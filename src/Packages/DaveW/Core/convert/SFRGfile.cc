@@ -43,6 +43,7 @@ using namespace SCICore::Datatypes;
 using namespace SCICore::Geometry;
 using namespace SCICore::Math;
 using namespace SCICore::PersistentSpace;
+using namespace std;
 
 VTYPE inVoxel;
 VTYPE outVoxel;
@@ -58,6 +59,10 @@ int haveOutFile=0;
 char *inName;
 char *outName;
 int haveMinMax;
+int havePad=0;
+double padVal;
+int padNx, padNy, padNz;
+
 int nx, ny, nz;
 Point minIn, minOut, maxIn, maxOut;
 double Omin, Omax, Ospan, Nmin, Nmax, Nspan;
@@ -179,6 +184,13 @@ int parseArgs(int argc, char *argv[]) {
 	    maxOut.y(atof(argv[i+5]));
 	    maxOut.z(atof(argv[i+6]));
 	    i+=7;
+	} else if (!strcmp(argv[i], "-pad")) {
+	    havePad = true;
+	    padNx=atoi(argv[i+1]);
+	    padNy=atoi(argv[i+2]);
+	    padNz=atoi(argv[i+3]);
+	    padVal=atof(argv[i+4]);
+	    i+=5;
 	} else if (!strcmp(argv[i], "-obin")) {
 	    if (!strcmp(argv[i+1], "BIN")) outBin = BIN;
 	    else if (!strcmp(argv[i+1], "ASCII")) outBin = ASCII;
@@ -242,8 +254,9 @@ void printOutputStats() {
     else if (outVoxel == FLOAT) cerr << "floats ";
     else if (outVoxel == INT) cerr << "ints ";
     else if (outVoxel == SHORT) cerr << "shorts ";
-    else if (outVoxel == CHAR) cerr << "char ";
+    else if (outVoxel == CHAR) cerr << "chars ";
     else cerr << "unsigned chars ";
+    cerr << "with dims ["<<nx<<", "<<ny<< ", "<<nz<<"] ";
     if (haveMinMax) cerr << "\n    with minVal="<<Max(Nmin,Cmin)<<", maxVal="<<Min(Nmax,Cmax);
     cerr << "\n    and bounds "<<minOut<<" to "<<maxOut<<"\n\n";
 }
@@ -625,6 +638,72 @@ inline double SETVAL(double val) {
     if (!haveMinMax) return val;
     else v=(val-Omin)*Nspan/Ospan+Nmin;
     if (v<Cmin) return Cmin; else if (v>Cmax) return Cmax; else return v;
+}
+
+void padvolume() {
+    if (inVoxel == UCHAR) {
+	ScalarFieldRGuchar *old = ifu;
+        ifu = new ScalarFieldRGuchar(*old);
+	ifu->resize(nx+2*padNx, ny+2*padNy, nz+2*padNz);
+	ifu->grid.initialize((unsigned char)padVal);
+	for (int i=0; i<nx; i++)
+	    for (int j=0; j<ny; j++)
+		for (int k=0; k<nz; k++)
+		    ifu->grid(i+padNx, j+padNy, k+padNz)=old->grid(i, j, k);
+    } else if (inVoxel == CHAR) {
+	ScalarFieldRGchar *old = ifc;
+        ifc = new ScalarFieldRGchar(*old);
+	ifc->resize(nx+2*padNx, ny+2*padNy, nz+2*padNz);
+	ifc->grid.initialize((char)padVal);
+	for (int i=0; i<nx; i++)
+	    for (int j=0; j<ny; j++)
+		for (int k=0; k<nz; k++)
+		    ifc->grid(i+padNx, j+padNy, k+padNz)=old->grid(i, j, k);
+    } else if (inVoxel == SHORT) {
+	ScalarFieldRGshort *old = ifs;
+        ifs = new ScalarFieldRGshort(*old);
+	ifs->resize(nx+2*padNx, ny+2*padNy, nz+2*padNz);
+	ifs->grid.initialize((short)padVal);
+	for (int i=0; i<nx; i++)
+	    for (int j=0; j<ny; j++)
+		for (int k=0; k<nz; k++)
+		    ifs->grid(i+padNx, j+padNy, k+padNz)=old->grid(i, j, k);
+    } else if (inVoxel == INT) {
+	ScalarFieldRGint *old = ifi;
+        ifi = new ScalarFieldRGint(*old);
+	ifi->resize(nx+2*padNx, ny+2*padNy, nz+2*padNz);
+	ifi->grid.initialize((int)padVal);
+	for (int i=0; i<nx; i++)
+	    for (int j=0; j<ny; j++)
+		for (int k=0; k<nz; k++)
+		    ifi->grid(i+padNx, j+padNy, k+padNz)=old->grid(i, j, k);
+    } else if (inVoxel == FLOAT) {
+	ScalarFieldRGfloat *old = iff;
+        iff = new ScalarFieldRGfloat(*old);
+	iff->resize(nx+2*padNx, ny+2*padNy, nz+2*padNz);
+	iff->grid.initialize((float)padVal);
+	for (int i=0; i<nx; i++)
+	    for (int j=0; j<ny; j++)
+		for (int k=0; k<nz; k++)
+		    iff->grid(i+padNx, j+padNy, k+padNz)=old->grid(i, j, k);
+    } else if (inVoxel == DOUBLE) {
+	ScalarFieldRGdouble *old = ifd;
+        ifd = new ScalarFieldRGdouble(*old);
+	ifd->resize(nx+2*padNx, ny+2*padNy, nz+2*padNz);
+	ifd->grid.initialize((double)padVal);
+	for (int i=0; i<nx; i++)
+	    for (int j=0; j<ny; j++)
+		for (int k=0; k<nz; k++)
+		    ifd->grid(i+padNx, j+padNy, k+padNz)=old->grid(i, j, k);
+    }
+    Vector diag(maxOut-minOut);
+    Vector dVec(Vector(nx-1, ny-1, nz-1)/Vector(padNx, padNy, padNz));
+    Vector shiftVec(diag/dVec);
+    maxOut+=shiftVec;
+    minOut-=shiftVec;
+    nx+=2*padNx;
+    ny+=2*padNy;
+    nz+=2*padNz;
 }
 
 void revoxelize() {
@@ -1186,7 +1265,7 @@ void writeOther() {
 void main(int argc, char *argv[]) {
     setDefaultArgs();
     if (!parseArgs(argc, argv)) {
-	cerr << "Usage: "<<argv[0]<<" iname [-bbox xmin ymin zmin xmax ymax zmax] [-range RangeMin CropMin CropMax RangeMax] [-ifile { SCI | NRRD| PCGV | RAW }] [-oname name] [-ofile {SCI | NRRD | PCGV | RAW }] [-obin { BIN | ASCII }] [-ovoxel { double | float | int | short | char | uchar }]\n";
+	cerr << "Usage: "<<argv[0]<<" iname [-bbox xmin ymin zmin xmax ymax zmax] [-range RangeMin CropMin CropMax RangeMax] [-ifile { SCI | NRRD| PCGV | RAW }] [-oname name] [-ofile {SCI | NRRD | PCGV | RAW }] [-obin { BIN | ASCII }] [-ovoxel { double | float | int | short | char | uchar }] [-pad nx ny nz pval]\n";
 	return;
     }
 
@@ -1204,6 +1283,7 @@ void main(int argc, char *argv[]) {
     if (!haveOutVoxel) { outVoxel = inVoxel; cerr << "Copying voxel type.\n"; }
     if (!haveOutFile) { outFile = inFile; cerr << "Copying file type.\n"; }
 
+    if (havePad) padvolume();
     printOutputStats();
     if (outVoxel != inVoxel) revoxelize();
     setBounds();
@@ -1215,3 +1295,4 @@ void main(int argc, char *argv[]) {
 	writeOther();  // this works for PCGV or RAW
     }
 }
+

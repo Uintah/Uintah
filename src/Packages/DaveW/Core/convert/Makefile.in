@@ -3,7 +3,7 @@ SRCDIR   = @srcdir@
 OBJTOP   = ../..
 
 INCLUDES = -I$(SRCTOP) -I$(SRCTOP)/DaveW/ThirdParty/Nrrd/include/ -I$(OBJTOP)
-LIBRARIES = -L$(OBJTOP)/SCICore -Wl,-rpath -Wl,/home/sci/u2/VR/SCI/PSE/src/SCICore/ -lSCICore
+LIBRARIES = -L$(OBJTOP)/SCICore -Wl,-rpath -Wl,/home/sci/u2/VR/SCI/PSE/src/SCICore/ -lSCICore -L../prebuilt -lnrrd
 
 all:: prog-SurfToJAS
 
@@ -30,6 +30,9 @@ prog-STreeToTris:
 
 prog-SurfToJAS:
 	@$(MAKE) --no-print-directory SRCS=SurfToJAS.cc PROGRAM=SurfToJAS SurfToJAS
+
+prog-SurfToVIN:
+	@$(MAKE) --no-print-directory SRCS=SurfToVIN.cc PROGRAM=SurfToVIN SurfToVIN
 
 prog-VDTtoMesh:
 	@$(MAKE) --no-print-directory SRCS=VDTtoMesh.cc PROGRAM=VDTtoMesh VDTtoMesh
