@@ -24,7 +24,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Basis
 
 SRCS     +=      $(SRCDIR)/CrvLinearLgn.cc             \
-                 $(SRCDIR)/CubicHermitian.cc           \
+                 $(SRCDIR)/CrvQuadraticLgn.cc           \
                  $(SRCDIR)/HexTrilinearLgn.cc          \
                  $(SRCDIR)/PrismLinearLgn.cc           \
                  $(SRCDIR)/QuadBilinearLgn.cc          \
