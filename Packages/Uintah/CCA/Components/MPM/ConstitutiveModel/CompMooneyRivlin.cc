@@ -136,11 +136,11 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     delt_vartype delT;
 
     old_dw->get(px,                  lb->pXLabel,                  pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    old_dw->get(pstress,             lb->pStressLabel,             pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
+    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
+    new_dw->allocate(pstress,        lb->pStressLabel,             pset);
 
     new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,patch,
 		Ghost::AroundCells, 1);
@@ -300,7 +300,6 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pMassLabel,   matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pVolumeLabel, matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pStressLabel, matlset, Ghost::None);
   task->requires(Task::NewDW, lb->gMomExedVelocityLabel, matlset,
 		 Ghost::AroundCells, 1);
   task->requires(Task::OldDW, lb->delTLabel);
