@@ -391,8 +391,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-isoval-min
 	global $this-isoval-max
 
-	set $this-isoval-min min
-	set $this-isoval-max max
+	set $this-isoval-min $min
+	set $this-isoval-max $max
 
 	if [ expr [winfo exists $w] ] {
 	    set lg [expr floor( log10($max-$min) ) ]
