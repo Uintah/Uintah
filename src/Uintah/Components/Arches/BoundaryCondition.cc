@@ -153,6 +153,10 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
   // 4) The labels used/computed by pressureBC 
   d_presCoefPBLMLabel = scinew VarLabel("presCoefPBLM", 
 				    CCVariable<double>::getTypeDescription() );
+  d_presLinSrcPBLMLabel = scinew VarLabel("presLinSrcPBLM",
+				  CCVariable<double>::getTypeDescription() );
+  d_presNonLinSrcPBLMLabel = scinew VarLabel("presNonLinSrcPBLM",
+				  CCVariable<double>::getTypeDescription() );
 
   // 5) The labels used/computed by computePressureBC (CPBC)
   d_pressurePSLabel = scinew VarLabel("pressurePS", 
@@ -970,8 +974,6 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
   // get cellType and velocity
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
   switch(eqnType) {
   case Arches::PRESSURE:
     new_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
@@ -1115,6 +1117,7 @@ BoundaryCondition::uVelocityBC(DataWarehouseP& new_dw,
 	      cellinfo->yy.get_objs(), cellinfo->yv.get_objs(), 
 	      cellinfo->zz.get_objs(),
 	      cellinfo->zw.get_objs());
+  cerr << "after uvelbc_fort" << endl;
 
   switch(eqnType) {
   case Arches::PRESSURE:
@@ -1346,11 +1349,21 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
   int matlIndex = 0;
   int nofGhostCells = 0;
   int nofStencils = 7;
+  // Create vars for new_dw
+  CCVariable<double> pressLinearSrc;
+  CCVariable<double> pressNonlinearSrc;
+
+
+  new_dw->get(pressLinearSrc, d_presLinSrcPBLMLabel, matlIndex, patch,
+	      Ghost::None, nofGhostCells);
+  new_dw->get(pressNonlinearSrc, d_presNonLinSrcPBLMLabel, matlIndex, patch,
+	      Ghost::None, nofGhostCells);
+
 
   // get cellType, pressure and pressure stencil coeffs
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(pressure, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(pressure, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->get(presCoef[ii], d_presCoefPBLMLabel, ii, patch, Ghost::None,
@@ -1379,6 +1392,8 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
 	       presCoef[Arches::AS].getPointer(),
 	       presCoef[Arches::AT].getPointer(),
 	       presCoef[Arches::AB].getPointer(),
+	       pressNonlinearSrc.getPointer(),
+	       pressLinearSrc.getPointer(),
 	       cellType.getPointer(),
 	       &wall_celltypeval, &symmetry_celltypeval,
 	       &flow_celltypeval);
@@ -1387,6 +1402,8 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->put(presCoef[ii], d_presCoefPBLMLabel, ii, patch);
   }
+  new_dw->put(pressNonlinearSrc, d_presNonLinSrcPBLMLabel, matlIndex, patch);
+  new_dw->put(pressLinearSrc, d_presLinSrcPBLMLabel, matlIndex, patch);
 }
 
 //****************************************************************************
@@ -1410,7 +1427,7 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
   // get cellType, pressure and pressure stencil coeffs
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
+  new_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
 	      nofGhostCells);
   // ** WARNING ** have to figure out a way to read the stencils
   //               currently overwriting scalarCoef[ii] each time
@@ -1958,6 +1975,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.44  2000/07/17 22:06:58  rawat
+// modified momentum source
+//
 // Revision 1.43  2000/07/14 03:45:45  rawat
 // completed velocity bc and fixed some bugs
 //

@@ -120,15 +120,10 @@ C-----------------------------------------------------------------------
                AW(i,j,k) = DENW*AREAEW*AREAEW*SEWU(i)/
      &              (DXPW(i)*AUP(i,j,k))*EPSG
 
-               IF (j.EQ.JEND) THEN
-                  AN(i,j,k) = DENN*AREAN*SEW(i)*SNSV(j+1)*
-     &                 STB(k)/(DYNP(j)*AVP(i,j+1,k))*EPSG
-               ELSE
-                  AN(i,j,k) = DENN*AREAN*SEW(i)*SNSV(j+1)*PT5*
-     &                 STB(k)/(DYNP(j)*AVP(i,j+1,k))*EPSG
-               ENDIF
+               AN(i,j,k) = DENN*AREAN*SEW(i)*SNSV(j+1)*
+     &              STB(k)/(DYNP(j)*AVP(i,j+1,k))*EPSG
 
-               AS(i,j,k) = DENS*AREAS*SEW(i)*SNSV(j)*PT5*
+               AS(i,j,k) = DENS*AREAS*SEW(i)*SNSV(j)*
      &              STB(k)/(DYPS(j)*AVP(i,j,k))*EPSG
 
                AT(i,j,k) = DENT*AREATB*AREATB*STBW(k+1)/
@@ -145,6 +140,9 @@ C-----------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/07/17 22:07:02  rawat
+c modified momentum source
+c
 c Revision 1.1  2000/07/12 22:15:05  bbanerje
 c Added pressure Coef .. will do until Kumar's code is up and running
 c

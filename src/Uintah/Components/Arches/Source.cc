@@ -143,6 +143,9 @@ Source::Source(TurbulenceModel* turb_model, PhysicalConstants* phys_const)
 				CCVariable<double>::getTypeDescription() );
   d_scalNonLinSrcSBLMLabel = scinew VarLabel("scalNonLinSrcSBLM",
 					     CCVariable<double>::getTypeDescription() );
+  // for pressure gradient source in momentum eqns
+  d_pressurePSLabel = scinew VarLabel("pressurePS",
+				      CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -515,6 +518,7 @@ Source::calculatePressureSource(const ProcessorGroup*,
 
   // Declare the variables
   CCVariable<double> density;
+  CCVariable<double> old_density;
 
   SFCXVariable<double> uVelocity;
   StencilMatrix<SFCXVariable<double> > uVelCoeff;
@@ -532,7 +536,9 @@ Source::calculatePressureSource(const ProcessorGroup*,
 
   // get the variabels from the old/new datawarehouse
   // density
-  old_dw->get(density, d_densityCPLabel, matlIndex, patch, 
+  old_dw->get(old_density, d_densityCPLabel, matlIndex, patch, 
+	      Ghost::None, numGhostCells);
+  new_dw->get(density, d_densityCPLabel, matlIndex, patch, 
 	      Ghost::None, numGhostCells);
 
   // u - velocity
@@ -598,7 +604,7 @@ Source::calculatePressureSource(const ProcessorGroup*,
 		  idxLo.get_pointer(), idxHi.get_pointer(),
 		  pressLinearSrc.getPointer(),
 		  pressNonlinearSrc.getPointer(),
-		  density.getPointer(),
+		  density.getPointer(), old_density.getPointer(),
 		  domLoU.get_pointer(), domHiU.get_pointer(),
 		  uVelocity.getPointer(), 
 		  uVelCoeff[Arches::AP].getPointer(),
@@ -631,7 +637,7 @@ Source::calculatePressureSource(const ProcessorGroup*,
 		  wNonlinearSrc.getPointer(),
 		  cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
 		  cellinfo->stb.get_objs(),
-		  cellType.getPointer(), &ffield);
+		  cellType.getPointer(), &ffield, &delta_t);
 		   
   // Write back to new datawarehouse
   new_dw->put(pressLinearSrc, d_presLinSrcPBLMLabel, matlIndex, patch);
@@ -1030,16 +1036,171 @@ Source::modifyScalarMassSource(const ProcessorGroup* ,
 //****************************************************************************
 void 
 Source::addPressureSource(const ProcessorGroup* ,
-			  const Patch* ,
-			  DataWarehouseP& ,
-			  DataWarehouseP& ,
+			  const Patch* patch ,
+			  DataWarehouseP& old_dw,
+			  DataWarehouseP& new_dw,
+			  double delta_t,
 			  int index)
 {
-  //FORT_ADDPRESSSOURCE
+  int numGhostCells = 0;
+  int matlIndex = 0;
+
+  IntVector domLoU; 
+  IntVector domHiU; 
+  IntVector domLoV; 
+  IntVector domHiV; 
+  IntVector domLoW; 
+  IntVector domHiW; 
+  IntVector idxLoU; 
+  IntVector idxHiU; 
+  IntVector idxLoV; 
+  IntVector idxHiV; 
+  IntVector idxLoW; 
+  IntVector idxHiW; 
+  CCVariable<double> old_density;
+  CCVariable<double> pressure;
+  SFCXVariable<double> uVelocity;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
+  SFCXVariable<double> uVelNonlinearSrc; // SU in Arches 
+  SFCYVariable<double> vVelNonlinearSrc; // SU in Arches 
+  SFCZVariable<double> wVelNonlinearSrc; // SU in Arches 
+  switch(index) {
+    case Arches::XDIR:
+      new_dw->get(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+		  numGhostCells);
+      new_dw->get(uVelNonlinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+      domLoU = uVelocity.getFortLowIndex();
+      domHiU = uVelocity.getFortHighIndex();
+      idxLoU = patch->getSFCXFORTLowIndex();
+      idxHiU = patch->getSFCXFORTHighIndex();
+    break;
+    case Arches::YDIR:
+      new_dw->get(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+		  numGhostCells);
+      new_dw->get(vVelNonlinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+      domLoV = vVelocity.getFortLowIndex();
+      domHiV = vVelocity.getFortHighIndex();
+      idxLoV = patch->getSFCYFORTLowIndex();
+      idxHiV = patch->getSFCYFORTHighIndex();
+    break;
+    case Arches::ZDIR:
+      new_dw->get(wVelocity, d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+		  numGhostCells);
+      new_dw->get(wVelNonlinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+      domLoW = wVelocity.getFortLowIndex();
+      domHiW = wVelocity.getFortHighIndex();
+      idxLoW = patch->getSFCZFORTLowIndex();
+      idxHiW = patch->getSFCZFORTHighIndex();
+    break;
+  default:
+    throw InvalidValue("Invalid index value");
+  }
+  old_dw->get(old_density, d_densityCPLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  new_dw->get(pressure, d_pressurePSLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  IntVector domLo = old_density.getFortLowIndex();
+  IntVector domHi = old_density.getFortHighIndex();
+
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //else {
+  //  cellInfoP.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //}
+  CellInformation* cellinfo = cellInfoP;
+  int ioff;
+  int joff;
+  int koff;
+  
+  switch(index) {
+  case Arches::XDIR:
+    ioff = 1;
+    joff = 0;
+    koff = 0;
+    FORT_ADDPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
+		      idxLoU.get_pointer(), idxHiU.get_pointer(),
+		      uVelocity.getPointer(),
+		      uVelNonlinearSrc.getPointer(), 
+		      domLo.get_pointer(), domHi.get_pointer(),
+		      pressure.getPointer(),
+		      old_density.getPointer(),
+		      &delta_t, &ioff, &joff, &koff,
+		      cellinfo->sewu.get_objs(), 
+		      cellinfo->sns.get_objs(),
+		      cellinfo->stb.get_objs(),
+		      cellinfo->dxpw.get_objs());
+    break;
+  case Arches::YDIR:
+    ioff = 0;
+    joff = 1;
+    koff = 0;
+    // computes remaining diffusion term and also computes 
+    // source due to gravity...need to pass ipref, jpref and kpref
+    FORT_ADDPRESSGRAD(domLoV.get_pointer(), domHiV.get_pointer(),
+		      idxLoV.get_pointer(), idxHiV.get_pointer(),
+		      vVelocity.getPointer(),
+		      vVelNonlinearSrc.getPointer(), 
+		      domLo.get_pointer(), domHi.get_pointer(),
+		      pressure.getPointer(),
+		      old_density.getPointer(),
+		      &delta_t, &ioff, &joff, &koff,
+		      cellinfo->sew.get_objs(), 
+		      cellinfo->snsv.get_objs(), 
+		      cellinfo->stb.get_objs(),
+		      cellinfo->dyps.get_objs());
+    break;
+  case Arches::ZDIR:
+    ioff = 0;
+    joff = 0;
+    koff = 1;
+    // computes remaining diffusion term and also computes 
+    // source due to gravity...need to pass ipref, jpref and kpref
+    FORT_ADDPRESSGRAD(domLoW.get_pointer(), domHiW.get_pointer(),
+		      idxLoW.get_pointer(), idxHiW.get_pointer(),
+		      wVelocity.getPointer(),
+		      wVelNonlinearSrc.getPointer(), 
+		      domLo.get_pointer(), domHi.get_pointer(),
+		      pressure.getPointer(),
+		      old_density.getPointer(),
+		      &delta_t, &ioff, &joff, &koff,
+		      cellinfo->sew.get_objs(), 
+		      cellinfo->sns.get_objs(),
+		      cellinfo->stbw.get_objs(),
+		      cellinfo->dzpb.get_objs());
+    break;
+  default:
+    throw InvalidValue("Invalid index in Source::calcPressGrad");
+  }
+
+
+  switch(index) {
+  case Arches::XDIR:
+    new_dw->put(uVelNonlinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch);
+    break;
+  case Arches::YDIR:
+    new_dw->put(vVelNonlinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch);
+    break;
+  case Arches::ZDIR:
+    new_dw->put(wVelNonlinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, patch);
+    break;
+  default:
+    throw InvalidValue("Invalid index in Pressure::calcVelSrc");
+  }
 }
 
 //
 //$Log$
+//Revision 1.29  2000/07/17 22:06:59  rawat
+//modified momentum source
+//
 //Revision 1.28  2000/07/14 03:45:46  rawat
 //completed velocity bc and fixed some bugs
 //

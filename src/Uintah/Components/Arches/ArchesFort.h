@@ -61,6 +61,7 @@ WARNING
 #define FORT_PRESSCOEFF prescoef_
 #define FORT_PRESSOURCE pressrc_
 #define FORT_PRESSBC bcpress_
+#define FORT_ADDPRESSGRAD addpressgrad_
 #define FORT_SCALARCOEFF scalcoef_
 #define FORT_SCALARSOURCE ssource_
 #define FORT_COLDPROPS cprops_
@@ -529,7 +530,7 @@ extern "C"
 
     ////////////////////////////////////////////////////////////////////////
     //
-    // Calculate the V-velocity bc
+    // Calculate the W-velocity bc
     //
     void
     FORT_BCWVEL(const int* domLoW, const int* domHiW,
@@ -603,7 +604,7 @@ extern "C"
 		    const int* idxLo, const int* idxHi,
 		    double* pressureLinSrc,
 		    double* pressureNonLinSrc,
-		    const double* density,
+		    const double* density, const double* old_density,
 		    const int* domLoU, const int* domHiU,
 		    const double* uVelocity,
 		    const double* uVelCoefAP,
@@ -635,7 +636,8 @@ extern "C"
 		    const double* wVelCoefAB,
 		    const double* wVelNonLinSrc,
 		    const double* sew, const double* sns, const double* stb,
-		    const int* cellType, const int* cellTypeID);
+		    const int* cellType, const int* cellTypeID,
+		    const double* delta_t);
 
     ////////////////////////////////////////////////////////////////////////
     //
@@ -651,9 +653,29 @@ extern "C"
 		 double* pressCoeffAS,
 		 double* pressCoeffAT,
 		 double* pressCoeffAB,
+		 double* pressNonlinearSrc,
+		 double* pressLinearSrc,
 		 int* cellType,
 		 int* wall_celltypeval, int* symmetry_celltypeval,
 		 int* flow_celltypeval);
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the pressure grad for [u,v,w] source
+    //
+    void
+    FORT_ADDPRESSGRAD(const int* domLoU, const int* domHiU,
+		      const int* idxLo, const int* idxHiU,
+		      const double* uVelocity,
+		      double* nlsource,
+		      const int* domLo, const int* domHi,
+		      const double* pressure,
+		      const double* old_density,
+		      const double* delta_t, const int* ioff, const int* joff,
+		      const int* koff,
+		      const double* sew, const double* sns, const double* stbw,
+		      const double* dxpw);
+
+
 
     ////////////////////////////////////////////////////////////////////////
     //
@@ -697,6 +719,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.23  2000/07/17 22:06:57  rawat
+// modified momentum source
+//
 // Revision 1.22  2000/07/14 05:23:49  bbanerje
 // Added scalcoef.F and updated related stuff in C++. scalcoef ==> coefs.f
 // in Kumar's code.

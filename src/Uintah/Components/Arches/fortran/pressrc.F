@@ -3,7 +3,7 @@ c $Id$
 c
       subroutine pressrc(domLo, domHi, idxLo, idxHi, 
      $     su, sp, 
-     &     den,
+     &     den, old_den,
      &     domLoU, domHiU, uu, 
      $     aup, aue, auw, aun, aus, aut, aub, suu,
      &     domLoV, domHiV, vv, 
@@ -16,7 +16,7 @@ c    $     rv, ra, rcv,
      &     sew, sns, stb, 
 c    &     sign,
 c    $     ltest,
-     $     pcell, ffield)
+     $     pcell, ffield, deltat)
 
       implicit none
       INCLUDE 'param4.h'
@@ -30,6 +30,9 @@ c    $     ltest,
       double precision sp(domLo(1):domHi(1), domLo(2):domHi(2),
      $     domLo(3):domHi(3))
       double precision den(domLo(1):domHi(1), domLo(2):domHi(2),
+     $     domLo(3):domHi(3))
+      double precision old_den(
+     $     domLo(1):domHi(1), domLo(2):domHi(2),
      $     domLo(3):domHi(3))
 
       integer domLoU(3), domHiU(3)
@@ -117,6 +120,7 @@ c     double precision rcv(domLo(2):domHi(2))
       integer pcell(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
       integer ffield
+      double precision deltat
       
 *     local variables
 
@@ -124,13 +128,13 @@ c     double precision rcv(domLo(2):domHi(2))
       double precision dene, denw, denn, dens, dent, denb
       double precision ue, uw, vn, vs, wt, wb
       double precision ce, cw, cn, cs, ct, cb
-      double precision smp
+      double precision smp, apo
       integer IST, JST, KST, IEND, JEND, KEND
       integer i, j, k
-      logical ltest
+      logical ltest, ltim
 
 c     include 'celltypes.h'
-
+      ltim = .true.
       ltest = .false.
       IST = idxLo(1)
       JST = idxLo(2)
@@ -175,6 +179,7 @@ c-----------------------------------------------------------------------
 
 c-----------------------------------------------------------------------
 c     calculate pseudovelocities when not on boundaries
+c for multi-patch include ghost cell of size 1 for pcell and uu
 c-----------------------------------------------------------------------
 
                if (pcell(i-1,j,k).eq.ffield)
@@ -234,8 +239,9 @@ c-----calculate source terms--------------------------------------------
                cs = dens*areas
                ct = dent*areatb
                cb = denb*areatb
-
-               smp = cn*vn-cs*vs+ce*ue-cw*uw+ct*wt-cb*wb
+               apo = 0.0
+               if (ltim) apo = (old_den(i,j,k) - den(i,j,k))*vol/deltat
+               smp = cn*vn-cs*vs+ce*ue-cw*uw+ct*wt-cb*wb - apo
 c    $              -sign*spm(i,j,k)
 
                if (ltest) then
@@ -260,6 +266,9 @@ c        convs = convs/((KEND-KST+1)*(JEND-JST+1)*(IEND-IST+1))
          end
 c
 c $Log$
+c Revision 1.2  2000/07/17 22:07:03  rawat
+c modified momentum source
+c
 c Revision 1.1  2000/07/12 23:23:25  bbanerje
 c Added pressure source .. modified Kumar's version a bit.
 c

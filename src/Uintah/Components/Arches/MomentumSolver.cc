@@ -265,14 +265,18 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				     Arches::MOMENTUM);
 
   // Add the pressure source terms
-  // inputs :
-  // outputs:
-  d_source->addPressureSource(pc, patch, new_dw, new_dw, index);
+  // inputs :[u,v,w]VelNonlinSrcMBLM, pressurePS, densityCP(old_dw), 
+  // [u,v,w]VelocityCPBC
+  // outputs:[u,v,w]VelNonlinSrcMBLM
+  d_source->addPressureSource(pc, patch, new_dw, new_dw, delta_t, index);
 
 }
 
 //
 // $Log$
+// Revision 1.17  2000/07/17 22:06:58  rawat
+// modified momentum source
+//
 // Revision 1.16  2000/07/12 07:35:46  bbanerje
 // Added stuff for mascal : Rawat: Labels and dataWarehouse in velsrc need to be corrected.
 //
