@@ -6,6 +6,7 @@ SRCDIR   := Packages/Uintah/Dataflow/Modules/Operators
 
 SRCS     += \
 	$(SRCDIR)/ScalarFieldOperator.cc \
+	$(SRCDIR)/ScalarFieldBinaryOperator.cc \
 	$(SRCDIR)/ScalarFieldAverage.cc \
 	$(SRCDIR)/TensorFieldOperator.cc \
 	$(SRCDIR)/TensorParticlesOperator.cc \
