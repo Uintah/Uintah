@@ -299,6 +299,9 @@ WARNING
 
       // get the index into the Level::d_patches array
       int getLevelIndex() const { return d_level_index; }
+
+       void setLayoutHint(const IntVector& pos);
+       bool getLayoutHint(IntVector& pos) const;
    protected:
      friend class Level;
      
@@ -337,6 +340,8 @@ WARNING
      vector<BCData> d_bcs;
      friend class NodeIterator;
      bool in_database;
+       bool have_layout;
+       IntVector layouthint;
    };
 
 } // End namespace Uintah

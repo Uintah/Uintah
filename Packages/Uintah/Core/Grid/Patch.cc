@@ -30,7 +30,8 @@ Patch::Patch(const Level* level,
       d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
       d_id( id )
 {
-   if(d_id == -1){
+  have_layout=false;
+  if(d_id == -1){
     d_id = ids++;
 
     if(patches.find(d_id) != patches.end()){
@@ -856,5 +857,18 @@ void Patch::computeVariableExtents(TypeDescription::Type basis,
   }
   computeVariableExtents(translation, gtype, numGhostCells,
 			 neighbors, low, high);
+}
+
+void Patch::setLayoutHint(const IntVector& pos)
+{
+  ASSERT(!have_layout);
+  layouthint = pos;
+  have_layout=true;
+}
+
+bool Patch::getLayoutHint(IntVector& pos) const
+{
+  pos = layouthint;
+  return have_layout;
 }
 
