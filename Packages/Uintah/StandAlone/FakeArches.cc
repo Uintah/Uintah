@@ -51,6 +51,26 @@ Arches::problemSetup(const ProblemSpecP& params,
 		     GridP&,
 		     SimulationStateP& sharedState)
 {
+  printf("-----------------------------------\n");
+  printf(" Y O U ' R E   R U N N I N G   F A K E   A R C H E S \n");
+  printf("  The last person to check in Uintah/StandAlone/sub.mk \n");
+  printf("  probably checked it in after it had been tweaked to compile \n");
+  printf("  fakeArches.  If you want the real arches then do the following \n");
+  printf("  a) add the following to src/Packages\n\n");
+  printf("     Packages/Uintah/CCA/Components/Arches \\ \n");
+  printf("     Packages/Uintah/CCA/Components/MPMArches \\ \n\n");
+  printf("     below Packages/Uintah/CCA/Components/Examples  \n\n");
+  printf("  b) Check to see that in src/Packages/Uintah/CCA/Component/sub.mk \n");
+  printf("     you have something like \n");
+  printf("          $(SRCDIR)/MPMArches \\ \n");
+  printf("          $(SRCDIR)/Arches \\ \n");
+  printf("          $(SRCDIR)/Arches/fortran \\ \n");
+  printf("          $(SRCDIR)/Arches/Mixing \\ \n");
+  printf("          $(SRCDIR)/Arches/Radiation \\ \n");
+  printf("          $(SRCDIR)/Arches/Radiation/fortran \\ \n\n");
+  printf("   c) Bug the person who last touched the sub.mk files --Todd\n");
+  printf("-----------------------------------\n");
+  exit(1);
 }
 
 void 
