@@ -9,6 +9,7 @@ SRCS     += \
 	$(SRCDIR)/Utils.cc \
 	$(SRCDIR)/ShaderProgramARB.cc \
 	$(SRCDIR)/Pbuffer.cc \
+	$(SRCDIR)/VideoCardInfo.c \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Geometry \

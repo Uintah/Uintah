@@ -50,6 +50,14 @@ struct ColVal {
   ColVal(): r(0), g(0), b(0), a(1.0), set(false) {}
 };
   
+template <typename T>
+inline T
+CLAMP(T x, T l, T u)
+{
+  if (x < l) return l;
+  if (x > u) return u;
+  return x;
+}
 
 } // End namespace Volume
 

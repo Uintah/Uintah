@@ -67,4 +67,7 @@ itcl_class Volume_Visualization_NrrdTextureBuilder {
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
+    method set_card_mem {mem} {
+	set $this-card_mem $mem
+    }
 }

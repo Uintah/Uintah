@@ -159,4 +159,7 @@ itcl_class Volume_Visualization_TextureBuilder {
         
     }
 
+    method set_card_mem {mem} {
+	set $this-card_mem $mem
+    }
 }

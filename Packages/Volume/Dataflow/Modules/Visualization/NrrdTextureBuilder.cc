@@ -19,9 +19,13 @@
 #include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
 
 #include <Packages/Volume/Core/Util/Utils.h>
+#include <Packages/Volume/Core/Util/VideoCardInfo.h>
 #include <Packages/Volume/Core/Datatypes/Texture.h>
 #include <Packages/Volume/Dataflow/Ports/TexturePort.h>
 #include <Packages/Volume/Core/Algorithms/NrrdTextureBuilderAlgo.h>
+
+#include <sstream>
+using std::ostringstream;
 
 namespace Volume {
 
@@ -40,7 +44,8 @@ public:
 
 private:
   GuiInt gui_card_mem_;
-
+  int card_mem_;
+  
   int nvfield_last_generation_;
   int gmfield_last_generation_;
   
@@ -58,7 +63,9 @@ NrrdTextureBuilder::NrrdTextureBuilder(GuiContext* ctx)
   : Module("NrrdTextureBuilder", ctx, Source, "Visualization", "Volume"),
     gui_card_mem_(ctx->subVar("card_mem")),
     nvfield_last_generation_(-1), gmfield_last_generation_(-1),
-    texture_(0) {
+    texture_(0)
+{
+  card_mem_ = video_card_memory_size();
 }
 
 NrrdTextureBuilder::~NrrdTextureBuilder() {
@@ -119,6 +126,11 @@ bool
 NrrdTextureBuilder::build_texture(Reporter* reporter,
                                   NrrdDataHandle nvfield, NrrdDataHandle gmfield)
 {
+  if(card_mem_ != 0) {
+    ostringstream set_mem;
+    set_mem << id << " set_card_mem " << card_mem_;
+    gui->execute(set_mem.str().c_str());
+  }
   texture_ = TextureHandle(builder_.build(nvfield, gmfield, gui_card_mem_.get()));
   return true;
 }
