@@ -439,9 +439,7 @@ inline void Di(StaticArray<CCVariable<Vector> >& d,
   
     L1 = rightFace *(0.5 * K * (press - p_infinity)/domainLength[n_dir] + s[1])
        + leftFace  * L1;
-       
-    L1 = 0;   
-       
+              
     L5 = leftFace  *(0.5 * K * (press - p_infinity)/domainLength[n_dir] + s[5])
        + rightFace * L5;
   }
@@ -1498,7 +1496,7 @@ void FaceTemp_LODI(const Patch* patch,
       double E_src = - delT * ( BN_convect + conv - gravityTerm);
       double vel_new_sqr = vel_new[c].length2();
 
-      temp_CC[c] = (E[c] * E_src)/(rho_new[c] *cv[c]) - 0.5 * vel_new_sqr/cv[c];
+      temp_CC[c] = (E[c] + E_src)/(rho_new[c] *cv[c]) - 0.5 * vel_new_sqr/cv[c];
     }
   }  
  
@@ -1530,7 +1528,7 @@ void FaceTemp_LODI(const Patch* patch,
 
     double E_new = E[c] - delT * ( term1 + term2 + term3 - gravityTerm);
 
-    temp_CC[c] = E_new/(rho_new[c] * cv[c]) - 0.5 * vel_new_sqr/cv[c]; 
+    temp_CC[c] = E_new/(rho_new[c] * cv[c]) - 0.5 * vel_new_sqr/cv[c];
   }
 } //end of function FaceTempLODI()  
 
