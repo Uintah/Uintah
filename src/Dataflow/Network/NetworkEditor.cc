@@ -225,7 +225,7 @@ void NetworkEditor::do_scheduling(Module* exclude)
     // mm - this doesn't really execute them. It just adds modules to
     // the queue of those to execute based on dataflow dependencies.
 
-    Array1<Connection*> to_trigger;
+    vector<Connection*> to_trigger;
     while(!needexecute.empty()){
 	Module* module = needexecute.front();
 	needexecute.pop();
@@ -260,7 +260,7 @@ void NetworkEditor::do_scheduling(Module* exclude)
 			    // If this oport already has the data, add it
 			    // to the to_trigger list...
 			    if(oport->have_data()){
-				to_trigger.add(conn);
+				to_trigger.push_back(conn);
 			    } else {
 				m->need_execute=1;
 				needexecute.push(m);
@@ -274,7 +274,8 @@ void NetworkEditor::do_scheduling(Module* exclude)
     }
 
     // Trigger the ports in the trigger list...
-    for(i=0;i<to_trigger.size();i++){
+    for(i=0;i<(int)(to_trigger.size());i++)
+    {
 	Connection* conn=to_trigger[i];
 	OPort* oport=conn->oport;
 	Module* module=oport->get_module();

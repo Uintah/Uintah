@@ -36,14 +36,16 @@
 #define SCI_project_Network_h 1
 
 #include <Dataflow/share/share.h>
-
-#include <Core/Containers/Array1.h>
 #include <Core/Thread/Mutex.h>
-
+#include <string>
+#include <vector>
 #include <map>
 
 namespace SCIRun {
 
+using std::string;
+using std::vector;
+using std::map;
 
 class Connection;
 
@@ -68,8 +70,8 @@ private:
     int first;
     int nextHandle;
 public:				// mm-hack to get direct access
-    Array1<Connection*> connections;
-    Array1<Module*> modules;
+    vector<Connection*> connections;
+    vector<Module*> modules;
     
     MapStringModule module_ids;
     MapIntModule mod_handles;

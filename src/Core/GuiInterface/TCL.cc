@@ -248,20 +248,6 @@ string TCLArgs::make_list(const string& item1, const string& item2,
     return res;
 }
 
-string TCLArgs::make_list(const Array1<string>& items)
-{
-    char** argv=scinew char*[items.size()];
-    for(int i=0;i<items.size();i++)
-    {
-      argv[i]= ccast_unsafe(items[i]);
-    }
-    char* ilist=Tcl_Merge(items.size(), argv);
-    string res(ilist);
-    free(ilist);
-    delete[] argv;
-    return res;
-}
-
 string TCLArgs::make_list(const vector<string>& items)
 {
     char** argv=scinew char*[items.size()];

@@ -63,7 +63,6 @@ public:
 
     static string make_list(const string&, const string&);
     static string make_list(const string&, const string&, const string&);
-    static string make_list(const Array1<string>&);
     static string make_list(const vector<string>&);
 };
 
