@@ -60,23 +60,25 @@ set netedit_savefile ""
 global NetworkChanged
 set NetworkChanged 0
 
-# boolToInt <environment variable name>
+# boolToInt <variable name>
 #
-#   boolToInt will query the environment for the varaible's value.
+#   boolToInt will query the varaible's value.
 #   Usage example: boolToInt SCIRUN_INSERT_NET_COPYRIGHT
 #
 # Turns 'true/false', 'on/off', 'yes/no', '1/0' into '1/0' respectively
-#  (Non-existent environment variables are treated as 'false'.)
+#  (Non-existent variables are treated as 'false'.)
 #
 # This function is case insensitive.
 #
 proc boolToInt { var } {
-    global env
-    if { ! [info exists env($var)] } {
+
+    global $var
+
+    if { ! [info exists $var] } {
        return 0
     }
 
-    set val $env($var)
+    set val [set $var]
 
     if [string equal $val ""] {
 	return 0; # blank value is taken to mean false
@@ -88,6 +90,49 @@ proc boolToInt { var } {
     return [string is true $val]
 }
 
+#
+# The setEnvVar and getEnvVar procedures are just convenience
+# functions that will set the environment variables value on the C
+# side or query the C side for the current value of the environment
+# variable.  You should NEVER USE THE env VARIABLE on the Tcl side.
+# The C side now completely controls the environment variables.
+#
+proc setEnvVar { var value } {
+    netedit setenv $var $value
+}
+proc getEnvVar { var } {
+    netedit getenv $var
+}
+
+#
+# Called from the C side at the end of the initialization so that
+# these variables can be populated with their current value.  There 
+# is currently nothing that keeps them up to date with the C side.
+#
+# These variables are now used as a convenience so that the C side
+# does not have to be queried (and result validated) every time
+# we access them.  However, it is possible that making the coder
+# query every time is better as then the values could not get out
+# of sync between the TCL and C side.
+#
+proc initEnviroVars {} {
+    puts "initEnviroVars"
+    # Ask the C side for the values of these commonly used environment variables.
+
+    global SCIRUN_DATA SCI_DATA PSE_DATA SCI_CONFIRM_OVERWRITE 
+    global SCIRUN_GUI_UseGuiFetch SCIRUN_GUI_MoveGuiToMouse
+    global SCIRUN_INSERT_NET_COPYRIGHT SCIRUN_NET_SUBSTITUTE_DATADIR 
+
+    set SCIRUN_DATA  [netedit getenv SCIRUN_DATA]
+    set SCI_DATA     [netedit getenv SCI_DATA]
+    set PSE_DATA     [netedit getenv PSE_DATA]
+
+    set SCI_CONFIRM_OVERWRITE          [netedit getenv SCI_CONFIRM_OVERWRITE]
+    set SCIRUN_GUI_UseGuiFetch         [netedit getenv SCIRUN_GUI_UseGuiFetch]
+    set SCIRUN_GUI_MoveGuiToMouse      [netedit getenv SCIRUN_GUI_MoveGuiToMouse]
+    set SCIRUN_INSERT_NET_COPYRIGHT    [netedit getenv SCIRUN_INSERT_NET_COPYRIGHT]
+    set SCIRUN_NET_SUBSTITUTE_DATADIR  [netedit getenv SCIRUN_NET_SUBSTITUTE_DATADIR]
+}
 
 proc makeNetworkEditor {} {
 
@@ -820,11 +865,17 @@ proc NiceQuit {} {
 }
 
 proc initInfo { {force 0 } } {
-    global userName runDate runTime notes env
+    global userName runDate runTime notes 
     if { $force || ![info exists userName] } {
-	if { [info exists env(LOGNAME)] } { set userName $env(LOGNAME) 
-	} elseif [info exists env(USER)] { set userName $env(USER) 
-	} else { set userName unknown }
+
+	set userName [netedit getenv LOGNAME]
+	if { $userName == "" } {
+	    set userName [netedit getenv USER] 
+	}
+	if { $userName == "" } {
+	    set userName Unknown
+	}
+
     }
     if { $force || ![info exists runDate] } {
 	set runDate [clock format [clock seconds] -format "%a %b %d %Y"]
@@ -1028,16 +1079,9 @@ proc showChooseDatasetPrompt { initialdir } {
 proc sourceSettingsFile {} {
     renameSourceCommand
     
-    set DATADIR ""
-    set DATASET ""
-
     # Attempt to get environment variables:
-    if { [info exists env(SCIRUN_DATA)] } {
-        set DATADIR $env(SCIRUN_DATA)
-    }
-    if { [info exists env(SCIRUN_DATASET)] } {
-        set DATASET $env(SCIRUN_DATASET)
-    }
+    set DATADIR [netedit getenv SCIRUN_DATA]
+    set DATASET [netedit getenv SCIRUN_DATASET]
     
     if { "$DATASET" == "" } {
 	# if env var SCIRUN_DATASET not set... default to sphere:
@@ -1342,19 +1386,18 @@ proc validDir { name } {
 }
 
 proc getOnTheFlyLibsDir {} {
-    global env SCIRUN_OBJDIR tcl_platform
+    global SCIRUN_OBJDIR tcl_platform
     set binOTF [file join $SCIRUN_OBJDIR on-the-fly-libs]
-    set dir ""
-    if [info exists env(SCIRUN_ON_THE_FLY_LIBS_DIR)] {
-	set dir $env(SCIRUN_ON_THE_FLY_LIBS_DIR)
+
+    set dir [netedit getenv SCIRUN_ON_THE_FLY_LIBS_DIR]
+
+    if { $dir != "" } {
 	catch "file mkdir $dir"
 	if { [validDir $dir] && ![llength [glob -nocomplain -directory $dir *]] } {
 	    foreach name [glob -nocomplain -directory $binOTF *.cc *.d *.o *.so] {
 		file copy $name $dir
 	    }
 	}
-		
-	    
     }
 
     if ![validDir $dir] {
@@ -1457,21 +1500,13 @@ proc init_DATADIR_and_DATASET {} {
     # The following declarations make sure that these vars exist.
     set DATADIR ""
     set DATASET ""
-    set datadir ""
-    set dataset ""
-
-    # Must use ::env to get to the global scope
-    if { [info exists ::env(SCIRUN_DATA)] } {
-        set datadir $::env(SCIRUN_DATA)
-    }
-    if { [info exists ::env(SCIRUN_DATASET)] } {
-        set dataset $::env(SCIRUN_DATASET)
-    }
+    set datadir [netedit getenv SCIRUN_DATA]
+    set dataset [netedit getenv SCIRUN_DATASET]
 }
     
 
 proc writeNetwork { filename { subnet 0 } } {
-    global env userName runDate runTime notes SCIRUN_VERSION
+    global userName runDate runTime notes SCIRUN_VERSION
 
     set out [open $filename {WRONLY CREAT TRUNC}]
     puts $out "\# SCI Network $SCIRUN_VERSION\n"
