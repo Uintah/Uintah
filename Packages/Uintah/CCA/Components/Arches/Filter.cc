@@ -314,6 +314,20 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
 	 for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 	   IntVector currCell(colX, colY, colZ);
+	   int bndry_count=0;
+	   if  (!(cellType[IntVector(colX+1, colY, colZ)] == flowID))
+		   bndry_count++;
+	   if  (!(cellType[IntVector(colX-1, colY, colZ)] == flowID))
+		   bndry_count++;
+	   if  (!(cellType[IntVector(colX, colY+1, colZ)] == flowID))
+		   bndry_count++;
+	   if  (!(cellType[IntVector(colX, colY-1, colZ)] == flowID))
+		   bndry_count++;
+	   if  (!(cellType[IntVector(colX, colY, colZ+1)] == flowID))
+		   bndry_count++;
+	   if  (!(cellType[IntVector(colX, colY, colZ-1)] == flowID))
+		   bndry_count++;
+	   bool corner = (bndry_count==3);
 	   int count = 0;
 	   double totalVol = 0.0;
 	   for (int kk = -1; kk <= 1; kk ++) {
@@ -321,8 +335,8 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
 	       for (int ii = -1; ii <= 1; ii ++) {
 		 IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
 		 double vol = cellinfo->sew[colX+ii]*cellinfo->sns[colY+jj]*
-		   cellinfo->stb[colZ+kk]*
-		   (1.0-0.5*abs(ii))*
+		   cellinfo->stb[colZ+kk];
+		 if (!(corner)) vol *= (1.0-0.5*abs(ii))*
 		   (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
 		 col[count] = l2g[filterCell];  //ab
 #if 1

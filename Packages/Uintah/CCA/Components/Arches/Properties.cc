@@ -1475,7 +1475,7 @@ Properties::averageRKProps(const ProcessorGroup*,
 		(new_scalar[ii])[currCell])/(factor_divide*predicted_density);
             if ((new_scalar[ii])[currCell] > 1.0) 
 		(new_scalar[ii])[currCell] = 1.0;
-            else if ((new_scalar[ii])[currCell] < 1.0e-7)
+            else if ((new_scalar[ii])[currCell] < 0.0)
             	(new_scalar[ii])[currCell] = 0.0;
           }
 
@@ -1488,7 +1488,7 @@ Properties::averageRKProps(const ProcessorGroup*,
 		(factor_divide*predicted_density);
             if ((new_reactScalar[ii])[currCell] > 1.0) 
 		(new_reactScalar[ii])[currCell] = 1.0;
-            else if ((new_reactScalar[ii])[currCell] < 1.0e-7)
+            else if ((new_reactScalar[ii])[currCell] < 0.0)
             	(new_reactScalar[ii])[currCell] = 0.0;
             }
 	  }

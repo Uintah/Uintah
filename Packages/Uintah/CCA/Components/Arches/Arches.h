@@ -70,7 +70,7 @@ WARNING
 
 // Filtering of drhodt
 #ifdef PetscFilter
- //#define FILTER_DRHODT
+// #define FILTER_DRHODT
 #endif
 
 namespace Uintah {

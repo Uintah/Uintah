@@ -1066,7 +1066,7 @@ RBGSSolver::scalarLisolve(const ProcessorGroup*,
 	  IntVector currCell(ii,jj,kk);
 	  if (vars->scalar[currCell] > 1.0)
 	    vars->scalar[currCell] = 1.0;
-	  else if (vars->scalar[currCell] < 1e-7)
+	  else if (vars->scalar[currCell] < 0.0)
 	    vars->scalar[currCell] = 0.0;
 	}
       }
@@ -1154,7 +1154,7 @@ RBGSSolver::enthalpyLisolve(const ProcessorGroup*,
 		  constvars->scalarCoeff[Arches::AT], 
 		  constvars->scalarCoeff[Arches::AB], 
 		  constvars->scalarCoeff[Arches::AP], 
-		  constvars->scalarNonlinearSrc, constvars->old_density,
+		  constvars->scalarNonlinearSrc, constvars->density_guess,
 		  cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
      
 #ifdef ARCHES_DEBUG
