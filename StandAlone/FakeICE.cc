@@ -1,5 +1,6 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
+#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 namespace Uintah {
 
 class ICE : public UintahParallelComponent, public SimulationInterface {
