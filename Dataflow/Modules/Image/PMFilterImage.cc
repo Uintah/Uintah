@@ -12,12 +12,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/Image/ImagePort.h>
-#include <Malloc/Allocator.h>
-#include <Math/Trig.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCIRun/Datatypes/Image/ImagePort.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/Trig.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <math.h>
 
 namespace SCIRun {
@@ -47,17 +47,13 @@ class PMFilterImage : public Module {
     int old_res;
 public:
     PMFilterImage(const clString& id);
-    PMFilterImage(const PMFilterImage&, int deep);
     virtual ~PMFilterImage();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
-extern "C" {
 Module* make_PMFilterImage(const clString& id)
 {
     return scinew PMFilterImage(id);
-}
 }
 
 PMFilterImage::PMFilterImage(const clString& id)
@@ -74,22 +70,8 @@ PMFilterImage::PMFilterImage(const clString& id)
     old_res=-1;
 }
 
-PMFilterImage::PMFilterImage(const PMFilterImage& copy, int deep)
-: Module(copy, deep), inphi("phi", id, this),
-  inu10("u10", id, this), inbegtime("begtime", id, this),
-  inres("res", id, this),
-  innsteps("nsteps", id, this), intstep("tstep", id, this)
-{
-    NOT_FINISHED("PMFilterImage::PMFilterImage");
-}
-
 PMFilterImage::~PMFilterImage()
 {
-}
-
-Module* PMFilterImage::clone(int deep)
-{
-    return scinew PMFilterImage(*this, deep);
 }
 
 static double g(double x)
@@ -203,6 +185,9 @@ void PMFilterImage::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:34  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:57  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -12,18 +12,17 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/Image/ImagePort.h>
-#include <Malloc/Allocator.h>
-#include <Math/MusilRNG.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCIRun/Datatypes/Image/ImagePort.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/MusilRNG.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 namespace SCIRun {
 namespace Modules {
 
 using namespace SCICore::TclInterface;
-using namespace SCICore::Multitask;
 
 using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
@@ -36,17 +35,13 @@ class WhiteNoiseImage : public Module {
     TCLint yres;
 public:
     WhiteNoiseImage(const clString& id);
-    WhiteNoiseImage(const WhiteNoiseImage&, int deep);
     virtual ~WhiteNoiseImage();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
-extern "C" {
 Module* make_WhiteNoiseImage(const clString& id)
 {
     return scinew WhiteNoiseImage(id);
-}
 }
 
 WhiteNoiseImage::WhiteNoiseImage(const clString& id)
@@ -58,19 +53,8 @@ WhiteNoiseImage::WhiteNoiseImage(const clString& id)
     add_oport(oport);
 }
 
-WhiteNoiseImage::WhiteNoiseImage(const WhiteNoiseImage& copy, int deep)
-: Module(copy, deep), xres("xres", id, this), yres("yres", id, this)
-{
-    NOT_FINISHED("WhiteNoiseImage::WhiteNoiseImage");
-}
-
 WhiteNoiseImage::~WhiteNoiseImage()
 {
-}
-
-Module* WhiteNoiseImage::clone(int deep)
-{
-    return scinew WhiteNoiseImage(*this, deep);
 }
 
 void WhiteNoiseImage::execute()
@@ -94,6 +78,9 @@ void WhiteNoiseImage::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:36  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:49:00  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

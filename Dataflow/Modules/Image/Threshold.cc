@@ -8,21 +8,24 @@
  *    August 1997
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Geom/GeomGrid.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
-#include <Multitask/Task.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
+
+using namespace SCICore::Thread;
 
 namespace SCIRun {
 namespace Modules {
@@ -31,7 +34,6 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 
 using namespace SCICore::TclInterface;
-using namespace SCICore::Multitask;
 
 class Threshold : public Module {
    ScalarFieldIPort *inscalarfield;
@@ -50,20 +52,16 @@ class Threshold : public Module {
   
 public:
    Threshold(const clString& id);
-   Threshold(const Threshold&, int deep);
    virtual ~Threshold();
-   virtual Module* clone(int deep);
    virtual void execute();
 
    void do_parallel(int proc);
   
 };
 
-extern "C" {
 Module* make_Threshold(const clString& id)
 {
    return scinew Threshold(id);
-}
 }
 
 //static clString module_name("Threshold");
@@ -89,21 +87,8 @@ Threshold::Threshold(const clString& id)
     gen=99;
 }
 
-Threshold::Threshold(const Threshold& copy, int deep)
-: Module(copy, deep), 
-  low("low", id, this), high("high", id, this), lowval("lowval", id, this),
-  medval("medval", id, this), higval("higval", id, this)
-{
-   NOT_FINISHED("Threshold::Threshold");
-}
-
 Threshold::~Threshold()
 {
-}
-
-Module* Threshold::clone(int deep)
-{
-   return scinew Threshold(*this, deep);
 }
 
 void Threshold::do_parallel(int proc)
@@ -124,13 +109,6 @@ void Threshold::do_parallel(int proc)
       }
 }
 
-static void do_parallel_stuff(void* obj,int proc)
-{
-  Threshold* img = (Threshold*) obj;
-
-  img->do_parallel(proc);
-}
-  
 double Threshold::thresh(double val, double orig)
 {
   if (val==-1)
@@ -193,8 +171,9 @@ void Threshold::execute()
     
     newgrid->resize(nx,ny,nz);
     
-    np = Task::nprocessors();
-    Task::multiprocess(np, do_parallel_stuff, this);
+    np = Thread::numProcessors();
+    Thread::parallel(Parallel<Threshold>(this, &Threshold::do_parallel),
+		     np, true);
 
     outscalarfield->send( newgrid );
 }
@@ -204,6 +183,9 @@ void Threshold::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:35  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:59  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

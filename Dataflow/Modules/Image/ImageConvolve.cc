@@ -6,21 +6,24 @@
  *  Written by:
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Geom/GeomGrid.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
-#include <Multitask/Task.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
+
+using namespace SCICore::Thread;
 
 namespace SCIRun {
 namespace Modules {
@@ -29,7 +32,6 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 
 using namespace SCICore::TclInterface;
-using namespace SCICore::Multitask;
 
 class ImageConvolve : public Module {
    ScalarFieldIPort *inscalarfield;
@@ -46,9 +48,7 @@ class ImageConvolve : public Module {
   
 public:
    ImageConvolve(const clString& id);
-   ImageConvolve(const ImageConvolve&, int deep);
    virtual ~ImageConvolve();
-   virtual Module* clone(int deep);
    virtual void execute();
 
    void tcl_command( TCLArgs&, void *);
@@ -57,11 +57,9 @@ public:
   
 };
 
-extern "C" {
 Module* make_ImageConvolve(const clString& id)
 {
    return scinew ImageConvolve(id);
-}
 }
 
 //static clString module_name("ImageConvolve");
@@ -85,19 +83,8 @@ ImageConvolve::ImageConvolve(const clString& id)
     normal=1;
 }
 
-ImageConvolve::ImageConvolve(const ImageConvolve& copy, int deep)
-: Module(copy, deep)
-{
-   NOT_FINISHED("ImageConvolve::ImageConvolve");
-}
-
 ImageConvolve::~ImageConvolve()
 {
-}
-
-Module* ImageConvolve::clone(int deep)
-{
-   return scinew ImageConvolve(*this, deep);
 }
 
 void ImageConvolve::do_parallel(int proc)
@@ -120,13 +107,6 @@ void ImageConvolve::do_parallel(int proc)
 			      matrix[7]*rg->grid(x,y+1,0) + \
 			      matrix[8]*rg->grid(x+1,y+1,0))*normal; 
       }
-}
-
-static void do_parallel_stuff(void* obj,int proc)
-{
-  ImageConvolve* img = (ImageConvolve*) obj;
-
-  img->do_parallel(proc);
 }
 
 void ImageConvolve::execute()
@@ -164,8 +144,9 @@ void ImageConvolve::execute()
     int nz=rg->grid.dim3();
     newgrid->resize(nx,ny,nz);
 
-    np = Task::nprocessors();
-    Task::multiprocess(np, do_parallel_stuff, this);
+    np = Thread::numProcessors();
+    Thread::parallel(Parallel<ImageConvolve>(this, &ImageConvolve::do_parallel),
+		     np, true);
 
     outscalarfield->send( newgrid );
 }
@@ -191,6 +172,9 @@ void ImageConvolve::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:33  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:56  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

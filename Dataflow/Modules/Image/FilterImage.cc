@@ -12,10 +12,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/Image/ImagePort.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCIRun/Datatypes/Image/ImagePort.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace SCIRun {
 namespace Modules {
@@ -31,17 +31,13 @@ class FilterImage : public Module {
     ImageOPort* oport;
 public:
     FilterImage(const clString& id);
-    FilterImage(const FilterImage&, int deep);
     virtual ~FilterImage();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
-extern "C" {
 Module* make_FilterImage(const clString& id)
 {
     return scinew FilterImage(id);
-}
 }
 
 FilterImage::FilterImage(const clString& id)
@@ -56,19 +52,8 @@ FilterImage::FilterImage(const clString& id)
     add_oport(oport);
 }
 
-FilterImage::FilterImage(const FilterImage& copy, int deep)
-: Module(copy, deep)
-{
-    NOT_FINISHED("FilterImage::FilterImage");
-}
-
 FilterImage::~FilterImage()
 {
-}
-
-Module* FilterImage::clone(int deep)
-{
-    return scinew FilterImage(*this, deep);
 }
 
 void filter_image(int xres, int yres, float* out, float* image, float* filter)
@@ -106,6 +91,9 @@ void FilterImage::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:31  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:55  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

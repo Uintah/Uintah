@@ -10,28 +10,28 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Datatypes/ScalarFieldRGint.h>
-#include <Datatypes/ScalarFieldRGshort.h>
-#include <Datatypes/ScalarFieldRGfloat.h>
-#include <Datatypes/ScalarFieldRGBase.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Malloc/Allocator.h>
-#include <Multitask/Task.h>
-#include <Multitask/ITC.h>
-#include <TclInterface/TCLvar.h>
-#include <TclInterface/TCLTask.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Datatypes/ScalarFieldRGint.h>
+#include <SCICore/Datatypes/ScalarFieldRGshort.h>
+#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
+#include <SCICore/Datatypes/ScalarFieldRGBase.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include <Geom/GeomOpenGL.h>
+#include <SCICore/Geom/GeomOpenGL.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
@@ -54,7 +54,7 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
-using namespace SCICore::Multitask;
+using namespace SCICore::Thread;
 
 class Ted : public Module {
   ScalarFieldIPort *inscalarfield;
@@ -102,9 +102,7 @@ class Ted : public Module {
   
 public: 
   Ted(const clString& id);
-  Ted(const Ted&, int deep);
   virtual ~Ted();
-  virtual Module* clone(int deep);
 
   void abs_parallel(int proc);   // Takes care of negatives, finds max
   void scale_parallel(int proc); // scales, or normalizes
@@ -129,12 +127,10 @@ public:
 
 };
 
-extern "C" {
   Module* make_Ted(const clString& id)
     {
       return scinew Ted(id);
     }
-}
 
 //static clString module_name("Ted");
 //static clString widget_name("Ted Widget");
@@ -183,22 +179,8 @@ Ted::Ted(const clString& id)
   //points->compute_bounds();
 }
 
-Ted::Ted(const Ted& copy, int deep)
-: Module(copy, deep),
-  zoom("zoom", id, this),
-  normal("normal", id, this),
-  negative("negative", id, this)
-{
-  NOT_FINISHED("Ted::Ted");
-}
-
 Ted::~Ted()
 {
-}
-
-Module* Ted::clone(int deep)
-{
-  return scinew Ted(*this, deep);
 }
 
 void Ted::scale_parallel(int proc)  // Scales image to 1.0 
@@ -249,20 +231,6 @@ void Ted::mask_parallel(int proc)  // creates the mask
     }
 }
 
-static void scale_starter(void* obj,int proc)
-{
-  Ted* img = (Ted*) obj;
-
-  img->scale_parallel (proc);
-}
-
-static void mask_starter(void* obj,int proc)
-{
-  Ted* img = (Ted*) obj;
-
-  img->mask_parallel (proc);
-}
-
 void Ted::execute()
 {
 
@@ -286,7 +254,7 @@ void Ted::execute()
   int newimage = (gen!=ingrid32->generation) || override;
   override = 0;
 
-  np = Task::nprocessors();
+  np = Thread::numProcessors();
   
   if (newimage) {
     cerr << "New image received..\n";
@@ -326,7 +294,8 @@ void Ted::execute()
   
   cerr << "Scaling to " << maxval << ".\n";
   
-  Task::multiprocess(np, scale_starter, this);
+  Thread::parallel(Parallel<Ted>(this, &Ted::scale_parallel),
+		   np, true);
   ingridf->compute_minmax();
   ingridf->get_minmax(minval,maxval);    
   cerr << "Float Min/Max : " << minval << " / " << maxval << "\n";
@@ -373,14 +342,16 @@ void Ted::execute()
     outmask=new ScalarFieldRG(*ingrid32);
     outmask->resize(ingrid32->grid.dim1(),ingrid32->grid.dim2(),3);
 
-    Task::multiprocess(np, mask_starter, this);
+    Thread::parallel(Parallel<Ted>(this, &Ted::mask_parallel),
+		     np, true);
 
     handle = outmask;
   } else if (newimage) {
     backup=new ScalarFieldRGfloat(*ingridf);
     backup->resize(ingrid32->grid.dim1(),ingrid32->grid.dim2(),3);
 
-    Task::multiprocess(np, mask_starter, this);
+    Thread::parallel(Parallel<Ted>(this, &Ted::mask_parallel),
+		     np, true);
     
     handle = ingrid32;
     mask = 0;
@@ -670,7 +641,8 @@ int Ted::makeCurrent(void)
   if (!ctx) {
     cerr << "Context is not defined!\n";
     clString myname(clString(".ui")+id+".f.gl1.gl");
-    tkwin = Tk_NameToWindow(the_interp, myname(),Tk_MainWindow(the_interp));
+    tkwin = Tk_NameToWindow(the_interp, const_cast<char*>(myname()),
+			    Tk_MainWindow(the_interp));
 
     if (!tkwin) {
       cerr << "Unable to locate window!\n";
@@ -685,7 +657,7 @@ int Ted::makeCurrent(void)
     dpy = Tk_Display(tkwin);
     win = Tk_WindowId(tkwin);
 
-    ctx = OpenGLGetContext(the_interp,myname());
+    ctx = OpenGLGetContext(the_interp,const_cast<char*>(myname()));
 
     // check if it was created
     if(!ctx)
@@ -708,6 +680,9 @@ int Ted::makeCurrent(void)
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:35  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:58  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
