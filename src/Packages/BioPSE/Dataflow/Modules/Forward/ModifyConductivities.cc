@@ -373,16 +373,13 @@ ModifyConductivities::execute()
     changed_table_p = true;
   }
 
-  if (new_field_p || changed_table_p)
-  {
-    // Forward the results.
-    FieldOPort *ofp = (FieldOPort *)get_oport("Output");
-    if (!ofp) {
-      error("Unable to initialize " + name + "'s Output port.");
-      return;
-    }
-    ofp->send(field);
+  // Forward the results.
+  FieldOPort *ofp = (FieldOPort *)get_oport("Output");
+  if (!ofp) {
+    error("Unable to initialize " + name + "'s Output port.");
+    return;
   }
+  ofp->send(field);
 }
 
 
