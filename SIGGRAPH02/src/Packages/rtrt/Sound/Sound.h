@@ -47,7 +47,11 @@ public:
   short * getFrames( int numFrames, int & actualNumframes );
 
   // Actually load the sound.  SOUND WILL NOT PLAY UNTIL THIS IS CALLED!
-  void    activate();
+  void    load();
+
+  // If sound is on, it will play if you are near it.  If not, no sound.
+  void    playNow() { on_ = true; playNow_ = true; }
+  bool    isOn() { return on_; }
 
   // Continually repeat this sound?
   bool    repeat() { return continuous_; }
@@ -74,6 +78,9 @@ private:
 
   bool          continuous_;
   double        constantVol_;
+
+  bool          on_;
+  bool          playNow_;
 
   string        filename_;
   string        name_;
