@@ -10,8 +10,9 @@ SCISubdirs($(SUBDIRS))
 AllTarget(libModules.o)
 
 OBJS = Contours/libContours.o FEM/libFEM.o Matrix/libMatrix.o \
-	Mesh/libMesh.o Salmon/libSalmon.o Sound/libSound.o \
-	Readers/libReaders.o Visualization/libVisualization.o
+	Mesh/libMesh.o Readers/libReaders.o Salmon/libSalmon.o \
+	Sound/libSound.o Surface/libSurface.o \
+	Visualization/libVisualization.o
 
 libModules.o: $(OBJS)
 	ld -r -o libModules.o $(OBJS)
