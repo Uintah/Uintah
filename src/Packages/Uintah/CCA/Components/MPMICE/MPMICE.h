@@ -217,13 +217,7 @@ public:
                                const MaterialSubset* matls,
                                DataWarehouse*, 
                                DataWarehouse*); 
-
- void doCCMomExchangeRF(const ProcessorGroup*,
-                       const PatchSubset* patch,
-                       const MaterialSubset* matls,
-                       DataWarehouse* old_dw,
-                       DataWarehouse* new_dw);       
-        
+     
   enum bctype { NONE=0,
                 FIXED,
                 SYMMETRY,
