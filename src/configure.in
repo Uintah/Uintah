@@ -1116,7 +1116,6 @@ SCI_CHECK_HEADERS(/usr/include,math.h,,HAVE_GL_H=no)
 if test "$HAVE_LIBMATH" &&
    test "$HAVE_MATH_H" != "no"; then
   FOUND_ALL_MATH=yes
-  break
 fi
 
 if test "$FOUND_ALL_MATH" != "yes"; then
