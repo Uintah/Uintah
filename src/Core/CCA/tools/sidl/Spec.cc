@@ -168,9 +168,9 @@ CI::CI(const string& curfile, int lineno, const string& name,
   : Definition(curfile, lineno, name), mymethods(methods), mydistarrays(arrays)
 {
   doRedistribution = false;
-  iam_exception = false;
-  vtable_base=-1234;
-  parentclass=0;
+  exceptionID = 0;
+  vtable_base = -1234;
+  parentclass = 0;
 }
 
 CI::~CI()

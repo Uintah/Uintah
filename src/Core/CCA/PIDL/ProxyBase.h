@@ -119,8 +119,9 @@ DESCRIPTION
     void _proxycreateSubset(int localsize, int remotesize);
 
     /////////
-    // Synchronizes parallel processes and throws all necessary exceptions
-    void _proxygetException(); 
+    // Synchronizes parallel processes and receives all existing exceptions
+    // Returns: exception id of prevailing exception 
+    int _proxygetException(int xid=0, int lineid=0); 
 
   private:
     

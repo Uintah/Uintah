@@ -857,10 +857,13 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   e.out << ");\n";
   if(throws_clause) {
     e.out.pop_leader(x_leader);
-    int cnt = 1+(100*handlerOff);
+    int cnt = -1;
     const std::vector<ScopedName*>& thlist=throws_clause->getList();
-    for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++, cnt++){
+    for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++){
       ::std::string name = (*iter)->cppfullname();
+      Definition* def = (*iter)->getSymbol()->getDefinition();           
+      CI* xci = dynamic_cast< CI*>(def);            
+      if(xci) cnt = xci->exceptionID;  
       e.out << leader2 << "} catch(" << name << "* _e_ptr) {\n";
       e.out << leader2 << "  ::std::cerr << \"Throwing " << name << "\\n\";\n";
       e.out << leader2 << "  _marshal_exception< " << name << ">(message,_e_ptr," << cnt << ");\n";
@@ -1225,6 +1228,7 @@ void CI::emit_interface(EmitState& e)
   e.out << "// retreive all exceptions method\n";
   e.out << "void " << fn << "::getException()\n";
   e.out << "{\n";
+  e.out << "  ::std::cout << \"This method should only be called on proxies\\n\";\n";
   e.out << "}\n\n";
 
   e.out << fn << "::" << cn << "(bool initServer)\n";
@@ -1341,7 +1345,19 @@ void CI::emit_proxy(EmitState& e)
   e.out << "void " << fn << "::getException()\n";
   e.out << "{\n";
 #ifdef HAVE_MPI
-  e.out << "  _proxygetException();\n";
+  e.out << "  ::std::cout << \"getEXCEPTION CALLING\\n\";\n";  
+  e.out << "  ::SCIRun::Message* _xMsg;\n";
+  e.out << "  int _xid = xr->checkException(&_xMsg);\n";
+  e.out << "  if(_xid != 0) {\n";
+  e.out << "    _castException(_xid,&_xMsg);\n";
+  e.out << "  } else {\n";
+  e.out << "    _xid = _proxygetException();\n";
+  e.out << "    if(_xid != 0) {\n";
+  e.out << "      //There is some exception that I have not yet received\n";
+  e.out << "      //_xMsg = recvException(_xid);\n";
+  e.out << "      //if(_xMsg) _castException(_xid,&_xMsg);\n";
+  e.out << "    }\n";
+  e.out << "  }\n";
 #endif
   e.out << "}\n";
 
@@ -1350,6 +1366,8 @@ void CI::emit_proxy(EmitState& e)
   e.out << "{\n";
   e.out << leader2 << "  switch (_xid) {\n";
   e.out << e.xcept.str();
+  e.out << leader2 << "  default:\n";
+  e.out << leader2 << "    throw ::SCIRun::InternalError(\"Trying to cast an unknown exception\");\n";
   e.out << leader2 << "  }\n";
   e.out << "}\n\n";
 
@@ -1447,14 +1465,19 @@ void Method::emit_proxy(EmitState& e, const string& fn,
       e.out << leader2 << "if(_xid != 0) {\n";
       e.out << leader2 << "  _castException(_xid,&_xMsg);\n";
       //Write things for the castException method
-      int cnt = 1+(100*handlerOff);
+      int cnt = -1;
       const std::vector<ScopedName*>& thlist=throws_clause->getList();
-      for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++, cnt++){
+      for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++){
 	::std::string name = (*iter)->cppfullname();
-	e.xcept << leader2 << "  case " << cnt << ":\n";
+	//STEST
+	Definition* def = (*iter)->getSymbol()->getDefinition();
+        CI* xci = dynamic_cast< CI*>(def);
+	if(xci) cnt = xci->exceptionID;
+        e.xcept << leader2 << "  case " << cnt << ": {\n";
 	e.xcept << leader2 << "    " << name << "* _e_ptr = _unmarshal_exception<" << name << ", " << name << "_proxy>(*_xMsg);\n";
 	e.xcept << leader2 << "    throw _e_ptr;\n";
 	e.xcept << leader2 << "    break;\n";
+	e.xcept << leader2 << "  }\n";
       }
       //EOF write things for the castException method
       e.out << leader2 << "}\n";
@@ -1705,10 +1728,13 @@ e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _se
     if(throws_clause) {
       //Blah
       e.out << leader2 << "  switch (_x_flag) {\n";
-      int cnt = 1+(100*handlerOff);
+      int cnt = -1;
       const std::vector<ScopedName*>& thlist=throws_clause->getList();
-      for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++, cnt++){
+      for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++){
 	::std::string name = (*iter)->cppfullname();
+	Definition* def = (*iter)->getSymbol()->getDefinition();           
+        CI* xci = dynamic_cast< CI*>(def);                                 
+        if(xci) cnt = xci->exceptionID;  
 	e.out << leader2 << "  case " << cnt << ":\n";
 #ifdef HAVE_MPI
 	if(isCollective) 
@@ -1766,10 +1792,13 @@ e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _se
       e.out << leader2 << "    if(_x_flag != 0) {\n";
       //Blah
       e.out << leader2 << "      switch (_x_flag) {\n";
-      int cnt = 1+(100*handlerOff);
+      int cnt = -1;
       const std::vector<ScopedName*>& thlist=throws_clause->getList();
-      for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++, cnt++){
+      for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++){
 	::std::string name = (*iter)->cppfullname();
+	Definition* def = (*iter)->getSymbol()->getDefinition();             
+        CI* xci = dynamic_cast< CI*>(def);                                   
+        if(xci) cnt = xci->exceptionID;  
 	e.out << leader2 << "      case " << cnt << ":\n";
 #ifdef HAVE_MPI
 	e.out << leader2 << "        xr->relayException(" << cnt << ", (*iter));\n";

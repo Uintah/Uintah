@@ -120,7 +120,7 @@ public:
   std::string cppfullname(SymbolTable* forpackage) const;
   std::string cppclassname() const;
   MethodList* getMethods() const;
-  bool iam_exception;
+  int exceptionID;
 protected:
   virtual void emit(EmitState& out);
   void emit_typeinfo(EmitState& e);
