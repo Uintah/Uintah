@@ -145,7 +145,7 @@ AttractNormals::execute()
   }
 
   bool scale_p = false;
-  if (ifieldhandle->query_scalar_interface())
+  if (ifieldhandle->query_scalar_interface(this))
   {
     scale_p = true;
   }

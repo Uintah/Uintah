@@ -165,7 +165,7 @@ Coregister::execute()
       error("Simplex needs a distance field.");
       return;
     }
-    ScalarFieldInterface *dfieldP = dfieldH->query_scalar_interface();
+    ScalarFieldInterface *dfieldP = dfieldH->query_scalar_interface(this);
     if (!dfieldP) {
       error("Simplex needs a distance field.");
       return;

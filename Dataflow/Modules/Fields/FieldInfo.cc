@@ -68,7 +68,8 @@ FieldInfo::~FieldInfo(){
 
 
 
-void FieldInfo::clear_vals() 
+void
+FieldInfo::clear_vals() 
 {
   gui->execute(string("set ")+id+"-fldname \"---\"");
   gui->execute(string("set ")+id+"-typename \"---\"");
@@ -86,7 +87,9 @@ void FieldInfo::clear_vals()
   gui->execute(id+" update_multifields");
 }
 
-void FieldInfo::update_input_attributes(FieldHandle f) 
+
+void
+FieldInfo::update_input_attributes(FieldHandle f) 
 {
   const string &tname = f->get_type_description()->get_name();
   gui->execute(string("set ")+id+"-typename \"" + tname + "\"");
@@ -119,7 +122,7 @@ void FieldInfo::update_input_attributes(FieldHandle f)
   gui->execute(string("set ")+id+"-sizey "+to_string(size.y()));
   gui->execute(string("set ")+id+"-sizez "+to_string(size.z()));
 
-  ScalarFieldInterface *sdi = f->query_scalar_interface();
+  ScalarFieldInterface *sdi = f->query_scalar_interface(this);
   if (sdi && f->data_at() != Field::NONE) {
     sdi->compute_min_max(minmax_.first,minmax_.second);
     gui->execute(string("set ")+id+"-datamin "+to_string(minmax_.first));

@@ -217,7 +217,7 @@ ShowField::check_for_vector_data(FieldHandle fld_handle) {
   // Test for vector data possibility
   has_vec_data_.reset();
   nodes_as_disks_.reset();
-  if (fld_handle->query_vector_interface() != 0) {
+  if (fld_handle->query_vector_interface(this) != 0) {
     if (! has_vec_data_.get()) { 
       has_vec_data_.set(1); 
     }

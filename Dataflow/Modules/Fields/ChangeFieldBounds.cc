@@ -106,7 +106,8 @@ ChangeFieldBounds::~ChangeFieldBounds(){
 
 
 
-void ChangeFieldBounds::clear_vals() 
+void
+ChangeFieldBounds::clear_vals() 
 {
   gui->execute(string("set ")+id+"-datamin \"---\"");
   gui->execute(string("set ")+id+"-datamax \"---\"");
@@ -119,7 +120,9 @@ void ChangeFieldBounds::clear_vals()
   gui->execute(id+" update_multifields");
 }
 
-void ChangeFieldBounds::update_input_attributes(FieldHandle f) 
+
+void
+ChangeFieldBounds::update_input_attributes(FieldHandle f) 
 {
   Point center;
   Vector size;
@@ -135,7 +138,7 @@ void ChangeFieldBounds::update_input_attributes(FieldHandle f)
   gui->execute(string("set ")+id+"-sizey "+to_string(size.y()));
   gui->execute(string("set ")+id+"-sizez "+to_string(size.z()));
 
-  ScalarFieldInterface *sdi = f->query_scalar_interface();
+  ScalarFieldInterface *sdi = f->query_scalar_interface(this);
   if (sdi && f->data_at() != Field::NONE) {
     sdi->compute_min_max(minmax_.first,minmax_.second);
     gui->execute(string("set ")+id+"-datamin "+to_string(minmax_.first));
@@ -304,7 +307,7 @@ ChangeFieldBounds::execute()
   double translate = 0.0;
   if (transform_p)
   {
-    if (fh->query_scalar_interface())
+    if (fh->query_scalar_interface(this))
     {
       scale = (datamax_.get() - datamin_.get()) /
 	(minmax_.second - minmax_.first);
@@ -329,7 +332,7 @@ ChangeFieldBounds::execute()
 
   // Do any necessary data transforms here.
   const bool both_scalar_p =
-    ef->query_scalar_interface() && fh->query_scalar_interface();
+    ef->query_scalar_interface(this) && fh->query_scalar_interface(this);
   if (both_scalar_p || same_value_type_p)
   {
     const TypeDescription *fdst_td = ef->get_type_description();
@@ -368,7 +371,7 @@ ChangeFieldBounds::execute()
   ef->mesh()->transform(t);
 
 
-  ScalarFieldInterface* sfi = ef->query_scalar_interface();
+  ScalarFieldInterface* sfi = ef->query_scalar_interface(this);
   if (sfi)
   {
     ef->freeze();
