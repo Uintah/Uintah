@@ -774,10 +774,18 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
       maybe_execute(EDGE);
     }
   } else if (args[1] == "data_resolution_scale") {
-    data_dirty_ = true;
-    if (vectors_on_.get())
+    if (tensors_on_.get() && tensor_display_type_.get() == "Ellipsoids")
     {
+      data_dirty_ = true;
       maybe_execute(DATA);
+    }
+    else
+    {
+      data_dirty_ = true;
+      if (vectors_on_.get())
+      {
+	maybe_execute(DATA);
+      }
     }
   } else if (args[1] == "default_color_change") {
     def_color_r_.reset();

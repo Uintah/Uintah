@@ -378,6 +378,16 @@ itcl_class SCIRun_Visualization_ShowField {
 		-variable $this-tensors_scale
 
 	bind $tensor.slide.scale <ButtonRelease> "$this-c data_scale"
+
+	iwidgets::labeledframe $tensor.resolution \
+	    -labelpos nw -labeltext "Ellipse Resolution"
+	pack $tensor.resolution -side top -fill x -expand 1
+
+	set res [$tensor.resolution childsite]
+	scale $res.scale -orient horizontal -variable $this-data-resolution \
+	    -from 3 -to 20 -showvalue true -resolution 1
+	bind $res.scale <ButtonRelease> "$this-c data_resolution_scale"
+	pack $res.scale -side top -fill both -expand 1
     }
 
     # Text Tab
