@@ -41,8 +41,6 @@ SRCS     += \
 	$(SRCDIR)/BoundCondData.cc \
 	$(SRCDIR)/UnknownVariable.cc \
 	$(SRCDIR)/SimpleMaterial.cc \
-	$(SRCDIR)/NCVariable_special.cc \
-	$(SRCDIR)/CCVariable_special.cc \
 	$(SRCDIR)/ParticleVariable_special.cc \
 	$(SRCDIR)/ucg_templates.cc
 
@@ -59,7 +57,7 @@ PSELIBS := \
 	Core/Geometry                    \
 	Dataflow/XMLUtil
 
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) -lm -lz
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) -lm -lz 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
