@@ -151,9 +151,9 @@
           conductivity_table Property, rather than a Field&lt;Tensor>
           where each element has a unique Tensor).  This option will
           precompute a decomposition of A into:
-	<code>
+	</p><p>
           A = sigma_1 x A'_1 + sigma_2 x A'_2 + ... sigma_N x A'_N 
-	</code>
+	</p><p>
           where the A'_n matrices are the same size and structure (in
           the sparse matrix sense) as A, but just contain
           contributions from elements of material type n.  The sigma_n
