@@ -213,6 +213,7 @@ void ParticleVis::execute()
   if( hasTensors ) t_it = tens->get().begin();
   
   
+  bool have_particle = false;
   
   for(; p_it != p_it_end; p_it++, s_it++, id_it++){
     ParticleSubset *ps = (*p_it).getParticleSubset();
@@ -245,6 +246,7 @@ void ParticleVis::execute()
 	  iter != ps->end(); iter++){
 	count++;
 	if (count == show_nth.get() ){ 
+	  have_particle = true;
 	  GeomObj *sp = 0;
 	  
 	  if( hasScale ) {
@@ -344,12 +346,15 @@ void ParticleVis::execute()
  	}
       }
       
-      if( drawVectors.get() == 1 && hasVectors){
-	obj->add( arrows );
+      if(have_particle ){
+	if( drawVectors.get() == 1 && hasVectors){
+	  obj->add( arrows );
+	}
+	// Let's set it up so that we can pick 
+	// the particle set -- Kurt Z. 12/18/98
+	GeomPick *pick = scinew GeomPick( obj, this);
+	ogeom->addObj(pick, "Particles");      
       }
-      // Let's set it up so that we can pick the particle set -- Kurt Z. 12/18/98
-      GeomPick *pick = scinew GeomPick( obj, this);
-      ogeom->addObj(pick, "Particles");      
     } else if( ps->getParticleSet()->numParticles() ) { // Particles
       GeomGroup *obj = scinew GeomGroup;
       GeomPts *pts = scinew GeomPts(ps->getParticleSet()->numParticles());
@@ -367,6 +372,7 @@ void ParticleVis::execute()
 	  iter != ps->end(); iter++){     
 	count++;
 	if (count == show_nth.get() ){ 
+	  have_particle = true;
 	  double value = (*s_it)[*iter];
 	  pts->add((*p_it)[*iter], cmap->lookup(value));
 	  count = 0;
@@ -383,12 +389,14 @@ void ParticleVis::execute()
 	    }
 	  }
  	}
-      } 
-      obj->add( pts );
-      if( drawVectors.get() == 1 && hasVectors){
-	obj->add( arrows );
       }
+      obj->add( pts );
+       if( have_particle ){
+	if( drawVectors.get() == 1 && hasVectors){
+	  obj->add( arrows );
+	}
       ogeom->addObj(obj, "Particles");      
+      }
     }
     if(hasVectors) v_it++;
     if(hasTensors) t_it++;
