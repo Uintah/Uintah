@@ -35,6 +35,13 @@
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/Transform.h>
 
+// This removes compiler warnings about unreachable statements.
+#if defined(__sgi) && !defined(__GNUC__)
+#  define RETURN_0
+#else
+#  define RETURN_0 return 0
+#endif
+
 namespace SCIRun {
 
 using std::string;
@@ -467,17 +474,17 @@ public:
 
   //! get the parent element(s) of the given index
   unsigned get_edges(Edge::array_type &, Node::index_type) const
-  { ASSERTFAIL("LatVolMesh::get_edges not implemented."); return 0; }
+  { ASSERTFAIL("LatVolMesh::get_edges not implemented."); RETURN_0; }
   unsigned get_faces(Face::array_type &, Node::index_type) const
-  { ASSERTFAIL("LatVolMesh::get_faces not implemented."); return 0; }
+  { ASSERTFAIL("LatVolMesh::get_faces not implemented."); RETURN_0; }
   unsigned get_faces(Face::array_type &, Edge::index_type) const
-  { ASSERTFAIL("LatVolMesh::get_faces not implemented."); return 0; }
+  { ASSERTFAIL("LatVolMesh::get_faces not implemented."); RETURN_0; }
   unsigned get_cells(Cell::array_type &, Node::index_type)
-  { ASSERTFAIL("LatVolMesh::get_faces not implemented."); return 0; }
+  { ASSERTFAIL("LatVolMesh::get_faces not implemented."); RETURN_0; }
   unsigned get_cells(Cell::array_type &, Edge::index_type)
-  { ASSERTFAIL("LatVolMesh::get_faces not implemented."); return 0; }
+  { ASSERTFAIL("LatVolMesh::get_faces not implemented."); RETURN_0; }
   unsigned get_cells(Cell::array_type &, Face::index_type)
-  { ASSERTFAIL("LatVolMesh::get_faces not implemented."); return 0; }
+  { ASSERTFAIL("LatVolMesh::get_faces not implemented."); RETURN_0; }
 
   //! return all cell_indecies that overlap the BBox in arr.
   void get_cells(Cell::array_type &arr, const BBox &box);
