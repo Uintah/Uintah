@@ -32,7 +32,10 @@
 #include <Core/CCA/spec/cca_sidl.h>
 #include <map>
 #include <vector>
+#include <qcanvas.h>
+#include <qtextedit.h>
 class QPopupMenu;
+class NetworkCanvasView;
 #include <qmainwindow.h>
 
 namespace SCIRun {
@@ -78,11 +81,14 @@ namespace SCIRun {
 
     // From gov::cca::ComponentEventListener
     void componentActivity(const gov::cca::ports::ComponentEvent::pointer& e);
+    void displayMsg(const char *); 
   private:
     gov::cca::Services::pointer services;
     void buildPackageMenus();
     BuilderWindow(const BuilderWindow&);
     BuilderWindow& operator=(const BuilderWindow&);
+    NetworkCanvasView* big_canvas_view;
+    QTextEdit *e;	
   };
 }
 

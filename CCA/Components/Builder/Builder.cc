@@ -52,6 +52,7 @@ Builder::~Builder()
 
 void Builder::setServices(const gov::cca::Services::pointer& svc)
 {
+	
   services=svc;
 
   QApplication* app = QtUtils::getApplication();

@@ -30,6 +30,7 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
+#include <iostream.h>
 using namespace SCIRun;
 
 #include <qapplication.h>
@@ -57,6 +58,7 @@ QApplication* QtUtils::getApplication()
 
 void QtThread::run()
 {
+  cerr<<"******************QtThread::run()**********************\n"; 
   int argc=1;
   char* argv[4];
   argv[0]="test";
