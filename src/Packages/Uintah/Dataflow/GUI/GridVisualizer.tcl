@@ -404,11 +404,13 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	    setup_color $w.colormenus.nodecolor "node" [set $this-nl] $n
 	}
     }
+    method do_nothing {} {
+    }
     method make_entry {w text v c} {
 	frame $w
 	label $w.l -text "$text"
 	pack $w.l -side left
-	entry $w.e -textvariable $v -state disabled
+	entry $w.e -textvariable $v
 	bind $w.e <Return> $c
 	pack $w.e -side right
     }
@@ -473,13 +475,13 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	pack $w.o.r.sphere.polygons -side top -fill x
 
 	# node ID
-	make_entry $w.o.r.nodel "level index:" $this-index_l $n
+	make_entry $w.o.r.nodel "level index:" $this-index_l "$this do_nothing"
 	pack $w.o.r.nodel -side top -fill x -padx 2 -pady 2
-	make_entry $w.o.r.nodex "x index:" $this-index_x $n
+	make_entry $w.o.r.nodex "x index:" $this-index_x "$this do_nothing"
 	pack $w.o.r.nodex -side top -fill x -padx 2 -pady 2
-	make_entry $w.o.r.nodey "y index:" $this-index_y $n
+	make_entry $w.o.r.nodey "y index:" $this-index_y "$this do_nothing"
 	pack $w.o.r.nodey -side top -fill x -padx 2 -pady 2
-	make_entry $w.o.r.nodez "z index:" $this-index_z $n
+	make_entry $w.o.r.nodez "z index:" $this-index_z "$this do_nothing"
 	pack $w.o.r.nodez -side top -fill x -padx 2 -pady 2
 
 	makeFrames $w
