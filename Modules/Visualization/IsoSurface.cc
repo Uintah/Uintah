@@ -36,6 +36,7 @@
 #include <Geometry/Point.h>
 #include <Geometry/Plane.h>
 #include <Math/Expon.h>
+#include <Math/MiscMath.h>
 #include <TCL/TCLvar.h>
 #include <iostream.h>
 #include <strstream.h>
@@ -279,22 +280,31 @@ void IsoSurface::execute()
     }
     GeomGroup* group=new GeomGroup;
 
-    if (emit_surface.get()) {
-	surf=new TriSurface;
-	Point min, max;
-	field->get_bounds(min,max);
-	Vector diff(max-min);
-	double spacing=Cbrt(diff.length());
-	double xdim=diff.x()/spacing+1;
-	double ydim=diff.x()/spacing+1;
-	double zdim=diff.x()/spacing+1;
-	surf->construct_grid(xdim,ydim,zdim,min,spacing);
-    }	
-
     group->set_matl(matl);
     ScalarFieldRG* regular_grid=field->getRG();
     ScalarFieldUG* unstructured_grid=field->getUG();
+
+    Point minPt, maxPt;
+    double spacing;
+    Vector diff;
+
+    if (emit_surface.get()) {
+        field->get_bounds(minPt, maxPt);
+        diff=maxPt-minPt;
+        spacing=Max(diff.x(), diff.y(), diff.z());
+    }   
+
     if(regular_grid){
+	if (emit_surface.get()) {
+	    surf=new TriSurface;
+	    int nx=regular_grid->nx;
+	    int ny=regular_grid->ny;
+	    int nz=regular_grid->nz;
+	    spacing=Max(diff.x()/nx, diff.y()/ny, diff.z()/nz);
+	    surf->construct_grid(nx+2, ny+2, nz+2, 
+				 minPt+(Vector(1.001,1.029,0.917)*(-.001329)),
+				 spacing);
+	}	
 	if(have_seedpoint.get()){
 	    Point sp(seed_point.get());
 	    iso_reg_grid(regular_grid, sp, group);
@@ -303,6 +313,14 @@ void IsoSurface::execute()
 	    iso_reg_grid(regular_grid, iv, group);
 	}
     } else if(unstructured_grid){
+	if (emit_surface.get()) {
+	    surf=new TriSurface;
+	    int pts_per_side=(int) Cbrt(unstructured_grid->mesh->nodes.size());
+	    spacing/=pts_per_side;
+	    surf->construct_grid(pts_per_side+2,pts_per_side+2,pts_per_side+2, 
+				 minPt+(Vector(1.001,1.029,0.917)*(-.001329)),
+				 spacing);
+	}	
 	if(have_seedpoint.get()){
 	    Point sp(seed_point.get());
 	    iso_tetrahedra(unstructured_grid, sp, group);
@@ -324,7 +342,6 @@ void IsoSurface::execute()
 	isosurface_id=ogeom->addObj(group, surface_name);
 	if (emit_surface.get()) {
 	    osurf->send(surf);
-	    emit_surface.set(0);
 	}
     }
 }
