@@ -22,27 +22,28 @@
 <head>
 
 	<title>SCIRun Makefile design rationale</title>
+	<!-- Changed by: Ted Dustman, 26-Feb-2002 -->
 
 	<link rel=stylesheet type="text/css" href="../doc_styles.css">
 </head>
 
 <body>
-<!-- *************************************************************** -->
-<!-- ********** STANDARD SCI RESEARCH HEADER WITH MENU ************* -->
-<!-- *************************************************************** -->
-<center><img SRC="../images/research_menuheader.jpg" usemap="#head-links" height="71" width="600" border="0"></center>
-<map name="head-links">
-	<area href="http://www.sci.utah.edu" shape="rect" coords="7,4,171,33" alt="SCI Home">
-	<area href="../index.html" shape="rect" coords="340,10,480,32" alt="Documentation">
-	<area href="http://www.sci.utah.edu/software" shape="rect" coords="490,10,586,32" alt="Software">
-	<area href="../InstallGuide/installguide.xml?cont=0&amp;dir=2" shape="rect" coords="0,41,156,64" alt="Installation Guide">
-	<area href="../UserGuide/userguide.html" shape="rect" coords="157,41,256,64" alt="User's Guide">
-	<area href="../DeveloperGuide/devguide.xml?cont=0&amp;dir=2" shape="rect" coords="257,41,397,64" alt="Developer's Guide">
-	<area href="../ReferenceGuide/refguide.html" shape="rect" coords="398,41,535,64" alt="Reference Guide">
-	<area href="../FAQ/faq.xml?cont=0&amp;dir=2" shape="rect" coords="536,41,600,64" alt="FAQ">
+<!-- ******************** DOCUMENTATION HEADER ********************* -->
+<div class="banner-margins">
+<table border="0" cellspacing="0" cellpadding="0" width="100%" height="91">
+<tr>
+	<td align="center" width="%100" background="../images/banner_top_fill.jpg"><img src="../images/banner_top.jpg" width="744" height="91" border="0" usemap="#banner" /></td>
+<map name="banner">
+	<area href="http://www.sci.utah.edu" alt="Home" coords="92,62,186,83" />
+	<area href="http://software.sci.utah.edu" alt="Software" coords="193,61,289,83" />
+	<area href=".." alt="Documentation" coords="296,62,437,83" />
+	<area href="../UserGuide/usersguide" alt="User Guide" coords="449,62,544,83" />
+	<area href="../TechnicalGuide/TOC.html" alt="Technical Guide" coords="550,62,692,83" />
 </map>
-<!-- *************************************************************** -->
-<!-- *************************************************************** -->
+</tr>
+</table>
+</div>
+<!-- ****************** END DOCUMENTATION HEADER ******************* -->
 <p class="title">SCIRun Makefile design rationale</p>
 
 <h1>Introduction</h1>
@@ -238,6 +239,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2  2002/02/26 22:24:34  dustman
+# Insert new banners
+#
 # Revision 1.1  2001/11/14 19:30:00  moulding
 # add new files to reflect new book organization
 #
@@ -316,6 +320,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.2  2002/02/26 22:24:34  dustman
+# Insert new banners
+#
 # Revision 1.1  2001/11/14 19:30:00  moulding
 # add new files to reflect new book organization
 #
@@ -592,16 +599,15 @@ These will be removed by make clean.  Creates from $(GENHDRS) and
 $(GENSRCS) by so_epilogue.mk
 </ul>
 
-<!-- ******************************************************************* -->
-<!-- *********************** STANDARD SCI FOOTER *********************** -->
-<!-- ******************************************************************* -->
-<center>
-<hr size="1" width="600">
-<font size="-1"><a href="http://www.sci.utah.edu">Scientific Computing and Imaging Institute</a> &#149; <a href="http://www.utah.edu">University of Utah</a> &#149; 
-(801) 585-1867</font>
-</center>
-<!-- ********************* END STANDARD SCI FOOTER ********************* -->
-<!-- ******************************************************************* -->
+<!-- ******************** DOCUMENTATION FOOTER ********************* -->
+<div class="banner-margins">
+<table border="0" cellspacing="0" cellpadding="0" height="32" width="100%">
+<tr>
+	<td align="left" background="../images/banner_bottom_fill.jpg" width="%100"><img src="../images/banner_bottom.jpg" width="444" height="32" border="0"></td>
+</tr>
+</table>
+</div>
+<!-- ****************** END DOCUMENTATION FOOTER ******************* -->
 
 </body>
 </html>
