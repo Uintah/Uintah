@@ -56,8 +56,8 @@ extern int Tk_CursorCmd _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, int argc, char **argv));
 extern int BLineInit _ANSI_ARGS_((void));
 
-#ifdef WIN32 
-#define EXPORT  __declspec(dllexport)
+#ifdef _WIN32 
+#define EXPORT  __declspec(dllimport)
 #else
 #define EXPORT
 #endif
