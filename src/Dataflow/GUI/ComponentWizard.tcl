@@ -1,7 +1,7 @@
 
 package require Iwidgets 3.0
 
-proc Core/CCA/ComponentWizard {} {
+proc ComponentWizard {} {
     set w .componentWizard
     if {[winfo exists $w]} {
 	destroy $w
@@ -19,7 +19,7 @@ proc Core/CCA/ComponentWizard {} {
     global time_font
     
     toplevel $w -width [concat $MAIN_WIDTH i] -height [concat $MAIN_HEIGHT i]
-    wm title $w "Core/CCA/Component Wizard"
+    wm title $w "Component Wizard"
 
     iwidgets::tabnotebook $w.tabs -width [concat $WIDTH i]\
 	                  -height [concat $HEIGHT i]
