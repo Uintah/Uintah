@@ -44,7 +44,7 @@ LOG
 
 
 namespace Uintah {
-using namespace Uintah::Datatypes;
+
 using namespace SCIRun;
 
 class ParticleFieldExtractor : public Module { 
@@ -127,9 +127,8 @@ private:
 
   void graph(string varname, vector<string> mat_list,
 	     vector<string> type_list, string particleID);
-} // End namespace Uintah
   //  void graph(clString, clString);
-
-
+};
+} // End namespace Uintah
 
 #endif

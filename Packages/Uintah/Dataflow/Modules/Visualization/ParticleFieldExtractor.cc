@@ -17,7 +17,7 @@ KEYWORDS
     ParticleGridReader, Material/Particle Method
 
 AUTHOR
-    Packages/Kurt Zimmerman
+    Kurt Zimmerman
     Department of Computer Science
     University of Utah
     January 1999
@@ -30,8 +30,8 @@ LOG
 #include "ParticleFieldExtractor.h"
 
 #include <Core/Util/NotFinished.h>
-#include <Packages/Uintah/Interface/DataArchive.h>
-#include <Packages/Uintah/Grid/TypeDescription.h>
+#include <Packages/Uintah/CCA/Ports/DataArchive.h>
+#include <Packages/Uintah/Core/Grid/TypeDescription.h>
 #include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
 #include <Packages/Uintah/Core/Datatypes/ScalarParticlesPort.h>
 #include <Packages/Uintah/Core/Datatypes/VectorParticles.h>
@@ -41,23 +41,23 @@ LOG
 #include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Grid/Grid.h>
-#include <Packages/Uintah/Grid/GridP.h>
-#include <Packages/Uintah/Grid/Level.h>
-#include <Packages/Uintah/Grid/Patch.h>
-#include <Packages/Uintah/Grid/NodeIterator.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <iostream> 
 #include <sstream>
 #include <string>
+
+namespace Uintah {
 
 using std::cerr;
 using std::endl;
 using std::vector;
 using std::string;
 
-namespace Uintah {
 using namespace SCIRun;
-using namespace Uintah::Datatypes;
 
 extern "C" Module* make_ParticleFieldExtractor( const clString& id ) {
   return scinew ParticleFieldExtractor( id ); 
@@ -714,32 +714,4 @@ void ParticleFieldExtractor::cache_value(string where, vector<Matrix3>& values)
 }
 
 } // End namespace Uintah
-//--------------------------------------------------------------- 
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 

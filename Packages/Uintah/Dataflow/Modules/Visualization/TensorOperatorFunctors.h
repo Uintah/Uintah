@@ -7,7 +7,9 @@
  * Copyright 2000
  */
 
-#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+
+namespace Uintah {
 
 /* Functors used by TensorFieldOperator and TensorParticlesOperator */
 
@@ -96,5 +98,6 @@ inline pair<double, Vector> EigenOp::operator()(Matrix3 M)
 }
 */
 
+} // end namespace Uintah
 
 

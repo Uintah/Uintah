@@ -1,6 +1,6 @@
 
 /*
- *  sus.cc: Standalone Packages/Uintah Simulation - a bare-bones uintah simulation
+ *  sus.cc: Standalone Uintah Simulation - a bare-bones uintah simulation
  *          for development
  *
  *  Written by:
@@ -12,27 +12,27 @@
  *  Copyright (C) 2000 U of U
  */
 
-#include <Packages/Uintah/Parallel/Parallel.h>
-#include <Uintah/Core/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Uintah/Core/CCA/Components/SimulationController/SimulationController.h>
-#include <Uintah/Core/CCA/Components/MPM/SerialMPM.h>
-#include <Uintah/Core/CCA/Components/Arches/Arches.h>
-#include <Uintah/Core/CCA/Components/ICE/ICE.h>
-#include <Uintah/Core/CCA/Components/MPMICE/MPMICE.h>
-#include <Uintah/Core/CCA/Components/Schedulers/SingleProcessorScheduler.h>
-#include <Uintah/Core/CCA/Components/Schedulers/MPIScheduler.h>
-#include <Uintah/Core/CCA/Components/Schedulers/MixedScheduler.h>
-#include <Uintah/Core/CCA/Components/Schedulers/NullScheduler.h>
-#include <Uintah/Core/CCA/Components/Schedulers/SingleProcessorLoadBalancer.h>
-#include <Uintah/Core/CCA/Components/Schedulers/RoundRobinLoadBalancer.h>
-#include <Uintah/Core/CCA/Components/Schedulers/SimpleLoadBalancer.h>
-#include <Uintah/Core/CCA/Components/DataArchiver/DataArchiver.h>
-#include <Packages/Uintah/Interface/DataWarehouse.h>
-#include <Packages/Uintah/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <Packages/Uintah/CCA/Components/SimulationController/SimulationController.h>
+#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
+#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
+#include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorScheduler.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/MixedScheduler.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/NullScheduler.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorLoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/RoundRobinLoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/SimpleLoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
+#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Exceptions/Exception.h>
 
 #ifdef USE_VAMPIR
-#include <Packages/Uintah/Parallel/Vampir.h>
+#include <Packages/Uintah/Core/Parallel/Vampir.h>
 #endif
 
 #if HAVE_FPSETMASK
@@ -53,7 +53,7 @@ void quit( const std::string & msg = "" )
     {
       cerr << msg << "\n";
     }
-  Parallel::finalizeManager();
+  Uintah::Parallel::finalizeManager();
   exit( 1 );
 }
 
@@ -61,9 +61,9 @@ void usage( const std::string & message,
 	    const std::string& badarg,
 	    const std::string& progname)
 {
-  if( !Parallel::usingMPI() || 
-      ( Parallel::usingMPI() &&
-	Parallel::getRootProcessorGroup()->myrank() == 0 ) )
+  if( !Uintah::Parallel::usingMPI() || 
+      ( Uintah::Parallel::usingMPI() &&
+	Uintah::Parallel::getRootProcessorGroup()->myrank() == 0 ) )
     {
       cerr << message << "\n";
       if(badarg != "")
@@ -86,7 +86,7 @@ int main(int argc, char** argv)
     /*
      * Initialize MPI
      */
-    Parallel::initializeManager(argc, argv);
+    Uintah::Parallel::initializeManager(argc, argv);
 
     #ifdef USE_VAMPIR
     VTsetup();
@@ -153,10 +153,10 @@ int main(int argc, char** argv)
     }
 
     if(scheduler == ""){
-       if(Parallel::usingMPI()){
+       if(Uintah::Parallel::usingMPI()){
 	  scheduler="MPIScheduler"; // Default for parallel runs
 	  loadbalancer="RoundRobinLoadBalancer";
-	  Parallel::noThreading();
+	  Uintah::Parallel::noThreading();
        } else {
 	  scheduler="SingleProcessorScheduler"; // Default for serial runs
 	  loadbalancer="SingleProcessorLoadBalancer";
@@ -181,7 +181,7 @@ int main(int argc, char** argv)
      * Create the components
      */
     try {
-	const ProcessorGroup* world = Parallel::getRootProcessorGroup();
+	const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 	SimulationController* sim = scinew SimulationController(world);
 
 	// Reader
@@ -191,17 +191,17 @@ int main(int argc, char** argv)
 	// Connect a MPM module if applicable
 	MPMInterface* mpm = 0;
 	if(do_mpm){
-	  mpm = scinew MPM::SerialMPM(world);
+	  mpm = scinew SerialMPM(world);
 	  sim->attachPort("mpm", mpm);
 	}
 
 	// Connect a CFD module if applicable
 	CFDInterface* cfd = 0;
 	if(do_arches){
-	    cfd = scinew ArchesSpace::Arches(world);
+	    cfd = scinew Arches(world);
 	}
 	if(do_ice){
-	    cfd = scinew ICESpace::ICE(world);
+	    cfd = scinew ICE(world);
 	}
 	if(cfd)
 	    sim->attachPort("cfd", cfd);
@@ -209,7 +209,7 @@ int main(int argc, char** argv)
 	// Connect an MPMICE module if do_mpm and do_ice are both true
 	MPMCFDInterface* mpmcfd = 0;
 	if(do_mpm && do_ice){
-	    mpmcfd = scinew MPMICESpace::MPMICE(world);
+	    mpmcfd = scinew MPMICE(world);
 	    sim->attachPort("mpmcfd", mpmcfd);
 	}
 
@@ -247,8 +247,8 @@ int main(int argc, char** argv)
 	   sched->attachPort("load balancer", bal);
 	} else if(scheduler == "MixedScheduler"){
 	   if( numThreads > 0 ){
-	     if( Parallel::getMaxThreads() == 1 ){
-	       Parallel::setMaxThreads( numThreads );
+	     if( Uintah::Parallel::getMaxThreads() == 1 ){
+	       Uintah::Parallel::setMaxThreads( numThreads );
 	     }
 	   }
 	   MixedScheduler* sched =
@@ -290,21 +290,21 @@ int main(int argc, char** argv)
 	cerr << "Caught exception: " << e.message() << '\n';
 	if(e.stackTrace())
 	   cerr << "Stack trace: " << e.stackTrace() << '\n';
-	Parallel::finalizeManager(Parallel::Abort);
+	Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
 	abort();
     } catch (std::exception e){
         cerr << "Caught std exception: " << e.what() << '\n';
-	Parallel::finalizeManager(Parallel::Abort);
+	Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
 	abort();       
     } catch(...){
 	cerr << "Caught unknown exception\n";
-	Parallel::finalizeManager(Parallel::Abort);
+	Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
 	abort();
     }
 
     /*
      * Finalize MPI
      */
-    Parallel::finalizeManager();
+    Uintah::Parallel::finalizeManager();
 }
 

@@ -8,6 +8,7 @@
 #include <Dataflow/Ports/VectorFieldPort.h>
 
 namespace Uintah {
+
 using namespace SCIRun;
 
   class EigenEvaluator: public Module {
@@ -24,7 +25,8 @@ using namespace SCIRun;
 
     ScalarFieldOPort *sfout; // for eigen values
     VectorFieldOPort *vfout; // for eigen vectors
-} // End namespace Uintah
   };
-#endif // __VISUALIZATION_EIGENEVALUATOR_H__
 
+} // End namespace Uintah
+
+#endif // __VISUALIZATION_EIGENEVALUATOR_H__

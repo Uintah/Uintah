@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Datatypes/VectorParticlesPort.h>
 
 namespace Uintah {
+
 using namespace SCIRun;
 
   class ParticleEigenEvaluator: public Module {
@@ -24,8 +25,10 @@ using namespace SCIRun;
 
     ScalarParticlesOPort *spout; // for eigen values
     VectorParticlesOPort *vpout; // for eigen vectors
-} // End namespace Uintah
   };
+
+} // End namespace Uintah
+
 #endif // __VISUALIZATION_EIGENEVALUATOR_H__
 
 

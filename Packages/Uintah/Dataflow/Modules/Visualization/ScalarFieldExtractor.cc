@@ -17,7 +17,7 @@ KEYWORDS
     ParticleGridReader, Material/Particle Method
 
 AUTHOR
-    Packages/Kurt Zimmerman
+    Kurt Zimmerman
     Department of Computer Science
     University of Utah
     January 1999
@@ -30,37 +30,37 @@ LOG
 #include "ScalarFieldExtractor.h"
 
 #include <Core/Util/NotFinished.h>
-#include <Packages/Uintah/Interface/DataArchive.h>
-#include <Packages/Uintah/Grid/TypeDescription.h>
+#include <Packages/Uintah/CCA/Ports/DataArchive.h>
+#include <Packages/Uintah/Core/Grid/TypeDescription.h>
 #include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Datatypes/ScalarFieldRG.h>
-#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <Packages/Uintah/Core/Datatypes/NCScalarField.h>
 #include <Packages/Uintah/Core/Datatypes/CCScalarField.h>
-#include <Packages/Uintah/Interface/DataArchive.h>
-#include <Packages/Uintah/Grid/Grid.h>
-#include <Packages/Uintah/Grid/GridP.h>
-#include <Packages/Uintah/Grid/Level.h>
-#include <Packages/Uintah/Grid/Patch.h>
-#include <Packages/Uintah/Grid/NodeIterator.h>
+#include <Packages/Uintah/CCA/Ports/DataArchive.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/NodeIterator.h>
  
 //#include <Packages/Uintah/Core/Datatypes/DumbScalarField.h>
 #include <iostream> 
 #include <sstream>
 #include <string>
 
+namespace Uintah {
+
 using std::cerr;
 using std::endl;
 using std::vector;
 using std::string;
 
-namespace Uintah {
 using namespace SCIRun;
-using namespace Uintah;
-using namespace Uintah::Datatypes;
+
   //using DumbScalarField;
 
 extern "C" Module* make_ScalarFieldExtractor( const clString& id ) {
@@ -359,7 +359,7 @@ void ScalarFieldExtractor::execute()
   }
   return;
 
-//   Packages/UintahScalarField* sf = Packages/UintahScalarField::make( archive, grid, level,
+//   UintahScalarField* sf = ScalarField::make( archive, grid, level,
 // 						   type, sVar.get()(),
 // 						   sMatNum.get(),
 // 						   times[idx]);
@@ -369,5 +369,3 @@ void ScalarFieldExtractor::execute()
 
 }
 } // End namespace Uintah
-//--------------------------------------------------------------- 
-  

@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <limits.h>
 
+using namespace SCIRun;
+
 list<int> getRandomList(int size, int min, int max);
 void doListInitTests(Suite* suite);
 void doStringInitTests(Suite* suite);
