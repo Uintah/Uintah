@@ -195,9 +195,10 @@ append_sparse(vector<MatrixHandle> &matrices)
     for (j = 0; j <= snrows; j++)
     {
       rr[rowcounter] = sparse->rows[j] + offset;
-      if (j < snrows) { rowcounter++; }
-      else { offset += sparse->rows[j]; }
+      rowcounter++;
     }
+    rowcounter--;
+    offset += sparse->rows[snrows];
   }
 
   return scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, dd);
