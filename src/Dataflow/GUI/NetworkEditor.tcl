@@ -613,14 +613,27 @@ proc popupSaveAsMenu {} {
 	{{Dataflow Script} {.sr} }
 	{{Other} { * } }
     } 
+
     global netedit_savefile NetworkChanged
+
+    # determine initialdir based on current $netedit_savefile
+    set dirs [file split "$netedit_savefile"]
+    set initialdir [pwd]
+    if {[llength $dirs] > 1} {
+	set initialdir ""
+	set size [expr [llength $dirs] - 1]
+	for {set i 0} {$i<$size} {incr i} {
+	    set initialdir [file join $initialdir [lindex $dirs $i]]
+	}
+    }
+
     set netedit_savefile \
-	[tk_getSaveFile -defaultextension {.net} -filetypes $types ]
+	[tk_getSaveFile -defaultextension {.net} -filetypes $types -initialdir $initialdir]
     if { $netedit_savefile != "" } {
 	writeNetwork $netedit_savefile
 	set NetworkChanged 0
 	# Cut off the path from the net name and put in on the title bar:
-	wm title . "SCIRun ([lindex [split "$netedit_savefile" /] end])"
+	wm title . "SCIRun ([lindex [file split "$netedit_savefile"] end])"
     }
 }
 
