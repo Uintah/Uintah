@@ -66,6 +66,9 @@ WARNING
     virtual bool needRecompile(double time, double delt,
 			       const GridP& grid);
 
+    //! Asks if we are going to do regridding
+    virtual bool isAdaptive() { return d_isAdaptive; }
+
     enum {
       FILTER_STAR,
       FILTER_BOX
@@ -73,6 +76,7 @@ WARNING
 
   protected:
      SimulationStateP d_sharedState; ///< to keep track of timesteps
+     bool d_isAdaptive; //!< if true, do not regrid (stick with what you got)
 
     // input parameters from ups file
     SizeList  d_cellRefinementRatio;

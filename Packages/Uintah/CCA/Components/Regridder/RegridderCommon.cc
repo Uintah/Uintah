@@ -7,7 +7,7 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
-
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <iostream>
 #include <sstream>
 
@@ -60,9 +60,15 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   d_sharedState = state;
 
   ProblemSpecP regrid_spec = params->findBlock("Regridder");
-  if (!regrid_spec)
-    throw ProblemSetupException("Must specify a Regridder section for"
-                                " AMR problems\n");
+  if (!regrid_spec) {
+    d_isAdaptive = false;
+    //if (d_myworld->myrank() == 0) {
+      cout << "No Regridder section specified.  Using static Grid.\n";
+      //}
+    return;
+  }
+
+  d_isAdaptive = true;
 
   // get max num levels
   regrid_spec->require("max_levels", d_maxLevels);
