@@ -95,7 +95,6 @@ private:
   CrowdMonitor          map_crowd_;
   ConditionVariable     compilation_cond_;
   Mutex                 map_lock_;
-  Mutex                 condit_mutex_;
 
   //! static vars.
   static DynamicLoader        *scirun_loader_;

@@ -64,8 +64,7 @@ DynamicAlgoBase::DynamicAlgoBase() :
 DynamicLoader::DynamicLoader() :
   map_crowd_("DynamicLoader: One compilation at a time."),
   compilation_cond_("DynamicLoader: waits for compilation to finish."),
-  map_lock_("DynamicLoader: controls mutable access to the map."),
-  condit_mutex_("DynamicLoader: supports condition variable.")
+  map_lock_("DynamicLoader: controls mutable access to the map.")
 {
   map_lock_.lock();
   algo_map_.clear();
@@ -129,9 +128,9 @@ DynamicLoader::wait_for_current_compile(const string &entry)
 {
   while (entry_is_null(entry)) {
     // another thread is compiling this lib, so wait.
-    condit_mutex_.lock();
-    compilation_cond_.wait(condit_mutex_);
-    condit_mutex_.unlock();
+    map_lock_.lock();
+    compilation_cond_.wait(map_lock_);
+    map_lock_.unlock();
   }
   // if the map entry no longer exists, compilation failed.
   if (! entry_exists(entry)) return false;
