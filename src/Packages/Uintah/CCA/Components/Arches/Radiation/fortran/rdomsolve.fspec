@@ -23,4 +23,14 @@ void rdomsolve(IntVector idxlo, IntVector idxhi,
 	   OffsetArray1<double> areatb,
            CCVariable<double> volq,
            CCVariable<double> src,
-	   bool plusX, bool plusY, bool plusZ);
+	   bool plusX, bool plusY, bool plusZ,
+           OffsetArray1<double> fraction, int bands,
+           CCVariable<double> qfluxe,
+           CCVariable<double> qfluxw,
+           CCVariable<double> qfluxn,
+           CCVariable<double> qfluxs,
+           CCVariable<double> qfluxt,
+           CCVariable<double> qfluxb);
+
+
+

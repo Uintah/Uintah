@@ -99,7 +99,6 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
     if (d_DORadiationCalc) {
       d_DORadiation = scinew DORadiationModel(d_boundaryCondition, d_myworld);
       d_DORadiation->problemSetup(db);
-      d_DORadiation->radiationInitialize();
     }
   }
   string finite_diff;
