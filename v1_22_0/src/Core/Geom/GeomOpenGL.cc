@@ -6083,6 +6083,22 @@ void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
 void GeomTextTexture::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if(!pre_draw(di,matl,0)) return;
+
+#if 0
+  //used for debugging to indicate left and up directions
+  glColor4d(1.0,0.0,0.0,1.0);
+  glBegin(GL_LINE_STRIP);
+  glVertex3d(origin_.x(), origin_.y(), origin_.z());
+  glVertex3d(origin_.x()+up_.x(), origin_.y()+up_.y(), origin_.z()+up_.z());
+  glEnd();
+
+  glColor4d(1.0,1.0,0.0,1.0);
+  glBegin(GL_LINE_STRIP);
+  glVertex3d(origin_.x(), origin_.y(), origin_.z());
+  glVertex3d(origin_.x()+left_.x(), origin_.y()+left_.y(), origin_.z()+left_.z());
+  glEnd();
+#endif
+
   glColor4d(1.0,1.0,1.0,1.0);
   glEnable(GL_BLEND);
   glDepthMask(GL_FALSE);
