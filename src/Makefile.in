@@ -299,7 +299,7 @@ clean::
 	rm -f $(CLEANPROGS)
 	rm -f y.output
 	rm -Rf $(LIBDIR)
-	-rm sciTAGS
+	-rm -f sciTAGS
 
 distclean:: clean
 	rm -f config.status config.log config.cache
@@ -365,7 +365,11 @@ endif
 
 #
 # $Log$
+# Revision 1.38  2000/08/15 20:55:57  dav
+# added -f flag to rm of sciTAGS
+#
 # Revision 1.37  2000/08/11 17:35:55  kirby
+#
 # Move NEKTAR_INCLUDE_DIR out of the general include
 #
 # Revision 1.36  2000/08/10 15:22:55  kirby
