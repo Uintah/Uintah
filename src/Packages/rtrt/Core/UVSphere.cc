@@ -164,6 +164,26 @@ void UVSphere::uv(UV& uv, const Point& hitpos, const HitInfo&)
   uv.set( uu,vv);
 }
 
+void UVSphere::get_frame(const Point &hitpos, const HitInfo&hit,
+                         const Vector &norm,  Vector &pu, Vector &pv)
+{
+  UV uv_m;
+  float u,v;
+  double phi,theta;
+  uv(uv_m,hitpos,hit);
+  u = uv_m.u();
+  v = uv_m.v();
+  phi = 6.28318530718 * u;
+  theta = -(M_PI*v) + M_PI;
+  pu = Vector(-6.28318530718* radius * sin(phi) * sin(theta),
+	      6.28318530718 * radius * sin(phi) * cos(theta), 	0);
+  pv = Vector(M_PI * radius * cos(phi) * cos(theta),
+	      M_PI * radius * cos(phi) * sin(theta),
+	      -1 * M_PI * radius * sin(phi));
+  VXV3(pu,norm,pv);
+  VXV3(pv,norm,pu);
+}
+
 const int UVSPHERE_VERSION = 1;
 
 void 
