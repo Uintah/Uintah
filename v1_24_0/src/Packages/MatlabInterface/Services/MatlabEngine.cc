@@ -139,7 +139,6 @@ MatlabCallHandler::MatlabCallHandler(MatlabCall* handle) :
 bool
 MatlabCallHandler::execute(std::string line)
 {
-
   if (line == "SCIRUN-MATLABINTERFACE-MATLABENGINE-END\n") 
     {
       if (handle_->engine_ptr_)
@@ -490,7 +489,7 @@ void MatlabEngine::close_service()
               std::cerr << "Error: " << error.geterror() << std::endl;
             }        
           matlab_processes_lock_.unlock();
-          matlab_handle_ = MatlabCallHandle(0);
+          matlab_handle_ = 0;
         }
     }
   catch (...)
@@ -508,7 +507,28 @@ void MatlabEngine::handle_service(IComPacketHandle &packet)
 {
   switch (packet->gettag())
     {
+    case TAG_INPUT:
+    {
+      if (packet->getelsize() != 1)
+        {
+          packet->settag(TAG_MERROR);
+          packet->setstring("Code needs to be of character size");
+          send_packet(packet);
+          break;
+        }
+      if (packet->getdatasize() == 0)
+        {
+          packet->settag(TAG_MERROR);
+          packet->setstring("No matlab code was send");
+        }
+
+      std::string str = packet->getstring();
+      matlab_handle_->put_stdin(str);
+    }                    
+    break;
+
     case TAG_MCODE:
+    {
       if (packet->getelsize() != 1)
         {
           packet->settag(TAG_MERROR);
@@ -534,7 +554,8 @@ void MatlabEngine::handle_service(IComPacketHandle &packet)
       // unlocking of the engine will be done by the stdout/stderr handler
       // as soon as they recognise an end or error message on the output
       // the engine will be unlocked for the next job
-      break;
+    }
+    break;
     }
 }
 
