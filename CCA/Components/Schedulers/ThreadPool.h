@@ -45,14 +45,14 @@ public:
 
 private:
 
-  Semaphore            * do_work_;
   Mutex                * d_ready;
   int                    d_id;
-  int                    proc_group_;
   ThreadPool           * d_parent;
+  int                    proc_group_;
 
   DetailedTask          * d_task;
   const ProcessorGroup  * d_pg; // PG of current d_task
+  Semaphore            * do_work_;
   mpi_timing_info_s     * mpi_info_;
   SendRecord            * sends_;
   SendState             * ss_;
