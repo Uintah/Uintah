@@ -851,42 +851,55 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     geometry_ = REGULAR;
 
     Point minpt(0,0,0), maxpt(1,1,1);
+    string trans_str;
+    const bool has_transform = dataH->get_property("Transform", trans_str) &&
+      trans_str != "Unknown";
 
     switch (dataH->nrrd->dim-data_off) {
     case 1:
-      //get data from x axis and stuff into a Scanline
-      if (has_min_pt)
-	minpt = Point (data->axis[data_off].min, 0, 0);
-      
-      maxpt = Point ((data->axis[data_off].size - pt_off) * sp[0] + minpt.x(), 0, 0);
-      
+      if (!has_transform)
+      {
+        //get data from x axis and stuff into a Scanline
+        if (has_min_pt)
+        {
+          minpt = Point (data->axis[data_off].min, 0, 0);
+        }
+        maxpt = Point ((data->axis[data_off].size - pt_off) * sp[0] + minpt.x(), 0, 0);
+      }
       mHandle = scinew ScanlineMesh( data->axis[data_off].size + mesh_off,
 				     minpt, maxpt );
       break;
 
     case 2:
-      //get data from x,y axes and stuff into an Image
-      if (has_min_pt)
-	minpt = Point ( data->axis[data_off].min, data->axis[data_off+1].min, 0);
-
-      maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + minpt.x(), 
-		     (data->axis[data_off+1].size - pt_off) * sp[1] + minpt.y(), 0);
-
+      if (!has_transform)
+      {
+        //get data from x,y axes and stuff into an Image
+        if (has_min_pt)
+        {
+          minpt = Point ( data->axis[data_off].min, data->axis[data_off+1].min, 0);
+        }
+        maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + minpt.x(), 
+                       (data->axis[data_off+1].size - pt_off) * sp[1] + minpt.y(), 0);
+      }
       mHandle = scinew ImageMesh( data->axis[data_off  ].size + mesh_off, 
 				  data->axis[data_off+1].size + mesh_off, 
 				  minpt, maxpt);
       break;
 
     case 3:
-      //get data from x,y,z axes and stuff into a LatVol
-      if (has_min_pt) 
-	minpt = Point ( data->axis[data_off  ].min,
-			data->axis[data_off+1].min,
-			data->axis[data_off+2].min);
-      
-      maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + minpt.x(), 
-		     (data->axis[data_off+1].size - pt_off) * sp[1] + minpt.y(), 
-		     (data->axis[data_off+2].size - pt_off) * sp[2] + minpt.z());
+      if (!has_transform)
+      {
+        //get data from x,y,z axes and stuff into a LatVol
+        if (has_min_pt)
+        {
+          minpt = Point ( data->axis[data_off  ].min,
+                          data->axis[data_off+1].min,
+                          data->axis[data_off+2].min);
+        }
+        maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + minpt.x(), 
+                       (data->axis[data_off+1].size - pt_off) * sp[1] + minpt.y(), 
+                       (data->axis[data_off+2].size - pt_off) * sp[2] + minpt.z());
+      }
 
       mHandle = scinew LatVolMesh( data->axis[data_off  ].size + mesh_off, 
 				   data->axis[data_off+1].size + mesh_off, 
