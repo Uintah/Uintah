@@ -117,6 +117,7 @@ SRCS := \
         $(SRCDIR)/ManageFieldData.tcl \
         $(SRCDIR)/MapDataToMeshCoord.tcl \
         $(SRCDIR)/MaskLattice.tcl \
+        $(SRCDIR)/MatrixInfo.tcl \
         $(SRCDIR)/MatrixReader.tcl \
         $(SRCDIR)/MatrixSelectVector.tcl \
         $(SRCDIR)/MatrixWriter.tcl \
