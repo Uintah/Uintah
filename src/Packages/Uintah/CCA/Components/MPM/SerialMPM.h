@@ -85,6 +85,16 @@ public:
 	lb = Mlb;
   };
 
+  void setWithICE()
+  {
+	d_with_ice = true;
+  };
+
+  void setWithArches()
+  {
+	d_with_arches = true;
+  };
+
   enum bctype { NONE=0,
                 FIXED,
                 SYMMETRY,
@@ -348,6 +358,8 @@ private:
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;
+  bool             d_with_ice;
+  bool             d_with_arches;
 };
       
 } // end namespace Uintah
