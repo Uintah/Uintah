@@ -22,7 +22,8 @@ GLVolumeRenderer::GLVolumeRenderer(int id)
   controlPoint(Point(0,0,0)), slices(0),
   cmapHasChanged(true),
   slice_alpha(1.0), _state(FullRes::Instance(this)),
-  _gl_state(GLOverOp::Instance( this ))
+  _gl_state(GLOverOp::Instance( this )),
+  drawX(false),drawY(false),drawZ(false),drawView(false)
 {
   NOT_FINISHED("GLVolumeRenderer::GLVolumeRenderer(int id, const Texture3D* tex, ColorMap* cmap)");
 }
@@ -36,7 +37,8 @@ GLVolumeRenderer::GLVolumeRenderer(int id,
   controlPoint(Point(0,0,0)), slices(0),
   cmapHasChanged(true),
   slice_alpha(1.0), _state(FullRes::Instance(this)),
-  _gl_state(GLOverOp::Instance( this ))
+  _gl_state(GLOverOp::Instance( this )),
+  drawX(false),drawY(false),drawZ(false),drawView(false)
 {
   
 }
@@ -47,7 +49,9 @@ GLVolumeRenderer::GLVolumeRenderer(const GLVolumeRenderer& copy)
   controlPoint(copy.controlPoint), slices(copy.slices),
   cmapHasChanged(copy.cmapHasChanged),
   slice_alpha(copy.slice_alpha), _state(copy._state),
-  _gl_state(copy._gl_state)
+  _gl_state(copy._gl_state),
+  drawX(copy.drawX),drawY(copy.drawY),
+  drawZ(copy.drawZ),drawView(copy.drawView)
 {
 } 
 
