@@ -40,7 +40,7 @@
 
 #include <Core/CCA/Component/PIDL/MalformedURL.h>
 
-#include <testprograms/Component/pp/PingPong_impl.h>
+#include <testprograms/Component/pp0/PingPong_impl.h>
 
 #include <Core/Thread/Time.h>
 

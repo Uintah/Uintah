@@ -17,7 +17,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := testprograms/Component/pp
+SRCDIR := testprograms/Component/pp0
 
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
