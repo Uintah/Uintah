@@ -76,7 +76,7 @@ WARNING
       return value;
     }
     virtual SoleVariableBase* clone() const;
-    virtual void copyPointer(const SoleVariableBase&);
+    virtual void copyPointer(Variable&);
     virtual void print(ostream& out)
     { out << value; }
     virtual void emitNormal(ostream& out, const IntVector& /*l*/,
@@ -98,7 +98,8 @@ WARNING
     virtual void getMPIInfo(int& count, MPI_Datatype& datatype);
     virtual void getMPIData(vector<char>& buf, int& index);
     virtual void putMPIData(vector<char>& buf, int& index);
-    virtual void getSizeInfo(string& elems, unsigned long& totsize) const {
+    virtual void getSizeInfo(string& elems, unsigned long& totsize,
+                             void*& ptr) const {
       elems="1";
       totsize = sizeof(T);
     }
@@ -143,9 +144,9 @@ WARNING
   }
 
   template<class T> void 
-    SoleVariable<T>::copyPointer(const SoleVariableBase& copy)
+    SoleVariable<T>::copyPointer(Variable& copy)
   {
-    const SoleVariable<T>* c = dynamic_cast<const SoleVariable<T>* >(&copy);
+    SoleVariable<T>* c = dynamic_cast<SoleVariable<T>* >(&copy);
     if(!c)
       SCI_THROW(TypeMismatchException("Type mismatch in sole variable"));
     *this = *c;
