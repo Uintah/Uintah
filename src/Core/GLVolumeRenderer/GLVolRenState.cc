@@ -104,7 +104,7 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
   // from OpenGL matricies.
   field_trans.get_trans(mvmat);
   
-  glMatrixMode(GL_MODELVIEW_MATRIX);
+  glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glMultMatrixd(mvmat);
 
@@ -164,7 +164,7 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
     }
   }
 
-  glMatrixMode(GL_MODELVIEW_MATRIX);
+  glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 }
 
