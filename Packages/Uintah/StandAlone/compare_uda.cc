@@ -943,8 +943,8 @@ int main(int argc, char** argv)
   /*
    * Default values
    */
-  double rel_tolerance = 1e-5;
-  double abs_tolerance = 1e-8;
+  double rel_tolerance = 1e-6;
+  double abs_tolerance = 1e-9;
 
   /*
    * Parse arguments
