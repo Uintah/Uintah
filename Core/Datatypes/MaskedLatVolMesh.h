@@ -229,7 +229,7 @@ public:
       : MaskedLatIndex(m, i, j, k) {}
     operator unsigned () const 
     { 
-      return (i_-1)*(j_-1)*(k_-1);
+      return i_*j_*k_;
       // - (mesh_?mesh_->num_masked_cells() : 0);
     } 
   };
@@ -899,14 +899,14 @@ public:
 
   // returns 26 pairs in ijk order
   void	get_neighbors_stencil(vector<pair<bool,Cell::index_type> > &nbrs, 
-			      Cell::index_type &idx) const;
+							  Cell::index_type idx) const;
   // return 26 pairs in ijk order
   void	get_neighbors_stencil(vector<pair<bool,Node::index_type> > &nbrs, 
-			      Node::index_type &idx) const;
-
+							  Node::index_type idx) const;
+  
   // return 8 pairs in ijk order
   void	get_neighbors_stencil(vector<pair<bool,Cell::index_type> > &nbrs, 
-			      Node::index_type &idx) const;
+							  Node::index_type idx) const;
 
 
   //! get the center point (in object space) of an element
@@ -961,14 +961,14 @@ private:
 
   bool		update_count(Cell::index_type, bool masking);
   unsigned	num_missing_faces(Cell::index_type);
-  bool		check_valid(Node::index_type idx) const;
+  bool      check_valid(Node::index_type idx) const;
   bool		check_valid(Edge::index_type idx) const;
   bool		check_valid(Face::index_type idx) const;
   bool		check_valid(Cell::index_type idx) const;
-  bool		check_valid(Node::iterator idx) const;
+  bool      check_valid(Node::iterator idx) const;
   bool		check_valid(Edge::iterator idx) const;
-  bool		check_valid(Face::iterator idx) const;
-  bool		check_valid(Cell::iterator idx) const;
+  bool		check_valid(Face::iterator idx) const;    
+  bool		check_valid(Cell::iterator idx) const; 
 #if 0
   inline bool	check_valid(unsigned i, unsigned j, unsigned k) const
   { 
