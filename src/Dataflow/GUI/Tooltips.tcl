@@ -38,6 +38,26 @@ global tooltipsOn
 set tooltipsOn 1
 
 
+# TooltipMultiline allows the caller to put the tool tip string on
+# separate lines (as separate substrings)
+#
+# eg:
+#     TooltipMultiline window \
+#        "this is line one\n" \
+#        "this is line two\n" \
+#        "etc"
+#
+proc TooltipMultiline { w args } {
+
+    set message [lindex $args 0]
+
+    for {set arg 1} {$arg < [llength $args] } { incr arg } {
+	set message "$message[lindex $args $arg]"
+    }
+    puts "message: $message"
+    Tooltip $w "$message"
+}
+
 proc Tooltip {w msg} {
     global tooltipDelayMS tooltipID tooltipsOn
     bind $w <Enter> "global tooltipID tooltipsOn
