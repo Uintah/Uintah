@@ -38,6 +38,8 @@ LOG
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/TclInterface/Histogram.h>
 
+#include <SCICore/Malloc/Allocator.h>
+
 #include <string.h>
 #include <iostream>
 using std::cerr;
@@ -52,7 +54,7 @@ namespace Modules {
 using namespace SCICore::Containers;
 
 extern "C" PSECore::Dataflow::Module* make_ParticleGridVisControl( const clString& id ) {
-  return new ParticleGridVisControl( id ); 
+  return scinew ParticleGridVisControl( id ); 
 }
 
 //--------------------------------------------------------------- 
@@ -65,12 +67,12 @@ ParticleGridVisControl::ParticleGridVisControl(const clString& id)
 { 
   //////////// Initialization code goes here
   // Create Ports
-  in=new ParticleGridReaderIPort(this, "ParticleGridReader",
+  in=scinew ParticleGridReaderIPort(this, "ParticleGridReader",
 				  ParticleGridReaderIPort::Atomic);
-  sfout=new ScalarFieldOPort(this, "ScalarField", ScalarFieldIPort::Atomic);
-  vfout=new VectorFieldOPort(this, "VectorField", VectorFieldIPort::Atomic);
-  psout=new ParticleSetOPort(this, "ParticleSet", ParticleSetIPort::Atomic);
-  //  pseout = new ParticleSetExtensionOPort(this, "ParticleSetExtension",
+  sfout=scinew ScalarFieldOPort(this, "ScalarField", ScalarFieldIPort::Atomic);
+  vfout=scinew VectorFieldOPort(this, "VectorField", VectorFieldIPort::Atomic);
+  psout=scinew ParticleSetOPort(this, "ParticleSet", ParticleSetIPort::Atomic);
+  //  pseout = scinew ParticleSetExtensionOPort(this, "ParticleSetExtension",
   //				 ParticleSetExtensionIPort::Atomic);
   // Add them to the Module
   add_iport(in);

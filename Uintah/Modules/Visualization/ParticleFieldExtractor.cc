@@ -84,13 +84,13 @@ ParticleFieldExtractor::ParticleFieldExtractor(const clString& id)
 { 
   //////////// Initialization code goes here
   // Create Ports
-  in=new ArchiveIPort(this, "Data Archive",
+  in=scinew ArchiveIPort(this, "Data Archive",
 		      ArchiveIPort::Atomic);
-  psout=new ScalarParticlesOPort(this, "ScalarParticles",
+  psout=scinew ScalarParticlesOPort(this, "ScalarParticles",
 				 ScalarParticlesIPort::Atomic);
-  pvout=new VectorParticlesOPort(this, "VectorParticles",
+  pvout=scinew VectorParticlesOPort(this, "VectorParticles",
 				 VectorParticlesIPort::Atomic);
-  ptout=new TensorParticlesOPort(this, "TensorParticles",
+  ptout=scinew TensorParticlesOPort(this, "TensorParticles",
 				 TensorParticlesIPort::Atomic);
 
   // Add them to the Module
@@ -305,7 +305,7 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
   LevelP level = grid->getLevel( 0 );
 
    
-  ParticleSubset* dest_subset = new ParticleSubset();
+  ParticleSubset* dest_subset = scinew ParticleSubset();
   ParticleVariable< Vector > vectors(dest_subset);
   ParticleVariable< Point > positions(dest_subset);
   ParticleVariable< double > scalars(dest_subset);
@@ -370,17 +370,17 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
     }
   }
   if(have_sp) {
-    sp =  new ScalarParticles( positions, scalars, this);
+    sp =  scinew ScalarParticles( positions, scalars, this);
     sp->SetCallbackClass( this );
   } else 
     sp = 0;
   if(have_tp){
-    tp =  new TensorParticles( positions, tensors, this);
+    tp =  scinew TensorParticles( positions, tensors, this);
     tp->SetCallbackClass( this );
   } else
     tp = 0;
   if(have_vp){
-    vp = new VectorParticles( positions, vectors, this);
+    vp = scinew VectorParticles( positions, vectors, this);
     vp->SetCallbackClass( this );
   } else 
     vp = 0;

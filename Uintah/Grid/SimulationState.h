@@ -51,6 +51,7 @@ namespace Uintah {
    class SimulationState : public RefCounted {
    public:
       SimulationState(ProblemSpecP &ps);
+      ~SimulationState();
       const VarLabel* get_delt_label() const {
 	 return delt_label;
       }
@@ -85,6 +86,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.11  2000/08/09 03:18:05  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.10  2000/06/27 20:14:09  guilkey
 // Removed Kinetic and Strain energy labels and associated stuff.
 //

@@ -167,7 +167,7 @@ Arches::sched_paramInit(const LevelP& level,
     const Patch* patch=*iter;
 
     // primitive variable initialization
-    Task* tsk = new Task("Arches::paramInit",
+    Task* tsk = scinew Task("Arches::paramInit",
 			 patch, old_dw, new_dw, this,
 			 &Arches::paramInit);
     int matlIndex = 0;
@@ -309,6 +309,9 @@ Arches::paramInit(const ProcessorGroup* ,
   
 //
 // $Log$
+// Revision 1.55  2000/08/09 03:17:56  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.54  2000/08/04 02:14:32  bbanerje
 // Added debug statements.
 //

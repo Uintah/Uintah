@@ -9,8 +9,16 @@ Contact::Contact()
   lb = scinew MPMLabel();
 }
 
+Contact::~Contact()
+{
+  delete lb;
+}
+
 //
 // $Log$
+// Revision 1.3  2000/08/09 03:18:01  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.2  2000/07/05 23:43:35  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling

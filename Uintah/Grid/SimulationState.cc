@@ -27,8 +27,19 @@ void SimulationState::registerMaterial(Material* matl)
    matls.push_back(matl);
 }
 
+SimulationState::~SimulationState()
+{
+  delete delt_label;
+
+  for (int i = 0; i < matls.size(); i++) 
+    delete matls[i];
+}
+
 //
 // $Log$
+// Revision 1.13  2000/08/09 03:18:05  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.12  2000/08/08 01:32:47  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.

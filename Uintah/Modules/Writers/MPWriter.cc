@@ -58,7 +58,7 @@ using namespace SCICore::Datatypes;
 extern "C" PSECore::Dataflow::Module*
   make_MPWriter( const clString& id )
   { 
-    return new MPWriter( id ); 
+    return scinew MPWriter( id ); 
   } 
 
 //--------------------------------------------------------------- 
@@ -71,9 +71,9 @@ MPWriter::MPWriter(const clString& id)
 { 
   //////////// Initialization code goes here
   // Create Ports
-  in=new ParticleGridReaderIPort(this, "ParticleGridReader",
+  in=scinew ParticleGridReaderIPort(this, "ParticleGridReader",
 				  ParticleGridReaderIPort::Atomic);
-  //  pseout = new ParticleSetExtensionOPort(this, "ParticleSetExtension",
+  //  pseout = scinew ParticleSetExtensionOPort(this, "ParticleSetExtension",
   //				 ParticleSetExtensionIPort::Atomic);
   // Add them to the Module
   add_iport(in);

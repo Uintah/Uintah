@@ -40,18 +40,18 @@ RescaleColorMapForParticles::RescaleColorMapForParticles(const clString& id)
   scaleMode("scaleMode", id, this)
 {
     // Create the output port
-    omap=new ColorMapOPort(this, "ColorMap", ColorMapIPort::Atomic);
+    omap=scinew ColorMapOPort(this, "ColorMap", ColorMapIPort::Atomic);
 
     add_oport(omap);
 
     // Create the input ports
 
-    iPort=new ScalarParticlesIPort(this, "ScalarParticles",
+    iPort=scinew ScalarParticlesIPort(this, "ScalarParticles",
 						     ScalarParticlesIPort::Atomic);
     add_iport(iPort);
 
 
-    imap=new ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
+    imap=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
     add_iport(imap);
 
     //    scaleMode.set("auto");
@@ -95,7 +95,7 @@ void RescaleColorMapForParticles::execute()
 }
   
 extern "C" Module* make_RescaleColorMapForParticles( const clString& id ) {
-  return new RescaleColorMapForParticles( id );
+  return scinew RescaleColorMapForParticles( id );
 }
 
 } // End namespace Modules

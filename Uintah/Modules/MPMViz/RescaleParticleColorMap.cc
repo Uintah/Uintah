@@ -38,18 +38,18 @@ RescaleParticleColorMap::RescaleParticleColorMap(const clString& id)
   scaleMode("scaleMode", id, this)
 {
     // Create the output port
-    omap=new ColorMapOPort(this, "ColorMap", ColorMapIPort::Atomic);
+    omap=scinew ColorMapOPort(this, "ColorMap", ColorMapIPort::Atomic);
 
     add_oport(omap);
 
     // Create the input ports
 
-    iPort=new ParticleSetIPort(this, "ParticleSet",
+    iPort=scinew ParticleSetIPort(this, "ParticleSet",
 						     ParticleSetIPort::Atomic);
     add_iport(iPort);
 
 
-    imap=new ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
+    imap=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
     add_iport(imap);
 
     //    scaleMode.set("auto");
@@ -110,7 +110,7 @@ void RescaleParticleColorMap::execute()
  }
   
 extern "C" Module* make_RescaleParticleColorMap( const clString& id ) {
-  return new RescaleParticleColorMap( id );
+  return scinew RescaleParticleColorMap( id );
 }
 
 } // End namespace Modules
@@ -118,6 +118,9 @@ extern "C" Module* make_RescaleParticleColorMap( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.8  2000/08/09 03:18:07  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.7  2000/03/17 09:30:11  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

@@ -151,7 +151,7 @@ void ThreadedMPM::timeStep(double t, double dt,
 	     *             using P.NAT_X and some shape function evaluations)
 	     * out(G.MASS, G.VELOCITY)
 	     */
-	    Task* t = new Task("ThreadedMPM::interpolateParticlesToGrid",
+	    Task* t = scinew Task("ThreadedMPM::interpolateParticlesToGrid",
 			       patch, old_dw, new_dw,
 			       this, ThreadedMPM::interpolateParticlesToGrid);
 	    t->requires(old_dw, "p.mass", patch, 0,
@@ -181,7 +181,7 @@ void ThreadedMPM::timeStep(double t, double dt,
 	     *             the stress)
 	     * out(P.CONMOD)
 	     */
-	    Task* t = new Task("ThreadedMPM::computeStressTensor",
+	    Task* t = scinew Task("ThreadedMPM::computeStressTensor",
 			       patch, old_dw, new_dw,
 			       this, ThreadedMPM::computeStressTensor);
 	    t->requires(new_dw, "g.velocity", patch, 0,
@@ -205,7 +205,7 @@ void ThreadedMPM::timeStep(double t, double dt,
 	     *             shape functions)
 	     * out(G.F_INTERNAL)
 	     */
-	    Task* t = new Task("ThreadedMPM::computeInternalForce",
+	    Task* t = scinew Task("ThreadedMPM::computeInternalForce",
 			       patch, old_dw, new_dw,
 			       this, ThreadedMPM::computeInternalForce);
 	    t->requires(new_dw, "p.conmod", patch, 0,
@@ -226,7 +226,7 @@ void ThreadedMPM::timeStep(double t, double dt,
 	     *   out(G.ACCELERATION)
 	     * 
 	     */
-	    Task* t = new Task("ThreadedMPM::solveEquationsMotion",
+	    Task* t = scinew Task("ThreadedMPM::solveEquationsMotion",
 			       patch, old_dw, new_dw,
 			       this, ThreadedMPM::solveEquationsMotion);
 	    t->requires(new_dw, "g.mass", patch, 0,
@@ -247,7 +247,7 @@ void ThreadedMPM::timeStep(double t, double dt,
 	     *   out(G.VELOCITY_STAR)
 	     * 
 	     */
-	    Task* t = new Task("ThreadedMPM::integrateAcceleration",
+	    Task* t = scinew Task("ThreadedMPM::integrateAcceleration",
 			       patch, old_dw, new_dw,
 			       this, ThreadedMPM::integrateAcceleration);
 	    t->requires(new_dw, "g.acceleration", patch, 0,
@@ -271,7 +271,7 @@ void ThreadedMPM::timeStep(double t, double dt,
 	     *             position)
 	     * out(P.VELOCITY, P.X, P.NAT_X)
 	     */
-	    Task* t = new Task("ThreadedMPM::interpolateToParticlesAndUpdate",
+	    Task* t = scinew Task("ThreadedMPM::interpolateToParticlesAndUpdate",
 			       patch, old_dw, new_dw,
 			       this, ThreadedMPM::interpolateToParticlesAndUpdate);
 	    t->requires(new_dw, "g.acceleration", patch, 0,
@@ -537,8 +537,8 @@ void ThreadedMPM::findOwners(const ProcessorGroup* pc,
 
     if(pc->threadNumber() == 0){
 	if(!owners){
-	    owners=new OwnerTable[pc->numThreads()];
-	    owners[0].info = new OwnerInfo[pc->numThreads()*pc->numThreads()];
+	    owners=scinew OwnerTable[pc->numThreads()];
+	    owners[0].info = scinew OwnerInfo[pc->numThreads()*pc->numThreads()];
 	    makeOwnerArrays(patch, pc->numThreads());
 	}
     }
@@ -607,9 +607,9 @@ void ThreadedMPM::findOwners(const ProcessorGroup* pc,
     }
 
     if(!hack_owned[pc->threadNumber()])
-       hack_owned[pc->threadNumber()] = new ParticleSubset(pset->getParticleSet());
+       hack_owned[pc->threadNumber()] = scinew ParticleSubset(pset->getParticleSet());
     if(!hack_ghost[pc->threadNumber()])
-       hack_ghost[pc->threadNumber()] = new ParticleSubset(pset->getParticleSet());
+       hack_ghost[pc->threadNumber()] = scinew ParticleSubset(pset->getParticleSet());
     ParticleSubset* osubs = hack_owned[pc->threadNumber()];
     ParticleSubset* gsubs = hack_ghost[pc->threadNumber()];
     osubs->resize(ohave);

@@ -77,9 +77,9 @@ TensorFieldExtractor::TensorFieldExtractor(const clString& id)
 { 
   //////////// Initialization code goes here
   // Create Ports
-  in=new ArchiveIPort(this, "Data Archive",
+  in=scinew ArchiveIPort(this, "Data Archive",
 		      ArchiveIPort::Atomic);
-  sfout=new TensorFieldOPort(this, "TensorField", TensorFieldIPort::Atomic);
+  sfout=scinew TensorFieldOPort(this, "TensorField", TensorFieldIPort::Atomic);
 
   // Add them to the Module
   add_iport(in);
@@ -212,7 +212,7 @@ void TensorFieldExtractor::execute()
     switch ( subtype->getType() ) {
     case TypeDescription::Matrix3:
       {
-	NCTensorField *vfd  = new NCTensorField();
+	NCTensorField *vfd  = scinew NCTensorField();
 	NCVariable< Matrix3 > vv;
 	
 	if(var != ""){
@@ -240,7 +240,7 @@ void TensorFieldExtractor::execute()
     switch ( subtype->getType() ) {
     case TypeDescription::Matrix3:
       {
-	CCTensorField *vfd  = new CCTensorField();
+	CCTensorField *vfd  = scinew CCTensorField();
 	CCVariable< Matrix3 > vv;
 	
 	if(var != ""){

@@ -26,7 +26,7 @@ namespace Datatypes {
 
 static Persistent* maker()
 {
-    return new cfdlibParticleSet();
+    return scinew cfdlibParticleSet();
 }
 
 PersistentTypeID cfdlibParticleSet::type_id("cfdlibParticleSet", "ParticleSet", maker);
@@ -128,13 +128,13 @@ void cfdlibParticleSet::io(Piostream& stream)
       timesteps.resize(nsets);
 //     for(int i=0;i<nsets;i++){
 // 	if(stream.reading())
-// 	    timesteps[i]=new cfdlibTimeStep();
+// 	    timesteps[i]=scinew cfdlibTimeStep();
 // 	Pio(stream, timesteps[i]->time);
 // 	Pio(stream, timesteps[i]->positions);
 //     }
     for(int i = 0; i < nsets; i++){
       if(stream.reading())
-	timesteps[i] = new cfdlibTimeStep();
+	timesteps[i] = scinew cfdlibTimeStep();
       Pio(stream, timesteps[i]->vectors);
       Pio(stream, timesteps[i]->scalars);
     }
@@ -202,6 +202,9 @@ void cfdlibParticleSet::print() {
 
 //
 // $Log$
+// Revision 1.5  2000/08/09 03:18:04  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.4  1999/10/07 02:08:24  sparker
 // use standard iostreams and complex type
 //

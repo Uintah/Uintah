@@ -59,6 +59,7 @@ WARNING
       public:
          // Constructor
 	 HEBurn();
+	 virtual ~HEBurn();
 
 	 // Basic burn methods
 
@@ -96,6 +97,9 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.8  2000/08/09 03:17:59  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.7  2000/07/25 19:10:25  guilkey
 // Changed code relating to particle combustion as well as the
 // heat conduction.

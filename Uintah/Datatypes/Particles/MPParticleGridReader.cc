@@ -13,6 +13,7 @@
 #include "MPParticleGridReader.h"
 #include <SCICore/Datatypes/ScalarFieldRG.h>
 #include <SCICore/Datatypes/VectorFieldRG.h>
+#include <SCICore/Malloc/Allocator.h>
 
 #include <fstream>
 #include <iomanip>
@@ -28,7 +29,7 @@ using SCICore::Containers::to_string;
 
 static Persistent* maker()
 {
-    return new MPParticleGridReader();
+    return scinew MPParticleGridReader();
 }
 
 PersistentTypeID MPParticleGridReader::type_id("MPParticleGridReader",
@@ -219,7 +220,7 @@ void MPParticleGridReader::readGrid( MPRead& reader)
   o_x = o_y = o_z = dx = dy = dz = 0;
 
   reader.GetGridInfo( name, type, x,y,z, sVars, vVars);
-  MPVizGrid *grid = new MPVizGrid(name);
+  MPVizGrid *grid = scinew MPVizGrid(name);
 
   if( type == "NC" || type == "CC" ){
     reader.GetGridPoints(o_x, o_y, o_z, dx, dy, dz);
@@ -250,10 +251,10 @@ void MPParticleGridReader::readParticles(MPRead& reader)
   Array1<clString> sVars;
   Array1<clString> vVars;
   int nParticles;
-  cfdlibTimeStep* ts = new cfdlibTimeStep();
+  cfdlibTimeStep* ts = scinew cfdlibTimeStep();
 
   reader.GetParticleInfo(name, nParticles, sVars, vVars);
-  MPVizParticleSet *ps = new MPVizParticleSet(name);
+  MPVizParticleSet *ps = scinew MPVizParticleSet(name);
   
   for( i = 0; i < sVars.size(); i++){
     ps->addScalarVar( sVars[i] );
@@ -295,6 +296,9 @@ void MPParticleGridReader::readParticles(MPRead& reader)
 
 //
 // $Log$
+// Revision 1.6  2000/08/09 03:18:04  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.5  2000/01/27 04:48:55  kuzimmer
 // changes necessary to make MaterialParticle files work when there are only Grids or only Particles
 //

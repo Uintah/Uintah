@@ -90,7 +90,7 @@ TaskGraph::setupTaskConnections()
 	    const VarLabel* var = dep->d_var;
 	    map<const VarLabel*, Task*, VarLabel::Compare>::iterator it=reductionTasks.find(var);
 	    if(it == reductionTasks.end()){
-	       reductionTasks[var]=new Task(var->getName()+" reduction");
+	       reductionTasks[var]=scinew Task(var->getName()+" reduction");
 	       it = reductionTasks.find(var);
 	       it->second->computes(dep->d_dw, var, -1, 0);
 	    }
@@ -284,6 +284,9 @@ Task* TaskGraph::getTask(int idx)
 
 //
 // $Log$
+// Revision 1.6  2000/08/09 03:18:04  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.5  2000/07/27 22:39:47  sparker
 // Implemented MPIScheduler
 // Added associated support

@@ -31,6 +31,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps)
       
       else if (mat_type == "comp_neo_hook_plastic")
 	 return(scinew CompNeoHookPlas(child));
+
       
       else if (mat_type == "hyper_elastic_damage")
 	 return(scinew HyperElasticDamage(child));

@@ -36,7 +36,7 @@ TecplotFileSelector::TecplotFileSelector(const clString& id)
 
 { 
       // Initialization code goes here 
-  out=new ParticleGridReaderOPort(this,
+  out=scinew ParticleGridReaderOPort(this,
 				  "ParticleGridReader",
 				  ParticleGridReaderIPort::Atomic);
   add_oport(out);
@@ -101,7 +101,7 @@ void TecplotFileSelector::execute()
    
    if( !animate.get() && checkFile( filebase.get() ) ) {
      tcl_status.set("Reading file");    
-     reader = new TecplotReader( filebase.get(), startFrame.get(),
+     reader = scinew TecplotReader( filebase.get(), startFrame.get(),
 				   endFrame.get(), increment.get());
      out->send( ParticleGridReaderHandle( reader ) );
    } else if ( animate.get() && checkFile( filebase.get() ) ) {
@@ -136,7 +136,7 @@ void TecplotFileSelector::doAnimation()
     ostr.fill('0');
     ostr << path << "/"<< root<< setw(4)<<i;
     cerr << ostr.str()<< endl;
-    reader = new TecplotReader( ostr.str().c_str(), startFrame.get(),
+    reader = scinew TecplotReader( ostr.str().c_str(), startFrame.get(),
 				   endFrame.get(), increment.get() );
     filebase.set( ostr.str().c_str() );
     if( i != endFrame.get())
@@ -150,7 +150,7 @@ void TecplotFileSelector::doAnimation()
 //--------------------------------------------------------------- 
   
 extern "C" PSECore::Dataflow::Module* make_TecplotFileSelector( const clString& id ) { 
-  return new TecplotFileSelector( id );
+  return scinew TecplotFileSelector( id );
 }
 
 } // End namespace Modules
@@ -158,6 +158,9 @@ extern "C" PSECore::Dataflow::Module* make_TecplotFileSelector( const clString& 
 
 //
 // $Log$
+// Revision 1.8  2000/08/09 03:18:07  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.7  2000/03/17 09:30:12  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

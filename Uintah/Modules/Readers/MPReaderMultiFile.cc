@@ -1,6 +1,7 @@
 
 #include "MPReaderMultiFile.h"
 #include <Uintah/Datatypes/Particles/MFMPParticleGridReader.h>
+#include <SCICore/Malloc/Allocator.h>
 
 #include <fstream>
 #include <iostream> 
@@ -26,7 +27,7 @@ namespace Modules {
 using namespace SCICore::Containers;
 
 extern "C" PSECore::Dataflow::Module* make_MPReaderMultiFile( const clString& id ) { 
-  return new MPReaderMultiFile( id );
+  return scinew MPReaderMultiFile( id );
 }
 
 
@@ -42,7 +43,7 @@ MPReaderMultiFile::MPReaderMultiFile(const clString& id)
 
 { 
       // Initialization code goes here 
-  out=new ParticleGridReaderOPort(this,
+  out=scinew ParticleGridReaderOPort(this,
 				  "ParticleGridReader",
 				  ParticleGridReaderIPort::Atomic);
   add_oport(out);
@@ -123,7 +124,7 @@ void MPReaderMultiFile::execute()
    if( !animate.get() ) {
      tcl_status.set("Reading files"); 
      
-     reader = new MFMPParticleGridReader( filebase.get(), startFrame.get(),
+     reader = scinew MFMPParticleGridReader( filebase.get(), startFrame.get(),
 					   endFrame.get(), increment.get());
      out->send( ParticleGridReaderHandle( reader ) );
    } else if ( animate.get() ) {
@@ -158,7 +159,7 @@ void MPReaderMultiFile::doAnimation()
     ostr.fill('0');
     ostr << path << "/"<< root<< setw(4)<<i;
     std::cerr << ostr.str()<< endl;
-    reader = new MFMPParticleGridReader( ostr.str().c_str(), startFrame.get(),
+    reader = scinew MFMPParticleGridReader( ostr.str().c_str(), startFrame.get(),
 					  endFrame.get(), increment.get() );
     filebase.set( ostr.str().c_str() );
     file = basename( filebase.get() );

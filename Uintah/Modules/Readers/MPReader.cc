@@ -10,7 +10,7 @@ using std::endl;
 using std::setw;
 #include <sstream>
 using std::ostringstream;
-
+#include <SCICore/Malloc/Allocator.h>
 #include <ctype.h>
 #include <unistd.h>
 
@@ -20,7 +20,7 @@ namespace Modules {
 using namespace SCICore::Containers;
 
 extern "C" PSECore::Dataflow::Module* make_MPReader( const clString& id ) { 
-  return new MPReader( id );
+  return scinew MPReader( id );
 }
 
 
@@ -35,7 +35,7 @@ MPReader::MPReader(const clString& id)
 
 { 
       // Initialization code goes here 
-  out=new ParticleGridReaderOPort(this,
+  out=scinew ParticleGridReaderOPort(this,
 				  "ParticleGridReader",
 				  ParticleGridReaderIPort::Atomic);
   add_oport(out);
@@ -99,7 +99,7 @@ void MPReader::execute()
    
    if( !animate.get() && checkFile( filebase.get() ) ) {
      tcl_status.set("Reading file");    
-     reader = new MPParticleGridReader( filebase.get(), startFrame.get(),
+     reader = scinew MPParticleGridReader( filebase.get(), startFrame.get(),
 					   endFrame.get(), increment.get());
      out->send( ParticleGridReaderHandle( reader ) );
    } else if ( animate.get() && checkFile( filebase.get() ) ) {
@@ -134,7 +134,7 @@ void MPReader::doAnimation()
     ostr.fill('0');
     ostr << path << "/"<< root<< setw(4)<<i;
     std::cerr << ostr.str()<< endl;
-    reader = new MPParticleGridReader( ostr.str().c_str(), startFrame.get(),
+    reader = scinew MPParticleGridReader( ostr.str().c_str(), startFrame.get(),
 					  endFrame.get(), increment.get() );
     filebase.set( ostr.str().c_str() );
     file = basename( filebase.get() );
@@ -159,6 +159,9 @@ void MPReader::doAnimation()
 
 //
 // $Log$
+// Revision 1.4  2000/08/09 03:18:08  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.3  2000/03/17 09:30:15  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

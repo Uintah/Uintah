@@ -68,7 +68,7 @@ private:
 };
 
 extern "C" Module* make_GridVisualizer(const clString& id) {
-  return new GridVisualizer(id);
+  return scinew GridVisualizer(id);
 }
 
 GridVisualizer::GridVisualizer(const clString& id)
@@ -76,12 +76,12 @@ GridVisualizer::GridVisualizer(const clString& id)
 {
 
   // Create the input port
-  in=new ArchiveIPort(this, "Data Archive",
+  in=scinew ArchiveIPort(this, "Data Archive",
 		      ArchiveIPort::Atomic);
   add_iport(in);
 
   // Create the output port
-  ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+  ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
   add_oport(ogeom);
   
   ////////////////////////////////
@@ -210,12 +210,12 @@ void GridVisualizer::execute()
       color_index = 5;
     
     // edges is all the edges made up all the patches in the level
-    GeomLines* edges = new GeomLines();
-    GeomObj* top_edges = new GeomMaterial(edges, level_color[color_index]);
+    GeomLines* edges = scinew GeomLines();
+    GeomObj* top_edges = scinew GeomMaterial(edges, level_color[color_index]);
 
     // nodes consists of the nodes in all the patches in the level
-    GeomPts* nodes = new GeomPts(1); // 1 is the size
-    GeomObj* top_nodes = new GeomMaterial(nodes, node_color[color_index]);
+    GeomPts* nodes = scinew GeomPts(1); // 1 is the size
+    GeomObj* top_nodes = scinew GeomMaterial(nodes, node_color[color_index]);
     
     
     Level::const_patchIterator iter;
@@ -251,6 +251,9 @@ void GridVisualizer::execute()
 
 //
 // $Log$
+// Revision 1.2  2000/08/09 03:18:09  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.1  2000/06/20 17:57:19  kuzimmer
 // Moved GridVisualizer to Uintah
 //

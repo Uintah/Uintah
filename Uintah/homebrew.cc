@@ -7,6 +7,7 @@ using SCICore::Exceptions::Exception;
 #include <iostream>
 using std::cerr;
 #include <mpi.h>
+#include <SCICore/Malloc/Allocator.h>
 
 int main(int argc, char** argv)
 {
@@ -15,7 +16,7 @@ int main(int argc, char** argv)
     fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
     cerr << "mask: " << fpgetmask() << '\n';
 
-    SimulationController* sim = new SimulationController(argc, argv);
+    SimulationController* sim = scinew SimulationController(argc, argv);
     try {
 	sim->run();
     } catch (Exception& e) {

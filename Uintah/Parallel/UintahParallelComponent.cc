@@ -16,6 +16,10 @@ UintahParallelComponent::UintahParallelComponent(const ProcessorGroup* myworld)
 
 UintahParallelComponent::~UintahParallelComponent()
 {
+  for(map<string, PortRecord*>::iterator iter = portmap.begin(); 
+      iter != portmap.end(); iter++) 
+    delete iter->second;
+
 }
 
 void
@@ -52,6 +56,9 @@ void UintahParallelComponent::releasePort(const std::string&)
 
 //
 // $Log$
+// Revision 1.9  2000/08/09 03:18:11  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.8  2000/06/17 07:06:49  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

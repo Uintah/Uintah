@@ -13,7 +13,7 @@ using PSECore::Datatypes::ArchiveIPort;
 using PSECore::Datatypes::ArchiveOPort;
 
 extern "C" PSECore::Dataflow::Module* make_ArchiveReader( const clString& id ) { 
-  return new ArchiveReader( id );
+  return scinew ArchiveReader( id );
 }
 
 
@@ -24,7 +24,7 @@ ArchiveReader::ArchiveReader(const clString& id)
     tcl_status("tcl_status",id,this) 
 { 
       // Initialization code goes here 
-  out=new ArchiveOPort(this,
+  out=scinew ArchiveOPort(this,
 				  "ArchiveReader",
 				  ArchiveIPort::Atomic);
   add_oport(out);
@@ -50,7 +50,7 @@ void ArchiveReader::execute()
 
    if( string(filebase.get()()) != aName ){
      try {
-       reader = new DataArchive( string(filebase.get()()) );
+       reader = scinew DataArchive( string(filebase.get()()) );
      } catch ( const SCICore::Exceptions::InternalError& ex) {
        cerr<<"Caught and exception\n";
        return;
@@ -58,7 +58,7 @@ void ArchiveReader::execute()
      aName = string(filebase.get()());
    }
 
-   Archive *archive = new Archive( reader );
+   Archive *archive = scinew Archive( reader );
    out->send( archive );
 
 }

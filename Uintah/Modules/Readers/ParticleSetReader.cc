@@ -42,14 +42,14 @@ public:
 };
 
 extern "C" Module* make_ParticleSetReader(const clString& id) {
-  return new ParticleSetReader(id);
+  return scinew ParticleSetReader(id);
 }
 
 ParticleSetReader::ParticleSetReader(const clString& id)
 : Module("ParticleSetReader", id, Source), filename("filename", id, this)
 {
     // Create the output data handle and port
-    outport=new ParticleSetOPort(this, "Output Data", ParticleSetIPort::Atomic);
+    outport=scinew ParticleSetOPort(this, "Output Data", ParticleSetIPort::Atomic);
     add_oport(outport);
 }
 
@@ -105,6 +105,9 @@ void ParticleSetReader::execute()
 
 //
 // $Log$
+// Revision 1.8  2000/08/09 03:18:08  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.7  2000/03/17 09:30:16  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

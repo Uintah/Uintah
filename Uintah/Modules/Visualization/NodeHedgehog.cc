@@ -173,7 +173,7 @@ static clString module_name("NodeHedgehog");
 static clString widget_name("NodeHedgehog Widget");
 
 extern "C" Module* make_NodeHedgehog(const clString& id) {
-  return new NodeHedgehog(id);
+  return scinew NodeHedgehog(id);
 }       
 
 // obtains a pointer to the grid via the Archive in Port
@@ -209,7 +209,7 @@ NodeHedgehog::NodeHedgehog(const clString& id)
 {
   // Create the input ports
   // grid
-  ingrid=new ArchiveIPort(this, "Data Archive",
+  ingrid=scinew ArchiveIPort(this, "Data Archive",
 		      ArchiveIPort::Atomic);
   add_iport(ingrid);
 
@@ -276,7 +276,7 @@ void NodeHedgehog::execute()
     init = 0;
     GeomObj *w2d = widget2d->GetWidget() ;
     GeomObj *w3d = widget3d->GetWidget() ;
-    GeomGroup* w = new GeomGroup;
+    GeomGroup* w = scinew GeomGroup;
     w->add(w2d);
     w->add(w3d);
     widget_id = ogeom->addObj( w, widget_name, &widget_lock );
@@ -383,7 +383,7 @@ void NodeHedgehog::execute()
   double widscale = width_scale.get();
   double headlen = head_length.get();
   int exhaustive = exhaustive_flag.get();
-  GeomArrows* arrows = new GeomArrows(widscale, 1.0-headlen, drawcylinders.get(), shaft_rad.get() );
+  GeomArrows* arrows = scinew GeomArrows(widscale, 1.0-headlen, drawcylinders.get(), shaft_rad.get() );
 
   // loop over all the nodes in the graph taking the position
   // of the node and determining the vector value.
@@ -483,6 +483,9 @@ void NodeHedgehog::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.4  2000/08/09 03:18:09  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.3  2000/08/03 15:09:21  bigler
 // Fixed some bugs that was causing the module to crash when
 // the 2d widget on the xz plane was selected.  Also a bug that

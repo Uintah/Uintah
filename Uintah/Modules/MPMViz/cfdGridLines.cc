@@ -30,6 +30,7 @@
 #include <PSECore/Datatypes/ScalarFieldPort.h>
 #include <PSECore/Datatypes/VectorFieldPort.h>
 
+
 namespace Uintah {
 namespace Modules {
 
@@ -284,6 +285,9 @@ extern "C" PSECore::Dataflow::Module*
 
 //
 // $Log$
+// Revision 1.10  2000/08/09 03:18:07  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.9  2000/03/17 09:30:13  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

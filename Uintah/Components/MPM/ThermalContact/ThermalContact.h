@@ -58,6 +58,7 @@ class ThermalContact {
 public:
   // Constructor
   ThermalContact(ProblemSpecP& ps,SimulationStateP& d_sS);
+  ~ThermalContact();
 
   void computeHeatExchange(const ProcessorGroup*,
                            const Patch* patch,
@@ -83,6 +84,9 @@ private:
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.7  2000/08/09 03:18:03  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.6  2000/07/05 23:43:38  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling

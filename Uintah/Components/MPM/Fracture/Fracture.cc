@@ -404,11 +404,19 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
   
   lb = scinew MPMLabel();
 }
+
+Fracture::~Fracture()
+{
+  delete lb;
+}
   
 } //namespace MPM
 } //namespace Uintah
 
 // $Log$
+// Revision 1.28  2000/08/09 03:18:02  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.27  2000/07/06 16:58:54  tan
 // Least square interpolation added for particle velocities and stresses
 // updating.

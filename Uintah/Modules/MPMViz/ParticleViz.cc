@@ -100,12 +100,12 @@ ParticleViz::ParticleViz(const clString& id)
     nu("nu", id, this), nv("nv", id, this)
 {
     cbid=-1;
-    iface=new PIDLObjectIPort(this, "VizualizationInterface",
+    iface=scinew PIDLObjectIPort(this, "VizualizationInterface",
 			      PIDLObjectIPort::Atomic);
     add_iport(iface);
-    cmapport=new ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
+    cmapport=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
     add_iport(cmapport);
-    ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+    ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
     addReference(); // So that we won't get blown away through our PIDL interface
 }
@@ -202,7 +202,7 @@ void ParticleViz::updateLoop(int)
 	    cmap->Scale(min, max);
 	    t4=Time::currentSeconds();
 	    if(t == "Points"){
-		GeomPts* pts=new GeomPts(0);
+		GeomPts* pts=scinew GeomPts(0);
 		for(int i=0;i<data.size2();i++){
 		    pts->add(Point(data[0][i], data[1][i], data[2][i]),
 			     cmap->lookup(data[3][i])->diffuse);
@@ -212,15 +212,15 @@ void ParticleViz::updateLoop(int)
 		int nnu=nu.get();
 		int nnv=nv.get();
 		double r=radius.get();
-		GeomGroup* group=new GeomGroup();
+		GeomGroup* group=scinew GeomGroup();
 		for(int i=0;i<data.size2();i++){
-		    group->add(new GeomSphere(Point(data[0][i], data[1][i], data[2][i]), r, nnu, nnv));
+		    group->add(scinew GeomSphere(Point(data[0][i], data[1][i], data[2][i]), r, nnu, nnv));
 		}
 		ogeom->addObj(group, "Particles");
 	    }
 	} else {
 	    if(t == "Points"){
-		GeomPts* pts=new GeomPts(0);
+		GeomPts* pts=scinew GeomPts(0);
 		for(int i=0;i<data.size2();i++){
 		    pts->add(Point(data[0][i], data[1][i], data[2][i]));
 		}
@@ -229,9 +229,9 @@ void ParticleViz::updateLoop(int)
 		int nnu=nu.get();
 		int nnv=nv.get();
 		double r=radius.get();
-		GeomGroup* group=new GeomGroup();
+		GeomGroup* group=scinew GeomGroup();
 		for(int i=0;i<data.size2();i++){
-		    group->add(new GeomSphere(Point(data[0][i], data[1][i], data[2][i]), r, nnu, nnv));
+		    group->add(scinew GeomSphere(Point(data[0][i], data[1][i], data[2][i]), r, nnu, nnv));
 		}
 		ogeom->addObj(group, "Particles");
 	    }
@@ -286,7 +286,7 @@ void ParticleViz::tcl_command(TCLArgs& args, void* userdata)
 
 extern "C" Module* make_ParticleViz( const clString& id )
 {
-  return new ParticleViz( id );
+  return scinew ParticleViz( id );
 }
 
 
@@ -296,6 +296,9 @@ extern "C" Module* make_ParticleViz( const clString& id )
 
 //
 // $Log$
+// Revision 1.4  2000/08/09 03:18:07  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.3  2000/03/17 09:30:11  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
