@@ -1,8 +1,4 @@
 <?xml version="1.0"?>
-
-<!--% require("../../Utilities/Publish/srdoc.rb") %-->
-<!--% doc = Doc.create(Doc::DocBook) %-->
-
 <!--
    For more information, please see: http://software.sci.utah.edu
 
@@ -31,26 +27,41 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
 
-<!--% doc.insertDocType("article", {"sr"=>"SCIRun","osx"=>"Mac OS X"},
-["intro", "rpm_inst","source_inst", "download_src",
+<!--% doc.insertDocType("article",
+{"sr"=>"SCIRun","osx"=>"Mac OS X","pf"=>Doc::PlatformString},
+["intro", "dmg_inst", "rpm_inst","source_inst", "download_src",
  "third_party_inst", "opt_inst", "build", "preparing", "starting", "help",
  "blas_lapack_inst", "petsc_inst", "itk_inst", "hdf5_inst", "mdsplus_inst",
  "cvs"])
 %-->
 
 <article id="article.main">
-<title>&sr; Installation Guide (v. <!--%= doc.edition %-->)</title>
+<title>&sr; Installation Guide for &pf;</title>
+<subtitle>(v. <!--%= doc.edition %-->)</subtitle>
 &intro;
+<!--%= doc.ifP(Doc::Linux) {%Q{-->
 &rpm_inst;
+<!--}} %-->
+<!--%= doc.ifP(Doc::OSX) {%Q{-->
+&dmg_inst;
+<!--}} %-->
 &source_inst;
 &preparing;
 &starting;
 &help;
+<!--%= doc.ifNotP(Doc::OSX) {%Q{-->
 &blas_lapack_inst;
+<!--}} %-->
 &petsc_inst;
+<!--%= doc.ifNotP(Doc::Irix) {%Q{-->
 &itk_inst;
+<!--}} %-->
 &hdf5_inst;
+<!--%= doc.ifNotP(Doc::Irix) {%Q{-->
 &mdsplus_inst;
+<!--}} %-->
 &cvs;
 </article>

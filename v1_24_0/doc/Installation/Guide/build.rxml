@@ -26,9 +26,30 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--%
+doc = Doc.create(Doc::DocBook)
+withThirdParty = ""
+extraOpts = ""
+case Doc::Platform
+  when Doc::Linux
+    withThirdParty = "-\-with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Linux/gcc-3.2-32bit"
+  when Doc::Irix
+    withThirdParty = "-\-with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Irix/CC-32bit"
+  when Doc::OSX
+    withThirdParty = "-\-with-thirdparty=/usr/local/&sr;/Thirdparty_osx"
+    extraOptions = %Q{\
+-\-enable-32bit \
+-\-disable-sci-malloc \
+CC=gcc CXX=g++}
+
+end
+%-->
+
 <section id="sec.build-sr">
   <title id="title.build-sr">Building &sr;</title>
 
+<!--
   <note>
     <title>Note for Itanium Architecture</title>
     <para>When building &sr; for the Itanium architecture, the GNU compiler
@@ -49,6 +70,7 @@ DEALINGS IN THE SOFTWARE.
       </programlisting>
     </para>
   </note>
+-->
 
   <orderedlist>
 
@@ -58,84 +80,76 @@ DEALINGS IN THE SOFTWARE.
 	Run &sr;'s configure script.    Do this from a sub-directory of
 	directory <filename>&sr;</filename> (but <emphasis>not</emphasis>
 	<filename>&sr;/src</filename>) as follows:
-
 	<literallayout class="monospaced">
 mkdir &sr;/<replaceable>dir</replaceable>
 cd &sr;/<replaceable>dir</replaceable>
+
 ../src/configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \
---enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"
+--enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"<!--%= extraOptions %-->
 	</literallayout>
 	in which case &sr; is built in the directory
 	<filename>&sr;/<replaceable>dir</replaceable></filename>.
 	<replaceable>Dir</replaceable> is often
 	<filename>bin</filename> or a name that reflects the machine
-	architecture, e.g. <filename>macx</filename>,
+	architecture, e.g. <filename>osx</filename>,
 	<filename>linux</filename>, <filename>irix</filename>,
-	etc. Above, <replaceable>third-party-dir</replaceable> is
-	replaced by the name of the third party software
-	installation directory.  For SGI/Linux platforms, use the
-	third-party installation path provided by the third-party
-	installation script.  For the &osx; platform, use the path
-	given to the third-party installation script.  Replace
-	"<replaceable>package-name1 package-name2
+	etc.
+	<!--%= doc.ifNotP(Doc::OSX) {%Q{-->
+	Above, replace <replaceable>third-party-dir</replaceable> by
+	the path provided by the third-party installation script.
+	<!--}} %-->
+	<!--%= doc.ifP(Doc::OSX) {%Q{-->
+	Above, replace <replaceable>third-party-dir</replaceable> by  the path
+	given to the third-party installation script.
+	<!--}} %-->
+	Replace "<replaceable>package-name1 package-name2
 	&hellip;</replaceable>" by a list of package names ,
 	e.g. "BioPSE MatlabInterface".  An example configure command
-	for SGI/Linux platforms is:
+	is:
 	<literallayout class="monospaced">
 ../src/configure \
---with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Irix/CC-32bit \
---enable-package="BioPSE MatlabInterface"
+<!--%= withThirdParty %-->
+--enable-package="BioPSE MatlabInterface" <!--%= extraOptions %-->
 	</literallayout>
 	Use option <option>--with-unipetsc</option> to add support for
-	<acronym>PETSc</acronym>.  Options <option>--with-lapack</option> and
+	<acronym>PETSc</acronym>.
+	<!--%= doc.ifP(Doc::OSX) {%Q{-->
+	Options <option>--with-lapack</option> and
 	<option>--with-blas</option> must be used if the
 	<acronym>BLAS</acronym> and <acronym>LAPACK</acronym> libraries are
 	not in <filename>/usr/lib</filename> (<xref
 	linkend="sec.petsc_sr_config"/> describes these options).
+	<!--}} %-->
 	For example:
 	<literallayout class="monospaced">
 ../src/configure \
---with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Irix/CC-32bit \
+<!--%= withThirdParty %-->
 --enable-package="BioPSE MatlabInterface" \
---with-unipetsc=/usr/local/petsc \
+--with-unipetsc=/usr/local/petsc<!--%= doc.ifNotP(Doc::OSX) {%Q{--> \
 --with-blas=/usr/local/lib \
 --with-lapack=/usr/local/lib
+<!--}} %-->
 	</literallayout>
-	Use option <option>--with-insight</option> to add support
-	for Insight.  Also enable packages TEEM and Insight.  For example:
+	Use option <option>--with-insight</option> to add support for
+	Insight.  Packages Teem and Insight must also be enabled when using
+	<option>--with-insight</option>.  For example:
 	<literallayout class="monospaced">
 ../src/configure \
---with-thirdparty=/usr/local/Thirdparty_lib_osx.1.22.0 \
---enable-package="BioPSE TEEM Insight" \
---with-insight=/usr/local/lib/InsightToolkit
+<!--%= withThirdParty %-->
+--enable-package="BioPSE Teem Insight" \
+--with-insight=/usr/local/lib/InsightToolkit <!--%= extraOptions %-->
 	</literallayout>
+<!--%= doc.ifNotP(Doc::Irix) {%Q{-->
 	Use options <option>--with-hdf5</option> and
 	<option>--with-mdplus</option> to add support for HDF5 and
-	MDSplus.  Also enable packages TEEM and DataIO.  For example:
+	MDSplus.  Also enable packages Teem and DataIO.  For example:
 	<literallayout class="monospaced">
 ../src/configure \
---with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Irix/CC-32bit \
---enable-package="BioPSE TEEM DataIO" \
---with-hdf5=/usr/local/hdf5 --with-mdsplus=/usr/local/mdsplus
+<!--$ #{withThirdParty} $-->
+--enable-package="BioPSE Teem DataIO" \
+--with-hdf5=/usr/local/hdf5 --with-mdsplus=/usr/local/mdsplus <!--$ #{extraOptions} $-->
 	</literallayout>
-      </para>
-
-      <para>
-	&osx; builds of &sr; require use of configure options
-	<option>--enable-32bit</option> and
-	<option>--disable-sci-malloc</option>.
-	The configure command must also include the
-	following environment variable assignments:
-	<userinput>CC=gcc</userinput> and <userinput>CXX=g++</userinput>.  For
-	example:
-	<literallayout class="monospaced">
-../src/configure \
---with-thirdparty=/usr/local/&sr;/Thirdparty_osx \
---enable-package="BioPSE MatlabInterface" \
---enable-32bit \
---disable-sci-malloc \
-CC=gcc CXX=g++
-	</literallayout>
+<!--}} %-->
       </para>
 
       <para>
@@ -148,9 +162,7 @@ CC=gcc CXX=g++
     <listitem>
       <para>
 	Run GNU make from the same directory used when running
-	configure (e.g. <filename>&sr;/linux</filename>,
-	<filename>&sr;/sgi32</filename>, <filename>&sr;/sgi64</filename>, or
-	<filename>&sr;/osx</filename>).  Note that the
+	configure (e.g. <filename>&sr;/bin</filename>).  Note that the
 	<quote>configure</quote> directory is called
 	<replaceable>build_dir</replaceable> from this point on.
 	<literallayout class="monospaced">

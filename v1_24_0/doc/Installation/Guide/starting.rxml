@@ -1,3 +1,6 @@
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
 <!--
    For more information, please see: http://software.sci.utah.edu
 
@@ -25,10 +28,6 @@
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
 -->
-
-
-<!--% require("../../Utilities/Publish/srdoc.rb") %-->
-<!--% doc = Doc.create(Doc::DocBook) %-->
 
 <section id="sec.starting">
 <title>Starting &sr;</title>

@@ -26,6 +26,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
 <section id="sec.sources">
   <title id="sec.title.sources">Downloading and Unpacking Sources</title>
 
@@ -55,12 +58,14 @@ DEALINGS IN THE SOFTWARE.
 	      requires package TEEM.
 	    </para>
 	  </listitem>
+	  <!--%= doc.ifNotP(Doc::Irix) {%Q{-->
 	  <listitem>
 	    <para><filename>Insight.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
 	    to add support for ITK in &sr;.  Insight requires
 	    package TEEM.  See also <xref linkend="sec.obitk"/>.
 	    </para>
 	  </listitem>
+	  <!--}} %-->
 	  <listitem>
 	    <para>
 	      <filename>DataIO.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
@@ -82,10 +87,12 @@ DEALINGS IN THE SOFTWARE.
 	  </listitem>
 	  <listitem>
 	    <para>
+	      <!--%= doc.ifNotP(Doc::OSX) {%Q{-->
 	      <filename>Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	      for SGI/Linux and
+	      <!--}} %-->	      
+	      <!--%= doc.ifP(Doc::OSX) {%Q{-->
 	      <filename>Thirdparty_install_osx.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	      for &osx; users.
+	      <!--}} %-->	      
 	    </para>
 	  </listitem>
 	  <listitem>
@@ -144,18 +151,21 @@ DEALINGS IN THE SOFTWARE.
 	Unpack third party sources.
       </para>
       <para>
-	For SGI/Linux:
 	<literallayout class="monospaced">
+	  <!--%= doc.ifNotP(Doc::OSX) {%Q{-->
 	  gunzip -c Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+	  <!--}} %-->      
+	  <!--%= doc.ifP(Doc::OSX) {%Q{-->
+	gunzip -c Thirdparty_install_osx.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+	<!--}} %-->
 	</literallayout>
 	This creates the directory
-      <filename>Thirdparty_install.<replaceable>x.x.x</replaceable></filename>.</para>
-      <para>For &osx;:
-      <literallayout class="monospaced">
-	gunzip -c Thirdparty_install_osx.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
-      </literallayout>
-      This creates the directory
+	<!--%= doc.ifNotP(Doc::OSX) {%Q{-->
+      <filename>Thirdparty_install.<replaceable>x.x.x</replaceable></filename>.
+      <!--}} %-->
+      <!--%= doc.ifP(Doc::OSX) {%Q{-->
       <filename>Thirdparty_install_osx.<replaceable>x.x.x</replaceable></filename>.
+      <!--}} %-->
       </para>
     </listitem>
 

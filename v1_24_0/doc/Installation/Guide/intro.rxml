@@ -26,20 +26,24 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
 
 <section id="sec.intro">
   <title>Introduction</title>
 
   <para>This guide provides instructions for installing &sr;, its
   required third party software, optional thirdparty software, sample
-  data sets, and &sr; documentation.</para>
+  data sets, and &sr; documentation on the &pf; platform.</para>
 
-  <para>&sr; has been tested on three platforms: SGI,
-  Linux<footnote><para>&sr; has been tested on the specified systems
-  and RPMs are provided for these systems.  &sr; may work on other
-  Linux systems as well.</para></footnote>, and Mac OS X.  Platform
-  requirement guidelines are listed in <xref
+  <para>&pf; platform guidelines are listed in <xref
   linkend="tbl.pltfm_req"/>.</para>
+    
+<!--%= doc.ifP(Doc::Linux) { %Q{-->
+   <para>Linux has been tested on the specified systems and RPMs are
+   provided for these systems.  &sr; may work on other Linux systems
+   as well.</para>
+<!--}} %-->
 
   <para>
     Disk space requirements for a source code installation are listed in
@@ -47,27 +51,43 @@ DEALINGS IN THE SOFTWARE.
   </para>
 
   <table id="tbl.pltfm_req">
-    <title>Platform Guidelines</title>
-    <tgroup cols="3">
-      <thead >
+    <title>Platform Guidelines for &pf;</title>
+    <tgroup cols="2">
+      <thead>
 	<row>
-	  <entry align="center">Linux</entry>
-	  <entry align="center">SGI</entry>
-	  <entry align="center">Mac OS X</entry>
+	  <entry>Hardware</entry>
+	  <entry>Software</entry>
 	</row>
       </thead>
       <tbody>
 	<row valign="top">
+        <!--%= doc.ifP(Doc::Linux) { %Q{-->
+	  <entry>
+	    <itemizedlist>
+	      <listitem>
+		<para>OpenGL compatible video card and driver</para>
+	      </listitem>
+	      <listitem>
+		<para>512 Mb (or more) RAM</para>
+	      </listitem>
+	    </itemizedlist>
+	  </entry>
 	  <entry>
 	    <itemizedlist>
 	      <listitem>
 		<para>Redhat 9 or Mandrake 9.2</para>
 	      </listitem>
 	      <listitem>
-		<para>OpenGL compatible video card and driver</para>
-	      </listitem>
-	      <listitem>
 		<para>GCC 3.x</para>
+	      </listitem>
+	    </itemizedlist>
+	  </entry>
+          <!--}} %-->	  
+	  <!--%= doc.ifP(Doc::Irix) { %Q{-->
+	  <entry>
+	    <itemizedlist>
+	      <listitem>
+		<para>MIPS R10000 (or more recent) CPU</para>
 	      </listitem>
 	      <listitem>
 		<para>512 Mb (or more) RAM</para>
@@ -82,8 +102,14 @@ DEALINGS IN THE SOFTWARE.
 	      <listitem>
 		<para>MIPSpro compiler 7.3.1.1m (or later)</para>
 	      </listitem>
+	    </itemizedlist>
+	  </entry>
+	  <!--}} %-->	    
+	  <!--%= doc.ifP(Doc::OSX) { %Q{-->
+	  <entry>
+	    <itemizedlist>
 	      <listitem>
-		<para>MIPS R10000 (or more recent) CPU</para>
+		<para>G4 or G5 processor</para>
 	      </listitem>
 	      <listitem>
 		<para>512 Mb (or more) RAM</para>
@@ -96,25 +122,36 @@ DEALINGS IN THE SOFTWARE.
 		<para>OS X 10.3 (Panther)</para>
 	      </listitem>
 	      <listitem>
-		<para>&osx; 10.3 developer tools.</para>
+		<para>Apple's X11 server software, Xcode developer tools, and X11
+		software development kit must be installed before installing &sr;.
+		Apple's X11 server software, Xcode developer tools, and X11 SDK
+		are distributed with &osx; but are not part of the &osx; default
+		installation.  They are installed by double-clicking, in turn, the
+		files <filename>X11User.pkg</filename>,
+		<filename>Developer.mpkg</filename>, and
+		<filename>X11SDK.pkg</filename>.  These files may be present on
+		the hard drive, the &osx; installation CDs, or DVD.
+		<filename>Developer.mpkg</filename> and
+		<filename>X11SDK.pkg</filename> are part of the Xcode
+		distribution.</para>
 	      </listitem>
 	      <listitem>
-		<para>Apple's X11 and X11 <acronym>SDK</acronym> for
-		&osx; 10.3.</para>
+		<para>&sr;'s MatlabInterface package requires Matlab version
+		Matlab 6.5.1 (MathWorks Relase 13, Service Pack 1).</para>
 	      </listitem>
 	      <listitem>
-		<para>G4 or G5 processor</para>
-	      </listitem>
-	      <listitem>
-		<para>512 Mb (or more) RAM</para>
+		<para>&sr;'s TEEM package supports PNG images if PNG libraries
+		are installed.  PNG libraries can be installed via the <ulink
+		url="http://fink.sourceforge.net/">fink</ulink>
+		software distribution system.</para>
 	      </listitem>
 	    </itemizedlist>
 	  </entry>
+	  <!--}} %-->
 	</row>
       </tbody>
     </tgroup>
   </table>
-
 
   <table id="tbl.disk_space">
     <title>Disk Space Requirements</title>
@@ -136,81 +173,49 @@ DEALINGS IN THE SOFTWARE.
     </tgroup>
   </table>
 
-  <para>
-    On Linux systems &sr; binaries can
-    be <link linkend="sec.rpminst">installed via an <acronym>RPM</acronym>
-    package</link> or <link linkend="sec.source_inst">from &sr;'s source
-    code distribution</link>.  The &sr; <acronym>RPM</acronym>
-    distribution does <emphasis>not</emphasis> provide support for
-    <acronym>PETSc</acronym>.
-    <acronym>PETSc</acronym> support is
-    available only through the &sr; source code distribution.
-  </para>
+<!--%= doc.ifP(Doc::Linux) {%Q{-->
+  <para>Linux binaries can be <link linkend="sec.rpminst">installed
+  via an <acronym>RPM</acronym> package</link> or <link
+  linkend="sec.source_inst">from &sr;'s source code
+  distribution</link>.  The &sr; <acronym>RPM</acronym> distribution
+  does <emphasis>not</emphasis> provide support for
+  <acronym>PETSc</acronym>.  <acronym>PETSc</acronym> support is
+  available only through the &sr; source code distribution.</para>
 
   <para>See <xref linkend="intro.nvidia_notes" /> for information on
-  the use of Nvidia graphics cards with the Linux operating
-  system.</para>
+  the use of Nvidia graphics cards with &sr;</para>
 
   <para>See <xref linkend="intro.ati_notes"/> for information on the
-  use of ATI cards and drivers with the Linux operating system.</para>
+  use of ATI cards and drivers with &sr;.</para>
 
   <para>See <xref linkend="intro.redhat_ent_notes" /> for information
   about the use of Red Hat Enterprise Linux.</para>
 
-  <para>On SGI systems &sr; must be <link
-  linkend="sec.source_inst">installed from the source code
-  distribution</link>.</para>
+  <para>Proceed to <xref linkend="sec.rpminst" /> to install &sr;
+  via an <acronym>RPM</acronym>.  Otherwise, start with <xref
+  linkend="sec.source_inst" /> to install &sr; from source
+  code.</para>
+<!--}} %-->
 
-  <para>On &osx; systems &sr; must be <link
-  linkend="sec.source_inst">installed from the source code
-  distribution</link>.  <xref linkend="sec.osx_notes"/> discusses
-  &osx; prerequisites.</para>
+<!--%= doc.ifP(Doc::Irix) {%Q{-->
+  <para>On &pf;, &sr; must be <link
+  linkend="sec.source_inst">installed from its source code
+  distribution</link>.  Proceed to <xref
+  linkend="sec.source_inst"/>.</para>
+<!--}} %-->
+
+<!--%= doc.ifP(Doc::OSX) {%Q{-->
+  <para>On &osx; systems &sr; can be installed from its disk image (a
+  dmg file) or its source code distribution.  Proceed to <xref
+  linkend="sec.dmg_inst"/> if installing &sr; from its disk image.
+  Proceed to <xref linkend="sec.source_inst"/> if installing &sr; from
+  its source code.</para>
+<!--}} %-->
 
   <para>Read <xref linkend="sec.prepare" /> after installing
   &sr;.</para>
 
-  <para>Proceed to <xref linkend="sec.rpminst" /> if installing &sr;
-  via an <acronym>RPM</acronym>.  Otherwise, start with <xref
-  linkend="sec.source_inst" /> to install &sr; from source
-  code.</para>
-
-  <section id="sec.osx_notes">
-    <title>&osx; Prerequisites</title>
-
-    <para>Observe the following when installing &sr; on &osx;:</para>
-
-    <itemizedlist>
-      <listitem>
-	<para>&sr; is supported on &osx; 10.3 (Panther).</para>
-      </listitem>
-      <listitem>
-	<para>Apple's X11 server software, Xcode developer tools, and X11
-	software development kit must be installed before installing &sr;.
-	Apple's X11 server software, Xcode developer tools, and X11 SDK
-	are distributed with &osx; but are not part of the &osx; default
-	installation.  They are installed by double-clicking, in turn, the
-	files <filename>X11User.pkg</filename>,
-	<filename>Developer.mpkg</filename>, and
-	<filename>X11SDK.pkg</filename>.  These files may be present on
-	the hard drive, the &osx; installation CDs, or DVD.
-	<filename>Developer.mpkg</filename> and
-	<filename>X11SDK.pkg</filename> are part of the Xcode
-	distribution.</para>
-      </listitem>
-      <listitem>
-	<para>&sr;'s MatlabInterface package requires Matlab version
-	Matlab 6.5.1 (MathWorks Relase 13, Service Pack 1).</para>
-      </listitem>
-      <listitem>
-	<para>&sr;'s TEEM package supports PNG images if PNG libraries
-	are installed.  PNG libraries can be installed via the <ulink
-	url="http://fink.sourceforge.net/">fink</ulink>
-	software distribution system.</para>
-      </listitem>
-    </itemizedlist>
-
-  </section>
-
+<!--%= doc.ifP(Doc::Linux) {%Q{-->
   <section id="intro.nvidia_notes">
     <title id="intro.nvidia_notes.title">Linux and Nvidia Driver Notes</title>
 
@@ -224,7 +229,7 @@ DEALINGS IN THE SOFTWARE.
 
     <para>
       Driver version 1.0-4191 does not work.  SCI has not tested versions
-      earlier than 1.0-4191&mdash;they may or may not work.
+      earlier than 1.0-4191&#x2014;they may or may not work.
     </para>
 
   </section>
@@ -276,5 +281,6 @@ DEALINGS IN THE SOFTWARE.
     this system at this time.  SCI will evaluate future versions of Redhat
     Enterprise</para>
   </section>
+<!--}} %-->
 
 </section>
