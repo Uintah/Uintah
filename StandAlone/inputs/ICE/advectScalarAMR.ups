@@ -17,7 +17,7 @@
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
-       <delt_init>          1.0e-3      </delt_init>
+       <delt_init>          1.0e-5      </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -137,8 +137,9 @@
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
            </Box>
-           <spacing>         [1,1,1]    </spacing>
+           <spacing>         [0.2,0.2,0.2]    </spacing>
        </Level>
+<!-- 
        <Level>
            <Box label="2">
               <lower>        [2,2,2]    </lower>
@@ -146,8 +147,9 @@
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
            </Box>
-           <spacing>         [0.5,0.5,0.5]    </spacing>
+           <spacing>         [0.1,0.1,0.1]    </spacing>
        </Level>
+ -->
     </Grid>    
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
@@ -156,12 +158,6 @@
       <filebase>advectScalarAMR.uda</filebase>
       <outputTimestepInterval>10</outputTimestepInterval>
       <save label="press_equil_CC"/>
-      <save label="uvel_FC"/>
-      <save label="vvel_FC"/>
-      <save label="wvel_FC"/>
-      <save label="uvel_FCME"/>
-      <save label="vvel_FCME"/>
-      <save label="wvel_FCME"/>
       <save label="delP_Dilatate"/>
       <save label="press_CC"/>
       <save label="mom_L_ME_CC"/>
@@ -219,7 +215,7 @@
          <material name = "BackgroundGas">
            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
-           <viscosity>          0.0                     </viscosity>
+           <dynamic_viscosity>   0.0                    </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
            <specific_heat>      716.0                   </specific_heat>
            <speed_of_sound>     376                     </speed_of_sound>
@@ -245,25 +241,14 @@
        </exchange_properties>
     </MaterialProperties> 
     <!--____________________________________________________________________-->
-    <!--   Bring in the simpleRxn model to advect a scalar around           -->
+    <!--  Use passiveScalar model to advect a scalar around                -->
     <Models>
-       <Model type="SimpleRxn">
+       <Model type="PassiveScalar">
         <material>BackgroundGas</material>
 	 <scalar name="f">
         <constants>
-          <f_stoichometric>          0.06207        </f_stoichometric>
           <diffusivity>              0.0            </diffusivity>
-          <initialize_diffusion_knob>  0            </initialize_diffusion_knob>
-          <rho_air>            1.1792946927374306   </rho_air>
-          <rho_fuel>           1.1792946927374306   </rho_fuel>
-          <cv_air>               716.0              </cv_air>
-          <cv_fuel>              716.0              </cv_fuel>
-          <R_air>                287.0              </R_air>
-          <R_fuel>               287.0              </R_fuel>
-          <thermalCond_air>      0                  </thermalCond_air>
-          <thermalCond_fuel>     0                  </thermalCond_fuel>  
-          <viscosity_air>        0                  </viscosity_air>
-          <viscosity_fuel>       0                  </viscosity_fuel>       
+          <initialize_diffusion_knob>  0            </initialize_diffusion_knob>     
         </constants>
          <geom_object>
             <difference>
