@@ -40,6 +40,8 @@
 #include <sci_defs/babel_defs.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
+#include <SCIRun/Internal/ComponentEvent.h>
+#include <SCIRun/Internal/ComponentEventService.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
 #if HAVE_BABEL
 #include <SCIRun/Bridge/BridgeComponentModel.h>
@@ -62,7 +64,6 @@
 
 #include "CCACommunicator.h"
 
-
 namespace SCIRun {
 
 SCIRunFramework::SCIRunFramework()
@@ -83,10 +84,9 @@ SCIRunFramework::~SCIRunFramework()
   std::cerr << "~SCIRunFramework called!" << std::endl;;
   abort();
   for(std::vector<ComponentModel*>::iterator iter=models.begin();
-      iter != models.end(); iter++)
-    {
+      iter != models.end(); iter++) {
     delete *iter;
-    }
+  }
 }
 
 sci::cca::Services::pointer
@@ -117,57 +117,50 @@ SCIRunFramework::createComponentInstance(const std::string& name,
     // a ton of models, nor do we expect instantiation to
     // occur often
     for(std::vector<ComponentModel*>::iterator iter=models.begin();
-        iter != models.end(); iter++)
-      {
+        iter != models.end(); iter++) {
       ComponentModel* model = *iter;
-      if(model->prefixName == modelName)
-        {
+      if(model->prefixName == modelName) {
         mod=model;
         break;
-        }
       }
     }
-  else
-    {
+  } else {
     int count=0;
     for(std::vector<ComponentModel*>::iterator iter=models.begin();
-        iter != models.end(); iter++)
-      {
+        iter != models.end(); iter++) {
       ComponentModel* model = *iter;
-      if(model->haveComponent(type))
-        {
+      if(model->haveComponent(type)) {
         count++;
         mod=model;
-        }
       }
-    if(count > 1)
-      {
+    }
+    if(count > 1) {
       std::cerr << "More than one component model wants to build " << type << '\n';
       throw InternalError("Need CCA Exception here");
-      }
     }
-  if(!mod)
-    {
+  }
+  if(!mod) {
     std::cerr << "No component model wants to build " << type << std::endl;
     return ComponentID::pointer(0);
-    }
+  }
   ComponentInstance* ci;
-  if(mod->getName()=="CCA")
-    {
+  if(mod->getName()=="CCA") {
     ci = ((CCAComponentModel*)mod)->createInstance(name, type, properties);
-    }
-  else
-    {
+  } else {
     ci = mod->createInstance(name, type);
-    }
-  if(!ci)
-    {
+  }
+  if(!ci) {
     std::cerr << "Error: failed to create ComponentInstance" << std::endl;;
     return ComponentID::pointer(0);
-    }
+  }
   registerComponent(ci, name);
-  compIDs.push_back(ComponentID::pointer(new ComponentID(this,
-                                                         ci->instanceName)));
+
+  sci::cca::ComponentID::pointer cid = ComponentID::pointer(new ComponentID(this, ci->instanceName));
+//ComponentID::pointer()
+  compIDs.push_back(cid);
+  emitComponentEvent(new ComponentEvent(sci::cca::ports::ComponentInstantiated,
+			    cid, properties));
+
   return compIDs[compIDs.size()-1];
 }
 
@@ -244,17 +237,14 @@ void SCIRunFramework::registerComponent(ComponentInstance* ci,
 {
   std::string goodname = name;
   int count=0;
-  while(activeInstances.find(goodname) != activeInstances.end())
-    {
+  while(activeInstances.find(goodname) != activeInstances.end()) {
     std::ostringstream newname;
     newname << name << "_" << count++;
     goodname=newname.str();
-    }
+  }
   ci->framework=this;
   ci->instanceName = goodname;
   activeInstances[ci->instanceName] = ci;
-  // Get the component event service and send a creation event
-  std::cerr << "TODO: register a creation event for component " << name << std::endl;
 }
 
 ComponentInstance *
@@ -262,18 +252,15 @@ SCIRunFramework::unregisterComponent(const std::string& instanceName)
 {
   std::map<std::string, ComponentInstance*>::iterator found
     = activeInstances.find(instanceName);
-  if(found != activeInstances.end())
-    {
+  if(found != activeInstances.end()) {
     ComponentInstance *ci=found->second;
     activeInstances.erase(found);
     return ci;
-    }
-  else
-    {
-    std::cerr<<"Error: component instance "<<instanceName<<" not found!"
-             <<std::endl;;
+  } else {
+    std::cerr << "Error: component instance " << instanceName << " not found!"
+              << std::endl;;
     return 0;
-    }
+  }
 }
 
 ComponentInstance*
@@ -357,6 +344,25 @@ int SCIRunFramework::unregisterLoader(const std::string &loaderName)
 {
   cca->removeLoader(loaderName);
   return 0;
+}
+
+
+void
+SCIRunFramework::emitComponentEvent(ComponentEvent* event)
+{
+  sci::cca::ports::ComponentEventService::pointer service =
+    pidl_cast<sci::cca::ports::ComponentEventService::pointer>(
+	getFrameworkService("cca.ComponentEventService", "")
+    );
+  if (service.isNull()) {
+    std::cerr << "Error: could not find ComponentEventService" << std::endl;
+  } else {
+	ComponentEventService* ces =
+	    dynamic_cast<ComponentEventService*>(service.getPointer());
+	sci::cca::ports::ComponentEvent::pointer ce = ComponentEvent::pointer(event);
+      ces->emitComponentEvent(ce);
+      this->releaseFrameworkService("cca.ComponentEventService", "");
+  }
 }
 
 

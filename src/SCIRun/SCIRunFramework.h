@@ -53,6 +53,7 @@ namespace SCIRun {
 class ComponentDescription;
 class ComponentModel;
 class ComponentInstance;
+class ComponentEvent;
 class InternalComponentModel;
 class CCAComponentModel;
 class BabelComponentModel;
@@ -233,6 +234,9 @@ public:
 protected:
   friend class Services;
   friend class BuilderService;
+
+  /** ? */
+  void emitComponentEvent(ComponentEvent* event);
 
   // Put these in a private structure to avoid #include bloat?
   /** A list of component models available in this framework. */

@@ -74,25 +74,51 @@ ComponentEventService::addComponentEventListener(sci::cca::ports::ComponentEvent
 						 const sci::cca::ports::ComponentEventListener::pointer& l,
 						 bool playInitialEvents)
 {
+  std::cerr << "ComponentEventService::addComponentEventListener " << type << std::endl;
   listeners.push_back(new Listener(type, l));
-  if(playInitialEvents)
-    {
-    std::cerr << "addComponentEventListener not done!" << std::endl;
-    }
+  if (playInitialEvents) {
+    std::cerr << "addComponentEventListener playInitialEvents not done!" << std::endl;
+  }
 }
 
 void
 ComponentEventService::removeComponentEventListener(
-                                  sci::cca::ports::ComponentEventType /*type*/,
-			    const sci::cca::ports::ComponentEventListener::pointer& /*l*/)
+                                  sci::cca::ports::ComponentEventType type,
+			    const sci::cca::ports::ComponentEventListener::pointer& l)
 {
-  std::cerr << "removeComponentEventListener not done!" << std::endl;
+    for (std::vector<Listener*>::iterator iter=listeners.begin();
+	    iter != listeners.end(); iter++) {
+	if ((*iter)->type == type && (*iter)->l == l) {
+	    delete *iter;
+	}
+    }
 }
 
-void ComponentEventService::moveComponent(const sci::cca::ComponentID::pointer& /*id*/,
-                                          int /*x*/, int /*y*/)
+void
+ComponentEventService::moveComponent(const sci::cca::ComponentID::pointer& /*id*/,
+                                     int /*x*/, int /*y*/)
 {
   std::cerr << "moveComponent not done!" << std::endl;
+}
+
+void
+ComponentEventService::emitComponentEvent(const sci::cca::ports::ComponentEvent::pointer& event)
+{
+    // iterate through listeners and call connectionActivity
+    std::cerr << "ComponentEventService::emitComponentEvent" << std::endl;
+
+    // should the event type to be emitted be ALL?
+    if (event->getEventType() == sci::cca::ports::AllComponentEvents) {
+	return;
+    }
+
+    for (std::vector<Listener*>::iterator iter=listeners.begin();
+	    iter != listeners.end(); iter++) {
+	if ((*iter)->type == sci::cca::ports::AllComponentEvents ||
+		(*iter)->type == event->getEventType()) {
+	    (*iter)->l->componentActivity(event);
+	}
+    }
 }
 
 } // end namespace SCIRun
