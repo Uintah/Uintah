@@ -174,6 +174,7 @@ set m133 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 540 1161
 set m134 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 1068 1289]
 set m135 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 1274 1358]
 set m136 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 204 392]
+set m137 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxinfo"  269 666]
 
 setProgressText "Loading BioTensor Connections, Please Wait..."
 # Create the Connections between Modules
@@ -321,7 +322,8 @@ set c140 [addConnection $m21 0 $m122 1]
 set c141 [addConnection $m45 0 $m105 1]
 set c142 [addConnection $m49 0 $m3 1]
 set c143 [addConnection $m105 0 $m47 1]
-set c144 [addConnection $m113 0 $m114 1]
+#set c144 [addConnection $m113 0 $m114 1]
+set c144 [addConnection $m113 0 $m137 0]
 set c145 [addConnection $m117 0 $m118 1]
 set c146 [addConnection $m123 0 $m124 1]
 set c147 [addConnection $m123 0 $m121 1]
@@ -359,6 +361,7 @@ set c178 [addConnection $m131 1 $m44 11]
 set c179 [addConnection $m136 0 $m103 0]
 set c180 [addConnection $m105 0 $m136 1]
 set c181 [addConnection $m102 0 $m111 3]
+set c182 [addConnection $m137 0 $m114 1]
 
 setProgressText "Loading BioTensor Settings, Please Wait..."
 
@@ -1553,6 +1556,8 @@ set $m134-port-index {1}
 set $m135-notes {}
 set $m135-port-index {1}
 set $m136-port-index {0}
+
+set $m137-kind {nrrdKind3DMaskedSymTensor}
 
 ::netedit scheduleok
 
