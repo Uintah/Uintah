@@ -1785,7 +1785,7 @@ itcl_class ViewWindow {
            return
         }
 
-	toplevel $w
+	toplevel $w -class TkFDialog
 
 	set initdir [pwd]
 
@@ -2359,7 +2359,7 @@ itcl_class EmbeddedViewWindow {
            return
         }
 
-	toplevel $w
+	toplevel $w -class TkFDialog
 
 	set initdir [pwd]
 
