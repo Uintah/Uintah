@@ -105,6 +105,7 @@ private:
   //! loop through the nodes in the seed field
   template <class VMESH, class SMESH>
   void TemplatedExecute(VMESH *, SMESH *, VectorFieldInterface *,
+			double tolerance, double stepsize, int maxsteps,
 			ContourMeshHandle);
 
   //! find the nodes that make up a single stream line.
@@ -251,30 +252,21 @@ template <class VMESH, class SMESH>
 void 
 StreamLines::TemplatedExecute(VMESH *vmesh, SMESH *smesh,
 			      VectorFieldInterface *vfi,
+			      double tolerance,
+			      double stepsize,
+			      int maxsteps,
 			      ContourMeshHandle cmesh)
 {
   typedef typename VMESH::Node::iterator          vf_node_iterator;
   typedef typename SMESH::Node::iterator          sf_node_iterator;
-  typedef typename ContourMesh::Node::index_type  node_index_type;
 
   Point seed;
   Vector test;
   vector<Point> nodes;
   vector<Point>::iterator node_iter;
-  node_index_type n1, n2;
+  ContourMesh::Node::index_type n1, n2;
 
   vmesh->finish_mesh();
-
-  TCL::execute(id + " set_state Executing 0");
-  const int node_count = smesh->nodes_size();
-  double loop = 0;
-
-  double tolerance;
-  double stepsize;
-  int maxsteps;
-  get_gui_doublevar(id, "tolerance", tolerance);
-  get_gui_doublevar(id, "stepsize", stepsize);
-  get_gui_intvar(id, "maxsteps", maxsteps);
 
   // Try to find the streamline for each seed point.
   sf_node_iterator seed_iter = smesh->node_begin();
@@ -327,9 +319,6 @@ StreamLines::TemplatedExecute(VMESH *vmesh, SMESH *smesh,
     }
 
     ++seed_iter;
-    ++loop;
-    
-    TCL::execute(id + " set_progress " + to_string(loop / node_count) + " 0");
   }
 }
 
@@ -380,6 +369,13 @@ void StreamLines::execute()
   ContourField<double> *cf = scinew ContourField<double>(Field::NODE);
   ContourMeshHandle cmesh = cf->get_typed_mesh();
 
+  double tolerance;
+  double stepsize;
+  int maxsteps;
+  get_gui_doublevar(id, "tolerance", tolerance);
+  get_gui_doublevar(id, "stepsize", stepsize);
+  get_gui_intvar(id, "maxsteps", maxsteps);
+
   // this is a pain...
   // use Marty's dispatch here instead...
   if (vf_->get_type_name(0) == "LatticeVol") {
@@ -387,13 +383,13 @@ void StreamLines::execute()
     if (vf_->get_type_name(1) == "Vector") {
       if (sf_->get_type_name(-1) == "ContourField<double>") {
 	TemplatedExecute(vmesh, (ContourMesh *)(sf_->mesh().get_rep()),
-			 vfi, cmesh);
+			 vfi, tolerance, stepsize, maxsteps, cmesh);
       } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
 	TemplatedExecute(vmesh, (TriSurfMesh *)(sf_->mesh().get_rep()),
-			 vfi, cmesh);
+			 vfi, tolerance, stepsize, maxsteps, cmesh);
       } else if (sf_->get_type_name(-1) == "PointCloud<double>") {
 	TemplatedExecute(vmesh, (PointCloudMesh *)(sf_->mesh().get_rep()),
-			 vfi, cmesh);
+			 vfi, tolerance, stepsize, maxsteps, cmesh);
       }
     }
   } else if (vf_->get_type_name(0) =="TetVol") {
@@ -401,13 +397,13 @@ void StreamLines::execute()
     if (vf_->get_type_name(1) == "Vector") {
       if (sf_->get_type_name(-1) == "ContourField<double>") {
 	TemplatedExecute(vmesh, (ContourMesh *)(sf_->mesh().get_rep()),
-			 vfi, cmesh);
+			 vfi, tolerance, stepsize, maxsteps, cmesh);
       } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
 	TemplatedExecute(vmesh, (TriSurfMesh *)(sf_->mesh().get_rep()),
-			 vfi, cmesh);
+			 vfi, tolerance, stepsize, maxsteps, cmesh);
       } else if (sf_->get_type_name(-1) == "PointCloud<double>") {
 	TemplatedExecute(vmesh, (PointCloudMesh *)(sf_->mesh().get_rep()),
-			 vfi, cmesh);
+			 vfi, tolerance, stepsize, maxsteps, cmesh);
       }
     }
   }
@@ -415,6 +411,7 @@ void StreamLines::execute()
   cf->resize_fdata();
   oport_->send(cf);
 }
+
 
 void StreamLines::tcl_command(TCLArgs& args, void* userdata)
 {
