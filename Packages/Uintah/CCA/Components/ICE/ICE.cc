@@ -1049,7 +1049,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
           delt_CFL = std::min(C, delt_CFL);
         } 
       } 
-    // cout << " delT Based on currant number "<< delt_CFL << endl;;
+//    cout << " delT Based on currant number "<< delt_CFL << endl;
 
       if (d_impICE) {    //    I M P L I C I T
         //__________________________________
@@ -1106,7 +1106,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
           delt_CFL = std::min(delt_CFL, delt_tmp);
         }  // iter loop
       }  // implicit loop
-      //cout << "delT based on swept volumes "<< delt_CFL<<endl;
+//      cout << "delT based on swept volumes "<< delt_CFL<<endl;
       
       //__________________________________
       // stability constraint due to heat conduction
@@ -1127,6 +1127,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
         }  //
       }  // ice_matl
     }  // matl loop
+    
+//    cout << "delT based on conduction "<< delt_cond<<endl;
     
     delt = std::min(delt_CFL, delt_cond);
     delt = std::min(delt, d_initialDt);
@@ -2783,9 +2785,9 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
             top    = c + IntVector(0,1,0);    bottom = c ;    
             front  = c + IntVector(0,0,1);    back   = c ; 
             
-            int_eng_source[c]=(q_X_FC[right] - q_X_FC[left])  * areaX +
-                              (q_Y_FC[top]   - q_Y_FC[bottom])* areaY +
-                              (q_Z_FC[front] - q_Z_FC[back])  * areaZ; 
+            int_eng_source[c]=-((q_X_FC[right] - q_X_FC[left])  *areaX +         
+                                (q_Y_FC[top]   - q_Y_FC[bottom])*areaY +         
+                                (q_Z_FC[front] - q_Z_FC[back])  *areaZ )*delT;  
           }
         } 
       }
@@ -3942,7 +3944,6 @@ template <class T>
   //__________________________________
   //  For variable thermalCond use
   //  thermalCond_FC = 2 * k[L] * k[R]/ ( k[R] + k[L])
-   
   double thermalCond_FC = thermalCond;
   
   for(;!iter.done(); iter++){
@@ -3950,7 +3951,8 @@ template <class T>
     IntVector L = R + adj_offset;
     double rho_brack = (2.0 * rho_CC[R] * rho_CC[L])/(rho_CC[R] + rho_CC[L]);
     double vol_frac_FC = rho_brack * sp_vol_CC[R];
-    q_FC[R] = -vol_frac_FC * thermalCond_FC* (Temp_CC[R] - Temp_CC[L]/dx);
+    q_FC[R] = -vol_frac_FC * thermalCond_FC* (Temp_CC[R] - Temp_CC[L])/dx;
+
   }
 }
 
