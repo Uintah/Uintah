@@ -119,6 +119,9 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 					  lb->pCrackSurfaceNormalLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pMicrocrackSizeLabel,
 					  lb->pMicrocrackSizeLabel_preReloc); 
+       lb->registerPermanentParticleState(m,lb->pMicrocrackPositionLabel,
+					  lb->pMicrocrackPositionLabel_preReloc); 
+					  
        lb->registerPermanentParticleState(m,lb->pIsBrokenLabel,
 					  lb->pIsBrokenLabel_preReloc); 
      }
@@ -214,7 +217,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			Ghost::AroundNodes, 1 );
    	       t->requires(old_dw, lb->pMicrocrackSizeLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
-   	       t->requires(old_dw, lb->pVolumeLabel, idx, patch,
+   	       t->requires(old_dw, lb->pMicrocrackPositionLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
    	    }
 
@@ -670,6 +673,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			 Ghost::None);
 	      t->requires( old_dw, lb->pMicrocrackSizeLabel, idx, patch,
 			 Ghost::None);
+	      t->requires( old_dw, lb->pMicrocrackPositionLabel, idx, patch,
+			 Ghost::None);
 	      t->requires( old_dw, lb->pVolumeLabel, idx, patch,
 			 Ghost::None);
 	      t->requires( new_dw, lb->pDilationalWaveSpeedLabel, idx, patch,
@@ -682,6 +687,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	      t->computes( new_dw, lb->pIsBrokenLabel_preReloc, idx, patch );
 	      t->computes( new_dw, lb->pCrackSurfaceNormalLabel_preReloc, idx, patch );
 	      t->computes( new_dw, lb->pMicrocrackSizeLabel_preReloc, idx, patch );
+	      t->computes( new_dw, lb->pMicrocrackPositionLabel_preReloc, idx, patch );
 	    }
 	 }
 
@@ -756,6 +762,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
      new_dw->pleaseSave(lb->pCrackSurfaceNormalLabel, numMatls);
      new_dw->pleaseSave(lb->pIsBrokenLabel, numMatls);
      new_dw->pleaseSave(lb->pMicrocrackSizeLabel, numMatls);
+     new_dw->pleaseSave(lb->pMicrocrackPositionLabel, numMatls);
    }
 
    new_dw->pleaseSaveIntegrated(lb->StrainEnergyLabel);
@@ -1833,6 +1840,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.142  2000/09/11 00:14:55  tan
+// Added calculations on random distributed microcracks in broken particles.
+//
 // Revision 1.141  2000/09/10 23:09:57  tan
 // Added calculations on the rotation of crack surafce during fracture.
 //

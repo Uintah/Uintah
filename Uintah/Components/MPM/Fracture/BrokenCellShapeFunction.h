@@ -16,10 +16,10 @@ class BrokenCellShapeFunction {
 public:
 
         BrokenCellShapeFunction( const Lattice& lattice,
-                                 const ParticleVariable<double>& pVolume,
                                  const ParticleVariable<int>& pIsBroken,
 				 const ParticleVariable<Vector>& pCrackSurfaceNormal,
-				 const ParticleVariable<double>& pMicrocrackSize );
+				 const ParticleVariable<double>& pMicrocrackSize,
+			         const ParticleVariable<double>& pMicrocracPosition );
 
   bool  findCellAndWeights( int partIdx, 
                             IntVector nodeIdx[8], 
@@ -41,10 +41,10 @@ public:
 
 private:
   const Lattice&                  d_lattice;
-  const ParticleVariable<double>& d_pVolume;
   const ParticleVariable<int>&    d_pIsBroken;
   const ParticleVariable<Vector>& d_pCrackSurfaceNormal;
   const ParticleVariable<double>& d_pMicrocrackSize;
+  const ParticleVariable<double>& d_pMicrocracPosition;
 };
 
 } //namespace MPM
@@ -53,6 +53,9 @@ private:
 #endif //__Uintah_MPM_BrokenCellShapeFunction__
 
 // $Log$
+// Revision 1.7  2000/09/11 00:15:00  tan
+// Added calculations on random distributed microcracks in broken particles.
+//
 // Revision 1.6  2000/09/08 18:24:39  tan
 // Added visibility calculation to fracture broken cell shape function
 // interpolation.

@@ -21,10 +21,10 @@ class ParticlesNeighbor : public std::vector<particleIndex> {
 public:
 
         ParticlesNeighbor(const ParticleVariable<Point>& pX,
-                          const ParticleVariable<double>& pVolume,
 	                  const ParticleVariable<int>& pIsBroken,
 			  const ParticleVariable<Vector>& pCrackSurfaceNormal,
-			  const ParticleVariable<double>& pMicrocrackSize);
+			  const ParticleVariable<double>& pMicrocrackSize,
+			  const ParticleVariable<double>& pMicrocrackPosition);
 
   void  buildIn(const IntVector& cellIndex,const Lattice& lattice);
   
@@ -52,7 +52,7 @@ private:
   const ParticleVariable<int>&    d_pIsBroken;
   const ParticleVariable<Vector>& d_pCrackSurfaceNormal;
   const ParticleVariable<double>& d_pMicrocrackSize;
-  const ParticleVariable<double>& d_pVolume;
+  const ParticleVariable<double>& d_pMicrocrackPosition;
 };
 
 } //namespace MPM
@@ -61,6 +61,9 @@ private:
 #endif //__PARTICLESNEIGHBOR_H__
 
 // $Log$
+// Revision 1.8  2000/09/11 00:15:00  tan
+// Added calculations on random distributed microcracks in broken particles.
+//
 // Revision 1.7  2000/09/08 18:25:35  tan
 // Added visibility calculation to fracture broken cell shape function
 // interpolation.
