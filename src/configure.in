@@ -2542,17 +2542,27 @@ case $host in
          dirs="$SCI_LAB_TP_LIBS"
       fi
 
-      SCI_CHECK_LIB($dirs,mpi,main,,,optional)
-
+      SCI_CHECK_LIB("",util,main,,,optional)
+      if test -n "$HAVE_LIB_UTIL"; then
+         SCI_CHECK_LIB($dirs,lam,main,-lutil,,optional)
+         if test -n "$HAVE_LIB_LAM"; then
+            SCI_CHECK_LIB($dirs,mpi,main,-llam -lutil,,optional)
+         fi
+      fi
+      
       if test -z "$HAVE_LIB_MPI"; then
-         SCI_CHECK_LIB($dirs,mpich,main,,,optional)
-         SCI_CHECK_LIB($LIB_DIR_MPICH,pmpich,main,,,optional)
+         SCI_CHECK_LIB($dirs,mpi,main,,,optional)
 
-         if test "$HAVE_LIB_MPICH" && test "$HAVE_LIB_PMPICH"; then
-	    HAVE_LIB_MPI="$HAVE_LIB_MPICH"
-	    LIB_DIR_MPI="$LIB_DIR_MPICH"
-            MPI_LIB_FLAG="$MPICH_LIB_FLAG $PMPICH_LIB_FLAG"
-            MPI_LIB_DIR_FLAG="$MPICH_LIB_DIR_FLAG"
+         if test -z "$HAVE_LIB_MPI"; then
+            SCI_CHECK_LIB($dirs,mpich,main,,,optional)
+            SCI_CHECK_LIB($LIB_DIR_MPICH,pmpich,main,,,optional)
+
+            if test "$HAVE_LIB_MPICH" && test "$HAVE_LIB_PMPICH"; then
+	       HAVE_LIB_MPI="$HAVE_LIB_MPICH"
+	       LIB_DIR_MPI="$LIB_DIR_MPICH"
+               MPI_LIB_FLAG="$MPICH_LIB_FLAG $PMPICH_LIB_FLAG"
+               MPI_LIB_DIR_FLAG="$MPICH_LIB_DIR_FLAG"
+            fi
          fi
       fi
 
