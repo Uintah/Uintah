@@ -8278,7 +8278,16 @@ class BioTensorApp {
 		    # NOT SURE ABOUT THIS RESCALE
 		    #disableModule $mods(RescaleColorMap2) 0
 		    disableModule $mods(TendEpireg) 1
-		    disableModule $mods(UnuJoin) 1
+                    global data_mode
+                    # Enable the UnuJoin module if it hasn't already
+		    # been enabled when the B0 volume has been provided.
+		    # This could have been missed being enabled if
+		    # registration was skipped.
+		    if {$data_mode == "DWIknownB0" && $data_completed} {
+			disableModule $mods(UnuJoin) 0
+		    } else {
+			disableModule $mods(UnuJoin) 1
+		    }
 		    #$mods(ChooseNrrd-ToReg)-c needexecute
 		    activate_dt
 		    $proc_tab1 view "Build Tensors"
