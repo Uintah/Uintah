@@ -94,7 +94,6 @@ DESCRIPTION
 	    int granularity_;
 	    std::vector<int> assignments_;
 	    AtomicCounter current_assignment_;
-	    bool done_;
 	    bool dynamic_;
 	    
 	    void fill();
