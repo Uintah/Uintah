@@ -10,7 +10,7 @@
    </Meta>
 
    <Time>
-	<maxTime>.010</maxTime>
+	<maxTime>.001</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.001</delt_max>
@@ -54,7 +54,7 @@
 		    <tri>
 			<name>sphere</name>
 		    </tri>
-		    <res>[2,2,2]</res>
+		    <res>[2,1,1]</res>
 		    <velocity>[1.,0.,0.]</velocity>
 		    <temperature>300.</temperature>
  		</geom_object>
@@ -74,9 +74,9 @@
     <Grid>
 	<Level>
 	    <Box label="1">
-		<lower>[-1 0.0,-1 0.0,-1 0.0   ]</lower>
-		<upper>[ 1.0, 1.0, 1.0 ]</upper>
-	        <resolution>[20,20,20]</resolution>
+		<lower>[-1.5, -1.5, -1.5   ]</lower>
+		<upper>[ 1.5, 1.5, 1.5 ]</upper>
+	        <resolution>[40,40,40]</resolution>
 		<patches>[1,1,1]</patches>
 	    </Box>
 	</Level>
