@@ -21,11 +21,7 @@ Instructions for running mixing tables created by stand alone programs
 2. Put the non-adiabatic mixing table in the runs directory with file name
    "nonadeqlb.tbl"
 
-3. Copy/move the SCIRun/SCIRun/src/Packages/Uintah/CCA/Components/Arches/
-   Mixing/Stream.h.static to Stream.h (Caution: This has to be done before 
-   making a build)
-
-4. The non-adiabatic tables and ups files are located in the sub-directories 
+3. The non-adiabatic tables and ups files are located in the sub-directories 
    from this level, named by fuel types
   
 ----------------------------------------------------------------------------
