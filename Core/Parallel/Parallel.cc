@@ -117,6 +117,9 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
     // Look for CompaqMPI - that latter is set on ASCI Q
     // This isn't conclusive, but we will go with it.
     ::usingMPI=true;
+  } else if(getenv("LAMWORLD") || getenv("LAMRANK")){
+    // Look for LAM-MPI
+    ::usingMPI=true;
   } else {
     // Look for mpich
     for(int i=0;i<argc;i++){
