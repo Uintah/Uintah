@@ -630,6 +630,9 @@ void ICE::createDirs( const string& desc, string& path)
   string::size_type pos  = desc.find ( "Mat" );
   string::size_type pos2 = desc.find ( "patch" );
   string dirName, matDir;
+  ostringstream DW;
+  DW << dataArchiver->getCurrentTimestep();
+  
   //__________________________________
   // parse desc into dirName, matl and patch
   if (pos == string::npos ){  // if Mat isn't in the desc
@@ -646,16 +649,20 @@ void ICE::createDirs( const string& desc, string& path)
   }
   //  cout << desc << " dirName "<< dirName << " matDir "<< matDir 
   //        << " patchDir "<< patchDir<<endl;
+
   //__________________________________
   // make the directories
   // code = 0 if successful
   int code = mkdir( dirName.c_str(), 0777 );
   
-  path = dirName + "/" + patchDir;
+  path = dirName + "/" + DW.str();
+  code = mkdir( path.c_str(), 0777 );
+  
+  path = dirName + "/" + DW.str() + "/" + patchDir;
   code = mkdir( path.c_str(), 0777 );
   
   if (matDir != "") { 
-    path = dirName + "/" + patchDir + "/" + matDir ;
+    path = dirName + "/" + DW.str() + "/" + patchDir + "/" + matDir ;
     code = mkdir( path.c_str(), 0777 );
   }
 }
