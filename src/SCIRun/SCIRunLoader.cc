@@ -89,11 +89,73 @@ SCIRunLoader::SCIRunLoader(const std::string &loaderName,
   */
 }
 
+//<<<<<<< SCIRunLoader.cc
+int SCIRunLoader::createPInstance(const string& componentName, const string& componentType, 
+				  const sci::cca::TypeMap::pointer& properties,SSIDL::array1<std::string> &componentURLs) {
+
+
+  //////////////////////////
+  //create a group here
+
+  SSIDL::array1<int> nodeSet;
+  nodeSet=properties->getIntArray("nodes", nodeSet);
+  
+  int mpi_size;
+  int mpi_rank;
+  MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+  MPI_Group world_group;
+  MPI_Comm_group(MPI_COMM_WORLD, &world_group);
+  
+  bool skip=true;
+  
+  //count how many nodes are involved
+  int ns=0;
+  for(unsigned int i=0;i<nodeSet.size(); i+=2){
+    ns+=nodeSet[i+1]-nodeSet[i]+1;
+  }
+  cerr<<"### ns = "<<ns<<endl;
+  int *ranks=new int[ns];
+  int index=0;
+  for(unsigned int i=0;i<nodeSet.size(); i+=2){
+    for(int k=nodeSet[i]; k<=nodeSet[i+1]; k++){
+      ranks[index++]=k;
+      cerr<<" rank[ " << index-1 << "="<<k<<endl;
+      if(k==mpi_rank) skip=false;
+    }
+  }
+
+  ////////////////////////////////////////////////
+  // Note that the subgroup has to be created in
+  // the world_group, ie, every world_group has
+  // to participate in the creatation process:
+  //   MPI_Group_incl and MPI_Comm_create.
+  MPI_Group group;
+  MPI_Group_incl(world_group,ns,ranks,&group );
+  delete ranks;
+
+  MPI_Comm MPI_COMM_COM;
+  MPI_Comm_create(MPI_COMM_WORLD, group, &MPI_COMM_COM);
+  /////////////////////////////////
+
+
+
+  if(skip){
+    componentURLs.resize(1);
+    componentURLs[0] = "";
+    return 0;
+  }
+
+
+//=======
+/*
 int SCIRunLoader::createPInstance(const std::string& componentName,
                                   const std::string& componentType, 
                                   const sci::cca::TypeMap::pointer& properties,
                                   SSIDL::array1<std::string> &componentURLs)
 {
+*/
+//>>>>>>> 1.13
   //TODO: assume type is always good?
   std::cerr<<"SCIRunLoader::getRefCount()="<<getRefCount()<<std::endl;
   
@@ -123,6 +185,9 @@ int SCIRunLoader::createPInstance(const std::string& componentName,
   sci::cca::Component::pointer component = (*maker)();
   //TODO: need keep a reference in the loader's creatation recored.
   component->addReference();
+  component->setCommunicator((int)(&MPI_COMM_COM) );
+
+
 
   MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
   MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
@@ -214,6 +279,8 @@ SCIRunLoader::~SCIRunLoader()
   //abort();
 }
 
+//<<<<<<< SCIRunLoader.cc
+//=======
 /*
 std::string CCAComponentModel::createComponent(const std::string& name,
 						      const std::string& type)
@@ -258,6 +325,7 @@ std::string CCAComponentModel::createComponent(const std::string& name,
 */
 
 
+//>>>>>>> 1.13
 void SCIRunLoader::buildComponentList()
 {
   // Initialize the XML4C system

@@ -38,8 +38,11 @@
  *  Copyright (C) 2003 SCI Group
  */
 
-#include "resourceReference.h"
+#include <SCIRun/resourceReference.h>
 #include <Core/CCA/spec/cca_sidl.h>
+#include <SCIRun/TypeMap.h>
+using namespace std;
+using namespace SCIRun;
 
 namespace SCIRun {
 
@@ -122,9 +125,21 @@ sci::cca::Component::pointer resourceReference::createInstance(const std::string
     }
   std::cerr<<"Done" << std::endl;
  
-  std::cerr<<"comURLs1.size before create Instance="<<comURLs1.size()<<std::endl;
-  std::cerr<<"ploader->createPInstance(name, type, comURLs1)...";
-  ploader->createPInstance(name, type, sci::cca::TypeMap::pointer(0), comURLs1);
+//<<<<<<< resourceReference.cc
+  cerr<<"comURLs1.size before create Instance="<<comURLs1.size()<<endl;
+  cerr<<"ploader->createPInstance(name, type, comURLs1)...";
+
+  SSIDL::array1<int> nodeSet;
+  nodeSet.push_back(0);
+  nodeSet.push_back(2);  //use nodes 0-2
+  sci::cca::TypeMap::pointer properties(new TypeMap);
+  properties->putIntArray("nodes", nodeSet);
+  ploader->createPInstance(name, type, properties, comURLs1);
+//=======
+//  std::cerr<<"comURLs1.size before create Instance="<<comURLs1.size()<<std::endl;
+//  std::cerr<<"ploader->createPInstance(name, type, comURLs1)...";
+//  ploader->createPInstance(name, type, sci::cca::TypeMap::pointer(0), comURLs1);
+//>>>>>>> 1.8
 
   std::cerr << "Done" << std::endl;
   std::cerr<<"comURLs1.size="<<comURLs1.size()<<std::endl;
@@ -132,8 +147,8 @@ sci::cca::Component::pointer resourceReference::createInstance(const std::string
 
   std::vector<URL> comURLs;
   for(unsigned int i=0; i<comURLs1.size(); i++){
-    std::cerr<<"comURLs["<<i<<"]="<<comURLs1[i]<<std::endl;
-    comURLs.push_back(comURLs1[i]);
+    cerr<<"comURLs["<<i<<"]="<<comURLs1[i]<<endl;
+    if(comURLs1[i]!="") comURLs.push_back(comURLs1[i]);
   }
 
   Object::pointer obj=PIDL::objectFrom(comURLs);
