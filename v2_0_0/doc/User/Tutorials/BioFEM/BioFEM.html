@@ -348,16 +348,17 @@
       <h3>2.3 User Interface Organization</h3>
 
       <p>
-	The BioFEM window contains two panes.  The Rendering Pane is
+	The BioFEM window contains two panes: the Rendering Pane and
+	the Visualization Pane.  The Rendering Pane is
 	on the left side of the window. All data interaction and
 	visualization is performed in the Rendering Pane. The
 	Visualization Pane is on the right side of the window. The
 	Visualization Pane guides the user through the application, and
 	controls visualization parameters for the Rendering
-	window. The panes may be "detached" from one another by
+	window. The panes may be detached from one another by
 	clicking on the pane detachment/attachment
 	controls&mdash;these are the vertical dashed lines separating
-	the panes. When separated, the panes appear as shown in <a
+	the panes. When separated, the panes appear as displayed in <a
 	href="#figure_2">Figure 2.</a> Detaching the Rendering window
 	allows it to be viewed at maximum resolution.  Panes are
 	re-attached by clicking on the pane
@@ -376,7 +377,7 @@
 
       <p>
 	The Rendering window contains two top-level menus: File and
-	Help.  The File menu, shown in <a
+	Help.  The File menu, displayed in <a
 	href="#figure_3">Figure&nbsp;3</a> contains the following items:
       </p>
 
@@ -450,7 +451,7 @@
 
       
       <p>
-	After starting BioFEM, the Visualization pane shows the
+	After starting BioFEM, the Visualization pane displays the
 	contents of the Data Selection tab.  Verify that the Utah
 	Torso Lowres radio button is selected.
       </p>
@@ -468,17 +469,17 @@
       </p>
 
       <ol>
-	<li>Click on the tab labeled "Viewer Options".</li>
+	<li><p>Click on the tab labeled "Viewer Options".</p></li>
 
-	<li>Click on the Views pop-up menu, select menu item
-	"Look down -Y axis", then select sub-menu item "Up vector +Z".
+	<li><p>Click on the Views pop-up menu, select menu item
+	"Look down -Y axis", then select sub-menu item "Up vector +Z".</p>
 	</li>
       </ol>
 
       <p>
 	The Rendering window should look like the Rendering window
 	shown in <a href="#figure_5">Figure 5</a>.  The Rendering
-	window shows the outer boundary of the torso volume, the set
+	window displays the outer boundary of the torso volume, the set
 	of measurement electrodes, the zero-voltage isosurface, and
 	streamlines that follow voltage gradients. The electrodes,
 	isosurface, and streamlines are color coded to show negative
@@ -569,10 +570,10 @@
       <h3>4.1 Viewer Options Tab</h3>
 
       <p>
-	<a href="#figure_6">Figure 6</a> shows the Visualization
+	<a href="#figure_6">Figure 6</a> displays the Visualization
 	Pane's Viewer Options tab.  The Viewer Options tab provides
 	controls for changing the properties of the Rendering Window.
-	"Hovering" the mouse pointer over a control (e.g., Views
+	Hovering the mouse pointer over a control (e.g., Views
 	pop-up menu button) displays a tooltip describing a control.
       </p>
 
@@ -589,11 +590,11 @@
       <h3>4.2 Vis Options Tab</h3>
 
       <p>
-	<a href="#figure_7">Figure 7</a> shows the Visualization
+	<a href="#figure_7">Figure 7</a> displays the Visualization
 	Pane's Vis Options tab.  Controls in the Vis Options tab allow
 	selection of visualization type, visualization parameters, and
 	colormap.  Visualizations can be viewed individually or
-	together. For example, <a href="#figure_5">Figure 5</a> shows
+	together. For example, <a href="#figure_5">Figure 5</a> displays
 	concurrent visualization of streamlines, zero-voltage
 	iso-surface, and electrodes.
       </p>
@@ -617,9 +618,9 @@
 
       <p>
 	An iso-surface is a surface of constant value. <a
-	href="#figure_8">Figure 8</a> shows an iso-potential surface
+	href="#figure_8">Figure 8</a> displays an iso-potential surface
 	of value 0.  Produce the visualization in <a href="#figure_8">Figure
-	8</a> is by selecting the checkbox labeled "Show
+	8</a>  by selecting the checkbox labeled "Show
 	IsoSuface" (from the Vis Options tab), and typing the
 	value 0 in Isoval control's text box.
       </p>
@@ -725,9 +726,9 @@
 
       <p>
 	Voltage values are color coded using a colormap.  Six
-	colormaps are available (<a href="#figure_7">Figure 7)</a>.  A
+	colormaps are available (<a href="#figure_7">Figure 7</a>).  A
 	colormap is selected from the Visualization pane's Vis Option
-	tab.  <a href="#figure_11">Figure 11</a> shows the
+	tab.  <a href="#figure_11">Figure 11</a> displays the
 	utahtorso-lowres model colored with the Red-to-Blue colormap
 	selected, rather than the default Inverse Rainbow coloring.
       </p>
@@ -748,11 +749,15 @@
       <h2>Appendix A&mdash;Data Formats and Preparation</h2>
 
       <p>
-	<ins>Warning: Under Construction</ins>
+	Users will want to use BioFEM to analyze their own data sets.
+	Before doing so the user must convert their data to the form
+	used by BioFEM.  This section discusses the preparation and
+	conversion of data stored in text-based files to the  form
+	used by BioFEM.
       </p>
-      
+
       <p>
-	BioFEM requires these inputs:
+	BioFEM requires these binary inputs:
       </p>
       <ul>
 	<li>
@@ -768,10 +773,11 @@
       </ul>
 
       <p>
-	The above input data are prepared as text files, then
-	converted to SCIRun's persistant file object format.  Once
-	converted to SCIRun's persistant file object format, inputs
-	can be used in BioFEM.
+	Binary inputs are in SCIRun's persistant file object format.
+	To create these binary inputs, input data are first prepared
+	as text files, then converted to SCIRun's persistant file
+	object format using the instructions given below.  The
+	converted files can then be used as inputs to BioFEM.
       </p>
       
       <p>
@@ -788,7 +794,7 @@
       <h3 id="appendix_a_1">A.1 Preparing Volume Data</h3>
 
       <p>
-	Volume data are stored as four text files:  one file contains
+	Volume data are stored in four text files:  one file contains
 	mesh node locations, one file contains mesh connectivity
 	data, one file contains conductivity data, and one contains
 	conductivity index data.  
@@ -802,8 +808,9 @@
 	href="../../Guide/usersguide/srug7_4.html#sec:node_loc_fmt">7.4.1</a>
 	and <a
 	href="../../Guide/usersguide/srug7_4.html#sec:node_conn_fmt">7.4.2</a>
-	of the SCIRun User's Guide describe these file formats.  These
-	files specify the discretization of a volume into elements.
+	of the SCIRun User's Guide describe these file formats.  The
+	node location and node connectivity files specify the
+	discretization of a volume into elements.
       </p>
 
       <p>
@@ -811,9 +818,12 @@
 	program (converter programs are located in directory
 	<tt>SCIRun/src/StandAlone/convert</tt>).  For example, use
 	<tt>TextToTetVolField</tt> to create a field from a "pts" file
-	and a "tet" file.  For example, the command:
+	and a "tet" file.
       </p>
 
+      <p>
+	The command:
+      </p>
       <pre>
   TextToTetVolField torso-mesh.pts torso-mesh.tets torso-mesh.tv.fld
       </pre>
@@ -829,12 +839,15 @@
       <h3 id="appendix_a_1_2">A.1.2 Prepare Conductivity Data</h3>
 
       <p>
-	Construct a tensor data file.  The file's first
+	Construct a tensor data file.  The tensor data file's first
 	line contains two values: the number of tensors followed by
-	the number of values per tensor (should always be 9).
-	Remaining lines contain tensor data, one tensor per line,
-	tensor data given in row-wise order.  Here is a sample file
-	containing 6 tensors:
+	the number of values per tensor, which should always be the
+	value 9.  Each remaining line contains data for one tensor.
+	Tensor data on each line are given in row-wise order.
+      </p>
+
+      <p>
+	Here are data for 6 tensors:
       </p>
 
       <pre>
@@ -852,11 +865,11 @@
       </pre>
 
       <p>
-	Each tensor is implicitly numbered (indexed) starting at 1.
+	Each tensor is implicitly numbered (indexed) starting with 1.
       </p>
 
       <p>
-	Contruct a tensor index file.  A tensor index file assigns
+	Prepare a tensor index file.  A tensor index file assigns
 	tensors in a tensor data file to volume elements defined in a
 	node connectivity file.  The first line of the tensor index
 	file contains the number of tensor index values, which must
@@ -864,8 +877,11 @@
 	contains the index of a tensor in the tensor data file.  The
 	first index value assigns a tensor to the first volume
 	element, the second index value assigns a tensor to the second
-	volume element, and so on.  A part of a tensor index file
-	follows:
+	volume element, and so on.
+      </p>
+
+      <p>
+	Here is the first part of a tensor index file:
       </p>
 
       <pre>
@@ -886,9 +902,19 @@
       </pre>
 
       <p>
-	Use converter programs <tt>TextToDenseMatrix</tt> and
-	<tt>TextToColumnMatrix</tt> to create SCIRun data objects
-	containing conductivity data and indicies:
+	Above, volume elements 1, 3&ndash;6, 9, and 10 are assigned
+	the third tensor in the tensor data file.  Volume elements 2,
+	7, and 8 are assigned the fourth tensor.
+      </p>
+
+      <p>
+	Create SCIRun data objects containing conductivity data and
+	indicies.  Use converter programs <tt>TextToDenseMatrix</tt>
+	and <tt>TextToColumnMatrix</tt>.
+      </p>
+
+      <p>
+	Here are the commands:
       </p>
 
       <pre>
@@ -897,20 +923,24 @@
       </pre>
 
       <p>
-	Files <tt>torso-conductivity-table.dmat</tt> and
-	<tt>torso-conductivity-indicies.cmat</tt> are used in a SCIRun network
-	<a href="appendix_a_1_3">below</a>.
+	These commands create files
+	<tt>torso-conductivity-table.dmat</tt> and
+	<tt>torso-conductivity-indicies.cmat</tt> respectively.  Files
+	<tt>torso-conductivity-table.dmat</tt> and
+	<tt>torso-conductivity-indicies.cmat</tt> are used in a SCIRun
+	network <a href="appendix_a_1_3">below</a>.
       </p>
       
       <h3 id="appendix_a_1_3">A.1.3 Generating the Final Field</h3>
 
       <p>
 	Execute <a type="text/plain"
-	href="nets/build-tet-vol-of-tensors.net">the SCIRun network</a>
-	shown in Figure A1.  This network combines files
-	<tt>torso-mesh.tv.fld</tt>, <tt>torso-conductivity-table.dmat</tt>
-	and <tt>torso-conductivity-indicies.cmat</tt>, into a SCIRun field
-	object that can be used in BioFEM.
+	href="nets/build-tet-vol-of-tensors.net">the SCIRun
+	network</a> displayed in Figure A1.  This network combines
+	files <tt>torso-mesh.tv.fld</tt>,
+	<tt>torso-conductivity-table.dmat</tt>, and
+	<tt>torso-conductivity-indicies.cmat</tt>, into a SCIRun
+	volume field object that can be used in BioFEM.
       </p>
 
       <a name="figure_a1" id="figure_a1"/>
@@ -926,7 +956,11 @@
 
       <p>
 	Prepare a "pts" file specifying the location of a dipole
-	source.  The file will contain one coordinate, for example:
+	source.  The file will contain one coordinate.
+      </p>
+
+      <p>
+	For example:
       </p>
 
       <pre>
@@ -936,7 +970,11 @@
 
       <p>
 	Create a partial (position information only) SCIRun dipole
-	field using <tt>TextToPointCloudField</tt>, for example:
+	field using <tt>TextToPointCloudField</tt>.
+      </p>
+
+      <p>
+	For example:
       </p>
 
       <pre>
@@ -952,8 +990,11 @@
       <p>
 	Prepare a file specifying the dipole's orientation and
 	magnitude.  The file will contain the components of a vector
-	representing the dipole's orientation and magnitude, for
-	example:
+	representing the dipole's orientation and magnitude.
+      </p>
+
+      <p>
+	For example:
       </p>
 
       <pre>
@@ -972,8 +1013,10 @@
 
       <p>
 	Create a complete SCIRun dipole field from
-	files<tt>dipole-pts.fld</tt> and <tt>dipole.mat</tt> using
-	the <a type="text/plain" href="nets/build-dipole-fld.net">network</a> shown in Figure A2. 
+	files <tt>dipole-pts.fld</tt> and <tt>dipole.mat</tt> using the
+	<a type="text/plain"
+	href="nets/build-dipole-fld.net">network</a> displayed in
+	Figure A2.
       </p>
 
       <a name="figure_a2" id="figure_a2"/>
@@ -994,7 +1037,11 @@
 
       <p>
 	Create a SCIRun point cloud field using converter
-	<tt>TextToPointClouldField</tt>.  The command:
+	<tt>TextToPointClouldField</tt>.
+      </p>
+
+      <p>
+	The command:
       </p>
 
       <pre>
@@ -1005,6 +1052,7 @@
 	creates the SCIRun field <tt>electrodes.pc.fld</tt> from the
 	file <tt>electrodes.pts</tt>.
       </p>
+
       <center>
 	<img src="images/footer.gif" alt="BioFEM bottom banner"/><br />
       </center>
