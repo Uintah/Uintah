@@ -9,7 +9,7 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 SRCS := $(SRCDIR)/sus.cc
 
 ifeq ($(CC),newmpxlc)
-AIX_LIBS := \
+AIX_LIBRARY := \
         Core/Datatypes    \
         Dataflow/Comm     \
         Dataflow/Network  \
@@ -61,24 +61,24 @@ else
         Packages/Uintah/CCA/Components/Arches \
         Packages/Uintah/CCA/Components/MPMArches \
         Packages/Uintah/CCA/Components/PatchCombiner \
-        $(AIX_LIBS)
+        $(AIX_LIBRARY)
 endif
 
 ifeq ($(CC),newmpxlc)
 LIBS := \
-        -L$(TCL_LIB_DIR) $(TCL_LIB_FLAG) $(TK_LIB_FLAG) $(ITCL_LIB_FLAG) \
-        $(ITK_LIB_FLAG) $(BLT_LIB_FLAG) \
-        $(XML_LIB_FLAG) \
+        $(TCL_LIBRARY) $(TK_LIBRARY) $(ITCL_LIBRARY) $(ITK_LIBRARY)
+	$(BLT_LIBRARY) \
+        $(XML_LIBRARY) \
         $(TAU_LIBRARY) \
-        $(GL_LIBS) $(GZ_LIBRARY) \
-        $(THREAD_LIBS) \
-        $(FLIBS) \
+        $(GL_LIBRARY) $(GZ_LIBRARY) \
+        $(THREAD_LIBRARY) \
+        $(F_LIBRARY) \
         $(MPI_LIBRARY) \
-        $(PETSC_LIBS) \
+        $(PETSC_LIBRARY) \
         -lld -lm
 else
-LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(FLIBS) \
-        $(PETSC_LIBS)
+LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) \
+        $(PETSC_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

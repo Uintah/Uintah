@@ -26,7 +26,7 @@ PSELIBS := Core
 else
 PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry Core/Util Packages/rtrt/Core
 endif
-LIBS := $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBS) $(X11_LIBS) -lXi -lXmu $(FASTM_LIBRARY) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY)
+LIBS := $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(X11_LIBRARY) -lXi -lXmu $(FASTM_LIBRARY) -lm $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
 
 PROGRAM := $(SRCDIR)/SphereImagesToEnvmap
 SRCS := $(SRCDIR)/SphereImagesToEnvmap.cc

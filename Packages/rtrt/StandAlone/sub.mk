@@ -27,7 +27,7 @@ else
 	Core/Exceptions
 
 endif
-LIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBS) $(X11_LIBS) -lXi -lXmu $(FASTM_LIBRARY) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY) $(SOUNDLIBS)
+LIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(X_LIBRARY) -lXi -lXmu $(FASTM_LIBRARY) -lm $(THREAD_LIBRARY) $(PERFEX_LIBRARY) $(SOUNDLIBS)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -56,7 +56,7 @@ else
 	Packages/rtrt/visinfo
 
 endif
-LIBS := $(GL_LIBS)
+LIBS := $(GL_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -76,7 +76,7 @@ else
 	Core/Exceptions
 
 endif
-LIBS := $(GL_LIBS) $(FASTM_LIBRARY) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY)
+LIBS := $(GL_LIBRARY) $(FASTM_LIBRARY) -lm $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -97,7 +97,7 @@ else
 	Core/Exceptions
 
 endif
-LIBS := $(GL_LIBS) $(FASTM_LIBRARY) -lm -lXmu $(THREAD_LIBS) $(PERFEX_LIBRARY)
+LIBS := $(GL_LIBRARY) $(FASTM_LIBRARY) -lm -lXmu $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

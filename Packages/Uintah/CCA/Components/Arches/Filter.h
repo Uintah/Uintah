@@ -2,6 +2,8 @@
 #ifndef Uintah_Components_Arches_Filter_h
 #define Uintah_Components_Arches_Filter_h
 
+#include <sci_defs.h>
+
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
@@ -11,7 +13,6 @@
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Core/Geometry/IntVector.h>
-
 
 #include <Core/Containers/Array1.h>
 

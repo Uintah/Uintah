@@ -8,8 +8,11 @@ SRCDIR   := Packages/Uintah/CCA/Components/Arches/Radiation
 
 SRCS += \
 	$(SRCDIR)/RadiationModel.cc \
-	$(SRCDIR)/DORadiationModel.cc \
-	$(SRCDIR)/RadLinearSolver.cc
+	$(SRCDIR)/DORadiationModel.cc
+
+ifneq ($(HAVE_PETSC),)
+  SRCS += $(SRCDIR)/RadLinearSolver.cc
+endif
 
 PSELIBS := \
 	Packages/Uintah/CCA/Components/Arches/Radiation/fortran \

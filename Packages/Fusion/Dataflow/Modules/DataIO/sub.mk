@@ -17,6 +17,7 @@ INCLUDES += $(MDSPLUS_INCLUDE)
 SRCS     += \
 	$(SRCDIR)/FusionFieldReader.cc\
 	$(SRCDIR)/MDSPlusFieldReader.cc\
+	$(SRCDIR)/MDSPlusDataReader.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
@@ -27,7 +28,7 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
 	Packages/Fusion/Core/ThirdParty \
 	Packages/Fusion/Core/Datatypes
 
-LIBS := $(TK_LIBRARY) $(GL_LIBS) $(MDSPLUS_LIBRARY) -lm
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(MDSPLUS_LIBRARY) -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

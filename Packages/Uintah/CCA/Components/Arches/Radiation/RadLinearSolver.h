@@ -2,6 +2,8 @@
 #ifndef Uintah_Components_Arches_RadLinearSolver_h
 #define Uintah_Components_Arches_RadLinearSolver_h
 
+#include <sci_defs.h>
+
 #include <Packages/Uintah/CCA/Components/Arches/LinearSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>

@@ -32,6 +32,8 @@ WARNING
   
 ****************************************/
 
+#include <sci_defs.h>
+
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
