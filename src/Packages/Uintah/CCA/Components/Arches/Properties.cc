@@ -48,6 +48,7 @@ Properties::Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
   d_enthalpySolve(enthalpySolver)
 {
   d_flamelet = false;
+  d_DORadiationCalc = false;
   d_bc = 0;
 #ifdef PetscFilter
   d_filter = 0;
