@@ -490,8 +490,7 @@ ColumnMatrix::exterior(const ColumnMatrix &m) const
 
   if (rows != m.nrows())
   {
-    ASSERT("Cannot compute exterior of two vectors of unequal dimensions.");
-    return ret;
+    ASSERTFAIL("Cannot compute exterior of two vectors of unequal dimensions.");
   }
   for (int i=0; i < rows; i++)
     for (int j=0; j< rows; j++)
