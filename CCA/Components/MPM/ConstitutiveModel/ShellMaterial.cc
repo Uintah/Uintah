@@ -238,6 +238,58 @@ ShellMaterial::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
+void 
+ShellMaterial::allocateCMData(DataWarehouse* new_dw,
+			      ParticleSubset* subset,
+			      map<const VarLabel*, ParticleVariableBase*>* newState)
+{
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+  Matrix3 One, Zero(0.0); One.Identity();
+
+
+  ParticleVariable<Vector>  pRotRate; 
+  ParticleVariable<Matrix3> pDefGradTop, pDefGradCen, pDefGradBot, 
+                            pStressTop, pStressCen, pStressBot;
+  new_dw->allocateTemporary(pRotRate, subset);
+  new_dw->allocateTemporary(pDefGradTop, subset);
+  new_dw->allocateTemporary(pDefGradCen, subset);
+  new_dw->allocateTemporary(pDefGradBot, subset);
+  new_dw->allocateTemporary(pStressTop, subset);
+  new_dw->allocateTemporary(pStressCen, subset);
+  new_dw->allocateTemporary(pStressBot, subset);
+
+  ParticleVariable<Matrix3> pDefGrad, pStress;
+  new_dw->allocateTemporary(pDefGrad, subset);
+  new_dw->allocateTemporary(pStress,  subset);
+
+  ParticleSubset::iterator iter = subset->begin();
+  for(; iter != subset->end(); iter++) {
+    particleIndex pidx = *iter;
+    pRotRate[pidx]    = Vector(0.0,0.0,0.0);
+    pDefGradTop[pidx] = One;
+    pDefGradCen[pidx] = One;
+    pDefGradBot[pidx] = One;
+    pStressTop[pidx]  = Zero;
+    pStressCen[pidx]  = Zero;
+    pStressBot[pidx]  = Zero;
+
+    pDefGrad[*iter] = One;
+    pStress[*iter] = Zero;
+  }
+
+   (*newState)[pNormalRotRateLabel]=pRotRate.clone();
+   (*newState)[pDefGradTopLabel]=pDefGradTop.clone();
+   (*newState)[pDefGradCenLabel]=pDefGradCen.clone();
+   (*newState)[pDefGradBotLabel]=pDefGradBot.clone();
+   (*newState)[pStressTopLabel]=pStressTop.clone();
+   (*newState)[pStressCenLabel]=pStressCen.clone();
+   (*newState)[pStressBotLabel]=pStressBot.clone();
+   (*newState)[lb->pDeformationMeasureLabel]=pDefGrad.clone();
+   (*newState)[lb->pStressLabel]=pStress.clone();
+ 
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Compute a stable time step.

@@ -83,6 +83,46 @@ void CompMooneyRivlin::initializeCMData(const Patch* patch,
 
   computeStableTimestep(patch, matl, new_dw);
 }
+void CompMooneyRivlin::allocateCMData(DataWarehouse* new_dw,
+				      ParticleSubset* subset,
+				      map<const VarLabel*, ParticleVariableBase*>* newState)
+{
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+  Matrix3 Identity, zero(0.);
+  Identity.Identity();
+
+  ParticleVariable<Matrix3> deformationGradient, pstress;
+
+  new_dw->allocateTemporary(deformationGradient,subset);
+  new_dw->allocateTemporary(pstress, subset);
+  // for J-Integral
+  
+  ParticleVariable<Matrix3> pdispGrads;
+  ParticleVariable<double>  pstrainEnergyDensity;
+#ifdef FRACTURE
+  new_dw->allocateTemporary(pdispGrads, subset);
+  new_dw->allocateTemporary(pstrainEnergyDensity, subset);
+#endif
+  for(ParticleSubset::iterator iter =subset->begin();iter != subset->end();
+      iter++){
+    deformationGradient[*iter] = Identity;
+    pstress[*iter] = zero;
+#ifdef FRACTURE
+    pdispGrads[*iter] = zero;
+    pstrainEnergyDensity[*iter] = 0.0;
+#endif
+  }
+
+  (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
+  (*newState)[ lb->pStressLabel]=pstress.clone();
+#ifdef FRACTURE
+  (*newState)[lb->pDispGradsLabel]=pdispGrads.clone();
+  (*newState)[ lb->pStrainEnergyDensityLabel]=pstrainEnergyDensity.clone();
+#endif
+
+}
+
 
 void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
 					     const MPMMaterial* matl,
