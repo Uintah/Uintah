@@ -94,6 +94,7 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_probeLocy
     global $this-gui_probeLocz
     global $this-gui_probe_scale
+    global $this-selnameloc
 
     set $this-gui_name $this
     set $this-gui_label(1) "label1"
@@ -195,6 +196,7 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_probeLocy "0"
     set $this-gui_probeLocz "0"
     set $this-gui_probe_scale "1.0"
+    set $this-selnameloc "unknown,0.0,0.0,0.0"
 
   }
   # end method set_defaults
@@ -318,6 +320,7 @@ itcl_class VS_DataFlow_HotBox {
 
   method set_selection { selection_id } {
     puts "VS_DataFlow_HotBox::set_selection{$selection_id}"
+    set selection "unknown"
     if { [info exists $this-gui_label($selection_id)] } {
         set selection [set $this-gui_label($selection_id)]
     } else {
@@ -344,6 +347,24 @@ itcl_class VS_DataFlow_HotBox {
     $this-c needexecute
   }
   # end method setProbeLoc
+
+  method set_probeSelection { name1 name2 op } {
+    # $this-selnameloc is of the form "<selection>,<locX>,<locY>,<locZ>"
+    # separate tokens at commas
+    set fields [split [set $this-selnameloc] ","]
+    # set current selection
+    set $this-currentselection [lindex $fields 0]
+    # tell the HotBox module that the
+    # current selection was changed
+    # from the HotBox UI -- not the Probe
+    set $this-selectionsource "fromHotBoxUI"
+    # set probe location
+    set $this-gui_probeLocx [lindex $fields 1]
+    set $this-gui_probeLocy [lindex $fields 2]
+    set $this-gui_probeLocz [lindex $fields 3]
+    $this setProbeLoc
+  }
+  # end method set_probeSelection
 
   method set_hier_selection { selection_id } {
     set w .ui[modname]
@@ -545,6 +566,8 @@ itcl_class VS_DataFlow_HotBox {
     ######################################
     frame $w.probeUI
     frame $w.probeUI.loc
+    tk_optionMenu $w.probeUI.loc.hotlist $this-selnameloc "Pericardium,94.5,60.1,52.3" "Myocardial zone 7,96.9,60.0,71.4" "Myocardial zone 12,113.9,69.5,83.7"
+    trace var $this-selnameloc w "$this set_probeSelection"
     label $w.probeUI.loc.locLabel -text "Cursor Location" -just left
     entry $w.probeUI.loc.locx -width 10 -textvariable $this-gui_probeLocx
     entry $w.probeUI.loc.locy -width 10 -textvariable $this-gui_probeLocy
@@ -552,7 +575,8 @@ itcl_class VS_DataFlow_HotBox {
     bind $w.probeUI.loc.locx <KeyPress-Return> "$this setProbeLoc"
     bind $w.probeUI.loc.locy <KeyPress-Return> "$this setProbeLoc"
     bind $w.probeUI.loc.locz <KeyPress-Return> "$this setProbeLoc"
-    pack $w.probeUI.loc.locLabel $w.probeUI.loc.locx $w.probeUI.loc.locy $w.probeUI.loc.locz \
+    bind $w.probeUI.loc.locz <KeyPress-Return> "$this setProbeLoc"
+    pack $w.probeUI.loc.locLabel $w.probeUI.loc.hotlist $w.probeUI.loc.locx $w.probeUI.loc.locy $w.probeUI.loc.locz \
                 -side left -anchor n -expand yes -fill x
 
     frame $w.probeUI.slideTime
@@ -568,6 +592,7 @@ itcl_class VS_DataFlow_HotBox {
     ######################################
     label $w.probeUI.slideTime.timeLabel -text "Time"
     entry $w.probeUI.slideTime.timeVal -width 5 -textvariable $this-currentTime
+    bind $w.probeUI.slideTime.timeVal <KeyPress-Return> "$this-c needexecute"
     bind $w.probeUI.slideTime.timeVal <KeyPress-Return> "$this-c needexecute"
     pack $w.probeUI.slideTime.slide $w.probeUI.slideTime.timeLabel $w.probeUI.slideTime.timeVal -side left -expand yes -fill x
     pack $w.probeUI.slideTime $w.probeUI.loc -side bottom -expand yes -fill x
@@ -619,24 +644,6 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_parent_list [list [set $this-gui_parent(0)] \
                                     [set $this-gui_parent(1)] \
                                     [set $this-gui_parent(2)] \
-                                    [set $this-gui_parent(3)] \
-                                    [set $this-gui_parent(4)] \
-                                    [set $this-gui_parent(5)] \
-                                    [set $this-gui_parent(6)] \
-                                    [set $this-gui_parent(7)]]
-    set $this-gui_sibling_list [list [set $this-gui_sibling(0)] \
-                                     [set $this-gui_sibling(1)] \
-                                     [set $this-gui_sibling(2)] \
-                                     [set $this-gui_sibling(3)]]
-    set $this-gui_child_list [list [set $this-gui_child(0)] \
-                                   [set $this-gui_child(1)] \
-                                   [set $this-gui_child(2)] \
-                                   [set $this-gui_child(3)] \
-                                   [set $this-gui_child(4)] \
-                                   [set $this-gui_child(5)] \
-                                   [set $this-gui_child(6)] \
-                                   [set $this-gui_child(7)] \
-                                   [set $this-gui_child(8)] \
                                    [set $this-gui_child(9)] \
                                    [set $this-gui_child(10)] \
                                    [set $this-gui_child(11)] \
