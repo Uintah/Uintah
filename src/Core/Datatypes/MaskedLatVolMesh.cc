@@ -120,6 +120,7 @@ void
 MaskedLatVolMesh::begin(MaskedLatVolMesh::Edge::iterator &itr) const
 {
   itr = Edge::iterator(this,min_i_,min_j_,min_k_,0);
+  if (!check_valid(itr)) ++itr;
 }
 
 void
@@ -127,24 +128,19 @@ MaskedLatVolMesh::end(MaskedLatVolMesh::Edge::iterator &itr) const
 {
   itr = Edge::iterator(this, min_i_+ni_-1, min_j_+nj_-1, min_k_+nk_-1,2);
   if (!check_valid(itr)) { --itr; itr.next(); }
-  //  itr = ((ni_-1) * nj_ * nk_) + (ni_ * (nj_-1) * nk_) + (ni_ * nj_ * (nk_-1));
 }
 
 void
 MaskedLatVolMesh::size(MaskedLatVolMesh::Edge::size_type &s) const
 {
   s = Edge::size_type(this,ni_,nj_,nk_);
-
-  //  s = (((ni_-1) * nj_ * nk_) + 
-  //    (ni_ * (nj_-1) * nk_) + 
-  //   (ni_ * nj_ * (nk_-1)) -
-  //   masked_edges_count_);
 }
 
 void
 MaskedLatVolMesh::begin(MaskedLatVolMesh::Face::iterator &itr) const
 {
   itr = Face::iterator(this,min_i_,min_j_,min_k_,0);
+  if (!check_valid(itr)) ++itr;
 }
 
 void
@@ -152,19 +148,12 @@ MaskedLatVolMesh::end(MaskedLatVolMesh::Face::iterator &itr) const
 {
   itr = Face::iterator(this, min_i_+ni_-2, min_j_+nj_-1, min_k_+nk_-2,2);
   if (!check_valid(itr)) { --itr; itr.next(); }
-  //  itr = (ni_-1) * (nj_-1) * nk_ +
-  //  ni_ * (nj_ - 1 ) * (nk_ - 1) +
-  //  (ni_ - 1) * nj_ * (nk_ - 1);
 }
 
 void
 MaskedLatVolMesh::size(MaskedLatVolMesh::Face::size_type &s) const
 {
   s = Face::size_type(this,ni_,nj_,nk_);
-  //  s =  (((ni_-1) * (nj_-1) * nk_) +
-  //	(ni_ * (nj_ - 1 ) * (nk_ - 1)) +
-  //	((ni_ - 1) * nj_ * (nk_ - 1)) -
-  //	masked_faces_count_);
 }
 
 //! get the child elements of the given index
@@ -189,16 +178,14 @@ MaskedLatVolMesh::get_nodes(Node::array_type &array, Face::index_type f) const
 			      f.i_ + (f.dir_ == 0 ? 1:0),
 			      f.j_ + (f.dir_ == 1 ? 1:0),
 			      f.k_ + (f.dir_ == 2 ? 1:0));
-  //todo
   array[2] = Node::index_type(this,
-			      f.i_ + (f.dir_ == 0 ? 1:0),
-			      f.j_ + (f.dir_ == 1 ? 1:0),
-			      f.k_ + (f.dir_ == 2 ? 1:0));
-
+			      f.i_ + ((f.dir_ == 0 || f.dir_ == 2) ? 1:0),
+			      f.j_ + ((f.dir_ == 0 || f.dir_ == 1) ? 1:0),
+			      f.k_ + ((f.dir_ == 1 || f.dir_ == 2) ? 1:0));
   array[3] = Node::index_type(this,
-			      f.i_ + (f.dir_ == 0 ? 1:0),
-			      f.j_ + (f.dir_ == 1 ? 1:0),
-			      f.k_ + (f.dir_ == 2 ? 1:0));
+			      f.i_ + (f.dir_ == 2 ? 1:0),
+			      f.j_ + (f.dir_ == 0 ? 1:0),
+			      f.k_ + (f.dir_ == 1 ? 1:0));
 
 }
 
