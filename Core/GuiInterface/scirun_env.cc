@@ -39,13 +39,14 @@
 
 namespace SCIRun {
 
-char* MacroSubstitute(char* var_val)
+char*
+MacroSubstitute( char * var_val )
 {
-  int cur = 0;
-  int start = 0;
-  int end = start;
+  int    cur = 0;
+  int    start = 0;
+  int    end = start;
   string newstring("");
-  char* macro = 0;
+  char * macro = 0;
   
   if (var_val==0)
     return 0;
@@ -87,9 +88,9 @@ char* MacroSubstitute(char* var_val)
   return retval;
 }
 
-
-void sci_putenv(const string &var,const string &val,
-		GuiInterface *gui, bool force)
+void
+sci_putenv( const string &var, const string &val,
+	    GuiInterface *gui, bool force )
 {
   // Check TCL's backup of the enviroment when scirun started
   // to make sure we dont overwrite any env string that the user
@@ -112,7 +113,26 @@ void sci_putenv(const string &var,const string &val,
   if (gui) gui->execute("global env; set env("+var+") {"+val+"}");
 }  
 
-bool RCParse(const char* rcfile, GuiInterface *gui)
+// Returns true if the 'line' passed in is a comment (first character is a '#') 
+// or if the entire line is empty or white space.
+bool
+emptyOrComment( const char * line )
+{
+  const char A_TAB = '	';
+  int   length = strlen( line );
+
+  for( int pos = 0; pos < length; pos++ ) {
+    if( line[pos] == '#' ) {
+      return true;
+    } else if( ( line[pos] != ' ' ) && ( line[pos] != A_TAB ) ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool
+RCParse( const char* rcfile, GuiInterface *gui )
 {
   FILE* filein = fopen(rcfile,"r");
   char var[0xff];
@@ -121,12 +141,26 @@ bool RCParse(const char* rcfile, GuiInterface *gui)
   if (!filein)
     return false;
 
-  int i=1; // prevent warning
+  bool done = false;
 
-  while (i) {
+  while( !done ) {
     var[0]='\0';
     var_val[0]='\0';
-    if (fscanf(filein,"%[^=]=%s",var,var_val)!=EOF){
+
+    char line[1024];
+    // If we get to the EOF:
+    if( !fgets( line, 1024, filein ) ) break;
+
+    int length = strlen(line);
+    if( length > 0 ) {
+      // Replace CR with EOL.
+      line[length-1] = 0;
+    }
+      
+    // Skip commented out lines or blank lines
+    if( emptyOrComment( line ) ) continue;
+
+    if( sscanf( line, "%[^=]=%s", var, var_val ) == 2 ){
       if (var[0]!='\0' && var_val[0]!='\0') {
 	removeLTWhiteSpace(var);
 	removeLTWhiteSpace(var_val);
@@ -134,8 +168,13 @@ bool RCParse(const char* rcfile, GuiInterface *gui)
 	sci_putenv(var,sub,gui);
 	delete[] sub;
       }
-    } else
+    } else if( sscanf( line, "%s%s", var, var_val ) == 2 ){
+      gui->execute( (string( "setGuiPreference " ) + var + " " + var_val ) );
+    } else {
+      string msg = string( "Error parsing .scirunrc file with line: " ) + line;
+      gui->postMessage( msg, true );
       break;
+    }
   }
 
   fclose(filein);
@@ -143,8 +182,8 @@ bool RCParse(const char* rcfile, GuiInterface *gui)
   return true;
 }
 
-
-void parse_scirunrc(GuiInterface *gui)
+void
+parse_scirunrc( GuiInterface *gui )
 {
   gui->execute("set alreadySetEnv [array names env]");
   ostringstream str;
