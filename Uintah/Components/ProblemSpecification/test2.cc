@@ -4,6 +4,7 @@
 
 using std::cout;
 using std::endl;
+using std::cerr;
 
 using Uintah::Interface::ProblemSpec;
 using Uintah::Interface::ProblemSpecP;
@@ -31,11 +32,11 @@ int main()
 
   ProblemSpecP mat_prob_spec = prob_spec->findBlock("MaterialProperties");
   
-  ProblemSpecP mpm_mat_ps = mat_prob_spec->findBlock("ARCHES");
+  ProblemSpecP mpm_mat_ps = mat_prob_spec->findBlock("MPM");
 
-   cout << "Works after finding ICE block" << endl;
+  cout << "Works after finding ICE block" << endl;
 
-  string title;
+  std::string title;
   meta_prob_spec->require("title",title);
   cout << "title is " << title << endl;
 
@@ -62,12 +63,13 @@ int main()
   ice_mat_prob_spec->require("viscosity",viscosity);
   cout << "viscosity is " << viscosity << endl;
 
+  // Here is an example of picking out multiple tags from within a block
 
-  for (ProblemSpecP mat_ps = mpm_mat_ps->findBlock("stream"); mat_ps != 0;
-       mat_ps = mat_ps->findNextBlock("stream") ) {
-    double density;
-    mat_ps->require("density",density);
-    cout << "density is " << density << endl;
+  for (ProblemSpecP mat_ps = mpm_mat_ps->findBlock("material"); mat_ps != 0;
+       mat_ps = mat_ps->findNextBlock("material") ) {
+    std::string material_type;
+    mat_ps->require("material_type", material_type);
+    cout << "material_type is " <<  material_type << endl;
   }
   exit(1);
 }
