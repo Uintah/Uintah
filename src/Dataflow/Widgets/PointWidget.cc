@@ -126,7 +126,7 @@ PointWidget::geom_moved( GeomPick*, int /* axis */, double dist,
   switch(pick)
   {
   case Pick:
-    MoveDelta(delta * dist);
+    MoveDelta(delta);
     break;
   }
   execute(0);
