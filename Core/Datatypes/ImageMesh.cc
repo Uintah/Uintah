@@ -127,21 +127,17 @@ ImageMesh::set_dim(vector<unsigned int> dim)
 void
 ImageMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 {
-  const int arr_size = 4;
-  array.resize(arr_size);
-
-  for (int i = 0; i < arr_size; i++)
-    array[i].mesh_ = idx.mesh_;
+  array.resize(4);
 
   array[0].i_ = idx.i_;   array[0].j_ = idx.j_;
   array[1].i_ = idx.i_+1; array[1].j_ = idx.j_;
   array[2].i_ = idx.i_+1; array[2].j_ = idx.j_+1;
   array[3].i_ = idx.i_;   array[3].j_ = idx.j_+1;
 
-  array[0].mesh_ = this;
-  array[1].mesh_ = this;
-  array[2].mesh_ = this;
-  array[3].mesh_ = this;
+  array[0].mesh_ = idx.mesh_;
+  array[1].mesh_ = idx.mesh_;
+  array[2].mesh_ = idx.mesh_;
+  array[3].mesh_ = idx.mesh_;
 }
 
 
