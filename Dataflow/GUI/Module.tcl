@@ -569,8 +569,6 @@ itcl_class Module {
 
 	set iports [portCount "[modname] 0 i"]
 	set oports [portCount "[modname] 0 o"]
-      puts $oports
-      puts $iports
 	set nports [expr $oports>$iports?$oports:$iports]
 	set ports_width [expr 8+$nports*$port_spacing] 
 	set port_diff [expr $ports_width - $initial_width]
@@ -774,8 +772,6 @@ itcl_class Module {
 	    foreach var $ModuleSavedVars($module) {
 		if { ![isaDefaultValue $module $var $classname] } {
 		    lappend write_vars $var
-		} else {
-		    puts "$var is default"
 		}
 	    }
 	}
@@ -793,7 +789,7 @@ itcl_class Module {
 
 		if { [info exists ModuleSubstitutedVars($module)] && \
 			 [lsearch $ModuleSubstitutedVars($module) $var]!=-1} {
-		    append script "${tab}set $varname \""
+		    append script "${tab}set $varname "
 		    append script "\"[subDATADIRandDATASET $val]\"\n"
 		} else {
 		    if { [llength $val] == 1 && ![string is integer $val] } {
@@ -806,7 +802,6 @@ itcl_class Module {
 			    continue
 			}
 		    }
-		    puts "Writing ${tab}set $varname \{${val}\}"
 		    append script "${tab}set $varname \{${val}\}\n"
 		}
 	    }
