@@ -149,13 +149,14 @@ itcl_class ViewWindow {
 
 	frame $w.menu -relief raised -borderwidth 3
 	pack $w.menu -fill x
-#	menubutton $w.menu.file -text "File" -underline 0 \
-#		-menu $w.menu.file.menu
-#	menu $w.menu.file.menu
+	menubutton $w.menu.file -text "File" -underline 0 \
+		-menu $w.menu.file.menu
+	menu $w.menu.file.menu
 #	$w.menu.file.menu add command -label "Save geom file..." -underline 0 \
 #		-command "$this makeSaveObjectsPopup"
-#	$w.menu.file.menu add command -label "Save image file..." -underline 0 \
-#		-command "$this makeSaveImagePopup"
+	$w.menu.file.menu add command -label "Save image file..." \
+	    -underline 0 -command "$this makeSaveImagePopup"
+
 	menubutton $w.menu.renderer -text "Renderer" -underline 0 \
 		-menu $w.menu.renderer.menu
 	menu $w.menu.renderer.menu
@@ -230,7 +231,7 @@ itcl_class ViewWindow {
 	    incr i
 	}
 
-#	pack $w.menu.file -side left
+	pack $w.menu.file -side left
 	pack $w.menu.edit -side left
 #	pack $w.menu.renderer -side left
 #	pack $w.menu.spawn -side left
@@ -1377,39 +1378,38 @@ itcl_class ViewWindow {
 	radiobutton $ex.raw -variable $this-saveType \
 	    -text "Raw File" -value "raw" \
 	    -command "$this changeName $w raw"
-	pack $ex.raw -side top -anchor w
-	set sgi [$this-c sgi_defined]
-	if { $sgi == 1 || $sgi == 2 } {
-	    radiobutton $ex.rgb -variable $this-saveType \
-		-text "SGI RGB File" -value "rgb" \
-	    -command "$this changeName $w rgb"
-	    radiobutton $ex.ppm -variable $this-saveType \
-		-text "PPM File" -value "ppm" \
+	
+	radiobutton $ex.ppm -variable $this-saveType \
+	    -text "PPM File" -value "ppm" \
 	    -command "$this changeName $w ppm"
-	    radiobutton $ex.jpg -variable $this-saveType \
-		-text "JPEG File" -value "jpg" \
-	    -command "$this changeName $w jpg"
-	} else {
-	    radiobutton $ex.rgb -variable $this-saveType \
-		-text "SGI RGB File" -value "rgb" \
-		-state disabled -disabledforeground ""
-	    radiobutton $ex.ppm -variable $this-saveType \
-		-text "PPM File" -value "ppm" \
-		-state disabled -disabledforeground ""
+	pack $ex.raw $ex.ppm -side top -anchor w
+# 	set sgi [$this-c sgi_defined]
+# 	if { $sgi == 1 || $sgi == 2 } {
+# 	    radiobutton $ex.rgb -variable $this-saveType \
+# 		-text "SGI RGB File" -value "rgb" \
+# 	    -command "$this changeName $w rgb"
+# 	    radiobutton $ex.jpg -variable $this-saveType \
+# 		-text "JPEG File" -value "jpg" \
+# 	    -command "$this changeName $w jpg"
+# 	} else {
+# 	    radiobutton $ex.rgb -variable $this-saveType \
+# 		-text "SGI RGB File" -value "rgb" \
+# 		-state disabled -disabledforeground ""
+# 	    radiobutton $ex.jpg -variable $this-saveType \
+# 		-text "JPEG File" -value "jpg" \
+# 		-state disabled -disabledforeground ""
+# 	}
 
-	    radiobutton $ex.jpg -variable $this-saveType \
-		-text "JPEG File" -value "jpg" \
-		-state disabled -disabledforeground ""
-	}
+	if { [set $this-saveType] == "ppm" } { 
+	    $ex.ppm select 
+ 	} 
+# 	elseif { [set $this-saveType] == "rgb" } {
+# 	    $ex.rgb select
+# 	} elseif { [set $this-saveType] == "jpg" } {
+# 	    $ex.jpg select
+# 	} else { $ex.raw select }
+# 	pack $ex.rgb $ex.jpg -side top -anchor w
 
-	if { [set $this-saveType] == "rgb" } { 
-	    $ex.rgb select 
-	} elseif { [set $this-saveType] == "ppm" } {
-	    $ex.ppm select
-	} elseif { [set $this-saveType] == "jpg" } {
-	    $ex.jpg select
-	} else { $ex.raw select }
-	pack $ex.rgb $ex.ppm $ex.jpg -side top -anchor w
     }
 
     method changeName { w type} {
