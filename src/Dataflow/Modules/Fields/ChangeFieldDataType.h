@@ -25,6 +25,8 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Tensor.h>
 
 namespace SCIRun {
 
@@ -33,9 +35,7 @@ class ChangeFieldDataTypeAlgoCreate : public DynamicAlgoBase
 {
 public:
 
-  virtual FieldHandle execute(FieldHandle fsrc_h,
-			      Field::data_location fout_at,
-			      bool &same_value_type_p) = 0;
+  virtual FieldHandle execute(FieldHandle fsrc_h) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -48,31 +48,21 @@ class ChangeFieldDataTypeAlgoCreateT : public ChangeFieldDataTypeAlgoCreate
 {
 public:
 
-  virtual FieldHandle execute(FieldHandle fsrc_h,
-			      Field::data_location fout_at,
-			      bool &same_value_type_p);
+  virtual FieldHandle execute(FieldHandle fsrc_h);
 };
 
 
 template <class FSRC, class FOUT>
 FieldHandle
-ChangeFieldDataTypeAlgoCreateT<FSRC, FOUT>::execute(FieldHandle fsrc_h,
-					  Field::data_location at,
-					  bool &same_value_type_p)
+ChangeFieldDataTypeAlgoCreateT<FSRC, FOUT>::execute(FieldHandle fsrc_h)
 {
   FSRC *fsrc = dynamic_cast<FSRC *>(fsrc_h.get_rep());
 
   // Create the field with the new mesh and data location.
-  FOUT *fout = scinew FOUT(fsrc->get_typed_mesh(), at);
+  FOUT *fout = scinew FOUT(fsrc->get_typed_mesh(), fsrc_h->data_at());
 
-  // Copy the (possibly transformed) data to the new field.
-  fout->resize_fdata();
-
+  // Copy the properties from old field to new field.
   *((PropertyManager *)fout) = *(PropertyManager *)fsrc;
-
-  same_value_type_p =
-    (get_type_description((typename FSRC::value_type *)0)->get_name() ==
-     get_type_description((typename FOUT::value_type *)0)->get_name());
 
   return fout;
 }

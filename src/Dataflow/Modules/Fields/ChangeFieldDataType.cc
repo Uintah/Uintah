@@ -43,53 +43,35 @@ public:
   ChangeFieldDataType(GuiContext* ctx);
   virtual ~ChangeFieldDataType();
 
-  bool			check_types(FieldHandle);
   bool			types_equal_p(FieldHandle);
   virtual void		execute();
   virtual void		tcl_command(GuiArgs&, void*);
-  GuiString		outputtypename_;   // the out field type
+  GuiString		outputdatatype_;   // the out field type
   int			generation_;
+  string                last_data_type_;
+  FieldHandle           outputfield_;
 };
 
   DECLARE_MAKER(ChangeFieldDataType)
 
 ChangeFieldDataType::ChangeFieldDataType(GuiContext* ctx)
   : Module("ChangeFieldDataType", ctx, Source, "Fields", "SCIRun"),
-    outputtypename_(ctx->subVar("outputtypename")),
-    generation_(-1)
+    outputdatatype_(ctx->subVar("outputdatatype")),
+    generation_(-1),
+    outputfield_(0)
 {
 }
 
-ChangeFieldDataType::~ChangeFieldDataType(){
-}
-
-
-
-bool ChangeFieldDataType::check_types(FieldHandle f)
+ChangeFieldDataType::~ChangeFieldDataType()
 {
-  const string &iname = f->get_type_description()->get_name();
-  const string &oname = outputtypename_.get();
-  
-  string::size_type iindx = iname.find('<');
-  string::size_type oindx = oname.find('<');
-
-  if (iindx == oindx)
-  {
-    if (iname.substr(0, iindx) == oname.substr(0, oindx))
-    {
-      return true;
-    }
-  }
-  string s(string("Input type is ") + iname + string(" -- selected type is ") + oname + "\n");
-  warning(s);
-  warning("The input field type and selected type are incompatable.");
-  return false;
 }
+
+
 
 bool ChangeFieldDataType::types_equal_p(FieldHandle f)
 {
   const string &iname = f->get_type_description()->get_name();
-  const string &oname = outputtypename_.get();
+  const string &oname = outputdatatype_.get();
   return iname == oname;
 }
 
@@ -107,7 +89,7 @@ ChangeFieldDataType::execute()
   FieldHandle fh;
   if (!iport->get(fh) || !fh.get_rep())
   {
-    gui->execute(string("set ")+id+"-inputtypename \"---\"");
+    gui->execute(string("set ")+id+"-inputdatatype \"---\"");
     return;
   }
 
@@ -118,71 +100,92 @@ ChangeFieldDataType::execute()
     return;
   }
 
+  const string old_data_type = fh->get_type_description(1)->get_name();
+  const string new_data_type = outputdatatype_.get();
+  const string new_field_type =
+    fh->get_type_description(0)->get_name() + "<" + new_data_type + "> ";
+
   if (generation_ != fh.get_rep()->generation) 
   {
     generation_ = fh.get_rep()->generation;
     const string &tname = fh->get_type_description()->get_name();
-    gui->execute(string("set ")+id+"-inputtypename \"" + tname + "\"");
+    gui->execute(string("set ")+id+"-inputdatatype \"" + tname + "\"");
+
+    string fldname;
+    if (fh->get_property("name",fldname))
+      gui->execute(string("set ")+id+"-fldname "+fldname);
+    else
+      gui->execute(string("set ")+id+"-fldname \"--- Name Not Assigned ---\"");
+
     gui->execute(id+" copy_attributes; update idletasks");
   }
-
-  // verify that the requested edits are possible (type check)
-  if (!check_types(fh))
+  else if (new_data_type == last_data_type_)
   {
-    outputtypename_.set(fh->get_type_description()->get_name());
+    oport->send(outputfield_);
+    return;
   }
+  last_data_type_ = new_data_type;
 
-  if (types_equal_p(fh))
+  if (old_data_type == new_data_type)
   {
-    // no changes, just send the original through (it may be nothing!)
-    oport->send(fh);
+    // No changes, just send the original through.
+    outputfield_ = fh;
     remark("Passing field from input port to output port unchanged.");
+    oport->send(outputfield_);
     return;
   }
 
   // Create a field identical to the input, except for the edits.
   const TypeDescription *fsrc_td = fh->get_type_description();
-  CompileInfoHandle ci =
-    ChangeFieldDataTypeAlgoCreate::get_compile_info(fsrc_td,
-						    outputtypename_.get());
-  Handle<ChangeFieldDataTypeAlgoCreate> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
-
-  gui->execute(id + " set_state Executing 0");
-  bool same_value_type_p = false;
-  FieldHandle ef(algo->execute(fh, fh->data_at(), same_value_type_p));
-
-
-  // Copy over the field data
-  const bool both_scalar_p =
-    ef->query_scalar_interface(this) && fh->query_scalar_interface(this);
-  if (both_scalar_p || same_value_type_p)
+  CompileInfoHandle create_ci =
+    ChangeFieldDataTypeAlgoCreate::get_compile_info(fsrc_td, new_field_type);
+  Handle<ChangeFieldDataTypeAlgoCreate> create_algo;
+  if (!module_dynamic_compile(create_ci, create_algo))
   {
-    const TypeDescription *fdst_td = ef->get_type_description();
-    CompileInfoHandle ci =
-      ChangeFieldDataTypeAlgoCopy::get_compile_info(fsrc_td, fdst_td);
-    Handle<ChangeFieldDataTypeAlgoCopy> algo;
-    if (!module_dynamic_compile(ci, algo)) return;
+    error("Unable to compile creation algorithm.");
+    return;
+  }
+  gui->execute(id + " set_state Executing 0");
+  outputfield_ = create_algo->execute(fh);
 
+
+  const TypeDescription *fdst_td = outputfield_->get_type_description();
+  CompileInfoHandle copy_ci =
+    ChangeFieldDataTypeAlgoCopy::get_compile_info(fsrc_td, fdst_td);
+  Handle<ChangeFieldDataTypeAlgoCopy> copy_algo;
+  if (new_data_type == "Vector" && fh->query_scalar_interface(this) ||
+      !module_maybe_dynamic_compile(copy_ci, copy_algo))
+  {
+    warning("Unable to convert from " + old_data_type +
+	    " to " + new_data_type + ".");
+  }
+  else
+  {
+    remark("Copying " + old_data_type + " data into " + new_data_type +
+	   " may result in a loss of precision.");
     gui->execute(id + " set_state Executing 0");
-    algo->execute(fh, ef);
+    copy_algo->execute(fh, outputfield_);
   }
 
-  oport->send(ef);
+  oport->send(outputfield_);
 }
 
     
 void
 ChangeFieldDataType::tcl_command(GuiArgs& args, void* userdata)
 {
-  if(args.count() < 2){
+  if (args.count() < 2)
+  {
     args.error("ChangeFieldDataType needs a minor command");
     return;
   }
  
-  if (args[1] == "execute" || args[1] == "update_widget") {
+  if (args[1] == "execute" || args[1] == "update_widget")
+  {
     want_to_execute();
-  } else {
+  }
+  else
+  {
     Module::tcl_command(args, userdata);
   }
 }
