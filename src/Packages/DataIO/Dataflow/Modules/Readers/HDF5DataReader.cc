@@ -198,8 +198,7 @@ void HDF5DataReader::execute() {
   string datasets(datasets_.get());
 
   if( filename.length() == 0 ) {
-    if( !power_app_.get() )
-      error( string("No HDF5 file selected.") );
+    error( string("No HDF5 file selected.") );
     return;
   }
   
