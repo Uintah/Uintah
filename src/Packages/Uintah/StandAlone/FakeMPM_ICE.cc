@@ -2,13 +2,13 @@
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 namespace Uintah {
 
-class MPM : public UintahParallelComponent, public SimulationInterface {
+class SerialMPM : public UintahParallelComponent, public SimulationInterface {
 
 public:
 
-      MPM(const ProcessorGroup* myworld);
+      SerialMPM(const ProcessorGroup* myworld);
 
-      virtual ~MPM();
+      virtual ~SerialMPM();
 
       virtual void problemSetup(const ProblemSpecP& params, 
 				GridP& grid,
@@ -31,30 +31,30 @@ public:
 				       DataWarehouseP&, 
 				       DataWarehouseP&);
 
-}; // end class MPM
+}; // end class SerialMPM
 
 } // End namespace Uintah
 
 using namespace Uintah;
 
-MPM::MPM(const ProcessorGroup* myworld) :
+SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
 }
 
-MPM::~MPM()
+SerialMPM::~SerialMPM()
 {
 }
 
 void 
-MPM::problemSetup(const ProblemSpecP& params, 
+SerialMPM::problemSetup(const ProblemSpecP& params, 
 		     GridP&,
 		     SimulationStateP& sharedState)
 {
 }
 
 void 
-MPM::sched_paramInit(const LevelP& level,
+SerialMPM::sched_paramInit(const LevelP& level,
 			SchedulerP& sched,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw)
@@ -65,7 +65,7 @@ MPM::sched_paramInit(const LevelP& level,
 // Schedule initialization
 // ****************************************************************************
 void 
-MPM::scheduleInitialize(const LevelP& level,
+SerialMPM::scheduleInitialize(const LevelP& level,
 			   SchedulerP& sched)
 {
 }
@@ -74,7 +74,7 @@ MPM::scheduleInitialize(const LevelP& level,
 // schedule computation of stable time step
 // ****************************************************************************
 void 
-MPM::scheduleComputeStableTimestep(const LevelP&,
+SerialMPM::scheduleComputeStableTimestep(const LevelP&,
 				      SchedulerP&)
 {
 }
@@ -83,7 +83,98 @@ MPM::scheduleComputeStableTimestep(const LevelP&,
 // Schedule time advance
 // ****************************************************************************
 void 
-MPM::scheduleTimeAdvance(double time, double dt,
+SerialMPM::scheduleTimeAdvance(double time, double dt,
+			    const LevelP& level, 
+			    SchedulerP& sched,
+			    DataWarehouseP& old_dw, 
+			    DataWarehouseP& new_dw)
+{
+}
+
+namespace Uintah {
+
+class ImpMPM : public UintahParallelComponent, public SimulationInterface {
+
+public:
+
+      ImpMPM(const ProcessorGroup* myworld);
+
+      virtual ~ImpMPM();
+
+      virtual void problemSetup(const ProblemSpecP& params, 
+				GridP& grid,
+				SimulationStateP&);
+
+      virtual void scheduleInitialize(const LevelP& level,
+				      SchedulerP&);
+	 
+      virtual void sched_paramInit(const LevelP& level,
+				   SchedulerP&,
+				   DataWarehouseP& old_dw,
+				   DataWarehouseP& new_dw);
+      
+      virtual void scheduleComputeStableTimestep(const LevelP& level,
+						 SchedulerP&);
+
+      virtual void scheduleTimeAdvance(double t, double dt,
+				       const LevelP& level, 
+				       SchedulerP&,
+				       DataWarehouseP&, 
+				       DataWarehouseP&);
+
+}; // end class ImpMPM
+
+} // End namespace Uintah
+
+using namespace Uintah;
+
+ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
+  UintahParallelComponent(myworld)
+{
+}
+
+ImpMPM::~ImpMPM()
+{
+}
+
+void 
+ImpMPM::problemSetup(const ProblemSpecP& params, 
+		     GridP&,
+		     SimulationStateP& sharedState)
+{
+}
+
+void 
+ImpMPM::sched_paramInit(const LevelP& level,
+			SchedulerP& sched,
+			DataWarehouseP& old_dw,
+			DataWarehouseP& new_dw)
+{
+}
+
+// ****************************************************************************
+// Schedule initialization
+// ****************************************************************************
+void 
+ImpMPM::scheduleInitialize(const LevelP& level,
+			   SchedulerP& sched)
+{
+}
+
+// ****************************************************************************
+// schedule computation of stable time step
+// ****************************************************************************
+void 
+ImpMPM::scheduleComputeStableTimestep(const LevelP&,
+				      SchedulerP&)
+{
+}
+
+// ****************************************************************************
+// Schedule time advance
+// ****************************************************************************
+void 
+ImpMPM::scheduleTimeAdvance(double time, double dt,
 			    const LevelP& level, 
 			    SchedulerP& sched,
 			    DataWarehouseP& old_dw, 
