@@ -18,6 +18,8 @@ else
 	Packages/Uintah/Core/Parallel \
 	Packages/Uintah/Core/Math \
 	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/Core/Disclosure \
+	Packages/Uintah/Core/Exceptions \
 	Packages/Uintah/CCA/Ports \
 	Packages/Uintah/CCA/Components/MPM \
 	Packages/Uintah/CCA/Components/MPMICE \
@@ -32,6 +34,7 @@ else
 	Dataflow/Network \
 	Core/Exceptions  \
 	Core/Thread      \
+	Core/Geometry    \
 	Core/Util
 
 endif
@@ -52,6 +55,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Math          \
 	Packages/Uintah/Core/Disclosure    \
 	Packages/Uintah/Core/ProblemSpec   \
+	Packages/Uintah/Core/Disclosure    \
 	Packages/Uintah/CCA/Ports          \
 	Dataflow/XMLUtil \
 	Core/Exceptions  \
@@ -99,6 +103,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Parallel \
+	Packages/Uintah/Core/Disclosure \
 	Packages/Uintah/CCA/Ports \
 	Packages/Uintah/CCA/Components/DataArchiver \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
