@@ -40,6 +40,8 @@ ICELabel::ICELabel()
 
   mass_CCLabel =
     scinew VarLabel("mass_CC",      CCVariable<double>::getTypeDescription());
+  mass_sourceLabel =
+    scinew VarLabel("mass_source",  CCVariable<double>::getTypeDescription());
   speedSound_CCLabel =
     scinew VarLabel("speedSound_CC",CCVariable<double>::getTypeDescription());
   div_velfc_CCLabel =
@@ -127,6 +129,7 @@ ICELabel::~ICELabel()
     delete sp_vol_CCLabel;
     delete sp_vol_equilLabel;
     delete mass_CCLabel;
+    delete mass_sourceLabel;
     delete speedSound_CCLabel;
     delete div_velfc_CCLabel;
     delete vol_frac_CCLabel;
