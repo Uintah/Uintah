@@ -42,6 +42,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <sci_defs/image_defs.h>
 
 #ifdef HAVE_MAGICK
 namespace C_Magick {
