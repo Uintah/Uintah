@@ -264,7 +264,7 @@ void PPPLHDF5FieldReader::execute() {
       if( rank_ == 1 ) {
 	// Now after the mesh has been created, create the field.
 	pHandle_ =
-	  scinew StructQuadSurfField<float>(mesh, Field::NODE);
+	  scinew StructQuadSurfField<float >(mesh, Field::NODE);
       } else if( rank_ == 3 ) {
 	// Now after the mesh has been created, create the field.
 	pHandle_ =
@@ -319,6 +319,7 @@ void PPPLHDF5FieldReader::execute() {
 
 
 float*  PPPLHDF5FieldReader::readGrid( string filename ) {
+#ifdef HAVE_HDF5
   herr_t  status;
  
   /* Open the file using default properties. */
@@ -417,10 +418,13 @@ float*  PPPLHDF5FieldReader::readGrid( string filename ) {
   status = H5Fclose(file_id);
     
   return grid;
+#else
+  return NULL;
+#endif
 }
 
 float* PPPLHDF5FieldReader::readData( string filename ) {
-
+#ifdef HAVE_HDF5
   herr_t  status;
  
   /* Open the file using default properties. */
@@ -530,6 +534,9 @@ float* PPPLHDF5FieldReader::readData( string filename ) {
   status = H5Fclose(file_id);
 
   return data;
+#else
+  return NULL;
+#endif
 }
 
 void PPPLHDF5FieldReader::tcl_command(GuiArgs& args, void* userdata)
