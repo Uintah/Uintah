@@ -40,6 +40,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <math.h>
+
 using namespace std;
 
 namespace SCIRun {
@@ -163,8 +165,8 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
   if(array.dim3() != 4) return;
   int size_x = array.dim2();
   int size_y = array.dim1();
-  float top_left = top_x_-std::abs(width_)/2;
-  float top_right = top_x_+std::abs(width_)/2;
+  float top_left = top_x_ - abs(width_)/2;
+  float top_right = top_x_ + abs(width_)/2;
   int lb = (int)(bottom_*top_y_*size_y);
   int le = (int)(top_y_*size_y);
   int ilb = Clamp(lb, 0, size_y-1);
@@ -185,10 +187,10 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
       float dr = color_.r()/(rm-rb);
       float dg = color_.g()/(rm-rb);
       float db = color_.b()/(rm-rb);
-      float a = alpha_-std::abs(rm-jrm+1)*da;
-      float r = color_.r()-std::abs(rm-jrm+1)*dr;
-      float g = color_.g()-std::abs(rm-jrm+1)*dg;
-      float b = color_.b()-std::abs(rm-jrm+1)*db;
+      float a = alpha_ - abs(rm-jrm+1)*da;
+      float r = color_.r() - abs(rm-jrm+1)*dr;
+      float g = color_.g() - abs(rm-jrm+1)*dg;
+      float b = color_.b() - abs(rm-jrm+1)*db;
       for(int j=jrm-1; j>=jrb; j--, a-=da, r-=dr, b-=db, g-=dg) {
         array(i,j,0) = Clamp(array(i,j,0)*(1-a) + r, 0.0f, 1.0f);
         array(i,j,1) = Clamp(array(i,j,1)*(1-a) + g, 0.0f, 1.0f);
@@ -199,10 +201,10 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
       dr = color_.r()/(re-rm);
       dg = color_.g()/(re-rm);
       db = color_.b()/(re-rm);
-      a = alpha_-std::abs(rm-jrm)*da;
-      r = color_.r()-std::abs(rm-jrm)*dr;
-      g = color_.g()-std::abs(rm-jrm)*dg;
-      b = color_.b()-std::abs(rm-jrm)*db;
+      a = alpha_ - abs(rm-jrm)*da;
+      r = color_.r() - abs(rm-jrm)*dr;
+      g = color_.g() - abs(rm-jrm)*dg;
+      b = color_.b() - abs(rm-jrm)*db;
       //cerr << mTop.x << " " << fm << " -> " << fe << std::endl;
       for (int j=jrm; j<=jre; j++, a-=da, r-=dr, b-=db, g-=dg)
       {
@@ -224,7 +226,7 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
       int jre = Clamp(re, 0, size_x-1);
       int jrm = Clamp(rm, 0, size_x-1);
       float da = alpha_/(rm-rb);
-      float a = alpha_-std::abs(rm-jrm+1)*da;
+      float a = alpha_ - abs(rm-jrm+1)*da;
       for(int j=jrm-1; j>=jrb; j--, a-=da) {
         array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
         array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
@@ -232,7 +234,7 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
         array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
       }
       da = alpha_/(re-rm);
-      a = alpha_-std::abs(rm-jrm)*da;
+      a = alpha_ - abs(rm-jrm)*da;
       //cerr << mTop.x << " " << fm << " -> " << fe << std::endl;
       for (int j=jrm; j<=jre; j++, a-=da)
       {
@@ -584,10 +586,10 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
         float dr = ra <= rb+1 ? 0.0 : color_.r()/(ra-rb-1);
         float dg = ra <= rb+1 ? 0.0 : color_.g()/(ra-rb-1);
         float db = ra <= rb+1 ? 0.0 : color_.b()/(ra-rb-1);
-        float a = ra <= rb+1 ? alpha_ : alpha_-std::abs(ra-jra)*da;
-        float r = ra <= rb+1 ? color_.r() : color_.r()-std::abs(ra-jra)*dr;
-        float g = ra <= rb+1 ? color_.g() : color_.g()-std::abs(ra-jra)*dg;
-        float b = ra <= rb+1 ? color_.b() : color_.b()-std::abs(ra-jra)*db;
+        float a = ra <= rb+1 ? alpha_ : alpha_ - abs(ra-jra)*da;
+        float r = ra <= rb+1 ? color_.r() : color_.r() - abs(ra-jra)*dr;
+        float g = ra <= rb+1 ? color_.g() : color_.g() - abs(ra-jra)*dg;
+        float b = ra <= rb+1 ? color_.b() : color_.b() - abs(ra-jra)*db;
         for(int j=jra-1; j>=jrb; j--, a-=da, r-=dr, b-=db, g-=dg) {
           for(int i=ilb; i<=ile; i++) {
           
@@ -601,10 +603,10 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
         dr = ra < re-1 ? color_.r()/(re-ra-1) : 0.0;
         dg = ra < re-1 ? color_.g()/(re-ra-1) : 0.0;
         db = ra < re-1 ? color_.b()/(re-ra-1) : 0.0;
-        a = alpha_-std::abs(ra-jra)*da;
-        r = color_.r()-std::abs(ra-jra)*dr;
-        g = color_.g()-std::abs(ra-jra)*dg;
-        b = color_.b()-std::abs(ra-jra)*db;
+        a = alpha_ - abs(ra-jra)*da;
+        r = color_.r() - abs(ra-jra)*dr;
+        g = color_.g() - abs(ra-jra)*dg;
+        b = color_.b() - abs(ra-jra)*db;
         for(int j=jra; j<=jre; j++, a-=da, r-=dr, b-=db, g-=dg) {
           for(int i=ilb; i<=ile; i++) {
             array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
@@ -615,7 +617,7 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
         }
       } else { // !faux
         float da = ra <= rb+1 ? 0.0 : alpha_/(ra-rb-1);
-        float a = ra <= rb+1 ? alpha_ : alpha_-std::abs(ra-jra)*da;
+        float a = ra <= rb+1 ? alpha_ : alpha_ - abs(ra-jra)*da;
         for(int j=jra-1; j>=jrb; j--, a-=da) {
           for(int i=ilb; i<=ile; i++) {
             array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
@@ -625,7 +627,7 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
           }
         }
         da = ra < re-1 ? alpha_/(re-ra-1) : 0.0;
-        a = alpha_-std::abs(ra-jra)*da;
+        a = alpha_ - abs(ra-jra)*da;
         for(int j=jra; j<=jre; j++, a-=da) {
           for(int i=ilb; i<=ile; i++) {
             array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);

@@ -29,7 +29,8 @@
 //    Author : Milan Ikits
 //    Date   : Wed Jul 14 16:03:05 2004
 
-#include <cmath>
+#include <math.h>
+
 #include <Core/Volume/Brick.h>
 #include <Core/Volume/Utils.h>
 
@@ -165,9 +166,9 @@ Brick::compute_polygons(const Ray& view, double tmin, double tmax, double dt,
   Vector vdir = view.direction();
   Vector up;
   Vector right;
-  switch(MinIndex(std::abs(vdir.x()),
-                  std::abs(vdir.y()),
-                  std::abs(vdir.z()))) {
+  switch(MinIndex(abs(vdir.x()),
+                  abs(vdir.y()),
+                  abs(vdir.z()))) {
   case 0:
     up.x(0.0); up.y(-vdir.z()); up.z(vdir.y());
     break;
@@ -209,7 +210,7 @@ Brick::compute_polygons(const Ray& view, double tmin, double tmax, double dt,
         double vx = Dot(vv[i] - vc, right);
         double vy = Dot(vv[i] - vc, up);
         // compute pseudo-angle
-        pa[i] = vy / (std::abs(vx) + std::abs(vy));
+        pa[i] = vy / (abs(vx) + abs(vy));
         if (vx < 0.0) pa[i] = 2.0 - pa[i];
         else if (vy < 0.0) pa[i] = 4.0 + pa[i];
         // init idx
