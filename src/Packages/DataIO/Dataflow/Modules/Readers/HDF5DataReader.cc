@@ -1142,7 +1142,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 
   string tuple_type_str(":Scalar");
   int sink_size = 1;
-  NrrdData *nout = scinew NrrdData(false);
+  NrrdData *nout = scinew NrrdData(true);
 
 
   switch(ndims) {
