@@ -35,7 +35,7 @@ public:
 private:
     int empty_index;
     int directed;	// are the triangle all ordered clockwise?
-    double distance(const Point &p, int i, int *type);
+    double distance(const Point &p, int i, int *type, Point *pp=0);
     int find_or_add(const Point &p);
 public:
     TriSurface();
@@ -54,7 +54,7 @@ public:
     void add_point(const Point& p);
     int add_triangle(int i1, int i2, int i3, int cw=0);
     void remove_triangle(int i);
-    double distance(const Point &p, Array1<int> &res);
+    double distance(const Point &p, Array1<int> &res, Point *pp=0);
 
     // these two were implemented for isosurfacing btwn two surfaces
     // (MorphMesher3d module/class)
