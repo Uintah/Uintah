@@ -19,10 +19,7 @@ itcl_class SCIRun_FieldsCreate_Probe {
     inherit Module
     constructor {config} {
         set name Probe
-        set_defaults
-    }
 
-    method set_defaults {} {
 	global $this-value
 	global $this-show-value
 	global $this-locx
@@ -39,7 +36,10 @@ itcl_class SCIRun_FieldsCreate_Probe {
 	global $this-moveto
 	global $this-probe_scale
 	
+        set_defaults
+    }
 
+    method set_defaults {} {
 	set $this-value ""
 	set $this-show-value 1
 	set $this-locx ""
