@@ -48,9 +48,9 @@ DirectInterpAlgoBase::get_compile_info(const TypeDescription *field_td,
   static const string base_class_name("DirectInterpAlgoBase");
 
   CompileInfo *rval = 
-    scinew CompileInfo(to_filename(template_class_name + "." +
-				   field_td->get_name(".", ".") +
-				   loc_td->get_name(".", ".")) + ".",
+    scinew CompileInfo(template_class_name + "." +
+		       field_td->get_filename() + "." +
+		       loc_td->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
                        field_td->get_name() + ", " + loc_td->get_name());

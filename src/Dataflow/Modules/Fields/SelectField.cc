@@ -41,6 +41,9 @@ private:
   GuiInt value_;
   GuiInt mode_;  // 0 nothing 1 accumulate 2 replace
 
+  int  last_generation_;
+  BBox last_bounds_;
+
 public:
   SelectField(const string& id);
   virtual ~SelectField();
@@ -57,7 +60,8 @@ SelectField::SelectField(const string& id)
   : Module("SelectField", id, Filter, "Fields", "SCIRun"),
     widget_lock_("SelectField widget lock"),
     value_("stampvalue", id, this),
-    mode_("runmode", id, this)
+    mode_("runmode", id, this),
+    last_generation_(0)
 {
   box_ = scinew ScaledBoxWidget(this, &widget_lock_, 1.0, 1);
 }
@@ -87,10 +91,10 @@ SelectField::execute()
 
   bool forward_p = false;
 
-  const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
   if (output_field_.get_rep() == NULL ||
-      output_field_->mesh()->get_type_description()->get_name() != mtd->get_name())
+      last_generation_ != ifieldhandle->generation)
   {
+    const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
     const TypeDescription *ftd = ifieldhandle->get_type_description();
     CompileInfo *ci = SelectFieldCreateAlgo::get_compile_info(mtd, ftd);
     DynamicAlgoHandle algo_handle;
@@ -109,39 +113,48 @@ SelectField::execute()
     output_field_ =
       algo->execute(ifieldhandle->mesh(), ifieldhandle->data_at());
 
-    // update the widget
-    const BBox bbox = output_field_->mesh()->get_bounding_box();
-    const Point &bmin = bbox.min();
-    const Point &bmax = bbox.max();
+    last_generation_ = ifieldhandle->generation;
+
+    BBox obox = output_field_->mesh()->get_bounding_box();
+    if (!(last_bounds_.valid() && obox.valid() &&
+	  obox.min() == last_bounds_.min() &&
+	  obox.max() == last_bounds_.max()))
+    {
+      // update the widget
+      const BBox bbox = output_field_->mesh()->get_bounding_box();
+      const Point &bmin = bbox.min();
+      const Point &bmax = bbox.max();
 #if 0
-    const Point center = bmin + Vector(bmax - bmin) * 0.5;
-    const Point right = center + Vector((bmax.x()-bmin.x())/2.,0,0);
-    const Point down = center + Vector(0,(bmax.y()-bmin.y())/2.,0);
-    const Point in = center + Vector(0,0,(bmax.z()-bmin.z())/2.);
+      const Point center = bmin + Vector(bmax - bmin) * 0.5;
+      const Point right = center + Vector((bmax.x()-bmin.x())/2.,0,0);
+      const Point down = center + Vector(0,(bmax.y()-bmin.y())/2.,0);
+      const Point in = center + Vector(0,0,(bmax.z()-bmin.z())/2.);
 #else
-    const Point center = bmin + Vector(bmax - bmin) * 0.25;
-    const Point right = center + Vector((bmax.x()-bmin.x())/4.0, 0, 0);
-    const Point down = center + Vector(0, (bmax.y()-bmin.y())/4.0, 0);
-    const Point in = center + Vector(0, 0, (bmax.z()-bmin.z())/4.0);
+      const Point center = bmin + Vector(bmax - bmin) * 0.25;
+      const Point right = center + Vector((bmax.x()-bmin.x())/4.0, 0, 0);
+      const Point down = center + Vector(0, (bmax.y()-bmin.y())/4.0, 0);
+      const Point in = center + Vector(0, 0, (bmax.z()-bmin.z())/4.0);
 #endif
-    const double l2norm = (bmax - bmin).length();
+      const double l2norm = (bmax - bmin).length();
 
-    box_->SetScale(l2norm * 0.015);
-    box_->SetPosition(center, right, down, in);
+      box_->SetScale(l2norm * 0.015);
+      box_->SetPosition(center, right, down, in);
 
-    GeomGroup *widget_group = scinew GeomGroup;
-    widget_group->add(box_->GetWidget());
+      GeomGroup *widget_group = scinew GeomGroup;
+      widget_group->add(box_->GetWidget());
 
-    GeometryOPort *ogport=0;
-    ogport = (GeometryOPort*)get_oport("Selection Widget");
-    if (!ogport) {
-      postMessage("Unable to initialize "+name+"'s oport\n");
-      return;
+      GeometryOPort *ogport=0;
+      ogport = (GeometryOPort*)get_oport("Selection Widget");
+      if (!ogport) {
+	postMessage("Unable to initialize "+name+"'s oport\n");
+	return;
+      }
+      ogport->addObj(widget_group, "SelectField Selection Widget",
+		     &widget_lock_);
+      ogport->flushViews();
+
+      last_bounds_ = obox;
     }
-    ogport->addObj(widget_group, "SelectField Selection Widget",
-		   &widget_lock_);
-    ogport->flushViews();
-
     forward_p = true;
   }
 
@@ -199,7 +212,7 @@ SelectFieldCreateAlgo::get_compile_info(const TypeDescription *msrc,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       to_filename(msrc->get_name()) + "." +
+		       msrc->get_filename() + "." +
 		       to_filename(fout) + ".",
                        base_class_name, 
                        template_class_name, 
@@ -223,8 +236,8 @@ SelectFieldFillAlgo::get_compile_info(const TypeDescription *fsrc,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       to_filename(fsrc->get_name()) + "." +
-		       to_filename(lsrc->get_name()) + ".",
+		       fsrc->get_filename() + "." +
+		       lsrc->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
                        fsrc->get_name() + ", " + lsrc->get_name());

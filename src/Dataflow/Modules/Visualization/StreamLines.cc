@@ -328,9 +328,9 @@ StreamLinesAlgo::get_compile_info(const TypeDescription *vmesh,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       to_filename(vmesh->get_name()) + "." +
-		       to_filename(smesh->get_name()) + "." +
-		       to_filename(sloc->get_name()) + ".",
+		       vmesh->get_filename() + "." +
+		       smesh->get_filename() + "." +
+		       sloc->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
                        vmesh->get_name() + ", " +
