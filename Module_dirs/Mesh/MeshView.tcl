@@ -29,15 +29,30 @@ proc uiMeshView {modid} {
 		-orient horizontal -command $n -label X
 	pack $w.f.clipX -side top -fill x
 
+	global clipNX,$modid
+	fscale $w.f.clipNX -variable clipNX,$modid -from -1 -to 1 \
+		-orient horizontal -command $n -label "Negative X"
+	pack $w.f.clipNX -side top -fill x
+
 	global clipY,$modid
 	fscale $w.f.clipY -variable clipY,$modid -from -1 -to 1 \
 		-orient horizontal -command $n -label Y
 	pack $w.f.clipY -side top -fill x
 
+	global clipNY,$modid
+	fscale $w.f.clipNY -variable clipNY,$modid -from -1 -to 1 \
+		-orient horizontal -command $n -label "Negative Y"
+	pack $w.f.clipNY -side top -fill x
+
 	global clipZ,$modid
 	fscale $w.f.clipZ -variable clipZ,$modid -from -1 -to 1 \
 		-orient horizontal -command $n -label Z
 	pack $w.f.clipZ -side top -fill x
+
+	global clipNZ,$modid
+	fscale $w.f.clipNZ -variable clipNZ,$modid -from -1 -to 1 \
+		-orient horizontal -command $n -label "Negative Z"
+	pack $w.f.clipNZ -side top -fill x
 
 	global allLevels,$modid
 	set allLevels,$modid 1
@@ -66,11 +81,11 @@ proc MeshView_set_minmax_numTet {modid min max} {
 proc MeshView_set_bounds {modid xmin xmax ymin ymax zmin zmax} {
     set w .ui$modid
     $w.f.clipX configure -from $xmin -to $xmax
+    $w.f.clipNX configure -from $xmin -to $xmax
     $w.f.clipY configure -from $ymin -to $ymax
+    $w.f.clipNY configure -from $ymin -to $ymax
     $w.f.clipZ configure -from $zmin -to $zmax
-	set clipX,$modid $xmin
-	set clipY,$modid $ymin
-	set clipZ,$modid $zmin
+    $w.f.clipNZ configure -from $zmin -to $zmax
 }
 
 
