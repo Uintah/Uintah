@@ -136,8 +136,11 @@ ShaderProgramARB::create()
       mSupported = true;
     }
 #else       
-    if (!gluCheckExtension((const GLubyte*)"GL_ARB_vertex_program", glGetString(GL_EXTENSIONS)) ||
-        !gluCheckExtension((const GLubyte*)"GL_ARB_fragment_program", glGetString(GL_EXTENSIONS))) {
+    if (!gluCheckExtension((const GLubyte*)"GL_ARB_vertex_program", 
+			   glGetString(GL_EXTENSIONS)) ||
+        !gluCheckExtension((const GLubyte*)"GL_ARB_fragment_program", 
+			   glGetString(GL_EXTENSIONS))) 
+    {
       mSupported = false;
       //SCI_THROW(InternalError("GL_ARB_fragment_program is not supported."));
     } else {
@@ -146,17 +149,23 @@ ShaderProgramARB::create()
     bool fail = !mSupported;
 #if !defined(CORRECT_OGLEXT_HDRS)
     fail = fail
-      || (glGenProgramsARB = (PFNGLGENPROGRAMSARBPROC)getProcAddress("glGenProgramsARB")) == 0;
+      || (glGenProgramsARB = (PFNGLGENPROGRAMSARBPROC)
+	  getProcAddress("glGenProgramsARB")) == 0;
     fail = fail
-      || (glDeleteProgramsARB = (PFNGLDELETEPROGRAMSARBPROC)getProcAddress("glDeleteProgramsARB")) == 0;
+      || (glDeleteProgramsARB = (PFNGLDELETEPROGRAMSARBPROC)
+	  getProcAddress("glDeleteProgramsARB")) == 0;
     fail = fail
-      || (glBindProgramARB = (PFNGLBINDPROGRAMARBPROC)getProcAddress("glBindProgramARB")) == 0;
+      || (glBindProgramARB = (PFNGLBINDPROGRAMARBPROC)
+	  getProcAddress("glBindProgramARB")) == 0;
     fail = fail
-      || (glProgramStringARB = (PFNGLPROGRAMSTRINGARBPROC)getProcAddress("glProgramStringARB")) == 0;
+      || (glProgramStringARB = (PFNGLPROGRAMSTRINGARBPROC)
+	  getProcAddress("glProgramStringARB")) == 0;
     fail = fail
-      || (glIsProgramARB = (PFNGLISPROGRAMARBPROC)getProcAddress("glIsProgramARB")) == 0;
+      || (glIsProgramARB = (PFNGLISPROGRAMARBPROC)
+	  getProcAddress("glIsProgramARB")) == 0;
     fail = fail
-      || (glProgramLocalParameter4fARB = (PFNGLPROGRAMLOCALPARAMETER4FARBPROC)getProcAddress("glProgramLocalParameter4fARB")) == 0;
+      || (glProgramLocalParameter4fARB = (PFNGLPROGRAMLOCALPARAMETER4FARBPROC)
+	  getProcAddress("glProgramLocalParameter4fARB")) == 0;
 #endif
     if(fail) {
       mSupported = false;
@@ -174,7 +183,7 @@ ShaderProgramARB::create()
 
 #ifdef HAVE_AVR_SUPPORT
   if(mSupported) {
-    dbg << mProgram << endl;
+    //dbg << mProgram << endl;
     glGenProgramsARB(1, &mId);
     glBindProgramARB(mType, mId);
     glProgramStringARB(mType, GL_PROGRAM_FORMAT_ASCII_ARB,

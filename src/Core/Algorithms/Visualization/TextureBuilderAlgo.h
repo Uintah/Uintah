@@ -48,6 +48,8 @@ using std::vector;
 
 namespace SCIRun {
 
+void break_in_me();
+
 class TextureBuilderAlgoBase : public SCIRun::DynamicAlgoBase
 {
 public:
@@ -312,11 +314,28 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrick* brick,
 {
   LatVolField<value_type>* vfld = 
     dynamic_cast<LatVolField<value_type>*>(vfield.get_rep());
+
+  if (! vfld) { 
+    cerr << "dynamic cast failed! : value field" << endl;
+    return;
+  }
+
   LatVolField<Vector>* gfld = 
     dynamic_cast<LatVolField<Vector>*>(gfield.get_rep());
+
+  if (! gfld) { 
+    cerr << "dynamic cast failed! : gradient field" << endl;
+    return;
+  }
+
   int nc = brick->nc();
   TextureBrickT<unsigned char>* br =
     dynamic_cast<TextureBrickT<unsigned char>*>(brick);
+
+  if (! br) { 
+    cerr << "dynamic cast failed! : brick" << endl;
+    return;
+  }
 
   int nx = brick->nx();
   int ny = brick->ny();

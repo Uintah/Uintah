@@ -29,8 +29,8 @@
 //    Author : Milan Ikits
 //    Date   : Mon Jul  5 18:33:29 2004
 
-#include <Core/Volume/CM2Widget.h>
 
+#include <Core/Volume/CM2Widget.h>
 #include <Core/Volume/ShaderProgramARB.h>
 #include <Core/Volume/CM2Shader.h>
 #include <Core/Volume/Pbuffer.h>
@@ -39,6 +39,7 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <sci_gl.h>
+#include <GL/glu.h>
 
 #include <iostream>
 #include <sstream>
@@ -600,6 +601,7 @@ RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbu
     if(pbuffer)
       shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 0.0, 0.0);
   
+
     glBegin(GL_QUADS);
     {
       glVertex2f(left_x_, left_y_);
@@ -615,6 +617,7 @@ RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbu
 void
 RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
 {
+
   if(array.dim3() != 4) return;
   int size_x = array.dim2();
   int size_y = array.dim1();
@@ -697,20 +700,28 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
         float a = ra <= rb+1 ? alpha_ : alpha_ - abs(ra-jra)*da;
         for(int j=jra-1; j>=jrb; j--, a-=da) {
           for(int i=ilb; i<=ile; i++) {
-            array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
-            array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
-            array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + (float)color_.b(), 0.0f, 1.0f);
-            array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
+            array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + 
+				 (float)color_.r(), 0.0f, 1.0f);
+            array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + 
+				 (float)color_.g(), 0.0f, 1.0f);
+            array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + 
+				 (float)color_.b(), 0.0f, 1.0f);
+            array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + 
+				 a, 0.0f, 1.0f);
           }
         }
         da = ra < re-1 ? alpha_/(re-ra-1) : 0.0;
         a = alpha_ - abs(ra-jra)*da;
         for(int j=jra; j<=jre; j++, a-=da) {
           for(int i=ilb; i<=ile; i++) {
-            array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
-            array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
-            array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + (float)color_.b(), 0.0f, 1.0f);
-            array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
+            array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + 
+				 (float)color_.r(), 0.0f, 1.0f);
+            array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + 
+				 (float)color_.g(), 0.0f, 1.0f);
+            array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + 
+				 (float)color_.b(), 0.0f, 1.0f);
+            array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + 
+				 a, 0.0f, 1.0f);
           }
         }
       }
@@ -947,43 +958,45 @@ RectangleCM2Widget::tcl_unpickle(const string &p)
 }
 
 
+// Image --
+#define IMAGECM2WIDGET_VERSION 1
 
-
-Persistent* ImageCM2Widget::maker()
+static Persistent* ImageCM2Widget_maker()
 {
   return scinew ImageCM2Widget;
 }
 
-PersistentTypeID ImageCM2Widget::type_id("ImageCM2Widget", "Datatype", maker);
-
-#define IMAGECM2WIDGET_VERSION 1
+PersistentTypeID ImageCM2Widget::type_id("ImageCM2Widget", "Datatype",
+					    ImageCM2Widget_maker);
 
 void
 ImageCM2Widget::io(Piostream &stream)
 {
-  stream.begin_class("ImageCM2Widget", RECTANGLECM2WIDGET_VERSION);
-
-  // TODO:  Dump out the image in a PIO manner here.
+  stream.begin_class("ImageCM2Widget", IMAGECM2WIDGET_VERSION);
+  
+  Pio(stream, pixels_);
 
   stream.end_class();
 }
 
-ImageCM2Widget::ImageCM2Widget()
-  : image_(0)
+ImageCM2Widget::ImageCM2Widget() : 
+  pixels_(0)
 {
 }
 
-ImageCM2Widget::ImageCM2Widget(NrrdDataHandle image)
-  : image_(image)
+ImageCM2Widget::ImageCM2Widget(NrrdDataHandle p) : 
+  pixels_(p)
 {}
 
 ImageCM2Widget::~ImageCM2Widget()
 {}
 
-ImageCM2Widget::ImageCM2Widget(ImageCM2Widget& copy)
-  : CM2Widget(copy),
-    image_(copy.image_)
-{}
+ImageCM2Widget::ImageCM2Widget(ImageCM2Widget& copy) : 
+  CM2Widget(copy),
+  pixels_(copy.pixels_)
+{
+  pixels_.detach();
+}
 
 CM2Widget*
 ImageCM2Widget::clone()
@@ -991,69 +1004,151 @@ ImageCM2Widget::clone()
   return new ImageCM2Widget(*this);
 }
 
+const float trans = 1.0/255.0;
+
 void
-ImageCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux,
+ImageCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, 
 			  Pbuffer* pbuffer)
 {
-  // TODO:  Draw image_ to the pbuffer.
+  CHECK_OPENGL_ERROR("ImageCM2Widget::rasterize - - start")
+  //assume images draw first.
+  
+  if (! pixels_.get_rep()) return;
+  
+  glDisable(GL_BLEND);
+  glRasterPos2i(0,0);
+
+  // float data in the range 0 - 255 
+  glPixelTransferf(GL_RED_SCALE, trans);
+  glPixelTransferf(GL_GREEN_SCALE, trans);
+  glPixelTransferf(GL_BLUE_SCALE, trans);
+  glPixelTransferf(GL_ALPHA_SCALE, trans);
+
+
+  Nrrd *nout = pixels_->nrrd;
+  if (pbuffer) {
+    if (pbuffer->width() != nout->axis[1].size || 
+	pbuffer->height() != nout->axis[2].size) 
+    {
+      nout = resize(pbuffer->width(), pbuffer->height());
+    }
+    if (! nout) return;
+  }
+  int w = nout->axis[1].size;
+  int h = nout->axis[2].size;
+    
+  glDrawPixels(w, h, GL_RGBA, GL_FLOAT, (float*)nout->data);
+
+  if (nout != pixels_->nrrd) {
+    nrrdNuke(nout);
+  }
+  
+
+  // restore default values
+  glPixelTransferf(GL_RED_SCALE, 1.0);
+  glPixelTransferf(GL_GREEN_SCALE, 1.0);
+  glPixelTransferf(GL_BLUE_SCALE, 1.0);
+  glPixelTransferf(GL_ALPHA_SCALE, 1.0);
+
+  glEnable(GL_BLEND);
+  CHECK_OPENGL_ERROR("ImageCM2Widget::rasterize - - end") 
+    }
+
+Nrrd*
+ImageCM2Widget::resize(int width, int height) 
+{
+  Nrrd *nin   = pixels_->nrrd;
+  NrrdResampleInfo *info = nrrdResampleInfoNew();
+  NrrdKernel *kern;
+  double p[NRRD_KERNEL_PARMS_NUM];
+  memset(p, 0, NRRD_KERNEL_PARMS_NUM * sizeof(double));
+  p[0] = 1.0L;
+  kern = nrrdKernelBCCubic; 
+  p[1] = 1.0L; 
+  p[2] = 0.0L; 
+  info->kernel[0] = kern;
+  info->kernel[1] = kern;
+  info->kernel[2] = kern;
+  info->samples[0]= 4;
+  info->samples[1]= width;
+  info->samples[2]= height;
+
+  for (int a = 0; a < 3; a++) {
+
+    if (nrrdKindSize(nin->axis[a].kind) > 1) {
+      std::cerr << "Trying to resample along axis " << a 
+		<< " which is not of nrrdKindDomain or nrrdKindUnknown." 
+		<< std::endl;
+    }
+
+    memcpy(info->parm[a], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
+    if (info->kernel[a] && 
+	(!(airExists_d(nin->axis[a].min) && 
+	   airExists_d(nin->axis[a].max)))) {
+      nrrdAxisInfoMinMaxSet(nin, a, nin->axis[a].center ? 
+			    nin->axis[a].center : nrrdDefCenter);
+    }
+    info->min[a] = nin->axis[a].min;
+    info->max[a] = nin->axis[a].max;
+  } 
+
+  info->boundary = nrrdBoundaryBleed;
+  info->type = nin->type;
+  info->renormalize = AIR_TRUE;
+
+  bool fail = false;
+  Nrrd *nrrd_resamp = nrrdNew();
+  if (nrrdSpatialResample(nrrd_resamp, nin, info)) {
+    char *err = biffGetDone(NRRD);
+    std::cerr << "Resample Failed in Core/Volume/CM2Widget.cc: " 
+	      << err << std::endl;
+    free(err);
+    fail = true;
+  }
+  nrrdResampleInfoNix(info); 
+  if (fail) {
+    nrrdNuke(nrrd_resamp);
+    return 0;
+  } else {
+    return nrrd_resamp;
+  }
 }
 
 void
 ImageCM2Widget::rasterize(Array3<float>& array, bool faux)
 {
-  // TODO:  Copy image_ to array.  Maybe rescale.
+  if (! pixels_.get_rep()) return;
+  ASSERT(pixels_->nrrd->type == nrrdTypeFloat);
+  if(array.dim3() != 4) return;
+
+  Nrrd *nout = 0;
+  if (array.dim2() != pixels_->nrrd->axis[1].size || 
+      array.dim1() != pixels_->nrrd->axis[2].size) 
+  {
+    nout = resize(array.dim2(), array.dim1());
+  }
+
+  // return if resample fails.
+  if (!nout) return;
+
+  const int chans = 4;
+  const int ysz = nout->axis[2].size;
+  const int xsz = nout->axis[1].size;
+  for (int j = 0; j < ysz; ++j) {
+    const int yoff = j * xsz * chans;
+    for (int i = 0; i < xsz; ++i) {
+      float *dat = ((float*)nout->data) + yoff + (i * chans);
+      array(j,i,0) = trans * *dat++;
+      array(j,i,1) = trans * *dat++;
+      array(j,i,2) = trans * *dat++;
+      array(j,i,3) = trans * *dat;
+    }
+  }
 }
 
 
 void
 ImageCM2Widget::draw()
 {
-  // No widget handles, don't need to do anything here.
+  // no widget controls to draw.
 }
-
-
-int
-ImageCM2Widget::pick1 (int ix, int iy, int w, int h)
-{
-  // Not pickable.
-  return 0;
-}
-
-
-int
-ImageCM2Widget::pick2 (int ix, int iy, int w, int h, int m)
-{
-  // Not pickable.
-  return 0;
-}
-
-
-void
-ImageCM2Widget::move (int /*obj*/, int ix, int iy, int w, int h)
-{
-  // Not moveable.
-}
-
-
-void
-ImageCM2Widget::release (int /*obj*/, int /*x*/, int /*y*/,
-                             int /*w*/, int /*h*/)
-{
-  // Don't need to do anything here.
-}
-
-
-string
-ImageCM2Widget::tcl_pickle()
-{
-  // Not pickleable
-  return "";
-}
-
-void
-ImageCM2Widget::tcl_unpickle(const string &p)
-{
-  // Not pickleable
-}
-
-

@@ -737,7 +737,7 @@ TextureRenderer::build_colormap2()
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cmap2_array_.dim2(), cmap2_array_.dim1(),
                         GL_RGBA, GL_UNSIGNED_BYTE, &cmap2_array_(0,0,0));
         glBindTexture(GL_TEXTURE_2D, 0);
-      }
+      }      
     }
   }
 #endif

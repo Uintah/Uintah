@@ -40,6 +40,10 @@ using namespace std;
 
 static DebugStream dbg("TextureBuilderAlgo", false);
 
+
+void break_in_me(){
+}
+
 TextureBuilderAlgoBase::TextureBuilderAlgoBase()
 {}
 
