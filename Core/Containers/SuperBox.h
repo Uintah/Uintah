@@ -132,8 +132,16 @@ public:
   {
     size_t operator()(BoxP box) const
     { return (size_t)box; }
+#ifdef __ECC
+    // intel compilersspecific hash map stuff
+    static const size_t bucket_size = 4;
+    static const size_t min_buckets = 8;
+    bool operator()(BoxP b1, BoxP b2) const
+    { return b1 < b2; }
+#endif // __ECC
   };
   
+
   typedef hash_map<BoxP, BB*, BoxHash> BoxHashMap;
 #else
   typedef map<BoxP, BB*>               BoxHashMap;
@@ -1494,7 +1502,7 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
   typename vector<SB*>::iterator sb_iter;
 
   vector<BB*> basicBoxes(n);
-#ifdef HAVE_HASH_MAP
+#if defined(HAVE_HASH_MAP) && !defined(__ECC)
   BoxHashMap boxMap(n);
 #else
   BoxHashMap boxMap;
