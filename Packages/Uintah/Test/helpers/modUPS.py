@@ -1,6 +1,7 @@
 #!/usr/local/bin/python
 
 from os import stat, system, mkdir, path, getcwd, chdir
+from sys import exit
 
 #pass the ups directory and filename, and a list of changes
 # change will be the entire tag change, i.e.,
@@ -52,7 +53,7 @@ def modUPS(directory, filename, changes):
       sedreplacestring = ""
       sedscript = "s/"
       for ch in change:
-        if ch == '=' or ch == '>':
+        if ch == '=' or ch == '>' or ch == ' ':
           addToScript = 0
         if addToScript == 1:
           sedscript = sedscript + ch
@@ -68,6 +69,6 @@ def modUPS(directory, filename, changes):
       system(command)
       command = "mv %s %s" % (tempfilename, newfilename)
       system(command)
-    system("rm -f sedscript")
+    #system("rm -f sedscript")
     system("rm -rf tempfilename")
     return "tmp/MOD-%s" % filename
