@@ -2,9 +2,6 @@
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
 set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 17 17]
 set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 231 129]
 set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 231 20]
@@ -76,10 +73,10 @@ set $m4-data-at {Nodes}
 set $m5-notes {}
 set $m5-show_status {1}
 set $m5-is_fixed {0}
-set $m5-max_brick_dim {64}
+set $m5-max_brick_dim {128}
 set $m5-sel_brick_dim {64}
-set $m5-min {2.122e-314}
-set $m5-max {733699}
+set $m5-min {      1.04083e-17}
+set $m5-max {      1.90382e+06}
 set $m6-notes {}
 set $m6-show_status {1}
 set $m6-num_slices {128}
@@ -89,11 +86,12 @@ set $m6-alpha_scale {-0.745}
 set $m6-interp_mode {1}
 set $m7-notes {}
 set $m7-show_status {1}
-set $m7-use_interp {1}
-set $m7-use_closest {0}
-set $m7-closeness_distance {1e+15}
+set $m7-interpolation_basis {linear}
+set $m7-map_source_to_single_dest {0}
+set $m7-exhaustive_search {1}
+set $m7-exhaustive_search_max_dist {-1}
+set $m7-np {1}
 set $m8-notes {}
 set $m8-show_status {1}
-$m3 initialize_ui
 
 ::netedit scheduleok
