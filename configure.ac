@@ -2641,32 +2641,6 @@ AC_SUBST(PERFEX_LIB_DIR_FLAG)
 AC_SUBST(DEF_PERFEX)
 
 
-##  --  search for ssl ---------------------------------
-
-if test "$sci_check_ssl" = "yes"; then
-  if test "$with_ssl"; then
-    _sci_lib="$with_ssl/lib"
-  else
-    _sci_lib="$sci_thirdparty_libs"
-  fi
-
-  SCI_TRY_LINK(SSL,ssl library,,,ssl,$_sci_lib,,,optional)  
-  
-  if test "$HAVE_SSL" = "yes"; then
-    DEF_SSL="#define HAVE_SSL 1"
-  fi
-  
-  if test "$with_ssl" && test ! "$DEF_SSL"; then
-    echo
-    AC_MSG_ERROR(One or more of the SSL components is missing.)
-    echo
-  fi
-fi # end sci_check_ssl
-
-AC_SUBST(SSL_LIB_FLAG)
-AC_SUBST(SSL_LIB_DIR_FLAG)
-AC_SUBST(DEF_SSL)
-
 ##  --  search for crypto --------------------------------
 
 if test "$sci_check_crypto" = "yes"; then
@@ -2692,6 +2666,32 @@ fi # end sci_check_crypto
 AC_SUBST(CRYPTO_LIB_FLAG)
 AC_SUBST(CRYPTO_LIB_DIR_FLAG)
 AC_SUBST(DEF_CRYPTO)
+
+##  --  search for ssl ---------------------------------
+
+if test "$sci_check_ssl" = "yes"; then
+  if test "$with_ssl"; then
+    _sci_lib="$with_ssl/lib"
+  else
+    _sci_lib="$sci_thirdparty_libs"
+  fi
+
+  SCI_TRY_LINK(SSL,ssl library,,,ssl crypto,$_sci_lib,,,optional)  
+  
+  if test "$HAVE_SSL" = "yes"; then
+    DEF_SSL="#define HAVE_SSL 1"
+  fi
+  
+  if test "$with_ssl" && test ! "$DEF_SSL"; then
+    echo
+    AC_MSG_ERROR(One or more of the SSL components is missing.)
+    echo
+  fi
+fi # end sci_check_ssl
+
+AC_SUBST(SSL_LIB_FLAG)
+AC_SUBST(SSL_LIB_DIR_FLAG)
+AC_SUBST(DEF_SSL)
 
 ##  --  globus nexus  ----------------------------------------------------
 if test "$sci_check_globus" = "yes"; then
