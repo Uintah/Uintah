@@ -25,6 +25,10 @@ class ColumnMatrix : public Datatype {
     int rows;
     double* data;
 public:
+
+  double* get_rhs(){return data;}
+  void put_lhs(double* lhs) {data = lhs;}
+  
     ColumnMatrix(int);
     ~ColumnMatrix();
     ColumnMatrix(const ColumnMatrix&);

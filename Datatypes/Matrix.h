@@ -46,6 +46,12 @@ protected:
 private:
     Representation rep;
 public:
+
+  virtual double* get_val(){return NULL;}
+  virtual int* get_row(){return NULL;}
+  virtual int* get_col() {return NULL;}
+
+  
     clString getType();
     SymSparseRowMatrix* getSymSparseRow();
     SparseRowMatrix* getSparseRow();

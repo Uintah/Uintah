@@ -31,6 +31,11 @@ protected:
     int* columns;
 public:
     double* a;
+
+    virtual double* get_val(){return a;}
+  virtual int* get_row(){return rows;}
+  virtual int* get_col(){return columns;}
+  
     SymSparseRowMatrix();
     SymSparseRowMatrix(int, int, Array1<int>&, Array1<int>&);
     SymSparseRowMatrix(int, int, int*, int*, int);
@@ -61,3 +66,9 @@ public:
 };
 
 #endif
+
+
+
+
+
+
