@@ -1,6 +1,7 @@
 //----- PDFMixingModel.cc --------------------------------------------------
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/PDFMixingModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Integrator.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/KDTree.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ReactionModel.h>
