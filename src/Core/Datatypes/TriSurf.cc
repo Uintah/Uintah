@@ -1,5 +1,5 @@
 /*
- *  SurfDEG.cc: Tetrahedral mesh with new design.
+ *  TriSurf.cc: Tetrahedral mesh with new design.
  *
  *  Written by:
  *   Michael Callahan
@@ -11,32 +11,32 @@
  *
  */
 
-#include <Core/Datatypes/SurfDEG.h>
+#include <Core/Datatypes/TriSurf.h>
 
 
 namespace SCIRun {
 
-PersistentTypeID SurfDEG::type_id("SurfDEG", "Datatype", NULL);
+PersistentTypeID TriSurf::type_id("TriSurf", "Datatype", NULL);
 
 
-SurfDEG::SurfDEG()
+TriSurf::TriSurf()
 {
 }
 
-SurfDEG::SurfDEG(const SurfDEG &copy)
+TriSurf::TriSurf(const TriSurf &copy)
   : points_(copy.points_),
-    tris_(copy.tris_),
+    faces_(copy.faces_),
     neighbors_(copy.neighbors_)
 {
 }
 
-SurfDEG::~SurfDEG()
+TriSurf::~TriSurf()
 {
 }
 
 
 BBox
-SurfDEG::get_bounding_box() const
+TriSurf::get_bounding_box() const
 {
   BBox result;
 
@@ -49,45 +49,45 @@ SurfDEG::get_bounding_box() const
 }
 
 
-SurfDEG::node_iterator
-SurfDEG::node_begin() const
+TriSurf::node_iterator
+TriSurf::node_begin() const
 {
   return 0;
 }
 
-SurfDEG::node_iterator
-SurfDEG::node_end() const
+TriSurf::node_iterator
+TriSurf::node_end() const
 {
   return points_.size();
 }
 
-SurfDEG::edge_iterator
-SurfDEG::edge_begin() const
+TriSurf::edge_iterator
+TriSurf::edge_begin() const
 {
   return 0;
 }
 
-SurfDEG::edge_iterator
-SurfDEG::edge_end() const
+TriSurf::edge_iterator
+TriSurf::edge_end() const
 {
-  return tris_.size();
+  return faces_.size();
 }
 
-SurfDEG::face_iterator
-SurfDEG::face_begin() const
+TriSurf::face_iterator
+TriSurf::face_begin() const
 {
   return 0;
 }
 
-SurfDEG::face_iterator
-SurfDEG::face_end() const
+TriSurf::face_iterator
+TriSurf::face_end() const
 {
-  return tris_.size() / 3;
+  return faces_.size() / 3;
 }
 
 
 void
-SurfDEG::get_nodes_from_edge(node_array &array, edge_index idx) const
+TriSurf::get_nodes_from_edge(node_array &array, edge_index idx) const
 {
   static int table[6][2] =
   {
@@ -99,22 +99,22 @@ SurfDEG::get_nodes_from_edge(node_array &array, edge_index idx) const
   const int off = idx % 3;
   const int node = idx - off;
 
-  array.push_back(tris_[node + table[off][0]]);
-  array.push_back(tris_[node + table[off][1]]);
+  array.push_back(faces_[node + table[off][0]]);
+  array.push_back(faces_[node + table[off][1]]);
 }
 
 
 void
-SurfDEG::get_nodes_from_face(node_array &array, face_index idx) const
+TriSurf::get_nodes_from_face(node_array &array, face_index idx) const
 {
-  array.push_back(tris_[idx * 3 + 0]);
-  array.push_back(tris_[idx * 3 + 1]);
-  array.push_back(tris_[idx * 3 + 2]);
+  array.push_back(faces_[idx * 3 + 0]);
+  array.push_back(faces_[idx * 3 + 1]);
+  array.push_back(faces_[idx * 3 + 2]);
 }
 
 
 void
-SurfDEG::get_edges_from_face(edge_array &array, face_index idx) const
+TriSurf::get_edges_from_face(edge_array &array, face_index idx) const
 {
   array.push_back(idx * 3 + 0);
   array.push_back(idx * 3 + 1);
@@ -123,7 +123,7 @@ SurfDEG::get_edges_from_face(edge_array &array, face_index idx) const
 
 
 void
-SurfDEG::get_neighbor_from_edge(face_index &neighbor, edge_index idx) const
+TriSurf::get_neighbor_from_edge(face_index &neighbor, edge_index idx) const
 {
   neighbor = neighbors_[idx];
 }
@@ -140,7 +140,7 @@ distance2(const Point &p0, const Point &p1)
 
 
 void
-SurfDEG::locate_node(node_index &node, const Point &p)
+TriSurf::locate_node(node_index &node, const Point &p)
 {
   // TODO: Use search structure instead of exaustive search.
   int min_indx;
@@ -172,22 +172,22 @@ SurfDEG::locate_node(node_index &node, const Point &p)
 #if 0
 
 void
-SurfDEG::locate_edge(edge_index &edge, const Point & /* p */)
+TriSurf::locate_edge(edge_index &edge, const Point & /* p */)
 {
   edge = edge_end();
 }
 
 void
-SurfDEG::locate_face(face_index &face, const Point & /* p */)
+TriSurf::locate_face(face_index &face, const Point & /* p */)
 {
   face = face_end();
 }
 
 
 void
-SurfDEG::locate_cell(cell_index &cell, const Point &p)
+TriSurf::locate_cell(cell_index &cell, const Point &p)
 {
-  for (int i=0; i < tris_.size(); i+=4)
+  for (int i=0; i < faces_.size(); i+=4)
   {
     if (inside4_p(i, p))
     {
@@ -201,14 +201,14 @@ SurfDEG::locate_cell(cell_index &cell, const Point &p)
 
 
 void
-SurfDEG::unlocate(Point &result, const Point &p)
+TriSurf::unlocate(Point &result, const Point &p)
 {
   result = p;
 }
 
 
 void
-SurfDEG::get_point(Point &result, node_index index) const
+TriSurf::get_point(Point &result, node_index index) const
 {
   result = points_[index];
 }
@@ -216,15 +216,15 @@ SurfDEG::get_point(Point &result, node_index index) const
 
 #if 0
 bool
-SurfDEG::inside4_p(int i, const Point &p)
+TriSurf::inside4_p(int i, const Point &p)
 {
   // TODO: This has not been tested.
   // TODO: Looks like too much code to check sign of 4 plane/point tests.
 
-  const Point &p0 = points_[tris_[i+0]];
-  const Point &p1 = points_[tris_[i+1]];
-  const Point &p2 = points_[tris_[i+2]];
-  const Point &p3 = points_[tris_[i+3]];
+  const Point &p0 = points_[faces_[i+0]];
+  const Point &p1 = points_[faces_[i+1]];
+  const Point &p2 = points_[faces_[i+2]];
+  const Point &p3 = points_[faces_[i+3]];
   const double x0 = p0.x();
   const double y0 = p0.y();
   const double z0 = p0.z();
@@ -277,15 +277,61 @@ SurfDEG::inside4_p(int i, const Point &p)
 #endif
 
 
-#define SURFDEG_VERSION 1
+TriSurf::node_index
+TriSurf::add_find_point(const Point &p, double err)
+{
+  node_index i;
+  locate_node(i, p);
+  if (distance2(points_[i], p) < err)
+  {
+    return i;
+  }
+  else
+  {
+    points_.push_back(p);
+    return points_.size() - 1;
+  }
+}
+
 
 void
-SurfDEG::io(Piostream &stream)
+TriSurf::add_triangle(node_index a, node_index b, node_index c,
+		      bool cw_p)
 {
-  stream.begin_class(type_id.type.c_str(), SURFDEG_VERSION);
+  if (cw_p)
+  {
+    faces_.push_back(a);
+    faces_.push_back(b);
+    faces_.push_back(c);
+  }
+  else
+  {
+    faces_.push_back(c);
+    faces_.push_back(b);
+    faces_.push_back(a);
+  }
+}
+
+
+void
+TriSurf::add_triangle(const Point &p0, const Point &p1, const Point &p2,
+		      bool cw_p)
+{
+  add_triangle(add_find_point(p0),
+	       add_find_point(p1),
+	       add_find_point(p2), cw_p);
+}
+
+
+#define TRISURF_VERSION 1
+
+void
+TriSurf::io(Piostream &stream)
+{
+  stream.begin_class(type_id.type.c_str(), TRISURF_VERSION);
 
   Pio(stream, points_);
-  Pio(stream, tris_);
+  Pio(stream, faces_);
   Pio(stream, neighbors_);
 
   stream.end_class();
