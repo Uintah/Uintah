@@ -1321,7 +1321,6 @@ int HexMesh::locate (const Point& P, int & idx)
   }
 
   return idx = -1;
-#endif
 }
 
 
