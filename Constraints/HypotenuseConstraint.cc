@@ -39,6 +39,7 @@ HypotenuseConstraint::Satisfy( const Index index, const Scheme scheme )
 {
    Variable& v0 = *vars[0];
    Variable& v1 = *vars[1];
+   Real t;
 
    if (hc_debug) {
       ChooseChange(index, scheme);
@@ -48,12 +49,12 @@ HypotenuseConstraint::Satisfy( const Index index, const Scheme scheme )
    /* 2 * dist^2 = hypo^2 */
    switch (ChooseChange(index, scheme)) {
    case 0:
-      v0.Assign(Point(sqrt(v1.Get().x() * v1.Get().x() / 2.0), 0, 0),
-		scheme);
+      if ((t = v1.Get().x() * v1.Get().x() / 2.0) >= 0.0)
+	 v0.Assign(Point(sqrt(t), 0, 0), scheme);
       break;
    case 1:
-      v1.Assign(Point(sqrt(2.0 * v0.Get().x() * v0.Get().x()), 0, 0),
-		scheme);
+      if ((t = 2.0 * v0.Get().x() * v0.Get().x()) >= 0.0)
+	 v1.Assign(Point(sqrt(t), 0, 0), scheme);
       break;
    default:
       cerr << "Unknown variable in Hypotenous Constraint!" << endl;

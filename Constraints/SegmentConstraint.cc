@@ -59,7 +59,7 @@ SegmentConstraint::Satisfy( const Index index, const Scheme scheme )
       break;
    case 2:
       Vector norm(v1.Get() - v0.Get());
-      if (norm.length2() == 0.0) {
+      if (norm.length2() < v2.GetEpsilon()) {
 	 v2.Assign(v1.Get(), scheme);
       } else {
 	 Real length = norm.normalize();
@@ -69,8 +69,7 @@ SegmentConstraint::Satisfy( const Index index, const Scheme scheme )
 	    t = 0;
 	 else if (t > length)
 	    t = length;
-	 Point p = v0.Get() + (norm * t);
-	 v2.Assign(p, scheme);
+	 v2.Assign(v0.Get() + (norm * t), scheme);
       }
       break;
    default:

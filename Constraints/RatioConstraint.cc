@@ -56,15 +56,15 @@ RatioConstraint::Satisfy( const Index index, const Scheme scheme )
       v0.Assign(temp, scheme);
       break;
    case 1:
-      if (v2.Get().x() == 0.0)
+      if (v2.Get().x() < v1.GetEpsilon())
 	 temp.x(v1.Get().x()); // Don't change v1 since 0/any == 0
       else
 	 temp.x(v0.Get().x() / v2.Get().x());
       v1.Assign(temp, scheme);
       break;
    case 2:
-      if (v1.Get().x() == 0.0)
-	 temp.x(1.0);
+      if (v1.Get().x() < v2.GetEpsilon())
+	 temp.x(v2.Get().x()); // Don't change v1 since 0/any == 0
       else
 	 temp.x(v0.Get().x() / v1.Get().x());
       v2.Assign(temp, scheme);

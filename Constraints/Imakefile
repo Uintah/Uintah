@@ -4,17 +4,21 @@
 #ifdef SCI_DIR_Constraints
 
 OBJS = BaseConstraint.o \
+	AngleConstraint.o \
 	DistanceConstraint.o \
 	HypotenuseConstraint.o  \
 	LineConstraint.o \
+	MidpointConstraint.o \
 	PlaneConstraint.o \
 	PythagorasConstraint.o \
 	RatioConstraint.o \
 	SegmentConstraint.o
 SRCS = BaseConstraint.cc \
+	AngleConstraint.cc \
 	DistanceConstraint.cc \
 	HypotenuseConstraint.cc  \
 	LineConstraint.cc \
+	MidpointConstraint.cc \
 	PlaneConstraint.cc \
 	PythagorasConstraint.cc \
 	RatioConstraint.cc \
