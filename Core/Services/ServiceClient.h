@@ -51,11 +51,11 @@ class ServiceClient: public ServiceBase {
     ServiceClient();
     virtual ~ServiceClient();
 
-    // Run will be called by the thread environment as the entry point of
-    // a new thread.
-
     bool  open(IComAddress address, std::string servicename, int session, std::string passwd);
     bool  close();
+  
+
+    ////////////////////////////////////////
   
     IComSocket  getsocket();
     
@@ -84,6 +84,7 @@ class ServiceClient: public ServiceBase {
     std::string  error_;
     int          errno_;
     IComSocket   socket_;
+    bool         need_send_end_stream_;
 };
 
 typedef LockingHandle<ServiceClient> ServiceClientHandle;

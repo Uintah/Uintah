@@ -60,6 +60,11 @@ void ServiceManager::run()
   if (!address_.isvalid()) 
   {
     log_->putmsg("ServiceManager: invalid address for server, shutting down service manager");
+    std::cerr << "-------------------------------------------------------" << std::endl;
+    std::cerr << "Error detected when launching the service manager" << std::endl;
+    std::cerr << "Invalid address for server, shutting down service manager" << std::endl;
+    std::cerr << "-------------------------------------------------------" << std::endl;
+
     return;		
   }
   
@@ -67,6 +72,13 @@ void ServiceManager::run()
   {
     log_->putmsg("ServiceManager: socket.create() failed, shutting down service manager");
     log_->putmsg(std::string("ServiceFrame: socket error = ") + serversocket.geterror());
+
+    std::cerr << "-------------------------------------------------------" << std::endl;
+    std::cerr << "Error detected when launching the service manager" << std::endl;
+    std::cerr << std::string("ServiceFrame: socket error = ") + serversocket.geterror() << std::endl;
+    std::cerr << "Please check the service manager settings" << std::endl;
+    std::cerr << "-------------------------------------------------------" << std::endl;
+
     return;	
   }
 	
@@ -75,6 +87,13 @@ void ServiceManager::run()
     log_->putmsg("ServiceManager: socket.bind() failed, shutting down service manager");
     std::string errormsg = "ServiceManager: socket error = " + serversocket.geterror();
     log_->putmsg(errormsg);
+
+    std::cerr << "-------------------------------------------------------" << std::endl;
+    std::cerr << "Error detected when launching the service manager" << std::endl;
+    std::cerr << errormsg << std::endl;
+    std::cerr << "Please check the service manager port settings" << std::endl;
+    std::cerr << "-------------------------------------------------------" << std::endl;
+
     return;	
   }
 
@@ -85,10 +104,17 @@ void ServiceManager::run()
   if (!(serversocket.listen())) 
   {
     log_->putmsg("ServiceManager: socket.listen() failed, shutting down service manager");
+
+    std::cerr << "-------------------------------------------------------" << std::endl;
+    std::cerr << "Error detected when launching the service manager" << std::endl;
+    std::cerr << "ServiceManager: socket.listen() failed, shutting down service manager"<< std::endl; 
+    std::cerr << "-------------------------------------------------------" << std::endl;
+
     return;
   }
   
-  for(;;) {
+  while(1) 
+  {
     // LOOP FOREVER...
 
     

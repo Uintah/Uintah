@@ -35,7 +35,7 @@
 namespace SCIRun {
 
 SimpleServiceOutputInfo::SimpleServiceOutputInfo(IComSocket socket,ServiceLogHandle log) :
-  lock("SimpleServiceOutputThread"),
+  lock("SimpleServiceOutputThread Lock"),
   ref_cnt(0),
   socket_(socket),
   wait_("SimpleServiceOutputThread Condition Variable"),
@@ -64,7 +64,7 @@ SimpleServiceOutputThread::~SimpleServiceOutputThread()
 void SimpleServiceOutputThread::run()
 {
   try
-    {
+  {
       std::list<IComPacketHandle> *plist;
       handle_->lock.lock();
       while(!handle_->exit_)
@@ -79,46 +79,60 @@ void SimpleServiceOutputThread::run()
               {
                   if(!(handle_->socket_.send((*it))))
                   {
-                     std::cerr << "SimpleServiceOutputThread: error sending packet" << std::endl;
+                     if (!(handle_->socket_.isconnected()))
+                     {  // remote connection was closed
+                        delete plist;
+                        handle_->lock.lock();
+                        break;
+                     }
+                     else
+                     {
+                        std::cerr << "SimpleServiceOutputThread: error sending packet" << std::endl;
+                     }
                   }
               }	
               delete  plist;
               handle_->lock.lock();	
-            }
-            handle_->wait_.wait(handle_->lock);
-        }
-		
+           }
+           handle_->wait_.wait(handle_->lock);
+      }
+	
       if (handle_->exit_)
       {
           IComPacketHandle packet = scinew IComPacket;
           packet->settag(TAG_END_);
           handle_->socket_.send(packet);
       }
+      handle_->lock.unlock();
   }
   catch(...)
   {
       handle_->log_->putmsg("SimpleServiceOutputThread: thread caught an exception");
+      handle_->lock.unlock();
   }
 	
   // In case we caught an exception wait until we receive an exit signal
   // from the main task. It is using this threads resources so we cannot exit
 	
   handle_->lock.lock();
-  if (!handle_->exit_)
-  {
-      while (!handle_->exit_)
-      {
-          handle_->wait_.wait(handle_->lock);
-          // delete all incoming traffic
-          // This process stalled and we cannot relay
-          // output. To keep the program from crashing
-          // immediately we do not forward any messages
-          if (handle_->packet_list_) delete handle_->packet_list_;
-          handle_->packet_list_ = 0;
-      }
 
+  while (!handle_->exit_)
+  {
+      handle_->wait_.wait(handle_->lock);
+      // delete all incoming traffic
+      // This process stalled and we cannot relay
+      // output. To keep the program from crashing
+      // immediately we do not forward any messages
+      if (handle_->packet_list_) delete handle_->packet_list_;
+      handle_->packet_list_ = 0;
   }
+
   handle_->lock.unlock();
+  
+  // Let's clean up here, so SCIRun does not have to do it.
+  // It does not always invoke the destructors.
+  handle_ = 0;  
+  return;
 }
 
 ///////////////////////////////////////////////////
@@ -195,9 +209,9 @@ void SimpleService::forward_exit(SystemCallHandle syscall)
 
 void SimpleService::stop_forward_stdout()
 {
-  if (stdout_syscall_.get_rep())
+  if (stdout_syscall_.get_rep() != 0)
   {
-      if (stdout_handler_.get_rep()) 
+      if (stdout_handler_.get_rep() != 0) 
       {
           SystemCallHandlerHandle handle = dynamic_cast<SystemCallHandler*>(stdout_handler_.get_rep());
           stdout_syscall_->rem_stdout_handler(handle);
@@ -209,9 +223,9 @@ void SimpleService::stop_forward_stdout()
 
 void SimpleService::stop_forward_stderr()
 {
-  if (stderr_syscall_.get_rep())
+  if (stderr_syscall_.get_rep() != 0)
   {
-      if (stderr_handler_.get_rep()) 
+      if (stderr_handler_.get_rep() != 0) 
       {
           SystemCallHandlerHandle handle = dynamic_cast<SystemCallHandler*>(stderr_handler_.get_rep());
           stderr_syscall_->rem_stderr_handler(handle);
@@ -223,9 +237,9 @@ void SimpleService::stop_forward_stderr()
 
 void SimpleService::stop_forward_exit()
 {
-  if (exit_syscall_.get_rep())
+  if (exit_syscall_.get_rep() != 0)
   {
-      if (exit_handler_.get_rep())
+      if (exit_handler_.get_rep() != 0)
       {
           SystemCallHandlerHandle handle = dynamic_cast<SystemCallHandler*>(exit_handler_.get_rep());
           exit_syscall_->rem_exit_handler(handle);
@@ -249,9 +263,10 @@ SimpleService::~SimpleService()
   stop_forward_stdout();
   stop_forward_stderr();
   stop_forward_exit();
-	
+
   // Make sure the thread knows we are exiting
   kill_output_thread();
+
 }
 
 
@@ -329,8 +344,10 @@ void SimpleService::execute()
         handle_input();
         putmsg("SimpleService: Main loop ends here");
         putmsg("SimpleService: closing down sevice");
-        close_service();
+        // we need to end the stream of output first before
+        // ending the service and sending an end message
         kill_output_thread();
+        close_service();
     }
     else
     {
@@ -340,11 +357,6 @@ void SimpleService::execute()
         close_service();
         // no thread to kill
     }
-}
-
-void SimpleService::handle_stdpacket(IComPacketHandle& /*packet*/)
-{
-  // I need to finish this function
 }
 
 void SimpleService::handle_input()
@@ -362,7 +374,7 @@ void SimpleService::handle_input()
           break;
       }
 
-      if (packet->gettag() == TAG_END_) 
+      if (packet->gettag() == TAG_END_STREAM) 
       { 
           done = true; 
           continue;

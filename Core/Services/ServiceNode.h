@@ -78,6 +78,7 @@ namespace SCIRun {
 typedef struct {
 	std::string servicename;
 	std::string classname;
+    std::string classpackagename;
 	std::string	version;
 	std::map<std::string,std::string> parameter;
 	} ServiceNode;

@@ -133,13 +133,13 @@ LIBRARY_HANDLE ServiceDB::findlib(string lib)
 bool ServiceDB::findmaker(ServiceInfo* info) 
 {
   std::string cat_bname, pak_bname;
-  if(info->packagename == "SCIRun") 
+  if(info->classpackagename == "SCIRun") 
   {
       pak_bname = "Core_Services";
   }	
   else 
   {
-      pak_bname = "Packages_" + info->packagename + "_Services";
+      pak_bname = "Packages_" + info->classpackagename + "_Services";
   }
   
   std::string errstr;
@@ -150,7 +150,7 @@ bool ServiceDB::findmaker(ServiceInfo* info)
 
   if (!package_so) 
   {
-      std::cerr << "Unable to load services of package '"  << info->packagename << "'\n :" << errstr;
+      std::cerr << "Unable to load services of package '"  << info->classpackagename << "'\n :" << errstr;
       return(false);
   }
 
@@ -279,6 +279,17 @@ void ServiceDB::loadpackages()
           new_service->maker = 0;
           new_service->servicename = node.servicename;
           new_service->classname = node.classname;
+          new_service->disabled = false;
+          if (node.classpackagename == "")
+          {
+            new_service->classpackagename = packageelt;
+          }
+          else
+          { // This options allows to define a services whose class
+            // lives in a different package. Mostly in the SCIRun main
+            // class.
+            new_service->classpackagename = node.classpackagename;
+          } 
           new_service->parameters = node.parameter;
           new_service->version = node.version;
 			
@@ -295,6 +306,9 @@ void ServiceDB::loadpackages()
 
           std::string password = new_service->parameters["password"];
           if (password != "") new_service->passwd = password;
+
+          std::string disabled = new_service->parameters["disabled"];
+          if ((disabled=="1")||(disabled=="true")||(disabled=="TRUE")||(disabled=="yes")||(disabled=="YES")) new_service->disabled =true;
 
           // Store the information so all threads can use it
           servicedb_[node.servicename] = new_service;

@@ -32,6 +32,9 @@
  */
 
 #include <Core/Services/ServiceFrame.h>
+#include <exception>
+#include <Core/Thread/ThreadError.h>
+#include <Core/SystemCall/SystemCallError.h>
 
 namespace SCIRun { 
 
@@ -262,10 +265,6 @@ bool ServiceFrame::initiate()
 		}
 		else
 		{
-            std::cout << "passwd = '" << passwd << "'\n";
-            std::cout << "service passwd = '" << si->passwd << "'\n";
-
-
 			packet->settag(TAG_AUFL);
 			packet->setid(0);
 			packet->setstring(std::string("Improper password"));
@@ -307,16 +306,82 @@ bool ServiceFrame::runservice()
 		std::string status = "ServiceFrame: launching service " + servicename_;
 		log_->putmsg(status);
 		serv->run();
-	}
+    }
+    catch (std::exception &e)
+    {
+		std::string str = "ServiceFrame: Service '" + servicename_ + "' generated an exception";
+		std::cerr << str << std::endl;
+		log_->putmsg(str);
+        str = "ServiceFrame: std-exception = " + std::string(e.what());
+        std::cerr << str << std::endl;
+        log_->putmsg(str);
+        delete(serv);
+		return(false);
+    }
+    catch(ThreadError &e)
+    {
+		std::string str = "ServiceFrame: Service '" + servicename_ + "' generated an exception while deleting the service";
+		std::cerr << str << std::endl; 
+		log_->putmsg(str);
+        str = "ServiceFrame: std-exception = " + std::string(e.message());
+        std::cerr << str << std::endl;
+        log_->putmsg(str);
+        delete(serv);
+        return(false);
+    }
 	catch(...)
 	{
 		std::string str = "ServiceFrame: Service '" + servicename_ + "' generated an exception";
 		std::cerr << str << std::endl;
 		log_->putmsg(str);
-		delete serv;
+        delete serv;
+        throw;
+        return(false);
+	}
+
+    
+    try
+    {
+        delete serv;
+	}
+    catch (std::exception &e)
+    {
+		std::string str = "ServiceFrame: Service '" + servicename_ + "' generated an exception while deleting the service";
+		std::cerr << str << std::endl; 
+		log_->putmsg(str);
+        str = "ServiceFrame: std-exception = " + std::string(e.what());
+        std::cerr << str << std::endl;
+        log_->putmsg(str);
+		return(false);
+    }
+    catch(ThreadError &e)
+    {
+		std::string str = "ServiceFrame: Service '" + servicename_ + "' generated an exception while deleting the service";
+		std::cerr << str << std::endl; 
+		log_->putmsg(str);
+        str = "ServiceFrame: std-exception = " + std::string(e.message());
+        std::cerr << str << std::endl;
+        log_->putmsg(str);
+		return(false);
+    }
+    catch(SystemCallError &e)
+    {
+		std::string str = "ServiceFrame: Service '" + servicename_ + "' generated an exception while deleting the service";
+		std::cerr << str << std::endl; 
+		log_->putmsg(str);
+        str = "ServiceFrame: std-exception = " + std::string(e.geterror());
+        std::cerr << str << std::endl;
+        log_->putmsg(str);
+		return(false);
+    }    
+	catch(...)
+	{
+		std::string str = "ServiceFrame: Service '" + servicename_ + "' generated an exception while deleting the service";
+		std::cerr << str << std::endl;
+		log_->putmsg(str);
+        throw;
 		return(false);
 	}
-	delete serv;
 
 	return(true);
 }

@@ -106,6 +106,17 @@ void ProcessServiceNode(const DOMNode& d, ServiceNode& n)
 		n.classname = std::string(to_char_ptr(classname->getNodeValue()));
     }
 
+	// Get service classpackage name. This specifies the location of the dynamic file
+    // to run to provide this service. If this one is not supplied it is assumed to
+    // in the same directory as the class it self
+    
+    const XMLCh* classpackagexs = to_xml_ch_ptr("classpackage");
+    DOMNode *classpackagename = d.getAttributes()->getNamedItem(classpackagexs);
+    if (classpackagename != 0) 
+	{
+		n.classpackagename = std::string(to_char_ptr(classpackagename->getNodeValue()));
+    }
+
 	// Get service version number. This is used to keep track of bugs and changes
 	
     const XMLCh* versionxs = to_xml_ch_ptr("version");
