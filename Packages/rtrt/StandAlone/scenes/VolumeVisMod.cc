@@ -29,12 +29,6 @@ void get_material(Array1<Color*> &matls, Array1<float> &alphas,
   spline.add(Color(0,0,1));
   spline.add(Color(0,0,1));
   spline.add(Color(0,0,1));
-  spline.add(Color(0,0,1));
-  spline.add(Color(0,0,1));
-  spline.add(Color(0,0,1));
-  spline.add(Color(0,0,1));
-  spline.add(Color(0,0,1));
-  spline.add(Color(0,0,1));
   spline.add(Color(0,0.4,1));
   spline.add(Color(0,0.8,1));
   spline.add(Color(0,1,0.8));
@@ -45,6 +39,8 @@ void get_material(Array1<Color*> &matls, Array1<float> &alphas,
   spline.add(Color(1,0.9176,0));
   spline.add(Color(1,0.8,0));
   spline.add(Color(1,0.4,0));
+  spline.add(Color(1,0,0));
+  spline.add(Color(1,0,0));
   spline.add(Color(1,0,0));
 #else
   spline.add(Color(.4,.4,.4));
@@ -237,8 +233,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       // the file was not set
       scene_type = 0;
   
-  Camera cam(Point(0,400,0), Point(0,0,0),
-	     Vector(0,1,0), 60.0);
+  Camera cam(Point(0.5,0.5,3), Point(0.5,0.5,0.5),
+	     Vector(0,1,0), 40.0);
   
   double bgscale=0.5;
   double ambient_scale=1.0;
@@ -403,14 +399,14 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     data_max = data_max_in;
 
   cout << "minP = "<<minP<<", maxP = "<<maxP<<endl;
-  VolumeVisDpy *dpy = new VolumeVisDpy();
+  VolumeVisDpy *dpy = new VolumeVisDpy(new Array1<Color*>(matls),
+				       new Array1<float>(alphas),
+				       t_inc);
   Object* obj = (Object*) new VolumeVis(data, data_min, data_max,
 					nx, ny, nz,
 					minP, maxP,
-					matls, matls.size(),
-					alphas, alphas.size(),
 					spec_coeff, ambient, diffuse,
-					specular, t_inc, dpy);
+					specular, dpy);
   new Thread(dpy, "VolumeVis display thread");
   
   if(cut){
