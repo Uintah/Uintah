@@ -1061,7 +1061,7 @@ TetVolMesh::compute_grid()
   // cubed root of number of cells to get a subdivision ballpark
   const double one_third = 1.L/3.L;
   Cell::size_type csize;  size(csize);
-  const int s = ((int)ceil(pow((double)csize , one_third))) / 8 + 2;
+  const int s = ((int)ceil(pow((double)csize , one_third))) / 2 + 2;
   const Vector cell_epsilon = bb.diagonal() * (0.01 / s);
   bb.extend(bb.min() - cell_epsilon*2);
   bb.extend(bb.max() + cell_epsilon*2);
