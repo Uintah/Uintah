@@ -42,7 +42,7 @@
 #include <fstream>
 #include <string.h>
 
-#include <map.h>
+#include <map>
 
 #include <Core/Geom/GeomObj.h>
 #include <Core/Util/Timer.h>

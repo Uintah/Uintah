@@ -48,7 +48,7 @@
 #include <Dataflow/Modules/Render/SCIBaWGL.h>
 // --  BAWGL -- 
 
-#include <map.h>
+#include <map>
 
 // define 'the_time()' function for UniCam
 #ifdef WIN32
