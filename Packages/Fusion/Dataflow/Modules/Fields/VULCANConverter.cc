@@ -105,6 +105,11 @@ VULCANConverter::execute(){
   vector< NrrdDataHandle > nHandles;
   NrrdDataHandle nHandle;
 
+  string datasetsStr;
+
+  string nrrdName;
+  string property;
+
   // Assume a range of ports even though four are needed.
   port_range_type range = get_iports("Input Nrrd");
 
@@ -125,95 +130,38 @@ VULCANConverter::execute(){
 
     // Save the field handles.
     if (inrrd_port->get(nHandle) && nHandle.get_rep()) {
-      unsigned int tuples = nHandle->get_tuple_axis_size();
-
-      // Store only single nrrds
-      if( tuples == 0 ) {
-	error("Zero tuples???");
+      // Get the name of the nrrd being worked on.
+      if( !nHandle->get_property( "Name", nrrdName ) ||
+	  nrrdName == "Unknown" ) {
+	error( "Can not find the name of the nrrd or it is unknown." );
 	return;
-      } else if( tuples == 1 ) {
-	nHandles.push_back( nHandle );
-      } else {
+      }
 
-	// Multiple nrrds
-	vector< string > dataset;
-	nHandle->get_tuple_indecies(dataset);
-	
-	const unsigned int nrrdDim = nHandle->nrrd->dim;
-	
-	int *min = scinew int[nrrdDim];
-	int *max = scinew int[nrrdDim];
+      // Get the source of the nrrd being worked on.
+      if( !nHandle->get_property( "Source", property ) ||
+	  property == "Unknown" ) {
+	error( "Can not find the source of the nrrd or it is unknown." );
+	return;
+      }
 
-	// Keep the same dims except for the tuple axis.
-	for( int j=1; j<nHandle->nrrd->dim; j++) {
-	  min[j] = 0;
-	  max[j] = nHandle->nrrd->axis[j].size-1;
-	}
+      nHandles.push_back( nHandle );
 
-	// Separate via the tupple axis.
-	for( unsigned int i=0; i<tuples; i++ ) {
-
-	  Nrrd *nout = nrrdNew();
-
-	  // Translate the tuple index into the real offsets for a tuple axis.
-	  int tmin, tmax;
-	  if (! nHandle->get_tuple_index_info( i, i, tmin, tmax)) {
-	    error("Tuple index out of range");
-	    return;
-	  }
-	  
-	  min[0] = tmin;
-	  max[0] = tmax;
-
-	  // Crop the tupple axis.
-	  if (nrrdCrop(nout, nHandle->nrrd, min, max)) {
-
-	    char *err = biffGetDone(NRRD);
-	    error(string("Trouble resampling: ") + err);
-	    msgStream_ << "input Nrrd: nHandle->nrrd->dim="<<nHandle->nrrd->dim<<"\n";
-	    free(err);
-	  }
-
-	  // Form the new nrrd and store.
-	  NrrdData *nrrd = scinew NrrdData(true);
-	  nrrd->nrrd = nout;
-	  nout->axis[0].label = strdup(dataset[i].c_str());
-
-	  NrrdDataHandle handle = NrrdDataHandle(nrrd);
-
-	  // Copy the properties.
-	  *((PropertyManager *) handle.get_rep()) =
-	    *((PropertyManager *) nHandle.get_rep());
-
-	  nHandles.push_back( handle );
-	}
-
-	delete min;
-	delete max;
-       }
     } else if( pi != range.second ) {
-      error( "No handle or representation" );
+      error( "No handle or representation." );
       return;
     }
   }
 
-  string datasetsStr;
-
-  // Get each of the dataset names for the GUI.
   for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
 
-    nHandle = nHandles[ic];
-
-    // Get the tuple axis name - there is only one.
-    vector< string > dataset;
-    nHandle->get_tuple_indecies(dataset);
+    nHandles[ic]->get_property( "Name", nrrdName );
 
     // Save the name of the dataset.
     if( nHandles.size() == 1 )
-      datasetsStr.append( dataset[0] );
+      datasetsStr.append( nrrdName );
     else
-      datasetsStr.append( "{" + dataset[0] + "} " );
-  }      
+      datasetsStr.append( "{" + nrrdName + "} " );
+  }
 
   if( datasetsStr != datasetsStr_.get() ) {
     // Update the dataset names and dims in the GUI.
@@ -223,7 +171,8 @@ VULCANConverter::execute(){
     gui->execute(str.str().c_str());
   }
 
-  if( nHandles.size() != 1 && nHandles.size() != 2 && nHandles.size() != 3 &&
+  if( nHandles.size() != 1 && nHandles.size() != 2 &&
+      nHandles.size() != 3 &&
       nHandles.size() != 4 && nHandles.size() != 8 ){
     error( "Not enough or too many handles or representations" );
     return;
@@ -244,8 +193,6 @@ VULCANConverter::execute(){
     }
   }
 
-  string property;
-
   // If data change, update the GUI the field if needed.
   if( generation ) {
     conversion_ = NONE;
@@ -264,9 +211,8 @@ VULCANConverter::execute(){
 
       nHandle = nHandles[ic];
 
-      // Get the tuple axis name - there is only one.
-      vector< string > dataset;
-      nHandle->get_tuple_indecies(dataset);
+      // Get the name of the nrrd being worked on.
+      nHandle->get_property( "Name", nrrdName );
 
       if( nHandle->get_property( "Topology", property ) ) {
 
@@ -280,24 +226,24 @@ VULCANConverter::execute(){
 	    if( property.find("Cylindrical - VULCAN") != string::npos ) {
 
 	      // Sort the components.
-	      if( dataset[0].find( "ZR:Scalar" ) != string::npos &&
-		  nHandle->nrrd->dim == 3 ) {
+	      if( nrrdName.find( "ZR:Scalar" ) != string::npos &&
+		  nHandle->nrrd->dim == 2 ) {
 		conversion_ = MESH;
 		mesh_[ZR] = ic;
-	      } else if( dataset[0].find( "ZR:Vector" ) != string::npos &&
+	      } else if( nrrdName.find( "ZR:Vector" ) != string::npos &&
 			 nHandle->nrrd->dim == 2 ) {
 		conversion_ = MESH;
 		mesh_[ZR] = ic;
-	      } else if( dataset[0].find( "PHI:Scalar" ) != string::npos && 
-			 nHandle->nrrd->dim == 2 ) {
+	      } else if( nrrdName.find( "PHI:Scalar" ) != string::npos && 
+			 nHandle->nrrd->dim == 1 ) {
 		mesh_[PHI] = ic;
 	      } else {
-		error( dataset[0] + " is unknown VULCAN mesh data." );
+		error( nrrdName + " is unknown VULCAN mesh data." );
 		error_ = true;
 		return;
 	      }
 	    } else {
-	      error( dataset[0] + " " + property + " is an unsupported coordinate system." );
+	      error( nrrdName + " " + property + " is an unsupported coordinate system." );
 	      error_ = true;
 	      return;
 	    }
@@ -305,12 +251,12 @@ VULCANConverter::execute(){
 	    conversion_ = CONNECTION;
 	    mesh_[LIST] = ic;
 	  } else {
-	    error( dataset[0] + "No coordinate system or cell type found." );
+	    error( nrrdName + "No coordinate system or cell type found." );
 	    error_ = true;
 	    return;
 	  }
 	} else {
-	  error( dataset[0] + " " + property + " is an unsupported topology." );
+	  error( nrrdName + " " + property + " is an unsupported topology." );
 	  error_ = true;
 	  return;
 	}
@@ -323,30 +269,30 @@ VULCANConverter::execute(){
 	    data_[0] = -1;
 	  }
 
-	  if( dataset[0].find( "ZR:Scalar" ) != string::npos && 
-	      nHandle->nrrd->dim == 3 ) {
-	    conversion_ = REALSPACE;
-	    data_[ZR] = ic; 
-	  } else if( dataset[0].find( "ZR:Vector" ) != string::npos && 
+	  if( nrrdName.find( "ZR:Scalar" ) != string::npos && 
 	      nHandle->nrrd->dim == 2 ) {
 	    conversion_ = REALSPACE;
 	    data_[ZR] = ic; 
-	  } else if( dataset[0].find( ":Scalar" ) != string::npos && 
-		     nHandle->nrrd->dim == 2 ) {
+	  } else if( nrrdName.find( "ZR:Vector" ) != string::npos && 
+	      nHandle->nrrd->dim == 2 ) {
+	    conversion_ = REALSPACE;
+	    data_[ZR] = ic; 
+	  } else if( nrrdName.find( ":Scalar" ) != string::npos && 
+		     nHandle->nrrd->dim == 1 ) {
 	    conversion_ = SCALAR;
 	    data_[0] = ic;
 	  } else {
-	    error( dataset[0] + " is unknown VULCAN node data." );
+	    error( nrrdName + " is unknown VULCAN node data." );
 	    error_ = true;
 	    return;
 	  }
 	} else {	
-	  error( dataset[0] + " " + property + " Unsupported Data Space." );
+	  error( nrrdName + " " + property + " Unsupported Data Space." );
 	  error_ = true;
 	  return;
 	}
       } else {
-	error( dataset[0] + " No DataSpace property." );
+	error( nrrdName + " No DataSpace property." );
 	error_ = true;
 	return;
       }

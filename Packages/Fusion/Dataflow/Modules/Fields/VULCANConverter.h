@@ -90,7 +90,6 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 					   vector< int >& data,
 					   vector< int >& modes)
 {
-  int sink_size = 1;
   int ndims = 1;
 
   NrrdData *nout = scinew NrrdData(true);
@@ -100,23 +99,12 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
   NTYPE *ptrZR  = (NTYPE *)(nHandles[mesh[ZR]]->nrrd->data);
   NTYPE *ptrPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
   
+  int nPhi = nHandles[mesh[PHI]]->nrrd->axis[0].size; // Phi
   int nZR  = nHandles[mesh[ZR ]]->nrrd->axis[1].size; // Points
-  int nPhi = nHandles[mesh[PHI]]->nrrd->axis[1].size; // Phi
 
   NTYPE* ndata = scinew NTYPE[nPhi*nZR*3];
 
-  vector< string > dataset;
-  nHandles[mesh[ZR]]->get_tuple_indecies(dataset);
-
-  int rank = 0;
-
-  if( dataset[0].find( "ZR:Scalar" ) != string::npos &&
-      nHandles[mesh[ZR]]->nrrd->dim == 3 ) {
-    rank = nHandles[mesh[ZR]]->nrrd->axis[nHandles[mesh[ZR]]->nrrd->dim-1].size;
-  } else if( dataset[0].find( "ZR:Vector" ) != string::npos &&
-      nHandles[mesh[ZR]]->nrrd->dim == 2 ) {
-    rank = 3;
-  }
+  int rank = nHandles[mesh[ZR]]->nrrd->axis[0].size;
 
   // Mesh uprolling.
   if( modes[0] ) {
@@ -147,17 +135,31 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
     }
   }
 
-  nrrdWrap(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
-	   ndims+1, sink_size, nPhi*nZR);
+  nrrdWrap(nout->nrrd, ndata, nHandles[mesh[ZR]]->nrrd->type,
+	   ndims+1, 3, nPhi*nZR);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, nrrdCenterNode);
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+		  nrrdCenterNode, nrrdCenterNode);
 
-  nout->nrrd->axis[0].label = strdup("XYZ:Vector");
-  nout->nrrd->axis[1].label = strdup("Point List");
+  nout->nrrd->axis[0].kind  = nrrdKind3Vector;
+  nout->nrrd->axis[0].label = nHandles[mesh[ZR]]->nrrd->axis[0].label;
+  nout->nrrd->axis[1].label = nHandles[mesh[ZR]]->nrrd->axis[1].label;
 
   *((PropertyManager *)nout) =
-    *((PropertyManager *)(nHandles[mesh[PHI]].get_rep()));
+    *((PropertyManager *)(nHandles[mesh[ZR]].get_rep()));
 
+  string nrrdName;
+  nHandles[mesh[ZR]]->get_property( "Name", nrrdName );
+
+  string::size_type pos = nrrdName.find( "ZR:Scalar" );
+  if( pos != string::npos )
+    nrrdName.replace( pos, 9, "XYZ:Vector" );
+
+  pos = nrrdName.find( "ZR:Vector" );
+  if( pos != string::npos )
+    nrrdName.replace( pos, 9, "XYZ:Vector" );
+
+  nout->set_property( "Name", nrrdName, false );
   nout->set_property( "Coordinate System", string("Cartesian - XYZ"), false );
 
   return  NrrdDataHandle( nout );	
@@ -184,7 +186,6 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
 					   vector< int >& data,
 					   vector< int >& modes)
 {
-  int sink_size = 1;
   int ndims = 1;
   int hex = 8;
 
@@ -196,12 +197,12 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
   NTYPE *ptrCon = (NTYPE *)(nHandles[mesh[LIST]]->nrrd->data);
   
   int nCon = nHandles[mesh[LIST]]->nrrd->axis[1].size; // Connection list
-  int nPhi = nHandles[mesh[PHI ]]->nrrd->axis[1].size; // Phi
+  int nPhi = nHandles[mesh[PHI ]]->nrrd->axis[0].size; // Phi
   int nZR  = nHandles[mesh[ZR  ]]->nrrd->axis[1].size; // Points
 
   NTYPE* ndata = scinew NTYPE[nPhi*nCon*hex];
 
-  int rank = nHandles[mesh[LIST]]->nrrd->axis[nHandles[mesh[LIST]]->nrrd->dim-1].size;
+  int rank = nHandles[mesh[LIST]]->nrrd->axis[0].size;
 
   // Mesh
   if( 0 && modes[0] ) { // Wrapping
@@ -242,22 +243,26 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
   }
 
   nrrdWrap(nout->nrrd, ndata, nHandles[mesh[LIST]]->nrrd->type,
-	   ndims+2, sink_size, cc, hex);
+	   ndims+1, hex, cc);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+		  nrrdCenterNode, nrrdCenterNode);
 
-  vector< string > dataset;
-
-  nHandles[mesh[LIST]]->get_tuple_indecies(dataset);
-
-  nout->nrrd->axis[0].label = strdup(dataset[0].c_str());
-  nout->nrrd->axis[1].label = strdup("Cells");
-  nout->nrrd->axis[2].label = strdup("Connections");
-
+  nout->nrrd->axis[0].kind  = nrrdKindUnknown;
+  nout->nrrd->axis[0].label = nHandles[mesh[LIST]]->nrrd->axis[0].label;
+  nout->nrrd->axis[1].label = nHandles[mesh[LIST]]->nrrd->axis[1].label;
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[mesh[LIST]].get_rep()));
 
+  string nrrdName;
+  nHandles[mesh[LIST]]->get_property( "Name", nrrdName );
+
+  string::size_type pos = nrrdName.find( "Quad" );
+  if( pos != string::npos )
+    nrrdName.replace( pos, 4, "Hex" );
+
+  nout->set_property( "Name", nrrdName, false );
   nout->set_property( "Cell Type", string("Hex"), false );
 
   return  NrrdDataHandle( nout );	
@@ -357,13 +362,12 @@ execute(vector< NrrdDataHandle >& nHandles,
 	vector< int >& data,
 	vector< int >& modes)
 {
-  int sink_size = 1;
   int ndims = 1;
 
   NrrdData *nout = scinew NrrdData(true);
 
   int nCon = nHandles[mesh[LIST]]->nrrd->axis[1].size; // Connection list
-  int nPhi = nHandles[mesh[PHI ]]->nrrd->axis[1].size; // Phi
+  int nPhi = nHandles[mesh[PHI ]]->nrrd->axis[0].size; // Phi
   int nZR  = nHandles[mesh[ZR  ]]->nrrd->axis[1].size; // Points
 
   int nVal = nHandles[data[0]]->nrrd->axis[1].size;    // Values
@@ -387,7 +391,7 @@ execute(vector< NrrdDataHandle >& nHandles,
   for( kj=0; kj<nZR; kj++ )
     wt[kj] = 0;
 
-  int rank = nHandles[mesh[LIST]]->nrrd->axis[nHandles[mesh[LIST]]->nrrd->dim-1].size;
+  int rank = nHandles[mesh[LIST]]->nrrd->axis[0].size;
 
   for( kj=0; kj<nCon; kj++ ) {
     int c0 = (int) ptrCon[kj*rank];
@@ -435,19 +439,15 @@ execute(vector< NrrdDataHandle >& nHandles,
   }
 
   nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	   ndims+1, sink_size, nPhi*nZR);
+	   ndims, nPhi*nZR);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, nrrdCenterNode);
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode);
 
-  vector< string > dataset;
-
-  nHandles[data[0]]->get_tuple_indecies(dataset);
-
-  nout->nrrd->axis[0].label = strdup(dataset[0].c_str());
-  nout->nrrd->axis[1].label = strdup("Data");
+  nout->nrrd->axis[0].kind  = nrrdKindUnknown;
+  nout->nrrd->axis[0].label = nHandles[mesh[LIST]]->nrrd->axis[0].label;
 
   *((PropertyManager *)nout) =
-    *((PropertyManager *)(nHandles[data[0]].get_rep()));
+    *((PropertyManager *)(nHandles[mesh[LIST]].get_rep()));
 
   nout->set_property( "Coordinate System", string("Cartesian - XYZ"), false );
 
@@ -476,33 +476,21 @@ execute(vector< NrrdDataHandle >& nHandles,
 	vector< int >& data,
 	vector< int >& modes)
 {
-  int sink_size = 1;
   int ndims = 1;
 
-  int nPhi = nHandles[mesh[PHI]]->nrrd->axis[1].size; // Phi
+  int nPhi = nHandles[mesh[PHI]]->nrrd->axis[0].size; // Phi
   int nZR  = nHandles[data[ZR ]]->nrrd->axis[1].size; // Radial
   
   NrrdData *nout = scinew NrrdData(true);
-
-  NTYPE* ndata = scinew NTYPE[nPhi*nZR*3];
 
   register int i,kj,cc = 0;
 
   NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
   NTYPE *ptrZR      = (NTYPE *)(nHandles[data[ZR ]]->nrrd->data);
 
-  int rank = 0;
+  NTYPE* ndata = scinew NTYPE[nPhi*nZR*3];
 
-  vector< string > dataset;
-  nHandles[data[ZR]]->get_tuple_indecies(dataset);
-
-  if( dataset[0].find( "ZR:Scalar" ) != string::npos &&
-      nHandles[data[ZR]]->nrrd->dim == 3 ) {
-    rank = nHandles[data[ZR]]->nrrd->axis[nHandles[data[ZR]]->nrrd->dim-1].size;
-  } else if( dataset[0].find( "ZR:Vector" ) != string::npos &&
-      nHandles[data[ZR]]->nrrd->dim == 2 ) {
-    rank = 3;
-  }
+  int rank = nHandles[data[ZR]]->nrrd->axis[0].size;
 
   for( i=0; i<nPhi; i++ ) {
     double cosPhi = cos( ptrMeshPhi[i] );
@@ -520,12 +508,14 @@ execute(vector< NrrdDataHandle >& nHandles,
   }
 
   nrrdWrap(nout->nrrd, ndata, nHandles[data[ZR]]->nrrd->type,
-	   ndims+1, sink_size, nPhi*nZR);
+	   ndims+1, 3, nPhi*nZR);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, nrrdCenterNode);
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+		  nrrdCenterNode, nrrdCenterNode);
 
-  nout->nrrd->axis[0].label = strdup("XYZ:Vector");
-  nout->nrrd->axis[1].label = strdup("Domain");
+  nout->nrrd->axis[0].kind  = nrrdKind3Vector;
+  nout->nrrd->axis[0].label = nHandles[data[ZR]]->nrrd->axis[0].label;
+  nout->nrrd->axis[1].label = nHandles[data[ZR]]->nrrd->axis[1].label;
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[data[ZR]].get_rep()));

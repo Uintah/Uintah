@@ -105,6 +105,11 @@ NIMRODConverter::execute(){
   vector< NrrdDataHandle > nHandles;
   NrrdDataHandle nHandle;
 
+  string datasetsStr;
+
+  string nrrdName;
+  string property;
+
   // Assume a range of ports even though four are needed.
   port_range_type range = get_iports("Input Nrrd");
 
@@ -125,96 +130,38 @@ NIMRODConverter::execute(){
 
     // Save the field handles.
     if (inrrd_port->get(nHandle) && nHandle.get_rep()) {
-      unsigned int tuples = nHandle->get_tuple_axis_size();
-
-      // Store only single nrrds
-      if( tuples == 0 ) {
-	error("Zero tuples???");
+      // Get the name of the nrrd being worked on.
+      if( !nHandle->get_property( "Name", nrrdName ) ||
+	  nrrdName == "Unknown" ) {
+	error( "Can not find the name of the nrrd or it is unknown." );
 	return;
-      } else if( tuples == 1 ) {
-	nHandles.push_back( nHandle );
-      } else {
+      }
 
-	// Multiple nrrds
-	vector< string > dataset;
-	nHandle->get_tuple_indecies(dataset);
-	
-	const unsigned int nrrdDim = nHandle->nrrd->dim;
-	
-	int *min = scinew int[nrrdDim];
-	int *max = scinew int[nrrdDim];
+      // Get the source of the nrrd being worked on.
+      if( !nHandle->get_property( "Source", property ) ||
+	  (property != "HDF5" && property != "MDSPlus") ) {
+	error( "Can not find the source of the nrrd or it is unknown." );
+	return;
+      }
 
-	// Keep the same dims except for the tuple axis.
-	for( int j=1; j<nHandle->nrrd->dim; j++) {
-	  min[j] = 0;
-	  max[j] = nHandle->nrrd->axis[j].size-1;
-	}
+      nHandles.push_back( nHandle );
 
-	// Separate via the tupple axis.
-	for( unsigned int i=0; i<tuples; i++ ) {
-
-	  Nrrd *nout = nrrdNew();
-
-	  // Translate the tuple index into the real offsets for a tuple axis.
-	  int tmin, tmax;
-	  if (! nHandle->get_tuple_index_info( i, i, tmin, tmax)) {
-	    error("Tuple index out of range");
-	    return;
-	  }
-	  
-	  min[0] = tmin;
-	  max[0] = tmax;
-
-	  // Crop the tupple axis.
-	  if (nrrdCrop(nout, nHandle->nrrd, min, max)) {
-
-	    char *err = biffGetDone(NRRD);
-	    error(string("Trouble resampling: ") + err);
-	    msgStream_ << "input Nrrd: nHandle->nrrd->dim="<<nHandle->nrrd->dim<<"\n";
-	    free(err);
-	  }
-
-	  // Form the new nrrd and store.
-	  NrrdData *nrrd = scinew NrrdData;
-	  nrrd->nrrd = nout;
-	  nout->axis[0].label = strdup(dataset[i].c_str());
-
-	  NrrdDataHandle handle = NrrdDataHandle(nrrd);
-
-	  // Copy the properties.
-	  *((PropertyManager *) handle.get_rep()) =
-	    *((PropertyManager *) nHandle.get_rep());
-
-	  nHandles.push_back( handle );
-	}
-
-	delete min;
-	delete max;
-       }
     } else if( pi != range.second ) {
-      error( "No handle or representation" );
+      error( "No handle or representation." );
       return;
     }
   }
 
-  string datasetsStr;
-
-  // Get each of the dataset names for the GUI.
   for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
 
-    nHandle = nHandles[ic];
-
-    // Get the tuple axis name - there is only one.
-    vector< string > dataset;
-    nHandle->get_tuple_indecies(dataset);
+    nHandles[ic]->get_property( "Name", nrrdName );
 
     // Save the name of the dataset.
     if( nHandles.size() == 1 )
-      datasetsStr.append( dataset[0] );
+      datasetsStr.append( nrrdName );
     else
-      datasetsStr.append( "{" + dataset[0] + "} " );
-  }      
-
+      datasetsStr.append( "{" + nrrdName + "} " );
+  }
 
   if( datasetsStr != datasetsStr_.get() ) {
     // Update the dataset names and dims in the GUI.
@@ -224,8 +171,9 @@ NIMRODConverter::execute(){
     gui->execute(str.str().c_str());
   }
 
-  if( nHandles.size() != 1 && nHandles.size() != 3 &&
-      nHandles.size() != 4 && nHandles.size() != 8 ){
+  if( nHandles.size() != 1 && nHandles.size() != 2 &&
+      nHandles.size() != 3 && nHandles.size() != 4 &&
+      nHandles.size() != 8 ){
     error( "Not enough or too many handles or representations" );
     return;
   }
@@ -245,8 +193,6 @@ NIMRODConverter::execute(){
     }
   }
 
-  string property;
-
   // If data change, update the GUI the field if needed.
   if( generation ) {
     conversion_ = NONE;
@@ -265,9 +211,8 @@ NIMRODConverter::execute(){
 
       nHandle = nHandles[ic];
 
-      // Get the tuple axis name - there is only one.
-      vector< string > dataset;
-      nHandle->get_tuple_indecies(dataset);
+      // Get the name of the nrrd being worked on.
+      nHandle->get_property( "Name", nrrdName );
 
       if( nHandle->get_property( "Topology", property ) ) {
 
@@ -280,38 +225,38 @@ NIMRODConverter::execute(){
 	    if( property.find("Cylindrical - NIMROD") != string::npos ) {
 
 	      // Sort the components components.
-	      if( dataset[0].find( "R:Scalar" ) != string::npos &&
-		  nHandle->nrrd->dim == 3 ) {
+	      if( nrrdName.find( "R:Scalar" ) != string::npos &&
+		  nHandle->nrrd->dim == 2 ) {
 		conversion_ = MESH;
 		mesh_[R] = ic;
-	      } else if( dataset[0].find( "Z:Scalar" ) != string::npos && 
-			 nHandle->nrrd->dim == 3 ) {
+	      } else if( nrrdName.find( "Z:Scalar" ) != string::npos && 
+			 nHandle->nrrd->dim == 2 ) {
 		conversion_ = MESH;
 		mesh_[Z] = ic; 
-	      } else if( dataset[0].find( "PHI:Scalar" ) != string::npos && 
-			 nHandle->nrrd->dim == 2 ) {
+	      } else if( nrrdName.find( "PHI:Scalar" ) != string::npos && 
+			 nHandle->nrrd->dim == 1 ) {
 		mesh_[PHI] = ic;
-	      } else if( dataset[0].find( "K:Scalar" ) != string::npos && 
-			 nHandle->nrrd->dim == 2 ) {
+	      } else if( nrrdName.find( "K:Scalar" ) != string::npos && 
+			 nHandle->nrrd->dim == 1 ) {
 		conversion_ = PERTURBED;
 		mesh_[K] = ic;
 	      } else {
-		error( dataset[0] + " is unknown NIMROD mesh data." );
+		error( nrrdName + " is unknown NIMROD mesh data." );
 		error_ = true;
 		return;
 	      }
 	    } else {
-	      error( dataset[0] + property + " is an unsupported coordinate system." );
+	      error( nrrdName + property + " is an unsupported coordinate system." );
 	      error_ = true;
 	      return;
 	    }
 	  } else {
-	    error( dataset[0] + "No coordinate system found." );
+	    error( nrrdName + "No coordinate system found." );
 	    error_ = true;
 	    return;
 	  }
 	} else {
-	  error( dataset[0] + property + "is an unsupported topology." );
+	  error( nrrdName + property + "is an unsupported topology." );
 	  error_ = true;
 	  return;
 	}
@@ -324,24 +269,29 @@ NIMRODConverter::execute(){
 	    data_[0] = data_[1] = data_[2] = -1;
 	  }
 
-	  if( dataset[0].find( "R:Scalar" ) != string::npos &&
-	      nHandle->nrrd->dim == 4 ) {
+	  if( nrrdName.find( "R:Scalar" ) != string::npos &&
+	      nHandle->nrrd->dim == 3 ) {
 	    conversion_ = REALSPACE;
 	    data_[0] = ic;
-	  } else if( dataset[0].find( "Z:Scalar" ) != string::npos && 
-		     nHandle->nrrd->dim == 4 ) {
+	  } else if( nrrdName.find( "Z:Scalar" ) != string::npos && 
+		     nHandle->nrrd->dim == 3 ) {
 	    conversion_ = REALSPACE;
 	    data_[1] = ic; 
-	  } else if( dataset[0].find( "PHI:Scalar" ) != string::npos && 
-		     nHandle->nrrd->dim == 4 ) {
+	  } else if( nrrdName.find( "PHI:Scalar" ) != string::npos && 
+		     nHandle->nrrd->dim == 3 ) {
 	    conversion_ = REALSPACE;
 	    data_[2] = ic;
-	  } else if( dataset[0].find( ":Scalar" ) != string::npos && 
-		     nHandle->nrrd->dim == 4 ) {
+	  } else if( nrrdName.find( ":Scalar" ) != string::npos && 
+		     nHandle->nrrd->dim == 3 ) {
 	    conversion_ = SCALAR;
 	    data_[0] = ic;
+	  } else if( nrrdName.find( "PHI-R-Z:Vector" ) != string::npos && 
+		     nHandle->nrrd->dim == 4 ) {
+	    conversion_ = REALSPACE;
+	    data_.resize(1);
+	    data_[0] = ic;
 	  } else {
-	    error( dataset[0] + " is unknown NIMROD node data." );
+	    error( nrrdName + " is unknown NIMROD node data." );
 	    error_ = true;
 	    return;
 	  }
@@ -364,16 +314,16 @@ NIMRODConverter::execute(){
 		offset = 1;
 	      
 	      int index = 0;
-	      if( dataset[0].find( "R:Scalar" ) != string::npos &&
-		  nHandle->nrrd->dim == 4 ) {
+	      if( nrrdName.find( "R:Scalar" ) != string::npos &&
+		  nHandle->nrrd->dim == 3 ) {
 		conversion_ = PERTURBED;
 		index = 0 + 3 * offset;
-	      } else if( dataset[0].find( "Z:Scalar" ) != string::npos && 
-			 nHandle->nrrd->dim == 4 ) {
+	      } else if( nrrdName.find( "Z:Scalar" ) != string::npos && 
+			 nHandle->nrrd->dim == 3 ) {
 		conversion_ = PERTURBED;
 		index = 1 + 3 * offset;
-	      } else if( dataset[0].find( "PHI:Scalar" ) != string::npos && 
-			 nHandle->nrrd->dim == 4 ) {
+	      } else if( nrrdName.find( "PHI:Scalar" ) != string::npos && 
+			 nHandle->nrrd->dim == 3 ) {
 		index = 2 + 3 * offset;
 		conversion_ = PERTURBED;
 	      } else { // Scalar data
@@ -385,22 +335,22 @@ NIMRODConverter::execute(){
 	      data_[index] = ic;
 
 	    } else {
-	      error( dataset[0] + property + " Unsupported Data SubSpace." );
+	      error( nrrdName + property + " Unsupported Data SubSpace." );
 	      error_ = true;
 	      return;
 	    }
 	  } else {
-	    error( dataset[0] + " No Data SubSpace property." );
+	    error( nrrdName + " No Data SubSpace property." );
 	    error_ = true;
 	    return;
 	  }
 	} else {	
-	  error( dataset[0] + property + " Unsupported Data Space." );
+	  error( nrrdName + property + " Unsupported Data Space." );
 	  error_ = true;
 	  return;
 	}
       } else {
-	error( dataset[0] + " No DataSpace property." );
+	error( nrrdName + " No DataSpace property." );
 	error_ = true;
 	return;
       }
@@ -539,18 +489,18 @@ NIMRODConverter::execute(){
       nHandles[mesh_[PHI]]->get_property( "Coordinate System", property );
 
       if( property.find("Cylindrical - NIMROD") != string::npos ) {
-	if( nHandles[mesh_[R]]->nrrd->axis[1].size != 
-	    nHandles[mesh_[Z]]->nrrd->axis[1].size ||
-	    nHandles[mesh_[R]]->nrrd->axis[2].size != 
-	    nHandles[mesh_[Z]]->nrrd->axis[2].size ) {
+	if( nHandles[mesh_[R]]->nrrd->axis[0].size != 
+	    nHandles[mesh_[Z]]->nrrd->axis[0].size ||
+	    nHandles[mesh_[R]]->nrrd->axis[1].size != 
+	    nHandles[mesh_[Z]]->nrrd->axis[1].size ) {
 	  error( "Mesh dimension mismatch." );
 	  error_ = true;
 	  return;
 	}
 
-	idim = nHandles[mesh_[PHI]]->nrrd->axis[1].size; // Phi
-	jdim = nHandles[mesh_[R]]->nrrd->axis[1].size;   // Radial
-	kdim = nHandles[mesh_[Z]]->nrrd->axis[2].size;   // Theta
+	idim = nHandles[mesh_[PHI]]->nrrd->axis[0].size; // Phi
+	jdim = nHandles[mesh_[R  ]]->nrrd->axis[0].size; // Radial
+	kdim = nHandles[mesh_[Z  ]]->nrrd->axis[1].size; // Theta
 
 	modes_.resize(1);
 	modes_[0] = unrolling_;
@@ -561,9 +511,9 @@ NIMRODConverter::execute(){
     } else if( conversion_ & SCALAR ) {
       ntype = nHandles[data_[0]]->nrrd->type;
 
-      idim = nHandles[data_[0]]->nrrd->axis[1].size; // Phi
-      jdim = nHandles[data_[0]]->nrrd->axis[2].size; // Radial
-      kdim = nHandles[data_[0]]->nrrd->axis[3].size; // Theta
+      idim = nHandles[data_[0]]->nrrd->axis[0].size; // Phi
+      jdim = nHandles[data_[0]]->nrrd->axis[1].size; // Radial
+      kdim = nHandles[data_[0]]->nrrd->axis[2].size; // Theta
 
       convertStr = "Scalar";
 
@@ -573,17 +523,30 @@ NIMRODConverter::execute(){
       nHandles[mesh_[PHI]]->get_property( "Coordinate System", property );
 
       if( property.find("Cylindrical - NIMROD") != string::npos ) {
-	idim = nHandles[mesh_[PHI]]->nrrd->axis[1].size; // Phi
-	jdim = nHandles[data_[R]]->nrrd->axis[2].size;   // Radial
-	kdim = nHandles[data_[Z]]->nrrd->axis[3].size;   // Theta
+	if(  data_.size() == 1 ) {
+	  idim = nHandles[data_[0]]->nrrd->axis[1].size; // Phi
+	  jdim = nHandles[data_[0]]->nrrd->axis[2].size; // Radial
+	  kdim = nHandles[data_[0]]->nrrd->axis[3].size; // Theta
 
-	for( unsigned int ic=0; ic<data_.size(); ic++ ) {
-	  if( nHandles[data_[ic]]->nrrd->axis[1].size != idim ||
-	      nHandles[data_[ic]]->nrrd->axis[2].size != jdim ||
-	      nHandles[data_[ic]]->nrrd->axis[3].size != kdim ) {
+	  if( nHandles[mesh_[PHI]]->nrrd->axis[0].size != idim ) {
 	    error( "Mesh dimension mismatch." );
 	    error_ = true;
 	    return;
+	  }
+
+	} else if( data_.size() == 3 ) {
+	  idim = nHandles[mesh_[PHI]]->nrrd->axis[0].size; // Phi
+	  jdim = nHandles[data_[0  ]]->nrrd->axis[1].size; // Radial
+	  kdim = nHandles[data_[0  ]]->nrrd->axis[2].size; // Theta
+
+	  for( unsigned int ic=0; ic<data_.size(); ic++ ) {
+	    if( nHandles[data_[ic]]->nrrd->axis[0].size != idim ||
+		nHandles[data_[ic]]->nrrd->axis[1].size != jdim ||
+		nHandles[data_[ic]]->nrrd->axis[2].size != kdim ) {
+	      error( "Data dimension mismatch." );
+	      error_ = true;
+	      return;
+	    }
 	  }
 	}
       }
@@ -596,16 +559,16 @@ NIMRODConverter::execute(){
       nHandles[mesh_[PHI]]->get_property( "Coordinate System", property );
 
       if( property.find("Cylindrical - NIMROD") != string::npos ) {
-	nmodes = nHandles[mesh_[K]]->nrrd->axis[1].size;   // Modes
-	idim   = nHandles[mesh_[PHI]]->nrrd->axis[1].size; // Phi
-	jdim   = nHandles[data_[0]]->nrrd->axis[2].size;   // Radial
-	kdim   = nHandles[data_[0]]->nrrd->axis[3].size;   // Theta
+	nmodes = nHandles[mesh_[K  ]]->nrrd->axis[0].size; // Modes
+	idim   = nHandles[mesh_[PHI]]->nrrd->axis[0].size; // Phi
+	jdim   = nHandles[data_[0  ]]->nrrd->axis[1].size; // Radial
+	kdim   = nHandles[data_[0  ]]->nrrd->axis[2].size; // Theta
 
 	for( unsigned int ic=0; ic<data_.size(); ic++ ) {
-	  if( nHandles[data_[ic]]->nrrd->axis[1].size != nmodes ||
-	      nHandles[data_[ic]]->nrrd->axis[2].size != jdim ||
-	      nHandles[data_[ic]]->nrrd->axis[3].size != kdim ) {
-	    error( "Mesh dimension mismatch." );
+	  if( nHandles[data_[ic]]->nrrd->axis[0].size != nmodes ||
+	      nHandles[data_[ic]]->nrrd->axis[1].size != jdim ||
+	      nHandles[data_[ic]]->nrrd->axis[2].size != kdim ) {
+	    error( "Data dimension mismatch." );
 	    error_ = true;
 	    return;
 	  }
