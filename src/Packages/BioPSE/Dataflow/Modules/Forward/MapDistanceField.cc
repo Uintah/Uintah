@@ -126,14 +126,14 @@ MapDistanceField::execute()
   pair<FieldHandle, FieldHandle> result;
   result = algo->execute(fsrc_h, fdst_h->mesh(), fdst_h->data_at());
 
-  FieldOPort *ofp1 = (FieldOPort *)get_oport("Contour Interpolant");
+  FieldOPort *ofp1 = (FieldOPort *)get_oport("From Contour Interpolant");
   if(!ofp1) {
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;
   }
   ofp1->send(result.second);
 
-  FieldOPort *ofp2 = (FieldOPort *)get_oport("Surface Interpolant");
+  FieldOPort *ofp2 = (FieldOPort *)get_oport("From Surface Interpolant");
   if(!ofp2) {
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;
