@@ -331,6 +331,8 @@ WARNING
        return d_level;
      }
      void getFace(FaceType face, int offset, IntVector& l, IntVector& h) const;
+     void getFaceNodes(FaceType face, int offset, IntVector& l,
+		       IntVector& h) const;
 
      void computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 				 int numGhostCells,
@@ -424,11 +426,10 @@ WARNING
 
      // NULL, unless this patch is a virtual patch (wrap-around
      // from periodic boundary conditions).
-     const Patch* d_realPatch;     
-     
      const Level* d_level; // I live in this grid level;
      int d_level_index;  // I'm at this index in the Level vector;
-
+     const Patch* d_realPatch;     
+     
      // used only by friend class Level
      inline void setLevelIndex( int idx ){ d_level_index = idx;}
      
