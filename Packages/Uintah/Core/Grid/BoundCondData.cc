@@ -1,11 +1,19 @@
 #include <Packages/Uintah/Core/Grid/BoundCondData.h>
 #include <Packages/Uintah/Core/Grid/BoundCondBase.h>
+#include <Core/Util/DebugStream.h>
 
-using namespace Uintah;
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <utility>
+#include <sgi_stl_warnings_on.h>
+
+using namespace Uintah;
+using namespace SCIRun;
 using std::cerr;
 using std::endl;
+
+// export SCI_DEBUG="OLD_BC_DBG:+"
+static DebugStream OLD_BC_dbg("OLD_BC_DBG",false);
 
 BoundCondData::BoundCondData() 
 {
@@ -207,8 +215,8 @@ void BoundCondData::print()
   for (i = d_data.begin(); i != d_data.end(); ++i) {
     map<string,BoundCondBase*>::const_iterator it;
     for (it = i->second.begin(); it != i->second.end(); ++it) {
-      cerr << "mat id: " << i->first << " BC " << it->first << " " 
-	   << it->second << endl;
+      OLD_BC_dbg << "mat id: " << i->first << " BC " << it->first << " " 
+		 << it->second << endl;
     }
   }
 
