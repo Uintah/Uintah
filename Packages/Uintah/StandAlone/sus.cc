@@ -398,7 +398,7 @@ main(int argc, char** argv)
     } catch (Exception& e) {
 
       cerrLock.lock();
-      mixedDebug << "Caught exception: " << e.message() << '\n';
+      cerr << "Caught exception: " << e.message() << '\n';
       if(e.stackTrace())
 	cerr << "Stack trace: " << e.stackTrace() << '\n';
       cerrLock.unlock();
