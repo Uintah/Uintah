@@ -23,7 +23,6 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Dataflow/Modules/Selectors/PatchToField.h>
-#include <Packages/Teem/Dataflow/Modules/DataIO/ConvertToNrrd.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -36,6 +35,8 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Persistent/Pstreams.h>
+
+#include <nrrd.h>
 
 #include <iostream>
 #include <string>
@@ -51,6 +52,7 @@ using namespace Uintah;
 
 bool verbose = false;
 bool quiet = false;
+bool attached_header = true;
 
 class QueryInfo {
 public:
@@ -85,7 +87,7 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -m,--material <material number> [defaults to 0]\n";
     cerr << "  -l,--level <level index> [defaults to 0]\n";
     cerr << "  -o,--out <outputfilename> [defaults to data]\n";
-    cerr << "  -dh,--detatched-header - writes the data with detached headers.  The default is to not do this.";
+    cerr << "  -dh,--detatched-header - writes the data with detached headers.  The default is to not do this.\n";
     //    cerr << "  -binary (prints out the data in binary)\n";
     cerr << "  -tlow,--timesteplow [int] (only outputs timestep from int) [defaults to 0]\n";
     cerr << "  -thigh,--timestephigh [int] (only outputs timesteps up to int) [defaults to last timestep]\n";
@@ -94,41 +96,81 @@ void usage(const std::string& badarg, const std::string& progname)
     exit(1);
 }
 
-#if 0
-template<class T>
-void printData(DataArchive* archive, string& variable_name,
-	       int material, IntVector& var_id,
-               unsigned long time_step_lower, unsigned long time_step_upper,
-	       ostream& out) 
 
-{
-  // set defaults for output stream
-  out.setf(ios::scientific,ios::floatfield);
-  out.precision(8);
-  
-  // for each type available, we need to query the values for the time range, 
-  // variable name, and material
-  vector<T> values;
-  try {
-    archive->query(values, variable_name, material, var_id, times[time_step_lower], times[time_step_upper]);
-  } catch (const VariableNotFoundInGrid& exception) {
-    cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-    exit(1);
-  }
-  // Print out data
-  for(unsigned int i = 0; i < values.size(); i++) {
-    out << times[i] << ", " << values[i] << endl;
-  }
+///////////////////////////////////////////////////////////////////
+// Special nrrd functions
+//
+template <class T>
+unsigned int get_nrrd_type();
+
+template <>
+unsigned int get_nrrd_type<char>() {
+  return nrrdTypeChar;
 }
-#endif
 
+
+template <>
+unsigned int get_nrrd_type<unsigned char>()
+{
+  return nrrdTypeUChar;
+}
+
+template <>
+unsigned int get_nrrd_type<short>()
+{
+  return nrrdTypeShort;
+}
+
+template <>
+unsigned int get_nrrd_type<unsigned short>()
+{
+  return nrrdTypeUShort;
+}
+
+template <>
+unsigned int get_nrrd_type<int>()
+{
+  return nrrdTypeInt;
+}
+
+template <>
+unsigned int get_nrrd_type<unsigned int>()
+{
+  return nrrdTypeUInt;
+}
+
+template <>
+unsigned int get_nrrd_type<long long>()
+{
+  return nrrdTypeLLong;
+}
+
+template <>
+unsigned int get_nrrd_type<unsigned long long>()
+{
+  return nrrdTypeULLong;
+}
+
+template <>
+unsigned int get_nrrd_type<float>()
+{
+  return nrrdTypeFloat;
+}
+
+template <class T>
+unsigned int get_nrrd_type() {
+  return nrrdTypeDouble;
+}
+
+/////////////////////////////////////////////////////////////////////
 template <class T, class Var>
 void build_field(QueryInfo &qinfo,
 		 IntVector& lo,
 		 Var& /*var*/,
-		 LatVolField<T>*& sfd)
+		 LatVolField<T> *sfd)
 {
   int max_workers = Max(Thread::numProcessors()/2, 2);
+  if (verbose) cout << "max_workers = "<<max_workers<<"\n";
   Semaphore* thread_sema = scinew Semaphore("extractor semaphore",
 					    max_workers);
   Mutex lock("build_field lock");
@@ -204,6 +246,88 @@ void build_field(QueryInfo &qinfo,
   if( thread_sema ) delete thread_sema;
 }
 
+// This is the function we need in order to write the nrrd header without
+// writing the data.  We want to write the data ourselves.
+extern int _nrrdWriteNrrd(FILE *file, Nrrd *nrrd, NrrdIO *io, int writeData);
+
+// Allocates memory for dest when needed (sets delete_me to true if it
+// does allocate memory), then copies all the data to dest from
+// source.
+template<class T>
+Nrrd* wrap_nrrd(LatVolField<T> *source, bool &delete_data);
+
+// Do the generic one for scalars
+template<class T>
+Nrrd* wrap_nrrd(LatVolField<T> *source, bool &delete_data) {
+  Nrrd *out = nrrdNew();
+  int dim = 3;
+  int size[3];
+  
+  size[0] = source->fdata().dim1();
+  size[1] = source->fdata().dim2();
+  size[2] = source->fdata().dim3();
+  if (verbose) for(int i = 0; i < dim; i++) cout << "size["<<i<<"] = "<<size[i]<<endl;
+  // We don't need to copy data, so just get the pointer to the data
+  delete_data = false;
+  void *data = (void*)&(source->fdata()(0,0,0));
+
+#if 0
+  size_t num = source->fdata().size();
+  for(int z = 0; z < size[2]; z++)
+    for(int y = 0; y < size[1]; y++)
+      for(int x = 0; x < size[0]; x++)
+	T t = source->fdata()(x,y,z);
+  for(size_t i = 0; i < num; i++)
+    T t = ((T*)data)[i];
+#endif
+  if (nrrdWrap_nva(out, data, get_nrrd_type<T>(), dim, size) == 0) {
+    return out;
+  } else {
+    nrrdNix(out);
+    return 0;
+  }
+}
+
+// Do the one for vectors
+template <>
+Nrrd* wrap_nrrd(LatVolField<Vector> *source, bool &delete_data) {
+  Nrrd *out = nrrdNew();
+  int dim = 4;
+  int size[4];
+
+  size[0] = 3;
+  size[1] = source->fdata().dim1();
+  size[2] = source->fdata().dim2();
+  size[3] = source->fdata().dim3();
+  if (verbose) for(int i = 0; i < dim; i++) cout << "size["<<i<<"] = "<<size[i]<<endl;
+  unsigned int num_vec = source->fdata().size();
+  double *data = new double[num_vec*3];
+  if (!data) {
+    cerr << "Cannot allocate memory for temp storage of vectors\n";
+    nrrdNix(out);
+    return 0;
+  }
+  double *datap = data;
+  delete_data = true;
+  Vector *vec_data = &(source->fdata()(0,0,0));
+
+  // Copy the data
+  for(unsigned int i = 0; i < num_vec; i++) {
+    *datap++ = vec_data->x();
+    *datap++ = vec_data->y();
+    *datap++ = vec_data->z();
+    vec_data++;
+  }
+
+  if (nrrdWrap_nva(out, data, nrrdTypeDouble, dim, size) == 0) {
+    return out;
+  } else {
+    nrrdNix(out);
+    delete data;
+    return 0;
+  }
+}
+
 // getData<CCVariable<T>, T >();
 template<class Var, class T>
 void getData(QueryInfo &qinfo, IntVector &low,
@@ -211,48 +335,62 @@ void getData(QueryInfo &qinfo, IntVector &low,
 	     SCIRun::Field::data_location data_at,
 	     string &filename) {
   Var gridVar;
-  LatVolField<T> *vfd =
-    scinew LatVolField<T>( mesh_handle_, data_at );
+  LatVolField<T>* source_field = new LatVolField<T>( mesh_handle_, data_at );
+  if (!source_field) {
+    cerr << "Cannot allocate memory for field\n";
+    return;
+  }
   // set the generation and timestep in the field
   if (!quiet) cout << "Building Field from uda data\n";
-  build_field(qinfo, low, gridVar, vfd );
+  build_field(qinfo, low, gridVar, source_field);
 
-  // Convert the field to a nrrd
-  if (!quiet) cout << "Converting field to nrrd.\n";
-  const SCIRun::TypeDescription *td = vfd->get_type_description();
-  CompileInfoHandle ci = ConvertToNrrdBase::get_compile_info(td);
-  DynamicAlgoHandle algo;
-  if (!DynamicLoader::scirun_loader().get(*(ci.get_rep()), algo)) {
-    cerr << "Could not compile field to nrrd code.  Exiting.\n";
-    exit(1);
-  }
-  
-  string lab("uda2nrrd");
-  ConvertToNrrdBase *nrrd_algo = (ConvertToNrrdBase*)(algo.get_rep());
-  NrrdDataHandle onrrd_handle = nrrd_algo->convert_to_nrrd(vfd, lab);
-  if (!quiet) cout << "Done converting field to nrrd.\n";
-  // Write out the nrrd
-  
-  Piostream* stream;
-  string ft("Binary");
-  if (ft == "Binary")
-  {
-    stream = scinew BinaryPiostream(filename, Piostream::Write);
-  }
-  else
-  {
-    stream = scinew TextPiostream(filename, Piostream::Write);
-  }
-    
-  if (stream->error()) {
-    cerr << "Could not open file ("<<filename<<" for writing\n";
+#if 0
+  Piostream *fieldstrm =
+    scinew BinaryPiostream(string(filename + ".fld").c_str(),
+			   Piostream::Write);
+  if (fieldstrm->error()) {
+    cerr << "Could not open test.fld for writing.\n";
     exit(1);
   } else {
-    // Write the file
-    Pio(*stream, onrrd_handle); // wlll also write out a separate nrrd.
-    delete stream; 
-  } 
+    Pio(*fieldstrm, *source_field);
+    delete fieldstrm;
+  }
+#endif
   
+  // Convert the field to a nrrd
+  if (!quiet) cout << "Converting field to nrrd.\n";
+
+  // Get the nrrd data, and print it out.
+  char *err;
+  bool delete_data = false;
+  Nrrd *out = wrap_nrrd(source_field, delete_data);
+  if (out) {
+    // Now write it out
+    if (!quiet) cout << "Writing nrrd file\n";
+    string filetype = attached_header? ".nrrd": ".nhdr";
+    if (nrrdSave(string(filename + filetype).c_str(), out, 0)) {
+      // There was a problem
+      err = biffGetDone(NRRD);
+      cerr << "Error writing nrrd:\n"<<err<<"\n";
+    } else {
+      if (!quiet) cout << "Done writing nrrd file\n";
+    }
+    // Clean up the memory if we need to
+    if (delete_data) {
+      // nrrdNuke deletes the nrrd and the data inside the nrrd
+      nrrdNuke(out);
+    } else {
+      // nrrdNix will only delete the nrrd and not the data
+      nrrdNix(out);
+    }
+  } else {
+    // There was a problem
+    err = biffGetDone(NRRD);
+    cerr << "Error wrapping nrrd: "<<err<<"\n";
+  }
+
+  // Clean up our memory
+  delete source_field;
   
   return;
 }
@@ -350,6 +488,8 @@ int main(int argc, char** argv)
       int y = atoi(argv[++i]);
       int z = atoi(argv[++i]);
       var_id = IntVector(x,y,z);
+    } else if( s ==  "-dh" || s == "--detatched-header") {
+      attached_header = false;
     } else if( (s == "-h") || (s == "--help") ) {
       usage( "", argv[0] );
     } else if (s == "-uda") {
