@@ -1,5 +1,5 @@
 /*
- *  VariablePlotter.cc:  Displays Patch boundaries
+ *  VariablePlotter.cc:  Displays plots for simulation variables
  *
  *  This module is designed to allow the user to select a variable by the
  *  index and display the value over time in a graph or table.
@@ -329,6 +329,7 @@ string VariablePlotter::vector_to_string(vector< string > data) {
 
 string VariablePlotter::vector_to_string(vector< double > data) {
   ostringstream ostr;
+  ostr.precision(15);
   for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i]  << " ";
     }
@@ -337,6 +338,7 @@ string VariablePlotter::vector_to_string(vector< double > data) {
 
 string VariablePlotter::vector_to_string(vector< Vector > data, string type) {
   ostringstream ostr;
+  ostr.precision(15);
   if (type == "length") {
     for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].length() << " ";
@@ -364,6 +366,7 @@ string VariablePlotter::vector_to_string(vector< Vector > data, string type) {
 
 string VariablePlotter::vector_to_string(vector< Matrix3 > data, string type) {
   ostringstream ostr;
+  ostr.precision(15);
   if (type == "Determinant") {
     for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].Determinant() << " ";
