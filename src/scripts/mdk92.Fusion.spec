@@ -124,12 +124,13 @@ cd /usr/local/SCIRun/bin/
 gmake
 
 %install
-chown -R root.root /usr/local/SCIRun /usr/local/%{hdf5}
-chmod -R a+r /usr/local/SCIRun /usr/local/%{hdf5}
+chown -R root.root /usr/local/SCIRun /usr/local/%{hdf5} /usr/local/%{ftgl}
+chmod -R a+r /usr/local/SCIRun /usr/local/%{hdf5} /usr/local/%{ftgl}
 
 %clean
 rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}
 rm -rf $RPM_BUILD_DIR/%{hdf5}
+rm -rf $RPM_BUILD_DIR/%{ftgl}
 
 %files
 /usr/local/SCIRun
