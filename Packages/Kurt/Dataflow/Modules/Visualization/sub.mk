@@ -5,7 +5,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/Kurt/Dataflow/Modules/Visualization
 
 SRCS     += \
-	$(SRCDIR)/GridVolVis.cc
+	$(SRCDIR)/GridVolVis.cc \
+	$(SRCDIR)/GridSliceVis.cc \
 #[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/ParticleColorMapKey.cc \
 
