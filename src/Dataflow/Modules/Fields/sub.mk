@@ -49,7 +49,7 @@ SRCS     += \
 	$(SRCDIR)/CastTVtoMLV.cc\
 	$(SRCDIR)/Centroids.cc\
 	$(SRCDIR)/ChangeCoordinates.cc\
-	$(SRCDIR)/ChangeFieldDataAt.cc\
+	$(SRCDIR)/ChangeFieldBasis.cc\
 	$(SRCDIR)/ChangeFieldDataType.cc\
 	$(SRCDIR)/ChangeFieldBounds.cc\
 	$(SRCDIR)/ChooseField.cc\

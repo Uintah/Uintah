@@ -27,10 +27,10 @@
 #
 
 
-itcl_class SCIRun_FieldsData_ChangeFieldDataAt {
+itcl_class SCIRun_FieldsData_ChangeFieldBasis {
     inherit Module
     constructor {config} {
-        set name ChangeFieldDataAt
+        set name ChangeFieldBasis
         set_defaults
     }
 

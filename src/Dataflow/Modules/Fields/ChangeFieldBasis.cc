@@ -27,7 +27,7 @@
 */
 
 
-//    File   : ChangeFieldDataAt.cc
+//    File   : ChangeFieldBasis.cc
 //    Author : McKay Davis
 //    Date   : July 2002
 
@@ -35,7 +35,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Modules/Fields/ChangeFieldDataAt.h>
+#include <Dataflow/Modules/Fields/ChangeFieldBasis.h>
 #include <Dataflow/Modules/Fields/ApplyInterpMatrix.h>
 #include <Core/Containers/StringUtil.h>
 #include <map>
@@ -44,22 +44,22 @@
 namespace SCIRun {
 
 
-class PSECORESHARE ChangeFieldDataAt : public Module {
+class PSECORESHARE ChangeFieldBasis : public Module {
 public:
   GuiString outputdataat_;    // the out data at
   GuiString inputdataat_;     // the in data at
   GuiString fldname_;         // the field name
   int              generation_;
-  ChangeFieldDataAt(GuiContext* ctx);
-  virtual ~ChangeFieldDataAt();
+  ChangeFieldBasis(GuiContext* ctx);
+  virtual ~ChangeFieldBasis();
   virtual void execute();
   void update_input_attributes(FieldHandle);
 };
 
-  DECLARE_MAKER(ChangeFieldDataAt)
+  DECLARE_MAKER(ChangeFieldBasis)
 
-ChangeFieldDataAt::ChangeFieldDataAt(GuiContext* ctx)
-  : Module("ChangeFieldDataAt", ctx, Filter, "FieldsData", "SCIRun"),
+ChangeFieldBasis::ChangeFieldBasis(GuiContext* ctx)
+  : Module("ChangeFieldBasis", ctx, Filter, "FieldsData", "SCIRun"),
     outputdataat_(ctx->subVar("output-basis")),
     inputdataat_(ctx->subVar("inputdataat", false)),
     fldname_(ctx->subVar("fldname", false)),
@@ -67,7 +67,7 @@ ChangeFieldDataAt::ChangeFieldDataAt(GuiContext* ctx)
 {
 }
 
-ChangeFieldDataAt::~ChangeFieldDataAt()
+ChangeFieldBasis::~ChangeFieldBasis()
 {
   fldname_.set("---");
   inputdataat_.set("---");
@@ -75,7 +75,7 @@ ChangeFieldDataAt::~ChangeFieldDataAt()
 
 
 void
-ChangeFieldDataAt::update_input_attributes(FieldHandle f) 
+ChangeFieldBasis::update_input_attributes(FieldHandle f) 
 {
   static char *at_table[4] = { "Nodes", "Edges", "Faces", "Cells" };
   switch(f->basis_order())
@@ -105,7 +105,7 @@ ChangeFieldDataAt::update_input_attributes(FieldHandle f)
 
 
 void
-ChangeFieldDataAt::execute()
+ChangeFieldBasis::execute()
 {
   FieldIPort *iport = (FieldIPort*)get_iport("Input Field"); 
   if (!iport) {
@@ -177,8 +177,8 @@ ChangeFieldDataAt::execute()
   // Create a field identical to the input, except for the edits.
   const TypeDescription *fsrctd = fh->get_type_description();
   CompileInfoHandle ci =
-    ChangeFieldDataAtAlgoCreate::get_compile_info(fsrctd);
-  Handle<ChangeFieldDataAtAlgoCreate> algo;
+    ChangeFieldBasisAlgoCreate::get_compile_info(fsrctd);
+  Handle<ChangeFieldBasisAlgoCreate> algo;
   if (!DynamicCompilation::compile(ci, algo, this)) return;
 
   update_state(Executing);
@@ -224,12 +224,12 @@ ChangeFieldDataAt::execute()
     
 
 CompileInfoHandle
-ChangeFieldDataAtAlgoCreate::get_compile_info(const TypeDescription *field_td)
+ChangeFieldBasisAlgoCreate::get_compile_info(const TypeDescription *field_td)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class("ChangeFieldDataAtAlgoCreateT");
-  static const string base_class_name("ChangeFieldDataAtAlgoCreate");
+  static const string template_class("ChangeFieldBasisAlgoCreateT");
+  static const string base_class_name("ChangeFieldBasisAlgoCreate");
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class + "." +

@@ -28,13 +28,13 @@
 
 
 
-//    File   : ChangeFieldDataAt.h
+//    File   : ChangeFieldBasis.h
 //    Author : McKay Davis
 //    Date   : July 2002
 
 
-#if !defined(ChangeFieldDataAt_h)
-#define ChangeFieldDataAt_h
+#if !defined(ChangeFieldBasis_h)
+#define ChangeFieldBasis_h
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
@@ -45,7 +45,7 @@
 namespace SCIRun {
 
 
-class ChangeFieldDataAtAlgoCreate : public DynamicAlgoBase
+class ChangeFieldBasisAlgoCreate : public DynamicAlgoBase
 {
 public:
 
@@ -60,7 +60,7 @@ public:
 
 
 template <class FSRC>
-class ChangeFieldDataAtAlgoCreateT : public ChangeFieldDataAtAlgoCreate
+class ChangeFieldBasisAlgoCreateT : public ChangeFieldBasisAlgoCreate
 {
 public:
 
@@ -73,7 +73,7 @@ public:
 
 template <class FSRC>
 FieldHandle
-ChangeFieldDataAtAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
+ChangeFieldBasisAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
 					    FieldHandle fsrc_h,
 					    int basis_order,
 					    MatrixHandle &interp)
@@ -364,4 +364,4 @@ ChangeFieldDataAtAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
 
 } // end namespace SCIRun
 
-#endif // ChangeFieldDataAt_h
+#endif // ChangeFieldBasis_h
