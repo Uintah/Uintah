@@ -4,6 +4,7 @@
 static char *id="@(#) $Id$";
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -75,6 +76,10 @@ ColdflowMixingModel::computeProps(const InletStream& inStream,
 
 //
 // $Log$
+// Revision 1.3  2001/07/27 20:51:40  sparker
+// Include file cleanup
+// Fix uninitialized array element
+//
 // Revision 1.2  2001/07/16 21:15:38  rawat
 // added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
 //
