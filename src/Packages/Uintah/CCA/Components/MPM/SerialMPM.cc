@@ -209,10 +209,10 @@ void SerialMPM::scheduleTimeAdvance(double , double ,
   scheduleComputeInternalForce(           sched, patches, matls);
   scheduleComputeInternalHeatRate(        sched, patches, matls);
   scheduleSolveEquationsMotion(           sched, patches, matls);
-  scheduleSolveHeatEquations(             sched, patches, matls);
   scheduleIntegrateAcceleration(          sched, patches, matls);
   // scheduleIntegrateTemperatureRate(    sched, patches, matls);
   scheduleExMomIntegrated(                sched, patches, matls);
+  scheduleSolveHeatEquations(             sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
 
