@@ -490,8 +490,8 @@ BoundaryCondition::sched_mmWallCellTypeInit_first(SchedulerP& sched,
 void 
 BoundaryCondition::mmWallCellTypeInit_first(const ProcessorGroup*,
 					    const PatchSubset* patches,
-					    const MaterialSubset* matls,
-					    DataWarehouse* old_dw,
+					    const MaterialSubset*,
+					    DataWarehouse* ,
 					    DataWarehouse* new_dw)	
 {
 
@@ -1036,8 +1036,10 @@ BoundaryCondition::computeOMB(const ProcessorGroup* pc,
 	d_uvwout = totalFlowOUT_outbc/totalAreaOUT;
 #endif
       }
+#if 0
       if (d_uvwout < 0.0) 
 	d_uvwout = 0.0;
+#endif
     }
     else
       d_uvwout = 0.0;
@@ -1081,6 +1083,8 @@ BoundaryCondition::sched_transOutletBC(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_pressurePSLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   // changes to make it work for the task graph
   tsk->requires(Task::NewDW, d_lab->d_uVelocityCPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -1150,6 +1154,7 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
     constSFCZVariable<double> old_wVelocity;
     constCCVariable<double> old_scalar;
     constCCVariable<double> density;
+    constCCVariable<double> pressure;
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
@@ -1193,6 +1198,9 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
     new_dw->get(density, d_lab->d_densityINLabel, matlIndex, patch, Ghost::AroundCells,
 		Arches::ONEGHOSTCELL);
 
+    new_dw->get(pressure, d_lab->d_pressurePSLabel, matlIndex, patch, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+
     delt_vartype uvwout_red;
     new_dw->get(uvwout_red, d_lab->d_uvwoutLabel);
     double uvwout = uvwout_red;
@@ -1213,7 +1221,7 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
 
       fort_outletbc(uVelocity, vVelocity, wVelocity, scalar[0],
 		    old_uVelocity, old_vVelocity, old_wVelocity, old_scalar,
-		    density, cellType, d_outletBC->d_cellTypeID, uvwout, flowout,
+		    density, pressure, cellType, d_outletBC->d_cellTypeID, uvwout, flowout,
 		    idxLo, idxHi,
 		    xminus, xplus, yminus, yplus, zminus, zplus, delta_t,
 		    cellinfo->sew, cellinfo->sns, cellinfo->stb,
@@ -1302,7 +1310,7 @@ void BoundaryCondition::sched_correctOutletBC(SchedulerP& sched,
 }
 
 void 
-BoundaryCondition::correctOutletBC(const ProcessorGroup* pc,
+BoundaryCondition::correctOutletBC(const ProcessorGroup* ,
 			      const PatchSubset* patches,
 			      const MaterialSubset*,
 			      DataWarehouse*,
@@ -1327,8 +1335,10 @@ BoundaryCondition::correctOutletBC(const ProcessorGroup* pc,
       if (totalAreaOUT > 0.0) {
 	uvwcorr = (totalFlowIN - denAccum - totalFlowOUT-netFlowOUT_outbc)/
 	  totalAreaOUT;
+#if 1
 	if (uvwcorr < 0.0)
 	  uvwcorr = 0.0;
+#endif
       }
       
     }

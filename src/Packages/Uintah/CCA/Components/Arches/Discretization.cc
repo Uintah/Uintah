@@ -472,7 +472,8 @@ Discretization::computeDivergence(const ProcessorGroup*,
 	   (vars->scalarDiffusionCoeff[Arches::AB])[currCell]*
 	   vars->scalar[IntVector(colX,colY,colZ-1)]+
 	   (vars->scalarDiffusionCoeff[Arches::AT])[currCell]*
-	   vars->scalar[IntVector(colX,colY,colZ+1)]-
+	   vars->scalar[IntVector(colX,colY,colZ+1)]+
+	   vars->scalarDiffNonlinearSrc[currCell] -
 	   (vars->scalarDiffusionCoeff[Arches::AP])[currCell]*
 	   vars->scalar[currCell])/(vars->new_density[currCell]*
 				    vars->new_density[currCell]);

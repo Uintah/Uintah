@@ -117,7 +117,7 @@ C--------------------------------------------------------------------
       endif
 
 C--------------------------------------------------------------------
-C     PRESSURE BOUNDARY CONDITOINS 
+C     PRESSURE BOUNDARY CONDITONS 
 C       EAST AND/OR WEST WALLS
 C--------------------------------------------------------------------
       DO 210 K = kst,kend
@@ -125,13 +125,13 @@ C--------------------------------------------------------------------
             IF ((PCELL(iEndGhost,J,K).EQ.PBCFLD
      &           .AND. UU(iEndGhost+1,J,K).GT.0.0D0).or.
      $          (PCELL(iEndGhost, J, K).EQ.outletfld)) THEN
-               WW(iEndGhost,J,K) = WW(iend,J,K)
+c               WW(iEndGhost,J,K) = WW(iend,J,K)
 c               AE(iend,J,K) = 2.0D0*TINY
             END IF
             IF (PCELL(iBegGhost,J,K).EQ.PBCFLD
      &           .AND. UU(iBegGhost,J,K).LT.0.0D0) THEN
-               WW(iBegGhost,J,K) = WW(ist,J,K)
-               AW(ist,J,K) = 2.0D0*TINY
+c               WW(iBegGhost,J,K) = WW(ist,J,K)
+c               AW(ist,J,K) = 2.0D0*TINY
             END IF
  200     CONTINUE
  210  CONTINUE
@@ -142,12 +142,12 @@ C-------------------------------------------------------------------
         DO 300 I = ist,iend
           IF (PCELL(I,jEndGhost,K).EQ.PBCFLD) then
 c     &          .AND. VV(I,jEndGhost+1,K).GT.0.0D0) THEN
-             WW(I,jEndGhost,K) = WW(I,jend,K)
+c             WW(I,jEndGhost,K) = WW(I,jend,K)
 c             AN(I,jend,K) = 2.0D0*TINY
           END IF
           IF (PCELL(I,jBegGhost,K).EQ.PBCFLD) then
 c     &         .AND. VV(I,jBegGhost,K).LT.0.0D0) THEN
-            WW(I,jBegGhost,K) = WW(I,jst,K)
+c            WW(I,jBegGhost,K) = WW(I,jst,K)
 c            AS(I,jst,K) = 2.0D0*TINY
           END IF
   300   CONTINUE
@@ -158,10 +158,10 @@ C-------------------------------------------------------------------
       DO 410 J = jst,jend
         DO 400 I = ist,iend
           IF (PCELL(I,J,kEndGhost).EQ.PBCFLD) THEN
-             WW(I,J,kEndGhost+1) = WW(I,J,kEndGhost)
+c             WW(I,J,kEndGhost+1) = WW(I,J,kEndGhost)
           END IF
           IF (PCELL(I,J,kBegGhost).EQ.PBCFLD) THEN
-            WW(I,J,kBegGhost) = WW(I,J,kst)
+c            WW(I,J,kBegGhost) = WW(I,J,kst)
           END IF
   400   CONTINUE
   410 CONTINUE

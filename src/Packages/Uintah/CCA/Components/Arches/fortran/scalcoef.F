@@ -92,7 +92,7 @@ C-----------------------------------------------------------------------
       double precision tew, tns, ttb
       double precision aec, awc, anc, asc, atc, abc
       double precision crn0
-      double precision prandtlno
+      double precision prandtlno, prno
 
       integer i, j, k
       integer IST, JST, KST
@@ -110,7 +110,7 @@ c      lcend = .true.
 c      leno = .true.
       leno = .false.
       vol = zero
-      prandtlno = 0.9D0
+      prno = 0.4D0
 
       IST = idxLo(1)
       JST = idxLo(2)
@@ -190,6 +190,11 @@ C-----------------------------------------------------------------------
 C--------------------------------------------------------------------
 C     CALCULATE DIFFUSION COEFFICIENTS
 C--------------------------------------------------------------------
+               if (i .lt. 10) then
+                  prandtlno = prno
+               else
+                  prandtlno = prno
+               endif
                GAME = 0.5D0*(VIS(I,J,K)+VIS(I+1,J,K))/prandtlno
                GAMW = 0.5D0*(VIS(I,J,K)+VIS(I-1,J,K))/prandtlno
                GAMN = 0.5D0*(VIS(I,J,K)+VIS(I,J+1,K))/prandtlno

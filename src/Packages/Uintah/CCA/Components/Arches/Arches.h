@@ -73,6 +73,7 @@ WARNING
   #define Scalar_ENO
 #endif
 
+#define PetscFilter
 namespace Uintah {
 
   class VarLabel;
@@ -83,6 +84,9 @@ namespace Uintah {
   class BoundaryCondition;
   class MPMArchesLabel;
   class ArchesLabel;
+#ifdef PetscFilter
+  class Filter;
+#endif
 
 class Arches : public UintahParallelComponent, public SimulationInterface {
 
@@ -221,6 +225,10 @@ private:
       ArchesLabel* d_lab;
       // for multimaterial
       const MPMArchesLabel* d_MAlab;
+#ifdef PetscFilter
+      Filter* d_filter;
+#endif
+
 #ifdef multimaterialform
       MultiMaterialInterface* d_mmInterface;
 #endif

@@ -125,13 +125,13 @@ C--------------------------------------------------------------------
                IF ((PCELL(iEndGhost,J,K).EQ.PBCFLD
      &              .AND. UU(iEndGhost+1,J,K).GT.0.0D0).or.
      $          (PCELL(iEndGhost, J, K).EQ.outletfld)) THEN
-                  VV(iEndGhost,J,K) = VV(iend,J,K)
+c                  VV(iEndGhost,J,K) = VV(iend,J,K)
 c                  AE(iend,J,K) = 2.0D0*TINY
                END IF
                IF (PCELL(iBegGhost,J,K).EQ.PBCFLD
      &              .AND.UU(iBegGhost,J,K).LT.0.0D0) THEN
-                  VV(iBegGhost,J,K) = VV(ist,J,K)
-                  AW(ist,J,K) = 2.0D0*TINY
+c                  VV(iBegGhost,J,K) = VV(ist,J,K)
+c                  AW(ist,J,K) = 2.0D0*TINY
                END IF
  200        CONTINUE
  210     CONTINUE
@@ -144,10 +144,10 @@ C--------------------------------------------------------------------
       DO 310 K = kst,kend
          DO 300 I = ist,iend
             IF (PCELL(I,jEndGhost,K).EQ.PBCFLD) THEN
-               VV(I,jEndGhost+1,K) = VV(I,jEndGhost,K)
+c               VV(I,jEndGhost+1,K) = VV(I,jEndGhost,K)
             END IF
             IF (PCELL(I,jBegGhost,K).EQ.PBCFLD) THEN
-               VV(I,jBegGhost,K) = VV(I,jst,K)
+c               VV(I,jBegGhost,K) = VV(I,jst,K)
             END IF
  300     CONTINUE
  310  CONTINUE
@@ -160,12 +160,12 @@ C--------------------------------------------------------------------
          DO 400 I = ist,iend
             IF (PCELL(I,J,kEndGhost).EQ.PBCFLD) then
 c     &           .AND.WW(I,J,kEndGhost+1).GT.0.0D0) THEN
-               VV(I,J,kEndGhost) = VV(I,J,kend)
+c               VV(I,J,kEndGhost) = VV(I,J,kend)
 c               AT(I,J,kend) = 2.0D0*TINY
             END IF
             IF (PCELL(I,J,kBegGhost).EQ.PBCFLD) then
 c     &           .AND.WW(I,J,kBegGhost).LT.0.0D0) THEN
-               VV(I,J,kBegGhost) = VV(I,J,kst)
+c               VV(I,J,kBegGhost) = VV(I,J,kst)
 c               AB(I,J,kst) = 2.0D0*TINY
             END IF
  400     CONTINUE

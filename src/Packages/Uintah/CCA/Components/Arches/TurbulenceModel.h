@@ -35,7 +35,9 @@ WARNING
 ****************************************/
 
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-
+#ifdef PetscFilter
+#include <Packages/Uintah/CCA/Components/Arches/Filter.h>
+#endif
 namespace Uintah {
 class TurbulenceModel
 {
@@ -44,13 +46,18 @@ public:
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
       // Blank constructor for TurbulenceModel.
-      TurbulenceModel();
+      TurbulenceModel(const ArchesLabel* label, 
+		      const MPMArchesLabel* MAlb);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
       // Virtual destructor for TurbulenceModel.
       virtual ~TurbulenceModel();
-
+#ifdef PetscFilter
+      inline void setFilter(Filter* filter) {
+	d_filter = filter;
+      }
+#endif
       // GROUP: Access Methods :
       ///////////////////////////////////////////////////////////////////////
       // Get the molecular viscisity
@@ -65,13 +72,27 @@ public:
       // Interface for Set up the problem specification database
       virtual void problemSetup(const ProblemSpecP& db) = 0;
 
+
+      // access function
+#ifdef PetscFilter
+      Filter* getFilter() const{
+	return d_filter;
+      }
+
+      void sched_initFilterMatrix(const LevelP&, 
+			      SchedulerP&, const PatchSet* patches,
+			      const MaterialSet* matls);
+
+#endif
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
       // Interface for Schedule the computation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
-      virtual void sched_computeTurbSubmodel(SchedulerP&, const PatchSet* patches,
+      virtual void sched_computeTurbSubmodel(const LevelP&, 
+					     SchedulerP&, const PatchSet* patches,
 					     const MaterialSet* matls) = 0;
+
 
       ///////////////////////////////////////////////////////////////////////
       // Interface for Schedule the recomputation of Turbulence Model data
@@ -111,8 +132,24 @@ public:
 				      const DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw, 
 				      int index) = 0;
+ protected:
 
+      const ArchesLabel* d_lab;
+      const MPMArchesLabel* d_MAlab;
+
+#ifdef PetscFilter
+      Filter* d_filter;
+#endif
 private:
+
+#ifdef PetscFilter
+      void initFilterMatrix(const ProcessorGroup* pg,
+			    const PatchSubset* patches,
+			    const MaterialSubset*,
+			    DataWarehouse*,
+			    DataWarehouse* new_dw);
+#endif
+
 
 }; // End class TurbulenceModel
 } // End namespace Uintah
@@ -122,5 +159,6 @@ private:
 #endif
 
 // $Log :$
+
 
 

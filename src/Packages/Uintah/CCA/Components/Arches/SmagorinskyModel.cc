@@ -40,8 +40,7 @@ SmagorinskyModel::SmagorinskyModel(const ArchesLabel* label,
 				   const MPMArchesLabel* MAlb,
 				   PhysicalConstants* phyConsts,
 				   BoundaryCondition* bndry_cond):
-                                    TurbulenceModel(), 
-                                    d_lab(label), d_MAlab(MAlb),
+                                    TurbulenceModel(label, MAlb),
 				    d_physicalConsts(phyConsts),
 				    d_boundaryCondition(bndry_cond)
 {
@@ -79,7 +78,8 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
 // Schedule compute 
 //****************************************************************************
 void 
-SmagorinskyModel::sched_computeTurbSubmodel(SchedulerP& sched, const PatchSet* patches,
+SmagorinskyModel::sched_computeTurbSubmodel(const LevelP&,
+					    SchedulerP& sched, const PatchSet* patches,
 					    const MaterialSet* matls)
 {
   Task* tsk = scinew Task("SmagorinskyModel::TurbSubmodel",
@@ -163,7 +163,6 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
 				      DataWarehouse*,
 				      DataWarehouse* new_dw)
 {
-  double time = 0.0;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -343,7 +342,6 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 					DataWarehouse*,
 					DataWarehouse* new_dw)
 {
-  double time = d_lab->d_sharedState->getElapsedTime();
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -554,7 +552,6 @@ SmagorinskyModel::computeTurbSubmodelPred(const ProcessorGroup*,
 					    DataWarehouse*,
 					    DataWarehouse* new_dw)
 {
-  double time = d_lab->d_sharedState->getElapsedTime();
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -767,7 +764,6 @@ SmagorinskyModel::computeTurbSubmodelInterm(const ProcessorGroup*,
 					    DataWarehouse*,
 					    DataWarehouse* new_dw)
 {
-  double time = d_lab->d_sharedState->getElapsedTime();
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
