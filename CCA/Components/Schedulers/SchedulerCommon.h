@@ -58,13 +58,13 @@ WARNING
     // Insert Documentation Here:
     virtual void initialize();
        
-    virtual void compile( const ProcessorGroup * pc );
+    virtual void compile( const ProcessorGroup * pc, bool init_timestep );
 
     //////////
     // Insert Documentation Here:
     virtual void addTask(Task* t, const PatchSet*, const MaterialSet*);
 
-    virtual const vector<const Task::Dependency*>& getInitialRequires();
+    virtual const set<const VarLabel*>& getInitialRequires();
 
     virtual LoadBalancer* getLoadBalancer();
     virtual void releaseLoadBalancer();
@@ -86,6 +86,7 @@ WARNING
 			  bool emit_edges = true);
     void emitNode(const DetailedTask* dt, double start, double duration);
     void finalizeNodes(int process=0);
+    void scrub(const DetailedTask* dt);
     
     TaskGraph graph;
     int d_generation;

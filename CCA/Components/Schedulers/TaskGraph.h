@@ -7,6 +7,7 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <set>
 
 namespace Uintah {
 
@@ -76,7 +77,7 @@ WARNING
       
       // Get all of the requires needed from the old data warehouse
       // (carried forward).
-      const vector<const Task::Dependency*>& getInitialRequires()
+      const set<const VarLabel*>& getInitialRequires() const
       { return d_initreqs; }
 
       int getNumTasks() const;
@@ -122,7 +123,7 @@ WARNING
      vector<Task::Edge*> edges;
 
       // data required from old data warehouse
-      vector<const Task::Dependency*> d_initreqs;
+     set<const VarLabel*> d_initreqs;
       
    };
 

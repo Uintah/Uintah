@@ -3,7 +3,6 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/RoundRobinLoadBalancer.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/Core/Grid/DetailedTask.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
