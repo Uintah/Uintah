@@ -48,12 +48,12 @@ itcl_class SCIRun_DataIO_FieldSetReader {
 	# to be modified for particular reader
 
 	# extansion to append if no extension supplied by user
-	set defext ".fld"
+	set defext ".fset"
 	set title "Open field file"
 	
 	# file types to appers in filter box
 	set types {
-	    {{FieldSet File}     {.fld}      }
+	    {{FieldSet File}     {.fset}      }
 	    {{All Files} {.*}   }
 	}
 	
@@ -62,7 +62,7 @@ itcl_class SCIRun_DataIO_FieldSetReader {
 	makeOpenFilebox \
 		-parent $w \
 		-filevar $this-filename \
-		-command "$this-c needexecute" \
+		-command "$this-c needexecute; destroy $w" \
 		-cancel "destroy $w" \
 		-title $title \
 		-filetypes $types \

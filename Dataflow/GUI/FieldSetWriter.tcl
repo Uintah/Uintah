@@ -47,7 +47,7 @@ itcl_class SCIRun_DataIO_FieldSetWriter {
 	# to be modified for particular reader
 
 	# extansion to append if no extension supplied by user
-	set defext ".fld"
+	set defext ".fset"
 	
 	# name to appear initially
 	set defname "MyFieldSet"
@@ -55,7 +55,7 @@ itcl_class SCIRun_DataIO_FieldSetWriter {
 
 	# file types to appers in filter box
 	set types {
-	    {{FieldSet File}     {.fld}      }
+	    {{FieldSet File}     {.fset}      }
 	    {{All Files}       {.*}   }
 	}
 	
@@ -64,7 +64,7 @@ itcl_class SCIRun_DataIO_FieldSetWriter {
 	makeSaveFilebox \
 		-parent $w \
 		-filevar $this-filename \
-		-command "$this-c needexecute" \
+		-command "$this-c needexecute; destroy $w" \
 		-cancel "destroy $w" \
 		-title $title \
 		-filetypes $types \
