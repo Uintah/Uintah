@@ -157,7 +157,7 @@ set $m19-edges-on {1}
 set $m19-faces-on {0}
 set $m19-edge_display_type {Cylinders}
 set $m19-active_tab {Edges}
-set $m19-edge_scale [expr 0.008 * ${global-scale}]
+set $m19-edge_scale [expr 0.004 * ${global-scale}]
 set $m20-nodes-on {1}
 set $m20-nodes-as-disks {0}
 set $m20-edges-on {0}
