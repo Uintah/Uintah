@@ -1,0 +1,45 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Sat  Mar 10 2001"
+
+global runTime
+set runTime " 19:39:41"
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 10 10]
+set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 81 227]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 81 138]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 168 10]
+
+set $m0-notes {}
+set $m0-show_status 1
+set $m0-pid 71433
+set $m0-filename {/res/sci/u2/dmw/mydata/dipole.fld}
+set $m1-notes {}
+set $m1-show_status 1
+set $m1-pid -2147483647
+set $m2-notes {}
+set $m2-show_status 1
+set $m2-pid 71478
+set $m2-node_display_type {Spheres}
+set $m2-scale 0.03
+set $m2-show_progress -2147483647
+set $m3-notes {}
+set $m3-show_status 1
+set $m3-pid 71343
+set $m3-tcl_status {Calling GenStandardColorMaps!}
+set $m3-positionList {}
+set $m3-nodeList {}
+set $m3-width 1
+set $m3-height 1
+set $m3-mapType 3
+set $m3-minRes 12
+set $m3-resolution 12
+$m2 ui
+
+::netedit scheduleok
