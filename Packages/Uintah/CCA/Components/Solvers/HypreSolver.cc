@@ -85,16 +85,18 @@ template<class Types>
 class HypreStencil7 : public RefCounted {
 public:
   HypreStencil7(const Level* level,
-		const MaterialSet* matlset,
-		const VarLabel* A,
-		const VarLabel* x, bool modifies_x,
-		const VarLabel* b,
-		const VarLabel* guess, Task::WhichDW guess_dw,
+		  const MaterialSet* matlset,
+	         const VarLabel* A, Task::WhichDW which_A_dw,
+	         const VarLabel* x, bool modifies_x,
+	         const VarLabel* b, Task::WhichDW which_b_dw,
+	         const VarLabel* guess, Task::WhichDW which_guess_dw,
 		const HypreSolver2Params* params)
     : level(level), matlset(matlset),
-      A_label(A), X_label(x), B_label(b),
+      A_label(A), which_A_dw(which_A_dw),
+      X_label(x), 
+      B_label(b), which_b_dw(which_b_dw),
       modifies_x(modifies_x),
-      guess_label(guess), guess_dw(guess_dw), params(params)
+      guess_label(guess), which_guess_dw(which_guess_dw), params(params)
   {
   }
 
@@ -110,6 +112,11 @@ public:
     typedef typename Types::sol_type sol_type;
     cout_doing << "HypreSolver2::solve" << endl;
 
+
+    DataWarehouse* A_dw = new_dw->getOtherDataWarehouse(which_A_dw);
+    DataWarehouse* b_dw = new_dw->getOtherDataWarehouse(which_b_dw);
+    DataWarehouse* guess_dw = new_dw->getOtherDataWarehouse(which_guess_dw);
+    
     ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));
     double tstart = Time::currentSeconds();
     for(int m = 0;m<matls->size();m++){
@@ -165,7 +172,7 @@ public:
 
 	// Get the data
 	typename Types::matrix_type A;
-	new_dw->get(A, A_label, matl, patch, Ghost::None, 0);
+	A_dw->get(A, A_label, matl, patch, Ghost::None, 0);
 
 	Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
 	IntVector ec = params->getSolveOnExtraCells() ?
@@ -224,7 +231,7 @@ public:
 
 	// Get the data
 	typename Types::const_type B;
-	new_dw->get(B, B_label, matl, patch, Ghost::None, 0);
+	b_dw->get(B, B_label, matl, patch, Ghost::None, 0);
 
 	Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
 	IntVector ec = params->getSolveOnExtraCells() ?
@@ -255,11 +262,8 @@ public:
 	const Patch* patch = patches->get(p);
 
 	if(guess_label){
-	  typename Types::const_type X;
-	  if(guess_dw == Task::OldDW)
-	    old_dw->get(X, guess_label, matl, patch, Ghost::None, 0);
-	  else
-	    new_dw->get(X, guess_label, matl, patch, Ghost::None, 0);
+	 typename Types::const_type X;
+        guess_dw->get(X, guess_label, matl, patch, Ghost::None, 0);
 
 	  // Get the initial guess
 	  Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
@@ -279,8 +283,8 @@ public:
 					     const_cast<double*>(values));
 	    }
 	  }
-	}
-      }
+	}  // initialGuess
+      } // patch loop
       HYPRE_StructVectorAssemble(HX);
 
       double solve_start = Time::currentSeconds();
@@ -674,11 +678,13 @@ private:
   const Level* level;
   const MaterialSet* matlset;
   const VarLabel* A_label;
+  Task::WhichDW which_A_dw;
   const VarLabel* X_label;
   const VarLabel* B_label;
+  Task::WhichDW which_b_dw;
   bool modifies_x;
   const VarLabel* guess_label;
-  Task::WhichDW guess_dw;
+  Task::WhichDW which_guess_dw;
   const HypreSolver2Params* params;
 };
 
@@ -721,12 +727,13 @@ SolverParameters* HypreSolver2::readParameters(ProblemSpecP& params, const strin
 }
 
 void HypreSolver2::scheduleSolve(const LevelP& level, SchedulerP& sched,
-			     const MaterialSet* matls,
-			     const VarLabel* A, const VarLabel* x,
-			     bool modifies_x,
-                             const VarLabel* b, const VarLabel* guess,
-			     Task::WhichDW guess_dw,
-			     const SolverParameters* params)
+			        const MaterialSet* matls,
+                             const VarLabel* A,    Task::WhichDW which_A_dw,  
+                             const VarLabel* x,
+			        bool modifies_x,
+                             const VarLabel* b,    Task::WhichDW which_b_dw,  
+                             const VarLabel* guess,Task::WhichDW which_guess_dw,
+			        const SolverParameters* params)
 {
   Task* task;
   // The extra handle arg ensures that the stencil7 object will get freed
@@ -738,40 +745,40 @@ void HypreSolver2::scheduleSolve(const LevelP& level, SchedulerP& sched,
   ASSERTEQ(domtype, b->typeDescription()->getType());
   const HypreSolver2Params* dparams = dynamic_cast<const HypreSolver2Params*>(params);
   if(!dparams)
-    throw InternalError("Wrong type of params passed to cg solver!");
+    throw InternalError("Wrong type of params passed to hypre solver!");
 
   switch(domtype){
   case TypeDescription::SFCXVariable:
     {
-      HypreStencil7<SFCXTypes>* that = new HypreStencil7<SFCXTypes>(level.get_rep(), matls, A, x, modifies_x, b, guess, guess_dw, dparams);
+      HypreStencil7<SFCXTypes>* that = new HypreStencil7<SFCXTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams);
       Handle<HypreStencil7<SFCXTypes> > handle = that;
       task = scinew Task("Matrix solve", that, &HypreStencil7<SFCXTypes>::solve, handle);
     }
     break;
   case TypeDescription::SFCYVariable:
     {
-      HypreStencil7<SFCYTypes>* that = new HypreStencil7<SFCYTypes>(level.get_rep(), matls, A, x, modifies_x, b, guess, guess_dw, dparams);
+      HypreStencil7<SFCYTypes>* that = new HypreStencil7<SFCYTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams);
       Handle<HypreStencil7<SFCYTypes> > handle = that;
       task = scinew Task("Matrix solve", that, &HypreStencil7<SFCYTypes>::solve, handle);
     }
     break;
   case TypeDescription::SFCZVariable:
     {
-      HypreStencil7<SFCZTypes>* that = new HypreStencil7<SFCZTypes>(level.get_rep(), matls, A, x, modifies_x, b, guess, guess_dw, dparams);
+      HypreStencil7<SFCZTypes>* that = new HypreStencil7<SFCZTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams);
       Handle<HypreStencil7<SFCZTypes> > handle = that;
       task = scinew Task("Matrix solve", that, &HypreStencil7<SFCZTypes>::solve, handle);
     }
     break;
   case TypeDescription::CCVariable:
     {
-      HypreStencil7<CCTypes>* that = new HypreStencil7<CCTypes>(level.get_rep(), matls, A, x, modifies_x, b, guess, guess_dw, dparams);
+      HypreStencil7<CCTypes>* that = new HypreStencil7<CCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams);
       Handle<HypreStencil7<CCTypes> > handle = that;
       task = scinew Task("Matrix solve", that, &HypreStencil7<CCTypes>::solve, handle);
     }
     break;
   case TypeDescription::NCVariable:
     {
-      HypreStencil7<NCTypes>* that = new HypreStencil7<NCTypes>(level.get_rep(), matls, A, x, modifies_x, b, guess, guess_dw, dparams);
+      HypreStencil7<NCTypes>* that = new HypreStencil7<NCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams);
       Handle<HypreStencil7<NCTypes> > handle = that;
       task = scinew Task("Matrix solve", that, &HypreStencil7<NCTypes>::solve, handle);
     }
@@ -780,13 +787,17 @@ void HypreSolver2::scheduleSolve(const LevelP& level, SchedulerP& sched,
     throw InternalError("Unknown variable type in scheduleSolve");
   }
 
-  task->requires(Task::NewDW, A, Ghost::None, 0);
+  task->requires(which_A_dw, A, Ghost::None, 0);
   if(modifies_x)
     task->modifies(x);
   else
     task->computes(x);
+    
+  if(guess){
+    task->requires(which_guess_dw, guess, Ghost::None, 0); 
+  }
 
-  task->requires(Task::NewDW, b, Ghost::None, 0);
+  task->requires(which_b_dw, b, Ghost::None, 0);
   sched->addTask(task, level->eachPatch(), matls);
 }
 
