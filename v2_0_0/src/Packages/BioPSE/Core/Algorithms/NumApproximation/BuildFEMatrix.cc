@@ -216,15 +216,18 @@ void BuildFEMatrix::parallel(int proc)
   barrier_.wait(np_);
 }
 
-void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::Cell::index_type c_ind)
+void
+BuildFEMatrix::build_local_matrix( double lcl_a[4][4],
+				   TetVolMesh::Cell::index_type c_ind )
 {
   Vector grad1, grad2, grad3, grad4;
   double vol = hMesh_->get_gradient_basis(c_ind, grad1, grad2, grad3, grad4);
  
+  typedef double onerow[3]; // This 'hack' is necessary to compile under IRIX CC
+  onerow *el_cond;
 
-  double (*el_cond)[3][3];
-  if (index_based_) el_cond = &(tens_[hFieldInt_->value(c_ind)].second.mat_);
-  else el_cond = &(hFieldTensor_->value(c_ind).mat_);
+  if (index_based_) el_cond = tens_[hFieldInt_->value(c_ind)].second.mat_;
+  else el_cond = hFieldTensor_->value(c_ind).mat_;
 
   if(fabs(vol) < 1.e-10){
     for(int i = 0; i<4; i++)
@@ -264,7 +267,7 @@ void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::Cell::ind
       for (int k=0; k< 3; k++){
 	for (int l=0; l<3; l++){
 	  lcl_a[i][j] += 
-	    ((*el_cond)[k][l]*unitsScale_)*el_coefs[i][k]*el_coefs[j][l];
+	    (el_cond[k][l]*unitsScale_)*el_coefs[i][k]*el_coefs[j][l];
 	}
       }
 
