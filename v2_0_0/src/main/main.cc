@@ -313,7 +313,11 @@ main(int argc, char *argv[] )
   
   // Check the dynamic compilation directory for validity
   gui->eval("getOnTheFlyLibsDir",result);
-  setenv ("SCIRUN_ON_THE_FLY_LIBS_DIR",result.c_str(),true);
+  string envarstr = "SCIRUN_ON_THE_FLY_LIBS_DIR=" + result;
+  char *envar = scinew char[envarstr.size()+1];
+  memcpy(envar, envarstr.c_str(), envarstr.size());
+  envar[envarstr.size()] = '\0';
+  putenv(envar);
 
   // Activate "File" menu sub-menus once packages are all loaded.
   gui->execute("activate_file_submenus");
