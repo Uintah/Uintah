@@ -213,6 +213,27 @@ itcl_class PSECommon_Matrix_BldTransform {
 		-side top
 	
 	pack $w.f -fill x -expand 1 -side top
+	if {[set $this-whichxform] == 0} {
+	    $this setxform $w translate
+	} else {
+	    if {[set $this-whichxform] == 1} {
+		$this setxform $w scale
+	    } else {
+		if {[set $this-whichxform] == 2} {
+		    $this setxform $w rotate
+		} else {
+		    if {[set $this-whichxform] == 3} {
+			$this setxform $w shear
+		    } else {
+			if {[set $this-whichxform] == 4} {
+			    $this setxform $w permute
+			} else {
+			    puts "BldTransform.tcl::ui setxform [set $this-whichxform] not recognized"
+			}
+		    }
+		}
+	    }
+	}
     }	
 
     method setxform {w t} {
