@@ -113,7 +113,7 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
-      NCVariable<double> phi;
+      constNCVariable<double> phi;
       old_dw->get(phi, lb_->phi, matl, patch, Ghost::AroundNodes, 1);
       NCVariable<double> newphi;
       new_dw->allocate(newphi, lb_->phi, matl, patch);
