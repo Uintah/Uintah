@@ -182,7 +182,7 @@
 \newmucmd{envvar}{texttt}
 
 % Markup for the title of a book or article or whatever.
-\newcommand{\etitle}[1]{\texttt{#1}}
+\newcommand{\etitle}[1]{\textit{#1}}
 
 % Markup name of a latex section.  First arg is section name.  Second arg
 % is section's label.  When processed with latex, the section
@@ -202,7 +202,7 @@
 % command generates text like this: #1 (Section~\ref{#2}).  When
 % processed by latex2html, this command generates a normal link using
 % #1 as the link text.
-\newcommand{\secrefalt}[2]{\latexhtml{#1 (Section~\ref{#2})}{\htmlref{#1}{#2}}}
+\newcommand{\secrefalt}[2]{\latexhtml{\etitle{#1} (Section~\ref{#2})}{\htmlref{#1}{#2}}}
 
 % Create a link to a doc in the tree.  Create a relative link if processed by
 % latex2html and a footnoted http url to the sci web site when processed by
