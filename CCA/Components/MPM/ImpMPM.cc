@@ -17,6 +17,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/HeatConduction/HeatConduction.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -69,7 +70,7 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   lb = scinew MPMLabel();
   flags = scinew MPMFlags();
   d_nextOutputTime=0.;
-  d_SMALL_NUM_MPM=0.;
+  d_SMALL_NUM_MPM=1e-200;
   d_rigid_body = false;
   d_numIterations=0;
   d_doGridReset = true;
@@ -677,6 +678,9 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
   t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->pSizeLabel,             Ghost::None);
+  t->requires(Task::NewDW, lb->gTemperatureRateLabel,  Ghost::AroundCells,1);
+  t->requires(Task::NewDW, lb->gTemperatureLabel,      Ghost::AroundCells,1);
+  t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,  Ghost::AroundCells,1);
 
   t->computes(lb->pVelocityLabel_preReloc);
   t->computes(lb->pAccelerationLabel_preReloc);
@@ -832,17 +836,18 @@ void ImpMPM::iterate(const ProcessorGroup*,
       cerr << "dispIncQNorm/dispIncQNorm0 = "
            << dispIncQNorm/(dispIncQNorm0 + 1.e-100) << "\n";
     }
-    if ((dispIncNorm/(dispIncNormMax + 1e-100) <= d_conv_crit_disp) &&
-        dispIncNormMax != 0.0)
+    if ((dispIncNorm/(dispIncNormMax + 1e-100) <= d_conv_crit_disp)/* &&
+                                                                      dispIncNormMax != 0.0 */)
       dispInc = true;
-    if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy &&
-        dispIncQNorm/(dispIncQNorm0 + 1e-100) > 0.0)
+    if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy /*&&
+                                                                      dispIncQNorm/(dispIncQNorm0 + 1e-100) > 0.0 */)
       dispIncQ = true;
     // Check to see if the residual is likely a nan, if so, we'll restart.
     bool restart_nan=false;
     bool restart_neg_residual=false;
     bool restart_num_iters=false;
-    if (isnan(dispIncQNorm/dispIncQNorm0)||isnan(dispIncNorm/dispIncNormMax)){
+    if ((isnan(dispIncQNorm/dispIncQNorm0)||isnan(dispIncNorm/dispIncNormMax)) 
+        && isnan(dispIncQNorm0)){
       restart_nan=true;
       cerr << "Restarting due to a nan residual" << endl;
     }
@@ -854,7 +859,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       restart_num_iters=true;
       cerr << "Restarting due to exceeding max number of iterations" << endl;
     }
-    if (restart_nan || restart_neg_residual || restart_num_iters){
+    if (restart_nan || restart_neg_residual || restart_num_iters) {
       new_dw->abortTimestep();
       new_dw->restartTimestep();
       return;
@@ -1146,19 +1151,27 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     // Give all non-rigid materials the same nodal values
     for(int m = 0; m < numMatls; m++){
      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+     int matl = mpm_matl->getDWIndex();
      if(!mpm_matl->getIsRigid()){
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         IntVector c = *iter;
+        gTemperature[m][c] /= gmass[m][c];
+        gTemperatureNoBC[m][c] = gTemperature[m][c];
+#if 1
         gmass[m][c]=GMASS[c];
         gvolume[m][c]=GVOLUME[c];
         gextforce[m][c]=GEXTFORCE[c];
         gvel_old[m][c]=GVEL_OLD[c]/(GMASS[c] + 1.e-200);
         gacc[m][c]=GACC[c]/(GMASS[c] + 1.e-200);
-        gTemperature[m][c] /= gmass[m][c];
-        gTemperatureNoBC[m][c] = gTemperature[m][c];
+#endif
+     
       }
+
+      MPMBoundCond bc;
+      bc.setBoundaryCondition(patch,matl,"Temperature",gTemperature[m],8);
      }
     }  // End loop over materials
+
     delete interpolator;
   }  // End loop over patches
 }
@@ -2089,6 +2102,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> dispNew, gacceleration;
+      constNCVariable<double> gTemperatureRate, gTemperature, gTemperatureNoBC;
       constNCVariable<double> dTdt;
 
       delt_vartype delT;
@@ -2120,6 +2134,12 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(dispNew,      lb->dispNewLabel,      dwindex, patch, gac, 1);
       new_dw->get(gacceleration,lb->gAccelerationLabel,dwindex, patch, gac, 1);
 
+      new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwindex,patch,gac,
+                  1);
+      new_dw->get(gTemperature,   lb->gTemperatureLabel,  dwindex,patch,gac,1);
+      new_dw->get(gTemperatureNoBC,lb->gTemperatureNoBCLabel,dwindex,patch,gac,
+                  1);
+
       old_dw->get(psize,               lb->pSizeLabel,                 pset);
       new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
       psizeNew.copyData(psize);
@@ -2141,11 +2161,13 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         
         disp = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
+        double tempRate = 0.;
         
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < 8; k++) {
           disp      += dispNew[ni[k]]       * S[k];
           acc       += gacceleration[ni[k]] * S[k];
+          tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]])* S[k];
         }
         
         // Update the particle's position and velocity
@@ -2161,7 +2183,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pmassNew[idx]        = pmass[idx];
         pvolumeNew[idx]      = pvolume[idx];
         newpvolumeold[idx]   = pvolumeold[idx];
-        pTemp[idx]           = pTempOld[idx];
+        pTemp[idx]           = pTempOld[idx] + tempRate*delT;
 
         if(pmassNew[idx] <= 0.0){
           delete_particles->addParticle(idx);
