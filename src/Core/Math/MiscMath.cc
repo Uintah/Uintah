@@ -40,7 +40,6 @@
  *  Copyright (C) 2004 SCI Group
  */
 
-#include <sci_defs.h>
 #include <Core/Math/MiscMath.h>
 #include <math.h>
 #ifdef __sgi
