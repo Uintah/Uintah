@@ -33,13 +33,14 @@
 
 #include <Dataflow/Ports/FieldPort.h>
 
+#include <Core/Datatypes/ScanlineField.h>
 #include <Packages/Fusion/Core/Datatypes/StructHexVolField.h>
 #include <Packages/Fusion/Dataflow/Modules/Render/Plot2DViewer.h>
 
 #include <sci_defs.h>
 
 #ifdef HAVE_PLPLOT
-#include <tclMatrix.h>
+#include <plplot/tclMatrix.h>
 #endif
 
 namespace Fusion {
@@ -86,8 +87,9 @@ void Plot2DViewer::execute(){
   FieldHandle fHandle;
 
   StructHexVolMesh *hvmInput;
+  ScanlineMesh *slmInput;
 
-  unsigned int ndata;
+  unsigned int ndata, idim, jdim, kdim;
 
   port_range_type range = get_iports("Input Field");
 
@@ -111,7 +113,7 @@ void Plot2DViewer::execute(){
 
     // The field input is required.
     if (!ifield_port->get(fHandle) || !(fHandle.get_rep()) ||
-	!(hvmInput = (StructHexVolMesh*) fHandle->mesh().get_rep())) {
+	!(fHandle->mesh().get_rep())) {
       error( "No handle or representation" );
       return;
     }
@@ -121,25 +123,45 @@ void Plot2DViewer::execute(){
       return;
     }
 
+    if( fHandle->get_type_description(0)->get_name() == "StructHexVolField" ) {
+      hvmInput = (StructHexVolMesh*) fHandle->mesh().get_rep();
+
+      idim = hvmInput->get_nx();
+      jdim = hvmInput->get_ny();
+      kdim = hvmInput->get_nz();
+    } else if( fHandle->get_type_description(0)->get_name() == "ScanlineField" ) {
+      slmInput = (ScanlineMesh*) fHandle->mesh().get_rep();
+
+      idim = slmInput->get_length();
+      jdim = 1;
+      kdim = 1;
+    } else {
+      error( fHandle->get_type_description(0)->get_name() );
+      error( "Only availible for Scanline and StructHexVol data." );
+      return;
+    }
+
     if( fGeneration_.size() < ndata+1 ) {
 
       fGeneration_.push_back( - 1 );
       fHandle_.push_back( fHandle );
-      idim_.push_back( hvmInput->get_nx() );
-      jdim_.push_back( hvmInput->get_ny() );
-      kdim_.push_back( hvmInput->get_nz() );
 
-      //      needsUpdated_.push_back( true );
+      idim_.push_back( idim );
+      jdim_.push_back( jdim );
+      kdim_.push_back( kdim );
+//      needsUpdated_.push_back( true );
 
       // Add the data in the GUI.
       {
 	ostringstream str;
 	str << id << " add_data " << ndata << " ";
-	str << hvmInput->get_nx() << " ";
-	str << hvmInput->get_ny() << " ";
-	str << hvmInput->get_nz();
+	str << idim << " ";
+	str << jdim << " ";
+	str << kdim;
 
 	gui->execute(str.str().c_str());
+
+	remark( str.str() );
       }
 
       updateField  = true;
@@ -155,14 +177,14 @@ void Plot2DViewer::execute(){
     }
 
     // Check to see if the dimensions have changed.
-    if( idim_[ndata] != hvmInput->get_nx() ||
-	jdim_[ndata] != hvmInput->get_ny() ||
-	kdim_[ndata] != hvmInput->get_nz() ) {
+    if( idim_[ndata] != idim ||
+	jdim_[ndata] != jdim ||
+	kdim_[ndata] != kdim ) {
 
       // Get the dimensions of the mesh.
-      idim_[ndata] = hvmInput->get_nx();
-      jdim_[ndata] = hvmInput->get_ny();
-      kdim_[ndata] = hvmInput->get_nz();
+      idim_[ndata] = idim;
+      jdim_[ndata] = jdim;
+      kdim_[ndata] = kdim;
 
       // Update the dims in the GUI.
       ostringstream str;
@@ -172,7 +194,7 @@ void Plot2DViewer::execute(){
       gui->execute(str.str().c_str());
 
       updateAll  = true;
-      //      needsUpdated_[nData] = true;
+//      needsUpdated_[nData] = true;
     }
   }
   
@@ -283,7 +305,7 @@ void Plot2DViewer::tcl_command(GuiArgs& args, void* userdata)
 
       unsigned int slice = atoi( args[3].c_str() );
 
-      trueExecute(  port, slice );
+      trueExecute( port, slice );
 
       if( dMat_x_ && dMat_y_ && dMat_v_ ) {
 
@@ -325,9 +347,13 @@ void Plot2DViewer::tcl_command(GuiArgs& args, void* userdata)
     }
 #endif
 
-  } else if (args[1] == "add_GUIVar") {
+  } else if (args[1] == "add_GUIVar_Int") {
     
-    scinew GuiInt(ctx->subVar(args[2]), atoi(args[3].c_str())  );
+    scinew GuiInt(ctx->subVar(args[2]), atoi(args[3].c_str()) );
+
+  } else if (args[1] == "add_GUIVar_String") {
+    
+    scinew GuiString(ctx->subVar(args[2]), args[3].c_str() );
 
   } else if (args[1] == "remove_GUIVar") {
     

@@ -33,6 +33,9 @@
 
 #include <Packages/Fusion/share/share.h>
 
+#include <Core/Datatypes/ScanlineField.h>
+#include <Packages/Fusion/Core/Datatypes/StructHexVolField.h>
+
 namespace Fusion {
 
 using namespace SCIRun;
@@ -114,37 +117,73 @@ template< class FIELD, class TYPE >
 template< template<class> class FIELD, class TYPE >
 #endif
 void
-Plot2DViewerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h, int slice, Plot2DViewer* p2Dv )
+Plot2DViewerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
+					int slice,
+					Plot2DViewer* p2Dv )
 {
-  FIELD<TYPE> *ifield = (FIELD<TYPE> *) field_h.get_rep();
+  if( field_h.get_rep()->get_type_description(0)->get_name() == "StructHexVolField" ) {
 
-  typename FIELD<TYPE>::mesh_handle_type imesh = ifield->get_typed_mesh();
+    StructHexVolField<TYPE> *ifield =
+      (StructHexVolField<TYPE> *) field_h.get_rep();
 
-  const unsigned int onx = imesh->get_nx();
-  const unsigned int ony = imesh->get_ny();
-  const unsigned int onz = imesh->get_nz();
+    typename StructHexVolField<TYPE>::mesh_handle_type imesh =
+      ifield->get_typed_mesh();
 
-  p2Dv->dMat_x_ = scinew DenseMatrix( onx, ony );
-  p2Dv->dMat_y_ = scinew DenseMatrix( onx, ony );
-  p2Dv->dMat_v_ = scinew DenseMatrix( onx, ony );
+    const unsigned int onx = imesh->get_nx();
+    const unsigned int ony = imesh->get_ny();
+    const unsigned int onz = imesh->get_nz();
 
-  typename FIELD<TYPE>::mesh_type::Node::index_type node;
-  typename FIELD<TYPE>::value_type v;
-  Point p;
+    p2Dv->dMat_x_ = scinew DenseMatrix( onx, ony );
+    p2Dv->dMat_y_ = scinew DenseMatrix( onx, ony );
+    p2Dv->dMat_v_ = scinew DenseMatrix( onx, ony );
 
-  for (unsigned int i = 0; i < onx; i++) {
-    for (unsigned int j = 0; j < ony; j++) {
-      node.i_ = i;
-      node.j_ = j;
-      node.k_ = slice;
+    typename StructHexVolField<TYPE>::mesh_type::Node::index_type node;
+    typename StructHexVolField<TYPE>::value_type v;
+    Point p;
+
+    for (unsigned int i = 0; i < onx; i++) {
+      for (unsigned int j = 0; j < ony; j++) {
+	node.i_ = i;
+	node.j_ = j;
+	node.k_ = slice;
+
+	ifield->value(v, node);
+	p2Dv->dMat_v_->put( i, j, v );
+
+	imesh->get_center(p, node);
+
+	p2Dv->dMat_x_->put( i, j, sqrt(p.x() * p.x() + p.y() * p.y() ) );
+	p2Dv->dMat_y_->put( i, j, p.z() );
+      }
+    }
+  } 
+
+  else if( field_h.get_rep()->get_type_description(0)->get_name() == "ScanlineField" ) {
+
+    ScanlineField<TYPE> *ifield = (ScanlineField<TYPE> *) field_h.get_rep();
+
+    typename ScanlineField<TYPE>::mesh_handle_type imesh = ifield->get_typed_mesh();
+    const unsigned int onx = imesh->get_length();
+
+    p2Dv->dMat_x_ = scinew DenseMatrix( onx, 1 );
+    p2Dv->dMat_y_ = scinew DenseMatrix( onx, 1 );
+    p2Dv->dMat_v_ = scinew DenseMatrix( onx, 1 );
+
+    typename ScanlineField<TYPE>::mesh_type::Node::index_type node;
+    typename ScanlineField<TYPE>::value_type v;
+
+    Point p;
+
+    for (unsigned int i = 0; i < onx; i++) {
+      node = i;
 
       ifield->value(v, node);
-      p2Dv->dMat_v_->put( i, j, v );
-
+      p2Dv->dMat_v_->put( i, 0, v );
+      
       imesh->get_center(p, node);
-
-      p2Dv->dMat_x_->put( i, j, sqrt(p.x() * p.x() + p.y() * p.y() ) );
-      p2Dv->dMat_y_->put( i, j, p.z() );
+      
+      p2Dv->dMat_x_->put( i, 0, p.x() );
+      p2Dv->dMat_y_->put( i, 0, v );
     }
   }
 }
@@ -152,7 +191,3 @@ Plot2DViewerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h, int slice, Plot2DVi
 } // end namespace SCIRun
 
 #endif // Plot2DViewer_h
-
-
-
-
