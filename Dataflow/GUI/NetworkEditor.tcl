@@ -339,7 +339,7 @@ proc removeSpaces { str } {
 }
 
 proc createCategoryMenu {} {
-
+    
 #  puts "Building Module Menus..."
 
   foreach package [netedit packageNames] {
@@ -741,7 +741,6 @@ proc ClearCanvas {} {
     # destroy all modules
     global modules
     foreach m $modules {
-	puts $m
 	moduleDestroy .bot.neteditFrame.canvas .top.globalViewFrame.canvas $m
     }
     
