@@ -45,8 +45,10 @@ WARNING
     string d_type;
     
   private:
+#if 0
     BoundCondBase(const BoundCondBase&);
     BoundCondBase& operator=(const BoundCondBase&);
+#endif
   };
 } // End namespace Uintah
 

@@ -40,8 +40,10 @@ WARNING
       virtual std::string getType() const = 0;
          
    private:
+#if 0
       ThermalBoundCond(const ThermalBoundCond&);
       ThermalBoundCond& operator=(const ThermalBoundCond&);
+#endif
       
    };
 } // End namespace Uintah

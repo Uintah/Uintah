@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/TypeDescription.h>
+#include <Packages/Uintah/Core/Grid/BoundCondData.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -25,7 +26,6 @@ using std::string;
    
 class NodeIterator;
 class CellIterator;
-class BoundCondBase;
    
 /**************************************
       
@@ -217,8 +217,8 @@ WARNING
      
      BCType getBCType(FaceType face) const;
      void setBCType(FaceType face, BCType newbc);
-     void setBCValues(FaceType face, vector<BoundCondBase*>& bc);
-     vector<BoundCondBase*> getBCValues(FaceType face) const;
+     void setBCValues(FaceType face, BCData& bc);
+     BoundCondBase* getBCValues(int mat_id,string type,FaceType face) const;
 
      bool atEdge(FaceType face) const;
      static FaceType nextFace(FaceType face) {
@@ -329,8 +329,9 @@ WARNING
      IntVector d_nodeHighIndex;
      
      int d_id;
+     // Added an extra vector<> for each material
      BCType d_bctypes[numFaces];
-     vector<vector<BoundCondBase*> > d_bcs;
+     vector<BCData> d_bcs;
      friend class NodeIterator;
      bool in_database;
    };

@@ -41,8 +41,10 @@ WARNING
       virtual double getValue() const;
       
    private:
+#if 0
       TemperatureBoundCond(const TemperatureBoundCond&);
       TemperatureBoundCond& operator=(const TemperatureBoundCond&);
+#endif
 
       double d_temp;
    };

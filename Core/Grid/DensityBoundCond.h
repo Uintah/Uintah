@@ -41,8 +41,10 @@ WARNING
      virtual double getValue() const;
      
    private:
+#if 0
      DensityBoundCond(const DensityBoundCond&);
      DensityBoundCond& operator=(const DensityBoundCond&);
+#endif
      
      double d_rho;
    };
