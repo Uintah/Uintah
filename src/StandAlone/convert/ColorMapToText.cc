@@ -117,8 +117,8 @@ main(int argc, char **argv) {
   //double alpha;
   for (int c=0; c<size; c++) {
     double t=c*1./(size-1.);
-    Color clr = handle->FindColor(t);
-    const double alpha = handle->FindAlpha(t);
+    Color clr = handle->getColor(t);
+    const double alpha = handle->getAlpha(t);
     fprintf(fTxt, "%lf %lf %lf %lf %lf\n", clr.r(), clr.g(), clr.b(), alpha, t);
   }
   fclose(fTxt);

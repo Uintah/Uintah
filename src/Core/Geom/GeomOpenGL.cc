@@ -947,7 +947,7 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
 
     // Send Cmap
     glTexImage1D(GL_TEXTURE_1D, 0, 4, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-		 cmap_->raw1d);
+		 cmap_->rawRGBA_);
     glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
 
     // Draw child

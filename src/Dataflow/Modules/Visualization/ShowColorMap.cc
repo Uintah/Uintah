@@ -133,7 +133,7 @@ ShowColorMap::execute()
 				       ref0 + along + out,
 				       ref0 + out);
 
-  sq->set_texture( cmap->raw1d );
+  sq->set_texture( cmap->rawRGBA_ );
   all->add( sq );
   const int numlabels = gui_numlabels_.get();
   if (numlabels > 1 && numlabels < 50)

@@ -51,76 +51,74 @@ using std::vector;
 
 class SCICORESHARE ColorMap : public Datatype, public GeomColormapInterface {
 public:
-  vector<float> rawRampAlpha;
-  vector<float> rawRampAlphaT;
-  vector<Color> rawRampColor;
-  vector<float> rawRampColorT;
-
-  unsigned char*          raw1d;
-
-  string units;
+  vector<float>			rawRampAlpha_;
+  vector<float>			rawRampAlphaT_;
+  vector<Color>			rawRampColor_;
+  vector<float>			rawRampColorT_;
+  unsigned char*		rawRGBA_;
+  string			units;
 
 private:
-  double min_;
-  double max_;
 
-  vector<MaterialHandle> colors_;
 
-  vector<Color> rcolors_;// make this big...
-  vector<float> alphas_; // alphas - same size
+  double			min_;
+  double			max_;
 
-  bool pre_mult_alpha_p_; // set if you want it.
-  bool scaled_p_;
+  vector<MaterialHandle>	colors_;
+
+  bool				scaled_p_;
+  bool				blend_p_;
 
 public:
 
   ColorMap();
   ColorMap(const ColorMap&);
-  ColorMap(int nlevels, double min, double max, int shortrange=0);
+  ColorMap(int nlevels, double min, double max);
 
   ColorMap(const vector<Color>& rgb,
 	   const vector<float>& rgbT,
 	   const vector<float>& alphas,
-	   const vector<float>& alphaT,
-	   const int size=2000);
+	   const vector<float>& alphaT);
+  virtual ~ColorMap();
+  virtual ColorMap*	clone();
 
-  void SetRaw(const vector<Color>& rgb,
-	      const vector<float>& rgbT,
-	      const vector<float>& alphas,
-	      const vector<float>& alphaT,
-	      const int size=2000);
+  void			SetRaw(const vector<Color>& rgb,
+			       const vector<float>& rgbT,
+			       const vector<float>& alphas,
+			       const vector<float>& alphaT);
 
-  void Build1d(const int size=256);
+  void			Build1d(const int size=256);
 
+  // are the colors scaled to some data?
+  bool			IsScaled(){ return scaled_p_;} 
 
-  bool IsScaled(){ return scaled_p_;} // are the colors scaled to some data?
-  void Scale(double newmin, double newmax)
+  void			Scale(double newmin, double newmax)
   { min_ = newmin; max_ = newmax; scaled_p_ = true;}
-  void ResetScale() { min_ = -1; max_ = 1; scaled_p_ = false; }
 
+  void			ResetScale() 
+  { min_ = -1; max_ = 1; scaled_p_ = false; }
+
+  // return the number of color points in the colormap
+  int			size() const { return rawRampColor_.size();}
+ 
   // Lookup which color value would be associated with in the colormap.
-  MaterialHandle& lookup(double value);
+  MaterialHandle&	lookup(double value);
 
   // Lookup a color in the colormap by a value that has already been fitted
   // to the min/max of the colormap (value should be between 1 and ncolors).
-  MaterialHandle& lookup2(double value);
+  MaterialHandle&	lookup2(double value);
 
-  virtual ~ColorMap();
-  virtual ColorMap* clone();
+  virtual double	getMin() const;
+  virtual double	getMax() const;
+  Color			getColor(double t);
+  double		getAlpha(double t);
 
-  void build_default();
+  bool			blend_p() { return blend_p_; }
+  void			set_blend(bool);
+
   // Persistent representation...
-  virtual void io(Piostream&);
+  virtual void		io(Piostream&);
   static PersistentTypeID type_id;
-
-  virtual double getMin() const;
-  virtual double getMax() const;
-
-  Color FindColor(double t);
-  double FindAlpha(double t);
-
-  // return the number of color points in the colormap
-  int size() const { return rawRampColor.size();} 
 };
 
 typedef LockingHandle<ColorMap> ColorMapHandle;

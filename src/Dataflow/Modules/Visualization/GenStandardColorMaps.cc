@@ -84,12 +84,13 @@ GenStandardColorMaps::genMap(const string& s)
     {
       is >> r >> g >> b >> a;
       rgbs[i] = Color(r/255.0, g/255.0, b/255.0);
-      rgbT[i] = i/float(m-1);
+      rgbT[i] = i/float(m);
       alphas[i] = a;
-      alphaT[i] = i/float(m-1);
+      alphaT[i] = i/float(m);
     }
-  
-    cmap = scinew ColorMap(rgbs,rgbT,alphas,alphaT,m);
+    rgbT.push_back(1.0);
+    alphaT.push_back(1.0);
+    cmap = scinew ColorMap(rgbs,rgbT,alphas,alphaT);
     return true;
   }
   else

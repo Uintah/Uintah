@@ -421,7 +421,7 @@ void GenTransferFunc::DrawGraphs( int flush)
     }
     
 //     cmap.get_rep()->SetRaw(ncolors,times,alphas,aTimes,256);
-    cmap.get_rep()->SetRaw(ncolors,times,a,t,256);
+    cmap.get_rep()->SetRaw(ncolors,times,a,t);
 
     glXMakeCurrent(dpy[0],None,NULL);
 
@@ -799,29 +799,29 @@ GenTransferFunc::execute(void)
   {
     cmap_generation = newcmap->generation;
 
-    if (!newcmap->raw1d)
+    if (!newcmap->rawRGBA_)
     {
       error("Old version of color map!");
       return;
     }
 
-    cmap.get_rep()->SetRaw(newcmap->rawRampColor,
-			   newcmap->rawRampColorT,
-			   newcmap->rawRampAlpha,
-			   newcmap->rawRampAlphaT);
+    cmap.get_rep()->SetRaw(newcmap->rawRampColor_,
+			   newcmap->rawRampColorT_,
+			   newcmap->rawRampAlpha_,
+			   newcmap->rawRampAlphaT_);
 
-    points.resize(newcmap->rawRampColor.size());
+    points.resize(newcmap->rawRampColor_.size());
     
     for(int i=0;i<points.size();i++)
     {
-      points[i]._t = newcmap->rawRampColorT[i];
-      points[i]._rgb = newcmap->rawRampColor[i];
+      points[i]._t = newcmap->rawRampColorT_[i];
+      points[i]._rgb = newcmap->rawRampColor_[i];
     }
 
-    alphas.resize(newcmap->rawRampAlpha.size());
+    alphas.resize(newcmap->rawRampAlpha_.size());
     for(int i = 0; i < alphas.size(); i++ ){
-      alphas[i]._t = newcmap->rawRampAlphaT[i];
-      alphas[i]._alpha = newcmap->rawRampAlpha[i];
+      alphas[i]._t = newcmap->rawRampAlphaT_[i];
+      alphas[i]._alpha = newcmap->rawRampAlpha_[i];
     }
 //     alphas = newcmap->rawRampAlpha;
 //     aTimes = newcmap->rawRampAlphaT;
@@ -851,7 +851,7 @@ GenTransferFunc::execute(void)
     cmap.get_rep()->SetRaw(ncolors,times,a,t); 
 
     // Bad for Volume Rendering?
-    cmap = scinew ColorMap(ncolors,times,a,t,256);
+    cmap = scinew ColorMap(ncolors,times,a,t);
   }
   DrawGraphs(0);
 #if 0  
