@@ -139,6 +139,10 @@ Pio(Piostream& stream, map<Key, Data>& data );
 template <class T>
 SCICORESHARE void Pio(Piostream& stream, vector<T>& data);
 
+template<class T,class S>
+SCICORESHARE void 
+Pio( Piostream &stream, pair<T,S>& pair);
+
 } // End namespace SCIRun
 
 #endif
