@@ -14,6 +14,7 @@
 #include <Packages/Uintah/CCA/Components/Models/HEChem/Simple_Burn.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/IandG.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/JWLpp.h>
+#include <Packages/Uintah/CCA/Components/Models/HEChem/LightTime.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
@@ -58,6 +59,8 @@ void ModelFactory::makeModels(const ProblemSpecP& params, GridP&,
       models.push_back(scinew IandG(d_myworld, model));
     else if(type == "JWLpp")
       models.push_back(scinew JWLpp(d_myworld, model));
+    else if(type == "LightTime")
+      models.push_back(scinew LightTime(d_myworld, model));
     else if(type == "flameSheet_rxn")
       models.push_back(scinew flameSheet_rxn(d_myworld, model));
     else
