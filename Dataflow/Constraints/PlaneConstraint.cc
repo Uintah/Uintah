@@ -32,16 +32,14 @@
 #include <Dataflow/Constraints/PlaneConstraint.h>
 #include <Core/Geometry/Plane.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Util/Debug.h>
+
 #include <iostream>
+
 using std::cerr;
 using std::cout;
 using std::endl;
 
 namespace SCIRun {
-
-
-static DebugSwitch pc_debug("Constraints", "Plane");
 
 /***************************************************************************
  * The constructor initializes the constraint's variables.
@@ -95,17 +93,11 @@ PlaneConstraint::Satisfy( const Index index, const Scheme scheme,
    PointVariable& p4 = *vars[3];
    Vector vec1, vec2;
 
-   if (pc_debug) {
-      ChooseChange(index, scheme);
-      print(cout);
-   }
-   
    switch (ChooseChange(index, scheme)) {
    case 0:
       vec1 = ((Point)p2 - p3);
       vec2 = ((Point)p4 - p3);
       if (Cross(vec1, vec2).length2() < Epsilon) {
-	 if (pc_debug) cerr << "No Plane." << endl;
       } else {
 	 Plane plane(p2, p3, p4);
 	 var = vars[0];
@@ -117,7 +109,6 @@ PlaneConstraint::Satisfy( const Index index, const Scheme scheme,
       vec1 = ((Point)p1 - p3);
       vec2 = ((Point)p4 - p3);
       if (Cross(vec1, vec2).length2() < Epsilon) {
-	 if (pc_debug) cerr << "No Plane." << endl;
       } else {
 	 Plane plane(p1, p3, p4);
 	 var = vars[1];
@@ -129,7 +120,6 @@ PlaneConstraint::Satisfy( const Index index, const Scheme scheme,
       vec1 = ((Point)p1 - p2);
       vec2 = ((Point)p4 - p2);
       if (Cross(vec1, vec2).length2() < Epsilon) {
-	 if (pc_debug) cerr << "No Plane." << endl;
       } else {
 	 Plane plane(p1, p2, p4);
 	 var = vars[2];
@@ -141,7 +131,6 @@ PlaneConstraint::Satisfy( const Index index, const Scheme scheme,
       vec1 = ((Point)p1 - p2);
       vec2 = ((Point)p3 - p2);
       if (Cross(vec1, vec2).length2() < Epsilon) {
-	 if (pc_debug) cerr << "No Plane." << endl;
       } else {
 	 Plane plane(p1, p2, p3);
 	 var = vars[3];

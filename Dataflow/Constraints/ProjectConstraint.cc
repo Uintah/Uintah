@@ -30,16 +30,13 @@
 
 #include <Dataflow/Constraints/ProjectConstraint.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Util/Debug.h>
 #include <iostream>
+
 using std::cerr;
 using std::cout;
 using std::endl;
 
 namespace SCIRun {
-
-
-static DebugSwitch pc_debug("Constraints", "Project");
 
 /***************************************************************************
  * The constructor initializes the constraint's variables.
@@ -92,11 +89,6 @@ ProjectConstraint::Satisfy( const Index index, const Scheme scheme,
    PointVariable& p2 = *vars[3];
    Vector norm;
 
-   if (pc_debug) {
-      ChooseChange(index, scheme);
-      print(cout);
-   }
-   
    switch (ChooseChange(index, scheme)) {
    case 0:
       norm = (Point)p2 - p1;

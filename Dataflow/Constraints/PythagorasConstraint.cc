@@ -30,16 +30,13 @@
 
 
 #include <Dataflow/Constraints/PythagorasConstraint.h>
-#include <Core/Util/Debug.h>
 #include <iostream>
+
 using std::cerr;
 using std::cout;
 using std::endl;
 
 namespace SCIRun {
-
-
-static DebugSwitch pc_debug("Constraints", "Pythagoras");
 
 /***************************************************************************
  * The constructor initializes the constraint's variables.
@@ -90,11 +87,6 @@ PythagorasConstraint::Satisfy( const Index index, const Scheme scheme,
    RealVariable& hypo = *vars[2];
    double t;
 
-   if (pc_debug) {
-      ChooseChange(index, scheme);
-      print(cout);
-   }
-   
    switch (ChooseChange(index, scheme)) {
    case 0:
       if ((t = hypo * hypo - dist2 * dist2) >= 0.0) {

@@ -30,16 +30,14 @@
 
 #include <Dataflow/Constraints/LineConstraint.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Util/Debug.h>
+
 #include <iostream>
+
 using std::cerr;
 using std::cout;
 using std::endl;
 
 namespace SCIRun {
-
-
-static DebugSwitch lc_debug("Constraints", "Line");
 
 /***************************************************************************
  * The constructor initializes the constraint's variables.
@@ -90,11 +88,6 @@ LineConstraint::Satisfy( const Index index, const Scheme scheme,
    PointVariable& p3 = *vars[2];
    Vector norm;
 
-   if (lc_debug) {
-      ChooseChange(index, scheme);
-      print(cout);
-   }
-   
    switch (ChooseChange(index, scheme)) {
    case 0:
       norm = (Point)p3 - p2;

@@ -32,18 +32,17 @@
 #include <Core/Geometry/Plane.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Util/Debug.h>
 #include <Core/Util/NotFinished.h>
+
+#include <math.h>
+
 #include <iostream>
+
 using std::cerr;
 using std::cout;
 using std::endl;
-#include <math.h>
 
 namespace SCIRun {
-
-
-static DebugSwitch ac_debug("Constraints", "Angle");
 
 /***************************************************************************
  * The constructor initializes the constraint's variables.
@@ -54,8 +53,8 @@ AngleConstraint::AngleConstraint( const string& name,
 				  const Index numSchemes,
 				  PointVariable* center, PointVariable* end1,
 				  PointVariable* end2, PointVariable* p,
-				  RealVariable* angle )
-:BaseConstraint(name, numSchemes, 5)
+				  RealVariable* angle ) :
+  BaseConstraint(name, numSchemes, 5)
 {
    vars[0] = center;
    vars[1] = end1;
@@ -100,11 +99,6 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme,
    RealVariable& angle = *vars[4];
    Vector v, v1, v2;
 
-   if (ac_debug) {
-      ChooseChange(index, scheme);
-      print(cout);
-   }
-   
    switch (ChooseChange(index, scheme)) {
    case 0:
       NOT_FINISHED("Line Constraint:  center");
