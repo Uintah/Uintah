@@ -280,7 +280,7 @@ int DpyBase::close_display() {
   
   if (close_display_flag) {
     
-    cerr << "Closing dpy:"<<window_name<<"\n";
+    //    cerr << "Closing dpy:"<<window_name<<"\n";
     XCloseDisplay(dpy);
     cerr << "Closed dpy:"<<window_name<<"\n";
     
