@@ -115,8 +115,27 @@ const TypeDescription* get_type_description(MaskedLatVolField<unsigned int> *);
 const TypeDescription* get_type_description(MaskedLatVolField<unsigned short> *);
 const TypeDescription* get_type_description(MaskedLatVolField<unsigned char> *);
 
+template class MRLatVolField<Tensor>;
+template class MRLatVolField<Vector>;
 template class MRLatVolField<double>;
+template class MRLatVolField<float>;
+template class MRLatVolField<int>;
+template class MRLatVolField<short>;
+template class MRLatVolField<char>;
+template class MRLatVolField<unsigned int>;
+template class MRLatVolField<unsigned short>;
+template class MRLatVolField<unsigned char>;
+
+const TypeDescription* get_type_description(MRLatVolField<Tensor> *);
+const TypeDescription* get_type_description(MRLatVolField<Vector> *);
 const TypeDescription* get_type_description(MRLatVolField<double> *);
+const TypeDescription* get_type_description(MRLatVolField<float> *);
+const TypeDescription* get_type_description(MRLatVolField<int> *);
+const TypeDescription* get_type_description(MRLatVolField<short> *);
+const TypeDescription* get_type_description(MRLatVolField<char> *);
+const TypeDescription* get_type_description(MRLatVolField<unsigned int> *);
+const TypeDescription* get_type_description(MRLatVolField<unsigned short> *);
+const TypeDescription* get_type_description(MRLatVolField<unsigned char> *);
 
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
