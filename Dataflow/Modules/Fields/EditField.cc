@@ -39,6 +39,7 @@
 #include <Core/Datatypes/PointCloud.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Thread/CrowdMonitor.h>
+#include <Dataflow/Modules/Fields/EditField.h>
 #include <Dataflow/Widgets/ScaledBoxWidget.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <map>
@@ -83,8 +84,6 @@ public:
 
   virtual ~EditField();
 
-  template <class MeshType>
-  void compute_nums(MeshType *, int &nodes, int &elems);
   template <class field_type_in, class field_type_out>
   field_type_out *create_edited_field(field_type_in *, field_type_out *);
   void clear_vals();
@@ -137,35 +136,6 @@ double mag_val(double v) { return v; }
 double mag_val(Vector v) { return v.length(); }
 
 
-template <class MeshType>
-void 
-EditField::compute_nums(MeshType *mesh, int &num_nodes, int &num_elems)
-{
-  typedef typename MeshType::Node::iterator node_iter_type;
-  typedef typename MeshType::Elem::iterator elem_iter_type;
-
-  int count = 0;
-  node_iter_type ni = mesh->tbegin((node_iter_type *)0);
-  node_iter_type nie = mesh->tend((node_iter_type *)0);
-  while (ni != nie)
-  {
-    count++;
-    ++ni;
-  }
-  num_nodes = count;
-
-  count = 0;
-  elem_iter_type ei = mesh->tbegin((elem_iter_type *)0);
-  elem_iter_type eie = mesh->tend((elem_iter_type *)0);
-  while (ei != eie)
-  {
-    count++;
-    ++ei;
-  }
-  num_elems = count;
-}
-
-
 void EditField::clear_vals() 
 {
   TCL::execute(string("set ")+id+"-fldname \"---\"");
@@ -200,18 +170,23 @@ void EditField::update_input_attributes(FieldHandle f)
   }
 
   const TypeDescription *meshtd = f->mesh()->get_type_description();
-  const string &mname = meshtd->get_name();
+  CompileInfo *ci = EditFieldAlgoCN::get_compile_info(meshtd);
+  DynamicAlgoHandle algo_handle;
+  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+  {
+    cout << "Could not compile algorithm." << std::endl;
+    return;
+  }
+  EditFieldAlgoCN *algo =
+    dynamic_cast<EditFieldAlgoCN *>(algo_handle.get_rep());
+  if (algo == 0)
+  {
+    cout << "Could not get algorithm." << std::endl;
+    return;
+  }
   int num_nodes;
   int num_elems;
-  if (mname == get_type_description((TetVolMesh *)0)->get_name()) {
-    compute_nums((TetVolMesh *)(f->mesh().get_rep()), num_nodes, num_elems);
-  } else if (mname == get_type_description((LatVolMesh *)0)->get_name()) {
-    compute_nums((LatVolMesh *)(f->mesh().get_rep()), num_nodes, num_elems);
-  } else if (mname == get_type_description((TriSurfMesh *)0)->get_name()) {
-    compute_nums((TriSurfMesh *)(f->mesh().get_rep()), num_nodes, num_elems);
-  } else if (mname == get_type_description((PointCloudMesh *)0)->get_name()) {
-    compute_nums((PointCloudMesh *)(f->mesh().get_rep()), num_nodes, num_elems);
-  }
+  algo->execute(f->mesh(), num_nodes, num_elems);
 
   TCL::execute(string("set ")+id+"-numnodes "+to_string(num_nodes));
   TCL::execute(string("set ")+id+"-numelems "+to_string(num_elems));
@@ -1220,6 +1195,28 @@ void EditField::widget_moved(int i)
   } else {
     //Module::widget_moved(i);
   }
+}
+
+
+CompileInfo *
+EditFieldAlgoCN::get_compile_info(const TypeDescription *mesh_td)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("EditFieldAlgoCNT");
+  static const string base_class_name("EditFieldAlgoCN");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       to_filename(mesh_td->get_name()) + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       mesh_td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  mesh_td->fill_compile_info(rval);
+  return rval;
 }
 
 } // End namespace Moulding
