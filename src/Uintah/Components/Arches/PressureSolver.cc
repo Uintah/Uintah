@@ -10,6 +10,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/Arches/TurbulenceModel.h>
 #include <Uintah/Components/Arches/PhysicalConstants.h>
 #include <Uintah/Components/Arches/RBGSSolver.h>
+#include <Uintah/Components/Arches/PetscSolver.h>
 #include <Uintah/Components/Arches/ArchesVariables.h>
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <Uintah/Interface/Scheduler.h>
@@ -72,6 +73,7 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
   string linear_sol;
   db->require("linear_solver", linear_sol);
   if (linear_sol == "linegs") d_linearSolver = scinew RBGSSolver();
+  else if (linear_sol == "petsc") d_linearSolver = scinew PetscSolver();
   else {
     throw InvalidValue("Linear solver option"
 		       " not supported" + linear_sol);
@@ -535,6 +537,9 @@ PressureSolver::normPressure(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.46  2000/09/12 15:46:23  sparker
+// Use petscsolver
+//
 // Revision 1.45  2000/08/23 06:20:52  bbanerje
 // 1) Results now correct for pressure solve.
 // 2) Modified BCU, BCV, BCW to add stuff for pressure BC.
