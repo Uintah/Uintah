@@ -49,7 +49,7 @@ DEALINGS IN THE SOFTWARE.
 	  installation instructions.</para>
 	</listitem>
 	<listitem>
-	  <para> The &sr;/Insight RPM includes the Insight and TEEM
+	  <para> The &sr;/Insight RPM includes the Insight and Teem
 	  packages and Insight libraries.</para>
 	</listitem>
       </itemizedlist>
@@ -62,11 +62,7 @@ DEALINGS IN THE SOFTWARE.
 
     <para>
       Root privileges are required to install the &sr;
-      <acronym>RPM</acronym>s.
-    </para>
-
-    <para>
-      The following procedure installs &sr; in
+      <acronym>RPM</acronym>s.  &sr; is installed in
       <filename>/usr/local/&sr;/bin</filename>.
     </para>
 
@@ -74,11 +70,12 @@ DEALINGS IN THE SOFTWARE.
       RPM installation consists of the following steps:
       <orderedlist>
 	<listitem>
-	  <para>Downloading the &sr; RPM distribution and &sr;'s sample data
-	  sets.</para>
+	  <para>Downloading a &sr; RPM distribution,
+	  documentation, and sample data sets.</para>
 	</listitem>
 	<listitem>
-	  <para>Installing &sr; using the <command>rpm</command> command.</para>
+	  <para>Installing &sr; using the <command>rpm</command>
+	  command.</para>
 	</listitem>
 	<listitem>
 	  <para>Installing &sr;'s sample data sets.</para>

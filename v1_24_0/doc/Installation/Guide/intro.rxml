@@ -33,8 +33,10 @@ DEALINGS IN THE SOFTWARE.
   <title>Introduction</title>
 
   <para>This guide provides instructions for installing &sr;, its
-  required third party software, optional thirdparty software, sample
-  data sets, and &sr; documentation on the &pf; platform.</para>
+  sample data sets, and &sr; documentation on the &pf; platform.  &sr;
+  can be installed from an <!--%= doc.ifP(Doc::Linux) {%Q{-->RPM<!--}}
+  %--><!--%= doc.ifP(Doc::OSX) {%Q{-->disk image (DMG)<!--}} %--> or
+  from its source code.</para>
 
   <para>&pf; platform guidelines are listed in <xref
   linkend="tbl.pltfm_req"/>.</para>
@@ -122,22 +124,27 @@ DEALINGS IN THE SOFTWARE.
 		<para>OS X 10.3 (Panther)</para>
 	      </listitem>
 	      <listitem>
-		<para>Apple's X11 server software, Xcode developer tools, and X11
-		software development kit must be installed before installing &sr;.
-		Apple's X11 server software, Xcode developer tools, and X11 SDK
-		are distributed with &osx; but are not part of the &osx; default
-		installation.  They are installed by double-clicking, in turn, the
-		files <filename>X11User.pkg</filename>,
-		<filename>Developer.mpkg</filename>, and
-		<filename>X11SDK.pkg</filename>.  These files may be present on
-		the hard drive, the &osx; installation CDs, or DVD.
-		<filename>Developer.mpkg</filename> and
-		<filename>X11SDK.pkg</filename> are part of the Xcode
-		distribution.</para>
+		<para>Apple's X11 server software, Xcode developer
+		tools, and X11 software development kit.
+		<footnote>
+		  <para>Apple's X11 server software, Xcode developer
+		  tools, and X11 SDK are distributed with &osx; but
+		  are not part of the &osx; default installation.
+		  They are installed by double-clicking, in turn, the
+		  files <filename>X11User.pkg</filename>,
+		  <filename>Developer.mpkg</filename>, and
+		  <filename>X11SDK.pkg</filename>.  These files may be
+		  present on the hard drive, the &osx; installation
+		  CDs, or DVD.  <filename>Developer.mpkg</filename>
+		  and <filename>X11SDK.pkg</filename> are part of the
+		  Xcode distribution.</para>
+		</footnote>
+		</para>
 	      </listitem>
 	      <listitem>
-		<para>&sr;'s MatlabInterface package requires Matlab version
-		Matlab 6.5.1 (MathWorks Relase 13, Service Pack 1).</para>
+		<para>&sr;'s MatlabInterface package requires Matlab
+		version Matlab 6.5.1 (MathWorks Relase 13, Service
+		Pack 1).</para>
 	      </listitem>
 	      <listitem>
 		<para>&sr;'s TEEM package supports PNG images if PNG libraries
@@ -174,10 +181,7 @@ DEALINGS IN THE SOFTWARE.
   </table>
 
 <!--%= doc.ifP(Doc::Linux) {%Q{-->
-  <para>Linux binaries can be <link linkend="sec.rpminst">installed
-  via an <acronym>RPM</acronym> package</link> or <link
-  linkend="sec.source_inst">from &sr;'s source code
-  distribution</link>.  The &sr; <acronym>RPM</acronym> distribution
+  <para>The &sr; <acronym>RPM</acronym> distribution
   does <emphasis>not</emphasis> provide support for
   <acronym>PETSc</acronym>.  <acronym>PETSc</acronym> support is
   available only through the &sr; source code distribution.</para>
@@ -203,9 +207,8 @@ DEALINGS IN THE SOFTWARE.
 <!--}} %-->
 
 <!--%= doc.ifP(Doc::OSX) {%Q{-->
-  <para>On &osx; systems &sr; can be installed from its disk image (a
-  dmg file) or its source code distribution.  Proceed to <xref
-  linkend="sec.dmg_inst"/> if installing &sr; from its disk image.
+  <para>Proceed to <xref
+  linkend="sec.dmg_inst"/> if installing &sr; from a disk image.
   Proceed to <xref linkend="sec.source_inst"/> if installing &sr; from
   its source code.</para>
 <!--}} %-->
@@ -265,7 +268,7 @@ DEALINGS IN THE SOFTWARE.
     </itemizedlist>
     Based on these experiences, SCI does not recommend the use of ATI
     cards with &sr; software at this time.  We suggest the use of an
-    NVidia card instead.  SCI investigate ATI cards further when
+    NVidia card instead.  SCI will investigate ATI cards further when
     ATI releases new drivers.
     </para>
   </section>

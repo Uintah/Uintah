@@ -29,11 +29,16 @@ DEALINGS IN THE SOFTWARE.
 <!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
+<!--%
+standard_loc = Doc::Platform == Doc::OSX ? "/sw/lib" : "/usr/lib"
+%-->
+
 <!--% teem_crap = %Q{
 <listitem>
   <para><emphasis>Optional:</emphasis> Enable
   <acronym>PNG</acronym> support in the Teem third party
-  library.  Set the <envar>TEEM_ZLIB</envar> and
+  library.  To enable <acronym>PNG</acronym> support in the Teem third party
+  library set the <envar>TEEM_ZLIB</envar> and
   <envar>TEEM_PNG</envar> environment variables:</para>
   <para>
     For sh-type shells:
@@ -52,7 +57,7 @@ DEALINGS IN THE SOFTWARE.
   </para>
   <para>If <acronym>PNG</acronym> support is enabled and
   <acronym>PNG</acronym> libraries (and corresponding header
-  files) are not installed in a standard location then
+  files) are not installed in a standard location (#{standard_loc}) then
   environment variables <envar>TEEM_PNG_IPATH</envar> and
   <envar>TEEM_PNG_LPATH</envar> must be set.  For example, if
   PNG libraries and headers are installed in
@@ -74,7 +79,7 @@ DEALINGS IN THE SOFTWARE.
   </para>
   <para>If <acronym>ZLIB</acronym> libraries (and
   corresponding header files) are not installed in a
-  standard location then environment variables
+  standard location (#{standard_loc}) then environment variables
   <envar>TEEM_ZLIB_IPATH</envar> and
   <envar>TEEM_ZLIB_LPATH</envar> must be set.  For example, if
   ZLIB libraries and headers are installed in
