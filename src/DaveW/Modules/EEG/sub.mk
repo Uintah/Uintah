@@ -29,6 +29,7 @@ SRCS     += \
 	$(SRCDIR)/Taubin.cc\
 	$(SRCDIR)/Thermal.cc\
 	$(SRCDIR)/TopoSurfToGeom.cc\
+	$(SRCDIR)/SliceMaker.cc\
 #[INSERT NEW MODULE HERE]
 
 PSELIBS := DaveW/Datatypes/General PSECore/Datatypes PSECore/Widgets \
@@ -41,6 +42,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/09/07 20:40:16  zyp
+# Added the SliceMaker module (it creates a disc for a demo)
+#
 # Revision 1.4  2000/06/08 22:46:13  moulding
 # Added a comment note about not messing with the module maker comment lines,
 # and how to edit this file by hand.
