@@ -808,9 +808,8 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
   for (int ii = 0; ii < d_props->getNumMixVars(); ii++) 
     tsk->modifies(d_lab->d_scalarSPLabel);
 
-  if (d_carbon_balance)
-    for (int ii = 0; ii < d_numInlets; ii++) 
-      tsk->computes(d_flowInlets[ii].d_flowRate_label);
+  for (int ii = 0; ii < d_numInlets; ii++) 
+    tsk->computes(d_flowInlets[ii].d_flowRate_label);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -893,9 +892,8 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 		   d_ramping_inlet_flowrate, actual_flow_rate);
 
 	d_flowInlets[indx].flowRate = actual_flow_rate;
-        if (d_carbon_balance)
-	  new_dw->put(delt_vartype(actual_flow_rate),
-		      d_flowInlets[indx].d_flowRate_label);
+	new_dw->put(delt_vartype(actual_flow_rate),
+		    d_flowInlets[indx].d_flowRate_label);
 
         fort_profscalar(idxLo, idxHi, density, cellType,
 		        fi.calcStream.d_density, fi.d_cellTypeID,
