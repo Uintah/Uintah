@@ -448,6 +448,10 @@ itcl_class Module {
 		place $modframe.ff.inset.graph -relheight 1 \
 		    -anchor nw
 	    }
+	    if {[winfo exists .standalone]} {
+		app update_progress [modname] $state
+	    }
+	    
 	}
 	set old_width $width
     }
@@ -533,6 +537,11 @@ itcl_class Module {
 	$modframe.ff.msg.indicator configure -width $indicator_width \
 	    -background $color
 	place $modframe.ff.msg.indicator -relheight 1 -anchor nw 
+
+	if {[winfo exists .standalone]} {
+                app indicate_error
+	}
+	
     }
 
     method get_x {} {
