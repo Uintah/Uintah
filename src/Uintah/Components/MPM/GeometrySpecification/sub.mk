@@ -6,20 +6,23 @@
 SRCDIR   := Uintah/Components/MPM/GeometrySpecification
 
 SRCS     += $(SRCDIR)/GeometryObject.cc \
-	$(SRCDIR)/GeometryPiece.cc \
-	$(SRCDIR)/Problem.cc \
-	$(SRCDIR)/SphereGeometryPiece.cc  $(SRCDIR)/BoxGeometryPiece.cc \
-	$(SRCDIR)/SphereGeometryPiece.cc \
-	$(SRCDIR)/CylinderGeometryPiece.cc \
-	$(SRCDIR)/TriGeometryPiece.cc \
-	$(SRCDIR)/UnionGeometryPiece.cc \
-	$(SRCDIR)/DifferenceGeometryPiece.cc \
-	$(SRCDIR)/IntersectionGeometryPiece.cc \
-	$(SRCDIR)/GeometryPieceFactory.cc
+	$(SRCDIR)/Problem.cc
+#	$(SRCDIR)/GeometryPiece.cc \
+#	$(SRCDIR)/SphereGeometryPiece.cc  $(SRCDIR)/BoxGeometryPiece.cc \
+#	$(SRCDIR)/SphereGeometryPiece.cc \
+#	$(SRCDIR)/CylinderGeometryPiece.cc \
+#	$(SRCDIR)/TriGeometryPiece.cc \
+#	$(SRCDIR)/UnionGeometryPiece.cc \
+#	$(SRCDIR)/DifferenceGeometryPiece.cc \
+#	$(SRCDIR)/IntersectionGeometryPiece.cc \
+#	$(SRCDIR)/GeometryPieceFactory.cc
 
 
 #
 # $Log$
+# Revision 1.7  2000/06/09 18:45:20  jas
+# Moved GeometryPiece stuff to Grid/.
+#
 # Revision 1.6  2000/04/24 21:04:34  sparker
 # Working on MPM problem setup and object creation
 #
