@@ -39,6 +39,7 @@ SRCS     += \
 	$(SRCDIR)/SCIBaWGL.cc\
 	$(SRCDIR)/SharedMemory.cc\
 	$(SRCDIR)/glMath.cc\
+	$(SRCDIR)/EditPath.cc\
 #[INSERT NEW MODULE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Comm \
@@ -54,6 +55,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.8  2000/07/18 23:11:11  samsonov
+# EditPath module added
+#
 # Revision 1.7  2000/06/09 17:50:19  kuzimmer
 # Hopefully everything is fixed so that you can use -lifl on SGI's and you can use -lcl on SGI's in32bit mode.
 #
