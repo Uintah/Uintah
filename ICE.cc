@@ -3,6 +3,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/LODI.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/AdvectionFactory.h>
+#include <Packages/Uintah/CCA/Components/ICE/TurbulenceFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -41,6 +42,8 @@ using namespace Uintah;
 
 #undef  CONVECT
 //#define CONVECT
+#undef  NEARWALL
+//#define NEARWALL
 
 //__________________________________
 //  To turn on normal output
@@ -80,6 +83,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_EqForm            = false; 
   d_add_heat          = false;
   d_impICE            = false;
+  d_Turb              = false;
   d_delT_knob         = 1.0;
   d_delT_scheme       = "aggressive";
 
@@ -98,6 +102,9 @@ ICE::~ICE()
   delete lb;
   delete MIlb;
   delete d_advector;
+  if(d_Turb){
+    delete d_turbulence;
+  }
 
   for(vector<ModelInterface*>::iterator iter = d_models.begin();
       iter != d_models.end(); iter++) {
@@ -234,6 +241,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   
   cfd_ice_ps->require("max_iteration_equilibration",d_max_iter_equilibration);
   d_advector = AdvectionFactory::create(cfd_ice_ps, d_advect_type);
+  d_turbulence = TurbulenceFactory::create(cfd_ice_ps, d_Turb);
+  
   // Grab the solution technique
   ProblemSpecP child = cfd_ice_ps->findBlock("solution");
   if(!child)
@@ -580,6 +589,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
 
   scheduleAccumulateMomentumSourceSinks(  sched, patches, press_matl,
                                                           ice_matls_sub,
+                                                          mpm_matls_sub,                                                      
                                                           all_matls);
 
   scheduleAccumulateEnergySourceSinks(    sched, patches, ice_matls_sub,
@@ -875,6 +885,7 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSubset* press_matl,
                                           const MaterialSubset* ice_matls_sub,
+                                          const MaterialSubset* mpm_matls_sub,
                                           const MaterialSet* matls)
 {
   Task* t;
@@ -897,6 +908,19 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
     t->requires(Task::NewDW,lb->press_diffY_FCLabel, gac, 1);
     t->requires(Task::NewDW,lb->press_diffZ_FCLabel, gac, 1);
   }
+
+  if(d_Turb){
+    t->requires(Task::NewDW,lb->uvel_FCMELabel,   ice_matls_sub, gac, 3);
+    t->requires(Task::NewDW,lb->vvel_FCMELabel,   ice_matls_sub, gac, 3);
+    t->requires(Task::NewDW,lb->wvel_FCMELabel,   ice_matls_sub, gac, 3);
+    t->computes(lb->turb_viscosity_CCLabel,   ice_matls_sub);
+    #ifdef NEARWALL
+    t->requires(Task::OldDW,MIlb->NC_CCweightLabel, press_matl, gac, 1);
+    t->requires(Task::NewDW,lb->vol_frac_CCLabel, mpm_matls_sub, Ghost::None);
+    t->requires(Task::NewDW,MIlb->gMassLabel, mpm_matls_sub,    gac, 1);
+    t->requires(Task::NewDW,MIlb->gVelocityLabel, mpm_matls_sub, Ghost::None);
+    #endif
+  } 
  
   t->computes(lb->mom_source_CCLabel);
   t->computes(lb->press_force_CCLabel);
@@ -2670,9 +2694,25 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     constSFCYVariable<double> press_diffY_FC;
     constSFCZVariable<double> press_diffZ_FC;
     Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn = Ghost::None;  
     new_dw->get(pressX_FC,lb->pressX_FCLabel, 0, patch, gac, 1);
     new_dw->get(pressY_FC,lb->pressY_FCLabel, 0, patch, gac, 1);
     new_dw->get(pressZ_FC,lb->pressZ_FCLabel, 0, patch, gac, 1);
+
+#ifdef NEARWALL
+    constCCVariable<double>   mpm_vol_frac;
+    int involve_mpm=0;
+    int* mpm_indx = new int[numMatls];
+    
+    for(int m = 0; m < numMatls; m++) {
+      Material* matl        = d_sharedState->getMaterial( m );
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+       if (mpm_matl){
+        involve_mpm++;
+        mpm_indx[involve_mpm] = matl->getDWIndex();
+       }
+     }
+#endif
   //__________________________________
   //  Matl loop 
     for(int m = 0; m < numMatls; m++) {
@@ -2681,7 +2721,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       indx = matl->getDWIndex();
 
       new_dw->get(rho_CC,  lb->rho_CCLabel,      indx,patch,gac,2);
-      new_dw->get(vol_frac,lb->vol_frac_CCLabel, indx,patch,Ghost::None, 0);
+      new_dw->get(vol_frac,lb->vol_frac_CCLabel, indx,patch,gn, 0);
       CCVariable<Vector>   mom_source, press_force;
       new_dw->allocateAndPut(mom_source,  lb->mom_source_CCLabel,  indx, patch);
       new_dw->allocateAndPut(press_force, lb->press_force_CCLabel, indx, patch); 
@@ -2711,10 +2751,76 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         old_dw->get(vel_CC,    lb->vel_CCLabel,     indx,patch,gac,2);
         new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,  indx,patch,gac,2);
         viscosity = ice_matl->getViscosity();
-        if(viscosity != 0.0){  
-          computeTauX(patch, rho_CC, sp_vol_CC, vel_CC,viscosity,dx, tau_X_FC);
-          computeTauY(patch, rho_CC, sp_vol_CC, vel_CC,viscosity,dx, tau_Y_FC);
-          computeTauZ(patch, rho_CC, sp_vol_CC, vel_CC,viscosity,dx, tau_Z_FC); 
+        if(viscosity != 0.0){
+          CCVariable<double> tot_viscosity;
+          new_dw->allocateTemporary(tot_viscosity, patch, gac, 1);
+          tot_viscosity.initialize(viscosity);
+          
+         if(d_Turb){
+          constSFCXVariable<double> uvel_FC;
+          constSFCYVariable<double> vvel_FC;
+          constSFCZVariable<double> wvel_FC;
+
+          CCVariable<double> turb_viscosity, turb_viscosity_copy;
+          new_dw->allocateTemporary(turb_viscosity, patch, gac, 1);
+          new_dw->allocateAndPut(turb_viscosity_copy,lb->turb_viscosity_CCLabel,indx, patch);
+          turb_viscosity.initialize(0.0);          
+
+          new_dw->get(uvel_FC,     lb->uvel_FCMELabel,            indx,patch,gac,3);  
+          new_dw->get(vvel_FC,     lb->vvel_FCMELabel,            indx,patch,gac,3);  
+          new_dw->get(wvel_FC,    lb->wvel_FCMELabel,            indx,patch,gac,3);
+
+          d_turbulence->computeTurbViscosity(new_dw,patch,vel_CC,uvel_FC,vvel_FC,
+                                                 wvel_FC,rho_CC,indx,d_sharedState,turb_viscosity);
+#ifdef NEARWALL
+          NearWallTreatment* wall_treatment = scinew NearWallTreatment();
+          wall_treatment->computeNearBoundaryWallValue(patch, vel_CC, rho_CC, indx, 
+                                                                                    viscosity, turb_viscosity);
+
+          if(involve_mpm > 0){           
+             constNCVariable<double> NC_CCweight, NCsolidMass;
+             constNCVariable<Vector> NCvelocity;
+             old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,  0,   patch,gac,1);
+             for (int i=1; i<=involve_mpm; i++){
+               new_dw->get(mpm_vol_frac, lb->vol_frac_CCLabel,mpm_indx[i],patch,gn 0);
+               new_dw->get(NCsolidMass, MIlb->gMassLabel, mpm_indx[i],patch,gac,1);
+               new_dw->get(NCvelocity,MIlb->gVelocityLabel, mpm_indx[i],patch,gn, 0);
+           
+               wall_treatment->computeNearSolidInterfaceValue(patch,vel_CC,rho_CC,
+               mpm_vol_frac,NC_CCweight,NCsolidMass,NCvelocity,viscosity,turb_viscosity);
+             }
+           }
+          delete [] mpm_indx;
+          delete wall_treatment;
+#endif           
+
+           setBC(turb_viscosity,    "zeroNeumann",  patch, d_sharedState, indx);
+           // make copy of turb_viscosity for visualization.
+          for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+            IntVector c = *iter;    
+                   turb_viscosity_copy[c] = turb_viscosity[c];         
+           }
+          //__________________________________
+           //  At patch boundaries you need to extend
+           // the computational footprint by one cell in ghostCells
+           CellIterator iter = patch->getCellIterator();
+           CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
+  
+           for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+             IntVector c = *iter;    
+             tot_viscosity[c] += turb_viscosity[c];         
+           } 
+         }//turb
+           
+          computeTauX(patch, rho_CC, sp_vol_CC, vel_CC,tot_viscosity,dx, tau_X_FC);
+          computeTauY(patch, rho_CC, sp_vol_CC, vel_CC,tot_viscosity,dx, tau_Y_FC);
+          computeTauZ(patch, rho_CC, sp_vol_CC, vel_CC,tot_viscosity,dx, tau_Z_FC); 
+        }
+        else{
+         if(d_Turb){
+           string warn="ERROR:\n input :viscosity can't be zero when calculate turbulence";
+           throw ProblemSetupException(warn);
+         }
         }
         include_term = 1.0;
         // This multiplies terms that are only included in the ice_matls
@@ -3996,7 +4102,7 @@ void ICE::computeTauX( const Patch* patch,
                        constCCVariable<double>& rho_CC,      
                        constCCVariable<double>& sp_vol_CC,   
                        constCCVariable<Vector>& vel_CC,      
-                       const double viscosity,                
+                       const CCVariable<double>& viscosity,                
                        const Vector dx,                       
                        SFCXVariable<Vector>& tau_X_FC)        
 {
@@ -4031,7 +4137,15 @@ void ICE::computeTauX( const Patch* patch,
     double rho_brack = (2.0 * rho_CC[left] * rho_CC[cell])/
                        (rho_CC[left] + rho_CC[cell]);
                        
-    double vol_frac_FC = rho_brack * sp_vol_CC[cell]; 
+    double vol_frac_FC = rho_brack * sp_vol_CC[cell];  
+     
+    double vis_FC = viscosity[left] + viscosity[cell];
+
+    if (vis_FC < 1.0e-20)
+      vis_FC = 0.0;
+    else
+      vis_FC = (2.0 * viscosity[left] * viscosity[cell])/
+                         (viscosity[left] + viscosity[cell]); 
 
     //__________________________________
     // - find indices of surrounding cells
@@ -4081,21 +4195,21 @@ void ICE::computeTauX( const Patch* patch,
     grad_vvel = (vvel_EC_top      - vvel_EC_bottom)  /delY;
     grad_wvel = (wvel_EC_front    - wvel_EC_back )   /delZ;
 
-    term1 = 2.0 * viscosity * grad_uvel;
-    term2 = (2.0/3.0) * viscosity * (grad_uvel + grad_vvel + grad_wvel);
+    term1 = 2.0 * vis_FC * grad_uvel;
+    term2 = (2.0/3.0) * vis_FC * (grad_uvel + grad_vvel + grad_wvel);
     tau_X_FC[cell].x( vol_frac_FC * (term1 - term2)); 
 
     //__________________________________
     //  tau_XY
     grad_1 = (uvel_EC_top      - uvel_EC_bottom)  /delY;
     grad_2 = (vel_CC[cell].y() - vel_CC[left].y())/delX;
-    tau_X_FC[cell].y(vol_frac_FC * viscosity * (grad_1 + grad_2)); 
+    tau_X_FC[cell].y(vol_frac_FC * vis_FC * (grad_1 + grad_2)); 
 
     //__________________________________
     //  tau_XZ
     grad_1 = (uvel_EC_front    - uvel_EC_back)    /delZ;
     grad_2 = (vel_CC[cell].z() - vel_CC[left].z())/delX;
-    tau_X_FC[cell].z(vol_frac_FC * viscosity * (grad_1 + grad_2)); 
+    tau_X_FC[cell].z(vol_frac_FC * vis_FC * (grad_1 + grad_2)); 
 
     
 //     if (i == 0 && k == 0){
@@ -4121,7 +4235,7 @@ void ICE::computeTauY( const Patch* patch,
                        constCCVariable<double>& rho_CC,      
                        constCCVariable<double>& sp_vol_CC,   
                        constCCVariable<Vector>& vel_CC,      
-                       const double viscosity,                
+                       const CCVariable<double>& viscosity,                
                        const Vector dx,                       
                        SFCYVariable<Vector>& tau_Y_FC)        
 {
@@ -4155,6 +4269,13 @@ void ICE::computeTauY( const Patch* patch,
                        (rho_CC[bottom] + rho_CC[cell]);
                        
     double vol_frac_FC = rho_brack * sp_vol_CC[cell]; 
+    
+    double vis_FC = viscosity[bottom] + viscosity[cell];
+    if (vis_FC < 1.0e-20)
+      vis_FC = 0.0;
+    else
+      vis_FC = (2.0 * viscosity[bottom] * viscosity[cell])/
+                         (viscosity[bottom] + viscosity[cell]); 
 
     //__________________________________
     // - find indices of surrounding cells
@@ -4205,22 +4326,22 @@ void ICE::computeTauY( const Patch* patch,
     grad_vvel = (vel_CC[cell].y() - vel_CC[bottom].y())/delY;
     grad_wvel = (wvel_EC_front    - wvel_EC_back )     /delZ;
 
-    term1 = 2.0 * viscosity * grad_vvel;
-    term2 = (2.0/3.0) * viscosity * (grad_uvel + grad_vvel + grad_wvel);
+    term1 = 2.0 * vis_FC * grad_vvel;
+    term2 = (2.0/3.0) * vis_FC * (grad_uvel + grad_vvel + grad_wvel);
     tau_Y_FC[cell].y(vol_frac_FC * (term1 - term2)); 
     
     //__________________________________
     //  tau_YX
     grad_1 = (vel_CC[cell].x() - vel_CC[bottom].x())/delY;
     grad_2 = (vvel_EC_right    - vvel_EC_left)      /delX;
-    tau_Y_FC[cell].x(vol_frac_FC * viscosity * (grad_1 + grad_2) ); 
+    tau_Y_FC[cell].x(vol_frac_FC * vis_FC * (grad_1 + grad_2) ); 
 
 
     //__________________________________
     //  tau_YZ
     grad_1 = (vvel_EC_front    - vvel_EC_back)      /delZ;
     grad_2 = (vel_CC[cell].z() - vel_CC[bottom].z())/delY;
-    tau_Y_FC[cell].z(vol_frac_FC * viscosity * (grad_1 + grad_2)); 
+    tau_Y_FC[cell].z(vol_frac_FC * vis_FC * (grad_1 + grad_2)); 
     
 //     if (i == 0 && k == 0){    
 //       cout<< cell<< " tau_YX: "<<tau_Y_FC[cell].x()<<
@@ -4244,7 +4365,7 @@ void ICE::computeTauZ( const Patch* patch,
                        constCCVariable<double>& rho_CC,      
                        constCCVariable<double>& sp_vol_CC,   
                        constCCVariable<Vector>& vel_CC,      
-                       const double viscosity,                
+                       const CCVariable<double>& viscosity,               
                        const Vector dx,                       
                        SFCZVariable<Vector>& tau_Z_FC)        
 {
@@ -4280,6 +4401,13 @@ void ICE::computeTauZ( const Patch* patch,
                        (rho_CC[back] + rho_CC[cell]);
                        
     double vol_frac_FC = rho_brack * sp_vol_CC[cell]; 
+    
+    double vis_FC = viscosity[back] + viscosity[cell];
+    if (vis_FC < 1.0e-20)
+      vis_FC = 0.0;
+    else
+      vis_FC = (2.0 * viscosity[back] * viscosity[cell])/
+                         (viscosity[back] + viscosity[cell]); 
 
     //__________________________________
     // - find indices of surrounding cells
@@ -4327,13 +4455,13 @@ void ICE::computeTauZ( const Patch* patch,
     //  tau_ZX
     grad_1 = (vel_CC[cell].x() - vel_CC[back].x()) /delZ;
     grad_2 = (wvel_EC_right    - wvel_EC_left)     /delX;
-    tau_Z_FC[cell].x(vol_frac_FC * viscosity * (grad_1 + grad_2)); 
+    tau_Z_FC[cell].x(vol_frac_FC * vis_FC * (grad_1 + grad_2)); 
 
     //__________________________________
     //  tau_ZY
     grad_1 = (vel_CC[cell].y() - vel_CC[back].y()) /delZ;
     grad_2 = (wvel_EC_top      - wvel_EC_bottom)   /delY;
-    tau_Z_FC[cell].y( vol_frac_FC * viscosity * (grad_1 + grad_2) ); 
+    tau_Z_FC[cell].y( vol_frac_FC * vis_FC * (grad_1 + grad_2) ); 
 
     //__________________________________
     //  tau_ZZ
@@ -4341,8 +4469,8 @@ void ICE::computeTauZ( const Patch* patch,
     grad_vvel = (vvel_EC_top      - vvel_EC_bottom)  /delY;
     grad_wvel = (vel_CC[cell].z() - vel_CC[back].z())/delZ;
 
-    term1 = 2.0 * viscosity * grad_wvel;
-    term2 = (2.0/3.0) * viscosity * (grad_uvel + grad_vvel + grad_wvel);
+    term1 = 2.0 * vis_FC * grad_wvel;
+    term2 = (2.0/3.0) * vis_FC * (grad_uvel + grad_vvel + grad_wvel);
     tau_Z_FC[cell].z( vol_frac_FC * (term1 - term2)); 
 
 //  cout<<"tau_ZX: "<<tau_Z_FC[cell].x()<<
