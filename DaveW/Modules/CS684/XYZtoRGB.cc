@@ -21,8 +21,8 @@
 #include <GL/glu.h>
 #include <GL/glx.h>
 #include <SCICore/Geom/GeomOpenGL.h>
-#include "/home/sci/u2/dmw/itcltk-8.0.4/include/tcl.h"
-#include "/home/sci/u2/dmw/itcltk-8.0.4/include/tk.h"
+#include "../../../dmw/itcltk-8.0.4/include/tcl.h"
+#include "../../../dmw/itcltk-8.0.4/include/tk.h"
 #undef Colormap
 #include <PSECore/Dataflow/Module.h>
 #include <SCICore/Geom/Color.h>

@@ -125,7 +125,7 @@ void initPackage(const clString& tcl) {
   RM("FEM",	      "ErrorMetric",		 make_ErrorMetric,	    tcl+"/ErrorMetric.tcl");
   RM("FEM",	      "FieldFromBasis",		 make_FieldFromBasis,	    "");
   RM("FEM",	      "RecipBasis",		 make_RecipBasis,	    "");
-  RM("FEM",	      "RemapVector",		 make_RemapVector,	    "");
+  RM("FEM",	      "RemapVector",		 make_RemapVector,	    tcl+"/RemapVector.tcl");
   RM("FEM",	      "VecSplit",		 make_VecSplit,	            "");
   
   // ISL

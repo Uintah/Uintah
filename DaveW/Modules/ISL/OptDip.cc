@@ -206,9 +206,11 @@ void OptDip::execute()
    cc_port->send(cc_vector);
    w_port->send(w_vector);
 
+#if 0
    cerr << "OptDip -- output direction: ("<<cc[0]<<","<<cc[1]<<","<<cc[2]<<")\n   w=";
    for (int ii=0; ii<n; ii++) cerr << w[ii]<<" ";
    cerr << "\n";
+#endif
 } 
 //---------------------------------------------------------------
 } // End namespace Modules
@@ -217,6 +219,9 @@ void OptDip::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/09/22 18:43:26  dmw
+// added new GUI
+//
 // Revision 1.2  1999/09/08 02:26:28  sparker
 // Various #include cleanups
 //

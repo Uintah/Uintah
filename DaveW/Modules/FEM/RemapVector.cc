@@ -12,17 +12,20 @@
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/ColumnMatrixPort.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 namespace DaveW {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
+using namespace SCICore::TclInterface;
 
 class RemapVector : public Module {
     ColumnMatrixIPort* irhsP;
     ColumnMatrixIPort* imapP;
     ColumnMatrixOPort* orhsP;
+    TCLint zeroGround;
 public:
     RemapVector(const clString& id);
     virtual ~RemapVector();
@@ -35,7 +38,7 @@ Module* make_RemapVector(const clString& id)
 }
 
 RemapVector::RemapVector(const clString& id)
-: Module("RemapVector", id, Filter)
+: Module("RemapVector", id, Filter), zeroGround("zeroGround", id, this)
 {
     // Create the input port
     irhsP=scinew ColumnMatrixIPort(this, "RHS in",ColumnMatrixIPort::Atomic);
@@ -64,14 +67,23 @@ void RemapVector::execute()
      
      int nr=map->nrows();
 
-     ColumnMatrix* orhs=scinew ColumnMatrix(nr);
-     double *vals=orhs->get_rhs();
-     ColumnMatrixHandle orhsH(orhs);
-
-     for (int i=0; i<nr; i++) {
-	 vals[i]=(*irhs)[(int)((*map)[i])];
+     ColumnMatrixHandle orhsH;
+     ColumnMatrix* orhs;
+     if (zeroGround.get()) {
+	 orhs=scinew ColumnMatrix(nr-1);
+	 double *vals=orhs->get_rhs();
+	 double v=(*irhs)[(int)((*map)[0])];
+	 for (int i=1; i<nr; i++) {
+	     vals[i-1]=(*irhs)[(int)((*map)[i])]-v;
+	 }
+     } else {
+	 orhs=scinew ColumnMatrix(nr);
+	 double *vals=orhs->get_rhs();
+	 for (int i=0; i<nr; i++) {
+	     vals[i]=(*irhs)[(int)((*map)[i])];
+	 }
      }
-
+     orhsH=orhs;
      orhsP->send(orhsH);
 }
 } // End namespace Modules
@@ -80,6 +92,9 @@ void RemapVector::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/09/22 18:43:26  dmw
+// added new GUI
+//
 // Revision 1.1  1999/09/02 04:49:25  dmw
 // more of Dave's modules
 //

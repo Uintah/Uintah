@@ -81,7 +81,7 @@ void RecipBasis::execute() {
     int nnodes=mesh_in->nodes.size();
     int nelems=mesh_in->elems.size();
     int counter=0;
-    DenseMatrix *bmat=new DenseMatrix((nelecs-1)*3, nelems);
+    DenseMatrix *bmat=new DenseMatrix(nelems, (nelecs-1)*3);
 
     while (counter<(nelecs-1)) {
 	// send rhs
@@ -101,7 +101,7 @@ void RecipBasis::execute() {
 	}
 	for (i=0; i<nelems; i++)
 	    for (int j=0; j<3; j++)
-		(*bmat)[counter*3+i][j]=-(*sol_in.get_rep())[i][j];
+		(*bmat)[i][counter*3+j]=-(*sol_in.get_rep())[i][j];
 	counter++;
     }
     
@@ -113,6 +113,9 @@ void RecipBasis::execute() {
 
 //
 // $Log$
+// Revision 1.4  1999/09/22 18:43:25  dmw
+// added new GUI
+//
 // Revision 1.3  1999/09/16 00:36:55  dmw
 // added new Module that Chris Butson will work on (DipoleInSphere) and fixed SRCDIR references in DaveW makefiles
 //
