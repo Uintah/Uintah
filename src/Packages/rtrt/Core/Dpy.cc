@@ -176,8 +176,8 @@ Dpy::Dpy( Scene* scene, RTRT* rtrt_engine, char* criteria1, char* criteria2,
 	  int nworkers, bool bench, int ncounters, int c0, int c1,
 	  float, float, bool display_frames, 
 	  int pp_size, int scratchsize, bool fullscreen, bool frameless,
-	  bool rserver, bool stereo)
-  : DpyBase("Real-time Ray Tracer", DoubleBuffered, false),
+	  bool rserver, bool stereo):
+  DpyBase("Real-time Ray Tracer", DoubleBuffered, false),
   fullScreenMode_( fullscreen ),
   parentSema("Dpy window wait", 0),
   doAutoJitter_( false ),
@@ -186,7 +186,8 @@ Dpy::Dpy( Scene* scene, RTRT* rtrt_engine, char* criteria1, char* criteria2,
   turnOnLight_( false ), turnOffLight_( false ),
   toggleRenderWindowSize_(fullscreen), renderWindowSize_(1),
   turnOnTransmissionMode_(false), 
-  numThreadsRequested_(nworkers), changeNumThreads_(false),
+  numThreadsRequested_(nworkers), numThreadsRequested_new(nworkers),
+  changeNumThreads_(false),
   stealth_(NULL), attachedObject_(NULL), holoToggle_(false),
   scene(scene), rtrt_engine(rtrt_engine),
   criteria1(criteria1), criteria2(criteria2),
@@ -268,7 +269,7 @@ void
 Dpy::register_worker(int i, Worker* worker)
 {
   io_lock_.lock();
-  cout << "registering worker " << i << "-" << worker << "\n";
+  cout << "registering worker " << i << ", PID: " << worker << "\n";
   io_lock_.unlock();
   workers_[i] = worker;
 }
@@ -531,7 +532,12 @@ Dpy::checkGuiFlags()
     priv->exposed=false;
   }
 
-  // If we've been told to exit go ahead and check this
+  if (numThreadsRequested_new != numThreadsRequested_)
+    numThreadsRequested_ = numThreadsRequested_new;
+  
+  // If we've been told to exit go ahead and check this.  This code
+  // needs to come after the check for numThreadsRequested_new,
+  // because it could override this for us.
   if (rtrt_engine->exit_engine) {
     numThreadsRequested_ = 0;
   }
@@ -613,15 +619,15 @@ Dpy::renderFrame() {
 
   // If we need to change the number of worker threads:
   if( changeNumThreads_ ) {
-    cout << "changeNumThreads\n";
+    //    cout << "changeNumThreads\n";
     int oldNumWorkers = nworkers;
     nworkers = numThreadsRequested_;
 
-    if( oldNumWorkers < numThreadsRequested_ ) { // Create more workers
-      int numNeeded     = numThreadsRequested_ - oldNumWorkers;
+    if( oldNumWorkers < nworkers ) { // Create more workers
+      int numNeeded     = nworkers - oldNumWorkers;
       int stopAt        = oldNumWorkers + numNeeded;
 
-      workers_.resize( numThreadsRequested_ );
+      workers_.resize( nworkers );
       for( int cnt = oldNumWorkers; cnt < stopAt; cnt++ ) {
 	char buf[100];
 	sprintf(buf, "worker %d", cnt);
@@ -629,7 +635,7 @@ Dpy::renderFrame() {
 				     pp_size_, scratchsize_,
 				     ncounters, c0, c1);
 
-	cout << "created worker: " << cnt << ", " << worker << "\n";
+        //	cout << "created worker: " << cnt << ", " << worker << "\n";
 	Thread * thread = new Thread( worker, buf);
 	thread->detach();
       }
@@ -641,7 +647,8 @@ Dpy::renderFrame() {
       //cout << "worker " << cnt << ": " << workers_[cnt] << "\n";
       //}
     }
-    cout << "sync with workers for change: " << oldNumWorkers+1 << "\n";
+    //    cout << "sync with workers for change: " << oldNumWorkers+1 << "\n";
+    cout << "Number of workers is now "<<nworkers<<"\n";
     addSubThreads_->wait( oldNumWorkers + 1 );
     changeNumThreads_ = false;
   }
@@ -664,7 +671,6 @@ Dpy::renderFrame() {
 
   changed = checkGuiFlags();
 
-  //  scene->refill_work(rendering_scene, numThreadsRequested_);
   scene->refill_work(rendering_scene, nworkers);
 
   if(!changed && !scene->no_aa){
@@ -895,3 +901,7 @@ void Dpy::wait_on_close() {
 #endif
 }
 
+void Dpy::change_nworkers(int num) {
+  if (numThreadsRequested_new+num >= 1)
+    numThreadsRequested_new += num;
+}

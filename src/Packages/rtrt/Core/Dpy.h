@@ -46,17 +46,17 @@ struct DpyPrivate;
 // WARNING: Currently there can only be ONE Dpy at a time!
 //////////////////////////////////////////////////////////
 
-  class Dpy : public DpyBase {
+class Dpy : public DpyBase {
 
   friend class Gui;
   friend class DpyGui;
   friend class Worker;
 
   bool       fullScreenMode_;
-    Window parentWindow;
-    int nstreams;
-    Semaphore parentSema;
-
+  Window parentWindow;
+  int nstreams;
+  Semaphore parentSema;
+  
   // Begin Gui Interaction Flags:
   bool       doAutoJitter_; // Jitter when not moving
   int        shadowMode_;  // Must be an int so GLUI can write to it.
@@ -75,7 +75,12 @@ struct DpyPrivate;
 
   bool       turnOnTransmissionMode_;
 
+  // If you want to change the number of threads externally use
+  // numThreadsRequested_new or change_nworkers().  Modifying
+  // numThreadsRequested_ externally could cause race conditions that
+  // lock up the renderer.
   int        numThreadsRequested_;
+  int        numThreadsRequested_new;
   bool       changeNumThreads_;
 
   Camera   * guiCam_;
@@ -100,12 +105,12 @@ struct DpyPrivate;
   int        pp_size_;
   int        scratchsize_;
   bool       bench;
-    // Number of frames to warmup with before starting the bench mark.
-    int bench_warmup;
-    // This is the number of frames to bench + warmup frames.
-    int bench_num_frames;
-    // Please exit rtrt after doing the bench mark
-    bool exit_after_bench;
+  // Number of frames to warmup with before starting the bench mark.
+  int bench_warmup;
+  // This is the number of frames to bench + warmup frames.
+  int bench_num_frames;
+  // Please exit rtrt after doing the bench mark
+  bool exit_after_bench;
   RServer* rserver;
 
   Stats    * drawstats[2];
@@ -132,13 +137,13 @@ struct DpyPrivate;
 
   bool checkGuiFlags();
 
-    // Call this function when you want to start a benchmark
-    void start_bench(int num_frames=100, int warmup=5);
-    // Call this to stop the currently in progress benchmark
-    void stop_bench();
+  // Call this function when you want to start a benchmark
+  void start_bench(int num_frames=100, int warmup=5);
+  // Call this to stop the currently in progress benchmark
+  void stop_bench();
 
-    // Inherited from DpyBase
-    virtual bool should_close();
+  // Inherited from DpyBase
+  virtual bool should_close();
     
 public:
   Dpy(Scene* scene, RTRT* rtrt_endinge, char* criteria1, char* criteria2,
@@ -147,14 +152,13 @@ public:
       int pp_size, int scratchsize, bool fullscreen, bool frameless,
       bool rserver, bool stereo=false);
   virtual ~Dpy();
-    void release(Window win);
+  void release(Window win);
 
   virtual void run();
   void get_barriers(Barrier *& mainBarrier, Barrier *& addSubThreads);
 
   const Camera * getGuiCam() { return guiCam_; }
 
-  // <<<< bigler >>>>
   int get_num_procs();
   
   int doing_frameless() { return frameless; }
@@ -163,6 +167,8 @@ public:
   void register_worker(int i, Worker* worker);
 
   void wait_on_close();
+
+  void change_nworkers(int num);
 };
 
 } // end namespace rtrt
