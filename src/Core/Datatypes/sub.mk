@@ -20,7 +20,6 @@ SRCS += $(SRCDIR)/BasicSurfaces.cc	    \
         $(SRCDIR)/Matrix.cc		    \
         $(SRCDIR)/Mesh.cc		    \
         $(SRCDIR)/MeshGeom.cc		    \
-        $(SRCDIR)/MeshRG.cc		    \
         $(SRCDIR)/Path.cc		    \
         $(SRCDIR)/PointCloudGeom.cc	    \
         $(SRCDIR)/PropertyManager.cc	    \

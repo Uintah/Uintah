@@ -16,7 +16,6 @@
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Geometry/Point.h>
 
 
 namespace SCIRun {
@@ -75,11 +74,11 @@ class SCICORESHARE MeshRG : public Datatype
   };
 
 
-  struct Cell3Iter : public NCIter
+  struct CellIter : public NCIter
   {
-    Cell3Iter(const MeshRG *m, int i, int j, int k) : NCIter(m, i, j, k) {}
+    CellIter(const MeshRG *m, int i, int j, int k) : NCIter(m, i, j, k) {}
 
-    Cell3Iter &operator++()
+    CellIter &operator++()
     {
       i_++;
       if (i_ >= mesh_->nx_)
@@ -97,11 +96,9 @@ class SCICORESHARE MeshRG : public Datatype
   };
 
 public:
-  friend class NodeIter;
-  friend class Cell3Iter;
 
   typedef IPoint          node_index;
-  typedef NodeIter       node_iterator;
+  typedef NodeIter        node_iterator;
 	                
   typedef void *          edge_index; 
   typedef void *          edge_iterator;
@@ -110,7 +107,7 @@ public:
   typedef void *          face_iterator;
 	                
   typedef IPoint          cell_index;
-  typedef Cell3Iter       cell_iterator;
+  typedef CellIter        cell_iterator;
 
 
   MeshRG(int x, int y, int z);
