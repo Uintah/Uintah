@@ -28,6 +28,7 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Filters
 
 
 SRCS     += \
+	$(SRCDIR)/NrrdCmedian.cc\
 	$(SRCDIR)/NrrdConvert.cc\
 	$(SRCDIR)/NrrdCrop.cc\
 	$(SRCDIR)/NrrdJoin.cc\

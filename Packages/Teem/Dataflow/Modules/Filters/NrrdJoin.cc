@@ -139,7 +139,7 @@ NrrdJoin::execute()
   }
   
   
-  Array1<Nrrd*> arr(nrrds.size());
+  vector<Nrrd*> arr(nrrds.size());
 
   if (do_join) {
 
