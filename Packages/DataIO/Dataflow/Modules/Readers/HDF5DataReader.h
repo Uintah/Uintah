@@ -102,6 +102,7 @@ protected:
   int increment(int which, int lower, int upper);
 
 protected:
+  GuiInt         power_app_;
   GuiDouble      selectable_min_;
   GuiDouble      selectable_max_;
   GuiInt         selectable_inc_;

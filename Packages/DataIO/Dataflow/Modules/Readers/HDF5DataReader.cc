@@ -64,6 +64,7 @@ DECLARE_MAKER(HDF5DataReader)
 
 HDF5DataReader::HDF5DataReader(GuiContext *context)
   : Module("HDF5DataReader", context, Source, "Readers", "DataIO"),
+    power_app_(context->subVar("power_app")),
     selectable_min_(ctx->subVar("selectable_min")),
     selectable_max_(ctx->subVar("selectable_max")),
     selectable_inc_(ctx->subVar("selectable_inc")),
@@ -197,7 +198,8 @@ void HDF5DataReader::execute() {
   string datasets(datasets_.get());
 
   if( filename.length() == 0 ) {
-    error( string("No HDF5 file selected.") );
+    if( !power_app_.get() )
+      error( string("No HDF5 file selected.") );
     return;
   }
   
@@ -290,7 +292,7 @@ void HDF5DataReader::execute() {
   vector< string > datasetList;
   
   parseDatasets( datasets, pathList, datasetList );
-  
+
   if( animate_.get() ) {
 
     vector< vector<string> > frame_paths;

@@ -81,6 +81,7 @@ public:
 
 protected:
 
+  GuiInt    power_app_;
   GuiString loadServer_;
   GuiString loadTree_;
   GuiString loadShot_;
@@ -138,6 +139,8 @@ DECLARE_MAKER(MDSPlusDataReader)
 
 MDSPlusDataReader::MDSPlusDataReader(GuiContext *context)
   : Module("MDSPlusDataReader", context, Source, "Readers", "DataIO"),
+    power_app_(context->subVar("power_app")),
+
     loadServer_(context->subVar("load-server")),
     loadTree_(context->subVar("load-tree")),
     loadShot_(context->subVar("load-shot")),
@@ -334,7 +337,7 @@ void MDSPlusDataReader::execute(){
     }
 
     tmpStr = gSignal_[ic]->get();
-    if( tmpStr != servers_[ic] ) {
+    if( tmpStr != signals_[ic] ) {
       signals_[ic] = tmpStr;
       update = true;
     }
