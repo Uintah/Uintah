@@ -10,6 +10,7 @@
 #include <Core/Thread/Semaphore.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
 #include <string>
 #include <iostream>
 using std::string;
