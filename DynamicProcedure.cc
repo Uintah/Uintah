@@ -2307,7 +2307,9 @@ DynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
       cellInfoP.setData(scinew CellInformation(patch));
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
+#if !defined(PetscFilter)
     CellInformation* cellinfo = cellInfoP.get().get_rep();
+#endif
     
     int numGC = 1;
     IntVector idxLo = patch->getGhostCellLowIndex(numGC);
