@@ -107,7 +107,7 @@ ImplicitParticleCreator::createParticles(MPMMaterial* matl,
             for(int iz=0;iz < ppc.z(); iz++){
               IntVector idx(ix, iy, iz);
               Point p = lower + dxpp*idx;
-              IntVector cell_idx = iter.index();
+              IntVector cell_idx = *iter;
               // If the assertion fails then we may just need to change
               // the format of particle ids such that the cell indices
               // have more bits.
