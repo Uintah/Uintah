@@ -153,7 +153,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
 
 
-  environ['MPI_TYPE_MAX'] = '10000'
+  environ['MPI_TYPE_MAX'] = '200000'
 
   print ""
   if solotest == "":
@@ -236,7 +236,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
     inputxml = path.basename(input(test))
     system("cp %s/%s %s" % (inputsdir, input(test), inputxml))
-
+    symlink(inputpath, "inputs")
     # Run normal test
     environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, ALGO, testname)
     rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, tests_to_do, "no", newalgo)
@@ -249,6 +249,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
           failcode = 1
       mkdir("restart")
       chdir("restart")
+      symlink(inputpath, "inputs")
       # call the callback function before running each test
       callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism);
 
