@@ -1053,8 +1053,8 @@ void MPMArches::interpolateNCToCC(const ProcessorGroup*,
 		  patch, Ghost::AroundNodes, numGhostCells);
 
       if (d_calcEnergyExchange)
-	new_dw->get(gTemperature, Mlb->gTemperatureLabel, matlindex, 
-		    patch, Ghost::AroundNodes, numGhostCells);
+      	new_dw->get(gTemperature, Mlb->gTemperatureLabel, matlindex, 
+      		    patch, Ghost::AroundNodes, numGhostCells);
       
       IntVector nodeIdx[8];
       
@@ -1074,7 +1074,8 @@ void MPMArches::interpolateNCToCC(const ProcessorGroup*,
 
 	}
 	vel_CC[*iter]      /= (cmass[*iter]     + d_SMALL_NUM);
-	tempSolid_CC[*iter]   /= (cmass[*iter]     + d_SMALL_NUM);
+	if (d_calcEnergyExchange) 
+	  tempSolid_CC[*iter]   /= (cmass[*iter]     + d_SMALL_NUM);
       }
       
       new_dw->put(cmass,     d_MAlb->cMassLabel,    
@@ -1084,8 +1085,8 @@ void MPMArches::interpolateNCToCC(const ProcessorGroup*,
       new_dw->put(vel_CC,    d_MAlb->vel_CCLabel,   
 		  matlindex, patch);
       if (d_calcEnergyExchange) 
-	new_dw->put(tempSolid_CC, d_MAlb->tempSolid_CCLabel,   
-		    matlindex, patch);
+      	new_dw->put(tempSolid_CC, d_MAlb->tempSolid_CCLabel,   
+      		    matlindex, patch);
 
     }
   }
@@ -2889,12 +2890,22 @@ void MPMArches::putAllForcesOnNC(const ProcessorGroup*,
 
       }
 
+      // debug for now: set acc_archesNC to zero so that MPM does
+      // not feel anything from the object; do same with heat transfer
+
+      acc_archesNC.initialize(zero);
+
       new_dw->put(acc_archesNC, d_MAlb->AccArchesNCLabel,  matlindex, 
 		  patch);
 
-      if (d_calcEnergyExchange)
+      if (d_calcEnergyExchange) {
+
+	// debug for now
+	htrate_nc.initialize(0.0);
+
 	new_dw->put(htrate_nc, d_MAlb->heaTranSolid_NCLabel, matlindex, 
 		    patch);
+      }
 
     }
   }
