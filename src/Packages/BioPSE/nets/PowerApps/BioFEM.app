@@ -1200,10 +1200,10 @@ class BioFEMApp {
  
 	if {[set $mods(ShowField-Isosurface)-faces-on] == 1} {
 	    foreach w [winfo children $isosurface_tab1] {
-		activate_widget $w
+		enable_widget $w
 	    }
 	    foreach w [winfo children $isosurface_tab2] {
-		activate_widget $w
+		enable_widget $w
 	    }
 	} else {
 	    foreach w [winfo children $isosurface_tab1] {

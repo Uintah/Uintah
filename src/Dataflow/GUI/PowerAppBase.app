@@ -706,12 +706,12 @@ class PowerAppBase {
 
 
     ###########################
-    ### activate_widget
+    ### enable_widget
     ###########################
-    # This method activates a widget and changes the foreground color to be black.
+    # This method enable a widget and changes the foreground color to be black.
     # If it is a Next or Execute button, it changes the foreground color to be
     # the appropriate color
-    method activate_widget {w} {
+    method enable_widget {w} {
     	set has_state_option 0
     	set has_foreground_option 0
         set has_text_option 0
@@ -752,7 +752,7 @@ class PowerAppBase {
         }
 
         foreach widg [winfo children $w] {
-	     activate_widget $widg
+	     enable_widget $widg
         }
     }
 
@@ -1110,6 +1110,10 @@ class PowerAppBase {
 		{ 239 253 174 }}}
 	} elseif {$which == "Blue-to-Red"} {
 	    set color { "Blue-to-Red" { { 0 0 255 } { 255 255 255} { 255 0 0 } } }
+	} else {
+	    puts stderr "Bad colormap name"
+	    puts stderr $which
+	    return
 	}
 
         set colorMap [$this set_color_map $color]
