@@ -314,6 +314,7 @@ FieldExtractor::execute()
             fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::float_type:
         {
           NCVariable<float> gridVar;
@@ -337,6 +338,7 @@ FieldExtractor::execute()
             fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::int_type:
         {
           NCVariable<int> gridVar;
@@ -360,6 +362,7 @@ FieldExtractor::execute()
             fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::long64_type:
         {
           NCVariable<long64> gridVar;
@@ -383,8 +386,9 @@ FieldExtractor::execute()
             fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::Vector:
-        {       
+        {
           NCVariable<Vector> gridVar;
           if(get_all_levels){
             GridP newGrid = build_minimal_patch_grid( grid );
@@ -408,8 +412,9 @@ FieldExtractor::execute()
             fHandle_ = vfd;
           }
         }
+        break;
       case TypeDescription::Matrix3:
-        {       
+        {
           NCVariable<Matrix3> gridVar;
           if(get_all_levels){
             GridP newGrid = build_minimal_patch_grid( grid );
@@ -433,6 +438,7 @@ FieldExtractor::execute()
             //  DumpAllocator(default_allocator, "TensorDump.allocator");
           }
         }
+        break;
       default:
         error("NCVariable<?>  Unknown scalar type.");
         //        AllocatorSetDefaultTag(old_tag1);
