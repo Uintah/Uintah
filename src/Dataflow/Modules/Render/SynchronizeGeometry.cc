@@ -254,7 +254,7 @@ SynchronizeGeometry::forward_saved_msg()
     {
       flush_port(i);
 
-      // TODO:  Unclear why we flush again.  - MWC
+#if 0
       GeometryComm *tmp_gmsg = msg_heads_[i];
       while (tmp_gmsg &&
 	     (tmp_gmsg->type == MessageTypes::GeometryFlush ||
@@ -263,6 +263,7 @@ SynchronizeGeometry::forward_saved_msg()
 	flush_port(i);
 	tmp_gmsg = msg_heads_[i];
       }
+#endif
     }
   }
 }
@@ -307,6 +308,7 @@ SynchronizeGeometry::flush_port(int portno)
     gmsg = next;
   }
 }
+
 
 
 void
