@@ -59,6 +59,12 @@ public:
     return true;
   }
 
+  MaskedLatticeVol() : LatticeVol<T>() {}
+  MaskedLatticeVol(LatVolMeshHandle mesh, Field::data_location data_at)
+    : LatticeVol<T>(mesh, data_at)
+  {
+    resize_fdata();
+  }
 
   virtual ~MaskedLatticeVol() {};
 
@@ -80,25 +86,25 @@ public:
   void resize_fdata() {
     if (data_at() == NODE)
     {
-      typename mesh_type::Node::size_type ssize;
+      LatticeVol<T>::mesh_type::Node::size_type ssize;
       get_typed_mesh()->size(ssize);
       mask_.resize(ssize);
     }
     else if (data_at() == EDGE)
     {
-      typename mesh_type::Edge::size_type ssize;
+      LatticeVol<T>::mesh_type::Edge::size_type ssize;
       get_typed_mesh()->size(ssize);
       mask_.resize(ssize);
     }
     else if (data_at() == FACE)
     {
-      typename mesh_type::Face::size_type ssize;
+      LatticeVol<T>::mesh_type::Face::size_type ssize;
       get_typed_mesh()->size(ssize);
       mask_.resize(ssize);
     }
     else if (data_at() == CELL)
     {
-      typename mesh_type::Cell::size_type ssize;
+      LatticeVol<T>::mesh_type::Cell::size_type ssize;
       get_typed_mesh()->size(ssize);
       mask_.resize(ssize);
     }
@@ -114,28 +120,12 @@ public:
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
   virtual const TypeDescription* get_type_description() const;
 
-  MaskedLatticeVol();
-  MaskedLatticeVol(LatVolMeshHandle mesh, Field::data_location data_at);
 private:
   static Persistent *maker();
 };
 
 // Pio defs.
 const int MASKED_LATTICE_VOL_VERSION = 1;
-
-template <class Data>
-MaskedLatticeVol<Data>::MaskedLatticeVol(LatVolMeshHandle mesh,
-					 Field::data_location data_at)
-  : LatticeVol<Data>(mesh, data_at)
-{
-  resize_fdata();
-}
-
-template <class Data>
-MaskedLatticeVol<Data>::MaskedLatticeVol()
-  : LatticeVol<Data>()
-{
-}
 
 template <class T>
 Persistent*
