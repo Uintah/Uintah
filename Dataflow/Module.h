@@ -26,6 +26,7 @@ class Network;
 class NetworkEditor;
 class OPort;
 class Vector;
+class GeomPick;
 
 class Module : public TCL {
 public:
@@ -70,9 +71,10 @@ public:
 
     // Callbacks
     virtual void connection(Module::ConnectionMode, int, int);
-    virtual void geom_pick(void*);
-    virtual void geom_release(void*);
-    virtual void geom_moved(int, double, const Vector&, void*);
+    virtual void geom_pick(GeomPick*, void*);
+    virtual void geom_release(GeomPick*, void*);
+    virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
+    virtual void widget_moved();
 
     // Port manipulations
     void add_iport(IPort*);

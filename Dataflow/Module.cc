@@ -19,6 +19,7 @@
 #include <Dataflow/Network.h>
 #include <Dataflow/NetworkEditor.h>
 #include <Dataflow/Port.h>
+#include <Geom/Pick.h>
 #include <TCL/TCL.h>
 
 #include <stdlib.h>
@@ -150,19 +151,24 @@ void Module::want_to_execute()
     netedit->mailbox.send(new Module_Scheduler_Message);
 }
 
-void Module::geom_pick(void*)
+void Module::geom_pick(GeomPick*, void*)
 {
     cerr << "Caught stray pick event!\n";
 }
 
-void Module::geom_release(void*)
+void Module::geom_release(GeomPick*, void*)
 {
     cerr << "Caught stray release event!\n";
 }
 
-void Module::geom_moved(int, double, const Vector&, void*)
+void Module::geom_moved(GeomPick*, int, double, const Vector&, void*)
 {
     cerr << "Caught stray moved event!\n";
+}
+
+void Module::widget_moved()
+{
+    cerr << "Caught stray widget_moved event!\n";
 }
 
 void Module::tcl_command(TCLArgs& args, void*)
