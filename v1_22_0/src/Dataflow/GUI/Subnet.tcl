@@ -993,7 +993,7 @@ proc subDATADIRandDATASET { val } {
 	    set first [string first $tmp $tmpval]
 	}
     }
-    return $val
+    return $tmpval
 }
 
 
