@@ -92,7 +92,9 @@ public:
   virtual bool getValid1(int x, T&);
   virtual bool getValid2(int x, int y, T&);
   virtual bool getValid3(int x, int y, int z, T&);
-
+  const unsigned int* getValidBits(int&);
+  void copyValidBits(const unsigned int*, int);
+  
   virtual string getInfo();
 
   //////////
@@ -108,9 +110,9 @@ public:
   virtual int ysize() const { return d_ny; }
   virtual int zsize() const { return d_nz; }
   virtual int dimension() const { return d_dim; }
-
+  virtual void initialize(const T&);
 protected:
-
+  
   // GROUP: Protected member functions
   //////////
   // -- returns size of validBits array in number of int's
@@ -566,24 +568,24 @@ DiscreteAttrib<T>::validSet(int pos, bool bitVal){
 template <class T> inline void
 DiscreteAttrib<T>::setValidBit(int ix, bool bitVal){
   ASSERTEQ(d_dim, 1);
-  CHECKARRAYBOUNDS(ix, 0, d_nx-1);
+  CHECKARRAYBOUNDS(ix, 0, d_nx);
   validSet(ix, bitVal);
 }
 
 template <class T> inline void
 DiscreteAttrib<T>::setValidBit(int ix, int iy, bool bitVal){
   ASSERTEQ(d_dim, 2);
-  CHECKARRAYBOUNDS(ix, 0, d_nx-1);
-  CHECKARRAYBOUNDS(iy, 0, d_ny-1);
+  CHECKARRAYBOUNDS(ix, 0, d_nx);
+  CHECKARRAYBOUNDS(iy, 0, d_ny);
   validSet(iy*(d_nx)+ix, bitVal);
 }
 
 template <class T> inline void
 DiscreteAttrib<T>::setValidBit(int ix, int iy, int iz, bool bitVal){
   ASSERTEQ(d_dim, 3);
-  CHECKARRAYBOUNDS(ix, 0, d_nx-1);
-  CHECKARRAYBOUNDS(iy, 0, d_ny-1);
-  CHECKARRAYBOUNDS(iz, 0, d_nz-1);
+  CHECKARRAYBOUNDS(ix, 0, d_nx);
+  CHECKARRAYBOUNDS(iy, 0, d_ny);
+  CHECKARRAYBOUNDS(iz, 0, d_nz);
   validSet((iz*d_ny+iy)*d_nx+ix, bitVal);
 }
 
@@ -644,6 +646,35 @@ DiscreteAttrib<T>::getValid3(int ix, int iy, int iz, T& res){
   return testValidBit(iz*(d_nx*d_ny)+iy*(d_nx)+ix);
 }
 
+template <class T> void
+DiscreteAttrib<T>::initialize(const T& val){
+  int i, j, k;
+  if (d_dim==1)
+    for (i=0; i<d_nx; i++)
+      fset1(i, val);
+  else if (d_dim==2)
+    for (i=0; i<d_nx; i++)
+      for (j=0; j<d_ny; j++)
+	fset2(i, j, val);
+  else
+    for (k=0; k<d_nz; k++)
+      for (j=0; j<d_ny; j++)
+	for (i=0; i<d_nx; i++)
+	  fset3(i, j, k, val); 
+}
+
+template <class T> const unsigned int*
+DiscreteAttrib<T>::getValidBits(int& nalloc){
+  nalloc = d_nalloc;
+  return d_pValidBits;
+}
+ 
+template <class T> void 
+DiscreteAttrib<T>::copyValidBits(const unsigned int* pValidBits, int nalloc){
+  resizeValidBits(nalloc);
+  memcpy(d_pValidBits, pValidBits, nalloc*sizeof(unsigned int));
+}
+  
 } // End namespace SCIRun
 
 #endif
