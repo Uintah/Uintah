@@ -232,6 +232,63 @@ TCLInterface::set(const std::string& name, const std::string& value)
 
 
 bool
+TCLInterface::get_map(const std::string& name, 
+		      const std::string& key, 
+		      std::string& value)
+{
+  TCLTask::lock();
+  const char* l=Tcl_GetVar2(the_interp, 
+			    ccast_unsafe(name),
+			    ccast_unsafe(key),
+			    TCL_GLOBAL_ONLY);
+  value = l?l:"";
+  TCLTask::unlock();
+  return l;
+}
+		      
+bool
+TCLInterface::set_map(const std::string& name, 
+		      const std::string& key, 
+		      const std::string& value)
+{
+  TCLTask::lock();
+  const char *l = Tcl_SetVar2(the_interp, 
+			      ccast_unsafe(name),
+			      ccast_unsafe(key),
+			      ccast_unsafe(value), 
+			      TCL_GLOBAL_ONLY);
+  TCLTask::unlock();
+  return l;
+}
+
+
+bool
+TCLInterface::extract_element_from_list(const std::string& contents, 
+					const vector <int>& indexes,
+					std::string& value)
+{
+  string command = "lsubindex {"+contents+"}";
+  const unsigned int last = indexes.size()-1;
+  for (unsigned int i = 0; i <= last; ++i)
+    command += " "+to_string(indexes[last-i]);
+  return eval(command, value);
+}
+
+
+bool
+TCLInterface::set_element_in_list(std::string& contents, 
+				  const vector <int>& indexes,
+				  const std::string& value)
+{
+  string command = "lreplacesubindex {"+contents+"} "+value;
+  const unsigned int last = indexes.size()-1;
+  for (unsigned int i = 0; i <= last; ++i)
+    command += " "+to_string(indexes[last - i]);
+  return eval(command, contents);
+}
+
+
+bool
 TCLInterface::complete_command(const string &command)
 {
   const int len = command.length()+1;

@@ -64,8 +64,25 @@ namespace SCIRun {
     virtual void unlock();
     virtual GuiContext* createContext(const string& name);
     virtual void postMessage(const string& errmsg, bool err = false);
+    // Get TCL array var, which resembles a STL a map<string, string>
     virtual bool get(const std::string& name, std::string& value);
     virtual void set(const std::string& name, const std::string& value);
+    // Get TCL array var, which resembles a STL a map<string, string>
+    virtual bool get_map(const std::string& name, 
+			 const std::string &key,
+			 std::string& value);
+    virtual bool set_map(const std::string& name, 
+			 const std::string &key,
+			 const std::string& value);
+
+    // Get an element of regular tcl list
+    virtual bool extract_element_from_list(const std::string& list_contents, 
+					   const vector<int> &indexes, 
+					   std::string& value);
+    virtual bool set_element_in_list(std::string& list_contents, 
+				     const vector<int> &indexes, 
+				     const std::string& value);
+
     bool complete_command(const string&);
   };
 }

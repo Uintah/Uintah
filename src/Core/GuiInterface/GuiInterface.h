@@ -45,6 +45,7 @@
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
+#include <vector>
 #include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
@@ -64,8 +65,27 @@ namespace SCIRun {
     virtual void unlock() = 0;
     virtual GuiContext* createContext(const string& name) = 0;
     virtual void postMessage(const string& errmsg, bool err = false) = 0;
+    // Get regular var as string
     virtual bool get(const std::string& name, std::string& value) = 0;
     virtual void set(const std::string& name, const std::string& value) = 0;
+
+    // Get TCL array var, which resembles a STL a map<string, string>
+    virtual bool get_map(const std::string& name, 
+			 const std::string &key,
+			 std::string& value) = 0;
+    virtual bool set_map(const std::string& name, 
+			 const std::string &key,
+			 const std::string& value) =0;
+
+    // Get an element of regular tcl list
+    virtual bool extract_element_from_list(const std::string& list_contents, 
+					   const vector<int> &indexes, 
+					   std::string& value) = 0;
+    virtual bool set_element_in_list(std::string& list_contents, 
+				     const vector<int> &indexes, 
+				     const std::string& value) = 0;
+
+
     static GuiInterface* getSingleton();
   protected:
     GuiInterface();
