@@ -491,7 +491,6 @@ case $1 in
     sci_check_tools=yes
   ;;
   Fusion)
-    sci_check_plplot=yes
   ;;
   DataIO)
     sci_check_mdsplus=yes
