@@ -418,13 +418,59 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	    frame $w.vars -borderwidth 3 -relief ridge
 	    pack $w.vars -side top -fill x -padx 2 -pady 2
 	    
+            # Create a scrolling pane within this frame
+            # Width and height set to some default, no other options set yet.
+            # These will be dyanimcailly determined and set after all the buttons
+            # have been placed into the scroll pane.
+            canvas $w.vars.canvas -width 10 -height 10 \
+                -yscrollcommand "$w.vars.yscroll set" \
+                
+#            frame $w.vars.canvas.frame -relief sunken -borderwidth 2
+            frame $w.vars.canvas.frame
+            pack $w.vars.canvas.frame
+            $w.vars.canvas create window 0 1 \
+                -window $w.vars.canvas.frame -anchor nw
+
+            # Scrollbar for the button scrollpane
+            scrollbar $w.vars.yscroll -relief sunken -orient vertical \
+                -command "$w.vars.canvas yview"
+            pack $w.vars.yscroll -fill y -side right -padx 2 -pady 2
+            pack $w.vars.canvas -side top -padx 2 -pady 2 -fill both -expand yes
+            
+            # Populate the scroll pane with buttons
 #	    puts "var_list length [llength $var_list]"
 	    for {set i 0} { $i < [llength $var_list] } { incr i } {
 		set newvar [lindex $var_list $i]
 		set newmat_list [lindex $mat_lists $i]
 		set newtype [lindex $type_list $i]
-		addVar $w.vars $newvar $newmat_list $newtype $i
+		addVar $w.vars.canvas.frame $newvar $newmat_list $newtype $i
 	    }
+
+            # Use these 3 commands to force the window to draw so that queried
+            # data is accurate.  
+            wm withdraw $w
+            ::update idletasks
+            wm deiconify $w
+
+            set width [winfo reqwidth $w.vars.canvas.frame]
+            set height [winfo reqheight $w.vars.canvas.frame]
+            set yincr [winfo reqheight $w.vars.canvas.frame.var0]
+            # Add 4 to the y increment to account for the padding
+            set yincr [expr $yincr + 4]
+
+            puts "width: $width"
+            puts "height: $height"
+            puts "yincr: $yincr"
+            $w.vars.canvas config -yscrollincrement $yincr
+            $w.vars.canvas config -scrollregion "0 0 $width $height"
+            
+            # Calculate the correct height to display up to 8 materials
+            set max [llength $var_list]
+            if { $max > 8 } {
+                set max 8
+            }
+            set height [expr $yincr * $max]
+            $w.vars.canvas config -width $width -height $height
 	}
     }
     method do_nothing {} {
