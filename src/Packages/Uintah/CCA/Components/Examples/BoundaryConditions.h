@@ -8,6 +8,8 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Variables/NCVariable.h>
+#include <Packages/Uintah/Core/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <sgi_stl_warnings_off.h>
 #include <map>
 #include <string>

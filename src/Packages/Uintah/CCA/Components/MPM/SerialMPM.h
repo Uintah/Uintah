@@ -8,6 +8,9 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
+// put here to avoid template problems
+#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Short27.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Core/Geometry/Vector.h>

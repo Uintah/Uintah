@@ -58,7 +58,7 @@ namespace Uintah {
     Tensor4D<T>::Tensor4D(int dim0, int dim1, int dim2, int dim3):
     Tensor<T>(dim0*dim1*dim2*dim3,4)
     {
-      d_dim[0] = dim0; d_dim[1] = dim1; d_dim[2] = dim2; d_dim[3] = dim3;
+      this->d_dim[0] = dim0; this->d_dim[1] = dim1; this->d_dim[2] = dim2; this->d_dim[3] = dim3;
       d_offset0 = dim1*dim2*dim3;
       d_offset1 = dim2*dim3;
       d_offset2 = dim3;
@@ -96,9 +96,9 @@ namespace Uintah {
     inline T&
     Tensor4D<T>::operator()(int dim0, int dim1, int dim2, int dim3) 
     {
-      ASSERT(!(dim0 < 0 || dim0 >= d_dim[0] || dim1 < 0 || dim1 >= d_dim[1] ||
-	       dim2 < 0 || dim2 >= d_dim[2] || dim3 < 0 || dim3 >= d_dim[3]));
-      return d_data[dim0*d_offset0 + dim1*d_offset1 + dim2*d_offset2 + dim3];
+      ASSERT(!(dim0 < 0 || dim0 >= this->d_dim[0] || dim1 < 0 || dim1 >= this->d_dim[1] ||
+	       dim2 < 0 || dim2 >= this->d_dim[2] || dim3 < 0 || dim3 >= this->d_dim[3]));
+      return this->d_data[dim0*d_offset0 + dim1*d_offset1 + dim2*d_offset2 + dim3];
     }
 
   // Operator()
@@ -106,9 +106,9 @@ namespace Uintah {
     inline T
     Tensor4D<T>::operator()(int dim0, int dim1, int dim2, int dim3) const
     {
-      ASSERT(!(dim0 < 0 || dim0 >= d_dim[0] || dim1 < 0 || dim1 >= d_dim[1] ||
-	       dim2 < 0 || dim2 >= d_dim[2] || dim3 < 0 || dim3 >= d_dim[3]));
-      return d_data[dim0*d_offset0 + dim1*d_offset1 + dim2*d_offset2 + dim3];
+      ASSERT(!(dim0 < 0 || dim0 >= this->d_dim[0] || dim1 < 0 || dim1 >= this->d_dim[1] ||
+	       dim2 < 0 || dim2 >= this->d_dim[2] || dim3 < 0 || dim3 >= this->d_dim[3]));
+      return this->d_data[dim0*d_offset0 + dim1*d_offset1 + dim2*d_offset2 + dim3];
     }
 
 } // namespace Uintah

@@ -30,6 +30,7 @@
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Geometry/IntVector.h>
+#include <Core/Containers/StringUtil.h>
 #include <Dataflow/Network/Module.h>
 
 namespace Uintah {

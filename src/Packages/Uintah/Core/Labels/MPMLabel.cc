@@ -1,11 +1,11 @@
 
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Short27.h>
 #include <Packages/Uintah/Core/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h>
 #include <Packages/Uintah/Core/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Variables/PerPatch.h>
 #include <Core/Malloc/Allocator.h>

@@ -20,7 +20,6 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Containers/StringUtil.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 #include <Packages/Uintah/Core/Datatypes/VariableCache.h>

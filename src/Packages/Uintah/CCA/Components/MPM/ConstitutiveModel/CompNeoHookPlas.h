@@ -1,6 +1,19 @@
 #ifndef __NEOHOOKPLAS_CONSTITUTIVE_MODEL_H__
 #define __NEOHOOKPLAS_CONSTITUTIVE_MODEL_H__
 
+namespace Uintah {
+  struct CompNeoHookPlasStateData {
+    double Alpha;
+  };   
+}
+
+#include <Core/Util/Endian.h>
+namespace SCIRun {
+  using namespace Uintah;
+  inline void swapbytes( Uintah::CompNeoHookPlasStateData& d)
+    { swapbytes(d.Alpha); }
+} // namespace SCIRun
+
 
 #include "ConstitutiveModel.h"  
 #include <math.h>
@@ -52,9 +65,7 @@ WARNING
       double K;
       double Alpha;
     };   
-    struct StateData {
-      double Alpha;
-    };   
+    typedef CompNeoHookPlasStateData StateData;
   private:
     friend const TypeDescription* fun_getTypeDescription(StateData*);
 
@@ -153,11 +164,5 @@ WARNING
   };
 } // End namespace Uintah
 
-#include <Core/Util/Endian.h>
-namespace SCIRun {
-  using namespace Uintah;
-  inline void swapbytes( Uintah::CompNeoHookPlas::StateData& d)
-    { swapbytes(d.Alpha); }
-} // namespace SCIRun
 
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 

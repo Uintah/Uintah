@@ -3,10 +3,11 @@
 
 #include <Packages/Uintah/Core/Variables/PerPatchBase.h>
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
-  class TypeDescription;
 /**************************************
 
 CLASS

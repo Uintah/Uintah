@@ -1,6 +1,7 @@
+// include before other files so gcc 3.4 can properly instantiate template
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Variables/SFCXVariable.h>
 #include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <utility>
 using namespace Uintah;
