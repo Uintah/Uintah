@@ -92,6 +92,24 @@ MPMLabel::MPMLabel()
   pStressLabel_preReloc = VarLabel::create( "p.stress+",
 			ParticleVariable<Matrix3>::getTypeDescription() );
 
+  pStress_eLabel = VarLabel::create( "p.stress_e",
+			ParticleVariable<Matrix3>::getTypeDescription() );
+  
+  pStress_veLabel = VarLabel::create( "p.stress_ve",
+			ParticleVariable<Matrix3>::getTypeDescription() );
+  
+  pStress_ve_vLabel = VarLabel::create( "p.stress_ve_v",
+			ParticleVariable<double>::getTypeDescription() );
+			
+  pStress_ve_dLabel = VarLabel::create( "p.stress_ve_d",
+			ParticleVariable<Matrix3>::getTypeDescription() );
+			
+  pStress_e_vLabel = VarLabel::create( "p.stress_e_v",
+			ParticleVariable<double>::getTypeDescription() );
+			
+  pStress_e_dLabel = VarLabel::create( "p.stress_e_d",
+			ParticleVariable<Matrix3>::getTypeDescription() );												
+
   pCrackRadiusLabel_preReloc = VarLabel::create( "p.CrackRadius+",
 			ParticleVariable<double>::getTypeDescription());
   
@@ -280,6 +298,12 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pDeformationMeasureLabel_preReloc);
   VarLabel::destroy(pStressLabel);
   VarLabel::destroy(pStressLabel_preReloc);
+  VarLabel::destroy(pStress_eLabel);
+  VarLabel::destroy(pStress_veLabel);
+  VarLabel::destroy(pStress_ve_vLabel);
+  VarLabel::destroy(pStress_ve_dLabel);
+  VarLabel::destroy(pStress_e_vLabel);
+  VarLabel::destroy(pStress_e_dLabel);
   VarLabel::destroy(pVolumeLabel);
   VarLabel::destroy(pVolumeLabel_preReloc);
   VarLabel::destroy(pMassLabel);
