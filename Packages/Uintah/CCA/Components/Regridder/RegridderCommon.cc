@@ -435,7 +435,8 @@ void RegridderCommon::Dilate2(const ProcessorGroup*,
 			      const PatchSubset* patches,
 			      const MaterialSubset* ,
 			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw)
+			      DataWarehouse* new_dw, DilationType dilate_which, FilterType filter_type,
+                              IntVector depth)
 {
-
+  cout << "D2\n";
 }
