@@ -24,11 +24,11 @@ itcl_class Uintah_Visualization_GridVisualizer {
     protected vector_types {"length" "length2" "x" "y" "z"}
     protected num_m_type
     protected num_v_type
-    # this represents the number of graphs made
-    # when a new graph is created then this number is incremented
-    # Thus repeatidly punching graph will continue to make new ones
+    # this represents the number of graphs and tables made
+    # when a new graph or table is created then this number is incremented
+    # Thus repeatidly punching graph or table will continue to make new ones
     # without replacing old ones.
-    protected graph_id 0
+    protected display_data_id 0
 
     constructor {config} {
 	set name GridVisualizer
@@ -264,7 +264,22 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	    }
 	}
     }
-    method graphbutton {name var_index mat_list type} {
+    # this function extracts which variables to get information from the global
+    # variables set up with the widget.
+    #
+    # displaymethod - should be either graph or table, this value is passed on
+    #                 to the c code which will call the appropiate function to
+    #                 display the information
+    # name - the name of the variable to graph, this is used by the c code to
+    #        extract the values from the data archive
+    # var_index - the index into the internal data structures that correspond
+    #             to the variable "name"
+    # mat_list - the list of material indecies, this is used to recreate the
+    #            global variables used to determine if the variable should be
+    #            graphed
+    # type - the type of the variable, should be either matrix3, vector, or
+    #        scaler
+    method extract {displaymethod name var_index mat_list type} {
 	set val_list {}
 	set num_vals 0
 	set var_root $this-matvar_$var_index
@@ -309,7 +324,7 @@ itcl_class Uintah_Visualization_GridVisualizer {
 #	puts "num_vals  = $num_vals"
 #	puts "val_list  = $val_list"
 	if {[llength $val_list] > 0} {
-	    set call "$this-c graph $name $var_index $num_vals"
+	    set call "$this-c extract_data $displaymethod $name $var_index $num_vals"
 	    for {set i 0} { $i < [llength $val_list] } { incr i } {
 		set insert [lindex $val_list $i]
 		append call " $insert"
@@ -326,8 +341,13 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	label $fname.label -text "$name"
 	pack $fname.label -side left -padx 2 -pady 2
 
-	button $fname.button -text "Graph" -command "$this graphbutton $name $i {$mat_list} $type"
-	pack $fname.button -side right -padx 2 -pady 2
+	button $fname.table -text "Table" \
+		-command "$this extract table $name $i {$mat_list} $type"
+	pack $fname.table -side right -padx 2 -pady 2
+
+	button $fname.graph -text "Graph" \
+		-command "$this extract graph $name $i {$mat_list} $type"
+	pack $fname.graph -side right -padx 2 -pady 2
 
 	make_mat_menu $fname $mat_list $i $type
     }
@@ -469,6 +489,8 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	# close button
 	button $w.close -text "Close" -command "wm withdraw $w"
 	pack $w.close -side bottom -expand yes -fill x
+	button $w.ttest -text "Table test" -command "$this table_test"
+	pack $w.ttest -side bottom -expand yes -fill x
 #	button $w.gtest -text "Graph test" -command "$this graph_test"
 #	pack $w.gtest -side bottom -expand yes -fill x
     }
@@ -523,12 +545,12 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	return $c
     }
     method graph_data { id var args } {
-	set w .graph[modname]$graph_id
+	set w .graph[modname]$display_data_id
         if {[winfo exists $w]} { 
             destroy $w 
 	}
 	toplevel $w
-	incr graph_id
+	incr display_data_id
 #	wm minsize $w 300 300
 
 #	puts "id = $id"
@@ -601,6 +623,105 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	
 	pack $w.graph
     }
+    method table_data { id var args } {
+	set w .table[modname]$display_data_id
+        if {[winfo exists $w]} { 
+            destroy $w 
+	}
+	toplevel $w
+	incr display_data_id
+
+	button $w.close -text "Close" -command "destroy $w"
+	pack $w.close -side bottom -anchor s -expand yes -fill x
+	
+	#seperate the materials from the types
+	set args_mat {}
+	set args_type {}
+	for {set i 0} { $i < [llength $args] } {incr i} {
+	    lappend args_mat [lindex $args $i]
+	    incr i
+	    lappend args_type [lindex $args $i]
+	}
+
+	# create the scrolled frame
+	iwidgets::scrolledframe $w.sf -width 300 -height 300 \
+		-labeltext "Data for $var" \
+		-vscrollmode dynamic -hscrollmode dynamic \
+		-sbwidth 10
+
+	# get the childsite to add table stuff to
+	set cs [$w.sf childsite]
+	blt::table $cs
+
+	# set up columns for time idicies
+	blt::table $cs [label $cs.time_list_title -text "Time Step"] \
+		-cspan 2 0,0
+	set time_list_length [llength $time_list]
+	for { set i 0 } { $i < $time_list_length } {incr i} {
+	    # the array index
+	    blt::table $cs [label $cs.time_index$i -text $i] [expr $i+1],0 
+	    # the actual time step
+	    blt::table $cs [label $cs.time_value$i -text [lindex $time_list $i]] [expr $i+1],1
+	}
+	
+	# now add all the variables
+	set vvlist_length [llength $var_val_list]
+	for { set i 0 } { $i < $vvlist_length } {incr i} {
+	    # extract the values for this variable
+	    set mat_index  [lindex $args_mat $i]
+	    set mat_type [lindex $args_type $i]
+	    set mat_vals [lindex $var_val_list $i]
+
+	    
+	    set line_name "Material_$mat_index"
+	    if {$mat_type != "invalid"} {
+		append line_name "_$mat_type"
+	    }
+	    
+	    set column [expr $i + 2]
+	    blt::table $cs [label $cs.top$line_name -text $line_name] 0,$column
+	    # a for loop for each time step
+	    set mat_vals_length [llength $mat_vals]
+	    for { set t 0 } { $t < $mat_vals_length } {incr t} {
+		set box_name "val$line_name"
+		append box_name "$t"
+		blt::table $cs [label $cs.$box_name -text [lindex $mat_vals $t]] [expr $t+1],$column
+	    }
+	}
+
+	pack $w.sf -fill both
+    }
+
+    # This is test code used to create a window with a scrollable blt table
+    # This code is not normally accessable from the main user interface
+    method table_test {} {
+	set w .table[modname]test
+        if {[winfo exists $w]} { 
+            destroy $w 
+	}
+	toplevel $w
+
+	iwidgets::scrolledframe $w.sf -width 150 -height 180 \
+		-labeltext scrolledframe \
+		-vscrollmode dynamic -hscrollmode dynamic \
+		-sbwidth 10
+#		-labelmargin 0 -scrollmargin 0
+
+	set cs [$w.sf childsite]
+	blt::table $cs \
+		[label $cs.title -text "A Table"] 0,0 -cspan 3\
+		[button $cs.10 -text OK] 1,0 -fill both \
+		[label $cs.11 -text 3.1415] 1,1 -fill y \
+		[label $cs.12 -text 4.5e3] 1,2 -fill x \
+		[button $cs.20 -text NOTOK] 2,0 -fill both \
+		[label $cs.21 -text 4.5123123] 2,1 -fill y \
+		[label $cs.22 -text 0.54234134134] 2,2 -fill x
+
+	pack $w.sf -expand yes -fill both -padx 10 -pady 10
+    }
+
+    # This is test code used to create a window with a graph
+    # This code is not normally accessable from the main user interface
     method graph_test {} {
 	set w .graph[modname]test
         if {[winfo exists $w]} { 
