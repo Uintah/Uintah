@@ -2638,13 +2638,7 @@ echo "${ECHO_T}Packages include $package" >&6
 fi
 
 PACKAGE_DIRS=""
-# make sure the package dir exists
 for i in $package; do
-   if test ! -d "$path_to_src/Packages/$i"; then
-      { { echo "$as_me:$LINENO: error: Package '$i' does not exist (in $path_to_src/Packages/)!" >&5
-echo "$as_me: error: Package '$i' does not exist (in $path_to_src/Packages/)!" >&2;}
-   { (exit 1); exit 1; }; }
-   fi
    PACKAGE_DIRS=$PACKAGE_DIRS" Packages/$i"
    # set the package dependent checks
 
@@ -2878,6 +2872,15 @@ esac
       package="$package DataIO"
   fi
 fi
+
+for i in $package; do
+   # Make sure the Package directories exist.
+   if test ! -d "$path_to_src/Packages/$i"; then
+      { { echo "$as_me:$LINENO: error: Package '$i' does not exist (in $path_to_src/Packages/)!" >&5
+echo "$as_me: error: Package '$i' does not exist (in $path_to_src/Packages/)!" >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+done
 
 if test "$sci_required_unipetsc" = "yes"; then
    sci_required_blas=yes
@@ -4549,7 +4552,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4552:" \
+echo "$as_me:4555:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5

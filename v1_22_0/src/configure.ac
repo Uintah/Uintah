@@ -548,11 +548,7 @@ if test "$package" = "all"; then
 fi
 
 PACKAGE_DIRS=""
-# make sure the package dir exists
 for i in $package; do
-   if test ! -d "$path_to_src/Packages/$i"; then
-      AC_MSG_ERROR(Package '$i' does not exist (in $path_to_src/Packages/)!)
-   fi
    PACKAGE_DIRS=$PACKAGE_DIRS" Packages/$i"
    # set the package dependent checks
    SCI_SET_PACKAGE_CHECKS($i, $host)
@@ -581,6 +577,13 @@ if test "$pkg_Fusion" = "yes"; then
       package="$package DataIO"
   fi
 fi
+
+for i in $package; do
+   # Make sure the Package directories exist.
+   if test ! -d "$path_to_src/Packages/$i"; then
+      AC_MSG_ERROR(Package '$i' does not exist (in $path_to_src/Packages/)!)
+   fi
+done
 
 if test "$sci_required_unipetsc" = "yes"; then
    sci_required_blas=yes
