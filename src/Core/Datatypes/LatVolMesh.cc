@@ -33,6 +33,7 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Math/MusilRNG.h>
 
 namespace SCIRun {
@@ -164,6 +165,8 @@ LatVolMesh::set_dim(Array1<unsigned int> dim)
   nk_ = dim[2];
 }
 
+
+// Note: This code does not respect boundaries of the mesh
 void
 LatVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 {
@@ -207,6 +210,8 @@ LatVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 }
 
 
+
+// Note: This code does not respect boundaries of the mesh
 void
 LatVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 {
@@ -252,7 +257,7 @@ LatVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
   }
 }
 
-
+// Note: This code does not respect boundaries of the mesh
 void
 LatVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 {
@@ -266,6 +271,19 @@ LatVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
   array[6].i_ = idx.i_+1; array[6].j_ = idx.j_+1; array[6].k_ = idx.k_+1;
   array[7].i_ = idx.i_;   array[7].j_ = idx.j_+1; array[7].k_ = idx.k_+1;
 }
+
+
+void
+LatVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
+{
+  
+}
+
+void
+LatVolMesh::get_edges(Edge::array_type &array, Cell::index_type idx) const
+{  
+}
+
 
 
 void
@@ -552,6 +570,61 @@ LatVolMesh::get_center(Point &result, const Node::index_type &idx) const
   Point p(idx.i_, idx.j_, idx.k_);
   result = transform_.project(p);
 }
+
+
+
+double
+LatVolMesh::get_size(Node::index_type idx) const
+{
+  return 0.0;
+}
+
+
+double
+LatVolMesh::get_size(Edge::index_type idx) const
+{
+  Node::array_type arr;
+  get_nodes(arr, idx);
+  Point p0, p1;
+  get_center(p0, arr[0]);
+  get_center(p1, arr[1]);
+
+  return (p1.asVector() - p0.asVector()).length();
+}
+  
+
+double
+LatVolMesh::get_size(Face::index_type idx) const
+{
+  Node::array_type nodes;
+  get_nodes(nodes, idx);
+  Point p0, p1, p2;
+  get_point(p0, nodes[0]);
+  get_point(p1, nodes[1]);
+  get_point(p2, nodes[2]);
+  Vector v0 = p1 - p0;
+  Vector v1 = p2 - p0;
+  return (v0.length() * v1.length());
+}
+
+
+double
+LatVolMesh::get_size(Cell::index_type idx) const
+{
+  Node::array_type nodes;
+  get_nodes(nodes, idx);
+  Point p0, p1, p2, p3;
+  get_point(p0, nodes[0]);
+  get_point(p1, nodes[1]);
+  get_point(p2, nodes[3]);
+  get_point(p3, nodes[4]);
+  Vector v0 = p1 - p0;
+  Vector v1 = p2 - p0;
+  Vector v2 = p3 - p0;
+  return (v0.length() * v1.length() * v2.length());
+}
+
+
 
 
 bool
