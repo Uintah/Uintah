@@ -552,7 +552,7 @@ QuadraticTetVolMesh::compute_nodes()
 
   for (Edge::iterator edge = edges_.begin(); edge != edges_.end(); ++edge)
   {
-    edge_2_node_.insert(map<int,int>::value_type(*edge,node_2_edge_.size()));
+    edge_2_node_.insert(map<unsigned int, unsigned int>::value_type(*edge, node_2_edge_.size()));
     node_2_edge_.push_back(*edge);
   }
 
@@ -661,7 +661,7 @@ QuadraticTetVolMesh::add_node_neighbors(vector<Node::index_type> &array,
 					Node::index_type node, 
 					const vector<bool> &bc, bool apBC)
 {
-  set<int> c2;
+  set<unsigned int> c2;
   if ((unsigned int)node < points_.size())
   {
     Cell::array_type tets;

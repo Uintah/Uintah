@@ -114,11 +114,11 @@ public:
 
 private:
 
-  vector<int> node_2_edge_;
+  vector<unsigned int> node_2_edge_;
 #ifdef HAVE_HASH_MAP
-  typedef hash_multimap<int,int,Edge::CellEdgeHasher, Edge::eqEdge> E2N;
+  typedef hash_multimap<unsigned int, unsigned int, Edge::CellEdgeHasher, Edge::eqEdge> E2N;
 #else
-  typedef multimap<int,int,Edge::eqEdge> E2N;
+  typedef multimap<unsigned int, unsigned int, Edge::eqEdge> E2N;
 #endif
   E2N edge_2_node_;
   bool phantom_nodes_computed_p_;

@@ -888,11 +888,11 @@ TetVolMesh::combine_3_to_2(Cell::index_type &removed,
   edges.push_back(*edge_iter++);
   edges.push_back(*edge_iter);
 
-  set<int, less<int> > ord_cells;
+  set<unsigned int, less<unsigned int> > ord_cells;
   ord_cells.insert(edges[0] / 6);
   ord_cells.insert(edges[1] / 6);
   ord_cells.insert(edges[2] / 6);
-  set<int, less<int> >::iterator iter = ord_cells.begin();
+  set<unsigned int, less<unsigned int> >::iterator iter = ord_cells.begin();
   
   Cell::index_type c1 = *iter++;
   Cell::index_type c2 = *iter++;
@@ -908,7 +908,7 @@ TetVolMesh::combine_3_to_2(Cell::index_type &removed,
   get_nodes(opp2, Edge::opposite_edge(edges[2]));
   
   // filter out duplicates
-  set<int, less<int> > shared_face;
+  set<unsigned int, less<unsigned int> > shared_face;
   shared_face.insert(opp0[0]);
   shared_face.insert(opp0[1]);
   shared_face.insert(opp1[0]);
@@ -944,8 +944,8 @@ TetVolMesh::combine_3_to_2(Cell::index_type &removed,
 //! Undoes a previous center split.
 bool
 TetVolMesh::combine_4_to_1_cell(Cell::array_type &tets, 
-				set<int> &removed_tets,
-				set<int> &removed_nodes) 
+				set<unsigned int> &removed_tets,
+				set<unsigned int> &removed_nodes) 
 {
   // the center node gets removed, it is at index 3 for each cell.
   unsigned c0, c1, c2, c3;
@@ -972,7 +972,7 @@ TetVolMesh::combine_4_to_1_cell(Cell::array_type &tets,
     
     // redefine the remaining tet.
     // get the 4 unique nodes that make up the new single tet.
-    set<int> new_tet;
+    set<unsigned int> new_tet;
     new_tet.insert(cells_[c0]);
     new_tet.insert(cells_[c0 + 1]);
     new_tet.insert(cells_[c0 + 2]);
@@ -987,7 +987,7 @@ TetVolMesh::combine_4_to_1_cell(Cell::array_type &tets,
     new_tet.insert(cells_[c3 + 2]);
     ASSERT(new_tet.size() == 4);
 
-    set<int>::iterator iter = new_tet.begin();
+    set<unsigned int>::iterator iter = new_tet.begin();
     mod_tet(tets[0], *iter++, *iter++, *iter++, *iter);
 
     return true;
@@ -1130,7 +1130,7 @@ TetVolMesh::get_neighbors(vector<Node::index_type> &array,
 {
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E, 
 	    "Must call synchronize NODE_NEIGHBORS_E on TetVolMesh first.");
-  set<int> inserted;
+  set<unsigned int> inserted;
   for (unsigned int i = 0; i < node_neighbors_[idx].size(); i++)
   {
     const int base = node_neighbors_[idx][i]/4*4;
@@ -1715,10 +1715,10 @@ TetVolMesh::add_elem(Node::array_type a)
 
 
 void
-TetVolMesh::delete_cells(set<int> &to_delete)
+TetVolMesh::delete_cells(set<unsigned int> &to_delete)
 {
   cells_lock_.lock();
-  set<int>::reverse_iterator iter = to_delete.rbegin();
+  set<unsigned int>::reverse_iterator iter = to_delete.rbegin();
   while (iter != to_delete.rend()) {
     // erase the correct cell
     TetVolMesh::Cell::index_type ci = *iter++;
@@ -1744,10 +1744,10 @@ TetVolMesh::delete_cells(set<int> &to_delete)
 }
 
 void
-TetVolMesh::delete_nodes(set<int> &to_delete)
+TetVolMesh::delete_nodes(set<unsigned int> &to_delete)
 {
   points_lock_.lock();
-  set<int>::reverse_iterator iter = to_delete.rbegin();
+  set<unsigned int>::reverse_iterator iter = to_delete.rbegin();
   while (iter != to_delete.rend()) {
     TetVolMesh::Node::index_type n = *iter++;
     vector<Point>::iterator pit = points_.begin() + n;
@@ -2143,7 +2143,7 @@ TetVolMesh::io(Piostream &stream)
   SCIRun::Pio(stream, cells_);
   if (version == 1)
   {
-    vector<int> neighbors;
+    vector<unsigned int> neighbors;
     SCIRun::Pio(stream, neighbors);
   }
 
