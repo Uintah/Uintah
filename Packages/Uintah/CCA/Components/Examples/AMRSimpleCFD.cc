@@ -150,6 +150,7 @@ void refineFaces(const Patch* patch,
      //  determine low and high cell iter limits
       IntVector l,h;
       patch->getFace(face, IntVector(0,0,0), IntVector(1,1,1), l, h);
+
       if(face == highFace){
 	l += dir;
 	h += dir;
@@ -450,14 +451,22 @@ void AMRSimpleCFD::addRefineDependencies(Task* task,
   cout_doing << "Doing addRefineDependencies  \t\t\t AMRSimpleCFD" 
              << " step " << step << " nsteps " << nsteps <<'\n';
   ASSERTRANGE(step, 0, nsteps+1);
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  
+
+  TypeDescription::Type type = var->typeDescription()->getType();
+  Ghost::GhostType gc = Ghost::AroundCells;
+  /*  if (type == TypeDescription::SFCXVariable)
+    gc = Ghost::AroundFacesX;
+  else if (type == TypeDescription::SFCYVariable)
+    gc = Ghost::AroundFacesY;
+  else if (type == TypeDescription::SFCZVariable)
+    gc = Ghost::AroundFacesZ;
+  */
   if(step != nsteps)
     task->requires(Task::CoarseOldDW, var,
-		   0, Task::CoarseLevel, 0, Task::NormalDomain, gac, 1);
+		   0, Task::CoarseLevel, 0, Task::NormalDomain, gc, 1);
   if(step != 0)
     task->requires(Task::CoarseNewDW, var,
-		   0, Task::CoarseLevel, 0, Task::NormalDomain, gac, 1);
+		   0, Task::CoarseLevel, 0, Task::NormalDomain, gc, 1);
 }
 //______________________________________________________________________
 //  CCVariable<double> version
@@ -571,13 +580,13 @@ void AMRSimpleCFD::scheduleCoarsen(const LevelP& coarseLevel,
 
   // give these ghost cells to refine the faces
   task->requires(Task::NewDW, lb_->xvelocity,
-		 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::AroundFacesX, 1);
+		 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::AroundFacesX, 10);
 
   task->requires(Task::NewDW, lb_->yvelocity,
-		 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::AroundFacesY, 1);
+		 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::AroundFacesY, 10);
 
   task->requires(Task::NewDW, lb_->zvelocity,
-		 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::AroundFacesZ, 1);
+		 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::AroundFacesZ, 10);
 
   task->modifies(lb_->density);
   task->modifies(lb_->xvelocity);
@@ -600,11 +609,11 @@ void AMRSimpleCFD::scheduleCoarsen(const LevelP& coarseLevel,
 }
 //______________________________________________________________________
 //
-void AMRSimpleCFD::scheduleRefine(const LevelP& fineLevel,
+void AMRSimpleCFD::scheduleRefine(const PatchSet* patches,
 				   SchedulerP& sched)
 {
   Ghost::GhostType  gn = Ghost::None; 
-  cout_doing << "AMRSimpleCFD::scheduleRefine on level " << fineLevel->getIndex() << '\n';
+  cout_doing << "AMRSimpleCFD::scheduleRefine on patches " << *patches << '\n';
   Task* task = scinew Task("refine",
 			   this, &AMRSimpleCFD::refine);
   task->requires(Task::NewDW, lb_->density,
@@ -613,7 +622,7 @@ void AMRSimpleCFD::scheduleRefine(const LevelP& fineLevel,
   if(do_thermal){
     task->requires(Task::NewDW, lb_->temperature,
 		   0, Task::CoarseLevel, 0, Task::NormalDomain,gn, 0);
-    task->computes(lb_->temperature);
+    //task->computes(lb_->temperature);
   }
 
   task->requires(Task::NewDW, lb_->xvelocity,
@@ -628,13 +637,13 @@ void AMRSimpleCFD::scheduleRefine(const LevelP& fineLevel,
   //task->requires(Task::NewDW, lb_->pressure2,
   //		 0, Task::CoarseLevel, 0, Task::NormalDomain,gn, 0);
 
-  task->computes(lb_->density);
-  task->computes(lb_->xvelocity);
-  task->computes(lb_->yvelocity);
-  task->computes(lb_->zvelocity);
+  //task->computes(lb_->density);
+  //task->computes(lb_->xvelocity);
+  //task->computes(lb_->yvelocity);
+  //task->computes(lb_->zvelocity);
   //  task->computes(lb_->pressure2);
 
-  sched->addTask(task, fineLevel->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, patches, sharedState_->allMaterials());
   /*
   //__________________________________
   // Re-solve/apply the pressure, using the pressure2 variable
@@ -795,10 +804,10 @@ void AMRSimpleCFD::coarsen(const ProcessorGroup*,
 	new_dw->getCopy(fine_xvel, lb_->xvelocity, matl, finePatch,
 			Ghost::AroundFacesX, 1);
                      
-	refineFaces<SFCXVariable<double>, constSFCXVariable<double> >
-	  (finePatch, fineLevel, coarseLevel, IntVector(1,0,0),
-	   Patch::xminus, Patch::xplus, fine_xvel,
-	   lb_->xvelocity, 1.0, matl, old_dw, new_dw, Patch::XFaceBased);
+// 	refineFaces<SFCXVariable<double>, constSFCXVariable<double> >
+// 	  (finePatch, fineLevel, coarseLevel, IntVector(1,0,0),
+// 	   Patch::xminus, Patch::xplus, fine_xvel,
+// 	   lb_->xvelocity, 1.0, matl, old_dw, new_dw, Patch::XFaceBased);
           
 	IntVector fl(finePatch->getSFCXLowIndex());
 	IntVector fh(finePatch->getSFCXHighIndex());
@@ -839,10 +848,10 @@ void AMRSimpleCFD::coarsen(const ProcessorGroup*,
 	new_dw->getCopy(fine_yvel, lb_->yvelocity, matl, finePatch,
 			Ghost::AroundFacesY, 1);
                      
-	refineFaces<SFCYVariable<double>, constSFCYVariable<double> >
-	  (finePatch, fineLevel, coarseLevel, IntVector(0,1,0),
-	   Patch::yminus, Patch::yplus, fine_yvel,
-	   lb_->yvelocity, 1.0, matl, old_dw, new_dw, Patch::YFaceBased);
+// 	refineFaces<SFCYVariable<double>, constSFCYVariable<double> >
+// 	  (finePatch, fineLevel, coarseLevel, IntVector(0,1,0),
+// 	   Patch::yminus, Patch::yplus, fine_yvel,
+// 	   lb_->yvelocity, 1.0, matl, old_dw, new_dw, Patch::YFaceBased);
           
 	IntVector fl(finePatch->getSFCYLowIndex());
 	IntVector fh(finePatch->getSFCYHighIndex());
@@ -881,10 +890,10 @@ void AMRSimpleCFD::coarsen(const ProcessorGroup*,
 	new_dw->getCopy(fine_zvel, lb_->zvelocity, matl, finePatch,
 			Ghost::AroundFacesZ, 1);
 	
-       refineFaces<SFCZVariable<double>, constSFCZVariable<double> >
-	  (finePatch, fineLevel, coarseLevel, IntVector(0,0,1),
-	   Patch::zminus, Patch::zplus, fine_zvel,
-	   lb_->zvelocity, 1.0, matl, old_dw, new_dw, Patch::ZFaceBased);
+//        refineFaces<SFCZVariable<double>, constSFCZVariable<double> >
+// 	  (finePatch, fineLevel, coarseLevel, IntVector(0,0,1),
+// 	   Patch::zminus, Patch::zplus, fine_zvel,
+// 	   lb_->zvelocity, 1.0, matl, old_dw, new_dw, Patch::ZFaceBased);
 	
        IntVector fl(finePatch->getSFCZLowIndex());
 	IntVector fh(finePatch->getSFCZHighIndex());

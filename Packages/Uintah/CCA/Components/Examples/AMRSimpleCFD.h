@@ -19,7 +19,7 @@ namespace Uintah {
 					 SchedulerP& scheduler,
 					 int step, int nsteps);
     virtual void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
-    virtual void scheduleRefine (const LevelP& fineLevel, SchedulerP& sched);
+    virtual void scheduleRefine (const PatchSet* patches, SchedulerP& sched);
 
     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
 				       SchedulerP& sched);
