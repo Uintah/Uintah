@@ -2725,20 +2725,32 @@ class BioImageApp {
 	addConnection $m1 0 $m2 0
 	addConnection $m2 0 $ChooseNrrd $choose
 
+        global $mods(ViewImage)-min
+        global $mods(ViewImage)-max
+        set min [set $mods(ViewImage)-min]
+        set max [set $mods(ViewImage)-max]
+
+        if {$min == -1 && $max == -1} {
+	    # min/max haven't been set becuase it hasn't executed yet
+	    set min 0
+	    set max 255
+	}
+
         global $m4-setdata
         set $m4-setdata 1
         global $m4-args
         trace variable $m4-args w "$this update_histo_graph_callback $num_filters"
 
         global $m1-bins
-        set $m1-bins 256
+        set $m1-bins 3000
 
-        global $m2-bits $m4-minf $m4-maxf $m4-useinputmin $m4-useinputmax
+        global $m2-bits $m2-minf $m2-maxf $m2-useinputmin $m2-useinputmax
         set $m2-bits 8
-        set $m2-minf 0
-        set $m2-maxf 256
+        set $m2-minf $min
+        set $m2-maxf $max
         set $m2-useinputmin 1
         set $m2-useinputmax 1
+
 
 	set row $grid_rows
 	# if inserting, disconnect current to current's next and connect current
