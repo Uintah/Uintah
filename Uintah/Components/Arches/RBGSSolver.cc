@@ -34,24 +34,6 @@ using namespace std;
 //****************************************************************************
 RBGSSolver::RBGSSolver()
 {
-
-  // Momentum Solve requires (inputs)
-
-  // Scalar Solve Requires/Computes
-  d_scalarINLabel = scinew VarLabel("scalarIN",
-				    CCVariable<double>::getTypeDescription() );
-  d_scalCoefSBLMLabel = scinew VarLabel("scalCoefSBLM",
-				    CCVariable<double>::getTypeDescription() );
-  d_scalNonLinSrcSBLMLabel = scinew VarLabel("scalNonLinSrcSBLM",
-				    CCVariable<double>::getTypeDescription() );
-  d_scalResidualSSLabel = scinew VarLabel("scalResidualSS",
-				    CCVariable<double>::getTypeDescription() );
-  d_scalCoefSSLabel = scinew VarLabel("scalCoefSS",
-				    CCVariable<double>::getTypeDescription() );
-  d_scalNonLinSrcSSLabel = scinew VarLabel("scalNonLinSrcSS",
-				    CCVariable<double>::getTypeDescription() );
-  d_scalarSPLabel = scinew VarLabel("scalarSP",
-				    CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -73,89 +55,6 @@ RBGSSolver::problemSetup(const ProblemSpecP& params)
   db->require("underrelax", d_underrelax);
 }
 
-
-//****************************************************************************
-// Scalar Solve
-//****************************************************************************
-void 
-RBGSSolver::sched_scalarSolve(const LevelP& level,
-			      SchedulerP& sched,
-			      DataWarehouseP& old_dw,
-			      DataWarehouseP& new_dw,
-			      int index)
-{
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-      Task* tsk = scinew Task("RBGSSolver::scalar_residual",
-			      patch, old_dw, new_dw, this,
-			      &RBGSSolver::scalar_residCalculation,
-			      index);
-
-      int numGhostCells = 0;
-      int matlIndex = 0;
-
-      // coefficient for the variable for which solve is invoked
-      tsk->requires(old_dw, d_scalarINLabel, index, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_scalCoefSBLMLabel, index, patch, Ghost::None,
-		    numGhostCells);
-
-      // computes global residual
-      tsk->computes(new_dw, d_scalResidualSSLabel, index, patch);
-
-      sched->addTask(tsk);
-    }
-    {
-      Task* tsk = scinew Task("RBGSSolver::scalar_underrelax",
-			      patch, old_dw, new_dw, this,
-			      &RBGSSolver::scalar_underrelax,
-			      index);
-
-      int numGhostCells = 0;
-      int matlIndex = 0;
-
-      // coefficient for the variable for which solve is invoked
-      tsk->requires(old_dw, d_scalarINLabel, index, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_scalCoefSBLMLabel, index, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_scalNonLinSrcSBLMLabel, index, patch, 
-		    Ghost::None, numGhostCells);
-
-      // computes 
-      tsk->computes(new_dw, d_scalCoefSSLabel, index, patch);
-      tsk->computes(new_dw, d_scalNonLinSrcSSLabel, index, patch);
-
-      sched->addTask(tsk);
-    }
-    {
-      // use a recursive task based on number of sweeps reqd
-      Task* tsk = scinew Task("RBGSSolver::scalar_lisolve",
-			      patch, old_dw, new_dw, this,
-			      &RBGSSolver::scalar_lisolve,
-			      index);
-
-      int numGhostCells = 0;
-      int matlIndex = 0;
-
-      // coefficient for the variable for which solve is invoked
-      tsk->requires(old_dw, d_scalarINLabel, index, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_scalCoefSSLabel, index, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_scalNonLinSrcSSLabel, index, patch, 
-		    Ghost::None, numGhostCells);
-
-      // Computes
-      tsk->computes(new_dw, d_scalarSPLabel, index, patch);
-
-      sched->addTask(tsk);
-    }
-    // add another task that computes the linear residual
-  }    
-}
 
 //****************************************************************************
 // Actual compute of pressure underrelaxation
@@ -389,9 +288,9 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
 #ifdef WONT_COMPILE_YET
     FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
-		   vars->uVelocity.getPointer(),
-		   vars->uVelocityCoeff[Arches::AP].getPointer(), 
-		   vars->uVelNonLinSrc.getPointer(),
+		   vars->vVelocity.getPointer(),
+		   vars->vVelocityCoeff[Arches::AP].getPointer(), 
+		   vars->vVelNonLinSrc.getPointer(),
 		   &d_underrelax);
 
 
@@ -508,44 +407,56 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* ,
   }
 }
 
+//****************************************************************************
+// Calculate Scalar residuals
+//****************************************************************************
+void 
+RBGSSolver::computeScalarResidual(const ProcessorGroup* ,
+				  const Patch* patch,
+				  DataWarehouseP& ,
+				  DataWarehouseP& , 
+				  int index,
+				  ArchesVariables* vars)
+{
+  // Get the patch bounds and the variable bounds
+  IntVector domLo = vars->scalar.getFortLowIndex();
+  IntVector domHi = vars->scalar.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  //fortran call
+#ifdef WONT_COMPILE_YET
+  FORT_COMPUTERESID(domLo.get_pointer(), domHi.get_pointer(),
+		    idxLo.get_pointer(), idxHi.get_pointer(),
+		    vars->scalar.getPointer(),
+		    vars->scalarCoeff[Arches::AP].getPointer(), 
+		    vars->scalarCoeff[Arches::AE].getPointer(), 
+		    vars->scalarCoeff[Arches::AW].getPointer(), 
+		    vars->scalarCoeff[Arches::AN].getPointer(), 
+		    vars->scalarCoeff[Arches::AS].getPointer(), 
+		    vars->scalarCoeff[Arches::AT].getPointer(), 
+		    vars->scalarCoeff[Arches::AB].getPointer(), 
+		    vars->scalarNonLinSrc.getPointer(),
+		    &vars->residScalar, &vars->truncScalar);
+#endif
+
+}
 
 
 //****************************************************************************
 // Scalar Underrelaxation
 //****************************************************************************
 void 
-RBGSSolver::scalar_underrelax(const ProcessorGroup* ,
-			      const Patch* patch,
-			      DataWarehouseP& old_dw,
-			      DataWarehouseP& new_dw, 
-			      int index)
+RBGSSolver::computeScalarUnderrelax(const ProcessorGroup* ,
+				    const Patch* patch,
+				    DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw, 
+				    int index,
+				    ArchesVariables* vars)
 {
-  int numGhostCells = 0;
-  int matlIndex = 0;
-  int nofStencils = 7;
-
-  // Patch based variables
-  CCVariable<double> scalar;
-  StencilMatrix<CCVariable<double> > scalarCoeff;
-  CCVariable<double> scalarNonLinSrc;
-
-  // Get the scalar from the old DW and scalar coefficients and non-linear
-  // source terms from the new DW
-  old_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
-	      numGhostCells);
-
-  // ** WARNING ** scalarCoeff is not being read in corrctly .. may
-  //               have to create new type instead of StencilMatrix
-  for (int ii = 0; ii < nofStencils; ii++) {
-     new_dw->get(scalarCoeff[ii], d_scalCoefSBLMLabel, index, patch, 
-		 Ghost::None, numGhostCells);
-  }
-  new_dw->get(scalarNonLinSrc, d_scalNonLinSrcSBLMLabel, index, patch, 
-	      Ghost::None, numGhostCells);
- 
   // Get the patch bounds and the variable bounds
-  IntVector domLo = scalar.getFortLowIndex();
-  IntVector domHi = scalar.getFortHighIndex();
+  IntVector domLo = vars->scalar.getFortLowIndex();
+  IntVector domHi = vars->scalar.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
@@ -553,64 +464,33 @@ RBGSSolver::scalar_underrelax(const ProcessorGroup* ,
 #ifdef WONT_COMPILE_YET
   FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
 		 idxLo.get_pointer(), idxHi.get_pointer(),
-		 scalar.getPointer(),
-		 scalarCoeff[Arches::AP].getPointer(), 
-		 scalarCoeff[Arches::AE].getPointer(), 
-		 scalarCoeff[Arches::AW].getPointer(), 
-		 scalarCoeff[Arches::AN].getPointer(), 
-		 scalarCoeff[Arches::AS].getPointer(), 
-		 scalarCoeff[Arches::AT].getPointer(), 
-		 scalarCoeff[Arches::AB].getPointer(), 
-		 scalarNonLinSrc.getPointer(), 
-		 d_underrelax);
+		 vars->scalar.getPointer(),
+		 vars->scalarCoeff[Arches::AP].getPointer(), 
+		 vars->scalarCoeff[Arches::AE].getPointer(), 
+		 vars->scalarCoeff[Arches::AW].getPointer(), 
+		 vars->scalarCoeff[Arches::AN].getPointer(), 
+		 vars->scalarCoeff[Arches::AS].getPointer(), 
+		 vars->scalarCoeff[Arches::AT].getPointer(), 
+		 vars->scalarCoeff[Arches::AB].getPointer(), 
+		 vars->scalarNonLinSrc.getPointer(), 
+		 &d_underrelax);
 #endif
-
-  // Write the scalar Coefficients and nonlinear source terms into new DW
-  // ** WARNING ** scalarCoeff is not being read in corrctly .. may
-  //               have to create new type instead of StencilMatrix
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(scalarCoeff[ii], d_scalCoefSSLabel, index, patch);
-  }
-  new_dw->put(scalarNonLinSrc, d_scalNonLinSrcSSLabel, index, patch);
 }
 
 //****************************************************************************
 // Scalar Solve
 //****************************************************************************
 void 
-RBGSSolver::scalar_lisolve(const ProcessorGroup* ,
-			   const Patch* patch,
-			   DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw, 
-			   int index)
+RBGSSolver::scalarLisolve(const ProcessorGroup* ,
+			  const Patch* patch,
+			  DataWarehouseP& old_dw,
+			  DataWarehouseP& new_dw, 
+			  int index,
+			  ArchesVariables* vars)
 {
-  int numGhostCells = 0;
-  int matlIndex = 0;
-  int nofStencils = 7;
-
-  // Variables
-  CCVariable<double> scalar;
-  StencilMatrix<CCVariable<double> > scalarCoeff;
-  CCVariable<double> scalarNonLinSrc;
-
-  // Get the scalar from the old DW and scalar coefficients and non-linear
-  // source terms from the new DW
-  old_dw->get(scalar, d_scalarINLabel, index, patch, Ghost::None,
-	      numGhostCells);
-
-  // ** WARNING ** scalarCoeff is not being read in corrctly .. may
-  //               have to create new type instead of StencilMatrix
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->get(scalarCoeff[ii], d_scalCoefSSLabel, index, patch, 
-		Ghost::None, numGhostCells);
-  }
-
-  new_dw->get(scalarNonLinSrc, d_scalNonLinSrcSSLabel, index, patch, 
-	      Ghost::None, numGhostCells);
- 
   // Get the patch bounds and the variable bounds
-  IntVector domLo = scalar.getFortLowIndex();
-  IntVector domHi = scalar.getFortHighIndex();
+  IntVector domLo = vars->scalar.getFortLowIndex();
+  IntVector domHi = vars->scalar.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
@@ -618,36 +498,24 @@ RBGSSolver::scalar_lisolve(const ProcessorGroup* ,
   //fortran call for red-black GS solver
   FORT_RBGSLISOLV(domLo.get_pointer(), domHi.get_pointer(),
 		  idxLo.get_pointer(), idxHi.get_pointer(),
-		  scalar.getPointer(),
-		  scalarCoeff[Arches::AP].getPointer(), 
-		  scalarCoeff[Arches::AE].getPointer(), 
-		  scalarCoeff[Arches::AW].getPointer(), 
-		  scalarCoeff[Arches::AN].getPointer(), 
-		  scalarCoeff[Arches::AS].getPointer(), 
-		  scalarCoeff[Arches::AT].getPointer(), 
-		  scalarCoeff[Arches::AB].getPointer(), 
-		  scalarNonLinSrc.getPointer());
-		  d_underrelax);
+		  vars->scalar.getPointer(),
+		  vars->scalarCoeff[Arches::AP].getPointer(), 
+		  vars->scalarCoeff[Arches::AE].getPointer(), 
+		  vars->scalarCoeff[Arches::AW].getPointer(), 
+		  vars->scalarCoeff[Arches::AN].getPointer(), 
+		  vars->scalarCoeff[Arches::AS].getPointer(), 
+		  vars->scalarCoeff[Arches::AT].getPointer(), 
+		  vars->scalarCoeff[Arches::AB].getPointer(), 
+		  vars->scalarNonLinSrc.getPointer());
+		  &d_underrelax);
 #endif
-
-  new_dw->put(scalar, d_scalarSPLabel, index, patch);
-}
-
-//****************************************************************************
-// Calculate Scalar residuals
-//****************************************************************************
-void 
-RBGSSolver::scalar_residCalculation(const ProcessorGroup* ,
-				    const Patch* ,
-				    DataWarehouseP& ,
-				    DataWarehouseP& , 
-				    int index)
-{
-  index = 0;
 }
 
 //
 // $Log$
+// Revision 1.15  2000/08/01 06:18:38  bbanerje
+// Made ScalarSolver similar to PressureSolver and MomentumSolver.
+//
 // Revision 1.14  2000/07/28 02:31:00  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients

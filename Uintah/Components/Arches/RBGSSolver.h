@@ -62,12 +62,6 @@ public:
       //
       // Construct an instance of a RBGSSolver.
       //
-      // PRECONDITIONS
-      //
-      // POSTCONDITIONS
-      //
-      // Default constructor.
-      //
       RBGSSolver();
 
       // GROUP: Destructors:
@@ -144,70 +138,46 @@ public:
 
       ////////////////////////////////////////////////////////////////////////
       //
-      // Scalar Solve
+      // Calculate scalar residuals
       //
-      void sched_scalarSolve(const LevelP& level,
-			     SchedulerP& sched,
-			     DataWarehouseP& old_dw,
-			     DataWarehouseP& new_dw,
-			     int index);
-protected:
-
-private:
-
-      // GROUP:  Actual Action :
+      void computeScalarResidual(const ProcessorGroup* pc,
+				 const Patch* patch,
+				 DataWarehouseP& old_dw,
+				 DataWarehouseP& new_dw, 
+				 int index,
+				 ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
       // Scalar Underrelaxation
       //
-      void scalar_underrelax(const ProcessorGroup* pc,
-			     const Patch* patch,
-			     DataWarehouseP& old_dw,
-			     DataWarehouseP& new_dw, 
-			     int index);
+      void computeScalarUnderrelax(const ProcessorGroup* pc,
+				   const Patch* patch,
+				   DataWarehouseP& old_dw,
+				   DataWarehouseP& new_dw, 
+				   int index,
+				   ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
       // Scalar Solve
       //
-      void scalar_lisolve(const ProcessorGroup* pc,
-			  const Patch* patch,
-			  DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw, 
-			  int index);
+      void scalarLisolve(const ProcessorGroup* pc,
+			 const Patch* patch,
+			 DataWarehouseP& old_dw,
+			 DataWarehouseP& new_dw, 
+			 int index,
+			 ArchesVariables* vars);
 
-      ////////////////////////////////////////////////////////////////////////
-      //
-      // Calculate Scalar residuals
-      //
-      void scalar_residCalculation(const ProcessorGroup* pc,
-				   const Patch* patch,
-				   DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw, 
-				   int index);
+protected:
+
+private:
 
       int d_maxSweeps;
       double d_convgTol; // convergence tolerence
       double d_underrelax;
       double d_initResid;
       double d_residual;
-
-      // const VarLabel *
-      // inputs (Pressure Solve)
-
-      // inputs (Momentum Solve)
-
-      // inputs (Scalar Solve)
-      const VarLabel* d_scalarINLabel;
-      const VarLabel* d_scalCoefSBLMLabel;
-      const VarLabel* d_scalNonLinSrcSBLMLabel;
-
-      // computes (Scalar Solve)
-      const VarLabel* d_scalResidualSSLabel;
-      const VarLabel* d_scalCoefSSLabel;
-      const VarLabel* d_scalNonLinSrcSSLabel;
-      const VarLabel* d_scalarSPLabel;
 
 }; // End class RBGSSolver.h
 
@@ -218,6 +188,9 @@ private:
   
 //
 // $Log$
+// Revision 1.14  2000/08/01 06:18:38  bbanerje
+// Made ScalarSolver similar to PressureSolver and MomentumSolver.
+//
 // Revision 1.13  2000/07/28 02:31:00  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients

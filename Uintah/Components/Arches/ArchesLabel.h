@@ -215,8 +215,8 @@ namespace Uintah {
       const VarLabel* d_vVelTruncPSLabel;
       const VarLabel* d_wVelResidPSLabel;
       const VarLabel* d_wVelTruncPSLabel;
-      const VarLabel* d_scalarResidPSLabel;
-      const VarLabel* d_scalarTruncPSLabel;
+      const VarLabel* d_scalarResidLabel;
+      const VarLabel* d_scalarTruncLabel;
 
       // Not sure what these labels are for
       const VarLabel* d_DUPBLMLabel;
@@ -234,6 +234,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.4  2000/08/01 06:18:37  bbanerje
+// Made ScalarSolver similar to PressureSolver and MomentumSolver.
+//
 // Revision 1.3  2000/07/28 02:30:59  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients
