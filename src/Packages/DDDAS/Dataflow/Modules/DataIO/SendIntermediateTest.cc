@@ -39,7 +39,7 @@ SendIntermediateTest::SendIntermediateTest(GuiContext* ctx) :
   Point p(0,0,0);
   pcm->add_point(p);
   PointCloudField<double> *pcfd = 
-    scinew PointCloudField<double>(pcm, Field::NODE);
+    scinew PointCloudField<double>(pcm, 0);
   pcfd->resize_fdata();
   pcfd->set_value(69.69, (PointCloudMesh::Node::index_type)0);
   output_ = pcfd;

@@ -275,14 +275,14 @@ void Reader::fill_mesh( string filename, FieldOPort * ofp )
   cerr << "(Reader::fill_mesh) Assign data to cell centers" << endl;
   
   // Assign data to cell centers
-  Field::data_location data_at = Field::CELL;
+  int basis_order = 0; // constant basis
 
   cerr << "(Reader::fill_mesh) Create Image Field" << endl;
   // Create Image Field.
   FieldHandle ofh;
 
-  LatVolField<double> *lvf = scinew LatVolField<double>(mesh, data_at);
-  if (data_at != Field::NONE)
+  LatVolField<double> *lvf = scinew LatVolField<double>(mesh, basis_order);
+  if (basis_order != -1)
   {
     LatVolField<double>::fdata_type::iterator itr = lvf->fdata().begin();
 
