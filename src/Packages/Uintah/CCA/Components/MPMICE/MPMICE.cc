@@ -2115,8 +2115,8 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
         //  WSB1 burn model
         constCCVariable<double> beta, aveSurfTemp;
         CCVariable<double>      beta_new, aveSurfTemp_new;
-        old_dw->get(beta,         MIlb->TempGradLabel   ,react_indx,patch,gn, 0);
-        old_dw->get(aveSurfTemp,  MIlb->aveSurfTempLabel,react_indx,patch,gn, 0);
+        old_dw->get(beta,         MIlb->TempGradLabel   ,react_indx,patch,gn,0);
+        old_dw->get(aveSurfTemp,  MIlb->aveSurfTempLabel,react_indx,patch,gn,0);
 
         new_dw->allocateAndPut(beta_new,        
                                   MIlb->TempGradLabel,   react_indx,patch);
