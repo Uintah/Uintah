@@ -85,9 +85,17 @@ HistObj::draw( bool )
 {
   glColor3f( color_.r(), color_.g(), color_.b() );
 
-  glBegin(GL_LINE_STRIP);
+//   glBegin(GL_LINE_STRIP);
+//   for (int i=0; i<data_.size(); i++) {
+//     glVertex2f( i, data_[i] );
+//   }
+
+  glBegin(GL_QUADS);
   for (int i=0; i<data_.size(); i++) {
-    glVertex2f( i, data_[i] );
+    glVertex2i(i,0);
+    glVertex2i(i+1,0);
+    glVertex2f(i+1,data_[i]);
+    glVertex2f(i,data_[i]);
   }
   glEnd();
 
