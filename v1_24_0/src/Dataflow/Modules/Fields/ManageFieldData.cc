@@ -308,12 +308,12 @@ ManageFieldDataAlgoMesh::get_compile_info(const TypeDescription *fsrc,
   {
   case 3:
     extension = "Tensor6";
-    extension2 = "Tensor6";
+    extension2 = "Tensor";
     break;
 
   case 2:
     extension = "Tensor9";
-    extension2 = "Tensor9";
+    extension2 = "Tensor";
     break;
 
   case 1:
