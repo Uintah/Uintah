@@ -121,6 +121,7 @@ Streamline
 VectorSeg
 VolVis
 WidgetTest
+AddWells
 
 Category: Writers
 ColorMapWriter
