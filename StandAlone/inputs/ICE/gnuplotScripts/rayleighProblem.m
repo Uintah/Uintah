@@ -10,33 +10,52 @@
 %  HardWired Variables  ( Tweak these)
 clear all;
 close all;
-timesteps={405,805, 1206,1607,2008,2409,2810,3211,3612};
-time = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+
+uda      = sprintf('rayleigh.uda.001')
 viscosity = 0.01;
 vel_CC_initial = 10.0;
+dy = 0.35/50;
+
+% lineExtract options
+options = '-istart 25 0 0 -iend 25 50 0 -m 0'
+
+%________________________________
+%  extract the physical time of each dump
+c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda);
+[status0, result0]=unix(c0);
+physicalTime  = importdata('tmp');
+nDumps = length(physicalTime) - 1;
 
 %_________________________________
 % Loop over all the timesteps
-for( t = 1:length(timesteps) )
+for( t = 1:nDumps )
+  %t = input('input timestep')
+  time =physicalTime(t)
+  %use line extract to pull out the data
+  c1 = sprintf('lineextract -v vel_CC -timestep %i %s -o vel_tmp -uda %s',t,options,uda)
+  [status1, result1]=unix(c1)
   
-  %Load the data into the arrays  
-  here = timesteps{t};
-  path = sprintf('BOT_Advection_after_BC/%d/patch_combined/Mat_0/X_vel_CC',here);
-  load(path);
-  data =importdata(path);
-  y    =data(:,1);
-  uvel =data(:,2);
-  
+  % rip out [] from velocity data
+  c2 = sprintf('sed ''s/\\[//g'' vel_tmp | sed ''s/\\]//g'' >vel');
+  [status2, result2]=unix(c2);
+
+  % import the data into arrays
+  vel1    = importdata('vel'); 
+  y = vel1(:,2) * dy;
+  uvel = vel1(:,4);    
+  vvel = vel1(:,5);
+  wvel = vel1(:,6);
+ 
   % computes quantities
   vel_ratio = uvel/vel_CC_initial;
-  eta = y/sqrt(4.0 * viscosity * time{t});
-  vel_ratio_exact =( 1.0 - erf( y/(2.0 * sqrt(viscosity * time{t})) ) );
+  eta = y/sqrt(4.0 * viscosity * time);
+  vel_ratio_exact =( 1.0 - erf( y/(2.0 * sqrt(viscosity * time)) ) );
   
   %______________________________
   % Plot the results from each timestep
   % onto 2 plots
   subplot(2,1,1),plot(uvel, y)
-  xlabel('uvel')
+  xlabel('u velocity')
   ylabel('y')
   legend('computed');
   title('Rayleigh Problem');
@@ -52,7 +71,7 @@ for( t = 1:length(timesteps) )
   grid on;
   axis([0 1 0 3]);
   
-  pause
+  %pause
   clear y, uvel, vel_ratio, eta, vel_ratio_exact;
 end
 hold off;
