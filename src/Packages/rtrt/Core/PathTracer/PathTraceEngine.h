@@ -50,6 +50,9 @@ namespace rtrt {
     PathTraceLight light;
     // Surface luminance
     float luminance;
+    // Lighting parameters
+    bool compute_shadows; // defaults to true
+    bool compute_directlighting; // defaults to true
     // Acceleration geometry
     Object* geometry;
     // Background
@@ -73,6 +76,12 @@ namespace rtrt {
     // Stuff for PerProcessorContext
     int pp_size;
     int pp_scratchsize;
+
+    void shadowsOff() { compute_shadows = false; }
+    void directLightingOff() {
+      compute_shadows = false;
+      compute_directlighting = false;
+    }
   };
   
 #define NUM_SAMPLE_GROUPS 100
