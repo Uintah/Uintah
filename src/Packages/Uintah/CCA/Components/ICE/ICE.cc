@@ -330,8 +330,10 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
   scheduleAddExchangeToMomentumAndEnergy(sched, patches, all_matls);
 
   scheduleAdvectAndAdvanceInTime(sched, patches, all_matls);
-
-  //schedulePrintConservedQuantities(sched, patches, press_matl,all_matls); 
+  
+  if(switchTestConservation) {
+    schedulePrintConservedQuantities(sched, patches, press_matl,all_matls); 
+  }
   
 }
 
