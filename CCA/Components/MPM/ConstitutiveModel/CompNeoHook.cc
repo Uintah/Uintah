@@ -701,7 +701,7 @@ void CompNeoHook::addComputesAndRequiresImplicit(Task* task,
    if (recursion)
      task->modifies(lb->pStressLabel_preReloc);
    else
-     task->computes(lb->pStressLabel,matlset);
+     task->computes(lb->pStressLabel_preReloc,matlset);
 
 
    task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
@@ -709,6 +709,40 @@ void CompNeoHook::addComputesAndRequiresImplicit(Task* task,
    task->computes(bElBarLabel_preReloc,matlset);
    
 }
+
+void CompNeoHook::addComputesAndRequiresImplicitOnly(Task* task,
+						 const MPMMaterial* matl,
+						 const PatchSet*,
+						 const bool recursion)
+{
+   const MaterialSubset* matlset = matl->thisMaterial();
+   task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
+   task->requires(Task::OldDW, lb->pMassLabel,   matlset, Ghost::None);
+   task->requires(Task::OldDW, lb->pVelocityLabel, matlset, Ghost::None);
+   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
+						 matlset, Ghost::None);
+
+   task->requires(Task::OldDW,bElBarLabel,matlset,Ghost::None);
+   task->requires(Task::NewDW,lb->gVelocityLabel,matlset,Ghost::AroundCells,1);
+   task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
+   
+   task->requires(Task::OldDW, lb->delTLabel);
+
+   if(d_8or27==27){
+     task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
+   }
+
+   task->modifies(lb->pStressLabel_preReloc);
+ 
+
+
+   task->modifies(lb->pDeformationMeasureLabel_preReloc, matlset);
+   task->modifies(lb->pVolumeDeformedLabel,              matlset);
+   task->modifies(bElBarLabel_preReloc,matlset);
+   
+}
+
+
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double CompNeoHook::computeRhoMicroCM(double pressure, 
