@@ -40,16 +40,15 @@ are two UI checkbuttons for the widget transform.  The first is the
 "Ignore Changes" button.  When selected, any changes to the scene
 widget are not reflected in the transform the module outputs.  This
 mode is useful for alligning the widget with an object to be moved
-(e.g. coregistration).  The second is the "Auto Update" button.  When
-selected, any change to the scene widget is propagated immediately to
-the transformation and is output (as opposed to only updating and
-outputing the transform when the user explicitly presses the "Apply
-Transform" button).  The exceptions to this are if the user has also
-selected the "Ignore Changes" button, or if the user changes the
-uniform scale.  The user can perform a uniform scale via the tcl
-interface (since scaled-box widgets do not presently support such a
-mode).  After the scale is applied (via the "Apply Transform" button),
-the scale is automatically reset to the value 1.0.
+(e.g. coregistration).  The second is the "Resize Separably" button.
+When selected, the resize handles of the widget are shown - these can
+be used for separably resizing the data in different directions.
+Since most coregistration should not require separable scaling, the
+default is not to sho the resize handles.  The user can perform a
+uniform scale via the tcl interface (since scaled-box widgets do not
+presently support such a mode).  After the scale is applied (via the
+"Apply Transform" button), the scale is automatically reset to the
+value 1.0.
 
 When the module executes, it checks its optional matrix input port and
 if no matrix was passed in, it build an identity matrix for input.
