@@ -1150,13 +1150,24 @@ ICUMonitor::setConfigFromData()
   string value;
   int intValue, idxDigits;
   float floatValue;
+  string name;
 
+  // find how many plots we are drawing and call init_plots()
+  data_->get_property(string("DSPY_plot_count"), value);
+  // set gui int plot count
+  gui_plot_count_.set(intValue);
+  if(intValue < 10) idxDigits = 1;
+  else if(intValue < 100) idxDigits = 2;
+  // once we know how many plots we are drawing
+  // we can (must) call init_plots()
+  init_plots();
+
+  // now that the GUI variables have been allocated, populate them
   for (unsigned int c = 0; c < data_->nproperties(); c++) {
-     string name = data_->get_property_name(c);
+     name = data_->get_property_name(c);
      // only look at DSPY_<name> values here
      if(string(name, 0, 5) == "DSPY_")
      {
-       //data_->get_property(name, value);
        data_->get_property(name, value);
        // convert value string to various types
        stringstream ss(value);
@@ -1165,15 +1176,6 @@ ICUMonitor::setConfigFromData()
        // strip off "DSPY_"
        string ICUvarName = string(name, 5, name.size()-5);
 
-       if(ICUvarName ==  "plot_count")
-       { // set gui int plot count
-           gui_plot_count_.set(intValue);
-           if(intValue < 10) idxDigits = 1;
-           else if(intValue < 100) idxDigits = 2;
-	   // once we know how many plots we are drawing
-	   // we can (must) call init_plots()
-	   init_plots();
-       }
        if(string(ICUvarName, 0, 9) ==  "nw_label-")
        {
            // get gui var index
@@ -1397,9 +1399,9 @@ ICUMonitor::execute()
 
   addMarkersToMenu();
 
-  setConfigFromData();
-
   setNameAndDateAndTime();
+
+  setConfigFromData();
 
   NrrdIPort *nrrd2_port = (NrrdIPort*)get_iport("Nrrd2");
 
