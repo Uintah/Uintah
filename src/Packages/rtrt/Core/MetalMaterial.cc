@@ -24,10 +24,10 @@ PersistentTypeID MetalMaterial::type_id("MetalMaterial", "Material",
 MetalMaterial::MetalMaterial(const Color& specular_reflectance)
     : specular_reflectance(specular_reflectance)
 {
-     phong_exponent = 100.0;
+     phong_exponent = 100;
 }
 
-MetalMaterial::MetalMaterial(const Color& specular_reflectance, double phong_exponent)
+MetalMaterial::MetalMaterial(const Color& specular_reflectance, int phong_exponent)
     : specular_reflectance(specular_reflectance), phong_exponent(phong_exponent)
 {
 }

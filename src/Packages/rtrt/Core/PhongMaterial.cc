@@ -22,7 +22,7 @@ PersistentTypeID PhongMaterial::type_id("PhongMaterial", "Material",
 
 
 PhongMaterial::PhongMaterial(const Color& Rd, double opacity, double Rphong, 
-			     double phong_exponent)
+			     int phong_exponent)
   : Rd(Rd), opacity(opacity), Rphong(Rphong), phong_exponent(phong_exponent)
 {
 }

@@ -9,10 +9,10 @@ namespace rtrt {
 class CoupledMaterial : public Material {
   Color Rd;   // diffuse reflectance
   double R0;  // normal reflectance of polish
-  double phong_exponent;
+  int phong_exponent;
 public:
   CoupledMaterial(const Color& Rd, double R0 = 0.05, 
-		  double phong_exponent = 100);
+		  int phong_exponent = 100);
   virtual ~CoupledMaterial();
   virtual void io(SCIRun::Piostream &/*stream*/)
   { ASSERTFAIL("not implemented"); }

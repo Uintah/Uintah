@@ -18,18 +18,18 @@ class PhongMaterial : public Material {
   Color Rd;   // diffuse reflectance
   double opacity;  // transparancy = 1 - opacity
   double Rphong;  // phong reflectance
-  double phong_exponent;
+  int phong_exponent;
 public:
   PhongMaterial(const Color& Rd, double opacity, double Rphong = 0.0, 
-		double phong_exponent = 100);
+		int phong_exponent = 100);
   inline Color get_diffuse() { return Rd; }
   inline void set_diffuse(const Color &d) { Rd = d; }
   inline double get_opacity() { return opacity; }
   inline void set_opacity(double o) { opacity = o; }
   inline double get_reflectance() { return Rphong; }
   inline void set_reflectance(double r) { Rphong = r; }
-  inline double get_shininess() { return phong_exponent; }
-  inline void set_shininess(double s) { phong_exponent = s; }
+  inline int get_shininess() { return phong_exponent; }
+  inline void set_shininess(int s) { phong_exponent = s; }
   virtual ~PhongMaterial();
 
   PhongMaterial() : Material() {} // for Pio.
