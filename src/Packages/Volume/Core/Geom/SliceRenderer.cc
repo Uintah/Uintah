@@ -1,24 +1,44 @@
-#include <sci_gl.h>
+//  
+//  For more information, please see: http://software.sci.utah.edu
+//  
+//  The MIT License
+//  
+//  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+//  University of Utah.
+//  
+//  License for the specific language governing rights and limitations under
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//  
+//  The above copyright notice and this permission notice shall be included
+//  in all copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//  
+//    File   : SliceRenderer.cc
+//    Author : Milan Ikits
+//    Date   : Wed Jul  7 23:37:16 2004
 
+#include <string>
 #include <Core/Geom/GeomOpenGL.h>
-
 #include <Packages/Volume/Core/Geom/SliceRenderer.h>
-#include <Packages/Volume/Core/Geom/FragmentProgramARB.h>
 #include <Packages/Volume/Core/Datatypes/Brick.h>
 #include <Packages/Volume/Core/Util/SliceTable.h>
+#include <Packages/Volume/Core/Util/ShaderProgramARB.h>
 
-// static const char* ShaderString =
-// "!!ARBfp1.0 \n
-// TEMP c0, c; \n
-// ATTRIB fc = fragment.color; \n
-// ATTRIB tf = fragment.texcoord[0]; \n
-// TEX c0, tf, texture[0], 3D; \n
-// TEX c, c0, texture[1], 1D; \n
-// MUL c, c, fc; \n
-// MOV_SAT result.color, c; \n
-// END";
+using std::string;
 
-static const char* ShaderString1 =
+static const string ShaderString1 =
 "!!ARBfp1.0 \n"
 "TEMP v, c; \n"
 "ATTRIB t = fragment.texcoord[0]; \n"
@@ -28,8 +48,7 @@ static const char* ShaderString1 =
 "MUL result.color, c, f; \n"
 "END";
 
-
-static const char* ShaderString4 =
+static const string ShaderString4 =
 "!!ARBfp1.0 \n"
 "TEMP v, c; \n"
 "ATTRIB t = fragment.texcoord[0]; \n"
@@ -39,8 +58,7 @@ static const char* ShaderString4 =
 "MUL result.color, c, f; \n"
 "END";
 
-
-static const char* FogShaderString1 =
+static const string FogShaderString1 =
 "!!ARBfp1.0 \n"
 "TEMP value, color, fogFactor; \n"
 "PARAM fogColor = state.fog.color; \n"
@@ -57,7 +75,7 @@ static const char* FogShaderString1 =
 "MOV result.color, color; \n"
 "END";
 
-static const char* FogShaderString4 =
+static const string FogShaderString4 =
 "!!ARBfp1.0 \n"
 "TEMP value, color, fogFactor, finalColor; \n"
 "PARAM fogColor = state.fog.color; \n"
@@ -90,10 +108,10 @@ SliceRenderer::SliceRenderer():
   phi1_(0),
   draw_cyl_(false)
 {
-  VolShader1 = new FragmentProgramARB(ShaderString1, false);
-  VolShader4 = new FragmentProgramARB(ShaderString4, false);
-  FogVolShader1 = new FragmentProgramARB(FogShaderString1, false);
-  FogVolShader4 = new FragmentProgramARB(FogShaderString4, false);
+  VolShader1 = new FragmentProgramARB(ShaderString1);
+  VolShader4 = new FragmentProgramARB(ShaderString4);
+  FogVolShader1 = new FragmentProgramARB(FogShaderString1);
+  FogVolShader4 = new FragmentProgramARB(FogShaderString4);
 
   lighting_ = 1;
 }
@@ -111,10 +129,10 @@ SliceRenderer::SliceRenderer(TextureHandle tex, ColorMapHandle map, Colormap2Han
   phi1_(0),
   draw_cyl_(false)
 {
-  VolShader1 = new FragmentProgramARB(ShaderString1, false);
-  VolShader4 = new FragmentProgramARB(ShaderString4, false);
-  FogVolShader1 = new FragmentProgramARB(FogShaderString1, false);
-  FogVolShader4 = new FragmentProgramARB(FogShaderString4, false);
+  VolShader1 = new FragmentProgramARB(ShaderString1);
+  VolShader4 = new FragmentProgramARB(ShaderString4);
+  FogVolShader1 = new FragmentProgramARB(FogShaderString1);
+  FogVolShader4 = new FragmentProgramARB(FogShaderString4);
   lighting_ = 1;
 }
 

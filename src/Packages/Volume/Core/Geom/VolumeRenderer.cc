@@ -1,19 +1,47 @@
-#include <sci_gl.h>
+//  
+//  For more information, please see: http://software.sci.utah.edu
+//  
+//  The MIT License
+//  
+//  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+//  University of Utah.
+//  
+//  License for the specific language governing rights and limitations under
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//  
+//  The above copyright notice and this permission notice shall be included
+//  in all copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//  
+//    File   : VolumeRenderer.cc
+//    Author : Milan Ikits
+//    Date   : Thu Jul  8 00:04:15 2004
 
+#include <string>
 #include <Core/Geom/GeomOpenGL.h>
-
 #include <Packages/Volume/Core/Geom/VolumeRenderer.h>
-#include <Packages/Volume/Core/Geom/VertexProgramARB.h>
-#include <Packages/Volume/Core/Geom/FragmentProgramARB.h>
-#include <Packages/Volume/Core/Datatypes/Brick.h>
+#include <Packages/Volume/Core/Util/ShaderProgramARB.h>
 #include <Packages/Volume/Core/Util/SliceTable.h>
+#include <Packages/Volume/Core/Datatypes/Brick.h>
 #include <Core/Util/DebugStream.h>
+
+using std::string;
 
 static SCIRun::DebugStream dbg("VolumeRenderer", false);
 
-//ATTRIB fc = fragment.color;
-//MUL_SAT result.color, c, fc;
-static const char* ShaderString1 =
+static const string ShaderString1 =
 "!!ARBfp1.0 \n"
 "TEMP v; \n"
 "ATTRIB t = fragment.texcoord[0]; \n"
@@ -21,7 +49,7 @@ static const char* ShaderString1 =
 "TEX result.color, v, texture[2], 1D; \n"
 "END";
 
-static const char* ShaderString4 =
+static const string ShaderString4 =
 "!!ARBfp1.0 \n"
 "TEMP v; \n"
 "ATTRIB t = fragment.texcoord[0]; \n"
@@ -29,7 +57,7 @@ static const char* ShaderString4 =
 "TEX result.color, v.w, texture[2], 1D; \n"
 "END";
 
-static const char* ShaderString1_2 =
+static const string ShaderString1_2 =
 "!!ARBfp1.0 \n"
 "TEMP v, c; \n"
 "ATTRIB t = fragment.texcoord[0]; \n"
@@ -38,7 +66,7 @@ static const char* ShaderString1_2 =
 "TEX result.color, v, texture[2], 2D; \n"
 "END";
 
-static const char* ShaderString4_2 =
+static const string ShaderString4_2 =
 "!!ARBfp1.0 \n"
 "TEMP v, c; \n"
 "ATTRIB t = fragment.texcoord[0]; \n"
@@ -50,7 +78,7 @@ static const char* ShaderString4_2 =
 //fogParam = {density, start, end, 1/(end-start) 
 //fogCoord.x = z
 //f = (end - fogCoord)/(end-start)
-static const char* FogShaderString1 =
+static const string FogShaderString1 =
 "!!ARBfp1.0 \n"
 "TEMP c0, c, fogFactor, finalColor; \n"
 "PARAM fogColor = state.fog.color; \n"
@@ -66,7 +94,7 @@ static const char* FogShaderString1 =
 "MOV result.color, finalColor; \n"
 "END";
 
-static const char* FogShaderString1_2 =
+static const string FogShaderString1_2 =
 "!!ARBfp1.0 \n"
 "TEMP v, c, fogFactor, finalColor; \n"
 "PARAM fogColor = state.fog.color; \n"
@@ -83,7 +111,7 @@ static const char* FogShaderString1_2 =
 "MOV result.color, finalColor; \n"
 "END";
 
-static const char* FogShaderString4 =
+static const string FogShaderString4 =
 "!!ARBfp1.0 \n"
 "TEMP c0, c, fogFactor, finalColor; \n"
 "PARAM fogColor = state.fog.color; \n"
@@ -99,7 +127,7 @@ static const char* FogShaderString4 =
 "MOV result.color, finalColor; \n"
 "END";
 
-static const char* FogShaderString4_2 =
+static const string FogShaderString4_2 =
 "!!ARBfp1.0 \n"
 "TEMP v, c, fogFactor, finalColor; \n"
 "PARAM fogColor = state.fog.color; \n"
@@ -116,7 +144,7 @@ static const char* FogShaderString4_2 =
 "MOV result.color, finalColor; \n"
 "END";
 
-static const char* LitVolShaderString =
+static const string LitVolShaderString =
 "!!ARBfp1.0 \n"
 "ATTRIB t = fragment.texcoord[0];\n"
 "PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
@@ -137,7 +165,7 @@ static const char* LitVolShaderString =
 "MOV result.color, c; \n"
 "END";
 
-static const char* LitVolShaderString_2 =
+static const string LitVolShaderString_2 =
 "!!ARBfp1.0 \n"
 "ATTRIB t = fragment.texcoord[0];\n"
 "PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
@@ -159,7 +187,7 @@ static const char* LitVolShaderString_2 =
 "MOV result.color, c; \n"
 "END";
 
-static const char* LitFogVolShaderString =
+static const string LitFogVolShaderString =
 "!!ARBfp1.0 \n"
 "ATTRIB t = fragment.texcoord[0];\n"
 "PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
@@ -186,7 +214,7 @@ static const char* LitFogVolShaderString =
 "MOV result.color, c; \n"
 "END";
 
-static const char* LitFogVolShaderString_2 =
+static const string LitFogVolShaderString_2 =
 "!!ARBfp1.0 \n"
 "ATTRIB t = fragment.texcoord[0];\n"
 "PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
@@ -214,7 +242,7 @@ static const char* LitFogVolShaderString_2 =
 "MOV result.color, c; \n"
 "END";
 
-static const char* FogVertexShaderString =
+static const string FogVertexShaderString =
 "!!ARBvp1.0 \n"
 "ATTRIB iPos = vertex.position; \n"
 "ATTRIB iTex0 = vertex.texcoord[0]; \n"
@@ -239,19 +267,19 @@ VolumeRenderer::VolumeRenderer() :
   shading_(false), ambient_(0.5), diffuse_(0.5), specular_(0.0),
   shine_(30.0), light_(0)
 {
-  VolShader1 = new FragmentProgramARB(ShaderString1, false);
-  VolShader4 = new FragmentProgramARB(ShaderString4, false);
-  FogVolShader1 = new FragmentProgramARB(FogShaderString1, false);
-  FogVolShader4 = new FragmentProgramARB(FogShaderString4, false);
-  LitVolShader = new FragmentProgramARB(LitVolShaderString, false);
-  LitFogVolShader = new FragmentProgramARB(LitFogVolShaderString, false);
-  VolShader1_2 = new FragmentProgramARB(ShaderString1_2, false);
-  VolShader4_2 = new FragmentProgramARB(ShaderString4_2, false);
-  FogVolShader1_2 = new FragmentProgramARB(FogShaderString1_2, false);
-  FogVolShader4_2 = new FragmentProgramARB(FogShaderString4_2, false);
-  LitVolShader_2 = new FragmentProgramARB(LitVolShaderString_2, false);
-  LitFogVolShader_2 = new FragmentProgramARB(LitFogVolShaderString_2, false);
-  FogVertexShader = new VertexProgramARB(FogVertexShaderString, false);
+  VolShader1 = new FragmentProgramARB(ShaderString1);
+  VolShader4 = new FragmentProgramARB(ShaderString4);
+  FogVolShader1 = new FragmentProgramARB(FogShaderString1);
+  FogVolShader4 = new FragmentProgramARB(FogShaderString4);
+  LitVolShader = new FragmentProgramARB(LitVolShaderString);
+  LitFogVolShader = new FragmentProgramARB(LitFogVolShaderString);
+  VolShader1_2 = new FragmentProgramARB(ShaderString1_2);
+  VolShader4_2 = new FragmentProgramARB(ShaderString4_2);
+  FogVolShader1_2 = new FragmentProgramARB(FogShaderString1_2);
+  FogVolShader4_2 = new FragmentProgramARB(FogShaderString4_2);
+  LitVolShader_2 = new FragmentProgramARB(LitVolShaderString_2);
+  LitFogVolShader_2 = new FragmentProgramARB(LitFogVolShaderString_2);
+  FogVertexShader = new VertexProgramARB(FogVertexShaderString);
 }
 
 VolumeRenderer::VolumeRenderer(TextureHandle tex, ColorMapHandle cmap, Colormap2Handle cmap2):
@@ -260,19 +288,19 @@ VolumeRenderer::VolumeRenderer(TextureHandle tex, ColorMapHandle cmap, Colormap2
   shading_(false), ambient_(0.5), diffuse_(0.5), specular_(0.0),
   shine_(30.0), light_(0)
 {
-  VolShader1 = new FragmentProgramARB(ShaderString1, false );
-  VolShader4 = new FragmentProgramARB(ShaderString4, false );
-  FogVolShader1 = new FragmentProgramARB(FogShaderString1, false );
-  FogVolShader4 = new FragmentProgramARB(FogShaderString4, false );
-  LitVolShader = new FragmentProgramARB(LitVolShaderString, false);
-  LitFogVolShader = new FragmentProgramARB(LitFogVolShaderString, false);
-  VolShader1_2 = new FragmentProgramARB(ShaderString1_2, false);
-  VolShader4_2 = new FragmentProgramARB(ShaderString4_2, false);
-  FogVolShader1_2 = new FragmentProgramARB(FogShaderString1_2, false);
-  FogVolShader4_2 = new FragmentProgramARB(FogShaderString4_2, false);
-  LitVolShader_2 = new FragmentProgramARB(LitVolShaderString_2, false);
-  LitFogVolShader_2 = new FragmentProgramARB(LitFogVolShaderString_2, false);
-  FogVertexShader = new VertexProgramARB(FogVertexShaderString, false);
+  VolShader1 = new FragmentProgramARB(ShaderString1);
+  VolShader4 = new FragmentProgramARB(ShaderString4);
+  FogVolShader1 = new FragmentProgramARB(FogShaderString1);
+  FogVolShader4 = new FragmentProgramARB(FogShaderString4);
+  LitVolShader = new FragmentProgramARB(LitVolShaderString);
+  LitFogVolShader = new FragmentProgramARB(LitFogVolShaderString);
+  VolShader1_2 = new FragmentProgramARB(ShaderString1_2);
+  VolShader4_2 = new FragmentProgramARB(ShaderString4_2);
+  FogVolShader1_2 = new FragmentProgramARB(FogShaderString1_2);
+  FogVolShader4_2 = new FragmentProgramARB(FogShaderString4_2);
+  LitVolShader_2 = new FragmentProgramARB(LitVolShaderString_2);
+  LitFogVolShader_2 = new FragmentProgramARB(LitFogVolShaderString_2);
+  FogVertexShader = new VertexProgramARB(FogVertexShaderString);
 }
 
 VolumeRenderer::VolumeRenderer( const VolumeRenderer& copy):
@@ -398,26 +426,11 @@ VolumeRenderer::draw()
   //--------------------------------------------------------------------------
 
   if(mode_ == OVEROP) {
-    //glFogi(GL_FOG_COORDINATE_SOURCE, GL_FRAGMENT_DEPTH);
     GLboolean fog;
     glGetBooleanv(GL_FOG, &fog);
 
-//     GLfloat fog_start, fog_end;
-//     GLfloat fog_color[4];
-//     GLint fog_source;
-//     glGetIntegerv(GL_FOG_COORDINATE_SOURCE, &fog_source);
-//     glGetFloatv(GL_FOG_START, &fog_start);
-//     glGetFloatv(GL_FOG_END, &fog_end);
-//     glGetFloatv(GL_FOG_COLOR, (GLfloat*)&fog_color);
-
-//     dbg << "FOG: " << (int)fog << endl;
-//     dbg << "PARAM: " << fog_start << " " << fog_end << endl;
-//     dbg << "COLOR: " << fog_color[0] << " " << fog_color[1] << " " << fog_color[2] << " " << fog_color[3] << endl;
-//     dbg << "SOURCE: " << fog_source << " " << GL_FRAGMENT_DEPTH << " " << GL_FOG_COORDINATE << endl;
-
     int nc = (*bricks.begin())->data()->nc();
     int nb0 = (*bricks.begin())->data()->nb(0);
-    //int nb1 = (*bricks.begin())->data()->nb(1);
     
     if (fog) {
       if (!FogVertexShader->valid()) {

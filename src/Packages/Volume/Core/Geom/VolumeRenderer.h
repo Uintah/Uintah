@@ -32,7 +32,6 @@
 #include <Packages/Volume/Core/Datatypes/Texture.h>
 #include <Packages/Volume/Core/Geom/TextureRenderer.h>
 
-
 namespace Volume {
 
 using SCIRun::GeomObj;

@@ -6,9 +6,9 @@ SRCDIR   := Packages/Volume/Core/Util
 
 SRCS     += \
 	$(SRCDIR)/SliceTable.cc \
-	$(SRCDIR)/Utils.cc
+	$(SRCDIR)/Utils.cc \
+	$(SRCDIR)/ShaderProgramARB.cc \
 #	$(SRCDIR)/Pbuffer.cc \
-#	$(SRCDIR)/Shader.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Geometry \
