@@ -33,7 +33,7 @@ using std::vector;
 #pragma reset woff 1375
 #endif
 
-#define NEW_MODULE_MAKER 1
+#define NEW_MODULE_MAKER 0
 typedef std::map<int,char*>::iterator char_iter;
 
 namespace PSECore {
@@ -741,6 +741,10 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.19  2000/10/19 15:13:26  moulding
+// set NEW_MODULE_MAKER to 0;  I accidentally committed a version with it set
+// to 1.
+//
 // Revision 1.18  2000/10/19 08:05:02  moulding
 // cordoned off an old section of code with #if !NEW_MODULE_MAKER that
 // traversed the old components.xml file.  It will be defunct soon, and will
