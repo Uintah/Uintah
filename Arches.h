@@ -74,7 +74,7 @@ WARNING
 
 //#define Scalar_ENO
 
-//#define Scalar_WENO
+// #define Scalar_WENO
 #ifdef Scalar_WENO
   #define Scalar_ENO
 #endif
