@@ -261,6 +261,13 @@ void ICE::scheduleInitialize(const LevelP& level,
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
 }
+
+void ICE::restartInitialize()
+{
+  // disregard initial dt when restarting
+  d_initialDt = 10000.0;
+}
+
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeStableTimestep--
 _____________________________________________________________________*/
