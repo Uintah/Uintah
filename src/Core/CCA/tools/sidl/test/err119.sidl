@@ -16,7 +16,7 @@
 */
 
 
-class z extends SIDL.Throwable {
+class z extends SSIDL.Throwable {
 };
 
 class x {
