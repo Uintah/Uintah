@@ -36,7 +36,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Util/NotFinished.h>
-
+#include <Core/Util/DebugStream.h>
 
 #include <iostream>
 #include <fstream>
@@ -48,10 +48,7 @@ using namespace std;
 
 #define MAX_BASIS 27
 
-/*`====================*/ 
-//#define DOING    
-#undef DOING
-/*====================`*/
+static DebugStream cout_doing("MPM_DOING_COUT", false);
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
 extern Mutex cerrLock;
@@ -598,10 +595,10 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
   particleIndex totalParticles=0;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout <<"Doing actuallyInitialize on patch " << patch->getID()
-         <<"\t\t\t MPM"<< endl;
-  #endif
+
+    cout_doing <<"Doing actuallyInitialize on patch " << patch->getID()
+	       <<"\t\t\t MPM"<< endl;
+
     CCVariable<short int> cellNAPID;
     new_dw->allocate(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
     cellNAPID.initialize(0);
@@ -645,10 +642,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout <<"Doing interpolateParticlesToGrid on patch " << patch->getID()
-         <<"\t\t MPM"<< endl;
-  #endif
+
+    cout_doing <<"Doing interpolateParticlesToGrid on patch " << patch->getID()
+	       <<"\t\t MPM"<< endl;
+
     int numMatls = d_sharedState->getNumMPMMatls();
 
     NCVariable<double> gmassglobal,gtempglobal;
@@ -837,9 +834,9 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
 				    DataWarehouse* old_dw,
 				    DataWarehouse* new_dw)
 {
- #ifdef DOING
-   cout <<"Doint computeStressTensor " <<"\t\t\t\t MPM"<< endl;
- #endif
+
+  cout_doing <<"Doint computeStressTensor " <<"\t\t\t\t MPM"<< endl;
+
    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -855,10 +852,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout <<"Doing computeInternalForce on patch " << patch->getID()
-         <<"\t\t\t MPM"<< endl;
-  #endif
+
+    cout_doing <<"Doing computeInternalForce on patch " << patch->getID()
+	       <<"\t\t\t MPM"<< endl;
+
     Vector dx = patch->dCell();
     double oodx[3];
     oodx[0] = 1.0/dx.x();
@@ -1022,10 +1019,10 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout <<"Doing computeInternalHeatRate on patch " << patch->getID()
-         <<"\t\t MPM"<< endl;
-  #endif
+
+    cout_doing <<"Doing computeInternalHeatRate on patch " << patch->getID()
+	       <<"\t\t MPM"<< endl;
+
     Vector dx = patch->dCell();
     double oodx[3];
     oodx[0] = 1.0/dx.x();
@@ -1125,10 +1122,10 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout <<"Doing solveEquationsMotion on patch " << patch->getID()
-         <<"\t\t\t MPM"<< endl;
-  #endif
+
+    cout_doing <<"Doing solveEquationsMotion on patch " << patch->getID()
+	       <<"\t\t\t MPM"<< endl;
+
     Vector gravity = d_sharedState->getGravity();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label() );
@@ -1206,10 +1203,10 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout <<"Doing solveHeatEquations on patch " << patch->getID()
-         <<"\t\t\t MPM"<< endl;
-  #endif
+
+    cout_doing <<"Doing solveHeatEquations on patch " << patch->getID()
+	       <<"\t\t\t MPM"<< endl;
+
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwindex = mpm_matl->getDWIndex();
@@ -1313,10 +1310,10 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout <<"Doing integrateAcceleration on patch " << patch->getID()
-         <<"\t\t\t MPM"<< endl;
-  #endif
+
+    cout_doing <<"Doing integrateAcceleration on patch " << patch->getID()
+	       <<"\t\t\t MPM"<< endl;
+
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwindex = mpm_matl->getDWIndex();
@@ -1355,10 +1352,10 @@ void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout <<"Doing integrateTemperatureRate on patch " << patch->getID()
-         << "\t\t MPM"<< endl;
-  #endif
+
+    cout_doing <<"Doing integrateTemperatureRate on patch " << patch->getID()
+	       << "\t\t MPM"<< endl;
+
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwindex = mpm_matl->getDWIndex();
@@ -1396,10 +1393,10 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout <<"Doing setGridBoundaryConditions on patch " << patch->getID()
-         <<"\t\t MPM"<< endl;
-  #endif
+
+    cout_doing <<"Doing setGridBoundaryConditions on patch " << patch->getID()
+	       <<"\t\t MPM"<< endl;
+
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     
     delt_vartype delT;            
@@ -1512,10 +1509,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout <<"Doing interpolateToParticlesAndUpdate on patch " << patch->getID()
-         <<"\t MPM"<< endl;
-  #endif
+
+    cout_doing <<"Doing interpolateToParticlesAndUpdate on patch " 
+	       << patch->getID() << "\t MPM"<< endl;
+
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
     // velocity and position respectively
