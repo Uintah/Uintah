@@ -364,6 +364,12 @@ void MWViscoElastic::computePressEOSCM(const double rho_cur, double& pressure,
 #endif
 }
 
+double MWViscoElastic::getCompressibility()
+{
+  return 1.0/d_initialData.K;
+}
+
+
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1209

@@ -15,6 +15,8 @@ ICELabel::ICELabel()
     = VarLabel::create("doMech",    delt_vartype::getTypeDescription());
   press_CCLabel     =
     VarLabel::create("press_CC",    CCVariable<double>::getTypeDescription());
+  matl_press_CCLabel     =
+    VarLabel::create("matl_press_CC",CCVariable<double>::getTypeDescription());
   press_equil_CCLabel   =
     VarLabel::create("press_equil_CC",CCVariable<double>::getTypeDescription());
   delP_DilatateLabel  =
@@ -83,6 +85,9 @@ ICELabel::ICELabel()
     VarLabel::create("term2",        CCVariable<double>::getTypeDescription());
   term3Label = 
     VarLabel::create("term3",        CCVariable<double>::getTypeDescription());
+
+  f_theta_CCLabel = 
+    VarLabel::create("f_theta",      CCVariable<double>::getTypeDescription());
   
   // Face centered variables
   uvel_FCLabel       = 
@@ -147,6 +152,7 @@ ICELabel::~ICELabel()
     // Cell centered variables
     VarLabel::destroy(press_CCLabel);
     VarLabel::destroy(press_equil_CCLabel);
+    VarLabel::destroy(matl_press_CCLabel);
     VarLabel::destroy(delP_DilatateLabel);
     VarLabel::destroy(delP_MassXLabel);
     VarLabel::destroy(rho_CCLabel);

@@ -77,6 +77,8 @@ WARNING
                                         double& dp_drho, double& ss_new,
 	        		        const MPMMaterial* matl) = 0;
 
+         virtual double getCompressibility() = 0;
+
 /*`==========TESTING==========*/ 
 	 double computeRhoMicro(double& press,double& gamma,
 				        double& cv, double& Temp);

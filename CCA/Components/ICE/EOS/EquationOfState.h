@@ -72,6 +72,8 @@ WARNING
                           const Vector& dx,
                           CCVariable<double>& Temp_CC) = 0;
 
+         virtual double getCompressibility(double press) =0;
+
         protected:
 
 	 ICELabel* lb;

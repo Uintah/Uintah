@@ -72,6 +72,8 @@ namespace Uintah {
                                         double& dp_drho, double& ss_new,
                                         const MPMMaterial* matl);
 
+         virtual double getCompressibility();
+
          // class function to read correct number of parameters
          // from the input file
          static void readParameters(ProblemSpecP ps, double *p_array);
