@@ -27,13 +27,12 @@
  *  Copyright (C) 2002 SCI Group
  */
 
+#include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/Datatypes/FieldInterface.h>
+#include <Core/Containers/StringUtil.h>
 #include <Dataflow/Modules/Fields/TransformVectorData.h>
-#include <Core/Containers/Handle.h>
+
 #include <iostream>
-#include <sstream>
 
 namespace SCIRun {
 

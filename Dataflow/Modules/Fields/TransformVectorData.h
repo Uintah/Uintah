@@ -34,8 +34,6 @@ public:
   virtual FieldHandle execute(FieldHandle src,
 			      Function *fx, Function *fy, Function *fz,
 			      bool pre_normalize_p, bool post_normalize_p) = 0;
-  virtual FieldHandle execute(FieldHandle src, double scale,
-			      const Vector &trans)=0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -51,7 +49,6 @@ public:
   virtual FieldHandle execute(FieldHandle src,
 			      Function *fx, Function *fy, Function *fz,
 			      bool pre_normalize_p, bool post_normalize_p);
-  virtual FieldHandle execute(FieldHandle src, double scale, const Vector &t);
 };
 
 
@@ -84,32 +81,6 @@ TransformVectorDataAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
 
     ++ibi;
     ++obi;
-  }
-
-  return ofield;
-}
-
-template <class FIELD, class LOC>
-FieldHandle
-TransformVectorDataAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
-					      double scale,
-					      const Vector &trans)
-{
-  FIELD *ifield = dynamic_cast<FIELD *>(field_h.get_rep());
-  FIELD *ofield = ifield->clone();
-
-  typename FIELD::fdata_type::iterator ibi, iei, obi;
-  ibi = ifield->fdata().begin();
-  iei = ifield->fdata().end();
-  obi = ofield->fdata().begin();
-
-  while (ibi != iei)
-  {
-    typename FIELD::value_type val = *ibi;
-    *obi = val * scale + trans;
-    ++ibi;
-    ++obi;
-
   }
 
   return ofield;
