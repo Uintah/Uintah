@@ -108,7 +108,7 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
 
 Patch::~Patch()
 {
-  d_BCFaces.clear();
+  d_BoundaryFaces.clear();
 
   if(in_database){
 //     patches.erase( patches.find(getID()));
@@ -943,14 +943,14 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
 
 
    // If this face has a BCType of Patch::None, make sure
-   // that it is in the list of d_BCFaces, otherwise, make
+   // that it is in the list of d_BoundaryFaces, otherwise, make
    // sure that it is not in this list.
 
    // I thought vector<> had the find() function, but I guess not.
-   //   vector<FaceType>::iterator faceIdx = d_BCFaces.find(face);
+   //   vector<FaceType>::iterator faceIdx = d_BoundaryFaces.find(face);
 
-   vector<FaceType>::iterator faceIdx = d_BCFaces.begin();
-   vector<FaceType>::iterator faceEnd = d_BCFaces.end();
+   vector<FaceType>::iterator faceIdx = d_BoundaryFaces.begin();
+   vector<FaceType>::iterator faceEnd = d_BoundaryFaces.end();
 
    while (faceIdx != faceEnd) {
      if (*faceIdx == face) break;
@@ -958,12 +958,12 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
    }
 
    if (newbc == Patch::None) {
-     if (faceIdx == d_BCFaces.end()) {
-       d_BCFaces.push_back(face);
+     if (faceIdx == d_BoundaryFaces.end()) {
+       d_BoundaryFaces.push_back(face);
      }
    } else {
-     if (faceIdx != d_BCFaces.end()) {
-       d_BCFaces.erase(faceIdx);
+     if (faceIdx != d_BoundaryFaces.end()) {
+       d_BoundaryFaces.erase(faceIdx);
      }
    }     
 }
