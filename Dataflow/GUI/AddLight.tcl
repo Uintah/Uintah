@@ -18,6 +18,13 @@ itcl_class SCIRun_Visualization_AddLight {
 	set $this-type 0
 	set $this-on 1
 	set $this-control_pos_saved 0
+	set $this-control_x 0
+	set $this-control_y 0
+	set $this-control_z 0
+	set $this-at_x 0
+	set $this-at_y 0
+	set $this-at_z 1
+	
     }
 
     method ui {} {
