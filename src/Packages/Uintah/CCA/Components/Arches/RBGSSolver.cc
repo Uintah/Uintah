@@ -1018,6 +1018,11 @@ RBGSSolver::scalarLisolve(const ProcessorGroup*,
     vars->truncScalar = 1.0;
    
 }
+
+//****************************************************************************
+// Enthalpy Solve for Multimaterial
+//****************************************************************************
+
 void 
 RBGSSolver::enthalpyLisolve(const ProcessorGroup*,
 			  const Patch* patch,

@@ -985,7 +985,7 @@ MomentumSolver::sched_buildLinearMatrixPred(SchedulerP& sched, const PatchSet* p
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel, 
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
   }
 
@@ -1143,7 +1143,7 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 		      matlIndex, patch, 
 		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-      new_dw->getCopy(velocityVars.cellType, d_lab->d_mmcellTypeLabel,
+      new_dw->getCopy(velocityVars.cellType, d_lab->d_cellTypeLabel,
 		      matlIndex, patch, 
 		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
