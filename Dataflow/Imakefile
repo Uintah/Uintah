@@ -14,9 +14,10 @@ SRCS = Connection.cc Module.cc ModuleHelper.cc ModuleList.cc \
 
 LIBNAME = Dataflow
 
+SCI_CLIBS = SCI_CCLibs
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lComm -lTCL -lClasslib -lMultitask \
-	-lMalloc SCI_CCLibs $(DLLIB)
+	-lMalloc $(DLLIB)
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS), $(SO_LDFLAGS))
