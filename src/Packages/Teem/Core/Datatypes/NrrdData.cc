@@ -45,7 +45,7 @@ NrrdData::NrrdData(bool owned) :
 {}
 
 NrrdData::NrrdData(const NrrdData &copy) :
-  fname(copy.fname) 
+  nrrd_fname_(copy.nrrd_fname_) 
 {
   nrrd = nrrdNew();
   nrrdCopy(nrrd, copy.nrrd);
@@ -138,35 +138,39 @@ NrrdData::get_tuple_index_info(int tmin, int tmax, int &min, int &max) const
   return true;
 }
 
-#define NRRDDATA_VERSION 1
+#define NRRDDATA_VERSION 2
 
 //////////
 // PIO for NrrdData objects
 void NrrdData::io(Piostream& stream) {
-  /*  int version = */ stream.begin_class("NrrdData", NRRDDATA_VERSION);
-
+  int version =  stream.begin_class("NrrdData", NRRDDATA_VERSION);
+  cout << "version is: " << version << endl;
   if (stream.reading()) {
-    Pio(stream, fname);
-    if (!(nrrdLoad(nrrd=nrrdNew(), strdup(fname.c_str())))) {
+    Pio(stream, nrrd_fname_);
+    cerr << "fname is: " << nrrd_fname_ << endl;
+    if (nrrdLoad(nrrd = nrrdNew(), strdup(nrrd_fname_.c_str()))) {
       char *err = biffGet(NRRD);
-      cerr << "Error reading nrrd "<<fname<<": "<<err<<"\n";
+      cerr << "Error reading nrrd " << nrrd_fname_ << ": " << err << endl;
       free(err);
       biffDone(NRRD);
       return;
     }
-    fname="";
   } else { // writing
-    if (fname == "") {   // if fname wasn't set up stream, just append .nrrd
-      fname = stream.file_name + string(".nrrd");
-    }
-    Pio(stream, fname);
-    if (nrrdSave(strdup(fname.c_str()), nrrd, 0)) {
+
+    // the nrrd file name will just append .nrrd
+    nrrd_fname_ = stream.file_name + string(".nrrd");
+    Pio(stream, nrrd_fname_);
+    if (nrrdSave(strdup(nrrd_fname_.c_str()), nrrd, 0)) {
       char *err = biffGet(NRRD);      
-      cerr << "Error writing nrrd "<<fname<<": "<<err<<"\n";
+      cerr << "Error writing nrrd " << nrrd_fname_ << ": "<< err << endl;
       free(err);
       biffDone(NRRD);
       return;
     }
+  }
+  if (version > 1) {
+    Pio(stream, data_owned_);
+    Pio(stream, originating_field_);
   }
   stream.end_class();
 }

@@ -32,10 +32,10 @@
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <strstream>
+#include <sstream>
 #include <fstream>
 using std::ifstream;
-using std::ostrstream;
+using std::ostringstream;
 
 namespace SCITeem {
 
@@ -93,40 +93,25 @@ void NrrdWriter::execute()
     return;
   }
 
-  ifstream in (fn.c_str(), ios::in);
-  if( in ) { //succeeded file already exists
-    //hack find . insert number there
-#if 0
-    // The stream method was problematic (it would add extra junk in the stream
-    // for no appearent reason).  Therefor, I'll write it the C way. Phooey
-    // on C++. -- James Bigler
-    ostrstream convert;
-    // width pads the number to 4 digits
-    convert.width(4);
-    // This tells the stream to fill with zeros ('0').
-    convert.fill('0');
-    convert << counter;
-    unsigned long pos = fn.find(".");
-    
-    //add count to file name
-    
-    fn.insert(pos, convert.str());
-#else
-    char number[10];
-    sprintf(number, "%04d\0", counter);
-    unsigned long pos = fn.find(".");
-    fn.insert(pos, number);
-#endif
-    ++counter;
+  // Open up the output stream
+  Piostream* stream;
+  string ft(filetype_.get());
+  if (ft == "Binary")
+  {
+    stream = scinew BinaryPiostream(fn, Piostream::Write);
   }
-  in.close();
-
-  if (nrrdSave(strdup(fn.c_str()), handle->nrrd, 0)) {
-    char *err = biffGetDone(NRRD);      
-    error("Write error on '" + fn + "': " + err);
-    free(err);
-    return;
+  else
+  {
+    stream = scinew TextPiostream(fn, Piostream::Write);
   }
+    
+  if (stream->error()) {
+    error("Could not open file for writing" + fn);
+  } else {
+    // Write the file
+    Pio(*stream, handle); // wlll also write out a separate nrrd.
+    delete stream; 
+  } 
 }
 
 

@@ -28,8 +28,8 @@ itcl_class Teem_DataIO_NrrdWriter {
 	set_defaults
     }
     method set_defaults {} {
-	global $this-d_filetype
-	set $this-d_filetype Binary
+	global $this-filetype
+	set $this-filetype Binary
 	# set $this-split 0
     }
     
@@ -61,7 +61,7 @@ itcl_class Teem_DataIO_NrrdWriter {
 	# to be modified for particular reader
 
 	# extansion to append if no extension supplied by user
-	set defext ".fld"
+	set defext ".nd"
 	
 	# name to appear initially
 	set defname "MyNrrd"
@@ -69,7 +69,7 @@ itcl_class Teem_DataIO_NrrdWriter {
 
 	# file types to appers in filter box
 	set types {
-	    {{Nrrd File}     {.nrrd}      }
+	    {{Nrrd Data (and separate .nrrd)}     {.nd}      }
 	    {{All Files}       {.*}   }
 	}
 	
@@ -85,7 +85,7 @@ itcl_class Teem_DataIO_NrrdWriter {
 	        -initialfile $defname \
 		-initialdir $initdir \
 		-defaultextension $defext \
-		-formatvar $this-d_filetype 
+		-formatvar $this-filetype 
 		#-splitvar $this-split
     }
 }
