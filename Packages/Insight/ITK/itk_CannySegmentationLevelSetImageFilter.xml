@@ -1,0 +1,88 @@
+<filter-itk name="itk::CannySegmentationLevelSetImageFilter">
+  <description>
+  Segments structures in images based on image features derived from pseudo-canny-edges.
+  </description>
+  <templated>
+    <base>itk::Object</base>
+    <template>SeedImageType</template>
+    <template>FeatureImageType</template>
+    <template>OutputPixelType</template>
+  </templated>
+
+  <inputs>
+    <input num="1">
+      <value>SeedImageType</value>
+      <call>SetInput</call>
+      <name>SeedImage</name>
+    </input>  
+    <input num="2">
+      <value>FeatureImageType</value>
+      <call>SetFeatureImage</call>
+      <name>FeatureImage</name>
+    </input>  
+  </inputs>
+  <outputs>
+    <output num="1">
+      <value>OutputPixelType</value>
+      <call>GetOutput</call>
+      <name>OutputModel</name>
+    </output>
+    <output num="2">
+      <value>OutputPixelType</value>
+      <call>GetSpeedImage</call>
+      <name>OutputFeatures</name>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>iterations</name>
+      <type>int</type>
+      <call>SetMaximumIterations</call>
+    </param>
+    <param>
+      <name>negative_features</name>
+      <type>bool</type>
+      <call>SetUseNegativeFeatures</call>
+    </param>
+    <param>
+      <name>max_rms_change</name>
+      <type>double</type>
+      <call>SetMaximumRMSError</call>
+    </param>
+    <param>
+      <name>threshold</name>
+      <type>double</type>
+      <call>SetThreshold</call>
+    </param>
+    <param>
+      <name>variance</name>
+      <type>double</type>
+      <call>SetVariance</call>
+    </param>
+    <param>
+      <name>propagation_scaling</name>
+      <type>double</type>
+      <call>SetPropagationScaling</call>
+    </param>
+    <param>
+      <name>advection_scaling</name>
+      <type>double</type>
+      <call>SetAdvectionScaling</call>
+    </param>
+    <param>
+      <name>curvature_scaling</name>
+      <type>double</type>
+      <call>SetCurvatureScaling</call>
+    </param>
+    <param>
+      <name>isovalue</name>
+      <type>double</type>
+      <call>SetIsoSurfaceValue</call>
+    </param>
+  </parameters>
+  <includes>
+    <include>itkCannySegmentationLevelSetImageFilter.h</include>
+  </includes>
+</filter-itk>
+
