@@ -53,21 +53,6 @@ namespace Uintah {
 	 if(data != &fixed[0])
 	    delete[] data;
       }
-      fixedvector(const fixedvector<T,Len>& copy)
-      {
-	curalloc=Len;
-	cursize=0;
-	data=&fixed[0];
-	for (const_iterator iter = copy.begin(); iter != copy.end(); iter++)
-	  push_back(*iter);
-      }
-     
-      fixedvector<T,Len>& operator=(const fixedvector<T,Len>& copy) {
-	resize(0);
-	for (const_iterator iter = copy.begin(); iter != copy.end(); iter++)
-	  push_back(*iter);
-	return *this;
-      }
 
       iterator begin() { return &data[0]; }
       const_iterator begin() const { return &data[0]; }
@@ -98,6 +83,9 @@ namespace Uintah {
       reference operator[](size_type n) { return data[n]; }
       const_reference operator[](size_type n) const {return data[n]; }
    private:
+      fixedvector(const fixedvector<T,Len>& copy);
+      fixedvector<T,Len>& operator=(const fixedvector<T,Len>& copy);
+     
       T* data;
       T fixed[Len];
       int cursize;
