@@ -1,6 +1,7 @@
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/YieldConditionFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DamageModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMEquationOfStateFactory.h>
@@ -43,6 +44,15 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or
   d_erosionAlgorithm = "none";
   d_damageCutOff = 1.0;
   ps->get("damage_cutoff", d_damageCutOff);
+
+  d_yield = YieldConditionFactory::create(ps);
+  if(!d_plasticity){
+    ostringstream desc;
+    desc << "An error occured in the YieldConditionFactory that has \n"
+	 << " slipped through the existing bullet proofing. Please tell \n"
+	 << " Biswajit.  "<< endl;
+    throw ParameterNotFound(desc.str());
+  }
 
   d_plasticity = PlasticityModelFactory::create(ps);
   if(!d_plasticity){
@@ -111,6 +121,7 @@ HypoElasticPlastic::~HypoElasticPlastic()
   VarLabel::destroy(pPlasticTempLabel);
   VarLabel::destroy(pPlasticTempLabel_preReloc);
 
+  delete d_yield;
   delete d_plasticity;
   delete d_damage;
   delete d_eos;
@@ -415,12 +426,17 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       flowStress = d_plasticity->computeFlowStress(tensorEta, tensorS, 
                                                    temperature,
 						   delT, d_tol, matl, idx);
-      double flowStressSq = flowStress*flowStress;
 
       // Initialize rate of temperature increase
       double Tdot = 0.0;
 
-      if (flowStressSq >= equivStress) {
+      // Evaluate yield condition
+      double porosity = 0.0;
+      double traceOfTrialStress = 
+          tensorSig.Trace() + tensorD.Trace()*(2.0*shear*delT);
+      double Phi = d_yield->evalYieldCondition(sqrt(equivStress), flowStress,
+                                      traceOfTrialStress, porosity);
+      if (Phi <= 0.0) {
 
 	// Calculate the deformed volume
 	double rho_cur = rho_0/J;
@@ -838,9 +854,14 @@ HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
 	flowStress = d_plasticity->computeFlowStress(tensorEta, tensorS, 
                                                      temperature,
 						     delT, d_tol, matl, idx);
-	double flowStressSq = flowStress*flowStress;
 
-	if (flowStressSq >= equivStress) {
+        // Evaluate yield condition
+        double porosity = 0.0;
+        double traceOfTrialStress = 
+            tensorSig.Trace() + tensorD.Trace()*(2.0*shear*delT);
+        double Phi = d_yield->evalYieldCondition(sqrt(equivStress), flowStress,
+                                        traceOfTrialStress, porosity);
+        if (Phi <= 0.0) {
 
 	  // Calculate the deformed volume
 	  double rho_cur = rho_0/J;
