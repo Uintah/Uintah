@@ -404,10 +404,10 @@ proc makeSubnetEditorWindow { from_subnet x y { bbox "0 0 0 0" } } {
     bind $w <ButtonPress-5>  "canvasScroll $canvas 0.0 0.01"
     bind $w <ButtonPress-4>  "canvasScroll $canvas 0.0 -0.01"
     # Bindings for SubCanvas movement on arrow keys press
-    bind $w <KeyPress-Down>  "canvasScroll $canvas 0.0 0.01"
-    bind $w <KeyPress-Up>    "canvasScroll $canvas 0.0 -0.01"
-    bind $w <KeyPress-Left>  "canvasScroll $canvas -0.01 0.0"
-    bind $w <KeyPress-Right> "canvasScroll $canvas 0.01 0.0" 
+    $canvas bind <KeyPress-Down>  "canvasScroll $canvas 0.0 0.01"
+    $canvas bind <KeyPress-Up>    "canvasScroll $canvas 0.0 -0.01"
+    $canvas bind <KeyPress-Left>  "canvasScroll $canvas -0.01 0.0"
+    $canvas bind <KeyPress-Right> "canvasScroll $canvas 0.01 0.0" 
     # Other misc. SubCanvas key bindings
     bind $w <Control-d> "moduleDestroySelected"
     bind $w <Control-l> "ClearCanvas 1 ${subnet_id}"
@@ -660,14 +660,16 @@ proc drawSubnetConnections { subnet } {
 # this allow nested source loads of the networks (see the .net files)
 proc backupLoadVars { key } {
     global loadVars
-    set pattern m
-    for {set i 0} {$i < 4} {incr i} {
-	set pattern "$pattern\\\[0\\\-9\\\]"
-	set varNames [uplevel \#0 info vars $pattern]
-	eval lappend {loadVars($key-varList)} $varNames
-	foreach name $varNames {
-	    upvar \#0 $name var
-	    set loadVars($key-$name) $var
+    foreach pattern "m c" {
+	for {set i 0} {$i < 4} {incr i} {
+	    set pattern "$pattern\\\[0\\\-9\\\]"
+	    set varNames [uplevel \#0 info vars $pattern]
+	    if { ![llength $varNames] } continue
+	    eval lappend {loadVars($key-varList)} $varNames
+	    foreach name $varNames {
+		upvar \#0 $name var
+		set loadVars($key-$name) $var
+	    }
 	}
     }
 }
@@ -717,16 +719,6 @@ proc loadSubnet { filename { x 0 } { y 0 } } {
     return SubnetIcon$subnetNumber
 }
 
-proc addSubnetInstanceAtPosition { name x y } {
-    global Subnet
-    set from $Subnet(Loading)    
-    set to [makeSubnetEditorWindow $from $x $y]
-    set Subnet(Loading) $to
-    instantiateSubnet$name
-    set Subnet(Loading) $from
-    return SubnetIcon$to
-}
-
 proc generateInstanceName { name } {
     global InstanceNames
     set i 1
@@ -742,7 +734,7 @@ proc generateInstanceName { name } {
 }
 
 proc instanceSubnet { subnet_name { x 0 } { y 0 } { from 0 } } {
-    global Subnet Notes Disabled SubnetScripts
+    global Subnet Notes Disabled SubnetScripts name
     if {!$x && !$y} {
 	global mouseX mouseY
 	set x [expr $mouseX+[$Subnet(Subnet${from}_canvas) canvasx 0]]
@@ -752,9 +744,11 @@ proc instanceSubnet { subnet_name { x 0 } { y 0 } { from 0 } } {
     }
     set to [makeSubnetEditorWindow $from $x $y]
     set Subnet(Loading) $to
-    eval $SubnetScripts($subnet_name)
-    set Subnet(Subnet${to}_Name) "$name"
-    set Subnet(Subnet${to}_Instance) [generateInstanceName $name]
+    backupLoadVars $subnet_name
+    uplevel \#0 $SubnetScripts($subnet_name)
+    restoreLoadVars $subnet_name
+    set Subnet(Subnet${to}_Name) "$subnet_name"
+    set Subnet(Subnet${to}_Instance) [generateInstanceName $subnet_name]
     SubnetIcon$to setColorAndTitle
     set Subnet(Loading) $from
     return SubnetIcon$to
@@ -762,8 +756,12 @@ proc instanceSubnet { subnet_name { x 0 } { y 0 } { from 0 } } {
 
 
 proc isaDefaultValue { var } {
-    set scope [string first :: $var]
-    if { $scope == 0 } { set var [string range $var 2 end] }
+    set var [string trimleft $var :]
+    upvar \#0 $var val
+    # If this variable doesn't globally exist, its definitely default
+    if { ![info exists val] } {
+	return 1
+    }
     # Find string position where Module and Variable name are deliniated by -
     set pos [string first - $var]
     # Get the module instantiations name
@@ -782,27 +780,51 @@ proc isaDefaultValue { var } {
 	# Then try and create a default TCL instance of that modules GUI
 	eval $classname $command
     }
+    # Get the newly created variablee at the global level
+    upvar \#0 "$command-$varname" default_value
+
     # If the default variable hasn't been created in TCL yet...
-    if { [llength [uplevel \#0 info vars \"$command-$varname\"]] != 1 } { 
+    if { ![info exists default_value] } {
 	# Assume the variable we're checknig is NOT DEFAULT and return FALSE
 	return 0
     }
-    # Get the variables at the global level
-    upvar \#0 "$command-$varname" tocheck_value "$module-$varname" default_value
     # Compare strings values exactly, returns FALSE if there is any differnce
-    return [string equal $tocheck_value $default_value]
+    return [string equal $default_value $val]
 }
 
-proc writeSubnets { filename { subnet 0 } } {
-    global Subnet
-    set Subnet(Subnet${subnet}_instance) [join $Subnet(Subnet${subnet}_Name) ""]
-    foreach module $Subnet(Subnet${subnet}_Modules) {
-	if [isaSubnetIcon $module] {
-	    writeSubnets $filename $Subnet(${module}_num)
+proc writeSubnets { file subnet_id } {
+    global Subnet SubnetScripts
+
+    set allsubnets ""
+    set modules $Subnet(Subnet${subnet_id}_Modules)
+    while { [llength $modules] } {
+	set more_modules ""
+	foreach module $modules {
+	    if { [isaSubnetIcon $module] } {
+		set id $Subnet(${module}_num) 
+		lappend allsubnets $id
+		foreach submod $Subnet(Subnet${id}_Modules) {
+		    lappend more_modules $submod
+		}
+		set SubnetScripts($Subnet(Subnet${id}_Name)) [genSubnetScript $id]
+	    }
+	}
+	set modules $more_modules
+    }
+
+    set alreadyWritten ""
+    foreach subnet_id $allsubnets {
+	set name $Subnet(Subnet${id}_Name)
+	if { ([lsearch $alreadyWritten $name] == -1) && \
+		 [info exists SubnetScripts($name)] } {
+	    lappend alreadyWritten $name
+	    puts -nonewline $file "addSubnetToDatabase \{"
+	    puts -nonewline $file $SubnetScripts($name)
+	    puts $file "\}\n"
 	}
     }
-    writeSubnet $filename $subnet
 }
+
 
 proc scripted_addModuleAtPosition { args } {
 #    puts "scripted_addModuleAtPosition $args"
@@ -825,6 +847,8 @@ proc addSubnetToDatabase { script } {
     rename scripted_addModuleAtPosition addModuleAtPosition
     rename scripted_addConnection addConnection
     eval $script
+    if { [info exists Name] && ![info exists name] } { set name $Name }
+    if { ![info exists name] } { set name Unknown }
     set SubnetScripts($name) $script
     rename addModuleAtPosition scripted_addModuleAtPosition 
     rename addConnection scripted_addConnection
@@ -833,59 +857,76 @@ proc addSubnetToDatabase { script } {
 }
 
 
-proc writeSubnet { filename subnet { create_file 0 } } {
-    global Subnet Disabled Notes
-    if { $create_file } {
-	set out [open $filename {WRONLY CREAT TRUNC}]
-    } else {
-	set out [open $filename {WRONLY APPEND}]
+proc subDATADIRandDATASET { val } {
+    set tmpval $val
+    set tmp [netedit getenv SCIRUN_DATA]
+    if { [string length $tmp] } {
+	set first [string first $tmp $tmpval]
+	set last [expr $first+[string length $tmp]-1]
+	if { $first != -1 } {
+	    set tmpval [string replace $tmpval $first $last "\$DATADIR"]
+	}
     }
+    set tmp [netedit getenv SCIRUN_DATASET]
+    if { [string length $tmp] } {
+	set first [string first $tmp $tmpval]
+	while { $first != -1 } {
+	    set last [expr $first+[string length $tmp]-1]
+	    set tmpval [string replace $tmpval $first $last "\$DATASET"]
+	    set first [string first $tmp $tmpval]
+	}
+    }
+    return $val
+}
+
+
+proc genSubnetScript { subnet { tab "__auto__" }  } {
+    global Subnet Disabled Notes
     set connections ""
     set modVar(Subnet${subnet}) "Subnet"
-    
-    if $subnet {
-	set tab "   "
-#	puts $out "proc instantiateSubnet$Subnet(Subnet${subnet}_instance) \{\} \{"
-	puts $out "\naddSubnetToDatabase \{"
-#	puts $out "${tab}global Subnet Notes Disabled"
 
-    } else {
-	set tab ""
+    if { [string equal $tab "__auto__"] } {
+	if $subnet { set tab "   " } else { set tab "" }
     }
-    puts $out "${tab}set name \{$Subnet(Subnet${subnet}_Name)\}"
-    puts $out "${tab}set bbox \{[subnet_bbox $subnet]\}"
-    puts $out "${tab}set creationDate \{$Subnet(Subnet${subnet}_creationDate)\}"
-    puts $out "${tab}set creationTime \{$Subnet(Subnet${subnet}_creationTime)\}"
-    puts $out "${tab}set runDate \{$Subnet(Subnet${subnet}_runDate)\}"
-    puts $out "${tab}set runTime \{$Subnet(Subnet${subnet}_runTime)\}"
-    puts $out "${tab}set notes \{$Subnet(Subnet${subnet}_notes)\}"
+    
+    append script "\n${tab}set name \{$Subnet(Subnet${subnet}_Name)\}\n"
+    append script "${tab}set bbox \{[subnet_bbox $subnet]\}\n"
+    append script "${tab}set creationDate \{$Subnet(Subnet${subnet}_creationDate)\}\n"
+    append script "${tab}set creationTime \{$Subnet(Subnet${subnet}_creationTime)\}\n"
+    append script "${tab}set runDate \{$Subnet(Subnet${subnet}_runDate)\}\n"
+    append script "${tab}set runTime \{$Subnet(Subnet${subnet}_runTime)\}\n"
+    append script "${tab}set notes \{$Subnet(Subnet${subnet}_notes)\}\n"
     
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
 	incr i
 	set modVar($module) "\$m$i"
+	append script "\n"
 	if { [isaSubnetIcon $module] } {
-	    puts $out "\n${tab}\# Instiantiate a SCIRun Sub-Network"
 	    set number $Subnet(${module}_num)
-	    puts -nonewline $out "${tab}set m$i \[instanceSubnet \"$Subnet(Subnet${number}_Name)\" "
+	    set name $Subnet(Subnet${number}_Name)
+	    append script "${tab}\# Create an instance of a $name Sub-Network\n"
+	    append script "${tab}set m$i \[instanceSubnet \"${name}\" "
 	} else {
-	    set modpath [modulePath $module]
-	    puts $out "\n${tab}\# Create a [join $modpath ->] Module"
-	    puts -nonewline $out  "${tab}set m$i \[addModuleAtPosition "
-	    foreach elem $modpath { puts -nonewline $out "\"${elem}\" " }
+	    set modpath [modulePath $module]	    
+	    append script "${tab}\# Create a [join $modpath ->] Module\n"
+	    append script "${tab}set m$i \[addModuleAtPosition "
+	    foreach elem $modpath { append script "\"${elem}\" " }
 	}
 	# Write the x,y position of the modules icon on the network graph
-	puts $out "[expr int([$module get_x])] [expr int([$module get_y])]\]"
+	append script "[expr int([$module get_x])] [expr int([$module get_y])]\]\n"
 	# Cache all connections to a big list to write out later in the file
 	eval lappend connections $Subnet(${module}_connections)
 	# Write user notes 
-	if { [info exists Notes($module)] && [string length $Notes($module)] } {
-	    puts $out "${tab}set Notes(\$m$i) \{$Notes($module)\}"
+	if { [info exists Notes($module)]&&[string length $Notes($module)] } {
+	    append script "${tab}set Notes(\$m$i) \{$Notes($module)\}\n"
 	    if { [info exists Notes($module-Position)] } {
-		puts $out "${tab}set Notes(\$m$i-Position) \{$Notes($module-Position)\}"
+		append script "${tab}set Notes(\$m$i-Position) "
+		append script  "\{$Notes($module-Position)\}\n"
 	    }
 	    if { [info exists Notes($module-Color)] } {
-		puts $out "${tab}set Notes(\$m$i--Color) \{$Notes($module-Color)\}"
+		append script "${tab}set Notes(\$m$i--Color) "
+		append script "\{$Notes($module-Color)\}\n"
 	    }
 	}
     }
@@ -894,57 +935,80 @@ proc writeSubnet { filename subnet { create_file 0 } } {
     set connections [lsort -integer -index 3 [lsort -unique $connections]]
 
     if [llength $connections] {
-	puts $out "\n${tab}\# Create the Connections between Modules"
+	append script "\n"
+	append script "${tab}\# Create the Connections between Modules\n"
     }
     set i 0
     foreach conn $connections {
 	incr i
-	puts -nonewline $out "${tab}set c$i \[addConnection "
-	puts $out "$modVar([oMod conn]) [oNum conn] $modVar([iMod conn]) [iNum conn]\]"
+        append script "${tab}set c$i \[addConnection "
+	append script "$modVar([oMod conn]) [oNum conn]"
+	append script " $modVar([iMod conn]) [iNum conn]\]\n"
 	set id [makeConnID $conn]
 	if { [info exists Disabled($id)] && $Disabled($id) } {
-	    puts $out "${tab}set Disabled(\$c$i) \{1\}"
+	    append script "${tab}set Disabled(\$c$i) \{1\}\n"
 	}
 
 	if { [info exists Notes($id)] && [string length $Notes($id)] } {
-	    puts $out "${tab}set Notes(\$c$i) \{$Notes($id)\}"
+	    append script "${tab}set Notes(\$c$i) \{$Notes($id)\}\n"
 	    if [info exists Notes($id-Position)] {
-		puts $out "${tab}set Notes(\$c$i-Position) \{$Notes($id-Position)\}"
+		append script "${tab}set Notes(\$c$i-Position) "
+		append script "\{$Notes($id-Position)\}\n"
 	    }
 	    if { [info exists Notes($id-Color)] } {
-		puts $out "${tab}set Notes(\$c$i-Color) \{$Notes($id-Color)\}"
-	    }	
-	    puts $out "" ;# newline between connections
+		append script "${tab}set Notes(\$c$i-Color) "
+		append script "\{$Notes($id-Color)\}\n"
+	    }
 	}
     }
-    close $out
 
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
 	incr i
 	if [isaSubnetIcon $module] continue
-	# Write the comment line for this modules GUIV values
 	set modstr [join [modulePath $module] ->]
-	set out [open $filename {WRONLY APPEND}] ;# Re-Open for appending
-	puts $out "\n${tab}\# Setup GUI for the $modstr Module"
-	close $out
-	# C-side knows which GUI vars to write out
-	if { ![isaSubnetIcon $module] } { 
-	    $module-c emit_vars $filename "\$m$i" "${tab}"
+
+	if { [string equal "SCIRun->Render->Viewer" $modstr] } {
+	    foreach w [winfo children .] {
+		if { [string first .ui$module $w] == 0 } {
+		    append script "\n${tab}$modVar($module) ui\n"
+		    break
+		}
+	    }
 	}
+
+	set write_vars ""
+	global ModuleSavedVars ModuleSubstitutedVars
+	if { [info exists ModuleSavedVars($module)] } {
+	    foreach var $ModuleSavedVars($module) {
+		if { ![isaDefaultValue $module-$var] } {
+		    lappend write_vars $var
+		}
+	    }
+	}
+	if { [llength $write_vars] } {
+	    # Write the comment line for this modules GUI values
+	    append script "\n${tab}\# Set GUI variables for the $modstr Module\n"
+	    foreach var $write_vars {
+		upvar \#0 $module-$var val
+		if { [info exists ModuleSubstitutedVars($module)] && \
+		     [lsearch $ModuleSubstitutedVars($module) $var] != -1 } {
+		    set tmpval [subDATADIRandDATASET $val]
+		    append script "${tab}set \$m$i-${var} \"${tmpval}\"\n"
+		} else {
+		    append script "${tab}set \$m$i-${var} \{${val}\}\n"
+		}
+	    }
+	}
+	
 	# Write command to open GUI on load if it was open on save
 	if [windowIsMapped .ui$module] {
-	    set out [open $filename {WRONLY APPEND}] ;# Re-Open for appending
-	    puts $out "${tab}\$m$i initialize_ui"
-	    close $out
+	    append script "\n${tab}\# Open the $modstr UI\n"
+	    append script "${tab}\$m$i initialize_ui\n"
 	}	
     }   
 
-    if $subnet {
-	set out [open $filename {WRONLY APPEND}] ;# Re-Open for appending
-	puts $out "\}\n"
-	close $out
-    }
+    return $script
 }
 
 
@@ -992,7 +1056,7 @@ proc showSubnetWindow { subnet { bbox "" } } {
 }
 
 
-proc saveSubnet { subnet_id ask } {
+proc saveSubnetDialog { subnet_id ask } {
     global Subnet
     if { ![info exists Subnet(Subnet${subnet_id}_Filename)] || \
 	     ![string length $Subnet(Subnet${subnet_id}_Filename)]} {
@@ -1004,10 +1068,29 @@ proc saveSubnet { subnet_id ask } {
 	    {{Other} { * } }
 	} 
 	set Subnet(Subnet${subnet_id}_Filename) \
-	    [tk_getSaveFile -defaultextension {.net} -filetypes $types ]
+	    [tk_getSaveFile -defaultextension {.net} -filetypes $types \
+		 -initialdir "[netedit getenv HOME]/SCIRun/Subnets"]
     }
     if { [string length $Subnet(Subnet${subnet_id}_Filename)]} {
-	writeSubnet $Subnet(Subnet${subnet_id}_Filename) $subnet_id 1
+	writeNetwork $Subnet(Subnet${subnet_id}_Filename) $subnet_id
     }
 }
     
+proc loadSubnetScriptsFromDisk { } {
+    global SubnetScripts
+    set files [glob -nocomplain "[netedit getenv SCIRUN_SRCDIR]/Subnets/*.net"]
+    eval lappend files [glob -nocomplain "[netedit getenv HOME]/SCIRun/Subnets/*.net"]
+
+    foreach file $files {
+	set script ""
+	set handle [open $file RDONLY]
+	while { ![eof $handle] } { 
+	    append script "[gets $handle]\n"
+	}
+	close $handle
+	addSubnetToDatabase $script
+    }
+}
+
+	
+	
