@@ -17,6 +17,8 @@ using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
+static map<int, const Patch*> patches;
+
 static AtomicCounter ids("Patch ID counter", 0);
 
 Patch::Patch(const Level* level,
@@ -29,6 +31,12 @@ Patch::Patch(const Level* level,
 {
    if(d_id == -1)
       d_id = ids++;
+
+   if(patches.find(d_id) != patches.end()){
+     cerr << "id=" << d_id << '\n';
+     throw InternalError("duplicate patch!");
+   }
+   patches[d_id]=this;
 
    d_bcs = vector<vector<BoundCondBase*> >(numFaces);
    for (int i = 0; i<numFaces; i++ ) {
@@ -43,6 +51,16 @@ Patch::Patch(const Level* level,
 
 Patch::~Patch()
 {
+  patches.erase(patches.find(getID()));
+}
+
+const Patch* Patch::getByID(int id)
+{
+  map<int, const Patch*>::iterator iter = patches.find(id);
+  if(iter == patches.end())
+    return 0;
+  else
+    return iter->second;
 }
 
 int Patch::findClosestNode(const Point& pos, IntVector& idx) const
@@ -766,33 +784,36 @@ void Patch::computeVariableExtents(TypeDescription::Type basis,
 				   Level::selectType& neighbors,
 				   IntVector& low, IntVector& high) const
 {
-    VariableBasis translation;
-    switch(basis){
-    case TypeDescription::CCVariable:
-	translation=CellFaceBased;
-	break;
-    case TypeDescription::NCVariable:
-         translation=NodeBased;
-         break;
-    case TypeDescription::SFCXVariable:
-	translation=XFaceBased;
-	break;
-    case TypeDescription::SFCYVariable:
-	translation=YFaceBased;
-	break;
-    case TypeDescription::SFCZVariable:
-	translation=ZFaceBased;
-	break;
-    case TypeDescription::ParticleVariable:
-	translation=CellBased;
-	break;
-    default:
-       if(gtype == Ghost::None)
-	  translation=CellBased;  // Shouldn't matter what it is
-       else
-	  throw InternalError("Unknown variable type in Patch::getVariableExtents (from TypeDescription::Type)");
-    }
-    computeVariableExtents(translation, gtype, numGhostCells,
-			   neighbors, low, high);
+  VariableBasis translation;
+  switch(basis){
+  case TypeDescription::CCVariable:
+    translation=CellFaceBased;
+    break;
+  case TypeDescription::NCVariable:
+    translation=NodeBased;
+    break;
+  case TypeDescription::SFCXVariable:
+    translation=XFaceBased;
+    break;
+  case TypeDescription::SFCYVariable:
+    translation=YFaceBased;
+    break;
+  case TypeDescription::SFCZVariable:
+    translation=ZFaceBased;
+    break;
+  case TypeDescription::ParticleVariable:
+    translation=CellBased;
+    break;
+  case TypeDescription::ScatterGatherVariable:
+    translation=CellBased;
+    break;
+  default:
+    if(gtype == Ghost::None)
+      translation=CellBased;  // Shouldn't matter what it is
+    else
+      throw InternalError("Unknown variable type in Patch::getVariableExtents (from TypeDescription::Type)");
+  }
+  computeVariableExtents(translation, gtype, numGhostCells,
+			 neighbors, low, high);
 }
 
