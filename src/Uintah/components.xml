@@ -169,7 +169,24 @@ Level 6: Magenta</documentation>
       <creationFunction>make_NodeHedgehog</creationFunction>
     </implementation>
   </dataflow-component>
+  <dataflow-component name="EigenEvaluator">
+    <meta>
+      <authors>
+        <author>Wayne Witzel</author>
+      </authors>
+      <version-date>August 2000</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs>TensorField</inputs>
+    <outputs>ScalarField, VectorField</outputs>
+    <parameters>int</parameters>
+    <implementation>
+      <creationFunction>make_EigenEvaluator</creationFunction>
+    </implementation>
+  </dataflow-component>
   </scirun-library>
+
   <scirun-library category="MPMViz">
   <soNames>
     <soName>libUintah_Modules_MPMViz.so</soName>
@@ -291,6 +308,7 @@ Level 6: Magenta</documentation>
       <creationFunction>make_PartToGeom</creationFunction>
     </implementation>
   </dataflow-component>
+
   <dataflow-component name="GridLines">
     <meta>
       <authors>
@@ -324,6 +342,7 @@ Level 6: Magenta</documentation>
       <creationFunction>make_ParticleGridVisControl</creationFunction>
     </implementation>
   </dataflow-component>
+
   <dataflow-component name="ParticleViz">
     <meta>
       <authors>
@@ -342,6 +361,8 @@ Level 6: Magenta</documentation>
   </dataflow-component>
 
   </scirun-library>
+
+
   <scirun-library category="Readers">
   <soNames>
     <soName>libUintah_Modules_Readers.so</soName>
