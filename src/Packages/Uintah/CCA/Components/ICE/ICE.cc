@@ -67,7 +67,6 @@ ICE::ICE(const ProcessorGroup* myworld)
   switchDebugMomentumExchange_CC  = false;
   switchDebugSource_Sink          = false;
   switchDebug_advance_advect      = false;
-  switchDebug_advectQFirst        = false;
   switchTestConservation          = false;
 
   d_massExchange      = false;
@@ -175,8 +174,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
        switchDebugSource_Sink           = true;
       else if (debug_attr["label"] == "switchDebug_advance_advect")
        switchDebug_advance_advect       = true;
-      else if (debug_attr["label"] == "switchDebug_advectQFirst")
-       switchDebug_advectQFirst         = true;
       else if (debug_attr["label"] == "switchTestConservation")
         switchTestConservation           = true;
     }
@@ -200,7 +197,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
   cfd_ice_ps->get("add_delP_Dilatate", d_add_delP_Dilatate); 
   
   cfd_ice_ps->require("max_iteration_equilibration",d_max_iter_equilibration);
-  d_advector = AdvectionFactory::create(cfd_ice_ps);
+  d_advector = AdvectionFactory::create(cfd_ice_ps, d_advect_type);
   // Grab the solution technique
   ProblemSpecP child = cfd_ice_ps->findBlock("solution");
   if(!child)
@@ -349,8 +346,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
     cout_norm << "switchDebugSource_Sink is ON" << endl;
   if (switchDebug_advance_advect == true) 
     cout_norm << "switchDebug_advance_advect is ON" << endl;
-  if (switchDebug_advectQFirst == true) 
-    cout_norm << "switchDebug_advectQFirst is ON" << endl;
   if (switchTestConservation == true)
     cout_norm << "switchTestConservation is ON" << endl;
 
@@ -694,7 +689,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->requires( Task::OldDW, lb->delTLabel);
   task->requires( Task::NewDW, lb->press_equil_CCLabel,
                                           press_matl,  gn);
-  task->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,1);
+  task->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2);
   task->requires( Task::NewDW, lb->uvel_FCMELabel,     gac,2);
   task->requires( Task::NewDW, lb->vvel_FCMELabel,     gac,2);
   task->requires( Task::NewDW, lb->wvel_FCMELabel,     gac,2);
@@ -960,10 +955,10 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::NewDW, lb->uvel_FCMELabel,      Ghost::AroundCells,2);
   task->requires(Task::NewDW, lb->vvel_FCMELabel,      Ghost::AroundCells,2);
   task->requires(Task::NewDW, lb->wvel_FCMELabel,      Ghost::AroundCells,2);
-  task->requires(Task::NewDW, lb->mom_L_ME_CCLabel,    Ghost::AroundCells,1);
-  task->requires(Task::NewDW, lb->mass_L_CCLabel,      Ghost::AroundCells,1);
-  task->requires(Task::NewDW, lb->eng_L_ME_CCLabel,    Ghost::AroundCells,1);
-  task->requires(Task::NewDW, lb->spec_vol_L_CCLabel,  Ghost::AroundCells,1);
+  task->requires(Task::NewDW, lb->mom_L_ME_CCLabel,    Ghost::AroundCells,2);
+  task->requires(Task::NewDW, lb->mass_L_CCLabel,      Ghost::AroundCells,2);
+  task->requires(Task::NewDW, lb->eng_L_ME_CCLabel,    Ghost::AroundCells,2);
+  task->requires(Task::NewDW, lb->spec_vol_L_CCLabel,  Ghost::AroundCells,2);
  
   task->modifies(lb->rho_CCLabel);
   task->modifies(lb->sp_vol_CCLabel);
@@ -2080,7 +2075,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 
     new_dw->allocateTemporary(q_advected, patch);
     new_dw->allocateTemporary(term1,      patch);
-    new_dw->allocateTemporary(q_CC,       patch, gac,1);
+    new_dw->allocateTemporary(q_CC,       patch, gac,2);
     new_dw->get(pressure,  lb->press_equil_CCLabel,0,patch,gn,0);
 
     term1.initialize(0.);
@@ -2101,10 +2096,10 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       constSFCYVariable<double> vvel_FC;
       constSFCZVariable<double> wvel_FC;
             
-      new_dw->get(uvel_FC, lb->uvel_FCMELabel,         indx,patch,gac, 2);   
-      new_dw->get(vvel_FC, lb->vvel_FCMELabel,         indx,patch,gac, 2);   
-      new_dw->get(wvel_FC, lb->wvel_FCMELabel,         indx,patch,gac, 2);   
-      new_dw->get(vol_frac,lb->vol_frac_CCLabel,       indx,patch,gac, 1);   
+      new_dw->get(uvel_FC,     lb->uvel_FCMELabel,     indx,patch,gac, 2);   
+      new_dw->get(vvel_FC,     lb->vvel_FCMELabel,     indx,patch,gac, 2);   
+      new_dw->get(wvel_FC,     lb->wvel_FCMELabel,     indx,patch,gac, 2);   
+      new_dw->get(vol_frac,    lb->vol_frac_CCLabel,   indx,patch,gac, 2);   
       new_dw->get(rho_CC,      lb->rho_CCLabel,        indx,patch,gn,0);
       new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel,     indx,patch,gn,0);
       new_dw->get(burnedMass,  lb->burnedMass_CCLabel, indx,patch,gn,0);
@@ -2122,19 +2117,32 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         printData_FC( indx, patch,1, desc.str(), "vvel_FC",    vvel_FC);
         printData_FC( indx, patch,1, desc.str(), "wvel_FC",    wvel_FC);
       }
+      
+      //__________________________________
+      // If second order is used 
+      // iterate over two layers of ghostCells
+      int ncells = 1;   // default for first order advection
+      if (d_advect_type == "SecondOrder" || 
+          d_advect_type == "SecondOrderCE" ){
+        ncells = 2;
+      }
+      CellIterator iter = patch->getExtraCellIterator();
+      CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter, ncells);
+            
       //__________________________________
       // Advection preprocessing
       // - divide vol_frac_cc/vol
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx); 
 
-      for(CellIterator iter = patch->getCellIterator(gc); !iter.done();iter++){
+      for(CellIterator iter = iterPlusGhost; !iter.done();iter++){
        IntVector c = *iter;
         q_CC[c] = vol_frac[c] * invvol;
-      }
+      } 
+      
       //__________________________________
       //   First order advection of q_CC 
       advector->advectQ(q_CC, patch, q_advected, new_dw); 
-
+      
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
         //   Contributions from reactions
@@ -3175,8 +3183,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     new_dw->allocateTemporary(mass_new,     patch);
     new_dw->allocateTemporary(q_advected,   patch);
     new_dw->allocateTemporary(qV_advected,  patch);
-    new_dw->allocateTemporary(qV_CC,        patch,gac,1);
-    new_dw->allocateTemporary(q_CC,         patch,gac,1);
+    new_dw->allocateTemporary(qV_CC,        patch,gac,2);
+    new_dw->allocateTemporary(q_CC,         patch,gac,2);
     int numALLMatls = d_sharedState->getNumMatls();
 
     for (int m = 0; m < numALLMatls; m++ ) {
@@ -3197,11 +3205,11 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       new_dw->get(uvel_FC,     lb->uvel_FCMELabel,        indx,patch,gac,2);  
       new_dw->get(vvel_FC,     lb->vvel_FCMELabel,        indx,patch,gac,2);  
       new_dw->get(wvel_FC,     lb->wvel_FCMELabel,        indx,patch,gac,2);  
-      new_dw->get(mass_L,      lb->mass_L_CCLabel,        indx,patch,gac,1);  
+      new_dw->get(mass_L,      lb->mass_L_CCLabel,        indx,patch,gac,2);  
 
-      new_dw->get(mom_L_ME,    lb->mom_L_ME_CCLabel,      indx,patch,gac,1);
-      new_dw->get(spec_vol_L,  lb->spec_vol_L_CCLabel,    indx,patch,gac,1);
-      new_dw->get(int_eng_L_ME,lb->eng_L_ME_CCLabel,      indx,patch,gac,1);
+      new_dw->get(mom_L_ME,    lb->mom_L_ME_CCLabel,      indx,patch,gac,2);
+      new_dw->get(spec_vol_L,  lb->spec_vol_L_CCLabel,    indx,patch,gac,2);
+      new_dw->get(int_eng_L_ME,lb->eng_L_ME_CCLabel,      indx,patch,gac,2);
       new_dw->getModifiable(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch);
       new_dw->getModifiable(rho_CC,    lb->rho_CCLabel,   indx,patch);
       if(ice_matl){
@@ -3222,12 +3230,24 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       qV_advected.initialize(Vector(0.0,0.0,0.0));
 
       //__________________________________
+      // If second order is used 
+      // iterate over two layers of ghostCells
+      cout << "Advecton Type "<< d_advect_type << endl;
+      int ncells = 1;   // default for first order advection
+      if (d_advect_type == "SecondOrder" || 
+          d_advect_type == "SecondOrderCE" ){
+        ncells = 2;
+      }
+      CellIterator iter = patch->getExtraCellIterator();
+      CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter, ncells); 
+      
+      //__________________________________
       //   Advection preprocessing
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx); 
 
       //__________________________________
       // Advect mass and backout rho_CC
-      for(CellIterator iter=patch->getCellIterator(gc); !iter.done();iter++){
+      for(CellIterator iter=iterPlusGhost; !iter.done();iter++){
         IntVector c = *iter;
         q_CC[c] = mass_L[c] * invvol;
       }
@@ -3244,7 +3264,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       
       //__________________________________
       // Advect  momentum and backout vel_CC
-      for(CellIterator iter=patch->getCellIterator(gc); !iter.done(); iter++){
+      for(CellIterator iter=iterPlusGhost; !iter.done(); iter++){
         IntVector c = *iter;
         qV_CC[c] = mom_L_ME[c] * invvol;
       }
@@ -3260,7 +3280,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 
       //__________________________________
       // Advect internal energy and backout Temp_CC
-      for(CellIterator iter=patch->getCellIterator(gc); !iter.done(); iter++){
+      for(CellIterator iter=iterPlusGhost; !iter.done(); iter++){
         IntVector c = *iter;
         q_CC[c] = int_eng_L_ME[c] * invvol;
       }
@@ -3286,7 +3306,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       //__________________________________
       // Advection of specific volume
       // Note sp_vol_L[m] is actually sp_vol[m] * mass
-      for(CellIterator iter=patch->getCellIterator(gc); !iter.done();iter++){
+      for(CellIterator iter=iterPlusGhost; !iter.done();iter++){
         IntVector c = *iter;
         q_CC[c] = spec_vol_L[c]*invvol;
       }
@@ -3887,6 +3907,8 @@ bool ICE::areAllValuesPositive( CCVariable<double> & src, IntVector& neg_cell )
   neg_cell = IntVector(0,0,0); 
   return true;      
 } 
+
+
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1209
