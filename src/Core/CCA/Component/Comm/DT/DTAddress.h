@@ -16,10 +16,10 @@
 */
 
 /*
- *  SocketSpChannel.h: Socket implemenation of Sp Channel
+ *  DTAddress.h defines the unique address of each data transmitter
  *
  *  Written by:
- *   Kosta Damevski and Keming Zhang
+ *   Keming Zhang
  *   Department of Computer Science
  *   University of Utah
  *   Jun 2003
@@ -28,35 +28,22 @@
  */
 
 
-#ifndef CORE_CCA_COMPONENT_COMM_SOCKETSPCHANNEL_H
-#define CORE_CCA_COMPONENT_COMM_SOCKETSPCHANNEL_H
-
-#include <Core/CCA/Component/Comm/SpChannel.h>
-#include <Core/CCA/Component/Comm/DT/DTPoint.h>
-#include <Core/CCA/Component/Comm/DT/DTAddress.h>
+#ifndef CORE_CCA_COMPONENT_COMM_DT_DTADDRESS_H
+#define CORE_CCA_COMPONENT_COMM_DT_DTADDRESS_H
 
 namespace SCIRun {
-  class SocketSpChannel : public SpChannel {
-    friend class SocketMessage;
-    friend class SocketEpChannel;
+  class DTAddress{
   public:
-
-    SocketSpChannel();
-    SocketSpChannel(SocketSpChannel &spchan);
-    ~SocketSpChannel();
-    void openConnection(const URL& url);
-    void closeConnection();
-    Message* getMessage();
-    SpChannel* SPFactory(bool deep);
-
-  private:
-    SocketSpChannel(struct SocketStartPoint *sp);
-    DTPoint *sp;
-    DTAddress ep_addr;
-    DTPoint *ep;
-    void *object;
+    int port;
+    long ip;
+    bool operator<(const DTAddress &p) const{
+      return (port<=p.port && ip<p.ip) || (port<p.port && ip<=p.ip); 
+    }
+    bool operator==(const DTAddress &p) const{
+      return port==p.port && ip==p.ip;
+    }
   };
-}
 
+}// namespace SCIRun
 
 #endif

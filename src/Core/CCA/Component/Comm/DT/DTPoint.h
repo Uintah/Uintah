@@ -16,10 +16,10 @@
 */
 
 /*
- *  SocketSpChannel.h: Socket implemenation of Sp Channel
+ *  DTPoint.h: Data Communication Point (Sender/Receiver)
  *
  *  Written by:
- *   Kosta Damevski and Keming Zhang
+ *   Keming Zhang
  *   Department of Computer Science
  *   University of Utah
  *   Jun 2003
@@ -28,35 +28,32 @@
  */
 
 
-#ifndef CORE_CCA_COMPONENT_COMM_SOCKETSPCHANNEL_H
-#define CORE_CCA_COMPONENT_COMM_SOCKETSPCHANNEL_H
-
-#include <Core/CCA/Component/Comm/SpChannel.h>
-#include <Core/CCA/Component/Comm/DT/DTPoint.h>
-#include <Core/CCA/Component/Comm/DT/DTAddress.h>
+#ifndef CORE_CCA_COMPONENT_COMM_DT_DTPOINT_H
+#define CORE_CCA_COMPONENT_COMM_DT_DTPOINT_H
 
 namespace SCIRun {
-  class SocketSpChannel : public SpChannel {
-    friend class SocketMessage;
-    friend class SocketEpChannel;
+  class Semaphore;
+  class DTMessage;
+  class DTPoint{
   public:
-
-    SocketSpChannel();
-    SocketSpChannel(SocketSpChannel &spchan);
-    ~SocketSpChannel();
-    void openConnection(const URL& url);
-    void closeConnection();
-    Message* getMessage();
-    SpChannel* SPFactory(bool deep);
+    friend class DataTransmitter;
+    DTPoint();
+    ~DTPoint();
+    
+    ///////////
+    //This method blocks until a message is available in the 
+    //DataTransmitter and then return this message.
+    DTMessage* getMessage();
+    
+    ///////////
+    //Put msg into the sending message queue.
+    //the sender field is automaticly filled.
+    void putMessage(DTMessage *msg);
 
   private:
-    SocketSpChannel(struct SocketStartPoint *sp);
-    DTPoint *sp;
-    DTAddress ep_addr;
-    DTPoint *ep;
-    void *object;
+    Semaphore *sema;
   };
-}
 
+}//namespace SCIRun
 
 #endif

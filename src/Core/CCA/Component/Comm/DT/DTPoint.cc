@@ -16,7 +16,7 @@
 */
 
 /*
- *  SocketThread.cc: Threads used by Socket communication channels
+ *  DTPoint.cc: Data Communication Point (Sender/Receiver)
  *
  *  Written by:
  *   Keming Zhang
@@ -26,31 +26,36 @@
  *
  *  Copyright (C) 1999 SCI Group
  */
+#include <Core/Thread/Semaphore.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/Component/Comm/DT/DTPoint.h>
+#include <Core/CCA/Component/Comm/DT/DTMessage.h>
+#include <Core/CCA/Component/Comm/DT/DataTransmitter.h>
 
-
-#include <iostream>
-#include <Core/Thread/Thread.h>
-#include <Core/CCA/Component/Comm/SocketEpChannel.h>
-#include <Core/CCA/Component/Comm/SocketThread.h>
-#include <Core/CCA/Component/Comm/Message.h>
-#include <Core/CCA/Component/PIDL/ServerContext.h>
 
 using namespace SCIRun;
-using namespace std;
 
-  
-SocketThread::SocketThread(SocketEpChannel *ep, Message* msg, int id){
-  this->ep=ep;
-  this->msg=msg;
-  this->id=id;
+DTPoint::DTPoint(){
+  sema=new Semaphore("DTPoint semaphore", 0);
+  PIDL::getDT()->registerPoint(this);
 }
 
-void 
-SocketThread::run()
-{
-  if(id==-1) ep->runService();
-  else{
-    //cerr<<"calling handler #"<<id<<"\n";
-    ep->handler_table[id](msg);
-  }
+DTPoint::~DTPoint(){
+  delete sema;
+  PIDL::getDT()->unregisterPoint(this);
 }
+
+DTMessage *
+DTPoint::getMessage(){
+  sema->down();
+  return PIDL::getDT()->getMessage(this);
+}
+
+void DTPoint::putMessage(DTMessage *msg){
+  msg->sender=this;
+  PIDL::getDT()->putMessage(msg);
+}
+
+
+
+

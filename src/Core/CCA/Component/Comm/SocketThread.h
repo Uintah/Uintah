@@ -40,10 +40,9 @@ namespace SCIRun{
 
   class SocketThread : public Runnable{
   public:
-    SocketThread(SocketEpChannel *ep, Message *msg, int id, int new_fd=-1);
+    SocketThread(SocketEpChannel *ep, Message *msg, int id);
     //id>=0, handlers
-    //id==-1, accept
-    //id==-2, service
+    //id==-1, service
     
     ~SocketThread() {}
     void run();
@@ -51,7 +50,6 @@ namespace SCIRun{
     SocketEpChannel *ep;
     Message *msg;
     int id;
-    int new_fd;
   };
 } // namespace SCIRun
   

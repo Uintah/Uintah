@@ -38,6 +38,7 @@ namespace SCIRun {
   class Message;
   class SpChannel;
   class Thread;
+  class DTPoint;
   class SocketEpChannel : public EpChannel {
     friend class SocketMessage;
     friend class SocketThread;
@@ -54,23 +55,9 @@ namespace SCIRun {
     void registerHandler(int num, void* handle);
     void bind(SpChannel* spchan);
 
-    void runAccept();
-    void runService(int new_fd);
-
-    static inline long getIP(){
-      return ip;
-    }
-
+    void runService();
   private:
-  
-    /////////////
-    // File descriptor for the socket
-
-    int sockfd;
-
-    char *hostname;
-    static long ip;
-    unsigned short port;
+    DTPoint *ep;
 
     ////////////
     // The table of handlers from the sidl generated file
@@ -81,18 +68,9 @@ namespace SCIRun {
     // Handler table size
     int table_size;
 
-     /////////////
-    // If we can kill the accept_thread expicitly, we keep this field,
-    Thread *accept_thread;
-
     /////////////
     // Server context object
     void *object;
-
-
-    /////////////
-    // flag to indicate if the SpChannel is dead
-    bool dead;
   };
 }// namespace SCIRun
 
