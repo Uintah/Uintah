@@ -50,14 +50,14 @@ void AMRWave::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
   sched->addTask(task, coarseLevel->eachPatch(), sharedState_->allMaterials());
 }
 
-void AMRWave::scheduleRefine (const LevelP& fineLevel, SchedulerP& sched)
+void AMRWave::scheduleRefine (const PatchSet* patches, SchedulerP& sched)
 {
   Task* task = scinew Task("refine", this, &AMRWave::refine);
-  task->requires(Task::NewDW, phi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::None, 0);
-  task->computes(phi_label);
-  task->requires(Task::NewDW, pi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::None, 0);
-  task->computes(pi_label);
-  sched->addTask(task, fineLevel->eachPatch(), sharedState_->allMaterials());
+  task->requires(Task::NewDW, phi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
+  //task->computes(phi_label);
+  task->requires(Task::NewDW, pi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
+  //task->computes(pi_label);
+  sched->addTask(task, patches, sharedState_->allMaterials());
 }
 
 void AMRWave::scheduleErrorEstimate(const LevelP& coarseLevel,
@@ -89,6 +89,9 @@ void AMRWave::errorEstimate(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    //if (patch->getLevel()->getIndex() > 0) cout << "  Doing errorEstimate on patch " << patch->getID() 
+    //                                           << " low " << patch->getLowIndex() << " hi " << patch->getHighIndex() 
+    //                                           << endl;
     CCVariable<int> refineFlag;
     PerPatch<PatchFlagP> refinePatchFlag;
     
@@ -115,6 +118,9 @@ void AMRWave::errorEstimate(const ProcessorGroup*,
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         const IntVector& c = *iter;
 
+        IntVector low = patch->getLowIndex();
+        IntVector high = patch->getHighIndex();
+
         // Compute curl
         double curlPhi = sumdx2 * phi[c]
           + (phi[c+IntVector(1,0,0)] + phi[c-IntVector(1,0,0)]) * inv_dx2.x()
@@ -126,7 +132,7 @@ void AMRWave::errorEstimate(const ProcessorGroup*,
           refineFlag[c] = true;
         }
       }
-      cerr << "numFlag=" << numFlag << '\n';
+      // cerr << "numFlag=" << numFlag << '\n';
       if(numFlag != 0)
         refinePatch->set();
     }
@@ -139,7 +145,63 @@ void AMRWave::refine(const ProcessorGroup*,
                      const MaterialSubset* matls,
                      DataWarehouse*, DataWarehouse* new_dw)
 {
-  cerr << "AMRWave::refine not finished\n";
+  const Level* fineLevel = getLevel(patches);
+  const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+
+  for (int p = 0; p < patches->size(); p++) {  
+    const Patch* finePatch = patches->get(p);
+    cerr << "  Refine for patch " << finePatch->getID() << endl;
+
+    // Find the overlapping regions...
+    Level::selectType coarsePatches;
+    finePatch->getCoarseLevelPatches(coarsePatches);
+
+    for(int m = 0;m<matls->size();m++){
+      int matl = matls->get(m);
+
+      CCVariable<double> pi;
+      CCVariable<double> phi;
+      
+      new_dw->allocateAndPut(phi, phi_label, matl, finePatch);
+      new_dw->allocateAndPut(pi, pi_label, matl, finePatch);
+      
+      for ( int i = 0; i < coarsePatches.size(); i++ ) {
+        const Patch* coarsePatch = coarsePatches[i];
+        constCCVariable<double> coarse_pi;
+        constCCVariable<double> coarse_phi;
+        new_dw->get(coarse_pi, pi_label, matl, coarsePatch, Ghost::AroundCells, 1);
+        new_dw->get(coarse_phi, phi_label, matl, coarsePatch, Ghost::AroundCells, 1);
+        
+        IntVector l = Max(coarseLevel->mapCellToFiner(coarsePatch->getCellLowIndex()), 
+                          finePatch->getCellLowIndex());
+        IntVector h = Min(coarseLevel->mapCellToFiner(coarsePatch->getCellHighIndex()),
+                          finePatch->getCellHighIndex());
+        
+        // simple linear interpolation (maybe)
+        for(CellIterator iter(l, h); !iter.done(); iter++){
+          Point cell_pos = fineLevel->getCellPosition(*iter);
+          double tmp_phi=0;
+          double tmp_pi=0;
+          double total_weight = 0;
+          IntVector coarseStart(fineLevel->mapCellToCoarser(*iter));
+          
+          for(CellIterator inside(IntVector(-1,-1,-1), coarseLevel->getRefinementRatio() - IntVector(1,1,1));
+              !inside.done(); inside++){
+            IntVector coarse_idx = coarseStart+*inside;
+            Point coarse_pos = coarseLevel->getCellPosition(coarse_idx);
+            double distance = (coarse_pos - cell_pos).length();
+            
+            tmp_phi +=coarse_phi[coarse_idx]*distance;
+            tmp_pi  +=coarse_pi[coarse_idx]*distance;
+            total_weight += distance;
+          }
+          phi[*iter]=tmp_phi/total_weight;
+          pi[*iter]=tmp_pi/total_weight;
+        }
+      } // for(int i=0;i<coarsePatches.size();i++)
+        
+    } // matls
+  } // finePatches
 }
 
 void AMRWave::coarsen(const ProcessorGroup*,
@@ -147,5 +209,5 @@ void AMRWave::coarsen(const ProcessorGroup*,
                       const MaterialSubset* matls,
                       DataWarehouse*, DataWarehouse* new_dw)
 {
-  cerr << "AMRWave::coarsen not finished\n";
+  //cerr << "AMRWave::coarsen not finished\n";
 }
