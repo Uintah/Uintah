@@ -15,6 +15,7 @@
 #include <Packages/Uintah/CCA/Components/Models/test/flameSheet_rxn.h>
 #include <Packages/Uintah/CCA/Components/Models/test/VorticityConfinement.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/Simple_Burn.h>
+#include <Packages/Uintah/CCA/Components/Models/HEChem/Steady_Burn.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/IandG.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/JWLpp.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/LightTime.h>
@@ -58,6 +59,8 @@ void ModelFactory::makeModels(const ProblemSpecP& params, GridP&,
       models.push_back(scinew Mixing(d_myworld, model));
     else if(type == "Simple_Burn")
       models.push_back(scinew Simple_Burn(d_myworld, model));
+    else if(type == "Steady_Burn")
+      models.push_back(scinew Steady_Burn(d_myworld, model));
     else if(type == "IandG")
       models.push_back(scinew IandG(d_myworld, model));
     else if(type == "JWLpp")
