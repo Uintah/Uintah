@@ -363,7 +363,7 @@ void MaterialParticleData::sort()
 	 iter != subset->end(); iter++) {
       idIndices.push_back(ID_Index(*(pID++), base + *iter));
     }
-    base = (int)idIndices.size();
+    base = idIndices.size();
   }
 
   // sort by particle id and find out what happens to the particle indices.
@@ -484,9 +484,9 @@ compare(MaterialParticleVarData& data2, ParticleVariable<T>* value1,
 	ASSERT(getParticleID(i) == data2.getParticleID(i));
       }
       cerr << "DIFFERENCE on particle id= " << getParticleID(i) << endl;
-      IntVector origin((int)(getParticleID(i) >> 16) & 0xffff,
-		       (int)(getParticleID(i) >> 32) & 0xffff,
-		       (int)(getParticleID(i) >> 48) & 0xffff);
+      IntVector origin((getParticleID(i) >> 16) & 0xffff,
+		       (getParticleID(i) >> 32) & 0xffff,
+		       (getParticleID(i) >> 48) & 0xffff);
       cerr << "(Originating from " << origin << ")\n";
       const Patch* patch1 = getPatch(i);
       const Patch* patch2 = data2.getPatch(i);
