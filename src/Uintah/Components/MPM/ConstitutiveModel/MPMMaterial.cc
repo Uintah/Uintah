@@ -20,8 +20,35 @@ using namespace SCICore::Geometry;
 
 MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 {
+   // Constructor
 
-   // Loop through all of the pieces in this geometry object
+  // Follow the layout of the input file
+  // Steps:
+  // 1.  Determine the type of constitutive model and create it.
+  // 2.  Get the general properties of the material such as
+  //     density, toughness, thermal_conductivity, specific_heat.
+  // 3.  Loop through all of the geometry pieces that make up a single
+  //     geometry object.
+  // 4.  Within the geometry object, assign the boundary conditions
+  //     to the object.
+  // 5.  Assign the velocity field.
+
+  // Step 1 -- create the constitutive gmodel.
+
+   d_cm = ConstitutiveModelFactory::create(ps);
+   if(!d_cm)
+      throw ParameterNotFound("No constitutive model");
+   std::cerr << "works here after cm factory" << std::endl;
+
+   // Step 2 -- get the general material properties
+
+   ps->require("density",d_density);
+   ps->require("toughness",d_toughness);
+   ps->require("thermal_conductivity",d_thermal_cond);
+   ps->require("specific_heat",d_spec_heat);
+   ps->require("temperature",d_temp);
+
+   // Step 3 -- Loop through all of the pieces in this geometry object
 
    int piece_num = 0;
    for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
@@ -46,22 +73,20 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
       geom_obj_ps->require("res",res);
       cerr << piece_num << ": res: " << res << '\n';
       d_geom_objs.push_back(new GeometryObject(mainpiece, res));
+
+      // Step 4 -- Assign the boundary conditions to the object
+
+      
+      // Step 5 -- Assign the velocity field
+      int vf;
+      ps->require("velocity_field",vf);
+      setVFIndex(vf);
+      
+	
+            
    }
-   // Constructor
 
-   double den;
-   ps->require("density",den);
-   cerr << "density is " << den << endl;
-   
-   d_cm = ConstitutiveModelFactory::create(ps);
-   if(!d_cm)
-      throw ParameterNotFound("No constitutive model");
-   std::cerr << "works here after cm factory" << std::endl;
 
-   ps->require("density",d_density);
-   ps->require("toughness",d_toughness);
-   ps->require("thermal_conductivity",d_thermal_cond);
-   ps->require("specific_heat",d_spec_heat);
 }
 
 MPMMaterial::~MPMMaterial()
