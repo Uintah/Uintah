@@ -1,7 +1,6 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-#include <iostream.h>
 #include <qapplication.h>
 #include <qpushbutton.h>
 #include <qslider.h>

@@ -30,8 +30,9 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
-#include <iostream.h>
+#include <iostream>
 using namespace SCIRun;
+using namespace std;
 
 #include <qapplication.h>
 
