@@ -123,6 +123,20 @@ protected:
   vector<T[2]>          derivs_; 
 };
 
+template <class T>
+const TypeDescription* get_type_description(QuadBicubicHmt<T> *)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew TypeDescription(QuadBicubicHmt<T>::type_name(0), subs, 
+				string(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
 
 template <class T>
 const string
