@@ -176,7 +176,11 @@ SFInterface<F, L>::find_closest(double &minout, const Point &p) const
 {
   double mindist = DBL_MAX;
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
-  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
+  Field::data_location d_at = fld_->data_at();
+  if (d_at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
+  else if (d_at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
+  else if (d_at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
+  else if (d_at == Field::EDGE) mesh->synchronize(Mesh::EDGES_E);
 
   typename L::index_type index;
   typename L::iterator bi, ei;
@@ -342,7 +346,11 @@ VFInterface<F, L>::find_closest(Vector &minout, const Point &p) const
 {
   double mindist = DBL_MAX;
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
-  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
+  Field::data_location d_at = fld_->data_at();
+  if (d_at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
+  else if (d_at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
+  else if (d_at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
+  else if (d_at == Field::EDGE) mesh->synchronize(Mesh::EDGES_E);
 
   typename L::index_type index;
   typename L::iterator bi, ei;
@@ -467,7 +475,12 @@ TFInterface<F, L>::find_closest(Tensor &minout, const Point &p) const
 {
   double mindist = DBL_MAX;
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
-  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
+  Field::data_location d_at = fld_->data_at();
+  if (d_at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
+  else if (d_at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
+  else if (d_at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
+  else if (d_at == Field::EDGE) mesh->synchronize(Mesh::EDGES_E);
+
 
   typename L::index_type index;
   typename L::iterator bi, ei;
