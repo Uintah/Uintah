@@ -20,6 +20,8 @@
 #include <SCICore/Geom/GeomSphere.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
+#include <map.h>
+
 namespace SCIRun {
 namespace Modules {
 
@@ -32,7 +34,7 @@ using namespace SCICore::TclInterface;
 
 class MeshRender : public Module {
 public:
-    typedef map<Edge, int, less<Edge> > MapEdgeInt;
+    typedef map<Edge, int> MapEdgeInt;
   
 private:
     MeshIPort* imesh;
@@ -136,6 +138,10 @@ void MeshRender::execute()
 
 //
 // $Log$
+// Revision 1.5  2000/03/17 18:48:08  dahart
+// Included STL map header files where I forgot them, and removed less<>
+// parameter from map declarations
+//
 // Revision 1.4  2000/03/17 09:29:13  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

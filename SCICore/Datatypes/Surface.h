@@ -24,6 +24,8 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Thread/CrowdMonitor.h>
 
+#include <map.h>
+
 namespace SCICore {
     
 namespace Geometry {
@@ -76,7 +78,7 @@ public:
     Grid *grid;
   
   //HashTable<int, int> *pntHash;
-  typedef map<int, int, less<int> > MapIntInt;
+  typedef map<int, int> MapIntInt;
   MapIntInt* pntHash;
 
     // Boundary conditions...
@@ -114,6 +116,10 @@ public:
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 18:47:46  dahart
+// Included STL map header files where I forgot them, and removed less<>
+// parameter from map declarations
+//
 // Revision 1.7  2000/03/11 00:41:30  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>

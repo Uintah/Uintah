@@ -40,17 +40,10 @@ class NetworkEditor;
 class PSECORESHARE Network {
 public:
     
-    typedef map<clString, Connection*, less<clString> >
-        MapClStringConnection;
-    
-    typedef map<clString, Module*, less<clString> >
-        MapClStringModule;
-    
-    typedef map<int, Connection*, less<int> >
-        MapIntConnection;
-    
-    typedef map<int, Module*, less<int> >
-        MapIntModule;
+    typedef map<clString, Connection*>	MapClStringConnection;
+    typedef map<clString, Module*>	MapClStringModule;
+    typedef map<int, Connection*>	MapIntConnection;
+    typedef map<int, Module*>		MapIntModule;
     
 private:
     SCICore::Thread::Mutex the_lock;
@@ -108,6 +101,10 @@ public:
 
 //
 // $Log$
+// Revision 1.6  2000/03/17 18:47:28  dahart
+// Included STL map header files where I forgot them, and removed less<>
+// parameter from map declarations
+//
 // Revision 1.5  2000/03/11 00:40:55  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>

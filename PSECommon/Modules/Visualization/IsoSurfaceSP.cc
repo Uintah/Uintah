@@ -38,6 +38,8 @@
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <PSECore/Widgets/ArrowWidget.h>
+
+#include <map.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -667,7 +669,7 @@ void IsoSurfaceMSRG::iso_reg_grid(ScalarFieldRG* field, const Point& p,
     }
     isoval.set(iv);
     cerr << "Isoval = " << iv << "\n";
-    typedef map<int, int, less<int> > MapIntInt;
+    typedef map<int, int> MapIntInt;
     MapIntInt visitedPts;
     Queue<int> surfQ;
     int px, py, pz;
@@ -1703,6 +1705,10 @@ void IsoSurfaceMSRG::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.9  2000/03/17 18:47:05  dahart
+// Included STL map header files where I forgot them, and removed less<>
+// parameter from map declarations
+//
 // Revision 1.8  2000/03/17 09:27:34  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

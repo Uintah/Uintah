@@ -96,7 +96,7 @@ class OpenGLHelper;
 #define REDRAW_DONE 4
 #define PICK_DONE 5
 
-static map< clString, ObjTag*, less<clString> >::iterator viter;
+static map<clString, ObjTag*>::iterator viter;
 
 struct GetReq {
     int datamask;
@@ -1753,6 +1753,10 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.23  2000/03/17 18:47:03  dahart
+// Included STL map header files where I forgot them, and removed less<>
+// parameter from map declarations
+//
 // Revision 1.22  2000/03/17 08:23:13  sparker
 // Commented out SCI logo - it wasn't drawing on the screen anyway
 //

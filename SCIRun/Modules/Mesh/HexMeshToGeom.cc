@@ -23,6 +23,8 @@
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <PSECore/Datatypes/HexMeshPort.h>
 
+#include <map.h>
+
 namespace SCIRun {
 namespace Modules {
 
@@ -71,7 +73,7 @@ void HexMeshToGeom::execute()
     unsigned long l;    
     HexFace * f;
     
-    map<unsigned long, int, less<unsigned long> > line_set;
+    map<unsigned long, int> line_set;
     
     FourHexNodes c;
     GeomLines* lines = scinew GeomLines;
@@ -127,6 +129,10 @@ void HexMeshToGeom::execute()
 
 //
 // $Log$
+// Revision 1.4  2000/03/17 18:48:08  dahart
+// Included STL map header files where I forgot them, and removed less<>
+// parameter from map declarations
+//
 // Revision 1.3  2000/03/17 09:29:12  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

@@ -27,6 +27,8 @@
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/Thread/CrowdMonitor.h>
 
+#include <map.h>
+
 namespace PSECommon {
 namespace Modules {
 
@@ -58,7 +60,7 @@ struct PortInfo {
     GeometryComm* msg_tail;
     int portno;
 
-    typedef map< int, SceneItem*, less<int> > MapIntSceneItem;
+    typedef map<int, SceneItem*> MapIntSceneItem;
     MapIntSceneItem* objs;
 };
 #endif
@@ -66,9 +68,9 @@ struct PortInfo {
 class Salmon : public Module {
     
 public:
-    typedef map< clString, void*, less<clString> >	MapClStringVoid;
+    typedef map<clString, void*>	MapClStringVoid;
 #if 0    
-    typedef map< int, PortInfo*, less<int> >		MapIntPortInfo;
+    typedef map<int, PortInfo*>		MapIntPortInfo;
 #endif
 
 private:
@@ -147,6 +149,10 @@ public:
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 18:47:03  dahart
+// Included STL map header files where I forgot them, and removed less<>
+// parameter from map declarations
+//
 // Revision 1.7  2000/03/11 00:39:53  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>

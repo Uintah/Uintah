@@ -46,14 +46,9 @@ class SCICORESHARE Piostream {
   
 public:
 
-  typedef map<Persistent*, int, less<Persistent*> >
-    MapPersistentInt;
-
-  typedef map<int, Persistent*, less<int> >
-    MapIntPersistent;
-  
-  typedef map<clString, PersistentTypeID*, less<clString> >
-    MapClStringPersistentTypeID;
+  typedef map<Persistent*, int>			MapPersistentInt;
+  typedef map<int, Persistent*>			MapIntPersistent;
+  typedef map<clString, PersistentTypeID*>	MapClStringPersistentTypeID;
 
   enum Direction {
     Read,
@@ -130,7 +125,7 @@ SCICORESHARE inline void Pio(Piostream& stream, Persistent& data) { data.io(stre
 				// persistent io for maps
 template <class Key, class Data>
 SCICORESHARE void
-  Pio(Piostream& stream, map<Key, Data, less<Key> >& data );
+  Pio(Piostream& stream, map<Key, Data>& data );
 
 
 } // End namespace PersistentSpace
