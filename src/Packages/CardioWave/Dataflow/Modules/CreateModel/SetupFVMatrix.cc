@@ -36,31 +36,31 @@ class CardioWaveSHARE SetupFVMatrix : public Module {
   GuiString	sprfile_;
   GuiString	volumefile_;
   GuiString	visfile_;
-  GuiInt		BW_;
+  GuiInt	BW_;
   
 public:
-  SetupFVMatrix(const string& id);
+  SetupFVMatrix(GuiContext *context);
   virtual ~SetupFVMatrix();
   virtual void execute();
 };
 
-extern "C" CardioWaveSHARE Module* make_SetupFVMatrix(const string& id) {
-  return scinew SetupFVMatrix(id);
-}
 
-SetupFVMatrix::SetupFVMatrix(const string& id)
-  : Module("SetupFVMatrix", id, Source, "CreateModel", "CardioWave"),
-    sigx1_("sigx1", id, this),
-    sigy1_("sigy1", id, this),
-    sigz1_("sigz1", id, this),
-    sigx2_("sigx2", id, this),
-    sigy2_("sigy2", id, this),
-    sigz2_("sigz2", id, this),
-    sprfile_("sprfile", id, this),
-    sprbwfile_("sprbwfile", id, this),
-    volumefile_("volumefile", id, this),
-    visfile_("visfile", id, this),
-    BW_("BW", id, this)
+DECLARE_MAKER(SetupFVMatrix)
+
+
+SetupFVMatrix::SetupFVMatrix(GuiContext *context)
+  : Module("SetupFVMatrix", context, Source, "CreateModel", "CardioWave"),
+    sigx1_(context->subVar("sigx1")),
+    sigy1_(context->subVar("sigy1")),
+    sigz1_(context->subVar("sigz1")),
+    sigx2_(context->subVar("sigx2")),
+    sigy2_(context->subVar("sigy2")),
+    sigz2_(context->subVar("sigz2")),
+    sprbwfile_(context->subVar("sprbwfile")),
+    sprfile_(context->subVar("sprfile")),
+    volumefile_(context->subVar("volumefile")),
+    visfile_(context->subVar("visfile")),
+    BW_(context->subVar("BW"))
   
 {
 }

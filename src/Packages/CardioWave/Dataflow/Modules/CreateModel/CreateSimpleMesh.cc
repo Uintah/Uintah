@@ -35,29 +35,29 @@ class CardioWaveSHARE CreateSimpleMesh : public Module {
 	GuiDouble	fib2z_;
 
 public:
-  CreateSimpleMesh(const string& id);
+  CreateSimpleMesh(GuiContext *context);
   virtual ~CreateSimpleMesh();
   virtual void execute();
 };
 
-extern "C" CardioWaveSHARE Module* make_CreateSimpleMesh(const string& id) {
-  return scinew CreateSimpleMesh(id);
-}
 
-CreateSimpleMesh::CreateSimpleMesh(const string& id)
-  : Module("CreateSimpleMesh", id, Source, "CreateModel", "CardioWave"),
-    xdim_("xdim", id, this),
-    ydim_("ydim", id, this),
-    zdim_("zdim", id, this),
-    dx_("dx", id, this),
-    dy_("dy", id, this),
-    dz_("dz", id, this),
-    fib1x_("fib1x", id, this),
-    fib1y_("fib1y", id, this),
-    fib1z_("fib1z", id, this),
-    fib2x_("fib2x", id, this),
-    fib2y_("fib2y", id, this),
-    fib2z_("fib2z", id, this)   
+DECLARE_MAKER(CreateSimpleMesh)
+
+
+CreateSimpleMesh::CreateSimpleMesh(GuiContext *context)
+  : Module("CreateSimpleMesh", context, Source, "CreateModel", "CardioWave"),
+    xdim_(context->subVar("xdim")),
+    ydim_(context->subVar("ydim")),
+    zdim_(context->subVar("zdim")),
+    dx_(context->subVar("dx")),
+    dy_(context->subVar("dy")),
+    dz_(context->subVar("dz")),
+    fib1x_(context->subVar("fib1x")),
+    fib1y_(context->subVar("fib1y")),
+    fib1z_(context->subVar("fib1z")),
+    fib2x_(context->subVar("fib2x")),
+    fib2y_(context->subVar("fib2y")),
+    fib2z_(context->subVar("fib2z"))
 {
 }
 
