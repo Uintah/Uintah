@@ -527,7 +527,8 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   Task* t=scinew Task("SerialMPM::applyExternalLoads",
 		    this, &SerialMPM::applyExternalLoads);
                   
-  const MaterialSubset* mss = matls->getUnion();
+  // BB : 11/09/02 Unused variable
+  //const MaterialSubset* mss = matls->getUnion();
   
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
   t->computes(             lb->pExtForceLabel_preReloc);
@@ -1258,7 +1259,7 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
              IntVector low = patch->getInteriorNodeLowIndex();
              IntVector hi  = patch->getInteriorNodeHighIndex();     
               if(face==Patch::xplus || face==Patch::xminus){
-                int I;
+                int I = 0;
                 if(face==Patch::xminus){ I=low.x(); }
                 if(face==Patch::xplus){ I=hi.x()-1; }
                 for (int j = low.y(); j<hi.y(); j++) {
@@ -1269,7 +1270,7 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
                 }
               }
               if(face==Patch::yplus || face==Patch::yminus){
-                int J;
+                int J = 0;
                 if(face==Patch::yminus){ J=low.y(); }
                 if(face==Patch::yplus){ J=hi.y()-1; }
                 for (int i = low.x(); i<hi.x(); i++) {
@@ -1280,7 +1281,7 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
                 }
               }
               if(face==Patch::zplus || face==Patch::zminus){
-                int K;
+                int K = 0;
                 if(face==Patch::zminus){ K=low.z(); }
                 if(face==Patch::zplus){ K=hi.z()-1; }
                 for (int i = low.x(); i<hi.x(); i++) {
@@ -1455,7 +1456,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
             IntVector hi  = patch->getInteriorNodeHighIndex();
 	     double boundTemp = bc->getValue();
 	     if(face==Patch::xplus || face==Patch::xminus){
-		int I;
+		int I = 0;
 		if(face==Patch::xminus){ I=low.x(); }
 		if(face==Patch::xplus){  I=hi.x()-1; }
 		for (int j = low.y(); j<hi.y(); j++) { 
@@ -1466,7 +1467,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
 		}
 	     }
 	     if(face==Patch::yplus || face==Patch::yminus){
-	       int J;
+	       int J = 0;
 	       if(face==Patch::yminus){ J=low.y(); }
 	       if(face==Patch::yplus){  J=hi.y()-1; }
 	       for (int i = low.x(); i<hi.x(); i++) {
@@ -1477,7 +1478,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
 	       }
 	     }
 	     if(face==Patch::zplus || face==Patch::zminus){
-	       int K;
+	       int K = 0;
 	       if(face==Patch::zminus){ K=low.z(); }
 	       if(face==Patch::zplus){  K=hi.z()-1; }
 	       for (int i = low.x(); i<hi.x(); i++) {
