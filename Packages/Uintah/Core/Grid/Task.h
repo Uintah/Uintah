@@ -424,9 +424,9 @@ WARNING
     void subpatchCapable(bool state=true);
 
     enum DomainSpec {
-      NormalDomain,
-      OutOfDomain,
-      CoarseLevel,
+      NormalDomain,  // <- Normal/default setting
+      OutOfDomain,   // <- Require things from another level or set of patches
+      CoarseLevel,   // <- AMR 
       FineLevel
     };
 
@@ -566,14 +566,14 @@ WARNING
       const PatchSubset* patches;
       const MaterialSubset* matls;
       const Level* reductionLevel;
-      Edge* req_head;
+      Edge* req_head;   // Used in compiling the task graph.
       Edge* req_tail;
       Edge* comp_head;
       Edge* comp_tail;
       DomainSpec patches_dom;
       DomainSpec matls_dom;
       Ghost::GhostType gtype;
-      WhichDW whichdw;
+      WhichDW whichdw;  // Used only by Requires
       int numGhostCells;
       int mapDataWarehouse() const {
 	return task->mapDataWarehouse(whichdw);
