@@ -102,7 +102,7 @@ makeModule ModuleList::lookup(const clString& name)
 	    if(!dlhandles->lookup(dirname, handle)){
 		char* home=getenv("SCI_WORK");
 		if(!home)home=".";
-		clString path(clString(home)+"/Modules/"+dirname+"/lib"+dirname+".so");
+		clString path(clString("lib")+dirname+".so");
 		handle=dlopen(path(), RTLD_LAZY);
 		if(!handle){
 		    cerr << "Cannot open shared library: " << path << endl;

@@ -61,14 +61,12 @@ void NetworkEditor::main_loop()
 	switch(msg->type){
 	case MessageTypes::MultiSend:
 	    {
-		cerr << "Start multisend...\n";
 		Module_Scheduler_Message* mmsg=(Module_Scheduler_Message*)msg;
 		multisend(mmsg->p1);
 		if(mmsg->p2)
 		    multisend(mmsg->p2);
 		// Do not re-execute sender
 		do_scheduling(mmsg->p1->get_module());
-		cerr << "End multisend...\n";
 	    }
 	    break;
 	case MessageTypes::ReSchedule:
@@ -108,7 +106,6 @@ void NetworkEditor::do_scheduling(Module* exclude)
 	    needexecute.append(module);
     }
     if(needexecute.is_empty()){
-	cerr << "Nothing in execute list\n";
 	return;
     }
 
@@ -130,7 +127,6 @@ void NetworkEditor::do_scheduling(Module* exclude)
 		if(!m->need_execute){
 		    m->need_execute=1;
 		    needexecute.append(m);
-		    cerr << "OPORT - adding " << m->id << endl;
 		}
 	    }
 	}
@@ -148,12 +144,10 @@ void NetworkEditor::do_scheduling(Module* exclude)
 		    // If this oport already has the data, add it
 		    // to the to_trigger list...
 		    if(oport->have_data()){
-			cerr << "Adding to the to_trigger list " << conn->iport->get_module()->name << "(" << conn << ")" << endl;
 			to_trigger.add(conn);
 		    } else {
 			m->need_execute=1;
 			needexecute.append(m);
-			cerr << "IPORT - adding " << m->id << endl;
 		    }
 		}
 	    }
@@ -168,7 +162,6 @@ void NetworkEditor::do_scheduling(Module* exclude)
 	if(module->need_execute){
 	    // Executing this module, don't actually trigger....
 	} else {
-	    cerr << "Triggering: " << module->id << " (to " << conn->iport->get_module()->name << ", conn=" << conn << ")" << endl;
 	    module->mailbox.send(scinew Scheduler_Module_Message(conn));
 	}
     }

@@ -122,6 +122,7 @@ itcl_class Module {
 	}
 	
 	menu $p.menu
+	$p.menu add command -label "Execute" -command "$this-c needexecute"
 	$p.menu add command -label "Help" -command "moduleHelp $name"
 	$p.menu add command -label "Destroy" -command "moduleDestroy $canvas $this"
 
