@@ -6,7 +6,6 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/BoundCondReader.h>
 #include <Packages/Uintah/Core/Grid/BoundCondData.h>
 
@@ -543,8 +542,10 @@ void Level::setBCTypes()
 void Level::assignBCS(const ProblemSpecP& grid_ps)
 {
   ProblemSpecP bc_ps = grid_ps->findBlock("BoundaryConditions");
-  if (bc_ps == 0)
-    throw ProblemSetupException("No BoundaryConditions specified");
+  if (bc_ps == 0) {
+    cerr << "No BoundaryConditions specified" << endl;
+    return;
+  }
 
 
   BoundCondReader reader;
