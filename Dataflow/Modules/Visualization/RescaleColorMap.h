@@ -50,6 +50,7 @@ protected:
   bool success_;
 
 private:
+  GuiString gFrame_;
   GuiInt gIsFixed_;
   GuiDouble gMin_;
   GuiDouble gMax_;

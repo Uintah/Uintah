@@ -67,6 +67,7 @@ private:
   int  last_input_generation_;
   BBox last_bounds_;
 
+  GuiString gui_frame_;
   GuiDouble gui_locx_;
   GuiDouble gui_locy_;
   GuiDouble gui_locz_;
@@ -103,6 +104,7 @@ Probe::Probe(GuiContext* ctx)
   : Module("Probe", ctx, Filter, "FieldsCreate", "SCIRun"),
     widget_lock_("Probe widget lock"),
     last_input_generation_(0),
+    gui_frame_(ctx->subVar("main_frame")),
     gui_locx_(ctx->subVar("locx")),
     gui_locy_(ctx->subVar("locy")),
     gui_locz_(ctx->subVar("locz")),
