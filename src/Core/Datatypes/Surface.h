@@ -41,8 +41,7 @@ typedef LockingHandle<Surface> SurfaceHandle;
 
 class SCICORESHARE Surface : public Datatype {
 public:
-  CrowdMonitor monitor;
-  clString name;
+  string name;
 
 protected:
   enum Representation {
@@ -88,14 +87,13 @@ public:
 
   void set_bc(const clString& expr);
 
-  virtual int inside(const Point& p)=0;
-  virtual void construct_grid(int, int, int, const Point &, double)=0;
-  virtual void construct_grid()=0;
+  virtual bool inside(const Point& p) = 0;
+  virtual void construct_grid() = 0;
+  virtual void construct_grid(int, int, int, const Point &, double) = 0;
   virtual void destroy_grid();
   virtual void destroy_hash();
-  //virtual void get_surfnodes(Array1<NodeHandle>&)=0;
-  //virtual void set_surfnodes(const Array1<NodeHandle>&)=0;
-  virtual GeomObj* get_obj(const ColorMapHandle&)=0;
+
+  virtual GeomObj* get_geom(const ColorMapHandle&) = 0;
 
   // Persistent representation...
   virtual void io(Piostream&);
