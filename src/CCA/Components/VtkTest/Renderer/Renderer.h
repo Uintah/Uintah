@@ -29,7 +29,8 @@
 #ifndef SCIRun_VTK_Components_Renderer_h
 #define SCIRun_VTK_Components_Renderer_h
 
-#include <SCIRun/Vtk/Port.h>
+#include <SCIRun/Vtk/InPort.h>
+#include <SCIRun/Vtk/OutPort.h>
 #include <SCIRun/Vtk/Component.h>
 #include <vector>
 
@@ -37,42 +38,31 @@ class vtkRenderer;
 class vtkRenderWindow;
 class vtkRenderWindowInteractor;
 
-#define IPort Renderer_IPort
-#define OPort Renderer_OPort
-
 namespace SCIRun {
   namespace vtk{
-  class IPort : public vtk::Port {
-  public:
-    IPort(vtkRenderer *ren);
-    virtual ~IPort();
-    bool isInput();
-    std::string getName();
-    bool accept(Port* p);
-    void connect(Port* p);
-  private:
-    vtkRenderer *ren;
-  };
-  
-  class Renderer: public vtk::Component{
-    
-  public:
-    Renderer();
-    virtual ~Renderer();
-    bool haveUI();
-    int popupUI();
-  private:
-    IPort *iPort;
-    vtkRenderer *ren1; 
-    vtkRenderWindow *renWin;
-    vtkRenderWindowInteractor *iren;
+    class Renderer: public Component, public InPort{
+      
+    public:
+      //constructor
+      Renderer();
 
-    Renderer(const Renderer&);
-    Renderer& operator=(const Renderer&);
-  };
-  
-  
-} //namespace vtk
+      //destructor
+      ~Renderer();
+
+      //Component interface
+      int popupUI();
+      
+      //InPort interfaces
+      bool accept(OutPort* port);
+
+      //InPort interfaces
+      void connect(OutPort* port);
+    private:
+      vtkRenderer *ren1; 
+      Renderer(const Renderer&);
+      Renderer& operator=(const Renderer&);
+    };
+  } //namespace vtk
 } //namespace SCIRun
 
 

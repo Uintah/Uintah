@@ -26,17 +26,17 @@
  *
  */
 
-#include <iostream>
-#include <SCIRun/Vtk/Port.h>
+
 #include <CCA/Components/VtkTest/Renderer/Renderer.h>
 
-#include "vtkRenderer.h"
-#include "vtkRenderWindowInteractor.h"
-#include "vtkRenderWindow.h"
-#include "vtkCamera.h"
-#include "vtkMapper.h"
-#include "vtkProp.h"
-#include "vtkActor.h"
+#include <iostream>
+#include <vtkRenderer.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkRenderWindow.h>
+#include <vtkCamera.h>
+#include <vtkMapper.h>
+#include <vtkProp.h>
+#include <vtkActor.h>
 
 using namespace std;
 using namespace SCIRun;
@@ -47,66 +47,40 @@ extern "C" vtk::Component* make_Vtk_Renderer()
   return new Renderer;
 }
 
-//Input Port
-IPort::IPort(vtkRenderer *ren){
-  this->ren=ren;
-}
-
-IPort::~IPort(){
-
-}
-
-bool
-IPort::isInput(){
-  return true;
-}
-
-std::string
-IPort::getName(){
-  return "Renderer::input";
-}
-
-
 bool 
-IPort::accept(Port* port){
-  return dynamic_cast<vtkProp*>(port->getObj())!=0;
+Renderer::accept(OutPort* port){
+  return dynamic_cast<vtkProp*>(port->getOutput())!=0;
 }
 
 void
-IPort::connect(Port* port){
-  ren->AddActor(dynamic_cast<vtkProp*>(port->getObj()));
+Renderer::connect(OutPort* port){
+  ren1->AddActor(dynamic_cast<vtkProp*>(port->getOutput()));
 }
 
 Renderer::Renderer(){
+  //Set Input port name
+  setName("Renderer::input");
+
   ren1=vtkRenderer::New();
   ren1->SetBackground(0.1,0.2,0.4);
   ren1->ResetCameraClippingRange();
-  iports.push_back(new IPort(ren1));
-  
 
+  //register the inport
+  addPort(this);
 
-  //  ren1->GetActiveCamera()->Azimuth(20);
-  
-  //ren1->GetActiveCamera()->Elevation(30);
-
-
-  
-  //ren1->GetActiveCamera()->Zoom(1.4);
-
+  //enable UI (using new thread)
+  enableUI(true);
 }
 
 Renderer::~Renderer(){
   ren1->Delete();
-
-}
-
-bool
-Renderer::haveUI(){
-  return true;
 }
 
 int
 Renderer::popupUI(){
+  vtkRenderWindow *renWin;
+  vtkRenderWindowInteractor *iren;
+
   renWin=vtkRenderWindow::New();
   renWin->SetSize( 500, 500);
   renWin->AddRenderer(ren1);

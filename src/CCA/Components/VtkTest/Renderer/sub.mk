@@ -29,7 +29,7 @@ LIBS := $(QT_LIBRARY)
 
 Vtk_LIBRARY:=  -lvtkFiltering -lvtkGraphics -lvtkImaging -lvtkCommon -lvtkRendering -lvtkIO
 
-LIBS += $(Vtk_LIBRARY)
+LIBS += $(Vtk_LIBRARY) 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
