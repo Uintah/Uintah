@@ -392,6 +392,7 @@ itcl_class ViewWindow {
     method bindEvents {w} {
 	bind $w <Expose> "$this-c redraw"
 	bind $w <Configure> "$this-c redraw"
+
 	bind $w <ButtonPress-1> "$this-c mtranslate start %x %y"
 	bind $w <Button1-Motion> "$this-c mtranslate move %x %y"
 	bind $w <ButtonRelease-1> "$this-c mtranslate end %x %y"
@@ -401,18 +402,20 @@ itcl_class ViewWindow {
 	bind $w <ButtonPress-3> "$this-c mscale start %x %y"
 	bind $w <Button3-Motion> "$this-c mscale move %x %y"
 	bind $w <ButtonRelease-3> "$this-c mscale end %x %y"
+
+	bind $w <Control-ButtonPress-1> "$this-c mdolly start %x %y"
+	bind $w <Control-Button1-Motion> "$this-c mdolly move %x %y"
+	bind $w <Control-ButtonRelease-1> "$this-c mdolly end %x %y"
+	bind $w <Control-ButtonPress-2> "$this-c mrotate_eyep start %x %y %t"
+	bind $w <Control-Button2-Motion> "$this-c mrotate_eyep move %x %y %t"
+	bind $w <Control-ButtonRelease-2> "$this-c mrotate_eyep end %x %y %t"
+	bind $w <Control-ButtonPress-3> "$this-c municam start %x %y %t"
+	bind $w <Control-Button3-Motion> "$this-c municam move %x %y %t"
+	bind $w <Control-ButtonRelease-3> "$this-c municam end %x %y %t"
+
 	bind $w <Shift-ButtonPress-1> "$this-c mpick start %x %y %s %b"
 	bind $w <Shift-ButtonPress-2> "$this-c mpick start %x %y %s %b"
 	bind $w <Shift-ButtonPress-3> "$this-c mpick start %x %y %s %b"
-	
-	#-----------------------------------------------------------------
-	# by AS:
-	bind $w <Alt-ButtonPress-2> "$this-c mrotate_eyep start %x %y %t"
-	bind $w <Alt-Button2-Motion> "$this-c mrotate_eyep move %x %y %t"
-	bind $w <Alt-ButtonRelease-2> "$this-c mrotate_eyep end %x %y %t"
-	# end by AS
-	#-----------------------------------------------------------------
-
 	bind $w <Shift-Button1-Motion> "$this-c mpick move %x %y %s 1"
 	bind $w <Shift-Button2-Motion> "$this-c mpick move %x %y %s 2"
 	bind $w <Shift-Button3-Motion> "$this-c mpick move %x %y %s 3"
