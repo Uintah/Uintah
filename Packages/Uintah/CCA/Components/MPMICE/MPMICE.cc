@@ -1857,8 +1857,8 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
             MinMass = 0.0;   
          #endif
 /*==========TESTING==========`*/
-         if ((MaxMass-MinMass)/MaxMass > 0.9){
-// && (MaxMass-MinMass)/MaxMass < 0.99999) 
+         if ((MaxMass-MinMass)/MaxMass > 0.4
+          && (MaxMass-MinMass)/MaxMass < 1.0){
 
              double gradRhoX, gradRhoY, gradRhoZ;
              double normalX,  normalY,  normalZ;
@@ -1923,8 +1923,6 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
                sumReleasedHeat[c] = 0.0;
       #endif
 /*===================================`*/
-            //  We can probably get rid of createdVol since it is no longer
-            // being used  -Todd 02/28/02 
              int_eng_react[m][c] =
                       cv_solid*solidTemperature[c]*burnedMass[m][c];
              createdVol[m][c]    =  burnedMass[m][c] * sp_vol_CC[c];
@@ -1962,6 +1960,8 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      setBC(burnedMass[m], "set_if_sym_BC",patch, d_sharedState, indx);
+      setBC(sumBurnedMass, "set_if_sym_BC",patch, d_sharedState, indx);
       if (ice_matl && (ice_matl->getRxProduct() == Material::product)) {
         new_dw->put(sumBurnedMass,  MIlb->burnedMassCCLabel,   indx, patch);
         new_dw->put(sumReleasedHeat, Ilb->int_eng_comb_CCLabel,indx, patch); 
