@@ -57,7 +57,8 @@ public:
 
   bool transient() const { return transient_; }
   void set_transient(bool t) { transient_ = t; }
-private:
+
+protected:
   //! Transient properties are deleted when the PropertyManager that this
   //! Property belongs to is thawed. 
   bool transient_;
@@ -100,7 +101,7 @@ private:
  * Persistent Io
  */
 
-const int PROPERTY_VERSION = 1;
+const int PROPERTY_VERSION = 2;
 
 /*
  * Property<T>
@@ -137,7 +138,16 @@ template<class T>
 void
 Property<T>::io( Piostream &stream)
 {
-  stream.begin_class( type_name(-1), PROPERTY_VERSION);
+  const int version = stream.begin_class( type_name(-1), PROPERTY_VERSION);
+  if (version < 2)
+  {
+    cout << "Warning: Possible bad transient flag in property '"
+	 << type_name(-1) << "'\n";
+  }
+  else
+  {
+    Pio(stream, transient_);
+  }
   Pio(stream, obj_);
   stream.end_class();
 }
