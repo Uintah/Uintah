@@ -10,13 +10,14 @@ include $(SRCTOP_ABS)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/DaveW/Dataflow/Modules/Contours
 
 SRCS     += \
-	$(SRCDIR)/ShowContours.cc\
+	$(SRCDIR)/MLV.cc\
+#	$(SRCDIR)/ShowContours.cc\
 #	$(SRCDIR)/TransformContours.cc\
 #	$(SRCDIR)/ContoursToField.cc\
 #	$(SRCDIR)/LaceContours.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Dataflow/Network \
+PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
