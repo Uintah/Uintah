@@ -1,7 +1,7 @@
-//----- ScaleSimilarityModel.cc --------------------------------------------------
+//----- OdtClosure.cc --------------------------------------------------
 
 #include <Packages/Uintah/CCA/Components/Arches/debug.h>
-#include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/OdtClosure.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
@@ -20,59 +20,194 @@
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Grid/Variables/Array3.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <iostream>
 using namespace std;
 
 using namespace Uintah;
 using namespace SCIRun;
 
+#include <iomanip>
+using std::ios;
+using std::setw;
+using std::setiosflags;
 
 //****************************************************************************
 // Default constructor for SmagorinskyModel
 //****************************************************************************
-ScaleSimilarityModel::ScaleSimilarityModel(const ArchesLabel* label, 
+OdtClosure::OdtClosure(const ArchesLabel* label, 
 				   const MPMArchesLabel* MAlb,
 				   PhysicalConstants* phyConsts,
 				   BoundaryCondition* bndry_cond):
-                                    TurbulenceModel(label, MAlb),
-				    d_physicalConsts(phyConsts),
-				    d_boundaryCondition(bndry_cond)
+                                    SmagorinskyModel(label, MAlb, phyConsts,
+						    bndry_cond)
 {
 }
 
 //****************************************************************************
 // Destructor
 //****************************************************************************
-ScaleSimilarityModel::~ScaleSimilarityModel()
+OdtClosure::~OdtClosure()
 {
 }
 
-//****************************************************************************
-//  Get the molecular viscosity from the Physical Constants object 
-//****************************************************************************
-double 
-ScaleSimilarityModel::getMolecularViscosity() const {
-  return d_physicalConsts->getMolecularViscosity();
-}
+//__________________________________
+  static MPI_Datatype makeMPI_odtData()
+  {
+//    ASSERTEQ(sizeof(odtData), sizeof(double)*10);
+//    MPI_Datatype mpitype;
+//    MPI_Type_vector(1, 10, 10, MPI_DOUBLE, &mpitype);
+//    MPI_Type_commit(&mpitype);
+//    return mpitype;
+      MPI_Datatype odt_type;
+      MPI_Type_contiguous(210, MPI_DOUBLE, &odt_type);
+      MPI_Type_commit(&odt_type);
+      return odt_type;
+  }
 
+  const Uintah::TypeDescription* Uintah::fun_getTypeDescription(Uintah::odtData*)
+  {
+    static Uintah::TypeDescription* td = 0;
+    if(!td){
+      td = scinew Uintah::TypeDescription(Uintah::TypeDescription::Other,
+					  "odtData", true, 
+					  &makeMPI_odtData);
+    }
+    return td;
+  }
+
+namespace SCIRun {
+
+  void swapbytes( Uintah::odtData& d) {
+    double *p = d.x_x;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.y_y;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.z_z;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.x_u;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.x_v;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.x_w;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.x_rho;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.x_T;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.x_Phi;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.y_u;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.y_v;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.y_w;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.y_rho;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.y_T;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.y_Phi;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.z_u;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.z_v;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.z_w;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.z_rho;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.z_T;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+    p = d.z_Phi;
+    for (int i = 0; i < 10; i++) {
+      SWAP_8(*p); 
+      p++;
+    }
+  }
+}
 
 //****************************************************************************
 // Problem Setup 
 //****************************************************************************
 void 
-ScaleSimilarityModel::problemSetup(const ProblemSpecP& params)
+OdtClosure::problemSetup(const ProblemSpecP& params)
 {
-//  SmagorinskyModel::problemSetup(params);
-  ProblemSpecP db = params->findBlock("ScaleSimilarity");
+  SmagorinskyModel::problemSetup(params);
+  ProblemSpecP db = params->findBlock("OdtClosure");
   db->require("cf", d_CF);
+  db->require("odtPoints", d_odtPoints);
+  db = params->findBlock("PhysicalConstants");
+  db->require("viscosity", d_viscosity);
 }
 void
-ScaleSimilarityModel::initializeSmagCoeff( const ProcessorGroup*,
+OdtClosure::initializeSmagCoeff( const ProcessorGroup*,
                                                 const PatchSubset* patches,
                                                 const MaterialSubset* ,
                                                 DataWarehouse*,
@@ -94,14 +229,98 @@ ScaleSimilarityModel::initializeSmagCoeff( const ProcessorGroup*,
 // Schedule initialization of the smag coeff sub model 
 //****************************************************************************
 void 
-ScaleSimilarityModel::sched_initializeSmagCoeff( SchedulerP& sched, 
+OdtClosure::sched_initializeSmagCoeff( SchedulerP& sched, 
                                                       const PatchSet* patches,
                                                       const MaterialSet* matls,
                                                       const TimeIntegratorLabel* timelabels )
 {
-  string taskname =  "ScaleSimilarityModel::initializeSmagCoeff" + timelabels->integrator_step_name;
+  string taskname =  "OdtClosure::initializeSmagCoeff" + timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
-                          &ScaleSimilarityModel::initializeSmagCoeff,
+                          &OdtClosure::initializeSmagCoeff,
+                          timelabels);
+
+  tsk->computes(d_lab->d_CsLabel);
+  sched->addTask(tsk, patches, matls);
+}
+
+
+
+//--------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------
+void
+OdtClosure::initializeOdtvariable( const ProcessorGroup*,
+                                                const PatchSubset* patches,
+                                                const MaterialSubset* ,
+                                                DataWarehouse*,
+                                                DataWarehouse* new_dw,
+                                                const TimeIntegratorLabel* ) {
+  int archIndex = 0; // only one arches material
+  int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    CCVariable<odtData> odt_variable; //smag coeff 
+    new_dw->allocateAndPut(odt_variable, d_lab->d_odtDataLabel, matlIndex, patch);  
+    odtData data;
+    for (int i =0; i<d_odtPoints; i++) {
+	data.x_u[i] = 0.0;
+    	data.x_v[i] = 0.0;
+	data.x_w[i] = 0.0;
+    }
+    odt_variable.initialize(data);
+//    odt_variable.x_u.initialize(0.0);
+    int numGC = 1;
+    IntVector idxLo = patch->getGhostCellLowIndex(numGC);
+    IntVector idxHi = patch->getGhostCellHighIndex(numGC);
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    int startZ = idxLo.z();
+    if (zminus) startZ++;
+    int endZ = idxHi.z();
+    if (zplus) endZ--;
+    int startY = idxLo.y();
+    if (yminus) startY++;
+    int endY = idxHi.y();
+    if (yplus) endY--;
+    int startX = idxLo.x();
+    if (xminus) startX++;
+    int endX = idxHi.x();
+    if (xplus) endX--;
+
+    for (int colZ = startZ; colZ < endZ; colZ ++) {
+      for (int colY = startY; colY < endY; colY ++) {
+	for (int colX = startX; colX < endX; colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+    	  for (int i=0; i<d_odtPoints; i++) {
+	  odt_variable[currCell].x_u[i]=0.0;
+	  odt_variable[currCell].x_v[i]=0.0;
+	  odt_variable[currCell].x_w[i]=0.0;
+	  }
+	  
+	}
+      }
+    }
+    
+  }
+}
+
+//****************************************************************************
+// Schedule initialization of the smag coeff sub model 
+//****************************************************************************
+void 
+OdtClosure::sched_initializeOdtvariable( SchedulerP& sched, 
+                                                      const PatchSet* patches,
+                                                      const MaterialSet* matls,
+                                                      const TimeIntegratorLabel* timelabels )
+{
+  string taskname =  "OdtClosure::initializeOdtvariable" + timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this,
+                          &OdtClosure::initializeOdtvariable,
                           timelabels);
 
   tsk->computes(d_lab->d_CsLabel);
@@ -115,20 +334,18 @@ ScaleSimilarityModel::sched_initializeSmagCoeff( SchedulerP& sched,
 // Schedule recomputation of the turbulence sub model 
 //****************************************************************************
 void 
-ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched, 
+OdtClosure::sched_reComputeTurbSubmodel(SchedulerP& sched, 
 					      const PatchSet* patches,
 					      const MaterialSet* matls,
 				        const TimeIntegratorLabel* timelabels)
 {
-//  SmagorinskyModel::sched_reComputeTurbSubmodel(sched, patches, matls,
-//						timelabels);
-  
-//  cout << "  BEGIN sched_recomputeTurbSubmodel\n";
+  SmagorinskyModel::sched_reComputeTurbSubmodel(sched, patches, matls,
+						timelabels);
 
-  string taskname =  "ScaleSimilarityModel::ReTurbSubmodel" +
+  string taskname =  "OdtClosure::ReTurbSubmodel" +
 		     timelabels->integrator_step_name;
     Task* tsk = scinew Task(taskname, this,
-			    &ScaleSimilarityModel::reComputeTurbSubmodel,
+			    &OdtClosure::reComputeTurbSubmodel,
 			    timelabels);
 
   // Requires
@@ -141,14 +358,16 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::AroundCells,
 		Arches::ONEGHOSTCELL);
 
-  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::OldDW, d_lab->d_odtDataLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // for multimaterial
@@ -159,63 +378,76 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 
       // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-//    printf("adding compute for stress teonsor comp\n");
     tsk->computes(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl,
 		  Task::OutOfDomain);
-
+/*    tsk->computes(d_lab->d_stressTensorXdivLabel
+		  );
+    tsk->computes(d_lab->d_stressTensorYdivLabel
+		  );
+    tsk->computes(d_lab->d_stressTensorZdivLabel
+		  );
+*/
     tsk->computes(d_lab->d_scalarFluxCompLabel, d_lab->d_vectorMatl,
 		  Task::OutOfDomain);
+
+    tsk->computes(d_lab->d_odtDataLabel);
   }
   else {
-//    printf("adding modifies for stress teonsor comp\n");
     tsk->modifies(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl,
 		  Task::OutOfDomain);
-
+/*    tsk->modifies(d_lab->d_stressTensorXdivLabel);
+    tsk->modifies(d_lab->d_stressTensorYdivLabel);
+    tsk->modifies(d_lab->d_stressTensorZdivLabel);
+*/
     tsk->modifies(d_lab->d_scalarFluxCompLabel, d_lab->d_vectorMatl,
 		  Task::OutOfDomain);
+    tsk->modifies(d_lab->d_odtDataLabel);
   }
-
   sched->addTask(tsk, patches, matls);
-//  cout << "  END sched_recomputeTurbSubmodel\n";
 }
 
 //****************************************************************************
 // Actual recompute 
 //****************************************************************************
 void 
-ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
+OdtClosure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 					const PatchSubset* patches,
 					const MaterialSubset*,
-					DataWarehouse*,
+					DataWarehouse* old_dw,
 					DataWarehouse* new_dw,
 				        const TimeIntegratorLabel* timelabels)
 {
-//  printf("enter reComputeTurbSubmodel\n");
-
   for (int p = 0; p < patches->size(); p++) {
-
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    delt_vartype delT;
+    new_dw->get(delT, d_lab->d_sharedState->get_delt_label(), getLevel(patches));
+    double deltaT_les = delT;
+    double deltaT_odt=Min(0.001,deltaT_les/10);
+    
     // Variables
-    constCCVariable<double> uVel;
-    constCCVariable<double> vVel;
-    constCCVariable<double> wVel;
+    constSFCXVariable<double> uVel;
+    constSFCYVariable<double> vVel;
+    constSFCZVariable<double> wVel;
     constCCVariable<double> den;
     constCCVariable<double> scalar;
     constCCVariable<double> voidFraction;
+    constCCVariable<odtData> odt_variable;
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
 
-    new_dw->get(uVel,d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(vVel,d_lab->d_newCCVVelocityLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(wVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(uVel,d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(vVel,d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(wVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(den, d_lab->d_densityCPLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    old_dw->get(odt_variable, d_lab->d_odtDataLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     if (d_MAlab)
@@ -225,10 +457,9 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-#ifndef PetscFilter
+//#ifndef PetscFilter
     // Get the PerPatch CellInformation data
 
-//    printf("aaaaaaaaa\n");
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
@@ -237,13 +468,13 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-#endif
+//#endif
     
     // Get the patch and variable details
     // compatible with fortran index
     double CF = d_CF;
     StencilMatrix<CCVariable<double> > stressTensorCoeff; //9 point tensor
-
+//    CCVariable<double> stressTensorXdiv, stressTensorYdiv, stressTensorZdiv;
   // allocate stress tensor coeffs
     for (int ii = 0; ii < d_lab->d_tensorMatl->size(); ii++) {
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -254,8 +485,26 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 			      d_lab->d_stressTensorCompLabel, ii, patch);
       stressTensorCoeff[ii].initialize(0.0);
     }
-
-
+/*      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+        new_dw->allocateAndPut(stressTensorXdiv, 
+			       d_lab->d_stressTensorXdivLabel, matlIndex, patch);
+        new_dw->allocateAndPut(stressTensorYdiv, 
+			       d_lab->d_stressTensorYdivLabel, matlIndex, patch);
+        new_dw->allocateAndPut(stressTensorZdiv, 
+			       d_lab->d_stressTensorZdivLabel, matlIndex, patch);
+      }
+      else {
+        new_dw->getModifiable(stressTensorXdiv, 
+			      d_lab->d_stressTensorXdivLabel, matlIndex, patch);
+        new_dw->getModifiable(stressTensorYdiv, 
+			      d_lab->d_stressTensorYdivLabel, matlIndex, patch);
+        new_dw->getModifiable(stressTensorZdiv, 
+			      d_lab->d_stressTensorZdivLabel, matlIndex, patch);
+      }
+   	stressTensorXdiv.initialize(0.0);
+        stressTensorYdiv.initialize(0.0);
+        stressTensorZdiv.initialize(0.0);	
+*/
     // compute test filtered velocities, density and product 
     // (den*u*u, den*u*v, den*u*w, den*v*v,
     // den*v*w, den*w*w)
@@ -265,6 +514,13 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     // computing turbulent scalar flux
     StencilMatrix<CCVariable<double> > scalarFluxCoeff; //9 point tensor
 
+    CCVariable<odtData> odt_variableNew;
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+      new_dw->allocateAndPut(odt_variableNew, d_lab->d_odtDataLabel, matlIndex, patch);
+    }
+    else
+      new_dw->getModifiable(odt_variableNew, d_lab->d_odtDataLabel, matlIndex, patch);
+      
     // allocate stress tensor coeffs
     for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -276,10 +532,10 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
       scalarFluxCoeff[ii].initialize(0.0);
     }
 
-//    printf("AAAAAAAAA\n");
     int numGC = 1;
     IntVector idxLo = patch->getGhostCellLowIndex(numGC);
     IntVector idxHi = patch->getGhostCellHighIndex(numGC);
+    cout << "ATTENTION(idxLo and idxHi): " << idxLo << " " << idxHi << " " << patches->size() << " " << p <<  "\n";
     Array3<double> denUU(idxLo, idxHi);
     denUU.initialize(0.0);
     Array3<double> denUV(idxLo, idxHi);
@@ -316,7 +572,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     if (xminus) startX++;
     int endX = idxHi.x();
     if (xplus) endX--;
-//    printf("bbbbbbbbb\n");
     for (int colZ = startZ; colZ < endZ; colZ ++) {
       for (int colY = startY; colY < endY; colY ++) {
 	for (int colX = startX; colX < endX; colX ++) {
@@ -352,7 +607,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	}
       }
     }
-//    printf("BBBBBBBBB\n");
     if (xplus) {
       for (int colZ = startZ; colZ < endZ; colZ ++) {
 	for (int colY = startY; colY < endY; colY ++) {
@@ -387,7 +641,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	}
       }
     }
-//    printf("ccccccccc\n");
     if (yplus) {
       for (int colZ = startZ; colZ < endZ; colZ ++) {
 	for (int colX = startX; colX < endX; colX ++) {
@@ -440,7 +693,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
       }
     }
 
-//    printf("CCCCCCCCC\n");
     // fill the corner cells
     if (xminus) {
       if (yminus) {
@@ -516,7 +768,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	  denPhiV[currCell] = denPhiV[prevCell];
 	  denPhiW[currCell] = denPhiW[prevCell];
       }
-//    printf("ddddddddd\n");
       if (yminus&&zplus) {
 	IntVector currCell(startX-1, startY-1, endZ);
 	IntVector prevCell(startX, startY, endZ-1);
@@ -719,7 +970,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	denPhiW[currCell] = denPhiW[prevCell];
       }
     }
-//    printf("DDDDDDDDD\n");
     if (yplus&&zplus) {
       for (int colX = startX; colX < endX; colX++) {
 	IntVector currCell(colX, endY, endZ);
@@ -735,7 +985,7 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	denPhiW[currCell] = denPhiW[prevCell];
       }
     }	
-//    printf("zzzzzzzzz\n");
+
 #endif
     Array3<double> filterdenUU(patch->getLowIndex(), patch->getHighIndex());
     filterdenUU.initialize(0.0);
@@ -747,7 +997,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     filterdenVV.initialize(0.0);
     Array3<double> filterdenVW(patch->getLowIndex(), patch->getHighIndex());
     filterdenVW.initialize(0.0);
-//    printf("xxxxxxxxx\n");
     Array3<double> filterdenWW(patch->getLowIndex(), patch->getHighIndex());
     filterdenWW.initialize(0.0);
     Array3<double> filterDen(patch->getLowIndex(), patch->getHighIndex());
@@ -758,7 +1007,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     filterVVel.initialize(0.0);
     Array3<double> filterWVel(patch->getLowIndex(), patch->getHighIndex());
     filterWVel.initialize(0.0);
-//    printf("XXXXXXXXX\n");
     Array3<double> filterPhi(patch->getLowIndex(), patch->getHighIndex());
     filterPhi.initialize(0.0);
     Array3<double> filterdenPhiU(patch->getLowIndex(), patch->getHighIndex());
@@ -769,26 +1017,20 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     filterdenPhiW.initialize(0.0);
     IntVector indexLow = patch->getCellFORTLowIndex();
     IntVector indexHigh = patch->getCellFORTHighIndex();
-//    printf("ZZZZZZZZZ\n");
 #ifdef PetscFilter
-//    printf("qqqqqqqqq %p\n", d_filter);
-    d_filter->applyFilter(pc, patch,uVel, filterUVel);
-//    printf("QQQQQQQQQ\n");
+//    d_filter->applyFilter(pc, patch,uVel, filterUVel);
 #if 0
     cerr << "In the Scale Similarity print vVel" << endl;
     vVel.print(cerr);
 #endif
 
-//    printf("rrrrrrrrr\n");
-    d_filter->applyFilter(pc, patch,vVel, filterVVel);
-//    printf("RRRRRRRRR\n");
+//    d_filter->applyFilter(pc, patch,vVel, filterVVel);
 #if 0
     cerr << "In the Scale Similarity model after filter print filterVVel" << endl;
     filterVVel.print(cerr);
 #endif
 
-//    printf("eeeeeeeee\n");
-    d_filter->applyFilter(pc, patch,wVel, filterWVel);
+//    d_filter->applyFilter(pc, patch,wVel, filterWVel);
     d_filter->applyFilter(pc, patch,denUU, filterdenUU);
     d_filter->applyFilter(pc, patch,denUV, filterdenUV);
     d_filter->applyFilter(pc, patch,denUW, filterdenUW);
@@ -868,35 +1110,122 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
       }
     }
 #endif
-//    printf("EEEEEEEEE\n");
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
+	  IntVector xpCell(colX+1, colY, colZ);
+	  IntVector xmCell(colX-1, colY, colZ);
 	  // compute stress tensor
 	  // index 0: T11, 1:T12, 2:T13, 3:T21, 4:T22, 5:T23, 6:T31, 7:T32, 8:T33
-	  (stressTensorCoeff[0])[currCell] = CF*den[currCell]*(filterdenUU[currCell] -
-						 filterUVel[currCell]*
-						 filterUVel[currCell]);
-	  (stressTensorCoeff[1])[currCell] = CF*den[currCell]*(filterdenUV[currCell] -
-						 filterUVel[currCell]*
-						 filterVVel[currCell]);
-	  (stressTensorCoeff[2])[currCell] = CF*den[currCell]*(filterdenUW[currCell] -
-						 filterUVel[currCell]*
-						 filterWVel[currCell]);
+	  double sewcur = cellinfo->sew[colX];
+	  double snscur = cellinfo->sns[colY];
+	  double stbcur = cellinfo->stb[colZ];
+	  double h_odt = sewcur/d_odtPoints;
+	  double uep, uwp, unp, usp, utp, ubp;
+	  double vnp, vsp, vep, vwp, vtp, vbp;
+	  double wtp, wbp, wep, wwp, wnp, wsp;
+
+	  double uvelcur = uVel[currCell];
+	  int iOdt=0;
+	  for (iOdt=1; iOdt<d_odtPoints-1; iOdt++) {
+	      odt_variableNew[currCell].x_u[iOdt]=odt_variable[currCell].x_u[iOdt]
+		  + deltaT_odt*d_viscosity*(odt_variable[currCell].x_u[iOdt-1]
+		  - 2.0*odt_variable[currCell].x_u[iOdt]
+		  + odt_variable[currCell].x_u[iOdt+1])/h_odt/h_odt;
+	  }
+	  iOdt = 0;
+	  odt_variableNew[currCell].x_u[0]=odt_variable[currCell].x_u[iOdt]
+		  + deltaT_odt*d_viscosity*(odt_variable[xmCell].x_u[d_odtPoints-1]
+		  - 2.0*odt_variable[currCell].x_u[iOdt]
+		  + odt_variable[currCell].x_u[iOdt+1])/h_odt/h_odt;
+	  iOdt = d_odtPoints-1;
+	  odt_variableNew[currCell].x_u[d_odtPoints-1]=odt_variable[currCell].x_u[iOdt]
+		  + deltaT_odt*d_viscosity*(odt_variable[currCell].x_u[iOdt-1]
+		  - 2.0*odt_variable[currCell].x_u[iOdt]
+		  + odt_variable[xpCell].x_u[0])/h_odt/h_odt;
+	  
+	  double vvelcur = vVel[currCell];
+	  double wvelcur = wVel[currCell];
+	  double uvelxp1 = uVel[IntVector(colX+1,colY,colZ)];
+	  double vvelyp1 = vVel[IntVector(colX,colY+1,colZ)];
+	  double wvelzp1 = wVel[IntVector(colX,colY,colZ+1)];
+
+	  uep = uvelxp1;
+	  uwp = uvelcur;
+	  unp = 0.25*(uvelxp1 + uvelcur +
+		      uVel[IntVector(colX+1,colY+1,colZ)] +
+		      uVel[IntVector(colX,colY+1,colZ)]);
+	  usp = 0.25*(uvelxp1 + uvelcur +
+		      uVel[IntVector(colX+1,colY-1,colZ)] +
+		      uVel[IntVector(colX,colY-1,colZ)]);
+	  utp = 0.25*(uvelxp1 + uvelcur +
+		      uVel[IntVector(colX+1,colY,colZ+1)] + 
+		      uVel[IntVector(colX,colY,colZ+1)]);
+	  ubp = 0.25*(uvelxp1 + uvelcur + 
+		      uVel[IntVector(colX+1,colY,colZ-1)] + 
+		      uVel[IntVector(colX,colY,colZ-1)]);
+
+	  vnp = vvelyp1;
+	  vsp = vvelcur;
+	  vep = 0.25*(vvelyp1 + vvelcur +
+		      vVel[IntVector(colX+1,colY+1,colZ)] + 
+		      vVel[IntVector(colX+1,colY,colZ)]);
+	  vwp = 0.25*(vvelyp1 + vvelcur +
+		      vVel[IntVector(colX-1,colY+1,colZ)] + 
+		      vVel[IntVector(colX-1,colY,colZ)]);
+	  vtp = 0.25*(vvelyp1 + vvelcur + 
+		      vVel[IntVector(colX,colY+1,colZ+1)] + 
+		      vVel[IntVector(colX,colY,colZ+1)]);
+	  vbp = 0.25*(vvelyp1 + vvelcur +
+		      vVel[IntVector(colX,colY+1,colZ-1)] + 
+		      vVel[IntVector(colX,colY,colZ-1)]);
+
+	  wtp = wvelzp1;
+	  wbp = wvelcur;
+	  wep = 0.25*(wvelzp1 + wvelcur + 
+		      wVel[IntVector(colX+1,colY,colZ+1)] + 
+		      wVel[IntVector(colX+1,colY,colZ)]);
+	  wwp = 0.25*(wvelzp1 + wvelcur +
+		      wVel[IntVector(colX-1,colY,colZ+1)] + 
+		      wVel[IntVector(colX-1,colY,colZ)]);
+	  wnp = 0.25*(wvelzp1 + wvelcur + 
+		      wVel[IntVector(colX,colY+1,colZ+1)] + 
+		      wVel[IntVector(colX,colY+1,colZ)]);
+	  wsp = 0.25*(wvelzp1 + wvelcur +
+		      wVel[IntVector(colX,colY-1,colZ+1)] + 
+		      wVel[IntVector(colX,colY-1,colZ)]);
+
+	  //     calculate the grid strain rate tensor
+	  (stressTensorCoeff[0])[currCell] = 2.0*(uep-uwp)/sewcur;
+	  (stressTensorCoeff[1])[currCell] = (unp-usp)/snscur +(vep-vwp)/sewcur;
+	  (stressTensorCoeff[2])[currCell] = (utp-ubp)/stbcur +(wep-wwp)/sewcur;
 	  (stressTensorCoeff[3])[currCell] = (stressTensorCoeff[1])[currCell];
-	  (stressTensorCoeff[4])[currCell] = CF*den[currCell]*(filterdenVV[currCell] -
-						 filterVVel[currCell]*
-						 filterVVel[currCell]);
-	  (stressTensorCoeff[5])[currCell] = CF*den[currCell]*(filterdenVW[currCell] -
-						 filterVVel[currCell]*
-						 filterWVel[currCell]);
+	  (stressTensorCoeff[4])[currCell] = 2.0*(vnp-vsp)/snscur;
+	  (stressTensorCoeff[5])[currCell] = (vtp-vbp)/stbcur + (wnp-wsp)/snscur;
 	  (stressTensorCoeff[6])[currCell] = (stressTensorCoeff[2])[currCell];
 	  (stressTensorCoeff[7])[currCell] = (stressTensorCoeff[5])[currCell];
-	  (stressTensorCoeff[8])[currCell] = CF*den[currCell]*(filterdenWW[currCell] -
-						 filterWVel[currCell]*
-						 filterWVel[currCell]);
+	  (stressTensorCoeff[8])[currCell] = 2.0*(wtp-wbp)/stbcur;
 
+	  Point location = getLevel(patches)->getCellPosition(currCell);
+	  for (iOdt=0; iOdt<d_odtPoints; iOdt++)
+		  odt_variableNew[currCell].x_x[iOdt]=location.x()+(iOdt-d_odtPoints/2+0.5)*
+			  sewcur/d_odtPoints;
+	     if (colZ==(indexHigh.z()+1)/2) {
+		if (abs(colX*cellinfo->sew[colX]-3.14)<2.0*cellinfo->sew[colX]) {
+		   cout << "in Odt " << colX <<  "  " << colY << "  " << colZ << " " 
+			<< location.x() << " " << uVel[currCell] << "\n ";
+		   for (iOdt=0; iOdt<d_odtPoints; iOdt++)
+		     cout << setiosflags(ios::scientific | ios::floatfield) 
+			  << odt_variable[currCell].x_u[iOdt] << " "
+			  << odt_variable[currCell].x_x[iOdt] << "\n";
+		}
+	     }
+		
+/*          stressTensorXdiv[currCell] =1.0;
+	  stressTensorYdiv[currCell] =1.0;
+	  stressTensorZdiv[currCell] =1.0;
+*/	  
 	  // scalar fluxes uf, vf, wf
 	  (scalarFluxCoeff[0])[currCell] = CF*den[currCell]*(filterdenPhiU[currCell] -
 						 filterPhi[currCell]*
@@ -925,28 +1254,24 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 #endif
 
   }
-//  printf("done with reComputeTurbSubmodel\n");
-} // end reComputeTurbSubmodel()
+}
 
 void 
-ScaleSimilarityModel::sched_computeScalarVariance(SchedulerP& sched, 
+OdtClosure::sched_computeScalarVariance(SchedulerP& sched, 
 					      const PatchSet* patches,
 					      const MaterialSet* matls,
 			    		 const TimeIntegratorLabel* timelabels)
 {
-  string taskname =  "ScaleSimilarityModel::computeScalarVaraince" +
+  string taskname =  "OdtClosure::computeScalarVaraince" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
-			  &ScaleSimilarityModel::computeScalarVariance,
+			  &OdtClosure::computeScalarVariance,
 			  timelabels);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // Computes
@@ -960,7 +1285,7 @@ ScaleSimilarityModel::sched_computeScalarVariance(SchedulerP& sched,
 
 
 void 
-ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
+OdtClosure::computeScalarVariance(const ProcessorGroup*,
 					const PatchSubset* patches,
 					const MaterialSubset*,
 					DataWarehouse*,
@@ -985,10 +1310,6 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
     	new_dw->getModifiable(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
 			       patch);
     scalarVar.initialize(0.0);
-    
-    constCCVariable<int> cellType;
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -1056,101 +1377,20 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
 #if 0
     new_dw->put(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
 #endif
-    // boundary conditions
-    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-    int outlet_celltypeval = d_boundaryCondition->outletCellType();
-    int pressure_celltypeval = d_boundaryCondition->pressureCellType();
-    if (xminus) {
-      int colX = indexLow.x();
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-	for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	  IntVector currCell(colX-1, colY, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (xplus) {
-      int colX = indexHigh.x();
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-	for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	  IntVector currCell(colX+1, colY, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (yminus) {
-      int colY = indexLow.y();
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY-1, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (yplus) {
-      int colY = indexHigh.y();
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY+1, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (zminus) {
-      int colZ = indexLow.z();
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ-1);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (zplus) {
-      int colZ = indexHigh.z();
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ+1);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
   }
 }
 
 
 void 
-ScaleSimilarityModel::sched_computeScalarDissipation(SchedulerP& sched, 
+OdtClosure::sched_computeScalarDissipation(SchedulerP& sched, 
 						 const PatchSet* patches,
 						 const MaterialSet* matls,
 			    		 const TimeIntegratorLabel* timelabels)
 {
-  string taskname =  "ScaleSimilarityModel::computeScalarDissipation" +
+  string taskname =  "OdtClosure::computeScalarDissipation" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
-			  &ScaleSimilarityModel::computeScalarDissipation,
+			  &OdtClosure::computeScalarDissipation,
 			  timelabels);
 
   
@@ -1160,9 +1400,6 @@ ScaleSimilarityModel::sched_computeScalarDissipation(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -1187,7 +1424,7 @@ ScaleSimilarityModel::sched_computeScalarDissipation(SchedulerP& sched,
 
 
 void 
-ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
+OdtClosure::computeScalarDissipation(const ProcessorGroup*,
 					const PatchSubset* patches,
 					const MaterialSubset*,
 					DataWarehouse* old_dw,
@@ -1229,9 +1466,6 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
     }
     scalarDiss.initialize(0.0);
     
-    constCCVariable<int> cellType;
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
@@ -1260,7 +1494,7 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
 	  double dfdy = (scaln-scals)/cellinfo->sns[colY];
 	  double dfdz = (scalt-scalb)/cellinfo->stb[colZ];
 	  // molecular diffusivity
-	  scalarDiss[currCell] = viscosity[currCell]/d_turbPrNo*
+	  scalarDiss[currCell] = 2.0*viscosity[currCell]/d_turbPrNo*
 	                        (dfdx*dfdx + dfdy*dfdy + dfdz*dfdz); 
 	  double turbProduction = -2.0*((scalarFlux[0])[currCell]*dfdx+
 				       (scalarFlux[1])[currCell]*dfdy+
@@ -1269,89 +1503,6 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
 	    scalarDiss[currCell] += turbProduction;
 	  if (scalarDiss[currCell] < 0.0)
 	    scalarDiss[currCell] = 0.0;
-	}
-      }
-    }
-    // boundary conditions
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
-    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-    int outlet_celltypeval = d_boundaryCondition->outletCellType();
-    int pressure_celltypeval = d_boundaryCondition->pressureCellType();
-    if (xminus) {
-      int colX = idxLo.x();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  IntVector currCell(colX-1, colY, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (xplus) {
-      int colX = idxHi.x();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  IntVector currCell(colX+1, colY, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (yminus) {
-      int colY = idxLo.y();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY-1, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (yplus) {
-      int colY = idxHi.y();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY+1, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (zminus) {
-      int colZ = idxLo.z();
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ-1);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (zplus) {
-      int colZ = idxHi.z();
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ+1);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
 	}
       }
     }
