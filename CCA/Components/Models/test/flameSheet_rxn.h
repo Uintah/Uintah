@@ -81,22 +81,6 @@ WARNING
 	       const MaterialSubset* matls, DataWarehouse*, 
 	       DataWarehouse* new_dw, const ModelInfo*);
 
-template <class T> 
-   void q_diffusion(CellIterator iter, 
-                    IntVector adj_offset,
-                    const double diffusivity,
-                    const double dx,   
-                    const CCVariable<double>& q_CC,
-                    T& q_FC);
-                    
-   void computeQ_diffusion_FC(DataWarehouse* new_dw,
-                              const Patch* patch,  
-                              const CCVariable<double>& q_CC,
-                              const double diffusivity,
-                              SFCXVariable<double>& q_X_FC,
-                              SFCYVariable<double>& q_Y_FC,
-                              SFCZVariable<double>& q_Z_FC);
-
     flameSheet_rxn(const flameSheet_rxn&);
     flameSheet_rxn& operator=(const flameSheet_rxn&);
 

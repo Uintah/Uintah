@@ -1,4 +1,5 @@
-
+#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
 #include <Packages/Uintah/CCA/Components/Models/test/flameSheet_rxn.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -14,7 +15,6 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/UnionGeometryPiece.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Math/MiscMath.h>
@@ -25,13 +25,7 @@
 using namespace Uintah;
 using namespace std;
 static DebugStream cout_doing("flameSheet_RXN_DOING_COUT", false);
-//______________________________________________________________________
-//    To Do:
-//      - fix smearing of initial distribution when patch boundary 
-//        intersects the scalar field.  Currently there is no good 
-//        way to do an operation that need a layer of ghost cells during
-//        the initialization task.  Thus we adjust the iterator to 
-//        stay away for the boundaries completely.
+
 //______________________________________________________________________
 // flame sheet approach for laminar diffusion flames.
 // Reference:  "An Introduction to Combustion Concepts and Applications"
@@ -231,49 +225,14 @@ void flameSheet_rxn::initialize(const ProcessorGroup*,
         //__________________________________
         //  Smooth out initial distribution with some diffusion
         double FakeDiffusivity = 1.0;
+        double fakedelT = 1.0;
         for( int i =1 ; i < d_smear_initialDistribution_knob; i++ ){
-          Vector dx = patch->dCell();
-          IntVector right, left, top, bottom, front, back;
-          double areaX = dx.y() * dx.z();
-          double areaY = dx.x() * dx.z();
-          double areaZ = dx.x() * dx.y();
-          SFCXVariable<double> f_flux_X_FC;
-          SFCYVariable<double> f_flux_Y_FC;
-          SFCZVariable<double> f_flux_Z_FC;
-
-          computeQ_diffusion_FC( new_dw, patch, var, FakeDiffusivity,
-                                 f_flux_X_FC, f_flux_Y_FC, f_flux_Z_FC);
-/*`==========BUG==========*/
-          //__________________________________
-          //  Adjust the iterator to stay away from
-          //  patch boundaries.  See top of file for 
-          //  discussion
-          CellIterator hi_lo = patch->getCellIterator();
-          IntVector low = hi_lo.begin();
-          IntVector hi  = hi_lo.end();
-
-          hi -=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?1:0,
-                         patch->getBCType(patch->yplus) ==patch->Neighbor?1:0,
-                         patch->getBCType(patch->zplus) ==patch->Neighbor?1:0); 
-
-          low +=IntVector(patch->getBCType(patch->xminus) ==patch->Neighbor?1:0,
-                         patch->getBCType(patch->yminus) ==patch->Neighbor?1:0,
-                         patch->getBCType(patch->zminus) ==patch->Neighbor?1:0); 
-
-          CellIterator iterLimits(low,hi); 
-/*==========BUG==========`*/ 
+          bool use_vol_frac = false; // don't include vol_frac in diffusion calc.
+          constCCVariable<double> placeHolder;
           
-          for(CellIterator iter = iterLimits;!iter.done();iter++){ 
-            IntVector c = *iter;
-            right  = c + IntVector(1,0,0);    left   = c ;
-            top    = c + IntVector(0,1,0);    bottom = c ;
-            front  = c + IntVector(0,0,1);    back   = c ;
-
-            double smear=((f_flux_X_FC[right] - f_flux_X_FC[left]) *areaX + 
-                          (f_flux_Y_FC[top]   - f_flux_Y_FC[bottom])*areaY +
-                          (f_flux_Z_FC[front] - f_flux_Z_FC[back])  *areaZ );           
-            var[c]   +=smear;
-          } // cells
+          scalarDiffusionOperator(new_dw, patch, use_vol_frac,
+                                  placeHolder, placeHolder,  var,
+                                  var, FakeDiffusivity, fakedelT); 
         }  // diffusion loop
       } // over scalars
     } // Over matls
@@ -433,121 +392,14 @@ void flameSheet_rxn::react(const ProcessorGroup*,
       }         
       //__________________________________
       //  Tack on diffusion
-      IntVector right, left, top, bottom, front, back;
-      double areaX = dx.y() * dx.z();
-      double areaY = dx.x() * dx.z();
-      double areaZ = dx.x() * dx.y();
-
       if(d_diffusivity != 0.0){ 
-        SFCXVariable<double> f_flux_X_FC;
-        SFCYVariable<double> f_flux_Y_FC;
-        SFCZVariable<double> f_flux_Z_FC;
-
-        computeQ_diffusion_FC( new_dw, patch, f_old, d_diffusivity,
-                               f_flux_X_FC, f_flux_Y_FC, f_flux_Z_FC);
-
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); 
-                                                                  iter++){
-          IntVector c = *iter;
-          right  = c + IntVector(1,0,0);    left   = c ;
-          top    = c + IntVector(0,1,0);    bottom = c ;
-          front  = c + IntVector(0,0,1);    back   = c ;
-
-          f_src[c] +=((f_flux_X_FC[right] - f_flux_X_FC[left])  *areaX + 
-                      (f_flux_Y_FC[top]   - f_flux_Y_FC[bottom])*areaY +
-                      (f_flux_Z_FC[front] - f_flux_Z_FC[back])  *areaZ )*delT;
-        }
+        bool use_vol_frac = false; // don't include vol_frac in diffusion calc.
+        constCCVariable<double> placeHolder;
+        
+        scalarDiffusionOperator(new_dw, patch, use_vol_frac,
+                                placeHolder, placeHolder,  f_old,
+                                f_src, d_diffusivity, delT);
       }  // diffusivity > 0 
     }  // matl loop
   }
-}
-// --------------------------------------------------------------------- 
-//
-template <class T> 
-  void flameSheet_rxn::q_diffusion(CellIterator iter, 
-                         IntVector adj_offset,
-                         const double diffusivity,
-                         const double dx,  
-                         const CCVariable<double>& q_CC,
-                         T& q_flux_FC)
-{
-  //__________________________________
-  //  For variable diffusivity use
-  //  diffusivity_FC = 2 * D[L] * D[R]/ ( D[R] + D[L])
-  double diffusivity_FC = diffusivity;
-  
-  for(;!iter.done(); iter++){
-    IntVector R = *iter;
-    IntVector L = R + adj_offset;
-    q_flux_FC[R] = diffusivity_FC* (q_CC[R] - q_CC[L])/dx;
-
-  }
-}
-
-
-//______________________________________________________________________
-//
-void flameSheet_rxn::computeQ_diffusion_FC(DataWarehouse* new_dw,
-                                 const Patch* patch,   
-                                 const CCVariable<double>& q_CC,
-                                 const double diffusivity,
-                                 SFCXVariable<double>& q_flux_X_FC,
-                                 SFCYVariable<double>& q_flux_Y_FC,
-                                 SFCZVariable<double>& q_flux_Z_FC)
-{
-  Vector dx = patch->dCell();
-  vector<IntVector> adj_offset(3);
-  adj_offset[0] = IntVector(-1, 0, 0);    // X faces
-  adj_offset[1] = IntVector(0, -1, 0);    // Y faces
-  adj_offset[2] = IntVector(0,  0, -1);   // Z faces
- 
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  new_dw->allocateTemporary(q_flux_X_FC, patch, gac, 1);
-  new_dw->allocateTemporary(q_flux_Y_FC, patch, gac, 1);
-  new_dw->allocateTemporary(q_flux_Z_FC, patch, gac, 1);
-
-  q_flux_X_FC.initialize(0.0);
-  q_flux_Y_FC.initialize(0.0);
-  q_flux_Z_FC.initialize(0.0);
-
-  //__________________________________
-  // For multipatch problems adjust the iter limits
-  // on the (left/bottom/back) patches to 
-  // include the (right/top/front) faces
-  // of the cells at the patch boundary. 
-  // We compute q_X[right]-q_X[left] on each patch
-  IntVector low,hi;      
-  low = patch->getSFCXIterator().begin();    // X Face iterator
-  hi  = patch->getSFCXIterator().end();
-  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?1:0,
-                 patch->getBCType(patch->yplus) ==patch->Neighbor?0:0,
-                 patch->getBCType(patch->zplus) ==patch->Neighbor?0:0); 
-  CellIterator X_FC_iterLimits(low,hi);
-         
-  low = patch->getSFCYIterator().begin();   // Y Face iterator
-  hi  = patch->getSFCYIterator().end();
-  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?0:0,
-                 patch->getBCType(patch->yplus) ==patch->Neighbor?1:0,
-                 patch->getBCType(patch->zplus) ==patch->Neighbor?0:0); 
-  CellIterator Y_FC_iterLimits(low,hi); 
-        
-  low = patch->getSFCZIterator().begin();   // Z Face iterator
-  hi  = patch->getSFCZIterator().end();
-  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?0:0,
-                 patch->getBCType(patch->yplus) ==patch->Neighbor?0:0,
-                 patch->getBCType(patch->zplus) ==patch->Neighbor?1:0); 
-  CellIterator Z_FC_iterLimits(low,hi);            
-  //__________________________________
-  //  For each face compute conduction
-  q_diffusion<SFCXVariable<double> >(X_FC_iterLimits,
-                                     adj_offset[0],  diffusivity, dx.x(),
-                                     q_CC, q_flux_X_FC);
-
-  q_diffusion<SFCYVariable<double> >(Y_FC_iterLimits,
-                                     adj_offset[1], diffusivity, dx.y(),
-                                     q_CC, q_flux_Y_FC);
-
-  q_diffusion<SFCZVariable<double> >(Z_FC_iterLimits,
-                                     adj_offset[2],  diffusivity, dx.z(),
-                                     q_CC, q_flux_Z_FC);
 }
