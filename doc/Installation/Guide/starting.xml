@@ -24,9 +24,9 @@ typing <command>/usr/local/&sr;/bin/scirun</command>.
 </para>
 
 <para>
-If  built from its source code tarballs, 
-&sr;'s installation can be tested by <command>cd</command>ing to its build directory
-and typing <command>./scirun</command>.
+If built from its source code tarballs, &sr;'s installation can be
+tested by changing the working directory (<command>cd</command>ing) to
+&sr;'s build directory and typing <command>./scirun</command>.
 </para>
 
 <para>
