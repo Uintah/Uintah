@@ -122,7 +122,7 @@ class NodeHedgehog : public Module {
   // GROUP: Private Function:
   //////////////////////
   // add_arrow -
-  void add_arrow(FieldHandle vfield, FieldHandle ssfield,
+  void add_arrow(Vector vv, FieldHandle ssfield,
 		 int have_sfield, ColorMapHandle cmap,
 		 double lenscale, GeomArrows* arrows, Point p);
 
@@ -239,34 +239,32 @@ NodeHedgehog::~NodeHedgehog()
 }
 
 void
-NodeHedgehog::add_arrow(FieldHandle vfield, FieldHandle ssfield,
+NodeHedgehog::add_arrow(Vector vv, FieldHandle ssfield,
 			int have_sfield, ColorMapHandle cmap,
 			double lenscale, GeomArrows* arrows, Point p) {
-  Vector vv;
-  if (interpolate( vfield, p, vv)){
-    double length = vv.length();
-    if (length > max_length) {
-      max_length = length;
-      max_vector = vv;
-    }
-    if(have_sfield) {
-      // get the color from cmap for p 	    
-      MaterialHandle matl;
-      double sval;
-      if (interpolate( ssfield, p, sval))
-	matl = cmap->lookup( sval);
-      else {
-	matl = outcolor;
-      }
-
-      if(length*lenscale > 1.e-3) {
-	arrows->add(p, vv*lenscale, matl, matl, matl);
-      }
-    }
+  
+  double length = vv.length();
+  if (length > max_length) {
+    max_length = length;
+    max_vector = vv;
+  }
+  if(have_sfield) {
+    // get the color from cmap for p 	    
+    MaterialHandle matl;
+    double sval;
+    if (interpolate( ssfield, p, sval))
+      matl = cmap->lookup( sval);
     else {
-      if(length*lenscale > 1.e-3) {
-	arrows->add(p, vv*lenscale);
-      }
+      matl = outcolor;
+    }
+    
+    if(length*lenscale > 1.e-3) {
+      arrows->add(p, vv*lenscale, matl, matl, matl);
+    }
+  }
+  else {
+    if(length*lenscale > 1.e-3) {
+      arrows->add(p, vv*lenscale);
     }
   }
 }
@@ -293,11 +291,18 @@ void NodeHedgehog::execute()
     return;
   }
   
-  if(vfield->get_type_name(0) != "LevelField" &&
-     vfield->get_type_name(0) != "LatticeVol" ){
-    cerr<<"Not a LatticeVol or LevelField\n";
+  if(vfield->get_type_name(0) != "LevelField") {
+    cerr<<"Not a LevelField\n";
+    return;
   }
 
+  LevelField<Vector> *fld =dynamic_cast<LevelField<Vector>*>(vfield.get_rep());
+  // if fld == NULL then the cast didn't work, so bail
+  if (!fld) {
+    cerr << "Cannot cast field into a LevelField\n";
+    return;
+  }
+  
   GridP grid = getGrid();
   if (!grid)
     return;
@@ -452,27 +457,29 @@ void NodeHedgehog::execute()
     for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
       Patch* patch = *iter;
 
-
-      switch (var_orientation.get()) {
-      case 0: //NC_VARIABLE
+      if( fld->data_at() == Field::NODE) {
+	var_orientation.set(0);
 	//------------------------------------
 	// for each node in the patch
 	for(NodeIterator iter = patch->getNodeIterator(boundaryRegion); !iter.done(); iter+=skip){
-	  Point p = patch->nodePosition(*iter);
-	  add_arrow(vfield, ssfield, have_sfield, cmap,
+	  IntVector idx = *iter;
+	  Point p = patch->nodePosition(idx);
+	  Vector vv = fld->fdata().get_data_by_patch_and_index(patch, idx);
+	  add_arrow(vv, ssfield, have_sfield, cmap,
 		    lenscale, arrows, p);
 	} // end for loop
-	break;
-      case 1: // CC_VARIABLE
+      } else if( fld->data_at() == Field::CELL) {
+	var_orientation.set(1);
 	for(CellIterator iter = patch->getCellIterator(boundaryRegion); !iter.done(); iter+=skip){
-	  Point p = patch->cellPosition(*iter);
-	  add_arrow(vfield, ssfield, have_sfield, cmap,
+	  IntVector idx = *iter;
+	  Point p = patch->cellPosition(idx);
+	  Vector vv = fld->fdata().get_data_by_patch_and_index(patch, idx);
+	  add_arrow(vv, ssfield, have_sfield, cmap,
 		    lenscale, arrows, p);
-	}
-	break;
-      } // end switch
-    }
-  }
+	} // end for loop
+      } // end if NODE
+    } // end for each patch
+  } // end for each level
 
   // delete the old grid/cutting plane
   if (old_grid_id != 0)
