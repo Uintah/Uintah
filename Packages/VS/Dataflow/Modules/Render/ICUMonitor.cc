@@ -41,6 +41,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Util/Timer.h>
+#include <Core/Util/GlobalData.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/GuiInterface/UIvar.h>
 #include <Core/Geom/Material.h>
@@ -142,7 +143,8 @@ private:
       max_(1.0),
       r_(1.0),
       g_(1.0),
-      b_(1.0)
+      b_(1.0),
+      init_(false)
     {}
     
     LabelTex *nw_label_;
@@ -164,6 +166,7 @@ private:
     float     r_;
     float     g_;
     float     b_;
+    bool      init_;
   };
 
   GuiDouble                            gui_time_;	 
@@ -219,11 +222,15 @@ private:
   vector<int>                           markers_;
   int                                   cur_idx_;
   bool                                  plots_dirty_;
+  unsigned int                          frame_count_;
+  double                                last_global_time_;
+  double                                elapsed_since_global_change_;
+  double                                time_sf_;
   LabelTex 				*name_label;
   string 				name_text;
   LabelTex 				*date_label;
   string 				date_text;
-  unsigned int                          frame_count_;
+
 
   bool                  make_current();
   void                  synch_plot_vars(int s);
@@ -327,8 +334,8 @@ ICUMonitor::LabelTex::bind(FreeTypeFace *font)
   u_ = w / (float)tex_width_;
   v_ = h / (float)tex_height_;
 
-  GLubyte *buf = scinew GLubyte[tex_width_ * tex_height_ * 4];
-  memset(buf, 0, tex_width_ * tex_height_ * 4);
+  GLubyte *buf = scinew GLubyte[tex_width_ * tex_height_];
+  memset(buf, 0, tex_width_ * tex_height_);
   fttext.render(tex_width_, tex_height_, buf);     
 
   if (glIsTexture(tex_id_))
@@ -346,8 +353,8 @@ ICUMonitor::LabelTex::bind(FreeTypeFace *font)
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glPixelTransferi(GL_MAP_COLOR, 0);
       
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width_, tex_height_, 
-	       0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, tex_width_, tex_height_, 
+	       0, GL_ALPHA, GL_UNSIGNED_BYTE, buf);
       
   delete[] buf;
 }
@@ -388,11 +395,14 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   markers_(0),
   cur_idx_(0),
   plots_dirty_(true),
+  frame_count_(0),
+  last_global_time_(0.0L),
+  elapsed_since_global_change_(0.0L),
+  time_sf_(0.0L),
   name_label(0),
   name_text(" "),
   date_label(0),
-  date_text(" "),
-  frame_count_(0)
+  date_text(" ")
 {
   try {
     freetype_lib_ = scinew FreeTypeLibrary();
@@ -437,6 +447,8 @@ ICUMonitor::~ICUMonitor()
   }
 }
 
+#define time_slave 1
+//! elapsed has time since last redraw.
 void 
 ICUMonitor::inc_time(double elapsed)
 {
@@ -444,13 +456,33 @@ ICUMonitor::inc_time(double elapsed)
   gui_play_mode_.reset();
   gui_time_markers_mode_.reset();
 
-  float samp_rate = gui_sample_rate_.get();  // samples per second.
+  if (time_slave) {
+    GlobalData &gd = GlobalData::scirun_global_data();
+    double cur = gd.cur_time();
+
+    double dt = cur - last_global_time_;
+    if (dt < 0.0) last_global_time_ = cur;
+    if (dt > 0.0001) { // don't do if negative or small
+      time_sf_ = elapsed_since_global_change_ / dt; 
+      std::cout << "time scale factor: " << time_sf_ << std::endl;
+      elapsed_since_global_change_ = 0.0L;
+      last_global_time_ = cur;
+      int tot_samp = data_->nrrd->axis[1].size;
+      cur_idx_ = (int)(tot_samp * cur);   
+    } else {
+      elapsed_since_global_change_ += elapsed;
+    }
+  } 
+  if (fabs(time_sf_) < 0.001) time_sf_ = 1.0; 
+  float samp_rate = gui_sample_rate_.get() * time_sf_;  // samples per second.
   if (! data_.get_rep() || ! gui_play_mode_.get()) return;
+  
   int samples = (int)round(samp_rate * elapsed);
   cur_idx_ += samples;
   if (cur_idx_ > data_->nrrd->axis[1].size) {
-    cur_idx_ = 0;
+    cur_idx_ = data_->nrrd->axis[1].size;
   }
+
 
   gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
   gui_time_.reset();
@@ -754,7 +786,6 @@ ICUMonitor::draw_plots()
   const int gp = 3;
   const float cw = 0.70;
   const int cg = 25;
-
   float cur_x = gui_left_margin_.get();
   float cur_y = h - gui_top_margin_.get();
 
@@ -882,8 +913,8 @@ ICUMonitor::draw_plots()
       }
     }
     if (data_.get_rep()) {
-      const float norm = (float)gr_ht / (g.max_ - g.min_);
       // draw the plot
+      const float norm = (float)gr_ht / (g.max_ - g.min_);
       //1 millimeters = 0.0393700787 inches
       const float dpi = gui_dots_per_inch_.get();
       const float pixels_per_mm = dpi * 0.0393700787;
@@ -895,13 +926,13 @@ ICUMonitor::draw_plots()
       float start_y = cur_y - gr_ht;
       //glColor4f(0.0, 0.9, 0.1, 1.0);
       glDisable(GL_TEXTURE_2D);
-
       glBegin(GL_LINE_STRIP);
       for (int i = 0; i < (int)samples; i++) {
 	int idx = i + cur_idx_;
-	if (idx > data_->nrrd->axis[1].size) {
-	  idx -= data_->nrrd->axis[1].size;
+	if (idx > data_->nrrd->axis[1].size - 1) {
+	  idx = 0;
 	}
+
 	float *dat = (float*)data_->nrrd->data;
 	int dat_index = idx * data_->nrrd->axis[0].size + g.index_;
         float tmpdat = dat[dat_index];
@@ -911,7 +942,7 @@ ICUMonitor::draw_plots()
         }
 	//float val = (dat[dat_index] - g.min_) * norm;
         float val = (tmpdat - g.min_) * norm;
-	//glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, (start_y + val) * sy);
+
 	glVertex2f((cur_x + (i * pix_per_sample)) * sx, (start_y + val) * sy);
 
 	if (idx % (int)samp_rate == 0){
@@ -933,6 +964,7 @@ ICUMonitor::draw_plots()
 	}
       }
       glEnd();
+
 
       if (data2_.get_rep() && data2_->nrrd->axis[1].size == data_->nrrd->axis[1].size && g.snd_ == 1) {
         glBegin(GL_LINE_STRIP);
