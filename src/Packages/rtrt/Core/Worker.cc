@@ -138,9 +138,9 @@ void Worker::run()
   if (!dpy->doing_frameless()) {
     
     for(;;){
-      /* <<<< bigler >>>> */
-      //stats[showing_scene]->add(Thread::currentSeconds(), Color(0,1,0));
       stats[showing_scene]->add(SCIRun::Time::currentSeconds(), Color(0,1,0));
+
+      // Sync.
       barrier->wait(dpy->get_num_procs()+1);
 
       // exit if you are supposed to
@@ -152,7 +152,18 @@ void Worker::run()
 
       Stats* st=stats[rendering_scene];
       st->reset();
+
+      // Sync.
       barrier->wait(dpy->get_num_procs()+1);
+
+#if 0
+      //////////////////////
+      // For debugging... //
+      int shadow_mode_at_beginning = scene->shadow_mode;
+      Camera cam_at_beg = *(scene->get_camera(rendering_scene));
+      //////////////////////
+#endif
+
       st->add(SCIRun::Time::currentSeconds(), Color(1,0,0));
       Image* image=scene->get_image(rendering_scene);
       Camera* camera=scene->get_camera(rendering_scene);
@@ -278,8 +289,13 @@ void Worker::run()
 		  }
 		}
 	      } else {
+		bool transMode = scene->doTransmissionMode();
 		for(int y=sy;y<ey;y++){
 		  for(int x=sx;x<ex;x++){
+		    if( transMode && (y % 2 == 0) ){
+		      (*image)(x,y).set(Color(0,0,0));
+		      continue;
+		    }
 		    camera->makeRay(ray, x+xoffset, y+yoffset, ixres, iyres);
 		    traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
 		    (*image)(x,y).set(result);
@@ -293,9 +309,25 @@ void Worker::run()
 	st->add(SCIRun::Time::currentSeconds(), (n%2)?Color(0,0,0):Color(1,1,1));
 	n++;
       }
+
+#if 0
+      if( cam_at_beg != *(scene->get_camera(rendering_scene)) )
+	{
+	  cout << "ERROR camera changed in the middle of the rendering!\n";
+	}
+      if( shadow_mode_at_beginning != scene->shadow_mode )
+	{
+	  cout << "ERROR shadow mode changed!\n";
+	}
+#endif
+
       rendering_scene=1-rendering_scene;
       showing_scene=1-showing_scene;
+
+
+
     }
+
   } else { // we're doing frameles rendering...
     int clusterSize = scene->get_rtrt_engine()->clusterSize;
     showing_scene=0; // you just need 1 for this...
