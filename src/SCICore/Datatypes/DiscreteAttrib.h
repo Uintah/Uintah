@@ -40,13 +40,13 @@ public:
 
   virtual ~DiscreteAttrib();
 
-  T &get1(int x);
-  T &get2(int x, int y);
-  T &get3(int x, int y, int z);
+  const T &get1(int x) const;
+  const T &get2(int x, int y) const;
+  const T &get3(int x, int y, int z) const;
 
-  T &set1(int x, T &val);
-  T &set2(int x, int y, T &val);
-  T &set3(int x, int y, int z, T &val);
+  //T &set1(int x, T &val);
+  //T &set2(int x, int y, T &val);
+  //T &set3(int x, int y, int z, T &val);
 
   // Implement begin()
   // Implement end()
@@ -115,29 +115,30 @@ DiscreteAttrib<T>::~DiscreteAttrib()
 
 
 template <class T>
-T &
-DiscreteAttrib<T>::get1(int)
+const T &
+DiscreteAttrib<T>::get1(int) const
 {
   return defval;
 }
 
 
 template <class T>
-T &
-DiscreteAttrib<T>::get2(int, int)
+const T &
+DiscreteAttrib<T>::get2(int, int) const
 {
   return defval;
 }
 
 
 template <class T>
-T &
-DiscreteAttrib<T>::get3(int, int, int)
+const T &
+DiscreteAttrib<T>::get3(int, int, int) const
 {
   return defval;
 }
 
 
+#if 0
 template <class T>
 T &
 DiscreteAttrib<T>::set1(int, T& val)
@@ -159,6 +160,7 @@ DiscreteAttrib<T>::set3(int, int, int, T& val)
 {
   return defval = val;
 }
+#endif
 
 
 // template <class T> bool DiscreteAttrib<T>::compute_minmax(){

@@ -59,9 +59,9 @@ public:
   
   //////////
   // return the value at the given position
-  T &get1(int);
-  T &get2(int, int);
-  T &get3(int, int, int);
+  const T &get1(int) const;
+  const T &get2(int, int) const;
+  const T &get3(int, int, int) const;
 
   T &set1(int x, T &val);
   T &set2(int x, int y, T &val);
@@ -141,8 +141,8 @@ FlatAttrib<T>::~FlatAttrib()
 
 
 
-template <class T> T&
-FlatAttrib<T>::get1(int ix)
+template <class T> const T &
+FlatAttrib<T>::get1(int ix) const
 {
 #ifdef MIKE_DEBUG
   if (dim != 1) {
@@ -155,8 +155,8 @@ FlatAttrib<T>::get1(int ix)
   return data[ix];  
 }
 
-template <class T> T&
-FlatAttrib<T>::get2(int ix, int iy)
+template <class T> const T &
+FlatAttrib<T>::get2(int ix, int iy) const
 {
 #ifdef MIKE_DEBUG
   if (dim != 2) {
@@ -172,8 +172,8 @@ FlatAttrib<T>::get2(int ix, int iy)
   return data[iy*(nx)+ix];  
 }
 
-template <class T> T&
-FlatAttrib<T>::get3(int ix, int iy, int iz)
+template <class T> const T &
+FlatAttrib<T>::get3(int ix, int iy, int iz) const
 {
 #ifdef MIKE_DEBUG
   if (dim != 3) {

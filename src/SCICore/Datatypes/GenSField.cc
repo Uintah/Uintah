@@ -53,7 +53,7 @@ bool GenSField<T,G,A>::resize(int a, int b, int c)
 }
 
 template <class T, class G, class A >
-T& GenSField<T,G,A>::grid(int x, int y, int z)
+const T& GenSField<T,G,A>::grid(int x, int y, int z) const
 {
   A* typedattrib = attrib.get_rep();
   if (typedattrib) {
@@ -70,7 +70,7 @@ T& GenSField<T,G,A>::operator[](int a)
   A* typedattrib = attrib.get_rep();
   if (typedattrib)
     {
-      return typedattrib->get1(a);
+      return (T &)(typedattrib->get1(a));
     }
   else
     {

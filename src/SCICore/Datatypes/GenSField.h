@@ -49,7 +49,7 @@ public:
   // Destructors
   ~GenSField();
 
-  virtual T& grid(int, int, int);
+  virtual const T& grid(int, int, int) const;
   virtual T& operator[](int);
 
   //////////
