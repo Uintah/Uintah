@@ -656,7 +656,7 @@ void CompTable::remembercomp(DetailedTask* task, Task::Dependency* comp,
 	int matl = matls->get(m);
 	Data* newData = new Data(task, comp, patch, matl);
 
-	if( data.lookup(newData, dummy) != 0 ){ // multiple compute found???
+	if( (dummy = data.lookup(newData)) != 0 ){ // multiple compute found???
 	  cerr << "Multiple compute found for\n";
 	  cerr << "matl: " << matl << "\n";
 	  cerr << "patch: " << *patch << "\n";
@@ -674,7 +674,7 @@ void CompTable::remembercomp(DetailedTask* task, Task::Dependency* comp,
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
       Data* newData = new Data(task, comp, 0, matl);      
-      if( data.lookup(newData, dummy) != 0 ){ // multiple compute found???
+      if( (dummy = data.lookup(newData)) != 0 ){ // multiple compute found???
 	cerr << "Multiple compute found for\n";
 	cerr << "matl: " << matl << "\n";
 	cerr << *comp << "\n";
@@ -690,7 +690,7 @@ void CompTable::remembercomp(DetailedTask* task, Task::Dependency* comp,
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       Data* newData = new Data(task, comp, patch, 0);
-      if( data.lookup(newData, dummy) != 0 ){ // multiple compute found???
+      if( (dummy = data.lookup(newData)) != 0 ){ // multiple compute found???
 	cerr << "Multiple compute found for\n";
 	cerr << "patch: " << *patch << "\n";
 	cerr << *comp << "\n";
@@ -704,7 +704,7 @@ void CompTable::remembercomp(DetailedTask* task, Task::Dependency* comp,
   }
   else {
     Data* newData = new Data(task, comp, 0, 0);
-    if( data.lookup(newData, dummy) != 0 ){ // multiple compute found???
+    if( (dummy = data.lookup(newData)) != 0 ){ // multiple compute found???
       cerr << "Multiple compute found for\n";
       cerr << *comp << "\n";
       cerr << *task << "\n";
@@ -712,7 +712,7 @@ void CompTable::remembercomp(DetailedTask* task, Task::Dependency* comp,
       dummy->task->getTask()->displayAll(cerr);
       SCI_THROW(InternalError("Multiple computes for variable: "+comp->var->getName()));
     }
-    ASSERT(data.lookup(newData, dummy) == 0); // no multiple computes    
+    ASSERT(data.lookup(newData) == 0); // no multiple computes    
     data.insert(newData);
   }
 }
@@ -723,7 +723,7 @@ bool CompTable::findcomp(Task::Dependency* req, const Patch* patch,
 {
   Data key(0, req, patch, matlIndex);
   Data* result;
-  if(data.lookup(&key, result)){
+  if( (result = data.lookup(&key))){
     dt=result->task;
     comp=result->comp;
     return true;
@@ -740,7 +740,7 @@ CompTable::findReplaceComp(Task::Dependency* req, const Patch* patch,
 {
   Data key(0, req, patch, matlIndex);
   Data* result;
-  if(data.lookup(&key, result)){
+  if((result=data.lookup(&key))){
     foundTask=result->task;
     foundComp=result->comp;
     data.remove(&key);
