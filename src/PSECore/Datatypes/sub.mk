@@ -7,18 +7,35 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := PSECore/Datatypes
 
-SRCS     += $(SRCDIR)/BooleanPort.cc $(SRCDIR)/ColorMapPort.cc \
-	$(SRCDIR)/ColumnMatrixPort.cc $(SRCDIR)/GeometryPort.cc \
-	$(SRCDIR)/HexMeshPort.cc $(SRCDIR)/IntervalPort.cc \
-	$(SRCDIR)/MatrixPort.cc $(SRCDIR)/MeshPort.cc \
-	$(SRCDIR)/ScalarFieldPort.cc $(SRCDIR)/ScaledBoxWidgetData.cc \
-	$(SRCDIR)/ScaledBoxWidgetDataPort.cc $(SRCDIR)/SoundPort.cc \
-	$(SRCDIR)/SurfacePort.cc $(SRCDIR)/VectorFieldPort.cc \
-	$(SRCDIR)/VoidStarPort.cc $(SRCDIR)/cMatrixPort.cc \
-	$(SRCDIR)/cVectorPort.cc \
-	$(SRCDIR)/SpanSpace.cc $(SRCDIR)/SpanPort.cc \
-	$(SRCDIR)/templates.cc \
-	$(SRCDIR)/PathPort.cc $(SRCDIR)/CameraViewPort.cc 
+SRCS     += $(SRCDIR)/AttribPort.cc               \
+            $(SRCDIR)/BooleanPort.cc              \
+            $(SRCDIR)/CameraViewPort.cc           \
+            $(SRCDIR)/ColorMapPort.cc             \
+            $(SRCDIR)/ColumnMatrixPort.cc         \
+            $(SRCDIR)/DomainPort.cc               \
+            $(SRCDIR)/FieldPort.cc                \
+            $(SRCDIR)/FieldWrapperPort.cc         \
+            $(SRCDIR)/GeomPort.cc                 \
+            $(SRCDIR)/GeometryPort.cc             \
+            $(SRCDIR)/HexMeshPort.cc              \
+            $(SRCDIR)/IntervalPort.cc             \
+            $(SRCDIR)/MatrixPort.cc               \
+            $(SRCDIR)/MeshPort.cc                 \
+            $(SRCDIR)/PathPort.cc                 \
+            $(SRCDIR)/ScalarFieldPort.cc          \
+            $(SRCDIR)/ScaledBoxWidgetData.cc      \
+            $(SRCDIR)/ScaledBoxWidgetDataPort.cc  \
+            $(SRCDIR)/SoundPort.cc                \
+            $(SRCDIR)/SpanPort.cc                 \
+            $(SRCDIR)/SpanSpace.cc                \
+            $(SRCDIR)/SpanTree.cc                 \
+            $(SRCDIR)/SurfacePort.cc              \
+            $(SRCDIR)/VectorFieldPort.cc          \
+            $(SRCDIR)/VoidStarPort.cc             \
+            $(SRCDIR)/cMatrixPort.cc              \
+            $(SRCDIR)/cVectorPort.cc              \
+            $(SRCDIR)/templates.cc
+
 
 PSELIBS := PSECore/Dataflow PSECore/Comm SCICore/Containers \
 	SCICore/Thread SCICore/Geom SCICore/Geometry SCICore/Exceptions \
@@ -29,6 +46,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3.2.7  2000/10/27 18:44:07  michaelc
+# Fix unresolved port symbols
+#
 # Revision 1.3.2.6  2000/10/26 14:16:52  moulding
 # merge HEAD into FIELD_REDESIGN
 #
