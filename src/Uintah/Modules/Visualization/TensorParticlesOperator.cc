@@ -75,15 +75,15 @@ void TensorParticlesOperator::execute(void) {
 	computeScalars(pTP, pSP, Eigen2DYZOp());
     }
     else {
-      // sin(e1 - e2) / delta
+      // cos(e1 - e2) / delta
       int plane = tclPlaneSelect.get();
       double delta = tclDelta.get();
       if (plane == 2)
-	computeScalars(pTP, pSP, Eigen2DXYSinOp(delta));
+	computeScalars(pTP, pSP, Eigen2DXYCosOp(delta));
       else if (plane == 1)
-	computeScalars(pTP, pSP, Eigen2DXZSinOp(delta));
+	computeScalars(pTP, pSP, Eigen2DXZCosOp(delta));
       else
-	computeScalars(pTP, pSP, Eigen2DYZSinOp(delta));
+	computeScalars(pTP, pSP, Eigen2DYZCosOp(delta));
     }
     break;
   case 2: // pressure

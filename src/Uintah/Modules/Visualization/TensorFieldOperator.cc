@@ -106,15 +106,15 @@ void TensorFieldOperator::performOperation(TensorField* tensorField,
 	computeScalars(tensorField, scalarField, Eigen2DYZOp());
     }
     else {
-      // sin(e1 - e2) / delta
+      // cos(e1 - e2) / delta
       int plane = tclPlaneSelect.get();
       double delta = tclDelta.get();
       if (plane == 2)
-	computeScalars(tensorField, scalarField, Eigen2DXYSinOp(delta));
+	computeScalars(tensorField, scalarField, Eigen2DXYCosOp(delta));
       else if (plane == 1)
-	computeScalars(tensorField, scalarField, Eigen2DXZSinOp(delta));
+	computeScalars(tensorField, scalarField, Eigen2DXZCosOp(delta));
       else
-	computeScalars(tensorField, scalarField, Eigen2DYZSinOp(delta));
+	computeScalars(tensorField, scalarField, Eigen2DYZCosOp(delta));
     }
     break;
   case 2: // pressure

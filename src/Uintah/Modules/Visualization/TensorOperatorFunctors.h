@@ -38,22 +38,22 @@ Eigen2DOp(XY); // declares Eigen2DXYOp struct from above macro
 Eigen2DOp(XZ); // declares Eigen2DXZOp struct from above macro
 Eigen2DOp(YZ); // declares Eigen2DYZOp struct from above macro
 
-#define Eigen2DSinOp(plane) \
-struct Eigen2D##plane##SinOp \
+#define Eigen2DCosOp(plane) \
+struct Eigen2D##plane##CosOp \
 { \
-  Eigen2D##plane##SinOp(double delta) \
+  Eigen2D##plane##CosOp(double delta) \
   : m_delta(delta) {} \
   inline double operator()(Matrix3 M) \
   { \
     double e1, e2; \
     int num_eigen_values = M.get##plane##EigenValues(e1, e2); \
-    return (num_eigen_values == 2) ? sin((e1 - e2) / m_delta) : 0; \
+    return (num_eigen_values == 2) ? cos((e1 - e2) / m_delta) : 1; \
   } \
   double m_delta; \
 }
-Eigen2DSinOp(XY); // declares Eigen2DXYSinOp struct from above macro
-Eigen2DSinOp(XZ); // declares Eigen2DXZSinOp struct from above macro
-Eigen2DSinOp(YZ); // declares Eigen2DYZSinOp struct from above macro
+Eigen2DCosOp(XY); // declares Eigen2DXYCosOp struct from above macro
+Eigen2DCosOp(XZ); // declares Eigen2DXZCosOp struct from above macro
+Eigen2DCosOp(YZ); // declares Eigen2DYZCosOp struct from above macro
 
 struct PressureOp
 {
