@@ -35,6 +35,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/Solver.h>
 #include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
 #include <Packages/Uintah/CCA/Components/MPM/SimpleSolver.h>
+#include <Packages/Uintah/Core/Grid/BCDataArray.h>
 #include <sgi_stl_warnings_off.h>
 #include <set>
 #include <iostream>
@@ -1138,7 +1139,8 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 	  face <= Patch::endFace; face=Patch::nextFace(face)){
 	const BoundCondBase *vel_bcs,*sym_bcs;
 	if (patch->getBCType(face) == Patch::None) {
-	  int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl);
+	  int numChildren = 
+	    patch->getBCDataArray(face)->getNumberChildren(matl);
 	  for (int child = 0; child < numChildren; child++) {
 	    vector<IntVector> bound,nbound,sfx,sfy,sfz;
 	    vector<IntVector>::const_iterator boundary;
