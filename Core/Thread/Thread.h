@@ -16,6 +16,7 @@
 #define SCICore_Thread_Thread_h
 
 #include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Parallel1.h>
 #include <SCICore/Thread/Parallel2.h>
 #include <SCICore/Thread/Parallel3.h>
 #include <SCICore/share/share.h>
@@ -171,7 +172,7 @@ DESCRIPTION
 	    //////////
 	    // Another overloaded version of parallel that passes 1 argument
 	    template<class T, class Arg1>
-	    static void parallel(T* ptr, void (T::*)(int, Arg1),
+	    static void parallel(T* ptr, void (T::*pmf)(int, Arg1),
 				 int numThreads, bool block,
 				 Arg1 a1) {
 		parallel(Parallel1<T, Arg1>(ptr, pmf, a1),
@@ -293,6 +294,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.20  2000/03/17 08:28:46  sparker
+// Added implementation of single argument parallel function
+//
 // Revision 1.19  2000/02/15 00:23:50  sparker
 // Added:
 //  - new Thread::parallel method using member template syntax
