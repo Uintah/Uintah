@@ -115,7 +115,7 @@ public:
   //     to walk in vals.  For example vals (and cols) should be
   //     accessed as vals[3*stride] to get the fourth value.  As of this
   //     time all the matrices return 1 for this value.
-  //   For example usage see Dataflow/Modules/Fields/ApplyInterpMatrix.h
+  //   For example usage see Dataflow/Modules/Fields/ApplyMappingMatrix.h
   virtual void getRowNonzerosNoCopy(int r, int &size, int &stride,
                                     int *&cols, double *&vals) = 0;
 
