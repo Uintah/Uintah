@@ -4,6 +4,7 @@
 
 mode=$1 # dbg or opt
 CONFIGURE_ARGS=$2 # configure command line arguments
+WithArches="yes"
 
 if [ ! -d "${BUILDROOT}/${mode}/build" ]; then
   mkdir "${BUILDROOT}/${mode}/build"
@@ -48,37 +49,67 @@ rm -f "../make.log"
 nice gmake -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
 retval=$?
 if [ $retval != "0" ]; then
-	# try it again -- it may not go all the way the first time
-	echo "Failed first compile, try again"
-	nice gmake -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
-	retval=$?
+    # try it again -- it may not go all the way the first time
+    echo "Failed first compile, try again"
+    nice gmake -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
+    retval=$?
 fi
 if [ $retval != "0" ]; then
-	nice gmake -k -j$MAKE_PARALLELISM > ../remake.log 2>&1
-	
-	if  [ -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
-	    mv ../remake.log ../remake_failed_scirun.log
-	    echo "*** Make failed, but sus was compiled successfully"
-	    echo "A log of build errors can be found in"
-	    echo "${BUILDROOT}/${mode}/remake_failed_scirun.log"
-	    echo "A full log of trying to compile everything twice can be found in"
-	    echo "${BUILDROOT}/${mode}/make.log"
+    # try it again -- it may not go all the way the first time
+    echo "Failed second compile, try again (storing make errors)"
+    nice gmake -k -j$MAKE_PARALLELISM > ../remake_with_arches.log 2>&1
+    retval=$?
+fi
+if [ $retval != "0" ]; then
+    # failed 3 times
+    if  [ -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
+	# sus compiled alone
+	mv ../remake_with_arches.log ../remake_failed_scirun.log
+	echo "*** Make failed, but sus was compiled successfully"
+	echo "A log of build errors can be found in"
+	echo "${BUILDROOT}/${mode}/remake_failed_scirun.log"
+	echo "A full log of trying to compile everything twice can be found in"
+	echo "${BUILDROOT}/${mode}/make.log"
+	echo ""
+    else
+	# No sus compiled -- try compiling without arches
+	# Run Todd's perl script to use fake arches instead of arches.
+	echo "Failed third compile, try without arches."
+	cd "${BUILDROOT}/src/Packages/Uintah/CCA/Components/ICE"
+	./fasterGmake.pl > ../remake_without_arches.log 2>&1
+	cd "${BUILDROOT}/${mode}/build"
+	nice gmake -k -j$MAKE_PARALLELISM >> ../remake_without_arches.log 2>&1
+	retval=$?
+	failed_sus=0
+	if [ $retval == "0" ]; then
+	    echo "*** Make failed with ARCHES, but passed without it."
 	    echo ""
+	    echo "Showing make errors with ARCHES:"
+	    WithArches="no"
+	elif  [ -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
+	    echo "*** Make failed, but sus was compiled successfully without ARCHES"
+	    echo ""
+	    echo "Showing make errors with ARCHES:"
+	    WithArches="no"
 	else
-	    mv ../remake.log ../remake_failed_sus.log
 	    echo "*** Make failed with code $retval"
 	    echo ""
 	    echo "Showing make errors:"
-	    # show the compile errors (just the stuff it can't compile)
-	    cat ../remake_failed_sus.log
-	    echo ""
+	    failed_sus=1
+	fi
+	# show the compile errors (just the stuff it can't compile)
+	cat ../remake_with_arches.log
+	echo ""
 
-	    # failed make, set a lock for this build
-	    if [ ! -d "${BUILD_DIR}/make-${mode}.lock" ]; then
-		ln -s "$BUILDROOT" "${BUILD_DIR}/make-${mode}.lock"
-	    fi
+	# failed make, set a lock for this build
+	if [ ! -d "${BUILD_DIR}/make-${mode}.lock" ]; then
+	    ln -s "$BUILDROOT" "${BUILD_DIR}/make-${mode}.lock"
+	fi
+
+	if [ $failed_sus != "0" ]; then
 	    exit 1
 	fi
+    fi
 fi
 
 if [ -d "${BUILD_DIR}/make-${mode}.lock" ]; then
@@ -118,6 +149,13 @@ rm -f $summary_log
 cd TestScripts
 for test in *; do
     if [ -f "$test" -a -x "$test" ]; then
+	if [ $WithArches == "no" -a $test == "ARCHES" ]; then
+	    echo ""
+	    echo "Skipping test \"${test}-${mode}\" at `date`"
+	    echo "(ARCHES doesn't compile)"
+	    failed=1
+	    continue; # skip arches test
+	fi
 	echo ""
 	echo "Running test \"${test}-${mode}\" at `date`"
 
