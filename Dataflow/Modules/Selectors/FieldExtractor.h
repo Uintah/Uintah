@@ -119,8 +119,29 @@ void FieldExtractor::build_field(DataArchive& archive,
     int vartype;
     archive.query( v, varname, mat, *r, time);
     if( sfd->data_at() == Field::CELL){
-      low = (*r)->getNodeLowIndex();
-      hi = (*r)->getNodeHighIndex() - IntVector(1,1,1);
+      low = (*r)->getCellLowIndex();
+      hi = (*r)->getCellHighIndex();
+//       low = (*r)->getNodeLowIndex();
+//       hi = (*r)->getNodeHighIndex() - IntVector(1,1,1);
+
+//       cerr<<"v.getLowIndex() = "<<v.getLowIndex()<<"\n";
+//       cerr<<"v.getHighIndex() = "<<v.getHighIndex()<<"\n";
+//       cerr<<"getCellLowIndex() = "<< (*r)->getCellLowIndex()
+// 	  <<"\n";
+//       cerr<<"getCellHighIndex() = "<< (*r)->getCellHighIndex()
+// 	  <<"\n";
+//       cerr<<"getInteriorCellLowIndex() = "<< (*r)->getInteriorCellLowIndex()
+// 	  <<"\n";
+//       cerr<<"getInteriorCellHighIndex() = "<< (*r)->getInteriorCellHighIndex()
+// 	  <<"\n";
+//       cerr<<"getNodeLowIndex() = "<< (*r)->getNodeLowIndex()
+// 	  <<"\n";
+//       cerr<<"getNodeHighIndex() = "<< (*r)->getNodeHighIndex()
+// 	  <<"\n";
+//       cerr<<"getInteriorNodeLowIndex() = "<< (*r)->getInteriorNodeLowIndex()
+// 	  <<"\n";
+//       cerr<<"getInteriorNodeHighIndex() = "<< (*r)->getInteriorNodeHighIndex()
+// 	  <<"\n\n";
     } else if(sfd->get_property("vartype", vartype)){
       low = (*r)->getNodeLowIndex();
       switch (vartype) {
