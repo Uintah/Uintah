@@ -13,7 +13,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/VS/Dataflow/Modules/Render
 
 SRCS     += \
-	$(SRCDIR)/ICUMonitor.cc     \
+	$(SRCDIR)/ICUMonitor.cc \
+	$(SRCDIR)/ExecutiveState.cc
+
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
