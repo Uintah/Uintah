@@ -74,9 +74,13 @@ WARNING
 				      DataWarehouseP& new_dw) = 0;
 
 	 // Per cell
-	 virtual double computeRhoMicro(double& ,double& ) = 0;
+         virtual double computeRhoMicro(double& press,double& gamma,
+                                        double& cv, double& Temp);
 
-	 virtual double computePressEOS(double&, double&) = 0;
+         virtual void computePressEOS(double& rhoM, double& gamma,
+                                      double& cv, double& Temp,
+                                      double& press, double& dp_drho, 
+                                      double& dp_de);
 
 	 
 	 // Per patch
@@ -101,6 +105,9 @@ WARNING
 #endif  // __EQUATION_OF_STATE_H__
 
 // $Log$
+// Revision 1.3  2000/10/10 22:18:27  guilkey
+// Added some simple functions
+//
 // Revision 1.2  2000/10/10 20:35:12  jas
 // Move some stuff around.
 //
