@@ -70,7 +70,7 @@ template<class T> void fillFace(CCVariable<T>& var,Patch::FaceType face,
     break;
   }
   
-};
+}
 
 template <class V, class T>  void fillFace(V& var, const Patch* patch, 
 					   Patch::FaceType face,
@@ -169,7 +169,7 @@ template <class V, class T>  void fillFace(V& var, const Patch* patch,
   
 template<class T> void fillFaceFlux(CCVariable<T>& var, Patch::FaceType face, 
 				    const T& value,const Vector& dx,
-				    const double& plus_minus_one=1.0,
+				    const double& plus_minus_one,
 				    IntVector offset )
 { 
   IntVector low,hi;
@@ -237,7 +237,7 @@ template<class T> void fillFaceFlux(CCVariable<T>& var, Patch::FaceType face,
     break;
   }
   
-};
+}
 
 template <class T> void fillFaceNormal(CCVariable<T>& var,Patch::FaceType, 
 				       IntVector)
@@ -402,7 +402,7 @@ void setHydrostaticPressureBC(CCVariable<double>& press,Patch::FaceType face,
   case Patch::invalidFace:
     break;
   }
-};
+}
 
  
 /* --------------------------------------------------------------------- 
