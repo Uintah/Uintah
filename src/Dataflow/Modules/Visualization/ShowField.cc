@@ -82,6 +82,7 @@ class ShowField : public Module
   //! top level nodes for switching on and off..
   //! nodes.
   GuiInt                   nodes_on_;
+  GuiInt                   nodes_as_disks_;
   bool                     nodes_dirty_;
   //! edges.
   GuiInt                   edges_on_;
@@ -136,6 +137,7 @@ ShowField::ShowField(const string& id) :
   face_id_(0),
   data_id_(0),
   nodes_on_("nodes-on", id, this),
+  nodes_as_disks_("nodes-as-disks", id, this),
   nodes_dirty_(true),
   edges_on_("edges-on", id, this),
   edges_dirty_(true),
@@ -195,11 +197,20 @@ ShowField::execute()
     return;
   } else if (fld_gen_ != fld_handle->generation) {
     const TypeDescription *td = fld_handle->get_type_description();
+
+    // Test for vector data possibility
     has_vec_data_.reset();
-    if ((fld_handle->query_vector_interface() != 0) && 
-	(! has_vec_data_.get())) {
-      has_vec_data_.set(1);
+    nodes_as_disks_.reset();
+    if (fld_handle->query_vector_interface() != 0) {
+      if (! has_vec_data_.get()) { has_vec_data_.set(1); }
+      cout << "data at" << fld_handle->data_at() << endl;
+      if (fld_handle->data_at() == Field::NODE && nodes_as_disks_.get() == 0) {
+	nodes_as_disks_.set(1); 
+      }
+    } else if (nodes_as_disks_.get() == 1) {
+      nodes_as_disks_.set(0);
     }
+    
     error(td->get_h_file_path().c_str());
 
     // Get the Algorithm.

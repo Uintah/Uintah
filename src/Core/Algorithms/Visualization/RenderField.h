@@ -121,6 +121,8 @@ public:
 private:
   inline void add_sphere(const Point &p, double scale, GeomGroup *g, 
 			 MaterialHandle m0);
+  inline void add_disk(const Point &p, const Vector& v, double scale, 
+		       GeomGroup *g, MaterialHandle m0);
   inline void add_axis(const Point &p, double scale, GeomGroup *g, 
 		       MaterialHandle m0);
   inline void add_point(const Point &p, GeomPts *g, 
@@ -147,6 +149,19 @@ private:
     return color_handle_->lookup(val);
   }
 };
+
+template <class T>
+bool
+to_vector(const T& tmp, Vector &val)
+{
+  return false;
+}
+
+
+template <>
+bool
+to_vector(const Vector&, Vector &);
+
 
 template <class T>
 bool
@@ -315,13 +330,22 @@ RenderField<Fld>::render_nodes(const Fld *sfld,
 
     // val is double because the color index field must be scalar.
     double val = 0.L;
- 
+    Vector vec(0,0,0);
     switch (sfld->data_at()) {
     case Field::NODE:
       {
 	typename Fld::value_type tmp;
-	if (! (sfld->value(tmp, *niter) && (to_double(tmp, val)))) { 
-	  def_color = true; 
+
+	if (node_display_type == "Disks") {
+	  if (sfld->value(tmp, *niter) && (to_vector(tmp, vec))) { 
+	    val = vec.length();
+	  } else {
+	    def_color = true; 
+	  }
+	} else {
+	  if (! (sfld->value(tmp, *niter) && (to_double(tmp, val)))) { 
+	    def_color = true; 
+	  }
 	}
       }
       break;
@@ -338,6 +362,8 @@ RenderField<Fld>::render_nodes(const Fld *sfld,
 		 choose_mat(def_color, val));
     } else if (node_display_type == "Axes") {
       add_axis(p, node_scale, nodes, choose_mat(def_color, val));
+    } else if (node_display_type == "Disks") {
+      add_disk(p, vec, node_scale, nodes, choose_mat(def_color, val));
     } else {
       add_point(p, pts, choose_mat(def_color, val));
     }
@@ -572,6 +598,24 @@ RenderField<Fld>::add_sphere(const Point &p0, double scale,
 		      GeomGroup *g, MaterialHandle mh) {
   GeomSphere *s = scinew GeomSphere(p0, scale, res_, res_);
   g->add(scinew GeomMaterial(s, mh));
+}
+
+template <class Fld>
+void 
+RenderField<Fld>::add_disk(const Point &p, const Vector &vin, double scale, 
+			   GeomGroup *g, MaterialHandle mh) {
+
+  Vector v = vin;
+  if (v.length() > 0.00001) {
+    v.normalize();
+    v*=scale/6;
+    GeomCappedCylinder *d = scinew GeomCappedCylinder(p + v, p - v, scale, 
+						    res_, 1, 1);
+    g->add(scinew GeomMaterial(d, mh));
+  } else {
+    GeomSphere *s = scinew GeomSphere(p, scale, res_, res_);
+    g->add(scinew GeomMaterial(s, mh));
+  }
 }
 
 template <class Fld>

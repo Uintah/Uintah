@@ -125,10 +125,14 @@
       <label>Node Display Type</label>
       <description>
 	<p>
-           Choices are Spheres, Axes, Points. These are options for how to 
-           draw the nodes. Spheres will draw spheres centered on the node, 
+           Choices are Spheres, Axes, Points and possibly Disks. These are 
+           options for how to draw the nodes. Spheres will draw spheres 
+           centered on the node, 
            Axes will draw a miniature coordinate frame centered on each 
-           node, while Points will draw a single point at each node.
+           node, while Points will draw a single point at each node. 
+           Disks will show up as an option only if the input Field has Vector
+           data.  It will render a disk oriented by the vector, and color 
+           indexed based on the lenght of the vector.
         </p>
       </description>
     </parameter>
