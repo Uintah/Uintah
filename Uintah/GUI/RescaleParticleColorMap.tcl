@@ -1,4 +1,4 @@
-itcl_class RescaleParticleColorMap { 
+itcl_class Uintah_MPMViz_RescaleParticleColorMap { 
 
     inherit Module 
 

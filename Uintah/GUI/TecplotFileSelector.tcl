@@ -1,4 +1,4 @@
-itcl_class TecplotFileSelector { 
+itcl_class Uintah_MPMViz_TecplotFileSelector { 
 
     inherit Module 
     
@@ -112,17 +112,18 @@ itcl_class TecplotFileSelector {
         pack $w.f2.f4.label $w.f2.f4.t  -side left -pady 2m 
 	pack $w.f2.f4 -side bottom -anchor w
 
-	puts "first  $env(PSE_DATA)/*"
-	puts "second  [set $this-filebase]"
 	if { [string compare [set $this-filebase] ""] == 0 } {
-	    puts "inside compare"
-	    set dir $env(PSE_DATA)
+	    
+	    if { [info exists env(PSE_DATA)] } {
+		set dir $env(PSE_DATA)
+	    } else {
+		set dir $env(PWD)
+	    }
 	    iwidgets::fileselectionbox $w.f1.fb \
-		-directory $env(PSE_DATA)
+		-directory $dir
 	    #-dblfilescommand  "$this selectfile"
-	    puts "after iwidgets"
 	    $w.f1.fb.filter delete 0 end
-	    $w.f1.fb.filter insert 0 "$env(PSE_DATA)/*"
+	    $w.f1.fb.filter insert 0 "$dir\/*"
 	    $w.f1.fb filter
 	    pack $w.f1.fb -padx 2 -pady 2 -side top
 	} else {
@@ -140,7 +141,6 @@ itcl_class TecplotFileSelector {
 	    $this activate
 	}
 	
-	puts "outside compare"
 	frame $w.f1.f -relief flat
 	pack $w.f1.f -side top -padx 2 -pady 2 -expand yes -fill x
 	
@@ -155,9 +155,7 @@ itcl_class TecplotFileSelector {
 
     method selectfile {} {
 	set w .ui[modname]
-	puts "third [$w.f1.fb get]"
 	set $this-filebase [$w.f1.fb get]
-	puts "fourth [set $this-filebase]"
 	$this-c needexecute
     }
     

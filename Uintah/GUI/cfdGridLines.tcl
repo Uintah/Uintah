@@ -1,5 +1,5 @@
 
-itcl_class cfdGridLines {
+itcl_class Uintah_MPMViz_cfdGridLines {
     inherit Module
 
     method modname {} {

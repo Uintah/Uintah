@@ -1,7 +1,7 @@
 
 catch {rename PartToGeom ""}
 
-itcl_class PartToGeom {
+itcl_class Uintah_MPMViz_PartToGeom {
 
     inherit Module
 
