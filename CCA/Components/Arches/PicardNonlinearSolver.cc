@@ -288,6 +288,14 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   }
   if (d_enthalpySolve) {
     tsk->computes(d_lab->d_enthalpySPLabel);
+    tsk->computes(d_lab->d_tempINLabel);
+    tsk->computes(d_lab->d_cpINLabel);
+    if (d_radiationCalc) {
+    tsk->computes(d_lab->d_absorpINLabel);
+    if (d_DORadiationCalc) {
+    tsk->computes(d_lab->d_co2INLabel);
+    tsk->computes(d_lab->d_h2oINLabel);
+    tsk->computes(d_lab->d_sootFVINLabel);
     tsk->computes(d_lab->d_abskgINLabel);
     tsk->computes(d_lab->d_radiationSRCINLabel);
     tsk->computes(d_lab->d_radiationFluxEINLabel);
@@ -296,6 +304,8 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     tsk->computes(d_lab->d_radiationFluxSINLabel);
     tsk->computes(d_lab->d_radiationFluxTINLabel);
     tsk->computes(d_lab->d_radiationFluxBINLabel);
+  }
+  }
   }
 
   tsk->computes(d_lab->d_densityCPLabel);
@@ -530,7 +540,14 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     }
     if (d_enthalpySolve) {
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_enthalpySPLabel, patches, matls); 
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_tempINLabel, patches, matls); 
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_cpINLabel, patches, matls); 
+    if (d_radiationCalc) {
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_absorpINLabel, patches, matls); 
     if (d_DORadiationCalc) {
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_co2INLabel, patches, matls); 
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_h2oINLabel, patches, matls); 
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_sootFVINLabel, patches, matls); 
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_abskgINLabel, patches, matls); 
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationSRCINLabel, patches, matls); 
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationFluxEINLabel, patches, matls); 
@@ -539,6 +556,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationFluxSINLabel, patches, matls); 
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationFluxTINLabel, patches, matls); 
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationFluxBINLabel, patches, matls); 
+    }
     }
     }
     new_dw->transferFrom(subsched->get_dw(3), d_lab->d_densityCPLabel, patches, matls); 
