@@ -47,6 +47,7 @@
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Containers/StackVector.h>
 
 namespace SCIRun {
 
@@ -208,7 +209,7 @@ public:
     typedef INodeIndex                       index_type;
     typedef INodeIter                        iterator;
     typedef INodeSize                        size_type;
-    typedef vector<index_type>               array_type;
+    typedef StackVector<index_type, 4>       array_type;
   };			
 			
   struct Edge {		

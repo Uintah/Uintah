@@ -48,6 +48,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Datatypes/LatVolField.h>
+#include <Core/Containers/StackVector.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
@@ -62,43 +63,6 @@
 
 namespace SCIRun {
 
-template <class T, int CAPACITY>
-class StackVector {
-public:
-  int size_;
-  T data_[CAPACITY];
-
-  typedef T        value_type;
-  typedef T*       pointer;
-  typedef T&       reference;
-  typedef const T& const_reference;
-  typedef size_t   size_type;
-  //typedef difference_type;
-  typedef T*       iterator;
-  typedef const T* const_iterator;
-  //typedef reverse_iterator;
-  //typedef const_reverse_iterator;
-
-  iterator begin() { return data_; }
-  iterator end() { return data_+size_; }
-  const_iterator begin() const { return data_; }
-  const_iterator end() const { return data_+size_; }
-  size_type size() const { ASSERT(size_ <= CAPACITY); return size_; }
-  size_type max_size() const { return CAPACITY; }
-  size_type capacity() const { return CAPACITY; }
-  bool empty() const { return size_; }
-  reference operator[](size_type n) { return data_[n]; }
-  const_reference operator[](size_type n) const { return data_[n]; }
-  void resize(size_type s) { ASSERT(s <= CAPACITY); size_ = s; }
-  void push_back(T t) { ASSERT(size_ < CAPACITY); data_[size_] = t; size_++; }
-  void clear() { size_ = 0; }
-  StackVector() { size_ = 0xDEADBABE; }
-  StackVector(size_type s) { ASSERT(s <= CAPACITY); size_ = s; }
-  ~StackVector() {}
-};
-
-
-
 class SCICORESHARE TetVolMesh : public Mesh
 {
 public:
@@ -110,7 +74,6 @@ public:
     typedef NodeIterator<under_type>    iterator;
     typedef NodeIndex<under_type>       size_type;
     typedef StackVector<index_type, 10> array_type; // 10 = quadratic size
-    //typedef vector<index_type>          array_type;
   };					
 
   struct Cell {				

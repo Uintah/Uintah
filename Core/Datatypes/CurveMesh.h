@@ -47,6 +47,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
+#include <Core/Containers/StackVector.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
@@ -69,7 +70,7 @@ public:
     typedef NodeIndex<under_type>       index_type;
     typedef NodeIterator<under_type>    iterator;
     typedef NodeIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef StackVector<index_type, 2>  array_type;
   };					
   					
   struct Edge {				
@@ -125,7 +126,7 @@ public:
 
   //! get the child elements of the given index
   void get_nodes(Node::array_type &a, Edge::index_type i) const
-    { a.resize(2,0); a[0] = edges_[i].first; a[1] = edges_[i].second; }
+    { a.resize(2); a[0] = edges_[i].first; a[1] = edges_[i].second; }
   void get_nodes(Node::array_type &, Face::index_type) const {}
   void get_nodes(Node::array_type &, Cell::index_type) const {}
   void get_edges(Edge::array_type &, Face::index_type) const {}

@@ -47,6 +47,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
+#include <Core/Containers/StackVector.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
@@ -67,7 +68,7 @@ public:
     typedef NodeIndex<under_type>       index_type;
     typedef NodeIterator<under_type>    iterator;
     typedef NodeIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef StackVector<index_type, 1>  array_type;
   };
 
   struct Edge {
