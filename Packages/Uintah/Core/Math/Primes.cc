@@ -108,25 +108,28 @@ static unsigned long primes[] = {
    7841,  7853,  7867,  7873,  7877,  7879,  7883,  7901,  7907,  7919,
 };
 
+using namespace Uintah;
+
 static int numPrimes = sizeof(primes)/sizeof(unsigned long);
-const int Primes::MaxFactors = 64; // Enough for any 64 bit number
+//const int Primes::MaxFactors = 64; // Enough for any 64 bit number
+
 
 int Primes::factorize(unsigned long n, FactorType result)
 {
-    int numFactors = 0;
-    int primeNumber = 0;
-    while(n>1){
-	if(n%primes[primeNumber] == 0){
-	    result[numFactors++]=primes[primeNumber];
-	    if(numFactors >= MaxFactors)
-		throw InternalError("Too many factors for this number");
-	    n/=primes[primeNumber];
-	} else {
-	    primeNumber++;
-	    if(primeNumber >= numPrimes)
-		throw InternalError("Must increase size of table in class Primes to factorize this number");
-	}
+  int numFactors = 0;
+  int primeNumber = 0;
+  while(n>1){
+    if(n%primes[primeNumber] == 0){
+      result[numFactors++]=primes[primeNumber];
+      if(numFactors >= MaxFactors)
+        throw InternalError("Too many factors for this number");
+      n/=primes[primeNumber];
+    } else {
+      primeNumber++;
+      if(primeNumber >= numPrimes)
+        throw InternalError("Must increase size of table in class Primes to factorize this number");
     }
-    return numFactors;
+  }
+  return numFactors;
 }
 
