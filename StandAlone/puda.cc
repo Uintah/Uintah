@@ -102,58 +102,41 @@ string makeFileName(string raydatadir, string variable_file, string time_file,
   return raydatafile;
 }
 
-// get the volume average particle data
-void getVolAvPart(DataArchive* da, unsigned short flag) {
+// Get particle strains (avg, true or all)
+void 
+getParticleStrains(DataArchive* da, string flag) {
 
-  // Check the available variables - should have at least p.volume 
-  // and p.stress/p.strain and print variable names
+   // Parse the flag and check which option is needed
+   bool doAverage = false;
+   bool doTrue = false;
+   bool doAll = false;
+   if (flag == "avg") doAverage = true;
+   else if (flag == "true") doTrue = true;
+   else doAll = true;
+
+   // Check if all the required variables are there .. for all cases
+   // we need p.deformationMeasure and for the volume average we need p.volume
   vector<string> vars;
   vector<const Uintah::TypeDescription*> types;
   da->queryVariables(vars, types);
   ASSERTEQ(vars.size(), types.size());
-  cout << "There are " << vars.size() << " variables:\n";
 
-  bool gotVol = false;
-  bool gotVar = false;
+  bool gotVolume = false;
+  bool gotDeform = false;
   for(unsigned int v=0;v<vars.size();v++){
     std::string var = vars[v];
-    cout << "\t" << var ;
-    if (var == "p.volume") gotVol = true;
-    switch(flag) {
-    case 1:
-      if (var == "p.stress") gotVar = true;
-      break;
-    case 2:
-      if (var == "p.strain") gotVar = true;
-      break;
-    default:
-      cerr << "\n **Error** getVolAvPart : Wrong flag " << flag << " passed." << endl; 
-      exit(1);
-    }
+    if (var == "p.volume") gotVolume = true;
+    if (var == "p.deformationMeasure") gotDeform = true;
   }
-  cout << endl;
-  if (!gotVol) {
-    cerr << "\n **Error** getVolAvPart : DataArchiver does not contain particle volume data." << endl;
+  if (!gotDeform) {
+    cerr << "\n **Error** getParticleStrains : DataArchiver does not contain p.deformationMeasure\n";
     exit(1);
   }
-  switch(flag) {
-  case 1:
-    if (!gotVar) {
-      cerr << "\n **Error** getVolAvPart : DataArchiver does not contain particle stress data." << endl;
-      exit(1);
-    }
-    break;
-  case 2:
-    if (!gotVar) {
-      cerr << "\n **Error** getVolAvPart : DataArchiver does not contain particle strain data." << endl;
-      exit(1);
-    }
-    break;
-  default:
-    cerr << "\n **Error** getVolAvPart : Wrong flag " << flag << " passed." << endl; 
+  if (doAverage && !gotVolume) {
+    cerr << "\n **Error** getParticleStrains : DataArchiver does not contain p.volume\n";
     exit(1);
   }
-      
+
   // Now that the variables have been found, get the data for all available time steps 
   // from the data archive
   vector<int> index;
@@ -168,13 +151,11 @@ void getVolAvPart(DataArchive* da, unsigned short flag) {
   // Loop thru all time steps and store the volume and variable (stress/strain)
   for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
     double time = times[t];
-    //cout << "time = " << time << "\n";
+    cout << "Time = " << time << endl;
     GridP grid = da->queryGrid(time);
 
-    //vector<ShareAssignParticleVariable<double> > volumeVector;
-    //vector<ShareAssignParticleVariable<Matrix3> > sigepsVector;
     vector<double> volumeVector;
-    vector<Matrix3> sigepsVector;
+    vector<Matrix3> deformVector;
     double totVol = 0.0;
 
     // Loop thru all the levels
@@ -184,13 +165,11 @@ void getVolAvPart(DataArchive* da, unsigned short flag) {
       // Loop thru all the patches
       for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
 	const Patch* patch = *iter;
-	//cout << "\t\tPatch: " << patch->getID() << "\n";
 
 	// Loop thru all the variables 
 	for(int v=0;v<(int)vars.size();v++){
 	  std::string var = vars[v];
 	  const Uintah::TypeDescription* td = types[v];
-	  //cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
 
 	  // Check if the variable is a ParticleVariable
 	  if(td->getType() == Uintah::TypeDescription::ParticleVariable) { 
@@ -199,27 +178,56 @@ void getVolAvPart(DataArchive* da, unsigned short flag) {
 	    ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
 	    for(ConsecutiveRangeSet::iterator matlIter = matls.begin(); matlIter != matls.end(); matlIter++){
 	      int matl = *matlIter;
-	      //cout << "\t\t\tMaterial: " << matl << "\n";
 
 	      // Find the name of the variable
-	      if (var == "p.volume") {
-		ParticleVariable<double> value;
-		da->query(value, var, matl, patch, time);
-		ParticleSubset* pset = value.getParticleSubset();
-		if(pset->numParticles() > 0){
-		  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
-                    volumeVector.push_back(value[*iter]);
-                    totVol += value[*iter];
+	      if (doAverage) {
+		if (var == "p.volume") {
+		  ParticleVariable<double> value;
+		  da->query(value, var, matl, patch, time);
+		  ParticleSubset* pset = value.getParticleSubset();
+		  if(pset->numParticles() > 0){
+		    for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+		      volumeVector.push_back(value[*iter]);
+		      totVol += value[*iter];
+		    }
 		  }
 		}
 	      } 
-	      else if (var == "p.stress") {
+	      if (var == "p.deformationMeasure") {
+	        cout << "Material: " << matl << endl;
 		ParticleVariable<Matrix3> value;
 		da->query(value, var, matl, patch, time);
 		ParticleSubset* pset = value.getParticleSubset();
 		if(pset->numParticles() > 0){
 		  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
-                    sigepsVector.push_back(value[*iter]);
+
+                    // Find the right stretch tensor
+                    Matrix3 deformGrad = value[*iter];
+                    Matrix3 stretch(0.0), rotation(0.0);
+                    deformGrad.polarDecomposition(stretch, rotation, 1.0e-10, true);
+
+                    if (doAverage) deformVector.push_back(stretch);
+                    else {
+
+                      if (doTrue) {
+
+		        // Find the eigenvalues of the stretch
+                        double lambda[3];
+                        int numEigen = stretch.getEigenValues(lambda[0], lambda[1], lambda[2]);
+
+			cout << "True Strain = [";
+                        for (int ii = 0; ii < numEigen; ++ii) {
+                          double trueStrain = 0.0;
+			  if (lambda[ii] > 0.0) trueStrain = log(lambda[ii]);
+                          cout << trueStrain << ",";
+                        }
+                        cout << "\b]\n";
+                      } else {
+                        cout << "Deformation Gradient = \n" << deformGrad << endl ;
+                        cout << "Right Stretch = \n" << stretch << endl;
+                        cout << "Rotation = \n" << rotation << endl;
+                      }
+                    }
 		  }
 		}
 	      } // end of var compare if
@@ -229,27 +237,176 @@ void getVolAvPart(DataArchive* da, unsigned short flag) {
       } // end of patch loop
     } // end of level loop
 
-    // Now that the volume vector and variable vector are available just
-    // do a weighted average
-    ASSERTEQ(volumeVector.size(), sigepsVector.size());
-    Matrix3 avVar;
-    cout << "Size of vector = " << volumeVector.size() << endl;
-    for (unsigned int ii = 0; ii < volumeVector.size() ; ++ii) {
-      avVar += ((sigepsVector[ii]*volumeVector[ii])/totVol);
-    }
-    for (int ii = 1; ii < 4; ++ii) {
-      for (int jj = 1; jj < 4; ++jj) {
-	cout << avVar(ii,jj) << "  " ;
+    if (doAverage) {
+      // Now that the volume vector and variable vector are available just
+      // do a weighted average
+      ASSERTEQ(volumeVector.size(), deformVector.size());
+      Matrix3 avVar;
+      for (unsigned int ii = 0; ii < volumeVector.size() ; ++ii) {
+	avVar += ((deformVector[ii]*volumeVector[ii])/totVol);
       }
-      cout << endl;
+      for (int ii = 1; ii < 4; ++ii) {
+	for (int jj = 1; jj < 4; ++jj) {
+	  cout << avVar(ii,jj) << "  " ;
+	}
+	cout << endl;
+      }
     }
   } // end of time step loop
 }
 
+// Get particle stresses (avg, equiv or all)
+void 
+getParticleStresses(DataArchive* da, string flag) {
+
+   // Parse the flag and check which option is needed
+   bool doAverage = false;
+   bool doEquiv = false;
+   bool doAll = false;
+   if (flag == "avg") doAverage = true;
+   else if (flag == "equiv") doEquiv = true;
+   else doAll = true;
+
+   // Check if all the required variables are there .. for all cases
+   // we need p.stress and for the volume average we need p.volume
+  vector<string> vars;
+  vector<const Uintah::TypeDescription*> types;
+  da->queryVariables(vars, types);
+  ASSERTEQ(vars.size(), types.size());
+
+  bool gotVolume = false;
+  bool gotStress = false;
+  for(unsigned int v=0;v<vars.size();v++){
+    std::string var = vars[v];
+    if (var == "p.volume") gotVolume = true;
+    if (var == "p.stress") gotStress = true;
+  }
+  if (!gotStress) {
+    cerr << "\n **Error** getParticleStresses : DataArchiver does not contain p.stress\n";
+    exit(1);
+  }
+  if (doAverage && !gotVolume) {
+    cerr << "\n **Error** getParticleStresses : DataArchiver does not contain p.volume\n";
+    exit(1);
+  }
+
+  // Now that the variables have been found, get the data for all available time steps 
+  // from the data archive
+  vector<int> index;
+  vector<double> times;
+  da->queryTimesteps(index, times);
+  ASSERTEQ(index.size(), times.size());
+  cout << "There are " << index.size() << " timesteps:\n";
+      
+  unsigned long time_step_lower = 0;
+  unsigned long time_step_upper = times.size() - 1 ;
+      
+  // Loop thru all time steps and store the volume and variable (stress/strain)
+  for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
+    double time = times[t];
+    cout << "Time = " << time << endl;
+    GridP grid = da->queryGrid(time);
+
+    vector<double> volumeVector;
+    vector<Matrix3> stressVector;
+    double totVol = 0.0;
+
+    // Loop thru all the levels
+    for(int l=0;l<grid->numLevels();l++){
+      LevelP level = grid->getLevel(l);
+
+      // Loop thru all the patches
+      for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
+	const Patch* patch = *iter;
+
+	// Loop thru all the variables 
+	for(int v=0;v<(int)vars.size();v++){
+	  std::string var = vars[v];
+	  const Uintah::TypeDescription* td = types[v];
+
+	  // Check if the variable is a ParticleVariable
+	  if(td->getType() == Uintah::TypeDescription::ParticleVariable) { 
+
+	    // loop thru all the materials
+	    ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
+	    for(ConsecutiveRangeSet::iterator matlIter = matls.begin(); matlIter != matls.end(); matlIter++){
+	      int matl = *matlIter;
+
+	      // Find the name of the variable
+              if (doAverage) {
+	        if (var == "p.volume") {
+		  ParticleVariable<double> value;
+		  da->query(value, var, matl, patch, time);
+		  ParticleSubset* pset = value.getParticleSubset();
+		  if(pset->numParticles() > 0){
+		    for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+		      volumeVector.push_back(value[*iter]);
+		      totVol += value[*iter];
+		    }
+		  }
+		}
+	      } 
+	      if (var == "p.stress") {
+	        cout << "Material: " << matl << endl;
+		ParticleVariable<Matrix3> value;
+		da->query(value, var, matl, patch, time);
+		ParticleSubset* pset = value.getParticleSubset();
+		if(pset->numParticles() > 0){
+		  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+                    if (doAverage) {
+                      stressVector.push_back(value[*iter]);
+                    } else {
+		      Matrix3 stress = value[*iter];
+                      double sig11 = stress(1,1);
+                      double sig12 = stress(1,2);
+                      double sig13 = stress(1,3);
+                      double sig22 = stress(2,2);
+                      double sig23 = stress(2,3);
+                      double sig33 = stress(3,3);
+                      if (doEquiv) {
+			double s12 = sig11 - sig22;
+			double s23 = sig22 - sig33;
+			double s31 = sig33 - sig11;
+			double sigeff = sqrt(0.5*(s12*s12 + s23*s23 + s31*s31 + 6.0*(sig12*sig12 +
+					          sig23*sig23 + sig13*sig13)));
+			cout << "Effective Stress = " << sigeff << endl; 
+                      } else {
+			cout << "[" << sig11 << "," << sig22 << "," << sig33 
+			     << "," << sig23 << "," << sig13 << "," << sig12 << "]\n";
+                      }
+                    }
+		  }
+		}
+	      } // end of var compare if
+	    } // end of material loop
+	  } // end of ParticleVariable if
+	} // end of variable loop
+      } // end of patch loop
+    } // end of level loop
+
+    if (doAverage) {
+      // Now that the volume vector and variable vector are available just
+      // do a weighted average
+      ASSERTEQ(volumeVector.size(), stressVector.size());
+      Matrix3 avVar;
+      for (unsigned int ii = 0; ii < volumeVector.size() ; ++ii) {
+	avVar += ((stressVector[ii]*volumeVector[ii])/totVol);
+      }
+      for (int ii = 1; ii < 4; ++ii) {
+	for (int jj = 1; jj < 4; ++jj) {
+	  cout << avVar(ii,jj) << "  " ;
+	}
+	cout << endl;
+      }
+    }
+  } // end of time step loop
+}
+
+
 void usage(const std::string& badarg, const std::string& progname)
 {
     if(badarg != "")
-	cerr << "Error parsing argument: " << badarg << '\n';
+	cerr << "Error parsing argument: " << badarg << endl;
     cerr << "Usage: " << progname << " [options] <archive file>\n\n";
     cerr << "Valid options are:\n";
     cerr << "  -h[elp]\n";
@@ -259,8 +416,8 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -varsummary\n";
     cerr << "  -asci\n";
     cerr << "  -cell_stresses\n";
-    cerr << "  -av_part_stress\n";
-    cerr << "  -av_part_strain\n";
+    cerr << "  -part_stress [avg or equiv or all]\n";
+    cerr << "  -part_strain [avg or true or all]\n";
     cerr << "  -rtdata [output directory]\n";
     cerr << "  -PTvar\n";
     cerr << "  -ptonly (prints out only the point location\n";
@@ -291,8 +448,12 @@ int main(int argc, char** argv)
   bool do_varsummary=false;
   bool do_asci=false;
   bool do_cell_stresses=false;
+  bool do_part_stress = false;
+  bool do_part_strain = false;
   bool do_av_part_stress = false;
   bool do_av_part_strain = false;
+  bool do_equiv_part_stress = false;
+  bool do_true_part_strain = false;
   bool do_rtdata = false;
   bool do_NCvar_double = false;
   bool do_NCvar_point = false;
@@ -333,10 +494,26 @@ int main(int argc, char** argv)
       do_asci=true;
     } else if(s == "-cell_stresses"){
       do_cell_stresses=true;
-    } else if(s == "-av_part_stress"){
-      do_av_part_stress=true;
-    } else if(s == "-av_part_strain"){
-      do_av_part_strain=true;
+    } else if(s == "-part_stress"){
+      do_part_stress = true;
+      if (++i < argc) {
+	s = argv[i];
+	if (s == "avg") do_av_part_stress=true;
+	else if (s == "equiv") do_equiv_part_stress=true;
+	else if (s == "all") do_part_stress=true;
+        else
+	  usage("-part_stress [avg or equiv or all]", argv[0]);
+      }
+    } else if(s == "-part_strain"){
+      do_part_strain = true;
+      if (++i < argc) {
+	s = argv[i];
+	if (s == "avg") do_av_part_strain=true;
+	else if (s == "true") do_true_part_strain=true;
+	else if (s == "all") do_part_strain=true;
+        else
+	  usage("-part_strain [avg or true or all]", argv[0]);
+      }
     } else if(s == "-rtdata") {
       do_rtdata = true;
       if (++i < argc) {
@@ -418,7 +595,7 @@ int main(int argc, char** argv)
       ASSERTEQ(index.size(), times.size());
       cout << "There are " << index.size() << " timesteps:\n";
       for(int i=0;i<(int)index.size();i++)
-	cout << index[i] << ": " << times[i] << '\n';
+	cout << index[i] << ": " << times[i] << endl;
     }
     if(do_gridstats){
       vector<int> index;
@@ -427,7 +604,7 @@ int main(int argc, char** argv)
       ASSERTEQ(index.size(), times.size());
       cout << "There are " << index.size() << " timesteps:\n";
       for(int i=0;i<(int)index.size();i++){
-	cout << index[i] << ": " << times[i] << '\n';
+	cout << index[i] << ": " << times[i] << endl;
 	GridP grid = da->queryGrid(times[i]);
 	grid->performConsistencyCheck();
 	grid->printStatistics();
@@ -439,19 +616,34 @@ int main(int argc, char** argv)
       da->queryVariables(vars, types);
       cout << "There are " << vars.size() << " variables:\n";
       for(int i=0;i<(int)vars.size();i++){
-	cout << vars[i] << ": " << types[i]->getName() << '\n';
+	cout << vars[i] << ": " << types[i]->getName() << endl;
       }
     }
-    if (do_av_part_stress) {
-       unsigned short flag = 1;
-       cout << "\t Volume average stress = " << endl;
-       getVolAvPart(da, flag);
-    }
-    if (do_av_part_strain) {
-       unsigned short flag = 2;
-       cout << "\t Volume average strain = " << endl;
-       getVolAvPart(da, flag);
-    }
+
+    // Get the particle stresses
+    if (do_part_stress) {
+      if (do_av_part_stress) {
+	cout << "\t Volume average stress = " << endl;
+	getParticleStresses(da, "avg");
+      } else if (do_equiv_part_stress) {
+	getParticleStresses(da, "equiv");
+      } else {
+	getParticleStresses(da, "all");
+      }
+    } 
+
+    // Get the particle strains
+    if (do_part_strain) {
+      if (do_av_part_strain) {
+	cout << "\t Volume average strain = " << endl;
+	getParticleStrains(da, "avg");
+      } else if (do_true_part_strain) {
+	getParticleStrains(da, "true");
+      } else {
+	getParticleStrains(da, "all");
+      }
+    } 
+
     //______________________________________________________________________
     //              V A R S U M M A R Y   O P T I O N
     if(do_varsummary){
@@ -461,7 +653,7 @@ int main(int argc, char** argv)
       ASSERTEQ(vars.size(), types.size());
       cout << "There are " << vars.size() << " variables:\n";
       for(int i=0;i<(int)vars.size();i++)
-	cout << vars[i] << ": " << types[i]->getName() << '\n';
+	cout << vars[i] << ": " << types[i]->getName() << endl;
       
       vector<int> index;
       vector<double> times;
@@ -469,7 +661,7 @@ int main(int argc, char** argv)
       ASSERTEQ(index.size(), times.size());
       cout << "There are " << index.size() << " timesteps:\n";
       for(int i=0;i<(int)index.size();i++)
-	cout << index[i] << ": " << times[i] << '\n';
+	cout << index[i] << ": " << times[i] << endl;
       
       if (!tslow_set)
 	time_step_lower =0;
@@ -486,26 +678,26 @@ int main(int argc, char** argv)
       
       for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
 	double time = times[t];
-	cout << "time = " << time << "\n";
+	cout << "time = " << time << endl;
 	GridP grid = da->queryGrid(time);
 	for(int v=0;v<(int)vars.size();v++){
 	  std::string var = vars[v];
 	  const Uintah::TypeDescription* td = types[v];
 	  const Uintah::TypeDescription* subtype = td->getSubType();
-	  cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
+	  cout << "\tVariable: " << var << ", type " << td->getName() << endl;
 	  for(int l=0;l<grid->numLevels();l++){
 	    LevelP level = grid->getLevel(l);
-	    cout << "\t    Level: " << level->getIndex() << ", id " << level->getID() << '\n';
+	    cout << "\t    Level: " << level->getIndex() << ", id " << level->getID() << endl;
 	    for(Level::const_patchIterator iter = level->patchesBegin();
 		iter != level->patchesEnd(); iter++){
 	      const Patch* patch = *iter;
-	      cout << "\t\tPatch: " << patch->getID() << "\n";
+	      cout << "\t\tPatch: " << patch->getID() << endl;
 	      ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
 	      // loop over materials
 	      for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
 		  matlIter != matls.end(); matlIter++){
 		int matl = *matlIter;
-		cout << "\t\t\tMaterial: " << matl << "\n";
+		cout << "\t\t\tMaterial: " << matl << endl;
 		switch(td->getType()){
               //__________________________________
               //   P A R T I C L E   V A R I A B L E
@@ -525,8 +717,8 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter]);
 			  max=Max(max, value[*iter]);
 			}
-			cout << "\t\t\t\tmin value: " << min << '\n';
-			cout << "\t\t\t\tmax value: " << max << '\n';
+			cout << "\t\t\t\tmin value: " << min << endl;
+			cout << "\t\t\t\tmax value: " << max << endl;
 		      }
 		    }
 		  break;
@@ -544,8 +736,8 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter]);
 			  max=Max(max, value[*iter]);
 			}
-			cout << "\t\t\t\tmin value: " << min << '\n';
-			cout << "\t\t\t\tmax value: " << max << '\n';
+			cout << "\t\t\t\tmin value: " << min << endl;
+			cout << "\t\t\t\tmax value: " << max << endl;
 		      }
 		    }
 		  break;
@@ -563,8 +755,8 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter]);
 			  max=Max(max, value[*iter]);
 			}
-			 cout << "\t\t\t\tmin value: " << min << '\n';
-			cout << "\t\t\t\tmax value: " << max << '\n';
+			 cout << "\t\t\t\tmin value: " << min << endl;
+			cout << "\t\t\t\tmax value: " << max << endl;
 		      }
 		    }
 		  break;
@@ -582,8 +774,8 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter].length2());
 			  max=Max(max, value[*iter].length2());
 			}
-			cout << "\t\t\t\tmin magnitude: " << sqrt(min) << '\n';
-			cout << "\t\t\t\tmax magnitude: " << sqrt(max) << '\n';
+			cout << "\t\t\t\tmin magnitude: " << sqrt(min) << endl;
+			cout << "\t\t\t\tmax magnitude: " << sqrt(max) << endl;
 		      }
 		    }
 		  break;
@@ -601,8 +793,8 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter].Norm());
 			  max=Max(max, value[*iter].Norm());
 			}
-			cout << "\t\t\t\tmin Norm: " << min << '\n';
-			cout << "\t\t\t\tmax Norm: " << max << '\n';
+			cout << "\t\t\t\tmin Norm: " << min << endl;
+			cout << "\t\t\t\tmax Norm: " << max << endl;
 		      }
 		    }
 		  break;
@@ -620,13 +812,13 @@ int main(int argc, char** argv)
 			  min=std::min(min, value[*iter]);
 			  max=std::max(max, value[*iter]);
 			}
-			cout << "\t\t\t\tmin : " << min << '\n';
-			cout << "\t\t\t\tmax : " << max << '\n';
+			cout << "\t\t\t\tmin : " << min << endl;
+			cout << "\t\t\t\tmax : " << max << endl;
 		      }
 		    }
 		  break;
 		  default:
-		    cerr << "Particle Variable of unknown type: " << subtype->getType() << '\n';
+		    cerr << "Particle Variable of unknown type: " << subtype->getType() << endl;
 		    break;
 		  }
 		  break;
@@ -640,7 +832,7 @@ int main(int argc, char** argv)
 		      da->query(value, var, matl, patch, time);
                     IntVector lo = value.getLowIndex();
                     IntVector hi = value.getHighIndex() - IntVector(1,1,1);
-		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << "\n";
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
@@ -650,8 +842,8 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter]);
 			  max=Max(max, value[*iter]);
 			}
-			cout << "\t\t\t\tmin value: " << min << '\n';
-			cout << "\t\t\t\tmax value: " << max << '\n';
+			cout << "\t\t\t\tmin value: " << min << endl;
+			cout << "\t\t\t\tmax value: " << max << endl;
 		      }
 		    }
 		  break;
@@ -659,7 +851,7 @@ int main(int argc, char** argv)
 		    {
 		      NCVariable<Point> value;
 		      da->query(value, var, matl, patch, time);
-                    cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+                    cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << endl;
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			Point min, max;
@@ -669,8 +861,8 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter]);
 			  max=Max(max, value[*iter]);
 			}
-			cout << "\t\t\t\tmin value: " << min << '\n';
-			cout << "\t\t\t\tmax value: " << max << '\n';
+			cout << "\t\t\t\tmin value: " << min << endl;
+			cout << "\t\t\t\tmax value: " << max << endl;
 		      }
 		    }
 		  break;
@@ -680,7 +872,7 @@ int main(int argc, char** argv)
 		      da->query(value, var, matl, patch, time);
                     IntVector lo = value.getLowIndex();
                     IntVector hi = value.getHighIndex() - IntVector(1,1,1);
-		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << "\n";
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
@@ -690,8 +882,8 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter].length2());
 			  max=Max(max, value[*iter].length2());
 			}
-			cout << "\t\t\t\tmin magnitude: " << sqrt(min) << '\n';
-			cout << "\t\t\t\tmax magnitude: " << sqrt(max) << '\n';
+			cout << "\t\t\t\tmin magnitude: " << sqrt(min) << endl;
+			cout << "\t\t\t\tmax magnitude: " << sqrt(max) << endl;
 		      }
 		    }
 		  break;
@@ -699,7 +891,7 @@ int main(int argc, char** argv)
 		    {
 		      NCVariable<Matrix3> value;
 		      da->query(value, var, matl, patch, time);
-                    cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+                    cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << endl;
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
@@ -709,13 +901,13 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter].Norm());
 			  max=Max(max, value[*iter].Norm());
 			}
-			cout << "\t\t\t\tmin Norm: " << min << '\n';
-			cout << "\t\t\t\tmax Norm: " << max << '\n';
+			cout << "\t\t\t\tmin Norm: " << min << endl;
+			cout << "\t\t\t\tmax Norm: " << max << endl;
 		      }
 		    }
 		  break;
 		  default:
-		    cerr << "NC Variable of unknown type: " << subtype->getType() << '\n';
+		    cerr << "NC Variable of unknown type: " << subtype->getType() << endl;
 		    break;
 		  }
 		  break;
@@ -729,7 +921,7 @@ int main(int argc, char** argv)
 		      da->query(value, var, matl, patch, time);
                     IntVector lo = value.getLowIndex();
                     IntVector hi= value.getHighIndex() - IntVector(1,1,1);
-		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << "\n";
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
@@ -744,8 +936,8 @@ int main(int argc, char** argv)
                        if (max == value[*iter] ) 
                          c_max = *iter;
 			}                     
-			cout << "\t\t\t\tmin value: " << min << "\t\t"<< c_min <<'\n';
-			cout << "\t\t\t\tmax value: " << max << "\t\t"<< c_max <<'\n';
+			cout << "\t\t\t\tmin value: " << min << "\t\t"<< c_min <<endl;
+			cout << "\t\t\t\tmax value: " << max << "\t\t"<< c_max <<endl;
 		      }
 		    }
 		  break;
@@ -753,7 +945,7 @@ int main(int argc, char** argv)
 		    {
 		      CCVariable<Point> value;
 		      da->query(value, var, matl, patch, time);
-                    cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+                    cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << endl;
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			Point min, max;
@@ -763,8 +955,8 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter]);
 			  max=Max(max, value[*iter]);
 			}
-			cout << "\t\t\t\tmin value: " << min << '\n';
-			cout << "\t\t\t\tmax value: " << max << '\n';
+			cout << "\t\t\t\tmin value: " << min << endl;
+			cout << "\t\t\t\tmax value: " << max << endl;
 		      }
 		    }
 		  break;
@@ -774,7 +966,7 @@ int main(int argc, char** argv)
 		      da->query(value, var, matl, patch, time);
                     IntVector lo = value.getLowIndex();
                     IntVector hi= value.getHighIndex() - IntVector(1,1,1);
-		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << "\n";
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
@@ -789,8 +981,8 @@ int main(int argc, char** argv)
                        if (max == value[*iter].length2() ) 
                          c_max = *iter;
 			}
-			cout << "\t\t\t\tmin magnitude: " << sqrt(min) << "\t\t"<< c_min <<'\n';
-			cout << "\t\t\t\tmax magnitude: " << sqrt(max) << "\t\t"<< c_max <<'\n';
+			cout << "\t\t\t\tmin magnitude: " << sqrt(min) << "\t\t"<< c_min <<endl;
+			cout << "\t\t\t\tmax magnitude: " << sqrt(max) << "\t\t"<< c_max <<endl;
 		      }
 		    }
 		  break;
@@ -798,7 +990,7 @@ int main(int argc, char** argv)
 		    {
 		      CCVariable<Matrix3> value;
 		      da->query(value, var, matl, patch, time);
-                    cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+                    cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << endl;
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
@@ -808,18 +1000,18 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter].Norm());
 			  max=Max(max, value[*iter].Norm());
 			}
-			cout << "\t\t\t\tmin Norm: " << min << '\n';
-			cout << "\t\t\t\tmax Norm: " << max << '\n';
+			cout << "\t\t\t\tmin Norm: " << min << endl;
+			cout << "\t\t\t\tmax Norm: " << max << endl;
 		      }
 		    }
 		  break;
 		  default:
-		    cerr << "CC Variable of unknown type: " << subtype->getType() << '\n';
+		    cerr << "CC Variable of unknown type: " << subtype->getType() << endl;
 		    break;
 		  }
 		  break;
 		default:
-		  cerr << "Variable of unknown type: " << td->getType() << '\n';
+		  cerr << "Variable of unknown type: " << td->getType() << endl;
 		  break;
 		}
 	      }
@@ -961,7 +1153,7 @@ int main(int argc, char** argv)
 		     }
 		     break;
 		   default:
-		     cerr << "Particle Variable of unknown type: " << subtype->getType() << '\n';
+		     cerr << "Particle Variable of unknown type: " << subtype->getType() << endl;
 		     break;
 		   }
 		   break;
@@ -1122,7 +1314,7 @@ int main(int argc, char** argv)
 		      }
 		      break;
 		    default:
-		      cerr << "Particle Variable of unknown type: " << subtype->getType() << '\n';
+		      cerr << "Particle Variable of unknown type: " << subtype->getType() << endl;
 		      break;
 		    }
 		    break;
@@ -1174,7 +1366,7 @@ int main(int argc, char** argv)
       
       for(t = time_step_lower; t <= time_step_upper; t++){
 	double time = times[t];
-	cout << "    " << t + 1 << "        "  << time << "\n";
+	cout << "    " << t + 1 << "        "  << time << endl;
       }
       cout << endl;
       if (t != (time_step_lower +1)){
@@ -1195,7 +1387,7 @@ int main(int argc, char** argv)
       for(t=start_time;t<=stop_time;t++){
 	
 	double time = times[t];
-	cout << "time = " << time << "\n";
+	cout << "time = " << time << endl;
 	GridP grid = da->queryGrid(time);
 	for(int v=0;v<(int)vars.size();v++){
 	  std::string var = vars[v];
@@ -1204,13 +1396,13 @@ int main(int argc, char** argv)
 	  if (var == "g.stressFS"){
 	    const Uintah::TypeDescription* td = types[v];
 	    const Uintah::TypeDescription* subtype = td->getSubType();
-	    cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
+	    cout << "\tVariable: " << var << ", type " << td->getName() << endl;
 	    for(int l=0;l<grid->numLevels();l++){
 	      LevelP level = grid->getLevel(l);
 	      for(Level::const_patchIterator iter = level->patchesBegin();
 		  iter != level->patchesEnd(); iter++){
 		const Patch* patch = *iter;
-		cout << "\t\tPatch: " << patch->getID() << "\n";
+		cout << "\t\tPatch: " << patch->getID() << endl;
                 ConsecutiveRangeSet matls =
 		   da->queryMaterials(var, patch, time);
 	        // loop over materials
@@ -1230,7 +1422,7 @@ int main(int argc, char** argv)
 		  ofstream partfile(filename.c_str());
 		  partfile << "# x, y, z, st11, st12, st13, st21, st22, st23, st31, st32, st33" << endl;
 		  
-		  cout << "\t\t\tMaterial: " << matl << "\n";
+		  cout << "\t\t\tMaterial: " << matl << endl;
 		  switch(td->getType()){
 		  case Uintah::TypeDescription::NCVariable:
 		    switch(subtype->getType()){
@@ -1238,7 +1430,7 @@ int main(int argc, char** argv)
 		      NCVariable<Matrix3> value;
 		      da->query(value, var, matl, patch, time);
 		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex()
-			   << " to " << value.getHighIndex() << "\n";
+			   << " to " << value.getHighIndex() << endl;
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			NodeIterator iter = patch->getNodeIterator();
@@ -1254,12 +1446,12 @@ int main(int argc, char** argv)
 		    }
 		    break;
 		    default:
-		      cerr << "No Matrix3 Subclass avaliable." << subtype->getType() << '\n';
+		      cerr << "No Matrix3 Subclass avaliable." << subtype->getType() << endl;
 		      break;
 		    }
 		    break;
 		  default:
-		    cerr << "No NC Variables avaliable." << td->getType() << '\n';
+		    cerr << "No NC Variables avaliable." << td->getType() << endl;
 		    break;
 		  }
 		}
@@ -1284,7 +1476,7 @@ int main(int argc, char** argv)
 	  rayDir.create(raydatadir);
 	}
 	catch (Exception& e) {
-	  cerr << "Caught exception: " << e.message() << '\n';
+	  cerr << "Caught exception: " << e.message() << endl;
 	}
       }
 
@@ -1336,7 +1528,7 @@ int main(int argc, char** argv)
 	GridP grid = da->queryGrid(time);
 	fprintf(filelist,"<TIMESTEP>\n");
 	if(do_verbose)
-	  cout << "time = " << time << "\n";
+	  cout << "time = " << time << endl;
 	// Create a directory if it's not already there.
 	// The exception occurs when the directory is already there
 	// and the Dir.create fails.  This exception is ignored. 
@@ -1345,7 +1537,7 @@ int main(int argc, char** argv)
 	  rayDir.create(raydatadir + string("/TS_") + time_file);
 	}
 	catch (Exception& e) {
-	  cerr << "Caught directory making exception: " << e.message() << '\n';
+	  cerr << "Caught directory making exception: " << e.message() << endl;
 	}
 	// for each level in the grid
 	for(int l=0;l<grid->numLevels();l++){
@@ -1422,7 +1614,7 @@ int main(int argc, char** argv)
 		      }
 		    break;
 		    default:
-		      cerr << "Particle Variable of unknown type: " << subtype->getType() << '\n';
+		      cerr << "Particle Variable of unknown type: " << subtype->getType() << endl;
 		      break;
 		    }
 		    break;
@@ -1493,7 +1685,7 @@ int main(int argc, char** argv)
 		    }
 		  break;
 		  default:
-		    cerr << "NC variable of unknown type: " << subtype->getType() << '\n';
+		    cerr << "NC variable of unknown type: " << subtype->getType() << endl;
 		    break;
 		  }
 		  break;
@@ -1563,12 +1755,12 @@ int main(int argc, char** argv)
 		    }
 		  break;
 		  default:
-		    cerr << "CC variable of unknown type: " << subtype->getType() << '\n';
+		    cerr << "CC variable of unknown type: " << subtype->getType() << endl;
 		    break;
 		  }
 		  break;
 		default:
-		  cerr << "Variable of unknown type: " << td->getType() << '\n';
+		  cerr << "Variable of unknown type: " << td->getType() << endl;
 		  break;
 		} // end switch(td->getType())
 		if (matl < (int)material_data_list.size())
@@ -1742,7 +1934,7 @@ int main(int argc, char** argv)
       fclose(filelist);
     } // end do_rtdata
   } catch (Exception& e) {
-    cerr << "Caught exception: " << e.message() << '\n';
+    cerr << "Caught exception: " << e.message() << endl;
     abort();
   } catch(...){
     cerr << "Caught unknown exception\n";
