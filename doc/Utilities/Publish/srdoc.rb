@@ -83,7 +83,7 @@ end
 ### Output mode mixins:
 
 module Print_Output
-  include Constants
+  include(Constants)
 
   # Convert tree absolute url to a sci website link.
   def treeUrl(url)
@@ -139,7 +139,7 @@ class Doc
   Edition = "edition.xml"
 
   # Create a document object.
-  def Doc.create(docType)
+  def Doc.create(docType, nem=true)
     outputMode = getOutputMode()
     doc = case docType
 	  when DocBook
@@ -167,8 +167,8 @@ class Doc
 	  else
 	    raise "Unsupported doc type"
 	  end
-    @@edition = getEdition
-    doc.insertNoEditMeMsg
+    @@edition = getEdition()
+    doc.insertNoEditMeMsg() if nem == true
     doc
   end
 
@@ -223,6 +223,7 @@ class Doc
     @@edition
   end
 
+  # Insert "no edit me" message into current document.
   def insertNoEditMeMsg()
     msg = "* DON'T EDIT ME!  I'm generated.  Edit my source file instead *"
     putComment("*"*msg.size)
@@ -232,16 +233,19 @@ class Doc
     putComment("*"*msg.size)
   end
 
+  # Return value of <edition> element from edition.xml.
   def edition()
     Doc.edition
   end
 
-  def comment(c)
-    commentBeg + " " + c + " " + commentEnd
+  # Generate a comment with the given text.
+  def comment(text)
+    commentBeg + " " + text + " " + commentEnd
   end
 
-  def putComment(c)
-    print(comment(c) + "\n")
+  # Insert command into current document.
+  def putComment(text)
+    print(comment(text) + "\n")
   end
 
   # Is we a doin' html output?
@@ -262,6 +266,14 @@ class Doc
   # Execute the given block if we be doin' print output.
   def doIfPrint()
     printOutput?() ? yield() : ""
+  end
+
+  # Include a file with eruby substitution.
+  def include(fileName)
+    file = File.open(fileName)
+    compiler = ERuby::Compiler.new
+    c = compiler.compile_file(file)
+    eval(c,TOPLEVEL_BINDING)
   end
 
 end
