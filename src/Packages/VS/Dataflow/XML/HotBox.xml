@@ -81,6 +81,13 @@
         <name>Selection Highlight</name>
         <datatype>SCIRun::Field</datatype>
       </port>
+      <port>
+        <description>
+          <p>Simple field showing injury icon geometry.</p>
+        </description>
+        <name>Injury Icon</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
     </outputs>
   </io>
   <gui>
