@@ -9,14 +9,20 @@
 #include <Packages/rtrt/Core/VolumeVisDpy.h>
 #include <Packages/rtrt/Core/CutPlane.h>
 #include <Packages/rtrt/Core/PlaneDpy.h>
+
 #include <Core/Thread/Thread.h>
+
 #include <teem/nrrd.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
-#include <math.h>
-#include <stdlib.h>
 #include <vector>
 #include <string>
+#include <sgi_stl_warnings_on.h>
+
+#include <math.h>
+#include <stdlib.h>
 
 using namespace std;
 using namespace rtrt;

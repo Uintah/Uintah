@@ -148,7 +148,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     //float Kd=.8;
     //float Ks=.8;
     float refl=0;
-    float specpow=40;
+    int specpow=40;
     for(int i=0;i<ncolors;i++){
       float frac=float(i)/(ncolors-1);
       Color c(spline(frac));

@@ -140,7 +140,7 @@ void add_video_on_wall (Material* video, const Point &top_left,
   video->local_ambient_mode=Arc_Ambient;
   wall_group->add(image_obj);
 
-  Material* glass= new DielectricMaterial(1.5, 1.0, 0.05, 400.0, 
+  Material* glass= new DielectricMaterial(1.5, 1.0, 0.05, 400, 
 					  Color(.80, .93 , .87), 
 					  Color(1,1,1), false);
   Vector in = Cross (right,down);
@@ -161,7 +161,7 @@ void add_poster_on_wall (string image_name, const Point &top_left,
 			 Group* wall_group) {
 
   /* add glass frame */
-  Material* glass= new DielectricMaterial(1.5, 1.0, 0.05, 400.0, 
+  Material* glass= new DielectricMaterial(1.5, 1.0, 0.05, 400, 
 					  Color(.80, .93 , .87), 
 					  Color(1,1,1), false);
   Material* grey = new PhongMaterial(Color(.5,.5,.5),1,0.3,100);
@@ -776,7 +776,7 @@ void build_cornell_box (Group* main_group, const Point CBoxPoint, float ped_size
 
 void build_history_hall (Group* main_group, Group* no_shadow_group, 
 			 Group* no_draw_group, Scene *scene,
-			 Light* light0, Light* light1, Light* light2) {
+			 Light* /*light0*/, Light* light1, Light* light2) {
   FILE *fp;
   char buf[MAXBUFSIZE];
   char *name;
@@ -1327,10 +1327,10 @@ void build_history_hall (Group* main_group, Group* no_shadow_group,
 			       BumpMapPoint+Vector(0,0,0.3),0.2)); 
 
   /* **************** ray-traced scene **************** */
-  Material* outside_glass= new DielectricMaterial(1.5, 1.0, 0.04, 400.0, 
+  Material* outside_glass= new DielectricMaterial(1.5, 1.0, 0.04, 400, 
 					  Color(.80, .93 , .87), 
 					  Color(1,1,1), false, 0.001);
-  Material* inv_glass= new DielectricMaterial(1.0, 1.5, 0.04, 400.0, 
+  Material* inv_glass= new DielectricMaterial(1.0, 1.5, 0.04, 400, 
 					  Color(.80, .93 , .87), 
 					  Color(1,1,1), true, 0.001);
   Material* silver = new MetalMaterial( Color(0.8, 0.8, 0.8),20);
@@ -1468,7 +1468,7 @@ void build_history_hall (Group* main_group, Group* no_shadow_group,
   /* **************** Kajiya's Chess Scene **************** */
   Material* kaj_white = new Phong(Color(.95,.95,.85),Color(.2,.2,.2),40);
   Material* pink = new LambertianMaterial(Color(.78,.59,.50));
-  Material* kaj_glass= new DielectricMaterial(1.5, 1.0, 0.05, 400.0, 
+  Material* kaj_glass= new DielectricMaterial(1.5, 1.0, 0.05, 400, 
 					  Color(.80, .93 , .87), 
 					      Color(.40,.93,.47), true, 3);
 

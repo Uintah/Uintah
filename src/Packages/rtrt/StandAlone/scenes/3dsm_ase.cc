@@ -1,4 +1,4 @@
-#include <Core/Geometry/Point.h>
+
 #include <Packages/rtrt/Core/BV1.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Array3.h>
@@ -15,8 +15,13 @@
 #include <Packages/rtrt/Core/CycleMaterial.h>
 #include <Packages/rtrt/Core/DielectricMaterial.h>
 #include <Packages/rtrt/Core/InvisibleMaterial.h>
+
+#include <Core/Geometry/Point.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace rtrt;
 using namespace std;
@@ -79,9 +84,9 @@ Material* get_material(ifstream &infile) {
   if (!result)
     if (transparency == 0) {
       result = (Material*) new Phong( diffuse, specular*shinestrength,
-				     specpow, reflectance);
+				     (int)specpow, reflectance);
     } else {
-      result = (Material*) new DielectricMaterial(1.0, 1.0, 0.3, 400.0, Color(1,1,1), Color(1,1,1), false);
+      result = (Material*) new DielectricMaterial(1.0, 1.0, 0.3, 400, Color(1,1,1), Color(1,1,1), false);
 //      result = (Material*) new Phong( Color(1,0,0), Color(1,0,0), 10, 0);
     }
   return result;
@@ -155,7 +160,7 @@ Group *Split_Data(Group* g)
 	    Object* obj = g->objs[i];
 	    Tri *tri;
 
-	    if (tri = dynamic_cast<Tri*>(obj))
+	    if ((tri = dynamic_cast<Tri*>(obj)))
 		{
 		    int x_index;
 		    int y_index;
@@ -187,7 +192,7 @@ Group *Split_Data(Group* g)
 //  		if (num_objs > 0 && (i%2!=0 || j%2!=0))
 		if (num_objs > 0)
 		    {
-			int nside = ceil(pow(num_objs, 1./3.));
+			int nside = (int)ceil(pow(num_objs, 1./3.));
 			result->add(new Grid(regions[i][j],nside));
 //  			result->add(new BV1(regions[i][j]));
 		    }
@@ -576,11 +581,11 @@ Group *get_object(ifstream &infile) {
     if (cm->members.size() == 0) {
       cm->members.add(ase_matls[matl_index]);
       cm->members.add(new InvisibleMaterial);
-      cm->members.add(new DielectricMaterial(1.0, 1.0, 0.3, 400.0, Color(1,1,1), Color(1,1,1), false));
+      cm->members.add(new DielectricMaterial(1.0, 1.0, 0.3, 400, Color(1,1,1), Color(1,1,1), false));
     }
     matl_index=ase_matls.size()-1;
   }
-  for(unsigned int i = 0; i < faces.size(); i++) {
+  for(int i = 0; i < faces.size(); i++) {
     Object *face = faces[i];
     face->set_matl(ase_matls[matl_index]);
     result->add(face);
@@ -694,7 +699,7 @@ Scene* make_scene(int argc, char* argv[], int) {
   scene->set_materials(ase_matls);
   cerr << "num materials="<<ase_matls.size()<<"\n";
   CycleMaterial *cm;
-  if (cm = dynamic_cast<CycleMaterial*>(scene->get_material(ase_matls.size()-1))) {
+  if ((cm = dynamic_cast<CycleMaterial*>(scene->get_material(ase_matls.size()-1)))) {
     cerr << " CYCLE! -- nmembers="<<cm->members.size()<<"\n";
   } else {
     cerr << " not a cycle material.\n";

@@ -97,7 +97,7 @@ static Object* make_obj(int size, char* texfile)
     Vector objset[9];
     create_dirs(objset);
     //Material* matl0=new LambertianMaterial (Color(.4,.4,.4));
-    Material* matl0=new CoupledMaterial (Color(0.2,0.2,0.2), 0.05, 100.0);
+    Material* matl0=new CoupledMaterial (Color(0.2,0.2,0.2), 0.05, 100);
     create_objs(world, Point(0,0,.5), BV_RADIUS/2.0, Vector(0,0,1),
 		size, objset, matl0);
 
