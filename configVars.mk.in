@@ -101,8 +101,14 @@ endif
 
 LDRUN_PREFIX      := @LDRUN_PREFIX@
 
-# Libraries and other flags
+ifeq ($(SCIRUN_APP_NAME),)
+  SCIRUN_APP_NAME := SCIRun
+endif
 
+# Libraries and other flags
+ifeq ($(SCIRUN_THIRDPARTY_DIR),)
+  SCIRUN_THIRDPARTY_DIR=@SCI_THIRDPARTY_DIR@
+endif
 SCI_THIRDPARTY_LIBRARY = @SCI_THIRDPARTY_LIB_DIR_FLAG@
 
 M_LIBRARY := @M_LIB_DIR_FLAG@ @M_LIB_FLAG@
