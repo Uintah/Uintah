@@ -38,16 +38,34 @@ RenderFieldBase::get_compile_info(const TypeDescription *td) {
 
 template <>
 bool
-to_double(const Vector&, double &)
+to_double(const double&in, double &out)
 {
-  return false;
+  out = in;
+  return true;
 }
 
 template <>
 bool
-to_double(const Tensor&, double &)
+to_double(const int&in, double &out)
 {
-  return false;
+  out = in;
+  return true;
+}
+
+template <>
+bool
+to_double(const short&in, double &out)
+{
+  out = in;
+  return true;
+}
+
+template <>
+bool
+to_double(const unsigned char&in, double &out)
+{
+  out = in;
+  return true;
 }
 
 } // end namespace SCIRun

@@ -89,7 +89,7 @@ public:
   static  PersistentTypeID type_id;
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
-
+  virtual const TypeDescription* get_type_description() const;
 private:
   static Persistent *maker();
 };
@@ -140,6 +140,29 @@ MaskedLatticeVol<T>::type_name(int n)
   {
     return find_type_name((T *)0);
   }
+}
+
+template <class T>
+const TypeDescription* 
+get_type_description(MaskedLatticeVol<T>*)
+{
+  static TypeDescription* td = 0;
+  static string name("MaskedLatticeVol");
+  static string path(__FILE__);
+  if(!td){
+    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew TypeDescription(name, subs, path);
+  }
+  return td;
+}
+
+template <class T>
+const TypeDescription* 
+MaskedLatticeVol<T>::get_type_description() const 
+{
+  return SCIRun::get_type_description((MaskedLatticeVol<T>*)0);
 }
 
 } // end namespace SCIRun

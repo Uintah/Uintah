@@ -66,6 +66,13 @@ template class MaskedTetVol<int>;
 template class MaskedTetVol<short>;
 template class MaskedTetVol<unsigned char>;
 
+const TypeDescription* get_type_description(MaskedTetVol<Tensor>*);
+const TypeDescription* get_type_description(MaskedTetVol<Vector>*);
+const TypeDescription* get_type_description(MaskedTetVol<double>*);
+const TypeDescription* get_type_description(MaskedTetVol<int>*);
+const TypeDescription* get_type_description(MaskedTetVol<short>*);
+const TypeDescription* get_type_description(MaskedTetVol<unsigned char>*);
+
 template class TetVol<Tensor>;
 template class TetVol<Vector>;
 template class TetVol<double>;
@@ -103,6 +110,13 @@ template class MaskedLatticeVol<double>;
 template class MaskedLatticeVol<int>;
 template class MaskedLatticeVol<short>;
 template class MaskedLatticeVol<unsigned char>;
+
+const TypeDescription* get_type_description(MaskedLatticeVol<Tensor>*);
+const TypeDescription* get_type_description(MaskedLatticeVol<Vector>*);
+const TypeDescription* get_type_description(MaskedLatticeVol<double>*);
+const TypeDescription* get_type_description(MaskedLatticeVol<int>*);
+const TypeDescription* get_type_description(MaskedLatticeVol<short>*);
+const TypeDescription* get_type_description(MaskedLatticeVol<unsigned char>*);
 
 template class LatticeVol<Tensor>;
 template class LatticeVol<Vector>;
@@ -170,6 +184,13 @@ template class FData2d<int>;
 template class FData2d<short>;
 template class FData2d<unsigned char>;
 
+const TypeDescription* get_type_description(ImageField<Tensor>*);
+const TypeDescription* get_type_description(ImageField<Vector>*);
+const TypeDescription* get_type_description(ImageField<double>*);
+const TypeDescription* get_type_description(ImageField<int>*);
+const TypeDescription* get_type_description(ImageField<short>*);
+const TypeDescription* get_type_description(ImageField<unsigned char>*);
+
 template class ContourField<Tensor>;
 template class ContourField<Vector>;
 template class ContourField<double>;
@@ -182,6 +203,13 @@ template class GenericField<ContourMesh, vector<double> >;
 template class GenericField<ContourMesh, vector<int> >;
 template class GenericField<ContourMesh, vector<short> >;
 template class GenericField<ContourMesh, vector<unsigned char> >;
+
+const TypeDescription* get_type_description(ContourField<Tensor>*);
+const TypeDescription* get_type_description(ContourField<Vector>*);
+const TypeDescription* get_type_description(ContourField<double>*);
+const TypeDescription* get_type_description(ContourField<int>*);
+const TypeDescription* get_type_description(ContourField<short>*);
+const TypeDescription* get_type_description(ContourField<unsigned char>*);
 
 template class ScanlineField<Tensor>;
 template class ScanlineField<Vector>;
@@ -196,6 +224,13 @@ template class GenericField<ScanlineMesh, vector<int> >;
 template class GenericField<ScanlineMesh, vector<short> >;
 template class GenericField<ScanlineMesh, vector<unsigned char> >;
 
+const TypeDescription* get_type_description(ScanlineField<Tensor>*);
+const TypeDescription* get_type_description(ScanlineField<Vector>*);
+const TypeDescription* get_type_description(ScanlineField<double>*);
+const TypeDescription* get_type_description(ScanlineField<int>*);
+const TypeDescription* get_type_description(ScanlineField<short>*);
+const TypeDescription* get_type_description(ScanlineField<unsigned char>*);
+
 template class PointCloud<Tensor>;
 template class PointCloud<Vector>;
 template class PointCloud<double>;
@@ -208,6 +243,13 @@ template class GenericField<PointCloudMesh, vector<double> >;
 template class GenericField<PointCloudMesh, vector<int> >;
 template class GenericField<PointCloudMesh, vector<short> >;
 template class GenericField<PointCloudMesh, vector<unsigned char> >;
+
+const TypeDescription* get_type_description(PointCloud<Tensor>*);
+const TypeDescription* get_type_description(PointCloud<Vector>*);
+const TypeDescription* get_type_description(PointCloud<double>*);
+const TypeDescription* get_type_description(PointCloud<int>*);
+const TypeDescription* get_type_description(PointCloud<short>*);
+const TypeDescription* get_type_description(PointCloud<unsigned char>*);
 
 template class Property<string>;
 template class Property<Array1<double> >;

@@ -101,14 +101,23 @@ string
 TypeDescription::get_name(string type_sep_start, 
 			  string type_sep_end) const
 {
+  const string comma(",");
+  bool do_end = true;
   if(subtype_) {
     string rval = name_ + type_sep_start;
     td_vec::iterator iter = subtype_->begin();
     while (iter != subtype_->end()) {
-      rval+=(*iter)->get_name();
+      rval+=(*iter)->get_name(type_sep_start, type_sep_end);
       ++iter;
+      if (iter != subtype_->end()) {
+	if (type_sep_start == type_sep_end) {
+	  do_end = false;
+	} else {
+	  rval += comma;
+	}
+      }
     }
-    rval += type_sep_end;
+    if (do_end) rval += type_sep_end;
     return rval;
   } else {
     return name_;
