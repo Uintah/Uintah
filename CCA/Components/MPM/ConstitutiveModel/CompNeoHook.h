@@ -63,7 +63,9 @@ namespace Uintah {
 						  DataWarehouse* old_dw,
 						  DataWarehouse* new_dw,
 						  SparseMatrix<double,int>& KK,
+#ifdef HAVE_PETSC
 						  Mat &A,
+#endif
 						  const bool recursion);
 
          virtual void computeStressTensorImplicitOnly(const PatchSubset* patches,

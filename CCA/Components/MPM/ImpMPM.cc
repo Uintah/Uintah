@@ -1459,8 +1459,14 @@ void ImpMPM::computeStressTensor(const ProcessorGroup*,
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+#ifdef HAVE_PETSC
     cm->computeStressTensorImplicit(patches, mpm_matl, old_dw, new_dw,KK,A,
 				    recursion);
+#else
+    cm->computeStressTensorImplicit(patches, mpm_matl, old_dw, new_dw,KK,
+				    recursion);
+#endif
+
   }
   
 }
@@ -1904,14 +1910,13 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
       temp2[dof[2]] = (dispNew[n].z()*fodts - velocity[n].z()*fodt -
 			accel[n].z())*mass[n];
 
-
+#ifdef HAVE_PETSC
       v[0] = (dispNew[n].x()*fodts - velocity[n].x()*fodt -
 			accel[n].x())*mass[n];
       v[1] = (dispNew[n].y()*fodts - velocity[n].y()*fodt -
 			accel[n].y())*mass[n];
       v[2] = (dispNew[n].z()*fodts - velocity[n].z()*fodt -
 			accel[n].z())*mass[n];
-#ifdef HAVE_PETSC
       VecSetValues(petscTemp2,3,dof,v,INSERT_VALUES);
 #endif
 

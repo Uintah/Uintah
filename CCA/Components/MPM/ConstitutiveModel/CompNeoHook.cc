@@ -270,7 +270,9 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 					      DataWarehouse* old_dw,
 					      DataWarehouse* new_dw,
 					      SparseMatrix<double,int>& KK,
+#ifdef HAVE_PETSC
 					      Mat &A,
+#endif
 					      const bool recursion)
 
 {
@@ -626,8 +628,10 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       
     }
   }
+#ifdef HAVE_PETSC
   MatAssemblyBegin(A,MAT_FLUSH_ASSEMBLY);
   MatAssemblyEnd(A,MAT_FLUSH_ASSEMBLY);
+#endif
   
 }
 
