@@ -16,6 +16,8 @@ namespace rtrt {
 using SCIRun::Runnable;
 
 class GridSpheres;
+class TextureGridSpheres;
+class PCAGridSpheres;
 
 class GridSpheresDpy : public Runnable {
   
@@ -23,6 +25,8 @@ class GridSpheresDpy : public Runnable {
   int* histmax;
   int xres, yres;
   friend class GridSpheres;
+  friend class TextureGridSpheres;
+  friend class PCAGridSpheres;
   Array1<GridSpheres*> grids;
   std::string *var_names;
   float* scales;
