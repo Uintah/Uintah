@@ -250,7 +250,6 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
     int wcase=tab->which_case;
     switch(wcase){
     case 0:
-	cerr << "Case 0!\n";
 	break;
     case 1:
 	{
@@ -470,7 +469,6 @@ void IsoSurface::iso_reg_grid(ScalarFieldRG* field, const Point& p,
     int nx=field->nx;
     int ny=field->ny;
     int nz=field->nz;
-    NOT_FINISHED("iso_reg_grid from seedpoint");
     if(!field->interpolate(p, isoval)){
 	error("Seed point not in field boundary");
 	return;
