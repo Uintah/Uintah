@@ -193,18 +193,7 @@ inline SCICORESHARE int Tile(int tile, int tf)
   }
 }
 
-inline SCICORESHARE double MakeReal(double value) 
-{
-  if (!finite(value))
-  {
-    const int is_inf = isinf(value);
-    if (is_inf == 1) value = (double)(0x7fefffffffffffffULL);
-    if (is_inf == -1) value = (double)(0x0010000000000000ULL);
-    else value = 0.0; // Assumed NaN
-  }
-  return value;
-}
-
+SCICORESHARE double MakeReal(double value);
 
 } // End namespace SCIRun
 
