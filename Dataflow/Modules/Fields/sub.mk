@@ -39,6 +39,7 @@ SRCS     += \
 	$(SRCDIR)/ChangeFieldDataAt.cc\
 	$(SRCDIR)/ChangeFieldDataType.cc\
 	$(SRCDIR)/ChangeFieldBounds.cc\
+	$(SRCDIR)/ChooseField.cc\
 	$(SRCDIR)/ClipByFunction.cc\
 	$(SRCDIR)/ClipField.cc\
 	$(SRCDIR)/ClipLattice.cc\

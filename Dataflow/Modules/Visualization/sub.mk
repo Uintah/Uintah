@@ -30,6 +30,7 @@ SRCDIR   := Dataflow/Modules/Visualization
 
 SRCS     += \
 	$(SRCDIR)/AddLight.cc\
+	$(SRCDIR)/ChooseColorMap.cc\
 	$(SRCDIR)/GLTextureBuilder.cc\
 	$(SRCDIR)/GenStandardColorMaps.cc\
 	$(SRCDIR)/GenTransferFunc.cc\
