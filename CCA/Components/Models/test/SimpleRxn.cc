@@ -192,6 +192,8 @@ if (!oldStyleAdvect.active()){
   //__________________________________
   //  Read in probe locations for the scalar field
   ProblemSpecP probe_ps = child->findBlock("probePoints");
+  d_usingProbePts = true;
+  
   if (probe_ps) {
     probe_ps->require("probeSamplingFreq", d_probeFreq);
      
