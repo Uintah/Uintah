@@ -48,6 +48,10 @@ SRCS := \
 	$(SRCDIR)/TSVD.tcl\
 	$(SRCDIR)/Tikhonov.tcl\
 	$(SRCDIR)/TikhonovSVD.tcl\
+        $(SRCDIR)/ElectrodeManager.tcl\
+        $(SRCDIR)/EITAnalyticSolution.tcl\
+        $(SRCDIR)/SetEITGround.tcl\
+        $(SRCDIR)/TrigCurrentPattern.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
