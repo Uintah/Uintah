@@ -111,6 +111,7 @@ namespace Uintah {
     int d_8or27;
     bool d_useLoadCurves;
     bool d_with_color;
+    bool d_fracture;
 
     vector<const VarLabel* > particle_state, particle_state_preReloc;
     typedef map<pair<const Patch*,GeometryObject*>,vector<Point> > geompoints;
