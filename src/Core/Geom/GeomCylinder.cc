@@ -218,19 +218,21 @@ GeomCylinders::io(Piostream& stream)
 }
 
 
-void
+bool
 GeomCylinders::add(const Point& p1, const Point& p2)
 {
   if ((p1 - p2).length2() > 1.0e-12)
   {
     points_.push_back(p1);
     points_.push_back(p2);
+    return true;
   }
+  return false;
 }
 
-void
+bool
 GeomCylinders::add(const Point& p1, MaterialHandle c1,
-			  const Point& p2, MaterialHandle c2)
+		   const Point& p2, MaterialHandle c2)
 {
   if ((p1 - p2).length2() > 1.0e-12)
   {
@@ -238,12 +240,14 @@ GeomCylinders::add(const Point& p1, MaterialHandle c1,
     points_.push_back(p2);
     colors_.push_back(c1);
     colors_.push_back(c2);
+    return true;
   }
+  return false;
 }
 
-void
+bool
 GeomCylinders::add(const Point& p1, float index1,
-			  const Point& p2, float index2)
+		   const Point& p2, float index2)
 {
   if ((p1 - p2).length2() > 1.0e-12)
   {
@@ -251,8 +255,11 @@ GeomCylinders::add(const Point& p1, float index1,
     points_.push_back(p2);
     indices_.push_back(index1);
     indices_.push_back(index2);
+    return true;
   }
+  return false;
 }
+
 
 void
 GeomCylinders::set_nu_nv(int nu, int nv)
@@ -316,6 +323,27 @@ GeomCappedCylinders::~GeomCappedCylinders()
 {
 }
 
+void
+GeomCappedCylinders::add_radius(const Point& p1, const Point& p2, double r)
+{
+  if (add(p1, p2)) { radii_.push_back(r); }
+}
+
+void
+GeomCappedCylinders::add_radius(const Point& p1, MaterialHandle c1,
+				const Point& p2, MaterialHandle c2, double r)
+{
+  if (add(p1, c1, p2, c2)) { radii_.push_back(r); }
+}
+
+void
+GeomCappedCylinders::add_radius(const Point& p1, float index1,
+				const Point& p2, float index2, double r)
+{
+  if (add(p1, index1, p2, index2)) { radii_.push_back(r); }
+}
+
+
 GeomObj* GeomCappedCylinders::clone()
 {
     return scinew GeomCappedCylinders(*this);
@@ -327,6 +355,7 @@ void GeomCappedCylinders::io(Piostream& stream)
 {
     stream.begin_class("GeomCappedCylinders", GEOMCAPPEDCYLINDERS_VERSION);
     GeomCylinders::io(stream);
+    Pio(stream, radii_);
 }
 
 

@@ -1257,7 +1257,7 @@ protected:
 
   void add_disk(const Point &p, const Vector &vin,
 		double scale, int resolution,
-		GeomGroup *g, MaterialHandle mh,
+		GeomCappedCylinders *cg, GeomSpheres *sg, MaterialHandle mh,
 		bool normalize, bool colorify);
 
   void add_cone(const Point &p, const Vector &vin,
@@ -1299,29 +1299,19 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   CFld *cfld = dynamic_cast<CFld*>(cfld_handle.get_rep());
 
   const bool colorify = false;
-
-  GeomGroup *disks;
-  GeomArrows *vec_node;
-  GeomLines *lines;
+  
+  GeomLines *lines = 0;
+  GeomGroup *cones = 0;
+  GeomArrows *arrows = 0;
+  GeomCappedCylinders *disks = 0;
+  GeomSpheres *spheres = 0;
   const bool lines_p = (display_mode == "Lines");
   const bool needles_p = (display_mode == "Needles");
   const bool cones_p = (display_mode == "Cones");
   const bool arrows_p = (display_mode == "Arrows");
   const bool disks_p = (display_mode == "Disks");
   GeomHandle data_switch;
-  if (disks_p || cones_p)
-  {
-    disks = scinew GeomGroup();
-    data_switch =
-      scinew GeomSwitch(scinew GeomDL(scinew GeomMaterial(disks,
-							  default_material)));
-  }
-  else if (arrows_p)
-  {
-    vec_node = scinew GeomArrows(0.15, 0.6);
-    data_switch = scinew GeomSwitch(scinew GeomDL(vec_node));
-  }
-  else if (lines_p || needles_p)
+  if (lines_p || needles_p)
   {
     if (lines_p)
     {
@@ -1334,6 +1324,28 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 
     data_switch =
       scinew GeomSwitch(scinew GeomColorMap(scinew GeomDL(scinew GeomMaterial(lines, default_material)), cmap));
+  }
+  else if (cones_p)
+  {
+    cones = scinew GeomGroup();
+    data_switch =
+      scinew GeomSwitch(scinew GeomDL(scinew GeomMaterial(cones,
+							  default_material)));
+  }
+  else if (arrows_p)
+  {
+    arrows = scinew GeomArrows(0.15, 0.6);
+    data_switch = scinew GeomSwitch(scinew GeomDL(arrows));
+  }
+  else if (disks_p)
+  {
+    disks = scinew GeomCappedCylinders(resolution, scale);
+    spheres = scinew GeomSpheres(scale, resolution, resolution);
+    GeomGroup *grp = scinew GeomGroup();
+    grp->add(disks);
+    grp->add(spheres);
+    data_switch =
+      scinew GeomSwitch(scinew GeomColorMap(scinew GeomDL(scinew GeomMaterial(grp, default_material)), cmap));
   }
 
   MaterialHandle opaque = scinew Material(Color(1.0, 1.0, 1.0));
@@ -1362,19 +1374,19 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 
       if (disks_p)
       {
-	add_disk(p, tmp, scale, resolution, disks,
+	add_disk(p, tmp, scale, resolution, disks, spheres,
 		 (cmap.get_rep())?(cmap->lookup(ctmpd)):0,
 		 normalize, colorify);
       }
       else if (cones_p)
       {
-	add_cone(p, tmp, scale, resolution, disks,
+	add_cone(p, tmp, scale, resolution, cones,
 		 (cmap.get_rep())?(cmap->lookup(ctmpd)):0,
 		 normalize, colorify);
       }
       else if (arrows_p)
       {
-	add_data(p, tmp, vec_node,
+	add_data(p, tmp, arrows,
 		 (cmap.get_rep())?(cmap->lookup(ctmpd)):default_material,
 		 display_mode, scale, normalize, bidirectional);
       }
