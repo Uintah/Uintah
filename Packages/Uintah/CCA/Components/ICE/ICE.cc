@@ -1405,9 +1405,35 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     a.zero();
     K.zero();
 
-    for (int i = 0; i < numMatls; i++ )  {
-      K[numMatls-1-i][i] = d_K_mom[i];
+    // Fill in the exchange matrix with the vector of exchange coefficients.
+    // The vector of exchange coefficients only contains the upper triagonal
+    // matrix
+
+    // Check if the # of coefficients = # of upper triangular terms needed
+    int num_coeff = ((numMatls)*(numMatls) - numMatls)/2;
+    vector<double>::iterator it = d_K_mom.begin();
+
+    if (num_coeff == d_K_mom.size() ) {
+      // Fill in the upper triangular matrix
+      for (int i = 0; i < numMatls; i++ )  {
+      	for (int j = i + 1; j < numMatls; j++) {
+	  K[i][j] = K[j][i] = *it++;
+	}
+      }
+    } else if (2*num_coeff == d_K_mom.size() ) {
+      // Fill in the whole matrix but skip the diagonal terms
+      for (int i = 0; i < numMatls; i++ )  {
+	for (int j = 0; j < numMatls; j++) {
+	  if (i == j) continue;
+	  K[i][j] = *it++;
+	}
+      }
+    } else {
+      cerr << "Number of exchange components don't match " << endl;
+      abort();
     }
+    
+  
 
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -2397,10 +2423,40 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       new_dw->allocate( Temp_CC[m],    lb->temp_CCLabel,        indx, patch);
       cv[m] = matl->getSpecificHeat();
     }
-    for (int i = 0; i < numMatls; i++ )  {
-        K[numMatls-1-i][i] = d_K_mom[i];
-        H[numMatls-1-i][i] = d_K_heat[i];
-    }      
+
+    // Fill in the exchange matrix with the vector of exchange coefficients.
+    // The vector of exchange coefficients only contains the upper triagonal
+    // matrix
+
+    // Check if the # of coefficients = # of upper triangular terms needed
+    int num_coeff = ((numMatls)*(numMatls) - numMatls)/2;
+
+    vector<double>::iterator it=d_K_mom.begin(),it1=d_K_heat.begin();
+
+    if (num_coeff == d_K_mom.size() && num_coeff == d_K_heat.size()) {
+      // Fill in the upper triangular matrix
+      for (int i = 0; i < numMatls; i++ )  {
+	for (int j = i + 1; j < numMatls; j++) {
+	  K[i][j] = K[j][i] = *it++;
+	  H[i][j] = H[j][i] = *it1++;
+	}
+      }
+    } else if (2*num_coeff==d_K_mom.size() && 2*num_coeff == d_K_heat.size()){
+      // Fill in the whole matrix but skip the diagonal terms
+      for (int i = 0; i < numMatls; i++ )  {
+	for (int j = 0; j < numMatls; j++) {
+	  if (i == j) continue;
+	  K[i][j] = *it++;
+	  H[i][j] = *it1++;
+	}
+      }
+    } else {
+      cerr << "Number of exchange components don't match " << endl;
+      abort();
+    }
+
+    
+
     //__________________________________
     // Convert vars. flux -> primitive 
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
