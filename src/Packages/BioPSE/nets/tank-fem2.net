@@ -41,7 +41,7 @@ set m35 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 970 866]
 set m36 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 1160 657]
 set m37 [addModuleAtPosition "SCIRun" "Fields" "SamplePlane" 486 561]
 set m38 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 689 1028]
-set m39 [addModuleAtPosition "SCIRun" "Fields" "EditField" 307 996]
+set m39 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldBounds" 307 996]
 set m40 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 486 998]
 set m41 [addModuleAtPosition "SCIRun" "Fields" "Unstructure" 307 1080]
 set m42 [addModuleAtPosition "SCIRun" "Fields" "ClipField" 307 1159]
@@ -97,7 +97,6 @@ addConnection $m27 0 $m28 0
 addConnection $m5 0 $m37 0
 addConnection $m38 0 $m12 4
 addConnection $m37 0 $m39 0
-addConnection $m39 1 $m12 5
 addConnection $m40 0 $m38 0
 addConnection $m33 0 $m40 0
 addConnection $m8 0 $m38 1
@@ -110,7 +109,7 @@ addConnection $m22 0 $m11 1
 addConnection $m8 0 $m24 1
 addConnection $m8 0 $m43 0
 addConnection $m43 0 $m44 1
-addConnection $m44 1 $m12 6
+addConnection $m44 1 $m12 5
 addConnection $m5 0 $m44 0
 
 set $m0-notes {}
@@ -460,23 +459,17 @@ set $m38-interactive_mode {Interactive}
 set $m38-resolution {4}
 set $m39-notes {}
 set $m39-show_status {1}
-set $m39-numnodes2 {}
-set $m39-fldname2 {}
-set $m39-typename2 {ImageField<double> }
-set $m39-datamin2 {0}
-set $m39-datamax2 {0}
-set $m39-dataat2 {Nodes}
-set $m39-cx2 {         0.106086}
-set $m39-cy2 {        -0.133746}
-set $m39-cz2 {          6.50847}
-set $m39-sizex2 {           8.5277}
-set $m39-sizey2 {          11.3688}
-set $m39-sizez2 {           0.0002}
-set $m39-cfldname {0}
-set $m39-ctypename {0}
-set $m39-cdataat {0}
-set $m39-cdataminmax {0}
-set $m39-cgeom {1}
+set $m39-outputdatamin {0}
+set $m39-outputdatamax {10}
+set $m39-outputcenterx {0.106086}
+set $m39-outputcentery {-0.133746}
+set $m39-outputcenterz {6.50847}
+set $m39-outputsizex {8.5277}
+set $m39-outputsizey {11.3688}
+set $m39-outputsizez {0.0002}
+set $m39-useoutputcenter {1}
+set $m39-useoutputsize {1}
+set $m39-useoutputminmax {0}
 set $m40-notes {}
 set $m40-show_status {1}
 set $m40-use_interp {1}
