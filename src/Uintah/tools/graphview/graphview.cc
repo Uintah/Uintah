@@ -1,3 +1,4 @@
+#include <Uintah/Interface/DataArchive.h>
 #include <errno.h>
 #include <fstream>
 #include <iostream>
@@ -7,7 +8,7 @@
 #include <stdlib.h>
 #include "DaVinci.h"
 #include "graphview.h"
-#include "TaskGraph.h"
+#include "GV_TaskGraph.h"
 
 using namespace std;
 
@@ -40,13 +41,13 @@ static const char HELP_MSG[] = {
 bool gQuit = false;
 queue<Event> gEventQueue;
 
-static TaskGraph* gGraph = 0;
+static GV_TaskGraph* gGraph = 0;
 static DaVinci* gDavinci = 0;
 static string udaDir;
 
 static void handle_event(const Event& event);
 static void handle_console_input();
-static bool load_timestep(int timestep, float prune_percent);
+bool load_timestep(int timestep, float prune_percent);
 
 void usage(char* prog_name)
 {
@@ -113,13 +114,15 @@ main(int argc, char* argv[])
   DaVinci::doExclusion = do_exclusion;
 
   gGraph = NULL;
-  if (!load_timestep(timestep, prune_percent)) {
-    cerr << "Failed reading task graph, quitting" << endl;
+
+  bool loaded = load_timestep(timestep, prune_percent);
+  if (!loaded) {
+    cerr << "Failed reading task graph.  Quitting.\n";
     return 1;
   }
-
+ 
   cout << HELP_MSG << endl;
-  
+   
   while (!gQuit) {
     while (!gEventQueue.empty()) {
       Event event = gEventQueue.front();
@@ -177,7 +180,7 @@ handle_event(const Event& event)
       list<string> selected_nodes = gDavinci->getSelectedNodes();
       if (selected_nodes.size() == 1) {
 	cout << selected_nodes.front() << endl;
-	Task* pTask = gGraph->findTask(selected_nodes.front());
+	GV_Task* pTask = gGraph->findTask(selected_nodes.front());
 	if (pTask != NULL) {
 	  cout << "\tCost (duration): " << pTask->getDuration() << endl;
 	  cout << "\tMax Path Cost: " << pTask->getMaxInclusivePathCost()
@@ -194,7 +197,7 @@ handle_event(const Event& event)
 	for (list<string>::iterator iter = selected_nodes.begin();
 	     iter != selected_nodes.end(); iter++) {
 	  cout << *iter;
-	  Task* pTask = gGraph->findTask(*iter);
+	  GV_Task* pTask = gGraph->findTask(*iter);
 	  if (pTask == NULL) {
 	    cout << "\n\tError, task not found\n";
 	    return;
@@ -223,13 +226,14 @@ handle_event(const Event& event)
   }
 }
 
-static bool load_timestep(int timestep, float prune_percent)
+bool load_timestep(int timestep, float prune_percent)
 {
   ostringstream timedir;
   timedir << "/t" << setw(4) << setfill('0') << timestep;
   cout << "Loading timestep " << timestep << "...\n";
-  TaskGraph* oldGraph = gGraph;
-  gGraph = TaskGraph::inflate(udaDir + timedir.str());
+  GV_TaskGraph* oldGraph = gGraph;
+  gGraph = GV_TaskGraph::inflate(udaDir + timedir.str());
+
   if (gGraph != NULL) {
     gGraph->setThresholdPercent(prune_percent);
     cout << "Sending graph to daVinci...\n";
@@ -240,8 +244,6 @@ static bool load_timestep(int timestep, float prune_percent)
   }
   else {
     gGraph = oldGraph;
-    cout << "Use the 'List' command to get a list of timestep directories\n"
-	 << "and find out which timestep numbers are valid.\n";
     return false;
   }
 }
@@ -287,8 +289,7 @@ static void handle_console_input()
     cin >> timestep;
 
     if (!load_timestep(timestep, gGraph->getThresholdPercent()))
-      cout << "Use the 'List' command to get a list of timestep directories\n"
-	   << "and find out which timestep numbers are valid.\n";
+      cout << "Use the 'List' command to get a list of timestep directories\n";
   } break;
 
   case 'f': {
@@ -300,9 +301,19 @@ static void handle_console_input()
     
   } break;
   
-  case 'l':
-    system((string("find ") +  udaDir + " -name 'taskgraph_00000.xml' | sed -e \"s/\\/taskgraph_00000\\.xml//g\" | sed -e \"s/.*\\///g\"").c_str());
-    break;
+  case 'l': {
+    DataArchive dataArchive(udaDir);
+    std::vector<int> timeindices;
+    std::vector<double> times;
+    dataArchive.queryTimesteps(timeindices, times);
+    
+    cout << "\nTimesteps:\n";
+    for (int i = 0; i < timeindices.size(); i++) {
+      cout << timeindices[i] << endl;
+    }
+
+    //system((string("find ") +  udaDir + " -name 'taskgraph_00000.xml' | sed -e \"s/\\/taskgraph_00000\\.xml//g\" | sed -e \"s/.*\\///g\"").c_str());
+  } break;
     
   default:
     cerr << "Unknown command: " << cmd << endl;
