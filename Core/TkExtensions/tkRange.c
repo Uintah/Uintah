@@ -29,7 +29,7 @@
  * 9/95  Added nonZero flag to indicate whether min and max must be distinct
  */
 
-#include <config.h>
+#include <sci_config.h>
 
 #include "tkPort.h"
 #include "default.h"

@@ -13,7 +13,7 @@
  */
 
 
-#include <config.h>
+#include <sci_config.h>
 #include <stdio.h>
 
 #ifdef SCI_SPARSELIB
@@ -1496,6 +1496,18 @@ void SolveMatrix::parallel_bi_conjugate_gradient(CGData* data, int processor)
 
 //
 // $Log$
+// Revision 1.4  1999/08/19 05:30:52  sparker
+// Configuration updates:
+//  - renamed config.h to sci_config.h
+//  - also uses sci_defs.h, since I couldn't get it to substitute vars in
+//    sci_config.h
+//  - Added flags for --enable-scirun, --enable-uintah, and
+//    --enable-davew, to build the specific package set.  More than one
+//    can be specified, and at least one must be present.
+//  - Added a --enable-parallel, to build the new parallel version.
+//    Doesn't do much yet.
+//  - Made construction of config.h a little bit more general
+//
 // Revision 1.3  1999/08/18 20:19:45  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so
