@@ -58,7 +58,7 @@ public:
 
   // GROUP: cloning and execution 
   ////////// 
-  virtual void execute(); 
+//    virtual void execute(); 
 
   //////////
   // overides tcl_command in base class Module
@@ -69,17 +69,6 @@ protected:
 			vector< const TypeDescription *>&);
  
 private:
-
-  GuiString tcl_status;
-
-  GuiString sVar;
-  GuiInt sMatNum;
-
-  const TypeDescription *type;
-
-  ArchiveIPort *in;
-  FieldOPort *vfout;
-  
   std::string positionName;
 
 
