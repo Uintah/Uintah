@@ -41,9 +41,11 @@
 #include <Core/Math/MiscMath.h>
 
 #include <iostream>
+#include <fstream>
 using std::cerr;
 using std::endl;
 
+using std::string;
 using namespace Uintah;
 using namespace SCIRun;
 #ifdef PetscFilter
@@ -109,6 +111,9 @@ Arches::problemSetup(const ProblemSpecP& params,
   db->require("grow_dt", d_deltaT);
   db->require("variable_dt", d_variableTimeStep);
   db->require("reacting_flow", d_reactingFlow);
+  db->getWithDefault("set_initial_condition",d_set_initial_condition,false);
+  if (d_set_initial_condition)
+    db->require("init_cond_input_file", d_init_inputfile);
   if (d_reactingFlow) {
     db->require("solve_reactingscalar", d_calcReactingScalar);
     db->require("solve_enthalpy", d_calcEnthalpy);
@@ -205,6 +210,10 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : [u,v,w]VelocityIN, pressureIN, scalarIN, densityIN,
   //           viscosityIN
   sched_paramInit(level, sched);
+  if (d_set_initial_condition) {
+    sched_readCCInitialCondition(level, sched);
+    sched_interpInitialConditionToStaggeredGrid(level, sched);
+  }
   // schedule init of cell type
   // require : NONE
   // compute : cellType
@@ -300,190 +309,6 @@ Arches::sched_paramInit(const LevelP& level,
       tsk->computes(d_lab->d_pressPlusHydroLabel);
     sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
-}
-
-// ****************************************************************************
-// schedule computation of stable time step
-// ****************************************************************************
-void 
-Arches::scheduleComputeStableTimestep(const LevelP& level,
-				      SchedulerP& sched)
-{
-  // primitive variable initialization
-  Task* tsk = scinew Task( "Arches::computeStableTimeStep",
-			   this, &Arches::computeStableTimeStep);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-
-  if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_MAlab->KStabilityULabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_MAlab->KStabilityVLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_MAlab->KStabilityWLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-  }
-
-  tsk->computes(d_sharedState->get_delt_label());
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-
-
-}
-
-void 
-Arches::computeStableTimeStep(const ProcessorGroup* ,
-			      const PatchSubset* patches,
-			      const MaterialSubset*,
-			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    constSFCXVariable<double> uVelocity;
-    constSFCYVariable<double> vVelocity;
-    constSFCZVariable<double> wVelocity;
-    constCCVariable<double> den;
-    constCCVariable<double> visc;
-
-    constCCVariable<double> KStabilityU;
-    constCCVariable<double> KStabilityV;
-    constCCVariable<double> KStabilityW;
-    
-    PerPatch<CellInformationP> cellInfoP;
-
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-
-    else {
-
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-
-    }
-
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
-
-    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(den, d_lab->d_densityCPLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(visc, d_lab->d_viscosityCTSLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-
-    if (d_MAlab) {
-      new_dw->get(KStabilityU, d_MAlab->KStabilityULabel,
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(KStabilityV, d_MAlab->KStabilityULabel,
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(KStabilityW, d_MAlab->KStabilityULabel,
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
-
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex() + IntVector(1,1,1);
-  // set density for the whole domain
-    double delta_t = d_deltaT; // max value allowed
-    double small_num = 1e-30;
-    double delta_t2 = delta_t;
-    for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  double tmp_time;
-// if statement to handle Kumar's wall with zero density
-	  if (den[currCell] > 0.0) {
-	    if (d_MAlab) {
-	      tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
-		Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
-		Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
-		(visc[currCell]/den[currCell])* 
-		(1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
-		 1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
-		 1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
-		//		2.0*KStabilityU[currCell] +
-		//		2.0*KStabilityV[currCell] +
-		//		2.0*KStabilityW[currCell] +
-		small_num;
-	    }
-	    else {
-	      tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
-		Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
-		Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
-		(visc[currCell]/den[currCell])* 
-		(1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
-		 1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
-		 1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
-		small_num;
-	    }
-
-	  delta_t2=Min(1.0/tmp_time, delta_t2);
-#if 0								  
-	  delta_t2=Min(Abs(cellinfo->sew[colX]/
-			  (uVelocity[currCell]+small_num)),delta_t2);
-	  delta_t2=Min(Abs(cellinfo->sns[colY]/
-			  (vVelocity[currCell]+small_num)), delta_t2);
-	  delta_t2=Min(Abs(cellinfo->stb[colZ]/
-			  (wVelocity[currCell]+small_num)), delta_t2);
-#endif
-	  }
-	}
-      }
-    }
-    if (d_variableTimeStep) {
-      delta_t = delta_t2;
-    }
-    else {
-      cout << " Courant condition for time step: " << delta_t2 << endl;
-    }
-
-    //    cout << "time step used: " << delta_t << endl;
-    new_dw->put(delt_vartype(delta_t),  d_sharedState->get_delt_label()); 
-  }
-}
-
-// ****************************************************************************
-// Schedule time advance
-// ****************************************************************************
-void 
-Arches::scheduleTimeAdvance( const LevelP& level, 
-			     SchedulerP& sched,
-			     int /*step*/, int /*nsteps*/ ) // AMR Parameters
-{
-  double time = d_lab->d_sharedState->getElapsedTime();
-  nofTimeSteps++ ;
-  if (d_MAlab) {
-#ifndef ExactMPMArchesInitialize
-    //    if (nofTimeSteps < 2) {
-    if (time < 1.0E-10) {
-      cout << "Calculating at time step = " << nofTimeSteps << endl;
-      d_nlSolver->noSolve(level, sched);
-    }
-    else
-      d_nlSolver->nonlinearSolve(level, sched);
-#else
-    d_nlSolver->nonlinearSolve(level, sched);
-#endif
-  }
-  else {
-    d_nlSolver->nonlinearSolve(level, sched);
-    d_recompile = false;
-  }
 }
 
 // ****************************************************************************
@@ -646,9 +471,377 @@ Arches::paramInit(const ProcessorGroup* ,
 }
 
 // ****************************************************************************
+// schedule computation of stable time step
+// ****************************************************************************
+void 
+Arches::scheduleComputeStableTimestep(const LevelP& level,
+				      SchedulerP& sched)
+{
+  // primitive variable initialization
+  Task* tsk = scinew Task( "Arches::computeStableTimeStep",
+			   this, &Arches::computeStableTimeStep);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  if (d_MAlab) {
+    tsk->requires(Task::NewDW, d_MAlab->KStabilityULabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_MAlab->KStabilityVLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_MAlab->KStabilityWLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
+
+  tsk->computes(d_sharedState->get_delt_label());
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+
+}
+
+// ****************************************************************************
+// actually computate stable time step
+// ****************************************************************************
+void 
+Arches::computeStableTimeStep(const ProcessorGroup* ,
+			      const PatchSubset* patches,
+			      const MaterialSubset*,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    constSFCXVariable<double> uVelocity;
+    constSFCYVariable<double> vVelocity;
+    constSFCZVariable<double> wVelocity;
+    constCCVariable<double> den;
+    constCCVariable<double> visc;
+
+    constCCVariable<double> KStabilityU;
+    constCCVariable<double> KStabilityV;
+    constCCVariable<double> KStabilityW;
+    
+    PerPatch<CellInformationP> cellInfoP;
+
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+
+    else {
+
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+
+    }
+
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(den, d_lab->d_densityCPLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(visc, d_lab->d_viscosityCTSLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    if (d_MAlab) {
+      new_dw->get(KStabilityU, d_MAlab->KStabilityULabel,
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(KStabilityV, d_MAlab->KStabilityULabel,
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(KStabilityW, d_MAlab->KStabilityULabel,
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex() + IntVector(1,1,1);
+  // set density for the whole domain
+    double delta_t = d_deltaT; // max value allowed
+    double small_num = 1e-30;
+    double delta_t2 = delta_t;
+    for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+	  double tmp_time;
+// if statement to handle Kumar's wall with zero density
+	  if (den[currCell] > 0.0) {
+	    if (d_MAlab) {
+	      tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
+		Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
+		Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
+		(visc[currCell]/den[currCell])* 
+		(1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
+		 1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
+		 1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
+		//		2.0*KStabilityU[currCell] +
+		//		2.0*KStabilityV[currCell] +
+		//		2.0*KStabilityW[currCell] +
+		small_num;
+	    }
+	    else {
+	      tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
+		Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
+		Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
+		(visc[currCell]/den[currCell])* 
+		(1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
+		 1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
+		 1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
+		small_num;
+	    }
+
+	  delta_t2=Min(1.0/tmp_time, delta_t2);
+#if 0								  
+	  delta_t2=Min(Abs(cellinfo->sew[colX]/
+			  (uVelocity[currCell]+small_num)),delta_t2);
+	  delta_t2=Min(Abs(cellinfo->sns[colY]/
+			  (vVelocity[currCell]+small_num)), delta_t2);
+	  delta_t2=Min(Abs(cellinfo->stb[colZ]/
+			  (wVelocity[currCell]+small_num)), delta_t2);
+#endif
+	  }
+	}
+      }
+    }
+    if (d_variableTimeStep) {
+      delta_t = delta_t2;
+    }
+    else {
+      cout << " Courant condition for time step: " << delta_t2 << endl;
+    }
+
+    //    cout << "time step used: " << delta_t << endl;
+    new_dw->put(delt_vartype(delta_t),  d_sharedState->get_delt_label()); 
+  }
+}
+
+// ****************************************************************************
+// Schedule time advance
+// ****************************************************************************
+void 
+Arches::scheduleTimeAdvance( const LevelP& level, 
+			     SchedulerP& sched,
+			     int /*step*/, int /*nsteps*/ ) // AMR Parameters
+{
+  double time = d_lab->d_sharedState->getElapsedTime();
+  nofTimeSteps++ ;
+  if (d_MAlab) {
+#ifndef ExactMPMArchesInitialize
+    //    if (nofTimeSteps < 2) {
+    if (time < 1.0E-10) {
+      cout << "Calculating at time step = " << nofTimeSteps << endl;
+      d_nlSolver->noSolve(level, sched);
+    }
+    else
+      d_nlSolver->nonlinearSolve(level, sched);
+#else
+    d_nlSolver->nonlinearSolve(level, sched);
+#endif
+  }
+  else {
+    d_nlSolver->nonlinearSolve(level, sched);
+    d_recompile = false;
+  }
+}
+
+// ****************************************************************************
 // Function to return boolean for recompiling taskgraph
 // ****************************************************************************
 bool Arches::need_recompile(double time, double dt, 
 			    const GridP& grid) {
  return d_recompile;
 }
+// ****************************************************************************
+// schedule reading of initial condition for velocity and pressure
+// ****************************************************************************
+void 
+Arches::sched_readCCInitialCondition(const LevelP& level,
+			SchedulerP& sched)
+{
+    // primitive variable initialization
+    Task* tsk = scinew Task( "Arches::readCCInitialCondition",
+			    this, &Arches::readCCInitialCondition);
+    tsk->modifies(d_lab->d_newCCUVelocityLabel);
+    tsk->modifies(d_lab->d_newCCVVelocityLabel);
+    tsk->modifies(d_lab->d_newCCWVelocityLabel);
+    tsk->modifies(d_lab->d_pressurePSLabel);
+    sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+}
+
+// ****************************************************************************
+// Actual read
+// ****************************************************************************
+void
+Arches::readCCInitialCondition(const ProcessorGroup* ,
+		  const PatchSubset* patches,
+		  const MaterialSubset*,
+		  DataWarehouse* ,
+		  DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    CCVariable<double> uVelocityCC;
+    CCVariable<double> vVelocityCC;
+    CCVariable<double> wVelocityCC;
+    CCVariable<double> pressure;
+    new_dw->getModifiable(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
+    new_dw->getModifiable(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
+    new_dw->getModifiable(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
+    new_dw->getModifiable(pressure, d_lab->d_pressurePSLabel, matlIndex, patch);
+
+    ifstream fd(d_init_inputfile.c_str());
+    if(fd.fail()) {
+      cout << " Unable to open the given input file " << d_init_inputfile << endl;
+      exit(1);
+    }
+    int nx,ny,nz;
+    fd >> nx >> ny >> nz;
+    const Level* level = patch->getLevel();
+    IntVector low, high;
+    level->findCellIndexRange(low, high);
+    IntVector range = high-low;//-IntVector(2,2,2);
+    if (!(range == IntVector(nx,ny,nz))) {
+      cout << "Wrong grid size in input file" << endl;
+      exit(1);
+    }
+    double tmp;
+    fd >> tmp >> tmp >> tmp;
+    fd >> tmp >> tmp >> tmp;
+    double uvel,vvel,wvel,pres;
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+    for (int colZ = 1; colZ <= nz; colZ ++) {
+      for (int colY = 1; colY <= ny; colY ++) {
+	for (int colX = 1; colX <= nx; colX ++) {
+	  IntVector currCell(colX-1, colY-1, colZ-1);
+
+	  fd >> uvel >> vvel >> wvel >> pres >> tmp;
+	  if ((currCell <= idxHi)&&(currCell >= idxLo)) {
+	    uVelocityCC[currCell] = 0.01*uvel;
+	    vVelocityCC[currCell] = 0.01*vvel;
+	    wVelocityCC[currCell] = 0.01*wvel;
+	    pressure[currCell] = 0.1*pres;
+          }
+	}
+      }
+    }
+    fd.close();  
+  }
+}
+
+// ****************************************************************************
+// schedule interpolation of initial condition for velocity to staggered
+// ****************************************************************************
+void 
+Arches::sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
+			SchedulerP& sched)
+{
+    // primitive variable initialization
+    Task* tsk = scinew Task( "Arches::interpInitialConditionToStaggeredGrid",
+			    this, &Arches::interpInitialConditionToStaggeredGrid);
+    tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, Ghost::AroundCells,
+		  Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, Ghost::AroundCells,
+		  Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, Ghost::AroundCells,
+		  Arches::ONEGHOSTCELL);
+    tsk->modifies(d_lab->d_uVelocitySPBCLabel);
+    tsk->modifies(d_lab->d_vVelocitySPBCLabel);
+    tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+    sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+}
+
+// ****************************************************************************
+// Actual interpolation
+// ****************************************************************************
+void
+Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
+		  const PatchSubset* patches,
+		  const MaterialSubset*,
+		  DataWarehouse* ,
+		  DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    constCCVariable<double> uVelocityCC;
+    constCCVariable<double> vVelocityCC;
+    constCCVariable<double> wVelocityCC;
+    SFCXVariable<double> uVelocity;
+    SFCYVariable<double> vVelocity;
+    SFCZVariable<double> wVelocity;
+    new_dw->get(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
+    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
+    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
+    
+    IntVector idxLo, idxHi;
+
+    idxLo = patch->getSFCXFORTLowIndex();
+    idxHi = patch->getSFCXFORTHighIndex();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+	  IntVector xminusCell(colX-1, colY, colZ);
+
+	  uVelocity[currCell] = 0.5*(uVelocityCC[currCell] +
+			             uVelocityCC[xminusCell]);
+
+	}
+      }
+    }
+    idxLo = patch->getSFCYFORTLowIndex();
+    idxHi = patch->getSFCYFORTHighIndex();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+	  IntVector yminusCell(colX, colY-1, colZ);
+
+	  vVelocity[currCell] = 0.5*(vVelocityCC[currCell] +
+			             vVelocityCC[yminusCell]);
+
+	}
+      }
+    }
+    idxLo = patch->getSFCZFORTLowIndex();
+    idxHi = patch->getSFCZFORTHighIndex();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+	  IntVector zminusCell(colX, colY, colZ-1);
+
+	  wVelocity[currCell] = 0.5*(wVelocityCC[currCell] +
+			             wVelocityCC[zminusCell]);
+
+	}
+      }
+    }
+  }
+}
+
