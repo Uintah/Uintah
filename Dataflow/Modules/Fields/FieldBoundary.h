@@ -77,6 +77,7 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
   Point center;
   typename Msh::Cell::iterator citer; mesh->begin(citer);
   typename Msh::Cell::iterator citere; mesh->end(citere);
+
   while (citer != citere) {
     typename Msh::Cell::index_type ci = *citer;
     ++citer;
@@ -86,6 +87,7 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
     mesh->get_faces(faces, ci);
     // Check each face for neighbors
     typename Msh::Face::array_type::iterator fiter = faces.begin();
+
     while (fiter != faces.end()) {
       typename Msh::Cell::index_type nci;
       typename Msh::Face::index_type fi = *fiter;
@@ -181,18 +183,14 @@ FieldBoundaryAlgoT<Msh>::execute(ModuleReporter *mod, const MeshHandle mesh,
       get_type_description((typename Msh::Cell *)0)->get_name())
   {
     mod->error("Boundary module only works on volumes.");
-    return;
   }
   else
   {
     const TypeDescription *mtd = get_type_description((Msh *)0);
     CompileInfo *ci = FieldBoundaryAlgoAux::get_compile_info(mtd);
     Handle<FieldBoundaryAlgoAux> algo;
-    if (!mod->module_dynamic_compile(*ci, algo))
-    {
-      return;
-    }
-    algo->execute(mesh, boundary, interp);
+    if (mod->module_dynamic_compile(*ci, algo))
+      algo->execute(mesh, boundary, interp);
   }
 }
 
