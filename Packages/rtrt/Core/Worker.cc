@@ -56,11 +56,12 @@ extern void hilbert_i2c( int n, int m, long int r, int a[]);
 
 Worker::Worker(Dpy* dpy, Scene* scene, int num, int pp_size, int scratchsize,
 	       int ncounters, int c0, int c1)
-  : dpy(dpy), num(num), scene(scene), ncounters(ncounters), c0(c0), c1(c1)
+  : dpy(dpy), num(num), scene(scene), ncounters(ncounters), c0(c0), c1(c1),
+    stop_(false), useAddSubBarrier_(false)
 {
   if(dpy){
     dpy->register_worker(num, this);
-    barrier=dpy->get_barrier();
+    dpy->get_barriers( barrier, addSubThreads_ );
   }
   stats[0]=new Stats(1000);
   stats[1]=new Stats(1000);
@@ -69,6 +70,7 @@ Worker::Worker(Dpy* dpy, Scene* scene, int num, int pp_size, int scratchsize,
 
 Worker::~Worker()
 {
+  delete ppc;
 }
 
 Stats* Worker::get_stats(int idx)
@@ -138,9 +140,29 @@ void Worker::run()
   if (!dpy->doing_frameless()) {
     
     for(;;){
+
+      if( useAddSubBarrier_ ) {
+	//cout << "stopping for threads, will wait for: " 
+	//   << oldNumWorkers_+1 << " threads\n";
+
+	useAddSubBarrier_ = false;
+	addSubThreads_->wait( oldNumWorkers_+1 );
+	// stop if you have been told to stop.  
+
+	//cout << "stop is " << stop_ << "\n";
+
+	if( stop_ ) {// I don't think this one ever is called
+	  //cout << "Thread: " << num << " stopping\n";
+	  my_thread_->exit();
+	  cout << "Worker.cc: should never get here!\n";
+	  return;
+	}
+      }
+
       stats[showing_scene]->add(SCIRun::Time::currentSeconds(), Color(0,1,0));
 
       // Sync.
+      //cout << "b" << num << ": " << dpy->get_num_procs()+1 << "\n";
       barrier->wait(dpy->get_num_procs()+1);
 
       // exit if you are supposed to
@@ -154,6 +176,7 @@ void Worker::run()
       st->reset();
 
       // Sync.
+      //cout << "B" << num << "\n";
       barrier->wait(dpy->get_num_procs()+1);
 
 #if 0
@@ -1023,3 +1046,11 @@ void Worker::traceRay(Color& result, const Ray& ray,
   }
 }
 
+void
+Worker::syncForNumThreadChange( int oldNumWorkers, bool stop /* = false */ )
+{
+  //cout << "W" << num << " sync" << oldNumWorkers << "," << stop << "\n";
+  oldNumWorkers_ = oldNumWorkers;
+  useAddSubBarrier_ = true;
+  stop_ = stop;
+}
