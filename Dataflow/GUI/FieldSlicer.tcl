@@ -146,7 +146,7 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 
 	entry $win.e -width 4 -text $var2
 
-	bind $win.e <Return> "$this manualSliderEntry $start $stop $var1 $var2"
+	bind $win.e <KeyRelease> "$this manualSliderEntry $start $stop $var1 $var2"
 
 	pack $win.s -side left
 	pack $win.e -side bottom -padx 5
@@ -157,6 +157,9 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
     }
 
     method manualSliderEntry { start stop var1 var2 } {
+
+	if { ![string is integer [set $var2]] } {
+	    set $var2 [set $var1] }
 
 	if { [set $var2] < $start } {
 	    set $var2 $start }
@@ -216,7 +219,7 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 		$w.main.$index.index.s configure -from 0 -to $stop_val
 
 		bind $w.main.$index.index.e \
-		    <Return> "$this manualSliderEntry 0 $stop_val $this-$index-index $this-$index-index2"
+		    <KeyRelease> "$this manualSliderEntry 0 $stop_val $this-$index-index $this-$index-index2"
 	    }
 
 	    # Reset all of the slider values to the index values.

@@ -423,7 +423,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	bind $win.l.s <ButtonRelease> "$this set-isoval"
 
-	bind $win.r.e <Return> "$this manualSliderEntry \
+	bind $win.r.e <KeyRelease> "$this manualSliderEntry \
              $start $stop $var1 $var2"
 
 	pack $win.l.s -side top -expand 1 -fill x -padx 5
@@ -444,13 +444,24 @@ itcl_class SCIRun_Visualization_Isosurface {
     }
     
     method manualSliderEntry { start stop var1 var2 } {
+	if { ![string is double [set $var2]] } {
+	    set $var2 [set $var1] }
+
 	if { [set $var2] < $start } {
 	    set $var2 $start
 	}
 	if { [set $var2] > $stop } {
 	    set $var2 $stop 
 	}
+
+	# Force the update to be manul
+	global $this-continuous
+	set continuous [set $this-continuous]
+
+	set $this-continuous 0
+	
 	set $var1 [set $var2]
-	eval "$this-c needexecute"
+
+	set $this-continuous $continuous
     }
 }
