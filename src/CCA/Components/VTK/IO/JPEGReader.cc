@@ -43,7 +43,6 @@ SCIRun::vtk::JPEGReader::JPEGReader()
   //set output port name
   OutPort::setName("JPEGReader::output");
   this->reader = vtkJPEGReader::New();
-  OutPort::setOutput(this->reader->GetOutput());
   addPort(this);
   enableUI();
 }
@@ -65,4 +64,9 @@ SCIRun::vtk::JPEGReader::popupUI()
   reader->Update();
 
   return 0;
+}
+
+vtkObject*
+SCIRun::vtk::JPEGReader::getOutput(){
+  return reader->GetOutput();
 }

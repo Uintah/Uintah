@@ -50,7 +50,8 @@ public:
   
   //Component interface
   int popupUI();
-  
+
+  vtkObject* getOutput();  
 private:
   vtkJPEGReader *reader;
   JPEGReader(const JPEGReader&);

@@ -74,12 +74,15 @@ PolyDataMapper::PolyDataMapper(){
 
   mapper=vtkPolyDataMapper::New();
 
-  setOutput(mapper);
-
   addPort(dynamic_cast<InPort*>(this));
   addPort(dynamic_cast<OutPort*>(this));
 }
 
 PolyDataMapper::~PolyDataMapper(){
   mapper->Delete();
+}
+
+vtkObject*
+PolyDataMapper::getOutput(){
+  return mapper;
 }

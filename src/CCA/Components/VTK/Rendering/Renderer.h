@@ -63,6 +63,8 @@ namespace SCIRun {
 
       //Component interface
       int popupUI();
+
+      void refresh(int flag); //virtual
       
       //InPort interfaces
       bool accept(OutPort* port);
@@ -70,7 +72,11 @@ namespace SCIRun {
       //InPort interfaces
       void connect(OutPort* port);
     private:
+      bool renWindowActive;
       vtkRenderer *ren1; 
+      vtkRenderWindowInteractor *iren;
+  
+      vtkRenderWindow *renWin;
       Renderer(const Renderer&);
       Renderer& operator=(const Renderer&);
     };
