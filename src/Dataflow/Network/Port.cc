@@ -32,6 +32,8 @@
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
 #include <iostream>
+#include <stdio.h>
+
 using namespace std;
 using namespace SCIRun;
 

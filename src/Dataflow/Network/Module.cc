@@ -43,6 +43,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/soloader.h>
 #include <sstream>
+#include <stdio.h>
+
 using namespace SCIRun;
 typedef std::map<int,IPortInfo*>::iterator iport_iter;
 typedef std::map<int,OPortInfo*>::iterator oport_iter;
