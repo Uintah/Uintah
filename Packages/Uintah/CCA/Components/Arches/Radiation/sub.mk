@@ -30,9 +30,18 @@ LIBS := $(XML_LIBRARY) $(PETSC_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(FLIBS)
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rordr_fort.h
+$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rordrss_fort.h
+$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rordrtn_fort.h
+$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/radarray_fort.h
+$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/radcal_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/radcoef_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdomr_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdombc_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdomsolve_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdomsrc_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdomflux_fort.h
+$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdombmcalc_fort.h
+$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdomvolq_fort.h
+
+
+
+

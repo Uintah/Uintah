@@ -3,4 +3,4 @@ void rdombc(IntVector idxlo, IntVector idxhi,
             constCCVariable<double> tg,
             CCVariable<double> abskg, 
 	    bool xminus, bool xplus, bool yminus, bool yplus, bool zminus,
-     	    bool zplus);
+     	    bool zplus, bool lprobone, bool lprobtwo, bool lprobthree);

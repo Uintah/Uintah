@@ -7,22 +7,47 @@ C***********************************************************************
 	
       double precision PI,PI1,PATM,OPF,EMG,PCO2,PH2O,PCO2F,PH2OF,
      &PSUMF,PAVE,PML,PRES,PWPC,TGI,CCO2,CH2O,DELE,EMGI,EMGF,FV,ECO2,
-     &EH2O,TGF,SIG,xxx,yyy,zzz,xxxx,yyyy,zzzz, small
+     &EH2O,TGF,SIG,xxx,yyy,zzz,xxxx,yyyy,zzzz,small,QSRC
 
       double precision AEM(3)
-      double precision AEK(3) 
+      double precision AEK(3)
 
-        Integer I,J,K
+        Integer I,II,J,K,NELEM
 
 	DATA SIG/5.67D-08/, small/1.0d-40/
 C
+	fraction(lambda)=1.0d0
+
         pi = dacos(-1.0D0)
+
 	PI1 = 1.0d0 / PI
 	PRES = 1.01325D5
         PATM = PRES / 1.01325D5
 
-c       Conversion of OPL in "meters" to "feet":gautham
+c       Conversion of OPL in "meters" to "feet"
         OPF = 3.281d0 * opl
+
+c       Domain details for Problem Two
+
+        IF (LPROBTWO)THEN
+
+        DO 90 K=idxlo(3),idxhi(3)
+          DO 85 J=idxlo(2),idxhi(2)
+            DO 80 I=idxlo(1),idxhi(1)
+	     IF (PCELL(I,J,K).EQ.FFIELD) THEN
+               CO2(I,J,K) = 0.0d0
+               H2O(I,J,K) = 1.0d0
+	       SFV(I,J,K) = 0.0d0
+               TG(I,J,K) = 1000.0
+	     END IF
+80          CONTINUE
+85        CONTINUE
+90      CONTINUE
+
+        END IF
+
+        IF (LRADCAL)GO TO 441
+        IF (LPROBONE.OR.LPROBTHREE)GO TO 241
 
 C	Calculate absorption coefficients for FFIELD's
 
@@ -55,15 +80,7 @@ C	      C & V model, e.g., only Pw/Pc = 1 or TG < 2500 K is used.
 C----------------------------------------------------------------------
 	          PCO2 = CO2(I,J,K) * PATM
 	          PH2O = H2O(I,J,K) * PATM
-c
-C		  if ((i.eq.0).and.(j.eq.8).and.(k.eq.8)) then
-C		     print*,'printing pco2 ',pco2
-C		     print*,'printing ph2o ',ph2o
-c		     print*,'printing co2 ',co2(i,j,k)
-c		     print*,'printing h2o ',h2o(i,j,k)
-c		     print*,'printing patm ',patm
-C		  endif
-c
+
 	          PCO2F = PCO2 * OPF
 	          PH2OF = PH2O * OPF
 	          PSUMF = MAX((PCO2F + PH2OF),0.0001d0)
@@ -87,16 +104,7 @@ C
 	          TGI = MIN(TG(I,J,K),1200.0d0)
 	          CALL EICO2( TGI,PCO2F,ECO2 )
 	          CALL EIH2O( TGI,PH2OF,EH2O )
-c
-C		  if ((i.eq.0).and.(j.eq.8).and.(k.eq.8)) then
-C		     print*,'printing eco2 after eico2 ',eco2
-C		     print*,'printing eh2o after eih2o ',eh2o
-c		     print*,'printing pco2f ',pco2f
-c		     print*,'printing ph2of ',ph2of
-c		     print*,'printing tgi ',tgi
-C		  endif
-c
-C
+
 C	Calculate total gas emissivity accounting for spectral overlap
 C	and pressure correction
 C
@@ -122,12 +130,7 @@ C
 	            DELE = MAX(DELE,0.0d0)
 	          END IF
 	          EMGI = CCO2 * ECO2 + CH2O * EH2O - DELE
-c
-c		  if ((i.eq.0).and.(j.eq.8).and.(k.eq.8)) then
-c		     print*,'printing emgi ',emgi
-c		  endif
-c
-C
+
 C	Use Coppalle and Vervisch model to calculate CO2-H2O mixture 
 C	total emissivity by summing 3 gray gases (plus one clear).
 C	Compute emissivity weighting factors for CO2-H2O mixture
@@ -156,12 +159,7 @@ C
 	          EMGF = AEM(1) * (1.0d0 - EXP(-AEK(1)))
      1                 + AEM(2) * (1.0d0 - EXP(-AEK(2)))
      2                 + AEM(3) * (1.0d0 - EXP(-AEK(3)))
-c
-c		  if ((i.eq.0).and.(j.eq.8).and.(k.eq.8)) then
-c		     print*,'printing emgf ',emgf
-c		  endif
-c
-C
+
 C	Determine which model is appropriate for given gas temperature
 C
 	          IF (TG(I,J,K) .LE. 1200.0d0) THEN
@@ -172,15 +170,7 @@ C
 	            EMG = EMGI + (EMGF-EMGI) 
      1                  * ((TG(I,J,K)-1200.0d0) / 900.0d0)
 	          END IF
-c
-C		  if ((i.eq.0).and.(j.eq.8).and.(k.eq.8)) then
-C		     print*,'printing emg after emgi,emgf ',emg
-C		     print*,'printing emgi ',emgi
-C		     print*,'printing emgf ',emgf
-C		     print*,'printing gas temp ',tg(i,j,k)
-C		  endif
-c
-C
+
 c-- first guess for SO2 effects, assume same as CO2
 c                  IF (IDSO2.NE.0) THEN
 c                    PSO2F = SPECIE(I,J,K,IDSO2) * PATM * OPF
@@ -195,12 +185,7 @@ C	Calculate absorption coefficient from Bouguer's Law
 C
 
 	          ABSKG(I,J,K) = -DLOG (1.0d0 - EMG) / OPL
-c
-C		  if ((i.eq.0).and.(j.eq.8).and.(k.eq.8)) then
-C		     print*,'printing abskg after emg ',abskg(i,j,k)
-C		     print*,'printing emg ',emg
-C		  endif
-c
+
 C-----------------------------------------------------------------------
 C	Soot model is based on a correlation given by Sarofim and Hottel
 C	in "Radiative Transfer in Combustion Chambers: Influence of 
@@ -217,15 +202,11 @@ C-----------------------------------------------------------------------
                     FV = SFV(I,J,K)
 	    ABSKG(I,J,K) = ABSKG(I,J,K) + MIN( 25.0d0,((4.0d0/OPL) 
      1                 * DLOG(1.0d0 + 350.0d0*FV*TG(I,J,K)*OPL)) ) 
-c
-C	    if ((i.eq.0).and.(j.eq.8).and.(k.eq.8)) then
-C	       print*,'printing abskg after fv and tg',abskg(i,j,k)
-C	    endif
-c
-C
+
 C	Calculate blackbody emissive intensity (emissive power / pi)
 C
-	          ESRCG(I,J,K) = SIG * PI1 * ABSKG(I,J,K) * TG(I,J,K)**4
+        ESRCG(I,J,K) = abs(fraction(lambda)) * SIG * PI1 * 
+     1	ABSKG(I,J,K) * TG(I,J,K)**4
 
 	        END IF
 220	      CONTINUE
@@ -236,7 +217,11 @@ C-----------------------------------------------------------------------
 C--- PARTICLE PROPS WILL BE CALCULATED IN GLACIER
 C-----------------------------------------------------------------------
 c     User specified properties for validation
-#if 0
+
+241   CONTINUE
+
+        IF (LPROBONE)THEN
+
           DO 340 K=idxlo(3),idxhi(3)
             DO 330 J=idxlo(2),idxhi(2)
               DO 320 I=idxlo(1),idxhi(1)
@@ -255,14 +240,50 @@ c     User specified properties for validation
                  zzzz=zzz/0.5
 
                  ABSKG(I,J,K)=(0.9*(1-xxxx)*(1-yyyy)*(1-zzzz))+0.1
-                 ESRCG(I,J,K) = PI1 * ABSKG(I,J,K)
+                 ESRCG(I,J,K) = abs(fraction(lambda))*PI1 * 
+     &		 ABSKG(I,J,K)
 
-c       Geometric locations output for validation
-                if((J.EQ.7).AND.(K.EQ.7))WRITE(6,*)I,xxx
 320           CONTINUE
 330         CONTINUE
 340       CONTINUE
-#endif
+
+        END IF
+
+        IF (LPROBTHREE)THEN
+
+          DO 440 K=idxlo(3),idxhi(3)
+            DO 430 J=idxlo(2),idxhi(2)
+              DO 420 I=idxlo(1),idxhi(1)
+
+                ABSKG(I,J,K)=2.0d0
+		TG(I,J,K)=295.0d0
+
+                ESRCG(I,J,K) = abs(fraction(lambda)) 
+     &          * SIG * PI1 * ABSKG(I,J,K) * TG(I,J,K)**4
+
+c		IF((I.EQ.12).AND.(J.EQ.12).AND.(K.EQ.12))
+c     &          ESRCG(I,J,K) = 1.0/(4.0*PI*((0.64/25)**3))
+
+420           CONTINUE
+430         CONTINUE
+440       CONTINUE
+
+c	OPEN(UNIT=15,FILE='qpts.methanol.24x24x50',STATUS='OLD')
+	OPEN(UNIT=15,FILE='qpts.methanol.64x64x128.1',STATUS='OLD')
+	READ(15,*)NELEM
+
+	DO II=1,NELEM
+	   READ(15,*)QSRC,K,J,I
+	   write(6,*)II
+	   ESRCG(I,J,K) = (1.0/(4.0*PI))*QSRC
+	ENDDO
+
+        CLOSE (UNIT=15)
+
+        END IF
+
+441   CONTINUE
+
 	RETURN
 	END
 

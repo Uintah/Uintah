@@ -5,12 +5,11 @@
       double precision PI,PI1,SIG
       double precision val, factor
 
-c      logical plusX, plusY, plusZ
-
       DATA SIG/5.67D-08/
 
       pi = dacos(-1.0D0)
       PI1 = 1.0d0 / PI
+
       do 30 k=idxlo(3),idxhi(3)
       do 20 j=idxlo(2),idxhi(2)
       do 10 i=idxlo(1),idxhi(1)
@@ -65,10 +64,8 @@ c      logical plusX, plusY, plusZ
       areatb(ii) = sew(ii) * sns(jj)
       if (pcell(ii,jj,kk).ne.ffield) then
 c  call fixval assume abskg to be one but change it in props calculation
-c         print*,'Printing value of temperature in non-ffield cell'
-c         print*,'At location ',ii,jj,kk
-c         print*,'Temperature = ',tg(ii,jj,kk)
-         val = SIG*PI1*tg(ii,jj,kk)**4
+
+         val = abs(fraction(bands))*SIG*PI1*tg(ii,jj,kk)**4
          factor = 1.d0
          call fixradval(val,aw(ii,jj,kk),as(ii,jj,kk),ab(ii,jj,kk),
      $                  ap(ii,jj,kk),su(ii,jj,kk),factor)
@@ -79,9 +76,9 @@ c         print*,'Temperature = ',tg(ii,jj,kk)
             else
                aw(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + (abs(omu(l))*areaew) *
-     &              SIG * PI1 * 
-c abskg(ii-1,jj,kk) * 
-     &              tg(ii-1,jj,kk)**4
+     &         PI1 * (SIG * abskg(ii-1,jj,kk) * abs(fraction(bands))* 
+     &              tg(ii-1,jj,kk)**4 + (1 - abskg(ii-1,jj,kk))*
+     &         qfluxe(ii-1,jj,kk))
             end if
          else
             if (pcell(ii+1,j,k).eq.ffield) then
@@ -89,9 +86,9 @@ c abskg(ii-1,jj,kk) *
             else
                aw(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + (abs(omu(l)) * areaew) * 
-     &              SIG * PI1 * 
-c abskg(ii+1,jj,kk) * 
-     &              tg(ii+1,jj,kk)**4
+     &         PI1 * (SIG * abskg(ii+1,jj,kk) * abs(fraction(bands))* 
+     &              tg(ii+1,jj,kk)**4 + (1 - abskg(ii+1,jj,kk))*
+     &         qfluxw(ii+1,jj,kk))
             end if
          endif
          
@@ -102,9 +99,9 @@ c abskg(ii+1,jj,kk) *
                as(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oeta(l))*arean(ii)) *
-     &              SIG * PI1 * 
-c abskg(ii,jj-1,kk) *
-     &              tg(ii,jj-1,kk)**4
+     &         PI1 * (SIG * abskg(ii,jj-1,kk) * abs(fraction(bands)) *
+     &              tg(ii,jj-1,kk)**4 + (1 - abskg(ii,jj-1,kk))*
+     &         qfluxn(ii,jj-1,kk))
             end if
          else
             if (pcell(ii,jj+1,kk).eq.ffield) then
@@ -113,9 +110,9 @@ c abskg(ii,jj-1,kk) *
                as(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oeta(l))*arean(ii)) *
-     &              SIG * PI1 * 
-c abskg(ii,jj+1,kk) * 
-     &              tg(ii,jj+1,kk)**4
+     &         PI1 * (SIG * abskg(ii,jj+1,kk) * abs(fraction(bands)) *
+     &              tg(ii,jj+1,kk)**4 + (1 - abskg(ii,jj+1,kk))*
+     &         qfluxs(ii,jj+1,kk))
             end if
          endif
 
@@ -126,9 +123,9 @@ c abskg(ii,jj+1,kk) *
                ab(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oxi(l))*areatb(ii)) *
-     &              SIG * PI1 * 
-c abskg(ii,jj,kk-1) *
-     &              tg(ii,jj,kk-1)**4
+     &         PI1 * (SIG * abskg(ii,jj,kk-1) * abs(fraction(bands)) *
+     &              tg(ii,jj,kk-1)**4 + (1 - abskg(ii,jj,kk-1))*
+     &         qfluxt(ii,jj,kk-1))
             end if
          else
             if (pcell(ii,jj,kk+1).eq.ffield) then
@@ -137,26 +134,15 @@ c abskg(ii,jj,kk-1) *
                ab(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oxi(l))*areatb(ii)) * 
-     &              SIG * PI1 * 
-c abskg(ii,jj,kk+1) * 
-     &              tg(ii,jj,kk+1)**4
+     &         PI1 * (SIG * abskg(ii,jj,kk+1) * abs(fraction(bands)) *
+     &              tg(ii,jj,kk+1)**4 + (1 - abskg(ii,jj,kk+1))*
+     &         qfluxb(ii,jj,kk+1))
             end if
          endif
          
          ap(ii,jj,kk) =  abs(omu(l))*areaew + abs(oeta(l))*arean(ii) + 
      &        abs(oxi(l))*areatb(ii) + abskg(ii,jj,kk)*
      &        volume(ii,jj,kk)
-
-c         if ((ii.eq.0).and.(jj.eq.8).and.(kk.eq.8)) then
-c            print*,'printing source term values in rdomsolve'
-c            print*,'su (0,8,8) = ',su(ii,jj,kk)
-c            print*,'ap (0,8,8) = ',ap(ii,jj,kk)
-c         endif
-c         if ((ii.eq.6).and.(jj.eq.8).and.(kk.eq.9)) then
-c            print*,'printing source term values in rdomsolve'
-c            print*,'su (6,8,9) = ',su(ii,jj,kk)
-c            print*,'ap (6,8,9) = ',ap(ii,jj,kk)
-c         endif
          
       endif
 10    continue
@@ -164,6 +150,10 @@ c         endif
 30    continue
       RETURN
       end
+
+
+
+
 
 
 
