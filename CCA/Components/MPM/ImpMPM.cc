@@ -603,9 +603,6 @@ void ImpMPM::iterate(const ProcessorGroup*,
   if (dispIncQNorm/dispIncQNorm0 <= 4.*error)
     dispIncQ = true;
 
-  // subsched->set_old_dw(old_dw);
-  //  subsched->set_new_dw(new_dw);
- 
   // Get all of the required particle data that is in the old_dw and put it 
   // in the subscheduler's  new_dw.  Then once dw is advanced, subscheduler
   // will be pulling data out of the old_dw.
@@ -627,62 +624,23 @@ void ImpMPM::iterate(const ProcessorGroup*,
       // Get out some grid quantities: gmass, gInternalForce, gExternalForce
 
       constNCVariable<Vector> internal_force,dispInc;
-#if 0
-      constNCVariable<double> gmass;
-      constNCVariable<Vector> external_force,acc;
-      //constNCVariable<Vector> velocity_old;
-#endif
+
       NCVariable<Vector> dispNew,velocity;
       new_dw->getModifiable(dispNew,lb->dispNewLabel,matlindex,patch);
       new_dw->get(dispInc,lb->dispIncLabel,matlindex,patch,Ghost::None,0);
       new_dw->get(internal_force,lb->gInternalForceLabel,matlindex,patch,
       		  Ghost::None,0);
-#if 0
-      new_dw->get(external_force,lb->gExternalForceLabel,matlindex,patch,
-		  Ghost::None,0);
-      // We need both the old velocity and new_dw velocity
-      //new_dw->get(velocity_old,lb->gVelocityOldLabel,matlindex,patch,
-      //	  Ghost::None,0);
-      new_dw->get(acc,lb->gAccelerationLabel,matlindex,patch, Ghost::None,0);
-      new_dw->get(gmass,lb->gMassLabel,matlindex,patch,Ghost::None,0);
-#endif
+
       new_dw->getModifiable(velocity,lb->gVelocityLabel,matlindex,patch);
       delt_vartype dt;
       old_dw->get(dt,d_sharedState->get_delt_label());
       sum_vartype dispIncQNorm0,dispIncNormMax;
       new_dw->get(dispIncQNorm0,lb->dispIncQNorm);
       new_dw->get(dispIncNormMax,lb->dispIncNormMax);
-#if 0
-      constParticleVariable<Matrix3> pstress;
-      new_dw->get(pstress,lb->pStressLabel_preReloc,pset);
-      ParticleVariable<Matrix3> bElBar,deformationGradient;
-      new_dw->getModifiable(deformationGradient, 
-			    lb->pDeformationMeasureLabel_preReloc, pset);
-      new_dw->getModifiable(bElBar, lb->bElBarLabel_preReloc, pset);
-#endif
-#if 0
-      // Similar to gVelocityOld
-      constParticleVariable<Point> px;
-      old_dw->get(px,lb->pXLabel,pset);
-      constParticleVariable<double> pvolume,pvolumeold;
-      old_dw->get(pvolume,lb->pVolumeLabel,pset);
-      old_dw->get(pvolumeold,lb->pVolumeOldLabel,pset);
-#endif
+
       // New data to be stored in the subscheduler
       NCVariable<Vector> newdisp,new_int_force,	new_vel,new_disp_inc;
-#if 0
-      NCVariable<Vector> new_vel_old,new_ext_force,new_acc;
-      NCVariable<double> newgmass;
-#endif
-#if 0
-      ParticleVariable<Matrix3> newdefGrad,newbElBar;
-      ParticleVariable<Matrix3> newpstress;
-#endif
-#if 0
-      // Like gVelocityOld
-      ParticleVariable<Point> newpx;
-      ParticleVariable<double> newpvolume,newpvolumeold;
-#endif
+
       double new_dt;
       subsched->get_dw(3)->allocateAndPut(newdisp,lb->dispNewLabel,
 					     matlindex, patch);
@@ -693,61 +651,13 @@ void ImpMPM::iterate(const ProcessorGroup*,
 					     matlindex,patch);
       subsched->get_dw(3)->allocateAndPut(new_vel,lb->gVelocityLabel,
 					  matlindex,patch);
-#if 0
-      subsched->get_dw(3)->allocateAndPut(new_ext_force,
-					     lb->gExternalForceLabel,
-					     matlindex,patch);
-     
-      //subsched->get_dw(3)->allocateAndPut(new_vel_old,lb->gVelocityOldLabel,
-      //				     matlindex,patch);
-      subsched->get_dw(3)->allocateAndPut(new_acc,lb->gAccelerationLabel,
-					     matlindex,patch);
-      subsched->get_dw(3)->allocateAndPut(newgmass,lb->gMassLabel,matlindex,
-					     patch);
-#endif
-#if 0
-      subsched->get_dw(3)->allocateAndPut(newpstress,
-					     lb->pStressLabel_preReloc,
-					     pset);
 
-      subsched->get_dw(3)->allocateAndPut(newdefGrad,
-					 lb->pDeformationMeasureLabel_preReloc,
-					  pset);
-
-      subsched->get_dw(3)->allocateAndPut(newbElBar,
-					     lb->bElBarLabel_preReloc,
-					     pset);
-#endif
-#if 0
-      // Like gVelocityOld
-      subsched->get_dw(3)->allocateAndPut(newpx,lb->pXLabel, pset);
-      subsched->get_dw(3)->allocateAndPut(newpvolume,lb->pVolumeLabel,pset);
-      subsched->get_dw(3)->allocateAndPut(newpvolumeold,lb->pVolumeOldLabel,
-					  pset);
-#endif
       subsched->get_dw(3)->saveParticleSubset(matlindex, patch, pset);
       newdisp.copyData(dispNew);
       new_disp_inc.copyData(dispInc);
       new_int_force.copyData(internal_force);
       new_vel.copyData(velocity);
-#if 0
-      new_ext_force.copyData(external_force);
-      //new_vel_old.copyData(velocity_old);
-      new_acc.copyData(acc);
-      newgmass.copyData(gmass);
-#endif
 
-#if 0
-      newpstress.copyData(pstress);
-      newdefGrad.copyData(deformationGradient);
-      newbElBar.copyData(bElBar);
-#endif
-#if 0
-      // Like gVelocityOld
-      newpx.copyData(px);
-      newpvolume.copyData(pvolume);
-      newpvolumeold.copyData(pvolumeold);
-#endif
       new_dt = dt;
       // These variables are ultimately retrieved from the subschedulers
       // old datawarehouse after the advancement of the data warehouse.
@@ -2756,12 +2666,16 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
     } else {
       if (dynamic) {
 	for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+#if 0
 	  cerr << "velocity_old_old = " << velocity_old[*iter] << "\n";
 	  cerr << "velocity_old = " << velocity[*iter] << "\n";
+#endif
 	  dispNew[*iter] += dispInc[*iter];
 	  velocity[*iter] = dispNew[*iter]*(2./dt) - velocity[*iter];
+#if 0
 	  cerr << "dispNew = " << dispNew[*iter] << "\n";
 	  cerr << "velocity_new = " << velocity[*iter] << "\n";
+#endif
 	}
       } else {
 	for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
