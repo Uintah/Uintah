@@ -123,10 +123,12 @@ bool VariablePlotter::getGrid()
   return false;
 }
 
-void VariablePlotter::add_type(string &type_list,const TypeDescription *subtype)
+// Returns 0 on sucess, 1 otherwise.
+int VariablePlotter::add_type(string &type_list,const TypeDescription *subtype)
 {
   switch ( subtype->getType() ) {
   case TypeDescription::double_type:
+  case TypeDescription::int_type:
     type_list += " scaler";
     break;
   case TypeDescription::Vector:
@@ -135,10 +137,25 @@ void VariablePlotter::add_type(string &type_list,const TypeDescription *subtype)
   case TypeDescription::Matrix3:
     type_list += " matrix3";
     break;
+  // These need to be added as they get implemented
+  case TypeDescription::bool_type:
+    error("Error in VariablePlotter::add_type(): Boolean subtype is not implemented.");
+    return 1;
+  case TypeDescription::short_int_type:
+    error("Error in VariablePlotter::add_type(): Short Int subtype is not implemented.");
+    return 1;
+  case TypeDescription::long_type:
+    error("Error in VariablePlotter::add_type(): Long subtype is not implemented.");
+    return 1;
+  case TypeDescription::long64_type:
+    error("Error in VariablePlotter::add_type(): Long64 subtype is not implemented.");
+    return 1;
   default:
-    cerr<<"Error in VariablePlotter::setVars(): Vartype not implemented.  Aborting process.\n";
-    abort();
+    error("Error in VariablePlotter::add_type(): Unknown subtype not implemented.");
+    error("Please tell Vis Team about this, and prepare the net you used as well as a copy of the data.");
+    return 1;
   }
+  return 0;
 }  
 
 void VariablePlotter::setVars(GridP grid) {
@@ -153,24 +170,34 @@ void VariablePlotter::setVars(GridP grid) {
     switch (types[i]->getType()) {
     case TypeDescription::NCVariable:
       if (var_orientation.get() == NC_VAR) {
-	varNames += " ";
-	varNames += names[i];
-	cerr << "Calling appendMat_list\n";
-	gui->execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
-	add_type(type_list,types[i]->getSubType());
+	if (!add_type(type_list,types[i]->getSubType())) {
+	  // Only add this stuff to the gui if the variable was added
+	  // successfully
+	  varNames += " ";
+	  varNames += names[i];
+	  cerr << "Calling appendMat_list for "<<names[i]<<"\n";
+	  gui->execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
+	} else {
+	  error("Variable " +  names[i] + " was not added, because its subtype is not supported.");
+	}
       }
       break;
     case TypeDescription::CCVariable:
       if (var_orientation.get() == CC_VAR) {
-	varNames += " ";
-	varNames += names[i];
-	cerr << "Calling appendMat_list\n";
-	gui->execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
-	add_type(type_list,types[i]->getSubType());
+	if (!add_type(type_list,types[i]->getSubType())) {
+	  // Only add this stuff to the gui if the variable was added
+	  // successfully
+	  varNames += " ";
+	  varNames += names[i];
+	  cerr << "Calling appendMat_list for "<<names[i]<<"\n";
+	  gui->execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
+	} else {
+	  error("Variable " +  names[i] + " was not added, because its subtype is not supported.");
+	}
       }
       break;
     default:
-      cerr << "VariablePlotter::setVars: Warning!  Ignoring unknown type.\n";
+      cerr << "VariablePlotter::setVars: Warning!  Ignoring unknown type for variable "<<names[i]<<".\n";
       break;
     }
 
@@ -312,6 +339,32 @@ void VariablePlotter::extract_data(string display_mode, string varname,
 	cerr << "Cache miss.  Querying the data archive\n";
 	// query the value and then cache it
 	vector< double > values;
+	int matl = atoi(mat_list[i].c_str());
+	try {
+	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	} catch (const VariableNotFoundInGrid& exception) {
+	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+	  return;
+	} 
+	cerr << "Received data.  Size of data = " << values.size() << endl;
+	material_data_list.cache_value(cache_key, values, data);
+      } else {
+	cerr << "Cache hit\n";
+      }
+      gui->execute(id+" set_var_val "+data.c_str());
+      name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
+    }
+    break;
+  case TypeDescription::int_type:
+    cerr << "Graphing a variable of type int\n";
+    // loop over all the materials in the mat_list
+    for(int i = 0; i < (int)mat_list.size(); i++) {
+      string data;
+      string cache_key(currentNode_str()+" "+varname+" "+mat_list[i]);
+      if (!material_data_list.get_cached(cache_key,data)) {
+	cerr << "Cache miss.  Querying the data archive\n";
+	// query the value and then cache it
+	vector< int > values;
 	int matl = atoi(mat_list[i].c_str());
 	try {
 	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
