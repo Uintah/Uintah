@@ -18,6 +18,13 @@ using namespace Uintah;
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
+/* ---------------------------------------------------------------------
+                               T O   D O
+  - better initial guess
+  - use the correct upwinded volume fraction
+  - TEST mass Exchange
+  - TEST multipatch 
+_____________________________________________________________________*/
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleSetupMatrix--
@@ -43,6 +50,9 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
   t->requires( Task::NewDW,       lb->uvel_FCMELabel,     gac,2); 
   t->requires( Task::NewDW,       lb->vvel_FCMELabel,     gac,2); 
   t->requires( Task::NewDW,       lb->wvel_FCMELabel,     gac,2); 
+  t->requires( Task::NewDW,       lb->sp_volX_FCLabel,    gac,1);
+  t->requires( Task::NewDW,       lb->sp_volY_FCLabel,    gac,1);
+  t->requires( Task::NewDW,       lb->sp_volZ_FCLabel,    gac,1);
   
   t->computes(lb->betaLabel,    one_matl);
   t->computes(lb->matrixLabel,  one_matl);
@@ -155,7 +165,10 @@ void ICE::scheduleImplicitVel_FC(SchedulerP& sched,
   task->requires(Task::NewDW,       lb->uvel_FCLabel,      gac,2);
   task->requires(Task::NewDW,       lb->vvel_FCLabel,      gac,2);
   task->requires(Task::NewDW,       lb->wvel_FCLabel,      gac,2);
- 
+  task->computes(lb->sp_volX_FCLabel);
+  task->computes(lb->sp_volY_FCLabel);
+  task->computes(lb->sp_volZ_FCLabel);
+   
   task->computes(lb->uvel_FCMELabel);
   task->computes(lb->vvel_FCMELabel);
   task->computes(lb->wvel_FCMELabel);
@@ -226,7 +239,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   //__________________________________
   // SetupMatrix
   t->requires( Task::NewDW, lb->speedSound_CCLabel, gn,0);  
-   
+
   //__________________________________
   // SetupRHS
   t->requires( Task::NewDW, lb->burnedMass_CCLabel, gn,0);
@@ -291,30 +304,28 @@ void ICE::setupMatrix(const ProcessorGroup*,
     beta.initialize(0.0);
     for(CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++){
       IntVector c = *iter;
-      A[c].p = 1.0;
+      A[c].p = 0.0; 
       A[c].n = 0.0;   A[c].s = 0.0;
-      A[c].e = 0.0;   A[c].w = 0.0;   // extra cell only A.p[c] = 1.0
+      A[c].e = 0.0;   A[c].w = 0.0; 
       A[c].t = 0.0;   A[c].b = 0.0;
     } 
-    for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
-      IntVector c = *iter;
-      A[c].p = 0.0;
-      A[c].n = 0.0;   A[c].s = 0.0;
-      A[c].e = 0.0;   A[c].w = 0.0;   // Interior cells = 0.0;
-      A[c].t = 0.0;   A[c].b = 0.0;
-    }
   
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      constSFCXVariable<double> uvel_FC;
-      constSFCYVariable<double> vvel_FC;
-      constSFCZVariable<double> wvel_FC;
+      constSFCXVariable<double> uvel_FC, sp_volX_FC;
+      constSFCYVariable<double> vvel_FC, sp_volY_FC;
+      constSFCZVariable<double> wvel_FC, sp_volZ_FC;
       constCCVariable<double> vol_frac, sp_vol_CC, speedSound;     
 
       new_dw->get(uvel_FC,          lb->uvel_FCMELabel,     indx,patch,gac, 2);
       new_dw->get(vvel_FC,          lb->vvel_FCMELabel,     indx,patch,gac, 2);
       new_dw->get(wvel_FC,          lb->wvel_FCMELabel,     indx,patch,gac, 2);
+      
+      new_dw->get(sp_volX_FC,       lb->sp_volX_FCLabel,    indx,patch,gac, 1);
+      new_dw->get(sp_volY_FC,       lb->sp_volY_FCLabel,    indx,patch,gac, 1);
+      new_dw->get(sp_volZ_FC,       lb->sp_volZ_FCLabel,    indx,patch,gac, 1);
+      
       parent_new_dw->get(vol_frac,  lb->vol_frac_CCLabel,   indx,patch,gac, 1);
       parent_new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,     indx,patch,gac, 1);
       parent_new_dw->get(speedSound,lb->speedSound_CCLabel, indx,patch,gn,  0);
@@ -326,57 +337,41 @@ void ICE::setupMatrix(const ProcessorGroup*,
 
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
         IntVector c = *iter;
-        right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
-        top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
-        front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
+        right  = c + IntVector(1,0,0);      left   = c;  
+        top    = c + IntVector(0,1,0);      bottom = c;  
+        front  = c + IntVector(0,0,1);      back   = c;  
         
-        R_CC = right;   L_CC  = c - IntVector(1,0,0);  // Left, right
+        R_CC = right;   L_CC  = c - IntVector(1,0,0);  // right, left
         T_CC = top;     B_CC  = c - IntVector(0,1,0);  // top, bottom
         F_CC = front;   BK_CC = c - IntVector(0,0,1);  // front, back
              
         //__________________________________
-        //  T H I S   I S   G O I N G   T O   B E   S L O W   
+        //  T H I S   I S   G O I N G   T O   B E   S L O W 
+        //   A N D   I T ' S   W R O N G    
         //__________________________________
-        double sp_vol_brack_R = 2.0*(sp_vol_CC[c] * sp_vol_CC[R_CC])/      
-                                    (sp_vol_CC[c] + sp_vol_CC[R_CC]);      
-                                                                         
-        double sp_vol_brack_L = 2.0*(sp_vol_CC[c] * sp_vol_CC[L_CC])/      
-                                    (sp_vol_CC[c] + sp_vol_CC[L_CC]);      
-                                                                         
-        double sp_vol_brack_T = 2.0*(sp_vol_CC[c] * sp_vol_CC[T_CC])/      
-                                    (sp_vol_CC[c] + sp_vol_CC[T_CC]);
-                                                                         
-        double sp_vol_brack_B = 2.0*(sp_vol_CC[c] * sp_vol_CC[B_CC])/      
-                                    (sp_vol_CC[c] + sp_vol_CC[B_CC]);      
- 
-        double sp_vol_brack_F = 2.0*(sp_vol_CC[c] * sp_vol_CC[F_CC])/      
-                                    (sp_vol_CC[c] + sp_vol_CC[F_CC]);      
-                                                                         
-        double sp_vol_brack_BK= 2.0*(sp_vol_CC[c] * sp_vol_CC[BK_CC])/     
-                                    (sp_vol_CC[c] + sp_vol_CC[BK_CC]);
+
         //  use the upwinded vol_frac
         IntVector upwnd;                          
         upwnd   = upwindCell_X(c, uvel_FC[right],  1.0);     
-        A[c].e += vol_frac[upwnd] * sp_vol_brack_R;               
+        A[c].e += vol_frac[upwnd] * sp_volX_FC[right];               
                        
         upwnd   = upwindCell_X(c, uvel_FC[left],   0.0);     
-        A[c].w += vol_frac[upwnd] * sp_vol_brack_L;               
+        A[c].w += vol_frac[upwnd] * sp_volX_FC[left];               
 
         upwnd   = upwindCell_Y(c, vvel_FC[top],    1.0);     
-        A[c].n += vol_frac[upwnd] * sp_vol_brack_T;               
+        A[c].n += vol_frac[upwnd] * sp_volY_FC[top];               
               
         upwnd   = upwindCell_Y(c, vvel_FC[bottom], 0.0);
-        A[c].s += vol_frac[upwnd] * sp_vol_brack_B;
+        A[c].s += vol_frac[upwnd] * sp_volY_FC[bottom];
 
         upwnd   = upwindCell_Z(c, wvel_FC[front],  1.0);
-        A[c].t += vol_frac[upwnd] * sp_vol_brack_F;
+        A[c].t += vol_frac[upwnd] * sp_volZ_FC[front];
         
         upwnd   = upwindCell_Z(c, wvel_FC[back],   0.0);
-        A[c].b += vol_frac[upwnd] * sp_vol_brack_BK;
+        A[c].b += vol_frac[upwnd] * sp_volZ_FC[back];
       }
       //__________________________________
       // sum beta = sum ( vol_frac * sp_vol/speedSound^2)
-      // (THINK ABOUT PULLING OUT OF ITER LOOP)
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
         beta[c] += vol_frac[c] * sp_vol_CC[c]/(speedSound[c] * speedSound[c]);
@@ -414,7 +409,6 @@ void ICE::setupMatrix(const ProcessorGroup*,
     if (switchDebug_setupMatrix) {    
       ostringstream desc;
       desc << "BOT_setupMatrix_patch_" << patch->getID();
-      
       printData(    0, patch, 1, desc.str(), "beta", beta);
       printStencil( 0, patch, 1, desc.str(), "A", A);
     }         
@@ -471,7 +465,7 @@ void ICE::setupRHS(const ProcessorGroup*,
     rhs.initialize(0.0);
 /*`==========TESTING==========*/
     //initialGuess.copyData(imp_delP);
-    initialGuess.initialize(0.0); 
+    initialGuess.initialize(0.0);         // CAN WE DO BETTER THAN THIS?
 /*===========TESTING==========`*/
     sumAdvection.initialize(0.0);
     massExchTerm.initialize(0.0);
@@ -491,7 +485,6 @@ void ICE::setupRHS(const ProcessorGroup*,
       parent_new_dw->get(vol_frac,   lb->vol_frac_CCLabel,   indx,patch,gac, 2);
       parent_new_dw->get(burnedMass, lb->burnedMass_CCLabel, indx,patch,gn,0);
       parent_new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn,0);
-
 
       //---- P R I N T   D A T A ------  
       if (switchDebug_setupRHS) {
