@@ -26,7 +26,7 @@ class SubMaterial : public Material
       return materials_[index]; 
   }
 
-  add_material(Material *mat) { materials_.push_back(mat); }
+  void add_material(Material *mat) { materials_.push_back(mat); }
 
   virtual void shade(Color& result, const Ray& ray,
                      const HitInfo& hit, int depth, 
