@@ -638,7 +638,7 @@ QuadraticTetVolMesh::add_node_neighbors(Node::array_type &array,
 }
 #else
 void
-QuadraticTetVolMesh::add_node_neighbors(Node::array_type &array, 
+QuadraticTetVolMesh::add_node_neighbors(vector<Node::index_type> &array, 
 					Node::index_type node, 
 					const vector<bool> &bc, bool apBC)
 {
@@ -682,15 +682,8 @@ QuadraticTetVolMesh::add_node_neighbors(Node::array_type &array,
       }
     }
   }
-       
-  
 
-
-  for (set<int>::iterator it2 = c2.begin(); it2 != c2.end(); it2++)
-  {
-    array.push_back(*it2);
-  }
-  //  copy(c2.begin(), c2.end(), array.begin());
+  array.insert(array.end(), c2.begin(), c2.end());
 }
 #endif
 
