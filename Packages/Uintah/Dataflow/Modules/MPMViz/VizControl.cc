@@ -171,7 +171,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	      result = vars[0];
 	    else
 	      result = "";
-	    for( j = 1; j < vars.size(); j++){
+	    for( j = 1; j < (int)vars.size(); j++){
 	      result += clString( " " + vars[j]);
 	    }
 	    std::cerr<<"     result = "<<result<<endl;
@@ -195,7 +195,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	      result = vars[0];
 	    else
 	      result = "";
-	    for( j = 1; j < vars.size(); j++){
+	    for( j = 1; j < (int)vars.size(); j++){
 	      result += clString( " " + vars[j]);
 	    }
 	    std::cerr<<"     result = "<<result<<endl;
@@ -230,7 +230,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	    if ( vars.size() > 1)
 	      result = vars[1];
 	    else
-	    for( j = 2; j < vars.size(); j++){
+	    for( j = 2; j < (int)vars.size(); j++){
 	      result += clString( " " + vars[j]);
 	    }
 	    std::cerr<<"     result = "<<result<<endl;
@@ -252,7 +252,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	    result = "";
 	    if ( vars.size() > 1)
 	      result = vars[1];
-	    for( j = 2; j < vars.size(); j++){
+	    for( j = 2; j < (int)vars.size(); j++){
 	      result += clString( " " + vars[j]);
 	    }
 	    std::cerr<<"     result = "<<result<<endl;
@@ -283,7 +283,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	  result = "";
 	  if ( vars.size() > 0)
 	    result = vars[0];
-	  for( j = 1; j < vars.size(); j++){
+	  for( j = 1; j < (int)vars.size(); j++){
 	    result += clString( " " + vars[j]);
 
 	  }
@@ -305,7 +305,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	  result = "";
 	  if ( vars.size() > 0)
 	    result = vars[0];
-	  for( j = 1; j < vars.size(); j++){
+	  for( j = 1; j < (int)vars.size(); j++){
 	    result += clString( " " + vars[j]);
 
 	  }
@@ -336,7 +336,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	  result = "";
 	  if ( vars.size() > 0)
 	    result = vars[0];
-	  for( j = 1; j < vars.size(); j++){
+	  for( j = 1; j < (int)vars.size(); j++){
 	    result += clString( " " + vars[j]);
 	  }
 	  std::cerr<<"     result = "<<result<<endl;
@@ -354,7 +354,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	  result = "";
 	  if ( vars.size() > 0)
 	    result = vars[0];
-	  for( j = 1; j < vars.size(); j++){
+	  for( j = 1; j < (int)vars.size(); j++){
 	    result += clString( " " + vars[j]);
 	  }
 	  std::cerr<<"     result = "<<result<<endl;
@@ -463,7 +463,7 @@ void VizControl::checkVars(ParticleGridReaderHandle reader)
 	r->GetGrid(i)->getScalarNames(rVars);
 	pgr->GetGrid(i)->getScalarNames(pgrVars);
 	if( rVars.size() == pgrVars.size()){
-	  for(j = 0; j < rVars.size(); j++)
+	  for(j = 0; j < (int)rVars.size(); j++)
 	    if( rVars[i] != pgrVars[i] ){
 	      setVars(reader);
 	      return;
@@ -478,7 +478,7 @@ void VizControl::checkVars(ParticleGridReaderHandle reader)
 	r->GetGrid(i)->getVectorNames(rVars);
 	pgr->GetGrid(i)->getVectorNames(pgrVars);
 	if( rVars.size() == pgrVars.size()){
-	  for(j = 0; j < rVars.size(); j++)
+	  for(j = 0; j < (int)rVars.size(); j++)
 	    if( rVars[i] != pgrVars[i] ){
 	      setVars(reader);
 	      return;
@@ -493,7 +493,7 @@ void VizControl::checkVars(ParticleGridReaderHandle reader)
 	r->GetParticleSet(i)->list_scalars(rVars);
 	pgr->GetParticleSet(i)->list_scalars(pgrVars);
 	if( rVars.size() == pgrVars.size()){
-	  for(j = 0; j < rVars.size(); j++)
+	  for(j = 0; j < (int)rVars.size(); j++)
 	    if( rVars[i] != pgrVars[i] ){
 	      setVars(reader);
 	      return;
@@ -508,7 +508,7 @@ void VizControl::checkVars(ParticleGridReaderHandle reader)
 	r->GetParticleSet(i)->list_vectors(rVars);
 	pgr->GetParticleSet(i)->list_vectors(pgrVars);
 	if( rVars.size() == pgrVars.size()){
-	  for(j = 0; j < rVars.size(); j++)
+	  for(j = 0; j < (int)rVars.size(); j++)
 	    if( rVars[i] != pgrVars[i] ){
 	      setVars(reader);
 	      return;
@@ -541,7 +541,7 @@ void VizControl::callback( int index)
     if(MPVizParticleSet *ps = dynamic_cast<MPVizParticleSet*> (psh.get_rep())){
       ps->list_scalars( vars );
       int timestep= 0;
-      for(i = 0; i < vars.size(); i++){
+      for(i = 0; i < (int)vars.size(); i++){
 	int sid = ps->find_scalar( vars[i] );
 	double scale = ps->getScalar(timestep, sid, index);
 	TCL::execute( id + " infoAdd " + idx + " "
@@ -551,7 +551,7 @@ void VizControl::callback( int index)
       
       vars.remove_all();
       ps->list_vectors( vars );
-      for(i = 0; i < vars.size(); i++) {
+      for(i = 0; i < (int)vars.size(); i++) {
 	int vid = ps->find_vector( vars[i] );
 	Vector v = ps->getVector(timestep, vid, index);
 	TCL::execute( id + " infoAdd " + idx + " " + "0" + " " +
@@ -574,7 +574,7 @@ void VizControl::graph(clString idx, clString var)
       tpr->GetParticleData(atoi(idx()), pName.get(), var,  values);
     
       Array1<double> vs;
-      for(i = 0; i < values.size(); i++)
+      for(i = 0; i < (int)values.size(); i++)
 	vs.add( values[i] );
     
       ostringstream ostr;
