@@ -193,9 +193,13 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
 
+  //particle cracking speed is used for time-step computation
+  ParticleVariable<double> pCrackingSpeed;
+
   ParticleVariable<int> pVisibility;
   ParticleVariable<Vector> pRotationRate;
   if(matl->getFractureModel()) {
+    old_dw->get(pCrackingSpeed, lb->pCrackingSpeedLabel, pset);
     new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
     new_dw->allocate(pRotationRate, lb->pRotationRateLabel, pset);
   }
@@ -301,6 +305,13 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
 		     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
 		     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
 		     
+     if( matl->getFractureModel() ) {
+       //compare with the cracking speed
+       WaveSpeed=Vector(Max(pCrackingSpeed[idx],WaveSpeed.x()),
+                        Max(pCrackingSpeed[idx],WaveSpeed.y()),
+	  	        Max(pCrackingSpeed[idx],WaveSpeed.z()));
+     }
+
     pDilationalWaveSpeed[idx] = c_dil;
   }
 
@@ -363,6 +374,8 @@ void CompNeoHook::addComputesAndRequires(Task* task,
    task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
    
    if(matl->getFractureModel()) {
+      task->requires(old_dw, lb->pCrackingSpeedLabel, matl->getDWIndex(), patch,
+		  Ghost::None);
       task->requires(new_dw, lb->pVisibilityLabel, matl->getDWIndex(), patch,
 		  Ghost::None);
       task->computes(new_dw, lb->pDilationalWaveSpeedLabel, matl->getDWIndex(), patch);
@@ -399,6 +412,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.42  2000/09/11 01:08:43  tan
+// Modified time step calculation (in constitutive model computeStressTensor(...))
+// when fracture cracking speed involved.
+//
 // Revision 1.41  2000/09/10 22:51:12  tan
 // Added particle rotationRate computation in computeStressTensor functions
 // in each constitutive model classes.  The particle rotationRate will be used

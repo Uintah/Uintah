@@ -39,6 +39,8 @@ initializeFractureModelData(const Patch* patch,
    new_dw->allocate(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
    ParticleVariable<double> pMicrocrackPosition;
    new_dw->allocate(pMicrocrackPosition, lb->pMicrocrackPositionLabel, pset);
+   ParticleVariable<double> pCrackingSpeed;
+   new_dw->allocate(pCrackingSpeed, lb->pCrackingSpeedLabel, pset);
    
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
@@ -47,12 +49,14 @@ initializeFractureModelData(const Patch* patch,
 	pCrackSurfaceNormal[idx] = Vector(0.,0.,0.);
 	pMicrocrackSize[idx] = 0;
 	pMicrocrackPosition[idx] = 0;
+	pCrackingSpeed[idx] = 0;
    }
 
    new_dw->put(pIsBroken, lb->pIsBrokenLabel);
    new_dw->put(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel);
    new_dw->put(pMicrocrackSize, lb->pMicrocrackSizeLabel);
    new_dw->put(pMicrocrackPosition, lb->pMicrocrackPositionLabel);
+   new_dw->put(pCrackingSpeed, lb->pCrackingSpeedLabel);
 }
 
 void
@@ -70,6 +74,7 @@ crackGrow(const Patch* patch,
    ParticleVariable<Vector> pCrackSurfaceNormal;
    ParticleVariable<double> pMicrocrackSize;
    ParticleVariable<double> pMicrocrackPosition;
+   ParticleVariable<double> pCrackingSpeed;
    ParticleVariable<double> pDilationalWaveSpeed;
    ParticleVariable<double> pVolume;
    ParticleVariable<Vector> pRotationRate;
@@ -79,6 +84,7 @@ crackGrow(const Patch* patch,
    old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
    old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
    old_dw->get(pMicrocrackPosition, lb->pMicrocrackPositionLabel, pset);
+   old_dw->get(pCrackingSpeed, lb->pCrackingSpeedLabel, pset);  
    old_dw->get(pVolume, lb->pVolumeLabel, pset);
    new_dw->get(pDilationalWaveSpeed, lb->pDilationalWaveSpeedLabel, pset);
    new_dw->get(pRotationRate, lb->pRotationRateLabel, pset);
@@ -133,6 +139,7 @@ crackGrow(const Patch* patch,
 	  pCrackSurfaceNormal[idx] = maxDirection;
 	  pMicrocrackSize[idx] = 0;
 	  pMicrocrackPosition[idx] = pow(pVolume[idx],0.33333) * (drand48() - 0.5);
+	  pCrackingSpeed[idx] = 0;
 	  cout<<"Microcrack initiated in direction "<<maxDirection<<"."<<endl;
 	}
       }
@@ -148,9 +155,13 @@ crackGrow(const Patch* patch,
 	double tensilStress = Dot(pStress[idx] * pCrackSurfaceNormal[idx],
 	   pCrackSurfaceNormal[idx]);
 	
-	pMicrocrackSize[idx] += pDilationalWaveSpeed[idx] * 
-	  ( 1 - exp(tensilStress/d_tensileStrength - 1) ) * delT;
+	double newSpeed = pDilationalWaveSpeed[idx] * 
+	  ( 1 - exp(tensilStress/d_tensileStrength - 1) );
+	
+	pMicrocrackSize[idx] += ( pCrackingSpeed[idx] + newSpeed )/2 * delT;
 	if(pMicrocrackSize[idx] > sizeLimit) pMicrocrackSize[idx] = sizeLimit;
+	
+	pCrackingSpeed[idx] = newSpeed;
       }
    }
 
@@ -158,6 +169,7 @@ crackGrow(const Patch* patch,
    new_dw->put(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel_preReloc);
    new_dw->put(pMicrocrackSize, lb->pMicrocrackSizeLabel_preReloc);
    new_dw->put(pMicrocrackPosition, lb->pMicrocrackPositionLabel_preReloc);
+   new_dw->put(pCrackingSpeed, lb->pCrackingSpeedLabel_preReloc);
 }
 
 Fracture::
@@ -234,6 +246,10 @@ Fracture::~Fracture()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.42  2000/09/11 01:08:44  tan
+// Modified time step calculation (in constitutive model computeStressTensor(...))
+// when fracture cracking speed involved.
+//
 // Revision 1.41  2000/09/11 00:15:00  tan
 // Added calculations on random distributed microcracks in broken particles.
 //
