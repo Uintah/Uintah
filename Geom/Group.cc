@@ -106,7 +106,7 @@ void GeomGroup::preprocess()
     // Build the tree...
     if(treetop)
 	delete treetop;
-    int s=Max(objs.size(), 500);
+    int s=Min(objs.size(), 100);
     Array2<double> volumes(s, s);
     Array1<ITree*> current(s);
     Array1<BSphere> bounds(s);
@@ -121,14 +121,14 @@ void GeomGroup::preprocess()
 	}
     }
     int next=s;
-    ITree* newnode;
-    for(int count=0;count<objs.size();count++){
+    ITree* newnode=current[0];
+    for(int count=1;count<objs.size();count++){
 	// Fix this loop - cache minimums for each row.
 	double min=MAXDOUBLE;
-	int obj1, obj2;
+	int obj1=-1, obj2=-1;
 	for(int i=0;i<s;i++){
 	    for(int j=0;j<i;j++){
-		if(min < volumes(i,j)){
+		if(volumes(i,j) < min){
 		    min=volumes(i,j);
 		    obj1=i;
 		    obj2=j;
@@ -161,6 +161,8 @@ void GeomGroup::preprocess()
 		    BSphere s(bounds[obj2]);
 		    s.extend(bounds[i]);
 		    volumes(obj2,i)=volumes(i,obj2)=s.volume();
+		} else {
+		    volumes(obj2,i)=volumes(i,obj2)=MAXDOUBLE;
 		}
 	    }
 	    next++;
@@ -176,6 +178,8 @@ void GeomGroup::preprocess()
 		BSphere s(bounds[obj1]);
 		s.extend(bounds[i]);
 		volumes(obj1,i)=volumes(i,obj1)=s.volume();
+	    } else {
+		volumes(obj1,i)=volumes(i,obj1)=MAXDOUBLE;
 	    }
 	}
     }
@@ -186,9 +190,12 @@ void GeomGroup::preprocess()
 void GeomGroup::intersect(const Ray& ray, Material* matl,
 			  Hit& hit)
 {
+    treetop->intersect(ray, matl, hit);
+#if 0
     for(int i=0;i<objs.size();i++){
 	objs[i]->intersect(ray, matl, hit);
     }
+#endif
 }
 
 GeomGroup::ITreeLeaf::ITreeLeaf(GeomObj* obj)

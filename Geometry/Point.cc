@@ -37,10 +37,14 @@ int Point::operator!=(const Point& p) const
 
 Point::Point(double x, double y, double z, double w)
 {
-    ASSERT(w!=0);
-    _x=x/w;
-    _y=y/w;
-    _z=z/w;
+    if(w==0){
+	cerr << "degenerate point!" << endl;
+	_x=_y=_z=0;
+    } else {
+	_x=x/w;
+	_y=y/w;
+	_z=z/w;
+    }
 #if SCI_ASSERTION_LEVEL >= 4
     uninit=0;
 #endif
