@@ -153,73 +153,41 @@ NrrdCmedian::execute()
     max[i] = nrrd_handle->nrrd->axis[i].size - 1;
   }
 
-  bool found_scalar = false;
+
+  //! Slice a scalar out of the tuple axis and filter it. So for Vectors
+  //! and Tensors, a component wise filtering occurs.
+
   vector<Nrrd*> out;
-  vector<string>::iterator iter = elems.begin();
-  int elem_idx = 0;
-  while (iter != elems.end()) {
-    // check that this elem of the tuple axis is a scalar set
-
-    nrrd_handle->get_tuple_index_info(elem_idx, elem_idx, min[0], max[0]);
-    ++elem_idx;
-    const string &s = *iter;
-    ++iter;
-    
-    Nrrd *nout = nrrdNew();
-
-    // crop out the elem, and filter it.
-    if (nrrdCrop(nout, nin, min, max)) {
+  for (int i = 0; i < nrrd_handle->nrrd->axis[0].size; i++) 
+  { 
+    Nrrd *sliced = nrrdNew();
+    if (nrrdSlice(sliced, nin, 0, i)) {
       char *err = biffGetDone(NRRD);
-      error(string("Trouble with crop: ") + err);
-      msgStream_ << " Cropping: " << min[0] << "(min) " 
-		 << max[0] << "(max)" << endl;
+      error(string("Trouble with slice: ") + err);
       free(err);
     }
     
-    if (is_scalar(s)) {    
-      found_scalar = true;
-      
-      Nrrd *sliced = nrrdNew();
-      if (nrrdSlice(sliced, nout, 0, 0)) {
-	char *err = biffGetDone(NRRD);
-	error(string("Trouble with slice: ") + err);
-	free(err);
-      }
-      
-      Nrrd *nout_filtered;
-      nout_filtered = do_filter(sliced);
-      if (!nout_filtered) {
-	error("Error filtering, returning");
-	return;
-      }
-      out.push_back(nout_filtered);
-    } else {
-      warning("Non scalar set in tuple axis, copied unchanged to output");
-      out.push_back(nout);
-    }
-  }
-  
-  if (found_scalar) {
-    // Join the filtered nrrs along the tuple axis.
-    NrrdData *nrrd_joined = scinew NrrdData;
-    nrrd_joined->nrrd = nrrdNew();
-
-    if (nrrdJoin(nrrd_joined->nrrd, &out[0], out.size(), 0, 1)) {
-      char *err = biffGetDone(NRRD);
-      error(string("Join Error: ") +  err);
-      free(err);
+    Nrrd *nout_filtered;
+    nout_filtered = do_filter(sliced);
+    if (!nout_filtered) {
+      error("Error filtering, returning");
       return;
     }
-    nrrd_joined->nrrd->axis[0].label = strdup(nin->axis[0].label);
-    nrrd_joined->copy_sci_data(*nrrd_handle.get_rep());
-    onrrd_->send(NrrdDataHandle(nrrd_joined));
-  } else {
-    // destroy all the cropped nrrds, and output the input field.
-    vector<Nrrd*>::iterator iter =  out.begin();
-    while (iter != out.end()) { nrrdNuke(*iter++); }
-    onrrd_->send(nrrd_handle);
-    warning("No scalar data found, input sent through output");
+    out.push_back(nout_filtered);
   }
+  // Join the filtered nrrs along the tuple axis.
+  NrrdData *nrrd_joined = scinew NrrdData;
+  nrrd_joined->nrrd = nrrdNew();
+
+  if (nrrdJoin(nrrd_joined->nrrd, &out[0], out.size(), 0, 1)) {
+    char *err = biffGetDone(NRRD);
+    error(string("Join Error: ") +  err);
+    free(err);
+    return;
+  }
+  nrrd_joined->nrrd->axis[0].label = strdup(nin->axis[0].label);
+  nrrd_joined->copy_sci_data(*nrrd_handle.get_rep());
+  onrrd_->send(NrrdDataHandle(nrrd_joined));
 }
 
 } // End namespace SCITeem
