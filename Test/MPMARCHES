@@ -29,7 +29,7 @@ UNUSED_TESTS = [("matest_heptwb_cyl", "matest_heptwb_cyl.ups", "", 1.1, "ALL", "
                 ]
  
 TESTS = [ ("jp8cyl", "jp8cyl.ups", "", 1.1, "ALL", "chem_hept_westbrook"), \
-          ("jp8cyl_8p", jp8cyl_8p_ups, "", 8, "ALL","chem_hept_westbrook") \
+          ("jp8cyl_8p", jp8cyl_8p_ups, "", 8, "ALL","chem_hept_westbrook"), \
           ("jp8cyl_40cube_8p", jp8cyl_40cube_8p_ups, "", 8, "ALL","chem_hept_westbrook") \
     	]
 
