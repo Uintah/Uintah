@@ -5,6 +5,11 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := Packages/Kurt/Core/Geom
 SRCS   += \
 	$(SRCDIR)/VolumeRenderer.cc \
+	$(SRCDIR)/SCIRexRenderer.cc \
+	$(SRCDIR)/OGLXVisual.cc \
+	$(SRCDIR)/OGLXWindow.cc \
+	$(SRCDIR)/SCIRexWindow.cc \
+	$(SRCDIR)/SCIRexCompositer.cc \
 	$(SRCDIR)/SliceRenderer.cc \
 	$(SRCDIR)/BrickGrid.cc \
 	$(SRCDIR)/GridBrick.cc \

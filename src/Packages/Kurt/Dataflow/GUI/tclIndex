@@ -7,5 +7,6 @@
 # a script that loads the command.
 
 set auto_index(updateCanvas) [list source [file join $dir test.tcl]]
-set auto_index(Kurt_Visualization_GridVolVis) [list source [file join $dir GridVolVis.tcl]]
 set auto_index(Kurt_Visualization_GridSliceVis) [list source [file join $dir GridSliceVis.tcl]]
+set auto_index(Kurt_Visualization_GridVolVis) [list source [file join $dir GridVolVis.tcl]]
+set auto_index(Kurt_Visualization_SCIRex) [list source [file join $dir SCIRex.tcl]]

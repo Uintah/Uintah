@@ -7,6 +7,7 @@ SRCDIR   := Packages/Kurt/Dataflow/Modules/Visualization
 SRCS     += \
 	$(SRCDIR)/GridVolVis.cc \
 	$(SRCDIR)/GridSliceVis.cc \
+	$(SRCDIR)/SCIRex.cc \
 #[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/ParticleColorMapKey.cc \
 
