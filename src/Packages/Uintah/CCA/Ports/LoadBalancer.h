@@ -50,6 +50,9 @@ WARNING
 				 const ProcessorGroup* resources) = 0;
     virtual int getPatchwiseProcessorAssignment(const Patch* patch,
 						const ProcessorGroup* resources) = 0;
+    virtual void createNeighborhood(const Level* level, const ProcessorGroup*) = 0;
+    virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*) = 0;
+    virtual bool inNeighborhood(const Patch*) = 0;
 
     virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level,
 						       const ProcessorGroup* resources) = 0;
