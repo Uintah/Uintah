@@ -25,6 +25,7 @@
 
 #include <sci_defs.h>
 
+#define HAVE_HAS_HMAP
 #ifdef HAVE_STD_HASHMAP
 #include <hash_map>
 using std::hash_map;
@@ -43,7 +44,7 @@ using __gnu_cxx::hash_map;
 using __gnu_cxx::hash_multimap;
 using __gnu_cxx::hash;
 #else
-#error Do not know location of hash_map
+#undef HAVE_HASH_MAP
 #endif
 #endif
 #endif

@@ -355,9 +355,13 @@ private:
     }
   };
 
+#ifdef HAVE_HASH_MAP
   typedef hash_map<PFace, Face::index_type, FaceHash> face_ht;
   typedef hash_map<PEdge, Edge::index_type, EdgeHash> edge_ht;
-
+#else
+  typedef map<PFace, Face::index_type, FaceHash> face_ht;
+  typedef map<PEdge, Edge::index_type, EdgeHash> edge_ht;
+#endif
   /*! container for face storage. Must be computed each time
     nodes or cells change. */
   vector<PFace>             faces_;

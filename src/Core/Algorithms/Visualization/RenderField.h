@@ -48,7 +48,11 @@ class GeomArrows;
 class RenderFieldBase : public DynamicAlgoBase
 {
 public:
+#ifdef HAVE_HASH_MAP
   typedef hash_map<int, MaterialHandle> ind_mat_t;
+#else
+  typedef map<int, MaterialHandle> ind_mat_t;
+#endif
   virtual void set_mat_map(ind_mat_t *mm) = 0;
   virtual void render(FieldHandle f, bool nodes, bool edges, 
 		      bool faces, bool data, MaterialHandle def_mat, 
@@ -248,7 +252,11 @@ RenderField<Fld, Loc>::render_materials(const Fld *sfld,
   //cerr << "rendering materials" << endl;
 
   const string dat_mat("data_at_materials");
+#ifdef HAVE_HASH_MAP
   typedef hash_map<int, MaterialHandle> ind_mat_t;
+#else
+  typedef map<int, MaterialHandle> ind_mat_t;
+#endif
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
 
   if (! mats_) {

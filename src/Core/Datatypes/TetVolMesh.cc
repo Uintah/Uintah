@@ -62,16 +62,30 @@ TetVolMesh::TetVolMesh() :
   cells_(0),
   cells_lock_("TetVolMesh cells_ fill lock"),
   edges_computed_p_(false),
+#ifdef HAVE_HASH_SET
   edge_hasher_(cells_),
+#endif
   edge_eq_(cells_),
+#ifdef HAVE_HASH_SET
   all_edges_(100,edge_hasher_,edge_eq_),
   edges_(100,edge_hasher_,edge_eq_),
+#else
+  all_edges_(edge_eq_),
+  edges_(edge_eq_),
+#endif
   edge_lock_("TetVolMesh edges_ fill lock"),
   faces_computed_p_(false),
+#ifdef HAVE_HASH_SET
   face_hasher_(cells_),
+#endif
   face_eq_(cells_),
+#ifdef HAVE_HASH_SET
   all_faces_(100,face_hasher_,face_eq_),
   faces_(100,face_hasher_,face_eq_),
+#else
+  all_faces_(face_eq_),
+  faces_(face_eq_),
+#endif
   face_lock_("TetVolMesh faces_ fill lock"),
   nodes_computed_p_(false),
   nodes_(0),
@@ -88,16 +102,30 @@ TetVolMesh::TetVolMesh(const TetVolMesh &copy):
   cells_(copy.cells_),
   cells_lock_("TetVolMesh cells_ fill lock"),
   edges_computed_p_(copy.edges_computed_p_),
+#ifdef HAVE_HASH_SET
   edge_hasher_(cells_),
+#endif
   edge_eq_(cells_),
+#ifdef HAVE_HASH_SET
   all_edges_(100,edge_hasher_,edge_eq_),
   edges_(100,edge_hasher_,edge_eq_),
+#else
+  all_edges_(edge_eq_),
+  edges_(edge_eq_),
+#endif
   edge_lock_("TetVolMesh edges_ fill lock"),
   faces_computed_p_(copy.faces_computed_p_),
+#ifdef HAVE_HASH_SET
   face_hasher_(cells_),
+#endif
   face_eq_(cells_),
+#ifdef HAVE_HASH_SET
   all_faces_(100,face_hasher_,face_eq_),
   faces_(100,face_hasher_,face_eq_),
+#else
+  all_faces_(face_eq_),
+  faces_(face_eq_),
+#endif
   face_lock_("TetVolMesh edges_ fill lock"),
   nodes_computed_p_(copy.nodes_computed_p_),
   nodes_(0),

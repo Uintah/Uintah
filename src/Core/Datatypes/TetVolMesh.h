@@ -118,6 +118,7 @@ public:
       };
     };
       
+#ifdef HAVE_HASH_SET
     //! A functor that hashes an edge index according to the node
     //! indices of that edge
     //! Used as a template parameter to STL hash_[set,map] containers
@@ -141,6 +142,10 @@ public:
 
     typedef hash_multiset<index_type, CellEdgeHasher,eqEdge> HalfEdgeSet;
     typedef hash_set<index_type, CellEdgeHasher, eqEdge> EdgeSet;
+#else
+    typedef multiset<index_type, eqEdge> HalfEdgeSet;
+    typedef set<index_type, eqEdge> EdgeSet;
+#endif
     //! This iterator will traverse each shared edge once in no 
     //! particular order.
     typedef EdgeSet::iterator		iterator;
@@ -180,6 +185,7 @@ public:
       }
     };
     
+#ifdef HAVE_HASH_SET
     struct CellFaceHasher: public unary_function<size_t, index_type>
     {
     private:
@@ -201,6 +207,10 @@ public:
     };
     typedef hash_multiset<index_type, CellFaceHasher,eqFace> HalfFaceSet;
     typedef hash_set<index_type, CellFaceHasher, eqFace> FaceSet;
+#else
+    typedef multiset<index_type, eqFace> HalfFaceSet;
+    typedef set<index_type, eqFace> FaceSet;
+#endif
     typedef FaceSet::iterator		iterator;
     typedef FaceIndex<under_type>       size_type;
     typedef vector<index_type>          array_type;
@@ -395,7 +405,9 @@ protected:
   typedef LockingHandle<Edge::HalfEdgeSet> HalfEdgeSetHandle;
   typedef LockingHandle<Edge::EdgeSet> EdgeSetHandle;
   bool			edges_computed_p_;
+#ifdef HAVE_HASH_SET
   Edge::CellEdgeHasher	edge_hasher_;
+#endif
   Edge::eqEdge		edge_eq_;
   Edge::HalfEdgeSet	all_edges_;
   Edge::EdgeSet		edges_;
@@ -404,7 +416,9 @@ protected:
   typedef LockingHandle<Face::HalfFaceSet> HalfFaceSetHandle;
   typedef LockingHandle<Face::FaceSet> FaceSetHandle;
   bool			faces_computed_p_;
+#ifdef HAVE_HASH_SET
   Face::CellFaceHasher	face_hasher_;
+#endif
   Face::eqFace		face_eq_;
   Face::HalfFaceSet	all_faces_;
   Face::FaceSet		faces_;

@@ -104,7 +104,11 @@ class ShowField : public Module
   GuiDouble                def_color_b_;
   GuiDouble                def_color_a_;
   MaterialHandle           def_mat_handle_;
+#ifdef HAVE_HASH_MAP
   typedef hash_map<int, MaterialHandle> ind_mat_t;
+#else
+  typedef map<int, MaterialHandle> ind_mat_t;
+#endif
   ind_mat_t                idx_mats_;
 
   //! re-render all the material handles?
