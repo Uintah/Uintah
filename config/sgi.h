@@ -29,7 +29,7 @@
 #define SCI_DeltaCppCompiler NCC
 #define SCI_DeltaOptimizeCppFlags SCI_DeltaOptimizeCFlags
 #define SCI_DeltaDebugCppFlags SCI_DeltaDebugCFlags
-#define SCI_DeltaOtherCppFlags -mips2 w +p
+#define SCI_DeltaOtherCppFlags -mips2 +w +p
 #define SCI_DeltaCppIncludeLocation /usr/include/CC
 #define SCI_DeltaLinker time NCC
 #define SCI_DeltaLinkerFlags -ptv

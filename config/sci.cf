@@ -138,4 +138,4 @@ Concat(lib,libname.a): objlist						@@\
 
 clean::
 	$(RM) -r ii_files
-	$(RM) -f ILDUMPS
+	$(RM) -r ILDUMPS
