@@ -22,7 +22,7 @@
 #include <Packages/rtrt/Core/Box.h>
 #include <Packages/rtrt/Core/SpinningInstance.h>
 #include <Packages/rtrt/Core/DynamicInstance.h>
-#if !defined(linux) && !defined(SCI_64BITS)
+#if !defined(linux)
 #  include <Packages/rtrt/Sound/Sound.h>
 #endif
 #include <Core/Geometry/Point.h>
@@ -40,7 +40,7 @@ using std::vector;
 extern "C" 
 Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 {
-  Camera cam( Point(1.9,22,7), Point( 1.8,-9.6,3.5 ), Vector(0,0,1), 45.0 );
+  Camera cam( Point(1.9,22,7), Point( 1.9,-9.6,7 ), Vector(0,0,1), 45.0 );
 
   Material* matl=new MetalMaterial( Color( .9,.1,.4 ) );
   Material* matl2=new MetalMaterial( Color( .1,.9,.1 ) );
@@ -90,12 +90,12 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 			 bgcolor, cdown, cup, groundplane,
 			 ambient_scale, Arc_Ambient);
 
-#if !defined(linux) && !defined(SCI_64BITS)
+#if !defined(linux)
   vector<Point> loc; loc.push_back(Point(5,5,5));
-  Sound * sound = new Sound( "cool_music.wav", loc, 10, true );
+  Sound * sound = new Sound( "cool_music.wav", "cool", loc, 10, true );
   scene->addSound( sound );
   loc.clear(); loc.push_back( Point( 0,0,0 ) );
-  sound = new Sound( "water-flowing1.wav", loc, 5, true );
+  sound = new Sound( "water-flowing1.wav", "water", loc, 10, true );
   scene->addSound( sound );
 #endif
 

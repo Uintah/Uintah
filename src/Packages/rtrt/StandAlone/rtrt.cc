@@ -19,9 +19,10 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Gui.h>
-#if !defined(linux) && !defined(SCI_64BITS)
-#include <Packages/rtrt/Sound/SoundThread.h>
+#if !defined(linux)
+#  include <Packages/rtrt/Sound/SoundThread.h>
 #endif
+
 #include <iostream>
 
 #include <dlfcn.h>
@@ -475,7 +476,7 @@ main(int argc, char* argv[])
   Gui::setActiveGui( gui );
   gui->setDpy( dpy );
 
-#if !defined(linux) && !defined(SCI_64BITS)
+#if !defined(linux)
   SoundThread * soundthread = NULL;
 
   if( startSoundThread ) {
@@ -512,7 +513,8 @@ main(int argc, char* argv[])
   glutReshapeFunc( Gui::handleWindowResizeCB );
   glutDisplayFunc( doNothingCB );
 
-  Gui::createMenus( mainWindowId , show_gui);  // Must do this after glut is initialized.
+  // Must do this after glut is initialized.
+  Gui::createMenus( mainWindowId, show_gui);  
 
   // Let the GUI know about the lights.
   int cnt;
@@ -537,15 +539,16 @@ main(int argc, char* argv[])
     char buf[100];
     sprintf(buf, "worker %d", i);
 #if 0
-    new Thread(new Worker(dpy, scene, i,
-			  pp_size, scratchsize,
-			  ncounters, c0, c1), buf);
+    Thread * thread = new Thread(new Worker(dpy, scene, i,
+					    pp_size, scratchsize,
+					    ncounters, c0, c1), buf);
 #endif
 #if 1
-    (new Thread(new Worker(dpy, scene, i,
-			  pp_size, scratchsize,
-			  ncounters, c0, c1), buf))->detach();
-    //			     ncounters, c0, c1), buf, group);
+    Worker * worker = new Worker(dpy, scene, i,
+				 pp_size, scratchsize,
+				 ncounters, c0, c1);
+    Thread * thread = new Thread( worker, buf );
+    thread->detach();
 #endif
   } // end for (create workers)
 
