@@ -1,8 +1,8 @@
 
 package require Iwidgets 3.0
 
-proc ComponentWizard {} {
-    set w .componentWizard
+proc ComponentWizard { {window .componentWizard} } {
+    set w $window 
     if {[winfo exists $w]} {
 	destroy $w
     }
@@ -39,7 +39,7 @@ proc ComponentWizard {} {
 	  -y [expr $HEIGHT + [expr 2* $PAD]]i\
           -width 1i -height .33i
 
-    button $w.cancel -text "Cancel" 
+    button $w.cancel -text "Cancel" -command "destroy $w"  
     place $w.cancel -x [concat [expr $PAD + 3.5] i]\
 	  -y [expr $HEIGHT + [expr 2* $PAD]]i\
           -width 1i -height .33i
@@ -60,8 +60,14 @@ proc ComponentWizard {} {
     set tab3 [$w.tabs add -label "Implementation"]
     frame $tab3.f
     
-    set tab4 [$w.tabs add -label "Testing"]
-    frame $tab4.f
+    set testing [$w.tabs add -label "Testing"]
+    frame $testing.f
+    pack $testing.f -side top -fill both -expand true
+    
+    prompted_text $testing.f.testing_text "<Insert testing information>" -wrap word -yscrollcommand "$testing.f.sy set"
+    pack $testing.f.testing_text -side left -fill both -expand true
+    scrollbar $testing.f.sy -orient vert -command "$testing.f.testing_text yview"
+    pack $testing.f.sy -side right -fill y
 
     $w.tabs view "I/O and GUI"
 }
