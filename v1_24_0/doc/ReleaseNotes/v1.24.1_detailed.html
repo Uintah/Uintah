@@ -56,21 +56,49 @@ DEALINGS IN THE SOFTWARE.
     <h2> SCIRun Modules (Category in parentheses) </h2> 
 
     <ul>
-      <li></li>
+      <li>BuildMappingMatrix (FieldsData) - Was BuildInterpMatrix</li>
+      <li>ApplyMappingMatrix (FieldsData) - Was ApplyInterpMatrix</li>
+      <li>DirectMapping (FieldsData) - Was DirectInterpolate</li>
+      <li>MatrixInfo (Math) - Information about a SCIRun matrix.</li>
+    </ul>
+
+    <h2> Teem Modules (Category in parentheses) </h2>
+    
+    <ul>
+      <li>NrrdSetupTexture (NrrdData) - More efficiently building volume rendering data.</li>
+    </ul>
+
+    <h2> BioPSE Modules (Category in parentheses) </h2>
+    
+    <ul>
+      <li>ApplyFEMElectrodeSource (Forward) - Split 'electrode set' mode of ApplyFEMCurrentSource into separate module.</li>
     </ul>
 
     <h1> Module Enhancements </h1>
 
     <h2> SCIRun Modules (Category in parentheses) </h2>
-
     <ul>
-      <li></li>
+      <li>Add Generation output to the various Info modules.</li>
+      <li>ClipByFunction (FieldsCreate) - Fix compilation for gcc 3.4 (u0-u5 templating issue).</li>
+      <li>GatherFields (FieldsCreate) - Add support for elem data copying.</li>
+      <li>GatherFields (FieldsCreate) - Fix crash bug when no valid input fields are present.</li>
+      <li>SampleField (FieldsCreate) -  Lower the max number of samples to 201 on rake slider.</li>
+      <li>BuildMappingMatrix (FieldsData) - Reenable parallel interpolation.</li>
+      <li>ChangeFieldBasis (FieldsData) - Emit identity mapping if basis is same.</li>
+      <li>ChangeFieldBasis (FieldsData) - Fix backwards compatability bug.</li>
+      <li>FieldMeasures (FieldsOther) - Add error checking and fix normals.</li>
+      <li>LinAlgUnary (Math) - Added support for SparseRowMatrices.</li>
+      <li>LinAlgBinary (Math) - Added support for SparseRowMatrices.</li>
+      <li>Viewer (Render) - Check for stereo support before using it in the viewer, bug #2478.</li>
+      <li>Viewer (Render) - Fix 'Use Global Controls' button on Viewer items, bug #2431.</li>
+      <li>Isosurface (Visualization) - Filter out degenerate output elements when isosurfacing, bug #2468.</li>
     </ul>
 
     <h2>Teem Modules (Category in parentheses)</h2>
     <ul>
       <li>Upgraded many Unu and Tend modules to work with new Teem, 1.8.0.</li>
       <li>NrrdToField (Converters) - Now handles PointCloud points only case.</li>
+      <li>NrrdToField (Converters) - Fix gcc 3.4 compilation (reorder includes).</li>
       <li>UnuFlip (UnuAToM) - Maintains axis min/max for flipped axis.</li>
       <li>UnuCmedian (UnuAToM) - Module now caches.</li>
     </ul>
@@ -81,11 +109,21 @@ DEALINGS IN THE SOFTWARE.
       <li>BinaryThresholdImageFilter (Filters) - Initialize lower threshold to be lower than upper threshold.</li>
     </ul>
 
+    <h2> BioPSE Modules (Category in parentheses)</h2>
+    <ul>
+      <li>ApplyFEMCurrentSource (Forward) - Changed to use a Mapping Matrix instead of an Interpolant Field.</li>
+    </ul>
+    
     <h1> Deprecated Modules </h1>
 
     <h2>SCIRun Modules (Category in parentheses)</h2> 
     <ul>
-      <li></li>
+      <li>BuildInterpolant (FieldsData) - Use BuildMappingMatrix instead.</li>
+      <li>BuildInterpMatrix (FieldsData) - Use BuildMappingMatrix instead.</li>
+      <li>Interp2TransferMatrix (FieldsOther) - Use BuildMappingMatrix instead.</li>
+      <li>ApplyInterpolant (FieldsData) - Use ApplyMappingMatrix instead.</li>
+      <li>ApplyInterpMatrix (FieldsData) - Use ApplyMappingMatrix instead.</li>
+      <li>DirectInterpolate (FieldsData) - Use DirectMapping instead.</li>
     </ul>
 
     <h1> Power App Enhancements </h1>
@@ -116,7 +154,26 @@ DEALINGS IN THE SOFTWARE.
     <ul>
       <li>Fixed how we build tensors from eigenvectors/eigenvalues
       (had been missing a transpose).</li>
-      <li>Add double and float types to PropertyManager sot hat all options in NrrdSetProperty work.</li>
+      <li>Add double and float types to PropertyManager so that all options in NrrdSetProperty work.</li>
+      <li>Add SparseRowMatrix multiply.</li>
+      <li>Fixed crash bug in SparseRowMatrix::submatrix.</li>
+      <li>Cleaned up matrix classes.</li>
+      <li>Change Matrix::get to return value rather than reference.</li>
+      <li>Use copy_properties instead of unsafe typecast in teem modules.</li>
+      <li>Cleanup Thread_pthreads.cc, do proper pthread error checking (not errno).</li>
+      <li>Templatize Import/Export ExecConverter code to reduce redundancy.</li>
+      <li>Throw error on invalid get_iport(string) or get_oport(string).  Remove much redundant error checking code from modules.</li>
+      <li>Add data_size() function to the Field class.</li>
+      <li>Simplify update_progress interface.</li>
+      <li>Add new send command to Mailbox class so that we don't spam redraw events on viewer expose and resize.</li>
+      <li>Use dynamic test for shader support in volume code.</li>
+      <li>Add support for get_normals to ImageMesh and StructQuadSurfMeshes.</li>
+      <li>Use std::vector for all Mesh::get_neighbors.  Cannot guarantee an upper bound on neighbor size so fixed-sized arrays won't work.</li>
+      <li>Work around bad parsing of exponents in our tcl expscale widget.  %d will not read integers with a leading zero as it thinks they are octal.  However %.0f works.</li>
+      <li>Wrap up OpenGL shader problems to avoid backwards linking compatability problems.</li>
+      <li>Create virtual destructor for GeomColormapInterface.</li>
+      <li>Use const references for Masked*Field indices where appropriate.</li>
+      <li>Fix volume rendering transparency on apples with unsupported hardware.</li>
     </ul>
 
     <h1>Environment Variables</h1>
