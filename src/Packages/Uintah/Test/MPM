@@ -1,62 +1,25 @@
 #!/usr/local/bin/python
 
-from os import environ,mkdir,path,system,chdir
-from time import asctime,localtime,time
 from sys import argv,exit
-from helpers.runSusTest import runSusTest,input,modes,num_processes
+from helpers.runSusTest import runSusTests
 
-TESTS = [   ("disks.ups",		    ["dbg", "opt"]),    \
-    	    ("disks2mat.ups",		    ["dbg", "opt"]),    \
-	    ("disks2mat4patch.ups",	    ["dbg", "opt", "mpi"], 4), \
-    	    ("disks2mat_fc.ups",	    ["dbg", "opt"]),    \
-    	    ("disks_complex.ups",	    ["dbg", "opt"]),    \
-	    ("disks_fracture.ups",	    ["dbg", "opt"]),	\
-	    ("periodic_disks.ups",	    ["dbg", "opt"]),	\
-	    ("heatcond.ups",		    ["dbg", "opt"]),	\
-	    ("heatcond2mat.ups",	    ["dbg", "opt"]),	\
-    	    ("inclined_plane_sphere.ups",   ["dbg", "opt"]),	\
-	    ("const_test_cmr.ups",	    ["dbg", "opt"]),	\
-	    ("const_test_hypo.ups",	    ["dbg", "opt"]),	\
-	    ("const_test_nh.ups",	    ["dbg", "opt"]),	\
-	    ("const_test_nhp.ups",	    ["dbg", "opt"]),	\
-	    ("const_test_vs.ups",	    ["dbg", "opt"]),	\
-	    ("sidecrack.ups",		    ["dbg", "opt", "mpi"], 2)	\
+TESTS = [   ("disks", "disks.ups", 1),  \
+    	    ("disks2mat", "disks2mat.ups", 1), \
+	    ("disks2mat4patch", "disks2mat4patch.ups", 1), \
+	    ("disks2mat4patch4proc", "disks2mat4patch.ups", 4), \
+    	    ("disks2mat_fc", "disks2mat_fc.ups", 1), \
+    	    ("disks_complex", "disks_complex.ups", 1), \
+	    ("disks_fracture", "disks_fracture.ups", 1), \
+	    ("periodic_disks", "periodic_disks.ups", 4),	\
+	    ("heatcond", "heatcond.ups", 1), \
+	    ("heatcond2mat", "heatcond2mat.ups", 1), \
+    	    ("inclined_plane_sphere", "inclined_plane_sphere.ups", 1), \
+	    ("const_test_cmr", "const_test_cmr.ups", 1), \
+	    ("const_test_hypo", "const_test_hypo.ups", 1), \
+	    ("const_test_nh", "const_test_nh.ups", 1), \
+	    ("const_test_nhp", "const_test_nhp.ups", 1), \
+	    ("const_test_vs", "const_test_vs.ups", 1), \
+	    ("sidecrack", "sidecrack.ups", 2)
     	]
 
-if len(argv) < 2:
-    print "usage: %s <mode>" % argv[0]
-    print "    where <mode> is a short string used to select tests to run."
-    exit(1)
-mode = argv[1]
-
-testdir = "%s/MPM-%s" % (environ['BUILDROOT'], mode)
-susdir = "%s/SCIRun/src/Packages/Uintah/StandAlone" % (environ['BUILDROOT'])
-mkdir(testdir)
-chdir(testdir)
-
-failcode = 0
-
-DO_RESTART = "yes"
-
-for test in TESTS:
-  if mode not in modes(test):
-    continue
-
-  testname = path.splitext(input(test))[0];
-  mkdir(testname)
-  chdir(testname)
-
-  # Run normal test
-  rc = runSusTest(test, mode, susdir, "mpm")
-  if rc == 0:
-    # Run restart test
-    rc = runSusTest(test, mode, susdir, "mpm", DO_RESTART)
-    if rc == 1:
-	failcode = 1
-  else:
-    failcode = 1
-
-  chdir("..")
-
-exit(failcode)
-
+exit(runSusTests(argv, TESTS, "mpm"))
