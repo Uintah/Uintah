@@ -69,12 +69,15 @@ public:
 
   //////////
   // return the value at the given position
+  T &fget1(int);
   T &fget2(int, int);
   T &fget3(int, int, int);
 
+  virtual void set1(int x, const T &val);
   virtual void set2(int x, int y, const T &val);
   virtual void set3(int x, int y, int z, const T &val);
 
+  void fset1(int x, const T &val);
   void fset2(int x, int y, const T &val);
   void fset3(int x, int y, int z, const T &val);
 
@@ -86,8 +89,9 @@ public:
   virtual void resize(int, int);
   virtual void resize(int, int, int);
 
-  int size() const;
+  virtual int iterate(AttribFunctor<T> &func);
 
+  int size() const;
 
   virtual string get_info();  
 
@@ -136,24 +140,24 @@ BrickAttrib<T>::BrickAttrib() :
 }
 
 template <class T>
-BrickAttrib<T>::BrickAttrib(int ix) :
-  FlatAttrib<T>(ix)
+BrickAttrib<T>::BrickAttrib(int x) :
+  FlatAttrib<T>()
 {
-  update_brick_counts();
+  resize(x);
 }
 
 template <class T>
-BrickAttrib<T>::BrickAttrib(int ix, int iy) :
-  FlatAttrib<T>(ix, iy)
+BrickAttrib<T>::BrickAttrib(int x, int y) :
+  FlatAttrib<T>()
 {
-  update_brick_counts();
+  resize(x, y);
 }
 
 template <class T>
-BrickAttrib<T>::BrickAttrib(int ix, int iy, int iz) :
-  FlatAttrib<T>(ix, iy, iz)
+BrickAttrib<T>::BrickAttrib(int x, int y, int z) :
+  FlatAttrib<T>(x, y, z)
 {
-  update_brick_counts();
+  resize(x, y, z);
 }
 
 template <class T>
@@ -169,7 +173,7 @@ BrickAttrib<T>::~BrickAttrib()
 {
 }
 
-
+#if 0
 template <class T> unsigned int
 BrickAttrib<T>::linearize(int x, int y)
 {
@@ -201,8 +205,34 @@ BrickAttrib<T>::linearize(int x, int y, int z)
 
   return brick * (XBRICKSIZE * YBRICKSIZE * ZBRICKSIZE) + baddr;
 }
+#else
+template <class T> unsigned int
+BrickAttrib<T>::linearize(int x, int y)
+{
+  return y * nx + x;
+}
+
+template <class T> unsigned int
+BrickAttrib<T>::linearize(int x, int y, int z)
+{
+  return z * (nx * ny) + y * nx + x;
+}
+#endif
 
 
+template <class T> T &
+BrickAttrib<T>::fget1(int ix)
+{
+#ifdef MIKE_DEBUG
+  if (dim != 1) {
+    throw DimensionMismatch(1, dim);
+  }
+  if (ix >= nx) {
+    throw ArrayIndexOutOfBounds(ix, 0, nx);
+  }
+#endif
+  return data[ix];
+}
 
 template <class T> T &
 BrickAttrib<T>::fget2(int ix, int iy)
@@ -243,6 +273,12 @@ BrickAttrib<T>::fget3(int ix, int iy, int iz)
 
 
 template <class T> void
+BrickAttrib<T>::get1(T &result, int ix)
+{
+  result = fget1(ix);
+}
+
+template <class T> void
 BrickAttrib<T>::get2(T &result, int ix, int iy)
 {
   result = fget2(ix, iy);
@@ -257,6 +293,12 @@ BrickAttrib<T>::get3(T &result, int ix, int iy, int iz)
 
 // Virtual wrappers for inline functions.
 template <class T> T &
+BrickAttrib<T>::get1(int ix)
+{
+  return fget1(ix);
+}
+
+template <class T> T &
 BrickAttrib<T>::get2(int ix, int iy)
 {
   return fget2(ix, iy);
@@ -269,6 +311,20 @@ BrickAttrib<T>::get3(int ix, int iy, int iz)
 }
 
 
+
+template <class T> void
+BrickAttrib<T>::fset1(int ix, const T& val)
+{
+#ifdef MIKE_DEBUG
+  if (dim != 1) {
+    throw DimensionMismatch(1, dim);
+  }
+  if (ix >= nx) {
+    throw ArrayIndexOutOfBounds(ix, 0, nx);
+  }
+#endif
+  data[ix] = val;
+}
 
 template <class T> void
 BrickAttrib<T>::fset2(int ix, int iy, const T& val)
@@ -311,6 +367,12 @@ BrickAttrib<T>::fset3(int ix, int iy, int iz, const T& val)
 
 // Generic setters for Flat type
 template <class T> void
+BrickAttrib<T>::set1(int x, const T &val)
+{
+  fset1(x, val);
+}
+
+template <class T> void
 BrickAttrib<T>::set2(int x, int y, const T &val)
 {
   fset2(x, y, val);
@@ -346,46 +408,103 @@ BrickAttrib<T>::set3(int x, int y, int z, const T &val)
 template <class T> void
 BrickAttrib<T>::resize(int x, int y, int z)
 {
-  FlatAttrib<T>::resize(x, y, z);
+  DiscreteAttrib<T>::resize(x, y, z);
   update_brick_counts();
+  data.resize(xbrickcount * XBRICKSIZE *
+	      ybrickcount * YBRICKSIZE *
+	      zbrickcount * XBRICKSIZE);
 }
 
 
 template <class T> void
 BrickAttrib<T>::resize(int x, int y)
 {
-  FlatAttrib<T>::resize(x, y);
+  DiscreteAttrib<T>::resize(x, y);
   update_brick_counts();
+  data.resize(xbrickcount * XBRICKSIZE *
+	      ybrickcount * YBRICKSIZE);
 }
 
 
 template <class T> void
 BrickAttrib<T>::resize(int x)
 {
-  FlatAttrib<T>::resize(x);
-  update_brick_counts();
+  DiscreteAttrib<T>::resize(x);
+  data.resize(xbrickcount * XBRICKSIZE);
 }
 
 
 template <class T> int
 BrickAttrib<T>::size() const
 {
-  return data.size();
+  switch (dim)
+    {
+    case 3:
+      return nx * ny * nz;
+    case 2:
+      return nx * ny;
+    case 1:
+      return nx;
+    default:
+      return 0;
+    }
 }
+
+
+template <class T> int
+BrickAttrib<T>::iterate(AttribFunctor<T> &func)
+{
+  if (dim == 3)
+    {
+      for (int i = 0; i < nz; i++)
+	{
+	  for (int j = 0; j < ny; j++)
+	    {
+	      for (int k = 0; k < nx; k++)
+		{
+		  func(fget3(k, j, i));
+		}
+	    }
+	}
+      return size();
+    }
+  else if (dim == 2)
+    {
+      for (int i = 0; i < ny; i++)
+	{
+	  for (int j = 0; j < nx; j++)
+	    {
+	      func(fget2(j, i));
+	    }
+	}
+      return size();
+    }
+  else
+    {
+      return FlatAttrib<T>::iterate(func);
+    }
+}
+
 
 
 template <class T> string BrickAttrib<T>::get_info(){
   ostringstream retval;
   retval <<
-    "Name = " << name << '\n' <<
-    "Type = BrickAttrib" << '\n' <<
-    "Dim = " << dim << ": " << nx << ' ' << ny << ' ' << nz << '\n' <<
-    "Size = " << size() << '\n' <<
+    "Name = " << name << endl <<
+    "Type = BrickAttrib" << endl <<
+    "Dim = " << dim << ": " << nx << ' ' << ny << ' ' << nz << endl <<
+    "Brickcounts = " 
+	 << xbrickcount << ' ' << ybrickcount << ' ' << zbrickcount << endl <<
+    "Bricksizes = "
+	 << XBRICKSIZE << ' ' << YBRICKSIZE << ' ' << ZBRICKSIZE << endl <<
+    "Size = " << size() << endl <<
     "Data = ";
   vector<T>::iterator itr = data.begin();
-  for(;itr!=data.end(); itr++){
+  int i = 0;
+  for(;itr!=data.end() && i < 1000; itr++, i++) {
     retval << *itr << " ";
   }
+  if (itr != data.end()) { retval << "..."; }
   retval << endl;
   return retval.str();
 }
