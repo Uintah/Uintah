@@ -332,22 +332,36 @@ void Worker::renderFrameless() {
   for(;;) {
     // exit if you are supposed to
     if( useAddSubBarrier_ ) {
-      io_lock_.lock();
-      cout <<"Thread: "<<num<<" stopping for threads, will wait for: " 
-           << oldNumWorkers_+1 << " threads\n";
-      io_lock_.unlock();
+//       io_lock_.lock();
+//       cout <<"Thread: "<<num<<" stopping for threads, will wait for: " 
+//            << oldNumWorkers_+1 << " threads\n";
+//       io_lock_.unlock();
 
       useAddSubBarrier_ = false;
       addSubThreads_->wait( oldNumWorkers_+1 );
 
       // stop if you have been told to stop.  
       if( stop_ ) {
-        io_lock_.lock();
-        cerr << "Thread: " << num << " stopping\n";
-        io_lock_.unlock();
+//         io_lock_.lock();
+//         cerr << "Thread: " << num << " stopping\n";
+//         io_lock_.unlock();
         return;
       }
+      // By this point we should be able to pick up of the
+      // rendering_scene should be changed.
+      if (dpy->priv->showing_scene != rendering_scene) {
+        rendering_scene = 1-rendering_scene;
+//         io_lock_.lock();
+//         cout <<"Thread: "<<num<<" now using rendering_scene(" 
+//              << rendering_scene << ")\n";
+//         io_lock_.unlock();
+      }
 
+      // Get the new resolutions
+      image=scene->get_image(rendering_scene);
+      xres=image->get_xres();
+      yres=image->get_yres();
+      
       // Redistribute the work allocations
       fill_frameless_work(xpos, ypos, xres, yres, nwork);
       
