@@ -226,7 +226,7 @@ TkOpenGLContext::height()
 void
 TkOpenGLContext::swap()
 {
-  return glXSwapBuffers(display_, x11_win_);
+  glXSwapBuffers(display_, x11_win_);
 }
 
 
