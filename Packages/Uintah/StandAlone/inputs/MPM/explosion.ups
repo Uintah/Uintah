@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+
+<!-- @version: Updated 2/3/01-->
+
+<Uintah_specification>
+
+   <Meta>
+	<title>Container dynamics with cracking, fragmentation, and explosion</title>
+   </Meta>
+
+   <Time>
+	<maxTime>0.25</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.0</delt_min>
+	<delt_max>0.001</delt_max>
+	<timestep_multiplier>0.8</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>explosion.uda</filebase>
+	<outputInterval>.01</outputInterval>
+   </DataArchiver>
+
+    <MPM>
+	<time_integrator>explicit</time_integrator>
+    </MPM>
+
+    <PhysicalConstants>
+	<gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+	<MPM>
+	    <material>
+		<burn type = "null" />
+		<fracture type = "normal">
+		  <constraint> 3 </constraint>
+		</fracture>
+		<pressure_rate> 100000. </pressure_rate>
+		<explosive_pressure> 30000. </explosive_pressure>
+		<initial_pressure> 30000. </initial_pressure>
+		<density>1000.0</density>
+		<constitutive_model type="comp_mooney_rivlin"> 
+		   <he_constant_1>100000.0</he_constant_1>
+		   <he_constant_2>50000.0</he_constant_2>
+		   <he_PR>.49</he_PR>
+	        </constitutive_model>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
+		<geom_object>
+		    <cylinder label="explosive">
+			<bottom>[0., 0., 0.]</bottom>
+			<top>[0., 0., .05]</top>
+			<radius> .5 </radius>
+		    </cylinder>
+		    <res>[2,2,2]</res>
+		    <velocity>[0,0,0]</velocity>
+		    <temperature>12</temperature>
+                    <toughness_min> 0.01 </toughness_min>
+		    <toughness_max> 0.01 </toughness_max>
+		    <toughness_variation>1</toughness_variation>
+ 		</geom_object>
+		<velocity_field>0</velocity_field>
+	    </material>
+
+	    <material>
+		<burn type = "null" />
+		<fracture type = "normal">
+		  <constraint> 3 </constraint>
+		</fracture>
+		<pressure_rate> 0. </pressure_rate>
+		<explosive_pressure> 0 </explosive_pressure>
+		<initial_pressure> 0 </initial_pressure>
+		<density>1000.0</density>
+		<constitutive_model type="comp_mooney_rivlin"> 
+		   <he_constant_1>1000000.0</he_constant_1>
+		   <he_constant_2>500000.0</he_constant_2>
+		   <he_PR>.49</he_PR>
+	        </constitutive_model>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
+		<geom_object>
+                   <difference>
+		     <cylinder label = "outer steel">
+			<bottom>[0.0, 0.0, 0.0]</bottom>
+			<top>[0., 0., .05]</top>
+			<radius> 0.3 </radius>
+		     </cylinder>
+		     <cylinder label = "inner steel">
+			<bottom>[0.0, 0.0, 0.0]</bottom>
+			<top>[0., 0., .05]</top>
+			<radius> .5 </radius>
+	             </cylinder>
+                   </difference>
+		   <res>[2,2,2]</res>
+		   <velocity>[0,0,0]</velocity>
+		   <temperature>12</temperature>
+                   <toughness_min> 20 </toughness_min>
+		   <toughness_max> 20 </toughness_max>
+		   <toughness_variation>1</toughness_variation>
+ 		</geom_object>
+		<velocity_field>1</velocity_field>
+	    </material>
+
+	    <contact>
+	      <type>single_velocity</type>
+	      <vel_fields>[0,1,0]</vel_fields>
+	    </contact>
+	</MPM>
+
+    </MaterialProperties>
+	
+    <Grid>
+	<Level>
+	    <Box label="1">
+		<lower>[-1.,-1., 0]</lower>
+		<upper>[ 1., 1., 0.05]</upper>
+	        <resolution>[40,40,1]</resolution>
+		<patches>[2,2,1]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+    <PhysicalBC>
+	<MPM>
+		<crack>
+			<corner1>[-0.06, 0.04,  0. ]</corner1>
+			<corner2>[-0.06, 0.04,  1. ]</corner2>
+			<corner3>[-0.01, 0.,    1. ]</corner3>
+			<corner4>[-0.01, 0.,    0. ]</corner4>
+		</crack>
+		<crack>
+			<corner1>[0.08, 0.06,  0. ]</corner1>
+			<corner2>[0.08, 0.06,  1. ]</corner2>
+			<corner3>[0.14, 0.13,  1. ]</corner3>
+			<corner4>[0.14, 0.13,  0. ]</corner4>
+		</crack>
+		<crack>
+			<corner1>[-0.03, -0.14,  0. ]</corner1>
+			<corner2>[-0.03, -0.14,  1. ]</corner2>
+			<corner3>[ 0.04, -0.06,  1. ]</corner3>
+			<corner4>[ 0.04, -0.06,  0. ]</corner4>
+		</crack>
+
+		<crack>
+			<corner1>[2.5, 0.,  0. ]</corner1>
+			<corner2>[2.5, 0.,  1. ]</corner2>
+			<corner3>[2.4, 0.9, 1. ]</corner3>
+			<corner4>[2.4, 0.9, 0. ]</corner4>
+		</crack>
+		<crack>
+			<corner1>[0, 2.3,  0. ]</corner1>
+			<corner2>[0, 2.3,  1. ]</corner2>
+			<corner3>[0.05, 2.6,  1. ]</corner3>
+			<corner4>[0.05, 2.6,  0. ]</corner4>
+		</crack>
+	</MPM>
+    </PhysicalBC>
+    
+</Uintah_specification>
