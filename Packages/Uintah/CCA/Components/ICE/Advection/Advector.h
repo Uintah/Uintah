@@ -77,6 +77,7 @@ namespace Uintah {
     SFCYVariable<double> d_notUsedY; 
     SFCZVariable<double> d_notUsedZ;
     CCVariable<double> d_notUsed_D;
+
   }; 
   
   //__________________________________
@@ -86,6 +87,11 @@ namespace Uintah {
                                  const int indx,
                                  const Patch* patch,
                                  DataWarehouse* new_dw);
+				 
+  inline double equalZero(double d1, double d2, double d3)
+    {
+      return d1 == 0.0 ? d2:d3;
+    };
  /*______________________________________________________________________
  *   C O M M O N L Y   U S E D 
  *______________________________________________________________________*/ 
@@ -130,11 +136,6 @@ namespace Uintah {
   //__________________________________
   class saveFaceFluxes {
     public:
-    inline double equalZero(double d1, double d2, double d3)
-    {
-      return d1 == 0.0 ? d2:d3;
-    }
-  
     inline void operator()( const IntVector& c, 
 			    SFCXVariable<double>& q_XFC,           
 			    SFCYVariable<double>& q_YFC,           
@@ -143,12 +144,12 @@ namespace Uintah {
 			    double q_face_flux[],
 			    const CCVariable<double>& q_CC) 
     {
-      double d_SMALL_NUM = 1e-100;
+    
       double tmp_XFC, tmp_YFC, tmp_ZFC, q_tmp;
       q_tmp = q_CC[c];
-      tmp_XFC = fabs(q_face_flux[LEFT])  /(faceVol[LEFT]   + d_SMALL_NUM);
-      tmp_YFC = fabs(q_face_flux[BOTTOM])/(faceVol[BOTTOM] + d_SMALL_NUM);
-      tmp_ZFC = fabs(q_face_flux[BACK])  /(faceVol[BACK]   + d_SMALL_NUM);
+      tmp_XFC = fabs(q_face_flux[LEFT])  /(faceVol[LEFT]   + 1e-100);
+      tmp_YFC = fabs(q_face_flux[BOTTOM])/(faceVol[BOTTOM] + 1e-100);
+      tmp_ZFC = fabs(q_face_flux[BACK])  /(faceVol[BACK]   + 1e-100);
     
       // if q_(X,Y,Z)FC = 0.0 then set it equal to q_CC[c]
       tmp_XFC = equalZero(q_face_flux[LEFT],   q_tmp, tmp_XFC);
