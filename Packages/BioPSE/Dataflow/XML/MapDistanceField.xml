@@ -61,11 +61,11 @@
     </inputs>
     <outputs>
       <port>
-	<name>Contour Interpolant</name>
+	<name>From Contour Interpolant</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
-	<name>Surface Interpolant</name>
+	<name>From Surface Interpolant</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </outputs>
