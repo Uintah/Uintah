@@ -67,7 +67,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   }
 
   CellGroup *g = new CellGroup;
-  vector<Trigger*> allTriggers;
+
+  vector<Trigger*> * allTriggers;
 
   for (s=0; s<nscenes; s++) {
      std::cerr << "\n\n\n\n==========================================================\n"
@@ -89,16 +90,24 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     }
     Scene* (*make_scene)(int,char**,int) = (Scene*(*)(int,char**,int))scene_fn;
     scene[s]=(*make_scene)(scene_argc[s], &(argv[scene_first_arg[s]]), nworkers);
+
+      
     if(!scene[s]){
       cerr << "Scene creation failed!\n";
       exit(1);
     }
 
-    vector<Trigger*> & triggers = scene[s]->getTriggers();
-
-    for( int cnt = 0; cnt < triggers.size(); cnt++ )
+    if( s == 0 ) 
       {
-	allTriggers.push_back( triggers[cnt] );
+	allTriggers = &(scene[s]->getTriggers());
+      }
+    else
+      {
+	vector<Trigger*> & triggers = scene[s]->getTriggers();
+	for( int cnt = 0; cnt < triggers.size(); cnt++ )
+	  {
+	    allTriggers->push_back( triggers[cnt] );
+	  }
       }
 
     if (strncmp(argv[scene_first_arg[s]], "scenes/sea", strlen("scenes/sea")) == 0) {
@@ -125,7 +134,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
               << "Finished creating scene " << argv[scene_first_arg[s]] 
 	      << "\n=========================================================="
 	      << "\n\n\n\n";
-  }                                                      
+  }
+
+  cout << "Total number of triggers is: " << scene[0]->getTriggers().size()
+       << "\n";
+
   scene[0]->set_object(g);
   return scene[0];
 }
