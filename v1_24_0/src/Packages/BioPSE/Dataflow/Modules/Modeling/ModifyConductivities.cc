@@ -53,11 +53,16 @@
 
 namespace SCIRun {
 
+const unsigned int GUI_LIMIT = 250; // Number of entries before we
+                                    // require force flag to generate
+                                    // gui table.
+
 class ModifyConductivities : public Module
 {
 private:
   GuiInt			gui_num_entries_;
   GuiInt			gui_use_gui_values_;
+  GuiInt                        gui_force_gui_update_;
   vector<GuiString *>		gui_names_;
   vector<GuiDouble *>		gui_sizes_;
   vector<GuiDouble *>		gui_m00_;
@@ -96,6 +101,7 @@ ModifyConductivities::ModifyConductivities(GuiContext *context)
   : Module("ModifyConductivities", context, Filter, "Modeling", "BioPSE"),
     gui_num_entries_(context->subVar("num-entries")),
     gui_use_gui_values_(context->subVar("use-gui-values")),
+    gui_force_gui_update_(context->subVar("force-gui-update")),
     last_field_generation_(0),
     reset_gui_(false)
 {
@@ -370,52 +376,45 @@ ModifyConductivities::execute()
   if ((!gui_use_gui_values_.get() || created_p) &&
       different_tensors(field_tensors, last_field_tensors_))
   {
-    update_to_gui(field_tensors);
+    if (field_tensors.size() < GUI_LIMIT || gui_force_gui_update_.get())
+    {
+      update_to_gui(field_tensors);
+    }
+    else
+    {
+      vector<pair<string, Tensor> > blank;
+      blank.push_back(pair<string, Tensor>("Too many entries", Tensor(0)));
+      update_to_gui(blank);
+    }
     last_field_tensors_ = field_tensors;
     last_gui_tensors_ = field_tensors;
   }
 
   if (reset_gui_)
   {
-    update_to_gui(last_gui_tensors_);
+    if (last_gui_tensors_.size() < GUI_LIMIT || gui_force_gui_update_.get())
+    {
+      update_to_gui(last_gui_tensors_);
+    }
+    else
+    {
+      vector<pair<string, Tensor> > blank;
+      blank.push_back(pair<string, Tensor>("Too many entries", Tensor(0)));
+      update_to_gui(blank);
+    }
     reset_gui_ = false;
   }
-
+  
   vector<pair<string, Tensor> > gui_tensors;
   gui_tensors.resize(last_gui_tensors_.size());
-  update_from_gui(gui_tensors);
-
-#if 0  
-  if (addnew_)
+  if (last_gui_tensors_.size() < GUI_LIMIT || gui_force_gui_update_.get())
   {
-    addnew_ = false;
-
-    string result;
-    vector<double> t(6);
-    t[0] = t[3] = t[5] = 1;
-    t[1] = t[2] = t[4] = 0;
-
-    const int i = gui_tensors.size();
-
-    Tensor tn(t);
-    gui_tensors.push_back(pair<string, Tensor>("conductivity-" + to_string(i),
-					       tn));
-
-    string command = id + " set_item i" + to_string(i) +
-      " { Material \"" + gui_tensors[i].first + "\" Scale 1.0 C00 " +
-      to_string(gui_tensors[i].second.mat_[0][0]) + " C01 " +
-      to_string(gui_tensors[i].second.mat_[0][1]) + " C02 " +
-      to_string(gui_tensors[i].second.mat_[0][2]) + " C10 " +
-      to_string(gui_tensors[i].second.mat_[1][0]) + " C11 " +
-      to_string(gui_tensors[i].second.mat_[1][1]) + " C12 " +
-      to_string(gui_tensors[i].second.mat_[1][2]) + " C20 " +
-      to_string(gui_tensors[i].second.mat_[2][0]) + " C21 " +
-      to_string(gui_tensors[i].second.mat_[2][1]) + " C22 " +
-      to_string(gui_tensors[i].second.mat_[2][2]) + " }";
-
-    gui->eval(command, result);
+    update_from_gui(gui_tensors);
   }
-#endif
+  else
+  {
+    gui_tensors = last_gui_tensors_;
+  }
 
   bool changed_table_p = false;
   if (different_tensors(gui_tensors, last_gui_tensors_) ||
