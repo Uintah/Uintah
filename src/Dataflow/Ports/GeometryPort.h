@@ -86,10 +86,11 @@ struct GeometryData {
     void Print();
 };
 
-#define GEOM_VIEW 1
-#define GEOM_COLORBUFFER 2
-#define GEOM_DEPTHBUFFER 4
-#define GEOM_ALLDATA 7
+#define GEOM_VIEW		1
+#define GEOM_COLORBUFFER	2
+#define GEOM_DEPTHBUFFER	4
+#define GEOM_ALLDATA		(GEOM_VIEW|GEOM_COLORBUFFER|GEOM_DEPTHBUFFER)
+#define GEOM_TRIANGLES		8
 
 class PSECORESHARE GeometryOPort : public OPort {
     GeometryIPort* in;
@@ -136,6 +137,10 @@ public:
 
 //
 // $Log$
+// Revision 1.8  2000/06/06 15:14:31  dahart
+// Added a constant GEOM_TRIANGLES to identify requests for geometry in
+// the OpenGL renderer
+//
 // Revision 1.7  1999/12/03 00:36:09  dmw
 // more files for the setView message
 //
