@@ -30,6 +30,7 @@ itcl_class SCIRun_Math_SolveMatrix {
 	global $this-use_previous_so
 	global $this-np
 	global $this-emit_partial $this-emit_iter
+	global $this-petsc_installed
 	
         set $this-target_error 1.0
 	set $this-method "Conjugate Gradient & Precond. (SCI)"
@@ -45,6 +46,7 @@ itcl_class SCIRun_Math_SolveMatrix {
 	set $this-use_previous_soln 1
 	set $this-emit_partial 1
 	set $this-emit_iter 50
+	set $this-petsc_installed 0
 	set $this-np 4
     }
     
@@ -146,6 +148,13 @@ itcl_class SCIRun_Math_SolveMatrix {
 		{"KSPLSQR (PETSc)" "KSPLSQR (PETSc)"}
 		{"KSPBICG (PETSc)" "KSPBICG (PETSc)"}
 		{"KSPPREONLY (PETSc)" "KSPPREONLY (PETSc)"}}
+		
+	if { [set $this-petsc_installed] == 0 } {
+            for {set i 3} {$i<15} {incr i} {
+	     $meth.f.$i configure -state disabled
+	    }
+        }
+	    
 
 	
 	make_labeled_radio $prec.f "" ""\
