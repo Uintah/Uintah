@@ -1013,8 +1013,10 @@ TetVolMesh::get_weights(const Point &p,
   }
 }
 
+
+// The volume x 6, used by get_weights to compute barycentric coordinates.
 static double
-tet_volume(const Point &p1, const Point &p2, const Point &p3, const Point &p4)
+tet_vol6(const Point &p1, const Point &p2, const Point &p3, const Point &p4)
 {
   const double x1=p1.x();
   const double y1=p1.y();
@@ -1049,10 +1051,10 @@ TetVolMesh::get_weights(const Point &p,
     get_point(p1,ra[1]);
     get_point(p2,ra[2]);
     get_point(p3,ra[3]);
-    const double vol0 = tet_volume(p, p1, p2, p3);
-    const double vol1 = tet_volume(p, p0, p2, p3);
-    const double vol2 = tet_volume(p, p1, p0, p3);
-    const double vol3 = tet_volume(p, p1, p2, p0);
+    const double vol0 = tet_vol6(p, p1, p2, p3);
+    const double vol1 = tet_vol6(p, p0, p2, p3);
+    const double vol2 = tet_vol6(p, p1, p0, p3);
+    const double vol3 = tet_vol6(p, p1, p2, p0);
     const double vol_sum = vol0+vol1+vol2+vol3;
     l.push_back(ra[0]);
     l.push_back(ra[1]);
