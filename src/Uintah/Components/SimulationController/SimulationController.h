@@ -3,7 +3,6 @@
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/DataWarehouseP.h>
-#include <Uintah/Interface/DWMpiHandler.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Interface/SchedulerP.h>
@@ -13,7 +12,6 @@ namespace Uintah {
    class CFDInterface;
    class MPMInterface;
    class MDInterface;
-   class DWMpiHandler;
 
 /**************************************
       
@@ -57,8 +55,8 @@ namespace Uintah {
 			      DataWarehouseP&,
 			      CFDInterface*, MPMInterface*, MDInterface*);
       void scheduleComputeStableTimestep(LevelP&, SchedulerP&,
-					 DataWarehouseP&,
-					 CFDInterface*, MPMInterface*, MDInterface*);
+					 DataWarehouseP&, CFDInterface*,
+					 MPMInterface*, MDInterface*);
       void scheduleTimeAdvance(double t, double delt, LevelP&, SchedulerP&,
 			       DataWarehouseP& old_ds,
 			       DataWarehouseP& new_ds,
@@ -68,16 +66,15 @@ namespace Uintah {
       SimulationController& operator=(const SimulationController&);
       
       bool           d_restarting;
-                                      // The Nth iteration (time step.)
-      Thread       * d_MpiThread;
-      DWMpiHandler * d_dwMpiHandler;  // DWs register with the DWMpiHandler
-                                      //    and it handles the Mpi requests
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.14  2000/08/24 20:51:47  dav
+// Removed DWMpiHandler.
+//
 // Revision 1.13  2000/07/28 07:37:50  bbanerje
 // Rajesh must have missed these .. adding the changed version of
 // createDataWarehouse calls
