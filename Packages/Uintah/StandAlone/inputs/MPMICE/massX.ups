@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 
-
 <!-- @version: -->
 
 <Uintah_specification>
@@ -20,7 +19,7 @@
     <!--   timestep_mulipler= ???????????                                   -->
     <!--____________________________________________________________________-->
    <Time>
-	<maxTime>            0.001       </maxTime>
+	<maxTime>            0.003       </maxTime>
 	<initTime>           0.0         </initTime>
 	<delt_min>           0.0         </delt_min>
 	<delt_max>           1.0         </delt_max>
@@ -38,8 +37,8 @@
     <Grid>
 		<BoundaryConditions>
 		 <Face side = "x-">
-                     <BCType label = "Pressure" var = "Neumann">
-                           <value> 0.0   </value>
+                     <BCType label = "Pressure" var = "Dirichlet">
+                           <value> 101325.0   </value>
                         </BCType>
 			<BCType label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
@@ -52,8 +51,8 @@
                         </BCType>
                 </Face>
                 <Face side = "x+">
-			<BCType label = "Pressure" var = "Neumann">
-                           <value> 0.0   </value>
+			<BCType label = "Pressure" var = "Dirichlet">
+                           <value> 101325.0   </value>
                         </BCType>
 			<BCType label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
@@ -66,8 +65,8 @@
                         </BCType>
                 </Face>
                 <Face side = "y-">
-			<BCType label = "Pressure" var = "Neumann">
-                           <value> 0.0   </value>
+			<BCType label = "Pressure" var = "Dirichlet">
+                           <value> 101325.0   </value>
                         </BCType>
 			<BCType label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
@@ -80,8 +79,8 @@
                         </BCType>
                 </Face>                  
 		<Face side = "y+">
-			<BCType label = "Pressure" var = "Neumann">
-                           <value> 0.0   </value>
+			<BCType label = "Pressure" var = "Dirichlet">
+                           <value> 101325.0   </value>
                         </BCType>
 			<BCType label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
@@ -94,8 +93,8 @@
                         </BCType>
 		</Face>
                 <Face side = "z-">
-			<BCType label = "Pressure" var = "Neumann">
-                           <value> 0.0   </value>
+			<BCType label = "Pressure" var = "Dirichlet">
+                           <value> 101325.0   </value>
                         </BCType>
 			<BCType label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
@@ -108,8 +107,8 @@
                         </BCType>
                 </Face>                  
 		<Face side = "z+">
-			<BCType label = "Pressure" var = "Neumann">
-                           <value> 0.0   </value>
+			<BCType label = "Pressure" var = "Dirichlet">
+                           <value> 101325.0   </value>
                         </BCType>
 			<BCType label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
@@ -124,9 +123,9 @@
 	</BoundaryConditions>
 	<Level>
 	    <Box label="1">
-	    	<lower>           [1,1,1]                 </lower>
+	    	<lower>           [0,0,0]                 </lower>
 	    	<upper>           [5,5,5]                 </upper>
-              <extraCells>      [1,1,1]                 </extraCells>
+                <extraCells>      [1,1,1]                 </extraCells>
 		<patches>         [1,1,1]                 </patches>
 	    </Box>
 	    <spacing>            [1.0,1.0,1.0]           </spacing>
@@ -140,29 +139,36 @@
     <!--   switchDebug      = various debugging output                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-        <filebase>icempm.uda</filebase>
-        <outputInterval>.00</outputInterval>
+        <filebase>massX.uda</filebase>
+        <outputInterval>.001</outputInterval>
         <save label="mom_L_ME_CC"/>
         <save label="vel_CC"/>
         <save label="press_CC"/>
         <save label="press_equil_CC"/>
         <save label="delPress_CC"/>
         <save label="rho_CC"/>
+        <save label="rho_micro_CC"/>
+        <save label="vol_frac_CC"/>
+        <save label="sp_vol_CC"/>
+        <save label="temp_CC"/>
         <save label="p.x"/>
         <save label="p.volume"/>
         <save label="p.velocity"/>
+        <save label="p.temperature"/>
    </DataArchiver>
 
    <Debug>
-   <!--<debug label = "switchDebugInitialize"/>  -->
+<!--
+     <debug label = "switchDebugInitialize"/>
      <debug label = "switchDebug_equilibration_press"/>
-   <!--<debug label = "switchDebug_vel_FC"/>           
+     <debug label = "switchDebug_vel_FC"/>           
      <debug label = "switchDebug_explicit_press"/>   
      <debug label = "switchDebug_PressFC"/>          
      <debug label = "switchDebugLagrangianValues"/> 
-     <debug label = "switchDebugMomentumExchange_CC"/>  --> 
+     <debug label = "switchDebugMomentumExchange_CC"/>
      <debug label = "switchDebugSource_Sink"/>       
      <debug label = "switchDebug_advance_advect"/>  
+-->
    </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
@@ -192,10 +198,10 @@
         <MPM>
             <material>
                 <burn type = "simple" >
-		  <ThresholdTemp> 600 </ThresholdTemp>
+		  <ThresholdTemp> 399 </ThresholdTemp>
 		  <ThresholdPressure> 500 </ThresholdPressure>
 	          <Enthalpy> 1.0 </Enthalpy>
-	          <BurnCoeff> 1.0 </BurnCoeff>
+	          <BurnCoeff> 0.01 </BurnCoeff>
 		  <a> 0.0 </a>
 	          <b> 100000.0 </b>
                 </burn>
@@ -240,7 +246,7 @@
 	    <specific_heat>              716.0           </specific_heat>
 	    <speed_of_sound>             376             </speed_of_sound>
 	    <gamma>                      1.4             </gamma>
-           <Is_RX_Products>             1               </Is_RX_Products>	    
+            <Is_RX_Products>             1               </Is_RX_Products>
 	    <geom_object>
 		<difference>
                 <box label="gpice">
@@ -254,8 +260,8 @@
 		</difference>
 	        <res>		        [2,2,2]             </res>
 	        <velocity>           [0.0,0.0,0.0]       </velocity>
-	        <temperature>        300.0               </temperature>
-	        <density>    1.1792946927374306000e+00   </density>
+	        <temperature>        400.0               </temperature>
+	        <density>    0.88447101955307283        </density>
                <pressure>           101325.0            </pressure>
 	    </geom_object>
 	  </material>
