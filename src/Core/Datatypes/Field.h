@@ -34,7 +34,7 @@ public:
 
 
   //! Persistent I/O.
-  void    io(Piostream &stream);
+  virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
   static  const string type_name(int);
   //! All instantiable classes need to define this.

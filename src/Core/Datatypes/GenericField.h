@@ -78,7 +78,7 @@ public:
   mesh_handle_type get_typed_mesh() const { return mesh_; };
 
   //! Persistent I/O.
-  void    io(Piostream &stream);
+  virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
   static  const string type_name(int);
   virtual const string get_type_name(int n) const { return type_name(n); }
