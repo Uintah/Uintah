@@ -102,12 +102,12 @@ void Roe::itemAdded(SceneItem* si)
 	visible.insert(si->name, vis);
 	char buf[1000];
 	ostrstream str(buf, 1000);
-	str << "addObject " << id << " " << vis->tagid << " \"" << si->name << "\"";
+	str << "addObject " << id << " " << vis->tagid << " \"" << si->name << "\"" << '\0';
 	TCL::execute(str.str());
     } else {
 	char buf[1000];
 	ostrstream str(buf, 1000);
-	str << "addObject2 " << id << " " << vis->tagid;
+	str << "addObject2 " << id << " " << vis->tagid << '\0';
 	TCL::execute(str.str());
     }
     // invalidate the bounding box
@@ -123,7 +123,7 @@ void Roe::itemDeleted(SceneItem *si)
     } else {
 	char buf[1000];
 	ostrstream str(buf, 1000);
-	str << "removeObject " << id << " " << vis->tagid;
+	str << "removeObject " << id << " " << vis->tagid << '\0';
 	TCL::execute(str.str());
     }
     // invalidate the bounding box
@@ -214,9 +214,9 @@ void Roe::head1CB(CallbackData*, void*)
 void Roe::get_bounds(BBox& bbox)
 {
     bbox.reset();
-    HashTableIter<int,HashTable<int, SceneItem*>*> iter(&manager->portHash);
+    HashTableIter<int, PortInfo*> iter(&manager->portHash);
     for (iter.first(); iter.ok(); ++iter) {
-	HashTable<int, SceneItem*>* serHash=iter.get_data();
+	HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
 	HashTableIter<int, SceneItem*> serIter(serHash);
 	for (serIter.first(); serIter.ok(); ++serIter) {
 	    SceneItem *si=serIter.get_data();
@@ -268,17 +268,6 @@ void Roe::rotate_obj(double angle, const Vector& v, const Point& c)
     evl->unlock();
 #endif
     need_redraw=1;
-}
-
-static void mmult(double *m, double *p1, double *p2) {
-    for (int i=0; i<4; i++) {
-	p2[i]=0;
-	for (int j=0; j<4; j++) {
-	    p2[i]+=m[j*4+i]*p1[j];
-	}
-    }
-    for (i=0; i<3; i++)
-	p2[i]/=p2[3];
 }
 
 void Roe::translate(Vector v)
@@ -364,7 +353,7 @@ void Roe::mouse_translate(int action, int x, int y)
 
 	    need_redraw=1;
 	    ostrstream str(modebuf, MODEBUFSIZE);
-	    str << "translate: " << total_x << ", " << total_y;
+	    str << "translate: " << total_x << ", " << total_y << '\0';
 	    update_mode_string(str.str());
 	}
 	break;
@@ -403,7 +392,7 @@ void Roe::mouse_scale(int action, int x, int y)
 	    view.set(tmpview);
 	    need_redraw=1;
 	    ostrstream str(modebuf, MODEBUFSIZE);
-	    str << "scale: " << total_x*100 << "%";
+	    str << "scale: " << total_x*100 << "%" << '\0';
 	    update_mode_string(str.str());
 	}
 	break;
@@ -671,9 +660,9 @@ void Roe::tcl_command(TCLArgs& args, void*)
     }
     if(args[1] == "startup"){
 	// Fill in the visibility database...
-	HashTableIter<int,HashTable<int, SceneItem*>*> iter(&manager->portHash);
+	HashTableIter<int, PortInfo*> iter(&manager->portHash);
 	for (iter.first(); iter.ok(); ++iter) {
-	    HashTable<int, SceneItem*>* serHash=iter.get_data();
+	    HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
 	    HashTableIter<int, SceneItem*> serIter(serHash);
 	    for (serIter.first(); serIter.ok(); ++serIter) {
 		SceneItem *si=serIter.get_data();
@@ -793,7 +782,7 @@ void Roe::redraw()
 void Roe::update_mode_string(const char* msg)
 {
     ostrstream str(modecommand, MODEBUFSIZE);    
-    str << "updateMode " << id << " \"" << msg << "\"";
+    str << "updateMode " << id << " \"" << msg << "\"" << '\0';
     TCL::execute(str.str());
 }
 

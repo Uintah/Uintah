@@ -22,6 +22,7 @@
 #include <Geom/Lighting.h>
 #include <Multitask/ITC.h>
 
+class GeometryComm;
 class GeomReply;
 class Roe;
 
@@ -31,6 +32,13 @@ struct SceneItem {
 
     SceneItem(GeomObj*, const clString&);
     ~SceneItem();
+};
+
+struct PortInfo {
+    GeometryComm* msg_head;
+    GeometryComm* msg_tail;
+    int portno;
+    HashTable<int, SceneItem*>* objs;
 };
 
 class Salmon : public Module {
@@ -52,10 +60,12 @@ public:
     virtual Module* clone(int deep);
     virtual void execute();
     void initPort(Mailbox<GeomReply>*);
-    void addObj(int portno, GeomID serial, GeomObj *obj,
+    void append_port_msg(GeometryComm*);
+    void addObj(PortInfo* port, GeomID serial, GeomObj *obj,
 		const clString&);
-    void delObj(int portno, GeomID serial);
-    void delAll(int portno);
+    void delObj(PortInfo* port, GeomID serial);
+    void delAll(PortInfo* port);
+    void flushPort(int portid);
     void flushViews();
     void addTopRoe(Roe *r);
     void delTopRoe(Roe *r);
@@ -63,7 +73,7 @@ public:
     void tcl_command(TCLArgs&, void*);
 
     // The scene...
-    HashTable<int, HashTable<int, SceneItem*>*> portHash;
+    HashTable<int, PortInfo*> portHash;
 
     // Lighting
     Lighting lighting;

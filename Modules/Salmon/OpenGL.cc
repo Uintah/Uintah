@@ -209,7 +209,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
     str << "updatePerf " << roe->id << " \"";
     str << drawinfo.polycount << " polygons in " << timer.time()
 	<< " seconds\" \"" << drawinfo.polycount/timer.time()
-	<< " polygons/second\"";
+	<< " polygons/second\"" << '\0';
     TCL::execute(str.str());
     TCLTask::unlock();
 }
