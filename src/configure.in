@@ -2363,11 +2363,6 @@ SCI_CHECK_HEADERS(,stdio.h stdlib.h stddef.h stdarg.h string.h limits.h \
 
 SCI_CHECK_HEADERS(,inttypes.h stdint.h,,,optional)
 
-##  --  required SGI headers
-if test "$host" = "irix"; then
-  SCI_CHECK_HEADERS(,ieeefp.h ulocks.h sys/uuid.h,,,not-optional)
-fi
-
 ##  --  required STL headers 
 ##  --      (only look for STL after going into cplusplus mode)
 ##
@@ -2727,6 +2722,8 @@ AC_SUBST(TAU_MAKEFILE)
 echo
 AC_CHECKING(for optional components...)
 echo
+
+SCI_CHECK_HEADERS(,ieeefp.h,,,optional)
 
 SCI_CHECK_LIB(,fl,main,,,optional)
 SCI_CHECK_LIB(,ld,main,,,optional)
