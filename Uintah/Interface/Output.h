@@ -8,6 +8,7 @@
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/SchedulerP.h>
+#include <string>
 
 namespace Uintah {
    class ProcessorGroup;
@@ -57,6 +58,10 @@ WARNING
 				    SchedulerP&,
 				    DataWarehouseP&) = 0;
 
+      //////////
+      // Insert Documentation Here:
+      virtual const std::string getOutputLocation() const = 0;
+
    private:
       Output(const Output&);
       Output& operator=(const Output&);
@@ -66,6 +71,12 @@ WARNING
 
 //
 // $Log$
+// Revision 1.11  2000/07/26 20:14:12  jehall
+// Moved taskgraph/dependency output files to UDA directory
+// - Added output port parameter to schedulers
+// - Added getOutputLocation() to Uintah::Output interface
+// - Renamed output files to taskgraph[.xml]
+//
 // Revision 1.10  2000/06/17 07:06:46  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

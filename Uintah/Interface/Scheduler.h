@@ -4,6 +4,7 @@
 
 #include <Uintah/Parallel/UintahParallelPort.h>
 #include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Interface/Output.h>
 #include <string>
 
 class DOM_Document;
@@ -45,7 +46,7 @@ WARNING
 
     class Scheduler : public UintahParallelPort {
     public:
-       Scheduler();
+       Scheduler(Output* oport);
        virtual ~Scheduler();
        
        //////////
@@ -74,6 +75,7 @@ WARNING
        Scheduler(const Scheduler&);
        Scheduler& operator=(const Scheduler&);
 
+		Output* m_outPort;
     	DOM_Document* m_graphDoc;
     	DOM_Element* m_nodes;
     	unsigned int m_executeCount;
@@ -83,6 +85,12 @@ WARNING
 
 //
 // $Log$
+// Revision 1.14  2000/07/26 20:14:12  jehall
+// Moved taskgraph/dependency output files to UDA directory
+// - Added output port parameter to schedulers
+// - Added getOutputLocation() to Uintah::Output interface
+// - Renamed output files to taskgraph[.xml]
+//
 // Revision 1.13  2000/07/25 20:59:27  jehall
 // - Simplified taskgraph output implementation
 // - Sort taskgraph edges; makes critical path algorithm eastier
