@@ -76,6 +76,7 @@ public:
   int jump;
   int logging;
   bool symmetric;
+  bool restart;
 };
 
 template<class Types>
@@ -519,10 +520,18 @@ public:
       } else {
 	throw InternalError("Unknown solver type: "+params->solvertype);
       }
-      if(final_res_norm > params->tolerance || finite(final_res_norm) == 0)
-	throw ConvergenceFailure("HypreSolver variable: "+X_label->getName()+", solver: "+params->solvertype+", preconditioner: "+params->precondtype,
-				 num_iterations, final_res_norm,
-				 params->tolerance);
+      if(final_res_norm > params->tolerance || finite(final_res_norm) == 0){
+	if(params->restart){
+	  if(pg->myrank() == 0)
+	    cerr << "HypreSolver not converging, requesting smaller timestep\n";
+	  new_dw->abortTimestep();
+	  new_dw->restartTimestep();
+	} else {
+	  throw ConvergenceFailure("HypreSolver variable: "+X_label->getName()+", solver: "+params->solvertype+", preconditioner: "+params->precondtype,
+				   num_iterations, final_res_norm,
+				   params->tolerance);
+	}
+      }
       double solve_dt = Time::currentSeconds()-solve_start;
 
       for(int p=0;p<patches->size();p++){
@@ -703,6 +712,7 @@ SolverParameters* HypreSolver2::readParameters(ProblemSpecP& params, const strin
     p->logging = 0;
   }
   p->symmetric=true;
+  p->restart=true;
   return p;
 }
 
