@@ -63,10 +63,6 @@ WARNING
    public:
       virtual ~DataWarehouse();
       
-      DataWarehouseP getTop() const;
-      
-      virtual void setGrid(const GridP&)=0;
-
       virtual bool exists(const VarLabel*, int matlIndex, const Patch*) const =0;
 
       // Generic put, passing Variable as a pointer rather than by reference
@@ -92,6 +88,8 @@ WARNING
       // Particle Variables
       virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
 				        int matlIndex, const Patch*) = 0;
+      virtual void saveParticleSubset(int matlIndex, const Patch*,
+				      ParticleSubset* psubset) = 0;
       virtual bool haveParticleSubset(int matlIndex, const Patch*) = 0;
       virtual ParticleSubset* getParticleSubset(int matlIndex,
 					const Patch*) = 0;
@@ -171,7 +169,7 @@ WARNING
 	 return d_generation;
       }
    protected:
-      DataWarehouse(const ProcessorGroup* myworld, int generation, DataWarehouseP& parent_dw);
+      DataWarehouse(const ProcessorGroup* myworld, int generation);
       // These two things should be removed from here if possible - Steve
       const ProcessorGroup* d_myworld;
       const int d_generation;
@@ -181,7 +179,6 @@ WARNING
       
       DataWarehouse(const DataWarehouse&);
       DataWarehouse& operator=(const DataWarehouse&);
-      DataWarehouseP& d_parent;
    };
 } // End namespace Uintah
 

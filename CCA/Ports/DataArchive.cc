@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/UnknownVariable.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <Core/Util/NotFinished.h>
 
 #include <Dataflow/XMLUtil/SimpleErrorHandler.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
@@ -29,6 +30,7 @@ using namespace std;
 
 using namespace Uintah;
 using namespace SCIRun;
+
 
 DebugStream DataArchive::dbg("DataArchive", false);
 
@@ -411,9 +413,10 @@ DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
 }
 
 void
-DataArchive::restartInitialize(int& timestep, GridP grid,
-			       DataWarehouseP dw, double* pTime)
+DataArchive::restartInitialize(int& timestep, const GridP& grid,
+			       double* pTime)
 {
+#if 0
   vector<int> indices;
   vector<double> times;
   queryTimesteps(indices, times);
@@ -447,7 +450,7 @@ DataArchive::restartInitialize(int& timestep, GridP grid,
 
   // iterator through all patch, initializing on each patch
   // (perhaps not the most efficient, but this is only initialization)
-  for (i = 0; i < grid->numLevels(); i++) {
+  for (i = 0; i < (int)grid->numLevels(); i++) {
     LevelP level = grid->getLevel(i);
     list<Patch*> patches;
     patches.push_back(NULL); // add NULL patch for dealing with globals
@@ -479,11 +482,14 @@ DataArchive::restartInitialize(int& timestep, GridP grid,
 	}
       }
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 void
 DataArchive::initVariable(const Patch* patch,
-			  DataWarehouseP& dw,
+			  DataWarehouse* dw,
 			  VarLabel* label, int matl,
 			  pair<DOM_Node, XMLURL> dataRef)
 {
@@ -493,7 +499,7 @@ DataArchive::initVariable(const Patch* patch,
   query(*var, vnode, url, matl, patch);
 
   ParticleVariableBase* particles;
-  if (particles = dynamic_cast<ParticleVariableBase*>(var)) {
+  if ((particles = dynamic_cast<ParticleVariableBase*>(var))) {
     if (!dw->haveParticleSubset(matl, patch)) {
       int numParticles = particles->getParticleSubset()->numParticles(); 
       dw->createParticleSubset(numParticles, matl, patch);
