@@ -1487,10 +1487,14 @@ for i in $mpi $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test -z "$LIBMPI"; then
     SCI_CHECK_LIB($i/lib,mpich,main,MPI=-lmpich,continue,)
   fi
+
   SCI_CHECK_HEADER($i/include,mpi.h,,continue,)
-  if (test "$LIBMPI" ||
-      test "$LIBMPICH") &&
-     test "$INCBLT_H"; then
+
+  if (test "$LIBMPI" || test "$LIBMPICH") && test "$INCBLT_H"; then
+
+    if test $LIBMPICH; then
+       DEF_MPICH="#define HAVE_MPICH 1"
+    fi
     LIBMPI="$i/lib"
     MPI_LIBRARY="-L$LIBMPI"
     FOUND_ALL_MPI=yes
@@ -1513,6 +1517,7 @@ AC_SUBST(HAVE_LIBMPI)
 AC_SUBST(LIBMPI)
 AC_SUBST(INCMPI_H)
 AC_SUBST(DEF_MPI)
+AC_SUBST(DEF_MPICH)
 
 ##  --  if building uintah, search for TAU makefile  ---------------------
 
