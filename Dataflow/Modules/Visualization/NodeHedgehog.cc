@@ -387,48 +387,6 @@ NodeHedgehog::~NodeHedgehog()
 {
 }
 
-#if 0
-void
-NodeHedgehog::add_arrow(Vector vv, FieldHandle ssfield,
-			int have_sfield, ColorMapHandle cmap,
-			double lenscale, double minlen, double maxlen,
-			GeomArrows* arrows, Point p) {
-  
-  double length = vv.length();
-  // crop the vector based on it's length
-  // we only want to check against max_crop_length if it's greater than 0
-  if (maxlen > 0)
-      if (length > maxlen)
-	return;
-    if (length < minlen)
-      return;
-
-  if (length > max_length) {
-    max_length = length;
-    max_vector = vv;
-  }
-  if(have_sfield) {
-    // get the color from cmap for p 	    
-    MaterialHandle matl;
-    double sval;
-    if (interpolate( ssfield, p, sval))
-      matl = cmap->lookup( sval);
-    else {
-      matl = outcolor;
-    }
-    
-    if(length*lenscale > 1.e-3) {
-      arrows->add(p, vv*lenscale, matl, matl, matl);
-    }
-  }
-  else {
-    if(length*lenscale > 1.e-3) {
-      arrows->add(p, vv*lenscale);
-    }
-  }
-}
-#endif
-
 void NodeHedgehog::add_arrow(Point &v_origin, Vector &vf_value,
 			     GeomArrows *arrows, ArrowInfo &info) {
   //cout << "v_origin = "<<v_origin<<", vf_value = "<<vf_value<<endl;
@@ -553,13 +511,14 @@ void NodeHedgehog::execute()
   widget2d->SetCurrentMode(6);
   widget3d->SetCurrentMode(6);
 
+  BBox mesh_boundary = vfield->mesh()->get_bounding_box();
+  
   // draws the widget based on the vfield's size and position
   if (do_3d){
     if(need_find3d != 0){
-      BBox box;
       Point min, max;
-      box = vfield->mesh()->get_bounding_box();
-      min = box.min(); max = box.max();
+      min = mesh_boundary.min(); max = mesh_boundary.max();
+      cout << "mesh::min = "<<min<<", max = "<<max<<endl;
       Point center = min + (max-min)/2.0;
       Point right( max.x(), center.y(), center.z());
       Point down( center.x(), min.y(), center.z());
@@ -572,10 +531,9 @@ void NodeHedgehog::execute()
     need_find3d = 0;
   } else {
     if (need_find2d != 0){
-      BBox box;
       Point min, max;
-      box = vfield->mesh()->get_bounding_box();
-      min = box.min(); max = box.max();
+      min = mesh_boundary.min(); max = mesh_boundary.max();
+      cout << "mesh::min = "<<min<<", max = "<<max<<endl;
       
       Point center = min + (max-min)/2.0;
       double max_scale;
@@ -635,7 +593,10 @@ void NodeHedgehog::execute()
   Point temp1 = upper;
   upper = Max(temp1,lower);
   lower = Min(temp1,lower);
-  Box boundaryRegion(lower,upper);
+  cout << "lower = "<<lower<<", upper = "<<upper<<endl;
+//   upper = Min(upper, mesh_boundary.max());
+//   lower = Max(lower, mesh_boundary.min());
+//   cout << "lower = "<<lower<<", upper = "<<upper<<endl;
   
   cout << "NodeHedgehog::execute:add arrows\n";
   // create the group for the arrows to be added to
@@ -678,22 +639,50 @@ void NodeHedgehog::execute()
 #else
   // Make a switch based on the data location
   if( fld->data_at() == Field::CELL) {
-    // Now we need to loop over the data and extract the vector information
-    LatVolMesh::CellIter iter; mesh->begin(iter);
-    LatVolMesh::CellIter end;  mesh->end(end);
+    // Create the sub-mesh that represents where the widget is
+#if 0
+    LatVolMesh::Cell::index_type min_index, max_index;
+    mesh->locate(min_index, lower);
+    mesh->locate(max_index, upper);
+    cout << "min_index = "<<min_index<<", max_index = "<<max_index<<endl;
+    cout << "min_index = ["<<min_index.i_<<", "<<min_index.j_<<", "<<min_index.k_<<"]\n";
+    cout << "max_index = ["<<max_index.i_<<", "<<max_index.j_<<", "<<max_index.k_<<"]\n";
+#endif
+    LatVolMesh::Cell::range_iter iter;
+    LatVolMesh::Cell::iterator end;
+    mesh->get_cell_range(iter, end, BBox(lower, upper));
+#if 0
+    cout << "mesh::begin() = "<<*iter<<", end = "<<*end<<endl;
+    cout << "begin["<<(*iter).i_<<", "<<(*iter).j_<<", "<<(*iter).k_<<"]\n";
+    cout << "end["<<(*end).i_<<", "<<(*end).j_<<", "<<(*end).k_<<"]\n";
+    LatVolMesh::Cell::iterator mesh_begin; mesh->begin(mesh_begin);
+    LatVolMesh::Cell::iterator mesh_end;   mesh->end(mesh_end);
+    cout << "mesh_begin["<<(*mesh_begin).i_<<", "<<(*mesh_begin).j_<<", "<<(*mesh_begin).k_<<"]\n";
+    cout << "mesh_end["<<(*mesh_end).i_<<", "<<(*mesh_end).j_<<", "<<(*mesh_end).k_<<"]\n";
+#endif
     for(; iter != end; ++iter) {
-      cout << "*";
+      //cout << "*";
       Point v_origin;
       mesh->get_center(v_origin, *iter);
+      //cout << "iter["<<(*iter).i_<<", "<<(*iter).j_<<", "<<(*iter).k_<<"], ";
+      //cout << ", v_origin = "<<v_origin<<endl;
       Vector vf_value = fld->value(*iter);
       add_arrow(v_origin, vf_value, arrows, info);
     }
   } else if( fld->data_at() == Field::NODE) {
     // Now we need to loop over the data and extract the vector information
-    LatVolMesh::NodeIter iter; mesh->begin(iter);
-    LatVolMesh::NodeIter end;  mesh->end(end);
+    // Create the sub-mesh that represents where the widget is
+    LatVolMesh::Node::index_type min_index, max_index;
+    mesh->locate(min_index, lower);
+    mesh->locate(max_index, upper);
+    LatVolMesh submesh(mesh, min_index.i_,  min_index.j_, min_index.k_,
+		       max_index.i_ - min_index.i_,
+		       max_index.j_ - min_index.j_,
+		       max_index.k_ - min_index.k_);
+    LatVolMesh::NodeIter iter; submesh.begin(iter);
+    LatVolMesh::NodeIter end;  submesh.end(end);
     for(; iter != end; ++iter) {
-      cout << "+";
+      //cout << "+";
       Point v_origin;
       mesh->get_center(v_origin, *iter);
       Vector vf_value = fld->value(*iter);
