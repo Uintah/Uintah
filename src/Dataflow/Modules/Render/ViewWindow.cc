@@ -152,7 +152,8 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     gui_global_clip_(ctx->subVar("global-clip")),
     gui_global_cull_(ctx->subVar("global-cull")),
     gui_global_dl_(ctx->subVar("global-dl")),
-    gui_global_type_(ctx->subVar("global-type"))
+    gui_global_type_(ctx->subVar("global-type")),
+    gui_ortho_view_(ctx->subVar("ortho-view"))
 {
   inertia_mode=0;
   bgcolor.set(Color(0,0,0));

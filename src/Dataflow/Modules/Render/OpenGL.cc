@@ -862,7 +862,17 @@ OpenGL::redraw_frame()
 	  // Setup view.
 	  glMatrixMode(GL_PROJECTION);
 	  glLoadIdentity();
-	  gluPerspective(fovy, aspect, znear, zfar);
+	  if (viewwindow->ortho_view())
+	  {
+	    const double len = (view.lookat() - view.eyep()).length();
+	    const double yval = tan(fovy * M_PI / 360.0) * len;
+	    const double xval = yval * aspect;
+	    glOrtho(-xval, xval, -yval, yval, znear, zfar);
+	  }
+	  else
+	  {
+	    gluPerspective(fovy, aspect, znear, zfar);
+	  }
 	  glMatrixMode(GL_MODELVIEW);
 	  glLoadIdentity();
 	  Point eyep(view.eyep());
