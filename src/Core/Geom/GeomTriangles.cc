@@ -424,7 +424,7 @@ bool GeomTrianglesPT1d::saveobj(ostream& out, const clString& format,
 		out << '\n';
 		saveinfo->indent(out);
 	    }
-	    int idx=scalars[i]*255.;
+	    int idx=(int)(scalars[i]*255.);
 	    if(idx<0)
 		idx=0;
 	    else if(idx>255)
@@ -1081,6 +1081,11 @@ bool GeomTrianglesVPC::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.4  1999/08/23 06:30:36  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.3  1999/08/17 23:50:28  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

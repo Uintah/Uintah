@@ -1457,7 +1457,7 @@ GetReq::GetReq(int datamask, AsyncReply<GeometryData*>* result)
  * These template instantiations can't go in templates.cc, because
  * the classes are defined in this file.
  */
-#include <Multitask/Mailbox.h>
+#include <SCICore/Multitask/Mailbox.h>
 template class Mailbox<GetReq>;
 #endif
 
@@ -1466,6 +1466,11 @@ template class Mailbox<GetReq>;
 
 //
 // $Log$
+// Revision 1.4  1999/08/23 06:30:31  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.3  1999/08/19 23:17:52  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

@@ -484,12 +484,12 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
   double min[3],max[3];
   if (!id || map2d) {
     if (!id) {
-      glGenTexturesEXT(1,&id);
+      glGenTextures(1,&id);
     }
       
     cerr << "Loading texture...\n";
 
-    glBindTextureEXT(GL_TEXTURE_3D_EXT,id);
+    glBindTexture(GL_TEXTURE_3D_EXT,id);
     // assume environment is outside!
     glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP);
@@ -497,7 +497,7 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
     glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     
-#ifndef LINUX		    
+#ifdef __sgi
     glTexImage3DEXT(GL_TEXTURE_3D_EXT,0,
 		    GL_INTENSITY8_EXT,
 		    nx,ny,nz,0,
@@ -507,7 +507,7 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
     
     map2d = 0; // clear it out...
   } else { // jost load texture object...
-    glBindTextureEXT(GL_TEXTURE_3D_EXT,id);
+    glBindTexture(GL_TEXTURE_3D_EXT,id);
   }
 
   glEnable(GL_TEXTURE_GEN_S);
@@ -611,6 +611,11 @@ void GeomTexVolRender::Clear()
 
 //
 // $Log$
+// Revision 1.5  1999/08/23 06:30:32  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.4  1999/08/18 20:19:54  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

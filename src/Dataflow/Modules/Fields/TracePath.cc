@@ -27,8 +27,8 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/TclInterface/TCLvar.h>
-
 #include <PSECore/Widgets/PointWidget.h>
+#include <string.h>
 
 #define PCGVCCOMINDEX(i,x,I,L) ((I) - (i)                                  \
 				? ((x) > (I) - ((I)-(i))/(2.0*(L))         \
@@ -817,6 +817,11 @@ void TracePath::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.5  1999/08/23 06:30:31  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.4  1999/08/19 23:17:46  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.
