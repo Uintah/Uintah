@@ -40,12 +40,12 @@ $(SRCDIR)/scanner.cc: $(SRCDIR)/scanner.l
 $(SRCDIR)/scanner.o: $(SRCDIR)/parser.h
 
 $(SRCDIR)/parser.cc: $(SRCDIR)/parser.y
-	$(YACC) -d $<
+	$(YACC) -y -d $<
 	sed 's/getenv()/xxgetenv()/g' < y.tab.c > $@
 	rm y.tab.c y.tab.h
 
 $(SRCDIR)/parser.h: $(SRCDIR)/parser.y
-	$(YACC) -d $<
+	$(YACC) -y -d $<
 	rm y.tab.c
 	mv y.tab.h $@
 
