@@ -26,6 +26,7 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/FieldInterface.h>
 
 namespace SCIRun {
 
