@@ -2255,7 +2255,7 @@ if test "$pkg_rtrt" = "yes"; then
     INC_OOGL_H="$INC_OOGL_BASICTEXTURE_H"
   fi
 
-  $dirs="$with_audio"
+  dirs="$with_audio"
 
   SCI_CHECK_LIB($dirs,audio,main,,,optional)
   SCI_CHECK_LIB($dirs,audiofile,main,,,optional)
