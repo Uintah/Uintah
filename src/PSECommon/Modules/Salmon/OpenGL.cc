@@ -1142,11 +1142,12 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 		    idx+=nnames+1;
 		}
 	    }
+
+	    pick_obj=(GeomObj*)hit_obj;
+	    pick_pick=(GeomPick*)hit_pick;
+	    pick_obj->getId(pick_index); //(int)hit_pick_index;
+	    cerr << "pick_pick=" << pick_pick << ", pick_index="<<pick_index<<endl;
 	}
-	pick_obj=(GeomObj*)hit_obj;
-	pick_pick=(GeomPick*)hit_pick;
-	pick_obj->getId(pick_index); //(int)hit_pick_index;
-	cerr << "pick_pick=" << pick_pick << ", pick_index="<<pick_index<<endl;
     }
     salmon->geomlock.readUnlock();
 }
@@ -1741,6 +1742,9 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.19  2000/02/09 00:31:31  ikits
+// Fixed empty pick bug in OpenGL.cc.
+//
 // Revision 1.18  2000/02/04 00:42:23  dmw
 // corrected order when reading 64-bit pick and obj from pick buffer
 //
