@@ -108,7 +108,7 @@ public:
 public:
   typedef map<clString, Renderer*>	MapClStringRenderer;
   typedef map<clString, ObjTag*>	MapClStringObjTag;
-  
+  TCLstring pos;  
 protected:
   friend class Salmon;
   
@@ -297,6 +297,9 @@ public:
 
 //
 // $Log$
+// Revision 1.18  2000/11/03 19:08:26  darbyb
+// Added button in Salmon that allows the user to select specific orientations
+//
 // Revision 1.17  2000/10/08 05:42:38  samsonov
 // Added rotation around eye point and corresponding inertia mode; to use the mode , use ALT key and middle mouse button
 //
