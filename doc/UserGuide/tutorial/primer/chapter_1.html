@@ -1,51 +1,313 @@
 <html>
 
+
+
 	<head>
+
 		<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+
 		<meta name="generator" content="Adobe GoLive 4">
+
 		<title>Geometry Visualization</title>
+
 	</head>
 
+
+
 	<body bgcolor="#a9a9a9">
-		<table align="center" border="0" cellpadding="0" cellspacing="0" width="306" bgcolor="#cccccc">
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="306" bgcolor="#cccccc">
+
 			<tr>
+
 				<td><img height="91" width="600" src="images/sub-banner.jpg" border="0" usemap="#sub-banner8662a0c4"><map name="sub-banner8662a0c4"><area href="chapter_8.html" coords="580,65,597,84" shape="rect" title="Another View"><area href="chapter_7.html" coords="557,64,575,83" shape="rect" title="Feedback"><area href="chapter_6.html" coords="532,64,550,82" shape="rect" title="Putting Simulation and Visualization Together"><area href="chapter_5.html" coords="508,64,527,83" shape="rect" title="Bioelectric Field Simulation"><area href="chapter_4.html" coords="483,64,502,83" shape="rect" title="Multi-Vis"><area href="chapter_3.html" coords="460,64,478,83" shape="rect" title="Derived Fields"><area href="chapter_2.html" coords="436,64,454,83" shape="rect" title="Looking at the Data"><area href="chapter_1.html" coords="412,65,430,82" shape="rect" title="Geometry Visualization"><area href="Intro.html" coords="354,64,406,84" shape="rect" title="Introduction"><area href="http://software.sci.utah.edu/doc/index.html" coords="205,63,343,83" shape="rect" title="Documentation"><area href="http://software.sci.utah.edu/" coords="103,63,195,82" shape="rect" title="Software"><area href="index.html" coords="1,65,92,81" shape="rect" title="Tutorial Home"></map></td>
+
 			</tr>
+
 			<tr>
+
 				<td>
+
 					<center>
+
 						<table border="0" cellpadding="0" cellspacing="5" width="600">
+
 							<tr>
+
 								<td>
-									<center>
-										<br>
-										<font size="4" face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular" color="maroon"><b>Chapter 1: Geometry Visualization<br>
-										<hr>
-										</b></font></center>
-									<div align="left">
-										<p>A) Chapter Intro-DMW<br>
-										B) Image fo three modules-DMW/NG<br>
-										C) Overview of field types-Michael<br>
-										D) FieldReader UI-DMW<br>
-										E) ShowField module-MCole<br>
-										F) ViewWindow UI-Rob<br>
-										G) Hook modules together-MCole<br>
-										H) Read in differentField-MCole<br>
-										I) Navigate and change rendering options-DMW<br>
-										J) Save the net and reload the net-DMW<br>
-										<br>
-										<br>
-									</div>
+<center>
+                <p><br>
+                  <font size="4" face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular" color="maroon"><b>Chapter 
+                  1: Geometry Visualization</b></font> </p>
+                <p>&nbsp; </p>
+              </center>
+              <div align="left">
+                <p>&lt;subhead:Chapter overview&gt;
+                <p>In this first chapter, we will construct a SCIRun network [link] 
+                  to<br>
+                  perform a visualization task: rendering of a tetrahedral mesh. 
+                  Our<br>
+                  &quot;net&quot; will consist of three modules: data reader, 
+                  geometry<br>
+                  converter, and renderer. We will read in the datafile from disk,<br>
+                  set some rendering properties for the nodes, edges, and faces<br>
+                  (<i>e.g.</i> the nodes will be rendered as blue spheres). We 
+                  will also render the<br>
+                  geometry to the screen in the interactive view window. We will 
+                  begin constructing a net from scratch as shown, completed, in 
+                  Figure XXX. In future chapters we will expand on this network, 
+                  adding more<br>
+                  features and more functionality with each successive iteration.
+                <p><br>
+                  &lt;three module images here&gt;
+                <p>&nbsp;
+                <p><br>
+                  &lt;subhead:Overview of field types
+                <p>A SCIRun field is a geometric mesh [where data is associated| 
+                  PV--fix this] with one of the mesh elements. Currently, there 
+                  are eight different field types available:<br>
+                  <br>
+                  PointCloud Unconnected points.<br>
+                  <br>
+                  ScanlineField A regularly segmented straight line. (A regular 
+                  1D grid).<br>
+                  ContourField A segmented curve.<br>
+                  <br>
+                  ImageField A regular 2D grid.<br>
+                  TriSurf A surface made of connected triangles.<br>
+                  QuadSurf A surface make of connected quadrillaterals.<br>
+                  <br>
+                  LatticeVol A regular 3D grid.<br>
+                  TetVol A subdivision of space into tetrahedral elements.<br>
+                  HexVol A subdivision of space into hexagonal elements. <br>
+                  <br>
+                  <br>
+                  There are, most, four different places in which data can be 
+                  stored in<br>
+                  a field; at nodes, edges, faces, and cells. The dimensionality 
+                  of the mesh type limits the available locations. For instance, 
+                  a TriSurf has no three dimensional cell elements, thus, data 
+                  cannot be stored at cells in that field type.<br>
+                  <br>
+                  <br>
+                  The following data types can be stored in a field:<br>
+                  <br>
+                  Tensor<br>
+                  Vector<br>
+                  double<br>
+                  float<br>
+                  int<br>
+                  short<br>
+                  char<br>
+                  unsigned int<br>
+                  unsigned short<br>
+                  unsigned char<br>
+                  <br>
+                <p><br>
+                  &lt;subhead:FieldReader User Interface&gt;
+                <p>You should set several encironment variables in your shell 
+                  before we begin running SCIRun. First, the SCIRUN_DATA<br>
+                  variable should point to the location of the SCIRunData directory 
+                  on<br>
+                  your system. Second, since many of our example networks can 
+                  be run<br>
+                  with a variety of inputs, the SCIRUN_DATASET variable indicates 
+                  which dataset to load. 
+                <p>For example, the network that we construct in this chapter 
+                  will load a geometric mesh from disk and render it to the screen. 
+                  Such a network will work on a wide variety of inputs, and so 
+                  the SCIRUN_DATASET variable can be used to indicate which one 
+                  the user would like to see. 
+                <p>The first thing we must do when constructing a SCIRun network 
+                  is to<br>
+                  launch the SCIRun program from the command line. From the SCIRun/src/<br>
+                  directory, enter the command &quot;./scirun&quot; and the SCIRun 
+                  NetworkEditor<br>
+                  window will appear on your screen, as shown in Figure XX.</p>
+                <p>The first module we will [instantiate|initiate?] in our network 
+                  will be a<br>
+                  FieldReader. To create a FieldReader, pulldown the SCIRun menu 
+                  and<br>
+                  select DataIO -&gt; FieldReader, as shown in Figure XX. As the 
+                  module<br>
+                  instantiates, it will appear on the network map as a box, as 
+                  seen in<br>
+                  Figure XX. The box has a user interface button that, when pressed, 
+                  launches a file browser window. The user can type, or point-and-click<br>
+                  navigate to the input file. </p>
+                <p>The file browser initially points at the directory indicated 
+                  by the SCIRUN_DATA environment variable. We read in the spherical 
+                  mesh that is stored in sphere/sphere-mesh.tvt.fld. As described 
+                  above, the .tvt and .fld extensions indicate that the input 
+                  data is a Field (fld), specifically,<br>
+                  a tetrahedral volume of tensors (tvt).</p>
+                <p>This particular dataset is a tesselation of a spherical volume, 
+                  where<br>
+                  each tetrahedral element has been assigend a conductivity tensor. 
+                  For<br>
+                  the sphere dataset, the conductivity is constant through the 
+                  volume;<br>
+                  for more complex datasets, such as the torso or brain models, 
+                  the<br>
+                  conductivity type will vary with the different tissue types 
+                  in the<br>
+                  model.<br>
+                </p>
+                <p><br>
+                  E) ShowField module-MCole
+                <p>Select ShowField from the SCIRun/Visualization menu. This module 
+                  is used <br>
+                  for visualizing our various field types. Its gui has options 
+                  for <br>
+                  rendering various geometry from the field, as well as some special 
+                  <br>
+                  options for rendering vector data. It can use color to represent 
+                  data <br>
+                  within the geometry if so desired. For now we will want to just 
+                  render <br>
+                  the nodes of the geometry as blue spheres.<br>
+                  <br>
+                  Select the UI button on the ShowField module. By default the 
+                  Nodes tab <br>
+                  is selected and the Sphere Display Type is selcected. The default 
+                  color <br>
+                  however is grey. To change the default color select the Default 
+                  Color <br>
+                  button near the bottom of the dialogue. This will pop up a new 
+                  dialogue <br>
+                  with Red, Green, and Blue sliders. Set Red, and Green to 0.0, 
+                  and Blue <br>
+                  to 1.00. Then select the ok button in this color dialogue. To 
+                  remove the <br>
+                  Dialogue from view select Cancel.<br>
+                  <br>
+                  Lets turn off the display of edges and faces now. Select the 
+                  edges tab <br>
+                  in the ShowField dialogue. Turn off Show Edges. Select the Faces 
+                  tab. <br>
+                  Turn off Show Faces. Now the ShowField module is ready to render 
+                  the <br>
+                  nodes from our input geometry as blue spheres.<br>
+                <p><br>
+                  F) ViewWindow UI-Rob
+                <p>&nbsp;
+                <p><br>
+                  G) Hook modules together-MCole
+                <p>Now that you have the three modules in your canvas, they need 
+                  to be <br>
+                  connected so that data can flow between them. Output ports in 
+                  scirun <br>
+                  are always on the bottom of the module, whereas input ports 
+                  are always <br>
+                  on top. Ports that have the same color may be connected. Each 
+                  datatype <br>
+                  in scirun that can be passed through ports have a unique color.<br>
+                  <br>
+                  Using your middle mouse select the yellow output port on the 
+                  <br>
+                  FieldReader. You should see the name of the port pop up, as 
+                  well as <br>
+                  lines drawn indicating possible connections. If you then drag 
+                  your <br>
+                  middle mouse towards the ShowField input field port (the yellow 
+                  one) <br>
+                  eventually you will see the line turn red. Once it is red you 
+                  may <br>
+                  release the middle mouse button. What you should see is the 
+                  yellow port <br>
+                  connection between FieldReader and ShowField. Use the same procedure 
+                  to <br>
+                  connect the output port from ShowField to the input port of 
+                  the Viewer.<br>
+                  You propably noticed that the Viewer module generated a new 
+                  input port. <br>
+                  Some modules in SCIRun have dynamic input ports, Viewer is an 
+                  example of <br>
+                  this. This allows Viewer to always accept new sets of data to 
+                  Render.
+                <p><br>
+                  H) Read in differentField-MCole
+                <p>You have a connected dataflow network, all it needs is some 
+                  data to get <br>
+                  working on. Using the UI from the FieldReader select in the 
+                  sphere <br>
+                  directory sphere-voltage.tvd.fld. In this connected state, as 
+                  soon as <br>
+                  the FieldReader has valid data read, it passes that data through 
+                  its <br>
+                  output port to ShowField, which does its work on the field, 
+                  generates a <br>
+                  scene graph, and passes it to the Viewer module. The entire 
+                  network that <br>
+                  is connected to the FieldReader executes in order. Your viewer 
+                  window <br>
+                  should now be showing you the blue nodes from the input field.<br>
+                <p><br>
+                  I) Navigate and change rendering options-DMW(DELETE THIS SECTION)<br>
+                  J) Save the net and reload the net-DMW
+                <p>The three module network we created above will serve as a foundation<br>
+                  for the nets we will create through the rest of this tutorial. 
+                  As<br>
+                  such, we will take a few moments to examine how nets can be 
+                  saved to<br>
+                  disk and then can be reloaded in a future SCIRun session.
+                <p>To save a SCIRun network, pull down the File menu bar from 
+                  the top of<br>
+                  the SCIRun window, and select &quot;Save&quot;. A file browser 
+                  will pop up, and<br>
+                  you will be prompted to choose a location and filename for your 
+                  net.<br>
+                  By convention, we keep most of our nets in the SCIRun/src/nets/<br>
+                  directory, but you can store them in whatever location is most<br>
+                  convenient for you. For this example, let's store the net as<br>
+                  SCIRun/src/nets/show-sphere-mesh.net (we use the .net suffix 
+                  to<br>
+                  indicate SCIRun networks).</p>
+                <p>Now, quite out of SCIRun and restart it. To load in the saved 
+                  net,<br>
+                  pulldown the &quot;Load...&quot; option from the File menu bar, 
+                  and select<br>
+                  SCIRun/src/nets/show-sphere-mesh.net The net should reload into<br>
+                  SCIRun, just as it was when you saved it. If we change something<br>
+                  (e.g. rotate your view in the ViewWindow or change the rendering 
+                  color<br>
+                  of the nodes in ShowField), then we have two options if we want 
+                  to<br>
+                  re-save our net. First, we can overwrite the existing<br>
+                  show-sphere-mesh.net file by simply pulling down File -&gt; 
+                  Save.<br>
+                  Alternatively, we can save it to a new file using File -&gt; 
+                  Save As...<br>
+                  For more information on the File menu options (such as Insert 
+                  and<br>
+                  Clear), please see Section XXX of the User's Manual.</p>
+                <p><br>
+                  <br>
+                  <br>
+              </div>
+
 								</td>
+
 							</tr>
+
 						</table>
+
 					</center>
+
 				</td>
+
 			</tr>
+
 			<tr>
+
 				<td><img height="35" width="600" src="images/sub-banner-bottom.jpg" border="0" usemap="#sub-banner-bottom8abfd9a4"><map name="sub-banner-bottom8abfd9a4"><area href="chapter_2.html" coords="564,3,589,18" shape="rect"><area href="Intro.html" coords="537,6,560,21" shape="rect"><area href="http://www.sci.utah.edu" coords="6,7,67,31" shape="rect" title="SCI Institute"></map></td>
+
 			</tr>
+
 		</table>
+
 	</body>
 
+
+
 </html>
+

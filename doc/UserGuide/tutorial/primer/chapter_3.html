@@ -1,48 +1,267 @@
 <html>
 
+
+
 	<head>
+
 		<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+
 		<meta name="generator" content="Adobe GoLive 4">
+
 		<title>Derived Fields</title>
+
 	</head>
 
+
+
 	<body bgcolor="#a9a9a9">
+
 		<table align="center" border="0" cellpadding="0" cellspacing="0" width="306" bgcolor="#cccccc">
+
 			<tr>
+
 				<td><img height="91" width="600" src="images/sub-banner.jpg" border="0" usemap="#sub-banner8662a0c4"><map name="sub-banner8662a0c4"><area href="chapter_8.html" coords="580,65,597,84" shape="rect" title="Another View"><area href="chapter_7.html" coords="557,64,575,83" shape="rect" title="Feedback"><area href="chapter_6.html" coords="532,64,550,82" shape="rect" title="Putting Simulation and Visualization Together"><area href="chapter_5.html" coords="508,64,527,83" shape="rect" title="Bioelectric Field Simulation"><area href="chapter_4.html" coords="483,64,502,83" shape="rect" title="Multi-Vis"><area href="chapter_3.html" coords="460,64,478,83" shape="rect" title="Derived Fields"><area href="chapter_2.html" coords="436,64,454,83" shape="rect" title="Looking at the Data"><area href="chapter_1.html" coords="412,65,430,82" shape="rect" title="Geometry Visualization"><area href="Intro.html" coords="354,64,406,84" shape="rect" title="Introduction"><area href="http://software.sci.utah.edu/doc/index.html" coords="205,63,343,83" shape="rect" title="Documentation"><area href="http://software.sci.utah.edu/" coords="103,63,195,82" shape="rect" title="Software"><area href="index.html" coords="1,65,92,81" shape="rect" title="Tutorial Home"></map></td>
+
 			</tr>
+
 			<tr>
+
 				<td>
+
 					<center>
+
 						<table border="0" cellpadding="0" cellspacing="5" width="600">
+
 							<tr>
+
 								<td>
+
 									<center>
+
 										<br>
+
 										<font size="4" face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular" color="maroon"><b>Chapter 3: Derived Fields<br>
+
 										<hr>
+
 										</b></font></center>
-									<div align="left">
-										<p>A) SampleField-Michael<br>
-										B) DirectInterpolate-Michael<br>
-										C) Gradient and Streamlines description-DMW<br>
-										D) Build SampleField net-Michael(A)<br>
-										E) Build DirectInterpolate net-Michael(B)<br>
-										F) Build Grandient/Streamline net-DMW(C)<br>
-										G) Additional descriptions of derived field modules-DMW<br>
-										<br>
-										<br>
-									</div>
+
+									
+              <div align="left"> 
+                <p>In Chapters 1 and 2 we constructed SCIRun networks to visualize<br>
+                  the<br>
+                  geometry and data values in a Field. In this Chapter we will<br>
+                  explore<br>
+                  some more visualization techniques, and will look at &quot;filter&quot;<br>
+                  modules<br>
+                  that take in a Field and produce a new derived Field as output.<br>
+                  Rather than building one net to introduce all of these new<br>
+                  modules,<br>
+                  we will construct several nets, with each describing a single<br>
+                  algorithm. To keep things simple, we will divide this chapter<br>
+                  into<br>
+                  three sub-sections, one for each method.<br>
+                  <br>
+                  <br>
+                  <br>
+                
+                <p>3A) SampleField<br>
+                  <br>
+                  Given a large Field of data, it is often useful to sample a<br>
+                  subset of<br>
+                  the Field in order to make the visualization manageable and 
+                  to<br>
+                  avoid<br>
+                  visual clutter. One example of this is to examine a cutting<br>
+                  plane<br>
+                  inside of a three-dimensional dataset. A similar technique is 
+                  to<br>
+                  <br>
+                  examine a cutting volume.<br>
+                  <br>
+                  In SCIRun, the functionality described above is split into two<br>
+                  steps.<br>
+                  The first step is to generate a set of samples points; the second<br>
+                  is<br>
+                  to interpolate the datavalues from the original Field onto those<br>
+                  new<br>
+                  sample points. In this sub-section we will describe some of 
+                  our<br>
+                  sample generation modules. In 3B we will talk about data<br>
+                  interpolation.<br>
+                  <br>
+                  To generate a cutting plane, we use a Fields-&gt;SamplePlane 
+                  module.<br>
+                  <br>
+                  This module takes a Field as input, and sends a Field as output.<br>
+                  The<br>
+                  input Field is only used to specify the geometric bounds for 
+                  the<br>
+                  samples. The SamplePlane module generates a set of regularly<br>
+                  spaced<br>
+                  samples on a Plane (an ImageField) that can be chosen to line 
+                  up<br>
+                  with<br>
+                  the X, Y, or Z axis. The user specifies the orientation, as 
+                  well<br>
+                  as<br>
+                  the number of samples via the module's UI.<br>
+                  <br>
+                  An example of using this module is shown in Figure xx. We have<br>
+                  created<br>
+                  a FieldReader module and a SamplePlane module, and have hooked<br>
+                  them<br>
+                  together. For this example, we will use the<br>
+                  sphere-voltage.pcd.fld as<br>
+                  our input file. The output of SamplePlane is a Field that<br>
+                  contains<br>
+                  geometry (an ImageMesh), but no meaningful data yet. We can<br>
+                  visualize its<br>
+                  geometry, though, using a ShowField module and a Viewer module.
+                <p>A) SampleField-Michael 
+                <p>&nbsp;
+                <p>description&gt;<br>
+                  &lt;p&gt;<br>
+                  SampleField generates samples from any type of input field and 
+                  outputs<br>
+                  the samples as a PointCloud field. The samples can be generated<br>
+                  randomly or user selected via a 3D widget. <br>
+                  &lt;/p&gt;<br>
+                  &lt;p&gt;<br>
+                  The random sampling can be weighted by importance (determined 
+                  by<br>
+                  the data value of the sample) or left unweighted. The random 
+                  sampling<br>
+                  can also be limited to the selection of node points, rather 
+                  than points<br>
+                  from the interior of the fields elements, by clamping the samples 
+                  to<br>
+                  nodes. <br>
+                  &lt;/p&gt;<br>
+                  &lt;p&gt;<br>
+                  The &quot;uniform&quot; distributions are a uniformly random 
+                  function over the<br>
+                  spacial extents of the field (i.e. the elements are weighted 
+                  by their<br>
+                  volume or area), whereas the &quot;scattered&quot; distributions 
+                  are a uniformly<br>
+                  random function over the elements only (i.e. all elements have 
+                  the same<br>
+                  weight). The &quot;importance weighted&quot; distributions multiply 
+                  the existing<br>
+                  weight of a sample by the interpolated data value associated 
+                  with it,<br>
+                  while the &quot;not weighted&quot; distributions leave the existing 
+                  weight of <br>
+                  a sample unchanged.<br>
+                  B) DirectInterpolate-Michael
+                <p>In the previous sub-section, we generated sample distributions<br>
+                  based<br>
+                  on an input Field. In this section, we will use the<br>
+                  DirectInterpolate<br>
+                  module to interpolate datavalues onto that geometry. We begin 
+                  by<br>
+                  <br>
+                  creating a FieldReader and a SamplePlane module, as described 
+                  in<br>
+                  3A.<br>
+                  To map datavalues onto the plane, we use the DirectInterpolate<br>
+                  module. To the first input port we attach the datavalues source,<br>
+                  in<br>
+                  this case the output from the FieldReader. To the second input<br>
+                  port we attach the destination field, in this case the output<br>
+                  from<br>
+                  SamplePlane. The DirectInterpolate module uses linear<br>
+                  interpolation<br>
+                  to compute new values.<br>
+                  <br>
+                  Having computed the values on the plane, we can now visualize 
+                  the<br>
+                  <br>
+                  plane with color-mapped geometry. To do this, we hook up the<br>
+                  modules<br>
+                  just as we did in Chapter 2. The net you are using should look<br>
+                  like<br>
+                  the one in Figure xx, and the image in the ViewWindow should 
+                  look<br>
+                  like<br>
+                  the image in Figure xx.<br>
+                  DirectInterpolate generates a new field that contains the<br>
+                  geometry of the destination field, but with all of the<br>
+                  data values linearly interpolated from the source field.<br>
+                  It should work correctly with all of the current field<br>
+                  and data types. The data will be stored at the elements<br>
+                  specified in the destination field. 
+                <p><br>
+                  C) Gradient and Streamlines description-DMW
+                <p>The last visualization module we will introduce in this<br>
+                  Chapter<br>
+                  will be the StreamLines module. This module takes in a<br>
+                  VectorField,<br>
+                  and a Field of sample points (as might have been generated using<br>
+                  for<br>
+                  example a Rake in section 3B), and outputs a new Field consisting<br>
+                  of<br>
+                  a sequence of advected path-integral positions generated rom<br>
+                  integrating the sample positions through the (derivative)<br>
+                  VectorField. In the example Datasets directories, we do not 
+                  have<br>
+                  any<br>
+                  <br>
+                  <br>
+                  <br>
+                <p><br>
+                  D) Build SampleField net-Michael(A) 
+                <p>To use this module, we connect the field we would like to sample 
+                  to<br>
+                  the input port on top of the module. The sample points come 
+                  out at<br>
+                  the bottom and in this case are connected to the StreamLines 
+                  module as<br>
+                  the seed points for the streamlines. If the widget is to be 
+                  used to<br>
+                  generate the sample points, it's port is connected to the Viewer 
+                  as<br>
+                  well.<br>
+                  <br>
+                  E) Build DirectInterpolate net-Michael(B)
+                <p>The field we are interested in interpolating from is connected 
+                  to the<br>
+                  Source port on the top left of the module. The new field that 
+                  we wish<br>
+                  to fill in with values from the source field is connected to 
+                  the<br>
+                  Destination port on the top right of the module.<br>
+                <p><br>
+                  F) Build Grandient/Streamline net-DMW(C)<br>
+                  G) Additional descriptions of derived field modules-DMW<br>
+                  <br>
+                  <br>
+              </div>
+
 								</td>
+
 							</tr>
+
 						</table>
+
 					</center>
+
 				</td>
+
 			</tr>
+
 			<tr>
+
 				<td><img height="35" width="600" src="images/sub-banner-bottom.jpg" border="0" usemap="#sub-banner-bottom8ac341b7"><map name="sub-banner-bottom8ac341b7"><area href="chapter_4.html" coords="563,1,590,21" shape="rect"><area href="chapter_2.html" coords="533,1,561,21" shape="rect"><area href="http://www.sci.utah.edu" coords="6,6,67,31" shape="rect"></map></td>
+
 			</tr>
+
 		</table>
+
 	</body>
 
+
+
 </html>
+
