@@ -2261,7 +2261,7 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
     if (z<=zt) yh2 = (int)rint(m_slicecenter[1][z]);
     for (y=yl2;y<yh2;y++)
       {
-      dist = Min(fabs((float)y-m_slicecenter[1][z]),(float)15.0);
+      dist = Min(fabsf((float)y-m_slicecenter[1][z]),(float)15.0);
       xl2 = Max((int)floor(m_slicecenter[0][z]-dist),0);
       xh2 = Min((int)ceil(m_slicecenter[0][z]+dist),m_width-1);
       for (x=xl2;x<=xh2;x++)
@@ -2396,7 +2396,7 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
         yh2 = (int)rint(m_slicecenter[1][z]);
         for (y=yl2;y<yh2;y++)
 	{
-          dist = Min(fabs((float)y-m_slicecenter[1][z]),(float)15.0);
+          dist = Min(fabsf((float)y-m_slicecenter[1][z]),(float)15.0);
           xl2 = Max((int)floor(m_slicecenter[0][z]-dist),0);
           xh2 = Min((int)ceil(m_slicecenter[0][z]+dist),m_width-1);
           for (x=xl2;x<=xh2;x++)
