@@ -185,7 +185,7 @@ TendPoint::execute()
   fprintf(stderr, "% 15.7f % 15.7f % 15.7f\n", tdata[1], tdata[2], tdata[3]);
   fprintf(stderr, "% 15.7f % 15.7f % 15.7f\n", tdata[2], tdata[4], tdata[5]);
   fprintf(stderr, "% 15.7f % 15.7f % 15.7f\n", tdata[3], tdata[5], tdata[6]);
-  tenEigensolve(eval, evec, tdata);
+  tenEigensolve_f(eval, evec, tdata);
   eval1_.set(eval[0]);
   eval2_.set(eval[1]);
   eval3_.set(eval[2]);
