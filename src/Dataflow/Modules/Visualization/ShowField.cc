@@ -30,6 +30,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TriSurf.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/ContourField.h>
 #include <Core/Datatypes/FieldAlgo.h>
@@ -252,9 +253,6 @@ ShowField::execute()
     } else {
       error = true; msg ="LatticeVol of unknown type.";
     }
-    } else if (error) {
-    cerr << "ShowField Error: " << msg << endl;
-    return;
   } else if (name == "ContourField") {
     if (geom_handle->get_type_name(1) == "double") {
       ContourField<double> *cf = 0;
@@ -269,7 +267,21 @@ ShowField::execute()
     } else {
       error = true; msg ="ContourField of unknown type.";
     }
-    } else if (error) {
+  } else if (name == "TriSurf") {
+    if (geom_handle->get_type_name(1) == "double") {
+      TriSurf<double> *ts = 0;
+      TriSurf<double> *ts1 = 0;
+      ts = dynamic_cast<TriSurf<double>*>(geom_handle.get_rep());
+      if (data_gen_) {
+	ts1 = dynamic_cast<TriSurf<double>*>(data_handle.get_rep());
+      }
+      if (ts)
+	render(ts, ts1, color_handle);
+      else { error = true; msg = "Not a valid TriSurf."; }
+    } else {
+      error = true; msg ="ContourField of unknown type.";
+    }
+  } else if (error) {
     cerr << "ShowField Error: " << msg << endl;
     return;
   }
@@ -412,6 +424,7 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
 	       faces);
     }
   }
+  return true;
 }
 
 void 
