@@ -1463,7 +1463,8 @@ u=`echo $package | sed 's/.*Insight.*/Insight/'`
 if test "$u" = "Insight" ; then
    pkg_insight="yes"
 else
-   pkg_insight="no"
+   
+   pkg_insight="no"pkg_insight="no"
 fi
 
 if test "$enable_sci_malloc" = "yes"; then
@@ -1913,6 +1914,44 @@ case $ac_cv_sizeof_voidp in
   ;;
 esac
 AC_SUBST(NBITS)
+
+##  --  search for Insight  ----------------------------------------------------
+
+
+if test "$pkg_insight" = "yes"; then
+
+   # Insight is a large distribution. 
+   # we do not want to check all of it. We thus check only if the
+   # include and lib Insight dirs exist.
+
+   AC_MSG_CHECKING(for Insight.)
+
+   if test "$with_insight"; then
+      dir="$with_insight"
+   else
+      dir="/usr/local/lib/InsightToolkit"
+   fi
+
+   if test -a "$dir/ITKConfig.cmake"; then
+	INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g'`" 
+        INSIGHT_LIB_DIR_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS "/;/' | sed 's/")//' | sed 's/;/ -L/g'`"
+	INSIGHT_LIB_FLAG="-lITKFEM -lITKMetaIO -lITKIO -lITKAlgorithms -lITKStatistics -lVXLNumerics -lITKNumerics -lITKBasicFilters -lITKCommon -litkpng -litkzlib"
+#	INSIGHT_LIB_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARIES' | sed 's/SET(ITK_LIBRARIES//' | sed 's/)//' | sed 's/ / -l/g'`" 
+
+      DEF_INSIGHT="#define HAVE_INSIGHT"
+      HAVE_INSIGHT="yes"
+
+      AC_MSG_RESULT($dir)
+   else
+      AC_MSG_RESULT(not found.)
+   fi
+fi
+
+AC_SUBST(HAVE_INSIGHT)
+AC_SUBST(INSIGHT_LIB_FLAG)
+AC_SUBST(INSIGHT_LIB_DIR_FLAG)
+AC_SUBST(INC_INSIGHT_H)
+AC_SUBST(DEF_INSIGHT)
 
 #########################################################################
 ## Make sure number of bit build for Thirdparty and SCIRun compile match
@@ -3085,46 +3124,6 @@ AC_SUBST(GLOBUS_LIB_DIR_FLAG)
 AC_SUBST(GLOBUS_EXTRA_LIB_FLAG)
 AC_SUBST(INC_GLOBUS_H)
 AC_SUBST(DEF_GLOBUS)
-
-##  --  search for Insight  ----------------------------------------------------
-
-if test "$pkg_insight" = "yes"; then
-
-   # Insight is a large distribution. 
-   # we do not want to check all of it. We thus check only if the
-   # include and lib Insight dirs exist.
-
-   AC_MSG_CHECKING(for Insight.)
-
-   if test "$with_insight"; then
-      dir="$with_insight"
-   else
-      dir="/usr/local"
-   fi
-
-   if test -a "$dir/lib/InsightToolkit/ITKConfig.cmake"; then
-      INSIGHT_LIB_FLAG="-lVXLNumerics -lITKIO -lITKBasicFilters -lITKAlgorithms -lITKMetaIO -litkpng -litkzlib -lITKCommon "
-      INSIGHT_LIB_DIR_FLAG="-L$dir/lib/InsightToolkit"
-
-
-      dir=$dir/include/InsightToolkit 
-
-      INC_INSIGHT_H="-I$dir -I$dir/Common -I$dir/BasicFilters -I$dir/Algorithms -I$dir/IO -I$dir/Numerics -I$dir/Numerics/vxl -I$dir/Numerics/vxl/vnl -I$dir/Numerics/vxl/vcl -I$dir/SpatialObject -I$dir/Utilities"
-      DEF_INSIGHT="#define HAVE_INSIGHT"
-      HAVE_INSIGHT="yes"
-
-      AC_MSG_RESULT($dir)
-
-   else
-      AC_MSG_RESULT(not found.)
-   fi
-fi
-
-AC_SUBST(HAVE_INSIGHT)
-AC_SUBST(INSIGHT_LIB_FLAG)
-AC_SUBST(INSIGHT_LIB_DIR_FLAG)
-AC_SUBST(INC_INSIGHT_H)
-AC_SUBST(DEF_INSIGHT)
 
 ##  --  search for Qt  ----------------------------------------------------
 
