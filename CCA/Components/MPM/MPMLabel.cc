@@ -364,6 +364,10 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pMassRateLabel);
   VarLabel::destroy(pPressureLabel);
   VarLabel::destroy(pCrackRadiusLabel);
+  VarLabel::destroy(pTang1Label);
+  VarLabel::destroy(pTang2Label);
+  VarLabel::destroy(pTang1Label_preReloc);
+  VarLabel::destroy(pTang2Label_preReloc);
   
   VarLabel::destroy(pDeformationMeasureLabel_preReloc);
   VarLabel::destroy(pStressLabel_preReloc);
