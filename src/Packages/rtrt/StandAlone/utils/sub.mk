@@ -53,6 +53,11 @@ SRCS := $(SRCDIR)/pca-coeff.cc
 # Does need teem
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/tex-subset
+SRCS := $(SRCDIR)/tex-subset.cc
+# Does need teem
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/dilate
 SRCS := $(SRCDIR)/dilate.cc
 # Does need teem
