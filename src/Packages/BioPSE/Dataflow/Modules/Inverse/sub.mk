@@ -27,9 +27,9 @@ include $(SRCTOP_ABS)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/Inverse
 
 SRCS     += \
+	$(SRCDIR)/DipoleSearch.cc\
 #[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/ConductivitySearch.cc\
-#	$(SRCDIR)/DipoleSearch.cc\
 #	$(SRCDIR)/SurfaceToSurface.cc\
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
