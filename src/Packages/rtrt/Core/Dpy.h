@@ -57,10 +57,10 @@ class Dpy : public Runnable {
   bool       showLights_;    // Display lights as spheres  
   bool       lightsShowing_; // Lights are being displayed as spheres.
 
-  bool       turnOffAllLights_; 
   bool       turnOnAllLights_; 
-  Light    * turnOffLight_;
+  bool       turnOffAllLights_; 
   Light    * turnOnLight_;
+  Light    * turnOffLight_;
 
   bool       toggleRenderWindowSize_;
   int        renderWindowSize_; // 0 == full, 1 == med
