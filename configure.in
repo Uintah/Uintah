@@ -80,13 +80,24 @@ if test "$uintah" = "yes"; then
   PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/Uintah/libUintah.so\(\$(SRCTOP_ABS)/Uintah/GUI\)"
   package_output="$package_output \
               Uintah/Makefile \
+		Uintah/Components/Makefile \
+		  Uintah/Components/Arches/Makefile \
+		  Uintah/Components/ICE/Makefile \
+		  Uintah/Components/MPM/Makefile \
+		  Uintah/Components/Schedulers/Makefile \
+		  Uintah/Components/SimulationController/Makefile \
                 Uintah/Datatypes/Makefile \
                   Uintah/Datatypes/Particles/Makefile \
+		Uintah/Exceptions/Makefile \
 		Uintah/GUI/Makefile \
+		Uintah/Grid/Makefile \
+		Uintah/Interface/Makefile \
+		Uintah/Math/Makefile \
                 Uintah/Modules/Makefile \
                   Uintah/Modules/MPMViz/Makefile \
                   Uintah/Modules/Readers/Makefile \
-		  Uintah/Modules/Writers/Makefile
+		  Uintah/Modules/Writers/Makefile \
+		Uintah/Parallel/Makefile
 		  "
 fi
 
@@ -564,7 +575,11 @@ if test "$enable_parallel" = "yes"; then
 	      Component/Makefile \
 	        Component/CIA/Makefile \
 	        Component/PIDL/Makefile \
-	        tools/sidl/Makefile 
+	        PSECore/Interface/Makefile \
+	        PSECore/Controller/Makefile \
+	        PSECore/Builder/Makefile \
+	      newmain/Makefile \
+	        tools/sidl/Makefile \
 		testprograms/Component/Makefile \
 		  testprograms/Component/argtest/Makefile \
 		  testprograms/Component/memstress/Makefile \
