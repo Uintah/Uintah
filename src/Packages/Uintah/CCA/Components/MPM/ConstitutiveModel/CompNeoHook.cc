@@ -20,6 +20,10 @@
 #include <fstream>
 #include <iostream>
 
+#ifdef IMPLICIT
+#include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h>
+#endif
+
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
@@ -273,6 +277,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 					      SparseMatrix<double,int>& KK,
 #ifdef HAVE_PETSC
 					      Mat &A,
+					      map<const Patch*, Array3<int> >& d_petscLocalToGlobal,
 #endif
 					      const bool recursion)
 
@@ -291,14 +296,22 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
   }
   KK.setSize(num_nodes,num_nodes);
 
+#if 0
 #ifdef HAVE_PETSC
   MatCreateMPIAIJ(PETSC_COMM_WORLD,PETSC_DETERMINE,PETSC_DETERMINE,num_nodes,
 		  num_nodes, PETSC_DEFAULT,PETSC_NULL,PETSC_DEFAULT,
 		  PETSC_NULL,&A);
 #endif
 #endif
+#endif
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
+
+    IntVector lowIndex = patch->getNodeLowIndex();
+    IntVector highIndex = patch->getNodeHighIndex();
+    Array3<int> l2g(lowIndex,highIndex);
+    l2g.copy(d_petscLocalToGlobal[patch]);
+
     Matrix3 velGrad,Shear,deformationGradientInc,dispGrad,fbar;
     FastMatrix kmat(24,24);
     FastMatrix kgeo(24,24);
@@ -388,12 +401,18 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       
       for(int k = 0; k < 8; k++) {
 	const Vector& disp = dispNew[ni[k]];
-	
+#if 0		
 	int node_num = ni[k].x() + (nodes.x())*ni[k].y() + (nodes.x())*
 	  (nodes.y())*ni[k].z();
+
 	dof[ii++] = 3*node_num;
 	dof[ii++] = 3*node_num+1;
 	dof[ii++] = 3*node_num+2;
+#endif
+	int l2g_node_num = l2g[ni[k]];
+	dof[ii++] = l2g_node_num;
+	dof[ii++] = l2g_node_num+1;
+	dof[ii++] = l2g_node_num+2;
 	
 	for (int j = 0; j<3; j++){
 	  for (int i = 0; i<3; i++) {
@@ -699,7 +718,7 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
 		 pset);
      old_dw->get(bElBar_old, lb->bElBarLabel, pset);
 #endif
-     new_dw->get(dispNew,lb->dispNewLabel,dwi,patch,Ghost::None,0);
+     new_dw->get(dispNew,lb->dispNewLabel,dwi,patch,Ghost::AroundCells,1);
      new_dw->getModifiable(pstress,        lb->pStressLabel_preReloc, pset);
      new_dw->getModifiable(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
      new_dw->getModifiable(deformationGradient_new,
