@@ -35,6 +35,25 @@ later) and <ulink url="http://www.gnu.org/directory/make.html">GNU
 make</ulink> (version 3.79 or later) must be present before building
 SCIRun.</para>
 
+<para>
+The process consists of these steps:
+<orderedlist>
+<listitem>
+<para>Downloading and unpacking &sr; sources, its packages,
+third party software, and sample data sets.</para>
+</listitem>
+<listitem>
+<para>Building and installing third party software.</para>
+</listitem>
+<listitem>
+<para>Configuring &sr;</para>
+</listitem>
+<listitem>
+<para>Building &sr;</para>
+</listitem>
+</orderedlist>
+</para> 
+
 </section>
 
 <section>
@@ -48,7 +67,8 @@ SCIRun.</para>
 
 <para>
 Obtain the source code for SCIRun and any desired packages.  Be sure
-to get the <quote>third party</quote> sources too.  The compressed
+to get the <filename>Thirdparty_install.x.x.x.tar.gz</filename> and
+<filename>DataSets.x.x.x.tar.gz</filename> files too.  The compressed
 tarballs for these sources can be downloaded from SCI's <ulink
 url="http://software.sci.utah.edu/archive_entry.html">software
 archive</ulink> page.
@@ -79,10 +99,22 @@ to unpack the BioPSE package.
 
 <listitem>
 <para>
+Unpack the tarball containing sample datasets:
+<literallayout class="monospaced">
+gunzip -c DataSets.x.x.x.tar.gz | tar xf -
+</literallayout>
+This will create the directory <filename>SCIRunData</filename>.
+</para>
+</listitem>
+
+<listitem>
+<para>
 Unpack the third party tarball:
 <literallayout class="monospaced">
 gunzip -c Thirdparty_install.x.x.x.tar.gz | tar xf -
 </literallayout>
+This will create the directory
+<filename>Thirdparty_install.x.x.x</filename>. 
 </para>
 </listitem>
 
