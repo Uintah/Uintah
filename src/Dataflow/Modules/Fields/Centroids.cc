@@ -55,7 +55,7 @@ void Centroids::execute()
   MeshHandle ifieldMeshH = ifieldH->mesh();
   TetVolMesh *tvm = dynamic_cast<TetVolMesh*>(ifieldMeshH.get_rep());
   if (!tvm) {
-    cerr << "Ceontroids error: input data wasn't a TetVolField\n";
+    error("Input data wasn't a TetVolField.");
     return;
   }
 

@@ -70,12 +70,12 @@ VectorMagnitude::execute()
   FieldHandle fieldin;
 
   if (!ifp) {
-    error( "Unable to initialize "+name+"'s iport" );
+    error( "Unable to initialize iport 'Input Field'.");
     return;
   }
 
   if (!(ifp->get(fieldin) && fieldin.get_rep())) {
-    error( "No handle or representation" );
+    error( "No handle or representation." );
     return;
   }
 
@@ -118,7 +118,7 @@ VectorMagnitude::execute()
     FieldOPort* ofp = (FieldOPort *) get_oport("Output VectorMagnitude");
 
     if (!ofp) {
-      error("Unable to initialize "+name+"'s oport\n");
+      error("Unable to initialize oport 'Output VectorMagnitude'.");
       return;
     }
 
