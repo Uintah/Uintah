@@ -113,6 +113,7 @@ void Crack::MoveCracks(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double dx_min=Min(dx.x(),dx.y(),dx.z());
+    //double vc=dx.x()*dx.y()*dx.z();
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label() );
@@ -127,6 +128,11 @@ void Crack::MoveCracks(const ProcessorGroup*,
       //Get the necessary information
       MPMMaterial* mpm_matl=d_sharedState->getMPMMaterial(m);
       int dwi=mpm_matl->getDWIndex();
+
+      // Mass of a grad cell 
+      //double rho_init=mpm_matl->getInitialDensity();
+      //double mc=rho_init*vc;
+
       ParticleSubset* pset=old_dw->getParticleSubset(dwi,patch);
       constParticleVariable<Vector> psize;
       if(d_8or27==27)
@@ -172,7 +178,10 @@ void Crack::MoveCracks(const ProcessorGroup*,
               for(int k =0; k < d_8or27; k++) {
                 Point pi=patch->nodePosition(ni[k]);
                 if(PhysicalGlobalGridContainsPoint(dx_min,pi) &&  //ni[k] in real grid
-                   (gnum[ni[k]]+Gnum[ni[k]]!=0)) sumS += S[k];
+                     (gnum[ni[k]]+Gnum[ni[k]]!=0)) {
+                  //if(gmass[ni[k]]+Gmass[ni[k]]>mc/20.)
+	   	  sumS += S[k];
+                }
               }
               if(sumS>1.e-6) {
                 for(int k = 0; k < d_8or27; k++) {
@@ -183,7 +192,9 @@ void Crack::MoveCracks(const ProcessorGroup*,
                     mG = Gmass[ni[k]];
                     vg = gvelocity_star[ni[k]];
                     vG = Gvelocity_star[ni[k]];
-                    vcm += (mg*vg+mG*vG)/(mg+mG)*S[k]/sumS;
+                    //if(mg+mG>mc/100.) {
+                      vcm += (mg*vg+mG*vG)/(mg+mG)*S[k]/sumS;
+                    //}
                   }
                 }
               }
