@@ -345,12 +345,13 @@ proc removePort { port } {
 }
 
 proc tracePort { port { traverse 0 }} {
-    global Color CurrentlySelectedModules
+    global Color CurrentlySelectedModules TracedConnections
     lightPort $port $Color(Trace)
     set CurrentlySelectedModules ""
     foreach conn [portConnections $port] {
 	lightPort [[invType port]Port conn] $Color(Trace)
-	drawConnectionTrace $conn
+	lappend TracedConnections $conn
+	drawConnections [list $conn]
 	if $traverse { tracePortsBackwards [list [[invType port]Port conn]] }
     }
 }
@@ -377,8 +378,8 @@ proc tracePortsBackwards { ports } {
 	    set do "[pMod port] all [invType port]"
 	}
 	foreach conn [portConnections $do] { 
-	    #drawConnectionTrace $conn
 	    lappend TracedConnections $conn
+	    drawConnections [list $conn]
 	    lappend ports [[pType port]Port conn]
 	}
     }
