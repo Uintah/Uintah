@@ -33,7 +33,7 @@ using std::vector;
 #pragma reset woff 1375
 #endif
 
-#define NEW_MODULE_MAKER 0
+#define NEW_MODULE_MAKER 1
 typedef std::map<int,char*>::iterator char_iter;
 
 namespace PSECore {
@@ -422,15 +422,14 @@ void PackageDB::loadPackage(const clString& packPath)
     
     // Load the package
     postMessage(clString("Loading package '")+packageElt+"'", false);
-    //cout << "packageElt = " << packageElt << endl;
 
 #if NEW_MODULE_MAKER    
-    // The GUI path is now hard-wired to be 
-    // "PACKAGENAME/GUI""
-    TCL::execute(clString("lappend auto_path ")+packageElt+"/../GUI");
+    // The GUI path is hard-wired to be "PACKAGENAME/GUI""
+    TCL::execute(clString("lappend auto_path ")+packageElt+"/GUI");
 
-    // try to parse *.xml in the above GUI directory.
-    std::map<int,char*>* files = GetFilenamesEndingWith((char*)packageElt(),".xml");
+    // get *.xml in the above GUI directory.
+    clString xmldir = packageElt+"/XML";
+    std::map<int,char*>* files = GetFilenamesEndingWith((char*)xmldir(),".xml");
     for (char_iter i=files->begin();
 	 i!=files->end();
 	 i++) {
@@ -449,8 +448,7 @@ void PackageDB::loadPackage(const clString& packPath)
     //
     try {
 #if NEW_MODULE_MAKER
-      cout << "parsing file: " << clString(packageElt+(*i).second) << endl;
-      parser.parse(clString(packageElt+"/"+(*i).second)());
+      parser.parse(clString(packageElt+"/XML/"+(*i).second)());
 #else
       parser.parse(packageElt());
 #endif
@@ -478,9 +476,39 @@ void PackageDB::loadPackage(const clString& packPath)
       component_node* node = CreateComponentNode(3);
       DOM_NodeList list = doc.getElementsByTagName("component");
       int nlist = list.getLength();
-      cout << "nlist = " << nlist << endl;
-      for (int i=0;i<nlist;i++)
+      for (int i=0;i<nlist;i++) {
+	// get the component name and category name
 	ProcessComponentNode(list.item(i),node);
+
+	// find the .so for this component
+	LIBRARY_HANDLE so;
+	ModuleMaker makeaddr = 0;
+	clString libname(clString("lib")+basename(packageElt)+"_Modules_"+
+			 node->category+".so");
+	so = GetLibraryHandle(libname());
+	if (!so) {
+	  clString firsterror(SOError());
+	  libname = clString("lib")+basename(packageElt)+".so";
+	  so = GetLibraryHandle(libname());
+	  if (!so)
+	    postMessage("Couldn't load all of package \\\""+
+			basename(packageElt)+"\\\"\n  "+
+			firsterror()+"\n  "+SOError());
+	}
+
+	if (so) {
+	  clString make(clString("make_")+node->name);
+	  makeaddr = (ModuleMaker)GetHandleSymbolAddress(so,make());
+	  if (!makeaddr)
+	    postMessage(clString("Couldn't find component \\\"")+
+			node->name+"\\\"\n  "+
+			SOError());
+	}
+	    
+	if (makeaddr)
+	  registerModule(basename(packageElt()),node->category,
+			 node->name,makeaddr,"not currently used");
+      }
       
       if(handler.foundError)
 	TCL::execute("tk_dialog .errorPopup"
@@ -711,6 +739,11 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.17  2000/10/19 07:58:49  moulding
+// - finishing touches for phase 1 of new module maker.
+//
+// - added more useful messages when package loading fails.
+//
 // Revision 1.16  2000/10/18 17:37:00  moulding
 // added sections of code cordoned off with #if NEW_MODULE_MAKER which will
 // help facilitate the move to the new module maker and the move to source forge.
