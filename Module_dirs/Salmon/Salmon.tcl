@@ -99,7 +99,7 @@ proc makeRoe {salmon rid} {
     pack $w.bframe.v.gohome -fill x -pady 2
 
     button $w.bframe.more -text "+" -padx 3 \
-	    -font "-Adobe-Helvetica-bold-R-Normal-*-140-*" \
+	    -font "-Adobe-Helvetica-bold-R-Normal-*-140-75-*" \
 	    -command "addMFrame $w $rid"
     pack $w.bframe.more -pady 2 -padx 2 -anchor se -side right
 
@@ -110,7 +110,7 @@ proc makeRoe {salmon rid} {
     set height 500
     set wcommand [$rid setrenderer $renderer $w.wframe.draw $width $height]
     eval $wcommand
-    pack $w.wframe.draw
+    pack $w.wframe.draw -expand yes -fill both
     bind $w.wframe.draw <Expose> "$rid redraw"
 }
 
@@ -160,7 +160,7 @@ proc switchRenderer {rid renderer} {
     set wcommand [$rid setrenderer $renderer $w.wframe.draw $width $height]
     eval $wcommand
     bind $w.wframe.draw <Expose> "$rid redraw"
-    pack $w.wframe.draw
+    pack $w.wframe.draw -expand yes -fill both
 }
 
 proc updatePerf {rid p1 p2} {

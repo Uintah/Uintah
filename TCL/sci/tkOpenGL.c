@@ -30,6 +30,7 @@ static char rcsid[] = "$Header$ SPRITE (Berkeley)";
 
 #include "tkConfig.h"
 #include "tk.h"
+#include <tcl.h>
 
 #include <GL/glx.h>
 
@@ -161,6 +162,7 @@ OpenGLCmd(clientData, interp, argc, argv)
     XVisualInfo* vi;
     Tk_Window main = (Tk_Window) clientData;
     OpenGL *OpenGLPtr;
+    Colormap cmap;
     Tk_Window tkwin;
     int attributes[50];
     int idx=0;
@@ -245,10 +247,15 @@ OpenGLCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
     
-    Tk_Colormap(tkwin) = XCreateColormap(Tk_Display(tkwin),
-					 RootWindow(Tk_Display(tkwin), vi->screen),
-					 vi->visual, AllocNone);
-    Tk_Visual(tkwin) = vi->visual;
+    cmap = XCreateColormap(Tk_Display(tkwin),
+			   RootWindow(Tk_Display(tkwin), vi->screen),
+			   vi->visual, AllocNone);
+    
+    if( Tk_SetWindowVisual(tkwin, vi->visual, vi->depth, cmap) != 1){
+	Tcl_AppendResult(interp, "Error setting visual for window", (char*)NULL);
+	return TCL_ERROR;
+    }
+
     interp->result = Tk_PathName(OpenGLPtr->tkwin);
     return TCL_OK;
 }
@@ -352,7 +359,6 @@ OpenGLConfigure(interp, OpenGLPtr, argc, argv, flags)
 
     {
 	int height, width;
-	fprintf(stderr, "geometry=%s\n", OpenGLPtr->geometry);
         if (sscanf(OpenGLPtr->geometry, "%dx%d", &width, &height) != 2) {
             Tcl_AppendResult(interp, "bad geometry \"", OpenGLPtr->geometry,
                     "\": expected widthxheight", (char *) NULL);

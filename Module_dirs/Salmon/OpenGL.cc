@@ -31,10 +31,10 @@ clString OpenGL::create_window(const clString& name,
 				   const clString& width,
 				   const clString& height)
 {
-    return "canvas "+name+" -width "+width+" -height "+height+" -background lavender";
+    return "opengl "+name+" -geometry "+width+"x"+height+" -doublebuffer true -direct true -rgba true -redsize 2 -greensize 2 -bluesize 2 -depthsize 2";
 }
 
 void OpenGL::redraw(Salmon*, Roe*)
 {
-    NOT_FINISHED("X11::redraw");
+    NOT_FINISHED("OpenGL::redraw");
 }

@@ -18,7 +18,7 @@ proc showThreadStats {} {
 	set tleft [winfo pixels .tsw.canvas 1.1c]
 	set gleft [winfo pixels .tsw.canvas 5.5c]
 	set gwidth [winfo pixels .tsw.canvas 2c]
-	set font -Adobe-courier-medium-r-*-80-*
+	set font -Adobe-courier-medium-r-*-80-75-*
 	set ntasks 0
     }
     after 0 updateThreadStats $lineheight $tleft $gleft $gwidth $font $ntasks
