@@ -56,7 +56,7 @@ void Crack::addComputesAndRequiresGetNodalSolutions(Task* t,
   t->requires(Task::NewDW,lb->pVelGradsLabel,                     gan,NGP);
 
   t->requires(Task::OldDW,lb->pXLabel,                            gan,NGP);
-  if(d_8or27==27) t->requires(Task::OldDW, lb->pSizeLabel,        gan,NGP);
+  if(flag->d_8or27==27) t->requires(Task::OldDW, lb->pSizeLabel,        gan,NGP);
 
   // Required nodal solutions
   t->requires(Task::NewDW,lb->gMassLabel,                         gnone);
@@ -124,7 +124,7 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
       new_dw->get(pkineticenergydensity,lb->pKineticEnergyDensityLabel,pset);
 
       old_dw->get(px,                   lb->pXLabel,                   pset);
-      if(d_8or27==27) old_dw->get(psize,lb->pSizeLabel,                pset);
+      if(flag->d_8or27==27) old_dw->get(psize,lb->pSizeLabel,                pset);
 
       // Get nodal mass
       constNCVariable<double> gmass, Gmass;
@@ -173,14 +173,14 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
           particleIndex idx = *iter;
 
           // Get the node indices that surround the cell
-          if(d_8or27==8){
+          if(flag->d_8or27==8){
             patch->findCellAndWeights(px[idx], ni, S);
           }
-          else if(d_8or27==27){
+          else if(flag->d_8or27==27){
             patch->findCellAndWeights27(px[idx], ni, S, psize[idx]);
           }
 
-          for (int k = 0; k < d_8or27; k++){
+          for (int k = 0; k < flag->d_8or27; k++){
             if(patch->containsNode(ni[k])){
               double pmassTimesS=pmass[idx]*S[k];
               if(pgCode[idx][k]==1) {
@@ -254,7 +254,7 @@ void Crack::addComputesAndRequiresCalculateFractureParameters(Task* t,
   t->requires(Task::NewDW, lb->gVelocityLabel,            gac,NGC);
   t->requires(Task::NewDW, lb->GVelocityLabel,            gac,NGC);
 
-  if(d_8or27==27)
+  if(flag->d_8or27==27)
     t->requires(Task::OldDW, lb->pSizeLabel, Ghost::None);
 }
 
@@ -320,7 +320,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
       new_dw->get(GvelGrads,  lb->GVelGradsLabel,     dwi,patch,gac,NGC);
 
       constParticleVariable<Vector> psize;
-      if(d_8or27==27) old_dw->get(psize, lb->pSizeLabel, pset);
+      if(flag->d_8or27==27) old_dw->get(psize, lb->pSizeLabel, pset);
 
       // Allocate memory for cfSegJ and cfSegK
       int cfNodeSize=(int)cfSegNodes[m].size();
@@ -460,12 +460,12 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   /* Step 5: Evaluate solutions at integral points in global coordinates
                   */
                   for(int j=0; j<=nSegs; j++) {
-                    if(d_8or27==8)
+                    if(flag->d_8or27==8)
                       patch->findCellAndWeights(X[j],ni,S);
-                    else if(d_8or27==27)
+                    else if(flag->d_8or27==27)
                       patch->findCellAndWeights27(X[j],ni,S,psize[j]);
 
-                    for(int k=0; k<d_8or27; k++) {
+                    for(int k=0; k<flag->d_8or27; k++) {
                       if(GnumPatls[ni[k]]!=0 && j<nSegs/2) {  //below crack
                         W[j]  += GW[ni[k]]          * S[k];
                         K[j]  += GK[ni[k]]          * S[k];
@@ -576,12 +576,12 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                       Matrix3 DG=Matrix3(0.0);
                       Matrix3 VG=Matrix3(0.0);
 
-                      if(d_8or27==8)
+                      if(flag->d_8or27==8)
                         patch->findCellAndWeights(X[j],ni,S);
-                      else if(d_8or27==27)
+                      else if(flag->d_8or27==27)
                         patch->findCellAndWeights27(X[j],ni,S,psize[j]);
 
-                      for(int k=0; k<d_8or27; k++) {
+                      for(int k=0; k<flag->d_8or27; k++) {
                         if(GnumPatls[ni[k]]!=0 && x[j].y()<0.) { // below crack
                           // Valid only for stright crack within J-path, usually true
                           ACC += Gacc[ni[k]]       * S[k];
@@ -656,11 +656,11 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   // Get displacements at point p_d
                   Vector disp_a=Vector(0.);
                   Vector disp_b=Vector(0.);
-                  if(d_8or27==8)
+                  if(flag->d_8or27==8)
                     patch->findCellAndWeights(p_d,ni,S);
-                  else if(d_8or27==27)
+                  else if(flag->d_8or27==27)
                     patch->findCellAndWeights27(p_d,ni,S,psize[0]);
-                  for(int k=0; k<d_8or27; k++) {
+                  for(int k=0; k<flag->d_8or27; k++) {
                     disp_a += gdisp[ni[k]] * S[k];
                     disp_b += Gdisp[ni[k]] * S[k];
                   }

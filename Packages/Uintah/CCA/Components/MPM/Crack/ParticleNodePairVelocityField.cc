@@ -93,16 +93,16 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
         // set pgCode[idx][k]=1
         for(ParticleSubset::iterator iter=pset->begin();
                                      iter!=pset->end();iter++) {
-          for(int k=0; k<d_8or27; k++) pgCode[*iter][k]=1;
+          for(int k=0; k<flag->d_8or27; k++) pgCode[*iter][k]=1;
         }
         // Get number of particles around nodes
         for(ParticleSubset::iterator itr=psetWGCs->begin();
                            itr!=psetWGCs->end();itr++) {
-          if(d_8or27==8)
+          if(flag->d_8or27==8)
             patch->findCellNodes(pxWGCs[*itr], ni);
-          else if(d_8or27==27)
+          else if(flag->d_8or27==27)
             patch->findCellNodes27(pxWGCs[*itr], ni);
-          for(int k=0; k<d_8or27; k++) {
+          for(int k=0; k<flag->d_8or27; k++) {
             if(patch->containsNode(ni[k]))
               gNumPatls[ni[k]]++;
           }
@@ -151,12 +151,12 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
         for(ParticleSubset::iterator iter=pset->begin();
                               iter!=pset->end();iter++) {
           particleIndex idx=*iter;
-          if(d_8or27==8)
+          if(flag->d_8or27==8)
              patch->findCellNodes(px[idx], ni);
-          else if(d_8or27==27)
+          else if(flag->d_8or27==27)
              patch->findCellNodes27(px[idx], ni);
 
-          for(int k=0; k<d_8or27; k++) {
+          for(int k=0; k<flag->d_8or27; k++) {
             if(singlevfld[ni[k]]) { // for nodes in non-crack zone
               pgCode[idx][k]=0;
               num0[ni[k]]++;
@@ -241,12 +241,12 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
           }
 
           if(!operated) {// Particles are in GhostCells
-            if(d_8or27==8)
+            if(flag->d_8or27==8)
                patch->findCellNodes(pxWGCs[idx], ni);
-            else if(d_8or27==27)
+            else if(flag->d_8or27==27)
                patch->findCellNodes(pxWGCs[idx], ni);
 
-            for(int k=0; k<d_8or27; k++) {
+            for(int k=0; k<flag->d_8or27; k++) {
               Point gx=patch->nodePosition(ni[k]);
               if(singlevfld[ni[k]]) { // for nodes in non-crack zone
                 num0[ni[k]]++;
@@ -316,12 +316,12 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
         for(ParticleSubset::iterator iter=pset->begin();
                               iter!=pset->end();iter++) {
            particleIndex idx=*iter;
-           if(d_8or27==8)
+           if(flag->d_8or27==8)
               patch->findCellNodes(px[idx], ni);
-           else if(d_8or27==27)
+           else if(flag->d_8or27==27)
               patch->findCellNodes27(px[idx], ni);
 
-           for(int k=0; k<d_8or27; k++) {
+           for(int k=0; k<flag->d_8or27; k++) {
              if(pgCode[idx][k]==0) {
                if((num1[ni[k]]+num2[ni[k]]==0) || num2[ni[k]]!=0)
                  pgCode[idx][k]=1;
@@ -373,7 +373,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
                         iter!=pset->end();iter++) {
         particleIndex idx=*iter;
         cout << "p["<< idx << "]: " << px[idx]<< endl;
-        for(int k=0; k<d_8or27; k++) {
+        for(int k=0; k<flag->d_8or27; k++) {
           if(pgCode[idx][k]==1)
              cout << setw(10) << "Node: " << k
                   << ",\tvfld: " << pgCode[idx][k] << endl;
