@@ -23,9 +23,13 @@ namespace Uintah {
     
     ParticleCreator(MPMMaterial* matl, 
                     MPMLabel* lb,
-                    int n8or27,
-                    bool haveLoadCurve,
-		    bool doErosion);
+                    int n8or27, bool haveLoadCurve, bool doErosion);
+
+    ParticleCreator(MPMMaterial* matl, 
+                    MPMLabel* lb,
+                    int n8or27, bool haveLoadCurve, bool doErosion, 
+                    bool haveShell);
+
     virtual ~ParticleCreator();
 
     virtual ParticleSubset* createParticles(MPMMaterial* matl,
@@ -37,6 +41,8 @@ namespace Uintah {
 
     virtual void registerPermanentParticleState(MPMMaterial* matl,
 						MPMLabel* lb);
+
+    void registerPermanentShellParticleState(MPMLabel* lb);
 
     virtual particleIndex countParticles(const Patch*,
 				 std::vector<GeometryObject*>&) const;
