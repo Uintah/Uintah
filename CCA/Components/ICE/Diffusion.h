@@ -1,6 +1,5 @@
 #ifndef UINTAH_ICEDIFFUSION_H
 #define UINTAH_ICEDIFFUSION_H
-//#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
@@ -11,11 +10,12 @@ namespace Uintah {
   
   void q_flux_allFaces(DataWarehouse* new_dw,
                        const Patch* patch,
-                       const bool use_vol_frac,                        
-                       const CCVariable<double>& rho_CC,            
-                       const CCVariable<double>& sp_vol_CC,         
+                       const bool use_vol_frac,                                
                        const CCVariable<double>& Temp_CC,          
-                       const CCVariable<double>& diff_coeff,                
+                       const CCVariable<double>& diff_coeff,
+                       const SFCXVariable<double>& vol_fracX_FC,  
+                       const SFCYVariable<double>& vol_fracY_FC,  
+                       const SFCZVariable<double>& vol_fracZ_FC,                  
                        SFCXVariable<double>& q_X_FC,               
                        SFCYVariable<double>& q_Y_FC,               
                        SFCZVariable<double>& q_Z_FC);
@@ -23,9 +23,10 @@ namespace Uintah {
   void scalarDiffusionOperator(DataWarehouse* new_dw,
                          const Patch* patch,
                          const bool use_vol_frac,
-                         const CCVariable<double>& rho_CC,     
-                         const CCVariable<double>& sp_vol_CC,  
                          const CCVariable<double>& q_CC,
+                         const SFCXVariable<double>& vol_fracX_FC,
+                         const SFCYVariable<double>& vol_fracY_FC,
+                         const SFCZVariable<double>& vol_fracZ_FC,
                          CCVariable<double>& q_diffusion_src,
                          const CCVariable<double>& diff_coeff,
                          const double delT);            
@@ -35,31 +36,27 @@ namespace Uintah {
                  IntVector adj_offset,
                  const CCVariable<double>& diff_coeff,
                  const double dx,
-                 const CCVariable<double>& rho_CC,      
-                 const CCVariable<double>& sp_vol_CC,   
+                 const T& vol_frac_FC,   
                  const CCVariable<double>& Temp_CC,
                  T& q_FC,
                  const bool use_vol_frac);
                  
    void computeTauX( const Patch* patch,
-                     constCCVariable<double>& rho_CC,     
-                     constCCVariable<double>& sp_vol_CC,  
+                     constSFCXVariable<double>& vol_fracX_FC,  
                      constCCVariable<Vector>& vel_CC,     
                      const CCVariable<double>& viscosity,               
                      const Vector dx,                      
                      SFCXVariable<Vector>& tau_X_FC);      
 
    void computeTauY( const Patch* patch,
-                     constCCVariable<double>& rho_CC,     
-                     constCCVariable<double>& sp_vol_CC,  
+                     constSFCYVariable<double>& vol_fracX_FC,  
                      constCCVariable<Vector>& vel_CC,     
                      const CCVariable<double>& viscosity,              
                      const Vector dx,                      
                      SFCYVariable<Vector>& tau_Y_FC);      
 
    void computeTauZ( const Patch* patch,
-                     constCCVariable<double>& rho_CC,     
-                     constCCVariable<double>& sp_vol_CC,  
+                     constSFCZVariable<double>& vol_fracZ_FC,  
                      constCCVariable<Vector>& vel_CC,     
                      const CCVariable<double>& viscosity,              
                      const Vector dx,                      
