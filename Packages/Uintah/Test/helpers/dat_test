@@ -19,7 +19,7 @@ if [ -d "$TEST_UDADIR" ]; then
     echo "Creating $COMPARE_ROOT directory"
     COMPARE_PARENT_DIR=`echo "$COMPARE_ROOT" | sed 's|/[^/]*$||'`
     cd $COMPARE_PARENT_DIR
-    COMPARE_DIR=`echo "$COMPARE_ROOT" | sed "s\.*/\\"`
+    COMPARE_DIR=`echo "$COMPARE_ROOT" | sed "s|.*/||"`
     mkdir $COMPARE_DIR
     cvs add $COMPARE_DIR
   fi
