@@ -6,6 +6,7 @@
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/ReductionVariable.h>
+#include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <SCICore/Math/MinMax.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
@@ -303,7 +304,29 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
 					     const DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const
 {
-   cerr << "CompNeoHookPlas::addComputesAndRequires needs to be filled in\n";
+   task->requires(old_dw, pXLabel, matl->getDWIndex(), region,
+                  Task::None);
+   task->requires(old_dw, pDeformationMeasureLabel, matl->getDWIndex(), region,
+                  Task::None);
+   task->requires(old_dw, p_cmdata_label, matl->getDWIndex(),  region,
+                  Task::None);
+   task->requires(old_dw, pMassLabel, matl->getDWIndex(),  region,
+                  Task::None);
+   task->requires(old_dw, pVolumeLabel, matl->getDWIndex(),  region,
+                  Task::None);
+   task->requires(new_dw, gMomExedVelocityLabel, matl->getDWIndex(), region,
+                  Task::AroundCells, 1);
+   task->requires(old_dw, bElBarLabel, matl->getDWIndex(), region,
+                  Task::None);
+   task->requires(old_dw, deltLabel);
+
+   task->computes(new_dw, deltLabel);
+   task->computes(new_dw, pStressLabel, matl->getDWIndex(),  region);
+   task->computes(new_dw, pDeformationMeasureLabel, matl->getDWIndex(),  region);
+   task->computes(new_dw, bElBarLabel, matl->getDWIndex(),  region);
+   task->computes(new_dw, p_cmdata_label, matl->getDWIndex(),  region);
+
+
 }
 
 void CompNeoHookPlas::readParameters(ProblemSpecP ps, double *p_array)
@@ -365,6 +388,9 @@ p_array[2],
 #endif
 
 // $Log$
+// Revision 1.10  2000/05/10 23:29:34  guilkey
+// Filled in addComputesAndRequires
+//
 // Revision 1.9  2000/05/10 20:02:46  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)
