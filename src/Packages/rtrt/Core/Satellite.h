@@ -80,11 +80,11 @@ class Satellite : public UVSphere
     xform.pre_translate(-cen.asVector());
     xform.rotate(right, Vector(1,0,0));
     xform.rotate(up, Vector(0,0,1));
-    xform.pre_rotate(rev_speed_*t,Vector(0,0,1));
+    xform.pre_rotate(-rev_speed_*t,Vector(0,0,1));
     xform.pre_scale(Vector(1./radius, 1./radius, 1./radius));
     ixform.load_identity();
     ixform.pre_scale(Vector(radius, radius, radius));
-    ixform.pre_rotate(-rev_speed_*t,Vector(0,0,1));
+    ixform.pre_rotate(rev_speed_*t,Vector(0,0,1));
     ixform.rotate(Vector(0,0,1), up);
     ixform.rotate(Vector(1,0,0), right);
     ixform.pre_translate(cen.asVector());
