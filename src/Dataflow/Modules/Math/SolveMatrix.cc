@@ -425,7 +425,7 @@ void SolveMatrix::petsc_solve(const char* prec, const char* meth,
   SparseRowMatrix *sparse = dynamic_cast<SparseRowMatrix *>(matrix);
   if (sparse)
   {
-    cerr << "Using Sparse Matrix\n";
+    remark("Using Sparse Matrix.");
     MatCreateSeqAIJWithArrays(PETSC_COMM_WORLD, rows, cols,
 			      sparse->rows, sparse->columns, sparse->a, &A);
   }

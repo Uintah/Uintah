@@ -55,8 +55,6 @@ operator+=(const vector<pair<TetVolMesh::Node::index_type, double> >&r,
 
 namespace BioPSE {
 
-using std::cerr;
-using std::endl;
 using std::pair;
 
 using namespace SCIRun;
@@ -124,11 +122,11 @@ void BuildElemLeadField::execute() {
 
   FieldHandle mesh_in;
   if (!mesh_iport_->get(mesh_in)) {
-    cerr << "BuildElemLeadField -- couldn't get mesh.  Returning.\n";
+    error("Couldn't get input mesh.");
     return;
   }
   if (!mesh_in.get_rep() || mesh_in->get_type_name(0)!="TetVolField") {
-    cerr << "Error - BuildElemLeadField didn't get a TetVolField for the mesh" << "\n";
+    error("Expected a TetVolField for the mesh.");
     return;
   }
   TetVolMesh* mesh = 
@@ -136,11 +134,11 @@ void BuildElemLeadField::execute() {
 
   FieldHandle interp_in;
   if (!interp_iport_->get(interp_in)) {
-    cerr << "BuildElemLeadField -- couldn't get interp.  Returning.\n";
+    error("Couldn't get electrode interpolant.");
     return;
   }
   if (!interp_in.get_rep() || interp_in->get_type_name(0)!="PointCloudField") {
-    cerr << "Error - BuildElemLeadField didn't get a PointCloudField for interp" << "\n";
+    error("Didn't get a PointCloudField for interp.");
     return;
   }
   PointCloudMesh* interp_mesh = 
@@ -202,19 +200,18 @@ void BuildElemLeadField::execute() {
     // read sol'n
     MatrixHandle sol_in;
     if (!sol_iport_->get(sol_in)) {
-      cerr <<"BuildElemLeadField -- couldn't get solution vector.  Returning.\n";
+      error("Couldn't get solution vector.");
       return;
     }
     for (i=0; i<nelems; i++)
       for (int j=0; j<3; j++) {
 	(*leadfield_mat)[counter+1][i*3+j]=-(*sol_in.get_rep())[i][j];
       }
-    cerr << "BuildElemLeadField: "<<counter+1<<"/"<<nelecs-1<<"\n";
+    msgStream_ << "BuildElemLeadField: "<<counter+1<<"/"<<nelecs-1<<"\n";
     counter++;
     
   }
   leadfield_=leadfield_mat;
   leadfield_oport_->send(leadfield_);
-  cerr << "Done with the Module!"<<endl;
 } 
 } // End namespace BioPSE

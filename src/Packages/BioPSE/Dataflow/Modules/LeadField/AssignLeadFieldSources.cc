@@ -41,9 +41,6 @@
 
 namespace BioPSE {
 
-using std::cerr;
-using std::endl;
-
 using namespace SCIRun;
 
 class AssignLeadFieldSources : public Module
@@ -180,7 +177,7 @@ AssignLeadFieldSources::execute()
   vector<Vector> vecs2;
   PointCloudMesh *pcm = scinew PointCloudMesh;
   PointCloudMesh *pcm2 = scinew PointCloudMesh;
-  cerr << "\n\n\nFocusing ``spikes'':\n";
+  msgStream_ << "\n\n\nFocusing ``spikes'':\n";
   double halfMax = maxL/2.;
   for (i=0; i<lengths.size(); i++) {
     Point p;
@@ -192,10 +189,10 @@ AssignLeadFieldSources::execute()
     if (lengths[i]>halfMax) {
       pcm2->add_point(p);
       vecs2.push_back(ofield->fdata()[i]);
-      cerr<<"   Magnitude="<<lengths[i]<<" cellIdx="<<i<<" centroid="<<p<<"\n";
+      msgStream_ << "   Magnitude="<<lengths[i]<<" cellIdx="<<i<<" centroid="<<p<<"\n";
     }
   }
-  cerr << "End of focusing spikes.\n";
+  msgStream_ << "End of focusing spikes.\n";
   PointCloudMeshHandle pcmH(pcm);
   PointCloudField<Vector> *pc = scinew PointCloudField<Vector>(pcmH, Field::NODE);
   pc->fdata()=vecs;

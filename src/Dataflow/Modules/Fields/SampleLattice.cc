@@ -34,6 +34,7 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Containers/StringUtil.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -125,7 +126,7 @@ SampleLattice::execute()
   if (data_at_.get() == "Nodes") data_at = Field::NODE;
   else if (data_at_.get() == "Cells") data_at = Field::CELL;
   else {
-    cerr << "Error unsupported data_at location: "<<data_at_.get()<<"\n";
+    error("Unsupported data_at location " + data_at_.get() + ".");
     return;
   }
 

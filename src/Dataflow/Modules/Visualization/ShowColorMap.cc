@@ -31,8 +31,6 @@
 #include <string.h>
 #include <iostream>
 
-using std::cerr;
-
 namespace SCIRun {
 
 class ShowColorMap : public Module {

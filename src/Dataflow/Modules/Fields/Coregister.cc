@@ -116,12 +116,12 @@ Coregister::execute()
   
   fixedM->size(nnodes);
   if (nnodes < 3) {
-    cerr << "Error: fixed PointCloudField needs at least 3 input points.\n";
+    error("Fixed PointCloudField needs at least 3 input points.");
     return;
   }
   mobileM->size(nnodes);
   if (nnodes < 3) {
-    cerr << "Error: mobile PointCloudField needs at least 3 input points.\n";
+    error("Mobile PointCloudField needs at least 3 input points.");
     return;
   }
 
@@ -162,12 +162,12 @@ Coregister::execute()
   } else { // method == "Simplex"
     FieldHandle dfieldH;
     if (!dfield->get(dfieldH)) {
-      cerr << "Error -- Coregister::Simplex needs a distance field!\n";
+      error("Simplex needs a distance field.");
       return;
     }
     ScalarFieldInterface *dfieldP = dfieldH->query_scalar_interface();
     if (!dfieldP) {
-      cerr << "Error -- Coregister::Simplex needs a distance field!\n";
+      error("Simplex needs a distance field.");
       return;
     }
     int seed = seed_.get();
@@ -186,7 +186,7 @@ Coregister::execute()
   coreg->getMisfit(misfit);
 //  Array1<Point> transformedPts;
 //  coreg->getTransPtsA(transformedPts);
-  cerr << "Here's the misfit: "<<misfit<<"\n";
+  //cerr << "Here's the misfit: "<<misfit<<"\n";
   DenseMatrix *dm = scinew DenseMatrix(trans);
   omat->send(MatrixHandle(dm));
 }

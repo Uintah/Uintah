@@ -117,7 +117,6 @@ void CastTVtoMLV::execute()
     }
     ++ib;
   }
-  cerr << "CastTVtoMLV: found "<<cnt<<" of "<<nx*ny*nz<<" nodes ("<<cnt*100./(nx*ny*nz)<<"%)\n";
   oport_->send(lv);
 }
 

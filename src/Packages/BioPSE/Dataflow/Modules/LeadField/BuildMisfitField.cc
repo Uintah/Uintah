@@ -33,6 +33,7 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/TetVolField.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <iostream>
 #include <stdio.h>
@@ -44,10 +45,6 @@
 //   Store the misfit value at the cells (for now, push out to nodes)
 
 namespace BioPSE {
-
-using std::cerr;
-using std::endl;
-using std::pair;
 
 using namespace SCIRun;
 
@@ -121,11 +118,11 @@ void BuildMisfitField::execute() {
 
   FieldHandle mesh_in;
   if (!mesh_iport_->get(mesh_in)) {
-    cerr << "BuildMisfitField -- couldn't get mesh.  Returning.\n";
+    error("Couldn't get input mesh.");
     return;
   }
   if (!mesh_in.get_rep() || mesh_in->get_type_name(0)!="TetVolField") {
-    cerr << "Error - BuildMisfitField didn't get a TetVolField for the mesh" << "\n";
+    error("Input mesh not a TetVolField.");
     return;
   }
   TetVolMesh* mesh = 
@@ -133,27 +130,28 @@ void BuildMisfitField::execute() {
 
   MatrixHandle leadfield_in;
   if (!leadfield_iport_->get(leadfield_in) || !leadfield_in.get_rep()) {
-    cerr << "BuildMisfitField -- couldn't get leadfield.  Returning.\n";
+    error("Couldn't get leadfield.");
     return;
   }
   DenseMatrix *dm = dynamic_cast<DenseMatrix*>(leadfield_in.get_rep());
   if (!dm) {
-    cerr << "BuildMisfitField -- error, leadfield wasn't a DenseMatrix.\n";
+    error("Leadfield wasn't a DenseMatrix.");
     return;
   }
 
   MatrixHandle measurements_in;
   if (!measurements_iport_->get(measurements_in) || !measurements_in.get_rep()) {
-    cerr << "BuildMisfitField -- couldn't get measurement vector.  Returning.\n";
+    error("Couldn't get measurement vector.");
     return;
   }
   ColumnMatrix *cm = dynamic_cast<ColumnMatrix*>(measurements_in.get_rep());
   if (!cm) {
-    cerr << "BuildMisfitField -- error, measurement vectors wasn't a ColumnMatrix.\n";
+    error("Measurement vectors wasn't a ColumnMatrix.");
     return;
   }
   if (cm->nrows() != dm->nrows()) {
-    cerr << "BuildMisfitField -- error, leadfield ("<<dm->nrows()<<") and measurements ("<<cm->nrows()<<") have different numbers of rows.\n";
+    error("Leadfield (" + to_string(dm->nrows()) + ") and measurements (" +
+	  to_string(cm->nrows()) + ") have different numbers of rows.");
     return;
   }
   int nr = cm->nrows();
@@ -161,14 +159,15 @@ void BuildMisfitField::execute() {
   int ncells = csize;
 
   if (ncells * 3 != dm->ncols()) {
-    cerr << "BuildMisfitField -- error, leadfield has "<<dm->ncols()<<" columns, and the mesh has "<<ncells<<" cells.\n";
+    error("Leadfield has " + to_string(dm->ncols()) +
+	  " columns, and the mesh has " + to_string(ncells) + " cells.");
     return;
   }
 
   if (last_mesh_generation_ == mesh->generation &&
       last_leadfield_generation_ == dm->generation &&
       last_measurements_generation_ == cm->generation) {
-    cerr << "BuildMisfitField -- sending same data again.\n";
+    remark("Sending same data again.");
     mesh_oport_->send(last_mesh_);
     basis_oport_->send(last_basis_);
     MatrixHandle dummy;
@@ -176,12 +175,12 @@ void BuildMisfitField::execute() {
     return;
   }
 
-  cerr << "last-mesh-gen = "<<last_mesh_generation_<<"\n";
-  cerr << "last-lf-gen = "<<last_leadfield_generation_<<"\n";
-  cerr << "last-meas-gen = "<<last_measurements_generation_<<"\n";
-  cerr << "  mesh-gen = "<<mesh->generation<<"\n";
-  cerr << "  lf-gen = "<<dm->generation<<"\n";
-  cerr << "  meas-gen = "<<cm->generation<<"\n";
+  msgStream_ << "last-mesh-gen = "<<last_mesh_generation_<<"\n";
+  msgStream_ << "last-lf-gen = "<<last_leadfield_generation_<<"\n";
+  msgStream_ << "last-meas-gen = "<<last_measurements_generation_<<"\n";
+  msgStream_ << "  mesh-gen = "<<mesh->generation<<"\n";
+  msgStream_ << "  lf-gen = "<<dm->generation<<"\n";
+  msgStream_ << "  meas-gen = "<<cm->generation<<"\n";
 
   last_mesh_generation_ = mesh->generation;
   last_leadfield_generation_ = dm->generation;
@@ -201,7 +200,7 @@ void BuildMisfitField::execute() {
   // ok data is valid, iterate through all of the triple columns
   for (int i=0; i<ncells; i++) {
     if (i>0 && (i%100 == 0))
-      cerr << i << "/" << ncells << "\n";
+      msgStream_ << i << "/" << ncells << "\n";
     DenseMatrix *basis = scinew DenseMatrix(nr, 3);
     last_basis_ = basis;
     for (int j=0; j<3; j++) 
@@ -213,11 +212,11 @@ void BuildMisfitField::execute() {
       basis_oport_->send(last_basis_);
     MatrixHandle misfit_in;
     if (!misfit_iport_->get(misfit_in) || !misfit_in.get_rep()) {
-      cerr << "BuildMisfitField -- error, wasn't able to read back misfit.\n";
+      error("Wasn't able to read back misfit.");
       return;
     }
     if (!misfit_in->nrows() || !misfit_in->ncols()) {
-      cerr << "BuildMisfitField -- error, 0-sized misfit matrix.\n";
+      error("0-sized misfit matrix.");
       return;
     }
     double misfit = (*misfit_in.get_rep())[0][0];
@@ -246,6 +245,6 @@ void BuildMisfitField::execute() {
 
   last_mesh_ = tvd;
   mesh_oport_->send(last_mesh_);
-  cerr << "Best misfit was "<<best_val<<", which was cell "<<best_idx<<"\n";
+  msgStream_ << "Best misfit was "<<best_val<<", which was cell "<<best_idx<<"\n";
 }
 } // End namespace BioPSE
