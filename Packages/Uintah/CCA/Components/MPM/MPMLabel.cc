@@ -350,11 +350,14 @@ MPMLabel::MPMLabel()
   pStrainEnergyDensityLabel_preReloc = VarLabel::create( "p.strainEnergyDensity+",
                   ParticleVariable<double>::getTypeDescription());
 
+  pgCodeLabel = VarLabel::create("p.gcode",
+                  ParticleVariable<Short27>::getTypeDescription());
+
   pKineticEnergyDensityLabel = VarLabel::create("p.kineticEnergyDensity",
                   ParticleVariable<double>::getTypeDescription());
 
-  pgCodeLabel = VarLabel::create("p.gcode",
-                  ParticleVariable<Short27>::getTypeDescription());
+  pVelGradsLabel = VarLabel::create("p.velGrads",
+                  ParticleVariable<Matrix3>::getTypeDescription());
 
   gNumPatlsLabel = VarLabel::create("g.numPatls",
                   NCVariable<int>::getTypeDescription());
@@ -376,6 +379,11 @@ MPMLabel::MPMLabel()
   gDispGradsLabel = VarLabel::create("g.dispGrads",
                   NCVariable<Matrix3>::getTypeDescription());
   GDispGradsLabel = VarLabel::create("G.dispGrads",
+                  NCVariable<Matrix3>::getTypeDescription());
+
+  gVelGradsLabel = VarLabel::create("g.velGrads",
+                  NCVariable<Matrix3>::getTypeDescription());
+  GVelGradsLabel = VarLabel::create("G.velGrads",
                   NCVariable<Matrix3>::getTypeDescription());
 
   gStrainEnergyDensityLabel = VarLabel::create("g.strainEnergyDensity",
@@ -625,6 +633,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pKineticEnergyDensityLabel);
 
   VarLabel::destroy(pgCodeLabel);
+  VarLabel::destroy(pKineticEnergyDensityLabel);
+  VarLabel::destroy(pVelGradsLabel);
 
   VarLabel::destroy(gNumPatlsLabel);
   VarLabel::destroy(GNumPatlsLabel);
@@ -634,6 +644,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(GGridStressLabel);
   VarLabel::destroy(gDispGradsLabel);
   VarLabel::destroy(GDispGradsLabel);
+  VarLabel::destroy(gVelGradsLabel);
+  VarLabel::destroy(GVelGradsLabel);
   VarLabel::destroy(gStrainEnergyDensityLabel);
   VarLabel::destroy(GStrainEnergyDensityLabel);
   VarLabel::destroy(gKineticEnergyDensityLabel);
