@@ -1964,6 +1964,18 @@ fi
 AC_SUBST(PERFEX_LIBRARY)
 AC_SUBST(DEF_PERFEX)
 
+##  --  search for fastm  --------------------------------------------------
+
+SCI_CHECK_LIB($thirdparty/lib,fastm,main)
+
+if test "$HAVE_FASTM"; then
+  DEF_FASTM="#define HAVE_FASTM 1"
+fi
+
+AC_SUBST(HAVE_LIBFASTM)
+AC_SUBST(LIBFASTM)
+AC_SUBST(DEF_FASTM)
+
 ##  --  search for ssl  --------------------------------------------------
 
 SCI_CHECK_LIB($thirdparty/lib,ssl,main,,,optional)
