@@ -51,9 +51,7 @@ itcl_class Uintah_Visualization_CuttingPlane {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    wm deiconify $w
-	    raise $w
-	    return;
+	    return
 	}
 	toplevel $w
 	wm minsize $w 300 20
@@ -142,9 +140,9 @@ itcl_class Uintah_Visualization_CuttingPlane {
  	frame $w.f0 -relief groove -borderwidth 2
 	pack $w.f0 -side top -expand yes -fill both -padx 2
 	buildTranslateFrame $w.f0
-        button $w.b -text "Close" -command "wm withdraw $w"
-        pack $w.b -side top -fill x -padx 2 -pady 2
-	
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
     method buildTranslateFrame { name } {
 	if {  [winfo exists $name.1] } {

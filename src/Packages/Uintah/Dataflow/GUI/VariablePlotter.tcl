@@ -310,9 +310,7 @@ itcl_class Uintah_Visualization_VariablePlotter {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    wm deiconify $w
-	    raise $w
-	    return;
+	    return
 	}
 	toplevel $w
 	wm minsize $w 300 190
@@ -346,13 +344,13 @@ itcl_class Uintah_Visualization_VariablePlotter {
 
 	makeFrames $w
 
-	# close button
-	button $w.close -text "Close" -command "wm withdraw $w"
-	pack $w.close -side bottom -expand yes -fill x
 #	button $w.ttest -text "Table test" -command "$this table_test"
 #	pack $w.ttest -side bottom -expand yes -fill x
 #	button $w.gtest -text "Graph test" -command "$this graph_test"
 #	pack $w.gtest -side bottom -expand yes -fill x
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
     method reset_var_val {} {
 	set var_val_list {}
