@@ -24,7 +24,7 @@ using namespace SCIRun;
 using std::vector;
 
 template <class T>
-class SCICORESHARE NCScalarField : public ScalarFieldRGBase {
+class NCScalarField : public ScalarFieldRGBase {
 public:
   NCScalarField();
   NCScalarField(const NCScalarField<T>&);

@@ -16,7 +16,7 @@ namespace Uintah {
   using namespace SCIRun;
   using std::vector;
 
-class SCICORESHARE CCVectorField : public VectorFieldRG {
+class CCVectorField : public VectorFieldRG {
 public:
   CCVectorField();
   CCVectorField(const CCVectorField&);

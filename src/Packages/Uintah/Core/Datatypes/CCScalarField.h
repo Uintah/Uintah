@@ -22,7 +22,7 @@ namespace Uintah {
   using std::vector;
 
 template <class T>
-class SCICORESHARE CCScalarField : public ScalarFieldRGBase {
+class CCScalarField : public ScalarFieldRGBase {
 public:
   CCScalarField();
   CCScalarField(const CCScalarField<T>&);
