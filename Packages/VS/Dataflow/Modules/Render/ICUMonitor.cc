@@ -62,6 +62,7 @@
 
 #include <typeinfo>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <iomanip>
 
@@ -134,7 +135,7 @@ private:
       index_(-1),
       snd_(0),
       lines_(0),
-      draw_aux_data(0),
+      draw_aux_data_(0),
       auxindex_(-1),
       min_(0.0),
       max_(1.0),
@@ -154,7 +155,7 @@ private:
     int       index_;
     int       snd_;
     int       lines_;
-    int       draw_aux_data;
+    int       draw_aux_data_;
     int       auxindex_;
     float     min_;
     float     max_;
@@ -169,9 +170,9 @@ private:
   GuiDouble                            gui_dots_per_inch_;
   GuiDouble                            gui_plot_height_;
   GuiInt                               gui_play_mode_;
+  GuiInt                               gui_dump_frames_;
   GuiInt                               gui_time_markers_mode_;
   GuiInt                               gui_selected_marker_;
-
   GuiInt                               gui_plot_count_;
   vector<GuiString*>                   gui_nw_label_;
   vector<GuiString*>                   gui_sw_label_;
@@ -184,7 +185,7 @@ private:
   vector<GuiInt*>                      gui_idx_;
   vector<GuiInt*>                      gui_snd_;
   vector<GuiInt*>                      gui_lines_;
-  vector<GuiInt*>                      gui_draw_aux_data;
+  vector<GuiInt*>                      gui_draw_aux_data_;
   vector<GuiInt*>                      gui_auxidx_;
   vector<GuiDouble*>                   gui_red_;
   vector<GuiDouble*>                   gui_green_;
@@ -208,6 +209,7 @@ private:
   vector<int>                           markers_;
   int                                   cur_idx_;
   bool                                  plots_dirty_;
+  unsigned int                          frame_count_;
 
   bool                  make_current();
   void                  synch_plot_vars(int s);
@@ -220,6 +222,8 @@ private:
   void 			setTimeLabel();
   void 			addMarkersToMenu();
   void 			setWindowTitle();
+  void                  save_image(int x, int y,const string& fname,
+				   const string &ftype);
 };
 
 
@@ -347,6 +351,7 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   gui_dots_per_inch_(ctx->subVar("dots_per_inch")),
   gui_plot_height_(ctx->subVar("plot_height")),
   gui_play_mode_(ctx->subVar("play_mode")),
+  gui_dump_frames_(ctx->subVar("dump_frames")),
   gui_time_markers_mode_(ctx->subVar("time_markers_mode")),
   gui_selected_marker_(ctx->subVar("selected_marker")),
   gui_plot_count_(ctx->subVar("plot_count")),
@@ -364,7 +369,8 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   data2_(0),
   markers_(0),
   cur_idx_(0),
-  plots_dirty_(true)
+  plots_dirty_(true),
+  frame_count_(0)
 {
   try {
     freetype_lib_ = scinew FreeTypeLibrary();
@@ -549,7 +555,7 @@ ICUMonitor::synch_plot_vars(int s)
   clear_vector(gui_idx_, s);
   clear_vector(gui_snd_, s);
   clear_vector(gui_lines_, s);
-  clear_vector(gui_draw_aux_data, s);
+  clear_vector(gui_draw_aux_data_, s);
   clear_vector(gui_auxidx_, s);
   clear_vector(gui_red_, s);
   clear_vector(gui_green_, s);
@@ -663,10 +669,10 @@ ICUMonitor::init_plots()
       gui_auxidx_[i] = scinew GuiInt(ctx->subVar("auxidx-" + num));
     }
     g.auxindex_ = gui_auxidx_[i]->get();
-    if (! gui_draw_aux_data[i]) {
-      gui_draw_aux_data[i] = scinew GuiInt(ctx->subVar("draw_aux_data-" + num));
+    if (! gui_draw_aux_data_[i]) {
+      gui_draw_aux_data_[i] = scinew GuiInt(ctx->subVar("draw_aux_data_-" + num));
     }
-    g.draw_aux_data = gui_draw_aux_data[i]->get();
+    g.draw_aux_data_ = gui_draw_aux_data_[i]->get();
 
     if (! gui_red_[i]) {
       gui_red_[i] = scinew GuiDouble(ctx->subVar("plot_color-" + num + "-r"));
@@ -754,7 +760,7 @@ ICUMonitor::draw_plots()
     if (g.label_) { 
       g.label_->draw(cur_x + w * 0.70, cur_y, sx, sy);
     }
-    if (g.draw_aux_data == 1) { 
+    if (g.draw_aux_data_ == 1) { 
       if (g.aux_data_label_)
         g.aux_data_label_->draw(cur_x + w * 0.70 + 80, cur_y, sx, sy);
 
@@ -852,7 +858,15 @@ ICUMonitor::draw_plots()
 
     cur_y -= gr_ht + 20;
   }
-
+  gui_dump_frames_.reset();
+  if (gui_dump_frames_.get()) {
+    ostringstream fname;
+    fname << "icu_frame."; 
+    fname << setfill('0');
+    fname.width(5); 
+    fname << frame_count_++ << ".ppm";
+    save_image(width_, height_, fname.str(), "ppm");
+  }
   CHECK_OPENGL_ERROR("end draw_plots")
 }
 
@@ -1103,6 +1117,165 @@ ICUMonitor::tcl_command(GuiArgs& args, void* userdata)
   }
 }
 
+// Copied from main viewer OpenGL.cc
+void
+ICUMonitor::save_image(int x, int y,
+		       const string& fname, const string &ftype)
+{
+#ifndef HAVE_MAGICK
+  if (ftype != "ppm" && ftype != "raw")
+  {
+    cerr << "Error - ImageMagick is not enabled, " 
+	 << "can only save .ppm or .raw files.\n";
+    return;
+  }
+#endif
 
+  cerr << "Saving ICU Image: " << fname << " with width=" << x
+       << " and height=" << y <<"...\n";
+
+
+  //gui_->lock();
+  // Make sure our GL context is current
+  make_current();
+ 
+  // Get Viewport dimensions
+  GLint vp[4];
+  glGetIntegerv(GL_VIEWPORT,vp);
+  //gui_->unlock();
+
+  ofstream *image_file = NULL;
+#ifdef HAVE_MAGICK
+  C_Magick::Image *image = NULL;
+  C_Magick::ImageInfo *image_info = NULL;
+#endif
+  int channel_bytes, num_channels;
+  bool do_magick;
+
+  if (ftype == "ppm" || ftype == "raw")
+  {
+    image_file = scinew std::ofstream(fname.c_str());
+    channel_bytes = 1;
+    num_channels = 3;
+    do_magick = false;
+    if (ftype == "ppm")
+    {
+      (*image_file) << "P6" << std::endl;
+      (*image_file) << x << " " << y << std::endl;
+      (*image_file) << 255 << std::endl;
+    }
+  }
+  else
+  {
+#ifdef HAVE_MAGICK
+    C_Magick::InitializeMagick(0);
+    num_channels = 4;
+    channel_bytes = 2;
+    do_magick = true;
+    image_info = C_Magick::CloneImageInfo((C_Magick::ImageInfo *)0);
+    strcpy(image_info->filename,fname.c_str());
+    image_info->colorspace = C_Magick::RGBColorspace;
+    image_info->quality = 90;
+    image = C_Magick::AllocateImage(image_info);
+    image->columns = x;
+    image->rows = y;
+#endif
+  }
+
+  const int pix_size = channel_bytes*num_channels;
+
+  // Write out a screen height X image width chunk of pixels at a time
+  unsigned char* pixels = scinew unsigned char[x * y * pix_size];
+
+  // Start writing image_file
+  static unsigned char* tmp_row = 0;
+  if (!tmp_row )
+    tmp_row = scinew unsigned char[x * pix_size];
+
+  if (do_magick)
+  {
+#ifdef HAVE_MAGICK
+    cerr << "HAVE_MAGICK true" << endl;
+    pixels = (unsigned char *)C_Magick::SetImagePixels(image, 0, 0, x, y);
+#endif
+  }
+
+  if (!pixels)
+  {
+    cerr << "No ImageMagick Memory! Aborting...\n";
+    return;
+  }
+
+    
+  // render the col and row in the hi_res struct
+  //gui_->lock();
+    
+  // Tell OpenGL where to put the data in our pixel buffer
+  glPixelStorei(GL_PACK_ALIGNMENT,1);
+  // Set OpenGL back to nice PixelStore values for somebody else
+  glPixelStorei(GL_PACK_SKIP_PIXELS,0);
+  glPixelStorei(GL_PACK_ROW_LENGTH,0);
+    
+    
+  // Read the data from OpenGL into our memory
+  glReadBuffer(GL_FRONT);
+  glReadPixels(0, 0, x, y,
+	       (num_channels == 3) ? GL_RGB : GL_BGRA,
+	       (channel_bytes == 1) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
+	       pixels);
+  //gui_->unlock();
+    
+  // OpenGL renders upside-down to image_file writing
+  unsigned char *top_row, *bot_row;	
+  int top, bot;
+  for(top = y - 1, bot = 0; bot < y / 2; top--, bot++)
+  {
+    top_row = pixels + x * top * pix_size;
+    bot_row = pixels + x * bot * pix_size;
+    memcpy(tmp_row, top_row, x * pix_size);
+    memcpy(top_row, bot_row, x * pix_size);
+    memcpy(bot_row, tmp_row, x * pix_size);
+  }
+  if (do_magick)
+  {
+#ifdef HAVE_MAGICK
+    C_Magick::SyncImagePixels(image);
+#endif
+  } else
+    image_file->write((char *)pixels, x * y * pix_size);
+
+  //gui_->lock();
+
+
+
+  if (do_magick)
+  {
+#ifdef HAVE_MAGICK
+    if (!C_Magick::WriteImage(image_info, image))
+    {
+      cerr << "\nCannont Write " << fname << " because: "
+	   << image->exception.reason << std::endl;
+    }
+	
+    C_Magick::DestroyImageInfo(image_info);
+    C_Magick::DestroyImage(image);
+    C_Magick::DestroyMagick();
+#endif
+  }
+  else
+  {
+    image_file->close();
+    delete[] pixels;
+  }
+
+  //gui_->unlock();
+
+  if (tmp_row)
+  {
+    delete[] tmp_row;
+    tmp_row = 0;
+  }
+
+}
 
 } // End namespace VS
