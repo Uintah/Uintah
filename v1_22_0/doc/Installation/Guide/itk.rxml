@@ -1,3 +1,6 @@
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
 <!--
    For more information, please see: http://software.sci.utah.edu
 
@@ -37,28 +40,28 @@
 (<acronym>ITK</acronym>) is an open-source software library for
 performing segmentation and registration.  When the
 <acronym>ITK</acronym> toolkit is present, and &sr; is appropriately
-configured, <acronym>ITK</acronym> filters can be encapsulated in &sr;
+configured, <acronym>ITK</acronym> filters are encapsulated in &sr;
 modules for use in &sr; networks.  By default, &sr; encapsulates a
 subset of <acronym>ITK</acronym> filters.</para>
 
 <para>&sr; encapsulates <acronym>ITK</acronym> filters using
-<acronym>XML</acronym>-based filter description files.  An
+<acronym>XML</acronym>-based  description files.  An
 <acronym>XSLT</acronym> processor generates code for &sr; modules from
 the <acronym>XML</acronym> descriptions and <acronym>XSL</acronym>
 stylesheets.  Users may encapsulate additional filters by writing
-<acronym>XML</acronym> descriptions of them.  See the <ulink
-url="../../User/Guide/usersguide/srug8.html">&sr; Users Guide</ulink>
-for more information.</para>
+<acronym>XML</acronym> descriptions of them.  See the <ulink url="(%=
+doc.treeUrl(%Q{doc/User/Guide/usersguide/srug8.html}) %)">&sr; Users
+Guide</ulink> for more information.</para>
 
 <note>
 <para>The <acronym>RPM</acronym> distribution of &sr; 
 <emphasis>includes</emphasis> support for <acronym>ITK</acronym>.  The
 <acronym>RPM</acronym> distribution installs Insight libraries in
 /usr/local/lib/InsightTookit.  The instructions  in sections
-<citetitle><link endterm="sec.title.obitk"
+<citetitle><link 
 linkend="sec.obitk"/></citetitle>, <citetitle><link
-endterm="sec.title.cmake" linkend="sec.cmake"/></citetitle>, and <citetitle><link
-endterm="sec.title.itk_configsr" linkend="sec.itk_configsr"/></citetitle>
+linkend="sec.cmake"/></citetitle>, and <citetitle><link
+linkend="sec.itk_configsr"/></citetitle>
 apply only
 to source code installation of &sr;.</para>
 </note>
@@ -67,7 +70,7 @@ to source code installation of &sr;.</para>
 Java JDK 1.2.2 or later.  On Irix and Linux systems, environment
 variable <envar>JAVA_HOME</envar> must contain the path to the java
 <quote>JDK</quote> directory.  <envar>JAVA_HOME</envar> does not need
-to be set on &osx; The JDK directory is typically
+to be set on &osx;. The JDK directory is typically
 <filename>/usr/java</filename>, <filename>/usr/java2</filename>, or
 <filename>/usr/java/jdk<replaceable>x.x.x</replaceable></filename>.
 </para>
@@ -113,7 +116,7 @@ url="http://www.cmake.org">CMake web site</ulink>.</para>
 
 <note>
 <para>&sr;'s Insight package must also be downloaded to add support
-for ITK in &sr;.  See <link endterm="sec.title.sources"
+for ITK in &sr;.  See <link 
 linkend="sec.sources"/>.</para>
 </note>
 
@@ -145,13 +148,14 @@ libraries.</para>
 </section>
 
 <section id="sec.itk_configsr">
-<title id="sec.title.itk_configsr">Configuring &sr;</title>
+<title id="sec.title.itk_configsr">&sr; Insight
+Configure Options</title>
 
 <para>The configure options below add support for Insight
 in &sr;.  Include these options in the &sr;
 <command>configure</command> command (see <citetitle
 pubwork="section"><xref linkend="sec.build-sr"
-endterm="title.build-sr"/></citetitle>).
+/></citetitle>).
 <variablelist>
 <varlistentry>
 <term><option>--with-insight=<replaceable>path-to-insight-libs</replaceable></option></term>
@@ -183,10 +187,4 @@ will contain file <filename>ITKConfig.cmake</filename>.
 <title>Next</title>
 
 <para>After <acronym>ITK</acronym> has been installed, proceed to
-<citetitle pubwork="section"><xref linkend="sec.source_inst"
-endterm="title.source_inst" /></citetitle>
-</para>
-
-</section>
-
-</section>
+<xref linkend="sec.build-sr" /> </para> </section> </section>
