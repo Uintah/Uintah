@@ -97,6 +97,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_TINY_RHO  = 1.0e-12;// also defined ICEMaterial.cc and MPMMaterial.cc   
   d_modelInfo = 0;
   d_modelSetup = 0;
+  d_recompile = false;
   
   d_usingLODI = false;
   d_usingNG_hack = false;       // NG hack
@@ -370,6 +371,12 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
                                lb->specific_heatLabel,
                                lb->gammaLabel);
   }
+}
+
+void ICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
+                      SimulationStateP&   sharedState)
+{
+
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleInitialize--
@@ -5004,6 +5011,10 @@ ICE::refineBoundaries(const Patch*, SFCZVariable<double>&,
 			    int, double)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!");
+}
+
+bool ICE::needRecompile(double time, double dt, const GridP& grid) {
+  return d_recompile;
 }
 
 

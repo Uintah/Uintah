@@ -50,6 +50,10 @@ namespace Uintah {
                                 GridP& grid,
                                 SimulationStateP&);
       
+      virtual void addMaterial(const ProblemSpecP& params, 
+                               GridP& grid,
+                               SimulationStateP&);
+      
       virtual void scheduleInitialize(const LevelP& level, 
                                       SchedulerP&);
 
@@ -577,7 +581,9 @@ namespace Uintah {
       IntVector upwindCell_Z(const IntVector& c, 
                              const double& var,              
                              double is_logical_R_face );   
-                              
+
+      virtual bool needRecompile(double time, double dt,
+                                 const GridP& grid);
      
       // Debugging switches
       bool switchDebugInitialize;
@@ -611,6 +617,7 @@ namespace Uintah {
       bool d_RateForm;
       bool d_EqForm;
       bool d_impICE;
+      bool d_recompile;
       
       int d_max_iter_equilibration;
       int d_max_iter_implicit;
