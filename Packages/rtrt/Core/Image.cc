@@ -34,8 +34,11 @@ Persistent* image_maker() {
 // initialize the static member type_id
 PersistentTypeID Image::type_id("Image", "Persistent", image_maker);
 
+ofstream Image::ppm_streamR;
+ofstream Image::ppm_streamL;
+
 Image::Image(int xres, int yres, bool stereo)
-    : xres(xres), yres(yres), stereo(stereo)
+  : xres(xres), yres(yres), stereo(stereo)
 {
     image=0;
     depth=0;
@@ -469,6 +472,103 @@ void Image::save_depth(char *filename)
 	   new_filename);
   }
 }
+
+bool Image::start_ppm_stream(char *filename) {
+  // Make sure we close up any previous streams
+  end_ppm_stream();
+  
+  // We need to find a filename that isn't already taken
+  FILE *input_test;
+  char new_filename[1000];
+  if (!stereo)
+    sprintf(new_filename, "%s00.ppm_stream", filename);
+  else
+    sprintf(new_filename, "%s00-L.ppm_stream", filename);
+  int count = 0;
+  // I'm placing a max on how high count can get to prevent an
+  // infinate loop when the path is just bad and no amount of testing
+  // will create a viable filename.
+  while ((input_test = fopen(new_filename, "r")) != 0 && count < 500) {
+    fclose(input_test);
+    input_test = 0;
+    if (!stereo)
+      sprintf(new_filename, "%s%02d.ppm_stream", filename, ++count);
+    else
+      sprintf(new_filename, "%s%02d-L.ppm_stream", filename, ++count);
+  }
+
+  // Open the files
+  ppm_streamL.open(new_filename);
+  if (!ppm_streamL.is_open()) {
+    cerr << "Image::save_ppm: ERROR: I/O fault: couldn't write image file: "
+	 << new_filename << "\n";
+    return false;
+  }
+
+  if (stereo) {
+    sprintf(new_filename, "%s%02d-R.ppm_stream", filename, count);
+    ppm_streamR.open(new_filename);
+    if (!ppm_streamR.is_open()) {
+      cerr << "Image::save_ppm: ERROR: I/O fault: couldn't write image file: "
+	   << new_filename << "\n";
+      return false;
+    }
+  }
+}
+
+void Image::end_ppm_stream() {
+  if (ppm_streamL.is_open())
+    ppm_streamL.close();
+  if (ppm_streamR.is_open())
+    ppm_streamR.close();
+}
+
+void Image::save_to_ppm_stream() {
+  if (!ppm_streamL.is_open()) {
+    cerr << "Image::save_to_ppm_stream: Can't save to a closed stream\n";
+    return;
+  }
+  ppm_streamL << "P6\n# PPM binary image created with rtrt\n";
+  
+  ppm_streamL << xres << " " << yres << "\n";
+  ppm_streamL << "255\n";
+  
+  unsigned char c[3];
+  for(int v=yres-1;v>=0;--v){
+    for(int u=0;u<xres;++u){
+      c[0]=image[v][u].r;
+      c[1]=image[v][u].g;
+      c[2]=image[v][u].b;
+      ppm_streamL.write((char *)c, 3);
+    }
+  }
+  
+  printf("Finished writing image of size (%d, %d) to ppm_stream\n",xres, yres);
+  
+  if (stereo) {
+    if (!ppm_streamR.is_open()) {
+      cerr << "Image::save_to_ppm_stream: Can't save right image to a closed stream\n";
+      return;
+    }
+    ppm_streamR << "P6\n# PPM binary image created with rtrt\n";
+  
+    ppm_streamR << xres << " " << yres << "\n";
+    ppm_streamR << "255\n";
+  
+    unsigned char c[3];
+    for(int v=yres-1;v>=0;--v){
+      for(int u=0;u<xres;++u){
+	c[0]=image[v+yres][u].r;
+	c[1]=image[v+yres][u].g;
+	c[2]=image[v+yres][u].b;
+	ppm_streamR.write((char *)c, 3);
+      }
+    }
+    printf("Finished writing Right image of size (%d, %d) to ppm_stream\n",
+           xres, yres);
+  }
+}
+
 
 // this code is added for tiled images...
 
