@@ -225,6 +225,7 @@ bool GridVisualizer::getGrid()
     vector< int > indices;
     times.clear();
     archive->queryTimesteps( indices, times );
+    TCL::execute(id + " set_time " + vector_to_string(indices).c_str());
     // set old_timestep to something that will cause a new grid
     // to be queried.
     old_timestep = -1;
