@@ -743,6 +743,11 @@ void Module::do_execute()
   {
     error("Module crashed with the following exception:");
     error(e.message());
+    if (e.stackTrace())
+      {
+	error("Thread Stacktrace:");
+	error(e.stackTrace());
+      }
   }
   catch (...)
   {
