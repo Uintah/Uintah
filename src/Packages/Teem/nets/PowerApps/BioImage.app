@@ -595,12 +595,12 @@ class BioImageApp {
  	    -from 0 -to 20 \
  	    -orient horizontal -showvalue false \
  	    -length 110 \
-	    -variable $mods(ViewImage)-axial-viewport0-slice
+	    -variable $mods(ViewImage)-axial-viewport0-slice \
+	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
+	
 
 	label $topr.modes.slice.l -textvariable $mods(ViewImage)-axial-viewport0-slice
  	pack $topr.modes.slice.s $topr.modes.slice.l -side left -anchor n -padx 0
-
-        bind $topr.modes.slice.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
 
 	radiobutton $topr.modes.mip -text "MIP Mode" \
 	    -variable $mods(ViewImage)-axial-viewport0-mode -value 1 \
@@ -626,11 +626,11 @@ class BioImageApp {
  	    -from 0 -to 254 \
  	    -orient horizontal -showvalue false \
  	    -length 110 \
-	    -variable $mods(ViewImage)-sagittal-viewport0-slice
+	    -variable $mods(ViewImage)-sagittal-viewport0-slice \
+	    -command  "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
+	
 	label $botl.modes.slice.l -textvariable $mods(ViewImage)-sagittal-viewport0-slice
  	pack $botl.modes.slice.s $botl.modes.slice.l -side left -anchor n -padx 0
-
-        bind $botl.modes.slice.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
 
 	radiobutton $botl.modes.mip -text "MIP Mode" \
 	    -variable $mods(ViewImage)-sagittal-viewport0-mode -value 1 \
@@ -656,11 +656,11 @@ class BioImageApp {
  	    -from 0 -to 254 \
  	    -orient horizontal -showvalue false \
  	    -length 110 \
-	    -variable $mods(ViewImage)-coronal-viewport0-slice
+	    -variable $mods(ViewImage)-coronal-viewport0-slice \
+	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
+
 	label $botr.modes.slice.l -textvariable $mods(ViewImage)-coronal-viewport0-slice
  	pack $botr.modes.slice.s $botr.modes.slice.l -side left -anchor n -padx 0
-
-        bind $botr.modes.slice.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
 
 	radiobutton $botr.modes.mip -text "MIP Mode" \
 	    -variable $mods(ViewImage)-coronal-viewport0-mode -value 1 \
