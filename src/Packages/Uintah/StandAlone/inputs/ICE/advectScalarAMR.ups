@@ -18,7 +18,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-5      </delt_init>
-       <max_iterations>     100         </max_iterations>
+       <max_iterations>     5         </max_iterations>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -41,8 +41,8 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0" label = "scalar-f" var = "Dirichlet">
-                              <value> 1.0</value>
+        <BCType id = "0" label = "scalar-f" var = "Neumann">
+                              <value> 0.0</value>
         </BCType>
       </Face>
       <Face side = "x+">
@@ -133,42 +133,43 @@
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0,0,0]    </lower>
-              <upper>        [5,5,5]    </upper>
+              <lower>        [-0.4,-0.4,-0.4]    </lower>
+              <upper>        [0.4,  0.4, 0.4]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
            </Box>
-           <spacing>         [0.25,0.25,0.25]    </spacing>
-       </Level>
-
+           <spacing>         [0.025,0.025,0.025]    </spacing>
+       </Level>  
+  <!--
        <Level>
            <Box label="2">
-              <lower>        [.75,0.25,0.25]    </lower>
-              <upper>        [1.25,4.75,4.75]    </upper>
+              <lower>        [-0.4,-0.4,-0.4]    </lower>
+              <upper>        [0.4,  0.4, 0.4]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
            </Box>
-           <spacing>         [0.125,0.125,0.125]    </spacing>
-       </Level>
-  
+           <spacing>         [0.05,0.05,0.05]    </spacing>
+       </Level>  -->
     </Grid> 
     <!--____________________________________________________________________-->
     <!--    A M R   G R I D                                                 -->
-    <!--____________________________________________________________________-->   
+    <!--____________________________________________________________________-->  
+     
     <Regridder>
-      <max_levels>4</max_levels>
-      <cell_refinement_ratio>    [[2,2,2]]  </cell_refinement_ratio>
-      <lattice_refinement_ratio> [[2,2,2],[2,2,2],[2,2,2]]   </lattice_refinement_ratio>
-      <cell_creation_dilation>   [2,2,2]   </cell_creation_dilation>   
-      <cell_deletion_dilation>   [2,2,2]   </cell_deletion_dilation>   
-      <min_boundary_cells>       [3,3,3]   </min_boundary_cells>
+      <max_levels>2</max_levels>
+      <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
+      <lattice_refinement_ratio> [[2,2,1]]   </lattice_refinement_ratio>
+      <cell_creation_dilation>   [2,1,1]   </cell_creation_dilation>   
+      <cell_deletion_dilation>   [1,1,1]   </cell_deletion_dilation>   
+      <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
     </Regridder>   
+    
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>advectScalarAMR.uda</filebase>
-      <outputTimestepInterval>10</outputTimestepInterval>
+      <outputTimestepInterval>1</outputTimestepInterval>
       <save label="press_equil_CC"/>
       <save label="delP_Dilatate"/>
       <save label="press_CC"/>
@@ -176,6 +177,7 @@
       <save label="rho_CC"/>
       <save label="vel_CC"/> 
       <save label="scalar-f"/>
+      <save label="scalar-f_grad"/>
       <save label="refineFlag"/> 
       <checkpoint interval="0.005" cycle="2"/>"
    </DataArchiver>
@@ -244,10 +246,10 @@
            <geom_object>
                 <box label="wholeDomain">
                     <min>       [ -1., -1., -1. ]       </min>
-                    <max>       [ 6.0, 6.0, 6.0 ]       </max>
+                    <max>       [  1.,  1.,  1. ]       </max>
                 </box>
                <res>                 [2,2,2]            </res>
-               <velocity>      [10.,0.,0.]               </velocity>
+               <velocity>      [0.,0.,0.]               </velocity>
                <density>       1.1792946927374306000e+00</density>
                <pressure>      101325.0                 </pressure>     
                <temperature>   300.0                    </temperature>
@@ -268,26 +270,28 @@
         <material>BackgroundGas</material>
 	 <scalar name="f">
         <constants>
-          <diffusivity>              0.0            </diffusivity>
-          <initialize_diffusion_knob>  0            </initialize_diffusion_knob>     
+          <diffusivity>              0.0    </diffusivity>                      
+          <initialize_diffusion_knob>  0    </initialize_diffusion_knob>         
+          <AMR_Refinement_Criteria>    1   </AMR_Refinement_Criteria>          
+              
         </constants>
          <geom_object>
             <difference>
             <box label="wholeDomain">
-                <min>       [ -1., -1., -1. ]       </min>
-                <max>       [ 6.0, 6.0, 6.0 ]       </max>
+                <min>       [ -1., -1., -1. ]        </min>
+                <max>       [  1.,  1.,  1. ]        </max>
             </box>
-            <box label="LeftSideSlug">
-              <min>         [-1,-1,-1]    </min>
-              <max>         [1,6,6]       </max>
+            <box label="scalarPlug">
+              <min>         [-0.0,-0.0,-0.0]         </min>
+              <max>         [ 0.1, 0.1, 0.1]         </max>
             </box>
             </difference>
             <scalar>    0.00   </scalar>
          </geom_object>
           <geom_object>
-            <box label="LeftSideSlug">
-              <min>          [-1,-1,-1]    </min>
-              <max>          [1,6,6]       </max>
+            <box label="scalarPlug">
+              <min>          [-0.0,-0.0,-0.0]    </min>
+              <max>          [ 0.1, 0.1, 0.1]    </max>
             </box>
             <scalar>    1.00   </scalar>
          </geom_object>
