@@ -39,8 +39,9 @@
  */
 
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/QuadSurfField.h>
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 #include <Dataflow/Modules/Fields/QuadToTri.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>

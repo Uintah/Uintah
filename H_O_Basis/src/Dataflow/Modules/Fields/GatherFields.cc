@@ -38,8 +38,9 @@
  *
  *  Copyright (C) 2004 SCI Group
  */
-
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Modules/Fields/GatherFields.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -186,8 +187,8 @@ GatherFields::execute()
 	  warning("Non-editable meshes detected, try Unstructuring first, outputting PointCloudField.");
 	else
 	  warning("Different mesh types detected, outputting PointCloudField.");
-	
-	PointCloudMeshHandle pc = scinew PointCloudMesh;
+	typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+	PCMesh::handle_type pc = scinew PCMesh;
 	
 	for (unsigned int i=0; i<fHandles.size(); i++) {
 	  const TypeDescription *mtd =
@@ -197,8 +198,10 @@ GatherFields::execute()
 	  if (!module_dynamic_compile(ci, algo)) return;
 	    algo->execute(fHandles[i]->mesh(), pc);
 	}
-	
-	fHandle_ = scinew PointCloudField<double>(pc, 1);
+
+	typedef ConstantBasis<double>                           DatBasis;
+	typedef GenericField<PCMesh, DatBasis, vector<double> > PCField;
+	fHandle_ = scinew PCField(pc);
       }
     }
   }

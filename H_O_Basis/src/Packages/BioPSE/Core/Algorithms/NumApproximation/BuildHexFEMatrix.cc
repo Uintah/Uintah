@@ -47,7 +47,6 @@
 
 
 #include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildHexFEMatrix.h>
-#include <Core/Datatypes/HexVolField.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/BBox.h>
@@ -88,13 +87,13 @@ MatrixHandle BuildHexFEMatrix::buildMatrix() {
   int i,j;
 
   // create sparse matrix
-  HexVolMesh::Node::size_type nsize;
+  HVMesh::Node::size_type nsize;
   hMesh_->size(nsize);
   int numNodes = nsize;
   rows_ = scinew int[numNodes+1];
   cols_ = scinew int[numNodes*27]; // 27 entries per row only for inner nodes!!!
   int nonZeros = 0;
-  HexVolMesh::Node::iterator nii, nie;
+  HVMesh::Node::iterator nii, nie;
   hMesh_->begin(nii); hMesh_->end(nie);
   int index[27];
   int numNeighbors;
@@ -119,11 +118,11 @@ MatrixHandle BuildHexFEMatrix::buildMatrix() {
   }
 
   // fill the matrix
-  HexVolMesh::Cell::iterator ii,ie;
+  HVMesh::Cell::iterator ii,ie;
   hMesh_->begin(ii);
   hMesh_->end(ie);
   double localMatrix[8][8];
-  HexVolMesh::Node::array_type cell_nodes(8);
+  HVMesh::Node::array_type cell_nodes(8);
 
   // loop over cells
   for(; ii != ie; ++ii) {
@@ -138,7 +137,7 @@ MatrixHandle BuildHexFEMatrix::buildMatrix() {
   
 }
 
-void BuildHexFEMatrix::buildLocalMatrix(double localMatrix[8][8], HexVolMesh::Cell::index_type ci, HexVolMesh::Node::array_type& cell_nodes) {
+void BuildHexFEMatrix::buildLocalMatrix(double localMatrix[8][8], HVMesh::Cell::index_type ci, HVMesh::Node::array_type& cell_nodes) {
 
   // compute matrix entries
   for(int i=0; i<8; i++) { // loop over nodes (basis functions)
@@ -149,8 +148,8 @@ void BuildHexFEMatrix::buildLocalMatrix(double localMatrix[8][8], HexVolMesh::Ce
   
 }
 
-double BuildHexFEMatrix::getLocalMatrixEntry(HexVolMesh::Cell::index_type ci, int i, int j, 
-			       HexVolMesh::Node::array_type& cell_nodes) {
+double BuildHexFEMatrix::getLocalMatrixEntry(HVMesh::Cell::index_type ci, int i, int j, 
+			       HVMesh::Node::array_type& cell_nodes) {
   double value = 0.0;
   int w;
   double xa, xb, ya, yb, za, zb;
@@ -193,7 +192,7 @@ double BuildHexFEMatrix::getLocalMatrixEntry(HexVolMesh::Cell::index_type ci, in
 
 }
 
-void BuildHexFEMatrix::addLocal2GlobalMatrix(double localMatrix[8][8], HexVolMesh::Node::array_type& cell_nodes) {
+void BuildHexFEMatrix::addLocal2GlobalMatrix(double localMatrix[8][8], HVMesh::Node::array_type& cell_nodes) {
   // get global matrix indices
   for(int i=0; i<8; i++) {
 	int row = (int)cell_nodes[i]; 
@@ -205,13 +204,13 @@ void BuildHexFEMatrix::addLocal2GlobalMatrix(double localMatrix[8][8], HexVolMes
 }
 
 // method will be deleted soon
-int BuildHexFEMatrix::getAllNeighbors(HexVolMesh::Node::index_type nii, int *index) {
+int BuildHexFEMatrix::getAllNeighbors(HVMesh::Node::index_type nii, int *index) {
   int num = 0;
   int i,j,k;
   Point p[27];
   Point pBlack, pRed, pBlue, pGrey, pOrange, pTurquise, pPink, pGreen, pYellow;
-  vector<HexVolMesh::Node::index_type> black;
-  hMesh_->synchronize(HexVolMesh::NODE_NEIGHBORS_E);
+  vector<HVMesh::Node::index_type> black;
+  hMesh_->synchronize(HVMesh::NODE_NEIGHBORS_E);
   hMesh_->get_neighbors(black, nii);
   hMesh_->get_point(p[0], nii);
   
@@ -230,7 +229,7 @@ int BuildHexFEMatrix::getAllNeighbors(HexVolMesh::Node::index_type nii, int *ind
 	  index[num] = (int)black[i]; //hField_->value(black[i]);
 	  num++;
 	  hMesh_->get_point(p[1], black[i]);
-	  vector<HexVolMesh::Node::index_type> red;
+	  vector<HVMesh::Node::index_type> red;
 	  hMesh_->get_neighbors(red, black[i]);
 	  for(j=0;j<((int)red.size());j++) {
 		hMesh_->get_point(pRed, red[j]);
@@ -238,7 +237,7 @@ int BuildHexFEMatrix::getAllNeighbors(HexVolMesh::Node::index_type nii, int *ind
 		  index[num] = (int)red[j]; //hField_->value(red[j]);
 		  num++;
 		  hMesh_->get_point(p[7], red[j]);
-		  vector<HexVolMesh::Node::index_type> turquise;
+		  vector<HVMesh::Node::index_type> turquise;
 		  hMesh_->get_neighbors(turquise, red[j]);
 		  for(k=0; k<((int)turquise.size()); k++) {
 			hMesh_->get_point(pTurquise, turquise[k]);
@@ -263,7 +262,7 @@ int BuildHexFEMatrix::getAllNeighbors(HexVolMesh::Node::index_type nii, int *ind
 		  index[num] = (int)red[j];//hField_->value(red[j]);
 		  num++;
 		  hMesh_->get_point(p[9], red[j]);
-		  vector<HexVolMesh::Node::index_type> pink;
+		  vector<HVMesh::Node::index_type> pink;
 		  hMesh_->get_neighbors(pink, red[j]);
 		  for(k=0; k<((int)pink.size()); k++) {
 			hMesh_->get_point(pPink, pink[k]);
@@ -290,7 +289,7 @@ int BuildHexFEMatrix::getAllNeighbors(HexVolMesh::Node::index_type nii, int *ind
 	  index[num] = (int)black[i];//hField_->value(black[i]);
 	  num++;
 	  hMesh_->get_point(p[2], black[i]);
-	  vector<HexVolMesh::Node::index_type> blue;
+	  vector<HVMesh::Node::index_type> blue;
 	  hMesh_->get_neighbors(blue, black[i]);
 	  for(j=0; j<((int)blue.size());j++) {
 		hMesh_->get_point(pBlue, blue[j]);
@@ -298,7 +297,7 @@ int BuildHexFEMatrix::getAllNeighbors(HexVolMesh::Node::index_type nii, int *ind
 		  index[num] = (int)blue[j];//hField_->value(blue[j]);
 		  num++;
 		  hMesh_->get_point(p[11], blue[j]);
-		  vector<HexVolMesh::Node::index_type> green;
+		  vector<HVMesh::Node::index_type> green;
 		  hMesh_->get_neighbors(green, blue[j]);
 		  for(k=0; k<((int)green.size()); k++) {
 			hMesh_->get_point(pGreen, green[k]);
@@ -323,7 +322,7 @@ int BuildHexFEMatrix::getAllNeighbors(HexVolMesh::Node::index_type nii, int *ind
 		  index[num] = (int)blue[j];//hField_->value(blue[j]);
 		  num++;
 		  hMesh_->get_point(p[13], blue[j]);
-		  vector<HexVolMesh::Node::index_type> yellow;
+		  vector<HVMesh::Node::index_type> yellow;
 		  hMesh_->get_neighbors(yellow, blue[j]);
 		  for(k=0; k<((int)yellow.size()); k++) {
 			hMesh_->get_point(pYellow, yellow[k]);
@@ -350,7 +349,7 @@ int BuildHexFEMatrix::getAllNeighbors(HexVolMesh::Node::index_type nii, int *ind
 	  index[num] = (int)black[i];//hField_->value(black[i]);
 	  num++;
 	  hMesh_->get_point(p[3], black[i]);
-	  vector<HexVolMesh::Node::index_type> orange;
+	  vector<HVMesh::Node::index_type> orange;
 	  hMesh_->get_neighbors(orange, black[i]);
 	  for(j=0; j<((int)orange.size()); j++) {
 		hMesh_->get_point(pOrange, orange[j]);
@@ -372,7 +371,7 @@ int BuildHexFEMatrix::getAllNeighbors(HexVolMesh::Node::index_type nii, int *ind
 	  index[num] = (int)black[i];//hField_->value(black[i]);
 	  num++;
 	  hMesh_->get_point(p[4], black[i]);
-	  vector<HexVolMesh::Node::index_type> grey;
+	  vector<HVMesh::Node::index_type> grey;
 	  hMesh_->get_neighbors(grey, black[i]);
 	  for(j=0; j<((int)grey.size()); j++) {
 		hMesh_->get_point(pGrey, grey[j]);

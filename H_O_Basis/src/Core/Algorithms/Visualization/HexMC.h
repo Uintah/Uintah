@@ -44,8 +44,12 @@
 
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Algorithms/Visualization/mcube2.h>
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Containers/FData.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <sci_hash_map.h>
 
@@ -69,13 +73,21 @@ public:
   typedef typename Field::mesh_handle_type       mesh_handle_type;
   typedef typename mesh_type::Node::array_type         node_array_type;
 
+  typedef TriSurfMesh<TriLinearLgn<Point> >                 TSMesh;
+  typedef TriLinearLgn<double>                              TDatBasis;
+  typedef GenericField<TSMesh, TDatBasis, vector<double> >  TSField;  
+
+  typedef QuadSurfMesh<QuadBilinearLgn<Point> >                     QSMesh;
+  typedef QuadBilinearLgn<double>                                   QDatBasis;
+  typedef GenericField<QSMesh, QDatBasis, FData2d<double, QSMesh> > QSField;  
+
 private:
   LockingHandle<Field> field_;
   mesh_handle_type mesh_;
   GeomFastTriangles *triangles_;
   bool build_field_;
-  TriSurfMeshHandle trisurf_;
-  QuadSurfMeshHandle quadsurf_;
+  TSMesh::handle_type trisurf_;
+  QSMesh::handle_type quadsurf_;
   int nx_, ny_, nz_;
 
   struct edgepair_t
@@ -120,7 +132,7 @@ private:
 
 #ifndef __ECC
   typedef hash_map<edgepair_t,
-		   TriSurfMesh::Node::index_type,
+		   TSMesh::Node::index_type,
 		   edgepairhash,
 		   edgepairequal> edge_hash_type;
 #else
@@ -139,18 +151,18 @@ private:
   };
 
   typedef map<edgepair_t,
-	      TriSurfMesh::Node::index_type,
+	      TSMesh::Node::index_type,
 	      edgepairless> edge_hash_type;
 #endif
 
   edge_hash_type   edge_map_;  // Unique edge cuts when surfacing node data
   vector<long int> node_map_;  // Unique nodes when surfacing cell data.
 
-  TriSurfMesh::Node::index_type find_or_add_edgepoint(unsigned int n0,
+  TSMesh::Node::index_type find_or_add_edgepoint(unsigned int n0,
 						      unsigned int n1,
 						      double d0,
 						      const Point &p);
-  QuadSurfMesh::Node::index_type find_or_add_nodepoint(node_index_type &);
+  QSMesh::Node::index_type find_or_add_nodepoint(node_index_type &);
 
   void extract_c( const cell_index_type &, double);
   void extract_n( const cell_index_type &, double);
@@ -201,17 +213,17 @@ void HexMC<Field>::reset( int n, bool build_field, bool build_geom )
   {
     if (field_->basis_order() == 0)
     {
-      quadsurf_ = scinew QuadSurfMesh;
+      quadsurf_ = scinew QSMesh;
     }
     else
     {
-      trisurf_ = scinew TriSurfMesh; 
+      trisurf_ = scinew TSMesh; 
     }
   }
 }
 
 template<class Field>
-TriSurfMesh::Node::index_type
+HexMC<Field>::TSMesh::Node::index_type
 HexMC<Field>::find_or_add_edgepoint(unsigned int u0, unsigned int u1,
 				    double d0, const Point &p) 
 {
@@ -221,7 +233,7 @@ HexMC<Field>::find_or_add_edgepoint(unsigned int u0, unsigned int u1,
   const typename edge_hash_type::iterator loc = edge_map_.find(np);
   if (loc == edge_map_.end())
   {
-    const TriSurfMesh::Node::index_type nodeindex = trisurf_->add_point(p);
+    const TSMesh::Node::index_type nodeindex = trisurf_->add_point(p);
     edge_map_[np] = nodeindex;
     return nodeindex;
   }
@@ -233,12 +245,12 @@ HexMC<Field>::find_or_add_edgepoint(unsigned int u0, unsigned int u1,
 
 
 template<class Field>
-QuadSurfMesh::Node::index_type
+HexMC<Field>::QSMesh::Node::index_type
 HexMC<Field>::find_or_add_nodepoint(node_index_type &tet_node_idx)
 {
-  QuadSurfMesh::Node::index_type surf_node_idx;
+  QSMesh::Node::index_type surf_node_idx;
   long int i = node_map_[(long int)(tet_node_idx)];
-  if (i != -1) surf_node_idx = (QuadSurfMesh::Node::index_type) i;
+  if (i != -1) surf_node_idx = (QSMesh::Node::index_type) i;
   else {
     Point p;
     mesh_->get_point(p, tet_node_idx);
@@ -272,7 +284,7 @@ HexMC<Field>::extract_c( const cell_index_type& cell, double iso )
   cell_index_type nbr_cell;
   Point p[4];
   node_array_type face_nodes;
-  QuadSurfMesh::Node::index_type verts[4];
+  QSMesh::Node::index_type verts[4];
   unsigned int f, n;
   for (f=0; f<faces.size(); f++)
   {
@@ -327,7 +339,7 @@ void HexMC<Field>::extract_n( const cell_index_type& cell, double iso )
   int *vertex = tcase->edges;
   
   Point q[12];
-  TriSurfMesh::Node::index_type surf_node[12];
+  TSMesh::Node::index_type surf_node[12];
 
   // interpolate and project vertices
   int v = 0;
@@ -369,10 +381,10 @@ HexMC<Field>::get_field(double value)
 {
   if (field_->basis_order() == 0)
   {
-    QuadSurfField<double> *fld = 0;
+    QSField *fld = 0;
     if (quadsurf_.get_rep())
     {
-      fld = scinew QuadSurfField<double>(quadsurf_, 1);
+      fld = scinew QSField(quadsurf_, 1);
       vector<double>::iterator iter = fld->fdata().begin();
       while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
     }
@@ -380,10 +392,10 @@ HexMC<Field>::get_field(double value)
   }
   else
   {
-    TriSurfField<double> *fld = 0;
+    TSField *fld = 0;
     if (trisurf_.get_rep())
     {
-      fld = scinew TriSurfField<double>(trisurf_, 1);
+      fld = scinew TSField(trisurf_, 1);
       vector<double>::iterator iter = fld->fdata().begin();
       while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
     }

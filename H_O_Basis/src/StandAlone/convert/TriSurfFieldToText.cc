@@ -50,7 +50,9 @@
 // -noElementsCount flag is used).  The tri entries will be zero-based, 
 // unless the user specifies -oneBasedIndexing.
 
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -147,16 +149,21 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<fieldName<<".  Exiting...\n";
     return 2;
   }
-  if (handle->get_type_description(0)->get_name() != "TriSurfField") {
-    cerr << "Error -- input field wasn't a TriSurfField (type_name="<<handle->get_type_description(0)->get_name()<<"\n";
+  if (handle->get_type_description(1)->get_name().find("TriSurfField") !=
+      string::npos)
+  {
+    cerr << "Error -- input field wasn't a TriSurfField (type_name="
+	 << handle->get_type_description(1)->get_name() << std::endl;
     return 2;
   }
 
+  typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
+
   MeshHandle mH = handle->mesh();
-  TriSurfMesh *tsm = dynamic_cast<TriSurfMesh *>(mH.get_rep());
-  TriSurfMesh::Node::iterator niter; 
-  TriSurfMesh::Node::iterator niter_end; 
-  TriSurfMesh::Node::size_type nsize; 
+  TSMesh *tsm = dynamic_cast<TSMesh *>(mH.get_rep());
+  TSMesh::Node::iterator niter; 
+  TSMesh::Node::iterator niter_end; 
+  TSMesh::Node::size_type nsize; 
   tsm->begin(niter);
   tsm->end(niter_end);
   tsm->size(nsize);
@@ -175,10 +182,10 @@ main(int argc, char **argv) {
   }
   fclose(fPts);
 
-  TriSurfMesh::Face::size_type fsize; 
-  TriSurfMesh::Face::iterator fiter; 
-  TriSurfMesh::Face::iterator fiter_end; 
-  TriSurfMesh::Node::array_type fac_nodes(3);
+  TSMesh::Face::size_type fsize; 
+  TSMesh::Face::iterator fiter; 
+  TSMesh::Face::iterator fiter_end; 
+  TSMesh::Node::array_type fac_nodes(3);
   tsm->size(fsize);
   tsm->begin(fiter);
   tsm->end(fiter_end);

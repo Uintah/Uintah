@@ -46,7 +46,9 @@
 // also have a one line header, specifying ni and nj, unless the user 
 // specifies the -noHeader command-line argument.
 
-#include <Core/Datatypes/StructHexVolField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/StructHexVolMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -124,15 +126,20 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<fieldName<<".  Exiting...\n";
     return 2;
   }
-  if (handle->get_type_description(0)->get_name() != "StructHexVolField") {
-    cerr << "Error -- input field wasn't a StructHexVolField (type_name="<<handle->get_type_description(0)->get_name()<<"\n";
+  if (handle->get_type_description(1)->get_name().find("StructHexVolField") !=
+      string::npos)
+  {
+    cerr << "Error -- input field wasn't a StructHexVolField (type_name="
+	 << handle->get_type_description(1)->get_name() << std::endl;
     return 2;
   }
 
+  typedef StructHexVolMesh<HexTrilinearLgn<Point> > SHVMesh;
+
   MeshHandle mH = handle->mesh();
-  StructHexVolMesh *shvm = dynamic_cast<StructHexVolMesh *>(mH.get_rep());
-  StructHexVolMesh::Node::iterator niter; 
-  StructHexVolMesh::Node::iterator niter_end; 
+  SHVMesh *shvm = dynamic_cast<SHVMesh *>(mH.get_rep());
+  SHVMesh::Node::iterator niter; 
+  SHVMesh::Node::iterator niter_end; 
   shvm->begin(niter);
   shvm->end(niter_end);
   vector<unsigned int> dims;

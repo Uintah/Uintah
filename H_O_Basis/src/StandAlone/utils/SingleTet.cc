@@ -30,8 +30,9 @@
 //    Author : Martin Cole
 //    Date   : Thu Feb 28 17:09:21 2002
 
-
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Persistent/Pstreams.h>
 
 #include <iostream>
@@ -46,7 +47,8 @@ using namespace SCIRun;
 
 int
 main(int argc, char **argv) {
-  TetVolMesh *tvm = new TetVolMesh();
+  typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
+  TVMesh *tvm = new TVMesh();
 
   Point p1(0.,0.,0.);
   Point p2(1.,0.,0.);
@@ -58,10 +60,13 @@ main(int argc, char **argv) {
   tvm->add_point(p4);
 
   tvm->add_tet(0, 1, 2, 3);
-  TetVolField<double> *tv = scinew TetVolField<double>(tvm, 1);
+
+  typedef TetLinearLgn<double>  DatBasis;
+  typedef GenericField<TVMesh, DatBasis, vector<double> > TVField;
+  TVField *tv = scinew TVField(tvm);
   tv->resize_fdata();
 
-  TetVolField<double>::fdata_type &d = tv->fdata();
+  TVField::fdata_type &d = tv->fdata();
   d[0] = 0.0;
   d[1] = 0.25;
   d[2] = 0.75;

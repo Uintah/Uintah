@@ -50,123 +50,101 @@ using namespace SCIRun;
 #pragma set woff 1468
 #endif
 
-#include <Core/Datatypes/StructCurveField.h>
-#include <Core/Datatypes/StructQuadSurfField.h>
-#include <Core/Datatypes/StructHexVolField.h>
+#include <Core/Geometry/Tensor.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/StructCurveMesh.h>
+#include <Core/Datatypes/StructQuadSurfMesh.h>
+#include <Core/Datatypes/StructHexVolMesh.h>
 
-template <>
-Vector StructHexVolField<Vector>::cell_gradient(StructHexVolMesh::Cell::index_type /*ci*/)
-{
-  ASSERT(type_name(1) != "Vector");  // redundant, useful error message
-  return Vector(0, 0, 0);
-}
+typedef CrvLinearLgn<Tensor>                CFDTensorBasis;
+typedef CrvLinearLgn<Vector>                CFDVectorBasis;
+typedef CrvLinearLgn<double>                CFDdoubleBasis;
+typedef CrvLinearLgn<float>                 CFDfloatBasis;
+typedef CrvLinearLgn<int>                   CFDintBasis;
+typedef CrvLinearLgn<short>                 CFDshortBasis;
+typedef CrvLinearLgn<char>                  CFDcharBasis;
+typedef CrvLinearLgn<unsigned int>          CFDuintBasis;
+typedef CrvLinearLgn<unsigned short>        CFDushortBasis;
+typedef CrvLinearLgn<unsigned char>         CFDucharBasis;
+typedef CrvLinearLgn<unsigned long>         CFDulongBasis;
+
+typedef StructCurveMesh<CrvLinearLgn<Point> > CMesh;
+template class GenericField<CMesh, CFDTensorBasis, vector<Tensor> >;       
+template class GenericField<CMesh, CFDVectorBasis, vector<Vector> >;       
+template class GenericField<CMesh, CFDdoubleBasis, vector<double> >;       
+template class GenericField<CMesh, CFDfloatBasis,  vector<float> >;        
+template class GenericField<CMesh, CFDintBasis,    vector<int> >;          
+template class GenericField<CMesh, CFDshortBasis,  vector<short> >;        
+template class GenericField<CMesh, CFDcharBasis,   vector<char> >;         
+template class GenericField<CMesh, CFDuintBasis,   vector<unsigned int> >; 
+template class GenericField<CMesh, CFDushortBasis, vector<unsigned short> >;
+template class GenericField<CMesh, CFDucharBasis,  vector<unsigned char> >;
+template class GenericField<CMesh, CFDulongBasis,  vector<unsigned long> >;
 
 
-template <>
-Vector StructHexVolField<Tensor>::cell_gradient(StructHexVolMesh::Cell::index_type /*ci*/)
-{
-  ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
-  return Vector(0, 0, 0);
-}
+typedef QuadBilinearLgn<Tensor>                QFDTensorBasis;
+typedef QuadBilinearLgn<Vector>                QFDVectorBasis;
+typedef QuadBilinearLgn<double>                QFDdoubleBasis;
+typedef QuadBilinearLgn<float>                 QFDfloatBasis;
+typedef QuadBilinearLgn<int>                   QFDintBasis;
+typedef QuadBilinearLgn<short>                 QFDshortBasis;
+typedef QuadBilinearLgn<char>                  QFDcharBasis;
+typedef QuadBilinearLgn<unsigned int>          QFDuintBasis;
+typedef QuadBilinearLgn<unsigned short>        QFDushortBasis;
+typedef QuadBilinearLgn<unsigned char>         QFDucharBasis;
+typedef QuadBilinearLgn<unsigned long>         QFDulongBasis;
 
-template class GenericField<StructCurveMesh, vector<Tensor> >;
-template class GenericField<StructCurveMesh, vector<Vector> >;
-template class GenericField<StructCurveMesh, vector<double> >;
-template class GenericField<StructCurveMesh, vector<float> >;
-template class GenericField<StructCurveMesh, vector<int> >;
-template class GenericField<StructCurveMesh, vector<short> >;
-template class GenericField<StructCurveMesh, vector<char> >;
-template class GenericField<StructCurveMesh, vector<unsigned int> >;
-template class GenericField<StructCurveMesh, vector<unsigned short> >;
-template class GenericField<StructCurveMesh, vector<unsigned char> >;
+typedef StructQuadSurfMesh<QuadBilinearLgn<Point> > SQMesh;
+template class GenericField<SQMesh, QFDTensorBasis, FData2d<Tensor,SQMesh> >;
+template class GenericField<SQMesh, QFDVectorBasis, FData2d<Vector,SQMesh> >;
+template class GenericField<SQMesh, QFDdoubleBasis, FData2d<double,SQMesh> >;
+template class GenericField<SQMesh, QFDfloatBasis,  FData2d<float,SQMesh> >;
+template class GenericField<SQMesh, QFDintBasis,    FData2d<int,SQMesh> >;
+template class GenericField<SQMesh, QFDshortBasis,  FData2d<short,SQMesh> >;
+template class GenericField<SQMesh, QFDcharBasis,   FData2d<char,SQMesh> >;
+template class GenericField<SQMesh, QFDuintBasis,   FData2d<unsigned int,
+							    SQMesh> >; 
+template class GenericField<SQMesh, QFDushortBasis, FData2d<unsigned short,
+							    SQMesh> >;
+template class GenericField<SQMesh, QFDucharBasis,  FData2d<unsigned char,
+							    SQMesh> >;
+template class GenericField<SQMesh, QFDulongBasis,  FData2d<unsigned long,
+							    SQMesh> >;
 
-template class GenericField<StructQuadSurfMesh, FData2d<Tensor> >;
-template class GenericField<StructQuadSurfMesh, FData2d<Vector> >;
-template class GenericField<StructQuadSurfMesh, FData2d<double> >;
-template class GenericField<StructQuadSurfMesh, FData2d<float> >;
-template class GenericField<StructQuadSurfMesh, FData2d<int> >;
-template class GenericField<StructQuadSurfMesh, FData2d<short> >;
-template class GenericField<StructQuadSurfMesh, FData2d<char> >;
-template class GenericField<StructQuadSurfMesh, FData2d<unsigned int> >;
-template class GenericField<StructQuadSurfMesh, FData2d<unsigned short> >;
-template class GenericField<StructQuadSurfMesh, FData2d<unsigned char> >;
 
-template class GenericField<StructHexVolMesh, FData3d<Tensor> >;
-template class GenericField<StructHexVolMesh, FData3d<Vector> >;
-template class GenericField<StructHexVolMesh, FData3d<double> >;
-template class GenericField<StructHexVolMesh, FData3d<float> >;
-template class GenericField<StructHexVolMesh, FData3d<int> >;
-template class GenericField<StructHexVolMesh, FData3d<short> >;
-template class GenericField<StructHexVolMesh, FData3d<char> >;
-template class GenericField<StructHexVolMesh, FData3d<unsigned int> >;
-template class GenericField<StructHexVolMesh, FData3d<unsigned short> >;
-template class GenericField<StructHexVolMesh, FData3d<unsigned char> >;
+typedef HexTrilinearLgn<Tensor>                HFDTensorBasis;
+typedef HexTrilinearLgn<Vector>                HFDVectorBasis;
+typedef HexTrilinearLgn<double>                HFDdoubleBasis;
+typedef HexTrilinearLgn<float>                 HFDfloatBasis;
+typedef HexTrilinearLgn<int>                   HFDintBasis;
+typedef HexTrilinearLgn<short>                 HFDshortBasis;
+typedef HexTrilinearLgn<char>                  HFDcharBasis;
+typedef HexTrilinearLgn<unsigned int>          HFDuintBasis;
+typedef HexTrilinearLgn<unsigned short>        HFDushortBasis;
+typedef HexTrilinearLgn<unsigned char>         HFDucharBasis;
+typedef HexTrilinearLgn<unsigned long>         HFDulongBasis;
 
-template class StructCurveField<Tensor>;
-template class StructCurveField<Vector>;
-template class StructCurveField<double>;
-template class StructCurveField<float>;
-template class StructCurveField<int>;
-template class StructCurveField<short>;
-template class StructCurveField<char>;
-template class StructCurveField<unsigned int>;
-template class StructCurveField<unsigned short>;
-template class StructCurveField<unsigned char>;
-
-template class StructQuadSurfField<Tensor>;
-template class StructQuadSurfField<Vector>;
-template class StructQuadSurfField<double>;
-template class StructQuadSurfField<float>;
-template class StructQuadSurfField<int>;
-template class StructQuadSurfField<short>;
-template class StructQuadSurfField<char>;
-template class StructQuadSurfField<unsigned int>;
-template class StructQuadSurfField<unsigned short>;
-template class StructQuadSurfField<unsigned char>;
-
-template class StructHexVolField<Tensor>;
-template class StructHexVolField<Vector>;
-template class StructHexVolField<double>;
-template class StructHexVolField<float>;
-template class StructHexVolField<int>;
-template class StructHexVolField<short>;
-template class StructHexVolField<char>;
-template class StructHexVolField<unsigned int>;
-template class StructHexVolField<unsigned short>;
-template class StructHexVolField<unsigned char>;
-
-const TypeDescription* get_type_description(StructCurveField<Tensor> *);
-const TypeDescription* get_type_description(StructCurveField<Vector> *);
-const TypeDescription* get_type_description(StructCurveField<double> *);
-const TypeDescription* get_type_description(StructCurveField<float> *);
-const TypeDescription* get_type_description(StructCurveField<int> *);
-const TypeDescription* get_type_description(StructCurveField<short> *);
-const TypeDescription* get_type_description(StructCurveField<char> *);
-const TypeDescription* get_type_description(StructCurveField<unsigned int> *);
-const TypeDescription* get_type_description(StructCurveField<unsigned short> *);
-const TypeDescription* get_type_description(StructCurveField<unsigned char> *);
-
-const TypeDescription* get_type_description(StructQuadSurfField<Tensor> *);
-const TypeDescription* get_type_description(StructQuadSurfField<Vector> *);
-const TypeDescription* get_type_description(StructQuadSurfField<double> *);
-const TypeDescription* get_type_description(StructQuadSurfField<float> *);
-const TypeDescription* get_type_description(StructQuadSurfField<int> *);
-const TypeDescription* get_type_description(StructQuadSurfField<short> *);
-const TypeDescription* get_type_description(StructQuadSurfField<char> *);
-const TypeDescription* get_type_description(StructQuadSurfField<unsigned int> *);
-const TypeDescription* get_type_description(StructQuadSurfField<unsigned short> *);
-const TypeDescription* get_type_description(StructQuadSurfField<unsigned char> *);
-
-const TypeDescription* get_type_description(StructHexVolField<Tensor> *);
-const TypeDescription* get_type_description(StructHexVolField<Vector> *);
-const TypeDescription* get_type_description(StructHexVolField<double> *);
-const TypeDescription* get_type_description(StructHexVolField<float> *);
-const TypeDescription* get_type_description(StructHexVolField<int> *);
-const TypeDescription* get_type_description(StructHexVolField<short> *);
-const TypeDescription* get_type_description(StructHexVolField<char> *);
-const TypeDescription* get_type_description(StructHexVolField<unsigned int> *);
-const TypeDescription* get_type_description(StructHexVolField<unsigned short> *);
-const TypeDescription* get_type_description(StructHexVolField<unsigned char> *);
+typedef StructHexVolMesh<HexTrilinearLgn<Point> > SHMesh;
+template class GenericField<SHMesh, HFDTensorBasis, FData3d<Tensor,SHMesh> >;
+template class GenericField<SHMesh, HFDVectorBasis, FData3d<Vector,SHMesh> >;
+template class GenericField<SHMesh, HFDdoubleBasis, FData3d<double,SHMesh> >;
+template class GenericField<SHMesh, HFDfloatBasis,  FData3d<float,SHMesh> >;
+template class GenericField<SHMesh, HFDintBasis,    FData3d<int,SHMesh> >;
+template class GenericField<SHMesh, HFDshortBasis,  FData3d<short,SHMesh> >;
+template class GenericField<SHMesh, HFDcharBasis,   FData3d<char,SHMesh> >;
+template class GenericField<SHMesh, HFDuintBasis,   FData3d<unsigned int,
+							    SHMesh> >;
+template class GenericField<SHMesh, HFDushortBasis, FData3d<unsigned short,
+							    SHMesh> >;
+template class GenericField<SHMesh, HFDucharBasis,  FData3d<unsigned char,
+							    SHMesh> >;
+template class GenericField<SHMesh, HFDulongBasis,  FData3d<unsigned long,
+							    SHMesh> >;
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468

@@ -39,7 +39,9 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <fstream>
@@ -78,9 +80,9 @@ main(int argc, char **argv) {
     cerr << "Error -- input field wasn't a TriSurfField (type_name="<<handle->get_type_name(0)<<"\n";
     exit(0);
   }
-
+  typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
   MeshHandle mb = handle->mesh();
-  TriSurfMesh *tsm = dynamic_cast<TriSurfMesh *>(mb.get_rep());
+  TSMesh *tsm = dynamic_cast<TSMesh *>(mb.get_rep());
   char objname[512];
   sprintf(objname, "%s.obj", argv[2]);
   char mtlname[512];
@@ -93,9 +95,9 @@ main(int argc, char **argv) {
   }
 
   tsm->synchronize(Mesh::NORMALS_E);
-  TriSurfMesh::Node::iterator niter; 
-  TriSurfMesh::Node::iterator niter_end; 
-  TriSurfMesh::Node::size_type nsize; 
+  TSMesh::Node::iterator niter; 
+  TSMesh::Node::iterator niter_end; 
+  TSMesh::Node::size_type nsize; 
   tsm->begin(niter);
   tsm->end(niter_end);
   tsm->size(nsize);
@@ -110,10 +112,10 @@ main(int argc, char **argv) {
     ++niter;
   }
   fprintf(fobj, "usemtl Default\n");  
-  TriSurfMesh::Face::size_type fsize; 
-  TriSurfMesh::Face::iterator fiter; 
-  TriSurfMesh::Face::iterator fiter_end; 
-  TriSurfMesh::Node::array_type fac_nodes(3);
+  TSMesh::Face::size_type fsize; 
+  TSMesh::Face::iterator fiter; 
+  TSMesh::Face::iterator fiter_end; 
+  TSMesh::Node::array_type fac_nodes(3);
   tsm->size(fsize);
   tsm->begin(fiter);
   tsm->end(fiter_end);

@@ -43,10 +43,16 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Util/Assert.h>
 
 namespace SCIRun {
+
+typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
 
 class HexToTetAlgo : public DynamicAlgoBase
 {
@@ -73,9 +79,8 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
 			     ProgressReporter *mod)
 {
   FSRC *hvfield = dynamic_cast<FSRC*>(srcH.get_rep());
-
   typename FSRC::mesh_type *hvmesh = hvfield->get_typed_mesh().get_rep();
-  TetVolMeshHandle tvmesh = scinew TetVolMesh();
+  TVMesh::handle_type tvmesh = scinew TVMesh();
 
   typename FSRC::mesh_type::Node::size_type hnsize; hvmesh->size(hnsize);
   typename FSRC::mesh_type::Elem::size_type hesize; hvmesh->size(hesize);
@@ -130,57 +135,57 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
 	  ASSERT(hvnodes.size() == 8);
 	  if (flipflop)
 	  {
-	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
-			    (TetVolMesh::Node::index_type)(hvnodes[1]),
-			    (TetVolMesh::Node::index_type)(hvnodes[2]),
-			    (TetVolMesh::Node::index_type)(hvnodes[5]));
+	    tvmesh->add_tet((TVMesh::Node::index_type)(hvnodes[0]),
+			    (TVMesh::Node::index_type)(hvnodes[1]),
+			    (TVMesh::Node::index_type)(hvnodes[2]),
+			    (TVMesh::Node::index_type)(hvnodes[5]));
 
-	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
-			    (TetVolMesh::Node::index_type)(hvnodes[2]),
-			    (TetVolMesh::Node::index_type)(hvnodes[3]),
-			    (TetVolMesh::Node::index_type)(hvnodes[7]));
+	    tvmesh->add_tet((TVMesh::Node::index_type)(hvnodes[0]),
+			    (TVMesh::Node::index_type)(hvnodes[2]),
+			    (TVMesh::Node::index_type)(hvnodes[3]),
+			    (TVMesh::Node::index_type)(hvnodes[7]));
 
-	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
-			    (TetVolMesh::Node::index_type)(hvnodes[5]),
-			    (TetVolMesh::Node::index_type)(hvnodes[2]),
-			    (TetVolMesh::Node::index_type)(hvnodes[7]));
+	    tvmesh->add_tet((TVMesh::Node::index_type)(hvnodes[0]),
+			    (TVMesh::Node::index_type)(hvnodes[5]),
+			    (TVMesh::Node::index_type)(hvnodes[2]),
+			    (TVMesh::Node::index_type)(hvnodes[7]));
 
-	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
-			    (TetVolMesh::Node::index_type)(hvnodes[5]),
-			    (TetVolMesh::Node::index_type)(hvnodes[7]),
-			    (TetVolMesh::Node::index_type)(hvnodes[4]));
+	    tvmesh->add_tet((TVMesh::Node::index_type)(hvnodes[0]),
+			    (TVMesh::Node::index_type)(hvnodes[5]),
+			    (TVMesh::Node::index_type)(hvnodes[7]),
+			    (TVMesh::Node::index_type)(hvnodes[4]));
 
-	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[5]),
-			    (TetVolMesh::Node::index_type)(hvnodes[2]),
-			    (TetVolMesh::Node::index_type)(hvnodes[7]),
-			    (TetVolMesh::Node::index_type)(hvnodes[6]));
+	    tvmesh->add_tet((TVMesh::Node::index_type)(hvnodes[5]),
+			    (TVMesh::Node::index_type)(hvnodes[2]),
+			    (TVMesh::Node::index_type)(hvnodes[7]),
+			    (TVMesh::Node::index_type)(hvnodes[6]));
 	  }
 	  else
 	  {
-	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
-			    (TetVolMesh::Node::index_type)(hvnodes[1]),
-			    (TetVolMesh::Node::index_type)(hvnodes[3]),
-			    (TetVolMesh::Node::index_type)(hvnodes[4]));
+	    tvmesh->add_tet((TVMesh::Node::index_type)(hvnodes[0]),
+			    (TVMesh::Node::index_type)(hvnodes[1]),
+			    (TVMesh::Node::index_type)(hvnodes[3]),
+			    (TVMesh::Node::index_type)(hvnodes[4]));
 
-	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[1]),
-			    (TetVolMesh::Node::index_type)(hvnodes[2]),
-			    (TetVolMesh::Node::index_type)(hvnodes[3]),
-			    (TetVolMesh::Node::index_type)(hvnodes[6]));
+	    tvmesh->add_tet((TVMesh::Node::index_type)(hvnodes[1]),
+			    (TVMesh::Node::index_type)(hvnodes[2]),
+			    (TVMesh::Node::index_type)(hvnodes[3]),
+			    (TVMesh::Node::index_type)(hvnodes[6]));
 
-	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[1]),
-			    (TetVolMesh::Node::index_type)(hvnodes[3]),
-			    (TetVolMesh::Node::index_type)(hvnodes[4]),
-			    (TetVolMesh::Node::index_type)(hvnodes[6]));
+	    tvmesh->add_tet((TVMesh::Node::index_type)(hvnodes[1]),
+			    (TVMesh::Node::index_type)(hvnodes[3]),
+			    (TVMesh::Node::index_type)(hvnodes[4]),
+			    (TVMesh::Node::index_type)(hvnodes[6]));
 
-	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[1]),
-			    (TetVolMesh::Node::index_type)(hvnodes[5]),
-			    (TetVolMesh::Node::index_type)(hvnodes[6]),
-			    (TetVolMesh::Node::index_type)(hvnodes[4]));
+	    tvmesh->add_tet((TVMesh::Node::index_type)(hvnodes[1]),
+			    (TVMesh::Node::index_type)(hvnodes[5]),
+			    (TVMesh::Node::index_type)(hvnodes[6]),
+			    (TVMesh::Node::index_type)(hvnodes[4]));
 
-	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[3]),
-			    (TetVolMesh::Node::index_type)(hvnodes[4]),
-			    (TetVolMesh::Node::index_type)(hvnodes[6]),
-			    (TetVolMesh::Node::index_type)(hvnodes[7]));
+	    tvmesh->add_tet((TVMesh::Node::index_type)(hvnodes[3]),
+			    (TVMesh::Node::index_type)(hvnodes[4]),
+			    (TVMesh::Node::index_type)(hvnodes[6]),
+			    (TVMesh::Node::index_type)(hvnodes[7]));
 	  }
 
 	  elemmap.push_back(buffers[flipflop][i]);
@@ -202,11 +207,26 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
     }
     ++bi;
   }
-  
-  TetVolField<typename FSRC::value_type> *tvfield = 
-    scinew TetVolField<typename FSRC::value_type>(tvmesh, hvfield->basis_order());
-  tvfield->copy_properties(hvfield);
-  dstH = tvfield;
+  typedef vector<typename FSRC::value_type>          FDat; 
+
+  if (hvfield->basis_order() == -1) {
+    typedef NoDataBasis<typename FSRC::value_type>     DatBasis;
+    typedef GenericField<TVMesh, DatBasis, FDat>       TVField;   
+    TVField *tvfield =  scinew TVField(tvmesh);
+    dstH = tvfield;
+  } else if (hvfield->basis_order() == 0) {
+    typedef ConstantBasis<typename FSRC::value_type>    DatBasis;
+    typedef GenericField<TVMesh, DatBasis, FDat>       TVField;   
+    TVField *tvfield =  scinew TVField(tvmesh);
+    dstH = tvfield;
+  } else {
+    typedef TetLinearLgn<typename FSRC::value_type>    DatBasis;
+    typedef GenericField<TVMesh, DatBasis, FDat>       TVField;   
+    TVField *tvfield =  scinew TVField(tvmesh);
+    dstH = tvfield;
+  }
+
+  dstH->copy_properties(hvfield);
 
   typename FSRC::value_type val;
 
@@ -214,17 +234,17 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
     for (int i = 0; i < hnsize; i++)
     {
       hvfield->value(val, (typename FSRC::mesh_type::Node::index_type)(i));
-      tvfield->set_value(val, (TetVolMesh::Node::index_type)(i));
+      tvfield->set_value(val, (TVMesh::Node::index_type)(i));
     }
   } else if (hvfield->basis_order() == 0) {
     for (unsigned int i = 0; i < elemmap.size(); i++)
     {
       hvfield->value(val, elemmap[i]);
-      tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+0));
-      tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+1));
-      tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+2));
-      tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+3));
-      tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+4));
+      dstH->set_value(val, (TVMesh::Elem::index_type)(i*5+0));
+      dstH->set_value(val, (TVMesh::Elem::index_type)(i*5+1));
+      dstH->set_value(val, (TVMesh::Elem::index_type)(i*5+2));
+      dstH->set_value(val, (TVMesh::Elem::index_type)(i*5+3));
+      dstH->set_value(val, (TVMesh::Elem::index_type)(i*5+4));
     }
   } else {
     mod->warning("Could not load data values, use DirectInterp if needed.");
@@ -260,7 +280,7 @@ LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   FSRC *hvfield = dynamic_cast<FSRC*>(srcH.get_rep());
 
   typename FSRC::mesh_type *hvmesh = hvfield->get_typed_mesh().get_rep();
-  TetVolMeshHandle tvmesh = scinew TetVolMesh();
+  TVMesh::handle_type tvmesh = scinew TVMesh();
 
   typename FSRC::mesh_type::Node::size_type lnsize;
   hvmesh->size(lnsize);
@@ -289,65 +309,81 @@ LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
     hvmesh->get_nodes(hvnodes, *bi);
     if (!(((*bi).i_ ^ (*bi).j_ ^ (*bi).k_)&1))
     {
-      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[0]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[1]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[2]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[5]));
+      tvmesh->add_tet((TVMesh::Node::index_type)((unsigned int)hvnodes[0]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[1]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[2]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[5]));
 
-      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[0]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[2]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[3]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[7]));
+      tvmesh->add_tet((TVMesh::Node::index_type)((unsigned int)hvnodes[0]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[2]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[3]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[7]));
 
-      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[0]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[5]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[2]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[7]));
+      tvmesh->add_tet((TVMesh::Node::index_type)((unsigned int)hvnodes[0]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[5]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[2]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[7]));
 
-      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[0]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[5]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[7]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[4]));
+      tvmesh->add_tet((TVMesh::Node::index_type)((unsigned int)hvnodes[0]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[5]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[7]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[4]));
 
-      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[5]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[2]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[7]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[6]));
+      tvmesh->add_tet((TVMesh::Node::index_type)((unsigned int)hvnodes[5]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[2]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[7]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[6]));
     }
     else
     {
-      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[0]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[1]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[3]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[4]));
+      tvmesh->add_tet((TVMesh::Node::index_type)((unsigned int)hvnodes[0]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[1]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[3]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[4]));
 
-      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[1]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[2]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[3]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[6]));
+      tvmesh->add_tet((TVMesh::Node::index_type)((unsigned int)hvnodes[1]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[2]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[3]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[6]));
 
-      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[1]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[3]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[4]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[6]));
+      tvmesh->add_tet((TVMesh::Node::index_type)((unsigned int)hvnodes[1]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[3]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[4]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[6]));
 
-      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[1]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[5]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[6]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[4]));
+      tvmesh->add_tet((TVMesh::Node::index_type)((unsigned int)hvnodes[1]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[5]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[6]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[4]));
 
-      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[3]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[4]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[6]),
-		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[7]));
+      tvmesh->add_tet((TVMesh::Node::index_type)((unsigned int)hvnodes[3]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[4]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[6]),
+		      (TVMesh::Node::index_type)((unsigned int)hvnodes[7]));
     }
     ++bi;
   }
   
-  TetVolField<typename FSRC::value_type> *tvfield = 
-    scinew TetVolField<typename FSRC::value_type>(tvmesh, hvfield->basis_order());
-  tvfield->copy_properties(hvfield);
-  dstH = tvfield;
+
+  typedef vector<typename FSRC::value_type>          FDat; 
+
+  if (hvfield->basis_order() == -1) {
+    typedef NoDataBasis<typename FSRC::value_type>     DatBasis;
+    typedef GenericField<TVMesh, DatBasis, FDat>       TVField;   
+    TVField *tvfield =  scinew TVField(tvmesh);
+    dstH = tvfield;
+  } else if (hvfield->basis_order() == 0) {
+    typedef ConstantBasis<typename FSRC::value_type>    DatBasis;
+    typedef GenericField<TVMesh, DatBasis, FDat>       TVField;   
+    TVField *tvfield =  scinew TVField(tvmesh);
+    dstH = tvfield;
+  } else {
+    typedef TetLinearLgn<typename FSRC::value_type>    DatBasis;
+    typedef GenericField<TVMesh, DatBasis, FDat>       TVField;   
+    TVField *tvfield =  scinew TVField(tvmesh);
+    dstH = tvfield;
+  }
+  dstH->copy_properties(hvfield);
 
   typename FSRC::value_type val;
 
@@ -356,8 +392,7 @@ LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
     while (nbi != nei)
     {
       hvfield->value(val, *nbi);
-      tvfield->set_value(val,
-			 (TetVolMesh::Node::index_type)(unsigned int)(*nbi));
+      dstH->set_value(val, (TVMesh::Node::index_type)(unsigned int)(*nbi));
       ++nbi;
     }
   }
@@ -369,11 +404,11 @@ LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
     {
       hvfield->value(val, *cbi);
       unsigned int i = (unsigned int)*cbi;
-      tvfield->set_value(val, (TetVolMesh::Cell::index_type)(i*5+0));
-      tvfield->set_value(val, (TetVolMesh::Cell::index_type)(i*5+1));
-      tvfield->set_value(val, (TetVolMesh::Cell::index_type)(i*5+2));
-      tvfield->set_value(val, (TetVolMesh::Cell::index_type)(i*5+3));
-      tvfield->set_value(val, (TetVolMesh::Cell::index_type)(i*5+4));
+      dstH->set_value(val, (TVMesh::Cell::index_type)(i*5+0));
+      dstH->set_value(val, (TVMesh::Cell::index_type)(i*5+1));
+      dstH->set_value(val, (TVMesh::Cell::index_type)(i*5+2));
+      dstH->set_value(val, (TVMesh::Cell::index_type)(i*5+3));
+      dstH->set_value(val, (TVMesh::Cell::index_type)(i*5+4));
       ++cbi;
     }
   } else {

@@ -36,34 +36,18 @@ SRCDIR   := Core/Datatypes
 SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/Color.cc		    	\
 	$(SRCDIR)/ColumnMatrix.cc	    	\
-	$(SRCDIR)/CurveMesh.cc            	\
 	$(SRCDIR)/Datatype.cc		    	\
 	$(SRCDIR)/DenseMatrix.cc	    	\
 	$(SRCDIR)/Field.cc		    	\
 	$(SRCDIR)/FieldInterfaceAux.cc	    	\
-	$(SRCDIR)/HexVolMesh.cc			\
 	$(SRCDIR)/Image.cc		    	\
-	$(SRCDIR)/ImageMesh.cc		    	\
-	$(SRCDIR)/LatVolMesh.cc 		\
-	$(SRCDIR)/MaskedLatVolMesh.cc	    	\
 	$(SRCDIR)/Matrix.cc		    	\
 	$(SRCDIR)/MatrixOperations.cc	    	\
 	$(SRCDIR)/Mesh.cc		    	\
 	$(SRCDIR)/NrrdData.cc		    	\
-	$(SRCDIR)/PointCloudMesh.cc         	\
 	$(SRCDIR)/PropertyManager.cc	    	\
-	$(SRCDIR)/PrismVolMesh.cc	    	\
-	$(SRCDIR)/QuadSurfMesh.cc               \
-	$(SRCDIR)/QuadraticTetVolMesh.cc        \
-	$(SRCDIR)/QuadraticLatVolMesh.cc        \
-	$(SRCDIR)/ScanlineMesh.cc           	\
 	$(SRCDIR)/SearchGrid.cc           	\
 	$(SRCDIR)/SparseRowMatrix.cc	    	\
-	$(SRCDIR)/StructCurveMesh.cc	    	\
-	$(SRCDIR)/StructQuadSurfMesh.cc	    	\
-	$(SRCDIR)/StructHexVolMesh.cc	    	\
-	$(SRCDIR)/TetVolMesh.cc 	    	\
-	$(SRCDIR)/TriSurfMesh.cc	    	\
 	$(SRCDIR)/TypeName.cc		    	\
 	$(SRCDIR)/cd_templates.cc	    	\
 	$(SRCDIR)/cd_templates_fields_0.cc    	\

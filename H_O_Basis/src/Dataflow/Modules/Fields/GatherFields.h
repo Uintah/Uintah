@@ -40,7 +40,9 @@ namespace SCIRun {
 class GatherPointsAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(MeshHandle src, PointCloudMeshHandle pcmH) = 0;
+  typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+
+  virtual void execute(MeshHandle src, PCMesh::handle_type pcmH) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *msrc);
@@ -52,13 +54,13 @@ class GatherPointsAlgoT : public GatherPointsAlgo
 {
 public:
   //! virtual interface. 
-  virtual void execute(MeshHandle src, PointCloudMeshHandle pcmH);
+  virtual void execute(MeshHandle src, PCMesh::handle_type pcmH);
 };
 
 
 template <class MESH>
 void 
-GatherPointsAlgoT<MESH>::execute(MeshHandle mesh_h, PointCloudMeshHandle pcmH)
+GatherPointsAlgoT<MESH>::execute(MeshHandle mesh_h, PCMesh::handle_type pcmH)
 {
   typedef typename MESH::Node::iterator node_iter_type;
 

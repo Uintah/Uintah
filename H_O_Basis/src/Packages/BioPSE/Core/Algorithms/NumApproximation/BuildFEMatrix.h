@@ -43,7 +43,9 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/TetLinearLgn.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Barrier.h>
 #include <Core/Thread/Parallel.h>
@@ -55,8 +57,15 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class BuildFEMatrix;
-typedef LockingHandle<TetVolField<int> >   TetVolFieldIntHandle;
-typedef LockingHandle<TetVolField<Tensor> >   TetVolFieldTensorHandle;
+
+typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
+typedef TetLinearLgn<int>                TVFBasisi;
+typedef TetLinearLgn<Tensor>                TVFBasist;
+typedef GenericField<TVMesh, TVFBasisi,    vector<int> >    TVFieldi;   
+typedef GenericField<TVMesh, TVFBasist,    vector<Tensor> > TVFieldt;   
+
+typedef LockingHandle<TVFieldi >   TetVolFieldIntHandle;
+typedef LockingHandle<TVFieldt>   TetVolFieldTensorHandle;
 typedef LockingHandle<BuildFEMatrix>   BuildFEMatrixHandle;
 
 class BuildFEMatrix: public Datatype {
@@ -65,7 +74,7 @@ class BuildFEMatrix: public Datatype {
   TetVolFieldIntHandle            hFieldInt_;
   TetVolFieldTensorHandle         hFieldTensor_;
   bool                            index_based_;
-  TetVolMeshHandle                hMesh_;
+  TVMesh::handle_type             hMesh_;
   MatrixHandle&                   hA_;
   SparseRowMatrix*                pA_;
   int                             np_;
@@ -79,9 +88,10 @@ class BuildFEMatrix: public Datatype {
   //! Private methods
   void parallel(int);
   
-  void build_local_matrix(double lcl[4][4], TetVolMesh::Cell::index_type);
+  void build_local_matrix(double lcl[4][4], TVMesh::Cell::index_type);
   
-  void add_lcl_gbl(double lcl[4][4], TetVolMesh::Cell::index_type, int, int, TetVolMesh::Node::array_type&);
+  void add_lcl_gbl(double lcl[4][4], TVMesh::Cell::index_type, int, int, 
+		   TVMesh::Node::array_type&);
   
  
 public:

@@ -37,9 +37,15 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/HexVolField.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Containers/Array3.h>
 
 namespace SCIRun {
+
+typedef HexVolMesh<HexTrilinearLgn<Point> >  HVMesh;
+typedef LatVolMesh<HexTrilinearLgn<Point> >  LVMesh;
 
 class CastMLVtoHVAlgo : public DynamicAlgoBase
 {
@@ -69,9 +75,9 @@ CastMLVtoHVAlgoT<FSRC, LSRC, FDST, LDST>::execute(FieldHandle lv_h,
 						  int basis_order)
 {
   FSRC *lv = dynamic_cast<FSRC*>(lv_h.get_rep());
-  HexVolMeshHandle hvm = scinew HexVolMesh;
+  HVMesh::handle_type hvm = scinew HVMesh;
 
-  LatVolMeshHandle lvm = lv->get_typed_mesh();
+  LVMesh::handle_type lvm = lv->get_typed_mesh();
 
   // Fill in the nodes and connectivities
   BBox bbox = lvm->get_bounding_box();
@@ -117,8 +123,8 @@ CastMLVtoHVAlgoT<FSRC, LSRC, FDST, LDST>::execute(FieldHandle lv_h,
     {
       for (i=0; i<nx-1; i++)
       {
-	HexVolMesh::Node::index_type n000, n001, n010, n011;
-	HexVolMesh::Node::index_type n100, n101, n110, n111;
+	HVMesh::Node::index_type n000, n001, n010, n011;
+	HVMesh::Node::index_type n100, n101, n110, n111;
 	if ((n000 = nodeMap(k  , j  , i  )) == -1) continue;
 	if ((n001 = nodeMap(k  , j  , i+1)) == -1) continue;
 	if ((n010 = nodeMap(k  , j+1, i  )) == -1) continue;

@@ -40,9 +40,13 @@
  */
 
 #ifndef SCI_BioPSE_SepSurf_h
-#define SCI_BioPSE_SepSurf_h 1
+#define SCI_BioPSE_SepSurf_h
 
-#include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Containers/Array1.h>
@@ -87,11 +91,17 @@ typedef struct NodeInfo {
 //  friend void SCIRun::Pio(Piostream& stream, Datatypes::NodeInfo& node);
 } NodeInfo;
 
-class SCICORESHARE SepSurf : public QuadSurfField<int> {
+
+typedef ConstantBasis<int>                SSQSBasis;
+typedef QuadSurfMesh<QuadBilinearLgn<Point> > SSQSMesh;
+typedef GenericField<SSQSMesh, SSQSBasis, vector<int> > SSQSField;  
+
+
+class SCICORESHARE SepSurf : public SSQSField {
 public:
-  Array1<QuadSurfMesh::Node::index_type> nodes; // array of all nodes
-  Array1<QuadSurfMesh::Face::index_type> faces;	// array of all faces/elements
-//  Array1<QuadSurfMesh::Edge::index_type> edges; // array of all edges
+  Array1<SSQSMesh::Node::index_type> nodes; // array of all nodes
+  Array1<SSQSMesh::Face::index_type> faces;	// array of all faces/elements
+//  Array1<SSQSMesh::Edge::index_type> edges; // array of all edges
   
   Array1<SurfInfo> surfI;
   Array1<FaceInfo> faceI;
@@ -99,10 +109,10 @@ public:
   Array1<NodeInfo> nodeI;
 
 public:
-  SepSurf() : QuadSurfField<int>() {}
+  SepSurf() : SSQSField() {}
   SepSurf(const SepSurf& copy);
-  SepSurf(QuadSurfMeshHandle mesh)
-    : QuadSurfField<int>(mesh, 0) {}
+  SepSurf(SSQSMesh::handle_type mesh)
+    : SSQSField(mesh) {}
 
 
   virtual ~SepSurf();
@@ -111,7 +121,7 @@ public:
   void bldNodeInfo();
   void printNbrInfo();
   inline int ncomps() { return surfI.size(); }
-  QuadSurfField<int> *extractSingleComponent(int, const string &dataVals);
+  SSQSField *extractSingleComponent(int, const string &dataVals);
   
   // Persistent representation...
   virtual void io(Piostream&);

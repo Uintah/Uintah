@@ -50,7 +50,9 @@
 // -noElementsCount flag is used).  The hex entries will be zero-based, 
 // unless the user specifies -oneBasedIndexing.
 
-#include <Core/Datatypes/HexVolField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -143,16 +145,19 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<fieldName<<".  Exiting...\n";
     return 2;
   }
-  if (handle->get_type_description(0)->get_name() != "HexVolField") {
-    cerr << "Error -- input field wasn't a HexVolField (type_name="<<handle->get_type_description(0)->get_name()<<"\n";
+  if (handle->get_type_description(1)->get_name().find("HexVolField") != 
+      string::npos) {
+    cerr << "Error -- input field wasn't a HexVolField (type_name="
+	 << handle->get_type_description(1)->get_name() << std::endl;
     return 2;
   }
 
+  typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
   MeshHandle mH = handle->mesh();
-  HexVolMesh *hvm = dynamic_cast<HexVolMesh *>(mH.get_rep());
-  HexVolMesh::Node::iterator niter; 
-  HexVolMesh::Node::iterator niter_end; 
-  HexVolMesh::Node::size_type nsize; 
+  HVMesh *hvm = dynamic_cast<HVMesh *>(mH.get_rep());
+  HVMesh::Node::iterator niter; 
+  HVMesh::Node::iterator niter_end; 
+  HVMesh::Node::size_type nsize; 
   hvm->begin(niter);
   hvm->end(niter_end);
   hvm->size(nsize);
@@ -172,10 +177,10 @@ main(int argc, char **argv) {
   }
   fclose(fPts);
 
-  HexVolMesh::Cell::size_type csize; 
-  HexVolMesh::Cell::iterator citer; 
-  HexVolMesh::Cell::iterator citer_end; 
-  HexVolMesh::Node::array_type cell_nodes(8);
+  HVMesh::Cell::size_type csize; 
+  HVMesh::Cell::iterator citer; 
+  HVMesh::Cell::iterator citer_end; 
+  HVMesh::Node::array_type cell_nodes(8);
   hvm->size(csize);
   hvm->begin(citer);
   hvm->end(citer_end);

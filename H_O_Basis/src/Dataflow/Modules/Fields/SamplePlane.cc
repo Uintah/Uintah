@@ -42,7 +42,13 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/ImageField.h>
+#include <Core/Geometry/Tensor.h>
+#include <Core/Containers/FData.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -184,9 +190,9 @@ SamplePlane::execute()
   Vector diag((maxb.asVector() - minb.asVector()) * (padpercent_.get()/100.0));
   minb -= diag;
   maxb += diag;
-
-
-  ImageMeshHandle imagemesh = scinew ImageMesh(sizex, sizey, minb, maxb);
+  
+  typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
+  IMesh::handle_type imagemesh = scinew IMesh(sizex, sizey, minb, maxb);
 
   int basis_order;
   if (data_at_.get() == "Nodes") basis_order = 1;
@@ -204,15 +210,63 @@ SamplePlane::execute()
   FieldHandle ofh;
   if (datatype == VECTOR)
   {
-    ofh = scinew ImageField<Vector>(imagemesh, basis_order);
+    typedef NoDataBasis<Vector>                 NBasis;
+    typedef ConstantBasis<Vector>               CBasis;
+    typedef QuadBilinearLgn<Vector>             LBasis;
+
+    if (basis_order == -1) {
+      typedef GenericField<IMesh, NBasis, FData2d<Vector, IMesh> > IField;
+      IField *lvf = scinew IField(imagemesh);
+      ofh = lvf;
+    } else if (basis_order == 0) {
+      typedef GenericField<IMesh, CBasis, FData2d<Vector, IMesh> > IField;
+      IField *lvf = scinew IField(imagemesh);
+      ofh = lvf;
+    } else {
+      typedef GenericField<IMesh, LBasis, FData2d<Vector, IMesh> > IField;
+      IField *lvf = scinew IField(imagemesh);
+      ofh = lvf;
+    }
   }
   else if (datatype == TENSOR)
   {
-    ofh = scinew ImageField<Tensor>(imagemesh, basis_order);
+    typedef NoDataBasis<Tensor>                      NBasis;
+    typedef ConstantBasis<Tensor>               CBasis;
+    typedef QuadBilinearLgn<Tensor>             LBasis;
+
+    if (basis_order == -1) {
+      typedef GenericField<IMesh, NBasis, FData2d<Tensor, IMesh> > IField;
+      IField *lvf = scinew IField(imagemesh);
+      ofh = lvf;
+    } else if (basis_order == 0) {
+      typedef GenericField<IMesh, CBasis, FData2d<Tensor, IMesh> > IField;
+      IField *lvf = scinew IField(imagemesh);
+      ofh = lvf;
+    } else {
+      typedef GenericField<IMesh, LBasis, FData2d<Tensor, IMesh> > IField;
+      IField *lvf = scinew IField(imagemesh);
+      ofh = lvf;
+    }
   }
   else
   {
-    ofh = scinew ImageField<double>(imagemesh, basis_order);
+    typedef NoDataBasis<double>                      NBasis;
+    typedef ConstantBasis<double>               CBasis;
+    typedef QuadBilinearLgn<double>             LBasis;
+
+    if (basis_order == -1) {
+      typedef GenericField<IMesh, NBasis, FData2d<double, IMesh> > IField;
+      IField *lvf = scinew IField(imagemesh);
+      ofh = lvf;
+    } else if (basis_order == 0) {
+      typedef GenericField<IMesh, CBasis, FData2d<double, IMesh> > IField;
+      IField *lvf = scinew IField(imagemesh);
+      ofh = lvf;
+    } else {
+      typedef GenericField<IMesh, LBasis, FData2d<double, IMesh> > IField;
+      IField *lvf = scinew IField(imagemesh);
+      ofh = lvf;
+    }
   }
 
   // Transform field.

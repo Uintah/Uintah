@@ -50,7 +50,9 @@
 // -noElementsCount flag is used).  The quad entries will be zero-based, 
 // unless the user specifies -oneBasedIndexing.
 
-#include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -144,16 +146,19 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<fieldName<<".  Exiting...\n";
     return 2;
   }
-  if (handle->get_type_description(0)->get_name() != "QuadSurfField") {
-    cerr << "Error -- input field wasn't a QuadSurfField (type_name="<<handle->get_type_description(0)->get_name()<<"\n";
+  if (handle->get_type_description(1)->get_name().find("QuadSurfField") != 
+      string::npos) 
+  {
+    cerr << "Error -- input field wasn't a QuadSurfField (type_name="
+	 << handle->get_type_description(1)->get_name() << std::endl;
     return 2;
   }
-
+  typedef QuadSurfMesh<QuadBilinearLgn<Point> > QSMesh;
   MeshHandle mH = handle->mesh();
-  QuadSurfMesh *qsm = dynamic_cast<QuadSurfMesh *>(mH.get_rep());
-  QuadSurfMesh::Node::iterator niter; 
-  QuadSurfMesh::Node::iterator niter_end; 
-  QuadSurfMesh::Node::size_type nsize; 
+  QSMesh *qsm = dynamic_cast<QSMesh *>(mH.get_rep());
+  QSMesh::Node::iterator niter; 
+  QSMesh::Node::iterator niter_end; 
+  QSMesh::Node::size_type nsize; 
   qsm->begin(niter);
   qsm->end(niter_end);
   qsm->size(nsize);
@@ -173,10 +178,10 @@ main(int argc, char **argv) {
   }
   fclose(fPts);
 
-  QuadSurfMesh::Face::size_type fsize; 
-  QuadSurfMesh::Face::iterator fiter; 
-  QuadSurfMesh::Face::iterator fiter_end; 
-  QuadSurfMesh::Node::array_type face_nodes(4);
+  QSMesh::Face::size_type fsize; 
+  QSMesh::Face::iterator fiter; 
+  QSMesh::Face::iterator fiter_end; 
+  QSMesh::Node::array_type face_nodes(4);
   qsm->size(fsize);
   qsm->begin(fiter);
   qsm->end(fiter_end);

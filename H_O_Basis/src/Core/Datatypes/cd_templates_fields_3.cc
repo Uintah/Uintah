@@ -30,11 +30,13 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/PrismVolField.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/MaskedTetVolField.h>
-#include <Core/Datatypes/QuadraticTetVolField.h>
-#include <Core/Datatypes/QuadraticLatVolField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/TetQuadraticLgn.h>
+#include <Core/Basis/HexQuadraticLgn.h>
+#include <Core/Basis/PrismLinearLgn.h>
+#include <Core/Datatypes/PrismVolMesh.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/LatVolMesh.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 /*
@@ -47,162 +49,107 @@ cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line =
 
 using namespace SCIRun;
 
-template class GenericField<PrismVolMesh, vector<Tensor> >;
-template class GenericField<PrismVolMesh, vector<Vector> >;
-template class GenericField<PrismVolMesh, vector<double> >;
-template class GenericField<PrismVolMesh, vector<float> >;
-template class GenericField<PrismVolMesh, vector<int> >;
-template class GenericField<PrismVolMesh, vector<short> >;
-template class GenericField<PrismVolMesh, vector<char> >;
-template class GenericField<PrismVolMesh, vector<unsigned int> >;
-template class GenericField<PrismVolMesh, vector<unsigned short> >;
-template class GenericField<PrismVolMesh, vector<unsigned char> >;
+typedef PrismLinearLgn<Tensor>                PFDTensorBasis;
+typedef PrismLinearLgn<Vector>                PFDVectorBasis;
+typedef PrismLinearLgn<double>                PFDdoubleBasis;
+typedef PrismLinearLgn<float>                 PFDfloatBasis;
+typedef PrismLinearLgn<int>                   PFDintBasis;
+typedef PrismLinearLgn<short>                 PFDshortBasis;
+typedef PrismLinearLgn<char>                  PFDcharBasis;
+typedef PrismLinearLgn<unsigned int>          PFDuintBasis;
+typedef PrismLinearLgn<unsigned short>        PFDushortBasis;
+typedef PrismLinearLgn<unsigned char>         PFDucharBasis;
+typedef PrismLinearLgn<unsigned long>         PFDulongBasis;
 
-template class PrismVolField<Tensor>;
-template class PrismVolField<Vector>;
-template class PrismVolField<double>;
-template class PrismVolField<float>;
-template class PrismVolField<int>;
-template class PrismVolField<short>;
-template class PrismVolField<char>;
-template class PrismVolField<unsigned int>;
-template class PrismVolField<unsigned short>;
-template class PrismVolField<unsigned char>;
+typedef PrismVolMesh<PrismLinearLgn<Point> > PVMesh;
+template class GenericField<PVMesh, PFDTensorBasis, vector<Tensor> >;       
+template class GenericField<PVMesh, PFDVectorBasis, vector<Vector> >;       
+template class GenericField<PVMesh, PFDdoubleBasis, vector<double> >;       
+template class GenericField<PVMesh, PFDfloatBasis,  vector<float> >;        
+template class GenericField<PVMesh, PFDintBasis,    vector<int> >;          
+template class GenericField<PVMesh, PFDshortBasis,  vector<short> >;        
+template class GenericField<PVMesh, PFDcharBasis,   vector<char> >;         
+template class GenericField<PVMesh, PFDuintBasis,   vector<unsigned int> >; 
+template class GenericField<PVMesh, PFDushortBasis, vector<unsigned short> >;
+template class GenericField<PVMesh, PFDucharBasis,  vector<unsigned char> >;
+template class GenericField<PVMesh, PFDulongBasis,  vector<unsigned long> >;
 
-const TypeDescription* get_type_description(PrismVolField<Tensor> *);
-const TypeDescription* get_type_description(PrismVolField<Vector> *);
-const TypeDescription* get_type_description(PrismVolField<double> *);
-const TypeDescription* get_type_description(PrismVolField<float> *);
-const TypeDescription* get_type_description(PrismVolField<int> *);
-const TypeDescription* get_type_description(PrismVolField<short> *);
-const TypeDescription* get_type_description(PrismVolField<char> *);
-const TypeDescription* get_type_description(PrismVolField<unsigned int> *);
-const TypeDescription* get_type_description(PrismVolField<unsigned short> *);
-const TypeDescription* get_type_description(PrismVolField<unsigned char> *);
+typedef TetLinearLgn<Tensor>                TFDTensorBasis;
+typedef TetLinearLgn<Vector>                TFDVectorBasis;
+typedef TetLinearLgn<double>                TFDdoubleBasis;
+typedef TetLinearLgn<float>                 TFDfloatBasis;
+typedef TetLinearLgn<int>                   TFDintBasis;
+typedef TetLinearLgn<short>                 TFDshortBasis;
+typedef TetLinearLgn<char>                  TFDcharBasis;
+typedef TetLinearLgn<unsigned int>          TFDuintBasis;
+typedef TetLinearLgn<unsigned short>        TFDushortBasis;
+typedef TetLinearLgn<unsigned char>         TFDucharBasis;
+typedef TetLinearLgn<unsigned long>         TFDulongBasis;
 
-template class GenericField<TetVolMesh, vector<Tensor> >;
-template class GenericField<TetVolMesh, vector<Vector> >;
-template class GenericField<TetVolMesh, vector<double> >;
-template class GenericField<TetVolMesh, vector<float> >;
-template class GenericField<TetVolMesh, vector<int> >;
-template class GenericField<TetVolMesh, vector<short> >;
-template class GenericField<TetVolMesh, vector<char> >;
-template class GenericField<TetVolMesh, vector<unsigned int> >;
-template class GenericField<TetVolMesh, vector<unsigned short> >;
-template class GenericField<TetVolMesh, vector<unsigned char> >;
+typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
+template class GenericField<TVMesh, TFDTensorBasis, vector<Tensor> >;       
+template class GenericField<TVMesh, TFDVectorBasis, vector<Vector> >;       
+template class GenericField<TVMesh, TFDdoubleBasis, vector<double> >;       
+template class GenericField<TVMesh, TFDfloatBasis,  vector<float> >;        
+template class GenericField<TVMesh, TFDintBasis,    vector<int> >;          
+template class GenericField<TVMesh, TFDshortBasis,  vector<short> >;        
+template class GenericField<TVMesh, TFDcharBasis,   vector<char> >;         
+template class GenericField<TVMesh, TFDuintBasis,   vector<unsigned int> >; 
+template class GenericField<TVMesh, TFDushortBasis, vector<unsigned short> >;
+template class GenericField<TVMesh, TFDucharBasis,  vector<unsigned char> >;
+template class GenericField<TVMesh, TFDulongBasis,  vector<unsigned long> >;
 
-template class TetVolField<Tensor>;
-template class TetVolField<Vector>;
-template class TetVolField<double>;
-template class TetVolField<float>;
-template class TetVolField<int>;
-template class TetVolField<short>;
-template class TetVolField<char>;
-template class TetVolField<unsigned int>;
-template class TetVolField<unsigned short>;
-template class TetVolField<unsigned char>;
+typedef TetQuadraticLgn<Tensor>                TQFDTensorBasis;
+typedef TetQuadraticLgn<Vector>                TQFDVectorBasis;
+typedef TetQuadraticLgn<double>                TQFDdoubleBasis;
+typedef TetQuadraticLgn<float>                 TQFDfloatBasis;
+typedef TetQuadraticLgn<int>                   TQFDintBasis;
+typedef TetQuadraticLgn<short>                 TQFDshortBasis;
+typedef TetQuadraticLgn<char>                  TQFDcharBasis;
+typedef TetQuadraticLgn<unsigned int>          TQFDuintBasis;
+typedef TetQuadraticLgn<unsigned short>        TQFDushortBasis;
+typedef TetQuadraticLgn<unsigned char>         TQFDucharBasis;
+typedef TetQuadraticLgn<unsigned long>         TQFDulongBasis;
 
-const TypeDescription* get_type_description(TetVolField<Tensor> *);
-const TypeDescription* get_type_description(TetVolField<Vector> *);
-const TypeDescription* get_type_description(TetVolField<double> *);
-const TypeDescription* get_type_description(TetVolField<float> *);
-const TypeDescription* get_type_description(TetVolField<int> *);
-const TypeDescription* get_type_description(TetVolField<short> *);
-const TypeDescription* get_type_description(TetVolField<char> *);
-const TypeDescription* get_type_description(TetVolField<unsigned int> *);
-const TypeDescription* get_type_description(TetVolField<unsigned short> *);
-const TypeDescription* get_type_description(TetVolField<unsigned char> *);
-
-template class MaskedTetVolField<Tensor>;
-template class MaskedTetVolField<Vector>;
-template class MaskedTetVolField<double>;
-template class MaskedTetVolField<float>;
-template class MaskedTetVolField<int>;
-template class MaskedTetVolField<short>;
-template class MaskedTetVolField<char>;
-template class MaskedTetVolField<unsigned int>;
-template class MaskedTetVolField<unsigned short>;
-template class MaskedTetVolField<unsigned char>;
-
-const TypeDescription* get_type_description(MaskedTetVolField<Tensor> *);
-const TypeDescription* get_type_description(MaskedTetVolField<Vector> *);
-const TypeDescription* get_type_description(MaskedTetVolField<double> *);
-const TypeDescription* get_type_description(MaskedTetVolField<float> *);
-const TypeDescription* get_type_description(MaskedTetVolField<int> *);
-const TypeDescription* get_type_description(MaskedTetVolField<short> *);
-const TypeDescription* get_type_description(MaskedTetVolField<char> *);
-const TypeDescription* get_type_description(MaskedTetVolField<unsigned int> *);
-const TypeDescription* get_type_description(MaskedTetVolField<unsigned short> *);
-const TypeDescription* get_type_description(MaskedTetVolField<unsigned char> *);
-
-template class GenericField<QuadraticTetVolMesh, vector<Tensor> >;
-template class GenericField<QuadraticTetVolMesh, vector<Vector> >;
-template class GenericField<QuadraticTetVolMesh, vector<double> >;
-template class GenericField<QuadraticTetVolMesh, vector<float> >;
-template class GenericField<QuadraticTetVolMesh, vector<int> >;
-template class GenericField<QuadraticTetVolMesh, vector<short> >;
-template class GenericField<QuadraticTetVolMesh, vector<char> >;
-template class GenericField<QuadraticTetVolMesh, vector<unsigned int> >;
-template class GenericField<QuadraticTetVolMesh, vector<unsigned short> >;
-template class GenericField<QuadraticTetVolMesh, vector<unsigned char> >;
-
-template class QuadraticTetVolField<Tensor>;
-template class QuadraticTetVolField<Vector>;
-template class QuadraticTetVolField<double>;
-template class QuadraticTetVolField<float>;
-template class QuadraticTetVolField<int>;
-template class QuadraticTetVolField<short>;
-template class QuadraticTetVolField<char>;
-template class QuadraticTetVolField<unsigned int>;
-template class QuadraticTetVolField<unsigned short>;
-template class QuadraticTetVolField<unsigned char>;
+typedef TetVolMesh<TetQuadraticLgn<Point> > QTVMesh;
+template class GenericField<QTVMesh, TQFDTensorBasis, vector<Tensor> >;       
+template class GenericField<QTVMesh, TQFDVectorBasis, vector<Vector> >;       
+template class GenericField<QTVMesh, TQFDdoubleBasis, vector<double> >;       
+template class GenericField<QTVMesh, TQFDfloatBasis,  vector<float> >;        
+template class GenericField<QTVMesh, TQFDintBasis,    vector<int> >;          
+template class GenericField<QTVMesh, TQFDshortBasis,  vector<short> >;        
+template class GenericField<QTVMesh, TQFDcharBasis,   vector<char> >;         
+template class GenericField<QTVMesh, TQFDuintBasis,   vector<unsigned int> >; 
+template class GenericField<QTVMesh, TQFDushortBasis, vector<unsigned short> >;
+template class GenericField<QTVMesh, TQFDucharBasis,  vector<unsigned char> >;
+template class GenericField<QTVMesh, TQFDulongBasis,  vector<unsigned long> >;
 
 
-const TypeDescription* get_type_description(QuadraticTetVolField<Tensor> *);
-const TypeDescription* get_type_description(QuadraticTetVolField<Vector> *);
-const TypeDescription* get_type_description(QuadraticTetVolField<double> *);
-const TypeDescription* get_type_description(QuadraticTetVolField<float> *);
-const TypeDescription* get_type_description(QuadraticTetVolField<int> *);
-const TypeDescription* get_type_description(QuadraticTetVolField<short> *);
-const TypeDescription* get_type_description(QuadraticTetVolField<char> *);
-const TypeDescription* get_type_description(QuadraticTetVolField<unsigned int> *);
-const TypeDescription* get_type_description(QuadraticTetVolField<unsigned short> *);
-const TypeDescription* get_type_description(QuadraticTetVolField<unsigned char> *);
+typedef HexQuadraticLgn<Tensor>                QHFDTensorBasis;
+typedef HexQuadraticLgn<Vector>                QHFDVectorBasis;
+typedef HexQuadraticLgn<double>                QHFDdoubleBasis;
+typedef HexQuadraticLgn<float>                 QHFDfloatBasis;
+typedef HexQuadraticLgn<int>                   QHFDintBasis;
+typedef HexQuadraticLgn<short>                 QHFDshortBasis;
+typedef HexQuadraticLgn<char>                  QHFDcharBasis;
+typedef HexQuadraticLgn<unsigned int>          QHFDuintBasis;
+typedef HexQuadraticLgn<unsigned short>        QHFDushortBasis;
+typedef HexQuadraticLgn<unsigned char>         QHFDucharBasis;
+typedef HexQuadraticLgn<unsigned long>         QHFDulongBasis;
 
-template class GenericField<QuadraticLatVolMesh, vector<Tensor> >;
-template class GenericField<QuadraticLatVolMesh, vector<Vector> >;
-template class GenericField<QuadraticLatVolMesh, vector<double> >;
-template class GenericField<QuadraticLatVolMesh, vector<float> >;
-template class GenericField<QuadraticLatVolMesh, vector<int> >;
-template class GenericField<QuadraticLatVolMesh, vector<short> >;
-template class GenericField<QuadraticLatVolMesh, vector<char> >;
-template class GenericField<QuadraticLatVolMesh, vector<unsigned int> >;
-template class GenericField<QuadraticLatVolMesh, vector<unsigned short> >;
-template class GenericField<QuadraticLatVolMesh, vector<unsigned char> >;
+typedef LatVolMesh<HexQuadraticLgn<Point> > HQVMesh;
+template class GenericField<HQVMesh, QHFDTensorBasis, vector<Tensor> >;
+template class GenericField<HQVMesh, QHFDVectorBasis, vector<Vector> >;
+template class GenericField<HQVMesh, QHFDdoubleBasis, vector<double> >;
+template class GenericField<HQVMesh, QHFDfloatBasis,  vector<float> >;
+template class GenericField<HQVMesh, QHFDintBasis,    vector<int> >;
+template class GenericField<HQVMesh, QHFDshortBasis,  vector<short> >;
+template class GenericField<HQVMesh, QHFDcharBasis,   vector<char> >;
+template class GenericField<HQVMesh, QHFDuintBasis,   vector<unsigned int> >;
+template class GenericField<HQVMesh, QHFDushortBasis, vector<unsigned short> >;
+template class GenericField<HQVMesh, QHFDucharBasis,  vector<unsigned char> >;
+template class GenericField<HQVMesh, QHFDulongBasis,  vector<unsigned long> >;
 
-template class QuadraticLatVolField<Tensor>;
-template class QuadraticLatVolField<Vector>;
-template class QuadraticLatVolField<double>;
-template class QuadraticLatVolField<float>;
-template class QuadraticLatVolField<int>;
-template class QuadraticLatVolField<short>;
-template class QuadraticLatVolField<char>;
-template class QuadraticLatVolField<unsigned int>;
-template class QuadraticLatVolField<unsigned short>;
-template class QuadraticLatVolField<unsigned char>;
-
-const TypeDescription* get_type_description(QuadraticLatVolField<Tensor> *);
-const TypeDescription* get_type_description(QuadraticLatVolField<Vector> *);
-const TypeDescription* get_type_description(QuadraticLatVolField<double> *);
-const TypeDescription* get_type_description(QuadraticLatVolField<float> *);
-const TypeDescription* get_type_description(QuadraticLatVolField<int> *);
-const TypeDescription* get_type_description(QuadraticLatVolField<short> *);
-const TypeDescription* get_type_description(QuadraticLatVolField<char> *);
-const TypeDescription* get_type_description(QuadraticLatVolField<unsigned int> *);
-const TypeDescription* get_type_description(QuadraticLatVolField<unsigned short> *);
-const TypeDescription* get_type_description(QuadraticLatVolField<unsigned char> *);
-
-const TypeDescription* get_type_description(QuadraticLatVolMesh::Node::index_type *);
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468

@@ -42,7 +42,13 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Geometry/Tensor.h>
+#include <Core/Containers/FData.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -54,6 +60,35 @@ namespace SCIRun {
 class SampleLattice : public Module
 {
 public:
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+  typedef NoDataBasis<Tensor>             NDTBasis;
+  typedef NoDataBasis<Vector>             NDVBasis;
+  typedef NoDataBasis<double>             NDDBasis;
+  typedef ConstantBasis<Tensor>             CBTBasis;
+  typedef ConstantBasis<Vector>             CBVBasis;
+  typedef ConstantBasis<double>             CBDBasis;
+  typedef HexTrilinearLgn<Tensor>             LBTBasis;
+  typedef HexTrilinearLgn<Vector>             LBVBasis;
+  typedef HexTrilinearLgn<double>             LBDBasis;
+  typedef GenericField<LVMesh, NDTBasis,  
+		       FData3d<Tensor, LVMesh> > LVFieldNDT;
+  typedef GenericField<LVMesh, NDVBasis,  
+		       FData3d<Vector, LVMesh> > LVFieldNDV;
+  typedef GenericField<LVMesh, NDDBasis,  
+		       FData3d<double, LVMesh> > LVFieldNDD;
+  typedef GenericField<LVMesh, CBTBasis,  
+		       FData3d<Tensor, LVMesh> > LVFieldCBT;
+  typedef GenericField<LVMesh, CBVBasis,  
+		       FData3d<Vector, LVMesh> > LVFieldCBV;
+  typedef GenericField<LVMesh, CBDBasis,  
+		       FData3d<double, LVMesh> > LVFieldCBD;
+  typedef GenericField<LVMesh, LBTBasis,  
+		       FData3d<Tensor, LVMesh> > LVFieldT;
+  typedef GenericField<LVMesh, LBVBasis,  
+		       FData3d<Vector, LVMesh> > LVFieldV;
+  typedef GenericField<LVMesh, LBDBasis,  
+		       FData3d<double, LVMesh> > LVField;
+
   SampleLattice(GuiContext* ctx);
   virtual ~SampleLattice();
 
@@ -131,7 +166,7 @@ SampleLattice::execute()
   unsigned int sizex = Max(2, size_x_.get());
   unsigned int sizey = Max(2, size_y_.get());
   unsigned int sizez = Max(2, size_z_.get());
-  LatVolMeshHandle mesh = scinew LatVolMesh(sizex, sizey, sizez, minb, maxb);
+  LVMesh::handle_type mesh = scinew LVMesh(sizex, sizey, sizez, minb, maxb);
 
   int basis_order;
   if (data_at_.get() == "Nodes") basis_order = 1;
@@ -148,45 +183,79 @@ SampleLattice::execute()
   FieldHandle ofh;
   if (datatype == SCALAR)
   {
-    LatVolField<double> *lvf = scinew LatVolField<double>(mesh, basis_order);
-    if (basis_order != -1)
-    {
-      LatVolField<double>::fdata_type::iterator itr = lvf->fdata().begin();
+    if (basis_order == -1) {
+      LVFieldNDD *lvf = scinew LVFieldNDD(mesh);
+      ofh = lvf;
+    } else if (basis_order == 0) {
+      LVFieldCBD *lvf = scinew LVFieldCBD(mesh);
+      LVFieldCBD::fdata_type::iterator itr = lvf->fdata().begin();
       while (itr != lvf->fdata().end())
       {
 	*itr = 0.0;
 	++itr;
-      }    
+      }   
+      ofh = lvf;
+    } else {
+      LVField *lvf = scinew LVField(mesh);
+      LVField::fdata_type::iterator itr = lvf->fdata().begin();
+      while (itr != lvf->fdata().end())
+      {
+	*itr = 0.0;
+	++itr;
+      }   
+      ofh = lvf;
     }
-    ofh = lvf;
+
   } 
   else if (datatype == VECTOR)
   {
-    LatVolField<Vector> *lvf = scinew LatVolField<Vector>(mesh, basis_order);
-    if (basis_order != -1)
-    {
-      LatVolField<Vector>::fdata_type::iterator itr = lvf->fdata().begin();
+    if (basis_order == -1) {
+      LVFieldNDV *lvf = scinew LVFieldNDV(mesh);
+      ofh = lvf;
+    } else if (basis_order == 0) {
+      LVFieldCBV *lvf = scinew LVFieldCBV(mesh);
+      LVFieldCBV::fdata_type::iterator itr = lvf->fdata().begin();
       while (itr != lvf->fdata().end())
       {
 	*itr = Vector(0.0, 0.0, 0.0);
 	++itr;
-      }
+      }   
+      ofh = lvf;
+    } else {
+      LVFieldV *lvf = scinew LVFieldV(mesh);
+      LVFieldV::fdata_type::iterator itr = lvf->fdata().begin();
+      while (itr != lvf->fdata().end())
+      {
+	*itr = Vector(0.0, 0.0, 0.0);
+	++itr;
+      }   
+      ofh = lvf;
     }
-    ofh = lvf;
   }				    
   else // if (datatype == TENSOR)	    
-  {				    
-    LatVolField<Tensor> *lvf = scinew LatVolField<Tensor>(mesh, basis_order);
-    if (basis_order != -1)
-    {
-      LatVolField<Tensor>::fdata_type::iterator itr = lvf->fdata().begin();
+  {	
+    if (basis_order == -1) {
+      LVFieldNDT *lvf = scinew LVFieldNDT(mesh);
+      ofh = lvf;
+    } else if (basis_order == 0) {
+      LVFieldCBT *lvf = scinew LVFieldCBT(mesh);
+      LVFieldCBT::fdata_type::iterator itr = lvf->fdata().begin();
       while (itr != lvf->fdata().end())
       {
 	*itr = Tensor(0.0);
 	++itr;
-      }
+      }   
+      ofh = lvf;
+    } else {
+      LVFieldT *lvf = scinew LVFieldT(mesh);
+      LVFieldT::fdata_type::iterator itr = lvf->fdata().begin();
+      while (itr != lvf->fdata().end())
+      {
+	*itr = Tensor(0.0);
+	++itr;
+      }   
+      ofh = lvf;
     }
-    ofh = lvf;
   }				    
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Sample Field");

@@ -94,9 +94,9 @@ RatioConstraint::Satisfy( const Index index, const Scheme scheme,
 			  const double Epsilon,
 			  BaseVariable*& var, VarCore& c )
 {
-   RealVariable& numer = *vars[0];
-   RealVariable& denom = *vars[1];
-   RealVariable& ratio = *vars[2];
+   double numer = (double)*vars[0];
+   double denom = (double)*vars[1];
+   double ratio = (double)*vars[2];
 
    double temp;
    

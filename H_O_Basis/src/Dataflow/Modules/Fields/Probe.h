@@ -36,14 +36,21 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/StructHexVolMesh.h>
 #include <Core/Datatypes/ImageMesh.h>
 #include <Core/Datatypes/StructQuadSurfMesh.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
 #include <sstream>
 
 namespace SCIRun {
+
+typedef LatVolMesh<HexTrilinearLgn<Point> >         LVMesh;
+typedef ImageMesh<QuadBilinearLgn<Point> >          IMesh;
+typedef StructHexVolMesh<HexTrilinearLgn<Point> >   SHVMesh;
+typedef StructQuadSurfMesh<QuadBilinearLgn<Point> > SQSMesh;
 
 class ProbeLocateAlgo : public DynamicAlgoBase
 {
@@ -258,53 +265,53 @@ probe_center_compute_index(L &index, S &size,
 
 template <>
 bool
-probe_center_compute_index(LatVolMesh::Node::index_type &index,
-			   LatVolMesh::Node::size_type &size,
-			   const LatVolMesh *m, const string &indexstr);
+probe_center_compute_index(LVMesh::Node::index_type &index,
+			   LVMesh::Node::size_type &size,
+			   const LVMesh *m, const string &indexstr);
 
 template <>
 bool
-probe_center_compute_index(LatVolMesh::Cell::index_type &index,
-			   LatVolMesh::Cell::size_type &size,
-			   const LatVolMesh *m, const string &indexstr);
+probe_center_compute_index(LVMesh::Cell::index_type &index,
+			   LVMesh::Cell::size_type &size,
+			   const LVMesh *m, const string &indexstr);
 
 template <>
 bool
-probe_center_compute_index(StructHexVolMesh::Node::index_type &index,
-			   StructHexVolMesh::Node::size_type &size,
-			   const StructHexVolMesh *m, const string &indexstr);
+probe_center_compute_index(SHVMesh::Node::index_type &index,
+			   SHVMesh::Node::size_type &size,
+			   const SHVMesh *m, const string &indexstr);
 
 template <>
 bool
-probe_center_compute_index(StructHexVolMesh::Cell::index_type &index,
-			   StructHexVolMesh::Cell::size_type &size,
-			   const StructHexVolMesh *m, const string &indexstr);
+probe_center_compute_index(SHVMesh::Cell::index_type &index,
+			   SHVMesh::Cell::size_type &size,
+			   const SHVMesh *m, const string &indexstr);
 
 
 template <>
 bool
-probe_center_compute_index(ImageMesh::Node::index_type &index,
-			   ImageMesh::Node::size_type &size,
-			   const ImageMesh *m, const string &indexstr);
+probe_center_compute_index(IMesh::Node::index_type &index,
+			   IMesh::Node::size_type &size,
+			   const IMesh *m, const string &indexstr);
 
 template <>
 bool
-probe_center_compute_index(ImageMesh::Face::index_type &index,
-			   ImageMesh::Face::size_type &size,
-			   const ImageMesh *m, const string &indexstr);
+probe_center_compute_index(IMesh::Face::index_type &index,
+			   IMesh::Face::size_type &size,
+			   const IMesh *m, const string &indexstr);
 
 template <>
 bool
-probe_center_compute_index(StructQuadSurfMesh::Node::index_type &index,
-			   StructQuadSurfMesh::Node::size_type &size,
-			   const StructQuadSurfMesh *m,
+probe_center_compute_index(SQSMesh::Node::index_type &index,
+			   SQSMesh::Node::size_type &size,
+			   const SQSMesh *m,
 			   const string &indexstr);
 
 template <>
 bool
-probe_center_compute_index(StructQuadSurfMesh::Face::index_type &index,
-			   StructQuadSurfMesh::Face::size_type &size,
-			   const StructQuadSurfMesh *m,
+probe_center_compute_index(SQSMesh::Face::index_type &index,
+			   SQSMesh::Face::size_type &size,
+			   const SQSMesh *m,
 			   const string &indexstr);
 
 

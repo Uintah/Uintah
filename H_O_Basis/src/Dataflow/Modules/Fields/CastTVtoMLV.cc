@@ -37,8 +37,12 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/MaskedLatVolField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/MaskedLatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geometry/BBox.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -97,16 +101,25 @@ void CastTVtoMLV::execute()
       !ifieldH.get_rep())
     return;
   
+
+  typedef TetVolMesh<TetLinearLgn<Point> >    TVMesh;
+  typedef TetLinearLgn<Vector>                TFDVectorBasis;
+  typedef GenericField<TVMesh, TFDVectorBasis, vector<Vector> > TVV;    
+
   // we expect that the input field is a TetVolField<Vector>
-  if ( ifieldH.get_rep()->get_type_description()->get_name() ==
-       "TetVolField<Vector>" )
+  if ( ifieldH.get_rep()->get_type_description()->get_name() == 
+       TVV::type_name() )
   {
-    error("Input volume is not a TetVolField<Vector>.");
+    string msg("Input volume is not a ");
+    msg + TVV::type_name();
+    error(msg);
     return;
   }                     
 
-  TetVolField<Vector> *tv = (TetVolField<Vector> *) ifieldH.get_rep();
-  TetVolMesh *tvm = (TetVolMesh *) tv->get_typed_mesh().get_rep();
+
+
+  TVV *tv = (TVV *) ifieldH.get_rep();
+  TVMesh *tvm = (TVMesh *) tv->get_typed_mesh().get_rep();
 
   BBox b = tvm->get_bounding_box();
 
@@ -115,17 +128,18 @@ void CastTVtoMLV::execute()
   int ny = ny_.get();
   int nz = nz_.get();
 
-  MaskedLatVolMesh *mlvm = 
-    scinew MaskedLatVolMesh(nx, ny, nz, b.min(), b.max());
-  MaskedLatVolField<Vector> *lv = 
-    scinew MaskedLatVolField<Vector>(mlvm, 1);
+  typedef MaskedLatVolMesh<HexTrilinearLgn<Point> > MLVMesh;
+  typedef HexTrilinearLgn<Vector>                   FDVectorBasis;
+  typedef GenericField<MLVMesh, FDVectorBasis, FData3d<Vector, MLVMesh> > MLVF;
+  MLVMesh *mlvm =  scinew MLVMesh(nx, ny, nz, b.min(), b.max());
+  MLVF *lv = scinew MLVF(mlvm);
 
   // for each node in the LatVol, check to see if it's inside the TetMesh
   //    if it is, use the weights from get_weights and interpolate
   //    the fiber vectors
 
-  MaskedLatVolMesh::Node::iterator ib, ie; mlvm->begin(ib); mlvm->end(ie);
-  TetVolMesh::Cell::index_type tet;
+  MLVMesh::Node::iterator ib, ie; mlvm->begin(ib); mlvm->end(ie);
+  TVMesh::Cell::index_type tet;
   tvm->synchronize(Mesh::LOCATE_E); // for get_weights
   Point p;
   int cnt=0;
@@ -133,16 +147,16 @@ void CastTVtoMLV::execute()
     mlvm->get_center(p, *ib);
     if (tvm->locate(tet, p)) {
       cnt++;
-      TetVolMesh::Node::array_type nodes;
-      double weights[MESH_WEIGHT_MAXSIZE];
-      tvm->get_weights(p, nodes, weights);
+      TVMesh::Node::array_type nodes;
+      vector<double> coords(3, .0L);
+
+      tvm->get_coords(coords, p, tet);
       Vector f1(0,0,0);
-      for (unsigned int i=0; i<nodes.size(); i++) {
-	f1+=tv->fdata()[nodes[i]] * weights[i];
-      }
+      tv->interpolate(f1, coords, tet);
       lv->fdata()[*ib]=f1;
+
     } else {
-      mlvm->mask_cell(MaskedLatVolMesh::Cell::index_type(mlvm, ib.i_, ib.j_, ib.k_));
+      mlvm->mask_cell(MLVMesh::Cell::index_type(mlvm, ib.i_, ib.j_, ib.k_));
     }
     ++ib;
   }

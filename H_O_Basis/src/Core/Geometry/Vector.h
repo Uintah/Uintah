@@ -123,6 +123,7 @@ public:
   inline Vector& operator+=(const Vector&);
   inline Vector operator-() const;
   inline Vector operator-(const Vector&) const;
+  inline Vector operator-(const Point&) const;
   inline Vector& operator-=(const Vector&);
   inline double normalize();
   inline double safe_normalize();
@@ -277,6 +278,11 @@ inline Vector Vector::operator*(const Vector& v2) const
 }
 
 inline Vector Vector::operator-(const Vector& v2) const
+{
+    return Vector(_x-v2._x, _y-v2._y, _z-v2._z);
+}
+
+inline Vector Vector::operator-(const Point& v2) const
 {
     return Vector(_x-v2._x, _y-v2._y, _z-v2._z);
 }

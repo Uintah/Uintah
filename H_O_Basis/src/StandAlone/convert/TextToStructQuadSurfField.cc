@@ -47,7 +47,11 @@
 // The SCIRun output file will be written in ASCII, unless you specify 
 // -binOutput.
 
-#include <Core/Datatypes/StructQuadSurfField.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Datatypes/StructQuadSurfMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -143,21 +147,23 @@ main(int argc, char **argv) {
   }
   if (header) ptsstream >> ni >> nj;
   cerr << "number of points = ("<<ni<<" "<<nj<<")\n";
-  StructQuadSurfMesh *qsm = new StructQuadSurfMesh(ni, nj);
+
+  typedef StructQuadSurfMesh<QuadBilinearLgn<Point> > SQSMesh;
+  SQSMesh *qsm = new SQSMesh(ni, nj);
   int i, j;
   for (i=0; i<ni; i++)
     for (j=0; j<nj; j++) {
       double x, y, z;
       ptsstream >> x >> y >> z;
-      StructQuadSurfMesh::Node::index_type idx(qsm, i, j);
+      SQSMesh::Node::index_type idx(qsm, i, j);
       qsm->set_point(Point(x, y, z), idx);
       if (debugOn) 
 	cerr << "Added point (idx=["<<i<<" "<<j<<"]) at ("<<x<<", "<<y<<", "<<z<<")\n";
     }
   cerr << "done adding points.\n";
-
-  StructQuadSurfField<double> *qsf = 
-    scinew StructQuadSurfField<double>(qsm, -1);
+  typedef NoDataBasis<double>                DatBasis;
+  typedef GenericField<SQSMesh, DatBasis, FData2d<double, SQSMesh> > SQSField;
+  SQSField *qsf = scinew SQSField(qsm);
   FieldHandle qsH(qsf);
   
   if (binOutput) {

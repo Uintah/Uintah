@@ -50,7 +50,9 @@
 // -noElementsCount flag is used).  The tet entries will be zero-based, 
 // unless the user specifies -oneBasedIndexing.
 
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -143,16 +145,20 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<fieldName<<".  Exiting...\n";
     return 2;
   }
-  if (handle->get_type_description(0)->get_name() != "TetVolField") {
-    cerr << "Error -- input field wasn't a TetVolField (type_name="<<handle->get_type_description(0)->get_name()<<"\n";
+  if (handle->get_type_description(1)->get_name().find("TetVolField") !=
+      string::npos)
+  {
+    cerr << "Error -- input field wasn't a TetVolField (type_name="
+	 << handle->get_type_description(1)->get_name() << std::endl;
     return 2;
   }
+  typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
 
   MeshHandle mH = handle->mesh();
-  TetVolMesh *tvm = dynamic_cast<TetVolMesh *>(mH.get_rep());
-  TetVolMesh::Node::iterator niter; 
-  TetVolMesh::Node::iterator niter_end; 
-  TetVolMesh::Node::size_type nsize; 
+  TVMesh *tvm = dynamic_cast<TVMesh *>(mH.get_rep());
+  TVMesh::Node::iterator niter; 
+  TVMesh::Node::iterator niter_end; 
+  TVMesh::Node::size_type nsize; 
   tvm->begin(niter);
   tvm->end(niter_end);
   tvm->size(nsize);
@@ -172,10 +178,10 @@ main(int argc, char **argv) {
   }
   fclose(fPts);
 
-  TetVolMesh::Cell::size_type csize; 
-  TetVolMesh::Cell::iterator citer; 
-  TetVolMesh::Cell::iterator citer_end; 
-  TetVolMesh::Node::array_type cell_nodes;
+  TVMesh::Cell::size_type csize; 
+  TVMesh::Cell::iterator citer; 
+  TVMesh::Cell::iterator citer_end; 
+  TVMesh::Node::array_type cell_nodes;
   tvm->size(csize);
   tvm->begin(citer);
   tvm->end(citer_end);

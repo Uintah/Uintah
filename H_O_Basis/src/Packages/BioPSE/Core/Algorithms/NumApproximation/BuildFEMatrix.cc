@@ -70,7 +70,7 @@ BuildFEMatrix::BuildFEMatrix(TetVolFieldIntHandle hFieldInt,
   if (index_based_) hMesh_ = hFieldInt->get_typed_mesh();
   else hMesh_ = hFieldTensor->get_typed_mesh();
 
-  TetVolMesh::Node::size_type nsize; hMesh_->size(nsize);
+  TVMesh::Node::size_type nsize; hMesh_->size(nsize);
   unsigned int nNodes = nsize;
   rows_ = scinew int[nNodes+1];
 //  cerr << "unitsScale_ = "<< unitsScale_ << "\n";
@@ -120,7 +120,7 @@ bool BuildFEMatrix::build_FEMatrix(TetVolFieldIntHandle hFieldInt,
 void BuildFEMatrix::parallel(int proc)
 {
   //! dividing nodes among processors
-  TetVolMesh::Node::size_type nsize; hMesh_->size(nsize);
+  TVMesh::Node::size_type nsize; hMesh_->size(nsize);
   int nNodes     = nsize;
   int start_node = nNodes * proc/np_;
   int end_node   = nNodes * (proc+1)/np_;
@@ -139,15 +139,15 @@ void BuildFEMatrix::parallel(int proc)
 
   barrier_.wait(np_);
   
-  vector<TetVolMesh::Node::index_type> neib_nodes;
+  vector<TVMesh::Node::index_type> neib_nodes;
   for(i=start_node;i<end_node;i++){
     rows_[r++]=mycols.size();
     neib_nodes.clear();
     
-    hMesh_->get_neighbors(neib_nodes, TetVolMesh::Node::index_type(i));
+    hMesh_->get_neighbors(neib_nodes, TVMesh::Node::index_type(i));
     
     // adding the node itself, sorting and eliminating duplicates
-    neib_nodes.push_back(TetVolMesh::Node::index_type(i));
+    neib_nodes.push_back(TVMesh::Node::index_type(i));
     sort(neib_nodes.begin(), neib_nodes.end());
  
     for (unsigned int jj=0; jj<neib_nodes.size(); jj++){
@@ -212,11 +212,11 @@ void BuildFEMatrix::parallel(int proc)
   
   //----------------------------------------------------------
   //! Filling the matrix
-  TetVolMesh::Cell::iterator ii, iie;
+  TVMesh::Cell::iterator ii, iie;
   
   double lcl_matrix[4][4];
    
-  TetVolMesh::Node::array_type cell_nodes;
+  TVMesh::Node::array_type cell_nodes;
   hMesh_->begin(ii); hMesh_->end(iie);
   for (; ii != iie; ++ii){
  
@@ -230,7 +230,7 @@ void BuildFEMatrix::parallel(int proc)
 
 void
 BuildFEMatrix::build_local_matrix( double lcl_a[4][4],
-				   TetVolMesh::Cell::index_type c_ind )
+				   TVMesh::Cell::index_type c_ind )
 {
   Vector grad1, grad2, grad3, grad4;
   double vol = hMesh_->get_gradient_basis(c_ind, grad1, grad2, grad3, grad4);
@@ -288,9 +288,9 @@ BuildFEMatrix::build_local_matrix( double lcl_a[4][4],
   }
 }
 
-void BuildFEMatrix::add_lcl_gbl(double lcl_a[4][4], TetVolMesh::Cell::index_type c_ind, int s, int e, TetVolMesh::Node::array_type& cell_nodes)
+void BuildFEMatrix::add_lcl_gbl(double lcl_a[4][4], TVMesh::Cell::index_type c_ind, int s, int e, TVMesh::Node::array_type& cell_nodes)
 {
-  //TetVolMesh::Node::array_type cell_nodes(4);
+  //TVMesh::Node::array_type cell_nodes(4);
   hMesh_->get_nodes(cell_nodes, c_ind); 
 
   for (int i=0; i<4; i++) {

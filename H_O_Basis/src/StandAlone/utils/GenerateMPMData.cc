@@ -29,10 +29,13 @@
 //    Author : Martin Cole
 //    Date   : Wed Jun  2 16:08:19 2004
 
-#include <Core/Datatypes/Field.h>
+#include <Core/Geometry/Tensor.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/TetLinearLgn.h>
 #include <Core/Persistent/Pstreams.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Geometry/BBox.h>
 #include <iostream>
 #include <fstream>
@@ -103,9 +106,11 @@ write_MPM(FieldHandle& field_h, const string &outdir)
   int sizey = (int)(round(maxb.y() - minb.y()) / max_vol_s);
   int sizez = (int)(round(maxb.z() - minb.z()) / max_vol_s);
   
-  LatVolMesh *cntrl = new LatVolMesh(sizex, sizey, sizez, minb, maxb);
-  double vol = cntrl->get_volume(LatVolMesh::Cell::index_type(cntrl,0,0,0));
-  LatVolMesh::Cell::iterator iter, end;
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+
+  LVMesh *cntrl = new LVMesh(sizex, sizey, sizez, minb, maxb);
+  double vol = cntrl->get_volume(LVMesh::Cell::index_type(cntrl,0,0,0));
+  LVMesh::Cell::iterator iter, end;
   cntrl->begin( iter );
   cntrl->end( end );
   int count = 0;
@@ -180,9 +185,10 @@ main(int argc, char **argv)
 
   Pio(*in_stream, field_handle);
   delete in_stream;
-
-  
-  write_MPM<TetVolField<int> >(field_handle, outdir);
+  typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
+  typedef TetLinearLgn<int>  DatBasis;
+  typedef GenericField<TVMesh, DatBasis,    vector<int> > TVField;
+  write_MPM<TVField>(field_handle, outdir);
 
 
   return 0;

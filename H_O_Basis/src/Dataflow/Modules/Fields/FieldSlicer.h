@@ -40,13 +40,19 @@
 #include <Core/Containers/Handle.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/ScanlineField.h>
-#include <Core/Datatypes/StructHexVolField.h>
-#include <Core/Datatypes/StructQuadSurfField.h>
-#include <Core/Datatypes/StructCurveField.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/ScanlineMesh.h>
+#include <Core/Datatypes/StructHexVolMesh.h>
+#include <Core/Datatypes/StructQuadSurfMesh.h>
+#include <Core/Datatypes/StructCurveMesh.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Math/Trig.h>
 
 
@@ -68,6 +74,7 @@ class FieldSlicerAlgoT : public FieldSlicerAlgo
 public:
   //! virtual interface. 
   virtual FieldHandle execute(FieldHandle& src, int axis);
+
 };
 
 
@@ -94,7 +101,6 @@ public:
 		       unsigned int index,
 		       int axis);
 };
-
 
 
 template< class FIELD, class TYPE >
@@ -146,10 +152,14 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
   // Build the correct output field given the input field and and type.
 
   // 3D LatVol to 2D Image
-  if( ifield->get_type_description(0)->get_name() == "LatVolField" ) {
-    
-    typename ImageField<TYPE>::mesh_type *omesh =
-      scinew typename ImageField<TYPE>::mesh_type();
+
+  string mesh_type = fld_handle->get_type_description(1)->get_name();
+  if( mesh_type.find("LatVolMesh") != string::npos ) 
+  {  
+    typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
+
+    IMesh *omesh = scinew IMesh();
+
     omesh->copy_properties(imesh.get_rep());
 
     omesh->set_min_i( new_min_i );
@@ -157,76 +167,120 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     omesh->set_ni( new_i );
     omesh->set_nj( new_j );
 
-    ImageField<TYPE> *ofield =
-      scinew ImageField<TYPE>(omesh, ifield->basis_order());
-    ofield->copy_properties(ifield);
+    Field *ofield = 0;
+    typedef FData2d<TYPE, IMesh> FData;
+    if (ifield->basis_order() == -1) {
+      typedef GenericField<IMesh, NoDataBasis<TYPE>, FData > OField;
+      ofield = scinew OField(omesh);
+    } else if (ifield->basis_order() == 0) {
+      typedef GenericField<IMesh, ConstantBasis<TYPE>, FData > OField;
+      ofield = scinew OField(omesh);
+    } else {
+      typedef QuadBilinearLgn<TYPE>                LinBasis;
+      typedef GenericField<IMesh, LinBasis, FData> OField;
+      ofield = scinew OField(omesh);
+    }
 
+    ofield->copy_properties(ifield);
     ofield_h = ofield;
 
     // 3D StructHexVol to 2D StructQuadSurf
-  } else if( ifield->get_type_description(0)->get_name() == "StructHexVolField" ) {
-    typename StructQuadSurfField<TYPE>::mesh_type *omesh =
-      scinew typename StructQuadSurfField<TYPE>::mesh_type(new_i,new_j);
+  } else if( mesh_type.find("StructHexVolMesh") != string::npos ) {
+
+    typedef StructQuadSurfMesh<QuadBilinearLgn<Point> > SQMesh;
+
+    SQMesh *omesh = scinew SQMesh(new_i, new_j);
     omesh->copy_properties(imesh.get_rep());
 
-    StructQuadSurfField<TYPE> *ofield =
-      scinew StructQuadSurfField<TYPE>(omesh, ifield->basis_order());
-    ofield->copy_properties(ifield);
+    Field *ofield = 0;
+    typedef FData2d<TYPE, SQMesh> FData;
+    if (ifield->basis_order() == -1) {
+      typedef GenericField<SQMesh, NoDataBasis<TYPE>, FData > OField;
+      ofield = scinew OField(omesh);
+    } else if (ifield->basis_order() == 0) {
+      typedef GenericField<SQMesh, ConstantBasis<TYPE>, FData > OField;
+      ofield = scinew OField(omesh);
+    } else {
+      typedef QuadBilinearLgn<TYPE>                 LinBasis;
+      typedef GenericField<SQMesh, LinBasis, FData> OField;
+      ofield = scinew OField(omesh);
+    }
 
+    ofield->copy_properties(ifield);
     ofield_h = ofield;
 
-    // 2D Image to 1D Scanline
-  } else if( ifield->get_type_description(0)->get_name() == "ImageField" ) {
-    typename ScanlineField<TYPE>::mesh_type *omesh =
-      scinew typename ScanlineField<TYPE>::mesh_type();
+    // 2D Image to 1D Scanline or 
+    // 1D Scanline to 0D Scanline
+  } else if( mesh_type.find("ImageMesh") != string::npos || 
+	     mesh_type.find("ScanlineMesh") != string::npos) {
+
+    typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
+
+    SLMesh *omesh = scinew SLMesh();
     omesh->copy_properties(imesh.get_rep());
 
     omesh->set_min_i( new_min_i );
     omesh->set_ni( new_i );
 
-    ScanlineField<TYPE> *ofield = 
-      scinew ScanlineField<TYPE>(omesh, ifield->basis_order());
-    ofield->copy_properties(ifield);
+    Field *ofield = 0;
+    typedef vector<TYPE> FData;
+    if (ifield->basis_order() == -1) {
+      typedef GenericField<SLMesh, NoDataBasis<TYPE>, FData > OField;
+      ofield = scinew OField(omesh);
+    } else if (ifield->basis_order() == 0) {
+      typedef GenericField<SLMesh, ConstantBasis<TYPE>, FData > OField;
+      ofield = scinew OField(omesh);
+    } else {
+      typedef CrvLinearLgn<TYPE>                    LinBasis;
+      typedef GenericField<SLMesh, LinBasis, FData> OField;
+      ofield = scinew OField(omesh);
+    }
 
+    ofield->copy_properties(ifield);
     ofield_h = ofield;
 
     // 2D StructQuadSurf to 1D StructCurve
-  } else if( ifield->get_type_description(0)->get_name() == "StructQuadSurfField" ) {
-    typename StructCurveField<TYPE>::mesh_type *omesh =
-      scinew typename StructCurveField<TYPE>::mesh_type(new_i);
+  } else if( mesh_type.find("StructQuadSurfMesh") != string::npos ) {
+    typedef StructCurveMesh<CrvLinearLgn<Point> > SCMesh;
+
+    SCMesh *omesh = scinew SCMesh(new_i);
     omesh->copy_properties(imesh.get_rep());
 
-    StructCurveField<TYPE> *ofield =
-      scinew StructCurveField<TYPE>(omesh, ifield->basis_order());
+    Field *ofield = 0;
+    typedef vector<TYPE> FData;
+    if (ifield->basis_order() == -1) {
+      typedef GenericField<SCMesh, NoDataBasis<TYPE>, FData > OField;
+      ofield = scinew OField(omesh);
+    } else if (ifield->basis_order() == 0) {
+      typedef GenericField<SCMesh, ConstantBasis<TYPE>, FData > OField;
+      ofield = scinew OField(omesh);
+    } else {
+      typedef CrvLinearLgn<TYPE>                    LinBasis;
+      typedef GenericField<SCMesh, LinBasis, FData> OField;
+      ofield = scinew OField(omesh);
+    }
+
     ofield->copy_properties(ifield);
-
-    ofield_h = ofield;
-
-    // 1D Scanline to 0D Scanline
-  } else if( ifield->get_type_description(0)->get_name() == "ScanlineField" ) {
-    typename ScanlineField<TYPE>::mesh_type *omesh =
-      scinew typename ScanlineField<TYPE>::mesh_type();
-    omesh->copy_properties(imesh.get_rep());
-
-    omesh->set_min_i( new_min_i );
-    omesh->set_ni( new_i );
-
-    ScanlineField<TYPE> *ofield =
-      scinew ScanlineField<TYPE>(omesh, ifield->basis_order());
-    ofield->copy_properties(ifield);
-
     ofield_h = ofield;
 
     // 1D StructCurve to 0D PointCloud
-  } else if( ifield->get_type_description(0)->get_name() == "StructCurveField" ) {
-    typename PointCloudField<TYPE>::mesh_type *omesh =
-      scinew typename PointCloudField<TYPE>::mesh_type();
+  } else if( mesh_type.find("StructCurveMesh") != string::npos ) {
+
+    typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+    PCMesh *omesh = scinew PCMesh();
     omesh->copy_properties(imesh.get_rep());
 
-    PointCloudField<TYPE> *ofield =
-      scinew PointCloudField<TYPE>(omesh, ifield->basis_order());
-    ofield->copy_properties(ifield);
+    Field *ofield = 0;
+    typedef vector<TYPE> FData;
+    if (ifield->basis_order() == -1) {
+      typedef GenericField<PCMesh, NoDataBasis<TYPE>, FData > OField;
+      ofield = scinew OField(omesh);
+    } else {
+      typedef GenericField<PCMesh, ConstantBasis<TYPE>, FData > OField;
+      ofield = scinew OField(omesh);
+    }
 
+    ofield->copy_properties(ifield);
     ofield_h = ofield;
 
     omesh->resize_nodes( new_i );
@@ -297,9 +351,10 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle& ifield_h,
 
 #ifndef SET_POINT_DEFINED
   // For structured geometery we need to set the correct plane.
-  if( ifield->get_type_description(0)->get_name() == "LatVolField" ||
-      ifield->get_type_description(0)->get_name() == "ImageField" ||
-      ifield->get_type_description(0)->get_name() == "ScanlineField" )
+  string field_type = fld_handle->get_type_description(1)->get_name();
+  if( field_type.find("LatVolMesh") != string::npos ||
+      field_type.find("ImageMesh") != string::npos ||
+      field_type.find("ScanlineMesh") != string::npos )
   {
     Transform trans = imesh->get_transform();
     double offset = 0.0;

@@ -38,7 +38,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/GLVolumeRenderer/VolumeUtils.h>
@@ -49,7 +50,7 @@
 
 namespace SCIRun {
 
-
+typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
 
 static string widget_name("GLTextureBuilderLocatorWidget");
 static string res_name("Resolution Widget");
@@ -102,7 +103,7 @@ void GLTextureBuilder::real_execute(FieldHandle sfield)
   
   if (!sfield.get_rep() ||
       (sfield->mesh()->get_type_description()->get_name() !=
-       get_type_description((LatVolMesh *)0)->get_name()))
+       get_type_description((LVMesh *)0)->get_name()))
   {
     error("Input field has no representation or is not a LatVolMesh.");
     return;

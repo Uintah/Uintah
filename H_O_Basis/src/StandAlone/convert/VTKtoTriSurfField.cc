@@ -34,7 +34,10 @@
 // Warning!: this converter is only partially implemented. It supports only 
 //           a subset of the vtk format. Please extend it as you need more
 
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -55,6 +58,13 @@ using namespace SCIRun;
 
 bool bin_out;
 bool swap_endian;
+
+
+typedef TriLinearLgn<float>               LDatBasis;
+typedef ConstantBasis<float>              CDatBasis;
+typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
+typedef GenericField<TSMesh, LDatBasis,  vector<float> > TSFieldL;    
+typedef GenericField<TSMesh, CDatBasis,  vector<float> > TSFieldC;    
 
 void setDefaults() {
   bin_out=false;
@@ -110,7 +120,7 @@ void swap_endianess_4(unsigned *dw)
 
 template <class T>
 void
-read_n_points(TriSurfMesh *tsm, int n, ifstream &str) {
+read_n_points(TSMesh *tsm, int n, ifstream &str) {
   T arr[3];
   if (str.fail()) { cerr << "fail state on stream" << endl; return;}
   for(int i = 0; i < n; i++) {
@@ -136,7 +146,7 @@ read_n_points(TriSurfMesh *tsm, int n, ifstream &str) {
 
 template <class T>
 void
-read_n_polys(TriSurfMesh *tsm, int n, ifstream &str) {
+read_n_polys(TSMesh *tsm, int n, ifstream &str) {
   T arr[3];
   if (str.fail()) { cerr << "fail state on stream" << endl; return;}
   for(int i = 0; i < n; i++) {
@@ -198,7 +208,7 @@ main(int argc, char **argv) {
 
   setDefaults();
 
-  TriSurfMesh *tsm = scinew TriSurfMesh();
+  TSMesh *tsm = scinew TSMesh();
   //exit(5);
   char *in = argv[1];
   char *out = argv[2];
@@ -269,7 +279,7 @@ main(int argc, char **argv) {
   vtk >> dat; 
   vtk >> n;
   //cout << dat << " " << n << endl;
-  TriSurfField<float> *ts;
+  Field *tsf;
   string data, name;
   vtk >> data >> name >> type;
   //cout << data << " " << name << " " << type << endl;
@@ -279,22 +289,31 @@ main(int argc, char **argv) {
       cerr << "supporting float only atm..." << endl;
       return 1;
     }
-    ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), 0);
+    TSFieldC *ts = scinew TSFieldC(TSMesh::handle_type(tsm));
+    ts->resize_fdata();
+    tsf = ts;
     //cout << "putting data at faces" << endl;
+    string table, tname;
+    vtk >> table >> tname;
+    //cout << table << " " << tname << endl;
+    vtk.get(); // eat a newline
+    read_scalar_lookup(ts, n, vtk);
   } else {
     // node centered data ...
     if (type != "float") {
       cerr << "supporting float only atm..." << endl;
       return 1;
     }
-    ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), 1);
+    TSFieldL *ts = scinew TSFieldL(TSMesh::handle_type(tsm));
+    ts->resize_fdata();
+    tsf = ts;
+    string table, tname;
+    vtk >> table >> tname;
+    //cout << table << " " << tname << endl;
+    vtk.get(); // eat a newline
+    read_scalar_lookup(ts, n, vtk);
   }
-  ts->resize_fdata();
-  string table, tname;
-  vtk >> table >> tname;
-  //cout << table << " " << tname << endl;
-  vtk.get(); // eat a newline
-  read_scalar_lookup(ts, n, vtk);
+
 
   vtk >> dat; 
   vtk >> n;
@@ -305,7 +324,7 @@ main(int argc, char **argv) {
     vtk.get();
   }
 
-  FieldHandle ts_handle(ts);
+  FieldHandle ts_handle(tsf);
   
   if (bin_out) {
     BinaryPiostream out_stream(out, Piostream::Write);

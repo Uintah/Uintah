@@ -74,7 +74,7 @@ BuildTriFEMatrix::BuildTriFEMatrix(TriSurfFieldIntHandle hFieldInt,
   if (index_based_) hMesh_ = hFieldInt->get_typed_mesh();
   else hMesh_ = hFieldTensor->get_typed_mesh();
 
-  TriSurfMesh::Node::size_type nsize; hMesh_->size(nsize);
+  TSMesh::Node::size_type nsize; hMesh_->size(nsize);
   unsigned int nNodes = nsize;
   rows_ = scinew int[nNodes+1];
 }
@@ -124,7 +124,7 @@ bool BuildTriFEMatrix::build_FEMatrix(TriSurfFieldIntHandle hFieldInt,
 void BuildTriFEMatrix::parallel(int proc)
 {
   //! dividing nodes among processors
-  TriSurfMesh::Node::size_type nsize; hMesh_->size(nsize);
+  TSMesh::Node::size_type nsize; hMesh_->size(nsize);
   int nNodes     = nsize;
   int start_node = nNodes * proc/np_;
   int end_node   = nNodes * (proc+1)/np_;
@@ -142,15 +142,15 @@ void BuildTriFEMatrix::parallel(int proc)
 
   barrier_.wait(np_);
   
-  TriSurfMesh::Node::array_type neib_nodes;
+  TSMesh::Node::array_type neib_nodes;
 
   for(i=start_node;i<end_node;i++){
     rows_[r++]=mycols.size();
     neib_nodes.clear();
-    hMesh_->get_neighbors(neib_nodes, TriSurfMesh::Node::index_type(i));
+    hMesh_->get_neighbors(neib_nodes, TSMesh::Node::index_type(i));
     
     // adding the node itself, sorting and eliminating duplicates
-    neib_nodes.push_back(TriSurfMesh::Node::index_type(i));
+    neib_nodes.push_back(TSMesh::Node::index_type(i));
     sort(neib_nodes.begin(), neib_nodes.end());
  
     for (unsigned int jj=0; jj<neib_nodes.size(); jj++){
@@ -215,11 +215,11 @@ void BuildTriFEMatrix::parallel(int proc)
     
   //----------------------------------------------------------
   //! Filling the matrix
-  TriSurfMesh::Face::iterator ii, iie;
+  TSMesh::Face::iterator ii, iie;
   
   double lcl_matrix[3][3];
    
-  TriSurfMesh::Node::array_type face_nodes(3);
+  TSMesh::Node::array_type face_nodes(3);
   hMesh_->begin(ii); hMesh_->end(iie);
   for (; ii != iie; ++ii){
     if (hMesh_->test_nodes_range(*ii, start_node, end_node)){ 
@@ -231,7 +231,7 @@ void BuildTriFEMatrix::parallel(int proc)
 }
 
 void BuildTriFEMatrix::build_local_matrix(double lcl_a[3][3], 
-					  TriSurfMesh::Face::index_type f_ind)
+					  TSMesh::Face::index_type f_ind)
 {
 
   Vector grad1, grad2, grad3;
@@ -285,7 +285,10 @@ void BuildTriFEMatrix::build_local_matrix(double lcl_a[3][3],
 
 }
 
-void BuildTriFEMatrix::add_lcl_gbl(double lcl_a[3][3], TriSurfMesh::Face::index_type f_ind, int s, int e, TriSurfMesh::Node::array_type& face_nodes)
+void BuildTriFEMatrix::add_lcl_gbl(double lcl_a[3][3], 
+				   TSMesh::Face::index_type f_ind, 
+				   int s, int e, 
+				   TSMesh::Node::array_type& face_nodes)
 {
 
   hMesh_->get_nodes(face_nodes, f_ind); 

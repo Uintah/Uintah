@@ -48,6 +48,8 @@
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Containers/StackVector.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Geometry/BBox.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
@@ -58,10 +60,13 @@ namespace SCIRun {
 using std::string;
 using std::vector;
 
+template <class Basis>
 class SCICORESHARE PointCloudMesh : public Mesh
 {
 public:
-  typedef unsigned int under_type;
+  typedef LockingHandle<PointCloudMesh<Basis> > handle_type;
+  typedef Basis                                 basis_type;
+  typedef unsigned int                          under_type;
 
   //! Index and Iterator types required for Mesh Concept.
   struct Node {
@@ -102,97 +107,98 @@ public:
 
   bool get_dim(vector<unsigned int>&) const { return false;  }
 
-  void begin(Node::iterator &) const;
-  void begin(Edge::iterator &) const;
-  void begin(Face::iterator &) const;
-  void begin(Cell::iterator &) const;
+  void begin(typename Node::iterator &) const;
+  void begin(typename Edge::iterator &) const;
+  void begin(typename Face::iterator &) const;
+  void begin(typename Cell::iterator &) const;
 
-  void end(Node::iterator &) const;
-  void end(Edge::iterator &) const;
-  void end(Face::iterator &) const;
-  void end(Cell::iterator &) const;
+  void end(typename Node::iterator &) const;
+  void end(typename Edge::iterator &) const;
+  void end(typename Face::iterator &) const;
+  void end(typename Cell::iterator &) const;
 
-  void size(Node::size_type &) const;
-  void size(Edge::size_type &) const;
-  void size(Face::size_type &) const;
-  void size(Cell::size_type &) const;
+  void size(typename Node::size_type &) const;
+  void size(typename Edge::size_type &) const;
+  void size(typename Face::size_type &) const;
+  void size(typename Cell::size_type &) const;
 
-  void to_index(Node::index_type &index, unsigned int i) const { index = i; }
-  void to_index(Edge::index_type &index, unsigned int i) const { index = i; }
-  void to_index(Face::index_type &index, unsigned int i) const { index = i; }
-  void to_index(Cell::index_type &index, unsigned int i) const { index = i; }
+  void to_index(typename Node::index_type &index, unsigned int i) const { index = i; }
+  void to_index(typename Edge::index_type &index, unsigned int i) const { index = i; }
+  void to_index(typename Face::index_type &index, unsigned int i) const { index = i; }
+  void to_index(typename Cell::index_type &index, unsigned int i) const { index = i; }
 
   virtual BBox get_bounding_box() const;
   virtual void transform(const Transform &t);
 
   //! set the mesh statistics
-  void resize_nodes(Node::size_type n) { points_.resize(n); }
+  void resize_nodes(typename Node::size_type n) { points_.resize(n); }
 
-  // This is actually get_nodes(Node::array_type &, Elem::index_type)
+  // This is actually get_nodes(typename Node::array_type &, Elem::index_type)
   // for compilation purposes.  IE It is redundant unless we are
   // templated by Elem type and we don't know that Elem is Node.
   // This is needed in ClipField, for example.
-  void get_nodes(Node::array_type &a, Node::index_type i) const
+  void get_nodes(typename Node::array_type &a, typename Node::index_type i) const
     { a.resize(1); a[0] = i; }
 
   //! Get the children elemsnts of the given index
-  void get_nodes(Node::array_type &, Edge::index_type) const {}
-  void get_nodes(Node::array_type &, Face::index_type) const {}
-  void get_nodes(Node::array_type &, Cell::index_type) const {}
-  void get_edges(Edge::array_type &, Face::index_type) const {}
-  void get_edges(Edge::array_type &, Cell::index_type) const {}
-  void get_faces(Face::array_type &, Cell::index_type) const {}
+  void get_nodes(typename Node::array_type &, typename Edge::index_type) const {}
+  void get_nodes(typename Node::array_type &, typename Face::index_type) const {}
+  void get_nodes(typename Node::array_type &, typename Cell::index_type) const {}
+  void get_edges(typename Edge::array_type &, typename Face::index_type) const {}
+  void get_edges(typename Edge::array_type &, typename Cell::index_type) const {}
+  void get_faces(typename Face::array_type &, typename Cell::index_type) const {}
 
   //! get the parent element(s) of the given index
-  unsigned get_edges(Edge::array_type &, Node::index_type) const { return 0; }
-  unsigned get_faces(Face::array_type &, Node::index_type) const { return 0; }
-  unsigned get_faces(Face::array_type &, Edge::index_type) const { return 0; }
-  unsigned get_cells(Cell::array_type &, Node::index_type) const { return 0; }
-  unsigned get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
-  unsigned get_cells(Cell::array_type &, Face::index_type) const { return 0; }
+  unsigned get_edges(typename Edge::array_type &, typename Node::index_type) const { return 0; }
+  unsigned get_faces(typename Face::array_type &, typename Node::index_type) const { return 0; }
+  unsigned get_faces(typename Face::array_type &, typename Edge::index_type) const { return 0; }
+  unsigned get_cells(typename Cell::array_type &, typename Node::index_type) const { return 0; }
+  unsigned get_cells(typename Cell::array_type &, typename Edge::index_type) const { return 0; }
+  unsigned get_cells(typename Cell::array_type &, typename Face::index_type) const { return 0; }
 
   //! get the center point (in object space) of an element
-  void get_center(Point &p, Node::index_type i) const { p = points_[i]; }
-  void get_center(Point &, Edge::index_type) const {}
-  void get_center(Point &, Face::index_type) const {}
-  void get_center(Point &, Cell::index_type) const {}
+  void get_center(Point &p, typename Node::index_type i) const { p = points_[i]; }
+  void get_center(Point &, typename Edge::index_type) const {}
+  void get_center(Point &, typename Face::index_type) const {}
+  void get_center(Point &, typename Cell::index_type) const {}
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(Node::index_type /*idx*/) const { return 0.0; }
-  double get_size(Edge::index_type /*idx*/) const { return 0.0; }
-  double get_size(Face::index_type /*idx*/) const { return 0.0; }
-  double get_size(Cell::index_type /*idx*/) const { return 0.0; }
-  double get_length(Edge::index_type idx) const { return get_size(idx); }
-  double get_area(Face::index_type idx) const { return get_size(idx); }
-  double get_volume(Cell::index_type idx) const { return get_size(idx); }
+  double get_size(typename Node::index_type) const { return 0.0; }
+  double get_size(typename Edge::index_type) const { return 0.0; }
+  double get_size(typename Face::index_type) const { return 0.0; }
+  double get_size(typename Cell::index_type) const { return 0.0; }
+  double get_length(typename Edge::index_type idx) const 
+  { return get_size(idx); }
+  double get_area(typename Face::index_type idx) const 
+  { return get_size(idx); }
+  double get_volume(typename Cell::index_type idx) const 
+  { return get_size(idx); }
 
-  int get_valence(Node::index_type /*idx*/) const { return 0; }
-  int get_valence(Edge::index_type /*idx*/) const { return 0; }
-  int get_valence(Face::index_type /*idx*/) const { return 0; }
-  int get_valence(Cell::index_type /*idx*/) const { return 0; }
+  int get_valence(typename Node::index_type) const { return 0; }
+  int get_valence(typename Edge::index_type) const { return 0; }
+  int get_valence(typename Face::index_type) const { return 0; }
+  int get_valence(typename Cell::index_type) const { return 0; }
 
-  bool locate(Node::index_type &, const Point &) const;
-  bool locate(Edge::index_type &, const Point &) const { return false; }
-  bool locate(Face::index_type &, const Point &) const { return false; }
-  bool locate(Cell::index_type &, const Point &) const { return false; }
+  bool locate(typename Node::index_type &, const Point &) const;
+  bool locate(typename Edge::index_type &, const Point &) const 
+  { return false; }
+  bool locate(typename Face::index_type &, const Point &) const 
+  { return false; }
+  bool locate(typename Cell::index_type &, const Point &) const 
+  { return false; }
 
-  int get_weights(const Point &p, Node::array_type &l, double *w);
-  int get_weights(const Point & , Edge::array_type & , double * )
-  { ASSERTFAIL("PointCloudField::get_weights for edges isn't supported"); }
-  int get_weights(const Point & , Face::array_type & , double * )
-  { ASSERTFAIL("PointCloudField::get_weights for faces isn't supported"); }
-  int get_weights(const Point & , Cell::array_type & , double * )
-  { ASSERTFAIL("PointCloudField::get_weights for cells isn't supported"); }
-
-  void get_point(Point &p, Node::index_type i) const { get_center(p,i); }
-  void set_point(const Point &p, Node::index_type i) { points_[i] = p; }
-  void get_normal(Vector &/*normal*/, Node::index_type /*index*/) const
+  void get_point(Point &p, typename Node::index_type i) const 
+  { get_center(p,i); }
+  void set_point(const Point &p, typename Node::index_type i) 
+  { points_[i] = p; }
+  void get_normal(Vector &, typename Node::index_type) const
   { ASSERTFAIL("not implemented") }
 
   //! use these to build up a new PointCloudField mesh
-  Node::index_type add_node(const Point &p) { return add_point(p); }
-  Node::index_type add_point(const Point &p);
-  Elem::index_type add_elem(Node::array_type a) { return a[0]; }
+  typename Node::index_type add_node(const Point &p) { return add_point(p); }
+  typename Node::index_type add_point(const Point &p);
+  typename Elem::index_type add_elem(typename Node::array_type a) 
+  { return a[0]; }
   void node_reserve(size_t s) { points_.reserve(s); }
   void elem_reserve(size_t s) { points_.reserve(s); }
 
@@ -204,27 +210,287 @@ public:
   static  const string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
 
+  Basis& get_basis() { return basis_; }
+  static const TypeDescription* node_type_description();
+  static const TypeDescription* edge_type_description();
+  static const TypeDescription* face_type_description();
+  static const TypeDescription* cell_type_description();
 private:
   //! the nodes
   vector<Point> points_;
+
+  //! basis fns
+  Basis         basis_;
 
   // returns a PointCloudMesh
   static Persistent *maker() { return new PointCloudMesh(); }
 };  // end class PointCloudMesh
 
-typedef LockingHandle<PointCloudMesh> PointCloudMeshHandle;
+template <class Basis>
+PersistentTypeID 
+PointCloudMesh<Basis>::type_id(type_name(-1), "Mesh", 
+			       PointCloudMesh<Basis>::maker);
 
-const TypeDescription* get_type_description(PointCloudMesh *);
-const TypeDescription* get_type_description(PointCloudMesh::Node *);
-const TypeDescription* get_type_description(PointCloudMesh::Edge *);
-const TypeDescription* get_type_description(PointCloudMesh::Face *);
-const TypeDescription* get_type_description(PointCloudMesh::Cell *);
+
+template <class Basis>
+BBox
+PointCloudMesh<Basis>::get_bounding_box() const
+{
+  BBox result;
+
+  typename Node::iterator i, ie;
+  begin(i);
+  end(ie);
+  for ( ; i != ie; ++i)
+  {
+    result.extend(points_[*i]);
+  }
+
+  return result;
+}
+
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::transform(const Transform &t)
+{
+  vector<Point>::iterator itr = points_.begin();
+  vector<Point>::iterator eitr = points_.end();
+  while (itr != eitr)
+  {
+    *itr = t.project(*itr);
+    ++itr;
+  }
+}
+
+
+template <class Basis>
+bool
+PointCloudMesh<Basis>::locate(typename Node::index_type &idx, const Point &p) const
+{
+  typename Node::iterator ni, nie;
+  begin(ni);
+  end(nie);
+
+  idx = *ni;
+
+  if (ni == nie)
+  {
+    return false;
+  }
+
+  double closest = (p-points_[*ni]).length2();
+
+  ++ni;
+  for (; ni != nie; ++ni)
+  {
+    if ( (p-points_[*ni]).length2() < closest )
+    {
+      closest = (p-points_[*ni]).length2();
+      idx = *ni;
+    }
+  }
+
+  return true;
+}
+
+
+template <class Basis>
+typename PointCloudMesh<Basis>::Node::index_type
+PointCloudMesh<Basis>::add_point(const Point &p)
+{
+  points_.push_back(p);
+  return points_.size() - 1;
+}
+
+#define PointCloudFieldMESH_VERSION 1
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::io(Piostream& stream)
+{
+  stream.begin_class(type_name(-1), PointCloudFieldMESH_VERSION);
+
+  Mesh::io(stream);
+
+  // IO data members, in order
+  Pio(stream,points_);
+
+  stream.end_class();
+}
+
+template <class Basis>
+const string
+PointCloudMesh<Basis>::type_name(int n)
+{
+  ASSERT(n >= -1 && n <= 0);
+  static const string name = "PointCloudMesh";
+  return name;
+}
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::begin(typename PointCloudMesh::Node::iterator &itr) const
+{
+  itr = 0;
+}
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::end(typename PointCloudMesh::Node::iterator &itr) const
+{
+  itr = (unsigned)points_.size();
+}
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::size(typename PointCloudMesh::Node::size_type &s) const
+{
+  s = (unsigned)points_.size();
+}
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::begin(typename PointCloudMesh::Edge::iterator &itr) const
+{
+  itr = 0;
+}
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::end(typename PointCloudMesh::Edge::iterator &itr) const
+{
+  itr = 0;
+}
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::size(typename PointCloudMesh::Edge::size_type &s) const
+{
+  s = 0;
+}
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::begin(typename PointCloudMesh::Face::iterator &itr) const
+{
+  itr = 0;
+}
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::end(typename PointCloudMesh::Face::iterator &itr) const
+{
+  itr = 0;
+}
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::size(typename PointCloudMesh::Face::size_type &s) const
+{
+  s = 0;
+}
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::begin(typename PointCloudMesh::Cell::iterator &itr) const
+{
+  itr = 0;
+}
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::end(typename PointCloudMesh::Cell::iterator &itr) const
+{
+  itr = 0;
+}
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::size(typename PointCloudMesh::Cell::size_type &s) const
+{
+  s = 0;
+}
+
+
+
+template <class Basis>
+const TypeDescription*
+PointCloudMesh<Basis>::get_type_description() const
+{
+  return SCIRun::get_type_description((PointCloudMesh<Basis> *)0);
+}
+
+template <class Basis>
+const TypeDescription*
+get_type_description(PointCloudMesh<Basis> *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("PointCloudMesh",
+				string(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+template <class Basis>
+const TypeDescription*
+PointCloudMesh<Basis>::node_type_description()
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription(type_name(-1) + "::Node",
+				string(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+template <class Basis>
+const TypeDescription*
+PointCloudMesh<Basis>::edge_type_description()
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription(type_name(-1) + "::Edge",
+				string(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+template <class Basis>
+const TypeDescription*
+PointCloudMesh<Basis>::face_type_description()
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription(type_name(-1) + "::Face",
+				string(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+template <class Basis>
+const TypeDescription*
+PointCloudMesh<Basis>::cell_type_description()
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription(type_name(-1) + "::Cell",
+				string(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
 
 } // namespace SCIRun
 
 #endif // SCI_project_PointCloudMesh_h
-
-
-
-
-

@@ -37,7 +37,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/MaskedLatVolField.h>
+//#include <Core/Datatypes/MaskedLatVolField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Modules/Fields/CastMLVtoHV.h>
@@ -123,16 +123,16 @@ void CastMLVtoHV::execute()
   {
   case 0:
     if (ifieldH->mesh()->dimensionality() == 1) {
-      ldst_td = get_type_description((HexVolMesh::Edge *)0);
+      ldst_td = HVMesh::edge_type_description();
     } else if (ifieldH->mesh()->dimensionality() == 2) {
-      ldst_td = get_type_description((HexVolMesh::Face *)0);
+      ldst_td = HVMesh::face_type_description();
     } else if (ifieldH->mesh()->dimensionality() == 3) {
-      ldst_td = get_type_description((HexVolMesh::Cell *)0);
+      ldst_td = HVMesh::cell_type_description();
     }
 
     break;
   case 1:
-    ldst_td = get_type_description((HexVolMesh::Node *)0);
+    ldst_td = HVMesh::face_type_description();
     break;
   default:
     error("Unsupported basis order.");

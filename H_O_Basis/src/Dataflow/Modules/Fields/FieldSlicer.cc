@@ -45,6 +45,8 @@
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <Dataflow/Modules/Fields/FieldSlicer.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+
 
 namespace SCIRun {
 
@@ -153,9 +155,12 @@ void FieldSlicer::execute(){
   int dims = 0;
 
   // Get the dimensions of the mesh.
-  if( fHandle->get_type_description(0)->get_name() == "LatVolField" ||
-      fHandle->get_type_description(0)->get_name() == "StructHexVolField" ) {
-    LatVolMesh *lvmInput = (LatVolMesh*) fHandle->mesh().get_rep();
+  // this should be part of the dynamic compilation....
+  string mesh_type = fHandle->get_type_description(1)->get_name();
+  if( mesh_type.find("LatVolField") != string::npos ||
+      mesh_type.find("StructHexVolField") != string::npos ) {
+    typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+    LVMesh *lvmInput = (LVMesh*) fHandle->mesh().get_rep();
 
     idim_ = lvmInput->get_ni();
     jdim_ = lvmInput->get_nj();
@@ -163,9 +168,10 @@ void FieldSlicer::execute(){
 
     dims = 3;
 
-  } else if( fHandle->get_type_description(0)->get_name() == "ImageField" ||
-	     fHandle->get_type_description(0)->get_name() == "StructQuadSurfField" ) {
-    ImageMesh *imInput = (ImageMesh*) fHandle->mesh().get_rep();
+  } else if( mesh_type.find("ImageField") != string::npos ||
+	     mesh_type.find("StructQuadSurfField") != string::npos ) {
+    typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
+    IMesh *imInput = (IMesh*) fHandle->mesh().get_rep();
 
     idim_ = imInput->get_ni();
     jdim_ = imInput->get_nj();
@@ -173,10 +179,11 @@ void FieldSlicer::execute(){
 
     dims = 2;
 
-  } else if( fHandle->get_type_description(0)->get_name() == "ScanlineField" ||
-	     fHandle->get_type_description(0)->get_name() == "StructCurveField" ) {
-    ScanlineMesh *slmInput = (ScanlineMesh*) fHandle->mesh().get_rep();
-
+  } else if( mesh_type.find("ScanlineField") != string::npos ||
+	     mesh_type.find("StructCurveField") != string::npos ) {
+    typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
+    SLMesh *slmInput = (SLMesh*) fHandle->mesh().get_rep();
+    
     idim_ = slmInput->get_ni();
     jdim_ = 1;
     kdim_ = 1;

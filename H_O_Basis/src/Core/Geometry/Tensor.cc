@@ -211,6 +211,25 @@ string Tensor::type_name(int) {
   return str;
 }
 
+Tensor Tensor::operator-(const Tensor& t) const
+{
+  Tensor t1(*this);
+  t1.have_eigens_=0;
+  for (int i=0; i<3; i++)
+    for (int j=0; j<3; j++)
+      t1.mat_[i][j]-=t.mat_[i][j];
+  return t1;
+}
+
+Tensor& Tensor::operator-=(const Tensor& t)
+{
+  have_eigens_=0;
+  for (int i=0; i<3; i++)
+    for (int j=0; j<3; j++)
+      mat_[i][j]-=t.mat_[i][j];
+  return *this;
+}
+
 Tensor Tensor::operator+(const Tensor& t) const
 {
   Tensor t1(*this);

@@ -42,7 +42,9 @@
 #define TriMC_h
 
 #include <Core/Geom/GeomLine.h>
-#include <Core/Datatypes/CurveField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <sci_hash_map.h>
 
@@ -66,11 +68,14 @@ public:
   typedef typename Field::mesh_type              mesh_type;
   typedef typename Field::mesh_handle_type       mesh_handle_type;
 
+  typedef CurveMesh<CrvLinearLgn<Point> >                 CMesh;
+  typedef CrvLinearLgn<double>                            DatBasis;
+  typedef GenericField<CMesh, DatBasis, vector<double> >  CField;  
 private:
   LockingHandle<Field> field_;
   mesh_handle_type mesh_;
   GeomLines *lines_;
-  CurveMeshHandle out_mesh_;
+  CMesh::handle_type out_mesh_;
   int nnodes_;
 
   struct edgepair_t
@@ -99,7 +104,7 @@ private:
   };
 
   typedef hash_map<edgepair_t,
-		   CurveMesh::Node::index_type,
+		   CMesh::Node::index_type,
 		   edgepairhash,
 		   edgepairequal> edge_hash_type;
 #else
@@ -112,18 +117,18 @@ private:
   };
 
   typedef map<edgepair_t,
-	      CurveMesh::Node::index_type,
+	      CMesh::Node::index_type,
 	      edgepairless> edge_hash_type;
 #endif
 
   edge_hash_type   edge_map_;  // Unique edge cuts when surfacing node data
   vector<long int> node_map_;  // Unique nodes when surfacing cell data.
 
-  CurveMesh::Node::index_type find_or_add_edgepoint(unsigned int n0,
+  CMesh::Node::index_type find_or_add_edgepoint(unsigned int n0,
 						    unsigned int n1,
 						    double d0,
 						    const Point &p);
-  CurveMesh::Node::index_type find_or_add_nodepoint(node_index_type &idx);
+  CMesh::Node::index_type find_or_add_nodepoint(node_index_type &idx);
 
   void extract_n( cell_index_type, double );
   void extract_f( cell_index_type, double );
@@ -170,13 +175,13 @@ void TriMC<Field>::reset( int n, bool build_field, bool build_geom )
   out_mesh_ = 0;
   if (build_field)
   {
-    out_mesh_ = scinew CurveMesh;
+    out_mesh_ = scinew CMesh;
   }
 }
 
 
 template<class Field>
-CurveMesh::Node::index_type
+TriMC<Field>::CMesh::Node::index_type
 TriMC<Field>::find_or_add_edgepoint(unsigned int u0, unsigned int u1,
 				    double d0, const Point &p) 
 {
@@ -186,7 +191,7 @@ TriMC<Field>::find_or_add_edgepoint(unsigned int u0, unsigned int u1,
   const typename edge_hash_type::iterator loc = edge_map_.find(np);
   if (loc == edge_map_.end())
   {
-    const CurveMesh::Node::index_type nodeindex = out_mesh_->add_point(p);
+    const CMesh::Node::index_type nodeindex = out_mesh_->add_point(p);
     edge_map_[np] = nodeindex;
     return nodeindex;
   }
@@ -198,12 +203,12 @@ TriMC<Field>::find_or_add_edgepoint(unsigned int u0, unsigned int u1,
 
 
 template<class Field>
-CurveMesh::Node::index_type
+TriMC<Field>::CMesh::Node::index_type
 TriMC<Field>::find_or_add_nodepoint(node_index_type &tri_node_idx)
 {
-  CurveMesh::Node::index_type curve_node_idx;
+  CMesh::Node::index_type curve_node_idx;
   long int i = node_map_[(long int)(tri_node_idx)];
-  if (i != -1) curve_node_idx = (CurveMesh::Node::index_type) i;
+  if (i != -1) curve_node_idx = (CMesh::Node::index_type) i;
   else {
     Point p;
     mesh_->get_point(p, tri_node_idx);
@@ -251,7 +256,7 @@ void TriMC<Field>::extract_n( cell_index_type cell, double v )
     }
     if (out_mesh_.get_rep())
     {
-      CurveMesh::Node::array_type cnode(2);
+      CMesh::Node::array_type cnode(2);
       cnode[0] = find_or_add_edgepoint(node[a], node[b], d0, p0);
       cnode[1] = find_or_add_edgepoint(node[a], node[c], d1, p1);
       out_mesh_->add_elem(cnode);
@@ -271,7 +276,7 @@ void TriMC<Field>::extract_f( cell_index_type cell, double iso )
   cell_index_type nbr;
   Point p[2];
   typename mesh_type::Node::array_type nodes;
-  CurveMesh::Node::array_type vertices(2);
+  CMesh::Node::array_type vertices(2);
   unsigned int i, j;
   for (i = 0; i < edges.size(); i++)
   {
@@ -315,10 +320,10 @@ template<class Field>
 FieldHandle
 TriMC<Field>::get_field(double value)
 {
-  CurveField<double> *fld = 0;
+  CField *fld = 0;
   if (out_mesh_.get_rep())
   {
-    fld = scinew CurveField<double>(out_mesh_, 1);
+    fld = scinew CField(out_mesh_, 1);
     vector<double>::iterator iter = fld->fdata().begin();
     while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
   }

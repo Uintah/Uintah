@@ -35,7 +35,7 @@
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Volume/TextureBrick.h>
 #include <Core/Volume/Utils.h>

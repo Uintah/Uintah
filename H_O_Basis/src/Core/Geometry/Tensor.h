@@ -77,6 +77,8 @@ public:
 
   Tensor operator+(const Tensor&) const;
   Tensor& operator+=(const Tensor&);
+  Tensor operator-(const Tensor&) const;
+  Tensor& operator-=(const Tensor&);
   Tensor operator*(const double) const;
   Vector operator*(const Vector) const;
 
@@ -107,6 +109,10 @@ public:
   friend void SCICORESHARE Pio(Piostream&, Tensor&);
 };
 
+inline 
+Tensor operator*(double d, const Tensor &t) {
+  return t*d;
+}
 const TypeDescription* get_type_description(Tensor*);
 
 SCICORESHARE std::ostream& operator<<(std::ostream& os, const Tensor& t);
