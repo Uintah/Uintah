@@ -178,8 +178,12 @@ void GridVisualizer::setup_widget() {
     init = 0;
     GeomHandle w2d = widget2d->GetWidget();
     widget_id = ogeom->addObj(w2d, widget_name, &widget_lock);
+    
 
     widget2d->Connect (ogeom);
+
+    // set thier mode to resize/translate only
+    widget2d->SetCurrentMode(3);
   }
 
   setupColors();
@@ -189,8 +193,6 @@ void GridVisualizer::update_widget() {
   cerr << "\t\tStarting locator\n";
   widget_on = plane_on.get() != 0;
   widget2d->SetState(widget_on);
-  // set thier mode to resize/translate only
-  widget2d->SetCurrentMode(3);
 
   if (need_2d != 0){
     Point min, max;
@@ -332,7 +334,7 @@ int GridVisualizer::update_selected_node() {
       error("Can't add selected node.");
     }
   }
-  ogeom->flush();
+//    ogeom->flush();
   return 0;
 }
   
