@@ -129,6 +129,14 @@ public:
 	return d_flowInlets[index].d_cellTypeID;
       }
 
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Wall boundary ID
+      //
+      inline int wallCellType() const { 
+	return d_wallBdry->d_cellTypeID; 
+      }
+
       // GROUP:  Schedule tasks :
       ////////////////////////////////////////////////////////////////////////
       //
@@ -416,6 +424,9 @@ private:
   
 //
 // $Log$
+// Revision 1.42  2000/08/19 05:53:43  bbanerje
+// Changed code so that output looks more like fortran output.
+//
 // Revision 1.41  2000/07/30 22:21:21  bbanerje
 // Added bcscalar.F (originally bcf.f in Kumar's code) needs more work
 // in C++ side.

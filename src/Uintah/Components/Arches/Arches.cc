@@ -96,6 +96,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_turbModel, d_props);
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->problemSetup(db);
+  d_props->setBC(d_boundaryCondition);
+
   string nlSolver;
   db->require("nonlinear_solver", nlSolver);
   if(nlSolver == "picard") {
@@ -309,6 +311,9 @@ Arches::paramInit(const ProcessorGroup* ,
   
 //
 // $Log$
+// Revision 1.56  2000/08/19 05:53:43  bbanerje
+// Changed code so that output looks more like fortran output.
+//
 // Revision 1.55  2000/08/09 03:17:56  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //
