@@ -232,8 +232,6 @@ proc updateMode {rid msg} {
 }
 
 proc addObject {rid objid name} {
-    puts "rid is $rid"
-    puts "name is $name"
     set w .$rid
     set m $w.mframe.f
     checkbutton $m.objlist.canvas.frame.obj$objid -text $name \
@@ -251,5 +249,4 @@ proc removeObject {rid objid} {
     set w .$rid
     set m $w.mframe.f
     pack forget $m.objlist.canvas.frame.obj$objid
-    puts "removed $objid"
 }
