@@ -22,6 +22,7 @@ class Material;
 class ICEMaterial;
 class MPMMaterial;
 class ArchesMaterial; 
+  class SimpleMaterial;
    
     /**************************************
       
@@ -60,6 +61,7 @@ class ArchesMaterial;
 	 return delt_label;
       }
 
+      void registerSimpleMaterial(SimpleMaterial*);
       void registerMPMMaterial(MPMMaterial*);
       void registerArchesMaterial(ArchesMaterial*);
       void registerICEMaterial(ICEMaterial*);
@@ -116,7 +118,6 @@ class ArchesMaterial;
       void setElapsedTime(double t) {
 	d_elapsed_time = t;
       }
-      bool d_mpm_cfd;
    private:
 
       void registerMaterial(Material*);
@@ -129,6 +130,7 @@ class ArchesMaterial;
       std::vector<MPMMaterial*> mpm_matls;
       std::vector<ArchesMaterial*> arches_matls;
       std::vector<ICEMaterial*> ice_matls;
+      std::vector<SimpleMaterial*> simple_matls;
       Vector d_gravity;
       MaterialSet* all_mpm_matls;
       MaterialSet* all_ice_matls;

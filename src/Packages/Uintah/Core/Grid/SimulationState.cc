@@ -3,6 +3,7 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/ReductionVariable.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
+#include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
@@ -17,7 +18,6 @@ SimulationState::SimulationState(ProblemSpecP &ps)
     ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
    nonconstDelt->allowMultipleComputes();
    delt_label = nonconstDelt;
-   d_mpm_cfd = false;
    d_ref_press = 0.0;
 
   // Get the physical constants that are shared between codes.
@@ -54,6 +54,12 @@ void SimulationState::registerICEMaterial(ICEMaterial* matl)
 {
    ice_matls.push_back(matl);
    registerMaterial(matl);
+}
+
+void SimulationState::registerSimpleMaterial(SimpleMaterial* matl)
+{
+  simple_matls.push_back(matl);
+  registerMaterial(matl);
 }
 
 void SimulationState::finalizeMaterials()
