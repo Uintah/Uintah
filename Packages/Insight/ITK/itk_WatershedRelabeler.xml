@@ -53,6 +53,7 @@ This filter implements the final step in the watershed segmentation algorithm.  
       <name>flood_level</name>
       <type>double</type>
       <call>SetFloodLevel</call>
+      <default>0.1</default>
     </param>
   </parameters>
 

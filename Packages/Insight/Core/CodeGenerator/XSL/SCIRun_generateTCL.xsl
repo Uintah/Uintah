@@ -72,12 +72,16 @@
      on the C++ side
  -->
 <xsl:for-each select="/filter/filter-itk/parameters/param">
-<xsl:variable name="defined_object"><xsl:value-of select="@defined"/></xsl:variable>
+<xsl:variable name="defined_object">
+<xsl:call-template name="determine_type"/>
+</xsl:variable>
+<xsl:variable name="const"><xsl:value-of select="default/@const"/></xsl:variable>
 <!-- don't define globals for variables dependent on changing dimension -->
 <!-- this would be indicated by the attribute defined being empty string -->
-<xsl:if test="$defined_object = ''">
+<xsl:if test="$const != 'yes'">
+<xsl:if test="$defined_object = 'no'">
          global $this-<xsl:value-of select="name"/>  
-</xsl:if>
+</xsl:if></xsl:if>
 </xsl:for-each>
 <xsl:if test="$has_defined_objects != ''">
          global $this-dimension</xsl:if>
@@ -90,9 +94,22 @@
 -->
     method set_defaults {} {
 <xsl:for-each select="/filter/filter-itk/parameters/param">
-<xsl:variable name="defined_object"><xsl:value-of select="@defined"/></xsl:variable>
-<xsl:if test="$defined_object = ''">
-         set $this-<xsl:value-of select="name"/> 0</xsl:if>
+<xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
+<xsl:variable name="const"><xsl:value-of select="default/@const"/></xsl:variable>
+<xsl:variable name="defined_object">
+<xsl:call-template name="determine_type"/>
+</xsl:variable>
+<xsl:variable name="gui_default"><xsl:value-of select="/filter/filter-gui/parameters/param[@name=$name]/default"/></xsl:variable>
+<xsl:if test="$const != 'yes'">
+<xsl:if test="$defined_object = 'no'">
+<xsl:choose>
+<xsl:when test="$gui_default=''">
+         set $this-<xsl:value-of select="name"/><xsl:text> </xsl:text><xsl:value-of select="default"/></xsl:when>
+<xsl:otherwise>
+         set $this-<xsl:value-of select="name"/><xsl:text> </xsl:text><xsl:value-of select="$gui_default"/></xsl:otherwise>
+</xsl:choose>
+</xsl:if>
+</xsl:if>
 </xsl:for-each>
 <xsl:if test="$has_defined_objects != ''">
          set $this-dimension 0</xsl:if>
@@ -126,9 +143,12 @@
 -->  
 <xsl:for-each select="/filter/filter-itk/parameters/param">
 <xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
+<xsl:variable name="const"><xsl:value-of select="default/@const"/></xsl:variable>
 <xsl:variable name="gui"><xsl:value-of select="/filter/filter-gui/parameters/param[@name=$name]/gui"/></xsl:variable>
-<xsl:variable name="defined_object"><xsl:value-of select="@defined"/></xsl:variable>
-
+<xsl:variable name="defined_object">
+<xsl:call-template name="determine_type"/>
+</xsl:variable>
+<xsl:if test="$const != 'yes'">
 <xsl:choose>
 <xsl:when test="$defined_object = 'yes'">
         frame $w.<xsl:value-of select="name"/> -relief groove -borderwidth 2
@@ -184,6 +204,7 @@
 
 </xsl:otherwise>
 </xsl:choose>
+</xsl:if>
 </xsl:for-each>
 
 
@@ -208,6 +229,8 @@
     method clear_gui {} {
         set w .ui[modname]
 <xsl:for-each select="/filter/filter-itk/parameters/param">
+<xsl:variable name="const"><xsl:value-of select="default/@const"/></xsl:variable>
+<xsl:if test="$const != 'yes'">
 <xsl:variable name="path">$w.<xsl:value-of select="name"/>.<xsl:value-of select="name"/>$i</xsl:variable>
         for {set i 0} {$i &lt; [set $this-dimension]} {incr i} {
 
@@ -221,6 +244,7 @@
         if {[winfo exists $w.<xsl:value-of select="name"/>.label]} {
  		destroy $w.<xsl:value-of select="name"/>.label
         }
+</xsl:if>
 </xsl:for-each>
      }
 </xsl:if>
@@ -232,9 +256,13 @@
 -->
 <xsl:for-each select="/filter/filter-itk/parameters/param">
 <xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
-<xsl:variable name="defined_object"><xsl:value-of select="@defined"/></xsl:variable>
+<xsl:variable name="const"><xsl:value-of select="default/@const"/></xsl:variable>
+<xsl:variable name="defined_object">
+<xsl:call-template name="determine_type"/>
+</xsl:variable>
+<xsl:if test="$const!='yes'">
 <xsl:if test="$defined_object = 'yes'">
-<xsl:variable name="default"><xsl:value-of select="/filter/filter-gui/parameters/param[@name=$name]/default"/></xsl:variable>
+<xsl:variable name="gui_default"><xsl:value-of select="/filter/filter-gui/parameters/param[@name=$name]/default"/></xsl:variable>
 <xsl:variable name="path"><xsl:value-of select="$name"/>.<xsl:value-of select="name"/></xsl:variable>
     method init_<xsl:value-of select="$name"/>_dimensions {} {
      	set w .ui[modname]
@@ -255,11 +283,11 @@
 		    # create widget for this dimension
                     global $this-<xsl:value-of select="$name"/>$i
 <xsl:choose>
-<xsl:when test="$default=''">
-                    set $this-<xsl:value-of select="$name"/>$i 0
+<xsl:when test="$gui_default=''">
+                    set $this-<xsl:value-of select="$name"/>$i<xsl:text> </xsl:text><xsl:value-of select="default"/>
 </xsl:when>
 <xsl:otherwise>
-                    set $this-<xsl:value-of select="$name"/>$i <xsl:value-of select="$default"/>
+                    set $this-<xsl:value-of select="$name"/>$i <xsl:value-of select="$gui_default"/>
 </xsl:otherwise>
 </xsl:choose>
 
@@ -277,6 +305,7 @@
     }
 
  </xsl:if>
+</xsl:if>
 </xsl:for-each>
 }
 </xsl:template>
@@ -410,4 +439,20 @@
 <xsl:text>
 </xsl:text>	     
 </xsl:template>
+
+
+
+<!-- Helper function to determine if a parameter is a primitive type or defined type -->
+<xsl:template name="determine_type">
+<xsl:variable name="type"><xsl:value-of select="type"/></xsl:variable>
+<xsl:choose>
+<xsl:when test="$type='int'">no</xsl:when>
+<xsl:when test="$type='float'">no</xsl:when>
+<xsl:when test="$type='double'">no</xsl:when>
+<xsl:when test="$type='bool'">no</xsl:when>
+<xsl:otherwise>yes</xsl:otherwise>
+</xsl:choose>
+</xsl:template>
+
+
 </xsl:stylesheet>

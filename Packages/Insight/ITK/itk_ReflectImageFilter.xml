@@ -33,6 +33,7 @@ the type of the output image.
       <name>direction</name>
       <type>int</type>
       <call>SetDirection</call>
+      <default>0</default>
     </param>
   </parameters>
 

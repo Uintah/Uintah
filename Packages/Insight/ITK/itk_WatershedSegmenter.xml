@@ -55,6 +55,7 @@ This filter implements the first step in the N-d watershed segmentation algorith
       <name>threshold</name>
       <type>double</type>
       <call>SetThreshold</call>
+      <default>0.01</default>
     </param>
   </parameters>
 
