@@ -75,20 +75,15 @@ void *FindLibrarySymbol(const char* package, const char* type,
   void* SymbolAddress = 0;
   LIBRARY_HANDLE so = 0;
 
-  sprintf(libname,"lib%s_Datatypes_%s.so",package,type);
-  so = GetLibraryHandle(libname);
-  if (so) {
-    SymbolAddress = GetHandleSymbolAddress(so,symbol);
-    if (SymbolAddress) goto found;
-  }
-  
-  sprintf(libname,"lib%s_Datatypes.so",package);
+  // maybe it's in the small version of the .so
+  sprintf(libname,"lib%s_Ports.so",package);
   so = GetLibraryHandle(libname);
   if (so) {
     SymbolAddress = GetHandleSymbolAddress(so,symbol);
     if (SymbolAddress) goto found;
   }
 
+  // maybe it's in the large version of the .so
   sprintf(libname,"lib%s.so",package);
   so = GetLibraryHandle(libname);
   if (so) {
@@ -96,6 +91,7 @@ void *FindLibrarySymbol(const char* package, const char* type,
     if (SymbolAddress) goto found;
   }
 
+  // maybe it's in a .so that doesn't conform to the naming convention
   sprintf(libname,"%s",package);
   so = GetLibraryHandle(libname);
   if (so) {
