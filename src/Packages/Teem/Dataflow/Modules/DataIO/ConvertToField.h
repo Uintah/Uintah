@@ -74,17 +74,20 @@ public:
 				SCIRun::FieldHandle &);
 };
 
-template <class Val>
-void get_val_and_inc_nrrdptr(Val &v, void *&ptr);
 
-template <>
-void get_val_and_inc_nrrdptr<Vector>(Vector &v, void *&ptr);
 
-template <>
-void get_val_and_inc_nrrdptr<Tensor>(Tensor &v, void *&ptr);
 
 template <class Val>
-void get_val_and_inc_nrrdptr(Val &v, void *&ptr) 
+void get_val_and_inc_nrrdptr(Val &v, void *&ptr, unsigned);
+
+template <>
+void get_val_and_inc_nrrdptr<Vector>(Vector &v, void *&ptr, unsigned);
+
+template <>
+void get_val_and_inc_nrrdptr<Tensor>(Tensor &v, void *&ptr, unsigned);
+
+template <class Val>
+void get_val_and_inc_nrrdptr(Val &v, void *&ptr, unsigned) 
 {
   Val *&p = (Val*&)ptr;
   v = *p;
@@ -97,9 +100,10 @@ fill_data(Fld *fld, Nrrd *inrrd, Iter &iter, Iter &end)
 {
   typedef typename Fld::value_type val_t;
   void *p = inrrd->data;
+
   while (iter != end) {
     val_t tmp;
-    get_val_and_inc_nrrdptr(tmp, p);
+    get_val_and_inc_nrrdptr(tmp, p, inrrd->type);
     fld->set_value(tmp, *iter);
     ++iter;
   }
