@@ -10,6 +10,7 @@
 #include <Packages/rtrt/visinfo/visinfo.h>
 #include <stdio.h>
 #include <string>
+#include <X11/keysym.h>
 
 using std::string;
 using namespace rtrt;
@@ -56,10 +57,17 @@ void GridSpheresDpy::setup_vars() {
 
     // setup scales/ranges
     scales=new float[ndata];
+    color_scales=new float[ndata];
+    original_min=new float[ndata];
+    original_max=new float[ndata];
     range_begin=new float[ndata];
     range_end=new float[ndata];
     new_range_begin=new float[ndata];
     new_range_end=new float[ndata];
+    color_begin=new float[ndata];
+    color_end=new float[ndata];
+    new_color_begin=new float[ndata];
+    new_color_end=new float[ndata];
     for(int i=0;i<ndata;i++){
       if (var_names != 0)
 	cerr << var_names[i];
@@ -76,9 +84,11 @@ void GridSpheresDpy::setup_vars() {
 	    max[i] = 1;
 	}
       }
-      scales[i]=1./(max[i]-min[i]);
-      new_range_begin[i]=range_begin[i]=min[i];
-      new_range_end[i]=range_end[i]=max[i];
+      scales[i]=color_scales[i]=1./(max[i]-min[i]);
+      original_min[i]=new_range_begin[i]=range_begin[i]=color_begin[i]=
+	new_color_begin[i]=min[i];
+      original_max[i]=new_range_end[i]=range_end[i]=color_end[i]=
+	new_color_end[i]=max[i];
     }
   }
   cerr << "GridSpheresDpy:setup_vars:end\n";
@@ -123,7 +133,7 @@ void GridSpheresDpy::run()
   atts.border_pixmap = None;
   atts.border_pixel = 0;
   atts.colormap=cmap;
-  atts.event_mask=StructureNotifyMask|ExposureMask|ButtonPressMask|ButtonReleaseMask|ButtonMotionMask|KeyPressMask;
+  atts.event_mask=StructureNotifyMask|ExposureMask|ButtonPressMask|ButtonReleaseMask|ButtonMotionMask|KeyPressMask|KeyReleaseMask;
   Window win=XCreateWindow(dpy, RootWindow(dpy, screen),
 			   0, 0, xres, yres, 0, vi->depth,
 			   InputOutput, vi->visual, flags, &atts);
@@ -167,6 +177,8 @@ void GridSpheresDpy::run()
   setup_vars();
   bool need_hist=true;
   bool redraw=true;
+  bool control_pressed=false;
+  bool shift_pressed=false;
   int redraw_range=-1;
   xlock.unlock();
   for(;;){
@@ -197,23 +209,70 @@ void GridSpheresDpy::run()
 	redraw=true;
       }
       break;
+    case KeyPress:
+      switch(XKeycodeToKeysym(dpy, e.xkey.keycode, 0)){
+      case XK_Control_L:
+      case XK_Control_R:
+	//	cerr << "Pressed control\n";
+	control_pressed = true;
+	break;
+      case XK_Shift_L:
+      case XK_Shift_R:
+	//	cerr << "Pressed shift\n";
+	shift_pressed = true;
+      }
+      break;
+    case KeyRelease:
+      switch(XKeycodeToKeysym(dpy, e.xkey.keycode, 0)){
+      case XK_Control_L:
+      case XK_Control_R:
+	control_pressed = false;
+	//	cerr << "Releassed control\n";
+	break;
+      case XK_Shift_L:
+      case XK_Shift_R:
+	//	cerr << "Releassed shift\n";
+	shift_pressed = false;
+      }
+      break;
     case ButtonPress:
     case ButtonRelease:
       switch(e.xbutton.button){
       case Button1:
-	move(new_range_begin, e.xbutton.x, e.xbutton.y, redraw_range);
+	if (shift_pressed) {
+	  //cerr << "Left button pressed with shift\n";
+	} else if (control_pressed) {
+	  //cerr << "Left button pressed with control\n";
+	  move(new_color_begin, e.xbutton.x, e.xbutton.y, redraw_range);
+	} else {
+	  move(new_range_begin, e.xbutton.x, e.xbutton.y, redraw_range);
+	}
 	redraw=true;
 	break;
       case Button2:
-	changecolor(e.xbutton.y);
+	if (shift_pressed) {
+	  //cerr << "Middle button pressed with shift\n";
+	} else if (control_pressed) {
+	  //cerr << "Middle button pressed with control\n";
+	} else {
+	  changecolor(e.xbutton.y);
+	}
 	break;
       case Button3:
-	move(new_range_end, e.xbutton.x, e.xbutton.y, redraw_range);
+	if (shift_pressed) {
+	  //cerr << "Right button pressed with shift\n";
+	} else if (control_pressed) {
+	  //cerr << "Right button pressed with control\n";
+	  move(new_color_end, e.xbutton.x, e.xbutton.y, redraw_range);
+	} else {
+	  move(new_range_end, e.xbutton.x, e.xbutton.y, redraw_range);
+	}
 	redraw=true;
 	break;
       }
       break;
     case MotionNotify:
+      if (shift_pressed || control_pressed) break;
       switch(e.xmotion.state&(Button1Mask|Button2Mask|Button3Mask)){
       case Button1Mask:
 	move(new_range_begin, e.xbutton.x, e.xbutton.y, redraw_range);
@@ -330,7 +389,7 @@ void GridSpheresDpy::draw_hist(GLuint fid, XFontStruct* font_struct,
   //cerr << "GridSpheresDpy:draw_hist:start\n";
   int n=ndata;
   int descent=font_struct->descent;
-  int textheight=font_struct->descent+font_struct->ascent;
+  int textheight=font_struct->descent+font_struct->ascent+2;
   if(redraw_range == -1){
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glViewport(0, 0, xres, yres);
@@ -391,6 +450,36 @@ void GridSpheresDpy::draw_hist(GLuint fid, XFontStruct* font_struct,
       glLoadIdentity();
       glColor3f(0,0,0);
       glRectf(min[j], 0, max[j], h);
+
+      
+      // draw the coloring spots
+      if (new_color_begin[j] != new_color_end[j])
+	color_scales[j] = 1./(new_color_end[j]-new_color_begin[j]);
+      if (new_color_end[j] > new_color_begin[j]) {
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+#if 0
+	glColor3f(1,1,1);
+	glBegin(GL_LINES);
+	cerr << "new_color_begin["<<j<<"] = "<<new_color_begin[j];
+	cerr << ", new_color_end["<<j<<"] = "<<new_color_end[j]<<endl;
+	cerr << "textheight-2 = "<<textheight-2<<", h = "<<h<<endl;
+	float factor=xres/(max[j]-min[j]);
+	int x = (int)((new_color_begin[j]-min[j])*factor);
+	cerr <<"x = "<<x;
+	glVertex2i(new_color_begin[j], textheight-2);
+	glVertex2i(new_color_begin[j], h+2);
+	x = (int)((new_color_end[j]-min[j])*factor);
+	cerr <<",x2 = "<<x<<endl;
+	glVertex2i(new_color_end[j], textheight-2);
+	glVertex2i(new_color_end[j], h+2);
+	glEnd();
+#endif
+	glColor3f(0,0,0);
+	glRectf(min[j], textheight-2, max[j], textheight);
+	glColor3f(1,1,1);
+	glRectf(new_color_begin[j], textheight-2, new_color_end[j],textheight);
+	glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
+      }
       
       if(new_range_end[j] > new_range_begin[j]){
 	glColor3f(.5,0,0);
@@ -416,6 +505,7 @@ void GridSpheresDpy::draw_hist(GLuint fid, XFontStruct* font_struct,
       if(x>right-wid)
 	x=right-wid;
       printString(fid, x, descent+1, buf, Color(1,0,0));
+
     }
   }
   glFinish();
@@ -429,13 +519,18 @@ void GridSpheresDpy::draw_hist(GLuint fid, XFontStruct* font_struct,
 
 void GridSpheresDpy::move(float* range, int x, int y, int& redraw_range)
 {
+  // swap y=0 orientation
   y=yres-y;
+  // loop over each block and see where the event was
   for(int j = 0; j < ndata; j++){
     int s=j*yres/ndata +2;
     int e=(j+1)*yres/ndata-2;
     if(y>=s && y<e){
-      float xn=float(x)/xres;
+      // found the region the event was
+      float xn=float(x)/xres; // normalize the x location to [0,1]
+      // find the corresponding value at the clicked location
       float val=min[j]+xn*(max[j]-min[j]);
+      // bound the value
       if(val < min[j])
 	val = min[j];
       if(val > max[j])
@@ -457,6 +552,14 @@ void GridSpheresDpy::animate(bool& changed) {
     if(new_range_end[j] != range_end[j]){
       changed=true;
       range_end[j]=new_range_end[j];
+    }
+    if(new_color_begin[j] != color_begin[j]) {
+      changed = true;
+      color_begin[j] = new_color_begin[j];
+    }
+    if(new_color_end[j] != color_end[j]) {
+      changed = true;
+      color_end[j] = new_color_end[j];
     }
   }
   if (newcolordata != colordata) {
