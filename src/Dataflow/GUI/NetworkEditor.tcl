@@ -744,11 +744,13 @@ proc NiceQuit {} {
         if {[winfo exists .standalone] } {
 	    set result [createSciDialog -warning -title "Quit?" -button1 "Don't Save" -button2 "Cancel" -button3 "Save" \
                            -message "Your session has not been saved.\nWould you like to save before exiting?"  ]
+	    if {![string compare "-1" $result]} { return }
 	    if {![string compare "2" $result]} { return }
 	    if {![string compare "3" $result]} { app save_session }
 	} else {
 	    set result [createSciDialog -warning -title "Quit?" -button1 "Don't Save" -button2 "Cancel" -button3 "Save" \
                            -message "Your network has not been saved.\nWould you like to save before exiting?" ]
+	    if {![string compare "-1" $result]} { return }
 	    if {![string compare "2" $result]} { return }
 	    if {![string compare "3" $result]} { 
 		puts -nonewline "Saving $netedit_savefile..."
@@ -790,7 +792,7 @@ proc popupInfoMenu {} {
     set w .netedit_info
     if {[winfo exists $w]} {
 	raise $w
-	return;
+	return
     }
     toplevel $w
 
