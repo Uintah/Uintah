@@ -729,8 +729,14 @@ proc ClearCanvas { {confirm 1} {subnet 0} } {
     if {!$confirm || [string compare "yes" $result] == 0} {
 	global Subnet netedit_savefile CurrentlySelectedModules
 	foreach module $Subnet(Subnet${subnet}_Modules) {
+	    if { [string first Render_Viewer $module] != -1 } {
+		moduleDestroy $module
+	    }
+	}
+	foreach module $Subnet(Subnet${subnet}_Modules) {
 	    moduleDestroy $module
 	}
+
 	wm title . "SCIRun" ;# Reset Main Window Title
 	set netedit_savefile ""
 	set CurrentlySelectedModules ""
