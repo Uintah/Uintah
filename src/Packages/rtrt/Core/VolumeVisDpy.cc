@@ -13,6 +13,9 @@
 #include <stdio.h>
 #include <X11/keysym.h>
 #include <algorithm>
+#ifdef __GNUG__
+#include <values.h>
+#endif
 
 using namespace rtrt;
 using SCIRun::Mutex;
