@@ -2942,9 +2942,9 @@ AC_SUBST(DEF_MPEG)
 if test "$pkg_fusion" = "yes"; then
 
   if test "$with_mdsplus"; then
-  dirs="$with_mdsplus/lib $SCI_LAB_TP_LIBS"
+    dirs="$with_mdsplus/lib $SCI_LAB_TP_LIBS"
   else
-    dirs="$SCI_LAB_TP_LIBS"
+    dirs="/usr/local/mdsplus/lib $SCI_LAB_TP_LIBS"
   fi
 
   SCI_CHECK_LIB($dirs,MdsLib_client,main,,no,optional)
@@ -3125,6 +3125,7 @@ AC_SUBST(GLOBUS_LIB_DIR_FLAG)
 AC_SUBST(GLOBUS_EXTRA_LIB_FLAG)
 AC_SUBST(INC_GLOBUS_H)
 AC_SUBST(DEF_GLOBUS)
+
 
 ##  --  search for Qt  ----------------------------------------------------
 
