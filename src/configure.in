@@ -456,6 +456,7 @@ AC_OUTPUT(Makefile \
                 SCICore/TclInterface/Makefile \
                 SCICore/TkExtensions/Makefile \
                 SCICore/Tester/Makefile \
+		SCICore/Thread/Makefile \
                 SCICore/Util/Makefile \
               PSECore/Makefile \
                 PSECore/Comm/Makefile \
