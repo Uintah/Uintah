@@ -13,13 +13,16 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/ChemVis.tcl $(SRCDIR)/PartToGeom.tcl \
 	$(SRCDIR)/TecplotFileSelector.tcl $(SRCDIR)/TriangleReader.tcl \
 	$(SRCDIR)/application.tcl $(SRCDIR)/cfdGridLines.tcl \
 	$(SRCDIR)/test.tcl $(SRCDIR)/GridLines.tcl \
-	$(SRCDIR)/ArchiveReader.tcl
+	$(SRCDIR)/NodeHedgehog.tcl $(SRCDIR)/ArchiveReader.tcl
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Uintah/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.4  2000/06/27 16:56:58  bigler
+# Added Nodehedgehog.tcl
+#
 # Revision 1.3  2000/06/22 17:44:07  kuzimmer
 # removed commented out code and modified the sub.mk so that the GUI
 # comes up.
