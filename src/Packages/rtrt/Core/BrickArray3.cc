@@ -10,10 +10,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Packages/rtrt/Core/BrickArray3.h>
-
-using namespace rtrt;
-
 template<class T>
 BrickArray3<T>::BrickArray3()
 {

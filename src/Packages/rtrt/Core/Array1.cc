@@ -15,13 +15,6 @@
 #pragma interface
 #endif
 
-#include <Packages/rtrt/Core/Array1.h>
-
-#ifndef __ARRAY1_CC__
-#define __ARRAY1_CC__
-
-namespace rtrt {
-  
 template<class T>
 Array1<T>::Array1(const Array1<T>& a)
 {
@@ -195,6 +188,3 @@ void Pio(Piostream& stream, Array1<T>*& array) {
     Pio(stream, *array);
 }
 
-} // end namespace rtrt
-
-#endif // __ARRAY1_CC__

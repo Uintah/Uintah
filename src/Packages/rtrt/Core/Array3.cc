@@ -10,10 +10,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Packages/rtrt/Core/Array3.h>
-
-namespace rtrt {
-
 template<class T>
 Array3<T>::Array3()
 {
@@ -116,5 +112,3 @@ void Array3<T>::share(const Array3<T>& copy)
     dm3=copy.dm3;
     (*refcnt)++;
 }
-
-} // end namespace rtrt
