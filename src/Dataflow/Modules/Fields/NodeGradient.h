@@ -100,12 +100,15 @@ NodeGradientAlgoT<IFIELD>::execute(FieldHandle& field_h)
       LatVolMesh::Node::index_type iy0(*itr), iy1(*itr);
       LatVolMesh::Node::index_type iz0(*itr), iz1(*itr);
 
-      if (ix0.i_ > 0)  { ix0.i_--; }
-      if (ix1.i_ < ni) { ix1.i_++; }
-      if (iy0.j_ > 0)  { iy0.j_--; }
-      if (iy1.j_ < nj) { iy1.j_++; }
-      if (iz0.k_ > 0)  { iz0.k_--; }
-      if (iz1.k_ < nk) { iz1.k_++; }
+      double xscale, yscale, zscale;
+      xscale=yscale=zscale=0.5;
+
+      if (ix0.i_ > 0)  { ix0.i_--; } else { xscale=1.0; }
+      if (ix1.i_ < ni) { ix1.i_++; } else { xscale=1.0; }
+      if (iy0.j_ > 0)  { iy0.j_--; } else { yscale=1.0; }
+      if (iy1.j_ < nj) { iy1.j_++; } else { yscale=1.0; }
+      if (iz0.k_ > 0)  { iz0.k_--; } else { zscale=1.0; }
+      if (iz1.k_ < nk) { iz1.k_++; } else { zscale=1.0; }
 
       // Get all of the adjacent values.
       typename IFIELD::value_type x0, x1, y0, y1, z0, z1;
@@ -118,7 +121,7 @@ NodeGradientAlgoT<IFIELD>::execute(FieldHandle& field_h)
       ifield->value(z1, iz1);
 
       // Compute gradient.
-      const Vector g((x1 - x0) * 0.5, (y1 - y0) * 0.5, (z1 - z0) * 0.5);
+      const Vector g((x1 - x0)*xscale, (y1 - y0)*yscale, (z1 - z0)*zscale);
 
       // Transform gradient to world space.
       const Vector gradient = transform.project_normal(g);
