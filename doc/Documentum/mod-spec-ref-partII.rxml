@@ -1,4 +1,4 @@
-<!-- -*- nxml -*-
+<!--
 The contents of this file are subject to the University of Utah Public
 License (the "License"); you may not use this file except in compliance
 with the License.
@@ -14,9 +14,6 @@ The Original Source Code was developed by the University of Utah.
 Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
 University of Utah. All Rights Reserved.
 -->
-
-<!--% require("../Utilities/Publish/srdoc.rb") %-->
-<!--% doc = Doc.create(Doc::DocBook) %-->
 
 <part>
   <title>Module Description Element Reference</title>
