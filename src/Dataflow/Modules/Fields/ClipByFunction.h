@@ -26,6 +26,7 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
 #include <Core/Datatypes/Clipper.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
 #include <sci_hash_map.h>
 #include <algorithm>
 
@@ -41,7 +42,8 @@ public:
 
   virtual FieldHandle execute(ProgressReporter *reporter,
 			      FieldHandle fieldh,
-			      int clipmode) = 0;
+			      int clipmode,
+			      MatrixHandle &interpolant) = 0;
 
   virtual string identify() = 0;
 
@@ -59,7 +61,8 @@ public:
   //! virtual interface. 
   virtual FieldHandle execute(ProgressReporter *reporter,
 			      FieldHandle fieldh,
-			      int clipmode);
+			      int clipmode,
+			      MatrixHandle &interpolant);
 
   virtual bool vinside_p(double x, double y, double z,
 			 typename FIELD::value_type v)
@@ -73,7 +76,8 @@ template <class FIELD>
 FieldHandle
 ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
 				    FieldHandle fieldh,
-				    int clipmode)
+				    int clipmode,
+				    MatrixHandle &interpolant)
 {
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   typename FIELD::mesh_type *mesh =
@@ -196,14 +200,32 @@ ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
     FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
     typename hash_type::iterator hitr = nodemap.begin();
 
+    const int nrows = nodemap.size();;
+    const int ncols = field->fdata().size();
+    int *rr = scinew int[nrows+1];
+    int *cc = scinew int[nrows];
+    double *d = scinew double[nrows];
+
     while (hitr != nodemap.end())
     {
       typename FIELD::value_type val;
       field->value(val, (typename FIELD::mesh_type::Node::index_type)((*hitr).first));
       ofield->set_value(val, (typename FIELD::mesh_type::Node::index_type)((*hitr).second));
 
+      cc[(*hitr).second] = (*hitr).first;
+
       ++hitr;
     }
+
+    int i;
+    for (i = 0; i < nrows; i++)
+    {
+      rr[i] = i;
+      d[i] = 1.0;
+    }
+    rr[i] = i; // An extra entry goes on the end of rr.
+
+    interpolant = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
   }
   else if (fieldh->data_at_type_description()->get_name() ==
 	   get_type_description((typename FIELD::mesh_type::Elem *)0)->get_name())
