@@ -143,18 +143,18 @@ void ParticleVis::execute()
     cmap = cmh.get_rep();
   else {
     // create a default colormap
-    Array1<Color> rgb;
-    Array1<float> rgbT;
-    Array1<float> alphas;
-    Array1<float> alphaT;
-    rgb.add( Color(1,0,0) );
-    rgb.add( Color(0,0,1) );
-    rgbT.add(0.0);
-    rgbT.add(1.0);
-    alphas.add(1.0);
-    alphas.add(1.0);
-    alphaT.add(1.0);
-    alphaT.add(1.0);
+    vector<Color> rgb;
+    vector<float> rgbT;
+    vector<float> alphas;
+    vector<float> alphaT;
+    rgb.push_back( Color(1,0,0) );
+    rgb.push_back( Color(0,0,1) );
+    rgbT.push_back(0.0);
+    rgbT.push_back(1.0);
+    alphas.push_back(1.0);
+    alphas.push_back(1.0);
+    alphaT.push_back(1.0);
+    alphaT.push_back(1.0);
       
     cmap = scinew ColorMap(rgb,rgbT,alphas,alphaT,16);
   }
