@@ -306,7 +306,7 @@ EditField::build_widget(FieldHandle f)
 
   box_->SetScale(l2norm * 0.015);
   box_->SetPosition(center, right, down, in);
-  box_->AxisAligned(1);
+  box_->AxisAligned(0);
   
   GeomGroup *widget_group = scinew GeomGroup;
   widget_group->add(box_->GetWidget());
@@ -348,6 +348,9 @@ EditField::execute()
 
   // get and display the attributes of the input field
   update_input_attributes(fh);
+
+  // copy valid settings to the un-checked output field attributes
+  TCL::execute(id+" copy_attributes; update idletasks");
 
   // build the transform widget
   if (generation_ != fh.get_rep()->generation) {
@@ -507,23 +510,23 @@ EditField::execute()
   oport->send(ef);
 
   // The output port is required.
-  MatrixOPort *moport = (MatrixOPort*)get_oport("Transform matrix");
-  if (!oport) {
+  MatrixOPort *moport = (MatrixOPort*)get_oport("Transformation matrix");
+  if (!moport) {
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;
   }  
 
   // convert the transform into a matrix and send it out   
   DenseMatrix *matrix_transform = scinew DenseMatrix(4,4);
+  MatrixHandle mh = matrix_transform;
   double dummy[16];   
   box_initial_transform__.get(dummy);   
   double *p=&(dummy[0]);   
-  int cnt=0;   
-  for (int i=0; i<4; i++)     
-    for (int j=0; j<4; j++, cnt++)       
-      (*matrix_transform)[i][j]=*p++;
+  for (int i=0; i<4; ++i)     
+    for (int j=0; j<4; ++j,++p)       
+      (*matrix_transform)[i][j]=*p;
 
-  moport->send(matrix_transform);
+  moport->send(mh);
 }
 
     
