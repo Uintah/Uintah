@@ -78,7 +78,7 @@ set planes_mapType 0
 
 # volume rendering
 global show_vol_ren
-set show_vol_ren 1
+set show_vol_ren 0
 
 global show_iso
 set show_iso 0
@@ -242,9 +242,12 @@ class BioImageApp {
 	    change_indicate_val 2
 	} elseif {[string first "Isosurface" $which] != -1 && $state == "NeedData"} {
 	    change_indicate_val 1
-	    change_indicator_labels "Isosurfacing..."
 	} elseif {[string first "Isosurface" $which] != -1 && $state == "Completed"} {
 	    change_indicate_val 2
+	    if {$has_autoviewed == 0} {
+		set has_autoviewed 1
+		after 100 "$mods(Viewer)-ViewWindow_0-c autoview"
+	    }
 	} elseif {[string first "NrrdTextureBuilder" $which] != -1 && $state == "JustStarted"} {
 	    change_indicator_labels "Volume Rendering..."
 	    change_indicate_val 1
@@ -305,7 +308,7 @@ class BioImageApp {
 	    # update slice sliders
 	    global $which-size0 
 
-
+	    global $which-size1
 	    if {[info exists $which-size1]} {
 		global $which-size1 $which-size2
 
@@ -319,14 +322,17 @@ class BioImageApp {
   	    .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.modes.slice.s configure -from 0 -to $sizex
  	    .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.modes.slice.s configure -from 0 -to $sizey
 
- 	    # set slice to be middle slice
- 	    global $mods(ViewImage)-axial-viewport0-slice
- 	    global $mods(ViewImage)-sagittal-viewport0-slice
- 	    global $mods(ViewImage)-coronal-viewport0-slice
 
- 	    set $mods(ViewImage)-axial-viewport0-slice [expr $sizez/2]
- 	    set $mods(ViewImage)-sagittal-viewport0-slice [expr $sizex/2]
- 	    set $mods(ViewImage)-coronal-viewport0-slice [expr $sizey/2]
+	    if {!$loading} {
+		# set slice to be middle slice
+		global $mods(ViewImage)-axial-viewport0-slice
+		global $mods(ViewImage)-sagittal-viewport0-slice
+		global $mods(ViewImage)-coronal-viewport0-slice
+
+		set $mods(ViewImage)-axial-viewport0-slice [expr $sizez/2]
+		set $mods(ViewImage)-sagittal-viewport0-slice [expr $sizex/2]
+		set $mods(ViewImage)-coronal-viewport0-slice [expr $sizey/2]
+	    }
 	} elseif {[string first "Teem_NrrdData_NrrdInfo_0" $which] != -1 && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Loading Volume..."
@@ -622,7 +628,7 @@ class BioImageApp {
 	bind $topr.modes.slice.l <Return> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
  	pack $topr.modes.slice.s $topr.modes.slice.l -side left -anchor n -padx 0
 
-        bind $topr.modes.slice.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
+        bind $topr.modes.slice.s <Motion> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
 
 	frame $topr.modes.mip
 	pack $topr.modes.mip -side top -anchor nw \
@@ -663,7 +669,7 @@ class BioImageApp {
  	pack $botl.modes.slice.s $botl.modes.slice.l -side left -anchor n -padx 0
 	bind $botl.modes.slice.l <Return> "$mods(ViewImage)-c rebind  .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
 
-        bind $botl.modes.slice.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
+        bind $botl.modes.slice.s <Motion> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
 
 	radiobutton $botl.modes.mip -text "MIP Mode" \
 	    -variable $mods(ViewImage)-sagittal-viewport0-mode -value 1 \
@@ -701,7 +707,7 @@ class BioImageApp {
 	bind $botr.modes.slice.l <Return> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
  	pack $botr.modes.slice.s $botr.modes.slice.l -side left -anchor n -padx 0
 
-        bind $botr.modes.slice.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
+        bind $botr.modes.slice.s <Motion> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
 
 	radiobutton $botr.modes.mip -text "MIP Mode" \
 	    -variable $mods(ViewImage)-coronal-viewport0-mode -value 1 \
@@ -936,7 +942,9 @@ class BioImageApp {
             set m29 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 490 1973]
 	    set m30 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 369 1889]
 
+	    # store some in mods
 	    set mods(EditTransferFunc) $m14
+
 	    
 	    set c1 [addConnection $m17 0 $m18 0]
 	    set c2 [addConnection $m12 0 $m15 0]
@@ -975,6 +983,12 @@ class BioImageApp {
 
 	    # connect vis to Viewer
 	    set c25 [addConnection $m15 0 $mods(Viewer) 0]
+
+	    # disable the volume rendering
+ 	    disableModule $m8 1
+ 	    disableModule $m15 1
+ 	    disableModule $m17 1
+ 	    disableModule $m22 1
 
 	    # set some ui parameters
 	    global $m1-filename
@@ -1520,12 +1534,12 @@ class BioImageApp {
 		set iso_slider2 $page.isoval.s
 	    }
 	    
-            bind $page.isoval.s <ButtonRelease> "global show_iso; if {$show_iso == 1} {[set Isosurface]-c needexecute}"
+            bind $page.isoval.s <ButtonRelease> "$this execute_Isosurface"
 	    
             entry $page.isoval.val -textvariable [set Isosurface]-isoval \
                 -width 6 -relief flat
 
-            bind $page.isoval.val <Return> "global show_iso; if {$show_iso == 1} {[set Isosurface]-c needexecute}"
+            bind $page.isoval.val <Return> "$this execute_Isosurface"
 	    
 	    pack $page.isoval.l $page.isoval.s $page.isoval.val -side left -anchor nw -padx 3     
 
@@ -3106,8 +3120,26 @@ class BioImageApp {
     }
 
     method toggle_show_vol_ren {} {
-	global mods show_vol_ren
-        #puts "FIX ME: implement toggle_show_vol_ren"
+	global mods show_vol_ren 
+
+	set VolumeVisualizer [lindex [lindex $filters(0) $modules] 14]
+	set NodeGradient [lindex [lindex $filters(0) $modules] 16]
+	set UnuQuantize [lindex [lindex $filters(0) $modules] 7]
+	set UnuJhisto [lindex [lindex $filters(0) $modules] 21]
+
+        if {$show_vol_ren == 1} {
+	    disableModule [set VolumeVisualizer] 0
+	    disableModule [set NodeGradient] 0
+	    disableModule [set UnuQuantize] 0
+	    disableModule [set UnuJhisto] 0
+
+            [set NodeGradient]-c needexecute
+        } else {
+	    disableModule [set VolumeVisualizer] 1
+	    disableModule [set NodeGradient] 1
+	    disableModule [set UnuQuantize] 1
+	    disableModule [set UnuJhisto] 1
+        }
     }
 
     method toggle_show_iso {} {
@@ -3124,6 +3156,14 @@ class BioImageApp {
 	} else {
 	    disableModule [set Isosurface] 1
 	}
+    }
+
+    method execute_Isosurface {} {
+	global show_iso
+	if {$show_iso == 1} {
+	    set Isosurface [lindex [lindex $filters(0) $modules] 27]
+	    [set Isosurface]-c needexecute
+        }
     }
 
     ################################
