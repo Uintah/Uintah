@@ -39,6 +39,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <map>
+#include <sstream>
 
 using std::cerr;
 using std::ifstream;
@@ -47,6 +48,11 @@ using std::endl;
 using namespace SCIRun;
 
 vector<ofstream*> *files = 0;
+vector<unsigned> fcount;
+vector<unsigned> num_files;
+vector<string> prename;
+
+const unsigned int max_lines = 25000000;
 
 template<class Fld>
 void
@@ -55,7 +61,6 @@ write_MPM(FieldHandle& field_h, const string &outdir)
 
   Fld *ifield = (Fld *) field_h.get_rep();
   typename Fld::mesh_handle_type mesh = ifield->get_typed_mesh();
-
   bool have_files = false;
   vector<pair<string, Tensor> > field_tensors;
   if (ifield->get_property("conductivity_table", field_tensors)) {
@@ -63,8 +68,23 @@ write_MPM(FieldHandle& field_h, const string &outdir)
     files = new vector<ofstream*>;
     vector<pair<string, Tensor> >::iterator titer = field_tensors.begin();
     while (titer != field_tensors.end()) {
-      files->push_back(new ofstream((outdir + string("/") + 
-				     titer++->first).c_str(), ios_base::out));
+      fcount.push_back(0);
+      num_files.push_back(1);
+      stringstream fname(stringstream::in | stringstream::out);
+      string nm;
+      fname << outdir << "/" << titer++->first;
+      fname >> nm;
+      prename.push_back(nm);
+
+      fname.clear();
+      fname << nm << "-"; 
+      fname.fill('0');
+      fname.width(4);
+      fname << right << 1;
+      string nm1;
+      fname >> nm1;
+      files->push_back(new ofstream(nm1.c_str(), ios_base::out));
+
     }    
   }
 
@@ -92,9 +112,23 @@ write_MPM(FieldHandle& field_h, const string &outdir)
     typename Fld::mesh_type::Cell::index_type ci;
     if (mesh->locate(ci, c)) {
       int val = ifield->value(ci);
+      if (fcount[val] > max_lines) {
+	string nm;
+	stringstream fname(stringstream::in | stringstream::out);
+	fname << prename[val] << "-";
+	fname.fill('0');
+	fname.width(4);
+	fname << right << ++num_files[val];
+	fname >> nm;
+	delete (*files)[val];
+	(*files)[val] = new ofstream(nm.c_str(), ios_base::out);
+	fcount[val] = 0;
+      }
+
       ofstream* str = (*files)[val];
       (*str) << setprecision (9) <<c.x() << " " << c.y() << " " << c.z() 
 	     << " " << vol << endl;
+      fcount[val]++;
     }
     
     if (count % ((int)(sizex*sizey*sizez*0.01)) == 0) { cout << "."; }
