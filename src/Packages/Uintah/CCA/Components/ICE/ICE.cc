@@ -1238,7 +1238,6 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
     for( f = d_Lodi_variable_basket->LodiFaces.begin();
          f !=d_Lodi_variable_basket->LodiFaces.end(); ++f) {    
       VarLabel* V_Label = getMaxMach_face_VarLabel(*f);
-      cout << " requiring " << V_Label->getName() << endl;
       t->requires(Task::NewDW,V_Label, ice_matls);
     }
   } 
@@ -1317,9 +1316,9 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   
   //__________________________________
   if(d_usingLODI) { 
-    task->requires(Task::NewDW, lb->gammaLabel,        gn,  0);   
-    task->requires(Task::NewDW, lb->vol_frac_CCLabel,  gac, 2);
-    task->requires(Task::NewDW, lb->press_CCLabel,    press_matl,oims,gac, 2);
+    task->requires(Task::NewDW, lb->gammaLabel,        gn, 0);   
+    task->requires(Task::NewDW, lb->vol_frac_CCLabel,  gn, 0);
+    task->requires(Task::NewDW, lb->press_CCLabel,    press_matl,oims,gn, 0);
 
     // For Lodi faces require(maxMach_<face>)
     vector<Patch::FaceType>::iterator f ;
@@ -4388,7 +4387,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
                                       patch, d_sharedState, indx, new_dw,lv);
     }
     delete lv;
-/*==========TESTING==========`*/
+
     //__________________________________
     // Convert vars. primitive-> flux 
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
