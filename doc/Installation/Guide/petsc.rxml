@@ -394,7 +394,7 @@ Not needed if using a vendor supplied library or if the
 <para>Here is an example <command>configure</command> command:
 <literallayout class="monospaced">
 ../src/configure \
-  --with-thirdparty=/usr/local/&sr;/Third_Party/1.10.0/Irix/CC-32bit \
+  --with-thirdparty=/usr/local/&sr;/Thirdparty/1.10.0/Irix/CC-32bit \
   --enable-package="BioPSE MatlabInterface Teem" \
   --with-unipetsc=/usr/local/petsc \
   --with-blas=/usr/local/lib \

@@ -114,7 +114,7 @@ endterm="title.build-sr"/></citetitle>).
 <para>Here is an example <command>configure</command> command:
 <literallayout class="monospaced">
 ../src/configure \
-  --with-thirdparty=/usr/local/&sr;/Third_Party/1.10.0/Irix/CC-32bit \
+  --with-thirdparty=/usr/local/&sr;/Thirdparty/1.10.0/Irix/CC-32bit \
   --enable-package="Insight BioPSE" \
   --with-insight=/usr/local/Insight \
   --with-xalan=/usr/local/xalan-j_2_5_1

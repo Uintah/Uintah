@@ -26,8 +26,8 @@ libraries, sample data sets, and &sr; documentation.</para>
 url="http://www-unix.mcs.anl.gov/petsc/petsc-2/"><acronym>PETSc</acronym></ulink>
 library adds equation solvers to &sr;'s SolveMatrix module.  The
 <ulink url="http://www.itk.org">Insight toolkit
-(<acronym>ITK</acronym>)</ulink> provides filters for encapsulation as
-&sr; modules.
+(<acronym>ITK</acronym>)</ulink> provides segmentation, registration,
+and image processing filters encapsulated as &sr; modules.
 </para>
 
 <para>
@@ -45,44 +45,62 @@ linkend="tbl.pltfm_req"/>.
 </row>
 </thead>
 <tbody>
-<row>
+<row valign="top">
 <entry>
 <itemizedlist>
 <listitem>
-<simpara>Redhat 8/9 and Mandrake 9</simpara>
+<para>Redhat 8/9 or Mandrake 9</para>
 </listitem>
 <listitem>
-<simpara>OpenGL compatible video card and driver</simpara>
+<para>OpenGL compatible video card and driver</para>
 </listitem>
 <listitem>
-<simpara>512 Mb (or more) RAM
-</simpara></listitem>
+<para>512 Mb (or more) RAM</para>
+</listitem>
 </itemizedlist>
 </entry>
 <entry>
 <itemizedlist>
 <listitem>
-<simpara>Irix 6.5</simpara>
+<para>Irix 6.5</para>
 </listitem>
 <listitem>
-<simpara>MIPS R10000 (or better) CPU
-</simpara></listitem>
+<para>MIPSpro compiler 7.3.1.1m (or later)</para>
+</listitem>
 <listitem>
-<simpara>512 Mb (or more) RAM
-</simpara></listitem>
+<para>MIPS R10000 (or more recent) CPU</para>
+</listitem>
+<listitem>
+<para>512 Mb (or more) RAM</para>
+</listitem>
 </itemizedlist>
 </entry>
 <entry>
 <itemizedlist>
 <listitem>
-<simpara>Mac OS X 10.2.6
-</simpara></listitem>
+<para>Mac OS X 10.2.6 or Mac OS X 10.3</para>
+</listitem>
 <listitem>
-<simpara>G4 processor
-</simpara></listitem>
+<para>December 2002 developer tools for &osx; 10.2.6</para>
+<para>&osx; 10.3 compatible developer tools for &osx; 10.3</para>
+</listitem>
 <listitem>
-<simpara>512 Mb (or more) RAM
-</simpara></listitem>
+<para>Apple's <ulink url="http://www.apple.com/macosx/x11/">X11
+Public Beta 3</ulink> and X11 <acronym>SDK</acronym> for &osx;
+10.2.6</para> <para>Apple's X11 and X11 <acronym>SDK</acronym>
+are distributed with &osx; but must be installed separately</para>
+</listitem>
+<listitem>
+<para><quote>dlcompat</quote> library (provides
+<function>dlopen</function> functionality)</para>
+</listitem>
+<listitem>
+<para>G4 processor</para>
+<para>&sr; has not been tested on G5</para>
+</listitem>
+<listitem>
+<para>512 Mb (or more) RAM</para>
+</listitem>
 </itemizedlist>
 </entry>
 </row>
@@ -103,8 +121,9 @@ source code distribution.
 </para>
 
 <para>
-On SGI systems &sr; must be <link linkend="sec.source_inst">installed
-from the source code distribution</link>.
+On SGI and &osx; systems &sr; must be <link
+linkend="sec.source_inst">installed from the source code
+distribution</link>.
 </para>
 
 <para>
@@ -124,13 +143,13 @@ endterm="title.rpminst"/></citetitle> if installing &sr; from an
 endterm="title.opt_inst"/></citetitle> if installing
 <acronym>PETSc</acronym> or Insight toolkit (<acronym>ITK</acronym>)
 support.  Note that support for <acronym>PETSc</acronym> and
-<acronym>ITK</acronym> is not provided by the <acronym>RPM</acronym>
+<acronym>ITK</acronym> is not provided by Linux <acronym>RPM</acronym>
 &sr; distributions.</para>
 </listitem>
 <listitem>
 <para>Proceed to <citetitle
 pubwork="section"><xref linkend="sec.source_inst"
-endterm="title.source_inst"/></citetitle> to install &sr; from its
+endterm="title.source_inst"/></citetitle> to install &sr; from 
 source code.</para>
 </listitem>
 </orderedlist>

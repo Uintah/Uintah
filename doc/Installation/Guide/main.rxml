@@ -36,6 +36,7 @@
 <!--%= doc.sysEntity("help") %-->
 <!--%= doc.sysEntity("cvs") %-->
 <!ENTITY sr  "SCIRun">
+<!ENTITY osx "Mac OS X">
 ]>
 
 <article id="article.main">

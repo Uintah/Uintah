@@ -16,13 +16,22 @@
 -->
 
 <section id="sec.prepare">
-<title id="title.prepare">Preparing &sr;</title>
+<title id="title.prepare">Before Starting &sr;</title>
 
 <para>
-Before starting &sr;, initialize the environment variables
-<envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar>, <envar>SCIRUN_DATA</envar>,
-and <envar>SCIRUN_DATASET</envar>.  The following sections describe
-the purpose and use of these variables.
+&osx; users starting &sr; under the tcsh shell should issue the
+command:
+<literallayout class="monospaced">
+limit descriptors unlimited
+</literallayout>
+before starting &sr;.
+</para>
+
+<para>
+The environment variables <envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar>,
+<envar>SCIRUN_DATA</envar>, and <envar>SCIRUN_DATASET</envar> should
+be initialized before starting &sr;.  The following sections
+describe the purpose and use of these variables.
 </para>
 
 <section id="sec.dyncomp">
