@@ -3599,8 +3599,9 @@ void SerialMPM::setNeedAddMaterialFlag(const ProcessorGroup*,
     new_dw->get(need_add_flag, lb->NeedAddMPMMaterialLabel);
 
     if(need_add_flag < -0.1){
-      d_sharedState->setNeedAddMaterial(-1);
+      d_sharedState->setNeedAddMaterial(-99);
       flags->d_canAddMPMMaterial=false;
+      cout << "MPM setting NAM to -99" << endl;
     }
     else{
       d_sharedState->setNeedAddMaterial(0);
