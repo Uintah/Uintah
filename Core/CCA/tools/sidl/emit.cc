@@ -617,10 +617,6 @@ void CI::emit_handler_table_body(EmitState& e, int& vtable_base, bool top)
     e.out << "\n  //setCallerDistribution handler";
     e.out << "\n  epc->registerHandler(" << (++i)
           << ",(void*)_handler" << callerDistHandler << ");";
-    vtable_base+=vtab.size()+2;
-  }
-  else {
-    vtable_base+=vtab.size()+1;
   }
   i++;
   e.out << "\n    // Red zone\n";    
@@ -635,9 +631,22 @@ void CI::emit_handler_table_body(EmitState& e, int& vtable_base, bool top)
 	(*iter)->vtable_base=vtable_base;
       }
     }
+    if (doRedistribution) {
+      vtable_base+=vtab.size()+2;
+    }
+    else {
+      vtable_base+=vtab.size()+1;
+    }
     return;
   }
-  // For each parent, emit the handler table...
+
+  if (doRedistribution) {
+    vtable_base+=vtab.size()+2;
+  }
+  else {
+    vtable_base+=vtab.size()+1;
+  }
+  // For each parent, emit the handler table..
   if(parentclass){
     if(top)
       parentclass->vtable_base=vtable_base;
