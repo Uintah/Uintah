@@ -21,38 +21,18 @@
 using namespace __gnu_cxx;
 #endif
 
-#include <algorithm>
+#include "sci_algorithm.h"
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <sstream>
 #include <unistd.h>
 
-#if defined(__digital__) || defined(_AIX)
-// AIX and DEC don't have this...
-namespace Uintah {
-  template <class Iter, class Compare>
-  bool is_sorted(Iter begin, Iter end, Compare compare)
-  {
-    if(begin == end)
-      return true;
-    Iter cur = begin;
-    Iter next = cur; next++;
-    while(next != end){
-      if (compare(*next, *cur))
-	return false;
-      cur = next;
-      next++;
-    }
-    return true;
-  }
-}
-#endif
-
 using namespace Uintah;
 
 using namespace SCIRun;
 using std::cerr;
+using std::is_sorted;
 
 static DebugStream dbg("TaskGraph", false);
 
