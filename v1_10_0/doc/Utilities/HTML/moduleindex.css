@@ -37,9 +37,6 @@ font-weight:bold;
 font-size:small;
 color:#FFCC33}
 
-table { 
-}
-
 th { 
 background-color:#003333;
 color:#FFCC33}
@@ -48,9 +45,11 @@ tr {
 vertical-align: center}
 
 td {
-height: 1.75em}
+height: 1.75em;
+}
 
 td.cattitle {
+height: 1.75em;
 text-align:center;
 color:#FFCC33;            
 background-color:#003333;
@@ -59,3 +58,4 @@ background-color:#003333;
 a.alt { 
 color:#FFCC33;            
 }
+
