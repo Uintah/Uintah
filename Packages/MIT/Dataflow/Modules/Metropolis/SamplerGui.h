@@ -44,13 +44,19 @@ public:
   Signal1<int> num_iter;
   Signal1<int> subsample;
   Signal1<double> kappa;
+  Signal1<int> nparms;
   Signal1<int> go;
+  Signal1<vector <double> *> theta;
+  Signal1<vector <vector <double> > *> sigma;
 
   // Slots
   void set_iter( int );
   void done();
   void set_kappa(double );
-
+  void set_nparms( int );
+  void set_theta( vector<double> *);
+  void set_sigma( vector<vector<double> > *);
+  
 public:
   SamplerGui( const string &name, const string &script = "SamplerGui"); 
   virtual ~SamplerGui();

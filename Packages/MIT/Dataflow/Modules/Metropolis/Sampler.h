@@ -82,9 +82,15 @@ public:
 
   virtual void execute();
 
+  Signal1<int> nparms_changed;
+  Signal1<vector <double> *> theta_changed;
+  Signal1<vector <vector <double> > *> sigma_changed;
+  
   void init();
   void reset();
   void metropolis();
+  void theta_(vector<double> *t){theta[current]=*t;theta_changed(&theta[current]);};
+  void sigma_(vector<vector<double> > *s);
   Array2<double> &get_lkappa();
   double logpost( vector<double> & );
   void go( int );

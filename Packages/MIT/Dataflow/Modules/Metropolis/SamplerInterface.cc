@@ -54,5 +54,21 @@ SamplerInterface::go( int i)
   sampler_->go( i );
 }
 
+void
+SamplerInterface::theta( vector<double> *t )
+{
+  Sampler* part = (Sampler*) part_;
+  part->theta_(t);
+}
+void
+SamplerInterface::sigma( vector<vector<double> > *s)
+{
+  for (int i = 0; i < s->size(); i++)
+    for (int j = 0; j < (*s)[i].size(); j++)
+    { //to be completed... <something>[i][j] = s[i][j];
+    }
+}
+
+
 } // namespace MIT
 

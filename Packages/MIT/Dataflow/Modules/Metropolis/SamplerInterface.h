@@ -63,7 +63,8 @@ public:
   void go( int );
   void subsample( int i ) { subsample_ = i ; }
   void kappa( double k ) { if ( kappa_ != k ) {kappa_ = k; kappa_changed(k); }}
-  
+  void theta( vector<double> *t );
+  void sigma( vector<vector<double> > *s);
   // Signals
   Signal1<int> current_iter_changed;
   Signal1<double> kappa_changed;
