@@ -46,7 +46,7 @@ DEALINGS IN THE SOFTWARE.
 <!--}} %-->
 
   <para>
-    Disk space requirements for a source code installation are listed in
+    Disk space requirements <!--%= doc.ifNotP(Doc::Irix) {%Q{-->for a source code installation<!--}} %--> are listed in
     <xref linkend="tbl.disk_space"/>.
   </para>
 
@@ -198,10 +198,8 @@ DEALINGS IN THE SOFTWARE.
 <!--}} %-->
 
 <!--%= doc.ifP(Doc::Irix) {%Q{-->
-  <para>On &pf;, &sr; must be <link
-  linkend="sec.source_inst">installed from its source code
-  distribution</link>.  Proceed to <xref
-  linkend="sec.source_inst"/>.</para>
+  <para>Proceed to <xref
+  linkend="sec.source_inst"/> to install &sr;.</para>
 <!--}} %-->
 
 <!--%= doc.ifP(Doc::OSX) {%Q{-->

@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 <!--% teem_crap = %Q{
 <listitem>
   <para><emphasis>Optional:</emphasis> Enable
-  <acronym>PNG</acronym> support in the TEEM third party
+  <acronym>PNG</acronym> support in the Teem third party
   library.  Set the <envar>TEEM_ZLIB</envar> and
   <envar>TEEM_PNG</envar> environment variables:</para>
   <para>
@@ -100,9 +100,22 @@ DEALINGS IN THE SOFTWARE.
 <section id="sec.third_party_inst">
   <title id="title.third_party_inst">Building Third Party Software</title>
 
-  <para>Third party software must be built before building &sr; from
-  source code.  This section provides instruction for installing third
-  party software.</para>
+  <para>Third party software must be built before building &sr;.  This
+  section provides instruction for installing third party
+  software.</para>
+
+<!--%
+pythonInstallEx = ""
+tpBinDir = ""
+case Doc::Platform
+  when Doc::Linux
+    pythonInstallEx = "python install /usr/local/&sr;/Thirdparty"
+    tpBinDir = "/usr/local/&sr;/Thirdparty/1.8/Linux/gcc-3.2-32bit"
+  when Doc::Irix
+    pythonInstallEx = "python install /usr/local/&sr;/Thirdparty 64"
+    tpBinDir = "/usr/local/&sr;/Thirdparty/1.8/IRIX64/MIPSpro-7.3.1.3m-32bit"
+end   
+%-->
 
   <!--%= doc.ifNotP(Doc::OSX) {%Q{-->
   <note>
@@ -174,13 +187,13 @@ DEALINGS IN THE SOFTWARE.
     reflects the parameters given to the install script.  This allows the
     user to maintain multiple third-party installations for different
     operating systems and machine architectures.  For example, on a
-    Mandrake 9.0 Linux machine, the installation command:
+    &pf; machine, the installation command:
     <literallayout class="monospaced">
-      python install /usr/local/&sr;/Thirdparty
+<!--$ #{pythonInstallEx} $-->
     </literallayout>
     creates the installation under:
     <literallayout class="monospaced">
-      /usr/local/&sr;/Thirdparty/1.8/Linux/gcc-3.2-32bit
+<!--$ #{tpBinDir} $-->
     </literallayout>
   </para>
 

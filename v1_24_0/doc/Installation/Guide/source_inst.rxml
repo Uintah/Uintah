@@ -26,13 +26,16 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
 <section id="sec.source_inst">
   <title id="title.source_inst">&sr; Installation from Source Code</title>
   <section>
     <title>Introduction</title>
 
     <para>
-      Installation from source code consists of these steps:
+      Installation <!--%= doc.ifNotP(Doc::Irix) {%Q{-->from source code<!--}} %--> consists of these steps:
       <orderedlist>
 	<listitem>
 	  <para>Downloading &sr; sources, packages, third party
