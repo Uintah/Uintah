@@ -354,6 +354,19 @@ void HashTable<char*, int>::test_rigorous(RigorousTest* __test)
 
     TEST(table2.size()!=0);
     table2.remove_all();
+    
+    
+    TEST(!table2.lookup("one",i));
+    TEST(!table2.lookup("two",i));
+    TEST(!table2.lookup("three",i));
+    TEST(!table2.lookup("four",i));
+    TEST(!table2.lookup("five",i));
+    TEST(!table2.lookup("six",i));
+    TEST(!table2.lookup("seven",i));
+    TEST(!table2.lookup("eight",i));
+    TEST(!table2.lookup("nine",i));
+    TEST(!table2.lookup("ten",i));
+
     TEST(table2.size()==0);
     
 
@@ -385,12 +398,17 @@ void HashTable<char*, int>::test_rigorous(RigorousTest* __test)
     }
 
     TEST(int_table.size()==size);
-
+    
     for(x=1;x<=1000;x++){
 	TEST(int_table.remove(x)==2);
 	size-=2;
 	TEST(int_table.size()==size);
     }
+    
+    int v=0;
+    
+    for(x=1;x<1000;x++)
+	TEST(!int_table.lookup(x,v));
     
    TEST(int_table.size()==0);
 
