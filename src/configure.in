@@ -522,7 +522,22 @@ if ! NUM_CPUS="`expr $NUM_CPUS + 0 2> /dev/null`" ; then
 fi
 AC_MSG_RESULT($NUM_CPUS)
 
-MAKE_PARALLELISM="`expr ${NUM_CPUS} \* 2`"
+## MAKE_PARALLELISM is used to tell the compiler how many cpus to use
+## when linking.  1 is usually a good number to use per link,
+## espcially for smaller number of cpu machines.  I think 4 is
+## sufficient for even nirvana.  (BTW, if there is an "elseif"
+## construct in shell programming, could someone let me know... Dd.)
+if test "NUM_CPUS -le 2" ; then
+  MAKE_PARALLELISM=1
+else
+  if test "NUM_CPUS -le 8" ; then
+    MAKE_PARALLELISM=2
+  else
+    MAKE_PARALLELISM=4
+  fi
+fi
+
+
 export MAKE_PARALLELISM
 AC_SUBST(MAKE_PARALLELISM)
 
