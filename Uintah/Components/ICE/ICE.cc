@@ -31,22 +31,6 @@
 #include <Uintah/Grid/DensityBoundCond.h>
 #include <iomanip>
 
-#if 0
-//______________________________________________________________________
-//  DEBUGGING SWITCHES
-#define  todd_debug                         1       // TURN THIS OFF
-#define  switchDebugInitialize              0
-#define  switchDebug_equilibration_press    1 
-#define  switchDebug_vel_FC                 0
-#define  switchDebug_Exchange_FC            0
-#define  switchDebug_explicit_press         0
-#define  switchDebug_PressFC                0
-#define  switchDebugLagrangianValues        0
-#define  switchDebugSource_Sink             0
-#define  switchDebug_advance_advect         1
-#define  switch_Debug_advectQFirst          0
-#endif
-
 using std::vector;
 using std::max;
 using SCICore::Geometry::Vector;
@@ -3901,6 +3885,10 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.90  2001/01/12 18:54:57  jas
+// Remove the #define debug switches since they are now replaced with input file
+// debug switches.
+//
 // Revision 1.89  2001/01/11 20:38:39  jas
 // Added check to problemSpecification for <Debug> tag.  Default behavior
 // is to not print out any debugging info if the <Debug> </Debug> tag is
