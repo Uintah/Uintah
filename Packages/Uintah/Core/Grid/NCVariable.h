@@ -326,6 +326,12 @@ WARNING
   NCVariable<T>::NCVariable()
   {
   }
+
+  template<class T>
+  NCVariable<T>::NCVariable(const NCVariable<T>& copy)
+    : Array3<T>(copy)
+  {
+  }
    
   template<class T>
   void

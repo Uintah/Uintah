@@ -427,6 +427,12 @@ WARNING
   SFCZVariable<T>::SFCZVariable()
   {
   }
+
+  template<class T>
+  SFCZVariable<T>::SFCZVariable(const SFCZVariable<T>& copy)
+    : Array3<T>(copy)
+  {
+  }
    
   template<class T>
   void
