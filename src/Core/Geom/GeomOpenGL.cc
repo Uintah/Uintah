@@ -593,7 +593,13 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	  Vector n(dn+v1[i]+v2[i]);
 	  glNormal3d(n.x(), n.y(), n.z());
 	  Point top(positions[i]+directions[i]);
-	  Point from=top-directions[i]*h;
+	  Point from;
+	  if(normalize_headsize == 0 ) from =top-directions[i]*h;
+	  else {
+	    Vector dir( directions[i] );
+	    dir.normalize();
+	    from = top-dir*h;
+	  }
 	  //Point to(from+directions[i]);
 	  Point p1(from+v1[i]);
 	  Point p2(from+v2[i]);
@@ -624,7 +630,13 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	  glBegin(GL_TRIANGLE_FAN);
 	  Point from(positions[i]+directions[i]);
 	  glVertex3d(from.x(), from.y(), from.z());
-	  from-=directions[i]*(1.0-headlength);
+// 	  from-=directions[i]*(1.0-headlength);
+          if(normalize_headsize == 0 ) from-=directions[i]*(1.0-headlength);
+          else {
+            Vector dir( directions[i] );
+            dir.normalize();
+            from -= dir*(1.0-headlength);
+          }
 	  //Point to(from+directions[i]);
 	  Point p1(from+v1[i]);
 	  glVertex3d(p1.x(), p1.y(), p1.z());
@@ -651,7 +663,14 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	  Vector n(dn+v1[i]+v2[i]);
 	  glNormal3d(n.x(), n.y(), n.z());
 	  Point top(positions[i]+directions[i]);
-	  Point from=top-directions[i]*h;
+// 	  Point from=top-directions[i]*h;
+          Point from;
+          if(normalize_headsize == 0 ) from = top-directions[i]*h;
+          else {
+            Vector dir( directions[i] );
+            dir.normalize();
+            from = top-dir*h;
+          }
 	  //Point to(from+directions[i]);
 	  Point p1(from+v1[i]);
 	  Point p2(from+v2[i]);
@@ -684,6 +703,12 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	  Point from(positions[i]+directions[i]);
 	  glVertex3d(from.x(), from.y(), from.z());
 	  from-=directions[i]*(1.0-headlength);
+          if(normalize_headsize == 0 ) from-=directions[i]*(1.0-headlength);
+          else {
+            Vector dir( directions[i] );
+            dir.normalize();
+            from -= dir*(1.0-headlength);
+          }
 	  //Point to(from+directions[i]);
 	  Point p1(from+v1[i]);
 	  glVertex3d(p1.x(), p1.y(), p1.z());

@@ -103,6 +103,8 @@ void GeomArrows::add(const Point& pos, const Vector& dir)
     v2.add(vv2*headwidth*len);
   } else {
     // don't scale the head by the length
+    vv1.normalize();
+    vv2.normalize();
     v1.add(vv1*headwidth);
     v2.add(vv2*headwidth);
   }
