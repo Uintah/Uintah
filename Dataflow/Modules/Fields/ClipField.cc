@@ -183,7 +183,6 @@ ClipField::execute()
     do_clip_p = true;
   }
 
-#if 0
   // Update the widget.
   BBox obox = ifieldhandle->mesh()->get_bounding_box();
   if (!bbox_similar_to(last_bounds_, obox))
@@ -238,7 +237,6 @@ ClipField::execute()
     // Force clipper to sync with new widget.
     if (!clipper_->mesh_p()) { clipper_ = 0; }
   }
-#endif
 
   if (!clipper_.get_rep())
   {
