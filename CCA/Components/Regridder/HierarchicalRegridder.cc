@@ -257,7 +257,7 @@ void HierarchicalRegridder::MarkPatches( const GridP& oldGrid, int levelIdx  )
         rdbg << "Marking Active [ " << levelIdx+1 << " ]: " << latticeStartIdx << endl;
         (*d_patchActive[levelIdx+1])[latticeStartIdx] = 1;
       }
-      if (!flaggedCellsExist(*d_dilatedCellsDeleted[levelIdx], startCellSubPatch, endCellSubPatch)) {
+      else if (!flaggedCellsExist(*d_dilatedCellsDeleted[levelIdx], startCellSubPatch, endCellSubPatch)) {
         // Do we need to check for flagged cells in the children?
         IntVector childLatticeStartIdx = latticeStartIdx;
         IntVector childLatticeEndIdx = latticeEndIdx;
