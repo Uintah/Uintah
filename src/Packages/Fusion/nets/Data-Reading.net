@@ -2,45 +2,50 @@
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 226 114]
-set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 18 234]
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 51 191]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 18 371]
 set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 18 802]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 208 233]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 225 15]
-set m5 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 18 104]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 460 253]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 51 110]
+set m5 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 18 269]
 set m6 [addModuleAtPosition "Fusion" "DataIO" "MDSPlusFieldReader" 18 12]
-set m7 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 461 195]
-set m8 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 443 91]
-set m9 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 443 282]
-set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 443 383]
-set m11 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 647 96]
-set m12 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 665 184]
-set m13 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldDataType" 647 255]
-set m14 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 647 329]
-set m15 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 647 499]
-set m16 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 647 415]
-set m17 [addModuleAtPosition "Fusion" "DataIO" "MDSPlusFieldReader" 593 4]
-set m18 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 842 409]
-set m19 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 954 92]
-set m20 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 936 186]
-set m21 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 936 280]
-set m22 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 1326 188]
-set m23 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1326 294]
-set m24 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1136 198]
-set m25 [addModuleAtPosition "SCIRun" "Fields" "VectorMagnitude" 1153 106]
-set m26 [addModuleAtPosition "SCIRun" "Fields" "VectorMagnitude" 1533 106]
-set m27 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1515 190]
-set m28 [addModuleAtPosition "Fusion" "DataIO" "MDSPlusFieldReader" 10 890]
-set m29 [addModuleAtPosition "Fusion" "DataIO" "MDSPlusFieldReader" 918 6]
-set m30 [addModuleAtPosition "Fusion" "DataIO" "MDSPlusFieldReader" 1308 7]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 295 208]
+set m8 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 261 115]
+set m9 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 261 299]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 261 378]
+set m11 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 734 101]
+set m12 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 752 189]
+set m13 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldDataType" 734 260]
+set m14 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 734 334]
+set m15 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 734 504]
+set m16 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 734 420]
+set m17 [addModuleAtPosition "Fusion" "DataIO" "MDSPlusFieldReader" 680 9]
+set m18 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 530 419]
+set m19 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 1239 87]
+set m20 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 1031 320]
+set m21 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1031 414]
+set m22 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 1499 299]
+set m23 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1499 403]
+set m24 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1070 242]
+set m25 [addModuleAtPosition "SCIRun" "Fields" "VectorMagnitude" 1088 143]
+set m26 [addModuleAtPosition "SCIRun" "Fields" "VectorMagnitude" 1553 120]
+set m27 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1535 209]
+set m28 [addModuleAtPosition "Fusion" "DataIO" "MDSPlusFieldReader" 1013 5]
+set m29 [addModuleAtPosition "Fusion" "DataIO" "MDSPlusFieldReader" 1481 7]
+set m30 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1256 16]
+set m31 [addModuleAtPosition "Fusion" "DataIO" "MDSPlusFieldReader" 460 7]
+set m32 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 478 171]
+set m33 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 530 321]
+set m34 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 478 88]
 
 addConnection $m0 0 $m1 1
-addConnection $m0 0 $m3 1
 addConnection $m1 0 $m2 0
 addConnection $m3 1 $m2 1
 addConnection $m4 0 $m0 0
 addConnection $m5 0 $m1 0
-addConnection $m5 0 $m3 0
 addConnection $m6 0 $m5 0
 addConnection $m6 0 $m0 1
 addConnection $m8 0 $m7 0
@@ -54,36 +59,38 @@ addConnection $m11 1 $m12 0
 addConnection $m11 0 $m13 0
 addConnection $m13 0 $m14 0
 addConnection $m12 0 $m14 1
-addConnection $m15 1 $m2 3
 addConnection $m14 0 $m16 0
 addConnection $m16 0 $m15 0
 addConnection $m18 0 $m15 1
 addConnection $m14 0 $m18 1
-addConnection $m4 0 $m18 0
-addConnection $m19 1 $m2 4
 addConnection $m19 0 $m20 1
 addConnection $m20 0 $m21 0
-addConnection $m21 0 $m2 5
-addConnection $m19 0 $m22 1
 addConnection $m22 0 $m23 0
 addConnection $m24 0 $m21 1
 addConnection $m25 0 $m24 1
 addConnection $m26 0 $m27 1
-addConnection $m0 0 $m27 0
 addConnection $m27 0 $m23 1
-addConnection $m23 0 $m2 6
 addConnection $m17 3 $m11 0
-addConnection $m29 1 $m19 0
-addConnection $m29 1 $m20 0
-addConnection $m29 1 $m25 0
-addConnection $m30 1 $m22 0
-addConnection $m30 1 $m26 0
+addConnection $m28 1 $m19 0
+addConnection $m28 1 $m20 0
+addConnection $m28 1 $m25 0
+addConnection $m29 1 $m22 0
+addConnection $m29 1 $m26 0
+addConnection $m30 0 $m24 0
+addConnection $m15 1 $m2 3
+addConnection $m19 1 $m2 4
+addConnection $m21 0 $m2 5
+addConnection $m31 0 $m3 0
+addConnection $m31 0 $m32 1
+addConnection $m32 0 $m3 1
+addConnection $m33 0 $m18 0
+addConnection $m34 0 $m32 0
 
 set $m0-notes {}
 set $m0-show_status {1}
 set $m0-isFixed {0}
-set $m0-min {         -21160.3}
-set $m0-max {          21160.3}
+set $m0-min {          206.084}
+set $m0-max {           125631}
 set $m0-makeSymmetric {0}
 set $m1-notes {}
 set $m1-show_status {1}
@@ -98,7 +105,6 @@ set $m1-normalize-vectors {0}
 set $m1-has_vec_data {0}
 set $m1-bidirectional {0}
 set $m1-arrow-heads-on {1}
-set $m1-error-cones-on {0}
 set $m1-def-color-r {0.5}
 set $m1-def-color-g {0.5}
 set $m1-def-color-b {0.5}
@@ -116,17 +122,17 @@ set $m2-notes {}
 set $m2-show_status {1}
 $m2 ui
 set $m2-ViewWindow_0-pos {}
-set $m2-ViewWindow_0-caxes {1}
+set $m2-ViewWindow_0-caxes {0}
 set $m2-ViewWindow_0-iaxes {}
-set $m2-ViewWindow_0-view-eyep-x {              2.1}
-set $m2-ViewWindow_0-view-eyep-y {              1.6}
-set $m2-ViewWindow_0-view-eyep-z {             11.5}
+set $m2-ViewWindow_0-view-eyep-x {         -10.1571}
+set $m2-ViewWindow_0-view-eyep-y {           15.997}
+set $m2-ViewWindow_0-view-eyep-z {          3.52503}
 set $m2-ViewWindow_0-view-lookat-x {                0}
 set $m2-ViewWindow_0-view-lookat-y {                0}
-set $m2-ViewWindow_0-view-lookat-z {                0}
-set $m2-ViewWindow_0-view-up-x {                0}
-set $m2-ViewWindow_0-view-up-y {                1}
-set $m2-ViewWindow_0-view-up-z {                0}
+set $m2-ViewWindow_0-view-lookat-z {       -0.0338975}
+set $m2-ViewWindow_0-view-up-x {        0.0810548}
+set $m2-ViewWindow_0-view-up-y {        -0.167137}
+set $m2-ViewWindow_0-view-up-z {         0.982596}
 set $m2-ViewWindow_0-view-fov {               20}
 set $m2-ViewWindow_0-view-eyep_offset-x {}
 set $m2-ViewWindow_0-view-eyep_offset-y {}
@@ -150,11 +156,17 @@ set $m2-ViewWindow_0-resx {}
 set $m2-ViewWindow_0-resy {}
 set $m2-ViewWindow_0-aspect {}
 set $m2-ViewWindow_0-aspect_ratio {}
+set $m2-ViewWindow_0-unused {0}
+set $m2-ViewWindow_0-unused {1}
+set $m2-ViewWindow_0-unused {0}
+set $m2-ViewWindow_0-unused {1}
+set $m2-ViewWindow_0-unused {0}
+set $m2-ViewWindow_0-unused {1}
 set $m3-notes {}
 set $m3-show_status {1}
 set $m3-isoval {10000.000}
-set $m3-isoval-min {-20755.9}
-set $m3-isoval-max {20755.9}
+set $m3-isoval-min {-21160.3}
+set $m3-isoval-max {21160.3}
 set $m3-isoval-typed {0}
 set $m3-isoval-quantity {1}
 set $m3-extract-from-new-field {1}
@@ -207,8 +219,8 @@ set $m6-bPressure {1}
 set $m6-bBField {0}
 set $m6-bVField {0}
 set $m6-bJField {0}
-set $m6-space {1}
-set $m6-mode {1}
+set $m6-space {0}
+set $m6-mode {0}
 set $m7-notes {}
 set $m7-show_status {1}
 set $m8-notes {}
@@ -243,7 +255,6 @@ set $m10-normalize-vectors {}
 set $m10-has_vec_data {0}
 set $m10-bidirectional {0}
 set $m10-arrow-heads-on {1}
-set $m10-error-cones-on {0}
 set $m10-def-color-r {0.5}
 set $m10-def-color-g {0.5}
 set $m10-def-color-b {0.5}
@@ -351,9 +362,9 @@ set $m19-dist {impuni}
 set $m19-whichtab {Widget}
 set $m20-notes {}
 set $m20-show_status {1}
-set $m20-stepsize {0.01}
+set $m20-stepsize {0.025}
 set $m20-tolerance {0.0001}
-set $m20-maxsteps {2000}
+set $m20-maxsteps {1500}
 set $m20-direction {2}
 set $m20-color {1}
 set $m20-remove-colinear {1}
@@ -371,7 +382,6 @@ set $m21-normalize-vectors {}
 set $m21-has_vec_data {0}
 set $m21-bidirectional {0}
 set $m21-arrow-heads-on {1}
-set $m21-error-cones-on {0}
 set $m21-def-color-r {0.5}
 set $m21-def-color-g {0.5}
 set $m21-def-color-b {0.5}
@@ -387,9 +397,9 @@ set $m21-interactive_mode {Interactive}
 set $m21-resolution {4}
 set $m22-notes {}
 set $m22-show_status {1}
-set $m22-stepsize {0.01}
+set $m22-stepsize {0.25}
 set $m22-tolerance {0.0001}
-set $m22-maxsteps {2000}
+set $m22-maxsteps {1500}
 set $m22-direction {1}
 set $m22-color {1}
 set $m22-remove-colinear {1}
@@ -407,7 +417,6 @@ set $m23-normalize-vectors {}
 set $m23-has_vec_data {0}
 set $m23-bidirectional {0}
 set $m23-arrow-heads-on {1}
-set $m23-error-cones-on {0}
 set $m23-def-color-r {0.5}
 set $m23-def-color-g {0.5}
 set $m23-def-color-b {0.5}
@@ -424,8 +433,8 @@ set $m23-resolution {4}
 set $m24-notes {}
 set $m24-show_status {1}
 set $m24-isFixed {0}
-set $m24-min {0}
-set $m24-max {1}
+set $m24-min {      1.37981e-05}
+set $m24-max {        0.0835954}
 set $m24-makeSymmetric {0}
 set $m25-notes {}
 set $m25-show_status {1}
@@ -441,18 +450,18 @@ set $m28-notes {}
 set $m28-show_status {1}
 set $m28-serverName {atlas.gat.com}
 set $m28-treeName {NIMROD}
-set $m28-shotNumber {10089}
-set $m28-sliceNumber {0}
+set $m28-shotNumber {10115}
+set $m28-sliceNumber {100}
 set $m28-sliceRange {0}
 set $m28-sliceStart {0}
 set $m28-sliceStop {0}
 set $m28-sliceSkip {1}
 set $m28-bPressure {0}
-set $m28-bBField {0}
+set $m28-bBField {1}
 set $m28-bVField {0}
 set $m28-bJField {0}
-set $m28-space {0}
-set $m28-mode {0}
+set $m28-space {1}
+set $m28-mode {3}
 set $m29-notes {}
 set $m29-show_status {1}
 set $m29-serverName {atlas.gat.com}
@@ -468,26 +477,64 @@ set $m29-bBField {1}
 set $m29-bVField {0}
 set $m29-bJField {0}
 set $m29-space {0}
-set $m29-mode {0}
+set $m29-mode {3}
 set $m30-notes {}
 set $m30-show_status {1}
-set $m30-serverName {atlas.gat.com}
-set $m30-treeName {NIMROD}
-set $m30-shotNumber {10115}
-set $m30-sliceNumber {100}
-set $m30-sliceRange {0}
-set $m30-sliceStart {0}
-set $m30-sliceStop {0}
-set $m30-sliceSkip {1}
-set $m30-bPressure {0}
-set $m30-bBField {1}
-set $m30-bVField {0}
-set $m30-bJField {0}
-set $m30-space {1}
-set $m30-mode {3}
-$m6 initialize_ui
-$m15 initialize_ui
-$m20 initialize_ui
-$m29 initialize_ui
+set $m30-tcl_status {Calling GenStandardColorMaps!}
+set $m30-positionList {}
+set $m30-nodeList {}
+set $m30-width {1}
+set $m30-height {1}
+set $m30-mapType {3}
+set $m30-minRes {12}
+set $m30-resolution {255}
+set $m30-realres {255}
+set $m30-gamma {0}
+set $m31-notes {}
+set $m31-show_status {1}
+set $m31-serverName {atlas.gat.com}
+set $m31-treeName {NIMROD}
+set $m31-shotNumber {10115}
+set $m31-sliceNumber {100}
+set $m31-sliceRange {0}
+set $m31-sliceStart {0}
+set $m31-sliceStop {0}
+set $m31-sliceSkip {1}
+set $m31-bPressure {1}
+set $m31-bBField {0}
+set $m31-bVField {0}
+set $m31-bJField {0}
+set $m31-space {1}
+set $m31-mode {1}
+set $m32-notes {}
+set $m32-show_status {1}
+set $m32-isFixed {0}
+set $m32-min {         -21160.3}
+set $m32-max {          21160.3}
+set $m32-makeSymmetric {0}
+set $m33-notes {}
+set $m33-show_status {1}
+set $m33-tcl_status {Calling GenStandardColorMaps!}
+set $m33-positionList {}
+set $m33-nodeList {}
+set $m33-width {1}
+set $m33-height {1}
+set $m33-mapType {3}
+set $m33-minRes {12}
+set $m33-resolution {255}
+set $m33-realres {255}
+set $m33-gamma {0}
+set $m34-notes {}
+set $m34-show_status {1}
+set $m34-tcl_status {Calling GenStandardColorMaps!}
+set $m34-positionList {}
+set $m34-nodeList {}
+set $m34-width {1}
+set $m34-height {1}
+set $m34-mapType {3}
+set $m34-minRes {12}
+set $m34-resolution {255}
+set $m34-realres {255}
+set $m34-gamma {0}
 
 ::netedit scheduleok

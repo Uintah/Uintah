@@ -300,7 +300,6 @@ void MDSPlusFieldReader::execute(){
     else
       remark( "Conecting to MdsPlus Server " + server );
 
-
     // Open tree
     trys = 0;
 
@@ -312,7 +311,8 @@ void MDSPlusFieldReader::execute(){
 
     if( retVal == -2 ) {
       ostringstream str;
-      str << "Opening " << tree << " tree and shot " << shot << " too busy ... giving up.";
+      str << "Can not open " << tree << " tree and shot " << shot << " too busy ... giving up.";
+      error( str.str() );
       error_ = true;
       return;
     }
@@ -360,6 +360,7 @@ void MDSPlusFieldReader::execute(){
 	  if( nRadial != dims[0] || nTheta != dims[1] ) {
 	    error( "Error Grid dimensions do not match" );
 	    error_ = true;
+	    mds.disconnect();
 	    return;
 	  } else {
 	    break;
@@ -371,11 +372,21 @@ void MDSPlusFieldReader::execute(){
 	
 	case 3:
 	  nMode = dims[0];
+	  for( int i=0; i<3; i++ )
+	    if( grid_data[n][i] != (double) i ) {
+
+	      ostringstream str;
+	      str << "Invalid mode value " << grid_data[n][i];
+	      str << " ... correcting to " << i;
+	      remark( str.str() );
+	      grid_data[n][i] = (double) i;
+	    }
 	  break;
 	}
       } else {
-	error( "Error Can not get Grid data" );
+	error( "Can not get Grid data" );
 	error_ = true;
+	mds.disconnect();
 	return;
       }
     }
@@ -430,18 +441,21 @@ void MDSPlusFieldReader::execute(){
 	str << "Slice range is outside of the range [0-" << nSlices << ").";
 	error( str.str() );
 	error_ = true;
+	mds.disconnect();
 	return;
       } else if( sliceStop_ < sliceStart_ ) {
 	ostringstream str;
 	str << "Improper slice range";
 	error( str.str() );
 	error_ = true;
+	mds.disconnect();
 	return;
       } else if( sliceSkip_< 0 || sliceStop_-sliceStart_<sliceSkip_ ) {
 	ostringstream str;
 	str << "Slice skip is outside of the range [0-" << sliceStop_-sliceStart_ << ").";
 	error( str.str() );
 	error_ = true;
+	mds.disconnect();
 	return;
       }
     } else {
@@ -451,6 +465,7 @@ void MDSPlusFieldReader::execute(){
 	str << "Slice " << slice_ << " is outside of the range [0-" << nSlices << ").";
 	error( str.str() );
 	error_ = true;
+	mds.disconnect();
 	return;
       }
 
@@ -504,6 +519,7 @@ void MDSPlusFieldReader::execute(){
 		error( "Error can not get Scalar data" );
 		if( ! sliceRange_ ) {
 		  error_ = true;
+		  mds.disconnect();
 		  return;
 		}
 	      } else if( nRadial != dims[0] ||
@@ -516,6 +532,7 @@ void MDSPlusFieldReader::execute(){
 		error( str.str() );
 		if( ! sliceRange_ ) {
 		  error_ = true;
+		  mds.disconnect();
 		  return;
 		}
 	      }
@@ -531,6 +548,7 @@ void MDSPlusFieldReader::execute(){
 		  error( "Error can not get Scalar data" );
 		  if( ! sliceRange_ ) {
 		    error_ = true;
+		    mds.disconnect();
 		    return;
 		  }
 		} else if( nRadial != dims[0] ||
@@ -543,6 +561,7 @@ void MDSPlusFieldReader::execute(){
 		  error( str.str() );
 		  if( ! sliceRange_ ) {
 		    error_ = true;
+		    mds.disconnect();
 		    return;
 		  }
 		}
@@ -576,6 +595,7 @@ void MDSPlusFieldReader::execute(){
 		  error( "Error can not get Vector data" );
 		  if( ! sliceRange_ ) {
 		    error_ = true;
+		    mds.disconnect();
 		    return;
 		  }
 		} else if( nRadial != dims[0] ||
@@ -588,6 +608,7 @@ void MDSPlusFieldReader::execute(){
 		  error( str.str() );
 		  if( ! sliceRange_ ) {
 		    error_ = true;
+		    mds.disconnect();
 		    return;
 		  }
 		}
@@ -606,6 +627,7 @@ void MDSPlusFieldReader::execute(){
 		    error( "Error can not get Vector data" );
 		    if( ! sliceRange_ ) {
 		      error_ = true;
+		      mds.disconnect();
 		      return;
 		    }
 		  } else if( nRadial != dims[0] ||
@@ -618,6 +640,7 @@ void MDSPlusFieldReader::execute(){
 		    error( str.str() );
 		    if( ! sliceRange_ ) {
 		      error_ = true;
+		      mds.disconnect();
 		      return;
 		    }
 		  }
@@ -826,6 +849,8 @@ void MDSPlusFieldReader::execute(){
 	      ostringstream str;
 	      str << "Unable to initialize " << name << "'s oport";
 	      error( str.str() );
+	      if( readGrid || readData )
+		mds.disconnect();
 	      return;
 	    }
 
@@ -844,6 +869,8 @@ void MDSPlusFieldReader::execute(){
 	      ostringstream str;
 	      str << "Unable to initialize " << name << "'s oport";
 	      error( str.str() );
+	      if( readGrid || readData )
+		mds.disconnect();
 	      return;
 	    }
 

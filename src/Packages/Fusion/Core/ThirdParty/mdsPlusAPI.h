@@ -45,6 +45,7 @@ extern "C" {
 #ifdef HAVE_MDSPLUS
     int MDS_Connect( const char *server );
     int MDS_Open( const char *tree, int shot );
+    void MDS_SetSocket( int socket );
     void MDS_Disconnect();
 
     int get_rank( const char *signal );

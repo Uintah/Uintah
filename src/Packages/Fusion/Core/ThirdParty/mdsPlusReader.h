@@ -63,11 +63,8 @@ public:
 		      int *dims );
 
 protected:
+  int socket_;
+
   static Mutex mdsPlusLock_;
-  static std::string server_;
-  static std::string tree_;
-  static int shot_;
-  static int connects_;
-  static int opens_;
 };
 }

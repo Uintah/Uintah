@@ -40,9 +40,10 @@
 
 #include <mdslib.h>
 
-/* These are not defined in mdslib.h so to prevent a warning. */
+/* These are not defined in mdslib.h so define them here. */
 int MdsOpen(char *tree, int* shot);
 void MdsDisconnect();
+int MdsSetSocket( int *socket );
 
 /* If an MDSPlus call is successful the first bit is set. */
 #define status_ok( status ) ((status & 1) == 1)
@@ -56,7 +57,7 @@ int MDS_Connect( const char *server )
   return retVal;
 }
 
-/* Simple interface to interface bewteen the C and C++ calls. */
+/* Simple interface to interface bewteen the C++ and C calls. */
 int MDS_Open( const char *tree, int shot )
 {
   /* Open tree */
@@ -65,11 +66,18 @@ int MDS_Open( const char *tree, int shot )
   return retVal;
 }
 
-/* Simple interface to interface bewteen the C and C++ calls. */
+/* Simple interface to interface bewteen the C++ and C calls. */
 void MDS_Disconnect()
 {
   /* Disconnect to MDSplus */
   MdsDisconnect();
+}
+
+/* Simple interface to interface bewteen the C++ and C calls. */
+void MDS_SetSocket( int socket )
+{
+  /* Disconnect to MDSplus */
+  MdsSetSocket( &socket );
 }
 
 /*  Query the rank of the node - as in the number of dimensions. */
@@ -377,8 +385,3 @@ double *get_slice_data( const char *name,
     return NULL;
 }
 #endif  // HAVE_MDSPLUS
-
-
-
-
-

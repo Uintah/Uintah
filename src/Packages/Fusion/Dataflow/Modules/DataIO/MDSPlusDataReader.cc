@@ -114,7 +114,7 @@ void MDSPlusDataReader::execute(){
     int trys = 0;
     int retVal;
 
-    while( trys < 10 && (retVal = mds.connect(server.c_str()) ) == -2 ) {
+    while( trys < 10 && (retVal = mds.connect( server.c_str()) ) == -2 ) {
       remark( "Waiting for the connection to become free." );
       sleep( 1 );
       trys++;
@@ -133,7 +133,6 @@ void MDSPlusDataReader::execute(){
     }
     else
       remark( "Conecting to MdsPlus Server " + server );
-
 
     // Open tree
     trys = 0;

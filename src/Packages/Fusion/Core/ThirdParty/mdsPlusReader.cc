@@ -41,110 +41,81 @@ namespace Fusion {
 using namespace SCIRun;
 
 Mutex MDSPlusReader::mdsPlusLock_( "MDS Plus Mutex Lock" );
-std::string MDSPlusReader::server_;
-std::string MDSPlusReader::tree_;
-int MDSPlusReader::shot_ = 0;
-int MDSPlusReader::connects_ = 0;
-int MDSPlusReader::opens_ = 0;
 
-MDSPlusReader::MDSPlusReader()
+MDSPlusReader::MDSPlusReader() : socket_(-1)
 {
 }
 
 /* Simple interface to interface bewteen the C and C++ calls. */
 int MDSPlusReader::connect( std::string server )
 {
-  mdsPlusLock_.lock();
-
+#ifdef HAVE_MDSPLUS
   int retVal;
 
-  if( connects_ ) {
-    if( server == server_ ) {
-      connects_++;
-      retVal = 0;
-    }
-    else {
-      retVal = -2;
-    }
-  } else {
+  mdsPlusLock_.lock();
 
-#ifdef HAVE_MDSPLUS
-    /* Connect to MDSplus */
-    retVal = MDS_Connect((char*)server.c_str());
-#endif
+  /* Connect to MDSplus */
+  MDS_SetSocket( -1 );  // Insure that there will not be a disconnect.
 
-    if( retVal == 0 ) {
-      server_ = server_;
-      connects_++;
-    }
-  }
+  socket_ = MDS_Connect((char*)server.c_str());
+
+  if( socket_ > 0 )
+    retVal = 0;
+  else
+    retVal = -1;
 
   mdsPlusLock_.unlock();
-
-  return retVal;
+#else
+  return -1;
+#endif
 }
 
 /* simple interface to interface bewteen the C and C++ calls. */
-int MDSPlusReader::open( std::string tree, int shot )
+int MDSPlusReader::open( const std::string tree,
+			 const int shot )
 {
-  mdsPlusLock_.lock();
-
+#ifdef HAVE_MDSPLUS
   int retVal;
 
-  if( opens_ ) {
-    if( tree == tree_ && shot == shot_ ) {
-      opens_++;
-      retVal = 0;
-    }
-    else {
-      retVal = -2;
-    }
-  } else {
+  mdsPlusLock_.lock();
 
-#ifdef HAVE_MDSPLUS
-    /* Open tree */
-    retVal = MDS_Open((char*)tree.c_str(), shot);
-#endif
-    if( retVal == 0 ) {
-      tree_ = tree;
-      shot_ = shot;
-      opens_++;
-    }
-  }
+  MDS_SetSocket( socket_ );
+
+  /* Open tree */
+  retVal = MDS_Open((char*)tree.c_str(), shot);
 
   mdsPlusLock_.unlock();
 
   return retVal;
+#else
+  return -1;
+#endif
 }
 
 /* Simple interface to interface bewteen the C and C++ calls. */
 void MDSPlusReader::disconnect()
 {
+#ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
 
-  if( opens_ && --opens_ == 0 ) {
+  MDS_SetSocket( socket_ );
 
-    tree_ = "";
-    shot_ = 0;
-  }
+  /* Disconnect to MDSplus */
+  MDS_Disconnect();
 
-  if( connects_ && --connects_ == 0 ) {
-
-#ifdef HAVE_MDSPLUS
-    /* Disconnect to MDSplus */
-    MDS_Disconnect();
-#endif
-    server_ = "";
-  }
+  socket_ = -1;
 
   mdsPlusLock_.unlock();
+#endif
 }
 
 /*  Query the rank of the node - as in the number of dimensions. */
-int MDSPlusReader::rank( const std::string signal ) {
+int MDSPlusReader::rank( const std::string signal )
+{
 #ifdef HAVE_MDSPLUS
-
   mdsPlusLock_.lock();
+
+  MDS_SetSocket( socket_ );
 
   int rank = get_rank( signal.c_str() );
 
@@ -157,11 +128,13 @@ int MDSPlusReader::rank( const std::string signal ) {
 }
 
 /*  Query the size of the node  - as in the number of elements. */
-int MDSPlusReader::size( const std::string signal ) {
-
+int MDSPlusReader::size( const std::string signal )
+{
+#ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
 
-#ifdef HAVE_MDSPLUS
+  MDS_SetSocket( socket_ );
+
   int size = get_size( signal.c_str() );
 
   mdsPlusLock_.unlock();
@@ -177,6 +150,8 @@ double* MDSPlusReader::grid( const std::string axis, int *dims )
 {
 #ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
+
+  MDS_SetSocket( socket_ );
 
   double* data = get_grid( axis.c_str(), dims );
 
@@ -194,6 +169,8 @@ int MDSPlusReader::slice_ids( int **nids )
 #ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
 
+  MDS_SetSocket( socket_ );
+
   int nSlices = get_slice_ids( nids );
 
   mdsPlusLock_.unlock();
@@ -205,10 +182,13 @@ int MDSPlusReader::slice_ids( int **nids )
 }
 
 /*  Query the server for the slice name. */
-std::string MDSPlusReader::slice_name( const int *nids, int slice )
+std::string MDSPlusReader::slice_name( const int *nids,
+				       int slice )
 {
 #ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
+
+  MDS_SetSocket( socket_ );
 
   std::string name( get_slice_name(nids, slice) );
 
@@ -225,6 +205,8 @@ double MDSPlusReader::slice_time( const std::string name )
 {
 #ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
+
+  MDS_SetSocket( socket_ );
 
   double time = get_slice_time( name.c_str() );
 
@@ -245,6 +227,8 @@ double *MDSPlusReader::slice_data( const std::string name,
 {
 #ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
+
+  MDS_SetSocket( socket_ );
 
   double* data =
     get_slice_data( name.c_str(), space.c_str(), node.c_str(), dims );
