@@ -768,15 +768,22 @@ void matfile::writetag(matfiledata& md)
     // that are written after this tag, the size field needs to be
     // updated afterwards. Since the size is unknown we cannot assume
     // it is smaller 256. Hence we must exclude the miMATRIX class
-    
+   
     if ((md.type() != miMATRIX)&&(md.bytesize() < 5))
     {	// write a compressed header
         short	csizetype[2];
 
-		csizetype[0] = static_cast<short>(md.bytesize());
-		csizetype[1] = static_cast<short>(md.type());
-
-		mfwrite(static_cast<void *>(&(csizetype[0])),sizeof(long),1,m_->curptr_.hdrptr);
+        if (byteswapmachine())
+		{
+			csizetype[1] = static_cast<short>(md.bytesize());
+			csizetype[0] = static_cast<short>(md.type());
+		}
+		else
+		{
+			csizetype[0] = static_cast<short>(md.bytesize());
+			csizetype[1] = static_cast<short>(md.type());		
+		}
+		mfwrite(static_cast<void *>(&(csizetype[0])),sizeof(short),2,m_->curptr_.hdrptr);
         m_->curptr_.datptr = m_->curptr_.hdrptr+4;
         m_->curptr_.size = md.bytesize();
 	
@@ -796,7 +803,7 @@ void matfile::writedat(matfiledata& md)
 {
     writetag(md);
 	
-	if (md.size() > 0)
+	if (md.bytesize() > 0)
 	{
 		mfwrite(md.databuffer(),md.elsize(),md.size(),m_->curptr_.datptr);
 	}
@@ -807,6 +814,8 @@ void matfile::writedat(matfiledata& md)
 	if ((md.type() != miMATRIX)&&(md.bytesize() < 5)) headersize = 4;
 	
 	long remsize = (((((md.bytesize()+headersize)-1)/8)+1)*8)-(md.bytesize()+headersize);
+	
+	if ((headersize == 8)&&(md.bytesize() == 0)) return;
 	
 	if (remsize)
 	{   // fill up remaining bytes

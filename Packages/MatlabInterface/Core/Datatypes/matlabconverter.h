@@ -446,6 +446,9 @@ template<class FIELD> void matlabconverter::mladdfieldat(FIELD *scifield,matlaba
     if (scifield->basis_order() > 1) fieldat.createstringarray("higher order");
 	mlarray.setfield(0,"fieldat",fieldat);
 	
+	matlabarray basisorder;
+	basisorder.createdoublescalar(static_cast<double>(scifield->basis_order()));
+	mlarray.setfield(0,"basisorder",basisorder);
 }
  
 template <class MESH> void matlabconverter::mladdtransform(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray)
