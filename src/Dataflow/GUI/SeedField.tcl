@@ -67,9 +67,9 @@ itcl_class SCIRun_Fields_SeedField {
 	set type [$wtab.type childsite]
 	radiobutton $type.rake -var $this-wtype -value rake -text "Rake" 
 	radiobutton $type.ring -var $this-wtype -value ring -text "Ring" \
-		    -state disabled -dis darkgrey
+		    -state disabled -dis #444
 	radiobutton $type.frame -var $this-wtype -value frame \
-		    -text "Frame" -state disabled -dis darkgrey
+		    -text "Frame" -state disabled -dis #444
 	pack $type.rake $type.ring $type.frame -side left -padx 5 -pady 5
 	frame $wtab.f1 
 	pack $wtab.f1 -side top 
