@@ -40,12 +40,12 @@ static Persistent* make_TriSurface()
 
 PersistentTypeID TriSurface::type_id("TriSurface", "Surface", make_TriSurface);
 
-TriSurface::TriSurface()
-: Surface(TriSurf, 1), empty_index(-1), directed(1)
+TriSurface::TriSurface(Representation r)
+: Surface(r, 0), empty_index(-1), directed(1)
 {
 }
 
-TriSurface::TriSurface(const TriSurface& copy)
+TriSurface::TriSurface(const TriSurface& copy, Representation r)
 : Surface(copy)
 {
     NOT_FINISHED("TriSurface::TriSurface");
@@ -664,7 +664,7 @@ void TriSurface::get_surfnodes(Array1<NodeHandle> &n)
     }
 }
 
-GeomObj* TriSurface::get_obj(const ColormapHandle&)
+GeomObj* TriSurface::get_obj(const ColorMapHandle&)
 {
     NOT_FINISHED("TriSurface::get_obj");
     return 0;

@@ -1118,6 +1118,7 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
     }
     for(i=0;i<to_remove.size();i++){
 	int tr=to_remove[i];
+//	cerr << "Removing: " << tr << endl;
 	delete elems[tr];
 	elems[tr]=0;
     }

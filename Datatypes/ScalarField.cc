@@ -12,6 +12,7 @@
  */
 
 #include <Datatypes/ScalarField.h>
+#include <Datatypes/ScalarFieldRGBase.h>
 #include <Classlib/String.h>
 #include <iostream.h>
 
@@ -28,9 +29,12 @@ ScalarField::~ScalarField()
 
 ScalarFieldRG* ScalarField::getRG()
 {
-    if(rep==RegularGridBase)
+    if(rep==RegularGrid)
 	return (ScalarFieldRG*)this;
-    else
+    else if (rep==RegularGridBase) {
+	ScalarFieldRGBase *sfrgb=(ScalarFieldRGBase*) this;
+	if (sfrgb->getRGDouble()) return (ScalarFieldRG*)this; else return 0;
+    } else
 	return 0;
 }
 

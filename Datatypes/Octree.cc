@@ -767,7 +767,7 @@ void Octree::bottom_level() {
 
 double Octree::get_scalar(int x, int y, int z) {
     if (x>=nx || y>=ny || z>=nz) {
-	cerr << "Bogus x, y, z indices!\n";
+	cerr << "x="<<x<<" y="<<y<<" z="<<z<<"  nx="<<nx<<" ny="<<ny<<" nz="<<nz<<"  Bogus x, y, z indices!\n";
 	return 0;
     }
     if (leaf) {

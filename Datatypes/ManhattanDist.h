@@ -32,7 +32,9 @@ public:
     virtual ~ManhattanDist();
     virtual ScalarField* clone();
     double dist(const Point& p);
+    double dist(const Point& p, int &idx);
     double dist2(const Point& p);
+    double dist2(const Point& p, int &idx);
     int distFast(const Point& p);
     void partial_initialize();
     void computeCellDistance(int i, int j, int k);

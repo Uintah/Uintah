@@ -46,7 +46,7 @@ public:
     virtual void construct_grid(int, int, int, const Point &, double);
     virtual void construct_grid();
 
-    virtual GeomObj* get_obj(const ColormapHandle&);
+    virtual GeomObj* get_obj(const ColorMapHandle&);
 
     // Persistent representation...
     virtual void io(Piostream&);
@@ -67,7 +67,7 @@ public:
     virtual void construct_grid(int, int, int, const Point &, double);
     virtual void construct_grid();
 
-    virtual GeomObj* get_obj(const ColormapHandle&);
+    virtual GeomObj* get_obj(const ColorMapHandle&);
     // Persistent representation...
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
@@ -98,7 +98,7 @@ public:
     virtual void construct_grid(int, int, int, const Point &, double);
     virtual void construct_grid();
 
-    virtual GeomObj* get_obj(const ColormapHandle&);
+    virtual GeomObj* get_obj(const ColorMapHandle&);
 
     // Persistent representation...
     virtual void io(Piostream&);
@@ -119,7 +119,7 @@ public:
     virtual void construct_grid(int, int, int, const Point &, double);
     virtual void construct_grid();
 
-    virtual GeomObj* get_obj(const ColormapHandle&);
+    virtual GeomObj* get_obj(const ColorMapHandle&);
     // Persistent representation...
     virtual void io(Piostream&);
     static PersistentTypeID type_id;

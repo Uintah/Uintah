@@ -186,7 +186,7 @@ void CylinderSurface::construct_grid()
     NOT_FINISHED("CylinderSurface::construct_grid");
 }
 
-GeomObj* CylinderSurface::get_obj(const ColormapHandle& cmap)
+GeomObj* CylinderSurface::get_obj(const ColorMapHandle& cmap)
 {
     if(boundary_type == None)
 	return scinew GeomCappedCylinder(p1, p2, radius);
@@ -394,7 +394,7 @@ void SphereSurface::construct_grid()
     NOT_FINISHED("SphereSurface::construct_grid");
 }
 
-GeomObj* SphereSurface::get_obj(const ColormapHandle& cmap)
+GeomObj* SphereSurface::get_obj(const ColorMapHandle& cmap)
 {
     if(boundary_type == None)
 	return scinew GeomSphere(cen, radius);
@@ -561,7 +561,7 @@ void PointSurface::construct_grid()
     NOT_FINISHED("PointSurface::construct_grid");
 }
 
-GeomObj* PointSurface::get_obj(const ColormapHandle&)
+GeomObj* PointSurface::get_obj(const ColorMapHandle&)
 {
     NOT_FINISHED("PointSurface::get_obj");
     return 0;
@@ -626,7 +626,7 @@ void PointsSurface::construct_grid()
     NOT_FINISHED("PointsSurface::construct_grid");
 }
 
-GeomObj* PointsSurface::get_obj(const ColormapHandle&)
+GeomObj* PointsSurface::get_obj(const ColorMapHandle&)
 {
     NOT_FINISHED("PointsSurface::get_obj");
     return 0;

@@ -20,13 +20,14 @@
 class Surface;
 typedef LockingHandle<Surface> SurfaceHandle;
 
-#include <Datatypes/Colormap.h>
+#include <Datatypes/ColorMap.h>
 #include <Datatypes/Mesh.h>
 #include <Classlib/Array1.h>
 #include <Classlib/HashTable.h>
 #include <Classlib/String.h>
 #include <Geometry/Point.h>
 
+class ScalarTriSurface;
 class TriSurface;
 class PointsSurface;
 class Grid;
@@ -35,6 +36,7 @@ protected:
     enum Representation {
 	TriSurf,
 	PointsSurf,
+	ScalarTriSurf,
 	Other,
     };
     Surface(Representation, int closed);
@@ -68,10 +70,11 @@ public:
     virtual void construct_grid()=0;
     virtual void destroy_grid();
     virtual void destroy_hash();
+    ScalarTriSurface* getScalarTriSurface();
     TriSurface* getTriSurface();
     PointsSurface* getPointsSurface();
     virtual void get_surfnodes(Array1<NodeHandle>&)=0;
-    virtual GeomObj* get_obj(const ColormapHandle&)=0;
+    virtual GeomObj* get_obj(const ColorMapHandle&)=0;
 
     // Persistent representation...
     virtual void io(Piostream&);

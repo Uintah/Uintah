@@ -44,8 +44,8 @@ private:
     void add_node(Array1<NodeHandle>& nodes,
 		  char* id, const Point& p, int n);
 public:
-    TriSurface();
-    TriSurface(const TriSurface& copy);
+    TriSurface(Representation r=TriSurf);
+    TriSurface(const TriSurface& copy, Representation r=TriSurf);
     virtual ~TriSurface();
     virtual Surface* clone();
 
@@ -76,7 +76,7 @@ public:
     int get_closest_vertex_id(const Point &p1,const Point &p2,
 			      const Point &p3);
 
-    virtual GeomObj* get_obj(const ColormapHandle&);
+    virtual GeomObj* get_obj(const ColorMapHandle&);
 
     // Persistent representation...
     virtual void io(Piostream&);

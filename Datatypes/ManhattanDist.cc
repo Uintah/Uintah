@@ -248,6 +248,11 @@ int ManhattanDist::distFast(const Point& p) {
 }
 
 double ManhattanDist::dist2(const Point& p) {
+    int q;
+    return dist2(p,q);
+}
+
+double ManhattanDist::dist2(const Point& p, int &idx) {
     int i, j, k;
     locate(p, i, j, k);
     if (i>=grid.dim1()) i=grid.dim1()-1;
@@ -260,14 +265,23 @@ double ManhattanDist::dist2(const Point& p) {
         computeCellDistance(i,j,k);
     Array1<int> nds(closestNodeIdx(i,j,k));
     double dist=Vector(p-pts[nds[0]]).length2();
+    idx=nds[0];
     for (int a=1; a<nds.size(); a++) {
 	double tmp=Vector(p-pts[nds[a]]).length2();
-	if (tmp<dist) dist=tmp;
+	if (tmp<dist) {
+	    dist=tmp;
+	    idx=nds[a];
+	}
     }
     return dist;
 }
 
 double ManhattanDist::dist(const Point& p) {
+    int q;
+    return dist(p,q);
+}
+
+double ManhattanDist::dist(const Point& p, int &idx) {
     int i, j, k;
     locate(p, i, j, k);
     if (i>=grid.dim1()) i=grid.dim1()-1;
@@ -280,13 +294,18 @@ double ManhattanDist::dist(const Point& p) {
         computeCellDistance(i,j,k);
     Array1<int> nds(closestNodeIdx(i,j,k));
     double dist=Vector(p-pts[nds[0]]).length();
+    idx=nds[0];
     for (int a=1; a<nds.size(); a++) {
 	double tmp=Vector(p-pts[nds[a]]).length();
-	if (tmp<dist) dist=tmp;
+	if (tmp<dist) {
+	    cerr << "(was "<<idx<<" now "<<nds[a]<<")";
+	    dist=tmp;
+	    idx=nds[a];
+	}
     }
     return dist;
 }
-
+    
 #define ManhattanDist_VERSION 1
 
 void ManhattanDist::io(Piostream& stream) {

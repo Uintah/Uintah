@@ -28,7 +28,7 @@ Surface::~Surface()
 }
 
 Surface::Surface(const Surface& copy)
-: closed(copy.closed)
+: closed(copy.closed), rep(copy.rep)
 {
     NOT_FINISHED("Surface::Surface");
 }
@@ -66,6 +66,14 @@ void Surface::io(Piostream& stream) {
 	Pio(stream, bt);
     }
     stream.end_class();
+}
+
+ScalarTriSurface* Surface::getScalarTriSurface()
+{
+    if(rep==ScalarTriSurf)
+	return (ScalarTriSurface*)this;
+    else
+	return 0;
 }
 
 TriSurface* Surface::getTriSurface()
