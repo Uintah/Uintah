@@ -342,9 +342,6 @@ EditTransferFunc2::update()
     }
   }
   glXMakeCurrent(dpy_, win_, ctx_);
-
-  use_pbuffer_ = false;
-  //use_back_buffer_ = false;
   
   //----------------------------------------------------------------
   // decide what rasterization to use
