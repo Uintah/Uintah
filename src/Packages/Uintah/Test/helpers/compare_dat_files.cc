@@ -95,7 +95,7 @@ int main(int argc, char** argv)
 	   << first_significant_error_time[1] << endl;
       cout << "\nThe following is the suggested command to compare these files:\n";
 
-      cout << "xdiff " << datfilename[0] << " " << datfilename[1] << "\n\n";
+      cout << "xdiff\\\n" << datfilename[0] << "\\\n" << datfilename[1] << "\n\n";
       
       failed = true;
     }
