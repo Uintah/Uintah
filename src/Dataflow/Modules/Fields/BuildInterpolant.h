@@ -59,7 +59,7 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshBaseHandle src_meshH
 {
   MSRC *src_mesh = dynamic_cast<MSRC *>(src_meshH.get_rep());
   MDST *dst_mesh = dynamic_cast<MDST *>(dst_meshH.get_rep());
-  FOUT *ofield = new FOUT(dst_mesh, loc);
+  FOUT *ofield = scinew FOUT(dst_mesh, loc);
 
   typedef typename LDST::iterator DSTITR; 
   DSTITR itr = dst_mesh->tbegin((DSTITR *)0);
