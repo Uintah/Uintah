@@ -952,10 +952,12 @@ void Dpy::run()
     cerr << "glXMakeCurrent failed!\n";
   }
 
-  XFontStruct* fontInfo = XLoadQueryFont(priv->dpy, 
-					 "-adobe-helvetica-bold-r-normal--17-120-100-100-p-88-iso8859-1");
+  XFontStruct* fontInfo = 
+      XLoadQueryFont(priv->dpy, 
+		     "-gnu-unifont-bold-*-*-*-16-*-*-*-*-*-*-*");
+
   if (fontInfo == NULL) {
-    cerr << "no font found\n";
+      cerr << "no font found" << __FILE__ << "," << __LINE__ << std::endl;
     Thread::exitAll(1);
   }
   Font id = fontInfo->fid;
@@ -970,10 +972,12 @@ void Dpy::run()
   glXUseXFont(id, first, last-first+1, fontbase+first);
 
 
-  XFontStruct* fontInfo2 = XLoadQueryFont(priv->dpy, 
-					  "-adobe-helvetica-bold-r-normal--12-120-*-*-p-*-iso8859-1");
+  XFontStruct* fontInfo2 = 
+      XLoadQueryFont(priv->dpy,
+		     "-gnu-unifont-bold-*-*-*-16-*-*-*-*-*-*-*");
+
   if (fontInfo2 == NULL) {
-    cerr << "no font found(2)\n";
+      cerr << "no font found" << __FILE__ << "," << __LINE__ << std::endl;
     Thread::exitAll(1);
   }
 
