@@ -6,6 +6,7 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <string>
 #include <map>
+#include <vector>
 using namespace std;
 
 #ifdef __sgi
@@ -83,6 +84,7 @@ WARNING
       void require(const std::string& name, SCICore::Geometry::IntVector& value);
       void require(const std::string& name, SCICore::Geometry::Vector& value);
       void require(const std::string& name, SCICore::Geometry::Point& value);
+      void require(const std::string& name, vector<double>& value);
 
    // Get any optional attributes associated with a tag
 
@@ -100,6 +102,7 @@ WARNING
 		       SCICore::Geometry::Vector& value);
       ProblemSpecP get(const std::string& name, 
 		       SCICore::Geometry::Point& value);
+      ProblemSpecP get(const std::string& name, vector<double>& value);
 
       void getAttributes(std::map<std::string,std::string>& value);
 
@@ -128,6 +131,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.18  2000/12/21 21:53:09  jas
+// Added capability to read in an arbitrary length vector described by
+// [num,num,num,num,num].
+//
 // Revision 1.17  2000/09/26 23:15:53  witzel
 // Added optional write parameter to constructor.
 //
