@@ -101,14 +101,11 @@ C$DIR SCALAR
 C$DIR SCALAR
             DO 600 J = JST,JEND
                IF ((PCELL(IEND+1,J,K).NE.WALL .AND.
-     &              PCELL(IEND,J,K).NE.WALL).AND.
-     $              (PCELL(IEND+1,J,K).NE.FFIELD).AND.
-     $              xplus) THEN
+     &              PCELL(IEND,J,K).NE.WALL).AND.xplus) then
                   AE(IEND,J,K) = ZERO
                END IF
                IF ((PCELL(IST-1,J,K).NE.WALL .AND.
      &              PCELL(IST,J,K).NE.WALL).AND.
-     $              (PCELL(IST-1,J,K).NE.FFIELD).AND.
      $              xminus) THEN
                   AW(IST,J,K) = ZERO
                END IF
@@ -125,13 +122,11 @@ C$DIR SCALAR
             DO 700 I = IST,IEND
                IF ((PCELL(I,JEND+1,K).NE.WALL.AND.
      &              PCELL(I,JEND,K).NE.WALL).AND.
-     $              (PCELL(I,JEND+1,K).NE.FFIELD).AND.
      $              yplus) THEN
                   AN(I,JEND,K) = ZERO
                END IF
                IF ((PCELL(I,JST-1,K).NE.WALL.AND.
      &              PCELL(I,JST,K).NE.WALL).AND.
-     $              (PCELL(I,JST-1,K).NE.FFIELD).AND.
      $              yminus) THEN
                   AS(I,JST,K) = ZERO
                END IF
@@ -148,13 +143,11 @@ C$DIR SCALAR
             DO 800 I = IST,IEND
                IF ((PCELL(I,J,KEND+1).NE.WALL .AND. 
      &              PCELL(I,J,KEND).NE.WALL).AND.
-     $              (PCELL(I,J,KEND+1).NE.FFIELD).and.
      $              zplus)THEN
                   AT(I,J,KEND) = ZERO
                END IF
                IF ((PCELL(I,J,KST-1).NE.WALL .AND. 
      &              PCELL(I,J,KST).NE.WALL).AND.
-     $              (PCELL(I,J,KST-1).NE.FFIELD).AND.
      $              zminus) THEN
                   AB(I,J,KST) = ZERO
                END IF
@@ -182,6 +175,9 @@ C$DIR SCALAR
 c*********************************************************************
 c
 c $Log$
+c Revision 1.6  2000/10/07 23:53:03  rawat
+c modified bc subroutines
+c
 c Revision 1.5  2000/10/06 23:07:53  rawat
 c fixed some more bc routines for mulit-patch
 c

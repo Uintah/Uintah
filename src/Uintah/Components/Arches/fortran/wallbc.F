@@ -90,45 +90,27 @@ c*********************************************************************
       else
          kEndGhost = kend
       endif
-      
-      DO 500 K = kBegGhost,kEndGhost
-         DO 400 J = jBegGhost,jEndGhost
-            DO 300 I = iBegGhost,iEndGhost
+
+      if (xminus) then
+         DO 500 K = kst,kend
+            DO 400 J = jst,jend
+               I = ist -1
                IF (PCELL(I,J,K).EQ.WALL) THEN
-                  IF (I.NE.iBegGhost) THEN
-                     IF (PCELL(I-1,J,K).NE.WALL) 
-     $                    AE(I-1,J,K) = ZERO
-                  END IF
-                  IF (I.NE.iEndGhost) THEN
-                     IF (PCELL(I+1,J,K).NE.WALL) 
-     $                    AW(I+1,J,K) = ZERO
-                  END IF
-                  IF (J.NE.jBegGhost) THEN
-                     IF (PCELL(I,J-1,K).NE.WALL) 
-     $                    AN(I,J-1,K) = ZERO
-                  END IF
-                  IF (J.NE.jEndGhost) THEN
-                     IF (PCELL(I,J+1,K).NE.WALL) 
-     $                    AS(I,J+1,K) = ZERO
-                  END IF
-                  IF (K.NE.kBegGhost) THEN
-                     IF (PCELL(I,J,K-1).NE.WALL) 
-     $                    AT(I,J,K-1) = ZERO
-                  END IF
-                  IF (K.NE.kEndGhost) THEN
-                     IF (PCELL(I,J,K+1).NE.WALL) 
-     $                    AB(I,J,K+1) = ZERO
-                  END IF
+                  IF (PCELL(I+1,J,K).NE.WALL) 
+     $                 AW(I+1,J,K) = ZERO
                END IF
- 300        CONTINUE
- 400     CONTINUE
- 500  CONTINUE
+ 400        CONTINUE
+ 500     CONTINUE
+      endif
       RETURN
       END 
 
 c*********************************************************************
 c
 c $Log$
+c Revision 1.5  2000/10/07 23:53:03  rawat
+c modified bc subroutines
+c
 c Revision 1.4  2000/10/06 23:07:53  rawat
 c fixed some more bc routines for mulit-patch
 c

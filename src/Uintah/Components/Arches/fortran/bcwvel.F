@@ -157,32 +157,18 @@ c------------------------------------------------------------------
 c*********************************************************************
 c     Go thru all the cells
 c*********************************************************************
+      if (xminus) then
 C$DIR SCALAR
-      DO 120 K = kBegGhost, kEndGhost
+         DO 120 K = kst, kend
 C$DIR SCALAR
-        DO 110 J = jBegGhost, jEndGhost
+            DO 110 J = jst, jend
 C$DIR SCALAR
-          DO 100 I = iBegGhost, iEndGhost
-            IF (PCELL(I,J,K).EQ.WALL) THEN
-               WW(I,J,K) = 0.0
-C--------------------------------------------------------------------
-C             BOTTOM FACE OF INTRUSION\WALL
-C--------------------------------------------------------------------
-               IF (K.NE.kBegGhost) THEN
-                  IF(PCELL(I,J,K-1).EQ.FFIELD) AT(I,J,K-1) = 0.0
-               END IF
-C--------------------------------------------------------------------
-C               TOP FACE OF INTRUSION\WALL
-C--------------------------------------------------------------------
-               IF (K.NE.kEndGhost) THEN
-                  IF (PCELL(I, J, K+1).NE.WALL) THEN
-                     IF (K.NE.kend) AB(I,J,K+2) = 0.0
-                  end if
-               end if
+               I = ist -1
+               IF (PCELL(I,J,K).EQ.WALL) THEN
+                  WW(I,J,K) = 0.0
 C--------------------------------------------------------------------
 C             BOTTOMEAST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
-               IF (I.NE.iEndGhost.AND.K.NE.kBegGhost) THEN
                   IF (PCELL(I+1,J,K-1).NE.WALL.AND.
      &                 PCELL(I+1,J,K).NE.WALL) THEN
                      XP = X(I+1) - XU(I+1)
@@ -190,72 +176,10 @@ C--------------------------------------------------------------------
                      SP(I+1,J,K) =SP(I+1,J,K)-TMULT*SNS(J)*STBW(K)
                      AW(I+1,J,K) = 0.0
                   END IF
-               END IF
-
-C--------------------------------------------------------------------
-C             BOTTOMWEST FACE OF INTRUSION\WALL
-C--------------------------------------------------------------------
-               IF (I.NE.iBegGhost.AND.K.NE.kBegGhost) THEN
-                  IF (PCELL(I-1,J,K-1).NE.WALL.AND.
-     &                 PCELL(I-1,J,K).NE.WALL) THEN
-                     XP = XU(I) - X(I-1)
-                     TMULT = VISCOS/XP
-                     SP(I-1,J,K) =SP(I-1,J,K)-TMULT*SNS(J)*STBW(K)
-                     AE(I-1,J,K) = 0.0
-                  END IF
-               END IF
-C--------------------------------------------------------------------
-C             BOTTOM SOUTH FACE OF INTRUSION\WALL
-C--------------------------------------------------------------------
-              IF (K.NE.kBegGhost.AND.J.NE.jBegGhost) THEN
-                 IF (PCELL(I,J-1,K-1).NE.WALL.AND.
-     &                PCELL(I,J-1,K).NE.WALL) THEN
-                    YP = YV(J)-Y(J-1)
-                    TMULT = VISCOS/YP
-               
-                    SP(I,J-1,K) = SP(I,J-1,K)-TMULT*STBW(K)*SEW(I)
-                    AS(I,J-1,K) = 0.0
-                 END IF 
-              END IF
-C--------------------------------------------------------------------
-C             BOTTOM NORTH FACE OF INTRUSION\WALL
-C--------------------------------------------------------------------
-              IF (K.NE.kBegGhost.AND.J.NE.jEndGhost) THEN
-                 IF (PCELL(I,J+1,K-1).NE.WALL.AND.
-     &                PCELL(I,J+1,K).NE.WALL) THEN
-                    YP = Y(J+1)-YV(J+1)
-                    TMULT = VISCOS/YP
-c                TAUZX(I,J,K+1) = -TMULT*U(I,J,K+1)
-c                SU(I,J,K+1) = SUL(I,J,K+1)
-                    SP(I,J+1,K) = SP(I,J+1,K)-TMULT*SEW(I)*STBW(K)
-                    AS(I,J+1,K) = 0.0
-                 END IF
-              END IF
-C--------------------------------------------------------------------
-C             IF CELL ABOVE INTRUSION IS ALSO AN INTRUSION, SKIP
-C             MODIFICATIONS FOR TOP FACES OF FIRST INTRUSION
-C--------------------------------------------------------------------
-              IF (K.NE.kEndGhost) THEN
-                 IF (PCELL(I,J,K+1).NE.WALL) THEN
-C--------------------------------------------------------------------
-C               TOPWEST FACE OF INTRUSION\WALL
-C--------------------------------------------------------------------
-                    IF (I.NE.iBegGhost.AND.K.NE.kEndGhost) THEN
-                       IF (PCELL(I-1,J,K+1).NE.WALL.AND.
-     &                      PCELL(I-1,J,K).NE.WALL)  THEN
-                          XP = XU(I)-X(I-1)
-                          TMULT = VISCOS/XP
-c                       TAUYX(I+1,J-1,K) = -TMULT*U(I+1,J-1,K)
-c                       SU(I+1,J-1,K) = SUL(I+1,J-1,K)
-                          SP(I-1,J,K+1) = SP(I-1,J,K+1) - TMULT*
-     &                         SNS(J)*STBW(K+1)
-                          AE(I-1,J,K+1) = 0.0
-                       END IF
-                    END IF
 C--------------------------------------------------------------------
 C               TOPEAST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
-                    IF (I.NE.iEndGhost.AND.K.NE.kEndGhost) THEN
+                    IF (K.NE.kend) THEN
                        IF (PCELL(I+1,J,K+1).NE.WALL.AND.
      &                      PCELL(I+1,J,K).NE.WALL) THEN
                           XP = X(I+1)-XU(I+1)
@@ -267,42 +191,10 @@ c                  SU(I+1,J+1,K) = SUL(I+1,J+1,K)
                           AW(I+1,J,K+1) = 0.0
                        END IF
                     END IF
-C--------------------------------------------------------------------
-C               TOP SOUTH FACE OF INTRUSION\WALL
-C--------------------------------------------------------------------
-                    IF (J.NE.jBegGhost.AND.K.NE.kEndGhost) THEN
-                       IF (PCELL(I,J-1,K+1).NE.WALL.AND.
-     &                      PCELL(I,J-1,K).NE.WALL) THEN
-                          YP = YV(J)-Y(J-1)
-                          TMULT = VISCOS/YP
-c                  TAUZX(I+1,J,K-1) = -TMULT*U(I+1,J,K-1)
-c                  SU(I+1,J,K-1) = SUL(I+1,J,K-1)
-                          SP(I,J-1,K+1) =SP(I,J-1,K+1)-TMULT*
-     &                         STBW(K+1)*SEW(I)
-                          AN(I,J-1,K+1) = 0.0
-                       END IF
-                    END IF
-C--------------------------------------------------------------------
-C               TOP NORTH FACE OF INTRUSION\WALL
-C--------------------------------------------------------------------
-                    IF (K.NE.kEndGhost.AND.J.NE.jEndGhost) THEN
-                       IF (PCELL(I,J+1,K+1).NE.WALL.AND.
-     &                      PCELL(I,J+1,K).NE.WALL) THEN
-                          YP = Y(J+1)-YV(J+1)
-                          TMULT = VISCOS/YP
-c                  TAUZX(I+1,J,K+1) = -TMULT*U(I+1,J,K+1)
-c                  SU(I+1,J,K+1) = SUL(I+1,J,K+1)
-                          SP(I,J+1,K+1) =SP(I,J+1,K+1)-TMULT*SEW(I)
-     &                         *STBW(K+1)
-                          AS(I,J+1,K+1) = 0.0
-                       END IF
-                    END IF
-                 END IF
-              END IF
-           END IF
- 100    CONTINUE
- 110  CONTINUE
- 120  CONTINUE
+                 endif
+ 110          CONTINUE
+ 120       CONTINUE
+        endif
 
 C--------------------------------------------------------------------
 C     PRESSURE BOUNDARY CONDITOINS 
@@ -358,6 +250,9 @@ C-------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.7  2000/10/07 23:53:03  rawat
+c modified bc subroutines
+c
 c Revision 1.6  2000/10/06 23:07:53  rawat
 c fixed some more bc routines for mulit-patch
 c
