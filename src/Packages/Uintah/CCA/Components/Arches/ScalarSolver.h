@@ -104,11 +104,6 @@ public:
 				   const TimeIntegratorLabel* timelabels,
 				   int index);
 
-      const int& getConvectionSchemeType() const
-	{
-	  return d_conv_scheme;
-	}
-
 protected:
 
 private:

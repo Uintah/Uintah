@@ -126,9 +126,10 @@ public:
         d_discretize->setFilter(filter);
       }
 #endif
-      inline void setConvectionSchemeType(int conv_scheme) {
-	d_conv_scheme = conv_scheme;
-      }
+      const bool& getPressureCorrectionFlag() const
+	{
+	  return d_pressure_correction;
+	}
 protected: 
 
 private:
@@ -185,6 +186,7 @@ private:
       const ArchesLabel* d_lab;
       const MPMArchesLabel* d_MAlab;
       bool d_central;
+      bool d_pressure_correction;
       // computes coefficients
       Discretization* d_discretize;
       // computes sources
@@ -197,7 +199,6 @@ private:
       BoundaryCondition* d_boundaryCondition;
       // physical constants
       PhysicalConstants* d_physicalConsts;
-      int d_conv_scheme;
 
 
 }; // End class MomentumSolver

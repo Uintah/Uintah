@@ -149,10 +149,6 @@ public:
 	return d_calcEnergyExchange;
       }      
 
-      inline void setConvectionSchemeType(int conv_scheme) {
-	d_conv_scheme = conv_scheme;
-      }
-
       // GROUP:  Schedule tasks :
       ////////////////////////////////////////////////////////////////////////
       // Initialize cell types
@@ -444,14 +440,20 @@ public:
 			    CellInformation* cellinfo,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars,
-			    const double delta_t);
+			    const double delta_t,
+			    const double maxAbsU,
+			    const double maxAbsV,
+			    const double maxAbsW);
 
       void enthalpyOutletBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    CellInformation* cellinfo,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars,
-			    const double delta_t);
+			    const double delta_t,
+			    const double maxAbsU,
+			    const double maxAbsV,
+			    const double maxAbsW);
 
       void velRhoHatInletBC(const ProcessorGroup* pc,
 			    const Patch* patch,
@@ -470,7 +472,10 @@ public:
 			    CellInformation* cellinfo,
 			    const double delta_t,
 			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars);
+			    ArchesConstVariables* constvars,
+			    const double maxAbsU,
+			    const double maxAbsV,
+			    const double maxAbsW);
 
       void velocityPressureBC(const ProcessorGroup* pc,
 			    const Patch* patch,
@@ -787,7 +792,6 @@ private:
       bool d_intrusionBoundary;
       IntrusionBdry* d_intrusionBC;
       int d_flowfieldCellTypeVal;
-      int d_conv_scheme;
 
 }; // End of class BoundaryCondition
 } // End namespace Uintah

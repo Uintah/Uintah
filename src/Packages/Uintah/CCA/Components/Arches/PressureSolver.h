@@ -109,6 +109,9 @@ public:
 					      const PatchSet* patches,
 					      const MaterialSet* matls);
 
+      inline void setPressureCorrectionFlag(bool pressure_correction) {
+	d_pressure_correction = pressure_correction;
+      }
 protected:
 
 private:
@@ -202,6 +205,7 @@ private:
       MultiMaterialInterface* d_mmInterface;
       MultiMaterialSGSModel* d_mmSGSModel;
 #endif
+      bool d_pressure_correction;
 }; // End class PressureSolver
 
 } // End namespace Uintah
