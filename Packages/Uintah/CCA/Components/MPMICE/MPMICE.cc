@@ -43,10 +43,6 @@ MPMICE::~MPMICE()
   delete d_ice;
 }
 
-/*`==========TESTING==========  HACK: so we can get mass exchange off the ground*/
-#define HMX 1
-#define GAS 0
- /*==========TESTING==========`*/
 //______________________________________________________________________
 //
 void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
@@ -147,7 +143,6 @@ void MPMICE::scheduleTimeAdvance(double, double,
     d_mpm->scheduleComputeStressTensor(             patch,sched,old_dw,new_dw);
      
     d_ice->scheduleComputePressFC(                  patch,sched,old_dw,new_dw);
-  //  scheduleMassExchange(                           patch,sched,old_dw,new_dw);
     d_ice->scheduleAccumulateMomentumSourceSinks(   patch,sched,old_dw,new_dw);
     d_ice->scheduleAccumulateEnergySourceSinks(     patch,sched,old_dw,new_dw);
     d_ice->scheduleComputeLagrangianValues(         patch,sched,old_dw,new_dw);
@@ -434,7 +429,9 @@ void MPMICE::scheduleComputeEquilibrationPressure(const Patch* patch,
   task->computes(new_dw,Ilb->press_equil_CCLabel,0, patch);
   sched->addTask(task);
 }
-
+/* ---------------------------------------------------------------------
+ Function~  MPMICE::scheduleComputeMassBurnRate--
+_____________________________________________________________________*/
 void MPMICE::scheduleComputeMassBurnRate(const Patch* patch,
 					 SchedulerP& sched,
 					 DataWarehouseP& old_dw,
@@ -443,51 +440,28 @@ void MPMICE::scheduleComputeMassBurnRate(const Patch* patch,
   Task* task = scinew Task("MPMICE::computeMassBurnRate",
 			   patch, old_dw, new_dw, this,
 			   &MPMICE::computeMassBurnRate);
-
+  
+  ICEMaterial* ice_matl = d_sharedState->getICEMaterial(0);
+  int dwindex = ice_matl->getDWIndex();
   task->requires(new_dw, Ilb->press_CCLabel, 0, patch, Ghost::None);
+  task->requires(old_dw, Ilb->temp_CCLabel, dwindex, patch, Ghost::None);
 
-  for(int m = 0; m < d_sharedState->getNumMatls(); m++) {
+  int numALLMatls=d_sharedState->getNumMatls();
+  for(int m = 0; m < numALLMatls; m++) {
     Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
-    
-    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(0);
-
-    task->requires(old_dw, Ilb->temp_CCLabel, ice_matl->getDWIndex(), patch,
-		   Ghost::None);
-    
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     if (mpm_matl) {
       task->requires(new_dw, MIlb->temp_CCLabel,dwindex, patch, Ghost::None);
       task->requires(new_dw, MIlb->cMassLabel,dwindex, patch, Ghost::None);
-      
       task->computes(new_dw, MIlb->burnedMass_CCLabel, dwindex, patch);
       task->computes(new_dw, MIlb->releasedHeat_CCLabel, dwindex, patch);
     }
-  }
-
-  sched->addTask(task);
-
-  
-}
-
-
-/* ---------------------------------------------------------------------
- Function~  MPMICE::scheduleMassExchange--
-_____________________________________________________________________*/
-void  MPMICE::scheduleMassExchange(const Patch* patch,
-					SchedulerP& sched,
-					DataWarehouseP& old_dw,
-					DataWarehouseP& new_dw)
-
-{
-  Task* task = scinew Task("MPMICE::massExchange",
-                        patch, old_dw, new_dw, this, &MPMICE::massExchange);
-  int numMatls=d_sharedState->getNumMatls(); 
-
-  for (int m = 0; m < numMatls; m++)  {
-    Material* matl = d_sharedState->getMaterial(m);
-    int dwindex = matl->getDWIndex();  
-    task->computes(new_dw,  Ilb->mass_sourceLabel, dwindex, patch);    
+    if (ice_matl) {
+      task->computes(new_dw, Ilb->burnedMass_CCLabel, dwindex, patch);
+      task->computes(new_dw, Ilb->releasedHeat_CCLabel, dwindex, patch);
+    }
   }
   sched->addTask(task);
 }
@@ -1644,94 +1618,133 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     }
    #endif
   }
- /*==========DEBUG============`*/
-  
 }
-
+/* --------------------------------------------------------------------- 
+ Function~  MPMICE::computeMassBurnRate--
+ Steps:   
+    - Pull out temp_CC(matl 0) and press data from ICE
+    - Loop over all the mpm matls and compute heat and mass released
+    - Put the heat and mass into ICE matl (0).
+_____________________________________________________________________*/ 
 void MPMICE::computeMassBurnRate(const ProcessorGroup*,
 				 const Patch* patch,
 				 DataWarehouseP& old_dw,
 				 DataWarehouseP& new_dw)
 
 {
-
-  for(int m = 0; m < d_sharedState->getNumMatls(); m++) {
+  int numALLMatls=d_sharedState->getNumMatls();
+  vector<CCVariable<double> > burnedMass(numALLMatls);
+  vector<CCVariable<double> > releasedHeat(numALLMatls);
+  CCVariable<double> gasTemperature;
+  CCVariable<double> gasPressure;
+  CCVariable<double> sumBurnedMass;
+  CCVariable<double> sumReleasedHeat;
+    
+  for(int m = 0; m < numALLMatls; m++) {
     Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
-   
-    CCVariable<double> gasTemperature;
-    CCVariable<double> gasPressure;
-    
-    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(0);
-    
-    old_dw->get(gasTemperature, Ilb->temp_CCLabel, 
-		ice_matl->getDWIndex(), patch, Ghost::None, 0);
-    new_dw->get(gasPressure, Ilb->press_CCLabel, 0, patch, Ghost::None, 0);
-   
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    new_dw->allocate(burnedMass[m],  MIlb->burnedMass_CCLabel, dwindex, patch);
+    new_dw->allocate(releasedHeat[m],MIlb->releasedHeat_CCLabel,dwindex,patch);
+    burnedMass[m].initialize(0.0);
+    releasedHeat[m].initialize(0.0);
+  }
+  new_dw->allocate(sumBurnedMass,MIlb->sumBurnedMassLabel,0,patch);
+  new_dw->allocate(sumReleasedHeat,MIlb->sumReleasedHeatLabel,0,patch);
 
-    if (mpm_matl) {
+  sumBurnedMass.initialize(0.0);
+  sumReleasedHeat.initialize(0.0);
+  //__________________________________
+  // Pull out ICE data
+  ICEMaterial* ice_matl = d_sharedState->getICEMaterial(0);
+  int dwindex = ice_matl->getDWIndex();
+  old_dw->get(gasTemperature, Ilb->temp_CCLabel, dwindex,patch,Ghost::None,0);
+  new_dw->get(gasPressure,    Ilb->press_CCLabel,0,patch,Ghost::None,0);
+
+  //__________________________________
+  // M P M  matls
+  // compute the burned mass and released Heat
+  // if burnModel != null
+  for(int m = 0; m < numALLMatls; m++) {
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl)  {
+      int dwindex = matl->getDWIndex();
       CCVariable<double> solidTemperature;
       CCVariable<double> solidMass;
-      
+
       new_dw->get(solidTemperature, MIlb->temp_CCLabel, dwindex, patch, 
 		  Ghost::None, 0);
       new_dw->get(solidMass, MIlb->cMassLabel, dwindex, patch, Ghost::None, 0);
-  
-      CCVariable<double> burnedMass;
-      CCVariable<double> releasedHeat;
-
-      new_dw->allocate(burnedMass,MIlb->burnedMass_CCLabel, dwindex, patch);
-      new_dw->allocate(releasedHeat,MIlb->releasedHeat_CCLabel,dwindex,patch);
-
 
       for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
-	matl->getBurnModel()->computeBurn(gasTemperature[*iter],
+       matl->getBurnModel()->computeBurn(gasTemperature[*iter],
 					  gasPressure[*iter],
 					  solidMass[*iter],
 					  solidTemperature[*iter],
-					  burnedMass[*iter],
-					  releasedHeat[*iter]);
-      
+					  burnedMass[m][*iter],
+					  releasedHeat[m][*iter]);
+
+  /*`==========TESTING==========*/ 
+  // ignore the burnModel while testing. 
+     if (solidMass[*iter] > d_SMALL_NUM)  {
+      Vector dx        = patch->dCell();
+      double vol       = dx.x()*dx.y()*dx.z();
+      burnedMass[m][*iter]    = 0.1;
+      releasedHeat[m][*iter]  = 0.0;
+     }
+   /*==========TESTING==========`*/
+        sumBurnedMass[*iter]    += burnedMass[m][*iter];
+        sumReleasedHeat[*iter]  += releasedHeat[m][*iter];
       }
-
-      new_dw->put(burnedMass, MIlb->burnedMass_CCLabel, dwindex, patch);
-      new_dw->put(releasedHeat, MIlb->releasedHeat_CCLabel, dwindex, patch);
-      cout << "Computed Burned mass \n";
     }
-
   }  
-}
-
-/* ---------------------------------------------------------------------
- Function~  MPMICE::massExchange--
- ---------------------------------------------------------------------  */
-void MPMICE::massExchange(const ProcessorGroup*,  const Patch* patch,
-			  DataWarehouseP& ,  DataWarehouseP& new_dw)
-{
-#ifdef DOING
-  cout << "Doing massExchange on patch " <<
-    patch->getID() << "\t MPMICE" << endl;
-#endif
- double misha_change_in_mass_from_particles = 0.001;  //hardwired
- int numMatls=d_sharedState->getNumMatls();
- vector<CCVariable<double> > mass_source(numMatls);
-
-  for(int m = 0; m < numMatls; m++) {
+ 
+  //__________________________________
+  // I C E matl
+  // dump all the heat and mass into the 
+  // products of reaction 
+  for(int m = 0; m < numALLMatls; m++) {
+    Material* matl = d_sharedState->getMaterial( m );
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    
+    if (ice_matl->getIsProductOfReaction()) {  
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+        burnedMass[m][*iter]   = sumBurnedMass[*iter];
+        releasedHeat[m][*iter] = sumReleasedHeat[*iter];
+      }
+    }
+  }
+  
+  for(int m = 0; m < numALLMatls; m++) {
     Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
-    new_dw->allocate(mass_source[m],Ilb->mass_sourceLabel,dwindex,patch);
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    if (mpm_matl) {
+      new_dw->put(burnedMass[m],   MIlb->burnedMass_CCLabel,   dwindex, patch);
+      new_dw->put(releasedHeat[m], MIlb->releasedHeat_CCLabel, dwindex, patch);
+    }
+    if (ice_matl)
+    {
+      new_dw->put(burnedMass[m],   Ilb->burnedMass_CCLabel,   dwindex, patch);
+      new_dw->put(releasedHeat[m], Ilb->releasedHeat_CCLabel, dwindex, patch);
+    }
   }
-
-    
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-    mass_source[HMX][*iter] =  -misha_change_in_mass_from_particles;
-    mass_source[GAS][*iter] =  mass_source[HMX][*iter];
-  } 
+  cout << "Computed Burned mass \n";
+  //---- P R I N T   D A T A ------ 
+  for(int m = 0; m < numALLMatls; m++) {
+  #if 0  //turn off for quality control testing
+    if (d_ice->switchDebugSource_Sink) {
+      Material* matl = d_sharedState->getMaterial( m );
+      int dwindex = matl->getDWIndex();
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      char description[50];
+      if(ice_matl) sprintf(description, "ICEsources/sinks_Mat_%d",dwindex);
+      if(mpm_matl) sprintf(description, "MPMsources/sinks_Mat_%d",dwindex);
+      d_ice->printData( patch, 0, description, "burnedMass", burnedMass[m]);
+      d_ice->printData( patch, 0, description, "releasedHeat", releasedHeat[m]);
+    }
+  #endif
+  }
 }
-
-
-
-
-
-
