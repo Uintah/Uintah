@@ -177,7 +177,7 @@ void DWDatabase<VarType>::scrubExtraneous()
       iter != names.end(); iter++){
     list<const Patch*> patchesToRemove;
     patchDBtype& patchDB = iter->second->patches;
-    patchDBtype::iterator patchRecordIter;
+    typename patchDBtype::iterator patchRecordIter;
     for (patchRecordIter = patchDB.begin(); patchRecordIter != patchDB.end();
 	 ++patchRecordIter) {
       PatchRecord* patchRecord = patchRecordIter->second;
@@ -287,7 +287,7 @@ DWDatabase<VarType>::scrub(const VarLabel* var, int matlIndex,
   if (matlIndex < 0) {
     if (patch == NULL) {
       // get from globals
-      globalDBtype::const_iterator globaliter = globals.find(var);
+      typename globalDBtype::const_iterator globaliter = globals.find(var);
       if (globaliter != globals.end() && globaliter->second.var != 0) {
 	delete globaliter->second.var;
 	globals.erase(var);
@@ -301,10 +301,10 @@ DWDatabase<VarType>::scrub(const VarLabel* var, int matlIndex,
       throw InternalError("matlIndex must be >= 0");
   }
   else {
-    nameDBtype::iterator iter = names.find(var);
+    typename nameDBtype::iterator iter = names.find(var);
     if(iter != names.end()){
       patchDBtype& patchDB = iter->second->patches;
-      patchDBtype::iterator patchRecordIter = patchDB.find(patch);
+      typename patchDBtype::iterator patchRecordIter = patchDB.find(patch);
       PatchRecord* patchRecord;
       if (patchRecordIter != patchDB.end() &&
 	  ((patchRecord = patchRecordIter->second) != 0)) {
@@ -380,7 +380,7 @@ void DWDatabase<VarType>::PatchRecord::putVar(int matlIndex, VarType* var,
 }
 
 template <class VarType>
-inline DWDatabase<VarType>::DataItem*
+inline typename DWDatabase<VarType>::DataItem*
 DWDatabase<VarType>::PatchRecord::getDataItem(int matlIndex)
 {
   if (matlIndex < (int)vars.size())
@@ -517,7 +517,7 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
 }
 
 template<class VarType>
-const DWDatabase<VarType>::DataItem&
+const typename DWDatabase<VarType>::DataItem&
 DWDatabase<VarType>::getDataItem(const VarLabel* label, int matlIndex,
 				 const Patch* patch) const
 {
@@ -525,7 +525,7 @@ DWDatabase<VarType>::getDataItem(const VarLabel* label, int matlIndex,
    if(matlIndex < 0) {
       if (patch == NULL) {
          // get from globals
-         globalDBtype::const_iterator globaliter = globals.find(label);
+         typename globalDBtype::const_iterator globaliter =globals.find(label);
          if (globaliter != globals.end() && globaliter->second.var != 0)
 	    return globaliter->second;
          else
@@ -626,8 +626,8 @@ void DWDatabase<VarType>::print(std::ostream& out) const
       }
    }
 
-   for (globalDBtype::const_iterator globaliter = globals.begin();
-	globaliter != globals.end(); globaliter++)
+   for( typename globalDBtype::const_iterator globaliter = globals.begin();
+	globaliter != globals.end(); globaliter++ )
      out << (*globaliter).first->getName() << '\n';
 }
 
