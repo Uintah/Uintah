@@ -132,7 +132,7 @@ void checkForInputError(const std::string& stringValue,
   //__________________________________
   //  Make sure stringValue only contains valid characters
   if ("Int_or_float" != "int") {
-    string validChars(" -.0123456789eE");
+    string validChars(" -+.0123456789eE");
     std::string::size_type  pos = stringValue.find_first_not_of(validChars);
     if (pos != string::npos){
       ostringstream warn;
