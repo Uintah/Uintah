@@ -1631,12 +1631,16 @@ Properties::sched_computeDrhodt(SchedulerP& sched, const PatchSet* patches,
 			  &Properties::computeDrhodt,
 			  timelabels);
 
-  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
-  tsk->requires(Task::OldDW, d_lab->d_oldDeltaTLabel);
+  Task::WhichDW parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
+  else parent_old_dw = Task::OldDW;
 
-  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel, Ghost::None,
+  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_oldDeltaTLabel);
+
+  tsk->requires(parent_old_dw, d_lab->d_densityCPLabel, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_densityOldOldLabel, Ghost::None,
+  tsk->requires(parent_old_dw, d_lab->d_densityOldOldLabel, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
@@ -1645,6 +1649,7 @@ Properties::sched_computeDrhodt(SchedulerP& sched, const PatchSet* patches,
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
      tsk->computes(d_lab->d_filterdrhodtLabel);
      tsk->computes(d_lab->d_oldDeltaTLabel);
+     tsk->computes(d_lab->d_densityOldOldLabel);
   }
   else
      tsk->modifies(d_lab->d_filterdrhodtLabel);
@@ -1662,17 +1667,20 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
 			  DataWarehouse* new_dw,
 			  const TimeIntegratorLabel* timelabels)
 {
+  DataWarehouse* parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+  else parent_old_dw = old_dw;
+
   int drhodt_1st_order = 1;
   int current_step = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
   if (d_MAlab) drhodt_1st_order = 2;
   delt_vartype delT, old_delT;
-  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
     new_dw->put(delT, d_lab->d_oldDeltaTLabel);
   double delta_t = delT;
-  old_dw->get(old_delT, d_lab->d_oldDeltaTLabel);
+  parent_old_dw->get(old_delT, d_lab->d_oldDeltaTLabel);
   double  old_delta_t = old_delT;
-
 
   for (int p = 0; p < patches->size(); p++) {
 
@@ -1686,11 +1694,16 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     constCCVariable<double> old_old_density;
     CCVariable<double> drhodt;
     CCVariable<double> filterdrhodt;
+    CCVariable<double> density_oldold;
 
-    old_dw->get(old_density, d_lab->d_densityCPLabel, matlIndex, patch,
+    parent_old_dw->get(old_density, d_lab->d_densityCPLabel, matlIndex, patch,
 	        Ghost::None, Arches::ZEROGHOSTCELLS);
-    old_dw->get(old_old_density, d_lab->d_densityOldOldLabel, matlIndex, patch,
+    parent_old_dw->get(old_old_density, d_lab->d_densityOldOldLabel, matlIndex, patch,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+    new_dw->allocateAndPut(density_oldold, d_lab->d_densityOldOldLabel, matlIndex, patch);
+    density_oldold.copyData(old_density);
+    }
 
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
@@ -1717,6 +1730,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     IntVector idxHi = patch->getCellFORTHighIndex();
     // compute drhodt and add its filtered value
     drhodt.resize(patch->getLowIndex(), patch->getHighIndex());
+    drhodt.initialize(0.0);
 
     if (current_step <= drhodt_1st_order) {
 // 1st order drhodt
@@ -1734,15 +1748,15 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     }
     else {
 // 2nd order drhodt, assuming constant volume
+      double factor = 1.0 + old_delta_t/delta_t;
+      double new_factor = factor * factor - 1.0;
+      double old_factor = factor * factor;
       for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
         for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
           for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
 	    IntVector currcell(ii,jj,kk);
 
 	    double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
-	    double factor = 1.0 + old_delta_t/delta_t;
-            double new_factor = factor * factor - 1.0;
-	    double old_factor = factor * factor;
 	    drhodt[currcell] = (new_factor*new_density[currcell] -
 				old_factor*old_density[currcell] +
 				old_old_density[currcell])*vol /

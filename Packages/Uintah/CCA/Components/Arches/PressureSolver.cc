@@ -151,7 +151,11 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
 			  timelabels);
     
 
-  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  Task::WhichDW parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
+  else parent_old_dw = Task::OldDW;
+
+  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
   
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -212,8 +216,12 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  DataWarehouse* new_dw,
 		 	          const TimeIntegratorLabel* timelabels)
 {
+  DataWarehouse* parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+  else parent_old_dw = old_dw;
+
   delt_vartype delT;
-  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
