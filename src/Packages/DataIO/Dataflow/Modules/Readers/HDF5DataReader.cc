@@ -191,49 +191,58 @@ void HDF5DataReader::execute() {
   update_state(NeedData);
 
 #ifdef HAVE_HDF5
-  bool updateAll   = false;
-  bool updateFile  = false;
-
   filename_.reset();
   datasets_.reset();
 
-  string new_filename(filename_.get());
-  string new_datasets(datasets_.get());
+  string filename(filename_.get());
+  string datasets(datasets_.get());
 
-  if( new_filename.length() == 0 || new_datasets.length() == 0 )
+  if( filename.length() == 0 ) {
+    error( string("No HDF5 file selected.") );
     return;
+  }
+  
+  if( datasets.length() == 0 ) {
+    error( string("No HDF5 datasets selected.") );
+    return;
+  }
 
   // Read the status of this file so we can compare modification timestamps
 #ifdef HAVE_STAT64
   struct stat64 buf;
-  if (stat64(new_filename.c_str(), &buf)) {
+  if (stat64(filename.c_str(), &buf) == -1)
 #else
   struct stat buf;
-  if (stat(new_filename.c_str(), &buf)) {
+  if (stat(filename.c_str(), &buf) == -1)
 #endif
-    error( string("Execute File not found ") + new_filename );
+  {
+    error( string("HDF5 File not found ") + filename );
     return;
   }
 
-  // If we haven't read yet, or if it's a new filename, 
-  //  or if the datestamp has changed -- then read...
 #ifdef __sgi
-  time_t new_filemodification = buf.st_mtim.tv_sec;
+  time_t filemodification = buf.st_mtim.tv_sec;
 #else
-  time_t new_filemodification = buf.st_mtime;
+  time_t filemodification = buf.st_mtime;
 #endif
 
-  if( new_filename         != old_filename_ || 
-      new_filemodification != old_filemodification_ || 
-      new_datasets         != old_datasets_ ) {
+  bool updateAll   = false;
+  bool updateFile  = false;
 
-    old_filemodification_ = new_filemodification;
-    old_filename_         = new_filename;
-    old_datasets_         = new_datasets;
 
-    tmp_filemodification_ = new_filemodification;
-    tmp_filename_         = new_filename;
-    tmp_datasets_         = new_datasets;
+  // If we haven't read yet, or if it's a new filename, 
+  //  or if the datestamp has changed -- then read...
+  if( filename         != old_filename_ || 
+      filemodification != old_filemodification_ || 
+      datasets         != old_datasets_ ) {
+
+    old_filemodification_ = filemodification;
+    old_filename_         = filename;
+    old_datasets_         = datasets;
+
+    sel_filemodification_ = filemodification;
+    sel_filename_         = filename;
+    sel_datasets_         = datasets;
 
     updateFile = true;
   }
@@ -278,10 +287,10 @@ void HDF5DataReader::execute() {
     }
   }
 
-  vector< string > paths;
-  vector< string > datasets;
+  vector< string > pathList;
+  vector< string > datasetList;
   
-  parseDatasets( new_datasets, paths, datasets );
+  parseDatasets( datasets, pathList, datasetList );
   
   if( animate_.get() ) {
 
@@ -289,7 +298,7 @@ void HDF5DataReader::execute() {
     vector< vector<string> > frame_datasets;
     
     unsigned int nframes =
-      parseAnimateDatasets( paths, datasets, frame_paths, frame_datasets);
+      parseAnimateDatasets( pathList, datasetList, frame_paths, frame_datasets);
     
 
     // If there is a current index matrix, use it.
@@ -308,7 +317,7 @@ void HDF5DataReader::execute() {
 	current_.set(which);
 	current_.reset();
 	
-	ReadandSendData( new_filename, frame_paths[which],
+	ReadandSendData( filename, frame_paths[which],
 			 frame_datasets[which], true, which );
       } else {
 	error( "Input index is out of range" );
@@ -324,7 +333,7 @@ void HDF5DataReader::execute() {
 	gui->execute(str.str().c_str());
       }
 
-      animate_execute( new_filename, frame_paths, frame_datasets );
+      animate_execute( filename, frame_paths, frame_datasets );
     }
   } else if( error_ ||
 	     updateFile ||
@@ -332,10 +341,10 @@ void HDF5DataReader::execute() {
   {
     error_ = false;
 
-    ReadandSendData( new_filename, paths, datasets, true, -1 );
+    ReadandSendData( filename, pathList, datasetList, true, -1 );
 
   } else {
-    remark( "Already read the file " +  new_filename );
+    remark( "Already read the file " +  filename );
 
     for( unsigned int ic=0; ic<MAX_PORTS; ic++ ) {
       // Get a handle to the output double port.
@@ -381,8 +390,8 @@ void HDF5DataReader::execute() {
 }
 
 void HDF5DataReader::ReadandSendData( string& filename,
-				      vector< string >& paths,
-				      vector< string >& datasets,
+				      vector< string >& pathList,
+				      vector< string >& datasetList,
 				      bool cache,
 				      int which ) {
 
@@ -391,11 +400,11 @@ void HDF5DataReader::ReadandSendData( string& filename,
 
   vector< int > ports;
     
-  for( unsigned int ic=0; ic<paths.size(); ic++ ) {
+  for( unsigned int ic=0; ic<pathList.size(); ic++ ) {
     ports.push_back( -1 );
 
     NrrdDataHandle nHandle =
-      readDataset(filename, paths[ic], datasets[ic]);
+      readDataset(filename, pathList[ic], datasetList[ic]);
 
     if( nHandle != NULL ) {
       bool inserted = false;
@@ -428,7 +437,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	ids.push_back( idSet );
       }
     } else {
-      error( "No handle for - " + paths[ic] + "/" + datasets[ic] );
+      error( "No handle for - " + pathList[ic] + "/" + datasetList[ic] );
       return;
     }
   }
@@ -579,11 +588,11 @@ void HDF5DataReader::ReadandSendData( string& filename,
     }
   }
 
-  char *portStr = scinew char[paths.size()*4 + 2 ];
+  char *portStr = scinew char[pathList.size()*4 + 2 ];
 
   portStr[0] = '\0';
 
-  for( unsigned int ic=0; ic<paths.size(); ic++ )
+  for( unsigned int ic=0; ic<pathList.size(); ic++ )
     sprintf( portStr, "%s %3d", portStr, ports[ic] );
       
   if( cache ) {
@@ -642,9 +651,9 @@ void HDF5DataReader::ReadandSendData( string& filename,
 }
 
 
-void HDF5DataReader::parseDatasets( string new_datasets,
-				    vector<string>& paths,
-				    vector<string>& datasets )
+void HDF5DataReader::parseDatasets( string datasets,
+				    vector<string>& pathList,
+				    vector<string>& datasetList )
 {
   int open = 0;
 
@@ -654,34 +663,34 @@ void HDF5DataReader::parseDatasets( string new_datasets,
 
   string path, dataset;
 
-  while( cc < new_datasets.length() ) {
+  while( cc < datasets.length() ) {
 
     bb = ee = cc;
 
-    if( new_datasets[bb] == '{' ) {
+    if( datasets[bb] == '{' ) {
       // Multiple datasets.
 
       open = 1;
       ee = bb + 1;
 
-      while( open && ee < new_datasets.length() ) {
+      while( open && ee < datasets.length() ) {
 	ee++;
 
-	if( new_datasets[ee] == '{' )
+	if( datasets[ee] == '{' )
 	  open++;
-	else if( new_datasets[ee] == '}' )
+	else if( datasets[ee] == '}' )
 	  open--;
       }
 
-      path = new_datasets.substr( bb+1, ee-bb-1);
+      path = datasets.substr( bb+1, ee-bb-1);
 
       cc = ee + 2;
 
     } else {
       // Single Dataset
-      path = new_datasets;
+      path = datasets;
 
-      cc = new_datasets.length();
+      cc = datasets.length();
     }
 
     // Remove the first space.
@@ -728,16 +737,16 @@ void HDF5DataReader::parseDatasets( string new_datasets,
       // Just incase the dataset is at the root.
       if( path.length() == 0 ) path = string( "/" );
 
-      paths.push_back( path );
-      datasets.push_back( dataset );
+      pathList.push_back( path );
+      datasetList.push_back( dataset );
     }
   }
 }
 
 
 unsigned int
-HDF5DataReader::parseAnimateDatasets( vector<string>& paths,
-				      vector<string>& datasets,
+HDF5DataReader::parseAnimateDatasets( vector<string>& pathList,
+				      vector<string>& datasetList,
 				      vector< vector<string> >& frame_paths,
 				      vector< vector<string> >& frame_datasets )
 {
@@ -746,16 +755,16 @@ HDF5DataReader::parseAnimateDatasets( vector<string>& paths,
 
   unsigned int i, j;
 
-  if( paths.size() == 1 ) {
-    frame_paths.push_back( paths );
-    frame_datasets.push_back( datasets );
+  if( pathList.size() == 1 ) {
+    frame_paths.push_back( pathList );
+    frame_datasets.push_back( datasetList );
     return 1;
   }
 
-  string comp = paths[0];
+  string comp = pathList[0];
 
-  for( i=1; i<paths.size(); i++ ) {
-    unsigned int len = paths[i].length();
+  for( i=1; i<pathList.size(); i++ ) {
+    unsigned int len = pathList[i].length();
 
     // Reduce the size of the comparison to the smallest string.
     if( comp.length() > len )
@@ -763,7 +772,7 @@ HDF5DataReader::parseAnimateDatasets( vector<string>& paths,
     
     // Mark the characters that are different.
     for( unsigned int c=0; c<comp.length(); c++ ) {
-      if( comp[c] != paths[i][c] )
+      if( comp[c] != pathList[i][c] )
 	comp[c] = '?';
     }
   }
@@ -778,13 +787,13 @@ HDF5DataReader::parseAnimateDatasets( vector<string>& paths,
     if( comp[d2] != '?' )
       break;
 
-  string root = paths[0].substr( 0, d1 );
+  string root = pathList[0].substr( 0, d1 );
 
   vector <string> times;
 
   // Get all of the times.
-  for( i=0; i<paths.size(); i++ ) {
-    string time = paths[i].substr( d1, d2-d1 );
+  for( i=0; i<pathList.size(); i++ ) {
+    string time = pathList[i].substr( d1, d2-d1 );
 
     for( j=0; j<times.size(); j++ ) {
       if( time == times[j] )
@@ -807,11 +816,11 @@ HDF5DataReader::parseAnimateDatasets( vector<string>& paths,
     vector< string > path_list;
     vector< string > dataset_list;
 
-    for( i=0; i<paths.size(); i++ ) {
-      if( paths[i].find( base ) != string::npos ) {
+    for( i=0; i<pathList.size(); i++ ) {
+      if( pathList[i].find( base ) != string::npos ) {
 
-	path_list.push_back( paths[i] );
-	dataset_list.push_back( datasets[i] );
+	path_list.push_back( pathList[i] );
+	dataset_list.push_back( datasetList[i] );
       }
     }
 
@@ -1508,23 +1517,54 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     return;
   }
 
-  if (args[1] == "update_file") {
+  if (args[1] == "check_dumpfile") {
 #ifdef HAVE_HDF5
+    filename_.reset();
+
+    string filename(filename_.get());
+  
+    if( filename.length() == 0 )
+      return;
+
+    // Dump file name change
+    string dumpname = getDumpFileName( filename );
+
+    if( dumpname != dumpname_.get() ) {
+      dumpname_.set( dumpname );
+      dumpname_.reset();
+    }
+
+    // Dump file not available or out of date .
+    if( checkDumpFile( filename, dumpname ) ) {
+      createDumpFile( filename, dumpname );
+    }
+
+#else
+    error( "No HDF5 availible." );
+#endif
+
+  } else if (args[1] == "update_file") {
+#ifdef HAVE_HDF5
+
+    bool update = false;
+
     filename_.reset();
     string new_filename(filename_.get());
 
-    if( new_filename.length() == 0 )
+    if( new_filename.length() == 0 ) {
+      error( string("No HDF5 file.") );
       return;
+    }
 
     // Read the status of this file so we can compare modification timestamps
 #ifdef HAVE_STAT64
     struct stat64 buf;
-    if (stat64(new_filename.c_str(), &buf)) {
+    if (stat64(new_filename.c_str(), &buf) == -1) {
 #else
     struct stat buf;
-    if (stat(new_filename.c_str(), &buf)) {
+    if (stat(new_filename.c_str(), &buf) == -1) {
 #endif
-      error( string("Updating - File not found ") + new_filename );
+      error( string("Update - File not found ") + new_filename );
       return;
     }
 
@@ -1536,62 +1576,35 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     time_t new_filemodification = buf.st_mtime;
 #endif
 
-    if( new_filename         != old_filename_ || 
-	new_filemodification != old_filemodification_) {
+    // Dump file name change
+    string new_dumpname = getDumpFileName( new_filename );
 
-      // Get the file hierarchy for the tcl browser.
-      std::string::size_type pos = new_filename.find_last_of( "/" );
+    if( new_filename         != sel_filename_ || 
+	new_filemodification != sel_filemodification_) {
 
-      if( pos == string::npos )
-	pos = 0;
-      else
-	pos++;
+      sel_filename_         = new_filename;
+      sel_filemodification_ = new_filemodification;
 
-      char* tmpdir = getenv( "SCIRUN_TMP_DIR" );
+      update = true;
 
-      string tmp_filename;
+    } else {
 
-      if( tmpdir )
-	tmp_filename = tmpdir + string( "/" );
-      else
-	tmp_filename = string( "/tmp/" );
+      update = checkDumpFile( new_filename, new_dumpname );
+    }
 
-      tmp_filename.append( new_filename, pos, new_filename.length()-pos );
-      tmp_filename.append( ".dump" );
-
-      std::ofstream sPtr( tmp_filename.c_str() );
-
-      if( !sPtr ) {
-	error( string("Unable to open output file: ") + tmp_filename );
-	return;
-      }
-  
-      if( DataIO::HDF5Dump_file( new_filename.c_str(), &sPtr ) < 0 ) {
-	error( string("Could not create dump file: ") + tmp_filename );
-	return;
-      }
-
-      sPtr.flush();
-      sPtr.close();
-
-#ifdef HAVE_STAT64
-    if (stat64(tmp_filename.c_str(), &buf)) {
-#else
-    if (stat(tmp_filename.c_str(), &buf)) {
-#endif
-	error( string("Temporary dump file not found ") + tmp_filename );
-	return;
-      } 
-
+    if( update ) {
+      createDumpFile( new_filename, new_dumpname  );
+    
       // Update the treeview in the GUI.
       ostringstream str;
-      str << id << " build_tree " << tmp_filename;
+      str << id << " build_tree " << new_dumpname;
       
       gui->execute(str.str().c_str());
-
+    
       // Update the dims in the GUI.
       gui->execute(id + " set_size 0 {}");
     }
+
 #else
     error( "No HDF5 availible." );
 #endif
@@ -1603,51 +1616,26 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     string new_filename(filename_.get());
     string new_datasets(datasets_.get());
 
-    if( new_filename.length() == 0 || new_datasets.length() == 0 )
+    if( new_datasets.length() == 0 )
       return;
 
-    // Read the status of this file so we can compare modification timestamps
-#ifdef HAVE_STAT64
-    struct stat64 buf;
-    if (stat64(new_filename.c_str(), &buf)) {
-#else
-    struct stat buf;
-    if (stat(new_filename.c_str(), &buf)) {
-#endif
-      error( string("Selection - File not found ") + new_filename );
-      return;
-    }
-
-    // If we haven't read yet, or if it's a new filename, 
-    //  or if the datestamp has changed -- then read...
-#ifdef __sgi
-    time_t new_filemodification = buf.st_mtim.tv_sec;
-#else
-    time_t new_filemodification = buf.st_mtime;
-#endif
-
-    vector<string> paths;
-    vector<string> datasets;
+    vector<string> pathList;
+    vector<string> datasetList;
     
-    parseDatasets( new_datasets, paths, datasets );
+    parseDatasets( new_datasets, pathList, datasetList );
 
-    if( new_filename         != tmp_filename_ || 
-	new_filemodification != tmp_filemodification_ ||
-	new_datasets         != tmp_datasets_ ) {
-
-      tmp_filemodification_ = new_filemodification;
-      tmp_filename_         = new_filename;
-      tmp_datasets_         = new_datasets;
+    if( new_datasets != sel_datasets_ ) {
+      sel_datasets_ = new_datasets;
 
       unsigned long ndims = 0;
 
       for( int ic=0; ic<MAX_DIMS; ic++ )
 	dims_[ic] = 1;
 
-      for( unsigned int ic=0; ic<paths.size(); ic++ ) {
+      for( unsigned int ic=0; ic<pathList.size(); ic++ ) {
 
 	vector<int> dims =
-	  getDatasetDims( new_filename, paths[ic], datasets[ic] );
+	  getDatasetDims( new_filename, pathList[ic], datasetList[ic] );
 
 	if( ic == 0 ) {
 
@@ -1712,7 +1700,7 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       vector< vector<string> > frame_datasets;
 
       int nframes =
-	parseAnimateDatasets( paths, datasets, frame_paths, frame_datasets);
+	parseAnimateDatasets( pathList, datasetList, frame_paths, frame_datasets);
 
       if( nframes-1 != selectable_max_.get() ) {
 	selectable_max_.set(nframes-1);
@@ -1729,6 +1717,107 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
   } else {
     Module::tcl_command(args, userdata);
   }
+}
+
+    
+string
+HDF5DataReader::getDumpFileName( string filename ) {
+
+  string dumpname;
+
+  std::string::size_type pos = filename.find_last_of( "/" );
+
+  if( pos == string::npos )
+    pos = 0;
+  else
+    pos++;
+
+  char* tmpdir = getenv( "SCIRUN_TMP_DIR" );
+
+  if( tmpdir )
+    dumpname = tmpdir + string( "/" );
+  else
+    dumpname = string( "/tmp/" );
+
+  dumpname.append( filename, pos, filename.length()-pos );
+  dumpname.append( ".dump" );
+
+  return dumpname;
+}
+
+bool
+HDF5DataReader::checkDumpFile( string filename, string dumpname ) {
+
+  bool recreate = false;
+
+  // Read the status of this file so we can compare modification timestamps
+#ifdef HAVE_STAT64
+  struct stat64 buf;
+  if (stat64(filename.c_str(), &buf) == -1)
+#else
+  struct stat buf;
+  if (stat(filename.c_str(), &buf) == -1)
+#endif
+  {
+    error( string("HDF5 File not found ") + filename );
+    return false;
+  }
+
+#ifdef __sgi
+  time_t filemodification = buf.st_mtim.tv_sec;
+  time_t dumpfilemodification = 0;
+#else
+  time_t filemodification = buf.st_mtime;
+  time_t dumpfilemodification = 0;
+#endif
+
+  // Read the status of this dumpfile so we can compare modification timestamps
+#ifdef HAVE_STAT64
+  if (stat64(dumpname.c_str(), &buf) == -1)
+#else
+  if (stat(dumpname.c_str(), &buf) == -1)
+#endif
+  {
+    warning( string("HDF5 Dump File not found ") + dumpname +
+	     " ... recreating.");
+    recreate = true;
+  } else {
+
+#ifdef __sgi
+    dumpfilemodification = buf.st_mtim.tv_sec;
+#else
+    dumpfilemodification = buf.st_mtime;
+#endif
+    if( dumpfilemodification < filemodification ) {
+      warning( string("HDF5 Dump File is out of date ") + dumpname +
+	       " ... recreating.");
+      recreate = true;
+    }
+  }
+
+  return recreate;
+}
+
+
+int
+HDF5DataReader::createDumpFile( string filename, string dumpname ) {
+
+  std::ofstream sPtr( dumpname.c_str() );
+
+  if( !sPtr ) {
+    error( string("Unable to open output file: ") + dumpname );
+    return -1;
+  }
+  
+  if( DataIO::HDF5Dump_file( filename.c_str(), &sPtr ) < 0 ) {
+    error( string("Could not create dump file: ") + dumpname );
+    return -1;
+  }
+
+  sPtr.flush();
+  sPtr.close();
+
+  return 0;
 }
 
 
