@@ -431,3 +431,16 @@ OpenGLDestroy(clientData)
     ckfree((char *) OpenGLPtr);
 }
 
+
+GLXContext OpenGLGetContext(interp, name)
+    Tcl_Interp* interp;
+    char* name;
+{
+    Tcl_CmdInfo info;
+    OpenGL* OpenGLPtr;
+    if(!Tcl_GetCommandInfo(interp, name, &info))
+	return 0;
+    OpenGLPtr=(OpenGL*)info.clientData;
+    return OpenGLPtr->cx;
+}
+
