@@ -13,6 +13,7 @@
 
 
 #include <Classlib/Timer.h>
+#include <Classlib/NotFinished.h>
 #include <sys/types.h>
 #include <sys/times.h>
 #include <sys/time.h>
@@ -131,4 +132,29 @@ WallClockTimer::~WallClockTimer()
 
 CPUTimer::~CPUTimer()
 {
+}
+
+TimeThrottle::TimeThrottle()
+{
+}
+
+TimeThrottle::~TimeThrottle()
+{
+}
+
+void TimeThrottle::wait_for_time(double endtime)
+{
+    if(endtime==0)
+	return;
+    double time_now=time();
+    double delta=endtime-time_now;
+    if(delta <=0)
+	return;
+#ifdef __sgi
+    int nticks=delta*CLOCK_INTERVAL;
+    if(nticks<1)return;
+    sginap(nticks);
+#else
+    NOT_FINISHED("TimeThrottle::wait_for_time");
+#endif
 }

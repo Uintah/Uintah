@@ -45,4 +45,11 @@ public:
     virtual ~WallClockTimer();
 };
 
+class TimeThrottle : public WallClockTimer {
+public:
+    TimeThrottle();
+    virtual ~TimeThrottle();
+    void wait_for_time(double time);
+};
+
 #endif /* SCI_Classlib_Timer_h */
