@@ -217,8 +217,11 @@ main( int argc, char *argv[], char **environment) {
   t->detach();
   tcl_task->mainloop_waitstart();
 
-  // Create user interface link and setup TCL auto_path to find core components
+  // Create user interface link
   GuiInterface* gui = new TCLInterface();
+  // If the user doesnt have a .scirunrc file, provide them with a default one
+  if (!find_and_parse_scirunrc()) show_license_and_copy_scirunrc(gui);
+  // setup TCL auto_path to find core components
   gui->execute("lappend auto_path "SCIRUN_SRCDIR"/Core/GUI "
 	       SCIRUN_SRCDIR"/Dataflow/GUI "ITCL_WIDGETS);
   gui->execute("global scirun2; set scirun2 0");
@@ -234,9 +237,6 @@ main( int argc, char *argv[], char **environment) {
   Thread* t2=new Thread(sched_task, "Scheduler");
   t2->setDaemon(true);
   t2->detach();
-
-  // If the user doesnt have a .scirunrc file, provide them with a default one
-  if (!find_and_parse_scirunrc()) show_license_and_copy_scirunrc(gui);
 
   // set splash to be main one unless later changed due to a standalone
   packageDB->setSplashPath("main/scisplash.ppm");
