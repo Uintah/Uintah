@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
 "http://www.oasis-open.org/docbook/xml/4.0/docbookx.dtd" [
 <!ENTITY ltx "LaTeX">
@@ -302,21 +302,17 @@ products never are.</para>
 <para>
 Makefiles are responsible for generating products from sources.
 <xref linkend="tbl.srcprd"/> shows sources, corresponding Makefiles, and
-the products they generate.</para>
+the products they generate.  Products that are not explicit targets of
+<filename>Makefile</filename> are not shown.</para>
 
-<para>The doc tree uses a conventional recursive makefile <footnote>
-<para>Because there are no interdependencies between Makefile targets the
-doc build system does not suffer from the problems that can plaque
-recursive Make systems (although the current system is not very MP
-friendly).</para>
-</footnote>
+<para>The doc tree uses a conventional recursive makefile 
 approach to building documentation.  Some Makefiles generate products (see
 <xref linkend="tbl.srcprd"/>) while others
 (<filename>doc/Developer/Makefile</filename>,
 <filename>doc/Installation/Makefile</filename>,
 <filename>doc/User/Makefile</filename>) merely invoke sub-make processes.
 The topmost Makefile (<filename>doc/Makefile</filename> initiates the build
-of the entire documentation set.  Its other important functions is to make
+of the entire documentation set.  Its other important function is to make
 a documentation tarball</para>
 
 <para>The doc tree and its build system were designed so that anyone with
@@ -328,7 +324,7 @@ make to build products, test and debug the docs with his web browser, and
 correct problems all before committing his changes to the CVS
 repository.</para>
 
-<para>Note that Makefiles are written in the GNU tar dialect.</para>
+<para>Note that Makefiles are written in the GNU make dialect.</para>
 
 <para>
 <table id="tbl.srcprd">
@@ -343,41 +339,70 @@ repository.</para>
 </thead>
 <tbody>
 <row>
-<entry>C++ sources in the src side of the tree</entry>
-<entry><filename>doc/Developer/CodeViews/Makefile</filename></entry>
-<entry><filename>doc/Developer/CodeViews/html/*.html</filename></entry>
+<entry><para>C++ sources in the src side of the tree</para></entry>
+<entry><para><filename>doc/Developer/CodeViews/Makefile</filename></para></entry>
+<entry><para><filename>doc/Developer/CodeViews/html/*.html</filename></para></entry>
 </row>
 <row>
-<entry><filename>doc/Developer/Guide/main.xml</filename>,
+<entry>
+<para><filename>doc/Developer/Guide/main.xml</filename>,
 <filename>doc/Developer/Guide/dev/*.xml</filename>, and
-<filename>doc/Developer/Guide/src/*.xml</filename>.</entry>
-<entry><filename>doc/Developer/Guide/Makefile</filename></entry>
-<entry><filename>doc/Developer/Guide/*.html</filename> (although not all html files are generated).</entry>
+<filename>doc/Developer/Guide/src/*.xml</filename>.</para>
+</entry>
+<entry><para><filename>doc/Developer/Guide/Makefile</filename></para></entry>
+<entry><para><filename>doc/Developer/Guide/*.html</filename>.</para></entry>
 </row>
 <row>
-<entry>Module XML files in the <filename>src</filename> side of the tree
-(e.g. <filename>src/Dataflow/XML/*.xml</filename>).</entry>
-<entry><filename>doc/Developer/Modules/Makefile</filename></entry>
-<entry>HTML files saved with sources, e.g. <filename>src/Dataflow/XML/*.html</filename></entry>
+<entry>
+<para><filename>src/Dataflow/XML/*.xml</filename> and
+<filename>src/Packages/*/Dataflow/XML/*.xml</filename>.</para>
+</entry>
+<entry><para><filename>doc/Developer/Modules/Makefile</filename></para></entry>
+<entry>
+<para><filename>src/Dataflow/XML/*.html</filename> and
+<filename>src/Packages/*/Dataflow/XML/*.html</filename>.</para>
+</entry>
 </row>
 <row>
-<entry><filename>doc/FAQBook/faqbook.xml</filename>,
+<entry><para><filename>doc/FAQBook/faqbook.xml</filename>,
 <filename>doc/Developer/FAQ/faq.xml</filename>,
 <filename>doc/Installation/FAQ/faq.xml</filename>, and
-<filename>doc/User/FAQ/faq.xml</filename>.</entry> 
-<entry>doc/FAQBook/Makefile</entry>
-<entry><filename>doc/FAQBook/*.html</filename>.</entry>
+<filename>doc/User/FAQ/faq.xml</filename>.</para></entry> 
+<entry><para>doc/FAQBook/Makefile</para></entry>
+<entry><para><filename>doc/FAQBook/*.html</filename>.</para></entry>
 </row>
 <row>
-<entry><filename>doc/Installation/Guide/*.xml</filename>.</entry>
-<entry><filename>doc/Installation/Guide/Makefile</filename></entry>
-<entry><filename>doc/Installation/Guide/*.html</filename></entry>
+<entry><para><filename>doc/Installation/Guide/*.xml</filename>.</para></entry>
+<entry><para><filename>doc/Installation/Guide/Makefile</filename></para></entry>
+<entry><para><filename>doc/Installation/Guide/*.html</filename></para></entry>
 </row>
 <row>
-<entry><filename>doc/User/Guide/*.tex</filename> and xml files on the
-<filename>src</filename> side of the tree.</entry>
-<entry><filename>doc/User/Guide/Makefile</filename></entry>
-<entry><filename>doc/User/Guide/usersguide.ps</filename> and <filename>doc/User/Guide/usersguide/*.html</filename></entry>
+<entry>
+<para><filename>doc/User/Guide/*.tex</filename>,
+<filename>src/Dataflow/XML/*.xml</filename>,
+<filename>src/Dataflow/Modules/*/doc/*.jpg</filename>,
+<filename>src/Dataflow/Modules/*/doc/*.gif</filename>,
+<filename>src/Dataflow/TeX/*/*.tex</filename>,
+<filename>src/Dataflow/TeX/*/*.jpg</filename>,
+<filename>src/Dataflow/TeX/*/*.gif</filename>,
+<filename>src/Packages/*/Dataflow/XML/*.xml</filename>,
+<filename>src/Packages/*/Dataflow/Modules/*/doc/*.jpg</filename>,
+<filename>src/Packages/*/Dataflow/Modules/*/doc/*.gif</filename>,
+<filename>src/Packages/*/Dataflow/TeX/*.tex</filename>,
+<filename>src/Packages/*/Dataflow/TeX/*/*.jpg</filename>,
+<filename>src/Packages/*/Dataflow/TeX/*/*.gif</filename>.</para>
+</entry>
+<entry><para><filename>doc/User/Guide/Makefile</filename></para></entry>
+<entry>
+<para>
+<filename>doc/User/Guide/usersguide.ps</filename> and
+<filename>doc/User/Guide/usersguide/</filename>.  Intermediate products
+<filename>doc/User/Guide/userguide.dvi</filename>, <filename>*_modules.tex</filename> and
+<filename>srugmacros.sty</filename> are generated.</para> 
+<para>EPS files on
+the <filename>src</filename> side of the tree generated from JPEG
+and GIF files.</para>
+</entry>
 </row>
 </tbody>
 </tgroup>
@@ -913,14 +938,14 @@ Finish by inserting content into the  <sgmltag>keywords</sgmltag>,
 
 <section id="sec.editxmlmoddocs">
 <title>Editing XML Module Descriptions</title>
-<para>See <ulink url="file://module-xml/index.html"><citetitle>XML Module
+<para>See <ulink url="module-xml/index.html"><citetitle>XML Module
 Descriptions (Explicated)</citetitle></ulink> for information on
 creating/editing XML based module descriptions.</para>
 </section>
 
 <section id="sec.editltxmoddocs">
 <title>Editing &ltx; Module Descriptions</title>
-<para>See <ulink url="file://module-latex/index.html"><citetitle>Latex Module
+<para>See <ulink url="module-latex/index.html"><citetitle>Latex Module
 Descriptions (Explicated)</citetitle></ulink> for information on
 creating/editing &ltx; based module descriptions.</para>
 </section>
@@ -929,7 +954,8 @@ creating/editing &ltx; based module descriptions.</para>
 <title>Editing HTML and XHTML Documents</title> 
 <para>First of all you
 should try to avoid HTML/XHTML altogether.  Try using a higher-level markup
-language like &dbk; or &ltx;.</para> <para>Secondly, if you must use HTML
+language like &dbk; or &ltx;.</para> 
+<para>Secondly, if you must use HTML
 consider using XHTML instead.  XHTML is an XML formulation of HTML. It is
 not yet possible or practical to write pure XHTML but as much as possible
 we should be implementing our HTML-type documents using XHTML.  The
@@ -947,13 +973,13 @@ followed:
 (e.g. <userinput>id="sec.edithtmldocs"</userinput>)</para>
 </listitem>
 <listitem>
-<para>All elements should be closed.  I.e. never omit end tags.  Empty
+<para>Close all elements..  I.e. never omit end tags.  Empty
 elements should be closed by either an end tag or by ending the start tag
 with <userinput>/&gt;</userinput>, e.g. the horizontal rule element should
 be written as <userinput>&lt;hr /&gt;</userinput></para>
 </listitem>
 <listitem>
-<para>Elements should be properly nested.</para>
+<para>Nest elements properly.</para>
 </listitem>
 </itemizedlist>
 These rules are explained more fully on the <ulink
@@ -969,7 +995,7 @@ in the <filename>src</filename> side of the tree should be based on
 
 <section id="sec.editltxdocs">
 <title>Editing &ltx; Documents</title>
-<para> </para>
+<para></para>
 </section>
 
 <section id="sec.tools">
@@ -1072,12 +1098,36 @@ printable version of the users guide.</para>
 
 </section>
 
-<!--  <section> -->
-<!--  <title id="sec.intwebsite">Publishing to Internal Web Site</title> -->
-<!--  <para> -->
-<!--  Discuss how docs are published on the internal web site. -->
-<!--  </para> -->
-<!--  </section> -->
+<section id="to-do">
+<title>To Do</title>
+<para>This section presents a never ending list of things to be done
+(in no particular order).
+<itemizedlist>
+<listitem>
+<para>Convert FAQs to DocBook Q and A Set documents.</para>
+</listitem>
+<listitem>
+<para>Update Users Guide.</para>
+</listitem>
+<listitem>
+<para>Update Installation Guide.</para>
+</listitem>
+<listitem>
+<para>Update Developers Guide.</para>
+</listitem>
+<listitem>
+<para>Get missing figures for a few modules.</para>
+</listitem>
+<listitem>
+<para>Should the <filename>Documentum</filename> directory be part of
+the <filename>Developer</filename> directory?</para>
+</listitem>
+<listitem>
+<para>Produce truly printable Installation and Developer Guides.</para>
+</listitem>
+</itemizedlist>
+</para>
+</section>
 
 </article>
 
