@@ -120,26 +120,24 @@ int NCVectorField::interpolate(const Point& p, Vector& value)
 
     IntVector ni[8];
     double S[8];
-    if((*r)->findCellAndWeights(p, ni, S)){
-      value=Vector(0,0,0);
-      for(int k = 0; k < 8; k++){
-	if((*r)->containsNode(ni[k])){
-	  value += _vars[i][ni[k]]*S[k];
-	} else {
-	  Level::const_patchIterator r1;
-	  int j;
-	  for(j = 0, r1 = _level->patchesBegin();
-	      r1 != _level->patchesEnd(); r1++, j++)
-	    if( (*r1)->containsNode(ni[k])){
-	      value += _vars[j][ni[k]]*S[k];
-	      break;
-	    }
-	}
+    (*r)->findCellAndWeights(p, ni, S);
+    value=Vector(0,0,0);
+    for(int k = 0; k < 8; k++){
+      if((*r)->containsNode(ni[k])){
+	value += _vars[i][ni[k]]*S[k];
+      } else {
+	Level::const_patchIterator r1;
+	int j;
+	for(j = 0, r1 = _level->patchesBegin();
+	    r1 != _level->patchesEnd(); r1++, j++)
+	  if( (*r1)->containsNode(ni[k])){
+	    value += _vars[j][ni[k]]*S[k];
+	    break;
+	  }
       }
-      return 1;
     }
   }
-  return 0;
+  return 1;
 }
 
 
