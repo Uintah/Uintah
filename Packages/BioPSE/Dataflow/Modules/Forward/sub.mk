@@ -27,13 +27,16 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/Forward
 
 
-SRCS     += $(SRCDIR)/ApplyFEMCurrentSource.cc\
+SRCS     += $(SRCDIR)/AnisoSphereModel.cc\
+	    $(SRCDIR)/ApplyFEMCurrentSource.cc\
 	    $(SRCDIR)/ApplyFEMVoltageSource.cc\
 	    $(SRCDIR)/BuildFEMatrixQuadratic.cc\
 	    $(SRCDIR)/ComputeCurrent.cc\
 	    $(SRCDIR)/ConfigureElectrode.cc\
 	    $(SRCDIR)/ConfigureWireElectrode.cc\
+	    $(SRCDIR)/CreateDisAnisoSpheres.cc\
 	    $(SRCDIR)/DipoleInSphere.cc\
+	    $(SRCDIR)/DipoleInAnisoSpheres.cc\
 	    $(SRCDIR)/DipoleMatrixSourceRHSQuadratic.cc\
 	    $(SRCDIR)/FDMtoFEM.cc\
 	    $(SRCDIR)/IndicesToTensors.cc\
@@ -43,6 +46,7 @@ SRCS     += $(SRCDIR)/ApplyFEMCurrentSource.cc\
 	    $(SRCDIR)/ModifyConductivities.cc\
 	    $(SRCDIR)/SetupBEMatrix.cc\
 	    $(SRCDIR)/SetupFEMatrix.cc\
+	    $(SRCDIR)/SphereModel.cc\
 	    $(SRCDIR)/TensorsToIndices.cc\
 #[INSERT NEW CODE FILE HERE]	
 

@@ -26,6 +26,7 @@ SRCDIR := Packages/BioPSE/Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
+	$(SRCDIR)/AnisoSphereModel.tcl\
 	$(SRCDIR)/ApplyFEMCurrentSource.tcl\
 	$(SRCDIR)/ApplyFEMVoltageSource.tcl\
 	$(SRCDIR)/BuildFEMatrixQuadratic.tcl\
@@ -33,6 +34,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ConductivitySearch.tcl\
 	$(SRCDIR)/ConfigureElectrode.tcl\
 	$(SRCDIR)/ConfigureWireElectrode.tcl\
+	$(SRCDIR)/DipoleInAnisoSpheres.tcl\
 	$(SRCDIR)/DipoleSearch.tcl\
 	$(SRCDIR)/InsertVoltageSource.tcl\
 	$(SRCDIR)/IntegrateCurrent.tcl\
