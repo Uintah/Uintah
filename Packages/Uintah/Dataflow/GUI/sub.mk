@@ -24,6 +24,7 @@ SRCS := \
 	$(SRCDIR)/ScalarOperator.tcl\
 	$(SRCDIR)/ScalarFieldOperator.tcl\
 	$(SRCDIR)/ScalarFieldBinaryOperator.tcl\
+	$(SRCDIR)/ScalarMinMax.tcl \
 	$(SRCDIR)/TensorOperator.tcl\
 	$(SRCDIR)/TensorFieldOperator.tcl\
 	$(SRCDIR)/TensorParticlesOperator.tcl\
