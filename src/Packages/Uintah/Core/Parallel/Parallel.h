@@ -57,6 +57,12 @@ WARNING
       //////////
       // Insert Documenatation here:
       static ProcessorGroup* getRootProcessorGroup();
+
+      //////////
+      // Returns the MPI Rank of this process.  If this is not running
+      // under MPI, than 0 is returned.  Rank value is set after call to
+      // initializeManager();
+      static int getMPIRank();
       
       //////////
       // Returns true if this process is using MPI
