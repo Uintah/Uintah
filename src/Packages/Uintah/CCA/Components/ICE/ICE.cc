@@ -52,10 +52,6 @@ static DebugStream cout_doing("ICE_DOING_COUT", false);
 //#define ANNULUSICE
 #undef ANNULUSICE
 
-#define DEBUG
-//#undef DEBUG
-
-
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
 {
@@ -175,9 +171,13 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   if (solution_technique == "RateForm") {
     d_RateForm = true;
     cout_norm << "Solution Technique = Rate Form " << endl;
-  } else {
+  } 
+  if (solution_technique == "EqForm") {
     d_EqForm = true;
     cout_norm << "Solution Technique = Equilibration Form " << endl;
+  }
+  if (d_RateForm == false && d_EqForm == false ) {
+    throw ProblemSetupException("\n\nERROR:\nMust specify either EqForm or RateForm in ICE solution technique\n\n");
   }
   
   cout_norm << "cfl = " << d_CFL << endl;
@@ -941,7 +941,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
-      ice_matl->initializeCells(rho_micro[m], sp_vol_CC[m],   rho_CC[m],
+      ice_matl->initializeCells(rho_micro[m],  rho_CC[m],
                                 Temp_CC[m],   speedSound[m], 
                                 vol_frac_CC[m], vel_CC[m], 
                                 press_CC,  numALLMatls,    patch, new_dw);
@@ -951,7 +951,11 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       setBC(rho_micro[m],     "Density",      patch, d_sharedState, indx);
       setBC(Temp_CC[m],       "Temperature",  patch, d_sharedState, indx);
       setBC(vel_CC[m],        "Velocity",     patch, indx); 
-
+      for (CellIterator iter = patch->getExtraCellIterator();
+                                                        !iter.done();iter++){
+        IntVector c = *iter;
+        sp_vol_CC[m][c] = 1.0/rho_micro[m][c];
+      }
       //__________________________________
       //  Adjust pressure and Temp field if g != 0
       //  so fields are thermodynamically consistent.
@@ -1108,8 +1112,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     }
 
    //---- P R I N T   D A T A ------  
-
-#ifdef DEBUG
     if (switchDebug_EQ_RF_press) {
     
       new_dw->allocate(n_iters_equil_press, lb->scratchLabel, 0, patch);
@@ -1129,7 +1131,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
 #endif
     }
-#endif
 
   //______________________________________________________________________
   // Done with preliminary calcs, now loop over every cell
@@ -1268,7 +1269,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     new_dw->put(press_new,lb->press_equil_CCLabel,0,patch);
 
    //---- P R I N T   D A T A ------   
-#ifdef DEBUG
     if (switchDebug_EQ_RF_press) {
       ostringstream desc;
       desc << "BOT_equilibration_patch_" << patch->getID();
@@ -1280,14 +1280,13 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        ostringstream desc;
        desc << "BOT_equilibration_Mat_"<< indx << "_patch_"<< patch->getID();
        printData( patch, 1, desc.str(), "rho_CC",       rho_CC[m]);
-     //printData( patch, 1, desc.str(), "speedSound",   speedSound_new[m]);
+       printData( patch, 1, desc.str(), "sp_vol_CC",    sp_vol_CC[m]);
        printData( patch, 1, desc.str(), "rho_micro_CC", rho_micro[m]);
        printData( patch, 1, desc.str(), "vol_frac_CC",  vol_frac[m]);
      //printData( patch, 1, desc.str(), "iterations",   n_iters_equil_press);
        
      }
     }
-#endif
   }  // patch loop
 }
  
@@ -1296,7 +1295,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
  Purpose~   compute the face centered velocities minus the exchange
             contribution.
 _____________________________________________________________________*/
-
 template<class T> void ICE::computeVelFace(int dir, CellIterator it,
                                        IntVector adj_offset,double dx,
                                        double delT, double gravity,
@@ -1328,12 +1326,12 @@ template<class T> void ICE::computeVelFace(int dir, CellIterator it,
     double term3 =  delT * gravity;
     
     vel_FC[c] = term1- term2 + term3;
-  }
-  
+  } 
 }
 
                        
-                       
+//______________________________________________________________________
+//                       
 void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,  
                                         const PatchSubset* patches,
                                         const MaterialSubset* /*matls*/,
@@ -1379,8 +1377,7 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       }              
       new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch,
                   Ghost::AroundCells, 1);
-          
-#ifdef DEBUG      
+              
       //---- P R I N T   D A T A ------
   #if 0
       if (switchDebug_vel_FC ) {
@@ -1393,8 +1390,6 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
         printVector( patch,1, desc.str(), "wvel_CC", 2, vel_CC);
       }
   #endif
-#endif      
-
       SFCXVariable<double> uvel_FC;
       SFCYVariable<double> vvel_FC;
       SFCZVariable<double> wvel_FC;
@@ -1412,14 +1407,11 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       adj_offset[1] = IntVector(0, -1, 0);    // Y faces
       adj_offset[2] = IntVector(0,  0, -1);   // Z faces     
 
-      
       if(doMechOld < -1.5) {
-      
       int offset=0;      // 0=Compute all faces in computational domain
                          // 1=Skip the faces at the border between interior and gc    
       //__________________________________
       //  Compute vel_FC for each face
-
       computeVelFace<SFCXVariable<double> >(0,patch->getSFCXIterator(offset),
                                       adj_offset[0],dx(0),delT,gravity(0),
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
@@ -1438,12 +1430,10 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       //__________________________________
       // (*)vel_FC BC are updated in 
       // ICE::addExchangeContributionToFCVel()
-
       new_dw->put(uvel_FC, lb->uvel_FCLabel, indx, patch);
       new_dw->put(vvel_FC, lb->vvel_FCLabel, indx, patch);
       new_dw->put(wvel_FC, lb->wvel_FCLabel, indx, patch);
 
-#ifdef DEBUG
       //---- P R I N T   D A T A ------ 
       if (switchDebug_vel_FC ) {
         ostringstream desc;
@@ -1452,7 +1442,6 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
         printData_FC( patch,1, desc.str(), "vvel_FC", vvel_FC);
         printData_FC( patch,1, desc.str(), "wvel_FC", wvel_FC);
       }
-#endif
       }  // if doMech
     } // matls loop
   }  // patch loop
@@ -1698,7 +1687,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       setBC(vvel_FCME[m],"Velocity","y",patch,indx);
       setBC(wvel_FCME[m],"Velocity","z",patch,indx);
     }
-#ifdef DEBUG
+
    //---- P R I N T   D A T A ------ 
     if (switchDebug_Exchange_FC ) {
       for (int m = 0; m < numMatls; m++)  {
@@ -1711,7 +1700,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
        printData_FC( patch,1, desc.str(), "wvel_FCME", wvel_FCME[m]);
       }
     }
-#endif
+
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
@@ -1824,7 +1813,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       //   First order advection of q_CC
       advector->advectQ(q_CC,patch,q_advected);
 
-#ifdef DEBUG
       //---- P R I N T   D A T A ------  
       if (switchDebug_explicit_press ) {
         ostringstream desc;
@@ -1832,8 +1820,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         printData_FC( patch,1, desc.str(), "uvel_FC", uvel_FC);
         printData_FC( patch,1, desc.str(), "vvel_FC", vvel_FC);
         printData_FC( patch,1, desc.str(), "wvel_FC", wvel_FC);
-      }
-#endif    
+      }    
       //__________________________________
       //   E Q   F O R M
       if(d_EqForm) {
@@ -1891,7 +1878,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     new_dw->put(delP_Dilatate, lb->delP_DilatateLabel, 0, patch);
     new_dw->put(delP_MassX,    lb->delP_MassXLabel,    0, patch);
     new_dw->put(press_CC,      lb->press_CCLabel,      0, patch);
-#ifdef DEBUG
+
    //---- P R I N T   D A T A ------  
     if (switchDebug_explicit_press) {
       ostringstream desc;
@@ -1900,7 +1887,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     //printData( patch, 1,desc.str(), "delP_MassX",    delP_MassX);
       printData( patch, 1,desc.str(), "Press_CC",      press_CC);
     }
-#endif
   }  // patch loop
 }
 
@@ -1990,7 +1976,7 @@ void ICE::computePressFC(const ProcessorGroup*,
     new_dw->put(pressX_FC,lb->pressX_FCLabel, 0, patch);
     new_dw->put(pressY_FC,lb->pressY_FCLabel, 0, patch);
     new_dw->put(pressZ_FC,lb->pressZ_FCLabel, 0, patch);
-#ifdef DEBUG
+
    //---- P R I N T   D A T A ------ 
     if (switchDebug_PressFC) {
       ostringstream desc;
@@ -1999,7 +1985,6 @@ void ICE::computePressFC(const ProcessorGroup*,
       printData_FC( patch,0,desc.str(), "press_FC_TOP",   pressY_FC);
       printData_FC( patch,0,desc.str(), "press_FC_FRONT", pressZ_FC);
     }
-#endif
   }  // patch loop
 }
 
@@ -2107,7 +2092,7 @@ void ICE::massExchange(const ProcessorGroup*,
       new_dw->put(mom_comb[m],     lb->mom_comb_CCLabel,     indx,patch);
       new_dw->put(created_vol[m],  lb->created_vol_CCLabel,  indx,patch);
     }
-#ifdef DEBUG
+
 #if 0    // turn off for quality control tests
     //---- P R I N T   D A T A ------ 
     for(int m = 0; m < numMatls; m++) {
@@ -2122,7 +2107,6 @@ void ICE::massExchange(const ProcessorGroup*,
       }
 
     }
-#endif
 #endif
   }   // patch loop
 }
@@ -2342,7 +2326,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       } // if doMechOld
       new_dw->put(mom_source, lb->mom_source_CCLabel, indx, patch);
       new_dw->put(doMechOld,  lb->doMechLabel);
-#ifdef DEBUG
+
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
         ostringstream desc;
@@ -2351,7 +2335,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         printVector(patch, 1, desc.str(), "ymom_source", 1, mom_source);
         printVector(patch, 1, desc.str(), "zmom_source", 2, mom_source);
       }
-#endif
     }
   }
 }
@@ -2429,15 +2412,12 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       }
 #endif
 
-#ifdef DEBUG
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
         ostringstream desc;
         desc <<  "sources/sinks_Mat_" << indx << "_patch_"<<  patch->getID();
         printData(patch,1,desc.str(),"int_eng_source", int_eng_source);
       }
-#endif
-
       new_dw->put(int_eng_source, lb->int_eng_source_CCLabel, indx,patch);
     }  // matl loop
   }  // patch loop
@@ -2590,8 +2570,6 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
          string warn = "ICE::computeLagrangianValues: Negative Internal energy or Temperature detected";
          throw InvalidValue(warn);
         }
-
-#ifdef DEBUG
         //---- P R I N T   D A T A ------ 
         // Dump out all the matls data
         if (switchDebugLagrangianValues ) {
@@ -2603,7 +2581,6 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           printData(  patch,1, desc.str(), "int_eng_L_CC", int_eng_L); 
 
         }
-#endif
         new_dw->put(mom_L,     lb->mom_L_CCLabel,     indx,patch);
         new_dw->put(int_eng_L, lb->int_eng_L_CCLabel, indx,patch);
         new_dw->put(mass_L,    lb->mass_L_CCLabel,    indx,patch);
@@ -3069,7 +3046,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       }
 
       //---- P R I N T   D A T A ------   
-#ifdef DEBUG
       if (switchDebug_advance_advect ) {
        ostringstream desc;
        desc <<"BOT_Advection_after_BC_Mat_" <<indx<<"_patch_"<<patch->getID();
@@ -3083,7 +3059,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
        printVector( patch,1, desc.str(), "vvel_CC", 1,  vel_CC);
        printVector( patch,1, desc.str(), "wvel_CC", 2,  vel_CC);
       }
-#endif
       new_dw->put(vel_CC,   lb->vel_CCLabel,           indx,patch);
       new_dw->put(temp,     lb->temp_CCLabel,          indx,patch);
 
