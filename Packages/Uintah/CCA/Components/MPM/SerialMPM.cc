@@ -1,7 +1,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h> // 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
-#include <Packages/Uintah/CCA/Components/MPM/Burn/HEBurn.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMPhysicalModules.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
@@ -110,12 +109,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
      lb->registerPermanentParticleState(m,lb->pExternalForceLabel,
 					lb->pExternalForceLabel_preReloc);
 
-     if(mpm_matl->getHEBurnModel()->getBurns()){
-       //     lb->registerPermanentParticleState(m,lb->pSurfLabel,
-       //lb->pSurfLabel_preReloc);
-       lb->registerPermanentParticleState(m,lb->pIsIgnitedLabel,
-					  lb->pIsIgnitedLabel_preReloc);
-     }
      if(mpm_matl->getFractureModel()){
        d_fracture = true;
        lb->registerPermanentParticleState(m,lb->pCrackNormal1Label,
@@ -211,7 +204,6 @@ void SerialMPM::scheduleTimeAdvance(double , double ,
   //      scheduleIntegrateTemperatureRate(sched, patches, matls);
   scheduleExMomIntegrated(sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
-  scheduleComputeMassRate(sched, patches, matls);
 
   if(d_fracture) {
     scheduleComputeFracture(sched, patches, matls);
@@ -688,6 +680,9 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pParticleIDLabel,     Ghost::None);
   t->requires(Task::OldDW, lb->pTemperatureLabel,    Ghost::None);
   t->requires(Task::OldDW, lb->pVelocityLabel,       Ghost::None);
+  t->requires(Task::OldDW, lb->pMassLabel,           Ghost::None);
+  t->requires(Task::NewDW, lb->pVolumeDeformedLabel, Ghost::None);
+
   
   if(numMPMMatls!=numALLMatls){
     t->requires(Task::NewDW, lb->dTdt_NCLabel, Ghost::AroundCells,1);
@@ -707,35 +702,12 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pExternalForceLabel_preReloc);
   t->computes(lb->pParticleIDLabel_preReloc);
   t->computes(lb->pTemperatureLabel_preReloc);
+  t->computes(lb->pMassLabel_preReloc);
+  t->computes(lb->pVolumeLabel_preReloc);
 
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
   t->computes(lb->CenterOfMassVelocityLabel);
-  sched->addTask(t, patches, matls);
-}
-
-void SerialMPM::scheduleComputeMassRate(SchedulerP& sched,
-					const PatchSet* patches,
-					const MaterialSet* matls)
-{
- /* computeMassRate
-  * in(P.TEMPERATURE_RATE)
-  * operation(based on the heat flux history, determine if
-  * each of the particles has ignited, adjust the mass of those
-  * particles which are burning)
-  * out(P.IGNITED) */
-
-  int numMatls = d_sharedState->getNumMPMMatls();
-  Task *t = scinew Task("SerialMPM::computeMassRate",
-                         this, &SerialMPM::computeMassRate);
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    HEBurn* heb = mpm_matl->getHEBurnModel();
-    heb->addComputesAndRequires(t, mpm_matl, patches);
-    if(!d_burns){
-      d_burns=heb->getBurns();
-    }
-  }
   sched->addTask(t, patches, matls);
 }
 
@@ -842,8 +814,6 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
        NAPID=NAPID + numParticles;
 
        mpm_matl->getConstitutiveModel()->initializeCMData(patch,
-						mpm_matl, new_dw);
-       mpm_matl->getHEBurnModel()->initializeBurnModelData(patch,
 						mpm_matl, new_dw);
        if(mpm_matl->getFractureModel()) {
 	 mpm_matl->getFractureModel()->initializeFractureModelData( patch,
@@ -1127,19 +1097,6 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
       cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
-   }
-}
-
-void SerialMPM::computeMassRate(const ProcessorGroup*,
-			 	const PatchSubset* patches,
-				const MaterialSubset* matls,
-				DataWarehouse* old_dw,
-				DataWarehouse* new_dw)
-{
-   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      HEBurn* heb = mpm_matl->getHEBurnModel();
-      heb->computeMassRate(patches, mpm_matl, old_dw, new_dw);
    }
 }
 
@@ -1760,7 +1717,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // Get the arrays of particle values to be changed
     ParticleVariable<Point>  px, pxnew;
     ParticleVariable<Vector> pvelocity, pvelocitynew, pexternalForce;
-    ParticleVariable<double> pmass;
+    ParticleVariable<double> pmass, pmassNew,pvolume,pvolumeNew;
     ParticleVariable<double> pToughness;
     ParticleVariable<double> pTemperature, pTemperatureNew; 
 
@@ -1775,12 +1732,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     
     old_dw->get(px,                       lb->pXLabel, pset);
     old_dw->get(pmass,                    lb->pMassLabel, pset);
+    old_dw->get(pvolume,                  lb->pVolumeLabel, pset);
     old_dw->get(pexternalForce,           lb->pExternalForceLabel, pset);
     old_dw->get(pTemperature,             lb->pTemperatureLabel, pset);
     old_dw->get(pvelocity,                lb->pVelocityLabel, pset);
     new_dw->allocate(pTemperatureNew,     lb->pTemperatureLabel_preReloc, pset);
     new_dw->allocate(pvelocitynew,        lb->pVelocityLabel, pset);
     new_dw->allocate(pxnew,               lb->pXLabel_preReloc, pset);
+    new_dw->allocate(pmassNew,            lb->pMassLabel_preReloc, pset);
+    new_dw->allocate(pvolumeNew,          lb->pVolumeLabel_preReloc, pset);
 
     new_dw->get(gvelocity_star,   lb->gMomExedVelocityStarLabel,
 			dwindex, patch, Ghost::AroundCells, 1);
@@ -1955,8 +1915,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
    	  //for isolated particles in fracture
           pxnew[idx]      =  px[idx] + pvelocity[idx] * delT;
           pvelocitynew[idx] = pvelocity[idx] +
-	     pexternalForce[idx] / (pmass[idx] * delT);
+	  pexternalForce[idx] / (pmass[idx] * delT);
         }
+	pmassNew[idx]   = pmass[idx];
+        pvolumeNew[idx] = pvolume[idx];
 
         ke += .5*pmass[idx]*pvelocitynew[idx].length2();
 	CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
@@ -1991,6 +1953,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pxnew[idx]      = px[idx] + vel * delT;
         pvelocitynew[idx] = pvelocity[idx] + acc * delT;
         pTemperatureNew[idx] = pTemperature[idx] + tempRate * delT;
+        pmassNew[idx]        = pmass[idx];
+        pvolumeNew[idx]      = pvolume[idx];
 
         thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
         ke += .5*pmass[idx]*pvelocitynew[idx].length2();
@@ -2003,6 +1967,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->put(pxnew,          lb->pXLabel_preReloc);
       new_dw->put(pvelocitynew,   lb->pVelocityLabel_preReloc);
       new_dw->put(pexternalForce, lb->pExternalForceLabel_preReloc);
+      new_dw->put(pmassNew,       lb->pMassLabel_preReloc);
+      new_dw->put(pvolumeNew,     lb->pVolumeLabel_preReloc);
 
       ParticleVariable<long> pids;
       old_dw->get(pids, lb->pParticleIDLabel, pset);
