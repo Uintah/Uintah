@@ -79,6 +79,8 @@ ScaleFieldData::~ScaleFieldData()
 void
 ScaleFieldData::execute()
 {
+  warning("This module is deprecated.  Use TransformData instead.");
+
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
