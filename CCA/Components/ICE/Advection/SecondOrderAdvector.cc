@@ -1,32 +1,34 @@
 #include <Packages/Uintah/CCA/Components/ICE/Advection/SecondOrderAdvector.h>
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Core/Geometry/IntVector.h>
+
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Exceptions/OutFluxVolume.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+
+#include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
+
 #include <iostream>
+
 #define d_SMALL_NUM 1.0e-100
 
 using namespace Uintah;
-using std::cerr;
-using std::endl;
+using namespace std;
 
-
-SecondOrderAdvector::SecondOrderAdvector() 
+SecondOrderAdvector::SecondOrderAdvector()
 {
   OFS_CCLabel = 0;
 }
 
 
 SecondOrderAdvector::SecondOrderAdvector(DataWarehouse* new_dw, 
-                                   const Patch* patch)
+                                         const Patch* patch) 
 {
   OFS_CCLabel = VarLabel::create("OFS_CC",
-                             CCVariable<fflux>::getTypeDescription());
+                                 CCVariable<fflux>::getTypeDescription());
 
   new_dw->allocateTemporary(d_OFS,   patch, Ghost::AroundCells,1);
   new_dw->allocateTemporary(r_out_x, patch, Ghost::AroundCells,1);   
@@ -41,39 +43,39 @@ SecondOrderAdvector::~SecondOrderAdvector()
 }
 
 SecondOrderAdvector* SecondOrderAdvector::clone(DataWarehouse* new_dw,
-                                         const Patch* patch)
+                                                const Patch* patch)
 {
   return scinew SecondOrderAdvector(new_dw,patch);
 }
 
 /* ---------------------------------------------------------------------
- Function~  influxOutfluxVolume--
- Purpose~   calculate the individual outfluxes for each cell.
-            This includes the slabs and edge fluxes
- References:
-    "Compatible Fluxes for van Leer Advection" W.B VanderHeyden and 
-    B.A. Kashiwa, Journal of Computational Physics, 146, 1-28, (1998) 
+   Function~  influxOutfluxVolume--
+   Purpose~   calculate the individual outfluxes for each cell.
+   This includes the slabs and edge fluxes
+   References:
+   "Compatible Fluxes for van Leer Advection" W.B VanderHeyden and 
+   B.A. Kashiwa, Journal of Computational Physics, 146, 1-28, (1998) 
             
- Steps for each cell:  
- 1) calculate the volume for each outflux
- 3) set the influx_volume for the appropriate cell = to the q_outflux of the 
-    adjacent cell. 
+   Steps for each cell:  
+   1) calculate the volume for each outflux
+   3) set the influx_volume for the appropriate cell = to the q_outflux of the 
+   adjacent cell. 
 
-Implementation notes:
-The outflux of volume is calculated in each cell in the computational domain
-+ one layer of extra cells  surrounding the domain.The face-centered velocity 
-needs to be defined on all faces for these cells 
+   Implementation notes:
+   The outflux of volume is calculated in each cell in the computational domain
+   + one layer of extra cells  surrounding the domain.The face-centered velocity 
+   needs to be defined on all faces for these cells 
 
-See schematic diagram at bottom of ice.cc for del* definitions
- ---------------------------------------------------------------------  */
+   See schematic diagram at bottom of ice.cc for del* definitions
+   ---------------------------------------------------------------------  */
 
-void SecondOrderAdvector::inFluxOutFluxVolume(
-                        const SFCXVariable<double>& uvel_FC,
-                        const SFCYVariable<double>& vvel_FC,
-                        const SFCZVariable<double>& wvel_FC,
-                        const double& delT, 
-                        const Patch* patch,
-			   const int& indx)
+void
+SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
+                                          const SFCYVariable<double>& vvel_FC,
+                                          const SFCZVariable<double>& wvel_FC,
+                                          const double& delT, 
+                                          const Patch* patch,
+                                          const int& indx)
 
 {
   Vector dx = patch->dCell();
@@ -181,17 +183,18 @@ void SecondOrderAdvector::inFluxOutFluxVolume(
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::advectQSecond--ADVECTION:
- Purpose~   Calculate the advection of q_CC 
+   Function~  ICE::advectQSecond--ADVECTION:
+   Purpose~   Calculate the advection of q_CC 
    
- References:
-    "Compatible Fluxes for van Leer Advection" W.B VanderHeyden and 
-    B.A. Kashiwa, Journal of Computational Physics, 146, 1-28, (1998) 
- ---------------------------------------------------------------------  */
-void SecondOrderAdvector::advectQ(const CCVariable<double>& q_CC,
-                             const Patch* patch,
-                             CCVariable<double>& q_advected,
-			        DataWarehouse* new_dw)
+   References:
+   "Compatible Fluxes for van Leer Advection" W.B VanderHeyden and 
+   B.A. Kashiwa, Journal of Computational Physics, 146, 1-28, (1998) 
+   ---------------------------------------------------------------------  */
+void
+SecondOrderAdvector::advectQ( const CCVariable<double>& q_CC,
+                              const Patch* patch,
+                              CCVariable<double>& q_advected,
+                              DataWarehouse* new_dw)
 {
 
   CCVariable<double> grad_lim;
@@ -213,19 +216,19 @@ void SecondOrderAdvector::advectQ(const CCVariable<double>& q_CC,
   gradQ(q_CC, patch, q_grad_x, q_grad_y, q_grad_z);
     
   gradientLimiter(q_CC, patch, grad_lim, q_grad_x, q_grad_y, q_grad_z,
-                  unit, SN, new_dw);
+                             unit, SN, new_dw);
                   
   qAverageFlux(   q_CC, patch, grad_lim, q_grad_x, q_grad_y, q_grad_z, 
-                  q_OAFS,   new_dw);
+                  q_OAFS);
   advect(q_OAFS, patch, q_advected);
 }
 
 //______________________________________________________________________
 //       V E C T O R   V E R S I O N
 void SecondOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
-                             const Patch* patch,
-                             CCVariable<Vector>& q_advected,
-			        DataWarehouse* new_dw)
+                                  const Patch* patch,
+                                  CCVariable<Vector>& q_advected,
+                                  DataWarehouse* new_dw)
 {
   CCVariable<Vector> grad_lim;
   StaticArray<CCVariable<Vector> > q_OAFS(6);
@@ -248,16 +251,18 @@ void SecondOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
                   unit, SN, new_dw);
                   
   qAverageFlux(   q_CC, patch, grad_lim, q_grad_x, q_grad_y, q_grad_z,
-                  q_OAFS, new_dw);
+                  q_OAFS);
                   
   advect(q_OAFS, patch, q_advected);
 }
 
 //______________________________________________________________________
 //
-template <class T> void SecondOrderAdvector::advect(StaticArray<CCVariable<T> >& q_OAFS, 
-                                              const Patch* patch,
-                                              CCVariable<T>& q_advected)
+template <class T>
+void
+SecondOrderAdvector::advect( StaticArray<CCVariable<T> >& q_OAFS, 
+                             const Patch* patch,
+                             CCVariable<T>& q_advected )
   
 {
   T  sum_q_outflux, sum_q_influx, zero(0.);
@@ -308,14 +313,15 @@ template <class T> void SecondOrderAdvector::advect(StaticArray<CCVariable<T> >&
 
 //______________________________________________________________________
 //
-template <class T> void SecondOrderAdvector::qAverageFlux(const CCVariable<T>& q_CC,
-                                              const Patch* patch,
-						    CCVariable<T>& grad_lim,
-                                              const CCVariable<T>& q_grad_x,
-                                              const CCVariable<T>& q_grad_y,
-                                              const CCVariable<T>& q_grad_z,
-						    StaticArray<CCVariable<T> >& q_OAFS,
-			                         DataWarehouse* new_dw)
+template <class T>
+void
+SecondOrderAdvector::qAverageFlux( const CCVariable<T>& q_CC,
+                                   const Patch* patch,
+                                   CCVariable<T>& grad_lim,
+                                   const CCVariable<T>& q_grad_x,
+                                   const CCVariable<T>& q_grad_y,
+                                   const CCVariable<T>& q_grad_z,
+                                   StaticArray<CCVariable<T> >& q_OAFS )
   
 {
   //__________________________________
@@ -328,7 +334,7 @@ template <class T> void SecondOrderAdvector::qAverageFlux(const CCVariable<T>& q
     if ( patch->getBCType(face) != Patch::Neighbor ){
     
       for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                                 !iter.done(); iter++) {
+          !iter.done(); iter++) {
         IntVector c = *iter;  // hit only those cells along that face
         T Q_CC = q_CC[c];
         
@@ -359,65 +365,31 @@ template <class T> void SecondOrderAdvector::qAverageFlux(const CCVariable<T>& q
     //  with limiter.    
     q_OAFS[BACK][c] =   q_grad_X * r_out_x[c].d_fflux[BACK] + 
                         q_grad_Y * r_out_y[c].d_fflux[BACK] +               
-			   q_grad_Z * r_out_z[c].d_fflux[BACK] + Q_CC;     
-  				  
+                        q_grad_Z * r_out_z[c].d_fflux[BACK] + Q_CC;     
+                                  
     q_OAFS[FRONT][c] =  q_grad_X * r_out_x[c].d_fflux[FRONT] + 
                         q_grad_Y * r_out_y[c].d_fflux[FRONT] + 
-			   q_grad_Z * r_out_z[c].d_fflux[FRONT] + Q_CC;
+                        q_grad_Z * r_out_z[c].d_fflux[FRONT] + Q_CC;
 
     q_OAFS[BOTTOM][c] = q_grad_X * r_out_x[c].d_fflux[BOTTOM] + 
                         q_grad_Y * r_out_y[c].d_fflux[BOTTOM] + 
-			   q_grad_Z * r_out_z[c].d_fflux[BOTTOM] + Q_CC;
-  				  
+                        q_grad_Z * r_out_z[c].d_fflux[BOTTOM] + Q_CC;
+                                  
     q_OAFS[TOP][c] =    q_grad_X * r_out_x[c].d_fflux[TOP] + 
                         q_grad_Y * r_out_y[c].d_fflux[TOP] + 
-			   q_grad_Z * r_out_z[c].d_fflux[TOP] +  Q_CC;
-  				  
+                        q_grad_Z * r_out_z[c].d_fflux[TOP] +  Q_CC;
+                                  
     q_OAFS[LEFT][c] =   q_grad_X * r_out_x[c].d_fflux[LEFT] + 
                         q_grad_Y * r_out_y[c].d_fflux[LEFT] + 
-			   q_grad_Z * r_out_z[c].d_fflux[LEFT] + Q_CC;
-  				  
+                        q_grad_Z * r_out_z[c].d_fflux[LEFT] + Q_CC;
+                                  
     q_OAFS[RIGHT][c] =  q_grad_X * r_out_x[c].d_fflux[RIGHT] + 
                         q_grad_Y * r_out_y[c].d_fflux[RIGHT] + 
-			   q_grad_Z * r_out_z[c].d_fflux[RIGHT] + Q_CC;                      
+                        q_grad_Z * r_out_z[c].d_fflux[RIGHT] + Q_CC;                      
   }
 }
 
 
-//______________________________________________________________________
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1209
-#endif
 
-namespace Uintah {
 
-  static MPI_Datatype makeMPI_fflux()
-  {
-    ASSERTEQ(sizeof(SecondOrderAdvector::fflux), sizeof(double)*6);
-    MPI_Datatype mpitype;
-    MPI_Type_vector(1, 6, 6, MPI_DOUBLE, &mpitype);
-    MPI_Type_commit(&mpitype);
-    return mpitype;
-  }
-  
-  const TypeDescription* fun_getTypeDescription(SecondOrderAdvector::fflux*)
-  {
-    static TypeDescription* td = 0;
-    if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
-                              "SecondOrderAdvector::fflux", true, 
-                              &makeMPI_fflux);
-    }
-    return td;
-  }
-}
 
-namespace SCIRun {
-
-void swapbytes( Uintah::SecondOrderAdvector::fflux& f) {
-  double *p = f.d_fflux;
-  SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
-  SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
-}
-
-} // namespace SCIRun

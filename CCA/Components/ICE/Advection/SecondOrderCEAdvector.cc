@@ -1,5 +1,4 @@
 #include <Packages/Uintah/CCA/Components/ICE/Advection/SecondOrderCEAdvector.h>
-#include <Packages/Uintah/CCA/Components/ICE/Advection/SecondOrderBase.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -16,6 +15,7 @@ using namespace Uintah;
 
 SecondOrderCEAdvector::SecondOrderCEAdvector()
 {
+  OFS_CCLabel = 0;
   OFE_CCLabel = 0;
   OFC_CCLabel = 0;
 }
@@ -47,6 +47,7 @@ SecondOrderCEAdvector::SecondOrderCEAdvector(DataWarehouse* new_dw,
 
 SecondOrderCEAdvector::~SecondOrderCEAdvector()
 {
+  VarLabel::destroy(OFS_CCLabel);
   VarLabel::destroy(OFE_CCLabel);
   VarLabel::destroy(OFC_CCLabel);
 }
@@ -158,8 +159,7 @@ void SecondOrderCEAdvector::inFluxOutFluxVolume(
     //__________________________________
     //  Bullet proofing
     double total_fluxout = 0.0;
-    for(int face = TOP; face <= BACK; 
-       face++ )  {
+    for(int face = TOP; face <= BACK; face++ )  {
       total_fluxout  += d_OFS[c].d_fflux[face];
     }
     for(int edge = TOP_R; edge <= LEFT_FR; edge++ )  {
@@ -332,7 +332,7 @@ void SecondOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
   gradientLimiter(q_CC, patch, grad_lim, q_grad_x, q_grad_y, q_grad_z,
                   unit, SN, new_dw);
   qAverageFlux(q_CC, patch, grad_lim,  q_grad_x, q_grad_y, q_grad_z,
-               q_OAFS,  q_OAFE, q_OAFC, new_dw);
+               q_OAFS,  q_OAFE, q_OAFC);
               
   advect(q_OAFS, q_OAFE, q_OAFC, patch, q_advected);
 
@@ -374,7 +374,7 @@ void SecondOrderCEAdvector::advectQ(const CCVariable<Vector>& q_CC,
   gradientLimiter(q_CC, patch, grad_lim, q_grad_x, q_grad_y, q_grad_z,
                   unit, SN, new_dw);
   qAverageFlux(q_CC, patch, grad_lim,  q_grad_x, q_grad_y, q_grad_z,
-               q_OAFS,  q_OAFE, q_OAFC, new_dw);
+               q_OAFS,  q_OAFE, q_OAFC);
               
   advect(q_OAFS, q_OAFE, q_OAFC, patch, q_advected);
 
@@ -501,8 +501,7 @@ template <class T> void SecondOrderCEAdvector::qAverageFlux(const CCVariable<T>&
                                               const CCVariable<T>& q_grad_z,
 						    StaticArray<CCVariable<T> >& q_OAFS,
 				                  StaticArray<CCVariable<T> >& q_OAFE,
-				                  StaticArray<CCVariable<T> >& q_OAFC,						    
-			                         DataWarehouse* new_dw)
+				                  StaticArray<CCVariable<T> >& q_OAFC)
   
 {
 #if 0
@@ -598,26 +597,6 @@ template <class T> void SecondOrderCEAdvector::qAverageFlux(const CCVariable<T>&
   
 namespace Uintah {
 
-  static MPI_Datatype makeMPI_fflux()
-  {
-    ASSERTEQ(sizeof(SecondOrderCEAdvector::fflux), sizeof(double)*6);
-    MPI_Datatype mpitype;
-    MPI_Type_vector(1, 6, 6, MPI_DOUBLE, &mpitype);
-    MPI_Type_commit(&mpitype);
-    return mpitype;
-  }
-  
-  const TypeDescription* fun_getTypeDescription(SecondOrderCEAdvector::fflux*)
-  {
-    static TypeDescription* td = 0;
-    if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
-                              "SecondOrderCEAdvector::fflux", true, 
-                              &makeMPI_fflux);
-    }
-    return td;
-  }
-  
   static MPI_Datatype makeMPI_eflux()
   {
     ASSERTEQ(sizeof(SecondOrderCEAdvector::eflux), sizeof(double)*12);
@@ -660,12 +639,6 @@ namespace Uintah {
 }
 
 namespace SCIRun {
-
-void swapbytes( Uintah::SecondOrderCEAdvector::fflux& f) {
-  double *p = f.d_fflux;
-  SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
-  SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
-}
 
 void swapbytes( Uintah::SecondOrderCEAdvector::eflux& e) {
   double *p = e.d_eflux;
