@@ -79,7 +79,9 @@ itcl_class Module {
 	}
 	
 	$msgLogStream destructor
-	foreach i "[info vars $this-*]" {unset $i}
+	foreach i "[info vars $this-*]" {
+	    unset $i
+	}
 	destroy $this
     }
     
@@ -160,8 +162,37 @@ itcl_class Module {
 	update idletasks
 	#tk_dialog .xx xx xx "" 0 OK
     }
+    method set_title {name} {
+	set temp $name
 
+	# remove package from name
+	set l [expr [string length $temp]-1]
+	set index [string first "_" $temp 0]
+	set temp [string range $temp $index $l]
+	
+	# remove _
+	set l [expr [string length $temp]-1]
+	set temp [string range $temp 1 $l]
+	
+	# remove category
+	set l [expr [string length $temp]-1]
+	set index [string first "_" $temp 0]
+	set temp [string range $temp $index $l]
+		
+	# remove _
+	set l [expr [string length $temp]-1]
+	set temp [string range $temp 1 $l]
+	
+	return $temp
+    }
 
+    method initialize_ui {} {
+	$this ui
+	if {[winfo exists .ui[modname]]!= 0} {
+	    set w .ui[modname]
+	    wm title $w [set_title [modname]]
+	}
+    }
     method get_oports { which } {
 	set mmodid [$this MacroModule]
 	if { [string match [$mmodid mod_type] "module"] == 1 } {
@@ -212,15 +243,19 @@ itcl_class Module {
 	set modframe $canvas.module[modname]
 	frame $modframe -relief raised -borderwidth 3 
 	
-	frame $modframe.ff 
+	#bind $modframe <1> "moduleStartDrag $canvas [modname] %X %Y"
+	#bind $modframe <B1-Motion> "moduleDrag $canvas $minicanvas [modname] %X %Y"
+	#bind $modframe <ButtonRelease-1> "moduleEndDrag $modframe $canvas"
+
+	frame $modframe.ff
 	pack $modframe.ff -side top -expand yes -fill both -padx 5 -pady 6
- 
+	 
 	set p $modframe.ff
 	global ui_font
 	global sci_root
 	if {[$this info method ui] != ""} {
 	    button $p.ui -text "UI" -borderwidth 2 -font $ui_font \
-		    -anchor center -command "$this ui"
+		    -anchor center -command "$this initialize_ui"
 	    pack $p.ui -side left -ipadx 5 -ipady 2
 	}
 	global modname_font
@@ -1198,7 +1233,7 @@ proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
 	    "lightPipe $temp $omodid $owhich $imodid $iwhich"
     
     $netedit_canvas bind $connid <ButtonRelease-1> \
-	    "resetPipe $temp"
+	    "resetPipe $temp $omodid $imodid"
 	
     $netedit_canvas bind $connid <Control-Button-1> \
 	    "raisePipe $connid"
@@ -1305,14 +1340,45 @@ proc lightPipe { temp omodid owhich imodid iwhich } {
     eval $netedit_mini_canvas create line $minipath -width 1 \
 	-fill red -tags $temp
 
+    eval $netedit_mini_canvas itemconfigure $omodid -fill green
+    eval $netedit_mini_canvas itemconfigure $imodid -fill green
+
     $netedit_mini_canvas raise $temp
+
+    #set info_font "-Adobe-Helvetica-Medium-R-Normal-*-10-120-75-*"
+    #set connection $imodid
+    #append connection " to\n"
+    #append connection $omodid
+
+    #determine where to place connection text
+    #global mainCanvasWidth mainCanvasHeight
+    #global SCALEX SCALEY
+    #set x [expr [lindex [.bot.neteditFrame.canvas xview] 0]*\
+	    #$mainCanvasWidth]
+    #set y [expr [lindex [.bot.neteditFrame.canvas yview] 0]*\
+	    #$mainCanvasHeight] 
+    #set x [expr $x/$SCALEX]
+    #set y [expr $y/$SCALEY]
+
+        
+    #frame $netedit_mini_canvas.frame
+    #label $netedit_mini_canvas.frame.label -text $connection -font $info_font\
+	    #-foreground white -bg #036 
+    #pack $netedit_mini_canvas.frame $netedit_mini_canvas.frame.label
+    #$netedit_mini_canvas create window 0 90 -window $netedit_mini_canvas.frame \
+	    #-anchor sw -tags temp
+
 }
 
-proc resetPipe { temp } {
+proc resetPipe { temp omodid imodid } {
     global netedit_canvas
     $netedit_canvas delete $temp
     global netedit_mini_canvas
     $netedit_mini_canvas delete $temp
+    global basecolor
+    eval $netedit_mini_canvas itemconfigure $omodid -fill $basecolor
+    eval $netedit_mini_canvas itemconfigure $imodid -fill $basecolor
+    #destroy $netedit_mini_canvas.frame
 }
 
 proc raisePipe { connid } {
@@ -2634,7 +2700,6 @@ proc okNotes {w mclass} {
 }
 
 proc moduleDestroy {maincanvas minicanvas modid} {
-    
     # Remove me from the modules list
 
     global modules
@@ -2661,15 +2726,20 @@ proc moduleDestroy {maincanvas minicanvas modid} {
 	
 	set CurrentlySelectedModules $tempList
     
-    set modList [netedit getconnected $modid]
-    foreach i $modList {
+    set modList [netedit getconnected $modid]  
+    # go through list from end to start to work for
+    # dynamic modules also
+    set size [llength $modList]
+    set size [expr $size-1]
+    for {set j $size} {$j >= 0} {incr j -1} {
+	set i [lindex $modList $j]
 	set connid [lindex $i 0]
 	set omodid [lindex $i 1]
 	set owhich [lindex $i 2]
 	set imodid [lindex $i 3]
 	set iwhich [lindex $i 4]
 	set iinfo [lindex [lindex [$omodid get_oports $owhich] 0] 0]
-
+	
 	set romodid [lindex [lindex [$omodid get_oports $owhich] 0] 0]
 	set rowhich [lindex [lindex [$omodid get_oports $owhich] 0] 1]
 	set rimodid [lindex [lindex [$imodid get_iports $iwhich] 0] 0]
@@ -2682,7 +2752,7 @@ proc moduleDestroy {maincanvas minicanvas modid} {
 	
 	destroyConnection $rconnid $romodid $rimodid
     }
-
+    
     $maincanvas delete $modid
     destroy ${maincanvas}.module$modid
     $minicanvas delete $modid
