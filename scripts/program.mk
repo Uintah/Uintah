@@ -40,7 +40,7 @@ $(PROGRAM)_LIBS := $(LIBS)
 # we can use the -l syntax to link, but still express the dependicies.
 #
 $(PROGRAM): $(OBJS) $(patsubst %,$(LIBDIR)lib%.so,$(PSELIBS))
-	rm -f $(PROGRAM)
+	rm -f $@
 	$(CXX) $(LDFLAGS) -o $@ $(filter %.o,$^) $(patsubst ../lib/lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
 
 #
@@ -56,6 +56,9 @@ SRCS := INVALID_SRCS.cc
 
 #
 # $Log$
+# Revision 1.6  2000/03/17 10:40:17  sparker
+# Fixed rule to remove file - use $@ instead of $(PROGRAM)
+#
 # Revision 1.5  2000/03/17 09:53:22  sparker
 # remove before link (bugzilla #39)
 #
