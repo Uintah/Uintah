@@ -258,6 +258,8 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(new_dw,lb->rho_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(new_dw,lb->press_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
 
 	    t->computes(new_dw,lb->div_velfc_CCLabel,matl->getDWIndex(),patch);
 	    t->computes(new_dw,lb->pressdP_CCLabel,  matl->getDWIndex(),patch);
@@ -272,6 +274,16 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	Task* t = scinew Task("ICE::step3",patch, old_dw, new_dw,this,
 			       &ICE::actuallyStep3);
 	for (int m = 0; m < numMatls; m++) {
+	  Material* matl = d_sharedState->getMaterial(m);
+	  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+	  if(ice_matl){
+	    t->requires(new_dw,lb->pressdP_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(new_dw,lb->rho_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+
+	    t->computes(new_dw,lb->press_FCLabel, matl->getDWIndex(),patch);
+          }
 	}
 	sched->addTask(t);
       }
@@ -885,9 +897,71 @@ void ICE::actuallyStep3(const ProcessorGroup*,
 {
   cout << "Doing actually step3" << endl;
 
+  int numMatls = d_sharedState->getNumMatls();
+  int NVFs = d_sharedState->getNumVelFields();
+
+  double sum_rho, sum_rho_adj, sum_all_rho;
+  double SMALL_NUM=1.e-12;
+
+  // Get required variables for this patch
+  vector<CCVariable<double> > rho_CC;
+  vector<CCVariable<double> > press_CC;
+
+  // Create variables for the results
+  vector<FCVariable<double> > press_FC;
+
+  // Compute the face centered velocities
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    if(ice_matl){
+      int vfindex = matl->getVFIndex();
+      new_dw->get(rho_CC[vfindex],  lb->rho_CCLabel,
+				vfindex, patch, Ghost::None, 0);
+      new_dw->get(press_CC[vfindex],lb->pressdP_CCLabel,
+				vfindex, patch, Ghost::None, 0);
+
+      new_dw->allocate(press_FC[vfindex],lb->press_FCLabel,vfindex, patch);
+    }
+  }
+
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    IntVector curcell = *iter;
+
+   // Top face
+    IntVector adjcell(curcell.x(),curcell.y()+1,curcell.z());
+
+    sum_rho=0.0;
+    sum_rho_adj  = 0.0;
+    for(int m = 0; m < NVFs; m++){
+	sum_rho      += (rho_CC[m][curcell] + SMALL_NUM);
+	sum_rho_adj  += (rho_CC[m][adjcell] + SMALL_NUM);
+    }
+    sum_all_rho  = sum_rho     +  sum_rho_adj;
+
+    for(int m = 0; m < NVFs; m++){
+//	*press_FC[m][curcell][TOP]     =
+//                  press_CC[m][curcell] * sum_rho/sum_all_rho
+//                + press_CC[m][adjcell] * sum_rho_adj/sum_all_rho;
+    }
+
+ //  REPEAT THE PROCESS FOR THE OTHER TWO FACES
+   // Right face
+    adjcell = IntVector(curcell.x()+1,curcell.y(),curcell.z());
+
+   // Front face
+    adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+1);
+  }
+
+    /*__________________________________
+    * Update the boundary conditions
+        update_CC_FC_physical_boundary_conditions(
+    *___________________________________*/
+
+  for(int m = 0; m < NVFs; m++){
+      new_dw->put(press_FC[m],lb->press_FCLabel, m, patch);
+  }
 }
-
-
 
 void ICE::actuallyStep4(const ProcessorGroup*,
 		   const Patch* patch,
@@ -948,6 +1022,9 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.35  2000/10/16 20:31:00  guilkey
+// Step3 added
+//
 // Revision 1.34  2000/10/16 19:10:34  guilkey
 // Combined step1e with step2 and eliminated step1e.
 //
