@@ -76,10 +76,14 @@ WARNING
       virtual bool exists(const VarLabel*, int matlIndex, const Patch*) const =0;
       
       // Reduction Variables
-      virtual void allocate(ReductionVariableBase&, const VarLabel*) = 0;
-      virtual void get(ReductionVariableBase&, const VarLabel*) = 0;
-      virtual void put(const ReductionVariableBase&, const VarLabel*) = 0;
-      virtual void override(const ReductionVariableBase&, const VarLabel*) = 0;
+      virtual void allocate(ReductionVariableBase&, const VarLabel*,
+			    int matlIndex = -1) = 0;
+      virtual void get(ReductionVariableBase&, const VarLabel*,
+		       int matlIndex = -1) = 0;
+      virtual void put(const ReductionVariableBase&, const VarLabel*,
+		       int matlIndex = -1) = 0;
+      virtual void override(const ReductionVariableBase&, const VarLabel*,
+			    int matlIndex = -1) = 0;
 
       // Scatther/gather.  This will need a VarLabel if anyone but the
       // scheduler ever wants to use it.
@@ -193,7 +197,8 @@ WARNING
       virtual void emit(OutputContext&, const VarLabel* label,
 			int matlIndex, const Patch* patch) const = 0;
 
-      virtual void emit(ostream& intout, const VarLabel* label) const = 0;
+      virtual void emit(ostream& intout, const VarLabel* label,
+			int matlIndex = -1) const = 0;
 
       // For the schedulers
       virtual bool isFinalized() const = 0;
@@ -221,6 +226,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.41  2000/12/07 00:04:29  witzel
+// Change to allow reduction variables for particular materials
+//
 // Revision 1.40  2000/11/28 04:10:53  jas
 // Added X,Y,Z FCVariables and got rid of some compiler warnings.
 //
