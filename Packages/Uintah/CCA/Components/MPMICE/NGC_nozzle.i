@@ -67,7 +67,7 @@
             }
           }
         }  // second stage only
-      } // End of particle loop          
+      } // End of particle loop
   #endif
 
 
@@ -78,18 +78,17 @@
   //  2nd stage velocity != 0
   
   #ifdef SerialMPM_1
-      constParticleVariable<Vector> pvelocity;
-      new_dw->get(pvelocity,  lb->pVelocityLabel, pset);
-      
-      ParticleSubset::iterator iter = pset->begin();
-      
-      for(;iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        if (pvelocity[idx].length() > 0.0 ) {  
-          pcolor[idx] = 1.0;
-        }
-      }
+    constParticleVariable<Vector> pvelocity;
+    new_dw->get(pvelocity,  lb->pVelocityLabel, pset);
 
+    ParticleSubset::iterator iter = pset->begin();
+
+    for(;iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      if (pvelocity[idx].length() > 0.0 ) {  
+        pcolor[idx] = 1.0;
+      }
+    }
   #endif
 
 
@@ -99,20 +98,17 @@
   //__________________________________
   //  Inside ICE/BoundaryCond.cc: setBC(Pressure)
   //  hard code the pressure as a function of time
-  #ifdef ICEBoundaryCond_1   
+  #ifdef ICEBoundaryCond_1
     IntVector beginningIndex = *bound.begin();
     
     if(kind == "Pressure" && face == Patch::xminus && beginningIndex.y() == -1 ) {
       vector<IntVector>::const_iterator iter;
-      
-      double time = sharedState->getElapsedTime();
-      IntVector beginningIndex = *bound.begin();
      
       //__________________________________
       //  curve fit for the pressure
       double mean = 3.205751633986928e-02;
       double std  = 2.020912741291855e-02;
-      vector<double> c(7);
+      vector<double> c(8);
       c[7] = -2.084666863540239e+05;
       c[6] = -2.768180990368879e+04;
       c[5] =  1.216851029348476e+06;
@@ -122,29 +118,27 @@
       c[2] =  6.697085748135508e+04;
       c[1] =  3.276185586871563e+06;    
       c[0] =  1.794787251771923e+06;
-
+      
+      double time = sharedState->getElapsedTime();
       double tbar = (time - mean)/std;
+      
       double pressfit = c[7] * pow(tbar,7) + c[6]*pow(tbar,6) + c[5]*pow(tbar,5)
                       + c[4] * pow(tbar,4) + c[3]*pow(tbar,3) + c[2]*pow(tbar,2)
                       + c[1] * tbar + c[0];
       
-      // cout << " time " << time << " pressfit " << pressfit<< endl;
-      
       for (iter=bound.begin(); iter != bound.end(); iter++) {
         press_CC[*iter] = pressfit;
       }
-      //cout << "Time " << time << " Pressure:   child " << child <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1) << endl;
-    
-      // pressure polynomial curve fit here
-    }  
-  #endif
+      //cout << "Time " << time << " Pressure:   child " << child 
+      //     <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1) << endl;
+    }
+  #endif  // ICEBoundaryCond_1
 
 
   //__________________________________
   //  Inside ICE/BoundaryCond.cc: setBC(Temperature/Densiity)
   //  hard code the temperature and density as a function of time
   #ifdef ICEBoundaryCond_2
-    double time = sharedState->getElapsedTime();
     IntVector beginning_index = *bound.begin();
     if(face == Patch:: xminus && mat_id == 1 && beginning_index.y() == -1){
       vector<IntVector>::const_iterator iter;
@@ -159,7 +153,7 @@
       double gamma = 1.4;
       double cv    = 716;
       
-      vector<double> c(7);
+      vector<double> c(8);
       c[7] = -2.084666863540239e+05;
       c[6] = -2.768180990368879e+04;
       c[5] =  1.216851029348476e+06;
@@ -169,7 +163,8 @@
       c[2] =  6.697085748135508e+04;
       c[1] =  3.276185586871563e+06;    
       c[0] =  1.794787251771923e+06;
-
+      
+      double time = sharedState->getElapsedTime();
       double tbar = (time - mean)/std;
       
       double pressfit = c[7] * pow(tbar,7) + c[6]*pow(tbar,6) + c[5]*pow(tbar,5)
@@ -180,7 +175,7 @@
       double static_rho   = pressfit/((gamma - 1.0) * cv * static_temp);
 
       //cout << " time " << time << " pressfit " << pressfit
-      //     << " static_temp " << static_temp << " static_rho " << static_rho<< endl;
+      //     << " static_temp " << static_temp << " static_rho " << static_rho << endl;
       
       if(desc == "Temperature") {
         for (iter=bound.begin(); iter != bound.end(); iter++) {
@@ -193,7 +188,6 @@
         }
       }
     } 
+  #endif  //  ICEBoundaryCond_2
 
-  #endif
-
-#endif
+#endif  //running_NGC_nozzle
