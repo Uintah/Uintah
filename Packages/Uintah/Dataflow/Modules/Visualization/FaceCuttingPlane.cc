@@ -425,16 +425,16 @@ void FaceCuttingPlane::execute()
       
       if ( horiz ) {
 	if( j == v_ -1 && i == u_ - 1){
-	  p0 = corner + u * ((double) (i-0.1)/(u_num-1)) + 
-	    v * ((double) (j-0.1)/(v_num-1));
-	  p1 = corner + u * ((double) (i+1-0.1)/(u_num-1)) + 
-	    v * ((double) (j-0.1)/(v_num-1));
+	  p0 = corner + u * ((double) (i-0.00001)/(u_num-1)) + 
+	    v * ((double) (j-0.00001)/(v_num-1));
+	  p1 = corner + u * ((double) (i+1-0.00001)/(u_num-1)) + 
+	    v * ((double) (j-0.00001)/(v_num-1));
 	} else 
 	if( j == v_ - 1  ){
 	  p0 = corner + u * ((double) i/(u_num-1)) + 
-	    v * ((double) (j-0.1)/(v_num-1));
+	    v * ((double) (j-0.00001)/(v_num-1));
 	  p1 = corner + u * ((double)(i+1)/(u_num-1)) + 
-	    v * ((double) (j-0.1)/(v_num-1));
+	    v * ((double) (j-0.00001)/(v_num-1));
 	} else {
 	  p0 = corner + u * ((double) i/(u_num-1)) + 
 	    v * ((double) j/(v_num-1));
@@ -443,15 +443,15 @@ void FaceCuttingPlane::execute()
 	}
       } else {
 	if( j == v_ -1 && i == u_ - 1){
-	  p0 = corner + u * ((double) (i-0.1)/(u_num-1)) + 
-	    v * ((double) (j-0.1)/(v_num-1));
-	  p1 = corner + u * ((double) (i-0.1)/(u_num-1)) + 
-	    v * ((double)(j+1-0.1)/(v_num-1));
+	  p0 = corner + u * ((double) (i-0.00001)/(u_num-1)) + 
+	    v * ((double) (j-0.00001)/(v_num-1));
+	  p1 = corner + u * ((double) (i-0.00001)/(u_num-1)) + 
+	    v * ((double)(j+1-0.00001)/(v_num-1));
 	} else 
 	if( i == u_ - 1  ){
-	  p0 = corner + u * ((double) (i-0.1)/(u_num-1)) + 
+	  p0 = corner + u * ((double) (i-0.00001)/(u_num-1)) + 
 	    v * ((double) j/(v_num-1));
-	  p1 = corner + u * ((double) (i-0.1)/(u_num-1)) + 
+	  p1 = corner + u * ((double) (i-0.00001)/(u_num-1)) + 
 	    v * ((double)(j+1)/(v_num-1));
 	} else {
 	  p0 = corner + u * ((double) i/(u_num-1)) + 
