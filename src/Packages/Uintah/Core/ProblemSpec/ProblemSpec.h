@@ -227,6 +227,7 @@ WARNING
       void require(const std::string& name, Point& value);
       void require(const std::string& name, vector<double>& value);
       void require(const std::string& name, vector<int>& value); 
+      void require(const std::string& name, vector<IntVector>& value);
 
       //////////
       // Get any optional attributes associated with a tag
