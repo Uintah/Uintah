@@ -8,7 +8,7 @@
 SRCDIR   := Uintah/Components/Arches/fortran
 
 SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F  \
-	$(SRCDIR)/cellg.F
+	$(SRCDIR)/celltypeInit.F $(SRCDIR)/cellg.F
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
 #	$(SRCDIR)/arrmax.F $(SRCDIR)/assign.F $(SRCDIR)/bcp.F \
@@ -35,12 +35,15 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F  \
 PSELIBS :=
 #LIBS := -lftn -lm -lblas
 
-FFLAGS += -g -O3 -OPT:IEEE_arithmetic=3 -CG:if_conversion=false:reverse_if_conversion=false -LNO:pf2=0 -avoid_gp_overflow -I$(SRCDIR)
+#FFLAGS += -g -O3 -OPT:IEEE_arithmetic=3 -CG:if_conversion=false:reverse_if_conversion=false -LNO:pf2=0 -avoid_gp_overflow -I$(SRCDIR)
 
 #include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.9  2000/06/14 23:07:59  bbanerje
+# Added celltypeInit.F and sub.mk
+#
 # Revision 1.8  2000/06/14 21:25:25  jas
 # removed celltypeInit.F from compilation.
 #
