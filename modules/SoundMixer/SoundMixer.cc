@@ -25,6 +25,7 @@ SoundMixer::SoundMixer()
     overall_gain=1.0;
     MUI_slider_real* slider=new MUI_slider_real("overall gain",
 						&overall_gain, 1.0);
+    add_ui(slider);
 
     // Create the output data handle and port
     osound=new SoundOPort(this, "Sound Output",
