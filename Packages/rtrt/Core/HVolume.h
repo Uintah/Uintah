@@ -165,10 +165,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
   
   if(bin_fd == -1){
     cerr << "Brick data not found, reading data file\n";
-    //  if(!bin){
-    //    ifstream din(filebase);
     int din_fd = open (filebase, O_RDONLY);
-    //    if(!din){
     if(din_fd == -1) {
       cerr << "Error opening data file: " << filebase << '\n';
       exit(1);
@@ -178,11 +175,9 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
     double start=SCIRun::Time::currentSeconds();
     cerr << "Reading " << filebase << "...";
     cerr.flush();
-    //    read(din.rdbuf()->fd(), indata.get_dataptr(), indata.get_datasize());
     read(din_fd, indata.get_dataptr(), indata.get_datasize());
     double dt=SCIRun::Time::currentSeconds()-start;
     cerr << "done in " << dt << " seconds (" << (double)(sizeof(T)*nx*ny*nz)/dt/1024/1024 << " MB/sec)\n";
-    //    if(!din){
     int s = close (din_fd);
     if(s == -1 ) {
       cerr << "Error reading data file: " << filebase << '\n';
@@ -216,7 +211,6 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
     }
     cerr << "Writing " << buf << "...";
     start=SCIRun::Time::currentSeconds();	
-    //    write(bout.rdbuf()->fd(), blockdata.get_dataptr(), blockdata.get_datasize());
     write(bout_fd, blockdata.get_dataptr(),blockdata.get_datasize());
     dt=SCIRun::Time::currentSeconds()-start;
     cerr << "done (" << (double)(blockdata.get_datasize())/dt/1024/1024 << " MB/sec)\n";
