@@ -57,39 +57,20 @@ GLTexture3D::GLTexture3D() :
 }
 
 GLTexture3D::GLTexture3D(ScalarFieldRGuchar *tex ) :
-  tex(tex), X(tex->grid.dim3()), Y(tex->grid.dim2()),
-  Z(tex->grid.dim1()),  xmax(64), ymax(64), zmax(64)
+  tex(tex), X(tex->grid.dim1()), Y(tex->grid.dim2()),
+  Z(tex->grid.dim3()),  xmax(64), ymax(64), zmax(64)
 {
-  int size = std::max(X,Y);
-  size = std::max(size,Z);
   tex->get_bounds( minP, maxP );
-  std::cerr<<"Bounds = "<<minP<<", "<<maxP<<std::endl;
-  double x = minP.x();
-  minP.x(minP.z());
-  minP.z(x);
-  x = maxP.x();
-  maxP.x(maxP.z());
-  maxP.z(x);
+
   Vector diag = maxP - minP;
+  std::cerr<<"Bounds = "<<minP<<", "<<maxP<<std::endl;
+
   dx = diag.x()/(X-1);
   dy = diag.y()/(Y-1);
   dz = diag.z()/(Z-1); 
 
-// #ifdef SCI_OPENGL
-//   int i;
-//   int sizes[6] = { 256, 128, 64, 32, 16, 8};
-//   for(i = 0; i < 5; i++){
-//     if( size > sizes[i+1] ){
-//       if(SetMaxBrickSize( sizes[i] ) ){
-// 	break;
-//       }
-//     }
-//   }
-// #endif
-  
   computeTreeDepth(); 
   bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,0);
-
 }
 
 bool
@@ -467,7 +448,7 @@ void GLTexture3D::makeBrickData(int newx, int newy, int newz,
   for(kk = 0, k = zoff; kk < zsize; kk++, k++)
     for(jj = 0, j = yoff; jj < ysize; jj++, j++)
       for(ii = 0, i = xoff; ii < xsize; ii++, i++){
-	(*bd)(kk,jj,ii) = tex->grid(k,j,i);
+	(*bd)(kk,jj,ii) = tex->grid(i,j,k);
   }
 
 }
@@ -502,10 +483,10 @@ void GLTexture3D::makeLowResBrickData(int xmax, int ymax, int zmax,
 	for(ii = 0, i = xoff; ii < xmax; ii++, i+=dx){
 	  i1 = ((int)i + 1 >= xoff+xsize-1)?i:(int)i + 1 ;
 	  if( i1 == (int)i){ di = 0;} else {di = i1 - i;}
-	  k00 = Interpolate(tex->grid(k,j,i),tex->grid(k,j,i1),dk);
-	  k01 = Interpolate(tex->grid(k1,j,i),tex->grid(k1,j,i1),dk);
-	  k10 = Interpolate(tex->grid(k,j1,i),tex->grid(k,j,i1),dk);
-	  k11 = Interpolate(tex->grid(k1,j1,i),tex->grid(k1,j1,i1),dk);
+	  k00 = Interpolate(tex->grid(i,j,k),tex->grid(i,j,k1),dk);
+	  k01 = Interpolate(tex->grid(i1,j,k),tex->grid(i1,j,k1),dk);
+	  k10 = Interpolate(tex->grid(i,j1,k),tex->grid(i,j,k1),dk);
+	  k11 = Interpolate(tex->grid(i1,j1,k),tex->grid(i1,j1,k1),dk);
 	  j00 = Interpolate(k00,k10,dj);
 	  j01 = Interpolate(k01,k11,dj);
 	  (*bd)(kk,jj,ii) = Interpolate(j00,j01,di);
@@ -551,7 +532,7 @@ void GLTexture3D::makeLowResBrickData(int xmax, int ymax, int zmax,
       for(jj = 0, j = yoff; jj < ymax; jj++, j+=dy){
 	for(ii = 0, i = xoff; ii < xmax; ii++, i+=dx){
 	  if( i < xoff + xsize && j < yoff + ysize && k < zoff + zsize){
-	    (*bd)(kk,jj,ii) = tex->grid(k,j,i);
+	    (*bd)(kk,jj,ii) = tex->grid(i,j,k);
 	  }
 	}
       }
