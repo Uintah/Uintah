@@ -1,5 +1,3 @@
-
-C:\Blythe\SCIRun\src\Packages\BioPSE\Dataflow\XML>mycvs -d :ext:blythe@csf.cs.utah.edu:/csafe_noexport/cvs/cvsroot update -p -r1.7 DipoleInSphere.xml 
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
 
