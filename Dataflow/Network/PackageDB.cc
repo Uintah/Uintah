@@ -73,6 +73,8 @@ void PackageDB::loadPackage(const clString& packPath)
 
   bool loading = false;
 
+  postMessage("Loading packages, please wait...\n", false);
+
   while(packagePath!="") {
     // Strip off the first element, leave the rest in the path for the next
     // iteration.
@@ -100,8 +102,8 @@ void PackageDB::loadPackage(const clString& packPath)
       GetFilenamesEndingWith((char*)xmldir(),".xml");
 
     if ( !loading ) {
-      TCL::execute(clString("toplevel .loading -width 100 -height 20; "
-			    "update idletasks"));
+      TCL::execute(clString("toplevel .loading; "
+			    "wm geometry .loading 250x75+275+200;"));
       loading = true;
     }
     TCL::execute(clString("iwidgets::feedback .loading.fb -labeltext "
@@ -401,6 +403,9 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.32  2000/12/13 01:11:50  moulding
+// try to center the new progress window in the main window.
+//
 // Revision 1.31  2000/12/12 22:37:15  yarden
 // replace Moulding progress report with a popup window.
 //
