@@ -104,21 +104,39 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
   NTYPE *ptrZ   = (NTYPE *)(nHandles[mesh[Z]]->nrrd->data);
   NTYPE *ptrPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
     
-  for( i=0; i<idim; i++ ) {
-    double cosPhi = cos( ptrPhi[i] );
-    double sinPhi = sin( ptrPhi[i] );
+  if( modes[0] ) {
+    for( i=0; i<idim; i++ ) {
+      for( k=0; k<kdim; k++ ) {
+	for( j=0; j<jdim; j++ ) {
       
-    for( k=0; k<kdim; k++ ) {
-      for( j=0; j<jdim; j++ ) {
+	  int iRZ = k * jdim + j;
       
-	int iRZ = k * jdim + j;
-      
-	// Mesh
-	ndata[cc*3  ] =  ptrR[iRZ] * cosPhi;
-	ndata[cc*3+1] = -ptrR[iRZ] * sinPhi;
-	ndata[cc*3+2] =  ptrZ[iRZ];
+	  // Mesh
+	  ndata[cc*3  ] = ptrPhi[i];
+	  ndata[cc*3+1] = ptrR[iRZ];
+	  ndata[cc*3+2] = ptrZ[iRZ];
 	
-	++cc;
+	  ++cc;
+	}
+      }
+    }
+  } else {
+    for( i=0; i<idim; i++ ) {
+      double cosPhi = cos( ptrPhi[i] );
+      double sinPhi = sin( ptrPhi[i] );
+      
+      for( k=0; k<kdim; k++ ) {
+	for( j=0; j<jdim; j++ ) {
+      
+	  int iRZ = k * jdim + j;
+      
+	  // Mesh
+	  ndata[cc*3  ] =  ptrR[iRZ] * cosPhi;
+	  ndata[cc*3+1] = -ptrR[iRZ] * sinPhi;
+	  ndata[cc*3+2] =  ptrZ[iRZ];
+	
+	  ++cc;
+	}
       }
     }
   }
