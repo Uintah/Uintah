@@ -169,6 +169,8 @@ OpenGL::~OpenGL()
   while (recv_mb.tryReceive(r)) ;
 
   fpstimer.stop();
+  
+  delete drawinfo; drawinfo = 0;
 }
 
 
