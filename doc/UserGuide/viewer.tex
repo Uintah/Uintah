@@ -5,28 +5,84 @@
 % Last update:Tue Mar 13 19:08:17 MST 2001 by Dave Weinstein
 %    - created
 %    - DMW: proof-reading and minor corrections
+% Last update: Tue Mar 20 23:12:33 2001 by Rob MacLeod
+%    - fixing some image size problems and getting it ready for show and
+%    tell at doc group meeting
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%  Figures used in this file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The basic viewer window
 %begin{latexonly}
   \newcommand{\viewerwindow}%
-  {\centerline{\epsfig{file=figures/viewwindow.eps,height=4in}}}
+  {\centerline{\epsfig{file=figures/viewwindow.eps,height=4in,
+  bbllx=16, bblly=88, bburx=597, bbury=704}}}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\viewerwindow}{%
-  \htmladdimg[align=top,width="100%",alt="module"]
+  \htmladdimg[align=top,width=600,alt="module"]
   {../figures/viewwindow.jpg}}
 \end{htmlonly}
 
+%% View of the extended viewer window
 %begin{latexonly}
   \newcommand{\extendedwindow}%
-  {\centerline{\epsfig{file=figures/viewwindow-ext.eps,height=4in}}}
+  {\centerline{\epsfig{file=figures/viewwindow-ext.eps.gz,height=4in,
+  bbllx=16, bblly=310, bburx=600, bbury=703}}}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\extendedwindow}{%
-  \htmladdimg[align=top,width="100%",alt="module"]
+  \htmladdimg[align=top,width=600,alt="extended view window"]
   {../figures/viewwindow-ext.jpg}}
 \end{htmlonly}
+
+%% Gauge widget image
+%begin{latexonly}
+  \newcommand{\gaugewidget}%
+  {\centerline{\epsfig{file=figures/widget-gauge.eps,height=4in,
+  bbllx=0, bblly=0, bburx=457, bbury=340}}}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\gaugewidget}{%
+  \htmladdimg[align=top,width=457,alt="gaugewidget"]
+  {../figures/widget-gauge.gif}}
+\end{htmlonly}
+
+%% Frame widget image
+%begin{latexonly}
+  \newcommand{\framewidget}%
+  {\centerline{\epsfig{file=figures/widget-frame.eps,height=4in,
+  bbllx=0, bblly=0, bburx=328, bbury=268}}}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\framewidget}{%
+  \htmladdimg[align=top,width=328,alt="framewidget"]
+  {../figures/widget-frame.gif}}
+\end{htmlonly}
+
+%% Box widget image
+%begin{latexonly}
+  \newcommand{\boxwidget}%
+  {\centerline{\epsfig{file=figures/widget-box.eps,height=4in,
+  bbllx=0, bblly=0, bburx=458, bbury=342}}}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\boxwidget}{%
+  \htmladdimg[align=top,width=458,alt="boxwidget"]
+  {../figures/widget-box.gif}}
+\end{htmlonly}
+
+%% Ring widget image
+%begin{latexonly}
+  \newcommand{\ringwidget}%
+  {\centerline{\epsfig{file=figures/widget-ring.eps,height=4in,
+  bbllx=0, bblly=0, bburx=458, bbury=342}}}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\ringwidget}{%
+  \htmladdimg[align=top,width=458,alt="ringwidget"]
+  {../figures/widget-box.gif}}
+\end{htmlonly}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand{\graphics}{\emph{Graphics}}
 
@@ -157,7 +213,7 @@ Control & Left & Translate in the Z-direction, \ie{} zoom in and out of the
     motion). \\ 
       & Right & Unicam movement (see next table)\\ \hline
 \end{tabular}
-\caption{\label{tab:view-mouse} Mouse contols for the \viewer{}}
+\caption{\label{tab:view-mouse} Mouse controls for the \viewer{}}
 \end{center}
 \end{table}
 
@@ -305,8 +361,154 @@ movies.
 There is also a button that forces the size of the graphical window to be
 352x240 pixels in size, which is a standard format well suited to MPEG.
 
+\subsection{Control widgets}
+\label{sec:view-widgets} 
 
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: "usersguide"
-%%% End: 
+While the \hyperref{mouse controls}{mouse controls in
+Section}{}{sec:view-mouse} describe many ways to interact with the contents
+of the \viewer{}, SR{} also supports some powerful display widgets.
+Examples of widgets capabilities include managing cutting surfaces colored
+according to the local data values, displaying streamlines in vector
+fields, or selecting sub-volumes within the display area for further
+manipulation. 
+ 
+We have tried to make interacting with these widgets as consistent as
+possible so that, for example, controling parameters is usually by clicking
+and dragging on either a cylindrical ``collar'' or a sphere element of the
+widget.  The original design of these modules was by James Purcifal
+\cite{??}.  Note that a single widget may have more than one purpose
+depending on the context in which it exists.
+
+In this section, we describe the widgets available within \SR{} and \PSE{}.
+The same widget may, for example, select a clipping or a display plane
+through a three-dimensional object but may also set the seed points for a
+streamline module.  
+
+\subsubsection{Gauge Widget}
+\label{sec:view-gaugewidget} 
+
+\begin{figure}[htb]
+  \begin{makeimage}
+  \end{makeimage}
+  \gaugewidget
+%    \framebox{\parbox[3in]{\columnwidth}{The\dotfill Figure\\
+%    \vspace{2in}\\
+%    With some \dotfill dummy text}}
+  \caption{\label{fig:boxwidget} The gauge widget for setting location and
+    density of seed points}
+\end{figure}
+
+\paragraph{Appearance: } The Gauge Widget consists of two spheres connected
+by a cylinder with a small cylindrical slider collar on the cylinder.
+There are also small resize cylinders extending from the spheres.
+
+\paragraph{Purpose:} The primary use of the Gauge Widget is to set the
+location and density of streamlines emerging from the long cylinder.  It
+may also be used as a more general purpose three-dimensional slider or as a
+source for a stream surface. 
+
+\paragraph{Controls: } Clicking and dragging either sphere causes the
+entire widget to move in space, rotating about the other sphere and
+following along behind the selected sphere.  Dragging either of the resize
+cylinders cases the size of the widget to change and dragging any point on
+the main cylinder moves the whole widget without any change in orientation.
+Dragging the slider collar changes the associated value, typically the
+density of seed points for a streamline source.
+
+\subsubsection{Frame Widget}
+\label{sec:view-framewidget} 
+
+\begin{figure}[htb]
+  \begin{makeimage}
+  \end{makeimage}
+  \framewidget
+%    \framebox{\parbox[3in]{\columnwidth}{The\dotfill Figure\\
+%    \vspace{2in}\\
+%    With some \dotfill dummy text}}
+  \caption{\label{fig:boxwidget} The frame widget for selecting
+    cutting/projection planes}
+\end{figure}
+
+
+\paragraph{Appearance: } The Frame Widget consists of four cylinders
+connected in a rectangle.  In the middle of each of the cylinders there is
+a sphere, from which a resize cylinder extends.
+
+\paragraph{Purpose:} The primary uses of the Frame Widget is for image
+plane definition, for defining stream volumes, and as a "tie dye" as with
+the Ring Widget described in Section~\ref{sec:view-ringwidget}.
+
+\paragraph{Controls: } Clicking and ragging a sphere on the widget will
+cause the widget to rotate about it center; dragging on a resize cylinder
+will move the associated edge and this extend or contract the rectangle.
+Dragging any of the cylinder will drag the entire widget through space.
+
+
+\subsubsection{Box Widget}
+\label{sec:view-boxwidget} 
+
+\begin{figure}[htb]
+  \begin{makeimage}
+  \end{makeimage}
+  \boxwidget
+%    \framebox{\parbox[3in]{\columnwidth}{The\dotfill Figure\\
+%    \vspace{2in}\\
+%    With some \dotfill dummy text}}
+  \caption{\label{fig:boxwidget} The boxwidget for selecting sub-volumes}
+\end{figure}
+
+\paragraph{Appearance: } The Box Widget consists of twelve cylinders
+connected in a hexahedral box (three-dimensional rectangle) with cylinders
+indicating on the edges of the box.  In the middle of each face of the box
+is a sphere with a cylinder protruding from it that provide resize control.
+
+\paragraph{Purpose:} The primary use of the Box Widget is to select a
+subvolume of the workspace for further manipulation (\eg{} volume
+rendering, isosurfaces, streamlines, mesh adaption) where the faces of the
+widget act as orthogonal clipping planes.
+
+\paragraph{Controls: } Clicking and dragging on one of the spheres rotates
+the widget about its center without changing the position of the center.
+Clicking on and dragging any resize handle
+% What do these look like??
+causes the associated face to extend without changing its orientation.
+Dragging a cylinder causes the entire widget to move without changing its
+orientation.
+
+\subsubsection{Ring Widget}
+\label{sec:view-ringwidget} 
+
+\begin{figure}[htb]
+  \begin{makeimage}
+  \end{makeimage}
+  \ringwidget
+%    \framebox{\parbox[3in]{\columnwidth}{The\dotfill Figure\\
+%    \vspace{2in}\\
+%    With some \dotfill dummy text}}
+  \caption{\label{fig:boxwidget} The ring widget for selecting
+    cutting/projection planes}
+\end{figure}
+
+
+\paragraph{Appearance: } The Ring Widget consists of a ring with four
+embedded spheres, each with a resize cylindrical attached.  Between two of
+the spheres is a sliding collar.  One of the resize cylinders has a special
+material property (typically a different color from the other cylinders) to
+indicate that it is the ``halfway point'' for the slider.
+
+\paragraph{Purpose:} The primary use of the Ring Widget is to set the
+density of streamlines emerging from the ring---the ring serves as a set of
+seed points from which will emerge streamlines.  The Ring Widget can also
+serve as a three-dimensional angle gauge, as a source for multiple
+streamlines throughout its surface, as a source for a stream surface from
+the outer ring, and as a source for a stream volume.  Another use is as a
+color sheet, or ``tie dye'', in which the surface is colored as a function of
+the scalar value of the field at each point.
+
+\paragraph{Controls: } Clicking and dragging the slider collar along the
+ring changes the density of the seed points or some other related
+parameter.  Dragging the spheres controls the orientation of the Ring
+Widget, while moving the resize cylinders changes the radius of the Ring
+Widget about its center.  Dragging any other point on the ring moves the
+ring in space without changing its radius or orientation.
+

@@ -67,6 +67,10 @@ use code like:
   {../figures/biopse-modmap.gif}}
 \end{htmlonly}
 
+NOTE: I was not able to figure out a way to make a percentage page width
+that would survivie latex2html properly.  So stick to fixed widths (or none
+at all for the default).
+
 Then in the code, at the proper location, use
 
 \begin{figure}[htb]

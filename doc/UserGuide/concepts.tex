@@ -11,11 +11,12 @@
 %%%%%%%%%%  Figures used in this file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %begin{latexonly}
   \newcommand{\basicmodule}%
-  {\centerline{\epsfig{file=figures/biopse-modmap.eps,width=\columnwidth}}}
+  {\centerline{\epsfig{file=figures/biopse-modmap.eps,width=\columnwidth,
+  bbllx=7, bblly=-193, bburx=774, bbury=14}}}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\basicmodule}{%
-  \htmladdimg[align=top,width="100%",alt="module"]
+  \htmladdimg[align=top,width=881,alt="module"]
   {../figures/biopse-modmap.gif}}
 \end{htmlonly}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -177,7 +178,7 @@ environment.
 \end{figure}
 
 The functional unit of a dataflow environment is the {\em\/module}
-\index{module} .  Figure~\ref{fig:conc-module} contains a generic \SR{}
+\index{module}.  Figure~\ref{fig:conc-module} contains a generic \SR{}
 module, with a User Interface (UI) button for graphically accessing the
 module's parameters, and input and output ports for receiving and sending
 data, respectively.  On the right is a simple example of a dataflow
@@ -190,9 +191,9 @@ input or one output port.  Examples of a module with only an output port
 would be file readers.  The \htmladdnormallink{\emph{Viewer}}{viewer.html}
 module contains only input ports because it receives information and the
 output is a visualization.  For a more detailed description of modules and
-how to control them, see Section~\ref{sec:workwithnets}.  The most
-important goal at this stage is to appreciate the concept of a module and
-the dataflow that links one module to another.
+how to control them, see \secref{Working with Networks}{sec:workwithnets}.
+The most important goal at this stage is to appreciate the concept of a
+module and the dataflow that links one module to another.
 
 A network diagram \index{network!diagram} describes the way data flows
 through \SR{} and is the main means of user interaction with the overall
@@ -201,7 +202,8 @@ the program; without a network, \SR{} and \PSE{} are just a set of tools
 sitting in a chest.  By joining the modules into a network, the tools
 become a functioning program that does whatever the network tells it to.
 Once again, the important thing to appreciate is what the network is
-conceptually; for the details, see Section~\ref{sec:workwithnets}.
+conceptually; for the details, see \secref{Working with
+Networks}{sec:workwithnets}. 
 
 
 \subsection{Links to third party software}
@@ -227,9 +229,34 @@ such external code, including FORTRAN, C, Matlab, and IDL\@.  This first
 version of \PSE{} has support for Matlab and one example of wrapping
 existing FORTRAN code into a \SR{} module. \index{Matlab}
 
-%?? I need some detail here on how to work with Matlab in SR\@.
+\subsubsection{\SR{}/Matlab interface}
+\label{sec:concept-matlab} 
 
+The interface (based on Berkeley sockets) between \SR{} and Matlab provides
+a pathway to send matrix data objects from \SR{} to Matlab and then accept
+the result of some Matlab computations.  At present, this arrangement
+requires that a Matlab script exist that will perform the desired
+operations.  \SR{} sends the input data to an existing process running
+Matlab, which serves as a compute engine, performs the steps
+described in the script, and then returns data to \SR{} for further
+processing or display.  The Matlab process can even run on a separate
+computer connected via a network, which helps to distribute the load as
+well as to resolve potential licensing conflicts with Matlab.
 
+The underlying mechanism for this communication is a socket interface
+consisting of two SCIRun Modules, \module{MatrixSend} and
+\module{MatrixReceive}, and a Matlab ``transport'' routine.  Both the \SR{}
+and the Matlab process know about each other's whereabouts (in the form
+hostname:port) and use a client-to-client communication model, so that
+synchronization between processes is manual.  For example, 
+the \SR{} \module{MatrixSend} module sends the matrix to a socket at which a 
+Matlab script is listening.  The script then receives the matrix, 
+performs the calculations in Matlab and sends the results to a socket 
+where \module{MatrixReceive} module is listening.  \SR then carries out
+further calculations and display of the results.
+
+For examples of this interface, see \secref{Matlab
+Examples}{sec:examples-matlab}.
 
 \subsection{Extensibility}
 \label{sec:con-extend} 
@@ -275,9 +302,6 @@ unlimited batch control.  CUMULVS \index{CUMULVS} is one example of such a
 system and uses its detachable interface to allow collaboration between
 scientists working remotely, with viewing systems that can attach or detach
 from the running simulation.
-
-%?? Here I need to know how much detachable interface stuff we will have in
-%   the release.
 
 The first release of \SR{} will not include any of the detachable interface
 support but we plan to add this within six months of the first release.
