@@ -91,11 +91,9 @@ namespace Uintah {
          // class function to create a new object from parameters
          static ConstitutiveModel* create(double *p_array);
 
-         const VarLabel* pNormalLabel;
          const VarLabel* pTang1Label;
          const VarLabel* pTang2Label;
          const VarLabel* defGradInPlaneLabel;
-         const VarLabel* pNormalLabel_preReloc;
          const VarLabel* pTang1Label_preReloc;
          const VarLabel* pTang2Label_preReloc;
          const VarLabel* defGradInPlaneLabel_preReloc;
