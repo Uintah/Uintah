@@ -130,7 +130,8 @@ Plot2DViewerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
 
   typename FIELD<TYPE>::mesh_handle_type imesh = ifield->get_typed_mesh();
 
-  Array1<unsigned int> dim = imesh->get_dim();
+  vector<unsigned int> dim;
+  if (! imesh->get_dim(dim)) { return;  }
 
   unsigned int onx = dim[0];
   unsigned int ony;

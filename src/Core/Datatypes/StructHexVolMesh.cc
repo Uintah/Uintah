@@ -44,6 +44,20 @@ using namespace std;
 
 PersistentTypeID StructHexVolMesh::type_id("StructHexVolMesh", "Mesh", maker);
 
+
+bool
+StructHexVolMesh::get_dim(vector<unsigned int> &array) const
+{
+  array.resize(3);
+  array.clear();
+
+  array.push_back(ni_);
+  array.push_back(nj_);
+  array.push_back(nk_);
+
+  return true;
+}
+
 BBox
 StructHexVolMesh::get_bounding_box() const
 {

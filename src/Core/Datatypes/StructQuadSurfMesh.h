@@ -47,8 +47,8 @@
 
 #include <Core/Datatypes/ImageMesh.h>
 #include <Core/Containers/Array2.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
+#include <vector>
 
 namespace SCIRun {
 
@@ -67,7 +67,8 @@ public:
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
 
-  void set_dim(Array1<unsigned int> dims) {
+  bool get_dim(vector<unsigned int> &array) const;
+  void set_dim(vector<unsigned int> dims) {
     ImageMesh::set_dim(dims);
     points_.resize(dims[0], dims[1]);
     normals_.resize(dims[0], dims[1]);

@@ -140,6 +140,12 @@ public:
    *  TODO: Write what these iterators are good for here.
    *
    */
+
+  //! for meshes that dimensionality makes sense (structured) fill the vector
+  //! with the size in each dimension for all of the axes
+  //! unstructured meshses will return false, and not touch the vector.
+  bool get_dim(vector<unsigned int>&) const { return false;  }
+
   void begin(Node::iterator &itr) const;
   void begin(Edge::iterator &itr) const;
   void begin(Face::iterator &itr) const;

@@ -23,10 +23,21 @@
   <overview>
     <authors>
       <author>David Weinstein</author>
+      <author>Martin Cole</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Take the data from a field or fields and wrap it with a
+nrrd and pass it out.
+    </summary>
     <description>
-      <p>Version Date: February 2001</p><p>Version: 1.0</p>
+      <p>Inputs: a field or multiple fields that share the *same* mesh.
+         Output: a NrrdData.
+      </p>
+      <p>
+         This module combines sets of data for a given mesh, into one object for storage. This object is a NrrdData.  There are many operations that can be applied to the data as a nrrd, <slink path="http://www.cs.utah.edu/~gk/teem/unnrrdu/index.html"></slink> many of which are supported in this Teem package.
+      </p>
+      <p>
+         The input port is dynamic.  Each field that is accepted as input, must share a mesh, otherwise an error is signaled.  Data from each field as added to the nrrd that is output.  So and entire time series can be built up,or slices can be stacked up to create a volume, or scanlines can be stacked up to form an Image etc..
+      </p>
     </description>
   </overview>
   <io>

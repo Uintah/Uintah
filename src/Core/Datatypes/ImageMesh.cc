@@ -30,9 +30,9 @@
  */
 
 #include <Core/Datatypes/ImageMesh.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Math/MusilRNG.h>
+#include <vector>
 
 namespace SCIRun {
 
@@ -79,10 +79,10 @@ ImageMesh::transform(Transform &t)
   transform_.pre_trans(t);
 }
 
-Array1<unsigned int>
+vector<unsigned int>
 ImageMesh::get_min() const
 {
-  Array1<unsigned int> array(2);
+  vector<unsigned int> array(2);
 
   array[0] = min_i_;
   array[1] = min_j_;
@@ -90,26 +90,27 @@ ImageMesh::get_min() const
   return array;
 }
 
-Array1<unsigned int>
-ImageMesh::get_dim() const
+bool
+ImageMesh::get_dim(vector<unsigned int> &array) const
 {
-  Array1<unsigned int> array(2);
+  array.resize(2);
+  array.clear();
 
-  array[0] = ni_;
-  array[1] = nj_;
+  array.push_back(ni_);
+  array.push_back(nj_);
 
-  return array;
+  return true;
 }
 
 void
-ImageMesh::set_min(Array1<unsigned int> min)
+ImageMesh::set_min(vector<unsigned int> min)
 {
   min_i_ = min[0];
   min_j_ = min[1];
 }
 
 void
-ImageMesh::set_dim(Array1<unsigned int> dim)
+ImageMesh::set_dim(vector<unsigned int> dim)
 {
   ni_ = dim[0];
   nj_ = dim[1];

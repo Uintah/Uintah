@@ -30,11 +30,11 @@
  */
 
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MusilRNG.h>
+#include <vector>
 
 namespace SCIRun {
 
@@ -125,10 +125,10 @@ LatVolMesh::transform(Transform &t)
   transform_.pre_trans(t);
 }
 
-Array1<unsigned int>
+vector<unsigned int>
 LatVolMesh::get_min() const
 {
-  Array1<unsigned int> array(3);
+  vector<unsigned int> array(3);
 
   array[0] = min_i_;
   array[1] = min_j_;
@@ -137,20 +137,21 @@ LatVolMesh::get_min() const
   return array;
 }
 
-Array1<unsigned int>
-LatVolMesh::get_dim() const
+bool
+LatVolMesh::get_dim(vector<unsigned int> &array) const
 {
-  Array1<unsigned int> array(3);
+  array.resize(3);
+  array.clear();
 
-  array[0] = ni_;
-  array[1] = nj_;
-  array[2] = nk_;
+  array.push_back(ni_);
+  array.push_back(nj_);
+  array.push_back(nk_);
 
-  return array;
+  return true;
 }
 
 void
-LatVolMesh::set_min(Array1<unsigned int> min)
+LatVolMesh::set_min(vector<unsigned int> min)
 {
   min_i_ = min[0];
   min_j_ = min[1];
@@ -158,7 +159,7 @@ LatVolMesh::set_min(Array1<unsigned int> min)
 }
 
 void
-LatVolMesh::set_dim(Array1<unsigned int> dim)
+LatVolMesh::set_dim(vector<unsigned int> dim)
 {
   ni_ = dim[0];
   nj_ = dim[1];

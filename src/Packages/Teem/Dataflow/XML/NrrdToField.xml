@@ -23,10 +23,19 @@
   <overview>
     <authors>
       <author>David Weinstein</author>
+      <author>Martin Cole</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Given all the information stored about the input nrrd
+output a field of the appropriate type.</summary>
     <description>
-      <p>Version Date: February 2001</p><p>Version: 1.0</p>
+      <p>
+          If a mesh is stored in the NrrdData, and the nrrd data still
+maps to that mesh, create a field using that mesh. Otherwise for
+3three dimensional nrrd data create a LatVolField, for two dimensional
+nrrd data create an ImageField, and for one dimensional data create a
+ScanlineField. The created field is the output for this module. The
+user interface has options much like unu slice.
+      </p>
     </description>
   </overview>
   <io>

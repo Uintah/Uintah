@@ -89,6 +89,8 @@ public:
   virtual CurveMesh *clone() { return new CurveMesh(*this); }
   virtual ~CurveMesh() {}
 
+  bool get_dim(vector<unsigned int>&) const { return false;  }
+
   void begin(Node::iterator &) const;
   void begin(Edge::iterator &) const;
   void begin(Face::iterator &) const;

@@ -44,8 +44,8 @@
 #define SCI_project_StructCurveMesh_h 1
 
 #include <Core/Datatypes/ScanlineMesh.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
+#include <vector>
 
 namespace SCIRun {
 
@@ -65,10 +65,12 @@ public:
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
 
-  void set_dim(Array1<unsigned int> dims) {
+  void set_dim(vector<unsigned int> dims) {
     ScanlineMesh::set_dim(dims);
     points_.resize(dims[0]);
   }
+
+  bool get_dim(vector<unsigned int>&) const { return false;  }
 
   //! get the child elements of the given index
   void get_nodes(Node::array_type &, Edge::index_type) const;
@@ -149,7 +151,7 @@ public:
 private:
 
   //! the points
-  Array1<Point> points_;
+  vector<Point> points_;
 
   // returns a StructCurveMesh
   static Persistent *maker() { return new StructCurveMesh(); }

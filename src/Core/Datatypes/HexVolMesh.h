@@ -84,6 +84,8 @@ public:
   virtual HexVolMesh *clone() { return new HexVolMesh(*this); }
   virtual ~HexVolMesh();
 
+  bool get_dim(vector<unsigned int>&) const { return false;  }
+
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
 

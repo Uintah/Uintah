@@ -35,8 +35,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Datatypes/FieldInterface.h>
+#include <Teem/Dataflow/Modules/DataIO/ConvertToNrrd.h>
 #include <iostream>
-#include <pair.h>
+#include <utility>
 
 using std::endl;
 using std::pair;
@@ -104,131 +105,17 @@ void FieldToNrrd::execute()
     return;
   }
 
-  FieldHandle fieldH;
-  if (!ifield->get(fieldH))
+  FieldHandle field_handle;
+  if (!ifield->get(field_handle))
     return;
-  if (fieldH->mesh()->get_type_description()->get_name() !=
-      get_type_description((LatVolMesh *)0)->get_name())
-  {
-    error("FieldToNrrd only works with LatVolField's.");
-    return;
-  }
 
-  int nx, ny, nz;
-  NrrdData *nout=scinew NrrdData;
-  Field *field = fieldH.get_rep();
-  const string data = field->get_type_description(1)->get_name();
+  const TypeDescription *td = field_handle->get_type_description();
+  CompileInfoHandle ci = ConvertToNrrdBase::get_compile_info(td);
+  Handle<ConvertToNrrdBase> algo;
+  if (!module_dynamic_compile(ci, algo)) return;  
 
-  nout->nrrd = nrrdNew();
-  LatVolMeshHandle lvm;
+  NrrdDataHandle onrrd_handle = algo->convert_to_nrrd(field_handle);
 
-  if (data =="double") {
-    COPY_INTO_NRRD_FROM_FIELD(double, Double);
-  } else if (data == "float") { 
-    COPY_INTO_NRRD_FROM_FIELD(float, Float);
-  } else if (data == "unsigned_int") {
-    COPY_INTO_NRRD_FROM_FIELD(unsigned int, UInt);
-  } else if (data == "int") {
-    COPY_INTO_NRRD_FROM_FIELD(int, Int);
-  } else if (data == "unsigned_short") {
-    COPY_INTO_NRRD_FROM_FIELD(unsigned short, UShort);
-  } else if (data == "short") {
-    COPY_INTO_NRRD_FROM_FIELD(short, Short);
-  } else if (data == "unsigned_char") {
-    COPY_INTO_NRRD_FROM_FIELD(unsigned char, UChar);
-  } else if (data == "char") {
-    COPY_INTO_NRRD_FROM_FIELD(char, Char);
-  } else if (data == "Vector") {
-    LatVolField<Vector> *f = 
-      dynamic_cast<LatVolField<Vector>*>(field);
-    nx = f->fdata().dim3();
-    ny = f->fdata().dim2();
-    nz = f->fdata().dim1();
-    double *data=new double[nx*ny*nz*3];
-    double *p=&(data[0]);
-    for (int k=0; k<nz; k++)
-      for (int j=0; j<ny; j++)
-	for (int i=0; i<nx; i++) {
-	  *p++=f->fdata()(k,j,i).x();
-	  *p++=f->fdata()(k,j,i).y();
-	  *p++=f->fdata()(k,j,i).z();
-	}
-    nrrdWrap(nout->nrrd, data, nrrdTypeDouble, 4, 3, nx, ny, nz);
-    if (f->data_at() == Field::NODE)
-      nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
-    else // if (f->data_at() == Field::CELL)
-      nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterCell, 
-		  nrrdCenterCell, nrrdCenterCell, nrrdCenterCell);
-  } else if (data == "Tensor") {
-    LatVolField<Tensor> *f = 
-      dynamic_cast<LatVolField<Tensor>*>(field);
-    nx = f->fdata().dim3();
-    ny = f->fdata().dim2();
-    nz = f->fdata().dim1();
-    double *data=new double[nx*ny*nz*7];
-    double *p=&(data[0]);
-    for (int k=0; k<nz; k++)
-      for (int j=0; j<ny; j++)
-	for (int i=0; i<nx; i++) {
-	  *p++=1;  // should use mask if present
-	  *p++=f->fdata()(k,j,i).mat_[0][0];
-	  *p++=f->fdata()(k,j,i).mat_[0][1];
-	  *p++=f->fdata()(k,j,i).mat_[0][2];
-	  *p++=f->fdata()(k,j,i).mat_[1][1];
-	  *p++=f->fdata()(k,j,i).mat_[1][2];
-	  *p++=f->fdata()(k,j,i).mat_[2][2];
-	}
-    nrrdWrap(nout->nrrd, data, nrrdTypeDouble, 4, 7, nx, ny, nz);
-    if (f->data_at() == Field::NODE)
-      nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
-    else // if (f->data_at() == Field::CELL)
-      nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterCell, 
-		  nrrdCenterCell, nrrdCenterCell, nrrdCenterCell);
-  } else {
-    error("Unknown LatVolField data type '" + data + "'.");
-    free(nout);
-    return;
-  }
-
-  {
-    // Check for simple scale/translate matrix.
-    double td[16];
-    lvm->get_transform().get(td);
-    if ((td[1] + td[2] + td[4] + td[6] + td[8] + td[9]) > 1.0e-3)
-    {
-      warning("Input Field must contain a strictly scale/translate matrix.");
-    }
-  }
-
-  BBox bbox = lvm->get_bounding_box();
-  Point minP = bbox.min();
-  Point maxP = bbox.max();
-  Vector v(maxP-minP);
-  v.x(v.x()/(nx-1));
-  v.y(v.y()/(ny-1));
-  v.z(v.z()/(nz-1));
-  int offset=0;
-  if (data == "Vector" || data == "Tensor") offset=1;
-  nout->nrrd->axis[0+offset].min=minP.x();
-  nout->nrrd->axis[1+offset].min=minP.y();
-  nout->nrrd->axis[2+offset].min=minP.z();
-  nout->nrrd->axis[0+offset].max=maxP.x();
-  nout->nrrd->axis[1+offset].max=maxP.y();
-  nout->nrrd->axis[2+offset].max=maxP.z();
-  nout->nrrd->axis[0+offset].spacing=v.x();
-  nout->nrrd->axis[1+offset].spacing=v.y();
-  nout->nrrd->axis[2+offset].spacing=v.z();
-  nout->nrrd->axis[0+offset].label = strdup("x");
-  nout->nrrd->axis[1+offset].label = strdup("y");
-  nout->nrrd->axis[2+offset].label = strdup("z");
-  if (data == "Vector") {
-    nout->nrrd->axis[0].label = strdup("v");
-  } else if (data == "Tensor") {
-    nout->nrrd->axis[0].label = strdup("t");
-  }
-  NrrdDataHandle noutH(nout);
-  onrrd->send(noutH);
+  onrrd->send(onrrd_handle);
 }
 
