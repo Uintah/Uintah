@@ -125,6 +125,9 @@ DESCRIPTION
 
     static DataTransmitter* theDataTransmitter;
 
+    static int mpi_rank;
+    static int mpi_size;
+
     //////////
     // Private constructor to prevent creation of a PIDL
     PIDL();
