@@ -84,18 +84,18 @@ class Diagram {
 	$tb add button normal \
 	    -helpstr "Normal mode" \
 	    -image [image create photo \
-		-file "../src/pixmaps/pointer.ppm"] \
+		-file "../src/pixmaps/24x24-pointer.ppm"] \
 	    -command "$this set-mode normal"
 
 	$tb add button zoom-in \
 	    -helpstr "Zoom mode" \
 	    -image [image create photo \
-		-file "../src/pixmaps/viewmag.ppm"] \
+		-file "../src/pixmaps/24x24mag-glass.ppm"] \
 	    -command "$this set-mode zoom"
 	
-	$tb add button sub \
-	    -helpstr "SubWindow" \
-	    -command {puts "sub window"}
+#	$tb add button sub \
+\#	    -helpstr "SubWindow" \
+\#	    -command {puts "sub window"}
 
 
 	#
