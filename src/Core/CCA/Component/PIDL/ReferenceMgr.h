@@ -56,6 +56,9 @@ DESCRIPTION
    facilitate the creation of subsets.
 
 ****************************************/
+  class Object_proxy;
+  class TypeInfo;
+
   typedef std::vector<Reference> refList;
 
   typedef enum {
@@ -92,7 +95,7 @@ DESCRIPTION
     //////////
     // Retreives a pointer to the reference needed for  
     // independent (if parallel) or serial RMI 
-    Reference* getIndependentReference();
+    Reference* getIndependentReference() const;
 
     //////////
     // Retreives a pointer to the reference needed for  
@@ -113,13 +116,33 @@ DESCRIPTION
     // Returns the number of references in the list
     int getRemoteSize();
 
+    ///////////
+    // Returns the number of references in the list
+    int getSize();
+
+    ///////////
+    // Returns the number of references in the list
+    int getRank();
+
     //////////
     // Create a subset. Only affects getCollectiveReference() and
     // the localRank and localSize variables. Passing 0 or a negative
     // number resets the state of this object to no subsets. Passing a
     // number larger than the current parallel size has no effect.
     void createSubset(int ssize);
+
+    /////////
+    // An object used to facilitate intra-component communication
+    // (parallel component case)
+    IntraComm* intracomm;
     
+  protected:
+    ///////
+    // These class is involved in setting up ReferenceMgr
+    friend class Object_proxy;
+    friend class TypeInfo;
+
+  private:
     /////////
     // For parallel proxies, number of cohorts
     int localSize;
@@ -140,12 +163,6 @@ DESCRIPTION
     //////////
     // A vector of reference to the remote objects.
     refList d_ref;
-
-    /////////
-    // An object used to facilitate intra-component communication
-    // (parallel component case)
-    IntraComm* intracomm;
-
   };
 } // End namespace SCIRun
 
