@@ -256,6 +256,16 @@ SCIRUN_SERV_TMP_DIR = /tmp
 # SCIRUN_DRAWARRAYS_DISABLE = false
 
 
+### SCIRUN_DISABLE_PBUFFERS
+#   Turns off the use of pbuffers even if they are supported by the
+#   platform.  pbuffers are used to save images from the viewer and
+#   for some background tasks related to volume rendering.  However on
+#   Linux with ATI they seem to have OpenGL state issues in that
+#   transparency is disabled and volume rendering can lock up the
+#   screen.
+# SCIRUN_DISABLE_PBUFFERS = false
+
+
 ### SCIRUN_MPEG_LICENSE_ACCEPT
 #   License information describing the mpeg_encode software can be found
 #   in SCIRun's Thirdparty directory, in the mpeg_encode/README file:
