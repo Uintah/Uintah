@@ -10,7 +10,7 @@
 #include <Packages/rtrt/Core/CutPlane.h>
 #include <Packages/rtrt/Core/PlaneDpy.h>
 #include <Core/Thread/Thread.h>
-#include <nrrd.h>
+#include <teem/nrrd.h>
 #include <iostream>
 #include <fstream>
 #include <math.h>
@@ -41,7 +41,7 @@ VolumeVisBase *create_volume_from_nrrd(char *filename,
   // Do the nrrd stuff
   Nrrd *n = nrrdNew();
   // load the nrrd in
-  if (nrrdLoad(n,filename)) {
+  if (nrrdLoad(n,filename,NULL)) {
     char *err = biffGet(NRRD);
     cerr << "Error reading nrrd "<< filename <<": "<<err<<"\n";
     free(err);

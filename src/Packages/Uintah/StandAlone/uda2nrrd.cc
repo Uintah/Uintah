@@ -36,7 +36,7 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Persistent/Pstreams.h>
 
-#include <nrrd.h>
+#include <teem/nrrd.h>
 
 #include <iostream>
 #include <string>
