@@ -28,7 +28,7 @@ SRCS    := $(SRCDIR)/cca_sidl.cc \
 	$(SRCDIR)/SciServicesImpl.cc \
 	$(SRCDIR)/ConnectionServicesImpl.cc \
 	$(SRCDIR)/LocalFramework.cc \
-	$(SRCDIR)/BuilderImpl.cc \
+	$(SRCDIR)/BuilderImpl.cc 
 
 GENHDRS := $(SRCDIR)/cca_sidl.h
 

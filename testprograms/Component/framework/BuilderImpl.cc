@@ -2,12 +2,15 @@
 #include <testprograms/Component/framework/BuilderImpl.h>
 
 #include <sstream>
+#include <iostream>
 
 namespace sci_cca {
 
+using std::cerr;
+
 BuilderImpl::BuilderImpl()
 {
-  cerr << "Builder::" << endl; 
+  cerr << "Builder::\n";
 }
 
 BuilderImpl::~BuilderImpl()

@@ -1,10 +1,14 @@
 
-#include <testprograms/Component/framework/cca_sidl.h>
-#include <testprograms/Component/framework/PortImpl.h>
 #include <testprograms/Component/framework/LocalFramework.h>
 
+#include <testprograms/Component/framework/cca_sidl.h>
+#include <testprograms/Component/framework/PortImpl.h>
+
+#include <iostream>
 
 namespace sci_cca {
+
+using std::cerr; 
 
 LocalFramework::LocalFramework()
 {

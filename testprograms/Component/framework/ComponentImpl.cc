@@ -3,10 +3,11 @@
 #include <testprograms/Component/framework/ComponentImpl.h>
 
 #include <sstream>
-
-using std::cerr;
+#include <iostream>
 
 namespace sci_cca {
+
+using std::cerr;
 
 ComponentImpl::ComponentImpl()
 {

@@ -13,7 +13,7 @@ namespace sci_cca {
 using SCIRun::InternalError;
 using std::string;
 
-class ComponentImpl : public Component_interface {
+class ComponentImpl : virtual public Component_interface {
 protected:
   SciServices services_;
 

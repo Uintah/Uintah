@@ -35,8 +35,6 @@ ConnectionServicesImpl::connect( const ComponentID &uses,
 				 const ComponentID &provider, 
 				 const string &provide_port)
 {
-  
-
   // lock registry
   registry_->connections_.writeLock();
 
