@@ -37,19 +37,19 @@ if [ $yesno == "y" -o $yesno == "yes" ]; then
     echo "failed"
     exit 1
   fi
-  echo "cp $replacement_dir/$testname/restart/restart_malloc_stats $gold_standard_dir/const_test_nh/."
-  cp $replacement_dir/$testname/restart/restart_malloc_stats $gold_standard_dir/const_test_nh/.
+  echo "cp $replacement_dir/$testname/restart/restart_malloc_stats $gold_standard_dir/$testname/."
+  cp $replacement_dir/$testname/restart/restart_malloc_stats $gold_standard_dir/$testname/.
   if [ $? != "0" ]; then
     echo "No restart_malloc_stats -- ok"
   fi
   echo "/bin/chgrp -Rh csafe $replacement_dir/$testname"
-  /bin/chgrp -Rh csafe "$replacement_dir/$testname"
+  /bin/chgrp -Rh csafe "$gold_standard_dir/$testname"
   if [ $? != "0" ]; then
     echo "failed"
     exit 1
   fi
   echo "/bin/chmod -R g+ws $replacement_dir/$testname"
-  /bin/chmod -R g+ws "$replacement_dir/$testname"
+  /bin/chmod -R g+ws "$gold_standard_dir/$testname"
   if [ $? != "0" ]; then
     echo "failed"
     exit 1
