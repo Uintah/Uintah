@@ -349,7 +349,7 @@ void SteadyFlameletsTable::readMixingTable(std::string inputfile)
   cerr << "Preparing to read the inputfile:   " << inputfile << endl;
   	ifstream fd(inputfile.c_str());
   if(fd.fail()){
-	cout<<" Unable to open the given input file" <<endl;
+	cout<<" Unable to open the given input file "<< inputfile <<endl;
 	exit(1);
   }
   // Total number of variables in the table
