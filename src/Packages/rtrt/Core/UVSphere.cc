@@ -17,8 +17,9 @@ the change in mappying to a UVSphere map.
 using namespace rtrt;
 using namespace SCIRun;
 
-UVSphere::UVSphere(Material *matl, Point c, double r, const Vector& up) 
-    : Object(matl,this), radius(r), cen(c), up(up)
+UVSphere::UVSphere(Material *matl, Point c, double r, const Vector &up,
+                   const Vector &right) 
+  : Object(matl,this), radius(r), cen(c), up(up), right(right)
 {
 }
 
@@ -32,6 +33,7 @@ void UVSphere::preprocess(double, int&, int&)
     // Set up unit transformation
     xform.load_identity();
     xform.pre_translate(-cen.asVector());
+    xform.rotate(right, Vector(1,0,0));
     xform.rotate(up, Vector(0,0,1));
     xform.pre_scale(Vector(1./radius, 1./radius, 1./radius));
     print(cerr);
@@ -39,6 +41,7 @@ void UVSphere::preprocess(double, int&, int&)
     ixform.load_identity();
     ixform.pre_scale(Vector(radius, radius, radius));
     ixform.rotate(Vector(0,0,1), up);
+    ixform.rotate(Vector(1,0,0), right);
     ixform.pre_translate(cen.asVector());
     ixform.print();
 }
