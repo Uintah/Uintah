@@ -72,12 +72,17 @@ template <> const string find_type_name(vector<pair<LatVolMesh::face_index, doub
 template <> const string find_type_name(vector<pair<LatVolMesh::cell_index, double> > *)
 { return "vector<pair<LatVolMesh::cell_index"; }
 
-void Pio(Piostream &s, TetVolMesh::node_index i) { Pio(s, (unsigned int)i); }
-void Pio(Piostream &s, TetVolMesh::edge_index i) { Pio(s, (unsigned int)i); }
-void Pio(Piostream &s, TetVolMesh::face_index i) { Pio(s, (unsigned int)i); }
-void Pio(Piostream &s, TetVolMesh::cell_index i) { Pio(s, (unsigned int)i); }
+#if 0
+void Pio(Piostream &s, TetVolMesh::node_index &i)
+{ Pio(s, (unsigned int &)i); }
+void Pio(Piostream &s, TetVolMesh::edge_index &i)
+{ Pio(s, (unsigned int &)i); }
+void Pio(Piostream &s, TetVolMesh::face_index &i)
+{ Pio(s, (unsigned int &)i); }
+void Pio(Piostream &s, TetVolMesh::cell_index &i)
+{ Pio(s, (unsigned int &)i); }
 
-void Pio(Piostream &s, LatVolMesh::node_index i)
+void Pio(Piostream &s, LatVolMesh::node_index &i)
 {
   s.begin_cheap_delim();
   Pio(s, i.i_);
@@ -85,19 +90,19 @@ void Pio(Piostream &s, LatVolMesh::node_index i)
   Pio(s, i.k_);
   s.end_cheap_delim();
 }
-void Pio(Piostream &s, LatVolMesh::edge_index i)
+void Pio(Piostream &s, LatVolMesh::edge_index &i)
 {
   s.begin_cheap_delim();
   Pio(s, i.i_);
   s.end_cheap_delim();
 }
-void Pio(Piostream &s, LatVolMesh::face_index i)
+void Pio(Piostream &s, LatVolMesh::face_index &i)
 {
   s.begin_cheap_delim();
   Pio(s, i.i_);
   s.end_cheap_delim();
 }
-void Pio(Piostream &s, LatVolMesh::cell_index i)
+void Pio(Piostream &s, LatVolMesh::cell_index &i)
 {
   s.begin_cheap_delim();
   Pio(s, i.i_);
@@ -105,7 +110,16 @@ void Pio(Piostream &s, LatVolMesh::cell_index i)
   Pio(s, i.k_);
   s.end_cheap_delim();
 }
-
+#else
+void Pio(Piostream &s, TetVolMesh::node_index &i) {}
+void Pio(Piostream &s, TetVolMesh::edge_index &i) {}
+void Pio(Piostream &s, TetVolMesh::face_index &i) {}
+void Pio(Piostream &s, TetVolMesh::cell_index &i) {}
+void Pio(Piostream &s, LatVolMesh::node_index &i) {}
+void Pio(Piostream &s, LatVolMesh::edge_index &i) {}
+void Pio(Piostream &s, LatVolMesh::face_index &i) {}
+void Pio(Piostream &s, LatVolMesh::cell_index &i) {}
+#endif
 
 // TetVol
 

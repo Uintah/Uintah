@@ -56,15 +56,15 @@ template <> const string find_type_name(vector<pair<LatVolMesh::edge_index, doub
 template <> const string find_type_name(vector<pair<LatVolMesh::face_index, double> > *);
 template <> const string find_type_name(vector<pair<LatVolMesh::cell_index, double> > *);
 
-void Pio(Piostream &, TetVolMesh::node_index);
-void Pio(Piostream &, TetVolMesh::edge_index);
-void Pio(Piostream &, TetVolMesh::face_index);
-void Pio(Piostream &, TetVolMesh::cell_index);
+void Pio(Piostream &, TetVolMesh::node_index &);
+void Pio(Piostream &, TetVolMesh::edge_index &);
+void Pio(Piostream &, TetVolMesh::face_index &);
+void Pio(Piostream &, TetVolMesh::cell_index &);
 
-void Pio(Piostream &, LatVolMesh::node_index);
-void Pio(Piostream &, LatVolMesh::edge_index);
-void Pio(Piostream &, LatVolMesh::face_index);
-void Pio(Piostream &, LatVolMesh::cell_index);
+void Pio(Piostream &, LatVolMesh::node_index &);
+void Pio(Piostream &, LatVolMesh::edge_index &);
+void Pio(Piostream &, LatVolMesh::face_index &);
+void Pio(Piostream &, LatVolMesh::cell_index &);
 
 // TetVol
 // TetVol
@@ -528,6 +528,7 @@ ApplyInterpolant::execute()
 	cout << "Non-interpable source field type\n";
       }
     }
+#if 0
     else if (itp_geom_name == "TriSurf")
     {
       if (src_data_name == "Vector")
@@ -571,6 +572,7 @@ ApplyInterpolant::execute()
 	cout << "Non-interpable source field type\n";
       }
     }
+#endif
     else
     {
       cout << "bad interp field type";
@@ -664,6 +666,7 @@ ApplyInterpolant::execute()
 	cout << "Non-interpable source field type\n";
       }
     }
+#if 0
     else if (itp_geom_name == "TriSurf")
     {
       if (src_data_name == "Vector")
@@ -707,6 +710,7 @@ ApplyInterpolant::execute()
 	cout << "Non-interpable source field type\n";
       }
     }
+#endif
     else
     {
       cout << "bad interp field type";
