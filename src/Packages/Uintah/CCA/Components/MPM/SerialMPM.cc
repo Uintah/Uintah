@@ -1073,7 +1073,8 @@ void SerialMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
   }
   else {
     task->requires(Task::NewDW, d_sharedState->get_refineFlag_label(),
-                   0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+                   0, Task::FineLevel, d_sharedState->refineFlagMaterials(), 
+                   Task::NormalDomain, Ghost::None, 0);
   }
   task->modifies(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
   task->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
