@@ -705,7 +705,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       new_dw->getModifiable(dispNew, lb->dispNewLabel,      matl,patch);
 
       delt_vartype dt;
-      old_dw->get(dt,d_sharedState->get_delt_label());
+      old_dw->get(dt,d_sharedState->get_delt_label(), patch->getLevel());
       subsched->get_dw(3)->put(sum_vartype(0.0),lb->dispIncQNorm0);
       subsched->get_dw(3)->put(sum_vartype(0.0),lb->dispIncNormMax);
 
@@ -1299,7 +1299,7 @@ void ImpMPM::computeContact(const ProcessorGroup*,
         new_dw->getModifiable(dispNew,lb->dispNewLabel,matl, patch);
 
         delt_vartype dt;
-        old_dw->get(dt, d_sharedState->get_delt_label() );
+        old_dw->get(dt, d_sharedState->get_delt_label(), patch->getLevel() );
 
         for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
           IntVector c = *iter;
@@ -1423,7 +1423,7 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
       parent_new_dw->get(gmass, lb->gMassLabel,matlindex,patch,Ghost::None,0);
       DataWarehouse* parent_old_dw =
         new_dw->getOtherDataWarehouse(Task::ParentOldDW);
-      parent_old_dw->get(dt,d_sharedState->get_delt_label());
+      parent_old_dw->get(dt,d_sharedState->get_delt_label(), patch->getLevel());
 
 #ifdef HAVE_PETSC
       PetscScalar v[1];
@@ -1562,7 +1562,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
       DataWarehouse* parent_old_dw = 
         new_dw->getOtherDataWarehouse(Task::ParentOldDW);
 
-      parent_old_dw->get(dt,d_sharedState->get_delt_label());
+      parent_old_dw->get(dt,d_sharedState->get_delt_label(), patch->getLevel());
       new_dw->get(       intForce, lb->gInternalForceLabel,dwi,patch,gnone,0);
       old_dw->get(       dispNew,  lb->dispNewLabel,       dwi,patch,gnone,0);
       parent_new_dw->get(extForce, lb->gExternalForceLabel,dwi,patch,gnone,0);
@@ -1714,7 +1714,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
         new_dw->getOtherDataWarehouse(Task::ParentNewDW);
       DataWarehouse* parent_old_dw = 
         new_dw->getOtherDataWarehouse(Task::ParentOldDW);
-      parent_old_dw->get(dt, d_sharedState->get_delt_label());
+      parent_old_dw->get(dt, d_sharedState->get_delt_label(), patch->getLevel());
       old_dw->get(dispNew_old,         lb->dispNewLabel,   dwi,patch,gnone,0);
       new_dw->get(dispInc,             lb->dispIncLabel,   dwi,patch,gnone,0);
       new_dw->allocateAndPut(dispNew,  lb->dispNewLabel,   dwi,patch);
@@ -1876,7 +1876,7 @@ void ImpMPM::computeAcceleration(const ProcessorGroup*,
       new_dw->get(velocity,lb->gVelocityOldLabel,dwindex, patch, gnone, 0);
       new_dw->get(dispNew, lb->dispNewLabel,     dwindex, patch, gnone, 0);
 
-      old_dw->get(delT, d_sharedState->get_delt_label() );
+      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
       double fodts = 4./(delT*delT);
       double fodt = 4./(delT);
@@ -1974,7 +1974,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       dTdt = dTdt_create; // reference created data
             
 
-      old_dw->get(delT, d_sharedState->get_delt_label() );
+      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
       IntVector ni[8];
 
@@ -2182,12 +2182,12 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
               << patch->getID() <<"\t IMPM"<< "\n" << "\n";
 
    if(d_numIterations==0){
-    new_dw->put(delt_vartype(d_initialDt), lb->delTLabel);
+    new_dw->setDelT(d_initialDt, lb->delTLabel, patch->getLevel());
    }
    else{
     Vector dx = patch->dCell();
     delt_vartype old_delT;
-    old_dw->get(old_delT, d_sharedState->get_delt_label());
+    old_dw->get(old_delT, d_sharedState->get_delt_label(), patch->getLevel());
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
@@ -2217,7 +2217,7 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
         old_dt = d_delT_decrease_factor*old_delT;
       }
       delT_new = min(delT_new, old_dt);
-      new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+      new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
     }
    }
   }

@@ -1694,7 +1694,7 @@ void FractureMPM::solveEquationsMotion(const ProcessorGroup*,
 
     Vector gravity = d_sharedState->getGravity();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label() );
+    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
     Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
@@ -1892,7 +1892,7 @@ void FractureMPM::integrateAcceleration(const ProcessorGroup*,
       new_dw->get(acceleration,lb->gAccelerationLabel,dwi, patch,Ghost::None,0);
       new_dw->get(velocity,    lb->gVelocityLabel,    dwi, patch,Ghost::None,0);
 
-      old_dw->get(delT, d_sharedState->get_delt_label() );
+      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches));
 
       // Create variables for the results
       NCVariable<Vector> velocity_star;
@@ -1944,7 +1944,7 @@ void FractureMPM::integrateTemperatureRate(const ProcessorGroup*,
       new_dw->get(temp_oldNoBC,lb->gTemperatureNoBCLabel, dwi,patch,gnone,0);
       new_dw->getModifiable(temp_rate, lb->gTemperatureRateLabel,dwi,patch);
 
-      old_dw->get(delT, d_sharedState->get_delt_label() );
+      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
       new_dw->allocateAndPut(tempStar, lb->gTemperatureStarLabel, dwi,patch);
       tempStar.initialize(0.0);
@@ -2002,7 +2002,7 @@ void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     
     delt_vartype delT;            
-    old_dw->get(delT, d_sharedState->get_delt_label() );
+    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
                       
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -2221,7 +2221,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double ke=0;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label() );
+    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
     // Artificial Damping 
     double alphaDot = 0.0;

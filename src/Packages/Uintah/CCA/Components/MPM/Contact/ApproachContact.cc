@@ -83,7 +83,7 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
     StaticArray<NCVariable<Matrix3> >      gstress(numMatls);
     StaticArray<NCVariable<double> >       gnormtraction(numMatls);
     delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel);
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
   
     Vector surnor;
 
@@ -458,7 +458,7 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
     }
 
     delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel);
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
     double epsilon_max_max=0.0;
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){

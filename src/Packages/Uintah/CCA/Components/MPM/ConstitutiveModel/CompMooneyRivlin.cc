@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
@@ -207,8 +208,11 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    if(delT_new < 1.e-12) delT_new = MAXDOUBLE;
-    new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+    if(delT_new < 1.e-12)
+      // don't use setDelT here because of MAXDOUBLE
+      new_dw->put(delt_vartype(MAXDOUBLE), lb->delTLabel);
+    else
+      new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
 }
 
 void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
@@ -277,7 +281,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     }
 
     new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch, gac, NGN);
-    old_dw->get(delT, lb->delTLabel);
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     double C1 = d_initialData.C1;
     double C2 = d_initialData.C2;
@@ -391,8 +395,10 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     
-    if(delT_new < 1.e-12) delT_new = MAXDOUBLE;
-    new_dw->put(delt_vartype(delT_new), lb->delTLabel);    
+    if(delT_new < 1.e-12)
+      new_dw->put(delt_vartype(MAXDOUBLE), lb->delTLabel);
+    else
+      new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
   }
 }
@@ -426,7 +432,7 @@ void CompMooneyRivlin::carryForward(const PatchSubset* patches,
       pstress_new[idx] = Matrix3(0.0);
       pvolume_deformed[idx]=(pmass[idx]/rho_orig);
     }
-    new_dw->put(delt_vartype(1.e10), lb->delTLabel);
+    new_dw->setDelT(1.e10, lb->delTLabel, patch->getLevel());
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }
 }

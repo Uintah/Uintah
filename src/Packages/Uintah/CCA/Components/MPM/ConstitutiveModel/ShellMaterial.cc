@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
@@ -418,7 +419,7 @@ ShellMaterial::computeStableTimestep(const Patch* patch,
   Vector dx = patch->dCell();
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+  new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -624,7 +625,7 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pStressBot,  pStressBotLabel,              pset);
     old_dw->get(pStress,     lb->pStressLabel,             pset);
     old_dw->get(pDefGrad,    lb->pDeformationMeasureLabel, pset);
-    old_dw->get(delT,        lb->delTLabel);
+    old_dw->get(delT,        lb->delTLabel, getLevel(patches));
     new_dw->get(gVelocity,   lb->gVelocityLabel,      dwi, patch, gac, NGN);
     new_dw->get(gRotRate,    lb->gNormalRotRateLabel, dwi, patch, gac, NGN);
 
@@ -851,7 +852,7 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+    new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
     new_dw->put(sum_vartype(strainEnergy), lb->StrainEnergyLabel);
   }
 }
@@ -1076,7 +1077,7 @@ ShellMaterial::particleNormalRotRateUpdate(const PatchSubset* patches,
   double E   = 9.0*K*mu/(3.0*K+mu);
   int    dwi = matl->getDWIndex();
   delt_vartype delT;
-  old_dw->get(delT, lb->delTLabel);
+  old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
   // Local storage
   constParticleVariable<double>  pMass, pVol, pThickTop, pThickBot;
