@@ -312,6 +312,7 @@ DiscreteAttrib<T>::get_info()
   retval <<
     "Name = " << name << '\n' <<
     "Type = DiscreteAttrib" << '\n' <<
+    "Dim = " << dim << ": " << nx << ' ' << ny << ' ' << nz << '\n' <<
     "Size = " << size() << '\n';
   return retval.str();
 }
