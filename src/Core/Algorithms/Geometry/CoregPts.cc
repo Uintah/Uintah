@@ -453,7 +453,8 @@ int CoregPtsSimplexSearch::computeTrans() {
     for (j=0; j<NDIM_; j++)
       sum[j]+=params_(i,j);
 
-  double relative_tolerance;
+  double relative_tolerance = 99.9; // Give default value to remove
+				    // compiler warning.
   int num_evals = 0;
 
   for(;;) {
@@ -472,9 +473,10 @@ int CoregPtsSimplexSearch::computeTrans() {
       if (misfit_[i] > misfit_[worst]) {
 	next_worst = worst;
 	worst = i;
-      } else 
-	if (misfit_[i] > misfit_[next_worst] && (i != worst)) 
-	  next_worst=i;
+      }
+      else if (misfit_[i] > misfit_[next_worst] && (i != worst)) {
+	next_worst=i;
+      }
       relative_tolerance = 2*(misfit_[worst]-misfit_[best])/
 	(misfit_[worst]+misfit_[best]);
     }
