@@ -41,6 +41,9 @@
         <BCType id = "0"   label = "scalar-f"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
+        <BCType id = "0"   label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -56,6 +59,9 @@
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "scalar-f"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "cumulativeEnergyReleased" var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
       </Face>
@@ -76,6 +82,9 @@
         <BCType id = "0"   label = "scalar-f"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
+        <BCType id = "0"   label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
       </Face>
       <Face side = "y+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -91,6 +100,9 @@
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "scalar-f"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "cumulativeEnergyReleased" var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
       </Face>
