@@ -19,6 +19,7 @@
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/PointCloud.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/ScaledBoxWidget.h>
@@ -59,15 +60,14 @@ public:
 
   bool firsttime_;
   int widgetid_;
-  int num_nodes_;
   pair<double,double> minmax_;
 
   EditField(const string& id);
 
   virtual ~EditField();
 
-  template <class FieldType>
-  void set_nums(FieldType *);
+  template <class MeshType>
+  void compute_nums(MeshType *, int &nodes, int &elems);
   template <class field_type_in, class field_type_out>
   field_type_out *create_edited_field(field_type_in *, field_type_out *);
   void clear_vals();
@@ -119,33 +119,35 @@ EditField::~EditField(){
 double mag_val(double v) { return v; }
 double mag_val(Vector v) { return v.length(); }
 
-template <class FieldType>
+
+template <class MeshType>
 void 
-EditField::set_nums(FieldType *f) {
-  typedef typename FieldType::mesh_type      mesh_type;
-  typedef typename mesh_type::Node::iterator node_iter;
-  typedef typename mesh_type::Elem::iterator elem_iter;
+EditField::compute_nums(MeshType *mesh, int &num_nodes, int &num_elems)
+{
+  typedef typename MeshType::Node::iterator node_iter_type;
+  typedef typename MeshType::Elem::iterator elem_iter_type;
 
   int count = 0;
-  mesh_type *mesh = f->get_typed_mesh().get_rep();
-
-  node_iter ni = mesh->tbegin((node_iter*)0);
-  while (ni != mesh->tend((node_iter*)0)) {
-    count++;++ni;
+  node_iter_type ni = mesh->tbegin((node_iter_type *)0);
+  node_iter_type nie = mesh->tend((node_iter_type *)0);
+  while (ni != nie)
+  {
+    count++;
+    ++ni;
   }
+  num_nodes = count;
 
-  num_nodes_ = count;
-
-  TCL::execute(string("set ")+id+"-numnodes "+to_string(count));
   count = 0;
-
-  elem_iter ei = mesh->tbegin((elem_iter*)0);
-  while (ei != mesh->tend((elem_iter*)0)) {
-    count++;++ei;
+  elem_iter_type ei = mesh->tbegin((elem_iter_type *)0);
+  elem_iter_type eie = mesh->tend((elem_iter_type *)0);
+  while (ei != eie)
+  {
+    count++;
+    ++ei;
   }
-
-  TCL::execute(string("set ")+id+"-numelems "+to_string(count));
+  num_elems = count;
 }
+
 
 void EditField::clear_vals() 
 {
@@ -181,51 +183,23 @@ void EditField::update_input_attributes(Field *f)
   default: ;
   }
 
-  if (tname=="TetVol<double>") {
-    set_nums((TetVol<double>*)f);
-  } else if (tname == "TetVol<float>") {
-    set_nums((TetVol<float>*)f);
-  } else if (tname == "TetVol<int>") {
-    set_nums((TetVol<int>*)f);
-  } else if (tname == "TetVol<short>") {
-    set_nums((TetVol<short>*)f);
-  } else if (tname == "TetVol<unsigned char>") {
-    set_nums((TetVol<unsigned char>*)f);
-  } else if (tname == "TetVol<Vector>") {
-    set_nums((TetVol<Vector>*)f);
-  } else if (tname == "TetVol<Tensor>") {
-    set_nums((TetVol<Tensor>*)f);
-
-  } else if (tname=="TriSurf<double>") {
-    set_nums((TriSurf<double>*)f);
-  } else if (tname == "TriSurf<float>") {
-    set_nums((TriSurf<float>*)f);
-  } else if (tname == "TriSurf<int>") {
-    set_nums((TriSurf<int>*)f);
-  } else if (tname == "TriSurf<short>") {
-    set_nums((TriSurf<short>*)f);
-  } else if (tname == "TriSurf<unsigned char>") {
-    set_nums((TriSurf<unsigned char>*)f);
-  } else if (tname == "TriSurf<Vector>") {
-    set_nums((TriSurf<Vector>*)f);
-  } else if (tname == "TriSurf<Tensor>") {
-    set_nums((TriSurf<Tensor>*)f);
-
-  } else if (tname=="LatticeVol<double>") {
-    set_nums((LatticeVol<double>*)f);
-  } else if (tname == "LatticeVol<float>") {
-    set_nums((LatticeVol<float>*)f);
-  } else if (tname == "LatticeVol<int>") {
-    set_nums((LatticeVol<int>*)f);
-  } else if (tname == "LatticeVol<short>") {
-    set_nums((LatticeVol<short>*)f);
-  } else if (tname == "LatticeVol<unsigned char>") {
-    set_nums((LatticeVol<unsigned char>*)f);
-  } else if (tname == "LatticeVol<Vector>") {
-    set_nums((LatticeVol<Vector>*)f);
-  } else if (tname == "LatticeVol<Tensor>") {
-    set_nums((LatticeVol<Tensor>*)f);
+  const TypeDescription *meshtd = f->mesh()->get_type_description();
+  const string &mname = meshtd->get_name();
+  int num_nodes;
+  int num_elems;
+  if (mname == get_type_description((TetVolMesh *)0)->get_name()) {
+    compute_nums((TetVolMesh *)(f->mesh().get_rep()), num_nodes, num_elems);
+  } else if (mname == get_type_description((LatVolMesh *)0)->get_name()) {
+    compute_nums((LatVolMesh *)(f->mesh().get_rep()), num_nodes, num_elems);
+  } else if (mname == get_type_description((TriSurfMesh *)0)->get_name()) {
+    compute_nums((TriSurfMesh *)(f->mesh().get_rep()), num_nodes, num_elems);
+  } else if (mname == get_type_description((PointCloudMesh *)0)->get_name()) {
+    compute_nums((PointCloudMesh *)(f->mesh().get_rep()), num_nodes, num_elems);
   }
+
+  TCL::execute(string("set ")+id+"-numnodes "+to_string(num_nodes));
+  TCL::execute(string("set ")+id+"-numelems "+to_string(num_elems));
+
 
   const BBox bbox = f->mesh()->get_bounding_box();
   Point min = bbox.min();
