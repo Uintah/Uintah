@@ -220,8 +220,5 @@ main(int argc, char *argv[] )
   wait.down();
 #endif
 	
-  cerr << "Main done...?\n";
-  // Never reached
   return 0;
-
 }

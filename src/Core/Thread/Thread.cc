@@ -37,7 +37,6 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <iostream>
 
 #if defined(_AIX)
 // Needed for strcasecmp on aix 4.3 (on 5.1 we don't need this.)
@@ -105,7 +104,6 @@ Thread::Thread(ThreadGroup* g, const char* name)
     runner_=0;
     cpu_=-1;
     stacksize_=THREAD_DEFAULT_STACKSIZE;
-    std::cerr << "New Thread " << self() << " (" << name << ")\n";
 }
 
 void
