@@ -30,6 +30,7 @@
 #include <vector>
 #include <sstream>
 #include <iomanip>
+#include <stdio.h>
 
 
 using namespace SCIRun;
