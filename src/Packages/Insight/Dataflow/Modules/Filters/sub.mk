@@ -39,7 +39,11 @@ SRCDIR   := Packages/Insight/Dataflow/Modules/Filters
 #XMLS :=  $(shell ls $(PATH_TO_SCIRUN)/$(SRCDIR)/XML/sci_*.xml)
 XMLS :=  \
 	sci_DiscreteGaussianImageFilter.xml \
+	sci_GradientRecursiveGaussianImageFilter.xml \
         sci_GradientAnisotropicDiffusionImageFilter.xml \
+        sci_VectorGradientAnisotropicDiffusionImageFilter.xml \
+        sci_CurvatureAnisotropicDiffusionImageFilter.xml \
+        sci_VectorCurvatureAnisotropicDiffusionImageFilter.xml \
         sci_GradientMagnitudeImageFilter.xml \
 	sci_WatershedRelabeler.xml \
 	sci_WatershedSegmentTreeGenerator.xml \
@@ -50,6 +54,9 @@ XMLS :=  \
 	sci_BinaryThresholdImageFilter.xml \
 	sci_WatershedImageFilter.xml \
 	sci_MeanImageFilter.xml \
+	sci_UnaryFunctorImageFilter.xml \
+	sci_VectorIndexSelectionCastImageFilter.xml \
+	sci_RescaleIntensityImageFilter.xml \
 #[INSERT NEW CODE FILE HERE]
 
 
