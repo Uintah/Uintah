@@ -22,6 +22,16 @@ extern "C" {
 	      const int& lda, double eigen_val[],
 	      double dwork[], const int& ldwork,
 	      int& info);
+
+  void dsyevx_(const char& jobz, const char& range, const char& uplo,
+	       const int& n, double data_array[], const int& lda,
+	       const double& vl, const double& vu,
+	       const int& il, const int& iu,
+	       const double& tolerance,
+	       int& eval_cnt, double eigen_val[],
+	       double eigen_vec[], const int& ldz,
+	       double work[], const int& lwork, int iwork[],
+	       int ifail[], int& info);
 }
 
 using namespace std;
@@ -30,14 +40,15 @@ void usage(char *me, const char *unknown = 0) {
   if (unknown) {
     fprintf(stderr, "%s: unknown argument %s\n", me, unknown);
   }
+  
   // Print out the usage
-  printf("-input  <filename>\n");
-  printf("-output <filename>\n");
-  printf("-numbases <int>\n");
-  printf("-usegk\n");
-  printf("-v - verbose\n");
-  printf("-vv [int] - verbose level\n");
-	 
+  printf("-input  <filename>   input nrrd, channels as fastest axis (null)\n");
+  printf("-output <filename>   basename of output nrrds (\"pca\")\n");
+  printf("-numbases <int>      number of basis textures to use (0)");
+  printf("-usegk               use teem's ell library to do 3x3 eigensolves (false)\n");
+  printf("-simple              use the LAPACK simple driver (false)\n");
+  printf("-v                   print verbose status messages (false)\n");
+  printf("-vv <int>            verbosity level (0)\n");
 
   if (unknown)
     exit(1);
@@ -47,11 +58,12 @@ int main(int argc, char *argv[]) {
   char *me = argv[0];
   char *err;
   char *infilename = 0;
-  char *outfilename_base = "trasimage";
+  char *outfilename_base = "pca";
   // -1 defaults to all
   int num_bases = 0;
   int num_channels;
   bool usegk = false;
+  bool use_simple = false;
   int verbose = 0;
 
   if (argc < 2) {
@@ -69,6 +81,8 @@ int main(int argc, char *argv[]) {
       num_bases = atoi(argv[++i]);
     } else if (arg == "-usegk" ) {
       usegk = true;
+    } else if (arg == "-simple") {
+      use_simple = true;
     } else if (arg == "-v" ) {
       verbose++;
     } else if (arg == "-vv" ) {
@@ -195,7 +209,8 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if (verbose) cout << "Done computing first part of covariance matrix.\n";
+  if (verbose)
+    cout << "Done computing first part of covariance matrix.\n";
   
   if (verbose > 10) {
     double *cov_data = (double*)(cov->data);
@@ -235,121 +250,208 @@ int main(int argc, char *argv[]) {
 	cout << "]\n";
       }
   }
-  
-  // Covariance matrix computed
 
   // Compute eigen values/vectors
   double *eval = new double[num_channels];
   double *cov_data = (double*)(cov->data);
   double *evec_data = 0;
 
-  if (verbose) cout << "Computing eigen stuffs\n";
+  if (verbose)
+    cout<<"Beginning eigensolve"<<endl;
   
   if (usegk) {
+    if (verbose)
+      cout<<"Using teem 3x3 eigensolver"<<endl;
     // Here's where the general solution diverges to the RGB case.
     evec_data = new double[9];
     int roots = ell_3m_eigensolve_d(eval, evec_data, (double*)(cov->data), 1);
     if (roots != ell_cubic_root_three) {
-      cerr << me << "Something with the eighen solve went haywire.  Did not get three roots but "<<roots<<" roots.\n";
+      cerr << me << "Something with the eighen solve went haywire.  "
+	   <<"Did not get three roots but "<<roots<<" roots.\n";
       exit(2);
     }
   } else {
+    // Variables common to both LAPACK drivers
     const char jobz = 'V';
     const char uplo = 'L';
     const int N = num_channels;
     const int lda = N;
     int info;
-    const int lwork = (3*N-1)*2;
-    cout << "Wanting to allocate "<<lwork<<" doubles.\n";
-    double *work = new double[lwork];
-    if (!work) {
-      cerr << "Could not allocate the memory for work\n";
-      exit(2);
+    
+    if (use_simple) {
+      // Use LAPACK's simple driver
+      if (verbose)
+	cout<<"Using LAPACK's simple driver (dsyev)"<<endl;
+      
+      const int lwork = (3*N-1)*2;
+      cout << "Wanting to allocate "<<lwork<<" doubles.\n";
+      double *work = new double[lwork];
+      if (!work) {
+	cerr << "Could not allocate the memory for work\n";
+	exit(2);
+      }
+      
+      dsyev_(jobz, uplo, N, cov_data, lda, eval, work, lwork, info);
+      
+      delete[] work;
+      
+      if (info != 0) {
+	cout << "Eigensolver did not converge.\n";
+	cout << "info  = "<<info<<"\n";
+	exit(2);
+      }
+      
+      evec_data = cov_data;
+    } else {
+      // Use LAPACK's expert driver
+      if (verbose)
+	cout<<"Using LAPACK's expert driver (dsyevx)"<<endl;
+      
+      const char range = 'I';
+      const double vl = 0;
+      const double vu = 0;
+      const int il = N - num_bases + 1;
+      const int iu = N;
+      if (verbose > 10)
+	cout<<"Solving for eigenvalues/vectors in the range = ["
+	    <<il<<", "<<iu<<"]"<<endl;
+      const double tolerance = 0;
+      int eval_cnt;
+      const int ldz = N;
+      evec_data=new double[ldz*N];
+      if (!evec_data) {
+	cerr<<"Couldn't allocate the memory for evec_data"<<endl;
+	exit(2);
+      }
+      const int lwork = 8*N;
+      double *work = new double[lwork];
+      if (!work) {
+	cerr<<"Couldn't allocate the memory for work"<<endl;
+	exit(2);
+      }
+      int *iwork=new int[5*N];
+      if (!iwork) {
+	cerr<<"Couldn't allocate the memory for iwork"<<endl;
+	exit(2);
+      }
+      int *ifail=new int[N];;
+      
+      dsyevx_(jobz, range, uplo, N, cov_data, lda, vl, vu, il, iu,
+	      tolerance, eval_cnt, eval, evec_data, ldz, work, lwork,
+	      iwork, ifail, info);
+
+      delete [] work;
+      delete [] iwork;
+      delete [] ifail;
+      
+      if (info != 0) {
+	if (info < 0) {
+	  cerr<<"dsyevx_ error:  "<<(-info)
+	      <<"th argument has an illegal value"<<endl;
+	  exit(2);
+	} else if (info > 0) {
+	  cerr<<"dsyevx_ error:  "<<info
+	      <<" eigenvalues failed to converge"<<endl;
+	  exit(2);
+	}
+      }
     }
-    dsyev_(jobz, uplo, N, cov_data, lda, eval, work, lwork, info);
-    delete[] work;
-    if (info != 0) {
-      cout << "Eigen solver did not converge.\n";
-      cout << "info  = "<<info<<"\n";
-      exit(2);
-    }
-    evec_data = cov_data;
   }
 
-  if (verbose) cout << "Done computing eigen vectors and values.\n";
+  if (verbose)
+    cout<<"Eigensolve complete"<<endl;
   
   if (verbose > 10) {
-    cout << "Eigen values are [";
+    cout << "Eigenvalues are [";
     for (int i = 0; i < num_channels; i++)
       cout << eval[i]<<", ";
     cout << "]\n";
   }
 
-  double total_var = 0;
   double recovered_var = 0;
-  for (int i=0; i<num_channels; i++) {
-    total_var += eval[i];
-    if(i>=(num_channels-num_bases))
+  if (use_simple) {
+    double total_var = 0;
+    for (int i=0; i<num_channels; i++) {
+      total_var += eval[i];
+      if(i>=(num_channels-num_bases))
+	recovered_var+=eval[i];
+    }
+    
+    cout <<"Recovered "<<(recovered_var/total_var)*100.0<<"% of the "
+	 <<"variance with "<<num_bases<<" basis textures"<<endl;
+  } else {
+    // XXX - how to account for the total, now that we only solve
+    //       for num_bases eigenvalues/vectors?
+    for (int i=0; i<num_bases; i++) {
       recovered_var+=eval[i];
+    }
+    
+    cout <<"Recovered "<<recovered_var<<" of the total "
+	 <<"variance with "<<num_bases<<" basis textures"<<endl;
   }
   
-  cout << "Variance recovered by "<<num_bases<<" is "
-       <<(recovered_var/total_var)*100.0<<"%"<<endl;
-  
   delete[] eval;
-  
-  // Cull our eigen vectors
+
   Nrrd *transform = nrrdNew();
   if (nrrdAlloc(transform, nrrdTypeFloat, 2, num_channels, num_bases)) {
     err = biffGet(NRRD);
     fprintf(stderr, "%s: error allocating transform matrix :\n%s", me, err);
     exit(0);
   }
-
+  
   nrrdAxisInfoSet(transform, nrrdAxisInfoLabel, "channels", "bases");
   
-  {
-    float *tdata = (float*)(transform->data);
-    double *edata = evec_data;
-    if (usegk) {
-      for (int basis = 0; basis < num_bases; basis++) {
-	for(int channel = 0; channel < num_channels; channel++) {
-	  *tdata = edata[basis * num_channels + channel];
-	  tdata++;
-	}
-      }
-    } else {
-      int basis_start = num_channels - 1;
-      int basis_end = basis_start - num_bases;
-      for (int basis = basis_start; basis > basis_end; basis--) {
-	for(int channel = 0; channel < num_channels; channel++) {
-	  *tdata = edata[basis * num_channels + channel];
-	  tdata++;
-	}
+  float *tdata = (float*)(transform->data);
+  double *edata = evec_data;
+  if (usegk) {
+    // Cull the eigenvectors
+    for (int basis = 0; basis < num_bases; basis++) {
+      for(int channel = 0; channel < num_channels; channel++) {
+	*tdata = edata[basis * num_channels + channel];
+	tdata++;
       }
     }
-
-    // Free covariance matrix, eigenvectors
-    cov = nrrdNuke(cov);
-    cov_data = evec_data = 0;
-    
-    if (verbose > 10) {
-      cout << "\ntransform matrix\n";
-      tdata = (float*)(transform->data);
-      for(int c = 0; c < num_bases; c++)
-	{
-	  cout << "[";
-	  for(int r = 0; r < num_channels; r++)
-	    {
-	      cout << tdata[c*num_channels + r] << ", ";
-	    }
-	  cout << "]\n";
-	}
-      cout << "\n\n";
+  } else if (use_simple) {
+    // Cull the eigenvectors
+    int basis_start = num_channels - 1;
+    int basis_end = basis_start - num_bases;
+    for (int basis = basis_start; basis > basis_end; basis--) {
+      for(int channel = 0; channel < num_channels; channel++) {
+	*tdata = edata[basis * num_channels + channel];
+	tdata++;
+      }
+    }
+  } else {
+    // Copy the eigenvectors
+    for (int basis=0;basis<num_bases;basis++) {
+      for(int channel=0;channel<num_channels;channel++) {
+	*tdata = edata[basis*num_channels+channel];
+	tdata++;
+      }
     }
   }
 
-  if (verbose) cout << "Done filling transfer matrix.\n";
+  // Free covariance matrix, eigenvectors
+  cov = nrrdNuke(cov);
+  cov_data = evec_data = 0;
+  
+  if (verbose > 10) {
+    cout << "\ntransform matrix\n";
+    float* tdata = (float*)(transform->data);
+    for(int c = 0; c < num_bases; c++)
+      {
+	cout << "[";
+	for(int r = 0; r < num_channels; r++)
+	  {
+	    cout << tdata[c*num_channels + r] << ", ";
+	  }
+	cout << "]\n";
+      }
+    cout << "\n\n";
+  }
+  
+  if (verbose)
+    cout << "Done filling transfer matrix.\n";
   
   // Compute our basis textures
   Nrrd *basesTextures = nrrdNew();
@@ -358,7 +460,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "%s: error allocating bases textures :\n%s", me, err);
     exit(0);
   }
-
+  
   nrrdAxisInfoSet(basesTextures, nrrdAxisInfoLabel, "bases", "width", "height");
   
   {
@@ -374,7 +476,7 @@ int main(int argc, char *argv[]) {
 	
 	// Now do transform * data
 	float *tdata = (float*)(transform->data);
-
+	
 	for(int c = 0; c < num_bases; c++)
 	  for(int r = 0; r < num_channels; r++)
 	    {
@@ -385,7 +487,7 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-
+  
   // Free input nrrd and mean
   nin = nrrdNuke(nin);
   mean = nrrdNuke(mean);
