@@ -37,7 +37,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#if defined( __sgi )
+#if defined( __sgi ) || defined ( __alpha )
 #  include <fcntl.h>
 #  include <sys/ioctl.h>
 #  include <sys/procfs.h>
@@ -46,10 +46,9 @@
 
 namespace SCIRun {
 
-
   bool ProcessInfo::IsSupported ( int info_type )
   {
-#if defined( __linux ) || defined( __sgi )
+#if defined( __linux ) || defined( __sgi ) || defined( __alpha)
 
     switch ( info_type ) {
     case MEM_SIZE: return true;
@@ -100,10 +99,10 @@ namespace SCIRun {
 
     return 0;
 
-#elif defined( __sgi )
+#elif defined( __sgi ) || defined( __alpha )
 
     char statusFileName[MAXPATHLEN];
-    sprintf( statusFileName, "/proc/pinfo/%d", getpid() );
+    sprintf( statusFileName, "/proc/%d", getpid() );
 
     int file = open( statusFileName, O_RDONLY );
 
