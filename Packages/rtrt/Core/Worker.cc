@@ -118,27 +118,27 @@ void Worker::run()
     counters=new Counters(ncounters, c0, c1);
   else
     counters=0;
-  int np = scene->get_rtrt_engine()->np;
   
-#if 1
   rendering_scene=0;
-  int showing_scene=1;
-  
-  // make them from -1 to 1
-  
-  // jittered masks for this stuff...
-  double jitter_vals[1000];
-  double jitter_valsb[1000];
-  
-  // make them from -1 to 1
-  
-  for(int ii=0;ii<1000;ii++) {
-    jitter_vals[ii] = scene->get_rtrt_engine()->Gjitter_vals[ii];
-    jitter_valsb[ii] = scene->get_rtrt_engine()->Gjitter_valsb[ii];
-  }
   
   if (!dpy->doing_frameless()) {
+
+    // Convience alias
+    int np = scene->get_rtrt_engine()->np;
     
+    int showing_scene=1;
+    
+    // jittered masks for this stuff...
+    double jitter_vals[1000];
+    double jitter_valsb[1000];
+  
+    // make them from -1 to 1
+  
+    for(int ii=0;ii<1000;ii++) {
+      jitter_vals[ii] = scene->get_rtrt_engine()->Gjitter_vals[ii];
+      jitter_valsb[ii] = scene->get_rtrt_engine()->Gjitter_valsb[ii];
+    }
+  
     for(;;){
       if( useAddSubBarrier_ ) {
 	//cout << "stopping for threads, will wait for: " 
@@ -148,7 +148,7 @@ void Worker::run()
 	addSubThreads_->wait( oldNumWorkers_+1 );
 
 	// stop if you have been told to stop.  
-	if( stop_ ) {// I don't think this one ever is called
+	if( stop_ ) {
           //	  cerr << "Thread: " << num << " stopping\n";
 	  return;
 	}
@@ -475,10 +475,8 @@ void Worker::run()
     }
 
   } else { // FRAMELES RENDERING...
-    // Read comment in WorkerFrameless.cc
-#   include<Packages/rtrt/Core/WorkerFrameless.cc>
+    renderFrameless();
   }
-#endif
 } // end run()
 
 #ifdef DEBUG
@@ -592,3 +590,6 @@ Worker::syncForNumThreadChange( int oldNumWorkers, bool stop /* = false */ )
   useAddSubBarrier_ = true;
   stop_ = stop;
 }
+
+// Having this code in the file made things confusing.
+#include <Packages/rtrt/Core/WorkerFrameless.cc>
