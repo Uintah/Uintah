@@ -117,6 +117,7 @@ protected:
 
   Point corner[8];
   Ray edge[12];
+  Ray texEdge[12];
   double aX, aY, aZ;
   int padx, pady, padz;
 
@@ -124,7 +125,8 @@ protected:
 
   unsigned int name;
 
-  void OrderIntersects(Point *p, Ray *r, RayStep *dt, int n) const;
+  void OrderIntersects(Point *p, Point *t, Ray *r, Ray *te,
+		       RayStep *dt, int n) const;
 
 };
 

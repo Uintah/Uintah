@@ -15,6 +15,7 @@ SRCS     += \
 	$(SRCDIR)/ParticleColorMapKey.cc \
 	$(SRCDIR)/RescaleColorMapForParticles.cc \
 	$(SRCDIR)/AnimatedStreams.cc \
+	$(SRCDIR)/SFRG.cc
 #[INSERT NEW CODE FILE HERE]
 
 #		$(SRCDIR)/VolVis.cc \
@@ -27,7 +28,7 @@ PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
         SCICore/Thread SCICore/Persistent SCICore/Exceptions \
         SCICore/TclInterface SCICore/Containers SCICore/Datatypes \
         SCICore/Geom SCICore/Geometry PSECore/Widgets PSECore/XMLUtil \
-	Kurt/Datatypes SCICore/Util \
+	PSECommon/Modules/Fields  Kurt/Datatypes SCICore/Util \
 	Uintah/Datatypes Uintah/Grid Uintah/Interface Uintah/Exceptions 
 
 
@@ -38,7 +39,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.16  2000/12/07 20:33:48  kuzimmer
+# VolumeRendering updates
+#
 # Revision 1.15  2000/10/24 05:57:22  moulding
+#
+#
 # new module maker Phase 2: new module maker goes online
 #
 # These changes clean out the last remnants of the old module maker and

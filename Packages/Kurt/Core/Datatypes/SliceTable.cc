@@ -17,8 +17,8 @@ using namespace SCICore::Geometry;
 
 
 SliceTable::SliceTable( const Point& min,  const Point& max,  const Ray& view,
-	      int slices):
-  view(view), slices(slices)
+	      int slices, int treedepth):
+  view(view), slices(slices), treedepth(treedepth)
 {
   Point corner[8];
   corner[0] = min;
@@ -72,7 +72,7 @@ void SliceTable::getParameters(const Brick& brick, double& tmin,
 			       brick[ order[0] ],
 			       view);
 
-  dt = DT/pow(2.0, brick.level());
+  dt = DT * pow(2.0, treedepth  - brick.level());
 
   int steps = (max - minT)/dt;
   tmax = minT + (steps * dt);
