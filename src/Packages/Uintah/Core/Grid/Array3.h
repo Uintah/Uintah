@@ -125,17 +125,16 @@ WARNING
       if(d_window)
 	d_window->addReference();
     }
-      
-    Array3& operator=(const Array3& copy) {
+
+    void copyPointer(const Array3& copy) {
       if(copy.d_window)
 	copy.d_window->addReference();
       if(d_window && d_window->removeReference()){
 	delete d_window;
       }
       d_window = copy.d_window;
-      return *this;
-    }
-
+    }    
+      
     IntVector size() const {
       return d_window->getData()->size();
     }
@@ -166,6 +165,53 @@ WARNING
       d_window=scinew Array3Window<T>(new Array3Data<T>(size), lowIndex, lowIndex, highIndex);
       d_window->addReference();
     }
+
+    void rewindow(const IntVector& lowIndex, const IntVector& highIndex) {
+      if (!d_window) {
+	resize(lowIndex, highIndex);
+	return;
+      }
+      bool inside = true;
+      IntVector relLowIndex = lowIndex - d_window->getOffset();
+      IntVector relHighIndex = highIndex - d_window->getOffset();
+      IntVector size = d_window->getData()->size();
+      for (int i = 0; i < 3; i++) {
+	ASSERT(relLowIndex[i] < relHighIndex[i]);
+	if ((relLowIndex[i] < 0) || (relHighIndex[i] > size[i])) {
+	  inside = false;
+	  break;
+	}
+      }
+      Array3Window<T>* oldWindow = d_window;
+      if (inside) {
+	// just rewindow
+	d_window=
+	  scinew Array3Window<T>(oldWindow->getData(), oldWindow->getOffset(),
+				 lowIndex, highIndex);
+      }
+      else {
+	// will have to re-allocate and copy
+	//cerr << "RE-ALLOCATION NEEDED\n";
+	//cerr << relLowIndex << " to " << relHighIndex << " in " << size << endl;
+	//cerr << oldWindow->getData() << endl;
+	//ASSERT(false);
+	IntVector encompassingLow = Min(lowIndex, oldWindow->getLowIndex());
+	IntVector encompassingHigh = Max(highIndex, oldWindow->getHighIndex());
+	
+	Array3Data<T>* newData =
+	  new Array3Data<T>(encompassingHigh - encompassingLow);
+	Array3Window<T> tempWindow(newData, encompassingLow,
+				   oldWindow->getLowIndex(),
+				   oldWindow->getHighIndex());
+	tempWindow.copy(oldWindow); // copies into newData
+	d_window=scinew Array3Window<T>(newData, encompassingLow,
+					lowIndex, highIndex);
+      }
+      d_window->addReference();      
+      if(oldWindow->removeReference())
+	delete oldWindow;
+    }
+    
     inline T& operator[](const IntVector& idx) const {
       return d_window->get(idx);
     }
@@ -264,6 +310,8 @@ WARNING
 
 	 
   private:
+    Array3& operator=(const Array3& copy);
+    
     Array3Window<T>* d_window;
   };
    
