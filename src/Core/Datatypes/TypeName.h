@@ -23,7 +23,7 @@ namespace SCIRun {
 
 using std::string;
 using std::vector;
-
+using std::pair;
 
 static const char FTNS = '<';
 static const char FTNM = ',';
