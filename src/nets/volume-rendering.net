@@ -1,0 +1,154 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+if {[llength [array get env SCIRUN_DATA]] == 0} {
+   puts ""
+   puts "*** Error: this net depends on the SCIRUN_DATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
+   puts ""
+   ::netedit scheduleok
+   return
+}
+set DATADIR $env(SCIRUN_DATA)
+puts "*** Using SCIRUN_DATA $DATADIR"
+
+source $DATADIR/aneurysm/aneurysm-settings.net
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Sat  Oct 7 19100"
+
+global runTime
+set runTime " 16:35:33"
+
+set bbox {24.0 20.0 399 374}
+
+set m0 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 24 130]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 24 20]
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 137 330]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "TextureVolVis" 137 238]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 204 21]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 204 131]
+
+addConnection $m1 0 $m0 0
+addConnection $m0 0 $m3 0
+addConnection $m3 0 $m2 0
+addConnection $m4 0 $m5 0
+addConnection $m1 0 $m5 1
+addConnection $m5 0 $m3 1
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-is_fixed {0}
+set $m0-max_brick_dim {64}
+set $m0-min {0}
+set $m0-max {251}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-filename $DATADIR/aneurysm/aneurysm-mra.lvs.fld
+$m2 ui
+set $m2-ViewWindow_0-pos {z1_x1}
+set $m2-ViewWindow_0-caxes {0}
+set $m2-ViewWindow_0-iaxes {40}
+set $m2-ViewWindow_0-view-eyep-x {0}
+set $m2-ViewWindow_0-view-eyep-y {0}
+set $m2-ViewWindow_0-view-eyep-z {2897.98}
+set $m2-ViewWindow_0-view-lookat-x {382.9}
+set $m2-ViewWindow_0-view-lookat-y {334.4}
+set $m2-ViewWindow_0-view-lookat-z {119.4}
+set $m2-ViewWindow_0-view-up-x {1}
+set $m2-ViewWindow_0-view-up-y {0}
+set $m2-ViewWindow_0-view-up-z {0}
+set $m2-ViewWindow_0-view-fov {20}
+set $m2-ViewWindow_0-view-eyep-x {0}
+set $m2-ViewWindow_0-view-eyep-y {0}
+set $m2-ViewWindow_0-view-eyep-z {2897.98}
+set $m2-ViewWindow_0-view-eyep-x {0}
+set $m2-ViewWindow_0-view-eyep-y {0}
+set $m2-ViewWindow_0-view-eyep-z {2897.98}
+set $m2-ViewWindow_0-view-lookat-x {382.9}
+set $m2-ViewWindow_0-view-lookat-y {334.4}
+set $m2-ViewWindow_0-view-lookat-z {119.4}
+set $m2-ViewWindow_0-view-lookat-x {382.9}
+set $m2-ViewWindow_0-view-lookat-y {334.4}
+set $m2-ViewWindow_0-view-lookat-z {119.4}
+set $m2-ViewWindow_0-view-up-x {1}
+set $m2-ViewWindow_0-view-up-y {0}
+set $m2-ViewWindow_0-view-up-z {0}
+set $m2-ViewWindow_0-view-up-x {1}
+set $m2-ViewWindow_0-view-up-y {0}
+set $m2-ViewWindow_0-view-up-z {0}
+set $m2-ViewWindow_0-view-fov {20}
+set $m2-ViewWindow_0-view-eyep_offset-x {3.90872e-311}
+set $m2-ViewWindow_0-view-eyep_offset-y {1.44126e-310}
+set $m2-ViewWindow_0-view-eyep_offset-z {4.15699e-311}
+set $m2-ViewWindow_0-view-eyep_offset-x {3.90872e-311}
+set $m2-ViewWindow_0-view-eyep_offset-y {1.44126e-310}
+set $m2-ViewWindow_0-view-eyep_offset-z {4.15699e-311}
+set $m2-ViewWindow_0-bgcolor-r {0}
+set $m2-ViewWindow_0-bgcolor-g {0}
+set $m2-ViewWindow_0-bgcolor-b {0}
+set $m2-ViewWindow_0-bgcolor-r {0}
+set $m2-ViewWindow_0-bgcolor-g {0}
+set $m2-ViewWindow_0-bgcolor-b {0}
+set $m2-ViewWindow_0-shading {}
+set $m2-ViewWindow_0-do_stereo {0}
+set $m2-ViewWindow_0-ambient-scale {1}
+set $m2-ViewWindow_0-diffuse-scale {1}
+set $m2-ViewWindow_0-specular-scale {1}
+set $m2-ViewWindow_0-emission-scale {1}
+set $m2-ViewWindow_0-shininess-scale {1}
+set $m2-ViewWindow_0-sbase {1}
+set $m2-ViewWindow_0-sr {1}
+set $m2-ViewWindow_0-do_bawgl {0}
+set $m2-ViewWindow_0-drawimg {126}
+set $m2-ViewWindow_0-saveprefix {}
+set $m2-ViewWindow_0-unused {1}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-num_slices {300}
+set $m3-draw_mode {0}
+set $m3-render_style {1}
+set $m3-alpha_scale {-0.613}
+set $m3-interp_mode {1}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-tcl_status {Calling GenStandardColorMaps!}
+set $m4-positionList {{0 40} {47 40} {121 32} {241 18} {313 8} {471 0}}
+set $m4-nodeList {13 14 15 16 598 797}
+set $m4-width {471}
+set $m4-height {40}
+set $m4-mapType {0}
+set $m4-minRes {2}
+set $m4-resolution {12}
+set $m4-realres {12}
+set $m4-gamma {0}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-isFixed {0}
+set $m5-min {0}
+set $m5-max {251}
+$m3-c needexecute
+
+::netedit scheduleok
