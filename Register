@@ -10,7 +10,8 @@ $argu = $ARGV[0];
 
 $argu1 = $ARGV[1];
 
-$SIG{INT} = \&catchZap;  # best strategy
+$SIG{INT} = \&catchZap;  # Tells perl to catch sigInt (control-c) 
+                         # and call catchZap().
 
 if( $argc == 0 ){
     usage();
@@ -86,7 +87,6 @@ if($argu1 ne "-uda"){
     $ftp->put($dirName . "\/input.xml");
 
 #$ftp->put($filename);
-    $Answer1 = "Y";
     print("Attach a thumbnail image for this run ? (Y\/N) ");
     $Answer1 = <STDIN> ;
     chop $Answer1;
@@ -103,6 +103,7 @@ if($argu1 ne "-uda"){
 	    $ftp->put($InputImage);
 	} else {
 	    print( "$InputImage does not exist.  Not attaching.\n" );
+	    $InputImage = "";
 	}
     }
     
