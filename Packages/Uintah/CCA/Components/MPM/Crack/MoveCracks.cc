@@ -237,9 +237,12 @@ void Crack::MoveCracks(const ProcessorGroup*,
       /* Task 3: Calculate normals, tangential normals and binormals
                  at crack-front nodes of crack plane
       */
-      if(d_calFractParameters!="false"||d_doCrackPropagation!="false")
-        CalculateCrackFrontNormals(m);
-
+      if(d_calFractParameters!="false"||d_doCrackPropagation!="false") {
+        if(!CalculateCrackFrontNormals(m)) {
+          if(pid==0) cout << "   ! Crack front is not smoothed successfully."
+                          << endl;
+        }
+      }
     } // End of loop over matls
   }
 }

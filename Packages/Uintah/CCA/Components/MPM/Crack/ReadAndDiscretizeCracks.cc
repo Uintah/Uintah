@@ -530,9 +530,11 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
 {      
   for(int p=0;p<patches->size();p++) { // All ranks
     const Patch* patch = patches->get(p);
-    int rankSize;
-    MPI_Comm_size(mpi_crack_comm,&rankSize);
        
+    int pid,rankSize;
+    MPI_Comm_rank(mpi_crack_comm, &pid);
+    MPI_Comm_size(mpi_crack_comm,&rankSize);
+
     // Set radius (rJ) of J-path cirlce or number of cells
     Vector dx = patch->dCell();
     double dx_min=Min(dx.x(),dx.y(),dx.z());
@@ -600,8 +602,12 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
         cs0[m]/=ncfSegs;
 
         // Get normals of crack plane at crack-front nodes
-        if(d_calFractParameters!="false"||d_doCrackPropagation!="false")
-          CalculateCrackFrontNormals(m);
+        if(d_calFractParameters!="false"||d_doCrackPropagation!="false") {
+          if(!CalculateCrackFrontNormals(m)) {
+            if(pid==0) cout << " ! Crack front is not smoothed successfully."
+                            << endl;
+          }
+        }
          
         // Output crack mesh information
         OutputCrackPlaneMesh(m);
