@@ -9,6 +9,7 @@
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Components/SimulationController/SimulationController.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
 
 namespace Uintah {
 
@@ -64,6 +65,12 @@ class SimulationInterface;
 		    SimulationStateP& sharedState,
 		    int startDW, int dwStride, int numLevel,
 		    SimulationInterface* sim);
+
+      void initializeErrorEstimate(const ProcessorGroup*,
+				   const PatchSubset* patches,
+				   const MaterialSubset* matls,
+				   DataWarehouse*, DataWarehouse* new_dw,
+				   SimulationStateP sharedState);
 
       /* for restarting */
       bool           d_restarting;

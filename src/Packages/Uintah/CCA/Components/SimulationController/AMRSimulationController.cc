@@ -181,12 +181,8 @@ void AMRSimulationController::run()
       sim->restartInitialize();
    } else {
       // Initialize the CFD and/or MPM data
-     LevelP level = grid->getLevel(0);
-     sim->scheduleInitialize(level, scheduler);
-     for(int i=1;i<grid->numLevels();i++){
-       LevelP fineLevel = grid->getLevel(i);
-       sim->scheduleRefine(fineLevel, scheduler);
-     }
+     for(int i=0;i<grid->numLevels();i++)
+       sim->scheduleInitialize(grid->getLevel(i), scheduler);
    }
    
    double start_time = Time::currentSeconds();
@@ -222,16 +218,26 @@ void AMRSimulationController::run()
    // The main time loop; here the specified problem is actually getting solved
    
    int  iterations = 0;
-   int new_dwidx = 1;
+   double prev_delt = 0;
    while( ( t < timeinfo.maxTime ) && 
 	  ( iterations < timeinfo.num_time_steps ) ) {
 
+     // After one step (either timestep or initialization) and correction
+     // the delta we can finally, finalize our old timestep, eg. 
+     // finalize and advance the Datawarehouse
+     scheduler->advanceDataWarehouse(grid);
+
+     // Compute number of dataWarehouses
+     int totalFine=1;
+     for(int i=1;i<grid->numLevels();i++)
+       totalFine *= grid->getLevel(i)->timeRefinementRatio();
+     
      iterations ++;
      double wallTime = Time::currentSeconds() - start_time;
  
      delt_vartype delt_var;
-     DataWarehouse* newDW = scheduler->get_dw(new_dwidx);
-     newDW->get(delt_var, sharedState->get_delt_label());
+     DataWarehouse* oldDW = scheduler->get_dw(0);
+     oldDW->get(delt_var, sharedState->get_delt_label());
 
      double delt = delt_var;
      delt *= timeinfo.delt_factor;
@@ -241,6 +247,14 @@ void AMRSimulationController::run()
 	 cerr << "WARNING: raising delt from " << delt
 	      << " to minimum: " << timeinfo.delt_min << '\n';
        delt = timeinfo.delt_min;
+     }
+     if(iterations > 1 && delt > (1+timeinfo.max_delt_increase)*prev_delt){
+       if(d_myworld->myrank() == 0)
+	 cerr << "WARNING: lowering delt from " << delt 
+	      << " to maxmimum: " << (1+timeinfo.max_delt_increase)*prev_delt
+	      << " (maximum increase of " << timeinfo.max_delt_increase
+	      << ")\n";
+       delt = (1+timeinfo.max_delt_increase)*prev_delt;
      }
      if(t <= timeinfo.initial_delt_range && delt > timeinfo.max_initial_delt){
        if(d_myworld->myrank() == 0)
@@ -255,8 +269,8 @@ void AMRSimulationController::run()
 	      << " to maximum: " << timeinfo.delt_max << '\n';
        delt = timeinfo.delt_max;
      }
-     newDW->override(delt_vartype(delt), sharedState->get_delt_label());
-     
+     prev_delt=delt;
+
 #ifndef DISABLE_SCI_MALLOC
      size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
        nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
@@ -305,7 +319,7 @@ void AMRSimulationController::run()
      if(d_myworld->myrank() == 0){
        cout << "Time=" << t << ", delT=" << delt 
 	    << ", elap T = " << wallTime 
-	    << ", DW: " << newDW->getID() << ", Mem Use = ";
+	    << ", DW: " << oldDW->getID() << ", Mem Use = ";
        if (avg_memuse == max_memuse && avg_highwater == max_highwater){
 	 cout << avg_memuse;
 	 if(avg_highwater)
@@ -336,16 +350,6 @@ void AMRSimulationController::run()
 #endif
      }
 
-     // Compute number of dataWarehouses
-     int totalFine=1;
-     for(int i=1;i<grid->numLevels();i++)
-       totalFine *= grid->getLevel(i)->timeRefinementRatio();
-     
-     // After one step (either timestep or initialization) and correction
-     // the delta we can finally, finalize our old timestep, eg. 
-     // finalize and advance the Datawarehouse
-     scheduler->advanceDataWarehouse(grid);
-
      // put the current time into the shared state so other components
      // can access it
      sharedState->setElapsedTime(t);
@@ -357,27 +361,32 @@ void AMRSimulationController::run()
        
        scheduler->initialize(1, totalFine);
        scheduler->fillDataWarehouses(grid);
-       new_dwidx = totalFine;
 
        // Set up new DWs, DW mappings.
        scheduler->clearMappings();
        scheduler->mapDataWarehouse(Task::OldDW, 0);
        scheduler->mapDataWarehouse(Task::NewDW, totalFine);
        
-       sim->scheduleTimeAdvance(grid->getLevel(0), scheduler);
+       sim->scheduleTimeAdvance(grid->getLevel(0), scheduler, 0, 1);
        
        if(grid->numLevels() > 1)
 	 subCycle(grid, scheduler, sharedState, 0, totalFine, 1, sim);
-	
+
        scheduler->clearMappings();
+       scheduler->mapDataWarehouse(Task::OldDW, 0);
        scheduler->mapDataWarehouse(Task::NewDW, totalFine);
+       for(int i=0;i<grid->numLevels();i++){
+	 Task* task = scinew Task("initializeErrorEstimate", this,
+				  &AMRSimulationController::initializeErrorEstimate,
+				  sharedState);
+	 task->computes(sharedState->get_refineFlag_label());
+	 sched->addTask(task, grid->getLevel(i)->eachPatch(),
+			sharedState->allMaterials());
+	 sim->scheduleErrorEstimate(grid->getLevel(i), scheduler);
+	 sim->scheduleComputeStableTimestep(grid->getLevel(i), scheduler);
+       }
        if(output)
 	 output->finalizeTimestep(t, delt, grid, scheduler);
-       
-       // CST might need an old DW
-       scheduler->mapDataWarehouse(Task::OldDW, 0);
-       for(int i=0;i<grid->numLevels();i++)
-	 sim->scheduleComputeStableTimestep(grid->getLevel(i), scheduler);
 
        scheduler->compile(d_myworld);
 
@@ -387,6 +396,22 @@ void AMRSimulationController::run()
        levelids.resize(grid->numLevels());
        for(int i=0;i<grid->numLevels();i++)
 	 levelids[i]=grid->getLevel(i)->getID();
+     }
+
+     oldDW->override(delt_vartype(delt), sharedState->get_delt_label());
+     double delt_fine = delt;
+     int skip=totalFine;
+     for(int i=0;i<grid->numLevels();i++){
+       const Level* level = grid->getLevel(i).get_rep();
+       if(i != 0){
+	 delt_fine /= level->timeRefinementRatio();
+	 skip /= level->timeRefinementRatio();
+       }
+       for(int idw=0;idw<totalFine;idw+=skip){
+	 DataWarehouse* dw = scheduler->get_dw(idw);
+	 dw->override(delt_vartype(delt_fine), sharedState->get_delt_label(),
+		      level);
+       }
      }
 
      // Execute the current timestep
@@ -430,7 +455,7 @@ void AMRSimulationController::subCycle(GridP& grid, SchedulerP& scheduler,
     scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
 
     sim->scheduleRefineInterface(fineLevel, scheduler, step, numSteps);
-    sim->scheduleTimeAdvance(fineLevel, scheduler);
+    sim->scheduleTimeAdvance(fineLevel, scheduler, step, numSteps);
     if(numLevel+1 < grid->numLevels()){
       ASSERT(newDWStride > 0);
       subCycle(grid, scheduler, sharedState, curDW, newDWStride,
@@ -441,6 +466,7 @@ void AMRSimulationController::subCycle(GridP& grid, SchedulerP& scheduler,
   // Coarsening always happens at the final timestep, completely within the
   // last DW
   scheduler->clearMappings();
+  scheduler->mapDataWarehouse(Task::OldDW, 0);
   scheduler->mapDataWarehouse(Task::NewDW, curDW);
   sim->scheduleCoarsen(coarseLevel, scheduler);
 }
@@ -610,4 +636,25 @@ AMRSimulationController::need_recompile(double time, double delt,
       return true;
   }
   return false;
+}
+
+void
+AMRSimulationController::initializeErrorEstimate(const ProcessorGroup*,
+						 const PatchSubset* patches,
+						 const MaterialSubset* matls,
+						 DataWarehouse* old_dw,
+						 DataWarehouse* new_dw,
+						 SimulationStateP sharedState)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    for(int m = 0;m<matls->size();m++){
+      int matl = matls->get(m);
+
+      CCVariable<int> refineFlag;
+      new_dw->allocateAndPut(refineFlag, sharedState->get_refineFlag_label(),
+			     matl, patch);
+      refineFlag.initialize(false);
+    }
+  }
 }
