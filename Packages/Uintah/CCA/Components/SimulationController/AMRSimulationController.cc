@@ -103,7 +103,7 @@ void AMRSimulationController::run()
    // Setup the initial grid
    GridP grid=scinew Grid();
 
-   grid->problemSetup(ups, d_myworld);
+   grid->problemSetupAMR(ups, d_myworld);
    
    if(grid->numLevels() == 0){
       cerr << "No problem specified.  Exiting AMRSimulationController.\n";
