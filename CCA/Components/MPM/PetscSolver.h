@@ -1,63 +1,70 @@
 #ifndef MPM_PETSC_SOLVER_H
 #define MPM_PETSC_SOLVER_H
 
-#include "Solver.h"
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <sgi_stl_warnings_off.h>
+#include <set>
 #include <map>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
+#include <iostream>
 
 #ifdef HAVE_PETSC
 extern "C" {
 #include "petscsles.h"
 }
 #endif
+using std::set;
 using std::map;
 using std::vector;
+using namespace std;
 
 namespace Uintah {
 
   class ProcessorGroup;
   class Patch;
 
-  class MPMPetscSolver : public Solver {
+  class MPMPetscSolver {
 
   public:
     MPMPetscSolver();
-    virtual ~MPMPetscSolver();
+    ~MPMPetscSolver();
 
-    virtual void initialize();
+    void initialize();
 
-    virtual void createLocalToGlobalMapping(const ProcessorGroup* pg,
+    void createLocalToGlobalMapping(const ProcessorGroup* pg,
 					    const PatchSet* perproc_patches,
 					    const PatchSubset* patches);
 
-    virtual void solve();
+    void solve();
 
-    virtual void createMatrix(const ProcessorGroup* pg,
+    void createMatrix(const ProcessorGroup* pg,
 			      const map<int,int>& dof_diag);
 
-    virtual void destroyMatrix(bool recursion);
+    void destroyMatrix(bool recursion);
 
-    virtual void fillMatrix(int, int, double);
-    
-    virtual void fillVector(int, double);
-    
-    virtual void copyL2G(Array3<int>& l2g, const Patch* patch);
+#ifdef HAVE_PETSC
+    inline void fillMatrix(int,int[],int,int j[],PetscScalar v[]);
+#endif
 
-    virtual void removeFixedDOF(int num_nodes);
+    void fillVector(int, double);
 
-    virtual void finalizeMatrix();
+    void copyL2G(Array3<int>& l2g, const Patch* patch);
 
-    virtual void flushMatrix();
+    void removeFixedDOF(int num_nodes);
 
-    virtual int getSolution(vector<double>& xPetsc);
+    void finalizeMatrix();
 
-    virtual int getRHS(vector<double>& QPetsc);
+    void flushMatrix();
 
-    virtual void assembleVector();
+    int getSolution(vector<double>& xPetsc);
+
+    int getRHS(vector<double>& QPetsc);
+
+    void assembleVector();
+
+    set<int> d_DOF;
   private:
 
     // Needed for the local to global mappings
@@ -65,7 +72,7 @@ namespace Uintah {
     map<const Patch*, Array3<int> > d_petscLocalToGlobal;
     vector<int> d_numNodes,d_startIndex;
     int d_totalNodes;
-    
+
     // Petsc matrix and vectors
 #ifdef HAVE_PETSC
     Mat d_A;
@@ -83,7 +90,13 @@ namespace Uintah {
 
   };
 
+#ifdef HAVE_PETSC
+inline void MPMPetscSolver::fillMatrix(int numi,int i[],int numj,
+                                       int j[],PetscScalar value[])
+{
+    MatSetValues(d_A,numi,i,numj,j,value,ADD_VALUES);
 }
+#endif
 
-
+}
 #endif

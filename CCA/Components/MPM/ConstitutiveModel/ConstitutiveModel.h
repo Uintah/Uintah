@@ -8,10 +8,12 @@
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Core/Containers/StaticArray.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
-#include <Packages/Uintah/CCA/Components/MPM/Solver.h>
+#include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
+#include <Packages/Uintah/CCA/Components/MPM/SimpleSolver.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/Math/FastMatrix.h>
 
 #define MAX_BASIS 27
 
@@ -63,7 +65,11 @@ namespace Uintah {
 				     const MPMMaterial* matl,
 				     DataWarehouse* old_dw,
 				     DataWarehouse* new_dw,
-				     Solver* solver,
+#ifdef HAVE_PETSC
+                                     MPMPetscSolver* solver,
+#else
+                                     SimpleSolver* solver,
+#endif
 				     const bool recursion);
 	 
     //////////
@@ -234,6 +240,9 @@ namespace Uintah {
     void polarDecomposition(const Matrix3& F, 
                             Matrix3& R,
                             Matrix3& U) const;
+
+    void BtDB(double B[6][24], double D[6][6], double Km[24][24]) const;
+    void BnltDBnl(double Bnl[3][24], double sig[3][3], double Kg[24][24]) const;
 
     MPMLabel* lb;
     int d_8or27;

@@ -141,9 +141,14 @@ void SimpleSolver::destroyMatrix(bool recursion)
     d_DOF.clear();
 }
 
-void SimpleSolver::fillMatrix(int i,int j,double value)
+void SimpleSolver::fillMatrix(int numi,int i[],int numj,
+                                       int j[],double value[])
 {
-  KK[i][j] = KK[i][j] + value;
+   for(int ii=0;ii<numi;ii++){
+     for(int jj=0;jj<numj;jj++){
+       KK[i[ii]][j[jj]] = KK[i[ii]][j[jj]] + value[24*ii+jj];
+     }
+   }
 }
 
 void SimpleSolver::flushMatrix()

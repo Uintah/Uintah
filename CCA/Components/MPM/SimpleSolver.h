@@ -1,16 +1,17 @@
 #ifndef SIMPLE_SOLVER_H
 #define SIMPLE_SOLVER_H
 
-#include "Solver.h"
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Packages/Uintah/Core/Math/Sparse.h>
 #include <sgi_stl_warnings_off.h>
 #include <map>
+#include <set>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
 using std::map;
+using std::set;
 using std::vector;
 
 namespace Uintah {
@@ -18,42 +19,44 @@ namespace Uintah {
   class ProcessorGroup;
   class Patch;
 
-  class SimpleSolver : public Solver {
+  class SimpleSolver {
 
   public:
     SimpleSolver();
-    virtual ~SimpleSolver();
+    ~SimpleSolver();
 
-    virtual void initialize();
+    void initialize();
 
-    virtual void createLocalToGlobalMapping(const ProcessorGroup* pg,
+    void createLocalToGlobalMapping(const ProcessorGroup* pg,
 					    const PatchSet* perproc_patches,
 					    const PatchSubset* patches);
 
-    virtual void solve();
+    void solve();
 
-    virtual void createMatrix(const ProcessorGroup* pg,
+    void createMatrix(const ProcessorGroup* pg,
 			      const map<int,int>& diag);
 
-    virtual void destroyMatrix(bool recursion);
+    void destroyMatrix(bool recursion);
 
-    virtual void fillMatrix(int, int, double);
+    void fillMatrix(int,int[],int,int j[],double v[]);
     
-    virtual void fillVector(int, double);
+    void fillVector(int, double);
     
-    virtual void copyL2G(Array3<int>& l2g, const Patch* patch);
+    void copyL2G(Array3<int>& l2g, const Patch* patch);
 
-    virtual void removeFixedDOF(int num_nodes);
+    void removeFixedDOF(int num_nodes);
 
-    virtual void finalizeMatrix();
+    void finalizeMatrix();
 
-    virtual void flushMatrix();
+    void flushMatrix();
 
-    virtual int getSolution(vector<double>& xSimple);
+    int getSolution(vector<double>& xSimple);
 
-    virtual int getRHS(vector<double>& QSimple);
+    int getRHS(vector<double>& QSimple);
 
-    virtual void assembleVector();
+    void assembleVector();
+
+    set<int> d_DOF;
   private:
 
     // Needed for the local to global mappings

@@ -19,7 +19,8 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/CCA/Components/MPM/Solver.h>
+#include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
+#include <Packages/Uintah/CCA/Components/MPM/SimpleSolver.h>
 
 namespace Uintah {
       class CompNeoHookImplicit : public ConstitutiveModel {
@@ -55,7 +56,11 @@ namespace Uintah {
 					  const MPMMaterial* matl,
 					  DataWarehouse* old_dw,
 					  DataWarehouse* new_dw,
-					  Solver* solver,
+#ifdef HAVE_PETSC
+                                          MPMPetscSolver* solver,
+#else
+                                          SimpleSolver* solver,
+#endif
 					  const bool recursion);
 
          virtual void computeStressTensor(const PatchSubset* patches,

@@ -14,13 +14,13 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MinMax.h>
-#include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/NotFinished.h>
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
+#include <TauProfilerForSCIRun.h>
 
 using std::cerr;
 using namespace Uintah;
@@ -146,7 +146,11 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 					 const MPMMaterial* matl,
 					 DataWarehouse* old_dw,
 					 DataWarehouse* new_dw,
-					 Solver* solver,
+#ifdef HAVE_PETSC
+					 MPMPetscSolver* solver,
+#else
+					 SimpleSolver* solver,
+#endif
 					 const bool recursion)
 
 {
@@ -154,15 +158,14 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(pp);
 //    cerr <<"Doing computeStressTensor on " << patch->getID()
 //	 <<"\t\t\t\t IMPM"<< "\n" << "\n";
+
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     solver->copyL2G(l2g,patch);
 
     Matrix3 Shear,deformationGradientInc,dispGrad,fbar;
-    FastMatrix kmat(24,24);
-    FastMatrix kgeo(24,24);
-    
+
     Matrix3 Identity;
     
     Identity.Identity();
@@ -204,10 +207,13 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
     
-    FastMatrix B(6,24);
-    FastMatrix Btrans(24,6);
-    FastMatrix Bnl(3,24);
-    FastMatrix Bnltrans(24,3);
+    double B[6][24];
+    double Bnl[3][24];
+#ifdef HAVE_PETSC
+    PetscScalar v[576];
+#else
+    double v[576];
+#endif
 
     if(matl->getIsRigid()){
       for(ParticleSubset::iterator iter = pset->begin();
@@ -239,15 +245,15 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 #endif
 
         patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-        vector<int> dof(0);
+        int dof[24];
         int l2g_node_num;
         for(int k = 0; k < 8; k++) {
           // Need to loop over the neighboring patches l2g to get the right
           // dof number.
           l2g_node_num = l2g[ni[k]];
-          dof.push_back(l2g_node_num);
-          dof.push_back(l2g_node_num+1);
-          dof.push_back(l2g_node_num+2);
+          dof[3*k]  =l2g_node_num;
+          dof[3*k+1]=l2g_node_num+1;
+          dof[3*k+2]=l2g_node_num+2;
 
           const Vector& disp = dispNew[ni[k]];
 	
@@ -257,36 +263,36 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
             }
           }
 
-          B(0,3*k) = d_S[k][0]*oodx[0];
-          B(3,3*k) = d_S[k][1]*oodx[1];
-          B(5,3*k) = d_S[k][2]*oodx[2];
-          B(1,3*k) = 0.;
-          B(2,3*k) = 0.;
-          B(4,3*k) = 0.;
+          B[0][3*k] = d_S[k][0]*oodx[0];
+          B[3][3*k] = d_S[k][1]*oodx[1];
+          B[5][3*k] = d_S[k][2]*oodx[2];
+          B[1][3*k] = 0.;
+          B[2][3*k] = 0.;
+          B[4][3*k] = 0.;
 
-          B(1,3*k+1) = d_S[k][1]*oodx[1];
-          B(3,3*k+1) = d_S[k][0]*oodx[0];
-          B(4,3*k+1) = d_S[k][2]*oodx[2];
-          B(0,3*k+1) = 0.;
-          B(2,3*k+1) = 0.;
-          B(5,3*k+1) = 0.;
+          B[1][3*k+1] = d_S[k][1]*oodx[1];
+          B[3][3*k+1] = d_S[k][0]*oodx[0];
+          B[4][3*k+1] = d_S[k][2]*oodx[2];
+          B[0][3*k+1] = 0.;
+          B[2][3*k+1] = 0.;
+          B[5][3*k+1] = 0.;
 
-          B(2,3*k+2) = d_S[k][2]*oodx[2];
-          B(4,3*k+2) = d_S[k][1]*oodx[1];
-          B(5,3*k+2) = d_S[k][0]*oodx[0];
-          B(0,3*k+2) = 0.;
-          B(1,3*k+2) = 0.;
-          B(3,3*k+2) = 0.;
+          B[2][3*k+2] = d_S[k][2]*oodx[2];
+          B[4][3*k+2] = d_S[k][1]*oodx[1];
+          B[5][3*k+2] = d_S[k][0]*oodx[0];
+          B[0][3*k+2] = 0.;
+          B[1][3*k+2] = 0.;
+          B[3][3*k+2] = 0.;
 
-          Bnl(0,3*k) = d_S[k][0]*oodx[0];
-          Bnl(1,3*k) = 0.;
-          Bnl(2,3*k) = 0.;
-          Bnl(0,3*k+1) = 0.;
-          Bnl(1,3*k+1) = d_S[k][1]*oodx[1];
-          Bnl(2,3*k+1) = 0.;
-          Bnl(0,3*k+2) = 0.;
-          Bnl(1,3*k+2) = 0.;
-          Bnl(2,3*k+2) = d_S[k][2]*oodx[2];
+          Bnl[0][3*k] = d_S[k][0]*oodx[0];
+          Bnl[1][3*k] = 0.;
+          Bnl[2][3*k] = 0.;
+          Bnl[0][3*k+1] = 0.;
+          Bnl[1][3*k+1] = d_S[k][1]*oodx[1];
+          Bnl[2][3*k+1] = 0.;
+          Bnl[0][3*k+2] = 0.;
+          Bnl[1][3*k+2] = 0.;
+          Bnl[2][3*k+2] = d_S[k][2]*oodx[2];
         }
       
         // Find the stressTensor using the displacement gradient
@@ -319,82 +325,63 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
         double coef1 = bulk;
         double coef2 = 2.*bulk*log(J);
+        double D[6][6];
 
-        FastMatrix D(6,6);
-      
-        D(0,0) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(0,0));
-        D(0,1) = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(0,0) + shrTrl(1,1));
-        D(0,2) = coef1 -2.*mubar*1./3. - 2./3.*(shrTrl(0,0) + shrTrl(2,2));
-        D(0,3) =  - 2./3.*(shrTrl(0,1));
-        D(0,4) =  - 2./3.*(shrTrl(0,2));
-        D(0,5) =  - 2./3.*(shrTrl(1,2));
-        D(1,1) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(1,1));
-        D(1,2) = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(1,1) + shrTrl(2,2));
-        D(1,3) =  - 2./3.*(shrTrl(0,1));
-        D(1,4) =  - 2./3.*(shrTrl(0,2));
-        D(1,5) =  - 2./3.*(shrTrl(1,2));
-        D(2,2) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(2,2));
-        D(2,3) =  - 2./3.*(shrTrl(0,1));
-        D(2,4) =  - 2./3.*(shrTrl(0,2));
-        D(2,5) =  - 2./3.*(shrTrl(1,2));
-        D(3,3) =  -.5*coef2 + mubar;
-        D(3,4) = 0.;
-        D(3,5) = 0.;
-        D(4,4) =  -.5*coef2 + mubar;
-        D(4,5) = 0.;
-        D(5,5) =  -.5*coef2 + mubar;
-      
-        D(1,0)=D(0,1);
-        D(2,0)=D(0,2);
-        D(2,1)=D(1,2);
-        D(3,0)=D(0,3);
-        D(3,1)=D(1,3);
-        D(3,2)=D(2,3);
-        D(4,0)=D(0,4);
-        D(4,1)=D(1,4);
-        D(4,2)=D(2,4);
-        D(4,3)=D(3,4);
-        D(5,0)=D(0,5);
-        D(5,1)=D(1,5);
-        D(5,2)=D(2,5);
-        D(5,3)=D(3,5);
-        D(5,4)=D(4,5);
-      
-        FastMatrix sig(3,3);
+        D[0][0] = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(0,0));
+        D[0][1] = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(0,0) + shrTrl(1,1));
+        D[0][2] = coef1 -2.*mubar*1./3. - 2./3.*(shrTrl(0,0) + shrTrl(2,2));
+        D[0][3] =  - 2./3.*(shrTrl(0,1));
+        D[0][4] =  - 2./3.*(shrTrl(0,2));
+        D[0][5] =  - 2./3.*(shrTrl(1,2));
+        D[1][1] = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(1,1));
+        D[1][2] = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(1,1) + shrTrl(2,2));
+        D[1][3] =  - 2./3.*(shrTrl(0,1));
+        D[1][4] =  - 2./3.*(shrTrl(0,2));
+        D[1][5] =  - 2./3.*(shrTrl(1,2));
+        D[2][2] = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(2,2));
+        D[2][3] =  - 2./3.*(shrTrl(0,1));
+        D[2][4] =  - 2./3.*(shrTrl(0,2));
+        D[2][5] =  - 2./3.*(shrTrl(1,2));
+        D[3][3] =  -.5*coef2 + mubar;
+        D[3][4] = 0.;
+        D[3][5] = 0.;
+        D[4][4] =  -.5*coef2 + mubar;
+        D[4][5] = 0.;
+        D[5][5] =  -.5*coef2 + mubar;
+
+        // kmat = B.transpose()*D*B*volold
+        double kmat[24][24];
+        BtDB(B,D,kmat);
+        // kgeo = Bnl.transpose*sig*Bnl*volnew;
+        double sig[3][3];
         for (int i = 0; i < 3; i++) {
           for (int j = 0; j < 3; j++) {
-            sig(i,j)=pstress[idx](i,j);
+            sig[i][j]=pstress[idx](i,j);
           }
         }
+        double kgeo[24][24];
+        BnltDBnl(Bnl,sig,kgeo);
 
         double volold = pvolumeold[idx];
         double volnew = pvolumeold[idx]*J;
 
         pvolume_deformed[idx] = volnew;
 
-        // Perform kmat = B.transpose()*D*B*volold
-        FastMatrix out(24,6);
-        Btrans.transpose(B);
-        out.multiply(Btrans, D);
-        kmat.multiply(out, B);
-        kmat.multiply(volold);
-        
-        // Perform kgeo = Bnl.transpose*sig*Bnl*volnew;
-        FastMatrix out1(24,3);
-        Bnltrans.transpose(Bnl);
-        out1.multiply(Bnltrans, sig);
-        kgeo.multiply(out1, Bnl);
-        kgeo.multiply(volnew);
+        for(int ii = 0;ii<24;ii++){
+          for(int jj = 0;jj<24;jj++){
+            kmat[ii][jj]*=volold;
+            kgeo[ii][jj]*=volnew;
+          }
+        }
 
-	for (int I = 0; I < (int)dof.size();I++) {
-	  int dofi = dof[I];
-	  for (int J = 0; J < (int)dof.size(); J++) {
-	    int dofj = dof[J];
-	    double v = kmat(I,J) + kgeo(I,J);
-	    solver->fillMatrix(dofi,dofj,v);
+	for (int I = 0; I < 24;I++){
+	  for (int J = 0; J < 24; J++){
+	    v[24*I+J] = kmat[I][J] + kgeo[I][J];
 	  }
 	}
-      }
+        solver->fillMatrix(24,dof,24,dof,v);
+
+      }  // end of loop over particles
     }
   }
   solver->flushMatrix();
