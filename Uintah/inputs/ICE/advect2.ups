@@ -97,11 +97,17 @@
 			<BCType label = "Pressure" var = "Neumann">
         	                 <value> 0. </value>
 			</BCType>
+			<BCType label = "Density" var = "Dirichlet">
+			   <value> 1.1792946927374306000e+00 </value>	
+                        </BCType>
 	        </Face>
 		<Face side = "z+">
 			<BCType label = "Pressure" var = "Neumann">
         	              <value> 0. </value>
 			</BCType>
+			<BCType label = "Density" var = "Dirichlet">
+			   <value> 1.1792946927374306000e+00 </value>	
+                        </BCType>
 	        </Face>
 	</BoundaryConditions>
 	<Level>
@@ -147,6 +153,7 @@
 	    <time_integrator>explicit    </time_integrator>
 	    <max_iteration>  100         </max_iteration>
   	    <delt_based_on>  convective  </delt_based_on>
+	    <max_iteration_equilibration> 50 </max_iteration_equilibration>
 	</ICE>	 
     </CFD>
 
