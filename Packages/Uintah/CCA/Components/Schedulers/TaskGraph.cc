@@ -533,6 +533,15 @@ TaskGraph::createDetailedTask(DetailedTasks* tasks, Task* task,
 			      const MaterialSubset* matls)
 {
   DetailedTask* dt = scinew DetailedTask(task, patches, matls, tasks);
+
+  if (task->getType() == Task::Reduction) {
+    Task::Dependency* req = task->getRequires();
+    // reduction tasks should have at least 1 requires (and they
+    // should all be for the same variable).
+    ASSERT(req != 0); 
+    d_reductionTasks[req->var] = dt;
+  }
+		     
   tasks->add(dt);
 }
 
@@ -543,6 +552,8 @@ TaskGraph::createDetailedTasks( const ProcessorGroup* pg,
 {
   vector<Task*> sorted_tasks;
   topologicalSort(sorted_tasks);
+
+  d_reductionTasks.clear();
 
   // WARNING - this just grabs ONE level.  For AMR, we may need to be
   // more careful.
@@ -671,29 +682,38 @@ CompTable::~CompTable()
 void CompTable::remembercomp(DetailedTask* task, Task::Dependency* comp,
 			     const PatchSubset* patches, const MaterialSubset* matls)
 {
+  Data* dummy;
   if(patches && matls){
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       for(int m=0;m<matls->size();m++){
 	int matl = matls->get(m);
-	data.insert(new Data(task, comp, patch, matl));
+	Data* newData = new Data(task, comp, patch, matl);
+	ASSERT(data.lookup(newData, dummy) == 0); // no multiple computes
+	data.insert(newData);
       }
     }
   } 
   else if (matls) {
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
-      data.insert(new Data(task, comp, 0, matl));
+      Data* newData = new Data(task, comp, 0, matl);      
+      ASSERT(data.lookup(newData, dummy) == 0); // no multiple computes      
+      data.insert(newData);
     }
   }
   else if (patches) {
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      data.insert(new Data(task, comp, patch, 0));
+      Data* newData = new Data(task, comp, patch, 0);
+      ASSERT(data.lookup(newData, dummy) == 0); // no multiple computes
+      data.insert(newData);
     }
   }
   else {
-    data.insert(new Data(task, comp, 0, 0));
+    Data* newData = new Data(task, comp, 0, 0);
+    ASSERT(data.lookup(newData, dummy) == 0); // no multiple computes    
+    data.insert(newData);
   }
 }
 
@@ -744,20 +764,33 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
     DetailedTask* task = dt->getTask(i);
     for(Task::Dependency* comp = task->task->getComputes();
 	comp != 0; comp = comp->next){
-      constHandle<PatchSubset> patches =
-	comp->getPatchesUnderDomain(task->patches);
-      constHandle<MaterialSubset> matls =
-	comp->getMaterialsUnderDomain(task->matls);
-      if(!patches) {
-	// Reduction task
-	if (matls && !matls->empty()) {
-	  ct.remembercomp(task, comp, 0, matls.get_rep());
-	} else { 
-	  ct.remembercomp(task, comp, 0, 0);
+      if (comp->var->typeDescription()->isReductionVariable() &&
+	  task->getTask()->getType() != Task::Reduction) {
+	// create internal dependencies to reduction tasks from any task
+	// computing the reduction
+	DetailedTask* reductionTask = d_reductionTasks[comp->var];
+	if (reductionTask->getAssignedResourceIndex() == 
+	    task->getAssignedResourceIndex()) {
+	  // the tasks are on the same processor, so add an internal dependency
+	  reductionTask->addInternalDependency(task, comp->var);
 	}
       }
-      else if(!patches->empty() && !matls->empty())
-	ct.remembercomp(task, comp, patches.get_rep(), matls.get_rep());
+      else {
+	constHandle<PatchSubset> patches =
+	  comp->getPatchesUnderDomain(task->patches);
+	constHandle<MaterialSubset> matls =
+	  comp->getMaterialsUnderDomain(task->matls);
+	if(!patches) {
+	  // Reduction task
+	  if (matls && !matls->empty()) {
+	    ct.remembercomp(task, comp, 0, matls.get_rep());
+	  } else { 
+	    ct.remembercomp(task, comp, 0, 0);
+	  }
+	}
+	else if(!patches->empty() && !matls->empty())
+	  ct.remembercomp(task, comp, patches.get_rep(), matls.get_rep());
+      }
     }
   }
 
@@ -778,39 +811,9 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
   for(int i=0;i<dt->numTasks();i++){
     DetailedTask* task = dt->getTask(i);
     if(task->task->getType() == Task::Reduction) {
-      // only internal dependencies need to be generated for reductions
-      for (Task::Dependency* req = task->task->getRequires();
-	   req != 0; req = req->next) {
-	DetailedTask* creator;
-	Task::Dependency* comp;
-	const PatchSubset* patches = req->patches;
-	const MaterialSubset* matls = req->matls;
-	if(patches && !patches->empty() && matls && !matls->empty()){
-	  for(int i=0;i<patches->size();i++){
-	    for(int m=0;m<matls->size();m++){
-	      const Patch* patch = patches->get(i);
-	      int matl = matls->get(m);
-	      bool didFind = ct.findcomp(req, patch, matl, creator, comp);
-	      if (didFind) {
-		// it may not find it if it isn't in the local part of
-		// the taskgraph, in which case we don't need to worry
-		// about it anyways.
-		if(task->getAssignedResourceIndex() == 
-		   creator->getAssignedResourceIndex()) {
-		  task->addInternalDependency(creator, req->var);
-		}
-	      }
-	    }
-	  }
-	}
-	 else{
-          ostringstream desc;
-          desc << "TaskGraph::createDetailedDependencies, reduction task dependency not supported without patches and materials"
-             << " \n Trying to require or modify " << *req << " in Task " << task->getTask()->getName() << "\n\n";
-          throw InternalError(desc.str()); 
-        }      
-      }
-      continue;
+      // Reduction tasks were dealt with above (adding internal dependencies
+      // to the tasks computing the reduction variables.
+      continue; 
     }
 
     if(dbg.active() && (task->task->getRequires() != 0))
