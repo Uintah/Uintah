@@ -29,6 +29,9 @@ int main(int argc, char **argv)
     }
     MeshHandle mesh=new Mesh;
     ifstream ptsfile(argv[1]);
+    int n;
+    ptsfile >> n;
+    cerr << "nnodes=" << n << endl;
     while(ptsfile){
 	double x,y,z;
 	ptsfile >> x >> y >> z;
@@ -36,19 +39,24 @@ int main(int argc, char **argv)
 	    mesh->nodes.add(new Node(Point(x,y,z)));
 	}
     }
+    cerr << "nnodes=" << mesh->nodes.size() << endl;
     if(argc == 4){
 	// Have a tetra file, read it...
 	ifstream tetrafile(argv[2]);
+	int n;
+	tetrafile >> n;
+	cerr << "nelems=" << n << endl;
 	while(tetrafile){
-	    int i1, i2, i3, i4;
-	    tetrafile >> i1 >> i2 >> i3 >> i4;
+	    int i1, i2, i3, i4, cond;
+	    tetrafile >> i1 >> i2 >> i3 >> i4 >> cond;
 	    if(tetrafile){
 		mesh->elems.add(new Element(mesh.get_rep(),
 					    i1-1, i2-1, i3-1, i4-1));
 	    }
 	}
+	cerr << "nelems=" << mesh->elems.size() << endl;
     }
-    TextPiostream stream(argv[argc-1], Piostream::Write);
+    BinaryPiostream stream(argv[argc-1], Piostream::Write);
     Pio(stream, mesh);
     return 0;
 }
