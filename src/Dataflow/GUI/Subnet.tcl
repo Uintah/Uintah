@@ -188,7 +188,7 @@ proc makeSubnet { from_subnet { x 0 } { y 0 }} {
 	-name $Subnet(Subnet$Subnet(num)_Name) -subnetNumber $Subnet(num)
     set Subnet(SubnetIcon$Subnet(num)_num) $Subnet(num)
     set Subnet(SubnetIcon$Subnet(num)_connections) ""
-    SubnetIcon$Subnet(num) make_icon $x $y
+    SubnetIcon$Subnet(num) make_icon $x $y 1
     lappend Subnet(Subnet${from_subnet}_Modules) SubnetIcon$Subnet(num)
 
     # Select the item in focus, and unselect all others
@@ -247,7 +247,7 @@ proc createSubnet { from_subnet { modules "" } } {
 	set x [expr [lindex $modbbox 0] - [lindex $bbox 0] + 10]
 	set y [expr [lindex $modbbox 1] - [lindex $bbox 1] + 25]
 	set Subnet($modid) $subnet
-	$modid make_icon $x $y
+	$modid make_icon $x $y 1
     }
 
     # Create new connections to Subnet Icon and within Subnet Editor

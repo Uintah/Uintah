@@ -199,7 +199,12 @@ itcl_class Module {
 	update_progress
 	update_time
 
-	set pos [findModulePosition $Subnet([modname]) $modx $mody]
+	# compute the placement of the module icon
+	if { !$ignore_placement } {
+	    set pos [findModulePosition $Subnet([modname]) $modx $mody]
+	} else {
+	    set pos [list $modx $mody]
+	}
 	
 	# Stick it in the canvas
 	$canvas create window [lindex $pos 0] [lindex $pos 1] -anchor nw \
@@ -1281,7 +1286,6 @@ proc do_moduleDrag {modid x y} {
 
     # Total Canvas Scroll Region width and height
     set canScroll [$canvas cget -scrollregion]
-    puts "$canvas $canScroll"
     set canWidth  [expr double([lindex $canScroll 2] - [lindex $canScroll 0])]
     set canHeight [expr double([lindex $canScroll 3] - [lindex $canScroll 1])]
         
