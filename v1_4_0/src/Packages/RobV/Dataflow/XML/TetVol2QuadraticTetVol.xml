@@ -3,7 +3,7 @@
 <?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
-<component name="TetVolField2QuadraticTetVolField" category="Quadratic">
+<component name="TetVol2QuadraticTetVol" category="Quadratic">
   <overview>
     <authors>
     </authors>
