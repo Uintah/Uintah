@@ -711,7 +711,19 @@ void Module::do_execute()
   update_state(JustStarted);
   timer.clear();
   timer.start();
-  execute();
+  try {
+    execute();
+  }
+  catch (const Exception &e)
+  {
+    error("Module crashed with the following exception:");
+    error(e.message());
+  }
+  catch (...)
+  {
+    error("Module crashed with no reason given.");
+  }
+
   timer.stop();
   update_state(Completed);
 
