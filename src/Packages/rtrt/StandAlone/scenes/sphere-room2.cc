@@ -7,6 +7,9 @@
 
 #include <Packages/rtrt/Core/Satellite.h>
 #include <Packages/rtrt/Core/PortalParallelogram.h>
+#include <Packages/rtrt/Core/UVCylinder.h>
+#include <Packages/rtrt/Core/UVCylinderArc.h>
+#include <Packages/rtrt/Core/Rect.h>
 
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Camera.h>
@@ -20,18 +23,16 @@
 using namespace rtrt;
 using namespace std;
 
-#define CYLTEXSCALEX           .06
-#define CYLTEXSCALEY           .3
 #define DOORWIDTH              .05
 #define DOORHEIGHT             2.5
-#define ROOMHEIGHT             10
+#define ROOMHEIGHT             30
 #define HEIGHTRATIO            (DOORHEIGHT/ROOMHEIGHT)
-#define ROOMCENTER             9,9
-#define ROOMRADIUS             4
+#define ROOMCENTER             46,46
+#define ROOMRADIUS             50
 #define WALLTHICKNESS          .1
 #define INSCILAB               0
-#define SYSTEM_SIZE_SCALE      1.438848E-4/*1.438848E-6*/
-#define SYSTEM_DISTANCE_SCALE  6.76E-8/*3.382080E-9*/
+#define SYSTEM_SIZE_SCALE      1.438848E-5/*1.438848E-6*/
+#define SYSTEM_DISTANCE_SCALE  6.76E-9/*3.382080E-9*/
 #define SYSTEM_TIME_SCALE1     .4
 #define SYSTEM_TIME_SCALE2     .02
 #define FLIP_IMAGES            true
@@ -109,7 +110,9 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 {
   Group *solar_system = new Group();
 
-  Camera cam( Point(20,20,20), Point( 0,0,0 ), Vector(0,0,1), 45.0 );
+  Camera cam( Point(20,20,ROOMHEIGHT*.75), 
+              Point(ROOMCENTER, ROOMHEIGHT/2.), 
+              Vector(0,0,1), 60.0 );
 
   // create a scene
   double ambient_scale=0.1;
@@ -147,10 +150,58 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   MapBlendMaterial *earth_m = 
     new MapBlendMaterial(IMAGEDIR"earthclouds.ppm", white, earth_spec);
               
+  TileImageMaterial *matl0 = 
+    new TileImageMaterial(IMAGEDIR"holowall.ppm",
+                          4,Color(.5,.5,.5),0,0,0,true);
+  matl0->SetScale(9,.9);
+
+  TileImageMaterial *matl1 = 
+    new TileImageMaterial(IMAGEDIR"holowall.ppm",
+                          4,Color(.5,.5,.5),0,0,0,true);
+  matl1->SetScale(3,3);
 
   // objects
   double radius;
   double orb_radius;
+
+  UVCylinderArc* uvcylarc0 = new UVCylinderArc(matl0,Point(ROOMCENTER,0),
+                                               Point(ROOMCENTER,DOORHEIGHT),
+                                               ROOMRADIUS);
+  UVCylinderArc* uvcylarc1 = new UVCylinderArc(matl0,Point(ROOMCENTER,0),
+                                               Point(ROOMCENTER,DOORHEIGHT),
+                                               ROOMRADIUS);
+  UVCylinderArc* uvcylarc2 = new UVCylinderArc(white,Point(ROOMCENTER,0),
+                                               Point(ROOMCENTER,DOORHEIGHT),
+                                               ROOMRADIUS+WALLTHICKNESS);
+  UVCylinderArc* uvcylarc3 = new UVCylinderArc(white,Point(ROOMCENTER,0),
+                                               Point(ROOMCENTER,DOORHEIGHT),
+                                               ROOMRADIUS+WALLTHICKNESS);
+  UVCylinder* uvcyl0 = new UVCylinder(matl0,Point(ROOMCENTER,DOORHEIGHT),
+                                      Point(ROOMCENTER,ROOMHEIGHT),ROOMRADIUS);
+  UVCylinder* uvcyl1 = new UVCylinder(white,Point(ROOMCENTER,DOORHEIGHT),
+                                      Point(ROOMCENTER,ROOMHEIGHT),
+                                      ROOMRADIUS+WALLTHICKNESS);
+
+  uvcylarc0->set_arc((DOORWIDTH)*M_PI,(.5-DOORWIDTH)*M_PI);
+  uvcylarc1->set_arc((.5+DOORWIDTH)*M_PI,(2-DOORWIDTH)*M_PI);
+  uvcylarc2->set_arc((DOORWIDTH)*M_PI,(.5-DOORWIDTH)*M_PI);
+  uvcylarc3->set_arc((.5+DOORWIDTH)*M_PI,(2-DOORWIDTH)*M_PI);
+
+  Rect* floor = new Rect(matl1,Point(ROOMCENTER,0),Vector(ROOMRADIUS,0,0),
+                         Vector(0,ROOMRADIUS,0));
+  Rect* ceiling = new Rect(matl1,Point(ROOMCENTER,ROOMHEIGHT),
+                           Vector(ROOMRADIUS,0,0),
+                           Vector(0,ROOMRADIUS,0));
+
+  solar_system->add( uvcylarc0 );
+  solar_system->add( uvcylarc1 );
+  solar_system->add( uvcylarc2 );
+  solar_system->add( uvcylarc3 );
+  solar_system->add( uvcyl0 );
+  solar_system->add( uvcyl1 );
+  solar_system->add( floor );
+  solar_system->add( ceiling );
+
 
   // test portals
 #if 1
@@ -171,7 +222,9 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
   // build the sun but don't add it to the scene 
   // (represented later as a light in the scene)
-  Satellite *sol = new Satellite(table[0].name_, sol_m, Point(0,0,0), .01);
+  Satellite *sol = new Satellite(table[0].name_, sol_m, Point(ROOMCENTER,
+                                                              ROOMHEIGHT/2.), 
+                                 .01);
 
   radius = table[1].radius_*SYSTEM_SIZE_SCALE;
   orb_radius = table[1].orb_radius_*SYSTEM_DISTANCE_SCALE;
@@ -196,7 +249,6 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
   scene->addObjectOfInterest(earth,true);
 
-#if 0
   // build the other satellites
   for (unsigned loop=2; table[loop].radius_!=0; ++loop) {
 
@@ -226,10 +278,10 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
     scene->addObjectOfInterest( newsat, true );
   }
-#endif
 
   // add the light (the sun, as mentioned above)
-  Light2 *light = new Light2(sol_m, Color(1,1,1), Point(0,0,0), 1);
+  Light2 *light = new Light2(sol_m, Color(1,1,1), Point(ROOMCENTER,
+                                                        ROOMHEIGHT/2.), .2);
   scene->add_light( light );
   scene->addObjectOfInterest(light->getSphere(),true);
 
