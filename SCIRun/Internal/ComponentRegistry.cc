@@ -142,10 +142,9 @@ void ComponentRegistry::addComponentClass(const std::string& componentClassName)
 {
     ComponentModel* cm = framework->lookupComponentModel(componentClassName);
     if (cm == 0) {
-	std::cerr << "Error: could not find component model "
-		  << componentClassName << std::endl;
+        throw CCAException("Unknown component class");
     } else {
-	cm->buildComponentList();
+        cm->buildComponentList();
     }
 }
 
