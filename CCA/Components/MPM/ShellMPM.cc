@@ -31,7 +31,6 @@
 #include <Packages/Uintah/Core/Grid/SymmetryBoundCond.h>
 #include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/fillFace.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>

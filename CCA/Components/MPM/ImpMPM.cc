@@ -1062,10 +1062,13 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 
       new_dw->getModifiable(gvelocity_old,lb->gVelocityOldLabel, matl, patch);
       new_dw->getModifiable(gacceleration,lb->gAccelerationLabel,matl, patch);
-
+#if 0
       IntVector low,high;
       patch->getLevel()->findNodeIndexRange(low,high);
       high -= IntVector(1,1,1);
+#endif
+#define JOHN
+#ifndef JOHN
       for(Patch::FaceType face = Patch::startFace;
 	  face <= Patch::endFace; face=Patch::nextFace(face)){
 	const BoundCondBase *vel_bcs, *sym_bcs;
@@ -1095,6 +1098,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
                d_solver[m]->d_DOF.insert(dof[2]);
             }
 	  }
+	  delete vel_bcs;
 	}
 
 	if (sym_bcs != 0) { 
@@ -1133,8 +1137,115 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
             if (DOF.z())
               d_solver[m]->d_DOF.insert(dof[2]);
 	  }
+	  delete sym_bcs;
 	}
       }
+#else
+      for(Patch::FaceType face = Patch::startFace;
+	  face <= Patch::endFace; face=Patch::nextFace(face)){
+	const BoundCondBase *vel_bcs,*sym_bcs;
+	if (patch->getBCType(face) == Patch::None) {
+	  int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl);
+	  for (int child = 0; child < numChildren; child++) {
+	    vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
+	    vector<IntVector>::const_iterator boundary;
+	    vel_bcs = patch->getArrayBCValues(face,matl,"Velocity",bound,
+					      inter,sfx,sfy,sfz,nbound,
+					      child);
+	    sym_bcs  = patch->getArrayBCValues(face,matl,"Symmetric",bound,
+					       inter,sfx,sfy,sfz,nbound,
+					       child);
+	    if (vel_bcs != 0) {
+	      const VelocityBoundCond* bc =
+		dynamic_cast<const VelocityBoundCond*>(vel_bcs);
+	      if (bc->getKind() == "Dirichlet") {
+		for (boundary=nbound.begin(); boundary != nbound.end();
+		     boundary++) {
+		  gvelocity_old[*boundary] = bc->getValue();
+		  gacceleration[*boundary] = bc->getValue();
+		  
+		}
+		IntVector l,h;
+		patch->getFaceNodes(face,0,l,h);
+		for(NodeIterator it(l,h); !it.done(); it++) {
+		  IntVector n = *it;
+		  int dof[3];
+		  int l2g_node_num = l2g[n];
+		  dof[0] = l2g_node_num;
+		  dof[1] = l2g_node_num+1;
+		  dof[2] = l2g_node_num+2;
+		  d_solver[m]->d_DOF.insert(dof[0]);
+		  d_solver[m]->d_DOF.insert(dof[1]);
+		  d_solver[m]->d_DOF.insert(dof[2]);
+		}
+	      }
+	      delete vel_bcs;
+	    }
+	    if (sym_bcs != 0) {
+	      if (face == Patch::xplus || face == Patch::xminus)
+		for (boundary=nbound.begin(); boundary != nbound.end(); 
+		     boundary++) {
+		  gvelocity_old[*boundary] = 
+		    Vector(0.,gvelocity_old[*boundary].y(),
+			   gvelocity_old[*boundary].z());
+		  gacceleration[*boundary] = 
+		    Vector(0.,gacceleration[*boundary].y(),
+			   gacceleration[*boundary].z());
+		}
+	      if (face == Patch::yplus || face == Patch::yminus)
+		for (boundary=nbound.begin(); boundary != nbound.end(); 
+		     boundary++) {
+		  gvelocity_old[*boundary] = 
+		    Vector(gvelocity_old[*boundary].x(),0.,
+			   gvelocity_old[*boundary].z());
+		  gacceleration[*boundary] = 
+		    Vector(gacceleration[*boundary].x(),0.,
+			   gacceleration[*boundary].z());
+		}
+	      if (face == Patch::zplus || face == Patch::zminus)
+		for (boundary=nbound.begin(); boundary != nbound.end(); 
+		     boundary++) {
+		  gvelocity_old[*boundary] = 
+		    Vector(gvelocity_old[*boundary].x(),
+			   gvelocity_old[*boundary].y(),0.);
+		  gacceleration[*boundary] = 
+		    Vector(gacceleration[*boundary].x(),
+			   gacceleration[*boundary].y(),0.);
+		}
+	      IntVector l,h;
+	      patch->getFaceNodes(face,0,l,h);
+	      for(NodeIterator it(l,h); !it.done(); it++) {
+		IntVector n = *it;
+		// The DOF is an IntVector which is initially (0,0,0).
+		// Inserting a 1 into any of the components indicates that 
+		// the component should be inserted into the DOF array.
+		IntVector DOF(0,0,0);
+		if (face == Patch::xminus || face == Patch::xplus)
+		  DOF=IntVector(max(DOF.x(),1),max(DOF.y(),0),max(DOF.z(),0));
+		if (face == Patch::yminus || face == Patch::yplus)
+		  DOF=IntVector(max(DOF.x(),0),max(DOF.y(),1),max(DOF.z(),0));
+		if (face == Patch::zminus || face == Patch::zplus)
+		  DOF=IntVector(max(DOF.x(),0),max(DOF.y(),0),max(DOF.z(),1));
+		
+		int dof[3];
+		int l2g_node_num = l2g[n];
+		dof[0] = l2g_node_num;
+		dof[1] = l2g_node_num+1;
+		dof[2] = l2g_node_num+2;
+		if (DOF.x())
+		  d_solver[m]->d_DOF.insert(dof[0]);
+		if (DOF.y())
+		  d_solver[m]->d_DOF.insert(dof[1]);
+		if (DOF.z())
+		  d_solver[m]->d_DOF.insert(dof[2]);
+	      }
+	      delete sym_bcs;
+	    }
+	  }
+	} else
+	  continue;
+      }
+#endif      
     }
   }
 
