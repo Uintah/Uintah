@@ -26,28 +26,26 @@
     <authors>
       <author>David Weinstein</author>
     </authors>
-    <summary>The module changes/recreates right-hand side (RHS) for Finite
-    Elements discretization approach due to source current dipoles</summary>
+    <summary>Due to course current dipoles, the ApplyFEMCurrentSource module changes and recreates the right-hand side (RHS) for the Finite
+    Elements discretization approach.</summary>
     <description>
       <p>Version Date: March 2001</p><p>Version: 1.0</p>
-      <p>The module has the following behaviour:</p>
       <orderedlist>
 	<listitem>
-	  <p>When the module doesn't find ColumnMatrix on its imput
-	  containing RHS to modify or the ColumnMatrix found is of
-	  size different than the number of nodes in the mesh, it creates new ColumnMatrix and
-	  fills it in correspondence with supplied mesh and dipole parameters</p>
+	  <p>The ApplyFEMCurrentSource module creates and fills a new ColumnMatrix,
+	  according to mesh and dipole parameters in situations where it does not locate a ColumnMatrix on its input
+	  that contains an RHS to modify, or when the module finds a ColumnMatrix of a 
+	  different size than the number of nodes in the mesh.</p>
 	</listitem>
 	<listitem>
-	  <p>The supplied mesh is assumed to be of type TetVolField(int)
-	  containing indices to conductivity tensor lookup
-	  table. Further requirements to the supplied mesh are
-	  described in documentation to BioPSE::Forward::SetupFEMatrix module</p>
+	  <p>We assume the mesh to be a TetVolField(int) type,
+	  containing indices to the conductivity tensor lookup table.
+	  The documentation for BioPSE::Forward::SetupFEMatrix module provides further documentation about this mesh.</p>
 	</listitem>
 	<listitem>
 	  <p>Dipoles are represented as nodes in TetVolMesh. The
 	  corresponding value are vectors representing dipole
-	  moments. So the module expects dipoles as TetVolField(Vector) field</p>
+	  moments. Thus, the module expects dipoles as TetVolField(Vector) field</p>
 	</listitem>
       </orderedlist>
     </description>
