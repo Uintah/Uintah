@@ -143,7 +143,16 @@ CompileInfo::create_cc(ostream &fstr, bool empty) const
 	string::size_type endloc = loc+srcdir.size()+1;
 	fstr << "#include <" << s.substr(endloc) << ">\n";
       } else {
-	fstr << "#include \"" << s << "\"\n";
+	// when using TAU, we will have the prefix .inst.h instead of .h
+        // we fix it here
+        if (s.find(".inst.") != string::npos) {
+          int pos = s.find(".inst.");
+          string newString = s;
+          newString.replace(pos,6,".");
+          fstr << "#include \"" << newString << "\"\n";
+        } else {
+          fstr << "#include \"" << s << "\"\n";
+        }
       }
     }
     ++iter;
