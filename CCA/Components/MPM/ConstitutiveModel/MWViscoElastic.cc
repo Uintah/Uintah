@@ -88,35 +88,62 @@ void MWViscoElastic::initializeCMData(const Patch* patch,
 }
 
 
+void MWViscoElastic::allocateCMDataAddRequires(Task* task,
+					       const MPMMaterial* matl,
+					       const PatchSet* patch,
+					       MPMLabel* lb) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pStress_eLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pStress_ve_vLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pStress_ve_dLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pStress_e_vLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pStress_e_dLabel, Ghost::None);
+
+}
+
+
 void MWViscoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
-				       ParticleSubset* subset,
+				       ParticleSubset* addset,
 				       map<const VarLabel*, ParticleVariableBase*>* newState,
 				       ParticleSubset* delset,
 				       DataWarehouse* old_dw)
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
-  Matrix3 Identity, zero(0.);
-  Identity.Identity();
+  Matrix3 zero(0.);
   
   ParticleVariable<Matrix3> deformationGradient,pstress_e,pstress_ve_d,
     pstress_e_d;
   ParticleVariable<double> pstress_ve_v,pstress_e_v;
-  new_dw->allocateTemporary(deformationGradient,subset);
-  new_dw->allocateTemporary(pstress_e,subset);
-  new_dw->allocateTemporary(pstress_ve_v,subset);
-  new_dw->allocateTemporary(pstress_ve_d,subset);
-  new_dw->allocateTemporary(pstress_e_v,subset);
-  new_dw->allocateTemporary(pstress_e_d,subset);
 
-  for(ParticleSubset::iterator iter = subset->begin();iter != subset->end();
-      iter++){
-    deformationGradient[*iter] = Identity;
-    pstress_e[*iter] = zero;
-    pstress_ve_v[*iter] = 0.0;
-    pstress_ve_d[*iter] = zero;
-    pstress_e_v[*iter] = 0.0;
-    pstress_e_d[*iter] = zero;
+  constParticleVariable<Matrix3> o_deformationGradient,o_stress_e,
+    o_stress_ve_d,o_stress_e_d;
+  constParticleVariable<double> o_stress_ve_v,o_stress_e_v;
+
+  new_dw->allocateTemporary(deformationGradient,addset);
+  new_dw->allocateTemporary(pstress_e,addset);
+  new_dw->allocateTemporary(pstress_ve_v,addset);
+  new_dw->allocateTemporary(pstress_ve_d,addset);
+  new_dw->allocateTemporary(pstress_e_v,addset);
+  new_dw->allocateTemporary(pstress_e_d,addset);
+
+  old_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel,delset);
+  old_dw->get(o_stress_e,          lb->pStress_eLabel,          delset);
+  old_dw->get(o_stress_ve_v,       lb->pStress_ve_vLabel,       delset);
+  old_dw->get(o_stress_ve_d,       lb->pStress_ve_dLabel,       delset);
+  old_dw->get(o_stress_e_v,        lb->pStress_e_vLabel,        delset);
+  old_dw->get(o_stress_e_d,        lb->pStress_e_dLabel,        delset);
+
+  ParticleSubset::iterator o,n = addset->begin();
+  for (o=delset->begin(); o != delset->end(); o++, n++) {
+    deformationGradient[*n] = o_deformationGradient[*o];
+    pstress_e[*n] = o_stress_e[*o];
+    pstress_ve_v[*n] = o_stress_ve_v[*o];
+    pstress_ve_d[*n] = o_stress_ve_d[*o];
+    pstress_e_v[*n] = o_stress_e_v[*o];
+    pstress_e_d[*n] = o_stress_e_d[*o];
   }
 
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();

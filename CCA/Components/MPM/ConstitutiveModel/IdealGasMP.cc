@@ -72,32 +72,44 @@ void IdealGasMP::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
+void IdealGasMP::allocateCMDataAddRequires(Task* task,
+						   const MPMMaterial* matl,
+						   const PatchSet* patch,
+						   MPMLabel* lb) const
+{
+  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+}
+
 void IdealGasMP::allocateCMDataAdd(DataWarehouse* new_dw,
-				   ParticleSubset* subset,
+				   ParticleSubset* addset,
 				   map<const VarLabel*, ParticleVariableBase*>* newState,
 				   ParticleSubset* delset,
 				   DataWarehouse* old_dw)
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
-  Matrix3 Identity, zero(0.);
-  Identity.Identity();
+  Matrix3  zero(0.);
+  ParticleSubset::iterator n,o;
 
   ParticleVariable<Matrix3> deformationGradient, pstress;
 
-  new_dw->allocateTemporary(deformationGradient,subset);
-  new_dw->allocateTemporary(pstress,subset);
+  constParticleVariable<Matrix3> o_DeformGrad, o_Stress;
 
-  for(ParticleSubset::iterator iter = subset->begin();iter != subset->end();
-      iter++){
-    deformationGradient[*iter] = Identity;
-    pstress[*iter] = zero;
+  new_dw->allocateTemporary(deformationGradient,addset);
+  new_dw->allocateTemporary(pstress,addset);
+
+  old_dw->get(o_DeformGrad,lb->pDeformationMeasureLabel,delset);
+  old_dw->get(o_Stress,lb->pStressLabel,delset);
+
+  n = addset->begin();
+  for (o=delset->begin(); o != delset->end(); o++, n++) {
+    deformationGradient[*n] = o_DeformGrad[*o];
+    pstress[*n] = zero;
   }
 
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
   (*newState)[lb->pStressLabel]=pstress.clone();
- 
-
 }
 
 

@@ -85,8 +85,21 @@ void Membrane::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
+
+void Membrane::allocateCMDataAddRequires(Task* task,
+					 const MPMMaterial* matl,
+					 const PatchSet* patch,
+					 MPMLabel* lb) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+  task->requires(Task::OldDW,defGradInPlaneLabel, Ghost::None);
+}
+
+
 void Membrane::allocateCMDataAdd(DataWarehouse* new_dw,
-				 ParticleSubset* subset,
+				 ParticleSubset* addset,
 				 map<const VarLabel*, ParticleVariableBase*>* newState,
 				 ParticleSubset* delset,
 				 DataWarehouse* old_dw)
@@ -97,16 +110,21 @@ void Membrane::allocateCMDataAdd(DataWarehouse* new_dw,
   Identity.Identity();
 
   ParticleVariable<Matrix3> deformationGradient, pstress, defGradIP;
+  constParticleVariable<Matrix3> o_deformationGradient, o_stress, o_defGradIP;
 
-  new_dw->allocateTemporary(deformationGradient,subset);
-  new_dw->allocateTemporary(defGradIP,subset);
-  new_dw->allocateTemporary(pstress,subset);
+  new_dw->allocateTemporary(deformationGradient,addset);
+  new_dw->allocateTemporary(defGradIP,addset);
+  new_dw->allocateTemporary(pstress,addset);
 
-  for(ParticleSubset::iterator iter = subset->begin();
-          iter != subset->end(); iter++) {
-    deformationGradient[*iter] = Identity;
-    defGradIP[*iter] = Identity;
-    pstress[*iter] = zero;
+  old_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel,delset);
+  old_dw->get(o_defGradIP,defGradInPlaneLabel,delset);
+  old_dw->get(o_stress,lb->pStressLabel,delset);
+
+  ParticleSubset::iterator o,n=addset->begin();
+  for (o=delset->begin(); o != delset->end(); o++, n++) {
+    deformationGradient[*n] = o_deformationGradient[*o];
+    defGradIP[*n] = o_defGradIP[*o];
+    pstress[*n] = zero;
   }
 
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();

@@ -269,7 +269,6 @@ void HypoElasticPlastic::allocateCMDataAddRequires(Task* task,
   task->requires(Task::OldDW,pPlasticTempLabel, Ghost::None);
 
   d_plastic->allocateCMDataAddRequires(task,matl,patch,lb);
-
 }
 
 void HypoElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
@@ -322,8 +321,6 @@ void HypoElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
     pDamage[*n] = o_Damage[*o];
     pLocalized[*n] = o_Localized[*o];
     pPlasticTemperature[*n] = o_PlasticTemperature[*o];
-
-
   }
 
   (*newState)[pLeftStretchLabel]=pLeftStretch.clone();
