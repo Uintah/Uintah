@@ -163,7 +163,8 @@ void GenField::tfill(A *attrib, int x, int y, int z)
   }
 }
 
-    
+
+
 void
 GenField::execute()
 {
@@ -183,7 +184,6 @@ GenField::execute()
   dbg << "attribtype: " << mattribtype << endl; 
   //switch (mattribtype)
   DiscreteAttrib<double> *attrib;
-#if 0
   switch (mgeomtype)
     {
     case 4:
@@ -205,18 +205,8 @@ GenField::execute()
       attrib = new FlatAttrib<double>(x, y, z);
       tfill((FlatAttrib<double> *)attrib, x, y, z);
     }
-#elif 0
-  attrib = new WrapAttrib<double>(x, y, z);
-  tfill((WrapAttrib<double> *)attrib, x, y, z);
   dbg << "Attrib in Genfield:\n" << attrib->get_info() << endl;
-#else
-  attrib = new BrickAttrib<double>(x, y, z);
-  tfill((BrickAttrib<double> *)attrib, x, y, z);
-  dbg << "Attrib in Genfield:\n" << attrib->get_info() << endl;
-#endif
 
-  //dbg << "filling" << endl;
-  //fill(attrib, x, y, z);
   GenSField<double, LatticeGeom> *osf =
     new GenSField<double, LatticeGeom>(geom, attrib);
   osf->set_bbox(Point(0, 0, 0), Point(x-1, y-1, z-1));
