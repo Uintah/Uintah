@@ -1054,7 +1054,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
      "-gridcellsize",
      "100",
      "-nl",
-     "2" };
+     "10" };
   
   make_brain_glyphs(glyphs, holo_lights, ac, av);
 #endif
