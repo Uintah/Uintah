@@ -88,6 +88,7 @@ public:
   std::string fullname() const;
   std::string cppfullname() const;
   void emit(EmitState& e) const;
+
 };
 
 #endif

@@ -102,6 +102,32 @@ int main(int argc, char* argv[])
 	emit_header=true;
       } else if(arg == "-cia") {
 	doing_cia=true;
+      } else if(arg == "-I") {
+        i++;
+	if(i>=argc){
+	  cerr << "No file specified for -I\n";
+	  exit(1);
+	}
+	foremit=false;
+	char* ccabuf=new char[strlen(cpp)+strlen(argv[i])+10];
+	sprintf(ccabuf, "%s %s", cpp, argv[i]);
+	yyin=popen(ccabuf, "r");
+	delete[] ccabuf;
+	if(!yyin){
+	  cerr << "Error opening file: " << argv[i] << '\n';
+	  failed=true;
+	}
+	if(yyparse()){
+	  cerr << "Error parsing file: " << argv[i] << '\n';
+	  failed=true;
+	}
+	if(pclose(yyin) == -1){
+	  perror("pclose");
+	  failed=true;
+	}
+        parse_spec->isImport=true;
+	specs.add(parse_spec);
+	parse_spec=0;
       } else {
 	cerr << "Unknown option: " << argv[i] << endl;
 	exit(1);
@@ -130,7 +156,7 @@ int main(int argc, char* argv[])
 	parse_spec=0;
 	done_builtin=true;
       }
-      
+
       foremit=true;
       nfiles++;
       char* buf=new char[strlen(cpp)+strlen(argv[i])+10];
@@ -164,6 +190,7 @@ int main(int argc, char* argv[])
   /*
    * Process imports...
    */
+
   specs.processImports();
 
   /*

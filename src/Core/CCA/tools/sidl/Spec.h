@@ -63,10 +63,11 @@ public:
   virtual void emit(EmitState& out)=0;
   void setName(const std::string& name);
   bool isEmitted() { return emitted_declaration; }
+  bool isImport;
+  std::string curfile;
 protected:
   Definition(const std::string& curfile, int lineno,
 	     const std::string& name);
-  std::string curfile;
   int lineno;
   std::string name;
   SymbolTable* symbols;
@@ -233,7 +234,7 @@ public:
   void staticCheck(SymbolTable*) const;
   void gatherSymbols(SymbolTable*) const;
   void emit(EmitState& out);
-private:
+  void processImports();
   std::vector<Definition*> list;
 };
 
@@ -348,7 +349,6 @@ public:
   virtual void staticCheck(SymbolTable*);
   virtual void gatherSymbols(SymbolTable*);
   virtual void emit(EmitState& out);
-private:
   DefinitionList* definition;
 };
 
@@ -456,7 +456,7 @@ public:
   void staticCheck(SymbolTable* globals);
   void gatherSymbols(SymbolTable* globals);
   void processImports();
-private:
+  bool isImport;
   VersionList* versions;
   ScopedNameList* imports;
   DefinitionList* packages;
