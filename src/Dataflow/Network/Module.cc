@@ -71,36 +71,41 @@ ModuleInfo* GetModuleInfo(const clString& name, const clString& catname,
 void *FindLibrarySymbol(const char* package, const char* type, 
 			const char* symbol)
 {
-  char* libname = new char[strlen(package)+strlen(symbol)+15];
   void* SymbolAddress = 0;
   LIBRARY_HANDLE so = 0;
 
+  clString pname(package);
+  clString pak_bname,cat_bname;
+  if (pname=="SCIRun") {
+    pak_bname = "libDataflow.so";
+    cat_bname = "libDataflow_Ports.so";
+  } else {
+    pak_bname = clString("libPackages_")+pname+"_Dataflow.so";
+    cat_bname = clString("libPackages_")+pname+"_Dataflow_Ports.so";
+  }
+
   // maybe it's in the small version of the .so
-  sprintf(libname,"lib%s_Ports.so",package);
-  so = GetLibraryHandle(libname);
+  so = GetLibraryHandle(cat_bname());
   if (so) {
     SymbolAddress = GetHandleSymbolAddress(so,symbol);
     if (SymbolAddress) goto found;
   }
 
   // maybe it's in the large version of the .so
-  sprintf(libname,"lib%s.so",package);
-  so = GetLibraryHandle(libname);
+  so = GetLibraryHandle(pak_bname());
   if (so) {
     SymbolAddress = GetHandleSymbolAddress(so,symbol);
     if (SymbolAddress) goto found;
   }
 
   // maybe it's in a .so that doesn't conform to the naming convention
-  sprintf(libname,"%s",package);
-  so = GetLibraryHandle(libname);
+  so = GetLibraryHandle(pname());
   if (so) {
     SymbolAddress = GetHandleSymbolAddress(so,symbol);
     if (SymbolAddress) goto found;
   }
 
  found:
-  delete[] libname;
   return SymbolAddress;
 }
 
