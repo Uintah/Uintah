@@ -43,11 +43,18 @@ public:
   // Destructor
   virtual ~Accel3Attrib();
   
+  virtual void get3(T &result, int x, int y, int z);
+
+  virtual T &get3(int x, int y, int z);
+
   //////////
   // return the value at the given position
-  const T& get3(int, int, int) const;
+  T& fget3(int, int, int);
 
-  T& set3(int, int, int, T& val);
+
+  virtual void set3(int x, int y, int z, const T &val);
+  void fset3(int x, int y, int z, const T &val);
+
 
   //////////
   // Resize the attribute to the specified dimensions
@@ -110,20 +117,42 @@ Accel3Attrib<T>::Accel3Attrib(const Accel3Attrib<T>& copy)
   create_accel_structure();
 }
 
-
-template <class T> const T &
-Accel3Attrib<T>::get3(int ix, int iy, int iz) const
+template <class T> T &
+Accel3Attrib<T>::fget3(int ix, int iy, int iz)
 {
   return accel[iz][iy][ix];
 }
 
 
-template <class T>
-T&
-Accel3Attrib<T>::set3(int ix, int iy, int iz, T& val)
+// Copy wrappers, no allocation of result.
+template <class T> void
+Accel3Attrib<T>::get3(T &result, int ix, int iy, int iz)
 {
-  return accel[iz][iy][ix] = val;
+  result = fget3(ix, iy, iz);
 }
+
+
+// Virtual wrappers for inline functions.
+template <class T> T &
+Accel3Attrib<T>::get3(int ix, int iy, int iz)
+{
+  return fget3(ix, iy, iz);
+}
+
+
+template <class T> void
+Accel3Attrib<T>::fset3(int x, int y, int z, const T &val)
+{
+  accel[z][y][x] = val;
+}
+
+
+template <class T> void
+Accel3Attrib<T>::set3(int x, int y, int z, const T &val)
+{
+  fset3(x, y, z, val);
+}
+
 
 
 template <class T>
