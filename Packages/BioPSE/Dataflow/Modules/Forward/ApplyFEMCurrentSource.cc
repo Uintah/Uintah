@@ -54,6 +54,7 @@ class ApplyFEMCurrentSource : public Module {
 
   //! Output ports
   MatrixOPort*  oportRhs_;
+  MatrixOPort*  oportWeights_;
 
   int gen_;
   TetVolMesh::Cell::index_type loc;
@@ -88,6 +89,9 @@ ApplyFEMCurrentSource::ApplyFEMCurrentSource(const string& id)
   // Create the output ports
   oportRhs_=scinew MatrixOPort(this,"Output RHS", MatrixIPort::Atomic);
   add_oport(oportRhs_);
+
+  oportWeights_=scinew MatrixOPort(this,"Output Weights", MatrixIPort::Atomic);
+  add_oport(oportWeights_);
 }
 
 ApplyFEMCurrentSource::~ApplyFEMCurrentSource()
@@ -153,7 +157,7 @@ void ApplyFEMCurrentSource::execute()
 
   //! Computing contributions of dipoles to RHS
   PointCloudMesh::Node::iterator ii;
-  
+  Array1<double> weights;
   for (ii=hDipField->get_typed_mesh()->node_begin(); ii!=hDipField->get_typed_mesh()->node_end(); ++ii) {
     
     Vector dir = hDipField->value(*ii);
@@ -161,6 +165,17 @@ void ApplyFEMCurrentSource::execute()
     hDipField->get_typed_mesh()->get_point(p, *ii);
     
     if (hMesh->locate(loc, p)) {
+      if (fabs(dir.x()) > 0.000001) {
+	weights.add(loc*3);
+	weights.add(dir.x());
+      } else if (fabs(dir.y()) > 0.000001) {
+	weights.add(loc*3+1);
+	weights.add(dir.y());
+      } else if (fabs(dir.z()) > 0.000001) {
+	weights.add(loc*3+2);
+	weights.add(dir.z());
+      }
+
       double s1, s2, s3, s4;
       Vector g1, g2, g3, g4;
       hMesh->get_gradient_basis(loc, g1, g2, g3, g4);
@@ -169,10 +184,9 @@ void ApplyFEMCurrentSource::execute()
       s2=Dot(g2,dir);
       s3=Dot(g3,dir);
       s4=Dot(g4,dir);
-      TetVolMesh::Node::array_type cell_nodes;
       
+      TetVolMesh::Node::array_type cell_nodes;
       hMesh->get_nodes(cell_nodes, loc);
-
       (*rhs)[cell_nodes[0]]+=s1;
       (*rhs)[cell_nodes[1]]+=s2;
       (*rhs)[cell_nodes[2]]+=s3;
@@ -186,13 +200,12 @@ void ApplyFEMCurrentSource::execute()
     
     gen_=hSource->generation;
   }
+  ColumnMatrix* w = scinew ColumnMatrix(weights.size());
+  for (int i=0; i<weights.size(); i++) (*w)[i]=weights[i];
   
   //! Sending result
   oportRhs_->send(MatrixHandle(rhs)); 
+  oportWeights_->send(MatrixHandle(w));
 }
 
 } // End namespace BioPSE
-
-
-
-
