@@ -420,7 +420,7 @@ void OpenGL::redraw_frame()
   double fovy=RtoD(2*Atan(1.0/aspect*Tan(DtoR(view.fov()/2.))));
   
   drawinfo->reset();
-  const bool do_stereo= viewwindow->do_stereo.get(); 
+  int do_stereo=viewwindow->do_stereo.get();
   
 #ifdef __sgi
   //  --  BAWGL  -- 
@@ -457,15 +457,14 @@ void OpenGL::redraw_frame()
     TimeThrottle throttle;
     throttle.start();
     Vector eyesep(0,0,0);
-    if (do_stereo && false) // DEBUG
-    {
+    if(do_stereo){
       //      double eye_sep_dist=0.025/2;
-      const double eye_sep_dist =
-	viewwindow->sbase.get() * (viewwindow->sr.get() ? 0.048 : 0.0125);
+      double eye_sep_dist=viewwindow->sbase.get()*
+	(viewwindow->sr.get()?0.048:0.0125);
       Vector u, v;
       view.get_viewplane(aspect, 1.0, u, v);
       u.normalize();
-      const double zmid = (znear+zfar) * 0.5;
+      double zmid=(znear+zfar)/2.;
       eyesep=u*eye_sep_dist*zmid;
     }
     
@@ -492,495 +491,445 @@ void OpenGL::redraw_frame()
       bawgl->getControllerState(pinchID, &pinch);
     }
 #endif
-
-    cout << "BEFORE FOR LOOP\n";
     
-    for(int t=0;t<nframes;t++)
-    {
+    for(int t=0;t<nframes;t++){
       int n=1;
 #ifdef __sgi
-      if ( do_stereo || do_bawgl ) n=2;
+      if( do_stereo || do_bawgl ) n=2;
+      for(int i=0;i<n;i++){
+	if( do_stereo || do_bawgl ){
 #else
-      if ( do_stereo ) n=1;
+	  if( do_stereo ) n=2;
+	  for(int i=0;i<n;i++){
+	    if( do_stereo ){
 #endif
-      for(int i=0;i<n;i++)
-      {
-#ifdef __sgi 	
-	if( do_stereo || do_bawgl )
-	{
-	  glDrawBuffer(i==0?GL_BACK_LEFT:GL_BACK_RIGHT);
-	}
-	else
-	{
-	  glDrawBuffer(GL_BACK);
-	}
-#else
-	cout << " DEBUG 1\n";
-	if( do_stereo )
-	{
-	  glDrawBuffer(i==0?GL_BACK_LEFT:GL_BACK_RIGHT);
-	}
-	else
-	{
-	  glDrawBuffer(GL_BACK);
-	}
-#endif
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glViewport(0, 0, xres, yres);
+	      glDrawBuffer(i==0?GL_BACK_LEFT:GL_BACK_RIGHT);
+	    } else {
+	      glDrawBuffer(GL_BACK);
+	    }
 	    
-	double modeltime=t*dt+tbeg;
-	viewwindow->set_current_time(modeltime);
+	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	    glViewport(0, 0, xres, yres);
+	    
+	    double modeltime=t*dt+tbeg;
+	    viewwindow->set_current_time(modeltime);
 	    
 #ifdef __sgi
-	if( do_bawgl ) // render head tracked stereo
-	{
-	  bawgl->setViewPort(0, 0, xres, yres);
+	    if( do_bawgl ) // render head tracked stereo
+	    {
+	      bawgl->setViewPort(0, 0, xres, yres);
 	      
-	  if( i==1 )
-	  {
-	    bawgl->setModelViewMatrix(BAWGL_RIGHT_EYE);
-	    bawgl->setProjectionMatrix(BAWGL_RIGHT_EYE);
-	  }
-	  else
-	  {
-	    bawgl->setModelViewMatrix(BAWGL_LEFT_EYE);
-	    bawgl->setProjectionMatrix(BAWGL_LEFT_EYE);
-	  }
+	      if( i==1 )
+	      {
+		bawgl->setModelViewMatrix(BAWGL_RIGHT_EYE);
+		bawgl->setProjectionMatrix(BAWGL_RIGHT_EYE);
+	      }
+	      else
+	      {
+		bawgl->setModelViewMatrix(BAWGL_LEFT_EYE);
+		bawgl->setProjectionMatrix(BAWGL_LEFT_EYE);
+	      }
 	      
-	  bawgl->setSurfaceView();
+	      bawgl->setSurfaceView();
 	      
-	  glPushMatrix();
+	      glPushMatrix();
 	      
-	  bawgl->setVirtualView();
-	} else 
-	  //  --  BAWGL  -- 
+	      bawgl->setVirtualView();
+	    } else 
+	      //  --  BAWGL  -- 
 #endif
-	{  // render normal
-	  glMatrixMode(GL_PROJECTION);
-	  glLoadIdentity();
-	  gluPerspective(fovy, aspect, znear, zfar);
-	  glMatrixMode(GL_MODELVIEW);
-	  glLoadIdentity();
-	  Point eyep(view.eyep());
-	  Point lookat(view.lookat());
-	  if (do_stereo)
-	  {
-	    if (i==0)
-	    {
-	      eyep-=eyesep;
-	      if (!viewwindow->sr.get())
-	      {
-		lookat-=eyesep;
+	    {  // render normal
+	      glMatrixMode(GL_PROJECTION);
+	      glLoadIdentity();
+	      gluPerspective(fovy, aspect, znear, zfar);
+	      glMatrixMode(GL_MODELVIEW);
+	      glLoadIdentity();
+	      Point eyep(view.eyep());
+	      Point lookat(view.lookat());
+	      if(do_stereo){
+		if(i==0){
+		  eyep-=eyesep;
+		  if (!viewwindow->sr.get())
+		    lookat-=eyesep;
+		} else {
+		  eyep+=eyesep;
+		  if (!viewwindow->sr.get())
+		    lookat+=eyesep;
+		}
 	      }
+	      Vector up(view.up());
+	      gluLookAt(eyep.x(), eyep.y(), eyep.z(),
+			lookat.x(), lookat.y(), lookat.z(),
+			up.x(), up.y(), up.z());
 	    }
-	    else
-	    {
-	      eyep+=eyesep;
-	      if (!viewwindow->sr.get())
-	      {
-		lookat+=eyesep;
-	      }
+	    
+	    // Set up Lighting
+	    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+	    Lighting& l=viewer->lighting;
+	    int idx=0;
+	    int ii;
+	    for(ii=0;ii<l.lights.size();ii++){
+	      Light* light=l.lights[ii];
+	      light->opengl_setup(view, drawinfo, idx);
 	    }
-	  }
-	  Vector up(view.up());
-	  gluLookAt(eyep.x(), eyep.y(), eyep.z(),
-		    lookat.x(), lookat.y(), lookat.z(),
-		    up.x(), up.y(), up.z());
-	}
+	    for(ii=0;ii<idx && ii<maxlights;ii++)
+	      glEnable((GLenum)(GL_LIGHT0+ii));
+	    for(;ii<maxlights;ii++)
+	      glDisable((GLenum)(GL_LIGHT0+ii));
 	    
-	cout << " DEBUG 2\n";
-
-	glBegin(GL_POINTS);
-	glVertex3f(0.0, 0.0, 0.0);
-	glEnd();
-
-	// Set up Lighting
-	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-	Lighting& l=viewer->lighting;
-	int idx=0;
-	int ii;
-	for(ii=0;ii<l.lights.size();ii++)
-	{
-	  Light* light=l.lights[ii];
-	  light->opengl_setup(view, drawinfo, idx);
-	}
-	cout << "   DEBUG 2 0\n";
-	for(ii=0;ii<idx && ii<maxlights;ii++)
-	  glEnable((GLenum)(GL_LIGHT0+ii));
-	for(;ii<maxlights;ii++)
-	  glDisable((GLenum)(GL_LIGHT0+ii));
+	    // now set up the fog stuff
 	    
-	// now set up the fog stuff
-	cout << "   DEBUG 2 1\n";
+	    glFogi(GL_FOG_MODE,GL_LINEAR);
+	    glFogf(GL_FOG_START,float(znear));
+	    glFogf(GL_FOG_END,float(zfar));
+	    GLfloat bgArray[4];
+	    bgArray[0]=bg.r(); 
+	    bgArray[1]=bg.g(); 
+	    bgArray[2]=bg.b(); 
+	    bgArray[3]=1.0;
+	    glFogfv(GL_FOG_COLOR, bgArray);
 	    
-	glFogi(GL_FOG_MODE,GL_LINEAR);
-	glFogf(GL_FOG_START,float(znear));
-	glFogf(GL_FOG_END,float(zfar));
-	GLfloat bgArray[4];
-	bgArray[0]=bg.r(); 
-	bgArray[1]=bg.g(); 
-	bgArray[2]=bg.b(); 
-	bgArray[3]=1.0;
-	glFogfv(GL_FOG_COLOR, bgArray);
+	    // now make the ViewWindow setup its clipping planes...
+	    viewwindow->setClip(drawinfo);
 	    
-	cout << "   DEBUG 2 2\n";
-
-	// now make the ViewWindow setup its clipping planes...
-	viewwindow->setClip(drawinfo);
+            // UNICAM addition
+            glGetDoublev (GL_MODELVIEW_MATRIX, get_depth_model);
+            glGetDoublev (GL_PROJECTION_MATRIX, get_depth_proj);
+            glGetIntegerv(GL_VIEWPORT, get_depth_view);
 	    
-	cout << "   DEBUG 2 3\n";
-	// UNICAM addition
-	glGetDoublev (GL_MODELVIEW_MATRIX, get_depth_model);
-	glGetDoublev (GL_PROJECTION_MATRIX, get_depth_proj);
-	glGetIntegerv(GL_VIEWPORT, get_depth_view);
-	    
-	cout << "   DEBUG 2 4\n";
-	// Draw it all...
-	current_time=modeltime;
-	viewwindow->do_for_visible(this, (ViewWindowVisPMF)&OpenGL::redraw_obj);
-
-	cout << " DEBUG 3\n";
+	    // Draw it all...
+	    current_time=modeltime;
+	    viewwindow->do_for_visible(this, (ViewWindowVisPMF)&OpenGL::redraw_obj);
 	    
 #ifdef __sgi
-	//  --  BAWGL  -- 
-	if( do_bawgl ) // render stylus and pinch 'metaphores'
-	{
-	  glPopMatrix();
+	    //  --  BAWGL  -- 
+	    if( do_bawgl ) // render stylus and pinch 'metaphores'
+	    {
+	      glPopMatrix();
 	      
-	  glPushMatrix();
-	  glMultMatrixf(realStylusMatrix);
-	  stylusCylinder[0]->draw(drawinfo, stylusMaterial[0], 
+	      glPushMatrix();
+	      glMultMatrixf(realStylusMatrix);
+	      stylusCylinder[0]->draw(drawinfo, stylusMaterial[0], 
+				      current_time);
+	      
+	      if( stylus == BAWGL_STYLUS_ON )
+	      {
+		stylusCylinder[1]->draw(drawinfo, stylusMaterial[2], 
+					current_time);
+		stylusTriangle[0]->draw(drawinfo, stylusMaterial[3], 
+					current_time);
+		stylusTriangle[1]->draw(drawinfo, stylusMaterial[4], 
+					current_time);
+		stylusTriangle[2]->draw(drawinfo, stylusMaterial[7], 
+					current_time);
+		stylusTriangle[3]->draw(drawinfo, stylusMaterial[8], 
+					current_time);
+	      }
+	      else
+	      {
+		stylusCylinder[1]->draw(drawinfo, stylusMaterial[1], 
+					current_time);
+	      }
+	      glPopMatrix();
+	      
+	      if( !bawgl->pick )
+	      {
+		glPushMatrix();
+		glMultMatrixf(realPinchMatrix);
+		pinchSphere->draw(drawinfo, pinchMaterial, 
 				  current_time);
+		glPopMatrix();
+	      }
 	      
-	  if( stylus == BAWGL_STYLUS_ON )
-	  {
-	    stylusCylinder[1]->draw(drawinfo, stylusMaterial[2], 
+	      if( bawgl->scale )
+	      {
+		glPushMatrix();
+		glMultMatrixf(realPinchMatrix);
+		scale = bawgl->scaleFrom - realPinchMatrix[13];
+		
+		glPushMatrix();
+		if( scale > 0 )
+		{
+		  glPushMatrix();
+		  glScalef(scale, 1.0, 1.0);
+		  pinchCylinder[0]->draw(drawinfo, 
+					 stylusMaterial[3], 
+					 current_time);
+		  glPopMatrix();
+		  
+		  glTranslatef(scale, 0.0, 0.0);
+		  pinchSphere->draw(drawinfo, 
+				    pinchMaterial, current_time);
+		}
+		else
+		{
+		  glPushMatrix();
+		  glScalef(-scale, 1.0, 1.0);
+		  pinchCylinder[1]->draw(drawinfo, 
+					 stylusMaterial[3], 
+					 current_time);
+		  glPopMatrix();
+		  
+		  glTranslatef(scale, 0.0, 0.0);
+		  pinchSphere->draw(drawinfo, 
+				    pinchMaterial, 
 				    current_time);
-	    stylusTriangle[0]->draw(drawinfo, stylusMaterial[3], 
-				    current_time);
-	    stylusTriangle[1]->draw(drawinfo, stylusMaterial[4], 
-				    current_time);
-	    stylusTriangle[2]->draw(drawinfo, stylusMaterial[7], 
-				    current_time);
-	    stylusTriangle[3]->draw(drawinfo, stylusMaterial[8], 
-				    current_time);
-	  }
-	  else
-	  {
-	    stylusCylinder[1]->draw(drawinfo, stylusMaterial[1], 
-				    current_time);
-	  }
-	  glPopMatrix();
+		}
+		glPopMatrix();
+		
+		delete pinchText[0];
+		sprintf(scalestr, "Scale: %.2f", bawgl->virtualViewScale);
+		
+		pinchText[0] = scinew GeomText(scalestr, Point(1,1,1));
+		pinchText[0]->draw(drawinfo, pinchMaterial, current_time);
+		
+		glPopMatrix();
+	      }
 	      
-	  if( !bawgl->pick )
-	  {
-	    glPushMatrix();
-	    glMultMatrixf(realPinchMatrix);
-	    pinchSphere->draw(drawinfo, pinchMaterial, 
-			      current_time);
-	    glPopMatrix();
-	  }
-	      
-	  if( bawgl->scale )
-	  {
-	    glPushMatrix();
-	    glMultMatrixf(realPinchMatrix);
-	    scale = bawgl->scaleFrom - realPinchMatrix[13];
+	      if( bawgl->navigate )
+	      {
+		glPushMatrix();
+		glMultMatrixf(realPinchMatrix);
 		
-	    glPushMatrix();
-	    if( scale > 0 )
-	    {
-	      glPushMatrix();
-	      glScalef(scale, 1.0, 1.0);
-	      pinchCylinder[0]->draw(drawinfo, 
-				     stylusMaterial[3], 
-				     current_time);
-	      glPopMatrix();
+		scale = bawgl->navigateFrom - realPinchMatrix[13];
+		
+		glPushMatrix();
+		if( scale > 0 )
+		{
+		  glPushMatrix();
+		  glScalef(scale, 1.0, 1.0);
+		  pinchCylinder[0]->draw(drawinfo, stylusMaterial[7], 
+					 current_time);
+		  glPopMatrix();
 		  
-	      glTranslatef(scale, 0.0, 0.0);
-	      pinchSphere->draw(drawinfo, 
-				pinchMaterial, current_time);
-	    }
-	    else
-	    {
-	      glPushMatrix();
-	      glScalef(-scale, 1.0, 1.0);
-	      pinchCylinder[1]->draw(drawinfo, 
-				     stylusMaterial[3], 
-				     current_time);
-	      glPopMatrix();
+		  glTranslatef(scale, 0.0, 0.0);
+		  pinchSphere->draw(drawinfo, pinchMaterial, 
+				    current_time);
+		}
+		else
+		{
+		  glPushMatrix();
+		  glScalef(-scale, 1.0, 1.0);
+		  pinchCylinder[1]->draw(drawinfo, stylusMaterial[7], 
+					 current_time);
+		  glPopMatrix();
 		  
-	      glTranslatef(scale, 0.0, 0.0);
-	      pinchSphere->draw(drawinfo, 
-				pinchMaterial, 
-				current_time);
+		  glTranslatef(scale, 0.0, 0.0);
+		  pinchSphere->draw(drawinfo, pinchMaterial, 
+				    current_time);
+		}
+		glPopMatrix();      
+		
+		delete pinchText[1];
+		sprintf(scalestr, "Velocity: %.2f", -1000*bawgl->velocity);
+		
+		pinchText[1] = scinew GeomText(scalestr, Point(1,1,1));
+		pinchText[1]->draw(drawinfo, pinchMaterial, 
+				   current_time);
+		
+		glPopMatrix();
+		
+	      }
 	    }
-	    glPopMatrix();
-		
-	    delete pinchText[0];
-	    sprintf(scalestr, "Scale: %.2f", bawgl->virtualViewScale);
-		
-	    pinchText[0] = scinew GeomText(scalestr, Point(1,1,1));
-	    pinchText[0]->draw(drawinfo, pinchMaterial, current_time);
-		
-	    glPopMatrix();
-	  }
-	      
-	  if( bawgl->navigate )
-	  {
-	    glPushMatrix();
-	    glMultMatrixf(realPinchMatrix);
-		
-	    scale = bawgl->navigateFrom - realPinchMatrix[13];
-		
-	    glPushMatrix();
-	    if( scale > 0 )
-	    {
-	      glPushMatrix();
-	      glScalef(scale, 1.0, 1.0);
-	      pinchCylinder[0]->draw(drawinfo, stylusMaterial[7], 
-				     current_time);
-	      glPopMatrix();
-		  
-	      glTranslatef(scale, 0.0, 0.0);
-	      pinchSphere->draw(drawinfo, pinchMaterial, 
-				current_time);
-	    }
-	    else
-	    {
-	      glPushMatrix();
-	      glScalef(-scale, 1.0, 1.0);
-	      pinchCylinder[1]->draw(drawinfo, stylusMaterial[7], 
-				     current_time);
-	      glPopMatrix();
-		  
-	      glTranslatef(scale, 0.0, 0.0);
-	      pinchSphere->draw(drawinfo, pinchMaterial, 
-				current_time);
-	    }
-	    glPopMatrix();      
-		
-	    delete pinchText[1];
-	    sprintf(scalestr, "Velocity: %.2f", -1000*bawgl->velocity);
-		
-	    pinchText[1] = scinew GeomText(scalestr, Point(1,1,1));
-	    pinchText[1]->draw(drawinfo, pinchMaterial, 
-			       current_time);
-		
-	    glPopMatrix();
-		
-	  }
-	}
-	//  --  BAWGL  -- 
+	    //  --  BAWGL  -- 
 #endif
-      }
+	  }
 	  
 #if 0
-      if(viewwindow->drawimg.get()){
-	if(!imglist)
-	  make_image();
-	else
-	  glCallList(imglist);
-      }
+	  if(viewwindow->drawimg.get()){
+	    if(!imglist)
+	      make_image();
+	    else
+	      glCallList(imglist);
+	  }
 #endif
 	  
-      // save z-buffer data
-      if (CAPTURE_Z_DATA_HACK) {
-	CAPTURE_Z_DATA_HACK = 0;
-	glReadPixels( 0, 0,
-		      xres, yres,
-		      GL_DEPTH_COMPONENT, GL_FLOAT,
-		      pixel_depth_data );
-	//            cerr << "(read from (0,0) to (" << xres << "," << yres << ")" << endl;
-      }
+          // save z-buffer data
+          if (CAPTURE_Z_DATA_HACK) {
+            CAPTURE_Z_DATA_HACK = 0;
+            glReadPixels( 0, 0,
+                          xres, yres,
+                          GL_DEPTH_COMPONENT, GL_FLOAT,
+                          pixel_depth_data );
+	    //            cerr << "(read from (0,0) to (" << xres << "," << yres << ")" << endl;
+          }
 	  
-      // Wait for the right time before swapping buffers
-      //TCLTask::unlock();
-      double realtime=t*frametime;
-      throttle.wait_for_time(realtime);
-      //TCLTask::lock();
-      TCL::execute("update idletasks");
+	  // Wait for the right time before swapping buffers
+	  //TCLTask::unlock();
+	  double realtime=t*frametime;
+	  throttle.wait_for_time(realtime);
+	  //TCLTask::lock();
+	  TCL::execute("update idletasks");
 	  
-      cout << " DEBUG 5\n";
-
-      // Show the pretty picture
-      glXSwapBuffers(dpy, win);
+	  // Show the pretty picture
+	  glXSwapBuffers(dpy, win);
 #ifdef __sgi
 #ifdef LIBIMAGE
-      if(saveprefix != ""){
-	// Save out the image...
-	char filename[200];
-	sprintf(filename, "%s%04d.rgb", saveprefix.c_str(), t);
-	unsigned short* reddata=scinew unsigned short[xres*yres];
-	unsigned short* greendata=scinew unsigned short[xres*yres];
-	unsigned short* bluedata=scinew unsigned short[xres*yres];
-	glReadPixels(0, 0, xres, yres, GL_RED, GL_UNSIGNED_SHORT, reddata);
-	glReadPixels(0, 0, xres, yres, GL_GREEN, GL_UNSIGNED_SHORT, greendata);
-	glReadPixels(0, 0, xres, yres, GL_BLUE, GL_UNSIGNED_SHORT, bluedata);
-	IMAGE* image=iopen(filename, "w", RLE(1), 3, xres, yres, 3);
-	unsigned short* rr=reddata;
-	unsigned short* gg=greendata;
-	unsigned short* bb=bluedata;
-	for(int y=0;y<yres;y++){
-	  for(int x=0;x<xres;x++){
-	    rr[x]>>=8;
-	    gg[x]>>=8;
-	    bb[x]>>=8;
+	  if(saveprefix != ""){
+	    // Save out the image...
+	    char filename[200];
+	    sprintf(filename, "%s%04d.rgb", saveprefix.c_str(), t);
+	    unsigned short* reddata=scinew unsigned short[xres*yres];
+	    unsigned short* greendata=scinew unsigned short[xres*yres];
+	    unsigned short* bluedata=scinew unsigned short[xres*yres];
+	    glReadPixels(0, 0, xres, yres, GL_RED, GL_UNSIGNED_SHORT, reddata);
+	    glReadPixels(0, 0, xres, yres, GL_GREEN, GL_UNSIGNED_SHORT, greendata);
+	    glReadPixels(0, 0, xres, yres, GL_BLUE, GL_UNSIGNED_SHORT, bluedata);
+	    IMAGE* image=iopen(filename, "w", RLE(1), 3, xres, yres, 3);
+	    unsigned short* rr=reddata;
+	    unsigned short* gg=greendata;
+	    unsigned short* bb=bluedata;
+	    for(int y=0;y<yres;y++){
+	      for(int x=0;x<xres;x++){
+		rr[x]>>=8;
+		gg[x]>>=8;
+		bb[x]>>=8;
+	      }
+	      putrow(image, rr, y, 0);
+	      putrow(image, gg, y, 1);
+	      putrow(image, bb, y, 2);
+	      rr+=xres;
+	      gg+=xres;
+	      bb+=xres;
+	    }
+	    iclose(image);
+	    delete[] reddata;
+	    delete[] greendata;
+	    delete[] bluedata;
 	  }
-	  putrow(image, rr, y, 0);
-	  putrow(image, gg, y, 1);
-	  putrow(image, bb, y, 2);
-	  rr+=xres;
-	  gg+=xres;
-	  bb+=xres;
-	}
-	iclose(image);
-	delete[] reddata;
-	delete[] greendata;
-	delete[] bluedata;
-      }
 #endif // LIBIMAGE
 #endif // __sgi
-    }
-
-    cout << " DEBUG 6\n";
-
-    throttle.stop();
-    double fps;
-    if (throttle.time()>0)
-      fps=nframes/throttle.time();
-    else
-      fps=nframes;
-    int fps_whole=(int)fps;
-    int fps_hund=(int)((fps-fps_whole)*100);
-    ostringstream str;
-    str << viewwindow->id << " setFrameRate " << fps_whole << "." << fps_hund;
-    TCL::execute(str.str().c_str());
-    viewwindow->set_current_time(tend);
-  } else {
-    // Just show the cleared screen
-    viewwindow->set_current_time(tend);
+	}
+	throttle.stop();
+	double fps;
+	if (throttle.time()>0)
+	  fps=nframes/throttle.time();
+	else
+	  fps=nframes;
+	int fps_whole=(int)fps;
+	int fps_hund=(int)((fps-fps_whole)*100);
+	ostringstream str;
+	str << viewwindow->id << " setFrameRate " << fps_whole << "." << fps_hund;
+	TCL::execute(str.str().c_str());
+	viewwindow->set_current_time(tend);
+      } else {
+	// Just show the cleared screen
+	viewwindow->set_current_time(tend);
 	
 #ifdef __sgi
-    //  --  BAWGL  -- 
-    if( do_stereo || do_bawgl )
-#else
-    if( do_stereo )
+	//  --  BAWGL  -- 
+	if( do_stereo || do_bawgl ) {
+	  glDrawBuffer(GL_BACK_LEFT);
+	  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	  glDrawBuffer(GL_BACK_RIGHT);
+        } else {
+	  glDrawBuffer(GL_BACK);
+	}
+	//  --  BAWGL  -- 
 #endif
-    {
-      glDrawBuffer(GL_BACK_LEFT);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      glDrawBuffer(GL_BACK_RIGHT);
-    } else {
-      glDrawBuffer(GL_BACK);
-    }
-    //  --  BAWGL  -- 
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    if(viewwindow->drawimg.get()){
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	if(viewwindow->drawimg.get()){
 #if 0
-      if(!imglist)
-	make_image();
-      else
-	glCallList(imglist);
+	  if(!imglist)
+	    make_image();
+	  else
+	    glCallList(imglist);
 #endif
-    }
-    glXSwapBuffers(dpy, win);
-  }
+	}
+	glXSwapBuffers(dpy, win);
+      }
       
-  viewer->geomlock.readUnlock();
+      viewer->geomlock.readUnlock();
       
 				// Look for errors
-  GLenum errcode;
-  while((errcode=glGetError()) != GL_NO_ERROR)
-  {
-    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
-  }
+      GLenum errcode;
+      while((errcode=glGetError()) != GL_NO_ERROR){
+	cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+      }
       
 				// Report statistics
-  timer.stop();
-  fpstimer.stop();
-  double fps;
-  if (fpstimer.time()>0)
-    fps=nframes/fpstimer.time();
-  else
-    fps=100;
-  fps+=0.05;			// Round to nearest tenth
-  int fps_whole=(int)fps;
-  int fps_tenths=(int)((fps-fps_whole)*10);
-  fpstimer.clear();
-  fpstimer.start();		// Start it running for next time
-  ostringstream str;
-  double pps;
-  if (timer.time()>0)
-    pps=drawinfo->polycount/timer.time();
-  else
-    pps=drawinfo->polycount;
-  str << viewwindow->id << " updatePerf \"";
-  str << drawinfo->polycount << " polygons in " << timer.time()
-      << " seconds\" \"" << pps
-      << " polygons/second\"" << " \"" << fps_whole << "."
-      << fps_tenths << " frames/sec\"" << '\0';
-  //    cerr <<"updatePerf: <" << str.str() << ">\n";	
-  /***********************************/
-  /* movie makin' movie-movie makin' */
-  /***********************************/
-  if (viewwindow->doingMovie) {
+      timer.stop();
+      fpstimer.stop();
+      double fps;
+      if (fpstimer.time()>0)
+	fps=nframes/fpstimer.time();
+      else
+	fps=100;
+      fps+=0.05;			// Round to nearest tenth
+      int fps_whole=(int)fps;
+      int fps_tenths=(int)((fps-fps_whole)*10);
+      fpstimer.clear();
+      fpstimer.start();		// Start it running for next time
+      ostringstream str;
+      double pps;
+      if (timer.time()>0)
+	pps=drawinfo->polycount/timer.time();
+      else
+	pps=drawinfo->polycount;
+      str << viewwindow->id << " updatePerf \"";
+      str << drawinfo->polycount << " polygons in " << timer.time()
+	  << " seconds\" \"" << pps
+	  << " polygons/second\"" << " \"" << fps_whole << "."
+	  << fps_tenths << " frames/sec\"" << '\0';
+      //    cerr <<"updatePerf: <" << str.str() << ">\n";	
+      /***********************************/
+      /* movie makin' movie-movie makin' */
+      /***********************************/
+      if (viewwindow->doingMovie) {
 	
-    string segname(viewwindow->curName);
-    int lasthash=-1;
-    for (unsigned int ii=0; ii<segname.size(); ii++) {
-      if (segname[ii] == '/') lasthash=ii;
-    }
-    string pathname;
-    if (lasthash == -1) pathname = "./";
-    else pathname = segname.substr(0, lasthash+1);
-    string fname = segname.substr(lasthash+1, segname.size()-(lasthash+1));
+	string segname(viewwindow->curName);
+	int lasthash=-1;
+	for (unsigned int ii=0; ii<segname.size(); ii++) {
+	  if (segname[ii] == '/') lasthash=ii;
+	}
+	string pathname;
+	if (lasthash == -1) pathname = "./";
+	else pathname = segname.substr(0, lasthash+1);
+	string fname = segname.substr(lasthash+1, segname.size()-(lasthash+1));
 	
-    //      cerr << "Saving a movie!\n";
-    if( viewwindow->makeMPEG ){
-      if(!encoding_mpeg){
-	encoding_mpeg = true;
-	fname = fname + ".mpg";
-	StartMpeg( fname );
+	//      cerr << "Saving a movie!\n";
+	if( viewwindow->makeMPEG ){
+	  if(!encoding_mpeg){
+	    encoding_mpeg = true;
+	    fname = fname + ".mpg";
+	    StartMpeg( fname );
+	  }
+	  AddMpegFrame();
+	} else { // dump each frame
+	  /* if mpeg has just been turned off, close the file. */
+	  if(encoding_mpeg){
+	    encoding_mpeg = false;
+	    EndMpeg();
+	  }
+	  unsigned char movie[10];
+	  int startDiv = 100;
+	  int idx=0;
+	  int fi = viewwindow->curFrame;
+	  while (startDiv >= 1) {
+	    movie[idx] = '0' + fi/startDiv;
+	    fi = fi - (startDiv)*(fi/startDiv);
+	    startDiv /= 10;
+	    idx++;
+	  }
+	  movie[idx] = 0;
+	  fname = fname + ".raw";
+	  string framenum((char *)movie);
+	  framenum = framenum + ".";
+	  string fullpath(pathname + framenum + fname);
+	  cerr << "Dumping "<<fullpath<<"....  ";
+	  dump_image(fullpath);
+	  cerr << " done!\n";
+	  viewwindow->curFrame++;
+	}
       }
-      AddMpegFrame();
-    } else { // dump each frame
-      /* if mpeg has just been turned off, close the file. */
-      if(encoding_mpeg){
-	encoding_mpeg = false;
-	EndMpeg();
+      else {
+	if(encoding_mpeg) {// make sure we finish up mpeg that was in progress
+	  encoding_mpeg = false;
+	  EndMpeg();
+	}
       }
-      unsigned char movie[10];
-      int startDiv = 100;
-      int idx=0;
-      int fi = viewwindow->curFrame;
-      while (startDiv >= 1) {
-	movie[idx] = '0' + fi/startDiv;
-	fi = fi - (startDiv)*(fi/startDiv);
-	startDiv /= 10;
-	idx++;
-      }
-      movie[idx] = 0;
-      fname = fname + ".raw";
-      string framenum((char *)movie);
-      framenum = framenum + ".";
-      string fullpath(pathname + framenum + fname);
-      cerr << "Dumping "<<fullpath<<"....  ";
-      dump_image(fullpath);
-      cerr << " done!\n";
-      viewwindow->curFrame++;
-    }
-  }
-  else {
-    if(encoding_mpeg) {// make sure we finish up mpeg that was in progress
-      encoding_mpeg = false;
-      EndMpeg();
-    }
-  }
-  TCL::execute(str.str().c_str());
-  TCLTask::unlock();
+      TCL::execute(str.str().c_str());
+      TCLTask::unlock();
 }
     
 void OpenGL::hide()
@@ -1238,7 +1187,6 @@ void OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomObj* obj)
 void OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj)
 {
   drawinfo->viewwindow = viewwindow;
-  cout <<  "        redrawing " << viewer << ":" << viewwindow << ":" << obj << '\n';
   obj->draw(drawinfo, viewer->default_matl.get_rep(), current_time);
 }
 
@@ -1621,12 +1569,9 @@ void OpenGL::listvisuals(TCLArgs& args)
     }
     GETCONFIG(GLX_STEREO);
     if(value){
-      cout << "STEREO GOTTEN\n";
       score+=1;
       tag += "stereo, ";
     }
-    else { cout << "NO STEREO\n"; }
-
     tag += "rgba=";
     GETCONFIG(GLX_RED_SIZE);
     tag+=to_string(value)+":";
