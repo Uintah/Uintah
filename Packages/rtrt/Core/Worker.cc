@@ -21,6 +21,7 @@
 #include <Packages/rtrt/Core/PerProcessorContext.h>
 #include <Packages/rtrt/Core/MusilRNG.h>
 #include <Packages/rtrt/Core/Context.h>
+#include <Packages/rtrt/Core/rtrt.h>
 
 #include <Core/Thread/Barrier.h>
 #include <Core/Thread/Mutex.h>
@@ -167,7 +168,8 @@ void Worker::run()
       //cout << "B" << num << "\n";
       barrier->wait(dpy->get_num_procs()+1);
 
-      int hotSpotMode = scene->getHotSpotsMode();
+      int hotSpotsMode = dpy->rtrt_engine->hotSpotsMode;
+      bool do_jitter = dpy->rtrt_engine->do_jitter;
 
 #if 0
       //////////////////////
@@ -222,10 +224,10 @@ void Worker::run()
 	    // Stereo
 	    ///////////////////////////////////////////////////////
 	    double stime = 0;
-	    if( hotSpotMode )
+	    if( hotSpotsMode )
 	      stime = SCIRun::Time::currentSeconds();
 
-	    if (!scene->get_rtrt_engine()->do_jitter) {
+	    if (!do_jitter) {
               Color Rcolor;
               Ray rayR;
 	      //////////////////////////
@@ -236,7 +238,7 @@ void Worker::run()
                                     ixres, iyres);
 		  traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
 		  traceRay(Rcolor, rayR, 0, 1.0, Color(0,0,0), &cx);
-		  if( !hotSpotMode ) {
+		  if( !hotSpotsMode ) {
 		    (*image)(x,y).set(result);
 		    (*image)(x,y+yres).set(Rcolor);
 		  } else {
@@ -309,7 +311,7 @@ void Worker::run()
                   Rcolor_sum += Rcolor;
                   xj_index++; yj_index++;
 
-		  if( !hotSpotMode ) {
+		  if( !hotSpotsMode ) {
 		    (*image)(x,y).set(Lcolor_sum*0.25f);
 		    (*image)(x,y+yres).set(Rcolor_sum*0.25f);
 		  } else {
@@ -326,10 +328,10 @@ void Worker::run()
 	    ///////////////////////////////////////////////////////
 	    // Mono
 	    ///////////////////////////////////////////////////////
-	    if (scene->get_rtrt_engine()->do_jitter) {
+	    if (do_jitter) {
 	      Color result2, result3, result4; // 4 samples
 	      double stime = 0;
-	      if( hotSpotMode )
+	      if( hotSpotsMode )
 		stime = SCIRun::Time::currentSeconds();
               // See comments above for these two variables
               int xj_index = sx % (1000-(xtilesize*ytilesize*4));
@@ -366,8 +368,9 @@ void Worker::run()
                   traceRay(result4, ray, 0, 1.0, Color(0,0,0), &cx);
                   xj_index++; yj_index++;
 		  
-		  if( (hotSpotMode == 1) ||
-		      (hotSpotMode == 2 && (x < halfXres) ) ){
+		  if( (hotSpotsMode == RTRT::HotSpotsOn) ||
+		      (hotSpotsMode == RTRT::HotSpotsHalfScreen &&
+                       (x < halfXres) ) ) {
 		    double etime=SCIRun::Time::currentSeconds();
 		    double t=etime-stime;	
 		    stime=etime;
@@ -381,10 +384,10 @@ void Worker::run()
 	      // end if( do_jitter )
 	    } else {
 	      double stime;
-	      bool   transMode = scene->doTransmissionMode();
-	      if( hotSpotMode ) {
+	      bool   transMode = dpy->rtrt_engine->frameMode == RTRT::OddRows;
+	      if( hotSpotsMode ) {
 		stime = SCIRun::Time::currentSeconds();
-		if( hotSpotMode == 1){
+		if( hotSpotsMode == RTRT::HotSpotsOn){
 		  // Hot Spot Mode: 1
 		  for(int y=sy;y<ey;y++){
 		    for(int x=sx;x<ex;x++){

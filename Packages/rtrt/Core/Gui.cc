@@ -31,6 +31,7 @@
 #include <Packages/rtrt/Core/Trigger.h>
 #include <Packages/rtrt/Core/VolumeVis2D.h>
 #include <Packages/rtrt/Core/MouseCallBack.h>
+#include <Packages/rtrt/Core/rtrt.h>
 
 #if !defined(linux) && !defined(__APPLE__)
 #  include <Packages/rtrt/Sound/SoundThread.h>
@@ -720,16 +721,16 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     activeGui->stealth_->toggleGravity();
     break;
   case 't':
-    if( activeGui->dpy_->scene->hotSpotMode_ )
-      activeGui->dpy_->scene->hotSpotMode_ = 0;
+    if( activeGui->dpy_->rtrt_engine->hotSpotsMode != RTRT::HotSpotsOff)
+      activeGui->dpy_->rtrt_engine->hotSpotsMode = RTRT::HotSpotsOff;
     else
-      activeGui->dpy_->scene->hotSpotMode_ = 1;
+      activeGui->dpy_->rtrt_engine->hotSpotsMode = RTRT::HotSpotsOn;
     break;
   case 'T':
-    if( activeGui->dpy_->scene->hotSpotMode_ )
-      activeGui->dpy_->scene->hotSpotMode_ = 0;
+    if( activeGui->dpy_->rtrt_engine->hotSpotsMode != RTRT::HotSpotsOff)
+      activeGui->dpy_->rtrt_engine->hotSpotsMode = RTRT::HotSpotsOff;
     else
-      activeGui->dpy_->scene->hotSpotMode_ = 2;
+      activeGui->dpy_->rtrt_engine->hotSpotsMode = RTRT::HotSpotsHalfScreen;
     break;
   case 'Q':
     activeGui->beQuiet_ = !activeGui->beQuiet_;
@@ -2776,10 +2777,17 @@ Gui::toggleTransmissionModeCB( int /* id */ )
 void
 Gui::toggleHotspotsCB( int /*id*/ )
 {
-  if( activeGui->dpy_->scene->hotSpotMode_ == 2 )
-    activeGui->dpy_->scene->hotSpotMode_ = 0;
-  else
-    activeGui->dpy_->scene->hotSpotMode_++;
+  switch (activeGui->dpy_->rtrt_engine->hotSpotsMode) {
+  case RTRT::HotSpotsOff:
+    activeGui->dpy_->rtrt_engine->hotSpotsMode = RTRT::HotSpotsOn;
+    break;
+  case RTRT::HotSpotsOn:
+    activeGui->dpy_->rtrt_engine->hotSpotsMode = RTRT::HotSpotsHalfScreen;
+    break;
+  case RTRT::HotSpotsHalfScreen:
+    activeGui->dpy_->rtrt_engine->hotSpotsMode = RTRT::HotSpotsOff;
+    break;
+  }
 }
 
 
