@@ -21,7 +21,9 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/scalcoef.F $(SRCDIR)/coeffb.F $(SRCDIR)/rmean.F \
 	$(SRCDIR)/addpressgrad.F \
 	$(SRCDIR)/bcscalar.F \
-	$(SRCDIR)/scalsrc.F
+	$(SRCDIR)/scalsrc.F \
+	$(SRCDIR)/rescal.F \
+	$(SRCDIR)/arrl1.F
 
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
@@ -57,6 +59,10 @@ FFLAGS += -g
 
 #
 # $Log$
+# Revision 1.31  2000/08/01 23:28:46  skumar
+# Added residual calculation procedure and modified templates in linear
+# solver.  Added template for order-of-magnitude term calculation.
+#
 # Revision 1.30  2000/07/30 22:59:32  bbanerje
 # Added scalar source term calcs.
 #

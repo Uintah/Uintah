@@ -89,7 +89,11 @@ namespace Uintah {
       double truncWVel;
       double residScalar;
       double truncScalar;
-      
+      CCVariable<double> residualPressure;
+      SFCXVariable<double> residualUVelocity;
+      SFCYVariable<double> residualVVelocity;
+      SFCZVariable<double> residualWVelocity;
+      CCVariable<double> residualScalar;      
 
     }; // End class ArchesVariables
 
@@ -100,6 +104,10 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.2  2000/08/01 23:28:43  skumar
+// Added residual calculation procedure and modified templates in linear
+// solver.  Added template for order-of-magnitude term calculation.
+//
 // Revision 1.1  2000/07/28 02:30:59  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients

@@ -326,6 +326,9 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 		   ii, patch, Ghost::None, numGhostCells);
   matrix_dw->get(d_scalarVars->scalarNonlinearSrc, d_lab->d_scalNonLinSrcSBLMLabel,
 		 matlIndex, patch, Ghost::None, numGhostCells);
+  matrix_dw->allocate(d_scalarVars->residualScalar, d_lab->d_scalarRes,
+			  matlIndex, patch);
+
   
   // compute eqn residual
   d_linearSolver->computeScalarResidual(pc, patch, new_dw, matrix_dw, index, 
@@ -345,6 +348,10 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.19  2000/08/01 23:28:43  skumar
+// Added residual calculation procedure and modified templates in linear
+// solver.  Added template for order-of-magnitude term calculation.
+//
 // Revision 1.18  2000/08/01 06:18:38  bbanerje
 // Made ScalarSolver similar to PressureSolver and MomentumSolver.
 //

@@ -22,6 +22,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/SFCZVariable.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Components/Arches/Arches.h>
+#include <Uintah/Components/Arches/ArchesFort.h>
 #include <Uintah/Components/Arches/ArchesVariables.h>
 #include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Grid/ReductionVariable.h>
@@ -57,7 +58,7 @@ RBGSSolver::problemSetup(const ProblemSpecP& params)
 
 
 //****************************************************************************
-// Actual compute of pressure underrelaxation
+// Actual compute of pressure residual
 //****************************************************************************
 void 
 RBGSSolver::computePressResidual(const ProcessorGroup*,
@@ -73,25 +74,41 @@ RBGSSolver::computePressResidual(const ProcessorGroup*,
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-#ifdef WONT_COMPILE_YET
+
   FORT_COMPUTERESID(domLo.get_pointer(), domHi.get_pointer(),
 		    idxLo.get_pointer(), idxHi.get_pointer(),
 		    vars->pressure.getPointer(),
-		    vars->pressCoeff[Arches::AP].getPointer(), 
+		    vars->residualPressure.getPointer(),
 		    vars->pressCoeff[Arches::AE].getPointer(), 
 		    vars->pressCoeff[Arches::AW].getPointer(), 
 		    vars->pressCoeff[Arches::AN].getPointer(), 
 		    vars->pressCoeff[Arches::AS].getPointer(), 
 		    vars->pressCoeff[Arches::AT].getPointer(), 
 		    vars->pressCoeff[Arches::AB].getPointer(), 
-		    vars->pressNonLinSrc.getPointer(),
-		    &vars->residPress, &vars->truncPress);
-
-); 
-#endif
+		    vars->pressCoeff[Arches::AP].getPointer(), 
+		    vars->pressNonlinearSrc.getPointer(),
+		    &vars->residPress);
 
 }
 
+
+//****************************************************************************
+// Actual calculation of order of magnitude term for pressure equation
+//****************************************************************************
+void 
+RBGSSolver::computePressOrderOfMagnitude(const ProcessorGroup* pc,
+				const Patch* patch,
+				DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw, ArchesVariables* vars)
+{
+
+//&vars->truncPress
+
+}
+
+//****************************************************************************
+// Actual compute of pressure underrelaxation
+//****************************************************************************
 void 
 RBGSSolver::computePressUnderrelax(const ProcessorGroup*,
 				   const Patch* patch,
@@ -124,7 +141,7 @@ RBGSSolver::computePressUnderrelax(const ProcessorGroup*,
 }
 
 //****************************************************************************
-// Actual linear solve
+// Actual linear solve for pressure
 //****************************************************************************
 void 
 RBGSSolver::pressLisolve(const ProcessorGroup*,
@@ -157,6 +174,10 @@ RBGSSolver::pressLisolve(const ProcessorGroup*,
 
 }
 
+//****************************************************************************
+// Actual compute of Velocity residual
+//****************************************************************************
+
 void 
 RBGSSolver::computeVelResidual(const ProcessorGroup* ,
 			       const Patch* patch,
@@ -176,74 +197,90 @@ RBGSSolver::computeVelResidual(const ProcessorGroup* ,
     domHi = vars->uVelocity.getFortHighIndex();
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
-  //fortran call
-#ifdef WONT_COMPILE_YET
+    //fortran call
+
     FORT_COMPUTERESID(domLo.get_pointer(), domHi.get_pointer(),
 		      idxLo.get_pointer(), idxHi.get_pointer(),
 		      vars->uVelocity.getPointer(),
-		      vars->uVelocityCoeff[Arches::AP].getPointer(), 
+		      vars->residualUVelocity.getPointer(),
 		      vars->uVelocityCoeff[Arches::AE].getPointer(), 
 		      vars->uVelocityCoeff[Arches::AW].getPointer(), 
 		      vars->uVelocityCoeff[Arches::AN].getPointer(), 
 		      vars->uVelocityCoeff[Arches::AS].getPointer(), 
 		      vars->uVelocityCoeff[Arches::AT].getPointer(), 
 		      vars->uVelocityCoeff[Arches::AB].getPointer(), 
-		      vars->uVelNonLinSrc.getPointer(),
-		      &vars->residUVel, &vars->truncUVel);
+		      vars->uVelocityCoeff[Arches::AP].getPointer(), 
+		      vars->uVelNonlinearSrc.getPointer(),
+		      &vars->residUVel);
 
-
-#endif
     break;
-    case Arches::YDIR:
+  case Arches::YDIR:
     domLo = vars->vVelocity.getFortLowIndex();
     domHi = vars->vVelocity.getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
-  //fortran call
-#ifdef WONT_COMPILE_YET
+    //fortran call
+
     FORT_COMPUTERESID(domLo.get_pointer(), domHi.get_pointer(),
 		      idxLo.get_pointer(), idxHi.get_pointer(),
 		      vars->vVelocity.getPointer(),
-		      vars->vVelocityCoeff[Arches::AP].getPointer(), 
+		      vars->residualVVelocity.getPointer(),
 		      vars->vVelocityCoeff[Arches::AE].getPointer(), 
 		      vars->vVelocityCoeff[Arches::AW].getPointer(), 
 		      vars->vVelocityCoeff[Arches::AN].getPointer(), 
 		      vars->vVelocityCoeff[Arches::AS].getPointer(), 
 		      vars->vVelocityCoeff[Arches::AT].getPointer(), 
 		      vars->vVelocityCoeff[Arches::AB].getPointer(), 
-		      vars->vVelNonLinSrc.getPointer(),
-		      &vars->residVVel, &vars->truncVVel);
+		      vars->vVelocityCoeff[Arches::AP].getPointer(), 
+		      vars->vVelNonlinearSrc.getPointer(),
+		      &vars->residVVel);
 
-
-#endif
     break;
-    case Arches::ZDIR:
+  case Arches::ZDIR:
     domLo = vars->wVelocity.getFortLowIndex();
     domHi = vars->wVelocity.getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
-  //fortran call
-#ifdef WONT_COMPILE_YET
+    //fortran call
+
     FORT_COMPUTERESID(domLo.get_pointer(), domHi.get_pointer(),
 		      idxLo.get_pointer(), idxHi.get_pointer(),
 		      vars->wVelocity.getPointer(),
-		      vars->wVelocityCoeff[Arches::AP].getPointer(), 
+		      vars->residualWVelocity.getPointer(),
 		      vars->wVelocityCoeff[Arches::AE].getPointer(), 
 		      vars->wVelocityCoeff[Arches::AW].getPointer(), 
 		      vars->wVelocityCoeff[Arches::AN].getPointer(), 
 		      vars->wVelocityCoeff[Arches::AS].getPointer(), 
 		      vars->wVelocityCoeff[Arches::AT].getPointer(), 
 		      vars->wVelocityCoeff[Arches::AB].getPointer(), 
-		      vars->wVelNonLinSrc.getPointer(),
-		      &vars->residWVel, &vars->truncWVel);
+		      vars->wVelocityCoeff[Arches::AP].getPointer(), 
+		      vars->wVelNonlinearSrc.getPointer(),
+		      &vars->residWVel);
 
-
-#endif
     break;
   default:
     throw InvalidValue("Invalid index in LinearSolver for velocity");
   }
 }
+
+
+//****************************************************************************
+// Actual calculation of order of magnitude term for Velocity equation
+//****************************************************************************
+void 
+RBGSSolver::computeVelOrderOfMagnitude(const ProcessorGroup* pc,
+				const Patch* patch,
+				DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw, ArchesVariables* vars)
+{
+
+  //&vars->truncUVel
+  //&vars->truncVVel
+  //&vars->truncWVel
+
+}
+
+
 
 //****************************************************************************
 // Velocity Underrelaxation
@@ -425,23 +462,36 @@ RBGSSolver::computeScalarResidual(const ProcessorGroup* ,
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-#ifdef WONT_COMPILE_YET
+
   FORT_COMPUTERESID(domLo.get_pointer(), domHi.get_pointer(),
 		    idxLo.get_pointer(), idxHi.get_pointer(),
 		    vars->scalar.getPointer(),
-		    vars->scalarCoeff[Arches::AP].getPointer(), 
+		    vars->residualScalar.getPointer(),
 		    vars->scalarCoeff[Arches::AE].getPointer(), 
 		    vars->scalarCoeff[Arches::AW].getPointer(), 
 		    vars->scalarCoeff[Arches::AN].getPointer(), 
 		    vars->scalarCoeff[Arches::AS].getPointer(), 
 		    vars->scalarCoeff[Arches::AT].getPointer(), 
 		    vars->scalarCoeff[Arches::AB].getPointer(), 
-		    vars->scalarNonLinSrc.getPointer(),
-		    &vars->residScalar, &vars->truncScalar);
-#endif
-
+		    vars->scalarCoeff[Arches::AP].getPointer(), 
+		    vars->scalarNonlinearSrc.getPointer(),
+		    &vars->residScalar);
 }
 
+
+//****************************************************************************
+// Actual calculation of order of magnitude term for Scalar equation
+//****************************************************************************
+void 
+RBGSSolver::computeScalarOrderOfMagnitude(const ProcessorGroup* pc,
+				const Patch* patch,
+				DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw, ArchesVariables* vars)
+{
+
+  //&vars->truncScalar
+
+}
 
 //****************************************************************************
 // Scalar Underrelaxation
@@ -513,6 +563,10 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* ,
 
 //
 // $Log$
+// Revision 1.16  2000/08/01 23:28:43  skumar
+// Added residual calculation procedure and modified templates in linear
+// solver.  Added template for order-of-magnitude term calculation.
+//
 // Revision 1.15  2000/08/01 06:18:38  bbanerje
 // Made ScalarSolver similar to PressureSolver and MomentumSolver.
 //

@@ -4,7 +4,7 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE rescal(indexLow, indexHigh,
+      SUBROUTINE rescal(domLo, domHi, idxLo, idxHi,
      &     PHI,RES,
      &     AE,AW,AN,AS,AT,AB,AP,SU,
      &     RESPHI)
@@ -46,28 +46,30 @@ C-----------------------------------------------------------------------
 c*********************************************************************
 c     Arguments :
 c*********************************************************************
-      integer indexLow(3)
-      integer indexHigh(3)
-      double precision PHI(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision RES(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AP(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AE(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AW(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AN(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AS(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AT(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AB(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision SU(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
+      integer domLo(3)
+      integer domHi(3)
+      integer idxLo(3)
+      integer idxHi(3)
+      double precision PHI(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision RES(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision AP(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision AE(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision AW(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision AN(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision AS(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision AT(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision AB(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision SU(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
       double precision RESPHI
 
 c*********************************************************************
@@ -75,16 +77,36 @@ c     Local Variables :
 c*********************************************************************
       double precision RESAVE
 
+      integer i,j,k
+
 C-----------------------------------------------------------------------
 C     EXECUTABLE STATEMENTS
 C-----------------------------------------------------------------------
-      CALL MATVEC(indexLow, indexHigh,
-     &     PHI,RES,
-     &     AE,AW,AN,AS,AT,AB,AP)
-      CALL ARRADD(indexLow, indexHigh,
-     &     RES,SU,RES,ONE,-ONE)
-      CALL ARRL1(indexLow, indexHigh,
-     &     RES,RESPHI,RESAVE)
+
+      do 300 k = idxLo(3), idxHi(3)
+         do 200 j = idxLo(2), idxHi(2)
+            do 100 i = idxLo(1), idxHi(1)
+
+c-----calculate residual------------------------------------------------
+
+               res(i,j,k) = 
+     $              ap(i,j,k)*phi(i,j,k) - (
+     $              ae(i,j,k)*phi(i+1,j,k)+
+     &              aw(i,j,k)*phi(i-1,j,k)+
+     &              an(i,j,k)*phi(i,j+1,k)+
+     &              as(i,j,k)*phi(i,j-1,k)+
+     &              at(i,j,k)*phi(i,j,k+1)+
+     &              ab(i,j,k)*phi(i,j,k-1))
+
+               res(i,j,k) = su(i,j,k) - res(i,j,k)
+
+ 100        continue
+ 200     continue
+ 300  continue
+
+      call arrl1(resphi,resave,res,
+     $     domLo, domHi, idxLo, idxHi)
+
 C-----------------------------------------------------------------------
       RETURN
       END
@@ -92,6 +114,10 @@ C-----------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/08/01 23:28:46  skumar
+c Added residual calculation procedure and modified templates in linear
+c solver.  Added template for order-of-magnitude term calculation.
+c
 c Revision 1.1  2000/04/12 20:31:50  rawat
 c modified PressureSolver and added fortran subroutines
 c

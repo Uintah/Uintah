@@ -469,6 +469,8 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
 		 d_lab->d_presNonLinSrcPBLMLabel, 
 		 matlIndex, patch, Ghost::None, numGhostCells);
   // compute eqn residual, L1 norm
+  matrix_dw->allocate(d_pressureVars->residualPressure, d_lab->d_pressureRes,
+			  matlIndex, patch);
   d_linearSolver->computePressResidual(pc, patch, new_dw, matrix_dw, 
 				       d_pressureVars);
   new_dw->put(sum_vartype(d_pressureVars->residPress), d_lab->d_presResidPSLabel);
@@ -520,6 +522,10 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.42  2000/08/01 23:28:43  skumar
+// Added residual calculation procedure and modified templates in linear
+// solver.  Added template for order-of-magnitude term calculation.
+//
 // Revision 1.41  2000/08/01 06:18:38  bbanerje
 // Made ScalarSolver similar to PressureSolver and MomentumSolver.
 //

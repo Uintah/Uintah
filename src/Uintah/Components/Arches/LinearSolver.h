@@ -113,7 +113,17 @@ public:
 
       ////////////////////////////////////////////////////////////////////////
       //
-      // Pressure Underrelaxation
+      // Calculate order of magnitude term for pressure equation
+      //
+      virtual void computePressOrderOfMagnitude(const ProcessorGroup* pc,
+				const Patch* patch,
+				DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw, ArchesVariables* vars) = 0;
+
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Velocity Underrelaxation
       //
       virtual void computeVelUnderrelax(const ProcessorGroup* pc,
 					const Patch* patch,
@@ -123,7 +133,7 @@ public:
 
       ////////////////////////////////////////////////////////////////////////
       //
-      // Pressure Solve
+      // Velocity Solve
       //
       virtual void velocityLisolve(const ProcessorGroup* pc,
 				   const Patch* patch,
@@ -133,13 +143,23 @@ public:
 
       ////////////////////////////////////////////////////////////////////////
       //
-      // Calculate pressure residuals
+      // Calculate Velocity residuals
       //
       virtual void computeVelResidual(const ProcessorGroup* pc,
 				      const Patch* patch,
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw, int index,
 				      ArchesVariables* vars) = 0;
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Calculate order of magnitude term for Velocity equation
+      //
+      virtual void computeVelOrderOfMagnitude(const ProcessorGroup* pc,
+				const Patch* patch,
+				DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw, ArchesVariables* vars) = 0;
+
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -170,6 +190,17 @@ public:
 					 DataWarehouseP& old_dw,
 					 DataWarehouseP& new_dw, int index,
 					 ArchesVariables* vars) = 0;
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Calculate order of magnitude term for scalar equation
+      //
+      virtual void computeScalarOrderOfMagnitude(const ProcessorGroup* pc,
+				const Patch* patch,
+				DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw, ArchesVariables* vars) = 0;
+
+
 protected:
 
 private:
@@ -182,6 +213,10 @@ private:
 
 //
 // $Log$
+// Revision 1.10  2000/08/01 23:28:43  skumar
+// Added residual calculation procedure and modified templates in linear
+// solver.  Added template for order-of-magnitude term calculation.
+//
 // Revision 1.9  2000/08/01 06:18:37  bbanerje
 // Made ScalarSolver similar to PressureSolver and MomentumSolver.
 //

@@ -517,6 +517,9 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
     matrix_dw->get(d_velocityVars->uVelNonlinearSrc, 
 		   d_lab->d_uVelNonLinSrcMBLMLabel,
 		   matlIndex, patch, Ghost::None, numGhostCells);
+    matrix_dw->allocate(d_velocityVars->residualUVelocity, d_lab->d_uVelocityRes,
+			  matlIndex, patch);
+
     break;
   case Arches::YDIR:
     new_dw->get(d_velocityVars->vVelocity, d_lab->d_vVelocityCPBCLabel, 
@@ -528,6 +531,8 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
     matrix_dw->get(d_velocityVars->vVelNonlinearSrc, 
 		   d_lab->d_vVelNonLinSrcMBLMLabel,
 		   matlIndex, patch, Ghost::None, numGhostCells);
+    matrix_dw->allocate(d_velocityVars->residualVVelocity, d_lab->d_vVelocityRes,
+			  matlIndex, patch);
     break; 
   case Arches::ZDIR:
     new_dw->get(d_velocityVars->wVelocity, d_lab->d_wVelocityCPBCLabel, 
@@ -539,6 +544,8 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
     matrix_dw->get(d_velocityVars->wVelNonlinearSrc, 
 		   d_lab->d_wVelNonLinSrcMBLMLabel,
 		   matlIndex, patch, Ghost::None, numGhostCells);
+    matrix_dw->allocate(d_velocityVars->residualWVelocity, d_lab->d_wVelocityRes,
+			  matlIndex, patch);
     break;  
   default:
     throw InvalidValue("Invalid index in MomentumSolver");
@@ -583,6 +590,10 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   
 //
 // $Log$
+// Revision 1.22  2000/08/01 23:28:43  skumar
+// Added residual calculation procedure and modified templates in linear
+// solver.  Added template for order-of-magnitude term calculation.
+//
 // Revision 1.21  2000/08/01 06:18:37  bbanerje
 // Made ScalarSolver similar to PressureSolver and MomentumSolver.
 //

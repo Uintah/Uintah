@@ -217,6 +217,11 @@ namespace Uintah {
       const VarLabel* d_wVelTruncPSLabel;
       const VarLabel* d_scalarResidLabel;
       const VarLabel* d_scalarTruncLabel;
+      const VarLabel* d_pressureRes;
+      const VarLabel* d_uVelocityRes;
+      const VarLabel* d_vVelocityRes;
+      const VarLabel* d_wVelocityRes;
+      const VarLabel* d_scalarRes;
 
       // Not sure what these labels are for
       const VarLabel* d_DUPBLMLabel;
@@ -234,6 +239,10 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.5  2000/08/01 23:28:43  skumar
+// Added residual calculation procedure and modified templates in linear
+// solver.  Added template for order-of-magnitude term calculation.
+//
 // Revision 1.4  2000/08/01 06:18:37  bbanerje
 // Made ScalarSolver similar to PressureSolver and MomentumSolver.
 //
