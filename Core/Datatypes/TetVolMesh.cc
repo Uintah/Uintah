@@ -441,6 +441,7 @@ TetVolMesh::locate(cell_index &cell, const Point &p) const
       found_p = true;
       break;     
     }
+    ++ci;
   }
   cell = *ci;
   return found_p;
