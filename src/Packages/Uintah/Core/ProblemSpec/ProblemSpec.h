@@ -79,6 +79,7 @@ WARNING
       void require(const std::string& name, Vector& value);
       void require(const std::string& name, Point& value);
       void require(const std::string& name, vector<double>& value);
+      void require(const std::string& name, vector<int>& value); 
 
    // Get any optional attributes associated with a tag
 
@@ -93,7 +94,8 @@ WARNING
       ProblemSpecP get(const std::string& name, IntVector& value);
       ProblemSpecP get(const std::string& name, Vector& value);
       ProblemSpecP get(const std::string& name, Point& value);
-      ProblemSpecP get(const std::string& name, vector<double>& value);
+      ProblemSpecP get(const std::string& name, vector<double>& value);   
+      ProblemSpecP get(const std::string& name, vector<int>& value); 
 
       void getAttributes(std::map<std::string,std::string>& value);
       bool getAttribute(const std::string& value, std::string& result);
