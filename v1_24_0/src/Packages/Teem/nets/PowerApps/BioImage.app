@@ -128,7 +128,7 @@ class BioImageApp {
 	set i_width 260
 
 	set viewer_width 436
-	set viewer_height 670 
+	set viewer_height 570 
 	
 	set notebook_width 305
 	set notebook_height [expr $viewer_height - 50]
@@ -1178,6 +1178,8 @@ class BioImageApp {
  	    disableModule $m15 1
  	    disableModule $m17 1
  	    disableModule $m22 1
+            disableModule $m14 1
+	    disableModule $m12 1
 
 	    # disable flip/permute modules
 	    disableModule $m29 1
@@ -1502,6 +1504,13 @@ class BioImageApp {
 	Tooltip $w.sentry "Edit the entries to indicate the various orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
 	grid config $w.sentry -row 1 -column 4 -sticky "n"
 	bind $w.sentry <ButtonPress-1> "$this change_current $which"
+
+        # reset button
+	button $data.ui.reset -text "Reset" -command "$this reset_orientations"
+	Tooltip $data.ui.reset "Reset the orientation labels to defaults."
+	#grid config $w.reset -row 4 -column 3 -columnspan 2 -stick "ne"
+	pack $data.ui.reset -side right -anchor se -padx 4 -pady 4
+
     }
 
     method open_nrrd_reader_ui {i} {
@@ -1531,8 +1540,46 @@ class BioImageApp {
     }
 
 
-    ### update_orientations
+    ### update/reset_orientations
     #################################################
+    method reset_orientations {} {
+	global top front side
+
+        # disable flip and permute modules and change choose ports
+	set UnuFlip1 [lindex [lindex $filters(0) $modules] 29]
+	set Choose1 [lindex [lindex $filters(0) $modules] 32]
+	global [set Choose1]-port-index
+        disableModule [set UnuFlip1] 1
+	set [set Choose1]-port-index 0
+
+	set UnuFlip2 [lindex [lindex $filters(0) $modules] 30]
+	set Choose2 [lindex [lindex $filters(0) $modules] 33]
+	global [set Choose2]-port-index
+        disableModule [set UnuFlip2] 1
+	set [set Choose2]-port-index 0
+
+	set UnuFlip3 [lindex [lindex $filters(0) $modules] 31]
+	set Choose3 [lindex [lindex $filters(0) $modules] 34]
+	global [set Choose3]-port-index
+        disableModule [set UnuFlip3] 1
+	set [set Choose3]-port-index 0
+
+	set UnuPermute [lindex [lindex $filters(0) $modules] 28]
+	set Choose4 [lindex [lindex $filters(0) $modules] 35]
+	global [set Choose4]-port-index
+        disableModule [set UnuPermute] 1
+	set [set Choose4]-port-index 0
+
+	set top "S"
+	set front "A"
+	set side "L"
+
+	# Re-execute
+	if {$has_executed} {
+	    set m [lindex [lindex $filters(0) $modules] 5]
+	    $m-c needexecute
+	}
+    }
     method update_orientations {} {
 	global top front side
 
@@ -1703,7 +1750,6 @@ class BioImageApp {
 	    set m [lindex [lindex $filters(0) $modules] 5]
 	    $m-c needexecute
 	}
-
     }
 
     method flip0 { toflip } {
@@ -2487,12 +2533,6 @@ class BioImageApp {
         }
 
         # put traces on changing these
-        trace variable $m1-minAxis0 w "$this update_crop_ui "
-        trace variable $m1-maxAxis0 w "$this update_crop_ui "
-        trace variable $m1-minAxis1 w "$this update_crop_ui "
-        trace variable $m1-maxAxis1 w "$this update_crop_ui "
-        trace variable $m1-minAxis2 w "$this update_crop_ui "
-        trace variable $m1-maxAxis2 w "$this update_crop_ui "
 
         if {!$insert} {
 	    $attachedPFr.f.p.sf justify bottom
@@ -3976,12 +4016,16 @@ class BioImageApp {
 	set NodeGradient [lindex [lindex $filters(0) $modules] 16]
 	set UnuQuantize [lindex [lindex $filters(0) $modules] 7]
 	set UnuJhisto [lindex [lindex $filters(0) $modules] 21]
+        set EditTransferFunc2 [lindex [lindex $filters(0) $modules] 13]
+        set NrrdTextureBuilder [lindex [lindex $filters(0) $modules] 11]
 
         if {$show_vol_ren == 1} {
 	    disableModule [set VolumeVisualizer] 0
 	    disableModule [set NodeGradient] 0
 	    disableModule [set UnuQuantize] 0
 	    disableModule [set UnuJhisto] 0
+	    disableModule [set EditTransferFunc2] 0
+	    disableModule [set NrrdTextureBuilder] 0
 
             [set NodeGradient]-c needexecute
         } else {
@@ -3989,6 +4033,8 @@ class BioImageApp {
 	    disableModule [set NodeGradient] 1
 	    disableModule [set UnuQuantize] 1
 	    disableModule [set UnuJhisto] 1
+	    disableModule [set EditTransferFunc2] 1
+	    disableModule [set NrrdTextureBuilder] 1
         }
     }
 
