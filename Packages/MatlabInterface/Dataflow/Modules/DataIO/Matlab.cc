@@ -39,7 +39,7 @@
 #include <Dataflow/Ports/MatrixPort.h>
 
 #include <Core/Util/sci_system.h>      // for sci_system call
-#include <Core/Util/Environmet.h>      // for SCIRUN_OBJDIR location
+#include <Core/Util/Environment.h>     // for sci_getenv
 
 #include <Packages/MatlabInterface/Core/Util/transport.h>
 
