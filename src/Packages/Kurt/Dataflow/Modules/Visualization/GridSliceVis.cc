@@ -23,7 +23,8 @@
  */
 
 #include "GridSliceVis.h"
-
+#include <Packages/Kurt/Core/Geom/SliceRenderer.h>
+#include <Packages/Kurt/Core/Geom/GridSliceRen.h>
 #include <Core/Containers/Array1.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColorMap.h>
@@ -32,10 +33,11 @@
 
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Geom/View.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/TCLInterface.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Containers/StringUtil.h>
@@ -52,7 +54,6 @@
 
 using namespace Kurt ;
 
-using SCIRun::TCLInterface;
 using SCIRun::Field;
 using SCIRun::to_string;
 using SCIRun::GeometryData;
@@ -62,10 +63,12 @@ using SCIRun::DumpAllocator;
 using SCIRun::LatVolMesh;
 using SCIRun::Interpolate;
 using SCIRun::GuiContext;
+using SCIRun::Point;
+using SCIRun::Vector;
 
 static std::string control_name("Control Widget");
 			 
-DECLARE_MAKER(GridSliceVis);
+DECLARE_MAKER(GridSliceVis)
 
 GridSliceVis::GridSliceVis(SCIRun::GuiContext *ctx)
   : Module("GridSliceVis", ctx, Filter, "Visualization", "Kurt"), 

@@ -23,23 +23,26 @@
  * Simple interface to volume rendering stuff
  */
 
-#include <Packages/Kurt/Core/Geom/SliceRenderer.h>
-#include <Packages/Kurt/Core/Geom/GridSliceRen.h>
 #include <Core/Containers/Array1.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
+#include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
-#include <Dataflow/Widgets/PointWidget.h>
+
+namespace SCIRun{
+  class PointWidget;
+}
 
 namespace Kurt {
 using SCIRun::Module;
 using SCIRun::ColorMapIPort;
+using SCIRun::FieldHandle;
 using SCIRun::FieldIPort;
 using SCIRun::GeometryOPort;
 using SCIRun::GuiInt;
@@ -48,10 +51,10 @@ using SCIRun::CrowdMonitor;
 using SCIRun::Vector;
 using SCIRun::GeomID;
 using SCIRun::PointWidget;
-class GeomObj;
 
 
-
+class SliceRenderer;
+class GridSliceRen;
 class GridSliceVis : public Module {
 
 public:
