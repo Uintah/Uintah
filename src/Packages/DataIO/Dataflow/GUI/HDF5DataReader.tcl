@@ -172,11 +172,17 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	
 	######################################################
 	
+	global current_cursor
+	
+	$w config -cursor $current_cursor
+
 	makeOpenFilebox \
 	    -parent $w \
 	    -filevar $this-filename \
-	    -command "set_watch_cursor; \
-                      $this-c update_file 0; \
+	    -command "$w config -cursor watch; \
+                      $this set_watch_cursor; \
+                      $this-c update_file 0;
+                      $w config -cursor $current_cursor;\
                       wm withdraw $w" \
 	    -cancel "wm withdraw $w" \
 	    -title $title \
@@ -184,8 +190,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    -initialdir $initdir \
 	    -defaultextension $defext
 
-       moveToCursor $w
-       wm deiconify $w
+	moveToCursor $w
+	wm deiconify $w
     }
 
     method ui {} {
@@ -1429,7 +1435,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
-	    global current_cursor
+
+	    puts stderr "watch cursor"
 	    $w config -cursor watch
 	    update idletasks
 	}
@@ -1439,6 +1446,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
+	    puts stderr "arrow cursor"
 	    global current_cursor
 	    $w config -cursor $current_cursor
 	    update idletasks
