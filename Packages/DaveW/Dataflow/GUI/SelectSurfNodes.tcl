@@ -14,13 +14,6 @@
 catch {rename DaveW_EEG_SelectSurfNodes ""}
 itcl_class DaveW_EEG_SelectSurfNodes {
     inherit Module
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
     constructor {config} {
         set name SelectSurfNodes
         set_defaults

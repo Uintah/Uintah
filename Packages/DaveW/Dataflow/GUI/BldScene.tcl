@@ -15,13 +15,6 @@ catch {rename DaveW_CS684_BldScene ""}
 
 itcl_class DaveW_CS684_BldScene {
     inherit Module
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
     constructor {config} {
 	set name BldScene
 	set_defaults
