@@ -18,10 +18,20 @@ Sound::Sound( const string        & filename,
 	            double          constantVol /* = -1 */ ) :
   filename_(filename), name_(name), continuous_(repeat), locations_(locations),
   distance2_(distance*distance), bufferLocation_(0), numFrames_(0),
-  constantVol_(constantVol), loaded_(false)
+  constantVol_(constantVol), loaded_(false), playNow_(false)
 {
   if( constantVol_ > 1.0 )
     constantVol_ = 1.0;
+
+  if( continuous_ )
+    {
+      on_ = true;
+    }
+  else
+    {
+      on_ = false;
+      playNow_ = false;
+    }
 }
 
 Sound::~Sound()
@@ -47,6 +57,8 @@ Sound::getFrames( int numFramesRequested, int & actualNumframes )
   if( actualNumframes < numFramesRequested ) // reset to beginning
     {
       //cout << "reseting sound\n";
+      if( !continuous_ )
+	on_ = false;
       bufferLocation_ = 0;
     }
   else
@@ -61,8 +73,11 @@ double
 Sound::volume( const Point & location )
 {
   int size = locations_.size();
-  if( size == 0 )
+  if( size == 0 || !on_ )
     return 0;
+
+  if( playNow_ )
+    return constantVol_;
 
   double minDist2 = 9999999.9;
   for( int cnt = 0; cnt < size; cnt++ )
@@ -93,7 +108,7 @@ Sound::volume( const Point & location )
 }
 
 void
-Sound::activate()
+Sound::load()
 {
 #if !defined(linux)
   if( loaded_ ) return;
