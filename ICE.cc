@@ -687,7 +687,7 @@ void ICE::actuallyComputeStableTimestep(
     DataWarehouseP& ,
     DataWarehouseP& new_dw)
 {
-  cout << "Doing Compute Stable Timestep \t\t\t ICE" << endl;
+//  cout << "Doing Compute Stable Timestep \t\t\t ICE" << endl;
   double dT = d_initialDt;
 
   if (computeDt) {
@@ -910,7 +910,7 @@ void ICE::computeEquilibrationPressure(
   char      warning[100];
   static int n_passes;                  
   n_passes ++; 
-  cout << "Doing calc_equilibration_pressure \t\t ICE" << endl;
+//  cout << "Doing calc_equilibration_pressure \t\t ICE" << endl;
  
   vector<double> delVol_frac(numMatls),press_eos(numMatls);
   vector<double> dp_drho(numMatls),dp_de(numMatls);
@@ -1226,7 +1226,7 @@ void ICE::computeFaceCenteredVelocities(
             const ProcessorGroup*,  const Patch* patch,
 	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  cout << "Doing compute_face_centered_velocities \t\t ICE" << endl;
+//  cout << "Doing compute_face_centered_velocities \t\t ICE" << endl;
 
   int numMatls = d_sharedState->getNumMatls();
 
@@ -1445,7 +1445,7 @@ void ICE::addExchangeContributionToFCVel(
             const ProcessorGroup*,  const Patch* patch,
             DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  cout << "Doing Add_exchange_contribution_to_FC_vel \t ICE" << endl;
+//  cout << "Doing Add_exchange_contribution_to_FC_vel \t ICE" << endl;
   
   int numMatls = d_sharedState->getNumMatls();
   int itworked;
@@ -1672,7 +1672,7 @@ void ICE::computeDelPressAndUpdatePressCC(
             const ProcessorGroup*,  const Patch* patch,
 	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  cout << "Doing explicit delPress  \t\t\t ICE" << endl;
+//  cout << "Doing explicit delPress  \t\t\t ICE" << endl;
   int numMatls  = d_sharedState->getNumMatls();
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
@@ -1812,7 +1812,7 @@ void ICE::computeDelPressAndUpdatePressCC(
 void ICE::computePressFC(const ProcessorGroup*,   const Patch* patch,
 			 DataWarehouseP&, DataWarehouseP& new_dw)
 {
-  cout << "Doing press_face_MM \t\t\t\t ICE" << endl;
+//  cout << "Doing press_face_MM \t\t\t\t ICE" << endl;
   int numMatls = d_sharedState->getNumMatls();
   double sum_rho, sum_rho_adj;
   double A;                                 
@@ -1912,7 +1912,7 @@ void ICE::accumulateMomentumSourceSinks(
             const ProcessorGroup*,  const Patch* patch,
 	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  cout << "Doing accumulate_momentum_source_sinks_MM \t ICE" << endl;
+//  cout << "Doing accumulate_momentum_source_sinks_MM \t ICE" << endl;
   int dwindex;
   int numMatls  = d_sharedState->getNumMatls();
   
@@ -2049,7 +2049,7 @@ void ICE::accumulateEnergySourceSinks(
             const ProcessorGroup*,  const Patch* patch,
 	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  cout << "Doing accumulate_energy_source_sinks \t\t ICE" << endl;
+//  cout << "Doing accumulate_energy_source_sinks \t\t ICE" << endl;
 
   int numMatls = d_sharedState->getNumMatls();
 
@@ -2112,7 +2112,7 @@ void ICE::computeLagrangianValues(
             const ProcessorGroup*,  const Patch* patch,
 	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  cout << "Doing Lagrangian mass, momentum and energy \t ICE" << endl;
+//  cout << "Doing Lagrangian mass, momentum and energy \t ICE" << endl;
 
   int numALLMatls = d_sharedState->getNumMatls();
   Vector    dx = patch->dCell();
@@ -2256,7 +2256,7 @@ void ICE::addExchangeToMomentumAndEnergy(
             const ProcessorGroup*,  const Patch* patch,
 	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  cout << "Doing Heat and momentum exchange \t\t ICE" << endl;
+//  cout << "Doing Heat and momentum exchange \t\t ICE" << endl;
 
   int     numMatls  = d_sharedState->getNumICEMatls();
   double  tmp;
@@ -2463,7 +2463,7 @@ void ICE::advectAndAdvanceInTime(
 	     DataWarehouseP& old_dw,DataWarehouseP& new_dw)
 {
 
-  cout << "Doing Advect and Advance in Time \t\t ICE" << endl;
+//  cout << "Doing Advect and Advance in Time \t\t ICE" << endl;
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
 
