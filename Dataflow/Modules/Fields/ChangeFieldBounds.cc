@@ -111,7 +111,7 @@ ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
     box_right_(ctx->subVar("box-right")),
     box_down_(ctx->subVar("box-down")),
     box_in_(ctx->subVar("box-in")),
-    resetting_(ctx->subVar("resetting"), false),
+    resetting_(ctx->subVar("resetting", false)),
     widget_lock_("ChangeFieldBounds widget lock"),
     generation_(-1),
     widgetid_(0)
