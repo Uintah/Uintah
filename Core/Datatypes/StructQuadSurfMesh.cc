@@ -460,7 +460,7 @@ StructQuadSurfMesh::compute_normals()
       ave += face_normals((*fiter).i_,(*fiter).j_);
       ++fiter;
     }
-    ave.normalize();
+    ave.safe_normalize();
     normals_((*nif_iter).i_, (*nif_iter).j_) = ave;
     ++nif_iter;
   }

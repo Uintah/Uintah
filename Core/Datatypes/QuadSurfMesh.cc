@@ -719,7 +719,7 @@ QuadSurfMesh::compute_normals()
       ave += face_normals[*fiter];
       ++fiter;
     }
-    ave.normalize();
+    ave.safe_normalize();
     normals_[i] = ave; ++i;
     ++nif_iter;
   }
