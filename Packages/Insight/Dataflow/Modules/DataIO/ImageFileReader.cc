@@ -26,8 +26,6 @@ public:
   //! GUI variables
   GuiString gui_FileName_;
 
-  itk::Object::Pointer reader_;
-
   ITKDatatypeOPort* outport_;
   ITKDatatypeHandle handle_;
   
@@ -61,21 +59,25 @@ void ImageFileReader::execute(){
     return;
   }
 
-  string fn = gui_FileName_.get();
-
-
   // Can't determine image type by casting??
   if(1)
   {
-    typedef itk::ImageFileReader<itk::Image<float, 2> > FileReaderType;
-    reader_ = FileReaderType::New();
-    dynamic_cast<FileReaderType*>(reader_.GetPointer())->SetFileName( fn.c_str() );
-    dynamic_cast<FileReaderType*>(reader_.GetPointer())->Update();  
+    typedef itk::ImageFileReader<itk::Image<float, 3> > FileReaderType;
     
+    // create a new reader
+    FileReaderType::Pointer reader = FileReaderType::New();
+
+    // set reader
+    string fn = gui_FileName_.get();
+    reader->SetFileName( fn.c_str() );
+
+    reader->Update();  
+
+    // get reader output
     if(!handle_.get_rep())
     {
       ITKDatatype *im = scinew ITKDatatype;
-      im->data_ = dynamic_cast<FileReaderType*>(reader_.GetPointer())->GetOutput();  
+      im->data_ = reader->GetOutput();  
       handle_ = im; 
     }
     
