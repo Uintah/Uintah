@@ -962,7 +962,4 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   if(press_matlSet->removeReference()){
     delete press_matlSet;
   }
-  if(one_matl->removeReference()){
-    delete one_matl;
-  }
 }
