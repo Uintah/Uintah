@@ -669,7 +669,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			Ghost::AroundNodes, 1 );
 	      t->requires(new_dw, lb->pMassLabel_preReloc, idx, patch,
 			Ghost::AroundNodes, 1 );
-	      t->requires(new_dw, lb->pXLabel_preReloc, idx, patch,
+	      t->requires(new_dw, lb->pXLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
 
 	      t->computes(new_dw, lb->gStressForSavingLabel, idx, patch );
@@ -756,7 +756,7 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
           int matlindex = matl->getDWIndex();
           int vfindex = matl->getVFIndex();
           ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch,
-                            Ghost::AroundNodes, 1, lb->pXLabel_preReloc);
+                            Ghost::AroundNodes, 1, lb->pXLabel);
 
           // Allocate storage & retrieve particle weighting and position
           ParticleVariable<double> weighting;
@@ -1794,6 +1794,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.136  2000/09/08 22:54:02  guilkey
+// Fixed an error with interpolateParticlesForSaving.
+//
 // Revision 1.135  2000/09/08 20:27:59  tan
 // Added visibility calculation to fracture broken cell shape function
 // interpolation.
