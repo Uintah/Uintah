@@ -130,6 +130,9 @@ Volvis2DDpy::loadCleanTexture( void ) {
   // repaint widget textures onto invisible texture
   bindWidgetTextures();
 
+  if( display_probe )
+    cp_probe->paintTransFunc( transTexture2->textArray, master_opacity );
+    
   // copy visible values from fresh texture onto visible texture
   for( int i = 0; i < textureHeight; i++ )
     for( int j = 0; j < textureWidth; j++ ) {
@@ -179,10 +182,8 @@ Volvis2DDpy::drawBackground( void ) {
   glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, GL_BLEND );
   glBindTexture( GL_TEXTURE_2D, transFuncTextName );
   if( transFunc_changed ) {
-//  #if 0
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, 
 		  textureHeight, 0, GL_RGBA, GL_FLOAT, transTexture1 );
-//  #endif
     transFunc_changed = false;
   }
   
@@ -197,8 +198,12 @@ Volvis2DDpy::drawBackground( void ) {
   glTexCoord2f( 1.0, 0.0 );    glVertex2f( UIwind->width-UIwind->border,
 					   UIwind->border+UIwind->menu_height);
   glEnd();
+
   glDisable( GL_BLEND );
   glDisable( GL_TEXTURE_2D );
+
+  if(display_probe)
+    cp_probe->draw();
 
 } // drawBackground()
 
@@ -400,14 +405,15 @@ Volvis2DDpy::pickShape( int x, int y ) {
 // template<class T>
 void
 Volvis2DDpy::init() {
+  // initialize adjustable global variables from volume data
+  if( selected_vmin == NULL ) {
+    selected_vmin = current_vmin = vmin;
+    selected_vmax = current_vmax = vmax;
+    selected_gmin = current_gmin = gmin;
+    selected_gmax = current_gmax = gmax;
+  }
   // initialize point size for cutplane voxel display
   glPointSize( (GLfloat) 4.0 );
-
-  // initialize adjustable global variables from volume data
-  selected_vmin = current_vmin = vmin;
-  selected_vmax = current_vmax = vmax;
-  selected_gmin = current_gmin = gmin;
-  selected_gmax = current_gmax = gmax;
 
   glViewport( 0, 0, 500, 330 );
   pickedIndex = -1;
@@ -420,7 +426,7 @@ Volvis2DDpy::init() {
   glDisable( GL_DEPTH_TEST );
 
   // create scatterplot texture to reflect volume data
-  createBGText( vmin, vmax, gmin, gmax );
+  createBGText( current_vmin, current_vmax, current_gmin, current_gmax );
   glPixelStoref( GL_UNPACK_ALIGNMENT, 1 );
   glGenTextures( 1, &bgTextName );
   glBindTexture( GL_TEXTURE_2D, bgTextName );
@@ -441,6 +447,18 @@ Volvis2DDpy::init() {
   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight,
 		0, GL_RGBA, GL_FLOAT, transTexture1->textArray ); 
+
+  // create widget manipulation texture
+  glPixelStoref( GL_UNPACK_ALIGNMENT, 1 );
+  glGenTextures( 1, &widgetManipName );
+  glBindTexture( GL_TEXTURE_2D, widgetManipName );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+  glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight,
+		0, GL_RGBA, GL_FLOAT, cp_probe->transText->textArray );
+  
   glEnd();
 } // init()
 
@@ -514,7 +532,7 @@ Volvis2DDpy::display_hist_perimeter() {
   // display what the new parameters would be
   sprintf( text, "selected view: [%.5g,%.5g] x [%.5g,%.5g]", selected_vmin,
 	   selected_vmax, selected_gmin, selected_gmax );
-  printString( fontbase, 200, 40, text, textColor );
+  printString( fontbase, 201, 40, text, textColor );
 } // display_hist_perimeter()
 
 
@@ -588,16 +606,54 @@ Volvis2DDpy::key_pressed(unsigned long key) {
     exit(0);
     break;
 
-    // adjust histogram parameters
+    // help output for user
   case XK_h:
   case XK_H:
+    cerr << "-----------------------------------------------" << endl
+	 << "--                   HELP                    --" << endl
+	 << "-----------------------------------------------" << endl
+	 << endl
+	 << "--KEY COMMANDS:" << endl
+	 << "B/b: allows user to adjust the histogram parameters (zoom in)\n "
+	 << "\tTo adjust the parameters, click in the Volvis UI window\n"
+	 << "\tand drag the mouse.  This will create a diagonal from\n"
+	 << "\twhich the new histogram parameters will be calculated.\n"
+	 << "\tType B/b again to turn this histogram selection mode off.\n"
+	 << "C/c: creates user-defined histogram\n"
+	 << "H/h: brings up this menu help screen\n"
+	 << "O/o: reverts histogram to original parameters (zoom out)\n"
+	 << "Q/q/Esc: quits the program\n"
+	 << "R/r: toggles on/off a rendering hack to improve frame rates\n"
+	 << "\tCAUTION: will decrease image quality.\n"
+	 << "S/s: switch a single widget's texture alignment between\n"
+	 << "\ta vertical or horizontal alignment.\n"
+	 << "0-9: save widget configuration into one of ten states\n"
+	 << "Ctrl+(0-9): load widget configuration from one of ten states\n"
+	 << "Delete: deletes widget in focus (the one with the blue frame)\n"
+	 << "Page Up/Down: increases/decreases ray sample interval\n"
+	 << "\tby a factor of 2\n\n"
+	 << "--SLIDERS:" << endl
+	 << "Top Slider: adjusts EVERY widget's texture's opacity\n"
+	 << "\tby a factor of [master opacity]\n"
+	 << "Bottom Left Slider: adjusts the cutting plane opacity,\n"
+	 << "\twhere 0 is completely transparent and 1 is completely opaque\n"
+	 << "Bottom Right Slider: adjusts the cutting plane grayscale,\n"
+	 << "\twhere 0 is completely colored and 1 is completely gray-shaded\n"
+	 << "-----------------------------------------------" << endl
+	 << "--                END OF HELP                --" << endl
+	 << "-----------------------------------------------" << endl << endl;
+    break;
+
+    // adjust histogram parameters
+  case XK_b:
+  case XK_B:
     hist_adjust = !hist_adjust;
     redraw = true;
     break;
 
     // revert histogram to selected parameters
-  case XK_b:
-  case XK_B:
+  case XK_c:
+  case XK_C:
     current_vmin = selected_vmin;
     current_vmax = selected_vmax;
     current_gmin = selected_gmin;
@@ -609,8 +665,8 @@ Volvis2DDpy::key_pressed(unsigned long key) {
     break;
 
     // revert to original histogram parameters
-  case XK_r:
-  case XK_R:
+  case XK_o:
+  case XK_O:
     selected_vmin = current_vmin = vmin;
     selected_vmax = current_vmax = vmax;
     selected_gmin = current_gmin = gmin;
@@ -665,22 +721,33 @@ Volvis2DDpy::key_pressed(unsigned long key) {
     break;
 
     // render accurately
-  case XK_c:
-  case XK_C:
-    render_mode = CLEAN;
-    cerr << "rendering hack is now " << render_mode << ".\n";
-    break;
-
-    // volume rendering hack to improve performance (>1.5x)
-  case XK_f:
-  case XK_F:
-    render_mode = FAST;
+  case XK_r:
+  case XK_R:
+    render_mode = !render_mode;
     cerr << "rendering hack is now " << render_mode << ".\n";
     break;
 
     // information display
   case XK_i:
   case XK_I:
+    cerr << "--------------------------------------------------------------\n"
+	 << "--                   FILE INFORMATION                       --\n"
+	 << "--------------------------------------------------------------\n"
+	 << "--Unused save states:\n";
+    char file[20] = "savedUIState0.txt";
+    for( int i = 0; i < 10; i++ ) {
+      ifstream filecheck( file );
+      if( !filecheck.good() )
+	cerr << "\t" << file << "\n";
+      file[12]++;
+    }
+    cerr << "--Most recently saved state (this session):\n"
+  	 << "\t" << lastSaveState << endl
+	 << "--Most recently loaded state (this session):\n"
+	 << "\t" << lastLoadState << endl
+	 << "--------------------------------------------------------------\n"
+	 << "--               END OF FILE INFORMATION                    --\n"
+	 << "--------------------------------------------------------------\n";
     break;
   } // switch()
 } // key_pressed()
@@ -729,6 +796,31 @@ Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y) {
 //    // update old_x and old_y
 //    old_x = x;
 //    old_y = y;
+
+  delete_voxel_storage();
+  // if user selected the cutplane probe widget, add it to the widget vector
+  float hist_x = x/pixel_width;
+  float hist_y = (height-y)/pixel_height;
+  if( display_probe &&
+      hist_x >= cp_probe->topLeftVertex[0] - 5 &&
+      hist_x <= cp_probe->lowRightVertex[0] + 5 &&
+      hist_y >= cp_probe->lowRightVertex[1] - 5 &&
+      hist_y <= cp_probe->topLeftVertex[1] + 5 ) {
+    float color[3] = {1.0, 1.0, 0.0};
+    float x = (cp_probe->topLeftVertex[0]+cp_probe->lowRightVertex[0])*0.5f;
+    float y = (cp_probe->topLeftVertex[1]+cp_probe->lowRightVertex[1])*0.5f;
+    float width = cp_probe->lowRightVertex[0]-cp_probe->topLeftVertex[0];
+    float height = cp_probe->topLeftVertex[1]-cp_probe->lowRightVertex[1];
+    widgets.push_back( new RectWidget( x, y, width, height, color, 1 ) );
+    widgets[widgets.size()-1]->changeColor( 0.0, 0.6, 0.85 );
+    if(widgets.size() > 1)
+      widgets[widgets.size()-2]->changeColor( 0.85, 0.6, 0.6 );
+    display_probe = false;
+  } else {
+    display_probe = false;
+    redraw = true;
+    transFunc_changed = true;
+  }
 
   switch( button ) {
   case MouseButton1:	// update focus onto selected widget
@@ -1149,6 +1241,7 @@ Volvis2DDpy::display_cp_voxels( void )
 void
 Volvis2DDpy::store_voxel( Voxel2D<float> voxel )
 {
+  // gather cp voxel information
   if( voxel.g() < current_gmax && voxel.v() < current_vmax &&
       voxel.g() > current_gmin && voxel.v() > current_vmin ) {
     float x = (voxel.v()-current_vmin)/(current_vmax-current_vmin)*
@@ -1160,8 +1253,35 @@ Volvis2DDpy::store_voxel( Voxel2D<float> voxel )
     vvp->value = x;
     vvp->gradient = y;
     cp_voxels.push_back(vvp);
+
+    // use cp voxel information to create new widget probe
     redraw = true;
   }
+}
+
+
+// creates a cutplane widget probe from cp_voxels information
+void
+Volvis2DDpy::create_widget_probe()
+{
+  float p_vmin = MAXFLOAT;
+  float p_vmax = -MAXFLOAT;
+  float p_gmin = MAXFLOAT;
+  float p_gmax = -MAXFLOAT;
+  for( int i = 0; i < cp_voxels.size(); i++ ) {
+    p_vmin = min( p_vmin, cp_voxels[i]->value );
+    p_gmin = min( p_gmin, cp_voxels[i]->gradient );
+    p_vmax = max( p_vmax, cp_voxels[i]->value );
+    p_gmax = max( p_gmax, cp_voxels[i]->gradient );
+  }
+
+  float midx = (p_vmin+p_vmax)*0.5f;
+  float midy = (p_gmin+p_gmax)*0.5f;
+  float width = p_vmax-p_vmin;
+  float height = p_gmax-p_gmin;
+  cp_probe->reposition( midx, midy, width, height );
+  display_probe = true;
+  redraw = true;
 }
 
 
@@ -1321,6 +1441,7 @@ Volvis2DDpy::saveUIState( unsigned long key ) {
   } // for()
   outfile.close();
   printf( "Saved state %d successfully.\n", stateNum );
+  lastSaveState = file;
   redraw = true;
 } // saveUIState()
 
@@ -1376,7 +1497,7 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
   } // switch()
   ifstream infile( file );
   if( !infile.good() ) {
-    perror( "Could not find savedUIState.txt!" );
+    perror( "Could not open file!" );
     return;
   } // if()
 
@@ -1520,11 +1641,163 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
     } // else if()
   } // while()
   printf( "Loaded state %d successfully.\n", stateNum );
+  lastLoadState = file;
   infile.close();
   transFunc_changed = true;
   redraw = true;
 } // loadUIState()
 
+
+
+void
+Volvis2DDpy::loadWidgets( char* file )
+{
+  ifstream infile( file );
+  if( !infile.good() ) {
+    perror( "Could not open file!" );
+    return;
+  } // if()
+
+  string token;
+  infile >> token;
+  if( token == "HistogramParameters:" ) {
+    float vmn, vmx;
+    float gmn, gmx;
+    infile >> vmn >> vmx >> gmn >> gmx;
+    current_vmin = selected_vmin = vmn;
+    current_vmax = selected_vmax = vmx;
+    current_gmin = selected_gmin = gmn;
+    current_gmax = selected_gmax = gmx;
+    text_x_convert = ((float)textureWidth-1.0f)/(current_vmax-current_vmin);
+    text_y_convert = ((float)textureHeight-1.0f)/(current_gmax-current_gmin);
+  }
+  while( !infile.eof() ) {
+    infile >> token;
+    while( token != "TriWidget" && token != "RectWidget" && !infile.eof() )
+      infile >> token;
+    // if widget is a TriWidget...
+    if( token == "TriWidget" ) {
+      float lV0 = 0.0f;       float lV1 = 0.0f;      float mLV0 = 0.0f;
+      float mLV1 = 0.0f;      float mRV0 = 0.0f;     float mRV1 = 0.0f;
+      float uLV0 = 0.0f;      float uLV1 = 0.0f;     float uRV0 = 0.0f;
+      float uRV1 = 0.0f;      float red = 0.0f;      float green = 0.0f;
+      float blue = 0.0f;      float opacity = 0.0f;  float opac_x = 0.0f;
+      float opac_y = 0.0f;    float text_red = 0.0f; float text_green = 0.0f;
+      float text_blue = 0.0f; int text_x_off = 0;    int text_y_off = 0;
+      int switchFlag = 0;
+      while( token != "//TriWidget" ) {
+	infile >> token;
+	if( token == "LowerVertex:" ) {
+	  infile >> lV0 >> lV1;
+	  infile >> token;
+	} // if()
+	if( token == "LeftLowerbound:" ) {
+	  infile >> mLV0 >> mLV1;
+	  infile >> token;
+	} // if()
+	if( token == "RightLowerbound:" ) {
+	  infile >> mRV0 >> mRV1;
+	  infile >> token;
+	} // if()
+	if( token == "LeftUpperbound:" ) {
+	  infile >> uLV0 >> uLV1;
+	  infile >> token;
+	} // if()
+	if( token == "RightUpperbound:" ) {
+	  infile >> uRV0 >> uRV1;
+	  infile >> token;
+	} // if()
+	if( token == "WidgetFrameColor:" ) {
+	  infile >> red >> green >> blue >> opacity;
+	  infile >> token;
+	} // if()
+	if( token == "WidgetOpacityStarPosition:" ) {
+	  infile >> opac_x >> opac_y;
+	  infile >> token;
+	} // if()
+	if( token == "WidgetTextureColor:" ) {
+	  infile >> text_red >> text_green >> text_blue;
+	  infile >> token;
+	} // if()
+	if( token == "WidgetTextureColormapOffset:" ) {
+	  infile >> text_x_off >> text_y_off;
+	  infile >> token;
+	} // if()
+	if( token == "WidgetTextureAlignment:" ) {
+	  infile >> switchFlag;
+	  infile >> token;
+	} // if()
+      } // while()
+      widgets.push_back( new TriWidget( lV0, mLV0, mLV1, mRV0, mRV1, uLV0,
+					uLV1, uRV0, uRV1, red, green, blue,
+					opacity, opac_x, opac_y, text_red,
+					text_green, text_blue, text_x_off, 
+					text_y_off, switchFlag ) );
+    } // if()
+    // if widget is a RectWidget...
+    else if( token == "RectWidget" ) {
+      int type = -1;          float left = 0.0f;     float top = 0.0f;
+      float width = 0.0f;     float height = 0.0f;   float red = 0.0f;
+      float green = 0.0f;     float blue = 0.0f;     float opacity = 0.0f;
+      float focus_x = 0.0f;   float focus_y = 0.0f;  float opac_x = 0.0f;
+      float opac_y = 0.0f;    float text_red = 0.0f; float text_green = 0.0f;
+      float text_blue = 0.0f; int text_x_off = 0;    int text_y_off = 0;
+      int switchFlag = 0;
+      while( token != "//RectWidget" ) {
+	infile >> token;
+	if( token == "Type:" ) {
+	  infile >> type;
+	  infile >> token;
+	} // if()
+	if( token == "UpperLeftCorner:" ) {
+	  infile >> left >> top;
+	  infile >> token;
+	} // if()
+	if( token == "Width:" ) {
+	  infile >> width;
+	  infile >> token;
+	} // if()
+	if( token == "Height:" ) {
+	  infile >> height;
+	  infile >> token;
+	} // if()
+	if( token == "WidgetFrameColor:" ) {
+	  infile >> red >> green >> blue >> opacity;
+	  infile >> token;
+	} // if()
+	if( token == "FocusStarLocation:" ) {
+	  infile >> focus_x >> focus_y;
+	  infile >> token;
+	} // if()
+	if( token == "OpacityStarLocation:" ) {
+	  infile >> opac_x >> opac_y;
+	  infile >> token;
+	} // if()
+	if( token == "WidgetTextureColor:" ) {
+	  infile >> text_red >> text_green >> text_blue;
+	  infile >> token;
+	} // if()
+	if( token == "WidgetColormapOffset:" ) {
+	  infile >> text_x_off >> text_y_off;
+	  infile >> token;
+	} // if()
+	if( token == "WidgetTextureAlignment:" ) {
+	  infile >> switchFlag;
+	  infile >> token;
+	} // if()
+      } // else while()
+      widgets.push_back( new RectWidget( type, left, top, width, height, red,
+					 green, blue, opacity, focus_x,
+					 focus_y, opac_x, opac_y, text_red,
+					 text_green, text_blue, text_x_off,
+					 text_y_off, switchFlag ) );
+    } // else if()
+  } // while()
+  infile.close();
+  transFunc_changed = true;
+  redraw = true;
+  
+} // loadWidgets()
 
 
 
@@ -1534,6 +1807,12 @@ Volvis2DDpy::Volvis2DDpy( float t_inc, bool cut ):DpyBase("Volvis2DDpy"),
 					t_inc(t_inc), vmin(MAXFLOAT),
 					vmax(-MAXFLOAT), gmin(MAXFLOAT),
 					gmax(-MAXFLOAT), cut(cut) {
+  // initialize adjustable global variables from volume data
+  selected_vmin = current_vmin = NULL;
+  selected_vmax = current_vmax = NULL;
+  selected_gmin = current_gmin = NULL;
+  selected_gmax = current_gmax = NULL;
+
   t_inc_diff = 1.0f;
   t_inc = original_t_inc;
   unsigned int init_width = 500;
@@ -1568,11 +1847,18 @@ Volvis2DDpy::Volvis2DDpy( float t_inc, bool cut ):DpyBase("Volvis2DDpy"),
   transTexture1 = new Texture<GLfloat>();
   transTexture2 = new Texture<GLfloat>();
   transTexture3 = new Texture<GLfloat>();
+
+  float color[3] = {1,1,0};
+  cp_probe = new RectWidget( 0, 0, 0, 0, color, 1 );
+  display_probe = false;
+
   set_resolution( init_width, init_height );
   UIwind->border = 5;
   UIwind->menu_height = 80;
   UIwind->width = (float)init_width;
   UIwind->height = (float)init_height;
+  lastSaveState = "";
+  lastLoadState = "";
 } // Volvis2DDpy()
 
 // template<class T>
