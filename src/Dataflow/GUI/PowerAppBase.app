@@ -1200,6 +1200,8 @@ class PowerAppBase {
 	    set color { "Purple Tint" { { 10 0 20 } { 245 235 255 } } }
 	} elseif {$which == "Blue-to-Red"} {
 	    set color { "Blue-to-Red" { { 0 0 255 } { 255 255 255} { 255 0 0 } } }
+	} elseif {$which == "Blue-to-red"} {
+	    set color { "Blue-to-Red" { { 0 0 255 } { 255 255 255} { 255 0 0 } } }
 	} else {
 	    puts stderr "Bad colormap name"
 	    puts stderr $which
