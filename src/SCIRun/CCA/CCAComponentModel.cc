@@ -209,7 +209,7 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
   
     void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
     if(!maker_v){
-      cerr <<Cannot load component " << type << '\n';
+      cerr <<"Cannot load component " << type << '\n';
       cerr << SOError() << '\n';
       return 0;
     }
