@@ -413,7 +413,9 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	    if(task->getPatch())
 	       dbg << " on patch " << task->getPatch()->getID() << '\n';
 	    double taskstart = Time::currentSeconds();
+	    SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
 	    task->doit(pc);
+	    SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
 	    double sendstart = Time::currentSeconds();
 	    
 
@@ -500,6 +502,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
    finalizeNodes(me);
    int junk;
    MPI_Buffer_detach(&mpibuffer, &junk);
+   delete[] mpibuffer;
    if(old_mpibuffersize)
       MPI_Buffer_attach(old_mpibuffer, old_mpibuffersize);
 
@@ -885,6 +888,9 @@ MPIScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.28  2000/10/09 22:43:33  sparker
+// must free mpi buffer
+//
 // Revision 1.27  2000/09/30 05:33:10  sparker
 // Fixed typo
 //
