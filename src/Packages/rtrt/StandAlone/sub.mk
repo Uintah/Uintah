@@ -20,32 +20,31 @@ PSELIBS := \
 
 endif
 
-LIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(X_LIBRARY) $(XI_LIBRARY) $(XMU_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
-
-ifeq ($(findstring -n32, $(C_FLAGS)),-n32)
-#ifneq ($(USE_SOUND),no)
-  PSELIBS += Packages/rtrt/Sound
-  libs +=  $(SOUND_LIBRARY)
-endif
+LIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(X_LIBRARY) $(XI_LIBRARY) $(XMU_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY) $(SOUND_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
+
+# These need the same libray parameters as rtrt
 
 # multi_rtrt
 SRCS := $(SRCDIR)/multi_rtrt.cc
 PROGRAM := Packages/rtrt/StandAlone/mrtrt
 include $(SCIRUN_SCRIPTS)/program.mk
 
+# nrrd2brick
+SRCS := $(SRCDIR)/nrrd2brick.cc
+LIBS += $(TEEM_LIBRARY)
+PROGRAM := Packages/rtrt/StandAlone/nrrd2brick
+include $(SCIRUN_SCRIPTS)/program.mk
+
+############################################################
+# These don't need the same library parameters as rtrt
+
 # rserver
 SRCS := $(SRCDIR)/rserver.cc
 PROGRAM := Packages/rtrt/StandAlone/rserver
 LIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(X_LIBRARY) $(XI_LIBRARY) $(XMU_LIBRARY)
 PSELIBS := Packages/rtrt/visinfo Core/Thread Packages/rtrt/Core
-include $(SCIRUN_SCRIPTS)/program.mk
-
-#nrrd2brick
-SRCS := $(SRCDIR)/nrrd2brick.cc
-LIBS := $(FASTM_LIBRARY) $(TEEM_LIBRARY) $(THREAD_LIBRARY) $(X11_LIBRARY) $(M_LIBRARY) $(XI_LIBRARY) $(XMU_LIBRARY)
-PROGRAM := Packages/rtrt/StandAlone/nrrd2brick
 include $(SCIRUN_SCRIPTS)/program.mk
 
 # visinfo
