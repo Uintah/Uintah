@@ -409,6 +409,10 @@ void CuttingPlane::execute()
 	int haveval=0;
 	double minval, maxval, invrange;
 
+	ScalarFieldInterface *sfi = 0;
+	if( field->get_type_name(0) == "LatVolField")
+	  sfi = field->query_scalar_interface();
+
 	if (localMinMax) {
 	    // get the min and max values from this slice
 	    for (i = 0; i < u_num; i++)
@@ -420,7 +424,7 @@ void CuttingPlane::execute()
 // 			(ix=0) || 
 // 			sfield->
 // 			  interpolate( p, sval, ix, EPS, EPS, exhaustive)) {
-		    if( interpolate( field, p, sval) ){
+		    if(  sfi->interpolate( sval, p) ){
 		      if (!haveval) { minval=maxval=sval; haveval=1; }
 		      else if (sval<minval) minval=sval;
 		      else if (sval>maxval) maxval=sval;
@@ -431,9 +435,6 @@ void CuttingPlane::execute()
 	}
 
 	
-	ScalarFieldInterface *sfi = 0;
-	if( field->get_type_name(0) == "LatVolField")
-	  sfi = field->query_scalar_interface();
 	
 	for (i = 0; i < u_num; i++)
 	  for (j = 0; j < v_num; j++) {
