@@ -59,11 +59,28 @@ class Module;
 
 typedef IPort* (*iport_maker)(Module*, const clString&);
 typedef OPort* (*oport_maker)(Module*, const clString&);
+typedef std::multimap<clString,int> port_map;
+typedef port_map::iterator port_iter;
+typedef std::pair<clString,int> port_pair;
+typedef std::pair<port_map::iterator,port_map::iterator> dynamic_port_range;
+
+template<class T> 
+class PortManager {
+public:
+  port_map namemap;
+  Array1<T> ports;
+
+  int size();
+  void add(T);
+  void remove(int);
+  const T& operator[](int);
+  dynamic_port_range* operator[](clString);
+};
 
 class PSECORESHARE Module : public TCL, public Pickable {
   /*
    * This exists to trip people up that still have clone and
-   * copy constructors in the modules - they shoudl be removed.
+   * copy constructors in the modules - they should be removed.
    */
   Module(const Module&);
   
@@ -93,12 +110,11 @@ public:
    void setStackSize(unsigned long stackSize);
 
     State state;
-    Array1<OPort*> oports;
-    Array1<IPort*> iports;
-    std::map<clString,OPort*> auto_oports;
-    std::map<clString,IPort*> auto_iports;
+    PortManager<OPort*> oports;
+    PortManager<IPort*> iports;
     char lastportdynamic;
     iport_maker dynamic_port_maker;
+    clString lastportname;
     ModuleHelper* helper;
     int have_own_dispatch;
 
@@ -165,8 +181,10 @@ public:
     void rename_oport(int, const clString&);
     virtual void reconfigure_iports();
     virtual void reconfigure_oports();
-    IPort* get_iport(char*);
-    OPort* get_oport(char*);
+    IPort* get_iport(int);   // return port at position
+    OPort* get_oport(int);
+    dynamic_port_range* get_iport(char*); // return port(s) with name
+    dynamic_port_range* get_oport(char*);
 
     // Used by Module subclasses
     void error(const clString&);
