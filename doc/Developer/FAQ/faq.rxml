@@ -39,6 +39,33 @@ end
 <revhistory>
 <revision>
 <revnumber>1.0</revnumber>
+<date>2/15/03</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+Should I use <type>std::vector</type> or <type>SCIRun::Array1</type>?
+</para>
+</question>
+<answer>
+<para>
+In cases where performance does not matter please use
+<type>std::vector</type>.  However, in cases where you need optimal
+performance then you should compare the performance of
+<type>std::vector</type> and <type>SCIRun::Array1</type>.  We have
+found in some cases that <type>SCIRun::Array1</type> is significantly
+faster. 
+</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
 <date>1/31/03</date>
 </revision>
 </revhistory>
