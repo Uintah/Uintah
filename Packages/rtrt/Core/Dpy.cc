@@ -333,6 +333,7 @@ Dpy::run()
   priv->up=0;
 
   priv->exposed=true;
+  priv->FrameRate = 0;
 
   double benchstart=0;
   for(;;)
@@ -346,13 +347,13 @@ Dpy::run()
 
       // Exit if you are supposed to.
       if (should_close()) {
-        cerr << "Dpy is closing\n";
+        //        cerr << "Dpy is closing\n";
         cleanup();
-        cerr << "Dpy::cleanup finished\n";
+        //        cerr << "Dpy::cleanup finished\n";
         // This can't proceed until someone calls wait_on_close which
         // calls down on the sema.
 	parentSema.up();
-        cerr << "parentSema.up finished\n";
+        //        cerr << "parentSema.up finished\n";
         //for(;;) {}
         return;
       }
@@ -875,13 +876,13 @@ Dpy::get_barriers( Barrier *& mainBarrier, Barrier *& addSubThreads )
 
 void Dpy::wait_on_close() {
   parentSema.down();
-  cerr << "Dpy::wait_on_close::parentSema.down()\n";
+  //  cerr << "Dpy::wait_on_close::parentSema.down()\n";
   // Now wait for the thread to have exited
   unsigned int i =0;
   while(my_thread_ != 0) {
     i++;
-    if (i %10000 == 0)
-      cerr << "+";
+//     if (i %10000 == 0)
+//       cerr << "+";
   }
 }
 
