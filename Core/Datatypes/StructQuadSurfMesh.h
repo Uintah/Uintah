@@ -74,16 +74,43 @@ public:
   void get_edges(Edge::array_type &, Cell::index_type) const {}
   void get_faces(Face::array_type &, Cell::index_type) const {}
 
+  //! get the parent element(s) of the given index
+  unsigned get_edges(Edge::array_type &, Node::index_type) const { return 0; }
+  unsigned get_faces(Face::array_type &, Node::index_type) const { return 0; }
+  unsigned get_faces(Face::array_type &, Edge::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Node::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Face::index_type) const { return 0; }
+
   //! return all face_indecies that overlap the BBox in arr.
   void get_faces(Face::array_type &arr, const BBox &box)
   { ASSERTFAIL("ScanlineMesh::get_faces for BBox is not implemented."); }
 
-  //! similar to get_faces() with Face::index_type argument, but
-  //  returns the "other" face if it exists, not all that exist
-  bool get_neighbor(Face::index_type & /*neighbor*/, Face::index_type /*from*/,
-		    Edge::index_type /*idx*/) const {
-    ASSERTFAIL("StructQuadSurfMesh::get_neighbor not implemented.");
+  //! Get the size of an elemnt (length, area, volume)
+  double get_size(Node::index_type idx) const { return 0.0; }
+  double get_size(Edge::index_type idx) const 
+  {
+    Node::array_type arr;
+    get_nodes(arr, idx);
+    Point p0, p1;
+    get_center(p0, arr[0]);
+    get_center(p1, arr[1]);
+    return (p1.asVector() - p0.asVector()).length();
   }
+  double get_size(Face::index_type idx) const
+  {
+    Node::array_type ra;
+    get_nodes(ra,idx);
+    Point p0,p1,p2;
+    get_point(p0,ra[0]);
+    get_point(p1,ra[1]);
+    get_point(p2,ra[2]);
+    return (Cross(p0-p1,p2-p0)).length()*0.5;
+  }
+  double get_size(Cell::index_type idx) const { return 0.0; }
+  double get_length(Edge::index_type idx) const { return get_size(idx); };
+  double get_area(Face::index_type idx) const { return get_size(idx); };
+  double get_volume(Cell::index_type idx) const { return get_size(idx); };
 
   //! get the center point (in object space) of an element
   void get_center(Point &, const Node::index_type &) const;
@@ -106,25 +133,12 @@ public:
   void get_point(Point &point, const Node::index_type &index) const
   { get_center(point, index); }
   void set_point(const Node::index_type &index, const Point &point);
-  void get_normal(Vector &vector, const Node::index_type &index) const
-  { ASSERTFAIL("not implemented") }
 
   void get_random_point(Point &p, const Elem::index_type &ei, int seed=0) const
   { ASSERTFAIL("not implemented") }
 
-  double get_area(const Face::index_type &fi) {
-    Node::array_type ra;
-    get_nodes(ra,fi);
-    Point p0,p1,p2;
-    get_point(p0,ra[0]);
-    get_point(p1,ra[1]);
-    get_point(p2,ra[2]);
-    return (Cross(p0-p1,p2-p0)).length()*0.5;
-  }
-
   double get_element_size(const Elem::index_type &fi) { return get_area(fi); }
 
-  virtual bool has_normals() const { return true; }
   virtual bool is_editable() const { return true; }
 
   virtual void io(Piostream&);
@@ -140,8 +154,6 @@ private:
 
   int next(int i) { return ((i%4)==3) ? (i-3) : (i+1); }
   int prev(int i) { return ((i%4)==0) ? (i+3) : (i-1); }
-
-  //bool inside4_p(int, const Point &p);
 
   Array2<Point>  points_;
   Array2<Vector> normals_; //! normalized per node

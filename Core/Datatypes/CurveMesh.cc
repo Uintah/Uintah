@@ -90,6 +90,17 @@ CurveMesh::get_center(Point &result, Edge::index_type idx) const
 }
 
 
+int
+CurveMesh::get_valence(Node::index_type idx) const
+{
+  int count = 0;
+  for (unsigned int i = 0; i < edges_.size(); i++)
+    if (edges_[i].first == idx || edges_[i].second == idx) count++;
+  return count;
+}
+
+
+
 bool
 CurveMesh::locate(Node::index_type &idx, const Point &p) const
 {

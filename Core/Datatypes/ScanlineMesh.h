@@ -154,6 +154,12 @@ public:
   double get_area(Face::index_type idx) const { return get_size(idx); };
   double get_volume(Cell::index_type idx) const { return get_size(idx); };
 
+  int get_valence(Node::index_type idx) const
+  { return (idx == 0 || idx == ni_ - 1) ? 1 : 2; }
+  int get_valence(Edge::index_type idx) const { return 0; }
+  int get_valence(Face::index_type idx) const { return 0; }
+  int get_valence(Cell::index_type idx) const { return 0; }
+
   //! get the center point (in object space) of an element
   void get_center(Point &, Node::index_type) const;
   void get_center(Point &, Edge::index_type) const;

@@ -124,16 +124,34 @@ public:
   unsigned get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
   unsigned get_cells(Cell::array_type &, Face::index_type) const { return 0; }
 
-  //! similar to get_edges() with Node::index_type argument, but
-  //  returns the "other" edge if it exists, not all that exist
-  void get_neighbor(Edge::index_type &, Node::index_type) const {}
-
   //! get the center point (in object space) of an element
   void get_center(Point &result, Node::index_type idx) const
     { result = nodes_[idx]; }
   void get_center(Point &, Edge::index_type) const;
   void get_center(Point &, Face::index_type) const {}
   void get_center(Point &, Cell::index_type) const {}
+
+  //! Get the size of an elemnt (length, area, volume)
+  double get_size(Node::index_type idx) const { return 0.0; }
+  double get_size(Edge::index_type idx) const 
+  {
+    Node::array_type arr;
+    get_nodes(arr, idx);
+    Point p0, p1;
+    get_center(p0, arr[0]);
+    get_center(p1, arr[1]);
+    return (p1.asVector() - p0.asVector()).length();
+  }
+  double get_size(Face::index_type idx) const { return 0.0; }
+  double get_size(Cell::index_type idx) const { return 0.0; }
+  double get_length(Edge::index_type idx) const { return get_size(idx); };
+  double get_area(Face::index_type idx) const   { return get_size(idx); };
+  double get_volume(Cell::index_type idx) const { return get_size(idx); };
+
+  int get_valence(Node::index_type idx) const;
+  int get_valence(Edge::index_type idx) const { return 0; }
+  int get_valence(Face::index_type idx) const { return 0; }
+  int get_valence(Cell::index_type idx) const { return 0; }
 
   bool locate(Node::index_type &, const Point &) const;
   bool locate(Edge::index_type &, const Point &) const;
@@ -142,19 +160,24 @@ public:
 
   void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
   void get_weights(const Point &p, Edge::array_type &l, vector<double> &w);
-  void get_weights(const Point &, Face::array_type &, vector<double> &) {ASSERTFAIL("CurveMesh::get_weights for faces isn't supported");}
-  void get_weights(const Point &, Cell::array_type &, vector<double> &) {ASSERTFAIL("CurveMesh::get_weights for cells isn't supported");}
+  void get_weights(const Point &, Face::array_type &, vector<double> &) 
+    {ASSERTFAIL("CurveMesh::get_weights for faces isn't supported");}
+  void get_weights(const Point &, Cell::array_type &, vector<double> &) 
+    {ASSERTFAIL("CurveMesh::get_weights for cells isn't supported");}
 
   void get_point(Point &result, Node::index_type idx) const
     { get_center(result,idx); }
-  void get_normal(Vector & /* result */, Node::index_type /* index */) const
-    { ASSERTFAIL("not implemented") }
   void set_point(const Point &point, Node::index_type index)
     { nodes_[index] = point; }
+
+  void get_normal(Vector & /* result */, Node::index_type /* index */) const
+    { ASSERTFAIL("not implemented") }
 
   //! use these to build up a new contour mesh
   Node::index_type add_node(const Point &p)
     { nodes_.push_back(p); return nodes_.size()-1; }
+  Node::index_type add_point(const Point &point) 
+    { return add_node(point); }
   Edge::index_type add_edge(Node::index_type i1, Node::index_type i2)
     {
       edges_.push_back(index_pair_type(i1,i2));
@@ -165,7 +188,6 @@ public:
       edges_.push_back(index_pair_type(a[0],a[1]));
       return static_cast<Elem::index_type>(nodes_.size()-1);
     }
-  Node::index_type add_point(const Point &point) { return add_node(point); }
 
   virtual bool is_editable() const { return true; }
     
@@ -174,7 +196,6 @@ public:
   static  const string type_name(int n = -1);
 
   virtual const TypeDescription *get_type_description() const;
-
 private:
 
   //! the nodes

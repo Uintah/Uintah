@@ -34,6 +34,7 @@
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/Transform.h>
+#include <Core/Geometry/Point.h>
 
 namespace SCIRun {
 
@@ -266,12 +267,43 @@ public:
   //! return all face_indecies that overlap the BBox in arr.
   void get_faces(Face::array_type &arr, const BBox &box);
 
-  //! similar to get_faces() with Face::index_type argument, but
-  //  returns the "other" face if it exists, not all that exist
-  bool get_neighbor(Face::index_type & /*neighbor*/, Face::index_type /*from*/,
-		    Edge::index_type /*idx*/) const {
-    ASSERTFAIL("ImageMesh::get_neighbor not implemented.");
+  //! Get the size of an elemnt (length, area, volume)
+  double get_size(Node::index_type idx) const { return 0.0; }
+  double get_size(Edge::index_type idx) const 
+  {
+    Node::array_type arr;
+    get_nodes(arr, idx);
+    Point p0, p1;
+    get_center(p0, arr[0]);
+    get_center(p1, arr[1]);
+    return (p1.asVector() - p0.asVector()).length();
   }
+  double get_size(Face::index_type idx) const
+  {
+    Node::array_type ra;
+    get_nodes(ra,idx);
+    Point p0,p1,p2;
+    get_point(p0,ra[0]);
+    get_point(p1,ra[1]);
+    get_point(p2,ra[2]);
+    return (Cross(p0-p1,p2-p0)).length()*0.5;
+  }
+  double get_size(Cell::index_type idx) const { return 0.0; }
+  double get_length(Edge::index_type idx) const { return get_size(idx); };
+  double get_area(Face::index_type idx) const { return get_size(idx); };
+  double get_volume(Cell::index_type idx) const { return get_size(idx); };
+
+  int get_valence(Node::index_type idx) const
+  {
+    return ((idx.i_ == 0 || idx.i_ == ni_ - 1 ? 1 : 2) +
+	    (idx.j_ == 0 || idx.j_ == nj_ - 1 ? 1 : 2));
+  }   
+  int get_valence(Edge::index_type idx) const;
+  int get_valence(Face::index_type idx) const { return 0; }
+  int get_valence(Cell::index_type idx) const { return 0; }
+
+  void get_normal(Vector &/* result */, Node::index_type /* index */) const
+  { ASSERTFAIL("not implemented") }
 
   //! get the center point (in object space) of an element
   void get_center(Point &, const Node::index_type &) const;
@@ -291,11 +323,8 @@ public:
 
   void get_point(Point &p, Node::index_type i) const
   { get_center(p, i); }
-  void get_normal(Vector &/* result */, Node::index_type /* index */) const
-  { ASSERTFAIL("not implemented") }
 
-  void get_random_point(Point &p, const Face::index_type &fi, 
-			int seed=0) const;
+  void get_random_point(Point &, const Face::index_type &, int seed=0) const;
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

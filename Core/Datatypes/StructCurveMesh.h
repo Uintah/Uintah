@@ -76,22 +76,38 @@ public:
   //! get the parent element(s) of the given index
   void get_edges(Edge::array_type &a, Node::index_type idx) const
   { a.push_back(Edge::index_type(idx));}
-  //bool get_faces(Face::array_type &, Node::index_type) const { return 0; }
-  //bool get_faces(Face::array_type &, Edge::index_type) const { return 0; }
-  //bool get_cells(Cell::array_type &, Node::index_type) const { return 0; }
-  //bool get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
-  //bool get_cells(Cell::array_type &, Face::index_type) const { return 0; }
+  bool get_faces(Face::array_type &, Node::index_type) const { return 0; }
+  bool get_faces(Face::array_type &, Edge::index_type) const { return 0; }
+  bool get_cells(Cell::array_type &, Node::index_type) const { return 0; }
+  bool get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
+  bool get_cells(Cell::array_type &, Face::index_type) const { return 0; }
 
   //! return all edge_indecies that overlap the BBox in arr.
   void get_edges(Edge::array_type &arr, const BBox &box) const
   { ASSERTFAIL("ScanlineMesh::get_edges for BBox is not implemented."); }
 
-  //! similar to get_cells() with Face::index_type argument, but
-  //  returns the "other" cell if it exists, not all that exist
-  bool get_neighbor(Cell::index_type & /*neighbor*/, Cell::index_type /*from*/,
-		    Face::index_type /*idx*/) const {
-    ASSERTFAIL("StructCurveMesh::get_neighbor not implemented.");
-  }
+  //! Get the size of an elemnt (length, area, volume)
+  double get_size(Node::index_type idx) const { return 0.0; }
+  double get_size(Edge::index_type idx) const 
+  {
+    Node::array_type arr;
+    get_nodes(arr, idx);
+    Point p0, p1;
+    get_center(p0, arr[0]);
+    get_center(p1, arr[1]);
+    return (p1.asVector() - p0.asVector()).length();
+  }  
+  double get_size(Face::index_type idx) const { return 0.0; }
+  double get_size(Cell::index_type idx) const { return 0.0; };
+  double get_length(Edge::index_type idx) const { return get_size(idx); };
+  double get_area(Face::index_type idx) const { return get_size(idx); };
+  double get_volume(Cell::index_type idx) const { return get_size(idx); };
+
+  int get_valence(Node::index_type idx) const 
+  { return (idx == 0 || idx == points_.size()  - 1) ? 1 : 2; }
+  int get_valence(Edge::index_type idx) const { return 0; }
+  int get_valence(Face::index_type idx) const { return 0; }
+  int get_valence(Cell::index_type idx) const { return 0; }
 
   //! get the center point (in object space) of an element
   void get_center(Point &, const Node::index_type &) const;
@@ -111,12 +127,8 @@ public:
   void get_weights(const Point &, Cell::array_type &, vector<double> &)
   {ASSERTFAIL("StructCurveMesh::get_weights for cells isn't supported");}
 
-  void get_point(Point &point, Node::index_type index) const
-  { get_center(point,index); }
-  void set_point(Node::index_type index, const Point &point )
-  { points_[index] = point; }
-  void get_normal(Vector &vector, Node::index_type index) const
-  { ASSERTFAIL("not implemented") }
+  void get_point(Point &p, Node::index_type i) const { get_center(p,i); }
+  void set_point(Node::index_type i, const Point &p) { points_[i] = p; }
 
   void get_random_point(Point &p, const Elem::index_type &ei, int seed=0) const
   { ASSERTFAIL("not implemented") }
