@@ -19,6 +19,9 @@
 // these functions are used to abstract the interface for 
 // accessing shared libraries (.so for unix and .dll for windows)
 
+#ifndef SOLOADER_H_
+#define SOLOADER_H_
+
 #include <Core/share/share.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -72,3 +75,4 @@ SCICORESHARE const char* SOError();
 
 LIBRARY_HANDLE FindLibInPath(const std::string& lib, const std::string& path);
 
+#endif
