@@ -40,27 +40,37 @@ public:
   typedef Data value_type;
   typedef Data * iterator;
 
-  Data *begin();
-  Data *end();
+  Data *begin() { return &(*this)(0,0); }
+   Data *end() { return &((*this)(dim1()-1,dim2()-1))+1; }
     
-  FData2d();
-  FData2d(const FData2d& data);
+  FData2d() : Array2<Data>() {}
+  FData2d(const FData2d& data) { copy(data); }
   virtual ~FData2d();
   
-  const value_type &operator[](typename ImageMesh::Cell::index_type idx) const;
-  const value_type &operator[](typename ImageMesh::Face::index_type idx) const;
-  const value_type &operator[](typename ImageMesh::Edge::index_type idx) const;
-  const value_type &operator[](typename ImageMesh::Node::index_type idx) const;
+  const value_type &operator[](typename ImageMesh::Cell::index_type idx) const
+  { return operator()(0, idx.i_); } 
+  const value_type &operator[](typename ImageMesh::Face::index_type idx) const
+  { return operator()(idx.j_, idx.i_); }
+  const value_type &operator[](typename ImageMesh::Edge::index_type idx) const
+  { return operator()(0, idx.i_); }
+  const value_type &operator[](typename ImageMesh::Node::index_type idx) const
+  { return operator()(idx.j_, idx.i_); }
 
-  value_type &operator[](typename ImageMesh::Cell::index_type idx);
-  value_type &operator[](typename ImageMesh::Face::index_type idx);
-  value_type &operator[](typename ImageMesh::Edge::index_type idx);
-  value_type &operator[](typename ImageMesh::Node::index_type idx);
+  value_type &operator[](typename ImageMesh::Cell::index_type idx)
+  { return operator()(0, idx.i_); } 
+  value_type &operator[](typename ImageMesh::Face::index_type idx)
+  { return operator()(idx.j_, idx.i_); }
+  value_type &operator[](typename ImageMesh::Edge::index_type idx)
+  { return operator()(0, idx.i_); }
+  value_type &operator[](typename ImageMesh::Node::index_type idx)
+  { return operator()(idx.j_, idx.i_); }
 
-  void resize(const ImageMesh::Node::size_type &size);
-  void resize(const ImageMesh::Edge::size_type &size);
-  void resize(const ImageMesh::Face::size_type &size);
-  void resize(const ImageMesh::Cell::size_type &size);
+  void resize(const ImageMesh::Node::size_type &size)
+  { newsize(size.j_, size.i_); }
+  void resize(const ImageMesh::Edge::size_type &size) {}
+  void resize(const ImageMesh::Face::size_type &size)
+  { newsize(size.j_, size.i_); }
+  void resize(const ImageMesh::Cell::size_type &size) {} 
 
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const;
@@ -68,131 +78,7 @@ public:
 
 
 template <class Data>
-Data *
-FData2d<Data>::begin()
-{
-  return &(*this)(0,0);
-}
-
-
-template <class Data>
-Data *
-FData2d<Data>::end()
-{
-  return &((*this)(dim1()-1,dim2()-1))+1;
-}
-  
-
-template <class Data>
-FData2d<Data>::FData2d()
-  : Array2<Data>()
-{
-}
-
-
-template <class Data>
-FData2d<Data>::FData2d(const FData2d& data)
-{
-  copy(data);
-} 
-
-
-template <class Data>
 FData2d<Data>::~FData2d()
-{
-}
-
-
-template <class Data>
-const FData2d<Data>::value_type &
-FData2d<Data>::operator[](typename ImageMesh::Cell::index_type idx) const
-{
-  return operator()(0, idx.i_);
-} 
-
-
-template <class Data>
-const FData2d<Data>::value_type &
-FData2d<Data>::operator[](typename ImageMesh::Face::index_type idx) const
-{
-  return operator()(idx.j_, idx.i_);
-}
-
-
-template <class Data>
-const FData2d<Data>::value_type &
-FData2d<Data>::operator[](typename ImageMesh::Edge::index_type idx) const 
-{
-  return operator()(0, idx.i_);
-}
-
-
-template <class Data>
-const FData2d<Data>::value_type &
-FData2d<Data>::operator[](typename ImageMesh::Node::index_type idx) const
-{
-  return operator()(idx.j_, idx.i_);
-}
-
-
-template <class Data>
-FData2d<Data>::value_type &
-FData2d<Data>::operator[](typename ImageMesh::Cell::index_type idx)
-{
-  return operator()(0, idx.i_);
-}
-
-
-template <class Data>
-FData2d<Data>::value_type &
-FData2d<Data>::operator[](typename ImageMesh::Face::index_type idx)
-{
-  return operator()(idx.j_, idx.i_);
-}
-
-
-template <class Data>
-FData2d<Data>::value_type &
-FData2d<Data>::operator[](typename ImageMesh::Edge::index_type idx)
-{
-  return operator()(0, idx.i_);
-}
-
-
-template <class Data>
-FData2d<Data>::value_type &
-FData2d<Data>::operator[](typename ImageMesh::Node::index_type idx)
-{
-  return operator()(idx.j_, idx.i_);
-}
-
-
-template <class Data>
-void
-FData2d<Data>::resize(const ImageMesh::Node::size_type &size)
-{
-  newsize(size.j_, size.i_);
-}
-
-
-template <class Data>
-void
-FData2d<Data>::resize(const ImageMesh::Edge::size_type &size)
-{
-}
-
-
-template <class Data>
-void
-FData2d<Data>::resize(const ImageMesh::Face::size_type &size)
-{
-  newsize(size.j_, size.i_);
-}
-
-
-template <class Data>
-void
-FData2d<Data>::resize(const ImageMesh::Cell::size_type &size)
 {
 }
 
