@@ -164,7 +164,7 @@ ClipByFunction::execute()
     Handle<ClipByFunctionAlgo> algo;
     int hoffset = 0;
 
-    while (1) {
+    for (;;) {
       CompileInfoHandle ci =
 	ClipByFunctionAlgo::get_compile_info(ftd, function, hoffset);
       if (!DynamicCompilation::compile(ci, algo, false, this)){
