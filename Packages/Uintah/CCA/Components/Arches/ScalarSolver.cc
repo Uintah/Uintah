@@ -320,7 +320,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->get(scalarVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->get(scalarVars.old_scalar, d_lab->d_scalarINLabel, 
-		index, patch, Ghost::None, zeroGhostCells);
+		matlIndex, patch, Ghost::None, zeroGhostCells);
 
     // from new_dw get DEN, VIS, F(index), U, V, W
     new_dw->get(scalarVars.density, d_lab->d_densityINLabel, 
@@ -328,7 +328,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->get(scalarVars.viscosity, d_lab->d_viscosityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(scalarVars.scalar, d_lab->d_scalarCPBCLabel, 
-		index, patch, Ghost::None, zeroGhostCells);
+		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit get old values
     new_dw->get(scalarVars.uVelocity, d_lab->d_uVelocityCPBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
@@ -436,7 +436,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit calculation
     new_dw->get(scalarVars.scalar, d_lab->d_scalarCPBCLabel, 
-		index, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     scalarVars.old_scalar.allocate(scalarVars.scalar.getLowIndex(),
 				   scalarVars.scalar.getHighIndex());
     scalarVars.old_scalar.copy(scalarVars.scalar);
@@ -469,6 +469,6 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 				  &scalarVars, cellinfo, d_lab);
   // put back the results
     new_dw->put(scalarVars.scalar, d_lab->d_scalarSPLabel, 
-		index, patch);
+		matlIndex, patch);
   }
 }

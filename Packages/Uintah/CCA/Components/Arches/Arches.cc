@@ -249,6 +249,9 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_uVelocityINLabel);
     tsk->computes(d_lab->d_vVelocityINLabel);
     tsk->computes(d_lab->d_wVelocityINLabel);
+    tsk->computes(d_lab->d_newCCUVelocityLabel);
+    tsk->computes(d_lab->d_newCCVVelocityLabel);
+    tsk->computes(d_lab->d_newCCWVelocityLabel);
     tsk->computes(d_lab->d_pressureINLabel);
     for (int ii = 0; ii < d_nofScalars; ii++) 
       tsk->computes(d_lab->d_scalarINLabel); // only work for 1 scalar
@@ -360,15 +363,25 @@ Arches::paramInit(const ProcessorGroup* ,
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
+    CCVariable<double> uVelocityCC;
+    CCVariable<double> vVelocityCC;
+    CCVariable<double> wVelocityCC;
     CCVariable<double> pressure;
     vector<CCVariable<double> > scalar(d_nofScalars);
     CCVariable<double> density;
     CCVariable<double> viscosity;
     std::cerr << "Material Index: " << matlIndex << endl;
+    new_dw->allocate(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
+    new_dw->allocate(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
+    new_dw->allocate(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
+    uVelocityCC.initialize(0.0);
+    vVelocityCC.initialize(0.0);
+    wVelocityCC.initialize(0.0);
     new_dw->allocate(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch);
     new_dw->allocate(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
     new_dw->allocate(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
     new_dw->allocate(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
+
     // will only work for one scalar
     for (int ii = 0; ii < d_nofScalars; ii++) {
       new_dw->allocate(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch);
@@ -418,6 +431,9 @@ Arches::paramInit(const ProcessorGroup* ,
 		       idxLo.get_pointer(), idxHi.get_pointer(), 
 		       scalar[ii].getPointer(), &scalVal);
     }
+    new_dw->put(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
+    new_dw->put(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
+    new_dw->put(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
     
     new_dw->put(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch);
     new_dw->put(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
