@@ -64,6 +64,7 @@
 #include <Core/Exceptions/Exception.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
 
 #include <sci_defs/ieeefp_defs.h>
@@ -415,7 +416,9 @@ main( int argc, char** argv )
 	usage( "You need to specify -arches, -ice, -mpmf, -rmpm, -smpm or -mpm", "", argv[0]);
     }
 
+#ifndef _WIN32
     SimulationController::start_addr = (char*)sbrk(0);
+#endif
     Thread::disallow_sgi_OpenGL_page0_sillyness();
 
     if(scheduler == ""){
@@ -450,7 +453,7 @@ main( int argc, char** argv )
 	  cerr << "SLEEPING FOR " << sleepTime 
 	       << " SECONDS TO ALLOW DEBUGGER ATTACHMENT\n";
 	  cerr << "PID is " << getpid() << "\n";
-	  sleep( sleepTime );
+          Time::waitFor( (double)sleepTime );
 	}
 
 	const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
@@ -650,6 +653,7 @@ main( int argc, char** argv )
 	} else {
            lb = 0;
 	   bal = 0;
+           lb = 0;
 	   quit( "Unknown load balancer: " + loadbalancer );
 	}
 
