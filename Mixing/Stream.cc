@@ -157,22 +157,25 @@ Stream::addStream(const Stream& strm, ChemkinInterface* chemInterf,
   d_enthalpy += factor*strm.d_enthalpy;
   //Newton iteration to get mixture temperature
   double adH, Cp, del;
-  do {
-    //get enthalpy of mixture
-    adH = chemInterf->getMixEnthalpy(d_temperature, d_speciesConcn);
-    //cout << "InputState::h using mixTemp = " << adH << endl;
-    //get heat capacity of mixture
-    Cp = chemInterf->getMixSpecificHeat(d_temperature, d_speciesConcn);
-    if (Cp < 1e-10) {
-      del = 1e-10;  //***Use CONST here***
-      cout<<"WARNING in Stream.cc."<<endl
-	  <<"The mixture heat capacity is "<< Cp <<endl;     
-    }
-    else {
-      del = (adH-d_enthalpy)/Cp;
-      d_temperature -= del;
-    }
-  } while(fabs(del) > 0.0001);
+  // Do not do Newton iteration if temperature = 0 (i.e., value it is
+  // initialized to)
+  if (d_temperature > TLIM) {
+    do {
+      //get enthalpy of mixture
+      adH = chemInterf->getMixEnthalpy(d_temperature, d_speciesConcn);
+      //get heat capacity of mixture
+      Cp = chemInterf->getMixSpecificHeat(d_temperature, d_speciesConcn);
+      if (Cp < 1e-10) {
+	del = 1e-10;  //***Use CONST here***
+	//cout<<"WARNING in Stream.cc."<<endl  ???Do I need this???
+	//	  <<"The mixture heat capacity is "<< Cp <<endl;     
+      }
+      else {
+	del = (adH-d_enthalpy)/Cp;
+	d_temperature -= del;
+      }
+    } while(fabs(del) > 0.0001);
+  }
   d_sensibleEnthalpy += factor*strm.d_sensibleEnthalpy; //Does this even make sense??
   d_moleWeight += factor*strm.d_moleWeight;
   d_cp += factor*strm.d_cp;
@@ -443,6 +446,12 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
 
 //
 // $Log$
+// Revision 1.10  2001/11/17 00:23:00  spinti
+// 1. Modified addStream in Stream.cc to correct a problem with Newton iteration
+// 2. Made changes to several "const" values in header files
+// 3. Replaced arrays with vectors in ChemkinInterface.cc
+// 4. Added ILDMReactionModel.cc to sub.mk
+//
 // Revision 1.9  2001/11/08 19:13:44  spinti
 // 1. Corrected minor problems in ILDMReactionModel.cc
 // 2. Added tabulation capability to StanjanEquilibriumReactionModel.cc. Now,
