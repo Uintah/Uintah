@@ -107,7 +107,7 @@ VolumeVis *create_volume_from_nrrd(char *filename,
     return 0;
   }
   // convert the type to floats if you need to
-  nrrdBigInt num_elements = nrrdElementNumber(n);
+  size_t num_elements = nrrdElementNumber(n);
   cerr << "Number of data members = " << num_elements << endl;
   if (n->type != nrrdTypeFloat) {
     cerr << "Converting type from ";
@@ -296,7 +296,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   int scene_type = 0;
   vector<string> data_files;
   bool cut=false;
-  bool do_phong = true;
   int ncolors=256;
   float t_inc = 0.01;
   double spec_coeff = 64;
@@ -349,8 +348,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       }
     } else if(strcmp(argv[i], "-cut")==0){
       cut=true;
-    } else if(strcmp(argv[i], "-lam")==0){
-      do_phong = false;
     } else if(strcmp(argv[i], "-ncolors")==0){
       i++;
       ncolors = atoi(argv[i]);
