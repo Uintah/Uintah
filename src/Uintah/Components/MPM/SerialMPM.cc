@@ -940,8 +940,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
 	old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
 	
-        lattice = new Lattice(px);
-	brokenCellShapeFunction = new BrokenCellShapeFunction(*lattice,
+        lattice = scinew Lattice(px);
+	brokenCellShapeFunction = scinew BrokenCellShapeFunction(*lattice,
 	   pIsBroken,pCrackSurfaceNormal);
       }
 
@@ -1504,8 +1504,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
 	old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
 	
-        lattice = new Lattice(px);
-	brokenCellShapeFunction = new BrokenCellShapeFunction(*lattice,
+        lattice = scinew Lattice(px);
+	brokenCellShapeFunction = scinew BrokenCellShapeFunction(*lattice,
 	   pIsBroken,pCrackSurfaceNormal);
       }
 
@@ -1679,6 +1679,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->put(pTemperatureRate, lb->pTemperatureRateLabel_preReloc);
       new_dw->put(pTemperature, lb->pTemperatureLabel_preReloc);
       new_dw->put(pTemperatureGradient, lb->pTemperatureGradientLabel_preReloc);
+
+      if(mpm_matl->getFractureModel()) {
+        delete lattice;
+	delete brokenCellShapeFunction;
+      }
     }
   }
   // DON'T MOVE THESE!!!
@@ -1748,6 +1753,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.129  2000/09/06 19:35:46  jas
+// Changed new to scinew and fixed a memory leak introduced by the fracture
+// stuff.
+//
 // Revision 1.128  2000/09/05 19:37:15  tan
 // Fracture starts to run in Uintah/MPM!
 //
