@@ -1153,7 +1153,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSubset* press_matl,
                                             const MaterialSubset* ice_matls,
-					         const MaterialSubset* /*mpm_matls*/,
+					    const MaterialSubset* /*mpm_matls*/,
                                             const MaterialSet* matls)
 {
   cout_doing << "ICE::scheduleComputeDelPressAndUpdatePressCC" << endl;
@@ -3567,11 +3567,6 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
     constCCVariable<double> delP_Dilatate;
     constCCVariable<double> matl_press;
     constCCVariable<double> rho_CC;
-    constCCVariable<double> Temp_CC;
-    constCCVariable<double> thermalCond;
-    constSFCXVariable<double> vol_fracX_FC;
-    constSFCYVariable<double> vol_fracY_FC;
-    constSFCZVariable<double> vol_fracZ_FC;
         
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -3589,27 +3584,33 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       new_dw->get(rho_CC,       lb->rho_CCLabel,        indx,patch,gac,1);
       new_dw->get(speedSound,   lb->speedSound_CCLabel, indx,patch,gn, 0);
       new_dw->get(vol_frac,     lb->vol_frac_CCLabel,   indx,patch,gn, 0);
-      new_dw->get(vol_fracX_FC, lb->vol_fracX_FCLabel,  indx,patch,gac, 2);        
-      new_dw->get(vol_fracY_FC, lb->vol_fracY_FCLabel,  indx,patch,gac, 2);        
-      new_dw->get(vol_fracZ_FC, lb->vol_fracZ_FCLabel,  indx,patch,gac, 2);
        
       new_dw->allocateAndPut(int_eng_source, 
                                lb->int_eng_source_CCLabel,indx,patch);
       int_eng_source.initialize(0.0);
      
       //__________________________________
-      //  Source due to conduction
+      //  Source due to conduction ICE only
       if(ice_matl){
         double thermalCond_test = ice_matl->getThermalConductivity();
-        new_dw->get(thermalCond, lb->thermalCondLabel, indx,patch,gac,1); 
-        old_dw->get(Temp_CC,     lb->temp_CCLabel,     indx,patch,gac,1); 
-        
-        if(thermalCond_test != 0.0){ 
+        if(thermalCond_test != 0.0 ){
+          constCCVariable<double> Temp_CC;
+          constCCVariable<double> thermalCond;
+          new_dw->get(thermalCond, lb->thermalCondLabel, indx,patch,gac,1); 
+          old_dw->get(Temp_CC,     lb->temp_CCLabel,     indx,patch,gac,1); 
+
+          constSFCXVariable<double> vol_fracX_FC;
+          constSFCYVariable<double> vol_fracY_FC;
+          constSFCZVariable<double> vol_fracZ_FC;
+          new_dw->get(vol_fracX_FC, lb->vol_fracX_FCLabel,indx,patch,gac, 2);          
+          new_dw->get(vol_fracY_FC, lb->vol_fracY_FCLabel,indx,patch,gac, 2);          
+          new_dw->get(vol_fracZ_FC, lb->vol_fracZ_FCLabel,indx,patch,gac, 2);  
+
           bool use_vol_frac = true; // include vol_frac in diffusion calc.
           scalarDiffusionOperator(new_dw, patch, use_vol_frac, Temp_CC,
                                   vol_fracX_FC, vol_fracY_FC, vol_fracZ_FC,
                                   int_eng_source, thermalCond, delT);
-        } 
+        }
       }
                                      
       //__________________________________
