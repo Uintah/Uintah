@@ -565,6 +565,15 @@ VolumeRenderer::multi_level_draw()
     glGetDoublev(GL_MODELVIEW_MATRIX, mv);
     glGetDoublev(GL_PROJECTION_MATRIX, pr);
     
+     GLfloat fstart, fend, fcolor[4];
+    // Copy the fog state to the new context.
+    if (use_fog)
+    {
+      glGetFloatv(GL_FOG_START, &fstart);
+      glGetFloatv(GL_FOG_END, &fend);
+      glGetFloatv(GL_FOG_COLOR, fcolor);
+    }
+
     blend_buffer_->activate();
     glDrawBuffer(GL_FRONT);
     float* cc = clear_color;
@@ -577,6 +586,14 @@ VolumeRenderer::multi_level_draw()
     glLoadMatrixd(pr);
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixd(mv);
+ 
+    if (use_fog)
+    {
+      glFogi(GL_FOG_MODE, GL_LINEAR);
+      glFogf(GL_FOG_START, fstart);
+      glFogf(GL_FOG_END, fend);
+      glFogfv(GL_FOG_COLOR, fcolor);
+    }
   }
   
   glColor4f(1.0, 1.0, 1.0, 1.0);
@@ -656,7 +673,6 @@ VolumeRenderer::multi_level_draw()
   //-------------------------------------------------------------------------
   // set up stenciling
   if(use_stencil_){
-    glClearStencil(0);
     glStencilMask(1);
     glStencilFunc(GL_EQUAL, 0, 1);
     glStencilOp(GL_KEEP, GL_KEEP,GL_INCR);
