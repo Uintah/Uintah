@@ -107,7 +107,26 @@ ParticleFieldExtractor::~ParticleFieldExtractor(){}
 
 //------------------------------------------------------------- 
 
-  void ParticleFieldExtractor::setVars(ArchiveHandle ar)
+void ParticleFieldExtractor::add_type(string &type_list,
+				      const TypeDescription *subtype)
+{
+  switch ( subtype->getType() ) {
+  case TypeDescription::double_type:
+    type_list += " scaler";
+    break;
+  case TypeDescription::Vector:
+    type_list += " vector";
+    break;
+  case TypeDescription::Matrix3:
+    type_list += " matrix3";
+    break;
+  default:
+    cerr<<"Error in ParticleFieldExtractor::setVars(): Vartype not implemented.  Aborting process.\n";
+    abort();
+  }
+}  
+
+void ParticleFieldExtractor::setVars(ArchiveHandle ar)
 {
   string command;
   DataArchive& archive = *((*(ar.get_rep()))());
@@ -123,6 +142,8 @@ ParticleFieldExtractor::~ParticleFieldExtractor(){}
   string spNames("");
   string vpNames("");
   string tpNames("");
+  string type_list("");
+  string name_list("");
   //  string ptNames;
   
   // reset the vars
@@ -136,46 +157,55 @@ ParticleFieldExtractor::~ParticleFieldExtractor(){}
   for( int i = 0; i < names.size(); i++ ){
     td = types[i];
     if(td->getType() ==  TypeDescription::ParticleVariable){
-       const TypeDescription* subtype = td->getSubType();
-       switch ( subtype->getType() ) {
-       case TypeDescription::double_type:
-	 spNames += " ";
-	 spNames += names[i];
-	 if( psVar.get() == "" ){ psVar.set( names[i].c_str() ); }
-	 cerr << "Added scalar particle: " << names[i] << '\n';
-	 break;
-       case  TypeDescription::Vector:
-	 vpNames += " ";
-	 vpNames += names[i];
-	 if( pvVar.get() == "" ){ pvVar.set( names[i].c_str() ); }
-	 cerr << "Added vector particle: " << names[i] << '\n';
-	 break;
-       case  TypeDescription::Matrix3:
-	 tpNames += " ";
-	 tpNames += names[i];
-	 if( ptVar.get() == "" ){ ptVar.set( names[i].c_str() ); }
-	 cerr << "Added tensor particle: " << names[i] << '\n';
-	 break;
-       case  TypeDescription::Point:
+      const TypeDescription* subtype = td->getSubType();
+      switch ( subtype->getType() ) {
+      case TypeDescription::double_type:
+	spNames += " ";
+	spNames += names[i];
+	if( psVar.get() == "" ){ psVar.set( names[i].c_str() ); }
+	cerr << "Added scalar particle: " << names[i] << '\n';
+	add_type(type_list,types[i]->getSubType());
+	name_list += " ";
+	name_list += names[i];
+	break;
+      case  TypeDescription::Vector:
+	vpNames += " ";
+	vpNames += names[i];
+	if( pvVar.get() == "" ){ pvVar.set( names[i].c_str() ); }
+	cerr << "Added vector particle: " << names[i] << '\n';
+	add_type(type_list,types[i]->getSubType());
+	name_list += " ";
+	name_list += names[i];
+	break;
+      case  TypeDescription::Matrix3:
+	tpNames += " ";
+	tpNames += names[i];
+	if( ptVar.get() == "" ){ ptVar.set( names[i].c_str() ); }
+	cerr << "Added tensor particle: " << names[i] << '\n';
+	add_type(type_list,types[i]->getSubType());
+	name_list += " ";
+	name_list += names[i];
+	break;
+      case  TypeDescription::Point:
 	positionName = names[i];
 	break;
-       case TypeDescription::long_type:
-	 if( names[i] == "p.particleID" )
-	   particleIDs = names[i];
-	 else
-	   particleIDs = "";
-       default:
-	 cerr<<"Unknown particle type\n";
-       }// else { Tensor,Other}
+      case TypeDescription::long_type:
+	if( names[i] == "p.particleID" )
+	  particleIDs = names[i];
+	else
+	  particleIDs = "";
+      default:
+	cerr<<"Unknown particle type\n";
+      }// else { Tensor,Other}
     }
   }
-
+  
   // get the number of materials for the NC & particle Variables
   GridP grid = archive.queryGrid(times[0]);
   LevelP level = grid->getLevel( 0 );
   Patch* r = *(level->patchesBegin());
   int numpsMatls = archive.queryNumMaterials(psVar.get()(), r, times[0]);
-
+  
   clString visible;
   TCL::eval(id + " isVisible", visible);
   if( visible == "1"){
@@ -184,12 +214,13 @@ ParticleFieldExtractor::~ParticleFieldExtractor(){}
     
     TCL::execute(id + " buildPMaterials " + to_string(numpsMatls));
     pNMaterials.set(numpsMatls);
-
+    
     TCL::execute(id + " setParticleScalars " + spNames.c_str());
     TCL::execute(id + " setParticleVectors " + vpNames.c_str());
     TCL::execute(id + " setParticleTensors " + tpNames.c_str());
     TCL::execute(id + " buildVarList");
-    TCL::execute(id + " setVar_list " + spNames.c_str() + vpNames.c_str() + tpNames.c_str());
+    TCL::execute(id + " setVar_list " + name_list.c_str());
+    TCL::execute(id + " setType_list " + type_list.c_str());  
     TCL::execute("update idletasks");
     reset_vars();
   }
@@ -464,13 +495,17 @@ void ParticleFieldExtractor::tcl_command(TCLArgs& args, void* userdata) {
     args[4].get_int(num_mat);
     cerr << "Extracting " << num_mat << " materals:";
     vector< string > mat_list;
-    for (int i = 5; i < 5+num_mat; i++) {
+    vector< string > type_list;
+    for (int i = 5; i < 5+(num_mat*2); i++) {
       string mat(args[i]());
       mat_list.push_back(mat);
+      i++;
+      string type(args[i]());
+      type_list.push_back(type);
     }
     cerr << endl;
     cerr << "Graphing " << varname << " with materials: " << vector_to_string(mat_list) << endl;
-    graph(varname,mat_list,particleID);
+    graph(varname,mat_list,type_list,particleID);
   }
   else {
     Module::tcl_command(args, userdata);
@@ -478,7 +513,9 @@ void ParticleFieldExtractor::tcl_command(TCLArgs& args, void* userdata) {
 
 }
 
-void ParticleFieldExtractor::graph(string varname, vector<string> mat_list, string particleID) {
+void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
+				   vector<string> type_list, string particleID)
+{
 
   /* void DataArchive::query(std::vector<T>& values, const std::string& name,
     	    	    	int matlIndex, long particleID,
@@ -499,6 +536,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list, stri
   archive.queryTimesteps( indices, times );
   TCL::execute(id + " setTime_list " + vector_to_string(indices).c_str());
 
+  string name_list("");
   long partID = atol(particleID.c_str());
   const TypeDescription* subtype = td->getSubType();
   switch ( subtype->getType() ) {
@@ -508,13 +546,18 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list, stri
     for(int i = 0; i < mat_list.size(); i++) {
       string data;
       // query the value
-      vector< double > values;
-      int matl = atoi(mat_list[i].c_str());
-      archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
-      cerr << "Received data.  Size of data = " << values.size() << endl;
-      data = vector_to_string(values);
-      //material_data_list[varname+mat_list[i]+currentNode_str()] = data;
+      if (!is_cached(particleID+" "+varname+" "+mat_list[i],data)) {
+	// query the value and then cache it
+	vector< double > values;
+	int matl = atoi(mat_list[i].c_str());
+	archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	cerr << "Received data.  Size of data = " << values.size() << endl;
+	cache_value(particleID+" "+varname+" "+mat_list[i],values,data);
+      } else {
+	cerr << "Cache hit\n";
+      }
       TCL::execute(id+" set_var_val "+data.c_str());
+      name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
   case TypeDescription::Vector:
@@ -522,13 +565,20 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list, stri
     // loop over all the materials in the mat_list
     for(int i = 0; i < mat_list.size(); i++) {
       string data;
-      // query the value
-      vector< Vector > values;
-      int matl = atoi(mat_list[i].c_str());
-      archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
-      cerr << "Received data.  Size of data = " << values.size() << endl;
-      data = vector_to_string(values,"length");
+      if (!is_cached(particleID+" "+varname+" "+mat_list[i]+" "+type_list[i],
+		     data)) {
+	// query the value
+	vector< Vector > values;
+	int matl = atoi(mat_list[i].c_str());
+	archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	cerr << "Received data.  Size of data = " << values.size() << endl;
+	data = vector_to_string(values,type_list[i]);
+	cache_value(particleID+" "+varname+" "+mat_list[i],values);
+      } else {
+	cerr << "Cache hit\n";
+      }
       TCL::execute(id+" set_var_val "+data.c_str());
+      name_list = name_list + mat_list[i] + " " + type_list[i] + " ";      
     }
     break;
   case TypeDescription::Matrix3:
@@ -536,20 +586,27 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list, stri
     // loop over all the materials in the mat_list
     for(int i = 0; i < mat_list.size(); i++) {
       string data;
-      // query the value
-      vector< Matrix3 > values;
-      int matl = atoi(mat_list[i].c_str());
-      archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
-      cerr << "Received data.  Size of data = " << values.size() << endl;
-      data = vector_to_string(values,"Norm");
+      if (!is_cached(particleID+" "+varname+" "+mat_list[i]+" "+type_list[i],
+		     data)) {
+	// query the value
+	vector< Matrix3 > values;
+	int matl = atoi(mat_list[i].c_str());
+	archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	cerr << "Received data.  Size of data = " << values.size() << endl;
+	data = vector_to_string(values,type_list[i]);
+	cache_value(particleID+" "+varname+" "+mat_list[i],values);
+      } else {
+	cerr << "Cache hit\n";
+      }
       TCL::execute(id+" set_var_val "+data.c_str());
+      name_list = name_list + mat_list[i] + " " + type_list[i] + " ";      
     }
     break;
   default:
     cerr<<"Unknown var type\n";
-    }// else { Tensor,Other}
+  }// else { Tensor,Other}
   TCL::execute(id+" graph_data "+particleID.c_str()+" "+varname.c_str()+" "+
-	       vector_to_string(mat_list).c_str());
+	       name_list.c_str());
 
 }
 
@@ -623,7 +680,76 @@ string ParticleFieldExtractor::vector_to_string(vector< Matrix3 > data, string t
   return ostr.str();
 }
 
+bool ParticleFieldExtractor::is_cached(string name, string& data) {
+  map< string, string >::iterator iter;
+  iter = material_data_list.find(name);
+  if (iter == material_data_list.end()) {
+    return false;
+  }
+  else {
+    data = iter->second;
+    return true;
+  }
+}
+
+void ParticleFieldExtractor::cache_value(string where, vector<double>& values,
+				 string &data) {
+  data = vector_to_string(values);
+  material_data_list[where] = data;
+}
+
+void ParticleFieldExtractor::cache_value(string where, vector<Vector>& values)
+{
+  string data = vector_to_string(values,"length");
+  material_data_list[where+" length"] = data;
+  data = vector_to_string(values,"length2");
+  material_data_list[where+" length2"] = data;
+  data = vector_to_string(values,"x");
+  material_data_list[where+" x"] = data;
+  data = vector_to_string(values,"y");
+  material_data_list[where+" y"] = data;
+  data = vector_to_string(values,"z");
+  material_data_list[where+" z"] = data;
+}
+
+void ParticleFieldExtractor::cache_value(string where, vector<Matrix3>& values)
+{
+  string data = vector_to_string(values,"Determinant");
+  material_data_list[where+" Determinant"] = data;
+  data = vector_to_string(values,"Trace");
+  material_data_list[where+" Trace"] = data;
+  data = vector_to_string(values,"Norm");
+  material_data_list[where+" Norm"] = data;
+}
+
 //--------------------------------------------------------------- 
 } // end namespace Modules
 } // end namespace Kurt
   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -106,12 +106,13 @@ private:
   std::string particleIDs;
 
   ArchiveHandle archive;
+  void add_type(string &type_list, const TypeDescription *subtype);
   void setVars(ArchiveHandle ar);
   void buildData(DataArchive& archive, double time,
 		 ScalarParticles*& sp,
 		 VectorParticles*& vp,
 		 TensorParticles*& tp);
-  void graph(string varname, vector<string> mat_list, string particleID);
+  //  void graph(string varname, vector<string> mat_list, string particleID);
 
   vector< double > times;
   vector< int > indices;
@@ -125,6 +126,14 @@ private:
   string vector_to_string(vector< Vector > data, string type);
   string vector_to_string(vector< Matrix3 > data, string type);
 
+  bool is_cached(string name, string& data);
+  void cache_value(string where, vector<double>& values, string &data);
+  void cache_value(string where, vector<Vector>& values);
+  void cache_value(string where, vector<Matrix3>& values);
+  map< string, string > material_data_list;
+
+  void graph(string varname, vector<string> mat_list,
+	     vector<string> type_list, string particleID);
   //  void graph(clString, clString);
 }; //class 
 
