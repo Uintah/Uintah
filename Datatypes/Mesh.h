@@ -125,10 +125,21 @@ struct Edge{
     int operator==(const Edge&) const;
 };
 
+struct Octree {
+  Point mid;
+  Array1<int> elems;
+  Octree* child[8];
+  Octree();
+  ~Octree();
+
+  int locate(Mesh* mesh, const Point& p, double epsilon);
+};
+
 class Mesh;
 typedef LockingHandle<sci::Mesh> MeshHandle;
 
 class Mesh : public Datatype {
+  Octree* octree;
 public:
     Array1<int> ids;
     Array1<NodeHandle> nodes;
@@ -175,6 +186,15 @@ public:
 
     void draw_element(int, GeomGroup*);
     void draw_element(Element* e, GeomGroup*);
+
+    bool vertex_in_tetra(const Point& v, const Point& p0, const Point& p1,
+			 const Point& p2, const Point& p3);
+    bool tetra_edge_in_box(const Point& min, const Point& max,
+			   const Point& orig, const Vector& dir);
+    bool overlaps(Element* e, const Point& min, const Point& max);
+
+    void make_octree(int level, Octree*& octree, const Point& min,
+		     const Point& max, const Array1<int>& elems);
 
     // Persistent representation...
     virtual void io(Piostream&);

@@ -36,6 +36,7 @@ using sci::ElementVersion1;
 using sci::NodeHandle;
 using sci::Edge;
 using sci::DirichletBC;
+using sci::Octree;
 
 static TrivialAllocator Element_alloc(sizeof(Element));
 static TrivialAllocator Node_alloc(sizeof(Node));
@@ -127,7 +128,9 @@ Mesh::Mesh(const Mesh& copy)
 
 Mesh::~Mesh()
 {
-    remove_all_elements();
+  if(octree)
+    delete octree;
+  remove_all_elements();
 }
 
 void Mesh::remove_all_elements()
@@ -817,11 +820,308 @@ int Mesh::locate(const Point& p, int& ix, double epsilon1, double epsilon2)
 	ix=i;
 	return 1;
     }
+    return locate2(p, ix, epsilon1);
+}
+
+bool Mesh::vertex_in_tetra(const Point&  v, const Point& p0,
+			   const Point& p1, const Point& p2,
+			   const Point& p3)
+{
+
+  double x1=p0.x();
+  double y1=p0.y();
+  double z1=p0.z();
+  double x2=p1.x();
+  double y2=p1.y();
+  double z2=p1.z();
+  double x3=p2.x();
+  double y3=p2.y();
+  double z3=p2.z();
+  double x4=p3.x();
+  double y4=p3.y();
+  double z4=p3.z();
+  double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
+  double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
+  double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
+  double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
+  double iV6=1./(a1+a2+a3+a4);
+  if(iV6 < 0) iV6=-iV6;
+
+  double b1=-(y3*z4-y4*z3)-(y4*z2-y2*z4)-(y2*z3-y3*z2);
+  double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);
+  double d1=-(x3*y4-x4*y3)-(x4*y2-x2*y4)-(x2*y3-x3*y2);
+  Vector g1(b1*iV6, c1*iV6, d1*iV6);
+  double b2=+(y4*z1-y1*z4)+(y1*z3-y3*z1)+(y3*z4-y4*z3);
+  double c2=-(x4*z1-x1*z4)-(x1*z3-x3*z1)-(x3*z4-x4*z3);
+  double d2=+(x4*y1-x1*y4)+(x1*y3-x3*y1)+(x3*y4-x4*y3);
+  Vector g2(b2*iV6, c2*iV6, d2*iV6);
+  double b3=-(y1*z2-y2*z1)-(y2*z4-y4*z2)-(y4*z1-y1*z4);
+  double c3=+(x1*z2-x2*z1)+(x2*z4-x4*z2)+(x4*z1-x1*z4);
+  double d3=-(x1*y2-x2*y1)-(x2*y4-x4*y2)-(x4*y1-x1*y4);
+  Vector g3(b3*iV6, c3*iV6, d3*iV6);
+  double b4=+(y2*z3-y3*z2)+(y3*z1-y1*z3)+(y1*z2-y2*z1);
+  double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
+  double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
+  Vector g4(b4*iV6, c4*iV6, d4*iV6);
+  a1*=iV6;
+  a2*=iV6;
+  a3*=iV6;
+  a4*=iV6;
+
+  if (Dot(v, g1) + a1 >= -1e-3 &&
+      Dot(v, g2) + a2 >= -1e-3 &&
+      Dot(v, g3) + a3 >= -1e-3 &&
+      Dot(v, g4) + a4 >= -1e-3) return true;
+
+  return false;
+}
+
+bool Mesh::tetra_edge_in_box(const Point&  min, const Point&  max,
+			     const Point& orig, const Vector& dir)
+{
+
+  double MIN, MAX;
+  double xinv_dir=1./dir.x();
+  if(dir.x() > 0){
+    MIN=xinv_dir*(min.x()-orig.x());
+    MAX=xinv_dir*(max.x()-orig.x());
+  } else {
+    MIN=xinv_dir*(max.x()-orig.x());
+    MAX=xinv_dir*(min.x()-orig.x());
+  }	
+  double y0, y1;
+  double yinv_dir=1./dir.y();
+  if(dir.y() > 0){
+    y0=yinv_dir*(min.y()-orig.y());
+    y1=yinv_dir*(max.y()-orig.y());
+  } else if(dir.y() <-1.e-6){
+    y0=yinv_dir*(max.y()-orig.y());
+    y1=yinv_dir*(min.y()-orig.y());
+  }
+  if(y0>MIN)
+    MIN=y0;
+  if(y1<MAX)
+    MAX=y1;
+  if(MAX<MIN) {
+    return false;
+  }
+    
+  double z0, z1;
+  double zinv_dir=1./dir.z();
+  if(dir.z() > 0){
+    z0=zinv_dir*(min.z()-orig.z());
+    z1=zinv_dir*(max.z()-orig.z());
+  } else {
+    z0=zinv_dir*(max.z()-orig.z());
+    z1=zinv_dir*(min.z()-orig.z());
+  }
+  if(z0>MIN)
+    MIN=z0;
+  if(z1<MAX)
+    MAX=z1;
+  if(MAX<MIN) {
+    return false;
+  }
+
+  if(MIN > 1.001 || MAX < -0.001) return false;
+
+  return true;
+
+}
+
+bool Mesh::overlaps(Element* e, const Point& v0, const Point& v1)
+{
+  Point& p0(e->mesh->nodes[e->n[0]]->p);
+  Point& p1(e->mesh->nodes[e->n[1]]->p);
+  Point& p2(e->mesh->nodes[e->n[2]]->p);
+  Point& p3(e->mesh->nodes[e->n[3]]->p);
+  if(vertex_in_tetra(Point(v0.x(),v0.y(),v0.z()), p0, p1, p2, p3))
+    return true;
+  if(vertex_in_tetra(Point(v0.x(),v0.y(),v1.z()), p0, p1, p2, p3))
+    return true;
+  if(vertex_in_tetra(Point(v0.x(),v1.y(),v0.z()), p0, p1, p2, p3))
+    return true;
+  if(vertex_in_tetra(Point(v0.x(),v1.y(),v1.z()), p0, p1, p2, p3))
+    return true;
+  if(vertex_in_tetra(Point(v1.x(),v0.y(),v0.z()), p0, p1, p2, p3))
+    return true;
+  if(vertex_in_tetra(Point(v1.x(),v0.y(),v1.z()), p0, p1, p2, p3))
+    return true;
+  if(vertex_in_tetra(Point(v1.x(),v1.y(),v0.z()), p0, p1, p2, p3))
+    return true;
+  if(vertex_in_tetra(Point(v1.x(),v1.y(),v1.z()), p0, p1, p2, p3))
+    return true;
+  if(tetra_edge_in_box(v0, v1, p0, p1-p0)) return true;
+  if(tetra_edge_in_box(v0, v1, p0, p2-p0)) return true;
+  if(tetra_edge_in_box(v0, v1, p0, p3-p0)) return true;
+  if(tetra_edge_in_box(v0, v1, p1, p2-p1)) return true;
+  if(tetra_edge_in_box(v0, v1, p1, p3-p1)) return true;
+  if(tetra_edge_in_box(v0, v1, p2, p3-p2)) return true;
+
+  return false;  
+}
+
+void Mesh::make_octree(int level, Octree*& octree,
+		       const Point& min, const Point& max,
+		       const Array1<int>& inelems)
+{
+  octree=new Octree();
+  if(level>8){
+    for(int i=0;i<inelems.size();i++){
+      octree->elems.add(inelems[i]);
+    }
+    return;
+  }
+
+  Point mid(min+(max-min)*0.5);
+  octree->mid=mid;
+  Array1<int> passdown[8];
+  for(int i=0;i<inelems.size();i++){
+    bool flags[8];
+    int count=0;
+    for(int j=0;j<8;j++)
+      flags[j]=false;
+    Element* elem=elems[inelems[i]];
+    for(int iz=0;iz<2;iz++){
+      double lz=iz==0?min.z():mid.z();
+      double hz=iz==0?mid.z():max.z();
+      for(int iy=0;iy<2;iy++){
+	double ly=iy==0?min.y():mid.y();
+	double hy=iy==0?mid.y():max.y();
+	for(int ix=0;ix<2;ix++){
+	  double lx=ix==0?min.x():mid.x();
+	  double hx=ix==0?mid.x():max.x();
+	  if(overlaps(elem, Point(lx, ly, lz), Point(hx, hy, hz))){
+	    int idx=(iz<<2)|(iy<<1)|(iz);
+	    flags[idx]=true;
+	    count++;
+	  }
+	}
+      }
+    }
+    if(count > 3){
+      octree->elems.add(inelems[i]);
+    } else {
+      for(int j=0;j<8;j++){
+	if(flags[j]){
+	  passdown[j].add(inelems[i]);
+	}
+      }
+    }
+  }
+  for(int j=0;j<8;j++){
+    int iz=j&4;
+    int iy=j&2;
+    int ix=j&1;
+    double lz=iz==0?min.z():mid.z();
+    double hz=iz==0?mid.z():max.z();
+    double ly=iy==0?min.y():mid.y();
+    double hy=iy==0?mid.y():max.y();
+    double lx=ix==0?min.x():mid.x();
+    double hx=ix==0?mid.x():max.x();
+    
+    if(passdown[j].size()>0){
+      make_octree(level+1, octree->child[j], Point(lx, ly, lz),
+		  Point(hx, hy, hz), passdown[j]);
+    }
+  }
+}
+
+int Octree::locate(Mesh* mesh, const Point& p, double epsilon1)
+{
+  for(int i=0;i<elems.size();i++){
+    Element* elem=mesh->elems[elems[i]];
+#ifndef STORE_ELEMENT_BASIS
+    Point p1(nodes[elem->n[0]]->p);
+    Point p2(nodes[elem->n[1]]->p);
+    Point p3(nodes[elem->n[2]]->p);
+    Point p4(nodes[elem->n[3]]->p);
+    double x1=p1.x();
+    double y1=p1.y();
+    double z1=p1.z();
+    double x2=p2.x();
+    double y2=p2.y();
+    double z2=p2.z();
+    double x3=p3.x();
+    double y3=p3.y();
+    double z3=p3.z();
+    double x4=p4.x();
+    double y4=p4.y();
+    double z4=p4.z();
+    double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
+    double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
+    double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
+    double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
+    double iV6=1./(a1+a2+a3+a4);
+
+    double b1=-(y3*z4-y4*z3)-(y4*z2-y2*z4)-(y2*z3-y3*z2);
+    double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);
+    double d1=-(x3*y4-x4*y3)-(x4*y2-x2*y4)-(x2*y3-x3*y2);
+    double s0=iV6*(a1+b1*p.x()+c1*p.y()+d1*p.z());
+
+    double b2=+(y4*z1-y1*z4)+(y1*z3-y3*z1)+(y3*z4-y4*z3);
+    double c2=-(x4*z1-x1*z4)-(x1*z3-x3*z1)-(x3*z4-x4*z3);
+    double d2=+(x4*y1-x1*y4)+(x1*y3-x3*y1)+(x3*y4-x4*y3);
+    double s1=iV6*(a2+b2*p.x()+c2*p.y()+d2*p.z());
+
+    double b3=-(y1*z2-y2*z1)-(y2*z4-y4*z2)-(y4*z1-y1*z4);
+    double c3=+(x1*z2-x2*z1)+(x2*z4-x4*z2)+(x4*z1-x1*z4);
+    double d3=-(x1*y2-x2*y1)-(x2*y4-x4*y2)-(x4*y1-x1*y4);
+    double s2=iV6*(a3+b3*p.x()+c3*p.y()+d3*p.z());
+
+    double b4=+(y2*z3-y3*z2)+(y3*z1-y1*z3)+(y1*z2-y2*z1);
+    double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
+    double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
+    double s3=iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
+#else
+    double s0=elem->a[0]+Dot(elem->g[0], p);
+    double s1=elem->a[1]+Dot(elem->g[1], p);
+    double s2=elem->a[2]+Dot(elem->g[2], p);
+    double s3=elem->a[3]+Dot(elem->g[3], p);
+#endif
+    double min=s0;
+    if(s1<min){
+      min=s1;
+    }
+    if(s2<min){
+      min=s2;
+    }
+    if(s3<min){
+      min=s3;
+    }
+    if(min>-epsilon1){
+      return elems[i];
+    }
+  }
+  int xi=(p.x()>mid.x())?1:0;
+  int yi=(p.y()>mid.y())?2:0;
+  int zi=(p.z()>mid.z())?4:0;
+  int idx=xi+yi+zi;
+  if(child[idx])
+    return child[idx]->locate(mesh, p, epsilon1);
+  else
     return 0;
 }
 
 int Mesh::locate2(const Point& p, int& ix, double epsilon1)
 {
+  if(!octree){
+    Array1<int> topelems;
+    topelems.resize(elems.size());
+    for(int i=0;i<elems.size();i++)
+      topelems[i]=i;
+    Point min, max;
+    get_bounds(min, max);
+    make_octree(0, octree, min, max, topelems);
+  }
+  int idx=octree->locate(this, p, epsilon1);
+  if(idx == -1) {
+    return 0;
+  } else {
+    ix=idx;
+    return 1;
+  }
+#if 0
     // Exhaustive search
     int nelems=elems.size();
     for(int i=0;i<nelems;i++){
@@ -892,6 +1192,7 @@ int Mesh::locate2(const Point& p, int& ix, double epsilon1)
 	}
     }
     return 0;
+#endif
 }
 
 void* Element::operator new(size_t)
@@ -1599,6 +1900,20 @@ void Mesh::get_boundary_nodes(Array1<int> &pts)
 void Mesh::get_boundary_lines(Array1<Point>&)
 {
     NOT_FINISHED("Mesh::get_boundary_lines");
+}
+
+Octree::Octree()
+{
+  for(int i=0;i<8;i++)
+    child[i]=0;
+}
+
+Octree::~Octree()
+{
+  for(int i=0;i<8;i++){
+    if(child[i])
+      delete child[i];
+  }
 }
 
 #ifdef __GNUG__
