@@ -13776,7 +13776,7 @@ EOF
     INC_OOGL_H="$INC_OOGL_BASICTEXTURE_H"
   fi
 
-  $dirs="$with_audio"
+  dirs="$with_audio"
 
   
     #######################################################
