@@ -40,11 +40,10 @@
 */
   
 // SCIRun includes
-//#include <Core/Util/Comm/NetConnection.h>
+#include <Core/Util/Comm/NetConnection.h>
+
 #ifdef HAVE_SCISOCK
 
-#include "NetConnection.h"
- 
 using namespace std;
 
 namespace SCIRun {

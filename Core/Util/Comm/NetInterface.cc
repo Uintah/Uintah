@@ -37,11 +37,11 @@
  * Copyright (C) 2003 SCI Group
 */
     
+// SCIRun includes
+#include <Core/Util/Comm/NetInterface.h>
+
 #ifdef HAVE_SCISOCK
 
-// SCIRun includes
-//#include <Core/Util/Comm/NetInterface.h>
-#include "NetInterface.h"
  
 using namespace std;
 
