@@ -331,14 +331,8 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrick* brick,
 
   int i, j, k, ii, jj, kk;
     
-//   cerr << x0 << " "
-//        << y0 << " "
-//        << z0 << " "
-//        << x1 << " "
-//        << y1 << " "
-//        << z1 << endl;
-    
-  if(br && vfld && ((gfld && nc == 2) || nc == 1)) {
+  if (br && vfld && ((gfld && nc == 2) || nc == 1))
+  {
     typename FieldType::mesh_type* mesh = vfld->get_typed_mesh().get_rep();
 
     if (!gfld) { // fill only values
@@ -514,10 +508,13 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrick* brick,
         }
       }
     }    
-  } else {
+  }
+  else
+  {
     cerr<<"Not a Lattice type---should not be here\n";
   }
 }
+
 
 } // namespace SCIRun
 

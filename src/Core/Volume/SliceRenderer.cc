@@ -188,10 +188,11 @@ SliceRenderer::draw()
     vertex.resize(0);
     texcoord.resize(0);
     size.resize(0);
-    BBox box = b->bbox();
-    Point view = view_ray.origin();
-    Point mid = box.center();
-    Point c(control_point_);
+    const Point view = view_ray.origin();
+    const Point &bmin = b->bbox().min();
+    const Point &bmax = b->bbox().max();
+    const Point &bmid = b->bbox().center();
+    const Point c(control_point_);
     bool draw_z = false;
     if(draw_cyl_) {
       const double to_rad = M_PI / 180.0;
@@ -225,11 +226,11 @@ SliceRenderer::draw()
         b->compute_polygon(view_ray, t, vertex, texcoord, size);
       } else {
 	if(draw_x_) {
-	  Point o((*b)[0].x(), mid.y(), mid.z());
+	  Point o(bmin.x(), bmid.y(), bmid.z());
 	  Vector v(c.x() - o.x(), 0,0);
-	  if(c.x() > (*b)[0].x() && c.x() < (*b)[7].x() ){
+	  if(c.x() > bmin.x() && c.x() < bmax.x() ){
 	    if(view.x() > c.x()) {
-	      o.x((*b)[7].x());
+	      o.x(bmax.x());
 	      v.x(c.x() - o.x());
 	    } 
 	    Ray r(o,v);
@@ -238,11 +239,11 @@ SliceRenderer::draw()
 	  }
 	}
 	if(draw_y_) {
-	  Point o(mid.x(), (*b)[0].y(), mid.z());
+	  Point o(bmid.x(), bmin.y(), bmid.z());
 	  Vector v(0, c.y() - o.y(), 0);
-	  if(c.y() > (*b)[0].y() && c.y() < (*b)[7].y() ){
+	  if(c.y() > bmin.y() && c.y() < bmax.y() ){
 	    if(view.y() > c.y()) {
-	      o.y((*b)[7].y());
+	      o.y(bmax.y());
 	      v.y(c.y() - o.y());
 	    } 
 	    Ray r(o,v);
@@ -257,11 +258,11 @@ SliceRenderer::draw()
     }
     
     if (draw_z) {
-      Point o(mid.x(), mid.y(), (*b)[0].z());
+      Point o(bmid.x(), bmid.y(), bmin.z());
       Vector v(0, 0, c.z() - o.z());
-      if(c.z() > (*b)[0].z() && c.z() < (*b)[7].z() ) {
+      if(c.z() > bmin.z() && c.z() < bmax.z() ) {
 	if(view.z() > c.z()) {
-	  o.z((*b)[7].z());
+	  o.z(bmax.z());
 	  v.z(c.z() - o.z());
 	} 
 	Ray r(o,v);

@@ -49,12 +49,8 @@ public:
         int mx, int my, int mz, const BBox& bbox, const BBox& tbox);
   virtual ~TextureBrick();
 
-  // access one of the 8 vertices [0,7]
-  inline const Point& operator[] (int i) const { return corner_[i]; }
-  inline BBox bbox() const { return bbox_; }
-  inline BBox tbox() const { return tbox_; }
-  inline Point center() const
-  { return corner_[0] + 0.5*(corner_[7] - corner_[0]); }
+  inline const BBox &bbox() const { return bbox_; }
+  //inline BBox tbox() const { return tbox_; }
 
   inline int nx() { return nx_; }
   inline int ny() { return ny_; }
@@ -93,7 +89,6 @@ protected:
   int ox_, oy_, oz_; // offset into volume texture
   int mx_, my_, mz_; // data axis sizes (not necessarily pow2)
   BBox bbox_, tbox_; // bounding box and texcoord box
-  Point corner_[8]; // bbox corners
   Ray edge_[12]; // bbox edges
   Ray tex_edge_[12]; // tbox edges
   bool dirty_;
@@ -103,8 +98,9 @@ template <typename T>
 class TextureBrickT : public TextureBrick
 {
 public:
-  TextureBrickT(int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int oz,
-         int mx, int my, int mz, const BBox& bbox, const BBox& tbox, bool alloc);
+  TextureBrickT(int nx, int ny, int nz, int nc, int* nb,
+		int ox, int oy, int oz,	int mx, int my, int mz,
+		const BBox& bbox, const BBox& tbox, bool alloc);
   ~TextureBrickT();
   
   GLenum tex_type() { return GLinfo<T>::type; }
@@ -117,8 +113,10 @@ protected:
 };
 
 template <typename T>
-TextureBrickT<T>::TextureBrickT(int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int oz,
-                  int mx, int my, int mz, const BBox& bbox, const BBox& tbox, bool alloc)
+TextureBrickT<T>::TextureBrickT(int nx, int ny, int nz, int nc, int* nb,
+				int ox, int oy, int oz,
+				int mx, int my, int mz,
+				const BBox& bbox, const BBox& tbox, bool alloc)
   : TextureBrick(nx, ny, nz, nc, nb, ox, oy, oz, mx, my, mz, bbox, tbox)
 {
   data_[0] = 0;

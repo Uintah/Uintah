@@ -429,29 +429,40 @@ VolumeRenderer::draw_wireframe()
   vector<TextureBrick*> bricks;
   tex_->get_sorted_bricks(bricks, view_ray);
   for(unsigned int i=0; i<bricks.size(); i++) {
-    TextureBrick& brick = *bricks[i];
+    const Point &pmin(bricks[i]->bbox().min());
+    const Point &pmax(bricks[i]->bbox().max());
+    Point corner[8];
+    corner[0] = pmin;
+    corner[1] = Point(pmin.x(), pmin.y(), pmax.z());
+    corner[2] = Point(pmin.x(), pmax.y(), pmin.z());
+    corner[3] = Point(pmin.x(), pmax.y(), pmax.z());
+    corner[4] = Point(pmax.x(), pmin.y(), pmin.z());
+    corner[5] = Point(pmax.x(), pmin.y(), pmax.z());
+    corner[6] = Point(pmax.x(), pmax.y(), pmin.z());
+    corner[7] = pmax;
+
     glBegin(GL_LINES);
     {
       for(int i=0; i<4; i++) {
-        glVertex3d(brick[i].x(), brick[i].y(), brick[i].z());
-        glVertex3d(brick[i+4].x(), brick[i+4].y(), brick[i+4].z());
+        glVertex3d(corner[i].x(), corner[i].y(), corner[i].z());
+        glVertex3d(corner[i+4].x(), corner[i+4].y(), corner[i+4].z());
       }
     }
     glEnd();
     glBegin(GL_LINE_LOOP);
     {
-      glVertex3d(brick[0].x(), brick[0].y(), brick[0].z());
-      glVertex3d(brick[1].x(), brick[1].y(), brick[1].z());
-      glVertex3d(brick[3].x(), brick[3].y(), brick[3].z());
-      glVertex3d(brick[2].x(), brick[2].y(), brick[2].z());
+      glVertex3d(corner[0].x(), corner[0].y(), corner[0].z());
+      glVertex3d(corner[1].x(), corner[1].y(), corner[1].z());
+      glVertex3d(corner[3].x(), corner[3].y(), corner[3].z());
+      glVertex3d(corner[2].x(), corner[2].y(), corner[2].z());
     }
     glEnd();
     glBegin(GL_LINE_LOOP);
     {
-      glVertex3d(brick[4].x(), brick[4].y(), brick[4].z());
-      glVertex3d(brick[5].x(), brick[5].y(), brick[5].z());
-      glVertex3d(brick[7].x(), brick[7].y(), brick[7].z());
-      glVertex3d(brick[6].x(), brick[6].y(), brick[6].z());
+      glVertex3d(corner[4].x(), corner[4].y(), corner[4].z());
+      glVertex3d(corner[5].x(), corner[5].y(), corner[5].z());
+      glVertex3d(corner[7].x(), corner[7].y(), corner[7].z());
+      glVertex3d(corner[6].x(), corner[6].y(), corner[6].z());
     }
     glEnd();
   }
