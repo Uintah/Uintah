@@ -195,7 +195,6 @@ void
 
 
   if( need_execute) {
-    cerr << "RE-EXECUTING...\n";
     // Determine the number of bins given
     string bins = bins_.get();
     int binsLen = 0;
