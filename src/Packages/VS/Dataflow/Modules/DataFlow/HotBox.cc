@@ -660,6 +660,10 @@ HotBox::execute()
     // get the bounding box information for the selected entity
     selectBox = VH_Anatomy_findBoundingBox( boundBoxList_, selectName);
   }
+  else
+  {
+    selectBox = (VH_AnatomyBoundingBox *)NULL;
+  }
 
   // we now have the anatomy name corresponding to the label value at the voxel
   if(!injListDoc_ || activeInjList_ != injuryListDataSrc)
