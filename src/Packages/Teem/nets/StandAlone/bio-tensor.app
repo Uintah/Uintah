@@ -21,7 +21,10 @@ option add *Scale*width .35c
 
 option add *selectBackground "white"
 option add *selector red
-option add *font "-Adobe-Helvetica-bold-R-Normal--*-120-75-*"
+option add *font "-Adobe-Helvetica-normal-R-Normal-*-10-120-75-*"
+option add *Labeledframe.labelFont "-Adobe-Helvetica-bold-R-Normal-*-10-120-75-*"
+option add *Entryfield.labelFont "-Adobe-Helvetica-bold-R-Normal-*-10-120-75-*"
+option add *Optionmenu.labelFont "-Adobe-Helvetica-bold-R-Normal-*-10-120-75-*"
 option add *highlightThickness 0
 
 
@@ -1804,17 +1807,17 @@ class BioTensorApp {
 	toplevel .standalone
 	wm title .standalone "BioTensor"	 
 	set win .standalone
+
+	set viewer_width 512
+	set viewer_height 620
 	
-	set notebook_width 350
-	set notebook_height 600
+	set notebook_width 280
+	set notebook_height [expr $viewer_height - 50]
 	
-	set viewer_width 640
-	set viewer_height 670
-	
-	set process_width 365
+	set process_width 275
 	set process_height $viewer_height
 	
-	set vis_width [expr $notebook_width + 40]
+	set vis_width [expr $notebook_width + 30]
 	set vis_height $viewer_height
 
 	set screen_width [winfo screenwidth .]
@@ -1840,9 +1843,9 @@ class BioTensorApp {
         set indicate 0
         set cycle 0
 	set darby 0
-        set i_width 300
+        set i_width 220
         set i_height 20
-        set stripes 10
+        set stripes 8
         set i_move [expr [expr $i_width/double($stripes)]/2.0]
         set i_back [expr $i_move*-3]
 
@@ -1935,7 +1938,7 @@ class BioTensorApp {
         set fiber_type "Principle Eigenvector"
 
         # colormaps
-        set colormap_width 150
+        set colormap_width 80
         set colormap_height 15
         set colormap_res 64
 
@@ -2037,7 +2040,7 @@ class BioTensorApp {
 	
 	# Embed the Viewer
 	set eviewer [$mods(Viewer) ui_embedded]
-	$eviewer setWindow $win.viewer 
+	$eviewer setWindow $win.viewer $viewer_width $viewer_height
 	
 	
 	### Processing Part
@@ -2187,7 +2190,7 @@ class BioTensorApp {
 	    
             iwidgets::tabnotebook $process.tnb \
                 -width [expr $process_width - 40] \
-                -height [expr $process_height - 130] \
+                -height [expr $process_height - 120] \
                 -tabpos n
 	    pack $process.tnb -side top -anchor n 
 	    
@@ -2218,7 +2221,7 @@ class BioTensorApp {
 
 	    ### Data Acquisition
             iwidgets::tabnotebook $step_tab.tnb \
-		-width [expr $process_width - 65 ] -height 250 \
+		-width [expr $process_width - 55 ] -height 250 \
 		-tabpos n 
             pack $step_tab.tnb -side top -anchor n \
 		-padx 3 -pady 8
@@ -2255,7 +2258,7 @@ class BioTensorApp {
             pack $page.load -side top -anchor n -padx 3 -pady 6
 	    
             label $page.space -text "    "
-            pack $page.space -side top -anchor n -padx 3 -pady 3
+            pack $page.space -side top -anchor n -padx 3 -pady 0
             global $mods(NrrdReader-T2)-filename
             label $page.t2l -text "T2 Reference Image:"
             pack $page.t2l -side top -anchor nw -padx 3 -pady 3
@@ -2289,7 +2292,7 @@ class BioTensorApp {
 		-padx 3 -pady 5 -ipadx 2 -ipady 2
 	    
             label $page.space -text "    "
-            pack $page.space -side top -anchor n -padx 3 -pady 3
+            pack $page.space -side top -anchor n -padx 3 -pady 0
 
             label $page.t2l -text "T2 Reference Image:"
             pack $page.t2l -side top -anchor nw -padx 3 -pady 3
@@ -2319,7 +2322,7 @@ class BioTensorApp {
 		-padx 3 -pady 5 -ipadx 2 -ipady 2
 
             label $page.space -text "    "
-            pack $page.space -side top -anchor n -padx 3 -pady 3
+            pack $page.space -side top -anchor n -padx 3 -pady 0
 
             label $page.t2l -text "T2 Reference Image:"
             pack $page.t2l -side top -anchor nw -padx 3 -pady 3
@@ -2442,7 +2445,7 @@ class BioTensorApp {
 		-variable ref_image \
 		-from 1 -to 7 \
 		-showvalue false \
-		-length 150  -width 15 \
+		-length 80  -width 15 \
 		-sliderlength 15 \
 		-command "$this configure_reference_image" \
 		-orient horizontal
@@ -2478,7 +2481,7 @@ class BioTensorApp {
 		-from 0.0 -to 5.0 \
 		-resolution 0.01 \
 		-showvalue true \
-		-sliderlength 15 -width 15 -length 113 \
+		-sliderlength 15 -width 15 -length 50 \
 		-orient horizontal
             label $blur.labely -text "Y:" -state disabled
             scale $blur.entryy -label "" \
@@ -2488,7 +2491,7 @@ class BioTensorApp {
 		-from 0.0 -to 5.0 \
 		-resolution 0.01 \
 		-showvalue true \
-		-sliderlength 15 -width 15 -length 113 \
+		-sliderlength 15 -width 15 -length 50 \
 		-orient horizontal
             pack $blur.labelx $blur.entryx \
                 $blur.labely $blur.entryy \
@@ -2535,7 +2538,7 @@ class BioTensorApp {
             pack $seg.cc -side top -anchor nw -padx 6 -pady 0
 	    
             # Fitting
-            label $step_tab.fitl -text "Percentage of Slices for Parameter Estimation: " -state disabled
+            label $step_tab.fitl -text "Percent of Slices for Parameter Estimation: " -state disabled
             pack $step_tab.fitl -side top -anchor nw -padx 8 -pady 0
 	    
             frame $step_tab.fit
@@ -2669,17 +2672,19 @@ class BioTensorApp {
             pack $thresh.def -side top -anchor nw -padx 2 -pady 0
 	    
             frame $thresh.choose
-            pack $thresh.choose -side top -anchor nw -padx 0 -pady 0
+            pack $thresh.choose -side top -anchor nw -padx 0 -pady 0 -fill x
 	    
             radiobutton $thresh.choose.button -text "Specify Threshold:" \
 		-state disabled \
 		-variable $mods(TendEstim)-use-default-threshold -value 0 \
 		-command "$this toggle_dt_threshold" 
+            pack $thresh.choose.button -side left \
+		-anchor n -padx 2 -pady 3
             entry $thresh.choose.entry -width 10 \
 		-textvariable $mods(TendEstim)-threshold \
 		-state disabled -foreground grey64
-            pack $thresh.choose.button $thresh.choose.entry -side left \
-		-anchor n -padx 2 -pady 3
+            pack $thresh.choose.entry -side left \
+		-anchor n -padx 2 -pady 3 -fill x
 	    
             $thresh.def select
 
@@ -2693,7 +2698,7 @@ class BioTensorApp {
             set bm [$step_tab.bm childsite]
 	    
 	    global bmatrix
-            radiobutton $bm.computeb -text "Compute B-Matrix Using Gradients Provided" \
+            radiobutton $bm.computeb -text "Compute B-Matrix Using\nGradients Provided" \
 		-state disabled \
 		-variable bmatrix \
 		-value "compute" \
@@ -2701,7 +2706,7 @@ class BioTensorApp {
             pack $bm.computeb  -side top -anchor nw -padx 2 -pady 0
 	    
             frame $bm.load
-            pack $bm.load -side top -anchor nw -padx 0 -pady 0
+            pack $bm.load -side top -anchor nw -padx 0 -pady 0 -fill x
 	    
             radiobutton $bm.load.b -text "Load B-Matrix" \
 		-state disabled \
@@ -2709,11 +2714,14 @@ class BioTensorApp {
 		-value "load" \
 		-command "$this toggle_b_matrix"
 	    
-            entry $bm.load.e -width 25 \
+            pack $bm.load.b -side left -anchor nw \
+		-padx 2 -pady 0
+
+            entry $bm.load.e -width 10 \
 		-textvariable $mods(NrrdReader-BMatrix)-filename \
 		-state disabled -foreground grey64
-            pack $bm.load.b $bm.load.e -side left -anchor nw \
-		-padx 2 -pady 0
+            pack $bm.load.e -side left -anchor nw \
+		-padx 2 -pady 0 -fill x
 	    
             button $bm.browse -text "Browse" \
 		-command "$this load_bmatrix" \
@@ -2801,7 +2809,7 @@ class BioTensorApp {
 	    
 	    ### Tabs
 	    iwidgets::tabnotebook $vis.tnb -width $notebook_width \
-		-height [expr $vis_height - 30] -tabpos n
+		-height [expr $vis_height - 25] -tabpos n
 	    pack $vis.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
 
             if {$case == 0} {
@@ -4810,7 +4818,7 @@ class BioTensorApp {
 	    scale $f.axis.x.slider -from 0 -to 512 \
 		-variable plane_x \
 		-showvalue false \
-		-length 200  -width 15 \
+		-length 100  -width 15 \
 		-sliderlength 15 \
 		-state disabled -foreground grey64 \
 		-orient horizontal  
@@ -4828,7 +4836,7 @@ class BioTensorApp {
 	    scale $f.axis.y.slider -from 0 -to 512 \
 		-variable plane_y \
 		-showvalue false \
-		-length 200  -width 15 \
+		-length 100  -width 15 \
 		-sliderlength 15 \
 		-state disabled -foreground grey64 \
 		-orient horizontal 
@@ -4846,7 +4854,7 @@ class BioTensorApp {
 	    scale $f.axis.z.slider -from 0 -to 512 \
 		-variable plane_z \
 		-showvalue false \
-		-length 200  -width 15 \
+		-length 100  -width 15 \
 		-sliderlength 15 \
 		-state disabled -foreground grey64 \
 		-orient horizontal 
@@ -4865,9 +4873,10 @@ class BioTensorApp {
 	    
 	    iwidgets::optionmenu $fr.select.color -labeltext "" \
 		-labelpos w \
+	        -width 150 \
 		-command "$this select_color_planes_color $fr.select" \
 		-state disabled
-	    pack $fr.select.color -side left -anchor n -padx 3 -pady 3
+	    pack $fr.select.color -side left -anchor n -padx 1 -pady 3
 	    
 	    addColorSelection $fr.select "Color" clip_to_isosurface_color "clip_color_change"
 	    
@@ -5669,7 +5678,7 @@ class BioTensorApp {
 	    
 	    label $f.isoval.l -text "Isoval:" -state disabled -state disabled
 	    scale $f.isoval.s -from 0.0 -to 1.0 \
-		-length 200 -width 15 \
+		-length 100 -width 15 \
 		-sliderlength 15 \
 		-resolution 0.0001 \
 		-variable $mods(Isosurface)-isoval \
@@ -5684,11 +5693,12 @@ class BioTensorApp {
 	    
 	    pack $f.isoval.l $f.isoval.s $f.isoval.val -side left -anchor nw -padx 3      
 	    
-	    iwidgets::optionmenu $f.isovalcolor -labeltext "Isoval Based On:" \
+	    iwidgets::optionmenu $f.isovalcolor -labeltext "Isoval\nBased On:" \
 		-labelpos w \
+	        -width 150 \
 		-state disabled \
 		-command "$this select_isoval_based_on $f"
-	    pack $f.isovalcolor -side top -anchor nw -padx 3 -pady 5
+	    pack $f.isovalcolor -side top -anchor nw -padx 1 -pady 3
 	    
 	    $f.isovalcolor insert end "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy"
 	    
@@ -5707,9 +5717,10 @@ class BioTensorApp {
 	    
 	    iwidgets::optionmenu $isocolor.select.color -labeltext "" \
 		-labelpos w \
+	        -width 150 \
 		-state disabled \
 		-command "$this select_isosurface_color $isocolor.select"
-	    pack $isocolor.select.color -side left -anchor n -padx 3 -pady 3
+	    pack $isocolor.select.color -side left -anchor n -padx 1 -pady 3
 	    
 	    
 	    addColorSelection $isocolor.select "Color" isosurface_color "clip_color_change"
@@ -6142,7 +6153,7 @@ class BioTensorApp {
 		-command "$this change_glyph_display_type radio $rep"
 	    
 	    iwidgets::optionmenu $rep.f1.type -labeltext "" \
-		-width 180 -state disabled \
+		-width 150 -state disabled \
 		-command "$this change_glyph_display_type men $rep.f1"
 	    pack $rep.f1.boxes $rep.f1.type -side left -anchor nw -padx 2 -pady 0
 	    
@@ -6159,7 +6170,7 @@ class BioTensorApp {
 		-command "$this change_glyph_display_type radio $rep"
 	    
 	    iwidgets::optionmenu $rep.f2.type -labeltext "" \
-		-width 180 \
+		-width 150 \
 		-command "$this change_glyph_display_type men $rep.f2" \
 		-state disabled
 	    pack $rep.f2.ellips $rep.f2.type -side left -anchor nw -padx 2 -pady 0
@@ -6289,7 +6300,7 @@ class BioTensorApp {
 	    
 	    scale $f.scale.s -from 0.2 -to 5.0 \
                 -resolution 0.01 \
-  		-length 150  -width 15 \
+  		-length 80  -width 15 \
 		-sliderlength 15 \
                 -orient horizontal \
    	        -state disabled \
@@ -6313,7 +6324,7 @@ class BioTensorApp {
 	    
 	    scale $f.exag.s -from 0.2 -to 5.0 \
                 -resolution 0.01 \
-  		-length 150  -width 15 \
+  		-length 80  -width 15 \
 		-sliderlength 15 \
                 -orient horizontal \
    	        -state disabled \
@@ -6324,9 +6335,6 @@ class BioTensorApp {
 	    pack $f.exag.b -side left -anchor w -padx 3 -pady 0
 	    pack  $f.exag.s -side left -anchor ne -padx 3 -pady 0
 	    
-	    message $f.exagm -text "A value less than 1.0 will make the glyphs more isotropic while a value greater than 1.0 will make them more anisotropic.  Setting the value to 1.0 will not change the glyphs." -width 300 -foreground grey64
-	    
-	    pack $f.exagm -side top -anchor n -padx 3 -pady 0
 	} 
     }
 
@@ -6684,7 +6692,7 @@ class BioTensorApp {
 	    scale $algo.stepsize.step -label "" \
 		-from 0.1 -to 10 \
 		-resolution 0.1 \
-		-length 150  -width 15 \
+		-length 100  -width 15 \
 		-sliderlength 15 \
 		-orient horizontal \
 		-showvalue false \
@@ -6764,7 +6772,7 @@ class BioTensorApp {
 	    scale $stop.fiber.val -label "" \
 		-from 1 -to 400 \
 		-resolution 1 \
-		-length 120  -width 15 \
+		-length 80  -width 15 \
 		-sliderlength 15 \
 		-orient horizontal \
 		-showvalue false \
@@ -6788,7 +6796,7 @@ class BioTensorApp {
 	    scale $stop.steps.val -label "" \
 		-from 10 -to 1000 \
 		-resolution 10 \
-		-length 120  -width 15 \
+		-length 80  -width 15 \
 		-sliderlength 15 \
 		-orient horizontal \
 		-showvalue false \
@@ -6814,7 +6822,7 @@ class BioTensorApp {
 	    scale $stop.aniso1.val -label "" \
 		-from 0.0 -to 1.0 \
 		-resolution 0.01 \
-		-length 95  -width 15 \
+		-length 75  -width 15 \
 		-sliderlength 15 \
 		-orient horizontal \
 		-showvalue false \
@@ -6899,7 +6907,7 @@ class BioTensorApp {
 	    pack $rep.f1 -side top -anchor nw -padx 3 -pady 1
 	    
 	    iwidgets::optionmenu $rep.f1.type -labeltext "" \
-		-width 180 -state disabled \
+		-width 150 -state disabled \
 		-command "$this change_fiber_color_by $rep.f1"
 	    pack $rep.f1.type -side left -anchor nw -padx 2 -pady 0
 	    
@@ -6915,7 +6923,7 @@ class BioTensorApp {
 	    iwidgets::labeledframe $rep.maps \
 		-labeltext "Color Maps" \
 		-labelpos nw -foreground grey64
-	    pack $rep.maps -side top -anchor n -padx 3 -pady 3
+	    pack $rep.maps -side top -anchor n -padx 3 -pady 1
 	    
 	    set maps [$rep.maps childsite]
 	    global $mods(GenStandardColorMaps-Fibers)-mapType
@@ -7471,7 +7479,7 @@ class BioTensorApp {
 	
 	frame $frame.colorFrame
 	frame $frame.colorFrame.col -relief ridge -borderwidth \
-	    4 -height 0.6c -width 1.0c \
+	    4 -height 0.6c -width 0.6c \
 	    -background [format #%04x%04x%04x $ir $ig $ib]
 			 
 	set cmmd "$this raiseColor $frame.colorFrame.col $color $mod"
@@ -7483,7 +7491,7 @@ class BioTensorApp {
 	pack $frame.colorFrame.set_color \
 	    -side left -ipadx 3 -ipady 3
 	pack $frame.colorFrame.col -side left 
-	pack $frame.colorFrame -side left -padx 3
+	pack $frame.colorFrame -side left -padx 1
     }
     
     
@@ -7867,7 +7875,7 @@ class BioTensorApp {
           }
        }
 
-       set i_font "-Adobe-Helvetica-Bold-R-Normal-*-16-120-75-*"
+       set i_font "-Adobe-Helvetica-Bold-R-Normal-*-14-120-75-*"
 
        # make completed
        set s [expr $i_width/2]
@@ -8125,7 +8133,7 @@ class BioTensorApp {
     variable data_ex_button1
     variable data_ex_button2
 
-    # Visualiztion frame tabnotebook
+    # Visualization frame tabnotebook
     variable vis_frame_tab1
     variable vis_frame_tab2
 
