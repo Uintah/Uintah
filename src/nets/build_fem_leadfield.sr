@@ -3,13 +3,19 @@
 ::netedit dontschedule
 
 global userName
-set userName "darbyb"
+set userName "dmw"
 
 global runDate
-set runDate " Fri  Feb 23 19101"
+set runDate "Thu Mar  1 2001"
 
 global runTime
-set runTime " 15:7:25"
+set runTime " 21:53:29"
+
+global notes
+set notes "This net builds an element-centered finite element lead-field for an input finite element
+mesh and set of electrodes.
+
+"
 
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 226 15]
 set m1 [addModuleAtPosition "BioPSE" "Forward" "BuildFEMatrix" 45 179]
