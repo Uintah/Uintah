@@ -816,4 +816,4 @@ int Sage<AI,Field>::bbox_projection( int i, int j, int k,
 
 } // namespace SCIRun
 
-#endif SAGE_h
+#endif // SAGE_h

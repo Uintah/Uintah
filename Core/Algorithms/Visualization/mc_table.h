@@ -555,5 +555,4 @@ static TriangleCase tri_case[] = {
   { 0, { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}}
 };
 
-#endif
-
+#endif // MCUBE3_H

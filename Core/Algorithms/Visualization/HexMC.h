@@ -44,6 +44,7 @@ class HexMC
 public:
   typedef Field                                  field_type;
   typedef typename Field::mesh_type::cell_index  cell_index;
+  typedef typename Field::mesh_type::node_index  node_index;
   typedef typename Field::value_type             value_type;
   typedef typename Field::mesh_type              mesh_type;
   typedef typename Field::mesh_handle_type       mesh_handle_type;
@@ -52,14 +53,21 @@ private:
   Field *field_;
   mesh_handle_type mesh_;
   GeomTrianglesP *triangles_;
+  int build_trisurf_;
+  TriSurfMeshHandle trisurf_;
+  map<long int, TriSurfMesh::node_index> vertex_map_;
+  int nnodes_;
+  int nx_, ny_, nz_;
+  TriSurfMesh::node_index find_or_add_edgepoint(node_index, node_index, Point);
 
 public:
   HexMC( Field *field ) : field_(field), mesh_(field->get_typed_mesh()) {}
   virtual ~HexMC();
 	
   void extract( const cell_index &, double);
-  void reset( int );
+  void reset( int, int build_trisurf=0 );
   GeomObj *get_geom() { return triangles_; };
+  TriSurfMeshHandle get_trisurf() { return trisurf_; };
 };
   
 
@@ -70,10 +78,52 @@ HexMC<Field>::~HexMC()
     
 
 template<class Field>
-void HexMC<Field>::reset( int n )
+void HexMC<Field>::reset( int n, int build_trisurf )
 {
+  build_trisurf_ = build_trisurf;
   triangles_ = new GeomTrianglesP;
   triangles_->reserve_clear(n*2.5);
+  vertex_map_.clear();
+  nnodes_ = mesh_->nodes_size();
+  nx_ = mesh_->get_nx();
+  ny_ = mesh_->get_ny();
+  nz_ = mesh_->get_nz();
+  if (build_trisurf_)
+    trisurf_ = new TriSurfMesh; 
+  else 
+    trisurf_=0;
+}
+
+template<class Field>
+TriSurfMesh::node_index
+HexMC<Field>::find_or_add_edgepoint(node_index n0, node_index n1, Point p) {
+  map<long int, TriSurfMesh::node_index>::iterator node_iter;
+  long int key0 = 
+    (long int) n0.i_ + (nx_ + (long int) n0.j_ * (ny_ * (long int) n0.k_));
+  long int key1 = 
+    (long int) n1.i_ + (nx_ + (long int) n1.j_ * (ny_ * (long int) n1.k_));
+  int small_key;
+  int dir;
+  if (n0.k_ != n1.k_) dir=2;
+  else if (n0.j_ != n1.j_) dir=1;
+  else dir=0;
+  if (n0.k_ < n1.k_) small_key = key0;
+  else if (n0.k_ > n1.k_) small_key = key1;
+  else if (n0.j_ < n1.j_) small_key = key0;
+  else if (n0.j_ > n1.j_) small_key = key1;
+  else if (n0.i_ < n1.i_) small_key = key0;
+  else small_key = key1;
+  long int key = (small_key << 2) + dir;
+  TriSurfMesh::node_index node_idx;
+  node_iter = vertex_map_.find(key);
+  if (node_iter == vertex_map_.end()) { // first time to see this node
+    node_idx = trisurf_->add_point(p);
+    vertex_map_[key] = node_idx;
+    vertex_map_[key] = node_idx;
+  } else {
+    node_idx = (*node_iter).first;
+  }
+  return node_idx;
 }
 
 template<class Field>
@@ -88,7 +138,7 @@ void HexMC<Field>::extract( const cell_index& cell, double iso )
 
   for (int i=7; i>=0; i--) {
     mesh_->get_point( p[i], node[i] );
-    field_->value( value[i], node[i] );
+    if (!field_->value( value[i], node[i] )) return;
     code = code*2+(value[i] < iso );
   }
 
@@ -99,7 +149,8 @@ void HexMC<Field>::extract( const cell_index& cell, double iso )
   int *vertex = tcase->vertex;
   
   Point q[12];
-  
+  TriSurfMesh::node_index surf_node[12];
+
   // interpolate and project vertices
   int v = 0;
   for (int t=0; t<tcase->n; t++) {
@@ -109,6 +160,8 @@ void HexMC<Field>::extract( const cell_index& cell, double iso )
       int v2 = edge_table[i][1];
       q[i] = Interpolate(p[v1], p[v2], 
 			 (value[v1]-iso)/double(value[v1]-value[v2]));
+      if (build_trisurf_)
+	surf_node[i] = find_or_add_edgepoint(node[v1], node[v2], q[i]);
     }
   }
   
@@ -120,8 +173,8 @@ void HexMC<Field>::extract( const cell_index& cell, double iso )
     
     for (; v2 != -1; v1=v2,v2=vertex[v++]) {
       triangles_->add(q[v0], q[v1], q[v2]);
+      trisurf_->add_triangle(surf_node[v0], surf_node[v1], surf_node[v2]);
     }
-    
   }
 }
 
@@ -129,4 +182,4 @@ void HexMC<Field>::extract( const cell_index& cell, double iso )
      
 } // End namespace SCIRun
 
-#endif
+#endif // HexMC_H

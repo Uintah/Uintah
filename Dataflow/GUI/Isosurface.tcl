@@ -36,6 +36,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-algorithm
 	global $this-type
 	global $this-gen
+	global $this-build_trisurf
 	
 	set $this-isoval-min 0
 	set $this-isoval-max 4095
@@ -44,6 +45,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-algorithm 0
 	set $this-type ""
 	set $this-gen 0
+	set $this-build_trisurf 0
 
 	# SAGE vars
 	global $this-visibility $this-value $this-scan
@@ -93,8 +95,12 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	bind $w.f.isoval <ButtonRelease> "$this set-isoval"
 	
+	global $this-build_trisurf
+	checkbutton $w.f.buildsurf -text "Build TriSurf" \
+		-variable $this-build_trisurf
 	button $w.f.extract -text "Extract" -command "$this-c needexecute"
 	pack $w.f.isoval  -fill x
+	pack $w.f.buildsurf
 	pack $w.f.extract
 
 	#  Info

@@ -384,4 +384,4 @@ namespace SCIRun {
 
 } // namespace SCIRun
 
-#endif Noise_h
+#endif // Noise_h

@@ -232,4 +232,4 @@ namespace SCIRun {
 } // namespace SCIRun
 
 
-#endif SpanSpace_h
+#endif // SpanSpace_h

@@ -45,7 +45,9 @@ public:
 
   virtual void release() = 0;
   virtual void set_field( Field * ) = 0;
-  virtual GeomObj* search( double ) = 0;
+  virtual void search( double, int ) = 0;
+  virtual GeomObj* get_geom() = 0;
+  virtual TriSurfMeshHandle get_trisurf() = 0;
 };
 
   
@@ -62,12 +64,16 @@ protected:
   mesh_handle_type mesh_;
 public:
   MarchingCubes() {}
-  MarchingCubes( AI *ai ) : ai_(ai), tess_(0), mesh_(0) {}
+  MarchingCubes(AI *ai) : ai_(ai), tess_(0), mesh_(0) {}
   virtual ~MarchingCubes() {}
 
   virtual void release();
   virtual void set_field( Field * );
-  virtual GeomObj* search( double );
+  virtual void search( double, int=0 );
+  virtual GeomObj* get_geom() { 
+    if (tess_) return tess_->get_geom(); else return 0; }
+  virtual TriSurfMeshHandle get_trisurf() { 
+    if (tess_) return tess_->get_trisurf(); else return 0; }
 };
     
 
@@ -93,22 +99,21 @@ MarchingCubes<AI,Tesselator>::set_field( Field *f )
 }
 
 template<class AI, class Tesselator>
-GeomObj *
-MarchingCubes<AI,Tesselator>::search( double iso ) 
+void
+MarchingCubes<AI,Tesselator>::search( double iso, int build_trisurf )
 {
   ASSERT(tess_ != 0);
 
-  tess_->reset(0);
+  tess_->reset(0, build_trisurf);
   typename mesh_type::cell_iterator cell = mesh_->cell_begin(); 
   while ( cell != mesh_->cell_end() )
   {
     tess_->extract( *cell, iso );
     ++cell;
   }
-  return tess_->get_geom();
 }
 
 
 } // End namespace SCIRun
 
-#endif
+#endif // MarchingCubes_h

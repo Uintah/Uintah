@@ -328,10 +328,9 @@ public:
 
   //! similar to get_cells() with face_index argument, but
   //  returns the "other" cell if it exists, not all that exist
-  bool get_neighbor(cell_index &neighbor, cell_index from, 
-		    face_index idx) const {
-    cerr << "LatVolMesh::get_neighbor not implemented." << endl;
-    ASSERT(0);
+  bool get_neighbor(cell_index & /*neighbor*/, cell_index /*from*/, 
+		    face_index /*idx*/) const {
+    ASSERTFAIL("LatVolMesh::get_neighbor not implemented.");
   }
   //! get the center point (in object space) of an element
   void get_center(Point &, node_index) const;
