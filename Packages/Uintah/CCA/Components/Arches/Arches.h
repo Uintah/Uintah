@@ -91,7 +91,7 @@ public:
       // GROUP: Static Variables:
       ////////////////////////////////////////////////////////////////////////
       // Number of dimensions in the problem
-      static const int NDIM = 3;
+      static const int NDIM;
 
       // GROUP: Constants:
       ////////////////////////////////////////////////////////////////////////
@@ -226,6 +226,8 @@ private:
 #endif
 
 }; // end class Arches
+
+const int Arches::NDIM = 3;
 
 } // End namespace Uintah
 
