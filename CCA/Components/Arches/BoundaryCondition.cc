@@ -13,6 +13,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
