@@ -12,6 +12,8 @@
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <vector>
 
 namespace Uintah {
 
@@ -233,8 +235,12 @@ using namespace SCIRun;
                           const vector<CCVariable<double> >& rho_micro_CC,
                           const vector<CCVariable<double> >& rho_CC,
                           const vector<CCVariable<double> >& vol_frac_CC,
-                          const vector<CCVariable<Vector> >& vel_CC);   
-      
+                          const vector<CCVariable<Vector> >& vel_CC);
+                             
+/*`==========TESTING==========*/ 
+      void getExchangeCoefficients( DenseMatrix& K,
+                                    DenseMatrix& H );  
+ /*==========TESTING==========`*/    
       // Debugging switches
       bool switchDebugInitialize;
       bool switchDebug_equilibration_press;
