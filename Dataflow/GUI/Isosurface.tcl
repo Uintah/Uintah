@@ -181,17 +181,17 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	scaleEntry2 $sel.isoval \
 	    [set $this-isoval-min] [set $this-isoval-max] \
-	    5c $this-isoval $this-isoval2
+	     4c $this-isoval $this-isoval2
 
 #	scale $sel.isoval -label "Isovalue:" \
-		-variable $this-isoval \
-		-from [set $this-isoval-min] -to [set $this-isoval-max] \
-		-length 5c \
-		-showvalue true \
-		-orient horizontal  \
-		-digits 5 \
-		-resolution 0.001 \
-	        -command "$this change-isoval"
+#		-variable $this-isoval \
+#		-from [set $this-isoval-min] -to [set $this-isoval-max] \
+#		-length 5c \
+#		-showvalue true \
+#		-orient horizontal  \
+#		-digits 5 \
+#		-resolution 0.001 \
+#	        -command "$this change-isoval"
 
 	
 	button $sel.extract -text "Extract" -command "$this-c needexecute"
@@ -412,6 +412,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 #	pack $win -side top -padx 5
 
 	scale $win.s -from $start -to $stop -length $length \
+	    -tickinterval [expr ($start - $stop)/3.00000001] \
 	    -variable $var1 -orient horizontal -showvalue false \
 	    -command "$this updateSliderEntry $var1 $var2" \
 	    -resolution 0.001
@@ -423,7 +424,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	bind $win.e <Return> "$this manualSliderEntry $start $stop $var1 $var2"
 
 	pack $win.s -side left
-	pack $win.e -side bottom -padx 5
+	pack $win.e -side top -padx 5 -pady 3
     }
 
     method updateSliderEntry {var1 var2 someUknownVar} {
