@@ -14,7 +14,6 @@ SRCS := \
 	$(SRCDIR)/FusionSlicePlot.tcl\
 	$(SRCDIR)/NIMRODConverter.tcl\
 	$(SRCDIR)/NrrdFieldConverter.tcl\
-	$(SRCDIR)/Plot2DViewer.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
