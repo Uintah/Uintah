@@ -1,28 +1,43 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
 # SCI Network 1.0
+
+set DATADIR $env(INSIGHT_DATA)
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
-set m0 [addModuleAtPosition "Insight" "Converters" "ImageToField" 9 86]
-set m1 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 164 87]
-set m2 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 163 167]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 9 244]
-set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 9 317]
-set m5 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat3D" 9 17]
+set m0 [addModuleAtPosition "Insight" "Converters" "ImageToField" 10 98]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 215 100]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 215 198]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 288]
+set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 10 389]
+set m5 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat2D" 10 10]
 
 addConnection $m1 0 $m2 0
 addConnection $m0 0 $m2 1
 addConnection $m2 0 $m3 1
 addConnection $m3 0 $m4 0
-addConnection $m5 0 $m0 0
 addConnection $m0 0 $m3 0
+addConnection $m5 0 $m0 0
 
 set $m0-notes {}
-set $m0-show_status {1}
+set $m0-copy {0}
 set $m1-notes {}
-set $m1-show_status {1}
 set $m1-tcl_status {Calling GenStandardColorMaps!}
 set $m1-positionList {}
 set $m1-nodeList {}
@@ -34,28 +49,28 @@ set $m1-resolution {255}
 set $m1-realres {255}
 set $m1-gamma {0}
 set $m2-notes {}
-set $m2-show_status {1}
 set $m2-isFixed {0}
-set $m2-min {                0}
-set $m2-max {            65535}
+set $m2-min {0}
+set $m2-max {251}
 set $m2-makeSymmetric {0}
 set $m3-notes {}
-set $m3-show_status {1}
-set $m3-nodes-on {1}
+set $m3-nodes-on {0}
 set $m3-nodes-transparency {0}
 set $m3-nodes-as-disks {0}
 set $m3-edges-on {0}
 set $m3-edges-transparency {0}
-set $m3-faces-on {0}
+set $m3-faces-on {1}
 set $m3-use-normals {0}
 set $m3-use-transparency {0}
 set $m3-vectors-on {0}
 set $m3-normalize-vectors {}
 set $m3-has_vector_data {0}
 set $m3-bidirectional {0}
-set $m3-arrow-heads-on {1}
 set $m3-tensors-on {0}
 set $m3-has_tensor_data {0}
+set $m3-scalars-on {0}
+set $m3-scalars-transparency {0}
+set $m3-has_scalar_data {1}
 set $m3-text-on {0}
 set $m3-text-use-default-color {1}
 set $m3-text-color-r {1.0}
@@ -78,34 +93,37 @@ set $m3-node_display_type {Points}
 set $m3-edge_display_type {Lines}
 set $m3-data_display_type {Arrows}
 set $m3-tensor_display_type {Boxes}
-set $m3-active_tab {Nodes}
+set $m3-scalar_display_type {Points}
+set $m3-active_tab {Faces}
 set $m3-node_scale {3.22}
 set $m3-edge_scale {0.0150}
 set $m3-vectors_scale {0.30}
 set $m3-tensors_scale {0.30}
+set $m3-scalars_scale {0.300}
 set $m3-show_progress {}
 set $m3-interactive_mode {OnExecute}
+set $m3-field-name {}
+set $m3-field-name-update {1}
 set $m3-node-resolution {3}
 set $m3-edge-resolution {6}
 set $m3-data-resolution {6}
 set $m4-notes {}
-set $m4-show_status {1}
 $m4 ui
-set $m4-ViewWindow_0-pos {z0_y0}
+set $m4-ViewWindow_0-pos {z1_y0}
 set $m4-ViewWindow_0-caxes {0}
 set $m4-ViewWindow_0-raxes {1}
 set $m4-ViewWindow_0-iaxes {}
 set $m4-ViewWindow_0-have_collab_vis {0}
-set $m4-ViewWindow_0-view-eyep-x {         -240.803}
-set $m4-ViewWindow_0-view-eyep-y {         -9.74685}
-set $m4-ViewWindow_0-view-eyep-z {          425.572}
+set $m4-ViewWindow_0-view-eyep-x {0}
+set $m4-ViewWindow_0-view-eyep-y {0}
+set $m4-ViewWindow_0-view-eyep-z {801.28810090074353}
 set $m4-ViewWindow_0-view-lookat-x {                0}
 set $m4-ViewWindow_0-view-lookat-y {                0}
 set $m4-ViewWindow_0-view-lookat-z {                0}
-set $m4-ViewWindow_0-view-up-x {         0.163857}
-set $m4-ViewWindow_0-view-up-y {        -0.983985}
-set $m4-ViewWindow_0-view-up-z {        0.0701795}
-set $m4-ViewWindow_0-view-fov {               20}
+set $m4-ViewWindow_0-view-up-x {0}
+set $m4-ViewWindow_0-view-up-y {-1}
+set $m4-ViewWindow_0-view-up-z {0}
+set $m4-ViewWindow_0-view-fov {20}
 set $m4-ViewWindow_0-view-eyep_offset-x {}
 set $m4-ViewWindow_0-view-eyep_offset-y {}
 set $m4-ViewWindow_0-view-eyep_offset-z {}
@@ -143,8 +161,9 @@ set $m4-ViewWindow_0-global-dl {0}
 set $m4-ViewWindow_0-global-type {Gouraud}
 set $m4-ViewWindow_0-ortho-view {0}
 set $m4-ViewWindow_0-unused {1}
+set $m4-ViewWindow_0-unused {1}
 set $m5-notes {}
-set $m5-show_status {1}
-set $m5-filename {/scratch/darbyb/data/tumorbase/case1/metaimage/case1cropisosm.mhd}
+puts "$DATADIR/BrainProtonDensitySlice.png"	
+set $m5-filename $DATADIR/BrainProtonDensitySlice.png
 
 ::netedit scheduleok

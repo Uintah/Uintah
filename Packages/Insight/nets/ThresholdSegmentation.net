@@ -1,324 +1,277 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
 # SCI Network 1.0
+
+set DATADIR $env(INSIGHT_DATA)
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
 set m0 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat2D" 10 10]
-set m1 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat2D" 199 12]
-set m2 [addModuleAtPosition "Insight" "Filters" "GradientAnisotropicDiffusionImageFilter" 199 100]
-set m3 [addModuleAtPosition "Insight" "Converters" "ImageToField" 500 101]
-set m4 [addModuleAtPosition "Insight" "Converters" "ImageToField" 324 187]
-set m5 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 324 271]
-set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 500 270]
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 646 101]
-set m8 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 646 184]
-set m9 [addModuleAtPosition "SCIRun" "Render" "Viewer" 401 599]
-set m10 [addModuleAtPosition "Insight" "Converters" "ImageToField" 10 341]
-set m11 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 507]
-set m12 [addModuleAtPosition "Insight" "Filters" "ThresholdSegmentationLevelSetImageFilter" 10 184]
-set m13 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 206 425]
-set m14 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 186 507]
+set m1 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat2D" 217 10]
+set m2 [addModuleAtPosition "Insight" "Filters" "GradientAnisotropicDiffusionImageFilter" 217 113]
+set m3 [addModuleAtPosition "Insight" "Filters" "ThresholdSegmentationLevelSetImageFilter" 10 212]
+set m4 [addModuleAtPosition "Insight" "Converters" "ImageToField" 10 330]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 201 331]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 202 422]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 508]
+set m8 [addModuleAtPosition "SCIRun" "Render" "Viewer" 10 602]
+set m9 [addModuleAtPosition "Insight" "Converters" "ImageToField" 546 117]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 546 324]
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 737 114]
+set m12 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 737 210]
 
 addConnection $m1 0 $m2 0
-addConnection $m1 0 $m3 0
-addConnection $m2 0 $m4 0
-addConnection $m4 0 $m5 0
-addConnection $m3 0 $m6 0
-addConnection $m3 0 $m8 1
+addConnection $m2 0 $m3 1
+addConnection $m0 0 $m3 0
+addConnection $m4 0 $m6 1
+addConnection $m5 0 $m6 0
+addConnection $m6 0 $m7 1
+addConnection $m4 0 $m7 0
 addConnection $m7 0 $m8 0
-addConnection $m8 0 $m5 1
-addConnection $m8 0 $m6 1
-addConnection $m6 0 $m9 0
-addConnection $m5 0 $m9 1
-addConnection $m10 0 $m11 0
-addConnection $m11 0 $m9 2
-addConnection $m0 0 $m12 0
-addConnection $m2 0 $m12 1
-addConnection $m12 0 $m10 0
-addConnection $m10 0 $m13 1
-addConnection $m7 0 $m13 0
-addConnection $m13 0 $m11 1
-addConnection $m10 0 $m14 0
-addConnection $m14 1 $m9 3
+addConnection $m3 0 $m4 0
+addConnection $m1 0 $m9 0
+addConnection $m9 0 $m10 0
+addConnection $m10 0 $m8 1
+addConnection $m11 0 $m12 0
+addConnection $m9 0 $m12 1
+addConnection $m12 0 $m10 1
 
 set $m0-notes {}
-set $m0-show_status {1}
-set $m0-filename {/home/darbyb/SCIRunITK/data/BrainProtonDensitySliceSeed.png}
+set $m0-filename $DATADIR/BrainProtonDensitySliceSeed.mhd
 set $m1-notes {}
-set $m1-show_status {1}
-set $m1-filename {/home/darbyb/SCIRunITK/data/BrainProtonDensitySlice.png}
+set $m1-filename $DATADIR/BrainProtonDensitySlice.png
 set $m2-notes {}
-set $m2-show_status {1}
 set $m2-time_step {0.25}
-set $m2-iterations {5}
+set $m2-iterations {10}
 set $m2-conductance_parameter {1}
 set $m3-notes {}
-set $m3-show_status {1}
+set $m3-lower_threshold {210}
+set $m3-upper_threshold {250}
+set $m3-curvature_scaling {1}
+set $m3-propagation_scaling {1}
+set $m3-edge_weight {0}
+set $m3-max_iterations {300}
+set $m3-max_rms_change {0.02}
+set $m3-reverse_expansion_direction {1}
+set $m3-isovalue {0.5}
+set $m3-smoothing_iterations {0}
+set $m3-smoothing_time_step {0.1}
+set $m3-smoothing_conductance {0.5}
 set $m4-notes {}
-set $m4-show_status {1}
+set $m4-copy {0}
 set $m5-notes {}
-set $m5-show_status {1}
-set $m5-nodes-on {0}
-set $m5-nodes-transparency {0}
-set $m5-nodes-as-disks {0}
-set $m5-edges-on {0}
-set $m5-edges-transparency {0}
-set $m5-faces-on {1}
-set $m5-use-normals {0}
-set $m5-use-transparency {0}
-set $m5-vectors-on {0}
-set $m5-normalize-vectors {}
-set $m5-has_vector_data {0}
-set $m5-bidirectional {0}
-set $m5-arrow-heads-on {1}
-set $m5-tensors-on {0}
-set $m5-has_tensor_data {0}
-set $m5-text-on {0}
-set $m5-text-use-default-color {1}
-set $m5-text-color-r {1.0}
-set $m5-text-color-g {1.0}
-set $m5-text-color-b {1.0}
-set $m5-text-backface-cull {0}
-set $m5-text-fontsize {1}
-set $m5-text-precision {2}
-set $m5-text-render_locations {0}
-set $m5-text-show-data {1}
-set $m5-text-show-nodes {0}
-set $m5-text-show-edges {0}
-set $m5-text-show-faces {0}
-set $m5-text-show-cells {0}
-set $m5-def-color-r {0.5}
-set $m5-def-color-g {0.5}
-set $m5-def-color-b {0.5}
-set $m5-def-color-a {0.5}
-set $m5-node_display_type {Spheres}
-set $m5-edge_display_type {Lines}
-set $m5-data_display_type {Arrows}
-set $m5-tensor_display_type {Boxes}
-set $m5-active_tab {Edges}
-set $m5-node_scale {0.0300}
-set $m5-edge_scale {0.0150}
-set $m5-vectors_scale {0.30}
-set $m5-tensors_scale {0.30}
-set $m5-show_progress {}
-set $m5-interactive_mode {OnExecute}
-set $m5-node-resolution {6}
-set $m5-edge-resolution {6}
-set $m5-data-resolution {6}
+set $m5-tcl_status {Calling GenStandardColorMaps!}
+set $m5-positionList {{0 40} {532 0}}
+set $m5-nodeList {795 1157}
+set $m5-width {532}
+set $m5-height {40}
+set $m5-mapType {3}
+set $m5-minRes {12}
+set $m5-resolution {256}
+set $m5-realres {256}
+set $m5-gamma {0}
 set $m6-notes {}
-set $m6-show_status {1}
-set $m6-nodes-on {0}
-set $m6-nodes-transparency {0}
-set $m6-nodes-as-disks {0}
-set $m6-edges-on {0}
-set $m6-edges-transparency {0}
-set $m6-faces-on {1}
-set $m6-use-normals {0}
-set $m6-use-transparency {0}
-set $m6-vectors-on {0}
-set $m6-normalize-vectors {}
-set $m6-has_vector_data {0}
-set $m6-bidirectional {0}
-set $m6-arrow-heads-on {1}
-set $m6-tensors-on {0}
-set $m6-has_tensor_data {0}
-set $m6-text-on {0}
-set $m6-text-use-default-color {1}
-set $m6-text-color-r {1.0}
-set $m6-text-color-g {1.0}
-set $m6-text-color-b {1.0}
-set $m6-text-backface-cull {0}
-set $m6-text-fontsize {1}
-set $m6-text-precision {2}
-set $m6-text-render_locations {0}
-set $m6-text-show-data {1}
-set $m6-text-show-nodes {0}
-set $m6-text-show-edges {0}
-set $m6-text-show-faces {0}
-set $m6-text-show-cells {0}
-set $m6-def-color-r {0.5}
-set $m6-def-color-g {0.5}
-set $m6-def-color-b {0.5}
-set $m6-def-color-a {0.5}
-set $m6-node_display_type {Spheres}
-set $m6-edge_display_type {Lines}
-set $m6-data_display_type {Arrows}
-set $m6-tensor_display_type {Boxes}
-set $m6-active_tab {Edges}
-set $m6-node_scale {0.0300}
-set $m6-edge_scale {0.0150}
-set $m6-vectors_scale {0.30}
-set $m6-tensors_scale {0.30}
-set $m6-show_progress {}
-set $m6-interactive_mode {OnExecute}
-set $m6-node-resolution {6}
-set $m6-edge-resolution {6}
-set $m6-data-resolution {6}
+set $m6-isFixed {0}
+set $m6-min {-3}
+set $m6-max {3}
+set $m6-makeSymmetric {0}
 set $m7-notes {}
-set $m7-show_status {1}
-set $m7-tcl_status {Calling GenStandardColorMaps!}
-set $m7-positionList {}
-set $m7-nodeList {}
-set $m7-width {327}
-set $m7-height {40}
-set $m7-mapType {0}
-set $m7-minRes {2}
-set $m7-resolution {255}
-set $m7-realres {255}
-set $m7-gamma {0}
+set $m7-nodes-on {0}
+set $m7-nodes-transparency {0}
+set $m7-nodes-as-disks {0}
+set $m7-edges-on {0}
+set $m7-edges-transparency {0}
+set $m7-faces-on {1}
+set $m7-use-normals {0}
+set $m7-use-transparency {1}
+set $m7-vectors-on {0}
+set $m7-normalize-vectors {}
+set $m7-has_vector_data {0}
+set $m7-bidirectional {0}
+set $m7-tensors-on {0}
+set $m7-has_tensor_data {0}
+set $m7-scalars-on {0}
+set $m7-scalars-transparency {0}
+set $m7-has_scalar_data {1}
+set $m7-text-on {0}
+set $m7-text-use-default-color {1}
+set $m7-text-color-r {1.0}
+set $m7-text-color-g {1.0}
+set $m7-text-color-b {1.0}
+set $m7-text-backface-cull {0}
+set $m7-text-fontsize {1}
+set $m7-text-precision {2}
+set $m7-text-render_locations {0}
+set $m7-text-show-data {1}
+set $m7-text-show-nodes {0}
+set $m7-text-show-edges {0}
+set $m7-text-show-faces {0}
+set $m7-text-show-cells {0}
+set $m7-def-color-r {0.5}
+set $m7-def-color-g {0.5}
+set $m7-def-color-b {0.5}
+set $m7-def-color-a {0.5}
+set $m7-node_display_type {Points}
+set $m7-edge_display_type {Lines}
+set $m7-data_display_type {Arrows}
+set $m7-tensor_display_type {Boxes}
+set $m7-scalar_display_type {Points}
+set $m7-active_tab {Faces}
+set $m7-node_scale {0.0300}
+set $m7-edge_scale {0.0150}
+set $m7-vectors_scale {0.30}
+set $m7-tensors_scale {0.30}
+set $m7-scalars_scale {0.300}
+set $m7-show_progress {}
+set $m7-interactive_mode {Interactive}
+set $m7-field-name {}
+set $m7-field-name-update {1}
+set $m7-node-resolution {6}
+set $m7-edge-resolution {6}
+set $m7-data-resolution {6}
 set $m8-notes {}
-set $m8-show_status {1}
-set $m8-isFixed {0}
-set $m8-min {                0}
-set $m8-max {              251}
-set $m8-makeSymmetric {0}
+$m8 ui
+set $m8-ViewWindow_0-pos {}
+set $m8-ViewWindow_0-caxes {0}
+set $m8-ViewWindow_0-raxes {1}
+set $m8-ViewWindow_0-iaxes {}
+set $m8-ViewWindow_0-have_collab_vis {0}
+set $m8-ViewWindow_0-view-eyep-x {-30.574316225407664}
+set $m8-ViewWindow_0-view-eyep-y {196.19395588139963}
+set $m8-ViewWindow_0-view-eyep-z {776.29618285038362}
+set $m8-ViewWindow_0-view-lookat-x {0}
+set $m8-ViewWindow_0-view-lookat-y {0}
+set $m8-ViewWindow_0-view-lookat-z {0}
+set $m8-ViewWindow_0-view-up-x {0.024596971916088332}
+set $m8-ViewWindow_0-view-up-y {0.96945272277855399}
+set $m8-ViewWindow_0-view-up-z {-0.24404181459292462}
+set $m8-ViewWindow_0-view-fov {20}
+set $m8-ViewWindow_0-view-eyep_offset-x {}
+set $m8-ViewWindow_0-view-eyep_offset-y {}
+set $m8-ViewWindow_0-view-eyep_offset-z {}
+set $m8-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m8-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m8-ViewWindow_0-bgcolor-r {0}
+set $m8-ViewWindow_0-bgcolor-g {0}
+set $m8-ViewWindow_0-bgcolor-b {0}
+set $m8-ViewWindow_0-shading {}
+set $m8-ViewWindow_0-do_stereo {0}
+set $m8-ViewWindow_0-ambient-scale {1.0}
+set $m8-ViewWindow_0-diffuse-scale {1.0}
+set $m8-ViewWindow_0-specular-scale {0.4}
+set $m8-ViewWindow_0-emission-scale {1.0}
+set $m8-ViewWindow_0-shininess-scale {1.0}
+set $m8-ViewWindow_0-polygon-offset-factor {1.0}
+set $m8-ViewWindow_0-polygon-offset-units {0.0}
+set $m8-ViewWindow_0-point-size {1.0}
+set $m8-ViewWindow_0-line-width {1.0}
+set $m8-ViewWindow_0-sbase {0.40}
+set $m8-ViewWindow_0-sr {1}
+set $m8-ViewWindow_0-do_bawgl {0}
+set $m8-ViewWindow_0-drawimg {}
+set $m8-ViewWindow_0-saveprefix {}
+set $m8-ViewWindow_0-resx {}
+set $m8-ViewWindow_0-resy {}
+set $m8-ViewWindow_0-aspect {}
+set $m8-ViewWindow_0-aspect_ratio {}
+set $m8-ViewWindow_0-global-light {1}
+set $m8-ViewWindow_0-global-fog {0}
+set $m8-ViewWindow_0-global-debug {0}
+set $m8-ViewWindow_0-global-clip {1}
+set $m8-ViewWindow_0-global-cull {0}
+set $m8-ViewWindow_0-global-dl {0}
+set $m8-ViewWindow_0-global-type {Gouraud}
+set $m8-ViewWindow_0-ortho-view {0}
+set $m8-ViewWindow_0-unused {1}
+set $m8-ViewWindow_0-unused {1}
+set $m8-ViewWindow_0-unused {1}
+set $m8-ViewWindow_0-unused {1}
 set $m9-notes {}
-set $m9-show_status {1}
-$m9 ui
-set $m9-ViewWindow_0-pos {}
-set $m9-ViewWindow_0-caxes {0}
-set $m9-ViewWindow_0-raxes {1}
-set $m9-ViewWindow_0-iaxes {}
-set $m9-ViewWindow_0-have_collab_vis {0}
-set $m9-ViewWindow_0-view-eyep-x {          258.616}
-set $m9-ViewWindow_0-view-eyep-y {         -108.056}
-set $m9-ViewWindow_0-view-eyep-z {          781.816}
-set $m9-ViewWindow_0-view-lookat-x {          93.7936}
-set $m9-ViewWindow_0-view-lookat-y {          106.806}
-set $m9-ViewWindow_0-view-lookat-z {         -1.05543}
-set $m9-ViewWindow_0-view-up-x {       -0.0172831}
-set $m9-ViewWindow_0-view-up-y {        -0.965119}
-set $m9-ViewWindow_0-view-up-z {        -0.261241}
-set $m9-ViewWindow_0-view-fov {               20}
-set $m9-ViewWindow_0-view-eyep_offset-x {}
-set $m9-ViewWindow_0-view-eyep_offset-y {}
-set $m9-ViewWindow_0-view-eyep_offset-z {}
-set $m9-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
-set $m9-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
-set $m9-ViewWindow_0-bgcolor-r {                0}
-set $m9-ViewWindow_0-bgcolor-g {                0}
-set $m9-ViewWindow_0-bgcolor-b {                0}
-set $m9-ViewWindow_0-shading {}
-set $m9-ViewWindow_0-do_stereo {0}
-set $m9-ViewWindow_0-ambient-scale {1.0}
-set $m9-ViewWindow_0-diffuse-scale {1.0}
-set $m9-ViewWindow_0-specular-scale {0.4}
-set $m9-ViewWindow_0-emission-scale {1.0}
-set $m9-ViewWindow_0-shininess-scale {1.0}
-set $m9-ViewWindow_0-polygon-offset-factor {1.0}
-set $m9-ViewWindow_0-polygon-offset-units {0.0}
-set $m9-ViewWindow_0-point-size {1.0}
-set $m9-ViewWindow_0-line-width {1.0}
-set $m9-ViewWindow_0-sbase {0.40}
-set $m9-ViewWindow_0-sr {1}
-set $m9-ViewWindow_0-do_bawgl {0}
-set $m9-ViewWindow_0-drawimg {}
-set $m9-ViewWindow_0-saveprefix {}
-set $m9-ViewWindow_0-resx {}
-set $m9-ViewWindow_0-resy {}
-set $m9-ViewWindow_0-aspect {}
-set $m9-ViewWindow_0-aspect_ratio {}
-set $m9-ViewWindow_0-global-light {0}
-set $m9-ViewWindow_0-global-fog {0}
-set $m9-ViewWindow_0-global-debug {0}
-set $m9-ViewWindow_0-global-clip {0}
-set $m9-ViewWindow_0-global-cull {0}
-set $m9-ViewWindow_0-global-dl {0}
-set $m9-ViewWindow_0-global-type {Gouraud}
-set $m9-ViewWindow_0-ortho-view {0}
-set $m9-ViewWindow_0-unused {1}
-set $m9-ViewWindow_0-unused {1}
-set $m9-ViewWindow_0-unused {1}
-set $m9-ViewWindow_0-unused {0}
+set $m9-copy {0}
 set $m10-notes {}
-set $m10-show_status {1}
+set $m10-nodes-on {0}
+set $m10-nodes-transparency {0}
+set $m10-nodes-as-disks {0}
+set $m10-edges-on {0}
+set $m10-edges-transparency {0}
+set $m10-faces-on {1}
+set $m10-use-normals {0}
+set $m10-use-transparency {0}
+set $m10-vectors-on {0}
+set $m10-normalize-vectors {}
+set $m10-has_vector_data {0}
+set $m10-bidirectional {0}
+set $m10-tensors-on {0}
+set $m10-has_tensor_data {0}
+set $m10-scalars-on {0}
+set $m10-scalars-transparency {0}
+set $m10-has_scalar_data {1}
+set $m10-text-on {0}
+set $m10-text-use-default-color {1}
+set $m10-text-color-r {1.0}
+set $m10-text-color-g {1.0}
+set $m10-text-color-b {1.0}
+set $m10-text-backface-cull {0}
+set $m10-text-fontsize {1}
+set $m10-text-precision {2}
+set $m10-text-render_locations {0}
+set $m10-text-show-data {1}
+set $m10-text-show-nodes {0}
+set $m10-text-show-edges {0}
+set $m10-text-show-faces {0}
+set $m10-text-show-cells {0}
+set $m10-def-color-r {0.5}
+set $m10-def-color-g {0.5}
+set $m10-def-color-b {0.5}
+set $m10-def-color-a {0.5}
+set $m10-node_display_type {Points}
+set $m10-edge_display_type {Lines}
+set $m10-data_display_type {Arrows}
+set $m10-tensor_display_type {Boxes}
+set $m10-scalar_display_type {Points}
+set $m10-active_tab {Nodes}
+set $m10-node_scale {0.0300}
+set $m10-edge_scale {0.0150}
+set $m10-vectors_scale {0.30}
+set $m10-tensors_scale {0.30}
+set $m10-scalars_scale {0.300}
+set $m10-show_progress {}
+set $m10-interactive_mode {Interactive}
+set $m10-field-name {}
+set $m10-field-name-update {1}
+set $m10-node-resolution {6}
+set $m10-edge-resolution {6}
+set $m10-data-resolution {6}
 set $m11-notes {}
-set $m11-show_status {1}
-set $m11-nodes-on {0}
-set $m11-nodes-transparency {0}
-set $m11-nodes-as-disks {0}
-set $m11-edges-on {0}
-set $m11-edges-transparency {0}
-set $m11-faces-on {1}
-set $m11-use-normals {0}
-set $m11-use-transparency {0}
-set $m11-vectors-on {0}
-set $m11-normalize-vectors {}
-set $m11-has_vector_data {0}
-set $m11-bidirectional {0}
-set $m11-arrow-heads-on {1}
-set $m11-tensors-on {0}
-set $m11-has_tensor_data {0}
-set $m11-text-on {0}
-set $m11-text-use-default-color {1}
-set $m11-text-color-r {1.0}
-set $m11-text-color-g {1.0}
-set $m11-text-color-b {1.0}
-set $m11-text-backface-cull {0}
-set $m11-text-fontsize {1}
-set $m11-text-precision {2}
-set $m11-text-render_locations {0}
-set $m11-text-show-data {1}
-set $m11-text-show-nodes {0}
-set $m11-text-show-edges {0}
-set $m11-text-show-faces {0}
-set $m11-text-show-cells {0}
-set $m11-def-color-r {0.5}
-set $m11-def-color-g {0.5}
-set $m11-def-color-b {0.5}
-set $m11-def-color-a {0.5}
-set $m11-node_display_type {Spheres}
-set $m11-edge_display_type {Lines}
-set $m11-data_display_type {Arrows}
-set $m11-tensor_display_type {Boxes}
-set $m11-active_tab {Faces}
-set $m11-node_scale {1.00}
-set $m11-edge_scale {0.0150}
-set $m11-vectors_scale {0.30}
-set $m11-tensors_scale {0.30}
-set $m11-show_progress {}
-set $m11-interactive_mode {OnExecute}
-set $m11-node-resolution {6}
-set $m11-edge-resolution {6}
-set $m11-data-resolution {6}
+set $m11-tcl_status {Calling GenStandardColorMaps!}
+set $m11-positionList {}
+set $m11-nodeList {}
+set $m11-width {532}
+set $m11-height {40}
+set $m11-mapType {0}
+set $m11-minRes {2}
+set $m11-resolution {256}
+set $m11-realres {256}
+set $m11-gamma {0}
 set $m12-notes {}
-set $m12-show_status {1}
-set $m12-lower_threshold {210}
-set $m12-upper_threshold {250}
-set $m12-curvature {1}
-set $m12-max_iterations {1200}
-set $m12-max_rms_change {0.02}
-set $m12-negative_features {0}
-set $m12-isovalue {127.5}
-set $m13-notes {}
-set $m13-show_status {1}
-set $m13-isFixed {0}
-set $m13-min {               -3}
-set $m13-max {                3}
-set $m13-makeSymmetric {0}
-set $m14-notes {}
-set $m14-show_status {1}
-set $m14-isoval {0.01621622}
-set $m14-isoval-min {               -3}
-set $m14-isoval-max {                3}
-set $m14-isoval-typed {0}
-set $m14-isoval-quantity {1}
-set $m14-quantity-range {colormap}
-set $m14-quantity-min {0}
-set $m14-quantity-max {100}
-set $m14-isoval-list {0.0 1.0 2.0 3.0}
-set $m14-extract-from-new-field {1}
-set $m14-algorithm {0}
-set $m14-build_trisurf {0}
-set $m14-np {1}
-set $m14-active-isoval-selection-tab {0}
-set $m14-active_tab {MC}
-set $m14-update_type {on release}
-set $m14-color-r {0.4}
-set $m14-color-g {0.2}
-set $m14-color-b {0.9}
-$m14 initialize_ui
+set $m12-isFixed {0}
+set $m12-min {0}
+set $m12-max {251}
+set $m12-makeSymmetric {0}
 
 ::netedit scheduleok
