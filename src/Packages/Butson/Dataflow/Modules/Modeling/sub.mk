@@ -24,28 +24,15 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/BioPSE/Dataflow/Modules/Forward
+SRCDIR   := Packages/Butson/Dataflow/Modules/Modeling
 
 
-SRCS     += $(SRCDIR)/ApplyFEMCurrentSource.cc\
-	    $(SRCDIR)/ApplyFEMVoltageSource.cc\
-	    $(SRCDIR)/BuildFEMatrixQuadratic.cc\
-	    $(SRCDIR)/ComputeCurrent.cc\
-	    $(SRCDIR)/ConfigureElectrode.cc\
-	    $(SRCDIR)/DipoleInSphere.cc\
-	    $(SRCDIR)/DipoleMatrixSourceRHSQuadratic.cc\
-	    $(SRCDIR)/FDMtoFEM.cc\
-	    $(SRCDIR)/InsertElectrodes.cc\
-	    $(SRCDIR)/InsertVoltageSource.cc\
-	    $(SRCDIR)/ModifyConductivities.cc\
-	    $(SRCDIR)/SetupBEMatrix.cc\
-	    $(SRCDIR)/SetupFEMatrix.cc\
+SRCS     += $(SRCDIR)/GenDistanceField.cc\
+	    $(SRCDIR)/MapDistanceField.cc\
 #[INSERT NEW CODE FILE HERE]	
 
 
-PSELIBS := Packages/BioPSE/Core/Datatypes \
-	Packages/BioPSE/Core/Algorithms/NumApproximation \
-	Dataflow/Network Dataflow/Ports \
+PSELIBS := Dataflow/Network Dataflow/Ports \
 	Core/Datatypes Core/Persistent Core/Containers \
 	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Geometry Core/GeomInterface Core/TkExtensions
