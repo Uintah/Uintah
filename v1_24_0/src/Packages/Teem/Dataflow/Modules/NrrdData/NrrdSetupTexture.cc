@@ -222,12 +222,19 @@ NrrdSetupTexture::execute()
   }
 
   bool valuesonly = valuesonly_.get();
-  if (valuesonly == false && !ShaderProgramARB::shaders_supported())
+  bool compute_gradmag = true;
+  if (!ShaderProgramARB::shaders_supported())
   {
-    warning("No shader support on this machine.  No normals generated.");
-    valuesonly = true;
+    remark("No shader support on this machine.");
+    remark(" No gradient magnitude generated.");
+    compute_gradmag = false;
+    if (valuesonly == false)
+    {
+      warning(" No normals generated.");
+      valuesonly = true;
+    }
   }
-
+      
   if (last_generation_ != nin_handle->generation)
   {
     // Set default values for min,max
@@ -244,7 +251,6 @@ NrrdSetupTexture::execute()
   const double minf = useinputmin_.get()?realmin_.get():minf_.get();
   const double maxf = useinputmax_.get()?realmax_.get():maxf_.get();
   
-  bool compute_gradmag = true;
   if (last_generation_ == nin_handle->generation &&
       last_minf_ == minf &&
       last_maxf_ == maxf &&
