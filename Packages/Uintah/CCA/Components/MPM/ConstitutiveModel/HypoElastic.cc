@@ -28,20 +28,12 @@ HypoElastic::HypoElastic(ProblemSpecP& ps)
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
   d_se=0;
-
-  p_statedata_label = scinew VarLabel("p.statedata_hypo",
-                                ParticleVariable<StateData>::getTypeDescription());
-  p_statedata_label_preReloc = scinew VarLabel("p.statedata_hypo+",
-                                ParticleVariable<StateData>::getTypeDescription());
 }
 
 HypoElastic::~HypoElastic()
 {
   // Destructor
 
-  delete p_statedata_label;
-  delete p_statedata_label_preReloc;
- 
 }
 
 void HypoElastic::initializeCMData(const Patch* patch,
@@ -56,8 +48,6 @@ void HypoElastic::initializeCMData(const Patch* patch,
 
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
-   ParticleVariable<StateData> statedata;
-   new_dw->allocate(statedata, p_statedata_label, pset);
    ParticleVariable<Matrix3> deformationGradient;
    new_dw->allocate(deformationGradient, lb->pDeformationMeasureLabel, pset);
    ParticleVariable<Matrix3> pstress;
@@ -69,7 +59,6 @@ void HypoElastic::initializeCMData(const Patch* patch,
       deformationGradient[*iter] = Identity;
       pstress[*iter] = zero;
    }
-   new_dw->put(statedata, p_statedata_label);
    new_dw->put(deformationGradient, lb->pDeformationMeasureLabel);
    new_dw->put(pstress, lb->pStressLabel);
 
@@ -77,11 +66,9 @@ void HypoElastic::initializeCMData(const Patch* patch,
 
 }
 
-void HypoElastic::addParticleState(std::vector<const VarLabel*>& from,
-				   std::vector<const VarLabel*>& to)
+void HypoElastic::addParticleState(std::vector<const VarLabel*>& ,
+				   std::vector<const VarLabel*>& )
 {
-   from.push_back(p_statedata_label);
-   to.push_back(p_statedata_label_preReloc);
 }
 
 void HypoElastic::computeStableTimestep(const Patch* patch,
@@ -92,15 +79,12 @@ void HypoElastic::computeStableTimestep(const Patch* patch,
    // are computed as a side-effect of computeStressTensor
   Vector dx = patch->dCell();
   int matlindex = matl->getDWIndex();
-  // Retrieve the array of constitutive parameters
   ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
-  ParticleVariable<StateData> statedata;
-  new_dw->get(statedata, p_statedata_label, pset);
-  ParticleVariable<double> pmass;
-  new_dw->get(pmass, lb->pMassLabel, pset);
-  ParticleVariable<double> pvolume;
-  new_dw->get(pvolume, lb->pVolumeLabel, pset);
+  ParticleVariable<double> pmass, pvolume;
   ParticleVariable<Vector> pvelocity;
+
+  new_dw->get(pmass,     lb->pMassLabel,     pset);
+  new_dw->get(pvolume,   lb->pVolumeLabel,   pset);
   new_dw->get(pvelocity, lb->pVelocityLabel, pset);
 
   double c_dil = 0.0;
@@ -108,8 +92,7 @@ void HypoElastic::computeStableTimestep(const Patch* patch,
 
   double G = d_initialData.G;
   double bulk = d_initialData.K;
-  for(ParticleSubset::iterator iter = pset->begin();
-      iter != pset->end(); iter++){
+  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
      particleIndex idx = *iter;
 
      // Compute wave speed at each particle, store the maximum
@@ -148,43 +131,30 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     // Create array for the particle position
     ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
     ParticleVariable<Point> px;
-    old_dw->get(px, lb->pXLabel, pset);
-
-    // Create array for the particle deformation
-    ParticleVariable<Matrix3> deformationGradient;
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-
-    // Create array for the particle stress
-    ParticleVariable<Matrix3> pstress;
-    old_dw->get(pstress, lb->pStressLabel, pset);
-
-    // Retrieve the array of constitutive parameters
-    ParticleVariable<StateData> statedata;
-    old_dw->get(statedata, p_statedata_label, pset);
-    ParticleVariable<double> pmass;
-    old_dw->get(pmass, lb->pMassLabel, pset);
-    ParticleVariable<double> pvolume;
-    old_dw->get(pvolume, lb->pVolumeLabel, pset);
+    ParticleVariable<Matrix3> deformationGradient, pstress;
+    ParticleVariable<double> pmass, pvolume, ptemperature;
     ParticleVariable<Vector> pvelocity;
-    old_dw->get(pvelocity, lb->pVelocityLabel, pset);
-    ParticleVariable<double> ptemperature;
-    old_dw->get(ptemperature, lb->pTemperatureLabel, pset);
-
     NCVariable<Vector> gvelocity;
+    delt_vartype delT;
+
+    old_dw->get(px,                  lb->pXLabel,                  pset);
+    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
+    old_dw->get(pstress,             lb->pStressLabel,             pset);
+    old_dw->get(pmass,               lb->pMassLabel,               pset);
+    old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
+    old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
+    old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
 
     new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,patch,
 		Ghost::AroundCells, 1);
-    delt_vartype delT;
+
     old_dw->get(delT, lb->delTLabel);
 
     double G = d_initialData.G;
     double bulk = d_initialData.K;
-    // Unused variable - Steve
-    // double Cp0 = matl->getSpecificHeat();
-    //  cout << "Cp0 = " << Cp0 << endl;
 
     for(ParticleSubset::iterator iter = pset->begin();
-	iter != pset->end(); iter++){
+					iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
       velGrad.set(0.0);
@@ -236,8 +206,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 	       D(3,3)*OldStress(3,3) +
 	       2.*(D(1,2)*OldStress(1,2) +
 		   D(1,3)*OldStress(1,3) +
-		   D(2,3)*OldStress(2,3))
-	       )*pvolume[idx]*delT;
+		   D(2,3)*OldStress(2,3))) * pvolume[idx]*delT;
 
       // Compute wave speed at each particle, store the maximum
 
@@ -256,47 +225,30 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new),lb->delTLabel);
-    new_dw->put(pstress, lb->pStressAfterStrainRateLabel);
-    new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
-
-    // Put the strain energy in the data warehouse
-    new_dw->put(sum_vartype(d_se), lb->StrainEnergyLabel);
-
-    // This is updated
-    new_dw->put(statedata, p_statedata_label_preReloc);
-    // Store deformed volume
-    new_dw->put(pvolume,lb->pVolumeDeformedLabel);
+    new_dw->put(pstress,               lb->pStressAfterStrainRateLabel);
+    new_dw->put(deformationGradient,   lb->pDeformationMeasureLabel_preReloc);
+    new_dw->put(sum_vartype(d_se),     lb->StrainEnergyLabel);
+    new_dw->put(pvolume,               lb->pVolumeDeformedLabel);
   }
 }
 
 void HypoElastic::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
-					 const PatchSet* patches) const
+					 const PatchSet* ) const
 {
-#if 0
-   task->requires(old_dw, lb->pXLabel, matl->getDWIndex(), patch,
-                  Ghost::None);
-   task->requires(old_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch,
-                  Ghost::None);
-   task->requires(old_dw, p_statedata_label, matl->getDWIndex(),  patch,
-                  Ghost::None);
-   task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),  patch,
-                  Ghost::None);
-   task->requires(old_dw, lb->pVolumeLabel, matl->getDWIndex(),  patch,
-                  Ghost::None);
-   task->requires(old_dw, lb->pTemperatureLabel, matl->getDWIndex(),  patch,
-                  Ghost::None);
-   task->requires(new_dw, lb->gMomExedVelocityLabel, matl->getDWIndex(), patch,
-                  Ghost::AroundCells, 1);
-   task->requires(old_dw, lb->delTLabel);
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pMassLabel,              matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pTemperatureLabel,       matlset,Ghost::None);
+  task->requires(Task::NewDW, lb->gMomExedVelocityLabel,   matlset,
+                 Ghost::AroundCells, 1);
+  task->requires(Task::OldDW, lb->delTLabel);
 
-   task->computes(new_dw, lb->pStressAfterStrainRateLabel, matl->getDWIndex(),  patch);
-   task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
-   task->computes(new_dw, p_statedata_label_preReloc, matl->getDWIndex(),  patch);
-   task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
-#else
-   NOT_FINISHED("new task stuff");
-#endif
+  task->computes(lb->pStressAfterStrainRateLabel,       matlset);
+  task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
+  task->computes(lb->pVolumeDeformedLabel,              matlset);
 }
 
 #ifdef __sgi
@@ -306,6 +258,7 @@ void HypoElastic::addComputesAndRequires(Task* task,
 
 namespace Uintah {
 
+#if 0
 static MPI_Datatype makeMPI_CMData()
 {
    ASSERTEQ(sizeof(HypoElastic::StateData), sizeof(double)*2);
@@ -325,7 +278,6 @@ const TypeDescription* fun_getTypeDescription(HypoElastic::StateData*)
    }
    return td;
 }
+#endif
 
 } // End namespace Uintah
-
-
