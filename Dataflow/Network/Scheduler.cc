@@ -51,6 +51,21 @@
 using namespace SCIRun;
 using namespace std;
 
+
+struct SerialSet
+{
+  unsigned int base;
+  int size;
+  int callback_count;
+
+  SerialSet(unsigned int base, int s) :
+    base(base), size(s), callback_count(0)
+  {}
+};
+
+static SerialSet *serialset = 0;
+
+
 Scheduler::Scheduler(Network* net)
   : net(net), first_schedule(true), schedule(true),
     mailbox("NetworkEditor request FIFO", 100)
@@ -58,9 +73,11 @@ Scheduler::Scheduler(Network* net)
   net->attach(this);
 }
 
+
 Scheduler::~Scheduler()
 {
 }
+
 
 bool
 Scheduler::toggleOnOffScheduling()
@@ -69,21 +86,24 @@ Scheduler::toggleOnOffScheduling()
   return schedule;  
 }
 
+
 void
 Scheduler::run()
 {
-  // Go into Main loop...
+  // Go into Main loop.
   do_scheduling(0);
   main_loop();
 }
 
-void Scheduler::main_loop()
+
+void
+Scheduler::main_loop()
 {
-  // Dispatch events...
+  // Dispatch events.
   int done=0;
   while(!done){
     MessageBase* msg=mailbox.receive();
-    // Dispatch message....
+    // Dispatch message..
     switch(msg->type){
     case MessageTypes::MultiSend:
       {
@@ -108,39 +128,52 @@ void Scheduler::main_loop()
   };
 }
 
-void Scheduler::request_multisend(OPort* p1)
+
+void
+Scheduler::request_multisend(OPort* p1)
 {
   mailbox.send(new Module_Scheduler_Message(p1));
 }
 
-void Scheduler::multisend(OPort* oport)
+
+void
+Scheduler::multisend(OPort* oport)
 {
   int nc=oport->nconnections();
-  for(int c=0;c<nc;c++){
+  for (int c=0;c<nc;c++)
+  {
     Connection* conn=oport->connection(c);
     IPort* iport=conn->iport;
     Module* m=iport->get_module();
-    if(!m->need_execute){
+    if (!m->need_execute)
+    {
       m->need_execute=true;
     }
   }
 }
 
-void Scheduler::do_scheduling(Module* exclude)
+
+void
+Scheduler::do_scheduling(Module* exclude)
 {
   if(!schedule)
     return;
+
   int nmodules=net->nmodules();
   queue<Module *> needexecute;		
 
   // build queue of module ptrs to execute
   int i;			    
-  for(i=0;i<nmodules;i++){
+  for(i=0;i<nmodules;i++)
+  {
     Module* module=net->module(i);
     if(module->need_execute)
+    {
       needexecute.push(module);
+    }
   }
-  if(needexecute.empty()){
+  if(needexecute.empty())
+  {
     return;
   }
 
@@ -150,42 +183,54 @@ void Scheduler::do_scheduling(Module* exclude)
   // the queue of those to execute based on dataflow dependencies.
 
   vector<Connection*> to_trigger;
-  while(!needexecute.empty()){
+  while (!needexecute.empty())
+  {
     Module* module = needexecute.front();
     needexecute.pop();
     // Add oports
     int no=module->numOPorts();
     int i;
-    for(i=0;i<no;i++){
+    for (i=0;i<no;i++)
+    {
       OPort* oport=module->getOPort(i);
       int nc=oport->nconnections();
-      for(int c=0;c<nc;c++){
+      for (int c=0;c<nc;c++)
+      {
 	Connection* conn=oport->connection(c);
 	IPort* iport=conn->iport;
 	Module* m=iport->get_module();
-	if(m != exclude && !m->need_execute){
+	if (m != exclude && !m->need_execute)
+        {
 	  m->need_execute=1;
 	  needexecute.push(m);
 	}
       }
     }
 
-    // Now, look upstream...
+    // Now, look upstream.
     int ni=module->numIPorts();
-    for(i=0;i<ni;i++){
+    for (i=0;i<ni;i++)
+    {
       IPort* iport=module->getIPort(i);
-      if(iport->nconnections()){
+      if(iport->nconnections())
+      {
 	Connection* conn=iport->connection(0);
 	OPort* oport=conn->oport;
 	Module* m=oport->get_module();
-	if(!m->need_execute){
-	  if(m != exclude){
-	    if(module->sched_class != Module::ViewerSpecial){
+	if (!m->need_execute)
+        {
+	  if (m != exclude)
+          {
+	    if (module->sched_class != Module::ViewerSpecial)
+            {
 	      // If this oport already has the data, add it
-	      // to the to_trigger list...
-	      if(oport->have_data()){
+	      // to the to_trigger list.
+	      if(oport->have_data())
+              {
 		to_trigger.push_back(conn);
-	      } else {
+	      }
+              else
+              {
 		m->need_execute=true;
 		needexecute.push(m);
 	      }
@@ -196,25 +241,40 @@ void Scheduler::do_scheduling(Module* exclude)
     }
   }
 
-  // Trigger the ports in the trigger list...
-  for(i=0;i<(int)(to_trigger.size());i++) {
+  // Trigger the ports in the trigger list.
+  for (i=0; i<(int)(to_trigger.size()); i++)
+  {
     Connection* conn=to_trigger[i];
     OPort* oport=conn->oport;
     Module* module=oport->get_module();
-    if(module->need_execute){
-      // Executing this module, don't actually trigger....
+    if(module->need_execute)
+    {
+      // Executing this module, don't actually trigger.
     }
-    else {
+    else
+    {
       module->mailbox.send(scinew Scheduler_Module_Message(conn));
     }
   }
 
-  // Trigger any modules that need executing...
-  for(i=0;i<nmodules;i++){
+  // Trigger any modules that need executing.
+  // Lock serialid?
+  unsigned int serial_base = 0;
+  if (nmodules)
+  {
+    static unsigned int serialid = 1;
+    if (serialid > 0x0FFFFFFF) serialid = 1;
+    serial_base = serialid;
+    serialid += nmodules;
+    serialset = scinew SerialSet(serial_base, nmodules);
+  }
+  // Unlock serialid?
+  for(i=0;i<nmodules;i++)
+  {
     Module* module=net->module(i);
-    if(module->need_execute){
-
-      module->mailbox.send(scinew Scheduler_Module_Message);
+    if(module->need_execute)
+    {
+      module->mailbox.send(scinew Scheduler_Module_Message(serial_base + i));
       module->need_execute=0;
     }
   }
@@ -225,13 +285,28 @@ void Scheduler::do_scheduling()
   mailbox.send(new Module_Scheduler_Message());
 }
 
-Scheduler_Module_Message::Scheduler_Module_Message()
-: MessageBase(MessageTypes::ExecuteModule)
+void
+Scheduler::report_execution_finished(unsigned int serial)
+{
+  if (serial >= serialset->base &&
+      serial < serialset->base + serialset->size)
+  {
+    serialset->callback_count++;
+    if (serialset->callback_count == serialset->size-1)
+    {
+      cout << "EXECUTION DONE (except viewer)\n";
+    }
+  }
+}
+
+
+Scheduler_Module_Message::Scheduler_Module_Message(unsigned int s)
+  : MessageBase(MessageTypes::ExecuteModule), conn(NULL), serial(s)
 {
 }
 
 Scheduler_Module_Message::Scheduler_Module_Message(Connection* conn)
-: MessageBase(MessageTypes::TriggerPort), conn(conn)
+  : MessageBase(MessageTypes::TriggerPort), conn(conn), serial(0)
 {
 }
 

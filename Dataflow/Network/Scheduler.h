@@ -77,6 +77,9 @@ namespace SCIRun {
  
     void do_scheduling();
     void request_multisend(OPort*);
+
+    void report_execution_finished(unsigned int serial);
+
   private:
     virtual void run();
     void main_loop();
@@ -86,7 +89,8 @@ namespace SCIRun {
   class Scheduler_Module_Message : public MessageBase {
   public:
     Connection* conn;
-    Scheduler_Module_Message();
+    unsigned int serial;
+    Scheduler_Module_Message(unsigned int serial);
     Scheduler_Module_Message(Connection* conn);
     virtual ~Scheduler_Module_Message();
   };
