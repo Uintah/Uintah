@@ -69,8 +69,8 @@ public:
   // behavior
   virtual int pick1 (int x, int y, int w, int h) = 0;
   virtual int pick2 (int x, int y, int w, int h, int m) = 0;
-  virtual void move (int obj, int x, int y, int w, int h) = 0;
-  virtual void release (int obj, int x, int y, int w, int h) = 0;
+  virtual void move (int x, int y, int w, int h) = 0;
+  virtual void release (int x, int y, int w, int h) = 0;
 
   virtual std::string tcl_pickle() = 0;
   virtual void tcl_unpickle(const std::string &p) = 0;
@@ -78,34 +78,40 @@ public:
   void select(int obj) { selected_ = obj; }
   void unselect_all() { selected_ = 0; }
   Color color() const { return color_; }
-  void set_color(const Color &c) { color_ = c; }
+  virtual void set_color(const Color &c) { color_ = c; }
   float alpha() const { return alpha_; }
   void set_alpha(float a);
   virtual void set_value_range(double, double) {};
 
   virtual void io(Piostream &stream) = 0;
   static PersistentTypeID type_id;
-
+  string &	name() { return name_; }
+  virtual string	tk_cursorname(int) { return "left_ptr"; };
 protected:
-  void selectcolor(int obj);
 
-  Color line_color_;
-  float line_alpha_;
-  Color selected_color_;
-  float selected_alpha_;
-  float thin_line_width_;
-  float thick_line_width_;
-  float point_size_;
-  Color color_;
-  float alpha_;
-  int selected_;
-  int shadeType_;
-  int onState_;
-  HSVColor last_hsv_;
-  double value_min_;
-  double value_scale_;
-  double pan_x_;
-  double pan_y_;
+  virtual void		selectcolor(int obj);
+  virtual void		draw_thick_gl_line(double x1, double y1, 
+					   double x2, double y2,
+					   double r, double g, double b);
+  virtual void		draw_thick_gl_point(double x1, double y1,
+					    double r, double g, double b);
+
+  string	name_;
+  Color		line_color_;
+  float		line_alpha_;
+  Color		selected_color_;
+  float		selected_alpha_;
+  float		thin_line_width_;
+  float		thick_line_width_;
+  float		point_size_;
+  Color		color_;
+  float		alpha_;
+  int		selected_;
+  int		shadeType_;
+  int		onState_;
+  HSVColor	last_hsv_;
+  double	value_min_;
+  double	value_scale_;
 };
 
 typedef LockingHandle<CM2Widget> CM2WidgetHandle;
@@ -130,8 +136,8 @@ public:
   // behavior
   virtual int pick1 (int x, int y, int w, int h);
   virtual int pick2 (int x, int y, int w, int h, int m);
-  virtual void move (int obj, int x, int y, int w, int h);
-  virtual void release (int obj, int x, int y, int w, int h);
+  virtual void move (int x, int y, int w, int h);
+  virtual void release (int x, int y, int w, int h);
 
   virtual void set_value_range(double min, double scale);
 
@@ -141,6 +147,7 @@ public:
   virtual void io(Piostream &stream);
   static PersistentTypeID type_id;
 
+  virtual string	tk_cursorname(int obj);
 protected:
   float base_;
   float top_x_, top_y_;
@@ -177,8 +184,9 @@ public:
   // behavior
   virtual int pick1 (int x, int y, int w, int h);
   virtual int pick2 (int x, int y, int w, int h, int m);
-  virtual void move (int obj, int x, int y, int w, int h);
-  virtual void release (int obj, int x, int y, int w, int h);
+  virtual void move (int x, int y, int w, int h);
+  virtual void release (int x, int y, int w, int h);
+  virtual string	tk_cursorname(int obj);
 
   virtual void set_value_range(double min, double scale);
   
@@ -218,8 +226,8 @@ public:
   // behavior
   virtual int pick1 (int x, int y, int w, int h) { return 0;}
   virtual int pick2 (int x, int y, int w, int h, int m) { return 0;}
-  virtual void move (int obj, int x, int y, int w, int h) {}
-  virtual void release (int obj, int x, int y, int w, int h) {}
+  virtual void move (int x, int y, int w, int h) {}
+  virtual void release (int x, int y, int w, int h) {}
   
   virtual std::string tcl_pickle() {return "i";}
   virtual void tcl_unpickle(const std::string &/*p*/) {}
@@ -258,8 +266,8 @@ public:
   // behavior
   virtual int pick1 (int x, int y, int w, int h) { return 0;}
   virtual int pick2 (int x, int y, int w, int h, int m) { return 0;}
-  virtual void move (int obj, int x, int y, int w, int h) {}
-  virtual void release (int obj, int x, int y, int w, int h) {}
+  virtual void move (int x, int y, int w, int h) {}
+  virtual void release (int x, int y, int w, int h) {}
   
   virtual std::string tcl_pickle() {return "i";}
   virtual void tcl_unpickle(const std::string &/*p*/) {}
@@ -269,7 +277,8 @@ public:
 
   Segments &	get_segments() { return segments_; }
   void		set_dirty(bool dirty){ dirty_ = dirty; }
-
+  virtual void	set_color(const Color &c) { color_ = c; dirty_ = true; }
+  virtual void	set_shadeType(int type) { shadeType_ = type; dirty_ = true; }
 protected:
   // nrrdSpatialResample ...
   void				line(Array3<float> &, int, int, int, int);
