@@ -65,7 +65,7 @@ namespace Volume {
 
 struct UndoItem
 {
-  enum Action { UNDO_SELECT, UNDO_MOVE, UNDO_ADD, UNDO_DELETE, UNDO_COLOR };
+  enum Action { UNDO_CHANGE, UNDO_ADD, UNDO_DELETE };
 
   int action_;
   int selected_;
@@ -238,7 +238,7 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
     Color c(widgets_[n]->color());
     if (r != c.r() || g != c.g() || b != c.b() || a != widgets_[n]->alpha())
     {
-      undo_stack_.push(UndoItem(UndoItem::UNDO_COLOR, n,
+      undo_stack_.push(UndoItem(UndoItem::UNDO_CHANGE, n,
 				widgets_[n]->clone()));
       update_from_gui();
     }
@@ -336,11 +336,7 @@ EditTransferFunc2::undo()
     
     switch (item.action_)
     {
-    case UndoItem::UNDO_SELECT:
-      pick_widget_ = item.selected_;
-      break;
-      
-    case UndoItem::UNDO_MOVE:
+    case UndoItem::UNDO_CHANGE:
       delete widgets_[item.selected_];
       widgets_[item.selected_] = item.widget_;
       gui_update = true;
@@ -354,12 +350,6 @@ EditTransferFunc2::undo()
    
     case UndoItem::UNDO_DELETE:
       widgets_.insert(widgets_.begin() + item.selected_, item.widget_);
-      gui_update = true;
-      break;
-      
-    case UndoItem::UNDO_COLOR:
-      delete widgets_[item.selected_];
-      widgets_[item.selected_] = item.widget_;
       gui_update = true;
       break;
     }
@@ -541,7 +531,7 @@ EditTransferFunc2::motion(int x, int y)
   {
     if (first_motion_)
     {
-      undo_stack_.push(UndoItem(UndoItem::UNDO_MOVE, pick_widget_,
+      undo_stack_.push(UndoItem(UndoItem::UNDO_CHANGE, pick_widget_,
 				widgets_[pick_widget_]->clone()));
       first_motion_ = false;
     }
