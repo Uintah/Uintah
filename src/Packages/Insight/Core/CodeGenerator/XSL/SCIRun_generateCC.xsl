@@ -95,10 +95,10 @@ DECLARE_MAKER(<xsl:value-of select="/filter/filter-sci/@name"/>)
 #include &lt;Core/Malloc/Allocator.h&gt;
 #include &lt;Core/GuiInterface/GuiVar.h&gt;
 #include &lt;Packages/Insight/share/share.h&gt;
-<xsl:for-each select="/filter/filter-sci/includes/include">
+<xsl:for-each select="/filter/filter-sci/includes/file">
 #include &lt;<xsl:value-of select="."/>&gt;
 </xsl:for-each>
-<xsl:for-each select="/filter/filter-itk/includes/include">
+<xsl:for-each select="/filter/filter-itk/includes/file">
 #include &lt;<xsl:value-of select="."/>&gt;
 </xsl:for-each>
 </xsl:template>
@@ -342,9 +342,17 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 
   // get filter output
   <xsl:for-each select="/filter/filter-itk/outputs/output">
+  <xsl:variable name="const"><xsl:value-of select="call/@const"/></xsl:variable>
   <xsl:variable name="name"><xsl:value-of select="value"/></xsl:variable>
   <xsl:variable name="output"><!-- hard coded datatype -->ITKDatatype</xsl:variable>
+  <xsl:choose>
+  <xsl:when test="$const = 'yes'">
+  out<xsl:value-of select="@num"/>_->data_ = const_cast&lt;<xsl:value-of select="value"/>*  &gt;(filter-><xsl:value-of select="call"/>());
+  </xsl:when>
+  <xsl:otherwise>
   out<xsl:value-of select="@num"/>_->data_ = filter-><xsl:value-of select="call"/>();
+  </xsl:otherwise>
+  </xsl:choose>
   outhandle<xsl:value-of select="@num"/>_ = out<xsl:value-of select="@num"/>_; 
   </xsl:for-each>
   return true;
