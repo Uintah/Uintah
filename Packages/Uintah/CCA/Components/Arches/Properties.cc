@@ -135,6 +135,7 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
   if (d_reactingFlow) {
     tsk->computes(d_lab->d_tempINLabel);
     tsk->computes(d_lab->d_co2INLabel);
+    tsk->computes(d_lab->d_h2oINLabel);
     tsk->computes(d_lab->d_enthalpyRXNLabel);
     if (d_mixingModel->getNumRxnVars())
       tsk->computes(d_lab->d_reactscalarSRCINLabel);
@@ -196,6 +197,7 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
   if (d_reactingFlow) {
     tsk->computes(d_lab->d_tempINLabel);
     tsk->computes(d_lab->d_co2INLabel);
+    tsk->computes(d_lab->d_h2oINLabel);
     tsk->computes(d_lab->d_enthalpyRXNLabel);
     if (d_mixingModel->getNumRxnVars())
       tsk->computes(d_lab->d_reactscalarSRCINLabel);
@@ -285,11 +287,13 @@ Properties::computeProps(const ProcessorGroup*,
 
     CCVariable<double> temperature;
     CCVariable<double> co2;
+    CCVariable<double> h2o;
     CCVariable<double> enthalpyRXN;
     CCVariable<double> reactscalarSRC;
     if (d_reactingFlow) {
       new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel, matlIndex, patch);
       new_dw->allocateAndPut(co2, d_lab->d_co2INLabel, matlIndex, patch);
+      new_dw->allocateAndPut(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
       new_dw->allocateAndPut(enthalpyRXN, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
       if (d_mixingModel->getNumRxnVars()) {
 	new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
@@ -390,6 +394,7 @@ Properties::computeProps(const ProcessorGroup*,
 	  if (d_reactingFlow) {
 	    temperature[currCell] = outStream.getTemperature();
 	    co2[currCell] = outStream.getCO2();
+	    h2o[currCell] = outStream.getH2O();
 	    enthalpyRXN[currCell] = outStream.getEnthalpy();
 	    if (d_mixingModel->getNumRxnVars())
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
@@ -502,12 +507,14 @@ Properties::reComputeProps(const ProcessorGroup*,
     CCVariable<double> temperature;
     CCVariable<double> new_density;
     CCVariable<double> co2;
+    CCVariable<double> h2o;
     CCVariable<double> enthalpy;
     CCVariable<double> reactscalarSRC;
     CCVariable<double> drhodf;
     if (d_reactingFlow) {
       new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel, matlIndex, patch);
       new_dw->allocateAndPut(co2, d_lab->d_co2INLabel, matlIndex, patch);
+      new_dw->allocateAndPut(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
       new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
       if (d_mixingModel->getNumRxnVars()) {
 	new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
@@ -623,6 +630,7 @@ Properties::reComputeProps(const ProcessorGroup*,
 	  if (d_reactingFlow) {
 	    temperature[currCell] = outStream.getTemperature();
 	    co2[currCell] = outStream.getCO2();
+	    h2o[currCell] = outStream.getH2O();
 	    enthalpy[currCell] = outStream.getEnthalpy();
 	    if (d_mixingModel->getNumRxnVars())
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
@@ -813,6 +821,7 @@ Properties::sched_computePropsPred(SchedulerP& sched, const PatchSet* patches,
   if (d_reactingFlow) {
     tsk->computes(d_lab->d_tempINPredLabel);
     tsk->computes(d_lab->d_co2INPredLabel);
+    tsk->computes(d_lab->d_h2oINPredLabel);
     tsk->computes(d_lab->d_enthalpyRXNPredLabel);
     if (d_mixingModel->getNumRxnVars())
       tsk->computes(d_lab->d_reactscalarSRCINPredLabel);
@@ -851,6 +860,7 @@ Properties::computePropsPred(const ProcessorGroup*,
     CCVariable<double> temperature;
     CCVariable<double> new_density;
     CCVariable<double> co2;
+    CCVariable<double> h2o;
     CCVariable<double> enthalpy;
     CCVariable<double> reactscalarSRC;
     CCVariable<double> drhodf;
@@ -858,6 +868,7 @@ Properties::computePropsPred(const ProcessorGroup*,
     if (d_reactingFlow) {
       new_dw->allocateAndPut(temperature, d_lab->d_tempINPredLabel, matlIndex, patch);
       new_dw->allocateAndPut(co2, d_lab->d_co2INPredLabel, matlIndex, patch);
+      new_dw->allocateAndPut(h2o, d_lab->d_h2oINPredLabel, matlIndex, patch);
       new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpyRXNPredLabel, matlIndex, patch);
       if (d_mixingModel->getNumRxnVars()) {
 	new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINPredLabel,
@@ -971,6 +982,7 @@ Properties::computePropsPred(const ProcessorGroup*,
 	  if (d_reactingFlow) {
 	    temperature[currCell] = outStream.getTemperature();
 	    co2[currCell] = outStream.getCO2();
+	    h2o[currCell] = outStream.getH2O();
 	    enthalpy[currCell] = outStream.getEnthalpy();
 	    if (d_mixingModel->getNumRxnVars())
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
@@ -1102,6 +1114,7 @@ Properties::sched_computePropsInterm(SchedulerP& sched, const PatchSet* patches,
   if (d_reactingFlow) {
     tsk->computes(d_lab->d_tempINIntermLabel);
     tsk->computes(d_lab->d_co2INIntermLabel);
+    tsk->computes(d_lab->d_h2oINIntermLabel);
     tsk->computes(d_lab->d_enthalpyRXNIntermLabel);
     if (d_mixingModel->getNumRxnVars())
       tsk->computes(d_lab->d_reactscalarSRCINIntermLabel);
@@ -1140,6 +1153,7 @@ Properties::computePropsInterm(const ProcessorGroup*,
     CCVariable<double> temperature;
     CCVariable<double> new_density;
     CCVariable<double> co2;
+    CCVariable<double> h2o;
     CCVariable<double> enthalpy;
     CCVariable<double> reactscalarSRC;
     CCVariable<double> drhodf;
@@ -1147,6 +1161,7 @@ Properties::computePropsInterm(const ProcessorGroup*,
     if (d_reactingFlow) {
       new_dw->allocateAndPut(temperature, d_lab->d_tempINIntermLabel, matlIndex, patch);
       new_dw->allocateAndPut(co2, d_lab->d_co2INIntermLabel, matlIndex, patch);
+      new_dw->allocateAndPut(h2o, d_lab->d_h2oINIntermLabel, matlIndex, patch);
       new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpyRXNIntermLabel, matlIndex, patch);
       if (d_mixingModel->getNumRxnVars()) {
 	new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINIntermLabel,
@@ -1260,6 +1275,7 @@ Properties::computePropsInterm(const ProcessorGroup*,
 	  if (d_reactingFlow) {
 	    temperature[currCell] = outStream.getTemperature();
 	    co2[currCell] = outStream.getCO2();
+	    h2o[currCell] = outStream.getH2O();
 	    enthalpy[currCell] = outStream.getEnthalpy();
 	    if (d_mixingModel->getNumRxnVars())
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
