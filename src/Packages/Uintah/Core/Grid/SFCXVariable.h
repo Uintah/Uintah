@@ -423,6 +423,12 @@ WARNING
   SFCXVariable<T>::SFCXVariable()
   {
   }
+
+  template<class T>
+  SFCXVariable<T>::SFCXVariable(const SFCXVariable<T>& copy)
+    : Array3<T>(copy)
+  {
+  }
    
   template<class T>
   void
