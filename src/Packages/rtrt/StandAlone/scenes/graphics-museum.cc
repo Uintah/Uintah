@@ -474,6 +474,73 @@ void add_pedestal_and_label (Group* obj_group, Group* glass_group,Group* fake_gr
 
 }
 
+/* stadium pedestal has no top */
+void add_stadium_pedestal (Group* obj_group, Group* glass_group,Group* fake_group,
+			     char* sign_name, const Point UpperCorner, 
+			     const Vector FarDir, float sign_ratio, Scene *scene) {
+  Material* ped_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-pill.ppm",
+					  ImageMaterial::Tile,
+					  ImageMaterial::Tile, 1,
+					  Color(0,0,0), 0);
+  Vector u (FarDir.x()/2., 0, 0);
+  Vector v (0,FarDir.y()/2.,0);
+  Vector w (0,0,FarDir.z()/2.);
+  
+  Point OppUppCorner = UpperCorner+u+u+v+v;
+  // sides
+  glass_group->add(new Rect(ped_white, UpperCorner+u+w, -u, w));
+  glass_group->add(new Rect(ped_white, UpperCorner+v+w, -v, w));
+  glass_group->add(new Rect(ped_white, OppUppCorner-u+w, u, w));  
+  glass_group->add(new Rect(ped_white, OppUppCorner-v+w, v, w));
+
+  BBox ped_bbox;
+  ped_bbox.extend (UpperCorner);
+  ped_bbox.extend (OppUppCorner+w+w);
+  fake_group->add(new Box(ped_white,ped_bbox.min(),ped_bbox.max())); 
+
+  Light *l1=new Light(UpperCorner-u*3-v*3-w*2,Color(1.,1.,1.),0,0.3);
+  Light *l2=new Light(UpperCorner-u*3+v*5-w*2,Color(1.,1.,1.),0,0.3);
+  Light *l3=new Light(UpperCorner+u*5-v*3-w*2,Color(1.,1.,1.),0,0.3);
+  Light *l4=new Light(UpperCorner+u*5+v*5-w*2,Color(1.,1.,1.),0,0.3);
+  scene->add_per_matl_light(l1);
+  scene->add_per_matl_light(l2);
+  scene->add_per_matl_light(l3);
+  scene->add_per_matl_light(l4);
+  ped_white->my_lights.add(l1);
+  ped_white->my_lights.add(l2);
+  ped_white->my_lights.add(l3);
+  ped_white->my_lights.add(l4);
+
+#if IMGSONWALL
+  Material* sign = new ImageMaterial(sign_name, ImageMaterial::Tile,
+				     ImageMaterial::Tile, 1, Color(0,0,0), 0);
+  // signs on all sides
+  const float part = 0.8;
+  Vector part_u=u*part*2;
+  Vector part_v=v*part*2;
+  Vector half_u=u*(1-part);
+  Vector half_v=v*(1-part);
+  Vector small_w=w*0.1;
+
+  Vector sign_height (0,0,(FarDir.x()<0?FarDir.x():-FarDir.x())*0.5*part*sign_ratio);
+
+  obj_group->add(new Parallelogram(sign, UpperCorner-Vector(0,FarDir.y()*0.01,0)+half_u+small_w, 
+				   part_u, sign_height));  
+  obj_group->add(new Parallelogram(sign, UpperCorner+v+v-Vector(FarDir.x()*0.01,0,0)-half_v+small_w, 
+				   -part_v, sign_height)); 
+  obj_group->add(new Parallelogram(sign, OppUppCorner+Vector(0,FarDir.y()*0.01,0)-half_u+small_w, 
+				   -part_u, sign_height));  
+  obj_group->add(new Parallelogram(sign, OppUppCorner-v-v+Vector(FarDir.x()*0.01,0,0)+half_v+small_w, 
+				   part_v, sign_height));  
+
+  sign->my_lights.add(l1);
+  sign->my_lights.add(l2);
+  sign->my_lights.add(l3);
+  sign->my_lights.add(l4);
+#endif
+
+}
+
 void add_pedestal (Group* obj_group, const Point UpperCorner, 
 		   const Vector FarDir, Scene *scene) {
   Material* ped_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-pill.ppm",
@@ -2281,7 +2348,11 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
 
 #ifdef INSERT_BUDDHA
   int buddha_cells=5;
+#if INSERTHUGEMODELS
   int buddha_depth=2;
+#else
+  int buddha_depth=1;
+#endif
 
   //  printf ("\n\n*********************************\n\n");
   Transform buddhaT (Point(0,0,0),
@@ -2630,7 +2701,7 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   double stadium_ht = 1.2;
   Point stadium_centerpt(-14,-10,stadium_ht);
   double stadium_radius = 1;
-  add_pedestal_and_label (moderng,no_shadow_group,no_draw_group,
+  add_stadium_pedestal (moderng,no_shadow_group,no_draw_group,
 			  "/usr/sci/data/Geometry/textures/museum/modern/pillar-text/stadium.ppm",
 			  stadium_centerpt-Vector(stadium_radius,stadium_radius,0),
 			  Vector(2*stadium_radius,2*stadium_radius,-stadium_ht),sign_ratio,scene);
