@@ -15,7 +15,8 @@ SRCS     += $(SRCDIR)/Downsample.cc \
 	$(SRCDIR)/MergeTensor.cc $(SRCDIR)/OpenGL_Ex.cc \
 	$(SRCDIR)/SFRGfile.cc $(SRCDIR)/TracePath.cc \
 	$(SRCDIR)/TrainSeg2.cc $(SRCDIR)/TrainSegment.cc \
-	$(SRCDIR)/TransformField.cc $(SRCDIR)/GenField.cc
+	$(SRCDIR)/TransformField.cc $(SRCDIR)/GenField.cc \
+	$(SRCDIR)/ShowGeometry.cc
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
 	SCICore/Persistent SCICore/Exceptions SCICore/Thread \
@@ -27,6 +28,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2.2.3  2000/09/21 04:34:29  mcole
+# initial checkin of showGeometry module
+#
 # Revision 1.2.2.2  2000/09/11 16:17:49  kuehne
 # updates to field redesign
 #
