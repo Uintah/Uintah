@@ -620,7 +620,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         cpsum += cp;
         masssum += mass;
         ncells++;
-        double newTemp = oldTemp[c] + eloss/(cp*mass);
+        double newTemp = oldTemp[c] + erelease/(cp*mass);
         if(newTemp > maxTemp)
           maxTemp = newTemp;
         if(flameTemp[c] > maxFlameTemp)
@@ -631,8 +631,10 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         if(dtemp < maxDecrease)
           maxDecrease = dtemp;
       }
+#if 0
       if(flag)
         cerr << "PASSED!!!!!!!!!!!!!!!!!!!!!!!!\n";
+#endif
       cerr << "MaxTemp = " << maxTemp << ", maxFlameTemp=" << maxFlameTemp << ", maxIncrease=" << maxIncrease << ", maxDecrease=" << maxDecrease << ", totalEnergy=" << totalEnergy << '\n';
       double cp = cpsum/ncells;
       double mass = masssum/ncells;
