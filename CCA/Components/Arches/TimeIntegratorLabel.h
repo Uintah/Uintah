@@ -490,7 +490,7 @@ namespace Uintah {
 	}
       }; 
 
-    ~TimeIntegratorLabel();
+    ~TimeIntegratorLabel() {};
 
     private:
     TimeIntegratorLabel(const TimeIntegratorLabel&);

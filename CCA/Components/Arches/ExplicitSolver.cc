@@ -64,6 +64,7 @@ ExplicitSolver(const ArchesLabel* label,
   d_scalarSolver = 0;
   d_reactingScalarSolver = 0;
   d_enthalpySolver = 0;
+  nosolve_timelabels_allocated = false;
 }
 
 // ****************************************************************************
@@ -76,6 +77,10 @@ ExplicitSolver::~ExplicitSolver()
   delete d_scalarSolver;
   delete d_reactingScalarSolver;
   delete d_enthalpySolver;
+  for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
+    delete d_timeIntegratorLabels[curr_level];
+  if (nosolve_timelabels_allocated)
+    delete nosolve_timelabels;
 }
 
 // ****************************************************************************
@@ -216,7 +221,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   }
 #endif
 
-  int numTimeIntegratorLevels;
   if (d_timeIntegratorType == "FE")
     numTimeIntegratorLevels = 1;
   else if ((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "RK2SSP"))
@@ -335,8 +339,9 @@ int ExplicitSolver::noSolve(const LevelP& level,
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
   // use FE timelabels for nosolve
-  TimeIntegratorLabel* nosolve_timelabels = scinew TimeIntegratorLabel(d_lab,
+  nosolve_timelabels = scinew TimeIntegratorLabel(d_lab,
 					    TimeIntegratorStepType::FE);
+  nosolve_timelabels_allocated = true;
 
   //initializes and allocates vars for new_dw
   // set initial guess

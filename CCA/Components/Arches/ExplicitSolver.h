@@ -227,6 +227,9 @@ private:
       PhysicalConstants* d_physicalConsts;
 
     std::vector<TimeIntegratorLabel* > d_timeIntegratorLabels;
+    TimeIntegratorLabel* nosolve_timelabels;
+    int numTimeIntegratorLevels;
+    bool nosolve_timelabels_allocated;
 
 }; // End class ExplicitSolver
 } // End namespace Uintah
