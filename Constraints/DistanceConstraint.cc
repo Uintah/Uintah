@@ -60,9 +60,10 @@ DistanceConstraint::Satisfy( const Index index, const Scheme scheme )
 	 v = guess;
       else
 	 v.normalize();
-      if (v2.Get().x() < minimum)
+      if (v2.Get().x() < minimum) {
 	 t = minimum;
-      else
+	 v2.Assign(Point(t, 0, 0), scheme);
+      } else
 	 t = v2.Get().x();
       v0.Assign(v1.Get() + (v * t), scheme);
       break;
@@ -72,9 +73,10 @@ DistanceConstraint::Satisfy( const Index index, const Scheme scheme )
 	 v = guess;
       else
 	 v.normalize();
-      if (v2.Get().x() < minimum)
+      if (v2.Get().x() < minimum) {
 	 t = minimum;
-      else
+	 v2.Assign(Point(t, 0, 0), scheme);
+      } else
 	 t = v2.Get().x();
       v1.Assign(v0.Get() + (v * t), scheme);
       break;

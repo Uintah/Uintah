@@ -48,12 +48,11 @@ public:
    void Set( const Point& newValue, const Scheme s = DefaultScheme );
    void SetDelta( const Vector& deltaValue, const Scheme s = DefaultScheme );
    // Widgets use these to move whole widget.
-   // i.e. don't change constraints!!
+   // i.e. they don't change constraints!!
    inline void Move( const Point& newValue );
    inline void MoveDelta( const Vector& deltaValue );
    
    inline const Point& Get() const;
-   inline Point* GetRef();
    inline void SetEpsilon( const Real epsilon );
    inline Real GetEpsilon() const;
    
@@ -219,13 +218,6 @@ inline const Point&
 Variable::Get() const
 {
    return value;
-}
-
-
-inline Point*
-Variable::GetRef()
-{
-   return &value;
 }
 
 
