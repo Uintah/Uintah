@@ -25,7 +25,6 @@
 #include <Containers/HashTable.h>
 #include <Containers/FastHashTable.h>
 #include <Containers/BitArray1.h>
-#include <Containers/PQueue.h>
 
 namespace SCIRun {
 
@@ -37,7 +36,6 @@ TestTable test_table[] = {
     {"Array3", Array3<int>::test_rigorous, 0},
 //  {"HashTable", HashTable<char*, int>::test_rigorous, 0},
     {"FastHashTable", FastHashTable<int>::test_rigorous, 0},
-    {"PQueue", &PQueue::test_rigorous, 0},
     {0,0,0}
 
 };

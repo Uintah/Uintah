@@ -23,7 +23,6 @@ SRCDIR   := Core/Containers
 
 SRCS     += $(SRCDIR)/Sort.cc \
 	    $(SRCDIR)/StringUtil.cc \
-	    $(SRCDIR)/PQueue.cc \
 	    $(SRCDIR)/TrivialAllocator.cc \
 	    $(SRCDIR)/templates.cc \
             $(SRCDIR)/ConsecutiveRangeSet.cc
