@@ -482,9 +482,6 @@ void FractureMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
   if(d_with_ice){
     t->requires(Task::NewDW, lb->gradPAccNCLabel,   Ghost::None);
   }
-  if(d_with_arches){
-    t->requires(Task::NewDW, lb->AccArchesNCLabel,  Ghost::None);
-  }
 
   // for Fracture
   t->requires(Task::NewDW, lb->GMassLabel,          Ghost::None);
@@ -516,9 +513,6 @@ void FractureMPM::scheduleSolveHeatEquations(SchedulerP& sched,
   t->modifies(             lb->gInternalHeatRateLabel,               mss);
   t->requires(Task::NewDW, lb->gThermalContactHeatExchangeRateLabel, gnone);
 		
-  if(d_with_arches){
-    t->requires(Task::NewDW, lb->heaTranSolid_NCLabel, gnone);
-  }
 
   // for Fracture
   t->requires(Task::NewDW, lb->GMassLabel,                           gnone);
@@ -1644,7 +1638,6 @@ void FractureMPM::solveEquationsMotion(const ProcessorGroup*,
       constNCVariable<Vector> internalforce;
       constNCVariable<Vector> externalforce;
       constNCVariable<Vector> gradPAccNC;  // for MPMICE
-      constNCVariable<Vector> AccArchesNC; // for MPMArches
       constNCVariable<double> mass;
  
       new_dw->get(internalforce, lb->gInternalForceLabel, dwi, patch, gnone, 0);
@@ -1658,15 +1651,6 @@ void FractureMPM::solveEquationsMotion(const ProcessorGroup*,
 	 new_dw->allocateTemporary(gradPAccNC_create,  patch);
 	 gradPAccNC_create.initialize(Vector(0.,0.,0.));
 	 gradPAccNC = gradPAccNC_create; // reference created data
-      }
-      if(d_with_arches){
-         new_dw->get(AccArchesNC,lb->AccArchesNCLabel,    dwi, patch, gnone, 0);
-      }
-      else{
-  	 NCVariable<Vector> AccArchesNC_create;
-	 new_dw->allocateTemporary(AccArchesNC_create,  patch);
-	 AccArchesNC_create.initialize(Vector(0.,0.,0.));
-	 AccArchesNC = AccArchesNC_create; // reference created data	 
       }
 
 //    Uncomment to use damping
@@ -1695,25 +1679,25 @@ void FractureMPM::solveEquationsMotion(const ProcessorGroup*,
          // for primary field
          acceleration[c] =
                  (internalforce[c] + externalforce[c])/mass[c] +
-                 gravity + gradPAccNC[c] + AccArchesNC[c];
+                 gravity + gradPAccNC[c];
          // for additional field
          Gacceleration[c] =
                  (Ginternalforce[c] + Gexternalforce[c])/Gmass[c] +
-                 gravity + gradPAccNC[c] + AccArchesNC[c];
+                 gravity + gradPAccNC[c];
 //         acceleration[c] =
 //            (internalforce[c] + externalforce[c]
 //                                        -1000.*velocity[c]*mass[c])/mass[c]
-//                                + gravity + gradPAccNC[c] + AccArchesNC[c];
+//                                + gravity + gradPAccNC[c];
        }
     }
   }
 }
 
 void FractureMPM::solveHeatEquations(const ProcessorGroup*,
-				   const PatchSubset* patches,
-				   const MaterialSubset* ,
-				   DataWarehouse* /*old_dw*/,
-				   DataWarehouse* new_dw)
+				     const PatchSubset* patches,
+				     const MaterialSubset* ,
+				     DataWarehouse* /*old_dw*/,
+				     DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1730,7 +1714,6 @@ void FractureMPM::solveHeatEquations(const ProcessorGroup*,
       constNCVariable<double> mass,externalHeatRate,gvolume;
       constNCVariable<double> thermalContactHeatExchangeRate;
       NCVariable<double> internalHeatRate;
-      constNCVariable<double> htrate_gasNC; // for MPMArches
             
       new_dw->get(mass,    lb->gMassLabel,      dwi, patch, Ghost::None, 0);
       new_dw->get(gvolume, lb->gVolumeLabel,    dwi, patch, Ghost::None, 0);
@@ -1759,18 +1742,6 @@ void FractureMPM::solveHeatEquations(const ProcessorGroup*,
                   lb->GThermalContactHeatExchangeRateLabel,
                                                 dwi, patch, Ghost::None, 0);
 
-      if (d_with_arches) {
-	new_dw->get(htrate_gasNC,lb->heaTranSolid_NCLabel,    
-		    dwi, patch, Ghost::None, 0);
-      }
-      else{
-	NCVariable<double> htrate_gasNC_create;
-	new_dw->allocateTemporary(htrate_gasNC_create, patch);				  
-
-	htrate_gasNC_create.initialize(0.0);
-	htrate_gasNC = htrate_gasNC_create; // reference created data
-      }
-
       int n8or27=flags->d_8or27;
       MPMBoundCond bc;
       bc.setBoundaryCondition(patch,dwi,"Temperature",internalHeatRate,
@@ -1787,9 +1758,7 @@ void FractureMPM::solveHeatEquations(const ProcessorGroup*,
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
           IntVector c = *iter;
-	  tempRate[c] = (internalHeatRate[c]
-		      +  externalHeatRate[c]
-	              +  htrate_gasNC[c]) /
+	  tempRate[c] = (internalHeatRate[c]  +  externalHeatRate[c]) /
    		        (mass[c] * specificHeat) + 
                          thermalContactHeatExchangeRate[c];
       }

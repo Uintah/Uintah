@@ -72,7 +72,6 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
   d_with_ice    = false;
-  d_with_arches = false;
   contactModel        = 0;
   thermalContactModel = 0;
   d_min_part_mass = 3.e-15;
@@ -723,9 +722,6 @@ void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
   if(d_with_ice){
     t->requires(Task::NewDW, lb->gradPAccNCLabel,   Ghost::None);
   }
-  if(d_with_arches){
-    t->requires(Task::NewDW, lb->AccArchesNCLabel,  Ghost::None);
-  }
 
   t->computes(lb->gAccelerationLabel);
   sched->addTask(t, patches, matls);
@@ -750,11 +746,6 @@ void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gExternalHeatRateLabel,               gnone);
   t->modifies(             lb->gInternalHeatRateLabel,               mss);
   t->requires(Task::NewDW, lb->gThermalContactHeatExchangeRateLabel, gnone);
-                
-  if(d_with_arches){
-    t->requires(Task::NewDW, lb->heaTranSolid_NCLabel, gnone);
-  }
-                
   t->computes(lb->gTemperatureRateLabel);
 
   sched->addTask(t, patches, matls);
@@ -1997,12 +1988,11 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       constNCVariable<Vector> internalforce;
       constNCVariable<Vector> externalforce;
       constNCVariable<Vector> gradPAccNC;  // for MPMICE
-      constNCVariable<Vector> AccArchesNC; // for MPMArches
       constNCVariable<double> mass;
  
-      new_dw->get(internalforce, lb->gInternalForceLabel, dwi, patch, gnone, 0);
-      new_dw->get(externalforce, lb->gExternalForceLabel, dwi, patch, gnone, 0);
-      new_dw->get(mass,          lb->gMassLabel,          dwi, patch, gnone, 0);
+      new_dw->get(internalforce,lb->gInternalForceLabel, dwi, patch, gnone, 0);
+      new_dw->get(externalforce,lb->gExternalForceLabel, dwi, patch, gnone, 0);
+      new_dw->get(mass,         lb->gMassLabel,          dwi, patch, gnone, 0);
       if(d_with_ice){
         new_dw->get(gradPAccNC, lb->gradPAccNCLabel,     dwi, patch, gnone, 0);
       }
@@ -2011,15 +2001,6 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
         new_dw->allocateTemporary(gradPAccNC_create,  patch);
         gradPAccNC_create.initialize(Vector(0.,0.,0.));
         gradPAccNC = gradPAccNC_create; // reference created data
-      }
-      if(d_with_arches){
-        new_dw->get(AccArchesNC,lb->AccArchesNCLabel,    dwi, patch, gnone, 0);
-      }
-      else{
-        NCVariable<Vector> AccArchesNC_create;
-        new_dw->allocateTemporary(AccArchesNC_create,  patch);
-        AccArchesNC_create.initialize(Vector(0.,0.,0.));
-        AccArchesNC = AccArchesNC_create; // reference created data      
       }
 
       //Uncomment to use damping
@@ -2038,12 +2019,12 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
         Vector acc(0.0,0.0,0.0);
 	//if (mass[c] > 1.0e-199)
 	  acc = (internalforce[c] + externalforce[c])/mass[c] ;
-        acceleration[c] = acc +
-          gravity + gradPAccNC[c] + AccArchesNC[c];
+        acceleration[c] = acc +  gravity + gradPAccNC[c];
+
 //                 acceleration[c] =
 //                    (internalforce[c] + externalforce[c]
 //                    -5000.*velocity[c]*mass[c])/mass[c]
-//                    + gravity + gradPAccNC[c] + AccArchesNC[c];
+//                    + gravity + gradPAccNC[c];
       }
     }
   }
@@ -2070,7 +2051,6 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
       constNCVariable<double> mass,externalHeatRate,gvolume;
       constNCVariable<double> thermalContactHeatExchangeRate;
       NCVariable<double> internalHeatRate;
-      constNCVariable<double> htrate_gasNC; // for MPMArches
             
       new_dw->get(mass,    lb->gMassLabel,      dwi, patch, Ghost::None, 0);
       new_dw->get(gvolume, lb->gVolumeLabel,    dwi, patch, Ghost::None, 0);
@@ -2082,18 +2062,6 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
       new_dw->get(thermalContactHeatExchangeRate,
                   lb->gThermalContactHeatExchangeRateLabel,
                   dwi, patch, Ghost::None, 0);
-
-      if (d_with_arches) {
-        new_dw->get(htrate_gasNC,lb->heaTranSolid_NCLabel,    
-                    dwi, patch, Ghost::None, 0);
-      }
-      else{
-        NCVariable<double> htrate_gasNC_create;
-        new_dw->allocateTemporary(htrate_gasNC_create, patch);                            
-
-        htrate_gasNC_create.initialize(0.0);
-        htrate_gasNC = htrate_gasNC_create; // reference created data
-      }
 
       MPMBoundCond bc;
       bc.setBoundaryCondition(patch,dwi,"Temperature",internalHeatRate,
@@ -2108,8 +2076,7 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
       for(NodeIterator iter=patch->getNodeIterator(n8or27);!iter.done();iter++){
         IntVector c = *iter;
         tempRate[c] = internalHeatRate[c]*((mass[c]-1.e-200)/mass[c]) +  
-                      (externalHeatRate[c]+ htrate_gasNC[c])/(mass[c]*Cv) + 
-                      thermalContactHeatExchangeRate[c];
+	  (externalHeatRate[c])/(mass[c]*Cv)+thermalContactHeatExchangeRate[c];
       }
     }
   }
