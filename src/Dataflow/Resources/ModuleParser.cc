@@ -34,14 +34,15 @@ ModuleParser::startElement( const XMLCh * const uri,
     info_->package_ = package_->name_;
     info_->name_ = XMLString::transcode(attrs.getValue( t_name ) );
     info_->maker_ = "make_"+ info_->name_;
-    info_->ui_ = info_->name_+".tcl";
 
     // backward compatibility
     string cat = XMLString::transcode(attrs.getValue(t_cat));
+    info_->categories_.push_back( info_->package_ );
     info_->categories_.push_back(cat);
     info_->libs_.push_back( package_->lib_path_+"_Modules_"+ cat + ".so" );
 
     info_->id_ = package_->name_+ "_" + cat+"_" + info_->name_;
+    info_->ui_ =  package_->name_+ "_" + cat+"_" + info_->name_;
     resources_->modules_[info_->id_] = info_;
   }
   else if ( tag == "inputs" ) {
