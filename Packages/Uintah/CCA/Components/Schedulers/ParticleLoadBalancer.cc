@@ -57,14 +57,13 @@ public:
 ParticleLoadBalancer::ParticleLoadBalancer(const ProcessorGroup* myworld)
    : LoadBalancerCommon(myworld)
 {
-  //need to compensate for restarts
   d_lbInterval = 0.0;
   d_lastLbTime = 0.0;
   d_lbTimestepInterval = 0;
   d_lastLbTimestep = 0;
 
   d_dynamicAlgorithm = static_lb;  
-  d_state = initLoadBalance;
+  d_state = checkLoadBalance;
   d_do_AMR = false;
   d_pspec = 0;
 }
@@ -281,7 +280,7 @@ bool ParticleLoadBalancer::assignPatchesParticle(const GridP& grid)
             if (allParticles[neighbor->getID()].assigned || neighbor == patch)
               continue;
             float myGuess = patch_costs[p] + patch_costs[neighbor->getID()];
-            if (abs(myGuess-target) < abs(best-target)) {
+            if (fabs(myGuess-target) < fabs(best-target)) {
               best = myGuess;
               bestIndex = neighbor->getID();
             }
@@ -338,8 +337,8 @@ bool ParticleLoadBalancer::assignPatchesParticle(const GridP& grid)
       }
 
       if (currentProc > 0) {
-        int optimal_procs = totalCost/((origTotalCost-totalCost)/currentProc)
-          + currentProc;
+        int optimal_procs = (totalCost /
+          ((origTotalCost - totalCost) / currentProc) +  currentProc);
         dbg << "This simulation would probably perform better on " 
             << optimal_procs << "-" << optimal_procs+1 << " processors\n";
         dbg << "  or rather - origCost " << origTotalCost << ", costLeft " 
@@ -537,7 +536,16 @@ bool
 ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/, 
 				    const GridP& grid)
 {
-  if (d_dynamicAlgorithm == static_lb)
+  if (d_state == restartLoadBalance) {
+    // on a restart, nothing happens on the first execute, and then a recompile
+    // happens, but we already have the LB set up how we want from restart
+    // initialize, so do nothing here
+    d_state = postLoadBalance;
+    d_lastLbTime = d_sharedState->getElapsedTime();
+    d_lastLbTimestep = d_sharedState->getCurrentTopLevelTimeStep();
+    return false;
+  }
+  if (d_dynamicAlgorithm == static_lb && d_state != postLoadBalance)
     // should only happen on the first timestep, and we need to do this on a
     // restart
     return d_state != idle; 
@@ -581,8 +589,10 @@ ParticleLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl)
 {
   // here we need to grab the uda data to reassign patch data to the 
   // processor that will get the data
-  for (unsigned i = 0; i < d_processorAssignment.size(); i++)
-    d_processorAssignment[i]= -1;
+  dbg << " PLB: restartInitialize\n";
+  d_state = restartLoadBalance;
+  for (unsigned i = 0; i < d_oldAssignment.size(); i++)
+    d_oldAssignment[i]= -1;
 
   ASSERT(pspec != 0);
   ProblemSpecP datanode = pspec->findBlock("Data");
@@ -615,9 +625,9 @@ ParticleLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl)
             int patchid;
             if(!r->get("patch", patchid) && !r->get("region", patchid))
               throw InternalError("Cannot get patch id");
-            if (d_processorAssignment[patchid] == -1) {
+            if (d_oldAssignment[patchid] == -1) {
               // assign the patch to the processor
-              d_processorAssignment[patchid] = procnum % d_myworld->size();
+              d_oldAssignment[patchid] = procnum % d_myworld->size();
             }
           }
         }            
@@ -625,8 +635,16 @@ ParticleLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl)
       }
     }
   }
-  for (unsigned i = 0; i < d_processorAssignment.size(); i++)
-    ASSERT(d_processorAssignment[i] != -1);
+  for (unsigned i = 0; i < d_oldAssignment.size(); i++)
+    ASSERT(d_oldAssignment[i] != -1);
+  if (dbg.active()) {
+    if (d_myworld->myrank() == 0) {
+      dbg << d_myworld->myrank() << " POST RESTART\n";
+      for (unsigned i = 0; i < d_processorAssignment.size(); i++) {
+        dbg <<d_myworld-> myrank() << " patch " << i << " -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") - " << d_processorAssignment.size() << ' ' << d_oldAssignment.size() << "\n";
+      }
+    }
+  }
 }
 
 void 
