@@ -1285,7 +1285,7 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
   }
 
   bool vec_color = false;
-  if (fld->basis_order() != 1)
+  if (!(fld->basis_order() == 1 || mesh->dimensionality() == 0))
   {
     use_default_material = true;
   }
