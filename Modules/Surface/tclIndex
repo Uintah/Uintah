@@ -6,6 +6,8 @@
 # element name is the name of a command and the value is
 # a script that loads the command.
 
-set auto_index(GenSurface) "source $dir/GenSurface.tcl"
 set auto_index(AugmentSurf) "source $dir/AugmentSurf.tcl"
+set auto_index(GenSurface) "source $dir/GenSurface.tcl"
+set auto_index(LabelSurface) "source $dir/LabelSurface.tcl"
+set auto_index(RescaleSurface) "source $dir/RescaleSurface.tcl"
 set auto_index(SurfToGeom) "source $dir/SurfToGeom.tcl"
