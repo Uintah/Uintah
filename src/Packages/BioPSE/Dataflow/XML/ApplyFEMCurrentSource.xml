@@ -83,12 +83,12 @@
 	<componentname>FieldReader</componentname>
       </port>
       <port>
-	<name>Interpolant</name>
+	<name>Mapping</name>
 	<description>
 	  <p>Maps electrode indices to mesh indices</p>
 	</description>
-	<datatype>SCIRun::Field</datatype>
-	<componentname>FieldReader</componentname>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>MatrixReader</componentname>
       </port>
       <port>
 	<name>Input RHS</name>
