@@ -216,26 +216,18 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
         } 
       }   
       if (numMatls > 1 ) {
-        if( count > 0)  {
            vol_frac_CC[*iter]= count/totalppc;       
-	}  //Bracket goes here for only -ice problems..cheese. 
            press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
            vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
            rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
            sp_vol_CC[*iter]  = 1.0/rho_micro[*iter];
-           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] + SMALL_NUM;
+           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +SMALL_NUM;
            temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
            speedSound[*iter] = d_speed_of_sound;
            visc_CC[*iter]    = d_viscosity;
            IveBeenHere[*iter]= obj; 
-	   // } //Bracket goes here for MPMICE problems  this is cheese
-           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();  
-           press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
-           rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
-           sp_vol_CC[*iter]  = 1.0/rho_micro[*iter];
-           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
       }    
-    }  // Loop over domain
+   }  // Loop over domain
     /*`==========DEBUGGING==========*/
 #if 0
     ICE* d_ice;
