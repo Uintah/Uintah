@@ -171,9 +171,12 @@ void usage(const std::string& badarg, const std::string& progname)
   exit(1);
 }
 
-
 int main(int argc, char** argv)
 {
+  if (argc <= 1)
+    // Print out the usage and die
+    usage("", argv[0]);
+
   /*
    * Default values
    */
@@ -208,7 +211,6 @@ int main(int argc, char** argv)
   unsigned long time_step_inc = 1;
   bool tslow_set = false;
   bool tsup_set = false;
-  bool tsinc_set = false;
   int tskip = 1;
   string i_xd;
   string filebase;
@@ -321,12 +323,14 @@ int main(int argc, char** argv)
       tsup_set = true;
     } else if (s == "-timestepinc") {
       time_step_inc = strtoul(argv[++i],(char**)NULL,10);
-      tsinc_set = true;
     } else if( (s == "-help") || (s == "-h") ) {
       usage( "", argv[0] );
+    } else if( filebase == "") {
+      filebase = argv[i];
+    } else {
+      usage( s, argv[0]);
     }
   }
-  filebase = argv[argc-1];
 
   if(filebase == ""){
     cerr << "No archive file specified\n";
@@ -841,7 +845,7 @@ int main(int argc, char** argv)
 			      }
 			    break;
 			    default:
-			      cerr << "CC Variable of unknown type: " << subtype->getType() << endl;
+			      cerr << "CC Variable of unknown type: " << subtype->getName() << endl;
 			      break;
 			    } //end of switch (subtype->getType()): 12
 			  } //end of if(matlsIndex == matl): 11
@@ -1086,7 +1090,7 @@ int main(int argc, char** argv)
 		    }
 		  break;
 		  default:
-		    cerr << "Particle Variable of unknown type: " << subtype->getType() << endl;
+		    cerr << "Particle Variable of unknown type: " << subtype->getName() << endl;
 		    break;
 		  }
 		  break;
@@ -1197,7 +1201,7 @@ int main(int argc, char** argv)
 		    }
 		  break;
 		  default:
-		    cerr << "NC Variable of unknown type: " << subtype->getType() << endl;
+		    cerr << "NC Variable of unknown type: " << subtype->getName() << endl;
 		    break;
 		  }
 		  break;
@@ -1340,7 +1344,7 @@ int main(int argc, char** argv)
 		    }
 		  break;
 		  default:
-		    cerr << "CC Variable of unknown type: " << subtype->getType() << endl;
+		    cerr << "CC Variable of unknown type: " << subtype->getName() << endl;
 		    break;
 		  }
 		  break;
@@ -1578,7 +1582,7 @@ int main(int argc, char** argv)
 		  //__________________________________
 		  //  BULLET PROOFING
 		default:
-		  cerr << "Variable of unknown type: " << td->getType() << endl;
+		  cerr << "Variable of unknown type: " << td->getName() << endl;
 		  break;
 		}
 	      }
@@ -1818,7 +1822,7 @@ int main(int argc, char** argv)
 		  }
 		break;
 		default:
-		  cerr << "Particle Variable of unknown type: " << subtype->getType() << endl;
+		  cerr << "Particle Variable of unknown type: " << subtype->getName() << endl;
 		  break;
 		}
 		break;
@@ -1993,7 +1997,7 @@ int main(int argc, char** argv)
 		  }
 		break;
 		default:
-		  cerr << "Particle Variable of unknown type: " << subtype->getType() << endl;
+		  cerr << "Particle Variable of unknown type: " << subtype->getName() << endl;
 		  break;
 		}
 		break;
@@ -2279,8 +2283,10 @@ int main(int argc, char** argv)
 		      {
 			ParticleVariable<Point> value;
 			da->query(value, var, matl, patch, time);
-			
+
+			//cout << __LINE__ << ":var = ("<<var<<") for material index "<<matl<<"\n";
 			if (var == "p.x") {
+			  //cout << "Found p.x!\n";
 			  material_data.p_x.copyPointer(value);
 			} else {
 			  material_data.pv_point_list.push_back(value);
@@ -2302,7 +2308,7 @@ int main(int argc, char** argv)
 		      }
 		    break;
 		    default:
-		      cerr << "Particle Variable of unknown type: " << subtype->getType() << endl;
+		      cerr << __LINE__ << ":Particle Variable of unknown type: " << subtype->getName() << endl;
 		      break;
 		    }
 		    break;
@@ -2415,7 +2421,7 @@ int main(int argc, char** argv)
 		    }
 		  break;
 		  default:
-		    cerr << "NC variable of unknown type: " << subtype->getType() << endl;
+		    cerr << "NC variable of unknown type: " << subtype->getName() << endl;
 		    break;
 		  }
 		  break;
@@ -2527,12 +2533,12 @@ int main(int argc, char** argv)
 		    }
 		  break;
 		  default:
-		    cerr << "CC variable of unknown type: " << subtype->getType() << endl;
+		    cerr << "CC variable of unknown type: " << subtype->getName() << endl;
 		    break;
 		  }
 		  break;
 		default:
-		  cerr << "Variable of unknown type: " << td->getType() << endl;
+		  cerr << "Variable of unknown type: " << td->getName() << endl;
 		  break;
 		} // end switch(td->getType())
 		if (matl < (int)material_data_list.size())
@@ -2561,7 +2567,8 @@ int main(int argc, char** argv)
 		//cerr << "First md = " << m << endl;
 		ParticleSubset* pset = md.p_x.getParticleSubset();
 		if (!pset) {
-		  cerr << "No particle location variable found\n";
+		  cerr << __LINE__ << ":No particle location variable found for material index "<<m<<"\n";
+		  continue;
 		  abort();
 		}
 		int numParticles = pset->numParticles();
@@ -2614,7 +2621,8 @@ int main(int argc, char** argv)
 		// a little redundant, but may not have been cought
 		// by the previous section
 		if (!pset) {
-		  cerr << "No particle location variable found\n";
+		  cerr << __LINE__ << ":No particle location variable found\n";
+		  continue;
 		  abort();
 		}
 		
