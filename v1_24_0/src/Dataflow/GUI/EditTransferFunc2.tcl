@@ -479,23 +479,27 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
 	    $w.controls.load $w.controls.save \
             -padx 8 -pady 4 -fill x -expand yes -side left
 	
-        frame $w.swatchcontrol
-        button $w.swatchcontrol.saveButton -text "QuickSave" \
-	    -command "$this swatch_save" -width 20
-        button $w.swatchcontrol.delButton -text "Delete Swatch" \
-	    -command "$this swatch_delete" -width 20
-        pack $w.swatchcontrol.saveButton $w.swatchcontrol.delButton
+	if 0 {
+	    frame $w.swatchcontrol
+	    button $w.swatchcontrol.saveButton -text "QuickSave" \
+		-command "$this swatch_save" -width 20
+	    button $w.swatchcontrol.delButton -text "Delete Swatch" \
+		-command "$this swatch_delete" -width 20
+	    pack $w.swatchcontrol.saveButton $w.swatchcontrol.delButton
+	}
 	
 	
         pack [label_widget_columns $w.title]  -fill x -padx 2 -pady 2
         pack $w.widgets -side top -fill both -expand yes -padx 2
         pack $w.controls -fill x 
-        pack $w.swatchcontrol -side top -fill x
-        pack $w.swatchpicker -side top -fill both -expand yes -padx 2
         
 	add_frame [$w.widgets childsite]
         create_entries
-        create_swatches
+	if 0 {
+	    pack $w.swatchcontrol -side top -fill x
+	    pack $w.swatchpicker -side top -fill both -expand yes -padx 2
+	    create_swatches
+	}
 
         makeSciButtonPanel $w $w $this "\"Reset\" \"$this-c reset_gui\" \"\""
         moveToCursor $w
