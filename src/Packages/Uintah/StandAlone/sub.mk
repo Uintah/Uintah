@@ -6,6 +6,9 @@ SUBDIRS := $(SRCDIR)/tools
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
+##############################################
+# sus
+
 SRCS := $(SRCDIR)/sus.cc
 
 ifeq ($(CC),newmpxlc)
@@ -87,6 +90,9 @@ endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+##############################################
+# puda
+
 SRCS := $(SRCDIR)/puda.cc
 PROGRAM := Packages/Uintah/StandAlone/puda
 
@@ -114,10 +120,54 @@ LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+##############################################
+# timeextract
+
 SRCS := $(SRCDIR)/timeextract.cc
 PROGRAM := Packages/Uintah/StandAlone/timeextract
 
 include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
+# uda2nrrd
+
+ifeq ($(findstring Teem, $(LOAD_PACKAGE)),Teem)
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Datflow Packages/Uintah
+else
+  PSELIBS := \
+        Packages/Uintah/Core/Exceptions    \
+        Packages/Uintah/Core/Grid          \
+        Packages/Uintah/Core/Math          \
+        Packages/Uintah/Core/Disclosure    \
+        Packages/Uintah/Core/ProblemSpec   \
+        Packages/Uintah/Core/Disclosure    \
+        Packages/Uintah/Core/DataArchive   \
+	Packages/Uintah/CCA/Ports          \
+	Packages/Teem/Dataflow/Modules/DataIO \
+	Core/Persistent   \
+	Core/Datatypes    \
+	Core/Geom         \
+	Core/Util         \
+	Core/Exceptions  \
+        Core/Geometry    \
+        Core/Thread      \
+        Core/Util        \
+        Core/OS          \
+        Core/Containers
+endif
+
+LIBS := $(TEEM_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY)
+
+SRCS := $(SRCDIR)/uda2nrrd.cc
+PROGRAM := Packages/Uintah/StandAlone/uda2nrrd
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+endif
+
+##############################################
+# compare_uda
 
 SRCS := $(SRCDIR)/compare_uda.cc
 PROGRAM := Packages/Uintah/StandAlone/compare_uda
@@ -145,6 +195,9 @@ LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+##############################################
+# restart_merger
+
 SRCS := $(SRCDIR)/restart_merger.cc
 PROGRAM := Packages/Uintah/StandAlone/restart_merger
 ifeq ($(LARGESOS),yes)
@@ -170,6 +223,9 @@ endif
 LIBS    := $(XML_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
+# gambitFileReader
 
 SRCS := $(SRCDIR)/gambitFileReader.cc
 PROGRAM := Packages/Uintah/StandAlone/gambitFileReader
