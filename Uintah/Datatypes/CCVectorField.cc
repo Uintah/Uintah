@@ -26,7 +26,7 @@ CCVectorField::CCVectorField(const CCVectorField& copy)
   :VectorFieldRG( copy ), grid(copy.grid), level(copy.level),
     _varname(copy._varname), _matIndex(copy._matIndex)
 {
-  for(int i = 0; i < copy._vars.size(); i++){
+  for(int i = 0; i < (int)copy._vars.size(); i++){
     _vars.push_back( copy._vars[i] );
   }
 }
@@ -39,7 +39,7 @@ CCVectorField::CCVectorField(GridP grid, LevelP level,
   : VectorFieldRG(), grid(grid), level(level),
     _varname(var), _matIndex(mat)
 {
-  for(int i = 0; i < vars.size(); i++){
+  for(int i = 0; i < (int)vars.size(); i++){
     _vars.push_back( vars[i]);
   }
 }
@@ -127,7 +127,7 @@ int CCVectorField::interpolate(const Point& p, Vector& value)
     }
   }
 
-  if (i >= _vars.size() || r == level->patchesEnd() )
+  if (i >= (int)_vars.size() || r == level->patchesEnd() )
     return 0;
   
   value = _vars[i][index];

@@ -29,7 +29,7 @@ CCTensorField::CCTensorField(const CCTensorField& copy)
    high(copy.high), low(copy.low), nx(copy.nx),
    ny(copy.ny), nz(copy.nz)
 {
-  for(int i = 0; i < copy._vars.size(); i++){
+  for(int i = 0; i < (int)copy._vars.size(); i++){
     _vars.push_back( copy._vars[i] );
   }
 }
@@ -44,7 +44,7 @@ CCTensorField::CCTensorField(GridP grid, LevelP level,
    high(-MAXINT,-MAXINT,-MAXINT),
    low(MAXINT,MAXINT,MAXINT)
 {
-  for(int i = 0; i < vars.size(); i++){
+  for(int i = 0; i < (int)vars.size(); i++){
     _vars.push_back( vars[i]);
   }
   computeHighLowIndices();

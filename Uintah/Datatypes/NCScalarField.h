@@ -108,7 +108,7 @@ NCScalarField<T>::NCScalarField(GridP grid, LevelP level,
    high(-MAXINT,-MAXINT,-MAXINT),
    low(MAXINT,MAXINT,MAXINT)
 {
-  for(int i = 0; i < vars.size(); i++){
+  for(int i = 0; i < (int)vars.size(); i++){
     _vars.push_back( vars[i]);
   }
   computeHighLowIndices();
