@@ -52,10 +52,17 @@
     <inputs lastportdynamic="no">
       <port>
         <description>
-          <p>The only input port -- the label map as a field</p>
+          <p>Input port -- the label map as a field</p>
         </description>
-        <name>Input Field</name>
+        <name>Input Label Volume</name>
         <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <description>
+          <p>Input port -- Time as a matrix</p>
+        </description>
+        <name>Input TimeStep</name>
+        <datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
     <outputs>
