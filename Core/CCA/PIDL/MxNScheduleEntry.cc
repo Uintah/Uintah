@@ -40,7 +40,6 @@ MxNScheduleEntry::MxNScheduleEntry(std::string n, sched_t st)
 
 MxNScheduleEntry::~MxNScheduleEntry()
 {
-  assert(false);
   unsigned int i;
   descriptorList::iterator iter;
   for(iter=callee_rep.begin(),i=0; i < callee_rep.size(); i++,iter++) {
@@ -142,12 +141,10 @@ void MxNScheduleEntry::clear(sched_t sch)
   unsigned int i;
   descriptorList::iterator iter;
   if(sch == callee) {
-::std::cerr << "FORE calleerepsize=" << callee_rep.size() << "\n"; 
     for(i=0, iter=callee_rep.begin(); i < callee_rep.size(); i++,iter++) {
       delete (*iter);
     }
     callee_rep.clear();
-::std::cerr << "AFT calleerepsize=" << callee_rep.size() << "\n";
   } else {
     for(i=0, iter=caller_rep.begin(); i < caller_rep.size(); i++,iter++) {
       delete (*iter);
