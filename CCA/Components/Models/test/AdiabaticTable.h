@@ -124,6 +124,7 @@ WARNING
 
     double oldProbeDumpTime;
     Scalar* d_scalar;
+    // Release is J/kg
     VarLabel* cumulativeEnergyReleased_CCLabel;
     VarLabel* cumulativeEnergyReleased_src_CCLabel;
     
