@@ -545,6 +545,7 @@ operator<<(ostream& out, const DetailedTask3& task)
   return out;
 }
 
+#if 0
 ostream&
 operator<<(ostream& out, const DetailedDep& dep)
 {
@@ -558,6 +559,7 @@ operator<<(ostream& out, const DetailedDep& dep)
   */
   return out;
 }
+#endif
 
 void
 DetailedTasks3::internalDependenciesSatisfied(DetailedTask3* task)

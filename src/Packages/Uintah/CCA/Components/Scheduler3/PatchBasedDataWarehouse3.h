@@ -25,6 +25,7 @@ namespace SCIRun {
 
 namespace Uintah {
 
+  // use ondemanddw's versions - not defined here.
   int getDB_ID(const Patch* patch);
   int getDB_ID(const Level* level);
 

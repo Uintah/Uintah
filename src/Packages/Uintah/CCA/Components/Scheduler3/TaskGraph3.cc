@@ -602,7 +602,7 @@ TaskGraph3::createDetailedTasks( LoadBalancer* lb, bool useInternalDeps )
 
 namespace Uintah {
   
-class CompTable {
+class CompTable3 {
   struct Data {
     Data* next;
     DetailedTask3* task;
@@ -641,8 +641,8 @@ class CompTable {
   FastHashTable<Data> data;
   void insert(Data* d);
  public:
-  CompTable();
-  ~CompTable();
+  CompTable3();
+  ~CompTable3();
   void remembercomp(DetailedTask3* task, Task::Dependency* comp,
 		    const PatchSubset* patches, const MaterialSubset* matls,
                     const ProcessorGroup* pg);
@@ -655,15 +655,15 @@ private:
 
 }
 
-CompTable::CompTable()
+CompTable3::CompTable3()
 {
 }
 
-CompTable::~CompTable()
+CompTable3::~CompTable3()
 {
 }
 
-void CompTable::remembercomp(Data* newData, const ProcessorGroup* pg)
+void CompTable3::remembercomp(Data* newData, const ProcessorGroup* pg)
 {
   if(dbg.active()){
     dbg << pg->myrank() << " remembercomp: " << *newData->comp << ", matl=" << newData->matl;
@@ -690,7 +690,7 @@ void CompTable::remembercomp(Data* newData, const ProcessorGroup* pg)
   data.insert(newData);
 }
 
-void CompTable::remembercomp(DetailedTask3* task, Task::Dependency* comp,
+void CompTable3::remembercomp(DetailedTask3* task, Task::Dependency* comp,
 			     const PatchSubset* patches, 
                              const MaterialSubset* matls,
                              const ProcessorGroup* pg)
@@ -725,7 +725,7 @@ void CompTable::remembercomp(DetailedTask3* task, Task::Dependency* comp,
   }
 }
 
-bool CompTable::findcomp(Task::Dependency* req, const Patch* patch,
+bool CompTable3::findcomp(Task::Dependency* req, const Patch* patch,
 			 int matlIndex, DetailedTask3*& dt,
 			 Task::Dependency*& comp, const ProcessorGroup *pg)
 {
@@ -760,7 +760,7 @@ void
 TaskGraph3::createDetailedDependencies(DetailedTasks3* dt, LoadBalancer* lb)
 {
   // Collect all of the comps
-  CompTable ct;
+  CompTable3 ct;
   for(int i=0;i<dt->numTasks();i++){
     DetailedTask3* task = dt->getTask(i);
 
@@ -815,7 +815,7 @@ TaskGraph3::createDetailedDependencies(DetailedTasks3* dt, LoadBalancer* lb)
 }
 
 void TaskGraph3::remembercomps(DetailedTask3* task, Task::Dependency* comp,
-			      CompTable& ct)
+			      CompTable3& ct)
 {
   int me = d_myworld->myrank();
   
@@ -855,7 +855,7 @@ void
 TaskGraph3::createDetailedDependencies(DetailedTasks3* dt,
 				      LoadBalancer* lb,
 				      DetailedTask3* task,
-				      Task::Dependency* req, CompTable& ct,
+				      Task::Dependency* req, CompTable3& ct,
 				      bool modifies)
 {
   int me = d_myworld->myrank();
