@@ -24,6 +24,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.2.4.1  2000/10/27 00:33:11  moulding
+# merge HEAD into FIELD_REDESIGN
+#
 # Revision 1.2  2000/07/11 20:32:55  yarden
 # replace Timer with SCIRun's WallClockTimer
 # move main outside of the namespace
