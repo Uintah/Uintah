@@ -163,6 +163,7 @@ itcl_class Module {
 		-font $ui_font -anchor center \
 		-command "showSubnetWindow $subnetNumber"
 	    pack $p.subnet -side bottom -ipadx 5 -ipady 2
+	    Tooltip $p.ui $ToolTipText(ModuleSubnetBtn)
 	}
 
 	# Make the title
@@ -175,6 +176,7 @@ itcl_class Module {
 	if {$make_time} {
 	    label $p.time -text "00.00" -font $time_font
 	    pack $p.time -side left -padx 2
+	    Tooltip $p.time $ToolTipText(ModuleTime)
 	}
 
 	# Make the progress graph
@@ -184,6 +186,7 @@ itcl_class Module {
 	    pack $p.inset -side left -fill y -padx 2 -pady 2
 	    frame $p.inset.graph -relief raised \
 		-width 0 -borderwidth 2 -background green
+	    Tooltip $p.inset $ToolTipText(ModuleProgress)
 	}
 
 
@@ -195,6 +198,7 @@ itcl_class Module {
 	frame $p.msg.indicator -relief raised -width 0 -height 0 \
 	    -borderwidth 2 -background blue
 	bind $p.msg.indicator <Button> "$this displayLog"
+	Tooltip $p.msg.indicator $ToolTipText(ModuleMessageBtn)
 
 	update_msg_state
 	update_progress
@@ -242,6 +246,7 @@ itcl_class Module {
 	
 	fadeinIcon [modname]
     }
+    # end make_icon
     
     method setColorAndTitle { { color "" } args} {
 	global Subnet Color Disabled
@@ -1838,7 +1843,7 @@ proc findRealConnection { conn } {
 }
 
 proc drawPorts { modid { porttypes "i o" } } {
-    global Subnet port_spacing port_width port_height port_light_height
+    global Subnet port_spacing port_width port_height port_light_height ToolTipText
     if { ![info exists Subnet($modid)] } { return }
     set subnet $Subnet($modid)
     set isSubnetEditor [isaSubnetEditor $modid]
@@ -1875,6 +1880,10 @@ proc drawPorts { modid { porttypes "i o" } } {
 		-pto 2 -pwidth 7 -pborder 2
 	    frame $portlight -width $port_width -height 4 \
 		-relief raised -background black -borderwidth 0
+
+	    Tooltip $portlight $ToolTipText(ModulePortlight)
+	    Tooltip $portbevel $ToolTipText(ModulePort)
+
 	    if { $isSubnetEditor } {
 		if $isoport {
 		    place $portbevel -bordermode outside \
@@ -1895,7 +1904,6 @@ proc drawPorts { modid { porttypes "i o" } } {
 		    place $portlight -in $portbevel -x 0 -rely 1.0 -anchor nw
 		}
 	    }
-	    global ToolTipText
 	    set port [list $modid $i $porttype]
 	    foreach p [list $portbevel $portlight] {
 		bind $p <2> "startPortConnection {$port} {$portname}"
@@ -1904,7 +1912,6 @@ proc drawPorts { modid { porttypes "i o" } } {
 		bind $p <ButtonPress-1> "tracePort {$port}"
 		bind $p <Control-Button-1> "tracePort {$port} 1"
 		bind $p <ButtonRelease-1> "deleteTraces"
-		Tooltip $p $ToolTipText(Connection)
 	    }
 	    incr i
 	} 
