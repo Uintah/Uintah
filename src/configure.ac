@@ -2792,8 +2792,13 @@ if test "$sci_required_glut" = "yes"; then
        _sci_inc="$with_glut/include /usr/X11R6/include"
      fi
    else
-     _sci_lib="$sci_thirdparty_libs"
-     _sci_inc="$sci_thirdparty_includes"
+     if test "$with_opengl"; then
+       _sci_lib="$sci_thirdparty_libs $with_opengl/lib"
+       _sci_inc="$sci_thirdparty_includes $with_opengl/include"
+     else
+       _sci_lib="$sci_thirdparty_libs /usr/X11R6/lib"
+       _sci_inc="$sci_thirdparty_includes /usr/X11R6/include"
+     fi
    fi
 
    SCI_TRY_LINK(GLUT,glut library and headers,GL/glut.h,$_sci_inc,glut,$_sci_lib,$libs,,required)
@@ -2822,8 +2827,13 @@ if test "$sci_required_glui" = "yes"; then
        _sci_inc="$with_glut/include $with_glui/include /usr/X11R6/include"
      fi
    else
-     _sci_lib="$sci_thirdparty_libs"
-     _sci_inc="$sci_thirdparty_includes"
+     if test "$with_opengl"; then
+       _sci_lib="$sci_thirdparty_libs $with_opengl/lib"
+       _sci_inc="$sci_thirdparty_includes $with_opengl/include"
+     else
+       _sci_lib="$sci_thirdparty_libs /usr/X11R6/lib"
+       _sci_inc="$sci_thirdparty_includes /usr/X11R6/include"
+     fi
    fi
 
    SCI_TRY_LINK(GLUI,glui library and headers,GL/glut.h glui.h,
