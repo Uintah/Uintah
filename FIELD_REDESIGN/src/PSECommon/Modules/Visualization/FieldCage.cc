@@ -100,78 +100,77 @@ FieldCage::~FieldCage()
 
 void FieldCage::execute()
 {
-    ogeom->delAll();
-
-    SFieldHandle sfield;
-    BBox sbbox;
-    bool haveit=false;
-    if(insfield->get(sfield)){
-      sfield->get_bbox(sbbox);
-      haveit=true;
+  ogeom->delAll();
+  
+  SFieldHandle sfh;
+  BBox sbbox;
+  bool haveit=false;
+  if(insfield->get(sfh)){
+    SField* sfield = sfh.get_rep();
+    if(!sfield->get_geom()->get_bbox(sbbox)){
+      error("FieldCage: Could not compute bounding box of input field.");
+      return;
     }
-    //    VectorFieldHandle vfield;
-    //if(invfield->get(vfield)){
-    //	vfield->get_bounds(min, max);
-    //	haveit=true;
-    //}
-    if(!haveit)
-	return;
-    GeomGroup* all=new GeomGroup();
-    GeomLines* xmin=new GeomLines();
-    GeomLines* ymin=new GeomLines();
-    GeomLines* zmin=new GeomLines();
-    GeomLines* xmax=new GeomLines();
-    GeomLines* ymax=new GeomLines();
-    GeomLines* zmax=new GeomLines();
-    GeomLines* edges=new GeomLines();
-    all->add(new GeomMaterial(xmin, dk_red));
-    all->add(new GeomMaterial(ymin, dk_green));
-    all->add(new GeomMaterial(zmin, dk_blue));
-    all->add(new GeomMaterial(xmax, lt_red));
-    all->add(new GeomMaterial(ymax, lt_green));
-    all->add(new GeomMaterial(zmax, lt_blue));
-    all->add(new GeomMaterial(edges, gray));
-
-    edges->add(Point(sbbox.min().x(), sbbox.min().y(), sbbox.min().z()), Point(sbbox.min().x(), sbbox.min().y(), sbbox.max().z()));
-    edges->add(Point(sbbox.min().x(), sbbox.min().y(), sbbox.min().z()), Point(sbbox.min().x(), sbbox.max().y(), sbbox.min().z()));
-    edges->add(Point(sbbox.min().x(), sbbox.min().y(), sbbox.min().z()), Point(sbbox.max().x(), sbbox.min().y(), sbbox.min().z()));
-    edges->add(Point(sbbox.max().x(), sbbox.min().y(), sbbox.min().z()), Point(sbbox.max().x(), sbbox.max().y(), sbbox.min().z()));
-    edges->add(Point(sbbox.max().x(), sbbox.min().y(), sbbox.min().z()), Point(sbbox.max().x(), sbbox.min().y(), sbbox.max().z()));
-    edges->add(Point(sbbox.min().x(), sbbox.max().y(), sbbox.min().z()), Point(sbbox.max().x(), sbbox.max().y(), sbbox.min().z()));
-    edges->add(Point(sbbox.min().x(), sbbox.max().y(), sbbox.min().z()), Point(sbbox.min().x(), sbbox.max().y(), sbbox.max().z()));
-    edges->add(Point(sbbox.min().x(), sbbox.min().y(), sbbox.min().z()), Point(sbbox.min().x(), sbbox.min().y(), sbbox.max().z()));
-    edges->add(Point(sbbox.min().x(), sbbox.min().y(), sbbox.max().z()), Point(sbbox.max().x(), sbbox.min().y(), sbbox.max().z()));
-    edges->add(Point(sbbox.min().x(), sbbox.min().y(), sbbox.max().z()), Point(sbbox.min().x(), sbbox.max().y(), sbbox.max().z()));
-    edges->add(Point(sbbox.max().x(), sbbox.max().y(), sbbox.min().z()), Point(sbbox.max().x(), sbbox.max().y(), sbbox.max().z()));
-    edges->add(Point(sbbox.max().x(), sbbox.min().y(), sbbox.max().z()), Point(sbbox.max().x(), sbbox.max().y(), sbbox.max().z()));
-    edges->add(Point(sbbox.min().x(), sbbox.max().y(), sbbox.max().z()), Point(sbbox.max().x(), sbbox.max().y(), sbbox.max().z()));
-    int i;
-    int nx=numx.get();
-    int ny=numy.get();
-    int nz=numz.get();
-    for(i=0;i<nx;i++){
-	double x=Interpolate(sbbox.min().x(), sbbox.max().x(), double(i+1)/double(nx+1));
-	ymin->add(Point(x, sbbox.min().y(), sbbox.min().z()), Point(x, sbbox.min().y(), sbbox.max().z()));
-	ymax->add(Point(x, sbbox.max().y(), sbbox.min().z()), Point(x, sbbox.max().y(), sbbox.max().z()));
-	zmin->add(Point(x, sbbox.min().y(), sbbox.min().z()), Point(x, sbbox.max().y(), sbbox.min().z()));
-	zmax->add(Point(x, sbbox.min().y(), sbbox.max().z()), Point(x, sbbox.max().y(), sbbox.max().z()));
-    }
-    for(i=0;i<ny;i++){
-	double y=Interpolate(sbbox.min().y(), sbbox.max().y(), double(i+1)/double(ny+1));
-	xmin->add(Point(sbbox.min().x(), y, sbbox.min().z()), Point(sbbox.min().x(), y, sbbox.max().z()));
-	xmax->add(Point(sbbox.max().x(), y, sbbox.min().z()), Point(sbbox.max().x(), y, sbbox.max().z()));
-	zmin->add(Point(sbbox.min().x(), y, sbbox.min().z()), Point(sbbox.max().x(), y, sbbox.min().z()));
-	zmax->add(Point(sbbox.min().x(), y, sbbox.max().z()), Point(sbbox.max().x(), y, sbbox.max().z()));
-    }
-    for(i=0;i<nz;i++){
-	double z=Interpolate(sbbox.min().z(), sbbox.max().z(), double(i+1)/double(nz+1));
-	xmin->add(Point(sbbox.min().x(), sbbox.min().y(), z), Point(sbbox.min().x(), sbbox.max().y(), z));
-	xmax->add(Point(sbbox.max().x(), sbbox.min().y(), z), Point(sbbox.max().x(), sbbox.max().y(), z));
-	ymin->add(Point(sbbox.min().x(), sbbox.min().y(), z), Point(sbbox.max().x(), sbbox.min().y(), z));
-	ymax->add(Point(sbbox.min().x(), sbbox.max().y(), z), Point(sbbox.max().x(), sbbox.max().y(), z));
-    }
-    ogeom->delAll();
-    ogeom->addObj(all, "Field Cage");
+  }
+  else{
+    return;
+  }
+  GeomGroup* all=new GeomGroup();
+  GeomLines* xmin=new GeomLines();
+  GeomLines* ymin=new GeomLines();
+  GeomLines* zmin=new GeomLines();
+  GeomLines* xmax=new GeomLines();
+  GeomLines* ymax=new GeomLines();
+  GeomLines* zmax=new GeomLines();
+  GeomLines* edges=new GeomLines();
+  all->add(new GeomMaterial(xmin, dk_red));
+  all->add(new GeomMaterial(ymin, dk_green));
+  all->add(new GeomMaterial(zmin, dk_blue));
+  all->add(new GeomMaterial(xmax, lt_red));
+  all->add(new GeomMaterial(ymax, lt_green));
+  all->add(new GeomMaterial(zmax, lt_blue));
+  all->add(new GeomMaterial(edges, gray));
+  
+  edges->add(Point(sbbox.min().x(), sbbox.min().y(), sbbox.min().z()), Point(sbbox.min().x(), sbbox.min().y(), sbbox.max().z()));
+  edges->add(Point(sbbox.min().x(), sbbox.min().y(), sbbox.min().z()), Point(sbbox.min().x(), sbbox.max().y(), sbbox.min().z()));
+  edges->add(Point(sbbox.min().x(), sbbox.min().y(), sbbox.min().z()), Point(sbbox.max().x(), sbbox.min().y(), sbbox.min().z()));
+  edges->add(Point(sbbox.max().x(), sbbox.min().y(), sbbox.min().z()), Point(sbbox.max().x(), sbbox.max().y(), sbbox.min().z()));
+  edges->add(Point(sbbox.max().x(), sbbox.min().y(), sbbox.min().z()), Point(sbbox.max().x(), sbbox.min().y(), sbbox.max().z()));
+  edges->add(Point(sbbox.min().x(), sbbox.max().y(), sbbox.min().z()), Point(sbbox.max().x(), sbbox.max().y(), sbbox.min().z()));
+  edges->add(Point(sbbox.min().x(), sbbox.max().y(), sbbox.min().z()), Point(sbbox.min().x(), sbbox.max().y(), sbbox.max().z()));
+  edges->add(Point(sbbox.min().x(), sbbox.min().y(), sbbox.min().z()), Point(sbbox.min().x(), sbbox.min().y(), sbbox.max().z()));
+  edges->add(Point(sbbox.min().x(), sbbox.min().y(), sbbox.max().z()), Point(sbbox.max().x(), sbbox.min().y(), sbbox.max().z()));
+  edges->add(Point(sbbox.min().x(), sbbox.min().y(), sbbox.max().z()), Point(sbbox.min().x(), sbbox.max().y(), sbbox.max().z()));
+  edges->add(Point(sbbox.max().x(), sbbox.max().y(), sbbox.min().z()), Point(sbbox.max().x(), sbbox.max().y(), sbbox.max().z()));
+  edges->add(Point(sbbox.max().x(), sbbox.min().y(), sbbox.max().z()), Point(sbbox.max().x(), sbbox.max().y(), sbbox.max().z()));
+  edges->add(Point(sbbox.min().x(), sbbox.max().y(), sbbox.max().z()), Point(sbbox.max().x(), sbbox.max().y(), sbbox.max().z()));
+  int i;
+  int nx=numx.get();
+  int ny=numy.get();
+  int nz=numz.get();
+  for(i=0;i<nx;i++){
+    double x=Interpolate(sbbox.min().x(), sbbox.max().x(), double(i+1)/double(nx+1));
+    ymin->add(Point(x, sbbox.min().y(), sbbox.min().z()), Point(x, sbbox.min().y(), sbbox.max().z()));
+    ymax->add(Point(x, sbbox.max().y(), sbbox.min().z()), Point(x, sbbox.max().y(), sbbox.max().z()));
+    zmin->add(Point(x, sbbox.min().y(), sbbox.min().z()), Point(x, sbbox.max().y(), sbbox.min().z()));
+    zmax->add(Point(x, sbbox.min().y(), sbbox.max().z()), Point(x, sbbox.max().y(), sbbox.max().z()));
+  }
+  for(i=0;i<ny;i++){
+    double y=Interpolate(sbbox.min().y(), sbbox.max().y(), double(i+1)/double(ny+1));
+    xmin->add(Point(sbbox.min().x(), y, sbbox.min().z()), Point(sbbox.min().x(), y, sbbox.max().z()));
+    xmax->add(Point(sbbox.max().x(), y, sbbox.min().z()), Point(sbbox.max().x(), y, sbbox.max().z()));
+    zmin->add(Point(sbbox.min().x(), y, sbbox.min().z()), Point(sbbox.max().x(), y, sbbox.min().z()));
+    zmax->add(Point(sbbox.min().x(), y, sbbox.max().z()), Point(sbbox.max().x(), y, sbbox.max().z()));
+  }
+  for(i=0;i<nz;i++){
+    double z=Interpolate(sbbox.min().z(), sbbox.max().z(), double(i+1)/double(nz+1));
+    xmin->add(Point(sbbox.min().x(), sbbox.min().y(), z), Point(sbbox.min().x(), sbbox.max().y(), z));
+    xmax->add(Point(sbbox.max().x(), sbbox.min().y(), z), Point(sbbox.max().x(), sbbox.max().y(), z));
+    ymin->add(Point(sbbox.min().x(), sbbox.min().y(), z), Point(sbbox.max().x(), sbbox.min().y(), z));
+    ymax->add(Point(sbbox.min().x(), sbbox.max().y(), z), Point(sbbox.max().x(), sbbox.max().y(), z));
+  }
+  ogeom->delAll();
+  ogeom->addObj(all, "Field Cage");
 }
 
 } // End namespace Modules
@@ -179,6 +178,9 @@ void FieldCage::execute()
 
 //
 // $Log$
+// Revision 1.8.2.2  2000/09/11 16:18:20  kuehne
+// updates to field redesign
+//
 // Revision 1.8.2.1  2000/08/03 19:38:37  kuehne
 // Modules that use the new fields
 //
