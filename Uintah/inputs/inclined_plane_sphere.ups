@@ -10,11 +10,16 @@
    </Meta>
 
    <Time>
-	<maxTime>2.0</maxTime>
+	<maxTime>0.064</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00004</delt_min>
 	<delt_max>0.004</delt_max>
    </Time>
+
+   <DataArchiver>
+        <filebase>incplane.uda</filebase>
+        <outputInterval>5</outputInterval>
+   </DataArchiver>
 
     <MPM>
 	<time_integrator>explicit</time_integrator>
