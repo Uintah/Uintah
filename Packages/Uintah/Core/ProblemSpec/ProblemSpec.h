@@ -190,6 +190,8 @@ WARNING
       // only to be used when finished using entire document
       void releaseDocument();
 
+      // Returns the root node of the DOM tree.
+      ProblemSpecP getRootNode();
 
       //////////
       // simply adds the text to this node
