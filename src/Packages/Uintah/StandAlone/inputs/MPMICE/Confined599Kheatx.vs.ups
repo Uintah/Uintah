@@ -17,14 +17,9 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          0.00001     </delt_init>
        <timestep_multiplier>0.8         </timestep_multiplier>
-   </Time>
-   
+   </Time>    
     <!--____________________________________________________________________-->
     <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
-    <!--   lower            = Physical Coordinates (x, y, z)                -->
-    <!--   upper            = Physical Coordinates (x, y, z)                -->
-    <!--   resolution       = Number of cells in each directon              -->
-    <!--   patches          = Number of patches in each direction           -->
     <!--____________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
