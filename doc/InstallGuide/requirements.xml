@@ -1,7 +1,3 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE para SYSTEM "../docbook/docbookx.dtd">
-<?xml-stylesheet href="../docbook.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
 
 <para>
   Required OS version:
@@ -107,31 +103,3 @@
   </itemizedlist>
 </para>
 
-<para>
-  Optional thirdparty software:
-  <itemizedlist>
-    <listitem>
-      <ulink url="http://bloodyeck.com/mpegelib/">
-      <citetitle>MPEGe Lib</citetitle></ulink> 
-      0.3
-    </listitem>
-    <listitem>
-      <ulink url="http://bmrc.berkeley.edu/frame/research/mpeg/mpeg_encode.html">
-      <citetitle>Berkeley MPEG Encoder</citetitle></ulink> 
-      <ulink url="ftp://mm-ftp.cs.berkeley.edu/pub/multimedia/mpeg/encode/mpeg_encode-1.5b-src.tar.gz">
-      <citetitle>1.5b</citetitle></ulink>
-    </listitem>
-    <listitem>
-      <ulink url="http://oss.sgi.com/cgi-bin/cvsweb.cgi/inventor/libimage/">
-      <citetitle>libimage</citetitle></ulink> 
-      <ulink url="http://oss.sgi.com/cgi-bin/cvsweb.cgi/inventor/libimage/">
-      <citetitle>1.0</citetitle></ulink>
-    </listitem>
-    <listitem>
-      <ulink url="http://www.cs.utah.edu/~gk/teem">
-      <citetitle>teem</citetitle></ulink> 
-      <ulink url="http://software.sci.utah.edu/software/teem_download.html">
-      <citetitle>1.3</citetitle></ulink>
-    </listitem>
-  </itemizedlist>
-</para>
