@@ -107,7 +107,7 @@ C
      1                IEQWRK(NIKNT), REQWRK(NRTMP), REQWRK(NRA))
 C
          DO 100 K = 1, KK
-            REQWRK(NRKNT + K - 1) = FLOAT (IEQWRK(NIKNT + K - 1))
+            REQWRK(NRKNT + K - 1) = dble (IEQWRK(NIKNT + K - 1))
   100    CONTINUE
 C
          CALL CKWT (ICKWRK, RCKWRK, REQWRK(NWT))
@@ -124,12 +124,12 @@ C
 C
 C     NORMALIZED INPUT MOLE FRACTIONS
 C
-      SUMR = 0.0
+      SUMR = 0.0D0
       DO 150 K = 1, KK
          REQWRK(NX1 + K - 1) = REAC(K)
          SUMR = SUMR + REAC(K)
   150 CONTINUE
-      IF (SUMR .NE. 0.0) THEN
+      IF (SUMR .NE. 0.0D0) THEN
          DO 175 K = 1, KK
             REQWRK(NX1 + K - 1) = REAC(K) / SUMR
   175    CONTINUE
@@ -153,12 +153,12 @@ C
       REQWRK(NPEST) = PEST * PATM
       CALL CKRHOX (REQWRK(NP1), REQWRK(NT1), REQWRK(NX1), ICKWRK,
      1             RCKWRK, RHO)
-      REQWRK(NV1) = 1.0 / RHO
+      REQWRK(NV1) = 1.0D0 / RHO
 C
 C     compute entropy of mixture in mass units
 C
       CALL CKSMS (REQWRK(NT1), ICKWRK, RCKWRK, REQWRK(NSMS))
-      S1 = 0.0
+      S1 = 0.0D0
       DO 200 K = 1, KK
          SMS = REQWRK(NSMS + K - 1)
          WT  = REQWRK(NWT  + K - 1)
@@ -170,7 +170,7 @@ C
 C
       CALL CKMMWY (REQWRK(NY1), ICKWRK, RCKWRK, REQWRK(NWM1))
       REQWRK(NWM2) = REQWRK(NWM1)
-      REQWRK(NC1) = 0.0
+      REQWRK(NC1) = 0.0D0
       IF (NOP.EQ.10) THEN
          CALL CKCPBS (REQWRK(NT1), REQWRK(NY1), ICKWRK, RCKWRK, CP)
          CALL CKCVBS (REQWRK(NT1), REQWRK(NY1), ICKWRK, RCKWRK, CV)
@@ -241,7 +241,7 @@ C*****precision > single
 C        IMPLICIT REAL (A-H, O-Z), INTEGER (I-N)
 C*****END precision > single
 C
-      PARAMETER (HUGE = 1.0E+33)
+      PARAMETER (HUGE = 1.0D+33)
       DIMENSION IEQWRK(*), REQWRK(*), ICKWRK(*), RCKWRK(*)
       CHARACTER ATOM(*)*16, KSYM(*)*16
 C
@@ -501,10 +501,10 @@ C
       ENDIF
 C
       DO 260 M = 1, MM
-         REQWRK(IoPA+M) = 0.0
+         REQWRK(IoPA+M) = 0.0D0
          DO 260 K = 1, KK
 C           SET THE RELATIVE ATOM POPULATIONS FROM REAC(K)
-            RCMP = FLOAT (IEQWRK(NICMP + (K-1)*MM + M - 1))
+            RCMP = dble (IEQWRK(NICMP + (K-1)*MM + M - 1))
             X    = REQWRK(NX1 + K - 1)
             REQWRK(IoPA+M) = REQWRK(IoPA+M) + X * RCMP
             IEQWRK(IoN+M+LoN*K) = IEQWRK(NICMP+(K-1)*MM+M-1)
@@ -520,7 +520,7 @@ C
 C      ITERATION LOOP FOR VARIABLE MEAN MOLECULAR WEIGHT
 C
       ITER = 0
-      TOTMOL = 1.
+      TOTMOL = 1.0D0
 310   CONTINUE
 C
       DO 350 N = 1, NCON
@@ -535,9 +535,9 @@ C
 C        SET "ATOM POPULATION" MATRIX FOR CONSTRAINTS
 C
          DO 325 K = 1, KK
-            IEQWRK(IoN+M+LoN*K) = 0.0
+            IEQWRK(IoN+M+LoN*K) = 0.0D0
   325    CONTINUE
-         IEQWRK(IoN+M+LoN*KCON) = 1.0
+         IEQWRK(IoN+M+LoN*KCON) = 1.0D0
   350 CONTINUE
 C
 C     FROZEN COMPOSITION OPTION
@@ -545,7 +545,7 @@ C
       KFRZ = 0
       IEQWRK(IoKFRZ) = KFRZ
 C
-      DCS = 0.0
+      DCS = 0.0D0
       CALL CKHML( T298, ICKWRK, RCKWRK, REQWRK(IoDHF0+1) )
       DO 500 K = 1, KK
 C
@@ -598,7 +598,7 @@ C
 C       CHECK CHANGE IN MEAN MOLECULAR WEIGHT
 C
        TOTOLD = TOTMOL
-       TOTMOL = 0.
+       TOTMOL = 0.0D0
        DO 700 K = 1, KK
           TOTMOL = TOTMOL + REQWRK(IoSMOL+K)
 700    CONTINUE
@@ -613,7 +613,7 @@ C           STOP
            ierr = 1
            return
        ENDIF
-       IF (DEL .GT. 1.E-4) GO TO 310
+       IF (DEL .GT. 1.D-4) GO TO 310
 C
 C           RETRIEVE THE STANJAN RESULTS
 C
@@ -693,9 +693,9 @@ C
       HMH0 = SW(NH) / T
       DO 100 N = 1, NCP
          NH = NRA + (L0-1)*NCP2 + (K-1)*NCP2T + N - 1 - NRWORK
-         H298 = H298 + SW(NH) * T298**(N-1) / FLOAT(N)
+         H298 = H298 + SW(NH) * T298**(N-1) / dble(N)
          NH = NRA + (LT-1)*NCP2 + (K-1)*NCP2T + N - 1 - NRWORK
-         HMH0 = HMH0 + SW(NH) * T**(N-1) / FLOAT(N)
+         HMH0 = HMH0 + SW(NH) * T**(N-1) / dble(N)
 100   CONTINUE
 C
 C         ENTHALPY ABOVE 298K (KCAL/MOL)
@@ -711,7 +711,7 @@ C
       S0 = S0 + LOG(T) * SW(NS)
       DO 300 N = 2, NCP
          NS = NRA + (LT-1)*NCP2 + (K-1)*NCP2T + N - 1 - NRWORK
-         S0 = S0 + SW(NS) * T**(N-1) / FLOAT(N-1)
+         S0 = S0 + SW(NS) * T**(N-1) / dble(N-1)
 300   CONTINUE
 C
 C          ENTROPY (CAL/MOLE)
@@ -778,12 +778,12 @@ C
 C            INITIALIZE VARIABLES
 C
          DO 10 K = 1, KDIM
-            REAC(K) = 0.
+            REAC(K) = 0.0D0
 10       CONTINUE
-         TEMP = 0.0
-         TEST = 0.0
-         PRES = 0.0
-         PEST = 0.0
+         TEMP = 0.0D0
+         TEST = 0.0D0
+         PRES = 0.0D0
+         PEST = 0.0D0
          NCON = 0
          NOP  = 0
          KMON = 0
@@ -1172,9 +1172,9 @@ C
       ENDIF
 C
       IF ((NOP.EQ.2 .OR. NOP.EQ.3 .OR. NOP.EQ.7 .OR. NOP.EQ.8 .OR.
-     1    NOP.EQ.9) .AND. PEST.LE.0.0) PEST = PRES
+     1    NOP.EQ.9) .AND. PEST.LE.0.0D0) PEST = PRES
 C
-      IF (NOP.GT.3 .AND. TEST.LE.0.0) TEST = TEMP
+      IF (NOP.GT.3 .AND. TEST.LE.0.0D0) TEST = TEMP
 C
       IF (KERR) THEN
          WRITE (LOUT, *) ' STOP due to errors in input..'

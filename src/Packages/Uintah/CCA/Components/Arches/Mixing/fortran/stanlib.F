@@ -325,7 +325,7 @@ c    phase contributions
            J1 = J2 + 1
            J2 = J2 + IW(IoNSP+M)
            IoZM = IoZ + M
-           RW(IoZM) = 0
+           RW(IoZM) = 0.0D0
 c        species contributions
            DO 17 J=J1,J2
 c            check for inclusion
@@ -343,7 +343,7 @@ c                element potential contributions
            WF = WF + RW(IoPMOL+M)*RW(IoZM)
 c
 c        compute Z error
-           AEZ = RW(IoZM) - 1
+           AEZ = RW(IoZM) - 1.0D0
 c        check vs maximum
            IF (IW(IoKPC+M).NE.0)  THEN
 c                 the phase is active
@@ -361,8 +361,8 @@ c
 c ** calculate  D,DC, HA, HC, and QC and evaluate the relative errors
 c
 c    initialize
-       REHM = 0
-       REHCM = 0
+       REHM = 0.0D0
+       REHCM = 0.0D0
        DO 29 K =1,NB
 c        population term in WF
            IK = IW(IoIB+K)
@@ -377,20 +377,20 @@ c        initialize
            TERMX = ABS(RW(IoPAIK))
            TERMCX = ABS(RW(IoPCK))
            DO 21 L=1,NB
-               RW(IoQC+K+LoQC*L) = 0
+               RW(IoQC+K+LoQC*L) = 0.0D0
 21             CONTINUE
 c        phase contributions
            J2 = 0
-           DSUM = 0
+           DSUM = 0.0D0
            DO 27 M=1,NP
                J1 = J2 + 1
                J2 = J2 + IW(IoNSP+M)
                IoDKM = IoD + K + LoD*M
                IoDCKM = IoDC + K + LoDC*M
-               RW(IoDKM) = 0
-               RW(IoDCKM) = 0
-               TDM = 0
-               TDCM = 0
+               RW(IoDKM) = 0.0D0
+               RW(IoDCKM) = 0.0D0
+               TDM = 0.0D0
+               TDCM = 0.0D0
 c            species contributions
                DO 25 J=J1,J2
 c                check for inclusion
@@ -409,10 +409,10 @@ c                    contributions to conditioned D, H, and Q
                        IF ((IW(IoKB+J).NE.1).OR.(IW(IoJB+K).EQ.J)) THEN
                            IF (IW(IoKB+J).EQ.1)  THEN
 c                                species J is the Kth base species
-                                   TERM = 1
+                                   TERM = 1.0D0
                                ELSE
 c                                species J is not a base
-                                   TERM = 0
+                                   TERM = 0.0D0
                                    DO 23 L=1,NB
                                        IL = IW(IoIB+L)
                                        TERM = TERM + RW(IoCM+K+LoCM*L)*
@@ -444,7 +444,7 @@ c        compute relative errors in HA(K) and compare vs maximum
            IF (TERMX.NE.ZERO)  THEN
                    REH = ABS(RW(IoHAK))/TERMX
                ELSE
-                   REH = 0
+                   REH = 0.0D0
                ENDIF
            CALL SJUMAX(REH,REHM)
 c
@@ -452,7 +452,7 @@ c        compute relative errors in HC(K) and compare vs maximum
            IF (TERMCX.NE.ZERO)  THEN
                    REHC = ABS(RW(IoHCK))/TERMCX
                ELSE
-                   REHC = 0
+                   REHC = 0.0D0
                ENDIF
            CALL SJUMAX(REHC,REHCM)
 c
@@ -516,7 +516,7 @@ c                not getting anywhere:  give up
 c            cut ELAM changes in half and try again
                DO 117 K=1,NB
                    IoDLAK = IoDLAM + K
-                   RW(IoDLAK) = 0.5*RW(IoDLAK)
+                   RW(IoDLAK) = 0.5D0*RW(IoDLAK)
                    RW(IoELAM+K) = RW(IoELAM+K) - RW(IoDLAK)
 117                CONTINUE
                KTRH = KTRH + 1
@@ -644,7 +644,7 @@ c            set to take a fresh descent
            ENDIF
 c
 c    determine the dW/ds = beta
-       BETA2 = 0
+       BETA2 = 0.0D0
        DO 419 K=1,NB
            BETA2 = BETA2 + RW(IoHA+K)*RW(IoHA+K)
 419        CONTINUE
@@ -654,8 +654,8 @@ c    we are at the minimum W point if BETA2 = 0
        DWDS = - SQRT(BETA2)
 c
 c    determine sum{Q(K,L)*HA(K)*HA(L)}/BETA2
-       RBETA = 1/DWDS
-       QHSOB2 = 0
+       RBETA = 1.0D0/DWDS
+       QHSOB2 = 0.0D0
 c    phase contributions
        J2 = 0
        DO 429 M=1,NP
@@ -664,11 +664,11 @@ c    phase contributions
 c        check for active phase
            IF (IW(IoKPC+M).NE.0)  THEN
 c            species contributions
-               PSUM = 0
+               PSUM = 0.0D0
                DO 427 J=J1,J2
 c               check for inclusion
                    IF (IW(IoKB+J).NE.4)  THEN
-                       SUM = 0
+                       SUM = 0.0D0
                        DO 425 K=1,NB
                            I = IW(IoIB+K)
                            SUM  = SUM + IW(IoN+I+LoN*J)*RW(IoHA+K)
@@ -696,14 +696,14 @@ c    limit changes
            ENDIF
 c
 c    set direction cosines, changes, and new values
-       FDW = 1
+       FDW = 1.0D0
        DO 439 K=1,NB
            RLX = RW(IoHA+K)*RBETA
 c        check for oscillation
            IF (KTRM.GT.1) THEN
                IF (RLX*RW(IoRL+K).LT.ZERO)  THEN
 c                oscillating; reset damping factor
-                   FDWX = ABS(1 - 0.9*ABS(RLX))
+                   FDWX = ABS(1.0D0 - 0.9D0*ABS(RLX))
                    IF (FDWX.LT.FDW)  FDW = FDWX
                    ENDIF
                ENDIF
@@ -797,10 +797,10 @@ c
 c    ridge interpolation check
        IF (KTRY.GT.1)  THEN
 c        compute dW*/ds* at the new point on the old path
-           DYDSN = 0
+           DYDSN = 0.0D0
            DO 601 M=1,NP
                IF (IW(IoKPC+M).NE.0)
-     ;            DYDSN = DYDSN + (RW(IoZ+M) - 1)*RW(IoRP+M)
+     ;            DYDSN = DYDSN + (RW(IoZ+M) - 1.0D0)*RW(IoRP+M)
 601            CONTINUE
 c        check for a ridge
            IF (DYDSN*DYDS.LT.ZERO)  THEN
@@ -840,7 +840,7 @@ c        check for problems
            IF (IW(IoKERR).NE.0)  THEN
 c            set E zero and keep trying
                DO 613 K=1,NB
-                   RW(IoW+K) = 0
+                   RW(IoW+K) = 0.0D0
 613                CONTINUE
                ENDIF
 c        load the E vector
@@ -850,19 +850,19 @@ c        load the E vector
 617        CONTINUE
 c
 c    activate all phases and get maximum phase mols
-       PMMAX = 0
+       PMMAX = 0.0D0
        DO 619 M=1,NP
            CALL SJUMAX(RW(IoPMOL+M),PMMAX)
            IW(IoKPC+M) = 1
 619        CONTINUE
 c
 c    compute the cosine coefficients in W
-620    SUM = 0
+620    SUM = 0.0D0
        DO 629 M=1,NP
            IoWM = IoW+M
 c        check for active phase
            IF (IW(IoKPC+M).NE.0)  THEN
-               RW(IoWM) = (RW(IoZ+M) - 1)
+               RW(IoWM) = (RW(IoZ+M) - 1.0D0)
 c            check for an empty phase with W < 0
                IF ((RW(IoPMOL+M).EQ.ZERO).AND.(RW(IoWM).LT.ZERO)) THEN
 c                set this phase inactive and start over
@@ -883,8 +883,8 @@ c        check for convergence
            ENDIF
 c
 c    compute direction cosines and select damping factor FDYF
-       RDYDS = 1/DYDS
-       FDYF = 1
+       RDYDS = 1.0D0/DYDS
+       FDYF = 1.0D0
        DO 631 M=1,NP
            IF (IW(IoKPC+M).NE.0)  THEN
 c                active phase
@@ -892,14 +892,14 @@ c                active phase
 c                set damping
                    IF (KTRY.GT.1)  THEN
                        IF (RX*RW(IoRP+M).LT.ZERO)  THEN
-                           FDYFX = 1 - 0.8*ABS(RX)
+                           FDYFX = 1.0D0 - 0.8D0*ABS(RX)
                            IF (FDYFX.LT.FDYF)  FDYF = FDYFX
                            ENDIF
                        ENDIF
                    RW(IoRP+M) = RX
                ELSE
 c                inactive phase
-                   RW(IoRP+M) = 0
+                   RW(IoRP+M) = 0.0D0
                ENDIF
 631        CONTINUE
 c
@@ -907,13 +907,13 @@ c  set damping coefficient FDY
        IF (FDYF.EQ.ONE)  THEN
 c            reduce the damping if no longer needed
                IF (FDY.LT.ONE) THEN
-                   FDY = 1.4*FDY
-                   IF (FDY.GT.ONE)  FDY = 1
+                   FDY = 1.4D0*FDY
+                   IF (FDY.GT.ONE)  FDY = 1.0D0
                    ENDIF
            ELSE
                IF (KTRY.EQ.1)  THEN
 c                    set undamped at the start of an ascent
-                       FDY = 1
+                       FDY = 1.0D0
                    ELSE
 c                    increase damping if more is needed
                        FDY = FDY*FDYF
@@ -921,17 +921,17 @@ c                    increase damping if more is needed
            ENDIF
 c
 c    estimate the distance to the maximum point
-       D2YDS2 = 0
+       D2YDS2 = 0.0D0
        DO 639 L=1,NP
 c        check for active phase
            IF (IW(IoKPC+L).NE.0)  THEN
 c            phase L active
-               SUM = 0
+               SUM = 0.0D0
                DO 637 M=1,NP
 c                check for active phase
                    IF (IW(IoKPC+M).NE.0)  THEN
 c                    Mth phase active:  compute A(L,M)
-                       ALM = 0
+                       ALM = 0.0D0
                        DO 635 K=1,NB
                            ALM = ALM + RW(IoD+K+LoD*L)*RW(IoE+K+LoE*M)
 635                        CONTINUE
@@ -1009,7 +1009,7 @@ c                 make the change with roundoff control
                    RW(IoPMOM) = RW(IoPMOM) + RW(IoDPMM)
                    IF (RW(IoPMOM).LT.RW(IoFRND)*ABS(RW(IoDPMM)))
      ;              THEN
-                       RW(IoPMOM) = 0
+                       RW(IoPMOM) = 0.0D0
                        KPMC = 1
                        KRED = 1
                        IW(IoKPCX+M) = 0
@@ -1017,7 +1017,7 @@ c                 make the change with roundoff control
 c                 relative error assessment
                    IF (IW(IoKPCX+M).NE.ZERO)  THEN
 c                       be tolerant with sparse phases
-                          TERM = ERRH*(10.*LOG(PMMAX/RW(IoPMOM)) + 1)
+                          TERM =ERRH*(10.D0*LOG(PMMAX/RW(IoPMOM))+1.0D0)
                           IF (ABS(RW(IoDPMM)).GT.TERM*RW(IoPMOM))
      ;                        KPMC = 1
                        ELSE
@@ -1026,7 +1026,7 @@ c                        can not terminate on a phase deactivation
                        ENDIF
                ELSE
 c               inactive phase
-                   RW(IoDPMM) = 0
+                   RW(IoDPMM) = 0.0D0
                ENDIF
 649        CONTINUE
 c
@@ -1036,7 +1036,7 @@ c        check and rebase if ok
            CALL SJERB(NAMAX,NSMAX,NIW,NRW,ATOM,CHEM,IW,RW)
            IF (IW(IoKERR).NE.0)  THEN
 c            unacceptable changes; reduce and go
-               TERM = 1 - FDPMC
+               TERM = 1.0D0 - FDPMC
                DO 657 M=1,NP
                    IoPMOM = IoPMOL + M
                    IoDPMM = IoDPML + M
@@ -1047,7 +1047,7 @@ c            unacceptable changes; reduce and go
            ENDIF
 c
 c    estimate the associated changes in ELAMs
-       DLX = 0
+       DLX = 0.0D0
        DO 665 K = 1,NB
            IoDLYK = IoDLAY + K
            RW(IoDLYK) = 0
@@ -1065,7 +1065,7 @@ c    make the ELAM changes if not excessive
 667                CONTINUE
            ELSE
                DO 669 K=1,NB
-                   RW(IoDLAY+K) = 0
+                   RW(IoDLAY+K) = 0.0D0
 669                CONTINUE
            ENDIF
 c
@@ -1103,7 +1103,7 @@ c       in Mode 2
 c
 c    set up the active phase list and get maximum phase mols
        NPA = 0
-       PMMAX = 0
+       PMMAX = 0.0D0
        DO 701 M=1,NP
            IF ((RW(IoPMOL+M).GT.ZERO).OR.(RW(IoZ+M).GE.ONE))  THEN
 c                set phase active
@@ -1140,10 +1140,10 @@ c    load the last NPA x NPA block and rhs
        DO  709 M1=1,NPA
            L = NB + M1
            M = IW(IoMPA+M1)
-           RW(IoW+L) = 1 - RW(IoZ+M)
+           RW(IoW+L) = 1.0D0 - RW(IoZ+M)
            DO 708 M2=1,NPA
                K = NB + M2
-               RW(IoA+K+LoA*L) = 0
+               RW(IoA+K+LoA*L) = 0.0D0
 708            CONTINUE
 709        CONTINUE
 c
@@ -1164,7 +1164,7 @@ c        singular matrix; try mode 2
            ENDIF
 c
 c -- check for excessive change
-       DLX = 0
+       DLX = 0.0D0
 c    check maximum LAM changes
        DO 713 K=1,NB
            IF (ABS(RW(IoW+K)).GT.DLAMAX)  GOTO 750
@@ -1215,7 +1215,7 @@ c                make the change
                    RW(IoPMOM) = RW(IoPMOM) + RW(IoDPMM)
 c                relative error assessment; tolerant with sparse phases
                    IF (RW(IoPMOM).NE.ZERO)  THEN
-                          TERM = ERRH*(10.*LOG(PMMAX/RW(IoPMOM)) + 1)
+                          TERM =ERRH*(10.D0*LOG(PMMAX/RW(IoPMOM))+1.0D0)
                           IF (ABS(RW(IoDPMM)).GT.TERM*RW(IoPMOM))
      ;                         KPMC = 1
                        ELSE
@@ -1224,7 +1224,7 @@ c                        hopefully never get here
                        ENDIF
                ELSE
 c                inactive phase
-                   RW(IoDPMM) = 0
+                   RW(IoDPMM) = 0.0D0
                ENDIF
 747        CONTINUE
 c
@@ -1312,7 +1312,7 @@ c-----------------------------------------------------------------------
      ;   (IoA,IEPTR(36)),(LoA,IEPTR(37)),(IoW,IEPTR(76))
 c-----------------------------------------------------------------------
 c    set comparison constant
-       ZERO = 0
+       ZERO = 0.0D0
 c
 c    get parameters
        NB = IW(IoNB)
@@ -1327,7 +1327,7 @@ c    check the matrix
 c            replace the row to prevent singularities
 c            this treatment holds X(JB(K)) fixed in ELAM adjustments
                J = IW(IoJB+K)
-               RW(IoW+K) = 0
+               RW(IoW+K) = 0.0D0
                DO 95 L=1,NB
                    I = IW(IoIB+L)
                    RW(IoA+K+LoA*L) = IW(IoN+I+LoN*J)
@@ -1335,7 +1335,7 @@ c            this treatment holds X(JB(K)) fixed in ELAM adjustments
                IF (MS.GT.NB)  THEN
                    L1 = NB + 1
                    DO 97 L=L1,MS
-                       RW(IoA+K+LoA*L) = 0
+                       RW(IoA+K+LoA*L) = 0.0D0
 97                     CONTINUE
                    ENDIF
                ENDIF
@@ -1500,8 +1500,8 @@ c    Electron designation
        DATA ELECT /'E-'/
 c-----------------------------------------------------------------------
 c    set comparison constants in calculation precision
-       ZERO = 0
-       ONE = 1
+       ZERO = 0.0D0
+       ONE = 1.0D0
 c
 c    get parameters
        NA = IW(IoNA)
@@ -1516,7 +1516,7 @@ c    monitor
 c
 c    clear X and allow all species
        DO 3 J=1,NS
-           RW(IoX+J) = 0
+           RW(IoX+J) = 0.D0
            IW(IoKB+J) = 0
 3          CONTINUE
 c
@@ -1849,9 +1849,9 @@ c    get parameters
        NS = IW(IoNS)
 c
 c    set range constants in calculation precision
-       XRMIN = 0.8
-       XRMAX = 1.2
-       ZERO = 0
+       XRMIN = 0.8D0
+       XRMAX = 1.2D0
+       ZERO = 0.0D0
 c
 c    compare
        DO 9 J=1,NS
@@ -1950,7 +1950,7 @@ c        analyze phase M
            J2 = J2 + IW(IoNSP+M)
 c        compute total mols
            IoPMOM = IoPMOL + M
-           RW(IoPMOM) = 0
+           RW(IoPMOM) = 0.0D0
            DO 11 J = J1,J2
                RW(IoPMOM) = RW(IoPMOM) + RW(IoSMOL+J)
 11             CONTINUE
@@ -1961,7 +1961,7 @@ c        compute mol fractions
 13                     CONTINUE
                ELSE
                    DO 14 J=J1,J2
-                       RW(IoX+J) = 0
+                       RW(IoX+J) = 0.0D0
 14                     CONTINUE
                ENDIF
 15         CONTINUE
@@ -2083,9 +2083,9 @@ c            save base species
                IW(IoJBX+L) = J
 c            right hand side
                IF (L.EQ.M)  THEN
-                       RW(IoW+L) = 1
+                       RW(IoW+L) = 1.0D0
                    ELSE
-                       RW(IoW+L) = 0
+                       RW(IoW+L) = 0.0D0
                    ENDIF
 c            matrix
                DO 29 K=1,NB
@@ -2109,8 +2109,8 @@ c
 c    compute conditioned populations
        DO 69 K=1,NB
            IoPCK = IoPC + K
-           RW(IoPCK) = 0
-           TERMX = 0
+           RW(IoPCK) = 0.0D0
+           TERMX = 0.0D0
            DO 67 L=1,NB
                IL = IW(IoIB+L)
                TERM = RW(IoCM+K+LoCM*L)*RW(IoPA+IL)
@@ -2320,7 +2320,7 @@ c
 c        set for prescribed rebasing
            NB = IW(IoNB)
            DO 1 J=1,NS
-               RW(IoSMOL+J) = 0
+               RW(IoSMOL+J) = 0.0D0
                IoKBJ= IoKB + J
                IF (IW(IoKBJ).EQ.2)  IW(IoKBJ) = 0
                IF (IW(IoKBJ).LT.0)  IW(IoKBJ) = 1
@@ -2360,7 +2360,7 @@ c    set false species as the basis
 11         CONTINUE
        DO 13 J = 1,NS
            IF (IW(IoKB+J).NE.4)  IW(IoKB+J) = 0
-           RW(IoSMOL+J) = 0
+           RW(IoSMOL+J) = 0.0D0
            IoFJ = IoF + J
            RW(IoFJ) = RW(IoG+J)
 c        check for rebasing call from SJESEP
@@ -2402,13 +2402,13 @@ c                round 1; false species distribution
                    IF (J.GT.NS)  THEN
 c                        false species
                            IF (RW(IoSMOL+J).GE.ZERO)  THEN
-                                   RW(IoSMUL+K) = 1
+                                   RW(IoSMUL+K) = 1.0D0
                                ELSE
-                                   RW(IoSMUL+K) = - 1
+                                   RW(IoSMUL+K) = - 1.0D0
                                ENDIF
                        ELSE
 c                        real species
-                           RW(IoSMUL+K) = 0
+                           RW(IoSMUL+K) = 0.0D0
                        ENDIF
                ELSE
 c                round 2; approximate Gibbs minimization
@@ -2421,9 +2421,9 @@ c        matrix coefficients A(K,L)
                IF (J.GT.NS)  THEN
 c                    false species
                        IF (L.EQ.J-NS)  THEN
-                               RW(IoA+K+LoA*L) = 1
+                               RW(IoA+K+LoA*L) = 1.0D0
                            ELSE
-                               RW(IoA+K+LoA*L) = 0
+                               RW(IoA+K+LoA*L) = 0.0D0
                            ENDIF
                    ELSE
 c                    real species
@@ -2438,7 +2438,7 @@ c    solve to put the multipliers in SMUL
 c
 c -- select the new basis member JN
 c
-       SMAX = 0
+       SMAX = 0.0D0
        JN = 0
        DO 49 J=1,NT
            IF (IW(IoKB+J).EQ.0)  THEN
@@ -2447,10 +2447,10 @@ c            species J is a trial new base
 c                    round 1; false species distribution
                        IF (J.GT.NS)  THEN
 c                            trial base is false species
-                               SJ = - 1
+                               SJ = - 1.0D0
                            ELSE
 c                            trial base is a real species
-                               SJ = 0
+                               SJ = 0.0D0
                            ENDIF
                    ELSE
 c                    round 2; approximate Gibbs minimization
@@ -2464,9 +2464,9 @@ c            add in the simplex multiplier terms
                    IF (J.GT.NS)  THEN
 c                        trial base is a false species
                            IF (K.EQ.J-NS)  THEN
-                                   AKL = 1
+                                   AKL = 1.0D0
                                ELSE
-                                   AKL = 0
+                                   AKL = 0.0D0
                                ENDIF
                        ELSE
 c                        trial base is a real species
@@ -2501,9 +2501,9 @@ c        load the RHS
            IF (JN.GT.NS)  THEN
 c                new base is a false species
                    IF (K.EQ.JN-NS)  THEN
-                           RW(IoW+K) = - 1
+                           RW(IoW+K) = - 1.0D0
                        ELSE
-                           RW(IoW+K) = 0
+                           RW(IoW+K) = 0.0D0
                        ENDIF
                ELSE
 c                new base is a real species
@@ -2516,9 +2516,9 @@ c        load the matrix
                IF (J.GT.NS) THEN
 c                    false species
                        IF (K.EQ.J-NS)  THEN
-                               RW(IoA+K+LoA*L) = 1
+                               RW(IoA+K+LoA*L) = 1.0D0
                            ELSE
-                               RW(IoA+K+LoA*L) = 0
+                               RW(IoA+K+LoA*L) = 0.0D0
                            ENDIF
                    ELSE
 c                    real species
@@ -2566,7 +2566,7 @@ c    modify the old basis set
            RW(IoSMOJ) = TERM + RW(IoW+K)*DS
            CALL SJURND(RW(IoSMOJ),TERM)
 91         CONTINUE
-       RW(IoSMOL+JE) = 0
+       RW(IoSMOL+JE) = 0.0D0
 c
 c    modify the new base
        RW(IoSMOL+JN) = DS
@@ -2882,8 +2882,8 @@ c    integers for compares
        DATA   M1,M2,M3/-1,-2,-3/
 c-----------------------------------------------------------------------
 c    constants
-       FERRF = 10*RW(IoFRND)
-       ZERO = 0
+       FERRF = 10.0D0*RW(IoFRND)
+       ZERO = 0.0D0
 c
 c    get parameters
        NB = IW(IoNB)
@@ -2942,23 +2942,23 @@ c  set up the A array in B
                IF (MJK.EQ.MJL)  THEN
                        RW(IoBKL) = RW(IoX+JK)
                    ELSE
-                       RW(IoBKL) = 0
+                       RW(IoBKL) = 0.0D0
                    ENDIF
 8              CONTINUE
            IoBKK = IoB + K + LoB*K
-           RW(IoBKK) = RW(IoBKK) - 1
+           RW(IoBKK) = RW(IoBKK) - 1.0D0
 9          CONTINUE
 c
 c        compute the matrix Q
        DO 19 K=1,NSMF
 c        load the matrix and rhs
            DO 15 L=1,NSMF
-               RW(IoW+L) = 0
+               RW(IoW+L) = 0.0D0
                DO 13 M=1,NSMF
                    RW(IoA+L+LoA*M) = RW(IoB+L+LoB*M)
 13                 CONTINUE
 15             CONTINUE
-           RW(IoW+K) = 1
+           RW(IoW+K) = 1.0D0
 c        solve
            CALL SJULES(LoA,RW(IoA+1+LoA),RW(IoW+1),NSMF,IW(IoKERR))
            IF (IW(IoKERR).NE.0)  RETURN
@@ -2980,7 +2980,7 @@ c    compute the B array
                    IF (MJK.EQ.MJL)  THEN
                            RW(IoB+K+LoB*L) = - RW(IoX+JK)
                        ELSE
-                           RW(IoB+K+LoB*L) = 0
+                           RW(IoB+K+LoB*L) = 0.0D0
                        ENDIF
 23                 CONTINUE
 25             CONTINUE
@@ -2989,7 +2989,7 @@ c
 c    compute the F vector
        DO 39 K=1,NS2
            IoFK = IoF+K
-           RW(IoFK) = 0
+           RW(IoFK) = 0.0D0
            IF (K.LE.NSMF)  THEN
 c                smf species
                    DO 31 I=1,NSMF
@@ -3012,7 +3012,7 @@ c    compute the conditioned R array
            DO 57 L=1,NS2
                JL = IW(IoJS2+L)
                IoRCKL = IoRC + K + LoRC*L
-               RW(IoRCKL) = 0
+               RW(IoRCKL) = 0.0D0
 c            branch on species L type
                IF (L.LE.NSMF)  THEN
 c                    smf species
@@ -3023,10 +3023,10 @@ c                        check for a contribution
      ;                      .OR.(IW(IoJB+K).EQ.J1)) THEN
                                IF (IW(IoKB+J1).EQ.1)  THEN
 c                                    species J1 is the Kth base
-                                       SUM1 = 1
+                                       SUM1 = 1.0D0
                                    ELSE
 c                                    species J1 is not a base
-                                       SUM1 = 0
+                                       SUM1 = 0.0D0
                                        DO 43 K2=1,NB
                                          I2 = IW(IoIB+K2)
                                          SUM1 = SUM1 +
@@ -3042,7 +3042,7 @@ c                                    species J1 is not a base
 c                    bo&bx species
                        LX = L - NSMF
                        DO 55 K1=1,NSMF
-                           SUM1 = 0
+                           SUM1 = 0.0D0
                            DO 53 K2=1,NSMF
                                J2 = IW(IoJS2+K2)
                                IF ((IW(IoKB+J2).NE.1)
@@ -3050,10 +3050,10 @@ c                    bo&bx species
 c                               check for a contribution
                                  IF (IW(IoKB+J2).EQ.1)  THEN
 c                                     species J2 is the Kth base
-                                       SUM2 = 1
+                                       SUM2 = 1.0D0
                                     ELSE
 c                                     species J2 is not a base
-                                       SUM2 = 0
+                                       SUM2 = 0.0D0
                                        DO 51 K3=1,NB
                                          I3 = IW(IoIB+K3)
                                          SUM2 = SUM2 +
@@ -3072,7 +3072,7 @@ c                    check type of L species
                        IF (IW(IoKB+JL).EQ.1)  THEN
 c                            L is a base; add 1 if its the Kth base
                                IF (L-NSMF.EQ.K)  RW(IoRCKL) =
-     ;                          RW(IoRCKL) + 1
+     ;                          RW(IoRCKL) + 1.0D0
                            ELSE
 c                            L is a bx species
                                DO 56 K1=1,NB
@@ -3090,7 +3090,7 @@ c -- set initial basis
 c
 c    clear all mols
        DO 61 J=1,NS
-           RW(IoSMOL+J) = 0
+           RW(IoSMOL+J) = 0.0D0
 61         CONTINUE
 c    set basis mols = conditioned populations
        DO 63 K=1,NB
@@ -3150,7 +3150,7 @@ c      solve to put the multipliers in SMUL
 c
 c ---- select the new basis member LN
 c
-       SMAX = 0
+       SMAX = 0.0D0
        LN = 0
        DO 169 L=1,NS2
            IF (IW(IoKB2+L).LT.0)  THEN
@@ -3382,7 +3382,7 @@ c    set mols of bo&bx species
 c
 c    compute phase mols
        DO 413 M=1,NP
-           RW(IoPMOL+M) = 0
+           RW(IoPMOL+M) = 0.0D0
 413        CONTINUE
        DO 415 K=1,NS2
            J = IW(IoJS2+K)
@@ -3601,7 +3601,7 @@ c    pointers
      ;   IoSMOA,IoSMOB,IoSMOO,IoSMOL,IoSMUL,IoW,IoX,IoXO,IoY,IoZ
 c-----------------------------------------------------------------------
 c    set constants
-        ZERO = 0
+        ZERO = 0.0D0
 c
 c    get parameters
         NB = IW(IoNB)
@@ -3914,8 +3914,8 @@ c    pointers
      ;   (IoHUGE,IEPTR(32)),(IoPMOL,IEPTR(62))
 c-----------------------------------------------------------------------
 c    set constants
-        ZERO = 0
-        ONE = 1
+        ZERO = 0.0D0
+        ONE = 1.0D0
 c
 c    recover parameters
         NB = IW(IoNB)
@@ -3927,7 +3927,7 @@ c    get species and phase
 c
 c    initialize
        JBZ = 0
-       BZ = 0
+       BZ = 0.0D0
        JBS = 0
        BESTZ = - RW(IoHUGE)
        BESTS = - RW(IoHUGE)
@@ -4184,7 +4184,7 @@ c
            RETURN
            ENDIF
        IF (X.LT.XMIN)  THEN
-           SJUEXP = 0
+           SJUEXP = 0.0D0
            RETURN
            ENDIF
        SJUEXP = EXP(X)
@@ -4259,7 +4259,7 @@ c
 c            normalize each row on its largest emement
 c
                DO 119 I=1,M
-                   C = 0
+                   C = 0.0D0
                    DO 111 J=1,M
                        CX = ABS(A(I,J))
                        IF (CX.GT.C)  C = CX
@@ -4269,14 +4269,14 @@ c                check for singular matrix
                        IERR = 1
                        RETURN
                        ENDIF
-                   C = 1/C
+                   C = 1.0D0/C
                    DO 113 J=1,M
                        A(I,J) = A(I,J)*C
 113                     CONTINUE
                    V(I) = V(I)*C
 119                CONTINUE
 c            find the best row IX to eliminate in column M
-               C = 0
+               C = 0.0D0
                DO 121 I=1,M
                    CX=ABS(A(I,M))
                    IF (CX.GT.C)  THEN
@@ -4315,11 +4315,11 @@ c                check for column entry
 c                    eliminate
                        C = A(I,M)/A(M,M)
                        D = V(I) - C*V(M)
-                       IF (ABS(D).LT.FROUND*ABS(V(I)))  D = 0
+                       IF (ABS(D).LT.FROUND*ABS(V(I)))  D = 0.0D0
                        V(I) = D
                        DO 131 J=1,MM1
                            D = A(I,J) - C*A(M,J)
-                           IF (ABS(D).LT.FROUND*ABS(A(I,J)))    D = 0
+                           IF (ABS(D).LT.FROUND*ABS(A(I,J)))   D = 0.0D0
                            A(I,J) = D
 131                        CONTINUE
                        ENDIF
@@ -4347,7 +4347,7 @@ c            calculate X(I)
                    C = C - TERM
                    IF (ABS(TERM).GT.TERMB)  TERMB = ABS(TERM)
 219                CONTINUE
-               IF (ABS(C).LT.FROUND*TERMB)  C = 0
+               IF (ABS(C).LT.FROUND*TERMB)  C = 0.0D0
                V(I) = C/A(I,I)
 229            CONTINUE
            ENDIF
@@ -4395,7 +4395,7 @@ C*****END precision > single
 C
 c-----------------------------------------------------------------------
        DATA    FRND/1.D-13/
-       IF (ABS(A).LT.FRND*B)  A = 0
+       IF (ABS(A).LT.FRND*B)  A = 0.0D0
        RETURN
        END
 c-----------------------------------------------------------------------
@@ -4451,7 +4451,7 @@ c 80 pointers required by SJEQLB
 c-----------------------------------------------------------------------
 c    round-off factor in computation precision
 c    (1.D-12 for DOUBLE PRECISION)
-       FRND = 1.E-12
+       FRND = 1.D-12
 c-----------------------------------------------------------------------
 c    length combinations
        IF (NPMAX.GT.NAMAX)  THEN
@@ -4655,7 +4655,7 @@ c    pointers
      ;     (IoT,ITPTR(6)),(IoV,ITPTR(10))
 c-----------------------------------------------------------------------
 c    comparison constant in computation precisison
-       ZERO = 0
+       ZERO = 0.0D0
 c
 c    get parameters
        NP = IW(IoNP)
@@ -4676,43 +4676,43 @@ c
 c          single phase
                KINIT = 3
 c          temperature perturbations
-               DT = 0.001*TZ
+               DT = 0.001D0*TZ
 c            forward perturbation
                RW(IoT) = TZ + DT
                CALL SJTP(NAMAX,NSMAX,NIW,NRW,NSW,
      ;             ATOM,CHEM,IW,RW,SW,KINIT)
                IF (IW(IoKERR).NE.0)  GOTO 90
                SX = RW(IoS)
-               RX = 1/RW(IoV)
+               RX = 1.0D0/RW(IoV)
 c            backward perturbation
                RW(IoT) = TZ - DT
                CALL SJTP(NAMAX,NSMAX,NIW,NRW,NSW,
      ;             ATOM,CHEM,IW,RW,SW,KINIT)
                IF (IW(IoKERR).NE.0)  GOTO 90
                SY = RW(IoS)
-               RY = 1/RW(IoV)
-               DT = 2*DT
+               RY = 1.0D0/RW(IoV)
+               DT = 2.0D0*DT
                DSDT = (SX - SY)/DT
                DRDT = (RX - RY)/DT
 c
 c          pressure perturbations
                RW(IoT) = TZ
-               DP = 0.001*PZ
+               DP = 0.001D0*PZ
 c            forward perturbation
                RW(IoP) = PZ + DP
                CALL SJTP(NAMAX,NSMAX,NIW,NRW,NSW,
      ;             ATOM,CHEM,IW,RW,SW,KINIT)
                IF (IW(IoKERR).NE.0)  GOTO 90
                SX = RW(IoS)
-               RX = 1/RW(IoV)
+               RX = 1.0D0/RW(IoV)
 c            backward perturbation
                RW(IoP) = PZ - DP
                CALL SJTP(NAMAX,NSMAX,NIW,NRW,NSW,
      ;             ATOM,CHEM,IW,RW,SW,KINIT)
                IF (IW(IoKERR).NE.0)  GOTO 90
                SY = RW(IoS)
-               RY = 1/RW(IoV)
-               DP = 2*DP
+               RY = 1.0D0/RW(IoV)
+               DP = 2.0D0*DP
                DSDP = (SX - SY)/DP
                DRDP = (RX - RY)/DP
 c
@@ -4721,32 +4721,32 @@ c          calculate sound speed
                DTDPS = - DSDP/DSDT
                DRDPS = DRDT*DTDPS + DRDP
                IF (DRDPS.LE.ZERO)  GOTO 90
-               RW(IoC) = SQRT(1/DRDPS)
+               RW(IoC) = SQRT(1.0D0/DRDPS)
 c
            ELSE
 c
 c           multi-phase system; requires changes at constant S
                SZ = RW(IoS)
 c            forward perturbation
-               DP = 0.01*PZ
+               DP = 0.01D0*PZ
                RW(IoP) = PZ + DP
                MODE = 6
                CALL SJROPX(NAMAX,NSMAX,NIW,NRW,NSW,
      ;                     ATOM,CHEM,IW,RW,SW,MODE)
                IF (IW(IoKERR).NE.0)  GOTO 90
-               RX = 1/RW(IoV)
+               RX = 1.0D0/RW(IoV)
 c            backward perturbation
-               RW(IoP) = 2*PZ - RW(IoP)
+               RW(IoP) = 2.0D0*PZ - RW(IoP)
                RW(IoS) = SZ
-               RW(IoT) = 2*TZ - RW(IoT)
+               RW(IoT) = 2.0D0*TZ - RW(IoT)
                CALL SJROPX(NAMAX,NSMAX,NIW,NRW,NSW,
      ;                     ATOM,CHEM,IW,RW,SW,MODE)
                IF (IW(IoKERR).NE.0)  GOTO 90
-               RY = 1/RW(IoV)
+               RY = 1.0D0/RW(IoV)
 c            compute sound speed
                DR = RX - RY
                IF (DR.LE.ZERO)  GOTO 90
-               DPDRS = 2*DP/DR
+               DPDRS = 2.0D0*DP/DR
                RW(IoC) = SQRT(DPDRS)
            ENDIF
 c
@@ -4852,10 +4852,10 @@ c    pointers
 c    maximum iterations
        DATA KTRCDM/20/
 c    error parameters in calculation precision
-       ERRFT = 1.E-4
-       ERRFV = 1.E-4
+       ERRFT = 1.D-4
+       ERRFV = 1.D-4
 c-----------------------------------------------------------------------
-       ZERO = 0
+       ZERO = 0.0D0
 c    get parameters
        KMON = IW(IoKMON)
        KUMO = IW(IoKUMO)
@@ -4872,13 +4872,13 @@ c
 c    save unburned mixture properties
        RW(IoP1) = RW(IoP)
        RW(IoV1) = RW(IoV)
-       R1 = 1/RW(IoV1)
+       R1 = 1.0D0/RW(IoV1)
        RW(IoH1) = RW(IoH)
 c
 c   estimate burned gas state
        RW(IoT) = RW(IoTE)
-       RW(IoV) = RW(IoV)/1.8
-       RW(IoP) = RW(IoP)*RW(IoTE)/300
+       RW(IoV) = RW(IoV)/1.8D0
+       RW(IoP) = RW(IoP)*RW(IoTE)/300D0
 c
 c    other initialization
        DT = RW(IoHUGE)
@@ -4899,7 +4899,7 @@ c    save state
        H2 = RW(IoH)
        P2 = RW(IoP)
        V2 = RW(IoV)
-       R2 = 1/V2
+       R2 = 1.0D0/V2
 c
 c    get stagnation enthalpy and impulse changes through wave
        CALL SJRCJX(NAMAX,NSMAX,NIW,NRW,NSW,ATOM,CHEM,IW,RW,SW,
@@ -4930,7 +4930,7 @@ c
 c -- perturbations to get derivatives
 c
 c    temperature perturbation
-       DT = 0.02*T2
+       DT = 0.02D0*T2
        RW(IoT) = T2 + DT
        RW(IoV) = V2
        CALL SJROPX(NAMAX,NSMAX,NIW,NRW,NSW,ATOM,CHEM,IW,RW,SW,MODE)
@@ -4941,11 +4941,11 @@ c    temperature perturbation
        DPDT = (RW(IoP) - P2)/DT
 c
 c    volume perturbation
-       DV = 0.02*V2
+       DV = 0.02D0*V2
        RW(IoV) = V2 + DV
        RW(IoT) = T2
        CALL SJROPX(NAMAX,NSMAX,NIW,NRW,NSW,ATOM,CHEM,IW,RW,SW,MODE)
-       R2X = 1/RW(IoV)
+       R2X = 1.0D0/RW(IoV)
        CALL SJRCJX(NAMAX,NSMAX,NIW,NRW,NSW,ATOM,CHEM,IW,RW,SW,
      ;             RW(IoP1),RW(IoP),RW(IoH1),RW(IoH),R1,R2X,FHX,FPX)
        DFHDV = (FHX - FH)/DV
@@ -4965,23 +4965,23 @@ c
 c -- limit the magnitudes of changes
 c
 c    limit temperature change
-       DTM = 0.2*RW(IoT)
+       DTM = 0.2D0*RW(IoT)
        IF (ABS(DT).GT.DTM) DT = DTM*DT/ABS(DT)
 c
 c    limit volume change  (volume must be smaller than for unburned gas)
        V2X = V2 + DV
        IF (V2X.GE.RW(IoV1)) THEN
-               DVM = 0.5*(RW(IoV1) - V2)
+               DVM = 0.5D0*(RW(IoV1) - V2)
            ELSE
-               DVM = 0.2*V2
+               DVM = 0.2D0*V2
            ENDIF
        IF (ABS(DV).GT.DVM) DV = DVM*DV/ABS(DV)
 c
 c    limit pressure changes
        IF (DP.LT.ZERO)  THEN
-              DPM = 0.5*RW(IoP)
+              DPM = 0.5D0*RW(IoP)
            ELSE
-              DPM = 2*RW(IoP)
+              DPM = 2.0D0*RW(IoP)
            ENDIF
        IF (ABS(DP).GT.DPM) DP = DPM*DP/ABS(DP)
 c
@@ -5062,7 +5062,7 @@ c    calculate sound speed in burned gas
 c    unburned speed relative to wave set by continuity
        V1S = V2S*(R2/R1)**2
 c    stagnation enthalpy change
-       FH = H2 + 0.5*V2S - (H1 + 0.5*V1S)
+       FH = H2 + 0.5D0*V2S - (H1 + 0.5D0*V1S)
 c    impulse change
        FP = P2 + R2*V2S - (P1 + R1*V1S)
        RETURN
@@ -5225,11 +5225,11 @@ c-----------------------------------------------------------------------
 c    iteration maximum
        DATA    KTRSM/40/
 c    error control parameter in computation precision
-       ERRT = 0.1
+       ERRT = 0.1D0
 c       ERRT = 0.01
 c-----------------------------------------------------------------------
 c    comparison constant
-       ZERO = 0
+       ZERO = 0D0
 c     get parameters
        NP = IW(IoNP)
        KMON = IW(IoKMON)
@@ -5284,7 +5284,7 @@ c    set false limits
 18     DT = RW(IoHUGE)
        ZA = RW(IoHUGE)
        ZB = - RW(IoHUGE)
-       DZDTS = 1/RW(IoHUGE)
+       DZDTS = 1.0D0/RW(IoHUGE)
 c
 c -- iteration loop point
 c
@@ -5329,7 +5329,7 @@ c                derivative estimate on S curve
                        IF ((TMTB.GT.ZERO).AND.(Z.GT.ZB))  THEN
                                DZDTS = (Z - ZB)/TMTB
                            ELSE
-                               DZDTS = 1/RW(IoHUGE)
+                               DZDTS = 1.0D0/RW(IoHUGE)
                            ENDIF
                        ENDIF
 c                reset lower bound
@@ -5348,7 +5348,7 @@ c                derivative estimate on S curve
                        IF ((TAMT.GT.ZERO).AND.(Z.LT.ZA)) THEN
                                 DZDTS = (ZA - Z)/TAMT
                            ELSE
-                                DZDTS = 1/RW(IoHUGE)
+                                DZDTS = 1.0D0/RW(IoHUGE)
                            ENDIF
                        ENDIF
 c                reset upper bound
@@ -5364,8 +5364,8 @@ c -- select next step
 c
        IF (KTRS.EQ.1)  THEN
 c            arbitrary step
-               DT = 1
-               DPDT = 0
+               DT = 1.0D0
+               DPDT = 0.0D0
            ELSE
 c            step based on d()/dT
                IF (KCI.NE.3)  THEN
@@ -5380,7 +5380,7 @@ c                    solution bracketed
                        DPDT = (PA - PB)/DTAB
                        IF (DZDT.GT.2*DZDTS)  THEN
 c                            S-shaped curve; cut bracket in half
-                               DT = 0.5*(TA + TB) - RW(IoT)
+                               DT = 0.5D0*(TA + TB) - RW(IoT)
                            ELSE
 c                            gradual curve; use derivative
                                DT = (ZTAR - Z)/DZDT
@@ -5393,7 +5393,7 @@ c    estimate associated dP
 c
 c -- limit the magnitudes of changes
 c
-       DTM = 0.1*RW(IoT)
+       DTM = 0.1D0*RW(IoT)
        IF (ABS(DT).GT.DTM)  THEN
            FAC = DTM/ABS(DT)
            DT = FAC*DT
@@ -5401,9 +5401,9 @@ c
            ENDIF
        DP = DPDT*DT
        IF (DP.LT.ZERO)  THEN
-              DPM = 0.5*RW(IoP)
+              DPM = 0.5D0*RW(IoP)
            ELSE
-              DPM = 2*RW(IoP)
+              DPM = 2.0D0*RW(IoP)
            ENDIF
        IF (ABS(DP).GT.DPM)  THEN
            FAC = DPM/ABS(DP)
@@ -5639,7 +5639,7 @@ c    other initializations
        FB = - RW(IoHUGE)
        ZA = RW(IoHUGE)
        ZB = - RW(IoHUGE)
-       DZDFS = 1/RW(IoHUGE)
+       DZDFS = 1.0D0/RW(IoHUGE)
        KCI = 0
        KTRS1 = 0
        DT = RW(IoHUGE)
@@ -5699,8 +5699,8 @@ c
 c -- calculate the properties for the current trial (T,P)
 c
 c    skip initialization if T and P are close and one phase
-20     IF ((ABS(DT).LT.0.01*RW(IoT)).AND.
-     ;     (ABS(DP).LT.0.01*RW(IoP))) THEN
+20     IF ((ABS(DT).LT.0.01D0*RW(IoT)).AND.
+     ;     (ABS(DP).LT.0.01D0*RW(IoP))) THEN
            IF ((NP.EQ.1).AND.(KFRZ.GE.0))  KINITT = 2
 c        set to skip partial derivative re-estimation
            KINITD = 0
@@ -5794,7 +5794,7 @@ c                derivative estimate on S curve
                        IF ((FMFB.GT.ZERO).AND.(Z.GT.ZB))  THEN
                                DZDFS = (Z - ZB)/FMFB
                            ELSE
-                               DZDFS = 1/RW(IoHUGE)
+                               DZDFS = 1.0D0/RW(IoHUGE)
                            ENDIF
                        ENDIF
 c                reset lower bound
@@ -5815,7 +5815,7 @@ c                derivative estimate on S curve
                        IF ((FAMF.GT.ZERO).AND.(Z.LT.ZA)) THEN
                                DZDFS = (ZA - Z)/FAMF
                            ELSE
-                               DZDFS = 1/RW(IoHUGE)
+                               DZDFS = 1.0D0/RW(IoHUGE)
                            ENDIF
                        ENDIF
 c                reset upper bound
@@ -5851,7 +5851,7 @@ c    check for first iteration
        IF (KTRS1.EQ.1)  THEN
            FP = F
            ZP = Z
-           DF = 0.01*F
+           DF = 0.01D0*F
            GOTO 48
            ENDIF
 c
@@ -5862,7 +5862,7 @@ c            solution not yet bracketed
                ZMZP = Z - ZP
                IF ((FMFP.EQ.ZERO).OR.(ZMZP.EQ.ZERO))  THEN
 c                    set small value of correct sign
-                       DZDF = 1/RW(IoHUGE)
+                       DZDF = 1.0D0/RW(IoHUGE)
                    ELSE
 c                    estimate derivative
                        DZDF = ZMZP/FMFP
@@ -5884,7 +5884,7 @@ c                    estimate derivative
 c    select change
        IF ((KCI.EQ.3).AND.(DZDF.GT.2*DZDFS))  THEN
 c            S-shaped curve; cut bracket in half
-               DF = 0.5*(FA + FB) - F
+               DF = 0.5D0*(FA + FB) - F
            ELSE
 c            gradual curve; set change using derivative estimate
                DF = (ZTAR - Z)/DZDF
@@ -5896,11 +5896,11 @@ c   mode branch
 48     IF (MODE.LT.4)  THEN
 c            changing P
                DP = DF
-               DT = 0
+               DT = 0.0D0
            ELSE
 c           changing T
                DT = DF
-               DP = 0
+               DP = 0.0D0
            ENDIF
 c
 c  check change checks
@@ -5916,7 +5916,7 @@ c    check for derivative estimation
 50     IF (KINITD.NE.0)  THEN
 c
 c        temperature perturbation
-           DT = 0.01*TT
+           DT = 0.01D0*TT
            RW(IoT) = TT + DT
            RW(IoP) = PT
            CALL SJTP(NAMAX,NSMAX,NIW,NRW,NSW,
@@ -5946,7 +5946,7 @@ c        MODE = 9; specified V and S
            GOTO 70
 c
 c        pressure perturbation
-70         DP = 0.01*PT
+70         DP = 0.01D0*PT
            RW(IoP) = PT + DP
            RW(IoT) = TT
            CALL SJTP(NAMAX,NSMAX,NIW,NRW,NSW,ATOM,CHEM,IW,RW,SW,KINITD)
@@ -5989,13 +5989,13 @@ c    change determination
 c
 c -- limit the magnitudes of changes
 c
-200    DTM = 0.2*TT
+200    DTM = 0.2D0*TT
        IF (ABS(DT).GT.DTM)  THEN
            FAC = DTM/ABS(DT)
            DT = FAC*DT
            DP = FAC*DP
            ENDIF
-       DPM = 0.2*PT
+       DPM = 0.2D0*PT
        IF (ABS(DP).GT.DPM)  THEN
            FAC = DPM/ABS(DP)
            DT = FAC*DT
@@ -6022,7 +6022,7 @@ c    check for bracketed averaging
 602    FORMAT (' Mode ',i2,' iteration converged.')
        IF (KCI.EQ.3) THEN
            QA = (ZTAR - ZB)/ZAB
-           QB = 1 - QA
+           QB = 1.0D0 - QA
            DO 609 J=1,NS
                RW(IoSMOL+J) = QA*RW(IoSMFA+J) + QB*RW(IoSMFB+J)
 609            CONTINUE
@@ -6244,7 +6244,7 @@ c-----------------------------------------------------------------------
        COMMON /SJTERM/ KTERM,KUTERM
 c-----------------------------------------------------------------------
 c    constant in machine precision
-       ZERO = 0
+       ZERO = 0.0D0
 c
 c    header
        WRITE (KUTERM,4)  T,CHEMJ
@@ -6369,14 +6369,14 @@ c-----------------------------------------------------------------------
        common /kcallblock/ kcall
 c-----------------------------------------------------------------------
        IF (KCALL.EQ.0)  THEN
-           TOLD = 0
-           POLD = 0
-           DTMAX = 50
-           PRMAX = .5
+           TOLD = 0D0
+           POLD = 0D0
+           DTMAX = 50D0
+           PRMAX = .5D0
            KCALL = 1
            ENDIF
-       ZERO = 0
-       TINY = 1/RW(IoHUGE)
+       ZERO = 0.0D0
+       TINY = 1.0D0/RW(IoHUGE)
 c
 c    get parameters
        NA = IW(IoNA)
@@ -6494,9 +6494,9 @@ c
 c
 c -- mixture property calculation
 c
-       RW(IoH) = 0
-       RW(IoS) = 0
-       RW(IoV) = 0
+       RW(IoH) = 0.0D0
+       RW(IoS) = 0.0D0
+       RW(IoV) = 0.0D0
        J2 = 0
        DO 79 M=1,NP
            J1 = J2 + 1
@@ -6517,10 +6517,10 @@ c                    calculate partial molal volume,  m**3/mol
                    ELSE
 c                    condensed species; correct enthalpy for pressure
                       HX = HX +
-     ;                 (RW(IoP) - RW(IoPATM))*1.0E-9*RW(IoWMS+J)/
+     ;                 (RW(IoP) - RW(IoPATM))*1.0D-9*RW(IoWMS+J)/
      ;                                    (RW(IoDCS+J)*RW(IoCVCJ))
 c                     calculate partial molal volume,  m**3/mol
-                      VX = RW(IoWMS+J)*1.0E-6/RW(IoDCS+J)
+                      VX = RW(IoWMS+J)*1.0D-6/RW(IoDCS+J)
                    ENDIF
                RW(IoH) = RW(IoH) + RW(IoSMOL+J)*HX
                RW(IoS) = RW(IoS) + RW(IoSMOL+J)*SX
@@ -6531,9 +6531,9 @@ c
 c    here H is in kcal, S is in cal, and V is in m**3
 c    convert to J/kg, J/kg-K, and m**3/kg, the basic SI units
 c
-       RW(IoH) = RW(IoH)*RW(IoCVCJ)*1.E6/TMASS
-       RW(IoS) = RW(IoS)*RW(IoCVCJ)*1.E3/TMASS
-       RW(IoV) = RW(IoV)*1000./TMASS
+       RW(IoH) = RW(IoH)*RW(IoCVCJ)*1.D6/TMASS
+       RW(IoS) = RW(IoS)*RW(IoCVCJ)*1.D3/TMASS
+       RW(IoV) = RW(IoV)*1000.D0/TMASS
 c
 c    compute U, J/kg
        RW(IoU) = RW(IoH) - RW(IoP)*RW(IoV)
@@ -6620,7 +6620,7 @@ c    pointers
        EQUIVALENCE (IoNP,IEPTR(7)),(IoNSP,IEPTR(30)),
      ;   (IoG,IEPTR(57)),(IoJFS,ISPTR(6))
 c-----------------------------------------------------------------------
-       ZERO = 0
+       ZERO = 0.0D0
 c
 c    get parameters
        NP = IW(IoNP)
@@ -6655,11 +6655,11 @@ c                    gas species; correct entropy to mixture P
                    ELSE
 c                    condensed species; correct enthalpy to mixture P
                        HX = HX +
-     ;                      (RW(IoP) - RW(IoPATM))*1.0E-9*RW(IoWMS+J)/
+     ;                      (RW(IoP) - RW(IoPATM))*1.0D-9*RW(IoWMS+J)/
      ;                                    (RW(IoDCS+J)*RW(IoCVCJ))
                    ENDIF
 c            calculate g(T,P)/RT
-               RW(IoG+J) = (HX*1000. - RW(IoTP+M)*SX)/RT
+               RW(IoG+J) = (HX*1000.D0 - RW(IoTP+M)*SX)/RT
 19             CONTINUE
 29         CONTINUE
        RETURN
