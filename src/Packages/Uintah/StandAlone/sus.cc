@@ -87,8 +87,9 @@ usage( const std::string & message,
       cerr << "-emit_taskgraphs     : Output taskgraph information\n";
       cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
       cerr << "-t <timestep>        : Restart timestep (last checkpoint is default)\n";
-      cerr << "-copy                : Default, copy from old uda when restarting\n";
-      cerr << "-nocopy              : Move directories from old uda when restarting\n";
+      cerr << "-copy                : Copy from old uda when restarting\n";
+      cerr << "-move                : Move from old uda when restarting\n";
+      cerr << "-nocopy              : Default: Don't copy or move old uda timesteps when restarting\n";
       cerr << "\n\n";
     }
   quit();
@@ -125,7 +126,8 @@ main(int argc, char** argv)
     bool   restart=false;
     int    restartTimestep = -1;
     string restartFromDir;
-    bool   restartRemoveOldDir=false;
+    bool   restartFromScratch = true;
+    bool   restartRemoveOldDir = false;
     int    numThreads = 0;
     string filename;
     string scheduler;
@@ -174,10 +176,14 @@ main(int argc, char** argv)
 	   emit_graphs = true;
 	} else if(s == "-restart") {
 	   restart=true;
-	} else if(s == "-nocopy") {
-	   restartRemoveOldDir = true;
-	} else if(s == "-copy") { // default anyway, but that's fine
+	} else if(s == "-nocopy") { // default anyway, but that's fine
+ 	   restartFromScratch = true;
+	} else if(s == "-copy") {
+	   restartFromScratch = false;
 	   restartRemoveOldDir = false;
+	} else if(s == "-move") {
+ 	   restartFromScratch = false;
+	   restartRemoveOldDir = true;
 	} else if(s == "-t") {
            if (i < argc-1)
 	      restartTimestep = atoi(argv[++i]);
@@ -340,7 +346,7 @@ main(int argc, char** argv)
 
 	if (restart) {
 	  sim->doRestart(restartFromDir, restartTimestep,
-			 restartRemoveOldDir);
+			 restartFromScratch, restartRemoveOldDir);
 	}
 	sim->run();
 
