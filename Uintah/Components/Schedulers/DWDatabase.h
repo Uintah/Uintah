@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 #include <SCICore/Exceptions/InternalError.h>
-#include <Uintah/Exceptions/UnknownVariable.h>
+#include <Uintah/Grid/UnknownVariable.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <iosfwd>
@@ -351,9 +351,8 @@ void DWDatabase<VarType>::print(std::ostream& out)
 	 PatchRecord* rr = patchiter->second;
 	 out <<  "  " << *(rr->patch) << '\n';
 	 for(int i=0;i<(int)rr->vars.size();i++){
-	    if(rr->vars[i]){
+	    if(rr->vars[i])
 	       out << "    Material " << i << '\n';
-	    }
 	 }
       }
    }
@@ -367,6 +366,9 @@ void DWDatabase<VarType>::print(std::ostream& out)
 
 //
 // $Log$
+// Revision 1.22  2000/12/23 00:57:27  witzel
+// changed UnknownVariable.h include because it has moved
+//
 // Revision 1.21  2000/12/22 00:13:52  jas
 // Got rid of X,Y,Z FCVariable stuff.  Changes to get rid of g++ warnings.
 //
