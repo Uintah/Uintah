@@ -297,7 +297,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 	pack $w.f.meth -side top -fill x -expand 1
 
 	button $w.execute -text Execute -command "$this-c needexecute"
-	pack $w.execute -fill x -expand yes -padx 10 -pady 5
+	button $w.close   -text Close   -command "destroy $w"
+	pack $w.execute $w.close -fill x -expand yes -padx 10 -pady 5 -side left
     }
 
     method set-isoval {} {
