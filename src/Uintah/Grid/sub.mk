@@ -19,7 +19,7 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/SimulationTime.cc $(SRCDIR)/SubPatch.cc \
 	$(SRCDIR)/Task.cc $(SRCDIR)/TypeDescription.cc \
 	$(SRCDIR)/TypeUtils.cc $(SRCDIR)/VarLabel.cc \
-	$(SRCDIR)/templates.cc
+	$(SRCDIR)/templates.cc $(SRCDIR)/PerPatchBase.cc
 
 PSELIBS := Uintah/Math Uintah/Exceptions SCICore/Thread SCICore/Exceptions \
 	SCICore/Geometry PSECore/XMLUtil
@@ -29,6 +29,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.17  2000/06/05 19:44:49  guilkey
+# Created PerPatchBase, filled in PerPatch class.
+#
 # Revision 1.16  2000/05/30 20:19:35  sparker
 # Changed new to scinew to help track down memory leaks
 # Changed region to patch
