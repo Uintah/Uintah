@@ -12,7 +12,6 @@
  */
 
 #include <stdio.h>
-#include <malloc.h>
 #include <Classlib/HashTable.h>
 #include <MeshView/MeshView.h>
 #include <Geometry/Point.h>
@@ -37,12 +36,8 @@ static RegisterModule db2("Visualization", "MeshView", make_MeshView);
 static clString mesh_name("Mesh");
 
 MeshView::MeshView()
-: UserModule("MeshView", Source)
+: UserModule("MeshView", Filter)
 {
-
-    readDat();
-    levels = (int *) malloc (numTetra * sizeof(int));
-    oldLev = -1;
     numLevels=0;
     levSlide = new MUI_slider_int("Number of Levels",
 				  &numLevels,
@@ -53,10 +48,9 @@ MeshView::MeshView()
 
     oldSeed = -1;
     seedTet = 0;
-    MUI_slider_int *seedSlide = new MUI_slider_int("Starting Tetra", &seedTet,
-					MUI_widget::Immediate, 1);
+    seedSlide = new MUI_slider_int("Starting Tetra", &seedTet,
+				   MUI_widget::Immediate, 1);
     add_ui(seedSlide);	
-    seedSlide -> set_minmax(0, numTetra - 1);
 
     oldShare = 1;
     numShare = 3;
@@ -93,7 +87,8 @@ MeshView::MeshView()
     add_ui(new MUI_onoff_switch("Show all levels", &allLevels,
 				MUI_widget::Immediate));
 
-    sched_state=SchedNewData;
+    inport=new MeshIPort(this, "Mesh", MeshIPort::Atomic);
+    add_iport(inport);
 
     // Create the output port
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
@@ -118,12 +113,14 @@ Module* MeshView::clone(int deep)
 
 void MeshView::execute()
 {
-    int i;
-  
+    MeshHandle mesh;
+    if(!inport->get(mesh))
+	return;
+    
     ogeom->delAll();
-    if ((oldSeed != seedTet) || (numShare != oldShare))
-    {
-	makeLevels();
+
+    if ((oldSeed != seedTet) || (numShare != oldShare)){
+	makeLevels(mesh);
 	levSlide -> set_minmax(0, deep);
 	oldSeed = seedTet;
 	oldShare = numShare;
@@ -136,35 +133,24 @@ void MeshView::execute()
     ObjGroup *othGroup = new ObjGroup;
     ObjGroup *levGroup = new ObjGroup;
     ObjGroup *group = new ObjGroup;
-    for (i = 0; i < numTetra; i++)
-    {
+    int numTetra=mesh->elems.size();
+    seedSlide -> set_minmax(0, numTetra - 1);
+    for (int i = 0; i < numTetra; i++){
 	if (((allLevels == 0) && (levels[i] == numLevels)) ||
-	    ((allLevels == 1) && (levels[i] <= numLevels)))
-        {
-	    Point p1(data[tetra[i * 4] * 3], 
-		     data[tetra[i * 4] * 3 + 1],
-		     data[tetra[i * 4] * 3 + 2]);
-	    Point p2(data[tetra[i * 4 + 1] * 3], 
-		     data[tetra[i * 4 + 1] * 3 + 1],
-		     data[tetra[i * 4 + 1] * 3 + 2]);
-	    Point p3(data[tetra[i * 4 + 2] * 3], 
-		     data[tetra[i * 4 + 2] * 3 + 1],
-		     data[tetra[i * 4 + 2] * 3 + 2]);
-	    Point p4(data[tetra[i * 4 + 3] * 3], 
-		     data[tetra[i * 4 + 3] * 3 + 1],
-		     data[tetra[i * 4 + 3] * 3 + 2]);
+	    ((allLevels == 1) && (levels[i] <= numLevels))) {
+	    Element* e=mesh->elems[i];
+	    Point p1(mesh->nodes[e->n1]->p);
+	    Point p2(mesh->nodes[e->n2]->p);
+	    Point p3(mesh->nodes[e->n3]->p);
+	    Point p4(mesh->nodes[e->n4]->p);
 
 	    if (((p1.x() >= clipX) && (p2.x() >= clipX) && (p3.x() >= clipX) &&
 		 (p4.x() >= clipX)) &&
 		((p1.y() >= clipY) && (p2.y() >= clipY) && (p3.y() >= clipY) &&
 		 (p4.y() >= clipY)) &&
 		((p1.z() >= clipZ) && (p2.z() >= clipZ) && (p3.z() >= clipZ) &&
-		 (p4.z() >= clipZ)))
-	    {
-		Vector dummy(0, 0, 0);
+		 (p4.z() >= clipZ))) {
 		Tetra *nTet = new Tetra(p1, p2, p3, p4);
-		GeomPick* pick=new GeomPick(this, dummy);
-		nTet -> set_pick(pick);
 		if (levels[i] == numLevels)
 		    levGroup -> add(nTet);
 		else	
@@ -172,7 +158,6 @@ void MeshView::execute()
 	    }
 	}
     }
-<<<<<<< MeshView.cc
 
     MaterialProp *mtl = new  MaterialProp(Color(.5, .5, .5),
 					  Color(.5, .5, .5),
@@ -186,176 +171,43 @@ void MeshView::execute()
 					  10));
     group -> add(othGroup);
     group -> add(levGroup);
-    ogeom -> addObj(group);
-=======
-  
     ogeom -> addObj(group, mesh_name);
->>>>>>> 1.5
-}	
-
-void MeshView::initList()
-{
-    int i;
-
-    for (i = 0; i < numVerts; i++)
-    {
-	list[i] = newList();
-	list[i] -> next = NULL;
-    }
-
 }
 
-void MeshView::addTet(int row, int ind)
+void MeshView::makeLevels(const MeshHandle& mesh)
 {
-    int fin = 0;
-    LPTR newL, curr;
-
-    curr = list[row];
-    while ((curr -> next != NULL) && (!fin))
-    {
-        if (curr -> next -> tetra == ind)
-	     fin = 1;
-	else
-	     curr = curr -> next;
-    }
-
-    if (!fin)
-    {
-		newL = newList();
-		newL -> tetra = ind;
-		newL -> next = NULL;
-		curr -> next = newL;
-    }
-}
-
-LPTR MeshView::newList()
-{
-    return (LPTR) malloc (sizeof (LIST));
-}
-
-void MeshView::makeLevels()
-{
-    int i, x; 
-    Queue<int> q;
-    LPTR curr;
-    int *work, wCount;
-
-    work = (int *) malloc (numTetra * sizeof(int));
-    
     int counter = 0;
     
-    for (i = 0; i < numTetra; i++)
+    int numTetra=mesh->elems.size();
+    levels.remove_all();
+    levels.grow(numTetra);
+    for (int i = 0; i < numTetra; i++)
 	levels[i] = -1;
 
+    Queue<int> q;
     q.append(seedTet);
     q.append(-2);
 	
     deep = 0;
-    while(counter < numTetra)
-    {
-	x = q.pop();
-	if (x == -2)
-	{
+    while(counter < numTetra){
+	int x = q.pop();
+	if (x == -2) {
 	    deep++;
 	    q.append(-2);
-	}
-	else if (levels[x] == -1)
-	{
+	} else {
 	    levels[x] = deep;
 	    counter++;
-	    wCount = 0;
-//	    for (i = 0; i < 4; i++)
-//	    {
-//		for (curr = list[tetra[x * 4 + i]] -> next; curr != NULL;
-//		     curr = curr -> next)
-//	        {
-//		    q.append(curr -> tetra);
-//		 
-//		}	
-	    for (i = 0; i < 4; i++)
-	    {
-		for (curr = list[tetra[x * 4 + i]] -> next; curr != NULL;
-		     curr = curr -> next)
-		{
-		    if (work[curr -> tetra] == 0)
-			wCount++;
-		    work[curr -> tetra]++;
-		}
+	    Element* e=mesh->elems[x];
+	    for(int i=0;i<4;i++){
+		int neighbor=e->face[i];
+		if(neighbor !=-1 && levels[neighbor] == -1)
+		    q.append(neighbor);
 	    }
-//	    cerr << "Count " << counter << ": " <<  wCount << endl;
-	    for (i = 0; i < numTetra; i++)
-	    {
-		if (work[i] == numShare)
-		    q.append(i);
-		work[i] = 0;
-	    }
-	}   
-    }     
-}	
+	}
+    }
+}
 
 	
-void MeshView::readDat()
-{
-    FILE *dat, *tet;
-    double x, y, z;
-    int a, b, c, d;
-    char str[80], suff[10], str2[80];
-
-    printf("Enter data file name (no suffix): ");
-    scanf("%s",str);
-
-    strcpy(str2, str);
-    strcpy(suff,".pts");
-    strcat(str2,suff);
-    dat = fopen(str2,"r");
-    numVerts = 0;
-
-    data = (double *) malloc (3 * 10000 * sizeof(double));
-    tetra = (int *) malloc (4 * 50000 * sizeof(int));
-
-    Xmin = Ymin = Zmin = 10000; 
-    Xmax = Ymax = Zmax = -10000;
-    while (!feof(dat))
-    {
-	fscanf(dat,"%lf %lf %lf", &x, &y, &z);
-	data[numVerts * 3] = x;
-	data[numVerts * 3 + 1] = y;
-	data[numVerts * 3 + 2] = z;
-	numVerts++;
-	if (Xmin > x) Xmin = x;
-	if (Xmax < x) Xmax = x;
-	if (Ymin > y) Ymin = y;
-	if (Ymax < y) Ymax = y;
-	if (Zmin > z) Zmin = z;
-	if (Zmax < z) Zmax = z;
-    }
-
-    strcpy(str2, str);
-    strcpy(suff,".tetra");
-    strcat(str2,suff);
-    tet = fopen(str2,"r");
-
-    list = (LPTR *) malloc (numVerts * sizeof(LPTR));
-
-    initList();
-    numTetra = 0;
-   
-    while (!feof(tet))
-    {
-	fscanf(tet, "%d %d %d %d", &a, &b, &c, &d);
-	tetra[numTetra * 4] = a-1;
-	tetra[numTetra * 4 + 1] = b-1;
-	tetra[numTetra * 4 + 2] = c-1;
-	tetra[numTetra * 4 + 3] = d-1;
-	addTet(a-1, numTetra); 
-	addTet(b-1, numTetra); 
-	addTet(c-1, numTetra);
-	addTet(d-1, numTetra);
-	numTetra++;
-    }
-
-}
-    
 void MeshView::mui_callback(void*, int which)
 {
     if (oldLev != numLevels)

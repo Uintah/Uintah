@@ -15,19 +15,21 @@
 #define SCI_project_module_MeshView_h
 
 #include <UserModule.h>
+#include <MeshPort.h>
 #include <Geometry/Point.h>
 #include <MUI.h>
 #include "connect.h"
 
-class ColormapPort;
-class Field3DIPort;
 class GeometryOPort;
+class Mesh;
 class ObjGroup;
 
 class MeshView : public UserModule {
+    MeshIPort* inport;
     GeometryOPort* ogeom;
     int abort_flag;
     MUI_slider_int *levSlide;
+    MUI_slider_int *seedSlide;
     
     int numLevels, oldLev;
     int seedTet, oldSeed;
@@ -36,17 +38,7 @@ class MeshView : public UserModule {
     int deep;
     int allLevels;
     int numShare, oldShare;
-
-    int widget_id;
-    double *data;
-    int *tetra;
-    
-    int numVerts;
-    int numTetra;
-
-    LPTR *list;
-    int	*levels;
-
+    Array1<int> levels;
 public:
     MeshView();
     MeshView(const MeshView&, int deep);
@@ -55,16 +47,8 @@ public:
     virtual void execute();
     virtual void mui_callback(void*, int);
     void initList();
-    LPTR newList();
     void addTet(int row, int ind);
-    void makeLevels();
-    void readDat();
+    void makeLevels(const MeshHandle&);
 };
 
 #endif
-
-
-
-
-
-
