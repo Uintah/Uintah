@@ -41,6 +41,8 @@
 #include <sci_hash_map.h>
 #include <Core/Datatypes/TetVolMesh.h>
 
+#include <sstream>
+
 namespace SCIRun {
 
 class GeomEllipsoid;
@@ -74,6 +76,8 @@ public:
 				  MaterialHandle default_material,
 				  bool backface_cull_p,
 				  int  fontsize,
+				  int  precision,
+				  bool render_locations,
 				  bool render_data,
 				  bool render_nodes,
 				  bool render_edges,
@@ -118,7 +122,9 @@ public:
 				  bool use_default_material,
 				  MaterialHandle default_material,
 				  bool backface_cull_p,
-				  int  fontsize,
+				  int fontsize,
+				  int precision,
+				  bool render_locations,
 				  bool render_data,
 				  bool render_nodes,
 				  bool render_edges,
@@ -142,29 +148,39 @@ private:
 			       bool use_default_material,
 			       MaterialHandle default_material,
 			       bool backface_cull_p,
-			       int fontsize);
+			       int fontsize,
+			       int precision);
   GeomSwitch *render_text_data_nodes(FieldHandle fld,
 				     bool use_default_material,
 				     MaterialHandle default_material,
 				     bool backface_cull_p,
-				     int fontsize);
+				     int fontsize,
+				     int precision);
   GeomSwitch *render_text_nodes(FieldHandle fld,
   				bool use_default_material,
   				MaterialHandle default_material,
 				bool backface_cull_p,
-				int fontsize);
+				int fontsize,
+				int precision,
+				bool render_locations);
   GeomSwitch *render_text_edges(FieldHandle fld,
   				bool use_default_material,
   				MaterialHandle default_material,
-				int fontsize);
+				int fontsize,
+				int precision,
+				bool render_locations);
   GeomSwitch *render_text_faces(FieldHandle fld,
   				bool use_default_material,
   				MaterialHandle default_material,
-				int fontsize);
+				int fontsize,
+				int precision,
+				bool render_locations);
   GeomSwitch *render_text_cells(FieldHandle fld,
 				bool use_default_material,
 				MaterialHandle default_material,
-				int fontsize);
+				int fontsize,
+				int precision,
+				bool render_locations);
 
   GeomSwitch *render_data(const Fld *fld, 
 			  const string &data_display_mode,
@@ -228,6 +244,7 @@ to_double(const unsigned char&, double &);
 template <>
 bool
 to_double(const Vector&, double &);
+
 
 template <class Dat>
 bool 
@@ -858,6 +875,8 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
 				   MaterialHandle default_material,
 				   bool backface_cull_p,
 				   int fontsize,
+				   int precision,
+				   bool render_locations,
 				   bool render_data,
 				   bool render_nodes,
 				   bool render_edges,
@@ -871,28 +890,31 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
   {
     texts->add(render_text_data(field_handle, use_default_material,
 				default_material, backface_cull_p,
-				fontsize));
+				fontsize, precision));
   }
   if (render_nodes)
   {
     texts->add(render_text_nodes(field_handle, use_default_material,
 				 default_material, backface_cull_p,
-				 fontsize));
+				 fontsize, precision, render_locations));
   }
   if (render_edges)
   {
     texts->add(render_text_edges(field_handle, use_default_material,
-				 default_material, fontsize));
+				 default_material, fontsize,
+				 precision, render_locations));
   }
   if (render_faces)
   {
     texts->add(render_text_faces(field_handle, use_default_material,
-				 default_material, fontsize));
+				 default_material, fontsize,
+				 precision, render_locations));
   }
   if (render_cells)
   {
     texts->add(render_text_cells(field_handle, use_default_material,
-				 default_material, fontsize));
+				 default_material, fontsize,
+				 precision, render_locations));
   }
   return text_switch;
 }
@@ -904,12 +926,14 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
 					bool use_default_material,
 					MaterialHandle default_material,
 					bool backface_cull_p,
-					int fontsize)
+					int fontsize,
+					int precision)
 {
   if (backface_cull_p && field_handle->data_at() == Field::NODE)
   {
     return render_text_data_nodes(field_handle, use_default_material,
-				  default_material, backface_cull_p, fontsize);
+				  default_material, backface_cull_p, fontsize,
+				  precision);
   }
 
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
@@ -935,23 +959,22 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
     texts->set_font_index(fontsize);
   }
 
-  char buffer[256];
-  char format[256];
-  snprintf(format, 256, "%%%d.%df", 1, 2);
+  std::ostringstream buffer;
+  buffer.precision(precision);
+
   typename Loc::iterator iter, end;
   mesh->begin(iter);
   mesh->end(end);
   Point p;
   Vector n;
   while (iter != end) {
-    typename Fld::value_type tmp;
-    if (fld->value(tmp, *iter)) {
+    typename Fld::value_type val;
+    if (fld->value(val, *iter)) {
       mesh->get_center(p, *iter);
-      double val;
-      to_double(tmp, val);
-      
-      snprintf(buffer, 256, format, val);
-      const std::string as_str(buffer);
+
+      buffer.str("");
+      buffer << val;
+
       MaterialHandle m;
       if (use_default_material)
       {
@@ -964,11 +987,11 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
       if (culling_p)
       {
 	//mesh->get_normal(n, *iter);
-	ctexts->add(as_str, p, n, m->diffuse);
+	ctexts->add(buffer.str(), p, n, m->diffuse);
       }
       else
       {
-	texts->add(as_str, p, m->diffuse);
+	texts->add(buffer.str(), p, m->diffuse);
       }
     }
     ++iter;
@@ -984,7 +1007,8 @@ RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
 					      bool use_default_material,
 					      MaterialHandle default_material,
 					      bool backface_cull_p,
-					      int fontsize)
+					      int fontsize,
+					      int precision)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
@@ -1009,23 +1033,22 @@ RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
     texts->set_font_index(fontsize);
   }
 
-  char buffer[256];
-  char format[256];
-  snprintf(format, 256, "%%%d.%df", 1, 2);
+  std::ostringstream buffer;
+  buffer.precision(precision);
+
   typename Fld::mesh_type::Node::iterator iter, end;
   mesh->begin(iter);
   mesh->end(end);
   Point p;
   Vector n;
   while (iter != end) {
-    typename Fld::value_type tmp;
-    if (fld->value(tmp, *iter)) {
+    typename Fld::value_type val;
+    if (fld->value(val, *iter)) {
       mesh->get_center(p, *iter);
-      double val;
-      to_double(tmp, val);
       
-      snprintf(buffer, 256, format, val);
-      const std::string as_str(buffer);
+      buffer.str("");
+      buffer << val;
+
       MaterialHandle m;
       if (use_default_material)
       {
@@ -1038,11 +1061,11 @@ RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
       if (culling_p)
       {
 	mesh->get_normal(n, *iter);
-	ctexts->add(as_str, p, n, m->diffuse);
+	ctexts->add(buffer.str(), p, n, m->diffuse);
       }
       else
       {
-	texts->add(as_str, p, m->diffuse);
+	texts->add(buffer.str(), p, m->diffuse);
       }
     }
     ++iter;
@@ -1059,7 +1082,9 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
 					 bool use_default_material,
 					 MaterialHandle default_material,
 					 bool backface_cull_p,
-					 int fontsize)
+					 int fontsize,
+					 int precision,
+					 bool render_locations)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
@@ -1084,7 +1109,9 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
     texts->set_font_index(fontsize);
   }
 
-  char buffer[256];
+  ostringstream buffer;
+  buffer.precision(precision);
+
   typename Fld::mesh_type::Node::iterator iter, end;
   mesh->begin(iter);
   mesh->end(end);
@@ -1093,8 +1120,17 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
   while (iter != end)
   {
     mesh->get_center(p, *iter);
-    snprintf(buffer, 256, "%d", (int)(*iter));
-    const std::string as_str(buffer);
+
+    buffer.str("");
+    if (render_locations)
+    {
+      buffer << p;
+    }
+    else
+    {
+      buffer << (int)(*iter);
+    }
+
     MaterialHandle m;
     if (use_default_material)
     {
@@ -1107,11 +1143,11 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
     if (culling_p)
     {
       mesh->get_normal(n, *iter);
-      ctexts->add(as_str, p, n, m->diffuse);
+      ctexts->add(buffer.str(), p, n, m->diffuse);
     }
     else
     {
-      texts->add(as_str, p, m->diffuse);
+      texts->add(buffer.str(), p, m->diffuse);
     }
 
     ++iter;
@@ -1125,7 +1161,9 @@ GeomSwitch *
 RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
 					 bool use_default_material,
 					 MaterialHandle default_material,
-					 int fontsize)
+					 int fontsize,
+					 int precision,
+					 bool render_locations)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
@@ -1136,7 +1174,10 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
   GeomTexts *texts = scinew GeomTexts;
   GeomSwitch *text_switch = scinew GeomSwitch(texts);
   texts->set_font_index(fontsize);
-  char buffer[256];
+
+  ostringstream buffer;
+  buffer.precision(precision);
+
   typename Fld::mesh_type::Edge::iterator iter, end;
   mesh->begin(iter);
   mesh->end(end);
@@ -1144,8 +1185,17 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
   while (iter != end)
   {
     mesh->get_center(p, *iter);
-    snprintf(buffer, 256, "%d", (int)(*iter));
-    const std::string as_str(buffer);
+
+    buffer.str("");
+    if (render_locations)
+    {
+      buffer << p;
+    }
+    else
+    {
+      buffer << (int)(*iter);
+    }
+
     MaterialHandle m;
     if (use_default_material)
     {
@@ -1155,7 +1205,7 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
     {
       m = choose_mat(use_default_material, *iter);
     }
-    texts->add(as_str, p, m->diffuse);
+    texts->add(buffer.str(), p, m->diffuse);
  
     ++iter;
   }
@@ -1167,7 +1217,9 @@ GeomSwitch *
 RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
 					 bool use_default_material,
 					 MaterialHandle default_material,
-					 int fontsize)
+					 int fontsize,
+					 int precision,
+					 bool render_locations)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
@@ -1178,7 +1230,10 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
   GeomTexts *texts = scinew GeomTexts;
   GeomSwitch *text_switch = scinew GeomSwitch(texts);
   texts->set_font_index(fontsize);
-  char buffer[256];
+
+  ostringstream buffer;
+  buffer.precision(precision);
+
   typename Fld::mesh_type::Face::iterator iter, end;
   mesh->begin(iter);
   mesh->end(end);
@@ -1186,8 +1241,17 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
   while (iter != end)
   {
     mesh->get_center(p, *iter);
-    snprintf(buffer, 256, "%d", (int)(*iter));
-    const std::string as_str(buffer);
+
+    buffer.str("");
+    if (render_locations)
+    {
+      buffer << p;
+    }
+    else
+    {
+      buffer << (int)(*iter);
+    }
+
     MaterialHandle m;
     if (use_default_material)
     {
@@ -1197,7 +1261,7 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
     {
       m = choose_mat(use_default_material, *iter);
     }
-    texts->add(as_str, p, m->diffuse);
+    texts->add(buffer.str(), p, m->diffuse);
 
     ++iter;
   }
@@ -1209,7 +1273,9 @@ GeomSwitch *
 RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
 					 bool use_default_material,
 					 MaterialHandle default_material,
-					 int fontsize)
+					 int fontsize,
+					 int precision,
+					 bool render_locations)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
@@ -1220,7 +1286,10 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
   GeomTexts *texts = scinew GeomTexts;
   GeomSwitch *text_switch = scinew GeomSwitch(texts);
   texts->set_font_index(fontsize);
-  char buffer[256];
+
+  ostringstream buffer;
+  buffer.precision(precision);
+
   typename Fld::mesh_type::Cell::iterator iter, end;
   mesh->begin(iter);
   mesh->end(end);
@@ -1228,8 +1297,17 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
   while (iter != end)
   {
     mesh->get_center(p, *iter);
-    snprintf(buffer, 256, "%d", (int)(*iter));
-    const std::string as_str(buffer);
+
+    buffer.str("");
+    if (render_locations)
+    {
+      buffer << p;
+    }
+    else
+    {
+      buffer << (int)(*iter);
+    }
+
     MaterialHandle m;
     if (use_default_material)
     {
@@ -1239,7 +1317,7 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
     {
       m = choose_mat(use_default_material, *iter);
     }
-    texts->add(as_str, p, m->diffuse);
+    texts->add(buffer.str(), p, m->diffuse);
 
     ++iter;
   }
