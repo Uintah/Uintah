@@ -1119,7 +1119,7 @@ TetVolMesh::inside(Cell::index_type idx, const Point &p)
 
     const Point &p0 = point(ra[0]);
     const Point &p1 = point(ra[1]);
-    const Point &p0 = point(ra[0]);
+    const Point &p2 = point(ra[2]);
 
     const Vector v0(p0 - p1), v1(p2 - p1);
     const Vector normal = Cross(v0, v1);
@@ -1347,10 +1347,10 @@ TetVolMesh::orient(Cell::index_type ci) {
 
   Node::array_type ra;
   get_nodes(ra,ci);
-  const Point &p0 = point(arr[0]);
-  const Point &p1 = point(arr[1]);
-  const Point &p2 = point(arr[2]);
-  const Point &p3 = point(arr[3]);
+  const Point &p0 = point(ra[0]);
+  const Point &p1 = point(ra[1]);
+  const Point &p2 = point(ra[2]);
+  const Point &p3 = point(ra[3]);
 
   // Unsigned volumex6 of the tet.
   double sgn=Dot(Cross(p1-p0,p2-p0),p3-p0);
