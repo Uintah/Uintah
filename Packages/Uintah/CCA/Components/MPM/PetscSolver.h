@@ -7,11 +7,11 @@
 #include <map>
 #include <vector>
 
-
+#ifdef HAVE_PETSC
 extern "C" {
 #include "petscsles.h"
 }
-
+#endif
 using std::map;
 using std::vector;
 
