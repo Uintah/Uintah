@@ -46,7 +46,7 @@ degenerate(const Point &p0, const Point &p1, const Point &p2)
 
 bool
 rtrt::readASEFile(const string fname, const Transform t, Group *objgroup, 
-		  Array1<Material*> &ase_matls, string &env_map)
+		  Array1<Material*> &ase_matls, string &env_map, bool stadium)
 {
   ASEFile infile(fname);
   
@@ -196,33 +196,25 @@ rtrt::readASEFile(const string fname, const Transform t, Group *objgroup,
           token->GetDiffuse(diffuse);
           token->GetSpecular(specular);
           if (token->GetTMapFilename()=="" && !token->GetTransparency()) {
-            if (token->GetIndex()==5) {
-              // switch the roof texture with a cycle texture (material 5)
-//                CycleMaterial *cm = new CycleMaterial();
-//                cm->members.add(new Phong(Color(diffuse),
-//                                          Color(specular),
-//                                          token->GetShine()*1000,
-//                                          0));
-//                cm->members.add(new InvisibleMaterial);
-//                cm->members.add(new PhongMaterial(Color(diffuse),
-//                                                  .3,
-//                                                  .3,token->GetShine()*1000,true));
-              
-//                ase_matls[5]= new PhongMaterial(Color(.3,.3,.6),
-//                                                .3,
-//                                                .3,token->GetShine()*1000,true);
-//  ;
-              
-//                printf("Choosing cycle material!!!!\n");
-
-              ase_matls[5]= new InvisibleMaterial();
-            } else {
-              ase_matls[token->GetIndex()] = 
-                new Phong(Color(diffuse),
-                          Color(specular),
-                          (int)(token->GetShine()*1000),
-                          0.0);
-            }
+	    // make the 5th material (the roof) of the stadium a CycleMaterial
+	    if (token->GetIndex() == 5 && stadium) {
+	      CycleMaterial *cm = new CycleMaterial;
+	      cm->members.add(new Phong(Color(diffuse),
+					Color(specular),
+					(int)(token->GetShine()*1000),
+					0.0));
+	      cm->members.add(new InvisibleMaterial);
+	      cm->members.add(new PhongMaterial(Color(diffuse), 0.3, 0.3,
+						(int)(token->GetShine()*1000),
+						true));
+	      ase_matls[token->GetIndex()] = cm;
+	    } else {
+	      ase_matls[token->GetIndex()] = 
+		new Phong(Color(diffuse),
+			  Color(specular),
+			  (int)(token->GetShine()*1000),
+			  0.0);
+	    }
           } else if (token->GetTMapFilename()=="") {
             ase_matls[token->GetIndex()] = 
 #if 1

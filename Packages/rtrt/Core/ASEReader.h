@@ -18,7 +18,7 @@ using SCIRun::Transform;
 
 bool
 readASEFile(const string fname, const Transform t, Group *objgroup, 
-	    Array1<Material*> &ase_matls, string &env_map);
+	    Array1<Material*> &ase_matls, string &env_map, bool stadium=false);
 }
 
 #endif
