@@ -3,6 +3,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <string>
+#include <algorithm>
 #include <sgi_stl_warnings_on.h>
 
 // #define SAVE_ERROR 1
