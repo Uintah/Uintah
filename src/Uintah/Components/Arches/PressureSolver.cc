@@ -15,6 +15,8 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Task.h>
+#include <Uintah/Grid/CCVariable.h>
+#include <Uintah/Grid/FCVariable.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Components/Arches/Arches.h>
 
@@ -41,19 +43,15 @@ PressureSolver::PressureSolver(int nDim,
 				     d_physicalConsts(physConst),
 				     d_generation(0)
 {
-  // BB : **WARNING** velocity is set as CCVariable (should be FCVariable)
-  //  Change all those labels that are velocity related and delete this
-  //  comment
-
   // Inputs
   d_pressureINLabel = scinew VarLabel("pressureIN",
 			     CCVariable<double>::getTypeDescription() );
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
-				 CCVariable<double>::getTypeDescription() );
+				 FCVariable<double>::getTypeDescription() );
   d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
-				 CCVariable<double>::getTypeDescription() );
+				 FCVariable<double>::getTypeDescription() );
   d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC",
-				 CCVariable<double>::getTypeDescription() );
+				 FCVariable<double>::getTypeDescription() );
   d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
 			       CCVariable<double>::getTypeDescription() );
   d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
@@ -61,29 +59,29 @@ PressureSolver::PressureSolver(int nDim,
 
   // Computed
   d_uVelConvCoefPBLMLabel = scinew VarLabel("uVelConvectCoefPBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_vVelConvCoefPBLMLabel = scinew VarLabel("vVelConvectCoefPBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_wVelConvCoefPBLMLabel = scinew VarLabel("wVelConvectCoefPBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_uVelCoefPBLMLabel = scinew VarLabel("uVelCoefPBLM",
-			       CCVariable<double>::getTypeDescription() );
+			       FCVariable<double>::getTypeDescription() );
   d_vVelCoefPBLMLabel = scinew VarLabel("vVelCoefPBLM",
-			       CCVariable<double>::getTypeDescription() );
+			       FCVariable<double>::getTypeDescription() );
   d_wVelCoefPBLMLabel = scinew VarLabel("wVelCoefPBLM",
-			       CCVariable<double>::getTypeDescription() );
+			       FCVariable<double>::getTypeDescription() );
   d_uVelLinSrcPBLMLabel = scinew VarLabel("uVelLinSrcPBLM",
-				 CCVariable<double>::getTypeDescription() );
+				 FCVariable<double>::getTypeDescription() );
   d_vVelLinSrcPBLMLabel = scinew VarLabel("vVelLinSrcPBLM",
-				 CCVariable<double>::getTypeDescription() );
+				 FCVariable<double>::getTypeDescription() );
   d_wVelLinSrcPBLMLabel = scinew VarLabel("wVelLinSrcPBLM",
-				 CCVariable<double>::getTypeDescription() );
+				 FCVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcPBLMLabel = scinew VarLabel("uVelNonLinSrcPBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcPBLMLabel = scinew VarLabel("vVelNonLinSrcPBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcPBLMLabel = scinew VarLabel("wVelNonLinSrcPBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_presCoefPBLMLabel = scinew VarLabel("presCoefPBLM",
 			       CCVariable<double>::getTypeDescription() );
   d_presLinSrcPBLMLabel = scinew VarLabel("presLinSrcPBLM",
@@ -335,6 +333,10 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.25  2000/06/22 23:06:35  bbanerje
+// Changed velocity related variables to FCVariable type.
+// ** NOTE ** We may need 3 types of FCVariables (one for each direction)
+//
 // Revision 1.24  2000/06/21 07:51:00  bbanerje
 // Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
 // and made the stuff go through schedule_time_advance.

@@ -42,18 +42,15 @@ SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):
                                                  TurbulenceModel(), 
                                                  d_physicalConsts(phyConsts)
 {
-  // BB : (**WARNING**) velocity is set as CCVariable (should be FCVariable)
-  // Changed all vel related vars to FCVariable and then delete this comment.
-
   // Inputs & Outputs (computeTurbSubModel (CTS)
   d_cellTypeLabel = scinew VarLabel("celltype",
 				   CCVariable<int>::getTypeDescription() );
   d_uVelocitySPLabel = scinew VarLabel("uVelocitySP",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelocitySPLabel = scinew VarLabel("vVelocitySP",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelocitySPLabel = scinew VarLabel("wVelocitySP",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_densityCPLabel = scinew VarLabel("densityCP",
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityINLabel = scinew VarLabel("viscosityIN",
@@ -64,54 +61,54 @@ SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):
 
   // Inputs & Outputs (calcVelocityWallBC)
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_uVelocityCPBCLabel = scinew VarLabel("uVelocityCPBC",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelocityCPBCLabel = scinew VarLabel("vVelocityCPBC",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
 				   CCVariable<double>::getTypeDescription() );
 
   d_uVelLinSrcPBLMLabel = scinew VarLabel("uVelLinSrcPBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelLinSrcPBLMLabel = scinew VarLabel("vVelLinSrcPBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelLinSrcPBLMLabel = scinew VarLabel("wVelLinSrcPBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcPBLMLabel = scinew VarLabel("uVelNonLinSrcPBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcPBLMLabel = scinew VarLabel("vVelNonLinSrcPBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcPBLMLabel = scinew VarLabel("wVelNonLinSrcPBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_uVelLinSrcMBLMLabel = scinew VarLabel("uVelLinSrcMBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelLinSrcMBLMLabel = scinew VarLabel("vVelLinSrcMBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelLinSrcMBLMLabel = scinew VarLabel("wVelLinSrcMBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcMBLMLabel = scinew VarLabel("uVelNonLinSrcMBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcMBLMLabel = scinew VarLabel("vVelNonLinSrcMBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcMBLMLabel = scinew VarLabel("wVelNonLinSrcMBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
 
   // For the recomputaion of Turbulence SubModel (during solve)
   d_densityRCPLabel = scinew VarLabel("densityRCP",
 				    CCVariable<double>::getTypeDescription() );
   d_uVelocityMSLabel = scinew VarLabel("uVelocityMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelocityMSLabel = scinew VarLabel("vVelocityMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelocityMSLabel = scinew VarLabel("wVelocityMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_viscosityRCTSLabel = scinew VarLabel("viscosityRCTS",
 				    CCVariable<double>::getTypeDescription() );
 }
@@ -226,16 +223,15 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
 {
 
   // Get the velocity, density and viscosity from the old data warehouse
-  // (tmp) velocity should be FCVariable
   int matlIndex = 0;
   int numGhostCells = 0;
-  CCVariable<double> uVelocity;
+  FCVariable<double> uVelocity;
   old_dw->get(uVelocity, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  CCVariable<double> vVelocity;
+  FCVariable<double> vVelocity;
   old_dw->get(vVelocity, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  CCVariable<double> wVelocity;
+  FCVariable<double> wVelocity;
   old_dw->get(wVelocity, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
@@ -302,16 +298,15 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 {
 
   // Get the velocity, density and viscosity from the old data warehouse
-  // (tmp) velocity should be FCVariable
   int matlIndex = 0;
   int numGhostCells = 0;
-  CCVariable<double> uVelocity;
+  FCVariable<double> uVelocity;
   new_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  CCVariable<double> vVelocity;
+  FCVariable<double> vVelocity;
   new_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  CCVariable<double> wVelocity;
+  FCVariable<double> wVelocity;
   new_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
@@ -379,9 +374,9 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
 {
   int matlIndex = 0;
   int numGhostCells = 0;
-  CCVariable<double> uVelocity;
-  CCVariable<double> vVelocity;
-  CCVariable<double> wVelocity;
+  FCVariable<double> uVelocity;
+  FCVariable<double> vVelocity;
+  FCVariable<double> wVelocity;
   switch(eqnType) {
   case Discretization::PRESSURE:
     old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
@@ -442,9 +437,8 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
 
   numGhostCells = 0;
 
-  // Variables used (** WARNING ** FCVars)
-  CCVariable<double> velLinearSrc; //SP term in Arches
-  CCVariable<double> velNonLinearSrc; // SU in Arches
+  FCVariable<double> velLinearSrc; //SP term in Arches
+  FCVariable<double> velNonLinearSrc; // SU in Arches
 
   switch(eqnType) {
   case Discretization::PRESSURE:
@@ -588,6 +582,10 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.18  2000/06/22 23:06:38  bbanerje
+// Changed velocity related variables to FCVariable type.
+// ** NOTE ** We may need 3 types of FCVariables (one for each direction)
+//
 // Revision 1.17  2000/06/21 07:51:01  bbanerje
 // Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
 // and made the stuff go through schedule_time_advance.

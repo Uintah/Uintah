@@ -41,7 +41,6 @@ WARNING
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/VarLabel.h>
-#include <Uintah/Grid/CCVariable.h>
 
 namespace Uintah {
    class ProcessorGroup;
@@ -170,6 +169,10 @@ private:
 
 //
 // $Log$
+// Revision 1.11  2000/06/22 23:06:38  bbanerje
+// Changed velocity related variables to FCVariable type.
+// ** NOTE ** We may need 3 types of FCVariables (one for each direction)
+//
 // Revision 1.10  2000/06/21 07:51:01  bbanerje
 // Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
 // and made the stuff go through schedule_time_advance.

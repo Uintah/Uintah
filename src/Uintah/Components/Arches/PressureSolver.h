@@ -35,12 +35,13 @@ WARNING
 
 ************************************************************************/
 
-#include <Uintah/Grid/LevelP.h>
 #include <Uintah/Interface/SchedulerP.h>
-#include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/VarLabel.h>
+#include <SCICore/Geometry/Vector.h>
 
 namespace Uintah {
 class ProcessorGroup;
@@ -212,6 +213,10 @@ private:
 
 //
 // $Log$
+// Revision 1.19  2000/06/22 23:06:36  bbanerje
+// Changed velocity related variables to FCVariable type.
+// ** NOTE ** We may need 3 types of FCVariables (one for each direction)
+//
 // Revision 1.18  2000/06/18 01:20:16  bbanerje
 // Changed names of varlabels in source to reflect the sequence of tasks.
 // Result : Seg Violation in addTask in MomentumSolver

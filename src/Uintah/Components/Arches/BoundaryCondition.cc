@@ -53,10 +53,8 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
 				     Properties* props) :
                                      d_turbModel(turb_model), d_props(props)
 {
-  //** WARNING ** Velocity is a FC Variable : change all velocity related stuff
-  // to FCVariable type and delete this comment.
-  d_nofScalars = d_props->getNumMixVars();
   // The input labels first
+  d_nofScalars = d_props->getNumMixVars();
   d_cellTypeLabel = scinew VarLabel("CellType", 
 				    CCVariable<int>::getTypeDescription() );
   d_pressureINLabel = scinew VarLabel("pressureIN", 
@@ -66,11 +64,11 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
   d_viscosityINLabel = scinew VarLabel("viscosityIN", 
 				   CCVariable<double>::getTypeDescription() );
   d_uVelocityINLabel = scinew VarLabel("uVelocityIN", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelocityINLabel = scinew VarLabel("vVelocityIN", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelocityINLabel = scinew VarLabel("wVelocityIN", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_scalarINLabel = scinew VarLabel("scalarIN",
 				    CCVariable<double>::getTypeDescription() );
 
@@ -79,11 +77,11 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
   d_densitySPLabel = scinew VarLabel("densitySP", 
 				   CCVariable<double>::getTypeDescription() );
   d_uVelocitySPLabel = scinew VarLabel("uVelocitySP", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelocitySPLabel = scinew VarLabel("vVelocitySP", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelocitySPLabel = scinew VarLabel("wVelocitySP", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_scalarSPLabel = scinew VarLabel("scalarSP", 
 				    CCVariable<double>::getTypeDescription() );
   
@@ -92,49 +90,49 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
   d_densitySIVBCLabel = scinew VarLabel("densitySIVBC", 
 				    CCVariable<double>::getTypeDescription() );
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
 
   // 3) The labels used/computed by velocityBC (VBC)
   d_uVelCoefPBLMLabel = scinew VarLabel("uVelCoefPBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelCoefPBLMLabel = scinew VarLabel("vVelCoefPBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelCoefPBLMLabel = scinew VarLabel("wVelCoefPBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_uVelLinSrcPBLMLabel = scinew VarLabel("uVelLinSrcPBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelLinSrcPBLMLabel = scinew VarLabel("vVelLinSrcPBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelLinSrcPBLMLabel = scinew VarLabel("wVelLinSrcPBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcPBLMLabel = scinew VarLabel("uVelNonLinSrcPBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcPBLMLabel = scinew VarLabel("vVelNonLinSrcPBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcPBLMLabel = scinew VarLabel("wVelNonLinSrcPBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_uVelCoefMBLMLabel = scinew VarLabel("uVelCoefMBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelCoefMBLMLabel = scinew VarLabel("vVelCoefMBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelCoefMBLMLabel = scinew VarLabel("wVelCoefMBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_uVelLinSrcMBLMLabel = scinew VarLabel("uVelLinSrcMBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelLinSrcMBLMLabel = scinew VarLabel("vVelLinSrcMBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelLinSrcMBLMLabel = scinew VarLabel("wVelLinSrcMBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcMBLMLabel = scinew VarLabel("uVelNonLinSrcMBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcMBLMLabel = scinew VarLabel("vVelNonLinSrcMBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcMBLMLabel = scinew VarLabel("wVelNonLinSrcMBLM", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
 
   // 4) The labels used/computed by pressureBC 
   d_presCoefPBLMLabel = scinew VarLabel("presCoefPBLM", 
@@ -144,11 +142,11 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
   d_pressurePSLabel = scinew VarLabel("pressurePS", 
 				    CCVariable<double>::getTypeDescription() );
   d_uVelocityCPBCLabel = scinew VarLabel("uVelocityCPBC", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelocityCPBCLabel = scinew VarLabel("vVelocityCPBC", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC", 
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
 
   // 6) The labels used/computed by scalarBC
   d_scalCoefSBLMLabel = scinew VarLabel("scalCoefSBLM", 
@@ -736,10 +734,9 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
 {
   CCVariable<int> cellType;
   CCVariable<double> density;
-  // ** WARNING** velocity is a FC variable
-  CCVariable<double> uVelocity;
-  CCVariable<double> vVelocity;
-  CCVariable<double> wVelocity;
+  FCVariable<double> uVelocity;
+  FCVariable<double> vVelocity;
+  FCVariable<double> wVelocity;
 
   int matlIndex = 0;
   int nofGhostCells = 0;
@@ -842,9 +839,9 @@ BoundaryCondition::uVelocityBC(DataWarehouseP& new_dw,
 			       const IntVector& indexLow, 
 			       const IntVector& indexHigh,
 			       CCVariable<int>* cellType,
-			       CCVariable<double>* uVelocity, 
-			       CCVariable<double>* vVelocity, 
-			       CCVariable<double>* wVelocity, 
+			       FCVariable<double>* uVelocity, 
+			       FCVariable<double>* vVelocity, 
+			       FCVariable<double>* wVelocity, 
 			       CCVariable<double>* density,
 			       const double* VISCOS,
 			       CellInformation*,
@@ -854,10 +851,9 @@ BoundaryCondition::uVelocityBC(DataWarehouseP& new_dw,
   int numGhostCells = 0;
   int nofStencils = 7;
 
-  // ** WARNING ** velocity is a FCVariable
-  StencilMatrix<CCVariable<double> > velocityCoeff;
-  CCVariable<double> linearSrc; // SP term in Arches 
-  CCVariable<double> nonlinearSrc; // SU term in Arches 
+  StencilMatrix<FCVariable<double> > velocityCoeff;
+  FCVariable<double> linearSrc; // SP term in Arches 
+  FCVariable<double> nonlinearSrc; // SU term in Arches 
 
   switch(eqnType) {
   case Discretization::PRESSURE:
@@ -935,9 +931,9 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
 			       const IntVector& indexLow, 
 			       const IntVector& indexHigh,
 			       CCVariable<int>* cellType,
-			       CCVariable<double>* uVelocity, 
-			       CCVariable<double>* vVelocity, 
-			       CCVariable<double>* wVelocity, 
+			       FCVariable<double>* uVelocity, 
+			       FCVariable<double>* vVelocity, 
+			       FCVariable<double>* wVelocity, 
 			       CCVariable<double>* density,
 			       const double* VISCOS,
 			       CellInformation*,
@@ -947,10 +943,9 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
   int numGhostCells = 0;
   int nofStencils = 7;
 
-  // ** WARNING ** velocity is a FCVariable
-  StencilMatrix<CCVariable<double> > velocityCoeff;
-  CCVariable<double> linearSrc; // SP term in Arches 
-  CCVariable<double> nonlinearSrc; // SU term in Arches 
+  StencilMatrix<FCVariable<double> > velocityCoeff;
+  FCVariable<double> linearSrc; // SP term in Arches 
+  FCVariable<double> nonlinearSrc; // SU term in Arches 
 
   switch(eqnType) {
   case Discretization::PRESSURE:
@@ -1028,9 +1023,9 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
 			       const IntVector& indexLow, 
 			       const IntVector& indexHigh,
 			       CCVariable<int>* cellType,
-			       CCVariable<double>* uVelocity, 
-			       CCVariable<double>* vVelocity, 
-			       CCVariable<double>* wVelocity, 
+			       FCVariable<double>* uVelocity, 
+			       FCVariable<double>* vVelocity, 
+			       FCVariable<double>* wVelocity, 
 			       CCVariable<double>* density,
 			       const double* VISCOS,
 			       CellInformation*,
@@ -1040,9 +1035,9 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
   int numGhostCells = 0;
   int nofStencils = 7;
 
-  StencilMatrix<CCVariable<double> > velocityCoeff;
-  CCVariable<double> linearSrc; // SP term in Arches 
-  CCVariable<double> nonlinearSrc; // SU term in Arches 
+  StencilMatrix<FCVariable<double> > velocityCoeff;
+  FCVariable<double> linearSrc; // SP term in Arches 
+  FCVariable<double> nonlinearSrc; // SU term in Arches 
 
   switch(eqnType) {
   case Discretization::PRESSURE:
@@ -1238,10 +1233,9 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* pc,
 {
   CCVariable<int> cellType;
   CCVariable<double> density;
-  // ** WARNING** velocity is a FC variable
-  CCVariable<double> uVelocity;
-  CCVariable<double> vVelocity;
-  CCVariable<double> wVelocity;
+  FCVariable<double> uVelocity;
+  FCVariable<double> vVelocity;
+  FCVariable<double> wVelocity;
 
   int matlIndex = 0;
   int nofGhostCells = 0;
@@ -1297,10 +1291,9 @@ BoundaryCondition::calculatePressBC(const ProcessorGroup* pc,
   CCVariable<int> cellType;
   CCVariable<double> density;
   CCVariable<double> pressure;
-  // ** WARNING** velocity is a FC variable
-  CCVariable<double> uVelocity;
-  CCVariable<double> vVelocity;
-  CCVariable<double> wVelocity;
+  FCVariable<double> uVelocity;
+  FCVariable<double> vVelocity;
+  FCVariable<double> wVelocity;
 
   int matlIndex = 0;
   int nofGhostCells = 0;
@@ -1351,10 +1344,9 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
 {
   CCVariable<int> cellType;
   CCVariable<double> density;
-  // ** WARNING** velocity is a FC variable
-  CCVariable<double> uVelocity;
-  CCVariable<double> vVelocity;
-  CCVariable<double> wVelocity;
+  FCVariable<double> uVelocity;
+  FCVariable<double> vVelocity;
+  FCVariable<double> wVelocity;
   vector<CCVariable<double> > scalar(d_nofScalars);
   int matlIndex = 0;
   int nofGhostCells = 0;
@@ -1604,6 +1596,10 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.28  2000/06/22 23:06:33  bbanerje
+// Changed velocity related variables to FCVariable type.
+// ** NOTE ** We may need 3 types of FCVariables (one for each direction)
+//
 // Revision 1.27  2000/06/21 07:50:59  bbanerje
 // Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
 // and made the stuff go through schedule_time_advance.

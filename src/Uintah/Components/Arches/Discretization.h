@@ -166,7 +166,7 @@ private:
       StencilMatrix<CCVariable<double> >* d_press_stencil_matrix;
       // stores coefficients for all the velocity components
       // coefficients should be saved on staggered grid
-      StencilMatrix<CCVariable<double> >* d_mom_stencil_matrix;
+      StencilMatrix<FCVariable<double> >* d_mom_stencil_matrix;
       // coefficients for all the scalar components
       StencilMatrix<CCVariable<double> >* d_scalar_stencil_matrix;
 
@@ -227,6 +227,10 @@ private:
   
 //
 // $Log$
+// Revision 1.19  2000/06/22 23:06:34  bbanerje
+// Changed velocity related variables to FCVariable type.
+// ** NOTE ** We may need 3 types of FCVariables (one for each direction)
+//
 // Revision 1.18  2000/06/21 07:51:00  bbanerje
 // Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
 // and made the stuff go through schedule_time_advance.

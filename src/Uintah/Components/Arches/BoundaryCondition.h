@@ -257,9 +257,9 @@ private:
 		       const IntVector& indexLow, 
 		       const IntVector& indexHigh,
 		       CCVariable<int>* cellType,
-		       CCVariable<double>* uVelocity, 
-		       CCVariable<double>* vVelocity, 
-		       CCVariable<double>* wVelocity, 
+		       FCVariable<double>* uVelocity, 
+		       FCVariable<double>* vVelocity, 
+		       FCVariable<double>* wVelocity, 
 		       CCVariable<double>* density,
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
@@ -274,9 +274,9 @@ private:
 		       const IntVector& indexLow, 
 		       const IntVector& indexHigh,
 		       CCVariable<int>* cellType,
-		       CCVariable<double>* uVelocity, 
-		       CCVariable<double>* vVelocity, 
-		       CCVariable<double>* wVelocity, 
+		       FCVariable<double>* uVelocity, 
+		       FCVariable<double>* vVelocity, 
+		       FCVariable<double>* wVelocity, 
 		       CCVariable<double>* density,
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
@@ -291,9 +291,9 @@ private:
 		       const IntVector& indexLow, 
 		       const IntVector& indexHigh,
 		       CCVariable<int>* cellType,
-		       CCVariable<double>* uVelocity, 
-		       CCVariable<double>* vVelocity, 
-		       CCVariable<double>* wVelocity, 
+		       FCVariable<double>* uVelocity, 
+		       FCVariable<double>* vVelocity, 
+		       FCVariable<double>* wVelocity, 
 		       CCVariable<double>* density,
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
@@ -476,6 +476,10 @@ private:
   
 //
 // $Log$
+// Revision 1.27  2000/06/22 23:06:33  bbanerje
+// Changed velocity related variables to FCVariable type.
+// ** NOTE ** We may need 3 types of FCVariables (one for each direction)
+//
 // Revision 1.26  2000/06/19 18:00:29  rawat
 // added function to compute velocity and density profiles and inlet bc.
 // Fixed bugs in CellInformation.cc

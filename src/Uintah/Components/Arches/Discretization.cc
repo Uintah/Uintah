@@ -30,65 +30,62 @@ using SCICore::Geometry::Vector;
 //****************************************************************************
 Discretization::Discretization()
 {
-  // ** WARNING ** velocity is set as CCVariable (should be FCVariable)
-  // Change all velocity related variables and then delete this comment.
-
   // inputs
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
 				   CCVariable<double>::getTypeDescription() );
   d_uVelocityCPBCLabel = scinew VarLabel("uVelocityCPBC",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelocityCPBCLabel = scinew VarLabel("vVelocityCPBC",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
 
   // computes (calculateVelocityCoeff)
   d_uVelCoefPBLMLabel = scinew VarLabel("uVelCoefPBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_vVelCoefPBLMLabel = scinew VarLabel("vVelCoefPBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_wVelCoefPBLMLabel = scinew VarLabel("wVelCoefPBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_uVelConvCoefPBLMLabel = scinew VarLabel("uVelConvCoefPBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_vVelConvCoefPBLMLabel = scinew VarLabel("vVelConvCoefPBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_wVelConvCoefPBLMLabel = scinew VarLabel("wVelConvCoefPBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_uVelCoefMBLMLabel = scinew VarLabel("uVelCoefMBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_vVelCoefMBLMLabel = scinew VarLabel("vVelCoefMBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_wVelCoefMBLMLabel = scinew VarLabel("wVelCoefMBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_uVelConvCoefMBLMLabel = scinew VarLabel("uVelConvCoefMBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_vVelConvCoefMBLMLabel = scinew VarLabel("vVelConvCoefMBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_wVelConvCoefMBLMLabel = scinew VarLabel("wVelConvCoefMBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   // calculateVelDiagonal
   d_uVelLinSrcPBLMLabel = scinew VarLabel("uVelLinSrcPBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_vVelLinSrcPBLMLabel = scinew VarLabel("vVelLinSrcPBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_wVelLinSrcPBLMLabel = scinew VarLabel("wVelLinSrcPBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_uVelLinSrcMBLMLabel = scinew VarLabel("uVelLinSrcMBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_vVelLinSrcMBLMLabel = scinew VarLabel("vVelLinSrcMBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_wVelLinSrcMBLMLabel = scinew VarLabel("wVelLinSrcMBLM",
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   // calculatePressureCoeff
   d_pressureINLabel = scinew VarLabel("pressureIN",
 				   CCVariable<double>::getTypeDescription() );
@@ -103,11 +100,11 @@ Discretization::Discretization()
   d_scalarSPLabel = scinew VarLabel("scalarSP",
 				   CCVariable<double>::getTypeDescription() );
   d_uVelocityMSLabel = scinew VarLabel("uVelocityMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelocityMSLabel = scinew VarLabel("vVelocityMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelocityMSLabel = scinew VarLabel("wVelocityMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_scalCoefSBLMLabel = scinew VarLabel("scalCoefSBLM",
 				   CCVariable<double>::getTypeDescription() );
 
@@ -139,19 +136,17 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   int numGhostCells = 0;
   int nofStencils = 7;
 
-  // (** WARNING **) velocity is a FC variable
-  // Change all velocity related labels and delete this comment.
-  CCVariable<double> uVelocity;
-  CCVariable<double> vVelocity;
-  CCVariable<double> wVelocity;
+  FCVariable<double> uVelocity;
+  FCVariable<double> vVelocity;
+  FCVariable<double> wVelocity;
   CCVariable<double> density;
   CCVariable<double> viscosity;
-  StencilMatrix<CCVariable<double> > uVelocityCoeff;
-  StencilMatrix<CCVariable<double> > vVelocityCoeff;
-  StencilMatrix<CCVariable<double> > wVelocityCoeff;
-  StencilMatrix<CCVariable<double> > uVelocityConvectCoeff;
-  StencilMatrix<CCVariable<double> > vVelocityConvectCoeff;
-  StencilMatrix<CCVariable<double> > wVelocityConvectCoeff;
+  StencilMatrix<FCVariable<double> > uVelocityCoeff;
+  StencilMatrix<FCVariable<double> > vVelocityCoeff;
+  StencilMatrix<FCVariable<double> > wVelocityCoeff;
+  StencilMatrix<FCVariable<double> > uVelocityConvectCoeff;
+  StencilMatrix<FCVariable<double> > vVelocityConvectCoeff;
+  StencilMatrix<FCVariable<double> > wVelocityConvectCoeff;
 
   // Get the required data
   switch(eqnType) {
@@ -300,30 +295,25 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
   int nofStencils = 0;
 
   CCVariable<double> pressure;
+  FCVariable<double> uVelocity;
+  FCVariable<double> vVelocity;
+  FCVariable<double> wVelocity;
+  CCVariable<double> viscosity;
+
   old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-
-  // (** WARNING **) velocity is a FC variable
-  CCVariable<double> uVelocity;
   old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  // (** WARNING **) velocity is a FC variable
-  CCVariable<double> vVelocity;
   old_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  // (** WARNING **) velocity is a FC variable
-  CCVariable<double> wVelocity;
   old_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-
-  CCVariable<double> viscosity;
   old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
-  // (** WARNING **) velocity is a FC variable
-  StencilMatrix<CCVariable<double> > uVelCoeff;
-  StencilMatrix<CCVariable<double> > vVelCoeff;
-  StencilMatrix<CCVariable<double> > wVelCoeff;
+  StencilMatrix<FCVariable<double> > uVelCoeff;
+  StencilMatrix<FCVariable<double> > vVelCoeff;
+  StencilMatrix<FCVariable<double> > wVelCoeff;
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->get(uVelCoeff[ii], d_uVelCoefPBLMLabel, ii, patch, Ghost::None,
 		numGhostCells);
@@ -394,27 +384,24 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
   int numGhostCells = 0;
   int nofStencils = 7;
 
-  // (** WARNING **) velocity is a FC variable
-  CCVariable<double> uVelocity;
+  FCVariable<double> uVelocity;
+  FCVariable<double> vVelocity;
+  FCVariable<double> wVelocity;
+  CCVariable<double> density;
+  CCVariable<double> viscosity;
+  CCVariable<double> scalar;
+
   new_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  CCVariable<double> vVelocity;
   new_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  CCVariable<double> wVelocity;
   new_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-
-  CCVariable<double> density;
   new_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-
-  CCVariable<double> viscosity;
   old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-
   // ithe componenet of scalar vector
-  CCVariable<double> scalar;
   old_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
 	      numGhostCells);
 
@@ -482,13 +469,12 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
   IntVector lowIndex = patch->getCellLowIndex();
   IntVector highIndex = patch->getCellHighIndex();
 
-  // (** WARNING **) velocity is a FC variable
-  StencilMatrix<CCVariable<double> > uVelCoeff;
-  StencilMatrix<CCVariable<double> > vVelCoeff;
-  StencilMatrix<CCVariable<double> > wVelCoeff;
-  CCVariable<double> uVelLinearSrc;
-  CCVariable<double> vVelLinearSrc;
-  CCVariable<double> wVelLinearSrc;
+  StencilMatrix<FCVariable<double> > uVelCoeff;
+  StencilMatrix<FCVariable<double> > vVelCoeff;
+  StencilMatrix<FCVariable<double> > wVelCoeff;
+  FCVariable<double> uVelLinearSrc;
+  FCVariable<double> vVelLinearSrc;
+  FCVariable<double> wVelLinearSrc;
 
   switch(eqnType) {
   case PRESSURE:
@@ -643,6 +629,10 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.18  2000/06/22 23:06:33  bbanerje
+// Changed velocity related variables to FCVariable type.
+// ** NOTE ** We may need 3 types of FCVariables (one for each direction)
+//
 // Revision 1.17  2000/06/21 07:50:59  bbanerje
 // Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
 // and made the stuff go through schedule_time_advance.
