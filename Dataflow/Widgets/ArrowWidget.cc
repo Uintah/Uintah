@@ -143,18 +143,18 @@ ArrowWidget::redraw()
 
   if (mode_switches[0]->get_state())
   {
-    ((GeomSphere*)geometries[GeomPoint])->move(P, widget_scale_);
-    ((GeomCylinder*)geometries[GeomShaft])->move(P, H, 0.5*widget_scale_);
-    ((GeomCappedCone*)geometries[GeomHead])->move(H, H +GetDirection()*widget_scale_* 2.0, widget_scale_, 0);
+    geometry<GeomSphere*>(GeomPoint)->move(P, widget_scale_);
+    geometry<GeomCylinder*>(GeomShaft)->move(P, H, 0.5*widget_scale_);
+    geometry<GeomCappedCone*>(GeomHead)->move(H, H +GetDirection()*widget_scale_* 2.0, widget_scale_, 0);
   }
   if (mode_switches[1]->get_state())
   {
-    ((GeomCappedCylinder*)geometries[GeomResize])->move(H+GetDirection()*widget_scale_*1.0,  H + GetDirection()*widget_scale_*1.5, widget_scale_);
+    geometry<GeomCappedCylinder*>(GeomResize)->move(H+GetDirection()*widget_scale_*1.0,  H + GetDirection()*widget_scale_*1.5, widget_scale_);
   }
 
   if (mode_switches[2]->get_state())
   {
-    ((GeomSphere*)geometries[GeomPoint])->move(P, widget_scale_);
+    geometry<GeomSphere*>(GeomPoint)->move(P, widget_scale_);
   }
 
   Vector v(GetDirection()), v1, v2;

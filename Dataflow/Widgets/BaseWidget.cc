@@ -647,7 +647,7 @@ BaseWidget::geom_moved(GeomPick*, int, double, const Vector&,
 
 
 void
-BaseWidget::CreateModeSwitch( const Index snum, GeomObj* o )
+BaseWidget::CreateModeSwitch( const Index snum, GeomHandle o )
 {
   ASSERT(snum<mode_switches.size());
   ASSERT(mode_switches[snum]==NULL);
@@ -689,7 +689,7 @@ BaseWidget::FinishWidget()
   }
   for (i=0; i<geometries.size(); i++)
   {
-    ASSERT(geometries[i] != NULL);
+    ASSERT(geometries[i].get_rep() != NULL);
   }
   for (i=0; i<picks.size(); i++)
   {

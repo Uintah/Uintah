@@ -205,28 +205,28 @@ LightWidget::redraw()
    
   if (mode_switches[0]->get_state())
   {
-    ((GeomCylinder*)geometries[GeomShaft])->move(center,
-						 center + direct * 3.0 * widget_scale_,
-						 0.5 * widget_scale_);
-    ((GeomCappedCone*)geometries[GeomHead])->move(center + direct * 3.0 * widget_scale_,
-						  center + direct * 5.0 * widget_scale_,
-						  widget_scale_,
-						  0);
+    geometry<GeomCylinder*>(GeomShaft)->move(center,
+					     center + direct * 3.0 * widget_scale_,
+					     0.5 * widget_scale_);
+    geometry<GeomCappedCone*>(GeomHead)->move(center + direct * 3.0 * widget_scale_,
+					      center + direct * 5.0 * widget_scale_,
+					      widget_scale_,
+					      0);
   }
    
   if (mode_switches[1]->get_state())
   {
-    ((GeomSphere*)geometries[GeomSource])->move(center, sphererad);
+    geometry<GeomSphere*>(GeomSource)->move(center, sphererad);
   }
 
   if (mode_switches[2]->get_state())
   {
-    ((GeomSphere*)geometries[GeomDirect])->move(variables[DirectVar]->point(), sphererad);
-    ((GeomSphere*)geometries[GeomCone])->move(variables[ConeVar]->point(), sphererad);
-    ((GeomCylinder*)geometries[GeomAxis])->move(variables[SourceVar]->point(), variables[DirectVar]->point(),
-						cylinderrad);
-    ((GeomTorus*)geometries[GeomRing])->move(variables[DirectVar]->point(), direct,
-					     variables[RadiusVar]->real(), cylinderrad);
+    geometry<GeomSphere*>(GeomDirect)->move(variables[DirectVar]->point(), sphererad);
+    geometry<GeomSphere*>(GeomCone)->move(variables[ConeVar]->point(), sphererad);
+    geometry<GeomCylinder*>(GeomAxis)->move(variables[SourceVar]->point(), variables[DirectVar]->point(),
+					    cylinderrad);
+    geometry<GeomTorus*>(GeomRing)->move(variables[DirectVar]->point(), direct,
+					 variables[RadiusVar]->real(), cylinderrad);
   }
 
   if (mode_switches[3]->get_state())
