@@ -58,18 +58,20 @@ while [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; do
 	nice gmake -k -j$MAKE_PARALLELISM > ../remake.log 2>&1
 	
 	if  [ -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
+	    mv ../remake.log ../remake_failed_scirun.log
 	    echo "*** Make failed, but sus was compiled successfully"
 	    echo "A log of build errors can be found in"
-	    echo "${BUILDROOT}/${mode}/remake.log"
+	    echo "${BUILDROOT}/${mode}/remake_failed_scirun.log"
 	    echo "A full log of trying to compile everything twice can be found in"
 	    echo "${BUILDROOT}/${mode}/make.log"
 	    echo ""
 	else
+	    mv ../remake.log ../remake_failed_sus.log
 	    echo "*** Make failed with code $retval"
 	    echo ""
 	    echo "Showing make errors:"
 	    # show the compile errors (just the stuff it can't compile)
-	    cat ../remake.log
+	    cat ../remake_failed_sus.log
 	    echo ""
 
 	    # failed make, set a lock for this build
