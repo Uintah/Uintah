@@ -218,7 +218,7 @@ private:
 	       const PatchSubset* patches,
 	       const MaterialSubset* matls,
 	       DataWarehouse* old_dw, DataWarehouse* new_dw,
-	       LevelP level, SchedulerP sched);
+	       LevelP level, Scheduler* sched);
 
   void moveData(const ProcessorGroup*,
 		 const PatchSubset* patches,
@@ -271,7 +271,6 @@ private:
 			const MaterialSubset* matls,
 			DataWarehouse* old_dw,
 			DataWarehouse* new_dw,
-			LevelP level, SchedulerP sched,
 			const bool recursion);
 
 
