@@ -237,10 +237,15 @@ Parallel::finalizeManager(Circumstances circumstances)
 
   if(::usingMPI){
     if(circumstances == Abort){
+      int errorcode = 1;
+      if(getenv("LAMWORLD") || getenv("LAMRANK")){
+        errorcode = (errorcode << 16) + 1; // see LAM man MPI_Abort
+      }
+      cout << "An exception was thrown... Goodbye.\n";
       cerr.flush();
       cout.flush();
       sleep(1);
-      MPI_Abort(worldComm, 1);
+      MPI_Abort(worldComm, errorcode);
     } else {
       int status;
       if((status=MPI_Finalize()) != MPI_SUCCESS)
