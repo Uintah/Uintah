@@ -101,7 +101,6 @@ class Dpy : public DpyBase {
   char     * criteria2;
   Barrier  * barrier;
   Barrier  * addSubThreads_;
-  int        nworkers;
   int        pp_size_;
   int        scratchsize_;
   bool       bench;
@@ -147,7 +146,7 @@ class Dpy : public DpyBase {
     
 public:
   Dpy(Scene* scene, RTRT* rtrt_endinge, char* criteria1, char* criteria2,
-      int nworkers, bool bench, int ncounters, int c0, int c1,
+      bool bench, int ncounters, int c0, int c1,
       float xScale,float yScale, bool display_frames, 
       int pp_size, int scratchsize, bool fullscreen, bool frameless,
       bool rserver, bool stereo=false);
