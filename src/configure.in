@@ -1011,12 +1011,12 @@ CC_DEPEND_EXT=unknown
 for flag in -MDupdate; do
   if test $CC_DEPEND_MODE = unknown; then
     rm -f configure-test.o configure-test-dir/configure-test.o
-    ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.d -o configure-test-dir/configure-test.o configure-test.cc >/dev/null 2>conftest.out"
+    ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.d -o configure-test-dir/configure-test.o configure-test-dir/configure-test.cc >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
     if test -f configure-test-dir/configure-test.d ; then
-      CC_DEPEND_MODE=perdir
+      CC_DEPEND_MODE=normal
       CC_DEPEND_REGEN='-MDupdate $(dir $@)depend.mk'
-      CC_DEPEND_EXT=doesnotmatter
+      CC_DEPEND_EXT=depend.mk
     fi
   fi
 done

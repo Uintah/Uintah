@@ -412,11 +412,9 @@ ifeq ($(CC_DEPEND_MODE),stdout)
         # to a temp file.  Prepend that file to replace filename.o with:
         # <path_to_file>/filename.o.  Then remove the temp file.
         #
-	@rm -f $(basename $@).depend
 	@echo "CREATING DEPENDENCY INFORMATION:"
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	($(ECHO) "$(dir $@)"; $(CXX) $(CFLAGS) $(INCLUDES) -M -c $<) > $(basename $@).$(CC_DEPEND_EXT)
-	@rm -f $(basename $@).depend
 
         # Now do the actual compile!
 	@echo "ACTUALLY COMPILING:"
@@ -445,24 +443,9 @@ ifeq ($(CC_DEPEND_MODE),stdout)
         # to a temp file.  Awk that file to replace filename.o with:
         # <path_to_file>/filename.o.  Then remove the temp file.
         #
-	@rm -f $(basename $@).depend
 	@echo "CREATING DEPENDENCY INFORMATION:"
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	($(ECHO) "$(dir $@)"; $(CXX) $(CFLAGS) $(INCLUDES) -M -c $<) > $(basename $@).$(CC_DEPEND_EXT)
-	@rm -f $(basename $@).depend
-
-        # Now do the actual compile!
-	@echo "ACTUALLY COMPILING:"
-	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-
-	@rm -f $(basename $@).depend
-	@echo "CREATING DEPENDENCY INFORMATION:"
-	$(CXX) $(CFLAGS) $(INCLUDES) -M -c $< > $(basename $@).depend
-	@rm -f $(basename $@).$(CC_DEPEND_EXT)
-	@awk '{ print "$(basename $@)"".o: " $$2 }' \
-	  $(basename $@).depend > $(basename $@).$(CC_DEPEND_EXT)
-	@rm -f $(basename $@).depend
 
         # Now do the actual compile!
 	@echo "ACTUALLY COMPILING:"
@@ -491,11 +474,9 @@ ifeq ($(F77_DEPEND_MODE),stdout)
         # to a temp file.  Awk that file to replace filename.o with:
         # <path_to_file>/filename.o.  Then remove the temp file.
         #
-	@rm -f $(basename $@).depend
 	@echo "CREATING DEPENDENCY INFORMATION:"
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	($(ECHO) "$(dir $@)"; $(F77) $(CFLAGS) $(INCLUDES) -M -c $<) > $(basename $@).$(CC_DEPEND_EXT)
-	@rm -f $(basename $@).depend
 
         # Now do the actual compile!
 	@echo "ACTUALLY COMPILING:"
@@ -524,11 +505,9 @@ ifeq ($(CC_DEPEND_MODE),stdout)
         # to a temp file.  Awk that file to replace filename.o with:
         # <path_to_file>/filename.o.  Then remove the temp file.
         #
-	@rm -f $(basename $@).depend
 	@echo "CREATING DEPENDENCY INFORMATION:"
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	($(ECHO) "$(dir $@)"; $(CC) $(CFLAGS) $(INCLUDES) -M -c $<) > $(basename $@).$(CC_DEPEND_EXT)
-	@rm -f $(basename $@).depend
 
         # Now do the actual compile!
 	@echo "ACTUALLY COMPILING:"
