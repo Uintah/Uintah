@@ -46,7 +46,6 @@ DynamicTable::tableSetup(int numTableDim, MixRxnTableInfo* tableInfo)
 void
 DynamicTable::getProps(const vector<double>& mixRxnVar, Stream& outStream)
 {
-  //cout << "Made it to GetProps" << endl;
   for (int i = 0; i < d_tableDim; i++)
     {
 	// calculates index in the table
@@ -97,8 +96,6 @@ DynamicTable::getProps(const vector<double>& mixRxnVar, Stream& outStream)
 void
 DynamicTable::interpolate(int currentDim, int* lowIndex, int* upIndex,
 			  double* lowFactor, double* upFactor, Stream& interpValue) {
-  Stream upValue;
-  Stream lowValue;
   //cout << "made it to interpolate" << endl;
   if (currentDim == (d_tableDim- 1))
     {
@@ -106,11 +103,11 @@ DynamicTable::interpolate(int currentDim, int* lowIndex, int* upIndex,
       upFactor[currentDim] = d_tableBoundsVec[1][currentDim];
       lowIndex[currentDim] = d_tableIndexVec[0][currentDim];
       //cout << "interpolate:lowIndex = " << lowIndex[0] << " " << lowIndex[1] << endl;
-      tableLookUp(lowIndex, lowValue);
+      tableLookUp(lowIndex, d_lowValue);
       lowIndex[currentDim] = d_tableIndexVec[1][currentDim];
-      tableLookUp(lowIndex, upValue);
-      interpValue =  lowValue.linInterpolate(upFactor[currentDim],
-					     lowFactor[currentDim], upValue);
+      tableLookUp(lowIndex, d_upValue);
+      interpValue = d_lowValue.linInterpolate(upFactor[currentDim],
+					     lowFactor[currentDim], d_upValue);
       //cout << "end of interpolate" << endl;
     }
   else
@@ -140,6 +137,9 @@ DynamicTable::interpolate(int currentDim, int* lowIndex, int* upIndex,
  
 //
 // $Log$
+// Revision 1.9  2003/01/22 00:43:04  spinti
+// Added improved BetaPDF mixing model and capability to create a betaPDF table a priori. Cleaned up favre averaging and streamlined sections of code.
+//
 // Revision 1.8  2002/05/31 22:04:44  spinti
 // *** empty log message ***
 //

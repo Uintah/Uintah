@@ -63,6 +63,7 @@ namespace Uintah {
   class MixRxnTableInfo;
   class MixingModel;
   class Stream;
+  class StanjanEquilibriumReactionModel;
  
   // Reference temperature defined to be the lower limit of integration in the
   // determination of the system sensible enthalpy
@@ -120,7 +121,9 @@ namespace Uintah {
     virtual void computeRxnStateSpace(const Stream& unreactedMixture, 
 				      const std::vector<double>& mixRxnVar, 
 				      Stream& equilStateSpace);
-
+    virtual double computeTemperature(const double absEnthalpy, 
+			      const std::vector<double>& massFract, 
+			      double initTemp);   
 
   private:
     // Looks for needed entry in KDTree and returns that entry. If entry 
@@ -128,6 +131,7 @@ namespace Uintah {
     void tableLookUp(int* tableKeyIndex, Stream& stateSpaceVars);
     // Reads static data files created by Diem's ILDM
     void readStaticTable();
+    void convertKeyToFloatValues(int tableKeyIndex[], std::vector<double>& indepVars);
 
     // Class object that stores all the information about the reaction
     // mechanism read in through Chemkin including species, elements, reaction
@@ -142,6 +146,7 @@ namespace Uintah {
     int d_depStateSpaceVars;
     MixingModel* d_mixModel;
     MixRxnTableInfo* d_rxnTableInfo;
+    StanjanEquilibriumReactionModel* d_equilModel;
     // Data structure class that stores the table entries for state-space
     // variables as a function of independent variables.
     // This could be implemented either as a k-d or a binary tree data structure.

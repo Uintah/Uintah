@@ -15,6 +15,7 @@ using namespace Uintah;
 BetaPDFShape::BetaPDFShape(int dimPDF):PDFShape(),d_dimPDF(dimPDF)
 {
   d_coef = vector<double>(d_dimPDF+1);
+  d_vars = vector<double>(2);
 }
 
 //****************************************************************************
@@ -38,19 +39,31 @@ BetaPDFShape::problemSetup(const ProblemSpecP& /* params*/)
 //****************************************************************************
 void 
 BetaPDFShape::computePDFFunction(double* meanMixVar,
-				 double statVar)
+				 double normStatVar)
 {
   d_validGammaValue = true;
-  // ***Jennifer's note- This kluge will only work for integration over
-  // ONE variable***
-  //I'm not satisfied with this section***!!!
-  //If var too high, it is reduced in computeBetaPDFShape
-  // If var too low, mean values will be returned 
-  if (statVar < 1e-06*meanMixVar[0]) {
+  // IMPORTANT: statVar being passed in has been normalized. It needs to be
+  // unnormalized for use in this class  
+  double maxVar = meanMixVar[0]*(1.0 - meanMixVar[0]);
+  double statVar = normStatVar*maxVar; 
+  // If var > 0.9maxVar, this function is not called. Table entries
+  // are computed from the values at 0.9maxVar and the unreacted
+  // values at 1.0maxVar
+  // If var is too high, it is reduced in computeBetaPDFShape
+  // If var too low, mean values will be returned  
+  //if (statVar < SMALL_VARIANCE*maxVar) {
+  if (statVar < SMALL_VARIANCE) {
     d_validGammaValue = false;
+    //cout << "WARNING: Variance too small" << endl;
     return;
   }
-  if ((meanMixVar[0]<0.001)||(meanMixVar[0]>0.999)) {
+#if 0
+  if (statVar > 0.995*maxVar) {
+     d_validGammaValue = false;
+    return;
+  } 
+#endif
+  if ((meanMixVar[0]<CLOSETOZERO)||(meanMixVar[0]>CLOSETOONE)) {
      d_validGammaValue = false;
      return;
   }
@@ -74,10 +87,14 @@ BetaPDFShape::computeBetaPDFShape(double* meanMixVar,
   double new_factor = 0.0, new_d_statVar = 0.0;
   double sumMixVars = 0.0;
   double sumSqrMixVars = 0.0;
+  // Data needed by computeShapeFunction
+  d_vars[0] = meanMixVar[0];
+  d_vars[1] = statVar;
   //Because multi-dim PDF formulation is used here, need to
   //correct statVar for 1-D PDF
   if (d_dimPDF == 1)
     statVar = 2.0*statVar;
+  //cout << "in computeBetaPDFShape, d_vars = " << d_vars[0] << " " << d_vars[1] << endl;
   for (int i = 0; i < d_dimPDF; i++) {
     sumMixVars += meanMixVar[i];
     sumSqrMixVars += meanMixVar[i]*meanMixVar[i];
@@ -96,16 +113,18 @@ BetaPDFShape::computeBetaPDFShape(double* meanMixVar,
     //cout << meanMixVar[i] << " Beta(" << i << ") = " << d_coef[i] << endl;
     if (d_coef[i] <= 0.0)
       //Upper limit, if Q is greater than (1-S), ai becomes negative.  
-      //So we reset the new Q = 0.9*fi*(1-fi)/2
+      //So we reset the new Q = 0.9*fi*(1-fi)*2
       {
-	new_d_statVar = 0.9*meanMixVar[i]*(1-meanMixVar[i])/2.0;
+	new_d_statVar = 0.9*meanMixVar[i]*(1-meanMixVar[i])*2.0;
 	if (new_d_statVar < SMALL_VARIANCE)
 	  new_factor = 0.0;
 	else
 	  new_factor = (1.0 - sumSqrMixVars)/new_d_statVar - 1.0;
 	d_coef[i] = meanMixVar[i]*new_factor;
-	//cout << "beta is negative, new beta is calculated" << endl;
-      }
+	//cout << "new_factor = " << new_factor << endl;
+	cout << "beta is negative, new beta is calculated" << endl;
+        cout << "f, gf =" << meanMixVar[0] << " " << statVar<< endl;   
+    }
     gammafn[i] = dgammaln(&d_coef[i]); // gammaln(ai)
     //cout << "gammaln(" << i << ") = " << gammafn[i] << endl;
     multGamma += gammafn[i]; // LN(gamma(a1))+LN(gamma(a2))...LN(gamma(a(N-1)))
@@ -114,14 +133,16 @@ BetaPDFShape::computeBetaPDFShape(double* meanMixVar,
   d_coef[d_dimPDF] = lastMixVars*factor; // computing aN
   if (d_coef[d_dimPDF] <= 0.0)
     {
-      new_d_statVar = 0.9*lastMixVars*(1-lastMixVars)/2.0;
+      new_d_statVar = 0.9*lastMixVars*(1-lastMixVars)*2.0;
       if (new_d_statVar < SMALL_VARIANCE)
          new_factor = 0.0;
       else
 	 new_factor = (1.0 - sumSqrMixVars)/new_d_statVar - 1.0;
-      //cout << "lastMixVar = "<<lastMixVars<<" mean[d_dimPDF] = "<<meanMixVar[d_dimPDF]<<endl;
+      cout << "lastMixVar = "<<lastMixVars<<" mean[d_dimPDF] = "<<meanMixVar[d_dimPDF]<<endl;
       d_coef[d_dimPDF] = lastMixVars*new_factor;
-      //cout << "Beta is negative, new beta is calculated" << endl;
+      //cout << "new_factor = " << new_factor << endl;
+      cout << "Beta is negative, new beta is calculated" << endl;
+      cout << "f, gf =" << meanMixVar[0] << " " << statVar<< endl;
     }    
 
   //cout << lastMixVars << " Beta(" << d_dimPDF << ") = " << d_coef[d_dimPDF] << endl;
@@ -134,6 +155,7 @@ BetaPDFShape::computeBetaPDFShape(double* meanMixVar,
   //  cout << "sumCoefs = " << sumCoefs << endl;
   double gammafnNum = dgammaln(&sumCoefs);   // LN(gamma(a1+a2+...+aN))
   //cout << "LN(sum) = " << gammafnNum << endl;
+  //cout << "gammafn = " << gammafnNum-multGamma << endl;
   return (gammafnNum-multGamma);   
 } // gamma(a1+a2+...+aN)/(gamma(a1)*...*gamma(aN))
 
@@ -146,6 +168,25 @@ BetaPDFShape::computeShapeFunction(double *var) {
   //---------------------------------------------------
   double sumMixVars = 0.0;
   double pdffn = d_gammafnValue;
+  // Implement James Sutherlands' checks; only works for 
+  // one mixture fraction
+  double gf = d_vars[1];
+  if ( gf < SMALL_VARIANCE) {
+    cout << "GF is SMALL" << d_vars[0] << " " << d_vars[1] << endl;
+    if ((var[0] <= (d_vars[0] + 100.0*SMALL_VARIANCE))&&
+	(var[0] >= (d_vars[0] - 100.0*SMALL_VARIANCE))) 
+      return 1.0e9;
+    else {
+      cout << "returning 0" << endl;
+      return 0.0;
+    }
+  }
+  else {
+    if (var[0] < SMALL_VARIANCE)
+      var[0] = SMALL_VARIANCE;
+    else if (var[0] > (1.0-SMALL_VARIANCE))
+      var[0] = 1.0 - SMALL_VARIANCE;
+  }
   for (int i = 0; i < d_dimPDF; i++) {
     sumMixVars += var[i];
     pdffn += (d_coef[i] - 1.0)*log(var[i]);
@@ -160,6 +201,9 @@ BetaPDFShape::computeShapeFunction(double *var) {
 
 //
 // $Log$
+// Revision 1.10  2003/01/22 00:43:04  spinti
+// Added improved BetaPDF mixing model and capability to create a betaPDF table a priori. Cleaned up favre averaging and streamlined sections of code.
+//
 // Revision 1.9  2002/06/21 16:29:16  dav
 // xlC AIX fix: removed _ from fortran names.  This probably will break sgi/linux.  However, need to be consistent and do something link #define to add _ as is done in some files.
 //
