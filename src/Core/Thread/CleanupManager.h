@@ -50,11 +50,33 @@
 //  scirun.  It's recommended that you avoid calling scinew from
 //  within your callback.
 //  
-//  Register with CleanupManager::add_callback(YOUR_CALLBACK_HERE);
+//  Register with CleanupManager::add_callback(YOUR_CALLBACK_HERE, MISC_DATA);
 //  
 //  Your callback will only ever be called once, no matter how many
 //  times you register it.  In addition you can unregister it or
 //  design it such that it doesn't do anything if it doesn't need to.
+//  Here is an example of how this could be used:
+//
+//  class Myclass {
+//  public:
+//    Myclass() {
+//      CleanupManager::add_callback(this->cleanup_wrap, this);
+//    }
+//  
+//    ~Myclass() {
+//      // Need to remove and call callback at same time or else you get
+//      // a race condition and the callback could be called twice.
+//      CleanupManger::invoke_remove_callback(this->cleanup_wrap, this);
+//    }
+//  
+//  private: 
+//    static void cleanup_wrap(void *ptr) {
+//      ((Myclass *)ptr)->cleanup();
+//    }
+//  
+//    void cleanup();
+//  }
+//  
 
 #ifndef SCI_project_CleanupManager_h
 #define SCI_project_CleanupManager_h 1
@@ -65,18 +87,20 @@
 
 namespace SCIRun {
 
-typedef void (*CleanupManagerCallback)();
+typedef void (*CleanupManagerCallback)(void *);
 
 class SCICORESHARE CleanupManager {
 public:
   
-  static void add_callback(CleanupManagerCallback callback);
-  static void remove_callback(CleanupManagerCallback callback);
+  static void add_callback(CleanupManagerCallback cb, void *data);
+  static void invoke_remove_callback(CleanupManagerCallback cb, void *data);
+  static void remove_callback(CleanupManagerCallback cb, void *data);
 
   static void call_callbacks();
 
 protected:
-  static std::vector<CleanupManagerCallback> callbacks_;
+  static std::vector<std::pair<CleanupManagerCallback, void *> > callbacks_;
+  static Mutex lock_;
 };
 
 } // End namespace SCIRun
