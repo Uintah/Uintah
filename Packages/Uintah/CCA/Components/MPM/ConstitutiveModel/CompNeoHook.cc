@@ -16,6 +16,7 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/NotFinished.h>
 #include <fstream>
 #include <iostream>
 
@@ -48,7 +49,7 @@ CompNeoHook::~CompNeoHook()
 
 void CompNeoHook::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
-                                        DataWarehouseP& new_dw)
+                                        DataWarehouse* new_dw)
 {
    // Put stuff in here to initialize each particle's
    // constitutive model parameters and deformationMeasure
@@ -86,7 +87,7 @@ void CompNeoHook::addParticleState(std::vector<const VarLabel*>& from,
 
 void CompNeoHook::computeStableTimestep(const Patch* patch,
                                            const MPMMaterial* matl,
-                                           DataWarehouseP& new_dw)
+                                           DataWarehouse* new_dw)
 {
    // This is only called for the initial timestep - all other timesteps
    // are computed as a side-effect of computeStressTensor
@@ -121,11 +122,13 @@ void CompNeoHook::computeStableTimestep(const Patch* patch,
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
-void CompNeoHook::computeStressTensor(const Patch* patch,
-                                        const MPMMaterial* matl,
-                                        DataWarehouseP& old_dw,
-                                        DataWarehouseP& new_dw)
+void CompNeoHook::computeStressTensor(const PatchSubset* patches,
+				      const MPMMaterial* matl,
+				      DataWarehouse* old_dw,
+				      DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
   Matrix3 velGrad,Shear,fbar,deformationGradientInc;
   double J,p,IEl,U,W,se=0.;
   double c_dil=0.0,Jinc;
@@ -305,14 +308,14 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
 
   // Store updated particle volume
   new_dw->put(pvolume,lb->pVolumeDeformedLabel);
+  }
 }
 
 void CompNeoHook::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
-					 const Patch* patch,
-					 DataWarehouseP& old_dw,
-					 DataWarehouseP& new_dw) const
+					 const PatchSet* patches) const
 {
+#if 0
    int matlindex = matl->getDWIndex();
    task->requires(old_dw, lb->pXLabel,      matlindex, patch, Ghost::None);
    task->requires(old_dw, lb->pMassLabel,   matlindex,  patch, Ghost::None);
@@ -336,6 +339,9 @@ void CompNeoHook::addComputesAndRequires(Task* task,
 		  Ghost::None);
       task->computes(new_dw, lb->pRotationRateLabel, matlindex,  patch);
    }
+#else
+   NOT_FINISHED("New task stuff");
+#endif
 }
 
 #ifdef __sgi

@@ -16,6 +16,7 @@
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Core/Util/NotFinished.h>
 
 using namespace Uintah;
 
@@ -74,11 +75,10 @@ Properties::computeInletProperties(const InletStream& inStream,
 // Schedule the computation of properties
 //****************************************************************************
 void 
-Properties::sched_computeProps(const LevelP& level,
-			       SchedulerP& sched, 
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw)
+Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
+			       const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -100,17 +100,19 @@ Properties::sched_computeProps(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 //****************************************************************************
 // Schedule the recomputation of properties
 //****************************************************************************
 void 
-Properties::sched_reComputeProps(const LevelP& level,
-			       SchedulerP& sched, 
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw)
+Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
+				 const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -136,6 +138,9 @@ Properties::sched_reComputeProps(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 //****************************************************************************

@@ -17,6 +17,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Core/Util/NotFinished.h>
 
 #include <vector>
 #include <iostream>
@@ -47,18 +48,21 @@ RigidBodyContact::~RigidBodyContact()
 
 void RigidBodyContact::initializeContact(const Patch* /*patch*/,
 					 int /*dwindex*/,
-					 DataWarehouseP& /*new_dw*/)
+					 DataWarehouse* /*new_dw*/)
 {
 
 }
 
 void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
-					 const Patch* patch,
-					 DataWarehouseP&,
-					 DataWarehouseP& new_dw)
+					 const PatchSubset* patches,
+					 const MaterialSubset* matls,
+					 DataWarehouse*,
+					 DataWarehouse* new_dw)
 {
+#if 0
   Vector zero(0.0,0.0,0.0);
-  Vector centerOfMassVelocity(0.0,0.0,0.0);
+  // Unused varible - Steve
+  //Vector centerOfMassVelocity(0.0,0.0,0.0);
   Vector centerOfMassMom(0.0,0.0,0.0);
   double centerOfMassMass;
 
@@ -106,15 +110,21 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
     int dwindex = mpm_matl->getDWIndex();
     new_dw->put(gvelocity[n], lb->gMomExedVelocityLabel, dwindex, patch);
   }
+#else
+  NOT_FINISHED("New task stuff");
+#endif
 }
 
 void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
-				  const Patch* patch,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw)
+				       const PatchSubset* patches,
+				       const MaterialSubset* matls,
+				       DataWarehouse* old_dw,
+				       DataWarehouse* new_dw)
 {
+#if 0
   Vector zero(0.0,0.0,0.0);
-  Vector centerOfMassVelocity(0.0,0.0,0.0);
+  // Unused variable - Steve
+  // Vector centerOfMassVelocity(0.0,0.0,0.0);
   Vector centerOfMassMom(0.0,0.0,0.0);
   Vector Dvdt(0.0,0.0,0.0);
   double centerOfMassMass;
@@ -176,29 +186,32 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
     new_dw->put(gvelocity_star[n],lb->gMomExedVelocityStarLabel,dwindex,patch);
     new_dw->put(gacceleration[n], lb->gMomExedAccelerationLabel,dwindex,patch);
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 void RigidBodyContact::addComputesAndRequiresInterpolated( Task* t,
-                                             const MPMMaterial* matl,
-                                             const Patch* patch,
-                                             DataWarehouseP& old_dw,
-                                             DataWarehouseP& new_dw) const
+					     const PatchSet* patches,
+					     const MaterialSet* matls) const
 {
+#if 0
   int idx = matl->getDWIndex();
   t->requires( new_dw, lb->gMassLabel,     idx, patch, Ghost::None);
   t->requires( new_dw, lb->gVelocityLabel, idx, patch, Ghost::None);
 
   t->computes( new_dw, lb->gMomExedVelocityLabel, idx, patch );
+#else
+   NOT_FINISHED("new task stuff");
+#endif
 
 }
 
 void RigidBodyContact::addComputesAndRequiresIntegrated( Task* t,
-                                             const MPMMaterial* matl,
-                                             const Patch* patch,
-                                             DataWarehouseP& old_dw,
-                                             DataWarehouseP& new_dw) const
+					     const PatchSet* patches,
+					     const MaterialSet* matls) const
 {
-
+#if 0
   int idx = matl->getDWIndex();
   t->requires(new_dw, lb->gMassLabel,         idx, patch, Ghost::None);
   t->requires(new_dw, lb->gVelocityStarLabel, idx, patch, Ghost::None);
@@ -206,5 +219,8 @@ void RigidBodyContact::addComputesAndRequiresIntegrated( Task* t,
 
   t->computes( new_dw, lb->gMomExedVelocityStarLabel, idx, patch);
   t->computes( new_dw, lb->gMomExedAccelerationLabel, idx, patch);
+#else
+   NOT_FINISHED("new task stuff");
+#endif
 
 }

@@ -66,24 +66,18 @@ public:
       // Interface for Schedule the computation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
-      virtual void sched_computeTurbSubmodel(const LevelP&, 
-					     SchedulerP& sched,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw) = 0;
+      virtual void sched_computeTurbSubmodel(SchedulerP&, const PatchSet* patches,
+					     const MaterialSet* matls) = 0;
 
       ///////////////////////////////////////////////////////////////////////
       // Interface for Schedule the recomputation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
-      virtual void sched_reComputeTurbSubmodel(const LevelP&, 
-					     SchedulerP& sched,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw) = 0;
+      virtual void sched_reComputeTurbSubmodel(SchedulerP&, const PatchSet* patches,
+					       const MaterialSet* matls) = 0;
 
-      virtual void sched_computeScalarVariance(const LevelP&, 
-					       SchedulerP& sched,
-					       DataWarehouseP& old_dw,
-					       DataWarehouseP& new_dw) = 0;
+      virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
+					       const MaterialSet* matls) = 0;
       // GROUP: Action Computations :
       ///////////////////////////////////////////////////////////////////////
       // Interface for Calculate the wall velocity boundary conditions

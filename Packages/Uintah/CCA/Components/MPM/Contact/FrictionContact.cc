@@ -15,6 +15,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Core/Util/NotFinished.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -46,7 +47,7 @@ FrictionContact::~FrictionContact()
 
 void FrictionContact::initializeContact(const Patch* patch,
                                         int matlindex,
-                                        DataWarehouseP& new_dw)
+                                        DataWarehouse* new_dw)
 {
   NCVariable<double> normtraction;
   NCVariable<Vector> surfnorm;
@@ -63,10 +64,12 @@ void FrictionContact::initializeContact(const Patch* patch,
 }
 
 void FrictionContact::exMomInterpolated(const ProcessorGroup*,
-					const Patch* patch,
-					DataWarehouseP& old_dw,
-					DataWarehouseP& new_dw)
+					const PatchSubset* patches,
+					const MaterialSubset* matls,
+					DataWarehouse* old_dw,
+					DataWarehouse* new_dw)
 {
+#if 0
   Vector zero(0.0,0.0,0.0);
   Vector centerOfMassVelocity(0.0,0.0,0.0);
   Vector centerOfMassMom(0.0,0.0,0.0);
@@ -171,13 +174,18 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     int matlindex = mpm_matl->getDWIndex();
     new_dw->put(gvelocity[n], lb->gMomExedVelocityLabel, matlindex, patch);
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 void FrictionContact::exMomIntegrated(const ProcessorGroup*,
-				  const Patch* patch,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw)
+				      const PatchSubset* patches,
+				      const MaterialSubset* matls,
+				      DataWarehouse* old_dw,
+				      DataWarehouse* new_dw)
 {
+#if 0
   Vector zero(0.0,0.0,0.0);
   Vector centerOfMassVelocity(0.0,0.0,0.0);
   Vector centerOfMassMom(0.0,0.0,0.0);
@@ -497,41 +505,36 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     new_dw->put(gacceleration[n], lb->gMomExedAccelerationLabel,
 						matlindex, patch);
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
-                                             const MPMMaterial* matl,
-                                             const Patch* patch,
-                                             DataWarehouseP& old_dw,
-                                             DataWarehouseP& new_dw) const
+					     const PatchSet* patches,
+					     const MaterialSet* matls) const
 {
-  int idx = matl->getDWIndex();
-  t->requires( old_dw, lb->gNormTractionLabel,idx, patch, Ghost::None, 0);
-  t->requires( old_dw, lb->gSurfNormLabel,    idx, patch, Ghost::None, 0);
-  t->requires( new_dw, lb->gMassLabel,        idx, patch, Ghost::None);
-  t->requires( new_dw, lb->gVelocityLabel,    idx, patch, Ghost::None);
+  t->requires(Task::OldDW, lb->gNormTractionLabel,Ghost::None);
+  t->requires(Task::OldDW, lb->gSurfNormLabel,    Ghost::None);
+  t->requires(Task::NewDW, lb->gMassLabel,        Ghost::None);
+  t->requires(Task::NewDW, lb->gVelocityLabel,    Ghost::None);
 
-  t->computes( new_dw, lb->gMomExedVelocityLabel, idx, patch );
+  t->computes(lb->gMomExedVelocityLabel);
 }
 
 void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
-                                             const MPMMaterial* matl,
-                                             const Patch* patch,
-                                             DataWarehouseP& old_dw,
-                                             DataWarehouseP& new_dw) const
+					     const PatchSet* patches,
+					     const MaterialSet* matls) const
 {
-  int idx = matl->getDWIndex();
-  t->requires( new_dw, lb->pStressAfterStrainRateLabel, idx, patch,
-                        			   Ghost::AroundNodes, 1);
-  t->requires(new_dw,  lb->gMassLabel,         idx, patch,
-						   Ghost::AroundNodes, 1);
-  t->requires(new_dw,  lb->gVelocityStarLabel, idx, patch, Ghost::None);
-  t->requires(new_dw,  lb->gAccelerationLabel, idx, patch, Ghost::None);
+  t->requires(Task::NewDW, lb->pStressAfterStrainRateLabel,
+	      Ghost::AroundNodes, 1);
+  t->requires(Task::NewDW,  lb->gMassLabel, Ghost::AroundNodes, 1);
+  t->requires(Task::NewDW,  lb->gVelocityStarLabel, Ghost::None);
+  t->requires(Task::NewDW,  lb->gAccelerationLabel, Ghost::None);
 
-  t->computes( new_dw, lb->gNormTractionLabel,        idx, patch);
-  t->computes( new_dw, lb->gSurfNormLabel,            idx, patch);
-  t->computes( new_dw, lb->gMomExedVelocityStarLabel, idx, patch);
-  t->computes( new_dw, lb->gMomExedAccelerationLabel, idx, patch);
-  t->computes( new_dw, lb->gStressLabel,              idx, patch);
+  t->computes(lb->gNormTractionLabel);
+  t->computes(lb->gSurfNormLabel);
+  t->computes(lb->gMomExedVelocityStarLabel);
+  t->computes(lb->gMomExedAccelerationLabel);
+  t->computes(lb->gStressLabel);
 }
-

@@ -15,6 +15,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
+#include <Core/Util/NotFinished.h>
 
 #include <Packages/Uintah/CCA/Components/MPM/Fracture/Connectivity.h>
 
@@ -62,7 +63,7 @@ CompNeoHookPlas::~CompNeoHookPlas()
 
 void CompNeoHookPlas::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
-                                        DataWarehouseP& new_dw)
+                                        DataWarehouse* new_dw)
 {
    // Put stuff in here to initialize each particle's
    // constitutive model parameters and deformationMeasure
@@ -97,7 +98,7 @@ void CompNeoHookPlas::initializeCMData(const Patch* patch,
 
 void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
 					     const MPMMaterial* matl,
-					     DataWarehouseP& new_dw)
+					     DataWarehouse* new_dw)
 {
    // This is only called for the initial timestep - all other timesteps
    // are computed as a side-effect of computeStressTensor
@@ -140,11 +141,13 @@ void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
-void CompNeoHookPlas::computeStressTensor(const Patch* patch,
+void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 					  const MPMMaterial* matl,
-					  DataWarehouseP& old_dw,
-					  DataWarehouseP& new_dw)
+					  DataWarehouse* old_dw,
+					  DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
 
   Matrix3 bElBarTrial,deformationGradientInc;
   Matrix3 shearTrial,Shear,normal;
@@ -368,14 +371,14 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   new_dw->put(statedata, p_statedata_label_preReloc);
   // Store the deformed volume
   new_dw->put(pvolume,lb->pVolumeDeformedLabel);
+  }
 }
 
 void CompNeoHookPlas::addComputesAndRequires(Task* task,
 					     const MPMMaterial* matl,
-					     const Patch* patch,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw) const
+					     const PatchSet* patches) const
 {
+#if 0
    int matlindex = matl->getDWIndex();
    task->requires(old_dw, lb->pXLabel, matlindex,        patch, Ghost::None);
    task->requires(old_dw, p_statedata_label, matlindex,  patch, Ghost::None);
@@ -398,6 +401,9 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
      task->requires(new_dw, lb->pConnectivityLabel, matlindex,patch, Ghost::None);
      task->computes(new_dw, lb->pRotationRateLabel, matlindex, patch);
    }
+#else
+   NOT_FINISHED("CompMooneyRivlin::addComputesAndRequires");
+#endif
 }
 
 #ifdef __sgi

@@ -115,41 +115,31 @@ public:
       // GROUP:  Schedule tasks :
       ////////////////////////////////////////////////////////////////////////
       // Initialize cell types
-      void sched_cellTypeInit(const LevelP& level,
-			      SchedulerP& sched,
-			      DataWarehouseP& old_dw,
-			      DataWarehouseP& new_dw);
+      void sched_cellTypeInit(SchedulerP&, const PatchSet* patches,
+			      const MaterialSet* matls);
 
       ////////////////////////////////////////////////////////////////////////
       // Initialize inlet area
       // Details here
-      void sched_calculateArea(const LevelP& level,
-			       SchedulerP& sched,
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw);
+      void sched_calculateArea(SchedulerP&, const PatchSet* patches,
+			       const MaterialSet* matls);
 
       ////////////////////////////////////////////////////////////////////////
       // Schedule Computation of Pressure boundary conditions terms. 
-      void sched_computePressureBC(const LevelP& level,
-			    SchedulerP& sched,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw);
+      void sched_computePressureBC(SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls);
 
       ////////////////////////////////////////////////////////////////////////
       // Schedule Setting inlet velocity bc's
       // we need to do it because of staggered grid
-      void sched_setInletVelocityBC(const LevelP& level,
-				    SchedulerP& sched,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw);
+      void sched_setInletVelocityBC(SchedulerP&, const PatchSet* patches,
+				    const MaterialSet* matls);
 
       ////////////////////////////////////////////////////////////////////////
       // Schedule Compute Pressure BCS
       // used for pressure boundary type (during time advance)
-      void sched_recomputePressureBC(const LevelP& level,
-				   SchedulerP& sched,
-				   DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw);
+      void sched_recomputePressureBC(SchedulerP&, const PatchSet* patches,
+				     const MaterialSet* matls);
 
       ////////////////////////////////////////////////////////////////////////
       // Schedule Set Profile BCS
@@ -157,17 +147,13 @@ public:
       // assigns flat velocity profiles for primary and secondary inlets
       // Also sets flat profiles for density
       // ** WARNING ** Properties profile not done yet
-      void sched_setProfile(const LevelP& level,
-			    SchedulerP& sched,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw);
+      void sched_setProfile(SchedulerP&, const PatchSet* patches,
+			    const MaterialSet* matls);
 
       ////////////////////////////////////////////////////////////////////////
       // Initialize multimaterial wall cell types
-      void sched_mmWallCellTypeInit(const LevelP& level,
-				    SchedulerP& sched,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw);
+      void sched_mmWallCellTypeInit(SchedulerP&, const PatchSet* patches,
+				    const MaterialSet* matls);
 
       // GROUP:  Actual Computations :
       ////////////////////////////////////////////////////////////////////////

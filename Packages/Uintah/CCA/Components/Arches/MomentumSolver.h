@@ -87,17 +87,13 @@ public:
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule the build of the linearized momentum matrix
-      void sched_buildLinearMatrix(const LevelP& level,
-				   SchedulerP& sched,
-				   DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw,
+      void sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches,
+				   const MaterialSet* matls,
 				   double delta_t, int index);
  
-      void sched_velocityLinearSolve(const LevelP& level,
-				     SchedulerP& sched,
-				     DataWarehouseP& old_dw,
-				     DataWarehouseP& new_dw, double delta_t, 
-				     int index);
+      void sched_velocityLinearSolve(SchedulerP& sched, const PatchSet* patches,
+				     const MaterialSet* matls,
+				     double delta_t, int index);
 
 protected: 
 

@@ -159,9 +159,9 @@ Arches::problemSetup(const ProblemSpecP& params,
 // ****************************************************************************
 void 
 Arches::scheduleInitialize(const LevelP& level,
-			   SchedulerP& sched,
-			   DataWarehouseP& dw)
+			   SchedulerP& sched)
 {
+#if 0
   // schedule the initialization of parameters
   // require : None
   // compute : [u,v,w]VelocityIN, pressureIN, scalarIN, densityIN,
@@ -197,17 +197,19 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : pressureSPBC, [u,v,w]VelocitySPBC
   if (d_boundaryCondition->getPressureBC()) 
     d_boundaryCondition->sched_computePressureBC(level, sched, dw, dw);
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 // ****************************************************************************
 // schedule the initialization of parameters
 // ****************************************************************************
 void 
-Arches::sched_paramInit(const LevelP& level,
-			SchedulerP& sched,
-			DataWarehouseP& old_dw,
-			DataWarehouseP& new_dw)
+Arches::sched_paramInit(SchedulerP& sched, const PatchSet* patches,
+			const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -227,6 +229,9 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch);
     sched->addTask(tsk);
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 // ****************************************************************************
@@ -234,10 +239,13 @@ Arches::sched_paramInit(const LevelP& level,
 // ****************************************************************************
 void 
 Arches::scheduleComputeStableTimestep(const LevelP&,
-				      SchedulerP&,
-				      DataWarehouseP& dw)
+				      SchedulerP&)
 {
+#if 0
   dw->put(delt_vartype(d_deltaT),  d_sharedState->get_delt_label()); 
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 // ****************************************************************************
@@ -246,11 +254,9 @@ Arches::scheduleComputeStableTimestep(const LevelP&,
 void 
 Arches::scheduleTimeAdvance(double time, double dt,
 			    const LevelP& level, 
-			    SchedulerP& sched,
-			    DataWarehouseP& old_dw, 
-			    DataWarehouseP& new_dw)
+			    SchedulerP& sched)
 {
-
+#if 0
 #ifdef ARCHES_MAIN_DEBUG
   cerr << "Begin: Arches::scheduleTimeAdvance\n";
 #endif
@@ -269,6 +275,9 @@ Arches::scheduleTimeAdvance(double time, double dt,
   //  }
 #ifdef ARCHES_MAIN_DEBUG
   cerr << "Done: Arches::scheduleTimeAdvance\n";
+#endif
+#else
+  NOT_FINISHED("new task stuff");
 #endif
 }
 

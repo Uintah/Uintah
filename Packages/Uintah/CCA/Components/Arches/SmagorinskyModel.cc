@@ -73,11 +73,10 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
 // Schedule compute 
 //****************************************************************************
 void 
-SmagorinskyModel::sched_computeTurbSubmodel(const LevelP& level,
-					    SchedulerP& sched,
-					    DataWarehouseP& old_dw,
-					    DataWarehouseP& new_dw)
+SmagorinskyModel::sched_computeTurbSubmodel(SchedulerP& sched, const PatchSet* patches,
+					    const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -112,17 +111,19 @@ SmagorinskyModel::sched_computeTurbSubmodel(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 //****************************************************************************
 // Schedule recomputation of the turbulence sub model 
 //****************************************************************************
 void 
-SmagorinskyModel::sched_reComputeTurbSubmodel(const LevelP& level,
-					    SchedulerP& sched,
-					    DataWarehouseP& old_dw,
-					    DataWarehouseP& new_dw)
+SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched, const PatchSet* patches,
+					      const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -161,6 +162,9 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 //****************************************************************************
@@ -411,11 +415,10 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 // Schedule recomputation of the turbulence sub model 
 //****************************************************************************
 void 
-SmagorinskyModel::sched_computeScalarVariance(const LevelP& level,
-					      SchedulerP& sched,
-					      DataWarehouseP& old_dw,
-					      DataWarehouseP& new_dw)
+SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched, const PatchSet* patches,
+					      const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -442,6 +445,9 @@ SmagorinskyModel::sched_computeScalarVariance(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 

@@ -69,29 +69,23 @@ public:
       // Schedule the computation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
-      virtual void sched_computeTurbSubmodel(const LevelP&, 
-					     SchedulerP& sched,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw);
+      virtual void sched_computeTurbSubmodel(SchedulerP&, const PatchSet* patches,
+					     const MaterialSet* matls);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule the recomputation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
-      virtual void sched_reComputeTurbSubmodel(const LevelP&, 
-					       SchedulerP& sched,
-					       DataWarehouseP& old_dw,
-					       DataWarehouseP& new_dw);
+      virtual void sched_reComputeTurbSubmodel(SchedulerP&, const PatchSet* patches,
+					       const MaterialSet* matls);
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
       // Schedule the computation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
-      virtual void sched_computeScalarVariance(const LevelP&, 
-					       SchedulerP& sched,
-					       DataWarehouseP& old_dw,
-					       DataWarehouseP& new_dw);
+      virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
+					       const MaterialSet* matls);
       // GROUP: Access Methods :
       ///////////////////////////////////////////////////////////////////////
       // Get the molecular viscosity

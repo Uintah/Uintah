@@ -14,6 +14,7 @@
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Core/Util/NotFinished.h>
 
 
 using namespace Uintah;
@@ -57,11 +58,10 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 //______________________________________________________________________
 //
 void MPMArches::scheduleInitialize(const LevelP& level,
-				SchedulerP& sched,
-				DataWarehouseP& dw)
+				   SchedulerP& sched)
 {
-  d_mpm->scheduleInitialize(      level, sched, dw);
-  d_arches->scheduleInitialize(      level, sched, dw);
+  d_mpm->scheduleInitialize(      level, sched);
+  d_arches->scheduleInitialize(      level, sched);
   // add compute void fraction to be used by gas density and viscosity
   cerr << "Doing Initialization \t\t\t MPMArches" <<endl;
   cerr << "--------------------------------\n"<<endl; 
@@ -69,22 +69,23 @@ void MPMArches::scheduleInitialize(const LevelP& level,
 //______________________________________________________________________
 //
 void MPMArches::scheduleComputeStableTimestep(const LevelP& level,
-					   SchedulerP& sched,
-					   DataWarehouseP& dw)
+					      SchedulerP& sched)
 {
   // Schedule computing the Arches stable timestep
-  d_arches->scheduleComputeStableTimestep(level, sched, dw);
+  d_arches->scheduleComputeStableTimestep(level, sched);
   // MPM stable timestep is a by product of the CM
 }
 
 //______________________________________________________________________
 //
 void MPMArches::scheduleTimeAdvance(double time, double delt,
-				 const LevelP&   level,
-				 SchedulerP&     sched,
-				 DataWarehouseP& old_dw, 
-				 DataWarehouseP& new_dw)
+				    const LevelP&   level,
+				    SchedulerP&     sched)
 {
+  const PatchSet* patches = level->eachPatch();
+  NOT_FINISHED("probably wrong material set for MPMArches");
+  const MaterialSet* matls = d_sharedState->allMPMMaterials();
+
   // Rajesh/Kumar  Because interpolation from particles to nodes
   // is the fist thing done in our algorithm, it is, unfortunately,
   // going to be necessary to put that step of the algorithm in
@@ -93,70 +94,59 @@ void MPMArches::scheduleTimeAdvance(double time, double delt,
   // I don't see any way around this, and the only real cost is
   // to ugly this up a bit.
 
-  for(Level::const_patchIterator iter=level->patchesBegin();
-			       iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-
-    if(d_fracture) {
-      d_mpm->scheduleSetPositions(patch,sched,old_dw,new_dw);
-      d_mpm->scheduleComputeBoundaryContact(patch,sched,old_dw,new_dw);
-      d_mpm->scheduleComputeConnectivity(patch,sched,old_dw,new_dw);
-    }
-    d_mpm->scheduleInterpolateParticlesToGrid(patch,sched,old_dw,new_dw);
-    if (MPMPhysicalModules::thermalContactModel) {
-       d_mpm->scheduleComputeHeatExchange(patch,sched,old_dw,new_dw);
-    }
+  if(d_fracture) {
+    d_mpm->scheduleSetPositions(sched, patches, matls);
+    d_mpm->scheduleComputeBoundaryContact(sched, patches, matls);
+    d_mpm->scheduleComputeConnectivity(sched, patches, matls);
+  }
+  d_mpm->scheduleInterpolateParticlesToGrid(sched, patches, matls);
+  if (MPMPhysicalModules::thermalContactModel) {
+    d_mpm->scheduleComputeHeatExchange(sched, patches, matls);
   }
 
   // interpolate mpm properties from node center to cell center/ face center
   // these computed variables are used by void fraction and mom exchange
-  scheduleInterpolateNCToCC(level, sched, old_dw, new_dw);
+  scheduleInterpolateNCToCC(sched, patches, matls);
   // Velocity and temperature are needed at the faces, right?
-  scheduleInterpolateCCToFC(level, sched, old_dw, new_dw);
+  scheduleInterpolateCCToFC(sched, patches, matls);
 
   // for explicit calculation, exchange will be at the beginning
-  scheduleComputeVoidFrac(level, sched, old_dw, new_dw);
+  scheduleComputeVoidFrac(sched, patches, matls);
 
   // for heat transfer HeatExchangeCoeffs will be called
-  scheduleMomExchange(level, sched, old_dw, new_dw);
+  scheduleMomExchange(sched, patches, matls);
 
-  d_arches->scheduleTimeAdvance(time, delt, level, sched, old_dw, new_dw);
+  d_arches->scheduleTimeAdvance(time, delt, level, sched);
 
-  for(Level::const_patchIterator iter=level->patchesBegin();
-			       iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-
-    d_mpm->scheduleExMomInterpolated(               patch,sched,old_dw,new_dw);
-    d_mpm->scheduleComputeStressTensor(             patch,sched,old_dw,new_dw);
-    d_mpm->scheduleComputeInternalForce(            patch,sched,old_dw,new_dw);
-    d_mpm->scheduleComputeInternalHeatRate(         patch,sched,old_dw,new_dw);
-    d_mpm->scheduleSolveEquationsMotion(            patch,sched,old_dw,new_dw);
-    d_mpm->scheduleSolveHeatEquations(              patch,sched,old_dw,new_dw);
-    d_mpm->scheduleIntegrateAcceleration(           patch,sched,old_dw,new_dw);
-    d_mpm->scheduleIntegrateTemperatureRate(        patch,sched,old_dw,new_dw);
-    d_mpm->scheduleExMomIntegrated(                 patch,sched,old_dw,new_dw);
-    d_mpm->scheduleInterpolateToParticlesAndUpdate( patch,sched,old_dw,new_dw);
-    d_mpm->scheduleComputeMassRate(                 patch,sched,old_dw,new_dw);
-    if(d_fracture) {
-      d_mpm->scheduleComputeFracture(               patch,sched,old_dw,new_dw);
-    }
-    d_mpm->scheduleCarryForwardVariables(           patch,sched,old_dw,new_dw);
+  d_mpm->scheduleExMomInterpolated(               sched, patches, matls);
+  d_mpm->scheduleComputeStressTensor(             sched, patches, matls);
+  d_mpm->scheduleComputeInternalForce(            sched, patches, matls);
+  d_mpm->scheduleComputeInternalHeatRate(         sched, patches, matls);
+  d_mpm->scheduleSolveEquationsMotion(            sched, patches, matls);
+  d_mpm->scheduleSolveHeatEquations(              sched, patches, matls);
+  d_mpm->scheduleIntegrateAcceleration(           sched, patches, matls);
+  d_mpm->scheduleIntegrateTemperatureRate(        sched, patches, matls);
+  d_mpm->scheduleExMomIntegrated(                 sched, patches, matls);
+  d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, matls);
+  d_mpm->scheduleComputeMassRate(                 sched, patches, matls);
+  if(d_fracture) {
+    d_mpm->scheduleComputeFracture(               sched, patches, matls);
   }
+  d_mpm->scheduleCarryForwardVariables(           sched, patches, matls);
 
-  int numMPMMatls = d_sharedState->getNumMPMMatls();
-  sched->scheduleParticleRelocation(level, old_dw, new_dw,
+  sched->scheduleParticleRelocation(level,
                                     Mlb->pXLabel_preReloc,
                                     Mlb->d_particleState_preReloc,
                                     Mlb->pXLabel, Mlb->d_particleState,
-                                    numMPMMatls);
+                                    matls);
 }
 //
 //
-void MPMArches::scheduleInterpolateNCToCC(const LevelP& level,
-                                       SchedulerP& sched,
-                                       DataWarehouseP& old_dw,
-                                       DataWarehouseP& new_dw)
+void MPMArches::scheduleInterpolateNCToCC(SchedulerP& sched,
+					  const PatchSet* patches,
+					  const MaterialSet* matls)
 {
+#if 0
    /* interpolateNCToCC */
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
@@ -186,14 +176,17 @@ void MPMArches::scheduleInterpolateNCToCC(const LevelP& level,
 
    sched->addTask(t);
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 
-void MPMArches::scheduleInterpolateCCToFC(const LevelP& level,
-                                       SchedulerP& sched,
-                                       DataWarehouseP& old_dw,
-                                       DataWarehouseP& new_dw)
+void MPMArches::scheduleInterpolateCCToFC(SchedulerP& sched,
+					  const PatchSet* patches,
+					  const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -223,13 +216,16 @@ void MPMArches::scheduleInterpolateCCToFC(const LevelP& level,
 
    sched->addTask(t);
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
-void MPMArches::scheduleComputeVoidFrac(const LevelP& level,
-				       SchedulerP& sched,
-				       DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw)
+void MPMArches::scheduleComputeVoidFrac(SchedulerP& sched,
+					const PatchSet* patches,
+					const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -251,14 +247,17 @@ void MPMArches::scheduleComputeVoidFrac(const LevelP& level,
     sched->addTask(t);
 
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 
-void MPMArches::scheduleMomExchange(const LevelP& level,
-                                   SchedulerP& sched,
-                                   DataWarehouseP& old_dw,
-                                   DataWarehouseP& new_dw)
+void MPMArches::scheduleMomExchange(SchedulerP& sched,
+				    const PatchSet* patches,
+				    const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -317,17 +316,23 @@ void MPMArches::scheduleMomExchange(const LevelP& level,
     t->computes(new_dw, d_MAlb->d_wVel_mmNonlinSrcLabel, matlIndex, patch);
     sched->addTask(t);
   }
-
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 
 //______________________________________________________________________
 //
 void MPMArches::interpolateNCToCC(const ProcessorGroup*,
-			       const Patch* patch,
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw)
+				  const PatchSubset* patches,
+				  const MaterialSubset* matls,
+				  DataWarehouse* old_dw,
+				  DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
   int numMatls = d_sharedState->getNumMPMMatls();
   Vector zero(0.0,0.0,0.);
   int numGhostCells = 1;
@@ -372,13 +377,18 @@ void MPMArches::interpolateNCToCC(const ProcessorGroup*,
      new_dw->put(cvolume,   d_MAlb->cVolumeLabel,       matlindex, patch);
      new_dw->put(vel_CC,    d_MAlb->vel_CCLabel,        matlindex, patch);
   }
+  }
 }
 
 void MPMArches::interpolateCCToFC(const ProcessorGroup*,
-			       const Patch* patch,
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw)
+				  const PatchSubset* patches,
+				  const MaterialSubset* matls,
+				  DataWarehouse* old_dw,
+				  DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
   int numMatls = d_sharedState->getNumMPMMatls();
   Vector zero(0.0,0.0,0.);
   int numGhostCells = 1;
@@ -447,15 +457,20 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
     new_dw->put(yvelFC,    d_MAlb->d_yVelFCLabel,   matlindex, patch);
     new_dw->put(zvelFC,    d_MAlb->d_zVelFCLabel,   matlindex, patch);
   }
+  }
 }
 //
 //
 void 
 MPMArches::computeVoidFrac(const ProcessorGroup*,
-			   const Patch* patch,
-			   DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw) 
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw) 
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
   int numMPMMatls = d_sharedState->getNumMPMMatls();
   vector<CCVariable<double> > mat_vol(numMPMMatls);
   int zeroGhostCells = 0;
@@ -477,6 +492,7 @@ MPMArches::computeVoidFrac(const ProcessorGroup*,
       void_frac[*iter] += mat_vol[m][*iter]/total_vol;
   }
   new_dw->put(void_frac, d_MAlb->void_frac_CCLabel, matlindex, patch);
+  }
 }
     
 
@@ -485,10 +501,14 @@ MPMArches::computeVoidFrac(const ProcessorGroup*,
 //______________________________________________________________________
 //
 void MPMArches::doMomExchange(const ProcessorGroup*,
-                             const Patch* patch,
-                             DataWarehouseP& old_dw,
-                             DataWarehouseP& new_dw)
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
     // since arches materials are not registered it'll only get
     // mpm materials
     int numMPMMatls  = d_sharedState->getNumMPMMatls();                      
@@ -568,5 +588,6 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     new_dw->allocate(wVelNonlinearSrc, d_MAlb->d_wVel_mmNonlinSrcLabel,
 		     matlIndex, patch);
   // need Jim's and Kumar's help to complete it
+  }
 }
 

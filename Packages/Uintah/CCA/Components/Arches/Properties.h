@@ -75,17 +75,13 @@ public:
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
       // Schedule the computation of proprties
-      void sched_computeProps(const LevelP& level,
-			      SchedulerP&, 
-			      DataWarehouseP& old_dw,
-			      DataWarehouseP& new_dw);
+      void sched_computeProps(SchedulerP&, const PatchSet* patches,
+			      const MaterialSet* matls);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule the recomputation of proprties
-      void sched_reComputeProps(const LevelP& level,
-				SchedulerP&, 
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw);
+      void sched_reComputeProps(SchedulerP&, const PatchSet* patches,
+				const MaterialSet* matls);
 
       // GROUP: Get Methods :
       ///////////////////////////////////////////////////////////////////////

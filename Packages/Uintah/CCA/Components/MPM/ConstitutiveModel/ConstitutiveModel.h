@@ -54,22 +54,20 @@ WARNING
 	 
 	 //////////
 	 // Basic constitutive model calculations
-	 virtual void computeStressTensor(const Patch* patch,
+	 virtual void computeStressTensor(const PatchSubset* patches,
 					  const MPMMaterial* matl,
-					  DataWarehouseP& old_dw,
-					  DataWarehouseP& new_dw) = 0;
+					  DataWarehouse* old_dw,
+					  DataWarehouse* new_dw) = 0;
 	 
 	 //////////
 	 // Create space in data warehouse for CM data
 	 virtual void initializeCMData(const Patch* patch,
 				       const MPMMaterial* matl,
-				       DataWarehouseP& new_dw) = 0;
+				       DataWarehouse* new_dw) = 0;
 
 	 virtual void addComputesAndRequires(Task* task,
-					     const MPMMaterial* matl,
-					     const Patch* patch,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw) const = 0;
+					   const MPMMaterial* matl,
+					   const PatchSet* patches) const = 0;
 
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to) = 0;

@@ -7,6 +7,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Core/Util/NotFinished.h>
 
 #include <vector>
 
@@ -24,10 +25,14 @@ ThermalContact::~ThermalContact()
 }
 
 void ThermalContact::computeHeatExchange(const ProcessorGroup*,
-					const Patch* patch,
-					DataWarehouseP& old_dw,
-					DataWarehouseP& new_dw)
+					 const PatchSubset* patches,
+					 const MaterialSubset* matls,
+					 DataWarehouse* old_dw,
+					 DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
   int numMatls = d_sharedState->getNumMatls();
 
   std::vector<NCVariable<double> > gmass(numMatls);
@@ -82,28 +87,21 @@ void ThermalContact::computeHeatExchange(const ProcessorGroup*,
     new_dw->put(thermalContactHeatExchangeRate[n], 
       lb->gThermalContactHeatExchangeRateLabel, dwindex, patch);
   }
-
+  }
 }
 
 void ThermalContact::initializeThermalContact(const Patch* /*patch*/,
 					int /*vfindex*/,
-					DataWarehouseP& /*new_dw*/)
+					DataWarehouse* /*new_dw*/)
 {
 }
 
 void ThermalContact::addComputesAndRequires(Task* t,
-                                             const MPMMaterial* matl,
-                                             const Patch* patch,
-                                             DataWarehouseP& old_dw,
-                                             DataWarehouseP& new_dw) const
+					    const PatchSet* patch,
+					    const MaterialSet* matls) const
 {
-  int idx = matl->getDWIndex();
-  t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
-  t->requires( new_dw, lb->gTemperatureLabel, idx, patch, Ghost::None);
+  t->requires(Task::NewDW, lb->gMassLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->gTemperatureLabel, Ghost::None);
 
-  t->computes( new_dw, lb->gThermalContactHeatExchangeRateLabel, idx, patch );
+  t->computes(lb->gThermalContactHeatExchangeRateLabel);
 }
-
-
-
-

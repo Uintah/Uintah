@@ -45,7 +45,7 @@ ThreadedMPM::~ThreadedMPM()
 }
 
 void ThreadedMPM::problemSetup(const ProblemSpecP&, GridP& grid,
-			     DataWarehouseP& dw)
+			     DataWarehouse* dw)
 {
     string infile("in.mpm");
     Problem Enigma;
@@ -102,7 +102,7 @@ void ThreadedMPM::problemSetup(const ProblemSpecP&, GridP& grid,
 }
 
 void ThreadedMPM::computeStableTimestep(const LevelP& level,
-				      SchedulerP& sched, DataWarehouseP& dw)
+				      SchedulerP& sched, DataWarehouse* dw)
 {
     for(Level::const_patchIterator iter=level->patchesBegin();
 	iter != level->patchesEnd(); iter++){
@@ -121,7 +121,7 @@ void ThreadedMPM::computeStableTimestep(const LevelP& level,
 
 void ThreadedMPM::timeStep(double t, double dt,
 			 const LevelP& level, SchedulerP& sched,
-			 const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+			 const DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
     for(Level::const_patchIterator iter=level->patchesBegin();
 	iter != level->patchesEnd(); iter++){
@@ -334,8 +334,8 @@ static string s_delT("delT");
 
 void ThreadedMPM::actuallyComputeStableTimestep(const ProcessorGroup* pc,
 					      const Patch* patch,
-					      const DataWarehouseP& old_dw,
-					      DataWarehouseP& new_dw)
+					      const DataWarehouse* old_dw,
+					      DataWarehouse* new_dw)
 {
     ParticleVariable<double> pmass;
     new_dw->get(pmass, s_pmass, patch, 0);
@@ -523,8 +523,8 @@ static int findOwners(const Patch* patch,
 
 void ThreadedMPM::findOwners(const ProcessorGroup* pc,
 			     const Patch* patch,
-			     const DataWarehouseP& old_dw,
-			     DataWarehouseP& new_dw)
+			     const DataWarehouse* old_dw,
+			     DataWarehouse* new_dw)
 {
     ParticleVariable<Vector> px;
     old_dw->get(px, s_px, patch, 0);
@@ -661,8 +661,8 @@ void ThreadedMPM::findOwners(const ProcessorGroup* pc,
 
 void ThreadedMPM::interpolateParticlesToGrid(const ProcessorGroup* pc,
 					   const Patch* patch,
-					   const DataWarehouseP& old_dw,
-					   DataWarehouseP& new_dw)
+					   const DataWarehouse* old_dw,
+					   DataWarehouse* new_dw)
 {
     // Create arrays for the particle data
     ParticleVariable<Vector> px;
@@ -747,8 +747,8 @@ void ThreadedMPM::interpolateParticlesToGrid(const ProcessorGroup* pc,
 
 void ThreadedMPM::computeStressTensor(const ProcessorGroup* pc,
 				      const Patch* patch,
-				      const DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw)
+				      const DataWarehouse* old_dw,
+				      DataWarehouse* new_dw)
 {
 
     Matrix3 velGrad;
@@ -832,8 +832,8 @@ void ThreadedMPM::computeStressTensor(const ProcessorGroup* pc,
 
 void ThreadedMPM::computeInternalForce(const ProcessorGroup* pc,
 				     const Patch* patch,
-				     const DataWarehouseP& old_dw,
-				     DataWarehouseP& new_dw)
+				     const DataWarehouse* old_dw,
+				     DataWarehouse* new_dw)
 {
 
     Vector dx = patch->dCell();
@@ -901,8 +901,8 @@ void ThreadedMPM::computeInternalForce(const ProcessorGroup* pc,
 
 void ThreadedMPM::solveEquationsMotion(const ProcessorGroup* pc,
 				     const Patch* patch,
-				     const DataWarehouseP& old_dw,
-				     DataWarehouseP& new_dw)
+				     const DataWarehouse* old_dw,
+				     DataWarehouse* new_dw)
 {
     // Get required variables for this patch
     NCVariable<double> mass;
@@ -938,8 +938,8 @@ void ThreadedMPM::solveEquationsMotion(const ProcessorGroup* pc,
 
 void ThreadedMPM::integrateAcceleration(const ProcessorGroup* pc,
 				      const Patch* patch,
-				      const DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw)
+				      const DataWarehouse* old_dw,
+				      DataWarehouse* new_dw)
 {
     // Get required variables for this patch
     NCVariable<Vector> acceleration;
@@ -970,8 +970,8 @@ void ThreadedMPM::integrateAcceleration(const ProcessorGroup* pc,
 
 void ThreadedMPM::interpolateToParticlesAndUpdate(const ProcessorGroup* pc,
 						const Patch* patch,
-						const DataWarehouseP& old_dw,
-						DataWarehouseP& new_dw)
+						const DataWarehouse* old_dw,
+						DataWarehouse* new_dw)
 {
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their

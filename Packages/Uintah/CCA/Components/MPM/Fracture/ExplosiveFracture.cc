@@ -28,15 +28,15 @@ void
 ExplosiveFracture::
 initializeFractureModelData(const Patch* patch,
                             const MPMMaterial* matl,
-                            DataWarehouseP& new_dw)
+                            DataWarehouse* new_dw)
 {
 }
 
 void ExplosiveFracture::computeNodeVisibility(
                   const Patch* patch,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw)
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw)
 {
   int matlindex = mpm_matl->getDWIndex();
   ParticleSubset* insidePset = old_dw->getParticleSubset(matlindex, patch);
@@ -59,8 +59,8 @@ void
 ExplosiveFracture::
 crackGrow(const Patch* patch,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw)
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw)
 {
    ParticleVariable<Matrix3> pStress;
    ParticleVariable<double> pTensileStrength;
@@ -120,7 +120,8 @@ crackGrow(const Patch* patch,
          double beta = drand48() * M_PI;
          double cos_beta = cos(beta);
          double sin_beta = sin(beta);
-         Vector xy = eigenVectors[2] * sin_beta;
+	 // Unused variable - steve
+         // Vector xy = eigenVectors[2] * sin_beta;
          maxDirection = eigenVectors[0] * (sin_beta * cos(theta)) +
 	                eigenVectors[1] * (sin_beta * sin(theta)) +
 		  	eigenVectors[2] * cos_beta;
@@ -141,8 +142,8 @@ void
 ExplosiveFracture::
 stressRelease(const Patch* patch,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw)
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw)
 {
   //patch + ghost variables
   ParticleVariable<Point> pX;

@@ -136,11 +136,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 // schedule the initialization of cell types
 //****************************************************************************
 void 
-BoundaryCondition::sched_cellTypeInit(const LevelP& level,
-				      SchedulerP& sched,
-				      DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw)
+BoundaryCondition::sched_cellTypeInit(SchedulerP& sched, const PatchSet* patches,
+				      const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -153,6 +152,9 @@ BoundaryCondition::sched_cellTypeInit(const LevelP& level,
     tsk->computes(new_dw, d_lab->d_cellTypeLabel, matlIndex, patch);
     sched->addTask(tsk);
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 //****************************************************************************
@@ -337,11 +339,10 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 // schedule the initialization of mm wall cell types
 //****************************************************************************
 void 
-BoundaryCondition::sched_mmWallCellTypeInit(const LevelP& level,
-					    SchedulerP& sched,
-					    DataWarehouseP& old_dw,
-					    DataWarehouseP& new_dw)
+BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched, const PatchSet* patches,
+					    const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -361,6 +362,9 @@ BoundaryCondition::sched_mmWallCellTypeInit(const LevelP& level,
     
     sched->addTask(tsk);
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 //****************************************************************************
@@ -504,11 +508,10 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 // Schedule the computation of the presures bcs
 //****************************************************************************
 void 
-BoundaryCondition::sched_computePressureBC(const LevelP& level,
-				    SchedulerP& sched,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw)
+BoundaryCondition::sched_computePressureBC(SchedulerP& sched, const PatchSet* patches,
+					   const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -544,6 +547,9 @@ BoundaryCondition::sched_computePressureBC(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 //****************************************************************************
@@ -648,11 +654,10 @@ BoundaryCondition::calcPressureBC(const ProcessorGroup* ,
 // Schedule the setting of inlet velocity BC
 //****************************************************************************
 void 
-BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
-					    SchedulerP& sched,
-					    DataWarehouseP& old_dw,
-					    DataWarehouseP& new_dw)
+BoundaryCondition::sched_setInletVelocityBC(SchedulerP& sched, const PatchSet* patches,
+					    const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -666,6 +671,8 @@ BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
 
       // This task requires densityCP, [u,v,w]VelocitySP from new_dw
       tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       // changes to make it work for the task graph
       tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, 
@@ -685,17 +692,19 @@ BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 //****************************************************************************
 // Schedule the compute of Pressure BC
 //****************************************************************************
 void 
-BoundaryCondition::sched_recomputePressureBC(const LevelP& level,
-					   SchedulerP& sched,
-					   DataWarehouseP& old_dw,
-					   DataWarehouseP& new_dw)
+BoundaryCondition::sched_recomputePressureBC(SchedulerP& sched, const PatchSet* patches,
+					     const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -736,6 +745,9 @@ BoundaryCondition::sched_recomputePressureBC(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 //****************************************************************************
@@ -743,11 +755,10 @@ BoundaryCondition::sched_recomputePressureBC(const LevelP& level,
 // computes inlet area for inlet bc
 //****************************************************************************
 void 
-BoundaryCondition::sched_calculateArea(const LevelP& level,
-				       SchedulerP& sched,
-				       DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw)
+BoundaryCondition::sched_calculateArea(SchedulerP& sched, const PatchSet* patches,
+				       const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -768,6 +779,9 @@ BoundaryCondition::sched_calculateArea(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 //****************************************************************************
@@ -776,11 +790,10 @@ BoundaryCondition::sched_calculateArea(const LevelP& level,
 // Also sets flat profiles for density
 //****************************************************************************
 void 
-BoundaryCondition::sched_setProfile(const LevelP& level,
-				    SchedulerP& sched,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw)
+BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
+				    const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -820,6 +833,9 @@ BoundaryCondition::sched_setProfile(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 //****************************************************************************

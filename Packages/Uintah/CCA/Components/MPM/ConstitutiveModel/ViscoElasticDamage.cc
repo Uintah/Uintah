@@ -205,10 +205,10 @@ std::vector<double> ViscoElasticDamage::getMechProps() const
 
 }
 
-void ViscoElasticDamage::computeStressTensor(const Patch* patch,
+void ViscoElasticDamage::computeStressTensor(const PatchSubset* patches,
 					     const MPMMaterial* matl,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw)
+					     DataWarehouse* old_dw,
+					     DataWarehouse* new_dw)
 {
 #ifdef WONT_COMPILE_YET
   Matrix3 bElBarTrial,shearTrial,fbar,F_bar,C_bar,C_nn;
@@ -309,7 +309,7 @@ void ViscoElasticDamage::computeStressTensor(const Patch* patch,
 
 double ViscoElasticDamage::computeStrainEnergy(const Patch* patch,
 					       const MPMMaterial* matl,
-					       DataWarehouseP& new_dw)
+					       DataWarehouse* new_dw)
 {
 #ifdef WONT_COMPILE_YET
 
@@ -322,7 +322,7 @@ double ViscoElasticDamage::computeStrainEnergy(const Patch* patch,
 
 void ViscoElasticDamage::initializeCMData(const Patch* patch,
 		      const MPMMaterial* matl,
-		      DataWarehouseP& new_dw)
+		      DataWarehouse* new_dw)
 {
 }
 
@@ -442,9 +442,7 @@ void ViscoElasticDamage::printParameterNames(ofstream& out) const
 void ViscoElasticDamage::addComputesAndRequires(Task* task,
 						const MPMMaterial* matl,
 						const Patch* patch,
-						DataWarehouseP& old_dw,
-						DataWarehouseP& new_dw) const
-{
+						DataWarehouSetse* old_dwes) const;
    cerr << "ViscoElasticDamage::addComputesAndRequires needs to be filled in\n";
 }
 

@@ -15,6 +15,7 @@
 #include <Packages/Uintah/Core/Grid/DensityBoundCond.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Core/Util/NotFinished.h>
 
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -233,9 +234,9 @@ endl;
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleInitialize--
 _____________________________________________________________________*/
-void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched,
-			     DataWarehouseP& dw)       
+void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 {
+#if 0
   Level::const_patchIterator iter;
 
   for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
@@ -262,13 +263,16 @@ void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched,
 
     sched->addTask(t);
   }
+#else
+      NOT_FINISHED("new task stuff");
+#endif
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeStableTimestep--
 _____________________________________________________________________*/
-void ICE::scheduleComputeStableTimestep(const LevelP& level,SchedulerP& sched,
-					DataWarehouseP& dw)
+void ICE::scheduleComputeStableTimestep(const LevelP& level,SchedulerP& sched)
 {
+#if 0
     int numMatls = d_sharedState->getNumICEMatls();
     
     for (Level::const_patchIterator iter = level->patchesBegin();
@@ -288,14 +292,17 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,SchedulerP& sched,
       task->computes(dw, d_sharedState->get_delt_label());
       sched->addTask(task);
     }
+#else
+      NOT_FINISHED("new task stuff");
+#endif
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleTimeAdvance--
 _____________________________________________________________________*/
-void ICE::scheduleTimeAdvance(double, double, const LevelP& level,
-			      SchedulerP& sched, DataWarehouseP& old_dw,
-			      DataWarehouseP& new_dw)
+void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
+			      SchedulerP& sched)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
        iter != level->patchesEnd(); iter++)  {
     const Patch* patch=*iter;
@@ -328,16 +335,19 @@ void ICE::scheduleTimeAdvance(double, double, const LevelP& level,
     }
       
   }
+#else
+      NOT_FINISHED("new task stuff");
+#endif
 }
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeEquilibrationPressure--
 _____________________________________________________________________*/
-void ICE::scheduleComputeEquilibrationPressure(const Patch* patch, 
-					       SchedulerP& sched,
-					       DataWarehouseP& old_dw, 
-					       DataWarehouseP& new_dw)
+void ICE::scheduleComputeEquilibrationPressure(SchedulerP& sched,
+					       const PatchSet* patches,
+					       const MaterialSet* matls)
 {
+#if 0
   Task* task = scinew Task("ICE::computeEquilibrationPressure",
                         patch, old_dw, new_dw,this,
 			   &ICE::computeEquilibrationPressure);
@@ -362,16 +372,19 @@ void ICE::scheduleComputeEquilibrationPressure(const Patch* patch,
 
   task->computes(new_dw,lb->press_equil_CCLabel,0, patch);
   sched->addTask(task);
+#else
+      NOT_FINISHED("new task stuff");
+#endif
 }
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeFaceCenteredVelocities--
 _____________________________________________________________________*/
-void ICE::scheduleComputeFaceCenteredVelocities(const Patch* patch,
-						SchedulerP& sched,
-						DataWarehouseP& old_dw, 
-						DataWarehouseP& new_dw)
+void ICE::scheduleComputeFaceCenteredVelocities(SchedulerP& sched,
+						const PatchSet* patches,
+						const MaterialSet* matls)
 {
+#if 0
   Task* task = scinew Task("ICE::computeFaceCenteredVelocities",
                         patch, old_dw, new_dw,this,
 			   &ICE::computeFaceCenteredVelocities);
@@ -405,16 +418,19 @@ void ICE::scheduleComputeFaceCenteredVelocities(const Patch* patch,
     task->computes(new_dw,lb->wvel_FCLabel,  dwindex, patch);
   }
   sched->addTask(task);
+#else
+      NOT_FINISHED("new task stuff");
+#endif
 }
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleAddExchangeContributionToFCVel--
 _____________________________________________________________________*/
-void ICE::scheduleAddExchangeContributionToFCVel(const Patch* patch, 
-						 SchedulerP& sched,
-						 DataWarehouseP& old_dw, 
-						 DataWarehouseP& new_dw)
+void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
+						 const PatchSet* patches,
+						 const MaterialSet* matls)
 {
+#if 0
   Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
                         patch, old_dw, new_dw,this,
 			   &ICE::addExchangeContributionToFCVel);
@@ -439,17 +455,20 @@ void ICE::scheduleAddExchangeContributionToFCVel(const Patch* patch,
     task->computes(new_dw,lb->wvel_FCMELabel,   dwindex, patch);
   }
   sched->addTask(task);
+#else
+      NOT_FINISHED("new task stuff");
+#endif
 }
 
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeDelPressAndUpdatePressCC--
 _____________________________________________________________________*/
-void ICE::scheduleComputeDelPressAndUpdatePressCC(const Patch* patch,
-						  SchedulerP& sched,
-						  DataWarehouseP& old_dw, 
-						  DataWarehouseP& new_dw)
+void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
+						  const PatchSet* patches,
+						  const MaterialSet* matls)
 {
+#if 0
   Task* task = scinew Task("ICE::computeDelPressAndUpdatePressCC",
                         patch, old_dw, new_dw,this,
 			   &ICE::computeDelPressAndUpdatePressCC);
@@ -475,15 +494,19 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(const Patch* patch,
   task->computes(   new_dw,lb->delPress_CCLabel,  0,     patch);
   
   sched->addTask(task);
+#else
+      NOT_FINISHED("new task stuff");
+#endif
 }
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputePressFC--
 _____________________________________________________________________*/
-void ICE::scheduleComputePressFC(const Patch* patch, SchedulerP& sched,
-				 DataWarehouseP& old_dw, 
-				 DataWarehouseP& new_dw)
+void ICE::scheduleComputePressFC(SchedulerP& sched,
+				 const PatchSet* patches,
+				 const MaterialSet* matls)
 {                     
+#if 0
   Task* task = scinew Task("ICE::computePressFC",patch, old_dw, new_dw,this,
                            &ICE::computePressFC);
 
@@ -498,18 +521,21 @@ void ICE::scheduleComputePressFC(const Patch* patch, SchedulerP& sched,
   task->computes(   new_dw, lb->pressZ_FCLabel, 0,      patch);
 
   sched->addTask(task);
+#else
+      NOT_FINISHED("new task stuff");
+#endif
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleMassExchange--
 _____________________________________________________________________*/
-void  ICE::scheduleMassExchange(const Patch* patch,
-					SchedulerP& sched,
-					DataWarehouseP& old_dw,
-					DataWarehouseP& new_dw)
+void  ICE::scheduleMassExchange(SchedulerP& sched,
+				const PatchSet* patches,
+				const MaterialSet* matls)
 
 {
+#if 0
   Task* task = scinew Task("ICE::massExchange",
-                        patch, old_dw, new_dw, this, &ICE::massExchange);
+			   this, &ICE::massExchange);
   int numMatls=d_sharedState->getNumMatls(); 
 
   for (int m = 0; m < numMatls; m++)  {
@@ -520,15 +546,18 @@ void  ICE::scheduleMassExchange(const Patch* patch,
     task->computes(new_dw,  lb->releasedHeat_CCLabel,  dwindex, patch);  
   }
   sched->addTask(task);
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleAccumulateMomentumSourceSinks--
 _____________________________________________________________________*/
-void ICE::scheduleAccumulateMomentumSourceSinks(const Patch* patch, 
-						SchedulerP& sched,
-						DataWarehouseP& old_dw,
-						DataWarehouseP& new_dw)
+void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
+						const PatchSet* patches,
+						const MaterialSet* matls)
 {
+#if 0
   Task* task = scinew Task("ICE::accumulateMomentumSourceSinks", 
                         patch, old_dw, new_dw,this,
 			   &ICE::accumulateMomentumSourceSinks);
@@ -555,17 +584,20 @@ void ICE::scheduleAccumulateMomentumSourceSinks(const Patch* patch,
 //     task->computes(new_dw,  lb->tau_Z_FCLabel,      dwindex,patch);
   }
   sched->addTask(task);
+#else
+      NOT_FINISHED("new task stuff");
+#endif
 }
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleAccumulateEnergySourceSinks--
 _____________________________________________________________________*/
-void ICE::scheduleAccumulateEnergySourceSinks(const Patch* patch,
-					      SchedulerP& sched,
-					      DataWarehouseP& old_dw, 
-					      DataWarehouseP& new_dw)
+void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
+					      const PatchSet* patches,
+					      const MaterialSet* matls)
 
 {
+#if 0
   Task* task = scinew Task("ICE::accumulateEnergySourceSinks",
                         patch, old_dw, new_dw,this,
 			   &ICE::accumulateEnergySourceSinks);
@@ -583,6 +615,9 @@ void ICE::scheduleAccumulateEnergySourceSinks(const Patch* patch,
     task->computes (new_dw, lb->int_eng_source_CCLabel, dwindex, patch);
   }
   sched->addTask(task);
+#else
+      NOT_FINISHED("new task stuff");
+#endif
 }
 
 /* ---------------------------------------------------------------------
@@ -590,11 +625,11 @@ void ICE::scheduleAccumulateEnergySourceSinks(const Patch* patch,
  Note:      Only loop over ICE materials, mom_L for MPM is computed
             prior to this function.  
 _____________________________________________________________________*/
-void ICE:: scheduleComputeLagrangianValues(const Patch* patch, 
-					   SchedulerP&  sched,
-					   DataWarehouseP& old_dw, 
-					   DataWarehouseP& new_dw)
+void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
+					  const PatchSet* patches,
+					  const MaterialSet* matls)
 {
+#if 0
   Task* task = scinew Task("ICE::computeLagrangianValues",
                             patch, old_dw, new_dw,this,
 			       &ICE::computeLagrangianValues);
@@ -620,16 +655,19 @@ void ICE:: scheduleComputeLagrangianValues(const Patch* patch,
     }
  }
   sched->addTask(task);
+#else
+      NOT_FINISHED("new task stuff");
+#endif
 }
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleAddExchangeToMomentumAndEnergy--
 _____________________________________________________________________*/
-void ICE::scheduleAddExchangeToMomentumAndEnergy(const Patch* patch,
-						 SchedulerP& sched,
-						 DataWarehouseP& old_dw,
-						 DataWarehouseP& new_dw)
+void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
+						 const PatchSet* patches,
+						 const MaterialSet* matls)
 {
+#if 0
   Task* task = scinew Task("ICE::addExchangeToMomentumAndEnergy",
                         patch, old_dw, new_dw,this,
 			   &ICE::addExchangeToMomentumAndEnergy);
@@ -648,15 +686,19 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(const Patch* patch,
     task->computes( new_dw, lb->int_eng_L_ME_CCLabel,dwindex,patch);
   }
   sched->addTask(task);
+#else
+      NOT_FINISHED("new task stuff");
+#endif
 }
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleAdvectAndAdvanceInTime--
 _____________________________________________________________________*/
-void ICE::scheduleAdvectAndAdvanceInTime(const Patch* patch, SchedulerP& sched,
-					 DataWarehouseP& old_dw, 
-					 DataWarehouseP& new_dw)
+void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
+					 const PatchSet* patches,
+					 const MaterialSet* matls)
 {
+#if 0
   Task* task = scinew Task("ICE::advectAndAdvanceInTime",
                         patch, old_dw, new_dw,this,
 			   &ICE::advectAndAdvanceInTime);
@@ -686,15 +728,18 @@ void ICE::scheduleAdvectAndAdvanceInTime(const Patch* patch, SchedulerP& sched,
     task->computes(new_dw, lb->viscosity_CCLabel,     dwindex,patch);
   }
   sched->addTask(task);
+#else
+      NOT_FINISHED("new task stuff");
+#endif
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::schedulePrintConservedQuantities--
 _____________________________________________________________________*/
-void ICE::schedulePrintConservedQuantities(const Patch* patch,
-					   SchedulerP& sched,
-					   DataWarehouseP&,
-					   DataWarehouseP& new_dw)
+void ICE::schedulePrintConservedQuantities(SchedulerP& sched,
+					   const PatchSet* patches,
+					   const MaterialSet* matls)
 {
+#if 0
   Task* task = scinew Task("ICE::printConservedQuantities",
                         patch, new_dw, new_dw, this,
 			   &ICE::printConservedQuantities);
@@ -708,6 +753,9 @@ void ICE::schedulePrintConservedQuantities(const Patch* patch,
     task->requires( new_dw,lb->temp_CCLabel,        dwindex,patch,Ghost::None);
   }
   sched->addTask(task);
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 /* ---------------------------------------------------------------------
@@ -717,7 +765,7 @@ void ICE::schedulePrintConservedQuantities(const Patch* patch,
 _____________________________________________________________________*/
 void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 					const Patch*    patch,
-					DataWarehouseP&,DataWarehouseP& new_dw)
+					DataWarehouse*,DataWarehouse* new_dw)
 {
 #ifdef DOING
   cout << "Doing Compute Stable Timestep on patch " << patch->getID() 
@@ -775,7 +823,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
  everywhere in the domain
 _____________________________________________________________________*/ 
 void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
-			     DataWarehouseP&, DataWarehouseP& new_dw)
+			     DataWarehouse*, DataWarehouse* new_dw)
 {
 #ifdef DOING
   cout << "Doing Initialize on patch " << patch->getID() 
@@ -912,8 +960,8 @@ Note:  The nomenclature follows the reference.
 _____________________________________________________________________*/
 void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 				       const Patch* patch,
-				       DataWarehouseP& old_dw, 
-				       DataWarehouseP& new_dw)
+				       DataWarehouse* old_dw, 
+				       DataWarehouse* new_dw)
 {
 #ifdef DOING
   cout << "Doing calc_equilibration_pressure on patch " << patch->getID() 
@@ -1177,8 +1225,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 _____________________________________________________________________*/
 void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
 					const Patch* patch,
-					DataWarehouseP& old_dw, 
-					DataWarehouseP& new_dw)
+					DataWarehouse* old_dw, 
+					DataWarehouse* new_dw)
 {
 #ifdef DOING
   cout << "Doing compute_face_centered_velocities on patch " 
@@ -1389,8 +1437,8 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
  ---------------------------------------------------------------------  */
 void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,  
 					 const Patch* patch,
-					 DataWarehouseP& old_dw, 
-					 DataWarehouseP& new_dw)
+					 DataWarehouse* old_dw, 
+					 DataWarehouse* new_dw)
 {
 #ifdef DOING
   cout << "Doing Add_exchange_contribution_to_FC_vel on patch " <<
@@ -1614,8 +1662,8 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
  ---------------------------------------------------------------------  */
 void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,  
 					  const Patch* patch,
-					  DataWarehouseP& old_dw, 
-					  DataWarehouseP& new_dw)
+					  DataWarehouse* old_dw, 
+					  DataWarehouse* new_dw)
 {
 #ifdef DOING
   cout << "Doing explicit delPress on patch " << patch->getID() 
@@ -1752,7 +1800,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     layer of ghost cells. 
   ---------------------------------------------------------------------  */
 void ICE::computePressFC(const ProcessorGroup*,   const Patch* patch,
-			 DataWarehouseP&, DataWarehouseP& new_dw)
+			 DataWarehouse*, DataWarehouse* new_dw)
 {
 #ifdef DOING
   cout << "Doing press_face_MM on patch " << patch->getID() 
@@ -1849,8 +1897,8 @@ void ICE::computePressFC(const ProcessorGroup*,   const Patch* patch,
  ---------------------------------------------------------------------  */
 void ICE::massExchange(const ProcessorGroup*,  
 					const Patch* patch,
-					DataWarehouseP& old_dw, 
-					DataWarehouseP& new_dw)
+					DataWarehouse* old_dw,
+					DataWarehouse* new_dw)
 {
 #ifdef DOING
   cout << "Doing massExchange on patch " <<
@@ -1941,8 +1989,8 @@ void ICE::massExchange(const ProcessorGroup*,
  ---------------------------------------------------------------------  */
 void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,  
 					const Patch* patch,
-					DataWarehouseP& old_dw, 
-					DataWarehouseP& new_dw)
+					DataWarehouse* old_dw, 
+					DataWarehouse* new_dw)
 {
 #ifdef DOING
   cout << "Doing accumulate_momentum_source_sinks_MM on patch " <<
@@ -2084,8 +2132,8 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
  ---------------------------------------------------------------------  */
 void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,  
 				      const Patch* patch,
-				      DataWarehouseP& old_dw, 
-				      DataWarehouseP& new_dw)
+				      DataWarehouse* old_dw, 
+				      DataWarehouse* new_dw)
 {
 #ifdef DOING
   cout << "Doing accumulate_energy_source_sinks on patch " 
@@ -2150,8 +2198,8 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
             prior to this function
  ---------------------------------------------------------------------  */
 void ICE::computeLagrangianValues(const ProcessorGroup*,  const Patch* patch,
-				  DataWarehouseP& old_dw, 
-				  DataWarehouseP& new_dw)
+				  DataWarehouse* old_dw, 
+				  DataWarehouse* new_dw)
 {
 #ifdef DOING
   cout << "Doing Lagrangian mass, momentum and energy on patch " <<
@@ -2315,8 +2363,8 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,  const Patch* patch,
  ---------------------------------------------------------------------  */
 void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,  
 					 const Patch* patch,
-					 DataWarehouseP& old_dw, 
-					 DataWarehouseP& new_dw)
+					 DataWarehouse* old_dw, 
+					 DataWarehouse* new_dw)
 {
 #ifdef DOING
   cout << "Doing Heat and momentum exchange on patch " << 
@@ -2518,7 +2566,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
    Note, ICE doesn't need either sp_vol_CC or mass_CC, but MPMICE does.
  ---------------------------------------------------------------------  */
 void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
-				 DataWarehouseP& old_dw,DataWarehouseP& new_dw)
+				 DataWarehouse* old_dw,DataWarehouse* new_dw)
 {
 #ifdef DOING
   cout << "Doing Advect and Advance in Time on patch " << 
@@ -2687,11 +2735,12 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
  If the switch is turned on then print out the conserved quantities.
 _______________________________________________________________________ */
 void ICE::printConservedQuantities(const ProcessorGroup*,  const Patch* patch,
-				   DataWarehouseP&,
-				   DataWarehouseP& new_dw)
+				   DataWarehouse*,
+				   DataWarehouse* new_dw)
 {
   Vector mom_xyz_dir(0.0, 0.0, 0.0);
-  Vector total_mom(0.,0.,0.);
+  // Unused variable - Steve
+  //  Vector total_mom(0.,0.,0.);
   CCVariable<Vector> vel_CC;
   CCVariable<double> rho_CC;
   CCVariable<double> Temp_CC;
@@ -2859,6 +2908,15 @@ void ICE::setBC(CCVariable<double>& press_CC, CCVariable<double>& rho_micro,
     
     if (bc_base->getType() == "Pressure") {
       PressureBoundCond* bc = dynamic_cast<PressureBoundCond*>(bc_base);
+      if (bc->getKind() == "Dirichlet") 
+	press_CC.fillFace(face,bc->getValue());
+      
+      if (bc->getKind() == "Neumann") 
+	press_CC.fillFaceFlux(face,bc->getValue(),dx);
+      
+    }
+    if (bc_base->getType() == "Density") {
+      DensityBoundCond* bc = dynamic_cast<DensityBoundCond*>(bc_base);
       if (bc->getKind() == "Dirichlet") 
 	press_CC.fillFace(face,bc->getValue());
       

@@ -97,16 +97,11 @@ public:
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule the build of the linearized eqn
-      void sched_buildLinearMatrix(const LevelP& level,
-				   SchedulerP& sched,
-				   DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw,
-				   double delta_t);
+      void sched_buildLinearMatrix(SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls, double delta_t);
  
-      void sched_pressureLinearSolve(const LevelP& level, 
-				     SchedulerP& sched, 
-				     DataWarehouseP& new_dw,
-				     DataWarehouseP& matrix_dw);
+      void sched_pressureLinearSolve(SchedulerP&, const PatchSet* patches,
+				     const MaterialSet* matls);
 
 protected:
 

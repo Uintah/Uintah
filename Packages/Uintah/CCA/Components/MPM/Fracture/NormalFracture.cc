@@ -30,16 +30,19 @@ void
 NormalFracture::
 initializeFractureModelData(const Patch* patch,
                             const MPMMaterial* matl,
-                            DataWarehouseP& new_dw)
+                            DataWarehouse* new_dw)
 {
 }
 
 void NormalFracture::computeBoundaryContact(
-                  const Patch* patch,
+                  const PatchSubset* patches,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw)
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
   int matlindex = mpm_matl->getDWIndex();
   ParticleSubset* pset_pg = old_dw->getParticleSubset(matlindex, 
      patch, Ghost::AroundCells, 1, lb->pXLabel);
@@ -78,6 +81,7 @@ void NormalFracture::computeBoundaryContact(
   for(ParticleSubset::iterator iter = pset_p->begin();
           iter != pset_p->end(); iter++)
   {
+#if 0
     particleIndex pIdx_p = *iter;
     particleIndex pIdx_pg = pIdxEx[pIdx_p];
 
@@ -91,7 +95,6 @@ void NormalFracture::computeBoundaryContact(
     int contactFacetsNum = 0;
     pContactNormal_p_new[pIdx_p] = Vector(0.,0.,0.);
 
-#if 0
     //other side
     for(int facetIdx=0;facetIdx<3;facetIdx++)
     {
@@ -145,14 +148,18 @@ void NormalFracture::computeBoundaryContact(
   }
 
   new_dw->put(pContactNormal_p_new, lb->pContactNormalLabel);
+  }
 }
 
 void NormalFracture::computeConnectivity(
-                  const Patch* patch,
+                  const PatchSubset* patches,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw)
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
   static Vector zero(0.,0.,0.);
   
   int matlindex = mpm_matl->getDWIndex();
@@ -243,14 +250,18 @@ void NormalFracture::computeConnectivity(
   }
   
   new_dw->put(pConnectivity_p_new, lb->pConnectivityLabel);
+  }
 }
 
 void NormalFracture::computeFracture(
-                  const Patch* patch,
+                  const PatchSubset* patches,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw)
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
   int matlindex = mpm_matl->getDWIndex();
   ParticleSubset* pset_pg = old_dw->getParticleSubset(matlindex, 
      patch, Ghost::AroundCells, 1, lb->pXLabel);
@@ -449,6 +460,7 @@ void NormalFracture::computeFracture(
   new_dw->put(pCrackNormal_p_new[2], lb->pCrackNormal3Label_preReloc);
   new_dw->put(pStress_p_new, lb->pStressAfterFractureReleaseLabel);
   new_dw->put(pToughness_p, lb->pToughnessLabel_preReloc);
+  }
 }
 
 NormalFracture::

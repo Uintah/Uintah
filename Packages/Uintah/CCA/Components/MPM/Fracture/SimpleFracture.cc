@@ -28,15 +28,15 @@ void
 SimpleFracture::
 initializeFractureModelData(const Patch* patch,
                             const MPMMaterial* matl,
-                            DataWarehouseP& new_dw)
+                            DataWarehouse* new_dw)
 {
 }
 
 void SimpleFracture::computeNodeVisibility(
                   const Patch* patch,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw)
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw)
 {
   // Create arrays for the particle data
   ParticleVariable<Point>  pX_patchAndGhost;
@@ -126,8 +126,8 @@ void
 SimpleFracture::
 crackGrow(const Patch* patch,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw)
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw)
 {
     int matlindex = mpm_matl->getDWIndex();
 
@@ -162,7 +162,7 @@ crackGrow(const Patch* patch,
         vector<Vector> eigenVectors = gStress[*iter].getEigenVectors(maxStress,
 	   fabs(maxStress));
 
-        for(int i=0;i<eigenVectors.size();++i) eigenVectors[i].normalize();
+        for(int i=0;i<(int)eigenVectors.size();++i) eigenVectors[i].normalize();
 
         if(eigenVectors.size() == 1) 
 	  gCrackNormal[*iter] = eigenVectors[0];
@@ -181,7 +181,8 @@ crackGrow(const Patch* patch,
 	  double beta = drand48() * M_PI;
  	  double cos_beta = cos(beta);
 	  double sin_beta = sin(beta);
-	  Vector xy = eigenVectors[2] * sin_beta;
+	  // Unused - Steve
+	  //Vector xy = eigenVectors[2] * sin_beta;
 	  gCrackNormal[*iter] = 
 	     eigenVectors[0] * (sin_beta * cos(theta)) +
 	     eigenVectors[1] * (sin_beta * sin(theta)) +
@@ -198,8 +199,8 @@ void
 SimpleFracture::
 stressRelease(const Patch* patch,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw)
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw)
 {
   int matlindex = mpm_matl->getDWIndex();
   
