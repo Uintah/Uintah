@@ -1036,7 +1036,6 @@ fi
 
 if test "$PERL" = "perl"; then
   PERL=`type perl | sed 's%^.* %%'`
-  echo $PERL
 fi
 
 AC_CHECK_PROG(ETAGS, etags, etags)
@@ -1307,11 +1306,11 @@ for i in $tcl $thirdparty $SCI_LAB_TP_DEFAULT; do
     break,-I$INCTCL_H)
 
   SCI_CHECK_LIB($i/lib,itcl,main,,continue, -L$LIBTCL -ltcl)
-  SCI_CHECK_HEADER($LIBITCL/../include,itcl.h,,,-I$INCTCL_H)
+  SCI_CHECK_HEADER($i/include,itcl.h,,,-I$INCTCL_H)
 
   SCI_CHECK_LIB($i/lib,itk,main,,continue,
     -L$LIBITCL -litcl -L$LIBTK -ltk -L$LIBTCL -ltcl)
-  SCI_CHECK_HEADER($LIBITK/../include,itk.h,,, 
+  SCI_CHECK_HEADER($i/include,itk.h,,, 
     -I$INCITCL_H -I$INCTK_H -I$INCTCL_H)
 
   SCI_CHECK_LIB($i/lib,BLT,main,,continue,-L$LIBTK -ltk -L$LIBTCL -ltcl)
@@ -1682,7 +1681,7 @@ for i in $with_globus $thirdparty $SCI_LAB_TP_DEFAULT; do
      test "$HAVE_LIBGLOBUS_GAA"; then
     FOUND_ALL_GLOBUS=yes
     DEF_GLOBUS="#define HAVE_GLOBUS 1"
-    GLOBUS_INCLUDE="-I$i/include"
+    GLOBUS_INCLUDE="$i/include"
     GLOBUS_LIB="$LIBGLOBUS_UTP"
     is_linux=`echo $host | sed 's/.*linux.*/linux/'`
     if test "$is_linux" = "linux"; then
