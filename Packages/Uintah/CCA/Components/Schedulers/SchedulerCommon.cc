@@ -641,21 +641,25 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
       case TypeDescription::ParticleVariable:
 	{
 	  //cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH PARTICLEVARIABLE BGN" << endl;
-//  	  if(!oldDataWarehouse->d_particleDB.exists(currentVar.label_, currentVar.matlIndex_, currentVar.patch_))
-//  	    SCI_THROW(UnknownVariable(currentVar.label_->getName(), oldDataWarehouse->getID(), currentVar.patch_, currentVar.matlIndex_,
-//  				      "in copyDataTo ParticleVariable"));
-//  	  ParticleVariableBase* v = oldDataWarehouse->d_particleDB.get(currentVar.label_, currentVar.matlIndex_, currentVar.patch_);
-//  	  if ( !newDataWarehouse->d_particleDB.exists(currentVar.label_, currentVar.matlIndex_, newPatch) ) {
-//  	    ParticleVariableBase* newVariable = v->cloneType();
-//   	    newVariable->rewindow( newLowIndex, newHighIndex );
-//  	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
-//  	    newDataWarehouse->d_particleDB.put(currentVar.label_, currentVar.matlIndex_, newPatch, newVariable, false);
-//  	  } else {
-//  	    ParticleVariableBase* newVariable = newDataWarehouse->d_particleDB.get(currentVar.label_, currentVar.matlIndex_, newPatch );
-//  	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
-//  	  }
+  	  if(!oldDataWarehouse->d_particleDB.exists(currentVar.label_, currentVar.matlIndex_, currentVar.patch_))
+  	    SCI_THROW(UnknownVariable(currentVar.label_->getName(), oldDataWarehouse->getID(), currentVar.patch_, currentVar.matlIndex_,
+  				      "in copyDataTo ParticleVariable"));
+  	  if ( !newDataWarehouse->d_particleDB.exists(currentVar.label_, currentVar.matlIndex_, newPatch) ) {
+            PatchSubset* ps = new PatchSubset;
+            ps->add(currentVar.patch_);
+            PatchSubset* newps = new PatchSubset;
+            newps->add(newPatch);
+            MaterialSubset* ms = new MaterialSubset;
+            ms->add(currentVar.matlIndex_);
+  	    newDataWarehouse->transferFrom(oldDataWarehouse, currentVar.label_, ps, ms, newps);
+            delete ps;
+            delete ms;
+            delete newps;
+  	  } else {
+            SCI_THROW(InternalError("Particle copy not implemented for pre-existent var (BNR Regridder?)"));
+  	  }
 	  //cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH PARTICLEVARIABLE END" << endl;
-	}
+          }
 	break;
       case TypeDescription::PerPatch:
 	{
