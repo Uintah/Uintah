@@ -33,6 +33,8 @@ public:
     virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
     virtual void compute_bounds(BBox&, double offset);
     virtual void collect_prims(Array1<Object*>& prims);
+
+  void change_rate(double new_rate) { rate = new_rate; }
 };
 
 } // end namespace rtrt
