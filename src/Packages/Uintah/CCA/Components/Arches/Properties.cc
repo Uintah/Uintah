@@ -119,12 +119,13 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
   tsk->computes(d_lab->d_refDensity_label);
   tsk->computes(d_lab->d_densityCPLabel);
 
-  if (d_MAlab) 
-    tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel, Ghost::None,
-		  numGhostCells);
-  else
-    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
-		  numGhostCells);
+  // commenting stuff below for debug, sk, 01/22/02
+  //  if (d_MAlab) 
+  //    tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel, Ghost::None,
+  //		  numGhostCells);
+  //  else
+  //    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
+  //		  numGhostCells);
 
   if (d_enthalpySolve)
     tsk->computes(d_lab->d_enthalpySPLabel);
@@ -141,8 +142,8 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
     tsk->computes(d_lab->d_sootFVINLabel);
   }
   if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, Ghost::None,
-		  numGhostCells);
+    //    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, Ghost::None,
+    //		  numGhostCells);
     tsk->computes(d_lab->d_densityMicroLabel);
   }
 
@@ -168,8 +169,8 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
   if (d_MAlab) {
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
 		  Ghost::None, numGhostCells);
-    tsk->requires(Task::NewDW, d_lab->d_densityMicroINLabel, 
-		  Ghost::None, numGhostCells);
+    //    tsk->requires(Task::NewDW, d_lab->d_densityMicroINLabel, 
+    //		  Ghost::None, numGhostCells);
   }
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::None,
 		numGhostCells);
@@ -271,14 +272,15 @@ Properties::computeProps(const ProcessorGroup*,
       //enthalpy.copyData(enthalpy_old);
     }
     
-    if (d_MAlab) {
-      new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch, 
-		  Ghost::None, nofGhostCells);
-    }
-    else {
-      new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
-    }
+    // temporary comment, for debug, sk, 01/22/02
+    //    if (d_MAlab) {
+    //      new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch, 
+    //		  Ghost::None, nofGhostCells);
+    //    }
+    //    else {
+    //      new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
+    //		Ghost::None, nofGhostCells);
+    //    }
 
     CCVariable<double> temperature;
     CCVariable<double> co2;
@@ -330,8 +332,9 @@ Properties::computeProps(const ProcessorGroup*,
     constCCVariable<double> voidFraction;
 
     if (d_MAlab){
-      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
-      		  matlIndex, patch, Ghost::None, nofGhostCells);
+      // temporary comment for debug, sk, 01/22/02
+      //      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
+      //      		  matlIndex, patch, Ghost::None, nofGhostCells);
       new_dw->allocate(denMicro, d_lab->d_densityMicroLabel,
 		       matlIndex, patch);
     }
@@ -396,7 +399,8 @@ Properties::computeProps(const ProcessorGroup*,
 	  if (d_MAlab) {
 	    denMicro[currCell] = local_den;
 	    //	    if (voidFraction[currCell] > 0.01)
-	    local_den *= voidFraction[currCell];
+	    // temporary comment for debug, sk, 01/22/02
+	    //	    local_den *= voidFraction[currCell];
 
 	  }
 	  
@@ -513,6 +517,7 @@ Properties::reComputeProps(const ProcessorGroup*,
 
     constCCVariable<double> enthalpy_comp;
     CCVariable<double> denMicro;
+    //    CCVariable<double> denMicro_old;
 
     int nofGhostCells = 0;
 
@@ -762,8 +767,8 @@ Properties::sched_computePropsPred(SchedulerP& sched, const PatchSet* patches,
   if (d_MAlab) {
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
 		  Ghost::None, numGhostCells);
-    tsk->requires(Task::NewDW, d_lab->d_densityMicroINLabel, 
-		  Ghost::None, numGhostCells);
+    //    tsk->requires(Task::NewDW, d_lab->d_densityMicroINLabel, 
+    //		  Ghost::None, numGhostCells);
   }
   tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, Ghost::None,
 		numGhostCells);
@@ -948,8 +953,8 @@ Properties::computePropsPred(const ProcessorGroup*,
 
 	  if (d_MAlab) {
 	    //denMicro[IntVector(colX, colY, colZ)] = local_den;
-	    if (voidFraction[currCell] > 0.01)
-	      local_den *= voidFraction[currCell];
+	    //	    if (voidFraction[currCell] > 0.01)
+	    local_den *= voidFraction[currCell];
 
 	  }
 	  
@@ -968,6 +973,8 @@ Properties::computePropsPred(const ProcessorGroup*,
     density.print(cerr);
 #endif
     new_dw->put(new_density, d_lab->d_densityPredLabel, matlIndex, patch);
+    //    if (d_MAlab)
+    //      new_dw->put(denMicro, d_lab->densityMicroLabel, matlIndex, patch);
     if (d_reactingFlow) {
       new_dw->put(temperature, d_lab->d_tempINPredLabel, matlIndex, patch);
       new_dw->put(co2, d_lab->d_co2INPredLabel, matlIndex, patch);
