@@ -18,3 +18,5 @@ SCICore/Winfix/include/GL
 SCICore/globus_threads
 SCICore/share
 SCIRun/share
+Uintah/Components/Arches
+Uintah/Components/Arches/fortran
