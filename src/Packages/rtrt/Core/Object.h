@@ -61,6 +61,7 @@ public:
 				       double dist,
 				       DepthStats* st, PerProcessorContext* ppc);
     virtual Vector normal(const Point&, const HitInfo& hit)=0;
+//    virtual void get_frame(const Point &p, Vector &n, Vector &u, Vector &v);
     virtual void animate(double t, bool& changed);
     virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
     virtual void compute_bounds(BBox& bbox, double offset)=0;

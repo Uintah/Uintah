@@ -73,7 +73,7 @@ public:
 	if(hit.hit(this, min_t)){
 	  InstanceHit* i = (InstanceHit*)(hit.scratchpad);
 	  Point p = ray.origin() + min_t*ray.direction();
-	  i->normal = thit.hit_obj->normal(p,thit);
+	  i->normal = thit.hit_obj->normal(tray.origin()+min_t*tray.direction(),thit);
 	  i->obj = thit.hit_obj;
 	}
       }	      
