@@ -16,7 +16,7 @@ FullResIterator::FullResIterator(const GLTexture3D* tex, Ray view,
     GLTextureIterator( tex, view, control)
 {
 
-  const Octree< Brick* >* node = (tex->bontree);
+  const Octree< Brick* >* node = tex->getBonTree();
   // SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
   if ( tex->depth() == 0 ){
     next = (*node)();

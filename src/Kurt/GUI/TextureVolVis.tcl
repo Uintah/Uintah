@@ -13,7 +13,9 @@ itcl_class Kurt_Vis_TextureVolVis {
 	global $this-num_slices
 	set $this-num_slices 64
 	global $this-alpha_scale
-	set $this-alpha_scale 0
+	set $this-alpha_scale 1.0
+	global $this-alpha_gamma
+	set $this-alpha_gamma 0.0
 	global $this-render_style
 	set $this-render_style 0
 	global $this-interp_mode 
@@ -90,24 +92,33 @@ itcl_class Kurt_Vis_TextureVolVis {
 
 	global $this-num_slices
 	scale $w.nslice -variable $this-num_slices \
-		-from 64 -to 1024 -label "Number of Slices" \
+		-from 64 -to 1024 -label "Number of Slices (quality)" \
 		-showvalue true \
-		-orient horizontal \
+		-orient horizontal
 
 
 	global $this-alpha_scale
 	
-	scale $w.stransp -variable $this-alpha_scale \
-		-from -1.0 -to 1.0 -label "Slice Transparency" \
+	scale $w.stransp1 -variable $this-alpha_scale \
+		-from 0.0 -to 1.0 \
+	        -label "Overall Transparency (linear scale)" \
 		-showvalue true -resolution 0.001 \
 		-orient horizontal 
 
-	pack $w.stransp $w.nslice  -side top -fill x
+	global $this-alpha_gamma
+	
+	scale $w.stransp0 -variable $this-alpha_gamma \
+		-from -1.0 -to 1.0 -label "Slice Transparency (gamma)" \
+		-showvalue true -resolution 0.001 \
+		-orient horizontal 
+
+	pack $w.stransp0 $w.stransp1 $w.nslice  -side top -fill x
 
 	button $w.exec -text "Execute" -command $n
 	pack $w.exec -side top -fill x
 	bind $w.nslice <ButtonRelease> $n
-	bind $w.stransp <ButtonRelease> $n
+	bind $w.stransp0 <ButtonRelease> $n
+	bind $w.stransp1 <ButtonRelease> $n
 	
 	button $w.close -text "Close" -command "wm withdraw $w"
 	pack $w.close -side top -fill x

@@ -31,7 +31,7 @@ Brick::Brick(const Point& min, const Point& max,
   padx(padx), pady(pady), padz(padz), lev(level),
    tex( tex ), name(0)
 {
-  
+
   /* The cube is numbered in the following way 
      
           2________6        y

@@ -18,25 +18,9 @@ ROI::ROI(const GLVolumeRenderer* glvr ) :
 }
 
 void
-ROI::setAlpha( const Brick& b)
+ROI::setAlpha( const Brick&)
 {
-  if(b.level() == volren->tex->depth()){
-    double sliceRatio = pow(2.0, volren->tex->depth() - b.level() - 1); 
-    double alpha = 1.0 - pow((1.0 - volren->slice_alpha), sliceRatio);
-    glColor4f(1,1,1, alpha);
-  } else {
-    double alphaScale = pow(2.0, b.level()*2);
-    glColor4f(1,1,1, volren->slice_alpha*alphaScale);
-  }
-
-//   We want to lower the alpha of surrounding bricks so that the 
-//    region of influence can be seen.
-//   double alphaScale;
-//   if(b.level() == volren->tex->depth())
-//     alphaScale = 1.0/pow(2.0, b.level());
-//   else
-//     alphaScale = 1.0/pow(2.0, b.level()*2);
-//   glColor4f(1,1,1, volren->slice_alpha*alphaScale);
+  glColor4f(1,1,1, volren->scale_alpha);
 }
 
 void
@@ -59,7 +43,7 @@ ROI::draw()
   Point vertex;
   double tmin, tmax, dt;
   double ts[8];
-  int i,j, k;
+  int i;
   for( brick = it.Start(); !it.isDone(); brick = it.Next()){
     polys.clear();
     Brick& b = *brick;
@@ -80,7 +64,7 @@ void ROI::drawBrick( Brick& b, const vector<Polygon *>& polys)
     loadTexture( b );
     makeTextureMatrix( b );
     enableTexCoords();
-    //setAlpha( b );
+    setAlpha( b );
     drawPolys( polys );
     disableTexCoords();
 }

@@ -38,7 +38,7 @@ LOS::draw()
   Point vertex;
   double tmin, tmax, dt;
   double ts[8];
-  int i,j, k;
+  int i;
   for( brick = it.Start(); !it.isDone(); brick = it.Next()){
     polys.clear();
     Brick& b = *brick;
@@ -59,17 +59,15 @@ void LOS::drawBrick( Brick& b, const vector<Polygon *>& polys)
     loadTexture( b );
     makeTextureMatrix( b );
     enableTexCoords();
-    //setAlpha( b );
+    setAlpha( b );
     drawPolys( polys );
     disableTexCoords();
 }
 
 void
-LOS::setAlpha( const Brick& b )
+LOS::setAlpha( const Brick& )
 {
-  double sliceRatio = pow(2.0, volren->tex->depth() - b.level() - 1); 
-  double alpha = 1.0 - pow((1.0 - volren->slice_alpha), sliceRatio);
-  glColor4f(1,1,1, alpha);
+  glColor4f(1,1,1, volren->scale_alpha);
 }
 
 void 
