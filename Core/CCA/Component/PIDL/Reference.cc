@@ -13,73 +13,42 @@
  */
 
 #include <Component/PIDL/Reference.h>
-#include <Component/PIDL/GlobusError.h>
-#include <Component/PIDL/Startpoint.h>
-#include <Component/PIDL/URL.h>
+#include <Component/PIDL/TypeInfo.h>
 #include <globus_nexus.h>
 
 using Component::PIDL::Reference;
 
 Reference::Reference()
 {
-    d_startpoint=0;
+    d_vtable_base=TypeInfo::vtable_invalid;
 }
 
 Reference::Reference(const Reference& copy)
+    : d_sp(copy.d_sp), d_vtable_base(copy.d_vtable_base)
 {
-    if(copy.d_startpoint){
-	d_startpoint=new Startpoint;
-	if(int gerr=globus_nexus_startpoint_copy(&d_startpoint->d_sp,
-						 &copy.d_startpoint->d_sp))
-	    throw GlobusError("startpoint_copy", gerr);
-    } else {
-	d_startpoint=0;
-    }
-}
-
-Reference::Reference(const URL& url)
-{
-    std::string s(url.getString());
-    d_startpoint=new Startpoint;
-    char* str=const_cast<char*>(s.c_str());
-    if(int gerr=globus_nexus_attach(str, &d_startpoint->d_sp)){
-	delete d_startpoint;
-	d_startpoint=0;
-	throw GlobusError("nexus_attach", gerr);
-    }
 }
 
 Reference::~Reference()
 {
-    if(d_startpoint){
-	if(int gerr=globus_nexus_startpoint_destroy(&d_startpoint->d_sp))
-	    throw GlobusError("startpoint_destroy", gerr);
-	delete d_startpoint;
-    }
 }
 
 Reference& Reference::operator=(const Reference& copy)
 {
-    if(this == &copy)
-	return *this;
-    if(d_startpoint){
-	if(int gerr=globus_nexus_startpoint_destroy(&d_startpoint->d_sp))
-	    throw GlobusError("startpoint_destroy", gerr);
-    }
-    if(copy.d_startpoint) {
-	if(!d_startpoint)
-	    d_startpoint=new Startpoint;
-	if(int gerr=globus_nexus_startpoint_copy(&d_startpoint->d_sp,
-					      &copy.d_startpoint->d_sp))
-	    throw GlobusError("startpoint_copy", gerr);
-    } else {
-	if(d_startpoint)
-	    delete d_startpoint;
-    }
+    d_sp=copy.d_sp;
+    d_vtable_base=copy.d_vtable_base;
     return *this;
 }
+
+int Reference::getVtableBase() const
+{
+    return d_vtable_base;
+}
+
 //
 // $Log$
+// Revision 1.3  1999/09/17 05:08:09  sparker
+// Implemented component model to work with sidl code generator
+//
 // Revision 1.2  1999/08/31 08:59:02  sparker
 // Configuration and other updates for globus
 // First import of beginnings of new component library
