@@ -217,7 +217,7 @@ ${SCIRun_jpg_eps_files}: %.${eps} : %.jpg
 ${SCIRun_gif_eps_files}: %.${eps} : %.gif
 	${call imagetoeps}
 
-${SCIRun_xml_tex_files}: %.tex : %.xml
+${SCIRun_xml_tex_files}: %.tex : %.xml ${stylesheet}
 	${call xmltotex}
 
 SCIRun_clean:
@@ -250,7 +250,7 @@ ${BioPSE_jpg_eps_files}: %.${eps} : %.jpg
 ${BioPSE_gif_eps_files}: %.${eps} : %.gif
 	${call imagetoeps}
 
-${BioPSE_xml_tex_files}: %.tex : %.xml
+${BioPSE_xml_tex_files}: %.tex : %.xml ${stylesheet}
 	${call xmltotex}
 
 BioPSE_clean:
@@ -285,7 +285,7 @@ ${Teem_jpg_eps_files}: %.${eps} : %.jpg
 ${Teem_gif_eps_files}: %.${eps} : %.gif
 	${call imagetoeps}
 
-${Teem_xml_tex_files}: %.tex : %.xml
+${Teem_xml_tex_files}: %.tex : %.xml ${stylesheet}
 	${call xmltotex}
 
 Teem_clean:
@@ -318,7 +318,7 @@ ${Fusion_jpg_eps_files}: %.${eps} : %.jpg
 ${Fusion_gif_eps_files}: %.${eps} : %.gif
 	${call imagetoeps}
 
-${Fusion_xml_tex_files}: %.tex : %.xml
+${Fusion_xml_tex_files}: %.tex : %.xml ${stylesheet}
 	${call xmltotex}
 
 Fusion_clean:
@@ -352,7 +352,7 @@ ${MatlabInterface_jpg_eps_files}: %.${eps} : %.jpg
 ${MatlabInterface_gif_eps_files}: %.${eps} : %.gif
 	${call imagetoeps}
 
-${MatlabInterface_xml_tex_files}: %.tex : %.xml
+${MatlabInterface_xml_tex_files}: %.tex : %.xml ${stylesheet}
 	${call xmltotex}
 
 MatlabInterface_clean:
@@ -386,7 +386,7 @@ ${VDT_jpg_eps_files}: %.${eps} : %.jpg
 ${VDT_gif_eps_files}: %.${eps} : %.gif
 	${call imagetoeps}
 
-${VDT_xml_tex_files}: %.tex : %.xml
+${VDT_xml_tex_files}: %.tex : %.xml ${stylesheet}
 	${call xmltotex}
 
 VDT_clean:
