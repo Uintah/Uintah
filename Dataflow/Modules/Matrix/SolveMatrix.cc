@@ -967,9 +967,15 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     memrefs.set(0);
     memrate.set(0);
     iteration.set(0);
+    data->niter=0;
+    data->toomany=maxiter.get();
+    if(data->toomany == 0)
+      data->toomany=2*size;
 
     if (data->rhs->vector_norm(stats->flop, stats->memref) < 0.0000001) {
 	*data->lhs=*data->rhs;
+	data->niter=data->toomany+1;
+	data->reducer.wait(data->np);
 	return;
     }
         
@@ -1004,6 +1010,8 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     if(data->err == 0){
       lhs=rhs;
       stats->memref+=2*size*sizeof(double);
+      data->niter=data->toomany+1;
+      data->reducer.wait(data->np);
       return;
     } else {
 	int ev=(data->err<1000000);
@@ -1011,10 +1019,6 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
 	if (!ev) data->err=1000000;
     }
 
-    data->niter=0;
-    data->toomany=maxiter.get();
-    if(data->toomany == 0)
-      data->toomany=2*size;
     data->max_error=target_error.get();
     
     stats->gflop+=stats->flop/1000000000;
@@ -1288,6 +1292,8 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     if(data->err == 0){
       lhs=rhs;
       stats->memref+=2*size*sizeof(double);
+      data->niter=data->toomany+1;
+      data->reducer.wait(data->np);
       return;
     } else {
 	int ev=(data->err<1000000);
@@ -1486,6 +1492,10 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 
 //
 // $Log$
+// Revision 1.13  2000/01/19 22:33:30  moulding
+// These two had some bug(s) or other that steve fixed (BCFlag and
+// some parrellel stuff?).  Now the TorsoFE demo (from a fresh checkout) works!
+//
 // Revision 1.12  1999/10/07 02:06:52  sparker
 // use standard iostreams and complex type
 //
