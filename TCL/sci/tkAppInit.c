@@ -30,6 +30,7 @@ static char rcsid[] = "$Header$ SPRITE (Berkeley)";
 #endif /* not lint */
 
 #include "tk.h"
+#include <variant.h>
 
 /*
  * The following variable is a special hack that allows applications
@@ -101,8 +102,10 @@ Tcl_AppInit(interp)
      */
     Tcl_CreateCommand(interp, "fscale", Tk_FScaleCmd, (ClientData) main,
 		      (void (*)()) NULL);
+#ifdef SCI_OPENGL
     Tcl_CreateCommand(interp, "opengl", OpenGLCmd, (ClientData) main,
 		      (void (*)()) NULL);
+#endif
     Tcl_CreateCommand(interp, "bevel", BevelCmd, (ClientData) main,
 		      (void (*)()) NULL);
 

@@ -1,8 +1,16 @@
 
 #include <config/sci.cf>
 
-OBJS = tkAppInit.o  tkBevel.o  tkMain.o  tkOpenGL.o
-SRCS = tkAppInit.c  tkBevel.c  tkMain.c  tkOpenGL.c
+#ifdef SCI_OPENGL
+OPENGL_OBJS = tkOpenGL.o
+OPENGL_SRCS = tkOpenGL.c
+#else
+OPENGL_OBJS =
+OPENGL_SRCS =
+#endif
+
+OBJS = tkAppInit.o  tkBevel.o  tkMain.o  $(OPENGL_OBJS)
+SRCS = tkAppInit.c  tkBevel.c  tkMain.c  $(OPENGL_SRCS)
 LOCALINCLUDES = -I../tcl7.3 -I../tk3.6
 
 LIBNAME = scitk
