@@ -237,9 +237,11 @@ wait_shutdown()
 void
 Thread::allow_sgi_OpenGL_page0_sillyness()
 {
+#if 0
     if(mprotect(0, getpagesize(), PROT_READ|PROT_WRITE) != 0){
 	fprintf(stderr, "\007\007!!! Strange error re-mapping page 0 - tell Steve this number: %d\n", errno);
     }
+#endif
 }
 
 /*
@@ -248,11 +250,13 @@ Thread::allow_sgi_OpenGL_page0_sillyness()
 void
 Thread::initialize()
 {
+#if 0
     if(mprotect(0, getpagesize(), PROT_NONE) != -1){
 	//fprintf(stderr, "\007\007!!! WARNING: page 0 protected - talk to Steve if GL programs fail!\n");
     } else if(errno != EINVAL){
 	fprintf(stderr, "\007\007!!! Strange error protecting page 0 - tell Steve this number: %d\n", errno);
     }
+#endif
     usconfig(CONF_ARENATYPE, US_SHAREDONLY);
     usconfig(CONF_INITSIZE, 30*1024*1024);
     usconfig(CONF_INITUSERS, (unsigned int)140);
@@ -1320,6 +1324,9 @@ SCICore::Thread::ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.20  2000/03/08 18:22:34  dahart
+// Backed off of page 0 protection due to weird crash at program exit
+//
 // Revision 1.19  2000/02/24 16:59:24  sparker
 // enabled other half of Thread::allow_sgi_OpenGL_page0_sillyness()
 //
