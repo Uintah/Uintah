@@ -1026,13 +1026,12 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
     {
       glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
       glGenTextures(1, &(di->cmtexture_));
-      glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
     }
 
     // Send Cmap
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
     glTexImage1D(GL_TEXTURE_1D, 0, 4, 256, 0, GL_RGBA, GL_FLOAT,
 		 cmap_->rawRGBA_);
-    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
 
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     if (cmap_->resolution_ == 256)
