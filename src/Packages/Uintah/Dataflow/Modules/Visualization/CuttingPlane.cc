@@ -255,13 +255,38 @@ void CuttingPlane::execute()
     widget_id = ogeom->addObj( gt, widget_name, &widget_lock );
   }
 
+  IntVector idx_offset(0,0,0);
+  field->get_property( "offset", idx_offset);
+
   BBox box;
   Point min, max;
   box = field->mesh()->get_bounding_box();
   min = box.min(); max = box.max();
   int nx, ny, nz;
   get_dimensions(field, nx,ny,nz);
-  if(field->data_at() == Field::CELL){ nx--; ny--; nz--; }
+
+  if(field->data_at() == Field::CELL){ nx--; ny--; nz--;}
+    
+  Vector diag;
+  diag=max-min;
+  if(field->data_at() == Field::CELL){
+    diag.x(diag.x()/(nx));
+    diag.y(diag.y()/(ny));
+    diag.z(diag.z()/(nz));
+
+    min.x( min.x() + 0.5 * diag.x());
+    min.y( min.y() + 0.5 * diag.y());
+    min.z( min.z() + 0.5 * diag.z());
+    max.x( max.x() - 0.5 * diag.x());
+    max.y( max.y() - 0.5 * diag.y());
+    max.z( max.z() - 0.5 * diag.z());
+  }else {
+    diag = max-min;
+    diag.x(diag.x()/(nx-1));
+    diag.y(diag.y()/(ny-1));
+    diag.z(diag.z()/(nz-1));
+  }
+
 
   if( iPoint_ != min ){
     iPoint_ = min;
@@ -270,20 +295,8 @@ void CuttingPlane::execute()
     dim_ = IntVector(nx, ny, nz);
     find = -1;
   }
-
-
-  Vector diag;
-  diag=max-min;
-  if(field->data_at() == Field::CELL){
-    diag.x(diag.x()/nx);
-    diag.y(diag.y()/ny);
-    diag.z(diag.z()/nz);
-  } else {
-    diag.x(diag.x()/(nx-1));
-    diag.y(diag.y()/(ny-1));
-    diag.z(diag.z()/(nz-1));
-  }
   
+  reset_vars();
   if (need_find.get() != find)
   {
     Point center = min + (max-min)/2.0;
@@ -293,12 +306,12 @@ void CuttingPlane::execute()
     {   // Find the field and put in optimal place
       // in xy plane with reasonable frame thickness
       if(gui_use_plane_idx.get() == 1){
-	center.z(min.z() + diag.z() * gui_plane_idx.get());
+	center.z(min.z() + diag.z() * (gui_plane_idx.get()- idx_offset.z()));
 	gui_use_plane_idx.set(0);
       } else {
 	int plane_idx = (min.z()*wh+max.z()*(1-wh) - min.z())/diag.z();
 	center.z(min.z() + diag.z() * plane_idx);
-	gui_plane_idx.set( plane_idx );
+	gui_plane_idx.set( plane_idx + idx_offset.z());
       }
       Point right( max.x(), center.y(), center.z());
       Point down( center.x(), min.y(), center.z());
@@ -310,12 +323,12 @@ void CuttingPlane::execute()
     {   // Find the field and put in optimal place
       // in yz plane with reasonable frame thickness
       if(gui_use_plane_idx.get() == 1){
-	center.x(min.x() + diag.x() * gui_plane_idx.get());
+	center.x(min.x() + diag.x() * (gui_plane_idx.get() - idx_offset.x()));
 	gui_use_plane_idx.set(0);
       } else {
 	int plane_idx = (min.x()*wh+max.x()*(1-wh) - min.x())/diag.x();
 	center.x(min.x() + diag.x() * plane_idx);
-	gui_plane_idx.set( plane_idx );
+	gui_plane_idx.set( plane_idx + idx_offset.x());
       }
       Point right( center.x(), center.y(), max.z());
       Point down( center.x(), min.y(), center.z());	    
@@ -327,12 +340,12 @@ void CuttingPlane::execute()
     {   // Find the field and put in optimal place
       // in xz plane with reasonable frame thickness
       if(gui_use_plane_idx.get() == 1){
-	center.y(min.y() + diag.y() * gui_plane_idx.get());
+	center.y(min.y() + diag.y() * (gui_plane_idx.get() - idx_offset.y()));
 	gui_use_plane_idx.set(0);
       } else {
 	int plane_idx = (min.y()*wh+max.y()*(1-wh) - min.y())/diag.y();
 	center.y(min.y() + diag.y() * plane_idx);
-	gui_plane_idx.set( plane_idx );
+	gui_plane_idx.set( plane_idx + idx_offset.y());
       }
       Point right( max.x(), center.y(), center.z());
       Point down( center.x(), center.y(), min.z());	    
@@ -377,16 +390,25 @@ void CuttingPlane::execute()
     msg="";
   }
 
+  double incra;
+  int idx;
   // get the position of the frame widget
   Point 	corner, center, R, D;
   widget->GetPosition( center, R, D);
-  if(need_find.get() ==1){
-    gui_plane_idx.set( (center.z() - min.z())/diag.z());
-  } else if(need_find.get() ==2 ){
-    gui_plane_idx.set( (center.x() - min.x())/diag.x());
+  if(need_find.get() == 1){
+    incra = center.z() - min.z() < 0 ? -0.5 : 0.5;
+    idx = int((center.z() - min.z())/diag.z()+ incra);
+    gui_plane_idx.set( idx + idx_offset.z());
+  } else if(need_find.get() == 2 ){
+    incra = center.x() - min.x() < 0 ? -0.5 : 0.5;
+    idx = int((center.x() - min.x())/diag.x()+ incra);
+    gui_plane_idx.set( idx + idx_offset.x());
   } else {
-	gui_plane_idx.set( (center.y() - min.y())/diag.y());
+    incra = center.y() - min.y() < 0 ? -0.5 : 0.5;
+    idx = int((center.y() - min.y())/diag.y()+ incra);
+    gui_plane_idx.set( idx + idx_offset.y());
   }
+  reset_vars();
   Vector v1 = R - center,
     v2 = D - center;
          
