@@ -102,7 +102,7 @@ void UVSphere::uv(UV& uv, const Point& hitpos, const HitInfo&)
   Vector m(xform.project(hitpos).asVector());
   double uu,vv,theta,phi;  
   theta = acos(m.z());
-  phi = atan2(m.y(), m.x());
+  phi = -atan2(m.y(), m.x());
   if(phi < 0) phi += 6.28318530718;
   uu = phi * .159154943092; // 1_pi
   vv = (M_PI - theta) * .318309886184; // 1 / ( 2 * pi )
