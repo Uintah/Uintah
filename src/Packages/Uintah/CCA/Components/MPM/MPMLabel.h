@@ -39,6 +39,7 @@ using std::vector;
       
       //PermanentParticleState
       const VarLabel* pStressLabel;
+      const VarLabel* pCrackRadiusLabel;
       const VarLabel* pVolumeLabel;
       const VarLabel* pVolumeDeformedLabel;
       const VarLabel* pMassLabel;

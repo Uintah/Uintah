@@ -80,6 +80,8 @@ void ViscoScram::initializeCMData(const Patch* patch,
    new_dw->allocate(deformationGradient, lb->pDeformationMeasureLabel, pset);
    ParticleVariable<Matrix3> pstress;
    new_dw->allocate(pstress, lb->pStressLabel, pset);
+   ParticleVariable<double> pCrackRadius;
+   new_dw->allocate(pCrackRadius, lb->pCrackRadiusLabel, pset);
 
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
@@ -93,10 +95,12 @@ void ViscoScram::initializeCMData(const Patch* patch,
 
       deformationGradient[*iter] = Identity;
       pstress[*iter] = zero;
+      pCrackRadius[*iter] = 0.0;
    }
    new_dw->put(statedata, p_statedata_label);
    new_dw->put(deformationGradient, lb->pDeformationMeasureLabel);
    new_dw->put(pstress, lb->pStressLabel);
+   new_dw->put(pCrackRadius, lb->pCrackRadiusLabel);
 
    computeStableTimestep(patch, matl, new_dw);
 
@@ -186,6 +190,8 @@ void ViscoScram::computeStressTensor(const Patch* patch,
   old_dw->get(pstress, lb->pStressLabel, pset);
 
   // Retrieve the array of constitutive parameters
+  ParticleVariable<double> pCrackRadius;
+  old_dw->get(pCrackRadius, lb->pCrackRadiusLabel, pset);
   ParticleVariable<StateData> statedata;
   old_dw->get(statedata, p_statedata_label, pset);
   ParticleVariable<double> pmass;
@@ -419,6 +425,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 		+ statedata[idx].DevStress[4];
 
       c = statedata[idx].CrackRadius;
+      pCrackRadius[idx] = c;
       double coa3   = (c*c*c)/(a*a*a);
       double topc   = 3.*(coa3/c)*cdot;
       double odt    = 1./delT;
@@ -515,6 +522,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
   double delT_new = WaveSpeed.minComponent();
   new_dw->put(delt_vartype(delT_new),lb->delTLabel);
   new_dw->put(pstress, lb->pStressAfterStrainRateLabel);
+  new_dw->put(pCrackRadius, lb->pCrackRadiusLabel);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
 
   // Put the strain energy in the data warehouse
@@ -558,6 +566,7 @@ void ViscoScram::addComputesAndRequires(Task* task,
    task->requires(old_dw, lb->delTLabel);
 
    task->computes(new_dw, lb->pStressAfterStrainRateLabel, matl->getDWIndex(),  patch);
+   task->computes(new_dw, lb->pCrackRadiusLabel, matl->getDWIndex(), patch);
    task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
    task->computes(new_dw, p_statedata_label_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
