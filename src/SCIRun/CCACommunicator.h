@@ -33,6 +33,8 @@
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
 
+#include <string>
+
 namespace SCIRun {
 
 class SCIRunFramework;
@@ -46,15 +48,16 @@ struct Packet
 
 class CCACommunicator:public Runnable{
  public:
-  CCACommunicator(SCIRunFramework *framework,const sci::cca::Services::pointer &svc);
+  CCACommunicator(SCIRunFramework *framework,
+		  const sci::cca::Services::pointer &svc);
   ~CCACommunicator(){}
   void run();
 
  protected:
   void readPacket(const Packet &pkt);
   Packet makePacket(int i);
-  std::vector<string> ccaFrameworkURL; //framework URLs
-  std::vector<string> ccaSiteList; //machine IP addresses
+  std::vector<std::string> ccaFrameworkURL; //framework URLs
+  std::vector<std::string> ccaSiteList; //machine IP addresses
   SCIRunFramework *framework;
   sci::cca::Services::pointer services;
 };
