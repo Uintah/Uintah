@@ -118,6 +118,7 @@ performanceTest[SecondOrderCE]
 
 FASTEST    MEAN4RUNS  OPTION
 -----------------------------------------
+1.74358 s  1.74578 s  OFAST W/CHANGES AS OF 12/22/2003
 1.82382 s  1.82882 s  OFAST W/CHANGES AS OF 12/17/2003
 2.04459 s  2.07559 s  OFAST
 2.04224	s  2.06849 s  O3
@@ -131,6 +132,7 @@ performanceTest[SecondOrder]
 
 FASTEST    MEAN4RUNS  OPTION
 -----------------------------------------
+0.44820 s  0.44875 s  OFAST W/CHANGES AS OF 12/22/2003
 0.48879 s  0.48935 s  OFAST W/CHANGES AS OF 12/17/2003
 0.57505 s  0.57665 s  OFAST
 0.59217 s  0.59256 s  O3
