@@ -6,7 +6,7 @@ SRCS	 = ContourSet.cc ContourSetPort.cc ManhattanDist.cc \
 	   ScalarTriSurface.cc SegFld.cc SegFldPort.cc \
 	   SigmaSet.cc SigmaSetPort.cc \
 	   TensorField.cc TensorFieldBase.cc TensorFieldPort.cc \
-	   TopoSurfTree.cc
+	   TopoSurfTree.cc VectorFieldMI.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP) 
 
