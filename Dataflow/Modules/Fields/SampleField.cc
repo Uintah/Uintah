@@ -216,6 +216,7 @@ SampleField::execute_rake()
   if (!rake_)
   {
     rake_ = scinew GaugeWidget(this, &widget_lock_, widgetscale_.get(), false);
+    rake_->Connect(ogport_);
     rake_->SetEndpoints(endpoint0_,endpoint1_);
     GeomGroup *widget_group = scinew GeomGroup;
     widget_group->add(rake_->GetWidget());

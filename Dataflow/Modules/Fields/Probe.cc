@@ -96,6 +96,7 @@ DECLARE_MAKER(Probe)
       widgetid_(0)
 {
   widget_ = scinew PointWidget(this, &widget_lock_, 1.0);
+  widget_->Connect((GeometryOPort*)get_oport("Probe Widget"));
 }
 
 

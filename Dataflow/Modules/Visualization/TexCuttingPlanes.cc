@@ -150,6 +150,7 @@ void TexCuttingPlanes::execute(void)
 
   if(!control_widget_){
     control_widget_=scinew PointWidget(this, &control_lock_, 0.2);
+    control_widget_->Connect(ogeom_);
     
     BBox b;
     tex_->get_bounds(b);

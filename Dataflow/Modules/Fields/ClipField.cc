@@ -133,6 +133,7 @@ ClipField::ClipField(GuiContext* ctx)
     widgetid_(0)
 {
   box_ = scinew BoxWidget(this, &widget_lock_, 1.0, false, false);
+  box_->Connect((GeometryOPort *)get_oport("Selection Widget"));
 }
 
 
