@@ -13,7 +13,8 @@ map<string, VarLabel*> VarLabel::allLabels;
 
 VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
 		   VarType vartype)
-   : d_name(name), d_td(td), d_vartype(vartype)
+   : d_name(name), d_td(td), d_vartype(vartype),
+     d_allowMultipleComputes(false)
 {
    map<string, VarLabel*>::value_type mappair(name, this);
    if (allLabels.insert(mappair).second == false) {
@@ -63,6 +64,11 @@ operator<<( ostream & out, const Uintah::VarLabel & vl )
 
 //
 // $Log$
+// Revision 1.12  2001/01/04 22:32:34  witzel
+// Added allowMultipleComputes flag to allow one to indicate that a
+// VarLabel may be computed multiple times in a taskgraph without conflict
+// (i.e. can be done with reduction variables like delT).
+//
 // Revision 1.11  2000/12/23 00:35:23  witzel
 // Added a static member variable to VarLabel that maps VarLabel names to
 // the appropriate VarLabel* for all VarLabel's in existent, and added
