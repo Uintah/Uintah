@@ -53,6 +53,10 @@ set insertPosition 0
 global netedit_savefile
 set netedit_savefile ""
 
+global NetworkChanged
+set NetworkChanged 0
+
+
 
 proc makeNetworkEditor {} {
     wm protocol . WM_DELETE_WINDOW { NiceQuit }
@@ -105,6 +109,9 @@ proc makeNetworkEditor {} {
     menubutton .main_menu.help -text "Help" -underline 0 \
 	-menu .main_menu.help.menu -direction below
     menu .main_menu.help.menu -tearoff false
+    .main_menu.help.menu add checkbutton -label "Show Tooltips" -underline 0 \
+	-variable tooltipsOn
+
     .main_menu.help.menu add command -label "About..." -underline 0 \
 	-command  "showSplash"
     .main_menu.help.menu add command -label "License..." -underline 0 \
@@ -380,8 +387,10 @@ proc createModulesMenu { subnet } {
 }
 
 
-
-
+proc networkHasChanged {args} {
+    global NetworkChanged
+    set NetworkChanged 1
+}
 
 proc addModule { package category module } {
     return [addModuleAtPosition "$package" "$category" "$module" 10 10]
@@ -406,6 +415,7 @@ proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } } {
 	return
     }    
 
+    networkHasChanged
     global inserting insertPosition Subnet
     set canvas $Subnet(Subnet$Subnet(Loading)_canvas)
     set Subnet($modid) $Subnet(Loading)
@@ -450,10 +460,11 @@ proc addModule2 {package category module modid} {
 
 
 proc popupSaveMenu {} {
-    global netedit_savefile
+    global netedit_savefile NetworkChanged
     if { $netedit_savefile != "" } {
 	# We know the name of the savefile, dont ask for name, just save it
 	netedit savenetwork $netedit_savefile
+	set NetworkChanged 0
     } else { ;# Otherwise, ask the user for the name to save as
 	popupSaveAsMenu
     }
@@ -466,18 +477,19 @@ proc popupSaveAsMenu {} {
 	{{Dataflow Script} {.sr} }
 	{{Other} { * } }
     } 
-    global netedit_savefile
+    global netedit_savefile NetworkChanged
     set netedit_savefile \
 	[tk_getSaveFile -defaultextension {.net} -filetypes $types ]
     if { $netedit_savefile != "" } {
 	netedit savenetwork $netedit_savefile
+	set NetworkChanged 0
 	# Cut off the path from the net name and put in on the title bar:
 	wm title . "SCIRun ([lindex [split "$netedit_savefile" /] end])"
     }
 }
 
 proc popupInsertMenu { {subnet 0} } {
-    global inserting insertPosition Subnet
+    global inserting insertPosition Subnet NetworkChanged
     set inserting 1
     
     #get the net to be inserted
@@ -532,6 +544,7 @@ proc popupInsertMenu { {subnet 0} } {
     global modulesBbox
     set modulesBbox [compute_bbox $canvas [$canvas find withtag "module"]]
     loadnet $netedit_loadnet
+    set NetworkChanged 1
     set inserting 0
 }
 
@@ -555,6 +568,14 @@ proc compute_bbox { canvas { items "" } } {
 }
 
 proc popupLoadMenu {} {
+    global NetworkChanged
+    if $NetworkChanged {
+	set result [tk_messageBox -type yesnocancel -parent . -message \
+			"Your network has not been saved.\nWould you like to save before loading a new one?" -icon warning ]
+	if {![string compare "yes" $result]} { popupSaveMenu }
+	if {![string compare "cancel" $result]} { return }
+    }
+
     set types {
 	{{SCIRun Net} {.net} }
 	{{Uintah Script} {.uin} }
@@ -564,32 +585,45 @@ proc popupLoadMenu {} {
     
     set netedit_loadnet [tk_getOpenFile -filetypes $types ]
     if { $netedit_loadnet == ""} return
+    #dont ask user before clearing canvas
+    ClearCanvas 0
     loadnet $netedit_loadnet
 }
 
-proc ClearCanvas { {subnet 0} } {
-   # destroy all modules    
-    set result [tk_messageBox -type okcancel -parent . -message \
-	        "ALL modules and connections will be cleared.\nReally clear?"\
-		-icon warning ]
-    if {[string compare "ok" $result] == 0} {
+proc ClearCanvas { {confirm 1} {subnet 0} } {
+    # destroy all modules
+    global NetworkChanged
+    set result "ok"
+    if { $confirm && $NetworkChanged } {
+	set result \
+	    [tk_messageBox -type okcancel -parent . -icon warning -message \
+		 "You network has not been saved.\nALL modules and connections will be cleared.\nReally clear?"]	
+    }
+    if {!$confirm || [string compare "ok" $result] == 0} {
 	global Subnet netedit_savefile CurrentlySelectedModules
 	foreach module $Subnet(Subnet${subnet}_Modules) {
 	    moduleDestroy $module
 	}
 	wm title . "SCIRun" ;# Reset Main Window Title
 	set netedit_savefile ""
-	set CurrentlySelectedModules ""       	
+	set CurrentlySelectedModules ""
+	set NetworkChanged 0
     }   
 }
 
 proc NiceQuit {} {
-    set result [tk_messageBox -type okcancel -parent . -message \
-		    "Please confirm exit." -icon warning ]
-    if {![string compare "ok" $result]} {
-	puts "Goodbye!"
-	netedit quit
-    }   
+    global NetworkChanged netedit_savefile
+    if {$NetworkChanged} {
+	set result [tk_messageBox -type yesnocancel -parent . -message \
+			"Your network has not been saved.\nWould you like to save before exiting?" -icon warning ]
+	if {![string compare "cancel" $result]} { return }
+	if {![string compare "yes" $result]} { 
+	    puts -nonewline "Saving $netedit_savefile..."
+	    popupSaveMenu
+	}	
+    } 
+    puts "Goodbye!"
+    netedit quit
 }
 
 proc initInfo { {force 0 } } {
@@ -676,6 +710,7 @@ proc infoClear {w} {
 proc infoOk {w} {
     global notes
     set notes [$w.fnotes.tnotes get 1.0 end]
+    NetworkChanged
     destroy $w
 }
 
@@ -706,10 +741,11 @@ proc loadnet {netedit_loadfile } {
     # Cut off the path from the net name and put in on the title bar:
     wm title . "SCIRun ([lindex [split "$netedit_loadfile" / ] end])"
     # Remember the name of this net for future "Saves".
-    global netedit_savefile
+    global netedit_savefile NetworkChanged
     set netedit_savefile $netedit_loadfile
     # The '#' below is not a comment...
     uplevel #0 {source $netedit_savefile}
+    set NetworkChanged 0
 }
 
 # Ask the user to select a data directory 
@@ -874,68 +910,6 @@ proc showSplash { {steps none} } {
     update idletasks
 }
 
- proc scroll {type W args} {
-
- # ----------------------------------------------------------------------
-
-   set w $W.$type
-   set x $W.x
-   set y $W.y
-
- # ----------------------------------------------------------------------
-
-   array set arg [list \
-     -borderwidth 0 \
-     -highlightthickness 0 \
-     -relief flat \
-     -xscrollcommand [list $x set] \
-     -yscrollcommand [list $y set] \
-   ]
-   array set arg $args
-
- # ----------------------------------------------------------------------
-
-   frame $W \
-     -borderwidth 1 \
-     -class Scroll \
-     -highlightthickness 1 \
-     -relief sunken \
-     -takefocus 0
-
-   # create the scrollable widget
-   uplevel [linsert [array get arg] 0 $type $w]
-
-   scrollbar $x \
-     -borderwidth 0 \
-     -elementborderwidth 1 \
-     -orient horizontal \
-     -takefocus 0 \
-     -highlightthickness 0 \
-     -command [list $w xview]
-
-   scrollbar $y \
-     -borderwidth 0 \
-     -elementborderwidth 1 \
-     -orient vertical \
-     -takefocus 0 \
-     -highlightthickness 0 \
-     -command [list $w yview]
-
-   grid columnconfigure $W 1 -weight 1
-   grid    rowconfigure $W 1 -weight 1
-
-   grid $w -column 1 -row 1 -sticky nsew
-   grid $x -column 1 -row 2 -sticky nsew
-   grid $y -column 2 -row 1 -sticky nsew
-
- # ----------------------------------------------------------------------
-
-   return $w
-
- }
-
-
-
 proc licenseDialog { {firsttime 1} } {
     global SCIRUN_SRCDIR
     set filename [file join $SCIRUN_SRCDIR LICENSE]
@@ -1002,4 +976,10 @@ proc listFindAndRemove { name elem } {
     set elements [uplevel 1 set $name]
     set pos [lsearch $elements $elem]    
     uplevel 1 set $name \[list [lreplace $elements $pos $pos]\]
+}
+
+
+proc initVar { var } {
+    if { [string first msgStream $var] != -1 } return
+    uplevel \#0 trace variable "$var" w networkHasChanged
 }
