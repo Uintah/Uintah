@@ -54,7 +54,6 @@ proc TooltipMultiline { w args } {
     for {set arg 1} {$arg < [llength $args] } { incr arg } {
 	set message "$message[lindex $args $arg]"
     }
-    puts "message: $message"
     Tooltip $w "$message"
 }
 
@@ -121,3 +120,4 @@ proc balloon_aux {w x y msg} {
     bind $t <Enter> {after cancel {catch {destroy .balloon_help}}}
     bind $t <Leave> "catch {destroy .balloon_help}"
 }
+
