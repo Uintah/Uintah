@@ -20,6 +20,8 @@
 #ifndef PSE_Dataflow_PackageDB_h
 #define PSE_Dataflow_PackageDB_h 1
 
+#include <sci_defs.h>
+
 #include <Dataflow/share/share.h>
 
 #include <Core/Containers/AVLTree.h>
@@ -27,8 +29,8 @@
 #include <Dataflow/Network/Module.h>
 
 namespace SCIRun {
-
-
+  class GuiInterface;
+  using namespace std;
     typedef struct {
       string name;
       string datatype;
@@ -61,39 +63,51 @@ namespace SCIRun {
     typedef AVLTreeIter<string,Package*> PackagesIter;
 
     class PSECORESHARE PackageDB {
-      public:
-        PackageDB(void);
-        ~PackageDB(void);
+    public:
+      PackageDB(GuiInterface* gui);
+      ~PackageDB();
 
-        void loadPackage();
-	LIBRARY_HANDLE findLibInPath(string,string);
-        void registerModule(ModuleInfo* info);
-	void createAlias(const string& fromPackageName,
-			 const string& fromCategoryName,
-			 const string& fromModuleName,
-			 const string& toPackageName,
-			 const string& toCategoryName,
-			 const string& toModuleName);
+      void loadPackage(bool resolve=true);
+      void registerModule(ModuleInfo* info);
+      void createAlias(const string& fromPackageName,
+		       const string& fromCategoryName,
+		       const string& fromModuleName,
+		       const string& toPackageName,
+		       const string& toCategoryName,
+		       const string& toModuleName);
 
-        Module* instantiateModule(const string& packageName,
-                                  const string& categoryName,
-                                  const string& moduleName,
-                                  const string& instanceName) const;
+      Module* instantiateModule(const string& packageName,
+				const string& categoryName,
+				const string& moduleName,
+				const string& instanceName);
 
-        vector<string> packageNames(void) const;
-        vector<string> categoryNames(const string& packageName) const;
-        vector<string> moduleNames(const string& packageName,
+      bool haveModule(const string& packageName,
+		      const string& categoryName,
+		      const string& moduleName) const;
+
+      vector<string> packageNames() const;
+      vector<string> categoryNames(const string& packageName) const;
+      vector<string> moduleNames(const string& packageName,
                                      const string& categoryName) const;
-      public:
-        void *             db_;
-        vector<string>     packageList_;
+      void setGui(GuiInterface* gui);
+      ModuleInfo* GetModuleInfo(const string& name, const string& catname,
+				const string& packname);
+    private:
+      LIBRARY_HANDLE findLibInPath(string,string);
+      bool findMaker(ModuleInfo* info);
+
+      vector<string> delayed_commands;
+      void do_command(const string& cmd);
+      Packages *             db_;
+      vector<string>     packageList_;
+      GuiInterface* gui;
     };
 
     // PackageDB is intended to be a singleton class, but nothing will break
     // if you instantiate it many times.  This is the singleton instance,
     // on which you should invoke operations:
 
-    PSECORESHARE extern PackageDB packageDB;
+    PSECORESHARE extern PackageDB* packageDB;
 
 } // End namespace SCIRun
 

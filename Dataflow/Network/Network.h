@@ -43,47 +43,36 @@
 
 namespace SCIRun {
 
-using std::string;
-using std::vector;
-using std::map;
+  using std::string;
+  using std::vector;
+  using std::map;
 
-class Connection;
+  class Connection;
+  class Module;
+  class GuiInterface;
+  class Scheduler;
 
-class Module;
-class NetworkEditor;
-
-class PSECORESHARE Network {
-public:
+  class PSECORESHARE Network {
+  public:
     
     typedef map<string, Connection*>	MapStringConnection;
     typedef map<string, Module*>	MapStringModule;
-    typedef map<int, Connection*>	MapIntConnection;
-    typedef map<int, Module*>		MapIntModule;
     
-private:
+  private:
     Mutex the_lock;
-    int read_file(const string&);
 
     MapStringConnection conn_ids;
     
-    NetworkEditor* netedit;
-    int first;
-    int nextHandle;
-public:				// mm-hack to get direct access
     vector<Connection*> connections;
     vector<Module*> modules;
     
     MapStringModule module_ids;
-    MapIntModule mod_handles;
-    MapIntConnection conn_handles;
     
-    int slave_socket;
     int reschedule;
-public:
-    Network(int first);
+    Scheduler* sched;
+  public:
+    Network();
     ~Network();
-
-    void initialize(NetworkEditor*);
 
     void read_lock();
     void read_unlock();
@@ -93,23 +82,25 @@ public:
     int nmodules();
     Module* module(int);
 
-    int getNextHandle()  { return ++nextHandle; }  // mm
-
     int nconnections();
     Connection* connection(int);
     string connect(Module*, int, Module*, int);
     int disconnect(const string&);
-    Connection* get_connect_by_handle (int handle); 	// mm
     
     Module* add_module(const string& packageName,
                        const string& categoryName,
                        const string& moduleName);
+    // For SCIRun2
+    Module* add_module2(const string& packageName,
+			const string& categoryName,
+			const string& moduleName);
     int delete_module(const string& name);
 
-    Module* get_module_by_id(const string& id); 	
-    Module* get_module_by_handle (int handle);		// mm
+    Module* get_module_by_id(const string& id);
 
-};
+    void schedule();
+    void attach(Scheduler*);
+  };
 
 } // End namespace SCIRun
 

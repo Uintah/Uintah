@@ -29,81 +29,68 @@
  */
 
 #include <Dataflow/Network/Port.h>
-
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
-
 #include <iostream>
-using std::cerr;
-#include <stdio.h>
-
-namespace SCIRun {
+using namespace std;
+using namespace SCIRun;
 
 Port::Port(Module* module, const string& type_name,
-	   const string& portname, const string& colorname,
-	   int protocols)
-: type_name(type_name), portname(portname), colorname(colorname),
-  protocols(protocols), u_proto(0), module(module), which_port(-1),
-  portstate(Off)
+	   const string& port_name, const string& color_name)
+: module(module), which_port(-1), portstate(Off),
+  type_name(type_name), port_name(port_name), color_name(color_name)
 {
-}
-
-IPort::IPort(Module* module, const string& type_name,
-	     const string& portname, const string& colorname,
-	     int protocols)
-: Port(module, type_name, portname, colorname, protocols)
-{
-}
-
-OPort::OPort(Module* module, const string& type_name,
-	     const string& portname, const string& colorname,
-	     int protocols)
-: Port(module, type_name, portname, colorname, protocols)
-{
-}
-
-void Port::attach(Connection* conn)
-{
-    connections.push_back(conn);
-    module->connection(Module::Connected, which_port, this==conn->oport);
-}
-
-void Port::detach(Connection* conn)
-{
-    unsigned int i;
-    for (i=0; i<connections.size(); i++)
-	if (connections[i] == conn) break;
-    if (i == connections.size()) {
-	cerr << "Error: connection not found!\n";
-	return;
-    }
-    connections.erase(connections.begin() + i);
-    module->connection(Module::Disconnected, which_port, this==conn->oport);
 }
 
 int Port::nconnections()
 {
-    return connections.size();
-}
-
-int Port::using_protocol()
-{
-    return u_proto;
-}
-
-Connection* Port::connection(int i)
-{
-    return connections[i];
+  return connections.size();
 }
 
 Module* Port::get_module()
 {
-    return module;
+  return module;
 }
 
 int Port::get_which_port()
 {
-    return which_port;
+  return which_port;
+}
+
+void Port::attach(Connection* conn)
+{
+  connections.push_back(conn);
+  module->connection(Connected, which_port, this==conn->oport);
+}
+
+void Port::detach(Connection* conn)
+{
+  unsigned int i;
+  for (i=0; i<connections.size(); i++)
+    if (connections[i] == conn) break;
+  if (i == connections.size()) {
+    cerr << "Error: connection not found!\n";
+    return;
+  }
+  connections.erase(connections.begin() + i);
+  module->connection(Disconnected, which_port, this==conn->oport);
+}
+
+Connection* Port::connection(int i)
+{
+  return connections[i];
+}
+
+IPort::IPort(Module* module, const string& type_name,
+	     const string& port_name, const string& color_name)
+  : Port(module, type_name, port_name, color_name)
+{
+}
+
+OPort::OPort(Module* module, const string& type_name,
+	     const string& port_name, const string& color_name)
+  : Port(module, type_name, port_name, color_name)
+{
 }
 
 void Port::set_which_port(int wp)
@@ -131,7 +118,7 @@ void IPort::update_light()
     }
     char str[1000];
     sprintf(str,"%s lightIPort %d %s",module->id.c_str(),which_port,color);
-    TCL::execute(str);
+    module->getGui()->execute(str);
 }
 
 void OPort::update_light()
@@ -158,28 +145,16 @@ void OPort::update_light()
     }
     char str[1000];
     sprintf(str,"%s lightOPort %d %s",module->id.c_str(),which_port,color);
-    TCL::execute(str);
+    module->getGui()->execute(str);
 }
 
-void IPort::turn_on(PortState st)
+void Port::turn_on(PortState st)
 {
     portstate=st;
     update_light();
 }
 
-void IPort::turn_off()
-{
-    portstate=Off;
-    update_light();
-}
-
-void OPort::turn_on(PortState st)
-{
-    portstate=st;
-    update_light();
-}
-
-void OPort::turn_off()
+void Port::turn_off()
 {
     portstate=Off;
     update_light();
@@ -187,17 +162,12 @@ void OPort::turn_off()
 
 string Port::get_typename()
 {
-    return type_name;
-}
-
-void Port::set_portname(string& newname)
-{
-  portname = newname;
+  return type_name;
 }
 
 string Port::get_portname()
 {
-    return portname;
+  return port_name;
 }
 
 Port::~Port()
@@ -212,11 +182,7 @@ OPort::~OPort()
 {
 }
 
-
 string Port::get_colorname()
 {
-    return colorname;
+  return color_name;
 }
-
-} // End namespace SCIRun
-

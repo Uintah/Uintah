@@ -18,13 +18,15 @@
 #include <Dataflow/Network/PackageDBHandler.h>
 
 #include <Core/Containers/StringUtil.h>
+#include <Core/GuiInterface/GuiInterface.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Dataflow/Network/NetworkEditor.h>
 
 namespace SCIRun {
 
 
-PackageDBHandler::PackageDBHandler()
+PackageDBHandler::PackageDBHandler(GuiInterface* gui)
+  : gui(gui)
 {
   foundError=false;
 }
@@ -36,27 +38,27 @@ PackageDBHandler::~PackageDBHandler()
 void PackageDBHandler::error(const SAXParseException& e)
 {
   foundError=true;
-  postMessage(string("Error at (file ")+xmlto_string(e.getSystemId())
-	      +", line "+to_string(e.getLineNumber())
-	      +", char "+to_string(e.getColumnNumber())
-	      +"): "+xmlto_string(e.getMessage()));
+  gui->postMessage(string("Error at (file ")+xmlto_string(e.getSystemId())
+		   +", line "+to_string(e.getLineNumber())
+		   +", char "+to_string(e.getColumnNumber())
+		   +"): "+xmlto_string(e.getMessage()));
 }
 
 void PackageDBHandler::fatalError(const SAXParseException& e)
 {
   foundError=true;
-  postMessage(string("Fatal Error at (file ")+xmlto_string(e.getSystemId())
-	      +", line "+to_string(e.getLineNumber())
-	      +", char "+to_string(e.getColumnNumber())
-	      +"): "+xmlto_string(e.getMessage()));
+  gui->postMessage(string("Fatal Error at (file ")+xmlto_string(e.getSystemId())
+		   +", line "+to_string(e.getLineNumber())
+		   +", char "+to_string(e.getColumnNumber())
+		   +"): "+xmlto_string(e.getMessage()));
 }
 
 void PackageDBHandler::warning(const SAXParseException& e)
 {
-  postMessage(string("Warning at (file ")+xmlto_string(e.getSystemId())
-	      +", line "+to_string(e.getLineNumber())
-	      +", char "+to_string(e.getColumnNumber())
-	      +"): "+xmlto_string(e.getMessage()));
+  gui->postMessage(string("Warning at (file ")+xmlto_string(e.getSystemId())
+		   +", line "+to_string(e.getLineNumber())
+		   +", char "+to_string(e.getColumnNumber())
+		   +"): "+xmlto_string(e.getMessage()));
 }
 
 void PackageDBHandler::resetErrors()
