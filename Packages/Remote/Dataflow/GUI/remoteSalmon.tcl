@@ -109,7 +109,9 @@ itcl_class Roe {
 	# OpenGL is the preferred renderer, X11 the next best.
 	# Otherwise just pick the first one for the default
 	global $this-renderer
-	if {[lsearch -exact $r OpenGL] != -1} {
+	if {[lsearch -exact $r OpenGLServer] != -1} {
+	    set $this-renderer OpenGLServer
+	} elseif {[lsearch -exact $r OpenGL] != -1} {
 	    set $this-renderer OpenGL
 	} elseif {[lsearch -exact $r X11] != -1} {
 	    set $this-renderer X11
