@@ -66,8 +66,7 @@ int query_OpenGL()
   if (!have_opengl)
     cerr << "glXQueryExtension() returned NULL.\n"
       "** XFree86 NOTE **  Do you have the line 'Load \"glx\"'"
-      " in the Modules section of your XF86Config file?"
-         << endl;
+      " in the Modules section of your XF86Config file?\n";
   return have_opengl;
 }
 
@@ -195,7 +194,7 @@ void OpenGL::redraw(Viewer* s, ViewWindow* r, double _tbeg, double _tend,
   send_mb.send(DO_REDRAW);
   int rc=recv_mb.receive();
   if(rc != REDRAW_DONE){
-    cerr << "Wanted redraw_done, but got: " << r << endl;
+    cerr << "Wanted redraw_done, but got: " << r << "\n";
   }
 }
 
@@ -451,7 +450,8 @@ void OpenGL::redraw_frame()
     
     GLenum errcode;
     while((errcode=glGetError()) != GL_NO_ERROR){
-      cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+      cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) 
+	   << "\n";
     }
     
     // Do the redraw loop for each time value
@@ -754,7 +754,7 @@ void OpenGL::redraw_frame()
                           xres, yres,
                           GL_DEPTH_COMPONENT, GL_FLOAT,
                           pixel_depth_data );
-	    //            cerr << "(read from (0,0) to (" << xres << "," << yres << ")" << endl;
+	    //            cerr << "(read from (0,0) to (" << xres << "," << yres << ")\n";
           }
 	  
 	  // Wait for the right time before swapping buffers
@@ -811,7 +811,8 @@ void OpenGL::redraw_frame()
 				// Look for errors
       GLenum errcode;
       while((errcode=glGetError()) != GL_NO_ERROR){
-	cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+	cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) 
+	     << "\n";
       }
       
 				// Report statistics
@@ -917,7 +918,7 @@ void OpenGL::get_pick(Viewer*, ViewWindow*, int x, int y,
   for(;;){
     int r=recv_mb.receive();
     if(r != PICK_DONE){
-      cerr << "WANTED A PICK!!! (got back " << r << endl;
+      cerr << "WANTED A PICK!!! (got back " << r << "\n";
     } else {
       pick_obj=ret_pick_obj;
       pick_pick=ret_pick_pick;
@@ -1019,7 +1020,8 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
     int hits=glRenderMode(GL_RENDER);
     GLenum errcode;
     while((errcode=glGetError()) != GL_NO_ERROR){
-      cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+      cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) 
+	   << "\n";
     }
     TCLTask::unlock();
     GLuint min_z;
@@ -1034,7 +1036,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
     GLuint hit_pick=0;
     GLuint hit_pick_index = 0x12345678;  // need for object indexing
 #endif
-    //cerr << "hits=" << hits << endl;
+    //cerr << "hits=" << hits << "\n";
     if(hits >= 1){
       int idx=0;
       min_z=0;
@@ -1042,7 +1044,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
       for (int h=0; h<hits; h++) {
 	int nnames=pick_buffer[idx++];
 	GLuint z=pick_buffer[idx++];
-	//cerr << "h=" << h << ", nnames=" << nnames << ", z=" << z << endl;
+	//cerr << "h=" << h << ", nnames=" << nnames << ", z=" << z << "\n";
 	if (nnames > 1 && (!have_one || z < min_z)) {
 	  min_z=z;
 	  have_one=1;
@@ -1060,7 +1062,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
 #else
 	  // hit_obj=pick_buffer[idx++];
 	  // hit_obj_index=pick_buffer[idx++];
-	  //for(int i=idx; i<idx+nnames; ++i) cerr << pick_buffer[i] << endl;
+	  //for(int i=idx; i<idx+nnames; ++i) cerr << pick_buffer[i] << "\n";
 	  idx+=nnames-3; // Skip to the last one...
 	  hit_pick=pick_buffer[idx++];
 	  hit_obj=pick_buffer[idx++];
@@ -1077,7 +1079,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
       pick_obj=(GeomObj*)hit_obj;
       pick_pick=(GeomPick*)hit_pick;
       pick_obj->getId(pick_index); //(int)hit_pick_index;
-      //cerr << "pick_pick=" << pick_pick << ", pick_index="<<pick_index<<endl;
+      //cerr << "pick_pick=" << pick_pick << ", pick_index="<<pick_index<<"\n";
     }
   }
   viewer->geomlock.readUnlock();
@@ -1089,7 +1091,7 @@ void OpenGL::dump_image(const string& name, const string& /* type */)
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT,vp);
   int n=3*vp[2]*vp[3];
-  cerr << "Dumping: " << vp[2] << "x" << vp[3] << endl;
+  cerr << "Dumping: " << vp[2] << "x" << vp[3] << "\n";
   unsigned char* pxl=scinew unsigned char[n];
   glPixelStorei(GL_PACK_ALIGNMENT,1);
   glReadBuffer(GL_FRONT);
@@ -1194,7 +1196,7 @@ void ViewWindow::setState(DrawInfoOpenGL* drawinfo,string tclID)
       setState(drawinfo,globals);	    
       return; // if they are using the default, con't change
     } else {
-      cerr << "Unknown shading(" << val << "), defaulting to phong" << endl;
+      cerr << "Unknown shading(" << val << "), defaulting to phong" << "\n";
       drawinfo->set_drawtype(DrawInfoOpenGL::Gouraud);
       drawinfo->lighting=1;
     }
@@ -1609,7 +1611,9 @@ void OpenGL::setvisual(const string& wname, int which, int width, int height)
 	       " -visual " + to_string((int)visuals[which]->visualid) +
 	       " -direct true" +
 	       " -geometry " + to_string(width) + "x" + to_string(height));
-  //cerr << string("opengl ")+wname+" -visual "+to_string((int)visuals[which]->visualid)+" -direct true -geometry "+to_string(width)+"x"+to_string(height) << endl;
+  //cerr << string("opengl ")+wname+" -visual " +
+  //  to_string((int)visuals[which]->visualid)+" -direct true -geometry " +
+  //  to_string(width)+"x"+to_string(height) << "\n";
   //cerr << "done choosing visual\n";
   
   myname = wname;
@@ -1642,12 +1646,13 @@ void OpenGL::real_saveImage(const string& name,
   glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
   
   if(type == "raw"){
-    cerr << "Saving raw file "<<name<<":  size = " << vp[2] << "x" << vp[3] << endl;
+    cerr << "Saving raw file "<<name<<":  size = " << vp[2] << "x" << vp[3] 
+	 << "\n";
     ofstream dumpfile(name.c_str());
     dumpfile.write((const char *)pxl,n);
     dumpfile.close();
   } else if( type == "ppm") {
-    cerr << "Saving PPM file "<< name <<endl;
+    cerr << "Saving PPM file " << name << "\n";
 
     int width = vp[2];
     int height = vp[3];
@@ -1701,7 +1706,7 @@ void OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
   if(datamask&GEOM_COLORBUFFER){
     ColorImage* img = res->colorbuffer = new ColorImage(xres, yres);
     float* data=new float[xres*yres*3];
-    cerr << "xres=" << xres << ", yres=" << yres << endl;
+    cerr << "xres=" << xres << ", yres=" << yres << "\n";
     WallClockTimer timer;
     timer.start();
     glReadPixels(0, 0, xres, yres, GL_RGB, GL_FLOAT, data);
@@ -1736,7 +1741,7 @@ void OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
   if(datamask&(GEOM_COLORBUFFER|GEOM_DEPTHBUFFER)){
     GLenum errcode;
     while((errcode=glGetError()) != GL_NO_ERROR){
-      cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+      cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << "\n";
     }
     TCLTask::unlock();
   }
@@ -1759,7 +1764,7 @@ void OpenGL::StartMpeg(const string& fname)
   // was ("IIIIIIIIIIIIIII");
   options.search_range[1]=0;
   if( !MPEGe_open(output, &options ) ){
-    cerr<<"MPEGe library initialisation failure!:"<<options.error<<endl;
+    cerr << "MPEGe library initialisation failure!:" << options.error << "\n";
     return;
   }
 #endif // MPEG
@@ -1814,7 +1819,7 @@ void OpenGL::AddMpegFrame()
   }
     
   if( !MPEGe_image(image, &options) ){
-    cerr<<"MPEGe_image failure:"<<options.error<<endl;
+    cerr << "MPEGe_image failure:" << options.error << "\n";
   }
 #endif // MPEG
 }
