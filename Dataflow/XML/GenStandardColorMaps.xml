@@ -113,7 +113,7 @@
 	</note>
       </description>
     </parameter>
-    <img>../doc/GenStandardColorMapsGUI.gif</img>
+    <img>../Modules/Visualization/doc/GenStandardColorMapsGUI.gif</img>
   </gui>
   <testing>
   </testing>
