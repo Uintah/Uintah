@@ -21,8 +21,8 @@ void SelectableGroup::light_intersect(const Ray& ray, HitInfo& hit,
 			    Color& atten, DepthStats* st,
 			    PerProcessorContext* ppc)
 {
-  double min_t = MAXDOUBLE;
-  if (!bbox.intersect(ray, min_t)) return;
+  //double min_t = hit.min_t;
+  //if (!bbox.intersect(ray, min_t)) return;
 
   if (child >=0) objs[child]->light_intersect(ray, hit, atten, st, ppc);
 }
@@ -30,6 +30,8 @@ void SelectableGroup::light_intersect(const Ray& ray, HitInfo& hit,
 void SelectableGroup::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 		      PerProcessorContext* ppc)
 {
+  //double min_t = hit.min_t;
+  //if (!bbox.intersect(ray, min_t)) return;
   if (child >=0) objs[child]->intersect(ray, hit, st, ppc);
 }
 
@@ -48,7 +50,9 @@ void SelectableGroup::animate(double t, bool& changed)
   //automatic cycling of child based on the clock passed in with t
   if (autoswitch) {
     int sec = (int)(t/autoswitch_secs);
+    int ochild = child;
     child = sec%objs.size(); //should probably watch for changes and then pass back changed
+    if ((child-ochild)) changed = true;
   }
 
   //animate all of them even if they aren't showing
@@ -62,4 +66,6 @@ void SelectableGroup::collect_prims(Array1<Object*>& prims)
   //do not let the acceleration structure go under this, or everything will show
   prims.add(this);
 }
+
+
 

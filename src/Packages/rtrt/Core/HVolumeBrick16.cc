@@ -1080,10 +1080,14 @@ bool HVolumeBrick16::interior_value_sublevels(double &ret_val, //value to be ret
     if (ix<nx-1 && iy<ny-1 && iz<nz-1) {
       //everything kosher, return it
 
+      //#define KLUGE
+#ifdef KLUGE
+	//slightly faster, and less acurate to return the avg of the voxel
+#undef KLUGE
 #define one_div_eight 0.125
 
       float avg = 0.0;
-      
+
       int idx000=xidx[ix]+yidx[iy]+zidx[iz];
       avg+=blockdata[idx000];
       int idx001=xidx[ix]+yidx[iy]+zidx[iz+1];
@@ -1109,6 +1113,45 @@ bool HVolumeBrick16::interior_value_sublevels(double &ret_val, //value to be ret
       avg -= datamin;
       avg /= (datamax - datamin);
       ret_val = avg;
+
+#else
+      
+      //slightly more accurate to do trilinear interpolation
+      //it's more subject to aliasing as well
+      int idx000=xidx[ix]+yidx[iy]+zidx[iz];
+      double b000=blockdata[idx000];
+      int idx001=xidx[ix]+yidx[iy]+zidx[iz+1];
+      double b001=blockdata[idx001];
+      int idx010=xidx[ix]+yidx[iy+1]+zidx[iz];
+      double b010=blockdata[idx010];
+      int idx011=xidx[ix]+yidx[iy+1]+zidx[iz+1];
+      double b011=blockdata[idx011];
+      int idx100=xidx[ix+1]+yidx[iy]+zidx[iz];
+      double b100=blockdata[idx100];
+      int idx101=xidx[ix+1]+yidx[iy]+zidx[iz+1];
+      double b101=blockdata[idx101];
+      int idx110=xidx[ix+1]+yidx[iy+1]+zidx[iz];
+      double b110=blockdata[idx110];
+      int idx111=xidx[ix+1]+yidx[iy+1]+zidx[iz+1];
+      double b111=blockdata[idx111];
+
+      double u = (where.x()-cellcorner.x())/ixs;
+      double v = (where.y()-cellcorner.y())/iys;
+      double w = (where.z()-cellcorner.z())/izs;
+
+      double u00 = (1-u)*b000 + u*b100;
+      double u01 = (1-u)*b001 + u*b101;
+      double u10 = (1-u)*b010 + u*b110;
+      double u11 = (1-u)*b011 + u*b111;
+      
+      double v0 = (1-v)*u00 + v*u10;
+      double v1 = (1-v)*u01 + v*u11;
+
+      ret_val = (1-w)*v0+w*v1;
+      ret_val -= datamin;
+      ret_val /= (datamax - datamin);
+
+#endif
 
       return true;
 

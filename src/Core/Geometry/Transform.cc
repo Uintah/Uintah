@@ -361,9 +361,11 @@ void Transform::project(const Vector& p, Vector& res) const
 
 void Transform::project_inplace(Vector& p) const
 {
-    p.x(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z());
-    p.y(mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z());
-    p.z(mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z());
+  Vector t = p;
+  t.x(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z());
+  t.y(mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z());
+  t.z(mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z());
+  p = t;
 }
 
 Vector Transform::project(const Vector& p) const
@@ -382,10 +384,13 @@ void Transform::project(const Point& p, Point& res) const
 
 void Transform::project_inplace(Point& p) const
 {
-    double invw=1./(mat[3][0]*p.x()+mat[3][1]*p.y()+mat[3][2]*p.z()+mat[3][3]);
-    p.x(invw*(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z()+mat[0][3]));
-    p.y(invw*(mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z()+mat[1][3]));
-    p.z(invw*(mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z()+mat[2][3]));
+ 
+  Point t = p;
+  double invw=1./(mat[3][0]*p.x()+mat[3][1]*p.y()+mat[3][2]*p.z()+mat[3][3]);
+  t.x(invw*(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z()+mat[0][3]));
+  t.y(invw*(mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z()+mat[1][3]));
+  t.z(invw*(mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z()+mat[2][3]));
+  p = t;
 }
 
 Point Transform::unproject(const Point& p)
@@ -413,15 +418,17 @@ void Transform::unproject(const Point& p, Point& res)
 
 void Transform::unproject_inplace(Point& p) 
 {
+  Point t = p;
       if(!inverse_valid) compute_imat();
       double invw=
         1./(imat[3][0]*p.x()+imat[3][1]*p.y()+imat[3][2]*p.z()+imat[3][3]);
-      p.x(invw*
+      t.x(invw*
           (imat[0][0]*p.x()+imat[0][1]*p.y()+imat[0][2]*p.z()+imat[0][3]));
-      p.y(invw*
+      t.y(invw*
           (imat[1][0]*p.x()+imat[1][1]*p.y()+imat[1][2]*p.z()+imat[1][3]));
-    p.z(invw*
+      t.z(invw*
           (imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z()+imat[2][3]));
+      p = t;
 }
 
 Vector Transform::unproject(const Vector& p)
@@ -442,10 +449,12 @@ void Transform::unproject(const Vector& v, Vector& res)
 
 void Transform::unproject_inplace(Vector& v) 
 {
+  Vector t = v;
   if(!inverse_valid) compute_imat();
-  v.x(imat[0][0]*v.x()+imat[0][1]*v.y()+imat[0][2]*v.z());
-  v.y(imat[1][0]*v.x()+imat[1][1]*v.y()+imat[1][2]*v.z());
-  v.z(imat[2][0]*v.x()+imat[2][1]*v.y()+imat[2][2]*v.z());
+  t.x(imat[0][0]*v.x()+imat[0][1]*v.y()+imat[0][2]*v.z());
+  t.y(imat[1][0]*v.x()+imat[1][1]*v.y()+imat[1][2]*v.z());
+  t.z(imat[2][0]*v.x()+imat[2][1]*v.y()+imat[2][2]*v.z());
+  v = t;
 }
 
 Vector Transform::project_normal(const Vector& p)

@@ -119,6 +119,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/CutVolumeDpy.cc \
 	$(SRCDIR)/CutPlaneDpy.cc \
 	$(SRCDIR)/ColorMap.cc \
+	$(SRCDIR)/SpinningInstance.cc \
 	$(SRCDIR)/plyfile.c
 
 SUBDIRS := $(SRCDIR)/Shadows
