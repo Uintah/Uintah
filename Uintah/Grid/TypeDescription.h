@@ -39,6 +39,7 @@ namespace Uintah {
       enum Type {
 	 CCVariable,
 	 NCVariable,
+	 FCVariable,
 	 ParticleVariable,
 	 Point,
 	 Vector,
@@ -92,6 +93,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.6  2000/06/14 23:27:34  jas
+// Added FCVariables to enum.
+//
 // Revision 1.5  2000/06/02 17:22:14  guilkey
 // Added long_type to the the TypeDescription and TypeUtils.
 //
