@@ -8,11 +8,7 @@
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/NCVariable.h>
-#include <Uintah/Grid/ParticleSet.h>
-#include <Uintah/Grid/ParticleVariable.h>
-#include <Uintah/Interface/ProblemSpec.h>
-#include <Uintah/Grid/NodeIterator.h>
+#include <Uintah/Interface/ProblemSpec.h> 
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/PerPatch.h>
 #include <Uintah/Grid/ReductionVariable.h>
@@ -38,9 +34,9 @@
 //______________________________________________________________________
 //  DEBUGGING SWITCHES
 #define  switch_Debug_advectQFirst          0
-#define  switchDebug_equilibration_press    1
+#define  switchDebug_equilibration_press    1 
 #define  switchDebug_explicit_press         1
-#define  switchDebug_advance_advect         1
+#define  switchDebug_advance_advect        1
 
 
 using std::vector;
@@ -69,14 +65,22 @@ ICE::ICE(const ProcessorGroup* myworld)
                                 CCVariable<eflux>::getTypeDescription());
   OFE_CCLabel = scinew VarLabel("OFE_CC",
                                 CCVariable<eflux>::getTypeDescription());
+  IFC_CCLabel = scinew VarLabel("IFC_CC",
+                                CCVariable<cflux>::getTypeDescription());
+  OFC_CCLabel = scinew VarLabel("OFC_CC",
+                                CCVariable<cflux>::getTypeDescription());
   q_outLabel = scinew VarLabel("q_out",
                                 CCVariable<fflux>::getTypeDescription());
   q_out_EFLabel = scinew VarLabel("q_out_EF",
                                 CCVariable<eflux>::getTypeDescription());
+  q_out_CFLabel = scinew VarLabel("q_out_CF",
+                                CCVariable<cflux>::getTypeDescription());
   q_inLabel = scinew VarLabel("q_in",
                                 CCVariable<fflux>::getTypeDescription());
   q_in_EFLabel = scinew VarLabel("q_in_EF",
                                 CCVariable<eflux>::getTypeDescription());
+  q_in_CFLabel = scinew VarLabel("q_in_CF",
+                                CCVariable<cflux>::getTypeDescription());
 
 }
 
@@ -101,8 +105,10 @@ Programmer         Date       Description
 ----------         ----       -----------                 
 John Schmidt      10/04/00                              
 _____________________________________________________________________*/
-void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
-		       SimulationStateP& sharedState)
+void ICE::problemSetup(
+    const ProblemSpecP& prob_spec, 
+    GridP&              grid,
+    SimulationStateP&   sharedState)
 {
   d_sharedState = sharedState;
   d_SMALL_NUM = 1.e-12;
@@ -111,11 +117,11 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
   ProblemSpecP cfl_ps = prob_spec->findBlock("CFD");
   cfl_ps->require("cfl",d_CFL);
-  cout << "cfl = " << d_CFL << endl;
+ 
 
   ProblemSpecP time_ps = prob_spec->findBlock("Time");
   time_ps->require("delt_init",d_initialDt);
-  cout << "Initial dt = " << d_initialDt << endl;
+ 
     
   // Search for the MaterialProperties block and then get the MPM section
   ProblemSpecP mat_ps       =  prob_spec->findBlock("MaterialProperties");
@@ -136,16 +142,21 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   exch_ps->require("momentum",d_K_mom);
   exch_ps->require("heat",d_K_heat);
 
-  for (int i = 0; i<(int)d_K_mom.size(); i++)
-    cout << "K_mom = " << d_K_mom[i] << endl;
-  for (int i = 0; i<(int)d_K_heat.size(); i++)
-    cout << "K_heat = " << d_K_heat[i] << endl;
-
-  cout << "Number of ICE materials: " << d_sharedState->getNumICEMatls()<< endl;
 
   ProblemSpecP ic_ps = prob_spec->findBlock("InitialConditions");
   ProblemSpecP ice_ic_ps = ic_ps->findBlock("ICE");
-  ice_ic_ps->require("pressure",d_pressure);   
+  ice_ic_ps->require("pressure",d_pressure);  
+  //__________________________________
+  // output 
+    cout << "cfl = " << d_CFL << endl;
+    cout << "Initial dt = " << d_initialDt << endl;
+    cout << "Number of ICE materials: " << d_sharedState->getNumICEMatls()<< endl;
+
+    for (int i = 0; i<(int)d_K_mom.size(); i++)
+        cout << "K_mom = " << d_K_mom[i] << endl;
+    for (int i = 0; i<(int)d_K_heat.size(); i++)
+        cout << "K_heat = " << d_K_heat[i] << endl;
+   
 }
 //STOP_DOC
 
@@ -360,6 +371,44 @@ void ICE::actuallyInitialize(
       new_dw->put(wvel_FC,    lb->wvel_FCLabel,      dwindex,patch);
       new_dw->put(visc_CC,    lb->viscosity_CCLabel, dwindex,patch);
   }
+  //__________________________________
+  //    Output initial Cond
+    cout << " Initial Conditions" << endl;
+    
+    IntVector lowIndex     = patch->getInteriorCellLowIndex();
+    IntVector highIndex    = patch->getInteriorCellHighIndex();
+    cout << "\n\t xLoLimit   = "<<lowIndex.x()<< 
+            "\t yLoLimit   = "<<lowIndex.y()<<
+            "\t zLoLimit   = "<<lowIndex.z()<< endl;
+    cout << "\t xHiLimit   = "<<highIndex.x()<< 
+            "\t yHiLimit   = "<<highIndex.y()<<
+            "\t zHiLimit   = "<<highIndex.z()<< endl;
+            
+    IntVector loIndex   = patch->getCellLowIndex();
+    IntVector hiIndex   = patch->getCellHighIndex();
+    cout << "\n\txLo_GC   = "<<loIndex.x()<< 
+            "\t yLo_GC   = "<<loIndex.y()<<
+            "\t zLo_GC   = "<<loIndex.z()<< endl;
+    cout << "\t xHi_GC   = "<<hiIndex.x()<< 
+            "\t yHi_GC   = "<<hiIndex.y()<<
+            "\t zHi_GC   = "<<hiIndex.z()<< endl;
+    
+    Vector dx = patch->dCell();
+    cout << "\n\tdx     = "<< dx.x() << 
+            "\tdy     = "<< dx.y() << 
+            "\tdz     = "<< dx.z() << endl;
+              
+   for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) 
+  {
+    printData( patch, 1, "initialCond.", "rho",            rho_CC);
+    printData( patch, 1, "initialCond", "rho_micro",       rho_micro);
+    printData( patch, 1, "initialCond", "Temp",            Temp_CC);
+    printData( patch, 1, "initialCond", "vol_frac",        vol_frac_CC);
+    printData( patch, 1, "initialCond", "uvel_CC",         uvel_CC);
+    printData( patch, 1, "initialCond", "vvel_CC",         vvel_CC);
+    printData( patch, 1, "initialCond", "wvel_CC",         wvel_CC);
+
+   }
 }
 //STOP_DOC
 /* --------------------------------------------------------------------- 
@@ -507,7 +556,7 @@ void ICE::actuallyStep1b(
 
   press_new = press;
   
-  /*`==========TESTING==========*/ 
+  /*`==========DEBUG============*/ 
 #if switchDebug_equilibration_press
     printData( patch, 0, "TOP", "equilibrium press press_new",
               press_new);
@@ -520,7 +569,7 @@ void ICE::actuallyStep1b(
     printData( patch, 1, "TOP", "vol_frac",        vol_frac[m]);
    }
  #endif
- /*==========TESTING==========`*/
+ /*==========DEBUG============`*/
   //__________________________________
   //  Loop over every cell     
   int count;
@@ -724,7 +773,7 @@ void ICE::actuallyStep1b(
   new_dw->put(press_new,lb->press_CCLabel,0,patch);
   
   
-/*`==========TESTING==========*/ 
+/*`==========DEBUG============*/ 
 #if switchDebug_equilibration_press
     printData( patch, 1, "BOTTOM", "equilibrium press press_new",
               press_new);
@@ -735,7 +784,7 @@ void ICE::actuallyStep1b(
     printData( patch, 1, "BOTTOM", "vol_frac",      vol_frac[m]);
    }
 #endif
- /*==========TESTING==========`*/
+ /*==========DEBUG============`*/
   
 }
 //STOP_DOC
@@ -1354,11 +1403,9 @@ void ICE::actuallyStep2(
 //   Allocate the temporary variables needed for advection
 //   These arrays get re-used for each material
   CCVariable<double> q_CC,      q_advected;
-  CCVariable<fflux> IFS,        OFS,                    
-                    q_out,      q_in;
-  CCVariable<eflux> IFE,        OFE,                    
-                    q_out_EF,   q_in_EF;
-                    
+  CCVariable<fflux> IFS,        OFS,    q_out,      q_in;
+  CCVariable<eflux> IFE,        OFE,    q_out_EF,   q_in_EF;
+  CCVariable<cflux> IFC,        OFC,    q_out_CF,   q_in_CF;                    
   CCVariable<double> pressure;
   CCVariable<double> delPress;
   CCVariable<double> pressdP;
@@ -1372,11 +1419,15 @@ void ICE::actuallyStep2(
   new_dw->allocate(OFS,        OFS_CCLabel,         0, patch);  
   new_dw->allocate(IFE,        IFE_CCLabel,         0, patch);  
   new_dw->allocate(OFE,        OFE_CCLabel,         0, patch);  
+  new_dw->allocate(IFC,        IFC_CCLabel,         0, patch);  
+  new_dw->allocate(OFC,        OFC_CCLabel,         0, patch);
   new_dw->allocate(q_out,      q_outLabel,          0, patch);
-  new_dw->allocate(q_out_EF,   q_out_EFLabel,       0, patch);  
+  new_dw->allocate(q_out_EF,   q_out_EFLabel,       0, patch);
+  new_dw->allocate(q_out_CF,   q_out_CFLabel,       0, patch);   
   new_dw->allocate(q_in,       q_inLabel,           0, patch);
   new_dw->allocate(q_in_EF,    q_in_EFLabel,        0, patch);
-
+  new_dw->allocate(q_in_CF,    q_in_CFLabel,        0, patch);
+  
   CCVariable<double> term1, term2, term3;
   new_dw->allocate(term1, lb->term3Label, 0, patch);
   new_dw->allocate(term2, lb->term3Label, 0, patch);
@@ -1407,14 +1458,13 @@ void ICE::actuallyStep2(
 						     dwindex,  patch,Ghost::None, 0);
       new_dw->get(speedSound,lb->speedSound_equiv_CCLabel,
 					            dwindex,  patch,Ghost::None, 0);
-
-
       //__________________________________
       // Advection preprocessing
       // - divide vol_frac_cc/vol
       influxOutfluxVolume(  uvel_FC,    vvel_FC,    wvel_FC,
                             delT,       patch,
-                            OFS,        OFE,        IFS,        IFE);
+                            OFS,        OFE,        OFC,
+                            IFS,        IFE,        IFC);
 
         for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();
 	    iter++)
@@ -1426,16 +1476,17 @@ void ICE::actuallyStep2(
         }
         //__________________________________
         //   First order advection of q_CC
-        advectQFirst(       q_CC,       patch,
-                            OFS,        OFE,        IFS,        IFE,
-                            q_out,      q_out_EF,   q_in,   q_in_EF,
-                            q_advected);
-/*`==========TESTING==========*/ 
+      advectQFirst( q_CC,       patch,
+                    OFS,        OFE,        OFC,        
+                    IFS,        IFE,        IFC,
+                    q_out,      q_out_EF,   q_out_CF,
+                    q_in,       q_in_EF,    q_in_CF,    q_advected);
+/*`==========DEBUG============*/ 
 #if switchDebug_explicit_press
     printData( patch, 0, "middle of explicit Pressure", "q_advected", q_advected);
     printData( patch, 0, " ",                           "vol_frac",   vol_frac);
 #endif
- /*==========TESTING==========`*/
+ /*==========DEBUG============`*/
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); 
 	  iter++)
       {
@@ -1483,13 +1534,12 @@ void ICE::actuallyStep2(
   new_dw->put(delPress, lb->delPress_CCLabel, 0, patch);
   new_dw->put(pressdP,  lb->pressdP_CCLabel,  0, patch);
   
-  
-/*`==========TESTING==========*/ 
+/*`==========DEBUG============*/ 
 #if switchDebug_explicit_press
     printData( patch, 0, "Bottom of explicit Pressure",   "delPress",  delPress);
     printData( patch, 1, " ",                             "pressdP",   pressdP);
 #endif
- /*==========TESTING==========`*/
+ /*==========DEBUG============`*/
 }
 //STOP_DOC
 /* ---------------------------------------------------------------------  
@@ -1569,7 +1619,7 @@ void ICE::actuallyStep3(
 
         sum_rho=0.0;
         sum_rho_adj  = 0.0;
-        /* THIS NEEDS TO BE CHANGED*/
+        
         for(int m = 0; m < numMatls; m++)
         {
 	    sum_rho      += (rho_CC[m][curcell] + d_SMALL_NUM);
@@ -1598,7 +1648,7 @@ void ICE::actuallyStep3(
         A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
         pressZ_FC[curcell+IntVector(0,0,1)]      =  A/((1/sum_rho) + (1.0/sum_rho_adj) );
 #endif
-      pressZ_FC[curcell+IntVector(0,0,1)] = 0.;
+      pressZ_FC[curcell+IntVector(0,0,1)] = 101325.0;
     }
   }
 
@@ -1995,7 +2045,7 @@ void ICE::actuallyStep5a(
 }
 //STOP_DOC                                                                 
 /*---------------------------------------------------------------------
- Function~  add_exchange_contribution_to_data_L_CC--
+ Function~  ICE::actuallyStep5b--
  Purpose~
    This function adds the energy exchange contribution to the 
    existing cell-centered lagrangian temperature
@@ -2319,10 +2369,6 @@ void ICE::actuallyStep6and7(
 #endif
 
   CCVariable<double> uvel_CC, vvel_CC, wvel_CC, rho_CC, visc_CC, cv_old, cv,temp;
-  
-  CCVariable<double> rho_CC_old, uvel_CC_old, vvel_CC_old, wvel_CC_old, 
-                     temp_CC_old;
-
   CCVariable<double> xmom_L_ME, ymom_L_ME, zmom_L_ME, int_eng_L_ME, mass_L;
   CCVariable<double> speedSound;
 
@@ -2334,20 +2380,25 @@ void ICE::actuallyStep6and7(
   // These arrays get re-used for each material, and for each
   // advected quantity
   CCVariable<double> q_CC, q_advected;
-  CCVariable<fflux> IFS,OFS,q_out,q_in;
-  CCVariable<eflux> IFE,OFE,q_out_EF,q_in_EF;
-
+  CCVariable<fflux> IFS, OFS, q_out, q_in;
+  CCVariable<eflux> IFE, OFE, q_out_EF, q_in_EF;
+  CCVariable<cflux> IFC, OFC, q_out_CF, q_in_CF;
+  
   new_dw->allocate(q_CC,       lb->q_CCLabel,       0, patch);
   new_dw->allocate(q_advected, lb->q_advectedLabel, 0, patch);
   new_dw->allocate(IFS,        IFS_CCLabel,         0, patch);
   new_dw->allocate(OFS,        OFS_CCLabel,         0, patch);
   new_dw->allocate(IFE,        IFE_CCLabel,         0, patch);
   new_dw->allocate(OFE,        OFE_CCLabel,         0, patch);
+  new_dw->allocate(IFC,        IFE_CCLabel,         0, patch);
+  new_dw->allocate(OFC,        OFE_CCLabel,         0, patch);
   new_dw->allocate(q_out,      q_outLabel,          0, patch);
   new_dw->allocate(q_out_EF,   q_out_EFLabel,       0, patch);
+  new_dw->allocate(q_out_CF,   q_out_CFLabel,       0, patch);
   new_dw->allocate(q_in,       q_inLabel,           0, patch);
   new_dw->allocate(q_in_EF,    q_in_EFLabel,        0, patch);
-
+  new_dw->allocate(q_in_CF,    q_in_CFLabel,        0, patch);
+  
   for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) 
   {
       //__________________________________
@@ -2355,19 +2406,7 @@ void ICE::actuallyStep6and7(
       //   - allocate memory in new dw
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int dwindex = ice_matl->getDWIndex();
-
-      old_dw->get(cv_old,     lb->cv_CCLabel,      dwindex,patch,Ghost::None,0);
-  
-/*`==========TESTING==========*/ 
-    old_dw->get(rho_CC_old,lb->rho_CCLabel,   dwindex, patch,Ghost::None, 0);
-    old_dw->get(cv_old,lb->cv_CCLabel,   dwindex, patch,Ghost::None, 0);
-    old_dw->get(rho_CC_old,lb->rho_CCLabel,   dwindex, patch,Ghost::None, 0);
-    old_dw->get(uvel_CC_old,lb->uvel_CCLabel,   dwindex, patch,Ghost::None, 0);
-    old_dw->get(vvel_CC_old,lb->vvel_CCLabel,   dwindex, patch,Ghost::None, 0);
-    old_dw->get(wvel_CC_old,lb->wvel_CCLabel,   dwindex, patch,Ghost::None, 0);
-    old_dw->get(temp_CC_old,lb->temp_CCLabel,   dwindex, patch,Ghost::None, 0);
-
- /*==========TESTING==========`*/     
+      old_dw->get(cv_old,lb->cv_CCLabel,   dwindex, patch,Ghost::None, 0);     
       new_dw->get(uvel_FC,   lb->uvel_FCMELabel,   dwindex,patch,Ghost::None,0);
       new_dw->get(vvel_FC,   lb->vvel_FCMELabel,   dwindex,patch,Ghost::None,0);
       new_dw->get(wvel_FC,   lb->wvel_FCMELabel,   dwindex,patch,Ghost::None,0);
@@ -2387,18 +2426,11 @@ void ICE::actuallyStep6and7(
       new_dw->allocate(vvel_CC,lb->vvel_CCLabel,       dwindex,patch);
       new_dw->allocate(wvel_CC,lb->wvel_CCLabel,       dwindex,patch);
       new_dw->allocate(visc_CC,lb->viscosity_CCLabel,  dwindex,patch);
-
-/*`==========TESTING==========*/ 
+ 
     cv = cv_old;
-    rho_CC = rho_CC_old;
-     uvel_CC = uvel_CC_old;
-     vvel_CC = vvel_CC_old;
-     wvel_CC = wvel_CC_old;
-     temp = temp_CC_old; 
- /*==========TESTING==========`*/
  
 
-/*`==========TESTING==========*/ 
+/*`==========DEBUG============*/ 
 #if switchDebug_advance_advect
     printData( patch,1, "TOP Advection",   "mass_L",      mass_L);
     printData( patch,1, "",   "xmom_L_ME",                xmom_L_ME);
@@ -2406,13 +2438,14 @@ void ICE::actuallyStep6and7(
     printData( patch,1, "",   "zmom_L_ME",                zmom_L_ME);
     printData( patch,1, "",   "int_eng_L_ME",             int_eng_L_ME);
 #endif
- /*==========TESTING==========`*/
+ /*==========DEBUG============`*/
       //__________________________________
       //   Advection preprocessings
       influxOutfluxVolume(
                   uvel_FC,    vvel_FC,      wvel_FC,
                   delT,       patch,
-                  OFS,        OFE,          IFS,        IFE);
+                  OFS,        OFE,          OFC,
+                  IFS,        IFE,          IFC);
 
       // outflowVolCentroid goes here if doing second order
       //outflowVolCentroid(uvel_FC,vvel_FC,wvel_FC,delT,dx,
@@ -2427,9 +2460,11 @@ void ICE::actuallyStep6and7(
       }
 
       advectQFirst( q_CC,       patch,
-                    OFS,        OFE,        IFS,        IFE,
-                    q_out,      q_out_EF,   q_in,       q_in_EF,   q_advected);
-
+                    OFS,        OFE,        OFC,        
+                    IFS,        IFE,        IFC,
+                    q_out,      q_out_EF,   q_out_CF,
+                    q_in,       q_in_EF,    q_in_CF,    q_advected);
+                    
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++)
       {
   #ifdef john_debug
@@ -2449,9 +2484,10 @@ void ICE::actuallyStep6and7(
       }
       
       advectQFirst( q_CC,       patch,
-                    OFS,        OFE,        IFS,        IFE,
-                    q_out,      q_out_EF,   q_in,       q_in_EF,   q_advected);
-
+                    OFS,        OFE,        OFC,        
+                    IFS,        IFE,        IFC,
+                    q_out,      q_out_EF,   q_out_CF,
+                    q_in,       q_in_EF,    q_in_CF,    q_advected);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++)
       {
@@ -2465,10 +2501,11 @@ void ICE::actuallyStep6and7(
           q_CC[*iter] = ymom_L_ME[*iter] * invvol;
       }
 
-       advectQFirst( q_CC,       patch,
-                    OFS,        OFE,        IFS,        IFE,
-                    q_out,      q_out_EF,   q_in,       q_in_EF,   q_advected);
-                    
+      advectQFirst( q_CC,       patch,
+                    OFS,        OFE,        OFC,        
+                    IFS,        IFE,        IFC,
+                    q_out,      q_out_EF,   q_out_CF,
+                    q_in,       q_in_EF,    q_in_CF,    q_advected);                    
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++)
       {
         mass = rho_CC[*iter] * vol;
@@ -2482,9 +2519,11 @@ void ICE::actuallyStep6and7(
       }
 
       advectQFirst( q_CC,       patch,
-                    OFS,        OFE,        IFS,        IFE,
-                    q_out,      q_out_EF,   q_in,       q_in_EF,   q_advected);
-                    
+                    OFS,        OFE,        OFC,        
+                    IFS,        IFE,        IFC,
+                    q_out,      q_out_EF,   q_out_CF,
+                    q_in,       q_in_EF,    q_in_CF,    q_advected);
+                                        
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++)
       {
         mass = rho_CC[*iter] * vol;
@@ -2498,8 +2537,10 @@ void ICE::actuallyStep6and7(
       }
 
       advectQFirst( q_CC,       patch,
-                    OFS,        OFE,        IFS,        IFE,
-                    q_out,      q_out_EF,   q_in,       q_in_EF,   q_advected);
+                    OFS,        OFE,        OFC,        
+                    IFS,        IFE,        IFC,
+                    q_out,      q_out_EF,   q_out_CF,
+                    q_in,       q_in_EF,    q_in_CF,    q_advected);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++)
       {
@@ -2507,15 +2548,7 @@ void ICE::actuallyStep6and7(
           temp[*iter] = (int_eng_L_ME[*iter] + q_advected[*iter])/
                                                           (mass*cv[*iter]);
       }
-/*`==========TESTING==========*/ 
-#if switchDebug_advance_advect
-    printData( patch,0, "Bottom Advection before BC's",   "rho",      rho_CC);
-    printData( patch,0, "",   "uvel_CC",  uvel_CC);
-    printData( patch,0, "",   "vvel_CC",  vvel_CC);
-    printData( patch,0, "",   "wvel_CC",  wvel_CC);
-    printData( patch,0, "",   "Temp_CC",  temp);
-#endif
- /*==========TESTING==========`*/
+
   #ifdef john_debug
       cout << "Before applying bcs  6&7cd. . . " << endl << endl;
       for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
@@ -2534,7 +2567,15 @@ void ICE::actuallyStep6and7(
       setBC(uvel_CC,  "Velocity",     "x",    patch);
       setBC(vvel_CC,  "Velocity",     "y",    patch);
       setBC(wvel_CC,  "Velocity",     "z",    patch);
-
+/*`==========DEBUG============*/ 
+#if switchDebug_advance_advect
+    printData( patch,1, "AFTER Advection before BC's",   "rho",      rho_CC);
+    printData( patch,1, "",   "uvel_CC",  uvel_CC);
+    printData( patch,1, "",   "vvel_CC",  vvel_CC);
+    printData( patch,1, "",   "wvel_CC",  wvel_CC);
+    printData( patch,1, "",   "Temp_CC",  temp);
+#endif
+ /*==========DEBUG============`*/
   #ifdef john_debug
       cout << "After applying bcs . . . " << endl << endl;
       for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
@@ -3023,6 +3064,7 @@ Implementation notes:
  Programmer         Date       Descriptionø
  ----------         ----       -----------
   Jim Guilkey       10/04/00
+  Todd              01/02/01    Added corner flux terms and completed 3d edges
 
 See schematic diagram at bottom of ice.cc for del* definitions
  ---------------------------------------------------------------------  */
@@ -3034,8 +3076,10 @@ void ICE::influxOutfluxVolume(
     const Patch*                    patch,
     CCVariable<fflux>&              OFS, 
     CCVariable<eflux>&              OFE,
+    CCVariable<cflux>&              OFC,
     CCVariable<fflux>&              IFS, 
-    CCVariable<eflux>&              IFE)
+    CCVariable<eflux>&              IFE,
+    CCVariable<cflux>&              IFC)
 
 {
   Vector dx = patch->dCell();
@@ -3072,30 +3116,41 @@ void ICE::influxOutfluxVolume(
 
       //__________________________________
       //   SLAB outfluxes
-      OFS[*iter].d_fflux[TOP]    = delY_top     * delX_tmp * dx.z();
-      OFS[*iter].d_fflux[BOTTOM] = delY_bottom  * delX_tmp * dx.z();
-      OFS[*iter].d_fflux[RIGHT]  = delX_right   * delY_tmp * dx.z();
-      OFS[*iter].d_fflux[LEFT]   = delX_left    * delY_tmp * dx.z();
-      OFS[*iter].d_fflux[FRONT]  = delZ_front   * delZ_tmp * dx.y();
-      OFS[*iter].d_fflux[BACK]   = delZ_back    * delZ_tmp * dx.y();
+      OFS[*iter].d_fflux[TOP]    = delY_top     * delX_tmp * delZ_tmp;
+      OFS[*iter].d_fflux[BOTTOM] = delY_bottom  * delX_tmp * delZ_tmp;
+      OFS[*iter].d_fflux[RIGHT]  = delX_right   * delY_tmp * delZ_tmp;
+      OFS[*iter].d_fflux[LEFT]   = delX_left    * delY_tmp * delZ_tmp;
+      OFS[*iter].d_fflux[FRONT]  = delZ_front   * delZ_tmp * delY_tmp;
+      OFS[*iter].d_fflux[BACK]   = delZ_back    * delZ_tmp * delY_tmp;
       //__________________________________
-      // Corners (these are actually edges in 3-d)
-      OFE[*iter].d_eflux[TR] = delY_top      * delX_right * dx.z();
-      OFE[*iter].d_eflux[TL] = delY_top      * delX_left  * dx.z();
-      OFE[*iter].d_eflux[BR] = delY_bottom   * delX_right * dx.z();
-      OFE[*iter].d_eflux[BL] = delY_bottom   * delX_left  * dx.z();
+      // Edge flux terms
+      OFE[*iter].d_eflux[TOP_R]     = delY_top      * delX_right * delZ_tmp;
+      OFE[*iter].d_eflux[TOP_FR]    = delY_top      * delX_tmp   * delZ_front;
+      OFE[*iter].d_eflux[TOP_L]     = delY_top      * delX_left  * delZ_tmp;
+      OFE[*iter].d_eflux[TOP_BK]    = delY_top      * delX_tmp   * delZ_back;
+      
+      OFE[*iter].d_eflux[BOT_R]     = delY_bottom   * delX_right * delZ_tmp;
+      OFE[*iter].d_eflux[BOT_FR]    = delY_bottom   * delX_tmp   * delZ_front;
+      OFE[*iter].d_eflux[BOT_L]     = delY_bottom   * delX_left  * delZ_tmp;
+      OFE[*iter].d_eflux[BOT_BK]    = delY_bottom   * delX_tmp   * delZ_back;
+  
+      OFE[*iter].d_eflux[RIGHT_BK]  = delY_tmp      * delX_right * delZ_back;
+      OFE[*iter].d_eflux[RIGHT_FR]  = delY_tmp      * delX_right * delZ_front;
+      
+      OFE[*iter].d_eflux[LEFT_BK]   = delY_tmp      * delX_left  * delZ_back;
+      OFE[*iter].d_eflux[LEFT_FR]   = delY_tmp      * delX_left  * delZ_front;
+      
       //__________________________________
-      // These need to be filled in for 3-d
-      OFE[*iter].d_eflux[TF] = 0.0;
-      OFE[*iter].d_eflux[Tb] = 0.0;
-      OFE[*iter].d_eflux[BF] = 0.0;
-      OFE[*iter].d_eflux[Bb] = 0.0;
-      OFE[*iter].d_eflux[FR] = 0.0;
-      OFE[*iter].d_eflux[FL] = 0.0;
-      OFE[*iter].d_eflux[bR] = 0.0;
-      OFE[*iter].d_eflux[bL] = 0.0;
-      
-      
+      //   Corner flux terms
+      OFC[*iter].d_cflux[TOP_R_BK]  = delY_top      * delX_right * delZ_back;
+      OFC[*iter].d_cflux[TOP_R_FR]  = delY_top      * delX_right * delZ_front;
+      OFC[*iter].d_cflux[TOP_L_BK]  = delY_top      * delX_left  * delZ_back;
+      OFC[*iter].d_cflux[TOP_L_FR]  = delY_top      * delX_left  * delZ_front;
+ 
+      OFC[*iter].d_cflux[BOT_R_BK]  = delY_bottom   * delX_right * delZ_back;
+      OFC[*iter].d_cflux[BOT_R_FR]  = delY_bottom   * delX_right * delZ_front;
+      OFC[*iter].d_cflux[BOT_L_BK]  = delY_bottom   * delX_left  * delZ_back;
+      OFC[*iter].d_cflux[BOT_L_FR]  = delY_bottom   * delX_left  * delZ_front;
   }
 //__________________________________
 //     INFLUX TERMS
@@ -3103,58 +3158,110 @@ void ICE::influxOutfluxVolume(
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++)
   {
       IntVector curcell = *iter,adjcell;
+      int i,j,k;
       //__________________________________
       //   INFLUX SLABS
-      adjcell = IntVector(curcell.x(),curcell.y()+1,curcell.z());
+      i = curcell.x();
+      j = curcell.y();
+      k = curcell.z();
+
+      adjcell = IntVector(i, j+1, k);
       IFS[*iter].d_fflux[TOP]    = OFS[adjcell].d_fflux[BOTTOM];
 
-      adjcell = IntVector(curcell.x(),curcell.y()-1,curcell.z());
+      adjcell = IntVector(i, j-1, k);
       IFS[*iter].d_fflux[BOTTOM] = OFS[adjcell].d_fflux[TOP];
 
-      adjcell = IntVector(curcell.x()+1,curcell.y(),curcell.z());
+      adjcell = IntVector(i+1, j, k);
       IFS[*iter].d_fflux[RIGHT]  = OFS[adjcell].d_fflux[LEFT];
 
-      adjcell = IntVector(curcell.x()-1,curcell.y(),curcell.z());
+      adjcell = IntVector(i-1, j, k);
       IFS[*iter].d_fflux[LEFT]   = OFS[adjcell].d_fflux[RIGHT];
 
-      adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()-1);
+      adjcell = IntVector(i, j, k+1);
       IFS[*iter].d_fflux[FRONT]  = OFS[adjcell].d_fflux[BACK];
 
-      adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+1);
+      adjcell = IntVector(i, j, k-1);
       IFS[*iter].d_fflux[BACK]   = OFS[adjcell].d_fflux[FRONT];
 
       //__________________________________
       //    INFLUX EDGES
-      adjcell = IntVector(curcell.x()+1,curcell.y()+1,curcell.z());
-      IFE[*iter].d_eflux[TR]    = OFE[adjcell].d_eflux[BL];
-
-      adjcell = IntVector(curcell.x()+1,curcell.y()-1,curcell.z());
-      IFE[*iter].d_eflux[BR]    = OFE[adjcell].d_eflux[TL];
-
-      adjcell = IntVector(curcell.x()-1,curcell.y()+1,curcell.z());
-      IFE[*iter].d_eflux[TL]    = OFE[adjcell].d_eflux[BR];
-
-      adjcell = IntVector(curcell.x()-1,curcell.y()-1,curcell.z());
-      IFE[*iter].d_eflux[BL]    = OFE[adjcell].d_eflux[TR];
+      adjcell = IntVector(i+1, j+1, k);
+      IFE[*iter].d_eflux[TOP_R]    = OFE[adjcell].d_eflux[BOT_L];
       
-      //__________________________________
-      // These need to be filled in for 3-d
-      IFE[*iter].d_eflux[TF] = 0.0;
-      IFE[*iter].d_eflux[Tb] = 0.0;
-      IFE[*iter].d_eflux[BF] = 0.0;
-      IFE[*iter].d_eflux[Bb] = 0.0;
-      IFE[*iter].d_eflux[FR] = 0.0;
-      IFE[*iter].d_eflux[FL] = 0.0;
-      IFE[*iter].d_eflux[bR] = 0.0;
-      IFE[*iter].d_eflux[bL] = 0.0;
+      adjcell = IntVector(i, j+1, k+1);
+      IFE[*iter].d_eflux[TOP_FR]   = OFE[adjcell].d_eflux[BOT_BK];
       
+      adjcell = IntVector(i-1, j+1, k);
+      IFE[*iter].d_eflux[TOP_L]    = OFE[adjcell].d_eflux[BOT_R];
+      
+      adjcell = IntVector(i, j+1, k-1);
+      IFE[*iter].d_eflux[TOP_BK]   = OFE[adjcell].d_eflux[BOT_FR];
+          
+      adjcell = IntVector(i+1, j-1, k);
+      IFE[*iter].d_eflux[BOT_R]    = OFE[adjcell].d_eflux[TOP_L];
+      
+      adjcell = IntVector(i, j-1, k+1);
+      IFE[*iter].d_eflux[BOT_FR]    = OFE[adjcell].d_eflux[TOP_BK];
+
+      adjcell = IntVector(i-1, j-1, k);
+      IFE[*iter].d_eflux[BOT_L]    = OFE[adjcell].d_eflux[TOP_R];
+      
+      adjcell = IntVector(i, j-1, k-1);
+      IFE[*iter].d_eflux[BOT_BK]    = OFE[adjcell].d_eflux[TOP_FR];
+      
+      adjcell = IntVector(i+1, j, k-1);
+      IFE[*iter].d_eflux[RIGHT_BK]  = OFE[adjcell].d_eflux[LEFT_FR];
+      
+      adjcell = IntVector(i+1, j, k+1);
+      IFE[*iter].d_eflux[RIGHT_FR]  = OFE[adjcell].d_eflux[LEFT_BK];
+      
+      adjcell = IntVector(i-1, j, k-1);
+      IFE[*iter].d_eflux[LEFT_BK]  = OFE[adjcell].d_eflux[RIGHT_FR];
+      
+      adjcell = IntVector(i-1, j, k+1);
+      IFE[*iter].d_eflux[LEFT_FR]  = OFE[adjcell].d_eflux[RIGHT_BK];
+    
       //__________________________________
-      // NEED TO ADD CORNER FLUX TERMS
-      totalfluxin = IFS[*iter].d_fflux[TOP]   + IFS[*iter].d_fflux[BOTTOM] +
-        IFS[*iter].d_fflux[RIGHT] + IFS[*iter].d_fflux[LEFT]   +
-        IFS[*iter].d_fflux[FRONT] + IFS[*iter].d_fflux[BACK]   +
-        IFE[*iter].d_eflux[TR]    + IFE[*iter].d_eflux[BR]     +
-        IFE[*iter].d_eflux[TL]    + IFE[*iter].d_eflux[BL];
+      //   INFLUX CORNER FLUXES
+      adjcell = IntVector(i+1, j+1, k-1);
+      IFC[*iter].d_cflux[TOP_R_BK]= OFC[adjcell].d_cflux[BOT_L_FR];
+      
+      adjcell = IntVector(i+1, j+1, k+1);
+      IFC[*iter].d_cflux[TOP_R_FR]= OFC[adjcell].d_cflux[BOT_L_BK];
+      
+      adjcell = IntVector(i-1, j+1, k-1);
+      IFC[*iter].d_cflux[TOP_L_BK]= OFC[adjcell].d_cflux[BOT_R_FR];
+      
+      adjcell = IntVector(i-1, j+1, k+1);
+      IFC[*iter].d_cflux[TOP_L_FR]= OFC[adjcell].d_cflux[BOT_R_BK];
+      
+      adjcell = IntVector(i+1, j-1, k-1);
+      IFC[*iter].d_cflux[BOT_R_BK]= OFC[adjcell].d_cflux[TOP_L_FR];
+      
+      adjcell = IntVector(i+1, j-1, k+1);
+      IFC[*iter].d_cflux[BOT_R_FR]= OFC[adjcell].d_cflux[TOP_L_BK];
+      
+      adjcell = IntVector(i-1, j-1, k-1);
+      IFC[*iter].d_cflux[BOT_L_BK]= OFC[adjcell].d_cflux[TOP_R_FR];
+      
+      adjcell = IntVector(i-1, j-1, k+1);
+      IFC[*iter].d_cflux[BOT_L_FR]= OFC[adjcell].d_cflux[TOP_R_BK];
+     
+    //__________________________________
+    //  Bullet proofing
+    totalfluxin = 0.0;
+    for(int face = TOP; face <= BACK; face++ ) 
+    {
+       totalfluxin  += IFS[*iter].d_fflux[face];
+    }
+    for(int edge = TOP_R; edge <= LEFT_BK; edge++ ) 
+    {
+       totalfluxin  += IFE[*iter].d_eflux[edge];
+    }
+    for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ ) 
+    {
+       totalfluxin  += IFC[*iter].d_cflux[corner];
+    }
   #ifdef john_debug
       cout << "totalfluxin = " << totalfluxin << endl;
       cout << "vol = " << vol << endl;
@@ -3178,7 +3285,8 @@ void ICE::influxOutfluxVolume(
        
  Programmer         Date       Description
  ----------         ----       -----------
-  Jim Guilkey      10/04/00    
+  Jim Guilkey      10/04/00 
+  Todd             01/02/01     Added corner flux terms and extened to 3d   
 
  advect_preprocessing MUST be done prior to this function
  ---------------------------------------------------------------------  */
@@ -3187,24 +3295,31 @@ void ICE::advectQFirst(
     const Patch*                patch,
     const CCVariable<fflux>&    OFS,
     const CCVariable<eflux>&    OFE,
+    const CCVariable<cflux>&    OFC,
     const CCVariable<fflux>&    IFS,
     const CCVariable<eflux>&    IFE,
+    const CCVariable<cflux>&    IFC,
     CCVariable<fflux>&          q_out,
     CCVariable<eflux>&          q_out_EF,
+    CCVariable<cflux>&          q_out_CF,
     CCVariable<fflux>&          q_in,
     CCVariable<eflux>&          q_in_EF,
+    CCVariable<cflux>&          q_in_CF,
     CCVariable<double>&         q_advected)
 
 {
     double  sum_q_outflux,
             sum_q_outflux_EF,
+            sum_q_outflux_CF,
             sum_q_influx,
-            sum_q_influx_EF;
+            sum_q_influx_EF,
+            sum_q_influx_CF;
 //__________________________________
 // Determine the influx and outflux of q at each cell
-  qOutfluxFirst(    q_CC,       patch,      q_out,      q_out_EF);
+  qOutfluxFirst(    q_CC,       patch,      q_out,      q_out_EF,   q_out_CF);
   
-  qInflux(          q_out,      q_out_EF,   patch,      q_in,       q_in_EF);
+  qInflux(          q_out,      q_out_EF,   q_out_CF,
+                    patch,      q_in,       q_in_EF,    q_in_CF);
   
 //__________________________________
 //  - Loop over each cell 
@@ -3212,41 +3327,57 @@ void ICE::advectQFirst(
   {
     sum_q_outflux       = 0.0;
     sum_q_outflux_EF    = 0.0;
+    sum_q_outflux_CF    = 0.0;
     sum_q_influx        = 0.0;
     sum_q_influx_EF     = 0.0;
+    sum_q_influx_CF     = 0.0;
     
     //__________________________________
     //  OUTFLUX: SLAB 
     for(int face = TOP; face <= BACK; face++ ) 
     {
-       sum_q_outflux  += q_out[*iter].d_fflux[face] * OFS[*iter].d_fflux[face];
+       sum_q_outflux  += q_out[*iter].d_fflux[face]         * 
+                        OFS[*iter].d_fflux[face];
     }
     //__________________________________
     //  OUTFLUX: EDGE_FLUX
-    for(int edge = TR; edge <= bL; edge++ ) 
+    for(int edge = TOP_R; edge <= LEFT_BK; edge++ ) 
     {
-       sum_q_outflux_EF += q_out_EF[*iter].d_eflux[edge] * OFE[*iter].d_eflux[edge];
+       sum_q_outflux_EF += q_out_EF[*iter].d_eflux[edge]    * 
+                            OFE[*iter].d_eflux[edge];
     }
-                //__________________________________
-                //  OUTFLUX: CORNER FLUX   not done  
+    //__________________________________
+    //  OUTFLUX: CORNER FLUX
+    for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ ) 
+    {
+       sum_q_outflux_CF +=  q_out_CF[*iter].d_cflux[corner] * 
+                            OFC[*iter].d_cflux[corner];
+    } 
     //__________________________________
     //  INFLUX: SLABS
     for(int face = TOP; face <= BACK; face++ ) 
     {
-       sum_q_influx  += q_in[*iter].d_fflux[face] * IFS[*iter].d_fflux[face];
+       sum_q_influx  += q_in[*iter].d_fflux[face]           * 
+                        IFS[*iter].d_fflux[face];
     }
     //__________________________________
     //  INFLUX: EDGES
-    for(int edge = TR; edge <= bL; edge++ )
+    for(int edge = TOP_R; edge <= LEFT_BK; edge++ )
     {
-       sum_q_influx_EF += q_in_EF[*iter].d_eflux[edge] * IFE[*iter].d_eflux[edge];
+       sum_q_influx_EF += q_in_EF[*iter].d_eflux[edge]      * 
+                        IFE[*iter].d_eflux[edge];
     }
-                //__________________________________
-                //   INFLUX: CORNER FLUX  not done 
+    //__________________________________
+    //   INFLUX: CORNER FLUX
+    for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ )
+    {
+       sum_q_influx_CF += q_in_CF[*iter].d_cflux[corner]    * 
+                        IFC[*iter].d_cflux[corner];
+    }
     //__________________________________
     //  Calculate the advected q at t + delta t
-    q_advected[*iter] = - sum_q_outflux - sum_q_outflux_EF
-                        + sum_q_influx  + sum_q_influx_EF;
+    q_advected[*iter] = - sum_q_outflux - sum_q_outflux_EF - sum_q_outflux_CF
+                        + sum_q_influx  + sum_q_influx_EF  + sum_q_influx_CF;
 #ifdef john_debug
     cout << setprecision(16)<<"sum_q_outflux = " << sum_q_outflux << " sum_q_outflux_EF = " <<
       sum_q_outflux_EF << " sum_q_influx = " << sum_q_influx << 
@@ -3265,7 +3396,7 @@ void ICE::advectQFirst(
        fprintf(stderr, "slab: %i q_out %g, OFS %g\n",
        face, q_out[*iter].d_fflux[face], OFS[*iter].d_fflux[face]);
     }
-    for(int edge = TR; edge <= bL; edge++ ) 
+    for(int edge = TOP_R; edge <= LEFT_BK; edge++ ) 
     {
        fprintf(stderr, "edge %i q_out_EF %g, OFE %g\n",
        edge, q_out_EF[*iter].d_eflux[edge], OFE[*iter].d_eflux[edge]);
@@ -3275,7 +3406,7 @@ void ICE::advectQFirst(
        fprintf(stderr, "slab: %i q_in %g, IFS %g\n",
        face, q_in[*iter].d_fflux[face], IFS[*iter].d_fflux[face]);
     }
-    for(int edge = TR; edge <= bL; edge++ )
+    for(int edge = TOP_R; edge <= LEFT_BK; edge++ )
     {
        fprintf(stderr, "edge: %i q_in_EF %g, IFE %g\n",
        edge, q_in_EF[*iter].d_eflux[edge], IFE[*iter].d_eflux[edge]);
@@ -3302,6 +3433,7 @@ void ICE::advectQFirst(
 Programmer         Date       Description
 ----------         ----       -----------
 Jim Guilkey        10/04/00 
+Todd               01/02/01   Added corner fluxes
  
  See schematic diagram at bottom of ice.cc
  FIRST ORDER ONLY AT THIS TIME 10/21/00
@@ -3310,7 +3442,8 @@ void ICE::qOutfluxFirst(
     const CCVariable<double>&   q_CC,
     const Patch*                patch,
     CCVariable<fflux>&          q_out,
-    CCVariable<eflux>&          q_out_EF)
+    CCVariable<eflux>&          q_out_EF,
+    CCVariable<cflux>&          q_out_CF    )
 {
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++)
     {
@@ -3322,29 +3455,25 @@ void ICE::qOutfluxFirst(
         }
         //__________________________________
         //  EDGE fluxes
-        for(int edge = TR; edge <= bL; edge++ ) 
+        for(int edge = TOP_R; edge <= LEFT_BK; edge++ ) 
         {
            q_out_EF[*iter].d_eflux[edge] = q_CC[*iter];
         }
-        
-      //__________________________________
-      // These need to be filled in for 3-d
-      q_out_EF[*iter].d_eflux[TF] = 0.0;
-      q_out_EF[*iter].d_eflux[Tb] = 0.0;
-      q_out_EF[*iter].d_eflux[BF] = 0.0;
-      q_out_EF[*iter].d_eflux[Bb] = 0.0;
-      q_out_EF[*iter].d_eflux[FR] = 0.0;
-      q_out_EF[*iter].d_eflux[FL] = 0.0;
-      q_out_EF[*iter].d_eflux[bR] = 0.0;
-      q_out_EF[*iter].d_eflux[bL] = 0.0;
+
+        //__________________________________
+        //  CORNER fluxes
+        for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ ) 
+        {
+           q_out_CF[*iter].d_cflux[corner] = q_CC[*iter];
+        }
     }
 }
 //STOP_DOC
 /*---------------------------------------------------------------------
  Function~  ICE::qInflux
  Purpose~
-    Calculate the influx contribution \langle q \rangle for each slab and corner
-    flux.   
+    Calculate the influx contribution \langle q \rangle for each slab and 
+    corner flux.   
  
  References:
     "Compatible Fluxes for van Leer Advection" W.B VanderHeyden 
@@ -3357,62 +3486,112 @@ Implementation Notes:
   Programmer         Date       Description
   ----------         ----       -----------
 Jim Guilkey         10/04/00
+    Todd            01/02/01    Added corner cells and extend edged to 3d
 See schematic diagram at bottom of file ice.cc
 ---------------------------------------------------------------------  */
 void ICE::qInflux(
     const CCVariable<fflux>&    q_out,
     const CCVariable<eflux>&    q_out_EF,
+    const CCVariable<cflux>&    q_out_CF,
     const Patch*                patch,
     CCVariable<fflux>&          q_in,
-    CCVariable<eflux>&          q_in_EF)
+    CCVariable<eflux>&          q_in_EF,
+    CCVariable<cflux>&          q_in_CF)
 
 {
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++)
   {
-    IntVector curcell = *iter,adjcell;
-    //__________________________________
-    //  q_influx SLABS
-    adjcell = IntVector(curcell.x(),curcell.y()+1,curcell.z());
-    q_in[*iter].d_fflux[TOP]    = q_out[adjcell].d_fflux[BOTTOM];
-    adjcell = IntVector(curcell.x(),curcell.y()-1,curcell.z());
-    q_in[*iter].d_fflux[BOTTOM] = q_out[adjcell].d_fflux[TOP];
-
-    adjcell = IntVector(curcell.x()+1,curcell.y(),curcell.z());
-    q_in[*iter].d_fflux[RIGHT]  = q_out[adjcell].d_fflux[LEFT];
-    adjcell = IntVector(curcell.x()-1,curcell.y(),curcell.z());
-    q_in[*iter].d_fflux[LEFT]   = q_out[adjcell].d_fflux[RIGHT];
-
-    adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+1);
-    q_in[*iter].d_fflux[FRONT]  = q_out[adjcell].d_fflux[BACK];
-    adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()-1);
-    q_in[*iter].d_fflux[BACK]   = q_out[adjcell].d_fflux[FRONT];
-
-    //__________________________________
-    //  q_influx EDGES
-    adjcell = IntVector(curcell.x()+1,curcell.y()+1,curcell.z());
-    q_in_EF[*iter].d_eflux[TR]  = q_out_EF[adjcell].d_eflux[BL];
-
-    adjcell = IntVector(curcell.x()+1,curcell.y()-1,curcell.z());
-    q_in_EF[*iter].d_eflux[BR]  = q_out_EF[adjcell].d_eflux[TL];
-
-    adjcell = IntVector(curcell.x()-1,curcell.y()+1,curcell.z());
-    q_in_EF[*iter].d_eflux[TL]  = q_out_EF[adjcell].d_eflux[BR];
-
-    adjcell = IntVector(curcell.x()-1,curcell.y()-1,curcell.z());
-    q_in_EF[*iter].d_eflux[BL]  = q_out_EF[adjcell].d_eflux[TR];
-    
+      IntVector curcell = *iter,adjcell;
+      int i,j,k;
       //__________________________________
-      // These need to be filled in for 3-d
-      q_in_EF[*iter].d_eflux[TF] = 0.0;
-      q_in_EF[*iter].d_eflux[Tb] = 0.0;
-      q_in_EF[*iter].d_eflux[BF] = 0.0;
-      q_in_EF[*iter].d_eflux[Bb] = 0.0;
-      q_in_EF[*iter].d_eflux[FR] = 0.0;
-      q_in_EF[*iter].d_eflux[FL] = 0.0;
-      q_in_EF[*iter].d_eflux[bR] = 0.0;
-      q_in_EF[*iter].d_eflux[bL] = 0.0;
-  }
+      //   INFLUX SLABS
+      i = curcell.x();
+      j = curcell.y();
+      k = curcell.z();
 
+      adjcell = IntVector(i, j+1, k);
+      q_in[*iter].d_fflux[TOP]    = q_out[adjcell].d_fflux[BOTTOM];
+
+      adjcell = IntVector(i, j-1, k);
+      q_in[*iter].d_fflux[BOTTOM] = q_out[adjcell].d_fflux[TOP];
+
+      adjcell = IntVector(i+1, j, k);
+      q_in[*iter].d_fflux[RIGHT]  = q_out[adjcell].d_fflux[LEFT];
+
+      adjcell = IntVector(i-1, j, k);
+      q_in[*iter].d_fflux[LEFT]   = q_out[adjcell].d_fflux[RIGHT];
+
+      adjcell = IntVector(i, j, k+1);
+      q_in[*iter].d_fflux[FRONT]  = q_out[adjcell].d_fflux[BACK];
+
+      adjcell = IntVector(i, j, k-1);
+      q_in[*iter].d_fflux[BACK]   = q_out[adjcell].d_fflux[FRONT];
+
+      //__________________________________
+      //    INFLUX EDGES
+      adjcell = IntVector(i+1, j+1, k);
+      q_in_EF[*iter].d_eflux[TOP_R]    = q_out_EF[adjcell].d_eflux[BOT_L];
+      
+      adjcell = IntVector(i, j+1, k+1);
+      q_in_EF[*iter].d_eflux[TOP_FR]   = q_out_EF[adjcell].d_eflux[BOT_BK];
+      
+      adjcell = IntVector(i-1, j+1, k);
+      q_in_EF[*iter].d_eflux[TOP_L]    = q_out_EF[adjcell].d_eflux[BOT_R];
+      
+      adjcell = IntVector(i, j+1, k-1);
+      q_in_EF[*iter].d_eflux[TOP_BK]   = q_out_EF[adjcell].d_eflux[BOT_FR];
+          
+      adjcell = IntVector(i+1, j-1, k);
+      q_in_EF[*iter].d_eflux[BOT_R]    = q_out_EF[adjcell].d_eflux[TOP_L];
+      
+      adjcell = IntVector(i, j-1, k+1);
+      q_in_EF[*iter].d_eflux[BOT_FR]    = q_out_EF[adjcell].d_eflux[TOP_BK];
+
+      adjcell = IntVector(i-1, j-1, k);
+      q_in_EF[*iter].d_eflux[BOT_L]    = q_out_EF[adjcell].d_eflux[TOP_R];
+      
+      adjcell = IntVector(i, j-1, k-1);
+      q_in_EF[*iter].d_eflux[BOT_BK]    = q_out_EF[adjcell].d_eflux[TOP_FR];
+      
+      adjcell = IntVector(i+1, j, k-1);
+      q_in_EF[*iter].d_eflux[RIGHT_BK]  = q_out_EF[adjcell].d_eflux[LEFT_FR];
+      
+      adjcell = IntVector(i+1, j, k+1);
+      q_in_EF[*iter].d_eflux[RIGHT_FR]  = q_out_EF[adjcell].d_eflux[LEFT_BK];
+      
+      adjcell = IntVector(i-1, j, k-1);
+      q_in_EF[*iter].d_eflux[LEFT_BK]  = q_out_EF[adjcell].d_eflux[RIGHT_FR];
+      
+      adjcell = IntVector(i-1, j, k+1);
+      q_in_EF[*iter].d_eflux[LEFT_FR]  = q_out_EF[adjcell].d_eflux[RIGHT_BK];
+      
+      /*__________________________________
+      *   INFLUX CORNER FLUXES
+      *___________________________________*/
+      adjcell = IntVector(i+1, j+1, k-1);
+      q_in_CF[*iter].d_cflux[TOP_R_BK]= q_out_CF[adjcell].d_cflux[BOT_L_FR];
+      
+      adjcell = IntVector(i+1, j+1, k+1);
+      q_in_CF[*iter].d_cflux[TOP_R_FR]= q_out_CF[adjcell].d_cflux[BOT_L_BK];
+      
+      adjcell = IntVector(i-1, j+1, k-1);
+      q_in_CF[*iter].d_cflux[TOP_L_BK]= q_out_CF[adjcell].d_cflux[BOT_R_FR];
+      
+      adjcell = IntVector(i-1, j+1, k+1);
+      q_in_CF[*iter].d_cflux[TOP_L_FR]= q_out_CF[adjcell].d_cflux[BOT_R_BK];
+      
+      adjcell = IntVector(i+1, j-1, k-1);
+      q_in_CF[*iter].d_cflux[BOT_R_BK]= q_out_CF[adjcell].d_cflux[TOP_L_FR];
+      
+      adjcell = IntVector(i+1, j-1, k+1);
+      q_in_CF[*iter].d_cflux[BOT_R_FR]= q_out_CF[adjcell].d_cflux[TOP_L_BK];
+      
+      adjcell = IntVector(i-1, j-1, k-1);
+      q_in_CF[*iter].d_cflux[BOT_L_BK]= q_out_CF[adjcell].d_cflux[TOP_R_FR];
+      
+      adjcell = IntVector(i-1, j-1, k+1);
+      q_in_CF[*iter].d_cflux[BOT_L_FR]= q_out_CF[adjcell].d_cflux[TOP_R_BK];
+  }
 }
 //STOP_DOC
 
@@ -3434,29 +3613,36 @@ void    ICE::printData(
 {
     int i, j, k,
         xLo, yLo, zLo,
-        xHi, yHi, zHi,
-        extra_cell;
-    IntVector hiIndex      = patch->getCellHighIndex();
-    IntVector lowIndex    = patch->getCellLowIndex();                  
+        xHi, yHi, zHi;
+    IntVector lowIndex, hiIndex; 
+                    
     fprintf(stderr,"______________________________________________\n");
     fprintf(stderr,"%s\n",message1);
     fprintf(stderr,"~%s\n",message2);
     
-    if (include_GC == 1) extra_cell = 0;
-    if (include_GC == 0) extra_cell = 1;
-    xLo = lowIndex.x()  + extra_cell;
-    yLo = lowIndex.y()  + extra_cell;
-    zLo = lowIndex.z()  + extra_cell;
- 
-    xHi = hiIndex.x() - extra_cell-1;
-    yHi = hiIndex.y() - extra_cell-1;
-    zHi = hiIndex.z() - extra_cell-1;
-    
-    for(k = zLo; k <= zHi; k++)
+    if (include_GC == 1)
+    { 
+        lowIndex = patch->getCellLowIndex();
+        hiIndex  = patch->getCellHighIndex();
+    }
+    if (include_GC == 0)
     {
-        for(j = yLo; j <= yHi; j++)
+        lowIndex = patch->getInteriorCellLowIndex();
+        hiIndex  = patch->getInteriorCellHighIndex();
+    }
+    xLo = lowIndex.x();
+    yLo = lowIndex.y();
+    zLo = lowIndex.z();
+ 
+    xHi = hiIndex.x();
+    yHi = hiIndex.y();
+    zHi = hiIndex.z();
+    
+    for(k = zLo; k < zHi; k++)
+    {
+        for(j = yLo; j < yHi; j++)
         {
-            for(i = xLo; i <= xHi; i++)
+            for(i = xLo; i < xHi; i++)
             {
                 IntVector idx(i, j, k);
                fprintf(stderr,"[%d,%d,%d] = %4.3f \t",
@@ -3469,7 +3655,6 @@ void    ICE::printData(
         fprintf(stderr,"\n");
     }
     fprintf(stderr," ______________________________________________\n");
-       
  }
 /*STOP_DOC*/
 
@@ -3594,60 +3779,28 @@ const TypeDescription* fun_getTypeDescription(ICE::eflux*)
    return td;
 }
 
+static MPI_Datatype makeMPI_cflux()
+{
+   ASSERTEQ(sizeof(ICE::cflux), sizeof(double)*8);
+   MPI_Datatype mpitype;
+   MPI_Type_vector(1, 8, 8, MPI_DOUBLE, &mpitype);
+   MPI_Type_commit(&mpitype);
+   return mpitype;
+}
+
+const TypeDescription* fun_getTypeDescription(ICE::cflux*)
+{
+   static TypeDescription* td = 0;
+   if(!td){
+      td = scinew TypeDescription(TypeDescription::Other,
+                               "ICE::cflux", true, &makeMPI_cflux);
+   }
+   return td;
+}
+
 
 }
 }
-
-//______________________________________________________________________
-//      Put this in seperate function  This is mainly for debugging
-//      incompressible code
-#if 0
-
-
-    task->computes( new_dw, lb->div_velfc_CCLabel, dwindex,patch);
-
-      double top, bottom, front, back, right, left;
-      // Create variables for the divergence of the FC velocity
-      CCVariable<double> div_velfc_CC;
-      new_dw->allocate(div_velfc_CC, lb->div_velfc_CCLabel, dwindex, patch);
-
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++)
-      {
-#ifdef john_debug
-	cout << "top face velocity = " << vvel_FC[*iter+IntVector(0,1,0)] 
-	     << endl;
-	cout << "bottom face velocity = " << vvel_FC[*iter+IntVector(0,0,0)] 
-	     << endl;
-	cout << "left face velocity = " << uvel_FC[*iter+IntVector(1,0,0)] 
-	     << endl;
-	cout << "right face velocity = " << uvel_FC[*iter+IntVector(0,0,0)] 
-	     << endl;
-	cout << "front face velocity = " << wvel_FC[*iter+IntVector(0,0,1)] 
-	     << endl;
-	cout << "back face velocity = " << wvel_FC[*iter+IntVector(0,0,0)] 
-	     << endl;
-#endif
-	top      =  dx.x()*dx.z()* vvel_FC[*iter+IntVector(0,1,0)];
-	bottom   = -dx.x()*dx.z()* vvel_FC[*iter+IntVector(0,0,0)];
-	left     = -dx.y()*dx.z()* uvel_FC[*iter+IntVector(0,0,0)];
-	right    =  dx.y()*dx.z()* uvel_FC[*iter+IntVector(1,0,0)];
-	front    =  dx.x()*dx.y()* wvel_FC[*iter+IntVector(0,0,1)];
-	back     = -dx.x()*dx.y()* wvel_FC[*iter+IntVector(0,0,0)];
-#ifdef john_debug
-	cout << "top = " << top << " bottom = " << bottom << " left = " 
-	     << left << " right = " << right << " front = " << front 
-	     << " back = " << back << " vol_frac = " << vol_frac[*iter] << 
-	  endl;
-#endif
-	div_velfc_CC[*iter] = vol_frac[*iter]*
-			     (top + bottom + left + right + front  + back );
-      }
-      
-    new_dw->put(div_velfc_CC, lb->div_velfc_CCLabel, dwindex, patch);
-
-#endif
-
-
 /*______________________________________________________________________
           S H E M A T I C   D I A G R A M S
 
@@ -3707,6 +3860,12 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.71  2001/01/03 00:51:53  harman
+// - added cflux, OFC, IFC, q_in_CF, q_out_CF
+// - Advection operator now in 3D, not fully tested
+// - A little house cleaning on #includes
+// - Removed *_old from step6&7 except cv_old
+//
 // Revision 1.70  2001/01/01 23:57:37  harman
 // - Moved all scheduling of tasks over to ICE_schedule.cc
 // - Added instrumentation functions

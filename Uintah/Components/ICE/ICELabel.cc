@@ -1,6 +1,6 @@
 #include <Uintah/Components/ICE/ICELabel.h>
 #include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/NCVariable.h>
+//#include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/SFCXVariable.h>
 #include <Uintah/Grid/SFCYVariable.h>
 #include <Uintah/Grid/SFCZVariable.h>
@@ -175,6 +175,12 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.17  2001/01/03 00:51:53  harman
+// - added cflux, OFC, IFC, q_in_CF, q_out_CF
+// - Advection operator now in 3D, not fully tested
+// - A little house cleaning on #includes
+// - Removed *_old from step6&7 except cv_old
+//
 // Revision 1.16  2000/12/18 23:25:55  jas
 // 2d ice works for simple advection.
 //
