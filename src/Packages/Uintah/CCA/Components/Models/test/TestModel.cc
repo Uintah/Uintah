@@ -217,3 +217,10 @@ void TestModel::scheduleModifyThermoTransportProperties(SchedulerP&,
 {
   // do nothing      
 }
+void TestModel::computeSpecificHeat(CCVariable<double>&,
+                                    const Patch*,   
+                                    DataWarehouse*, 
+                                    const int)      
+{
+  //do nothing
+}

@@ -425,3 +425,10 @@ void flameSheet_rxn::scheduleModifyThermoTransportProperties(SchedulerP&,
 {
   // do nothing      
 }
+void flameSheet_rxn::computeSpecificHeat(CCVariable<double>&,
+                                 const Patch*,
+                                 DataWarehouse*,
+                                 const int)
+{
+  //do nothing
+}

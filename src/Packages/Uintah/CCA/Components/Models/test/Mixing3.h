@@ -80,6 +80,11 @@ WARNING
     virtual void scheduleMomentumAndEnergyExchange(SchedulerP&,
 						   const LevelP& level,
 						   const ModelInfo*);
+                                             
+    virtual void computeSpecificHeat(CCVariable<double>&,
+                                    const Patch*,
+                                    DataWarehouse*,
+                                    const int);
 
   private:
     void initialize(const ProcessorGroup*, const PatchSubset* patches,

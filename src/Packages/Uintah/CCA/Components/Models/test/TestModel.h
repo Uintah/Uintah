@@ -74,6 +74,11 @@ WARNING
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                const LevelP&,
                                                const MaterialSet*);
+                                               
+    virtual void computeSpecificHeat(CCVariable<double>&,
+                                 const Patch*,
+                                 DataWarehouse*,
+                                 const int);
 
   private:    
     void massExchange(const ProcessorGroup*, const PatchSubset* patches,
