@@ -2,7 +2,7 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
-SRCS     = ColorMapReader.cc ColumnMatrixReader.cc ContourSetReader.cc \
+SRCS     = ColorMapReader.cc ColumnMatrixReader.cc \
            DukeRawRead.cc GeomReader.cc GeometryReader.cc ImageReader.cc \
            MatrixReader.cc MeshReader.cc MultiSFRGReader.cc PointsReader.cc \
            ScalarFieldReader.cc SurfaceReader.cc VectorFieldReader.cc \
