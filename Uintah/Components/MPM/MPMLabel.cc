@@ -28,7 +28,7 @@ MPMLabel::MPMLabel()
   pVisibilityLabel = scinew VarLabel("p.visibility",
 			ParticleVariable<int>::getTypeDescription());
   
-  pCrackSurfaceContactForceLabel = scinew VarLabel("p.crfackSurfaceContactForce",
+  pCrackSurfaceContactForceLabel = scinew VarLabel("p.crackSurfaceContactForce",
 			ParticleVariable<Vector>::getTypeDescription());
   
   //PermanentParticleState
@@ -359,6 +359,9 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.38  2000/09/11 20:17:29  tan
+// Fixed a typo of crackSurfaceContactForce.
+//
 // Revision 1.37  2000/09/11 18:56:25  tan
 // Crack surface contact force is now considered in the simulation.
 //
