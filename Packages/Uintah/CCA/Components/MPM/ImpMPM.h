@@ -11,16 +11,18 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
-#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+
 
 
 #include <sgi_stl_warnings_off.h>
 #include <map>
 #include <vector>
+#include <list>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
@@ -92,6 +94,7 @@ public:
 
   void setMPMLabel(MPMLabel* Mlb)
   {
+
         delete lb;
 	lb = Mlb;
   };
@@ -368,7 +371,7 @@ private:
   double           d_delT_decrease_factor;
   double           d_delT_increase_factor;
 
-  list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, ...
+  std::list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, ...
 
   const PatchSet* d_perproc_patches;
 
