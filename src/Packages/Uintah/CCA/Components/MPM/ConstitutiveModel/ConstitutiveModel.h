@@ -86,18 +86,18 @@ WARNING
 
 	 virtual void addComputesAndRequires(Task* task,
 					   const MPMMaterial* matl,
-					   const PatchSet* patches);
+					   const PatchSet* patches) const;
 
 	 virtual void addComputesAndRequires(Task* task,
 					     const MPMMaterial* matl,
 					     const PatchSet* patches,
-					     const bool recursion);
+					     const bool recursion) const;
 
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to) = 0;
 
          virtual double computeRhoMicroCM(double pressure,
-                                     const double p_ref,
+					  const double p_ref,
 					  const MPMMaterial* matl) = 0;
 
          virtual void computePressEOSCM(double rho_m, double& press_eos,
