@@ -15,71 +15,43 @@
 #define SCI_Containers_Assert_h 1
 
 #include <sci_config.h>
-#ifdef SCI_ASSERTION_LEVEL_0
-#define SCI_ASSERTION_LEVEL 0
-#endif
-#ifdef SCI_ASSERTION_LEVEL_1
-#define SCI_ASSERTION_LEVEL 1
-#endif
-#ifdef SCI_ASSERTION_LEVEL_2
-#define SCI_ASSERTION_LEVEL 2
-#endif
-#ifdef SCI_ASSERTION_LEVEL_3
-#define SCI_ASSERTION_LEVEL 3
-#endif
 
-#include <SCICore/Exceptions/Exceptions.h>
+#include <SCICore/Exceptions/AssertionFailed.h>
+#include <SCICore/Exceptions/ArrayIndexOutOfBounds.h>
 
 #define ASSERTFAIL(string) \
-       { \
-           SCICore::ExceptionsSpace::AssertionFailed exc(string); \
-           EXCEPTION(exc); \
-       }
+   SCI_THROW(SCICore::Exceptions::AssertionFailed(string, __FILE__, __LINE__));
 
 #if SCI_ASSERTION_LEVEL >= 1
 #define ASSERTL1(condition) \
-	if(!(condition)){ \
-		SCICore::ExceptionsSpace::AssertionFailed exc(#condition); \
-		EXCEPTION(exc); \
-	}
+   if(!(condition)){ \
+      SCI_THROW(SCICore::Exceptions::AssertionFailed(#condition, __FILE__, __LINE__)); \
+   }
 #else
 #define ASSERTL1(condition)
 #endif
 
 #if SCI_ASSERTION_LEVEL >= 2
 #define ASSERTL2(condition) \
-	if(!(condition)){ \
-		SCICore::ExceptionsSpace::AssertionFailed exc(#condition); \
-		EXCEPTION(exc); \
-	}
+   if(!(condition)){ \
+      SCI_THROW(SCICore::Exceptions::AssertionFailed(#condition, __FILE__, __LINE__)); \
+   }
 #else
 #define ASSERTL2(condition)
 #endif
 
 #if SCI_ASSERTION_LEVEL >= 3
 #define ASSERTL3(condition) \
-	if(!(condition)){ \
-		SCICore::ExceptionsSpace::AssertionFailed exc(#condition); \
-		EXCEPTION(exc); \
-	}
+   if(!(condition)){ \
+      SCI_THROW(SCICore::Exceptions::AssertionFailed(#condition, __FILE__, __LINE__)); \
+   }
+#define CHECKARRAYBOUNDS(value, lower, upper) \
+   if(value < lower || value >= upper){ \
+      SCI_THROW(SCICore::Exceptions::ArrayIndexOutOfBounds(value, lower, upper)); \
+   }
 #else
 #define ASSERTL3(condition)
-#endif
-
-#if SCI_ASSERTION_LEVEL >= 2
-#define ASSERTEQ(c1, c2) \
-	if(c1 != c2){ \
-		SCICore::ExceptionsSpace::AssertionEQFailed exc(#c1, #c2, (int)c1, (int)c2); \
-		EXCEPTION(exc); \
-	}
-#define ASSERTRANGE(c, l, h) \
-        if(c < l || c >= h){ \
-		SCICore::ExceptionsSpace::AssertionRangeFailed exc(#c, #l, #h, c, l, h); \
-		EXCEPTION(exc); \
-        }
-#else
-#define ASSERTEQ(c1, c2)
-#define ASSERTRANGE(c, l, h)
+#define CHECKARRAYBOUNDS(value, lower, upper)
 #endif
 
 #if SCI_ASSERTION_LEVEL == 0
