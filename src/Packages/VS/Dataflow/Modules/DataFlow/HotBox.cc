@@ -76,9 +76,12 @@ private:
 
   // file or OQAFMA
   GuiInt datasource_;
+  // "fromHotBoxUI" or "fromProbe"
+  GuiString selectionsource_;
 
   GuiString anatomydatasource_;
   GuiString adjacencydatasource_;
+  GuiString boundingboxdatasource_;
   GuiString currentselection_;
 
   // temporary:  fixed anatomical label map files
@@ -114,8 +117,10 @@ HotBox::HotBox(GuiContext* ctx)
   gui_label9_(ctx->subVar("gui_label9")),
   enableDraw_(ctx->subVar("enableDraw")),
   datasource_(ctx->subVar("datasource")),
+  selectionsource_(ctx->subVar("selectionsource")),
   anatomydatasource_(ctx->subVar("anatomydatasource")),
   adjacencydatasource_(ctx->subVar("adjacencydatasource")),
+  boundingboxdatasource_(ctx->subVar("boundingboxdatasource")),
   currentselection_(ctx->subVar("currentselection"))
 {
   // instantiate the HotBox-specific interaction structure
@@ -209,10 +214,13 @@ void
   //  Matrix *matrixPtr = inputMatrixHandle.get_rep();
 
   const int dataSource(datasource_.get());
+  const string selectionSource(selectionsource_.get());
+  const string currentSelection(currentselection_.get());
   const string anatomyDataSrc(anatomydatasource_.get());
   const string adjacencyDataSrc(adjacencydatasource_.get());
+  const string boundingBoxDataSource(boundingboxdatasource_.get());
   const string enableDraw(enableDraw_.get());
-  
+
   // The segmented volume (input field to the Probe)
   // is an index into the MasterAnatomy list -- this only comes from a file
   // Read the status of this file so we can compare modification timestamps
@@ -234,7 +242,18 @@ void
     cout << " names" << endl;
   }
 
-  char *selectName = anatomytable->get_anatomyname(labelIndexVal);
+  // if the selection source is from the HotBox UI -- ignore the probe
+  char *selectName;
+
+  if(selectionSource == "fromHotBoxUI")
+  {
+    strcpy(selectName, currentSelection.c_str());
+    // clear selection source
+    selectionsource_.set("fromProbe");
+  }
+  else
+    selectName = anatomytable->get_anatomyname(labelIndexVal);
+
   if(selectName != 0)
     cout << "VS/HotBox: selected '" << selectName << "'" << endl;
   else
