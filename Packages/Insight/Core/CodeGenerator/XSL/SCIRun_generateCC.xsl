@@ -502,6 +502,8 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 
   // get filter output
   <xsl:for-each select="/filter/filter-itk/outputs/output">
+<xsl:variable name="ohandle">outhandle_<xsl:value-of select="@name"/>_</xsl:variable>
+<xsl:variable name="oport">outport_<xsl:value-of select="@name"/>_</xsl:variable>
   <xsl:variable name="const"><xsl:value-of select="call/@const"/></xsl:variable>
   <xsl:variable name="name"><xsl:value-of select="type"/></xsl:variable>
   <xsl:variable name="output"><!-- hard coded datatype -->ITKDatatype</xsl:variable>
@@ -516,7 +518,11 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   </xsl:otherwise>
   </xsl:choose>
   outhandle_<xsl:value-of select="@name"/>_ = out_<xsl:value-of select="@name"/>_; 
+  <xsl:value-of select="$oport"/><xsl:text>->send(</xsl:text><xsl:value-of select="$ohandle"/>
+<xsl:text>);
+  </xsl:text>
   </xsl:for-each>
+
   return true;
 <xsl:text>}
 </xsl:text>
@@ -622,7 +628,6 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   </xsl:when>
   <xsl:otherwise>
   if(!<xsl:value-of select="$ihandle"/><xsl:text>.get_rep()) {
-    error("No data in </xsl:text><xsl:value-of select="$iport"/><xsl:text>!");			       
     return;
   }
 
@@ -718,17 +723,7 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
     error(&quot;Incorrect input type&quot;);
     return;
   }
-
-  // send the data downstream
-  </xsl:text>
-<xsl:for-each select="/filter/filter-itk/outputs/output">
-<xsl:variable name="ohandle">outhandle_<xsl:value-of select="@name"/>_</xsl:variable>
-<xsl:variable name="oport">outport_<xsl:value-of select="@name"/>_</xsl:variable>
-
-<xsl:value-of select="$oport"/><xsl:text>->send(</xsl:text><xsl:value-of select="$ohandle"/>
-<xsl:text>);
-  </xsl:text>
-</xsl:for-each>
+</xsl:text>
 <xsl:text>
 }
 
