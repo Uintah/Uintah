@@ -955,7 +955,7 @@ void determineSpacingAndGravity(Patch::FaceType face,
 
 
 //______________________________________________________________________
-// Take care of the Density and Temperature
+// Take care of the Density Temperature and MassFraction
 void setBC(CCVariable<double>& variable, const string& kind, 
               const Patch* patch,  SimulationStateP& sharedState,
               const int mat_id)
@@ -990,10 +990,6 @@ void setBC(CCVariable<double>& variable, const string& kind,
        if (new_bcs != 0) {
          bc_value = new_bcs->getValue();
          bc_kind = new_bcs->getKind();
-#if 0
-         cout << "BC kind = " << bc_kind << endl;
-         cout << "BC value = " << bc_value << endl;
-#endif
        }
        
        // Apply the "zeroNeumann"
@@ -1010,7 +1006,7 @@ void setBC(CCVariable<double>& variable, const string& kind,
               boundary != bound.end(); boundary++,interior++) 
              variable[*boundary] = variable[*interior];
        }
-       
+   
        if (kind == "Density") {
          if (bc_kind == "Dirichlet")
            for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
@@ -1021,7 +1017,36 @@ void setBC(CCVariable<double>& variable, const string& kind,
              variable[*boundary] =  variable[*interior] - bc_value*spacing;
        }
        
-       if (kind == "Temperature") {
+
+       //__________________________________
+       //  mass Fraction BCs
+       bool massFractionBC = false;   // check for massFraction BC
+       string::size_type pos = kind.find ("massFraction");
+       if ( pos != std::string::npos ){
+         massFractionBC = true;
+       }
+
+       if (massFractionBC) {
+        cout << kind << endl;
+         if (bc_kind == "Dirichlet"){
+            for (boundary=bound.begin(); boundary != bound.end(); boundary++){ 
+              variable[*boundary] = bc_value;
+            }
+          }else if(bc_kind == "Neumann"){
+            for (boundary=bound.begin(),interior=inter.begin(); 
+                boundary != bound.end(); boundary++,interior++){
+              variable[*boundary] =  variable[*interior] - bc_value*spacing;
+            }
+          }else{   // if it hasn't been specified then assume it's zeroNeumann
+            for (boundary=bound.begin(),interior=inter.begin(); 
+                boundary != bound.end(); boundary++,interior++){
+              variable[*boundary] =  variable[*interior];
+            }
+          }
+        }
+        //__________________________________
+        //  Temperature
+        if (kind == "Temperature") {
          if (bc_kind == "Dirichlet")
            for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
              variable[*boundary] = bc_value;
