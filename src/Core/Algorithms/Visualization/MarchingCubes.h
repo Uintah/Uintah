@@ -69,7 +69,7 @@ protected:
   vector<FieldHandle> output_field_;
 public:
   MarchingCubes() : mesh_(0) { tess_.resize( np_, 0 ); }
-  virtual ~MarchingCubes() {}
+  virtual ~MarchingCubes() { release(); }
 
   virtual void set_np( int );
   virtual void release();

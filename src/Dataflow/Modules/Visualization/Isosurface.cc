@@ -337,6 +337,7 @@ Isosurface::execute()
 	  fields.push_back( mc_alg->get_field(i) );
 	}
       }
+      mc_alg->release();
     }
     break;
   case 1:  // Noise
@@ -360,6 +361,7 @@ Isosurface::execute()
 	geometries.push_back(noise_alg->search(isovals[iv], bf, bg));
 	fields.push_back(noise_alg->get_field());
       }
+      noise_alg->release();
     }
     break;
 
@@ -382,6 +384,7 @@ Isosurface::execute()
 	sage_alg->search(isovals[0], group, points);
 	geometries.push_back( group );
       }
+      sage_alg->release();
     }
     break;
   default: // Error
