@@ -46,7 +46,7 @@ if [ -d "$TEST_UDADIR" ]; then
 	if [ $retval != "0" ]; then
 	    # $COMPARE_UDADIR has no dat files either
 	    echo "No dat files to compare"
-	    exit -1
+	    exit 10
 	else
 	    # $COMPARE_UDADIR does have at least one dat file so
 	    # there is no excuse for $TEST_UDADIR for not having any.
