@@ -33,19 +33,9 @@
 # the generic "sourceSettingsFile" call...  So we just print out the
 # error message.  This will need to be fixed at some point.
 
-global SCIRUN_DATA
-if {$SCIRUN_DATA == ""} {
+set DATADIR [netedit getenv SCIRUN_DATA]
+set DATASET [netedit getenv SCIRUN_DATASET]
 
-   displayErrorWarningOrInfo "" error
-   displayErrorWarningOrInfo "*** Error: This net depends on the SCIRUN_DATA enviroment variable." error
-   displayErrorWarningOrInfo "*** Please exit, set it in your shell, and rerun." error
-   displayErrorWarningOrInfo "*** (e.g. setenv SCIRUN_DATA /usr/sci/data/SCIRunData/1.20.0)" error
-   displayErrorWarningOrInfo "" error
-   ::netedit scheduleok
-   return
-}
-
-set DATADIR $SCIRUN_DATA
 
 if {![file isfile $DATADIR/aneurysm/aneurysm.settings]} {
    displayErrorWarningOrInfo "" error
