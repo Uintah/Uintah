@@ -14,37 +14,34 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-/*******************************************************************************
+/******************************************************************************
 * Version control
-*******************************************************************************/
+******************************************************************************/
 
 #ifndef SCI_project_HexMesh_h
 #define SCI_project_HexMesh_h 1
 
-/*******************************************************************************
+/******************************************************************************
 * Includes
-*******************************************************************************/
+******************************************************************************/
 
 #include <SCICore/share/share.h>
 
 #include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/HashTable.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
 
 
-/*******************************************************************************
+/******************************************************************************
 * Class & function forward declarations and type declarations
-*******************************************************************************/
+******************************************************************************/
 namespace SCICore {
 namespace Datatypes {
 
 using SCICore::Containers::LockingHandle;
 using SCICore::Containers::Array1;
-using SCICore::Containers::HashTable;
-using SCICore::Containers::HashTableIter;
 using SCICore::Geometry::Point;
 using SCICore::Geometry::Vector;
 using SCICore::PersistentSpace::Piostream;
@@ -55,16 +52,16 @@ class HexFace;
 class Hexahedron;
 class HexMesh;
 
-/*******************************************************************************
+/******************************************************************************
 * Handles
-*******************************************************************************/
+******************************************************************************/
 
 typedef LockingHandle<HexMesh> HexMeshHandle;
 
 
-/*******************************************************************************
+/******************************************************************************
 * Index/pointer array structures  (Used to make copying/grouping easy.)
-*******************************************************************************/
+******************************************************************************/
 
 struct FourHexNodes
 {
@@ -79,11 +76,22 @@ struct FourHexNodes
            {  unmatched--;  used[d]++;  break; }      
        return unmatched == 0;
     };
-    
+
+  /*
   int hash (int h) const
     { return (((index[0] + index[1] + index[2] + index[3]) + 
                (index[0] ^ index[1] ^ index[2] ^ index[3]) +
-               (index[0] * index[1] * index[2] * index[3])) & 0x7fffffff) % h; };
+               (index[0] * index[1] * index[2] * index[3])) &
+	       0x7fffffff) % h; };
+	       */
+
+				// less than operator, required for
+				// use with STL maps - replaces hash()
+  bool operator<(const FourHexNodes& f) const {
+    return ((index[0]+index[1]+index[2]+index[3]) <
+      (f.index[0]+f.index[1]+f.index[2]+f.index[3]));
+  }
+  
 };
 
 struct EightHexNodes
@@ -108,10 +116,9 @@ struct KDTree
 };
 
 
-/*******************************************************************************
+/*****************************************************************************
 * Class actual declarations
-*******************************************************************************/
-
+*****************************************************************************/
 // This class contains one point, similar to Node in mesh.h.
 
 class SCICORESHARE HexNode : public Point
@@ -134,9 +141,9 @@ class SCICORESHARE HexNode : public Point
 };
 
 
+//----------------------------------------------------------------------
 // This class defines one surface, similar to face in mesh.h.
 //   Note that many fields are INVALID for degenerate faces (lines, points).
-
 class SCICORESHARE HexFace
 {
   private:
@@ -190,8 +197,8 @@ class SCICORESHARE HexFace
     void finish_read (HexMesh * m);
 };
 
+//----------------------------------------------------------------------
 // This class defines one volume unit, similar to element in mesh.h.
-
 class SCICORESHARE Hexahedron
 {  
   private:
@@ -240,62 +247,72 @@ class SCICORESHARE Hexahedron
 
 class SCICORESHARE HexMesh : public Datatype
 {
-  private:
+public:
 
-    //Array1<HexNode *> node_set;
-    //Array1<Hexahedron *> element_set;
-    //Array1<HexFace *> face_set;
-    HashTable<int, HexNode *> node_set;
-    HashTable<int, Hexahedron *> element_set;
-    HashTable<int, HexFace *> face_set;
-    HashTable<FourHexNodes, HexFace *> neighbor_set;
-    
-    int classified;
-    KDTree KD;
-    
-    int highest_face_index;
-    int highest_node_index;
-    int highest_element_index;
-    
-  public:
+  typedef map<int, HexNode*, less<int> >	MapIntHexNode;
+  typedef map<int, Hexahedron*, less<int> >	MapIntHexahedron;
+  typedef map<int, HexFace*, less<int> >	MapIntHexFace;
+  typedef map<FourHexNodes, HexFace*, less<FourHexNodes> >
+    MapFourHexNodesHexFace;
   
-    static PersistentTypeID type_id;
+private:
   
-    HexMesh ();
-    virtual ~HexMesh ();
-    virtual HexMesh * clone ();
-    
-    // Setup functions
-    
-    int       add_node    (int index, double x, double y, double z);
-    HexNode * find_node   (int index);
-    int       high_node   () { return highest_node_index; };
-
-    int       add_face    (int index, int e, FourHexNodes & f); 
-    int       add_face    (int e, FourHexNodes & f); 
-    HexFace * find_face   (int index);
-    HexFace * find_face   (FourHexNodes & f);
-    int       high_face   () { return highest_face_index; };
-    
-    int          add_element    (int index, EightHexNodes & e); 
-    Hexahedron * find_element   (int index);
-    
-    // Access functions
-    
-    void classify ();
-    
-    void finish ();
-    
-    int    locate      (const Point & P, int & start);
-    double interpolate (const Point & P, const Array1<double> & data, int & start);
-    double interpolate (const Point & P, const Array1<Vector> & data, Vector & v, int & start);
-    void   get_bounds  (Point & min, Point & max);
-    void get_boundary_lines(Array1<Point>& lines);
-    
-    // Io functions
-        
-    friend SCICORESHARE std::ostream & operator << (std::ostream & o, HexMesh & m);
-    virtual void io (Piostream & p);
+  MapIntHexNode			node_set;
+  MapIntHexahedron		element_set;
+  MapIntHexFace			face_set;
+  MapFourHexNodesHexFace	neighbor_set;
+  
+  int classified;
+  KDTree KD;
+  
+  int highest_face_index;
+  int highest_node_index;
+  int highest_element_index;
+  
+public:
+  
+  static PersistentTypeID type_id;
+  
+  HexMesh ();
+  virtual ~HexMesh ();
+  virtual HexMesh * clone ();
+  
+  // Setup functions
+  
+  int       add_node    (int index, double x, double y, double z);
+  HexNode * find_node   (int index);
+  int       high_node   () { return highest_node_index; };
+  
+  int       add_face    (int index, int e, FourHexNodes & f); 
+  int       add_face    (int e, FourHexNodes & f); 
+  HexFace * find_face   (int index);
+  HexFace * find_face   (FourHexNodes & f);
+  int       high_face   () { return highest_face_index; };
+  
+  int          add_element    (int index, EightHexNodes & e); 
+  Hexahedron * find_element   (int index);
+  
+  // Access functions
+  
+  void classify ();
+  
+  void finish ();
+  
+  int    locate      (const Point & P, int & start);
+  
+  double interpolate (const Point & P,
+    const Array1<double> & data, int & start);
+  
+  double interpolate (const Point & P,
+    const Array1<Vector> & data, Vector & v, int & start);
+  
+  void get_bounds( Point& min, Point& max );
+  void get_boundary_lines( Array1<Point>& lines );
+  
+  // Io functions
+  
+  friend SCICORESHARE std::ostream& operator<< (std::ostream& o, HexMesh& m);
+  virtual void io (Piostream& p);
 };
 
 } // End namespace Datatypes
@@ -303,6 +320,10 @@ class SCICORESHARE HexMesh : public Datatype
 
 //
 // $Log$
+// Revision 1.5  2000/03/11 00:41:29  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.4  1999/10/07 02:07:31  sparker
 // use standard iostreams and complex type
 //

@@ -14,7 +14,6 @@
 
 #include <SCICore/Tester/RigorousTest.h>
 #include <SCICore/Containers/BitArray1.h>
-#include <SCICore/Containers/HashTable.h>
 #include <SCICore/Containers/Queue.h>
 #include <SCICore/Containers/Stack.h>
 #include <SCICore/Datatypes/Mesh.h>
@@ -268,6 +267,10 @@ cerr << "Dd: SurfOctree Portion of this code deleted... it is"
 
 //
 // $Log$
+// Revision 1.7  2000/03/11 00:39:51  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.6  1999/10/07 02:06:47  sparker
 // use standard iostreams and complex type
 //

@@ -146,6 +146,7 @@ struct Edge{
     Edge(int, int);
     int hash(int hash_size) const;
     int operator==(const Edge&) const;
+    int operator<(const Edge&) const;
 };
 
 struct MeshGrid {
@@ -258,6 +259,10 @@ void Pio(Piostream& stream, ElementVersion1& node);
 
 //
 // $Log$
+// Revision 1.7  2000/03/11 00:41:29  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.6  2000/03/04 00:18:29  dmw
 // added new Mesh BC and fixed sparserowmatrix bug
 //

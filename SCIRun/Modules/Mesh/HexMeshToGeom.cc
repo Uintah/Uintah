@@ -67,10 +67,12 @@ void HexMeshToGeom::execute()
     if (!imesh->get(mesh))
 	return;
 
-    int index, t, p1, p2;
+    int index, p1, p2;
     unsigned long l;    
     HexFace * f;
-    HashTable<unsigned long, int> line_set;
+    
+    map<unsigned long, int, less<unsigned long> > line_set;
+    
     FourHexNodes c;
     GeomLines* lines = scinew GeomLines;
     
@@ -96,26 +98,26 @@ void HexMeshToGeom::execute()
         
         // Make a key for this pair of points.
           
-        l = (c.index[p1] < c.index[p2]) ? (((unsigned long) c.index[p1]) << 16) + c.index[p2]
-                                        : (((unsigned long) c.index[p2]) << 16) + c.index[p1];
+        l = (c.index[p1] < c.index[p2]) ?
+	  (((unsigned long) c.index[p1]) << 16) + c.index[p2]
+	  : (((unsigned long) c.index[p2]) << 16) + c.index[p1];
         
         // If it's in the hash table, it's been added.
         
-        if (line_set.lookup (l, t) != 0)
+        if (line_set.find(l) != line_set.end())
           continue;
           
         // Add the line segment.  
           
-        line_set.insert (l, 1);
+        line_set[l] = 1;
         
         lines->add (*(c.node[p1]), *(c.node[p2]));
       }
     }    
     
     GeomMaterial* matl=scinew GeomMaterial(lines,
-					scinew Material(Color(0,0,0),
-						     Color(0,.6,0), 
-						     Color(.5,.5,.5), 20));
+      scinew Material(Color(0,0,0), Color(0,.6,0), Color(.5,.5,.5), 20));
+
     ogeom->delAll();
     ogeom->addObj(matl, "Mesh1");
 }
@@ -125,6 +127,10 @@ void HexMeshToGeom::execute()
 
 //
 // $Log$
+// Revision 1.2  2000/03/11 00:41:55  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.1  1999/09/05 01:15:27  dmw
 // added all of the old SCIRun mesh modules
 //

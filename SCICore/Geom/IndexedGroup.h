@@ -15,7 +15,7 @@
 #define SCI_Geom_IndexedGroup_h 1
 
 #include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/HashTable.h>
+#include <map.h>
 
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Geometry/BBox.h>
@@ -23,12 +23,21 @@
 namespace SCICore {
 namespace GeomSpace {
 
-using SCICore::Containers::HashTable;
-using SCICore::Containers::HashTableIter;
-
 class SCICORESHARE GeomIndexedGroup: public GeomObj {
-    HashTable<int, GeomObj*> objs;
+    
 public:
+    typedef map< int, GeomObj*, less<int> > MapIntGeomObj;
+    
+    typedef pair< MapIntGeomObj::iterator,
+                  MapIntGeomObj::iterator >
+        IterIntGeomObj;
+
+private:
+    
+    MapIntGeomObj objs;
+    
+public:
+
     GeomIndexedGroup( const GeomIndexedGroup& );
     GeomIndexedGroup();
     virtual ~GeomIndexedGroup();
@@ -49,8 +58,10 @@ public:
     void delObj(int, int del);	 // removes object from table
     void delAll(void);		 // deletes everything
 
-    HashTableIter<int,GeomObj*> getIter(void); // gets an iter
-    HashTable<int,GeomObj*>* getHash(void);    // gets the table
+    IterIntGeomObj getIter(void); // gets an iter 
+    
+    MapIntGeomObj* getHash(void); // gets the table
+    
     virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
@@ -59,6 +70,10 @@ public:
 
 //
 // $Log$
+// Revision 1.5  2000/03/11 00:41:31  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.4  1999/10/07 02:07:48  sparker
 // use standard iostreams and complex type
 //

@@ -17,7 +17,6 @@
 #define SCI_ASSERTION_LEVEL_2
 #include <SCICore/Tester/RigorousTest.h>
 #include <SCICore/Containers/BitArray1.h>
-#include <SCICore/Containers/HashTable.h>
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <SCICore/Datatypes/Mesh.h>
@@ -268,6 +267,10 @@ void BitVisualize::vol_render1_grid() {
 
 //
 // $Log$
+// Revision 1.9  2000/03/11 00:39:54  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.8  1999/10/07 02:07:04  sparker
 // use standard iostreams and complex type
 //

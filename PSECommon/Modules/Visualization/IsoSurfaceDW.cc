@@ -16,7 +16,7 @@
 // Esc-x replace-string uchar [double | float | int | ushort]
 
 #include <SCICore/Containers/BitArray1.h>
-#include <SCICore/Containers/HashTable.h>
+#include <map.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/Queue.h>
 #include <SCICore/Containers/Ring.h>
@@ -72,6 +72,8 @@ using namespace SCICore::Math;
 using namespace SCICore::Thread;
 
 class IsoSurfaceDW : public Module {
+
+private:
     ScalarFieldIPort* infield;
     ScalarFieldIPort* incolorfield;
     ColorMapIPort* inColorMap;
@@ -101,7 +103,13 @@ class IsoSurfaceDW : public Module {
     Array1<GeomTrianglesP*> all_tris;
     Array1<Semaphore*> all_sems;
     Array1<Ring<int>* > all_bdryRings;
-    Array1<HashTable<int,int>* > all_bdryHashes;
+  
+public:
+    typedef map<int, int, less<int> > MapIntInt;
+
+private:
+    Array1<MapIntInt*> all_bdryHashes;
+  
     double old_min;
     double old_max;
     int sp;
@@ -112,7 +120,7 @@ class IsoSurfaceDW : public Module {
     CPUTimer innerExtract;
     CPUTimer lace;
     CPUTimer barrierLace;
-    HashTable<int,int> hash;
+    MapIntInt hash;
     Mutex hashing;
 
     void printIt(clString s, int i, int j, int k, int c, int idx);
@@ -127,7 +135,7 @@ class IsoSurfaceDW : public Module {
 
     int iso_cubeHash(int,int,int,double, GeomTrianglesP*,
 		     Array1<TSElement*>&, Array1<Point>&,
-		     HashTable<int,int>*, HashTable<int,int>*, int, int);
+		     MapIntInt*, MapIntInt*, int, int);
 
     int iso_cubeTS(int, int, int, double, GeomTrianglesP*, 
 		     Array1<TSElement*>&, Array1<Point>&);
@@ -350,6 +358,7 @@ void IsoSurfaceDW::execute()
 	IsoSurfaceDW_id=ogeom->addObj(scinew GeomMaterial(topobj, mpick), surface_name);
 	if (emit) {
 	    osurf->send(SurfaceHandle(composite_surf));
+	    cerr << "sent surface" << endl;
 	}
     }
 }
@@ -640,11 +649,10 @@ void IsoSurfaceDW::parallel_reg_grid(int proc)
 }
 
 int IsoSurfaceDW::iso_cubeHash(int i, int j, int k, double isoval, 
-			       GeomTrianglesP* group, 
-			       Array1<TSElement*>& elems, 
-			       Array1<Point>& pts, 
-			       HashTable<int,int>* hash,
-			       HashTable<int,int>* Bdry, int first, int last) {
+    GeomTrianglesP* group, Array1<TSElement*>& elems, 
+    Array1<Point>& pts, MapIntInt* hash, MapIntInt* Bdry,
+    int first, int last)
+{
     double val[8];
     if (rgfield_uc) {
 	val[0]=rgfield_uc->grid(i, j, k)-isoval;
@@ -720,6 +728,7 @@ int IsoSurfaceDW::iso_cubeHash(int i, int j, int k, double isoval,
     TRIANGLE_CASES *tcase=triCases+mask;
     EDGE_LIST *edges=tcase->edges;
     int pidx[3];
+    MapIntInt::iterator iter;
     int edgesVisited[12];
     for (int ev=0; ev<12; ev++) edgesVisited[ev]=-1;
     for(; edges[0]>-1; edges+=3) {
@@ -737,41 +746,35 @@ int IsoSurfaceDW::iso_cubeHash(int i, int j, int k, double isoval,
 		else if ((v1%2)==1) d1=1; 
 		int e=((i+i1)<<22)+((j+j1)<<12)+((k+k1)<<2)+d1;
 		if (last && i1) {
-//		    Bdry->dave_hack(e,pidx[ii]);
-		    Bdry->lookup(e,pidx[ii]);
-		    if (pidx[ii]%4 != 2) {
-			Bdry->remove(e);
-			Bdry->insert(e,pidx[ii]+1);
-//			Bdry->swap(e,pidx[ii]+1);
+		    pidx[ii] = (*Bdry)[e];
+		    if (pidx[ii] % 4 != 2) {
+			(*Bdry)[e] = pidx[ii] + 1;
 		    } else
-		        Bdry->remove(e);
-		    pidx[ii]=-2-(pidx[ii]>>2);
+		        Bdry->erase(e);
+		    pidx[ii] = -2 - (pidx[ii]>>2);
 		} else if (first && (v1==3 || v1==7 || v1==8 || v1==10)) {
-//		    if (Bdry->dave_hack(e,pidx[ii])) {
-		    if (Bdry->lookup(e,pidx[ii])) {
-			Bdry->remove(e);
-			Bdry->insert(e,pidx[ii]+1);
-//			Bdry->swap(e,pidx[ii]+1);
+		    iter = Bdry->find(e);
+		    pidx[ii] = (*iter).second;
+		    if (iter != Bdry->end()) {
+			(*Bdry)[e] = pidx[ii] + 1;
 			pidx[ii]=pidx[ii]>>2;
 		    } else {
 			pidx[ii]=pts.size();
-			Bdry->insert(e,pidx[ii]<<2);
+			(*Bdry)[e] = pidx[ii] << 2;
 			int p0=edge_table[v1][0];
 			int p1=edge_table[v1][1];
 			pts.add(INTERP(p0,p1));
 		    }
-//		} else if (hash->dave_hack(e,pidx[ii])) {
-		} else if (hash->lookup(e,pidx[ii])) {
+		} else if ((iter = hash->find(e)) != hash->end()) {
+		    pidx[ii] = (*iter).second;
 		    if (pidx[ii]%4 != 2) {
-//			hash->swap(e,pidx[ii]+1);
-			hash->remove(e);
-			hash->insert(e,pidx[ii]+1);
+			(*hash)[e] = pidx[ii]+1;
 		    } else
-			hash->remove(e);
+			hash->erase(e);
 		    pidx[ii]=pidx[ii]>>2;
 		} else {
 		    pidx[ii]=pts.size();
-		    hash->insert(e,pidx[ii]<<2);
+		    (*hash)[e] = pidx[ii] << 2;
 		    int p0=edge_table[v1][0];
 		    int p1=edge_table[v1][1];
 		    pts.add(INTERP(p0,p1));
@@ -827,9 +830,11 @@ void IsoSurfaceDW::parallel_reg_grid_hash(int proc)
     myOuterExtract.start();
     Array1<TSElement *>* elems=&all_elems[proc];
     Array1<Point>* pts=&all_pts[proc];
-    HashTable<int,int>* hash = new HashTable<int,int>;
-    HashTable<int,int>* BdryFirst=all_bdryHashes[proc];
-    HashTable<int,int>* BdryLast;
+    
+    MapIntInt* hash = new MapIntInt;
+    MapIntInt* BdryFirst = all_bdryHashes[proc];
+    MapIntInt* BdryLast;
+    
     if (proc != np-1) {
 	BdryLast=all_bdryHashes[proc+1];    
     }
@@ -969,7 +974,7 @@ void IsoSurfaceDW::iso_reg_grid_hash()
     for (i=0; i<np; i++) {
 	all_tris[i] = new GeomTrianglesP();
 	all_sems[i] = new Semaphore("IsoSurfaceDW reg_grid_hash semaphore", 0);
-	all_bdryHashes[i] = new HashTable<int,int>;
+	all_bdryHashes[i] = new MapIntInt;
     }
     
     outerExtract.clear();
@@ -1013,7 +1018,9 @@ void IsoSurfaceDW::iso_reg_grid()
     blockSize=tclBlockSize.get();
     if (sing) np=1;	
     else np=Min(Thread::numProcessors(), ((rgbase->nx-2)/blockSize)+1);
-    cerr << "Parallel extraction -- using "<<np<<" processors, blocksize="<<blockSize<<"  emit="<<emit<<"\n";
+    cerr << "Parallel extraction -- using " << np
+	 << " processors, blocksize=" << blockSize
+	 << "  emit=" << emit << "\n";
 
     int i;
     if (emit) {
@@ -1034,15 +1041,14 @@ void IsoSurfaceDW::iso_reg_grid()
     
     outerExtract.clear();
 
-
-    Thread::parallel(Parallel<IsoSurfaceDW>(this, &IsoSurfaceDW::parallel_reg_grid),
-		     np, true);
+    Thread::parallel(Parallel<IsoSurfaceDW>(this,
+      &IsoSurfaceDW::parallel_reg_grid), np, true);
 
     for (i=0; i<np; i++) {
 	if (all_tris[i]->size())
 	    maingroup->add(all_tris[i]);
     }
-
+    
     wct.stop();
     cerr << "Total outerExtract: "<<outerExtract.time()<<"\n";
     cerr << "TOTAL: "<<outerExtract.time()<<"\n";
@@ -1901,6 +1907,10 @@ void IsoSurfaceDW::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.8  2000/03/11 00:39:55  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.7  2000/03/10 09:09:34  dmw
 // fixed SurfToGeom to create vertex normals (smooth surfaces), and IsoSurfaceDW to: autoupdate, generate surfaces for MC, and support log isovals
 //

@@ -14,7 +14,6 @@
 
 #include <PSECommon/Modules/Salmon/Renderer.h>
 #include <PSECommon/Modules/Salmon/Roe.h>
-#include <SCICore/Containers/HashTable.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -165,6 +164,10 @@ void Renderer::getData(int, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.6  2000/03/11 00:39:52  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.5  1999/10/07 02:06:56  sparker
 // use standard iostreams and complex type
 //

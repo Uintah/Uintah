@@ -17,7 +17,6 @@
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Comm/MessageBase.h>
 #include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/HashTable.h>
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <PSECore/Datatypes/GeometryComm.h>
 #include <SCICore/Geom/GeomObj.h>
@@ -36,7 +35,6 @@ using PSECore::Comm::MessageBase;
 using PSECore::Comm::MessageTypes;
 using PSECore::Datatypes::GeomReply;
 
-using SCICore::Containers::HashTable;
 using SCICore::GeomSpace::MaterialHandle;
 using SCICore::TclInterface::TCLArgs;
 using SCICore::GeomSpace::Lighting;
@@ -59,11 +57,21 @@ struct PortInfo {
     GeometryComm* msg_head;
     GeometryComm* msg_tail;
     int portno;
-    HashTable<int, SceneItem*>* objs;
+
+    typedef map< int, SceneItem*, less<int> > MapIntSceneItem;
+    MapIntSceneItem* objs;
 };
 #endif
 
 class Salmon : public Module {
+    
+public:
+    typedef map< clString, void*, less<clString> >	MapClStringVoid;
+#if 0    
+    typedef map< int, PortInfo*, less<int> >		MapIntPortInfo;
+#endif
+
+private:
     Array1<Roe*> roe;
     int busy_bit;
     Array1<Roe*> topRoe;
@@ -72,7 +80,8 @@ class Salmon : public Module {
     int max_portno;
     virtual void connection(Module::ConnectionMode, int, int);
 
-    HashTable<clString, void*> specific;
+    MapClStringVoid specific;
+    
 public:
     MaterialHandle default_matl;
     friend class Roe;
@@ -96,11 +105,14 @@ public:
 
     virtual void emit_vars(std::ostream& out); // Override from class TCL
 
-    // The scene...
-    GeomIndexedGroup ports; // this contains all of the ports...
-//    HashTable<int, PortInfo*> portHash;
+				// The scene...
+    GeomIndexedGroup ports;	// this contains all of the ports...
 
-    // Lighting
+#if 0    
+    MapIntPortInfo portHash;
+#endif
+
+				// Lighting
     Lighting lighting;
 
     int process_event(int block);
@@ -135,6 +147,10 @@ public:
 
 //
 // $Log$
+// Revision 1.7  2000/03/11 00:39:53  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.6  1999/10/07 02:06:57  sparker
 // use standard iostreams and complex type
 //

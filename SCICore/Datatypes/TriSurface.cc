@@ -364,21 +364,25 @@ int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
 }
 
 int TriSurface::find_or_add(const Point &p) {
-    if (pntHash==0) {
-	points.add(p);
-	return(points.size()-1);
-    }
-    int oldId;
-    int val=(Round((p.z()-hash_min.z())/resolution)*hash_y+
-	     Round((p.y()-hash_min.y())/resolution))*hash_x+
-		 Round((p.x()-hash_min.x())/resolution);
-    if (pntHash->lookup(val, oldId)) {
-	return oldId;
-    } else {
-	pntHash->insert(val, points.size());
-	points.add(p);	
-	return(points.size()-1);
-    }
+  if (pntHash==0) {
+    points.add(p);
+    return(points.size()-1);
+  }
+  //int oldId;
+  MapIntInt::iterator oldId;
+  int val=(Round((p.z()-hash_min.z())/resolution)*hash_y+
+    Round((p.y()-hash_min.y())/resolution))*hash_x+
+    Round((p.x()-hash_min.x())/resolution);
+  //if (pntHash->lookup(val, oldId)) {
+  oldId = pntHash->find(val);
+  if (oldId != pntHash->end()) {
+    return (*oldId).second;
+  } else {
+    //pntHash->insert(val, points.size());
+    (*pntHash)[val] = points.size();
+    points.add(p);	
+    return(points.size()-1);
+  }
 }
 
 int TriSurface::cautious_add_triangle(const Point &p1, const Point &p2, 
@@ -542,12 +546,14 @@ void TriSurface::construct_hash(int xdim, int ydim, const Point &p, double res) 
     if (pntHash) {
 	delete pntHash;
     }
-    pntHash = scinew HashTable<int, int>;
+    //pntHash = scinew HashTable<int, int>;
+    pntHash = scinew MapIntInt;
     for (int i=0; i<points.size(); i++) {
 	int val=(Round((points[i].z()-p.z())/res)*ydim+
 		 Round((points[i].y()-p.y())/res))*xdim+
 		     Round((points[i].x()-p.x())/res);
-	pntHash->insert(val, i);
+	//pntHash->insert(val, i);
+	(*pntHash)[val] = i;
     }
 }
 
@@ -1152,6 +1158,10 @@ void Pio(Piostream& stream, TSEdge*& data)
 
 //
 // $Log$
+// Revision 1.12  2000/03/11 00:41:30  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.11  1999/11/02 06:06:13  moulding
 // added a #ifdef for win32 to quiet the C++ compiler.  This change
 // relates to bug # 61 in csafe's bugzilla.

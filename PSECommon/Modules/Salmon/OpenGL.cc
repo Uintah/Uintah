@@ -26,9 +26,10 @@ using std::ostringstream;
 using std::ofstream;
 #include <string.h>
 
+#include <map.h>
+
 #include "image.h"
 #include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Containers/HashTable.h>
 #include <SCICore/Util/Timer.h>
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Geom/GeomOpenGL.h>
@@ -94,6 +95,8 @@ class OpenGLHelper;
 #define DO_GETDATA 2
 #define REDRAW_DONE 4
 #define PICK_DONE 5
+
+static map< clString, ObjTag*, less<clString> >::iterator viter;
 
 struct GetReq {
     int datamask;
@@ -256,10 +259,10 @@ OpenGL::OpenGL()
 
 OpenGL::~OpenGL()
 {
-    fpstimer.stop();
-    
-    if(encoding_mpeg) // make sure we finish up mpeg that was in progress
-      encoding_mpeg = false;
+  fpstimer.stop();
+				// make sure we finish up mpeg that
+				// was in progress
+  if(encoding_mpeg) encoding_mpeg = false;
 }
 
 clString OpenGL::create_window(Roe*,
@@ -912,30 +915,30 @@ void OpenGL::redraw_frame()
 
     salmon->geomlock.readUnlock();
 
-    // Look for errors
+				// Look for errors
     GLenum errcode;
     while((errcode=glGetError()) != GL_NO_ERROR){
 	cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
     }
 
-    // Report statistics
+				// Report statistics
     timer.stop();
     fpstimer.stop();
     double fps=nframes/fpstimer.time();
-    fps+=0.05; // Round to nearest tenth
+    fps+=0.05;			// Round to nearest tenth
     int fps_whole=(int)fps;
     int fps_tenths=(int)((fps-fps_whole)*10);
     fpstimer.clear();
-    fpstimer.start(); // Start it running for next time
+    fpstimer.start();		// Start it running for next time
     ostringstream str;
     str << roe->id << " updatePerf \"";
     str << drawinfo->polycount << " polygons in " << timer.time()
 	<< " seconds\" \"" << drawinfo->polycount/timer.time()
 	<< " polygons/second\"" << " \"" << fps_whole << "."
 	<< fps_tenths << " frames/sec\"" << '\0';
-//    cerr <<"updatePerf: <" << str.str() << ">\n";	
+    //    cerr <<"updatePerf: <" << str.str() << ">\n";	
     if (roe->doingMovie) {
-//      cerr << "Saving a movie!\n";
+      //      cerr << "Saving a movie!\n";
       unsigned char movie[10];
       int startDiv = 100;
       int idx=0;
@@ -1363,11 +1366,13 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
 
 void Roe::setDI(DrawInfoOpenGL* drawinfo,clString name)
 {
-    ObjTag* vis;
+  ObjTag* vis;
 
-    if (visible.lookup(name,vis)){
-	setState(drawinfo,to_string(vis->tagid));
-    }
+  viter = visible.find(name);
+  if (viter != visible.end()) { // if found
+    vis = (*viter).second;
+    setState(drawinfo,to_string(vis->tagid));
+  }
 }
 
 // set the bits for the clipping planes that are on...
@@ -1746,6 +1751,10 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.21  2000/03/11 00:39:52  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.20  2000/02/24 06:08:43  sparker
 // Added call to Thread::allow_sgi_OpenGL_page0_sillyness()
 //

@@ -16,6 +16,9 @@
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
+
+#include <SCICore/Persistent/PersistentMap.h>
+
 #include <iostream>
 using std::cerr;
 using std::ostream;
@@ -31,119 +34,124 @@ static Persistent* make_GeomIndexedGroup()
 PersistentTypeID GeomIndexedGroup::type_id("GeomIndexedGroup", "GeomObj",
 					   make_GeomIndexedGroup);
 
+//----------------------------------------------------------------------
 GeomIndexedGroup::GeomIndexedGroup(const GeomIndexedGroup& /* g */)
 {
     NOT_FINISHED("GeomIndexedGroup::GeomIndexedGroup");
 }
 
+//----------------------------------------------------------------------
 GeomIndexedGroup::GeomIndexedGroup()
 {
     // do nothing for now
 }
 
+//----------------------------------------------------------------------
 GeomIndexedGroup::~GeomIndexedGroup()
 {
     delAll();  // just nuke everything for now...
 }
 
+//----------------------------------------------------------------------
 GeomObj* GeomIndexedGroup::clone()
 {
     return scinew GeomIndexedGroup(*this);
 }
 
+//----------------------------------------------------------------------
 void GeomIndexedGroup::reset_bbox()
 {
     NOT_FINISHED("GeomIndexedGroup::reset_bbox");
 }
 
-
+//----------------------------------------------------------------------
 void GeomIndexedGroup::get_bounds(BBox& bbox)
 {
-    HashTableIter<int, GeomObj*> iter(&objs);
-    for(iter.first();iter.ok();++iter) {
-	GeomObj *obj = iter.get_data();
-	obj->get_bounds(bbox);
-    }
+  MapIntGeomObj::iterator iter;
+  for (iter = objs.begin(); iter != objs.end(); iter++) {
+    (*iter).second->get_bounds(bbox);
+  }  
 }
 
 #define GEOMINDEXEDGROUP_VERSION 1
 
+//----------------------------------------------------------------------
 void GeomIndexedGroup::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomIndexedGroup", GEOMINDEXEDGROUP_VERSION);
-    // Do the base class first...
+				// Do the base class first...
     GeomObj::io(stream);
-    SCICore::Containers::Pio(stream, objs);
+    Pio(stream, objs);
     stream.end_class();
 }
 
+//----------------------------------------------------------------------
 bool GeomIndexedGroup::saveobj(ostream& out, const clString& format,
 			       GeomSave* saveinfo)
 {
-  cerr << "saveobj IndexedGroup\n";
-    HashTableIter<int, GeomObj*> iter(&objs);
-    for(iter.first();iter.ok();++iter) {
-	GeomObj *obj = iter.get_data();
-	if(!obj->saveobj(out, format, saveinfo))
-	    return false;
+    cerr << "saveobj IndexedGroup\n";
+    MapIntGeomObj::iterator iter;
+    for (iter = objs.begin(); iter != objs.end(); iter++) {
+      if (!(*iter).second->saveobj(out, format, saveinfo)) return false;
     }
     return true;
 }
 
+//----------------------------------------------------------------------
 void GeomIndexedGroup::addObj(GeomObj* obj, int id)
 {
-    objs.insert(id,obj);
+    objs[id] = obj;
 }
 
+//----------------------------------------------------------------------
 GeomObj* GeomIndexedGroup::getObj(int id)
 {
-    GeomObj *obj;
-    if (objs.lookup(id,obj)) {
-	return obj;
-    }
-    else {
-	cerr << "couldn't find object in GeomIndexedGroup::getObj!\n";
-    }
-    return 0;
+  MapIntGeomObj::iterator iter = objs.find(id);
+  if (iter != objs.end()) {
+    return (*iter).second;
+  }
+  else {
+    cerr << "couldn't find object in GeomIndexedGroup::getObj!\n";
+  }
+  return 0;
 }
 
+//----------------------------------------------------------------------
 void GeomIndexedGroup::delObj(int id, int del)
 {
-    GeomObj* obj;
-
-    if (objs.lookup(id,obj)) {
-	objs.remove(id);
-	//cerr << "Deleting, del=" << del << endl;
-	if(del)
-	    delete obj;
-    }
-    else {
-	cerr << "invalid id in GeomIndexedGroup::delObj()!\n";
-    }
+  MapIntGeomObj::iterator iter = objs.find(id);
+  if (iter != objs.end()) {
+    //cerr << "Deleting, del=" << del << endl;
+    if (del) delete (*iter).second;
+    objs.erase(iter);
+  }
+  else {
+    cerr << "invalid id in GeomIndexedGroup::delObj()!\n";
+  }
 }
 
+//----------------------------------------------------------------------
 void GeomIndexedGroup::delAll(void)
 {
-    HashTableIter<int, GeomObj*> iter(&objs);
-    for(iter.first();iter.ok();++iter) {
-	GeomObj *obj = iter.get_data();
-	delete obj;
-    }
-
-    objs.remove_all();
+  MapIntGeomObj::iterator iter;
+  for (iter = objs.begin(); iter != objs.end(); iter++) {
+    delete (*iter).second;
+  }
+  objs.clear();
 }
 
-HashTableIter<int,GeomObj*> GeomIndexedGroup::getIter(void)
+//----------------------------------------------------------------------
+GeomIndexedGroup::IterIntGeomObj GeomIndexedGroup::getIter(void)
 {
-    HashTableIter<int,GeomObj*> iter(&objs);
-    return iter;
+  return IterIntGeomObj(objs.begin(), objs.end());
 }
 
-HashTable<int,GeomObj*>* GeomIndexedGroup::getHash(void)
+//----------------------------------------------------------------------
+GeomIndexedGroup::MapIntGeomObj* GeomIndexedGroup::getHash(void)
 {
-    return &objs;
+  return &objs;
 }
 
 } // End namespace GeomSpace
@@ -151,6 +159,10 @@ HashTable<int,GeomObj*>* GeomIndexedGroup::getHash(void)
 
 //
 // $Log$
+// Revision 1.7  2000/03/11 00:41:31  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.6  1999/10/07 02:07:48  sparker
 // use standard iostreams and complex type
 //

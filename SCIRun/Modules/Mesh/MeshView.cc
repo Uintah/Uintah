@@ -17,7 +17,6 @@
 #include <PSECore/Datatypes/MeshPort.h>
 #include <PSECore/Widgets/CrosshairWidget.h>
 #include <SCICore/Containers/Queue.h>
-#include <SCICore/Containers/HashTable.h>
 #include <SCICore/Geom/Color.h>
 #include <SCICore/Geom/GeomCylinder.h>
 #include <SCICore/Geom/GeomGroup.h>
@@ -66,6 +65,10 @@ using namespace SCICore::TclInterface;
 #endif
 
 class MeshView : public Module {
+public:
+    typedef map<Edge, int, less<Edge> > MapEdgeInt;
+  
+private:
     MeshIPort* inport;
     ColorMapIPort* colorPort;
     GeometryOPort* ogeom;
@@ -524,7 +527,6 @@ void MeshView::getElements(const MeshHandle& mesh,
     //int numTetra = mesh -> elems.size();
     //int nL = numLevels.get();
     //int aL = allLevels.get();
-    //HashTable<Edge, int> edge_table;
 
     if (tech.get() == 1 || (tech.get() == 2 && lastTech == 1))
     {
@@ -653,8 +655,7 @@ void MeshView::getTetra(const MeshHandle& mesh)
     int toDo = render.get(); // Either looking at entire volume or surface
                              // faces only.
 
-    HashTable<Edge, int> edge_table;
-    int dummy = 0;
+    MapEdgeInt edge_table;
     for (i = 0; i < numTetra; i++)
     {
 	if (toDrawTet[i] != -1)
@@ -666,7 +667,7 @@ void MeshView::getTetra(const MeshHandle& mesh)
 		// and looking at entire volume
 		if (toDo == VOLUME)
 		{
-		    // add each edge of the tetrahedron to the hashtable, if
+		    // add each edge of the tetrahedron to the hash table, if
 		    // it's not already there
 		    Edge e1(e->n[0], e->n[1]);
 		    Edge e2(e->n[0], e->n[2]);
@@ -674,25 +675,26 @@ void MeshView::getTetra(const MeshHandle& mesh)
 		    Edge e4(e->n[1], e->n[2]);
 		    Edge e5(e->n[1], e->n[3]);
 		    Edge e6(e->n[2], e->n[3]);
-		    if (!(edge_table.lookup(e1, dummy)))
-			edge_table.insert(e1, 0);
-		    if (!(edge_table.lookup(e2, dummy)))
-			edge_table.insert(e2, 0);
-		    if (!(edge_table.lookup(e3, dummy)))
-			edge_table.insert(e3, 0);
-		    if (!(edge_table.lookup(e4, dummy)))
-			edge_table.insert(e4, 0);
-		    if (!(edge_table.lookup(e5, dummy)))
-			edge_table.insert(e5, 0);
-		    if (!(edge_table.lookup(e6, dummy)))
-			edge_table.insert(e6, 0);
+		    
+		    if (edge_table.find(e1) == edge_table.end())
+			edge_table[e1] = 0;
+		    if (edge_table.find(e2) == edge_table.end())
+			edge_table[e2] = 0;
+		    if (edge_table.find(e3) == edge_table.end())
+			edge_table[e3] = 0;
+		    if (edge_table.find(e4) == edge_table.end())
+			edge_table[e4] = 0;
+		    if (edge_table.find(e5) == edge_table.end())
+			edge_table[e5] = 0;
+		    if (edge_table.find(e6) == edge_table.end())
+			edge_table[e6] = 0;		    
 		}
 		else 
 		{
 		    // if we're only looking at the surface, for each of
 		    // the four neighbors, see if it is to be displayed,
 		    // and if it is not, then add the 3 edges of that face
-		    // to the hashtable
+		    // to the hash table
 		    for (int k = 0; k < 4; k++)
 		    {
 			int nbr = e->face(k);
@@ -704,12 +706,12 @@ void MeshView::getTetra(const MeshHandle& mesh)
 			    Edge e1(e->n[p1], e->n[p2]);
 			    Edge e2(e->n[p2], e->n[p3]);
 			    Edge e3(e->n[p3], e->n[p1]);
-			    if (!(edge_table.lookup(e1, dummy)))
-				edge_table.insert(e1, dummy);
-			    if (!(edge_table.lookup(e2, dummy)))
-				edge_table.insert(e2, dummy);
-			    if (!(edge_table.lookup(e3, dummy)))
-				edge_table.insert(e3, dummy);
+			    if (edge_table.find(e1) == edge_table.end())
+				edge_table[e1] = 0;
+			    if (edge_table.find(e2) == edge_table.end())
+				edge_table[e2] = 0;
+			    if (edge_table.find(e3) == edge_table.end())
+				edge_table[e3] = 0;
 			}
 		    }
 		}
@@ -740,14 +742,15 @@ void MeshView::getTetra(const MeshHandle& mesh)
     
 	}
     }
-    HashTableIter<Edge, int> eiter(&edge_table);
+    
+    MapEdgeInt::iterator eiter;
     double rad = radius.get();
 
-    // For each edge in the hashtable, make it into a cylinder and add it to
+    // For each edge in the hash table, make it into a cylinder and add it to
     // the group.
-    for(eiter.first(); eiter.ok(); ++eiter)
+    for(eiter = edge_table.begin(); eiter != edge_table.end(); ++eiter)
     {
-	Edge e(eiter.get_key());
+	Edge e((*eiter).first);
 	Point p1(mesh->nodes[e.n[0]]->p);
 	Point p2(mesh->nodes[e.n[1]]->p);
 	GeomCylinder* cyl = new GeomCylinder(p1, p2, rad, 8, 1);
@@ -984,7 +987,7 @@ int MeshView::getMeas(const MeshHandle& mesh, const ColorMapHandle& genColors)
 {
     //GeomGroup *gr = new GeomGroup;
     int e = elmMeas.get();
-    HashTable<Edge, int> edge_table;
+    MapEdgeInt edge_table;
     double min, max;
     histo.GetRange(min, max);
     int cSize = genColors -> colors.size();
@@ -1050,7 +1053,7 @@ int MeshView::getMeas(const MeshHandle& mesh, const ColorMapHandle& genColors)
 	for (i = 0; i < numTetra; i++)
 	{
 	    // If the element is not in the range to be drawn, then add
-	    // its edges to the hashtable to be rendered for the wireframe
+	    // its edges to the hash table to be rendered for the wireframe
 	    // mesh
 	    if (toDrawMeas[i] == cSize)
 	    {
@@ -1062,24 +1065,18 @@ int MeshView::getMeas(const MeshHandle& mesh, const ColorMapHandle& genColors)
 		Edge e5(elm->n[1], elm->n[3]);
 		Edge e6(elm->n[2], elm->n[3]);
 		
-		int dummy=0;
-		if (!(edge_table.lookup(e1, dummy)))
-		    edge_table.insert(e1, 0);
-		int dummy2=0;
-		if (!(edge_table.lookup(e2, dummy2)))
-		    edge_table.insert(e2, dummy2);
-		int dummy3=0;
-		if (!(edge_table.lookup(e3, dummy3)))
-		    edge_table.insert(e3, dummy3);
-		int dummy4=0;
-		if (!(edge_table.lookup(e4, dummy4)))
-		    edge_table.insert(e4, dummy4);
-		int dummy5=0;
-		if (!(edge_table.lookup(e5, dummy5)))
-		    edge_table.insert(e5, dummy5);
-		int dummy6=0;
-		if (!(edge_table.lookup(e6, dummy6)))
-		    edge_table.insert(e6, dummy6);
+		if (edge_table.find(e1) == edge_table.end())
+		    edge_table[e1] = 0;
+		if (edge_table.find(e2) == edge_table.end())
+		    edge_table[e2] = 0;
+		if (edge_table.find(e3) == edge_table.end())
+		    edge_table[e3] = 0;
+		if (edge_table.find(e4) == edge_table.end())
+		    edge_table[e4] = 0;
+		if (edge_table.find(e5) == edge_table.end())
+		    edge_table[e5] = 0;
+		if (edge_table.find(e6) == edge_table.end())
+		    edge_table[e6] = 0;
 	    }
 	    // Otherwise, if it is in the range, check each face to see if
 	    // that neighbor is to be drawn, and if it is not, then add that
@@ -1115,11 +1112,11 @@ int MeshView::getMeas(const MeshHandle& mesh, const ColorMapHandle& genColors)
 	    measGroup -> add(measMatl[i]);
 	}
 
-	// For each edge in the hashtable, add a line for the wireframe.
-	HashTableIter<Edge, int> eiter(&edge_table);
-	for(eiter.first(); eiter.ok(); ++eiter)
+	// For each edge in the hash table, add a line for the wireframe.
+	MapEdgeInt::iterator eiter;
+	for(eiter = edge_table.begin(); eiter != edge_table.end(); ++eiter)
 	{
-	    Edge e(eiter.get_key());
+	    Edge e((*eiter).first);
 	    Point p1(mesh->nodes[e.n[0]]->p);
 	    Point p2(mesh->nodes[e.n[1]]->p);
 	    GeomLine* gline = new GeomLine(p1, p2);
@@ -1644,6 +1641,10 @@ void MeshView::geom_moved(GeomPick*, int, double, const Vector&, void*)
 
 //
 // $Log$
+// Revision 1.4  2000/03/11 00:41:55  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.3  1999/10/07 02:08:20  sparker
 // use standard iostreams and complex type
 //

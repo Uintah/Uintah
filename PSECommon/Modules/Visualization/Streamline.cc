@@ -30,7 +30,7 @@ hook up user interface buttons
  */
 
 #include <SCICore/Tester/RigorousTest.h>
-#include <SCICore/Containers/HashTable.h>
+#include <map.h>
 #include <SCICore/Math/Trig.h>
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/ColorMapPort.h>
@@ -247,7 +247,8 @@ class Streamline : public Module {
 
     int first_execute;
 
-    HashTable<int, SLSourceInfo*> source_info;
+    typedef map<int, SLSourceInfo*, less<int> > MapIntSLSourceInfo;
+    MapIntSLSourceInfo source_info;
 
     virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
     virtual void geom_release(GeomPick*, void*);
@@ -356,6 +357,7 @@ Streamline::~Streamline()
 {
 }
 
+//----------------------------------------------------------------------
 void Streamline::execute()
 {
     // Get the data from the ports...
@@ -366,10 +368,11 @@ void Streamline::execute()
     if(!have_cmap)
 	sfield=0;
 
-    HashTableIter<int, SLSourceInfo*> iter(&source_info);
-    for(iter.first();iter.ok();++iter){
+    MapIntSLSourceInfo::iterator iter;
+    for (iter = source_info.begin(); iter != source_info.end(); ++iter) {
+
 	// Find the current source...
-        si=iter.get_data();
+        si=(*iter).second;
 	clString sidstr(id+"-"+to_string(si->sid));
 	cerr << "Processing source: " << si->sid << endl;
 
@@ -1932,7 +1935,7 @@ void Streamline::tcl_command(TCLArgs& args, void* userdata)
 	    args.error("newsource has a bad SID");
 	    return;
 	}
-	source_info.insert(sid, new SLSourceInfo(sid, this, ogeom));
+	source_info[sid] = new SLSourceInfo(sid, this, ogeom);
     } else if(args[1] == "need_find"){
 	if(args.count() != 3){
 	    args.error("need_find must have a SID");
@@ -1944,11 +1947,14 @@ void Streamline::tcl_command(TCLArgs& args, void* userdata)
 	    return;
 	}
 	SLSourceInfo* si;
-	if(!source_info.lookup(sid, si)){
+	MapIntSLSourceInfo::iterator iter;
+	iter = source_info.find(sid);
+	if (iter == source_info.end()) {
 	    args.error("bad SID for need_find");
 	    return;
 	}
-	si->need_find=1;
+	si = (*iter).second;
+	si->need_find = 1;
     } else if(args[1] == "reposition"){
 	if(args.count() != 3){
 	    args.error("need_find must have a SID");
@@ -1960,10 +1966,13 @@ void Streamline::tcl_command(TCLArgs& args, void* userdata)
 	    return;
 	}
 	SLSourceInfo* si;
-	if(!source_info.lookup(sid, si)){
+	MapIntSLSourceInfo::iterator iter;
+	iter = source_info.find(sid);
+	if (iter == source_info.end()) {
 	    args.error("bad SID for need_find");
 	    return;
 	}
+	si = (*iter).second;
 	clString pos;
 	clString sidstr(id+"-"+to_string(si->sid));
 	if(!get_tcl_stringvar(sidstr, "position", pos)){
@@ -2045,6 +2054,10 @@ void SLSourceInfo::pick_source(const clString& sname,
 
 //
 // $Log$
+// Revision 1.9  2000/03/11 00:39:56  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.8  1999/10/07 02:07:08  sparker
 // use standard iostreams and complex type
 //

@@ -106,12 +106,12 @@ SlaveController::createModule (char *name, char *id, int handle)
     // bind Network to Module instance, create thread, start event loop
     mod->set_context (0, net);
 
-    // add Module id and ptr to Module to hashtable of modules in network
-    net->module_ids.insert(mod->id, mod);
+    // add Module id and ptr to Module to hash table of modules in network
+    net->module_ids[mod->id] = mod;
 
-    // add to hashtable of handles and module ptrs
+    // add to hash table of handles and module ptrs
     if (mod->handle > 0)
-        net->mod_handles.insert(mod->handle, mod);
+	net->mod_handles.[mod->handle] = mod;
 
 #ifdef DEBUG
     cerr << "Exiting SlaveController::createModule (" << name << ", "
@@ -254,10 +254,10 @@ SlaveController::deleteModule (int handle)
     if (i == net->modules.size())
         return -1;
 
-    // remove array element corresponding to module, remove from hashtables
+    // remove array element corresponding to module, remove from hash tables
     net->modules.remove(i);
-    net->module_ids.remove(mod->id);
-    net->mod_handles.remove(handle);
+    net->module_ids.erase(mod->id);
+    net->mod_handles.erase(handle);
     delete mod;  	// might cause problems with dangling refs in net
 
 #ifdef DEBUG
@@ -287,9 +287,9 @@ SlaveController::deleteRemConnect (int connHandle)
     if (i == net->connections.size())
 	return -1;
 
-    // remove connection from array, hashtable, and free memory
+    // remove connection from array, hash table, and free memory
     net->connections.remove(i);
-    net->conn_handles.remove(connHandle);
+    net->conn_handles.erase(connHandle);
     delete conn;
 
 #ifdef DEBUG
@@ -318,9 +318,9 @@ SlaveController::deleteLocConnect (int connHandle)
     if (i == net->connections.size())
 	return -1;
 
-    // remove connection from array, hashtable, and free memory
+    // remove connection from array, hash table, and free memory
     net->connections.remove(i);
-    net->conn_handles.remove(connHandle);
+    net->conn_handles.erase(connHandle);
     delete conn;
 
 #ifdef DEBUG
@@ -453,6 +453,10 @@ Module_Scheduler_Message::~Module_Scheduler_Message()
 
 //
 // $Log$
+// Revision 1.4  2000/03/11 00:40:56  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.3  1999/10/07 02:07:22  sparker
 // use standard iostreams and complex type
 //

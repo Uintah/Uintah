@@ -21,15 +21,15 @@
 #include <PSECore/share/share.h>
 
 #include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/HashTable.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Thread/Mutex.h>
+
+#include <map.h>
 
 namespace PSECore {
 namespace Dataflow {
 
 using SCICore::Containers::clString;
-using SCICore::Containers::HashTable;
 using SCICore::Containers::Array1;
 
 class Connection;
@@ -38,19 +38,37 @@ class Module;
 class NetworkEditor;
 
 class PSECORESHARE Network {
+public:
+    
+    typedef map<clString, Connection*, less<clString> >
+        MapClStringConnection;
+    
+    typedef map<clString, Module*, less<clString> >
+        MapClStringModule;
+    
+    typedef map<int, Connection*, less<int> >
+        MapIntConnection;
+    
+    typedef map<int, Module*, less<int> >
+        MapIntModule;
+    
+private:
     SCICore::Thread::Mutex the_lock;
     int read_file(const clString&);
 
-    HashTable<clString, Connection*> conn_ids;
+    MapClStringConnection conn_ids;
+    
     NetworkEditor* netedit;
     int first;
     int nextHandle;
 public:				// mm-hack to get direct access
     Array1<Connection*> connections;
     Array1<Module*> modules;
-    HashTable<clString, Module*> module_ids;
-    HashTable<int, Module*> mod_handles;
-    HashTable<int, Connection*> conn_handles;
+    
+    MapClStringModule module_ids;
+    MapIntModule mod_handles;
+    MapIntConnection conn_handles;
+    
     int slave_socket;
     int reschedule;
 public:
@@ -90,6 +108,10 @@ public:
 
 //
 // $Log$
+// Revision 1.5  2000/03/11 00:40:55  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.4  1999/08/28 17:54:29  sparker
 // Integrated new Thread library
 //

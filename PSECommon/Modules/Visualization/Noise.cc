@@ -34,6 +34,7 @@
 
 #include <iostream>
 #include <strstream>
+
 #include <PSECore/Datatypes/SpanTree.h>
 #include <PSECommon/Modules/Visualization/Noise.h>
 //#include <Datatypes/Clock.h>
@@ -578,14 +579,3 @@ r_interp( ScalarField *, GeomTrianglesP *triangles, int index, double v )
 
 }
 }
-
-
-
-
-
-
-
-
-
-
-

@@ -4041,15 +4041,16 @@ void HeadLight::opengl_setup(const View& /*view*/, DrawInfoOpenGL*, int& idx)
     glPopMatrix();
 }
 
+//----------------------------------------------------------------------
 void GeomIndexedGroup::draw(DrawInfoOpenGL* di, Material* m, double time)
-{
-    HashTableIter<int, GeomObj*> iter(&objs);
-    for(iter.first();iter.ok();++iter) {
-	GeomObj *obj = iter.get_data();
-	obj->draw(di,m,time);
-    }
+{  
+  MapIntGeomObj::iterator iter;
+  for (iter = objs.begin(); iter != objs.end(); iter++) {
+    (*iter).second->draw(di, m, time);
+  }
 }
 
+//----------------------------------------------------------------------
 void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
 #ifndef _WIN32
@@ -4165,6 +4166,10 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.18  2000/03/11 00:41:31  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.17  2000/02/04 00:40:26  dmw
 // cleaning up leftover pushes on the name stack
 //
