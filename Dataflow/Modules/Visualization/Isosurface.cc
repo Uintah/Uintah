@@ -67,6 +67,7 @@ Isosurface::Isosurface(GuiContext* ctx) :
   gui_extract_from_new_field_(ctx->subVar("extract-from-new-field")),
   gui_use_algorithm_(ctx->subVar("algorithm")),
   gui_build_field_(ctx->subVar("build_trisurf")),
+  gui_build_geom_(ctx->subVar("build_geom")),
   gui_np_(ctx->subVar("np")),
   gui_active_isoval_selection_tab_(ctx->subVar("active-isoval-selection-tab")),
   gui_active_tab_(ctx->subVar("active_tab")),
@@ -307,8 +308,9 @@ Isosurface::execute()
     }
   }
 
-  bool build_field = gui_build_field_.get();
-  vector<GeomObj *> geometries;
+  const bool bf = gui_build_field_.get();
+  const bool bg = gui_build_geom_.get();
+  vector<GeomHandle > geometries;
   vector<FieldHandle> fields;
   const TypeDescription *td = field->get_type_description();
   switch (gui_use_algorithm_.get()) {
@@ -328,7 +330,7 @@ Isosurface::execute()
       mc_alg->set_field( field.get_rep() );
       for (unsigned int iv=0; iv<isovals.size(); iv++)
       {
-	mc_alg->search( isovals[iv], build_field);
+	mc_alg->search( isovals[iv], bf, bg );
 	geometries.push_back( mc_alg->get_geom() );
 	for (int i = 0 ; i < np; i++)
 	{
@@ -355,7 +357,7 @@ Isosurface::execute()
       }
       for (unsigned int iv=0; iv<isovals.size(); iv++)
       {
-	geometries.push_back(noise_alg->search(isovals[iv], build_field));
+	geometries.push_back(noise_alg->search(isovals[iv], bf, bg));
 	fields.push_back(noise_alg->get_field());
       }
     }
@@ -375,8 +377,8 @@ Isosurface::execute()
       } 
       for (unsigned int iv=0; iv<isovals.size(); iv++)
       {
-	GeomGroup *group = new GeomGroup;
-	GeomPoints *points = new GeomPoints();
+	GeomGroup *group = scinew GeomGroup;
+	GeomPoints *points = scinew GeomPoints();
 	sage_alg->search(isovals[0], group, points);
 	geometries.push_back( group );
       }
@@ -387,29 +389,7 @@ Isosurface::execute()
     return;
   }
 
-  // Merged send_results.
-  GeomGroup *geom = new GeomGroup;;
-
-  for (unsigned int iv=0; iv<isovals.size(); iv++)
-  {
-    MaterialHandle matl;
-
-    if (have_ColorMap)
-    {
-      matl= cmap->lookup(isovals[iv]);
-    }
-    else
-    {
-      matl = scinew Material(Color(gui_color_r_.get(),
-				   gui_color_g_.get(),
-				   gui_color_b_.get()));
-    }
-    if (geometries[iv]) 
-    {
-      geom->add(scinew GeomMaterial( geometries[iv] , matl ));
-    }
-  }
-
+  // Output geometry.
   GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
   if (!ogeom)
   {
@@ -421,19 +401,46 @@ Isosurface::execute()
   if ( geom_id_ )
   {
     ogeom->delObj( geom_id_ );
+    geom_id_ = 0;
   }
 
-  if (!geom->size())
+  if (bg)
   {
-    geom_id_=0;
-    return;
-  }
+    // Merged send_results.
+    GeomGroup *geom = scinew GeomGroup;;
 
-  // Send to viewer.
-  geom_id_ = ogeom->addObj( geom, surface_name);
+    for (unsigned int iv=0; iv<isovals.size(); iv++)
+    {
+      MaterialHandle matl;
+
+      if (have_ColorMap)
+      {
+	matl= cmap->lookup(isovals[iv]);
+      }
+      else
+      {
+	matl = scinew Material(Color(gui_color_r_.get(),
+				     gui_color_g_.get(),
+				     gui_color_b_.get()));
+      }
+      if (geometries[iv].get_rep()) 
+      {
+	geom->add(scinew GeomMaterial( geometries[iv] , matl ));
+      }
+    }
+
+    if (!geom->size())
+    {
+      delete geom;
+    }
+    else
+    {
+      geom_id_ = ogeom->addObj( geom, surface_name );
+    }
+  }
 
   // Output surface.
-  if (build_field && fields.size() && fields[0].get_rep())
+  if (bf && fields.size() && fields[0].get_rep())
   {
     FieldOPort *osurf = (FieldOPort *)get_oport("Surface");
     if (!osurf)
@@ -481,8 +488,6 @@ Isosurface::execute()
 bool
 Isosurface::new_field( FieldHandle field )
 {
-  const string type = field->get_type_description()->get_name();
-
   ScalarFieldInterfaceHandle sfi = field->query_scalar_interface(this);
   if (!sfi.get_rep())
   {

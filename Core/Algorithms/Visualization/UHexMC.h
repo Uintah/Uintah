@@ -61,8 +61,9 @@ public:
 private:
   LockingHandle<Field> field_;
   mesh_handle_type mesh_;
-  GeomTrianglesP *triangles_;
-  bool build_trisurf_;
+  GeomFastTriangles *triangles_;
+  bool build_field_;
+  bool build_geom_;
   TriSurfMeshHandle trisurf_;
   QuadSurfMeshHandle quadsurf_;
   map<long int, TriSurfMesh::Node::index_type> vertex_map_;
@@ -79,8 +80,8 @@ public:
   virtual ~UHexMC();
 	
   void extract( const cell_index_type &, double);
-  void reset( int, bool build_trisurf=false );
-  GeomObj *get_geom() { return triangles_; };
+  void reset( int, bool build_field, bool build_geom );
+  GeomHandle get_geom() { return triangles_; };
   FieldHandle get_field(double val);
 };
   
@@ -92,11 +93,11 @@ UHexMC<Field>::~UHexMC()
     
 
 template<class Field>
-void UHexMC<Field>::reset( int n, bool build_trisurf )
+void UHexMC<Field>::reset( int n, bool build_field, bool build_geom )
 {
-  build_trisurf_ = build_trisurf;
-  triangles_ = new GeomTrianglesP;
-  triangles_->reserve_clear((int)(n*2.5));
+  build_field_ = build_field;
+  build_geom_ = build_geom;
+
   vertex_map_.clear();
   typename Field::mesh_type::Node::size_type nsize;
   mesh_->size(nsize);
@@ -108,17 +109,24 @@ void UHexMC<Field>::reset( int n, bool build_trisurf )
     mesh_->synchronize(Mesh::FACE_NEIGHBORS_E);
     node_vector_ = vector<long int>(nsize, -1);
   }
+
+  triangles_ = 0;
+  if (build_geom_)
+  {
+    triangles_ = scinew GeomFastTriangles;
+  }
+
   trisurf_ = 0;
   quadsurf_ = 0;
-  if (build_trisurf_)
+  if (build_field_)
   {
     if (field_->data_at() == Field::CELL)
     {
-      quadsurf_ = new QuadSurfMesh;
+      quadsurf_ = scinew QuadSurfMesh;
     }
     else
     {
-      trisurf_ = new TriSurfMesh; 
+      trisurf_ = scinew TriSurfMesh; 
     }
   }
 }
@@ -187,10 +195,12 @@ void UHexMC<Field>::extract_c( const cell_index_type& cell, double iso )
     {
       mesh_->get_nodes(face_nodes, faces[f]);
       for (n=0; n<4; n++) { mesh_->get_center(p[n], face_nodes[n]); }
-      triangles_->add(p[0], p[1], p[2]);
-      triangles_->add(p[2], p[3], p[0]);
-
-      if (build_trisurf_)
+      if (build_geom_)
+      {
+	triangles_->add(p[0], p[1], p[2]);
+	triangles_->add(p[2], p[3], p[0]);
+      }
+      if (build_field_)
       {
 	for (n=0; n<4; n++)
 	{
@@ -240,8 +250,10 @@ void UHexMC<Field>::extract_n( const cell_index_type& cell, double iso )
     int v2 = edge_tab[i][1];
     q[i] = Interpolate(p[v1], p[v2], 
 		       (value[v1]-iso)/double(value[v1]-value[v2]));
-    if (build_trisurf_)
+    if (build_field_)
+    {
       surf_node[i] = find_or_add_edgepoint(node[v1], node[v2], q[i]);
+    }
   }    
   
   v = 0;
@@ -249,9 +261,14 @@ void UHexMC<Field>::extract_n( const cell_index_type& cell, double iso )
     int v0 = vertex[v++];
     int v1 = vertex[v++];
     int v2 = vertex[v++];
-    triangles_->add(q[v0], q[v1], q[v2]);
-    if (build_trisurf_)
+    if (build_geom_)
+    {
+      triangles_->add(q[v0], q[v1], q[v2]);
+    }
+    if (build_field_)
+    {
       trisurf_->add_triangle(surf_node[v0], surf_node[v1], surf_node[v2]);
+    }
   }
 }
 

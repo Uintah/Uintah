@@ -59,7 +59,8 @@ private:
   LockingHandle<Field> field_;
   mesh_handle_type mesh_;
   GeomLines *lines_;
-  bool build_mesh_;
+  bool build_field_;
+  bool build_geom_;
   CurveMeshHandle out_mesh_;
   map<long int, CurveMesh::Node::index_type> vertex_map_;
   int nnodes_;
@@ -77,8 +78,8 @@ public:
   virtual ~TriMC();
 	
   void extract( cell_index_type, double );
-  void reset( int, bool build_mesh=false);
-  GeomObj *get_geom() { return lines_->size() ? lines_ : 0; };
+  void reset( int, bool build_field, bool build_geom );
+  GeomHandle get_geom() { return lines_; }
   FieldHandle get_field(double val);
 };
   
@@ -90,13 +91,12 @@ TriMC<Field>::~TriMC()
     
 
 template<class Field>
-void TriMC<Field>::reset( int n, bool build_mesh )
+void TriMC<Field>::reset( int n, bool build_field, bool build_geom )
 {
   n_ = 0;
 
-  build_mesh_ = build_mesh;
-
-  lines_ = new GeomLines;
+  build_field_ = build_field;
+  build_geom_ = build_geom;
 
   vertex_map_.clear();
   typename Field::mesh_type::Node::size_type nsize;
@@ -110,10 +110,17 @@ void TriMC<Field>::reset( int n, bool build_mesh )
     node_vector_ = vector<long int>(nsize, -1);
   }
 
-  if (build_mesh)
-    out_mesh_ = new CurveMesh; 
-  else 
-    out_mesh_=0;
+  lines_ = 0;
+  if (build_geom_)
+  {
+    lines_ = scinew GeomLines;
+  }
+
+  out_mesh_ = 0;
+  if (build_field_)
+  {
+    out_mesh_ = scinew CurveMesh;
+  }
 }
 
 
@@ -181,16 +188,18 @@ void TriMC<Field>::extract_n( cell_index_type cell, double v )
     Point p0(Interpolate(p[a], p[b], (v-value[a])/double(value[b]-value[a])));
     Point p1(Interpolate(p[a], p[c], (v-value[a])/double(value[c]-value[a])));
 
-    lines_->add( p0, p1 );
-    n_++;
-
-    if (build_mesh_)
+    if (build_geom_)
+    {
+      lines_->add( p0, p1 );
+    }
+    if (build_field_)
     {
       CurveMesh::Node::array_type cnode(2);
       cnode[0] = find_or_add_edgepoint(node[a], node[b], p0);
       cnode[1] = find_or_add_edgepoint(node[a], node[c], p1);
       out_mesh_->add_elem(cnode);
     }
+    n_++;
   }
 }
 
@@ -217,9 +226,12 @@ void TriMC<Field>::extract_f( cell_index_type cell, double iso )
     {
       mesh_->get_nodes(nodes, edges[i]);
       for (j=0; j < 2; j++) { mesh_->get_center(p[j], nodes[j]); }
-      lines_->add(p[0], p[1]);
 
-      if (build_mesh_)
+      if (build_geom_)
+      {
+	lines_->add(p[0], p[1]);
+      }
+      if (build_field_)
       {
 	for (j=0; j < 2; j ++)
 	{
