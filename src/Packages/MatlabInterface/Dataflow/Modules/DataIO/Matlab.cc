@@ -253,18 +253,20 @@ class Matlab : public Module, public ServiceBase
 	std::string		mfile_;
 	
 	GuiString		matlab_code_;
-    GuiString       matlab_code_file_;
+  GuiString   matlab_code_file_;
 	GuiString		matlab_var_;
 	GuiString		matlab_add_output_;
 	GuiString		matlab_update_status_;
     
 	ServiceClientHandle				matlab_engine_;
-    FileTransferClientHandle        file_transfer_;
+  FileTransferClientHandle        file_transfer_;
 	MatlabEngineThreadInfoHandle	thread_info_;
     
-    bool            need_file_transfer_;
-    std::string     remote_tempdir_;
+  bool            need_file_transfer_;
+  std::string     remote_tempdir_;
     
+  std::string     inputstring_;
+     
   public:
     static void cleanup_callback(void *data);
 };
@@ -455,9 +457,8 @@ Matlab::Matlab(GuiContext *context) :
 	input_nrrd_generation_old_.resize(NUM_MATRIX_PORTS);
     for (int p = 0; p<NUM_NRRD_PORTS; p++)  input_nrrd_generation_old_[p] = -1;
 
-     CleanupManager::add_callback(Matlab::cleanup_callback,reinterpret_cast<void *>(this));
+  CleanupManager::add_callback(Matlab::cleanup_callback,reinterpret_cast<void *>(this));
 
-    // end temp solution
 
 }
 
@@ -474,7 +475,6 @@ void Matlab::cleanup_callback(void *data)
     ptr->delete_temp_directory();
     
 }
-// end temp solution
 
 Matlab::~Matlab()
 {
@@ -678,6 +678,8 @@ bool Matlab::send_input(std::string str)
 {
 	IComPacketHandle packet = scinew IComPacket;
 	
+  if (matlab_engine_.get_rep() == 0) return(true);
+    
 	if (packet.get_rep() == 0)
 	{
 		error("Matlab: Could not create packet");
@@ -1409,25 +1411,51 @@ void Matlab::tcl_command(GuiArgs& args, void* userdata)
         if (str.size() == 1)
         {
             if (str[0] == '\r') str[0] = '\n';
-            if(!(send_input(str)))
+            
+            if (str[0] == '\b')
             {
-                error("Matlab: Could not close matlab engine");
-                return;
-            }    
+              inputstring_ = inputstring_.substr(0,(inputstring_.size()-1));            
+            }
+            else
+            {
+              inputstring_ += str;
+            }
+            
+            if (str[0] == '\n')
+            {
+              if(!(send_input(inputstring_)))
+              {
+                  error("Matlab: Could not close matlab engine");
+                  return;
+              }
+              inputstring_ = "";
+            }
         }
         else
         {
             std::string key = args[3];
-            if (key == "Enter") str = "\n";
-            else if (key == "BackSpace") str = "\b";
+            if (key == "Enter") 
+            {
+              str = "\n";
+              inputstring_ += str;
+            }
+            else if (key == "BackSpace") 
+            {
+              inputstring_ = inputstring_.substr(0,(inputstring_.size()-1));
+            }
             else if (key == "Tab") str = "\t";
             else if (key == "Return") str ="\r";
+            
             if (str.size() == 1)
             {
-                if(!(send_input(str)))
+                if (str[0] == '\n')
                 {
-                    error("Matlab: Could not close matlab engine");
-                    return;
+                  if(!(send_input(inputstring_)))
+                  {
+                      error("Matlab: Could not close matlab engine");
+                      return;
+                  }
+                  inputstring_ = "";
                 }
             }    
             

@@ -222,6 +222,7 @@ class MatlabBundle : public Module, public ServiceBase
     
   bool            need_file_transfer_;
   std::string     remote_tempdir_;
+  std::string     inputstring_;
     
   public:
     static void cleanup_callback(void *data);
@@ -588,6 +589,8 @@ bool MatlabBundle::send_input(std::string str)
 {
 	IComPacketHandle packet = scinew IComPacket;
 	
+  if (matlab_engine_.get_rep() == 0) return(true);
+  
 	if (packet.get_rep() == 0)
 	{
 		error("MatlabBundle: Could not create packet");
@@ -596,6 +599,7 @@ bool MatlabBundle::send_input(std::string str)
 	
 	packet->settag(TAG_INPUT);
 	packet->setstring(str); 
+  
 	matlab_engine_->send(packet);
 	
 	return(true);
@@ -1086,31 +1090,58 @@ void MatlabBundle::tcl_command(GuiArgs& args, void* userdata)
         if (str.size() == 1)
         {
             if (str[0] == '\r') str[0] = '\n';
-            if(!(send_input(str)))
+            
+            if (str[0] == '\b')
             {
-                error("MatlabBundle: Could not close matlab engine");
-                return;
-            }    
+              inputstring_ = inputstring_.substr(0,(inputstring_.size()-1));            
+            }
+            else
+            {
+              inputstring_ += str;
+            }
+            
+            if (str[0] == '\n')
+            {
+              if(!(send_input(inputstring_)))
+              {
+                  error("Matlab: Could not close matlab engine");
+                  return;
+              }
+              inputstring_ = "";
+            }
         }
         else
         {
             std::string key = args[3];
-            if (key == "Enter") str = "\n";
-            else if (key == "BackSpace") str = "\b";
+            if (key == "Enter") 
+            {
+              str = "\n";
+              inputstring_ += str;
+            }
+            else if (key == "BackSpace") 
+            {
+              inputstring_ = inputstring_.substr(0,(inputstring_.size()-1));
+            }
             else if (key == "Tab") str = "\t";
             else if (key == "Return") str ="\r";
+            
             if (str.size() == 1)
             {
-                if(!(send_input(str)))
+                if (str[0] == '\n')
                 {
-                    error("MatlabBundle: Could not close matlab engine");
-                    return;
+                  if(!(send_input(inputstring_)))
+                  {
+                      error("Matlab: Could not close matlab engine");
+                      return;
+                  }
+                  inputstring_ = "";
                 }
             }    
             
         }
         return;
     }
+
     if (args[1] == "disconnect")
     {
         ctx->reset();
