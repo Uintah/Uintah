@@ -739,7 +739,7 @@ AC_ARG_WITH(petsc,
 	[  --with-petsc=<path-to-petsc>  <path-to-petsc>],
 	[withpetsc="$withval"],
 	[withpetsc=""])
-if test "$optimize" = "yes"; then
+if ! test "$optimize" = "no"; then
    PETSC_SUB="libO"
 else
    PETSC_SUB="libg"
@@ -872,6 +872,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.83  2000/12/21 19:23:40  witzel
+# Make it use the optimized PETSc library if optimize != 'no', not just if it is 'yes'
+#
 # Revision 1.82  2000/12/18 01:48:31  witzel
 # removed hard-coded /lib from xerces path
 #
