@@ -8,7 +8,7 @@
 namespace sci_cca {
 
 using std::string;
-using SIDL::array1;
+using SSIDL::array1;
 
 class TestPortImpl : public TestPort {
 public:

@@ -9,7 +9,7 @@ SRCDIR := testprograms/Component/framework
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
-PSELIBS := Core/CCA/Component/SIDL Core/CCA/Component/PIDL Core/Thread \
+PSELIBS := Core/CCA/Component/SSIDL Core/CCA/Component/PIDL Core/Thread \
 	Core/Exceptions Core/CCA/Component/Comm Core/globus_threads Core/Containers
 endif
 LIBS := 
