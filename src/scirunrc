@@ -239,11 +239,22 @@ SCIRUN_SERV_TMP_DIR = /tmp
 # FLIP_CAM_MANIP = false
 
 
+### SCIRUN_NO_PORT_CACHING
+#   If true then SCIRun will no longer cache intermediate results in
+#   its ports.  This will break interactive SCIRun usage as the
+#   program will be confused about which modules it needs to reexecute
+#   when a network is changed.  However it can save memory usage for
+#   batch-type operation.  Smarter caching should deprecate this option
+#   in the future.
+# SCIRUN_NO_PORT_CACHING = false
+
+
 ### SCIRUN_DRAWARRAYS_DISABLE
 #   Turns off use of glDrawArrays.  This should be set to true if you wish
 #   to avoid drawing artifacts on _ATI_ Radeon cards under Linux or to fix
 #   cross-platform remote display problems.
 # SCIRUN_DRAWARRAYS_DISABLE = false
+
 
 ### SCIRUN_MPEG_LICENSE_ACCEPT
 #   License information describing the mpeg_encode software can be found
@@ -290,3 +301,4 @@ SCIRUN_GUI_MoveGuiToMouse = on
 # LOGNAME
 # USER
 # SCI_DEBUG
+
