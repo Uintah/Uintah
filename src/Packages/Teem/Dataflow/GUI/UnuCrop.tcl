@@ -41,7 +41,7 @@ itcl_class Teem_Unu_UnuCrop {
 
 		set ax $this-absmaxAxis$i
 		set_scale_max_value $w.f.mmf.a$i [set $ax]
-		if {[set $this-maxAxis$i] == -1 || [set $this-reset]} {
+		if {[set $this-maxAxis$i] == 0 || [set $this-reset]} {
 		    set $this-maxAxis$i [set $this-absmaxAxis$i]
 		}
 	    }
@@ -58,7 +58,7 @@ itcl_class Teem_Unu_UnuCrop {
 		#puts "made minAxis$i"
 	    }
 	    if { [catch { set t [set $this-maxAxis$i]}] } {
-		set $this-maxAxis$i -1
+		set $this-maxAxis$i 0
 		#puts "made maxAxis$i   [set $this-maxAxis$i]"
 	    }
 	    if { [catch { set t [set $this-absmaxAxis$i]}] } {
