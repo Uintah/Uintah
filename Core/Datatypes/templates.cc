@@ -39,6 +39,10 @@ template class GenericField<TetVolMesh, vector<Tensor> >;
 template class LatticeVol<double>;
 template class GenericField<LatVolMesh, FData3d<double> >;
 
+#include <Core/Geometry/Vector.h>
+template class LatticeVol<Vector>;
+template class GenericField<LatVolMesh, FData3d<Vector> >;
+
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/PersistentSTL.h>
 
