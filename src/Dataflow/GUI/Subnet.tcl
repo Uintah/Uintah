@@ -107,7 +107,6 @@ proc makeSubnet { from_subnet x y { bbox "0 0 0 0" }} {
     $canvas create rectangle -1 -1 $mainCanvasWidth $mainCanvasWidth \
 	-fill $Color(SubnetEditor) -tags "bgRect"
     pack $canvas -expand yes -fill both
-    menu $canvas.modulesMenu -tearoff false
     
     frame $w.fname -borderwidth 2
     label $w.fname.label -text "Name"
@@ -460,11 +459,8 @@ proc loadSubnet { filename { x 0 } { y 0 } } {
     uplevel \#0 source \{$filename\}
     restoreLoadVars $filename
     set Subnet(Subnet$Subnet(Loading)_filename) "$filename"
-    if [info exists Name] {
-	set Subnet(Subnet$Subnet(Loading)_Name) $Name
-    } else {
-	set Subnet(Subnet$Subnet(Loading)_Name) [lindex [file split $filename] end]
-    }
+    set Subnet(Subnet$Subnet(Loading)_Name) \
+	[join [lrange [split [lindex [file split $filename] end] "."] 0 end-1] "."]
     set Subnet(Loading) $subnet
     return SubnetIcon$subnetNumber
 }
@@ -488,6 +484,7 @@ proc saveSubnet { subnet } {
 	return
     }
     netedit savenetwork $name $subnet
+    createModulesMenu $subnet
     return $name
 }
 
