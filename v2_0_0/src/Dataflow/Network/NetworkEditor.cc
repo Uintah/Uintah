@@ -159,7 +159,7 @@ void NetworkEditor::save_network(const string& filename,
     string midx;
     for(i=0;i<net->nmodules();i++){
         Module* module=net->module(i);
-	gui->eval("modVarName "+module->id, midx);
+	gui->eval("modVarName {"+filename+"} "+module->id, midx);
 	if (midx.size()) {
 	  module->emit_vars(out, midx);
 	}
@@ -167,7 +167,7 @@ void NetworkEditor::save_network(const string& filename,
 
     for(i=0;i<net->nmodules();i++){
         Module* module=net->module(i);
-	gui->eval("modVarName "+module->id, midx);
+	gui->eval("modVarName {"+filename+"} "+module->id, midx);
 	if (midx.size()) {
 	  string result;
 	  gui->eval("winfo exists .ui" + module->id, result);
