@@ -59,10 +59,6 @@ TetVolCellToNode::~TetVolCellToNode(){
 
 void TetVolCellToNode::execute()
 {
-  typedef TetVolMesh::cell_iterator cell_iterator;
-  typedef TetVolMesh::node_array    node_array;
-  typedef node_array::iterator      node_iterator;
-
   vector<Vector> vector_sums;
   vector<double> mag_sums;
   vector<int>    ref_counts;
@@ -105,9 +101,9 @@ void TetVolCellToNode::execute()
 
   TCL::execute(id + " set_state Executing 0");
 
-  cell_iterator ci;
-  node_iterator ni;
-  node_array    na;
+  TetVolMesh::Cell::iterator ci;
+  TetVolMesh::Node::array_type::iterator ni;
+  TetVolMesh::Node::array_type na;
   int           index;
   float         count = 0;
 

@@ -167,12 +167,12 @@ namespace SCIRun {
     void SpanSpace<T,Index>::init(Field *field)
     {
       typedef typename Field::mesh_type  mesh_type;
-      typedef typename mesh_type::cell_index cell_index;
+      //typedef typename mesh_type::Cell::index_type cell_index_type;
       
       typename Field::mesh_handle_type mesh = field->get_typed_mesh();
 
-      typename mesh_type::cell_iterator cell = mesh->cell_begin();
-      typename mesh_type::node_array nodes;
+      typename mesh_type::Cell::iterator cell = mesh->cell_begin();
+      typename mesh_type::Node::array_type nodes;
 
       for ( ; cell != mesh->cell_end(); ++cell) {
 	mesh->get_nodes( nodes, *cell );

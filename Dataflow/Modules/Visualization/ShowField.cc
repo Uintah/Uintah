@@ -306,7 +306,7 @@ ShowField::render_nodes(const Fld *sfld)
       pts = scinew GeomPts(mesh->nodes_size());
     }
     // First pass: over the nodes
-    typename Fld::mesh_type::node_iterator niter = mesh->node_begin();  
+    typename Fld::mesh_type::Node::iterator niter = mesh->node_begin();  
     while (niter != mesh->node_end()) {
       // Use a default color?
       bool def_color = (use_def_color_ || (color_handle_.get_rep() == 0));
@@ -361,12 +361,12 @@ ShowField::render_edges(const Fld *sfld)
     GeomGroup* edges = scinew GeomGroup;
     edge_switch_ = scinew GeomSwitch(edges);
     // Second pass: over the edges
-    typename Fld::mesh_type::edge_iterator eiter = mesh->edge_begin();  
+    typename Fld::mesh_type::Edge::iterator eiter = mesh->edge_begin();  
     while (eiter != mesh->edge_end()) {  
       // Use a default color?
       bool def_color = (use_def_color_ || (color_handle_.get_rep() == 0));
 
-      typename Fld::mesh_type::node_array nodes;
+      typename Fld::mesh_type::Node::array_type nodes;
       mesh->get_nodes(nodes, *eiter); ++eiter;
     
       
@@ -423,8 +423,8 @@ ShowField::render_faces(const Fld *sfld)
     GeomTriangles* faces = scinew GeomTriangles;
     face_switch_ = scinew GeomSwitch(faces);
     // Third pass: over the faces
-    typename Fld::mesh_type::face_iterator fiter = mesh->face_begin();  
-    typename Fld::mesh_type::node_array nodes;
+    typename Fld::mesh_type::Face::iterator fiter = mesh->face_begin();  
+    typename Fld::mesh_type::Node::array_type nodes;
 
     while (fiter != mesh->face_end()) {  
       // Use a default color?

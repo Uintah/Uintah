@@ -135,8 +135,8 @@ class Sage : public SageBase<AI>
 
   typedef typename F::value_type             value_type;
   typedef typename F::fdata_type             fdata_type;
-  typedef typename F::mesh_type::cell_index  cell_index;
-  typedef typename mesh_type::node_array     node_array;
+  typedef typename F::mesh_type::Cell::index_type  cell_index_type;
+  typedef typename mesh_type::Node::array_type     node_array_type;
 
 private:
   F *field;
@@ -646,12 +646,12 @@ void Sage<AI,Field>::extract( double iso, int x, int y, int z )
 {
   SysTime::SysClock start = SysTime::currentTicks();
       
-  node_array node(8);
+  node_array_type node(8);
   Point vp[8];
   value_type value[8];
   int code = 0;
 
-  mesh->get_nodes( node, cell_index(x,y,z) );
+  mesh->get_nodes( node, cell_index_type(x,y,z) );
 
   for (int i=7; i>=0; i--) {
     field->value( value[i], node[i] );

@@ -42,13 +42,13 @@ using std::cerr;
 using std::endl;
 using std::pair;
 
-//! Instead of calling this with a node_index just call get_point yourself.
+//! Instead of calling this with a Node::index_type just call get_point yourself.
 template <class Mesh, class Index>
 void
 calc_weights(const Mesh *mesh, Index i, const Point &p, 
 	     typename Mesh::weight_array &weights) {
   
-  typename Mesh::node_array nodes;
+  typename Mesh::Node::array_type nodes;
   mesh->get_nodes(nodes, i);
 
   weights.resize(nodes.size()); //clear and size correctly.
@@ -56,9 +56,9 @@ calc_weights(const Mesh *mesh, Index i, const Point &p,
 
   Point np;
 
-  typename Mesh::node_array::iterator iter = nodes.begin();
+  typename Mesh::Node::array_type::iterator iter = nodes.begin();
   while (iter != nodes.end()) {
-    typename Mesh::node_index ni = *iter;
+    typename Mesh::Node::index_type ni = *iter;
     ++iter;
     mesh->get_point(np, ni);
     // Calculate the weight, and store it.
@@ -106,7 +106,7 @@ bool
 interpolate(const Field &fld, const Point &p, Functor &f) {
   typedef typename Field::mesh_type Mesh;
   
-  typename Mesh::cell_index ci;
+  typename Mesh::Cell::index_type ci;
   const typename Field::mesh_handle_type &mesh = fld.get_typed_mesh();
   if (! mesh->locate(ci, p)) return false;
 
@@ -116,9 +116,9 @@ interpolate(const Field &fld, const Point &p, Functor &f) {
   case Field::NODE :
     {
       int i = 0;
-      typename Mesh::node_array nodes;
+      typename Mesh::Node::array_type nodes;
       mesh->get_nodes(nodes, ci);
-      typename Mesh::node_array::iterator iter = nodes.begin();
+      typename Mesh::Node::array_type::iterator iter = nodes.begin();
       while (iter != nodes.end()) {
 	f(fld, *iter, i);
 	++iter; ++i;

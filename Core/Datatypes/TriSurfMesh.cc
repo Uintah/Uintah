@@ -77,49 +77,49 @@ TriSurfMesh::get_bounding_box() const
 }
 
 
-TriSurfMesh::node_iterator
+TriSurfMesh::Node::iterator
 TriSurfMesh::node_begin() const
 {
   return 0;
 }
 
-TriSurfMesh::node_iterator
+TriSurfMesh::Node::iterator
 TriSurfMesh::node_end() const
 {
   return points_.size();
 }
 
-TriSurfMesh::edge_iterator
+TriSurfMesh::Edge::iterator
 TriSurfMesh::edge_begin() const
 {
   return 0;
 }
 
-TriSurfMesh::edge_iterator
+TriSurfMesh::Edge::iterator
 TriSurfMesh::edge_end() const
 {
   return faces_.size();
 }
 
-TriSurfMesh::face_iterator
+TriSurfMesh::Face::iterator
 TriSurfMesh::face_begin() const
 {
   return 0;
 }
 
-TriSurfMesh::face_iterator
+TriSurfMesh::Face::iterator
 TriSurfMesh::face_end() const
 {
   return faces_.size() / 3;
 }
 
-TriSurfMesh::cell_iterator
+TriSurfMesh::Cell::iterator
 TriSurfMesh::cell_begin() const
 {
   return 0;
 }
 
-TriSurfMesh::cell_iterator
+TriSurfMesh::Cell::iterator
 TriSurfMesh::cell_end() const
 {
   return 0;
@@ -139,7 +139,7 @@ TriSurfMesh::elem_end() const
 
 
 void
-TriSurfMesh::get_nodes(node_array &array, edge_index idx) const
+TriSurfMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 {
   static int table[6][2] =
   {
@@ -157,7 +157,7 @@ TriSurfMesh::get_nodes(node_array &array, edge_index idx) const
 
 
 void
-TriSurfMesh::get_nodes(node_array &array, face_index idx) const
+TriSurfMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 {
   array.clear();
   array.push_back(faces_[idx * 3 + 0]);
@@ -166,7 +166,7 @@ TriSurfMesh::get_nodes(node_array &array, face_index idx) const
 }
 
 void
-TriSurfMesh::get_nodes(node_array &array, cell_index cidx) const
+TriSurfMesh::get_nodes(Node::array_type &array, Cell::index_type cidx) const
 {
   array.clear();
   array.push_back(faces_[cidx * 3 + 0]);
@@ -176,7 +176,7 @@ TriSurfMesh::get_nodes(node_array &array, cell_index cidx) const
 
 
 void
-TriSurfMesh::get_edges(edge_array &array, face_index idx) const
+TriSurfMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
 {
   array.clear();
   array.push_back(idx * 3 + 0);
@@ -186,7 +186,7 @@ TriSurfMesh::get_edges(edge_array &array, face_index idx) const
 
 
 void
-TriSurfMesh::get_neighbor(face_index &neighbor, edge_index idx) const
+TriSurfMesh::get_neighbor(Face::index_type &neighbor, Edge::index_type idx) const
 {
   neighbor = neighbors_[idx];
 }
@@ -203,9 +203,9 @@ distance2(const Point &p0, const Point &p1)
 
 
 bool
-TriSurfMesh::locate(node_index &loc, const Point &p) const
+TriSurfMesh::locate(Node::index_type &loc, const Point &p) const
 {
-  node_iterator ni = node_begin();
+  Node::iterator ni = node_begin();
   loc = *ni;
   if (ni == node_end())
   {
@@ -230,7 +230,7 @@ TriSurfMesh::locate(node_index &loc, const Point &p) const
 
 
 bool
-TriSurfMesh::locate(edge_index &loc, const Point &) const
+TriSurfMesh::locate(Edge::index_type &loc, const Point &) const
 {
   loc = 0;
   return false;
@@ -238,7 +238,7 @@ TriSurfMesh::locate(edge_index &loc, const Point &) const
 
 
 bool
-TriSurfMesh::locate(face_index &loc, const Point &) const
+TriSurfMesh::locate(Face::index_type &loc, const Point &) const
 {
   loc = 0;
   return false;
@@ -246,7 +246,7 @@ TriSurfMesh::locate(face_index &loc, const Point &) const
 
 
 bool
-TriSurfMesh::locate(cell_index &loc, const Point &) const
+TriSurfMesh::locate(Cell::index_type &loc, const Point &) const
 {
   loc = 0;
   return false;
@@ -254,11 +254,11 @@ TriSurfMesh::locate(cell_index &loc, const Point &) const
 
 
 void
-TriSurfMesh::get_center(Point &p, edge_index i) const
+TriSurfMesh::get_center(Point &p, Edge::index_type i) const
 {
-  node_array nodes;
+  Node::array_type nodes;
   get_nodes(nodes, i);
-  node_array::iterator nai = nodes.begin();
+  Node::array_type::iterator nai = nodes.begin();
   const double isize = 1.0 / nodes.size();
   Vector v(0.0, 0.0, 0.0);
   while (nai != nodes.end())
@@ -274,11 +274,11 @@ TriSurfMesh::get_center(Point &p, edge_index i) const
 
 
 void
-TriSurfMesh::get_center(Point &p, face_index i) const
+TriSurfMesh::get_center(Point &p, Face::index_type i) const
 {
-  node_array nodes;
+  Node::array_type nodes;
   get_nodes(nodes, i);
-  node_array::iterator nai = nodes.begin();
+  Node::array_type::iterator nai = nodes.begin();
   const double isize = 1.0 / nodes.size();
   Vector v(0.0, 0.0, 0.0);
   while (nai != nodes.end())
@@ -367,12 +367,12 @@ TriSurfMesh::compute_normals()
   normals_.resize(points_.size()); // 1 per node
 
   // build table of faces that touch each node
-  vector<vector<face_index> > node_in_faces(points_.size());  
+  vector<vector<Face::index_type> > node_in_faces(points_.size());  
   //! face normals (not normalized) so that magnitude is also the area.
   vector<Vector> face_normals(faces_.size());
   // Computing normal per face.
-  node_array nodes(3);
-  face_iterator iter = face_begin();
+  Node::array_type nodes(3);
+  Face::iterator iter = face_begin();
   while (iter != face_end()) {
     get_nodes(nodes, *iter);
 
@@ -393,11 +393,11 @@ TriSurfMesh::compute_normals()
     ++iter;
   }  
   //Averaging the normals.
-  vector<vector<face_index> >::iterator nif_iter = node_in_faces.begin();
+  vector<vector<Face::index_type> >::iterator nif_iter = node_in_faces.begin();
   int i = 0;
   while (nif_iter != node_in_faces.end()) {
-    const vector<face_index> &v = *nif_iter;
-    vector<face_index>::const_iterator fiter = v.begin();
+    const vector<Face::index_type> &v = *nif_iter;
+    vector<Face::index_type>::const_iterator fiter = v.begin();
     Vector ave(0.L,0.L,0.L);
     while(fiter != v.end()) {
       ave += face_normals[*fiter];
@@ -409,10 +409,10 @@ TriSurfMesh::compute_normals()
   }
 }
 
-TriSurfMesh::node_index
+TriSurfMesh::Node::index_type
 TriSurfMesh::add_find_point(const Point &p, double err)
 {
-  node_index i;
+  Node::index_type i;
   if (locate(i, p) && distance2(points_[i], p) < err)
   {
     return i;
@@ -426,7 +426,7 @@ TriSurfMesh::add_find_point(const Point &p, double err)
 
 
 void
-TriSurfMesh::add_triangle(node_index a, node_index b, node_index c)
+TriSurfMesh::add_triangle(Node::index_type a, Node::index_type b, Node::index_type c)
 {
   faces_.push_back(a);
   faces_.push_back(b);
@@ -512,7 +512,7 @@ TriSurfMesh::connect(double err)
 
 
 
-TriSurfMesh::node_index
+TriSurfMesh::Node::index_type
 TriSurfMesh::add_point(const Point &p)
 {
   points_.push_back(p);

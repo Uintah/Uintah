@@ -77,32 +77,39 @@ void Pio(Piostream &stream, IndexPair<Data> &data)
 class SCICORESHARE ContourMesh : public MeshBase
 {
 public:
-  typedef unsigned index_type;
+  typedef unsigned int under_type;
 
   //! Index and Iterator types required for Mesh Concept.
-  typedef IndexPair<index_type>       index_pair;
+  typedef IndexPair<under_type>       index_pair;
 
-  typedef NodeIndex<index_type>       node_index;
-  typedef NodeIterator<index_type>    node_iterator;
-  typedef NodeIndex<index_type>       node_size_type;
- 
-  typedef EdgeIndex<index_type>       edge_index;
-  typedef EdgeIterator<index_type>    edge_iterator;
-  typedef EdgeIndex<index_type>       edge_size_type;
- 
-  typedef FaceIndex<index_type>       face_index;
-  typedef FaceIterator<index_type>    face_iterator;
-  typedef FaceIndex<index_type>       face_size_type;
- 
-  typedef CellIndex<index_type>       cell_index;
-  typedef CellIterator<index_type>    cell_iterator;
-  typedef CellIndex<index_type>       cell_size_type;
+  struct Node {
+    typedef NodeIndex<under_type>       index_type;
+    typedef NodeIterator<under_type>    iterator;
+    typedef NodeIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
+  };					
+  					
+  struct Edge {				
+    typedef EdgeIndex<under_type>       index_type;
+    typedef EdgeIterator<under_type>    iterator;
+    typedef EdgeIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
+  };					
+					
+  struct Face {				
+    typedef FaceIndex<under_type>       index_type;
+    typedef FaceIterator<under_type>    iterator;
+    typedef FaceIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
+  };					
+					
+  struct Cell {				
+    typedef CellIndex<under_type>       index_type;
+    typedef CellIterator<under_type>    iterator;
+    typedef CellIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
+  };
 
-  // storage types for get_* functions
-  typedef vector<node_index>  node_array;
-  typedef vector<edge_index>  edge_array;
-  typedef vector<face_index>  face_array;
-  typedef vector<cell_index>  cell_array;
   typedef vector<double>      weight_array;
 
   ContourMesh() {}
@@ -111,72 +118,72 @@ public:
   virtual ContourMesh *clone() { return new ContourMesh(*this); }
   virtual ~ContourMesh() {}
 
-  node_iterator node_begin() const { return 0; }
-  node_iterator node_end() const { return (unsigned)nodes_.size(); }
-  edge_iterator edge_begin() const { return 0; }
-  edge_iterator edge_end() const { return (unsigned)edges_.size(); }
-  face_iterator face_begin() const { return 0; }
-  face_iterator face_end() const { return 0; }
-  cell_iterator cell_begin() const { return 0; }
-  cell_iterator cell_end() const { return 0; }
+  Node::iterator node_begin() const { return 0; }
+  Node::iterator node_end() const { return (unsigned)nodes_.size(); }
+  Edge::iterator edge_begin() const { return 0; }
+  Edge::iterator edge_end() const { return (unsigned)edges_.size(); }
+  Face::iterator face_begin() const { return 0; }
+  Face::iterator face_end() const { return 0; }
+  Cell::iterator cell_begin() const { return 0; }
+  Cell::iterator cell_end() const { return 0; }
 
   //! get the mesh statistics
-  node_size_type nodes_size() const { return (unsigned)nodes_.size(); }
-  edge_size_type edges_size() const { return (unsigned)edges_.size(); }
-  face_size_type faces_size() const { return 0; }
-  cell_size_type cells_size() const { return 0; }
+  Node::size_type nodes_size() const { return (unsigned)nodes_.size(); }
+  Edge::size_type edges_size() const { return (unsigned)edges_.size(); }
+  Face::size_type faces_size() const { return 0; }
+  Cell::size_type cells_size() const { return 0; }
   virtual BBox get_bounding_box() const;
 
   //! set the mesh statistics
-  void resize_nodes(node_size_type n) { nodes_.resize(n); }
-  void resize_edges(edge_size_type n) { edges_.resize(n); }
+  void resize_nodes(Node::size_type n) { nodes_.resize(n); }
+  void resize_edges(Edge::size_type n) { edges_.resize(n); }
 
   //! get the child elements of the given index
-  void get_nodes(node_array &a, edge_index i) const
+  void get_nodes(Node::array_type &a, Edge::index_type i) const
     { a.resize(2,0); a[0] = edges_[i].first; a[1] = edges_[i].second; } 
-  void get_nodes(node_array &, face_index) const {}
-  void get_nodes(node_array &, cell_index) const {}
-  void get_edges(edge_array &, face_index) const {}
-  void get_edges(edge_array &, cell_index) const {}
-  void get_faces(face_array &, cell_index) const {}
+  void get_nodes(Node::array_type &, Face::index_type) const {}
+  void get_nodes(Node::array_type &, Cell::index_type) const {}
+  void get_edges(Edge::array_type &, Face::index_type) const {}
+  void get_edges(Edge::array_type &, Cell::index_type) const {}
+  void get_faces(Face::array_type &, Cell::index_type) const {}
 
   //! get the parent element(s) of the given index
-  unsigned get_edges(edge_array &, node_index) const { return 0; }
-  unsigned get_faces(face_array &, node_index) const { return 0; }
-  unsigned get_faces(face_array &, edge_index) const { return 0; }
-  unsigned get_cells(cell_array &, node_index) const { return 0; }
-  unsigned get_cells(cell_array &, edge_index) const { return 0; }
-  unsigned get_cells(cell_array &, face_index) const { return 0; }
+  unsigned get_edges(Edge::array_type &, Node::index_type) const { return 0; }
+  unsigned get_faces(Face::array_type &, Node::index_type) const { return 0; }
+  unsigned get_faces(Face::array_type &, Edge::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Node::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Face::index_type) const { return 0; }
 
-  //! similar to get_edges() with node_index argument, but
+  //! similar to get_edges() with Node::index_type argument, but
   //  returns the "other" edge if it exists, not all that exist
-  void get_neighbor(edge_index &, node_index) const {}
+  void get_neighbor(Edge::index_type &, Node::index_type) const {}
 
   //! get the center point (in object space) of an element
-  void get_center(Point &result, node_index idx) const
+  void get_center(Point &result, Node::index_type idx) const
     { result = nodes_[idx]; }
-  void get_center(Point &, edge_index) const {}
-  void get_center(Point &, face_index) const {}
-  void get_center(Point &, cell_index) const {}
+  void get_center(Point &, Edge::index_type) const {}
+  void get_center(Point &, Face::index_type) const {}
+  void get_center(Point &, Cell::index_type) const {}
 
-  bool locate(node_index &, const Point &) const;
-  bool locate(edge_index &, const Point &) const;
-  bool locate(face_index &, const Point &) const { return false; }
-  bool locate(cell_index &, const Point &) const { return false; }
+  bool locate(Node::index_type &, const Point &) const;
+  bool locate(Edge::index_type &, const Point &) const;
+  bool locate(Face::index_type &, const Point &) const { return false; }
+  bool locate(Cell::index_type &, const Point &) const { return false; }
 
   void unlocate(Point &result, const Point &p) const { result =  p; };
 
-  void get_point(Point &result, node_index idx) const
+  void get_point(Point &result, Node::index_type idx) const
     { get_center(result,idx); }
-  void get_normal(Vector & /* result */, node_index /* index */) const
+  void get_normal(Vector & /* result */, Node::index_type /* index */) const
   { ASSERTFAIL("not implemented") }
-  void set_point(const Point &point, node_index index)
+  void set_point(const Point &point, Node::index_type index)
     { nodes_[index] = point; }
 
   //! use these to build up a new contour mesh
-  node_index add_node(Point p) 
+  Node::index_type add_node(Point p) 
     { nodes_.push_back(p); return nodes_.size()-1; }
-  edge_index add_edge(node_index i1, node_index i2) 
+  Edge::index_type add_edge(Node::index_type i1, Node::index_type i2) 
     { edges_.push_back(index_pair(i1,i2)); return nodes_.size()-1; }
 
   virtual void io(Piostream&);

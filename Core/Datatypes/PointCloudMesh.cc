@@ -48,7 +48,7 @@ PointCloudMesh::get_bounding_box() const
 {
   BBox result;
 
-  for (node_iterator i = node_begin();
+  for (Node::iterator i = node_begin();
        i!=node_end();
        ++i) 
     result.extend(points_[*i]);
@@ -57,9 +57,9 @@ PointCloudMesh::get_bounding_box() const
 }
 
 bool
-PointCloudMesh::locate(node_index &idx, const Point &p) const
+PointCloudMesh::locate(Node::index_type &idx, const Point &p) const
 {
-  node_iterator ni = node_begin();
+  Node::iterator ni = node_begin();
   idx = *node_begin();
 
   if (ni==node_end())
@@ -78,7 +78,7 @@ PointCloudMesh::locate(node_index &idx, const Point &p) const
   return true;
 }
 
-PointCloudMesh::node_index
+PointCloudMesh::Node::index_type
 PointCloudMesh::add_point(const Point &p)
 {
   points_.push_back(p);

@@ -236,34 +236,41 @@ public:
     }
   };
   
-  typedef LatIndex index_type;
+  //typedef LatIndex        under_type;
   
   //! Index and Iterator types required for Mesh Concept.
-  typedef NodeIndex       node_index;
-  typedef NodeIter        node_iterator;
-  typedef NodeIndex       node_size_type;
- 
-  typedef EdgeIndex       edge_index;     
-  typedef EdgeIter        edge_iterator;
-  typedef EdgeIndex       edge_size_type;
- 
-  typedef FaceIndex       face_index;
-  typedef FaceIter        face_iterator;
-  typedef FaceIndex       face_size_type;
- 
-  typedef CellIndex       cell_index;
-  typedef CellIter        cell_iterator;
-  typedef CellIndex       cell_size_type;
+  struct Node {
+    typedef NodeIndex          index_type;
+    typedef NodeIter           iterator;
+    typedef NodeIndex          size_type;
+    typedef vector<index_type> array_type;
+  };			       
+  			       
+  struct Edge {		       
+    typedef EdgeIndex          index_type;     
+    typedef EdgeIter           iterator;
+    typedef EdgeIndex          size_type;
+    typedef vector<index_type> array_type;
+  };			       
+			       
+  struct Face {		       
+    typedef FaceIndex          index_type;
+    typedef FaceIter           iterator;
+    typedef FaceIndex          size_type;
+    typedef vector<index_type> array_type;
+  };			       
+			       
+  struct Cell {		       
+    typedef CellIndex          index_type;
+    typedef CellIter           iterator;
+    typedef CellIndex          size_type;
+    typedef vector<index_type> array_type;
+  };
+  
+  typedef Cell::index_type elem_index;
+  typedef Cell::iterator   elem_iterator;
+  typedef Cell::size_type  elem_size_type;
 
-  typedef cell_index      elem_index;
-  typedef cell_iterator   elem_iterator;
-  typedef cell_size_type  elem_size_type;
-
-  // storage types for get_* functions
-  typedef vector<node_index>  node_array;
-  typedef vector<edge_index>  edge_array;
-  typedef vector<face_index>  face_array;
-  typedef vector<cell_index>  cell_array;
   typedef vector<double>      weight_array;
 
   friend class NodeIter;
@@ -294,30 +301,30 @@ public:
   virtual ~LatVolMesh() 
     {  Vector p = max_-min_; cell_volume_ = (p.x()/(nx_-1))*(p.y()/(ny_-1))*(p.z()/(nz_-1));}
 
-  node_index  node(unsigned i, unsigned j, unsigned k) const
-    { return node_index(i, j, k); }
-  node_iterator  node_begin() const 
-  { return node_iterator(this, min_x_, min_y_, min_z_); }
-  node_iterator  node_end() const 
-  { return node_iterator(this, min_x_, min_y_, min_z_ + nz_); }
-  node_size_type nodes_size() const { return node_size_type(nx_,ny_,nz_); }
+  Node::index_type  node(unsigned i, unsigned j, unsigned k) const
+    { return Node::index_type(i, j, k); }
+  Node::iterator  node_begin() const 
+  { return Node::iterator(this, min_x_, min_y_, min_z_); }
+  Node::iterator  node_end() const 
+  { return Node::iterator(this, min_x_, min_y_, min_z_ + nz_); }
+  Node::size_type nodes_size() const { return Node::size_type(nx_,ny_,nz_); }
 
-  edge_iterator  edge_begin() const { return edge_iterator(this,0); }
-  edge_iterator  edge_end() const { return edge_iterator(this,0); }
-  edge_size_type edges_size() const { return edge_size_type(0); }
+  Edge::iterator  edge_begin() const { return Edge::iterator(this,0); }
+  Edge::iterator  edge_end() const { return Edge::iterator(this,0); }
+  Edge::size_type edges_size() const { return Edge::size_type(0); }
 
-  face_iterator  face_begin() const { return face_iterator(this,0); }
-  face_iterator  face_end() const { return face_iterator(this,0); }
-  face_size_type faces_size() const { return face_size_type(0); }
+  Face::iterator  face_begin() const { return Face::iterator(this,0); }
+  Face::iterator  face_end() const { return Face::iterator(this,0); }
+  Face::size_type faces_size() const { return Face::size_type(0); }
 
-  cell_index  cell(unsigned i, unsigned j, unsigned k) const
-    { return cell_index(i, j, k); }
-  cell_iterator  cell_begin() const 
-  { return cell_iterator(this,  min_x_, min_y_, min_z_); }
-  cell_iterator  cell_end() const 
-  { return cell_iterator(this, min_x_, min_y_, min_z_ + nz_-1); }
-  cell_size_type cells_size() const 
-  { return cell_size_type(nx_-1, ny_-1,nz_-1); }
+  Cell::index_type  cell(unsigned i, unsigned j, unsigned k) const
+    { return Cell::index_type(i, j, k); }
+  Cell::iterator  cell_begin() const 
+  { return Cell::iterator(this,  min_x_, min_y_, min_z_); }
+  Cell::iterator  cell_end() const 
+  { return Cell::iterator(this, min_x_, min_y_, min_z_ + nz_-1); }
+  Cell::size_type cells_size() const 
+  { return Cell::size_type(nx_-1, ny_-1,nz_-1); }
 
   elem_iterator elem_begin() const { return cell_begin(); }
   elem_iterator elem_end() const { return cell_end(); }
@@ -331,9 +338,9 @@ public:
   Point get_max() const { return max_; }
   Vector diagonal() const { return max_-min_; }
   virtual BBox get_bounding_box() const;
-  double get_volume(cell_index &) { return cell_volume_; }
-  double get_area(face_index &) { return 0; }
-  double get_element_size(cell_index &) { return cell_volume_; }
+  double get_volume(Cell::index_type &) { return cell_volume_; }
+  double get_area(Face::index_type &) { return 0; }
+  double get_element_size(Cell::index_type &) { return cell_volume_; }
 
   //! set the mesh statistics
   void set_min_x(unsigned x) {min_x_ = x; }
@@ -347,44 +354,44 @@ public:
 
 
   //! get the child elements of the given index
-  void get_nodes(node_array &, edge_index) const {}
-  void get_nodes(node_array &, face_index) const {}
-  void get_nodes(node_array &, cell_index) const;
-  void get_edges(edge_array &, face_index) const {}
-  void get_edges(edge_array &, cell_index) const {}
-  void get_faces(face_array &, cell_index) const {}
+  void get_nodes(Node::array_type &, Edge::index_type) const {}
+  void get_nodes(Node::array_type &, Face::index_type) const {}
+  void get_nodes(Node::array_type &, Cell::index_type) const;
+  void get_edges(Edge::array_type &, Face::index_type) const {}
+  void get_edges(Edge::array_type &, Cell::index_type) const {}
+  void get_faces(Face::array_type &, Cell::index_type) const {}
 
   //! get the parent element(s) of the given index
-  unsigned get_edges(edge_array &, node_index) const { return 0; }
-  unsigned get_faces(face_array &, node_index) const { return 0; }
-  unsigned get_faces(face_array &, edge_index) const { return 0; }
-  unsigned get_cells(cell_array &, node_index) const { return 0; }
-  unsigned get_cells(cell_array &, edge_index) const { return 0; }
-  unsigned get_cells(cell_array &, face_index) const { return 0; }
+  unsigned get_edges(Edge::array_type &, Node::index_type) const { return 0; }
+  unsigned get_faces(Face::array_type &, Node::index_type) const { return 0; }
+  unsigned get_faces(Face::array_type &, Edge::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Node::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Face::index_type) const { return 0; }
 
   //! return all cell_indecies that overlap the BBox in arr.
-  void get_cells(cell_array &arr, const BBox &box) const;
+  void get_cells(Cell::array_type &arr, const BBox &box) const;
 
-  //! similar to get_cells() with face_index argument, but
+  //! similar to get_cells() with Face::index_type argument, but
   //  returns the "other" cell if it exists, not all that exist
-  bool get_neighbor(cell_index & /*neighbor*/, cell_index /*from*/, 
-		    face_index /*idx*/) const {
+  bool get_neighbor(Cell::index_type & /*neighbor*/, Cell::index_type /*from*/, 
+		    Face::index_type /*idx*/) const {
     ASSERTFAIL("LatVolMesh::get_neighbor not implemented.");
   }
   //! get the center point (in object space) of an element
-  void get_center(Point &, node_index) const;
-  void get_center(Point &, edge_index) const {}
-  void get_center(Point &, face_index) const {}
-  void get_center(Point &, cell_index) const;
+  void get_center(Point &, Node::index_type) const;
+  void get_center(Point &, Edge::index_type) const {}
+  void get_center(Point &, Face::index_type) const {}
+  void get_center(Point &, Cell::index_type) const;
 
-  bool locate(node_index &, const Point &) const;
-  bool locate(edge_index &, const Point &) const { return false; }
-  bool locate(face_index &, const Point &) const { return false; }
-  bool locate(cell_index &, const Point &) const;
+  bool locate(Node::index_type &, const Point &) const;
+  bool locate(Edge::index_type &, const Point &) const { return false; }
+  bool locate(Face::index_type &, const Point &) const { return false; }
+  bool locate(Cell::index_type &, const Point &) const;
 
-  void get_point(Point &p, node_index i) const
+  void get_point(Point &p, Node::index_type i) const
   { get_center(p, i); }
-  void get_normal(Vector &/* result */, node_index /* index */) const
+  void get_normal(Vector &/* result */, Node::index_type /* index */) const
   { ASSERTFAIL("not implemented") }
 
   
@@ -395,10 +402,10 @@ public:
 
 private:
 
-  //! the min_node_index ( incase this is a subLattice )
+  //! the min_Node::index_type ( incase this is a subLattice )
   unsigned min_x_, min_y_, min_z_;
-  //! the node_index space extents of a LatVolMesh 
-  //! (min=min_node_index, max=min+extents-1)
+  //! the Node::index_type space extents of a LatVolMesh 
+  //! (min=min_Node::index_type, max=min+extents-1)
   unsigned nx_, ny_, nz_;
 
   //! the object space extents of a LatVolMesh

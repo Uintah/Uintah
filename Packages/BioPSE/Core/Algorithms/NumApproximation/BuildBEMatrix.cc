@@ -360,18 +360,18 @@ void BuildBEMatrix::makePbb(){
 
   const double mult = 1/(4*PI);
 
-  TriSurfMesh::node_array nodes;
+  TriSurfMesh::Node::array_type nodes;
   DenseMatrix coef(1, 3);
   DenseMatrix cVector(nsubs_, 3);
   int i;
 
-  TriSurfMesh::node_iterator  ni;
-  TriSurfMesh::face_iterator  fi;
+  TriSurfMesh::Node::iterator  ni;
+  TriSurfMesh::Face::iterator  fi;
 
   double tt = 0;
 
   for (ni=hsurf->node_begin(); ni!=hsurf->node_end(); ++ni){ //! for every node
-    TriSurfMesh::node_index ppi = *ni;
+    TriSurfMesh::Node::index_type ppi = *ni;
     Point pp = hsurf->point(ppi);
 
     for (fi=hsurf->face_begin(); fi!=hsurf->face_end(); ++fi){ //! find contributions from every triangle
@@ -416,16 +416,16 @@ void BuildBEMatrix::makePhh(){
   DenseMatrix  pts(3, 3);
   const double mult = 1/(-4*PI);
 
-  TriSurfMesh::node_array nodes;
+  TriSurfMesh::Node::array_type nodes;
   DenseMatrix coef(1, 3);
   DenseMatrix cVector(nsubs_, 3);
   int i;
 
-  TriSurfMesh::node_iterator  ni;
-  TriSurfMesh::face_iterator  fi;
+  TriSurfMesh::Node::iterator  ni;
+  TriSurfMesh::Face::iterator  fi;
 
   for (ni=hsurf->node_begin(); ni!=hsurf->node_end(); ++ni){ //! for every node
-    TriSurfMesh::node_index ppi = *ni;
+    TriSurfMesh::Node::index_type ppi = *ni;
     Point pp = hsurf->point(ppi);
 
     for (fi=hsurf->face_begin(); fi!=hsurf->face_end(); ++fi){ //! find contributions from every triangle
@@ -466,16 +466,16 @@ void BuildBEMatrix::makePbh(){
   DenseMatrix  pts(3, 3);
   const double mult = 1/(-4*PI);
 
-  TriSurfMesh::node_array nodes;
+  TriSurfMesh::Node::array_type nodes;
   DenseMatrix coef(1, 3);
   DenseMatrix cVector(nsubs_, 3);
   int i;
 
-  TriSurfMesh::node_iterator  ni;
-  TriSurfMesh::face_iterator  fi;
+  TriSurfMesh::Node::iterator  ni;
+  TriSurfMesh::Face::iterator  fi;
   
   for (ni=hsurf1->node_begin(); ni!=hsurf1->node_end(); ++ni){ //! for every node
-    TriSurfMesh::node_index ppi = *ni;
+    TriSurfMesh::Node::index_type ppi = *ni;
     Point pp = hsurf1->point(ppi);
 
     for (fi=hsurf2->face_begin(); fi!=hsurf2->face_end(); ++fi){ //! find contributions from every triangle
@@ -509,16 +509,16 @@ void BuildBEMatrix::makePhb(){
   DenseMatrix  pts(3, 3);
   const double mult = 1/(4*PI);
 
-  TriSurfMesh::node_array nodes;
+  TriSurfMesh::Node::array_type nodes;
   DenseMatrix coef(1, 3);
   DenseMatrix cVector(nsubs_, 3);
   int i;
 
-  TriSurfMesh::node_iterator  ni;
-  TriSurfMesh::face_iterator  fi;
+  TriSurfMesh::Node::iterator  ni;
+  TriSurfMesh::Face::iterator  fi;
   
   for (ni=hsurf1->node_begin(); ni!=hsurf1->node_end(); ++ni){ //! for every node
-    TriSurfMesh::node_index ppi = *ni;
+    TriSurfMesh::Node::index_type ppi = *ni;
     Point pp = hsurf1->point(ppi);
 
     for (fi=hsurf2->face_begin(); fi!=hsurf2->face_end(); ++fi){ //! find contributions from every triangle
@@ -552,16 +552,16 @@ void BuildBEMatrix::makeGhh(){
   DenseMatrix  pts(3, 3);
   const double mult = 1/(-4*PI);
 
-  TriSurfMesh::node_array nodes;
+  TriSurfMesh::Node::array_type nodes;
   DenseMatrix coef(1, 3);
   DenseMatrix cVector(nsubs_, 3);
   int i;
 
-  TriSurfMesh::node_iterator  ni;
-  TriSurfMesh::face_iterator  fi;
+  TriSurfMesh::Node::iterator  ni;
+  TriSurfMesh::Face::iterator  fi;
 
   for (ni=hsurf->node_begin(); ni!=hsurf->node_end(); ++ni){ //! for every node
-    TriSurfMesh::node_index ppi = *ni;
+    TriSurfMesh::Node::index_type ppi = *ni;
     Point pp = hsurf->point(ppi);
 
     for (fi=hsurf->face_begin(); fi!=hsurf->face_end(); ++fi){ //! find contributions from every triangle
@@ -596,16 +596,16 @@ void BuildBEMatrix::makeGbh(){
   DenseMatrix  pts(3, 3);
   const double mult = 1/(-4*PI);
 
-  TriSurfMesh::node_array nodes;
+  TriSurfMesh::Node::array_type nodes;
   DenseMatrix coef(1, 3);
   DenseMatrix cVector(nsubs_, 3);
   int i;
 
-  TriSurfMesh::node_iterator  ni;
-  TriSurfMesh::face_iterator  fi;
+  TriSurfMesh::Node::iterator  ni;
+  TriSurfMesh::Face::iterator  fi;
   
   for (ni=hsurf1->node_begin(); ni!=hsurf1->node_end(); ++ni){ //! for every node
-    TriSurfMesh::node_index ppi = *ni;
+    TriSurfMesh::Node::index_type ppi = *ni;
     Point pp = hsurf1->point(ppi);
 
     for (fi=hsurf2->face_begin(); fi!=hsurf2->face_end(); ++fi){ //! find contributions from every triangle
@@ -628,8 +628,8 @@ void BuildBEMatrix::makeGbh(){
 //! precalculate triangles area
 void BuildBEMatrix::calc_tri_area(TriSurfMeshHandle& hsurf, vector<Vector>& areaV){
  
-  TriSurfMesh::face_iterator  fi;
-  TriSurfMesh::node_array     nodes;
+  TriSurfMesh::Face::iterator  fi;
+  TriSurfMesh::Node::array_type     nodes;
 
   for (fi=hsurf->face_begin(); fi!=hsurf->face_end(); ++fi){
     hsurf->get_nodes(nodes, *fi);

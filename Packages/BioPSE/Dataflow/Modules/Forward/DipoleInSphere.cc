@@ -135,7 +135,7 @@ void DipoleInSphere::execute() {
       PointCloud<Vector>*  pDips = dynamic_cast<PointCloud<Vector>*>(dip_handle.get_rep());
       PointCloudMeshHandle hMesh = pDips->get_typed_mesh();
       
-      PointCloudMesh::node_iterator ii;
+      PointCloudMesh::Node::iterator ii;
       Point p;
       Vector qdip;
       vector<Vector> dips;
@@ -195,7 +195,7 @@ void DipoleInSphere::fillOneSpherePotentials(DenseMatrix& dips, TriSurfHandle hS
 
   if (hMesh->node_begin()!=hMesh->node_end()){ // don't want to iterate if no dipoles
     
-    TriSurfMesh::node_iterator niter = hMesh->node_begin();
+    TriSurfMesh::Node::iterator niter = hMesh->node_begin();
     
     // -- for every point
     while(niter!=hMesh->node_end()) {

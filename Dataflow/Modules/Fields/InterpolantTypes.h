@@ -11,46 +11,46 @@ using std::vector;
 using std::pair;
 
 
-template <> const string find_type_name(vector<pair<TetVolMesh::node_index, double> > *);
-template <> const string find_type_name(vector<pair<TetVolMesh::edge_index, double> > *);
-template <> const string find_type_name(vector<pair<TetVolMesh::face_index, double> > *);
-template <> const string find_type_name(vector<pair<TetVolMesh::cell_index, double> > *);
-void Pio(Piostream &, TetVolMesh::node_index &);
-void Pio(Piostream &, TetVolMesh::edge_index &);
-void Pio(Piostream &, TetVolMesh::face_index &);
-void Pio(Piostream &, TetVolMesh::cell_index &);
+template <> const string find_type_name(vector<pair<TetVolMesh::Node::index_type, double> > *);
+template <> const string find_type_name(vector<pair<TetVolMesh::Edge::index_type, double> > *);
+template <> const string find_type_name(vector<pair<TetVolMesh::Face::index_type, double> > *);
+template <> const string find_type_name(vector<pair<TetVolMesh::Cell::index_type, double> > *);
+void Pio(Piostream &, TetVolMesh::Node::index_type &);
+void Pio(Piostream &, TetVolMesh::Edge::index_type &);
+void Pio(Piostream &, TetVolMesh::Face::index_type &);
+void Pio(Piostream &, TetVolMesh::Cell::index_type &);
 
 #if 0
-template <> const string find_type_name(vector<pair<LatVolMesh::node_index, double> > *);
-template <> const string find_type_name(vector<pair<LatVolMesh::edge_index, double> > *);
-template <> const string find_type_name(vector<pair<LatVolMesh::face_index, double> > *);
-template <> const string find_type_name(vector<pair<LatVolMesh::cell_index, double> > *);
-void Pio(Piostream &, LatVolMesh::node_index &);
-void Pio(Piostream &, LatVolMesh::edge_index &);
-void Pio(Piostream &, LatVolMesh::face_index &);
-void Pio(Piostream &, LatVolMesh::cell_index &);
+template <> const string find_type_name(vector<pair<LatVolMesh::Node::index_type, double> > *);
+template <> const string find_type_name(vector<pair<LatVolMesh::Edge::index_type, double> > *);
+template <> const string find_type_name(vector<pair<LatVolMesh::Face::index_type, double> > *);
+template <> const string find_type_name(vector<pair<LatVolMesh::Cell::index_type, double> > *);
+void Pio(Piostream &, LatVolMesh::Node::index_type &);
+void Pio(Piostream &, LatVolMesh::Edge::index_type &);
+void Pio(Piostream &, LatVolMesh::Face::index_type &);
+void Pio(Piostream &, LatVolMesh::Cell::index_type &);
 #endif
 
 #if 0
-template <> Vector TetVol<vector<pair<TetVolMesh::node_index, double> > >::cell_gradient(TetVolMesh::cell_index);
-template <> Vector TetVol<vector<pair<TetVolMesh::edge_index, double> > >::cell_gradient(TetVolMesh::cell_index);
-template <> Vector TetVol<vector<pair<TetVolMesh::face_index, double> > >::cell_gradient(TetVolMesh::cell_index);
-template <> Vector TetVol<vector<pair<TetVolMesh::cell_index, double> > >::cell_gradient(TetVolMesh::cell_index);
-template <> Vector TetVol<vector<pair<LatVolMesh::node_index, double> > >::cell_gradient(TetVolMesh::cell_index);
-template <> Vector TetVol<vector<pair<LatVolMesh::edge_index, double> > >::cell_gradient(TetVolMesh::cell_index);
-template <> Vector TetVol<vector<pair<LatVolMesh::face_index, double> > >::cell_gradient(TetVolMesh::cell_index);
-template <> Vector TetVol<vector<pair<LatVolMesh::cell_index, double> > >::cell_gradient(TetVolMesh::cell_index);
+template <> Vector TetVol<vector<pair<TetVolMesh::Node::index_type, double> > >::cell_gradient(TetVolMesh::Cell::index_type);
+template <> Vector TetVol<vector<pair<TetVolMesh::Edge::index_type, double> > >::cell_gradient(TetVolMesh::Cell::index_type);
+template <> Vector TetVol<vector<pair<TetVolMesh::Face::index_type, double> > >::cell_gradient(TetVolMesh::Cell::index_type);
+template <> Vector TetVol<vector<pair<TetVolMesh::Cell::index_type, double> > >::cell_gradient(TetVolMesh::Cell::index_type);
+template <> Vector TetVol<vector<pair<LatVolMesh::Node::index_type, double> > >::cell_gradient(TetVolMesh::Cell::index_type);
+template <> Vector TetVol<vector<pair<LatVolMesh::Edge::index_type, double> > >::cell_gradient(TetVolMesh::Cell::index_type);
+template <> Vector TetVol<vector<pair<LatVolMesh::Face::index_type, double> > >::cell_gradient(TetVolMesh::Cell::index_type);
+template <> Vector TetVol<vector<pair<LatVolMesh::Cell::index_type, double> > >::cell_gradient(TetVolMesh::Cell::index_type);
 #endif
 
 #if 0
-template <> bool LatticeVol<vector<pair<TetVolMesh::node_index, double> > >::get_gradient(Vector &, Point &);
-template <> bool LatticeVol<vector<pair<TetVolMesh::edge_index, double> > >::get_gradient(Vector &, Point &);
-template <> bool LatticeVol<vector<pair<TetVolMesh::face_index, double> > >::get_gradient(Vector &, Point &);
-template <> bool LatticeVol<vector<pair<TetVolMesh::cell_index, double> > >::get_gradient(Vector &, Point &);
-template <> bool LatticeVol<vector<pair<LatVolMesh::node_index, double> > >::get_gradient(Vector &, Point &);
-template <> bool LatticeVol<vector<pair<LatVolMesh::edge_index, double> > >::get_gradient(Vector &, Point &);
-template <> bool LatticeVol<vector<pair<LatVolMesh::face_index, double> > >::get_gradient(Vector &, Point &);
-template <> bool LatticeVol<vector<pair<LatVolMesh::cell_index, double> > >::get_gradient(Vector &, Point &);
+template <> bool LatticeVol<vector<pair<TetVolMesh::Node::index_type, double> > >::get_gradient(Vector &, Point &);
+template <> bool LatticeVol<vector<pair<TetVolMesh::Edge::index_type, double> > >::get_gradient(Vector &, Point &);
+template <> bool LatticeVol<vector<pair<TetVolMesh::Face::index_type, double> > >::get_gradient(Vector &, Point &);
+template <> bool LatticeVol<vector<pair<TetVolMesh::Cell::index_type, double> > >::get_gradient(Vector &, Point &);
+template <> bool LatticeVol<vector<pair<LatVolMesh::Node::index_type, double> > >::get_gradient(Vector &, Point &);
+template <> bool LatticeVol<vector<pair<LatVolMesh::Edge::index_type, double> > >::get_gradient(Vector &, Point &);
+template <> bool LatticeVol<vector<pair<LatVolMesh::Face::index_type, double> > >::get_gradient(Vector &, Point &);
+template <> bool LatticeVol<vector<pair<LatVolMesh::Cell::index_type, double> > >::get_gradient(Vector &, Point &);
 #endif
 
 }

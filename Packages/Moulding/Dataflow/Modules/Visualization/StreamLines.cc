@@ -185,7 +185,7 @@ void StreamLines::execute()
 {
   ContourMesh *mesh;
   vector<Point> nodes;
-  ContourMesh::node_index n1,n2; 
+  ContourMesh::Node::index_type n1,n2; 
 
   if (!vfport_->get(vfhandle_))
     return;

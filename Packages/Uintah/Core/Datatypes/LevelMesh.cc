@@ -78,7 +78,7 @@ BBox LevelMesh::get_bounding_box() const
 }
 
 void 
-LevelMesh::get_nodes(node_array &array, cell_index idx) const
+LevelMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 {
   array.resize(8);
   array[0].i_ = idx.i_; array[0].j_ = idx.j_;  array[0].k_ = idx.k_; 
@@ -108,7 +108,7 @@ LevelMesh::get_nodes(node_array &array, cell_index idx) const
 }
 
 void 
-LevelMesh::get_center(Point &result, node_index idx) const
+LevelMesh::get_center(Point &result, Node::index_type idx) const
 {
   double xgap,ygap,zgap;
 
@@ -117,22 +117,22 @@ LevelMesh::get_center(Point &result, node_index idx) const
   ygap = (max_.y()-min_.y())/(ny_-1);
   zgap = (max_.z()-min_.z())/(nz_-1);
   
-  // return the node_index converted to object space
+  // return the Node::index_type converted to object space
   result.x(min_.x()+idx.i_*xgap);
   result.y(min_.y()+idx.j_*ygap);
   result.z(min_.z()+idx.k_*zgap);
 }
 
 void
-LevelMesh::get_point(Point &result, node_index index) const
+LevelMesh::get_point(Point &result, Node::index_type index) const
 { 
   get_center(result,index);
 }
 
 void 
-LevelMesh::get_center(Point &result, cell_index idx) const
+LevelMesh::get_center(Point &result, Cell::index_type idx) const
 {
-  node_array nodes;
+  Node::array_type nodes;
   Point min,max;
 
   // get the node_indeces inside of this cell
@@ -149,7 +149,7 @@ LevelMesh::get_center(Point &result, cell_index idx) const
 }
 
 bool
-LevelMesh::locate(cell_index &cell, const Point &p) const
+LevelMesh::locate(Cell::index_type &cell, const Point &p) const
 {
   if( grid_->getLevel(level_)->containsPoint(p) ) {
     IntVector idx = grid_->getLevel(level_)->getCellIndex( p );
@@ -165,10 +165,10 @@ LevelMesh::locate(cell_index &cell, const Point &p) const
 }
 
 bool
-LevelMesh::locate(node_index &node, const Point &p) const
+LevelMesh::locate(Node::index_type &node, const Point &p) const
 { 
-  node_array nodes;     // storage for node_indeces
-  cell_index cell;
+  Node::array_type nodes;     // storage for node_indeces
+  Cell::index_type cell;
   double max;
   int loop;
   

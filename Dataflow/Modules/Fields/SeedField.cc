@@ -220,7 +220,7 @@ SeedField::dispatch(M *mesh)
 #if 0
   // Get size of mesh.
   unsigned int mesh_size = 0;
-  typename M::cell_iterator itr = mesh->cell_begin();
+  typename M::Cell::iterator itr = mesh->cell_begin();
   while (itr != mesh->cell_end())
   {
     mesh_size++;

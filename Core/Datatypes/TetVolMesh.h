@@ -47,28 +47,40 @@ using std::hash_map;
 class SCICORESHARE TetVolMesh : public MeshBase
 {
 public:
-  typedef int index_type;
+  typedef int under_type;
+
   //! Index and Iterator types required for Mesh Concept.
-  typedef NodeIndex<index_type>       node_index;
-  typedef NodeIterator<index_type>    node_iterator;
+  struct Node {
+    typedef NodeIndex<under_type>       index_type;
+    typedef NodeIterator<under_type>    iterator;
+    typedef NodeIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
+  };					
+					
+  struct Edge {				
+    typedef EdgeIndex<under_type>       index_type;
+    typedef EdgeIterator<under_type>    iterator;
+    typedef EdgeIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
+  };					
+					
+  struct Face {				
+    typedef FaceIndex<under_type>       index_type;
+    typedef FaceIterator<under_type>    iterator;
+    typedef FaceIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
+  };					
+					
+  struct Cell {				
+    typedef CellIndex<under_type>       index_type;
+    typedef CellIterator<under_type>    iterator;
+    typedef CellIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
+  };
 
-  typedef EdgeIndex<index_type>       edge_index;
-  typedef EdgeIterator<index_type>    edge_iterator;
+  typedef Cell::index_type                  elem_index;
+  typedef Cell::iterator               elem_iterator;
 
-  typedef FaceIndex<index_type>       face_index;
-  typedef FaceIterator<index_type>    face_iterator;
-
-  typedef CellIndex<index_type>       cell_index;
-  typedef CellIterator<index_type>    cell_iterator;
-
-  typedef cell_index                  elem_index;
-  typedef cell_iterator               elem_iterator;
-
-  typedef vector<node_index> node_array;
-  typedef vector<edge_index> edge_array;
-  typedef vector<face_index> face_array;
-  typedef vector<cell_index> cell_array;
-  //! type for weights used by locate.
   typedef vector<double>     weight_array;
 
   TetVolMesh();
@@ -79,67 +91,67 @@ public:
 
   virtual BBox get_bounding_box() const;
 
-  node_iterator node_begin() const;
-  node_iterator node_end() const;
-  index_type    nodes_size() const { return points_.size(); }
-  edge_iterator edge_begin() const;
-  edge_iterator edge_end() const;
-  index_type    edges_size() const { return edges_.size(); }
-  face_iterator face_begin() const;
-  face_iterator face_end() const;
-  index_type    faces_size() const { return faces_.size(); }
-  cell_iterator cell_begin() const;
-  cell_iterator cell_end() const;
-  index_type    cells_size() const { return cells_.size() >> 2; }
+  Node::iterator  node_begin() const;
+  Node::iterator  node_end() const;
+  Node::size_type nodes_size() const { return points_.size(); }
+  Edge::iterator  edge_begin() const;
+  Edge::iterator  edge_end() const;
+  Edge::size_type edges_size() const { return edges_.size(); }
+  Face::iterator  face_begin() const;
+  Face::iterator  face_end() const;
+  Face::size_type faces_size() const { return faces_.size(); }
+  Cell::iterator  cell_begin() const;
+  Cell::iterator  cell_end() const;
+  Cell::size_type cells_size() const { return cells_.size() >> 2; }
   elem_iterator elem_begin() const { return cell_begin(); }
   elem_iterator elem_end() const {return cell_end(); }
-  index_type    elems_size() const { return cells_size(); }
+  under_type    elems_size() const { return cells_size(); }
 
-  void get_nodes(node_array &array, edge_index idx) const;
-  void get_nodes(node_array &array, face_index idx) const;
-  void get_nodes(node_array &array, cell_index idx) const;
-  void get_edges(edge_array &array, face_index idx) const;
-  void get_edges(edge_array &array, cell_index idx) const;
-  void get_faces(face_array &array, cell_index idx) const;
-  bool get_neighbor(cell_index &neighbor, cell_index from, 
-		   face_index idx) const;
-  void get_neighbors(cell_array &array, cell_index idx) const;
+  void get_nodes(Node::array_type &array, Edge::index_type idx) const;
+  void get_nodes(Node::array_type &array, Face::index_type idx) const;
+  void get_nodes(Node::array_type &array, Cell::index_type idx) const;
+  void get_edges(Edge::array_type &array, Face::index_type idx) const;
+  void get_edges(Edge::array_type &array, Cell::index_type idx) const;
+  void get_faces(Face::array_type &array, Cell::index_type idx) const;
+  bool get_neighbor(Cell::index_type &neighbor, Cell::index_type from, 
+		   Face::index_type idx) const;
+  void get_neighbors(Cell::array_type &array, Cell::index_type idx) const;
   //! must call compute_node_neighbors before calling get_neighbors.
-  void get_neighbors(node_array &array, node_index idx) const;
-  void get_center(Point &result, node_index idx) const;
-  void get_center(Point &result, edge_index idx) const;
-  void get_center(Point &result, face_index idx) const;
-  void get_center(Point &result, cell_index idx) const;
+  void get_neighbors(Node::array_type &array, Node::index_type idx) const;
+  void get_center(Point &result, Node::index_type idx) const;
+  void get_center(Point &result, Edge::index_type idx) const;
+  void get_center(Point &result, Face::index_type idx) const;
+  void get_center(Point &result, Cell::index_type idx) const;
 
   //! return false if point is out of range.
-  bool locate(node_index &loc, const Point &p) const;
-  bool locate(edge_index &loc, const Point &p) const;
-  bool locate(face_index &loc, const Point &p) const;
-  bool locate(cell_index &loc, const Point &p) const;
+  bool locate(Node::index_type &loc, const Point &p) const;
+  bool locate(Edge::index_type &loc, const Point &p) const;
+  bool locate(Face::index_type &loc, const Point &p) const;
+  bool locate(Cell::index_type &loc, const Point &p) const;
 
-  void get_point(Point &result, node_index index) const
+  void get_point(Point &result, Node::index_type index) const
   { result = points_[index]; }
-  void get_normal(Vector &/* result */, node_index /* index */) const
+  void get_normal(Vector &/* result */, Node::index_type /* index */) const
   { ASSERTFAIL("not implemented") }
 
-  void set_point(const Point &point, node_index index)
+  void set_point(const Point &point, Node::index_type index)
   { points_[index] = point; }
 
-  double get_volume(cell_index &ci) {
-    node_array ra; 
+  double get_volume(Cell::index_type &ci) {
+    Node::array_type ra; 
     get_nodes(ra,ci);
     return (Cross(Cross(ra[1]-ra[0],ra[2]-ra[0]),ra[3]-ra[0])).length2()*
       0.1666666666666666;
   }
-  double get_area(face_index &) { return 0; }
-  double get_element_size(cell_index &ci) { return get_volume(ci); }
+  double get_area(Face::index_type &) { return 0; }
+  double get_element_size(Cell::index_type &ci) { return get_volume(ci); }
   
   //! the double return val is the volume of the tet.
-  double get_gradient_basis(cell_index ci, Vector& g0, Vector& g1, 
+  double get_gradient_basis(Cell::index_type ci, Vector& g0, Vector& g1, 
 			    Vector& g2, Vector& g3);
 
   //! function to test if at least one of cell's nodes are in supplied range
-  inline bool test_nodes_range(cell_index ci, int sn, int en){
+  inline bool test_nodes_range(Cell::index_type ci, int sn, int en){
     if (cells_[ci*4]>=sn && cells_[ci*4]<en
 	|| cells_[ci*4+1]>=sn && cells_[ci*4+1]<en
 	|| cells_[ci*4+2]>=sn && cells_[ci*4+2]<en
@@ -174,13 +186,13 @@ public:
 
   // Extra functionality needed by this specific geometry.
 
-  node_index add_find_point(const Point &p, double err = 1.0e-3);
-  void add_tet(node_index a, node_index b, node_index c, node_index d);
+  Node::index_type add_find_point(const Point &p, double err = 1.0e-3);
+  void add_tet(Node::index_type a, Node::index_type b, Node::index_type c, Node::index_type d);
   void add_tet(const Point &p0, const Point &p1, const Point &p2, 
 	       const Point &p3);
 
   // Must call connect after adding tets this way.
-  node_index add_point(const Point &p);
+  Node::index_type add_point(const Point &p);
   void add_tet_unconnected(const Point &p0, const Point &p1,
 			   const Point &p2, const Point &p3);
 
@@ -188,10 +200,10 @@ public:
 
 
   //bool intersect(const Point &p, const Vector &dir, double &min, double &max,
-  //		 face_index &face, double &u, double &v);
+  //		 Face::index_type &face, double &u, double &v);
 
 
-  const Point &point(node_index i) { return points_[i]; }
+  const Point &point(Node::index_type i) { return points_[i]; }
 private:
 
   bool inside4_p(int, const Point &p) const;
@@ -201,17 +213,17 @@ private:
   Mutex                points_lock_;
 
   //! each 4 indecies make up a tet
-  vector<index_type>   cells_;
+  vector<under_type>   cells_;
   Mutex                cells_lock_;
   //! face neighbors index to tet opposite the corresponding node in cells_
-  vector<index_type>   neighbors_;
+  vector<under_type>   neighbors_;
   Mutex                nbors_lock_;
   //! Face information.
-  struct Face {
-    node_index         nodes_[3];   //! 3 nodes makes a face.
-    cell_index         cells_[2];   //! 2 cells may have this face is in.
+  struct PFace {
+    Node::index_type         nodes_[3];   //! 3 nodes makes a face.
+    Cell::index_type         cells_[2];   //! 2 cells may have this face is in.
     
-    Face() {
+    PFace() {
       nodes_[0] = -1;
       nodes_[1] = -1;
       nodes_[2] = -1;
@@ -219,7 +231,7 @@ private:
       cells_[1] = -1;
     }
     // nodes_ must be sorted. See Hash Function below.
-    Face(node_index n1, node_index n2, node_index n3) {
+    PFace(Node::index_type n1, Node::index_type n2, Node::index_type n3) {
       cells_[0] = -1;
       cells_[1] = -1;
       if ((n1 < n2) && (n1 < n3)) {
@@ -255,7 +267,7 @@ private:
     bool shared() const { return ((cells_[0] != -1) && (cells_[1] != -1)); }
     
     //! true if both have the same nodes (order does not matter)
-    bool operator==(const Face &f) const {
+    bool operator==(const PFace &f) const {
       return ((nodes_[0] == f.nodes_[0]) && (nodes_[1] == f.nodes_[1]) && 
 	      (nodes_[2] == f.nodes_[2]));
     }
@@ -263,16 +275,16 @@ private:
 
 
   //! Edge information.
-  struct Edge {
-    node_index         nodes_[2];   //! 2 nodes makes an edge.
-    vector<cell_index> cells_;      //! list of all the cells this edge is in.
+  struct PEdge {
+    Node::index_type         nodes_[2];   //! 2 nodes makes an edge.
+    vector<Cell::index_type> cells_;      //! list of all the cells this edge is in.
     
-    Edge() : cells_(0) {
+    PEdge() : cells_(0) {
       nodes_[0] = -1;
       nodes_[1] = -1;
     }
     // node_[0] must be smaller than node_[1]. See Hash Function below.
-    Edge(node_index n1, node_index n2) : cells_(0) {
+    PEdge(Node::index_type n1, Node::index_type n2) : cells_(0) {
       if (n1 < n2) {
 	nodes_[0] = n1;
 	nodes_[1] = n2; 
@@ -285,7 +297,7 @@ private:
     bool shared() const { return cells_.size() > 1; }
     
     //! true if both have the same nodes (order does not matter)
-    bool operator==(const Edge &e) const {
+    bool operator==(const PEdge &e) const {
       return ((nodes_[0] == e.nodes_[0]) && (nodes_[1] == e.nodes_[1]));
     }
   };
@@ -299,7 +311,7 @@ private:
     static const int mid3_mask =  up3_mask ^ (~((int)0) << sz_third_int);
     static const int low3_mask = ~(up3_mask | mid3_mask);
 
-    size_t operator()(const Face &f) const {
+    size_t operator()(const PFace &f) const {
       return ((f.nodes_[0] << sz_third_int << sz_third_int) | 
 	      (mid3_mask & (f.nodes_[1] << sz_third_int)) | 
 	      (low3_mask & f.nodes_[2]));
@@ -314,58 +326,58 @@ private:
     static const int up_mask = ((~((int)0)) << sz_half_int);
     static const int low_mask = (~((int)0) ^ up_mask);
 
-    size_t operator()(const Edge &e) const {
+    size_t operator()(const PEdge &e) const {
       return (e.nodes_[0] << sz_half_int) | (low_mask & e.nodes_[1]);
     }
   };
 
-  typedef hash_map<Face, face_index, FaceHash> face_ht;
-  typedef hash_map<Edge, edge_index, EdgeHash> edge_ht;
+  typedef hash_map<PFace, Face::index_type, FaceHash> face_ht;
+  typedef hash_map<PEdge, Edge::index_type, EdgeHash> edge_ht;
 
   /*! container for face storage. Must be computed each time 
     nodes or cells change. */
-  vector<Face>             faces_;
+  vector<PFace>             faces_;
   face_ht                  face_table_;
   Mutex                    face_table_lock_;
   /*! container for edge storage. Must be computed each time 
     nodes or cells change. */
-  vector<Edge>             edges_; 
+  vector<PEdge>             edges_; 
   edge_ht                  edge_table_;
   Mutex                    edge_table_lock_;
 
 
 
   inline
-  void hash_edge(node_index n1, node_index n2, 
-		 cell_index ci, edge_ht &table) const;
+  void hash_edge(Node::index_type n1, Node::index_type n2, 
+		 Cell::index_type ci, edge_ht &table) const;
 
   inline
-  void hash_face(node_index n1, node_index n2, node_index n3,
-		 cell_index ci, face_ht &table) const;
+  void hash_face(Node::index_type n1, Node::index_type n2, Node::index_type n3,
+		 Cell::index_type ci, face_ht &table) const;
 
   //! useful functors
   struct FillNodeNeighbors {
-    FillNodeNeighbors(vector<vector<node_index> > &n, const TetVolMesh &m) :
+    FillNodeNeighbors(vector<vector<Node::index_type> > &n, const TetVolMesh &m) :
       nbor_vec_(n),
       mesh_(m)
     {}
     
-    void operator()(edge_index e) {
+    void operator()(Edge::index_type e) {
       nodes_.clear();
       mesh_.get_nodes(nodes_, e);
       nbor_vec_[nodes_[0]].push_back(nodes_[1]);
       nbor_vec_[nodes_[1]].push_back(nodes_[0]);
     }
    
-    vector<vector<node_index> > &nbor_vec_;
+    vector<vector<Node::index_type> > &nbor_vec_;
     const TetVolMesh            &mesh_;
-    node_array                   nodes_;
+    Node::array_type                   nodes_;
   };
 
-  vector<vector<node_index> > node_neighbors_;  
+  vector<vector<Node::index_type> > node_neighbors_;  
   Mutex                       node_nbor_lock_;
   
-  typedef LockingHandle<LatticeVol<vector<cell_index> > > grid_handle;
+  typedef LockingHandle<LatticeVol<vector<Cell::index_type> > > grid_handle;
   grid_handle                 grid_;
   Mutex                       grid_lock_; // Bad traffic!
 };
@@ -395,7 +407,7 @@ TetVolMesh::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
   cells_lock_.lock();
   Iter iter = begin;
   cells_.resize((end - begin) * 4); // resize to the new size
-  vector<index_type>::iterator citer = cells_.begin();
+  vector<under_type>::iterator citer = cells_.begin();
   while (iter != end) {
     int *nodes = fill_ftor(*iter); // returns an array of length 4
     *citer = nodes[0];
@@ -416,7 +428,7 @@ TetVolMesh::fill_neighbors(Iter begin, Iter end, Functor fill_ftor) {
   nbors_lock_.lock();
   Iter iter = begin;
   neighbors_.resize((end - begin) * 4); // resize to the new size
-  vector<index_type>::iterator citer = neighbors_.begin();
+  vector<under_type>::iterator citer = neighbors_.begin();
   while (iter != end) {
     int *face_nbors = fill_ftor(*iter); // returns an array of length 4
     *citer = face_nbors[0];

@@ -143,34 +143,34 @@ template <class Msh>
 void 
 FieldBoundary::boundary(const Msh *mesh)
 {
-  map<typename Msh::node_index, typename TriSurfMesh::node_index> vertex_map_;
-  map<typename Msh::node_index, typename TriSurfMesh::node_index>::iterator node_iter;
-  TriSurfMesh::node_index node_idx[3];
+  map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type> vertex_map_;
+  map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type>::iterator node_iter;
+  TriSurfMesh::Node::index_type node_idx[3];
 
   TriSurfMeshHandle tmesh = scinew TriSurfMesh;
   // Walk all the cells in the mesh.
   Point center;
-  typename Msh::cell_iterator citer = mesh->cell_begin();
+  typename Msh::Cell::iterator citer = mesh->cell_begin();
   while (citer != mesh->cell_end()) {
-    typename Msh::cell_index ci = *citer;
+    typename Msh::Cell::index_type ci = *citer;
     ++citer;
     mesh->get_center(center, ci);
     // Get all the faces in the cell.
-    typename Msh::face_array faces;
+    typename Msh::Face::array_type faces;
     mesh->get_faces(faces, ci);
     // Check each face for neighbors
-    typename Msh::face_array::iterator fiter = faces.begin();
+    typename Msh::Face::array_type::iterator fiter = faces.begin();
     while (fiter != faces.end()) {
-      typename Msh::cell_index nci;
-      typename Msh::face_index fi = *fiter;
+      typename Msh::Cell::index_type nci;
+      typename Msh::Face::index_type fi = *fiter;
       ++fiter;
       if (! mesh->get_neighbor(nci , ci, fi)) {
 	// Faces with no neighbors are on the boundary, build a tri.
-	typename Msh::node_array nodes;
+	typename Msh::Node::array_type nodes;
 	mesh->get_nodes(nodes, fi);
 	// Creating triangles, so fan if more than 3 nodes.
 	Point p[3]; // cache points off
-	typename Msh::node_array::iterator niter = nodes.begin();
+	typename Msh::Node::array_type::iterator niter = nodes.begin();
 
 	for (int i=0; i<3; i++) {
 	  node_iter = vertex_map_.find(*niter);

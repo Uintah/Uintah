@@ -84,16 +84,16 @@ public:
   void normalize(vector<pair<int, double> > &v);
 
   template <class Mesh>
-  void find_closest_node(Mesh *mesh, typename Mesh::node_index &idx, Point &p);
+  void find_closest_node(Mesh *mesh, typename Mesh::Node::index_type &idx, Point &p);
 
   template <class Mesh>
-  void find_closest_edge(Mesh *mesh, typename Mesh::edge_index &idx, Point &p);
+  void find_closest_edge(Mesh *mesh, typename Mesh::Edge::index_type &idx, Point &p);
 
   template <class Mesh>
-  void find_closest_face(Mesh *mesh, typename Mesh::face_index &idx, Point &p);
+  void find_closest_face(Mesh *mesh, typename Mesh::Face::index_type &idx, Point &p);
 
   template <class Mesh>
-  void find_closest_cell(Mesh *mesh, typename Mesh::cell_index &idx, Point &p);
+  void find_closest_cell(Mesh *mesh, typename Mesh::Cell::index_type &idx, Point &p);
 
 };
 
@@ -136,12 +136,12 @@ BuildInterpolant::point_distance2(const Point &p1, const Point &p2)
 
 template <class Mesh>
 void
-BuildInterpolant::find_closest_node(Mesh *mesh, typename Mesh::node_index &idx,
+BuildInterpolant::find_closest_node(Mesh *mesh, typename Mesh::Node::index_type &idx,
 				    Point &p)
 {
   bool first_p = true;
   double min_dist = 1.0e6;
-  typename Mesh::node_iterator itr = mesh->node_begin();
+  typename Mesh::Node::iterator itr = mesh->node_begin();
   while (itr != mesh->node_end())
   {
     Point p2;
@@ -162,12 +162,12 @@ BuildInterpolant::find_closest_node(Mesh *mesh, typename Mesh::node_index &idx,
 
 template <class Mesh>
 void
-BuildInterpolant::find_closest_edge(Mesh *mesh, typename Mesh::edge_index &idx,
+BuildInterpolant::find_closest_edge(Mesh *mesh, typename Mesh::Edge::index_type &idx,
 				    Point &p)
 {
   bool first_p = true;
   double min_dist = 1.0e6;
-  typename Mesh::edge_iterator itr = mesh->edge_begin();
+  typename Mesh::Edge::iterator itr = mesh->edge_begin();
   while (itr != mesh->edge_end())
   {
     Point p2;
@@ -188,12 +188,12 @@ BuildInterpolant::find_closest_edge(Mesh *mesh, typename Mesh::edge_index &idx,
 
 template <class Mesh>
 void
-BuildInterpolant::find_closest_face(Mesh *mesh, typename Mesh::face_index &idx,
+BuildInterpolant::find_closest_face(Mesh *mesh, typename Mesh::Face::index_type &idx,
 				    Point &p)
 {
   bool first_p = true;
   double min_dist = 1.0e6;
-  typename Mesh::face_iterator itr = mesh->face_begin();
+  typename Mesh::Face::iterator itr = mesh->face_begin();
   while (itr != mesh->face_end())
   {
     Point p2;
@@ -214,12 +214,12 @@ BuildInterpolant::find_closest_face(Mesh *mesh, typename Mesh::face_index &idx,
 
 template <class Mesh>
 void
-BuildInterpolant::find_closest_cell(Mesh *mesh, typename Mesh::cell_index &idx,
+BuildInterpolant::find_closest_cell(Mesh *mesh, typename Mesh::Cell::index_type &idx,
 				    Point &p)
 {
   bool first_p = true;
   double min_dist = 1.0e6;
-  typename Mesh::cell_iterator itr = mesh->cell_begin();
+  typename Mesh::Cell::iterator itr = mesh->cell_begin();
   while (itr != mesh->cell_end())
   {
     Point p2;
@@ -273,35 +273,35 @@ BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
   {
   case Field::NODE:
     {
-      typename MDST::node_iterator itr = mdst->node_begin();
+      typename MDST::Node::iterator itr = mdst->node_begin();
       while (itr != mdst->node_end())
       {
 	Point p;
 	mdst->get_center(p, *itr);
     
-	vector<pair<typename MSRC::node_index, double> > v;
-	typename MSRC::cell_index idx;
+	vector<pair<typename MSRC::Node::index_type, double> > v;
+	typename MSRC::Cell::index_type idx;
 	if (msrc->locate(idx, p))
 	{
-	  typename MSRC::node_array array;
+	  typename MSRC::Node::array_type array;
 	  msrc->get_nodes(array, idx);
   
-	  typename MSRC::node_array::iterator array_itr = array.begin();
+	  typename MSRC::Node::array_type::iterator array_itr = array.begin();
 	  while (array_itr != array.end())
 	  {
 	    Point p2;
 	    msrc->get_center(p2, *array_itr);
 	    
-	    v.push_back(pair<typename MSRC::node_index, double>
+	    v.push_back(pair<typename MSRC::Node::index_type, double>
 			(*array_itr, point_distance(p, p2)));
 	    ++array_itr;
 	  }
 	}
 	else
 	{
-	  typename MSRC::node_index idx2;
+	  typename MSRC::Node::index_type idx2;
 	  find_closest_node(msrc, idx2, p);
-	  v.push_back(pair<typename MSRC::node_index, double>(idx2, 1.0));
+	  v.push_back(pair<typename MSRC::Node::index_type, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -311,35 +311,35 @@ BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
 
   case Field::EDGE:
     {
-      typename MDST::edge_iterator itr = mdst->edge_begin();
+      typename MDST::Edge::iterator itr = mdst->edge_begin();
       while (itr != mdst->edge_end())
       {
 	Point p;
 	mdst->get_center(p, *itr);
     
-	vector<pair<typename MSRC::node_index, double> > v;
-	typename MSRC::cell_index idx;
+	vector<pair<typename MSRC::Node::index_type, double> > v;
+	typename MSRC::Cell::index_type idx;
 	if (msrc->locate(idx, p))
 	{
-	  typename MSRC::node_array array;
+	  typename MSRC::Node::array_type array;
 	  msrc->get_nodes(array, idx);
   
-	  typename MSRC::node_array::iterator array_itr = array.begin();
+	  typename MSRC::Node::array_type::iterator array_itr = array.begin();
 	  while (array_itr != array.end())
 	  {
 	    Point p2;
 	    msrc->get_center(p2, *array_itr);
 	  
-	    v.push_back(pair<typename MSRC::node_index, double>
+	    v.push_back(pair<typename MSRC::Node::index_type, double>
 			(*array_itr, point_distance(p, p2)));
 	    ++array_itr;
 	  }
 	}
 	else
 	{
-	  typename MSRC::node_index idx2;
+	  typename MSRC::Node::index_type idx2;
 	  find_closest_node(msrc, idx2, p);
-	  v.push_back(pair<typename MSRC::node_index, double>(idx2, 1.0));
+	  v.push_back(pair<typename MSRC::Node::index_type, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -349,35 +349,35 @@ BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
 
   case Field::FACE:
     {
-      typename MDST::face_iterator itr = mdst->face_begin();
+      typename MDST::Face::iterator itr = mdst->face_begin();
       while (itr != mdst->face_end())
       {
 	Point p;
 	mdst->get_center(p, *itr);
     
-	vector<pair<typename MSRC::node_index, double> > v;
-	typename MSRC::cell_index idx;
+	vector<pair<typename MSRC::Node::index_type, double> > v;
+	typename MSRC::Cell::index_type idx;
 	if (msrc->locate(idx, p))
 	{
-	  typename MSRC::node_array array;
+	  typename MSRC::Node::array_type array;
 	  msrc->get_nodes(array, idx);
   
-	  typename MSRC::node_array::iterator array_itr = array.begin();
+	  typename MSRC::Node::array_type::iterator array_itr = array.begin();
 	  while (array_itr != array.end())
 	  {
 	    Point p2;
 	    msrc->get_center(p2, *array_itr);
 	  
-	    v.push_back(pair<typename MSRC::node_index, double>
+	    v.push_back(pair<typename MSRC::Node::index_type, double>
 			(*array_itr, point_distance(p, p2)));
 	    ++array_itr;
 	  }
 	}
 	else
 	{
-	  typename MSRC::node_index idx2;
+	  typename MSRC::Node::index_type idx2;
 	  find_closest_node(msrc, idx2, p);
-	  v.push_back(pair<typename MSRC::node_index, double>(idx2, 1.0));
+	  v.push_back(pair<typename MSRC::Node::index_type, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -387,35 +387,35 @@ BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
 
   case Field::CELL:
     {
-      typename MDST::cell_iterator itr = mdst->cell_begin();
+      typename MDST::Cell::iterator itr = mdst->cell_begin();
       while (itr != mdst->cell_end())
       {
 	Point p;
 	mdst->get_center(p, *itr);
     
-	vector<pair<typename MSRC::node_index, double> > v;
-	typename MSRC::cell_index idx;
+	vector<pair<typename MSRC::Node::index_type, double> > v;
+	typename MSRC::Cell::index_type idx;
 	if (msrc->locate(idx, p))
 	{
-	  typename MSRC::node_array array;
+	  typename MSRC::Node::array_type array;
 	  msrc->get_nodes(array, idx);
   
-	  typename MSRC::node_array::iterator array_itr = array.begin();
+	  typename MSRC::Node::array_type::iterator array_itr = array.begin();
 	  while (array_itr != array.end())
 	  {
 	    Point p2;
 	    msrc->get_center(p2, *array_itr);
 	  
-	    v.push_back(pair<typename MSRC::node_index, double>
+	    v.push_back(pair<typename MSRC::Node::index_type, double>
 			(*array_itr, point_distance(p, p2)));
 	    ++array_itr;
 	  }
 	}
 	else
 	{
-	  typename MSRC::node_index idx2;
+	  typename MSRC::Node::index_type idx2;
 	  find_closest_node(msrc, idx2, p);
-	  v.push_back(pair<typename MSRC::node_index, double>(idx2, 1.0));
+	  v.push_back(pair<typename MSRC::Node::index_type, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -446,35 +446,35 @@ BuildInterpolant::dispatch_src_edge(MDST *mdst, MSRC *msrc,
   {
   case Field::NODE:
     {
-      typename MDST::node_iterator itr = mdst->node_begin();
+      typename MDST::Node::iterator itr = mdst->node_begin();
       while (itr != mdst->node_end())
       {
 	Point p;
 	mdst->get_center(p, *itr);
     
-	vector<pair<typename MSRC::edge_index, double> > v;
-	typename MSRC::cell_index idx;
+	vector<pair<typename MSRC::Edge::index_type, double> > v;
+	typename MSRC::Cell::index_type idx;
 	if (msrc->locate(idx, p))
 	{
-	  typename MSRC::edge_array array;
+	  typename MSRC::Edge::array_type array;
 	  msrc->get_edges(array, idx);
   
-	  typename MSRC::edge_array::iterator array_itr = array.begin();
+	  typename MSRC::Edge::array_type::iterator array_itr = array.begin();
 	  while (array_itr != array.end())
 	  {
 	    Point p2;
 	    msrc->get_center(p2, *array_itr);
 	  
-	    v.push_back(pair<typename MSRC::edge_index, double>
+	    v.push_back(pair<typename MSRC::Edge::index_type, double>
 			(*array_itr, point_distance(p, p2)));
 	    ++array_itr;
 	  }
 	}
 	else
 	{
-	  typename MSRC::edge_index idx2;
+	  typename MSRC::Edge::index_type idx2;
 	  find_closest_edge(msrc, idx2, p);
-	  v.push_back(pair<typename MSRC::edge_index, double>(idx2, 1.0));
+	  v.push_back(pair<typename MSRC::Edge::index_type, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -484,35 +484,35 @@ BuildInterpolant::dispatch_src_edge(MDST *mdst, MSRC *msrc,
 
   case Field::EDGE:
     {
-      typename MDST::edge_iterator itr = mdst->edge_begin();
+      typename MDST::Edge::iterator itr = mdst->edge_begin();
       while (itr != mdst->edge_end())
       {
 	Point p;
 	mdst->get_center(p, *itr);
     
-	vector<pair<typename MSRC::edge_index, double> > v;
-	typename MSRC::cell_index idx;
+	vector<pair<typename MSRC::Edge::index_type, double> > v;
+	typename MSRC::Cell::index_type idx;
 	if (msrc->locate(idx, p))
 	{
-	  typename MSRC::edge_array array;
+	  typename MSRC::Edge::array_type array;
 	  msrc->get_edges(array, idx);
   
-	  typename MSRC::edge_array::iterator array_itr = array.begin();
+	  typename MSRC::Edge::array_type::iterator array_itr = array.begin();
 	  while (array_itr != array.end())
 	  {
 	    Point p2;
 	    msrc->get_center(p2, *array_itr);
 	  
-	    v.push_back(pair<typename MSRC::edge_index, double>
+	    v.push_back(pair<typename MSRC::Edge::index_type, double>
 			(*array_itr, point_distance(p, p2)));
 	    ++array_itr;
 	  }
 	}
 	else
 	{
-	  typename MSRC::edge_index idx2;
+	  typename MSRC::Edge::index_type idx2;
 	  find_closest_edge(msrc, idx2, p);
-	  v.push_back(pair<typename MSRC::edge_index, double>(idx2, 1.0));
+	  v.push_back(pair<typename MSRC::Edge::index_type, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -522,35 +522,35 @@ BuildInterpolant::dispatch_src_edge(MDST *mdst, MSRC *msrc,
 
   case Field::FACE:
     {
-      typename MDST::face_iterator itr = mdst->face_begin();
+      typename MDST::Face::iterator itr = mdst->face_begin();
       while (itr != mdst->face_end())
       {
 	Point p;
 	mdst->get_center(p, *itr);
     
-	vector<pair<typename MSRC::edge_index, double> > v;
-	typename MSRC::cell_index idx;
+	vector<pair<typename MSRC::Edge::index_type, double> > v;
+	typename MSRC::Cell::index_type idx;
 	if (msrc->locate(idx, p))
 	{
-	  typename MSRC::edge_array array;
+	  typename MSRC::Edge::array_type array;
 	  msrc->get_edges(array, idx);
   
-	  typename MSRC::edge_array::iterator array_itr = array.begin();
+	  typename MSRC::Edge::array_type::iterator array_itr = array.begin();
 	  while (array_itr != array.end())
 	  {
 	    Point p2;
 	    msrc->get_center(p2, *array_itr);
 	  
-	    v.push_back(pair<typename MSRC::edge_index, double>
+	    v.push_back(pair<typename MSRC::Edge::index_type, double>
 			(*array_itr, point_distance(p, p2)));
 	    ++array_itr;
 	  }
 	}
 	else
 	{
-	  typename MSRC::edge_index idx2;
+	  typename MSRC::Edge::index_type idx2;
 	  find_closest_edge(msrc, idx2, p);
-	  v.push_back(pair<typename MSRC::edge_index, double>(idx2, 1.0));
+	  v.push_back(pair<typename MSRC::Edge::index_type, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -560,35 +560,35 @@ BuildInterpolant::dispatch_src_edge(MDST *mdst, MSRC *msrc,
 
   case Field::CELL:
     {
-      typename MDST::cell_iterator itr = mdst->cell_begin();
+      typename MDST::Cell::iterator itr = mdst->cell_begin();
       while (itr != mdst->cell_end())
       {
 	Point p;
 	mdst->get_center(p, *itr);
     
-	vector<pair<typename MSRC::edge_index, double> > v;
-	typename MSRC::cell_index idx;
+	vector<pair<typename MSRC::Edge::index_type, double> > v;
+	typename MSRC::Cell::index_type idx;
 	if (msrc->locate(idx, p))
 	{
-	  typename MSRC::edge_array array;
+	  typename MSRC::Edge::array_type array;
 	  msrc->get_edges(array, idx);
   
-	  typename MSRC::edge_array::iterator array_itr = array.begin();
+	  typename MSRC::Edge::array_type::iterator array_itr = array.begin();
 	  while (array_itr != array.end())
 	  {
 	    Point p2;
 	    msrc->get_center(p2, *array_itr);
 	  
-	    v.push_back(pair<typename MSRC::edge_index, double>
+	    v.push_back(pair<typename MSRC::Edge::index_type, double>
 			(*array_itr, point_distance(p, p2)));
 	    ++array_itr;
 	  }
 	}
 	else
 	{
-	  typename MSRC::edge_index idx2;
+	  typename MSRC::Edge::index_type idx2;
 	  find_closest_edge(msrc, idx2, p);
-	  v.push_back(pair<typename MSRC::edge_index, double>(idx2, 1.0));
+	  v.push_back(pair<typename MSRC::Edge::index_type, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -619,35 +619,35 @@ BuildInterpolant::dispatch_src_face(MDST *mdst, MSRC *msrc,
   {
   case Field::NODE:
     {
-      typename MDST::node_iterator itr = mdst->node_begin();
+      typename MDST::Node::iterator itr = mdst->node_begin();
       while (itr != mdst->node_end())
       {
 	Point p;
 	mdst->get_center(p, *itr);
     
-	vector<pair<typename MSRC::face_index, double> > v;
-	typename MSRC::cell_index idx;
+	vector<pair<typename MSRC::Face::index_type, double> > v;
+	typename MSRC::Cell::index_type idx;
 	if (msrc->locate(idx, p))
 	{
-	  typename MSRC::face_array array;
+	  typename MSRC::Face::array_type array;
 	  msrc->get_faces(array, idx);
   
-	  typename MSRC::face_array::iterator array_itr = array.begin();
+	  typename MSRC::Face::array_type::iterator array_itr = array.begin();
 	  while (array_itr != array.end())
 	  {
 	    Point p2;
 	    msrc->get_center(p2, *array_itr);
 	  
-	    v.push_back(pair<typename MSRC::face_index, double>
+	    v.push_back(pair<typename MSRC::Face::index_type, double>
 			(*array_itr, point_distance(p, p2)));
 	    ++array_itr;
 	  }
 	}
 	else
 	{
-	  typename MSRC::face_index idx2;
+	  typename MSRC::Face::index_type idx2;
 	  find_closest_face(msrc, idx2, p);
-	  v.push_back(pair<typename MSRC::face_index, double>(idx2, 1.0));
+	  v.push_back(pair<typename MSRC::Face::index_type, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -657,35 +657,35 @@ BuildInterpolant::dispatch_src_face(MDST *mdst, MSRC *msrc,
 
   case Field::EDGE:
     {
-      typename MDST::edge_iterator itr = mdst->edge_begin();
+      typename MDST::Edge::iterator itr = mdst->edge_begin();
       while (itr != mdst->edge_end())
       {
 	Point p;
 	mdst->get_center(p, *itr);
     
-	vector<pair<typename MSRC::face_index, double> > v;
-	typename MSRC::cell_index idx;
+	vector<pair<typename MSRC::Face::index_type, double> > v;
+	typename MSRC::Cell::index_type idx;
 	if (msrc->locate(idx, p))
 	{
-	  typename MSRC::face_array array;
+	  typename MSRC::Face::array_type array;
 	  msrc->get_faces(array, idx);
   
-	  typename MSRC::face_array::iterator array_itr = array.begin();
+	  typename MSRC::Face::array_type::iterator array_itr = array.begin();
 	  while (array_itr != array.end())
 	  {
 	    Point p2;
 	    msrc->get_center(p2, *array_itr);
 	  
-	    v.push_back(pair<typename MSRC::face_index, double>
+	    v.push_back(pair<typename MSRC::Face::index_type, double>
 			(*array_itr, point_distance(p, p2)));
 	    ++array_itr;
 	  }
 	}
 	else
 	{
-	  typename MSRC::face_index idx2;
+	  typename MSRC::Face::index_type idx2;
 	  find_closest_face(msrc, idx2, p);
-	  v.push_back(pair<typename MSRC::face_index, double>(idx2, 1.0));
+	  v.push_back(pair<typename MSRC::Face::index_type, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -695,35 +695,35 @@ BuildInterpolant::dispatch_src_face(MDST *mdst, MSRC *msrc,
 
   case Field::FACE:
     {
-      typename MDST::face_iterator itr = mdst->face_begin();
+      typename MDST::Face::iterator itr = mdst->face_begin();
       while (itr != mdst->face_end())
       {
 	Point p;
 	mdst->get_center(p, *itr);
     
-	vector<pair<typename MSRC::face_index, double> > v;
-	typename MSRC::cell_index idx;
+	vector<pair<typename MSRC::Face::index_type, double> > v;
+	typename MSRC::Cell::index_type idx;
 	if (msrc->locate(idx, p))
 	{
-	  typename MSRC::face_array array;
+	  typename MSRC::Face::array_type array;
 	  msrc->get_faces(array, idx);
   
-	  typename MSRC::face_array::iterator array_itr = array.begin();
+	  typename MSRC::Face::array_type::iterator array_itr = array.begin();
 	  while (array_itr != array.end())
 	  {
 	    Point p2;
 	    msrc->get_center(p2, *array_itr);
 	  
-	    v.push_back(pair<typename MSRC::face_index, double>
+	    v.push_back(pair<typename MSRC::Face::index_type, double>
 			(*array_itr, point_distance(p, p2)));
 	    ++array_itr;
 	  }
 	}
 	else
 	{
-	  typename MSRC::face_index idx2;
+	  typename MSRC::Face::index_type idx2;
 	  find_closest_face(msrc, idx2, p);
-	  v.push_back(pair<typename MSRC::face_index, double>(idx2, 1.0));
+	  v.push_back(pair<typename MSRC::Face::index_type, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -733,35 +733,35 @@ BuildInterpolant::dispatch_src_face(MDST *mdst, MSRC *msrc,
 
   case Field::CELL:
     {
-      typename MDST::cell_iterator itr = mdst->cell_begin();
+      typename MDST::Cell::iterator itr = mdst->cell_begin();
       while (itr != mdst->cell_end())
       {
 	Point p;
 	mdst->get_center(p, *itr);
     
-	vector<pair<typename MSRC::face_index, double> > v;
-	typename MSRC::cell_index idx;
+	vector<pair<typename MSRC::Face::index_type, double> > v;
+	typename MSRC::Cell::index_type idx;
 	if (msrc->locate(idx, p))
 	{
-	  typename MSRC::face_array array;
+	  typename MSRC::Face::array_type array;
 	  msrc->get_faces(array, idx);
   
-	  typename MSRC::face_array::iterator array_itr = array.begin();
+	  typename MSRC::Face::array_type::iterator array_itr = array.begin();
 	  while (array_itr != array.end())
 	  {
 	    Point p2;
 	    msrc->get_center(p2, *array_itr);
 	  
-	    v.push_back(pair<typename MSRC::face_index, double>
+	    v.push_back(pair<typename MSRC::Face::index_type, double>
 			(*array_itr, point_distance(p, p2)));
 	    ++array_itr;
 	  }
 	}
 	else
 	{
-	  typename MSRC::face_index idx2;
+	  typename MSRC::Face::index_type idx2;
 	  find_closest_face(msrc, idx2, p);
-	  v.push_back(pair<typename MSRC::face_index, double>(idx2, 1.0));
+	  v.push_back(pair<typename MSRC::Face::index_type, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -792,23 +792,23 @@ BuildInterpolant::dispatch_src_cell(MDST *mdst, MSRC *msrc,
   {
   case Field::NODE:
     {
-      typename MDST::node_iterator itr = mdst->node_begin();
+      typename MDST::Node::iterator itr = mdst->node_begin();
       while (itr != mdst->node_end())
       {
 	Point p;
 	mdst->get_center(p, *itr);
     
-	vector<pair<typename MSRC::cell_index, double> > v;
-	typename MSRC::cell_index idx;
+	vector<pair<typename MSRC::Cell::index_type, double> > v;
+	typename MSRC::Cell::index_type idx;
 	if (msrc->locate(idx, p))
 	{
-	  v.push_back(pair<typename MSRC::cell_index, double>(idx, 1.0));
+	  v.push_back(pair<typename MSRC::Cell::index_type, double>(idx, 1.0));
 	}
 	else
 	{
-	  typename MSRC::cell_index idx2;
+	  typename MSRC::Cell::index_type idx2;
 	  find_closest_cell(msrc, idx2, p);
-	  v.push_back(pair<typename MSRC::cell_index, double>(idx2, 1.0));
+	  v.push_back(pair<typename MSRC::Cell::index_type, double>(idx2, 1.0));
 	}
 
 	ofield->set_value(v, *itr);
@@ -819,23 +819,23 @@ BuildInterpolant::dispatch_src_cell(MDST *mdst, MSRC *msrc,
 
   case Field::EDGE:
     {
-      typename MDST::edge_iterator itr = mdst->edge_begin();
+      typename MDST::Edge::iterator itr = mdst->edge_begin();
       while (itr != mdst->edge_end())
       {
 	Point p;
 	mdst->get_center(p, *itr);
     
-	vector<pair<typename MSRC::cell_index, double> > v;
-	typename MSRC::cell_index idx;
+	vector<pair<typename MSRC::Cell::index_type, double> > v;
+	typename MSRC::Cell::index_type idx;
 	if (msrc->locate(idx, p))
 	{
-	  v.push_back(pair<typename MSRC::cell_index, double>(idx, 1.0));
+	  v.push_back(pair<typename MSRC::Cell::index_type, double>(idx, 1.0));
 	}
 	else
 	{
-	  typename MSRC::cell_index idx2;
+	  typename MSRC::Cell::index_type idx2;
 	  find_closest_cell(msrc, idx2, p);
-	  v.push_back(pair<typename MSRC::cell_index, double>(idx2, 1.0));
+	  v.push_back(pair<typename MSRC::Cell::index_type, double>(idx2, 1.0));
 	}
 
 	ofield->set_value(v, *itr);
@@ -846,23 +846,23 @@ BuildInterpolant::dispatch_src_cell(MDST *mdst, MSRC *msrc,
 
   case Field::FACE:
     {
-      typename MDST::face_iterator itr = mdst->face_begin();
+      typename MDST::Face::iterator itr = mdst->face_begin();
       while (itr != mdst->face_end())
       {
 	Point p;
 	mdst->get_center(p, *itr);
     
-	vector<pair<typename MSRC::cell_index, double> > v;
-	typename MSRC::cell_index idx;
+	vector<pair<typename MSRC::Cell::index_type, double> > v;
+	typename MSRC::Cell::index_type idx;
 	if (msrc->locate(idx, p))
 	{
-	  v.push_back(pair<typename MSRC::cell_index, double>(idx, 1.0));
+	  v.push_back(pair<typename MSRC::Cell::index_type, double>(idx, 1.0));
 	}
 	else
 	{
-	  typename MSRC::cell_index idx2;
+	  typename MSRC::Cell::index_type idx2;
 	  find_closest_cell(msrc, idx2, p);
-	  v.push_back(pair<typename MSRC::cell_index, double>(idx2, 1.0));
+	  v.push_back(pair<typename MSRC::Cell::index_type, double>(idx2, 1.0));
 	}
 
 	ofield->set_value(v, *itr);
@@ -873,23 +873,23 @@ BuildInterpolant::dispatch_src_cell(MDST *mdst, MSRC *msrc,
 
   case Field::CELL:
     {
-      typename MDST::cell_iterator itr = mdst->cell_begin();
+      typename MDST::Cell::iterator itr = mdst->cell_begin();
       while (itr != mdst->cell_end())
       {
 	Point p;
 	mdst->get_center(p, *itr);
     
-	vector<pair<typename MSRC::cell_index, double> > v;
-	typename MSRC::cell_index idx;
+	vector<pair<typename MSRC::Cell::index_type, double> > v;
+	typename MSRC::Cell::index_type idx;
 	if (msrc->locate(idx, p))
 	{
-	  v.push_back(pair<typename MSRC::cell_index, double>(idx, 1.0));
+	  v.push_back(pair<typename MSRC::Cell::index_type, double>(idx, 1.0));
 	}
 	else
 	{
-	  typename MSRC::cell_index idx2;
+	  typename MSRC::Cell::index_type idx2;
 	  find_closest_cell(msrc, idx2, p);
-	  v.push_back(pair<typename MSRC::cell_index, double>(idx2, 1.0));
+	  v.push_back(pair<typename MSRC::Cell::index_type, double>(idx2, 1.0));
 	}
 
 	ofield->set_value(v, *itr);
@@ -940,28 +940,28 @@ BuildInterpolant::execute()
       dispatch_src_node((TetVolMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TetVol<vector<pair<TetVolMesh::node_index, double> > > *) 0);
+			(TetVol<vector<pair<TetVolMesh::Node::index_type, double> > > *) 0);
       break;
 
     case Field::EDGE:
       dispatch_src_edge((TetVolMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TetVol<vector<pair<TetVolMesh::edge_index, double> > > *) 0);
+			(TetVol<vector<pair<TetVolMesh::Edge::index_type, double> > > *) 0);
       break;
 
     case Field::FACE:
       dispatch_src_face((TetVolMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TetVol<vector<pair<TetVolMesh::face_index, double> > > *) 0);
+			(TetVol<vector<pair<TetVolMesh::Face::index_type, double> > > *) 0);
       break;
 
     case Field::CELL:
       dispatch_src_cell((TetVolMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TetVol<vector<pair<TetVolMesh::cell_index, double> > > *) 0);
+			(TetVol<vector<pair<TetVolMesh::Cell::index_type, double> > > *) 0);
       break;
 
     default:
@@ -977,28 +977,28 @@ BuildInterpolant::execute()
       dispatch_src_node((TetVolMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TetVol<vector<pair<LatVolMesh::node_index, double> > > *) 0);
+			(TetVol<vector<pair<LatVolMesh::Node::index_type, double> > > *) 0);
       break;
 
     case Field::EDGE:
       dispatch_src_edge((TetVolMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TetVol<vector<pair<LatVolMesh::edge_index, double> > > *) 0);
+			(TetVol<vector<pair<LatVolMesh::Edge::index_type, double> > > *) 0);
       break;
 
     case Field::FACE:
       dispatch_src_face((TetVolMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TetVol<vector<pair<LatVolMesh::face_index, double> > > *) 0);
+			(TetVol<vector<pair<LatVolMesh::Face::index_type, double> > > *) 0);
       break;
 
     case Field::CELL:
       dispatch_src_cell((TetVolMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TetVol<vector<pair<LatVolMesh::cell_index, double> > > *) 0);
+			(TetVol<vector<pair<LatVolMesh::Cell::index_type, double> > > *) 0);
       break;
 
     default:
@@ -1014,28 +1014,28 @@ BuildInterpolant::execute()
       dispatch_src_node((LatVolMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(LatticeVol<vector<pair<LatVolMesh::node_index, double> > > *) 0);
+			(LatticeVol<vector<pair<LatVolMesh::Node::index_type, double> > > *) 0);
       break;
 
     case Field::EDGE:
       dispatch_src_edge((LatVolMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(LatticeVol<vector<pair<LatVolMesh::edge_index, double> > > *) 0);
+			(LatticeVol<vector<pair<LatVolMesh::Edge::index_type, double> > > *) 0);
       break;
 
     case Field::FACE:
       dispatch_src_face((LatVolMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(LatticeVol<vector<pair<LatVolMesh::face_index, double> > > *) 0);
+			(LatticeVol<vector<pair<LatVolMesh::Face::index_type, double> > > *) 0);
       break;
 
     case Field::CELL:
       dispatch_src_cell((LatVolMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(LatticeVol<vector<pair<LatVolMesh::cell_index, double> > > *) 0);
+			(LatticeVol<vector<pair<LatVolMesh::Cell::index_type, double> > > *) 0);
       break;
 
     default:
@@ -1051,28 +1051,28 @@ BuildInterpolant::execute()
       dispatch_src_node((LatVolMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(LatticeVol<vector<pair<TetVolMesh::node_index, double> > > *) 0);
+			(LatticeVol<vector<pair<TetVolMesh::Node::index_type, double> > > *) 0);
       break;
 
     case Field::EDGE:
       dispatch_src_edge((LatVolMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(LatticeVol<vector<pair<TetVolMesh::edge_index, double> > > *) 0);
+			(LatticeVol<vector<pair<TetVolMesh::Edge::index_type, double> > > *) 0);
       break;
 
     case Field::FACE:
       dispatch_src_face((LatVolMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(LatticeVol<vector<pair<TetVolMesh::face_index, double> > > *) 0);
+			(LatticeVol<vector<pair<TetVolMesh::Face::index_type, double> > > *) 0);
       break;
 
     case Field::CELL:
       dispatch_src_cell((LatVolMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(LatticeVol<vector<pair<TetVolMesh::cell_index, double> > > *) 0);
+			(LatticeVol<vector<pair<TetVolMesh::Cell::index_type, double> > > *) 0);
       break;
 
     default:
@@ -1088,28 +1088,28 @@ BuildInterpolant::execute()
       dispatch_src_node((TriSurfMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TriSurf<vector<pair<TetVolMesh::node_index, double> > > *) 0);
+			(TriSurf<vector<pair<TetVolMesh::Node::index_type, double> > > *) 0);
       break;
 
     case Field::EDGE:
       dispatch_src_edge((TriSurfMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TriSurf<vector<pair<TetVolMesh::edge_index, double> > > *) 0);
+			(TriSurf<vector<pair<TetVolMesh::Edge::index_type, double> > > *) 0);
       break;
 
     case Field::FACE:
       dispatch_src_face((TriSurfMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TriSurf<vector<pair<TetVolMesh::face_index, double> > > *) 0);
+			(TriSurf<vector<pair<TetVolMesh::Face::index_type, double> > > *) 0);
       break;
 
     case Field::CELL:
       dispatch_src_cell((TriSurfMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TriSurf<vector<pair<TetVolMesh::cell_index, double> > > *) 0);
+			(TriSurf<vector<pair<TetVolMesh::Cell::index_type, double> > > *) 0);
       break;
 
     default:
@@ -1125,28 +1125,28 @@ BuildInterpolant::execute()
       dispatch_src_node((TriSurfMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TriSurf<vector<pair<LatVolMesh::node_index, double> > > *) 0);
+			(TriSurf<vector<pair<LatVolMesh::Node::index_type, double> > > *) 0);
       break;
 
     case Field::EDGE:
       dispatch_src_edge((TriSurfMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TriSurf<vector<pair<LatVolMesh::edge_index, double> > > *) 0);
+			(TriSurf<vector<pair<LatVolMesh::Edge::index_type, double> > > *) 0);
       break;
 
     case Field::FACE:
       dispatch_src_face((TriSurfMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TriSurf<vector<pair<LatVolMesh::face_index, double> > > *) 0);
+			(TriSurf<vector<pair<LatVolMesh::Face::index_type, double> > > *) 0);
       break;
 
     case Field::CELL:
       dispatch_src_cell((TriSurfMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TriSurf<vector<pair<LatVolMesh::cell_index, double> > > *) 0);
+			(TriSurf<vector<pair<LatVolMesh::Cell::index_type, double> > > *) 0);
       break;
 
     default:
@@ -1162,28 +1162,28 @@ BuildInterpolant::execute()
       dispatch_src_node((ContourMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(ContourField<vector<pair<TetVolMesh::node_index, double> > > *) 0);
+			(ContourField<vector<pair<TetVolMesh::Node::index_type, double> > > *) 0);
       break;
 
     case Field::EDGE:
       dispatch_src_edge((ContourMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(ContourField<vector<pair<TetVolMesh::edge_index, double> > > *) 0);
+			(ContourField<vector<pair<TetVolMesh::Edge::index_type, double> > > *) 0);
       break;
 
     case Field::FACE:
       dispatch_src_face((ContourMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(ContourField<vector<pair<TetVolMesh::face_index, double> > > *) 0);
+			(ContourField<vector<pair<TetVolMesh::Face::index_type, double> > > *) 0);
       break;
 
     case Field::CELL:
       dispatch_src_cell((ContourMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(ContourField<vector<pair<TetVolMesh::cell_index, double> > > *) 0);
+			(ContourField<vector<pair<TetVolMesh::Cell::index_type, double> > > *) 0);
       break;
 
     default:
@@ -1199,28 +1199,28 @@ BuildInterpolant::execute()
       dispatch_src_node((ContourMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(ContourField<vector<pair<LatVolMesh::node_index, double> > > *) 0);
+			(ContourField<vector<pair<LatVolMesh::Node::index_type, double> > > *) 0);
       break;
 
     case Field::EDGE:
       dispatch_src_edge((ContourMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(ContourField<vector<pair<LatVolMesh::edge_index, double> > > *) 0);
+			(ContourField<vector<pair<LatVolMesh::Edge::index_type, double> > > *) 0);
       break;
 
     case Field::FACE:
       dispatch_src_face((ContourMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(ContourField<vector<pair<LatVolMesh::face_index, double> > > *) 0);
+			(ContourField<vector<pair<LatVolMesh::Face::index_type, double> > > *) 0);
       break;
 
     case Field::CELL:
       dispatch_src_cell((ContourMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(ContourField<vector<pair<LatVolMesh::cell_index, double> > > *) 0);
+			(ContourField<vector<pair<LatVolMesh::Cell::index_type, double> > > *) 0);
       break;
 
     default:
@@ -1236,28 +1236,28 @@ BuildInterpolant::execute()
       dispatch_src_node((TriSurfMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TriSurf<vector<pair<TetVolMesh::node_index, double> > > *) 0);
+			(TriSurf<vector<pair<TetVolMesh::Node::index_type, double> > > *) 0);
       break;
 
     case Field::EDGE:
       dispatch_src_edge((TriSurfMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TriSurf<vector<pair<TetVolMesh::edge_index, double> > > *) 0);
+			(TriSurf<vector<pair<TetVolMesh::Edge::index_type, double> > > *) 0);
       break;
 
     case Field::FACE:
       dispatch_src_face((TriSurfMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TriSurf<vector<pair<TetVolMesh::face_index, double> > > *) 0);
+			(TriSurf<vector<pair<TetVolMesh::Face::index_type, double> > > *) 0);
       break;
 
     case Field::CELL:
       dispatch_src_cell((TriSurfMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TriSurf<vector<pair<TetVolMesh::cell_index, double> > > *) 0);
+			(TriSurf<vector<pair<TetVolMesh::Cell::index_type, double> > > *) 0);
       break;
 
     default:
@@ -1273,28 +1273,28 @@ BuildInterpolant::execute()
       dispatch_src_node((PointCloudMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(PointCloud<vector<pair<LatVolMesh::node_index, double> > > *) 0);
+			(PointCloud<vector<pair<LatVolMesh::Node::index_type, double> > > *) 0);
       break;
 
     case Field::EDGE:
       dispatch_src_edge((PointCloudMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(PointCloud<vector<pair<LatVolMesh::edge_index, double> > > *) 0);
+			(PointCloud<vector<pair<LatVolMesh::Edge::index_type, double> > > *) 0);
       break;
 
     case Field::FACE:
       dispatch_src_face((PointCloudMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(PointCloud<vector<pair<LatVolMesh::face_index, double> > > *) 0);
+			(PointCloud<vector<pair<LatVolMesh::Face::index_type, double> > > *) 0);
       break;
 
     case Field::CELL:
       dispatch_src_cell((PointCloudMesh *)dst_field->mesh().get_rep(),
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(PointCloud<vector<pair<LatVolMesh::cell_index, double> > > *) 0);
+			(PointCloud<vector<pair<LatVolMesh::Cell::index_type, double> > > *) 0);
       break;
 
     default:
@@ -1315,28 +1315,28 @@ BuildInterpolant::execute()
       dispatch_src_node((TriSurfMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TriSurf<vector<pair<TetVolMesh::node_index, double> > > *) 0);
+			(TriSurf<vector<pair<TetVolMesh::Node::index_type, double> > > *) 0);
       break;
 
     case Field::EDGE:
       dispatch_src_edge((TriSurfMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TriSurf<vector<pair<TetVolMesh::edge_index, double> > > *) 0);
+			(TriSurf<vector<pair<TetVolMesh::Edge::index_type, double> > > *) 0);
       break;
 
     case Field::FACE:
       dispatch_src_face((TriSurfMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TriSurf<vector<pair<TetVolMesh::face_index, double> > > *) 0);
+			(TriSurf<vector<pair<TetVolMesh::Face::index_type, double> > > *) 0);
       break;
 
     case Field::CELL:
       dispatch_src_cell((TriSurfMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(TriSurf<vector<pair<TetVolMesh::cell_index, double> > > *) 0);
+			(TriSurf<vector<pair<TetVolMesh::Cell::index_type, double> > > *) 0);
       break;
 
     default:
@@ -1352,28 +1352,28 @@ BuildInterpolant::execute()
       dispatch_src_node((ContourMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(ContourField<vector<pair<TetVolMesh::node_index, double> > > *) 0);
+			(ContourField<vector<pair<TetVolMesh::Node::index_type, double> > > *) 0);
       break;
 
     case Field::EDGE:
       dispatch_src_edge((ContourMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(ContourField<vector<pair<TetVolMesh::edge_index, double> > > *) 0);
+			(ContourField<vector<pair<TetVolMesh::Edge::index_type, double> > > *) 0);
       break;
 
     case Field::FACE:
       dispatch_src_face((ContourMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(ContourField<vector<pair<TetVolMesh::face_index, double> > > *) 0);
+			(ContourField<vector<pair<TetVolMesh::Face::index_type, double> > > *) 0);
       break;
 
     case Field::CELL:
       dispatch_src_cell((ContourMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(ContourField<vector<pair<TetVolMesh::cell_index, double> > > *) 0);
+			(ContourField<vector<pair<TetVolMesh::Cell::index_type, double> > > *) 0);
       break;
 
     default:
@@ -1389,28 +1389,28 @@ BuildInterpolant::execute()
       dispatch_src_node((PointCloudMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(PointCloud<vector<pair<TetVolMesh::node_index, double> > > *) 0);
+			(PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > > *) 0);
       break;
 
     case Field::EDGE:
       dispatch_src_edge((PointCloudMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(PointCloud<vector<pair<TetVolMesh::edge_index, double> > > *) 0);
+			(PointCloud<vector<pair<TetVolMesh::Edge::index_type, double> > > *) 0);
       break;
 
     case Field::FACE:
       dispatch_src_face((PointCloudMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(PointCloud<vector<pair<TetVolMesh::face_index, double> > > *) 0);
+			(PointCloud<vector<pair<TetVolMesh::Face::index_type, double> > > *) 0);
       break;
 
     case Field::CELL:
       dispatch_src_cell((PointCloudMesh *)dst_field->mesh().get_rep(),
 			(TetVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
-			(PointCloud<vector<pair<TetVolMesh::cell_index, double> > > *) 0);
+			(PointCloud<vector<pair<TetVolMesh::Cell::index_type, double> > > *) 0);
       break;
 
     default:

@@ -228,30 +228,37 @@ public:
     }
   };
   
-  typedef ImageIndex      index_type;
+  //typedef ImageIndex      under_type;
   
   //! Index and Iterator types required for Mesh Concept.
-  typedef NodeIndex       node_index;
-  typedef NodeIter        node_iterator;
-  typedef NodeIndex       node_size_type;
- 
-  typedef EdgeIndex       edge_index;     
-  typedef EdgeIter        edge_iterator;
-  typedef EdgeIndex       edge_size_type;
- 
-  typedef FaceIndex       face_index;
-  typedef FaceIter        face_iterator;
-  typedef FaceIndex       face_size_type;
- 
-  typedef CellIndex       cell_index;
-  typedef CellIter        cell_iterator;
-  typedef CellIndex       cell_size_type;
+  struct Node {
+    typedef NodeIndex          index_type;
+    typedef NodeIter           iterator;
+    typedef NodeIndex          size_type;
+    typedef vector<index_type> array_type;
+  };			  
+			  
+  struct Edge {		  
+    typedef EdgeIndex          index_type;     
+    typedef EdgeIter           iterator;
+    typedef EdgeIndex          size_type;
+    typedef vector<index_type> array_type;
+  };			       
+			       
+  struct Face {		       
+    typedef FaceIndex          index_type;
+    typedef FaceIter           iterator;
+    typedef FaceIndex          size_type;
+    typedef vector<index_type> array_type;
+  };			       
+			       
+  struct Cell {		       
+    typedef CellIndex          index_type;
+    typedef CellIter           iterator;
+    typedef CellIndex          size_type;
+    typedef vector<index_type> array_type;
+  };
 
-  // storage types for get_* functions
-  typedef vector<node_index>  node_array;
-  typedef vector<edge_index>  edge_array;
-  typedef vector<face_index>  face_array;
-  typedef vector<cell_index>  cell_array;
   typedef vector<double>      weight_array;
 
   friend class NodeIter;
@@ -274,30 +281,30 @@ public:
   virtual ImageMesh *clone() { return new ImageMesh(*this); }
   virtual ~ImageMesh() {}
 
-  node_index  node(unsigned i, unsigned j) const
-    { return node_index(i, j); }
-  node_iterator  node_begin() const 
-  { return node_iterator(this, min_x_, min_y_); }
-  node_iterator  node_end() const 
-  { return node_iterator(this, min_x_ + nx_, min_y_ + ny_); }  // TODO: verify
-  node_size_type nodes_size() const { return node_size_type(nx_, ny_); }
+  Node::index_type  node(unsigned i, unsigned j) const
+    { return Node::index_type(i, j); }
+  Node::iterator  node_begin() const 
+  { return Node::iterator(this, min_x_, min_y_); }
+  Node::iterator  node_end() const 
+  { return Node::iterator(this, min_x_ + nx_, min_y_ + ny_); }  // TODO: verify
+  Node::size_type nodes_size() const { return Node::size_type(nx_, ny_); }
 
-  edge_iterator  edge_begin() const { return edge_iterator(this, 0); }
-  edge_iterator  edge_end() const { return edge_iterator(this, 0); }
-  edge_size_type edges_size() const { return edge_size_type(0); }
+  Edge::iterator  edge_begin() const { return Edge::iterator(this, 0); }
+  Edge::iterator  edge_end() const { return Edge::iterator(this, 0); }
+  Edge::size_type edges_size() const { return Edge::size_type(0); }
 
-  face_index  face(unsigned i, unsigned j) const
-    { return face_index(i, j); }
-  face_iterator  face_begin() const 
-  { return face_iterator(this,  min_x_, min_y_); }
-  face_iterator  face_end() const 
-  { return face_iterator(this, min_x_ + nx_ - 1, min_y_ + ny_ - 1); }
-  face_size_type faces_size() const 
-  { return face_size_type(nx_-1, ny_-1); }
+  Face::index_type  face(unsigned i, unsigned j) const
+    { return Face::index_type(i, j); }
+  Face::iterator  face_begin() const 
+  { return Face::iterator(this,  min_x_, min_y_); }
+  Face::iterator  face_end() const 
+  { return Face::iterator(this, min_x_ + nx_ - 1, min_y_ + ny_ - 1); }
+  Face::size_type faces_size() const 
+  { return Face::size_type(nx_-1, ny_-1); }
 
-  cell_iterator  cell_begin() const { return cell_iterator(this, 0); }
-  cell_iterator  cell_end() const { return cell_iterator(this, 0); }
-  cell_size_type cells_size() const { return cell_size_type(0); }
+  Cell::iterator  cell_begin() const { return Cell::iterator(this, 0); }
+  Cell::iterator  cell_end() const { return Cell::iterator(this, 0); }
+  Cell::size_type cells_size() const { return Cell::size_type(0); }
 
   //! get the mesh statistics
   unsigned get_nx() const { return nx_; }
@@ -317,45 +324,45 @@ public:
 
 
   //! get the child elements of the given index
-  void get_nodes(node_array &, edge_index) const {}
-  void get_nodes(node_array &, face_index) const;
-  void get_nodes(node_array &, cell_index) const {}
-  void get_edges(edge_array &, face_index) const {}
-  void get_edges(edge_array &, cell_index) const {}
-  void get_faces(face_array &, cell_index) const {}
+  void get_nodes(Node::array_type &, Edge::index_type) const {}
+  void get_nodes(Node::array_type &, Face::index_type) const;
+  void get_nodes(Node::array_type &, Cell::index_type) const {}
+  void get_edges(Edge::array_type &, Face::index_type) const {}
+  void get_edges(Edge::array_type &, Cell::index_type) const {}
+  void get_faces(Face::array_type &, Cell::index_type) const {}
 
   //! get the parent element(s) of the given index
-  unsigned get_edges(edge_array &, node_index) const { return 0; }
-  unsigned get_faces(face_array &, node_index) const { return 0; }
-  unsigned get_faces(face_array &, edge_index) const { return 0; }
-  unsigned get_cells(cell_array &, node_index) const { return 0; }
-  unsigned get_cells(cell_array &, edge_index) const { return 0; }
-  unsigned get_cells(cell_array &, face_index) const { return 0; }
+  unsigned get_edges(Edge::array_type &, Node::index_type) const { return 0; }
+  unsigned get_faces(Face::array_type &, Node::index_type) const { return 0; }
+  unsigned get_faces(Face::array_type &, Edge::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Node::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Face::index_type) const { return 0; }
 
   //! return all face_indecies that overlap the BBox in arr.
-  void get_faces(face_array &arr, const BBox &box) const;
+  void get_faces(Face::array_type &arr, const BBox &box) const;
 
-  //! similar to get_faces() with face_index argument, but
+  //! similar to get_faces() with Face::index_type argument, but
   //  returns the "other" face if it exists, not all that exist
-  bool get_neighbor(face_index & /*neighbor*/, face_index /*from*/, 
-		    edge_index /*idx*/) const {
+  bool get_neighbor(Face::index_type & /*neighbor*/, Face::index_type /*from*/, 
+		    Edge::index_type /*idx*/) const {
     ASSERTFAIL("ImageMesh::get_neighbor not implemented.");
   }
 
   //! get the center point (in object space) of an element
-  void get_center(Point &, node_index) const;
-  void get_center(Point &, edge_index) const {}
-  void get_center(Point &, face_index) const;
-  void get_center(Point &, cell_index) const {}
+  void get_center(Point &, Node::index_type) const;
+  void get_center(Point &, Edge::index_type) const {}
+  void get_center(Point &, Face::index_type) const;
+  void get_center(Point &, Cell::index_type) const {}
 
-  bool locate(node_index &, const Point &) const;
-  bool locate(edge_index &, const Point &) const { return false; }
-  bool locate(face_index &, const Point &) const;
-  bool locate(cell_index &, const Point &) const { return false; }
+  bool locate(Node::index_type &, const Point &) const;
+  bool locate(Edge::index_type &, const Point &) const { return false; }
+  bool locate(Face::index_type &, const Point &) const;
+  bool locate(Cell::index_type &, const Point &) const { return false; }
 
-  void get_point(Point &p, node_index i) const
+  void get_point(Point &p, Node::index_type i) const
   { get_center(p, i); }
-  void get_normal(Vector &/* result */, node_index /* index */) const
+  void get_normal(Vector &/* result */, Node::index_type /* index */) const
   { ASSERTFAIL("not implemented") }
 
   
@@ -366,10 +373,10 @@ public:
 
 private:
 
-  //! the min_node_index ( incase this is a subLattice )
+  //! the min_Node::index_type ( incase this is a subLattice )
   unsigned min_x_, min_y_;
-  //! the node_index space extents of a ImageMesh 
-  //! (min=min_node_index, max=min+extents-1)
+  //! the Node::index_type space extents of a ImageMesh 
+  //! (min=min_Node::index_type, max=min+extents-1)
   unsigned nx_, ny_;
 
   //! the object space extents of a ImageMesh

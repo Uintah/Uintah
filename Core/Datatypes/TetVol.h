@@ -56,7 +56,7 @@ public:
   virtual void finish_mesh();
 
   bool get_gradient(Vector &, Point &);
-  Vector cell_gradient(TetVolMesh::cell_index);
+  Vector cell_gradient(TetVolMesh::Cell::index_type);
 
   virtual ScalarFieldInterface* query_scalar_interface() const;
 
@@ -193,7 +193,7 @@ TetVol<T>::get_type_name(int n) const
 //! compute the gradient g, at point p
 template <class T>
 bool TetVol<T>::get_gradient(Vector &g, Point &p) {
-  TetVolMesh::cell_index ci;
+  TetVolMesh::Cell::index_type ci;
   if (get_typed_mesh()->locate(ci, p)) {
     g = cell_gradient(ci);
     return true;
@@ -204,19 +204,19 @@ bool TetVol<T>::get_gradient(Vector &g, Point &p) {
 
 //! Compute the gradient g in cell ci.
 template <>
-Vector TetVol<Vector>::cell_gradient(TetVolMesh::cell_index ci);
+Vector TetVol<Vector>::cell_gradient(TetVolMesh::Cell::index_type ci);
 
 template <>
-Vector TetVol<Tensor>::cell_gradient(TetVolMesh::cell_index ci);
+Vector TetVol<Tensor>::cell_gradient(TetVolMesh::Cell::index_type ci);
 
 template <class T>
-Vector TetVol<T>::cell_gradient(TetVolMesh::cell_index ci)
+Vector TetVol<T>::cell_gradient(TetVolMesh::Cell::index_type ci)
 {
   // for now we only know how to do this for field with doubles at the nodes
   ASSERT(data_at() == Field::NODE);
 
   // load up the indices of the nodes for this cell
-  TetVolMesh::node_array nodes;
+  TetVolMesh::Node::array_type nodes;
   get_typed_mesh()->get_nodes(nodes, ci);
   Vector gb0, gb1, gb2, gb3;
   get_typed_mesh()->get_gradient_basis(ci, gb0, gb1, gb2, gb3);

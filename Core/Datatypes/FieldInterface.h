@@ -78,7 +78,7 @@ private:
     
     //! do linear interp at data location.
     bool operator()(double &result, const Point &p) const {
-      typename Mesh::cell_index ci;
+      typename Mesh::Cell::index_type ci;
       const typename F::mesh_handle_type &mesh = par_->fld_->get_typed_mesh();
 
       switch (par_->fld_->data_at()) {
@@ -86,13 +86,13 @@ private:
 	{
 	  if (! mesh->locate(ci, p)) return false;	  
 
-	  typename Mesh::node_array nodes;
+	  typename Mesh::Node::array_type nodes;
 	  mesh->get_nodes(nodes, ci);
 
 	  typename F::value_type tmp;
 	  int i = 0;
 	  Point center;
-	  typename Mesh::node_array::iterator iter = nodes.begin();
+	  typename Mesh::Node::array_type::iterator iter = nodes.begin();
 	  while (iter != nodes.end()) {
 	    if (par_->fld_->value(tmp, *iter)) { 
 	      mesh->get_point(center, *iter);
@@ -117,12 +117,12 @@ private:
 	{
 	  if (! mesh->locate(ci, p)) return false;
 	  
-	  typename Mesh::cell_array cells;
+	  typename Mesh::Cell::array_type cells;
 	  mesh->get_neighbors(cells, ci);
 	  
 	  typename F::value_type tmp;
 	  int i = 0;
-	  typename Mesh::cell_array::iterator iter = cells.begin();
+	  typename Mesh::Cell::array_type::iterator iter = cells.begin();
 	  Point center;
 	  while (iter != cells.end()) {
 	    if (par_->fld_->value(tmp, *iter)) { 

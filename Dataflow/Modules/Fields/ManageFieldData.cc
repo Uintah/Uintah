@@ -91,7 +91,7 @@ ManageFieldData::callback_scalar(F *ifield)
       {
 	int index = 0;
 	omatrix = new ColumnMatrix(mesh->nodes_size());
-	typename F::mesh_type::node_iterator iter = mesh->node_begin();
+	typename F::mesh_type::Node::iterator iter = mesh->node_begin();
 	while (iter != mesh->node_end())
 	{
 	  typename F::value_type val = ifield->value(*iter);
@@ -105,7 +105,7 @@ ManageFieldData::callback_scalar(F *ifield)
       {
 	int index = 0;
 	omatrix = new ColumnMatrix(mesh->edges_size());
-	typename F::mesh_type::edge_iterator iter = mesh->edge_begin();
+	typename F::mesh_type::Edge::iterator iter = mesh->edge_begin();
 	while (iter != mesh->edge_end())
 	{
 	  typename F::value_type val = ifield->value(*iter);
@@ -119,7 +119,7 @@ ManageFieldData::callback_scalar(F *ifield)
       {
 	int index = 0;
 	omatrix = new ColumnMatrix(mesh->faces_size());
-	typename F::mesh_type::face_iterator iter = mesh->face_begin();
+	typename F::mesh_type::Face::iterator iter = mesh->face_begin();
 	while (iter != mesh->face_end())
 	{
 	  typename F::value_type val = ifield->value(*iter);
@@ -133,7 +133,7 @@ ManageFieldData::callback_scalar(F *ifield)
       {
 	int index = 0;
 	omatrix = new ColumnMatrix(mesh->cells_size());
-	typename F::mesh_type::cell_iterator iter = mesh->cell_begin();
+	typename F::mesh_type::Cell::iterator iter = mesh->cell_begin();
 	while (iter != mesh->cell_end())
 	{
 	  typename F::value_type val = ifield->value(*iter);
@@ -175,7 +175,7 @@ ManageFieldData::callback_mesh(IMesh *imesh, OField *)
     {
       int index = 0;
       ofield = new OField(imesh, Field::NODE);
-      typename IMesh::node_iterator iter = imesh->node_begin();
+      typename IMesh::Node::iterator iter = imesh->node_begin();
       while (iter != imesh->node_end())
       {
 	ofield->set_value(imatrix->get(index++, 0), *iter);
@@ -186,7 +186,7 @@ ManageFieldData::callback_mesh(IMesh *imesh, OField *)
     {
       int index = 0;
       ofield = new OField(imesh, Field::EDGE);
-      typename IMesh::edge_iterator iter = imesh->edge_begin();
+      typename IMesh::Edge::iterator iter = imesh->edge_begin();
       while (iter != imesh->edge_end())
       {
 	ofield->set_value(imatrix->get(index++, 0), *iter);
@@ -197,7 +197,7 @@ ManageFieldData::callback_mesh(IMesh *imesh, OField *)
     {
       int index = 0;
       ofield = new OField(imesh, Field::FACE);
-      typename IMesh::face_iterator iter = imesh->face_begin();
+      typename IMesh::Face::iterator iter = imesh->face_begin();
       while (iter != imesh->face_end())
       {
 	ofield->set_value(imatrix->get(index++, 0), *iter);
@@ -208,7 +208,7 @@ ManageFieldData::callback_mesh(IMesh *imesh, OField *)
     {
       int index = 0;
       ofield = new OField(imesh, Field::CELL);
-      typename IMesh::cell_iterator iter = imesh->cell_begin();
+      typename IMesh::Cell::iterator iter = imesh->cell_begin();
       while (iter != imesh->cell_end())
       {
 	ofield->set_value(imatrix->get(index++, 0), *iter);

@@ -75,7 +75,7 @@ public:
 template<class Cell> template<class Field>
 void Tree<Cell>::init( Field *field, int levels, int rx, int ry, int rz ) 
 {
-  typedef typename Field::mesh_type::node_index node_index;
+  typedef typename Field::mesh_type::Node::index_type node_index_type;
   typename Field::mesh_handle_type mesh_ = field->get_typed_mesh();
 
   levels_ = levels;
@@ -121,14 +121,14 @@ void Tree<Cell>::init( Field *field, int levels, int rx, int ry, int rz )
 	int ez = sz + fz_; if ( ez >= nz_ ) ez = nz_-1;
 	// compute min max of sub region from field 
 	value_type min, max;
-	if ( !field->value(min, node_index(sx,sy,sz)))
+	if ( !field->value(min, node_index_type(sx,sy,sz)))
 	  cerr << "bug: @ " << sx << " " << sy << " " << sz << endl;
 	max = min;
 	for ( int i=sx; i<=ex; i++)
 	  for (int j=sy; j<=ey; j++)
 	    for (int k=sz; k<=ez; k++) {
 	      value_type v;
-	      if ( !field->value(v, node_index(i,j,k)) ) {
+	      if ( !field->value(v, node_index_type(i,j,k)) ) {
 		cerr << "bug2 @ " << i << " " << j << " " << k << endl;
 		continue;
 	      }

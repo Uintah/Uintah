@@ -47,28 +47,38 @@ class SCICORESHARE ScanlineMesh : public MeshBase
 {
 public:
 
-  typedef unsigned int    index_type;
+  typedef unsigned int    under_type;
   
   //! Index and Iterator types required for Mesh Concept.
-  typedef NodeIndex<index_type>       node_index;
-  typedef NodeIterator<index_type>    node_iterator;
-  typedef NodeIndex<index_type>       node_size_type;
- 
-  typedef EdgeIndex<index_type>       edge_index;     
-  typedef EdgeIterator<index_type>    edge_iterator;
-  typedef EdgeIndex<index_type>       edge_size_type;
- 
-  typedef FaceIndex<index_type>       face_index;
-  typedef FaceIterator<index_type>    face_iterator;
-  typedef FaceIndex<index_type>       face_size_type;
- 
-  typedef CellIndex<index_type>       cell_index;
-  typedef CellIterator<index_type>    cell_iterator;
-  typedef CellIndex<index_type>       cell_size_type;
+  struct Node {
+  typedef NodeIndex<under_type>       index_type;
+  typedef NodeIterator<under_type>    iterator;
+  typedef NodeIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+  };				      
+				      
+  struct Edge {			      
+  typedef EdgeIndex<under_type>       index_type;     
+  typedef EdgeIterator<under_type>    iterator;
+  typedef EdgeIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+  };				      
+  				      
+  struct Face {			      
+  typedef FaceIndex<under_type>       index_type;
+  typedef FaceIterator<under_type>    iterator;
+  typedef FaceIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+  };				      
+				      
+  struct Cell {			      
+  typedef CellIndex<under_type>       index_type;
+  typedef CellIterator<under_type>    iterator;
+  typedef CellIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+  };
 
   // storage types for get_* functions
-  typedef vector<node_index>  node_array;
-  typedef vector<edge_index>  edge_array;
   typedef vector<double>      weight_array;
 
   ScanlineMesh()
@@ -83,23 +93,23 @@ public:
   virtual ScanlineMesh *clone() { return new ScanlineMesh(*this); }
   virtual ~ScanlineMesh() {}
 
-  node_index  node(unsigned int i) const { return node_index(i); }
-  node_iterator  node_begin() const { return node_iterator(offset_); }
-  node_iterator  node_end() const { return node_iterator(offset_ + length_); }
-  node_size_type nodes_size() const { return node_size_type(length_); }
+  Node::index_type  node(unsigned int i) const { return Node::index_type(i); }
+  Node::iterator  node_begin() const { return Node::iterator(offset_); }
+  Node::iterator  node_end() const { return Node::iterator(offset_ + length_); }
+  Node::size_type nodes_size() const { return Node::size_type(length_); }
 
-  edge_index edge(unsigned int i) const { return edge_index(i); }
-  edge_iterator  edge_begin() const { return edge_iterator(offset_); }
-  edge_iterator  edge_end() const { return edge_iterator(offset_+length_-1); }
-  edge_size_type edges_size() const { return edge_size_type(length_ - 1); }
+  Edge::index_type edge(unsigned int i) const { return Edge::index_type(i); }
+  Edge::iterator  edge_begin() const { return Edge::iterator(offset_); }
+  Edge::iterator  edge_end() const { return Edge::iterator(offset_+length_-1); }
+  Edge::size_type edges_size() const { return Edge::size_type(length_ - 1); }
 
-  face_iterator  face_begin() const { return face_iterator(0); }
-  face_iterator  face_end() const { return face_iterator(0); }
-  face_size_type faces_size() const { return face_size_type(0); }
+  Face::iterator  face_begin() const { return Face::iterator(0); }
+  Face::iterator  face_end() const { return Face::iterator(0); }
+  Face::size_type faces_size() const { return Face::size_type(0); }
 
-  cell_iterator  cell_begin() const { return cell_iterator(0); }
-  cell_iterator  cell_end() const { return cell_iterator(0); }
-  cell_size_type cells_size() const { return cell_size_type(0); }
+  Cell::iterator  cell_begin() const { return Cell::iterator(0); }
+  Cell::iterator  cell_end() const { return Cell::iterator(0); }
+  Cell::size_type cells_size() const { return Cell::size_type(0); }
 
   //! get the mesh statistics
   unsigned get_length() const { return length_; }
@@ -116,45 +126,45 @@ public:
 
 
   //! get the child elements of the given index
-  void get_nodes(node_array &, edge_index) const;
-  void get_nodes(node_array &, face_index) const {}
-  void get_nodes(node_array &, cell_index) const {}
-  void get_edges(edge_array &, face_index) const {}
-  void get_edges(edge_array &, cell_index) const {}
-  //void get_faces(face_array &, cell_index) const {}
+  void get_nodes(Node::array_type &, Edge::index_type) const;
+  void get_nodes(Node::array_type &, Face::index_type) const {}
+  void get_nodes(Node::array_type &, Cell::index_type) const {}
+  void get_edges(Edge::array_type &, Face::index_type) const {}
+  void get_edges(Edge::array_type &, Cell::index_type) const {}
+  //void get_faces(Face::array_type &, Cell::index_type) const {}
 
   //! get the parent element(s) of the given index
-  void get_edges(edge_array &a, node_index idx) const
-  { a.push_back(edge_index(idx));}
-  //bool get_faces(face_array &, node_index) const { return 0; }
-  //bool get_faces(face_array &, edge_index) const { return 0; }
-  //bool get_cells(cell_array &, node_index) const { return 0; }
-  //bool get_cells(cell_array &, edge_index) const { return 0; }
-  //bool get_cells(cell_array &, face_index) const { return 0; }
+  void get_edges(Edge::array_type &a, Node::index_type idx) const
+  { a.push_back(Edge::index_type(idx));}
+  //bool get_faces(Face::array_type &, Node::index_type) const { return 0; }
+  //bool get_faces(Face::array_type &, Edge::index_type) const { return 0; }
+  //bool get_cells(Cell::array_type &, Node::index_type) const { return 0; }
+  //bool get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
+  //bool get_cells(Cell::array_type &, Face::index_type) const { return 0; }
 
   //! return all edge_indecies that overlap the BBox in arr.
-  void get_edges(edge_array &arr, const BBox &box) const;
+  void get_edges(Edge::array_type &arr, const BBox &box) const;
 
-  //! similar to get_cells() with face_index argument, but
+  //! similar to get_cells() with Face::index_type argument, but
   //  returns the "other" cell if it exists, not all that exist
-  bool get_neighbor(cell_index & /*neighbor*/, cell_index /*from*/, 
-		    face_index /*idx*/) const {
+  bool get_neighbor(Cell::index_type & /*neighbor*/, Cell::index_type /*from*/, 
+		    Face::index_type /*idx*/) const {
     ASSERTFAIL("ScanlineMesh::get_neighbor not implemented.");
   }
   //! get the center point (in object space) of an element
-  void get_center(Point &, node_index) const;
-  void get_center(Point &, edge_index) const;
-  void get_center(Point &, face_index) const {}
-  void get_center(Point &, cell_index) const {}
+  void get_center(Point &, Node::index_type) const;
+  void get_center(Point &, Edge::index_type) const;
+  void get_center(Point &, Face::index_type) const {}
+  void get_center(Point &, Cell::index_type) const {}
 
-  bool locate(node_index &, const Point &) const;
-  bool locate(edge_index &, const Point &) const;
-  bool locate(face_index &, const Point &) const { return false; }
-  bool locate(cell_index &, const Point &) const { return false; }
+  bool locate(Node::index_type &, const Point &) const;
+  bool locate(Edge::index_type &, const Point &) const;
+  bool locate(Face::index_type &, const Point &) const { return false; }
+  bool locate(Cell::index_type &, const Point &) const { return false; }
 
-  void get_point(Point &p, node_index i) const
+  void get_point(Point &p, Node::index_type i) const
   { get_center(p, i); }
-  void get_normal(Vector &/* result */, node_index /* index */) const
+  void get_normal(Vector &/* result */, Node::index_type /* index */) const
   { ASSERTFAIL("not implemented") }
 
   
@@ -165,11 +175,11 @@ public:
 
 private:
 
-  //! the min_node_index ( incase this is a subLattice )
+  //! the min_Node::index_type ( incase this is a subLattice )
   unsigned int offset_;
 
-  //! the node_index space extents of a ScanlineMesh 
-  //! (min=min_node_index, max=min+extents-1)
+  //! the Node::index_type space extents of a ScanlineMesh 
+  //! (min=min_Node::index_type, max=min+extents-1)
   unsigned int length_;
 
   //! the object space extents of a ScanlineMesh

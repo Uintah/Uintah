@@ -56,7 +56,7 @@ class ApplyFEMCurrentSource : public Module {
   MatrixOPort*  oportRhs_;
 
   int gen_;
-  TetVolMesh::cell_index loc;
+  TetVolMesh::Cell::index_type loc;
 
 public:
   //! Constructor/Destructor
@@ -152,7 +152,7 @@ void ApplyFEMCurrentSource::execute()
   
 
   //! Computing contributions of dipoles to RHS
-  PointCloudMesh::node_iterator ii;
+  PointCloudMesh::Node::iterator ii;
   
   for (ii=hDipField->get_typed_mesh()->node_begin(); ii!=hDipField->get_typed_mesh()->node_end(); ++ii) {
     
@@ -169,7 +169,7 @@ void ApplyFEMCurrentSource::execute()
       s2=Dot(g2,dir);
       s3=Dot(g3,dir);
       s4=Dot(g4,dir);
-      TetVolMesh::node_array cell_nodes;
+      TetVolMesh::Node::array_type cell_nodes;
       
       hMesh->get_nodes(cell_nodes, loc);
 
