@@ -15,7 +15,6 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
-using std::cerr;
 #include <sstream>
 
 namespace SCIRun {
@@ -72,7 +71,7 @@ void MatrixSelectVector::execute() {
   if (!imat_->get(mh))
     return;
   if (!mh.get_rep()) {
-    cerr << "Error: empty matrix\n";
+    warning("Empty input matrix.");
     return;
   }
   
@@ -119,7 +118,6 @@ void MatrixSelectVector::execute() {
     if (use_row) {
       for (; which<mh->nrows()-1; which++, row_.set(which)) {
 	if (stop_) { stop_=0; break; }
-	cerr << which << "\n";
 	cm=new ColumnMatrix(mh->ncols());
 	double *data = cm->get_rhs();
 	for (int c=0; c<mh->ncols(); c++) data[c]=mh->get(which, c);
@@ -129,7 +127,6 @@ void MatrixSelectVector::execute() {
     } else {
       for (; which<mh->ncols()-1; which++, col_.set(which)) {
 	if (stop_) { stop_=0; break; }
-	cerr << which << "\n";
 	cm=new ColumnMatrix(mh->nrows());
 	double *data = cm->get_rhs();
 	for (int r=0; r<mh->nrows(); r++) data[r]=mh->get(r, which);

@@ -89,8 +89,6 @@
 
 namespace SCIRun {
 
-using std::cerr;
-using std::endl;
 using std::ostringstream;
 using std::ofstream;
 

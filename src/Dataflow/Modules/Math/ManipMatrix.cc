@@ -102,8 +102,7 @@ private:
   MatrixManipFunction getFunctionFromDL( const string& filename);
 
   GuiString                  name_;
-  string                     id_;
-  MatrixManipFunction         curFun_;
+  MatrixManipFunction        curFun_;
 };
 
 
@@ -114,9 +113,8 @@ ManipMatrix::manips_map_t ManipMatrix::manips_;
 
 
 ManipMatrix::ManipMatrix( const string& id ) 
-  : Module("ManipMatrix", id.c_str(), Source, "Math", "SCIRun" )
-  , name_("manipulationName", id.c_str(), this)
-  , id_(id)
+  : Module("ManipMatrix", id, Source, "Math", "SCIRun" )
+  , name_("manipulationName", id, this)
   , curFun_(0)
 {
 }
@@ -624,13 +622,14 @@ ManipMatrix::load_ui()
     names += manipName + " ";
   }
 
-  TCL::execute(( id_ + " set_names " + "{" + names + "}" ).c_str());
+  TCL::execute(( id + " set_names " + "{" + names + "}" ).c_str());
 }
 
 
 
-string ManipMatrix::vector_to_string( const StringVector& stringVector
-  , const string& separator = " " )
+string
+ManipMatrix::vector_to_string( const StringVector& stringVector,
+			       const string& separator = " " )
 {
   string ret;
   for( StringVector::const_iterator i = stringVector.begin()
@@ -651,13 +650,13 @@ ManipMatrix::set_cur_manip( const string& name )
 
   // Set ui strings
   cout << "Setting ui strings" << endl;
-  string libs    = vector_to_string( manipData.libs_    );
-  string libpath = vector_to_string( manipData.libpath_ );
-  string inc     = vector_to_string( manipData.inc_     );
+  const string libs    = vector_to_string( manipData.libs_    );
+  const string libpath = vector_to_string( manipData.libpath_ );
+  const string inc     = vector_to_string( manipData.inc_     );
 
-  TCL::execute((id_ + " set_cur_libs "    + "{" + libs    + "}").c_str());
-  TCL::execute((id_ + " set_cur_libpath " + "{" + libpath + "}").c_str());
-  TCL::execute((id_ + " set_cur_inc "     + "{" + inc     + "}").c_str());
+  TCL::execute((id + " set_cur_libs "    + "{" + libs    + "}").c_str());
+  TCL::execute((id + " set_cur_libpath " + "{" + libpath + "}").c_str());
+  TCL::execute((id + " set_cur_inc "     + "{" + inc     + "}").c_str());
 }
 
 

@@ -520,7 +520,7 @@ GetClosest(float time, float val, int& cline, int& cpoint)
       }
     }
   } else { // HSV space...
-    printf("HSV window doesn't exist\n");
+    error("HSV window doesn't exist.");
   }
 
   // now check alpha...
@@ -713,8 +713,6 @@ void GenTransferFunc::DoRelease(int win, int x, int y, int button)
 
   DoMotion(win,x,y);
 
-//  printf("%d Button!\n",button);
-
   switch(button) {
   case 1:
   case 2:
@@ -894,7 +892,7 @@ int GenTransferFunc::makeCurrent(void)
     // check if it was created
     if(!ctxs[2])
       {
-	cerr << "Unable to create OpenGL Context!\n";
+	error("Unable to create OpenGL Context!");
 	TCLTask::unlock();
 	return 0;
       }
