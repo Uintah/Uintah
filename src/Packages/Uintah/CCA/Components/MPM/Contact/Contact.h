@@ -1,23 +1,15 @@
+
 #ifndef __CONTACT_H__
 #define __CONTACT_H__
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/ReductionVariable.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/VarTypes.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Math/MinMax.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
 
 #include <math.h>
 
 namespace Uintah {
 using namespace SCIRun;
-
+  class DataWarehouse;
+  class MPMLabel;
    class ProcessorGroup;
    class Patch;
    class VarLabel;

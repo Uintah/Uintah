@@ -6,6 +6,7 @@
 #include "HypoElastic.h"
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>

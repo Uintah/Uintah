@@ -2,6 +2,7 @@
 
 #include "Lattice.h"
 #include "ParticlesNeighbor.h"
+#include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Geometry/IntVector.h>
 
 #include <iostream>

@@ -1,21 +1,17 @@
 #ifndef __CONSTITUTIVE_MODEL_H__
 #define __CONSTITUTIVE_MODEL_H__
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <vector>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
-
-#include <Packages/Uintah/CCA/Components/MPM/Fracture/Lattice.h>
-#include <Packages/Uintah/CCA/Components/MPM/Fracture/ParticlesNeighbor.h>
 
 namespace Uintah {
 
   class Task;
   class Patch;
   class VarLabel;
+  class MPMLabel;
   class MPMMaterial;
+  class DataWarehouse;
 
 /**************************************
 

@@ -6,9 +6,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/ReductionVariable.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>

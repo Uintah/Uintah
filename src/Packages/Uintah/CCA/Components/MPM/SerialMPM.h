@@ -75,10 +75,7 @@ public:
   virtual void scheduleTimeAdvance(double t, double dt,
 				   const LevelP& level, SchedulerP&);
 
-  void setSharedState(SimulationStateP& ssp)
-  {
-	d_sharedState = ssp;
-  };
+  void setSharedState(SimulationStateP& ssp);
 
   void setMPMLabel(MPMLabel* Mlb)
   {
