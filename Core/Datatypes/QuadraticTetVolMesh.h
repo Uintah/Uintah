@@ -36,8 +36,19 @@ public:
   virtual ~QuadraticTetVolMesh();
 
   void begin(Node::iterator &) const;
+  void begin(Edge::iterator &) const;
+  void begin(Face::iterator &) const;
+  void begin(Cell::iterator &) const;
+
   void end(Node::iterator &) const;
+  void end(Edge::iterator &) const;
+  void end(Face::iterator &) const;
+  void end(Cell::iterator &) const;
+
   void size(Node::size_type &) const;
+  void size(Edge::size_type &) const;
+  void size(Face::size_type &) const;
+  void size(Cell::size_type &) const;
 
   void get_nodes(Node::array_type &array, Cell::index_type idx) const;
   void get_point(Point &result, Node::index_type index) const;

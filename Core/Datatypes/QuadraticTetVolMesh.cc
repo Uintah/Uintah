@@ -62,6 +62,60 @@ QuadraticTetVolMesh::size(Node::size_type &s) const
   s = points_.size() + cells_.size() * 6;
 }
 
+void
+QuadraticTetVolMesh::begin(TetVolMesh::Edge::iterator &itr) const
+{
+  TetVolMesh::begin(itr);
+}
+
+void
+QuadraticTetVolMesh::end(TetVolMesh::Edge::iterator &itr) const
+{
+  TetVolMesh::end(itr);
+}
+
+void
+QuadraticTetVolMesh::size(TetVolMesh::Edge::size_type &s) const
+{
+  TetVolMesh::size(s);
+}
+
+void
+QuadraticTetVolMesh::begin(TetVolMesh::Face::iterator &itr) const
+{
+  TetVolMesh::begin(itr);
+}
+
+void
+QuadraticTetVolMesh::end(TetVolMesh::Face::iterator &itr) const
+{
+  TetVolMesh::end(itr);
+}
+
+void
+QuadraticTetVolMesh::size(TetVolMesh::Face::size_type &s) const
+{
+  TetVolMesh::size(s);
+}
+
+void
+QuadraticTetVolMesh::begin(TetVolMesh::Cell::iterator &itr) const
+{
+  TetVolMesh::begin(itr);
+}
+
+void
+QuadraticTetVolMesh::end(TetVolMesh::Cell::iterator &itr) const
+{
+  TetVolMesh::end(itr);
+}
+
+void
+QuadraticTetVolMesh::size(TetVolMesh::Cell::size_type &s) const
+{
+  TetVolMesh::size(s);
+}
+
 const Point &
 QuadraticTetVolMesh::ave_point(const Point &p0, const Point &p1) const
 {
