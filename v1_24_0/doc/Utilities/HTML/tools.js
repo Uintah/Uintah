@@ -85,7 +85,7 @@ Document.prototype.endContent = function() {
 }
 
 Document.prototype.doTopBanner = function() {
-  document.write('<img class="top-banner" src="', gSiteTop, 'doc/Utilities/Figures/doc_banner04.jpg" border="0" usemap="#banner"> \
+  document.write('<img class="top-banner" src="', gSiteTop, 'doc/Utilities/Figures/doc_banner04.jpg" usemap="#banner"/>\
 <map name="banner">\
 <area href="http://www.sci.utah.edu" coords="133,103,212,124" alt="SCI Home">\
 <area href="http://software.sci.utah.edu" coords="213,103,296,124" alt="Software">\
