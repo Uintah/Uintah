@@ -123,7 +123,7 @@
 *   Step 4: Compute and accumulate the
 *           source and sinks terms
 *___________________________________*/
-#define switchDebug_accumulate_momentum_source_sinks    1     /* contour xmom_source                       */
+#define switchDebug_accumulate_momentum_source_sinks    0     /* contour xmom_source                       */
 #define switchDebug_accumulate_energy_source_sinks      0     /* contours of int. energy                   */
 #define switchDebug_shear_stress_Xdir                   0     /* face-centered shear stress                */
 #define switchDebug_shear_stress_Ydir                   0     /* face-centered shear stress                */

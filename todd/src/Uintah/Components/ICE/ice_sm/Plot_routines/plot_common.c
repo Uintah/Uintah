@@ -433,7 +433,16 @@ Note:
     float   char_size_axis,
             char_size_text,
            c_x, c_y, delx, dely;
-/*START_DOC*/ 
+/*START_DOC*/
+
+/*__________________________________
+*   Tweak the limits to account for 
+*    cell centered data.
+*___________________________________*/
+   /*  *x_max = *x_max + 0.15;
+    *y_max = *y_max + 0.15;
+    *y_min = *y_min - 0.15;
+    *x_min = *x_min - 0.15; */
 /*__________________________________
 * Determine the size of the text
 *___________________________________*/
@@ -577,9 +586,9 @@ void    plot_legend(
     {
         height  = (float)i/10.0;
         text    = data_min + (float) (i) * (data_max - data_min)/10.0;
-        sprintf(label, "%.4g",text); 
+        sprintf(label, "%.2e",text); 
          
-        cpgptxt(x_max*1.02, y_max*height, 30.0, 0.0,label);  
+        cpgptxt(x_max*1.02, y_max*height, 30.0, 0.3 ,label);  
     }    
 }
 /*STOP_DOC*/ 

@@ -230,8 +230,8 @@
          *___________________________________*/
          plot_type           = 1;
          Number_sub_plots    = 1;
-         strcpy(file_basename,"");
-         outputfile_type     = 0;
+         strcpy(file_basename,"TE");
+         outputfile_type     = 1;
          x_axis_origin       = (xLoLimit);
          y_axis_origin       = (yLoLimit);
          x_axis              = (xHiLimit);
@@ -251,10 +251,11 @@
                          x_TE,           y_TE,           Q_TE,                
                          x_label,        y_label,        graph_label,        
                          outline_ghostcells,             Number_sub_plots,          
-                         nThermalElements ); 
+                         nThermalElements,file_basename, outputfile_type);
 
 
-
+             outputfile_type     = 0;
+             strcpy(file_basename,"TE");
              sprintf(graph_label, "update_Q_TE_and_add_Q_cell, Q_chem");                   
              data_array1    = convert_darray_3d_to_vector(
                                      Q_chem,

@@ -151,7 +151,7 @@
 #define switchDebug_Advect_influx_outflux_volume        0     /* plotting inside of influx_outflux volume  */
 #define switchDebug_advect_preprocess                   0     /* plotting inside of advect_preprocess      */
 #define switchDebug_Advect_gradient_limiter             0     /* plotting inside of gradiend_limter        */
-#define switchDebug_Advect_q                            1     /* plotting inside of the functin Advect_q   */
+#define switchDebug_Advect_q                            0     /* plotting inside of the functin Advect_q   */
 
 /*__________________________________
 *   Step7 7: Advect and advance in timee

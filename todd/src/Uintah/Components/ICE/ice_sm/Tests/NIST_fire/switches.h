@@ -76,7 +76,7 @@
 #define switch_step3_OnOff                              1       /* Step 3 face-centered pressure            */
 #define switch_step4_OnOff                              1       /* Step 4 source/sink of momentum and enery */
 #define switch_step4_stress_source_OnOff                0       /*        shear stress terms                */
-#define switch_step4_NIST_fire                          0       /*        NIST fire model                   */
+#define switch_step4_NIST_fire                          1       /*        NIST fire model                   */
 #define switch_step5_OnOff                              1       /* Step 5 Accumulate sources and sinks      */
 #define switch_step6_OnOff                              1       /* Step 6 Advection of mass,momentum and    */
                                                                 /*        internal energy.                  */
@@ -136,7 +136,7 @@
 /*__________________________________
 *   NIST Fire Model
 *___________________________________*/
-#define switchDebug_update_Q_TE_and_add_Q_cell          1     /* NIST transfer heat from TE to cells       */
+#define switchDebug_update_Q_TE_and_add_Q_cell          0     /* NIST transfer heat from TE to cells       */
 
 
 #define switchDebug_accumulate_momentum_source_sinks    0     /* contour xmom_source                       */
@@ -190,8 +190,8 @@
 /*__________________________________
 * Misc debugging switches
 *___________________________________*/
-#define switchDebug_printData_4d                        2     /* When printing data to stderr using either */
-                                                              /* (1) use %4.3lf;  (2) use %6.5lf           */     
+#define switchDebug_printData_4d                        3     /* When printing data to stderr using either */
+                                                              /* (1) use %4.3lf;  (2) use %6.5lf (3) use %e*/     
 
 
 

@@ -50,9 +50,11 @@ _______________________________________________________________________ */
             color,
             error_data;                 /* error flag for NAN or INF    */
 static int
-            n_sub_win;                  /* counter for the number of sub*/
-                                        /* windows                      */
-    float   xLo,        xHi,        /* max and min values           */
+            n_sub_win,                  /* counter for the number of sub*/
+            n_sub_win_cursor,           /* windows                      */
+            n_sub_win_file;             /* number of subwins for file   */
+            
+    float   xLo,        xHi,            /* max and min values           */
             yHi,        yLo,
             data_max,   data_min,
             x,          y,
@@ -92,162 +94,187 @@ static int
 /*______________________________________________________________________
 *   When dumping to the screen
 *_______________________________________________________________________*/    
-    if (filetype == 0)
-    {
-    
+    if (filetype == 0)  plot_open_window_screen(max_sub_win, &n_sub_win);
+    if (filetype > 0)   plot_open_window_file(max_sub_win, &n_sub_win_file, file_basename, filetype);
         
-        plot_open_window_screen(max_sub_win, &n_sub_win);
-        
-        /*__________________________________
-        *   Generate the color spectrum
-        *___________________________________*/       
-        plot_color_spectrum(); 
+    /*__________________________________
+    *   Generate the color spectrum
+    *___________________________________*/       
+    plot_color_spectrum(); 
 
-        /*__________________________________
-        * Begin buffering the output
-        *___________________________________*/
-        cpgbbuf();
-        
-        
-        xHi = (float)xHiLimit+1;
-        yHi = (float)yHiLimit+1;
-        xLo = (float)xLoLimit;
-        yLo = (float)yLoLimit;
+    /*__________________________________
+    * Begin buffering the output
+    *___________________________________*/
+    cpgbbuf();
 
-        plot_generate_axis( x_label,        y_label,        graph_label,
-                            &xLo,           &xHi,         
-                            &yLo,           &yHi, 
-                            &error_data);
-                            
-        plot_scaling_FC( 
-                            xLoLimit,       yLoLimit,       zLoLimit,                  
-                            xHiLimit,       yHiLimit,       zHiLimit,                  
-                            data,           m,                         
-                            &data_min,      &data_max );
+     cpgsci(1);
+    xHi = (float)xHiLimit+1;
+    yHi = (float)yHiLimit+1;
+    xLo = (float)xLoLimit;
+    yLo = (float)yLoLimit;
+
+    plot_generate_axis( x_label,        y_label,        graph_label,
+                        &xLo,           &xHi,         
+                        &yLo,           &yHi, 
+                        &error_data);
+
+    plot_scaling_FC( 
+                        xLoLimit,       yLoLimit,       zLoLimit,                  
+                        xHiLimit,       yHiLimit,       zHiLimit,                  
+                        data,           m,                         
+                        &data_min,      &data_max );
 /*______________________________________________________________________
 *   Draw the face centered values in all of the cells except the 
 *   top and right face of the domain
 *_______________________________________________________________________*/
-        for ( k = zLoLimit; k <= zHiLimit; k++)
-        {
-            for ( j = yLoLimit; j <= yHiLimit; j++)
-            { 
-                for ( i = xLoLimit; i <= xHiLimit; i++)
-                {  
-                    x       = (float) i;    
-                    y       = (float) j;
-                    cpgmove(x,y);
-                    /*__________________________________
-                    *   Draw horizontal line
-                    *___________________________________*/
-                    x       = (float) i+1;
-                    y       = (float) j;
-                    color   = (int)(NUM_COLORS)*(*data[i][j][k][BOTTOM][m] - data_min)/
-                                (data_max - data_min + SMALL_NUM);
-                    cpgsci(color);                          /* Define the color         */
-                    cpgdraw(x,y);                           /* Draw a horiziontal line  */
-                    x       = (float) i;    
-                    y       = (float) j;
-                    cpgmove(x,y);                           /* Move back                */
-                    
-                    /*__________________________________
-                    *   Draw vertical line
-                    *___________________________________*/
-                    x       = (float) i;    
-                    y       = (float) j+1;
-                    color   = (int)(NUM_COLORS) *(*data[i][j][k][LEFT][m] - data_min)/
-                                (data_max - data_min + SMALL_NUM);
-                    cpgsci(color);                          /* Define the color         */
-                    cpgdraw(x,y);                            /* Draw a vertical line     */
-                           /* move back down to i,j    */  
-                }
+    for ( k = zLoLimit; k <= zHiLimit; k++)
+    {
+        for ( j = yLoLimit; j <= yHiLimit; j++)
+        { 
+            for ( i = xLoLimit; i <= xHiLimit; i++)
+            {  
+                x       = (float) i;    
+                y       = (float) j;
+                cpgmove(x,y);
+                /*__________________________________
+                *   Draw horizontal line
+                *___________________________________*/
+                x       = (float) i+1;
+                y       = (float) j;
+                color   = (int)(NUM_COLORS)*(*data[i][j][k][BOTTOM][m] - data_min)/
+                            (data_max - data_min + SMALL_NUM);
+                color   = color + 1;                    /* if color = 0)            */
+                cpgsci(color);                          /* Define the color         */
+                cpgdraw(x,y);                           /* Draw a horiziontal line  */
+                x       = (float) i;    
+                y       = (float) j;
+                cpgmove(x,y);                           /* Move back                */
+
+                /*__________________________________
+                *   Draw vertical line
+                *___________________________________*/
+                x       = (float) i;    
+                y       = (float) j+1;
+                color   = (int)(NUM_COLORS) *(*data[i][j][k][LEFT][m] - data_min)/
+                            (data_max - data_min + SMALL_NUM);
+                color   = color + 1;                    /* if color = 0)            */
+                cpgsci(color);                          /* Define the color         */
+                cpgdraw(x,y);                            /* Draw a vertical line     */
+                       /* move back down to i,j    */  
             }
         }
+    }
 
 
 /*______________________________________________________________________
 *   Draw the face centered values on the top and right face of the domain
 *_______________________________________________________________________*/
-        
-        for ( k = zLoLimit; k <= zHiLimit; k++)
-        {
-            for ( j = yHiLimit; j <= yHiLimit; j++)
-            { 
-                for ( i = xLoLimit; i <= xHiLimit; i++)
-                {  
-                    x       = (float) i;    
-                    y       = (float) j + 1;
-                    cpgmove(x,y); 
-                    /*__________________________________
-                    *   Top Face
-                    *___________________________________*/
-                    x       = (float) i+1;
-                    y       = (float) j+1;
-                    color   = (int)(NUM_COLORS)*(*data[i][j][k][TOP][m] - data_min)/
-                                (data_max - data_min + SMALL_NUM);
-                    cpgsci(color);                          /* Define the color         */
-                    cpgdraw(x,y);                           /* Draw a horiziontal line  */
-                }
+
+    for ( k = zLoLimit; k <= zHiLimit; k++)
+    {
+        for ( j = yHiLimit; j <= yHiLimit; j++)
+        { 
+            for ( i = xLoLimit; i <= xHiLimit; i++)
+            {  
+                x       = (float) i;    
+                y       = (float) j + 1;
+                cpgmove(x,y); 
+                /*__________________________________
+                *   Top Face
+                *___________________________________*/
+                x       = (float) i+1;
+                y       = (float) j+1;
+                color   = (int)(NUM_COLORS)*(*data[i][j][k][TOP][m] - data_min)/
+                            (data_max - data_min + SMALL_NUM);
+                color   = color + 1;                    /* if color = 0)            */
+                cpgsci(color);                          /* Define the color         */
+                cpgdraw(x,y);                           /* Draw a horiziontal line  */
             }
         }
-        for ( k = zLoLimit; k <= zHiLimit; k++)
-        {
-            for ( j = yLoLimit; j <= yHiLimit; j++)
-            { 
-                for ( i = xHiLimit; i <= xHiLimit; i++)
-                { 
-                    x       = (float) i + 1;    
-                    y       = (float) j;
-                    cpgmove(x,y);
-                    /*__________________________________
-                    *   Right Face
-                    *___________________________________*/
-                    x       = (float) i + 1;    
-                    y       = (float) j+1;
-                    color   = (int)(NUM_COLORS) *(*data[i][j][k][RIGHT][m] - data_min)/
-                                (data_max - data_min + SMALL_NUM);
-                    cpgsci(color);                          /* Define the color         */
-                    cpgdraw(x,y);                           /* Draw a vertical line     */
-
-                }
-            }
-        }
-
-        /*__________________________________
-        *   Generate a legend
-        *___________________________________*/
-        plot_legend(        data_max,       data_min, 
-                            xHi,          yHi);
-        /*__________________________________
-        *   Draw lines around the ghost cells
-        *___________________________________*/
-        cpgsci(1);
-        if(outline_ghostcells == 1)
-        {       
-            cpgmove(xLoLimit+N_GHOSTCELLS   + offset,yLoLimit+N_GHOSTCELLS      + offset);
-            cpgdraw(xHiLimit+1-N_GHOSTCELLS - offset,yLoLimit+N_GHOSTCELLS      + offset);
-            cpgdraw(xHiLimit+1-N_GHOSTCELLS - offset,yHiLimit+1-N_GHOSTCELLS    - offset);
-            cpgdraw(xLoLimit+N_GHOSTCELLS   + offset,yHiLimit+1-N_GHOSTCELLS    - offset);
-            cpgdraw(xLoLimit+N_GHOSTCELLS   + offset,yLoLimit+N_GHOSTCELLS      + offset);
-        }
-        
-        /*__________________________________
-        * End buffering the output
-        *___________________________________*/
-        cpgebuf();
-        /*__________________________________
-        *Close the windows
-        *___________________________________*/
-        
-        if(n_sub_win == max_sub_win)
-        {
-            cpgclos();
-            n_sub_win = 0;
-        }
-        
-
-                                                               
     }
+    for ( k = zLoLimit; k <= zHiLimit; k++)
+    {
+        for ( j = yLoLimit; j <= yHiLimit; j++)
+        { 
+            for ( i = xHiLimit; i <= xHiLimit; i++)
+            { 
+                x       = (float) i + 1;    
+                y       = (float) j;
+                cpgmove(x,y);
+                /*__________________________________
+                *   Right Face
+                *___________________________________*/
+                x       = (float) i + 1;    
+                y       = (float) j+1;
+                color   = (int)(NUM_COLORS) *(*data[i][j][k][RIGHT][m] - data_min)/
+                            (data_max - data_min + SMALL_NUM);
+                color   = color + 1;                    /* if color = 0)            */
+                cpgsci(color);                          /* Define the color         */
+                cpgdraw(x,y);                           /* Draw a vertical line     */
+
+            }
+        }
+    }
+    cpgsci(1);
+    /*__________________________________
+    *   Generate a legend
+    *___________________________________*/
+    plot_legend(        data_max,       data_min, 
+                        xHi,          yHi);
+    /*__________________________________
+    *   Draw lines around the ghost cells
+    *___________________________________*/
+    cpgsci(1);
+    if(outline_ghostcells == 1)
+    {       
+        cpgmove(xLoLimit+N_GHOSTCELLS   + offset,yLoLimit+N_GHOSTCELLS      + offset);
+        cpgdraw(xHiLimit+1-N_GHOSTCELLS - offset,yLoLimit+N_GHOSTCELLS      + offset);
+        cpgdraw(xHiLimit+1-N_GHOSTCELLS - offset,yHiLimit+1-N_GHOSTCELLS    - offset);
+        cpgdraw(xLoLimit+N_GHOSTCELLS   + offset,yHiLimit+1-N_GHOSTCELLS    - offset);
+        cpgdraw(xLoLimit+N_GHOSTCELLS   + offset,yLoLimit+N_GHOSTCELLS      + offset);
+    }
+    
+    /*__________________________________
+    *  Plot_cursor_position
+    *  Note this doesn't work in the PSE
+    *___________________________________*/
+/*     if (filetype == 0 ) plot_cursor_position(max_sub_win, &n_sub_win_cursor);
+ */    
+    /*__________________________________
+    *       MISC
+    * Graph description
+    *___________________________________*/
+    if(n_sub_win == 1 || n_sub_win_file == 1 )
+    {
+        cpgsclp(0);                                      /* turn off clipping*/
+        cpgsci(1);
+        cpgsch(1.0);
+        cpgmtxt("T\0", 3.0, 0.0, 0.0, GRAPHDESC);
+        cpgmtxt("T\0", 2.0, 0.0, 0.0, GRAPHDESC2);
+        cpgmtxt("B\0", 3.5, 0.5, 0.5, GRAPHDESC3);
+        cpgmtxt("B\0", 4.5, 0.5, 0.5, GRAPHDESC4);
+        cpgscf(1);
+        cpgsclp(1);                                      /* turn on clipping*/
+    }
+    /*__________________________________
+    * End buffering the output
+    *___________________________________*/
+    cpgebuf();
+    /*__________________________________
+    *Close the windows
+    *___________________________________*/
+
+    if(n_sub_win == max_sub_win)
+    {
+        cpgclos();
+        n_sub_win = 0;
+    }
+    if(n_sub_win_file == max_sub_win && filetype > 0)
+    {
+        cpgclos();
+        n_sub_win_file      = 0;
+    }
+
 /*__________________________________
 *   Quite fullwarn remarks in a way that
 *   is compiler independent

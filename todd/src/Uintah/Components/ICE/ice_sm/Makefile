@@ -1,5 +1,3 @@
-
-
 #_______________________________________________________________________
 #   Set some specific flags
 # BIT  =        n32, 64
@@ -7,74 +5,130 @@
 #                               audit function
 #               Malloc_NAN      Steve Parkers malloc libraray that initializes
 #                               all of the entries to NAN.
-#               efence          Electric fence
+#               efence          Electric fence (PLOTTING WORK WORK)
 #               malloc_cv       CVD's malloc library
+#
+#   Note that you need to set the environmental variable ICE_TEST
+#   to compile a test case
 #_______________________________________________________________________
-BIT             = 64
+
 IMPLICIT        = no
 EXPLICIT        = yes
-MEMORY_LIB      = malloc_cv
+OS              = sgi
+MM              = no   #multimaterial flow
+#__________________________________
+#  OS dependencies
+#___________________________________ 
+ifeq ($(OS),linux)
+  BIT             = 
+  MEMORY_LIB      = 
+  CUR_DIR         = $(shell pwd)
+  TOP_DIR         = 
+
+  ifeq ($(ICE_DIR),)    # needed by the test directory
+    ICE_DIR         = $(CUR_DIR)/$(TOP_DIR)
+  endif
+
+  PGPLOT          = $(ICE_DIR)/Libraries/Linux
+  MYLIB_PATH      = -L $(ICE_DIR)/Libraries/Linux
+  X11_PATH        = -L /usr/X11R6/lib 
+  ABI_FLAGS       = 
+  CC              = gcc -DPGPLOT_DIR=\"$(PGPLOT)\"
+  FULLWARN        = 
+  TRAPUV          =
+endif
+#--SGI-----------
+ifeq ($(OS),sgi)
+  BIT             = 64
+  MEMORY_LIB      = -l malloc_cv
+  CUR_DIR         = $(shell pwd)
+  TOP_DIR         = 
+
+  ifeq ($(ICE_DIR),)    # needed by the test directory
+    ICE_DIR         = $(CUR_DIR)/$(TOP_DIR)
+  endif
+
+  MYLIB_PATH      = -L $(ICE_DIR)/Libraries/$(BIT)bit
+  PGPLOT          = $(ICE_DIR)/Libraries
+  X11_PATH        =
+  ABI_FLAGS       = -$(BIT)
+  CC              = cc -DPGPLOT_DIR=\"$(PGPLOT)\"
+  FULLWARN        = -fullwarn
+  TRAPUV          = -trapuv
+endif
 
 #_______________________________________________________________________
-#               COMMON MACROS REQUIRED BY BOTH EXPLICIT AND IMPLICIT versions of ICE
+#      COMMON MACROS REQUIRED BY BOTH EXPLICIT AND IMPLICIT versions of ICE
 #_______________________________________________________________________
-ICE_DIR         = /usr/people/jas/PSE/src/Uintah/Components/ICE/ice_sm
 ICE_INCLUDE     = -I. -I$(ICE_DIR)/Header_files
-MYLIB_PATH      = -L $(ICE_DIR)/Libraries/$(BIT)bit
-MYLIB           = $(MYLIB_PATH) -ltecio -lcpgplot -lpgplot -lX11 -L. -l$(MEMORY_LIB) -lm
+MYLIB           = $(MYLIB_PATH) $(X11_PATH) -ltecio -lcpgplot -lpgplot \
+                    -lX11 -L. $(MEMORY_LIB)
 
 LIB             = $(MYLIB) -lm 
 
-ABI_FLAGS       = -$(BIT)
-CC              = cc
+MAKEFLAGS       = --no-keep-going 
 
-MAKEFLAGS       = --no-keep-going
+CFILES         += main2.c \
+                  input.c \
+                  Plot_routines/plot_vector.c \
+                  Plot_routines/plot_control.c \
+                  Plot_routines/plot_face_center.c \
+                  Plot_routines/plot_common.c \
+                  Plot_routines/plot_contour.c \
+                  Plot_routines/plot_2d_line.c \
+                  Plot_routines/plot_cursor_pos.c \
+                  p_face.c \
+                  explicit_delPress.c\
+                  equate_ptr_addrss.c \
+                  interpolate_vel_CC_to_FC.c \
+                  grid.c \
+                  flux_or_primitive.c \
+                  Equation_of_state/equation_of_state.c \
+                  Equation_of_state/speed_of_sound.c \
+                  lagrangian.c \
+                  commonFunctions.c \
+                  timeadvanced.c \
+                  Advection_2D/advect_grad_limiter.c \
+                  Advection_2D/advect_centroids.c \
+                  Advection_2D/advect_preprocess.c \
+                  Advection_2D/advect_q.c \
+                  Advection_2D/advect_q_flux.c \
+                  Advection_2D/advect_q_vertex.c \
+                  Boundary_Cond/boundary_cond_FC.c \
+                  Boundary_Cond/boundary_cond.c \
+                  Write_output/output_FC.c \
+                  Write_output/output_CC.c \
+                  Write_output/output_misc.c \
+                  Source_Sinks/energy.c \
+                  Source_Sinks/momentum.c \
+                  Source_Sinks/shear_stress.c\
+                  initialize_variables.c \
+                  nrutil+.c
 
-SRCS            = $(ICE_DIR)/main2.c \
-                  $(ICE_DIR)/input.c \
-                  $(ICE_DIR)/Plot_routines/plot_vector.c \
-                  $(ICE_DIR)/Plot_routines/plot_control.c \
-                  $(ICE_DIR)/Plot_routines/plot_face_center.c \
-                  $(ICE_DIR)/Plot_routines/plot_common.c \
-                  $(ICE_DIR)/Plot_routines/plot_contour.c \
-                  $(ICE_DIR)/Plot_routines/plot_2d_line.c \
-                  $(ICE_DIR)/Plot_routines/plot_cursor_pos.c \
-                  $(ICE_DIR)/p_face.c \
-                  $(ICE_DIR)/explicit_delPress.c\
-                  $(ICE_DIR)/equate_ptr_addrss.c \
-                  $(ICE_DIR)/interpolate_vel_CC_to_FC.c \
-                  $(ICE_DIR)/grid.c \
-                  $(ICE_DIR)/flux_or_primitive.c \
-                  $(ICE_DIR)/Equation_of_state/equation_of_state.c \
-                  $(ICE_DIR)/Equation_of_state/speed_of_sound.c \
-                  $(ICE_DIR)/lagrangian.c \
-                  $(ICE_DIR)/commonFunctions.c \
-                  $(ICE_DIR)/timeadvanced.c \
-                  $(ICE_DIR)/Advection_2D/advect_grad_limiter.c \
-                  $(ICE_DIR)/Advection_2D/advect_centroids.c \
-                  $(ICE_DIR)/Advection_2D/advect_preprocess.c \
-                  $(ICE_DIR)/Advection_2D/advect_q.c \
-                  $(ICE_DIR)/Advection_2D/advect_q_flux.c \
-                  $(ICE_DIR)/Advection_2D/advect_q_vertex.c \
-                  $(ICE_DIR)/Boundary_Cond/boundary_cond_FC.c \
-                  $(ICE_DIR)/Boundary_Cond/boundary_cond.c \
-                  $(ICE_DIR)/Write_output/output_FC.c \
-                  $(ICE_DIR)/Write_output/output_CC.c \
-                  $(ICE_DIR)/Write_output/output_misc.c \
-                  $(ICE_DIR)/Source_Sinks/energy.c \
-                  $(ICE_DIR)/Source_Sinks/momentum.c \
-                  $(ICE_DIR)/Source_Sinks/shear_stress.c\
-                  $(ICE_DIR)/initialize_variables.c \
-                  $(ICE_DIR)/nrutil+.c
- 
-OBJS          = $(addsuffix .o,$(basename $(SRCS)))
- 
-#_______________________________________________________________________
-#               EXPLICIT
-#_______________________________________________________________________
+# This is magic to enable overriding code on a file-by-file basis in the
+# Test subdirectories.  We have a list of source files which may or may
+# not exist in any particular subdirectory in the variable CFILES.  We
+# have a shell script which, given a list of CFILES looks for each in the
+# directory from which make was run, and if it exists adds a relative path 
+# to that file to the SRCS variable.  If the file does not exist in the
+# directory from which make was run, we add a relative path to the file
+# in ICE_DIR to the SRCS variable instead.  People need this to write
+# effective test cases.
+#                              -- mcq, 6/30/00
+
+SRCS            = $(shell for i in $(CFILES) ; do \
+                            if [ -r $$i ] ; then \
+                              echo $$i ; \
+                            else \
+                              echo $(ICE_DIR)/$$i ; \
+                            fi ; \
+                          done)
+                  
+OBJS            = $(addsuffix .o,$(basename $(SRCS)))
+
+CFLAGS        = -g $(FULLWARN) $(ICE_INCLUDE)
+
 ifeq ($(EXPLICIT),yes)
-
-CFLAGS        = -g -fullwarn $(ICE_INCLUDE) 
 
 all: ice
 	@echo ''
@@ -82,13 +136,13 @@ all: ice
 	@echo 'EXPLICIT ice'
 	@echo ''; echo ''
 
-ice: $(OBJS)
-	$(F77) -trapuv $(ABI_FLAGS) -o ice $(OBJS) $(MYLIB)
+ice:   $(OBJS) $(OBJS_TEST_CASE)
+	$(F77) $(TRAPUV) $(ABI_FLAGS) -o ice $(OBJS_TEST_CASE) $(OBJS) $(MYLIB)
        
 clean:
 	/bin/rm -f $(OBJS) ice core*
-       
 endif
+
 
 #_______________________________________________________________________
 #               IMPLICIT 
@@ -144,7 +198,7 @@ SRCS2           =$(ICE_DIR)/PressureSolve_PCG/pressure_PCG.c \
        
 OBJS_IMPLICIT   = $(addsuffix .o,$(basename $(SRCS2))) 
 
-CFLAGS          = -g -fullwarn -DIMPLICIT $(ICE_INCLUDE) $(PETSC_INCLUDE)
+CFLAGS          = -g $(FULLWARN) -DIMPLICIT $(ICE_INCLUDE) $(PETSC_INCLUDE)
 all: iceimplicit
 	@echo ''
 	@echo '-----------------------'
@@ -152,7 +206,7 @@ all: iceimplicit
 	@echo ''; echo ''
 
 iceimplicit: $(OBJS) $(OBJS_IMPLICIT)
-	$(F77) -trapuv $(ABI_FLAGS) -o iceimplicit $(OBJS) $(OBJS_IMPLICIT) $(MYLIB) $(PETSC_LIB)
+	$(F77) $(TRAPUV) $(ABI_FLAGS) -o iceimplicit $(OBJS) $(OBJS_IMPLICIT) $(MYLIB) $(PETSC_LIB)
        
 clean:
 	/bin/rm -f $(OBJS) $(OBJS2) iceimplicit core*

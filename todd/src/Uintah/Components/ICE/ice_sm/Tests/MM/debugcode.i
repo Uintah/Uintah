@@ -461,7 +461,7 @@
                         
        PLOT;
        
-        free_vector(data_array1, 1, max_len);
+        free_vector_nr(data_array1, 1, max_len);
 #endif 
 
 
@@ -500,7 +500,7 @@
 
 
     PLOT;
-    free_vector(data_array1, 1, max_len);
+    free_vector_nr(data_array1, 1, max_len);
     sprintf(graph_label, "plot2 influx_outflux_volume, Mat. %d \0",m);                 
 
     data_array1    = convert_darray_3d_to_vector(
@@ -510,7 +510,7 @@
                             &max_len);     
     PLOT;
     
-   free_vector(data_array1, 1, max_len);
+   free_vector_nr(data_array1, 1, max_len);
   
 #endif
 
@@ -542,26 +542,26 @@
 *  convert the multidimensional arrays 
 *   into a float vector
 *__________________________________*/ 
-    sprintf(graph_label, "Test inside of q_out_flux, Mat. %d \0",m);                 
+    sprintf(graph_label, "Plot1 inside of q_out_flux, Mat. %d \0",m);                 
      data_array1    = convert_darray_3d_to_vector(
-                            test,
+                            plot1,
                             xLoLimit,        xHiLimit,       yLoLimit,
                             yHiLimit,        zLoLimit,       zHiLimit,
                             &max_len);                                   
 
 
     PLOT;
-    free_vector(data_array1, 1, max_len);
-    sprintf(graph_label, "Test2 inside of q_out_flux, Mat. %d \0",m);                 
+    free_vector_nr(data_array1, 1, max_len);
+    sprintf(graph_label, "Plot2 inside of q_out_flux, Mat. %d \0",m);                 
 
     data_array1    = convert_darray_3d_to_vector(
-                            test2,
+                            plot2,
                             xLoLimit,        xHiLimit,       yLoLimit,
                             yHiLimit,        zLoLimit,       zHiLimit,
                             &max_len);     
     PLOT;
     
-   free_vector(data_array1, 1, max_len);
+   free_vector_nr(data_array1, 1, max_len);
    
 #endif
 
@@ -599,7 +599,7 @@
 
 
     PLOT;
-    free_vector(data_array1, 1, max_len);
+    free_vector_nr(data_array1, 1, max_len);
     sprintf(graph_label, "plot2 inside of q_in_flux, Mat. %d \0",m);                 
 
     data_array1    = convert_darray_3d_to_vector(
@@ -609,8 +609,7 @@
                             &max_len);     
     PLOT;
     
-   free_vector(data_array1, 1, max_len);
-   
+   free_vector_nr(data_array1, 1, max_len);
 #endif
 
 
@@ -680,12 +679,12 @@
 
     PLOT;                               
    
-    free_vector(data_array1, 1, max_len);  
+    free_vector_nr(data_array1, 1, max_len);  
 #endif
 
 
 /*______________________________________________________________________
-*           ADVECT_PREPROCESS
+*            A  D  V  E  C  T  _  P  R  E  P  R  O  C  E  S  S 
 *_______________________________________________________________________*/
 #if switchInclude_advect_preprocess
     stay_or_go = *getenv("PGPLOT_PLOTTING_ON_OFF");
@@ -715,7 +714,7 @@
                                 (yHiLimit),       (zLoLimit),               (zHiLimit),
                                 &max_len);                                   
         PLOT;
-        free_vector(data_array1, 1, max_len);
+        free_vector_nr(data_array1, 1, max_len);
 
         /* ______________________________
         *  Variable 2
@@ -727,7 +726,7 @@
                                 (yHiLimit),       (zLoLimit),               (zHiLimit),
                                 &max_len);        
         PLOT;
-        free_vector(data_array1, 1, max_len);
+        free_vector_nr(data_array1, 1, max_len);
     }
 #endif
 
@@ -771,7 +770,7 @@
                                 (yHiLimit),       (zLoLimit),               (zHiLimit),
                                 &max_len);                                   
         PLOT;
-        free_vector(data_array1, 1, max_len);
+        free_vector_nr(data_array1, 1, max_len);
 
         /* ______________________________
         *  Variable 2
@@ -783,7 +782,7 @@
                                 (yHiLimit),       (zLoLimit),               (zHiLimit),
                                 &max_len);        
         PLOT;
-        free_vector(data_array1, 1, max_len);
+        free_vector_nr(data_array1, 1, max_len);
         
         /* ______________________________
         *  Variable 3
@@ -795,7 +794,7 @@
                                 (yHiLimit),       (zLoLimit),               (zHiLimit),
                                 &max_len);        
         PLOT;
-        free_vector(data_array1, 1, max_len);
+        free_vector_nr(data_array1, 1, max_len);
 
     }
 #endif
@@ -917,7 +916,7 @@
 
     }
 
-    #endif 
+    #endif
 #endif
 
 

@@ -94,6 +94,7 @@ main()
                                         /* t_output_vars[3] = delta t       */
             *delt_limits,               /* delt_limits[1]   = delt_minimum  */
                                         /* delt_limits[2]   = delt_maximum  */
+                                        /* delt_limits[3]   = delt_initial  */
              t,                         /* current time                     */
              ***x_CC,                   /* x-coordinate of cell center      */
              ***y_CC,                   /* y-coordinate of cell center      */
@@ -131,9 +132,9 @@ main()
             ****ymom_CC,                /* y-dir momentum cell-centered     */
             ****zmom_CC,                /* z-dir momentum cell-centered     */
             ****int_eng_CC,             /* Internal energy cell-centered    */
-            ****total_eng_CC,           /* Total energy cell-centered       */  
+            ****total_eng_CC,           /* Total energy cell-centered       */
             ****div_velFC_CC,           /* Divergence of the face centered  */
-                                        /* velocity that lives at CC        */                
+                                        /* velocity that lives at CC        */    
             ****scalar1_CC,             /* Cell-centered scalars            */   
             ****scalar2_CC,             /* (x, y, z, material)              */
             ****scalar3_CC,
@@ -202,7 +203,8 @@ main()
 #if (switchDebug_main == 1|| switchDebug_main == 2 || switchDebug_main_input == 1)
     #include "plot_declare_vars.h"   
 #endif
-    stat = putenv("PGPLOT_DIR=/usr/people/harman/Csafe/ICE_SM/Libraries");
+   
+    stat = putenv("PGPLOT_DIR=" PGPLOT_DIR);
     stat = putenv("PGPLOT_I_AM_HERE=0");              
                                         /* tell the plotting routine that  */
                                         /* you're at the top of main       */      
@@ -219,23 +221,21 @@ main()
     fileNum     = 1;
 
 /*______________________________________________________________________ 
-*                       MEMORY SECTION
-*  Allocate memory for the arrays                                          
+*    M  E  M  O  R  Y     S  E  C  T  I  O  N 
+*   - Allocate memory for the arrays                                          
 *_______________________________________________________________________*/
-
 #include "allocate_memory.i"
-
  data_array2     = vector_nr(1, X_MAX_LIM);        /* needed by debug.i        */
- /*__________________________________
-* Needed by Steve Parkers Malloc library
-*___________________________________*/    
-    /* fpsetmask(FP_X_UFL|FP_X_OFL|FP_X_DZ|FP_X_INV); */
-    /* audit(); */                      /* Steve Parkers memory tool        */
 /*______________________________________________________________________
 *
-*                       PROBLEM INITIALIZATION SECTION
-*   Initializing routines                                                  
-*   First read the problem input then test the inputs.                     
+*  P  R  O  B  L  E  M     I  N  I  T  I  A  L  I  Z  A  T  I  O  N  
+*  - read input file
+*   - test the input variables
+*   - Equate the address of the face centered variables
+*   - Generate a grid
+*   - zero all of the face-centered arrays
+*   
+*                  
 * -----------------------------------------------------------------------  */
                                         
        readInputFile(   &xLoLimit,      &yLoLimit,      &zLoLimit,     
@@ -302,38 +302,40 @@ main()
                         tau_X_FC,       tau_Y_FC,       tau_Z_FC);                         
     stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
                             
-    /*  audit();  */                    /* Steve Parkers memory tool    */   
-/*______________________________________________________________________
-*  TESTING: HARDWIRE SOME OF THE INPUTS
-*       HARDWIRE FOR NOW
-*   Comment this out 
-*_______________________________________________________________________*/
-#if switchOveride_Initial_Conditions                               
-  #include "overide_initial_conds.i"
-#endif 
-/*______________________________________________________________________
-*   Plot the inputs (MUST HARDWIRE WHAT YOU WANT TO VIEW)
-*   To keep the code clean I moved the code to another file
-*_______________________________________________________________________*/
-#if switchDebug_main_input
-    #define switchInclude_main_1 1
-    #include "debugcode.i"
-    #undef switchInclude_main_1
-#endif     
-/*__________________________________
-*   For the first time through
-*   set some variables
-*___________________________________*/
+   
+    /*__________________________________
+    *   overide the initial conditions
+    *___________________________________*/
+    #if switchOveride_Initial_Conditions                               
+      #include "overide_initial_conds.i"
+    #endif 
+    
+    /*__________________________________
+    *  If desired plot the inputs
+    *___________________________________*/
+    #if switchDebug_main_input
+        #define switchInclude_main_1 1
+        #include "debugcode.i"
+        #undef switchInclude_main_1
+    #endif 
+        
+    /*__________________________________
+    *   For the first time through
+    *   set some variables
+    *___________________________________*/
     delt    = delt_limits[3];              
     t       = delt;
     fprintf(stderr,"\nInitial time %f, timestep is %f\n",t,delt);
+    
+    
+    
 /*______________________________________________________________________
-*                        MAIN ADVANCE LOOP
-*_______________________________________________________________________*/                       
+*   M  A  I  N     A  D  V  A  N  C  E     L  O  O  P 
+*_______________________________________________________________________*/                      
     while( t <= t_final)
     {
          should_I_write_output = Is_it_time_to_write_output( t, t_output_vars  );
-        /* fprintf(stderr, "should _ I write_output %i\n",should_I_write_output); */      
+        /* fprintf(stderr, "should _ I write_output %i\n",should_I_write_output); */
 
 
     /*__________________________________
@@ -389,11 +391,23 @@ main()
 #endif                         
  /*==========TESTING==========`*/
  /*__________________________________
- *  STEP 1
- *  Use the equation of state to get
- *  P at the cell center
- *___________________________________*/
-#if switch_step1_OnOff
+    *   Find the new time step based on the
+    *   Courant condition
+    *___________________________________*/        
+    find_delta_time_based_on_CC_vel(
+                        xLoLimit,        yLoLimit,      zLoLimit,
+                        xHiLimit,        yHiLimit,      zHiLimit,
+                        &delt,           delt_limits,
+                        delX,            delY,          delZ,
+                        uvel_CC,         vvel_CC,       wvel_CC,
+                        speedSound,      CFL,           nMaterials );                      
+
+     /*__________________________________
+     *   S  T  E  P     1 
+     *  Use the equation of state to get
+     *  P at the cell center
+     *___________________________________*/
+    #if switch_step1_OnOff
         equation_of_state(
                         xLoLimit,       yLoLimit,       zLoLimit,
                         xHiLimit,       yHiLimit,       zHiLimit,
@@ -408,18 +422,18 @@ main()
                         speedSound,     nMaterials   );
 #endif
 
-/*__________________________________
-*   STEP 2
-*   Use Euler's equation thingy to solve
-*   for the n+1 Lagrangian press (CC)
-*   and the n+1 face centered fluxing
-*   velocity
-*___________________________________*/ 
- /*__________________________________
-*   Take (*)vel_CC and interpolate it to the 
-*   face-center.  Advection operator needs
-*   uvel_FC and so does the pressure solver
-*___________________________________*/ 
+    /*__________________________________
+    *    S  T  E  P     2 
+    *   Use Euler's equation thingy to solve
+    *   for the n+1 Lagrangian press (CC)
+    *   and the n+1 face centered fluxing
+    *   velocity
+    *___________________________________*/ 
+     /*__________________________________
+    *   Take (*)vel_CC and interpolate it to the 
+    *   face-center.  Advection operator needs
+    *   uvel_FC and so does the pressure solver
+    *___________________________________*/ 
         stat = putenv("PGPLOT_PLOTTING_ON_OFF=1"); 
         compute_face_centered_velocities( 
                         xLoLimit,       yLoLimit,       zLoLimit,
@@ -433,6 +447,7 @@ main()
                         uvel_FC,        vvel_FC,        wvel_FC,
                         nMaterials ); 
                         
+                        
         divergence_of_face_centered_velocity(  
                         xLoLimit,       yLoLimit,       zLoLimit,
                         xHiLimit,       yHiLimit,       zHiLimit,
@@ -441,9 +456,9 @@ main()
                         div_velFC_CC,   nMaterials); 
         stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
 
- 
-#if switch_step2_OnOff                        
 
+#if switch_step2_OnOff                        
+  
     explicit_delPress
              (  
                         xLoLimit,       yLoLimit,       zLoLimit,
@@ -463,98 +478,35 @@ main()
                         nMaterials,     1,                 
                         delPress_CC,    DELPRESS);
                                             
-    /*`==========TESTING==========*/                                           
-    #if switch_explicit_implicit                        
-        compute_delta_Press_Using_PCGMG(
-                        xLoLimit,       yLoLimit,       zLoLimit,
-                        xHiLimit,       yHiLimit,       zHiLimit,
-                        delX,           delY,           delZ,
-                        delt,           rho_CC,         speedSound,     
-                        uvel_FC,        vvel_FC,        wvel_FC,
-                        delPress_CC,    press_CC,       BC_types,
-                        nMaterials ) ;  
-
-                            
-    /*__________________________________
-    *   Now update the face centered velocity
-    *   using the linear approximation to the
-    *   time advance pressure
-    *___________________________________*/
-        fprintf(stderr, "I've computed delpress_CC\n");
-       compute_face_centered_velocities( 
-                        xLoLimit,       yLoLimit,       zLoLimit,
-                        xHiLimit,       yHiLimit,       zHiLimit,
-                        delX,           delY,           delZ,
-                        delt, 
-                        BC_types,       BC_float_or_fixed,
-                        BC_Values,
-                        rho_CC,         grav,           press_CC,
-                        uvel_CC,        vvel_CC,        wvel_CC,
-                        uvel_FC,        vvel_FC,        wvel_FC,
-                        nMaterials );
-    
-                  
-        update_CC_FC_physical_boundary_conditions( 
-                        xLoLimit,       yLoLimit,       zLoLimit,             
-                        xHiLimit,       yHiLimit,       zHiLimit,             
-                        delX,           delY,           delZ,
-                        BC_types,       BC_float_or_fixed,
-                        BC_Values, 
-                        nMaterials,     1,                 
-                        press_CC,       PRESS,          press_FC);               
-    #endif  
-    /*==========TESTING==========`*/                      
-
+    #endif     
    
-         press_eq_residual(
-                        xLoLimit,       yLoLimit,       zLoLimit,            
-                        xHiLimit,       yHiLimit,       zHiLimit,            
-                        delX,           delY,           delZ,
-                        delt,           rho_CC,         speedSound,      
-                        uvel_FC,        vvel_FC,        wvel_FC,       
-                        delPress_CC,    press_CC,       &residual,
-                        nMaterials); 
-                        
-                            
-#endif 
-    /* audit(); */ 
-    
-   
-/* ______________________________   
-*   STEP 3 
-*   Compute the face-centered pressure
-*   using the "continuity of acceleration"
-*   principle                     
-* ______________________________   */
-#if switch_step3_OnOff                                  
+    /* ______________________________   
+    *    S  T  E  P     3    
+    *   Compute the face-centered pressure
+    *   using the "continuity of acceleration"
+    *   principle                     
+    * ______________________________   */
+    #if switch_step3_OnOff                                  
         press_face(         
                         xLoLimit,       yLoLimit,       zLoLimit,
                         xHiLimit,       yHiLimit,       zHiLimit,
+                        delX,           delY,           delZ,
+                        BC_types,       BC_float_or_fixed, BC_Values,
                         press_CC,       press_FC,       rho_CC, 
                         nMaterials );
-#endif
-    /*__________________________________
-    *
-    *___________________________________*/
-    update_CC_FC_physical_boundary_conditions( 
-                        xLoLimit,       yLoLimit,       zLoLimit,             
-                        xHiLimit,       yHiLimit,       zHiLimit,             
-                        delX,           delY,           delZ,
-                        BC_types,       BC_float_or_fixed,
-                        BC_Values, 
-                        nMaterials,     1,                 
-                        press_CC,       PRESS,          press_FC);
+    #endif
 
 
-/* ______________________________  
-*   STEP 4                          
-*   Compute ssources of mass, momentum and energy
-*   For momentum, there are sources
-*   due to mass conversion, gravity
-*   pressure, divergence of the stress
-*   and momentum exchange
-* ______________________________   */
-#if (switch_step4_OnOff == 1 && switch_Compute_burgers_eq == 0) 
+
+    /* ______________________________  
+    *    S  T  E  P     4                               
+    *   Compute sources of mass, momentum and energy
+    *   For momentum, there are sources
+    *   due to mass conversion, gravity
+    *   pressure, divergence of the stress
+    *   and momentum exchange
+    * ______________________________   */
+    #if (switch_step4_OnOff == 1 && switch_Compute_burgers_eq == 0) 
     accumulate_momentum_source_sinks(
                         xLoLimit,       yLoLimit,       zLoLimit,                  
                         xHiLimit,       yHiLimit,       zHiLimit,                  
@@ -583,17 +535,17 @@ main()
                         int_eng_source,  
                         nMaterials   );
 
-#endif
+    #endif
 
 
-/*__________________________________
-*   STEP 5                     
-*   Compute Lagrangian values for the volume 
-*   mass, momentum and energy.
-*   Lagrangian values are the sum of the time n
-*   values and the sources computed in 4
-*___________________________________*/
-#if switch_step5_OnOff 
+    /*__________________________________
+    *    S  T  E  P     5                        
+    *   Compute Lagrangian values for the volume 
+    *   mass, momentum and energy.
+    *   Lagrangian values are the sum of the time n
+    *   values and the sources computed in 4
+    *___________________________________*/
+    #if switch_step5_OnOff 
     lagrangian_vol(     xLoLimit,       yLoLimit,       zLoLimit,
                         xHiLimit,       yHiLimit,       zHiLimit,
                         delX,           delY,           delZ,
@@ -623,23 +575,23 @@ main()
                         xmom_source,    ymom_source,    zmom_source,
                         int_eng_CC,     int_eng_L_CC,   int_eng_source,
                         nMaterials);
-#endif  
+    #endif  
                                      
-/*_________________________________   
-*   STEP 6                           
-*   Compute the advection of mass,
-*   momentum and energy.  These
-*   quantities are advected using the face
-*   centered velocities velocities from 2
-*                  
-*   STEP 7
-*   Compute the time advanced values for
-*   mass, momentum and energy.  "Time advanced"
-*   means the sum of the "Lagrangian" values,
-*   found in 5 and the advection contribution
-*   from 6                      
-*______________________________ */  
-#if (switch_step7_OnOff== 1 || switch_step6_OnOff == 1)
+    /*_________________________________   
+    *    S  T  E  P     6                            
+    *   Compute the advection of mass,
+    *   momentum and energy.  These
+    *   quantities are advected using the face
+    *   centered velocities velocities from 2
+    *                  
+    *    S  T  E  P     7 
+    *   Compute the time advanced values for
+    *   mass, momentum and energy.  "Time advanced"
+    *   means the sum of the "Lagrangian" values,
+    *   found in 5 and the advection contribution
+    *   from 6                      
+    *______________________________ */  
+    #if (switch_step7_OnOff== 1 || switch_step6_OnOff == 1)
      advect_and_advance_in_time(   
                         xLoLimit,       yLoLimit,       zLoLimit,
                         xHiLimit,       yHiLimit,       zHiLimit,
@@ -686,11 +638,8 @@ main()
     
      /* audit(); */                     /* Steve Parkers memory tool        */
    
-/*__________________________________
-*   Write to tecplot files
-*___________________________________*/     
      
-#if tecplot
+    #if tecplot    
     if ( should_I_write_output == YES)
     {                     
         tecplot_CC(         
@@ -714,20 +663,17 @@ main()
         fileNum ++;
     } 
 #endif 
-/*______________________________________________________________________
-*   DEBUGGING SECTION
-*_______________________________________________________________________*/
-#if switchDebug_main
+    /*__________________________________
+    *  P  L  O  T  T  I  N  G     S  E  C  T  I  O  N 
+    *___________________________________*/
+    #if switchDebug_main
     if ( should_I_write_output == YES)
     {
          #define switchInclude_main 1
          #include "debugcode.i"
-         #undef switchInclude_main
-         
-      /*   fprintf(stderr,"\npress return to continue\n"); 
-        getchar();  */ 
+         #undef switchInclude_main 
     }
-#endif
+    #endif
          /*__________________________________
          *  Clean up the plotting windows 
          *___________________________________*/
@@ -735,41 +681,23 @@ main()
                                          /* tell the plotting routine that   */
                                          /* you're at the bottom of main     */
          putenv("PGPLOT_OPEN_NEW_WINDOWS=1"); 
-/*______________________________________________________________________
-*   Now advance in time
-*_______________________________________________________________________*/
-      
-/*         find_delta_time_based_on_FC_vel(
-                        xLoLimit,        yLoLimit,      zLoLimit,
-                        xHiLimit,        yHiLimit,      zHiLimit,
-                        &delt,           delt_limits,
-                        delX,            delY,          delZ,
-                        uvel_FC,         vvel_FC,       wvel_FC,
-                        speedSound,      CFL,           nMaterials ); */
-                        
-        find_delta_time_based_on_CC_vel(
-                        xLoLimit,        yLoLimit,      zLoLimit,
-                        xHiLimit,        yHiLimit,      zHiLimit,
-                        &delt,           delt_limits,
-                        delX,            delY,          delZ,
-                        uvel_CC,         vvel_CC,       wvel_CC,
-                        speedSound,      CFL,           nMaterials );
+         
+         
+    /*__________________________________
+    *    A  D  V  A  N  C  E     I  N     T  I  M  E 
+    *___________________________________*/
            
         t = t + delt;
         fprintf(stderr,"\nTime is %f, timestep is %f\n",t,delt);
  
  }
 /* -----------------------------------------------------------------------  
-*  Free the memory  and Finalize petsc                                                  
+*   F  R  E  E     T  H  E     M  E  M  O  R  Y                                                     
 * -----------------------------------------------------------------------  */
     fprintf(stderr,"Now deallocating memory");
     #include "free_memory.i"
-    
      free_vector_nr(    data_array2,       1, X_MAX_LIM);  /* NEEDED BY DEBUG.I*/  
 
-    #if switch_explicit_implicit 
-        PetscFinalize();
-    #endif    
 /*__________________________________
 *   Quite fullwarn compiler remarks
 *___________________________________*/

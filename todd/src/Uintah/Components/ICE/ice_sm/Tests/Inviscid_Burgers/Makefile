@@ -1,31 +1,63 @@
+
+
 #_______________________________________________________________________
 #   Set some specific flags
 # BIT  =        n32, 64
-# MEMORY_LIB    
+# MEMORY_LIB    Malloc_audit    Steve Parkers malloc library with the
+#                               audit function
 #               Malloc_NAN      Steve Parkers malloc libraray that initializes
-#                               all of the entries to NAN and audits it.
+#                               all of the entries to NAN.
 #               efence          Electric fence
 #               malloc_cv       CVD's malloc library
 #_______________________________________________________________________
-BIT             = 64
 IMPLICIT        = no
 EXPLICIT        = yes
-MEMORY_LIB      = Malloc_NAN
+OS              = sgi
+#__________________________________
+#  OS dependencies
+#___________________________________ 
+ifeq ($(OS),linux)
+BIT             = 
+MEMORY_LIB      = 
+CUR_DIR         = $(shell pwd)
+TOP_DIR         = ../..
+ICE_DIR         = $(CUR_DIR)/$(TOP_DIR)
+PGPLOT          = $(ICE_DIR)/Libraries/Linux
+MYLIB_PATH      = -L $(ICE_DIR)/Libraries/Linux
+X11_PATH        = -L /usr/X11R6/lib 
+ABI_FLAGS       = 
+CC              = gcc -DPGPLOT_DIR=\"$(PGPLOT)\"
+FULLWARN        = 
+TRAPUV          =
+endif
+#--SGI-----------
+ifeq ($(OS),sgi)
+BIT             = 64
+MEMORY_LIB      = -l malloc_cv
+CUR_DIR         = $(shell pwd)
+TOP_DIR         = ../..
+ICE_DIR         = $(CUR_DIR)/$(TOP_DIR)
+MYLIB_PATH      = -L $(ICE_DIR)/Libraries/$(BIT)bit
+PGPLOT          = $(ICE_DIR)/Libraries
+X11_PATH        =
+ABI_FLAGS       = -$(BIT)
+CC              = cc -DPGPLOT_DIR=\"$(PGPLOT)\"
+FULLWARN        = -fullwarn
+TRAPUV          = -trapuv
+endif
+
+
 
 #_______________________________________________________________________
 #               COMMON MACROS REQUIRED BY BOTH EXPLICIT AND IMPLICIT versions of ICE
 #_______________________________________________________________________
-ICE_DIR         = /usr/people/harman/Csafe/ICE_SM_TEST
 ICE_INCLUDE     = -I. -I$(ICE_DIR)/Header_files
-MYLIB_PATH      = -L $(ICE_DIR)/Libraries/$(BIT)bit
-MYLIB           = $(MYLIB_PATH) -ltecio -lcpgplot -lpgplot -lX11 -L. -l$(MEMORY_LIB) -lm
+MYLIB           = $(MYLIB_PATH) $(X11_PATH) -ltecio -lcpgplot -lpgplot -lX11 -L. $(MEMORY_LIB)
 
 LIB             = $(MYLIB) -lm 
 
-ABI_FLAGS       = -$(BIT)
-CC              = cc
 
-MAKEFLAGS       = --no-keep-going
+MAKEFLAGS       = --no-keep-going 
 
 SRCS            = overides.c\
                   $(ICE_DIR)/input.c \
@@ -37,7 +69,7 @@ SRCS            = overides.c\
                   $(ICE_DIR)/Plot_routines/plot_2d_line.c \
                   $(ICE_DIR)/Plot_routines/plot_cursor_pos.c \
                   $(ICE_DIR)/p_face.c \
-                  $(ICE_DIR)/PressureSolve_PCG/pressure_residual.c\
+                  $(ICE_DIR)/explicit_delPress.c\
                   $(ICE_DIR)/equate_ptr_addrss.c \
                   $(ICE_DIR)/interpolate_vel_CC_to_FC.c \
                   $(ICE_DIR)/grid.c \
@@ -63,15 +95,17 @@ SRCS            = overides.c\
                   $(ICE_DIR)/Source_Sinks/shear_stress.c\
                   $(ICE_DIR)/initialize_variables.c \
                   $(ICE_DIR)/nrutil+.c
- 
-OBJS          = $(addsuffix .o,$(basename $(SRCS)))
+                  
+OBJS            = $(addsuffix .o,$(basename $(SRCS)))
+
  
 #_______________________________________________________________________
 #               EXPLICIT
 #_______________________________________________________________________
 ifeq ($(EXPLICIT),yes)
-CFLAGS        = -g -fullwarn $(ICE_INCLUDE) 
-SRCS          += $(ICE_DIR)/explicit_delPress.c
+
+CFLAGS        = -g $(FULLWARN) $(ICE_INCLUDE)
+
 all: ice
 	@echo ''
 	@echo '-----------------------'
@@ -115,6 +149,7 @@ PETSC_FLAGS     = -DUSE_PETSC_DEBUG -DUSE_PETSC_LOG -DUSE_PETSC_BOPT_g -DUSE_PET
 SRCS2           =$(ICE_DIR)/PressureSolve_PCG/pressure_PCG.c \
                  $(ICE_DIR)/PressureSolve_PCG/computeStencilWeights.c \
                  $(ICE_DIR)/PressureSolve_PCG/computeSource.c \
+                 $(ICE_DIR)/PressureSolve_PCG/pressure_residual.c\
                  $(ICE_DIR)/PressureSolve_PCG/pcgmg/stencilShell.c\
                  $(ICE_DIR)/PressureSolve_PCG/pcgmg/multigridShell.c \
                  $(ICE_DIR)/PressureSolve_PCG/pcgmg/psol.f \
@@ -139,7 +174,7 @@ SRCS2           =$(ICE_DIR)/PressureSolve_PCG/pressure_PCG.c \
        
 OBJS_IMPLICIT   = $(addsuffix .o,$(basename $(SRCS2))) 
 
-CFLAGS          = -g -fullwarn -DIMPLICIT $(ICE_INCLUDE) $(PETSC_INCLUDE)
+CFLAGS          = -g $(FULLWARN) -DIMPLICIT $(ICE_INCLUDE) $(PETSC_INCLUDE)
 all: iceimplicit
 	@echo ''
 	@echo '-----------------------'
@@ -147,7 +182,7 @@ all: iceimplicit
 	@echo ''; echo ''
 
 iceimplicit: $(OBJS) $(OBJS_IMPLICIT)
-	$(F77) -trapuv $(ABI_FLAGS) -o iceimplicit $(OBJS) $(OBJS_IMPLICIT) $(MYLIB) $(PETSC_LIB)
+	$(F77) $(TRAPUV) $(ABI_FLAGS) -o iceimplicit $(OBJS) $(OBJS_IMPLICIT) $(MYLIB) $(PETSC_LIB)
        
 clean:
 	/bin/rm -f $(OBJS) $(OBJS2) iceimplicit core*
@@ -176,6 +211,7 @@ lib:
 	$(F77) $(ABI_FLAGS) $(FFLAGS) -o $@ -c $<
 #include Makedepend
 
+
 #__________________________________
 #  Documentation macros
 #___________________________________ 
@@ -196,3 +232,4 @@ ICE.html: $(SRCS)
 
 ICE.tex: $(SRC)
 	$(DOC_MACROS)/maketex $(SRC) >ICE.tex ; latex ICE.tex
+

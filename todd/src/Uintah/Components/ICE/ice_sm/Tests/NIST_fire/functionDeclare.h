@@ -57,7 +57,8 @@ void    plot_particles(
                     double delX,            double delY,
                     double *x_pos,          double *y_pos,              double *data,
                     char x_label[],         char y_label[],             char graph_label[],
-                    int  outline_ghostcells,int  max_sub_win,            int nParticles);
+                    int  outline_ghostcells,int  max_sub_win,            int nParticles,
+                    char file_basename[],     int filetype);
                                    
 int Is_it_time_to_inject(
                     double  t,              double  *t_inject_TE  );
@@ -334,8 +335,7 @@ void advect_and_advance_in_time(
 void zero_arrays_3d(  
                 int xLoLimit,               int yLoLimit,               int zLoLimit,
                 int xHiLimit,               int yHiLimit,               int zHiLimit,
-                int n_data_arrays,
-                double ***array1,           ...);
+                int n_data_arrays,          ...);
                 
 void divergence_of_face_centered_velocity(  
                 int xLoLimit,               int yLoLimit,               int zLoLimit,
@@ -348,21 +348,21 @@ void zero_arrays_4d(
                 int xLoLimit,               int yLoLimit,               int zLoLimit,
                 int xHiLimit,               int yHiLimit,               int zHiLimit,
                 int n4dl,                   int n4dh,                   int n_data_arrays,
-                double ****array1,          ...);
+                ...);
                 
 void zero_arrays_5d(  
                 int xLoLimit,               int yLoLimit,               int zLoLimit,
                 int xHiLimit,               int yHiLimit,               int zHiLimit,
                 int n4dlo,                  int n4dhi,                  
                 int n5dlo,                  int n5dhi,                  int n_data_arrays,
-                double *****array1,          ...);
+                ...);
 
 void zero_arrays_6d(  
                 int xLoLimit,               int yLoLimit,               int zLoLimit,
                 int xHiLimit,               int yHiLimit,               int zHiLimit,
                 int n4dlo,                  int n4dhi,                  
                 int n5dlo,                  int n5dhi,                  int n_data_arrays,
-                double ******array1,          ...);              
+                 ...);              
 
                                    
 void grad_q(
@@ -568,17 +568,14 @@ void equate_ptr_addresses_adjacent_cell_faces(
                 int xHiLimit,               int yHiLimit,               int zHiLimit,
                 double delX,                double delY,                double delZ,
                 int ***BC_types,            int ***BC_float_or_fixed,   double ***BC_Values,
-                int nMaterials,             int n_data_arrays,          
-                double ****data_CC,         int var,                    double ******data_FC,
-                ... );
+                int nMaterials,             int n_data_arrays,          ... );
                 
  void update_CC_physical_boundary_conditions( 
                 int xLoLimit,               int yLoLimit,               int zLoLimit,
                 int xHiLimit,               int yHiLimit,               int zHiLimit,
                 double delX,                double delY,                double delZ,
                 int ***BC_types,            int ***BC_float_or_fixed,   double ***BC_Values,
-                int nMaterials,             int n_data_arrays,          
-                double ****data_CC,         int var, ...);
+                int nMaterials,             int n_data_arrays,          ...);
 
 void set_Dirichlet_BC(
                 int xLoLimit,               int yLoLimit,               int zLoLimit,
@@ -634,8 +631,10 @@ void set_Periodic_BC(
 void set_Neumann_BC_FC(
                 int xLoLimit,               int yLoLimit,               int zLoLimit,
                 int xHiLimit,               int yHiLimit,               int zHiLimit,
+                double delX,                double delY,                double delZ,
                 double ****data_CC,         double ******data_FC,       int var,       
-                int ***BC_types,            int ***BC_float_or_fixed,   int m);
+                int ***BC_types,            double ***BC_Values,        int ***BC_float_or_fixed,   
+                int m);
                 
  void set_Dirichlet_BC_FC(           
                 int xLoLimit,               int yLoLimit,               int zLoLimit,             
@@ -811,6 +810,7 @@ void    plot(
 *    P  L  O  T  _  V  E  C  T  O  R  .  C 
 *_______________________________________________________________________*/
 void plot_vector_2D(       
+               int xLoLimit,               int yLoLimit,
                int xHiLimit,               int yHiLimit,
                int max_len,                const float *data_array1,
                const float *data_array2);

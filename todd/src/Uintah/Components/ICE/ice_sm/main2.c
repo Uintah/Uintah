@@ -199,7 +199,8 @@ main()
 #if (switchDebug_main == 1|| switchDebug_main == 2 || switchDebug_main_input == 1)
     #include "plot_declare_vars.h"   
 #endif
-    stat = putenv("PGPLOT_DIR=/usr/people/jas/PSE/src/Uintah/Components/ICE/ice_sm/Libraries");
+   
+    stat = putenv("PGPLOT_DIR=" PGPLOT_DIR);
     stat = putenv("PGPLOT_I_AM_HERE=0");              
                                         /* tell the plotting routine that  */
                                         /* you're at the top of main       */      

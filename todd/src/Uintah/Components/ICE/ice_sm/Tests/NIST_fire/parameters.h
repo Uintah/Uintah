@@ -137,12 +137,12 @@
 #define NUM_COLORS          100             /* number of colors in contour plot             */
 #define PLOT_MAX_LIM        10000           /* Maximum length for a array in a 2-d          */
                                             /* scatter plot                                 */
-#define filepath "/usr/people/harman/Csafe/Uintah_cfd_code/Results/" 
+#define filepath "/usr/people/harman/Csafe/ICE_SM_TEST/Tests/NIST_fire/Results/"
 #define show_grid           1               /* = 1 To see the overlying grid                */
 #define contourplot_type    2               /* = 1 for a normal contour plot.               */
                                             /* = 2 for a checkerboard type contour plot     */
-#define GRAPHDESC  ""
-#define GRAPHDESC2 ""
+#define GRAPHDESC  "Test of Nist Fire Code"
+#define GRAPHDESC2 "Gravity is currenty turned off in CFD"
 #define GRAPHDESC3 ""
 #define GRAPHDESC4 ""
 

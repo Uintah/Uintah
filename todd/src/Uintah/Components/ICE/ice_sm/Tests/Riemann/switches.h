@@ -90,7 +90,7 @@
 * Switches for printing and plotting debugging information
 *   MAIN CODE ROUTINES
 *_______________________________________________________________________*/
-#define switchDebug_main                                1     /* main program                             */
+#define switchDebug_main                                0     /* main program                             */
                                                               /* = 1 plot vars. =2 print to stderr        */
 #define switchDebug_main_input                          0     /* visualize the inputs                     */
 
@@ -118,7 +118,7 @@
 *___________________________________*/
 #define switchDebug_pcgmg_test                          0     /* Use some test inside of the core routines*/
 #define switchDebug_pressure_PCG                        0     /* Plot delPress_CC                         */
-#define switchDebug_press_eq_residual                   2     /* =1 printout div_vel, dpress_dt, residual */
+#define switchDebug_press_eq_residual                   0     /* =1 printout div_vel, dpress_dt, residual */
                                                               /* =2 plot of div_vel, dpress_dt, residual  */
 #define switchDebug_compute_face_centered_velocities    0     /* Face-centered velocities                 */
 

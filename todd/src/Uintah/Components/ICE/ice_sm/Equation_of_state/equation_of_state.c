@@ -44,6 +44,8 @@ void equation_of_state(
 
 {
     int     i, j, k, m;                 /* cell face locators               */
+    int     xLo, xHi, yLo, yHi, 
+            zLo, zHi;   
     char    should_I_write_output;
     double  neg_test1 = 0.0;            /* test for negative variables      */
     double  neg_test2 = 0.0;
@@ -60,14 +62,22 @@ void equation_of_state(
     assert ( xLoLimit >= 0 && xHiLimit <= X_MAX_LIM);
     assert ( yLoLimit >= 0 && yHiLimit <= Y_MAX_LIM);
     assert ( zLoLimit >= 0 && zHiLimit <= Z_MAX_LIM);
+    
+    xLo = GC_LO(xLoLimit);
+    xHi = GC_HI(xHiLimit);
+    yLo = GC_LO(yLoLimit);
+    yHi = GC_HI(yHiLimit);
+    zLo = GC_LO(zLoLimit);
+    zHi = GC_HI(zHiLimit);
+
 
     for ( m = 1; m <= nMaterials; m++)
     {
-        for ( i = xLoLimit; i <= xHiLimit; i++)
+        for ( i = xLo; i <= xHi; i++)
         {
-            for ( j = yLoLimit; j <= yHiLimit; j++)
+            for ( j = yLo; j <= yHi; j++)
             {
-                for ( k = zLoLimit; k <= zHiLimit; k++)
+                for ( k = zLo; k <= zHi; k++)
                 {
                     press_CC[m][i][j][k] = rho_CC[m][i][j][k] * R[m] * Temp_CC[m][i][j][k];
                     

@@ -66,8 +66,8 @@
 #define switchOveride_Initial_Conditions                1       /* if you want to include a file that       */
                                                                 /* overides the initial conditions specified*/
                                                                 /* by the input file                        */
-#define switch_step1_OnOff                              0       /* Step 1 Evaluate equation of state        */
-#define switch_step2_OnOff                              0       /* Step 2 face-centered vel. and delpress   */
+#define switch_step1_OnOff                              1       /* Step 1 Evaluate equation of state        */
+#define switch_step2_OnOff                              1       /* Step 2 face-centered vel. and delpress   */
 #define switch_step3_OnOff                              1       /* Step 3 face-centered pressure            */
 #define switch_step4_OnOff                              1       /* Step 4 source/sink of momentum and enery */
 #define switch_step4_stress_source_OnOff                0       /*        shear stress terms                */
@@ -86,7 +86,7 @@
                                                                 /* = 1 plot vars. =2 print to stderr        */
 #define switchDebug_main_input                          0       /* visualize the inputs                     */
 
-#define switchDebug_find_delta_time                     1       /* Finding the new time step with CFL cond.  */
+#define switchDebug_find_delta_time                     0       /* Finding the new time step with CFL cond.  */
 /*__________________________________
 *   Input and initialization functions
 *   Problem setup
@@ -103,7 +103,7 @@
 /*__________________________________
 *   Step 1:  Equation of state
 *___________________________________*/
-#define switchDebug_equation_of_state                   0     /* press_CC                                 */
+#define switchDebug_equation_of_state                   1     /* press_CC                                 */
 
 /*__________________________________
 *   Step 2:  PCGMG pressure switches

@@ -39,7 +39,10 @@ _______________________________________________________________________ */
     int     outline_ghostcells,         /* 1= outline the ghostcells    */            
     int     max_sub_win,                 /* max number of sub windows to */
                                         /* generate                     */
-    int     nParticles )                /* number of particles of plot  */
+    int     nParticles,                 /* number of particles of plot  */
+    char    file_basename[],            /* basename of the output file  */
+    int     filetype)                   /* type of file to select       */
+                                        /* 1 = gif, 2 = ps, 3 = xwd     */
 {
     int     n,
             color,                      /* color of the particle        */
@@ -48,7 +51,8 @@ _______________________________________________________________________ */
 static int
             n_sub_win,                  /* counter for the number of sub*/
                                         /* windows                      */
-            n_sub_win_cursor;           /*  related to the cursor counter*/                              
+            n_sub_win_cursor,           /*  related to the cursor counter*/
+            n_sub_win_file;             /* number of subwins for file   */                              
                                         
     float   xLo,        xHi,            /* max and min values           */
             yHi,        yLo,
@@ -70,11 +74,12 @@ static int
     if (stay_or_go == '0') return;
    
 
-    /*__________________________________
-    *   - Open a window
-    *   - Generate the color spectrum
-    *___________________________________*/   
-    plot_open_window_screen(max_sub_win, &n_sub_win);    
+/*______________________________________________________________________
+*   - Open a file or window
+*  - Generate the color spectrum
+*_______________________________________________________________________*/    
+    if (filetype == 0)  plot_open_window_screen(max_sub_win, &n_sub_win);
+    if (filetype > 0)   plot_open_window_file(max_sub_win, &n_sub_win_file, file_basename, filetype);   
     plot_color_spectrum(); 
 
     /*__________________________________
@@ -140,18 +145,64 @@ static int
 *    C  L  E  A  N     U  P     A  N  D     E  X  I  T 
 *   - end buffering
 *   - if you want to examine the cursor position
+*   - Header description
+*   - Outline ghostcells
 *   - close all the sub windows
 *   - free locally defined arrays
 *_______________________________________________________________________*/
     cpgebuf();
 
-    plot_cursor_position(max_sub_win, &n_sub_win_cursor);
-    cpgsci(1);
-    if(n_sub_win == max_sub_win)
+   /*__________________________________
+    *  Plot_cursor_position
+    *___________________________________*/
+    if (filetype == 0 ) plot_cursor_position(max_sub_win, &n_sub_win_cursor); 
+
+    /*__________________________________
+    *       MISC
+    * Graph description
+    *___________________________________*/
+    if(n_sub_win == 1 || n_sub_win_file == 1 )
+    {
+        cpgsclp(0);                                      /* turn off clipping*/
+        cpgsci(1);
+        cpgsch(1.0);
+        cpgmtxt("T\0", 3.0, 0.0, 0.0, GRAPHDESC);
+        cpgmtxt("T\0", 2.0, 0.0, 0.0, GRAPHDESC2);
+        cpgmtxt("B\0", 3.5, 0.5, 0.5, GRAPHDESC3);
+        cpgmtxt("B\0", 4.5, 0.5, 0.5, GRAPHDESC4);
+        cpgscf(1);
+        cpgsclp(1);                                      /* turn on clipping*/
+    }
+    /*__________________________________
+    *   Outline Ghostcells
+    *___________________________________*/
+    if(outline_ghostcells == 1)
+    {        
+        cpgmove(xLo+N_GHOSTCELLS,yLo+N_GHOSTCELLS);
+        cpgdraw(xHi-N_GHOSTCELLS,yLo+N_GHOSTCELLS);
+        cpgdraw(xHi-N_GHOSTCELLS,yHi-N_GHOSTCELLS);
+        cpgdraw(xLo+N_GHOSTCELLS,yHi-N_GHOSTCELLS);
+        cpgdraw(xLo+N_GHOSTCELLS,yLo+N_GHOSTCELLS);
+    }
+          
+    /*__________________________________
+    *Close the windows
+    *___________________________________*/
+
+    if(n_sub_win == max_sub_win && filetype == 0)
     {
         cpgclos();
-        n_sub_win = 0;
+        n_sub_win           = 0;
+        n_sub_win_cursor    = 0;
     }
+    if(n_sub_win_file == max_sub_win && filetype > 0)
+    {
+        cpgclos();
+        n_sub_win_file      = 0;
+    }    
+    
+    
+    
     free_vector_nr(data_float, 1, nParticles);   
 /*__________________________________
 *   Quite fullwarn remarks in a way that

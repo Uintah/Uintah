@@ -21,17 +21,19 @@
        1.0     Todd Harman       09/2/99   Written   
 _______________________________________________________________________ */
 void    plot_vector_2D(
-        int     xHiLimit,               /* x-array upper limit              */
-        int     yHiLimit,               /* y-array upper limit              */
-        int     max_len,                /* max length of data arrays        */
+  const int     xLoLimit,
+  const int     yLoLimit,
+  const int     xHiLimit,               /* x-array upper limit              */
+  const int     yHiLimit,               /* y-array upper limit              */
+  const int     max_len,                /* max length of data arrays        */
   const float   *data_array1,           /* data vector                      */
   const float   *data_array2)           /* second set of data used for      */
                                         /* vector plots                     */
 {
     int     i,
-            unit = 2;                   /* units of measure 2 = mm          */
-    static float    TR[6] = {-0.5, 1.0, 0.0, -0.5, 0.0, 1.0};
-    
+            unit = 2,                   /* units of measure 2 = mm          */
+            xtemp, ytemp;
+    float *TR;    
     float   vector_scale,               /* scale for the vector             */
             vel_vector,
             max_vector_len,             /* length of longest vector         */
@@ -46,9 +48,18 @@ void    plot_vector_2D(
 /*______________________________________________________________________
 *   Hardwire some vector plot parameters
 *_______________________________________________________________________*/
+    TR      = vector_nr(0,6);
+    TR[0]   = xLoLimit- 0.5;
+    TR[1]   = 1.0;
+    TR[2]   = 0.0;
+    TR[3]   = yLoLimit- 0.5;
+    TR[4]   = 0.0;
+    TR[5]   = 1.0;
+    
+    
     vector_scale    = 1;
     max_velocity    = 0.0;
-    max_vector_len  = 2.0;
+    max_vector_len  = 1.0;
 
 /*__________________________________
 *   Find the max velocity, and the 
@@ -74,10 +85,12 @@ void    plot_vector_2D(
 /*__________________________________
 *   Generate the vector field
 *___________________________________*/
+    xtemp = xHiLimit - xLoLimit + 1;
+    ytemp = yHiLimit - yLoLimit + 1;
     cpgvect(        &data_array1[1],&data_array2[1], 
-                    xHiLimit,       yHiLimit,
-                    1,       xHiLimit,
-                    1,       yHiLimit,
+                    xHiLimit,      yHiLimit,
+                    1,              xtemp,
+                    1,              ytemp,
                     vector_scale,   1, 
                     TR,             0.0);                     
 /*__________________________________
@@ -102,5 +115,9 @@ void    plot_vector_2D(
     cpgmtxt("L\0", 2.5, 0.0, 0.0, "Max.velocity\0");
     sprintf(label, "%5.5g",max_velocity);
     cpgmtxt("L\0", 1.5, 0.0, 0.0, label);
+    
+    
+    
+    free_vector_nr( TR, 0, 6);
 }
 /*STOP_DOC*/    

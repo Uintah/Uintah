@@ -86,230 +86,135 @@ static int
     error_data  = plot_scaling( data,       max_len,        &data_min, &data_max);  
     
 /*______________________________________________________________________
-*   When dumping to the screen
+*   Now start the the plotting 
 *_______________________________________________________________________*/    
-    if (filetype == 0)
-    {
-    
-        
-        plot_open_window_screen(max_sub_win, &n_sub_win);
+    if (filetype == 0)  plot_open_window_screen(max_sub_win, &n_sub_win);
+    if (filetype > 0)   plot_open_window_file(max_sub_win, &n_sub_win_file, file_basename, filetype);
 
-        /*__________________________________
-        *   Generate the color spectrum
-        *___________________________________*/       
-        plot_color_spectrum(); 
-                                                               
-        /*__________________________________
-        *  Contour plot
-        *___________________________________*/  
-        if(plot_type == 1)
-        { 
-            cpgbbuf();
-            xHi       = (float)xHiLimit;
-            yHi       = (float)yHiLimit;
-            xLo       = (float)xLoLimit;
-            yLo       = (float)yLoLimit;
-            
-            plot_generate_axis( x_label,        y_label,        graph_label,
-                                &xLo,           &xHi,         
-                                &yLo,           &yHi, 
-                                &error_data);
-                                
-        #if (contourplot_type  == 1)                              
-            plot_contour(       xLo,            xHi,       
-                                yLo,            yHi,
-                                data_min,       data_max,       data);
-        #endif
-        #if (contourplot_type  == 2)                                    
-            plot_contour_checkerboard(       
-                                xLo,            xHi,       
-                                yLo,            yHi,
-                                data_min,       data_max,       data);
-        #endif
-            
-            plot_legend(        data_max,       data_min, 
-                                xHi,            yHi);
-            cpgebuf();
-            
-        }
-       /*__________________________________
-       * Line plot
-       *___________________________________*/
-        if((plot_type == 2) || (plot_type == 4))
-        {
-                                                      
-            color           = NUM_COLORS;
-            symbol          = -9;
-            symbol_size     = 0.75;
-            /*__________________________________
-            *   Generate x data
-            *___________________________________*/
-            x_data      = vector_nr(1,  (max_len));
-            x_data[0]   = (float)xLoLimit - 1;   
-            x_data[1]   = (float)xLoLimit;
-
-            for( i =2; i<=max_len; i++)
-            {
-                x_data[i] = x_data[i-1] + 1;
-            }
-            /*__________________________________
-            *   search for NAN or INF numbers
-            *___________________________________*/
-            error_x     = plot_scaling( x_data,     max_len,     &xLo,    &xHi);
-            error_data  = plot_scaling(   data,     max_len,     &yLo,    &yHi); 
-            error       = IMAX(error_x, error_data);
-            
-            plot_generate_axis( 
-                                x_label,        y_label,        graph_label,
-                                &xLo,           &xHi,         
-                                &yLo,           &yHi, 
-                                &error_data );
-            cpgbox("G\0",0.0, 0, "G\0", 0.0, 0);
-            plot_2d_scatter(    x_data,         data,           max_len, 
-                                color,          symbol,         symbol_size);
-            /*__________________________________
-            *   To overlay a second set of data
-            *___________________________________*/
-            if (plot_type == 4)
-            { 
-                symbol      = -9;
-                color = (int)color/2;                   
-                plot_2d_scatter(x_data,         data2,          max_len,     
-                                color,          symbol,         symbol_size);
-            }
-            
-            free_vector_nr(x_data, 1, max_len);
-            
-        }
-        /*__________________________________
-        *   Vector Plot
-        *___________________________________*/
-        if( plot_type == 3 )
-        {
-            cpgbbuf();
-            
-/*`==========TESTING==========*/ 
-            xHi       = (float)xHiLimit + 1;
-            yHi       = (float)yHiLimit + 1;
-            
-            xHi       = (float)xHiLimit;
-            yHi       = (float)yHiLimit;
- /*==========TESTING==========`*/
-            
-            xLo       = (float)xLoLimit;
-            yLo       = (float)yLoLimit;
-            
-            plot_generate_axis( x_label,        y_label,        graph_label,
-                                &xLo,          &xHi,         
-                                &yLo,          &yHi, 
-                                &error_data);            
-            plot_vector_2D(      
-                                xHi,            yHi,
-                                max_len,
-                                data,           data2); 
-            cpgebuf();     
-         }
-    
-          
-        /*__________________________________
-        *  Plot_cursor_position
-        *___________________________________*/
-         /*plot_cursor_position(max_sub_win, &n_sub_win_cursor); */
- 
-    }
-/*______________________________________________________________________
-* If dumping to a file then
-*
-*                                   FILE DUMP
-*_______________________________________________________________________*/
-    if (filetype > 0)
+    /*__________________________________
+    *   Generate the color spectrum
+    *___________________________________*/       
+    plot_color_spectrum(); 
+    cpgsclp(0);                                      /* turn off clipping*/
+    /*__________________________________
+    *  Contour plot
+    *___________________________________*/  
+    if(plot_type == 1)
     { 
-        plot_open_window_file(max_sub_win, &n_sub_win_file, file_basename, filetype);
-        /*__________________________________
-        *   Generate the color spectrum
-        *___________________________________*/       
-        plot_color_spectrum();                                                                        
-        /*__________________________________
-        *  Contour plot
-        *___________________________________*/  
-        if(plot_type == 1)
-        { 
-            xHi       = (float)xHiLimit;
-            yHi      = (float)yHiLimit;
-            xLo       = (float)xLoLimit;
-            yLo       = (float)yLoLimit;
-            
-            plot_generate_axis( 
-                                x_label,        y_label,        graph_label,
-                                &xLo,           &xHi,         
-                                &yLo,           &yHi, 
-                                &error_data);
-        #if (contourplot_type  == 1)                              
-            plot_contour(       xLo,            xHi,       
-                                yLo,            yHi,
-                                data_min,       data_max,       data);
-        #endif
-        #if (contourplot_type  == 2)                                    
-            plot_contour_checkerboard(       
-                                xLo,            xHi,       
-                                yLo,            yHi,
-                                data_min,       data_max,       data);
-        #endif
-            
-            plot_legend(        data_max,       data_min, 
-                                xHi,            yHi);
-                            
-        }
-        /*__________________________________
-        * Line plot
-        *___________________________________*/
-         if((plot_type == 2) || (plot_type == 4))
-        {                                                
-            color           = NUM_COLORS;
-            symbol          = -9;
-            symbol_size     = 0.75;
-            /*__________________________________
-            *   Generate x data
-            *___________________________________*/
-            x_data      = vector_nr(1,  (max_len));
-            x_data[0]   = (float)xLoLimit - (float)delX;   
-            x_data[1]   = (float)xLoLimit;
+        cpgbbuf();
+        xHi       = (float)xHiLimit;
+        yHi       = (float)yHiLimit;
+        xLo       = (float)xLoLimit;
+        yLo       = (float)yLoLimit;
 
-            for( i =2; i<=max_len; i++)
-            {
-                x_data[i] = x_data[i-1] + (float)delX;
-            }
-            /*__________________________________
-            *   search for NAN or INF numbers
-            *___________________________________*/
-            error_x     = plot_scaling( x_data,     max_len,     &xLo,    &xHi);
-            error_data  = plot_scaling(   data,     max_len,     &yLo,    &yHi); 
-            error       = IMAX(error_x, error_data);
-            
-            plot_generate_axis( 
-                                x_label,        y_label,        graph_label,
-                                &xLo,           &xHi,         
-                                &yLo,           &yHi, 
-                                &error_data );
-            
-            plot_2d_scatter(    x_data,         data,           max_len, 
-                                color,          symbol,         symbol_size);
-            /*__________________________________
-            *   To overlay a second set of data
-            *___________________________________*/
-            if (plot_type == 4)
-            { 
-                color = (int)color/2;                   
-                plot_2d_scatter(x_data,         data2,          max_len,     
-                                color,          symbol,         symbol_size);
-            }
-            
-            free_vector_nr(x_data, 1, max_len);
-        }
-        
+        plot_generate_axis( x_label,        y_label,        graph_label,
+                            &xLo,           &xHi,         
+                            &yLo,           &yHi, 
+                            &error_data);
+
+    #if (contourplot_type  == 1)                              
+        plot_contour(       xLo,            xHi,       
+                            yLo,            yHi,
+                            data_min,       data_max,       data);
+    #endif
+    #if (contourplot_type  == 2)                                    
+        plot_contour_checkerboard(       
+                            xLo,            xHi,       
+                            yLo,            yHi,
+                            data_min,       data_max,       data);
+    #endif
+
+        plot_legend(        data_max,       data_min, 
+                            xHi,            yHi);
+        cpgebuf();
 
     }
-    
+   /*__________________________________
+   * Line plot
+   *___________________________________*/
+    if((plot_type == 2) || (plot_type == 4))
+    {
+
+        color           = NUM_COLORS;
+        symbol          = -9;
+        symbol_size     = 0.75;
+        /*__________________________________
+        *   Generate x data
+        *___________________________________*/
+        x_data      = vector_nr(1,  (max_len));
+        x_data[0]   = (float)xLoLimit - 1;   
+        x_data[1]   = (float)xLoLimit;
+
+        for( i =2; i<=max_len; i++)
+        {
+            x_data[i] = x_data[i-1] + 1;
+        }
+        /*__________________________________
+        *   search for NAN or INF numbers
+        *___________________________________*/
+        error_x     = plot_scaling( x_data,     max_len,     &xLo,    &xHi);
+        error_data  = plot_scaling(   data,     max_len,     &yLo,    &yHi); 
+        error       = IMAX(error_x, error_data);
+
+        plot_generate_axis( 
+                            x_label,        y_label,        graph_label,
+                            &xLo,           &xHi,         
+                            &yLo,           &yHi, 
+                            &error_data );
+        cpgbox("G\0",0.0, 0, "G\0", 0.0, 0);
+        plot_2d_scatter(    x_data,         data,           max_len, 
+                            color,          symbol,         symbol_size);
+        /*__________________________________
+        *   To overlay a second set of data
+        *___________________________________*/
+        if (plot_type == 4)
+        { 
+            symbol      = -9;
+            color = (int)color/2;                   
+            plot_2d_scatter(x_data,         data2,          max_len,     
+                            color,          symbol,         symbol_size);
+        }
+
+        free_vector_nr(x_data, 1, max_len);
+
+    }
+    /*__________________________________
+    *   Vector Plot
+    *___________________________________*/
+    if( plot_type == 3 )
+    {
+        cpgbbuf();
+
+/*`==========TESTING==========*/ 
+        xHi       = (float)xHiLimit + 1;
+        yHi       = (float)yHiLimit + 1;
+
+/*==========TESTING==========`*/
+
+        xLo       = (float)xLoLimit;
+        yLo       = (float)yLoLimit;
+
+        plot_generate_axis( x_label,        y_label,        graph_label,
+                            &xLo,          &xHi,         
+                            &yLo,          &yHi, 
+                            &error_data);   
+        xHi = xHi - 1.0;    /* you need this to acount for cell-centered data */
+        yHi = yHi - 1.0;         
+        plot_vector_2D(     xLo,            yLo,
+                            xHi,            yHi,
+                            max_len,
+                            data,           data2); 
+        cpgsclp(1);                                      /* turn on clipping*/
+        cpgebuf();     
+     }
+
+
+    /*__________________________________
+    *  Plot_cursor_position
+    *  This doesn't work in the pse
+    *___________________________________*/
+   /*  if (filetype == 0 ) plot_cursor_position(max_sub_win, &n_sub_win_cursor);  */
+
 /*______________________________________________________________________
 *   Now write a discription and outline the ghostcells and 
 *   if it's time then close the file
@@ -357,8 +262,6 @@ static int
         cpgclos();
         n_sub_win_file      = 0;
     }
-    
-/*     getchar(); */
 /*__________________________________
 *   Quite fullwarn remarks in a way that
 *   is compiler independent

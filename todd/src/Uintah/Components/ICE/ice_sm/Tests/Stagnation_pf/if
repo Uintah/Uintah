@@ -19,11 +19,11 @@ Note:  The tilde character MUST proceed each input.
 * Delta X                       ~0.5
 * Delta y                       ~0.5
 * Delta z                       ~1.0
-* xLoLimit                      ~1
-* yLoLimit                      ~1
+* xLoLimit                      ~2
+* yLoLimit                      ~2
 * zLoLimit                      ~1
 * xHiLimit                      ~20
-* yHiLimit                      ~15
+* yHiLimit                      ~20
 * zHiLimit                      ~1
 * Number of materials           ~1
 * CFL                           ~0.9    

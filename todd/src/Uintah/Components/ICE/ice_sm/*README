@@ -1,4 +1,4 @@
-UINTAH-CFD ICE README FILE  04/04/00
+UINTAH-CFD ICE README FILE  06/02/00
 ________________________________________________________________________
 
 The purpose is to introduce and warn the new developer to this code.
@@ -6,7 +6,7 @@ The purpose is to introduce and warn the new developer to this code.
 
 
 ________________________________________________________________________
-        DIRECTORY LAYOUT
+         D  I  R  E  C  T  O  R  Y     L  A  Y  O  U  T 
 ________________________________________________________________________
 Each one the steps in the algoritm has a separate folder which contains ONLY the source code for that particular step.  All of the include and header files are located in the the Header_file/ directory.  Currently, the folders and a description of what is inside is given below  
 
@@ -62,7 +62,7 @@ Pressure solver based on PETSc package
 
 Results/
 ---------------------            
-All of the tecplot files are placed in this folder 
+All of the tecplot files pgplot files are placed in this folder 
 
 Results/
 --------------------- 
@@ -76,7 +76,7 @@ Code for writing both face-centered and cell-centered variables to a binary tecp
 
 
 ________________________________________________________________________
-        CODE CONVENTIONS
+             C  O  D  E     C  O  N  V  E  N  T  I  O  N  S 
 ________________________________________________________________________
 Here are some of the coding conventions that you'll see throughout the code
 
@@ -98,7 +98,7 @@ cell[i][j][k][RIGHT] is equated to cell[i+1][j][k][LEFT] and similarly for the T
 
 6)  Array indexing convention
     ***Array    -> Array[i][j][k]
-    ****Arrays  -> Array[i][j][k][m]
+    ****Arrays  -> Array[m][i][j][k]
     *****Arrays -> *Array[i][j][k][face]
     ******Array -> *Array[i][j][k][face][m]
 
@@ -115,7 +115,7 @@ where you can printout pertainant variables either by writing to stderr or plott
                           #undef switchInclude_main
                  #endif
 
-If you turn on the debuggind switch "switchDebug_main 1" in the file "switches.h" then pgplot will dump a series of contour plots to the screen
+If you turn on the debuggind switch "switchDebug_main 1" in the file "/Header_files/switches.h" or in the "./switches.h" then pgplot will dump a series of contour plots to the screen
 
 9)  I usually refer to source and sinks of momentum and energy as sources.  So the variable xmom_sources actually contains sources and sinks of momentum.
 
@@ -164,10 +164,15 @@ input and output.
      steps in the algorithm without having to comment out that function.  The switch
      is defined in "switches.h"
      
+ 16) In the folder "./Tests" are subfolders that contain code verfication tests that can be run.
+     Inside of these subfolders are the files "switches.h" "parameters.h" and "Makefile."  These
+     files have been customized for that particular test.  There is also a file called "overides.c"
+     which is a version of main that may have the necessary changes.  Any code that resides in your
+     test folder will overide the base code, assuming that you've modified the Makefile.
      
 
 ________________________________________________________________________
-       BOUNDARY CONDITIONS
+        B  O  U  N  D  A  R  Y     C  O  N  D  I  T  I  O  N  S 
 ________________________________________________________________________
 1) Boundary conditions:
 Currently there are two main arrays "BC_types" and "BC_Values" that control what 
@@ -236,7 +241,7 @@ delt_initial_iteration            ~0.0001       time step for the initial
           
     
 ________________________________________________________________________
-        PGPLOT NOTES
+             P  G  P  L  O  T     N  O  T  E  S 
 ________________________________________________________________________
 
 
@@ -281,6 +286,8 @@ Inside of the file debug.i, for most functions there is section of code that def
                           of subplots is 4.  FOR EACH SUBPLOT THERE MUST BE A                      
                           CALL TO PLOT.
 
+      outputfile_type     0 = screen, 1 = gif, 2 = postscript, 3 = xwd
+      
       file_basename       If your going to dump to a file then put something
                           here.
 
@@ -373,8 +380,40 @@ so that the different windows aren't continuously overlapping each other.
 
 
 
+___________________________
+Making movies with pgplot
+___________________________ 
+Below are the steps you need to take to make movies with pgplot.  Note this has
+only been tested for single materials.
+
+
+1)  Edit the local version of "parameters.h" and edit 
+
+   #define filepath "/usr/people/harman/Csafe/ICE_SM_TEST/Tests/NIST_fire/Results/"
+   
+    to the path where you want the files to dump.
+
+   Add a description of the header of the plots 
+    #define GRAPHDESC  "Test of Nist Fire Code"
+    #define GRAPHDESC2 "Gravity is currenty turned off in CFD"
+    #define GRAPHDESC3 ""
+    #define GRAPHDESC4 ""
+   
+2)  Edit the "debugcode.i" file and set the "outputfile_type = 1" on those windows
+    that you wish to make a movie of.  Additionally set the variable file_basename to 
+    something you'll remember, don't include an extension the code will do it automatically.
+    
+3)  Run the code to generate the gif files of the window.
+
+4)  Run the script "makemove <basefilename> <output movie name>" to generate and play the movie.
+  
+   
+
+
+
+
 ________________________________________________________________________
-        MISC.
+         M  I  S  C  . 
 ________________________________________________________________________
 In this version the the thermodynamic and transport properties
 are assumed to be constant.  However, the "hooks" are in place for variable coeffients.

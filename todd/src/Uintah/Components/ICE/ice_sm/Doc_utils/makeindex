@@ -1,6 +1,8 @@
-#!/usr/sbin/perl
+#!/usr/bin/perl
 #______________________________________________________________________
 #   MAKEINDEX
+#
+#   Warning: Make sure that perl lives in path shown above or is won't work
 #
 #   Todd Harman     12/15/99
 #   This perl script is used to in conjunction with two other perl scripts

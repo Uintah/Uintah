@@ -138,8 +138,8 @@
                         * based on stability requirements
                         * see references
                         *___________________________________*/
-                        A   = fudge_factor * 0.5 * pow(delX, 2.0)/fabs(*uvel_FC[i][j][k][f][m]); 
-                        B   = fudge_factor * 0.5 * pow(delY, 2.0)/fabs(*vvel_FC[i][j][k][f][m]);
+                        A   = fudge_factor * 0.5 * pow(delX, 2.0)/fabs(*uvel_FC[i][j][k][f][m]  + SMALL_NUM); 
+                        B   = fudge_factor * 0.5 * pow(delY, 2.0)/fabs(*vvel_FC[i][j][k][f][m]  + SMALL_NUM);
                     
                         delt_stability = DMIN(A, delt_stability);
                         delt_stability = DMIN(B, delt_stability);
@@ -402,7 +402,7 @@ static int  iterNum;                    /* Iteration number                 */
 #if 0
 
 
-This doesn't work so eventually trash it.
+/* This doesn't work so eventually trash it. */
 /* 
  ======================================================================*/
 #include <math.h>
@@ -788,11 +788,12 @@ void    zero_arrays_4d(
     int     n4dl,
     int     n4dh,
     int     n_data_arrays,          /* number of data arrays            (INPUT) */
-    double  ****array1,...)         /* data(x,y,z,M)                    (INPUT) */             
+    ...)                            /* data(x,y,z,M)                    (INPUT) */             
 {
     va_list ptr_data_array;         /* pointer to each data array       */ 
     int i, j, k, m,
         array;
+        double ****array1;
 
 /*__________________________________
 * double check inputs
@@ -867,11 +868,12 @@ void    zero_arrays_5d(
     int     n5dlo,                  /* 5d lower limit                   */
     int     n5dhi,                  /* 5d upper limit                   */
     int     n_data_arrays,          /* number of data arrays            (INPUT) */
-    double  *****array1,...)        /* data(x,y,z,M)                    (INPUT) */             
+    ...)                            /* data(x,y,z,M)                    (INPUT) */             
 {
     va_list ptr_data_array;         /* pointer to each data array       */ 
     int i, j, k, m, n,
         array;
+    double *****array1;
 
 /*__________________________________
 * double check inputs
@@ -951,12 +953,12 @@ void    zero_arrays_6d(
     int     n5dlo,                  /* 5d lower limit                   */
     int     n5dhi,                  /* 5d upper limit                   */
     int     n_data_arrays,          /* number of data arrays            (INPUT) */
-    double  ******array1,...)       /* data(x,y,z,f,M)                  (INPUT) */             
+    ...)                            /* data(x,y,z,f,M)                  (INPUT) */             
 {
     va_list ptr_data_array;         /* pointer to each data array       */ 
     int i, j, k, f, m,
         array;
-
+    double ******array1 ;
 /*__________________________________
 * double check inputs
 *___________________________________*/
@@ -1030,11 +1032,12 @@ void    zero_arrays_3d(
     int     yHiLimit,               /* y-array upper limit              */
     int     zHiLimit,               /* z-array upper limit              */
     int     n_data_arrays,          /* number of data arrays            (INPUT) */
-    double  ***array1,...)          /* data(x,y,z)                      (INPUT) */             
+    ...)                            /* data(x,y,z)                      (INPUT) */             
 {
     va_list ptr_data_array;         /* pointer to each data array       */ 
     int i, j, k,
         array;
+    double ***array1;
 
 /*__________________________________
 * double check inputs
@@ -2080,12 +2083,17 @@ ______________________________  */
                 {    
                     #if (switchDebug_printData_4d == 1)
                     fprintf(stderr,"[%d,%d,%d,%d]= %4.3lf  ",
-                      i,j,k,m, data_array[m][i][j][k]);
+                      m,i,j,k, data_array[m][i][j][k]);
                     #endif 
                     
                     #if (switchDebug_printData_4d == 2)                      
                     fprintf(stderr,"[%d,%d,%d,%d]= %6.5lf  ",
-                      i,j,k,m, data_array[m][i][j][k]);
+                      m,i,j,k, data_array[m][i][j][k]);
+                    #endif
+                    
+                     #if (switchDebug_printData_4d == 3)                      
+                    fprintf(stderr,"[%d,%d,%d,%d]= %e  ",
+                      m,i,j,k, data_array[m][i][j][k]);
                     #endif
                 }
                
