@@ -59,4 +59,9 @@ inline double Hypot(double x, double y)
     return hypot(x, y);
 }
 
+inline double Sqr(double x)
+{
+    return x*x;
+}
+
 #endif
