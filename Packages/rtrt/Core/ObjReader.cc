@@ -8,6 +8,7 @@
 #include <Packages/rtrt/Core/TexturedTri.h>
 #include <Packages/rtrt/Core/Tri.h>
 #include <Packages/rtrt/Core/Phong.h>
+#include <Packages/rtrt/Core/PhongMaterial.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Plane.h>
@@ -189,8 +190,11 @@ void addObjMaterial(Array1<Material*> &matl,
     } else if (Ns == 0)
       m = new LambertianMaterial(Kd);
     else {
-      cerr << "Kd="<<Kd<<" opacity="<<opacity<<" R0="<<R0<<" Ns="<<Ns<<"\n";
-      m = new Phong(Kd, Ks, Ns, R0);
+      if (opacity == 1) {
+	m = new Phong(Kd, Ks, Ns, R0);
+      } else {
+	m = new PhongMaterial(Kd, opacity, R0, Ns, R0!=0);
+      }
     }
   }
   if (has_bmap) {
