@@ -1,5 +1,5 @@
 <!--
-    For more information, please see: http://software.sci.utah.edu
+For more information, please see: http://software.sci.utah.edu
 
 The MIT License
 
@@ -29,33 +29,30 @@ DEALINGS IN THE SOFTWARE.
 <chapter>
   <title>Tooth Data</title>
 
-  <!-- Intro to tooth data.  How was it obtained, etc -->
-  <para></para>
+  <para>
+    The tooth data used in this tutorial are industrial CT data of a
+    human tooth.  The data are stored in a format called
+    <firstterm>Nearly-Raw Raster Data</firstterm> or
+    <acronym>NRRD</acronym>.  See the <ulink
+    url="http://teem.sourceforge.net/nrrd/index.html"><acronym>NRRD</acronym>
+    web site</ulink> for information on this data format.  See <xref
+    linkend="ch.ref_data"/> for other data formats supported by BioImage.
+  </para>
 
   <section>
     <title>Loading Data</title>
     <para>
-      Upon opening BioImage, the first module visible in the
-      Processing Pane is the Load Data frame as seen in label 2 of
-      <xref linkend="fig.load"/>.  This tutorial will load a CT volume
-      of a tooth.  The volume is stored in a format called Nrrd which
-      means Nearly-Raw Raster Data.  To load the volume, select the
-      Nrrd tab.  This will allow BioImage to properly process the Nrrd
-      format.  Please see <xref linkend="ch.ref_data"/> for
-      information on loading other supported formats.
+      To load data, start by clicking the <guilabel>Nrrd</guilabel> tab
+      in the Processing Pan, then click the
+      <guibutton>Browse</guibutton> button.  See item 2 in <xref
+      linkend="fig.load"/>.
     </para>
     <para>
-      After selecting the Nrrd tab, press the "Browse" button to open
-      the File Selection Dialog.  Navigate to the proper location and
-      select the "tooth.nhdr" file.  After highlighting the proper
-      dataset, press the "Set" button to load the data.  The File
-      Selection Dialog will disapear.  Press the green "Update" button
-      located near the bottom of the Processing Pane as show in <xref
-      linkend="fig.load"/> labeled 4, to complete the process of
-      loading the data into BioImage.  Clicking the "Update" button
-      will finalize and apply the new filter rules.  Only after
-      clicking the Update button will any changes made to the data be
-      applied to the data being visualized.
+      Now select <filename>tooth.nhdr</filename> and click
+      <guibutton>Set</guibutton>.  Click
+      <guibutton>Update</guibutton>, located near the bottom of the
+      Processing Pane (item 4 in <xref linkend="fig.load"/>), to load
+      the data into BioImage.
     </para>
 
     <figure id="fig.load">
@@ -74,18 +71,18 @@ DEALINGS IN THE SOFTWARE.
     </figure>
 
     <para>
-      After loading the data into BioImage, the 4 view windows will
-      contain visualizations of the data as shown in <xref
-      linkend="fig.viewing-pane"/>. The top window will contain a 3D
-      reconstruction of the data, while the bottom three windows will
-      present 3 different, orthogonal, slices of the data.
+      After loading data, BioImage will display visualizations of the
+      data as shown in <xref linkend="fig.viewing-pane"/>.  The top
+      window displays a three dimensional reconstruction of the data
+      as orthogonal slices. The bottom three windows present the
+      slices individually.
     </para>
 
     <figure id="fig.viewing-pane">
-      <title>Viewing Pane After Clicking Update</title>
+      <title>Vizualization Pane After Clicking Update</title>
       <mediaobject>
 	<textobject>
-	  <phrase>Viewing Pane</phrase>
+	  <phrase>Vizualization Pane</phrase>
 	</textobject>
 	<imageobject>
 	  <imagedata fileref="Figures/viewing-pane.eps" align="center" format="EPS"/>
@@ -97,13 +94,13 @@ DEALINGS IN THE SOFTWARE.
     </figure>
     
     <para>
-      The 3 slice windows should show the sagittal, coronal, and axial
-      views and be labeled accordingly. Depending on the order of the
-      axes in the loaded volume, the data may need to be flipped or
-      permuted so that the axis labels are correct.  The Viewing Cube,
-      located in the Load Data window labeled 3 in <xref
-      linkend="fig.load"/> allows the user to change the orientation
-      of the slices presented in the 4 windows.  The orientation of
+      The  slice windows show  sagittal, coronal, and axial
+      views respectively. Depending on the order of the
+      axes in the volume, the data may need to be flipped or
+      permuted so that axis labels are correct.  The Viewing Cube,
+      located in the Processing Pane (item 3 in <xref
+      linkend="fig.load"/>),  allows the user to change the orientation
+      of  slices presented in the visualization windows.  The orientation of
       each view can be changed by altering the abbreviation next to
       the proper arrow.  By default, the axial, sagittal, and coronal
       slices are viewed from the superior, anterior, and left views

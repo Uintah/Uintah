@@ -1,5 +1,5 @@
 <!--
-For more information, please see: http://software.sci.utah.edu
+    For more information, please see: http://software.sci.utah.edu
 
 The MIT License
 
@@ -52,9 +52,9 @@ DEALINGS IN THE SOFTWARE.
     images.
     </para>
 
-    <para>BioImage provides a powerful volume rendering tool that allows
-    the user to interactively visualize an area of interest by assigning
-    a color to a range of values in the volume.</para>
+    <para>BioImage provides a powerful volume rendering tool that
+    allows the user to interactively visualize an area of interest by
+    assigning a color to a range of values in the volume.</para>
     
     <para>In this tutorial the user will: launch BioImage, load a tooth
     volume dataset, resample and crop the tooth volume using dynamic
@@ -68,43 +68,31 @@ DEALINGS IN THE SOFTWARE.
 
   <section>
     <title>Preparations</title>
-    <para> Before starting the tutorial a number of preparations must
+    <para> Before starting the tutorial, a number of preparations must
     be made. First, set the following environment variables:</para>
 
     <variablelist>
       <varlistentry>
 	<term><envar>SCIRUN_DATA</envar></term>
 	<listitem>
-	  <para><envar>SCIRUN_DATA</envar> points to the sample data sets
-	  directory. This tutorial assumes the SCIRun sample data
-	  directory is
-	  <filename>/usr/sci/data/SCIRunData/1.24.0</filename>.</para>
-	  <para>For a csh-like shell:</para>
-	  <literallayout class="monospaced">
-setenv SCIRUN_DATA /usr/sci/data/SCIRun/SCIRunData/1.24.0	    
-	  </literallayout>
-	  <para>For an  sh-like shell:</para>
-	  <literallayout class="monospaced">
-export SCIRUN_DATA=/usr/sci/data/SCIRun/SCIRunData/1.24.0
-	  </literallayout>
+	  <para>
+	    <envar>SCIRUN_DATA</envar> points to SCIRun's sample data
+	    directory. This tutorial assumes the SCIRun sample data
+	    directory is
+	    <filename>/usr/local/SCIRunData/1.24.0</filename>.
+	    For a csh-like shell:
+	    <literallayout class="monospaced">
+	      setenv SCIRUN_DATA /usr/local/SCIRunData/1.24.0	    
+	    </literallayout>
+	    For an  sh-like shell:
+	    <literallayout class="monospaced">
+	      export SCIRUN_DATA=/usr/local/SCIRunData/1.24.0
+	    </literallayout>
+	  </para>
 	</listitem>
       </varlistentry>
     </variablelist>
 
-    <para>
-      On Apple's OSX operating system, the limit on the number of open
-      files must be increased:
-    </para>
-
-    <para>For csh-like shells:</para>
-    <literallayout class="monospaced">
-limit descriptors unlimited      
-    </literallayout>
-
-    <para>For sh-like shells:</para>
-    <literallayout class="monospaced">
-ulimit -n unlimited
-    </literallayout>
   </section>
 
   <section>
@@ -114,14 +102,14 @@ ulimit -n unlimited
     the directory containing the BioImage executable and type
     <userinput>./BioImage</userinput>, for example:
     <literallayout class="monospaced">
-cd /usr/local/SCIRun/bin
-./BioImage
+      cd /usr/local/SCIRun/bin
+      ./BioImage
     </literallayout>
     BioImage takes a few moments to start up, then launches the user
     interface window shown in <xref linkend="fig.gui-launch"/>.</para>
 
     <figure id="fig.gui-launch">
-      <title>BioImage Interface Window Initial State</title>
+      <title>BioImage Window</title>
       <mediaobject>
 	<textobject>
 	  <phrase>BioImage interface window just after
@@ -141,19 +129,41 @@ cd /usr/local/SCIRun/bin
   <section>
     <title>The User Interface</title>
     <para>
-      BioImage is divided into three main panes: 1. Processing Pane on the left, 
-      2. Rendering Windows in the center, and 3. Visualization Pane on the right
-      as labeled in <xref linkend="fig.gui-launch"/>.
-      The two side panes can be detached from the Rendering Windows by clicking on 
-      the pane detachment/attachment controls which are the vertical dashed lines 
-      separating the panes. 
-    </para>
-    <para>
-      The Rendering Window pane <xref linkend="fig.viewing-pane"/> 
-      contains four main windows. The top
-      window is the 3D viewer window. The bottom viewer windows display 
-      2D images of the standard slice planes (in order from left to right)
-      of Sagittal, Coronal, and Axial.
+      The BioImage window consists of three panes, from left to right:
+      <variablelist>
+	<varlistentry>
+	  <term>Processing Pane</term>
+	  <listitem>
+	    <para>
+	      The Processing Pane is used to load, orient, and filter
+	      data
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>Visualization Pane</term>
+	  <listitem>
+	    <para>
+	      The Visualization pane <xref
+	      linkend="fig.viewing-pane"/> contains four windows. The
+	      top window displays three dimensional
+	      visualizations. The bottom three windows (left to right)
+	      display sagittal, coronal, and axial slice planes.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>Visualization Settings Pane</term>
+	  <listitem>
+	    <para>
+	      The Visualization Settings Pane is used to modify
+	      settings controlling two and three dimensional visualizations.
+	    </para>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
+      Panes can be detached from each other by clicking on the
+      vertical dashed lines separating the panes.
     </para>
   </section>
 
