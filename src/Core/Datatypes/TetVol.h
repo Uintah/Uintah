@@ -17,6 +17,7 @@
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/PersistentSTL.h>
+#include <Core/Geometry/Tensor.h>
 #include <Core/Util/Assert.h>
 #include <vector>
 
@@ -112,12 +113,18 @@ bool TetVol<T>::get_gradient(Vector &g, Point &p) {
   }
 }
 
-//! compute the gradient g in cell ci
+//! Compute the gradient g in cell ci.
+template <>
+Vector TetVol<Vector>::cell_gradient(TetVolMesh::cell_index ci);
+
+template <>
+Vector TetVol<Tensor>::cell_gradient(TetVolMesh::cell_index ci);
+
 template <class T>
-Vector TetVol<T>::cell_gradient(TetVolMesh::cell_index ci) {
+Vector TetVol<T>::cell_gradient(TetVolMesh::cell_index ci)
+{
   // for now we only know how to do this for field with doubles at the nodes
-  ASSERT(data_at() == Field::NODE)
-  ASSERT(type_name(1) == "double")
+  ASSERT(data_at() == Field::NODE);
 
   // load up the indices of the nodes for this cell
   TetVolMesh::node_array nodes;
@@ -127,10 +134,11 @@ Vector TetVol<T>::cell_gradient(TetVolMesh::cell_index ci) {
 
   // we really want this for all scalars... 
   //  but for now, we'll just make doubles work
-  TetVol<double> *tvd = dynamic_cast<TetVol<double> *>(this);
-  return Vector(gb0*tvd->value(nodes[0]) + gb1*tvd->value(nodes[1]) + 
-		gb2*tvd->value(nodes[2]) + gb3*tvd->value(nodes[3]));
+  return Vector(gb0 * value(nodes[0]) + gb1 * value(nodes[1]) + 
+		gb2 * value(nodes[2]) + gb3 * value(nodes[3]));
 }
+
+
 } // end namespace SCIRun
 
 #endif // Datatypes_TetVol_h
