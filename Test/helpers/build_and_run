@@ -12,8 +12,9 @@ fi
 cd "${BUILDROOT}/${mode}/build"
 
 if [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
+    echo ""
     echo "Configuring ${mode} build at `date` using these arguments"
-    echo "\t$CONFIGURE_ARGS"
+    echo "  $CONFIGURE_ARGS"
     echo "../../src/configure $CONFIGURE_ARGS" > configure_command
     chmod a+x configure_command
     ./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
@@ -37,6 +38,7 @@ if [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
 	rm "${BUILD_DIR}/configure-${mode}.lock"
     fi
 
+    echo ""
     echo "Starting $mode build at `date`"
 
     cd "${BUILDROOT}/${mode}/build"
