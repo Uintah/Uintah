@@ -770,6 +770,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   /*CALLONLY||CALLNORET              */
   /***********************************/
   string f_leader;
+  string a_leader;
   if (isCollective) {
     e.out << leader2 << "if ((_flag == 2)||(_flag == 3)) {  /*CALLONLY || CALLNORET*/ \n";
     f_leader=e.out.push_leader();
@@ -820,6 +821,8 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   }
   e.out << ");\n";
 
+
+
   if(reply_required()){
     // Set up startpoints for any objects...
     e.out << leader2 << "// Size the reply...\n";
@@ -865,8 +868,12 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     if (isCollective) {
       //Do this here because CALLNORET needs data redistribution
       //calls found in emit_marshal (OUT args)
-      e.out << leader2 << "if (_flag == 3) return;\n";
-      e.out << leader2 << "/*CALLONLY*/ \n";
+      e.out << leader2 << "if (_flag == 3) {\n";
+      e.out << leader2 << "  message->destroyMessage();\n";
+      e.out << leader2 << "  return;\n";
+      e.out << leader2 << "}\n";
+      e.out << leader2 << "else { /*CALLONLY*/ \n";
+      a_leader = e.out.push_leader(); 
     }
 
 
@@ -877,6 +884,8 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   e.out << leader2 << "message->destroyMessage();\n";  
 
   if (isCollective) {
+    e.out.pop_leader(a_leader);
+    e.out << leader2 << "}\n";
     e.out.pop_leader(f_leader);
     e.out << leader2 << "}\n";
   }
