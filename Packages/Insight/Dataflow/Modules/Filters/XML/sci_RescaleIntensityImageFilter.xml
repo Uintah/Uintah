@@ -39,11 +39,10 @@
       <type name="OutputImageType">
         <value>itk::Image&lt;float, 3&gt;</value>
       </type>
-    </instance>
-
-    
+    </instance>  
   </instantiations>
      <includes>
+       <file>itkVector.h</file>
      </includes>
   </filter-sci>
 </filter>

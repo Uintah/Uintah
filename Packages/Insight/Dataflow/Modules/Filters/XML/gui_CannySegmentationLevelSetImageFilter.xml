@@ -26,7 +26,7 @@
     </param>
     <param name="reverse_expansion_direction">
       <checkbutton>
-        <default>1</default>
+        <default>0</default>
       </checkbutton>
     </param>
     <param name="max_rms_change">
@@ -57,27 +57,13 @@
       </text-entry>
     </param>
     <param name="curvature_scaling">
-      <radiobutton>
-        <button>
-          <label>Zero</label>
-          <value>0.0</value>
-        </button>
-        <button>
-          <label>Point Five</label>
-          <value>0.5</value>
-        </button>
-        <button>
-          <label>One</label>
-          <value>1.0</value>
-        </button>
+      <text-entry>
         <default>1.0</default>
-      </radiobutton>
+      </text-entry>
     </param>
     <param name="isovalue">
-      <scrollbar>
-        <min>0</min>
-        <max>255</max>
+      <text-entry>
         <default>0.5</default>
-      </scrollbar>
+      </text-entry>
     </param>
 </filter-gui>
