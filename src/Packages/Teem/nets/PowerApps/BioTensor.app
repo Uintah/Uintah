@@ -169,7 +169,7 @@ set m103 [addModuleAtPosition "Teem" "Unu" "UnuResample" 14 517]
 set m104 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 14 652]
 set m105 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 14 248]
 set m106 [addModuleAtPosition "Teem" "Unu" "UnuResample" 14 588]
-set m107 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 1267 713]
+#set m107 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 1267 713]
 set m108 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1068 1144]
 set m109 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1068 1206]
 set m110 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 1102 1913]
@@ -1377,7 +1377,7 @@ set $m106-resampAxis0 {x1}
 set $m106-resampAxis1 {=}
 set $m106-resampAxis2 {=}
 set $m106-resampAxis3 {x1}
-set $m107-notes {}
+#set $m107-notes {}
 set $m108-notes {}
 set $m108-tcl_status {Calling GenStandardColorMaps!}
 set $m108-positionList {}
@@ -1666,6 +1666,7 @@ set mods(ChooseField-Fibers) $m122
 set mods(DirectInterpolate-Fibers) $m121
 set mods(TendFiber) $m123
 set mods(ChooseColorMap-Fibers) $m135
+set mods(GatherPoints) $m90
 
 
 ### Viewer
@@ -1692,6 +1693,7 @@ global plane_y
 set plane_y 0
 global plane_z
 set plane_z 0
+
 
 ### registration globals
 global ref_image
@@ -5797,21 +5799,32 @@ class BioTensorApp {
               # turn off 
               set $mods(ShowField-X)-faces-on 0
               set $clip-visible-$last_x 0
+	      
+	      # disable connection
+	      block_connection $mods(ChooseField-X) 0 $mods(GatherPoints) 0
           } else {
               set $mods(ShowField-X)-faces-on 1
               set $clip-visible-$last_x 1
+	      # enable connection
+	      unblock_connection $mods(ChooseField-X) 0 $mods(GatherPoints) 0
           }  
-          $mods(ShowField-X)-c toggle_display_faces  
-          $mods(Viewer)-ViewWindow_0-c redraw
+	   $mods(GatherPoints)-c needexecute
+
+	   $mods(ShowField-X)-c toggle_display_faces  
+	   $mods(Viewer)-ViewWindow_0-c redraw
        } elseif {$which == "Y"} {
           global $clip-visible-$last_y
           if {$show_plane_y == 0} {
               set $mods(ShowField-Y)-faces-on 0
-              set $clip-visible-$last_y 0             
+              set $clip-visible-$last_y 0   
+	      block_connection $mods(ChooseField-Y) 0 $mods(GatherPoints) 1
           } else {
               set $mods(ShowField-Y)-faces-on 1
-              set $clip-visible-$last_y 1              
+              set $clip-visible-$last_y 1
+	      unblock_connection $mods(ChooseField-Y) 0 $mods(GatherPoints) 1
           }   
+	   $mods(GatherPoints)-c needexecute
+
           $mods(ShowField-Y)-c toggle_display_faces
           $mods(Viewer)-ViewWindow_0-c redraw
        } else {
@@ -5819,11 +5832,15 @@ class BioTensorApp {
           global $clip-visible-$last_z
           if {$show_plane_z == 0} {
               set $mods(ShowField-Z)-faces-on 0
-              set $clip-visible-$last_z 0              
+              set $clip-visible-$last_z 0  
+	      block_connection $mods(ChooseField-Z) 0 $mods(GatherPoints) 2
           } else {
               set $mods(ShowField-Z)-faces-on 1
-              set $clip-visible-$last_z 1             
+              set $clip-visible-$last_z 1            
+	      unblock_connection $mods(ChooseField-Z) 0 $mods(GatherPoints) 2
           }   
+
+	  $mods(GatherPoints)-c needexecute
 
           $mods(ShowField-Z)-c toggle_display_faces
           $mods(Viewer)-ViewWindow_0-c redraw
@@ -8730,6 +8747,18 @@ class BioTensorApp {
 
 	}
     }
+
+    method block_connection { modA portA modB portB } {
+
+	#disableConnection $con
+	disableConnection "$modA $portA $modB $portB"
+    }
+
+    method unblock_connection { modA portA modB portB } {
+
+	#disableConnection $con
+	disableConnection "$modA $portA $modB $portB"
+    }
     
 
 
@@ -8896,7 +8925,7 @@ class BioTensorApp {
     variable clip_y
     variable clip_z
     variable glyph_type
-
+	
     # fibers
     variable fiber_type
 
