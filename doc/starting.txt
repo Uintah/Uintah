@@ -72,9 +72,10 @@ fi
    Compiler: Delta        (Always use this on the SGI)
    Assertion Level: 3     (Good for debugging)
    OpenGL: True
-   ogl normalizes primitives: (This does not make a difference right now)
+   ogl normalizes primitives: True
    Pthreads:		  (No - for now)
    Quarks: False
+   Use Sparsellib: False
    Irix binary format:    (Choose the proper format for your machine)
 
    Choose the Apply button and then the Exit button
