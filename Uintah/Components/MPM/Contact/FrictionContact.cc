@@ -90,7 +90,7 @@ void FrictionContact::exMomInterpolated(const ProcessorContext*,
 
   // Store new velocities in DataWarehouse
   for(int n=0; n< NVFs; n++){
-    new_dw->put(gvelocity[n], gInterpVelocityLabel, n, region);
+    new_dw->put(gvelocity[n], gMomExedVelocityLabel, n, region);
   }
 }
 
@@ -147,12 +147,16 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 
   // Store new velocities and accelerations in DataWarehouse
   for(int n = 0; n < NVFs; n++){
-    new_dw->put(gvelocity_star[n], gVelocityStarLabel, n, region);
-    new_dw->put(gacceleration[n], gAccelerationLabel, n, region);
+    new_dw->put(gvelocity_star[n], gMomExedVelocityStarLabel, n, region);
+    new_dw->put(gacceleration[n], gMomExedAccelerationLabel, n, region);
   }
 }
 
 // $Log$
+// Revision 1.6  2000/05/02 18:41:18  guilkey
+// Added VarLabels to the MPM algorithm to comply with the
+// immutable nature of the DataWarehouse. :)
+//
 // Revision 1.5  2000/05/02 17:54:27  sparker
 // Implemented more of SerialMPM
 //

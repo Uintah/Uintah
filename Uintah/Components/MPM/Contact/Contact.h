@@ -58,11 +58,15 @@ WARNING
 			      NCVariable<double>::getTypeDescription() );
 	 gVelocityLabel     = new VarLabel( "g.velocity",
                               NCVariable<Vector>::getTypeDescription() );
-	 gInterpVelocityLabel     = new VarLabel( "g.interpvelocity",
+	 gMomExedVelocityLabel     = new VarLabel( "g.momexedvelocity",
                               NCVariable<Vector>::getTypeDescription() );
 	 gVelocityStarLabel = new VarLabel( "g.velocity_star",
                               NCVariable<Vector>::getTypeDescription() );
+	 gMomExedVelocityStarLabel = new VarLabel( "g.momexedvelocity_star",
+                              NCVariable<Vector>::getTypeDescription() );
 	 gAccelerationLabel = new VarLabel( "g.acceleration",
+                              NCVariable<Vector>::getTypeDescription() );
+	 gMomExedAccelerationLabel = new VarLabel( "g.momexedacceleration",
                               NCVariable<Vector>::getTypeDescription() );
 	 deltLabel          = new VarLabel( "delt",
 					    delt_vartype::getTypeDescription() );
@@ -100,9 +104,11 @@ WARNING
          const VarLabel* deltLabel;
          const VarLabel* gMassLabel;
          const VarLabel* gAccelerationLabel;
+         const VarLabel* gMomExedAccelerationLabel;
          const VarLabel* gVelocityLabel;
-         const VarLabel* gInterpVelocityLabel;
+         const VarLabel* gMomExedVelocityLabel;
          const VarLabel* gVelocityStarLabel;
+         const VarLabel* gMomExedVelocityStarLabel;
       };
       
       inline bool compare(double num1, double num2)
@@ -117,6 +123,10 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.11  2000/05/02 18:41:18  guilkey
+// Added VarLabels to the MPM algorithm to comply with the
+// immutable nature of the DataWarehouse. :)
+//
 // Revision 1.10  2000/05/02 17:54:27  sparker
 // Implemented more of SerialMPM
 //
