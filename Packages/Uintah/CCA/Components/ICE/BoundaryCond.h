@@ -23,6 +23,8 @@ static DebugStream BC_dbg(  "ICE_BC_DBG", false);
 static DebugStream BC_doing("ICE_BC_DOING", false);
 
   class DataWarehouse;
+
+  void is_BC_specified(const ProblemSpecP& prob_spec, string variable);
   
   //__________________________________
   //  Temperature, pressure and other CCVariables
