@@ -206,7 +206,11 @@ herr_t HDF5Dump_attr(hid_t group_id, const char * name, void* op_data) {
 
     H5Sclose(file_space_id);
     */
-    if( HDF5Dump_data(attr_id, 0, iostr) < 0 ) {
+
+    if( HDF5Dump_datatype( attr_id, 0, iostr ) < 0) {
+      cerr << "Unable to dump attribute type \"" << name << "\"" << endl;
+      status = -1;
+    } else if( HDF5Dump_data(attr_id, 0, iostr) < 0 ) {
       cerr << "Unable to dump attribute data \"" << name << "\"" << endl;
       status = -1;
     }
@@ -299,7 +303,7 @@ herr_t HDF5Dump_dataset(hid_t dataset_id, const char * name, ostream* iostr) {
   hid_t file_space_id = H5Dget_space( dataset_id );
 
   /* Open the data space in the file. */
-  if( HDF5Dump_datatype( dataset_id, iostr ) < 0) {
+  if( HDF5Dump_datatype( dataset_id, H5G_DATASET, iostr ) < 0) {
     cerr << "Unable to dump datatype \"" << name << "\"" << endl;
     status = -1;
   } else if( file_space_id < 0 ) {
@@ -312,7 +316,7 @@ herr_t HDF5Dump_dataset(hid_t dataset_id, const char * name, ostream* iostr) {
     H5Sclose(file_space_id);
     /*    
     if( HDF5Dump_data(dataset_id, H5G_DATASET, iostr) < 0 ) {
-      cerr << "Unable to dump attribute data \"" << name << "\"" << endl;
+      cerr << "Unable to dump dataset data \"" << name << "\"" << endl;
       status = -1;
     }
     */
@@ -329,11 +333,18 @@ herr_t HDF5Dump_dataset(hid_t dataset_id, const char * name, ostream* iostr) {
 }
 
 
-herr_t HDF5Dump_datatype(hid_t dataset_id, ostream* iostr)
+herr_t HDF5Dump_datatype(hid_t obj_id, hid_t type, ostream* iostr)
 {
   herr_t status = 0;
 
-  hid_t type_id = H5Dget_type(dataset_id);
+  hid_t type_id;
+
+  // Get the data type.
+  if( type == H5G_DATASET ) {
+    type_id = H5Dget_type(obj_id);
+  } else {
+    type_id = H5Aget_type(obj_id);
+  }
 
   HDF5Dump_tab( iostr );
   *iostr << "DATATYPE \"";
@@ -363,11 +374,19 @@ herr_t HDF5Dump_datatype(hid_t dataset_id, ostream* iostr)
     break;
 
   case H5T_STRING:
-    *iostr << "String - Unsupported";
+    *iostr << "String";
+    if( type == H5G_DATASET )
+      *iostr << " - Unsupported";
     break;
 
   case H5T_COMPOUND:
     *iostr << "Compound - Unsupported";
+    break;
+      
+  case H5T_REFERENCE:
+    *iostr << "Reference";
+    if( type == H5G_DATASET )
+      *iostr << " - Unsupported";
     break;
       
   default:
@@ -481,6 +500,10 @@ herr_t HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
       return -1;
     }
     break;
+  case H5T_REFERENCE:
+    mem_type_id = H5T_STD_REF_OBJ;
+    break;
+
   default:
     cerr << "Unknown or unsupported HDF5 data type" << endl;
     return -1;
@@ -515,7 +538,7 @@ herr_t HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
 
   size = cc * element_size;
 
-  void *data = new char[size];
+  char *data = new char[size];
 
   if( data == NULL ) {
     cerr << "Can not allocate enough memory for the data" << endl;
@@ -555,7 +578,44 @@ herr_t HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
       *iostr << ((float*) data)[ic];
     else if (mem_type_id == H5T_NATIVE_DOUBLE)
       *iostr << ((double*) data)[ic];
-    else if( H5Tget_class(type_id) == H5T_STRING ) {
+    else if (mem_type_id == H5T_STD_REF_OBJ) {
+
+      // Find out the type of the object the reference points to.
+      hid_t ref_type =
+	H5Rget_obj_type(obj_id, H5R_OBJECT, data+ic*element_size);
+      // Dereference the reference points to.
+      hid_t ref_obj_id =
+	H5Rdereference(obj_id, H5R_OBJECT, data+ic*element_size);
+      // Get the object info.
+      H5G_stat_t  sb;
+      H5Gget_objinfo(ref_obj_id, ".", 0, &sb);
+      // Get the object name.
+      char name[256];
+      name[0] ='\0';
+      H5Iget_name(ref_obj_id, name, 256);
+
+      /* Print object type and close object */
+      switch (ref_type) {
+      case H5G_GROUP:
+	*iostr << "GROUPNAME ";
+	H5Gclose(ref_obj_id);
+	break;
+      case H5G_DATASET:
+	*iostr << "DATASET ";
+	H5Dclose(ref_obj_id);
+	break;
+      case H5G_TYPE:
+	*iostr << "DATATYPE ";
+	H5Tclose(ref_obj_id);
+	break;
+      case H5G_LINK:
+	*iostr  << "LINK ";
+	break;
+      }
+
+      *iostr << name << " ";
+//      *iostr << sb.objno[1] << ":" << sb.objno[0];
+    } else if( H5Tget_class(type_id) == H5T_STRING ) {
       if(H5Tis_variable_str(type_id))
 	*iostr << ((char*) data)[ic];
       // For non variable types all of the string data is read together
@@ -565,6 +625,9 @@ herr_t HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
 	for( int jc=0; jc<element_size; jc++ )
 	  if( !iscntrl( ((char*) data)[ic*element_size+jc] ) )
 	    *iostr << ((char*) data)[ic*element_size+jc];
+	  else
+	    break;
+
 	*iostr << "\"";
       }
     }
