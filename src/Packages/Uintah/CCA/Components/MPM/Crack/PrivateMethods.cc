@@ -1081,6 +1081,32 @@ short Crack::CubicSpline(const int& n, const int& m, const int& n1,
   return flag;
 }
 
+void Crack::PruneCrackFrontAfterPropagation(const int& m)
+{
+  // If the angle between the two line-segments connected by 
+  // a point is larger than 45 dgree, move the point to
+  // the center of the two points around to it
+  for(int i=0; i<(int)cfSegNodes[m].size(); i++) {
+    int preIdx=cfSegPreIdx[m][i];
+    if(preIdx<0) { // not operated
+      if(i>cfSegMinIdx[m][i] && i<cfSegMaxIdx[m][i]) {
+	Point pt =cfSegPtsT[m][i];      
+        Point pt1=cfSegPtsT[m][i-1];
+        Point pt2=cfSegPtsT[m][i+2];
+        Vector v1=TwoPtsDirCos(pt1,pt);
+	Vector v2=TwoPtsDirCos(pt,pt2);
+	double theta=acos(Dot(v1,v2));
+	if(fabs(theta)*180/3.141592654>90) {
+	  cfSegPtsT[m][i]=pt1+(pt2-pt1)/2.;	
+	}
+      }	// End of if(i>minIdx && i<maxIdx)
+    }	    
+    else { // operated
+      cfSegPtsT[m][i]=cfSegPtsT[m][preIdx];
+    }	    
+  } // End of loop over i	  
+}
+
 void Crack::CalculateCrackFrontNormals(const int& mm)
 {
   // Task 1: Calculate crack-front tangential normals
