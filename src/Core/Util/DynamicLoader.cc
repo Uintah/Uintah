@@ -47,6 +47,7 @@ using namespace std;
   Mutex fieldIEPluginMutex("FieldIE Plugin Table Lock");
   const string ext("dylib");
 #else
+  Mutex fieldIEPluginMutex("FieldIE Plugin Table Lock");
   const string ext("so");
 #endif
 
