@@ -44,9 +44,11 @@ class HexIntMask : public Module {
   
 public:
   GuiString gui_exclude_;
-  unsigned int last_generation_;
+  GuiInt gui_delete_nodes_;
+  int last_generation_;
   string last_gui_exclude_;
-  
+  int last_gui_delete_nodes_;
+
   //! Constructor/Destructor
   HexIntMask(GuiContext *context);
   virtual ~HexIntMask();
@@ -64,7 +66,9 @@ DECLARE_MAKER(HexIntMask)
 HexIntMask::HexIntMask(GuiContext *context) : 
   Module("HexIntMask", context, Filter, "CreateModel", "CardioWave"),
   gui_exclude_(context->subVar("exclude")),
-  last_generation_(0)
+  gui_delete_nodes_(context->subVar("delete-nodes")),
+  last_generation_(0),
+  last_gui_delete_nodes_(-1)
 {
 }
 
@@ -131,13 +135,13 @@ HexIntMask::execute()
   }
 
   // Cache generation.
-  if (hvfield->generation == last_generation_ &&
-      gui_exclude_.get() == last_gui_exclude_)
-  {
-    return;
-  }
+  if (hvfield->generation == last_generation_ && 
+      gui_exclude_.get() == last_gui_exclude_ &&
+      gui_delete_nodes_.get() == last_gui_delete_nodes_) return;
+
   last_generation_ = hvfield->generation;
   last_gui_exclude_ = gui_exclude_.get();
+  last_gui_delete_nodes_ = gui_delete_nodes_.get();
 
   vector<int> exclude;
   parse_exclude_list(gui_exclude_.get(), exclude);
@@ -167,9 +171,20 @@ HexIntMask::execute()
 #endif
     
     hash_type nodemap;
-    
+    if (!last_gui_delete_nodes_) {
+      HexVolMesh::Node::iterator bni, eni;
+      hvmesh->begin(bni);
+      hvmesh->end(eni);
+      while (bni != eni) {
+	Point p;
+	hvmesh->get_center(p, *bni);
+	nodemap[(unsigned int) *bni] = clipped->add_point(p);
+	++bni;
+      }
+    }
+
     vector<HexVolMesh::Elem::index_type> elemmap;
-    
+
     HexVolMesh::Elem::iterator bni, eni;
     hvmesh->begin(bni);
     hvmesh->end(eni);
@@ -261,7 +276,7 @@ HexIntMask::execute()
     //   be which old nodes
     hvmesh->begin(bni);
     while (bni != eni) {
-      if (usednode[*bni]) {
+      if (usednode[*bni] || !last_gui_delete_nodes_) {
 	Point np;
 	hvmesh->get_center(np, *bni);
 	clipped->add_point(np);
