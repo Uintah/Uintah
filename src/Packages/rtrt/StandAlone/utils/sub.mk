@@ -42,4 +42,5 @@ LIBS := $(TEEM_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX
 PROGRAM := $(SRCDIR)/pca-image
 SRCS := $(SRCDIR)/pca-image.cc
 #Does need teem
+LIBS += -lcomplib.sgimath_mp
 include $(SCIRUN_SCRIPTS)/program.mk
