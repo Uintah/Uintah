@@ -152,11 +152,13 @@ itcl_class BioPSE_Visualization_ShowLeads {
 
 	set r1 [set $this-range1]
 	set r2 [set $this-range2]
-	$w.graph element create "range1" -linewidth 1 -color yellow\
-		-data {$r1 -1 $r1 10} -pixels 3 -label ""
+	if {! [$w.graph element exists "range1"]} {
+	    $w.graph element create "range1" -linewidth 1 -color yellow\
+		    -data {$r1 -1 $r1 10} -pixels 3 -label ""
 	
-	$w.graph element create "range2" -linewidth 1 -color yellow\
-		-data {$r2 -1 $r2 10} -pixels 3 -label ""
+	    $w.graph element create "range2" -linewidth 1 -color yellow\
+		    -data {$r2 -1 $r2 10} -pixels 3 -label ""
+	}
 
 	draw_leads
 	pack $w.graph
@@ -286,10 +288,16 @@ itcl_class BioPSE_Visualization_ShowLeads {
 	    set xvec $xvals
 	    set yvec $ovals
 	    set zlvec $zlvals
+	    if {[$w.graph element exists $name]} {
+		$w.graph element delete $name
+	    }
 	    $w.graph element create $name -linewidth 1 -label ""\
 		    -xdata $xvec -ydata $yvec -symbol "" -color $col
 	    # add 0 line
 	    set zl [format "%s%s" $name "-zl"]
+	    if {[$w.graph element exists $zl]} {
+		$w.graph element delete $zl
+	    }
 	    $w.graph element create $zl -linewidth .5 \
 		    -xdata $xvec -ydata $zlvals -symbol "" -label "" \
 		    -color #414141 -dashes { 10 2 1 2 }
