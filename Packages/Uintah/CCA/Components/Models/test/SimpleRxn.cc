@@ -299,6 +299,7 @@ void SimpleRxn::initialize(const ProcessorGroup*,
             fprintf(fp, "#Time Scalar Field at [%e, %e, %e], at cell [%i, %i, %i]\n", 
                     d_probePts[i].x(),d_probePts[i].y(), d_probePts[i].x(),
                     cell.x(), cell.y(), cell.z() );
+            fclose(fp);
         }
       }  // loop over probes
     }  // if using probe points
@@ -556,6 +557,7 @@ void SimpleRxn::momentumAndEnergyExchange(const ProcessorGroup*,
            string filename = udaDir + "/" + d_probePtsNames[i].c_str();
            fp = fopen(filename.c_str(), "a");
            fprintf(fp, "%16.15E  %16.15E\n",time, f_old[cell_indx]);
+           fclose(fp);
         }
       }
     } 
