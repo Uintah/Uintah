@@ -10,7 +10,7 @@
    </Meta>    
 
    <Time>
-       <maxTime>             3.0e-6  </maxTime>
+       <maxTime>             3.2e-6  </maxTime>
        <initTime>            0.0    </initTime>
        <delt_min>            0.0    </delt_min>
        <delt_max>            1e-5   </delt_max>
@@ -20,7 +20,7 @@
 
    <DataArchiver>
       <filebase>test_plane_shell_punch.uda</filebase>
-      <outputTimestepInterval> 3 </outputTimestepInterval>
+      <outputTimestepInterval> 10 </outputTimestepInterval>
       <save label = "p.x"/>
       <save label = "p.volume"/>
       <save label = "p.mass"/>
@@ -50,7 +50,7 @@
       <save label = "g.internalforce"/>
       <save label = "g.normalRotRate"/>
       <save label = "StrainEnergy"/>
-      <checkpoint cycle = "2" timestepInterval = "9"/>
+      <checkpoint cycle = "2" timestepInterval = "5"/>
    </DataArchiver>
 
    <MPM>
