@@ -189,8 +189,7 @@ void SerialMPM::scheduleComputeStableTimestep(const LevelP&,
    // consitutive model
 }
 
-void SerialMPM::scheduleTimeAdvance(double , double ,
-				    const LevelP&         level,
+void SerialMPM::scheduleTimeAdvance(const LevelP&         level,
 				    SchedulerP&     sched)
 {
   const PatchSet* patches = level->eachPatch();

@@ -40,8 +40,7 @@ using namespace SCIRun;
       virtual void scheduleComputeStableTimestep(const LevelP&,
                                                 SchedulerP&);
       
-      virtual void scheduleTimeAdvance(double t, 
-                                      double dt,
+      virtual void scheduleTimeAdvance(
                                       const LevelP&,
 				          SchedulerP&);
                                                      
