@@ -17,6 +17,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 
 #include <Packages/Volume/Core/Util/Utils.h>
+#include <Packages/Volume/Core/Util/VideoCardInfo.h>
 #include <Packages/Volume/Core/Datatypes/Texture.h>
 #include <Packages/Volume/Dataflow/Ports/TexturePort.h>
 #include <Packages/Volume/Core/Algorithms/TextureBuilderAlgo.h>
@@ -43,6 +44,8 @@ private:
   
   GuiInt gui_fixed_;
   GuiInt gui_card_mem_;
+  GuiInt gui_card_mem_auto_;
+  int card_mem_;
 
   int vfield_last_generation_;
   int gfield_last_generation_;
@@ -70,8 +73,11 @@ TextureBuilder::TextureBuilder(GuiContext* ctx)
     gui_gmaxval_(ctx->subVar("gmax")),
     gui_fixed_(ctx->subVar("is_fixed")),
     gui_card_mem_(ctx->subVar("card_mem")),
+    gui_card_mem_auto_(ctx->subVar("card_mem_auto")),
     vfield_last_generation_(-1), gfield_last_generation_(-1),
-    texture_(0) {
+    texture_(0)
+{
+  card_mem_ = video_card_memory_size();
 }
 
 TextureBuilder::~TextureBuilder() {
@@ -80,6 +86,16 @@ TextureBuilder::~TextureBuilder() {
 void
 TextureBuilder::execute()
 {
+  if(card_mem_ != 0 && gui_card_mem_auto_.get()) {
+    ostringstream cmd;
+    cmd << id << " set_card_mem " << card_mem_ << "; " <<  id << " state";
+    gui->execute(cmd.str().c_str());
+  } else if(card_mem_ == 0) {
+    ostringstream cmd;
+    cmd << id << " set_card_mem_auto 0; " << id << " state";
+    gui->execute(cmd.str().c_str());
+  }
+
   FieldIPort* ivfield = (FieldIPort *)get_iport("Scalar Field");
   FieldIPort* igfield = (FieldIPort*)get_iport("Gradient Field");
   TextureOPort* otexture = (TextureOPort *)get_oport("Texture");
