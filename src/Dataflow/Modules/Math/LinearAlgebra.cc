@@ -156,7 +156,7 @@ LinearAlgebra::execute()
   while (func.size() && isspace(func[func.size()-1]))
     func.resize(func.size()-1);
 
-  while (1)
+  for( ;; )
   {
     CompileInfoHandle ci =
       LinearAlgebraAlgo::get_compile_info(mcount, func, hoffset);

@@ -196,7 +196,7 @@ public:
   {
     vector<Node::index_type> nodes;
     get_neighbors(nodes, idx);
-    return nodes.size();
+    return (int)nodes.size();
   }
   unsigned int get_valence(Edge::index_type /*idx*/) const { return 0; }
   unsigned int get_valence(Face::index_type /*idx*/) const { return 0; }

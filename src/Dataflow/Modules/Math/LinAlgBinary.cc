@@ -159,7 +159,7 @@ void LinAlgBinary::execute() {
     // Compile the function.
     int hoffset = 0;
     Handle<LinAlgBinaryAlgo> algo;
-    while (1)
+    for( ;; )
     {
       CompileInfoHandle ci =
 	LinAlgBinaryAlgo::get_compile_info(func, hoffset);
