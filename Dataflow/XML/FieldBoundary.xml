@@ -63,6 +63,14 @@
 	<datatype>SCIRun::Field</datatype>
 	<componentname>ShowField</componentname>
       </port>
+      <port>
+	<name>Interpolant</name>
+	<description>
+	  <p>outputs the interpolant for the TriSurface.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>ShowField</componentname>
+      </port>
     </outputs>
   </io>
   <testing>
