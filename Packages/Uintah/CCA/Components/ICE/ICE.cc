@@ -262,6 +262,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   if (impSolver) {
     d_delT_knob = 0.5;      // default value when running implicit
     solver_parameters = solver->readParameters(impSolver, "implicitPressure");
+    solver_parameters->setSolveOnExtraCells(false);
     impSolver->require("max_outer_iterations",      d_max_iter_implicit);
     impSolver->require("outer_iteration_tolerance", d_outer_iter_tolerance);
     d_impICE = true; 
