@@ -28,7 +28,7 @@
  *  Copyright (C) 1999 U of U
  */
 
-#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/PIDL.h>
 
 #include <testprograms/Component/argtest/argtest_sidl.h>
 
