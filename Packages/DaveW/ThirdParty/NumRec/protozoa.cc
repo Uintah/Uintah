@@ -87,8 +87,11 @@ void protozoa(double **p, double y[], int ndim, double ftol,
 		cerr << "NMAX exceeded";
 		break;
 	    }
-	    *nfunk += 2;
+	    //*nfunk += 2;
 	    //    cerr << "assign the matrix\n";
+
+	    // This parts creates the matrix of of ax^2 + bx + cy^2 + dy +... + 1 = error
+
 	    for (i=1;i<=mpts;i++) {
 		A(mpts,i)=1;
 		A(mpts+1,i)= y[i];
@@ -99,7 +102,7 @@ void protozoa(double **p, double y[], int ndim, double ftol,
 	    }
 	    //    cerr << "invert the matrix\n";
 	
-	    // a little gaussian elimination:
+	    //do some gaussian elimination:
    for (i=1;i<=mpts;i++) {
 
       /* Find the row with the largest first value */
@@ -117,7 +120,7 @@ void protozoa(double **p, double y[], int ndim, double ftol,
       }
 
       /* Singular matrix? */
-      if (abs(A(i,i)) < 0.0000001)
+      if (abs(A(i,i)) < 0.000000001)
 	  cerr << "urghh... This matrix isn't looking very healthy" << endl;
 
       /* Eliminate the ith element of the jth row */
@@ -135,6 +138,8 @@ void protozoa(double **p, double y[], int ndim, double ftol,
          tmp += A(k,j) * x[k];
       x[j] = (A(mpts+1,j) - tmp) / A(j,j);
    }
+
+   // so you have the matrix solution.  Now to find the minimum value for the quadratic equation you take the derivative of ax^2 + bx (for each dimension x,y,z) and set it to zero so x = -b/2a
    for (i=1;i<=ndim;i++){
        p[ihi][i] = -x[i]/(2*x[i+ndim]);	
 		//		cerr << " " << p[ihi][i];
@@ -142,7 +147,7 @@ void protozoa(double **p, double y[], int ndim, double ftol,
 	    //	    cerr << "ihi " << ihi << endl;
    y[ihi] = *((*funk)(p[ihi]));
    //  cerr << "Error (from in Amoeba)" << y[ihi] << endl;
-   *nfunk += ndim;
+   *nfunk += 1;
 		    //		    GET_PSUM
 }
 }
