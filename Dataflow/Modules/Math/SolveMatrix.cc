@@ -39,9 +39,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-
-#include <stdio.h>
-#include <math.h>
+#include <sci_defs/petsc_defs.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColumnMatrix.h>
@@ -58,6 +56,10 @@
 #include <Core/Thread/SimpleReducer.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
+
+#include <stdio.h>
+#include <math.h>
+
 #include <iostream>
 #include <sstream>
 
