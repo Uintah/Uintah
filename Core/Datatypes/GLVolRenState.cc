@@ -15,16 +15,37 @@
   University of Utah. All Rights Reserved.
 */
 
+#include <GL/gl.h>
 #include <Core/Datatypes/GLVolRenState.h>
 #include <Core/Datatypes/GLVolumeRenderer.h>
 #include <Core/Datatypes/GLTexture3D.h>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Datatypes/Brick.h>
 #include <Core/Datatypes/Polygon.h>
-#include <GL/gl.h>
 #include <vector>
 #include <stdlib.h>
 #include <iostream>
+
+#if ! defined(__sgi)
+//PFNGLCOLORTABLEEXTPROC glColorTableEXT;
+//#include <GL/glu.h>
+
+// extern "C" {
+//  void glColorTableEXT (GLenum, GLenum, GLsizei, GLenum, GLenum, const GLvoid *);
+// }
+#endif
+
+#include <GL/glu.h>
+GLenum errCode;
+const GLubyte *errString;
+
+void glCheckForError(const char* message)
+{
+  if((errCode = glGetError()) != GL_NO_ERROR){
+    errString = gluErrorString(errCode);
+    cerr<<"OpenGL Error: "<<message<<" "<<(const char*)errString<<endl;
+  }
+}
 
 namespace SCIRun {
 
@@ -148,20 +169,28 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
 void
 GLVolRenState::loadColorMap(Brick& brick)
 {
-#ifdef __sgi
+#ifdef GL_TEXTURE_COLOR_TABLE_SGI
   glColorTable(GL_TEXTURE_COLOR_TABLE_SGI,
                GL_RGBA,
                256, // try larger sizes?
                GL_RGBA,  // need an alpha value...
                GL_UNSIGNED_BYTE, // try shorts...
                volren->TransferFunctions[brick.level()]);
+#elif defined( GL_SHARED_TEXTURE_PALETTE_EXT )
+  ASSERT(glColorTableEXT != NULL );
+  glColorTableEXT(GL_SHARED_TEXTURE_PALETTE_EXT,
+	       GL_RGBA,
+               256, // try larger sizes?
+               GL_RGBA,  // need an alpha value...
+               GL_UNSIGNED_BYTE, // try shorts...
+               volren->TransferFunctions[brick.level()]);
+   glCheckForError("After glColorTableEXT");
 #endif
 }
 
 void 
 GLVolRenState::loadTexture(Brick& brick)
 {
-#ifdef __sgi
   if( !brick.texName() || reload ) {
     if( !brick.texName() ){
       glGenTextures(1, brick.texNameP());
@@ -187,6 +216,7 @@ GLVolRenState::loadTexture(Brick& brick)
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     
+#ifdef GL_TEXTURE_COLOR_TABLE_SGI 
     // set up the texture
     //glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0,
     glTexImage3D(GL_TEXTURE_3D_EXT, 0,
@@ -197,11 +227,21 @@ GLVolRenState::loadTexture(Brick& brick)
 		    0,
 		    GL_RED, GL_UNSIGNED_BYTE,
 		    &(*(brick.texture()))(0,0,0));
-
+#elif defined( GL_SHARED_TEXTURE_PALETTE_EXT )
+    glTexImage3D(GL_TEXTURE_3D_EXT, 0,
+		    GL_COLOR_INDEX8_EXT,
+		    (brick.texture())->dim1(), 
+		    (brick.texture())->dim2(), 
+		    (brick.texture())->dim3(),
+		    0,
+		    GL_COLOR_INDEX, GL_UNSIGNED_BYTE,
+		    &(*(brick.texture()))(0,0,0));
+    glCheckForError("After glTexImage3D");
+#endif
   } else {
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
   }
-#endif
+  //#endif
 }
 void 
 GLVolRenState::makeTextureMatrix( const Brick& brick)
