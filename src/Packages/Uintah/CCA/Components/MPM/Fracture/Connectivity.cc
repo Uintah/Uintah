@@ -67,10 +67,9 @@ modifyWeights(const int connectivity[8],double S[8],Cond cond)
   int num = 0;
 
   if(cond==connect) {
-    for(int i=0;i<8;++i)
-    if(connectivity[i] == 1) {
-      ++num;
+    for(int i=0;i<8;++i) {
       N[i] = 0;
+      if(connectivity[i] == 1) ++num;
     }
   
     for(int i=0;i<8;++i) {
@@ -84,10 +83,9 @@ modifyWeights(const int connectivity[8],double S[8],Cond cond)
     }
   }
   else if(cond==contact) {
-    for(int i=0;i<8;++i)
-    if(connectivity[i] >= 1) {
-      ++num;
+    for(int i=0;i<8;++i) {
       N[i] = 0;
+      if(connectivity[i] >= 1) ++num;
     }
   
     for(int i=0;i<8;++i) {
@@ -113,10 +111,9 @@ modifyShapeDerivatives(const int connectivity[8],Vector d_S[8],Cond cond)
   int num = 0;
 
   if(cond==connect) {
-    for(int i=0;i<8;++i)
-    if(connectivity[i] == 1) {
-      ++num;
+    for(int i=0;i<8;++i) {
       d_N[i] = Vector(0.,0.,0.);
+      if(connectivity[i] == 1) ++num;
     }
 
     for(int i=0;i<8;++i) {
@@ -130,10 +127,9 @@ modifyShapeDerivatives(const int connectivity[8],Vector d_S[8],Cond cond)
     }
   }
   else if(cond==contact) {
-    for(int i=0;i<8;++i)
-    if(connectivity[i] >= 1) {
-      ++num;
+    for(int i=0;i<8;++i) {
       d_N[i] = Vector(0.,0.,0.);
+      if(connectivity[i] >= 1) ++num;
     }
 
     for(int i=0;i<8;++i) {

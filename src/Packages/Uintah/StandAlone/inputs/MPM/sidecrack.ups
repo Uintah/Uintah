@@ -10,7 +10,7 @@
    </Meta>
 
    <Time>
-	<maxTime>0.08</maxTime>
+	<maxTime>0.06</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.001</delt_max>
@@ -48,7 +48,10 @@
 	<MPM>
 	    <material>
 		<burn type = "null" />
-		<fracture type = "normal" />
+		<fracture type = "normal">
+		  <constraint> 0 </constraint>
+		  <pressure_rate> 0. </pressure_rate>
+		</fracture>
                 <density>1000.0</density>
                 <thermal_conductivity>237.0</thermal_conductivity>
                 <specific_heat>903</specific_heat>
@@ -66,8 +69,8 @@
 		    <res>[2,2,2]</res>
 		    <velocity>[0.,0.,0.]</velocity>
 		    <temperature>300.</temperature>
-                    <toughness_min>  4000.0 </toughness_min>
-		    <toughness_max>  4000.0 </toughness_max>
+                    <toughness_min>  2000.0 </toughness_min>
+		    <toughness_max>  2000.0 </toughness_max>
 		    <toughness_variation>1</toughness_variation>
  		</geom_object>
 		<velocity_field>0</velocity_field>
