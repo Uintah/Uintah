@@ -101,10 +101,10 @@ FieldBoundary::execute()
 }
 
 template <class Mesh>
-void                                           // FIX_ME
-find_boundary(Mesh *mesh, GeomTrianglesP *tris/*, TriSurf *osurf*/)
+void                                                         // FIX_ME
+FieldBoundary::find_boundary(Mesh *mesh, GeomTrianglesP *tris/*, TriSurf *osurf*/)
 {
-  
+#if 0  
   // Walk all the cells in the mesh.
   typename Mesh::cell_iterator citer = mesh.cell_begin();
   while (citer != mesh.cell_end()) {
@@ -149,6 +149,7 @@ find_boundary(Mesh *mesh, GeomTrianglesP *tris/*, TriSurf *osurf*/)
   }
   // FIX_ME remove duplicates and build neighbors
   // osurf->resolve_surf();
+#endif
 }
 
 } // End namespace SCIRun
