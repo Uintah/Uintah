@@ -16,11 +16,19 @@ const char* DataWarehouseException::message() const
     return msg.c_str();
 }
 
+const char* DataWarehouseException::type() const
+{
+    return "Uintah::Exceptions::DataWarehouseException";
+}
+
 } // end namespace Exception
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.4  2000/03/23 10:30:29  sparker
+// Update to use new Exception base class
+//
 // Revision 1.3  2000/03/22 23:41:24  sparker
 // Working towards getting arches to compile/run
 //
