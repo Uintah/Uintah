@@ -212,6 +212,8 @@ static void usage(char* progname)
   cerr << " -nomempolicy     - Do system default for memory distribution.\n";
   cerr << " -pin             - Assign each worker to a specific processor.\n"
        << "                    Use only if you have the entire machine to yourself.\n";
+  cerr << " -sils            - Draw the silhouettes.\n";
+  cerr << " -silvalue [float] - Value to use for silhouette drawing.\n";
   cerr << " -ambientlevel    - the level of ambient light.\n";
   
   exit(1);
@@ -294,6 +296,9 @@ main(int argc, char* argv[])
   bool override_maxdepth = false;
 
   float ambient_level = -1;
+
+  bool do_sils = false;
+  float sil_value = -1;
   
   printf("before glutInit\n");
   glutInit( &argc, argv );
@@ -492,6 +497,10 @@ main(int argc, char* argv[])
       show_gui = false;
     } else if (strcmp(argv[i], "-stereo") == 0) {
       stereo = true;
+    } else if (strcmp(argv[i], "-sils") == 0) {
+      do_sils = true;
+    } else if (strcmp(argv[i], "-silvalue") == 0) {
+      sil_value = atof(argv[++i]);
     } else {
       cerr << "Unknown option: " << argv[i] << '\n';
       usage(argv[0]);
@@ -612,6 +621,17 @@ main(int argc, char* argv[])
     scene->setAmbientLevel(ambient_level);
   
   scene->no_aa=no_aa;
+
+  // Turn on silhouettes
+  if (do_sils) {
+    scene->display_sils = 1;
+    scene->store_depth = 1;
+  }
+
+  // Change the sil_value from the default one
+  if (sil_value >= 0)
+    scene->max_depth = sil_value;
+  
 
   if (override_maxdepth || scene->maxdepth == -1)
     // Override what the scene specifies,
