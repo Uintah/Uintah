@@ -24,7 +24,11 @@ class PointLight : public Light {
 public:
     PointLight(const Point&, const Color&);
     virtual ~PointLight();
-    virtual void compute_lighting(const Point& at, Color&, Vector&);
+    virtual void compute_lighting(const View& view, const Point& at,
+				  Color&, Vector&);
+#ifdef SCI_OPENGL
+    virtual void opengl_setup(const View& view, DrawInfoOpenGL*, int& idx);
+#endif
 };
 
 #endif /* SCI_Geom_PointLight_h */

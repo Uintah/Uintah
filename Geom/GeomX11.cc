@@ -67,7 +67,8 @@ void GeomObj::draw(DrawInfoX11* di)
 		// Compute diffuse contribution
 		Vector light_dir;
 		Color light;
-		di->lighting.lights[i]->compute_lighting(hitpos, light, light_dir);
+		di->lighting.lights[i]->compute_lighting(di->view, hitpos,
+							 light, light_dir);
 
 		double cos_theta=Dot(light_dir, normal);
 		if(cos_theta < 0){

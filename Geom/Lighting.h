@@ -21,6 +21,9 @@ class Light;
 struct Lighting {
     Array1<Light*> lights;
     Color amblight;
+
+    Lighting();
+    ~Lighting();
 };
 
 #endif /* SCI_Geom_Lighting_h */

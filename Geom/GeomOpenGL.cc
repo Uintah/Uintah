@@ -17,12 +17,16 @@
 #include <Geom/Disc.h>
 #include <Geom/Geom.h>
 #include <Geom/Group.h>
+#include <Geom/HeadLight.h>
+#include <Geom/Light.h>
 #include <Geom/Line.h>
+#include <Geom/PointLight.h>
 #include <Geom/Polyline.h>
 #include <Geom/Sphere.h>
 #include <Geom/Tetra.h>
 #include <Geom/Tri.h>
 #include <Geom/TriStrip.h>
+#include <Geom/View.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 
@@ -270,7 +274,7 @@ void GeomCylinder::objdraw(DrawInfoOpenGL* di)
 	    Vector n2(v1*d3+v2*d4);
 	    Point pn1(bottom+n1);
 	    Point pn2(bottom+n2);
-	    glNormal3d(n1.x(), n1.y(), n1.z());
+	    glNormal3d(-n1.x(), -n1.y(), -n1.z());
 	    for(i=0;i<=nv;i++){
 		double z1=double(i)/double(nv);
 		Point p1(pn1+axis*z1);
@@ -294,7 +298,7 @@ void GeomCylinder::objdraw(DrawInfoOpenGL* di)
 		Vector n(v1*d1+v2*d2);
 		Point p1(b1+n);
 		Point p2(b2+n);
-		glNormal3d(-n.x(), -n.y(), -n.z());
+		glNormal3d(n.x(), n.y(), n.z());
 		glVertex3d(p1.x(), p1.y(), p1.z());
 		glVertex3d(p2.x(), p2.y(), p2.z());
 	    }
@@ -340,7 +344,7 @@ void GeomDisc::objdraw(DrawInfoOpenGL* di)
 	break;
     case DrawInfoOpenGL::Gouraud:
     case DrawInfoOpenGL::Phong:
-	glNormal3d(normal.x(), normal.y(), normal.z());
+	glNormal3d(-normal.x(), -normal.y(), -normal.z());
 	// Trickle through...
     case DrawInfoOpenGL::Flat:
 	for(i=0;i<nv;i++){
@@ -382,21 +386,11 @@ void GeomLine::objdraw(DrawInfoOpenGL* di) {
 }
 
 void GeomPolyline::objdraw(DrawInfoOpenGL* di) {
-    cerr << "Drawing polyline...\n";
     di->polycount+=pts.size()-1;
     glBegin(GL_LINE_STRIP);
     for(int i=0;i<pts.size();i++){
 	Point p(pts[i]);
 	glVertex3d(p.x(), p.y(), p.z());
-	double wx, wy, wz;
-	double mm[16];
-	double pm[16];
-	int vp[4];
-	glGetDoublev(GL_MODELVIEW_MATRIX, mm);
-	glGetDoublev(GL_PROJECTION_MATRIX, pm);
-	glGetIntegerv(GL_VIEWPORT, vp);
-	gluProject(p.x(), p.y(), p.z(), mm, pm, vp, &wx, &wy, &wz);
-	cerr << "xp: " << wx << " " << wy << " " << wz << endl;
     }
     glEnd();
 }
@@ -467,7 +461,7 @@ void GeomSphere::objdraw(DrawInfoOpenGL* di)
 		double z0=v.cos(j);
 		double r1=v.sin(j+1);
 		double z1=v.cos(j+1);
-		glNormal3d(-x0*r0, -y0*r0, -z0);
+		glNormal3d(x0*r0, y0*r0, z0);
 		glVertex3d(x0*r0+cx, y0*r0+cy, z0+cz);
 		glVertex3d(x1*r0+cx, y1*r0+cy, z0+cz);
 		glVertex3d(x0*r1+cx, y0*r1+cy, z1+cz);
@@ -488,13 +482,13 @@ void GeomSphere::objdraw(DrawInfoOpenGL* di)
 		double z0=v.cos(j);
 		double r1=v.sin(j+1);
 		double z1=v.cos(j+1);
-		glNormal3d(-x0*r0, -y0*r0, -z0);
+		glNormal3d(x0*r0, y0*r0, z0);
 		glVertex3d(x0*r0+cx, y0*r0+cy, z0+cz);
-		glNormal3d(-x1*r0, -y1*r0, -z0);
+		glNormal3d(x1*r0, y1*r0, z0);
 		glVertex3d(x1*r0+cx, y1*r0+cy, z0+cz);
-		glNormal3d(-x0*r1, -y0*r1, -z1);
+		glNormal3d(x0*r1, y0*r1, z1);
 		glVertex3d(x0*r1+cx, y0*r1+cy, z1+cz);
-		glNormal3d(-x1*r1, -y1*r1, -z1);
+		glNormal3d(x1*r1, y1*r1, z1);
 		glVertex3d(x1*r1+cx, y1*r1+cy, z1+cz);
 	    }
 	    glEnd();
@@ -599,5 +593,28 @@ void GeomTriStrip::objdraw(DrawInfoOpenGL* di) {
 	}
 	break;
     }
+}
+
+void PointLight::opengl_setup(const View&, DrawInfoOpenGL*, int& idx)
+{
+    int i=idx++;
+    float f[4];
+    f[0]=p.x(); f[1]=p.y(); f[2]=p.z(); f[3]=1.0;
+    glLightfv(GL_LIGHT0+i, GL_POSITION, f);
+    c.get_color(f);
+    glLightfv(GL_LIGHT0+i, GL_DIFFUSE, f);
+    glLightfv(GL_LIGHT0+i, GL_SPECULAR, f);
+}
+
+void HeadLight::opengl_setup(const View& view, DrawInfoOpenGL*, int& idx)
+{
+    int i=idx++;
+    Point p(view.eyep);
+    float f[4];
+    f[0]=p.x(); f[1]=p.y(); f[2]=p.z(); f[3]=1.0;
+    glLightfv(GL_LIGHT0+i, GL_POSITION, f);
+    c.get_color(f);
+    glLightfv(GL_LIGHT0+i, GL_DIFFUSE, f);
+    glLightfv(GL_LIGHT0+i, GL_SPECULAR, f);
 }
 
