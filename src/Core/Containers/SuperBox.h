@@ -470,7 +470,7 @@ public:
   CompositeBox(const vector<BB*>& basicBoxes,
 	       typename SB::Region region, Volume totalVolume)
     : SB(region, totalVolume), basicBoxes_(basicBoxes), 
-      activeSubSuperBoxMaxValue_(0), parent_(0)
+      activeSubSuperBoxMaxValue_(0), parent_(0), isActive_( false )
   { init(basicBoxes_); }
 
   template <class BoxPIterator>
@@ -1522,7 +1522,7 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
     result->addSuperBox(scinew SB(**const_iter));
   }
   
-  // Take ownership of these super boxes so they will be deleted with the
+  // Take ownership of these super boxes so they will be deleted when the
   // result is deleted.
   result->takeOwnershipOfSuperBoxes();
 
