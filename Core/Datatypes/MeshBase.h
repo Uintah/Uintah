@@ -30,9 +30,12 @@ public:
   virtual MeshBase *clone() = 0;
   virtual ~MeshBase();
   
-  //! Required virtual functions
+  //! Required virtual functions.
   virtual BBox get_bounding_box() const = 0;
-  
+
+  //! Optional virtual functions.
+  //! finish all computed data within the mesh.
+  virtual void finish_mesh() {}; //Not all meshes need to do this.
   // Required interfaces
 
 
