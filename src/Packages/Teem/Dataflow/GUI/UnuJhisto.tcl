@@ -48,6 +48,8 @@ itcl_class Teem_UnuAtoM_UnuJhisto {
 
 	global $this-type
 	set $this-type "nrrdTypeUInt"
+
+	trace variable $this-type w "$this set_type" 
     }
 
     method ui {} {
@@ -75,14 +77,32 @@ itcl_class Teem_UnuAtoM_UnuJhisto {
 	    -textvariable $this-maxs
         pack $w.f.options.maxs -side top -expand yes -fill x
 
-        iwidgets::entryfield $w.f.options.type -labeltext "Type:" \
-	    -textvariable $this-type
-        pack $w.f.options.type -side top -expand yes -fill x
+	iwidgets::optionmenu $w.f.options.type -labeltext "Type:" \
+	    -labelpos w -command "$this update_type $w.f.options.type"
+	$w.f.options.type insert end nrrdTypeChar nrrdTypeUChar \
+	    nrrdTypeShort nrrdTypeUShort nrrdTypeInt nrrdTypeUInt \
+	    nrrdTypeLLong nrrdTupeULLong nrrdTypeFloat nrrdTypeDouble
+	pack $w.f.options.type -side top -anchor nw -padx 3 -pady 3
+	$w.f.options.type select [set $this-type]
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
 
 	pack $w.f -expand 1 -fill x
+    }
+
+    method update_type {menu} {
+	global $this-type
+	set which [$menu get]
+	set $this-type $which
+    }
+
+    method set_type { name1 name2 op } {
+	set w .ui[modname]
+	set menu $w.f.options.type
+	if {[winfo exists $menu]} {
+	    $menu select [set $this-type]
+	}
     }
 }
 

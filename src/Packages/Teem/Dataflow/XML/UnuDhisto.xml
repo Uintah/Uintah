@@ -42,7 +42,7 @@
     number of bins in input histogram). This value should be an integer.</p>
     <p>Show log-scaled hisogram: will show the log-scaled histogram with decade
     tick-marks.</p>
-    <p>Max Numbef of Hits: constrain the top of the drawn histogram to be at 
+    <p>Max Number of Hits: constrain the top of the drawn histogram to be at 
     this number of hits. This will either scale the drawn histogram
     downward or clip its top, depending on whether the given
     max is higher or lower than the actual maximum bin count. This value
