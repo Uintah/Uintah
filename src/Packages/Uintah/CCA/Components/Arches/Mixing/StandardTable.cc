@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <math.h>
 #include <stdio.h>
 #include <iostream>
 
@@ -49,11 +50,11 @@ StandardTable::problemSetup(const ProblemSpecP& params)
   
   string tablename = "testtable";
   table = TableFactory::readTable(db, tablename);
-  table->addIndependentVariable("mix. frac.");
+  table->addIndependentVariable("F");
   if (!(d_adiabatic))
-    table->addIndependentVariable("heat loss");
+    table->addIndependentVariable("Hl");
   if (d_numMixStatVars > 0)
-    table->addIndependentVariable("variance");
+    table->addIndependentVariable("Fvar");
 
   Rho_index = -1;
   T_index = -1;
@@ -67,15 +68,15 @@ StandardTable::problemSetup(const ProblemSpecP& params)
     TableValue* tv = new TableValue;
     child->get(tv->name);
     tv->index = table->addDependentVariable(tv->name);
-    if(tv->name == "density (kg/m3)")
+    if(tv->name == "density")
 	    Rho_index = tv->index;
-    else if(tv->name == "Temp(K)")
+    else if(tv->name == "Temp")
 	    T_index = tv->index;
-    else if(tv->name == "heat capacity(kj/kmol-K)")
+    else if(tv->name == "heat_capac")
 	    Cp_index = tv->index;
     else if(tv->name == "Entalpy")
 	    Enthalpy_index = tv->index;
-    else if(tv->name == "sensible heat(kj)")
+    else if(tv->name == "sensible_h")
 	    Hs_index = tv->index;
     else if(tv->name == "CO2")
 	    co2_index = tv->index;
@@ -111,6 +112,12 @@ StandardTable::computeProps(const InletStream& inStream,
   double var_limit=mixFracVars/((mixFrac*(1.0-mixFrac))+small);
   if(var_limit > 0.9)
   	mixFracVars=(2.0/3.0)*mixFracVars;
+  // normilizing varaince
+  mixFracVars=min(mixFracVars,mixFrac*(1.0-mixFrac));
+  if (mixFracVars <= small)
+    mixFracVars=0.0;
+  else
+  mixFracVars/=((mixFrac*(1.0-mixFrac))+small);
   // Heat loss for adiabatic case
   double current_heat_loss=0.0;
   double zero_heat_loss=0.0;
