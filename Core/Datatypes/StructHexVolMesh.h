@@ -82,17 +82,17 @@ public:
 
   //! get the center point (in object space) of an element
   void get_center(Point &, const Node::index_type &) const;
-  void get_center(Point &, const Edge::index_type &) const;
-  void get_center(Point &, const Face::index_type &) const;
+  void get_center(Point &, Edge::index_type) const;
+  void get_center(Point &, Face::index_type) const;
   void get_center(Point &, const Cell::index_type &) const;
 
-  double get_size(Node::index_type idx) const;
+  double get_size(const Node::index_type &idx) const;
   double get_size(Edge::index_type idx) const;
   double get_size(Face::index_type idx) const;
-  double get_size(Cell::index_type idx) const;
+  double get_size(const Cell::index_type &idx) const;
   double get_length(Edge::index_type idx) const { return get_size(idx); };
   double get_area(Face::index_type idx) const { return get_size(idx); };
-  double get_volume(Cell::index_type idx) const { return get_size(idx); };
+  double get_volume(const Cell::index_type &i) const { return get_size(i); };
 
   bool locate(Node::index_type &, const Point &);
   bool locate(Edge::index_type &, const Point &) const { return false; }

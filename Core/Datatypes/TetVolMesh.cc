@@ -151,8 +151,7 @@ TetVolMesh::~TetVolMesh()
    barrycentric coordinates (independent random variables between 0 and
    1 that sum to 1) for the point. */
 void
-TetVolMesh::get_random_point(Point &p, const Cell::index_type &ei,
-			     int seed) const
+TetVolMesh::get_random_point(Point &p, Cell::index_type ei, int seed) const
 {
   static MusilRNG rng;
 

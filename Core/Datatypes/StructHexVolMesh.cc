@@ -122,7 +122,7 @@ StructHexVolMesh::get_center(Point &result, const Node::index_type &idx) const
 
 
 void
-StructHexVolMesh::get_center(Point &result, const Edge::index_type &idx) const
+StructHexVolMesh::get_center(Point &result, Edge::index_type idx) const
 {
   Node::array_type arr;
   get_nodes(arr, idx);
@@ -136,7 +136,7 @@ StructHexVolMesh::get_center(Point &result, const Edge::index_type &idx) const
 
 
 void
-StructHexVolMesh::get_center(Point &result, const Face::index_type &idx) const
+StructHexVolMesh::get_center(Point &result, Face::index_type idx) const
 {
   Node::array_type nodes;
   get_nodes(nodes, idx);
@@ -668,7 +668,7 @@ StructHexVolMesh::compute_grid()
 
 
 double
-StructHexVolMesh::get_size(Node::index_type idx) const
+StructHexVolMesh::get_size(const Node::index_type &idx) const
 {
   return 0.0;
 }
@@ -703,7 +703,7 @@ StructHexVolMesh::get_size(Face::index_type idx) const
 
 
 double
-StructHexVolMesh::get_size(Cell::index_type idx) const
+StructHexVolMesh::get_size(const Cell::index_type &idx) const
 {
   Node::array_type nodes;
   get_nodes(nodes, idx);

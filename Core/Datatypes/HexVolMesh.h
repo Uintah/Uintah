@@ -204,7 +204,7 @@ public:
   void get_normal(Vector &/*normal*/, Node::index_type /*index*/) const
   { ASSERTFAIL("not implemented") }
 
-  void get_random_point(Point &, const Cell::index_type &i, int seed=0) const;
+  void get_random_point(Point &p, Cell::index_type i, int seed = 0) const;
 
   //! the double return val is the volume of the Hex.
   double get_gradient_basis(Cell::index_type ci, Vector& g0, Vector& g1,

@@ -78,9 +78,9 @@ public:
 
   //! get the child elements of the given index
   void get_nodes(Node::array_type &, Edge::index_type) const;
-  void get_nodes(Node::array_type &, Face::index_type) const;
+  void get_nodes(Node::array_type &, const Face::index_type &) const;
   void get_nodes(Node::array_type &, Cell::index_type) const {}
-  void get_edges(Edge::array_type &, Face::index_type) const;
+  void get_edges(Edge::array_type &, const Face::index_type &) const;
   void get_edges(Edge::array_type &, Cell::index_type) const {}
   void get_faces(Face::array_type &, Cell::index_type) const {}
 
@@ -97,7 +97,7 @@ public:
   { ASSERTFAIL("ScanlineMesh::get_faces for BBox is not implemented."); }
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(Node::index_type idx) const { return 0.0; }
+  double get_size(const Node::index_type &idx) const { return 0.0; }
   double get_size(Edge::index_type idx) const 
   {
     Node::array_type arr;
@@ -107,7 +107,7 @@ public:
     get_center(p1, arr[1]);
     return (p1.asVector() - p0.asVector()).length();
   }
-  double get_size(Face::index_type idx) const
+  double get_size(const Face::index_type &idx) const
   {
     Node::array_type ra;
     get_nodes(ra,idx);
@@ -119,7 +119,7 @@ public:
   }
   double get_size(Cell::index_type idx) const { return 0.0; }
   double get_length(Edge::index_type idx) const { return get_size(idx); };
-  double get_area(Face::index_type idx) const { return get_size(idx); };
+  double get_area(const Face::index_type &idx) const { return get_size(idx); };
   double get_volume(Cell::index_type idx) const { return get_size(idx); };
 
   void get_normal(Vector &, const Node::index_type &) const;
