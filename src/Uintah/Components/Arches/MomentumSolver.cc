@@ -75,6 +75,10 @@ MomentumSolver::MomentumSolver(TurbulenceModel* turb_model,
 				   CCVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcMBLMLabel = scinew VarLabel("uVelNonLinSrcMBLM",
 				   CCVariable<double>::getTypeDescription() );
+  d_vVelNonLinSrcMBLMLabel = scinew VarLabel("vVelNonLinSrcMBLM",
+				   CCVariable<double>::getTypeDescription() );
+  d_wVelNonLinSrcMBLMLabel = scinew VarLabel("wVelNonLinSrcMBLM",
+				   CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -129,13 +133,14 @@ MomentumSolver::solve(const LevelP& level,
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
   // pressure solve.
-  //DataWarehouseP matrix_dw = sched->createDataWarehouse(d_generation);
+  DataWarehouseP matrix_dw = sched->createDataWarehouse(d_generation);
+  ++d_generation;
 
   //computes stencil coefficients and source terms
   // require : pressurePS, [u,v,w]VelocityCPBC, densitySIVBC, viscosityCTS
   // compute : [u,v,w]VelCoefMBLM, [u,v,w]VelConvCoefMBLM
   //           [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
-  sched_buildLinearMatrix(level, sched, new_dw, new_dw, delta_t, index);
+  sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t, index);
     
   // Schedules linear velocity solve
   // require : [u,v,w]VelocityCPBC, [u,v,w]VelCoefMBLM,
@@ -143,7 +148,7 @@ MomentumSolver::solve(const LevelP& level,
   // compute : [u,v,w]VelResidualMS, [u,v,w]VelCoefMS, 
   //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
   //           [u,v,w]VelocityMS
-  d_linearSolver->sched_velSolve(level, sched, new_dw, new_dw, index);
+  d_linearSolver->sched_velSolve(level, sched, new_dw, matrix_dw, index);
     
 }
 
@@ -262,6 +267,9 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.10  2000/06/21 06:00:12  bbanerje
+// Added two labels that were causing seg violation.
+//
 // Revision 1.9  2000/06/18 01:20:15  bbanerje
 // Changed names of varlabels in source to reflect the sequence of tasks.
 // Result : Seg Violation in addTask in MomentumSolver
