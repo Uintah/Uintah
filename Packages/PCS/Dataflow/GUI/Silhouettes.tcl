@@ -51,5 +51,9 @@ itcl_class PCS_Visualization_Silhouettes {
         }
 
 	toplevel $w
+
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }

@@ -20,7 +20,7 @@
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>View Location</name>
+        <name>View</name>
         <datatype>SCIRun::Geometry</datatype>
       </port>
     </outputs>

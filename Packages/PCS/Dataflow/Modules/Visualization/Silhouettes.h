@@ -45,8 +45,8 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 
+#include <Core/Geom/View.h>
 #include <Core/Datatypes/Mesh.h>
-
 #include <Core/Datatypes/CurveField.h>
 
 namespace PCS {
@@ -56,7 +56,8 @@ using namespace SCIRun;
 class SilhouettesAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle& src) = 0;
+  virtual FieldHandle execute(FieldHandle& src,
+			      View &view) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
@@ -69,13 +70,15 @@ class SilhouettesAlgoT : public SilhouettesAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle& src);
+  virtual FieldHandle execute(FieldHandle& src,
+			      View &view);
 };
 
 // The goal dump all all of the unshared edges into a new field.
 template< class IFIELD, class OFIELD, class OMESH >
 FieldHandle
-SilhouettesAlgoT<IFIELD, OFIELD, OMESH >::execute(FieldHandle& field_h)
+SilhouettesAlgoT<IFIELD, OFIELD, OMESH >::execute(FieldHandle& field_h,
+						  View &view)
 {
   // Get the input field and mesh.
   IFIELD *ifield = (IFIELD *) field_h.get_rep();
