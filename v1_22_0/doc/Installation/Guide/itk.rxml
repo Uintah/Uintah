@@ -54,16 +54,13 @@ doc.treeUrl(%Q{doc/User/Guide/usersguide/srug8.html}) %)">&sr; Users
 Guide</ulink> for more information.</para>
 
 <note>
-<para>The <acronym>RPM</acronym> distribution of &sr; 
+<para>The <acronym>RPM</acronym> distribution of &sr;
 <emphasis>includes</emphasis> support for <acronym>ITK</acronym>.  The
 <acronym>RPM</acronym> distribution installs Insight libraries in
-/usr/local/lib/InsightTookit.  The instructions  in sections
-<link 
-linkend="sec.obitk"/>, <link
-linkend="sec.cmake"/>, and <link
-linkend="sec.itk_configsr"/>
-apply only
-to source code installation of &sr;.</para>
+/usr/local/lib/InsightTookit.  The instructions in sections <xref
+linkend="sec.obitk"/>, <xref linkend="sec.cmake"/>, and <xref
+linkend="sec.itk_configsr"/> apply only to a source code installation
+of &sr;.</para>
 </note>
 
 <para>&sr;'s <acronym>ITK</acronym> support depends on the presence of
@@ -116,8 +113,7 @@ url="http://www.cmake.org">CMake web site</ulink>.</para>
 
 <note>
 <para>&sr;'s Insight package must also be downloaded to add support
-for ITK in &sr;.  See <link 
-linkend="sec.sources"/>.</para>
+for ITK in &sr;.  See <xref linkend="sec.sources"/>.</para>
 </note>
 
 </section>
@@ -141,7 +137,7 @@ been enabled (<xref linkend="sec.third_party_inst"/>) then CMake
 variable <varname>ITK_USE_SYSTEM_PNG</varname> should be set to
 <literal>ON</literal>, otherwise <varname>ITK_USE_SYSTEM_PNG</varname>
 should be set to <literal>OFF</literal>.  When
-<varname>ITK_USE_SYSTEM_PNG</varname> is set to <literal>ON</literal>,
+<varname>ITK_USE_SYSTEM_PNG</varname> is set to <literal>ON</literal>
 CMake may ask for the location of <acronym>PNG</acronym>
 libraries.</para>
 
@@ -171,13 +167,14 @@ will contain file <filename>ITKConfig.cmake</filename>.
 </varlistentry>
 </variablelist>
 </para>
-<para>Here is an example <command>configure</command> command:
+<para>Here is an example &sr; <command>configure</command> command:
 <literallayout class="monospaced">
 ../src/configure \
   --with-thirdparty=/usr/local/&sr;/Thirdparty/1.10.0/Irix/CC-32bit \
-  --enable-package="Insight BioPSE" \
+  --enable-package="BioPSE TEEM Insight " \
   --with-insight=/usr/local/lib/InsightToolkit
 </literallayout>
+Note that package TEEM must be enabled.
 </para>
 
 </section>
@@ -186,4 +183,4 @@ will contain file <filename>ITKConfig.cmake</filename>.
 <title>Next</title>
 
 <para>After <acronym>ITK</acronym> has been installed, proceed to
-<xref linkend="sec.build-sr" /> </para> </section> </section>
+<xref linkend="sec.third_party_inst" /> </para> </section> </section>

@@ -44,7 +44,7 @@ DEALINGS IN THE SOFTWARE.
     <acronym>BLAS</acronym>/<acronym>ATLAS</acronym> and
     <acronym>LAPACK</acronym> are installed.  There is no need to
     install <acronym>BLAS</acronym>/<acronym>ATLAS</acronym> or
-    <acronym>LAPACK</acronym> on an &osx; system.  &osx; users can
+    <acronym>LAPACK</acronym> on a &osx; system.  &osx; users can
     skip to <xref linkend="sec.petsc"/>.
   </para>
 
@@ -144,7 +144,7 @@ make
   </section>
 
   <section id="sec.atlas_source">
-    <title id="title.atlas_source"><acronym>ATLAS</acronym></title>
+    <title id="title.atlas_source"><acronym>ATLAS</acronym> (Linux, SGI)</title>
     <para>
       Follow these steps to install <acronym>ATLAS</acronym>:
       <orderedlist>
@@ -154,7 +154,7 @@ make
 	    <literallayout class="monospaced">
 <ulink url="https://sourceforge.net/project/showfiles.php?group_id=23725">https://sourceforge.net/project/showfiles.php?group_id=23725</ulink>
 	    </literallayout>
-	    Choose from the list of files a stable
+	    Choose from the list of files a stable, 
 	    platform-independent distribution,
 	    e.g. <filename>atlas3.6.0.tar.gz</filename>.
 	  </para>

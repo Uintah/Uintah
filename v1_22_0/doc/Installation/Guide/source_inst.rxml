@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
     <title>Introduction</title>
 
     <para>
-      Installation from sources consists of these steps:
+      Installation from source code consists of these steps:
       <orderedlist>
 	<listitem>
 	  <para>Downloading &sr; sources, packages,
@@ -43,10 +43,10 @@ DEALINGS IN THE SOFTWARE.
 	  <para>Unpacking sources.</para>
 	</listitem>
 	<listitem>
-	  <para>Building third party software.</para>
+	  <para>Downloading and building optional software.</para>
 	</listitem>
 	<listitem>
-	  <para>Downloading and building optional software.</para>
+	  <para>Building third party software.</para>
 	</listitem>
 	<listitem>
 	  <para>Building &sr;</para>
@@ -90,7 +90,7 @@ DEALINGS IN THE SOFTWARE.
 	  <itemizedlist>
 	    <listitem>
 	      <para>
-		&sr; sources, <filename>&sr;.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+		<filename>SCIRun.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
 	      </para>
 	    </listitem>
 	    <listitem>
@@ -101,46 +101,52 @@ DEALINGS IN THE SOFTWARE.
 	    <listitem>
 	      <para>
 		<filename>MatlabInterface.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-		if Matlab support is desired.
+		if Matlab support is desired.  MatlatInterface
+		requires package TEEM.
 	      </para>
 	    </listitem>
 	    <listitem>
 	      <para><filename>Insight.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	      to add support for ITK in &sr;.  See also <link
-	      linkend="sec.obitk"/>.
+	      to add support for ITK in &sr;.  Insight requires
+	      package TEEM.  See also <xref linkend="sec.obitk"/>.
 	      </para>
 	    </listitem>
 	    <listitem>
 	      <para>
 		<filename>DataIO.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-		to add support for reading HDF5 and MDSplus data formats.
+		to add support for reading HDF5 and MDSplus data
+		formats.  DataIO requires package TEEM.
 	      </para>
 	    </listitem>
 	    <listitem>
 	      <para>
 		<filename>TEEM.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>.
 		The Teem package is required by the MatlabInterface,
-		Insight, and DataIO packages.
+		Insight, DataIO, and Fusion packages.
 	      </para>
 	    </listitem>
 	    <listitem>
+	      <para><filename>Fusion.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	      to add support for converting NRRD data to &sr; fields.
+	      Fusion requires packages TEEM and DataIO.</para>
+	    </listitem>
+	    <listitem>
 	      <para>
-		Third-party sources,
 		<filename>Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-		for
-		SGI/Linux and
+		for SGI/Linux and
 		<filename>Thirdparty_install_osx.<replaceable>x.x.x</replaceable>.tar.gz</filename>
 		for &osx; users.
 	      </para>
 	    </listitem>
 	    <listitem>
 	      <para>
-		&sr; sample data sets, <filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+		<filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>, &sr; sample data sets, 
 	      </para>
 	    </listitem>
 	    <listitem>
 	      <para>
-		&sr; documentation, <filename>docs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+		<filename>docs.<replaceable>x.x.x</replaceable>.tar.gz</filename>,
+		&sr; documentation,
 	      </para>
 	    </listitem>
 	  </itemizedlist>
@@ -167,6 +173,7 @@ gunzip -c &sr;.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 	  <literallayout class="monospaced">
 gunzip -c BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz | (cd &sr;/src/Packages &amp;&amp; tar xf -)
 	  </literallayout>
+	  Repeat for other packages.
 	</para>
       </listitem>
 
@@ -192,9 +199,8 @@ gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 gunzip -c Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 	  </literallayout>
 	  This creates the directory
-	  <filename>Thirdparty_install.<replaceable>x.x.x</replaceable></filename>.
-
-	  For &osx;:
+	  <filename>Thirdparty_install.<replaceable>x.x.x</replaceable></filename>.</para>
+	<para>For &osx;:
 	  <literallayout class="monospaced">
 gunzip -c Thirdparty_install_osx.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 	  </literallayout>
@@ -224,14 +230,22 @@ gunzip -c docs.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
       method for putting the downloaded &sr; sources under control of the
       CVS version control system.  This is useful if the &sr; distribution
       will be used for development.  This is <emphasis>not</emphasis> a
-      requirement for installing &sr;</para>
+      requirement for installing &sr;.</para>
     </note>
 
   </section>
 
-  &third_party_inst;
+  <section>
+    <title>Next</title>
+    <para>Proceed to <xref linkend="sec.opt_inst"/> if installing support for
+    <acronym>BLAS/LAPACK</acronym>, <acronym>PETSc</acronym>, or
+    Insight.  Otherwise skip to <xref
+    linkend="sec.third_party_inst"/></para>
+  </section>
 
   &opt_inst;
+
+  &third_party_inst;
 
   <section id="sec.build-sr">
     <title id="title.build-sr">Building &sr;</title>
@@ -242,7 +256,7 @@ gunzip -c docs.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 
 	<para>
 	  Run &sr;'s configure script.    Do this from a sub-directory of
-	  <filename>&sr;</filename> (but <emphasis>not</emphasis>
+	  directory <filename>&sr;</filename> (but <emphasis>not</emphasis>
 	  <filename>&sr;/src</filename>) as follows:
 
 	  <literallayout class="monospaced">
@@ -272,7 +286,6 @@ cd &sr;/<replaceable>dir</replaceable>
 --with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Irix/CC-32bit \
 --enable-package="BioPSE MatlabInterface"
 	  </literallayout>
-
 	  Use option <option>--with-unipetsc</option> to add support for
 	  <acronym>PETSc</acronym>.  Options <option>--with-lapack</option> and
 	  <option>--with-blas</option> must be used if the
@@ -288,7 +301,16 @@ cd &sr;/<replaceable>dir</replaceable>
 --with-blas=/usr/local/lib \
 --with-lapack=/usr/local/lib
 	  </literallayout>
+	  Use option <option>--with-insight</option> to add support
+	  for Insight.  For example:
+	  <literallayout class="monospaced">
+../src/configure \
+--with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Irix/CC-32bit \
+--enable-package="BioPSE TEEM Insight" \
+--with-insight=/usr/local/lib/InsightToolkit
+	  </literallayout>
 	</para>
+
 
 	<para>
 	  &osx; builds of &sr; require use of configure options
@@ -317,7 +339,7 @@ CC=gcc CXX=g++
 
       <listitem>
 	<para>
-	  Run GNU make from the previously used directory when running
+	  Run GNU make from the same directory used when running
 	  configure (e.g. <filename>&sr;/linux</filename>,
 	  <filename>&sr;/sgi32</filename>, <filename>&sr;/sgi64</filename>, or
 	  <filename>&sr;/osx</filename>).  Note that the
