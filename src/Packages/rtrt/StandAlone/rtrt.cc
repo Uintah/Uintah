@@ -698,6 +698,7 @@ main(int argc, char* argv[])
   DpyGui* dpygui = new DpyGui();
   dpygui->setDpy(dpy);
   dpygui->setRTRTEngine(rtrt_engine);
+  dpygui->set_resolution(xres, yres);
   (new Thread(dpygui, "DpyGui"))->detach();
   
   //////////////////////////////////////////////////////////////////
