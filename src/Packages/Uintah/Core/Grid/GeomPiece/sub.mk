@@ -8,7 +8,6 @@ SRCS     += \
 	$(SRCDIR)/SphereMembraneGeometryPiece.cc \
 	$(SRCDIR)/BoxGeometryPiece.cc \
 	$(SRCDIR)/CylinderGeometryPiece.cc \
-	$(SRCDIR)/SmoothCylGeomPiece.cc \
 	$(SRCDIR)/ConeGeometryPiece.cc \
 	$(SRCDIR)/TriGeometryPiece.cc \
 	$(SRCDIR)/UnionGeometryPiece.cc \
@@ -21,7 +20,9 @@ SRCS     += \
 	$(SRCDIR)/ShellGeometryFactory.cc \
 	$(SRCDIR)/CylinderShellPiece.cc \
 	$(SRCDIR)/PlaneShellPiece.cc \
-	$(SRCDIR)/SphereShellPiece.cc 
+	$(SRCDIR)/SphereShellPiece.cc \
+	$(SRCDIR)/SmoothGeomPiece.cc \
+	$(SRCDIR)/SmoothCylGeomPiece.cc
 
 PSELIBS := \
 	Packages/Uintah/Core/Grid        \

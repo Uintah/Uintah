@@ -1,7 +1,7 @@
 #ifndef __SMOOTH_CYL_PIECE_H__
 #define __SMOOTH_CYL_PIECE_H__
 
-#include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/SmoothGeomPiece.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
@@ -59,13 +59,13 @@ namespace Uintah {
 */
 /////////////////////////////////////////////////////////////////////////////
 
-  class SmoothCylGeomPiece : public GeometryPiece {
+  class SmoothCylGeomPiece : public SmoothGeomPiece {
 	 
   public:
     //////////////////////////////////////////////////////////////////////
     /*!  
-      \brief Constructor that takes a ProblemSpecP argument.   It reads the xml 
-       input specification and builds a cylinder.
+      \brief Constructor that takes a ProblemSpecP argument.   
+      It reads the xml input specification and builds a cylinder.
     */
     //////////////////////////////////////////////////////////////////////
     SmoothCylGeomPiece(ProblemSpecP &);
