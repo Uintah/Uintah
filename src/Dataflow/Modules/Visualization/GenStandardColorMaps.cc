@@ -72,15 +72,16 @@ GenStandardColorMaps::genMap(const string& s)
   int m = resolution.get();
   int r,g,b;
   double a;
-  istringstream is(s.c_str());
-  // got to check that library function...
-  if( is.good() ){
+  istringstream is(s);
+  if( is.good() )
+  {
     vector< Color > rgbs(m);
     vector< float > rgbT(m);
     vector< float > alphas(m);
     vector< float > alphaT(m);
 
-    for(int i = 0; i < m; i++) {
+    for (int i = 0; i < m; i++)
+    {
       is >> r >> g >> b >> a;
       rgbs[i] = Color(r/255.0, g/255.0, b/255.0);
       rgbT[i] = i/float(m-1);
@@ -90,7 +91,9 @@ GenStandardColorMaps::genMap(const string& s)
   
     cmap = scinew ColorMap(rgbs,rgbT,alphas,alphaT,m);
     return true;
-  } else {
+  }
+  else
+  {
     return false;
   }
 }
