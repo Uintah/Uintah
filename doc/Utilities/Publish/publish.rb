@@ -1,3 +1,4 @@
+#!/usr/bin/ruby
 #
 #  The contents of this file are subject to the University of Utah Public
 #  License (the "License"); you may not use this file except in compliance
@@ -138,10 +139,14 @@ class Configuration < ConfHash
   Build = "build"
   ToolsPath = "toolspath"
   ClassPath = "classpath"
-  StylesheetPath = "stylesheetPath"
+  Stylesheet_XSL_HTML = "stylesheet_XSL_HTML"
+  Stylesheet_DSSSL_Print = "stylesheet_DSSSL_Print"
+  XML_DCL = "XML_DCL"
+  Catalog = "catalog"
   Make = "make"
   Update = "update"
   PwdOnly = "pwdOnly"
+  Clean = "clean"
 
   def Configuration.new(file)
     eval("Configuration[#{File.new(file, 'r').read}]").init()
@@ -154,6 +159,7 @@ class Configuration < ConfHash
   def init()
     self[Group] = "BioPSE" if missing?(Group)
     self[BuildDir] = "." if missing?(BuildDir)
+    self[BuildDir] = File.expand_path(self[BuildDir])
     self[Wait] = false if missing?(Wait)
     self[CodeViews] = false if missing?(CodeViews)
     self[PwdOnly] = false if missing?(PwdOnly)
@@ -165,12 +171,13 @@ class Configuration < ConfHash
     self[Make] = "/usr/bin/gnumake" if missing?(Make)
     self[Update] = true if missing?(Update)
     self[LogFile] = $stderr if missing?(LogFile)
+    self[Clean] = false if missing?(Clean)
     $log = Log.new(self[LogFile])
     validate()
 
     if self[PwdOnly] == false
       initializeGroupsDB()
-      @groupDirs = @groupsDB[Group]
+      @groupDirs = @groupsDB[self[Group]]
     end
 
     if self[Deliver] == true
@@ -206,7 +213,6 @@ class Configuration < ConfHash
     errorIfNotBoolean(CodeViews)
     errorIfNotBoolean(Deliver)
     if self[Deliver] == true
-      self[Tarball] = true
       errorIfMissing(Dests)
       errorIfNotArray(Dests)
       needAgent = false
@@ -226,11 +232,18 @@ class Configuration < ConfHash
     errorIfNotString(ToolsPath)
     errorIfMissing(ClassPath)
     errorIfNotString(ClassPath)
-    errorIfMissing(StylesheetPath)
-    errorIfNotString(StylesheetPath)
+    errorIfMissing(Stylesheet_XSL_HTML)
+    errorIfNotString(Stylesheet_XSL_HTML)
+    errorIfMissing(Stylesheet_DSSSL_Print)
+    errorIfNotString(Stylesheet_DSSSL_Print)
+    errorIfMissing(XML_DCL)
+    errorIfNotString(XML_DCL)
+    errorIfMissing(Catalog)
+    errorIfNotString(Catalog)
     errorIfNotString(Make)
     errorIfEmpty(Make)
     errorIfNotBoolean(Update)
+    errorIfNotBoolean(Clean)
   end
 
   def initializeGroupsDB()
@@ -275,14 +288,24 @@ class Docs
   def build()
     ENV["PATH"] = ENV["PATH"] + ":" + @conf[Configuration::ToolsPath]
     ENV["CLASSPATH"] = @conf[Configuration::ClassPath]
-    ENV["STYLESHEET_PATH"] = @conf[Configuration::StylesheetPath]
-    
+    ENV["STYLESHEET_XSL_HTML"] = @conf[Configuration::Stylesheet_XSL_HTML]
+    ENV["STYLESHEET_DSSSL_PRINT"] = @conf[Configuration::Stylesheet_DSSSL_Print]
+    ENV["XML_DCL"] = @conf[Configuration::XML_DCL]
+    ENV["CATALOG"] = @conf[Configuration::Catalog]
+
     pwd = Dir.pwd
     trys = 0
     doclock = File.new("#{@conf[Configuration::BuildDir]}/.doclock", "w+")
     callcc {|$tryAgain|}
     trys += 1
     if doclock.flock(File::LOCK_EX|File::LOCK_NB) == 0
+      if @conf[Configuration::Clean] == true
+	if @conf[Configuration::PwdOnly] == true
+	  clean(Dir.pwd())
+	else
+	  clean("#{@treeRoot}/doc/")
+	end
+      end
       if @conf[Configuration::Update] == true
 	if @conf[Configuration::PwdOnly] == true
 	  updateOne(Dir.pwd())
@@ -306,6 +329,15 @@ docs.  Waiting...") )
     end
     doclock.close
     Dir.chdir(pwd)
+  end
+
+  def clean(dir)
+    $log.write("Begin clean starting at ", dir, "\n")
+    pwd = Dir.pwd()
+    Dir.chdir(dir)
+    $log.write(`#{@conf[Configuration::Make]} veryclean #{@redirect}`)
+    Dir.chdir(pwd)
+    $log.write("End clean\n")
   end
 
   def deliver()

@@ -16,22 +16,46 @@
 #
 
 PARAMS=
-STYLESHEET:=${STYLESHEET_PATH}/srdocbook.xsl
-
 edition:=../../edition.xml
+stylesheet_html := ${STYLESHEET_XSL_HTML}/srdocbook.xsl
+stylesheet_print := ${STYLESHEET_DSSSL_PRINT}/docbook.dsl
 
 .PHONY: clean veryclean
 
-.DELETE_ON_ERROR: faq.html
-faq.html: faq.xml
-	java com.icl.saxon.StyleSheet -w2 \
-	faq.xml ${STYLESHEET} ${PARAMS} >$@
+.DELETE_ON_ERROR:
 
-faq.xml: faq.rxml ${edition}
-	eruby --delimiters xml faq.rxml > $@
+all: html pdf
+
+bn := faq
+
+html: ${bn}.html
+
+pdf: ${bn}.pdf
+
+${bn}.html: ${bn}.html.xml
+	java com.icl.saxon.StyleSheet -w2 \
+	${bn}.html.xml ${stylesheet_html} >$@
+
+${bn}.tex: ${bn}.print.xml
+	openjade -t tex -V tex-backend -c ${CATALOG} -o ${bn}.tex \
+-d ${stylesheet_print} ${XML_DCL} ${bn}.print.xml 
+
+${bn}.dvi: ${bn}.tex
+	for i in 1 2 ; do jadetex ${bn}.tex ; done
+
+${bn}.pdf: ${bn}.dvi
+	dvipdfm -p letter ${bn}.dvi
+
+${bn}.html.xml: ${bn}.rxml ${edition}
+	OUTPUT_MODE=html eruby --delimiters xml ${bn}.rxml > $@
+
+${bn}.print.xml: ${bn}.rxml ${edition}
+	OUTPUT_MODE=print eruby --delimiters xml ${bn}.rxml > $@
 
 clean:
 	-rm -f *~
 
 veryclean: clean
-	-rm -f faq.xml *.html
+	-rm -f ${bn}.*.xml ${bn}.html ${bn}.tex ${bn}.dvi ${bn}.pdf ${bn}.aux \
+${bn}.log ${bn}.out
+

@@ -98,14 +98,14 @@ are used to install <acronym>PETSc</acronym> and
 Download and unpack <acronym>PETSc</acronym>'s source distribution:
 <orderedlist>
 <listitem>
-
+<para>
 Browser download:
 <literallayout class="monospaced"> <ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz">ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz</ulink>
 </literallayout>
-
+</para>
 </listitem>
 <listitem>
-
+<para>
 Unpack:
 <literallayout class="monospaced">
 gunzip -c petsc.tar.gz | tar xvf -
@@ -113,7 +113,7 @@ gunzip -c petsc.tar.gz | tar xvf -
 creates the directory
 <filename>petsc-<replaceable>x.x.x</replaceable></filename> where
 <replaceable>x.x.x</replaceable> is the <acronym>PETSc</acronym> version.
-
+</para>
 </listitem>
 </orderedlist>
 </para>

@@ -95,7 +95,9 @@ setenv CVSROOT /proj/cdsp/biomed2/cvs&sr;
 </listitem>
 
 <listitem>
+<para>
 Use gunzip to inflate all zip files.
+</para>
 </listitem>
 
 <listitem>

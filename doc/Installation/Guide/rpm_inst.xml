@@ -112,12 +112,9 @@ Type <command>exit</command> to leave the root account.
 <literallayout class="monospaced">
 rpm -e &sr;
 </literallayout>
-<para>
 Read  <citetitle pubwork="section"><xref
 endterm="title.prepare" linkend="sec.prepare"/></citetitle> before
 <link linkend="sec.starting">starting</link> &sr;.
-</para>
-
 </para>
 <!-- <figure id="fig.rpm_cmd"> -->
 <!-- <title>RPM installation process</title> -->

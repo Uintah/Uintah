@@ -1,16 +1,27 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
 
+<!-- DANGER: This file contains embedded ruby code. -->
+
 <!--%= "PCEtLQogICoqKioqIERPTidUIEVESVQgTUUhICoqKioqCiAgSSdtIGdlbmVy\nYXRlZCBmcm9tIGZhcS5yeG1sLiAgRWRpdCBpdCBpbnN0ZWFkLgotLT4=\n".unpack("m") %-->
 
-<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-"../../Utilities/XML/Docbook_dtd/docbookx.dtd" [
+<!--% mode = ENV["OUTPUT_MODE"] %-->
+
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
 <!ENTITY sr "SCIRun">
+<!ENTITY sr_bibtex_cit_url "http://software.sci.utah.edu/scirun_citation.bib">
+<!ENTITY biopse_bibtex_cit_url "http://software.sci.utah.edu/biopse_citation.bib">
+<!--%
+if mode == "html"
+print <<HTML_TEXT
 <!ENTITY sr_bibtex_cit "javascript:function NewWindow(PageName,wide,tall,scroll){
-window.open(PageName,'','toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=' + scroll + ',resizable=0,width=' + wide + ',height=' + tall + ',left=0,top=0');}NewWindow('http://software.sci.utah.edu/scirun_citation.bib',
+window.open(PageName,'','toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=' + scroll + ',resizable=0,width=' + wide + ',height=' + tall + ',left=0,top=0');}NewWindow('&sr_bibtex_cit_url;',
 '600','400','1')">
 <!ENTITY biopse_bibtex_cit "javascript:function NewWindow(PageName,wide,tall,scroll){
-window.open(PageName,'','toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=' + scroll + ',resizable=0,width=' + wide + ',height=' + tall + ',left=0,top=0');}NewWindow('http://software.sci.utah.edu/biopse_citation.bib',
-'600','400','1')">
+window.open(PageName,'','toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=' + scroll + ',resizable=0,width=' + wide + ',height=' + tall + ',left=0,top=0');}NewWindow('&biopse_bibtex_cit_url;', '600','400','1')">
+HTML_TEXT
+end
+%-->
 ]>
 
 <!--
@@ -36,8 +47,7 @@ version = File.open("../../edition.xml") do |f|
   /<edition>(.*)<\/edition>/.match(f.read())[1]
 end
 %-->
-<title>User FAQ (for &sr; Version <!--%= version %-->)</title>
-
+<title>User FAQ (version <!--%= version %-->)</title>
 
 
 <qandaset defaultlabel="number">
@@ -61,21 +71,62 @@ paper or grant application?
 <answer>
 <para>
 We have <quote>BibTeX</quote> and <quote>plain text</quote>
-citations. Here are the <ulink url="&sr_bibtex_cit;">&sr;
+citations for your use.
+<!--%=
+case mode
+  when "html"
+<<HTML_TEXT
+Here are the <ulink url="&sr_bibtex_cit;">&sr;
 citations</ulink> and here are the <ulink
 url="&biopse_bibtex_cit;">BioPSE citations</ulink>.
+HTML_TEXT
+  when "print"
+<<PRINT_TEXT
+See 
+<literallayout class="monospaced">
+&sr_bibtex_cit_url; and 
+&biopse_bibtex_cit_url;
+</literallayout>
+ for the &sr; and BioPSE
+citations respectively.
+PRINT_TEXT
+  else
+"*** Arrrrrr! Unrecognized mode! ***"
+end
+%-->
 </para>
 <para>
-Thank you for your citation(s).  Citations of the use of
-SCIRun/BioPSE in your projects and publications helps a lot with the
-continued funding of the SCIRun/BioPSE project.  Please <ulink
-url="mailto:macleod@cvrti.utah.edu">send us</ulink> your citations
-too.
+Thank you for your citation(s).  Citations of the use of SCIRun/BioPSE
+in your projects and publications helps a lot with the continued
+funding of the SCIRun/BioPSE project.  Please send
+us your citations (to macleod@sci.utah.edu).
 </para>
 </answer>
 
 </qandaentry>
 
+<qandaentry id="auto_exec_qa">
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>3/18/03</date>
+</revision>
+</revhistory>
+<question>
+<para>Is there an  way to make a scirun net automatically
+execute as soon as it's loaded?</para>
+</question>
+<answer>
+<para>Add the following line to the end of your net file:
+<programlisting>
+$m1-c needexecute 
+</programlisting>
+to the end of your .net file.  This will cause the execution of module
+<varname>$m1</varname> plus all of the modules that it depends on plus
+all of the modules that depend on it.
+</para>
+</answer>
+</qandaentry>
 <qandaentry>
 
 <revhistory>
@@ -288,26 +339,46 @@ What systems are compatible with &sr;?
 <para>
 &sr; has been tested on the following Linux distributions:
 <itemizedlist>
-<listitem>Mandrake 7.2 &amp; 8.0</listitem>
-<listitem>Redhat 6.2, 7.0 &amp; 7.1</listitem>
-<listitem>SuSE 6.4, 7.0 &amp; 7.2</listitem>
-<listitem>Debian testing</listitem>
+<listitem>
+<simpara>Mandrake 7.2 &amp; 8.0</simpara>
+</listitem>
+<listitem>
+<simpara>Redhat 6.2, 7.0 &amp; 7.1</simpara>
+</listitem>
+<listitem>
+<simpara>SuSE 6.4, 7.0 &amp; 7.2</simpara>
+</listitem>
+<listitem>
+<simpara>Debian testing</simpara>
+</listitem>
 </itemizedlist> 
 </para>
 <para>
 &sr; has been tested on the following PC processor configurations:
 <itemizedlist>
-<listitem>Dual Intel Pentium II</listitem>
-<listitem>Single Intel Pentium III</listitem>
-<listitem>Dual Intel Pentium III</listitem>
-<listitem>Single Intel Pentium 4</listitem>
-<listitem>Single AMD Athlon</listitem>
+<listitem>
+<simpara>Dual Intel Pentium II</simpara>
+</listitem>
+<listitem>
+<simpara>Single Intel Pentium III</simpara>
+</listitem>
+<listitem>
+<simpara>Dual Intel Pentium III</simpara>
+</listitem>
+<listitem>
+<simpara>Single Intel Pentium 4</simpara>
+</listitem>
+<listitem>
+<simpara>Single AMD Athlon</simpara>
+</listitem>
 </itemizedlist>
 </para>
 <para>
 &sr; has been tested with the following PC graphics cards:
 <itemizedlist>
-<listitem>NVIDIA GeForce, GeForce II &amp; GeForce3</listitem>
+<listitem>
+<simpara>NVIDIA GeForce, GeForce II &amp; GeForce3</simpara>
+</listitem>
 </itemizedlist>
 </para>
 </answer>
@@ -367,12 +438,17 @@ scientists and engineers of all disciplines.
 <title>BioPSE Software System</title>
 <mediaobject>
 <imageobject>
-<imagedata fileref="EAB-BioPSE.gif" format="GIF" width="645"
-align="center"/>
+<imagedata fileref="EAB-BioPSE.gif" format="GIF" width="645" align="center"/>
 </imageobject>
+<imageobject>
+<imagedata fileref="EAB-BioPSE.eps" format="EPS" align="center"/>
+</imageobject>
+<textobject>
+<simpara>Figure showing relationships among &sr; and its packages.</simpara>
+</textobject>
 <caption>
 <para>
-The relationship amoung &sr; and the other packages that it uses.
+This figure shows the relationship among &sr; and its packages.
 BioPSE consists of the basic &sr; software together with the BioPSE
 modules and support libraries.
 </para>
@@ -656,7 +732,7 @@ by using the Math::BuildTransform and Field::TransformField modules.
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: xml
-sgml-default-dtd-file:"../../Utilities/XML/docbook.ced"
+sgml-default-dtd-file:"../../Utilities/XML/docbook-4.2.ced"
 sgml-omittag:nil
 sgml-shorttag:nil
 End:

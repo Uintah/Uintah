@@ -25,28 +25,33 @@ Dir.chdir("..")
 root=File.basename(Dir.pwd())
 Dir.chdir("..")
 
-# First do non-wildcards
+# First do individula files and directories (non-wildcards)
 $stdout.print("#{root}/doc/index.html
 #{root}/doc/.htaccess
-#{root}/doc/Documentum/index.html
-#{root}/doc/Documentum/documentum.html
-#{root}/doc/Documentum/module-latex.ps.gz
 #{root}/doc/Documentum/module-latex
 #{root}/doc/Documentum/module-desc-template.tex
 #{root}/doc/Documentum/latex-article-template.tex
-#{root}/doc/Documentum/module-xml.ps.gz
 #{root}/doc/Documentum/module-xml
 #{root}/doc/Installation/index.html
+#{root}/doc/Installation/Guide/srig.pdf
 #{root}/doc/Installation/FAQ/faq.html
+#{root}/doc/Installation/FAQ/faq.pdf
 #{root}/doc/User/index.html
 #{root}/doc/User/FAQ/faq.html
+#{root}/doc/User/FAQ/faq.pdf
 #{root}/doc/User/Guide/usersguide
 #{root}/doc/User/Guide/Figures
+#{root}/doc/User/Guide/usersguide.pdf
 #{root}/doc/User/Tutorial
-#{root}/doc/User/Guide/usersguide.ps.gz
 #{root}/doc/Developer/index.html
 #{root}/doc/Developer/FAQ/faq.html
-#{root}/doc/Developer/Guide/dev/Figures
+#{root}/doc/Developer/FAQ/faq.pdf
+#{root}/doc/Developer/Guide/dev/Figures/ComponentWizard.gif
+#{root}/doc/Developer/Guide/dev/Figures/ComponentWizard2.gif
+#{root}/doc/Developer/Guide/dev/Figures/EditPort.gif
+#{root}/doc/Developer/Guide/dev/Figures/msts.gif
+#{root}/doc/Developer/Guide/dev/Figures/pdts.gif
+#{root}/doc/Developer/Guide/srdg.pdf
 #{root}/doc/Developer/CodeViews/html
 #{root}/doc/Utilities/Figures
 #{root}/doc/Utilities/TeX/scirun-doc.sty
@@ -57,6 +62,8 @@ $stdout.print("#{root}/doc/index.html
 # Now do wildcards
 $stdout.print(Dir["
 #{root}/doc/User/FAQ/*.gif
+#{root}/doc/Documentum/*.html
+#{root}/doc/Documentum/*.pdf
 #{root}/doc/Documentum/docbook_*_template.xml
 #{root}/doc/Documentum/*_template.html
 #{root}/doc/Installation/Guide/*.html

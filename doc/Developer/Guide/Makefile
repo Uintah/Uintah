@@ -15,42 +15,59 @@
 #  University of Utah. All Rights Reserved.
 #
 
-# This Makefile uses the Saxon XSLT processor.  CLASSPATH must point to
-# saxon.jar
+params_common=
+parms_chunk=${params_common} chunk.section.depth=0 use.id.as.filename=1
+params_nochunk=${params_common} 
+stylesheet_chunk=${STYLESHEET_XSL_HTML}/srdocbook-chunk.xsl
+stylesheet_nochunk=${STYLESHEET_XSL_HTML}/srdocbook.xsl
+stylesheet_print=${STYLESHEET_DSSSL_PRINT}/docbook.dsl
+commonsrcs=intro.xml dev/*.xml src/*.xml
+htmlsrcs=main.html.xml ${commonsrcs}
+printsrcs=main.print.xml ${commonsrcs} ${patsubst %.gif,%.ps,${wildcard dev/Figures/*.gif}}
 
-# STYLESHEET_PATH must point to the location of the srdocbook stylesheets,
-#  e.g. /Applications/docbook-xsl-1.51.1/html/.
+.PHONY: default chunk nochunk pdf clean veryclean
 
-PARAMS_COMMON=
-PARMS_CHUNK=${PARAMS_COMMON} chunk.section.depth=0 use.id.as.filename=1
-PARAMS_NOCHUNK=${PARAMS_COMMON} 
-STYLESHEET_CHUNK=${STYLESHEET_PATH}/srdocbook-chunk.xsl
-STYLESHEET_NOCHUNK=${STYLESHEET_PATH}/srdocbook.xsl
-SRCS=main.xml intro.xml dev/*.xml src/*.xml
+.DELETE_ON_ERROR:
 
-.PHONY: default chunk nochunk clean veryclean
+bn := srdg
 
-default: chunk
+default: chunk nochunk pdf
 
 chunk: index.html
 
-main.xml: main.rxml ../../edition.xml
-	eruby --delimiters xml main.rxml > $@
+main.html.xml: main.rxml ../../edition.xml
+	OUTPUT_MODE=html eruby --delimiters xml main.rxml > $@
 
-index.html: ${SRCS}
+main.print.xml: main.rxml ../../edition.xml
+	OUTPUT_MODE=print eruby --delimiters xml main.rxml > $@
+
+index.html: ${htmlsrcs}
 	-java com.icl.saxon.StyleSheet -w2 \
-	main.xml ${STYLESHEET_CHUNK} ${PARMS_CHUNK}
+	main.html.xml ${stylesheet_chunk} ${parms_chunk}
 
-nochunk: Guide.html
+nochunk: ${bn}.html
 
-.DELETE_ON_ERROR: Guide.html
-Guide.html: ${SRCS}
+${bn}.html: ${htmlsrcs}
 	java com.icl.saxon.StyleSheet -w2 \
-	main.xml ${STYLESHEET_NOCHUNK} ${PARAMS_NOCHUNK} >$@
+	main.html.xml ${stylesheet_nochunk} ${params_nochunk} >$@
+
+pdf: ${bn}.pdf
+
+${bn}.pdf : ${bn}.dvi
+	dvipdfm -p letter ${bn}.dvi
+
+${bn}.dvi : ${bn}.tex
+	for i in 1 2 ; do jadetex ${bn}.tex ; done
+
+${bn}.tex : ${printsrcs}
+	openjade -t tex -V tex-backend -c ${CATALOG} -o ${bn}.tex \
+-d ${stylesheet_print} ${XML_DCL} main.print.xml 
+
+%.ps : %.gif
+	convert $< $@
 
 clean:
-	-rm -f *~
+	-rm -f ${bn}.aux ${bn}.log ${bn}.out ${bn}.dvi  dev/Figures/*.ps *~
 
 veryclean: clean
-	-rm -f main.xml dev.html dev.*.html src.html \
-src.*.html index.html intro.html
+	-rm -f main.*.xml *.html ${bn}.tex ${bn}.pdf

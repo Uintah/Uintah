@@ -91,7 +91,7 @@ discussed in a <link linkend="sec.srcsprds">later</link> section.
 <colspec colname="docsubsub" />
 <colspec colname="descrip"/>
 <spanspec spanname="dirhead" namest="doc" nameend="docsubsub"/>
-<spanspec spanname="deschead" namest="descrip"/>
+<spanspec spanname="deschead" namest="descrip" nameend="descrip"/>
 <spanspec spanname="docspan" namest="doc" nameend="docsubsub"/>
 <spanspec spanname="docsubspan" namest="docsub" nameend="docsubsub"/>
 <thead>
@@ -1324,11 +1324,11 @@ in the <filename>src</filename> side of the tree should be based on
 
 <para>
 Documentation for the current &sr; release is published at <ulink
-url="http://software.sci.utah.edu/doc">http://software.sci.utah.edu/doc</ulink>.
+url="http://software.sci.utah.edu/doc/present/doc">http://software.sci.utah.edu/doc/present/doc</ulink>.
+</para>
 <para>
 Documentation under development is published at <ulink
 url="http://software.sci.utah.edu/doc/future/doc">http://software.sci.utah.edu/doc/future/doc</ulink>.
-</para>
 </para>
 <para>
 Documentation being tested for release is published at <ulink

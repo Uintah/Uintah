@@ -31,10 +31,6 @@
 # ########## Macros (Used with ${call ...} function)
 
 #  Convert xml file to html
-#
-# Use saxon 6.5 or higher to process the xml files.
-# The environment variable CLASSPATH must point to saxon.jar.
-#
 
 # Convert the xml file given by $< to the html file given by $@
 define xmltohtml
@@ -108,6 +104,8 @@ pkgbycatgenscript:=${treetop}/doc/Utilities/HTML/mkpkgidxbycat.rb
 
 # Phony targets.
 .PHONY: default SCIRun BioPSE Teem Fusion VDT MatlabInterface clean veryclean
+
+.DELETE_ON_ERROR:
 
 # Check SRGROUP variable...
 ifndef SRGROUP

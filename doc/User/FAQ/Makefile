@@ -15,23 +15,57 @@
 #  University of Utah. All Rights Reserved.
 #
 
-PARAMS=
-STYLESHEET:=${STYLESHEET_PATH}/srdocbook.xsl
+#
+# The following env variables must be set:
+#
+# CLASSPATH: Points to .../saxon.jar.
+# STYLESHEET_XSL_HTML: Points at .../html/docbook.xsl
+# STYLESHEET_DSSSL_PRINT: Points at .../print/docbook.dsl
+# XML_DCL: Points at .../xml.dcl
+# CATALOG: Points at the catalog file that in turn points to
+#  .../openjade/dsssl/catalog and .../ISOEnts/isoent.cat (Ugh!).
+#
 
 edition:=../../edition.xml
+stylesheet_html := ${STYLESHEET_XSL_HTML}/srdocbook.xsl
+stylesheet_print := ${STYLESHEET_DSSSL_PRINT}/docbook.dsl
 
-.PHONY: clean veryclean
+.PHONY: all clean veryclean
 
-.DELETE_ON_ERROR: faq.html
-faq.html: faq.xml
+.DELETE_ON_ERROR:
+
+all: html pdf
+
+bn := faq
+
+html: ${bn}.html
+
+pdf: ${bn}.pdf
+
+${bn}.html: ${bn}.html.xml
 	java com.icl.saxon.StyleSheet -w2 \
-	faq.xml ${STYLESHEET} ${PARAMS} >$@
+	${bn}.html.xml ${stylesheet_html} >$@
 
-faq.xml: faq.rxml ${edition}
-	eruby --delimiters xml faq.rxml > $@
+${bn}.tex: ${bn}.print.xml
+	openjade -t tex -V tex-backend -c ${CATALOG} -o ${bn}.tex \
+-d ${stylesheet_print} ${XML_DCL} ${bn}.print.xml 
+
+${bn}.dvi: ${bn}.tex
+	for i in 1 2 ; do jadetex ${bn}.tex ; done
+
+${bn}.pdf: ${bn}.dvi
+	dvipdfm -p letter ${bn}.dvi
+
+${bn}.html.xml: ${bn}.rxml ${edition}
+	OUTPUT_MODE=html eruby --delimiters xml ${bn}.rxml > $@
+
+${bn}.print.xml: ${bn}.rxml ${edition}
+	OUTPUT_MODE=print eruby --delimiters xml ${bn}.rxml > $@
 
 clean:
 	-rm -f *~
 
 veryclean: clean
-	-rm -f faq.xml *.html
+	-rm -f ${bn}.*.xml ${bn}.html ${bn}.tex ${bn}.dvi ${bn}.pdf ${bn}.aux \
+${bn}.log ${bn}.out
+

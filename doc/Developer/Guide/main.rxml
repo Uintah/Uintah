@@ -40,8 +40,6 @@
 ]>
 
 <book id="main">
-<bookinfo>
-</bookinfo>
 <title>Developers' Guide</title>
 <!--%
 version = File.open("../../edition.xml") do |f| 
