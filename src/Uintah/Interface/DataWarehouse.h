@@ -80,9 +80,9 @@ WARNING
       
       // Particle Variables
       virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
-						   int matlIndex, const Patch*) = 0;
+					int matlIndex, const Patch*) = 0;
       virtual ParticleSubset* getParticleSubset(int matlIndex,
-						const Patch*) = 0;
+					const Patch*) = 0;
       virtual ParticleSubset* getParticleSubset(int matlIndex,
 			 const Patch*, Ghost::GhostType, int numGhostCells,
 			 const VarLabel* posvar) = 0;
@@ -128,10 +128,13 @@ WARNING
 					      SchedulerP& sched,
 					      DataWarehouseP& dw,
 					      const VarLabel* posLabel,
-					      const vector<const VarLabel*>& labels,
+				const vector<const VarLabel*>& labels,
 					      const VarLabel* new_posLabel,
-					      const vector<const VarLabel*>& new_labels,
+				const vector<const VarLabel*>& new_labels,
 					      int numMatls) = 0;
+
+      // Remove particles that are no longer relevant
+      virtual void deleteParticles(ParticleSubset* delset) = 0;
 
       //////////
       // When the Scheduler determines that another MPI node will be
@@ -190,6 +193,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.33  2000/06/21 20:47:58  guilkey
+// Added deleteParticles, a currently empty function that
+// will remove irrelevant particles from the simulation.
+//
 // Revision 1.32  2000/06/17 07:06:46  sparker
 // Changed ProcessorContext to ProcessorGroup
 //
