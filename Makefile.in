@@ -88,13 +88,14 @@ X_PRE_LIBS := @X_PRE_LIBS@
 X_EXTRA_LIBS := @X_EXTRA_LIBS@
 THREAD_LIBS := @THREAD_LIBS@
 PLATFORM_LDFLAGS := @PLATFORM_LDFLAGS@
-IMAGE_LIBS := @IMAGE_LIBS@
+
 GL_LIBS := $(X_LIBS) $(X_PRE_LIBS) -lGLU -lGL -lXext -lX11 $(X_EXTRA_LIBS)
 X11_LIBS := $(X_LIBS) $(X_PRE_LIBS) -lXext -lX11 $(X_EXTRA_LIBS)
 
 PROGRAM_PSE   := @EXENAME@
 
 TRACEBACK_LIB := @TRACEBACK_LIB@
+IMAGE_LIBS := @IMAGE_LIBS@
 
 LEX := @LEX@
 YACC := @YACC@ -d -v
@@ -310,6 +311,10 @@ endif
 
 #
 # $Log$
+# Revision 1.26  2000/06/09 17:46:16  kuzimmer
+# Modified so that linux and 64bit compiles won't choke on the new image
+# and compression libraries
+#
 # Revision 1.25  2000/06/08 22:29:52  kuzimmer
 # fixed an error in IMAGE_LIBS
 #
