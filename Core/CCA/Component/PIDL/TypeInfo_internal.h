@@ -64,7 +64,7 @@ DESCRIPTION
 	    // a new proxy object for a proxy to this type.
 	    TypeInfo_internal(const std::string& fullclassname,
 			      const std::string& uuid,
-			      globus_nexus_handler_t* table, int tableSize,
+			      void* table, int tableSize,
 			      Object* (*create_proxy)(const Reference&));
 
 	    //////////
@@ -78,7 +78,7 @@ DESCRIPTION
 	    //////////
 	    // The nexus handler table which dispatches the methods
 	    // associated with this type.
-	    globus_nexus_handler_t* table;
+	    void* table;
 
 	    //////////
 	    // The number of handlers in the nexus handler table.

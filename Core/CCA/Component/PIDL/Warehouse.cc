@@ -28,7 +28,7 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Core/CCA/Component/PIDL/Warehouse.h>
+#include "Warehouse.h"
 #include <Core/CCA/Component/PIDL/InvalidReference.h>
 #include <Core/CCA/Component/PIDL/Object.h>
 #include <Core/CCA/Component/PIDL/ServerContext.h>
@@ -110,31 +110,5 @@ Object* Warehouse::lookupObject(const std::string& str)
   if(i) // If there are more characters, we have a problem...
     throw InvalidReference("Extra characters after object ID ("+str+")");
   return lookupObject(objid);
-}
-
-int Warehouse::approval(char* urlstring, globus_nexus_startpoint_t* sp)
-{
-  URL url(urlstring);
-  Object* obj=lookupObject(url.getSpec());
-  if(!obj){
-    std::cerr << "Unable to find object: " << urlstring
-	      << ", rejecting client (code=1002)\n";
-    return 1002;
-  }
-  if(!obj->d_serverContext){
-    std::cerr << "Object is corrupt: " << urlstring
-	      << ", rejecting client (code=1003)\n";
-    return 1003;
-  }
-  if(int gerr=globus_nexus_startpoint_bind(sp, &obj->d_serverContext->d_endpoint)){
-    std::cerr << "Failed to bind startpoint: " << url.getSpec()
-	      << ", rejecting client (code=1004)\n";
-    std::cerr << "Globus error code: " << gerr << '\n';
-    return 1004;
-  }
-  /* Increment the reference count for this object. */
-  obj->addReference();
-  //std::cerr << "Approved connection to " << urlstring << '\n';
-  return GLOBUS_SUCCESS;
 }
 

@@ -33,6 +33,8 @@
 
 #include <string>
 
+class NexusEpChannel;
+
 namespace PIDL {
 
 class TypeInfo_internal;
@@ -95,9 +97,6 @@ public:
   // changed in the sidl compiler.
   static const int vtable_methods_start = 3;
 
-protected:
-private:
-
   //////////
   // The ID of the remote isa handler
   static const int vtable_isa_handler = 0;
@@ -106,14 +105,17 @@ private:
   // The ID of the remote delete reference handler
   static const int vtable_deleteReference_handler = 1;
 
+protected:
+private:
+
   //////////
   // TypeInfo_internal needs access to the vtable_isa_handler
   // constant
   friend class TypeInfo_internal;
 
   //////////
-  // ServerContext needs access to the private TypeInfo_internal
-  friend class ServerContext;
+  // NexusEpChannel needs access to the private TypeInfo_internal
+  friend class NexusEpChannel;
 
   //////////
   // ProxyBase needs access to the private handler numbers

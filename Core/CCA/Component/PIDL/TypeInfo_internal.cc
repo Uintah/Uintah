@@ -36,7 +36,7 @@ using PIDL::TypeInfo_internal;
 
 TypeInfo_internal::TypeInfo_internal(const std::string& fullclassname,
 				     const std::string& uuid,
-				     globus_nexus_handler_t* table,
+				     void* table,
 				     int tableSize,
 				     Object* (*create_proxy)(const Reference&))
     : fullclassname(fullclassname), uuid(uuid),

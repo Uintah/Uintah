@@ -17,7 +17,7 @@
 
 
 /*
- *  Object.h: Base class for all PIDL distributed objects
+ *  Object_proxy.cc
  *
  *  Written by:
  *   Steven G. Parker

@@ -51,12 +51,14 @@ DESCRIPTION
 	class ProxyBase {
 	public:
 	protected:
+	  ProxyBase();
+	    
 	    ////////////
 	    // Create the proxy from the given reference.
 	    ProxyBase(const Reference&);
 
 	    ///////////
-	    // Destructor
+	    // Destructor which closes connection
 	    virtual ~ProxyBase();
 
 	    //////////
@@ -68,11 +70,8 @@ DESCRIPTION
 	    friend class TypeInfo;
 
 	    //////////
-	    // Return the internal reference.  If copy is true, the startpoint
-	    // will be copied through globus_nexus_startpoint_copy, and
-	    // will need to be destroyed with globus_nexus_startpoint_destroy
-	    // or globus_nexus_put_startpoint_transfer.
-	    void _proxyGetReference(Reference&, bool copy) const;
+	    // Return a copy of the internal reference or a copy of it.  
+	    void _proxyGetReference(Reference& ref, bool copy) const;
 
 	    //////////
 	    // Once the constructor of a sub class has finished
@@ -87,4 +86,8 @@ DESCRIPTION
 } // End namespace PIDL
 
 #endif
+
+
+
+
 

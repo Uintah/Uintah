@@ -33,7 +33,8 @@
 #define Component_PIDL_ServerContext_h
 
 #include <Core/CCA/Component/PIDL/Object.h>
-#include <globus_nexus.h>
+#include <Core/CCA/Component/Comm/EpChannel.h>
+#include <Core/CCA/Component/PIDL/Reference.h>
 
 namespace PIDL {
 /**************************************
@@ -46,20 +47,21 @@ KEYWORDS
    
 DESCRIPTION
    One of these objects is associated with each server object.  It provides
-   the state necessary for the PIDL internals, including the endpoint
+   the state necessary for the PIDL internals, including the comm channel
    associated with this object, a pointer to type information, the objects
    id from the object wharehouse, a pointer to the base object class
-   (Object), and to the most-derived type (a void*).  Endpoints
-   are created lazily from the Object class.
+   (Object), and to the most-derived type (a void*).  
 ****************************************/
   struct ServerContext {
+
+    
     //////////
     // A pointer to the type information.
     const TypeInfo* d_typeinfo;
 
     //////////
-    // The endpoint associated with this object.
-    globus_nexus_endpoint_t d_endpoint;
+    // The Comm Channel associated with this object
+    EpChannel * chan;
 
     //////////
     // The ID of this object from the object wharehouse.  This
@@ -83,8 +85,15 @@ DESCRIPTION
     //////////
     // Create the endpoint for this object.
     void activateEndpoint();
+
+    //////////
+    // Bind this reference's startpoint to my endpoint
+    void bind(Reference& ref);
   };
 } // End namespace PIDL
 
 #endif
+
+
+
 

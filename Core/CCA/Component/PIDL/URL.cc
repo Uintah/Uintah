@@ -28,7 +28,7 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Core/CCA/Component/PIDL/URL.h>
+#include "URL.h"
 #include <Core/CCA/Component/PIDL/MalformedURL.h>
 #include <sstream>
 

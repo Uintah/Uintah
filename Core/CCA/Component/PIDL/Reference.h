@@ -31,7 +31,7 @@
 #ifndef Component_PIDL_Reference_h
 #define Component_PIDL_Reference_h
 
-#include <globus_nexus.h>
+#include <Core/CCA/Component/Comm/SpChannel.h>
 
 namespace PIDL {
 /**************************************
@@ -53,17 +53,15 @@ DESCRIPTION
     Reference();
 
     //////////
-    // Copy the reference.  Does NOT copy the startpoint through
-    // globus_nexus_startpoint_copy
+    // Copy the reference. 
     Reference(const Reference&);
 
     //////////
-    // Copy the reference.  Does NOT copy the startpoint through
-    // globus_nexus_startpoint_copy
+    // Copy the reference.  
     Reference& operator=(const Reference&);
 
     //////////
-    // Destructor.  Does not destroy the startpoint.
+    // Destructor. 
     ~Reference();
 
     //////////
@@ -71,8 +69,8 @@ DESCRIPTION
     int getVtableBase() const;
 
     //////////
-    // The startpoint
-    globus_nexus_startpoint_t d_sp;
+    // Proxy's communication class. 
+    SpChannel * chan;
 
     //////////
     // The vtable base offset
@@ -81,4 +79,12 @@ DESCRIPTION
 } // End namespace PIDL
 
 #endif
+
+
+
+
+
+
+
+
 

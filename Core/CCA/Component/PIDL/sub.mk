@@ -22,7 +22,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/CCA/Component/PIDL
 
 SRCS     += \
-	$(SRCDIR)/GlobusError.cc \
 	$(SRCDIR)/InvalidReference.cc \
 	$(SRCDIR)/MalformedURL.cc \
 	$(SRCDIR)/Object.cc \
@@ -31,15 +30,13 @@ SRCS     += \
 	$(SRCDIR)/PIDLException.cc \
 	$(SRCDIR)/ProxyBase.cc \
 	$(SRCDIR)/Reference.cc \
-	$(SRCDIR)/ReplyEP.cc \
 	$(SRCDIR)/ServerContext.cc \
-	$(SRCDIR)/TypeInfo.cc \
-	$(SRCDIR)/TypeInfo_internal.cc \
 	$(SRCDIR)/URL.cc \
-	$(SRCDIR)/Warehouse.cc
+	$(SRCDIR)/Warehouse.cc \
+	$(SRCDIR)/TypeInfo.cc \
+	$(SRCDIR)/TypeInfo_internal.cc 
 
 PSELIBS := Core/Exceptions Core/Thread
-LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
