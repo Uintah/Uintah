@@ -32,6 +32,7 @@
 #define PropertyManager_h 
 
 #include <map>
+#include <Core/Util/Assert.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Datatypes/builtin.h>
@@ -47,7 +48,10 @@ class PropertyBase : public Datatype {
 public:
   PropertyBase(bool trans) : transient_(trans) {} 
   //PropertyBase(const PropertyBase &p) : transient_(p.transient_) {} 
-  virtual PropertyBase* clone() const {return 0;}
+  virtual PropertyBase* clone() const { 
+    ASSERTFAIL("PropertyBase clone called");
+    return 0;
+  }
 
   virtual void io(Piostream &) {}
   static  PersistentTypeID type_id;
@@ -69,7 +73,9 @@ class Property : public PropertyBase {
 public:
   friend class PropertyManager;
 
-  Property(const T &o, bool trans) :  PropertyBase(trans), obj_(o) {}
+  Property(const T &o, bool trans) :  PropertyBase(trans), obj_(o) 
+  {
+  }
   //Property(const Property &p) :  PropertyBase(p), obj_(p.obj_) {}
   virtual PropertyBase *clone() const 
   { return scinew Property(obj_, transient()); }
@@ -149,6 +155,7 @@ public:
   PropertyManager(const PropertyManager &copy);
   virtual ~PropertyManager();
 
+  PropertyManager & operator=(const PropertyManager &pm);
   
   template<class T> void set_property(const string &, const T &,
 				      bool is_transient);
