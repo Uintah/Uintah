@@ -411,6 +411,14 @@ c     as well.
      $                    htflux_radX(i,j,k) + qflux
                      htfluxX(i,j,k) = htfluxX(i,j,k) + qflux
 
+#if 0
+                     if (i.ne.valid_lo(1)) then
+                        kstabh(i-1,j,k) = kstabh(i-1,j,k) +
+     $                       abs(htfluxX(i,j,k)*areayz/
+     $                       (den(i-1,j,k)*enth(i-1,j,k)+small))
+                     endif
+#endif
+
 c#endif
 
 #ifdef debugEnergyExchange
@@ -491,6 +499,12 @@ c     as well.
      $                    htflux_radX(i+1,j,k) + qflux
                      htfluxX(i+1,j,k) = 
      $                    htfluxX(i+1,j,k) + qflux
+
+#if 0
+                     kstabh(i+1,j,k) = kstabh(i+1,j,k)
+     $                    + abs(htfluxX(i+1,j,k)*areayz/
+     $                    (den(i+1,j,k)*enth(i+1,j,k)+small))
+#endif
 
 c#endif
 
@@ -575,6 +589,12 @@ c     as well.
 
 c#endif
 
+#if 0
+                     kstabh(i,j-1,k) = kstabh(i,j-1,k) +
+     $                    abs(htfluxY(i,j,k)*areaxz/
+     $                    (den(i,j-1,k)*enth(i,j-1,k)+small))
+#endif
+
 #ifdef debugEnergyExchange
                      print*, i,j,k, hts_fcy(i,j,k),
      $                    tg(i,j-1,k), ts_fcy(i,j,k),
@@ -654,6 +674,11 @@ c     as well.
      $                    htflux_radY(i,j+1,k) + qflux
                      htfluxY(i,j+1,k) = htfluxY(i,j+1,k) + qflux
 
+#if 0
+                     kstabh(i,j+1,k) = kstabh(i,j+1,k)
+     $                    + abs(htfluxY(i,j+1,k)*areaxz/
+     $                    (den(i,j+1,k)*enth(i,j+1,k)+small))
+#endif
 c#endif
 
 #ifdef debugEnergyExchange
@@ -736,6 +761,12 @@ c     as well.
 
 c#endif
 
+#if 0
+                     kstabh(i,j,k-1) = kstabh(i,j,k-1) +
+     $                    abs(htfluxZ(i,j,k)*areaxy/
+     $                    (den(i,j,k-1)*enth(i,j,k-1)+small))
+#endif
+
 #ifdef debugEnergyExchange
                      print*, i,j,k, hts_fcz(i,j,k),
      $                    tg(i,j,k-1), ts_fcz(i,j,k),
@@ -816,6 +847,12 @@ c     as well.
 
 c#endif
 
+#if 0
+                     kstabh(i,j,k+1) = kstabh(i,j,k+1)
+     $                    + abs(htfluxZ(i,j,k+1)*areaxy/
+     $                    (den(i,j,k+1)*enth(i,j,k+1)+small))
+#endif
+
 #ifdef debugEnergyExchange
                      print*, i,j,k+1, hts_fcz(i,j,k+1),
      $                    tg(i,j,k+1), ts_fcz(i,j,k),
@@ -893,6 +930,11 @@ c                  qmult = heat_trans_coeff*area*factor
 
                   sug_cc(i,j,k) = sug_cc(i,j,k) -
      $                 qflux*area
+
+#if 0
+                  kstabh(i,j,k) = kstabh(i,j,k) + abs(qflux*area/
+     $                 (den(i,j,k)*enth(i,j,k) + small))
+#endif
 
 #ifdef debugEnergyExchange
                   print*, i,j,k, hts_cc(i,j,k),

@@ -197,12 +197,24 @@ c     length model
 
             tmult = tmult*epss(iorig,jorig,korig)
 
+            kstabu(i,j,k) = kstabu(i,j,k) + 
+     $           ((csmag*yp)**2*
+     $           abs((up_fcy(ii,jj,kk) - ug_cc(i,j,k))/yp)+
+     $           viscos/dmicr(i,j,k))*
+     $           epss(iorig,jorig,korig)*
+     $           sew(idf)*stb(idt2)/yp
+
          else
 
 c     laminar flow
 
             tmult = eps*viscos/yp
             tmult = tmult*epss(iorig,jorig,korig)
+
+            kstabu(i,j,k) = kstabu(i,j,k) + 
+     $           (viscos/dmicr(i,j,k))*
+     $           epss(iorig,jorig,korig)*
+     $           sew(idf)*stb(idt2)/yp
 
          endif
 
