@@ -237,8 +237,7 @@ void handleMATERIAL_LIST(token_list* children1, unsigned loop1,
       token->GetSpecular(specular);
       if (token->GetTMapFilename()=="" && !token->GetTransparency()) {
         ase_matls[token->GetIndex()] = 
-          new Phong(Color(ambient),
-                    Color(diffuse),
+          new Phong(Color(diffuse),
                     Color(specular),
                     token->GetShine()*1000,
                     0);
@@ -251,7 +250,6 @@ void handleMATERIAL_LIST(token_list* children1, unsigned loop1,
           new ImageMaterial((char*)(token->GetTMapFilename().c_str()),
                             ImageMaterial::Tile,
                             ImageMaterial::Tile,
-                            Color(ambient),
                             1.,
                             Color(specular),
                             token->GetShine()*1000,
