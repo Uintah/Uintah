@@ -65,7 +65,10 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
 	errors_to = ""
     rc = system("compare_sus_runs %s %s %s %s '%s' > compare_sus_runs.log 2>&1" % (testname, test_root, compare_root, susdir, errors_to))
     if rc != 0:
-	if rc != 65280:
+	if rc == 5 * 256:
+    	    print "\t*** Warning, %s has changed.  Must update." % (input(test))
+	    return 1
+	elif rc != 65280:
     	    print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, rc)
 	    return 1
 	else:
