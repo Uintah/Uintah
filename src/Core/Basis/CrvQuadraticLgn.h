@@ -238,6 +238,15 @@ CrvQuadraticLgn<T>::get_coords(vector<double> &coords, const T& value,
   coords.push_back(cur);
 }
  
+template <class T>
+int CrvQuadraticLgn<T>::GaussianNum = 1;
+
+template <class T>
+double CrvQuadraticLgn<T>::GaussianPoints[2][1] = {{0.211324865405}, {0.788675134595}};
+
+template <class T>
+double CrvQuadraticLgn<T>::GaussianWeights[2] = {.5, .5};
+
 
 } //namespace SCIRun
 

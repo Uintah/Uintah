@@ -123,12 +123,16 @@ public:
 template <class T>
 class TetLinearLgn : public TetApprox {
 public:
-  static int GaussianNum=4;
+  typedef T value_type;
+
+  static int GaussianNum;
   static double GaussianPoints[4][2];
   static double GaussianWeights[4];
   
   TetLinearLgn() {}
   virtual ~TetLinearLgn() {}
+
+  int polynomial_order() const { return 1; }
 
   // Value at coord
   template <class ElemData>
@@ -214,6 +218,17 @@ TetLinearLgn<T>::io(Piostream &stream)
   stream.begin_class(type_name(-1), TETLINEARLGN_VERSION);
   stream.end_class();
 }
+
+template <class T>
+int TetLinearLgn<T>::GaussianNum = 4;
+
+template <class T>
+double TetLinearLgn<T>::GaussianPoints[4][2] = {
+  {1./6., 1./6., 0., 1./6.}, {2./3., 1./6., 0., 1./6.}, 
+  {1./6., 2./3., 0., 1./6.}, {1./6., 1./6., 2./3., 0.}};
+
+template <class T>
+double TetLinearLgn<T>::GaussianWeights[4] = {.25, .25, 25.};
 
 } //namespace SCIRun
 

@@ -119,13 +119,17 @@ template <class T>
 class HexTrilinearLgn : public HexApprox
 {
 public:
-  static int GaussianNum=8;
-  static double GaussianPoints[8][3];
-  static double GaussianWeights[8];
- 
+  typedef T value_type;
+
   HexTrilinearLgn() {}
   virtual ~HexTrilinearLgn() {}
   
+  int polynomial_order() const { return 1; }
+
+  static int GaussianNum;
+  static double GaussianPoints[8][3];
+  static double GaussianWeights[8];
+ 
   // Value at coord
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const
@@ -386,6 +390,24 @@ HexTrilinearLgn<T>::io(Piostream &stream)
   stream.begin_class(type_name(-1), HEX_TRILINEAR_LGN_VERSION);
   stream.end_class();
 }
+template <class T>
+int HexTrilinearLgn<T>::GaussianNum = 8;
+
+template <class T>
+double HexTrilinearLgn<T>::GaussianPoints[8][3] = {
+  {0.211324865405, 0.211324865405, 0.211324865405},
+  {0.788675134595, 0.211324865405, 0.211324865405},
+  {0.788675134595, 0.788675134595, 0.211324865405},
+  {0.211324865405, 0.788675134595, 0.211324865405},
+  {0.211324865405, 0.211324865405, 0.788675134595},
+  {0.788675134595, 0.211324865405, 0.788675134595},
+  {0.788675134595, 0.788675134595, 0.788675134595},
+  {0.211324865405, 0.788675134595, 0.788675134595}};
+
+template <class T>
+double HexTrilinearLgn<T>::GaussianWeights[8] = 
+  {.125, .125, .125, .125, .125, .125, .125, .125};
+
 
 } //namespace SCIRun
 
