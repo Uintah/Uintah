@@ -14,11 +14,11 @@
 #define IRIX
 #pragma set woff 1375
 #endif
-#include <util/PlatformUtils.hpp>
-#include <parsers/XercesDOMParser.hpp>
-#include <dom/DOMNode.hpp>
-#include <dom/DOMNamedNodeMap.hpp>
-#include <util/XMLString.hpp>
+#include <xercesc/util/PlatformUtils.hpp>
+#include <xercesc/parsers/XercesDOMParser.hpp>
+#include <xercesc/dom/DOMNode.hpp>
+#include <xercesc/dom/DOMNamedNodeMap.hpp>
+#include <xercesc/util/XMLString.hpp>
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
 #endif

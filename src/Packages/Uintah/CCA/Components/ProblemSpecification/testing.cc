@@ -1,9 +1,9 @@
 #include <iostream>
 
-#include <util/PlatformUtils.hpp>
-#include <parsers/DOMParser.hpp>
-#include <dom/DOMNode.hpp>
-#include <dom/DOMNamedNodeMap.hpp>
+#include <xercesc/util/PlatformUtils.hpp>
+#include <xercesc/parsers/DOMParser.hpp>
+#include <xercesc/dom/DOMNode.hpp>
+#include <xercesc/dom/DOMNamedNodeMap.hpp>
 #include "DOMTreeErrorReporter.hpp"
 #include <string>
 #include <stdlib.h>

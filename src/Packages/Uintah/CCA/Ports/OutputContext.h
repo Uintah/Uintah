@@ -5,7 +5,7 @@
 #define IRIX
 #pragma set woff 1375
 #endif
-#include <dom/DOMElement.hpp>
+#include <xercesc/dom/DOMElement.hpp>
 
 namespace Uintah {
    /**************************************

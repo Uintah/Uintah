@@ -24,8 +24,8 @@
 #include <Core/Util/Endian.h>
 #include <Core/Thread/Time.h>
 
-#include <dom/DOMImplementationRegistry.hpp>
-#include <dom/DOMImplementation.hpp>
+#include <xercesc/dom/DOMImplementationRegistry.hpp>
+#include <xercesc/dom/DOMImplementation.hpp>
 #include <iomanip>
 #include <errno.h>
 #include <fstream>
@@ -1190,7 +1190,7 @@ void DataArchiver::output(const ProcessorGroup*,
   long cur=0;
   while(n != NULL){
     DOMNode* endNode = const_cast<DOMNode*>(findNode("end", n));
-    ASSERT(!endNode.isNull());
+    ASSERT(endNode != 0);
     const DOMNode* tn = findTextNode(endNode);
     //DOMString val = tn->getNodeValue();
     char* s = XMLString::transcode(tn->getNodeValue());
