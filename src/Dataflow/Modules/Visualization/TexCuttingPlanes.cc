@@ -78,17 +78,17 @@ TexCuttingPlanes::tcl_command( TCLArgs& args, void* userdata)
       if (!control_widget) return;
       Point w(control_widget->ReferencePoint());
       if (args[2] == "xplus") {
-	w+=Vector(ddv.x(), 0, 0);
+	w+=ddx;
       } else if (args[2] == "xminus") {
-	w-=Vector(ddv.x(), 0, 0);
+	w-=ddx;
       } else if (args[2] == "yplus") {
-	w+=Vector(0, ddv.y(), 0);
+	w+=ddy;
       } else if (args[2] == "yminus") {
-	w-=Vector(0, ddv.y(), 0);
+	w-=ddy;
       } else if (args[2] == "zplus") {
-	w+=Vector(0, 0, ddv.z());
+	w+=ddz;
       } else if (args[2] == "zminus"){
-	w-=Vector(0, 0, ddv.z());
+	w-=ddz;
       } else if (args[2] == "vplus"){
 	GeometryData* data = ogeom->getData( 0, 1);
 	Vector view = data->view->lookat() - data->view->eyep();
@@ -110,7 +110,7 @@ TexCuttingPlanes::tcl_command( TCLArgs& args, void* userdata)
 void TexCuttingPlanes::widget_moved(int)
 {
   if( volren ){
-      volren->SetControlPoint(control_widget->ReferencePoint());
+      volren->SetControlPoint(tex->get_field_transform().unproject(control_widget->ReferencePoint()));
     }
 }
 
@@ -152,16 +152,17 @@ void TexCuttingPlanes::execute(void)
   if(!control_widget){
     control_widget=scinew PointWidget(this, &control_lock, 0.2);
     
-    Point Smin(tex->min());
-    Point Smax(tex->max());
-    Vector dv(Smax - Smin);
+    BBox b;
+    tex->get_bounds(b);
+    Vector dv(b.diagonal());
     int nx, ny, nz;
+    Transform t(tex->get_field_transform());
+    ddx=t.project(Point(1,0,0))-t.project(Point(0,0,0));
+    ddy=t.project(Point(0,1,0))-t.project(Point(0,0,0));
+    ddz=t.project(Point(0,0,1))-t.project(Point(0,0,0));
     tex->get_dimensions(nx,ny,nz);
-    ddv.x(dv.x()/(nx - 1));
-    ddv.y(dv.y()/(ny - 1));
-    ddv.z(dv.z()/(nz - 1));
     ddview = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
-    control_widget->SetPosition(Interpolate(Smin,Smax,0.5));
+    control_widget->SetPosition(Interpolate(b.min(), b.max(), 0.5));
     control_widget->SetScale(dv.length()/80.0);
   }
 
@@ -183,15 +184,20 @@ void TexCuttingPlanes::execute(void)
   } else {    
     if( tex.get_rep() != oldtex.get_rep() ){
       oldtex = tex;
-      Point Smin(tex->min());
-      Point Smax(tex->max());
-      Vector dv(Smax - Smin);
+      BBox b;
+      tex->get_bounds(b);
+      Vector dv(b.diagonal());
       int nx, ny, nz;
+      Transform t(tex->get_field_transform());
+      ddx=t.project(Point(1,0,0))-t.project(Point(0,0,0));
+      ddy=t.project(Point(0,1,0))-t.project(Point(0,0,0));
+      ddz=t.project(Point(0,0,1))-t.project(Point(0,0,0));
       tex->get_dimensions(nx,ny,nz);
-      ddv.x(dv.x()/(nx - 1));
-      ddv.y(dv.y()/(ny - 1));
-      ddv.z(dv.z()/(nz - 1));
       ddview = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
+      if (!b.inside(control_widget->GetPosition())) {
+	control_widget->SetPosition(Interpolate(b.min(), b.max(), 0.5));
+	control_widget->SetScale(dv.length()/80.0);
+      }
       volren->SetVol( tex.get_rep() );
     }
 
