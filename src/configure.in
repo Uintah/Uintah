@@ -1913,7 +1913,7 @@ for i in $SCI_LAB_TP_DEFAULT; do
 done
 
 #########################################################################
-##  Set the no_optimize_flag flag 
+##  Set the no_optimize_flag 
 ##  
 
 case $host in
@@ -2414,15 +2414,16 @@ else
   fi
 fi
 
-SCI_CHECK_HEADERS($LIB_DIR_PLPLOT/../include,plplot.h,$INC_TCL_H $INC_TK_H,,optional)
+SCI_CHECK_HEADERS($LIB_DIR_PLPLOT/../include,plplot/plplot.h,$INC_TCL_H $INC_TK_H,,optional)
 
-if test "$HAVE_LIB_PLPLOT" && test "$HAVE_PLPLOT_H"; then
-    DEF_PLPLOT="#define HAVE_PLPLOT 1"
+if test "$HAVE_LIB_PLPLOT" && test "$HAVE_PLPLOT_PLPLOT_H"; then
+  DEF_PLPLOT="#define HAVE_PLPLOT 1"
+  INC_PLPLOT_H="$INC_PLPLOT_PLPLOT_H"
 else
-   DEF_PLPLOT=""
-   PLPLOT_LIB_FLAG=""
-   PLPLOT_LIB_DIR_FLAG=""
-   INC_PLPLOT_H=""
+  DEF_PLPLOT=""
+  PLPLOT_LIB_FLAG=""
+  PLPLOT_LIB_DIR_FLAG=""
+  INC_PLPLOT_H=""
 fi
 
 AC_SUBST(PLPLOT_LIB_FLAG)
