@@ -1,0 +1,798 @@
+			How to 
+                  Create A New Module
+                   for the SCIRun PSE
+        (unix version, last revised June 6, 2000)
+
+
+Table of contents
+
+1) Prerequisites
+2) Overview
+3) The module hierarchy
+4) Creating a heirarchy automatically
+5) Creating a heirarchy by hand
+6) Adding a user interface
+7) Adding ports and functionality
+8) Advanced topics
+9) Trouble shooting
+A) Appendix
+
+1) Prerequisites
+
+
+   This document assumes that you have programming experience,
+   understand what a PSE module is & know how to connect multiple
+   modules together to solve a problem, and know how to manipulate
+   a unix file system.
+
+
+2) Overview
+
+
+   Before you can effectively create and use a new PSE module, you
+   must first have a working knowledge of what a module is on both
+   a high and a low level.
+
+   From the most abstract level, a module is a single algorithm 
+   with inputs and outputs.  On the nuts-and-bolts level it is bunch
+   of files and directories somewhere in your file system.  The key
+   to effectively creating and using a module is knowing how those
+   two levels relate to each other.
+
+   The rest of this document will be organized in a high-level vs.
+   low-level manner in an attempt to leverage your abstract knowledge
+   of what a module is, so that you can then understand modules from
+   the lowest level.  Once you understand the nuts and bolts of a
+   module, you will be able to easily create your own!
+
+
+3) The module hierarchy
+   
+
+   Having used the PSE and connected modules together, you know that
+   modules are organized in a hierarchy:  At the lowest level is a
+   single module; Modules that have some arbitrary relation to each
+   other (e.g. they have the same input data type, or they read data
+   from disk) can be grouped together into a category.  Categories that
+   are also some how related can be grouped into a package (Modules
+   cannot exist outside of a category or outside of a package.  So,
+   if you want to create a module, you must also choose, or create,
+   a category and package for the module.) 
+
+   The module hierarchy is embodied in the PSE as a series of pull down
+   menus at the top of the PSE network canvas.  Each menu item after
+   "File" is a PSE package.  If you click on the PSECommon package,
+   a drop-down list of the categories that exist within that package
+   is shown.  If you then select one of the categories, another list
+   is shown which represents the modules in that category.
+
+   So, on a high level, modules are organized in a tree structure.  We
+   can illustrate this using the PSECommon package as an example:
+
+      PSECommon --- Example -- GeomPortTest
+                 |
+                 |- FEM ------ ApplyBC
+                 |          |- BuildFEMatrix
+                 |          |- ...
+                 |
+                 |- ...
+                      
+   This heirarchy also exists beyond the menu structure in the PSE.
+   The modules are organized in a similar way inside the file structure
+   in your PSE source tree:
+
+      PSE -- src -- PSECommon -- Modules -- Example -- GeomPortTest.cc
+                                         |
+                                         |- FEM ------ ApplyBC.cc
+                                         |          |- BuildFEMatrix.cc
+                                         |          |- ...
+                                         |
+                                         |- ...
+
+   So, if you created a new module and inserted it into the 
+   PSECommon package (and into the Example category), the new trees
+   would look like this:
+
+      PSECommon --- Example -- GeomPortTest
+                 |          |- YOUR_NEW_MODULE
+                 |
+                 |- FEM ------ ApplyBC
+                 |          |- BuildFEMatrix
+                 |          |- ...
+                 |
+                 |- ...
+                      
+      PSE -- src -- PSECommon -- Modules -- Example -- GeomPortTest.cc
+                                         | |- YOUR_NEW_MODULE.cc
+                                         |
+                                         |- FEM ------ ApplyBC.cc
+                                         | |- BuildFEMatrix.cc
+                                         | |- ...
+                                         |
+                                         |- ...
+
+   You can see that the abstract notions of package, category and
+   module directly correspond to a particular type of file: A package
+   is a directory within the PSE/src tree, a category is a
+   directory beneath a package directory and a single module is a
+   single .cc file (In the PSE .cc files are C++ files) inside a
+   category directory.
+
+   So, is making a module as easy as making a couple of directories
+   and writing some C++ code?  Yes and no.  No, because there are
+   other files in the PSECommon tree, Not just directories and
+   C++ files.  Yes, because creating this tree structure (along with
+   those other files) can be done with the click of a button via the
+   PSE.
+
+   The next sections will describe, in more detail, how to create all
+   the files needed to make a package directory.
+   
+   
+4) Creating a heirarchy automatically
+
+
+   Since you're probably like most other humans, you're too lazy to
+   read through the rest of this document, and just want to get on with
+   making a new module.  Well, you're in luck.  There is a way to create
+   modules, and the associated heirarchy of files, automatically.  All 
+   you need to use these facilities are three names: package, category 
+   and module.
+
+   From within the "File" menu at the top of the PSE network canvas,
+   select "New" and then "Module".  A dialog will pop up asking for 
+   the three names mentioned above.  Once you click the "Ok" button,
+   the PSE generates all the files, with the correct heirarchy, that
+   are necessary.  It may also modify existing files if you insert
+   into an existing heirarchy.
+
+   There are three possibilities for choosing names: 1) new package 
+   and new category, 2) existing package and new category, and 3)
+   existing package and existing category.
+
+   If you type in a package name or category name that already exists,
+   the module will be inserted into the proper heirarchy.  If you type
+   names that do not already exist, then a new (whole or partial) 
+   heirarchy will be created and/or inserted.
+
+   It is illegal to choose names that are blank or are names of already
+   existing files that are not part of valid PSE heirarchies.  It is
+   also illegal to have two modules with the same name inside the same
+   category.  You may have modules with the same name so long as they
+   are in different categories.  You may also have categories with the
+   same name so long as they are in different packages.
+
+   If you've attempted to create a new module with this facility and
+   it returned an error or warning, see the trouble shooting section
+   below.
+
+
+5) Creating a heirarchy by hand
+
+
+   Ah.  You're not lazy.  Wanting to know the nuts and bolts of a
+   system is the sign of a truly great programmer.  Here is the full
+   directory structure for a PSE package:
+
+     package -- Modules ------ category1 -- module1.cc
+             |              |            |- module2.cc
+             |              |            |- ...
+             |              |            |- sub.mk
+             |              |
+             |              |- category2 ...
+             |              |- ...
+             |              |- sub.mk
+             |
+             |- GUI ---------- moduleA.tcl
+             |              |- moduleB.tcl
+             |              |- ...
+             |              |- tclIndex
+             |              |- sub.mk
+             |
+             |- share -------- share.h
+             |              |- DllEntry.cc
+             |
+             |- Datatypes ---- group1 -- datatype1.cc
+             |              |         |- datatype1.h
+             |              |         |- datatype2.cc
+             |              |         |- ...
+             |              |         |- sub.mk
+             |              |
+             |              |- group2 ...
+             |              |- ...
+             |              |- sub.mk        
+             |
+             |- ThirdParty ...
+             |
+             |- components.xml
+             |- sub.mk
+
+   Whew.  So there are 5 directories (Modules, GUI, share, Datatypes
+   and ThirdParty) inside a package, and there are two non-directory files
+   inside a package (components.xml and sub.mk).  It is possible for a
+   package to have superfluous directories and files without affecting
+   the integrity of a package.  You should, however, not remove any of 
+   the listed files, even if they are empty, as future versions of the
+   PSE may require them.
+
+   You are already familiar with the "Modules" directory which houses the
+   category directories, and subsiquently the modules themselves.  Note the
+   "sub.mk" files within the Modules tree.  All the sub.mk files are used
+   to create makefiles for each directory.  They have information such as
+   subdirectory traversal, source files to be included in the build, and
+   libraries to be linked against.  See the appendix for skeleton versions
+   of each type of sub.mk file.  See the appendix for a skeleton version
+   of the .cc file that defines a module.
+
+   The "GUI" directory holds all the user interface files.  Currently,
+   all the user interfaces in the PSE are written in tcl.  The tcl files
+   should all have a certain structure in order to work with the PSE.  
+   You can see examples of the structure in the appendix.  New modules
+   have no user interface file by default.
+
+   The "share" directory is a mechanism for remaining platform independent.
+   It holds information needed by windows machines for building .dll files.
+   Although the share directory is not strictly needed for unix platforms,
+   it does make life easier when porting your modules to windows.
+
+   The "Datatypes" directory holds information about new PSE datatypes
+   that you define.  See "How to Create New Datatypes for the PSE" for
+   more details on this part of the heirarchy.
+
+   The "ThirdParty" directory is an empty directory that may be used to 
+   store third party sources or libraries that your new modules may want
+   to link with.  You can safely ignore this directory, if you have no
+   need for third party code.
+
+   The "components.xml" file is a file that contains information about 
+   the organization and characteristics (input/output types, author, date
+   created, etc.) of the modules in the package.  See the appendix for 
+   examples of a components.xml file.
+
+
+6) Adding a User Interface
+
+
+   If you want to add a user interface element to your module, you will
+   have to know tcl, and be familiar with the communication scheme in 
+   the PSE which allows you to import and export information from the tcl
+   code into your module code.  Both these topics are beyond the scope
+   of this document.
+
+   You will also have to create a .tcl file and place it into the GUI
+   directory.  Please see the appendix for a skeleton .tcl file for a
+   PSE module user interface.
+
+
+7) Adding ports and functionality
+
+
+   Once you have built the package heirarchy and created all other files
+   from the skeletons and example files in the appendix, you now need to
+   add functionality to your new module.
+
+   The first step is to decide how your module will get it's input data,
+   and what it will do with the output data that it generates.  There are
+   two methods of getting data into a module (input ports and read from
+   disk) and two methods for outputing data (output ports and write to 
+   disk).
+
+   Modules that read data from disk, or write data to disk are considered,
+   in the PSE, to be "readers" or "writers" respectively.  These types
+   of modules are very closely tied to specific PSE datatypes.  Their use
+   and convention is discussed in the "How to Create New Datatypes for
+   the PSE" document and will not be discussed here.
+
+   The other type of module is the kind that takes data into an input
+   port, runs some algorithm on the data, and then sends output data to the
+   output port.  This is the most common type of module, and perhaps the
+   most useful.  In order to create such a module, you will need to add
+   lines of code to the module's .cc file.
+
+   You will need to identify the PSE datatype that you will use for
+   each port, input and output.  Then add #include statements to the top
+   of the file for the header files that define the datatype(s) you want.
+   For example, suppose you want to have a Mesh input port and a Matrix
+   output port.  You would add the following lines to the top of your 
+   module's .cc file:
+
+     #include <PSECore/Datatypes/MeshPort.h>
+     #include <PSECore/Datatypes/MatrixPort.h>
+
+   The datatypes can come from any package or core directory within your 
+   PSE source tree (i.e. they don't have to come from PSECore).
+
+   Next, add lines of code to the data declaration section of your module's
+   class declartion, and declare your ports:
+
+     MeshIPort* imesh;
+     MatrixOPort* omatr;
+
+   Finally, add lines of code to the module's constructor to allocate "new"
+   instances for each port and add them to the list of ports for this
+   module:
+
+     imesh=scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
+     add_iport(imesh);
+     omatr=scinew MatrixOPort(this, "Matrix", MatrixIPort::Atomic);
+     add_oport(omatr);
+
+   Once you have ports, you can retrieve data.  When a module begins it's
+   execution cycle, it calls the execute() member function of your module.
+   It is in this function that you need to add lines of code to extract 
+   data from the input ports, run your module's algorithm on that data,
+   and send it to the output port:
+
+     MeshHandle mesh;
+     MatrixHandle matrix;
+
+     /* get the data from the port */
+
+     if (!imesh->get(mesh))
+        return;
+
+     /* run your algorithm here.  For example: */
+
+     matrix = GenerateMatrixFromMesh(mesh); /* this function is defined 
+                                               in other code you wrote */
+
+     /* send the results to the output port */
+
+     omatr->send(matrix);
+
+
+8) Advanced topics
+
+
+   What you're still reading?  You know, the more you read, the more I
+   have to write - arrgh!?!?  Alright smart guy, you asked for it...
+
+   Keen readers will wonder how a package _really_ works.  After all, a 
+   bunch of source code and fancy schmancy directory trees do not an
+   application make!  Good eye.
+
+   There is a hidden aspect of the PSE package that hasn't been discussed
+   yet: what does a package's source files get compiled into, and how does
+   this object, or objects, interface with the PSE?
+
+   When a package is built, the end result has a couple of possibilities:
+   1) a single, large, shared object library, or 2) a handful of small
+   shared object libraries.  You decide at configure time which kind
+   of libraries you want (--enable-largesos for large libraries, nothing
+   for small libraries).
+
+   The libraries that contain modules must all export a function of the 
+   following form:
+    
+     Module* make_MODULE-NAME()
+
+   for each module that is inside it.
+
+   So, in reality, any .so library that has Module-derived classes
+   defined within it, and also exports these "make" functions, could,
+   in a way, be considered a PSE package - regardless of whether or not
+   it came from the heirarchy described above or not.  But, in order
+   for the package to be useful to the PSE, you would still need to 
+   have a components.xml file and possibly a GUI directory for the .tcl
+   files, if any.  
+
+   When the PSE starts it searches the enabled packages (defined
+   at configure time: --enable-package="...") for components.xml files.
+   It parses those that it finds and builds the package menus.  The .xml
+   file tells the PSE where each module's .tcl file be found, which
+   library(s) to load, and tells it what the name of each module's make
+   function is.  If an entry in the .xml file cannot be confirmed (i.e. 
+   can't find the indicated make function), the associated module will
+   not be listed.  Packages that have no valid modules are also not
+   listed.
+
+
+9) Trouble shooting
+
+
+   If you attempted to automatically generate a module and got
+   back an error or warning message, you can search the following
+   table for the error you saw, and find the associated solution:
+
+    severity  message               solution   
+    --------- -------------------   -------------------------------
+    ERROR     One or more of the    It is illegal to use blank
+              entries was left      names for packages, categories,
+              blank.  All entries   or modules.  Retype a non-blank
+              must be filled in.    name in the offending field(s).
+              
+    WARNING   Package PACKAGE does  The package name you typed does
+              not exist.  Create    not exist.  Did you intend to
+              it now? (If yes, the  create a new package?  Did you
+              category CATEGORY     miss type the package name?
+              will also be created) all names are case sensitive.
+                                    If you want to create a new
+                                    package press "Ok".  Otherwise
+                                    press "Cancel".
+
+    ERROR     The name PACKAGE is   The name you supplied for the  
+              already in use by a   package is the name of a non-
+              non-package file      directory file.  Choose a
+                                    different name.
+
+    ERROR     The file PACKAGE does The name you supplied for the
+              not appear to be a    package is the name of a
+              valid package or is   directory that does not
+              somehow corrupt...    conform to the standard
+                                    package heirarchy.  Choose
+                                    another package.  This 
+                                    package may be damaged, or
+                                    was not created/edited
+                                    correctly.
+
+    WARNING   Category CATEGORY     The name you supplied for the
+              does not exist.       category does not exist.  Did
+              Create it now?        you intend to create a new
+                                    category?  Did you miss type
+                                    the category name?  If you
+                                    want to create a new category
+                                    press "Ok".  Otherwise, press
+                                    "Cancel"
+
+    ERROR     The name CATEGORY is  The name you supplied for the
+              already in use by a   category is the name of a non- 
+              non-category file     directory file.  Choose a 
+                                    different name.
+
+    ERROR     The file CATEGORY     The name you supplied for the
+              does not appear to be category  is the name of a 
+              a valid category or   directory that does not
+              is somehow corrupt... conform to the standard
+                                    category heirarchy.  Choose
+                                    another category.  This
+                                    category may be damaged, or
+                                    was not created/edited 
+                                    correctly.
+
+    ERROR     The name MODULE is    The name you supplied for the
+              already in use by     module is the name of a file
+              another file          that already exists.  Choose
+                                    another name.
+
+
+A) Appendix
+
+
+   The following are examples or skeletons for files that are required
+   for building a package heirarchy.  Many of the skeletons contain
+   macros which must be expanded before the files can be used.  The
+   macros are: 
+  
+     NEW_MODULE       = name of the new module
+
+     MODULE_AUTHOR    = your name
+
+     MODULE_DATE      = the date the module was created
+
+     PACKAGE_NAME     = the name of the package that 
+                        the module/category belongs to
+
+     NEW_PACKAGE      = the name of the new package
+
+
+   **** Module .cc file skeleton:
+
+     /*
+      *  NEW_MODULE.cc:  
+      *
+      *  Written by:
+      *   MODULE_AUTHOR
+      *   MODULE_DATE
+      *
+      */
+
+      #include <PSECore/Dataflow/Module.h>
+      #include <SCICore/Malloc/Allocator.h>
+
+      #include <PACKAGE_NAME/share/share.h>
+
+      namespace PACKAGE_NAME {
+      namespace Modules {
+    
+      using namespace PSECore::Dataflow;
+
+      class PACKAGE_NAMESHARE NEW_MODULE : public Module {
+  
+         // [PORT DECLS HERE]
+  
+      public:
+        NEW_MODULE(const clString& id);
+  
+        virtual ~NEW_MODULE();
+  
+        virtual void execute();
+  
+        virtual void tcl_command(TCLArgs&, void*);
+      };
+
+      extern "C" PACKAGE_NAMESHARE Module* 
+      make_NEW_MODULE(const clString& id) {
+        return new NEW_MODULE(id);
+      }
+
+      NEW_MODULE::NEW_MODULE(const clString& id)
+        : Module("NEW_MODULE", id, Source)
+      {
+        // [PORT CONSTRUCTORS HERE]
+      }
+
+      NEW_MODULE::~NEW_MODULE()
+      {
+      }
+
+      void NEW_MODULE::execute()
+      {
+      }
+
+      void NEW_MODULE::tcl_command(TCLArgs& args, void* userdata)
+      {
+        Module::tcl_command(args, userdata);
+      }
+
+      } // End namespace Modules
+      } // End namespace PACKAGE_NAME
+
+
+
+  **** skeleton sub.mk files for various trees:
+
+    ** PSE/src/PACKAGE/sub.mk = 
+
+       include $(OBJTOP_ABS)/scripts/largeso_prologue.mk
+
+       SRCDIR := NEW_PACKAGE
+
+       SUBDIRS := $(SRCDIR)/GUI $(SRCDIR)/Datatypes \
+               $(SRCDIR)/Modules
+
+       include $(OBJTOP_ABS)/scripts/recurse.mk
+
+       PSELIBS := PSECore SCICore
+       LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+
+       include $(OBJTOP_ABS)/scripts/largeso_epilogue.mk
+
+    ** PSE/src/PACKAGE/Modules/sub.mk = 
+
+       SRCDIR := NEW_PACKAGE/Modules
+
+       SUBDIRS := \
+       #[INSERT NEW SUBDIRS HERE]
+
+       include $(OBJTOP_ABS)/scripts/recurse.mk
+
+    ** PSE/src/PACKAGE/Modules/CATEGORY/sub.mk = 
+
+       include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+
+       SRCDIR   := NEW_PACKAGE/Modules/none
+
+       SRCS     += $(SRCDIR)/none.cc
+
+       PSELIBS := PSECore/Datatypes PSECore/Dataflow \
+               SCICore/Persistent SCICore/Containers SCICore/Util \
+               SCICore/Exceptions SCICore/Thread SCICore/TclInterface \
+               SCICore/Geom SCICore/Datatypes SCICore/Geometry \
+               SCICore/TkExtensions
+       LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+
+       include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+
+    ** PSE/src/PACKAGE/GUI/sub.mk = 
+
+       SRCDIR := NEW_PACKAGE/GUI
+
+       ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
+
+       $(SRCDIR)/tclIndex: 
+               scripts/createTclIndex NEW_PACKAGE/GUI
+
+       CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
+
+    ** PSE/src/PACKAGE/Datatypes/sub.mk = 
+
+       SRCDIR := NEW_PACKAGE/Datatypes
+
+       SUBDIRS := $(SRCDIR)/none 
+
+       include $(OBJTOP_ABS)/scripts/recurse.mk
+
+    ** PSE/src/PACKAGE/Datatypes/GROUP/sub.mk = 
+
+       include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+
+       SRCDIR   := NEW_PACKAGE/Datatypes/none
+
+       SRCS     += 
+
+       PSELIBS :=
+       LIBS :=
+
+       include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+
+  **** share.h skeleton file:
+
+       #undef NEW_PACKAGESHARE
+
+       #ifdef _WIN32
+         #if defined(BUILD_NEW_PACKAGE)
+            #define NEW_PACKAGESHARE __declspec(dllexport)
+         #else
+            #define NEW_PACKAGESHARE __declspec(dllimport)
+         #endif
+       #else
+         #define NEW_PACKAGESHARE
+       #endif
+
+  **** DllEntry.cc skeleton file:
+
+       #ifndef _WIN32
+       #error DllEntry.cc is for Windows platforms only
+       #endif
+
+       #include <afxwin.h>
+       #include <stdio.h>
+
+       BOOL APIENTRY DllMain(HANDLE hModule, 
+                      DWORD  ul_reason_for_call, 
+                      LPVOID lpReserved)
+       {
+       #ifdef DEBUG
+         char reason[100]="\0";
+         printf("Calling DllMain in NEW_PACKAGEd.dll : );
+         printf("   hModule = %d ***\n",hModule);
+         switch (ul_reason_for_call){
+           case DLL_PROCESS_ATTACH:sprintf(reason,"DLL_PROCESS_ATTACH"); break;
+           case DLL_THREAD_ATTACH:sprintf(reason,"DLL_THREAD_ATTACH"); break;
+           case DLL_THREAD_DETACH:sprintf(reason,"DLL_THREAD_DETACH"); break;
+           case DLL_PROCESS_DETACH:sprintf(reason,"DLL_PROCESS_DETACH"); break;
+         }
+         printf("   ul_reason_for_call = %s ***\n",reason);
+       #endif
+         return TRUE;
+       }
+
+  **** example .tcl file (from GenAxes.tcl inside PSECommon).  The
+       structure required (as mentioned above) is inheritance from
+       Module, and the existance of a method name "ui".  If "ui" 
+       does not exist, then the module has no user interface:
+
+itcl_class PSECommon_Visualization_GenAxes {
+    inherit Module
+    constructor {config} {
+        set name GenAxes
+        set_defaults
+    }
+    method set_defaults {} {
+        global $this-size
+        set $this-size 1
+        $this-c needexecute
+    }
+    method ui {} {
+        set w .ui[modname]
+        if {[winfo exists $w]} {
+            raise $w
+            return;
+        }
+        toplevel $w
+        frame $w.f
+        pack $w.f -padx 2 -pady 2
+        set n "$this-c needexecute"
+        
+        global $this-size
+        scale $w.f.slide -label Size -from 0.01 -to 9.99 \
+                -showvalue true \
+                -orient horizontal -resolution 0.01 \
+                -digits 3 -variable $this-size \
+                -command "$this-c size_changed"
+        button $w.f.b -text "Execute" -command $n
+        pack $w.f.slide $w.f.b -side top
+    }
+}
+
+
+  **** example components.xml file (from PSECommon package):
+
+<?xml version='1.0' encoding='us-ascii' ?>
+
+<!-- description of the PSECommon package -->
+
+<package name="PSECommon">
+  <guiPath>GUI</guiPath>
+  <scirun-library category="FEM">
+  <soNames>
+    <soName>libPSECommon_Modules_FEM.so</soName>
+    <soName>libPSECommon.so</soName>
+  </soNames>
+
+  <dataflow-component name="BuildFEMatrix">
+    <meta>
+      <authors>
+        <author>Ruth Nicholson Klepfer</author>
+      </authors>
+      <version-date>October 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_BuildFEMatrix</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+
+  <dataflow-component name="FEMError">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>May 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_FEMError</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+...
+
+
+  </scirun-library>
+  <scirun-library category="Readers">
+  <soNames>
+    <soName>libPSECommon_Modules_Readers.so</soName>
+    <soName>libPSECommon.so</soName>
+  </soNames>
+
+  <dataflow-component name="MatrixReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MatrixReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+
+  <dataflow-component name="MeshReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MeshReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+...
+
+  </scirun-library>
+</package>
+
+
