@@ -45,6 +45,7 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(list<int>& set)
   set.sort();
   set.unique();
 
+ 
   if (set.size() == 0) return; // empty set
   
   list<int>::iterator it = set.begin();
@@ -348,5 +349,32 @@ ostream& operator<<(ostream& out, const ConsecutiveRangeSet& set)
   }
   return out;
 }
+
+ConsecutiveRangeSet::iterator
+ConsecutiveRangeSet::find(int n)
+{
+  int start = 0;
+  int middle = rangeSet_.size()/2;
+  int last = rangeSet_.size()-1;
+  do {
+    Range* r = &rangeSet_[middle];
+    if (r->low_ <= n && r->high() >= n) {
+      return iterator(this, middle, n - r->low_);
+    }
+    else if (r->low_ > n) {
+      last = middle;
+      middle = (last-start)/2 + start;
+    }
+    else {
+      start = middle;
+      middle = (last-start)/2 + start;
+      if (middle == start)
+        middle++;  // make sure we can test the end value
+    }
+  } while (last != start);
+  return end();
+}
+
+
 } // End namespace SCIRun
 

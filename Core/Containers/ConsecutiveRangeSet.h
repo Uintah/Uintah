@@ -203,7 +203,8 @@ public:
   // Could implement binary search on the range set, but this
   // wasn't needed so I didn't do it.  Perhaps in the future if
   // needed. -- Wayne
-  //iterator find(int n);
+  // I needed it, so I implemented it.  -- Bryan
+  iterator find(int n);
   
   inline iterator begin() const
   { return iterator(this, 0, 0); }
