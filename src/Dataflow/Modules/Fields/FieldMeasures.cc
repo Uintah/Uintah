@@ -35,6 +35,7 @@
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/QuadraticTetVolField.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -57,6 +58,7 @@ private:
   GuiInt elemSizeFlag_;
   MeshHandle m_;
   void measure_tetvol();
+  void measure_quadtetvol();
   void measure_pointcloud();
   void measure_trisurf();
   void measure_latvol();
@@ -128,6 +130,9 @@ void
 FieldMeasures::measure_trisurf()
 {
   TriSurfMesh *mesh = dynamic_cast<TriSurfMesh *>(m_.get_rep());
+  
+  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
+ 
   int x = xFlag_.get();
   int y = yFlag_.get();
   int z = zFlag_.get();
@@ -230,6 +235,9 @@ void
 FieldMeasures::measure_tetvol()
 {
   TetVolMesh *mesh = dynamic_cast<TetVolMesh *>(m_.get_rep());
+
+  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
+
   int x = xFlag_.get();
   int y = yFlag_.get();
   int z = zFlag_.get();
@@ -306,6 +314,111 @@ FieldMeasures::measure_tetvol()
     mesh->size(nelems);
     DenseMatrix *dm = scinew DenseMatrix(nelems, ncols);
     TetVolMesh::Elem::iterator ei, eie;
+    mesh->begin(ei); mesh->end(eie);
+    int row=0;
+    int col=0;
+    while (ei != eie) {
+      col=0;
+      Point p;
+      mesh->get_center(p, *ei);
+      if (x) { (*dm)[row][col]=p.x(); col++; }
+      if (y) { (*dm)[row][col]=p.y(); col++; }
+      if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (elemSize) { (*dm)[row][col]=mesh->get_volume(*ei); col++; }
+      if (aspectRatio) { (*dm)[row][col]=0; col++; }  // FIXME: should be aspect_ratio
+      ++ei;
+      row++;
+    }
+    MatrixHandle matH(dm);
+    omp->send(matH);
+  } else {
+    warning("Unkown element type.");
+  }
+
+}
+
+void
+FieldMeasures::measure_quadtetvol()
+{
+  QuadraticTetVolMesh *mesh = dynamic_cast<QuadraticTetVolMesh *>(m_.get_rep());
+  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
+
+  int x = xFlag_.get();
+  int y = yFlag_.get();
+  int z = zFlag_.get();
+  int length = lengthFlag_.get();
+  int valence = valenceFlag_.get();
+  int aspectRatio = aspectRatioFlag_.get();
+  if (aspectRatio) {
+    warning("QuadraticTetVolMesh element aspect ratio not yet implemented.");
+    aspectRatio=0;
+  }
+  int elemSize = elemSizeFlag_.get();
+  int ncols = 0;
+  if (x) ncols++;
+  if (y) ncols++;
+  if (z) ncols++;
+  const string &type = nodeBased_.get();
+  if (type == "node") {
+    if (valence) ncols++;
+    QuadraticTetVolMesh::Node::size_type nnodes;
+    mesh->size(nnodes);
+    DenseMatrix *dm = scinew DenseMatrix(nnodes, ncols);
+    QuadraticTetVolMesh::Node::iterator ni, nie;
+    mesh->begin(ni); mesh->end(nie);
+    int row=0;
+    int col=0;
+    QuadraticTetVolMesh::Node::array_type nbrs;
+    while (ni != nie) {
+      col=0;
+      Point p;
+      mesh->get_center(p, *ni);
+      if (x) { (*dm)[row][col]=p.x(); col++; }
+      if (y) { (*dm)[row][col]=p.y(); col++; }
+      if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (valence) { 
+	mesh->get_neighbors(nbrs, *ni); 
+	(*dm)[row][col]=nbrs.size(); 
+	col++; 
+      }
+      ++ni;
+      row++;
+    }
+    MatrixHandle matH(dm);
+    omp->send(matH);
+  } else if (type == "edge") {
+    if (length) ncols++;
+    QuadraticTetVolMesh::Edge::size_type nedges;
+    mesh->size(nedges);
+    DenseMatrix *dm = scinew DenseMatrix(nedges, ncols);
+    QuadraticTetVolMesh::Edge::iterator ni, nie;
+    mesh->begin(ni); mesh->end(nie);
+    int row=0;
+    int col=0;
+    while (ni != nie) {
+      col=0;
+      Point p,p0,p1;
+      mesh->get_center(p, *ni);
+      QuadraticTetVolMesh::Node::array_type nodes;
+      mesh->get_nodes(nodes, *ni);
+      mesh->get_center(p0,nodes[0]);
+      mesh->get_center(p1,nodes[1]);
+      if (x) { (*dm)[row][col]=p.x(); col++; }
+      if (y) { (*dm)[row][col]=p.y(); col++; }
+      if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (length) { (*dm)[row][col]=(p1-p0).length(); col++; }
+      ++ni;
+      row++;
+    }
+    MatrixHandle matH(dm);
+    omp->send(matH);
+  } else if (type == "element") {
+    if (aspectRatio) ncols++;
+    if (elemSize) ncols++;
+    QuadraticTetVolMesh::Elem::size_type nelems;
+    mesh->size(nelems);
+    DenseMatrix *dm = scinew DenseMatrix(nelems, ncols);
+    QuadraticTetVolMesh::Elem::iterator ei, eie;
     mesh->begin(ei); mesh->end(eie);
     int row=0;
     int col=0;
@@ -465,6 +578,8 @@ FieldMeasures::execute()
     measure_trisurf();
   else if (mesh_name == "TetVolMesh") 
     measure_tetvol();
+  else if (mesh_name == "QuadraticTetVolMesh") 
+    measure_quadtetvol();
   else if (mesh_name == "LatVolMesh") 
     measure_latvol();
   else 
