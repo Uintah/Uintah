@@ -133,6 +133,7 @@ double ICEMaterial::getSpeedOfSound() const
  |____|____|____|____|          |____|____|____|____|=
 _____________________________________________________________________*/
 void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
+                              CCVariable<double>& sp_vol_CC,
 				  CCVariable<double>& rho_CC,
 				  CCVariable<double>& temp,
 				  CCVariable<double>& cv,
@@ -195,6 +196,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
+          sp_vol_CC[*iter]  = 1.0/rho_micro[*iter];
           rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM;
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
@@ -208,6 +210,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
+          sp_vol_CC[*iter]  = 1.0/rho_micro[*iter];
           rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM;
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
@@ -220,17 +223,18 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
         if( count > 0)
         {
            vol_frac_CC[*iter]= count/totalppc;       
-        //}  //Bracket goes here for only -ice problems..cheese. 
+        }  //Bracket goes here for only -ice problems..cheese. 
            press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
            vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
            rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
+           sp_vol_CC[*iter]  = 1.0/rho_micro[*iter];
            rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] + SMALL_NUM;
            temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
            speedSound[*iter] = d_speed_of_sound;
            visc_CC[*iter]    = d_viscosity;
            cv[*iter]         = d_specificHeat; 
            IveBeenHere[*iter]= obj; 
-       } //Bracket goes here for MPMICE problems  this is cheese
+       //} //Bracket goes here for MPMICE problems  this is cheese
            vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();  
            press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
            temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
