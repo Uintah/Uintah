@@ -44,7 +44,7 @@ public:
 
     virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
 
-    inline void calc_clipped_se(const BBox& obj_bbox, const BBox& bbox,
+    void calc_clipped_se(const BBox& obj_bbox, const BBox& bbox,
 				const Vector& diag, int nx, int ny, int nz,
 				int &sx, int &sy, int &sz,
 				int &ex, int &ey, int &ez);
@@ -75,28 +75,6 @@ private:
   static int L1CellsWithChildren, L2CellsWithChildren;
   static int LeafCells, TotalLeafPrims;
 };
-
-inline void HierarchicalGrid::calc_clipped_se(const BBox& obj_bbox, const BBox& bbox,
-					      const Vector& diag,
-					      int nx, int ny, int nz,
-					      int& sx, int& sy, int& sz,
-					      int& ex, int& ey, int& ez)
-{
-  Vector s((obj_bbox.min()-bbox.min())/diag);
-  Vector e((obj_bbox.max()-bbox.min())/diag);
-  sx=(int)(s.x()*nx);
-  sy=(int)(s.y()*ny);
-  sz=(int)(s.z()*nz);
-  ex=(int)(e.x()*nx);
-  ey=(int)(e.y()*ny);
-  ez=(int)(e.z()*nz);
-  sx=Max(Min(sx, nx-1), 0);
-  sy=Max(Min(sy, ny-1), 0);
-  sz=Max(Min(sz, nz-1), 0);
-  ex=Max(Min(ex, nx-1), 0);
-  ey=Max(Min(ey, ny-1), 0);
-  ez=Max(Min(ez, nz-1), 0);
-}
 
 } // end namespace rtrt
 

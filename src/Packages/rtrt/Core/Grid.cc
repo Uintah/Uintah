@@ -37,6 +37,55 @@ Grid::~Grid()
 {
 }
 
+void Grid::calc_se(const BBox& obj_bbox, const BBox& bbox,
+			  const Vector& diag,
+			  int nx, int ny, int nz,
+			  int& sx, int& sy, int& sz,
+			  int& ex, int& ey, int& ez)
+{
+  //    cerr << "obbx min " << obj_bbox.min() << endl;
+  //    cerr << "obbx max " << obj_bbox.max() << endl;
+  //    cerr << "bbx min " << bbox.min() << endl;
+  //    cerr << "bbx max " << bbox.max() << endl;
+  //    cerr << "diag " << diag << endl;
+  //    cerr << "nx, ny, nz " << nx << ", " << ny << ", " << nz << endl;
+    
+  Vector s((obj_bbox.min()-bbox.min())/diag);
+  //    cerr << "s " << s << endl;
+  Vector e((obj_bbox.max()-bbox.min())/diag);
+  //    cerr << "s " << s << endl;
+  sx=(int)(s.x()*nx);
+  sy=(int)(s.y()*ny);
+  sz=(int)(s.z()*nz);
+  ex=(int)(e.x()*nx);
+  ey=(int)(e.y()*ny);
+  ez=(int)(e.z()*nz);
+  if(sx < 0 || ex >= nx){
+    cerr << "NX out of bounds!\n";
+    cerr << "sx=" << sx << ", ex=" << ex << '\n';
+    cerr << "e=" << e << '\n';
+    cerr << "obj_bbox=" << obj_bbox.min() << ", " << obj_bbox.max() << '\n';
+    cerr << "bbox=" << bbox.min() << ", " << bbox.max() << '\n';
+    cerr << "diag=" << diag << '\n';
+    exit(1);
+  }
+  if(sy < 0 || ey >= ny){
+    cerr << "NY out of bounds!\n";
+    cerr << "sy=" << sy << ", ey=" << ey << '\n';
+    exit(1);
+  }
+  if(sz < 0 || ez >= nz){
+    cerr << "NZ out of bounds!\n";
+    cerr << "sz=" << sz << ", ez=" << ez << '\n';
+    cerr << "e=" << e << '\n';
+    cerr << "nz=" << nz << '\n';
+    cerr << "obj_bbox=" << obj_bbox.min() << ", " << obj_bbox.max() << '\n';
+    cerr << "bbox=" << bbox.min() << ", " << bbox.max() << '\n';
+    cerr << "diag=" << diag << '\n';
+    exit(1);
+  }
+}
+
 void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 {
   if (was_preprocessed) return;
