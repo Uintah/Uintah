@@ -108,7 +108,6 @@ PrismNrrdConverter::execute(){
 
   while (pi != range.second) {
     NrrdIPort *inrrd_port = (NrrdIPort*) get_iport(pi->second); 
-
     ++pi;
 
     if (!inrrd_port) {
@@ -117,8 +116,9 @@ PrismNrrdConverter::execute(){
     }
 
     // Save the field handles.
-    if (inrrd_port->get(nHandle) && nHandle.get_rep())
+    if (inrrd_port->get(nHandle) && nHandle.get_rep()) {
       nHandles.push_back( nHandle );
+    }
     else if( pi != range.second ) {
       error( "No handle or representation" );
       return;
@@ -138,13 +138,14 @@ PrismNrrdConverter::execute(){
 
   // See if input data has been added or removed.
   if( nGenerations_.size() == 0 ||
-      nGenerations_.size() != nHandles.size() )
+      nGenerations_.size() != nHandles.size()) {
     generation = nHandles.size();
-  else {
+  } else {
     // See if any of the input data has changed.
     for( int ic=0; ic<nHandles.size() && ic<nGenerations_.size(); ic++ ) {
-      if( nGenerations_[ic] != nHandles[ic]->generation )
+      if( nGenerations_[ic] != nHandles[ic]->generation ) {
 	++generation;
+      }
     }
   }
 
