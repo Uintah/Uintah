@@ -37,6 +37,38 @@ AC_ARG_ENABLE(exename,
 	[exename="$enableval"],
 	[exename=${exename='default'}])
 
+# Make sure that the gmake being used is at least 3.78.1
+gmake_version=`gmake -version | grep version | cut -f4 -d" "`
+
+if test -z "$gmake_version"; then
+    echo "Cannot tell which version of gmake you are using!"
+    echo ""
+    echo "You must be using gmake version 3.78.1!"
+    exit
+else
+
+    gmake_too_old="false"
+    # cut the "," off the end
+    gmake_version=`echo $gmake_version | cut -f1 -d","`
+
+    major=`echo $gmake_version | cut -f1 -d"."`
+    minor=`echo $gmake_version | cut -f2 -d"."`
+    subversion=`echo $gmake_version | cut -f3 -d"."`  
+
+    if test $major -lt 3; then
+	gmake_too_old="true"
+    elif test $minor -lt 78; then
+	gmake_too_old="true"
+    elif test $subversion -lt 1; then
+	gmake_too_old="true"
+    fi
+
+    if test "$gmake_too_old" = "true"; then
+        echo "gmake version ($gmake_version) is too old.  Need at least 3.78.1"
+        exit
+    fi
+fi
+
 #if test "$package" = ""; then
 #  echo "--enable-package requires an argument, such as:"
 #  echo "  --enable-package=\"Uintah BioPSE\""
