@@ -230,6 +230,52 @@ protected:
   NrrdDataHandle pixels_;
 };
 
+
+
+class PaintCM2Widget : public CM2Widget
+{
+public:
+  typedef pair<double, double>		Coordinate;
+  typedef pair<Coordinate, Coordinate>	Segment;
+  typedef pair<Color, Segment>		ColoredSegment;
+  typedef vector<ColoredSegment>	ColoredSegments;
+  
+
+  PaintCM2Widget();
+  PaintCM2Widget(NrrdDataHandle p);
+  ~PaintCM2Widget();
+  PaintCM2Widget(PaintCM2Widget& copy);
+
+  virtual CM2Widget* clone();
+
+  // appearance
+  void draw();
+  void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
+  void rasterize(SCIRun::Array3<float>& array, bool faux);
+  int  get_shadeType() {return shadeType_;}
+  int  get_onState() {return onState_;}
+  
+  bool is_empty();
+  // behavior
+  virtual int pick1 (int x, int y, int w, int h) { return 0;}
+  virtual int pick2 (int x, int y, int w, int h, int m) { return 0;}
+  virtual void move (int obj, int x, int y, int w, int h) {}
+  virtual void release (int obj, int x, int y, int w, int h) {}
+  
+  virtual std::string tcl_pickle() {return "i";}
+  virtual void tcl_unpickle(const std::string &/*p*/) {}
+
+  virtual void io(SCIRun::Piostream &stream);
+  static SCIRun::PersistentTypeID type_id;
+
+  ColoredSegments &	get_segments() { return segments_; }
+
+protected:
+  ColoredSegments		segments_;
+};
+
+
+
 } // End namespace SCIRun
 
 #endif // CM2Widget_h
