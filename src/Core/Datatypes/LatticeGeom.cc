@@ -174,9 +174,9 @@ LatticeGeom::locate(int *loc, const Point &p)
 {
   Point r;
   itransform(p, r);
-  loc[0] = r.x() + 0.5;
-  loc[1] = r.y() + 0.5;
-  loc[2] = r.z() + 0.5;
+  loc[0] = int(r.x() + 0.5);
+  loc[1] = int(r.y() + 0.5);
+  loc[2] = int(r.z() + 0.5);
 
   if (loc[0] < 0 || loc[0] >= nx_ ||
       loc[1] < 0 || loc[1] >= ny_ ||

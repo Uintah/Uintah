@@ -37,7 +37,8 @@ PersistentTypeID DenseMatrix::type_id("DenseMatrix", "Matrix", maker);
   }
   
 DenseMatrix::DenseMatrix()
-  : Matrix(Matrix::non_symmetric, Matrix::dense), nr(0), nc(0), data(0), dataptr(0)
+  : Matrix(Matrix::non_symmetric, Matrix::dense), nc(0), nr(0), data(0),
+    dataptr(0)
 {
 }
 
@@ -265,7 +266,7 @@ int DenseMatrix::solve(ColumnMatrix& sol)
 int DenseMatrix::solve(vector<double>& sol)
 {
     ASSERT(nr==nc);
-    ASSERT(sol.size()==nc);
+    ASSERT(sol.size()==(unsigned)nc);
     vector<double> b(sol);
 
     // Gauss-Jordan with partial pivoting
