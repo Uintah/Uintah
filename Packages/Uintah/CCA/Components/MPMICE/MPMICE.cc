@@ -351,10 +351,6 @@ void MPMICE::scheduleComputeEquilibrationPressure(const Patch* patch,
       task->requires(old_dw,Ilb->temp_CCLabel,      dwindex,patch,Ghost::None);
       task->requires(old_dw,Ilb->mass_CCLabel,      dwindex,patch,Ghost::None);
       task->requires(old_dw,Ilb->sp_vol_CCLabel,    dwindex,patch,Ghost::None);
-      // Above Might be extra
-      
-      task->computes(new_dw,Ilb->sp_vol_equilLabel, dwindex, patch);
-      // Above might be extra need to test
     }
     if(mpm_matl){                    // M P M
       task->requires(new_dw,MIlb->temp_CCLabel,      dwindex,patch,Ghost::None);
@@ -910,7 +906,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       dTdt_CC[m][*iter] = b[m];
     }
 
-
   }  //end CellIterator loop
   
   //__________________________________
@@ -970,7 +965,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   for(int m = 0; m < numALLMatls; m++){
     for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-        dTdt_CC[m].fillFace(face,0);
+	dTdt_CC[m].fillFace(face,0);
     }
   }
 
@@ -1049,7 +1044,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 				       DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw)
 {
-  double    converg_coeff = 60.;
+  double    converg_coeff = 100.;
   double    convergence_crit = converg_coeff * DBL_EPSILON;
   double    sum, tmp;
   int numICEMatls = d_sharedState->getNumICEMatls();
@@ -1074,7 +1069,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   vector<CCVariable<double> > speedSound_new(numALLMatls);
   vector<CCVariable<double> > speedSound(numALLMatls);
   vector<CCVariable<double> > sp_vol_CC(numALLMatls);
-  vector<CCVariable<double> > sp_vol_equil(numALLMatls);
   vector<CCVariable<double> > mat_vol(numALLMatls);
   vector<CCVariable<double> > mass_CC(numALLMatls);
   CCVariable<double> press, press_new;
@@ -1098,8 +1092,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       old_dw->get(mass_CC[m],  Ilb->mass_CCLabel,dwindex, patch, Ghost::None,0);
       old_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,
                                                 dwindex, patch, Ghost::None,0);
-      new_dw->allocate(sp_vol_equil[m],
-                                     Ilb->sp_vol_equilLabel, dwindex, patch);
       cv[m] = ice_matl->getSpecificHeat();
     }
     if(mpm_matl){                    // M P M    
@@ -1135,50 +1127,51 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 
       if(ice_matl){                // I C E
-         double gamma = ice_matl->getGamma();
+         rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
 
-         rho_micro[m][*iter] =  ice_matl->getEOS()->computeRhoMicro(
-                                           press_new[*iter],gamma,
-					        cv[m],Temp[m][*iter]); 
-
+          double gamma   = ice_matl->getGamma(); 
          ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
                                            cv[m],Temp[m][*iter],
                                            press_eos[m],dp_drho[m], dp_de[m]);
 
          mat_volume[m] = mass_CC[m][*iter] * sp_vol_CC[m][*iter];
-         sp_vol_equil[m][*iter] = 1.0/rho_micro[m][*iter];
 
          tmp = dp_drho[m] + dp_de[m] * 
                 (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
       } 
           
       if(mpm_matl){                //  M P M
+#if 0
           rho_micro[m][*iter] =  
            mpm_matl->getConstitutiveModel()->computeRhoMicroCM(press_new[*iter],
 								mpm_matl);
           mpm_matl->getConstitutiveModel()->
            computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
 								tmp,mpm_matl);
-
+#endif
           mat_volume[m] = mat_vol[m][*iter];
 
 //    This is the IDEAL GAS stuff
-//          double gamma   = mpm_matl->getGamma(); 
-//          mpm_matl->getConstitutiveModel()->computeRhoMicro(
-//                                            press_new[*iter],gamma,
-//					         cv[m],Temp[m][*iter]); 
-//          mpm_matl->getConstitutiveModel()->
-//            computePressEOS(rho_micro[m][*iter],gamma,
-//                                            cv[m],Temp[m][*iter],
-//                                           press_eos[m],dp_drho[m], dp_de[m]);
-//         tmp = dp_drho[m] + dp_de[m] * 
-//                (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
+#if 1
+          double gamma   = mpm_matl->getGamma(); 
+         rho_micro[m][*iter] =
+		mpm_matl->getConstitutiveModel()->computeRhoMicro(
+                                            press_new[*iter],gamma,
+					         cv[m],Temp[m][*iter]); 
+          mpm_matl->getConstitutiveModel()->
+            computePressEOS(rho_micro[m][*iter],gamma,
+                                            cv[m],Temp[m][*iter],
+                                           press_eos[m],dp_drho[m], dp_de[m]);
+         tmp = dp_drho[m] + dp_de[m] * 
+                (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
+#endif
       }              
       speedSound_new[m][*iter] = sqrt(tmp);
      
       total_mat_vol += mat_volume[m];
-      
+
      }
+
      for (int m = 0; m < numALLMatls; m++) {
        vol_frac[m][*iter] = mat_volume[m]/(total_mat_vol + d_SMALL_NUM);
        rho_CC[m][*iter]   = vol_frac[m][*iter]*rho_micro[m][*iter] +d_SMALL_NUM;
@@ -1246,15 +1239,19 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        if(mpm_matl){
         //__________________________________
         //  Hardwire for an ideal gas
+#if 0
           mpm_matl->getConstitutiveModel()->
                computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
 								tmp,mpm_matl);
+#endif
 //    This is the IDEAL GAS stuff
-//          double gamma = mpm_matl->getGamma();
-//          mpm_matl->getConstitutiveModel()->
-//            computePressEOS(rho_micro[m][*iter],gamma,
-//                                          cv[m],Temp[m][*iter],
-//                                          press_eos[m], dp_drho[m], dp_de[m]);
+#if 1
+          double gamma = mpm_matl->getGamma();
+          mpm_matl->getConstitutiveModel()->
+            computePressEOS(rho_micro[m][*iter],gamma,
+                                          cv[m],Temp[m][*iter],
+                                          press_eos[m], dp_drho[m], dp_de[m]);
+#endif
        }
      }
      //__________________________________
@@ -1286,17 +1283,20 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          rho_micro[m][*iter] = 
            ice_matl->getEOS()->computeRhoMicro(press_new[*iter],gamma,
                                              cv[m],Temp[m][*iter]);
-         sp_vol_equil[m][*iter] = 1.0/rho_micro[m][*iter];
        }
        if(mpm_matl){
+#if 0
          rho_micro[m][*iter] =  
            mpm_matl->getConstitutiveModel()->computeRhoMicroCM(press_new[*iter],
 								mpm_matl);
+#endif
 //    This is the IDEAL GAS stuff
-//         double gamma = mpm_matl->getGamma();
-//         rho_micro[m][*iter] = 
-//         mpm_matl->getConstitutiveModel()->computeRhoMicro(press_new[*iter],
-//					gamma, cv[m],Temp[m][*iter]);
+#if 1
+         double gamma = mpm_matl->getGamma();
+         rho_micro[m][*iter] = 
+         mpm_matl->getConstitutiveModel()->computeRhoMicro(press_new[*iter],
+					gamma, cv[m],Temp[m][*iter]);
+#endif
        }
      }
      //__________________________________
@@ -1324,17 +1324,21 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                     (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
        }
        if(mpm_matl){
+#if 0
           mpm_matl->getConstitutiveModel()->
                computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
 								tmp,mpm_matl);
+#endif
 //    This is the IDEAL GAS stuff
-//         double gamma = mpm_matl->getGamma();
-//         mpm_matl->getConstitutiveModel()->
-//             computePressEOS(rho_micro[m][*iter],gamma,
-//                                          cv[m],Temp[m][*iter],
-//                                          press_eos[m],dp_drho[m], dp_de[m]);
-//         tmp = dp_drho[m] + dp_de[m] * 
-//                    (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
+#if 1
+         double gamma = mpm_matl->getGamma();
+         mpm_matl->getConstitutiveModel()->
+             computePressEOS(rho_micro[m][*iter],gamma,
+                                          cv[m],Temp[m][*iter],
+                                          press_eos[m],dp_drho[m], dp_de[m]);
+         tmp = dp_drho[m] + dp_de[m] * 
+                    (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
+#endif
        }
        speedSound_new[m][*iter] = sqrt(tmp);
  /*==========TESTING==========`*/
@@ -1436,11 +1440,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   //    Put all matls into new dw
   for (int m = 0; m < numALLMatls; m++)   {
     Material* matl = d_sharedState->getMaterial( m );
-    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     int dwindex = matl->getDWIndex();
-    if(ice_matl){
-      new_dw->put( sp_vol_equil[m],  Ilb->sp_vol_equilLabel,  dwindex, patch);
-    }
     new_dw->put( vol_frac[m],      Ilb->vol_frac_CCLabel,   dwindex, patch);
     new_dw->put( speedSound_new[m],Ilb->speedSound_CCLabel, dwindex, patch);
     new_dw->put( rho_micro[m],     Ilb->rho_micro_CCLabel,  dwindex, patch);
