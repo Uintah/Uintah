@@ -83,8 +83,8 @@ proc TooltipMultiWidget {widgets msg} {
     }
 }
 
-proc Tooltip {w msg} {
-
+proc Tooltip {w args} {
+    set msg [join $args ""]
     global tooltipDelayMS tooltipID tooltipsOn
     bind $w <Enter> "global tooltipID tooltipsOn
                      if \[set tooltipsOn\] \{
