@@ -375,7 +375,9 @@ class BioImageApp {
         } elseif {[string first "VolumeVisualizer" $which] != -1 && $state == "Completed"} {
 	    change_indicate_val 2
 	    change_indicator_labels "Done Volume Rendering"
-        } elseif {[string first "ViewSlices" $which] != -1 && $state == "Completed"} {
+        } elseif {[string first "ViewSlices" $which] != -1 && $state == "JustStarted"} {
+	    change_indicate_val 1
+	} elseif {[string first "ViewSlices" $which] != -1 && $state == "Completed"} {
             if {$2D_fixed == 0} {
                 # simulate a click in each window and set them to the correct views
 		global mods
@@ -456,6 +458,7 @@ class BioImageApp {
 	    global $mods(ViewSlices)-min $mods(ViewSlices)-max
 
 	    $this update_planes_threshold_slider_min_max [set $mods(ViewSlices)-min] [set $mods(ViewSlices)-max]
+	    change_indicate_val 2
 
 	} elseif {[string first "Teem_NrrdData_NrrdInfo_1" $which] != -1 && $state == "Completed"} {
 	    set axis_num 0
@@ -695,7 +698,7 @@ class BioImageApp {
 	### Create a Detached Vis Part
 	toplevel $win.detachedV
 	frame $win.detachedV.f -relief flat
-	pack $win.detachedV.f -side left -anchor n
+	pack $win.detachedV.f -side left -anchor n -fill both -expand 1
 
 	wm title $win.detachedV "Visualization Settings Pane"
 
@@ -1465,7 +1468,7 @@ class BioImageApp {
  	pack $data.expand -side top -anchor nw
 	
  	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
- 	set show [image create photo -file ${image_dir}/play-icon-small.ppm]
+ 	set show [image create photo -file ${image_dir}/expand-icon-small.ppm]
  	button $data.expand.b -image $show \
  	    -anchor nw \
  	    -command "$this change_visibility $which" \
@@ -2108,7 +2111,7 @@ class BioImageApp {
 	    ### Visualization Frame
 	    iwidgets::labeledframe $m.vis \
 		-labelpos n -labeltext "Visualization Settings" 
-	    pack $m.vis -side right -anchor n -fill y
+	    pack $m.vis -side right -anchor ne -fill both -expand yes
 	    
 	    set vis [$m.vis childsite]
 	    
@@ -2842,7 +2845,6 @@ class BioImageApp {
                 global [set NrrdReader]-filename
                 set filename [set [set NrrdReader]-filename]
 
-                puts "filename is $filename"
                 if {[string first "${data_dir}volume/tooth.nhdr" $filename] != -1 && 
 		    [file exists "${data_dir}volume/tooth.xff"]} {
                     puts "loading ${data_dir}volume/tooth.xff"
@@ -3717,7 +3719,7 @@ class BioImageApp {
 	pack $w.expand -side top -anchor nw 
 
 	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
-	set show [image create photo -file ${image_dir}/play-icon-small.ppm]
+	set show [image create photo -file ${image_dir}/expand-icon-small.ppm]
 	set close [image create photo -file ${image_dir}/powerapp-close.ppm]
 	button $w.expand.b -image $show \
 	    -anchor nw \
@@ -3808,7 +3810,7 @@ class BioImageApp {
 	pack $w.expand -side top -anchor nw
 
 	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
-	set show [image create photo -file ${image_dir}/play-icon-small.ppm]
+	set show [image create photo -file ${image_dir}/expand-icon-small.ppm]
 	set close [image create photo -file ${image_dir}/powerapp-close.ppm]
 	button $w.expand.b -image $show \
 	    -anchor nw \
@@ -3964,7 +3966,7 @@ class BioImageApp {
 	pack $w.expand -side top -anchor nw
 
 	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
-	set show [image create photo -file ${image_dir}/play-icon-small.ppm]
+	set show [image create photo -file ${image_dir}/expand-icon-small.ppm]
 	set close [image create photo -file ${image_dir}/powerapp-close.ppm]
 	button $w.expand.b -image $show \
 	    -anchor nw \
@@ -4031,7 +4033,7 @@ class BioImageApp {
 	pack $w.expand -side top -anchor nw
 
 	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
-	set show [image create photo -file ${image_dir}/play-icon-small.ppm]
+	set show [image create photo -file ${image_dir}/expand-icon-small.ppm]
 	set close [image create photo -file ${image_dir}/powerapp-close.ppm]
 	button $w.expand.b -image $show \
 	    -anchor nw \
@@ -4450,8 +4452,8 @@ class BioImageApp {
 
 	set visible [lindex $filters($num) $visibility]
 	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
-	set show [image create photo -file ${image_dir}/expand-icon-small.ppm]
-	set hide [image create photo -file ${image_dir}/play-icon-small.ppm]
+	set hide [image create photo -file ${image_dir}/expand-icon-small.ppm]
+	set show [image create photo -file ${image_dir}/play-icon-small.ppm]
 	if {$visible == 1} {
 	    # hide
 
