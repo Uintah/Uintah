@@ -186,7 +186,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pSizeLabel);
-  t->computes(lb->doMechLabel);
   t->computes(d_sharedState->get_delt_label());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
 
@@ -419,10 +418,8 @@ void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
   t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
   t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
-  t->requires(Task::OldDW, lb->doMechLabel);
 //Uncomment  the next line to use damping
 //t->requires(Task::NewDW, lb->gVelocityLabel,      Ghost::None);     
-  t->computes(lb->doMechLabel);
 
   if(d_with_ice){
     t->requires(Task::NewDW, lb->gradPAccNCLabel,   Ghost::None);
@@ -650,11 +647,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
        mpm_matl->getConstitutiveModel()->initializeCMData(patch,
 						mpm_matl, new_dw);
     }
-    // allocateAndPut instead:
-    /* new_dw->put(cellNAPID, lb->pCellNAPIDLabel, 0, patch); */;
 
-    double doMech = -999.9;
-    new_dw->put(delt_vartype(doMech), lb->doMechLabel);
   }
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 
@@ -1153,8 +1146,6 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
     Vector gravity = d_sharedState->getGravity();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label() );
-    delt_vartype doMechOld;
-    old_dw->get(doMechOld, lb->doMechLabel);
 
     Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
@@ -1198,7 +1189,6 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       new_dw->allocateAndPut(acceleration, lb->gAccelerationLabel, dwi, patch);
       acceleration.initialize(Vector(0.,0.,0.));
 
-      if(doMechOld < -1.5){
        for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
          IntVector c = *iter;
          acceleration[c] =
@@ -1209,9 +1199,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
 //                                        -1000.*velocity[c]*mass[c])/mass[c]
 //                                + gravity + gradPAccNC[c] + AccArchesNC[c];
        }
-      }
     }
-    new_dw->put(doMechOld, lb->doMechLabel);
   }
 }
 
