@@ -60,7 +60,7 @@ DECLARE_MAKER(HexIntMask)
 
 
 HexIntMask::HexIntMask(GuiContext *context) : 
-  Module("HexIntMask", context, Filter, "Forward", "BioPSE")
+  Module("HexIntMask", context, Filter, "CreateModel", "CardioWave")
 {
 }
 
