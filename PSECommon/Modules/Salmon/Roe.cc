@@ -773,17 +773,22 @@ void Roe::pan   (int X, int Y)
 void Roe::ShowFocusSphere()
 {
   for(int i=0;i<roe_objs.size();i++)
-    if (roe_objs[i] == focus_sphere)
+    if (roe_objs[i] == focus_sphere) {
       return;
+    }
 
   roe_objs.add(focus_sphere);
+  roe_objs_draw.add(0);              
+  roe_objs_draw[roe_objs_draw.size()-1] = 1;
 }
 
 void Roe::HideFocusSphere()
 {
   for(int i=0;i<roe_objs.size();i++)
-    if (roe_objs[i] == focus_sphere)
+    if (roe_objs[i] == focus_sphere) {
       roe_objs.remove(i);
+      roe_objs_draw.remove(i);
+    }
 }
 
 // XXX - obsolete-- delete this method below.
@@ -885,8 +890,8 @@ void Roe::mouse_scale(int action, int x, int y, int, int, int)
             current_renderer->pick_scene(x, y, &_down_pt);
             _down_x = x;
             _down_y = y;
-            cerr << "_down_x = " << _down_x << endl;
-            cerr << "_down_y = " << _down_y << endl;
+//             cerr << "_down_x = " << _down_x << endl;
+//             cerr << "_down_y = " << _down_y << endl;
             
             // if someone has already clicked to make a dot and
             // they're not clicking on it now, OR if the user is
@@ -936,8 +941,8 @@ void Roe::mouse_scale(int action, int x, int y, int, int, int)
             double s = 0.008 * vec.length();
 
             focus_sphere->move(_down_pt, s);
-            ShowFocusSphere();
-            is_dot = 1;
+	    ShowFocusSphere();
+	    is_dot = 1;
           }
         }
         
@@ -973,7 +978,7 @@ void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
 	    if(!current_renderer->compute_depth(this, tmpview, znear, zfar))
 		return; // No objects...
 	    double zmid=(znear+zfar)/2.;
-            cerr << "zmid = " << zmid << endl;
+//             cerr << "zmid = " << zmid << endl;
 
 	    Point ep(0, 0, zmid);
 	    rot_point=tmpview.eyespace_to_objspace(ep, aspect);
@@ -2080,6 +2085,10 @@ GeomGroup* Roe::createGenAxes() {
 } // End namespace PSECommon
 
 // $Log$
+// Revision 1.23  2000/12/04 17:34:42  yarden
+// fix a bug caused by a clash between darby's last
+// update and the code from Brown.
+//
 // Revision 1.22  2000/12/01 23:24:42  yarden
 // remove Alexi's rotations.
 // add new 3D navigation from Brown.
