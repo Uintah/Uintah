@@ -25,13 +25,21 @@ namespace rtrt {
     //  rendering (and is the inverse).
     float sil_thickness, inv_sil_thickness, gui_sil_thickness;
     // This is the color the silhouette edge
-    Color sil_color, gui_sil_color;
+    Color sil_color;
+    float gui_sil_color_r, gui_sil_color_g, gui_sil_color_b;
+
+    int normal_method, gui_normal_method;
+    int show_silhouettes, gui_show_silhouettes;
 
     SketchMaterialBase(float sil_thickness):
       sil_thickness(sil_thickness), inv_sil_thickness(1/sil_thickness),
       gui_sil_thickness(sil_thickness),
-      sil_color(0,0,0), gui_sil_color(0,0,0)
+      sil_color(0,0,0),
+      gui_sil_color_r(0), gui_sil_color_g(0), gui_sil_color_b(0),
+      normal_method(1), gui_normal_method(1),
+      show_silhouettes(1), gui_show_silhouettes(1)
     {}
+    virtual ~SketchMaterialBase() {}
   };
   
 template<class ArrayType, class DataType>  
@@ -128,7 +136,7 @@ SketchMaterial<ArrayType, DataType>::SketchMaterial(ArrayType &indata, BBox &bbo
     return;
   }
   //  fprintf(stderr, "%s: pvl created with pointer: %x (%lu)\n", me, pvl, (unsigned long)pvl);
-  
+
   if (gagePerVolumeAttach(main_ctx, pvl)) {
     fprintf(stderr, "%s: problem with gagePerVolumeAttach:\n%s\n",
 	    me, errS = biffGetDone(GAGE));
@@ -231,6 +239,19 @@ SketchMaterial<ArrayType, DataType>::shade(Color& result, const Ray& ray,
 					double atten, const Color& accumcolor,
 					Context* cx) {
   Point hit_pos(ray.origin()+ray.direction()*(hit.min_t));
+  if (normal_method == 0) {
+    // Get the normal from the object
+    Vector normal(hit.hit_obj->normal(hit_pos, hit));
+
+    Light* light=cx->scene->light(0);
+    Vector light_dir;
+    light_dir = light->get_pos()-hit_pos;
+    
+    Color surface;
+    result = color(normal, ray.direction(), light_dir.normal(), 
+		   Color(1,0.3,0.2), light->get_color());
+    return;
+  }
   if (bbox.contains_point(hit_pos)) {
     // Get the ctx for this worker
     int rank = cx->worker->rank();
@@ -276,6 +297,10 @@ SketchMaterial<ArrayType, DataType>::shade(Color& result, const Ray& ray,
 	surface = color(normal, ray.direction(), light_dir.normal(), 
 			Color(1,0.3,0.2), light->get_color());
 
+	if (show_silhouettes == 0) {
+	  result = surface;
+	  return;
+	}
 	// Cool, now let's lookup the silhouette contribution.
 	
 	// We need a dot product of the normal with the view vector.
@@ -451,17 +476,26 @@ void
 SketchMaterial<ArrayType, DataType>::animate(double /*t*/, bool& changed) {
   // Here we can update all the gage stuff if we need to.
   if (gui_sil_thickness != sil_thickness ||
-      gui_sil_color.red() != sil_color.red() ||
-      gui_sil_color.green() != sil_color.green() ||
-      gui_sil_color.blue() != sil_color.blue()) {
-    sil_thickness = gui_sil_thickness;
-    if (gui_sil_thickness != 0)
-      inv_sil_thickness = 1/gui_sil_thickness;
-    else
-      inv_sil_thickness = 0;
-    sil_color = gui_sil_color;
-    changed = true;
-  }
+      gui_sil_color_r != sil_color.red() ||
+      gui_sil_color_g != sil_color.green() ||
+      gui_sil_color_b != sil_color.blue() ||
+      gui_show_silhouettes != show_silhouettes ||
+      gui_normal_method != normal_method)
+    {
+      // Update the thickness
+      sil_thickness = gui_sil_thickness;
+      if (gui_sil_thickness != 0)
+	inv_sil_thickness = 1/gui_sil_thickness;
+      else
+	inv_sil_thickness = 0;
+      // Update the silhouette color
+      sil_color = Color(gui_sil_color_r, gui_sil_color_g, gui_sil_color_b);
+      // Update show_silhouettes
+      show_silhouettes = gui_show_silhouettes;
+      // Update normal_method
+      normal_method = gui_normal_method;
+      changed = true;
+    }
 }
 
 } // end namespace rtrt
