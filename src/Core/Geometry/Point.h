@@ -41,6 +41,7 @@ public:
   inline Vector operator-(const Point&) const;
   inline Point operator+(const Vector&) const;
   inline Point operator-(const Vector&) const;
+  inline Point operator+(const Point&) const;
   inline Point operator*(double) const;
   inline Point& operator*=(const double);
   inline Point& operator+=(const Vector&);
@@ -138,6 +139,10 @@ inline Point Point::operator-() const
 inline Point Point::operator-(const Vector& v) const
 {
     return Point(_x-v._x, _y-v._y, _z-v._z);
+}
+
+inline Point Point::operator+(const Point& p2) const {
+  return Point(_x+p2._x, _y+p2._y, _z+p2._z);
 }
 
 inline Point& Point::operator-=(const Vector& v)
