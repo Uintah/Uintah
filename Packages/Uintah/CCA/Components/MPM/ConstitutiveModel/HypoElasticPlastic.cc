@@ -240,6 +240,53 @@ void HypoElasticPlastic::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
+void HypoElasticPlastic::allocateCMData(DataWarehouse* new_dw,
+					ParticleSubset* subset,
+					map<const VarLabel*, ParticleVariableBase*>* newState)
+{
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+  Matrix3 one, zero(0.); one.Identity();
+
+  ParticleVariable<Matrix3> pDeformGrad, pStress;
+  ParticleVariable<Matrix3> pLeftStretch, pRotation;
+  ParticleVariable<double> pDamage;
+  ParticleVariable<double> pPlasticTemperature;
+
+  new_dw->allocateTemporary(pLeftStretch,subset);
+  new_dw->allocateTemporary(pRotation,subset);
+  new_dw->allocateTemporary(pDeformGrad,subset);
+  new_dw->allocateTemporary(pStress,subset);
+  new_dw->allocateTemporary(pDamage,subset);
+  new_dw->allocateTemporary(pPlasticTemperature,subset);
+
+  for(ParticleSubset::iterator iter = subset->begin();iter != subset->end(); iter++){
+
+    // To fix : For a material that is initially stressed we need to
+    // modify the leftStretch and the stress tensors to comply with the
+    // initial stress state
+    pLeftStretch[*iter] = one;
+    pRotation[*iter] = one;
+    pDeformGrad[*iter] = one;
+    pStress[*iter] = zero;
+    pDamage[*iter] = 0.0;
+    pPlasticTemperature[*iter] = 0.0;
+  }
+
+  (*newState)[pLeftStretchLabel]=pLeftStretch.clone();
+  (*newState)[pRotationLabel]=pRotation.clone();
+  (*newState)[ lb->pDeformationMeasureLabel]=pDeformGrad.clone();
+  (*newState)[lb->pStressLabel]=pStress.clone();
+  (*newState)[pDamageLabel]=pDamage.clone();
+  (*newState)[pPlasticTempLabel]=pPlasticTemperature.clone();
+  
+  // Initialize the data for the plasticity model
+  d_plastic->initializeInternalVars(subset, new_dw);
+
+
+}
+
+
 void HypoElasticPlastic::computeStableTimestep(const Patch* patch,
 					       const MPMMaterial* matl,
 					       DataWarehouse* new_dw)

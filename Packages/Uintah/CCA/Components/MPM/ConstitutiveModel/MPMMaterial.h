@@ -86,6 +86,9 @@ WARNING
 			const Patch*,
 			DataWarehouse* new_dw);
 
+
+   ParticleCreator* getParticleCreator();
+
    //for HeatConductionModel
    double getThermalConductivity() const;
    double getSpecificHeat() const;

@@ -22,6 +22,8 @@ namespace Uintah {
   class MPMLabel;
   class MPMMaterial;
   class DataWarehouse;
+  class ParticleSubset;
+  class ParticleVariableBase;
 
 
   /**************************************
@@ -77,6 +79,10 @@ WARNING
     virtual void initializeCMData(const Patch* patch,
 				  const MPMMaterial* matl,
 				  DataWarehouse* new_dw) = 0;
+
+    virtual void allocateCMData(DataWarehouse* new_dw,
+				ParticleSubset* subset,
+				map<const VarLabel*, ParticleVariableBase*>* newState) = 0;
 
     virtual void addInitialComputesAndRequires(Task* task,
 					       const MPMMaterial* matl,

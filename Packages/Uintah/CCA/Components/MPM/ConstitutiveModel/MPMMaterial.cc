@@ -197,6 +197,10 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 				      patch,new_dw,lb,d_geom_objs);
 }
 
+ParticleCreator* MPMMaterial::getParticleCreator()
+{
+  return  d_particle_creator;
+}
 
 double MPMMaterial::getThermalConductivity() const
 {

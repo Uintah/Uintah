@@ -74,6 +74,35 @@ void CompNeoHookImplicit::initializeCMData(const Patch* patch,
 
 }
 
+void CompNeoHookImplicit::allocateCMData(DataWarehouse* new_dw,
+					 ParticleSubset* subset,
+					 map<const VarLabel*, ParticleVariableBase*>* newState)
+{
+   // Put stuff in here to initialize each particle's
+   // constitutive model parameters and deformationMeasure
+   Matrix3 Identity, zero(0.);
+   Identity.Identity();
+
+   ParticleVariable<Matrix3> deformationGradient, pstress, bElBar;
+
+   new_dw->allocateTemporary(deformationGradient,subset);
+   new_dw->allocateTemporary(pstress,subset);
+   new_dw->allocateTemporary(bElBar,subset);
+
+
+   for(ParticleSubset::iterator iter = subset->begin();
+          iter != subset->end(); iter++) {
+     deformationGradient[*iter] = Identity;
+     pstress[*iter] = zero;
+     bElBar[*iter] = Identity;
+   }
+
+   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
+   (*newState)[lb->pStressLabel]=pstress.clone();
+   (*newState)[lb->bElBarLabel]=bElBar.clone();
+
+}
+
 void CompNeoHookImplicit::addParticleState(std::vector<const VarLabel*>& from,
 				   std::vector<const VarLabel*>& to)
 {

@@ -163,6 +163,50 @@ HyperElasticPlastic::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
+
+void 
+HyperElasticPlastic::allocateCMData(DataWarehouse* new_dw,
+				    ParticleSubset* subset,
+				    map<const VarLabel*, ParticleVariableBase*>* newState)
+{
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+  Matrix3 one, zero(0.); one.Identity();
+
+  ParticleVariable<Matrix3> pDeformGrad, pStress;
+  ParticleVariable<Matrix3> pBbarElastic;
+  ParticleVariable<double> pDamage;
+
+  new_dw->allocateTemporary(pDeformGrad,subset);
+  new_dw->allocateTemporary(pStress,subset);
+  new_dw->allocateTemporary(pDamage,subset);
+  new_dw->allocateTemporary(pBbarElastic,subset);
+
+  for(ParticleSubset::iterator iter =subset->begin();iter != subset->end(); 
+      iter++){
+
+    // To fix : For a material that is initially stressed we need to
+    // modify the left Cauchy-Green and stress tensors to comply with the
+    // initial stress state
+    pBbarElastic[*iter] = one;
+    pDeformGrad[*iter] = one;
+    pStress[*iter] = zero;
+    pDamage[*iter] = 0.0;
+  }
+
+
+  (*newState)[lb->pDeformationMeasureLabel] = pDeformGrad.clone();
+  (*newState)[lb->pStressLabel] = pStress.clone();
+  (*newState)[pDamageLabel] = pStress.clone();
+  (*newState)[pBbarElasticLabel] = pBbarElastic.clone();
+
+
+  // Initialize the data for the plasticity model
+  d_plasticity->initializeInternalVars(subset, new_dw);
+
+
+}
+
 void 
 HyperElasticPlastic::computeStableTimestep(const Patch* patch,
 					   const MPMMaterial* matl,
@@ -571,16 +615,16 @@ HyperElasticPlastic::addComputesAndRequires(Task* task,
   Ghost::GhostType  gac   = Ghost::AroundCells;
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pXLabel, matlset,Ghost::None);
   if(d_8or27==27)
-    task->requires(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pMassLabel,              matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pTemperatureLabel,       matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
-  task->requires(Task::NewDW, lb->gVelocityLabel,          matlset,gac, NGN);
+    task->requires(Task::OldDW, lb->pSizeLabel, matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pMassLabel,  matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pVolumeLabel,  matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pTemperatureLabel, matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pVelocityLabel, matlset,Ghost::None);
+  task->requires(Task::NewDW, lb->gVelocityLabel,  matlset,gac, NGN);
 
-  task->requires(Task::OldDW, lb->pStressLabel,            matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pStressLabel, matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
 
   task->requires(Task::OldDW, pBbarElasticLabel, matlset,Ghost::None);
