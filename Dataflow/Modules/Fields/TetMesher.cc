@@ -221,6 +221,9 @@ bool TetMesher::write_tet_file(const int &npoints, double* const points,
   FieldOPort *ofld = (FieldOPort *)get_oport("TetVol");
   if (!ofld) return false;
   ofld->send(tvH);
+
+  cout << "Finished loading " << ntets << " tetrahedrons.\n\n";
+
   return true;
 }
 
