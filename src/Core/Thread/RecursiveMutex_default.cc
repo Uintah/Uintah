@@ -61,6 +61,7 @@ RecursiveMutex::RecursiveMutex(const char* name)
 RecursiveMutex::~RecursiveMutex()
 {
   delete priv_;
+  priv_=0;
 }
 
 void

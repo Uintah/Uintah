@@ -68,6 +68,7 @@ CrowdMonitor::CrowdMonitor(const char* name)
 CrowdMonitor::~CrowdMonitor()
 {
   delete priv_;
+  priv_=0;
 }
 
 void

@@ -67,6 +67,7 @@ Barrier::Barrier(const char* name)
 Barrier::~Barrier()
 {
     delete priv_;
+    priv_=0;
 }
 
 void
