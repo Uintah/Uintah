@@ -87,7 +87,7 @@ class PartToGeom : public Module {
  public:
     PartToGeom(const clString& id);
     virtual ~PartToGeom();
-    virtual void geom_pick(GeomPick*, void*, int);
+    virtual void geom_pick(GeomPick*, void*, GeomObj*);
 
     virtual void execute();
 };
@@ -317,19 +317,19 @@ void PartToGeom::execute()
 }
 
 
-void PartToGeom::geom_pick(GeomPick* pick, void* userdata, int index)
+void PartToGeom::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked)
 {
   cerr << "Caught stray pick event in PartToGeom!\n";
   cerr << "this = "<< this <<", pick = "<<pick<<endl;
   cerr << "User data = "<<userdata<<endl;
-  cerr << "sphere index = "<<index<<endl<<endl;
+  //  cerr << "sphere index = "<<index<<endl<<endl;
   int id = 0;
-  if ( ((GeomObj *)pick)->getId( id ) )
+  if ( ((GeomObj *)picked)->getId( id ) )
     cerr<<"Id = "<< id <<endl;
   else
     cerr<<"Not getting the correct data\n";
   if( cbClass != 0 )
-    ((VizControl *)cbClass)->callback( index );
+    ((VizControl *)cbClass)->callback( id );
   // Now modify so that points and spheres store index.
 }
   
@@ -343,6 +343,10 @@ extern "C" Module* make_PartToGeom( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.14  2000/08/11 16:11:10  bigler
+// Replace int index parameter in geom_pick function with GeomObj*.
+// Changed function to acces index from GeomObj*.
+//
 // Revision 1.13  2000/08/09 03:18:06  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //
