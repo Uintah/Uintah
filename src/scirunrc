@@ -121,9 +121,16 @@
 # SCIRUN_DATA = /usr/sci/data/SCIRunData/1.20.1
 
 
+### SCIRUN_NET_SUBSTITUTE_DATADIR = [boolean]
+#   If true, module filename variables will be automatically substitute
+#   SCIRUN_DATADIR and SCIRUN_DATASET in saved .net files.
+# SCIRUN_NET_SUBSTITUTE_DATADIR = false
+
+
 ### SCIRUN_DATASET = [name]
 #   Name of data set in SCIRUN_DATA to default to.
 # SCIRUN_DATASET = sphere
+
 
 ### SCIRUN_MYDATA_DIR = [path]
 #   Directory, or list of directories separated by colons, 
@@ -165,12 +172,6 @@ SCIRUN_TMP_DIR = /tmp
 ### SCIRUN_INSERT_NET_COPYRIGHT = [boolean]
 #   If true, adds SCI copyright to any SCI .net files that are created.
 # SCIRUN_INSERT_NET_COPYRIGHT = false
-
-
-### SCIRUN_NET_SUBSTITUTE_DATADIR = [boolean]
-#   If true, module filename variables will be automatically substitute
-#   SCIRUN_DATADIR and SCIRUN_DATASET in saved .net files.
-# SCIRUN_NET_SUBSTITUTE_DATADIR = false
 
 
 ### SCIRUN_NOCLEANUPCOMPILE = [boolean]
