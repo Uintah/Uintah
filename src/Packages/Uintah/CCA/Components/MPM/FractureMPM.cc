@@ -964,15 +964,21 @@ void FractureMPM::scheduleDoCrackPropagation(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls)
 {
+  // Recollect crack-front nodes, discarding the dead crack-front segments
+  Task* t = scinew Task("Crack::RecollectCrackFrontNodes", crackMethod,
+                        &Crack::RecollectCrackFrontNodes);
+  crackMethod->addComputesAndRequiresPropagateCrackFrontNodes(t, patches, matls);
+  sched->addTask(t, patches, matls);
+
   // Propagate crack front and form the new crack nodes
-  Task* t = scinew Task("Crack::PropagateCrackFrontNodes", crackMethod,
-                         &Crack::PropagateCrackFrontNodes);
+  t = scinew Task("Crack::PropagateCrackFrontNodes", crackMethod,
+                  &Crack::PropagateCrackFrontNodes);
   crackMethod->addComputesAndRequiresPropagateCrackFrontNodes(t, patches, matls);
   sched->addTask(t, patches, matls);
 
   // Construct the new crack front elements 
   t = scinew Task("Crack::ConstructNewCrackFrontElems", crackMethod,
-                         &Crack::ConstructNewCrackFrontElems);
+                  &Crack::ConstructNewCrackFrontElems);
   crackMethod->addComputesAndRequiresConstructNewCrackFrontElems(t, patches, matls);
   sched->addTask(t, patches, matls);
 }
