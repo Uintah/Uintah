@@ -21,9 +21,9 @@ University of Utah. All Rights Reserved.
 
 <xsl:template name="top_banner">
 
-<script language="JavaScript">
+<script type="text/javascript">
 var treetop="<xsl:value-of select="$treetop"/>";
-document.write('&lt;script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_top.js"&gt;&lt;\/script&gt;');
+document.write('&lt;script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"&gt;&lt;\/script&gt;');
 </script>
 
 </xsl:template>
