@@ -69,7 +69,7 @@ class SetupFEMatrix : public Module {
   int                lastUseCond_;
   
   GuiString          uiBCFlag_;
-  
+  clString           lastBCFlag_;
   MatrixHandle       hGblMtrx_;
   MatrixHandle       hRhs_;
   int                gen_;
@@ -124,7 +124,8 @@ void SetupFEMatrix::execute(){
   if (hField->generation == gen_ 
       && hGblMtrx_.get_rep() 
       && hRhs_.get_rep()
-      && lastUseCond_==uiUseCond_.get()) {
+      && lastUseCond_==uiUseCond_.get()
+      && lastBCFlag_==uiBCFlag_.get()) {
     oportMtrx_->send(hGblMtrx_);
     oportRhs_->send(hRhs_);
     return;
@@ -182,7 +183,7 @@ void SetupFEMatrix::execute(){
   }
   
   lastUseCond_ = uiUseCond_.get();
-  
+  lastBCFlag_ = bcFlag;
   if(BuildFEMatrix::build_FEMatrix(hCondMesh, dirBC, tens, hGblMtrx_, hRhs_)){
     msgStream_ << "Matrix is ready" << endl;
     msgStream_ << "Size: " << hGblMtrx_->nrows() << "-by-" << hGblMtrx_->ncols() << endl;
