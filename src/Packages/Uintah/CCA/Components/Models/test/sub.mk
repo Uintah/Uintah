@@ -12,6 +12,7 @@ endif
 SRCS	+= \
        $(SRCDIR)/Mixing.cc \
        $(SRCDIR)/SimpleRxn.cc \
+       $(SRCDIR)/AdiabaticTable.cc \
        $(SRCDIR)/ArchesTable.cc \
        $(SRCDIR)/TableInterface.cc \
        $(SRCDIR)/TableFactory.cc \

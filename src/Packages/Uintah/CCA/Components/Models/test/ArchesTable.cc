@@ -277,7 +277,7 @@ void ArchesTable::setup()
       Ind* ind = in_inds[i];
       int l=0;
       int h=ind->weights.size()-1;
-      if(value < ind->weights[l] || value > ind->weights[h])
+      if(value < ind->weights[l] || value > ind->weights[h])        
 	throw InternalError("Interpolate outside range of table");
       while(h > l+1){
 	int m = (h+l)/2;
@@ -367,12 +367,21 @@ void ArchesTable::interpolate(int index, CCVariable<double>& result,
       double value = independents[i][*iter];
       if(ind->uniform){
 	double index = (value-ind->weights[0])/ind->dx;
-	if(index < 0 || index >= ind->weights.size()){
-	  cerr << "value=" << value << ", start=" << ind->weights[0] << ", dx=" << ind->dx << '\n';
-	  cerr << "index=" << index << '\n';
-	  throw InternalError("Interpolate outside range of table");
-	}
 	int idx = (int)index;
+	if(index < 0 || index >= ind->weights.size()){
+          if(value == ind->weights[ind->weights.size()-1]){
+            idx--;
+          } else if(index < 0 || index > -1.e-10){
+            index=0;
+            idx=0;
+          } else {
+            cerr.precision(17);
+            cerr << "value=" << value << ", start=" << ind->weights[0] << ", dx=" << ind->dx << '\n';
+            cerr << "index=" << index << ", fraction=" << index-idx << '\n';
+            cerr << "last value=" << ind->weights[ind->weights.size()-1] << '\n';
+            throw InternalError("Interpolate outside range of table");
+          }
+	}
 	w[i] = index-idx;
 	idx0[i] = ind->offset[idx];
 	idx1[i] = ind->offset[idx+1];
