@@ -104,7 +104,8 @@ DEALINGS IN THE SOFTWARE.
           FieldBoundary, ChangeFieldBasis, ClipByFunction, IsoClip, and
           IsoSurface modules.</li>
       <li>GenStandardColormaps (Visualization) - New (better) default
-          rainbow colormap.  All colormaps are now reversible.</li>
+          rainbow colormap.  All colormaps are now reversible, and 
+	  can be downsampled to a minimum resolution of 2.</li>
       <li>Disable faces and edges in ShowField if the field dimension
           precludes them.</li>
       <li> FieldReader (DataIO) - Added an example wget plugin for
@@ -161,6 +162,8 @@ DEALINGS IN THE SOFTWARE.
       directly and will only write out a .nd file if specifed or if
       there are NrrdData properties.</li>
       <li>UnuResample (Unu) - Fixed to pass correct parameters to teem call.</li>
+      <li>NrrdGradient (NrrdData) - Compute the gradient vector for
+      the input Nrrd.</li>
     </ul>
 
     <h2>Insight Modules (Category in parentheses)</h2>
@@ -277,6 +280,13 @@ DEALINGS IN THE SOFTWARE.
       <li>Add versioning of .scirunrc file.&nbsp; If ~/.scirunrc file is out of date, ask user to update it.</li>
       <li>Upgrade RPMS to use Insight Toolkit v1.8.1 (was v1.6.1)</li>
       <li>Red-Green style subdivision added to Core/Datatypes/TetVolMesh.h</li>
+      <li>When saving a Field, Pio its MeshHandle (rather than its
+      Mesh)</li>
+      <li>Change OSX SCIRUn::Semaphore class to use a
+      ConditionVariable rather than an OSX native Semaphore, since
+      OSX Semaphores are expensive.</li>
+      <li>Added Teem's eigenvector / eigenvalue function calls into
+      Tensor class.</li>
     </ul>
 
     <h1>Environment Variables</h1>
