@@ -43,8 +43,10 @@ Tk_CursorCmd(clientData, interp, argc, argv)
  
     if  ( Tk_GetPixels(interp,winPtr,argv[3],&x) != TCL_OK )return TCL_ERROR;
     if  ( Tk_GetPixels(interp,winPtr,argv[4],&y) != TCL_OK )return TCL_ERROR;
- 
+
+#ifndef _WIN32
     XWarpPointer(Tk_Display(winPtr),None,win,0,0,0,0,x,y);
+#endif
   }
  
   return TCL_OK;
