@@ -1028,8 +1028,7 @@ PressureSolver::normPressure(const ProcessorGroup*,
 {
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  //  double pressref = vars->press_ref;
-  double pressref = 0.0;
+  double pressref = vars->press_ref;
   fort_normpress(idxLo, idxHi, vars->pressure, pressref);
 
 #ifdef ARCHES_PRES_DEBUG
