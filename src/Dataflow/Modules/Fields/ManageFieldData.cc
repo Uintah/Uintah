@@ -83,35 +83,69 @@ ManageFieldData::dispatch_scalar(F *ifield)
   MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Output Matrix");
   if (omatrix_port->nconnections() > 0)
   {
-    int rows;
     typename F::mesh_handle_type mesh = ifield->get_typed_mesh();
+    ColumnMatrix *omatrix;
     switch (ifield->data_at())
     {
     case Field::NODE:
-      rows = mesh->nodes_size();
+      {
+	int index = 0;
+	omatrix = new ColumnMatrix(mesh->nodes_size());
+	typename F::mesh_type::node_iterator iter = mesh->node_begin();
+	while (iter != mesh->node_end())
+	{
+	  typename F::value_type val = ifield->value(*iter);
+	  omatrix->put(index++, (double)val);
+	  ++iter;
+	}
+      }
       break;
+
     case Field::EDGE:
-      rows = mesh->edges_size();
+      {
+	int index = 0;
+	omatrix = new ColumnMatrix(mesh->edges_size());
+	typename F::mesh_type::edge_iterator iter = mesh->edge_begin();
+	while (iter != mesh->edge_end())
+	{
+	  typename F::value_type val = ifield->value(*iter);
+	  omatrix->put(index++, (double)val);
+	  ++iter;
+	}
+      }
       break;
+
     case Field::FACE:
-      rows = mesh->faces_size();
+      {
+	int index = 0;
+	omatrix = new ColumnMatrix(mesh->faces_size());
+	typename F::mesh_type::face_iterator iter = mesh->face_begin();
+	while (iter != mesh->face_end())
+	{
+	  typename F::value_type val = ifield->value(*iter);
+	  omatrix->put(index++, (double)val);
+	  ++iter;
+	}
+      }
       break;
+
     case Field::CELL:
-      rows = mesh->cells_size();
+      {
+	int index = 0;
+	omatrix = new ColumnMatrix(mesh->cells_size());
+	typename F::mesh_type::cell_iterator iter = mesh->cell_begin();
+	while (iter != mesh->cell_end())
+	{
+	  typename F::value_type val = ifield->value(*iter);
+	  omatrix->put(index++, (double)val);
+	  ++iter;
+	}
+      }
       break;
+
     case Field::NONE:
       // No data to put in matrix.
       return;
-    }
-
-    int index = 0;
-    ColumnMatrix *omatrix = new ColumnMatrix(rows);
-    typename F::mesh_type::cell_iterator ci = mesh->cell_begin();
-    while (ci != mesh->cell_end())
-    {
-      typename F::value_type val = ifield->value(*ci);
-      omatrix->put(index++, (double)val);
-      ++ci;
     }
     
     MatrixHandle omatrix_handle(omatrix);
@@ -135,38 +169,56 @@ ManageFieldData::dispatch_tetvol(F *ifield)
     }
 
     const int rows = imatrix->nrows();
-    TetVolMeshHandle tvm = ifield->get_typed_mesh();
-    Field::data_location loc = Field::NONE;
-    if (rows == tvm->nodes_size())
+    TetVolMeshHandle mesh = ifield->get_typed_mesh();
+    TetVol<double> *ofield;
+    if (rows == mesh->nodes_size())
     {
-      loc = Field::NODE;
+      int index = 0;
+      ofield = new TetVol<double>(mesh, Field::NODE);
+      typename F::mesh_type::node_iterator iter = mesh->node_begin();
+      while (iter != mesh->node_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
     }
-    else if (rows == tvm->edges_size())
+    else if (rows == mesh->edges_size())
     {
-      loc = Field::EDGE;
+      int index = 0;
+      ofield = new TetVol<double>(mesh, Field::EDGE);
+      typename F::mesh_type::edge_iterator iter = mesh->edge_begin();
+      while (iter != mesh->edge_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
     }
-    else if (rows == tvm->faces_size())
+    else if (rows == mesh->faces_size())
     {
-      loc = Field::FACE;
+      int index = 0;
+      ofield = new TetVol<double>(mesh, Field::FACE);
+      typename F::mesh_type::face_iterator iter = mesh->face_begin();
+      while (iter != mesh->face_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
     }
-    else if (rows == tvm->cells_size())
+    else if (rows == mesh->cells_size())
     {
-      loc = Field::CELL;
+      int index = 0;
+      ofield = new TetVol<double>(mesh, Field::CELL);
+      typename F::mesh_type::cell_iterator iter = mesh->cell_begin();
+      while (iter != mesh->cell_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
     }
-
-    if (rows == 0 || loc == Field::NONE)
+    else
     {
       // ERROR, matrix datasize does not match field geometry.
       return;
-    }
-
-    int index = 0;
-    TetVol<double> *ofield = new TetVol<double>(tvm, loc);
-    typename F::mesh_type::cell_iterator ci = tvm->cell_begin();
-    while (ci != tvm->cell_end())
-    {
-      ofield->set_value(imatrix->get(index++, 0), *ci);
-      ++ci;
     }
 
     FieldHandle fh(ofield);
@@ -189,39 +241,57 @@ ManageFieldData::dispatch_latticevol(F *ifield)
       return;
     }
 
-    unsigned int rows = imatrix->nrows();
-    LatVolMeshHandle lvm = ifield->get_typed_mesh();
-    Field::data_location loc = Field::NONE;
-    if (rows == lvm->nodes_size())
+    const unsigned int rows = imatrix->nrows();
+    LatVolMeshHandle mesh = ifield->get_typed_mesh();
+    LatticeVol<double> *ofield;
+    if (rows == mesh->nodes_size())
     {
-      loc = Field::NODE;
+      int index = 0;
+      ofield = new LatticeVol<double>(mesh, Field::NODE);
+      typename F::mesh_type::node_iterator iter = mesh->node_begin();
+      while (iter != mesh->node_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
     }
-    else if (rows == lvm->edges_size())
+    else if (rows == mesh->edges_size())
     {
-      loc = Field::EDGE;
+      int index = 0;
+      ofield = new LatticeVol<double>(mesh, Field::EDGE);
+      typename F::mesh_type::edge_iterator iter = mesh->edge_begin();
+      while (iter != mesh->edge_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
     }
-    else if (rows == lvm->faces_size())
+    else if (rows == mesh->faces_size())
     {
-      loc = Field::FACE;
+      int index = 0;
+      ofield = new LatticeVol<double>(mesh, Field::FACE);
+      typename F::mesh_type::face_iterator iter = mesh->face_begin();
+      while (iter != mesh->face_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
     }
-    else if (rows == lvm->cells_size())
+    else if (rows == mesh->cells_size())
     {
-      loc = Field::CELL;
+      int index = 0;
+      ofield = new LatticeVol<double>(mesh, Field::CELL);
+      typename F::mesh_type::cell_iterator iter = mesh->cell_begin();
+      while (iter != mesh->cell_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
     }
-
-    if (rows == 0 || loc == Field::NONE)
+    else
     {
       // ERROR, matrix datasize does not match field geometry.
       return;
-    }
-
-    int index = 0;
-    LatticeVol<double> *ofield = new LatticeVol<double>(lvm, loc);
-    typename F::mesh_type::cell_iterator ci = lvm->cell_begin();
-    while (ci != lvm->cell_end())
-    {
-      ofield->set_value(imatrix->get(index++, 0), *ci);
-      ++ci;
     }
 
     FieldHandle fh(ofield);
@@ -244,39 +314,46 @@ ManageFieldData::dispatch_trisurf(F *ifield)
       return;
     }
 
-    int rows = imatrix->nrows();
-    Field::data_location loc = Field::NONE;
-    TriSurfMeshHandle tsm = ifield->get_typed_mesh();
-    if (rows == tsm->nodes_size())
+    const int rows = imatrix->nrows();
+    TriSurfMeshHandle mesh = ifield->get_typed_mesh();
+    TriSurf<double> *ofield;
+    if (rows == mesh->nodes_size())
     {
-      loc = Field::NODE;
+      int index = 0;
+      ofield = new TriSurf<double>(mesh, Field::NODE);
+      typename F::mesh_type::node_iterator iter = mesh->node_begin();
+      while (iter != mesh->node_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
     }
-    else if (rows == tsm->edges_size())
+    else if (rows == mesh->edges_size())
     {
-      loc = Field::EDGE;
+      int index = 0;
+      ofield = new TriSurf<double>(mesh, Field::EDGE);
+      typename F::mesh_type::edge_iterator iter = mesh->edge_begin();
+      while (iter != mesh->edge_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
     }
-    else if (rows == tsm->faces_size())
+    else if (rows == mesh->faces_size())
     {
-      loc = Field::FACE;
+      int index = 0;
+      ofield = new TriSurf<double>(mesh, Field::FACE);
+      typename F::mesh_type::face_iterator iter = mesh->face_begin();
+      while (iter != mesh->face_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
     }
-    else if (rows == tsm->cells_size())
-    {
-      loc = Field::CELL;
-    }
-
-    if (rows == 0 || loc == Field::NONE)
+    else
     {
       // ERROR, matrix datasize does not match field geometry.
       return;
-    }
-
-    int index = 0;
-    TriSurf<double> *ofield = new TriSurf<double>(tsm, loc);
-    typename F::mesh_type::cell_iterator ci = tsm->cell_begin();
-    while (ci != tsm->cell_end())
-    {
-      ofield->set_value(imatrix->get(index++, 0), *ci);
-      ++ci;
     }
 
     FieldHandle fh(ofield);
