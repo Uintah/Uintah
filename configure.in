@@ -1164,10 +1164,10 @@ UNI_PETSC_LIB_DIR=""
 # try the user supplied path first
 if test "$unipetsc" ; then
   if test -e "$unipetsc/$PETSC_SUB/libpetsc.so"; then
-    UNI_PETSC_LIB_DIR="$unipetsc/$PETSC_SUB"
+    UNI_PETSC_LIB_DIR="-L$unipetsc/$PETSC_SUB"
     UNI_PETSC_DIR="$unipetsc"
   elif test -e "$unipetsc/lib/libpetsc.so"; then
-    UNI_PETSC_LIB_DIR="$unipetsc/lib"
+    UNI_PETSC_LIB_DIR="-L$unipetsc/lib"
     UNI_PETSC_DIR="$unipetsc"
   fi
 fi
@@ -1175,10 +1175,10 @@ fi
 # if not found try the default
 if test -z "$UNI_PETSC_LIB_DIR" ; then
   if test -e "$thirdparty/$PETSC_SUB/libpetsc.so"; then
-    UNI_PETSC_LIB_DIR=$thirdparty/$PETSC_SUB
+    UNI_PETSC_LIB_DIR=-L$thirdparty/$PETSC_SUB
     UNI_PETSC_DIR="$thirdparty"
   elif test -e "$thirdparty/lib/libpetsc.so"; then
-    UNI_PETSC_LIB_DIR=$thirdparty/lib
+    UNI_PETSC_LIB_DIR=-L$thirdparty/lib
     UNI_PETSC_DIR="$thirdparty"
   fi
 fi
@@ -1186,10 +1186,10 @@ fi
 # if still not found try some standard locations
 if test -z "$UNI_PETSC_LIB_DIR" ; then
   if test -e /lib/libpetsc.so ; then
-    UNI_PETSC_LIB_DIR=/lib
+    UNI_PETSC_LIB_DIR=-L/lib
     UNI_PETSC_DIR=/
   elif test -e /usr/lib/libpetsc.so; then
-    UNI_PETSC_LIB_DIR=/usr/lib
+    UNI_PETSC_LIB_DIR=-L/usr/lib
     UNI_PETSC_DIR=/usr
   fi
 fi
@@ -1199,7 +1199,7 @@ if test "$UNI_PETSC_LIB_DIR"; then
   UNI_PETSC_DEF="#define UNI_PETSC"
   UNI_PETSC_LIBS="-lpetsc -lpetscsles -lpetscmat -lpetscvec \
                    -lpetscdm -lpetsccontrib -llapack -lblas -lg2c -lmpiuni"
-  AC_MSG_RESULT(-L$UNI_PETSC_LIB_DIR -lpetsc)
+  AC_MSG_RESULT($UNI_PETSC_LIB_DIR -lpetsc)
 fi
 
 if test "$UNI_PETSC_LIB_DIR"; then
