@@ -327,7 +327,7 @@ GridSpheres* create_GridSpheres(Array1<SphereData> data_group, int colordata,
   Array1<Material*> matls;
   get_material(matls);
   cout << "Using radius "<<radius<<"\n";
-  return new GridSpheres(data, mins, maxs, total_spheres, numvars-3, gridcellsize, griddepth, radius, matls.size(), &matls[0]);  
+  return new GridSpheres(data, mins, maxs, total_spheres, numvars, gridcellsize, griddepth, radius, matls.size(), &matls[0]);  
 }
 
 GridSpheres* read_spheres(char* spherefile, int datanum,
@@ -580,7 +580,7 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
   double dt=SCIRun::Time::currentSeconds()-time;
   cerr << "Read " << nspheres << " spheres in " << dt << " seconds (" << nspheres/dt << " spheres/sec)\n";
   close(in_fd);
-  return new GridSpheres(data, mins, maxs, nspheres, numvars-3, gridcellsize, griddepth, radius, matls.size(), &matls[0]);
+  return new GridSpheres(data, mins, maxs, nspheres, numvars, gridcellsize, griddepth, radius, matls.size(), &matls[0]);
 }
 
 extern "C" 
