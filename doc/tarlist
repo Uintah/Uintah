@@ -83,21 +83,16 @@ globs = ["#{root}/doc/User/FAQ/*.gif",
   "#{root}/doc/User/Tutorials/BioImage/*.html",  
   "#{root}/doc/Installation/Guide/*/srig.pdf",
   "#{root}/doc/Installation/Guide/*/*.html",
-  "#{root}/doc/Documentum/*.html",
-  "#{root}/doc/Documentum/*.pdf",
+  "#{root}/doc/Documentum/*.{html,pdf}",
   "#{root}/doc/Developer/Guide/*.html",
   "#{root}/doc/Developer/Modules/*.html",
-  "#{root}/doc/Utilities/HTML/*.css",
-  "#{root}/doc/Utilities/HTML/*.js",
+  "#{root}/doc/Utilities/HTML/*.{css,js}",
   "#{root}/src/Dataflow/XML/*.html",
-  "#{root}/src/Dataflow/Modules/*/doc/*.jpg",
-  "#{root}/src/Dataflow/Modules/*/doc/*.gif",
-  "#{root}/src/Packages/*/Dataflow/XML/*.html",
-  "#{root}/src/Packages/*/Dataflow/TeX/*/*.jpg",
-  "#{root}/src/Packages/*/Dataflow/TeX/*/*.gif",
+  "#{root}/src/Dataflow/Modules/*/doc/*.{jpg,gif,png}",
+  "#{root}/src/Packages/*/Dataflow/XML/*.{html,jpg,gif,png}",
+  "#{root}/src/Packages/*/Dataflow/TeX/*/*.{jpg,gif,png}",
   "#{root}/src/Packages/*/Dataflow/TeX/*/*/*",
-  "#{root}/src/Packages/*/Dataflow/Modules/*/doc/*.gif",
-  "#{root}/src/Packages/*/Dataflow/Modules/*/doc/*.jpg"]
+  "#{root}/src/Packages/*/Dataflow/Modules/*/doc/*.{jpg,gif,png}"]
 
 globs.each do |glob|
   Dir.glob(glob).each do |file|
