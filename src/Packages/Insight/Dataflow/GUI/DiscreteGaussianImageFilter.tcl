@@ -3,15 +3,15 @@ itcl_class Insight_Filters_DiscreteGaussianImageFilter {
     constructor {config} {
         set name DiscreteGaussianImageFilter
 
-	global $this-variance
-	global $this-max_error
+	global $this-Variance
+	global $this-MaximumError
 
         set_defaults
     }
 
     method set_defaults {} {
-	set $this-variance 10
-	set $this-max_error 0.001
+	set $this-Variance 10
+	set $this-MaximumError 0.001
     }
 
     method ui {} {
@@ -24,25 +24,24 @@ itcl_class Insight_Filters_DiscreteGaussianImageFilter {
 	    return;
         }
         toplevel $w
-	frame $w.a
-	frame $w.a.labs
-	frame $w.a.ents
+                                                   
+	frame $w.Variance
+	label $w.Variance.label -text "Variance" 
+	entry $w.Variance.entry -textvariable $this-Variance
+	pack $w.Variance.label $w.Variance.entry -side left 
+	pack $w.Variance 
 
-	label $w.a.labs.variance -text "Variance" -just left
-	entry $w.a.ents.variance -textvariable $this-variance
-	label $w.a.labs.max_error -text "Max Error" -just left
-	entry $w.a.ents.max_error -textvariable $this-max_error
+	frame $w.MaximumError
+	label $w.MaximumError.label -text "MaximumError" 
+	entry $w.MaximumError.entry -textvariable $this-MaximumError
+	pack $w.MaximumError.label $w.MaximumError.entry -side left
+	pack $w.MaximumError 
 
-	pack $w.a.labs.variance $w.a.labs.max_error -side top -anchor w
-	pack $w.a.ents.variance $w.a.ents.max_error -side top -anchor w
-	pack $w.a.labs $w.a.ents -side left
 
-	frame $w.b
-	button $w.b.execute -text "Execute" -command "$this-c needexecute"
-	pack $w.b.execute -side top -e n -f both
-	pack $w.b -side bottom
+	button $w.execute -text "Execute" -command "$this-c needexecute"
+	button $w.close -text "Close" -command "destroy $w"
+	pack $w.execute $w.close 
 
-	pack $w.a -side left
-	
+
     }
 }

@@ -23,22 +23,22 @@ itcl_class Insight_DataIO_ImageFileWriter {
 
 	############
 	set types {
+	    {{Meta Image}        {.mhd} }
+	    {{PNG Image}        {.png} }
 	    {{All Files}       {.*} }
 	}
-	set defname "MyImage"
-	set initdir "/scratch-linux/darbyb"
-	set defext ".png"
+	set defname "MyImage.mhd"
+	set defext ".mhd"
 	############
         toplevel $w
 	makeSaveFilebox \
 	    -parent $w \
-	    -filevar $this-filename \
+	    -filevar $this-FileName \
 	    -command "$this-c needexecute; destroy $w" \
 	    -cancel "destroy $w" \
 	    -title "Save Image File" \
 	    -filetypes $types \
 	    -initialfile $defname \
-	    -initialdir $initdir \
 	    -defaultextension $defext \
 	    -formatvar $this-filetype \
 	    -splitvar $this-split

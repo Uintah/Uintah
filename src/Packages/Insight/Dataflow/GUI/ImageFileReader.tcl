@@ -18,12 +18,25 @@ itcl_class Insight_DataIO_ImageFileReader {
 	    return;
         }
         toplevel $w
+
+	set defext ".mhd"
+	set title "Open image file"
+	
+	# file types to appers in filter box
+	set types {
+	    {{Meta Image}        {.mhd} }
+	    {{PNG Image}        {.png} }
+	    {{All Files}       {.*}    }
+	}
+
 	makeOpenFilebox \
 		-parent $w \
-		-filevar $this-filename \
+		-filevar $this-FileName \
 		-command "$this-c needexecute; destroy $w" \
 		-cancel "destroy $w" \
 		-title "Open Image File" \
+                -filetypes $types \
+		-defaultextension $defext
 
     }
 }
