@@ -235,23 +235,19 @@ void Module::kill_helper()
 
 void Module::report_progress( ProgressState state )
 {
-  //static bool reset_color = false;
   switch ( state ) {
   case ProgressReporter::Starting:
-    //reset_color = false;
     break;
   case ProgressReporter::Compiling:
-    light_module();
+    gui->execute(id+" set_compiling_p 1");
     remark("Dynamically compiling some code.");
     break;
   case ProgressReporter::CompilationDone:
     msgStream_flush();
-    reset_module_color();
-    //reset_color = true;
+    gui->execute(id+" set_compiling_p 0");
     remark("Dynamic compilation completed.");
     break;
   case ProgressReporter::Done:
-    //if ( reset_color ) reset_module_color();
     break;
   }
 }
@@ -361,16 +357,6 @@ void Module::accumulate_progress(int n)
 }
 
 
-void Module::light_module()
-{
-  gui->execute(id+" light_module ");
-}
-
-void Module::reset_module_color()
-{
-  gui->execute(id+" reset_module_color ");
-}
-
 // Port stuff
 void Module::add_iport(IPort* port)
 {
@@ -432,7 +418,7 @@ void Module::remove_iport(int which)
 	iports[loop1]->connection(loop2)->id +
 	" <ButtonPress-3> \"destroyConnection " +
 	iports[loop1]->connection(loop2)->id +
-	" " + omod + " " + imod + "1\"";
+	" " + omod + " " + imod + " 1\"";
       gui->execute(command);
 
       command = "global maincanvas; set temp \"a\"\n$maincanvas bind " +
