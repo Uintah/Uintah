@@ -307,15 +307,15 @@ LevelField<Data>::maker()
 
 template <class Data>
 PersistentTypeID
-LevelField<Data>::type_id(type_name(),
-		GenericField<LevelMesh, LevelData<Data> >::type_name(),
+LevelField<Data>::type_id(type_name(-1),
+		GenericField<LevelMesh, LevelData<Data> >::type_name(-1),
                 maker); 
 
 template <class Data>
 void
 LevelField<Data>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(), LEVELFIELD_VERSION);
+  stream.begin_class(type_name(-1), LEVELFIELD_VERSION);
   GenericField<LevelMesh, LevelData<Data> >::io(stream);
   stream.end_class();                                                         
 }

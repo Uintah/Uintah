@@ -210,8 +210,8 @@ ImageField<Data>::maker()
 
 template <class Data>
 PersistentTypeID
-ImageField<Data>::type_id(type_name(),
-		GenericField<ImageMesh, FData2d<Data> >::type_name(),
+ImageField<Data>::type_id(type_name(-1),
+		GenericField<ImageMesh, FData2d<Data> >::type_name(-1),
                 maker); 
 
 template <class Data>

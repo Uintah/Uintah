@@ -149,8 +149,8 @@ TetVol<T>::maker()
 
 template <class T>
 PersistentTypeID 
-TetVol<T>::type_id(type_name(), 
-		   GenericField<TetVolMesh, vector<T> >::type_name(),
+TetVol<T>::type_id(type_name(-1), 
+		   GenericField<TetVolMesh, vector<T> >::type_name(-1),
 		   maker);
 
 
