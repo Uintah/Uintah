@@ -58,8 +58,8 @@ public:
 class myMeshPort: public virtual gov::cca::ports::MeshPort{
  public:
   virtual ~myMeshPort(){}
-  virtual CIA::array1<int> getTriangles();
-  virtual CIA::array1<double> getNodes();
+  virtual SIDL::array1<int> getTriangles();
+  virtual SIDL::array1<double> getNodes();
   void setParent(Tri *com){this->com=com;}
   Tri *com;  
 };

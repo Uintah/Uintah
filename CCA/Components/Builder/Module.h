@@ -44,7 +44,7 @@ class Module:public QFrame
 public:
   enum PortType{USES, PROVIDES}; 
   Module(NetworkCanvasView *parent, const std::string& name,
-	 CIA::array1<std::string> & up, CIA::array1<std::string> &pp,
+	 SIDL::array1<std::string> & up, SIDL::array1<std::string> &pp,
 	 const gov::cca::Services::pointer& services,
 	 const gov::cca::ComponentID::pointer &cid);
   QPoint usePortPoint(int num);
@@ -75,7 +75,7 @@ protected:
   QRect nameRect;
   //  std::string moduleName;
   std::string instanceName;
-  CIA::array1<std::string> up, pp;
+  SIDL::array1<std::string> up, pp;
 private:
   gov::cca::Services::pointer services;
   QPopupMenu *menu;

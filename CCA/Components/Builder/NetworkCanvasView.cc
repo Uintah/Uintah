@@ -273,8 +273,8 @@ void NetworkCanvasView::addChild( Module* mod2add, int x , int y, bool repositio
 
 
 void NetworkCanvasView::addModule( const string& name, int x, int y,
-				  CIA::array1<std::string> & up,
-				  CIA::array1<std::string> &pp ,
+				  SIDL::array1<std::string> & up,
+				  SIDL::array1<std::string> &pp ,
 				  const gov::cca::ComponentID::pointer &cid,
 				   bool reposition)
 {
@@ -387,7 +387,7 @@ void NetworkCanvasView::showPossibleConnections(Module *m, const std::string &po
 
   cerr<<"Possible Ports:"<<endl;
   for(unsigned int i=0; i<modules.size(); i++){
-      CIA::array1<std::string> portList=bs->getCompatiblePortList(m->cid,portname,modules[i]->cid );
+      SIDL::array1<std::string> portList=bs->getCompatiblePortList(m->cid,portname,modules[i]->cid );
       for(unsigned int j=0; j<portList.size(); j++){
 	Connection *con;
 	if(porttype==Module::USES)

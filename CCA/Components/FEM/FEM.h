@@ -59,7 +59,7 @@ class myPDEMatrixPort: public virtual gov::cca::ports::PDEMatrixPort{
  public:
   virtual ~myPDEMatrixPort(){}
   virtual gov::cca::Matrix::pointer getMatrix();
-  virtual CIA::array1<double> getVector();
+  virtual SIDL::array1<double> getVector();
   void setParent(FEM *com){this->com=com;}
   FEM *com;  
 };
@@ -77,16 +77,16 @@ class FEM : public gov::cca::Component{
 			   const double x[3], const double y[3]);
     void localMatrices(double A[3][3], double f[3], 
 		       const double x[3], const double y[3]);
-    void globalMatrices(const CIA::array1<double> &node1d,
-			const CIA::array1<int> &tmesh1d);
+    void globalMatrices(const SIDL::array1<double> &node1d,
+			const SIDL::array1<int> &tmesh1d);
     double source(int index);
     double boundary(int index);
     bool isConst(int index);
 
     Matrix::pointer Ag;
-    CIA::array1<double> fg;
-    CIA::array1<int> dirichletNodes;
-    CIA::array1<double> dirichletValues;
+    SIDL::array1<double> fg;
+    SIDL::array1<int> dirichletNodes;
+    SIDL::array1<double> dirichletValues;
   private:
 
     FEM(const FEM&);

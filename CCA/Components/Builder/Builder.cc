@@ -69,8 +69,8 @@ void Builder::setServices(const gov::cca::Services::pointer& services)
     cerr << "Fatal Error: Cannot find builder service\n";
     return;
   } 
-
-  builder->registerServices(services);
+  //do not delelet the following line	
+  //builder->registerServices(services);
     
   services->releasePort("cca.BuilderService"); 
       

@@ -37,9 +37,9 @@
 #include "Colormap.h"
 
 MainWindow::MainWindow( QWidget *parent, const char *name,
-			CIA::array1<double> nodes1d, 
-		        CIA::array1<int> triangles, 
-			CIA::array1<double> solution)
+			SIDL::array1<double> nodes1d, 
+		        SIDL::array1<int> triangles, 
+			SIDL::array1<double> solution)
         : QWidget( parent, name )
 {
     setGeometry(QRect(200,200,500,500));

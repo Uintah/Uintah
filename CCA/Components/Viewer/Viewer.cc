@@ -88,8 +88,8 @@ int myUIPort::ui()
   }  
   gov::cca::ports::MeshPort::pointer pdePort=
     pidl_cast<gov::cca::ports::MeshPort::pointer>(pp);
-  CIA::array1<double> nodes=pdePort->getNodes();	
-  CIA::array1<int> triangles=pdePort->getTriangles();	
+  SIDL::array1<double> nodes=pdePort->getNodes();	
+  SIDL::array1<int> triangles=pdePort->getTriangles();	
   com->getServices()->releasePort("mesh");	
 
   gov::cca::Port::pointer pp2=com->getServices()->getPort("field");	
@@ -99,7 +99,7 @@ int myUIPort::ui()
   }  
   gov::cca::ports::Field2DPort::pointer fport=
     pidl_cast<gov::cca::ports::Field2DPort::pointer>(pp2);
-  CIA::array1<double> solution=fport->getField();	
+  SIDL::array1<double> solution=fport->getField();	
   com->getServices()->releasePort("field");	
 
 

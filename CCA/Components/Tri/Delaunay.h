@@ -91,7 +91,7 @@ class Boundary{
 
 class Delaunay{
 public:
-  Delaunay(const CIA::array1<double> &nodes1d, const CIA::array1<int> &boundaries1d);
+  Delaunay(const SIDL::array1<double> &nodes1d, const SIDL::array1<int> &boundaries1d);
   Delaunay();
 
   void readNodes(std::istream &s);	//read nodes from a stream

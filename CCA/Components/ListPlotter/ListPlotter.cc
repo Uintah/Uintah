@@ -77,7 +77,7 @@ int ImUIPort::ui()
     return 1;
   }  
   gov::cca::ports::ZListPort::pointer lport=pidl_cast<gov::cca::ports::ZListPort::pointer>(pp);
-  CIA::array1<double> data=lport->getList();	
+  SIDL::array1<double> data=lport->getList();	
 
   services->releasePort("listport");
 

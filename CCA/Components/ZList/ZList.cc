@@ -67,8 +67,8 @@ int ImUIPort1::ui()
   return 0;
 }
 
-CIA::array1<double> ImZListPort::getList()
+SIDL::array1<double> ImZListPort::getList()
 {
- CIA::array1<double> data;
+ SIDL::array1<double> data;
  return com->datalist;
 }

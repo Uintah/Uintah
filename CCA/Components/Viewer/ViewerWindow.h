@@ -74,9 +74,9 @@ protected:
   int borderX, borderY;
   Colormap *cmap;
   double minx, miny, maxx, maxy;
-  CIA::array1<double> nodes1d;
-  CIA::array1<int> triangles;
-  CIA::array1<double> solution; 
+  SIDL::array1<double> nodes1d;
+  SIDL::array1<int> triangles;
+  SIDL::array1<double> solution; 
   void setBackground(const QString &type);
   bool showMesh;
   bool showCoordinates;
