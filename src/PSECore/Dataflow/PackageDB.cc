@@ -300,13 +300,14 @@ Module* PackageDB::instantiateModule(const clString& packageName,
 #endif
   
   Module *module = (moduleInfo->maker)(instanceName);
+  
+  // Some modules may already know their package and category.
+  // If this module doesn't, then set it's package and category here.
   clString unknown("unknown");
   if (unknown == module->packageName)
     module->packageName=packageName;
   if (unknown == module->categoryName)
     module->categoryName=categoryName;
-  if (unknown == module->moduleName)
-    module->moduleName = moduleName;
   
   return module;
 }
@@ -382,6 +383,9 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.29  2000/12/01 23:17:09  moulding
+// Added comments explaining the last commit.
+//
 // Revision 1.28  2000/12/01 23:05:41  moulding
 // if, when the packageDB instantiates a module, the module doesn't
 // itself know which package and category it belongs to, let the
