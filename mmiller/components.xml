@@ -4,13 +4,13 @@
 
 <package name="mmiller">
   <guiPath>GUI</guiPath>
-  <scirun-library category="dmatmul.cc">
+  <scirun-library category="matrix">
   <soNames>
-    <soName>libmmiller_Modules_dmatmul.cc.so</soName>
+    <soName>libmmiller_Modules_dmatmul.so</soName>
     <soName>libmmiller.so</soName>
   </soNames>
 
-  <dataflow-component name="">
+  <dataflow-component name="dmatmul">
     <meta>
       <authors>
         <author>Dorian Arnold</author>
@@ -26,14 +26,8 @@
       <creationFunction>make_</creationFunction>
     </implementation>
   </dataflow-component>
-  </scirun-library>
-  <scirun-library category="SolveMatrix.cc">
-  <soNames>
-    <soName>libmmiller_Modules_SolveMatrix.cc.so</soName>
-    <soName>libmmiller.so</soName>
-  </soNames>
 
-  <dataflow-component name="">
+  <dataflow-component name="SolveMatrix">
     <meta>
       <authors>
         <author>Steven G. Parker</author>
@@ -49,14 +43,8 @@
       <creationFunction>make_</creationFunction>
     </implementation>
   </dataflow-component>
-  </scirun-library>
-  <scirun-library category="dbuildmat.cc">
-  <soNames>
-    <soName>libmmiller_Modules_dbuildmat.cc.so</soName>
-    <soName>libmmiller.so</soName>
-  </soNames>
 
-  <dataflow-component name="">
+  <dataflow-component name="dbuildmat">
     <meta>
       <authors>
         <author>Dorian Arnold</author>
