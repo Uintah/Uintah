@@ -39,8 +39,11 @@ WARNING
     Handle();
     Handle(T*);
     Handle(const Handle<T>&);
-    Handle<T>& operator=(const Handle<T>&);
+    
+    Handle<T>& operator=(const Handle<T>& copy)
+    { return operator=(copy.d_rep); }
     Handle<T>& operator=(T*);
+    
     ~Handle();
     
     void detach();
@@ -53,7 +56,10 @@ WARNING
       ASSERT(d_rep != 0);
       return d_rep;
     }
-    inline T* get_rep() const {
+    inline T* get_rep() {
+      return d_rep;
+    }
+    inline const T* get_rep() const {
       return d_rep;
     }
     inline operator bool() const {
@@ -108,31 +114,17 @@ WARNING
   }
   
   template<class T>
-  Handle<T>& Handle<T>::operator=(const Handle<T>& copy)
+  Handle<T>& Handle<T>::operator=(T* copy)
   {
-    if(d_rep != copy.d_rep){
+    if(d_rep != copy){    
       if(d_rep){
 	if(d_rep->removeReference())
 	  delete d_rep;
       }
-      d_rep=copy.d_rep;
+      d_rep=copy;
       if(d_rep){
-	copy.d_rep->addReference();
+	d_rep->addReference();
       }
-    }
-    return *this;
-  }
-  
-  template<class T>
-  Handle<T>& Handle<T>::operator=(T* copy)
-  {
-    if(d_rep){
-      if(d_rep->removeReference())
-	delete d_rep;
-    }
-    d_rep=copy;
-    if(d_rep){
-      d_rep->addReference();
     }
     return *this;
   }
