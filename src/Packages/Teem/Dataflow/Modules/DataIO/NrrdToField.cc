@@ -31,7 +31,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/MaskedLatticeVol.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
@@ -77,156 +77,132 @@ void NrrdToField::execute()
   if(!inrrd->get(ninH))
     return;
 
-  if (ninH->nrrd->dim != 3) {
+  Nrrd *n = ninH->nrrd;
+  int i, j, k;
+
+  FieldHandle fieldH;
+
+  if (n->dim == 4) {  // vector or tensor data
+    if (n->type != nrrdTypeFloat) {
+      cerr << "Error - tensor nrrd's must be floats.\n";
+      return;
+    }
+    // matrix, x, y, z
+    if (n->size[0] == 7) {
+      // the Nrrd assumed samples at nodes and gave min/max accordingly
+      // but we want to think of those samples as centers of cells, so
+      // we need a different mesh
+      Point minP(0,0,0);
+      Point maxP((n->size[1]+1)*n->spacing[1], (n->size[2]+1)*n->spacing[2],
+		 (n->size[3]+1)*n->spacing[3]);
+      int nx = n->size[1];
+      int ny = n->size[2];
+      int nz = n->size[3];
+      LatVolMesh *lvm = scinew LatVolMesh(nx+1, ny+1, nz+1, minP, maxP);
+      MaskedLatticeVol<Tensor> *f =
+	scinew MaskedLatticeVol<Tensor>(lvm, Field::CELL);
+      double *p=(double *)n->data;
+      Array1<double> tens(6);
+      for (k=0; k<nz; k++)
+	for (j=0; j<ny; j++)
+	  for (i=0; i<nx; i++, p++) {
+	    if (*p++ > .5) f->mask()(k,j,i)=1; else f->mask()(k,j,i)=0;
+	    for (int ch=0; ch<6; ch++) tens[ch]=*p++;
+	    f->fdata()(k,j,i)=Tensor(tens);
+	  }
+      fieldH = f;      
+      ofield->send(fieldH);
+    } else {
+      cerr << "Error - 4D nrrd must have 7 entries per channel (1st dim).\n";
+    }
+    return;
+  }
+
+  if (n->dim != 3) {
     cerr << "Can only deal with 3-dimensional scalar fields... sorry.\n";
     return;
   }
-
-  int nx = ninH->nrrd->size[0];
-  int ny = ninH->nrrd->size[1];
-  int nz = ninH->nrrd->size[2];
+  int nx = n->size[0];
+  int ny = n->size[1];
+  int nz = n->size[2];
   
-  Point minP(0,0,0), maxP((nx-1)*ninH->nrrd->spacing[0],
-			  (ny-1)*ninH->nrrd->spacing[1],
-			  (nz-1)*ninH->nrrd->spacing[2]);	  
-  FieldHandle fieldH;
-
-#if 0
-  minP.x(ninH->nrrd->axisMin[0]);
-  if ((minP.x()<1 || minP.x()>-1)) {	// !NaN
-    minP.y(ninH->nrrd->axisMin[1]);
-    minP.z(ninH->nrrd->axisMin[2]);
-    maxP.x(ninH->nrrd->axisMax[0]);
-    maxP.y(ninH->nrrd->axisMax[1]);
-    maxP.z(ninH->nrrd->axisMax[2]);
-  } else {
-    minP=Point(0,0,0);
-    maxP=Point(nx-1, ny-1, nz-1);
-  }
-#endif
- 
-  int i, j, k;
+  Point minP(0,0,0), maxP((nx-1)*n->spacing[0],
+			  (ny-1)*n->spacing[1],
+			  (nz-1)*n->spacing[2]);	  
   LatVolMesh *lvm = scinew LatVolMesh(nx, ny, nz, minP, maxP);
   LatVolMeshHandle lvmH(lvm);
-
-  Array1<double> t(6);
-  if (ninH->nrrd->dim == 4) {  // vector or tensor data
-    if (ninH->nrrd->type != nrrdTypeDouble) {
-      cerr << "Error - vector and tensor nrrd's must be doubles.\n";
-      return;
-    }
-    if (ninH->nrrd->size[3] == 3) {
-      LatticeVol<Vector> *f = 
-	scinew LatticeVol<Vector>(lvm, Field::NODE);
-      double *p=(double *)ninH->nrrd->data;
-      for (k=0; k<nz; k++)
-	for (j=0; j<ny; j++)
-	  for(i=0; i<nx; i++) {
-	    f->fdata()(i,j,k).x(*p++);
-	    f->fdata()(i,j,k).y(*p++);
-	    f->fdata()(i,j,k).z(*p++);
-	  }
-      fieldH = f;      
-    } else if (ninH->nrrd->size[3] == 6) {
-      LatticeVol<Tensor> *f = 
-	scinew LatticeVol<Tensor>(lvm, Field::NODE);
-      double *p=(double *)ninH->nrrd->data;
-      for (k=0; k<nz; k++)
-	for (j=0; j<ny; j++)
-	  for(i=0; i<nx; i++) {
-	    for (int q=0; q<6; q++) t[q]=*p++;
-	    f->fdata()(i,j,k)=Tensor(t);
-	  }
-      fieldH = f;      
-    } else if (ninH->nrrd->size[3] == 7) {
-      LatticeVol<Tensor> *f = 
-	scinew LatticeVol<Tensor>(lvm, Field::NODE);
-      double *p=(double *)ninH->nrrd->data;
-      for (k=0; k<nz; k++)
-	for (j=0; j<ny; j++)
-	  for(i=0; i<nx; i++) {
-	    /* double valid = */ *p++; // should use masked value here
-	    for (int q=0; q<6; q++) t[q]=*p++;
-	    f->fdata()(i,j,k)=Tensor(t);
-	  }
-      fieldH = f;      
-    } else {
-      cerr << "Error - 4D nrrd must have vectors or tensors as 4th dim.\n";
-    }
-    return;
-  }
-
-  if (ninH->nrrd->type == nrrdTypeChar) {
+ 
+  if (n->type == nrrdTypeChar) {
     LatticeVol<char> *f = 
       scinew LatticeVol<char>(lvm, Field::NODE);
-    char *p=(char *)ninH->nrrd->data;
+    char *p=(char *)n->data;
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
 	for(i=0; i<nx; i++)
-	  f->fdata()(i,j,k) = *p++;
+	  f->fdata()(k,j,i) = *p++;
     fieldH = f;
-  } else if (ninH->nrrd->type == nrrdTypeUChar) {
+  } else if (n->type == nrrdTypeUChar) {
     LatticeVol<unsigned char> *f = 
       scinew LatticeVol<unsigned char>(lvm, Field::NODE);
-    unsigned char *p=(unsigned char *)ninH->nrrd->data;
+    unsigned char *p=(unsigned char *)n->data;
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
 	for(i=0; i<nx; i++)
-	  f->fdata()(i,j,k) = *p++;
+	  f->fdata()(k,j,i) = *p++;
     fieldH = f;
-  } else if (ninH->nrrd->type == nrrdTypeShort) {
+  } else if (n->type == nrrdTypeShort) {
     LatticeVol<short> *f = 
       scinew LatticeVol<short>(lvm, Field::NODE);
-    short *p=(short *)ninH->nrrd->data;
+    short *p=(short *)n->data;
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
 	for(i=0; i<nx; i++)
-	  f->fdata()(i,j,k) = *p++;
+	  f->fdata()(k,j,i) = *p++;
     fieldH = f;
-  } else if (ninH->nrrd->type == nrrdTypeUShort) {
+  } else if (n->type == nrrdTypeUShort) {
     LatticeVol<unsigned short> *f = 
       scinew LatticeVol<unsigned short>(lvm, Field::NODE);
-    unsigned short *p=(unsigned short *)ninH->nrrd->data;
+    unsigned short *p=(unsigned short *)n->data;
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
 	for(i=0; i<nx; i++)
-	  f->fdata()(i,j,k) = *p++;
+	  f->fdata()(k,j,i) = *p++;
     fieldH = f;
-  } else if (ninH->nrrd->type == nrrdTypeInt) {
+  } else if (n->type == nrrdTypeInt) {
     LatticeVol<int> *f = 
       scinew LatticeVol<int>(lvm, Field::NODE);
-    int *p=(int *)ninH->nrrd->data;
+    int *p=(int *)n->data;
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
 	for(i=0; i<nx; i++)
-	  f->fdata()(i,j,k) = *p++;
+	  f->fdata()(k,j,i) = *p++;
     fieldH = f;
-  } else if (ninH->nrrd->type == nrrdTypeUInt) {
+  } else if (n->type == nrrdTypeUInt) {
     LatticeVol<unsigned int> *f = 
       scinew LatticeVol<unsigned int>(lvm, Field::NODE);
-    unsigned int *p=(unsigned int *)ninH->nrrd->data;
+    unsigned int *p=(unsigned int *)n->data;
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
 	for(i=0; i<nx; i++)
-	  f->fdata()(i,j,k) = *p++;
+	  f->fdata()(k,j,i) = *p++;
     fieldH = f;
-  } else if (ninH->nrrd->type == nrrdTypeFloat) {
+  } else if (n->type == nrrdTypeFloat) {
     LatticeVol<float> *f = 
       scinew LatticeVol<float>(lvm, Field::NODE);
-    float *p=(float *)ninH->nrrd->data;
+    float *p=(float *)n->data;
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
 	for(i=0; i<nx; i++)
-	  f->fdata()(i,j,k) = *p++;
+	  f->fdata()(k,j,i) = *p++;
     fieldH = f;
-  } else if (ninH->nrrd->type == nrrdTypeDouble) {
+  } else if (n->type == nrrdTypeDouble) {
     LatticeVol<double> *f = 
       scinew LatticeVol<double>(lvm, Field::NODE);
-    double *p=(double *)ninH->nrrd->data;
+    double *p=(double *)n->data;
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
 	for(i=0; i<nx; i++)
-	  f->fdata()(i,j,k) = *p++;
+	  f->fdata()(k,j,i) = *p++;
     fieldH = f;
   } else {
     cerr << "NrrdToField error - Unrecognized nrrd type.\n";
