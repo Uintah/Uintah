@@ -15,6 +15,7 @@ include $(SRCTOP)/scripts/recurse.mk
 
 PSELIBS := \
 	Packages/Uintah/CCA/Components/HETransformation \
+	Packages/Uintah/CCA/Components/MPM \
 	Packages/Uintah/CCA/Ports \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/ProblemSpec \
