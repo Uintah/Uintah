@@ -21,6 +21,14 @@
 #include <iostream.h>
 #include <Geometry/BBox.h>
 
+int GeomPick::nprincipal() {
+    return directions.size();
+}
+
+Vector GeomPick::principal(int i) {
+    return directions[i];
+}
+
 GeomObj::GeomObj()
 : matl(0), pick(0)
 {

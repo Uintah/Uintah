@@ -44,6 +44,8 @@ struct DrawInfo {
 	Gouraud,
 	Phong,
     };
+    int pick_mode;
+    int edit_mode;
     DrawType drawtype;
     DrawInfo();
 
@@ -69,8 +71,8 @@ public:
 class GeomObj {
 protected:
     MaterialProp* matl;
-    GeomPick* pick;
 public:
+    GeomPick* pick;
     GeomObj();
     GeomObj(const GeomObj&);
     virtual ~GeomObj();
