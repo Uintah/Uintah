@@ -2,6 +2,12 @@
 #ifndef RTRT_GUI_H
 #define RTRT_GUI_H
 
+#include <GL/glx.h>
+#include <GL/glu.h>
+
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+
 #include <string>
 #include <vector>
 
@@ -26,8 +32,10 @@ struct DpyPrivate;
 class  Stealth;
 class  Camera;
 class  Color;
-
-class Light;
+class  Worker;
+class  DepthStats;
+class  Stats;
+class  Light;
 
 class Gui {
 
@@ -101,7 +109,12 @@ private:
   int   mouseDown_;
   bool  shiftDown_; // during mouse press
 
+  bool  rightButtonMenuActive_;
+
   bool  beQuiet_;
+
+  bool  displayRStats_;
+  bool  displayPStats_;
 
   std::vector<Light*> lights_;
   bool                lightsOn_;
@@ -132,7 +145,7 @@ private:
   GLUI_EditText * framesPerSecondTxt;
   GLUI_Spinner  * fovSpinner_;
 
-  int             fovValue_;
+  float           fovValue_;
   int             depthValue_;
 
   ////////////////////////////////////////////////////////////////
@@ -262,10 +275,27 @@ private:
   void cycleShadowMode();
   void cycleAmbientMode();
   void quit();
+  void setupFonts();
 
-  void displayText(void * font, double x, double y, char *s, const Color& c);
-  void displayShadowText(void * font,
+  // Functions to draw text, etc on GL window.
+  void displayText(GLuint fontbase, double x, double y,
+		   char *s, const Color& c);
+  void displayShadowText(GLuint fontbase,
 			 double x, double y, char *s, const Color& c);
+  void drawrstats(int nworkers, Worker** workers, int showing_scene,
+		  GLuint fontbase, int xres, int yres,
+		  XFontStruct* font_struct, int left, int up, double dt);
+  void draw_labels(XFontStruct* font_struct, GLuint fontbase,
+		   int& column, int dy, int top);
+  void draw_column(XFontStruct* font_struct,
+		   GLuint fontbase, char* heading, DepthStats& sum,
+		   int x, int w2, int dy, int top,
+		   bool first=false, double dt=1, int nworkers=0,
+		   int npixels=0);
+  void drawpstats(Stats* mystats, int nworkers, Worker** workers,
+		  bool draw_framerate, int showing_scene,
+		  GLuint fontbase, double& lasttime,
+		  double& cum_ttime, double& cum_dt);
 
   ////////////////////////////////////////////////////////////////
 
