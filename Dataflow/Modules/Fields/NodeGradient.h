@@ -77,7 +77,7 @@ NodeGradientAlgoT<IFIELD>::execute(FieldHandle& field_h)
 
   LatVolMeshHandle imesh = ifield->get_typed_mesh();
     
-  LatVolField<Vector> *ofield = scinew LatVolField<Vector>(imesh, Field::NODE);
+  LatVolField<Vector> *ofield = scinew LatVolField<Vector>(imesh, 1);
 
   LatVolMesh::Node::iterator itr, end;
 

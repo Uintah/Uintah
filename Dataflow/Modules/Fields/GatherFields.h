@@ -142,7 +142,7 @@ GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields, bool cdata)
     offset += (unsigned int)size;
   }
 
-  FIELD *ofield = scinew FIELD(omesh, Field::NODE);
+  FIELD *ofield = scinew FIELD(omesh, 1);
   if (cdata)
   {
     offset = 0;

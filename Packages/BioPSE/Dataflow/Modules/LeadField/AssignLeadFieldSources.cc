@@ -147,15 +147,15 @@ AssignLeadFieldSources::execute()
 
   TetVolMesh::Cell::size_type csize;  tvm->size(csize);
 
-  if (cm->nrows() != csize * 3) {
+  if ((unsigned)cm->nrows() != csize * 3) {
     remark("ColumnMatrix should be 3x as big as the number of mesh cells.");
     return;
   }
 
   // data looks good
   // make a new vector field and copy the matrix data into it
-  TetVolField<Vector> *ofield = scinew TetVolField<Vector>(tvmH, Field::CELL);
-  TetVolField<double> *ofield2 = scinew TetVolField<double>(tvmH, Field::NODE);
+  TetVolField<Vector> *ofield = scinew TetVolField<Vector>(tvmH, 0);
+  TetVolField<double> *ofield2 = scinew TetVolField<double>(tvmH, 1);
 
   TetVolMesh::Node::size_type nsize;  tvm->size(nsize);
 
@@ -206,11 +206,11 @@ AssignLeadFieldSources::execute()
   }
   msgStream_ << "End of focusing spikes.\n";
   PointCloudMeshHandle pcmH(pcm);
-  PointCloudField<Vector> *pc = scinew PointCloudField<Vector>(pcmH, Field::NODE);
+  PointCloudField<Vector> *pc = scinew PointCloudField<Vector>(pcmH, 1);
   pc->fdata()=vecs;
 
   PointCloudMeshHandle pcm2H(pcm2);
-  PointCloudField<Vector> *pc2 = scinew PointCloudField<Vector>(pcm2H, Field::NODE);
+  PointCloudField<Vector> *pc2 = scinew PointCloudField<Vector>(pcm2H, 1);
   pc2->fdata()=vecs2;
 
   for (i=0; i<nsize; i++) 

@@ -188,7 +188,7 @@ void FieldSlicer::execute(){
     return;
   }
 
-  if( fHandle->data_at() != Field::NODE ) {
+  if( fHandle->basis_order() != 1 ) {
     error( fHandle->get_type_description(0)->get_name() );
     error( "Currently only availible for node data." );
     return;

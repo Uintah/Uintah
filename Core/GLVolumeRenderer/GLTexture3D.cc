@@ -152,7 +152,7 @@ GLTexture3D::init(double& min, double &max, bool use_minmax)
     xmax_=ymax_=zmax_=128;
   }
 
-  if( texfld_->data_at() == Field::CELL )
+  if( texfld_->basis_order() == 0 )
   {
     isCC_=true;
     reuse_bricks = ( X_ == (int)(mesh->get_ni()-1) &&
@@ -443,7 +443,7 @@ GLTexture3D::set_brick_size(int bsize)
   xmax_ = ymax_ = zmax_ = bsize;
   int x,y,z;
   if (get_dimensions( x, y, z) ){
-    if( texfld_->data_at() == Field::CELL ){
+    if( texfld_->basis_order() == 0 ){
       isCC_=true;
       X_ = x-1;
       Y_ = y-1;

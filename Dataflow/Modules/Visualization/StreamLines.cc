@@ -470,14 +470,14 @@ StreamLines::execute()
   color_.reset();
   int color = color_.get();
 
-  if (method_.get() == 5 && vfhandle_->data_at() != Field::CELL)
+  if (method_.get() == 5 && vfhandle_->basis_order() != 0)
   {
     error("The Cell Walk method only works for cell centered FlowFields.");
     return;
   }
 
   const TypeDescription *smtd = sf_->mesh()->get_type_description();
-  const TypeDescription *sltd = sf_->data_at_type_description();
+  const TypeDescription *sltd = sf_->order_type_description();
   if (method_.get() != 5)
   {
     CompileInfoHandle ci = StreamLinesAlgo::get_compile_info(smtd, sltd); 

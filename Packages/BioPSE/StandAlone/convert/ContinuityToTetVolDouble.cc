@@ -286,7 +286,7 @@ main(int argc, char **argv) {
   }
 
   TetVolMeshHandle tvmH(tvm);
-  TetVolField<double> *tv = scinew TetVolField<double>(tvmH, Field::NODE);
+  TetVolField<double> *tv = scinew TetVolField<double>(tvmH, 1);
 
   for (i=0; i<nnodes; i++)
     tv->fdata()[i]=vals[i];

@@ -51,8 +51,8 @@ class PointCloudField: public GenericField< PointCloudMesh, vector<Data> >
 public:
 
   PointCloudField();
-  PointCloudField(Field::data_location data_at);
-  PointCloudField(PointCloudMeshHandle mesh, Field::data_location data_at);  
+  PointCloudField(int order);
+  PointCloudField(PointCloudMeshHandle mesh, int order);  
   virtual PointCloudField<Data> *clone() const; 
   virtual ~PointCloudField();
 
@@ -99,16 +99,16 @@ PointCloudField<Data>::PointCloudField()
 
 
 template <class Data>
-PointCloudField<Data>::PointCloudField(Field::data_location data_at)
-  : GenericField<PointCloudMesh, vector<Data> >(data_at)
+PointCloudField<Data>::PointCloudField(int order)
+  : GenericField<PointCloudMesh, vector<Data> >(order)
 {
 }
 
 
 template <class Data>
 PointCloudField<Data>::PointCloudField(PointCloudMeshHandle mesh,
-			     Field::data_location data_at)
-  : GenericField<PointCloudMesh, vector<Data> >(mesh, data_at)
+				       int order)
+  : GenericField<PointCloudMesh, vector<Data> >(mesh, order)
 {
 }
   

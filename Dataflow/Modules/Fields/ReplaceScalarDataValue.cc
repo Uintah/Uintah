@@ -99,7 +99,7 @@ ReplaceScalarDataValue::execute()
   double newvalue = newvalue_.get();
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
-  const TypeDescription *ltd = ifieldhandle->data_at_type_description();
+  const TypeDescription *ltd = ifieldhandle->order_type_description();
   CompileInfoHandle ci =
     ReplaceScalarDataValueAlgo::get_compile_info(ftd, ltd);
   Handle<ReplaceScalarDataValueAlgo> algo;

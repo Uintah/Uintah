@@ -77,22 +77,13 @@ ChangeFieldDataAt::~ChangeFieldDataAt()
 void
 ChangeFieldDataAt::update_input_attributes(FieldHandle f) 
 {
-  switch(f->data_at())
+  switch(f->basis_order())
   {
-  case Field::NODE:
-    inputdataat_.set("Nodes");
-    break;
-  case Field::EDGE: 
-    inputdataat_.set("Edges");
-    break;
-  case Field::FACE: 
-    inputdataat_.set("Faces");
-    break;
-  case Field::CELL: 
+  case 0: 
     inputdataat_.set("Cells");
     break;
-  case Field::NONE: 
-    inputdataat_.set("None");
+  case 1:
+    inputdataat_.set("Nodes");
     break;
   default: ;
   }
@@ -147,30 +138,17 @@ ChangeFieldDataAt::execute()
     return;
   }
 
-  Field::data_location dataat = fh->data_at();
+  int basis_order = fh->basis_order();
   const string &d = outputdataat_.get();
   if (d == "Nodes")
   {
-    dataat = Field::NODE;
-  }
-  else if (d == "Edges")
-  {
-    dataat = Field::EDGE;
-  }
-  else if (d == "Faces")
-  {
-    dataat = Field::FACE;
+    basis_order = 1;
   }
   else if (d == "Cells")
   {
-    dataat = Field::CELL;
+    basis_order = 0;
   }
-  else if (d == "None")
-  {
-    dataat = Field::NONE;
-  }
-
-  if (dataat == fh->data_at())
+  if (basis_order == fh->basis_order())
   {
     // No changes, just send the original through (it may be nothing!).
     remark("Passing field from input port to output port unchanged.");
@@ -189,7 +167,7 @@ ChangeFieldDataAt::execute()
 
   update_state(Executing);
   MatrixHandle interpolant(0);
-  FieldHandle ef(algo->execute(this, fh, dataat, interpolant));
+  FieldHandle ef(algo->execute(this, fh, basis_order, interpolant));
 
   // Automatically apply the interpolant matrix to the output field.
   if (ef.get_rep() && interpolant.get_rep())
@@ -197,9 +175,9 @@ ChangeFieldDataAt::execute()
     string actype = fh->get_type_description(1)->get_name();
     if (fh->query_scalar_interface(this) != NULL) { actype = "double"; }
     const TypeDescription *iftd = fh->get_type_description();
-    const TypeDescription *iltd = fh->data_at_type_description();
+    const TypeDescription *iltd = fh->order_type_description();
     const TypeDescription *oftd = ef->get_type_description();
-    const TypeDescription *oltd = ef->data_at_type_description();
+    const TypeDescription *oltd = ef->order_type_description();
     CompileInfoHandle ci =
       ApplyInterpMatrixAlgo::get_compile_info(iftd, iltd,
 					      oftd, oltd,

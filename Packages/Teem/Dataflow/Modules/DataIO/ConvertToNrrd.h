@@ -288,8 +288,8 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
   } else {
     // unstructured data so create a 1D nrrd (2D if vector or tensor)
     unsigned int sz = 0;
-    switch(f->data_at()) {
-    case Field::NODE :
+    switch(f->basis_order()) {
+    case 1 :
       {
 	typename Fld::mesh_type::Node::size_type size;
 	m->synchronize(Mesh::NODES_E);
@@ -297,23 +297,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	sz = size;
       }
     break;
-    case Field::EDGE :
-      {
-	typename Fld::mesh_type::Edge::size_type size;
-	m->synchronize(Mesh::NODES_E);
-	m->size(size);
-	sz = size;
-      }
-    break;
-    case Field::FACE :
-      {
-	typename Fld::mesh_type::Face::size_type size;
-	m->synchronize(Mesh::NODES_E);
-	m->size(size);
-	sz = size;
-      }
-    break;
-    case Field::CELL:
+    case 0:
       {
 	typename Fld::mesh_type::Cell::size_type size;
 	m->synchronize(Mesh::CELLS_E);
@@ -334,10 +318,9 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
   npoints = scinew NrrdData();
   nconnect = scinew NrrdData();
 
-  switch(f->data_at()) {
-  case Field::NODE:
-  case Field::EDGE:
-  case Field::CELL:
+  switch(f->basis_order()) {
+  case 0:
+  case 1:
     {
       switch(dims.size()) {
       case 1:
@@ -424,10 +407,10 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	nrrdWrap(ndata->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
 		 get_nrrd_type<val_t>(), 1, dims[0]);
 	
-	if (f->data_at() == Field::NODE) {
+	if (f->basis_order() == 1) {
 	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 			  nrrdCenterNode);
-	} else if (f->data_at() == Field::CELL) {
+	} else if (f->basis_order() == 0) {
 	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter, nrrdCenterCell,
 			  nrrdCenterCell);
 	} else  {
@@ -459,10 +442,10 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	}
 	ndata->nrrd->axis[1].kind = nrrdKindDomain;
 
-	if (f->data_at() == Field::NODE) {
+	if (f->basis_order() == 1) {
 	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter,
 			  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
-	} else if (f->data_at() == Field::CELL) {
+	} else if (f->basis_order() == 0) {
 	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter,
 			  nrrdCenterCell, nrrdCenterCell, nrrdCenterCell);
 	} else  {
@@ -498,7 +481,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
       break;
     case 3:
       {
-	if (f->data_at() == Field::NODE) {
+	if (f->basis_order() == 1) {
 	  if (pad_data > 0) {
 	    // 2D nrrd with vector/tensor NODE
 	    nrrdWrap(ndata->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
@@ -517,7 +500,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter,
 			  nrrdCenterNode, nrrdCenterNode, 
 			  nrrdCenterNode, nrrdCenterNode);
-	} else if (f->data_at() == Field::CELL) {
+	} else if (f->basis_order() == 0) {
 	  if (pad_data > 0) {
 	    // 2D nrrd with vector/tensor CELL
 	    nrrdWrap(ndata->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
@@ -585,7 +568,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	ndata->nrrd->axis[2].kind = nrrdKindDomain;
 	ndata->nrrd->axis[3].kind = nrrdKindDomain;
 
-	if (f->data_at() == Field::NODE) {
+	if (f->basis_order() == 1) {
 	  nrrdWrap(ndata->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
 		   get_nrrd_type<val_t>(), 4, pad_data,
 		   dims[0], dims[1], dims[2]);
@@ -593,7 +576,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter,
 			  nrrdCenterNode, nrrdCenterNode, 
 			  nrrdCenterNode, nrrdCenterNode);
-	} else if (f->data_at() == Field::CELL) {
+	} else if (f->basis_order() == 0) {
 	  nrrdWrap(ndata->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
 		   get_nrrd_type<val_t>(), 4, pad_data, 
 		   dims[0] - 1, dims[1] - 1, dims[2]-1);

@@ -138,7 +138,7 @@ void FieldExtractor::build_field(DataArchive& archive,
     Var v;
     int vartype;
     archive.query( v, varname, mat, *r, time);
-    if( sfd->data_at() == Field::CELL){
+    if( sfd->basis_order() == 0){
       low = (*r)->getCellLowIndex();
       hi = (*r)->getCellHighIndex();
 //       low = (*r)->getNodeLowIndex();

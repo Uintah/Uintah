@@ -111,7 +111,7 @@ void CastMLVtoHV::execute()
     return;
   }                     
 
-  if (ifieldH->data_at() != Field::NODE) {
+  if (ifieldH->basis_order() != 1) {
     error("Input volume data isn't node-centered.");
     return;
   }                         
@@ -119,27 +119,14 @@ void CastMLVtoHV::execute()
   const TypeDescription *fsrc_td = ifieldH->get_type_description();
   const TypeDescription *lsrc_td = 0;// = ifieldH->data_at_type_description();
   const TypeDescription *ldst_td = 0;
-  switch (ifieldH->data_at())
+  switch (ifieldH->basis_order())
   {
-  case Field::NODE:
-    ldst_td = get_type_description((HexVolMesh::Node *)0);
-    break;
-
-  case Field::EDGE:
-    ldst_td = get_type_description((HexVolMesh::Edge *)0);
-    break;
-
-  case Field::FACE:
-    ldst_td = get_type_description((HexVolMesh::Face *)0);
-    break;
-
-  case Field::CELL:
+  case 0:
     ldst_td = get_type_description((HexVolMesh::Cell *)0);
     break;
-
-  case Field::NONE:
-    error("Unsupported data_at location.");
-    return;
+  case 1:
+    ldst_td = get_type_description((HexVolMesh::Node *)0);
+    break;
   }
 
   CompileInfoHandle ci =
@@ -147,7 +134,7 @@ void CastMLVtoHV::execute()
   Handle<CastMLVtoHVAlgo> algo;
   if (!DynamicCompilation::compile(ci, algo, this)) return;
 
-  ofieldH_ = algo->execute(ifieldH, ifieldH->data_at());
+  ofieldH_ = algo->execute(ifieldH, ifieldH->basis_order());
 
   oport_->send(ofieldH_);
 }

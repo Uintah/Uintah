@@ -204,19 +204,19 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   }
   
   TetVolField<typename FSRC::value_type> *tvfield = 
-    scinew TetVolField<typename FSRC::value_type>(tvmesh, hvfield->data_at());
+    scinew TetVolField<typename FSRC::value_type>(tvmesh, hvfield->basis_order());
   tvfield->copy_properties(hvfield);
   dstH = tvfield;
 
   typename FSRC::value_type val;
 
-  if (hvfield->data_at() == Field::NODE) {
+  if (hvfield->basis_order() == 1) {
     for (int i = 0; i < hnsize; i++)
     {
       hvfield->value(val, (typename FSRC::mesh_type::Node::index_type)(i));
       tvfield->set_value(val, (TetVolMesh::Node::index_type)(i));
     }
-  } else if (hvfield->data_at() == Field::CELL) {
+  } else if (hvfield->basis_order() == 0) {
     for (unsigned int i = 0; i < elemmap.size(); i++)
     {
       hvfield->value(val, elemmap[i]);
@@ -345,13 +345,13 @@ LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   }
   
   TetVolField<typename FSRC::value_type> *tvfield = 
-    scinew TetVolField<typename FSRC::value_type>(tvmesh, hvfield->data_at());
+    scinew TetVolField<typename FSRC::value_type>(tvmesh, hvfield->basis_order());
   tvfield->copy_properties(hvfield);
   dstH = tvfield;
 
   typename FSRC::value_type val;
 
-  if (hvfield->data_at() == Field::NODE) {
+  if (hvfield->basis_order() == 1) {
     hvmesh->begin(nbi); hvmesh->end(nei);
     while (nbi != nei)
     {
@@ -361,7 +361,7 @@ LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       ++nbi;
     }
   }
-  else if (hvfield->data_at() == Field::CELL)
+  else if (hvfield->basis_order() == 0)
   {
     typename FSRC::mesh_type::Cell::iterator cbi, cei;    
     hvmesh->begin(cbi); hvmesh->end(cei);

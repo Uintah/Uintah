@@ -38,8 +38,8 @@ namespace SCIRun{
 PersistentTypeID Field::type_id("Field", "PropertyManager", 0);
 
 
-Field::Field(data_location at) :
-  data_at_(at)
+Field::Field(int order) :
+  order_(order)
 {
 }
 
@@ -47,14 +47,34 @@ Field::~Field()
 {
 }
 
-const int FIELD_VERSION = 1;
+const int FIELD_VERSION = 2;
 
 void 
 Field::io(Piostream& stream){
+  int version = stream.begin_class("Field", FIELD_VERSION);
+  if (version < FIELD_VERSION) {
 
-  stream.begin_class("Field", FIELD_VERSION);
-  data_location &tmp = data_at_;
-  Pio(stream, (unsigned int&)tmp);
+    // The following was FIELD_VERSION 1 data_at ordering
+    //     enum data_location{
+    //       NODE,
+    //       EDGE,
+    //       FACE,
+    //       CELL,
+    //       NONE
+    //     };
+
+    unsigned int tmp;
+    Pio(stream, tmp);
+    if (tmp == 3) {
+      // data_at_ was CELL
+      order_ = 0;
+    } else {
+      order_ = 1;
+    }
+  } else {
+    Pio(stream, order_);
+  }
+  
   PropertyManager::io(stream);
   stream.end_class();
 }
@@ -69,9 +89,8 @@ Field::get_type_name(int n) const
 ScalarFieldInterfaceHandle
 Field::query_scalar_interface(ProgressReporter *reporter)
 {
-  if (data_at_ == Field::NONE) { return 0; }
   const TypeDescription *ftd = get_type_description();
-  const TypeDescription *ltd = data_at_type_description();
+  const TypeDescription *ltd = order_type_description();
   CompileInfoHandle ci = ScalarFieldInterfaceMaker::get_compile_info(ftd, ltd);
   LockingHandle<ScalarFieldInterfaceMaker> algo(0);
   
@@ -87,9 +106,8 @@ Field::query_scalar_interface(ProgressReporter *reporter)
 VectorFieldInterfaceHandle
 Field::query_vector_interface(ProgressReporter *reporter)
 {
-  if (data_at_ == Field::NONE) { return 0; }
   const TypeDescription *ftd = get_type_description();
-  const TypeDescription *ltd = data_at_type_description();
+  const TypeDescription *ltd = order_type_description();
   CompileInfoHandle ci = VectorFieldInterfaceMaker::get_compile_info(ftd, ltd);
   LockingHandle<VectorFieldInterfaceMaker> algo(0);
   
@@ -105,9 +123,8 @@ Field::query_vector_interface(ProgressReporter *reporter)
 TensorFieldInterfaceHandle
 Field::query_tensor_interface(ProgressReporter *reporter)
 {
-  if (data_at_ == Field::NONE) { return 0; }
   const TypeDescription *ftd = get_type_description();
-  const TypeDescription *ltd = data_at_type_description();
+  const TypeDescription *ltd = order_type_description();
   CompileInfoHandle ci = TensorFieldInterfaceMaker::get_compile_info(ftd, ltd);
   LockingHandle<TensorFieldInterfaceMaker> algo(0);
   

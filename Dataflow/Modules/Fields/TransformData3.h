@@ -87,7 +87,7 @@ execute(FieldHandle f0_h, FieldHandle f1_h, FieldHandle f2_h)
   IFIELD1 *ifield1 = dynamic_cast<IFIELD1 *>(f1_h.get_rep());
   IFIELD2 *ifield2 = dynamic_cast<IFIELD2 *>(f2_h.get_rep());
   typename IFIELD0::mesh_handle_type imesh = ifield0->get_typed_mesh();
-  OFIELD *ofield = scinew OFIELD(imesh, ifield0->data_at());
+  OFIELD *ofield = scinew OFIELD(imesh, ifield0->basis_order());
 
   typename LOC::iterator ibi, iei;
   imesh->begin(ibi);

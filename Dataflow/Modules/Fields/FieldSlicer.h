@@ -158,7 +158,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     omesh->set_nj( new_j );
 
     ImageField<TYPE> *ofield =
-      scinew ImageField<TYPE>(omesh, ifield->data_at());
+      scinew ImageField<TYPE>(omesh, ifield->basis_order());
     ofield->copy_properties(ifield);
 
     ofield_h = ofield;
@@ -170,7 +170,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     omesh->copy_properties(imesh.get_rep());
 
     StructQuadSurfField<TYPE> *ofield =
-      scinew StructQuadSurfField<TYPE>(omesh, ifield->data_at());
+      scinew StructQuadSurfField<TYPE>(omesh, ifield->basis_order());
     ofield->copy_properties(ifield);
 
     ofield_h = ofield;
@@ -185,7 +185,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     omesh->set_ni( new_i );
 
     ScanlineField<TYPE> *ofield = 
-      scinew ScanlineField<TYPE>(omesh, ifield->data_at());
+      scinew ScanlineField<TYPE>(omesh, ifield->basis_order());
     ofield->copy_properties(ifield);
 
     ofield_h = ofield;
@@ -197,7 +197,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     omesh->copy_properties(imesh.get_rep());
 
     StructCurveField<TYPE> *ofield =
-      scinew StructCurveField<TYPE>(omesh, ifield->data_at());
+      scinew StructCurveField<TYPE>(omesh, ifield->basis_order());
     ofield->copy_properties(ifield);
 
     ofield_h = ofield;
@@ -212,7 +212,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     omesh->set_ni( new_i );
 
     ScanlineField<TYPE> *ofield =
-      scinew ScanlineField<TYPE>(omesh, ifield->data_at());
+      scinew ScanlineField<TYPE>(omesh, ifield->basis_order());
     ofield->copy_properties(ifield);
 
     ofield_h = ofield;
@@ -224,7 +224,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     omesh->copy_properties(imesh.get_rep());
 
     PointCloudField<TYPE> *ofield =
-      scinew PointCloudField<TYPE>(omesh, ifield->data_at());
+      scinew PointCloudField<TYPE>(omesh, ifield->basis_order());
     ofield->copy_properties(ifield);
 
     ofield_h = ofield;

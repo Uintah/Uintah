@@ -35,12 +35,12 @@
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/ColorMapTex.h>
+#include "VS_SCI_HotBox.h"
 
 namespace VS {
  
 using namespace SCIRun;
 
-#include "VS_SCI_HotBox.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // default class constructor

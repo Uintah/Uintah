@@ -138,7 +138,7 @@ CreateMesh::execute()
 
   FieldHandle result_field =
     algo->execute(this, elementshandle, positionshandle,
-		  normalshandle, Field::NODE);
+		  normalshandle, 1);
 
   if (!result_field.get_rep())
   {

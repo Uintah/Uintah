@@ -412,25 +412,17 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
     // val is double because the color index field must be scalar.
     Vector vec(0,0,0);
     double val;
-    switch (sfld->data_at())
-    {
-    case Field::NODE:
-      {
-	typename Fld::value_type tmp;
-	sfld->value(tmp, *niter);
-	
-	to_vector(tmp, vec);
-	to_double(tmp, val);
-	if (vec_color) { sciVectorToColor(vcol->diffuse, vec); }
-      }
-      break;
 
-    case Field::EDGE:
-    case Field::FACE:
-    case Field::CELL:
-    case Field::NONE:
+    if (sfld->basis_order() > 0) {
+      typename Fld::value_type tmp;
+      sfld->value(tmp, *niter);
+	
+      to_vector(tmp, vec);
+      to_double(tmp, val);
+      if (vec_color) { sciVectorToColor(vcol->diffuse, vec); }
+
+    } else {
       def_color = true;
-      break;
     }
 
     switch (mode)
@@ -601,102 +593,11 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
     Point p1, p2;
     mesh->get_point(p1, nodes[0]);
     mesh->get_point(p2, nodes[1]);
-    switch (sfld->data_at()) {
-    case Field::NODE:
-      {
-	typename Fld::value_type val0, val1;
-	sfld->value(val0, nodes[0]);
-	sfld->value(val1, nodes[1]);
-	if (def_color)
-	{
-	  if (cyl)
-	  {
-	    cylinders->add(p1, p2);
-	  }
-	  else
-	  {
-	    lines->add(p1, p2);
-	  }
-	}
-	else if (vec_color)
-	{
-	  Vector v0(0, 0, 0), v1(0, 0, 0);
-	  to_vector(val0, v0);
-	  to_vector(val1, v1);
-	  sciVectorToColor(vcol0->diffuse, v0);
-	  sciVectorToColor(vcol1->diffuse, v1);
-	  if (cyl)
-	  {
-	    cylinders->add(p1, vcol0, p2, vcol1);
-	  }
-	  else
-	  {
-	    lines->add(p1, vcol0, p2, vcol1);
-	  }
-	}
-	else
-	{
-	  double dval0, dval1;
-	  to_double(val0, dval0);
-	  to_double(val1, dval1);
-	  if (cyl)
-	  {
-	    cylinders->add(p1, dval0, p2, dval1);
-	  }
-	  else
-	  {
-	    lines->add(p1, dval0, p2, dval1);
-	  }
-	}
-      }
-      break;
-    case Field::EDGE:
-      {
-	typename Fld::value_type val;
-	sfld->value(val, *eiter);
-	if (def_color)
-	{
-	  if (cyl)
-	  {
-	    cylinders->add(p1, p2);
-	  }
-	  else
-	  {
-	    lines->add(p1, p2);
-	  }
-	}
-	else if (vec_color)
-	{
-	  Vector v(0, 0, 0);
-	  to_vector(val, v);
-	  sciVectorToColor(vcol0->diffuse, v);
-	  if (cyl)
-	  {
-	    cylinders->add(p1, vcol0, p2, vcol0);
-	  }
-	  else
-	  {
-	    lines->add(p1, vcol0, p2, vcol0);
-	  }
-	}
-	else
-	{
-	  double dval;
-	  to_double(val, dval);
-	  if (cyl)
-	  {
-	    cylinders->add(p1, dval, p2, dval);
-	  }
-	  else
-	  {
-	    lines->add(p1, dval, p2, dval);
-	  }
-	}
-      }
-      break;
-    case Field::FACE:
-    case Field::CELL:
-    case Field::NONE:
+    if (sfld->basis_order() > 0) {
+      typename Fld::value_type val0, val1;
+      sfld->value(val0, nodes[0]);
+      sfld->value(val1, nodes[1]);
+      if (def_color)
       {
 	if (cyl)
 	{
@@ -707,7 +608,90 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
 	  lines->add(p1, p2);
 	}
       }
-      break;
+      else if (vec_color)
+      {
+	Vector v0(0, 0, 0), v1(0, 0, 0);
+	to_vector(val0, v0);
+	to_vector(val1, v1);
+	sciVectorToColor(vcol0->diffuse, v0);
+	sciVectorToColor(vcol1->diffuse, v1);
+	if (cyl)
+	{
+	  cylinders->add(p1, vcol0, p2, vcol1);
+	}
+	else
+	{
+	  lines->add(p1, vcol0, p2, vcol1);
+	}
+      }
+      else
+      {
+	double dval0, dval1;
+	to_double(val0, dval0);
+	to_double(val1, dval1);
+	if (cyl)
+	{
+	  cylinders->add(p1, dval0, p2, dval1);
+	}
+	else
+	{
+	  lines->add(p1, dval0, p2, dval1);
+	}
+      }
+    }
+    else if (mesh->dimensionality() == 1)
+    {
+      typename Fld::value_type val;
+      sfld->value(val, *eiter);
+      if (def_color)
+      {
+	if (cyl)
+	{
+	  cylinders->add(p1, p2);
+	}
+	else
+	{
+	  lines->add(p1, p2);
+	}
+      }
+      else if (vec_color)
+      {
+	Vector v(0, 0, 0);
+	to_vector(val, v);
+	sciVectorToColor(vcol0->diffuse, v);
+	if (cyl)
+	{
+	  cylinders->add(p1, vcol0, p2, vcol0);
+	}
+	else
+	{
+	  lines->add(p1, vcol0, p2, vcol0);
+	}
+      }
+      else
+      {
+	double dval;
+	to_double(val, dval);
+	if (cyl)
+	{
+	  cylinders->add(p1, dval, p2, dval);
+	}
+	else
+	{
+	  lines->add(p1, dval, p2, dval);
+	}
+      }
+    }
+    else 
+    {
+      if (cyl)
+      {
+	cylinders->add(p1, p2);
+      }
+      else
+      {
+	lines->add(p1, p2);
+      }
     }
     
     ++eiter;
@@ -796,7 +780,7 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
       }
     }
 
-    if (sfld->data_at() == Field::NODE && !def_color)
+    if (sfld->basis_order() == 1 && !def_color)
     {
       for (i = 0; i < nodes.size(); i++)
       {
@@ -888,7 +872,7 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 	}
       }
     }
-    else if (sfld->data_at() == Field::FACE && !def_color)
+    else if (sfld->basis_order() == 0 && mesh->dimensionality() == 2 && !def_color)
     {
       typename Fld::value_type val;
       sfld->value(val, *fiter);
@@ -1078,7 +1062,7 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
 					int fontsize,
 					int precision)
 {
-  if (backface_cull_p && field_handle->data_at() == Field::NODE)
+  if (backface_cull_p && field_handle->basis_order() == 1)
   {
     return render_text_data_nodes(field_handle, use_color_map,
 				  use_default_material,
@@ -1186,7 +1170,7 @@ RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
   buffer.precision(precision);
 
   bool vec_color = false;
-  if (fld->data_at() != Field::NODE)
+  if (fld->basis_order() != 1)
   {
     use_default_material = true;
   }
@@ -1299,7 +1283,7 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
   }
 
   bool vec_color = false;
-  if (fld->data_at() != Field::NODE)
+  if (fld->basis_order() != 1)
   {
     use_default_material = true;
   }
@@ -1412,7 +1396,7 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
   buffer.precision(precision);
 
   bool vec_color = false;
-  if (fld->data_at() != Field::EDGE)
+  if (! (fld->basis_order() == 0 && mesh->dimensionality() == 1))
   {
     use_default_material = true;
   }
@@ -1496,7 +1480,7 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
   buffer.precision(precision);
 
   bool vec_color = false;
-  if (fld->data_at() != Field::FACE)
+  if (! (fld->basis_order() == 0 && mesh->dimensionality() == 2))
   {
     use_default_material = true;
   }
@@ -1581,7 +1565,7 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
   buffer.precision(precision);
 
   bool vec_color = false;
-  if (fld->data_at() != Field::CELL)
+  if (fld->basis_order() != 0)
   {
     use_default_material = true;
   }

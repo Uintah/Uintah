@@ -166,7 +166,7 @@ main(int argc, char **argv) {
     }
   }
 
-  CurveField<double> *field = scinew CurveField<double>(mesh, Field::EDGE);
+  CurveField<double> *field = scinew CurveField<double>(mesh, 0);
 
   CurveMesh::Edge::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);

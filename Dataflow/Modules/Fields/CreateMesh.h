@@ -60,7 +60,7 @@ public:
 			      MatrixHandle elements,
 			      MatrixHandle positions,
 			      MatrixHandle normals,
-			      Field::data_location data_at) = 0;
+			      int basis_order) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const string &basename,
@@ -77,7 +77,7 @@ public:
 			      MatrixHandle elements,
 			      MatrixHandle positions,
 			      MatrixHandle normals,
-			      Field::data_location data_at);
+			      int basis_order);
 };
 
 
@@ -87,7 +87,7 @@ CreateMeshAlgoT<FIELD>::execute(ProgressReporter *mod,
 				MatrixHandle elements,
 				MatrixHandle positions,
 				MatrixHandle normals,
-				Field::data_location data_at)
+				int basis_order)
 {
   if (positions->ncols() < 3)
   {
@@ -137,7 +137,7 @@ CreateMeshAlgoT<FIELD>::execute(ProgressReporter *mod,
     mod->error("..." + to_string(ecount-9) + " additional bad indices found.");
   }
   
-  FIELD *field = scinew FIELD(mesh, data_at);
+  FIELD *field = scinew FIELD(mesh, basis_order);
 
   return FieldHandle(field);
 }

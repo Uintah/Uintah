@@ -143,7 +143,7 @@ append_fields(vector<FIELD *> fields)
     offset += (unsigned int)size;
   }
 
-  FIELD *ofield = scinew FIELD(omesh, Field::NODE);
+  FIELD *ofield = scinew FIELD(omesh, 1);
   offset = 0;
   for (i=0; i < fields.size(); i++)
   {
@@ -389,8 +389,8 @@ Isosurface::execute()
       if (! noise_alg.get_rep()) {
 	CompileInfoHandle ci =
 	  NoiseAlg::get_compile_info(td,
-				     fieldin->data_at() == Field::CELL,
-				     fieldin->data_at() == Field::FACE);
+				     fieldin->basis_order() == 0,
+				     false);
 	if (! module_dynamic_compile(ci, noise_alg)) {
 	  error( "NOISE can not work with this field.");
 	  return;

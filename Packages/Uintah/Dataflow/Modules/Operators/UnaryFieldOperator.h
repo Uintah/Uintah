@@ -31,8 +31,8 @@ template<class Field, class ScalarField>
 void UnaryFieldOperator::initField(Field* field,
 				    ScalarField* scalarField)
 {
-  ASSERT( field->data_at() == Field::CELL ||
-	  field->data_at() == Field::NODE );
+  ASSERT( field->basis_order() == 0 ||
+	  field->basis_order() == 1 );
 
   typename Field::mesh_handle_type mh = field->get_typed_mesh();
   typename ScalarField::mesh_handle_type smh = scalarField->get_typed_mesh();
@@ -54,8 +54,8 @@ void UnaryFieldOperator::computeScalars(Field* field,
 					 Op op)
 {
   // so far only node and cell centered data
-  ASSERT( field->data_at() == Field::CELL ||
-	  field->data_at() == Field::NODE );
+  ASSERT( field->basis_order() == 0 ||
+	  field->basis_order() == 1 );
 
 
   typename Field::mesh_handle_type mh =
@@ -63,7 +63,7 @@ void UnaryFieldOperator::computeScalars(Field* field,
   typename ScalarField::mesh_handle_type smh =
     scalarField->get_typed_mesh();
  
-  if( field->data_at() == Field::CELL){
+  if( field->basis_order() == 0){
     typename Field::mesh_type::Cell::iterator it; mh->begin(it);
     typename Field::mesh_type::Cell::iterator end; mh->end(end);
     typename ScalarField::mesh_type::Cell::iterator s_it; smh->begin(s_it);

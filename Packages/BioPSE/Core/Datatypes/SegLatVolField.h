@@ -67,7 +67,7 @@ public:
   SegLatVolField() : LatVolField<int>() {}
   SegLatVolField(const SegLatVolField &copy);
   SegLatVolField(LatVolMeshHandle mesh)
-    : LatVolField<int>(mesh, Field::CELL)
+    : LatVolField<int>(mesh, 0)
   {
   }
   

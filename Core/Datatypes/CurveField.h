@@ -52,8 +52,8 @@ class CurveField: public GenericField< CurveMesh, vector<T> >
 public:
 
   CurveField();
-  CurveField(Field::data_location data_at);
-  CurveField(CurveMeshHandle mesh, Field::data_location data_at);
+  CurveField(int order);
+  CurveField(CurveMeshHandle mesh, int order);
   virtual CurveField<T> *clone() const;
   virtual ~CurveField();
 
@@ -101,16 +101,16 @@ CurveField<T>::CurveField()
 
 
 template <class T>
-CurveField<T>::CurveField(Field::data_location data_at)
-  : GenericField<CurveMesh, vector<T> >(data_at)
+CurveField<T>::CurveField(int order)
+  : GenericField<CurveMesh, vector<T> >(order)
 {
 }
 
 
 template <class T>
 CurveField<T>::CurveField(CurveMeshHandle mesh,
-				 Field::data_location data_at)
-  : GenericField<CurveMesh, vector<T> >(mesh, data_at)
+			  int order)
+  : GenericField<CurveMesh, vector<T> >(mesh, order)
 {
 }
 

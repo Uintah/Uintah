@@ -80,7 +80,7 @@ TransformData2AlgoT<IFIELD0, IFIELD1, OFIELD, LOC>::execute(FieldHandle f0_h,
   IFIELD0 *ifield0 = dynamic_cast<IFIELD0 *>(f0_h.get_rep());
   IFIELD1 *ifield1 = dynamic_cast<IFIELD1 *>(f1_h.get_rep());
   typename IFIELD0::mesh_handle_type imesh = ifield0->get_typed_mesh();
-  OFIELD *ofield = scinew OFIELD(imesh, ifield0->data_at());
+  OFIELD *ofield = scinew OFIELD(imesh, ifield0->basis_order());
 
   typename LOC::iterator ibi, iei;
   imesh->begin(ibi);

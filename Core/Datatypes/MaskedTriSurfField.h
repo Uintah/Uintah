@@ -61,10 +61,10 @@ public:
 
   MaskedTriSurfField() :
     TriSurfField<T>() {};
-  MaskedTriSurfField(Field::data_location data_at) : 
-    TriSurfField<T>(data_at) {};
-  MaskedTriSurfField(TriSurfMeshHandle mesh, Field::data_location data_at) : 
-    TriSurfField<T>(mesh, data_at) 
+  MaskedTriSurfField(int order) : 
+    TriSurfField<T>(order) {};
+  MaskedTriSurfField(TriSurfMeshHandle mesh, int order) : 
+    TriSurfField<T>(mesh, order) 
   {
     resize_fdata();
   };
@@ -73,7 +73,7 @@ public:
 				vector<T> &data) {
     nodes.resize(0);
     data.resize(0);
-    if (data_at() != NODE) return false;
+    if (basis_order() != 1) return false;
     TriSurfMesh::Node::iterator ni, nie;
     mesh_->begin(ni);
     mesh_->end(nie);
@@ -101,25 +101,8 @@ public:
   typedef GenericField<TriSurfMesh,vector<T> > GF;
 
   void resize_fdata() {
-    if (data_at() == NODE)
-    {
-      typename GF::mesh_type::Node::size_type ssize;
-      mesh_->size(ssize);
-      mask_.resize(ssize);
-    }
-    else if (data_at() == EDGE)
-    {
-      typename GF::mesh_type::Edge::size_type ssize;
-      mesh_->size(ssize);
-      mask_.resize(ssize);
-    }
-    else if (data_at() == FACE)
-    {
-      typename GF::mesh_type::Face::size_type ssize;
-      mesh_->size(ssize);
-      mask_.resize(ssize);
-    }
-    else if (data_at() == CELL)
+
+    if (basis_order() == 0)
     {
       typename GF::mesh_type::Cell::size_type ssize;
       mesh_->size(ssize);
@@ -127,7 +110,9 @@ public:
     }
     else
     {
-      ASSERTFAIL("data at unrecognized location");
+      typename GF::mesh_type::Node::size_type ssize;
+      mesh_->size(ssize);
+      mask_.resize(ssize);
     }
     TriSurfField<T>::resize_fdata();
   }

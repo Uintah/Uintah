@@ -374,12 +374,11 @@ Probe::execute()
   VectorFieldInterfaceHandle vfi = 0;
   TensorFieldInterfaceHandle tfi = 0;
   if (!input_field_p ||
-      ifieldhandle->data_at() == Field::NONE ||
       !gui_show_value_.get())
   {
     valstr << 0;
     PointCloudField<double> *field =
-      scinew PointCloudField<double>(mesh, Field::NODE);
+      scinew PointCloudField<double>(mesh, 1);
     field->set_value(0.0, pcindex);
     ofield = field;
   }
@@ -392,7 +391,7 @@ Probe::execute()
     }
     valstr << result;
 
-    PointCloudField<double> *field = scinew PointCloudField<double>(mesh, Field::NODE);
+    PointCloudField<double> *field = scinew PointCloudField<double>(mesh, 1);
     field->set_value(result, pcindex);
     ofield = field;
   }
@@ -405,7 +404,7 @@ Probe::execute()
     }
     valstr << result;
 
-    PointCloudField<Vector> *field = scinew PointCloudField<Vector>(mesh, Field::NODE);
+    PointCloudField<Vector> *field = scinew PointCloudField<Vector>(mesh, 1);
     field->set_value(result, pcindex);
     ofield = field;
   }
@@ -418,7 +417,7 @@ Probe::execute()
     }
     valstr << result;
 
-    PointCloudField<Tensor> *field = scinew PointCloudField<Tensor>(mesh, Field::NODE);
+    PointCloudField<Tensor> *field = scinew PointCloudField<Tensor>(mesh, 1);
     field->set_value(result, pcindex);
     ofield = field;
   }
@@ -443,21 +442,13 @@ Probe::execute()
       return;
     }
     unsigned int index = 0;
-    switch (ifieldhandle->data_at())
+    switch (ifieldhandle->basis_order())
     {
-    case Field::NODE:
+    case 1:
       index = atoi(nodestr.c_str());
       break;
-    case Field::EDGE:
-      index = atoi(edgestr.c_str());
-      break;
-    case Field::FACE:
-      index = atoi(facestr.c_str());
-      break;
-    case Field::CELL:
+    case 0:
       index = atoi(cellstr.c_str());
-      break;
-    case Field::NONE:
       break;
     }
     MatrixHandle cm = scinew ColumnMatrix(1);

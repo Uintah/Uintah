@@ -133,59 +133,45 @@ SampleLattice::execute()
   unsigned int sizez = Max(2, size_z_.get());
   LatVolMeshHandle mesh = scinew LatVolMesh(sizex, sizey, sizez, minb, maxb);
 
-  Field::data_location data_at;
-  if (data_at_.get() == "Nodes") data_at = Field::NODE;
-  else if (data_at_.get() == "Edges") data_at = Field::EDGE;
-  else if (data_at_.get() == "Faces") data_at = Field::FACE;
-  else if (data_at_.get() == "Cells") data_at = Field::CELL;
-  else if (data_at_.get() == "None") data_at = Field::NONE;
-  else {
-    error("Unsupported data_at location " + data_at_.get() + ".");
-    return;
-  }
+  int basis_order;
+  if (data_at_.get() == "Cells") basis_order = 0;
+  else basis_order = 1;
 
   // Create Image Field.
   FieldHandle ofh;
   if (datatype == SCALAR)
   {
-    LatVolField<double> *lvf = scinew LatVolField<double>(mesh, data_at);
-    if (data_at != Field::NONE)
+    LatVolField<double> *lvf = scinew LatVolField<double>(mesh, basis_order);
+    LatVolField<double>::fdata_type::iterator itr = lvf->fdata().begin();
+    while (itr != lvf->fdata().end())
     {
-      LatVolField<double>::fdata_type::iterator itr = lvf->fdata().begin();
-      while (itr != lvf->fdata().end())
-      {
-	*itr = 0.0;
-	++itr;
-      }
-    }
+      *itr = 0.0;
+      ++itr;
+    }    
     ofh = lvf;
   } 
   else if (datatype == VECTOR)
   {
-    LatVolField<Vector> *lvf = scinew LatVolField<Vector>(mesh, data_at);
-    if (data_at != Field::NONE)
+    LatVolField<Vector> *lvf = scinew LatVolField<Vector>(mesh, basis_order);
+    LatVolField<Vector>::fdata_type::iterator itr = lvf->fdata().begin();
+    while (itr != lvf->fdata().end())
     {
-      LatVolField<Vector>::fdata_type::iterator itr = lvf->fdata().begin();
-      while (itr != lvf->fdata().end())
-      {
-	*itr = Vector(0.0, 0.0, 0.0);
-	++itr;
-      }
+      *itr = Vector(0.0, 0.0, 0.0);
+      ++itr;
     }
+  
     ofh = lvf;
   }				    
   else // if (datatype == TENSOR)	    
   {				    
-    LatVolField<Tensor> *lvf = scinew LatVolField<Tensor>(mesh, data_at);
-    if (data_at != Field::NONE)
+    LatVolField<Tensor> *lvf = scinew LatVolField<Tensor>(mesh, basis_order);
+    LatVolField<Tensor>::fdata_type::iterator itr = lvf->fdata().begin();
+    while (itr != lvf->fdata().end())
     {
-      LatVolField<Tensor>::fdata_type::iterator itr = lvf->fdata().begin();
-      while (itr != lvf->fdata().end())
-      {
-	*itr = Tensor(0.0);
-	++itr;
-      }
+      *itr = Tensor(0.0);
+      ++itr;
     }
+
     ofh = lvf;
   }				    
 

@@ -95,11 +95,6 @@ TransformData2::execute()
     return;
   }
 
-  if (ifieldhandle0->data_at() == Field::NONE)
-  {
-    error("Field 0 contains no data to transform.");
-    return;
-  }
 
   FieldIPort *ifp1 = (FieldIPort *)get_iport("Input Field 1");
   FieldHandle ifieldhandle1;
@@ -110,12 +105,6 @@ TransformData2::execute()
   if (!(ifp1->get(ifieldhandle1) && ifieldhandle1.get_rep()))
   {
     error("Input field 1 is empty.");
-    return;
-  }
-
-  if (ifieldhandle1->data_at() == Field::NONE)
-  {
-    error("Field 1 contains no data to transform.");
     return;
   }
 
@@ -155,7 +144,7 @@ TransformData2::execute()
     }
   }
 
-  if (ifieldhandle0->data_at() != ifieldhandle1->data_at())
+  if (ifieldhandle0->basis_order() != ifieldhandle1->basis_order())
   {
     error("The Input Fields must share the same data location.");
     return;
@@ -173,7 +162,7 @@ TransformData2::execute()
 
   const TypeDescription *ftd0 = ifieldhandle0->get_type_description();
   const TypeDescription *ftd1 = ifieldhandle1->get_type_description();
-  const TypeDescription *ltd = ifieldhandle0->data_at_type_description();
+  const TypeDescription *ltd = ifieldhandle0->order_type_description();
   const string oftn = ifieldhandle0->get_type_description(0)->get_name() +
     "<" + outputdatatype + "> ";
   int hoffset = 0;

@@ -114,7 +114,7 @@ ApplyInterpolant::execute()
   CompileInfoHandle ci =
     ApplyInterpAlgo::get_compile_info(fsrc_h->get_type_description(),
 				      fitp_h->get_type_description(),
-				      fitp_h->data_at_type_description());
+				      fitp_h->order_type_description());
   Handle<ApplyInterpAlgo> algo;
   if (!DynamicCompilation::compile(ci, algo, this)) return;
 

@@ -160,7 +160,7 @@ main(int argc, char **argv) {
   cerr << "done adding points.\n";
 
   StructHexVolField<double> *hvf =
-    scinew StructHexVolField<double>(hvm, Field::NONE);
+    scinew StructHexVolField<double>(hvm, 0);
   FieldHandle hvH(hvf);
   
   if (binOutput) {

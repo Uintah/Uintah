@@ -173,13 +173,13 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   }
   
   TriSurfField<typename FSRC::value_type> *tvfield = 
-    scinew TriSurfField<typename FSRC::value_type>(tsmesh, qsfield->data_at());
+    scinew TriSurfField<typename FSRC::value_type>(tsmesh, qsfield->basis_order());
   tvfield->copy_properties(qsfield);
   dstH = tvfield;
 
   typename FSRC::value_type val;
 
-  if (qsfield->data_at() == Field::NODE) {
+  if (qsfield->basis_order() == 1) {
 
     unsigned int i = 0;
     typename FSRC::fdata_type dat = qsfield->fdata();
@@ -189,7 +189,7 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       tvfield->set_value(val, (TriSurfMesh::Node::index_type)(i));
       ++iter; ++i;
     }
-  } else if (qsfield->data_at() == Field::FACE) {
+  } else if (qsfield->basis_order() == Field::FACE) {
     for (unsigned int i = 0; i < elemmap.size(); i++)
     {
       qsfield->value(val, elemmap[i]);
@@ -285,13 +285,13 @@ ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   }
   
   TriSurfField<typename FSRC::value_type> *tfield = 
-    scinew TriSurfField<typename FSRC::value_type>(tmesh, ifield->data_at());
+    scinew TriSurfField<typename FSRC::value_type>(tmesh, ifield->basis_order());
   tfield->copy_properties(ifield);
   dstH = tfield;
 
   typename FSRC::value_type val;
 
-  if (ifield->data_at() == Field::NODE)
+  if (ifield->basis_order() == 1)
   {
     imesh->begin(nbi); imesh->end(nei);
     while (nbi != nei)
@@ -302,7 +302,7 @@ ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       ++nbi;
     }
   }
-  else if (ifield->data_at() == Field::FACE)
+  else if (ifield->basis_order() == Field::FACE)
   {
     typename FSRC::mesh_type::Cell::iterator cbi, cei;    
     imesh->begin(cbi); imesh->end(cei);

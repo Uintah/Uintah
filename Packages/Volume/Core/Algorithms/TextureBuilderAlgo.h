@@ -108,7 +108,7 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
   int nx = mesh->get_ni();
   int ny = mesh->get_nj();
   int nz = mesh->get_nk();
-  if(vfield->data_at() == SCIRun::Field::CELL) {
+  if(vfield->basis_order() == 0) {
     --nx; --ny; --nz;
   }
   int nc = gfield.get_rep() ? 2 : 1;
@@ -335,7 +335,7 @@ TextureBuilderAlgo<FieldType>::fill_brick(Brick* brick,
 
     if (!gfld) { // fill only values
       unsigned char* tex = br->data(0);
-      if(vfield->data_at() == SCIRun::Field::CELL) {
+      if(vfield->basis_order() == 0) {
         typename FieldType::mesh_type::RangeCellIter iter(mesh, x0, y0, z0,
                                                           x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
@@ -396,7 +396,7 @@ TextureBuilderAlgo<FieldType>::fill_brick(Brick* brick,
       unsigned char* tex0 = br->data(0);
       unsigned char* tex1 = br->data(1);
       
-      if(vfield->data_at() == SCIRun::Field::CELL) {
+      if(vfield->basis_order() == 0) {
         typename FieldType::mesh_type::RangeCellIter iter(mesh, x0, y0, z0,
                                                           x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {

@@ -55,16 +55,16 @@ public:
 private:
   void delete_orphans(set<unsigned int> &removed_cells);
   void subdivide_to_level(unsigned);
-  void locally_refine(TetVolField<int> *control);
+  void locally_refine(TetVolField<char> *control);
 
   void subdivide(TetVolMesh::Cell::index_type ci, 
 		 set<unsigned int, less<unsigned int> >&removed_cells);
 
-  int                     input_generation_;
-  TetVolField<int>        *subdivided_;
-  vector<unsigned>        levels_;
-  GuiInt                  cell_index_;
-  GuiString               execution_mode_;
+  int                       input_generation_;
+  TetVolField<char>        *subdivided_;
+  vector<unsigned char>     levels_;
+  GuiInt                    cell_index_;
+  GuiString                 execution_mode_;
 };
 
 
@@ -114,15 +114,15 @@ RefineTetVol::execute()
     error("Error: Invalid Input");
     return;
   }
-  TetVolField<int> *control = 0;
+  TetVolField<char> *control = 0;
 
   if (control_port->get(control_handle) && control_handle.get_rep()) {
     remark("Attempting to use Field in Refinement Control port to control refinement.");
     
     // Make sure it is the correct type of field.
-    control = dynamic_cast<TetVolField<int>*>(control_handle.get_rep());
+    control = dynamic_cast<TetVolField<char>*>(control_handle.get_rep());
     if (!control) {
-      error("second input must be a TetVolField<int>");
+      error("second input must be a TetVolField<char>");
       return;
     }      
     MeshHandle mesh_handle = control_handle->mesh();
@@ -143,8 +143,8 @@ RefineTetVol::execute()
     ifieldhandle.detach();
     if (subdivided_) delete subdivided_;
     
-    TetVolField<int>::mesh_handle_type mh(tvm);
-    subdivided_ = scinew TetVolField<int>(mh, Field::CELL);
+    TetVolField<char>::mesh_handle_type mh(tvm);
+    subdivided_ = scinew TetVolField<char>(mh, 0);
     // About to create new geometry so detach the mesh.
     subdivided_->mesh_detach(); 
 
@@ -178,11 +178,11 @@ RefineTetVol::execute()
   // always send a copy of subdivided_.  bad things could happen if another 
   // module is iterating over this field while this module is changing it.
 
-  TetVolField<int> *out = subdivided_->clone();
+  TetVolField<char> *out = subdivided_->clone();
   out->mesh_detach();
   // copy the levels to the data
   out->resize_fdata();
-  TetVolField<int>::mesh_handle_type out_mesh = out->get_typed_mesh();
+  TetVolField<char>::mesh_handle_type out_mesh = out->get_typed_mesh();
   TetVolMesh::Cell::iterator ci, c_end;
   out_mesh->begin(ci);
   out_mesh->end(c_end);
@@ -200,14 +200,15 @@ RefineTetVol::delete_orphans(set<unsigned int> &rem)
 {
   if (rem.empty()) return;
   // Delete the largest index first.
-  set<unsigned int, less<unsigned int> >::reverse_iterator iter = rem.rbegin();
+  set<unsigned int, less<unsigned int> >::reverse_iterator iter = 
+    rem.rbegin();
   while (iter != rem.rend()) {
     // clean up levels list
     TetVolMesh::Cell::index_type ci = *iter++;
-    vector<unsigned>::iterator liter = levels_.begin() + ci;
+    vector<unsigned char>::iterator liter = levels_.begin() + ci;
     levels_.erase(liter);
   }
-  TetVolField<int>::mesh_handle_type mh = subdivided_->get_typed_mesh();
+  TetVolField<char>::mesh_handle_type mh = subdivided_->get_typed_mesh();
   mh->delete_cells(rem);
 }
 
@@ -227,7 +228,7 @@ RefineTetVol::subdivide(TetVolMesh::Cell::index_type ci,
     //cerr << "dont subdivide a removed cell" << endl;
     return;
   }
-  TetVolField<int>::mesh_handle_type mh = subdivided_->get_typed_mesh();
+  TetVolField<char>::mesh_handle_type mh = subdivided_->get_typed_mesh();
   TetVolMesh *mesh = mh.get_rep();
 
   if (is_even(levels_[ci])) {
@@ -358,9 +359,44 @@ RefineTetVol::subdivide(TetVolMesh::Cell::index_type ci,
 }
 
 void
+RefineTetVol::subdivide_to_level(unsigned)
+{  
+  const double max_vol = 0.125L;
+  TetVolField<char>::mesh_handle_type mh = subdivided_->get_typed_mesh();
+  set<unsigned int> removed;
+  bool done = false;
+  update_progress(0.0);
+  while(! done) {
+    done = true;
+    TetVolMesh::Cell::size_type num_tets;
+    mh->size(num_tets);
+
+    for (unsigned int i = 0; i < num_tets; i++) {
+      if (removed.count(i)) {
+	continue;
+      }
+      update_progress((double)i / (double)num_tets);
+      double cur_vol = mh->get_volume(i);
+      
+      while (cur_vol < max_vol) {
+	done = false;
+	subdivide(i, removed);
+	if (removed.count(i)) {
+	  break;
+	}
+	cur_vol = mh->get_volume(i);
+      }
+    }
+  }
+  delete_orphans(removed);
+  update_progress(1.0);
+}
+
+#if defined(ORIGINAL_WORKING_CODE)
+void
 RefineTetVol::subdivide_to_level(unsigned target_level)
 {  
-  TetVolField<int>::mesh_handle_type mh = subdivided_->get_typed_mesh();
+  TetVolField<char>::mesh_handle_type mh = subdivided_->get_typed_mesh();
   set<unsigned int> removed;
   bool done = false;
   while(! done) {
@@ -380,12 +416,12 @@ RefineTetVol::subdivide_to_level(unsigned target_level)
   }
   delete_orphans(removed);
 }
-
+#endif
 void
-RefineTetVol::locally_refine(TetVolField<int> *control)
+RefineTetVol::locally_refine(TetVolField<char> *control)
 {  
-  TetVolField<int>::mesh_handle_type cnt = control->get_typed_mesh();
-  TetVolField<int>::mesh_handle_type mh = subdivided_->get_typed_mesh();
+  TetVolField<char>::mesh_handle_type cnt = control->get_typed_mesh();
+  TetVolField<char>::mesh_handle_type mh = subdivided_->get_typed_mesh();
   set<unsigned int> removed;
   
   TetVolMesh::Cell::size_type num_tets;

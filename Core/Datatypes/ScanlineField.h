@@ -53,8 +53,8 @@ class ScanlineField : public GenericField< ScanlineMesh, vector<Data> >
 {
 public:
   ScanlineField();
-  ScanlineField(Field::data_location data_at);
-  ScanlineField(ScanlineMeshHandle mesh, Field::data_location data_at);
+  ScanlineField(int order);
+  ScanlineField(ScanlineMeshHandle mesh, int order);
   virtual ScanlineField<Data> *clone() const;
   virtual ~ScanlineField();
 
@@ -79,16 +79,16 @@ ScanlineField<Data>::ScanlineField()
 
 
 template <class Data>
-ScanlineField<Data>::ScanlineField(Field::data_location data_at)
-  : GenericField<ScanlineMesh, vector<Data> >(data_at)
+ScanlineField<Data>::ScanlineField(int order)
+  : GenericField<ScanlineMesh, vector<Data> >(order)
 {
 }
 
 
 template <class Data>
 ScanlineField<Data>::ScanlineField(ScanlineMeshHandle mesh,
-			     Field::data_location data_at)
-  : GenericField<ScanlineMesh, vector<Data> >(mesh, data_at)
+				   int order)
+  : GenericField<ScanlineMesh, vector<Data> >(mesh, order)
 {
 }
 

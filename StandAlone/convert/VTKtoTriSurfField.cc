@@ -279,7 +279,7 @@ main(int argc, char **argv) {
       cerr << "supporting float only atm..." << endl;
       return 1;
     }
-    ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), Field::FACE);
+    ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), 0);
     //cout << "putting data at faces" << endl;
   } else {
     // node centered data ...
@@ -287,7 +287,7 @@ main(int argc, char **argv) {
       cerr << "supporting float only atm..." << endl;
       return 1;
     }
-    ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), Field::NODE);
+    ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), 1);
   }
   ts->resize_fdata();
   string table, tname;

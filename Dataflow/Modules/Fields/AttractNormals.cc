@@ -165,7 +165,7 @@ AttractNormals::execute()
   }
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
-  const TypeDescription *ltd = ifieldhandle->data_at_type_description();
+  const TypeDescription *ltd = ifieldhandle->order_type_description();
   const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
   CompileInfoHandle ci =
     AttractNormalsAlgo::get_compile_info(ftd, ltd, mtd, scale_p);

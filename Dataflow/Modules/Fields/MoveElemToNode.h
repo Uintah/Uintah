@@ -97,7 +97,7 @@ MoveElemToNodeAlgoLat<FIELD>::execute(ProgressReporter *mod,
   imesh->get_canonical_transform(trans);
   omesh->transform(trans);
 
-  FIELD *ofield = scinew FIELD(omesh, Field::NODE);
+  FIELD *ofield = scinew FIELD(omesh, 1);
 
   // Copy data from ifield to ofield.
   typename FIELD::mesh_type::Elem::iterator iter, eiter;
@@ -165,7 +165,7 @@ MoveElemToNodeAlgoSHex<FIELD>::execute(ProgressReporter *mod,
     }
   }
 
-  FIELD *ofield = scinew FIELD(omesh, Field::NODE);
+  FIELD *ofield = scinew FIELD(omesh, 1);
 
   // Copy data from ifield to ofield.
   typename FIELD::mesh_type::Elem::iterator iter, eiter;
@@ -226,7 +226,7 @@ MoveElemToNodeAlgoImg<FIELD>::execute(ProgressReporter *mod,
   imesh->get_canonical_transform(trans);
   omesh->transform(trans);
 
-  FIELD *ofield = scinew FIELD(omesh, Field::NODE);
+  FIELD *ofield = scinew FIELD(omesh, 1);
 
   // Copy data from ifield to ofield.
   typename FIELD::mesh_type::Elem::iterator iter, eiter;
@@ -290,7 +290,7 @@ MoveElemToNodeAlgoSQuad<FIELD>::execute(ProgressReporter *mod,
     }
   }
 
-  FIELD *ofield = scinew FIELD(omesh, Field::NODE);
+  FIELD *ofield = scinew FIELD(omesh, 1);
 
   // Copy data from ifield to ofield.
   typename FIELD::mesh_type::Elem::iterator iter, eiter;

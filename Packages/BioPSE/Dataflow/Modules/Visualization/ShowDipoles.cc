@@ -448,8 +448,7 @@ ShowDipoles::generate_output_field()
       msh->add_node(new_positions_[i]->get());
     }
     PointCloudMeshHandle mh(msh);
-    PointCloudField<Vector> *out = new PointCloudField<Vector>(mh, 
-							       Field::NODE);
+    PointCloudField<Vector> *out = new PointCloudField<Vector>(mh, 1);
     scaleModeGui_.reset();
     string scaleMode = scaleModeGui_.get();
     double max = max_len_.get();

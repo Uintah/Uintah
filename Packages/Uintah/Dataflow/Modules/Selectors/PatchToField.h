@@ -50,7 +50,7 @@ public:
     {
       LatVolMesh *mesh = fld_->get_typed_mesh().get_rep();
       
-      if( fld_->data_at() == Field::CELL){
+      if( fld_->basis_order() == 0){
         IntVector lo(min_ - offset_);
         IntVector hi(max_ - offset_);
 #if 1

@@ -58,7 +58,7 @@ main(int argc, char **argv) {
   tvm->add_point(p4);
 
   tvm->add_tet(0, 1, 2, 3);
-  TetVolField<double> *tv = scinew TetVolField<double>(tvm, Field::NODE);
+  TetVolField<double> *tv = scinew TetVolField<double>(tvm, 1);
   tv->resize_fdata();
 
   TetVolField<double>::fdata_type &d = tv->fdata();

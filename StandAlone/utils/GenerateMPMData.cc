@@ -89,7 +89,7 @@ write_MPM(FieldHandle& field_h, const string &outdir)
     }    
   }
 
-  const double max_vol_s = .5L;
+  const double max_vol_s = 1.0L;
   BBox bbox = field_h->mesh()->get_bounding_box();
   Point minb, maxb;
   minb = bbox.min();

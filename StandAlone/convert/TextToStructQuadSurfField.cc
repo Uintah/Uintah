@@ -157,7 +157,7 @@ main(int argc, char **argv) {
   cerr << "done adding points.\n";
 
   StructQuadSurfField<double> *qsf =
-    scinew StructQuadSurfField<double>(qsm, Field::NONE);
+    scinew StructQuadSurfField<double>(qsm, 0);
   FieldHandle qsH(qsf);
   
   if (binOutput) {

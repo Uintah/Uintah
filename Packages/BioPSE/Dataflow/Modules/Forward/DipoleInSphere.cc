@@ -131,9 +131,9 @@ void DipoleInSphere::execute() {
     TriSurfMeshHandle hMesh = 
       dynamic_cast<TriSurfMesh*>(field_handle->mesh().get_rep());
     TriSurfField<double>* hNewSurf = 
-      new TriSurfField<double>(hMesh, Field::NODE);
+      new TriSurfField<double>(hMesh, 1);
     TriSurfField<Vector>* hBSurf = 
-      new TriSurfField<Vector>(hMesh, Field::NODE);
+      new TriSurfField<Vector>(hMesh, 1);
     
     FieldHandle dip_handle;
     

@@ -59,8 +59,8 @@ class PrismVolField : public GenericField<PrismVolMesh, vector<T> >
 {
 public:
   PrismVolField();
-  PrismVolField(Field::data_location data_at);
-  PrismVolField(PrismVolMeshHandle mesh, Field::data_location data_at);
+  PrismVolField(int order);
+  PrismVolField(PrismVolMeshHandle mesh, int order);
   virtual PrismVolField<T> *clone() const;
   virtual ~PrismVolField();
 
@@ -86,24 +86,15 @@ PrismVolField<T>::PrismVolField()
 }
 
 template <class T>
-PrismVolField<T>::PrismVolField(Field::data_location data_at)
-  : GenericField<PrismVolMesh, vector<T> >(data_at)
+PrismVolField<T>::PrismVolField(int order)
+  : GenericField<PrismVolMesh, vector<T> >(order)
 {
-  ASSERTMSG(data_at != Field::EDGE, 
-	    "PrismVolField does NOT currently support data at edges."); 
-  ASSERTMSG(data_at != Field::FACE, 
-	    "PrismVolField does NOT currently support data at faces."); 
-
 }
 
 template <class T>
-PrismVolField<T>::PrismVolField(PrismVolMeshHandle mesh, Field::data_location data_at)
-  : GenericField<PrismVolMesh, vector<T> >(mesh, data_at)
+PrismVolField<T>::PrismVolField(PrismVolMeshHandle mesh, int order)
+  : GenericField<PrismVolMesh, vector<T> >(mesh, order)
 {
-  ASSERTMSG(data_at != Field::EDGE, 
-	    "PrismVolField does NOT currently support data at edges."); 
-  ASSERTMSG(data_at != Field::FACE, 
-	    "PrismVolField does NOT currently support data at faces."); 
 }
 
 template <class T>
@@ -227,7 +218,7 @@ template <class T>
 Vector PrismVolField<T>::cell_gradient(PrismVolMesh::Cell::index_type ci)
 {
   // for now we only know how to do this for field with doubles at the nodes
-  ASSERT(data_at() == Field::NODE);
+  ASSERT(basis_order() == 1);
 
   // load up the indices of the nodes for this cell
   PrismVolMesh::Node::array_type nodes;

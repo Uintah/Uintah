@@ -157,7 +157,6 @@ proc portCount { port } {
     if [isaSubnetIcon [pMod port]] {
 	set port "Subnet$Subnet([pMod port]_num) 0 [invType port]"
     }
-
     if [isaSubnetEditor [pMod port]] {
 	set idx [expr [string equal o [pType port]]?1:3]
 	set conns [portConnections "[pMod port] all [pType port]"]

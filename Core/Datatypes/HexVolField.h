@@ -59,8 +59,8 @@ class HexVolField : public GenericField<HexVolMesh, vector<T> >
 {
 public:
   HexVolField();
-  HexVolField(Field::data_location data_at);
-  HexVolField(HexVolMeshHandle mesh, Field::data_location data_at);
+  HexVolField(int order);
+  HexVolField(HexVolMeshHandle mesh, int order);
   virtual HexVolField<T> *clone() const;
   virtual ~HexVolField();
 
@@ -86,14 +86,14 @@ HexVolField<T>::HexVolField()
 }
 
 template <class T>
-HexVolField<T>::HexVolField(Field::data_location data_at)
-  : GenericField<HexVolMesh, vector<T> >(data_at)
+HexVolField<T>::HexVolField(int order)
+  : GenericField<HexVolMesh, vector<T> >(order)
 {
 }
 
 template <class T>
-HexVolField<T>::HexVolField(HexVolMeshHandle mesh, Field::data_location data_at)
-  : GenericField<HexVolMesh, vector<T> >(mesh, data_at)
+HexVolField<T>::HexVolField(HexVolMeshHandle mesh, int order)
+  : GenericField<HexVolMesh, vector<T> >(mesh, order)
 {
 }
 
@@ -218,7 +218,7 @@ template <class T>
 Vector HexVolField<T>::cell_gradient(HexVolMesh::Cell::index_type ci)
 {
   // for now we only know how to do this for field with doubles at the nodes
-  ASSERT(data_at() == Field::NODE);
+  ASSERT(basis_order() == 1);
 
   // load up the indices of the nodes for this cell
   HexVolMesh::Node::array_type nodes;

@@ -45,7 +45,7 @@ class CastMLVtoHVAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(FieldHandle fsrc,
-			      Field::data_location loc) = 0;
+			      int basis_order) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -59,14 +59,14 @@ class CastMLVtoHVAlgoT : public CastMLVtoHVAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle fsrc, Field::data_location loc);
+  virtual FieldHandle execute(FieldHandle fsrc, int basis_order);
 };
 
 
 template <class FSRC, class LSRC, class FDST, class LDST>
 FieldHandle
 CastMLVtoHVAlgoT<FSRC, LSRC, FDST, LDST>::execute(FieldHandle lv_h,
-						  Field::data_location loc)
+						  int basis_order)
 {
   FSRC *lv = dynamic_cast<FSRC*>(lv_h.get_rep());
   HexVolMeshHandle hvm = scinew HexVolMesh;
@@ -132,7 +132,7 @@ CastMLVtoHVAlgoT<FSRC, LSRC, FDST, LDST>::execute(FieldHandle lv_h,
     }
   }
 
-  FDST *hv = scinew FDST(hvm, loc);
+  FDST *hv = scinew FDST(hvm, basis_order);
 
   typename LDST::iterator bi, ei;
   hvm->begin(bi);

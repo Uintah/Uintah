@@ -122,7 +122,7 @@ FieldBoundary::execute()
     Handle<FieldBoundaryAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
-    algo->execute(this, mesh, tri_fh_, interp_mh_, input->data_at());
+    algo->execute(this, mesh, tri_fh_, interp_mh_, input->basis_order());
 
     // Automatically apply the interpolant matrix to the output field.
     if (tri_fh_.get_rep() && interp_mh_.get_rep())
@@ -130,9 +130,9 @@ FieldBoundary::execute()
       string actype = input->get_type_description(1)->get_name();
       if (input->query_scalar_interface(this) != NULL) { actype = "double"; }
       const TypeDescription *iftd = input->get_type_description();
-      const TypeDescription *iltd = input->data_at_type_description();
+      const TypeDescription *iltd = input->order_type_description();
       const TypeDescription *oftd = tri_fh_->get_type_description();
-      const TypeDescription *oltd = tri_fh_->data_at_type_description();
+      const TypeDescription *oltd = tri_fh_->order_type_description();
       CompileInfoHandle ci =
 	ApplyInterpMatrixAlgo::get_compile_info(iftd, iltd,
 						oftd, oltd,
@@ -141,7 +141,7 @@ FieldBoundary::execute()
       if (module_dynamic_compile(ci, algo))
       {
 	tri_fh_ = algo->execute(input, tri_fh_->mesh(),
-				interp_mh_, tri_fh_->data_at());
+				interp_mh_, tri_fh_->basis_order());
       }
     }
   }

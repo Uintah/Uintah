@@ -126,8 +126,8 @@ main(int argc, char **argv) {
   }
   cerr << "done.\n";
 
-  FieldHandle mlvfH = new MaskedLatVolField<double>(mlvm, lvfh->data_at());
-//  FieldHandle mlvfH = new LatVolField<double>(mlvm, lvfh->data_at());
+  FieldHandle mlvfH = new MaskedLatVolField<double>(mlvm, lvfh->basis_order());
+//  FieldHandle mlvfH = new LatVolField<double>(mlvm, lvfh->basis_order());
   
   BinaryPiostream out_stream(argv[3], Piostream::Write);
   cerr << "Saving MaskedLatVolField... ";

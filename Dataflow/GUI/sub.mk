@@ -66,6 +66,7 @@ SRCS := \
 	$(SRCDIR)/Connection.tcl \
 	$(SRCDIR)/Coregister.tcl \
 	$(SRCDIR)/CreateMesh.tcl \
+	$(SRCDIR)/CreateView.tcl \
 	$(SRCDIR)/CriticalPointWidget.tcl \
 	$(SRCDIR)/CrosshairWidget.tcl \
 	$(SRCDIR)/DirectInterpolate.tcl \
@@ -126,6 +127,7 @@ SRCS := \
 	$(SRCDIR)/ShowColorMap.tcl \
 	$(SRCDIR)/ShowField.tcl \
 	$(SRCDIR)/ShowMatrix.tcl \
+	$(SRCDIR)/ShowXYoverTimePlot.tcl \
 	$(SRCDIR)/SolveMatrix.tcl \
 	$(SRCDIR)/StreamLines.tcl \
 	$(SRCDIR)/Submatrix.tcl \

@@ -80,7 +80,7 @@ ToStructuredAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
   mesh->get_dim(dims);
   outmesh->set_dim(dims);
 
-  FDST *ofield = scinew FDST(outmesh, field_h->data_at());
+  FDST *ofield = scinew FDST(outmesh, field_h->basis_order());
 
   typename FSRC::mesh_type::Node::iterator bn, en;
   mesh->begin(bn); mesh->end(en);

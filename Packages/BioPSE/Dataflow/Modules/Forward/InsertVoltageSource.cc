@@ -135,7 +135,7 @@ void InsertVoltageSource::execute() {
     vals.push_back(0);
   } else {
     const TypeDescription *field_td = isourceH->get_type_description();
-    const TypeDescription *loc_td = isourceH->data_at_type_description();
+    const TypeDescription *loc_td = isourceH->order_type_description();
     CompileInfoHandle ci = 
       InsertVoltageSourceGetPtsAndValsBase::get_compile_info(field_td, 
 							     loc_td);

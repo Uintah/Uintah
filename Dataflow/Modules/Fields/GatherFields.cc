@@ -113,7 +113,7 @@ GatherFields::execute()
   {
     const TypeDescription *mtd0 = fields[0]->mesh()->get_type_description();
     const TypeDescription *ftd0 = fields[0]->get_type_description();
-    const int loc0 = fields[0]->data_at();
+    const int loc0 = fields[0]->basis_order();
     bool same_field_kind = true;
     bool same_mesh_kind = true;
     bool same_data_location = true;
@@ -127,7 +127,7 @@ GatherFields::execute()
       {
 	same_field_kind = false;
       }
-      if (fields[i]->data_at() != loc0)
+      if (fields[i]->basis_order() != loc0)
       {
 	same_data_location = false;
       }
@@ -146,7 +146,7 @@ GatherFields::execute()
 	warning("Copying data does not work for data of different kinds.");
 	copy_data = false;
       }
-      else if (same_data_location && fields[0]->data_at() != Field::NODE)
+      else if (same_data_location && fields[0]->basis_order() != 1)
       {
 	warning("Copying data does not work for non-node data locations.");
 	copy_data = false;
@@ -175,7 +175,7 @@ GatherFields::execute()
 	if (!module_dynamic_compile(ci, algo)) return;
 	algo->execute(fields[i]->mesh(), pc);
       }
-      ofield = scinew PointCloudField<double>(pc, Field::NODE);
+      ofield = scinew PointCloudField<double>(pc, 1);
     }
   }
 

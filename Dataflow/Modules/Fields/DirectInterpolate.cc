@@ -103,11 +103,6 @@ DirectInterpolate::execute()
   {
     return;
   }
-  if (fdst_h->data_at() == Field::NONE)
-  {
-    warning("No data location in destination to interpolate to.");
-    return;
-  }
 
   src_port = (FieldIPort *)get_iport("Source");
   FieldHandle fsrc_h;
@@ -119,17 +114,12 @@ DirectInterpolate::execute()
   {
     return;
   }
-  if (!fsrc_h->data_at() == Field::NONE)
-  {
-    warning("No data location in Source field to interpolate from.");
-    return;
-  }
 
   CompileInfoHandle ci =
     DirectInterpAlgo::get_compile_info(fsrc_h->get_type_description(),
-				       fsrc_h->data_at_type_description(),
+				       fsrc_h->order_type_description(),
 				       fdst_h->get_type_description(),
-				       fdst_h->data_at_type_description());
+				       fdst_h->order_type_description());
   Handle<DirectInterpAlgo> algo;
   if (!module_dynamic_compile(ci, algo)) return;
 
@@ -139,7 +129,7 @@ DirectInterpolate::execute()
     return;
   }
   fsrc_h->mesh()->synchronize(Mesh::LOCATE_E);
-  ofp->send(algo->execute(fsrc_h, fdst_h->mesh(), fdst_h->data_at(),
+  ofp->send(algo->execute(fsrc_h, fdst_h->mesh(), fdst_h->basis_order(),
 			  interpolation_basis_.get(),
 			  map_source_to_single_dest_.get(),
 			  exhaustive_search_.get(),

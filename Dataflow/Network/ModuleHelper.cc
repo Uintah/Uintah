@@ -94,7 +94,7 @@ void ModuleHelper::run()
 	break;
 
       default:
-	cerr << "Illegal Message type: " << msg->type << std::endl;
+	cerr << "(ModuleHelper.cc)Illegal Message type: " << msg->type << std::endl;
 	break;
       }
 

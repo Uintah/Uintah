@@ -55,7 +55,7 @@ public:
   virtual void execute(const MeshHandle mesh,
 		       FieldHandle &bndry,
 		       MatrixHandle &intrp,
-		       Field::data_location at) = 0;
+		       int basis_order) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *mesh,
@@ -76,7 +76,7 @@ public:
   virtual void execute(const MeshHandle mesh,
 		       FieldHandle &boundary,
 		       MatrixHandle &interp,
-		       Field::data_location at);
+		       int basis_order);
 
 };
 
@@ -86,7 +86,7 @@ void
 FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
 				    FieldHandle &boundary_fh,
 				    MatrixHandle &interp,
-				    Field::data_location at)
+				    int basis_order)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
   map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type> vertex_map;
@@ -166,9 +166,9 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
     }
   }
 
-  if (at == Field::CELL)
+  if (basis_order == 0)
   {
-    TriSurfField<double> *ts = scinew TriSurfField<double>(tmesh, Field::FACE);
+    TriSurfField<double> *ts = scinew TriSurfField<double>(tmesh, 0);
     boundary_fh = ts;
 
     typename Msh::Elem::size_type elemsize;
@@ -196,7 +196,7 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
   }
   else 
   {
-    TriSurfField<double> *ts = scinew TriSurfField<double>(tmesh, Field::NODE);
+    TriSurfField<double> *ts = scinew TriSurfField<double>(tmesh, 1);
     boundary_fh = ts;
 
     typename Msh::Node::size_type nodesize;
@@ -235,7 +235,7 @@ public:
   virtual void execute(const MeshHandle mesh,
 		       FieldHandle &boundary,
 		       MatrixHandle &interp,
-		       Field::data_location at);
+		       int basis_order);
 
 };
 
@@ -246,7 +246,7 @@ void
 FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
 				     FieldHandle &boundary_fh,
 				     MatrixHandle &interp,
-				     Field::data_location at)
+				     int basis_order)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
   map<typename Msh::Node::index_type, typename QuadSurfMesh::Node::index_type> vertex_map;
@@ -325,10 +325,10 @@ FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
     }
   }
 
-  if (at == Field::CELL)
+  if (basis_order == 0)
   {
     QuadSurfField<double> *ts =
-      scinew QuadSurfField<double>(tmesh, Field::FACE);
+      scinew QuadSurfField<double>(tmesh, 0);
     boundary_fh = ts;
     
     typename Msh::Elem::size_type nodesize;
@@ -357,7 +357,7 @@ FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
   else
   {
     QuadSurfField<double> *ts =
-      scinew QuadSurfField<double>(tmesh, Field::NODE);
+      scinew QuadSurfField<double>(tmesh, 1);
     boundary_fh = ts;
     
     typename Msh::Node::size_type nodesize;
@@ -396,7 +396,7 @@ public:
   virtual void execute(const MeshHandle mesh,
 		       FieldHandle &boundary,
 		       MatrixHandle &interp,
-		       Field::data_location at);
+		       int basis_order);
 
 };
 
@@ -406,7 +406,7 @@ void
 FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
 				      FieldHandle &boundary_fh,
 				      MatrixHandle &interp,
-				      Field::data_location at)
+				      int basis_order)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
   map<typename Msh::Node::index_type, typename CurveMesh::Node::index_type> vertex_map;
@@ -477,9 +477,9 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
     }
   }
 
-  if (at == Field::FACE)
+  if (basis_order == 0)
   {
-    CurveField<double> *ts = scinew CurveField<double>(tmesh, Field::NODE);
+    CurveField<double> *ts = scinew CurveField<double>(tmesh, 1);
     boundary_fh = ts;
 
     typename Msh::Elem::size_type nodesize;
@@ -507,7 +507,7 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
   }
   else
   {
-    CurveField<double> *ts = scinew CurveField<double>(tmesh, Field::NODE);
+    CurveField<double> *ts = scinew CurveField<double>(tmesh, 1);
     boundary_fh = ts;
 
     typename Msh::Node::size_type nodesize;
@@ -544,7 +544,7 @@ class FieldBoundaryAlgo : public DynamicAlgoBase
 public:
   virtual void execute(ProgressReporter *m, const MeshHandle mesh,
 		       FieldHandle &bndry, MatrixHandle &intrp,
-		       Field::data_location at) = 0;
+		       int basis_order) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *mesh);
@@ -558,7 +558,7 @@ public:
   //! virtual interface. 
   virtual void execute(ProgressReporter *m, const MeshHandle mesh,
 		       FieldHandle &boundary, MatrixHandle &interp,
-		       Field::data_location at);
+		       int basis_order);
 };
 
 
@@ -566,7 +566,7 @@ template <class Msh>
 void 
 FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
 				 FieldHandle &boundary, MatrixHandle &interp,
-				 Field::data_location at)
+				 int basis_order)
 {
   if (get_type_description((typename Msh::Elem *)0)->get_name() ==
       get_type_description((typename Msh::Cell *)0)->get_name())
@@ -598,7 +598,7 @@ FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
     Handle<FieldBoundaryAlgoAux> algo;
     if (DynamicCompilation::compile(ci, algo, true, mod))
     {
-      algo->execute(mesh, boundary, interp, at);
+      algo->execute(mesh, boundary, interp, basis_order);
     }
   }
   else if (get_type_description((typename Msh::Elem *)0)->get_name() ==
@@ -610,7 +610,7 @@ FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
     Handle<FieldBoundaryAlgoAux> algo;
     if (DynamicCompilation::compile(ci, algo, true, mod))
     {
-      algo->execute(mesh, boundary, interp, at);
+      algo->execute(mesh, boundary, interp, basis_order);
     }
     else
     {

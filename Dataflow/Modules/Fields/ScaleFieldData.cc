@@ -91,11 +91,6 @@ ScaleFieldData::execute()
     error("Input field is empty.");
     return;
   }
-  if (ifieldhandle->data_at() == Field::NONE)
-  {
-    error("This module only supports fields containing data.");
-    return;
-  }
 
   MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Input Matrix");
   MatrixHandle imatrix;
@@ -109,7 +104,7 @@ ScaleFieldData::execute()
   }
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
-  const TypeDescription *ltd = ifieldhandle->data_at_type_description();
+  const TypeDescription *ltd = ifieldhandle->order_type_description();
   CompileInfoHandle ci = ScaleFieldDataAlgo::get_compile_info(ftd, ltd);
   Handle<ScaleFieldDataAlgo> algo;
   if (!module_dynamic_compile(ci, algo)) return;

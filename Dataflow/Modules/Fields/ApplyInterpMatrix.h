@@ -48,7 +48,7 @@ public:
   //! virtual interface. 
   virtual FieldHandle execute(FieldHandle src, MeshHandle dst,
 			      MatrixHandle interp,
-			      Field::data_location at) = 0;
+			      int basis_order) = 0;
 
   virtual void execute_aux(FieldHandle src, FieldHandle dst,
 			   MatrixHandle interp) = 0;
@@ -70,7 +70,7 @@ public:
 
   //! virtual interface. 
   virtual FieldHandle execute(FieldHandle src, MeshHandle dst,
-			      MatrixHandle interp, Field::data_location at);
+			      MatrixHandle interp, int basis_order);
 
   virtual void execute_aux(FieldHandle src, FieldHandle dst,
 			   MatrixHandle interp);
@@ -79,15 +79,16 @@ public:
 
 template <class FSRC, class LSRC, class FDST, class LDST, class ACCUM>
 FieldHandle
-ApplyInterpMatrixAlgoT<FSRC, LSRC, FDST, LDST, ACCUM>::execute(FieldHandle src_h,
-							       MeshHandle dst_h,
-							       MatrixHandle interp,
-							       Field::data_location at)
+ApplyInterpMatrixAlgoT<FSRC, LSRC, 
+		       FDST, LDST, ACCUM>::execute(FieldHandle src_h,
+						   MeshHandle dst_h,
+						   MatrixHandle interp,
+						   int basis_order)
 {
   typename FDST::mesh_type *dstmesh =
     dynamic_cast<typename FDST::mesh_type *>(dst_h.get_rep());
 
-  FieldHandle ofield = scinew FDST(dstmesh, at);
+  FieldHandle ofield = scinew FDST(dstmesh, basis_order);
   execute_aux(src_h, ofield, interp);
 
   return ofield;
@@ -96,9 +97,10 @@ ApplyInterpMatrixAlgoT<FSRC, LSRC, FDST, LDST, ACCUM>::execute(FieldHandle src_h
 
 template <class FSRC, class LSRC, class FDST, class LDST, class ACCUM>
 void
-ApplyInterpMatrixAlgoT<FSRC, LSRC, FDST, LDST, ACCUM>::execute_aux(FieldHandle src_h,
-								   FieldHandle dst_h,
-								   MatrixHandle interp)
+ApplyInterpMatrixAlgoT<FSRC, LSRC, 
+		       FDST, LDST, ACCUM>::execute_aux(FieldHandle src_h,
+						       FieldHandle dst_h,
+						       MatrixHandle interp)
 {
   FSRC *fsrc = dynamic_cast<FSRC *>(src_h.get_rep());
   FDST *fdst = dynamic_cast<FDST *>(dst_h.get_rep());

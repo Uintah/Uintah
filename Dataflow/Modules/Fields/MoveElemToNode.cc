@@ -94,7 +94,7 @@ MoveElemToNode::execute()
   const TypeDescription *mtd = ifield->mesh()->get_type_description();
   if (mtd->get_name() == "LatVolMesh")
   {
-    if (ifield->data_at() != Field::CELL)
+    if (ifield->basis_order() != 0)
     {
       error("LatVolMesh data must be at cell centers.");
       return;
@@ -103,7 +103,7 @@ MoveElemToNode::execute()
   }
   else if (mtd->get_name() == "StructHexVolMesh")
   {
-    if (ifield->data_at() != Field::CELL)
+    if (ifield->basis_order() != 0)
     {
       error("StructHexVolMesh data must be at cell centers.");
       return;
@@ -112,20 +112,10 @@ MoveElemToNode::execute()
   }
   else if (mtd->get_name() == "ImageMesh")
   {
-    if (ifield->data_at() != Field::FACE)
-    {
-      error("ImageMesh data must be at face centers.");
-      return;
-    }
     ext = "Img";
   }
   else if (mtd->get_name() == "StructQuadSurfMesh")
   {
-    if (ifield->data_at() != Field::FACE)
-    {
-      error("StructQuadSurfMesh data must be at face centers.");
-      return;
-    }
     ext = "SQuad";
   }
   else

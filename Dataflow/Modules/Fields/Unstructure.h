@@ -210,9 +210,9 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
   // really should copy normals
   outmesh->synchronize(Mesh::NORMALS_E);
 
-  FDST *ofield = scinew FDST(outmesh, field_h->data_at());
+  FDST *ofield = scinew FDST(outmesh, field_h->basis_order());
 
-  if (field_h->data_at() == Field::NODE)
+  if (field_h->basis_order() == 1)
   {
     typename node_hash_type::iterator hitr = nodemap.begin();
 
@@ -225,7 +225,7 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
       ++hitr;
     }
   }
-  else if (field_h->data_at_type_description()->get_name() ==
+  else if (field_h->order_type_description()->get_name() ==
 	   get_type_description((typename FSRC::mesh_type::Elem *)0)->get_name())
   {
     typename elem_hash_type::iterator hitr = elemmap.begin();

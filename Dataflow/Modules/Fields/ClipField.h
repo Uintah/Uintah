@@ -134,10 +134,10 @@ ClipFieldAlgoT<FIELD>::execute_cell(ProgressReporter *mod,
     ++bi;
   }
 
-  FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
+  FIELD *ofield = scinew FIELD(clipped, fieldh->basis_order());
   ofield->copy_properties(fieldh.get_rep());
 
-  if (fieldh->data_at() == Field::NODE)
+  if (fieldh->basis_order() == 1)
   {
     FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
     typename hash_type::iterator hitr = nodemap.begin();
@@ -151,7 +151,7 @@ ClipFieldAlgoT<FIELD>::execute_cell(ProgressReporter *mod,
       ++hitr;
     }
   }
-  else if (fieldh->data_at_type_description()->get_name() ==
+  else if (fieldh->order_type_description()->get_name() ==
 	   get_type_description((typename FIELD::mesh_type::Elem *)0)->get_name())
   {
     FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
@@ -258,10 +258,10 @@ ClipFieldAlgoT<FIELD>::execute_node(ProgressReporter *mod,
     ++bi;
   }
 
-  FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
+  FIELD *ofield = scinew FIELD(clipped, fieldh->basis_order());
   ofield->copy_properties(fieldh.get_rep());
 
-  if (fieldh->data_at() == Field::NODE)
+  if (fieldh->basis_order() == 1)
   {
     FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
     typename hash_type::iterator hitr = nodemap.begin();
@@ -275,7 +275,7 @@ ClipFieldAlgoT<FIELD>::execute_node(ProgressReporter *mod,
       ++hitr;
     }
   }
-  else if (fieldh->data_at_type_description()->get_name() ==
+  else if (fieldh->order_type_description()->get_name() ==
 	   get_type_description((typename FIELD::mesh_type::Elem *)0)->get_name())
   {
     FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());

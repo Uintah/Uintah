@@ -188,29 +188,23 @@ SamplePlane::execute()
 
   ImageMeshHandle imagemesh = scinew ImageMesh(sizex, sizey, minb, maxb);
 
-  Field::data_location data_at;
-  if (data_at_.get() == "Nodes") data_at = Field::NODE;
-  else if (data_at_.get() == "Edges") data_at = Field::EDGE;
-  else if (data_at_.get() == "Faces") data_at = Field::FACE;
-  else if (data_at_.get() == "None") data_at = Field::NONE;
-  else {
-    error("Unsupported data_at location " + data_at_.get() + ".");
-    return;
-  }
+  int basis_order;
+  if (data_at_.get() == "Cells") basis_order = 0;
+  else basis_order = 1;
 
   // Create Image Field.
   FieldHandle ofh;
   if (datatype == VECTOR)
   {
-    ofh = scinew ImageField<Vector>(imagemesh, data_at);
+    ofh = scinew ImageField<Vector>(imagemesh, basis_order);
   }
   else if (datatype == TENSOR)
   {
-    ofh = scinew ImageField<Tensor>(imagemesh, data_at);
+    ofh = scinew ImageField<Tensor>(imagemesh, basis_order);
   }
   else
   {
-    ofh = scinew ImageField<double>(imagemesh, data_at);
+    ofh = scinew ImageField<double>(imagemesh, basis_order);
   }
 
   // Transform field.

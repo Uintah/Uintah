@@ -141,7 +141,7 @@ ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
 	Point p;
 	mesh->get_center(p, onodes[i]);
 	typename FIELD::value_type v(0);
-	if (field->data_at() == Field::NODE) { field->value(v, onodes[i]); }
+	if (field->basis_order() == 1) { field->value(v, onodes[i]); }
 	if (vinside_p(p.x(), p.y(), p.z(), v))
 	{
 	  counter++;
@@ -163,7 +163,7 @@ ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
 	Point p;
 	mesh->get_center(p, onodes[i]);
 	typename FIELD::value_type v(0);
-	if (field->data_at() == Field::NODE) { field->value(v, onodes[i]); }
+	if (field->basis_order() == 1) { field->value(v, onodes[i]); }
 	if (!vinside_p(p.x(), p.y(), p.z(), v))
 	{
 	  inside = false;
@@ -204,10 +204,10 @@ ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
     ++bi;
   }
 
-  FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
+  FIELD *ofield = scinew FIELD(clipped, fieldh->basis_order());
   ofield->copy_properties(fieldh.get_rep());
 
-  if (fieldh->data_at() == Field::NODE)
+  if (fieldh->basis_order() == 1)
   {
     FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
     typename hash_type::iterator hitr = nodemap.begin();

@@ -137,7 +137,7 @@ main(int argc, char **argv) {
   }
   fclose(f);
 
-  TetVolField<int> *tvi = scinew TetVolField<int>(tvm, Field::CELL);
+  TetVolField<int> *tvi = scinew TetVolField<int>(tvm, 0);
   vector<pair<string, Tensor> > tens;
   tens.resize(1);
   tens[0] = pair<string, Tensor>("inside", Tensor(1.0));
