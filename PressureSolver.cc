@@ -514,90 +514,6 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
   }
   d_pressRefProc = lb->getPatchwiseProcessorAssignment(d_pressRefPatch,
 						       d_myworld);
-#if 0
-#if 0
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-      Task* tsk = scinew Task("PressureSolver::PressLinearSolve",
-			   patch, old_dw, new_dw, this,
-			   &PressureSolver::pressureLinearSolve);
-
-      int numGhostCells = 0;
-      int matlIndex = 0;
-      int nofStencils = 7;
-      // Requires
-      // coefficient for the variable for which solve is invoked
-      tsk->requires(new_dw, d_lab->d_pressureINLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-      for (int ii = 0; ii < nofStencils; ii++)
-	tsk->requires(new_dw, d_lab->d_presCoefPBLMLabel, ii, patch, 
-		      Ghost::None, numGhostCells);
-      tsk->requires(new_dw, d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-      // computes global residual
-      //      tsk->computes(new_dw, d_lab->d_presResidPSLabel, matlIndex, patch);
-      //      tsk->computes(new_dw, d_lab->d_presTruncPSLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_lab->d_pressurePSLabel, matlIndex, patch);
-
-      sched->addTask(tsk, patches, matl);
-      
-    }
-  }
-#else
-  int numProcessors = d_myworld->size();
-  vector<Task*> tasks(numProcessors, (Task*)0);
-  LoadBalancer* lb = sched->getLoadBalancer();
-
-  //cerr << "In sched_PressureLinearSolve\n";
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-       int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
-       Task* tsk = tasks[proc];
-       if(!tsk){
-	  tsk = scinew Task("PressureSolver::PressLinearSolve",
-			    patch, old_dw, new_dw, this,
-			    &PressureSolver::pressureLinearSolve_all,
-			    level, sched);
-	  tasks[proc]=tsk;
-       }
-
-       int numGhostCells = 1;
-       int zeroGhostCells = 0;
-       int matlIndex = 0;
-       int nofStencils = 7;
-       // Requires
-       // coefficient for the variable for which solve is invoked
-       tsk->requires(new_dw, d_lab->d_pressureINLabel, matlIndex, patch, 
-		     Ghost::AroundCells, numGhostCells);
-       for (int ii = 0; ii < nofStencils; ii++)
-	  tsk->requires(new_dw, d_lab->d_presCoefPBLMLabel, ii, patch, 
-			Ghost::None, zeroGhostCells);
-       tsk->requires(new_dw, d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch, 
-		     Ghost::None, zeroGhostCells);
-       // computes global residual
-       //      tsk->computes(new_dw, d_lab->d_presResidPSLabel, matlIndex, patch);
-       //      tsk->computes(new_dw, d_lab->d_presTruncPSLabel, matlIndex, patch);
-       tsk->computes(new_dw, d_lab->d_pressurePSLabel, matlIndex, patch);
-#ifdef ARCHES_PRES_DEBUG
-       cerr << "Adding computes on patch: " << patch->getID() << '\n';
-#endif
-
-    }
-  }
-  for(int i=0;i<tasks.size();i++)
-     if(tasks[i]){
-	sched->addTask(tasks[i], patches, matl);
-#ifdef ARCHES_PRES_DEBUG
-	cerr << "Adding task: " << *tasks[i] << '\n';
-#endif
-     }
-  sched->releaseLoadBalancer();
-#endif
-#endif
 }
 
 
@@ -989,14 +905,7 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
   }
   if(d_pressRefProc == me){
     CCVariable<double> pressure;
-#if 0
-    int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    new_dw->get(pressure, d_lab->d_pressureINLabel, 
-		matlIndex, d_pressRefPatch, Ghost::None, 0);
-#else
     pressure = pressureVars.pressure;
-#endif
     pressureVars.press_ref = pressure[d_pressRef];
     cerr << "press_ref for norm: " << pressureVars.press_ref << " " <<
       d_pressRefProc << endl;
@@ -1012,112 +921,6 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
 
   // destroy matrix
   d_linearSolver->destroyMatrix();
-#if 0
-  ArchesVariables pressureVars;
-  int me = pg->myrank();
-  LoadBalancer* lb = sched->getLoadBalancer();
-
-  // initializeMatrix...
-  d_linearSolver->matrixCreate(level, lb);
-#ifdef ARCHES_PRES_DEBUG
-  cerr << "Finished creating petsc matrix\n";
-#endif
-
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-       int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
-       if(proc == me){
-	  // Underrelax...
-
-	  // This calls fillRows on linear(petsc) solver
-#ifdef ARCHES_PRES_DEBUG
-	  cerr << "Calling pressureLinearSolve for patch: " << patch->getID() << '\n';
-#endif
-	  pressureLinearSolve(pg, patch, old_dw, new_dw, pressureVars);
-#ifdef ARCHES_PRES_DEBUG
-	  cerr << "Done with pressureLinearSolve for patch: " << patch->getID() << '\n';
-#endif
-       }
-    }
-  }
-  // MPI_Reduce();
-  // solve
-#ifdef ARCHES_PRES_DEBUG
-  cerr << "Calling pressLinearSolve\n";
-#endif
-  bool converged =  d_linearSolver->pressLinearSolve();
-#ifdef ARCHES_PRES_DEBUG
-  cerr << "Done with pressLinearSolve\n";
-#endif
-  int pressRefProc = -1;
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-      int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
-      //int proc = find_processor_assignment(patch);
-      if (converged) {
-	if(proc == me){
-	  //	  unpack from linear solver.
-	  d_linearSolver->copyPressSoln(patch, &pressureVars);
-#ifdef ARCHES_PRES_DEBUG
-	  cerr << "Calling normPressure for patch: " << patch->getID() << '\n';
-#endif
-	}
-      }
-      else {
-	if ((proc == me)&&(me==0))
-	  cerr << "pressure solver not converged, using old values" << endl;
-      }
-      if (patch->containsCell(d_pressRef)) {
-	pressRefProc = proc;
-	if(pressRefProc == me){
-	  pressureVars.press_ref = pressureVars.pressure[d_pressRef];
-	  cerr << "press_ref for norm: " << pressureVars.press_ref << " " <<
-	    pressRefProc << endl;
-	}
-      }
-    }
-  }
-  if(pressRefProc == -1)
-    throw InternalError("Patch containing pressure reference point was not found");
-  
-  MPI_Bcast(&pressureVars.press_ref, 1, MPI_DOUBLE, pressRefProc, pg->getComm());
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-#ifdef ARCHES_PRES_DEBUG
-	 cerr << "After presssoln" << endl;
-#endif
-	 int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
-	 //int proc = find_processor_assignment(patch);
-	 if(proc == me){
-#ifdef ARCHES_PRES_DEBUG
-	   for(CellIterator iter = patch->getCellIterator();
-	       !iter.done(); iter++){
-	     cerr.width(10);
-	     cerr << "press"<<*iter << ": " << pressureVars.pressure[*iter] << "\n" ; 
-	   }
-#endif
-	   normPressure(pg, patch, &pressureVars);
-#ifdef ARCHES_PRES_DEBUG
-	   cerr << "Done with normPressure for patch: " 
-		<< patch->getID() << '\n';
-#endif
-	 // put back the results
-	   int matlIndex = 0;
-	   new_dw->put(pressureVars.pressure, d_lab->d_pressurePSLabel, 
-		       matlIndex, patch);
-	 }
-    }
-  }
-
-  // destroy matrix
-  d_linearSolver->destroyMatrix();
-#endif
 }
 
 // Actual linear solve
@@ -1173,54 +976,6 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
   // sets matrix
   d_linearSolver->setPressMatrix(pc, patch, &pressureVars, d_lab);
   //  d_linearSolver->pressLinearSolve();
-#if 0
-  int matlIndex = 0;
-  int numGhostCells = 1;
-  int zeroGhostCells = 0;
-  int nofStencils = 7;
-  // Get the required data
-  new_dw->get(pressureVars.pressure, d_lab->d_pressureINLabel, 
-	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
-  for (int ii = 0; ii < nofStencils; ii++) 
-    new_dw->get(pressureVars.pressCoeff[ii], d_lab->d_presCoefPBLMLabel, 
-		   ii, patch, Ghost::None, zeroGhostCells);
-
-  new_dw->get(pressureVars.pressNonlinearSrc, 
-		 d_lab->d_presNonLinSrcPBLMLabel, 
-		 matlIndex, patch, Ghost::None, zeroGhostCells);
-
-  // compute eqn residual, L1 norm
-  new_dw->allocate(pressureVars.residualPressure, d_lab->d_pressureRes,
-			  matlIndex, patch);
-#if 0
-  d_linearSolver->computePressResidual(pc, patch, old_dw, new_dw, 
-				       &pressureVars);
-#else
-  pressureVars.residPress=pressureVars.truncPress=0;
-#endif
-  new_dw->put(sum_vartype(pressureVars.residPress), d_lab->d_presResidPSLabel);
-  new_dw->put(sum_vartype(pressureVars.truncPress), d_lab->d_presTruncPSLabel);
-  // apply underelaxation to eqn
-  d_linearSolver->computePressUnderrelax(pc, patch, old_dw, new_dw,
-					 &pressureVars);
-  // put back computed matrix coeffs and nonlinear source terms 
-  // modified as a result of underrelaxation 
-  // into the matrix datawarehouse
-#if 0
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(pressureVars.pressCoeff[ii], d_lab->d_presCoefPSLabel, ii, patch);
-  }
-  new_dw->put(pressureVars.pressNonLinSrc, d_lab->d_presNonLinSrcPSLabel, 
-	      matlIndex, patch);
-#endif
-
-  // for parallel code lisolve will become a recursive task and 
-  // will make the following subroutine separate
-  // get patch numer ***warning****
-  // sets matrix
-  d_linearSolver->setPressMatrix(pc, patch, old_dw, new_dw, &pressureVars, d_lab);
-  //  d_linearSolver->pressLinearSolve();
-#endif
 }
   
   
