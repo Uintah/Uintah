@@ -604,7 +604,7 @@ void PFEThread::run(){
       if(have_ids)
 	ids[dest] = pvi[*iter];
       else
-	ids[dest] = -1;
+	ids[dest] = PARTICLE_FIELD_EXTRACTOR_BOGUS_PART_ID;
       
       positions[dest]=pvp[*iter];
     }
