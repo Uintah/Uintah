@@ -14,6 +14,9 @@
 #include <signal.h>
 #include <stdio.h>
 using namespace std;
+#ifdef __aix
+#include <strings.h>
+#endif
 
 #include <SCICore/OS/sock.h>
 
