@@ -16,9 +16,10 @@
 #define SCI_project_Point_Widget_h 1
 
 #include <Widgets/BaseWidget.h>
-
+#include <Geom/Material.h>
 
 class PointWidget : public BaseWidget {
+   GeomMaterial *sphMaterial;
 public:
    PointWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    PointWidget( const PointWidget& );
@@ -32,6 +33,9 @@ public:
 
    void SetPosition( const Point& );
    Point GetPosition() const;
+
+   void SetMaterial( const MaterialHandle& );
+   MaterialHandle GetMaterial();
 
    // Variable indexs
    enum { PointVar };

@@ -32,8 +32,8 @@ PointWidget::PointWidget( Module* module, CrowdMonitor* lock, double widget_scal
    variables[PointVar] = new PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
 
    geometries[GeomPoint] = new GeomSphere;
-   GeomMaterial* sphm = new GeomMaterial(geometries[GeomPoint], PointMaterial);
-   picks[Pick] = new GeomPick(sphm, module, this, Pick);
+   sphMaterial = new GeomMaterial(geometries[GeomPoint], PointMaterial);
+   picks[Pick] = new GeomPick(sphMaterial, module, this, Pick);
    picks[Pick]->set_highlight(HighlightMaterial);
    CreateModeSwitch(0, picks[Pick]);
 
@@ -99,5 +99,18 @@ Point
 PointWidget::GetPosition() const
 {
    return variables[PointVar]->point();
+}
+
+void 
+PointWidget::SetMaterial( const MaterialHandle& copy)
+{
+    sphMaterial->setMaterial(copy);
+    execute();
+}
+
+MaterialHandle 
+PointWidget::GetMaterial()
+{
+    return sphMaterial->getMaterial();
 }
 
