@@ -64,6 +64,7 @@ namespace Uintah {
     bool use_old_values;
     bool recursion;
     double time_multiplier;
+    double time_position_multiplier;
     double factor_old;
     double factor_new;
     double factor_divide;
@@ -84,6 +85,8 @@ namespace Uintah {
     const VarLabel* areaOUT;
     const VarLabel* maxuxplus_in;
     const VarLabel* maxuxplus_out;
+    const VarLabel* avuxplus_in;
+    const VarLabel* avuxplus_out;
 
 
     TimeIntegratorLabel(const ArchesLabel* lab, 
@@ -99,6 +102,7 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = true;
             time_multiplier = 1.0;
+            time_position_multiplier = 1.0;
 	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
@@ -119,6 +123,8 @@ namespace Uintah {
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    maxuxplus_in = lab->d_maxUxplus_label;
 	    maxuxplus_out = lab->d_maxUxplus_label;
+	    avuxplus_in = lab->d_avUxplus_label;
+	    avuxplus_out = lab->d_avUxplus_label;
 	  break;
 
 	  case TimeIntegratorStepType::FE:
@@ -129,6 +135,7 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
+            time_position_multiplier = 1.0;
 	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
@@ -149,6 +156,8 @@ namespace Uintah {
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    maxuxplus_in = lab->d_maxUxplus_label;
 	    maxuxplus_out = lab->d_maxUxplus_label;
+	    avuxplus_in = lab->d_avUxplus_label;
+	    avuxplus_out = lab->d_avUxplus_label;
 	  break;
 
 	  case TimeIntegratorStepType::Predictor:
@@ -159,6 +168,7 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
+            time_position_multiplier = 1.0;
 	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
@@ -179,6 +189,8 @@ namespace Uintah {
 	    areaOUT = lab->d_totalAreaOUTPredLabel;
 	    maxuxplus_in = lab->d_maxUxplus_label;
 	    maxuxplus_out = lab->d_maxUxplusPred_label;
+	    avuxplus_in = lab->d_avUxplus_label;
+	    avuxplus_out = lab->d_avUxplusPred_label;
 	  break;
 
 	  case TimeIntegratorStepType::OldPredictor:
@@ -189,6 +201,7 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 0.5;
+            time_position_multiplier = 0.5;
 	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
@@ -209,6 +222,8 @@ namespace Uintah {
 	    areaOUT = lab->d_totalAreaOUTPredLabel;
 	    maxuxplus_in = lab->d_maxUxplus_label;
 	    maxuxplus_out = lab->d_maxUxplusPred_label;
+	    avuxplus_in = lab->d_avUxplus_label;
+	    avuxplus_out = lab->d_avUxplusPred_label;
 	  break;
 
 	  case TimeIntegratorStepType::Corrector:
@@ -219,6 +234,7 @@ namespace Uintah {
 	    use_old_values = false;
 	    recursion = false;
             time_multiplier = 1.0;
+            time_position_multiplier = 2.0;
 	    factor_old = 1.0;
 	    factor_new = 1.0;
 	    factor_divide = 2.0;
@@ -239,6 +255,8 @@ namespace Uintah {
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    maxuxplus_in = lab->d_maxUxplusPred_label;
 	    maxuxplus_out = lab->d_maxUxplus_label;
+	    avuxplus_in = lab->d_avUxplusPred_label;
+	    avuxplus_out = lab->d_avUxplus_label;
 	  break;
 
 	  case TimeIntegratorStepType::OldCorrector:
@@ -249,6 +267,7 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
+            time_position_multiplier = 1.0;
 	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
@@ -269,6 +288,8 @@ namespace Uintah {
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    maxuxplus_in = lab->d_maxUxplusPred_label;
 	    maxuxplus_out = lab->d_maxUxplus_label;
+	    avuxplus_in = lab->d_avUxplusPred_label;
+	    avuxplus_out = lab->d_avUxplus_label;
 	  break;
 
 	  case TimeIntegratorStepType::CorrectorRK3:
@@ -279,6 +300,7 @@ namespace Uintah {
 	    use_old_values = false;
 	    recursion = false;
             time_multiplier = 1.0;
+            time_position_multiplier = 1.5;
 	    factor_old = 1.0;
 	    factor_new = 2.0;
 	    factor_divide = 3.0;
@@ -299,6 +321,8 @@ namespace Uintah {
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    maxuxplus_in = lab->d_maxUxplusInterm_label;
 	    maxuxplus_out = lab->d_maxUxplus_label;
+	    avuxplus_in = lab->d_avUxplusInterm_label;
+	    avuxplus_out = lab->d_avUxplus_label;
 	  break;
 
 	  case TimeIntegratorStepType::Intermediate:
@@ -309,6 +333,7 @@ namespace Uintah {
 	    use_old_values = false;
 	    recursion = false;
             time_multiplier = 1.0;
+            time_position_multiplier = 2.0;
 	    factor_old = 3.0;
 	    factor_new = 1.0;
 	    factor_divide = 4.0;
@@ -329,6 +354,8 @@ namespace Uintah {
 	    areaOUT = lab->d_totalAreaOUTIntermLabel;
 	    maxuxplus_in = lab->d_maxUxplusPred_label;
 	    maxuxplus_out = lab->d_maxUxplusInterm_label;
+	    avuxplus_in = lab->d_avUxplusPred_label;
+	    avuxplus_out = lab->d_avUxplusInterm_label;
 	  break;
 
 	  case TimeIntegratorStepType::BEEmulation1:
@@ -339,6 +366,7 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
+            time_position_multiplier = 1.0;
 	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
@@ -359,6 +387,8 @@ namespace Uintah {
 	    areaOUT = lab->d_totalAreaOUTPredLabel;
 	    maxuxplus_in = lab->d_maxUxplus_label;
 	    maxuxplus_out = lab->d_maxUxplusPred_label;
+	    avuxplus_in = lab->d_avUxplus_label;
+	    avuxplus_out = lab->d_avUxplusPred_label;
 	  break;
 
 	  case TimeIntegratorStepType::BEEmulation2:
@@ -369,6 +399,7 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
+            time_position_multiplier = 1.0;
 	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
@@ -389,6 +420,8 @@ namespace Uintah {
 	    areaOUT = lab->d_totalAreaOUTIntermLabel;
 	    maxuxplus_in = lab->d_maxUxplusPred_label;
 	    maxuxplus_out = lab->d_maxUxplusInterm_label;
+	    avuxplus_in = lab->d_avUxplusPred_label;
+	    avuxplus_out = lab->d_avUxplusInterm_label;
 	  break;
 
 	  case TimeIntegratorStepType::BEEmulation3:
@@ -399,6 +432,7 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
+            time_position_multiplier = 1.0;
 	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
@@ -419,6 +453,8 @@ namespace Uintah {
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    maxuxplus_in = lab->d_maxUxplusInterm_label;
 	    maxuxplus_out = lab->d_maxUxplus_label;
+	    avuxplus_in = lab->d_avUxplusInterm_label;
+	    avuxplus_out = lab->d_avUxplus_label;
 	  break;
 
 	  default: 
