@@ -31,10 +31,13 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Containers/Handle.h>
+
 #include <Dataflow/Ports/FieldPort.h>
+
 #include <Packages/Fusion/Dataflow/Modules/Fields/FusionSlicer.h>
 #include <Packages/Fusion/Core/Datatypes/StructHexVolField.h>
-#include <Core/Containers/Handle.h>
+
 #include <Packages/Fusion/share/share.h>
 
 namespace Fusion {
@@ -73,7 +76,6 @@ private:
   FieldHandle  fHandle_;
 
   int fGeneration_;
-  int mGeneration_;
 };
 
 
@@ -103,8 +105,7 @@ FusionSlicer::FusionSlicer(GuiContext *context)
     jindex_(-1),
     kindex_(-1),
 
-    fGeneration_(-1),
-    mGeneration_(-1)
+    fGeneration_(-1)
 {
 }
 
