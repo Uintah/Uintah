@@ -55,18 +55,17 @@ StaticMixingTable::problemSetup(const ProblemSpecP& params)
   db->require("rxnvars",d_numRxnVars);
   db->require("mixstatvars",d_numMixStatVars);
   db->require("inputfile",d_inputfile);
+  if ((db->findBlock("h_fuel"))&&(db->findBlock("h_fuel"))) {
+    db->require("h_fuel",d_H_fuel);
+    db->require("h_air",d_H_air);
+    d_adiab_enth_inputs = true;
+  }
+  else
+    d_adiab_enth_inputs = false;
   // Set up for MixingModel table
   d_numMixingVars = 1;
-  // Get nonadiabatic flag to see if we are using nonadiabatic table
-  db->getWithDefault("nonadiabatic_table",d_nonadiabatic_table,true);
   // Define mixing table, which includes call reaction model constructor
   readMixingTable(d_inputfile);
-  // Moving the index by adding the properties before the species 
-  co2_index=co2_index+5;
-  h2o_index=h2o_index+5;
-  cout<<"CO2 index is " << co2_index<<endl;
-  cout<<"H2O index is " << h2o_index<<endl;
-
 }
 
       
@@ -94,56 +93,70 @@ StaticMixingTable::computeProps(const InletStream& inStream,
   if(var_limit > 0.9)
   	mixFracVars=(2.0/3.0)*mixFracVars;
   // Heat loss for adiabatic case
-  double heat_loss=0.0;
+  double current_heat_loss=0.0;
   //Absolute enthalpy
   double enthalpy=0.0;
   // Adiabatic enthalp
   double adia_enthalpy=0.0;
+  double interp_adiab_enthalpy = d_H_fuel*mixFrac+d_H_air*(1.0-mixFrac);
   // Sensible enthalpy
   double sensible_enthalpy=0.0;
   if(!d_adiabatic){
-	sensible_enthalpy=tableLookUp(mixFrac, mixFracVars, heat_loss, 4);
+	sensible_enthalpy=tableLookUp(mixFrac, mixFracVars, current_heat_loss, Hs_index);
 	enthalpy=inStream.d_enthalpy;
-        adia_enthalpy=tableLookUp(mixFrac, 0.0, heat_loss, 3);
+	if (!(Enthalpy_index == -1))
+          adia_enthalpy=tableLookUp(mixFrac, 0.0, current_heat_loss, Enthalpy_index);
+	else if (d_adiab_enth_inputs)
+	  adia_enthalpy=interp_adiab_enthalpy;
+	else {
+	  cout << "No way provided to compute adiabatic enthalpy" << endl;
+	  exit (1);
+	}
+
         if (inStream.d_initEnthalpy)
-          	heat_loss = 0.0;
+          	current_heat_loss = 0.0;
         else
-  		heat_loss=(adia_enthalpy-enthalpy)/(sensible_enthalpy+small);
-        if(heat_loss < -1.0 || heat_loss > 1.0){
-		cout<< "Heat loss is exceeding the bounds: "<<heat_loss << endl;
+  		current_heat_loss=(adia_enthalpy-enthalpy)/(sensible_enthalpy+small);
+        if(current_heat_loss < -1.0 || current_heat_loss > 1.0){
+		cout<< "Heat loss is exceeding the bounds: "<<current_heat_loss << endl;
 		cout<< "Absolute enthalpy is : "<< enthalpy << endl;
 		cout<< "Adiabatic enthalpy is : "<< adia_enthalpy << endl;
 		cout<< "Sensible enthalpy is : "<< sensible_enthalpy << endl;
   		cout<< "Mixture fraction is :  "<< mixFrac << endl;
   		cout<< "Mixture fraction variance is :  "<< mixFracVars << endl;
 	}
-	if(fabs(heat_loss) < small)
-		heat_loss=0.0;
-        if(heat_loss > enthalpyLoss[d_enthalpycount-1])
-		heat_loss = enthalpyLoss[d_enthalpycount-1];
-	else if (heat_loss < enthalpyLoss[0])
-		heat_loss = enthalpyLoss[0];
+	if(fabs(current_heat_loss) < small)
+		current_heat_loss=0.0;
+        if(current_heat_loss > heatLoss[d_heatlosscount-1])
+		current_heat_loss = heatLoss[d_heatlosscount-1];
+	else if (current_heat_loss < heatLoss[0])
+		current_heat_loss = heatLoss[0];
   }
   // Looking for the properties corresponding to the heat loss
   
-  outStream.d_temperature=tableLookUp(mixFrac, mixFracVars, heat_loss, 0);  
-  outStream.d_density=tableLookUp(mixFrac, mixFracVars, heat_loss, 1);  
-  outStream.d_cp=tableLookUp(mixFrac, mixFracVars, heat_loss, 2);  
-  outStream.d_enthalpy=tableLookUp(mixFrac, mixFracVars, heat_loss, 3);  
-  outStream.d_co2=tableLookUp(mixFrac, mixFracVars, heat_loss, co2_index);  
-  outStream.d_h2o=tableLookUp(mixFrac, mixFracVars, heat_loss, h2o_index);  
+  outStream.d_temperature=tableLookUp(mixFrac, mixFracVars, current_heat_loss, T_index);  
+  outStream.d_density=tableLookUp(mixFrac, mixFracVars, current_heat_loss, Rho_index);  
+  outStream.d_cp=tableLookUp(mixFrac, mixFracVars, current_heat_loss, Cp_index);  
+  if (!(Enthalpy_index == -1))
+    outStream.d_enthalpy=tableLookUp(mixFrac, mixFracVars, current_heat_loss, Enthalpy_index);  
+  else if (d_adiab_enth_inputs)
+    outStream.d_enthalpy=interp_adiab_enthalpy;
+  else
+    outStream.d_enthalpy=0.0;
+  outStream.d_co2=tableLookUp(mixFrac, mixFracVars, current_heat_loss, co2_index);  
+  outStream.d_h2o=tableLookUp(mixFrac, mixFracVars, current_heat_loss, h2o_index);  
   /*if((outStream.d_temperature - 293.0) <= -0.01 || (outStream.d_density - 1.20002368329336) >= 0.001){
   	cout<<"Temperature for properties outbound is:  "<<outStream.d_temperature<<endl;
   	cout<<"Density for properties outbound is:  "<<outStream.d_density<<endl;
   	cout<<"Mixture fraction for properties outbound  is :  "<<mixFrac<<endl;
   	cout<<"Mixture fraction variance for properties outbound is :  "<<mixFracVars<<endl;
-  	cout<<"Heat loss for properties outbound is :  "<<heat_loss<<endl;
+  	cout<<"Heat loss for properties outbound is :  "<<current_heat_loss<<endl;
   }*/
 }
 
 
 
-double StaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, double heat_loss, int var_index)
+double StaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, double current_heat_loss, int var_index)
 {
   double small = 1.0e-10;
   // compute index
@@ -156,16 +169,16 @@ double StaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, double
   double fmg, fpmg,s1,s2,var_value;
   int nhl_lo=0, nhl_hi=0;
   double dhl_lo=0.0, dhl_hi=0.0;
-  if(heat_loss==0.0  && d_enthalpycount ==1){
+  if(current_heat_loss==0.0  && d_heatlosscount ==1){
 	nhl_lo=0;
 	nhl_hi=0;
         dhl_lo=0.0;
         dhl_hi=1.0;
   }
   else{
-	for(int hl_index=0; hl_index < d_enthalpycount-1; hl_index++){
-		dhl_lo = enthalpyLoss[hl_index]-heat_loss;
-		dhl_hi = enthalpyLoss[hl_index+1]-heat_loss;
+	for(int hl_index=0; hl_index < d_heatlosscount-1; hl_index++){
+		dhl_lo = heatLoss[hl_index]-current_heat_loss;
+		dhl_hi = heatLoss[hl_index+1]-current_heat_loss;
 		if((dhl_lo*dhl_hi) == 0.0 && hl_index != 0){
 			nhl_lo=hl_index+1;
 			nhl_hi=nhl_lo;
@@ -271,52 +284,102 @@ double StaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, double
 
 void StaticMixingTable::readMixingTable(std::string inputfile)
 {
-  cerr << "Preparing to read the inputfile:   " << inputfile << endl;
-  ifstream fd("nonadeqlb.tbl");
-  //ifstream fd(inputfile);
+  cout << "Preparing to read the inputfile:   " << inputfile << endl;
+  ifstream fd(inputfile.c_str());
   if(fd.fail()){
-	cout<<" Unable to open the given input file" <<endl;
+	cout<<" Unable to open the given input file " << inputfile << endl;
 	exit(1);
   }
-  fd >> d_enthalpycount >> d_mixfraccount >>d_mixvarcount >> d_speciescount;
-  cout << d_enthalpycount << " " << d_mixfraccount << " " << d_mixvarcount << " " << d_speciescount << endl;
-  // Total number of variables in the table: Non-adaibatic table has sensibile enthalpy too
-  d_varcount=d_speciescount+4+d_nonadiabatic_table;
-  cout<<"d_var count: "<< d_varcount << endl;
-  // Intitializing the mixture fraction table: 2-D vector for non-uniform tables
-  mixfrac_size=d_enthalpycount*d_mixfraccount;
-  meanMix = vector < vector<double> >(mixfrac_size);
-  for(int ii=0; ii<mixfrac_size; ii++)
-	meanMix[ii]=vector<double>(d_varcount);
-  cout<<"After mixture fraction intialization"<<endl;
-  // Enthalpy loss vector
-  enthalpyLoss=vector<double>(d_enthalpycount);
-  // Names of the species
-  species_list= vector<string>(d_speciescount);
-  // Reading the species names & finding the CO2 & H2O index
-  for (int ii = 0; ii < species_list.size(); ii++) {
-    fd >> species_list[ii];
-    if(species_list[ii]== "CO2")
-	    co2_index = ii;
-    else if(species_list[ii]== "H2O")
-	    h2o_index = ii;
-    cout<<species_list[ii]<<endl;
+  fd >> d_indepvarscount;
+  cout<< "d_indepvars count: " << d_indepvarscount << endl;
+  indepvars_names = vector<string>(d_indepvarscount);
+  Hl_index = -1;
+  F_index = -1;
+  Fvar_index = -1;
+  
+  for (int ii = 0; ii < d_indepvarscount; ii++) {
+    fd >> indepvars_names[ii];
+    if(indepvars_names[ii]== "Hl")
+	    Hl_index = ii;
+    else if(indepvars_names[ii]== "F")
+	    F_index = ii;
+    else if(indepvars_names[ii]== "Fvar")
+	    Fvar_index = ii;
+    cout<<indepvars_names[ii]<<endl;
   }
   
+  eachindepvarcount = vector<int>(d_indepvarscount);
+  for (int ii = 0; ii < d_indepvarscount; ii++)
+    fd >> eachindepvarcount[ii];
+
+  d_heatlosscount = 1;
+  d_mixfraccount = 1;
+  d_mixvarcount = 1;
+  if (!(Hl_index == -1)) d_heatlosscount = eachindepvarcount[Hl_index];
+  if (!(F_index == -1)) d_mixfraccount = eachindepvarcount[F_index];
+  if (!(Fvar_index == -1)) d_mixvarcount = eachindepvarcount[Fvar_index];
+  cout << d_heatlosscount << " " << d_mixfraccount << " " << d_mixvarcount << endl;
+
+  // Total number of variables in the table: non-adaibatic table has sensibile enthalpy too
+  fd >> d_varscount;
+  cout<< "d_vars count: " << d_varscount << endl;
+  vars_names= vector<string>(d_varscount);
+  Rho_index = -1;
+  T_index = -1;
+  Cp_index = -1;
+  Enthalpy_index = -1;
+  Hs_index = -1;
+  co2_index = -1;
+  h2o_index = -1;
+  for (int ii = 0; ii < d_varscount; ii++) {
+    fd >> vars_names[ii];
+    if(vars_names[ii]== "Rho")
+	    Rho_index = ii;
+    else if(vars_names[ii]== "T")
+	    T_index = ii;
+    else if(vars_names[ii]== "Cp")
+	    Cp_index = ii;
+    else if(vars_names[ii]== "Entalpy")
+	    Enthalpy_index = ii;
+    else if(vars_names[ii]== "Hs")
+	    Hs_index = ii;
+    else if(vars_names[ii]== "CO2")
+	    co2_index = ii;
+    else if(vars_names[ii]== "H2O")
+	    h2o_index = ii;
+    cout<<vars_names[ii]<<endl;
+  }
+  if ((Hs_index == -1)&&(!(d_adiabatic))) {
+    cout << "No Hs found in table" << endl;
+    exit(1);
+  }
+  cout<<"CO2 index is " << co2_index<<endl;
+  cout<<"H2O index is " << h2o_index<<endl;
+
+  // Intitializing the mixture fraction table meanMix: 2-D vector for non-uniform tables
+  int mixfrac_size=d_heatlosscount*d_mixfraccount;
+  meanMix = vector < vector<double> >(mixfrac_size);
+  for(int ii=0; ii<mixfrac_size; ii++)
+	meanMix[ii]=vector<double>(d_varscount);
+//  cout<<"After mixture fraction intialization"<<endl;
+  //
+  // Enthalpy loss vector
+  heatLoss=vector<double>(d_heatlosscount);
+  
   // Allocating the table space 
-  int size = d_enthalpycount*d_mixfraccount*d_mixvarcount;
+  int size = d_heatlosscount*d_mixfraccount*d_mixvarcount;
   table = vector <vector <double> > (size);
   for (int ii = 0; ii < size; ii++)
-    table[ii] = vector <double> (d_varcount);
+    table[ii] = vector <double> (d_varscount);
 
   //Reading the data
   // Enthaply loss loop
-  for (int mm=0; mm< d_enthalpycount; mm++){
-	fd >> enthalpyLoss[mm];
-        //cout<<enthalpyLoss[mm]<<endl;
+  for (int mm=0; mm< d_heatlosscount; mm++){
+	fd >> heatLoss[mm];
+        //cout<<heatLoss[mm]<<endl;
   	// Mixture fraction loop 
   	for (int ii=0; ii< d_mixfraccount; ii++){
-        	for (int ll=0; ll < d_varcount; ll++){
+        	for (int ll=0; ll < d_varscount; ll++){
  			fd >> meanMix[mm*d_mixfraccount+ii][ll];
                 	//cout<< meanMix[mm*d_mixfraccount+ii][ll]<< "  ";
         	}
@@ -324,7 +387,7 @@ void StaticMixingTable::readMixingTable(std::string inputfile)
         	// Variance loop
   		for (int jj=0;jj<d_mixvarcount; jj++){
                 	// Variables loop 
-			for (int kk=0; kk< d_varcount; kk++){
+			for (int kk=0; kk< d_varscount; kk++){
 				fd >> table[mm*(d_mixfraccount*d_mixvarcount)+ii*d_mixvarcount+jj][kk];
 				//cout << table[mm*(d_mixfraccount*d_mixvarcount)+ii*d_mixvarcount+jj][kk]<< " ";
 			}
@@ -336,17 +399,12 @@ void StaticMixingTable::readMixingTable(std::string inputfile)
   fd.close();
   //Printing the mixture fraction table
  /* cout<< "*********Mixture fraction space***************"  <<endl;
-  for (int ii=0; ii< d_enthalpycount; ii++){
+  for (int ii=0; ii< d_heatlosscount; ii++){
         cout<<"Enthalpy count: "<<ii<<endl;
 	for (int jj=0; jj<d_mixfraccount; jj++){
-		for( int kk=0; kk< d_varcount; kk++)
+		for( int kk=0; kk< d_varscount; kk++)
 			cout<< meanMix[ii*d_mixfraccount+jj][kk]<< " ";
 		cout<<endl; 
         }
   }*/
 }
-
-
-
-
-
