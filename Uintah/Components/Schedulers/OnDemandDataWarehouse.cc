@@ -638,7 +638,7 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
 			   const Patch* patch, Ghost::GhostType gtype,
 			   int numGhostCells)
 {
-#if 0
+#if 1
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
@@ -647,7 +647,7 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
 	 throw UnknownVariable(label->getName(), patch->getID(),
 			       patch->toString(), matlIndex);
       d_ccDB.get(label, matlIndex, patch, var);
-#if 0
+#if 1
    } else {
       int l,h;
       IntVector gc(numGhostCells, numGhostCells, numGhostCells);
@@ -655,21 +655,14 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
       IntVector highIndex;
       switch(gtype){
       case Ghost::AroundNodes:
-	 if(numGhostCells == 0)
-	    throw InternalError("No ghost cells specified with Task::AroundNodes");
-	 // All 27 neighbors
-	 l=-1;
-	 h=1;
-	 lowIndex = patch->getCellLowIndex()-gc;
-	 highIndex = patch->getCellHighIndex()+gc;
-	 cerr << "Cells around nodes is probably not functional!\n";
-	 break;
+	throw InternalError("Around Nodes not defined for CCVariable");
       case Ghost::AroundCells:
 	 if(numGhostCells == 0)
 	    throw InternalError("No ghost cells specified with Task::AroundCells");
-	 // all 6 faces
+	 // All 6 faces
 	 lowIndex = patch->getGhostCellLowIndex(numGhostCells);
-         highIndex = patch->getGhostCellHighIndex(numGhostCells);
+	 highIndex = patch->getGhostCellHighIndex(numGhostCells);
+	 cerr << "Cells around nodes is probably not functional!\n";
 	 break;
       default:
 	 throw InternalError("Illegal ghost type");
@@ -918,11 +911,11 @@ OnDemandDataWarehouse::allocate(SFCXVariableBase& var,
 				const Patch* patch)
 {
    // Error checking
-   if(d_sfcxDB.exists(label, matlIndex, patch))
-      throw InternalError("SFCX variable already exists: "+label->getName());
+  if(d_sfcxDB.exists(label, matlIndex, patch))
+    throw InternalError("SFCX variable already exists: "+label->getName());
 
    // Allocate the variable
-   var.allocate(patch->getSFCXLowIndex(), patch->getSFCXHighIndex());
+  var.allocate(patch->getSFCXLowIndex(), patch->getSFCXHighIndex());
 }
 
 void
@@ -1348,6 +1341,9 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.49  2000/09/22 22:00:03  rawat
+// fixed some bugs in staggered variables get for multi-patch
+//
 // Revision 1.48  2000/09/22 19:32:07  sparker
 // Do not send/recv particle variables when there are no particles on the
 //   patch
