@@ -2263,7 +2263,7 @@ OpenGL::EndMpeg()
 
 
 // Return world-space depth to point under pixel (x, y).
-int
+bool
 OpenGL::pick_scene( int x, int y, Point *p )
 {
   // y = 0 is bottom of screen (not top of screen, which is what X
@@ -2271,7 +2271,8 @@ OpenGL::pick_scene( int x, int y, Point *p )
   y = (yres - 1) - y;
   int index = x + (y * xres);
   double z = pixel_depth_data[index];
-  if (p) {
+  if (p)
+  {
     // Unproject the window point (x, y, z).
     GLdouble world_x, world_y, world_z;
     gluUnProject(x, y, z,

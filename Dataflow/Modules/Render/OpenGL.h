@@ -86,9 +86,6 @@ using std::ostringstream;
 using std::ofstream;
 using std::vector;
 
-
-
-
 class OpenGLHelper;
 class GuiArgs;
 
@@ -137,11 +134,23 @@ struct HiRes {
   int resy;
 };
 
+
 class OpenGL {
-  
+
+public:
+  static bool query(GuiInterface* gui);
+  OpenGL(GuiInterface* gui);
+  ~OpenGL();
+
+  void redraw_loop();
+  void saveImage(const string& fname,
+		 const string& type = "ppm", int x=640, int y=512);
+
 protected:
+  bool compute_depth(ViewWindow* viewwindow, const View& view,
+		     double& near, double& far);
+
   GuiInterface* gui;
-  bool compute_depth(ViewWindow* viewwindow, const View& view, double& near, double& far);
   int xres, yres;
   Runnable *helper;
   Tk_Window tkwin;
@@ -159,45 +168,32 @@ protected:
 
   void redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj);
   void pick_draw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj);
-  //OpenGLHelper* helper;
+
   string my_openglname;
   vector<XVisualInfo*> visuals;
 
-  /* Call this each time an mpeg frame is generated. */
+  bool do_hi_res;
+
   void StartMpeg(const string& fname);
   void AddMpegFrame();
   void EndMpeg();
-#ifdef __sgi
-#if (_MIPS_SZPTR == 64)
-#else
-  //CLhandle compressorHdl;
-  //int compressedBufferSize;
-  //CLbufferHdl compressedBufferHdl;
-  //ofstream os;
-#endif
-#endif
-  bool do_hi_res;
   bool encoding_mpeg;
+
 #ifdef HAVE_MPEG
   FILE *output;
   MPEGe_options options;
 #endif // HAVE_MPEG
 
-public:
-  static bool query(GuiInterface* gui);
-  OpenGL(GuiInterface* gui);
-  ~OpenGL();
   void redraw(Viewer*, ViewWindow*, double tbeg, double tend,
 	      int ntimesteps, double frametime);
-  void real_get_pick(Viewer*, ViewWindow*, int, int, GeomObj*&, GeomPick*&, int&);
+  void real_get_pick(Viewer*, ViewWindow*, int, int, GeomObj*&,
+		     GeomPick*&, int&);
   void get_pick(Viewer*, ViewWindow*, int, int,
 		GeomObj*&, GeomPick*&, int& );
   void dump_image(const string& fname,
 		  const string& type = "raw");
   void put_scanline(int y, int width, Color* scanline, int repeat=1);
 
-  void saveImage(const string& fname,
-		 const string& type = "ppm", int x=640, int y=512);
   void render_and_save_image(int x, int y,
 			     const string& fname,
 			     const string& type = "ppm");
@@ -211,13 +207,12 @@ public:
   GLint    get_depth_view[4];
 
 
-  // compute world space point under cursor (x,y).  If successful,
+  // Compute world space point under cursor (x,y).  If successful,
   // set 'p' to that value & return true.  Otherwise, return false.
-  int pick_scene(int x, int y, Point *p);
+  bool pick_scene(int x, int y, Point *p);
   void kill_helper();
 
   string myname;
-  void redraw_loop();
   Mailbox<int> send_mb;
   Mailbox<int> recv_mb;
   Mailbox<GetReq> get_mb;
@@ -260,11 +255,8 @@ public:
 
   // These functions were added to clean things up a bit.
 
-  //protected:
   void getData(int datamask, FutureValue<GeometryData*>* result);
   
-protected:
-    
   void real_getData(int datamask, FutureValue<GeometryData*>* result);
 };
 
