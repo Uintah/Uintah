@@ -3,7 +3,7 @@
  *            the data of a field
  *
  *  Written by:
- *   David Weinstein
+ *   Michael Callahan
  *   Department of Computer Science
  *   University of Utah
  *   February 2001
@@ -26,10 +26,6 @@ namespace SCIRun {
 
 class ManageFieldData : public Module
 {
-  FieldIPort    *ifield_;
-  MatrixIPort   *imatrix_;
-  FieldOPort    *ofield_;
-  MatrixOPort   *omatrix_;
   GuiString     data_op_gui_;
   GuiString     data_loc_gui_;
   GuiString     data_type_gui_;
@@ -37,6 +33,7 @@ class ManageFieldData : public Module
 public:
   ManageFieldData(const clString& id);
   virtual ~ManageFieldData();
+
   virtual void execute();
 };
 
@@ -47,30 +44,25 @@ extern "C" Module* make_ManageFieldData(const clString& id)
 }
 
 ManageFieldData::ManageFieldData(const clString& id)
-  : Module("ManageFieldData", id, Filter), 
-  data_op_gui_("data_op_gui", id, this),
-  data_loc_gui_("data_loc_gui", id, this),
-  data_type_gui_("data_type_gui", id, this)
+  : Module("ManageFieldData", id, Filter, "Fields", "SCIRun"),
+    data_op_gui_("data_op_gui", id, this),
+    data_loc_gui_("data_loc_gui", id, this),
+    data_type_gui_("data_type_gui", id, this)
 {
-  ifield_ = new FieldIPort(this, "FieldMesh", FieldIPort::Atomic);
-  add_iport(ifield_);
-  imatrix_ = new MatrixIPort(this, "FieldData", MatrixIPort::Atomic);
-  add_iport(imatrix_);
-
-  // Create the output port
-  ofield_ = new FieldOPort(this, "Composite", FieldIPort::Atomic);
-  add_oport(ofield_);
-  omatrix_ = new MatrixOPort(this, "FieldData", MatrixIPort::Atomic);
-  add_oport(omatrix_);
 }
+
+
 
 ManageFieldData::~ManageFieldData()
 {
 }
 
+
+
 void
 ManageFieldData::execute()
 {
+#if 0
   update_state(NeedData);
 
   FieldHandle fieldH;
@@ -102,7 +94,7 @@ ManageFieldData::execute()
   
     update_state(JustStarted);
 
-//    fieldH.detach();    // just in case someone else is sharing this handle
+    //    fieldH.detach();    // just in case someone else is sharing this handle
 
     // FIXME: based on the mapping of matrix values to field data,
     //   as indicated in the field_*_gui variables, set fieldH->FData
@@ -111,6 +103,7 @@ ManageFieldData::execute()
 
     ofield_->send(fieldH);
   }
+#endif
 }
 
 } // End namespace SCIRun
