@@ -51,17 +51,34 @@ struct DrawInfo {
     void pop_matl();
 };
 
+class GeomPick {
+    Array1<Vector> directions;
+    MaterialProp* hightlight;
+public:
+    GeomPick(const Vector&);
+    GeomPick(const Vector&, const Vector&);
+    GeomPick(const Vector&, const Vector&, const Vector&);
+    GeomPick(const Array1<Vector>&);
+    ~GeomPick();
+    GeomPick(const GeomPick&);
+    int nprincipal();
+    Vector principal(int i);
+    void set_highlight(MaterialProp* matl);
+};
+
 class GeomObj {
 protected:
     MaterialProp* matl;
+    GeomPick* pick;
 public:
     GeomObj();
     GeomObj(const GeomObj&);
     virtual ~GeomObj();
     virtual void draw(DrawInfo*) = 0;
-    virtual BBox bbox() = 0;
+    virtual void get_bounds(BBox&) = 0;
     virtual GeomObj* clone() = 0;
     void set_matl(MaterialProp*);
+    void set_pick(GeomPick*);
 };
 
 inline int Hash(const GeomObj*& k, int hash_size)
@@ -81,11 +98,10 @@ public:
     int size();
     virtual void draw(DrawInfo*);
     virtual GeomObj* clone();
-    virtual BBox bbox();
+    virtual void get_bounds(BBox&);
 };
 
 class Triangle : public GeomObj {
-    BBox bb;
 public:
     Point p1;
     Point p2;
@@ -97,11 +113,10 @@ public:
     virtual ~Triangle();
     virtual void draw(DrawInfo*);
     virtual GeomObj* clone();
-    virtual BBox bbox();
+    virtual void get_bounds(BBox&);
 };
 
 class Tetra : public GeomObj {
-    BBox bb;
 public:
     Point p1;
     Point p2;
@@ -113,11 +128,10 @@ public:
     virtual ~Tetra();
     virtual void draw(DrawInfo*);
     virtual GeomObj* clone();
-    virtual BBox bbox();
+    virtual void get_bounds(BBox&);
 };
 
 class GeomSphere : public GeomObj {
-    BBox bb;
 public:
     Point cen;
     double rad;
@@ -125,14 +139,69 @@ public:
     int nv;
 
     GeomSphere(const Point&, double, int nu=20, int nv=10);
+    GeomSphere(const GeomSphere&);
     virtual ~GeomSphere();
     virtual void draw(DrawInfo*);
     virtual GeomObj* clone();
-    virtual BBox bbox();
+    virtual void get_bounds(BBox&);
+};
+
+class GeomCylinder : public GeomObj {
+    Vector v1;
+    Vector v2;
+public:
+    Point bottom;
+    Point top;
+    double rad;
+    int nu;
+    int nv;
+
+    GeomCylinder(const Point&, const Point&, double, int nu=20, int nv=4);
+    GeomCylinder(const GeomCylinder&);
+    virtual ~GeomCylinder();
+    virtual void draw(DrawInfo*);
+    virtual GeomObj* clone();
+    virtual void get_bounds(BBox&);
+};
+
+class GeomCone : public GeomObj {
+    Vector v1;
+    Vector v2;
+public:
+    Point bottom;
+    Point top;
+    double bot_rad;
+    double top_rad;
+    int nu;
+    int nv;
+
+    GeomCone(const Point&, const Point&, double, double, int nu=20, int nv=4);
+    GeomCone(const GeomCone&);
+    virtual ~GeomCone();
+    virtual void draw(DrawInfo*);
+    virtual GeomObj* clone();
+    virtual void get_bounds(BBox&);
+};
+
+class GeomDisc : public GeomObj {
+    Vector v1;
+    Vector v2;
+public:
+    Point cen;
+    Vector normal;
+    double rad;
+    int nu;
+    int nv;
+
+    GeomDisc(const Point&, const Vector&, double, int nu=20, int nv=2);
+    GeomDisc(const GeomDisc&);
+    virtual ~GeomDisc();
+    virtual void draw(DrawInfo*);
+    virtual GeomObj* clone();
+    virtual void get_bounds(BBox&);
 };
 
 class GeomPt : public GeomObj {
-    BBox bb;
 public:
     Point p1;
 
@@ -141,7 +210,7 @@ public:
     virtual ~GeomPt();
     virtual void draw(DrawInfo*);
     virtual GeomObj* clone();
-    virtual BBox bbox();
+    virtual void get_bounds(BBox&);
 };
 
 #endif
