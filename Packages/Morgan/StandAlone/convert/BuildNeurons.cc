@@ -79,7 +79,7 @@ main(int argc, char **argv) {
   int npts = getNumNonEmptyLines(ptsName);
   ifstream ptsstream(ptsName);
   cerr << "number of points = "<< npts <<"\n";
-  Array1<Point> points(npts);
+  vector<Point> points(npts);
   int i;
   for (i=0; i<npts; i++) {
     int index;
@@ -94,7 +94,7 @@ main(int argc, char **argv) {
   int nedges = getNumNonEmptyLines(edgesName);
   ifstream edgesstream(edgesName);
   cerr << "number of edges = "<< nedges <<"\n";
-  Array1<Vector> edges(nedges);
+  vector<Vector> edges(nedges);
   for (i=0; i<nedges; i++) {
     int n1, n2;
     double radius;

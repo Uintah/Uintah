@@ -29,13 +29,11 @@ namespace Modules {
 
 class MorganSHARE DenseMatrixSQLReader : public Module {
 public:
-  DenseMatrixSQLReader(const string& id);
+  DenseMatrixSQLReader(GuiContext *context);
 
   virtual ~DenseMatrixSQLReader();
 
   virtual void execute();
-
-  virtual void tcl_command(TCLArgs&, void*);
 
 private:
 
@@ -51,19 +49,18 @@ private:
   MatrixOPort* omatrix;
 };
 
-extern "C" MorganSHARE Module* make_DenseMatrixSQLReader(const string& id) {
-  return new DenseMatrixSQLReader(id);
-}
 
-#define init_var(name) name##_ui(#name, id, this)
-DenseMatrixSQLReader::DenseMatrixSQLReader(const string& id)
-  : Module("DenseMatrixSQLReader", id, Source, "Readers", "Morgan"),
-    init_var(database),
-    init_var(hostname),
-    init_var(port),
-    init_var(username),
-    init_var(password),
-    init_var(sql)
+DECLARE_MAKER(DenseMatrixSQLReader)
+
+
+DenseMatrixSQLReader::DenseMatrixSQLReader(GuiContext *context)
+  : Module("DenseMatrixSQLReader", context, Source, "Readers", "Morgan"),
+    database_ui(context->subVar("database")),
+    hostname_ui(context->subVar("hostname")),
+    port_ui(context->subVar("port")),
+    username_ui(context->subVar("username")),
+    password_ui(context->subVar("password")),
+    sql_ui(context->subVar("sql"))
 {
 }
 
@@ -94,8 +91,8 @@ void DenseMatrixSQLReader::execute() {
         
 /*     system("/home/sci/butson/test.pl"); */
     if(!dbd.get()) {
-        fprintf(stderr, "Unable to connect to database\n");
-        return; // could not connect
+      error("Unable to connect to database.");
+      return; // could not connect
     }
 
     int rows = 0;
@@ -103,7 +100,7 @@ void DenseMatrixSQLReader::execute() {
 
     // count the number of rows
     if(!dbd->execute(sql_ui.get().c_str())) {
-        fprintf(stderr, "Can't execute SQL query %s\n", sql_ui.get().c_str());
+      error("Can't execute SQL query: " + sql_ui.get());
     }
 
     while(!dbd->at_end()) {
@@ -112,7 +109,7 @@ void DenseMatrixSQLReader::execute() {
     }
 
     if(!dbd->execute(sql_ui.get().c_str())) {
-        fprintf(stderr, "Can't execute SQL query %s\n", sql_ui.get().c_str());
+      error("Can't execute SQL query: " + sql_ui.get());
     }
 
     int cols = dbd->cols();
@@ -140,9 +137,6 @@ void DenseMatrixSQLReader::execute() {
     omatrix->send(omat);
 }
 
-void DenseMatrixSQLReader::tcl_command(TCLArgs& args, void* userdata) {
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace Modules
 } // End namespace Morgan
