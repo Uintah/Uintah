@@ -212,6 +212,11 @@ public:
 
   Node::index_type add_point(const Point &p);
 
+  //! Subdivision Methods
+  bool			insert_node(const Point &p);
+  void			insert_node(const Face::index_type face, const Point &p);
+  void			bisect_element(const Face::index_type);
+
 
   const Point &point(Node::index_type i) { return points_[i]; }
 

@@ -81,18 +81,18 @@ public:
     typedef EdgeIndex<under_type>       index_type;
 
     //! edgei return the two nodes make the edge
-    static pair<index_type, index_type> edgei(index_type idx)
+    static pair<Node::index_type, Node::index_type> edgei(index_type idx)
     { 
       const int b = (idx / 6) * 4;
       switch (idx % 6)
       {
-      case 0: return pair<index_type,index_type>(b+0,b+1);
-      case 1: return pair<index_type,index_type>(b+0,b+2);
-      case 2: return pair<index_type,index_type>(b+0,b+3);
-      case 3: return pair<index_type,index_type>(b+1,b+2);
-      case 4: return pair<index_type,index_type>(b+2,b+3);
+      case 0: return pair<Node::index_type,Node::index_type>(b+0,b+1);
+      case 1: return pair<Node::index_type,Node::index_type>(b+0,b+2);
+      case 2: return pair<Node::index_type,Node::index_type>(b+0,b+3);
+      case 3: return pair<Node::index_type,Node::index_type>(b+1,b+2);
+      case 4: return pair<Node::index_type,Node::index_type>(b+2,b+3);
       default:
-      case 5: return pair<index_type,index_type>(b+1,b+3);
+      case 5: return pair<Node::index_type,Node::index_type>(b+1,b+3);
       }
     }
 
@@ -411,6 +411,12 @@ public:
   Elem::index_type	add_elem(Node::array_type a);
 
 
+  //! Subidiviosn methods
+  bool			insert_node(const Point &p);
+  void			insert_node_watson(const Point &p);
+  void			bisect_element(const Cell::index_type c);
+
+
   void			delete_cells(set<int> &to_delete);
   
   bool			is_edge(Node::index_type n0,
@@ -443,7 +449,11 @@ protected:
   void			create_cell_node_neighbors(Cell::index_type);
   void			delete_cell_node_neighbors(Cell::index_type);
 
-
+  Elem::index_type	mod_tet(Cell::index_type cell, 
+				Node::index_type a,
+				Node::index_type b,
+				Node::index_type c,
+				Node::index_type d);
 
 
 
