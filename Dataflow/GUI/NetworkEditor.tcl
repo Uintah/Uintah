@@ -559,7 +559,16 @@ proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } } {
     # be read in if the modules change categories.
     findMovedModulePath package category module
     set category [netedit getCategoryName $package $category $module]
+
+    # fix for bug #2052, allows addmodule to call undefined procs without error
+    set unknown_body [info body unknown]
+    proc unknown { args } {}
+    
+    # Tell the C++ network to create the requested module
     set modid [netedit addmodule "$package" "$category" "$module"]
+
+    # Reset the unknown proc to default behavior
+    proc unknown { args } $unknown_body
 
     # netedit addmodule returns an empty string if the module wasnt created
     if { ![string length $modid] } {
@@ -860,7 +869,6 @@ proc NiceQuit {} {
 	    }
 	}
     }
-			
     puts "Goodbye!"
     netedit quit
 }
