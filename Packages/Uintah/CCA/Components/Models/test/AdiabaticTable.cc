@@ -133,6 +133,7 @@ if (!oldStyleAdvect.active()){
   d_gamma_index         = table->addDependentVariable("gamma");
   d_cv_index            = table->addDependentVariable("heat capacity Cv(j/kg-K)");
   d_viscosity_index     = table->addDependentVariable("viscosity");
+  d_thermalcond_index   = table->addDependentVariable("thermal conductivity");
   d_ref_cv_index    = table->addDependentVariable("reference heat capacity Cv(j/kg-K)");
   d_ref_gamma_index = table->addDependentVariable("reference gamma");
   d_ref_temp_index  = table->addDependentVariable("reference Temp(K)");
@@ -304,6 +305,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     table->interpolate(d_cv_index,        cv,       iter, ind_vars);
     table->interpolate(d_viscosity_index, viscosity,iter, ind_vars);
     table->interpolate(d_temp_index,      temp,     iter, ind_vars);
+    table->interpolate(d_thermalcond_index, thermalCond, iter, ind_vars);
     CCVariable<double> ref_temp, ref_cv, ref_gamma;
     new_dw->allocateTemporary(ref_cv, patch);
     new_dw->allocateTemporary(ref_gamma, patch);
@@ -318,7 +320,6 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
       const IntVector& c = *iter;
       rho_micro[c] = rho_CC[c];
       sp_vol[c] = 1./rho_CC[c];
-      thermalCond[c] = 0;
       double mass  = rho_CC[c]*volume;    
       double cp    = gamma[c] * cv[c];    
       double icp   = ref_gamma[c] * ref_cv[c];
@@ -409,11 +410,8 @@ void AdiabaticTable::modifyThermoTransportProperties(const ProcessorGroup*,
     table->interpolate(d_gamma_index,     gamma,    iter, ind_vars);
     table->interpolate(d_cv_index,        cv,       iter, ind_vars);
     table->interpolate(d_viscosity_index, viscosity,iter, ind_vars);
-    
-    for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
-      const IntVector& c = *iter;
-      thermalCond[c] = 0;
-    }
+    table->interpolate(d_thermalcond_index, thermalCond, iter, ind_vars);
+
     //diffusionCoeff.initialize(d_scalar->diff_coeff);
   }
 } 
