@@ -13,6 +13,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 extern DebugStream rdbg;
+extern DebugStream dilate_dbg;
 
 HierarchicalRegridder::HierarchicalRegridder(const ProcessorGroup* pg) : RegridderCommon(pg)
 {
@@ -272,8 +273,6 @@ void HierarchicalRegridder::MarkPatches( const GridP& oldGrid, int levelIdx  )
       }
     }
   }
-
-  rdbg << "HierarchicalRegridder::MarkPatches() END" << endl;
 }
 
 void HierarchicalRegridder::ExtendPatches( const GridP& oldGrid, int levelIdx  )
@@ -282,6 +281,7 @@ void HierarchicalRegridder::ExtendPatches( const GridP& oldGrid, int levelIdx  )
 
   for (int childLevelIdx = levelIdx+1; childLevelIdx>0; childLevelIdx--) {
     rdbg << "Extend Patches Level: " << childLevelIdx << endl;
+
     int parentLevelIdx = childLevelIdx - 1;
     IntVector currentLatticeRefinementRatio = d_latticeRefinementRatio[parentLevelIdx];
     IntVector currentPatchSize = d_patchSize[parentLevelIdx];
@@ -290,29 +290,44 @@ void HierarchicalRegridder::ExtendPatches( const GridP& oldGrid, int levelIdx  )
     patchCells.initialize(0);
     CCVariable<int> dilatedPatchCells;
     dilatedPatchCells.rewindow(d_flaggedCells[parentLevelIdx]->getLowIndex(), d_flaggedCells[parentLevelIdx]->getHighIndex());
+    if (dilate_dbg.active()) {
+      
+      dilate_dbg << endl << "  ACTIVE PATCHES  " << endl;
+      rdbg << d_patchNum[childLevelIdx] << endl;
+      for (CellIterator iter(IntVector(0,0,0), d_patchNum[childLevelIdx]); !iter.done(); iter++) {
+        IntVector idx(*iter);
+        if ((*d_patchActive[childLevelIdx])[idx]) {
+          dilate_dbg << idx << " ACTIVE " << endl;
+        }
+      }
+    }
+
 
     // Loop over child level patches and fill the corresponding parent level patches with PatchCell flags, then dilate
+    rdbg << d_patchNum[childLevelIdx] << endl;
     for (CellIterator iter(IntVector(0,0,0), d_patchNum[childLevelIdx]); !iter.done(); iter++) {
       IntVector idx(*iter);
-      if (!(*d_patchActive[childLevelIdx])[idx]) { // Fine patch does not exist, do nothing
-        continue;
+      if ((*d_patchActive[childLevelIdx])[idx]) { // only if Fine patch exists
+        rdbg << "Marking child patch at: [ " << childLevelIdx << " ]: " << idx << endl;
+        IntVector startCell       = idx * d_patchSize[childLevelIdx];
+        IntVector endCell         = (idx + IntVector(1,1,1)) * d_patchSize[childLevelIdx] - IntVector(1,1,1);
+        
+        IntVector parentStartCell = startCell / d_cellRefinementRatio[parentLevelIdx];
+        IntVector parentEndCell   = endCell / d_cellRefinementRatio[parentLevelIdx];
+        if (idx.x() == d_patchNum[parentLevelIdx](0)-1) parentEndCell(0) = d_cellNum[parentLevelIdx](0)-1;
+        if (idx.y() == d_patchNum[parentLevelIdx](1)-1) parentEndCell(1) = d_cellNum[parentLevelIdx](1)-1;
+        if (idx.z() == d_patchNum[parentLevelIdx](2)-1) parentEndCell(2) = d_cellNum[parentLevelIdx](2)-1;
+        // parentEndCell             = Min(parentEndCell, d_cellNum[parentLevelIdx]);
+        rdbg << " SC: " << startCell << " EC: " << endCell << " PSC: " << parentStartCell << " pec " << parentEndCell << endl;
+        for (CellIterator parent_iter(parentStartCell, parentEndCell); !parent_iter.done(); parent_iter++) {
+          patchCells[*parent_iter] = 1;
+        }
+        rdbg << "Done Marking child patch at: " << idx << endl;
       }
-      rdbg << "Marking child patch at: " << idx << endl;
-      IntVector startCell       = idx * d_patchSize[childLevelIdx];
-      IntVector endCell         = (idx + IntVector(1,1,1)) * d_patchSize[childLevelIdx] - IntVector(1,1,1);
-
-      IntVector parentStartCell = startCell / d_cellRefinementRatio[parentLevelIdx];
-      IntVector parentEndCell   = endCell / d_cellRefinementRatio[parentLevelIdx];
-      if (idx.x() == d_patchNum[parentLevelIdx](0)-1) parentEndCell(0) = d_cellNum[parentLevelIdx](0)-1;
-      if (idx.y() == d_patchNum[parentLevelIdx](1)-1) parentEndCell(1) = d_cellNum[parentLevelIdx](1)-1;
-      if (idx.z() == d_patchNum[parentLevelIdx](2)-1) parentEndCell(2) = d_cellNum[parentLevelIdx](2)-1;
-      // parentEndCell             = Min(parentEndCell, d_cellNum[parentLevelIdx]);
-      rdbg << " SC: " << startCell << " EC: " << endCell << " PSC: " << parentStartCell << " pec " << parentEndCell << endl;
-      for (CellIterator parent_iter(parentStartCell, parentEndCell); !iter.done(); iter++) {
-        patchCells[*parent_iter] = 1;
-      }
-      rdbg << "Done Marking child patch at: " << idx << endl;
+      else
+        rdbg << "NOT Marking child patch at: [ " << childLevelIdx << " ]: " << idx << endl;
     }
+    rdbg << "DONE MARKING PATCHES!\n";
     Dilate(patchCells, dilatedPatchCells, FILTER_BOX, d_minBoundaryCells);
     
     // Loop over parent level patches and mark them as active if their contain dilatedPatchCells
