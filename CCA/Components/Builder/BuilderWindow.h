@@ -81,6 +81,11 @@ namespace SCIRun {
     void clear();
     void addInfo();
     void exit();
+    void cluster_add();
+    void cluster_remove();
+    void mxn_add();
+    void performance_mngr();
+    void performance_tau_add();
     void demos();
     void about();
 
