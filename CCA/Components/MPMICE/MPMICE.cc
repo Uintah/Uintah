@@ -208,6 +208,11 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   t->computes(Ilb->speedSound_CCLabel); 
   t->computes(MIlb->NC_CCweightLabel, one_matl);
   
+  //______ D U C T   T A P E__________
+  //  WSB1 burn model
+  t->computes(MIlb->TempGradLabel);
+  t->computes(MIlb->aveSurfTempLabel);
+    
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
   cout_doing << "Done with Initialization \t\t\t MPMICE" <<endl;
@@ -656,6 +661,14 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   t->requires(Task::NewDW, MIlb->cMassLabel,      react_matls, gn);
   t->requires(Task::NewDW, Mlb->gMassLabel,       react_matls, gac,1);
   
+  //______ D U C T   T A P E__________
+  //  WSB1 burn model
+  t->requires(Task::OldDW, MIlb->TempGradLabel,   react_matls, gn);
+  t->requires(Task::OldDW, MIlb->aveSurfTempLabel,react_matls, gn);
+  t->computes( MIlb->TempGradLabel);
+  t->computes( MIlb->aveSurfTempLabel);
+  //__________________________________
+  
   t->computes( Ilb->int_eng_comb_CCLabel); 
   t->computes( Ilb->created_vol_CCLabel);
   t->computes( Ilb->mom_comb_CCLabel);
@@ -788,7 +801,16 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
         d_ice->printData(indx, patch,  1, desc.str(), "sp_vol_CC",   sp_vol_CC);
         d_ice->printData(indx, patch,  1, desc.str(), "Temp_CC",     Temp_CC);
         d_ice->printVector(indx, patch,1, desc.str(), "vel_CC", 0,   vel_CC);
-      }          
+      }
+      
+      //______ D U C T   T A P E__________
+      //  WSB1 burn model
+      CCVariable<double>TempGrad, aveSurfTemp;
+      new_dw->allocateAndPut(TempGrad,   MIlb->TempGradLabel,   indx,patch);
+      new_dw->allocateAndPut(aveSurfTemp,MIlb->aveSurfTempLabel,indx,patch);  
+      TempGrad.initialize(0.0);
+      aveSurfTemp.initialize(0.0);
+                    
     }  // num_MPM_matls loop 
 
   } // Patch loop
@@ -1995,6 +2017,19 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
         new_dw->get(solidTempZ_FC,   Ilb->TempZ_FCLabel,react_indx,patch,gac,2);
         new_dw->get(vel_CC,          MIlb->vel_CCLabel, react_indx,patch,gn, 0);
         new_dw->get(NCsolidMass,     Mlb->gMassLabel,   react_indx,patch,gac,1);
+        
+        //______ D U C T   T A P E__________
+        //  WSB1 burn model
+        constCCVariable<double> beta, aveSurfTemp;
+        CCVariable<double>      beta_new, aveSurfTemp_new;
+        old_dw->get(beta,         MIlb->TempGradLabel   ,react_indx,patch,gn, 0);
+        old_dw->get(aveSurfTemp,  MIlb->aveSurfTempLabel,react_indx,patch,gn, 0);
+        
+        new_dw->allocateAndPut(beta_new,        
+                                  MIlb->TempGradLabel,   react_indx,patch);
+        new_dw->allocateAndPut(aveSurfTemp_new, 
+                                  MIlb->aveSurfTempLabel,react_indx,patch);
+        //__________________________________
       }
     }
     
