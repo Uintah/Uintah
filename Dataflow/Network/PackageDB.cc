@@ -101,8 +101,6 @@ cerr << "After '" << packagePath << "'\n";
 
       // Tell Tcl where to find the .tcl files...
       TCL::eval(clString("lappend auto_path ") + tclPath, result);
-printf("just tried to add %s to auto_path\n", tclPath());
-      TCL::eval("echo $auto_path", result);
     }
 
     //void* so=dlopen(soName(),RTLD_NOW);
@@ -282,6 +280,9 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.12  1999/09/22 23:51:46  dav
+// removed debug print
+//
 // Revision 1.11  1999/09/22 22:39:50  dav
 // updated to use tclIndex files
 //
