@@ -355,13 +355,6 @@ void Grid2::intersect(Ray& ray, HitInfo& hit,
     }
 }
 
-void Grid2::light_intersect(Light*, Ray& lightray,
-			  HitInfo& hit, double, Color&,
-			  DepthStats* ds, PerProcessorContext* ppc)
-{
-    intersect(lightray, hit, ds, ppc);
-}
-
 void Grid2::animate(double, bool&)
 {
     //obj->animate(t);

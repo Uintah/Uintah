@@ -7,6 +7,7 @@
 #include <Packages/rtrt/Core/Color.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Persistent/Persistent.h>
+#include <Packages/rtrt/Core/Names.h>
 #include <iostream>
 
 #include <string>
@@ -62,7 +63,7 @@ class Object : public virtual SCIRun::Persistent {
 protected:
   bool was_preprocessed;
 public:
-  string name_;
+  //string name_;
 
   Object(Material* matl, UVMapping* uv=0);
   virtual ~Object();
@@ -124,6 +125,8 @@ public:
 			       const double /*t*/)
   { return false; }; 
 
+  string get_name() const { return Names::getName(this); }
+  void set_name(const string &s) { Names::nameObject(s, this); }
 };
 
 } // end namespace rtrt

@@ -45,9 +45,6 @@ public:
 			 HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
   virtual Vector normal(const Point&, const HitInfo& hit);
-  virtual void light_intersect(Light* light, Ray& ray,
-			       HitInfo& hit, double dist, Color& atten,
-			       DepthStats* st, PerProcessorContext*);
   void add(Object* obj);
   virtual void animate(double t, bool& changed);
   virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);

@@ -1153,7 +1153,7 @@ void HVolume<T,A,B>::get_minmax(float& min, float& max)
 
 template<class T, class A, class B>
 void HVolume<T,A,B>::print(ostream& out) {
-  out << "name_ = "<<name_<<endl;
+  out << "name_ = "<<get_name()<<endl;
   out << "min = "<<min<<endl;
   out << "datadiag = "<<datadiag<<", hierdiag = "<<hierdiag<<", ihierdiag = "<<ihierdiag<<", sdiag = "<<sdiag<<endl;
   out << "dim = ("<<nx<<", "<<ny<<", "<<nz<<")\n";

@@ -2,6 +2,7 @@
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Array1.h>
+#include <Packages/rtrt/Core/Names.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Thread/Thread.h>
@@ -95,9 +96,9 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
     if (was_preprocessed) return;
     was_preprocessed=true;
 
-   if (name_ != "") std::cerr << "\n\n"
+    if (Names::hasName(this)) std::cerr << "\n\n"
                               << "\n==========================================================\n"
-                              << "* Building Hierarchical Grid for Object " << name_
+					<< "* Building Hierarchical Grid for Object " << Names::getName(this)
                               << "\n==========================================================\n";
 
 

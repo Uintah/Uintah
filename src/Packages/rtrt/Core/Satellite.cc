@@ -53,7 +53,6 @@ Satellite::io(SCIRun::Piostream &str)
   str.begin_class("Satellite", SATELLITE_VERSION);
   UVSphere::io(str);
   SCIRun::Pio(str, parent_);
-  SCIRun::Pio(str, name_);
   SCIRun::Pio(str, rev_speed_);
   SCIRun::Pio(str, orb_radius_);
   SCIRun::Pio(str, orb_speed_);

@@ -4,6 +4,7 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/Names.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
@@ -444,8 +445,15 @@ Scene::addObjectOfInterest( Object * obj, bool animate /* = false */ )
 {
   if( animate )
     animateObjects_.add( obj );
-  if( obj->name_ != "" )
+  if( Names::hasName(obj) )
     objectsOfInterest_.add( obj );
+}
+
+void
+Scene::addObjectOfInterest( const string& name, Object * obj, bool animate /* = false */ )
+{
+  Names::nameObject(name, obj);
+  addObjectOfInterest(obj, animate);
 }
 
 // For adding single route names

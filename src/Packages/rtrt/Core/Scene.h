@@ -263,6 +263,7 @@ public:
   // be called on objects that have been added through this function
   // with the "animate" flag set to true.
   void addObjectOfInterest( Object * obj, bool animate = false );
+  void addObjectOfInterest( const string& name, Object * obj, bool animate = false );
 
   void attach_display(DpyBase *dpy);
   void attach_auxiliary_display(DpyBase *dpy);

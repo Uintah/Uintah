@@ -67,7 +67,7 @@ BV1::~BV1()
 
 void BV1::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 {
-  if (name_ != "") std::cerr << "\n\n"
+  if (Names::hasName(this)) std::cerr << "\n\n"
                              << "\n==========================================================\n"
                              << "* Building BV1 for Object " << name_
                              << "\n==========================================================\n";
