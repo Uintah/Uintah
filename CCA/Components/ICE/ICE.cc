@@ -521,7 +521,8 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
 {
   Task* t = 0;
   if (d_EqForm) {             // EQ 
-    cout_doing << "ICE::scheduleComputeStableTimestep " << endl;
+    cout_doing << "ICE::scheduleComputeStableTimestep \t\tL-"
+               <<level->getIndex() << endl;
     t = scinew Task("ICE::actuallyComputeStableTimestep",
                      this, &ICE::actuallyComputeStableTimestep);
   } else if (d_RateForm) {    // RF
@@ -563,9 +564,10 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
  Function~  ICE::scheduleTimeAdvance--
 _____________________________________________________________________*/
 void
-ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
+ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, 
+                          int step, int nsteps )
 {
-  cout_doing << "ICE::scheduleTimeAdvance" << endl;
+  cout_doing << "ICE::scheduleTimeAdvance\t\t\tL-" <<level->getIndex()<< endl;
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
@@ -664,6 +666,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
   if (press_matl->removeReference())
     delete press_matl;
 }
+
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeThermoTransportProperties--
 _____________________________________________________________________*/
@@ -784,7 +787,7 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
   }
                       // EQ  & RATE FORM 
   Ghost::GhostType  gac = Ghost::AroundCells;                      
-  t->requires(Task::OldDW, lb->delTLabel);
+//  t->requires(Task::OldDW, lb->delTLabel);    For AMR
   t->requires(Task::NewDW,lb->press_CCLabel,       press_matl, gac,1);
   t->requires(Task::NewDW,lb->sp_vol_CCLabel,    /*all_matls*/ gac,1);
   t->requires(Task::NewDW,lb->rho_CCLabel,       /*all_matls*/ gac,1);
@@ -817,7 +820,7 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
   Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
                      this, &ICE::addExchangeContributionToFCVel, recursion);
 
-  task->requires(Task::OldDW, lb->delTLabel);  
+//  task->requires(Task::OldDW, lb->delTLabel);    FOR AMR 
   task->requires(Task::NewDW,lb->sp_vol_CCLabel,    Ghost::AroundCells,1);
   task->requires(Task::NewDW,lb->vol_frac_CCLabel,  Ghost::AroundCells,1);
   task->requires(Task::NewDW,lb->uvel_FCLabel,      Ghost::AroundCells,2);
@@ -880,7 +883,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                             this, &ICE::computeDelPressAndUpdatePressCC);
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;  
-  task->requires( Task::OldDW, lb->delTLabel);
+//  task->requires( Task::OldDW, lb->delTLabel);    FOR AMR
   task->requires( Task::NewDW, lb->press_equil_CCLabel,
                                           press_matl,  gn);
   task->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2);
@@ -969,7 +972,7 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
             this, &ICE::accumulateMomentumSourceSinks);
 
                        // EQ  & RATE FORM     
-  t->requires(Task::OldDW, lb->delTLabel);
+//  t->requires(Task::OldDW, lb->delTLabel);  FOR AMR
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::NewDW,lb->pressX_FCLabel,   press_matl,    gac, 1);
   t->requires(Task::NewDW,lb->pressY_FCLabel,   press_matl,    gac, 1);
@@ -1020,7 +1023,7 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   }
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;  
-  t->requires(Task::OldDW, lb->delTLabel);
+//  t->requires(Task::OldDW, lb->delTLabel);  FOR AMR
   t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,gn);
   t->requires(Task::NewDW, lb->speedSound_CCLabel,           gn);
   t->requires(Task::OldDW, lb->temp_CCLabel,      ice_matls, gac,1);
@@ -1110,7 +1113,7 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;       
 
-  t->requires(Task::OldDW, lb->delTLabel);                         
+//  t->requires(Task::OldDW, lb->delTLabel);  for AMR                         
   t->requires(Task::NewDW, lb->rho_CCLabel,               gn);
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,            gn);    
   t->requires(Task::NewDW, lb->Tdot_CCLabel,              gn);  
@@ -1160,7 +1163,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
   }
 
   Ghost::GhostType  gn  = Ghost::None; 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label());
+//  t->requires(Task::OldDW, d_sharedState->get_delt_label()); for AMR
  
 /*`==========TESTING==========*/
 #ifdef CONVECT
@@ -1214,7 +1217,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   cout_doing << "ICE::scheduleAdvectAndAdvanceInTime" << endl;
   Task* task = scinew Task("ICE::advectAndAdvanceInTime",
                      this, &ICE::advectAndAdvanceInTime);
-  task->requires(Task::OldDW, lb->delTLabel);
+//  task->requires(Task::OldDW, lb->delTLabel);     for AMR
   task->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,2);
   task->requires(Task::NewDW, lb->vvel_FCMELabel,      gac,2);
   task->requires(Task::NewDW, lb->wvel_FCMELabel,      gac,2);
@@ -1445,7 +1448,13 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     delt = std::min(delt, d_initialDt);
     d_initialDt = 10000.0;
 
-    TIME += delt;
+    const Level* level = getLevel(patches);
+    GridP grid = level->getGrid();
+      for(int i=1;i<=level->getIndex();i++) {     // REFINE
+        delt *= grid->getLevel(i)->timeRefinementRatio();
+      }
+    
+    TIME += delt; //for AMR this may change ?
 
     //__________________________________
     //  Bullet proofing
@@ -1686,6 +1695,7 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
     }
   }
 } 
+
 /* ---------------------------------------------------------------------
  Function~  ICE::computeThermoTransportProperties
  Purpose~   
@@ -2195,7 +2205,6 @@ void ICE::computeVel_FC(const ProcessorGroup*,
               << patch->getID() << "\t\t\t\t ICE" << endl;
 
     int numMatls = d_sharedState->getNumMatls();
-    
     
     Vector dx      = patch->dCell();
     Vector gravity = d_sharedState->getGravity();
@@ -4372,6 +4381,51 @@ void ICE::ICEModelSetup::registerTransportedVariable(const MaterialSubset* matls
   t->src = src;
   t->Lvar = VarLabel::create(var->getName()+"-L", var->typeDescription());
   tvars.push_back(t);
+}
+
+//_____________________________________________________________________
+//   Stub functions for AMR
+void
+ICE::addRefineDependencies( Task*, const VarLabel*, int , int )
+{
+}
+
+void
+ICE::refineBoundaries(const Patch*, CCVariable<double>&,
+			    DataWarehouse*, const VarLabel*,
+			    int, double)
+{
+  throw InternalError("trying to do AMR iwth the non-AMR component!");
+}
+void
+ICE::refineBoundaries(const Patch*, CCVariable<Vector>&,
+			    DataWarehouse*, const VarLabel*,
+			    int, double)
+{
+  throw InternalError("trying to do AMR iwth the non-AMR component!");
+}
+void
+ICE::refineBoundaries(const Patch*, SFCXVariable<double>&,
+			    DataWarehouse*, const VarLabel*,
+			    int, double)
+{
+  throw InternalError("trying to do AMR iwth the non-AMR component!");
+}
+
+void
+ICE::refineBoundaries(const Patch*, SFCYVariable<double>&,
+			    DataWarehouse*, const VarLabel*,
+			    int, double)
+{
+  throw InternalError("trying to do AMR iwth the non-AMR component!");
+}
+
+void
+ICE::refineBoundaries(const Patch*, SFCZVariable<double>&,
+			    DataWarehouse*, const VarLabel*,
+			    int, double)
+{
+  throw InternalError("trying to do AMR iwth the non-AMR component!");
 }
 
 
