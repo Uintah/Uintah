@@ -29,6 +29,8 @@
 
 #include <sci_defs.h>
 
+#include <stdio.h>
+
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColumnMatrix.h>
