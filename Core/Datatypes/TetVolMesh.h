@@ -118,6 +118,7 @@ public:
     typedef CellIterator<under_type>    iterator;
     typedef CellIndex<under_type>       size_type;
     typedef vector<index_type>          array_type;
+
   };
 
   // Used for hashing operations below
@@ -416,6 +417,7 @@ public:
   bool locate(Face::index_type &loc, const Point &p);
   bool locate(Cell::index_type &loc, const Point &p);
 
+  void get_weights(const Point &p, Node::array_type &l,  vector<double> &w);
   int get_weights(const Point &p, Node::array_type &l, double *w);
   int get_weights(const Point & , Edge::array_type & , double * )
   {ASSERTFAIL("TetVolMesh::get_weights for edges isn't supported"); }
@@ -437,6 +439,9 @@ public:
   //! the double return val is the volume of the tet.
   double get_gradient_basis(Cell::index_type ci, Vector& g0, Vector& g1,
 			    Vector& g2, Vector& g3);
+
+  void get_basis(Cell::index_type ci, int gaussPt,  double& g0, double& g1,
+			    double& g2, double& g3);
 
   //! function to test if at least one of cell's nodes are in supplied range
   inline bool test_nodes_range(Cell::index_type ci, unsigned int sn,
@@ -535,14 +540,16 @@ public:
   Node::index_type	insert_node_watson(const Point &p, 
 					   Cell::array_type *new_cells = 0, 
 					   Cell::array_type *mod_cells = 0);
+  void                  refine_elements_levels(Cell::array_type cells, vector<int> refine_level);
+  void                  refine_elements(set<Cell::index_type> cells, map<Cell::index_type, set<Cell::index_type> > &cell_parent_2_children);
   void			bisect_element(const Cell::index_type c);
 
 
   void			delete_cells(set<unsigned int> &to_delete);
   void			delete_nodes(set<unsigned int> &to_delete);
   
-  bool			is_edge(Node::index_type n0,
-				Node::index_type n1,
+  bool			is_edge(const Node::index_type n0,
+				const Node::index_type n1,
 				Edge::array_type *edges = 0);
 
   bool			is_face(Node::index_type n0,
