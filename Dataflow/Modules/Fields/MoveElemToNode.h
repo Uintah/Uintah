@@ -27,12 +27,12 @@
 */
 
 
-//    File   : ClipField.h
+//    File   : MoveElemToNode.h
 //    Author : Michael Callahan
-//    Date   : August 2001
+//    Date   : September 2003
 
-#if !defined(ClipField_h)
-#define ClipField_h
+#if !defined(MoveElemToNode_h)
+#define MoveElemToNode_h
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
@@ -317,4 +317,4 @@ MoveElemToNodeAlgoSQuad<FIELD>::execute(ProgressReporter *mod,
 
 } // end namespace SCIRun
 
-#endif // ClipField_h
+#endif // MoveElemToNode_h
