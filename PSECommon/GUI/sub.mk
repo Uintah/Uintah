@@ -48,13 +48,17 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/AddWells.tcl $(SRCDIR)/AddWells2.tcl \
 	$(SRCDIR)/VoidStarReader.tcl $(SRCDIR)/VoidStarWriter.tcl \
 	$(SRCDIR)/VolRendTexSlices.tcl $(SRCDIR)/VolVis.tcl \
 	$(SRCDIR)/WidgetTest.tcl $(SRCDIR)/Writer.tcl \
-	$(SRCDIR)/cConjGrad.tcl $(SRCDIR)/cPhase.tcl
+	$(SRCDIR)/cConjGrad.tcl $(SRCDIR)/cPhase.tcl \
+	$(SRCDIR)/EditPath.tcl $(SRCDIR)/PathReader.tcl $(SRCDIR)/PathWriter.tcl \
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/PSECommon/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.3  2000/07/18 23:08:06  samsonov
+# Support for PathReader, PathWriter and EditPath modules
+#
 # Revision 1.2  2000/03/20 19:36:50  sparker
 # Added VPATH support
 #
