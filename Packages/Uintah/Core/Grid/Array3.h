@@ -217,52 +217,7 @@ WARNING
     }
 
     // return true iff no reallocation is needed
-    bool rewindow(const IntVector& lowIndex, const IntVector& highIndex) {
-      if (!d_window) {
-	resize(lowIndex, highIndex);
-	return false; // reallocation needed
-      }
-      bool inside = true;
-      IntVector relLowIndex = lowIndex - d_window->getOffset();
-      IntVector relHighIndex = highIndex - d_window->getOffset();
-      IntVector size = d_window->getData()->size();
-      for (int i = 0; i < 3; i++) {
-	ASSERT(relLowIndex[i] < relHighIndex[i]);
-	if ((relLowIndex[i] < 0) || (relHighIndex[i] > size[i])) {
-	  inside = false;
-	  break;
-	}
-      }
-      Array3Window<T>* oldWindow = d_window;
-      bool no_reallocation_needed = false;
-      if (inside) {
-	// just rewindow
-	d_window=
-	  scinew Array3Window<T>(oldWindow->getData(), oldWindow->getOffset(),
-				 lowIndex, highIndex);
-	no_reallocation_needed = true;
-      }
-      else {
-	// will have to re-allocate and copy
-	IntVector encompassingLow = Min(lowIndex, oldWindow->getLowIndex());
-	IntVector encompassingHigh = Max(highIndex, oldWindow->getHighIndex());
-	
-	Array3Data<T>* newData =
-	  new Array3Data<T>(encompassingHigh - encompassingLow);
-	Array3Window<T> tempWindow(newData, encompassingLow,
-				   oldWindow->getLowIndex(),
-				   oldWindow->getHighIndex());
-	tempWindow.copy(oldWindow); // copies into newData
-	
-	Array3Window<T>* new_window=
-	  scinew Array3Window<T>(newData, encompassingLow, lowIndex,highIndex);
-	d_window = new_window;
-      }
-      d_window->addReference();      
-      if(oldWindow->removeReference())
-	delete oldWindow;
-      return no_reallocation_needed;
-    }
+    bool rewindow(const IntVector& lowIndex, const IntVector& highIndex);
     
     inline const T& operator[](const IntVector& idx) const {
       return d_window->get(idx);
@@ -400,6 +355,56 @@ WARNING
       }
     }
     return *this;
+  }
+
+  // return true iff no reallocation is needed
+  template <class T>
+  bool Array3<T>::rewindow(const IntVector& lowIndex,
+			   const IntVector& highIndex) {
+    if (!d_window) {
+      resize(lowIndex, highIndex);
+      return false; // reallocation needed
+    }
+    bool inside = true;
+    IntVector relLowIndex = lowIndex - d_window->getOffset();
+    IntVector relHighIndex = highIndex - d_window->getOffset();
+    IntVector size = d_window->getData()->size();
+    for (int i = 0; i < 3; i++) {
+      ASSERT(relLowIndex[i] < relHighIndex[i]);
+      if ((relLowIndex[i] < 0) || (relHighIndex[i] > size[i])) {
+	inside = false;
+	break;
+      }
+    }
+    Array3Window<T>* oldWindow = d_window;
+    bool no_reallocation_needed = false;
+    if (inside) {
+      // just rewindow
+      d_window=
+	scinew Array3Window<T>(oldWindow->getData(), oldWindow->getOffset(),
+			       lowIndex, highIndex);
+      no_reallocation_needed = true;
+    }
+    else {
+      // will have to re-allocate and copy
+      IntVector encompassingLow = Min(lowIndex, oldWindow->getLowIndex());
+      IntVector encompassingHigh = Max(highIndex, oldWindow->getHighIndex());
+      
+      Array3Data<T>* newData =
+	new Array3Data<T>(encompassingHigh - encompassingLow);
+      Array3Window<T> tempWindow(newData, encompassingLow,
+				 oldWindow->getLowIndex(),
+				 oldWindow->getHighIndex());
+      tempWindow.copy(oldWindow); // copies into newData
+      
+      Array3Window<T>* new_window=
+	scinew Array3Window<T>(newData, encompassingLow, lowIndex,highIndex);
+      d_window = new_window;
+    }
+    d_window->addReference();      
+    if(oldWindow->removeReference())
+      delete oldWindow;
+    return no_reallocation_needed;
   }
 
 } // End namespace Uintah
