@@ -93,7 +93,9 @@
 #include <Core/Thread/Time.h>
 #include <Core/Math/MiscMath.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 #include <unistd.h>
 #include <strings.h>
@@ -344,8 +346,7 @@ Dpy::run()
       // dump the frame and quit for now
       if (frame == 2) {
 	if (!display_frames) {
-	  scene->get_image(priv->showing_scene)->save_ppm("displayless.ppm");
-	  cerr <<"Wrote frame to displayless.ppm\n";
+	  scene->get_image(priv->showing_scene)->save_ppm("displayless");
 	  Thread::exitAll(0);
 	}
       }
@@ -651,7 +652,8 @@ Dpy::renderFrame() {
   }
 
   if( displayedImage->get_xres() != priv->xres ||
-      displayedImage->get_yres() != priv->yres ) {
+      displayedImage->get_yres() != priv->yres ||
+      displayedImage->get_stereo() != stereo) {
     delete displayedImage;
     displayedImage = new Image(priv->xres, priv->yres, stereo);
     scene->set_image(showing_scene, displayedImage);
