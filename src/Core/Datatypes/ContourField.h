@@ -71,7 +71,7 @@ template <class Data>
 void
 ContourField<Data>::io(Piostream &stream)
 {
-  stream.begin_class(type_name().c_str(), CONTOURFIELD_VERSION);
+  stream.begin_class(type_name(-1).c_str(), CONTOURFIELD_VERSION);
   GenericField<ContourMesh, vector<Data> >::io(stream);
   stream.end_class();
 }
