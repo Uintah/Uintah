@@ -13,7 +13,6 @@
 #include <Packages/Uintah/Core/Math/SymmMatrix3.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Core/Thread/Mutex.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
@@ -34,8 +33,6 @@
 using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
-
-Mutex cerrLock( "cerrLock" );
 
 // declarations
 void usage(const std::string& badarg, const std::string& progname);
