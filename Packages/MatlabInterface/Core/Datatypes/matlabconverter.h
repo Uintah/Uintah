@@ -81,6 +81,7 @@
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/PrismVolField.h>
 #include <Core/Datatypes/PrismVolMesh.h>
+#include <Core/Datatypes/ScanlineField.h>
 #include <Core/Datatypes/StructHexVolField.h>
 #include <Core/Datatypes/StructHexVolMesh.h>
 #include <Core/Datatypes/HexVolField.h>
@@ -183,6 +184,7 @@
     void setindexbase(long indexbase);
 	// In a numericmatrix all data will be stripped and the data will be saved as
 	// a plain dense or sparse matrix.
+    void setdisabletranspose(bool dt);
 	void converttonumericmatrix();
 	void converttostructmatrix();
 
@@ -201,7 +203,7 @@
 	// SCIRun Fields/Meshes
 	long sciFieldCompatible(matlabarray &mlarray,std::string &infostring);
 	void mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle &scifield);
-
+	void sciFieldTOmlArray(SCIRun::FieldHandle &scifield,matlabarray &mlarray);
 
 	// SUPPORT FUNCTIONS
 	// Test whether the proposed name of a matlab matrix is valid.
@@ -235,7 +237,9 @@ private:
 	long indexbase_;
 	// Specify the data of output data
 	matlabarray::mitype datatype_;
-
+	// Disable transposing matrices from Fortran format to C++ format
+	bool disable_transpose_;
+	
 	// FUNCTIONS FOR CONVERTING FIELDS:
 	
 	struct fieldstruct
@@ -264,6 +268,7 @@ private:
 		matlabarray vectorfield;
 		matlabarray tensorfield;
 		matlabarray fieldlocation;
+		matlabarray fieldtype;
 		
 		// element definition (to be extended for more mesh classes)
 		matlabarray elemtype;
@@ -274,20 +279,21 @@ private:
 		// Property matrix to set properties
 		matlabarray property;
 		
+		SCIRun::Field::data_location data_at;
 	};
 
 	// analyse a matlab matrix and sort out all the different fieldname
 	// combinations
 	fieldstruct analyzefieldstruct(matlabarray &ma);
-	template<class FIELDPTR> void addscalardata(FIELDPTR fieldptr,matlabarray mlarray);
+	template<class FIELD> void addscalardata(FIELD *fieldptr,matlabarray mlarray);
 	template<class FIELDPTR> void addvectordata(FIELDPTR fieldptr,matlabarray mlarray);
 	template<class FIELDPTR> void addtensordata(FIELDPTR fieldptr,matlabarray mlarray);
 
-	template<class FIELDPTR> void addscalardata2d(FIELDPTR fieldptr,matlabarray mlarray);
+	template<class FIELD> void addscalardata2d(FIELD *fieldptr,matlabarray mlarray);
 	template<class FIELDPTR> void addvectordata2d(FIELDPTR fieldptr,matlabarray mlarray);
 	template<class FIELDPTR> void addtensordata2d(FIELDPTR fieldptr,matlabarray mlarray);
 
-	template<class FIELDPTR> void addscalardata3d(FIELDPTR fieldptr,matlabarray mlarray);
+	template<class FIELD> void addscalardata3d(FIELD *fieldptr,matlabarray mlarray);
 	template<class FIELDPTR> void addvectordata3d(FIELDPTR fieldptr,matlabarray mlarray);
 	template<class FIELDPTR> void addtensordata3d(FIELDPTR fieldptr,matlabarray mlarray);
 

@@ -54,17 +54,30 @@ void matlabfile::open(std::string filename,std::string accessmode)
     matfile::open(filename,accessmode);
     
     if (isreadaccess())
-    {    //scan the file for the number of matrices
+    {   //scan the file for the number of matrices
+		// This function will index the file and get all the matrix names
+		// If it is a compressed file, it will automatically uncompress every
+		// block (this behavior may be changed to become more memory efficient)
     	
     	long tagptr;
     	matfiledata mfd;
     	std::stack<long> ptrstack;
 		std::stack<std::string> strstack;
+		bool compressedmatrix = false;
 		
 		tagptr = firsttag();
     	while(tagptr)
     	{
     	    readtag(mfd);
+			
+			// If the tag tells that the next block is compressed
+			// Open this compressed block before continuing
+			if (mfd.type() == miCOMPRESSED)
+			{
+				compressedmatrix = true; // to mark that we have to close the compressed session
+				opencompression(); // uncompress the data
+				readtag(mfd); // read the first tag, which should be miMATRIX
+			}
 			if (mfd.type() != miMATRIX) throw invalid_file_format();
     	    
 			openchild();
@@ -74,6 +87,7 @@ void matlabfile::open(std::string filename,std::string accessmode)
 				nexttag();
 				readdat(mfd);
 			closechild();
+			if (compressedmatrix) closecompression();
 			
 			strstack.push(mfd.getstring());
     	    ptrstack.push(tagptr);
@@ -133,7 +147,7 @@ matlabfile::mxtype matlabfile::convertclass(matlabfile::mlclass mclass,matlabfil
 				case miUINT32: return(mxUINT32);
 				case miSINGLE: return(mxSINGLE);
 				case miUINT64: case miINT64:		// there is no mxclass for 64bit datat yet
-													// hence the easiest is to convert them to d
+													// hence the easiest is to convert them to double
 				case miDOUBLE: return(mxDOUBLE);
 				default: return(mxUNKNOWN);
 			}
@@ -325,6 +339,7 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
 {
     // make sure the matrix is cleared
 	matrix.clear();
+	bool compressedmatrix = false;
     
     matfiledata matrixheader;
     matfiledata matrixclass;
@@ -335,6 +350,16 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
     // If this is not a matrix header the file pointer
     // is not pointing to a matrix
     readtag(matrixheader);
+	if (matrixheader.type() == miCOMPRESSED)
+	{
+		// A compressed matrix is encapsulated in another
+		// data header. opencompressed will now open and
+		// decompress part of the file if needed.
+		compressedmatrix = true; // mark that we still need to close the compressed memory block
+		opencompression();
+		readtag(matrixheader); // This tag should now contain a miMATRIX tag
+	}
+	
     if (matrixheader.type() != miMATRIX) return;
     
     if (!openchild()) return;
@@ -528,6 +553,8 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
     }
      		      
     closechild();
+	if (compressedmatrix) closecompression();
+	
 }
 
 // ***********************************************

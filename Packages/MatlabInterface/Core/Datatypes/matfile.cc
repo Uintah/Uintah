@@ -123,26 +123,48 @@ void matfile::mfwrite(void *buffer,long elsize,long size,long offset)
 
 void matfile::mfread(void *buffer,long elsize,long size)
 {
-	FILE *fptr;
-	fptr = m_->fptr_;
+	if (m_->fcmpbuffer_ == 0)
+	{
+		FILE *fptr;
+		fptr = m_->fptr_;
 	
-    if (fptr == 0) return;
-    if (static_cast<long>(fread(buffer,elsize,size,fptr)) != size) throw io_error();
-    if (ferror(fptr)) throw io_error();
-	if (m_->byteswap_) mfswapbytes(buffer,elsize,size);
+		if (fptr == 0) return;
+		if (static_cast<long>(fread(buffer,elsize,size,fptr)) != size) throw io_error();
+		if (ferror(fptr)) throw io_error();
+		if (m_->byteswap_) mfswapbytes(buffer,elsize,size);
+	}
+	else
+	{   // Read from the decompressed buffer instead of the file
+		if ((m_->fcmpcount_) + (size*elsize) >= m_->fcmpsize_) throw io_error();
+		memcpy(buffer,static_cast<void *>((m_->fcmpbuffer_)+m_->fcmpcount_),(size*elsize));
+		m_->fcmpcount_ += (size*elsize);
+		if (m_->byteswap_) mfswapbytes(buffer,elsize,size);		
+	}
 }
 
 void matfile::mfread(void *buffer,long elsize,long size,long offset)
 {
-	FILE *fptr;
-	fptr = m_->fptr_;
+	if (m_->fcmpbuffer_ == 0)
+	{
+		FILE *fptr;
+		fptr = m_->fptr_;
 	
-    if (fptr == 0) return;
-    if (fseek(fptr,offset,SEEK_SET) != 0) throw io_error();
-    if (ferror(fptr)) throw io_error();
-    if (static_cast<long>(fread(buffer,elsize,size,fptr)) != size) throw io_error();
-    if (ferror(fptr)) throw io_error();
-    if (m_->byteswap_) mfswapbytes(buffer,elsize,size);
+		if (fptr == 0) return;
+		if (fseek(fptr,offset,SEEK_SET) != 0) throw io_error();
+		if (ferror(fptr)) throw io_error();
+		if (static_cast<long>(fread(buffer,elsize,size,fptr)) != size) throw io_error();
+		if (ferror(fptr)) throw io_error();
+		if (m_->byteswap_) mfswapbytes(buffer,elsize,size);
+	}
+	else
+	{   // Read from the decompressed buffer instead of the file
+		
+		m_->fcmpcount_ = offset-(m_->fcmpoffset_);
+		if ((m_->fcmpcount_) + (size*elsize) >= m_->fcmpsize_) throw io_error();
+		memcpy(buffer,static_cast<void *>((m_->fcmpbuffer_)+m_->fcmpcount_),(size*elsize));
+		m_->fcmpcount_ += (size*elsize);
+		if (m_->byteswap_) mfswapbytes(buffer,elsize,size);	
+	}
 }
 
 
@@ -153,7 +175,8 @@ void matfile::mfwriteheader()
 	short endian = 19785;	// In characters this is 'MI'
     
     if (m_->fptr_ == 0) return;
-    mfwrite(static_cast<void *>(&(m_->headertext_[0])),sizeof(char),124,0);    
+    mfwrite(static_cast<void *>(&(m_->headertext_[0])),sizeof(char),116,0);
+	mfwrite(static_cast<void *>(&(m_->subsysdata_[0])),sizeof(long),2,116);    
     mfwrite(static_cast<void *>(&(m_->version_)),sizeof(short),1,124);
     mfwrite(static_cast<void *>(&endian),sizeof(short),1,126);
 }
@@ -170,7 +193,8 @@ void matfile::mfreadheader()
     mfread(static_cast<void *>(&endian),1,sizeof(short),126);
     if (endian != 19785) if (endian == 18765) m_->byteswap_ = 1; else throw invalid_file_format();
 
-    mfread(static_cast<void *>(&(m_->headertext_[0])),sizeof(char),124,0);
+    mfread(static_cast<void *>(&(m_->headertext_[0])),sizeof(char),116,0);
+	mfread(static_cast<void *>(&(m_->subsysdata_[0])),sizeof(long),2,116);
     mfread(static_cast<void *>(&(m_->version_)),sizeof(short),1,124);
 }
 
@@ -182,6 +206,8 @@ matfile::matfile()
 {
 	m_ = new mxfile;
 	m_->fptr_ = 0;
+	m_->fcmpbuffer_ = 0;
+	m_->fcmpsize_ = 0;
 	m_->byteswap_ = 0;
 	m_->ref_ = 1;
 }
@@ -243,7 +269,7 @@ matfile& matfile::operator= (const matfile &mf)
 std::string matfile::getheadertext()
 {
     std::string text;
-    m_->headertext_[124] = 0;		// make sure it is zero terminated
+    m_->headertext_[116] = 0;		// make sure it is zero terminated
     text = m_->headertext_;			// should convert it to string class
     return(text);
 }
@@ -254,7 +280,7 @@ void matfile::setheadertext(std::string text)
     const char *ctext = text.c_str();
 	
 	len = static_cast<long>(text.size());
-    if (len > 124) len = 124;		// Protection against textheaders that are too long
+    if (len > 116) len = 116;		// Protection against textheaders that are too long
     
 	for (long p=0;p<len;p++) m_->headertext_[p] = ctext[p];
 }
@@ -305,10 +331,12 @@ void matfile::open(std::string filename,std::string mode)
             // All files are written in the native format, byteswapping is done
             // when reading files.
             
+			m_->subsysdata_[0] = 0;
+			m_->subsysdata_[1] = 0;
             m_->version_ = 0x0100;
             m_->byteswap_ = 0;
                 	
-            for(long p=0;p<124;p++) m_->headertext_[p] = 0;
+            for(long p=0;p<116;p++) m_->headertext_[p] = 0;
             strcpy(&(m_->headertext_[0]),"MATLAB 5.0 MAT-FILE");
             
             mfwriteheader();
@@ -344,6 +372,15 @@ void matfile::close()
         if (m_->fptr_) { fclose(m_->fptr_); m_->fptr_ = 0; }
         throw;
     }
+	
+	compressbuffer cmpbuffer;
+	while (m_->cmplist_.size())
+	{
+		cmpbuffer = m_->cmplist_.back();
+		if (cmpbuffer.buffer != 0) delete[] cmpbuffer.buffer;
+		m_->cmplist_.pop_back();
+	}
+	
 }
 
 
@@ -366,6 +403,9 @@ void matfile::rewind()
             m_->curptr_.endptr = m_->flength_;
             m_->curptr_.size   = 0;
     }
+	
+	m_->fcmpbuffer_ = 0;
+	m_->fcmpsize_ = 0;
 }
 
 long matfile::nexttag()
@@ -415,6 +455,169 @@ bool matfile::openchild()
     m_->curptr_ = childptr;
     return(true);
 }
+
+// When encountering a miCOMPRESSION tag use this function
+// to enter the compressed data.
+// This function uncompresses the data, adds the buffer to the list of
+// uncompressed memory blocks and recomputes the block pointers to read
+// in the domain of the uncompressed memory block
+
+bool matfile::opencompression()
+{
+	// If the datablock cannot be found, there is nothing to do
+	// except to report an error
+    if (m_->curptr_.datptr == -1) return(false);
+	
+	// Writing compressed data blocks is not yet supported
+	// A) to be compatible with V5 and V6 that are still wide
+	// spread
+	// B) because it needs a bigger effort to do a transparant 
+	// compression, usage of deflate() function. 
+	if (iswriteaccess()) throw compression_error();
+	
+	// Currently we assume there is no compression block in another
+	// compression block (this does not make sense anyway) and 
+	// according to MATLAB's description will not be generated neither
+	if (m_->fcmpbuffer_ != 0) throw compression_error();
+
+	// Get the size and position of the compressed data
+	long compressblockoffset = m_->curptr_.datptr;
+	long compressblocksize = m_->curptr_.size;
+	
+	// Make sure we are not in compressed mode
+	m_->fcmpbuffer_ = 0;
+	
+	// Create a new buffer structure
+	compressbuffer cmpbuffer;
+	
+	// First check whether the work we require has already been
+	// done. We should not overheat the processor without any good
+	// reason.
+	for (long p = 0;p<m_->cmplist_.size();p++)
+	{
+		cmpbuffer = m_->cmplist_[p];
+		if (cmpbuffer.bufferoffset == compressblockoffset)
+		{
+			// Yeah the job has already been done
+			// Enter the data of the block in the
+			// main file descriptor
+			m_->fcmpbuffer_ = cmpbuffer.buffer;
+			m_->fcmpsize_ = cmpbuffer.buffersize;
+			m_->fcmpoffset_ = cmpbuffer.bufferoffset;
+			m_->fcmpcount_ = 0;
+			break;
+		}
+	}
+
+	// We still need to uncompress the block
+	if (m_->fcmpbuffer_ == 0)
+	{   
+		// We need to decompress the buffer
+		char *sourcebuffer = 0;
+		char *destbuffer = 0;
+		long *destbufferheader = 0;
+		long destlen = 0;
+		
+		// We do some dynamic allocation here, if this fails the function
+		// should clear up its memory
+		try
+		{
+			// Read the block of compressed data
+			sourcebuffer = new char[compressblocksize];
+			mfread(static_cast<void *>(sourcebuffer),sizeof(char),compressblocksize,compressblockoffset);
+				
+			// first only read the header to find out how big the data segment should be	
+			// Only decompress the first 8 bytes. We need to know whether inside is a matrix
+			// and of what size this one is.
+			destlen = 8;
+			destbufferheader = new long[2];
+			// uncompress the first few bytes
+			// we need to do a few ugly casts as somehow the compiler does not recognize
+			// they are all pointers.
+			uncompress(reinterpret_cast<Bytef *>(destbufferheader),reinterpret_cast<uLongf *>(&destlen),reinterpret_cast<const Bytef *>(sourcebuffer),compressblocksize);
+			
+			// In case something weird happened
+			if (destlen != 8) throw compression_error();
+			
+			// If byteswapping needs to be done, it needs to be done
+			if (m_->byteswap_) mfswapbytes(destbufferheader,4,2);
+			
+			// The first long should be indicating it is a matrix
+			if (destbufferheader[0] != static_cast<long>(miMATRIX)) throw invalid_file_format();
+			// The secong long descibes the size of the contents of the matrix minus its header
+			// Hence the plus 8
+			destlen = destbufferheader[1]+8;
+					
+			// Uncompress the full thing including the previously read header		
+			destbuffer = new char[destlen];
+			uncompress(reinterpret_cast<Bytef *>(destbuffer),reinterpret_cast<uLongf *>(&destlen),reinterpret_cast<const Bytef *>(sourcebuffer),compressblocksize);
+			if (destlen != destbufferheader[1]+8) throw compression_error();
+			
+			// enter the information in the cmpbuffer structure
+			cmpbuffer.buffer = destbuffer;
+			destbuffer = 0;
+			cmpbuffer.buffersize = destlen;
+			cmpbuffer.bufferoffset = compressblockoffset;
+			
+			// add this one to the list
+			m_->cmplist_.push_back(cmpbuffer);
+			
+			// Now fill out the fcmpbuffer stuff to
+			// force reading in the buffer
+			m_->fcmpbuffer_ = cmpbuffer.buffer;
+			m_->fcmpsize_ = cmpbuffer.buffersize;
+			m_->fcmpoffset_ = cmpbuffer.bufferoffset;
+			m_->fcmpcount_ = 0;
+			
+			// free the remaining buffers
+			if (sourcebuffer != 0) delete[] sourcebuffer;
+			sourcebuffer = 0;
+			if (destbufferheader != 0) delete[] destbufferheader;
+			destbufferheader = 0;
+			
+		}	
+		catch(...)
+		{   // clean up
+			if (destbuffer != 0) delete[] destbuffer;
+			if (sourcebuffer != 0) delete[] sourcebuffer;
+			sourcebuffer = 0;
+			if (destbufferheader != 0) delete[] destbufferheader;
+			destbufferheader = 0;
+			throw;
+		}
+	}
+	
+	
+    matfileptr childptr;
+    childptr.hdrptr = m_->curptr_.datptr;
+    childptr.startptr = m_->curptr_.datptr;
+    childptr.endptr = m_->curptr_.datptr+m_->fcmpsize_;
+    childptr.datptr = -1;
+    childptr.size   = 0;
+ 	   
+    m_->ptrstack_.push(m_->curptr_);
+    m_->curptr_ = childptr;
+    return(true);	
+}
+
+
+void matfile::closecompression()
+{
+    matfileptr parptr;
+    
+    if (m_->ptrstack_.empty()) return;		// We are already at the top level;
+    parptr = m_->ptrstack_.top();
+	
+    if (iswriteaccess()) throw compression_error();
+	
+    m_->ptrstack_.pop();
+    m_->curptr_ = parptr; 
+    m_->fcmpbuffer_ = 0;
+	m_->fcmpsize_ = 0;
+	m_->fcmpoffset_ = 0;
+	m_->fcmpcount_ = 0;
+}
+
 
 void matfile::closechild()
 {
@@ -473,7 +676,7 @@ void matfile::readtag(matfiledata& md)
         mfread(static_cast<void *>(&size),sizeof(long),1,m_->curptr_.hdrptr+4);
         m_->curptr_.datptr = m_->curptr_.hdrptr+8;
  
-        if (type > miMATRIX)
+        if (type >= miEND)
         {   // Hence it must be a compressed data tag
             short	csizetype[2];
             // trick the reader in reading a 32bit long, so both 16bit integers
@@ -496,12 +699,11 @@ void matfile::readtag(matfiledata& md)
 
         // If type still invalid then something else is going on
         // Throw an exception as we cannot read this field
-        if (type > miMATRIX) throw unknown_type();
+        if (type >= miEND) throw unknown_type();
         
         md.clear();
         md.type(static_cast<mitype>(type));
-        
-    }
+	    }
     catch(...)
     {
         md.clear();		// Clean up everything allocated in this function
@@ -523,7 +725,7 @@ void matfile::readdat(matfiledata& md)
         mfread(static_cast<void *>(&size),sizeof(long),1,m_->curptr_.hdrptr+4);
         m_->curptr_.datptr = m_->curptr_.hdrptr+8;
  
-        if (type > miMATRIX)
+        if (type >= miEND)
         {   // Hence it must be a compressed data tag
             short	csizetype[2];
             // trick the reader in reading a 32bit long, so both 16bit integers
@@ -545,11 +747,11 @@ void matfile::readdat(matfiledata& md)
 
         // If type still invalid then something else is going on
         // Throw an exception as we cannot read this field
-        if (type > miMATRIX) throw unknown_type();
+        if (type >= miEND) throw unknown_type();
         
         md.newdatabuffer(size,static_cast<mitype>(type));
         if (md.size() > 0) mfread(md.databuffer(),md.elsize(),md.size(),m_->curptr_.datptr);
-		
+
     }
     catch(...)
     {

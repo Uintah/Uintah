@@ -317,6 +317,8 @@ matlabarray MatlabDataReader::readmatlabarray(long p)
 	gui->eval(oss.str(),matrixname);
 	gui->unlock();
 	
+	std::cout << "matrix name : " << matrixname << std::endl;
+	
 	if (matrixname == "")
 	{
 		// return an empty array

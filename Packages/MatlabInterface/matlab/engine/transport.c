@@ -44,7 +44,7 @@
    examples/refbook/revord.c - matlab examples
 */
 
-#include "mex.h"
+/* #include "mex.h" */
 #include "matrix.h"
 
 char *bring(int wordy,int flag,char *hname,int lbuf,char *buf);

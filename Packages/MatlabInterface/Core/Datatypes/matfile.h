@@ -84,6 +84,8 @@
 #include <stack>
 #include <iostream> 
 
+#include <zlib.h>
+
 #include "matfilebase.h"
 #include "matfiledata.h" 
  
@@ -104,16 +106,50 @@ class matfile : public matfilebase {
             long	size;		// length of data segment
             };
 
+	// This next struct is used for buffering sections of the compressed
+	// data chuncks in V7 of matlab.
+	// The basic idea is to decompress compressed pieces of the files and maintain a
+	// list of the pieces that have been compresse
+	// Using the offset in the file these pieces can be unique identified and cataloged
+	
+
+	struct compressbuffer {
+			char	*buffer;	// buffer with uncompressed data
+			long	buffersize; // size of the buffer;
+			long	bufferoffset; // file offset of the buffer
+			};
+
 	struct mxfile {
 
 			long		ref_;			// Reference counter
+			
+			// The file can be read in two modes
+			// 1) directly out of the file using the fptr_
+			// 2) out of a decompressed buffer
+			//
+			// If fcmpbuffer_ is not equal to zero the reading is 
+			// supposed to happen in the uncompressed buffer
+			// The three remaining counters log where in the
+			// file data has to be read
+			// fcmpsize_ makes sure that no data is read going beyong the chunck of
+			// unpressed data
+			// fcmpoffset_ marks at which file offset the data went from uncompressed
+			// raw data into a compressed data chunck, so seek can find the proper position
+			// fcmpcount_ counts the number of bytes read for the mfread and mfwrite calls
+			
+			char		*fcmpbuffer_;   // Compression buffer
+			long		fcmpsize_;		// Size of the buffer
+			long		fcmpoffset_;	// Offset of the buffer
+			long		fcmpcount_;		// Counter to check where next to read data
+			
 			FILE		*fptr_;			// File pointer
 			std::string fname_;			// Filename
 			std::string fmode_;			// File access mode: "r" or "w"
         
 			long	    flength_;		// File length	
         
-			char	    headertext_[126]; 	// The text in the header of the matfile
+			char	    headertext_[118]; 	// The text in the header of the matfile
+			long		subsysdata_[2];		// NEW IN VERSION 7
 			short 	    version_;			// Version of the matfile.
 			short       byteswap_;			// =1 if bytes need to be swapped
    	
@@ -123,7 +159,13 @@ class matfile : public matfilebase {
 												// the parent levels of the current one
 												// A matfile is like a directory (tree structure)
 			matfileptr curptr_;					// current pointer
-            };
+            
+			// The next list contains the compressed buffers that were allocated
+			// Hence compressed variables have to be decompressed only once, which
+			// should boost the performance, but will cost memory
+			
+			std::deque<compressbuffer> cmplist_;	// maintain a list of segments that have already been decompressed
+			};
 			
 	mxfile *m_;
 										                            
@@ -194,7 +236,15 @@ class matfile : public matfilebase {
 	
 	bool openchild();
 	void closechild();
-        
+    
+	// open and close a compressed section of data
+	// Compression is only used for reading matlab V7 files
+	// Data is exported as non compressed data to be compatible with
+	// version 5 and 6.
+	
+	bool opencompression();
+	void closecompression();	
+			    
 	// navigation through file:
 	// firsttag:
 	//   go back to the first data block

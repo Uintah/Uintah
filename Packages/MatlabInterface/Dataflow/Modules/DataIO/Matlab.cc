@@ -272,7 +272,20 @@ Matlab::execute()
     {
       if(wordy>0) fprintf(stderr,"Starting matlab engine on %s\n",hport); 
       char cl[1024];
-     
+    
+	 // The previous way of starting matlab does not work always and
+	 // tends to crach often
+	 // Hence, a new strategy:
+	 
+	  strcpy(cl,"matlab -nodesktop -nosplash -r \"addpath('");
+	  strcat(cl,SCIRUN_OBJDIR);
+	  strcat(cl,"/matlab/engine'); mlabengine(0,'");
+	  strcat(cl,hport);
+	  strcat(cl,"');\" &");
+	 
+	  printf("%s\n",cl);
+	 
+	 /*
       strcpy(cl,"echo 'path('\\''"); 
       ASSERT(sci_getenv("SCIRUN_OBJDIR"));
       strcat(cl,sci_getenv("SCIRUN_OBJDIR"));
@@ -282,7 +295,8 @@ Matlab::execute()
       strcat(cl,",'\\''"); 
       strcat(cl,hport); 
       strcat(cl,"'\\'');'|matlab -nosplash &");
-
+	*/
+	
       if(wordy>1) fprintf(stderr,"line for ystem call: \n %s\n",cl); 
       sci_system(cl);
       engine_running = true;
