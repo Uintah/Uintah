@@ -48,17 +48,21 @@
 namespace SCIRun {
 
 class SCICORESHARE TexSquare : public GeomObj {
-  Point a, b, c, d;
+  float tex_coords_[8];
+  float pos_coords_[12];
   unsigned char *texture;
-  int numcolors, width;
-  
+  int numcolors;
+  int width_;
+  int height_;
+  unsigned int texname_;
+  void	bind_texture();
 public:
-  TexSquare(const Point &p1,const Point &p2,const Point &p3,const Point &p4 );
+  TexSquare();
   TexSquare(const TexSquare&);
   virtual ~TexSquare();
-
-  void set_texture( unsigned char *tex, int num, int w = 32 );
-  
+  void set_coords(float *tex, float *pos);
+  void set_texture( unsigned char *tex, int num, int w, int h);
+  void set_texname(unsigned int texname);
   virtual GeomObj* clone();
   virtual void get_bounds(BBox&);
 
