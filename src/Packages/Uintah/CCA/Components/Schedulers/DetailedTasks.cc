@@ -59,6 +59,8 @@ DependencyBatch::~DependencyBatch()
     delete dep;
     dep = tmp;
   }
+  delete lock_;
+  delete cv_;
 }
 
 void
