@@ -15,8 +15,8 @@
 /*`==========TESTING==========*/
 #define JET_BC 0
 
-//#define JOHN_BCS
-#undef  JOHN_BCS
+#define JOHN_BCS
+//#undef  JOHN_BCS
 /*==========TESTING==========`*/
 
 
@@ -903,7 +903,7 @@ void setBC(CCVariable<double>& press_CC,
               const int mat_id,
               DataWarehouse* new_dw)
 {
-  cout << " I ' M   U S I N G   J O H N ' S   B C"<< endl;
+  //  cout << " I ' M   U S I N G   J O H N ' S   B C"<< endl;
   Vector dx = patch->dCell();
   for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
        face=Patch::nextFace(face)) {
@@ -923,19 +923,17 @@ void setBC(CCVariable<double>& press_CC,
 
       // For a given Intvector boundary, find the appropriate bc, determine if
       // it is symmetric, neumann, dirichlet, and its value,
-      for (int child = 0; 
-	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren();
+      for (int child = 0;  child < numChildren; child++) {
 	vector<IntVector> bound,inter,sfx,sfy,sfz;
 	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
 							  kind,bound,inter,
 							  sfx,sfy,sfz,
 							  child);
-	
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
+	const BoundCondBase* sym_bc;
+	if (bc == 0)
+	  sym_bc = patch->getArrayBCValues(face,mat_id,"Symmetric",bound,inter,
+					   sfx,sfy,sfz,child);
 
 	const BoundCond<double> *new_bcs = 
 	  dynamic_cast<const BoundCond<double> *>(bc);	
@@ -1023,21 +1021,18 @@ void setBC(CCVariable<double>& variable, const string& kind,
     determineSpacingAndGravity(face,dx,sharedState,spacing,gravity);
 
     if (patch->getBCType(face) == Patch::None) {
-
-      for (int child = 0; 
-	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren();
+      for (int child = 0; child < numChildren; child++) {
 	vector<IntVector> bound,inter,sfx,sfy,sfz;
-      
 	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
 							  kind, bound,inter,
 							  sfx,sfy,sfz,
 							  child);
       
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
+	const BoundCondBase* sym_bc;
+	if (bc == 0)
+	  sym_bc = patch->getArrayBCValues(face,mat_id,"Symmetric",bound,inter,
+					   sfx,sfy,sfz,child);
 	const BoundCond<double> *new_bcs = 
 	  dynamic_cast<const BoundCond<double> *>(bc);	
 	
@@ -1137,19 +1132,17 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
 
     if (patch->getBCType(face) == Patch::None) {
       for (int child = 0; 
-	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
+	   child < patch->getBCDataArray(face)->getNumberChildren(); child++) {
 	vector<IntVector> bound,inter,sfx,sfy,sfz;
-	
 	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
 							  kind,bound,inter,
 							  sfx,sfy,sfz,
 							  child);
       
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
+	const BoundCondBase* sym_bc;
+	if (bc == 0)
+	  sym_bc = patch->getArrayBCValues(face,mat_id,"Symmetric",bound,inter,
+					   sfx,sfy,sfz,child);
 	const BoundCond<Vector> *new_bcs = 
 	  dynamic_cast<const BoundCond<Vector> *>(bc);	
 	
@@ -1267,17 +1260,16 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
 
     if (patch->getBCType(face) == Patch::None) {
       for (int child = 0; 
-	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
+	   child < patch->getBCDataArray(face)->getNumberChildren(); child++) {
 	vector<IntVector> bound,inter,sfx,sfy,sfz;
 	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
 							  bound,inter,
 							  sfx,sfy,sfz,child);
 	
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
+	const BoundCondBase* sym_bc;
+	if (bc == 0)
+	  sym_bc = patch->getArrayBCValues(face,mat_id,"Symmetric",bound,inter,
+					   sfx,sfy,sfz,child);
 	
 	const BoundCond<Vector>* new_bcs  = 
 	  dynamic_cast<const BoundCond<Vector> *>(bc);
@@ -1346,17 +1338,16 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
 
     if (patch->getBCType(face) == Patch::None) {
       for (int child = 0; 
-	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
+	   child < patch->getBCDataArray(face)->getNumberChildren(); child++) {
 	vector<IntVector> bound,inter,sfx,sfy,sfz;
 	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
 							  bound,inter,
 							  sfx,sfy,sfz,child);
 	
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
+	const BoundCondBase* sym_bc;
+	if (bc == 0)
+	  sym_bc = patch->getArrayBCValues(face,mat_id,"Symmetric",bound,inter,
+					   sfx,sfy,sfz,child);
 	
 	const BoundCond<Vector>* new_bcs  = 
 	  dynamic_cast<const BoundCond<Vector> *>(bc);
@@ -1421,20 +1412,18 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
       face=Patch::nextFace(face)){
     double spacing,sign;
     determineSpacingAndSign(face,dx,spacing,sign);
-
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren();
     if (patch->getBCType(face) == Patch::None) {
-      for (int child = 0; 
-	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
+      for (int child = 0;  child < numChildren; child++) {
 	vector<IntVector> bound,inter,sfx,sfy,sfz;
 	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
 							  bound,inter,
 							  sfx,sfy,sfz,child);
 	
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
+	const BoundCondBase* sym_bc;
+	if (bc == 0)
+	  sym_bc = patch->getArrayBCValues(face,mat_id,"Symmetric",bound,inter,
+					   sfx,sfy,sfz,child);
 	
 	const BoundCond<Vector>* new_bcs  = 
 	  dynamic_cast<const BoundCond<Vector> *>(bc);
