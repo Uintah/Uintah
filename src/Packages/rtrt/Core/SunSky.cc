@@ -57,6 +57,8 @@ SunSky::GetSunThetaPhi( double& stheta, double& sphi ) const
 	stheta = thetaS;
 }
 
+#define DegsToRads(x) x/180.*M_PI
+
 /**********************************************************
 // South = x,  East = y, up = z
 // All times in decimal form (6.25 = 6:15 AM)
