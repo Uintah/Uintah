@@ -340,7 +340,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST MATLAB_ENG DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX ac_ct_CC EXEEXT OBJEXT ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC ASSERTION_LEVEL THROW_LEVEL OGL_ERR_MACRO AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT GMAKE MAKE AWK YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX EGREP NBITS SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS COMPILE_AVR DEF_HAVE_AVR DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG UUID_LIB_FLAG BUILD_SCIRUN2 scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST MATLAB_ENG DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX ac_ct_CC EXEEXT OBJEXT ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC ASSERTION_LEVEL THROW_LEVEL OGL_ERR_MACRO AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT GMAKE MAKE AWK YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX EGREP NBITS SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS COMPILE_AVR DEF_HAVE_AVR DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG HAVE_UUID UUID_LIB_FLAG BUILD_SCIRUN2 scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -980,6 +980,10 @@ which is /usr/local by defaultCMake variable CMAKE_INSTALL_PREFIX
 --with-audio=DIR        Use the audio installation in DIR
 --with-freetype=DIR     Use the Freetype2 installation in DIR
 --with-ftgl=DIR         Use the Freetype GL installation in DIR
+--with-uuid             Use UUID tools on IRIX or from ext2fs development
+                          tools on GNU/linux (SCIRun2 only, default).
+                          Installing the ext2fs package on GNU/Linux is
+                          recommended.
 
 Some influential environment variables:
   CC          C compiler command
@@ -2358,6 +2362,35 @@ echo "$as_me: error: The file or directory parameter ($ftgl) specified for --wit
   fi
 
 
+
+
+# Check whether --with-uuid or --without-uuid was given.
+if test "${with_uuid+set}" = set; then
+  withval="$with_uuid"
+  sci_required_uuid=yes
+else
+  with_uuid=""
+fi;
+  sci_arg_with_list="$sci_arg_with_list --with-uuid --without-uuid"
+  if test -n "$uuid" -a ! -e "$uuid"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($uuid) specified for --with-uuid does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($uuid) specified for --with-uuid does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+
+
+
+
+
+  # Check whether --enable-advanced-volume-rendering or --disable-advanced-volume-rendering was given.
+if test "${enable_advanced_volume_rendering+set}" = set; then
+  enableval="$enable_advanced_volume_rendering"
+  avr="$enableval"
+else
+  avr="test"
+fi;
+  sci_arg_enable_list="$sci_arg_enable_list --enable-advanced-volume-rendering --disable-advanced-volume-rendering"
 
 
 
@@ -4429,7 +4462,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4432:" \
+echo "$as_me:4465:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -7903,9 +7936,7 @@ esac
 
 
 
-
-
-for ac_header in limits.h sys/select.h unistd.h sys/time.h sys/uuid.h uuid/uuid.h ext/algorithm stdint.h inttypes.h
+for ac_header in limits.h sys/select.h unistd.h sys/time.h ext/algorithm stdint.h inttypes.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if eval "test \"\${$as_ac_Header+set}\" = set"; then
@@ -48422,6 +48453,157 @@ esac
 ##  --  search for uuid functions, either uuid_create or uuid_generate ----
 
 if test "$sci_required_uuid" = "yes"; then
+
+
+for ac_header in sys/uuid.h uuid/uuid.h
+do
+as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+else
+  # Is the header compilable?
+echo "$as_me:$LINENO: checking $ac_header usability" >&5
+echo $ECHO_N "checking $ac_header usability... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$ac_includes_default
+#include <$ac_header>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_cxx_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_header_compiler=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_header_compiler=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
+echo "${ECHO_T}$ac_header_compiler" >&6
+
+# Is the header present?
+echo "$as_me:$LINENO: checking $ac_header presence" >&5
+echo $ECHO_N "checking $ac_header presence... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <$ac_header>
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
+  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null; then
+  if test -s conftest.err; then
+    ac_cpp_err=$ac_cxx_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_cxx_werror_flag
+  else
+    ac_cpp_err=
+  fi
+else
+  ac_cpp_err=yes
+fi
+if test -z "$ac_cpp_err"; then
+  ac_header_preproc=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+  ac_header_preproc=no
+fi
+rm -f conftest.err conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
+echo "${ECHO_T}$ac_header_preproc" >&6
+
+# So?  What about this header?
+case $ac_header_compiler:$ac_header_preproc:$ac_cxx_preproc_warn_flag in
+  yes:no: )
+    { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
+echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the compiler's result" >&5
+echo "$as_me: WARNING: $ac_header: proceeding with the compiler's result" >&2;}
+    ac_header_preproc=yes
+    ;;
+  no:yes:* )
+    { echo "$as_me:$LINENO: WARNING: $ac_header: present but cannot be compiled" >&5
+echo "$as_me: WARNING: $ac_header: present but cannot be compiled" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header:     check for missing prerequisite headers?" >&5
+echo "$as_me: WARNING: $ac_header:     check for missing prerequisite headers?" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: see the Autoconf documentation" >&5
+echo "$as_me: WARNING: $ac_header: see the Autoconf documentation" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header:     section \"Present But Cannot Be Compiled\"" >&5
+echo "$as_me: WARNING: $ac_header:     section \"Present But Cannot Be Compiled\"" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
+echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: in the future, the compiler will take precedence" >&5
+echo "$as_me: WARNING: $ac_header: in the future, the compiler will take precedence" >&2;}
+    (
+      cat <<\_ASBOX
+## ---------------------------------------- ##
+## Report this to scirun-users@sci.utah.edu ##
+## ---------------------------------------- ##
+_ASBOX
+    ) |
+      sed "s/^/$as_me: WARNING:     /" >&2
+    ;;
+esac
+echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  eval "$as_ac_Header=\$ac_header_preproc"
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+
+fi
+if test `eval echo '${'$as_ac_Header'}'` = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+
+done
+
   # This is typical on SGI and ??
   echo "$as_me:$LINENO: checking for uuid_create in sys/uuid.h" >&5
 echo $ECHO_N "checking for uuid_create in sys/uuid.h... $ECHO_C" >&6
@@ -48572,8 +48754,6 @@ cat >>conftest.$ac_ext <<_ACEOF
   #include <uuid/uuid.h>
   }
   #define UUID_GENERATE
-  #else
-  #error We need either sys/uuid.h or uuid/uuid.h
   #endif
   #endif
 
@@ -48641,15 +48821,17 @@ echo "${ECHO_T}$UUID_LIB_FLAG" >&6
         echo "$as_me:$LINENO: result: none required" >&5
 echo "${ECHO_T}none required" >&6
       fi
+      HAVE_UUID="yes"
     else
       echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
       have_uuid=no
+      HAVE_UUID="no"
     fi
     LIBS="$old_LIBS"
   fi
-
 fi # end sci_required_uuid
+
 
 
 
@@ -48659,78 +48841,19 @@ if test "$enable_scirun2" = "yes"; then
   if test "$have_uuid" != "yes"; then
     case $host in
       *linux*)
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { echo "$as_me:$LINENO: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
-    error most likely will show up.
-  " >&5
-echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-{ { echo "$as_me:$LINENO: error: uuid_generate function and libuuid not found" >&5
-echo "$as_me: error: uuid_generate function and libuuid not found" >&2;}
-   { (exit 1); exit 1; }; }
-
+        { echo "$as_me:$LINENO: WARNING: uuid_generate function and libuuid not found.  Will use custom uuid generation instead." >&5
+echo "$as_me: WARNING: uuid_generate function and libuuid not found.  Will use custom uuid generation instead." >&2;}
         ;;
       ## For now, don't check for uuid if on macintosh.
       *-darwin*)
-        { echo "$as_me:$LINENO: WARNING: Skipping uuid check on MAC" >&5
-echo "$as_me: WARNING: Skipping uuid check on MAC" >&2;}
+        { echo "$as_me:$LINENO: WARNING: Skipping uuid check on MAC. Will use custom uuid generation instead." >&5
+echo "$as_me: WARNING: Skipping uuid check on MAC. Will use custom uuid generation instead." >&2;}
         ;;
       *)
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { echo "$as_me:$LINENO: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
-    error most likely will show up.
-  " >&5
-echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-{ { echo "$as_me:$LINENO: error: Cannot find uuid_generate or uuid_create" >&5
-echo "$as_me: error: Cannot find uuid_generate or uuid_create" >&2;}
-   { (exit 1); exit 1; }; }
-
+        { echo "$as_me:$LINENO: WARNING: cannot find uuid_generate or uuid_create.  Will use custom uuid generation instead." >&5
+echo "$as_me: WARNING: cannot find uuid_generate or uuid_create.  Will use custom uuid generation instead." >&2;}
         ;;
     esac
-    exit 1
   fi
   BUILD_SCIRUN2="yes"
 else
@@ -49696,6 +49819,7 @@ s,@DEF_HYPRE@,$DEF_HYPRE,;t t
 s,@INC_HYPRE_H@,$INC_HYPRE_H,;t t
 s,@HYPRE_LIB_FLAG@,$HYPRE_LIB_FLAG,;t t
 s,@HYPRE_LIB_DIR_FLAG@,$HYPRE_LIB_DIR_FLAG,;t t
+s,@HAVE_UUID@,$HAVE_UUID,;t t
 s,@UUID_LIB_FLAG@,$UUID_LIB_FLAG,;t t
 s,@BUILD_SCIRUN2@,$BUILD_SCIRUN2,;t t
 s,@scirun_obj_dir@,$scirun_obj_dir,;t t
