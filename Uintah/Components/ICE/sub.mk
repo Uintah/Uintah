@@ -9,7 +9,6 @@ SRCDIR   := Uintah/Components/ICE
 
 SRCS	+= $(SRCDIR)/ICE.cc       \
 	$(SRCDIR)/ICELabel.cc     \
-       $(SRCDIR)/ICE_schedule.cc \
        $(SRCDIR)/ICEMaterial.cc  \
        $(SRCDIR)/GeometryObject2.cc
 
@@ -28,6 +27,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.21  2001/01/03 21:35:04  jas
+# Moved scheduling back into ICE.cc and remove ICE_schedule.cc.
+#
 # Revision 1.20  2001/01/01 23:57:37  harman
 # - Moved all scheduling of tasks over to ICE_schedule.cc
 # - Added instrumentation functions
