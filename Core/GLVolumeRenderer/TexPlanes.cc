@@ -169,11 +169,21 @@ TexPlanes::draw()
   polys.push_back( poly );
   loadColorMap( b );
   loadTexture( b );
-  makeTextureMatrix( b );
-  enableTexCoords();
+//   makeTextureMatrix( b );
+//   enableTexCoords();
   setAlpha( b );
+#if defined( GL_ARB_fragment_program)
+  if( !VolShader->created() ){
+    cerr<<"creating Volume Shader\n";
+    VolShader->create();
+  }
+  VolShader->bind();
+#endif
   drawPolys( polys );
-  disableTexCoords();
+#if defined( GL_ARB_fragment_program)
+  VolShader->release();
+#endif
+//   disableTexCoords();
 }
 
   void
