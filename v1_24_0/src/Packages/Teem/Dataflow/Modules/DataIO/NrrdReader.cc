@@ -61,6 +61,8 @@ public:
   virtual void tcl_command(GuiArgs& args, void* userdata);
 private:
   bool read_nrrd();
+  bool read_file(string filename);
+  bool write_tmpfile(string filename, string *tmpfilename, string conv_command);
 
   GuiFilename     filename_;
 
@@ -133,6 +135,12 @@ NrrdReader::read_nrrd()
     const string filename(fn);
     const string ext(".nd");
     const string vff_ext(".vff");
+    const string vff_conv_command("vff2nrrd %f %t");
+    const string pic_ext(".pic");
+    const string pic_ext2(".pict");
+    const string pic_conv_command("PictToNrrd %f %t");
+    const string vol_ext(".vol");
+    const string vol_conv_command("GeoProbeToNhdr %f %t");
 
 
     // check that the last 3 chars are .nd for us to pio
@@ -155,68 +163,24 @@ NrrdReader::read_nrrd()
       delete stream;
     } else { // assume it is just a nrrd
       if (fn.substr(len - vff_ext.size(), vff_ext.size()) == vff_ext){
-	//write a nrrd vff header to /tmp and use that instead
+	string tmpfilename;
+	write_tmpfile(filename, &tmpfilename, vff_conv_command);
+	return read_file(tmpfilename);	
 	
-	string::size_type loc = filename.find_last_of("/");
-	const string basefilename =
-	  (loc==string::npos)?filename:filename.substr(loc+1);
-
+      } else if ((fn.substr(len - pic_ext.size(), pic_ext.size()) == pic_ext) ||
+		  fn.substr(len - pic_ext2.size(), pic_ext2.size()) == pic_ext2){
+	string tmpfilename;
+	write_tmpfile(filename, &tmpfilename, pic_conv_command);
+	return read_file(tmpfilename);
 	
-	// Base filename with first extension removed.
-	loc = basefilename.find_last_of(".");
-	const string basenoext = basefilename.substr(0, loc);
-
-	// Filename with first extension removed.
-	loc = filename.find_last_of(".");
-	const string noext = filename.substr(0, loc);
-
-	// Temporary filename.
-	string tmpfilename = "/tmp/" + basenoext + "-" +
-	  to_string((unsigned int)(getpid())) + ".nhdr";
-
-	ASSERT(sci_getenv("SCIRUN_OBJDIR"));
-	string command =
-	  string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
-	  "vff2nrrd %f %t";
-	while ((loc = command.find("%f")) != string::npos){
-	  command.replace(loc, 2, filename);
-	}
-	while ((loc = command.find("%t")) != string::npos){
-	  command.replace(loc, 2, tmpfilename);
-	}
-	const int status = sci_system(command.c_str());
-	ASSERT(status == 0);
-
-	NrrdData *n = scinew NrrdData;
-	if (nrrdLoad(n->nrrd=nrrdNew(), strdup(tmpfilename.c_str()), 0)) {
-	  char *err = biffGetDone(NRRD);
-	  error("Read error on '" + tmpfilename + "': " + err);
-	  free(err);
-	  return true;
-	}
-	read_handle_ = n;
-	for (int i = 0; i < read_handle_->nrrd->dim; i++) {
-	  if (!(airExists_d(read_handle_->nrrd->axis[i].min) && 
-		airExists_d(read_handle_->nrrd->axis[i].max)))
-	    nrrdAxisInfoMinMaxSet(read_handle_->nrrd, i, nrrdCenterNode);
-	}
-	
+      } else if (fn.substr(len - vol_ext.size(), vol_ext.size()) == vol_ext){
+	string tmpfilename;
+	write_tmpfile(filename, &tmpfilename, vol_conv_command);
+	return read_file(tmpfilename);
 	
       } else {
-      
-	NrrdData *n = scinew NrrdData;
-	if (nrrdLoad(n->nrrd=nrrdNew(), strdup(fn.c_str()), 0)) {
-	  char *err = biffGetDone(NRRD);
-	  error("Read error on '" + fn + "': " + err);
-	  free(err);
-	  return true;
-	}
-	read_handle_ = n;
-	for (int i = 0; i < read_handle_->nrrd->dim; i++) {
-	  if (!(airExists_d(read_handle_->nrrd->axis[i].min) && 
-		airExists_d(read_handle_->nrrd->axis[i].max)))
-	    nrrdAxisInfoMinMaxSet(read_handle_->nrrd, i, nrrdCenterNode);
-	}
+	return read_file(fn);
+	
       }
     }
     return true;
@@ -225,6 +189,57 @@ NrrdReader::read_nrrd()
 }
 
 
+bool NrrdReader::read_file(string fn){
+
+  NrrdData *n = scinew NrrdData;
+  if (nrrdLoad(n->nrrd=nrrdNew(), strdup(fn.c_str()), 0)) {
+    char *err = biffGetDone(NRRD);
+    error("Read error on '" + fn + "': " + err);
+    free(err);
+    return true;
+  }
+  read_handle_ = n;
+  for (int i = 0; i < read_handle_->nrrd->dim; i++) {
+    if (!(airExists_d(read_handle_->nrrd->axis[i].min) && 
+	  airExists_d(read_handle_->nrrd->axis[i].max)))
+      nrrdAxisInfoMinMaxSet(read_handle_->nrrd, i, nrrdCenterNode);
+  }
+  return false;
+}
+
+bool NrrdReader::write_tmpfile(string filename, string* tmpfilename, string conv_command){
+  string::size_type loc = filename.find_last_of("/");
+  const string basefilename =
+    (loc==string::npos)?filename:filename.substr(loc+1);
+	
+  // Base filename with first extension removed.
+  loc = basefilename.find_last_of(".");
+  const string basenoext = basefilename.substr(0, loc);
+
+  // Filename with first extension removed.
+  loc = filename.find_last_of(".");
+  const string noext = filename.substr(0, loc);
+
+  // Temporary filename.
+  //tmpfilename = "/tmp/" + basenoext + "-" +
+  //  to_string((unsigned int)(getpid())) + ".nhdr";
+  tmpfilename->assign("/tmp/" + basenoext + "-" +
+		      to_string((unsigned int)(getpid())) + ".nhdr");
+  
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
+  string command =
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
+    conv_command;
+  while ((loc = command.find("%f")) != string::npos){
+    command.replace(loc, 2, filename);
+  }
+  while ((loc = command.find("%t")) != string::npos){
+    command.replace(loc, 2, *tmpfilename);
+  }
+  const int status = sci_system(command.c_str());
+  ASSERT(status == 0);
+  return true;
+}
 
 void
 NrrdReader::execute()
