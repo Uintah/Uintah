@@ -76,8 +76,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_flowInlets.push_back(FlowInlet(numMixingScalars, total_cellTypes));
     d_flowInlets[d_numInlets].problemSetup(inlet_db);
     d_cellTypes.push_back(total_cellTypes);
-    d_flowInlets[d_numInlets].density = 
-      d_props->computeInletProperties(d_flowInlets[d_numInlets].streamMixturefraction);
+    // compute density and other dependent properties
+    d_props->computeInletProperties(
+                      d_flowInlets[d_numInlets].streamMixturefraction,
+		      d_flowInlets[d_numInlets].calcStream);
     ++total_cellTypes;
     ++d_numInlets;
   }
@@ -95,8 +97,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_pressBoundary = true;
     d_pressureBdry = scinew PressureInlet(numMixingScalars, total_cellTypes);
     d_pressureBdry->problemSetup(press_db);
-    d_pressureBdry->density = 
-      d_props->computeInletProperties(d_pressureBdry->streamMixturefraction);
+    // compute density and other dependent properties
+    d_props->computeInletProperties(
+                		 d_pressureBdry->streamMixturefraction, 
+		        	 d_pressureBdry->calcStream);
     d_cellTypes.push_back(total_cellTypes);
     ++total_cellTypes;
   }
@@ -108,8 +112,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_outletBoundary = true;
     d_outletBC = scinew FlowOutlet(numMixingScalars, total_cellTypes);
     d_outletBC->problemSetup(outlet_db);
-    d_outletBC->density = 
-      d_props->computeInletProperties(d_outletBC->streamMixturefraction);
+    // compute density and other dependent properties
+    d_props->computeInletProperties(
+			       d_outletBC->streamMixturefraction, 
+			       d_outletBC->calcStream);
     d_cellTypes.push_back(total_cellTypes);
     ++total_cellTypes;
   }
@@ -1970,7 +1976,7 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
 		    domLoCT.get_pointer(), domHiCT.get_pointer(),
 		    idxLo.get_pointer(), idxHi.get_pointer(),
 		    scalar[ii].getPointer(), cellType.getPointer(),
-		    &(d_pressureBdry->streamMixturefraction[ii]),
+		    &(d_pressureBdry->streamMixturefraction.d_mixVars[ii]),
 		    &(d_pressureBdry->d_cellTypeID),
 		    &xminus, &xplus, &yminus, &yplus,
 		    &zminus, &zplus);
@@ -2104,14 +2110,14 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 	       idxLo.get_pointer(), idxHi.get_pointer(),
 	       cellType.getPointer(), 
 	       &area, &fi.d_cellTypeID, &fi.flowRate, 
-	       &fi.density, &xminus, &xplus, &yminus, &yplus,
+	       &fi.calcStream.d_density, &xminus, &xplus, &yminus, &yplus,
 	       &zminus, &zplus);
     FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(),
 		    domLoCT.get_pointer(), domHiCT.get_pointer(),
 		    idxLo.get_pointer(), idxHi.get_pointer(),
 		    density.getPointer(), 
 		    cellType.getPointer(),
-		    &fi.density, &fi.d_cellTypeID, &xminus, &xplus, &yminus, &yplus,
+		    &fi.calcStream.d_density, &fi.d_cellTypeID, &xminus, &xplus, &yminus, &yplus,
 		    &zminus, &zplus);
   }   
   if (d_pressureBdry) {
@@ -2120,13 +2126,14 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 		    domLoCT.get_pointer(), domHiCT.get_pointer(), 
 		    idxLo.get_pointer(), idxHi.get_pointer(),
 		    density.getPointer(), cellType.getPointer(),
-		    &d_pressureBdry->density, &d_pressureBdry->d_cellTypeID, 
+		    &d_pressureBdry->calcStream.d_density, 
+		    &d_pressureBdry->d_cellTypeID, 
 		    &xminus, &xplus, &yminus, &yplus,
 		    &zminus, &zplus);
   }    
   for (int indx = 0; indx < d_nofScalars; indx++) {
     for (int ii = 0; ii < d_numInlets; ii++) {
-      double scalarValue = d_flowInlets[ii].streamMixturefraction[indx];
+      double scalarValue = d_flowInlets[ii].streamMixturefraction.d_mixVars[indx];
       FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(), 
 		      domLoCT.get_pointer(), domHiCT.get_pointer(), 
 		      idxLo.get_pointer(), idxHi.get_pointer(),
@@ -2136,7 +2143,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 		      &zminus, &zplus);
     }
     if (d_pressBoundary) {
-      double scalarValue = d_pressureBdry->streamMixturefraction[indx];
+      double scalarValue = d_pressureBdry->streamMixturefraction.d_mixVars[indx];
       FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(),
 		      domLoCT.get_pointer(), domHiCT.get_pointer(),
 		      idxLo.get_pointer(), idxHi.get_pointer(),
@@ -2279,7 +2286,6 @@ BoundaryCondition::WallBdry::problemSetup(ProblemSpecP& params)
 BoundaryCondition::FlowInlet::FlowInlet(int /*numMix*/, int cellID):
   d_cellTypeID(cellID)
 {
-  density = 0.0;
   turb_lengthScale = 0.0;
   flowRate = 0.0;
   // add cellId to distinguish different inlets
@@ -2318,7 +2324,14 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
        mixfrac_db != 0; 
        mixfrac_db = mixfrac_db->findNextBlock("MixtureFraction")) {
     mixfrac_db->require("Mixfrac", mixfrac);
-    streamMixturefraction.push_back(mixfrac);
+    streamMixturefraction.d_mixVars.push_back(mixfrac);
+  }
+  double mixfracvar;
+  for (ProblemSpecP mixfracvar_db = params->findBlock("MixtureFractionVar");
+       mixfracvar_db != 0; 
+       mixfracvar_db = mixfracvar_db->findNextBlock("MixtureFractionVar")) {
+    mixfracvar_db->require("Mixfracvar", mixfracvar);
+    streamMixturefraction.d_mixVarVariance.push_back(mixfracvar);
   }
  
 }
@@ -2331,7 +2344,6 @@ BoundaryCondition::PressureInlet::PressureInlet(int /*numMix*/, int cellID):
   d_cellTypeID(cellID)
 {
   //  streamMixturefraction.setsize(numMix-1);
-  density = 0.0;
   turb_lengthScale = 0.0;
   refPressure = 0.0;
 }
@@ -2365,7 +2377,14 @@ BoundaryCondition::PressureInlet::problemSetup(ProblemSpecP& params)
        mixfrac_db != 0; 
        mixfrac_db = mixfrac_db->findNextBlock("MixtureFraction")) {
     mixfrac_db->require("Mixfrac", mixfrac);
-    streamMixturefraction.push_back(mixfrac);
+    streamMixturefraction.d_mixVars.push_back(mixfrac);
+  }
+  double mixfracvar;
+  for (ProblemSpecP mixfracvar_db = params->findBlock("MixtureFractionVar");
+       mixfracvar_db != 0; 
+       mixfracvar_db = mixfracvar_db->findNextBlock("MixtureFractionVar")) {
+    mixfracvar_db->require("Mixfracvar", mixfracvar);
+    streamMixturefraction.d_mixVarVariance.push_back(mixfracvar);
   }
 }
 
@@ -2376,7 +2395,6 @@ BoundaryCondition::FlowOutlet::FlowOutlet(int /*numMix*/, int cellID):
   d_cellTypeID(cellID)
 {
   //  streamMixturefraction.setsize(numMix-1);
-  density = 0.0;
   turb_lengthScale = 0.0;
 }
 
@@ -2408,7 +2426,14 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
        mixfrac_db != 0; 
        mixfrac_db = mixfrac_db->findNextBlock("MixtureFraction")) {
     mixfrac_db->require("Mixfrac", mixfrac);
-    streamMixturefraction.push_back(mixfrac);
+    streamMixturefraction.d_mixVars.push_back(mixfrac);
+  }
+  double mixfracvar;
+  for (ProblemSpecP mixfracvar_db = params->findBlock("MixtureFractionVar");
+       mixfracvar_db != 0; 
+       mixfracvar_db = mixfracvar_db->findNextBlock("MixtureFractionVar")) {
+    mixfracvar_db->require("Mixfracvar", mixfracvar);
+    streamMixturefraction.d_mixVarVariance.push_back(mixfracvar);
   }
 }
 

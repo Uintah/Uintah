@@ -22,7 +22,7 @@ endif
 
 ifneq ($(CC_DEPEND_REGEN),-MD)
 # The fortran code doesn't work under g++ yet
-SUBDIRS := $(SRCDIR)/fortran
+SUBDIRS := $(SRCDIR)/fortran $(SRCDIR)/Mixing
 
 include $(SRCTOP)/scripts/recurse.mk
 FLIB := -lftn
