@@ -143,26 +143,26 @@ private:
       PhysicalConstants* d_physicalConsts;
 
       // const VarLabel* (required)
-      const VarLabel* d_pressureLabel;
-      const VarLabel* d_uVelocityLabel;
-      const VarLabel* d_vVelocityLabel;
-      const VarLabel* d_wVelocityLabel;
-      const VarLabel* d_densityLabel;
-      const VarLabel* d_viscosityLabel;
+      const VarLabel* d_pressurePSLabel;
+      const VarLabel* d_uVelocityCPBCLabel;
+      const VarLabel* d_vVelocityCPBCLabel;
+      const VarLabel* d_wVelocityCPBCLabel;
+      const VarLabel* d_densitySIVBCLabel;
+      const VarLabel* d_viscosityCTSLabel;
 
       // const VarLabel* (computed)
-      const VarLabel* d_uVelConvCoefLabel;
-      const VarLabel* d_vVelConvCoefLabel;
-      const VarLabel* d_wVelConvCoefLabel;
-      const VarLabel* d_uVelCoefLabel;
-      const VarLabel* d_vVelCoefLabel;
-      const VarLabel* d_wVelCoefLabel;
-      const VarLabel* d_uVelLinSrcLabel;
-      const VarLabel* d_vVelLinSrcLabel;
-      const VarLabel* d_wVelLinSrcLabel;
-      const VarLabel* d_uVelNonLinSrcLabel;
-      const VarLabel* d_vVelNonLinSrcLabel;
-      const VarLabel* d_wVelNonLinSrcLabel;
+      const VarLabel* d_uVelConvCoefMBLMLabel;
+      const VarLabel* d_vVelConvCoefMBLMLabel;
+      const VarLabel* d_wVelConvCoefMBLMLabel;
+      const VarLabel* d_uVelCoefMBLMLabel;
+      const VarLabel* d_vVelCoefMBLMLabel;
+      const VarLabel* d_wVelCoefMBLMLabel;
+      const VarLabel* d_uVelLinSrcMBLMLabel;
+      const VarLabel* d_vVelLinSrcMBLMLabel;
+      const VarLabel* d_wVelLinSrcMBLMLabel;
+      const VarLabel* d_uVelNonLinSrcMBLMLabel;
+      const VarLabel* d_vVelNonLinSrcMBLMLabel;
+      const VarLabel* d_wVelNonLinSrcMBLMLabel;
 
       // DataWarehouse generation
       int d_generation;
@@ -176,6 +176,10 @@ private:
 
 //
 // $Log$
+// Revision 1.8  2000/06/18 01:20:15  bbanerje
+// Changed names of varlabels in source to reflect the sequence of tasks.
+// Result : Seg Violation in addTask in MomentumSolver
+//
 // Revision 1.7  2000/06/17 07:06:24  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

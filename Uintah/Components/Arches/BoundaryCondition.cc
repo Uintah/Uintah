@@ -59,17 +59,17 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
   // The input labels first
   d_cellTypeLabel = scinew VarLabel("CellType", 
 				    CCVariable<int>::getTypeDescription() );
-  d_pressureLabel = scinew VarLabel("pressure", 
+  d_pressureINLabel = scinew VarLabel("pressureIN", 
 				   CCVariable<double>::getTypeDescription() );
-  d_densityLabel = scinew VarLabel("density", 
+  d_densityINLabel = scinew VarLabel("densityIN", 
 				   CCVariable<double>::getTypeDescription() );
-  d_viscosityLabel = scinew VarLabel("viscosity", 
+  d_viscosityINLabel = scinew VarLabel("viscosityIN", 
 				   CCVariable<double>::getTypeDescription() );
-  d_uVelocityLabel = scinew VarLabel("uVelocity", 
+  d_uVelocityINLabel = scinew VarLabel("uVelocityIN", 
 				    CCVariable<double>::getTypeDescription() );
-  d_vVelocityLabel = scinew VarLabel("vVelocity", 
+  d_vVelocityINLabel = scinew VarLabel("vVelocityIN", 
 				    CCVariable<double>::getTypeDescription() );
-  d_wVelocityLabel = scinew VarLabel("wVelocity", 
+  d_wVelocityINLabel = scinew VarLabel("wVelocityIN", 
 				    CCVariable<double>::getTypeDescription() );
 
   // The internal labels for computations
@@ -83,34 +83,75 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
   d_wVelocitySPLabel = scinew VarLabel("wVelocitySP", 
 				    CCVariable<double>::getTypeDescription() );
 
+  // 2) The labels computed by setInletVelocityBC (SIVBC)
+  d_densitySIVBCLabel = scinew VarLabel("densitySIVBC", 
+				    CCVariable<double>::getTypeDescription() );
+  d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC", 
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC", 
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC", 
+				    CCVariable<double>::getTypeDescription() );
+
+  // 3) The labels used/computed by velocityBC (VBC)
+  d_uVelCoefPBLMLabel = scinew VarLabel("uVelCoefPBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelCoefPBLMLabel = scinew VarLabel("vVelCoefPBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelCoefPBLMLabel = scinew VarLabel("wVelCoefPBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_uVelLinSrcPBLMLabel = scinew VarLabel("uVelLinSrcPBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelLinSrcPBLMLabel = scinew VarLabel("vVelLinSrcPBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelLinSrcPBLMLabel = scinew VarLabel("wVelLinSrcPBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_uVelNonLinSrcPBLMLabel = scinew VarLabel("uVelNonLinSrcPBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelNonLinSrcPBLMLabel = scinew VarLabel("vVelNonLinSrcPBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelNonLinSrcPBLMLabel = scinew VarLabel("wVelNonLinSrcPBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_uVelCoefMBLMLabel = scinew VarLabel("uVelCoefMBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelCoefMBLMLabel = scinew VarLabel("vVelCoefMBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelCoefMBLMLabel = scinew VarLabel("wVelCoefMBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_uVelLinSrcMBLMLabel = scinew VarLabel("uVelLinSrcMBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelLinSrcMBLMLabel = scinew VarLabel("vVelLinSrcMBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelLinSrcMBLMLabel = scinew VarLabel("wVelLinSrcMBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_uVelNonLinSrcMBLMLabel = scinew VarLabel("uVelNonLinSrcMBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelNonLinSrcMBLMLabel = scinew VarLabel("vVelNonLinSrcMBLM", 
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelNonLinSrcMBLMLabel = scinew VarLabel("wVelNonLinSrcMBLM", 
+				    CCVariable<double>::getTypeDescription() );
+
+  // 4) The labels used/computed by pressureBC 
+  d_presCoefPBLMLabel = scinew VarLabel("presCoefPBLM", 
+				    CCVariable<double>::getTypeDescription() );
+
+  // 5) The labels used/computed by computePressureBC (CPBC)
+  d_pressurePSLabel = scinew VarLabel("pressurePS", 
+				    CCVariable<double>::getTypeDescription() );
+  d_uVelocityCPBCLabel = scinew VarLabel("uVelocityCPBC", 
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelocityCPBCLabel = scinew VarLabel("vVelocityCPBC", 
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC", 
+				    CCVariable<double>::getTypeDescription() );
+
+  // 6) The labels used/computed by scalarBC
+  d_scalarINLabel = scinew VarLabel("scalarIN",
+				    CCVariable<double>::getTypeDescription() );
+  d_scalCoefSBLMLabel = scinew VarLabel("scalCoefSBLM", 
+				    CCVariable<double>::getTypeDescription() );
 
 
-  d_uVelCoefLabel = scinew VarLabel("uVelCoef", 
-				    CCVariable<double>::getTypeDescription() );
-  d_vVelCoefLabel = scinew VarLabel("vVelCoef", 
-				    CCVariable<double>::getTypeDescription() );
-  d_wVelCoefLabel = scinew VarLabel("wVelCoef", 
-				    CCVariable<double>::getTypeDescription() );
-  //** WARNING ** Velocity is a FC Variable
-  d_uVelLinSrcLabel = scinew VarLabel("uVelLinSrc", 
-				    CCVariable<double>::getTypeDescription() );
-  //** WARNING ** Velocity is a FC Variable
-  d_vVelLinSrcLabel = scinew VarLabel("vVelLinSrc", 
-				    CCVariable<double>::getTypeDescription() );
-  //** WARNING ** Velocity is a FC Variable
-  d_wVelLinSrcLabel = scinew VarLabel("wVelLinSrc", 
-				    CCVariable<double>::getTypeDescription() );
-  //** WARNING ** Velocity is a FC Variable
-  d_uVelNonLinSrcLabel = scinew VarLabel("uVelNonLinSrc", 
-				    CCVariable<double>::getTypeDescription() );
-  //** WARNING ** Velocity is a FC Variable
-  d_vVelNonLinSrcLabel = scinew VarLabel("vVelNonLinSrc", 
-				    CCVariable<double>::getTypeDescription() );
-  //** WARNING ** Velocity is a FC Variable
-  d_wVelNonLinSrcLabel = scinew VarLabel("wVelNonLinSrc", 
-				    CCVariable<double>::getTypeDescription() );
-  d_presCoefLabel = scinew VarLabel("presCoef", 
-				    CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -398,6 +439,7 @@ BoundaryCondition::sched_velocityBC(const LevelP& level,
 				    DataWarehouseP& new_dw,
 				    int index)
 {
+#ifdef WONT_COMPILE_YET
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -430,24 +472,24 @@ BoundaryCondition::sched_velocityBC(const LevelP& level,
 		    numGhostCells);
 	tsk->requires(old_dw, d_uVelLinSrcLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-	tsk->requires(old_dw, d_uVelNonLinSrcLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
+	tsk->requires(old_dw, d_uVelNonLinSrcLabel, matlIndex, patch, 
+		      Ghost::None, numGhostCells);
 	break;
       case 2:
 	tsk->requires(old_dw, d_vVelCoefLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 	tsk->requires(old_dw, d_vVelLinSrcLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-	tsk->requires(old_dw, d_vVelNonLinSrcLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
+	tsk->requires(old_dw, d_vVelNonLinSrcLabel, matlIndex, patch, 
+		      Ghost::None, numGhostCells);
 	break;
       case 3:
 	tsk->requires(old_dw, d_wVelCoefLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 	tsk->requires(old_dw, d_wVelLinSrcLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-	tsk->requires(old_dw, d_wVelNonLinSrcLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
+	tsk->requires(old_dw, d_wVelNonLinSrcLabel, matlIndex, patch, 
+		      Ghost::None, numGhostCells);
 	break;
       default:
 	throw InvalidValue("Invalid component for velocity" +index);
@@ -476,6 +518,7 @@ BoundaryCondition::sched_velocityBC(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#endif
 }
 
 //****************************************************************************
@@ -487,6 +530,7 @@ BoundaryCondition::sched_pressureBC(const LevelP& level,
 				    DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
 {
+#ifdef WONT_COMPILE_YET
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -512,6 +556,7 @@ BoundaryCondition::sched_pressureBC(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#endif
 }
 
 //****************************************************************************
@@ -547,17 +592,18 @@ BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
       int matlIndex = 0;
 
       // This task requires old uVelocity, vVelocity and wVelocity
-      tsk->requires(old_dw, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_wVelocityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
       // This task computes new uVelocity, vVelocity and wVelocity
-      tsk->computes(new_dw, d_uVelocityLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelocityLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelocityLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_densitySIVBCLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_uVelocitySIVBCLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_vVelocitySIVBCLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_wVelocitySIVBCLabel, matlIndex, patch);
 
       sched->addTask(tsk);
     }
@@ -585,21 +631,21 @@ BoundaryCondition::sched_computePressureBC(const LevelP& level,
       int matlIndex = 0;
 
       // This task requires old density, pressure and velocity
-      tsk->requires(old_dw, d_densityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_pressureLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_pressurePSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_uVelocityLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_vVelocityLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_wVelocityLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
+      tsk->requires(old_dw, d_uVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(old_dw, d_vVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(old_dw, d_wVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
 
       // This task computes new uVelocity, vVelocity and wVelocity
-      tsk->computes(new_dw, d_uVelocityLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelocityLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelocityLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_uVelocityCPBCLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_vVelocityCPBCLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_wVelocityCPBCLabel, matlIndex, patch);
 
       sched->addTask(tsk);
     }
@@ -628,13 +674,13 @@ BoundaryCondition::sched_setProfile(const LevelP& level,
       int matlIndex = 0;
 
       // This task requires old density, uVelocity, vVelocity and wVelocity
-      tsk->requires(old_dw, d_densityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_densityINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_uVelocityINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_vVelocityINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_wVelocityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_wVelocityINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
       // This task computes new density, uVelocity, vVelocity and wVelocity
@@ -656,7 +702,7 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
 			      const Patch* patch,
 			      DataWarehouseP& old_dw,
 			      DataWarehouseP& new_dw,
-			      int index) 
+			      int index, int eqnType) 
 {
   CCVariable<int> cellType;
   CCVariable<double> density;
@@ -671,15 +717,29 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
   // get cellType and velocity
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(density, d_densityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
-  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
-  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
-
+  switch(eqnType) {
+  case Discretization::PRESSURE:
+    old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+		nofGhostCells);
+    old_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+		nofGhostCells);
+    old_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+		nofGhostCells);
+    break;
+  case Discretization::MOMENTUM:
+    old_dw->get(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+		nofGhostCells);
+    old_dw->get(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+		nofGhostCells);
+    old_dw->get(wVelocity, d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+		nofGhostCells);
+    break;
+  default:
+    throw InvalidValue("Equation type can only be PRESSURE or MOMENTUM");
+  }
+  
 #ifdef WONT_COMPILE_YET
   // using chain of responsibility pattern for getting cell information
   DataWarehouseP top_dw = new_dw->getTop();
@@ -699,12 +759,6 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
   IntVector indexLow = patch->getCellLowIndex();
   IntVector indexHigh = patch->getCellHighIndex();
 
-  // Put the calculated data into the new DW
-  new_dw->put(density, d_densityLabel, matlIndex, patch);
-  new_dw->put(uVelocity, d_uVelocityLabel, matlIndex, patch);
-  new_dw->put(vVelocity, d_vVelocityLabel, matlIndex, patch);
-  new_dw->put(wVelocity, d_wVelocityLabel, matlIndex, patch);
-
 #ifdef WONT_COMPILE_YET
   //get Molecular Viscosity of the fluid
   SoleVariable<double> VISCOS_CONST;
@@ -719,23 +773,34 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
   case 1:
     uVelocityBC(new_dw, patch, indexLow, indexHigh, &cellType, &uVelocity, 
 		&vVelocity, &wVelocity, &density, &VISCOS,
-		cellinfo);
+		cellinfo, eqnType);
     break;
   case 2:
     vVelocityBC(new_dw, patch, indexLow, indexHigh, &cellType, &uVelocity, 
 		&vVelocity, &wVelocity, &density, &VISCOS,
-		cellinfo);
+		cellinfo, eqnType);
     break;
   case 3:
     wVelocityBC(new_dw, patch, indexLow, indexHigh, &cellType, &uVelocity, 
 		&vVelocity, &wVelocity, &density, &VISCOS,
-		cellinfo);
+		cellinfo, eqnType);
     break;
   default:
     cerr << "Invalid Index value" << endl;
     break;
   }
-  d_turbModel->calcVelocityWallBC(pc, patch, old_dw, new_dw, index);
+  // Calculate the velocity wall BC
+  // For Discretization::PRESSURE
+  //  inputs : densitySIVBC, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
+  //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
+  //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM, 
+  //           [u,v,w]VelNonLinSrcPBLM
+  // For Discretization::MOMENTUM
+  //  inputs : densitySIVBC, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefMBLM
+  //           [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
+  //  outputs: [u,v,w]VelCoefMBLM, [u,v,w]VelLinSrcMBLM, 
+  //           [u,v,w]VelNonLinSrcMBLM
+  d_turbModel->calcVelocityWallBC(pc, patch, old_dw, new_dw, index, eqnType);
 }
 
 //****************************************************************************
@@ -752,7 +817,8 @@ BoundaryCondition::uVelocityBC(DataWarehouseP& new_dw,
 			       CCVariable<double>* wVelocity, 
 			       CCVariable<double>* density,
 			       const double* VISCOS,
-			       CellInformation*)
+			       CellInformation*,
+			       int eqnType)
 {
   int matlIndex = 0;
   int numGhostCells = 0;
@@ -760,48 +826,74 @@ BoundaryCondition::uVelocityBC(DataWarehouseP& new_dw,
 
   // ** WARNING ** velocity is a FCVariable
   StencilMatrix<CCVariable<double> > velocityCoeff;
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->get(velocityCoeff[ii], d_uVelCoefLabel, ii, patch, Ghost::None,
+  CCVariable<double> linearSrc; // SP term in Arches 
+  CCVariable<double> nonlinearSrc; // SU term in Arches 
+
+  switch(eqnType) {
+  case Discretization::PRESSURE:
+    for (int ii = 0; ii < nofStencils; ii++) {
+      new_dw->get(velocityCoeff[ii], d_uVelCoefPBLMLabel, ii, patch, Ghost::None,
+		  numGhostCells);
+    }
+    new_dw->get(linearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
+    new_dw->get(nonlinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
+    break;
+  case Discretization::MOMENTUM:
+    for (int ii = 0; ii < nofStencils; ii++) {
+      new_dw->get(velocityCoeff[ii], d_uVelCoefMBLMLabel, ii, patch, Ghost::None,
+		  numGhostCells);
+    }
+    new_dw->get(linearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    new_dw->get(nonlinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
+    break;
+  default:
+    break;
   }
-
-  // SP term in Arches (** WARNING ** should be FCvariable)
-  CCVariable<double> linearSrc;
-  new_dw->get(linearSrc, d_uVelLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-
-  // SU term in Arches (** WARNING ** should be FCvariable)
-  CCVariable<double> nonlinearSrc;
-  new_dw->get(nonlinearSrc, d_uVelNonLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
 
   int ioff = 1;
   int joff = 0;
   int koff = 0;
 
 #ifdef WONT_COMPILE_YET
-    // 3-d array for volume - fortran uses it for temporary storage
-    Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
-    // computes remianing diffusion term and also computes source due to gravity
-    FORT_BCUVEL(velocityCoeff, linearSrc, nonlinearSrc, velocity,  
-		density, VISCOS, ioff, joff, koff, lowIndex, highIndex,
-		cellType,
-		cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
-		cellinfo->cnn, cellinfo->csn, cellinfo->css,
-		cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-		cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-		cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
-		cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
-		cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
-		cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
-		cellinfo->tfac, cellinfo->bfac, volume);
+  // 3-d array for volume - fortran uses it for temporary storage
+  Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
+  // computes remianing diffusion term and also computes source due to gravity
+  FORT_BCUVEL(velocityCoeff, linearSrc, nonlinearSrc, velocity,  
+	      density, VISCOS, ioff, joff, koff, lowIndex, highIndex,
+	      cellType,
+	      cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
+	      cellinfo->cnn, cellinfo->csn, cellinfo->css,
+	      cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
+	      cellinfo->sewu, cellinfo->sns, cellinfo->stb,
+	      cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
+	      cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
+	      cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
+	      cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
+	      cellinfo->tfac, cellinfo->bfac, volume);
 #endif
 
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(velocityCoeff[ii], d_uVelCoefLabel, ii, patch);
+  switch(eqnType) {
+  case Discretization::PRESSURE:
+    for (int ii = 0; ii < nofStencils; ii++) {
+      new_dw->put(velocityCoeff[ii], d_uVelCoefPBLMLabel, ii, patch);
+    }
+    new_dw->put(linearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch);
+    new_dw->put(nonlinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch);
+    break;
+  case Discretization::MOMENTUM:
+    for (int ii = 0; ii < nofStencils; ii++) {
+      new_dw->put(velocityCoeff[ii], d_uVelCoefMBLMLabel, ii, patch);
+    }
+    new_dw->put(linearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch);
+    new_dw->put(nonlinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch);
+    break;
+  default:
+    break;
   }
-  new_dw->put(linearSrc, d_uVelLinSrcLabel, matlIndex, patch);
-  new_dw->put(nonlinearSrc, d_uVelNonLinSrcLabel, matlIndex, patch);
 }
 
 //****************************************************************************
@@ -818,7 +910,8 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
 			       CCVariable<double>* wVelocity, 
 			       CCVariable<double>* density,
 			       const double* VISCOS,
-			       CellInformation*)
+			       CellInformation*,
+			       int eqnType)
 {
   int matlIndex = 0;
   int numGhostCells = 0;
@@ -826,20 +919,33 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
 
   // ** WARNING ** velocity is a FCVariable
   StencilMatrix<CCVariable<double> > velocityCoeff;
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->get(velocityCoeff[ii], d_vVelCoefLabel, ii, patch, Ghost::None,
+  CCVariable<double> linearSrc; // SP term in Arches 
+  CCVariable<double> nonlinearSrc; // SU term in Arches 
+
+  switch(eqnType) {
+  case Discretization::PRESSURE:
+    for (int ii = 0; ii < nofStencils; ii++) {
+      new_dw->get(velocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch, Ghost::None,
+		  numGhostCells);
+    }
+    new_dw->get(linearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
+    new_dw->get(nonlinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
+    break;
+  case Discretization::MOMENTUM:
+    for (int ii = 0; ii < nofStencils; ii++) {
+      new_dw->get(velocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch, Ghost::None,
+		  numGhostCells);
+    }
+    new_dw->get(linearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    new_dw->get(nonlinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
+    break;
+  default:
+    break;
   }
-
-  // SP term in Arches (** WARNING ** should be FCvariable)
-  CCVariable<double> linearSrc;
-  new_dw->get(linearSrc, d_vVelLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-
-  // SU term in Arches (** WARNING ** should be FCvariable)
-  CCVariable<double> nonlinearSrc;
-  new_dw->get(nonlinearSrc, d_vVelNonLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
 
   int ioff = 1;
   int joff = 0;
@@ -863,11 +969,24 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
 		cellinfo->tfac, cellinfo->bfac, volume);
 #endif
 
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(velocityCoeff[ii], d_vVelCoefLabel, ii, patch);
+  switch(eqnType) {
+  case Discretization::PRESSURE:
+    for (int ii = 0; ii < nofStencils; ii++) {
+      new_dw->put(velocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch);
+    }
+    new_dw->put(linearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch);
+    new_dw->put(nonlinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
+    break;
+  case Discretization::MOMENTUM:
+    for (int ii = 0; ii < nofStencils; ii++) {
+      new_dw->put(velocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch);
+    }
+    new_dw->put(linearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch);
+    new_dw->put(nonlinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch);
+    break;
+  default:
+    break;
   }
-  new_dw->put(linearSrc, d_vVelLinSrcLabel, matlIndex, patch);
-  new_dw->put(nonlinearSrc, d_vVelNonLinSrcLabel, matlIndex, patch);
 }
 
 //****************************************************************************
@@ -884,28 +1003,41 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
 			       CCVariable<double>* wVelocity, 
 			       CCVariable<double>* density,
 			       const double* VISCOS,
-			       CellInformation*)
+			       CellInformation*,
+			       int eqnType)
 {
   int matlIndex = 0;
   int numGhostCells = 0;
   int nofStencils = 7;
 
-  // ** WARNING ** velocity is a FCVariable
   StencilMatrix<CCVariable<double> > velocityCoeff;
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->get(velocityCoeff[ii], d_wVelCoefLabel, ii, patch, Ghost::None,
+  CCVariable<double> linearSrc; // SP term in Arches 
+  CCVariable<double> nonlinearSrc; // SU term in Arches 
+
+  switch(eqnType) {
+  case Discretization::PRESSURE:
+    for (int ii = 0; ii < nofStencils; ii++) {
+      new_dw->get(velocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch, Ghost::None,
+		  numGhostCells);
+    }
+    new_dw->get(linearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
+    new_dw->get(nonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
+    break;
+  case Discretization::MOMENTUM:
+    for (int ii = 0; ii < nofStencils; ii++) {
+      new_dw->get(velocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch, Ghost::None,
+		  numGhostCells);
+    }
+    new_dw->get(linearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    new_dw->get(nonlinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
+    break;
+  default:
+    break;
   }
-
-  // SP term in Arches (** WARNING ** should be FCvariable)
-  CCVariable<double> linearSrc;
-  new_dw->get(linearSrc, d_wVelLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-
-  // SU term in Arches (** WARNING ** should be FCvariable)
-  CCVariable<double> nonlinearSrc;
-  new_dw->get(nonlinearSrc, d_wVelNonLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
 
   int ioff = 1;
   int joff = 0;
@@ -929,11 +1061,24 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
 		cellinfo->tfac, cellinfo->bfac, volume);
 #endif
 
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(velocityCoeff[ii], d_wVelCoefLabel, ii, patch);
+  switch(eqnType) {
+  case Discretization::PRESSURE:
+    for (int ii = 0; ii < nofStencils; ii++) {
+      new_dw->put(velocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch);
+    }
+    new_dw->put(linearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch);
+    new_dw->put(nonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
+    break;
+  case Discretization::MOMENTUM:
+    for (int ii = 0; ii < nofStencils; ii++) {
+      new_dw->put(velocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch);
+    }
+    new_dw->put(linearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch);
+    new_dw->put(nonlinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, patch);
+    break;
+  default:
+    break;
   }
-  new_dw->put(linearSrc, d_wVelLinSrcLabel, matlIndex, patch);
-  new_dw->put(nonlinearSrc, d_wVelNonLinSrcLabel, matlIndex, patch);
 }
 
 //****************************************************************************
@@ -956,10 +1101,10 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
   // get cellType, pressure and pressure stencil coeffs
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(pressure, d_pressureLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->get(presCoef[ii], d_presCoefLabel, ii, patch, Ghost::None,
+    new_dw->get(presCoef[ii], d_presCoefPBLMLabel, ii, patch, Ghost::None,
 		nofGhostCells);
   }
 
@@ -986,7 +1131,7 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
 
   // Put the calculated data into the new DW
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(presCoef[ii], d_presCoefLabel, ii, patch);
+    new_dw->put(presCoef[ii], d_presCoefPBLMLabel, ii, patch);
   }
 }
 
@@ -1000,6 +1145,55 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
 			    DataWarehouseP& new_dw,
 			    int index)
 {
+  CCVariable<int> cellType;
+  CCVariable<double> scalar;
+  StencilMatrix<CCVariable<double> > scalarCoef;
+
+  int matlIndex = 0;
+  int nofGhostCells = 0;
+  int nofStencils = 7;
+
+  // get cellType, pressure and pressure stencil coeffs
+  old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  old_dw->get(scalar, d_scalarINLabel, index, patch, Ghost::None,
+	      nofGhostCells);
+  // ** WARNING ** have to figure out a way to read the stencils
+  //               currently overwriting scalarCoef[ii] each time
+  //               with the same data
+  for (int ii = 0; ii < nofStencils; ii++) {
+    new_dw->get(scalarCoef[ii], d_scalCoefSBLMLabel, index, patch, Ghost::None,
+		nofGhostCells);
+  }
+
+  // Get the low and high index for the patch
+  IntVector lowIndex = patch->getCellLowIndex();
+  IntVector highIndex = patch->getCellHighIndex();
+
+#ifdef WONT_COMPILE_YET
+  // using chain of responsibility pattern for getting cell information
+  DataWarehouseP top_dw = new_dw->getTop();
+  PerPatch<CellInformation*> cellinfop;
+  if(top_dw->exists("cellinfo", patch)){
+    top_dw->get(cellinfop, "cellinfo", patch);
+  } else {
+    cellinfop.setData(scinew CellInformation(patch));
+    top_dw->put(cellinfop, "cellinfo", patch);
+  } 
+  CellInformation* cellinfo = cellinfop;
+
+  //fortran call
+  FORT_SCALARBC(scalarCoeff, scalar, 
+	       lowIndex, highIndex, cellType);
+#endif
+
+  // Put the calculated data into the new DW
+  // ** WARNING ** have to figure out a way to read the stencils
+  //               currently overwriting scalarCoef[ii] each time
+  //               with the same data
+  for (int ii = 0; ii < nofStencils; ii++) {
+    new_dw->put(scalarCoef[ii], d_scalCoefSBLMLabel, index, patch);
+  }
 }
 
 
@@ -1025,11 +1219,11 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* pc,
   // get cellType and velocity
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(uVelocity, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(vVelocity, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(wVelocity, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
   // Get the low and high index for the patch
@@ -1054,10 +1248,10 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* pc,
 #endif
 
     // Put the calculated data into the new DW
-    new_dw->put(density, d_densityLabel, matlIndex, patch);
-    new_dw->put(uVelocity, d_uVelocityLabel, matlIndex, patch);
-    new_dw->put(vVelocity, d_vVelocityLabel, matlIndex, patch);
-    new_dw->put(wVelocity, d_wVelocityLabel, matlIndex, patch);
+    new_dw->put(density, d_densitySIVBCLabel, matlIndex, patch);
+    new_dw->put(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch);
+    new_dw->put(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch);
+    new_dw->put(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch);
   }
 }
 
@@ -1071,6 +1265,7 @@ BoundaryCondition::calculatePressBC(const ProcessorGroup* pc,
 				    DataWarehouseP& new_dw) 
 {
   CCVariable<int> cellType;
+  CCVariable<double> density;
   CCVariable<double> pressure;
   // ** WARNING** velocity is a FC variable
   CCVariable<double> uVelocity;
@@ -1083,13 +1278,15 @@ BoundaryCondition::calculatePressBC(const ProcessorGroup* pc,
   // get cellType, pressure and velocity
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(pressure, d_pressureLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(pressure, d_pressurePSLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  old_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
   // Get the low and high index for the patch
@@ -1108,9 +1305,9 @@ BoundaryCondition::calculatePressBC(const ProcessorGroup* pc,
 #endif
 
   // Put the calculated data into the new DW
-  new_dw->put(uVelocity, d_uVelocityLabel, matlIndex, patch);
-  new_dw->put(vVelocity, d_vVelocityLabel, matlIndex, patch);
-  new_dw->put(wVelocity, d_wVelocityLabel, matlIndex, patch);
+  new_dw->put(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch);
+  new_dw->put(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch);
+  new_dw->put(wVelocity, d_wVelocityCPBCLabel, matlIndex, patch);
 } 
 
 //****************************************************************************
@@ -1135,13 +1332,13 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
   // get cellType, density and velocity
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(density, d_densityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_densityINLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(uVelocity, d_uVelocityINLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(vVelocity, d_vVelocityINLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(wVelocity, d_wVelocityINLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
   // Get the low and high index for the patch
@@ -1339,6 +1536,10 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.23  2000/06/18 01:20:14  bbanerje
+// Changed names of varlabels in source to reflect the sequence of tasks.
+// Result : Seg Violation in addTask in MomentumSolver
+//
 // Revision 1.22  2000/06/17 07:06:22  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

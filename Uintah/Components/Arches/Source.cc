@@ -4,6 +4,7 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/Source.h>
+#include <Uintah/Components/Arches/Discretization.h>
 #include <Uintah/Components/Arches/StencilMatrix.h>
 #include <Uintah/Components/Arches/TurbulenceModel.h>
 #include <Uintah/Components/Arches/PhysicalConstants.h>
@@ -27,52 +28,79 @@ using SCICore::Geometry::Vector;
 //****************************************************************************
 Source::Source()
 {
-  d_densityLabel = scinew VarLabel("density",
-				    CCVariable<double>::getTypeDescription() );
-  d_viscosityLabel = scinew VarLabel("viscosity",
-				    CCVariable<double>::getTypeDescription() );
-  d_pressureLabel = scinew VarLabel("pressure",
-				    CCVariable<double>::getTypeDescription() );
-  d_presLinearSrcLabel = scinew VarLabel("pressureLinearSrc",
-				    CCVariable<double>::getTypeDescription() );
-  d_presNonlinearSrcLabel = scinew VarLabel("pressureNonlinearSrc",
-				    CCVariable<double>::getTypeDescription() );
   // ** WARNING ** velocity is a FCVariable
-  d_uVelocityLabel = scinew VarLabel("uVelocity",
+  // Change all velocity related variables and then remove this comment
+
+  // inputs (calcVelocitySource)
+  d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
 				    CCVariable<double>::getTypeDescription() );
-  d_vVelocityLabel = scinew VarLabel("vVelocity",
+  d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
 				    CCVariable<double>::getTypeDescription() );
-  d_wVelocityLabel = scinew VarLabel("wVelocity",
+  d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC",
 				    CCVariable<double>::getTypeDescription() );
-  // ** WARNING ** velLinearSrc is a FCVariable
-  d_velLinearSrcLabel = scinew VarLabel("velLinearSrc",
+  d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
 				    CCVariable<double>::getTypeDescription() );
-  // ** WARNING ** velNonlinearSrc is a FCVariable
-  d_velNonlinearSrcLabel = scinew VarLabel("velNonlinearSrc",
+  d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
 				    CCVariable<double>::getTypeDescription() );
-  // ** WARNING ** uVelCoeffLabel is a FCVariable
-  d_uVelCoeffLabel = scinew VarLabel("uVelocityCoeff",
-				     CCVariable<double>::getTypeDescription() );
-  // ** WARNING ** uNonlinearSrc is a FCVariable
-  d_uNonlinearSrcLabel = scinew VarLabel("uNonlinearSrc",
+  d_uVelocityCPBCLabel = scinew VarLabel("uVelocityCPBC",
 				    CCVariable<double>::getTypeDescription() );
-  // ** WARNING ** vVelCoeffLabel is a FCVariable
-  d_vVelCoeffLabel = scinew VarLabel("vVelocityCoeff",
-				     CCVariable<double>::getTypeDescription() );
-  // ** WARNING ** vNonlinearSrc is a FCVariable
-  d_vNonlinearSrcLabel = scinew VarLabel("vNonlinearSrc",
+  d_vVelocityCPBCLabel = scinew VarLabel("vVelocityCPBC",
 				    CCVariable<double>::getTypeDescription() );
-  // ** WARNING ** wVelCoeffLabel is a FCVariable
-  d_wVelCoeffLabel = scinew VarLabel("wVelocityCoeff",
-				     CCVariable<double>::getTypeDescription() );
-  // ** WARNING ** wNonlinearSrc is a FCVariable
-  d_wNonlinearSrcLabel = scinew VarLabel("wNonlinearSrc",
+  d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC",
 				    CCVariable<double>::getTypeDescription() );
-  d_scalarLabel = scinew VarLabel("scalar",
+
+  // outputs (calcVelocitySource)
+  d_uVelLinSrcPBLMLabel = scinew VarLabel("uVelLinSrcPBLM",
+				    CCVariable<double>::getTypeDescription() );
+  d_uVelNonLinSrcPBLMLabel = scinew VarLabel("uVelNonLinSrcPBLM",
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelLinSrcPBLMLabel = scinew VarLabel("vVelLinSrcPBLM",
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelNonLinSrcPBLMLabel = scinew VarLabel("vVelNonLinSrcPBLM",
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelLinSrcPBLMLabel = scinew VarLabel("wVelLinSrcPBLM",
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelNonLinSrcPBLMLabel = scinew VarLabel("wVelNonLinSrcPBLM",
+				    CCVariable<double>::getTypeDescription() );
+  d_uVelLinSrcMBLMLabel = scinew VarLabel("uVelLinSrcMBLM",
+				    CCVariable<double>::getTypeDescription() );
+  d_uVelNonLinSrcMBLMLabel = scinew VarLabel("uVelNonLinSrcMBLM",
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelLinSrcMBLMLabel = scinew VarLabel("vVelLinSrcMBLM",
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelNonLinSrcMBLMLabel = scinew VarLabel("vVelNonLinSrcMBLM",
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelLinSrcMBLMLabel = scinew VarLabel("wVelLinSrcMBLM",
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelNonLinSrcMBLMLabel = scinew VarLabel("wVelNonLinSrcMBLM",
+				    CCVariable<double>::getTypeDescription() );
+
+  // inputs/outputs for calculatePressureSource()
+  d_uVelCoefPBLMLabel = scinew VarLabel("uVelCoefPBLM",
 				  CCVariable<double>::getTypeDescription() );
-  d_scalarLinearSrcLabel = scinew VarLabel("scalarLinearSrc",
+  d_vVelCoefPBLMLabel = scinew VarLabel("vVelCoefPBLM",
+				  CCVariable<double>::getTypeDescription() );
+  d_wVelCoefPBLMLabel = scinew VarLabel("wVelCoefPBLM",
+				  CCVariable<double>::getTypeDescription() );
+  d_pressureINLabel = scinew VarLabel("pressureIN",
+				  CCVariable<double>::getTypeDescription() );
+  d_presLinSrcPBLMLabel = scinew VarLabel("presLinSrcPBLM",
+				  CCVariable<double>::getTypeDescription() );
+  d_presNonLinSrcPBLMLabel = scinew VarLabel("presNonLinSrcPBLM",
+				  CCVariable<double>::getTypeDescription() );
+
+  // inputs/outputs for calculateScalarSource()
+  d_uVelocityMSLabel = scinew VarLabel("uVelocityMS",
+				  CCVariable<double>::getTypeDescription() );
+  d_vVelocityMSLabel = scinew VarLabel("vVelocityMS",
+				  CCVariable<double>::getTypeDescription() );
+  d_wVelocityMSLabel = scinew VarLabel("wVelocityMS",
+				  CCVariable<double>::getTypeDescription() );
+  d_scalarINLabel = scinew VarLabel("scalarIN",
+				  CCVariable<double>::getTypeDescription() );
+  d_scalLinSrcSBLMLabel = scinew VarLabel("scalLinSrcSBLM",
 				CCVariable<double>::getTypeDescription() );
-  d_scalarNonlinearSrcLabel = scinew VarLabel("scalarNonlinearSrc",
+  d_scalNonLinSrcSBLMLabel = scinew VarLabel("scalNonLinSrcSBLM",
 				CCVariable<double>::getTypeDescription() );
 }
 
@@ -101,28 +129,51 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
 				DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw,
 				double delta_t,
-				int index) 
+				int index,
+				int eqnType) 
 {
   int numGhostCells = 0;
   int matlIndex = 0;
 
   // ** WARNING ** velocity is a FCVariable
+  // Change all velocity related variables and then remove this comment
   CCVariable<double> uVelocity;
-  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
   CCVariable<double> vVelocity;
-  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
   CCVariable<double> wVelocity;
-  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-
   CCVariable<double> density;
-  old_dw->get(density, d_densityLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-
   CCVariable<double> viscosity;
-  old_dw->get(viscosity, d_viscosityLabel, matlIndex, patch, Ghost::None,
+
+  CCVariable<double> uVelLinearSrc; //SP term in Arches 
+  CCVariable<double> uVelNonlinearSrc; // SU in Arches 
+  CCVariable<double> vVelLinearSrc; //SP term in Arches 
+  CCVariable<double> vVelNonlinearSrc; // SU in Arches 
+  CCVariable<double> wVelLinearSrc; //SP term in Arches 
+  CCVariable<double> wVelNonlinearSrc; // SU in Arches 
+
+  // get data
+  switch(eqnType) {
+  case Discretization::PRESSURE:
+    old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    old_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    old_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    break;
+  case Discretization::MOMENTUM:
+    old_dw->get(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    old_dw->get(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    old_dw->get(wVelocity, d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    break;
+  default:
+    throw InvalidValue("Equation type can be only PRESSURE or MOMENTUM");
+  }
+  old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
 #ifdef WONT_COMPILE_YET
@@ -144,13 +195,33 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   //get index component of gravity
   double gravity = d_physicalConsts->getGravity(index);
 
-  //SP term in Arches (** WARNING ** uLinearSrc is a FCVariable)
-  CCVariable<double> uLinearSrc;
-  new_dw->allocate(uLinearSrc, d_velLinearSrcLabel, matlIndex, patch);
-
-  // SU in Arches (** WARNING ** uNonLinearSrc is a FCVariable)
-  CCVariable<double> uNonlinearSrc;
-  new_dw->allocate(uNonlinearSrc, d_velNonlinearSrcLabel, matlIndex, patch);
+  // allocate
+  switch(eqnType) {
+  case Discretization::PRESSURE:
+    new_dw->allocate(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch);
+    new_dw->allocate(uVelNonlinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, 
+		     patch);
+    new_dw->allocate(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch);
+    new_dw->allocate(vVelNonlinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, 
+		     patch);
+    new_dw->allocate(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch);
+    new_dw->allocate(wVelNonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, 
+		     patch);
+    break;
+  case Discretization::MOMENTUM:
+    new_dw->allocate(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch);
+    new_dw->allocate(uVelNonlinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, 
+		     patch);
+    new_dw->allocate(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch);
+    new_dw->allocate(vVelNonlinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, 
+		     patch);
+    new_dw->allocate(wVelLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch);
+    new_dw->allocate(wVelNonlinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, 
+		     patch);
+    break;
+  default:
+    break;
+  }
 
 #ifdef WONT_COMPILE_YET
   int ioff = 1;
@@ -160,7 +231,7 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
-  FORT_VELSOURCE(uLinearSrc, uNonlinearSrc, velocity, viscosity, 
+  FORT_VELSOURCE(velLinearSrc, velNonlinearSrc, velocity, viscosity, 
 		 density, gravity, 
 		 ioff, joff, koff, lowIndex, highIndex,
 		 cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
@@ -174,8 +245,26 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
 		 cellinfo->tfac, cellinfo->bfac, volume);
 #endif
 
-  new_dw->put(uLinearSrc, d_velLinearSrcLabel, matlIndex, patch);
-  new_dw->put(uNonlinearSrc, d_velNonlinearSrcLabel, matlIndex, patch);
+  switch(eqnType) {
+  case Discretization::PRESSURE:
+    new_dw->put(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch);
+    new_dw->put(uVelNonlinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch);
+    new_dw->put(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch);
+    new_dw->put(vVelNonlinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
+    new_dw->put(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch);
+    new_dw->put(wVelNonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
+    break;
+  case Discretization::MOMENTUM:
+    new_dw->put(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch);
+    new_dw->put(uVelNonlinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch);
+    new_dw->put(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch);
+    new_dw->put(vVelNonlinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch);
+    new_dw->put(wVelLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch);
+    new_dw->put(wVelNonlinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, patch);
+    break;
+  default:
+    break;
+  }
   //new_dw->put(uLinearSrc, "velLinearSource", patch, index, 0);
   //new_dw->put(uNonlinearSrc, "velNonlinearSource", patch, index, 0);
 
@@ -183,6 +272,8 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   // it a data memeber of Source class
   // it computes the source in momentum eqn due to the turbulence
   // model used.
+  // inputs : 
+  // outputs : 
   d_turbModel->calcVelocitySource(pc, patch, old_dw, new_dw, index);
 }
 
@@ -201,63 +292,69 @@ Source::calculatePressureSource(const ProcessorGroup*,
   int nofStencils = 7;
 
   CCVariable<double> pressure;
-  old_dw->get(pressure, d_pressureLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   //old_dw->get(pressure, "pressure", patch, 1);
 
   CCVariable<double> uVelocity;
-  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> vVelocity;
+  old_dw->get(uVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> wVelocity;
+  old_dw->get(uVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   //FCVariable<Vector> velocity;
   //old_dw->get(velocity, "velocity", patch, 1);
 
   CCVariable<double> density;
-  old_dw->get(density, d_densityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   //old_dw->get(density, "density", patch, 1);
 
   StencilMatrix<CCVariable<double> > uVelCoeff;
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->get(uVelCoeff[ii], d_uVelCoeffLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
+    new_dw->get(uVelCoeff[ii], d_uVelCoefPBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
   }
   //int index = 1;
   //FCVariable<Vector> uVelCoeff;
   //new_dw->get(uVelCoeff,"uVelocityCoeff",patch, index, 0);
 
   CCVariable<double> uNonlinearSrc;
-  new_dw->get(uNonlinearSrc, d_uNonlinearSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
+  new_dw->get(uNonlinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch, 
+	      Ghost::None, numGhostCells);
   //FCVariable<double> uNonlinearSrc;
   //new_dw->get(uNonlinearSrc,"uNonlinearSource",patch, index, 0);
   //++index;
 
   StencilMatrix<CCVariable<double> > vVelCoeff;
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->get(vVelCoeff[ii], d_vVelCoeffLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
+    new_dw->get(vVelCoeff[ii], d_vVelCoefPBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
   }
   //FCVariable<Vector> vVelCoeff;
   //new_dw->get(vVelCoeff,"vVelocityCoeff",patch,index,  0);
 
   CCVariable<double> vNonlinearSrc;
-  new_dw->get(vNonlinearSrc, d_vNonlinearSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
+  new_dw->get(vNonlinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch, 
+	      Ghost::None, numGhostCells);
   //FCVariable<double> vNonlinearSrc;
   //new_dw->get(vNonlinearSrc,"vNonlinearSource",patch, index, 0);
   //++index;
 
   StencilMatrix<CCVariable<double> > wVelCoeff;
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->get(wVelCoeff[ii], d_wVelCoeffLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
+    new_dw->get(wVelCoeff[ii], d_wVelCoefPBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
   }
   //FCVariable<Vector> wVelCoeff;
   //new_dw->get(wVelCoeff,"wVelocityCoeff",patch, index, 0);
 
   CCVariable<double> wNonlinearSrc;
-  new_dw->get(wNonlinearSrc, d_wNonlinearSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
+  new_dw->get(wNonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch, 
+	      Ghost::None, numGhostCells);
   //FCVariable<Vector> wNonlinearSrc;
   //new_dw->get(wNonlinearSrc,"wNonlinearSource",patch, index, 0);
   
@@ -280,11 +377,12 @@ Source::calculatePressureSource(const ProcessorGroup*,
 
   // Create vars for new_dw
   CCVariable<double> pressLinearSrc;
-  new_dw->allocate(pressLinearSrc, d_presLinearSrcLabel, matlIndex, patch);
+  new_dw->allocate(pressLinearSrc, d_presLinSrcPBLMLabel, matlIndex, patch);
   //new_dw->allocate(pressLinearSrc,"pressureLinearSource",patch, 0);
 
   CCVariable<double> pressNonlinearSrc;
-  new_dw->allocate(pressNonlinearSrc, d_presNonlinearSrcLabel, matlIndex, patch);
+  new_dw->allocate(pressNonlinearSrc, d_presNonLinSrcPBLMLabel, matlIndex, 
+		   patch);
   //new_dw->allocate(pressNonlinearSrc,"pressureNonlinearSource",patch, 0);
 
 #ifdef WONT_COMPILE_YET
@@ -298,9 +396,9 @@ Source::calculatePressureSource(const ProcessorGroup*,
 		   cellinfo->dyps, cellinfo->dztp, cellinfo->dzpb);
 #endif
 		   
-  new_dw->put(pressLinearSrc, d_presLinearSrcLabel, matlIndex, patch);
+  new_dw->put(pressLinearSrc, d_presLinSrcPBLMLabel, matlIndex, patch);
   //new_dw->put(pressLinearSrc, "pressureLinearSource", patch, 0);
-  new_dw->put(pressNonlinearSrc, d_presNonlinearSrcLabel, matlIndex, patch);
+  new_dw->put(pressNonlinearSrc, d_presNonLinSrcPBLMLabel, matlIndex, patch);
   //new_dw->put(pressNonlinearSrc, "pressureNonlinearSource", patch, 0);
 }
 
@@ -319,30 +417,30 @@ Source::calculateScalarSource(const ProcessorGroup*,
   int matlIndex = 0;
 
   CCVariable<double> uVelocity;
-  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   CCVariable<double> vVelocity;
-  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   CCVariable<double> wVelocity;
-  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   //FCVariable<Vector> velocity;
   //old_dw->get(velocity, "velocity", patch, 1);
 
   // ** WARNING ** The scalar is got based on the input index
   CCVariable<double> scalar;
-  old_dw->get(scalar, d_scalarLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(scalar, d_scalarINLabel, index, patch, Ghost::None,
 	      numGhostCells);
   //old_dw->get(scalar, "scalar", patch, 1);
 
   CCVariable<double> density;
-  old_dw->get(density, d_densityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   //old_dw->get(density, "density", patch, 1);
 
   CCVariable<double> viscosity;
-  old_dw->get(viscosity, d_viscosityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   //old_dw->get(viscosity, "viscosity", patch, 1);
 
@@ -364,13 +462,13 @@ Source::calculateScalarSource(const ProcessorGroup*,
 
   //SP term in Arches
   CCVariable<double> scalarLinearSrc;
-  new_dw->allocate(scalarLinearSrc, d_scalarLinearSrcLabel, matlIndex, patch);
+  new_dw->allocate(scalarLinearSrc, d_scalLinSrcSBLMLabel, index, patch);
   //new_dw->allocate(scalarLinearSrc, "ScalarLinearSrc", patch, index, 0);
 
   // SU in Arches
   CCVariable<double> scalarNonlinearSrc;
-  new_dw->allocate(scalarNonlinearSrc, d_scalarNonlinearSrcLabel, 
-		   matlIndex, patch);
+  new_dw->allocate(scalarNonlinearSrc, d_scalNonLinSrcSBLMLabel, 
+		   index, patch);
   //new_dw->allocate(scalarNonlinearSrc, "ScalarNonlinearSource", patch, index, 0);
 
 #ifdef WONT_COMPILE_YET
@@ -392,10 +490,10 @@ Source::calculateScalarSource(const ProcessorGroup*,
 		    cellinfo->tfac, cellinfo->bfac, volume);
 #endif
 
-  new_dw->put(scalarLinearSrc, d_scalarLinearSrcLabel, matlIndex, patch);
+  new_dw->put(scalarLinearSrc, d_scalLinSrcSBLMLabel, index, patch);
   //new_dw->put(scalarLinearSrc, "scalarLinearSource", patch, index, 0);
 
-  new_dw->put(scalarNonlinearSrc, d_scalarNonlinearSrcLabel, matlIndex, patch);
+  new_dw->put(scalarNonlinearSrc, d_scalNonLinSrcSBLMLabel, index, patch);
   //new_dw->put(scalarNonlinearSrc, "scalarNonlinearSource", patch, index, 0);
 
 }

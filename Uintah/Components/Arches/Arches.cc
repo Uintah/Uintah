@@ -43,22 +43,22 @@ using namespace Uintah::ArchesSpace;
 Arches::Arches(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
-  d_densityLabel = scinew VarLabel("density", 
+  d_densityINLabel = scinew VarLabel("densityIN", 
 				   CCVariable<double>::getTypeDescription() );
-  d_pressureLabel = scinew VarLabel("pressure", 
-				    CCVariable<double>::getTypeDescription() );
-  d_uVelocityLabel = scinew VarLabel("uVelocity", 
-				    CCVariable<double>::getTypeDescription() );
-  d_vVelocityLabel = scinew VarLabel("vVelocity", 
-				    CCVariable<double>::getTypeDescription() );
-  d_wVelocityLabel = scinew VarLabel("wVelocity", 
-				    CCVariable<double>::getTypeDescription() );
-  d_scalarLabel = scinew VarLabel("scalar", 
-				  CCVariable<double>::getTypeDescription() );
-  d_viscosityLabel = scinew VarLabel("viscosity", 
-				     CCVariable<double>::getTypeDescription() );
+  d_pressureINLabel = scinew VarLabel("pressureIN", 
+				   CCVariable<double>::getTypeDescription() );
+  d_uVelocityINLabel = scinew VarLabel("uVelocityIN", 
+				   CCVariable<double>::getTypeDescription() );
+  d_vVelocityINLabel = scinew VarLabel("vVelocityIN", 
+				   CCVariable<double>::getTypeDescription() );
+  d_wVelocityINLabel = scinew VarLabel("wVelocityIN", 
+				   CCVariable<double>::getTypeDescription() );
+  d_scalarINLabel = scinew VarLabel("scalarIN", 
+				   CCVariable<double>::getTypeDescription() );
+  d_viscosityINLabel = scinew VarLabel("viscosityIN", 
+				   CCVariable<double>::getTypeDescription() );
   d_cellTypeLabel = scinew VarLabel("CellType", 
-				    CCVariable<int>::getTypeDescription() );
+				   CCVariable<int>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -177,14 +177,14 @@ Arches::scheduleInitialize(const LevelP& level,
 			   &Arches::paramInit);
       cerr << "New task created successfully\n";
       int matlIndex = 0;
-      tsk->computes(dw, d_uVelocityLabel, matlIndex, patch);
-      tsk->computes(dw, d_vVelocityLabel, matlIndex, patch);
-      tsk->computes(dw, d_wVelocityLabel, matlIndex, patch);
-      tsk->computes(dw, d_pressureLabel, matlIndex, patch);
+      tsk->computes(dw, d_uVelocityINLabel, matlIndex, patch);
+      tsk->computes(dw, d_vVelocityINLabel, matlIndex, patch);
+      tsk->computes(dw, d_wVelocityINLabel, matlIndex, patch);
+      tsk->computes(dw, d_pressureINLabel, matlIndex, patch);
       for (int ii = 0; ii < d_nofScalars; ii++) 
-	tsk->computes(dw, d_scalarLabel, ii, patch);
-      tsk->computes(dw, d_densityLabel, matlIndex, patch);
-      tsk->computes(dw, d_viscosityLabel, matlIndex, patch);
+	tsk->computes(dw, d_scalarINLabel, ii, patch);
+      tsk->computes(dw, d_densityINLabel, matlIndex, patch);
+      tsk->computes(dw, d_viscosityINLabel, matlIndex, patch);
       sched->addTask(tsk);
       cerr << "New task added successfully to scheduler\n";
     }
@@ -212,12 +212,23 @@ Arches::scheduleInitialize(const LevelP& level,
 
   }
   // Set the profile (output Varlabel have SP appended to them)
+  // require : densityIN,[u,v,w]VelocityIN
+  // compute : densitySP, [u,v,w]VelocitySP
   d_boundaryCondition->sched_setProfile(level, sched, dw, dw);
+
   // Compute props (output Varlabel have CP appended to them)
+  // require : densitySP
+  // compute : densityCP
   d_props->sched_computeProps(level, sched, dw, dw);
+
   // Compute Turb subscale model (output Varlabel have CTS appended to them)
+  // require : densityCP, viscosityIN, [u,v,w]VelocitySP
+  // compute : viscosityCTS
   d_turbModel->sched_computeTurbSubmodel(level, sched, dw, dw);
-  d_boundaryCondition->sched_pressureBC(level, sched, dw, dw);
+
+  // NOTE : Sched pressure BC requires pressureCoeff. That has not been 
+  // computed yet in this flow.
+  //d_boundaryCondition->sched_pressureBC(level, sched, dw, dw);
 }
 
 //****************************************************************************
@@ -243,6 +254,11 @@ Arches::scheduleTimeAdvance(double time, double dt,
 {
   cerr << "Arches::scheduleTimeAdvance\n";
 
+  // Schedule the non-linear solve
+  // require : densityCP, viscosityCTS, [u,v,w]VelocitySP, 
+  //           pressureIN. scalarIN
+  // compute : densityRCP, viscosityRCTS, [u,v,w]VelocityMS,
+  //           pressurePS, scalarSS 
   int error_code = d_nlSolver->nonlinearSolve(level, sched, old_dw, new_dw,
 					      time, dt);
   if (!error_code) {
@@ -279,15 +295,15 @@ Arches::paramInit(const ProcessorGroup* ,
   cerr << "Actual initialization - before allocation : old_dw = " 
        << old_dw <<"\n";
   int matlIndex = 0;
-  old_dw->allocate(uVelocity, d_uVelocityLabel, matlIndex, patch);
-  old_dw->allocate(vVelocity, d_vVelocityLabel, matlIndex, patch);
-  old_dw->allocate(wVelocity, d_wVelocityLabel, matlIndex, patch);
-  old_dw->allocate(pressure, d_pressureLabel, matlIndex, patch);
+  old_dw->allocate(uVelocity, d_uVelocityINLabel, matlIndex, patch);
+  old_dw->allocate(vVelocity, d_vVelocityINLabel, matlIndex, patch);
+  old_dw->allocate(wVelocity, d_wVelocityINLabel, matlIndex, patch);
+  old_dw->allocate(pressure, d_pressureINLabel, matlIndex, patch);
   for (int ii = 0; ii < d_nofScalars; ii++) {
-    old_dw->allocate(scalar[ii], d_scalarLabel, ii, patch);
+    old_dw->allocate(scalar[ii], d_scalarINLabel, ii, patch);
   }
-  old_dw->allocate(density, d_densityLabel, matlIndex, patch);
-  old_dw->allocate(viscosity, d_viscosityLabel, matlIndex, patch);
+  old_dw->allocate(density, d_densityINLabel, matlIndex, patch);
+  old_dw->allocate(viscosity, d_viscosityINLabel, matlIndex, patch);
   cerr << "Actual initialization - after allocation\n";
 
   // ** WARNING **  this needs to be changed soon (6/9/2000)
@@ -325,15 +341,15 @@ Arches::paramInit(const ProcessorGroup* ,
 
   cerr << "Actual initialization - before put : old_dw = " 
        << old_dw <<"\n";
-  old_dw->put(uVelocity, d_uVelocityLabel, matlIndex, patch);
-  old_dw->put(vVelocity, d_vVelocityLabel, matlIndex, patch);
-  old_dw->put(wVelocity, d_wVelocityLabel, matlIndex, patch);
-  old_dw->put(pressure, d_pressureLabel, matlIndex, patch);
+  old_dw->put(uVelocity, d_uVelocityINLabel, matlIndex, patch);
+  old_dw->put(vVelocity, d_vVelocityINLabel, matlIndex, patch);
+  old_dw->put(wVelocity, d_wVelocityINLabel, matlIndex, patch);
+  old_dw->put(pressure, d_pressureINLabel, matlIndex, patch);
   for (int ii = 0; ii < d_nofScalars; ii++) {
-    old_dw->put(scalar[ii], d_scalarLabel, ii, patch);
+    old_dw->put(scalar[ii], d_scalarINLabel, ii, patch);
   }
-  old_dw->put(density, d_densityLabel, matlIndex, patch);
-  old_dw->put(viscosity, d_viscosityLabel, matlIndex, patch);
+  old_dw->put(density, d_densityINLabel, matlIndex, patch);
+  old_dw->put(viscosity, d_viscosityINLabel, matlIndex, patch);
   cerr << "Actual initialization - after put \n";
 }
   
@@ -361,6 +377,10 @@ Arches::paramInit(const ProcessorGroup* ,
 
 //
 // $Log$
+// Revision 1.42  2000/06/18 01:20:14  bbanerje
+// Changed names of varlabels in source to reflect the sequence of tasks.
+// Result : Seg Violation in addTask in MomentumSolver
+//
 // Revision 1.41  2000/06/17 07:06:22  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

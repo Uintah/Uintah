@@ -80,6 +80,17 @@ public:
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw);
 
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Schedule the recomputation of Turbulence Model data
+      //    [in] 
+      //        data User data needed for solve 
+      //
+      virtual void sched_reComputeTurbSubmodel(const LevelP&, 
+					       SchedulerP& sched,
+					       DataWarehouseP& old_dw,
+					       DataWarehouseP& new_dw);
+
       // GROUP: Action Computations :
       ///////////////////////////////////////////////////////////////////////
       //
@@ -91,7 +102,9 @@ public:
 				      const Patch* patch,
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw, 
-				      int index);
+				      int index,
+				      int eqnType);
+
       ///////////////////////////////////////////////////////////////////////
       //
       // Calculate the velocity source terms
@@ -127,6 +140,17 @@ private:
 			       DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw);
 
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Actually reCalculate the Turbulence sub model
+      //    [in] 
+      //        documentation here
+      //
+      void reComputeTurbSubmodel(const ProcessorGroup*,
+				 const Patch* patch,
+				 DataWarehouseP& old_dw,
+				 DataWarehouseP& new_dw);
+
 private:
 
       PhysicalConstants* d_physicalConsts;
@@ -134,27 +158,41 @@ private:
       double d_factorMesh; // lengthscale = fac_mesh*meshsize
       double d_filterl; // prescribed filter length scale
 
-      // Labels that have to be changed
-      const VarLabel* d_uVelocityLabel;
-      const VarLabel* d_vVelocityLabel;
-      const VarLabel* d_wVelocityLabel;
-      const VarLabel* d_densityLabel;
-
-      // const VarLabel* variables
+      // const VarLabel* variables 
+      // for computeTurbulenceSubmodel
       const VarLabel* d_uVelocitySPLabel;
       const VarLabel* d_vVelocitySPLabel;
       const VarLabel* d_wVelocitySPLabel;
       const VarLabel* d_densityCPLabel;
-      const VarLabel* d_viscosityLabel;
+      const VarLabel* d_viscosityINLabel;
       const VarLabel* d_cellTypeLabel;
-
       const VarLabel* d_viscosityCTSLabel;
-      const VarLabel* d_uLinSrcLabel;
-      const VarLabel* d_vLinSrcLabel;
-      const VarLabel* d_wLinSrcLabel;
-      const VarLabel* d_uNonLinSrcLabel;
-      const VarLabel* d_vNonLinSrcLabel;
-      const VarLabel* d_wNonLinSrcLabel;
+      const VarLabel* d_uVelocityMSLabel;
+      const VarLabel* d_vVelocityMSLabel;
+      const VarLabel* d_wVelocityMSLabel;
+      const VarLabel* d_densityRCPLabel;
+      const VarLabel* d_viscosityRCTSLabel;
+
+      // for calcVelocityWallBC
+      const VarLabel* d_uVelocitySIVBCLabel;
+      const VarLabel* d_vVelocitySIVBCLabel;
+      const VarLabel* d_wVelocitySIVBCLabel;
+      const VarLabel* d_uVelocityCPBCLabel;
+      const VarLabel* d_vVelocityCPBCLabel;
+      const VarLabel* d_wVelocityCPBCLabel;
+      const VarLabel* d_densitySIVBCLabel;
+      const VarLabel* d_uVelLinSrcPBLMLabel;
+      const VarLabel* d_vVelLinSrcPBLMLabel;
+      const VarLabel* d_wVelLinSrcPBLMLabel;
+      const VarLabel* d_uVelNonLinSrcPBLMLabel;
+      const VarLabel* d_vVelNonLinSrcPBLMLabel;
+      const VarLabel* d_wVelNonLinSrcPBLMLabel;
+      const VarLabel* d_uVelLinSrcMBLMLabel;
+      const VarLabel* d_vVelLinSrcMBLMLabel;
+      const VarLabel* d_wVelLinSrcMBLMLabel;
+      const VarLabel* d_uVelNonLinSrcMBLMLabel;
+      const VarLabel* d_vVelNonLinSrcMBLMLabel;
+      const VarLabel* d_wVelNonLinSrcMBLMLabel;
 
 }; // End class SmagorinkyModel
   

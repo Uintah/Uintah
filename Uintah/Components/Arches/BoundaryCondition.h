@@ -212,7 +212,8 @@ public:
 		      const Patch* patch,
 		      DataWarehouseP& old_dw,
 		      DataWarehouseP& new_dw,
-		      const int index);
+		      const int index,
+		      int eqnType);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -250,7 +251,8 @@ private:
 		       CCVariable<double>* wVelocity, 
 		       CCVariable<double>* density,
 		       const double* VISCOS,
-		       CellInformation* cellinfo);
+		       CellInformation* cellinfo,
+		       int eqnType);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -266,7 +268,8 @@ private:
 		       CCVariable<double>* wVelocity, 
 		       CCVariable<double>* density,
 		       const double* VISCOS,
-		       CellInformation* cellinfo);
+		       CellInformation* cellinfo,
+		       int eqnType);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -282,7 +285,8 @@ private:
 		       CCVariable<double>* wVelocity, 
 		       CCVariable<double>* density,
 		       const double* VISCOS,
-		       CellInformation* cellinfo);
+		       CellInformation* cellinfo,
+		       int eqnType);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -398,42 +402,59 @@ private:
       bool d_outletBoundary;
       FlowOutlet* d_outletBC;
 
-      // const VarLabel*
+      // const VarLabel* inputs
       const VarLabel* d_cellTypeLabel;
-      const VarLabel* d_pressureLabel;
-      const VarLabel* d_densityLabel;
-      const VarLabel* d_viscosityLabel;
-      //** WARNING ** Velocity is a FC Variable
-      const VarLabel* d_uVelocityLabel;
-      //** WARNING ** Velocity is a FC Variable
-      const VarLabel* d_vVelocityLabel;
-      //** WARNING ** Velocity is a FC Variable
-      const VarLabel* d_wVelocityLabel;
-      //** WARNING ** Velocity is a FC Variable
-      const VarLabel* d_uVelCoefLabel;
-      //** WARNING ** Velocity is a FC Variable
-      const VarLabel* d_vVelCoefLabel;
-      //** WARNING ** Velocity is a FC Variable
-      const VarLabel* d_wVelCoefLabel;
-      //** WARNING ** Velocity is a FC Variable
-      const VarLabel* d_uVelLinSrcLabel;
-      //** WARNING ** Velocity is a FC Variable
-      const VarLabel* d_vVelLinSrcLabel;
-      //** WARNING ** Velocity is a FC Variable
-      const VarLabel* d_wVelLinSrcLabel;
-      //** WARNING ** Velocity is a FC Variable
-      const VarLabel* d_uVelNonLinSrcLabel;
-      //** WARNING ** Velocity is a FC Variable
-      const VarLabel* d_vVelNonLinSrcLabel;
-      //** WARNING ** Velocity is a FC Variable
-      const VarLabel* d_wVelNonLinSrcLabel;
-      const VarLabel* d_presCoefLabel;
+      const VarLabel* d_pressureINLabel;
+      const VarLabel* d_densityINLabel;
+      const VarLabel* d_viscosityINLabel;
+      const VarLabel* d_uVelocityINLabel;
+      const VarLabel* d_vVelocityINLabel;
+      const VarLabel* d_wVelocityINLabel;
 
       // Labels for data computed by setProfile()
       const VarLabel* d_densitySPLabel;
       const VarLabel* d_uVelocitySPLabel;
       const VarLabel* d_vVelocitySPLabel;
       const VarLabel* d_wVelocitySPLabel;
+
+      // Labels for data computed by setInletVelocityBC()
+      const VarLabel* d_densitySIVBCLabel;
+      const VarLabel* d_uVelocitySIVBCLabel;
+      const VarLabel* d_vVelocitySIVBCLabel;
+      const VarLabel* d_wVelocitySIVBCLabel;
+
+      // Labels for data computed by computePressureBC()
+      const VarLabel* d_pressurePSLabel;
+      const VarLabel* d_uVelocityCPBCLabel;
+      const VarLabel* d_vVelocityCPBCLabel;
+      const VarLabel* d_wVelocityCPBCLabel;
+
+      // VelocityBC
+      const VarLabel* d_uVelCoefPBLMLabel;
+      const VarLabel* d_vVelCoefPBLMLabel;
+      const VarLabel* d_wVelCoefPBLMLabel;
+      const VarLabel* d_uVelLinSrcPBLMLabel;
+      const VarLabel* d_vVelLinSrcPBLMLabel;
+      const VarLabel* d_wVelLinSrcPBLMLabel;
+      const VarLabel* d_uVelNonLinSrcPBLMLabel;
+      const VarLabel* d_vVelNonLinSrcPBLMLabel;
+      const VarLabel* d_wVelNonLinSrcPBLMLabel;
+      const VarLabel* d_uVelCoefMBLMLabel;
+      const VarLabel* d_vVelCoefMBLMLabel;
+      const VarLabel* d_wVelCoefMBLMLabel;
+      const VarLabel* d_uVelLinSrcMBLMLabel;
+      const VarLabel* d_vVelLinSrcMBLMLabel;
+      const VarLabel* d_wVelLinSrcMBLMLabel;
+      const VarLabel* d_uVelNonLinSrcMBLMLabel;
+      const VarLabel* d_vVelNonLinSrcMBLMLabel;
+      const VarLabel* d_wVelNonLinSrcMBLMLabel;
+
+      // PressureBC
+      const VarLabel* d_presCoefPBLMLabel;
+
+      // ScalarBC
+      const VarLabel* d_scalarINLabel;
+      const VarLabel* d_scalCoefSBLMLabel;
 
 }; // End of class BoundaryCondition
 } // End namespace ArchesSpace
@@ -442,6 +463,10 @@ private:
   
 //
 // $Log$
+// Revision 1.25  2000/06/18 01:20:14  bbanerje
+// Changed names of varlabels in source to reflect the sequence of tasks.
+// Result : Seg Violation in addTask in MomentumSolver
+//
 // Revision 1.24  2000/06/17 07:06:23  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

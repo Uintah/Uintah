@@ -176,29 +176,29 @@ private:
       Vector d_pressRef;
 
       // const VarLabel* (required)
-      const VarLabel* d_pressureLabel;
-      const VarLabel* d_uVelocityLabel;
-      const VarLabel* d_vVelocityLabel;
-      const VarLabel* d_wVelocityLabel;
-      const VarLabel* d_densityLabel;
-      const VarLabel* d_viscosityLabel;
+      const VarLabel* d_pressureINLabel;
+      const VarLabel* d_uVelocitySIVBCLabel;
+      const VarLabel* d_vVelocitySIVBCLabel;
+      const VarLabel* d_wVelocitySIVBCLabel;
+      const VarLabel* d_densitySIVBCLabel;
+      const VarLabel* d_viscosityCTSLabel;
 
       // const VarLabel* (computed)
-      const VarLabel* d_uVelConvCoefLabel;
-      const VarLabel* d_vVelConvCoefLabel;
-      const VarLabel* d_wVelConvCoefLabel;
-      const VarLabel* d_uVelCoefLabel;
-      const VarLabel* d_vVelCoefLabel;
-      const VarLabel* d_wVelCoefLabel;
-      const VarLabel* d_uVelLinSrcLabel;
-      const VarLabel* d_vVelLinSrcLabel;
-      const VarLabel* d_wVelLinSrcLabel;
-      const VarLabel* d_uVelNonLinSrcLabel;
-      const VarLabel* d_vVelNonLinSrcLabel;
-      const VarLabel* d_wVelNonLinSrcLabel;
-      const VarLabel* d_presCoefLabel;
-      const VarLabel* d_presLinSrcLabel;
-      const VarLabel* d_presNonLinSrcLabel;
+      const VarLabel* d_uVelConvCoefPBLMLabel;
+      const VarLabel* d_vVelConvCoefPBLMLabel;
+      const VarLabel* d_wVelConvCoefPBLMLabel;
+      const VarLabel* d_uVelCoefPBLMLabel;
+      const VarLabel* d_vVelCoefPBLMLabel;
+      const VarLabel* d_wVelCoefPBLMLabel;
+      const VarLabel* d_uVelLinSrcPBLMLabel;
+      const VarLabel* d_vVelLinSrcPBLMLabel;
+      const VarLabel* d_wVelLinSrcPBLMLabel;
+      const VarLabel* d_uVelNonLinSrcPBLMLabel;
+      const VarLabel* d_vVelNonLinSrcPBLMLabel;
+      const VarLabel* d_wVelNonLinSrcPBLMLabel;
+      const VarLabel* d_presCoefPBLMLabel;
+      const VarLabel* d_presLinSrcPBLMLabel;
+      const VarLabel* d_presNonLinSrcPBLMLabel;
 
       // DataWarehouse generation
       int d_generation;
@@ -212,6 +212,10 @@ private:
 
 //
 // $Log$
+// Revision 1.18  2000/06/18 01:20:16  bbanerje
+// Changed names of varlabels in source to reflect the sequence of tasks.
+// Result : Seg Violation in addTask in MomentumSolver
+//
 // Revision 1.17  2000/06/17 07:06:25  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

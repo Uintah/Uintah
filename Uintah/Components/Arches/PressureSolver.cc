@@ -41,53 +41,55 @@ PressureSolver::PressureSolver(int nDim,
 				     d_physicalConsts(physConst),
 				     d_generation(0)
 {
-  d_pressureLabel = scinew VarLabel("pressure",
-				    CCVariable<double>::getTypeDescription() );
-  // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_uVelocityLabel = scinew VarLabel("uVelocity",
-				    CCVariable<double>::getTypeDescription() );
-  d_vVelocityLabel = scinew VarLabel("vVelocity",
-				    CCVariable<double>::getTypeDescription() );
-  d_wVelocityLabel = scinew VarLabel("wVelocity",
-				    CCVariable<double>::getTypeDescription() );
-  d_densityLabel = scinew VarLabel("density",
+  // BB : **WARNING** velocity is set as CCVariable (should be FCVariable)
+  //  Change all those labels that are velocity related and delete this
+  //  comment
+
+  // Inputs
+  d_pressureINLabel = scinew VarLabel("pressureIN",
+			     CCVariable<double>::getTypeDescription() );
+  d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
+				 CCVariable<double>::getTypeDescription() );
+  d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
+				 CCVariable<double>::getTypeDescription() );
+  d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC",
+				 CCVariable<double>::getTypeDescription() );
+  d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
+			       CCVariable<double>::getTypeDescription() );
+  d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
+			       CCVariable<double>::getTypeDescription() );
+
+  // Computed
+  d_uVelConvCoefPBLMLabel = scinew VarLabel("uVelConvectCoefPBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_viscosityLabel = scinew VarLabel("viscosity",
-				     CCVariable<double>::getTypeDescription() );
-  // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_uVelConvCoefLabel = scinew VarLabel("uVelocityConvectCoeffP",
-				       CCVariable<double>::getTypeDescription() );
-  d_vVelConvCoefLabel = scinew VarLabel("vVelocityConvectCoeffP",
-				       CCVariable<double>::getTypeDescription() );
-  d_wVelConvCoefLabel = scinew VarLabel("wVelocityConvectCoeffP",
-				       CCVariable<double>::getTypeDescription() );
-  // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_uVelCoefLabel = scinew VarLabel("uVelocityCoeffP",
+  d_vVelConvCoefPBLMLabel = scinew VarLabel("vVelConvectCoefPBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_vVelCoefLabel = scinew VarLabel("vVelocityCoeffP",
+  d_wVelConvCoefPBLMLabel = scinew VarLabel("wVelConvectCoefPBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_wVelCoefLabel = scinew VarLabel("wVelocityCoeffP",
-				   CCVariable<double>::getTypeDescription() );
-  // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_uVelLinSrcLabel = scinew VarLabel("uVelLinearSourceP",
-				     CCVariable<double>::getTypeDescription() );
-  d_vVelLinSrcLabel = scinew VarLabel("vVelLinearSourceP",
-				     CCVariable<double>::getTypeDescription() );
-  d_wVelLinSrcLabel = scinew VarLabel("wVelLinearSourceP",
-				     CCVariable<double>::getTypeDescription() );
-  // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_uVelNonLinSrcLabel = scinew VarLabel("uVelNonlinearSourceP",
-					CCVariable<double>::getTypeDescription() );
-  d_vVelNonLinSrcLabel = scinew VarLabel("vVelNonlinearSourceP",
-					CCVariable<double>::getTypeDescription() );
-  d_wVelNonLinSrcLabel = scinew VarLabel("wVelNonlinearSourceP",
-					CCVariable<double>::getTypeDescription() );
-  d_presCoefLabel = scinew VarLabel("pressureCoeff",
-				       CCVariable<double>::getTypeDescription() );
-  d_presLinSrcLabel = scinew VarLabel("pressureLinearSource",
-				       CCVariable<double>::getTypeDescription() );
-  d_presNonLinSrcLabel = scinew VarLabel("pressureNonlinearSource",
-				       CCVariable<double>::getTypeDescription() );
+  d_uVelCoefPBLMLabel = scinew VarLabel("uVelCoefPBLM",
+			       CCVariable<double>::getTypeDescription() );
+  d_vVelCoefPBLMLabel = scinew VarLabel("vVelCoefPBLM",
+			       CCVariable<double>::getTypeDescription() );
+  d_wVelCoefPBLMLabel = scinew VarLabel("wVelCoefPBLM",
+			       CCVariable<double>::getTypeDescription() );
+  d_uVelLinSrcPBLMLabel = scinew VarLabel("uVelLinSrcPBLM",
+				 CCVariable<double>::getTypeDescription() );
+  d_vVelLinSrcPBLMLabel = scinew VarLabel("vVelLinSrcPBLM",
+				 CCVariable<double>::getTypeDescription() );
+  d_wVelLinSrcPBLMLabel = scinew VarLabel("wVelLinSrcPBLM",
+				 CCVariable<double>::getTypeDescription() );
+  d_uVelNonLinSrcPBLMLabel = scinew VarLabel("uVelNonLinSrcPBLM",
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelNonLinSrcPBLMLabel = scinew VarLabel("vVelNonLinSrcPBLM",
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelNonLinSrcPBLMLabel = scinew VarLabel("wVelNonLinSrcPBLM",
+				    CCVariable<double>::getTypeDescription() );
+  d_presCoefPBLMLabel = scinew VarLabel("presCoefPBLM",
+			       CCVariable<double>::getTypeDescription() );
+  d_presLinSrcPBLMLabel = scinew VarLabel("presLinSrcPBLM",
+				 CCVariable<double>::getTypeDescription() );
+  d_presNonLinSrcPBLMLabel = scinew VarLabel("presNonLinSrcPBLM",
+				    CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -143,20 +145,33 @@ void PressureSolver::solve(const LevelP& level,
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
   // pressure solve.
-  DataWarehouseP matrix_dw = sched->createDataWarehouse(d_generation);
-  ++d_generation;
+  //DataWarehouseP matrix_dw = sched->createDataWarehouse(d_generation);
+  //++d_generation;
 
   //computes stencil coefficients and source terms
-  sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t);
+  // require : pressureIN, densitySIVBC, viscosityCTS, [u,v,w]VelocitySIVBC
+  // compute : uVelConvCoefPBLM, vVelConvCoefPBLM, wVelConvCoefPBLM
+  //           uVelCoefPBLM, vVelCoefPBLM, wVelCoefPBLM, uVelLinSrcPBLM
+  //           vVelLinSrcPBLM, wVelLinSrcPBLM, uVelNonLinSrcPBLM 
+  //           vVelNonLinSrcPBLM, wVelNonLinSrcPBLM, presCoefPBLM 
+  //           presLinSrcPBLM, presNonLinSrcPBLM
+  sched_buildLinearMatrix(level, sched, new_dw, new_dw, delta_t);
 
   //residual at the start of linear solve
   // this can be part of linear solver
 #if 0
-  calculateResidual(level, sched, new_dw, matrix_dw);
-  calculateOrderMagnitude(level, sched, new_dw, matrix_dw);
+  calculateResidual(level, sched, new_dw, new_dw);
+  calculateOrderMagnitude(level, sched, new_dw, new_dw);
 #endif
 
-  d_linearSolver->sched_pressureSolve(level, sched, new_dw, matrix_dw);
+  // Schedule the pressure solve
+  // require : pressureIN, presCoefPBLM, presNonLinSrcPBLM
+  // compute : presResidualPS, presCoefPS, presNonLinSrcPS, pressurePS
+  d_linearSolver->sched_pressureSolve(level, sched, new_dw, new_dw);
+
+  // Schedule Calculation of pressure norm
+  // require :
+  // compute :
   sched_normPressure(level, sched, new_dw, new_dw);
   
 }
@@ -181,37 +196,39 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
 
       int numGhostCells = 0;
       int matlIndex = 0;
-      tsk->requires(old_dw, d_pressureLabel, matlIndex, patch, Ghost::None,
+
+      // Requires
+      tsk->requires(old_dw, d_pressureINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_uVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(old_dw, d_vVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(old_dw, d_wVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(old_dw, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_vVelocityLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_wVelocityLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_densityLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_viscosityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
       /// requires convection coeff because of the nodal
       // differencing
       // computes all the components of velocity
-      tsk->computes(new_dw, d_uVelConvCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelConvCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelConvCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_uVelCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_uVelLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_uVelNonLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelNonLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelNonLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_presCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_presLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_presNonLinSrcLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_uVelConvCoefPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_vVelConvCoefPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_wVelConvCoefPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_uVelCoefPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_vVelCoefPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_wVelCoefPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_uVelLinSrcPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_vVelLinSrcPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_wVelLinSrcPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_uVelNonLinSrcPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_presCoefPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_presLinSrcPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_presNonLinSrcPBLMLabel, matlIndex, patch);
      
       sched->addTask(tsk);
     }
@@ -230,21 +247,63 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  double delta_t)
 {
   // compute all three componenets of velocity stencil coefficients
-  for(int index = 1; index <= d_NDIM; ++index) {
-    d_discretize->calculateVelocityCoeff(pc, patch, old_dw,
-					 new_dw,delta_t, index);
-    d_source->calculateVelocitySource(pc, patch, old_dw,
-				      new_dw,delta_t, index);
-    d_boundaryCondition->velocityBC(pc, patch, old_dw, new_dw, index);
-    // similar to mascal
+  for(int index = 1; index <= Arches::NDIM; ++index) {
+
+    // Calculate Velocity Coeffs :
+    //  inputs : [u,v,w]VelocitySIVBC, densitySIVBC, viscosityCTS
+    //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM 
+    d_discretize->calculateVelocityCoeff(pc, patch, old_dw, new_dw, 
+					 delta_t, index,
+					 Discretization::PRESSURE);
+
+    // Calculate Velocity source
+    //  inputs : [u,v,w]VelocitySIVBC, densitySIVBC, viscosityCTS
+    //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
+    d_source->calculateVelocitySource(pc, patch, old_dw, new_dw, 
+				      delta_t, index,
+				      Discretization::PRESSURE);
+
+    // Calculate the Velocity BCS
+    //  inputs : densitySIVBC, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
+    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
+    //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM, 
+    //           [u,v,w]VelNonLinSrcPBLM
+    d_boundaryCondition->velocityBC(pc, patch, old_dw, new_dw, 
+				    index,
+				    Discretization::PRESSURE);
+
+    // Modify Velocity Mass Source
+    //  inputs :
+    //  outputs:
     d_source->modifyVelMassSource(pc, patch, old_dw, new_dw, delta_t, index);
 
-    d_discretize->calculateVelDiagonal(pc, patch, old_dw,
-				       new_dw, index);
+    // Calculate Velocity diagonal
+    //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
+    //  outputs: [u,v,w]VelCoefPBLM
+    d_discretize->calculateVelDiagonal(pc, patch, old_dw, new_dw, 
+				       index,
+				       Discretization::PRESSURE);
   }
+
+  // Calculate Pressure Coeffs
+  //  inputs : pressureIN, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
+  //  outputs: presCoefPBLM 
   d_discretize->calculatePressureCoeff(pc, patch, old_dw, new_dw, delta_t);
+
+  // Calculate Pressure Source
+  //  inputs : pressureIN, [u,v,w]VelocitySIVBC, densitySIVBC,
+  //           [u,v,w]VelCoefPBLM, [u,v,w]VelNonLinSrcPBLM
+  //  outputs: presLinSrcPBLM, presNonLinSrcPBLM
   d_source->calculatePressureSource(pc, patch, old_dw, new_dw, delta_t);
+
+  // Calculate Pressure BC
+  //  inputs : pressureIN, presCoefPBLM
+  //  outputs: presCoefPBLM
   d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw);
+
+  // Calculate Pressure Diagonal
+  //  inputs : presCoefPBLM, presLinSrcPBLM
+  //  outputs: presCoefPBLM 
   d_discretize->calculatePressDiagonal(pc, patch, old_dw, new_dw);
 
 }
@@ -273,6 +332,10 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.21  2000/06/18 01:20:16  bbanerje
+// Changed names of varlabels in source to reflect the sequence of tasks.
+// Result : Seg Violation in addTask in MomentumSolver
+//
 // Revision 1.20  2000/06/17 07:06:25  sparker
 // Changed ProcessorContext to ProcessorGroup
 //
