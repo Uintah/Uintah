@@ -104,6 +104,7 @@ void Scene::init(const Camera& cam, const Color& bgcolor)
   origAmbientColor_ = Color(1,1,1);
   ambientColor_     = origAmbientColor_;
   setAmbientLevel( ambientScale_ );
+  orig_ambientScale_ = ambientScale_;
 }
 
 void
@@ -289,6 +290,8 @@ Scene::turnOffAllLights( Light * exceptThisLight )
 void
 Scene::turnOffAllLights( double left )
 {
+  if (left == 1.0) orig_ambientScale_ = ambientScale_;
+
   int numLights = lights.size();
 
   for( int cnt = numLights-1; cnt >= 0; cnt-- )
@@ -305,13 +308,12 @@ Scene::turnOffAllLights( double left )
       }
     }
 
-  setAmbientLevel(0.9+0.1*left);
-
   for(int i=0; i<per_matl_mood_lights.size(); i++){
     Light* light = per_matl_mood_lights[i];    
     light->updateIntensity(1-left);
   }
-  
+
+  setAmbientLevel(orig_ambientScale_*(0.2*left+0.8));
 }
 
 void
@@ -332,8 +334,7 @@ Scene::turnOnAllLights()
     light->updateIntensity(0);
   }
 
-  setAmbientLevel(0.8);
-
+  setAmbientLevel(orig_ambientScale_);
 }
 
 void

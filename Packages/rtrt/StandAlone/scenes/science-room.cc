@@ -677,37 +677,29 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   SpinningInstance *smw = make_dna(g);
 
   //PER MATERIAL LIGHTS FOR THE HOLOGRAMS
-  Light *holo_light0 = new Light(Point(-8, 8, 3.8), Color(0.3,0.3,0.4), 0);
-  Light *holo_light1 = new Light(Point(-10, 10, 2.5), Color(0.3,0.3,0.4), 0);
-  Light *holo_light2 = new Light(Point(-10, 6, 2.5), Color(0.3,0.3,0.4), 0);
-  Light *holo_light3 = new Light(Point(-6, 6, 2.5), Color(0.3,0.3,0.4), 0);
-  Light *holo_light4 = new Light(Point(-6, 10, 2.5), Color(0.3,0.3,0.4), 0);
-  holo_light0->name_ = "hololight0";
+  Light *holo_light1 = new Light(Point(-8, 10, 2.2), Color(0.3,0.3,0.4), 0);
+  Light *holo_light2 = new Light(Point(-9.41, 6.58, 2.2), Color(0.3,0.3,0.4), 0);
+  Light *holo_light3 = new Light(Point(-6.58, 6.58, 2.2), Color(0.3,0.3,0.4), 0);
   holo_light1->name_ = "hololight1";
   holo_light2->name_ = "hololight2";
   holo_light3->name_ = "hololight3";
-  holo_light4->name_ = "hololight4";
 
   //CUTTING PLANE FOR THE HOLOGRAMS
-  CutPlaneDpy* cpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,2));
+  CutPlaneDpy* cpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
 
 
   //ADD THE VISIBLE FEMALE DATASET
 #ifdef ADD_VIS_FEM
   ColorMap *vcmap = new ColorMap("/usr/sci/data/Geometry/volumes/vfem",256);
   Material* vmat=new LambertianMaterial(Color(0.7,0.7,0.7));
-  vmat->my_lights.add(holo_light0);
   vmat->my_lights.add(holo_light1);
   vmat->my_lights.add(holo_light2);
   vmat->my_lights.add(holo_light3);
-  vmat->my_lights.add(holo_light4);
 
   Material *vcutmat = new CutMaterial(vmat, vcmap, cpdpy);
-  vcutmat->my_lights.add(holo_light0);
   vcutmat->my_lights.add(holo_light1);
   vcutmat->my_lights.add(holo_light2);
   vcutmat->my_lights.add(holo_light3);
-  vcutmat->my_lights.add(holo_light4);
 
   CutVolumeDpy* vcvdpy = new CutVolumeDpy(1200.5, vcmap);
   
@@ -751,11 +743,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   InstanceWrapperObject *viw = new InstanceWrapperObject(vig);
 
   Transform *vtrans = new Transform();
-  vtrans->pre_translate(Vector(8, -8, -2));
   vtrans->pre_rotate(3.14/2.0, Vector(0,1,0));
-  vtrans->pre_translate(Vector(-8, 8, 2));
+  vtrans->pre_scale(Vector(1.43,1.43,1.43)); //she's 1.73m tall, scale to fit between 0.51 and 3
+  vtrans->pre_translate(Vector(-8, 8, 1.75)); //place in center of space
+  vtrans->pre_translate(Vector(0,0,-.00305)); //place at 1cm above surface
 
-  SpinningInstance *vinst = new SpinningInstance(viw, vtrans, Point(-8,8,2), Vector(0,0,1), 0.1);
+  SpinningInstance *vinst = new SpinningInstance(viw, vtrans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
   vinst->name_ = "Spinning Visible Woman";
 
   CutGroup *vcut = new CutGroup(cpdpy);
@@ -766,18 +759,14 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   //ADD THE DAVE HEAD DATA SET
   ColorMap *hcmap = new ColorMap("/usr/sci/data/Geometry/volumes/dave",256);
   Material *hmat=new LambertianMaterial(Color(0.7,0.7,0.7));
-  hmat->my_lights.add(holo_light0);
   hmat->my_lights.add(holo_light1);
   hmat->my_lights.add(holo_light2);
   hmat->my_lights.add(holo_light3);
-  hmat->my_lights.add(holo_light4);
 
   Material *hcutmat = new CutMaterial(hmat, hcmap, cpdpy);
-  hcutmat->my_lights.add(holo_light0);
   hcutmat->my_lights.add(holo_light1);
   hcutmat->my_lights.add(holo_light2);
   hcutmat->my_lights.add(holo_light3);
-  hcutmat->my_lights.add(holo_light4);
 
   CutVolumeDpy* hcvdpy = new CutVolumeDpy(82.5, hcmap);
 
@@ -787,11 +776,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   InstanceWrapperObject *diw = new InstanceWrapperObject(davehead);
 
   Transform *dtrans = new Transform();
-  dtrans->pre_translate(Vector(8, -8, -2)); 
   dtrans->rotate(Vector(1,0,0), Vector(0,0,1));
-  dtrans->pre_translate(Vector(-8, 8, 2));
+  dtrans->pre_scale(Vector(2.12,2.12,2.12)); //scale to fit max
+  dtrans->pre_translate(Vector(-8, 8, 1.75));
+  dtrans->pre_translate(Vector(0,0,-0.71)); //place 1cm above table
 
-  SpinningInstance *dinst = new SpinningInstance(diw, dtrans, Point(-8,8,2), Vector(0,0,1), 0.1);
+  SpinningInstance *dinst = new SpinningInstance(diw, dtrans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
   dinst->name_ = "Spinning Head";
 
   CutGroup *hcut = new CutGroup(cpdpy);
@@ -802,16 +792,15 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 #ifdef ADD_CSAFE_FIRE
   //ADD THE CSAFE HEPTAINE POOL FIRE DATA SET
   Material* fmat=new LambertianMaterial(Color(0.7,0.7,0.7));
-  fmat->my_lights.add(holo_light0);
   fmat->my_lights.add(holo_light1);
   fmat->my_lights.add(holo_light2);
   fmat->my_lights.add(holo_light3);
 
   VolumeDpy* firedpy = new VolumeDpy(1000);
 
-  int fstart = 55;
-  int fend = 56;
-  int finc = 8;
+  int fstart = 00;
+  int fend = 01;
+  int finc = 1;
   SelectableGroup *fire_time = new SelectableGroup(1);
   fire_time->name_ = "CSAFE Fire Time Step Selector";
   //  TimeObj *fire_time = new TimeObj(5);
@@ -827,11 +816,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   InstanceWrapperObject *fire_iw = new InstanceWrapperObject(fire_time);
 
   Transform *fire_trans = new Transform();
-  fire_trans->pre_translate(Vector(8, -8, -2)); 
   fire_trans->rotate(Vector(1,0,0), Vector(0,0,1));
-  fire_trans->pre_translate(Vector(-8, 8, 2));
+  fire_trans->pre_scale(Vector(1.06,1.06,1.06));
+  fire_trans->pre_translate(Vector(-8, 8, 1.75));
+  fire_trans->pre_translate(Vector(0,0,-0.18));
 
-  SpinningInstance *fire_inst = new SpinningInstance(fire_iw, fire_trans, Point(-8,8,2), Vector(0,0,1), 0.5);
+  SpinningInstance *fire_inst = new SpinningInstance(fire_iw, fire_trans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
   fire_inst->name_ = "Spinning CSAFE Fire";
 
   CutGroup *fire_cut = new CutGroup(cpdpy);
@@ -842,18 +832,14 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   //ADD THE GEOLOGY DATA SET
   ColorMap *gcmap = new ColorMap("/usr/sci/data/Geometry/volumes/Seismic/geo",256);
   Material* gmat=new LambertianMaterial(Color(0.7,0.7,0.7));
-  gmat->my_lights.add(holo_light0);
   gmat->my_lights.add(holo_light1);
   gmat->my_lights.add(holo_light2);
   gmat->my_lights.add(holo_light3);
-  gmat->my_lights.add(holo_light4);
 
   Material *gcutmat = new CutMaterial(gmat, gcmap, cpdpy);
-  gcutmat->my_lights.add(holo_light0);
   gcutmat->my_lights.add(holo_light1);
   gcutmat->my_lights.add(holo_light2);
   gcutmat->my_lights.add(holo_light3);
-  gcutmat->my_lights.add(holo_light4);
 
   CutVolumeDpy* gcvdpy = new CutVolumeDpy(16137.7, gcmap);
 
@@ -863,11 +849,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   InstanceWrapperObject *giw = new InstanceWrapperObject(geology);
 
   Transform *gtrans = new Transform();
-  gtrans->pre_translate(Vector(8, -8, -2)); 
   gtrans->rotate(Vector(1,0,0), Vector(0,0,1));
-  gtrans->pre_translate(Vector(-8, 8, 2));
+  gtrans->pre_scale(Vector(2.49,2.49,2.49)); //fit between z=0.51 and 3
+  gtrans->pre_translate(Vector(-8, 8, 1.75));
+  gtrans->pre_translate(Vector(0,0,0.005)); //place 1 cm above table
 
-  SpinningInstance *ginst = new SpinningInstance(giw, gtrans, Point(-8,8,2), Vector(0,0,1), 0.1);
+  SpinningInstance *ginst = new SpinningInstance(giw, gtrans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
   ginst->name_ = "Spinning Geology";
 
   CutGroup *gcut = new CutGroup(cpdpy);
@@ -884,7 +871,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   sg->add(hcut);
 #endif
 #ifdef ADD_CSAFE_FIRE
-  sg->add(fire_inst);
+  sg->add(fire_cut);
 #endif
 #ifdef ADD_GEO_DATA
   sg->add(gcut);
@@ -947,17 +934,17 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->attach_display(gcvdpy);
   (new Thread(gcvdpy, "GEO Volume Dpy"))->detach();
 #endif
+#ifdef ADD_DAVE_HEAD
   scene->addObjectOfInterest( hcut, false );
+#endif
   scene->attach_auxiliary_display(cpdpy);
   cpdpy->setName("Cutting Plane");
   scene->attach_display(cpdpy);
   (new Thread(cpdpy, "CutPlane Dpy"))->detach();
 
-  scene->add_per_matl_mood_light(holo_light0);
   scene->add_per_matl_mood_light(holo_light1);
   scene->add_per_matl_mood_light(holo_light2);
   scene->add_per_matl_mood_light(holo_light3);
-  scene->add_per_matl_mood_light(holo_light4);
 
   return scene;
 }
