@@ -878,6 +878,7 @@ void OpenGL::dump_image(const clString& name) {
     int n=3*vp[2]*vp[3];
     cerr << "Dumping: " << vp[2] << "x" << vp[3] << endl;
     unsigned char* pxl=scinew unsigned char[n];
+    glPixelStorei(GL_PACK_ALIGNMENT,1);
     glReadBuffer(GL_FRONT);
     glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
     dumpfile.write((const char *)pxl,n);
@@ -1458,6 +1459,9 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.9  1999/09/14 17:08:11  kuzimmer
+// added glPixelStorei(GL_PACK_ALIGNMENT,1); to the dump_image function so that raw images were dumped correctly
+//
 // Revision 1.8  1999/09/08 22:04:32  sparker
 // Fixed picking
 // Added messages for pick mode
