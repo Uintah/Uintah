@@ -71,6 +71,13 @@ WARNING
     operator=(const VariableBase& v)
     { copyPointer(v); return *this; }
 
+    // Steve writes: castOffConst() is evil.  It returns a CCVariable
+    // from a constCCVariable that you can modify.  However, you
+    // should NOT modify it or you will cause serious problems for
+    // your simulation.  I used it in SimpleCFD as a hack to get
+    // around some silliness, but if you feel tempted to use it please
+    // let us know why and we will see if we can come up with a better
+    // solution.  So the answer to how/where is never/nowhere.
     Variable& castOffConst() {
       return rep_;
     }
