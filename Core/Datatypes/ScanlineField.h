@@ -100,7 +100,7 @@ ScanlineField<Data>::get_type_name(int n) const
 }
 
 
-#define LATTICEVOL_VERSION 1
+#define SCANLINEFIELD_VERSION 1
 
 template <class Data>
 Persistent* 
@@ -119,7 +119,7 @@ template <class Data>
 void
 ScanlineField<Data>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), LATTICEVOL_VERSION);
+  stream.begin_class(type_name(-1), SCANLINEFIELD_VERSION);
   GenericField<ScanlineMesh, vector<Data> >::io(stream);
   stream.end_class();                                                         
 }

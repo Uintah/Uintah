@@ -48,31 +48,31 @@ public:
   virtual ~FData2d(){}
   
   const value_type &operator[](typename ImageMesh::cell_index idx) const 
-    { return operator()(idx.i_, 0); } 
+    { return operator()(0, idx.i_); } 
   const value_type &operator[](typename ImageMesh::face_index idx) const
-    { return operator()(idx.i_, idx.j_); }
+    { return operator()(idx.j_, idx.i_); }
   const value_type &operator[](typename ImageMesh::edge_index idx) const 
-    { return operator()(idx.i_, 0); }
+    { return operator()(0, idx.i_); }
   const value_type &operator[](typename ImageMesh::node_index idx) const
-    { return operator()(idx.i_, idx.j_); }
+    { return operator()(idx.j_, idx.i_); }
 
   value_type &operator[](typename ImageMesh::cell_index idx)
-    { return operator()(idx.i_, 0); } 
+    { return operator()(0, idx.i_); } 
   value_type &operator[](typename ImageMesh::face_index idx)
-    { return operator()(idx.i_, idx.j_); }
+    { return operator()(idx.j_, idx.i_); }
   value_type &operator[](typename ImageMesh::edge_index idx)
-    { return operator()(idx.i_, 0); }
+    { return operator()(0, idx.i_); }
   value_type &operator[](typename ImageMesh::node_index idx)
-    { return operator()(idx.i_, idx.j_); }
+    { return operator()(idx.j_, idx.i_); }
 
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
   void resize(const ImageMesh::node_size_type &size)
-    { newsize(size.i_, size.j_); }
+    { newsize(size.j_, size.i_); }
   void resize(ImageMesh::edge_size_type) {}
   void resize(const ImageMesh::face_size_type &size)
-    { newsize(size.i_, size.j_); }
+    { newsize(size.j_, size.i_); }
   void resize(ImageMesh::cell_size_type) {}
 };
 
@@ -163,7 +163,7 @@ ImageField<Data>::get_type_name(int n) const
 }
 
 
-#define LATTICEVOL_VERSION 1
+#define IMAGEFIELD_VERSION 2
 
 template <class Data>
 Persistent* 
@@ -182,9 +182,18 @@ template <class Data>
 void
 ImageField<Data>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), LATTICEVOL_VERSION);
+  int version = stream.begin_class(type_name(-1), IMAGEFIELD_VERSION);
   GenericField<ImageMesh, FData2d<Data> >::io(stream);
   stream.end_class();                                                         
+  if (version < 2) {
+    FData2d<Data> temp;
+    temp=fdata();
+    resize_fdata();
+    int i, j;
+    for (i=0; i<fdata().dim1(); i++)
+      for (j=0; j<fdata().dim2(); j++)
+	fdata()(i,j)=temp(j,i);
+  }  
 }
 
 

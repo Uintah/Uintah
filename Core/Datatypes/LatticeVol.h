@@ -48,32 +48,32 @@ public:
   virtual ~FData3d(){}
   
   const value_type &operator[](typename LatVolMesh::cell_index idx) const 
-    { return operator()(idx.i_,idx.j_,idx.k_); } 
+    { return operator()(idx.k_,idx.j_,idx.i_); } 
   const value_type &operator[](typename LatVolMesh::face_index idx) const
-    { return operator()(idx.i_, 0, 0); }
+    { return operator()(0, 0, idx.i_); }
   const value_type &operator[](typename LatVolMesh::edge_index idx) const 
-    { return operator()(idx.i_, 0, 0); }
+    { return operator()(0, 0, idx.i_); }
   const value_type &operator[](typename LatVolMesh::node_index idx) const
-    { return operator()(idx.i_,idx.j_,idx.k_); }
+    { return operator()(idx.k_,idx.j_,idx.i_); }
 
   value_type &operator[](typename LatVolMesh::cell_index idx)
-    { return operator()(idx.i_,idx.j_,idx.k_); } 
+    { return operator()(idx.k_,idx.j_,idx.i_); } 
   value_type &operator[](typename LatVolMesh::face_index idx)
-    { return operator()(idx.i_, 0, 0); }
+    { return operator()(0, 0, idx.i_); }
   value_type &operator[](typename LatVolMesh::edge_index idx)
-    { return operator()(idx.i_, 0, 0); }
+    { return operator()(0, 0, idx.i_); }
   value_type &operator[](typename LatVolMesh::node_index idx)
-    { return operator()(idx.i_,idx.j_,idx.k_); }
+    { return operator()(idx.k_,idx.j_,idx.i_); }
 
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
   void resize(const LatVolMesh::node_size_type &size)
-    { newsize(size.i_, size.j_, size.k_); }
+    { newsize(size.k_, size.j_, size.i_); }
   void resize(LatVolMesh::edge_size_type) {}
   void resize(LatVolMesh::face_size_type) {}
   void resize(const LatVolMesh::cell_size_type &size)
-    { newsize(size.i_, size.j_, size.k_); }
+    { newsize(size.k_, size.j_, size.i_); }
 };
 
 template <class Data>
@@ -163,7 +163,7 @@ LatticeVol<Data>::get_type_name(int n) const
 }
 
 
-#define LATTICEVOL_VERSION 1
+#define LATTICEVOL_VERSION 2
 
 template <class Data>
 Persistent* 
@@ -182,9 +182,19 @@ template <class Data>
 void
 LatticeVol<Data>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), LATTICEVOL_VERSION);
+  int version = stream.begin_class(type_name(-1), LATTICEVOL_VERSION);
   GenericField<LatVolMesh, FData3d<Data> >::io(stream);
   stream.end_class();                                                         
+  if (version < 2) {
+    FData3d<Data> temp;
+    temp=fdata();
+    resize_fdata();
+    int i, j, k;
+    for (i=0; i<fdata().dim1(); i++)
+      for (j=0; j<fdata().dim2(); j++)
+	for (k=0; k<fdata().dim3(); k++)
+	  fdata()(i,j,k)=temp(k,j,i);
+  }
 }
 
 
