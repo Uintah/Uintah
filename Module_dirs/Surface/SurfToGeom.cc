@@ -118,6 +118,7 @@ void SurfToGeom::execute()
 
     GeomGroup* group = new GeomGroup;
     TriSurface* ts=surf->getTriSurface();
+
     if(ts){
 	for (int i=0; i<ts->elements.size(); i++) {
 	    if (have_cm && have_sf) {
