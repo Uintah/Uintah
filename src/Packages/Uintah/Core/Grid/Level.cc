@@ -453,7 +453,9 @@ const PatchSet* Level::allPatches() const
 const Patch* Level::selectPatch( const IntVector& idx) const
 {
   selectType pv;
-  selectPatches(idx,idx,pv);
+
+  IntVector i(1,1,1);
+  selectPatches(idx - i,idx + i,pv);
   if(pv.size() == 0)
     return 0;
   else
