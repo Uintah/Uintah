@@ -5,6 +5,7 @@ void taucal_cc(
 	constCCVariable<double> ug_cc,
 	Array3<double> up_fcy,
 	constCCVariable<double> epsg,
+	constCCVariable<double> den,
 	constCCVariable<double> epss,
 	OffsetArray1<double> sew,
 	OffsetArray1<double> stb,

@@ -636,6 +636,14 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
 	      arches_matls->getUnion(),
 	      Ghost::AroundCells, numGhostCells);
   
+  t->requires(Task::OldDW, d_Alab->d_densityINLabel, 
+	      arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+  
+  t->requires(Task::OldDW, d_Alab->d_densityMicroLabel, 
+	      arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+  
   t->requires(Task::NewDW,  d_Alab->d_mmgasVolFracLabel,   
 	      arches_matls->getUnion(),
 	      Ghost::AroundCells, numGhostCells);
@@ -1821,6 +1829,9 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     constCCVariable<double> zvelCC_gas;
     
     constCCVariable<double> gas_fraction_cc;
+
+    constCCVariable<double> density;
+    constCCVariable<double> denMicro;
     
     // multimaterial contribution to SP and SU terms 
     // in Arches momentum eqns currently at cc and fcs.  
@@ -1872,6 +1883,11 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 
     new_dw->get(gas_fraction_cc, d_Alab->d_mmgasVolFracLabel, matlIndex, 
 		patch, Ghost::AroundCells, numGhostCellsG);
+
+    old_dw->get(density, d_Alab->d_densityINLabel, matlIndex, 
+		patch, Ghost::AroundCells, numGhostCellsG);
+    old_dw->get(denMicro, d_Alab->d_densityMicroLabel, matlIndex, 
+		patch, Ghost::AroundCells, numGhostCellsG);    
 
     // patch geometry information
     
@@ -2081,6 +2097,8 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 						xvelFCY_solid[m],
 						xvelFCZ_solid[m],
 						gas_fraction_cc,
+						density,
+						denMicro,
 						solid_fraction_cc[m],
 						viscos, csmag,
 						cellinfo->sew, cellinfo->sns, cellinfo->stb, 
@@ -2115,6 +2133,8 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 						yvelFCZ_solid[m],
 						yvelFCX_solid[m],
 						gas_fraction_cc,
+						density,
+						denMicro,
 						solid_fraction_cc[m],
 						viscos, csmag,
 						cellinfo->sns, cellinfo->stb, cellinfo->sew, 
@@ -2149,6 +2169,8 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 						zvelFCX_solid[m],
 						zvelFCY_solid[m],
 						gas_fraction_cc,
+						density,
+						denMicro,
 						solid_fraction_cc[m],
 						viscos, csmag,
 						cellinfo->stb, cellinfo->sew, cellinfo->sns, 

@@ -162,6 +162,9 @@ C--------------------------------------------------------------------
       integer jj
       integer kk
 
+      double precision rho
+      double precision visturb
+
 *     externals
 
 C      external rmean
@@ -183,8 +186,15 @@ c     smagorinsky model: with delta near wall treated as
 c     distance from wall, in analogy with classical mixing 
 c     length model
 
-            tmult = eps*(csmag*yp)**2*abs((up_fcy(ii,jj,kk) - 
-     $           ug_cc(i,j,k))/yp)/yp
+            rho = pt5*(den(i,j,k) + 
+     $           den(i-ioff,j-joff,k-koff))
+            
+            visturb = (csmag*yp)**2*rho*
+     $           abs((up_fcy(ii,jj,kk) - ug_cc(i,j,k))/
+     $           yp)
+
+            tmult = (visturb + eps*viscos)/yp
+
             tmult = tmult*epss(iorig,jorig,korig)
 
          else
@@ -194,7 +204,7 @@ c     laminar flow
             tmult = eps*viscos/yp
             tmult = tmult*epss(iorig,jorig,korig)
 
-         end if
+         endif
 
          su_fcy(ii,jj,kk) = 
      $        su_fcy(ii,jj,kk) + 

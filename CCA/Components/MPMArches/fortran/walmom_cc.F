@@ -161,6 +161,8 @@ c--------------------------------------------------------------------
      $        PASS3B(up_fcy), 
      $        PASS3A(epsg)
      $        PASS3B(epsg), 
+     $        PASS3A(den)
+     $        PASS3B(den), 
      $        PASS3A(epss)
      $        PASS3B(epss),
      $        PASS1(sew), 
@@ -202,6 +204,8 @@ c--------------------------------------------------------------------
      $        PASS3B(up_fcy), 
      $        PASS3A(epsg)
      $        PASS3B(epsg), 
+     $        PASS3A(den)
+     $        PASS3B(den), 
      $        PASS3A(epss)
      $        PASS3B(epss), 
      $        PASS1(sew), 
