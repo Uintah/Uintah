@@ -141,13 +141,13 @@ DirectInterpVectorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
   {
     mesh->get_center(p, *itr);
 
-    if (interp && sfi->interpolate(val, p))
+    if (interp && vfi->interpolate(val, p))
     {
       fld->set_value((typename Fld::value_type)val, *itr);
     }
     else if (closest)
     {
-      if (sfi->find_closest(val, p) < dist)
+      if (vfi->find_closest(val, p) < dist)
       {
 	fld->set_value((typename Fld::value_type)val, *itr);
       }
@@ -205,13 +205,13 @@ DirectInterpTensorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
   {
     mesh->get_center(p, *itr);
 
-    if (interp && sfi->interpolate(val, p))
+    if (interp && tfi->interpolate(val, p))
     {
       fld->set_value((typename Fld::value_type)val, *itr);
     }
     else if (closest)
     {
-      if (sfi->find_closest(val, p) < dist)
+      if (tfi->find_closest(val, p) < dist)
       {
 	fld->set_value((typename Fld::value_type)val, *itr);
       }
