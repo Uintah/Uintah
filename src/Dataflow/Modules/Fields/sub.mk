@@ -31,16 +31,16 @@ SRCDIR   := Dataflow/Modules/Fields
 SRCS     += \
 	$(SRCDIR)/ApplyInterpolant.cc\
 	$(SRCDIR)/BuildInterpolant.cc\
-	$(SRCDIR)/CastField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldSet.cc\
-	$(SRCDIR)/ManipFields.cc\
 	$(SRCDIR)/SeedField.cc\
 	$(SRCDIR)/TransformField.cc\
 #[INSERT NEW CODE FILE HERE]
+#	$(SRCDIR)/CastField.cc\
 #	$(SRCDIR)/ChangeCellType.cc\
+#	$(SRCDIR)/ManipFields.cc\
 
 
 CFLAGS   := $(CFLAGS) -DFM_SRC=\"$(SRCTOP_ABS)/Dataflow/Modules/Fields/Manip\" -DFM_OBJ=\"$(OBJTOP_ABS)/Dataflow/Modules/Fields/Manip\"

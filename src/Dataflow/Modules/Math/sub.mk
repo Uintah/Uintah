@@ -31,11 +31,11 @@ SRCDIR   := Dataflow/Modules/Math
 SRCS     += \
 	$(SRCDIR)/BuildTransform.cc\
 	$(SRCDIR)/ErrorMetric.cc\
-        $(SRCDIR)/ManipMatrix.cc\
         $(SRCDIR)/MatrixSelectVector.cc\
         $(SRCDIR)/MinNormLeastSq.cc\
 	$(SRCDIR)/SolveMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
+#        $(SRCDIR)/ManipMatrix.cc\
 
 CFLAGS   := $(CFLAGS) -DMM_SRC=\"$(SRCTOP_ABS)/Dataflow/Modules/Math/Manip\" -DMM_OBJ=\"$(OBJTOP_ABS)/Dataflow/Modules/Math/Manip\"
 
