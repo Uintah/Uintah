@@ -1817,11 +1817,10 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
 
       for(NodeIterator iter=patch->getNodeIterator(n8or27);!iter.done();iter++){
         IntVector c = *iter;
-        tempRate[c] = (internalHeatRate[c]
+        tempRate[c] = (internalHeatRate[c]*((mass[c]-1.e-200)/mass[c])
                     +  externalHeatRate[c]
                     +  htrate_gasNC[c]) /
-                                         (mass[c] * specificHeat) + 
-          thermalContactHeatExchangeRate[c];
+                   (mass[c] * specificHeat) + thermalContactHeatExchangeRate[c];
       }
     }
   }
