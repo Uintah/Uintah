@@ -29,6 +29,9 @@ SRCS     += $(SRCDIR)/Point2d.cc \
 	$(SRCDIR)/OpenGLWindow.cc \
 	$(SRCDIR)/OpenGL.cc \
 	$(SRCDIR)/Graph.cc \
+	$(SRCDIR)/glprintf.cc \
+	$(SRCDIR)/asciitable.cc \
+	$(SRCDIR)/texture.cc
 
 
 PSELIBS := Core/Persistent Core/Exceptions \
