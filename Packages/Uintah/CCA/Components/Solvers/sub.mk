@@ -8,6 +8,10 @@ SRCS     += \
 	$(SRCDIR)/CGSolver.cc \
 	$(SRCDIR)/DirectSolve.cc
 
+ifeq ($(HAVE_HYPRE),yes)
+SRCS +=  $(SRCDIR)/HypreSolver.cc
+endif
+
 PSELIBS := \
 	Core/Exceptions                  \
 	Core/Thread                      \
@@ -20,7 +24,10 @@ PSELIBS := \
 	Packages/Uintah/Core/ProblemSpec 
 
 LIBS := $(XML_LIBRARY) 
-#$(M_LIBRARY)
+
+ifeq ($(HAVE_HYPRE),yes)
+LIBS := $(LIBS) $(HYPRE_LIBRARY) 
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
