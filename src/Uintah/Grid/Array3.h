@@ -72,6 +72,11 @@ namespace Uintah {
       void initialize(const T& value) {
 	 d_window->initialize(value);
       }
+      void copy(const Array3<T>& from) {
+	 ASSERT(d_window != 0);
+	 ASSERT(from.d_window != 0);
+	 d_window->copy(from.d_window);
+      }
       
       void initialize(const T& value, const IntVector& s,
 		      const IntVector& e) {
@@ -153,6 +158,9 @@ namespace Uintah {
    
 //
 // $Log$
+// Revision 1.17  2000/09/20 15:48:30  sparker
+// Added .copy() method to copy one Array3 from another
+//
 // Revision 1.16  2000/06/29 04:19:21  bbanerje
 // Added getForLowIndex() and getFortHighIndex()
 //
