@@ -136,7 +136,34 @@ extern "C" void ( * glXGetProcAddressARB (const GLubyte *procName)) (void);
 
 #endif /* GLX_ARB_get_proc_address */
 
+#ifdef __APPLE__
+
+#include <mach-o/dyld.h>
+#include <stdlib.h>
+#include <string.h>
+
+static void *NSGLGetProcAddress (const GLubyte *name)
+{
+  NSSymbol symbol;
+  char *symbolName;
+  /* prepend a '_' for the Unix C symbol mangling convention */
+  symbolName = (char*)malloc(strlen((const char *)name) + 2);
+  strcpy(symbolName+1, (const char *)name);
+  symbolName[0] = '_';
+  symbol = NULL;
+  if (NSIsSymbolNameDefined(symbolName))
+    symbol = NSLookupAndBindSymbol(symbolName);
+  free(symbolName);
+  return symbol ? NSAddressOfSymbol(symbol) : NULL;
+}
+
+#define getProcAddress(x) (NSGLGetProcAddress((const GLubyte*)x))
+
+#else
+
 #define getProcAddress(x) ((*glXGetProcAddressARB)((const GLubyte*)x))
+
+#endif
 
 static PFNGLXBINDTEXIMAGEATIPROC glXBindTexImageATI = 0;
 static PFNGLXRELEASETEXIMAGEATIPROC glXReleaseTexImageATI = 0;
