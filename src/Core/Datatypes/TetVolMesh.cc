@@ -140,11 +140,13 @@ TetVolMesh::~TetVolMesh()
 {
 }
 
+
 /* To generate a random point inside of a tetrahedron, we generate random
    barrycentric coordinates (independent random variables between 0 and
    1 that sum to 1) for the point. */
-void TetVolMesh::get_random_point(Point &p, const Cell::index_type &ei,
-				  int seed) const
+void
+TetVolMesh::get_random_point(Point &p, const Cell::index_type &ei,
+			     int seed) const
 {
   static MusilRNG rng;
 
@@ -849,6 +851,7 @@ TetVolMesh::get_center(Point &p, Edge::index_type idx) const
   p = ((Vector(p) + Vector(p1)) * s).asPoint();
 }
 
+
 void
 TetVolMesh::get_center(Point &p, Face::index_type idx) const
 {
@@ -863,6 +866,7 @@ TetVolMesh::get_center(Point &p, Face::index_type idx) const
   p = ((Vector(p) + Vector(p1) + Vector(p2)) * s).asPoint();
 }
 
+
 void
 TetVolMesh::get_center(Point &p, Cell::index_type idx) const
 {
@@ -876,64 +880,50 @@ TetVolMesh::get_center(Point &p, Cell::index_type idx) const
 	p2.asVector() + p3.asVector()) * s).asPoint();
 }
 
-static double
-distance2(const Point &p0, const Point &p1)
-{
-  const double dx = p0.x() - p1.x();
-  const double dy = p0.y() - p1.y();
-  const double dz = p0.z() - p1.z();
-  return dx * dx + dy * dy + dz * dz;
-}
-
 
 bool
 TetVolMesh::locate(Node::index_type &loc, const Point &p)
 {
   Cell::index_type ci;
-  if (locate(ci, p)) { // first try the fast way.
+  if (locate(ci, p)) // first try the fast way.
+  {
     Node::array_type nodes;
     get_nodes(nodes, ci);
 
-    double d0 = distance2(p, points_[nodes[0]]);
-    double d = d0;
-    loc = nodes[0];
-    double d1 = distance2(p, points_[nodes[1]]);
-    if (d1 < d) {
-      d = d1;
-      loc = nodes[1];
-    }
-    double d2 = distance2(p, points_[nodes[2]]);
-    if (d2 < d) {
-      d = d2;
-      loc = nodes[2];
-    }
-    double d3 = distance2(p, points_[nodes[3]]);
-    if (d3 < d)  {
-       loc = nodes[3];
+    Point ptmp;
+    double mindist;
+    for (int i=0; i<4; i++)
+    {
+      get_center(ptmp, nodes[i]);
+      double dist = (p - ptmp).length2();
+      if (i == 0 || dist < mindist)
+      {
+	mindist = dist;
+	loc = nodes[i];
+      }
     }
     return true;
   }
   else
   {  // do exhaustive search.
-    Node::iterator ni, nie;
-    begin(ni);
-    end(nie);
-    if (ni == nie) { return false; }
-
-    double min_dist = distance2(p, points_[*ni]);
-    loc = *ni;
-    ++ni;
-
-    while (ni != nie)
+    bool found_p = false;
+    double mindist;
+    Node::iterator bi; begin(bi);
+    Node::iterator ei; end(ei);
+    while (bi != ei)
     {
-      const double dist = distance2(p, points_[*ni]);
-      if (dist < min_dist)
+      Point c;
+      get_center(c, *bi);
+      const double dist = (p - c).length2();
+      if (!found_p || dist < mindist)
       {
-	loc = *ni;
+	mindist = dist;
+	loc = *bi;
+	found_p = true;
       }
-      ++ni;
+      ++bi;
     }
-    return true;
+    return found_p;
   }
 }
 
@@ -942,7 +932,7 @@ bool
 TetVolMesh::locate(Edge::index_type &edge, const Point &p)
 {
   bool found_p = false;
-  double mindist = 1.0e6;
+  double mindist;
   Edge::iterator bi; begin(bi);
   Edge::iterator ei; end(ei);
   while (bi != ei)
@@ -950,7 +940,7 @@ TetVolMesh::locate(Edge::index_type &edge, const Point &p)
     Point c;
     get_center(c, *bi);
     const double dist = (p - c).length2();
-    if (dist < mindist)
+    if (!found_p || dist < mindist)
     {
       mindist = dist;
       edge = *bi;
@@ -966,7 +956,7 @@ bool
 TetVolMesh::locate(Face::index_type &face, const Point &p)
 {
   bool found_p = false;
-  double mindist = 1.0e6;
+  double mindist;
   Face::iterator bi; begin(bi);
   Face::iterator ei; end(ei);
   while (bi != ei)
@@ -974,7 +964,7 @@ TetVolMesh::locate(Face::index_type &face, const Point &p)
     Point c;
     get_center(c, *bi);
     const double dist = (p - c).length2();
-    if (dist < mindist)
+    if (!found_p || dist < mindist)
     {
       mindist = dist;
       face = *bi;
@@ -1275,7 +1265,7 @@ TetVolMesh::Node::index_type
 TetVolMesh::add_find_point(const Point &p, double err)
 {
   Node::index_type i;
-  if (locate(i, p) && distance2(points_[i], p) < err)
+  if (locate(i, p) && (points_[i] - p).length2() < err)
   {
     return i;
   }
