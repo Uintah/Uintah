@@ -40,6 +40,8 @@ namespace VS {
 
 using namespace SCIRun;
 
+#define VS_DATASOURCE_OQAFMA 1
+#define VS_DATASOURCE_FILES 2
 
 class PSECORESHARE HotBox : public Module {
 private:
@@ -61,12 +63,20 @@ private:
   GuiString gui_label8_;
   GuiString gui_label9_;
 
+  // toggle on/off drawing GeomSticky output
+  GuiString enableDraw_;
+
   // the HotBox interaction
   VS_SCI_Hotbox *VS_HotBoxUI;
 
-  // temporary:  fixed anatomical label map files
+  // file or OQAFMA
+  GuiInt datasource_;
+
   GuiString anatomydatasource_;
   GuiString adjacencydatasource_;
+  GuiString currentselection_;
+
+  // temporary:  fixed anatomical label map files
   VH_MasterAnatomy *anatomytable;
   VH_AdjacencyMapping *adjacencytable;
 
@@ -97,8 +107,11 @@ HotBox::HotBox(GuiContext* ctx)
   gui_label7_(ctx->subVar("gui_label7")),
   gui_label8_(ctx->subVar("gui_label8")),
   gui_label9_(ctx->subVar("gui_label9")),
+  enableDraw_(ctx->subVar("enableDraw")),
+  datasource_(ctx->subVar("datasource")),
   anatomydatasource_(ctx->subVar("anatomydatasource")),
-  adjacencydatasource_(ctx->subVar("adjacencydatasource"))
+  adjacencydatasource_(ctx->subVar("adjacencydatasource")),
+  currentselection_(ctx->subVar("currentselection"))
 {
   // instantiate the HotBox-specific interaction structure
   VS_HotBoxUI = new VS_SCI_Hotbox();
@@ -192,8 +205,9 @@ void
 
   const string anatomyDataSrc(anatomydatasource_.get());
   const string adjacencyDataSrc(adjacencydatasource_.get());
+  const string enableDraw(enableDraw_.get());
   
-  // // launch queries via JACE/Protege
+  // // launch queries via OQAFMA/Protege C function calls
   //
   // // collect query results
 
@@ -238,6 +252,7 @@ void
   Color text_color;
   text_color = Color(1,1,1);
   MaterialHandle text_material = scinew Material(text_color);
+  text_material->transparency = 0.75;
 
   GeomLines *lines = scinew GeomLines();
   GeomTexts *texts = scinew GeomTexts();
@@ -317,6 +332,7 @@ void
 
   gui_label5_.set(selectName);
   VS_HotBoxUI->set_text(5, strdup(selectName));
+  currentselection_.set(selectName);
   
   if(adjacencytable->get_num_rel(labelIndexVal) >= 6)
   {
@@ -383,10 +399,13 @@ void
     VS_HotBoxUI->set_text(9, strdup(adjacentName));
   }
 
-  VS_HotBoxUI->draw(0, 0, 0.005);
+  if(enableDraw == "yes")
+  {
+    VS_HotBoxUI->draw(0, 0, 0.005);
   
-  HB_geomGroup->add(lines);
-  HB_geomGroup->add(texts);
+    HB_geomGroup->add(lines);
+    HB_geomGroup->add(texts);
+  }
 
   // set output
   GeometryOPort *outGeomPort = (GeometryOPort *)get_oport("HotBox Widget");

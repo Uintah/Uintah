@@ -27,6 +27,7 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_label8
     global $this-gui_label9
     global $this-FME_on
+    global $this-enableDraw
     global $this-currentselection
     global $this-datafile
     global $this-datasource
@@ -43,6 +44,7 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_label8 "label8"
     set $this-gui_label9 "label9"
     set $this-FME_on "yes"
+    set $this-enableDraw "no"
     set $this-currentselection ""
     set $this-datafile ""
     set $this-datasource ""
@@ -97,6 +99,15 @@ itcl_class VS_DataFlow_HotBox {
 
   }
   # end method toggle_FME_on
+
+  method toggle_enableDraw {} {
+    if {[set $this-enableDraw] == "yes"} {
+      # toggle HotBox output Geometry off
+      set $this-enableDraw "no"
+    } else {set $this-enableDraw "yes"}
+
+  }
+  # end method toggle_enableDraw
 
   method set_selection { selection_id } {
     puts "VS_DataFlow_HotBox::set_selection{$selection_id}"
@@ -187,8 +198,10 @@ itcl_class VS_DataFlow_HotBox {
     checkbutton $w.controls.togFME -text "Connect to FME" -command "$this toggle_FME_on"
     $w.controls.togFME select
 
+    checkbutton $w.controls.enableDraw -text "Enable Output Geom" -command "$this toggle_enableDraw"
+
     button $w.controls.close -text "Close" -command "destroy $w"
-    pack $w.controls.adjOQAFMA $w.controls.adjFILES $w.controls.togFME $w.controls.close -side left -expand yes -fill x
+    pack $w.controls.adjOQAFMA $w.controls.adjFILES $w.controls.togFME $w.controls.enableDraw $w.controls.close -side left -expand yes -fill x
 
     pack $w.f $w.controls -side top -expand yes -fill both -padx 5 -pady 5
 # pack $w.title -side top

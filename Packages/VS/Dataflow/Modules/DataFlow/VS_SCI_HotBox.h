@@ -70,12 +70,13 @@ class VS_box2D {
     VS_box2D(int mX, int mY, int mxX, int mxY) { minX = mX; minY = mY;
                              maxX = mxX; maxY = mxY; };
     // operators
-    VS_box2D operator =(VS_box2D x) { VS_box2D tmp;
-                             tmp.minX = x.minX; tmp.minY = x.minY;
-                             tmp.maxX = x.maxX; tmp.maxY = x.maxY; return tmp; };
+    void operator =(VS_box2D x) {
+                             set_minX(x.minX); set_minY(x.minY);
+                             set_maxX(x.maxX); set_maxY(x.maxY); };
     VS_box2D operator +(VS_box2D x) { VS_box2D tmp;
-                             tmp.minX += x.minX; tmp.minY += x.minY;
-                             tmp.maxX += x.maxX; tmp.maxY += x.maxY; return tmp; };
+                             tmp.minX = minX + x.minX; tmp.minY = minY + x.minY;
+                             tmp.maxX = maxX + x.maxX; tmp.maxY = maxY + x.maxY;
+			      return tmp; };
 
     // access functions
     int get_minX() { return minX; };
