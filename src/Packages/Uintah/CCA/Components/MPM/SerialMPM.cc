@@ -637,16 +637,14 @@ void SerialMPM::scheduleComputeFracture(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pCrackNormal1Label, Ghost::AroundCells, 1);
   t->requires(Task::OldDW, lb->pCrackNormal2Label, Ghost::AroundCells, 1);
   t->requires(Task::OldDW, lb->pCrackNormal3Label, Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pVolumeLabel,
-    Ghost::AroundCells, 1);
-  t->requires(Task::NewDW, lb->pStressAfterStrainRateLabel,
-    Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pVolumeLabel,       Ghost::AroundCells, 1);
 
   t->requires(Task::NewDW, lb->pXXLabel,                    Ghost::None);
-  t->requires(Task::NewDW, lb->pStrainEnergyLabel,          Ghost::None);
+  //t->requires(Task::NewDW, lb->pStrainEnergyLabel,          Ghost::None);
   t->requires(Task::OldDW, lb->pToughnessLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->pRotationRateLabel,          Ghost::None);
   t->requires(Task::NewDW, lb->pConnectivityLabel,          Ghost::None);
+  t->requires(Task::NewDW, lb->pStressAfterStrainRateLabel, Ghost::None);
 
   t->requires(Task::NewDW, lb->gStressForSavingLabel, Ghost::AroundCells, 1);
 
@@ -1793,9 +1791,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pTemperatureNew[idx] = pTemperature[idx] + tempRate * delT;
           thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
 	
-	  if(numConnectedNodes != 0) {
+//	  if(numConnectedNodes != 0) {
             pxnew[idx]        = px[idx]        + vel * delT;
             pvelocitynew[idx] = pvelocity[idx] + acc * delT;
+/*
           }
 	  else {        
 	    cout<<"isolated particle!"<<endl;
@@ -1805,6 +1804,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             pvelocitynew[idx] = pvelocity[idx] +
 	    pexternalForce[idx] / (pmass[idx] * delT);
           }
+*/
 	  pmassNew[idx]   = pmass[idx];
           pvolumeNew[idx] = pvolume[idx];
 
