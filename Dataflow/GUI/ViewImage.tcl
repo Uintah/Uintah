@@ -67,10 +67,27 @@ class Linkedpane {
     
 itcl_class SCIRun_Render_ViewImage {
     inherit Module
+    protected vp_tabs ""
 
     constructor {config} {
 	set name ViewImage
+	uplevel \#0 trace variable $this-min w \"$this update_clut_range\"
+	uplevel \#0 trace variable $this-max w \"$this update_clut_range\"
+	
     }
+
+    method update_clut_range {args} {
+	upvar \#0 [modname]-min min [modname]-max max
+	set ww [expr $max-$min]
+	set wl [expr $min+$ww/2]
+	foreach tab $vp_tabs {
+	    $tab.clutww.scale configure -from $min -to $max
+	    $tab.clutwl.scale configure -from $min -to $max
+	    $tab.clutww.scale set $ww
+	    $tab.clutwl.scale set $wl
+	}
+    }
+	
 
     method labeledSlider { frame text var from to res {width 13}} {
 	frame $frame
@@ -129,9 +146,10 @@ itcl_class SCIRun_Render_ViewImage {
 
 	bind $w.$id <Expose> "$this-c redraw %W"
 	bind $w.$id <Configure> "$this-c redraw %W"
-
-	bind $w.$id <Enter> "focus $w.$id" ;# to generate keypress events 
-	bind $w.$id <Motion>	 "$this-c motion   %W %x %y %s %t"
+	# the focus belowis to generate keypress events 
+	bind $w.$id <Enter>       "focus $w.$id; $this-c enter %W"
+	bind $w.$id <Leave>       "$this-c leave %W; $this-c redrawall"
+	bind $w.$id <Motion>	  "$this-c motion   %W %x %y %s %t"
 	bind $w.$id <KeyPress>    "$this-c keypress %W %k %K %t"
 	bind $w.$id <ButtonPress> "$this-c button   %W %b %s"
 
@@ -152,12 +170,17 @@ itcl_class SCIRun_Render_ViewImage {
     method add_nrrd_tab { w num } {
 	set w [add_tab $w "Nrrd$num"]
 	foreach c {x y z} {
-	    checkbutton $w.flip$c -text "Nrrd$num Flip [string toupper $c]" -variable [modname]-nrrd$num-flip_$c -command "$this-c redrawall"
+	    checkbutton $w.flip$c -text "Nrrd$num Flip [string toupper $c]" \
+		-variable [modname]-nrrd$num-flip_$c \
+		-command "$this-c redrawall"
 	    pack $w.flip$c -side top
 	}
 
  	foreach c {yz xz xy} {
-	    checkbutton $w.transpose$c -text "Nrrd$num Transpose [string toupper $c]" -variable [modname]-nrrd$num-transpose_$c -command "$this-c redrawall"
+	    checkbutton $w.transpose$c \
+		-text "Nrrd$num Transpose [string toupper $c]" \
+		-variable [modname]-nrrd$num-transpose_$c \
+		-command "$this-c redrawall"
 	    pack $w.transpose$c -side top
 	}
     }
@@ -165,6 +188,7 @@ itcl_class SCIRun_Render_ViewImage {
     method add_viewport_tab { w name prefix gl } {
 	set prefix [modname]-$prefix
 	set f [add_tab $w "$name"]
+	lappend vp_tabs $f
 	labeledSlider $f.slice Slice: $prefix-slice 0 255 1
 	$f.slice.scale configure -command \
 	    "$this-c rebind $gl"
@@ -181,7 +205,14 @@ itcl_class SCIRun_Render_ViewImage {
 	$f.clutwl.scale configure -command \
 	    "$this-c rebind $gl"
 
+	labeledSlider $f.fusion "Image Fusion:" $prefix-fusion 0 1 0.001
+	$f.fusion.scale configure -command \
+	    "$this-c redraw $gl"
+	update_clut_range
 
+	checkbutton $f.guidelines -text "Show Guidelines" -variable $prefix-show_guidelines \
+	    -command "$this-c redraw $gl"
+	pack $f.guidelines -side top -anchor w
     }	
 	
 	
