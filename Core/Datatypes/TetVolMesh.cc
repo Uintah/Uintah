@@ -625,16 +625,17 @@ TetVolMesh::set_nodes(Node::array_type &array, Cell::index_type idx)
 }
 
 void
-TetVolMesh::get_edges(Edge::array_type &array, Node::index_type idx) const
+TetVolMesh::get_edges(Edge::array_type &/*array*/, Node::index_type /*idx*/) const
 {
   ASSERTFAIL("Not implemented yet");
 }
 
 
 void
-TetVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
+TetVolMesh::get_edges(Edge::array_type &/*array*/, Face::index_type /*idx*/) const
 {
   ASSERTFAIL("Not implemented correctly");
+#if 0
   array.clear();    
   static int table[4][3] =
   {
@@ -649,6 +650,7 @@ TetVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
   array.push_back(base + table[off][0]);
   array.push_back(base + table[off][1]);
   array.push_back(base + table[off][2]);
+#endif
 }
 
 
@@ -665,13 +667,13 @@ TetVolMesh::get_edges(Edge::array_type &array, Cell::index_type idx) const
 
 
 void
-TetVolMesh::get_faces(Face::array_type &array, Node::index_type idx) const
+TetVolMesh::get_faces(Face::array_type &/*array*/, Node::index_type /*idx*/) const
 {
   ASSERTFAIL("Not implemented yet");
 }
 
 void
-TetVolMesh::get_faces(Face::array_type &array, Edge::index_type idx) const
+TetVolMesh::get_faces(Face::array_type &/*array*/, Edge::index_type /*idx*/) const
 {
   ASSERTFAIL("Not implemented yet");
 }
@@ -1506,7 +1508,7 @@ TetVolMesh::get_cells(Cell::array_type &array, Node::index_type idx)
   // have to calculate it if it does not already exist
   if (! is_frozen()) { 
     ASSERTFAIL("can only call get_cells with a node index if frozen!!");
-    return;
+    //return;
   }
   compute_nodes();
   array.clear();

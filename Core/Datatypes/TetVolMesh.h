@@ -92,13 +92,13 @@ public:
       const int b = (idx / 6) * 4;
       switch (idx % 6)
       {
-      case 0: return pair<index_type,index_type>(b+0,b+1); break;
-      case 1: return pair<index_type,index_type>(b+0,b+2); break;
-      case 2: return pair<index_type,index_type>(b+0,b+3); break;
-      case 3: return pair<index_type,index_type>(b+1,b+2); break;
-      case 4: return pair<index_type,index_type>(b+2,b+3); break;
+      case 0: return pair<index_type,index_type>(b+0,b+1);
+      case 1: return pair<index_type,index_type>(b+0,b+2);
+      case 2: return pair<index_type,index_type>(b+0,b+3);
+      case 3: return pair<index_type,index_type>(b+1,b+2);
+      case 4: return pair<index_type,index_type>(b+2,b+3);
       default:
-      case 5: return pair<index_type,index_type>(b+1,b+3); break;
+      case 5: return pair<index_type,index_type>(b+1,b+3);
       }
     }
 

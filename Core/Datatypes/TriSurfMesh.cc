@@ -579,19 +579,19 @@ TriSurfMesh::connect(double err)
 
     while (li1 != edgemap[i].end())
     {
-      int e1 = *li1;
+      unsigned long e1 = *li1;
       li1++;
 
       list<unsigned long>::iterator li2 = li1;
       while (li2 != edgemap[i].end())
       {
-	int e2 = *li2;
+	unsigned long e2 = *li2;
 	li2++;
 	
-	if ( faces_[next(e1)] == faces_[prev(e2)])
+	if ( faces_[next(static_cast<int>(e1))] == faces_[prev(static_cast<int>(e2))])
 	{
-	  neighbors_[e1] = e2;
-	  neighbors_[e2] = e1;
+	  neighbors_[e1] = static_cast<int>(e2);
+	  neighbors_[e2] = static_cast<int>(e1);
 	}
       }
     }
