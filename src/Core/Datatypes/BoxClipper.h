@@ -24,6 +24,7 @@
 
 #include <Core/Datatypes/Clipper.h>
 #include <Core/Geometry/Transform.h>
+#include <Core/Containers/LockingHandle.h>
 
 namespace SCIRun {
 
@@ -43,6 +44,29 @@ public:
 
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
+};
+
+
+template <class MESH>
+class MeshClipper : public Clipper
+{
+  LockingHandle<MESH> mesh_;
+
+public:
+
+  //BoxClipper(ScaledBoxWidget *box);
+  MeshClipper(LockingHandle<MESH> mesh) : mesh_(mesh) {}
+  MeshClipper(const BoxClipper &bc) : mesh_(bc.mesh_) {}
+  virtual ~MeshClipper() {}
+
+  virtual bool inside_p(const Point &p)
+  {
+    typename MESH::Elem::index_type indx;
+    return mesh_->locate(indx, p);
+  }
+
+  void    io(Piostream &stream) {}
+  //static  PersistentTypeID type_id;
 };
 
 
