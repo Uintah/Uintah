@@ -238,6 +238,7 @@ protected:
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   double d_SMALL_NUM;
+  double d_TINY_RHO;
   
   // Debugging switches
   bool switchDebug_InterpolateNCToCC_0;
