@@ -18,7 +18,6 @@
 #include <SCICore/Util/NotFinished.h>
 #include <globus_nexus.h>
 #include <vector>
-#include <iostream>
 
 using Component::PIDL::ReplyEP;
 using SCICore::Thread::Mutex;
@@ -113,6 +112,12 @@ globus_nexus_buffer_t ReplyEP::wait()
 
 //
 // $Log$
+// Revision 1.4  1999/09/21 06:13:00  sparker
+// Fixed bugs in multiple inheritance
+// Added round-trip optimization
+// To support this, we store Startpoint* in the endpoint instead of the
+//    object final type.
+//
 // Revision 1.3  1999/09/17 05:08:10  sparker
 // Implemented component model to work with sidl code generator
 //

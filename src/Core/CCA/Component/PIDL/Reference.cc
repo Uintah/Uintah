@@ -14,7 +14,6 @@
 
 #include <Component/PIDL/Reference.h>
 #include <Component/PIDL/TypeInfo.h>
-#include <globus_nexus.h>
 
 using Component::PIDL::Reference;
 
@@ -46,6 +45,12 @@ int Reference::getVtableBase() const
 
 //
 // $Log$
+// Revision 1.4  1999/09/21 06:13:00  sparker
+// Fixed bugs in multiple inheritance
+// Added round-trip optimization
+// To support this, we store Startpoint* in the endpoint instead of the
+//    object final type.
+//
 // Revision 1.3  1999/09/17 05:08:09  sparker
 // Implemented component model to work with sidl code generator
 //
