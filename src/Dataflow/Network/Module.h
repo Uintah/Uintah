@@ -33,7 +33,7 @@
 
 #include <Dataflow/Network/Port.h>
 #include <Core/Util/Assert.h>
-#include <Core/GuiInterface/TCLstrbuff.h>
+#include <Core/GuiInterface/SciTCLstrbuff.h>
 #include <Core/GeomInterface/Pickable.h>
 #include <Core/Thread/Mailbox.h>
 #include <Core/Thread/FutureValue.h>
@@ -269,7 +269,7 @@ protected:
   void update_msg_state(MsgState);  
   CPUTimer timer;
 public:
-  TCLstrbuff msgStream_;
+  SciTCLstrbuff msgStream_;
 protected:
   void get_position(int& x, int& y);
   virtual void emit_vars(std::ostream& out, const std::string& modname);
