@@ -7,6 +7,7 @@
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/UV.h>
+#include <Packages/rtrt/Core/RegularColorMap.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -26,10 +27,10 @@ PCAGridSpheres::PCAGridSpheres(float* spheres, size_t nspheres, int ndata,
 			       unsigned char* tex_data, int nbases, int tex_res,
 			       float *xform, float *mean, int nchannels,
 			       float tex_min, float tex_max,
-			       int nsides, int depth,
+			       int nsides, int depth, RegularColorMap* cmap,
 			       const Color& color) :
  TextureGridSpheres(spheres, nspheres, ndata, radius, tex_indices, tex_data,
-		    nbases, tex_res, nsides, depth, color),
+		    nbases, tex_res, nsides, depth, cmap, color),
  xform(xform), mean(mean), nbases(nbases), nchannels(nchannels),
  tex_min(tex_min)
 {
@@ -96,9 +97,15 @@ void PCAGridSpheres::shade(Color& result, const Ray& ray,
   else if(v<0)
     v=0;
 
-  Color surface_color = interp_color(u, v, tex_index);
+  float luminance = interp_luminance(u, v, tex_index);
+  Color surface;
+  if (cmap) {
+    surface = surface_color(hit);
+  } else {
+    surface = color;
+  }
 
-  result = surface_color;
+  result = surface * luminance;
 }
 
 // Given the pixel and texture index compute the pixel's luminance
@@ -118,7 +125,7 @@ float PCAGridSpheres::getPixel(int x, int y, int channel_index) {
   return outdata;
 }
 
-Color PCAGridSpheres::interp_color(double u, double v, int index)
+float PCAGridSpheres::interp_luminance(double u, double v, int index)
 {
 #if 0
   u *= tex_res;
@@ -131,11 +138,9 @@ Color PCAGridSpheres::interp_color(double u, double v, int index)
   if (iv == tex_res)
     iv = tex_res - 1;
   
-  Color c(getPixel(iu, iv, red_index),
-	  getPixel(iu, iv, green_index),
-	  getPixel(iu, iv, blue_index));
+  float lum = getPixel(iu, iv, index));
 
-  return c*one_over_255;
+  return lum*one_over_255;
 #else
   u *= tex_res;
   int iu = (int)u;
@@ -165,6 +170,6 @@ Color PCAGridSpheres::interp_color(double u, double v, int index)
     lum10*(1-u_weight_high)*   v_weight_high +
     lum11*   u_weight_high *   v_weight_high;
 
-  return lum*color*one_over_255;
+  return lum*one_over_255;
 #endif
 }
