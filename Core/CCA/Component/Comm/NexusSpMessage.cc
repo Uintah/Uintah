@@ -219,6 +219,7 @@ void NexusSpMessage::destroyMessage() {
     _recvbuff = 0;
   }
   ReplyEP::release(_reply);
+  delete this;
 }
 
 
