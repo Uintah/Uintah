@@ -335,6 +335,7 @@ EdgeMC<Field>::get_interpolant()
 
       cc[ei * 2 + 0] = (*eiter).first.first;
       cc[ei * 2 + 1] = (*eiter).first.second;
+      if ((*eiter).first.second == (unsigned int)-1) { cc[ei * 2 + 1] = 0; }
       dd[ei * 2 + 0] = 1.0 - (*eiter).first.dfirst;
       dd[ei * 2 + 1] = (*eiter).first.dfirst;
       

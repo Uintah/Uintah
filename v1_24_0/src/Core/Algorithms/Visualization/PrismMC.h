@@ -395,6 +395,7 @@ PrismMC<Field>::get_interpolant()
       const int ei = (*eiter).second;
 
       cc[ei * 2 + 0] = (*eiter).first.first;
+      if (cc[ei * 2 + 0] == -1) { cc[ei * 2 + 0] = 0; }
       cc[ei * 2 + 1] = (*eiter).first.second;
       dd[ei * 2 + 0] = 1.0 - (*eiter).first.dfirst;
       dd[ei * 2 + 1] = (*eiter).first.dfirst;
