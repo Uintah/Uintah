@@ -161,9 +161,10 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Vector> T1,T2,T3;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
-    Vector I(1,0,0);
-    Vector J(0,1,0);
-    Vector K(0,0,1);
+    // BB : 11/09/02 Unused Vars
+    //Vector I(1,0,0);
+    //Vector J(0,1,0);
+    //Vector K(0,0,1);
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
