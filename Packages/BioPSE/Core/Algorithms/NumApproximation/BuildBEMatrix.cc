@@ -56,10 +56,10 @@ BuildBEMatrix::BuildBEMatrix(TriSurfMeshHandle hInn,
   // ---------------------------------------------
   hInnerSurf_(hInn),
   hOuterSurf_(hOut),
-  hA_(hA),
-  cf_(cf),
   avInn_(),
   avOut_(),
+  cf_(cf),
+  hA_(hA),
   lock_Pbb_("Pbb mutex"),
   lock_Phh_("Phh mutex"),
   lock_Pbh_("Pbh mutex"),
@@ -68,9 +68,9 @@ BuildBEMatrix::BuildBEMatrix(TriSurfMeshHandle hInn,
   lock_Ghh_("Ghh mutex"),
   lock_avInn_("avInn mutex"),
   lock_avOut_("avOut mutex"),
+  lock_print_("print lock"),
   np_(np),
-  barrier_("BuildBEMatrix barrier"),
-  lock_print("print lock")
+  barrier_("BuildBEMatrix barrier")
 {
   nsubs_ = cf_.nrows();
 }

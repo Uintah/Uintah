@@ -186,8 +186,8 @@ ShowField::ShowField(const clString& id) :
   edge_display_type_("edge_display_type", id, this),
   node_scale_("node_scale", id, this),
   edge_scale_("edge_scale", id, this),
-  resolution_("resolution", id, this),
   showProgress_("show_progress", id, this),
+  resolution_("resolution", id, this),
   res_(0)
  {
   // Create the input ports

@@ -72,7 +72,7 @@ class BuildBEMatrix: public Datatype {
   Mutex             lock_Ghh_;
   Mutex             lock_avInn_;
   Mutex             lock_avOut_;
-  Mutex lock_print;
+  Mutex             lock_print_;
   
   int               np_;
   Barrier           barrier_;
