@@ -15,6 +15,8 @@
 
 #include <Classlib/Array1.h>
 #include <GL/glx.h>
+#include <Geometry/BBox.h>
+
 class CallbackData;
 class DialogShellC;
 class DrawInfo;
@@ -36,6 +38,7 @@ class GeomItem {
 public:
     GeomObj* geom;
     ToggleButtonC* btn;
+    char name[30];
     int vis;
     GeomItem();
     ~GeomItem();
@@ -81,13 +84,16 @@ class Roe {
     FormC* form;
     FrameC* gr_frame;
     Salmon* manager;
-
+    BBox bb;
     void btn1upCB(CallbackData*, void*);
     void btn1downCB(CallbackData*, void*);
     void btn1motionCB(CallbackData*, void*);
     void btn2upCB(CallbackData*, void*);
     void btn2downCB(CallbackData*, void*);
     void btn2motionCB(CallbackData*, void*);
+    void btn3upCB(CallbackData*, void*);
+    void btn3downCB(CallbackData*, void*);
+    void btn3motionCB(CallbackData*, void*);
     void itemCB(CallbackData*, void*);
     void wireCB(CallbackData*, void*);
     void flatCB(CallbackData*, void*);
@@ -115,10 +121,9 @@ class Roe {
     int last_y;
     int haveInheritMat;
     double inheritMat[16];
-    Array1<GeomItem *> geomItemA;
-
-    DrawInfo* drawinfo;
 public:
+    Array1<GeomItem *> geomItemA;
+    DrawInfo* drawinfo;
     Roe(Salmon *s);
     Roe(Salmon *s, double *m);
     Roe(const Roe&);

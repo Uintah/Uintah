@@ -40,6 +40,8 @@
 #include <CallbackCloners.h>
 #include <Math/MiscMath.h>
 #include <Geometry/BBox.h>
+#include <string.h>
+
 extern MtXEventLoop* evl;
 
 GeomItem::GeomItem() {
@@ -131,6 +133,18 @@ void Roe::RoeInit(Salmon* s) {
     new MotifCallback<Roe>FIXCB(graphics, "<Btn2Motion>",
 				&manager->mailbox, this,
 				&Roe::btn2motionCB, 0, 
+				&CallbackCloners::event_clone);
+    new MotifCallback<Roe>FIXCB(graphics, "<Btn3Up>",
+				&manager->mailbox, this,
+				&Roe::btn3upCB, 0, 
+				&CallbackCloners::event_clone);
+    new MotifCallback<Roe>FIXCB(graphics, "<Btn3Down>",
+				&manager->mailbox, this,
+				&Roe::btn3downCB, 0, 
+				&CallbackCloners::event_clone);
+    new MotifCallback<Roe>FIXCB(graphics, "<Btn3Motion>",
+				&manager->mailbox, this,
+				&Roe::btn3motionCB, 0, 
 				&CallbackCloners::event_clone);
 
     controls=new RowColumnC;
@@ -333,6 +347,7 @@ void Roe::itemAdded(GeomObj *g, char *name) {
     item->btn=bttn;
     item->vis=1;
     item->geom=g;
+    strcpy(item->name, name);
     geomItemA.add(item);
     new MotifCallback<Roe>FIXCB(item->btn, XmNvalueChangedCallback,
 				&manager->mailbox, this,
@@ -435,6 +450,9 @@ void Roe::spawnChCB(CallbackData*, void*)
 */
   kids.add(new Roe(manager, mat));
   kids[kids.size()-1]->SetParent(this);
+  for (int i=0; i<geomItemA.size(); i++)
+      kids[kids.size()-1]->itemAdded(geomItemA[i]->geom, geomItemA[i]->name);
+  kids[kids.size()-1]->redrawAll();
 //  manager->printFamilyTree();
 
 }
@@ -620,7 +638,7 @@ Roe::Roe(const Roe& copy)
 void Roe::rotate(double angle, Vector v)
 {
     make_current();
-    glScaled(v.x(), v.y(), v.z());
+    glRotated(angle,v.x(), v.y(), v.z());
 }
 
 void Roe::translate(Vector v)
@@ -687,3 +705,44 @@ void Roe::btn2motionCB(CallbackData* cbdata, void*) {
     redrawAll();
 }
 
+void Roe::btn3upCB(CallbackData* cbdata, void*) {
+    XEvent* event=cbdata->get_event();
+}
+
+void Roe::btn3downCB(CallbackData* cbdata, void*) {
+    XEvent* event=cbdata->get_event();
+    last_x=event->xbutton.x;
+    last_y=event->xbutton.y;
+    bb.reset();
+    HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
+    for (iter.first(); iter.ok(); ++iter) {
+	HashTable<int, GeomObj*>* serHash=iter.get_data();
+	HashTableIter<int, GeomObj*> serIter(serHash);
+	for (serIter.first(); serIter.ok(); ++serIter) {
+	    GeomObj *geom=serIter.get_data();
+	    for (int i=0; i<geomItemA.size(); i++)
+		if (geomItemA[i]->geom == geom)
+		    if (geomItemA[i]->vis)
+			bb.extend(geom->bbox());
+	}		
+    }	
+}
+
+void Roe::btn3motionCB(CallbackData* cbdata, void*) {
+    XEvent* event=cbdata->get_event();
+    double xmtn=last_x-event->xmotion.x;
+    double ymtn=last_y-event->xmotion.y;
+    last_x = event->xmotion.x;
+    last_y = event->xmotion.y;
+    make_current();
+    Point cntr(bb.center());
+    glTranslated(cntr.x(), cntr.y(), cntr.z());
+    glRotated(xmtn*xmtn+ymtn*ymtn,-ymtn,-xmtn,0);
+    glTranslated(-cntr.x(), -cntr.y(), -cntr.z());
+    for (int i=0; i<kids.size(); i++) {
+	kids[i]->translate(Vector(cntr.x(), cntr.y(), cntr.z()));
+	kids[i]->rotate(xmtn*xmtn+ymtn*ymtn,Vector(-ymtn,-xmtn,0));
+	kids[i]->translate(Vector(-cntr.x(), -cntr.y(), -cntr.z()));
+    }
+    redrawAll();
+}

@@ -247,6 +247,12 @@ void Salmon::spawnIndCB(CallbackData*, void*)
 {
   topRoe.add(new Roe(this));
   topRoe[topRoe.size()-1]->SetTop();
+  GeomItem *item;
+  for (int i=0; i<topRoe[0]->geomItemA.size(); i++) {
+      item=topRoe[0]->geomItemA[i];
+      topRoe[topRoe.size()-1]->itemAdded(item->geom, item->name);
+  }
+  topRoe[topRoe.size()-1]->redrawAll();
 //  printFamilyTree();
 }
 
