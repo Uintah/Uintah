@@ -4,4 +4,4 @@ OBJTOP  = ../..
 
 SUBDIRS = CS684 General SiRe
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(OBJTOP)/scripts/recurse.mk
