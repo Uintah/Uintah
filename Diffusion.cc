@@ -7,6 +7,8 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Core/Exceptions/InternalError.h>
 
+#define SMALL_NUM 1.0e-100
+
 #include <typeinfo>
 #include <Core/Util/DebugStream.h>
 using namespace Uintah;
@@ -88,7 +90,7 @@ template <class T>
       IntVector L = R + adj_offset;
       
       double diff_coeff_FC = (2.0 * diff_coeff[L] * diff_coeff[R] )/
-                                   (diff_coeff[L] + diff_coeff[R]);
+                                   (diff_coeff[L] + diff_coeff[R] + SMALL_NUM);
       double rho_brack = (2.0 * rho_CC[R] * rho_CC[L])/(rho_CC[R] + rho_CC[L]);
       double vol_frac_FC = rho_brack * sp_vol_CC[R];
       q_fluxFC[R] = -vol_frac_FC * diff_coeff_FC* (q_CC[R] - q_CC[L])/dx;
@@ -99,7 +101,7 @@ template <class T>
       IntVector L = R + adj_offset;
       
       double diff_coeff_FC = (2.0 * diff_coeff[L] * diff_coeff[R] )/
-                                   (diff_coeff[L] + diff_coeff[R]);
+                                   (diff_coeff[L] + diff_coeff[R] + SMALL_NUM);
                                    
       q_fluxFC[R] = -diff_coeff_FC* (q_CC[R] - q_CC[L])/dx;
     }
