@@ -15,6 +15,7 @@
 #include "TestSuite/SuiteTree.h"
 #include "TestMatrix3/testmatrix3.h"
 #include "TestConsecutiveRangeSet/TestConsecutiveRangeSet.h"
+#include "TestRangeTree/TestRangeTree.h"
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -23,6 +24,7 @@ void usage(char* prog_name)
   cerr << "usage: " << prog_name << " [-e|-a|-h]\n";
   cerr << "\t-e:  expands test suite tree even where all tests have passed\n";
   cerr << "\t-a:  reports all suites (not just failed ones)\n";
+  cerr << "\t-v:  verbose mode\n";
   cerr << "\t-h:  lists this help information\n";
 }
 
@@ -30,6 +32,7 @@ int main(int argc, char* argv[])
 {
   bool expandAll = false;
   bool reportAll = false;
+  bool verbose = false;
   for (int i = 1; i < argc; i++) {
     if (argv[i][0] != '-') {
       usage(argv[0]);
@@ -48,6 +51,9 @@ int main(int argc, char* argv[])
 	case 'h':
 	  usage(argv[0]);
 	  return 0;
+	case 'v':
+	  verbose = true;
+	  break;
 	default:
 	  cerr << "unkown option: " << argv[i][j] << endl;
 	  usage(argv[0]);
@@ -64,6 +70,7 @@ int main(int argc, char* argv[])
   // populate the suites tree
   suites->addSubTree(matrix3TestTree());
   suites->addSubTree(ConsecutiveRangeSetTestTree());
+  suites->addSubTree(RangeTreeTestTree(verbose, 20000));
 
   /* ADD MORE POPULATING METHODS ABOVE FOR OTHER TEST SUITES */
 
