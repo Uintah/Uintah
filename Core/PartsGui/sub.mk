@@ -37,7 +37,7 @@ PSELIBS := Core/Exceptions \
 	Core/2d \
 	Core/Containers
 
-LIBS := $(TCL_LIBRARY) $(ITK_LIBRARY) $(X11_LIBS)
+LIBS := $(TCL_LIBRARY) $(ITK_LIBRARY) $(X_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
