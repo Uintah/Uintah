@@ -132,6 +132,13 @@ SocketMessage::marshalSpChannel(SpChannel* channel){
 }
 
 void 
+SocketMessage::marshalOpaque(const void **buf, int size){
+  marshalBuf(&(PIDL::getDT()->getAddress()), sizeof(DTAddress));
+  marshalBuf(buf, size*sizeof(void*));
+}
+
+
+void 
 SocketMessage::sendMessage(int handler){
   //cerr<<"SocketMessage::sendMessage handler id="<<handler<<endl;
   memcpy(msg, &handler, sizeof(int));
@@ -206,6 +213,20 @@ SocketMessage::unmarshalSpChannel(SpChannel* channel){
   unmarshalBuf(&(chan->ep_addr), sizeof(DTAddress));
   unmarshalBuf(&(chan->ep), sizeof(void *));
 }
+
+
+void 
+SocketMessage::unmarshalOpaque(void **buf, int size){
+  DTAddress dtaddr;
+  unmarshalBuf(&dtaddr, sizeof(DTAddress));
+  unmarshalBuf(buf, size*sizeof(void*));
+  if(! (dtaddr==PIDL::getDT()->getAddress()) ){
+    for(int i=0; i<size; i++){
+      buf[i]=NULL;
+    }
+  }
+}
+
 
 void* 
 SocketMessage::getLocalObj(){

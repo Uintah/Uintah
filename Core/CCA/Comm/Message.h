@@ -53,6 +53,8 @@ namespace SCIRun {
     virtual void marshalFloat(const float *f, int size = 1) = 0;  
     virtual void marshalDouble(const double *d, int size = 1) = 0;
     virtual void marshalLong(const long *l, int size = 1) = 0;
+    virtual void marshalOpaque(const void **ptr, int size=1){ }
+
     virtual void sendMessage(int handler) = 0;
     virtual void waitReply() = 0;
     virtual void unmarshalReply() = 0;
@@ -63,7 +65,9 @@ namespace SCIRun {
     virtual void unmarshalDouble(double *d, int size = 1) = 0;
     virtual void unmarshalLong(long *l, int size = 1) = 0;
     virtual void unmarshalSpChannel(SpChannel* channel) = 0;
+    virtual void unmarshalOpaque(void **ptr, int size=1) {}
     virtual void destroyMessage() = 0;
+
   };
 }
 
