@@ -70,6 +70,14 @@ void Poisson2::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
   sched->addTask(task, perproc_patches, sharedState_->allMaterials());
 }
 
+// scheduleTimeAdvance version called by the AMR simulation controller.
+void
+Poisson2::scheduleTimeAdvance(const LevelP&, SchedulerP&, int , int )
+{
+  cout << "Poisson2 component does not support ARM yet.\n";
+  throw InternalError("Poisson2 component does not support AMR yet.");
+}
+
 void Poisson2::computeStableTimestep(const ProcessorGroup*,
 				  const PatchSubset*,
 				  const MaterialSubset*,
