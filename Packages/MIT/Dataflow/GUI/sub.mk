@@ -14,6 +14,8 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Metropolis.tcl\
+	$(SRCDIR)/Sampler.tcl\
+	$(SRCDIR)/SamplerGui.tcl\
 	$(SRCDIR)/BayerAnalysis.tcl\
 	$(SRCDIR)/MeasurementsReader.tcl\
 	$(SRCDIR)/DistributionReader.tcl\
