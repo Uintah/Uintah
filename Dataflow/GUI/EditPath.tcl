@@ -23,7 +23,7 @@ itcl_class SCIRun_Render_EditPath {
 	global $this-tcl_acc_mode
 	global $this-tcl_is_looped
 	global $this-tcl_msg_box
-	global $this-tcl_curr_roe
+	global $this-tcl_curr_viewwindow
 	global $this-tcl_step_size
 	global $this-tcl_speed_val
 	global $this-tcl_acc_val
