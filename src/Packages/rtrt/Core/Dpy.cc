@@ -365,10 +365,10 @@ Dpy::run()
       }
 
       // dump the frame and quit for now
-      if (frame == 3) {
+      if (frame >= 3) {
 	if (!display_frames) {
 	  scene->get_image(priv->showing_scene)->save_ppm("displayless");
-	  Thread::exitAll(0);
+          Thread::exitAll(0);
 	}
       }
 
@@ -727,6 +727,10 @@ Dpy::renderFrame() {
         priv->dumpFrame = false;
       }
     }
+  } else {
+    // Do stuff that the benchmark will notice
+    if (!scene->display_depth && scene->display_sils)
+      displayedImage->draw_sils_on_image( scene->max_depth );
   }
 
   if( displayedImage->get_xres() != priv->xres ||
