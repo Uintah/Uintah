@@ -1,0 +1,116 @@
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<section id="sec.isocontour-net">
+<title>Isocontour Net</title>
+
+<section>
+<title>Overview</title>
+
+<para>This network (<xref linkend="fig.isocontour-net"/>) uses the
+Isosurface module to extract Isocontours from a field.  This network
+description will not go into all the functionality of Isosurface, but
+rather just enough to help you extract Isocontours from a
+field.</para>
+
+<para>Isosurface is used to extract surfaces, and contours from a
+field. Go to the 
+<ulink url=<!--%= doc.treeUrl("src/Dataflow/XML/Isosurface.html") %-->> module
+description</ulink> for more information about this module's
+features.</para>
+
+<figure id="fig.isocontour-net">
+<title>Isocontour Network</title>
+<mediaobject>
+<imageobject>
+<imagedata fileref="SCIRun/isocontour-composite.ps" format="PS"/>
+</imageobject>
+<imageobject>
+<imagedata fileref="SCIRun/isocontour-composite.jpg" format="JPG"/>
+</imageobject>
+</mediaobject>
+</figure>
+
+</section>
+
+<section>
+<title>Inputs</title> 
+
+<para>We input one of the Fields from the SCIRunData set. In this case
+from the sphere dataset we chose the Tetrahedral Volume Field with
+data stored as doubles.</para>
+
+</section>
+
+<section>
+<title>Outputs</title>
+
+<para>The Isosurface module has two outputs, a FieldPort, and a
+GeomPort.  In this net we just use the GeomPort.  It outputs scene
+graph information much like ShowField, that can be rendered by the
+Viewer module.</para>
+
+</section>
+
+<section>
+<title>Interactions</title>
+
+<para>
+The Main interaction involves selecting
+which isoval, or collection of isovals that you would like to generate a
+contour for.  The notebook tabs at the top give you 3 ways to do so. 
+<itemizedlist>
+<listitem>
+<para>The first (Slider) allows you to select a single value, and as
+such will only generate a single contour.  The slider lets you select
+a value in the range of the min and max value in the field. The entry
+lets you enter an exact value directly.</para>
+</listitem>
+<listitem>
+<para>The second (Quantity) allows you to select an evenly spaced set
+of isovals.  Note that these are evenly space in data space, not
+evenly spaced contours in geometric space.  The user selects the
+number of isovals, and a MinMax space to divide, and the Isosurface
+module then generate isocontours for each of the evenly spaced
+isovals. There are 3 choices for MinMax spacing.  You can base your
+evenly spaced set on the min and max values in the data, or from the
+min and max specified in the ColorMap (If you pass a color map in), or
+you can just specify a min and max value to use.</para>
+</listitem>
+<listitem>
+<para>The third tab (List) allows you to specify a series of isovals
+for extracting an isocontour with. The user just enters the list as a
+space separated list of numbers, and for each number in the list, an
+isocontour is extracted.</para>
+</listitem>
+</itemizedlist>
+</para>
+</section>
+
+</section>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../../Utilities/XML/docbook-4.2.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->
