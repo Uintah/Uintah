@@ -28,8 +28,7 @@ itcl_class SCIRun_Math_BuildNoise {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -42,5 +41,8 @@ itcl_class SCIRun_Math_BuildNoise {
 		-orient horizontal
 	pack $w.f.snr -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
