@@ -179,6 +179,7 @@ template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 class SuperBox {
 public:
   friend class SuperBoxSet<BoxP, Point, Volume, Value, Evaluator>;
+  friend struct LexCompare;
   typedef SuperBoxSet<BoxP, Point, Volume, Value, Evaluator> SuperBoxSet;
   typedef BasicBox<BoxP, Point, Volume, Value, Evaluator> BasicBox;
   typedef CompositeBox<BoxP, Point, Volume, Value, Evaluator> CompositeBox;  
@@ -373,7 +374,8 @@ protected:
 
   virtual void makeAvailable() {}
   virtual void makeUnavailable() {}
-private:
+
+ private:
   Region region_;
   Volume volume_;
   Value value_;
