@@ -206,7 +206,7 @@ PETSC_LIBDIR := $(PETSC_DIR)/lib/$(PETSC_SUB)/$(PETSC_ARCH)
 PETSC_LIBS := $(LDRUN_PREFIX)$(PETSC_LIBDIR) -L$(PETSC_LIBDIR)
 endif
 
-INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(SRCTOP)/Packages -I@TCL_INCLUDE_DIR@ -I@TK_INCLUDE_DIR@ -I@ITCL_INCLUDE_DIR@ -I@BLT_INCLUDE_DIR@ @GLOBUS_INCLUDE@ $(XML_INCLUDE) -I@GL_INCLUDE_DIR@ $(PETSC_INCLUDES) $(TAU_INCLUDE) $(MPI_INCLUDE)
+INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(SRCTOP)/Packages -I@TCL_INCLUDE_DIR@ -I@TK_INCLUDE_DIR@ -I@ITCL_INCLUDE_DIR@ -I@BLT_INCLUDE_DIR@ @GLOBUS_INCLUDE@ $(XML_INCLUDE) @GL_INCLUDE_FLAG@ $(PETSC_INCLUDES) $(TAU_INCLUDE) $(MPI_INCLUDE)
 
 SSTREAM_COMPAT := @SSTREAM_COMPAT@
 ifeq ($(SSTREAM_COMPAT),yes)
@@ -240,13 +240,22 @@ endif
 .SUFFIXES: .cc .c .o .d .s .F
 
 .cc.o: $<
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 ifeq ($(CC_DEPEND_REGEN),-MD)
-ifeq ($(CC_DEPEND_REGEN_MOVE),y)
+	$(CXX) $(CFLAGS) $(INCLUDES) -MD -c $< -o $@
+  ifeq ($(CC_DEPEND_REGEN_MOVE),y)
 	echo -n "$(dir $@)" > $(basename $@).d
 	cat $(basename $(notdir $@)).d >> $(basename $@).d
 	rm $(basename $(notdir $@)).d 
-endif
+  endif
+else
+  ifeq ($(CC_DEPEND_REGEN),-M)
+	$(CXX) $(CFLAGS) $(INCLUDES) -M > $(basename $@).d
+	awk '{ print "$(basename $@)"".o: " $$2 }' $(basename $@).d > $(basename $@).temp.d
+	mv $(basename $@).temp.d $(basename $@).d
+	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
+  else
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+  endif
 endif
 
 .F.o: $<
@@ -256,14 +265,20 @@ ifeq ($(F77_DEPEND_REGEN),-MD)
 endif
 
 .c.o: $<
-	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 ifeq ($(CC_DEPEND_REGEN),-MD)
-ifeq ($(CC_DEPEND_REGEN_MOVE),y)
+	$(CC) $(CFLAGS) $(INCLUDES) -MD -c $< -o $@
 	mv $(basename $(notdir $@)).d $(basename $@).d
-endif
+else
+  ifeq ($(CC_DEPEND_REGEN),-M)
+	$(CC) $(CFLAGS) $(INCLUDES) -M > $(basename $@).d
+	awk '{ print "$(basename $@)"".o: " $$2 }' $(basename $@).d > $(basename $@).temp.d
+	mv $(basename $@).temp.d $(basename $@).d
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+  else
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+  endif
 endif
 
 .s.o: $<
 	$(AS) $(ASFLAGS) -o $@ $< -o $@
-
 
