@@ -239,7 +239,7 @@ void
 Thread::initialize()
 {
     usconfig(CONF_ARENATYPE, US_SHAREDONLY);
-    usconfig(CONF_INITSIZE, 3*1024*1024);
+    usconfig(CONF_INITSIZE, 30*1024*1024);
     usconfig(CONF_INITUSERS, (unsigned int)140);
     arena=usinit("/dev/zero");
     if(!arena)
@@ -1299,6 +1299,9 @@ SCICore::Thread::ConditionVariable::conditionBroadcast()
 }
 //
 // $Log$
+// Revision 1.14  1999/11/09 08:15:51  dmw
+// bumped up the arena size in order to fix Mesh problem
+//
 // Revision 1.13  1999/10/15 20:56:52  ikits
 // Fixed conflict w/ get_tid in /usr/include/task.h. Replaced by get_thread_id.
 //
