@@ -115,7 +115,7 @@ UnuConvert::execute()
 
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
-  nrrd->copy_sci_data(*nrrdH.get_rep());
+  //nrrd->copy_sci_data(*nrrdH.get_rep());
   last_nrrdH_ = nrrd;
   onrrd_->send(last_nrrdH_);
 }

@@ -21,11 +21,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
-
-#include <sstream>
-#include <iostream>
-using std::endl;
-#include <stdio.h>
+#include <teem/ten.h>
 
 namespace SCITeem {
 
@@ -57,31 +53,47 @@ void
 TendShrink::execute()
 {
   NrrdDataHandle nrrd_handle;
+
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  onrrd_ = (NrrdOPort *)get_oport("nout");
+  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
+
+  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
   if (!inrrd_) {
-    error("Unable to initialize iport 'Nrrd'.");
+    error("Unable to initialize iport  'InputNrrd'.");
     return;
   }
   if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
+    error("Unable to initialize oport 'OutputNrrd'.");
     return;
   }
   if (!inrrd_->get(nrrd_handle))
     return;
 
   if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
+    error("Empty input InputNrrd.");
     return;
   }
 
   Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nout = nrrdNew();
 
-  error("This module is a stub.  Implement me.");
+  if (tenShrink(nout, NULL, nin)) {
+    char *err = biffGetDone(TEN);
+    error(string("Error Converting 7-value volume to 9-value DT: ") + err);
+    free(err);
+    return;
+  }
 
-  //onrrd_->send(NrrdDataHandle(nrrd_joined));
+  NrrdData *nrrd = scinew NrrdData;
+  nrrd->nrrd = nout;
+
+  nrrd->nrrd->axis[0].kind = nrrdKind3DMaskedSymTensor;
+
+  NrrdDataHandle out(nrrd);
+
+  onrrd_->send(out);
 }
 
 } // End namespace SCITeem
+

@@ -21,11 +21,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
-
-#include <sstream>
-#include <iostream>
-using std::endl;
-#include <stdio.h>
+#include <teem/ten.h>
 
 namespace SCITeem {
 
@@ -66,7 +62,7 @@ TendMake::execute()
   inevals_ = (NrrdIPort *)get_iport("Evals");
   inevecs_ = (NrrdIPort *)get_iport("Evecs");
 
-  onrrd_ = (NrrdOPort *)get_oport("nout");
+  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
   if (!inconfidence_) {
     error("Unable to initialize iport 'Confidence'.");
@@ -81,7 +77,7 @@ TendMake::execute()
     return;
   }
   if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
+    error("Unable to initialize oport 'OutputNrrd'.");
     return;
   }
   if (!inconfidence_->get(conf_handle))
@@ -104,11 +100,25 @@ TendMake::execute()
     return;
   }
 
-  //  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *confidence = conf_handle->nrrd;
+  Nrrd *eval = eval_handle->nrrd;
+  Nrrd *evec = evec_handle->nrrd;
+  Nrrd *nout = nrrdNew();
 
-  error("This module is a stub.  Implement me.");
+  if (tenMake(nout, confidence, eval, evec)) {
+    char *err = biffGetDone(TEN);
+    error(string("Error creating DT volume: ") + err);
+    free(err);
+    return;
+  }
 
-  //onrrd_->send(NrrdDataHandle(nrrd_joined));
+  NrrdData *nrrd = scinew NrrdData;
+  nrrd->nrrd = nout;
+
+  NrrdDataHandle out(nrrd);
+
+  onrrd_->send(out);
+
 }
 
 } // End namespace SCITeem

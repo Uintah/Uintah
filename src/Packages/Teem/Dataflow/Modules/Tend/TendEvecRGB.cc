@@ -151,10 +151,12 @@ TendEvecRGB::execute()
     return;
   }
 
-  nout->axis[0].label = strdup("RGB:Vector");
+  nout->axis[0].kind = nrrdKind3Vector;
+  remark("nrrdKind changed to nrrdKind3Vector");
+  //nout->axis[0].label = strdup("RGB:Vector");
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
-  nrrd->copy_sci_data(*nrrd_handle.get_rep());
+  //nrrd->copy_sci_data(*nrrd_handle.get_rep());
   onrrd_->send(NrrdDataHandle(nrrd));
 }
 

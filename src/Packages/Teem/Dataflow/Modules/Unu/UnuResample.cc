@@ -228,26 +228,25 @@ UnuResample::execute()
   for (int a = 0; a < dim_.get(); a++) {
     info->kernel[a] = kern;
     msgStream_ << "NrrdResample sizes: ";
-    if (a==0) {
-      info->samples[0] = nin->axis[0].size;
-      info->kernel[0]=0;
-    } else {
-      info->samples[a]=nin->axis[a].size;
-      char *str = strdup(resampAxes_[a]->get().c_str());
-      int none=0;
-      if (getint(str, &(info->samples[a]), &none)) {
-	error("NrrdResample -- bad size."); 
-	return;
-      }
-      if (none) info->kernel[a] = 0;
-      msgStream_ << info->samples[a];
-      if (!info->kernel[a]) msgStream_ << "=";
-      msgStream_ << " ";
+    info->samples[a]=nin->axis[a].size;
+    char *str = strdup(resampAxes_[a]->get().c_str());
+    if (nrrdKindSize(nin->axis[a].kind) > 1 && str != "=") {
+      warning("Trying to resample along axis " + to_string(a) + " which is not of nrrdKindDomain or nrrdKindUnknown.");
     }
+    int none=0;
+    if (getint(str, &(info->samples[a]), &none)) {
+      error("NrrdResample -- bad size."); 
+      return;
+    }
+    if (none) info->kernel[a] = 0;
+    msgStream_ << info->samples[a];
+    if (!info->kernel[a]) msgStream_ << "=";
+    msgStream_ << " ";
+
     memcpy(info->parm[a], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
     if (info->kernel[a] && 
 	(!(AIR_EXISTS(nin->axis[a].min) && AIR_EXISTS(nin->axis[a].max)))) {
-      nrrdAxisMinMaxSet(nrrdH->nrrd, a, nin->axis[a].center ? 
+      nrrdAxisInfoMinMaxSet(nrrdH->nrrd, a, nin->axis[a].center ? 
 			nin->axis[a].center : nrrdDefCenter);
     }
     info->min[a] = nrrdH->nrrd->axis[a].min;
@@ -268,7 +267,7 @@ UnuResample::execute()
     free(err);
   }
   nrrdResampleInfoNix(info); 
-  nrrd->copy_sci_data(*nrrdH.get_rep());
+  //nrrd->copy_sci_data(*nrrdH.get_rep());
   last_nrrdH_ = nrrd;
   onrrd_->send(last_nrrdH_);
 }

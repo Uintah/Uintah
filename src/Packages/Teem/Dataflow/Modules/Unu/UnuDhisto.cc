@@ -62,15 +62,15 @@ UnuDhisto::execute()
 {
   NrrdDataHandle nrrd_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  onrrd_ = (NrrdOPort *)get_oport("nout");
+  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
+  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
   if (!inrrd_) {
-    error("Unable to initialize iport 'Nrrd'.");
+    error("Unable to initialize iport 'InputNrrd'.");
     return;
   }
   if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
+    error("Unable to initialize oport 'OutputNrrd'.");
     return;
   }
   if (!inrrd_->get(nrrd_handle))
@@ -81,11 +81,23 @@ UnuDhisto::execute()
     return;
   }
 
+  reset_vars();
+
   Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nout = nrrdNew();
 
-  error("This module is a stub.  Implement me.");
+  if (nrrdHistoDraw(nout, nin, height_.get(), log_.get(), AIR_NAN)) {
+    char *err = biffGetDone(NRRD);
+    error(string("Error creating DHistogram nrrd: ") + err);
+    free(err);
+  }
 
-  //onrrd_->send(NrrdDataHandle(nrrd_joined));
+  NrrdData *nrrd = scinew NrrdData;
+  nrrd->nrrd = nout;
+
+  NrrdDataHandle out(nrrd);
+
+  onrrd_->send(out);
 }
 
 } // End namespace SCITeem

@@ -88,13 +88,13 @@ UnuPermute::load_gui() {
   }
 }
 
-// check to see that the axes specified are in bounds, and not the tuple axis.
+// check to see that the axes specified are in bounds
 int
 UnuPermute::valid_data(int* axes) {
 
   vector<int> exists(dim_.get(), 0);
-  for (int a = 1; a < dim_.get(); a++) {
-    if (axes[a] >= 1 && axes[a] < dim_.get() && !exists[axes[a]]) {
+  for (int a = 0; a < dim_.get(); a++) {
+    if (axes[a] < dim_.get() && !exists[axes[a]]) {
       exists[axes[a]] = 1;
     } else {
       error("Bad axis assignments!");
@@ -180,7 +180,7 @@ UnuPermute::execute()
   nrrdAxesPermute(nout, nin, axp);
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
-  nrrd->copy_sci_data(*nrrdH.get_rep());
+  //nrrd->copy_sci_data(*nrrdH.get_rep());
   last_nrrdH_ = nrrd;
   onrrd_->send(last_nrrdH_);
 }

@@ -140,7 +140,7 @@ UnuQuantize::execute()
     return;
   }
   // propogate sci added data
-  nrrd->copy_sci_data(*nrrdH.get_rep());
+  //nrrd->copy_sci_data(*nrrdH.get_rep());
 
   last_minf_ = minf;
   last_maxf_ = maxf;
