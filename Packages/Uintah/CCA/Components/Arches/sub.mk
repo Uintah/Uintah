@@ -110,6 +110,9 @@ $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/scalcoef_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/uvelcoef_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/vvelcoef_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/wvelcoef_fort.h
+$(SRCDIR)/DynamicProcedure.o: $(SRCDIR)/fortran/dynamic_1loop_fort.h
+$(SRCDIR)/DynamicProcedure.o: $(SRCDIR)/fortran/dynamic_2loop_fort.h
+$(SRCDIR)/DynamicProcedure.o: $(SRCDIR)/fortran/dynamic_3loop_fort.h
 $(SRCDIR)/HypreSolver.o: $(SRCDIR)/fortran/rescal_fort.h
 $(SRCDIR)/HypreSolver.o: $(SRCDIR)/fortran/underelax_fort.h
 $(SRCDIR)/PetscSolver.o: $(SRCDIR)/fortran/rescal_fort.h
