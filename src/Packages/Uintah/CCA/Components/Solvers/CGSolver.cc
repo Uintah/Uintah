@@ -17,6 +17,7 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -928,7 +929,7 @@ public:
     }
   }
 
-  void solve(const ProcessorGroup*, const PatchSubset* patches,
+  void solve(const ProcessorGroup* pg, const PatchSubset* patches,
 	     const MaterialSubset* matls,
 	     DataWarehouse* old_dw, DataWarehouse* new_dw,
 	     Handle<CGStencil7<Types> >)
@@ -1115,13 +1116,15 @@ public:
     double dt=Time::currentSeconds()-tstart;
     double mflops = (double(flops)*1.e-6)/dt;
     double memrate = (double(memrefs)*1.e-9)/dt;
-    cerr << "Solve of " << X_label->getName() 
-	 << " on level " << level->getIndex();
-    if(niter < toomany)
-      cerr << " completed in ";
-    else
-      cerr << " FAILED in ";
-    cerr << niter << " iterations, " << dt << " seconds (" << mflops << " MFLOPS, " << memrate << " GB/sec)\n";
+    if(pg->myrank() == 0){
+      cerr << "Solve of " << X_label->getName() 
+	   << " on level " << level->getIndex();
+      if(niter < toomany)
+	cerr << " completed in ";
+      else
+	cerr << " FAILED in ";
+      cerr << niter << " iterations, " << dt << " seconds (" << mflops << " MFLOPS, " << memrate << " GB/sec)\n";
+    }
   }
     
 private:
