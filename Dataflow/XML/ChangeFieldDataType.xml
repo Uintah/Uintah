@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd"?>
 <?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
+<!cocoon-process type="xslt">
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -33,11 +33,11 @@
     <description>
       <p>
         ChangeFieldDataType allows the user to change the datatype
-        at each field data_at location.  It also tries to convert the
-        data in the field to the new type if it is possible.  If no
-        conversion can be done the output field will contain default
-        zero values.  Note that conversion from a large data type to a
-        smaller data type usually results in a loss of precision.
+        at each field data_at location.  This module also attempts to convert the
+        data in the field to the new type, if possible.  If no
+        conversion is possible, the output field will contain default
+        zero values.  Note that conversion from a large datatype to a
+        smaller datatype usually results in a loss of precision.
       </p>
     </description>
   </overview>
@@ -69,7 +69,7 @@
   </io>
   <gui>
     <description>
-      <p>
+      <p>&nbsp;
       </p>
     </description>
     <parameter>
