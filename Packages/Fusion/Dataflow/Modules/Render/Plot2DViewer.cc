@@ -33,13 +33,11 @@
 
 #include <Dataflow/Ports/FieldPort.h>
 
-#include <Core/Datatypes/ScanlineField.h>
-#include <Packages/Fusion/Core/Datatypes/StructHexVolField.h>
 #include <Packages/Fusion/Dataflow/Modules/Render/Plot2DViewer.h>
 
 #include <sci_defs.h>
 
-#ifdef HAVE_PLPLOT
+#ifdef HAVE_TCLMATRIX
 #include <plplot/tclMatrix.h>
 #endif
 
@@ -86,9 +84,6 @@ void Plot2DViewer::execute(){
 
   FieldHandle fHandle;
 
-  StructHexVolMesh *hvmInput;
-  ScanlineMesh *slmInput;
-
   unsigned int ndata, idim, jdim, kdim;
 
   port_range_type range = get_iports("Input Field");
@@ -123,21 +118,30 @@ void Plot2DViewer::execute(){
       return;
     }
 
-    if( fHandle->get_type_description(0)->get_name() == "StructHexVolField" ) {
-      hvmInput = (StructHexVolMesh*) fHandle->mesh().get_rep();
+    if( fHandle->get_type_description(0)->get_name() == "LatVolField" ||
+	fHandle->get_type_description(0)->get_name() == "StructHexVolField" ) {
+      LatVolMesh *lvmInput = (LatVolMesh*) fHandle->mesh().get_rep();
 
-      idim = hvmInput->get_nx();
-      jdim = hvmInput->get_ny();
-      kdim = hvmInput->get_nz();
-    } else if( fHandle->get_type_description(0)->get_name() == "ScanlineField" ) {
-      slmInput = (ScanlineMesh*) fHandle->mesh().get_rep();
+      idim = lvmInput->get_nx();
+      jdim = lvmInput->get_ny();
+      kdim = lvmInput->get_nz();
+    } else if( fHandle->get_type_description(0)->get_name() == "ImageField" ||
+               fHandle->get_type_description(0)->get_name() == "StructQuadSurfField" ) {
+      ImageMesh *imInput = (ImageMesh*) fHandle->mesh().get_rep();
+
+      idim = imInput->get_nx();
+      jdim = imInput->get_ny();
+      kdim = 1;
+    } else if( fHandle->get_type_description(0)->get_name() == "ScanlineField" ||
+               fHandle->get_type_description(0)->get_name() == "StructCurveField" ) {
+      ScanlineMesh *slmInput = (ScanlineMesh*) fHandle->mesh().get_rep();
 
       idim = slmInput->get_length();
       jdim = 1;
       kdim = 1;
     } else {
       error( fHandle->get_type_description(0)->get_name() );
-      error( "Only availible for Scanline and StructHexVol data." );
+      error( "Only availible for uniformly gridded or structure gridded data." );
       return;
     }
 
@@ -239,11 +243,9 @@ void Plot2DViewer::trueExecute( unsigned int port, unsigned int slice )
 {
   FieldHandle fHandle = fHandle_[port];
 
-  StructHexVolMesh *hvmInput;
-
   // The field input is required.
   if ( !(fHandle.get_rep()) ||
-       !(hvmInput = (StructHexVolMesh*) fHandle->mesh().get_rep())) {
+       !(fHandle->mesh().get_rep())) {
     error( "No handle or representation" );
     return;
   }
@@ -290,7 +292,7 @@ void Plot2DViewer::tcl_command(GuiArgs& args, void* userdata)
     updateGraph_ = true;
   }
   else if (args[1] == "vertex_coords") {
-#ifdef HAVE_PLPLOT
+#ifdef HAVE_TCLMATRIX
     unsigned int port = atoi( args[2].c_str() );
 
     if( fGeneration_[port] != -1 &&
