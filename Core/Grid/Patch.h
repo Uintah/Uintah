@@ -144,7 +144,10 @@ WARNING
      IntVector getNodeLowIndex() const {
        return d_lowIndex;
      }
-      IntVector getNodeHighIndex() const {
+ 
+     IntVector getInteriorNodeLowIndex()const;
+     IntVector getInteriorNodeHighIndex()const;     
+     IntVector getNodeHighIndex() const {
 	 return d_nodeHighIndex;
       }
 
