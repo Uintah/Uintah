@@ -106,8 +106,7 @@ void
 BCReader::read(ProblemSpecP& bc_ps)
 {  
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");
-       face_ps != 0; face_ps=face_ps->findNextBlock("Face"))  // end of face_ps
-    {
+       face_ps != 0; face_ps=face_ps->findNextBlock("Face")) {
 
       Patch::FaceType face_side;
       BCGeomBase* bcGeom = createBoundaryConditionFace(face_ps,face_side);
@@ -116,8 +115,6 @@ BCReader::read(ProblemSpecP& bc_ps)
 	   << typeid(*bcGeom).name() << " " << bcGeom << endl;
 #endif
 	      
-      //BCDataArray& bcDataArray = d_BCReaderData[face_side];
-
       multimap<int, BoundCondBase*> bctype_data;
 
       for (ProblemSpecP child = face_ps->findBlock("BCType"); child != 0;
@@ -131,11 +128,8 @@ BCReader::read(ProblemSpecP& bc_ps)
 #endif
 	// This is for the old boundary conditions.
 	d_bcs[face_side].setBCValues(mat_id,bc);
-#if 0
 	bctype_data.insert(pair<int,BoundCondBase*>(mat_id,bc->clone()));
 	delete bc;
-#endif
-	bctype_data.insert(pair<int,BoundCondBase*>(mat_id,bc));
       }
 #ifdef PRINT
       // Print out all of the bcs just created
@@ -174,14 +168,23 @@ BCReader::read(ProblemSpecP& bc_ps)
 	bcgeom_data[itr->first]->addBC(itr->second);
       }
       for (bc_geom_itr = bcgeom_data.begin(); bc_geom_itr != bcgeom_data.end();
-	   bc_geom_itr++) 
+	   bc_geom_itr++) {
 	d_BCReaderData[face_side].addBCData(bc_geom_itr->first,
-					    bcgeom_data[bc_geom_itr->first]);
+					    bcgeom_data[bc_geom_itr->first]->clone());
+	delete bc_geom_itr->second;
+      }
 						   
 #ifdef PRINT 
       cout << "Printing out bcDataArray . . " << endl;
       d_BCReaderData[face_side].print();
 #endif
+
+      //delete bcGeom;
+
+      // Delete stuff in bctype_data
+      multimap<int, BoundCondBase*>::const_iterator m_itr;
+      for (m_itr = bctype_data.begin(); m_itr != bctype_data.end(); ++m_itr) 
+	delete m_itr->second;
     }
 
   // Find the mat_id = "all" (-1) information and store it in each 
