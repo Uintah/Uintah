@@ -59,11 +59,29 @@ below.</font></font>
 <p><font face="Arial,Helvetica"><font size=+0>This section gives a structural
 and functional overview of the various classes associated with fields.</font></font>
 <p><b><font face="Arial,Helvetica">2.1 Class Domain</font></b>
-<p><font face="Arial,Helvetica"><font size=+0>The Domain class holds a
-list of attributes and geometries.&nbsp; It provides methods to access
-and manage the attributes and geometries.&nbsp; The modules that allow
-the user to extract and register geometries and attributes associated with
-a domain are described below (see section 3).</font></font>
+<p><font face="Arial,Helvetica"><font size=+0>The Domain class is a collectionof
+attributes and geometries.&nbsp; It provides methods to access and manage
+the attributes and geometries.&nbsp; The modules that allow the user to
+extract and register geometries and attributes associated with a domain
+are described below (see section 3).</font></font><font face="Arial,Helvetica"><font size=+0></font></font>
+<p><font face="Arial,Helvetica"><font size=+0>Fields may be extracted from
+a domain by combining an attribute and a geometry.&nbsp;&nbsp; When a field
+is formed by this combination, the attribute and geometry are checked to
+make sure that they are compatible.&nbsp; Changes may then be made to the
+field without affecting the attribute and geometry in the domain.&nbsp;
+If the user wishes the changes to be reflected in the domain then he may
+re-register the field with the domain, at which point the field is split
+in to its attribute and geometry which replace the old versions.</font></font><font face="Arial,Helvetica"><font size=+0></font></font>
+<p><font face="Arial,Helvetica"><font size=+0>A simple example:&nbsp; Say
+we have an empty domain.&nbsp; We may read in a geometry (representing
+the brain)&nbsp;and a few attributes (representing measurements on the
+brain)&nbsp;that live on the geometry. If we are interested in modifying
+or doing calculations with a particular set of measurements (say conductivity
+levels), we can extract a field by specifying the brain geometry and the
+conductivity attribute.&nbsp;&nbsp; We can then do calculation and make
+changes to the field without affecting the domain.&nbsp; If we want any
+changes we made to the attribute or geometry to be reflected in the domain,
+then we register the field with the domain.</font></font>
 <p><b><font face="Arial,Helvetica">2.2 Class Attrib</font></b>
 <p><font face="Arial,Helvetica"><font size=+0>The Attrib class holds sets
 of data, as well as various properties of that data.&nbsp;&nbsp; The Attrib
