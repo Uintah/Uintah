@@ -3,15 +3,15 @@
 // Symbol:        framework.TypeMap-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20030405 01:08:34 MST
-// Generated:     20030405 01:08:36 MST
+// SIDL Created:  20030428 21:05:36 MDT
+// Generated:     20030428 21:05:39 MDT
 // Description:   Server-side implementation for framework.TypeMap
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 17
-// source-url    = file:/home/sci/kzhang/SCIRun/cca-debug/../src/SCIRun/Babel/framework.sidl
+// source-url    = file:/home/sci/kzhang/testSCIRun/SCIRun/debug/../src/SCIRun/Babel/framework.sidl
 // 
 
 #ifndef included_framework_TypeMap_Impl_hh
