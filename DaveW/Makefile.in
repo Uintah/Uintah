@@ -15,11 +15,6 @@ SOLIB   = libDaveW.so
 
 SOLIBRARIES = -L$(OBJTOP)/PSECore -lPSECore \
               -L$(OBJTOP)/SCICore -lSCICore \
-              -L$(OBJTOP)/DaveW/prebuilt \
-                -l1sire -l1jarutil -l1signalib -l1gtiutil \
-                 -l1structlib -lfftw_SGI -l1c34 \
-                -lsparse -lspblas -lmv -lclapack -lcblas -lftn \
-                -lnrrd \
               -L$(ITCL_LIB_DIR) $(ITCL_LIB_FLAG) \
               -L$(TK_LIB_DIR) $(TK_LIB_FLAG) \
               -L$(TCL_LIB_DIR) $(TCL_LIB_FLAG) \
