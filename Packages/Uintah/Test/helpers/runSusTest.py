@@ -41,6 +41,9 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
   if datmode == "dbg":
     environ['MALLOC_STATS'] = "malloc_stats"
 
+  test_root = "%s/%s-%s" % (environ['BUILDROOT'], ALGO, mode)
+  compare_root = "%s/%s-%s" % (environ['TEST_DATA'], ALGO, datmode)
+
   rc = system("%s %s > %s 2>&1" % (command, susinput, log))
   if rc != 0:
     print "\t*** Test %s failed with code %d" % (testname, rc)
@@ -52,7 +55,7 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
     errors_to = environ['ERRORS_TO']
     if environ['ERRORMAIL'] != "yes":
 	errors_to = ""
-    rc = system("compare_sus_runs %s %s/%s-%s %s/%s-%s %s '%s' > compare_sus_runs.log 2>&1" % (testname, environ['BUILDROOT'], ALGO, mode, environ['TEST_DATA'], ALGO, datmode, susdir, errors_to))
+    rc = system("compare_sus_runs %s %s/%s-%s %s/%s-%s %s '%s' > compare_sus_runs.log 2>&1" % (testname, test_root, compare_root, susdir, errors_to))
     if rc != 0:
 	if rc != 65280:
     	    print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, rc)
@@ -63,15 +66,17 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
         print "\tComparison tests passed."
 
     if mode in ('dbg', 'dbgmpi'):
-	rc = system("mem_leak_check %s %s %s %s" % (testname, "malloc_stats", ".", errors_to))
+	rc = system("mem_leak_check %s malloc_stats %s/%s/malloc_stats %s %s" % (testname, compare_root, testname, ".", errors_to))
         if rc == 0:
-	    print "\tMemory leak test (only tests scinew leaks) passed."
+	    print "\tMemory leak tests passed."
 	elif rc == 5:
 	    print "\t*** Warning, no malloc_stats file created.  Memory leak test failed."
 	    return 1
-	else:
+	elif rc == 1:
 	    print "\t*** Warning, test %s failed memory leak test" % (testname)
 	    return 1
+	else:
+	    print "\tMemory leak tests passed (Note: no highwater comparison made).
 
   return 0
 
