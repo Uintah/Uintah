@@ -9,7 +9,7 @@ SRCS = SolveMatrix.cc
 LIBNAME = Matrix
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lClasslib -lMultitask -lMalloc
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lTCL -lClasslib -lMultitask -lMalloc
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
