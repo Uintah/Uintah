@@ -100,7 +100,7 @@ private:
 
    ConstraintSolver* solver;
    
-   int levellevel, level;
+   unsigned int levellevel, level;
 
    Index numconstraints;
    vector<BaseConstraint*> constraints;

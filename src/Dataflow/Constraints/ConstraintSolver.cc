@@ -46,7 +46,8 @@ namespace SCIRun {
 
 
 static DebugSwitch cs_debug("ConstraintSolver", "Print");
-static DebugSwitch cs2_debug("ConstraintSolver", "Stack");
+//static bool cs_debug = true;
+
 
 ostream& operator<<( ostream& os, const StackItem& i ) {
    os << i.var->GetName() << ":  ";
@@ -142,46 +143,38 @@ ConstraintSolver::Solve(BaseVariable* var,
 {
   changed |= !(var->data.epsilonequal(Epsilon, newValue));
    
-  Index index, index2;
-  int abort(0);
   VarCore newval(newValue);
-
   list<StackItem> itemstack;
+  bool abort_flag = false;
+  unsigned int i;
 
-  for (index=0; index< variables.size(); index++)
+  for (i=0; i < variables.size(); i++)
   {
-    variables[index]->level = variables[index]->levellevel = 0;
+    variables[i]->level = variables[i]->levellevel = 0;
   }
   itemstack.push_front(StackItem(var));
 
-  while (!itemstack.empty() && !abort)
+  while (!itemstack.empty() && !abort_flag)
   {
     StackItem& item = itemstack.front();
     BaseVariable *v = item.var;
-
-    //cout << "Stack top: (" << itemstack.front() << ")" << endl;
 
     switch (item.rtype)
     {
     case RecurseInitial:
       {
-	const bool reallynew = !(v->data.epsilonequal(Epsilon, newval));
-	if (!reallynew)
-	{
-	  itemstack.pop_front();
-	  break;
-	}
-	 
+	const bool notnew = v->data.epsilonequal(Epsilon, newval);
+
 	if (cs_debug)
 	{
 	  cout << "Recursion level = " << itemstack.size() << endl;
 	    
 	  cout << v->name << " S(" << v->levellevel << ")*";
-	  for (index=0; index<(Index)(v->level); index++)
+	  for (i=0; i < v->level; i++)
 	    cout << " ";
 	  cout << "*" << endl;
 	    
-	  cout << "Old value (" << v->data << ") " << (reallynew?"!=":"==")
+	  cout << "Old value (" << v->data << ") " << (notnew?"==":"!=")
 	       << " newval (" << newval << ").  Using Epsilon of ("
 	       << Epsilon << ")." << endl;
 	    
@@ -189,12 +182,19 @@ ConstraintSolver::Solve(BaseVariable* var,
 	       << " and Level is " << v->level << "." << endl;
 	}
 	 
+	if (notnew)
+	{
+	  itemstack.pop_front();
+	  break;
+	}
+	 
 	v->data = newval;
-
-	if (v->level++ == MaxDepth)
+	v->level++;
+	if (v->level > MaxDepth)
 	{
 	  v->level = 0;
-	  if (++(v->levellevel) < v->numconstraints)
+	  v->levellevel++;
+	  if (v->levellevel < v->numconstraints)
 	  {
 	    if (cs_debug)
 	    {
@@ -207,7 +207,7 @@ ConstraintSolver::Solve(BaseVariable* var,
 	    if (cs_debug)
 	    {
 	      cout << v->name << " E(" << v->levellevel << ")*";
-	      for (index=0; index< (Index)(v->level); index++)
+	      for (i=0; i < v->level; i++)
 	      {
 		cout << " ";
 	      }
@@ -220,7 +220,7 @@ ConstraintSolver::Solve(BaseVariable* var,
 	    cout << "Accepting current approximation." << endl;
 	    cout << "Recursion level = " << itemstack.size()-1 << endl;
 	       
-	    abort = 1;	       
+	    abort_flag = true;	       
 	  }
 	}
 	else
@@ -257,7 +257,7 @@ ConstraintSolver::Solve(BaseVariable* var,
 	if (cs_debug)
 	{
 	  cout << v->name << " E(" << v->levellevel << ")*";
-	  for (index=0; index<(Index)(v->level); index++)
+	  for (i = 0; i <v->level; i++)
 	    cout << " ";
 	  cout << "*" << endl;
 	  cout << "Recursion level = " << itemstack.size()-1 << endl;
@@ -269,12 +269,13 @@ ConstraintSolver::Solve(BaseVariable* var,
     case RecurseMax:
       if (item.iter < v->numconstraints)
       {
-	index2 = (item.iter + v->levellevel) % v->numconstraints;
-	if (v->constraints[v->constraint_order[index2]]
-	    ->Satisfy(v->constraint_indexs[v->constraint_order[index2]],
+	const int idx = (item.iter + v->levellevel) % v->numconstraints;
+	if (v->constraints[v->constraint_order[idx]]
+	    ->Satisfy(v->constraint_indexs[v->constraint_order[idx]],
 		      scheme, Epsilon, v, newval))
 	{
-	  itemstack.push_front(StackItem(v));
+	  StackItem si(v);
+	  itemstack.push_front(si);
 	}
 	item.iter++;
       }
@@ -293,7 +294,7 @@ ConstraintSolver::Solve(BaseVariable* var,
 	if (cs_debug)
 	{
 	  cout << v->name << " E(" << v->levellevel << ")*";
-	  for (index=0; index<(Index)(v->level); index++)
+	  for (i=0; i<v->level; i++)
 	  {
 	    cout << " ";
 	  }
