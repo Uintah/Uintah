@@ -14,6 +14,8 @@ SRCDIR   := Moulding/Modules/Visualization
 
 SRCS     += \
 	$(SRCDIR)/VolumeRender.cc\
+	$(SRCDIR)/StreamLines.cc\
+	$(SRCDIR)/GenField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := PSECore/Datatypes PSECore/Dataflow \
