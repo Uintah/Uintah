@@ -15,6 +15,17 @@ itcl_class IsoSurface {
 	global $this-isoval
 	global $this-emit_surface
 	set $this-emit_surface 0
+	global $this-min $this-max
+	set $this-min 0
+	set $this-max 1
+	puts "set_defaults"
+	global $this-xmin $this-xmax $this-ymin $this-ymax $this-zmin $this-zmax
+	set $this-xmin 0
+	set $this-ymin 0
+	set $this-zmin 0
+	set $this-xmax 1
+	set $this-ymax 1
+	set $this-zmax 1
     }
     method ui {} {
 	set w .ui$this
@@ -42,8 +53,9 @@ itcl_class IsoSurface {
 	pack $w.f.seedpoint.label $w.f.seedpoint.value \
 		$w.f.seedpoint.seedpoint $w.f.seedpoint.w3d -side left
 
+	global $this-min $this-max
 	scale $w.f.isoval -variable $this-isoval -digits 4 \
-		-from 0.0 -to 1.0 -label "IsoValue:" \
+		-from [set $this-min] -to [set $this-max] -label "IsoValue:" \
 		-resolution 0 -showvalue true \
 		-orient horizontal \
 		-command $n -state disabled
@@ -51,6 +63,9 @@ itcl_class IsoSurface {
 
 	makePoint $w.f.seed "Seed Point" $this-seed_point $n
 	pack $w.f.seed -fill x
+	global $this-xmin $this-ymin $this-zmin $this-xmax $this-ymax $this-zmax
+	set_bounds [set $this-xmin] [set $this-ymin] [set $this-zmin] \
+		[set $this-xmax] [set $this-ymax] [set $this-zmax]
 	
 	checkbutton $w.f.emit_surface -text "Emitting Surface" -relief flat \
 	    -variable $this-emit_surface -command $n
@@ -58,8 +73,9 @@ itcl_class IsoSurface {
     }
     method set_minmax {min max} {
 	set w .ui$this
-	set min -200
-	set max 200
+	global $this-min $this-max
+	set $this-min $min
+	set $this-max $max
 	$w.f.isoval configure -from $min -to $max
     }
     method set_bounds {xmin ymin zmin xmax ymax zmax} {
@@ -67,6 +83,16 @@ itcl_class IsoSurface {
 	$w.f.seed.x configure -from $xmin -to $xmax
 	$w.f.seed.y configure -from $ymin -to $ymax
 	$w.f.seed.z configure -from $zmin -to $zmax
+
+	global $this-xmin $this-xmax
+	set $this-xmin $xmin
+	set $this-xmax $xmax
+	global $this-ymin $this-ymax
+	set $this-ymin $ymin
+	set $this-ymax $ymax
+	global $this-zmin $this-zmax
+	set $this-zmin $zmin
+	set $this-zmax $zmax
     }
     method do_value {} {
 	set w .ui$this
