@@ -82,6 +82,9 @@ char * ccast_unsafe(const string &str);
 // replaces all occurances of 'substr' in 'str' with 'replacement'
 string replace_substring(string str, string substr, string replacement);
 
+// Returns true if 'str' ends with the string 'substr'
+bool ends_with(string str, string substr);
+
 
 } // End namespace SCIRun
 
