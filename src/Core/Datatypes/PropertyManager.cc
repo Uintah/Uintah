@@ -154,12 +154,13 @@ PropertyManager::clear_transient()
 }
 
 
-#define PROPERTYMANAGER_VERSION 1
+#define PROPERTYMANAGER_VERSION 2
 
 void
 PropertyManager::io(Piostream &stream)
 {
-  stream.begin_class("PropertyManager", PROPERTYMANAGER_VERSION);
+  const int version =
+    stream.begin_class("PropertyManager", PROPERTYMANAGER_VERSION);
 
   Pio( stream, size_ );
 
@@ -181,6 +182,10 @@ PropertyManager::io(Piostream &stream)
       Pio(stream, name );
       stream.io( p, PropertyBase::type_id );
       properties_[name] = static_cast<PropertyBase *>(p);
+      if (version < 2 && name == "minmax")
+      {
+	properties_[name]->set_transient(true);
+      }
     }
   }
   // TODO: implement this.  read/write all properties not marked temporary.
