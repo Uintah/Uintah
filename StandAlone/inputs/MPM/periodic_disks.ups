@@ -8,14 +8,14 @@
    </Meta>
 
    <Time>
-	<maxTime>5.0</maxTime>
+	<maxTime>0.2</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.001</delt_max>
 	<timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
-        <filebase>disks.uda</filebase>
+        <filebase>periodic_disks.uda</filebase>
 	<outputTimestepInterval>20</outputTimestepInterval>
 	<save label = "KineticEnergy"/>
 	<save label = "TotalMass"/>
