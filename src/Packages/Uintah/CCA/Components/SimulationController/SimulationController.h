@@ -51,6 +51,7 @@ class LoadBalancer;
 
       virtual void doRestart(std::string restartFromDir, int timestep,
 		     bool fromScratch, bool removeOldDir) = 0;
+      virtual void doTimestepClamping() = 0;
       virtual void run() = 0;
 
       // default just gives an error

@@ -53,6 +53,7 @@ SimpleSimulationController::SimpleSimulationController(const ProcessorGroup* myw
 {
    d_restarting = false;
    d_combinePatches = false;
+   d_timestepClamping = false;
 }
 
 SimpleSimulationController::~SimpleSimulationController()
@@ -332,7 +333,26 @@ SimpleSimulationController::run()
                << " to maximum: " << timeinfo.delt_max << '\n';
         delt = timeinfo.delt_max;
       }
-       
+
+      // clamp timestep to output/checkpoint
+      if (d_timestepClamping && output) {
+        double orig_delt = delt;
+        double nextOutput = output->getNextOutputTime();
+        double nextCheckpoint = output->getNextCheckpointTime();
+        if (nextOutput != 0 && t + delt > nextOutput) {
+          delt = nextOutput - t;       
+        }
+        if (nextCheckpoint != 0 && t + delt > nextCheckpoint) {
+          delt = nextCheckpoint - t;
+        }
+        if (delt != orig_delt) {
+          if(d_myworld->myrank() == 0)
+            cerr << "WARNING: lowering delt from " << orig_delt 
+                 << " to " << delt
+                 << " to line up with output/checkpoint time\n";
+        }
+      }
+
       newDW->override(delt_vartype(delt), sharedState->get_delt_label());
       double delt_fine = delt;
       for(int i=0;i<grid->numLevels();i++){
