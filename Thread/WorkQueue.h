@@ -15,14 +15,14 @@
 
 #include "Mutex.h"
 #include "ConditionVariable.h"
+struct WorkQueue_private;
 
 class WorkQueue {
-    Mutex lock;
-    ConditionVariable workdone;
-    int current_assignment;
-    int current_assignmentsize;
-    int decrement;
-    int threadcount;
+    WorkQueue_private* priv;
+    int* assignments;
+    int nallocated;
+    int nassignments;
+
     int nthreads;
     int totalAssignments;
     int granularity;

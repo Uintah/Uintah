@@ -26,6 +26,10 @@
 #include <sys/errno.h>
 #include <sys/syssgi.h>
 #include <sys/time.h>
+extern "C" {
+#include <sys/pmo.h>
+#include <fetchop.h>
+}
 #include "Thread.h"
 #include "ThreadGroup.h"
 #include "Mutex.h"
@@ -66,6 +70,7 @@ static int nactive;
 static bool initialized;
 static usema_t* schedlock;
 static usptr_t* arena;
+static fetchop_reservoir_t reservoir;
 static usptr_t* poolmutex_arena;
 static ulock_t poolmutex_lock;
 static ulock_t poolmutex[N_POOLMUTEX];
@@ -112,6 +117,8 @@ static void handle_profile(int, int, sigcontext_t*);
 #define STATE_BLOCK_ANY 9
 #define STATE_DIED 10
 #define STATE_BLOCK_POOLMUTEX 11
+#define STATE_BLOCK_BARRIER 12
+#define STATE_BLOCK_FETCHOP 13
 
 struct ThreadLocalMemory {
     Thread* current_thread;
@@ -186,6 +193,10 @@ static const char* getstate(Thread_private* p){
 	return "died";
     case STATE_BLOCK_POOLMUTEX:
 	return "blocking on pool mutex";
+    case STATE_BLOCK_BARRIER:
+	return "spinning in barrier";
+    case STATE_BLOCK_FETCHOP:
+	return "performing fetch&op";
     default:
 	return "UNKNOWN";
     }
@@ -361,11 +372,11 @@ static char* signal_name(int sig, int code, caddr_t addr)
 static void wait_shutdown() {
     long n;
     if((n=prctl(PR_GETNSHARE)) > 1){
-	fprintf(stderr, "Waiting for %d threads to shut down: ", n-1);
+	fprintf(stderr, "Waiting for %d threads to shut down: ", (int)(n-1));
 	sginap(10);
 	int delay=10;
 	while((n=prctl(PR_GETNSHARE)) > 1){
-	    fprintf(stderr, "%d...", n-1);
+	    fprintf(stderr, "%d...", (int)(n-1));
 	    sginap(delay);
 	    delay+=10;
 	}
@@ -651,6 +662,11 @@ void Thread::initialize() {
     arena=usinit("/dev/zero");
     if(!arena){
 	perror("usinit 2");
+	exit(1);
+    }
+    reservoir=fetchop_init(USE_DEFAULT_PM, 10);
+    if(!reservoir){
+	perror("fetchop_init");
 	exit(1);
     }
     devzero_fd=open("/dev/zero", O_RDWR);
@@ -1018,7 +1034,7 @@ void Thread::waitFor(double seconds) {
     static long tps=0;
     if(tps==0)
 	tps=CLK_TCK;
-    long ticks=seconds*tps;
+    long ticks=(long)(seconds*tps);
     while (ticks != 0){
 	ticks=sginap(ticks);
     }
@@ -1033,10 +1049,10 @@ void Thread::waitFor(SysClock time) {
 	return;
     static double tps=0;
     if(tps==0)
-	tps=CLK_TCK*ticks_to_seconds;
+	tps=(double)CLK_TCK*ticks_to_seconds;
     int ticks=time*tps;
     while (ticks != 0){
-	ticks=sginap(ticks);
+	ticks=(int)sginap(ticks);
     }
 }
 
@@ -1238,20 +1254,36 @@ void Semaphore::up()
     }
 }
 
-// This is only used for the single processor implementation
 struct Barrier_private {
+    Barrier_private();
+
+    // These variables used only for single processor implementation
     Mutex mutex;
     ConditionVariable cond0;
     ConditionVariable cond1;
     int cc;
     int nwait;
-    Barrier_private();
+
+    // Only for MP implementation
+    fetchop_var_t* pvar;
+    char pad[128];
+    int flag;  // We want this on it's own cache line
+    char pad2[128];
 };
 
 Barrier_private::Barrier_private()
 : cond0("Barrier condition 0"), cond1("Barrier condition 1"),
   mutex("Barrier lock"), nwait(0), cc(0)
 {
+    if(nprocessors > 1){
+	flag=0;
+	pvar=fetchop_alloc(reservoir);
+	if(!pvar){
+	    perror("fetchop_alloc");
+	    Thread::niceAbort();
+	}
+	storeop_store(pvar, 0);
+    }
 }   
 
 Barrier::Barrier(const char* name, int nthreads)
@@ -1260,15 +1292,7 @@ Barrier::Barrier(const char* name, int nthreads)
     if(!initialized){
 	Thread::initialize();
     }
-    if(nprocessors > 1){
-	priv=(Barrier_private*)new_barrier(arena);
-	if(!priv){
-	    perror("new_barrier");
-	    Thread::niceAbort();
-	}
-    } else {
-	priv=new Barrier_private;
-    }
+    priv=new Barrier_private;
 }
 
 Barrier::Barrier(const char* name, ThreadGroup* threadGroup)
@@ -1277,33 +1301,28 @@ Barrier::Barrier(const char* name, ThreadGroup* threadGroup)
     if(!initialized){
 	Thread::initialize();
     }
-    if(nprocessors>1){
-	priv=(Barrier_private*)new_barrier(arena);
-	if(!priv){
-	    perror("new_barrier");
-	    Thread::niceAbort();
-	}
-    } else {
-	priv=new Barrier_private;
-    }
+    priv=new Barrier_private;
 }
 
 Barrier::~Barrier()
 {
-    if(nprocessors > 1){
-	free_barrier((barrier_t*)priv);
-    } else {
-	delete priv;
-    }
+    delete priv;
 }
 
 void Barrier::wait()
 {
     int n=threadGroup?threadGroup->nactive(true):nthreads;
     Thread_private* p=Thread::currentThread()->priv;
-    int oldstate=push_bstack(p, STATE_BLOCK_SEMAPHORE, name);
+    int oldstate=push_bstack(p, STATE_BLOCK_BARRIER, name);
     if(nprocessors > 1){
-	barrier((barrier_t*)priv, n);
+	int gen=priv->flag;
+	fetchop_var_t val=fetchop_increment(priv->pvar);
+	if(val == n-1){
+	    storeop_store(priv->pvar, 0);
+	    priv->flag++;
+	}
+	while(priv->flag==gen)
+	    /* spin */ ;
     } else {
 	priv->mutex.lock();
 	ConditionVariable& cond=priv->cc?priv->cond0:priv->cond1;
