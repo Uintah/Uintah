@@ -190,7 +190,8 @@ WARNING
     }
 
     iterator end() const {
-      return ++iterator(this, getHighIndex() - IntVector(1, 1, 1));
+      iterator it(this, getHighIndex() - IntVector(1, 1, 1));
+      return ++it;
     }
 
     ///////////////////////////////////////////////////////////////////////
