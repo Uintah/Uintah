@@ -122,7 +122,6 @@ extern "C"
 			double* csmag,
 			double* sew, double* sns, double* stb,
 			double* yy, double* zz, double* yv, double* zw,
-			double* efac, double* wfac,
 			const int* dim_lo, const int* dim_hi,
 			const int* dim_lo_su_fcy, const int* dim_hi_su_fcy,
 			const int* dim_lo_sp_fcy, const int* dim_hi_sp_fcy,

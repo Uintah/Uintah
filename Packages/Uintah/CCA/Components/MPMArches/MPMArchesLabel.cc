@@ -85,42 +85,17 @@ MPMArchesLabel::MPMArchesLabel()
   DragForceZ_CCLabel = scinew VarLabel("DragForceZ_CC",
 				 CCVariable<double>::getTypeDescription() );
 
-  // FCX
-
-  // y-drag momentum acting on x-face (before redistribution)
-  DragForceY_FCX_BRLabel = scinew VarLabel("DragForceY_FCX_BR",
-				 SFCXVariable<double>::getTypeDescription() );
-  // z-drag momentum acting on x-face (before redistribution)
-  DragForceZ_FCX_BRLabel = scinew VarLabel("DragForceZ_FCX_BR",
-				 SFCXVariable<double>::getTypeDescription() );
-
-  // FCY
-
-  // x-drag momentum acting on y-face (before redistribution)
-  DragForceX_FCY_BRLabel = scinew VarLabel("DragForceX_FCY_BR",
-				 SFCYVariable<double>::getTypeDescription() );
-  // z-drag momentum acting on y-face (before redistribution)
-  DragForceZ_FCY_BRLabel = scinew VarLabel("DragForceZ_FCY_BR",
-				 SFCYVariable<double>::getTypeDescription() );
-
-  // FCZ
-
-  // x-drag momentum acting on z-face (before redistribution)
-  DragForceX_FCZ_BRLabel = scinew VarLabel("DragForceX_FCZ_BR",
-				 SFCZVariable<double>::getTypeDescription() );
-  // y-drag momentum acting on z-face (before redistribution)
-  DragForceY_FCZ_BRLabel = scinew VarLabel("DragForceY_FCZ_BR",
-				 SFCZVariable<double>::getTypeDescription() );
-
   // Passed to MPM:
 
   // Drag Forces:
 
   // FCX
 
+#if 0
   // x-drag momentum acting on x-face
   DragForceX_FCXLabel = scinew VarLabel("DragForceX_FCX",
 				 SFCXVariable<double>::getTypeDescription() );
+#endif
   // y-drag momentum acting on x-face
   DragForceY_FCXLabel = scinew VarLabel("DragForceY_FCX",
 				 SFCXVariable<double>::getTypeDescription() );
@@ -133,9 +108,11 @@ MPMArchesLabel::MPMArchesLabel()
   // x-drag momentum acting on y-face
   DragForceX_FCYLabel = scinew VarLabel("DragForceX_FCY",
 				 SFCYVariable<double>::getTypeDescription() );
+#if 0
   // y-drag momentum acting on y-face
   DragForceY_FCYLabel = scinew VarLabel("DragForceY_FCY",
 				 SFCYVariable<double>::getTypeDescription() );
+#endif
   // z-drag momentum acting on y-face
   DragForceZ_FCYLabel = scinew VarLabel("DragForceZ_FCY",
 				 SFCYVariable<double>::getTypeDescription() );
@@ -148,9 +125,11 @@ MPMArchesLabel::MPMArchesLabel()
   // y-drag momentum acting on z-face
   DragForceY_FCZLabel = scinew VarLabel("DragForceY_FCZ",
 				 SFCZVariable<double>::getTypeDescription() );
+#if 0
   // z-drag momentum acting on z-face
   DragForceZ_FCZLabel = scinew VarLabel("DragForceZ_FCZ",
 				 SFCZVariable<double>::getTypeDescription() );
+#endif
 
   // Pressure Forces:
 
@@ -337,26 +316,23 @@ MPMArchesLabel::~MPMArchesLabel()
   delete DragForceY_CCLabel;
   delete DragForceZ_CCLabel;
 
-  delete DragForceY_FCX_BRLabel;
-  delete DragForceZ_FCX_BRLabel;
-
-  delete DragForceX_FCY_BRLabel;
-  delete DragForceZ_FCY_BRLabel;
-
-  delete DragForceX_FCZ_BRLabel;
-  delete DragForceY_FCZ_BRLabel;
-
+#if 0
   delete DragForceX_FCXLabel;
+#endif
   delete DragForceY_FCXLabel;
   delete DragForceZ_FCXLabel;
 
   delete DragForceX_FCYLabel;
+#if 0
   delete DragForceY_FCYLabel;
+#endif
   delete DragForceZ_FCYLabel;
 
   delete DragForceX_FCZLabel;
   delete DragForceY_FCZLabel;
+#if 0
   delete DragForceZ_FCZLabel;
+#endif
 
   delete PressureForce_FCXLabel;
   delete PressureForce_FCYLabel;

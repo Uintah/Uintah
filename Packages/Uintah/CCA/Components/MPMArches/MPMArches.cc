@@ -319,14 +319,14 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   t->computes(d_MAlb->DragForceY_CCLabel, mpm_matls->getUnion());
   t->computes(d_MAlb->DragForceZ_CCLabel, mpm_matls->getUnion());
 	      
-  t->computes(d_MAlb->DragForceX_FCY_BRLabel, mpm_matls->getUnion());
-  t->computes(d_MAlb->DragForceX_FCZ_BRLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->DragForceX_FCYLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->DragForceX_FCZLabel, mpm_matls->getUnion());
   	      
-  t->computes(d_MAlb->DragForceY_FCZ_BRLabel, mpm_matls->getUnion());
-  t->computes(d_MAlb->DragForceY_FCX_BRLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->DragForceY_FCZLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->DragForceY_FCXLabel, mpm_matls->getUnion());
   	      
-  t->computes(d_MAlb->DragForceZ_FCX_BRLabel, mpm_matls->getUnion());
-  t->computes(d_MAlb->DragForceZ_FCY_BRLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->DragForceZ_FCXLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->DragForceZ_FCYLabel, mpm_matls->getUnion());
   	      
   t->computes(d_MAlb->PressureForce_FCXLabel, mpm_matls->getUnion());
   t->computes(d_MAlb->PressureForce_FCYLabel, mpm_matls->getUnion());
@@ -493,6 +493,8 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   
   sched->addTask(t, patches, arches_matls);
 
+#if 0
+
   // fourth step: redistributes the drag force calculated at the
   // cell-center (due to partially filled cells) to face centers
   // to supply to mpm
@@ -517,6 +519,9 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   t->computes(d_MAlb->DragForceY_FCYLabel, mpm_matls->getUnion());
   t->computes(d_MAlb->DragForceZ_FCZLabel, mpm_matls->getUnion());
   sched->addTask(t, patches, mpm_matls);
+
+#endif
+
 }
 
 void MPMArches::schedulePutAllForcesOnCC(SchedulerP& sched,
@@ -1117,27 +1122,27 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 		       idx, patch);
       dragForceZ_cc[m].initialize(0.);
       
-      new_dw->allocate(dragForceX_fcy[m], d_MAlb->DragForceX_FCY_BRLabel, 
+      new_dw->allocate(dragForceX_fcy[m], d_MAlb->DragForceX_FCYLabel, 
 		       idx, patch);
       dragForceX_fcy[m].initialize(0.);
       
-      new_dw->allocate(dragForceX_fcz[m], d_MAlb->DragForceX_FCZ_BRLabel, 
+      new_dw->allocate(dragForceX_fcz[m], d_MAlb->DragForceX_FCZLabel, 
 		       idx, patch);
       dragForceX_fcz[m].initialize(0.);
       
-      new_dw->allocate(dragForceY_fcz[m], d_MAlb->DragForceY_FCZ_BRLabel, 
+      new_dw->allocate(dragForceY_fcz[m], d_MAlb->DragForceY_FCZLabel, 
 		       idx, patch);
       dragForceY_fcz[m].initialize(0.);
       
-      new_dw->allocate(dragForceY_fcx[m], d_MAlb->DragForceY_FCX_BRLabel, 
+      new_dw->allocate(dragForceY_fcx[m], d_MAlb->DragForceY_FCXLabel, 
 		       idx, patch);
       dragForceY_fcx[m].initialize(0.);
       
-      new_dw->allocate(dragForceZ_fcx[m], d_MAlb->DragForceZ_FCX_BRLabel, 
+      new_dw->allocate(dragForceZ_fcx[m], d_MAlb->DragForceZ_FCXLabel, 
 		       idx, patch);
       dragForceZ_fcx[m].initialize(0.);
       
-      new_dw->allocate(dragForceZ_fcy[m], d_MAlb->DragForceZ_FCY_BRLabel, 
+      new_dw->allocate(dragForceZ_fcy[m], d_MAlb->DragForceZ_FCYLabel, 
 		       idx, patch);
       dragForceZ_fcy[m].initialize(0.);
       
@@ -1265,8 +1270,6 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 			    cellinfo->zz.get_objs(),
 			    cellinfo->yv.get_objs(),
 			    cellinfo->zw.get_objs(),
-			    cellinfo->efac.get_objs(),
-			    cellinfo->wfac.get_objs(),
 			    dim_lo.get_pointer(), 
 			    dim_hi.get_pointer(),
 			    xdim_lo_su_fcy.get_pointer(),
@@ -1384,8 +1387,6 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 			    cellinfo->xx.get_objs(),
 			    cellinfo->zw.get_objs(),
 			    cellinfo->xu.get_objs(),
-			    cellinfo->enfac.get_objs(),
-			    cellinfo->sfac.get_objs(),
 			    dim_lo.get_pointer(), 
 			    dim_hi.get_pointer(),
 			    ydim_lo_su_fcy.get_pointer(),
@@ -1503,8 +1504,6 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 			    cellinfo->yy.get_objs(),
 			    cellinfo->xu.get_objs(),
 			    cellinfo->yv.get_objs(),
-			    cellinfo->tfac.get_objs(),
-			    cellinfo->bfac.get_objs(),
 			    dim_lo.get_pointer(), 
 			    dim_hi.get_pointer(),
 			    zdim_lo_su_fcy.get_pointer(),
@@ -1607,19 +1606,19 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       new_dw->put(dragForceZ_cc[m], d_MAlb->DragForceZ_CCLabel,
 		  idx, patch);
       
-      new_dw->put(dragForceX_fcy[m], d_MAlb->DragForceX_FCY_BRLabel,
+      new_dw->put(dragForceX_fcy[m], d_MAlb->DragForceX_FCYLabel,
 		  idx, patch);
-      new_dw->put(dragForceX_fcz[m], d_MAlb->DragForceX_FCZ_BRLabel,
-		  idx, patch);
-      
-      new_dw->put(dragForceY_fcz[m], d_MAlb->DragForceY_FCZ_BRLabel,
-		  idx, patch);
-      new_dw->put(dragForceY_fcx[m], d_MAlb->DragForceY_FCX_BRLabel,
+      new_dw->put(dragForceX_fcz[m], d_MAlb->DragForceX_FCZLabel,
 		  idx, patch);
       
-      new_dw->put(dragForceZ_fcx[m], d_MAlb->DragForceZ_FCX_BRLabel,
+      new_dw->put(dragForceY_fcz[m], d_MAlb->DragForceY_FCZLabel,
 		  idx, patch);
-      new_dw->put(dragForceZ_fcy[m], d_MAlb->DragForceZ_FCY_BRLabel,
+      new_dw->put(dragForceY_fcx[m], d_MAlb->DragForceY_FCXLabel,
+		  idx, patch);
+      
+      new_dw->put(dragForceZ_fcx[m], d_MAlb->DragForceZ_FCXLabel,
+		  idx, patch);
+      new_dw->put(dragForceZ_fcy[m], d_MAlb->DragForceZ_FCYLabel,
 		  idx, patch);
       
       new_dw->put(pressForceX[m], d_MAlb->PressureForce_FCXLabel,
@@ -2245,6 +2244,7 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
 //______________________________________________________________________
 //
 
+#if 0
 void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
 						const PatchSubset* patches,
 						const MaterialSubset* ,
@@ -2396,6 +2396,7 @@ void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
   }
     
 }
+#endif
 
 void MPMArches::putAllForcesOnCC(const ProcessorGroup*,
 				const PatchSubset* patches,

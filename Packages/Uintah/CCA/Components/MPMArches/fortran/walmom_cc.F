@@ -1,8 +1,8 @@
       subroutine walmom_cc(
      $     su_dragx_fcy, sp_dragx_fcy, 
      $     dragforcex_fcy, 
-     $     ug_cc, up_fcy, epsg, 
-     $     epsg_solid,
+     $     ug_cc, up_fcy, eps_Gas, 
+     $     eps_Solid,
      $     sew, stb, yv, yy,
      $     viscos, csmag, 
      $     idf, idt1, idt2, 
@@ -85,12 +85,12 @@ c--------------------------------------------------------------------
      $     dim_lo_upy(2):dim_hi_upy(2),
      $     dim_lo_upy(3):dim_hi_upy(3))
 
-      double precision epsg(
+      double precision eps_Gas(
      $     dim_lo_eps(1):dim_hi_eps(1),
      $     dim_lo_eps(2):dim_hi_eps(2),
      $     dim_lo_eps(3):dim_hi_eps(3))
 
-      double precision epsg_solid(
+      double precision eps_Solid(
      $     dim_lo_epss(1):dim_hi_epss(1),
      $     dim_lo_epss(2):dim_hi_epss(2),
      $     dim_lo_epss(3):dim_hi_epss(3))
@@ -142,8 +142,8 @@ c--------------------------------------------------------------------
          call taucal_cc(
      $        su_dragx_fcy, sp_dragx_fcy, 
      $        dragforcex_fcy, 
-     $        ug_cc, up_fcy, epsg, 
-     $        epsg_solid,
+     $        ug_cc, up_fcy, eps_Gas, 
+     $        eps_Solid,
      $        sew, stb, yv, yy,
      $        viscos, csmag, one,
      $        1,
@@ -176,8 +176,8 @@ c--------------------------------------------------------------------
          call taucal_cc(
      $        su_dragx_fcy, sp_dragx_fcy, 
      $        dragforcex_fcy, 
-     $        ug_cc, up_fcy, epsg, 
-     $        epsg_solid, 
+     $        ug_cc, up_fcy, eps_Gas, 
+     $        eps_Solid, 
      $        sew, stb, yv, yy,
      $        viscos, csmag, -one,
      $        0, 

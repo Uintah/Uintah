@@ -12,11 +12,10 @@
      $     up_cc, 
      $     up_fcy, 
      $     up_fcz, 
-     $     epsg, 
-     $     epsg_solid,
+     $     eps_Gas, 
+     $     eps_Solid,
      $     viscos, csmag,
      $     sew, sns, stb, yy, zz, yv, zw,
-     $     efac, wfac,
      $     dim_lo, dim_hi, 
      $     dim_lo_su_fcy, dim_hi_su_fcy, 
      $     dim_lo_sp_fcy, dim_hi_sp_fcy, 
@@ -95,9 +94,9 @@ c
 c     up_fcz: solid velocity in the x-direction, stored at z-face 
 c     centers
 c
-c     epsg: cell-centered volume fraction of gas
+c     eps_Gas: cell-centered volume fraction of gas
 c
-c     epsg_solid: cell-centered volume fraction of solid of current 
+c     eps_Solid: cell-centered volume fraction of solid of current 
 c     material index
 c
 c     discrete_fraction: cell-centered discrete fraction of solid
@@ -111,11 +110,6 @@ c
 c     yy, yv: y co-ordinates of p-cell and v-cell
 c
 c     zz, zw: z co-ordinates of p-cell and w-cell
-c
-c     efac, wfac: factors for interpolating from the east and west
-c     faces of the pcell to the p-cell center (note that the p-cell
-c     "center" is not necessarily midway between the east and west
-c     faces.)
 c
 c     dim_lo, dim_hi: extents of the dimension of the input arrays
 c
@@ -262,12 +256,12 @@ C-----------------------------------------------------------------------
      $     dim_lo_upz(2):dim_hi_upz(2),
      $     dim_lo_upz(3):dim_hi_upz(3))
 
-      double precision epsg(
+      double precision eps_Gas(
      $     dim_lo_eps(1):dim_hi_eps(1),
      $     dim_lo_eps(2):dim_hi_eps(2),
      $     dim_lo_eps(3):dim_hi_eps(3))
 
-      double precision epsg_solid(
+      double precision eps_Solid(
      $     dim_lo_epss(1):dim_hi_epss(1),
      $     dim_lo_epss(2):dim_hi_epss(2),
      $     dim_lo_epss(3):dim_hi_epss(3))
@@ -284,9 +278,6 @@ C-----------------------------------------------------------------------
 
       double precision zz(dim_lo(indext2):dim_hi(indext2))
       double precision zw(dim_lo(indext2):dim_hi(indext2))
-
-      double precision efac(dim_lo(indexflo):dim_hi(indexflo))
-      double precision wfac(dim_lo(indexflo):dim_hi(indexflo))
 
       integer valid_lo(3)
       integer valid_hi(3)
@@ -309,7 +300,7 @@ C-----------------------------------------------------------------------
       integer valid_lo_ext(3)
       integer valid_hi_ext(3)
 
-      double precision epsg_cont
+      double precision eps_Gas_cont
       
       integer idf
       integer idt1
@@ -388,27 +379,28 @@ c
          do 110 j = valid_lo(2), valid_hi(2)
             do 100 i = valid_lo(1), valid_hi(1)
 
-c               epsg_cont = (one - discrete_fraction(i,j,k))*
-c     $              epsg(i,j,k)
+c               eps_Gas_cont = (one - discrete_fraction(i,j,k))*
+c     $              eps_Gas(i,j,k)
 c     later we will get discrete fraction from mpm to input here.
 
-               epsg_cont = epsg(i,j,k)
-               if (epsg_cont.lt.one .and. pcell(i,j,k).ne.wall) then
+               eps_Gas_cont = eps_Gas(i,j,k)
+               if (eps_Gas_cont.lt.one .and. 
+     $              pcell(i,j,k).ne.wall) then
 
                   idf  = ioff*i + joff*j + koff*k
                   idt1 = koff*i + ioff*j + joff*k
                   idt2 = joff*i + koff*j + ioff*k
 
-                  drep = (epsg_cont*
+                  drep = (eps_Gas_cont*
      $                 sew(idf)*sns(idt1)*stb(idt2))**
      $                 (1.0/3.0)
-                  darea = ((one - epsg_cont)*
+                  darea = ((one - eps_Gas_cont)*
      $                 sew(idf)*sns(idt1)*stb(idt2))**
      $                 (1.0/3.0)
                   dist = drep/two
                   area = darea*darea
 
-                  factor = epsg_solid(i,j,k)/(one - epsg(i,j,k))
+                  factor = eps_Solid(i,j,k)/(one - eps_Gas(i,j,k))
                   
                   tmult = factor*viscos/dist
                      
@@ -450,8 +442,8 @@ c     direction 1 (i.e., south and north faces)
                   call walmom_cc(
      $                 su_dragx_fcy, sp_dragx_fcy, 
      $                 dragforcex_fcy, 
-     $                 ug_cc, up_fcy, epsg, 
-     $                 epsg_solid,
+     $                 ug_cc, up_fcy, eps_Gas, 
+     $                 eps_Solid,
      $                 sew, stb, yv, yy,
      $                 viscos, csmag,
      $                 idf, idt1, idt2, 
@@ -478,8 +470,8 @@ c     direction 2 (i.e., bottom and top faces)
                   call walmom_cc(
      $                 su_dragx_fcz, sp_dragx_fcz,
      $                 dragforcex_fcz, 
-     $                 ug_cc, up_fcz, epsg, 
-     $                 epsg_solid,
+     $                 ug_cc, up_fcz, eps_Gas, 
+     $                 eps_Solid,
      $                 sew, sns, zw, zz,
      $                 viscos, csmag,
      $                 idf, idt2, idt1, 
