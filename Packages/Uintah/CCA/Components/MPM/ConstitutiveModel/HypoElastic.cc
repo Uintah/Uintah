@@ -12,7 +12,7 @@
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h> // for Fracture
+#include <Packages/Uintah/Core/Math/Short27.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h> 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
@@ -35,36 +35,56 @@ HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
 
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
+
+  if(flag->d_8or27==8){
+    NGN=1;
+  } else if(flag->d_8or27==27){
+    NGN=2;
+  }
+  
   if (flag->d_fracture) {
-    // Read in fracture toughness curve versus crack velocity
+    // Read in fracture criterion and the toughness curve
     ProblemSpecP curve_ps = ps->findBlock("fracture_toughness_curve");
     if(curve_ps!=0) {
       crackPropagationCriterion="max_hoop_stress";	  
       curve_ps->get("crack_propagation_criterion",crackPropagationCriterion);	  
+
       if(crackPropagationCriterion!="max_hoop_stress" && 
 	 crackPropagationCriterion!="max_principal_stress" &&
 	 crackPropagationCriterion!="max_energy_release_rate" &&
-	 crackPropagationCriterion!="strain_energy_density") {
+	 crackPropagationCriterion!="strain_energy_density" &&
+         crackPropagationCriterion!="empirical_criterion") {
 	cout << "!!! Undefinded crack propagation criterion: "
-	     << crackPropagationCriterion << ". Program terminated."
+	     << crackPropagationCriterion 
+	     << " for hypo-elastic material. Program terminated."
 	     << endl;
 	exit(1);       
       }	    
+
+      if(crackPropagationCriterion=="empirical_criterion") {
+        // Get parameters p & q in the fracture locus equation
+        // (KI/Ic)^p+(KII/KIIc)^q=1 and KIIc=r*KIc       
+        p=q=2.0;  // Default elliptical fracture locus  
+	r=-1.;
+        curve_ps->get("p",p);
+        curve_ps->get("q",q);
+        curve_ps->get("r",r);
+      }
+	    
       for(ProblemSpecP child_ps=curve_ps->findBlock("point"); child_ps!=0; 
 	  child_ps=child_ps->findNextBlock("point")) {
 	double Vc,KIc,KIIc;
 	child_ps->get("Vc",Vc);
 	child_ps->get("KIc",KIc);
-	child_ps->get("KIIc",KIIc);
+        if(r<0.) { // Input KIIc manually
+          child_ps->get("KIIc",KIIc);
+        }
+        else { // The ratio of KIIc to KIc is a constant (r) 
+	  KIIc=r*KIc;
+        }	
 	d_initialData.Kc.push_back(Vector(Vc,KIc,KIIc));
       }		  
     }
-  }
-  
-  if(flag->d_8or27==8){
-    NGN=1;
-  } else if(flag->d_8or27==27){
-    NGN=2;
   }
 }
 
@@ -519,21 +539,26 @@ HypoElastic::CrackPropagates(const double& Vc,const double& KI,
   // Dynamic fracture toughness Kc(Vc,KIc,KIIC) 
   vector<Vector> Kc = d_initialData.Kc;
   int num = (int) Kc.size();
-  double KIc=-1.;
+  double KIc=-1., KIIc=-1.0;
   if(Vc<=Kc[0].x()) { // Beyond the left bound
     KIc=Kc[0].y();
+    KIIc=Kc[0].z();
   }
   else if(Vc>=Kc[num-1].x()) { // Beyond the right bound
     KIc=Kc[num-1].y();
+    KIIc=Kc[num-1].z();
   }
   else { // In between 
     for(int i=0; i<num-1;i++) {
       double Vi=Kc[i].x();
       double Vj=Kc[i+1].x();
       if(Vc>=Vi && Vc<Vj) {
-        double Ki=Kc[i].y();
-	double Kj=Kc[i+1].y();
-	KIc=Ki+(Kj-Ki)*(Vc-Vi)/(Vj-Vi);
+        double KIi=Kc[i].y();
+        double KIj=Kc[i+1].y();
+        double KIIi=Kc[i].z();
+        double KIIj=Kc[i+1].z();
+        KIc=KIi+(KIj-KIi)*(Vc-Vi)/(Vj-Vi);
+        KIIc=KIIi+(KIIj-KIIi)*(Vc-Vi)/(Vj-Vi);	
 	break;
       }
     } // End of loop over i
@@ -605,19 +630,31 @@ HypoElastic::CrackPropagates(const double& Vc,const double& KI,
       double a22=(k+1)*(1-ct)+(1+ct)*(3*ct-1);
       Kq=sqrt((a11*KI*KI+2*a12*KI*KII+a22*KII*KII)/2/(k-1)); 
     }  
-  }  // End of STRAINENRGYDENSITY criterion	  
+  }  // End of strain_energy_density criterion       
 
-  if(fabs(theta)>3.141592655/2) {
-    cout << "*** Warning: predicted crack propagation angle ("
-         << theta*180/3.141592654 << ") is larger than 90 degree"
-         << " (KI=" << KI << ", KII=" << KII << ")." << endl;
-  }
+  if(crackPropagationCriterion=="empirical_criterion") {
+    if(KII==0. || (KII!=0. && fabs(KI/KII)>1000.)) { // Pure mode I
+      theta=0.;
+      Kq=KI;
+    }
+    else { // For mixed mode or pure mode II, use maximum pricipal criterion to
+           // determine the crack propagation direction and the emprical
+           // criterion to determine if crack will propagate.
+      double R=KI/KII;
+      int sign = (KII>0.)? -1 : 1;
+      double tanTheta2=(R+sign*sqrt(R*R+8.))/4.;
+      theta=2*atan(tanTheta2);
+      Kq=(pow(KI/KIc,p)+pow(KII/KIIc,q))*KIc;
+    }
+  } // End of empirical_criterion
 
-  if(Kq>=KIc) return 1;
-  else        return 0;
+  if(Kq>=KIc)
+    return 1;
+  else
+    return 0;
 }
 
-// Solve crack propagation angle numerically from strain energy density criterion
+// Obtain crack propagation angle numerically from strain energy density criterion
 // for FRACTURE
 double
 HypoElastic::CrackPropagationAngleFromStrainEnergyDensityCriterion(const double& k,
@@ -668,7 +705,8 @@ HypoElastic::CrackPropagationAngleFromStrainEnergyDensityCriterion(const double&
     } // End of if(fa*fb<0.)
   } // End of loop over i
     
-  // Determine the direction along which exists the minimum strain energy density   
+  // Select the direction from the solutions 
+  // along which there exists the minimum strain energy density   
   int count=0;
   double S0=0.0;
   for(int i=0;i<(int)root.size();i++) {
@@ -682,8 +720,8 @@ HypoElastic::CrackPropagationAngleFromStrainEnergyDensityCriterion(const double&
     double dsdr2=KI*KI*((1-k)*cr+2*cr2)-2*KI*KII*(4*sr2+(1-k)*sr)+
     	         KII*KII*((k-1)*cr-6*cr2); 
     if(dsdr2>0.) { 
-      // Determine propagation angle by comparison ofstrain energy density. 
-      // Along the angle exists the minimum strain energy density. 
+      // Determine propagation angle by comparison of strain energy density. 
+      // Along the angle there exists the minimum strain energy density. 
       double S=(1+cr)*(k-cr)*KI*KI+2*sr*(2*cr-k+1)*KI*KII+
 	       ((k+1)*(1-cr)+(1+cr)*(3*cr-1))*KII*KII; 
       if(count==0 || (count>0 && S<S0)) {
