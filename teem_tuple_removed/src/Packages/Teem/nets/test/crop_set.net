@@ -1,3 +1,20 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
 # SCI Network 1.0
 
 if {[llength [array get env SCIRUN_DATA]] == 0} {
@@ -11,7 +28,7 @@ if {[llength [array get env SCIRUN_DATA]] == 0} {
 }
 
 set DATADIR $env(SCIRUN_DATA)
-puts "*** Using SCIRUN_DATA $DATADIR"
+
 
 ::netedit dontschedule
 
@@ -73,8 +90,8 @@ set $m9-notes {}
 set $m9-show_status {1}
 set $m9-num-axes {2}
 set $m9-minAxis0 {0}
-set $m9-maxAxis0 {0}
-set $m9-absmaxAxis0 {1}
+set $m9-maxAxis0 {2}
+set $m9-absmaxAxis0 {3}
 set $m9-minAxis1 {0}
 set $m9-maxAxis1 {999}
 set $m9-absmaxAxis1 {999}
