@@ -1,5 +1,4 @@
 
-
 /*
  *  InvalidValue.h: 
  *
@@ -16,7 +15,6 @@
 #define UINTAH_EXCEPTIONS_INVALIDVALUE_H
 
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <string>
 
 namespace Uintah {
 
@@ -34,5 +32,3 @@ namespace Uintah {
 } // End namespace Uintah
 
 #endif
-
-
