@@ -38,16 +38,19 @@
 <script type="text/javascript">
 var treetop="";
 var path = location.pathname;
-var iLimit = 20;
-var i = 0;
-while (i < iLimit && path.substr(path.lastIndexOf("/")+1) != "doc") {
-treetop += "../";
-i += 1;
-path = path.substr(0, path.lastIndexOf("/"));
+if (path.charAt(path.length-1) == "/") {
+  path += "bogus.html"
 }
-var inDocTree = i < iLimit;
+var base = path.substr(path.lastIndexOf("/")+1);
+var roottag = "doc";
+while (base != roottag && base != "") {
+  treetop += "../";
+  path = path.substr(0, path.lastIndexOf("/"));
+  base = path.substr(path.lastIndexOf("/")+1);
+}
+var inDocTree = base == roottag;
 if (inDocTree) {
-document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
+document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'/>")
 }
 </script>
 \end{rawhtml}
