@@ -132,6 +132,7 @@ void InsertVoltageSource::execute() {
   TetVolMesh::Cell::size_type tvm_ncells;
   tvm->size(tvm_nnodes);
   tvm->size(tvm_ncells);
+  tvm->synchronize(Mesh::LOCATE_E);
 
   TetVolMesh::Node::array_type nbrs(4);
 
