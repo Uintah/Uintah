@@ -10,15 +10,18 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
+PATH_TO_SCIRUN := $(shell cd $(SRCTOP) ; pwd)
+
 INCLUDES += $(INSIGHT_INCLUDE)
 
 SRCDIR   := Packages/Insight/Dataflow/Modules/Filters
 
 #XMLS :=  $(wildcard $(SRCDIR)/XML/sci_*.xml)
+#XMLS :=  $(shell ls $(PATH_TO_SCIRUN)/$(SRCDIR)/XML/sci_*.xml)
 XMLS :=  \
 	sci_DiscreteGaussianImageFilter.xml \
-  sci_GradientAnisotropicDiffusionImageFilter.xml \
-  sci_GradientMagnitudeImageFilter.xml \
+        sci_GradientAnisotropicDiffusionImageFilter.xml \
+        sci_GradientMagnitudeImageFilter.xml \
 	sci_WatershedRelabeler.xml \
 	sci_WatershedSegmentTreeGenerator.xml \
 	sci_WatershedSegmenter.xml \
@@ -33,7 +36,7 @@ CODEGEN := Packages/Insight/Core/CodeGenerator/generate
 SRCS += ${SRC_GEN} 
 
 $(SRCDIR)/%.cc : $(SRCDIR)/XML/sci_%.xml
-	$(CODEGEN) /Users/yarden/projects/SCIRun/src/Packages/Insight $(CATEGORY) $*
+	$(CODEGEN) $(PATH_TO_SCIRUN)/Packages/Insight $(CATEGORY) $*
 	cp ../src/$@ $@
 
 PSELIBS := Packages/Insight/Core/Datatypes \
