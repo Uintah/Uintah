@@ -550,7 +550,12 @@ EditColorMap2D::load_file() {
   }  
   // read the file.
   ColorMap2Handle icmap = scinew ColorMap2();
-  Pio(*stream, icmap);
+  try {
+    Pio(*stream, icmap);
+  } catch (...) {
+    error("Error loading "+fn);
+    icmap = 0;
+  }
   delete stream;
   if (icmap.get_rep()) {
     widgets_ = icmap->widgets();
