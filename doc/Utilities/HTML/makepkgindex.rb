@@ -38,10 +38,11 @@
 TREE_TOP = "../../../"
 
 class Entry
-  attr_reader :base, :file
+  attr_reader :base, :file, :orphaned
   def initialize(file)
     @file = file
     @base = File.basename(file)
+    @orphaned = !File.exists?(@file[0..@file.rindex('.')-1] + ".xml")
   end
   def <=>(e)
     @base <=> e.base
@@ -51,19 +52,19 @@ class Entry
   end
 end
 
-class LatexEntry < Entry
-  @@count = 0
-  def initialize(file)
-    super
-    @@count += 1
-  end
-  def get
-    "<td><a href='#{@file}'>#{File.basename(@file, '.html')}</a><sup>*</sup></td>"
-  end
-  def LatexEntry.count
-    @@count
-  end
-end
+# class LatexEntry < Entry
+#   @@count = 0
+#   def initialize(file)
+#     super
+#     @@count += 1
+#   end
+#   def get
+#     "<td><a href='#{@file}'>#{File.basename(@file, '.html')}</a><sup>*</sup></td>"
+#   end
+#   def LatexEntry.count
+#     @@count
+#   end
+# end
 
 def main
 
@@ -108,10 +109,11 @@ EndOfString
 
       index.print("<br/>")
 
-      # Generate index of modules.  Alphabetical order in 3 columns.
+      # Generate module index.  Alphabetical order in 3 columns.
       entries = []
       Dir["#{xmlDir}/*.html"].each do |f|
-          entries << Entry.new(f)
+          entry = Entry.new(f)
+          entries << entry if !entry.orphaned()
       end
 		    
 #       Dir["#{texDir}/*/*/*.html"].each do |f|
@@ -178,9 +180,9 @@ cellpadding='2'> \n")
 
       index.print("</tbody>\n</table>\n")
 
-      if LatexEntry.count > 0
-        index.print("<p><sup>*</sup>Denotes additional documentation for a module.</p>\n")
-      end
+#       if LatexEntry.count > 0
+#         index.print("<p><sup>*</sup>Denotes additional documentation for a module.</p>\n")
+#       end
 
       # Generate end of file boilerplate.
       index.print <<EndOfString

@@ -63,51 +63,55 @@ class CategoryEntry < Entry
   end
 end
 
-# And Entry for a module description.
+# An Entry for a module description.
 class ModuleEntry < Entry
-  attr_reader :fileName
+  attr_reader :fileName, :category, :orphaned
   def initialize(fileName)
-    super(File.basename(fileName, ".html"))
     @fileName = fileName
+    fileNameCore = @fileName[0..@fileName.rindex('.')-1]
+    moduleName = File.basename(fileNameCore)
+    super(moduleName)
+    @orphaned = !File.exists?(fileNameCore + ".xml")
+    @category = nil
+    if !@orphaned
+      begin
+	@category = categoryP()
+      rescue
+	$stderr.print("#{$0}-Warning: #{@fileName}'s source can't be read\n")
+      end
+    end
   end
   def entry
     "<td><a href='#{@fileName}'>#{super()}</a></td>"
   end
-  def category
-    begin
-      categoryP()
-    rescue
-      "REMOVE THESE!"
-    end
-  end
   def categoryP
-    File.open(fileName.gsub(/\.html$/,".xml")) do |f|
+    File.open(@fileName.gsub(/\.html$/,".xml")) do |f|
       /category=\"(.*)\">/.match(f.read())[1]
     end
   end
 end
 
 # An Entry for a latex based module description.
-class LatexEntry < ModuleEntry
-  @@count = 0
-  def initialize(fileName)
-    super(fileName)
-    @@count += 1
-  end
-  def entry
-    "<td><a href='#{fileName()}'>#{File.basename(fileName, '.html')}</a><sup>*</sup></td>"
-  end
-  def categoryP
-    xmlFile = (File.dirname(fileName) + "/../../../XML/" +
-	       File.basename(fileName)).gsub(/\.html$/,".xml")
-    File.open(xmlFile) do |f|
-      /category=\"(.*)\">/.match(f.read())[1]
-    end
-  end
-  def LatexEntry.count
-    @@count
-  end
-end
+# class LatexEntry < ModuleEntry
+#   @@count = 0
+#   def initialize(fileName)
+#     super(fileName)
+#     @@count += 1
+#   end
+#   def entry
+#     "<td><a href='#{fileName()}'>#{File.basename(@fileName, '.html')}</a><sup>*</sup></td>"
+#   end
+#   def categoryP
+#     xmlFile = (File.dirname(fileName) + "/../../../XML/" +
+# 	       File.basename(fileName)).gsub(/\.html$/,".xml")
+#     File.open(xmlFile) do |f|
+#       /category=\"(.*)\">/.match(f.read())[1]
+#     end
+#   end
+#   def LatexEntry.count
+#     @@count
+#   end
+# end
 
 def insertTopBoilerPlate(file, packageName)
   # Insert boilerplate at top of file
@@ -217,9 +221,9 @@ def genPage(packageName, list)
     end
 
     file.print("</tbody>\n</table>\n")
-    if LatexEntry.count > 0
-      file.print("<p><sup>*</sup>Denotes additional documentation for a module.</p>\n")
-    end
+#     if LatexEntry.count > 0
+#       file.print("<p><sup>*</sup>Denotes additional documentation for a module.</p>\n")
+#     end
 
     insertBottomBoilerPlate(file)
   end
@@ -236,20 +240,22 @@ def main
     categories = {}
     Dir["#{xmlDir}/*.html"].each do |f|
       entry = ModuleEntry.new(f)
-      if not categories.has_key?(entry.category)
-	categories[entry.category] = []
+      if !entry.orphaned()
+	if not categories.has_key?(entry.category)
+	  categories[entry.category] = []
+	end
+	categories[entry.category] << entry
       end
-      categories[entry.category] << entry
     end
     
     # Add latex descriptions too.
-    Dir["#{texDir}/*/*/*.html"].each do |f|
-      entry = LatexEntry.new(f)
-      if not categories.has_key?(entry.category)
-	categories[entry.category] = []
-      end
-      categories[entry.category] << entry
-    end
+#     Dir["#{texDir}/*/*/*.html"].each do |f|
+#       entry = LatexEntry.new(f)
+#       if not categories.has_key?(entry.category)
+# 	categories[entry.category] = []
+#       end
+#       categories[entry.category] << entry
+#     end
 
     # Sort modules in each category and insert category heading at the
     # front of each category list and create master list.
