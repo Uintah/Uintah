@@ -49,6 +49,7 @@ $(LIBNAME)_LIBS := $(LIBS)
 # we can use the -l syntax to link, but still express the dependicies.
 #
 $(LIBNAME): $(OBJS) $(patsubst %,$(LIBDIR)lib%.so,$(PSELIBS))
+	rm -f $(LIBNAME)
 	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.o,$^) $(patsubst $(LIBDIR)/lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
 
 #
@@ -69,6 +70,9 @@ endif
 
 #
 # $Log$
+# Revision 1.3  2000/03/17 09:53:22  sparker
+# remove before link (bugzilla #39)
+#
 # Revision 1.2  2000/03/17 09:43:45  sparker
 # Fixed dependencies for $(GENHDRS)
 #
