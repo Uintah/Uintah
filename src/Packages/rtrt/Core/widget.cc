@@ -6,9 +6,6 @@
 
 using namespace rtrt;
 
-#define textureHeight 128  
-#define textureWidth 128    
-        
 //                    [-------width--------]
 //
 //               ---> 0===================o0 <---(upperRightVertex[0],   ===
@@ -27,21 +24,19 @@ using namespace rtrt;
 
 
 // creation of new triangle widget
-TriWidget::TriWidget( float x, float y, float w, float h, float c[3], float a )
+TriWidget::TriWidget( float x, float w, float h, float c[3], float a )
 {
-  // printf( "In TriWidget creation\n" );
   type = 0;
   drawFlag = 0;
   width = w;
   height = h;
-  lowerVertex[0] = x;	       		lowerVertex[1] = y;
-  midLeftVertex[0] = x-w/4;		midLeftVertex[1] = y+h/2;
-  upperLeftVertex[0] = x-w/2;		upperLeftVertex[1] = y+h;
-  upperRightVertex[0] = x+w/2;   	upperRightVertex[1] = y+h;
-  midRightVertex[0] = x+w/4;		midRightVertex[1] = y+h/2;
+  lowerVertex[0] = x;	       		lowerVertex[1] = 0;
+  midLeftVertex[0] = x-w/4;		midLeftVertex[1] = h/2;
+  upperLeftVertex[0] = x-w/2;		upperLeftVertex[1] = h;
+  upperRightVertex[0] = x+w/2;   	upperRightVertex[1] = h;
+  midRightVertex[0] = x+w/4;		midRightVertex[1] = h/2;
   opac_x = x;
   opac_y = upperRightVertex[1];
-  opacity_offset = 0.0;
   color[0] = c[0];
   color[1] = c[1];
   color[2] = c[2];
@@ -60,22 +55,20 @@ TriWidget::TriWidget( float x, float y, float w, float h, float c[3], float a )
 
 // replacement of another widget with a triangle widget, 
 //  retaining some values such as position, opacity, and color
-TriWidget::TriWidget( float x, float y, float w, float h, float c[3], float a, 
-		      float o_x, float o_y, float o_s, Texture<GLfloat> *t )
+TriWidget::TriWidget( float x, float w, float h, float l, float c[3], float a, 
+		      float o_x, float o_y, Texture<GLfloat> *t )
 {
-  // printf( "In TriWidget replacement\n" );
   drawFlag = 0;
   type = 0;
   width = w;
   height = h;
-  lowerVertex[0] = x;		       	lowerVertex[1] = y;
-  midLeftVertex[0] = x-w/4;		midLeftVertex[1] = y+h/2;
-  upperLeftVertex[0] = x-w/2;		upperLeftVertex[1] = y+h;
-  upperRightVertex[0] = x+w/2;    	upperRightVertex[1] = y+h;
-  midRightVertex[0] = x+w/4;		midRightVertex[1] = y+h/2;
+  lowerVertex[0] = x;		       	lowerVertex[1] = 0;
+  midLeftVertex[0] = x-(w/2)*(l/h);     midLeftVertex[1] = l;
+  upperLeftVertex[0] = x-w/2;		upperLeftVertex[1] = h;
+  upperRightVertex[0] = x+w/2;    	upperRightVertex[1] = h;
+  midRightVertex[0] = x+(w/2)*(l/h);	midRightVertex[1] = l;
   opac_x = o_x;
   opac_y = o_y;
-  opacity_offset = o_s;
   color[0] = c[0];
   color[1] = c[1];
   color[2] = c[2];
@@ -92,11 +85,48 @@ TriWidget::TriWidget( float x, float y, float w, float h, float c[3], float a,
 
 
 
+// used primarily to load widget information from saved UI state
+TriWidget::TriWidget( float lV0, float mLV0, float mLV1, float mRV0, float mRV1,
+		      float uLV0, float uLV1, float uRV0, float uRV1, float r, float g, float b,
+		      float a, float o_x, float o_y, float t_r, float t_g, float t_b,
+		      float t_x, float t_y )
+{
+  lowerVertex[0] = lV0;        lowerVertex[1] = 0;
+  midLeftVertex[0] = mLV0;     midLeftVertex[1] = mLV1;
+  midRightVertex[0] = mRV0;    midRightVertex[1] = mRV1;
+  upperLeftVertex[0] = uLV0;   upperLeftVertex[1] = uLV1;
+  upperRightVertex[0] = uRV0;  upperRightVertex[1] = uRV1;
+  width = uRV0-uLV0;
+  height = uLV1;
+  type = 0;
+  drawFlag = 0;
+  color[0] = r;
+  color[1] = g;
+  color[2] = b;
+  alpha = a;
+  opac_x = o_x;
+  opac_y = o_y;
+  translateStar = new GLStar( lowerVertex[0], lowerVertex[1], 8, 1, 0, 0 );
+  lowerBoundStar = new GLStar( midRightVertex[0], midRightVertex[1], 8, 0, 1, 0 );
+  widthStar = new GLStar( upperRightVertex[0], upperRightVertex[1], 8, 0, 0, 1 );
+  shearBar = new GLBar( (upperRightVertex[0]+upperLeftVertex[0])/2, upperLeftVertex[1], width, r, g, b );
+  barRounder = new GLStar( upperLeftVertex[0], upperLeftVertex[1], 5.0, r, g, b );
+  opacityStar = new GLStar( opac_x, opac_y, 6.5, 1-r, 1-g, 1-b );
+  transText = new Texture<GLfloat>();
+  transText->current_color[0] = t_r;
+  transText->current_color[1] = t_g;
+  transText->current_color[2] = t_b;
+  transText->colormap_x_offset = t_x;
+  transText->colormap_y_offset = t_y;
+  transText->makeOneDimTextureImage();
+} // TriWidget()
+
+
+
 // draws widget without its texture
 void
 TriWidget::draw( void )
 {
-  // printf( "In TriWidget::draw\n" );
   glBegin( GL_LINES );
     glColor3fv( color );
     glVertex2f( upperLeftVertex[0], upperLeftVertex[1] );  // left side
@@ -123,68 +153,24 @@ TriWidget::draw( void )
 void
 TriWidget::translate( float dx, float dy )
 {
-  // printf( "In TriWidget::translate\n" );
-  // quicker operation if x and y translation both keep widget inside window
+  dy = 0; // prevents base from moving off window base
+  // as long as translation keeps widget entirely inside its window
   if( upperLeftVertex[0]+dx > 0.0 && upperRightVertex[0]+dx < 500.0 &&
-      lowerVertex[0]+dx > 0.0 && lowerVertex[0]+dx < 500.0 &&
-      lowerVertex[1]+dy > 0.0 && upperLeftVertex[1]+dy < 250.0 )
+      lowerVertex[0]+dx > 0.0 && lowerVertex[0]+dx < 500.0 )
     { 
-      translateStar->translate( dx, dy );
-      lowerBoundStar->translate( dx, dy );
-      widthStar->translate( dx, dy );
-      shearBar->translate( dx, dy );
-      barRounder->translate( dx, dy );
-      opacityStar->translate( dx, dy );
+      translateStar->translate( dx, 0 );
+      lowerBoundStar->translate( dx, 0 );
+      widthStar->translate( dx, 0 );
+      shearBar->translate( dx, 0 );
+      barRounder->translate( dx, 0 );
+      opacityStar->translate( dx, 0 );
       opac_x += dx;
-      opac_y += dy;
       lowerVertex[0] += dx;
-      lowerVertex[1] += dy;
       midLeftVertex[0] += dx;
-      midLeftVertex[1] += dy;
       midRightVertex[0] += dx;
-      midRightVertex[1] += dy;
       upperLeftVertex[0] += dx;
-      upperLeftVertex[1] += dy;
       upperRightVertex[0] += dx;
-      upperRightVertex[1] += dy;
     } // if
-
-  // if either x or y translation move widget partially outside window,
-  //  then both dimensions must be operated on independently (slower)
-  else
-    {
-      if( upperLeftVertex[0]+dx > 0.0 && upperRightVertex[0]+dx < 500.0 &&
-	  lowerVertex[0]+dx > 0.0 && lowerVertex[0]+dx < 500.0 )
-	{
-	  translateStar->translate( dx, 0 );
-	  lowerBoundStar->translate( dx, 0 );
-	  widthStar->translate( dx, 0 );
-	  shearBar->translate( dx, 0 );
-	  barRounder->translate( dx, 0 );
-	  opacityStar->translate( dx, 0 );
-	  opac_x += dx;
-	  lowerVertex[0] += dx;
-	  midLeftVertex[0] += dx;
-	  midRightVertex[0] += dx;
-	  upperLeftVertex[0] += dx;
-	  upperRightVertex[0] += dx;
-	} // if
-      else if( lowerVertex[1]+dy > 0.0 && upperLeftVertex[1]+dy < 250.0 )
-	{
-	  translateStar->translate( 0, dy );
-	  lowerBoundStar->translate( 0, dy );
-	  widthStar->translate( 0, dy );
-	  shearBar->translate( 0, dy );
-	  barRounder->translate( 0, dy );
-	  opacityStar->translate( 0, dy );
-	  opac_y += dy;
-	  lowerVertex[1] += dy;
-	  midLeftVertex[1] += dy;
-	  midRightVertex[1] += dy;
-	  upperLeftVertex[1] += dy;
-	  upperRightVertex[1] += dy;
-	} // else if
-    } // else
 } // translate()
 
 
@@ -194,13 +180,12 @@ TriWidget::translate( float dx, float dy )
 void 
 TriWidget::adjustShear( float dx, float dy )
 { 
-  // printf( "In TriWidget::adjustShear\n" );
   // ratio of distances from the lowerBound and upperBound to the bottom tip
   float fractionalHeight = (midRightVertex[1]-lowerVertex[1])/(upperRightVertex[1]-lowerVertex[1]);
 
   // quicker computation if x and y translations both keep the widget fully inside the window
   if( upperLeftVertex[0]+dx > 0.0 && upperRightVertex[0]+dx < 500.0  &&
-      upperLeftVertex[1]+dy-20.0 > lowerVertex[1] && upperLeftVertex[1]+dy < 250.0 )
+      upperLeftVertex[1]+dy > lowerVertex[1] && upperLeftVertex[1]+dy < 250.0 )
     {
       height += dy;
       widthStar->translate( dx, dy );
@@ -236,8 +221,8 @@ TriWidget::adjustShear( float dx, float dy )
 	  midRightVertex[0] += dx*fractionalHeight;
 	  upperLeftVertex[0] += dx;
 	  upperRightVertex[0] += dx;
-	} // if
-      else if( upperLeftVertex[1]+dy-20.0 > lowerVertex[1] && upperLeftVertex[1]+dy < 250.0 )
+	} // if()
+      else if( upperLeftVertex[1]+dy > lowerVertex[1] && upperLeftVertex[1]+dy < 250.0 )
 	{
 	  height += dy;
 	  widthStar->translate( 0, dy );
@@ -250,7 +235,7 @@ TriWidget::adjustShear( float dx, float dy )
 	  midRightVertex[1] = midLeftVertex[1];
 	  upperLeftVertex[1] += dy;
 	  upperRightVertex[1] = upperLeftVertex[1];
-	} // else if
+	} // else if()
     } // else
 } // adjustShear()
 
@@ -260,7 +245,6 @@ TriWidget::adjustShear( float dx, float dy )
 void 
 TriWidget::adjustWidth( float dx, float dy )
 {
-  // printf( "In TriWidget::adjustWidth\n" );
   // if the adjustment doesn't cause part of the widget to fall outside its window
   if( upperLeftVertex[0]-dx+10 < upperRightVertex[0]+dx && 
       upperLeftVertex[0]-dx > 0.0 && upperRightVertex[0]+dx < 500.0 )
@@ -281,7 +265,7 @@ TriWidget::adjustWidth( float dx, float dy )
       barRounder->translate( -dx, 0 );
       widthStar->translate( dx, 0 );
       lowerBoundStar->translate( dx*fractionalHeight, 0 );
-    } // if
+    } // if()
 } // adjustWidth()
 
 
@@ -290,7 +274,6 @@ TriWidget::adjustWidth( float dx, float dy )
 void 
 TriWidget::adjustLowerBound( float dx, float dy )
 {
-  // printf( "In TriWidget::adjustLowerBound\n" );
   // slope of the right side of the widget
   float m = (upperRightVertex[1]-lowerVertex[1])/(upperRightVertex[0]-lowerVertex[0]);
   // ratio of distances from the lowerBound and upperBound to the bottom tip
@@ -299,8 +282,8 @@ TriWidget::adjustLowerBound( float dx, float dy )
   // the following if statements attempt to manipulate the lowerBoundStar more efficiently
 
   // if the mouse cursor is changing more in the x-direction...
-  if( fabs(dx) > fabs(dy) && (midRightVertex[1]+dx*m-5) > lowerVertex[1] &&
-      (midRightVertex[1]+dx*m+5) < upperRightVertex[1] )
+  if( fabs(dx) > fabs(dy) && (midRightVertex[1]+dx*m) >= lowerVertex[1] &&
+      (midRightVertex[1]+dx*m) <= upperRightVertex[1] )
     {
       midRightVertex[0] += dx;
       midRightVertex[1] += dx*m;
@@ -309,8 +292,8 @@ TriWidget::adjustLowerBound( float dx, float dy )
       lowerBoundStar->translate( dx, dx*m );
     } // if
   // otherwise, it's moving more in the y-direction...
-  else if( (midRightVertex[1]+dy-5) > lowerVertex[1] &&
-	   (midRightVertex[1]+dy+5) < upperRightVertex[1] )
+  else if( (midRightVertex[1]+dy) >= lowerVertex[1] &&
+	   (midRightVertex[1]+dy) <= upperRightVertex[1] )
     {
       midLeftVertex[1] += dy;
       midRightVertex[1] = midLeftVertex[1];
@@ -327,14 +310,11 @@ TriWidget::adjustLowerBound( float dx, float dy )
 void
 TriWidget::adjustOpacity( float dx, float dy )
 {
-  // printf( "In TriWidget::adjustOpacity\n" );
   // if the opacityStar's position adjustment will keep it on the shearBar
   if( opac_x+dx > upperLeftVertex[0] && opac_x+dx < upperRightVertex[0] )
     {
       opac_x += dx;
       opacityStar->left += dx;
-      opacity_offset = 2*(opac_x-upperLeftVertex[0])/(upperRightVertex[0]-upperLeftVertex[0])-1.0;
-      //      opacity_offset = (opac_x-upperLeftVertex[0])/(upperRightVertex[0]-upperLeftVertex[0]);
     } // if
 } // adjustOpacity()
 
@@ -344,7 +324,6 @@ TriWidget::adjustOpacity( float dx, float dy )
 void 
 TriWidget::manipulate( float x, float dx, float y, float dy )
 {
-  // printf( "In TriWidget::manipulate\n" );
   // the following block of if statements allow for continuous manipulation
   //  without conducting parameter checks every time (quicker)
   if( drawFlag == 1)
@@ -369,35 +348,35 @@ TriWidget::manipulate( float x, float dx, float y, float dy )
 	{
 	  drawFlag = 1;
 	  adjustOpacity( dx, dy );
-	} // if
+	} // if()
       // if mouse cursor near widthStar
       else if( x >= upperRightVertex[0] - 5 && x <= upperRightVertex[0] + 5 &&
 	       y >= upperRightVertex[1] - 5 && y <= upperRightVertex[1] + 5 )
 	{
 	  drawFlag = 2;
 	  adjustWidth( dx, dy );
-	} // if
+	} // if()
       // if mouse cursor near lowerBoundStar
       else if( x >= midRightVertex[0] - 5 && x <= midRightVertex[0] + 5 && 
 	       y >= midRightVertex[1] - 5 && y <= midRightVertex[1] + 5 )
 	{
 	  drawFlag = 3;
 	  adjustLowerBound( dx, dy );
-	} // if
+	} // if()
       // if mouse cursor on shearBar
       else if( x >= upperLeftVertex[0] - 5 && x <= upperRightVertex[0] + 5 && 
 	       y >= upperRightVertex[1] - 5 && y <= upperRightVertex[1] + 5 )
 	{
 	  drawFlag = 4;
 	  adjustShear( dx, dy );
-	} // if
+	} // if()
       // if mouse cursor near translateStar
       else if( x >= lowerVertex[0] - 5 && x <= lowerVertex[0] + 5 &&
 	       y >= lowerVertex[1] - 5 && y <= lowerVertex[1] + 5 )
 	{
 	  drawFlag = 5;
 	  translate( dx, dy );
-	} // if
+	} // if()
       // otherwise nothing pertinent was selected...
       else
 	{
@@ -411,12 +390,10 @@ TriWidget::manipulate( float x, float dx, float y, float dy )
 
 // paints this widget's texture onto a background texture
 void 
-TriWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4], float w, float h )
+TriWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4] )
 {
-  // printf( "In TriWidget::paintTransFunc\n" );
   int x, y;
   int startx, starty, endx, endy;
-  float frontx, rearx;
   starty = (int)(midLeftVertex[1]*textureHeight/250.0f);
   endy = (int)(upperLeftVertex[1]*textureHeight/250.0f);
   float fractionalHeight = (((float)starty/(float)textureHeight*250.0f-lowerVertex[1])/
@@ -424,6 +401,7 @@ TriWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4],
   // fractionalHeight iterative increment-step value
   float fhInterval = (1.0f-fractionalHeight)/(endy-starty);
   float intensity;
+  float opacity_offset = 2*(opac_x-upperLeftVertex[0])/(upperRightVertex[0]-upperLeftVertex[0])-1.0;
   float halfWidth;
   for( y = starty; y < endy; y++ )
     {
@@ -456,7 +434,6 @@ TriWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4],
 bool
 TriWidget::insideWidget( int x, int y )
 {
-  // printf( "In TriWidget::insideWidget\n" );
   // ratio of distances of y-coordinate in question and upperBound from bottom tip
   float fractionalHeight = ((250-y)-lowerVertex[1])/(upperLeftVertex[1]-lowerVertex[1]);
   if( (250-y) > lowerVertex[1]+5 && (250-y) < upperLeftVertex[1]-5 &&
@@ -473,18 +450,16 @@ TriWidget::insideWidget( int x, int y )
 void
 TriWidget::returnParams( float *p[numWidgetParams] )
 {
-  // printf( "In TriWidget::returnParams\n" );
   p[0] = &upperLeftVertex[0];
   p[1] = &upperLeftVertex[1];
   p[2] = &width;
-  p[3] = &height;
+  p[3] = &midLeftVertex[1];
   p[4] = &color[0];
   p[5] = &color[1];
   p[6] = &color[2];
   p[7] = &alpha; 
   p[8] = &opac_x;
   p[9] = &opac_y;
-  p[10] = &opacity_offset;
 } // returnParams()
 
 
@@ -510,7 +485,6 @@ TriWidget::changeColor( float r, float g, float b )
 void
 TriWidget::invertColor( float color[3] )
 {
-  // printf( "In TriWidget::invertColor\n" );
   return;
 } // invertColor()
 
@@ -521,9 +495,8 @@ TriWidget::invertColor( float color[3] )
 
 // replaces another widget with a rectangular widget
 RectWidget::RectWidget( float x, float y, float w, float h, float c[3], float a, 
-			int t, float o_x, float o_y, float o_s, Texture<GLfloat> *text )
+			int t, float o_x, float o_y, Texture<GLfloat> *text )
 {
-  // printf( "In RectWidget replacement\n" );
   drawFlag = 0;
   width = w;
   height = h;
@@ -540,7 +513,6 @@ RectWidget::RectWidget( float x, float y, float w, float h, float c[3], float a,
   opac_x = o_x;
   opac_y = o_y;
   opacityStar = new GLStar( opac_x, opac_y, 6.5, 1-color[0], 1-color[1], 1-color[2] );
-  opacity_offset = o_s;
   transText = text;
   focus_x = lowerRightVertex[0]-width/2;
   focus_y = lowerRightVertex[1]+height/2;
@@ -565,11 +537,60 @@ RectWidget::RectWidget( float x, float y, float w, float h, float c[3], float a,
 
 
 
+// RectWidget construction primarily used for restoring widget information from saved UI state
+RectWidget::RectWidget( int t, float x, float y, float w, float h, float r, float g, float b,
+			float a, float f_x, float f_y, float o_x, float o_y,
+			float t_r, float t_g, float t_b, float t_x, float t_y )
+{
+  drawFlag = 0;
+  type = t;
+  width = w;
+  height = h;
+  color[0] = r;
+  color[1] = g;
+  color[2] = b;
+  alpha = a;
+  focus_x = f_x;
+  focus_y = f_y;
+  opac_x = o_x;
+  opac_y = o_y;
+  upperLeftVertex[0] = x;
+  upperLeftVertex[1] = y;
+  lowerRightVertex[0] = x+w;
+  lowerRightVertex[1] = y-h;
+  translateStar = new GLStar( upperLeftVertex[0], upperLeftVertex[1], 5.0, r, g, b );
+  translateBar = new GLBar( upperLeftVertex[0]+width/2, upperLeftVertex[1], width, r, g, b );
+  barRounder = new GLStar( lowerRightVertex[0], upperLeftVertex[1], 5.0, r, g, b );
+  resizeStar = new GLStar( lowerRightVertex[0], lowerRightVertex[1], 8.0, r+0.30, g, b );
+  opacityStar = new GLStar( opac_x, opac_y, 6.5, 1-r, 1-g, 1-b );
+  focusStar = new GLStar( focus_x, focus_y, 8, 1-t_r, 1-t_g, 1-t_b );
+  transText = new Texture<GLfloat>();
+  transText->current_color[0] = t_r;
+  transText->current_color[1] = t_g;
+  transText->current_color[2] = t_b;
+  transText->colormap_x_offset = t_x;
+  transText->colormap_y_offset = t_y;
+  // determines which background texture to make from this widget's type
+  switch( t )
+    {
+    case 1:
+      transText->makeEllipseTextureImage();
+      break;
+    case 2:
+      transText->makeOneDimTextureImage();
+      break;
+    case 3:
+      transText->makeDefaultTextureImage();
+      break;
+    } // switch()
+} // RectWidget()
+
+
+
 // draws this widget without its texture
 void 
 RectWidget::draw( void )
 {
-  // printf( "In RectWidget::draw\n" );
   glBegin( GL_LINE_LOOP );
     glColor3fv( color );
     glVertex2f( upperLeftVertex[0], upperLeftVertex[1] );
@@ -591,7 +612,6 @@ RectWidget::draw( void )
 void 
 RectWidget::translate( float dx, float dy )
 {
-  // printf( "In RectWidget::translate\n" );
   // if x and y translations will keep this widget inside its window,
   //  then a faster computation can be undertaken
   if(upperLeftVertex[0]+dx > 0.0 && lowerRightVertex[0]+dx < 500.0 &&
@@ -650,7 +670,6 @@ RectWidget::translate( float dx, float dy )
 void 
 RectWidget::resize( float dx, float dy )
 {
-  // printf( "In RectWidget::resize\n" );
   // fractional distance of focusStar across this widget's length from left to right
   float frac_dist = (focus_x-upperLeftVertex[0])/(lowerRightVertex[0]-upperLeftVertex[0]);
   // restricts width to positive values
@@ -687,7 +706,6 @@ RectWidget::resize( float dx, float dy )
 void
 RectWidget::adjustFocus( float dx, float dy )
 {
-  // printf( "In RectWidget::adjustFocus\n" );
   if( focus_x + dx > upperLeftVertex[0] && focus_x + dx < lowerRightVertex[0] )
     {
       focus_x += dx;
@@ -706,14 +724,11 @@ RectWidget::adjustFocus( float dx, float dy )
 void
 RectWidget::adjustOpacity( float dx, float dy )
 {
-  // printf( "In RectWidget::adjustOpacity\n" );
   // if opacityStar remains inside translateBar
   if( opac_x+dx < lowerRightVertex[0] && opac_x+dx > upperLeftVertex[0] )
     {
       opac_x += dx;
       opacityStar->translate( dx, 0 );
-      opacity_offset = 2*(opac_x-upperLeftVertex[0])/(lowerRightVertex[0]-upperLeftVertex[0])-1.0;
-      //      opacity_offset = (opac_x-upperLeftVertex[0])/(lowerRightVertex[0]-upperLeftVertex[0]);
     } // if
 } // adjustOpacity()
 
@@ -723,7 +738,6 @@ RectWidget::adjustOpacity( float dx, float dy )
 void 
 RectWidget::manipulate( float x, float dx, float y, float dy )
 {
-  // printf( "In RectWidget::manipulate\n" );
   // the following block of if statements allow for continuous manipulation
   //  without conducting parameter checks every time (quicker)
   if( drawFlag == 1 )
@@ -783,7 +797,6 @@ RectWidget::manipulate( float x, float dx, float y, float dy )
 void
 RectWidget::invertColor( float color[3] )
 {
-  // printf( "In RectWidget::invertColor\n" );
   focusStar->invertColor( color );
 } // invertColor()
 
@@ -791,22 +804,32 @@ RectWidget::invertColor( float color[3] )
 
 // paints this widget's texture onto a background texture
 void
-RectWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4], float w, float h )
+RectWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4] )
 {
-  // printf( "In RectWidget::paintTransFunc\n" );
   int x, y;
   int startx, starty, endx, endy;
   startx = (int)(upperLeftVertex[0] * textureWidth/500.0f);
   endx = (int)(lowerRightVertex[0] * textureWidth/500.0f);
   starty = textureWidth-(int)((250.0f-lowerRightVertex[1]) * textureHeight/250.0f);
   endy = textureWidth-(int)((250.0f-upperLeftVertex[1]) * textureHeight/250.0f);
+  float midx, midy;
+  midx = (float)(endx+startx)/2.0f;
+  midy = (float)(endy+starty)/2.0f;
   float intensity;
+  float opacStar_alpha_off = 2*(opac_x-upperLeftVertex[0])/(lowerRightVertex[0]-upperLeftVertex[0])-1.0; 
+  float alpha_x_off = 0.0f;
+  float alpha_y_off = 0.0f;
+  // if not elliptical texture
+  if( type != 1 )
+    {
+      alpha_x_off = 2.0f*(focus_x-upperLeftVertex[0])/width-1.0f;
+      alpha_y_off = 2.0f*(focus_y-lowerRightVertex[1])/height-1.0f;
+    }
   float height = endy-starty;
   float width = endx-startx;
   float halfWidth = width*0.5;
   float half_x = (focus_x-upperLeftVertex[0])/this->width*width+startx;
   float half_y = (focus_y-(upperLeftVertex[1]-this->height))/this->height*(endy-starty)+starty;
-  //float exper = (focus_x-upperLeftVertex[0])/(lowerRightVertex[0]-upperLeftVertex[0])-0.50;
   switch( type )
     {
       // elliptical texture
@@ -822,7 +845,7 @@ RectWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4]
 		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][0], 
 		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][1], 
 		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][2],
-		   intensity+opacity_offset );
+		   intensity+opacStar_alpha_off );
 	  } // for()
       break;
       // one-dimensional texture
@@ -835,7 +858,7 @@ RectWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4]
 		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][0], 
 		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][1], 
 		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][2],
-		   intensity+opacity_offset );
+		   intensity+opacStar_alpha_off+alpha_x_off*(float)(x-midx)/(float)(width) );
 	  } // for()
       break;
       // rainbow texture
@@ -843,14 +866,15 @@ RectWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4]
       for( y = starty; y < endy; y++ )
 	for( x = startx; x < endx; x++ )
 	  {
-	    intensity = (y-starty)/height * (upperLeftVertex[1]-focus_y)/this->height;
+	    //	    intensity = (y-starty)/height * (upperLeftVertex[1]-focus_y)/this->height;
+	    intensity = 0.5f;
 	    if( intensity < 0 )
 	      intensity = 0;
 	    blend( texture_dest[y][x], 
-		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][0],//+exper, 
-		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][1],//+exper, 
-		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][2],//+exper,
-		   intensity+opacity_offset );
+		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][0],
+		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][1],
+		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][2],
+		   intensity+opacStar_alpha_off+alpha_x_off*(float)(x-midx)/(float)(width)+alpha_y_off*(float)(y-midy)/(float)(height) );
 	  } // for()
     } // switch()
 } // paintTransFunc()
@@ -862,7 +886,6 @@ bool
 RectWidget::insideWidget( int x, int y )
 {
   y = 250-y;
-  // printf( "In RectWidget::insideWidget\n" );
   if( x > upperLeftVertex[0]+5 && x < lowerRightVertex[0]-5 && (x > opac_x+4 || x < opac_x-4) &&
       y > lowerRightVertex[1]+5 && y < upperLeftVertex[1]-5 && (y > opac_y+4 || y < opac_y-4) )
     return true;
@@ -874,9 +897,8 @@ RectWidget::insideWidget( int x, int y )
 
 // allows another file to acces many of this widget's parameters
 void
-RectWidget::returnParams( float *p[10] )
+RectWidget::returnParams( float *p[numWidgetParams] )
 {
-  // printf( "In RectWidget::returnParams\n" );
   p[0] = &upperLeftVertex[0];
   p[1] = &upperLeftVertex[1];
   p[2] = &width;
@@ -887,7 +909,6 @@ RectWidget::returnParams( float *p[10] )
   p[7] = &alpha;
   p[8] = &opac_x;
   p[9] = &opac_y;
-  p[10] = &opacity_offset;
 } // returnParams()
 
 
@@ -923,7 +944,5 @@ Widget::blend( GLfloat texture_dest[4], float r, float g, float b, float a )
   texture_dest[0] = a*r + (1-a)*texture_dest[0];
   texture_dest[1] = a*g + (1-a)*texture_dest[1];
   texture_dest[2] = a*b + (1-a)*texture_dest[2];
-  //texture_dest[3] = 1 - a*texture_dest[3];
-  //texture_dest[3] = 1 - a + a*texture_dest[3];
   texture_dest[3] = a + (1-a)*texture_dest[3];
 } // blend()
