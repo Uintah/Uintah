@@ -284,7 +284,7 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
-    new_dw->put(pstress,                lb->pStressAfterStrainRateLabel);
+    new_dw->put(pstress,                lb->pStressLabel_afterStrainRate);
     new_dw->put(deformationGradient,    lb->pDeformationMeasureLabel_preReloc);
     new_dw->put(pvolume,                lb->pVolumeDeformedLabel);
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
@@ -311,7 +311,7 @@ void CompNeoHook::addComputesAndRequires(Task* task,
 						 matlset, Ghost::AroundCells,1);
    task->requires(Task::OldDW, lb->delTLabel);
 
-   task->computes(lb->pStressAfterStrainRateLabel,       matlset);
+   task->computes(lb->pStressLabel_afterStrainRate,      matlset);
    task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
    task->computes(bElBarLabel_preReloc,                  matlset);
    task->computes(lb->pVolumeDeformedLabel,              matlset);

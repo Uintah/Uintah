@@ -55,7 +55,6 @@ public:
 		  DataWarehouse* old_dw, 
 		  DataWarehouse* new_dw) = 0;
 
-  double         getPressureRate() const;
   int            getConstraint() const;
 
   Fracture(ProblemSpecP& ps);
@@ -63,7 +62,6 @@ public:
 
 protected:
   MPMLabel*        lb;
-  double           d_pressureRate;
   int              d_constraint;
 };
 

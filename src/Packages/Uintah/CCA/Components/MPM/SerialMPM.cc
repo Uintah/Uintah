@@ -113,15 +113,17 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
      if(mpm_matl->getFractureModel()){
        d_fracture = true;
        lb->registerPermanentParticleState(m,lb->pCrackNormalLabel,
-					 lb->pCrackNormalLabel_preReloc); 
+			lb->pCrackNormalLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pTipNormalLabel,
-					 lb->pTipNormalLabel_preReloc);
+			lb->pTipNormalLabel_preReloc);
        lb->registerPermanentParticleState(m,lb->pExtensionDirectionLabel,
-					 lb->pExtensionDirectionLabel_preReloc);
+			lb->pExtensionDirectionLabel_preReloc);
        lb->registerPermanentParticleState(m,lb->pToughnessLabel,
-					  lb->pToughnessLabel_preReloc); 
+			lb->pToughnessLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pIsBrokenLabel,
-					  lb->pIsBrokenLabel_preReloc); 
+			lb->pIsBrokenLabel_preReloc); 
+       lb->registerPermanentParticleState(m,lb->pCrackSurfacePressureLabel,
+			lb->pCrackSurfacePressureLabel_preReloc); 
      }
      
      lb->registerPermanentParticleState(m,lb->pTemperatureLabel,
@@ -164,6 +166,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->pTipNormalLabel);
     t->computes(lb->pExtensionDirectionLabel);
     t->computes(lb->pToughnessLabel);
+    t->computes(lb->pCrackSurfacePressureLabel);
   }
   t->computes(d_sharedState->get_delt_label());
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
@@ -319,6 +322,12 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   if(d_fracture) {
     t->requires(Task::NewDW,lb->pContactNormalLabel, Ghost::AroundNodes, 1 );
     t->requires(Task::NewDW, lb->pConnectivityLabel, Ghost::AroundNodes, 1 );
+
+    //for explosive fracture
+    t->requires(Task::OldDW, lb->pCrackNormalLabel,  Ghost::AroundNodes, 1 );
+    t->requires(Task::OldDW, lb->pCrackSurfacePressureLabel,
+      Ghost::AroundNodes, 1 );
+      
     t->computes(lb->gMassContactLabel);
   }
      
@@ -393,10 +402,10 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   Task* t = scinew Task("SerialMPM::computeInternalForce",
 		    this, &SerialMPM::computeInternalForce);
 
-  t->requires(Task::NewDW,lb->gMassLabel,                 Ghost::None);
-  t->requires(Task::NewDW,lb->pStressAfterStrainRateLabel,Ghost::AroundNodes,1);
-  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,       Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,lb->pMassLabel,                 Ghost::AroundNodes,1);
+  t->requires(Task::NewDW,lb->gMassLabel,                  Ghost::None);
+  t->requires(Task::NewDW,lb->pStressLabel_afterStrainRate,Ghost::AroundNodes,1);
+  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,        Ghost::AroundNodes,1);
+  t->requires(Task::OldDW,lb->pMassLabel,                  Ghost::AroundNodes,1);
 
   if(d_sharedState->getNumMatls() != d_sharedState->getNumMPMMatls()){
     t->requires(Task::NewDW, lb->pPressureLabel,          Ghost::AroundNodes,1);
@@ -602,7 +611,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->requires(Task::NewDW, lb->pContactNormalLabel,     Ghost::None);
   }
 
-  t->computes(lb->pVelocityLabel_preReloc);
+  t->computes(lb->pVelocityLabel_afterUpdate);
   t->computes(lb->pXLabel_preReloc);
   t->computes(lb->pExternalForceLabel_preReloc);
   t->computes(lb->pParticleIDLabel_preReloc);
@@ -632,23 +641,28 @@ void SerialMPM::scheduleComputeFracture(SchedulerP& sched,
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  t->requires(Task::OldDW, lb->pXLabel,                Ghost::AroundCells, 1);
-  t->requires(Task::NewDW, lb->pVelocityLabel_preReloc,Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pVolumeLabel,           Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pXLabel,                    Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, lb->pVelocityLabel_afterUpdate, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pVolumeLabel,               Ghost::AroundCells, 1);
 
   t->requires(Task::NewDW, lb->pXXLabel,                    Ghost::None);
   t->requires(Task::NewDW, lb->pRotationRateLabel,          Ghost::None);
-  t->requires(Task::NewDW, lb->pStressAfterStrainRateLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->pStressLabel_afterStrainRate,Ghost::None);
   t->requires(Task::OldDW, lb->pIsBrokenLabel,              Ghost::None);
   t->requires(Task::OldDW, lb->pCrackNormalLabel,           Ghost::None);
   t->requires(Task::OldDW, lb->pTipNormalLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->pExtensionDirectionLabel,    Ghost::None);
   t->requires(Task::OldDW, lb->pToughnessLabel,             Ghost::None);
+  t->requires(Task::OldDW, lb->pCrackSurfacePressureLabel,  Ghost::None);
+  t->requires(Task::NewDW, lb->pStrainEnergyLabel,          Ghost::None);
+  t->requires(Task::OldDW, lb->pMassLabel,                  Ghost::None);
 
   t->computes(lb->pToughnessLabel_preReloc);
   t->computes(lb->pIsBrokenLabel_preReloc);
   t->computes(lb->pCrackNormalLabel_preReloc);
-  t->computes(lb->pStressAfterFractureReleaseLabel);
+  t->computes(lb->pStressLabel_afterFracture);
+  t->computes(lb->pCrackSurfacePressureLabel_preReloc);
+  t->computes(lb->pVelocityLabel_afterFracture);
 
   sched->addTask(t, patches, matls);
 }
@@ -696,14 +710,21 @@ void SerialMPM::scheduleCarryForwardVariables(SchedulerP& sched,
   Task* t = scinew Task("SerialMPM::carryForwardVariables",
 		         this,&SerialMPM::carryForwardVariables);
 
-  if(d_fracture)
-    t->requires(Task::NewDW, lb->pStressAfterFractureReleaseLabel,
+  if(d_fracture) {
+    t->requires(Task::NewDW, lb->pStressLabel_afterFracture,
 		Ghost::None);
-  else
-      t->requires(Task::NewDW, lb->pStressAfterStrainRateLabel,
+    t->requires(Task::NewDW, lb->pVelocityLabel_afterFracture,
+		Ghost::None);
+  }
+  else {
+    t->requires(Task::NewDW, lb->pStressLabel_afterStrainRate,
 		Ghost::None);			 
-
+    t->requires(Task::NewDW, lb->pVelocityLabel_afterUpdate,
+		Ghost::None);
+  }
+  
   t->computes(lb->pStressLabel_preReloc);
+  t->computes(lb->pVelocityLabel_preReloc);
   sched->addTask(t, patches, matls);
 }
 
@@ -867,9 +888,15 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
         ParticleVariable<int> pConnectivity;
         ParticleVariable<Vector> pContactNormal;
+        ParticleVariable<Vector> pCrackNormal;
+	ParticleVariable<double> pCrackSurfacePressure;
 
         new_dw->get(pConnectivity, lb->pConnectivityLabel, pset);
         new_dw->get(pContactNormal, lb->pContactNormalLabel, pset);
+	
+	//for explosive fracture
+	old_dw->get(pCrackNormal, lb->pCrackNormalLabel, pset);
+	old_dw->get(pCrackSurfacePressure, lb->pCrackSurfacePressureLabel, pset);
 
         for(ParticleSubset::iterator iter = pset->begin();
 						  iter != pset->end(); iter++){
@@ -902,12 +929,18 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	      }
 
 	      if( conn[k] == Connectivity::connect ) {
-	        gexternalforce[ni[k]] += pexternalforce[idx] * S_contact[k];
+	        gexternalforce[ni[k]] += 
+		  ( pexternalforce[idx] - 
+		    pCrackNormal[idx] * pCrackSurfacePressure[idx]
+		  ) * S_contact[k];
 	        gvelocity[ni[k]]      += pvelocity[idx] *pmass[idx]*S_contact[k];
 	      }
 	      else if( conn[k] == Connectivity::contact ) {
 	        gexternalforce[ni[k]] += pContactNormal[idx] * 
-		  ( Dot(pContactNormal[idx],pexternalforce[idx]) * S_contact[k]);
+		  ( Dot(pContactNormal[idx],
+		    pexternalforce[idx] -
+		    pCrackNormal[idx] * pCrackSurfacePressure[idx]
+		  ) * S_contact[k]);
 	        gvelocity[ni[k]]      += pContactNormal[idx] * 
                   ( Dot(pContactNormal[idx],pvelocity[idx]) * 
                   pmass[idx] * S_contact[k] );
@@ -1107,7 +1140,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       old_dw->get(px,      lb->pXLabel, pset);
       old_dw->get(pmass,   lb->pMassLabel, pset);
       new_dw->get(pvol,    lb->pVolumeDeformedLabel, pset);
-      new_dw->get(pstress, lb->pStressAfterStrainRateLabel, pset);
+      new_dw->get(pstress, lb->pStressLabel_afterStrainRate, pset);
       new_dw->get(gmass,   lb->gMassLabel, matlindex, patch, Ghost::None, 0);
 
       new_dw->allocate(gstress,lb->gStressForSavingLabel, matlindex, patch);
@@ -1407,7 +1440,9 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
           acceleration[*iter] =
                 (internalforce[*iter] + externalforce[*iter] +
                         gradPressNC[*iter]/delT)/ mass[*iter] + gravity;
-        }
+//          cout<<"internalforce="<<internalforce[*iter]
+//	      <<" externalforce="<<externalforce[*iter]<<endl;
+	}
         else{
           acceleration[*iter] = Vector(0.,0.,0.);
         }
@@ -1772,53 +1807,47 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	  particleIndex idx = *iter;
 
           double S_connect[8],S_contact[8];
-          Vector d_S_connect[8],d_S_contact[8];
 
-          patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, 
-							S_connect, d_S_connect);
+          patch->findCellAndWeights(px[idx], ni, S_connect);
 	   //make a copy
 	  for(int k = 0; k < 8; k++) {
 	     S_contact[k] = S_connect[k];
-	     d_S_contact[k] = d_S_connect[k];
 	  }
 
           Connectivity connectivity(pConnectivity[idx]);
   	  int conn[8];
 	  connectivity.getInfo(conn);
-	 
-          connectivity.modifyShapeDerivatives(
-				     conn,d_S_connect,Connectivity::connect);
-      	  connectivity.modifyWeights(conn,S_connect,Connectivity::connect);
-          connectivity.modifyShapeDerivatives(
-				     conn,d_S_contact,Connectivity::contact);
-      	  connectivity.modifyWeights(conn,S_contact,Connectivity::contact);
-
-	  int numConnectedNodes = 0;
-
-          vel = Vector(0.0,0.0,0.0);
-          acc = Vector(0.0,0.0,0.0);
+      	  Connectivity::modifyWeights(conn,S_connect,Connectivity::connect);
 
           double tempRate = 0;
-
           // Accumulate the contribution from each surrounding vertex
           for(int k = 0; k < 8; k++) {
-	     if( conn[k] == Connectivity::connect || 
-	         conn[k] == Connectivity::contact) {
+	     if( conn[k] != Connectivity::unconnect ) {
                 tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]])
 							* S_connect[k];
-		numConnectedNodes++;
              }
+	  }
 
+          for(int k = 0; k < 8; k++) {
+	     if( conn[k] == Connectivity::contact ) {
+	        if(Dot(gacceleration[ni[k]],pvelocity[idx]) > 0) conn[k] = 0;
+	     }
+	  }
+      	  Connectivity::modifyWeights(conn,S_contact,Connectivity::contact);
+	  
+          vel = Vector(0.0,0.0,0.0);
+          acc = Vector(0.0,0.0,0.0);
+          for(int k = 0; k < 8; k++) {
 	     if( conn[k] == Connectivity::connect ) {
 	        vel += gvelocity_star[ni[k]]  * S_contact[k];
    	        acc += gacceleration[ni[k]]   * S_contact[k];
              }
 	     else if( conn[k] == Connectivity::contact ) {
-	        vel += pContactNormal[idx] *
-	          ( Dot(pContactNormal[idx], gvelocity_star[ni[k]]) * 
+	         vel += pContactNormal[idx] *
+	           ( Dot(pContactNormal[idx], gvelocity_star[ni[k]]) * 
 		    S_contact[k] );
-   	        acc += pContactNormal[idx] *
-	          ( Dot(pContactNormal[idx], gacceleration[ni[k]]) * 
+   	         acc += pContactNormal[idx] *
+	           ( Dot(pContactNormal[idx], gacceleration[ni[k]]) * 
 		    S_contact[k] );
 	     }
 	  }
@@ -1889,7 +1918,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       // Store the new result
       new_dw->put(pxnew,           lb->pXLabel_preReloc);
-      new_dw->put(pvelocitynew,    lb->pVelocityLabel_preReloc);
+      new_dw->put(pvelocitynew,    lb->pVelocityLabel_afterUpdate);
       new_dw->put(pexternalForce,  lb->pExternalForceLabel_preReloc);
       new_dw->put(pmassNew,        lb->pMassLabel_preReloc);
       new_dw->put(pvolumeNew,      lb->pVolumeLabel_preReloc);
@@ -1977,13 +2006,22 @@ void SerialMPM::carryForwardVariables( const ProcessorGroup*,
       //stress
       ParticleVariable<Matrix3> pStress;
       if(mpm_matl->getFractureModel()) {
-        new_dw->get(pStress, lb->pStressAfterFractureReleaseLabel, pset);
+        new_dw->get(pStress, lb->pStressLabel_afterFracture, pset);
       }
       else {
-        new_dw->get(pStress, lb->pStressAfterStrainRateLabel,      pset);
+        new_dw->get(pStress, lb->pStressLabel_afterStrainRate, pset);
       }
-
       new_dw->put(pStress, lb->pStressLabel_preReloc);
+
+      //velocity
+      ParticleVariable<Vector> pVelocity;
+      if(mpm_matl->getFractureModel()) {
+        new_dw->get(pVelocity, lb->pVelocityLabel_afterFracture, pset);
+      }
+      else {
+        new_dw->get(pVelocity, lb->pVelocityLabel_afterUpdate, pset);
+      }
+      new_dw->put(pVelocity, lb->pVelocityLabel_preReloc);
     }
   }
 }

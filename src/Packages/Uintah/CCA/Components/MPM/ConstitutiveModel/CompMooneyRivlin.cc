@@ -284,7 +284,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     
     if(delT_new < 1.e-12) delT_new = MAXDOUBLE;
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);    
-    new_dw->put(pstress,                lb->pStressAfterStrainRateLabel);
+    new_dw->put(pstress,                lb->pStressLabel_afterStrainRate);
     new_dw->put(deformationGradient,    lb->pDeformationMeasureLabel_preReloc);
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
     new_dw->put(pvolume,                lb->pVolumeDeformedLabel);
@@ -314,7 +314,7 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
 		 Ghost::AroundCells, 1);
   task->requires(Task::OldDW, lb->delTLabel);
 
-  task->computes(lb->pStressAfterStrainRateLabel,       matlset);
+  task->computes(lb->pStressLabel_afterStrainRate, matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
    

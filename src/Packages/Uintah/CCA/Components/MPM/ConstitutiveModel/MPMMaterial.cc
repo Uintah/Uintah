@@ -71,6 +71,12 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb)
    ps->require("specific_heat",d_specificHeat);
    ps->require("specific_heat",d_specificHeat);
    ps->get("gamma",d_gamma);
+   
+   if(d_fracture) {
+     ps->require("pressure_rate",d_pressureRate);
+     ps->require("explosive_pressure",d_explosivePressure);
+     ps->require("initial_pressure",d_initialPressure);
+   }
 
    // Step 3 -- Loop through all of the pieces in this geometry object
    int piece_num = 0;
@@ -177,6 +183,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    ParticleVariable<Vector> pTipNormal;
    ParticleVariable<Vector> pExtensionDirection;
    ParticleVariable<double> pToughness;
+   ParticleVariable<double> pCrackSurfacePressure;
    
    if(d_fracture) {
      new_dw->allocate(pIsBroken, 
@@ -185,6 +192,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      new_dw->allocate(pTipNormal, lb->pTipNormalLabel, subset);
      new_dw->allocate(pExtensionDirection, lb->pExtensionDirectionLabel, subset);
      new_dw->allocate(pToughness, lb->pToughnessLabel, subset);
+     new_dw->allocate(pCrackSurfacePressure, lb->pCrackSurfacePressureLabel, subset);
    }
    
    particleIndex start = 0;
@@ -212,6 +220,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 	pCrackNormal[pIdx] = Vector(0.,0.,0.);
 	pTipNormal[pIdx] = Vector(0.,0.,0.);
 	pExtensionDirection[pIdx] = Vector(0.,0.,0.);
+	pCrackSurfacePressure[pIdx] = d_initialPressure;
      }
 
      pexternalforce[pIdx] = Vector(0.0,0.0,0.0);
@@ -274,20 +283,20 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 	 
 	 double vdis = Dot( (p - bc->origin()), bc->e3() );
 
-	 double particle_half_size = pow( pvolume[pIdx], 1./3.) /2;
+	 double r = pow( 0.75*pvolume[pIdx]/M_PI, 1./3.);
 
 	 if(inside) {
-	   if(vdis > 0 && vdis < particle_half_size) {
+	   if(vdis > 0 && vdis < r) {
 	     pIsBroken[pIdx] = 1;
 	     pCrackNormal[pIdx] = - bc->e3();
 	   }
-	   else if(vdis <= 0 && vdis >= -particle_half_size*2) {
+	   else if(vdis <= 0 && vdis >= -r) {
              pIsBroken[pIdx] = 1;
 	     pCrackNormal[pIdx] = bc->e3();
 	   }
 	 }
 	 else {
-	   if( fabs(vdis) < particle_half_size ) {
+	   if( fabs(vdis) < r ) {
 	     Point P1(bc->x1(),bc->y1(),0);
 	     Point P2(bc->x2(),bc->y2(),0);
   	     Point P3(bc->x3(),bc->y3(),0);
@@ -302,8 +311,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 	     Vector dis;
 	   
 	     dis = Q-P1;
-	     if( ( dis - e12*Dot(dis,e12) ).length() < particle_half_size*2 &&
-	           mat4v*mat2v>0 ) 
+	     if( ( dis - e12*Dot(dis,e12) ).length() < r && mat4v*mat2v>0 ) 
 	     {
 	       if(vdis > 0) pTipNormal[pIdx] = -bc->e3();
 	       else pTipNormal[pIdx] = bc->e3();
@@ -312,8 +320,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 	     }
 
 	     dis = Q-P2;
-	     if( ( dis - e23*Dot(dis,e23) ).length() < particle_half_size*2 &&
-	           mat1v*mat3v>0 ) 
+	     if( ( dis - e23*Dot(dis,e23) ).length() < r  && mat1v*mat3v>0 ) 
 	     {
 	       if(vdis > 0) pTipNormal[pIdx] = -bc->e3();
 	       else pTipNormal[pIdx] = bc->e3();
@@ -322,8 +329,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 	     }
 
 	     dis = Q-P3;
-	     if( ( dis - e34*Dot(dis,e34) ).length() < particle_half_size*2 &&
-	           mat2v*mat4v>0 )
+	     if( ( dis - e34*Dot(dis,e34) ).length() < r && mat2v*mat4v>0 )
 	     {
 	       if(vdis > 0) pTipNormal[pIdx] = -bc->e3();
 	       else pTipNormal[pIdx] = bc->e3();
@@ -332,8 +338,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 	     }
 
 	     dis = Q-P4;
-	     if( ( dis - e41*Dot(dis,e41) ).length() < particle_half_size*2 &&
-	           mat3v*mat1v>0 )
+	     if( ( dis - e41*Dot(dis,e41) ).length() < r && mat3v*mat1v>0 )
 	     {
 	       if(vdis > 0) pTipNormal[pIdx] = -bc->e3();
 	       else pTipNormal[pIdx] = bc->e3();
@@ -365,6 +370,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      new_dw->put(pTipNormal, lb->pTipNormalLabel);
      new_dw->put(pExtensionDirection, lb->pExtensionDirectionLabel);
      new_dw->put(pToughness, lb->pToughnessLabel);
+     new_dw->put(pCrackSurfacePressure, lb->pCrackSurfacePressureLabel);
    }
 }
 
@@ -552,3 +558,17 @@ double MPMMaterial::getInitialDensity() const
   return d_density;
 }
 
+double MPMMaterial::getPressureRate() const
+{
+  return d_pressureRate;
+}
+
+double MPMMaterial::getExplosivePressure() const
+{
+  return d_explosivePressure;
+}
+
+double MPMMaterial::getInitialPressure() const
+{
+  return d_initialPressure;
+}
