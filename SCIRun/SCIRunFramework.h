@@ -29,7 +29,7 @@
 #ifndef SCIRun_Framework_SCIRunFramework_h
 #define SCIRun_Framework_SCIRunFramework_h
 
-#include <Core/CCA/ccaspec/cca_sidl.h>
+#include <Core/CCA/spec/cca_sidl.h>
 #include <vector>
 #include <map>
 #include <string>

@@ -30,7 +30,7 @@
 #define SCIRun_Framework_CCAComponentInstance_h
 
 #include <SCIRun/ComponentInstance.h>
-#include <Core/CCA/ccaspec/cca_sidl.h>
+#include <Core/CCA/spec/cca_sidl.h>
 #include <map>
 #include <string>
 

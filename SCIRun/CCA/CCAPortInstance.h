@@ -30,7 +30,7 @@
 #define SCIRun_CCA_CCAPortInstance_h
 
 #include <SCIRun/PortInstance.h>
-#include <Core/CCA/ccaspec/cca_sidl.h>
+#include <Core/CCA/spec/cca_sidl.h>
 #include <map>
 #include <string>
 #include <vector>
@@ -39,15 +39,15 @@ namespace SCIRun {
   class CCAPortInstance : public PortInstance {
   public:
     enum PortType {
-      Uses, Provides,
+      Uses, Provides
     };
-    CCAPortInstance(const std::string& name, const std::string& type,
-		  const gov::cca::TypeMap& properties,
-		  PortType type);
-    CCAPortInstance(const std::string& name, const std::string& type,
-		  const gov::cca::TypeMap& properties,
-		  const gov::cca::Port& port,
-		  PortType type);
+    CCAPortInstance(const std::string& portname, const std::string& classname,
+		    const gov::cca::TypeMap& properties,
+		    PortType porttype);
+    CCAPortInstance(const std::string& portname, const std::string& classname,
+		    const gov::cca::TypeMap& properties,
+		    const gov::cca::Port& port,
+		    PortType porttype);
     ~CCAPortInstance();
     std::string name;
     std::string type;
