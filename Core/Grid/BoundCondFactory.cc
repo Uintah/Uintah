@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/PressureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/DensityBoundCond.h>
+#include <Packages/Uintah/Core/Grid/MassFracBoundCond.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -28,6 +29,13 @@ void BoundCondFactory::create(const ProblemSpecP& ps,BCData& objs)
      map<string,string> bc_attr;
      child->getAttributes(bc_attr);
      int mat_id;
+       
+     bool massFractionBC = false;   // check for massFraction BC
+     string::size_type pos = bc_attr["label"].find ("massFraction");
+     if ( pos != std::string::npos ){
+      massFractionBC = true;
+     }
+     
      // Check to see if "id" is defined
      if (bc_attr.find("id") == bc_attr.end()) 
        SCI_THROW(ProblemSetupException("id is not specified in the BCType tag"));
@@ -82,8 +90,14 @@ void BoundCondFactory::create(const ProblemSpecP& ps,BCData& objs)
               bc_attr["var"]   == "Dirichlet") ) {
        BoundCondBase* bc = scinew DensityBoundCond(child,bc_attr["var"]);
        objs.setBCValues(mat_id,bc);
+     } 
+     else if (massFractionBC &&
+             (bc_attr["var"]   == "Neumann"  ||
+              bc_attr["var"]   == "Dirichlet") ) {  
+       BoundCondBase* bc = scinew MassFractionBoundCond(child,bc_attr["var"],
+                                   bc_attr["label"]);
+       objs.setBCValues(mat_id,bc);
      }
-
      else {
        cerr << "Unknown Boundary Condition Type " << "(" << bc_attr["var"] 
 	    << ")  " << bc_attr["label"]<<endl;
