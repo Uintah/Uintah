@@ -30,7 +30,7 @@
 #include <SCICore/Datatypes/DenseMatrix.h>
 #include <vector>
 #include <Uintah/Grid/BoundCond.h>
-#include <Uintah/Grid/KinematicBoundCond.h>
+#include <Uintah/Grid/PressureBoundCond.h>
 #include <Uintah/Grid/SymmetryBoundCond.h>
 #include <Uintah/Grid/TempThermalBoundCond.h>
 #include <Uintah/Grid/FluxThermalBoundCond.h>
@@ -431,8 +431,6 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
   }
 
   // Compute the equilibration pressure for all materials
-#if 1
- 
 
   // Compute initial Rho Micro
   for(int m = 0; m < numMatls; m++){
@@ -528,8 +526,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
        Material* matl = d_sharedState->getMaterial(m);
        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
        if (ice_matl) {
- // John, should this press be press_new???
-	 Q[m] = press[m][*iter] - press_eos[m];
+	 Q[m] = press_new[m][*iter] - press_eos[m];
 	 y[m] = rho[m][*iter]/(vol_frac[m][*iter]*vol_frac[m][*iter]) 
 	   * dp_drho[m];
 	 A += vol_frac[m][*iter];
@@ -591,8 +588,40 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
      
     }  // end of converged
 
-    // Update the boundary conditions
+    // Update the boundary conditions for the variables:
+    // Pressure (press_new)
 
+    for(Patch::FaceType face = Patch::startFace;
+	face <= Patch::endFace; face=Patch::nextFace(face)){
+      vector<BoundCond* > bcs;
+      bcs = patch->getBCValues(face);
+      for (int i = 0; i<(int)bcs.size(); i++ ) {
+	string bcs_type = bcs[i]->getType();
+	if (bcs_type == "Pressure") {
+	  PressureBoundCond* bc = 
+	    static_cast<PressureBoundCond*>(bcs[i]);
+	  cout << "bc value = " << bc->getPressure() << endl;
+	  for (int m = 0; m<numMatls; m++)
+	    press_new[m].fillFace(face,bc->getPressure());
+	}
+	if (bcs_type == "Symmetric") {
+	  SymmetryBoundCond* bc =
+	    static_cast<SymmetryBoundCond*>(bcs[i]);
+	}
+	if (bcs_type == "Temperature") {
+	  TempThermalBoundCond* bc = 
+	    static_cast<TempThermalBoundCond*>(bcs[i]);
+	  cout << "bc value = " << bc->getTemp() << endl;
+	}
+	if (bcs_type == "Flux") {
+	  FluxThermalBoundCond* bc = 
+	    static_cast<FluxThermalBoundCond*>(bcs[i]);
+	  cout << "bc value = " << bc->getFlux() << endl;
+	}
+      }
+    }
+    
+    
     // Hydrostatic pressure adjustment - subtract off the hydrostatic pressure
 
     Vector dx = patch->dCell();
@@ -654,7 +683,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
     }
   }
     
-#endif
+
 }
 
 void ICE::actuallyStep1c(const ProcessorGroup*,
@@ -885,9 +914,7 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
   }
 #endif
 
-  // Put Boundary condition stuff in here
-  //
-  //
+
   // Apply grid boundary conditions to the velocity
   // before storing the data
   
@@ -901,25 +928,25 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
     
     for (int i = 0; i<(int)bcs.size(); i++ ) {
       string bcs_type = bcs[i]->getType();
-      if (bcs_type == "Kinematic") {
-	KinematicBoundCond* bc = 
-	  dynamic_cast<KinematicBoundCond*>(bcs[i]);
-	//	    cout << "bc value = " << bc->getVelocity() << endl;
-	//gvelocity.fillFace(face,bc->getVelocity());
+      if (bcs_type == "Pressure") {
+	PressureBoundCond* bc = 
+	  static_cast<PressureBoundCond*>(bcs[i]);
+	cout << "bc value = " << bc->getPressure() << endl;
+	//pres.fillFace(face,bc->getPressure());
       }
       if (bcs_type == "Symmetric") {
-	//SymmetryBoundCond* bc =
-	dynamic_cast<SymmetryBoundCond*>(bcs[i]);
+	SymmetryBoundCond* bc =
+	  static_cast<SymmetryBoundCond*>(bcs[i]);
 	//gvelocity.fillFaceNormal(face);
       }
       if (bcs_type == "Temperature") {
-	// TempThermalBoundCond* bc = 
-	//  dynamic_cast<TempThermalBoundCond*>(bcs[i]);
+	TempThermalBoundCond* bc = 
+	  static_cast<TempThermalBoundCond*>(bcs[i]);
 	//cout << "bc value = " << bc->getTemp() << endl;
       }
       if (bcs_type == "Flux") {
-	// FluxThermalBoundCond* bc = 
-	//  dynamic_cast<FluxThermalBoundCond*>(bcs[i]);
+	FluxThermalBoundCond* bc = 
+	  static_cast<FluxThermalBoundCond*>(bcs[i]);
 	//cout << "bc value = " << bc->getFlux() << endl;
       }
     }
@@ -1137,6 +1164,9 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.41  2000/10/18 03:43:01  jas
+// Implemented pressure boundary conditions during equilibration computation (1b).
+//
 // Revision 1.40  2000/10/17 23:05:15  guilkey
 // Fixed some computes and requires.
 //
