@@ -129,11 +129,12 @@ itcl_class Module {
     }
 
     #  Make the modules icon on a particular canvas
-    method make_icon {modx mody} {
+    method make_icon {modx mody { ignore_placement 0 } } {
 	global $this-done_bld_icon Disabled Subnet Color
 	set $this-done_bld_icon 0
 	set Disabled([modname]) 0
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
+	set minicanvas $Subnet(Subnet$Subnet([modname])_minicanvas)
 	
 	set modframe $canvas.module[modname]
 	frame $modframe -relief raised -borderwidth 3 
@@ -198,45 +199,21 @@ itcl_class Module {
 	update_progress
 	update_time
 
+	set pos [findModulePosition $Subnet([modname]) $modx $mody]
+	
 	# Stick it in the canvas
-	$canvas create window $modx $mody -window $modframe \
-	    -tags "module [modname]" -anchor nw
+	$canvas create window [lindex $pos 0] [lindex $pos 1] -anchor nw \
+	    -window $modframe -tags "module [modname]"
 
-	global SCALEX SCALEY minicanvas
-	$minicanvas create rectangle [expr $modx/$SCALEX] [expr $mody/$SCALEY]\
-		[expr $modx/$SCALEX + 4] [expr $mody/$SCALEY + 2] \
-		-outline "" -fill $Color(Basecolor) -tags "module [modname]"
+	set pos [scalePath $pos]
+	$minicanvas create rectangle [lindex $pos 0] [lindex $pos 1] \
+	    [expr [lindex $pos 0]+4] [expr [lindex $pos 1]+2] \
+	    -outline "" -fill $Color(Basecolor) -tags "module [modname]"
 
 	# Create, draw, and bind all input and output ports
 	drawPorts [modname]
 	
-	# Try to find a position for the icon where it doesn't
-	# overlap other icons
-	set x1 [expr int($modx)]
-	set y1 [expr int($mody)]
-	set wid  170
-	set hei  80
-	set times 0
-	# arbitrary # of loops before stopping, avoiding an infinite loop
-	while { $times < 1000 } {
-	    set x2 [expr $x1+$wid]
-	    set y2 [expr $y1+$hei]	    
-	    if {[llength [$canvas find overlapping $x1 $y1 $x2 $y2]]<3} break
-	    $canvas move [modname] 0 $hei
-	    $minicanvas move [modname] 0 [expr $hei / $SCALEY ]
-	    incr y1 $hei
-	    set canbot [$canvas canvasy [winfo height $canvas]]
-	    if { $y1 > $canbot } {
-		set y1 [expr $y1 - [winfo height $canvas]]
-		incr x1 $wid
-		$canvas coords [modname] $x1 $y1
-		$minicanvas coords [modname] \
-		    [expr $x1/$SCALEX] [expr $y1 / $SCALEY] \
-		    [expr ($x1+$wid)/$SCALEX] [expr ($y1+$hei)/$SCALEY]
-	    }
-	    incr times
-	}
-	
+	# create the Module Menu
 	menu $p.menu -tearoff false -disabledforeground white
 
 	bindtags $p [linsert [bindtags $p] 1 $modframe]
@@ -247,18 +224,26 @@ itcl_class Module {
 	if {$make_progress_graph} {
 	    bindtags $p.inset [linsert [bindtags $p.inset] 1 $modframe]
 	}
+	if ![string length [info script]] {
+	    unselectAll
+	    global CurrentlySelectedModules
+	    set CurrentlySelectedModules "[modname]"
+	}
 	
-	$this setColorAndTitle
-	update idletasks
+	fadeinIcon [modname]
     }
     
-    method setColorAndTitle {args} {
+    method setColorAndTitle { { color "" } args} {
 	global Subnet Color Disabled
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
 	set m $canvas.module[modname]
-	set color $Color(Basecolor)
-	if { [$this is_selected] } { set color $Color(Selected) }
-	if { $Disabled([modname])} { set color [blend $color $Color(Disabled)]}
+	if ![llength $color] {
+	    set color $Color(Basecolor)
+	    if { [$this is_selected] } { set color $Color(Selected) }
+	    if { $Disabled([modname])} { 
+		set color [blend $color $Color(Disabled)]
+	    }
+	}
 	if { $compiling_p } { set color $Color(Compiling) }
 	if { ![llength $args] && ![string first SubnetIcon [modname]] } {
 	    set args $Subnet(Subnet$Subnet([modname]_num)_Name)
@@ -272,7 +257,7 @@ itcl_class Module {
 	if {![llength $args]} { set args $name }
 	if {![llength $args]} { set args $name }
 	$m.ff.title configure -text "$args" -justify left
-	update idletasks
+#	update idletasks
     }
        
     method addSelected {} {
@@ -499,6 +484,33 @@ itcl_class Module {
     }
 	
 }   
+
+proc fadeinIcon { modid { seconds 0.333 } } {
+    if [llength [info script]] {
+	$modid setColorAndTitle
+	return
+    }
+
+    set frequency 12
+    set period [expr double(1000.0/$frequency)]
+    set t $period
+    set stopAt [expr double($seconds*1000.0)]
+    set dA [expr double(1.0/($seconds*$frequency))]
+    set alpha $dA
+	    
+    set toggle 1
+    global Color
+    $modid setColorAndTitle $Color(Flashing)
+    while { $t < $stopAt } {
+	set color [blend $Color(Selected) $Color(Flashing) $alpha]
+	after [expr int($t)] "$modid setColorAndTitle $color"
+	set alpha [expr double($alpha+$dA)]
+	set t [expr double($t+$period)]
+    }
+    after [expr int($t)] "$modid setColorAndTitle"
+}
+	
+
 
 proc moduleMenu {x y modid} {
     global Subnet mouseX mouseY
@@ -1255,8 +1267,9 @@ proc moduleDrag {modid x y} {
 }    
 
 proc do_moduleDrag {modid x y} {
-    global Subnet minicanvas lastX lastY grouplastX grouplastY SCALEX SCALEY
+    global Subnet lastX lastY grouplastX grouplastY SCALEX SCALEY
     set canvas $Subnet(Subnet$Subnet($modid)_canvas)
+    set canvas $Subnet(Subnet$Subnet($modid)_minicanvas)
 
     set grouplastX $x
     set grouplastY $y
@@ -1494,7 +1507,7 @@ proc moduleHelp {modid} {
 }
 
 proc moduleDestroy {modid} {
-    global Subnet
+    global Subnet CurrentlySelectedModules
     if [isaSubnetIcon $modid] {
 	foreach submod $Subnet(Subnet$Subnet(${modid}_num)_Modules) {
 	    moduleDestroy $submod
@@ -1515,7 +1528,7 @@ proc moduleDestroy {modid} {
     
     # Remove references to module is various state arrays
     array unset Subnet ${modid}_connections
-    $modid removeSelected
+    listFindAndRemove CurrentlySelectedModules $modid
     listFindAndRemove Subnet(Subnet$Subnet($modid)_Modules) $modid
 
     $modid delete
@@ -1600,13 +1613,16 @@ proc brightness { color } {
     expr {($r*0.3 + $g*0.59 + $b*0.11)/$max}
  } ;#RS, after [Kevin Kenny]
 
-proc blend { c1 c2 } {
+proc blend { c1 c2 { alpha 0.5 } } {
     foreach {r1 g1 b1} [winfo rgb . $c1] break
     foreach {r2 g2 b2} [winfo rgb . $c2] break
     set max [expr double([lindex [winfo rgb . white] 0])]
-    set r [expr int(((($r1/$max)+($r2/$max))/2)*255)]
-    set g [expr int(((($g1/$max)+($g2/$max))/2)*255)]
-    set b [expr int(((($b1/$max)+($b2/$max))/2)*255)]
+    set oma   [expr (1.0 - $alpha)/$max]
+    set alpha [expr $alpha / $max]
+
+    set r [expr int(255*($r1*$alpha+$r2*$oma))]
+    set g [expr int(255*($g1*$alpha+$g2*$oma))]
+    set b [expr int(255*($b1*$alpha+$b2*$oma))]
     return [format "\#%02x%02x%02x" $r $g $b]
  } 
 
@@ -1858,8 +1874,77 @@ proc shiftLeftIPort { modid num } {
 }
 
 
+proc clipBBoxes { args } {
+    if { [llength $args] == 0 } { return "0 0 0 0" }
+    set box1 [lindex $args 0]
+    set args [lrange $args 1 end]
+    while { [llength $args] } {
+	set box2 [lindex $args 0]
+	set args [lrange $args 1 end]
+	foreach i {0 1} {
+	    if {[lindex $box1 $i]<[lindex $box2 $i] } {
+		set box1 [lreplace $box1 $i $i [lindex $box2 $i]]
+	    }
+	}
+	foreach i {2 3} {
+	    if {[lindex $box1 $i]>[lindex $box2 $i] } {
+		set box1 [lreplace $box1 $i $i [lindex $box2 $i]]
+	    }
+	}
+	if { [lindex $bbox 2] < [lidnex $bbox 0] || \
+	     [lindex $bbox 3] < [lidnex $bbox 1] } {
+	    return "0 0 0 0"
+	}	     
+    }
+    return $box1
+}	    
 
-	    
+proc findModulePosition { subnet x y } {
+    # if loading the module from a network, dont change its saved position
+    if { [string length [info script]] } { return "$x $y" }
+    global Subnet
+    set canvas $Subnet(Subnet${subnet}_canvas)
+    set wid  180
+    set hei  80
+    set canW [expr [winfo width $canvas] - $wid]
+    set canH [expr [winfo height $canvas] - $hei]
+    set maxx [$canvas canvasx $canW]
+    set maxy [$canvas canvasy $canH]
+    set x1 $x
+    set y1 $y
+    set acceptableNum 0
+    set overlapNum 1 ;# to make the wile loop a do-while loop
+    while { $overlapNum > $acceptableNum && $acceptableNum < 10 } {
+	set overlapNum 0
+	foreach tagid [$canvas find overlapping $x1 $y1 \
+			   [expr $x1+$wid] [expr $y1+$hei]] {
+	    foreach tags [$canvas gettags $tagid] {
+		if { [lsearch $tags module] != -1 } {
+		    incr overlapNum
+		}
+	    }
+	}
+	if { $overlapNum > $acceptableNum } {
+	    set y1 [expr $y1 + $hei/3]
+	    if { $y1 > $maxy } {
+		set y1 [expr $y1-$canH+10+10*$acceptableNum]
+		set x1 [expr $x1 + $wid/3]
+		if { $x1 > $maxx} {
+		    set x1 [expr $x1-$canW+10+10*$acceptableNum]
+		    incr acceptableNum
+		    incr overlapNum ;# to make sure loop executes again
+		}
+	    }
+
+	}
+    }
+    global mainCanvasWidth mainCanvasHeight
+    if { $x1 < 0 || $x1 > $mainCanvasWidth } { set x1 $x }
+    if { $y1 < 0 || $y1 > $mainCanvasHeight } { set y1 $y }
+
+    return "$x1 $y1"
+}
+	
 
 proc isaSubnet { modid } {
     return [expr [string first Subnet $modid] == 0]
