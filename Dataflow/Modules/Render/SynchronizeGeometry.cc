@@ -27,27 +27,25 @@ public:
 
   virtual void execute();
   virtual void do_execute();
-  virtual void tcl_command(GuiArgs&, void*);
+
 private:
   vector<GeometryComm*> msg_heads_;
   vector<GeometryComm*> msg_tails_;
   vector<int> portno_map_;
 
-  int num_of_IPorts_;
   int max_portno_;
   int init_ports_;
 
-  GeometryOPort * ogeom_;
+  GeometryOPort *ogeom_;
 
   GuiInt gui_enforce_;
 
   int enforce_barrier(MessageBase* message);
   void forward_saved_msg();
   void flush_all_msgs();
-  inline void append_msg(GeometryComm* gmsg);
-  inline void flush_port(int portno);
-  inline int get_enforce();
-  inline bool init_ports();
+  void append_msg(GeometryComm* gmsg);
+  void flush_port(int portno);
+  bool init_ports();
 };
 
 
@@ -78,11 +76,11 @@ SynchronizeGeometry::do_execute()
 {
   MessageBase* msg;
 
-  ogeom_ = (GeometryOPort*)getOPort("OutputGeometry");
+  ogeom_ = (GeometryOPort*)getOPort("Output Geometry");
 
   if (ogeom_ == NULL)
   {
-    cout << "ogeom_ is NULL" << std::endl; cout.flush();
+    error("Unable to initialize iport 'Output Geometry");
   }
 
   for (;;)
@@ -132,7 +130,7 @@ SynchronizeGeometry::enforce_barrier(MessageBase* message)
     }
     portno = gmsg->portno;
 
-    new_enforce = get_enforce();
+    new_enforce = gui_enforce_.get();
     if (new_enforce)
     {
       append_msg(gmsg);
@@ -161,7 +159,7 @@ SynchronizeGeometry::enforce_barrier(MessageBase* message)
     }
     portno = gmsg->portno;
 
-    new_enforce = get_enforce();
+    new_enforce = gui_enforce_.get();
     if (new_enforce)
     {
       append_msg(gmsg);
@@ -196,37 +194,31 @@ SynchronizeGeometry::enforce_barrier(MessageBase* message)
 }
 
 
-inline
 bool
 SynchronizeGeometry::init_ports()
 {
   if (init_ports_ == 0)
+  {
     return true;
-
-  Connection* connection;
-  if (ogeom_->nconnections()==0)
-  {
-    return false;
-  }
-  else
-  {
-    connection = ogeom_->connection(0);
   }
 
-  if (connection == 0)
+  if (ogeom_->nconnections() == 0)
   {
     return false;
   }
 
-  int i, portno;
-  for (i=0; i<init_ports_; i++)
+  if (ogeom_->connection(0) == 0)
+  {
+    return false;
+  }
+
+  for (int i=0; i < init_ports_; i++)
   {
     Mailbox<GeomReply> *tmp =
-      new Mailbox<GeomReply>("Temporary GeometryOPort mailbox", 1);
+      scinew Mailbox<GeomReply>("Temporary GeometryOPort mailbox", 1);
     ogeom_->forward(scinew GeometryComm(tmp));
     GeomReply reply = tmp->receive();
-    portno=reply.portid;
-    portno_map_[max_portno_ - init_ports_ + i] = portno;
+    portno_map_[max_portno_ - init_ports_ + i] = reply.portid;
   }
 
   init_ports_ = 0;
@@ -235,16 +227,7 @@ SynchronizeGeometry::init_ports()
 }
 
 
-inline int
-SynchronizeGeometry::get_enforce()
-{
-  string enforce_string;
-  gui->get(id+"-enforce",enforce_string);
-  return (atoi(enforce_string.c_str()));
-}
-
-
-inline void
+void
 SynchronizeGeometry::append_msg(GeometryComm* gmsg)
 {
   int portno = gmsg->portno;
@@ -286,8 +269,7 @@ SynchronizeGeometry::forward_saved_msg()
     }
   }
 
-  num_of_IPorts_ = this->numIPorts();
-  if (num_flush == num_of_IPorts_ - 1)
+  if (num_flush == numIPorts() - 1)
   {
     for (i = 0; i < max_portno_; i++)
     {
@@ -324,7 +306,7 @@ SynchronizeGeometry::forward_saved_msg()
 }
 
 
-inline void
+void
 SynchronizeGeometry::flush_port(int portno)
 {
   bool delete_msg;
@@ -371,29 +353,21 @@ SynchronizeGeometry::flush_port(int portno)
 void
 SynchronizeGeometry::flush_all_msgs()
 {
-  int i;
-  GeometryComm* gmsg;
-  for (i = 0; i < max_portno_; i++)
+  for (int i = 0; i < max_portno_; i++)
   {
-    gmsg = msg_heads_[i];
+    GeometryComm *gmsg = msg_heads_[i];
     while (gmsg)
     {
+      GeometryComm *next = gmsg->next;
       if (!(ogeom_->direct_forward(gmsg)))
       {
 	delete gmsg;
       }
-      gmsg = gmsg->next;
+      gmsg = next;
     }
 
     msg_heads_[i] = msg_tails_[i] = NULL;
   }
-}
-
-
-void
-SynchronizeGeometry::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 
