@@ -37,7 +37,8 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/ASE-RTRT.mo\
 	$(SRCDIR)/simple_tri.mo \
 	$(SRCDIR)/terrain.mo \
-	$(SRCDIR)/heightfield.mo
+	$(SRCDIR)/heightfield.mo \
+	$(SRCDIR)/multi-scene.mo
 
 
 ifeq ($(findstring Uintah, $(LOAD_PACKAGE)),Uintah)
