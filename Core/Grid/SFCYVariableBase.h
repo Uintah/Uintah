@@ -64,8 +64,6 @@ WARNING
       virtual void copyPatch(SFCYVariableBase* src,
 			      const IntVector& lowIndex,
 			      const IntVector& highIndex) = 0;
-      virtual void emit(OutputContext&) = 0;
-
       virtual void* getBasePointer() = 0;
       void getMPIBuffer(void*& buf, int& count,
 			MPI_Datatype& datatype, bool& free_datatype,
