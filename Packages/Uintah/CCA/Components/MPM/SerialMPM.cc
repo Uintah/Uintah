@@ -2120,7 +2120,8 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
 						     false,dwi,patch, 0);
       
       mpm_matl->getConstitutiveModel()->getDamageParameter(patch,damage,dwi,
-							   old_dw);
+							   old_dw,new_dw);
+
       for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
 	   iter++) {
 	if (damage[*iter]) {
@@ -2141,9 +2142,18 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
 	ParticleSet* set_add = scinew ParticleSet(numparticles);
 	ParticleSubset* addset = scinew ParticleSubset(set_add,true,null_dwi,
 						       patch,numparticles);
+#if 0
+	cout << "Address of delset = " << delset << endl;
+	cout << "Address of pset = " << pset << endl;
+	cout << "Address of set_add = " << set_add << endl;
+	cout << "Address of addset = " << addset << endl;
+#endif
 	
 	map<const VarLabel*, ParticleVariableBase*>* newState
-	  = new map<const VarLabel*, ParticleVariableBase*>;
+	  = scinew map<const VarLabel*, ParticleVariableBase*>;
+#if 0
+	cout << "Address of newState = " << newState << endl;
+#endif
 
 #if 0
 	cout << "Null Material" << endl;
@@ -2179,9 +2189,9 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
 	cout << "Calling deleteParticles for material: " << dwi << endl;
 	new_dw->deleteParticles(delset);
 	
-      } else 
+      } else
 	delete delset;
-	
+
     }
   }
   
