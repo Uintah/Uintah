@@ -114,15 +114,15 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
                               v1.y(), v2.y(), v3.y(),
                               v1.z(), v2.z(), v3.z());
 
-            // Determine if the node propagates
+            // Determine if the node propagates and the propagation direction
             cp[i]=NO;
             double KI  = cfSegK[m][i].x();
             double KII = cfSegK[m][i].y();
 	    double Vc  = cfSegVel[m][i];
-            if(cm->CrackSegmentPropagates(Vc,KI,KII)) cp[i]=YES;
+	    double theta;
+            if(cm->CrackPropagates(Vc,KI,KII,theta)) cp[i]=YES;
 
             // Propagate the node virtually
-            double theta=cm->GetPropagationDirection(KI,KII);
             double dl=rdadx*dx_bar;
             Vector da_local=Vector(dl*cos(theta),dl*sin(theta),0.);
             da[i]=T*da_local;
@@ -386,7 +386,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
           if((p2p-p2).length()/dx_bar<0.01) ep=NO; // p2 no propagating
 
 	  // velocity of crack propagation
-	  double vc1=0.,vc2=0., vcc=0.; 
+	  double vc1=0.,vc2=0.,vcc=0.;
 /*	  
 	  double time=d_sharedState->getElapsedTime();
 	  delt_vartype delT;
