@@ -11,10 +11,7 @@ static char *id="@(#) $Id$";
 #include <SCICore/Geometry/IntVector.h>
 #include <Uintah/Grid/Array3Index.h>
 #include <Uintah/Grid/Grid.h>
-#include <Uintah/Grid/Level.h>
-#include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/Patch.h>
-#include <Uintah/Grid/NodeIterator.h>
 #include <Uintah/Grid/ReductionVariable.h>
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SimulationStateP.h>
@@ -39,13 +36,41 @@ NullHEBurn::~NullHEBurn()
 
 }
 
+void NullHEBurn::initializeBurnModelData(const Patch* patch,
+                                         const MPMMaterial* matl,
+                                         DataWarehouseP& new_dw)
+{
+  // Nothing to be done
+
+}
+
 void NullHEBurn::addCheckIfComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const Patch* patch,
                                                DataWarehouseP& old_dw,
                                                DataWarehouseP& new_dw) const
 {
+  // Nothing is done so no dependencies
 
+}
+
+void NullHEBurn::addMassRateComputesAndRequires(Task* task,
+                                               const MPMMaterial* matl,
+                                               const Patch* patch,
+                                               DataWarehouseP& old_dw,
+                                               DataWarehouseP& new_dw) const
+{
+  const MPMLabel* lb = MPMLabel::getLabels();
+
+  task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),
+                                patch, Ghost::None);
+  
+  task->requires(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(),
+                                patch, Ghost::None);
+  
+  task->computes(new_dw, lb->pMassLabel,matl->getDWIndex(),patch);
+
+  task->computes(new_dw, lb->pVolumeLabel,matl->getDWIndex(),patch);
 }
 
 void NullHEBurn::checkIfIgnited(const Patch* patch,
@@ -53,18 +78,34 @@ void NullHEBurn::checkIfIgnited(const Patch* patch,
 				DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw)
 {
+  // For the NullHEBurn model, nothing needs to be done here
 
 }
 
-void NullHEBurn::computeMassRate()
+void NullHEBurn::computeMassRate(const Patch* patch,
+				 const MPMMaterial* matl,
+				 DataWarehouseP& old_dw,
+				 DataWarehouseP& new_dw)
 {
-}
+  int matlindex = matl->getDWIndex();
+  const MPMLabel* lb = MPMLabel::getLabels();
 
-void NullHEBurn::updatedParticleMassAndVolume() 
-{
+  // Carry the mass and volume forward
+  ParticleVariable<double> pmass;
+  old_dw->get(pmass, lb->pMassLabel, matlindex, patch,Ghost::None,0);
+  ParticleVariable<double> pvolume;
+  new_dw->get(pvolume, lb->pVolumeDeformedLabel, matlindex,patch,Ghost::None,0);
+
+  new_dw->put(pmass,lb->pMassLabel, matlindex, patch);
+  new_dw->put(pvolume,lb->pVolumeLabel, matlindex, patch);
+
 }
 
 // $Log$
+// Revision 1.4  2000/06/08 16:49:44  guilkey
+// Added more stuff to the burn models.  Most infrastructure is now
+// in place to change the mass and volume, we just need a little bit of science.
+//
 // Revision 1.3  2000/06/06 18:04:02  guilkey
 // Added more stuff for the burn models.  Much to do still.
 //

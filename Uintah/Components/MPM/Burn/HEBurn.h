@@ -69,15 +69,30 @@ WARNING
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw) = 0;
 
-          virtual void computeMassRate() = 0;
-          virtual void updatedParticleMassAndVolume() = 0;
+          virtual void computeMassRate(const Patch* patch,
+				       const MPMMaterial* matl,
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw) = 0;
+
+
+         //////////
+         // Create space in data warehouse for burn model data
+         virtual void initializeBurnModelData(const Patch* patch,
+                                              const MPMMaterial* matl,
+                                              DataWarehouseP& new_dw) = 0;
 
           virtual void addCheckIfComputesAndRequires(Task* task,
 					      const MPMMaterial* matl,
 					      const Patch* patch,
 					      DataWarehouseP& old_dw,
 					      DataWarehouseP& new_dw) const = 0;
-	
+
+          virtual void addMassRateComputesAndRequires(Task* task,
+					      const MPMMaterial* matl,
+					      const Patch* patch,
+					      DataWarehouseP& old_dw,
+					      DataWarehouseP& new_dw) const = 0;
+
        protected:
 	  bool d_burnable;
     
@@ -88,6 +103,10 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.3  2000/06/08 16:49:44  guilkey
+// Added more stuff to the burn models.  Most infrastructure is now
+// in place to change the mass and volume, we just need a little bit of science.
+//
 // Revision 1.2  2000/06/06 18:04:01  guilkey
 // Added more stuff for the burn models.  Much to do still.
 //
