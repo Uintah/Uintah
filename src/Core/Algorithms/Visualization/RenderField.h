@@ -1247,6 +1247,105 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
 }
 
 
+//! RenderFieldBase supports the dynamically loadable algorithm concept.
+//! when dynamically loaded the user will dynamically cast to a 
+//! RenderFieldBase from the DynamicAlgoBase they will have a pointer to.
+class RenderFieldDataBase : public DynamicAlgoBase
+{
+public:
+
+  virtual GeomSwitch *render_data(FieldHandle vfld_handle,
+				  FieldHandle cfld_handle,
+				  ColorMapHandle cmap,
+				  MaterialHandle default_material,
+				  const string &data_display_mode,
+				  double scale, bool normalize,
+				  bool bidirectional,
+				  bool arrow_heads) = 0;
+
+
+
+  RenderFieldDataBase();
+  virtual ~RenderFieldDataBase();
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfoHandle get_compile_info(const TypeDescription *vftd,
+					    const TypeDescription *cftd,
+					    const TypeDescription *ltd);
+};
+
+
+template <class VFld, class CFld, class Loc>
+class RenderFieldData : public RenderFieldDataBase
+{
+public:
+  virtual GeomSwitch *render_data(FieldHandle vfld_handle,
+				  FieldHandle cfld_handle,
+				  ColorMapHandle cmap,
+				  MaterialHandle default_material,
+				  const string &data_display_mode,
+				  double scale,
+				  bool normalize,
+				  bool bidirectional,
+				  bool arrow_heads);
+};
+
+
+template <class VFld, class CFld, class Loc>
+GeomSwitch *
+RenderFieldData<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
+					      FieldHandle cfld_handle,
+					      ColorMapHandle cmap,
+					      MaterialHandle default_material,
+					      const string &display_mode,
+					      double scale, 
+					      bool normalize,
+					      bool bidirectional,
+					      bool arrow_heads)
+{
+  VFld *vfld = dynamic_cast<VFld*>(vfld_handle.get_rep());
+  CFld *cfld = dynamic_cast<CFld*>(cfld_handle.get_rep());
+
+  GeomArrows *vec_node;
+  if (arrow_heads)
+  {
+    vec_node = scinew GeomArrows(0.15, 0.6);
+  }
+  else
+  {
+    vec_node = scinew GeomArrows(0, 0.6);
+  }
+  GeomSwitch *data_switch = scinew GeomSwitch(vec_node);
+
+  typename VFld::mesh_handle_type mesh = vfld->get_typed_mesh();
+
+  typename Loc::iterator iter, end;
+  mesh->begin(iter);
+  mesh->end(end);
+  while (iter != end)
+  {
+    typename VFld::value_type tmp;
+    if (vfld->value(tmp, *iter))
+    {
+      Point p;
+      mesh->get_center(p, *iter);
+
+      typename CFld::value_type ctmp;
+      cfld->value(ctmp, *iter);
+
+      double ctmpd;
+      to_double(ctmp, ctmpd);
+
+      add_data(p, tmp, vec_node,
+	       (cmap.get_rep())?(cmap->lookup(ctmpd)):default_material,
+	       display_mode, scale, normalize, bidirectional); 
+    }
+    ++iter;
+  }
+  return data_switch;
+}
+
+
 } // end namespace SCIRun
 
 #endif // Visualization_RenderField_h

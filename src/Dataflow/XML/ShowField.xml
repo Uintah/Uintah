@@ -84,6 +84,15 @@
 	<datatype>SCIRun::ColorMap</datatype>
 	<componentname>GenStandardColorMap</componentname>
       </port>
+      <port>
+	<name>Orientation Field</name>
+	<description>
+	  <p>
+          </p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
     </inputs>
     <outputs>
       <!-- one of (device port file) -->
