@@ -17,7 +17,7 @@
 
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Util/Assert.h>
-#include <sci_config.h>
+#include <sci_defs/template_defs.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>

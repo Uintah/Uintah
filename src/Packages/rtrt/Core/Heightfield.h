@@ -2,11 +2,14 @@
 #ifndef HEIGHTFIELD_H
 #define HEIGHTFIELD_H 1
 
-#include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Array2.h>
 #include <Packages/rtrt/Core/UVMapping.h>
-#include <sci_config.h>
+
+#include <Core/Geometry/Point.h>
+
+#include <sci_defs/template_defs.h>
+
 #include <stdlib.h>
 
 namespace rtrt {
