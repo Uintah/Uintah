@@ -7,4 +7,4 @@ SRCS = New.cc
 LIBNAME = Malloc
 
 SCIDependTarget($(SRCS))
-NormalLibraryTarget($(LIBNAME),$(OBJS))
+SCINormalLibraryTarget($(LIBNAME),$(OBJS))

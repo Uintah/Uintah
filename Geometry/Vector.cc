@@ -6,6 +6,7 @@
 #include <Classlib/String.h>
 #include <Math/Expon.h>
 #include <Math/MiscMath.h>
+#include <iostream.h>
 
 clString Vector::string() const
 {

@@ -20,4 +20,4 @@ SRCS = BaseConstraint.cc \
 LIBNAME = Constraints
 
 SCIDependTarget($(SRCS))
-NormalLibraryTarget($(LIBNAME),$(OBJS))
+SCINormalLibraryTarget($(LIBNAME),$(OBJS))

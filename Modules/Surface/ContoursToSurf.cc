@@ -191,7 +191,7 @@ void ContoursToSurf::lace_contours(const ContourSetHandle& contour,
 // if the point we're adding is closest to a face, we break that face
 // and add the three new traingles.
 
-void ContoursToSurf::break_triangle(int tri_id, int pt_id, const Point& p,
+void ContoursToSurf::break_triangle(int tri_id, int pt_id, const Point&,
 				    TriSurface* surf) {
     surf->remove_triangle(tri_id);
     int v0=surf->elements[tri_id]->i1;
@@ -207,7 +207,7 @@ void ContoursToSurf::break_triangle(int tri_id, int pt_id, const Point& p,
 // add a new triangle hanging over the old boundary.
 
 void ContoursToSurf::break_edge2(int tri1, int e1, int pt_id,
-				const Point &p, TriSurface *surf) {
+				const Point&, TriSurface *surf) {
     ASSERT(e1<3 && e1>=0);
     int v[3];
     v[0]=surf->elements[tri1]->i1;
@@ -221,7 +221,7 @@ void ContoursToSurf::break_edge2(int tri1, int e1, int pt_id,
 // two triangles that share that face, and create four new triangles.
 
 void ContoursToSurf::break_edge(int tri1, int tri2, int e1, int e2, int pt_id,
-				const Point &p, TriSurface *surf) {
+				const Point&, TriSurface *surf) {
     ASSERT(e1<3 && e1>=0);
     ASSERT(e2<3 && e2>=0);
 

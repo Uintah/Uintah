@@ -1,10 +1,12 @@
 
 #include <config/sci.cf>
 
-OBJS = BBox.o  Grid.o  Plane.o  Point.o  Transform.o  Vector.o
-SRCS = BBox.cc Grid.cc Plane.cc Point.cc Transform.cc Vector.cc
+OBJS = BBox.o  Grid.o  Plane.o  Point.o  Ray.o  \
+	Transform.o  Vector.o
+SRCS = BBox.cc Grid.cc Plane.cc Point.cc Ray.cc \
+	Transform.cc Vector.cc
 
 LIBNAME = Geometry
 
 SCIDependTarget($(SRCS))
-NormalLibraryTarget($(LIBNAME),$(OBJS))
+SCINormalLibraryTarget($(LIBNAME),$(OBJS))

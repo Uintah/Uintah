@@ -149,7 +149,7 @@ inline Vector Point::vector() const
 inline double Dot(const Point& p, const Vector& v)
 {
     ASSERTL4(!p.uninit && !v.uninit);
-    return p._x*v._x+p._y*v._y+p._z*v._z;
+    return p.x()*v.x()+p.y()*v.y()+p.z()*v.z();
 }
 
 inline double Dot(const Point& p1, const Point& p2)

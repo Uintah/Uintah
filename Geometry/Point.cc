@@ -7,6 +7,7 @@
 #include <Classlib/String.h>
 #include <Math/MinMax.h>
 #include <Math/MiscMath.h>
+#include <iostream.h>
 
 Point Interpolate(const Point& p1, const Point& p2, double w)
 {

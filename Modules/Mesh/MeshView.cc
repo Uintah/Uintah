@@ -137,7 +137,7 @@ void MeshView::execute()
     
     ogeom->delAll();
 
-    int i, j;
+    int i;
     if (oldSeed != seedTet.get()) 
     {
 	makeLevels(mesh);

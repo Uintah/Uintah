@@ -8,7 +8,7 @@
 
 #include <stdlib.h>
 
-class MemoryManager {
+struct MemoryManager {
     static unsigned long nnew;
     static unsigned long nfillbin;
     static unsigned long snew;
@@ -45,7 +45,6 @@ class MemoryManager {
     static void error(char*);
     static void* lockedptr;
     static int lockedbin;
-protected:
     static void* malloc(size_t);
     static void free(void*);
     static void* last_freed;
@@ -53,7 +52,6 @@ protected:
     static size_t last_freed_size;
     static void unlock_last_freed();
     static size_t blocksize(void*);
-public:
     friend void* operator new(size_t);
     friend void operator delete(void*);
     friend void* malloc(size_t);

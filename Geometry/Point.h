@@ -41,11 +41,11 @@ public:
     Point operator/(const double) const;
     Point operator-() const;
     void x(const double);
-    double x() const;
+    inline double x() const;
     void y(const double);
-    double y() const;
+    inline double y() const;
     void z(const double);
-    double z() const;
+    inline double z() const;
     Vector vector() const;
     
     clString string() const;
@@ -53,7 +53,7 @@ public:
     friend class Vector;
     friend double Dot(const Point&, const Point&);
     friend double Dot(const Vector&, const Point&);
-    friend double Dot(const Point&, const Vector&);
+//    friend double Dot(const Point&, const Vector&);
     friend Point Min(const Point&, const Point&);
     friend Point Max(const Point&, const Point&);
     friend Point Interpolate(const Point&, const Point&, double);
