@@ -20,7 +20,26 @@ University of Utah. All Rights Reserved.
 <!--% require("../Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 <!--% doc.insertDocType("article", {"sr"=>"SCIRun"}) %-->
-<!--% colspec = "<colspec colwidth=\"6*\"/> <colspec colwidth=\"1*\" align=\"center\"/> <colspec colwidth=\"1*\" align=\"center\"/> <colspec colwidth=\"1*\" align=\"center\"/> <colspec colwidth=\"1*\" align=\"center\"/>" %-->
+<!--% colspec = <<EOS
+<colspec colwidth=\"6*\"/> 
+<colspec colwidth=\"1*\" align=\"center\"/> 
+<colspec colwidth=\"1*\" align=\"center\"/> 
+<colspec colwidth=\"1*\" align=\"center\"/> 
+<colspec colwidth=\"1*\" align=\"center\"/>" 
+EOS
+%-->
+<!--% thead = <<EOS
+<thead>
+  <row>
+    <entry>Task</entry>
+    <entry>Priority</entry>
+    <entry>Status</entry>
+    <entry>Assigned</entry>
+    <entry>Comp Date</entry>
+  </row>
+</thead>
+EOS
+%-->
 
 <article class="techreport">
   <title>&sr; Documentation Inventory (v. <!--%= doc.edition %-->)</title>
@@ -89,15 +108,7 @@ University of Utah. All Rights Reserved.
       <title>Developer Guide Tasks</title>
       <tgroup cols="5">
 	<!--%= colspec %-->
-	<thead>
-	  <row>
-	    <entry>Task</entry>
-	    <entry>Priority</entry>
-	    <entry>Status</entry>
-	    <entry>Assigned</entry>
-	    <entry>Comp Date</entry>
-	  </row>
-	</thead>
+	<!--%= thead %-->
 	<tbody>
 	  <row>
 	    <entry></entry>
@@ -119,22 +130,14 @@ University of Utah. All Rights Reserved.
       <title></title>
       <tgroup cols="5">
 	<!--%= colspec %-->
-	<thead>
-	  <row>
-	    <entry>Task</entry>
-	    <entry>Priority</entry>
-	    <entry>%</entry>
-	    <entry>Assigned</entry>
-	    <entry>Comp Date</entry>
-	  </row>
-	</thead>
+	<!--%= thead %-->
 	<tbody>
 	  <row>
-	    <entry></entry>
-	    <entry></entry>
-	    <entry></entry>
-	    <entry></entry>
-	    <entry></entry>
+	    <entry>Documentation of new DataIO architecture</entry>
+	    <entry>High</entry>
+	    <entry>0</entry>
+	    <entry>Ted</entry>
+	    <entry>Unknown</entry>
 	  </row>
 	</tbody>
       </tgroup>
@@ -152,15 +155,7 @@ University of Utah. All Rights Reserved.
       <title></title>
       <tgroup cols="5">
 	<!--%= colspec %-->
-	<thead>
-	  <row>
-	    <entry>Task</entry>
-	    <entry>Priority</entry>
-	    <entry>%</entry>
-	    <entry>Assigned</entry>
-	    <entry>Comp Date</entry>
-	  </row>
-	</thead>
+	<!--%= thead %-->
 	<tbody>
 	  <row>
 	    <entry>Update system compatibility info. Dav has mostly
@@ -183,20 +178,13 @@ University of Utah. All Rights Reserved.
       <title></title>
       <tgroup cols="5">
 	<!--%= colspec %-->
-	<thead>
-	  <row>
-	    <entry>Task</entry>
-	    <entry>Priority</entry>
-	    <entry>%</entry>
-	    <entry>Assigned</entry>
-	    <entry>Comp Date</entry>
-	  </row>
-	</thead>
+	<!--%= thead %-->
 	<tbody>
 	  <row>
 	    <entry>Provide <emphasis>complete</emphasis> documentation
-	    for each module.  No module is adequately documented and this should
-	    be an ongoing process.</entry>
+	    for each module.  No module is adequately documented and
+	    this should be an ongoing process.  A module specification
+	    is also the forum for minor net descriptions.</entry>
 	    <entry>Low</entry>
 	    <entry>50</entry>
 	    <entry>Module Developers</entry>
@@ -208,21 +196,35 @@ University of Utah. All Rights Reserved.
   </section>
 
   <section>
+    <title>Network Examples</title>
+    <para></para>
+    <table>
+      <title></title>
+      <tgroup cols="5">
+	<!--%= colspec %-->
+	<!--%= thead %-->
+	<tbody>
+	  <row>
+	    <entry>How shall we proceed?</entry>
+	    <entry>Low</entry>
+	    <entry>0</entry>
+	    <entry>Dav, DMW, and Ted</entry>
+	    <entry>Unknown</entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+    
+  </section>
+
+  <section>
     <title>Module Specification Guide</title>
     <para>A guide to writing module documentation.</para>
     <table>
       <title></title>
       <tgroup cols="5">
 	<!--%= colspec %-->
-	<thead>
-	  <row>
-	    <entry>Task</entry>
-	    <entry>Priority</entry>
-	    <entry>%</entry>
-	    <entry>Assigned</entry>
-	    <entry>Comp Date</entry>
-	  </row>
-	</thead>
+	<!--%= thead %-->
 	<tbody>
 	  <row>
 	    <entry>Complete the MSG.  Incomplete draft is finished.
@@ -262,15 +264,7 @@ University of Utah. All Rights Reserved.
       <title></title>
       <tgroup cols="5">
 	<!--%= colspec %-->
-	<thead>
-	  <row>
-	    <entry>Task</entry>
-	    <entry>Priority</entry>
-	    <entry>%</entry>
-	    <entry>Assigned</entry>
-	    <entry>Comp Date</entry>
-	  </row>
-	</thead>
+	<!--%= thead %-->
 	<tbody>
 	  <row>
 	    <entry>Review new FAQ entries and commit them to repository.</entry>
@@ -291,15 +285,7 @@ University of Utah. All Rights Reserved.
       <title></title>
       <tgroup cols="5">
 	<!--%= colspec %-->
-	<thead>
-	  <row>
-	    <entry>Task</entry>
-	    <entry>Priority</entry>
-	    <entry>%</entry>
-	    <entry>Assigned</entry>
-	    <entry>Comp Date</entry>
-	  </row>
-	</thead>
+	<!--%= thead %-->
 	<tbody>
 	  <row>
 	    <entry>Review new FAQ entries and commit them to repository.</entry>
@@ -320,15 +306,7 @@ University of Utah. All Rights Reserved.
       <title></title>
       <tgroup cols="5">
 	<!--%= colspec %-->
-	<thead>
-	  <row>
-	    <entry>Task</entry>
-	    <entry>Priority</entry>
-	    <entry>%</entry>
-	    <entry>Assigned</entry>
-	    <entry>Comp Date</entry>
-	  </row>
-	</thead>
+	<!--%= thead %-->
 	<tbody>
 	  <row>
 	    <entry>Review new FAQ entries and commit them to repository.</entry>
@@ -349,15 +327,7 @@ University of Utah. All Rights Reserved.
       <title></title>
       <tgroup cols="5">
 	<!--%= colspec %-->
-	<thead>
-	  <row>
-	    <entry>Task</entry>
-	    <entry>Priority</entry>
-	    <entry>%</entry>
-	    <entry>Assigned</entry>
-	    <entry>Comp Date</entry>
-	  </row>
-	</thead>
+	<!--%= thead %-->
 	<tbody>
 	  <row>
 	    <entry>None known</entry>
@@ -378,15 +348,7 @@ University of Utah. All Rights Reserved.
       <title></title>
       <tgroup cols="5">
 	<!--%= colspec %-->
-	<thead>
-	  <row>
-	    <entry>Task</entry>
-	    <entry>Priority</entry>
-	    <entry>%</entry>
-	    <entry>Assigned</entry>
-	    <entry>Comp Date</entry>
-	  </row>
-	</thead>
+	<!--%= thead %-->
 	<tbody>
 	  <row>
 	    <entry>None</entry>
@@ -407,15 +369,7 @@ University of Utah. All Rights Reserved.
       <title></title>
       <tgroup cols="5">
 	<!--%= colspec %-->
-	<thead>
-	  <row>
-	    <entry>Task</entry>
-	    <entry>Priority</entry>
-	    <entry>%</entry>
-	    <entry>Assigned</entry>
-	    <entry>Comp Date</entry>
-	  </row>
-	</thead>
+	<!--%= thead %-->
 	<tbody>
 	  <row>
 	    <entry>Review and updates.  Latter third of document needs
@@ -438,15 +392,7 @@ University of Utah. All Rights Reserved.
       <title></title>
       <tgroup cols="5">
 	<!--%= colspec %-->
-	<thead>
-	  <row>
-	    <entry>Task</entry>
-	    <entry>Priority</entry>
-	    <entry>%</entry>
-	    <entry>Assigned</entry>
-	    <entry>Comp Date</entry>
-	  </row>
-	</thead>
+	<!--%= thead %-->
 	<tbody>
 	  <row>
 	    <entry>Needs to be brought up to date.</entry>

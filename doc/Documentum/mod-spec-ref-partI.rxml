@@ -153,24 +153,24 @@ University of Utah. All Rights Reserved.
 	<filename>.emacs</filename> initialization file prior to using
 	nxml mode:</para>
 	<programlisting>
-	  (load "nxml/rng-auto")
-	  (setq auto-mode-alist
-	  (append
-	  '(("\\.xml" . nxml-mode)
-	  ("\\.html" . nxml-mode))
-	  auto-mode-alist))
-	  (make-face 'nxml-delimited-data-face)
-	  (make-face 'nxml-name-face)
-	  (make-face 'nxml-ref-face)
-	  (make-face 'nxml-delimiter-face)
-	  (make-face 'nxml-comment-content-face)
-	  (make-face 'nxml-comment-delimiter-face)
-	  (set-face-foreground 'nxml-delimited-data-face "grey55")
-	  (set-face-foreground 'nxml-name-face "#257A25")
-	  (set-face-foreground 'nxml-ref-face "#9292C9")
-	  (set-face-foreground 'nxml-delimiter-face "#9292C9")
-	  (set-face-foreground 'nxml-comment-content-face "orange")
-	  (set-face-foreground 'nxml-comment-delimiter-face "orange")
+(load "nxml/rng-auto")
+(setq auto-mode-alist
+(append
+'(("\\.xml" . nxml-mode)
+("\\.html" . nxml-mode))
+auto-mode-alist))
+(make-face 'nxml-delimited-data-face)
+(make-face 'nxml-name-face)
+(make-face 'nxml-ref-face)
+(make-face 'nxml-delimiter-face)
+(make-face 'nxml-comment-content-face)
+(make-face 'nxml-comment-delimiter-face)
+(set-face-foreground 'nxml-delimited-data-face "grey55")
+(set-face-foreground 'nxml-name-face "#257A25")
+(set-face-foreground 'nxml-ref-face "#9292C9")
+(set-face-foreground 'nxml-delimiter-face "#9292C9")
+(set-face-foreground 'nxml-comment-content-face "orange")
+(set-face-foreground 'nxml-comment-delimiter-face "orange")
 	</programlisting>
       </sect2>
     </sect1>
@@ -183,42 +183,42 @@ University of Utah. All Rights Reserved.
 	<filename>.emacs</filename> initialization file prior to using
 	<acronym>SGML</acronym> mode:</para>
 	<programlisting>
-	  ;; Setup autoloading
-	  (require 'psgml)
-	  (autoload 'sgml-mode "psgml" "Major mode to edit SGML files" t)
-	  (autoload 'xml-mode "psgml" "Major mode to edit XML files." t) 
-	  (setq auto-mode-alist
-	  (append
-	  '(("\\.xml" . xml-mode)
-	  ("\\.html" . sgml-mode))
-	  auto-mode-alist))
+;; Setup autoloading
+(require 'psgml)
+(autoload 'sgml-mode "psgml" "Major mode to edit SGML files" t)
+(autoload 'xml-mode "psgml" "Major mode to edit XML files." t) 
+(setq auto-mode-alist
+(append
+'(("\\.xml" . xml-mode)
+("\\.html" . sgml-mode))
+auto-mode-alist))
 
-	  ;; Indent tags but not content.
-	  (setq sgml-indent-step 2)
-	  (setq sgml-indent-data nil)
+;; Indent tags but not content.
+(setq sgml-indent-step 2)
+(setq sgml-indent-data nil)
 
-	  ;; Create appropriate "faces"
-	  (make-face 'sgml-start-tag-face) 
-	  (make-face 'sgml-end-tag-face) 
-	  (make-face 'sgml-entity-face) 
-	  (make-face 'sgml-doctype-face)
-	  (make-face 'sgml-comment-face) 
+;; Create appropriate "faces"
+(make-face 'sgml-start-tag-face) 
+(make-face 'sgml-end-tag-face) 
+(make-face 'sgml-entity-face) 
+(make-face 'sgml-doctype-face)
+(make-face 'sgml-comment-face) 
 
-	  ;; Assign colors to faces
-	  (set-face-foreground 'sgml-start-tag-face "grey55") 
-	  (set-face-foreground 'sgml-end-tag-face "seagreen") 
-	  (set-face-foreground 'sgml-entity-face "yellow2") 
-	  (set-face-foreground 'sgml-doctype-face "orange3") 
-	  (set-face-foreground 'sgml-comment-face "lightblue") 
+;; Assign colors to faces
+(set-face-foreground 'sgml-start-tag-face "grey55") 
+(set-face-foreground 'sgml-end-tag-face "seagreen") 
+(set-face-foreground 'sgml-entity-face "yellow2") 
+(set-face-foreground 'sgml-doctype-face "orange3") 
+(set-face-foreground 'sgml-comment-face "lightblue") 
 
-	  ;; Assign faces to sgml objects
-	  (setq sgml-set-face t)
-	  (setq sgml-markup-faces 
-	  '((comment   . sgml-comment-face) 
-	  (start-tag . sgml-start-tag-face) 
-	  (end-tag   . sgml-end-tag-face) 
-	  (doctype   . sgml-doctype-face) 
-	  (entity    . sgml-entity-face))) 
+;; Assign faces to sgml objects
+(setq sgml-set-face t)
+(setq sgml-markup-faces 
+'((comment   . sgml-comment-face) 
+(start-tag . sgml-start-tag-face) 
+(end-tag   . sgml-end-tag-face) 
+(doctype   . sgml-doctype-face) 
+(entity    . sgml-entity-face))) 
 	</programlisting>
       </sect2>
     </sect1>
@@ -236,17 +236,17 @@ University of Utah. All Rights Reserved.
 
 &lt;component name="<replaceable>component-name</replaceable>" category="<replaceable>category-name</replaceable>"&gt;
   
-lt;/component&gt;
+&lt;/component&gt;
 	  </literallayout>
 	</listitem>
 	<listitem>
-	  <para>Save and close the file (this will force nxml/sgml
-	  mode to load the proper schema when the file is
+	  <para>Save, close, and re-open the file (this will force
+	  nxml/sgml mode to load the proper schema when the file is
 	  re-opened).</para>
 	</listitem>
 	<listitem>
-	  <para>Re-open the file and insert remaining content using
-	  features of nxml or psgml mode.</para>
+	  <para>Insert remaining content using features of nxml or
+	  psgml mode.</para>
 	</listitem>
       </orderedlist>
     </sect1>

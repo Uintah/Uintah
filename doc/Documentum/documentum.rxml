@@ -19,13 +19,7 @@
 
 <!--% require("../Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
-
-<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-"../Utilities/XML/Docbook_dtd/docbookx.dtd" [
-<!ENTITY ltx "LaTeX">
-<!ENTITY sr "SCIRun">
-<!ENTITY dbk "DocBook">
-]>
+<!--% doc.insertDocType("article", {"ltx"=>"LaTeX", "sr"=>"SCIRun", "dbk"=>"DocBook"}) %-->
 
 <article class="techreport">
 <title>&sr; Documentum</title>
@@ -153,8 +147,8 @@ documentation set.
 </entry>
 </row>
 <row>
-<entry colname="docsubsub"><filename>Tutorial/</filename></entry>
-<entry colname="descrip"><para>HTML sources and figures for the &sr; Tutorial</para></entry>
+<entry colname="docsubsub"><filename>Tutorials/</filename></entry>
+<entry colname="descrip"><para>HTML sources and figures for &sr; user-level tutorials</para></entry>
 </row>
 <row>
 <entry colname="docsubsub"><filename>Guide/</filename></entry>
@@ -378,7 +372,7 @@ within the OpenJade distribution.
 <title>Environment Variables</title>
 
 <para>Six environment variables must be set before building
-the documentation:
+documentation:
 <itemizedlist>
 <listitem>
 <para>
@@ -1711,107 +1705,6 @@ printable version of the user's guide.</para>
 </variablelist>
 </para>
 
-</section>
-
-<section id="goals">
-<title>Goals for &sr; 2.0</title>
-<itemizedlist>
-<listitem>
-<para>
-Produce PDF versions of all docs.
-</para>
-</listitem>
-<listitem>
-<para>Developers Guide</para>
-</listitem>
-<listitem>
-<para>
-Complete module descriptions
-</para>
-</listitem>
-<listitem>
-<para>
-Enhance <filename>component.dtd</filename>
-<itemizedlist>
-<listitem>
-<para>Enhance <sgmltag class="starttag">description</sgmltag> element
-to allow the <sgmltag class="starttag">img</sgmltag> element (as a
-block level element).</para>
-</listitem>
-<listitem>
-<para>
-Enhance <sgmltag class="starttag">img</sgmltag> element, to include
-<sgmltag class="starttag">title</sgmltag> and/or <sgmltag
-class="starttag">caption</sgmltag> elements.
-</para>
-</listitem>
-<listitem>
-<para>Do not require  basic flow patterns to start with a <sgmltag
-class="starttag">p</sgmltag> element.</para>
-</listitem>
-<listitem>
-<para>
-Extend <sgmltag class="starttag">gui</sgmltag> element to accommodate
-multiple panes.  This would change the
-<sgmltag class="starttag">gui</sgmltag> grammer to look like this:
-<literallayout class="monospaced">
-<![CDATA[
-<!ELEMENT gui ((description, parameter+, (img, caption?)+)+)>
-]]>
-</literallayout>
-</para>
-</listitem>
-<listitem>
-<para>Convert <filename>component.dtd</filename> to RelaxNG schema for
-purposes of validation.</para>
-</listitem>
-<listitem>
-<para>Replace <sgmltag class="starttag">slink</sgmltag> and <sgmltag
-class="starttag">rlink</sgmltag> elements with <sgmltag
-class="starttag">ulink</sgmltag> element.</para>
-</listitem>
-</itemizedlist>
-</para>
-</listitem>
-<listitem>
-<para>Net descriptions
-<itemizedlist>
-<listitem>
-<para>Create <filename>doc/User/Nets</filename>.  Cover page and index
-files live here.</para>
-</listitem>
-<listitem>
-<para>Cover page is index into major and minor net
-descriptions.</para>
-</listitem>
-<listitem>
-<para>Major and Minor net descriptions written in docbook.</para>
-</listitem>
-</itemizedlist>
-</para>
-</listitem>
-<listitem>
-<para>User's Guide</para>
-</listitem>
-<listitem>
-<para>Pdf versions of docs</para>
-</listitem>
-<listitem>
-<para>Document &sr; installation on Mac OS X.</para>
-</listitem>
-<listitem>
-<para>Install doc build tools on SCI Linux and OSX machines</para>
-</listitem>
-<listitem>
-<para>Documment creation of LaTeX documents</para>
-</listitem>
-<listitem>
-<para>Document use of eruby and the use of srdoc.rb.</para>
-</listitem>
-<listitem>
-<para>Document use of Publish.rb</para>
-</listitem>
-</itemizedlist>
 </section>
 
 </article>
