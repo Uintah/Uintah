@@ -228,6 +228,19 @@ using namespace SCIRun;
                                        constCCVariable<Vector>& vel_CC,
                                        constCCVariable<double>& press_CC,
                                        T& vel_FC);
+                                       
+      template<class V, class T>
+        void add_vel_FC_exchange( CellIterator it,
+                                       IntVector adj_offset,
+                                       int numMatls,
+                                       FastMatrix & K,
+                                       double delT,
+                                       StaticArray<constCCVariable<double> >& vol_frac_CC,
+                                       StaticArray<constCCVariable<double> >& sp_vol_CC,
+                                       V & vel_FC,
+                                       T & sp_vol_FC,
+                                       T & vel_FCME);
+                                    
 
       void addExchangeContributionToFCVel(const ProcessorGroup*, 
                                           const PatchSubset* patch,  
