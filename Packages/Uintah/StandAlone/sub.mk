@@ -77,11 +77,12 @@ ifeq ($(CC),newmpxlc)
         $(PETSC_LIBRARY) \
         $(HYPRE_LIBRARY) \
         $(BLAS_LIBRARY) \
+        $(LAPACK_LIBRARY) \
         $(MPI_LIBRARY) \
         -lld $(M_LIBRARY)
 else
-  LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(F_LIBRARY) \
-        $(HYPRE_LIBRARY) $(PETSC_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+  LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
+          $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
