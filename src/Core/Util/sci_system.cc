@@ -66,6 +66,12 @@ using namespace SCIRun;
 
 /* -- end Dd */
 
+/* - BW for PGI */
+#ifdef __PGI
+#define __sigemptyset sigemptyset
+#endif
+/* BW */
+
 #ifdef __digital__
 #define __environ environ
 #endif
