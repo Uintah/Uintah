@@ -63,6 +63,10 @@
 
 
 #if defined(__linux)
+#define HAVE_PBUFFER
+#endif
+
+#if defined(HAVE_PBUFFER)
 #include <Dataflow/Modules/Render/PBuffer.h>
 #endif
  
@@ -200,7 +204,7 @@ private:
   Window win;
   Display* dpy;
   GLXContext cx;
-#if defined(__linux)
+#if defined(HAVE_PBUFFER)
   PBuffer pbuffer;
 #endif
   int maxlights;
