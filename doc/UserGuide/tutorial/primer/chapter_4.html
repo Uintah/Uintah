@@ -55,28 +55,28 @@
 		networks to examine the utahtorso-lowres-voltage
 		dataset.  In this chapter we will integrate those
 		small networks into one larger network that performs
-		all of the visualizations concurrently.  And we will
-		add a fourth visualization tool, isosurface
-		extraction, as well.
+		all of the visualizations concurrently.  We will also
+		add a fourth visualization tool--isosurface
+		extraction.
 
                 <p><b>Putting the nets together</b><br>
 
-                <p>Now lets do all of the A, B, C work in a single
+                <p>Now let us do all of the A, B, C work in a single
                 network. The procedure here is to share the
                 FieldReader, and Viewer modules across the A, B, and
                 C networks created in the last chapter. Repeat all
                 of the steps for creating A. Now do the same for B
                 and C, but use the FieldReader, and Viewer from A.
                   
-                <p>At this point all of the visualization from the
-                previous chapter exists in one network. Now lets add
-                in isosurface visualization.  From the
+                <p>At this point, all of the visualization from the
+                previous chapter exists in one network. Now, we add
+                isosurface visualization.  From the
                 SCIRun/Visualization menu, add in the Isosurface
                 module.  Connect the output from the field reader to
-                the Isosurface modules yellow Field input (named
+                the Isosurface module's yellow Field input (named
                 Field), and the pink Geometry output to the Viewer
-                module. Now as soon as Isosurface executes you will
-                get see this surface show up in the viewer.
+                module. As soon as Isosurface executes you will
+                see this surface show up in the viewer.
 
                 <p><b>Isosurface</b><br>
 
@@ -84,10 +84,9 @@
                 isosurface creation.  It takes a volume field in, and
                 can output a surface field or scene graph data to be
                 directly visualized with or without a color map.  The
-                first thing to set in the UI for the isosurface is the
-                Iso Value (<b>Figure 4.3</b>).  As you might expect, this determines where
+                Iso Value (<b>Figure 4.3<b>) is the first thing to set in the UI for the isosurface.                As you might expect, this determines where
                 the surface is created throught the volume. You can
-                have the module update the visualization as you change
+                make the module update the visualization as you change
                 the value with the slider, only when you release your
                 mouse button over the slider, or only when you press
                 the extract button.
@@ -101,13 +100,13 @@
 										<p><br>
                   
                 <p>Just as in the ShowField Module, you can set a
-                default color for the Isosurface, or if it has a color
-                map input to it, the color map is used to visualize
-                the data values.  You can choose the which method for
+                default color for the Isosurface or, if it has a color
+                map input, the color map will visualize
+                the data values.  You can choose a method for
                 extracting the isosurface, and how many threads you
                 would like the algorithm to use. (how many processors
-                to use).  By default a Marching Cubes algorithm is
-                used, but you can also use the NOISE algorithm.<br>
+                to use).  By default, we use a Marching Cubes algorithm, 
+		but you can also use the NOISE algorithm.<br>
 <br>
 <br>
                   
