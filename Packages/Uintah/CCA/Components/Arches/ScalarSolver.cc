@@ -163,7 +163,8 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches
 		Ghost::AroundCells, numGhostCells);
 
       // added one more argument of index to specify scalar component
-  tsk->computes(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl);
+  tsk->computes(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl,
+		Task::OutOfDomain);
   tsk->computes(d_lab->d_scalNonLinSrcSBLMLabel);
 
   sched->addTask(tsk, patches, matls);
@@ -242,7 +243,8 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched, const PatchSet* patches
   tsk->requires(Task::NewDW, d_lab->d_scalarCPBCLabel, 
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_scalCoefSBLMLabel, 
-		d_lab->d_stencilMatl, Ghost::None, zeroGhostCells);
+		d_lab->d_stencilMatl, Task::OutOfDomain,
+		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_scalNonLinSrcSBLMLabel, 
 		Ghost::None, zeroGhostCells);
   tsk->computes(d_lab->d_scalarSPLabel);
