@@ -54,7 +54,7 @@ private:
   Field *field_;
   mesh_handle_type mesh_;
   GeomTrianglesP *triangles_;
-  int build_trisurf_;
+  bool build_trisurf_;
   TriSurfMeshHandle trisurf_;
   map<long int, TriSurfMesh::node_index> vertex_map_;
   int nnodes_;
@@ -66,7 +66,7 @@ public:
   virtual ~HexMC();
 	
   void extract( const cell_index &, double);
-  void reset( int, int build_trisurf=0 );
+  void reset( int, bool build_trisurf=false );
   GeomObj *get_geom() { return triangles_; };
   TriSurfMeshHandle get_trisurf() { return trisurf_; };
 };
@@ -79,7 +79,7 @@ HexMC<Field>::~HexMC()
     
 
 template<class Field>
-void HexMC<Field>::reset( int n, int build_trisurf )
+void HexMC<Field>::reset( int n, bool build_trisurf )
 {
   build_trisurf_ = build_trisurf;
   triangles_ = new GeomTrianglesP;
@@ -174,7 +174,8 @@ void HexMC<Field>::extract( const cell_index& cell, double iso )
     int v1 = vertex[v++];
     int v2 = vertex[v++];
     triangles_->add(q[v0], q[v1], q[v2]);
-    trisurf_->add_triangle(surf_node[v0], surf_node[v1], surf_node[v2]);
+    if (build_trisurf_)
+      trisurf_->add_triangle(surf_node[v0], surf_node[v1], surf_node[v2]);
   }
 }
 
