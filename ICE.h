@@ -167,6 +167,11 @@ namespace Uintah {
       void scheduleCheckNeedAddMaterial(SchedulerP&, 
                                         const LevelP& level,
                                         const MaterialSet*);
+
+      void scheduleSetNeedAddMaterialFlag(SchedulerP&, 
+                                          const LevelP& level,
+                                          const MaterialSet*);
+//__________________________________ 
 //__________________________________ 
 //  I M P L I C I T   I C E
                                          
@@ -503,6 +508,12 @@ namespace Uintah {
                                 DataWarehouse*,
                                 DataWarehouse*);
                                 
+      void setNeedAddMaterialFlag(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse*,
+                                  DataWarehouse*);
+                                
       void computeLagrangian_Transported_Vars(const ProcessorGroup*,  
                                               const PatchSubset* patches,
                                               const MaterialSubset* matls,
@@ -631,6 +642,7 @@ namespace Uintah {
       bool d_EqForm;
       bool d_impICE;
       bool d_recompile;
+      bool d_canAddMaterial;
       
       int d_max_iter_equilibration;
       int d_max_iter_implicit;
