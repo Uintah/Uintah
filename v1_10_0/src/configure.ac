@@ -2538,8 +2538,8 @@ if test "$sci_check_mdsplus" = "yes"; then
     _sci_lib="$with_mdsplus/lib"
     _sci_inc="$with_mdsplus/include"
   else
-    _sci_lib="/usr/local/mdsplus/lib $sci_thirdparty_libs"
-    _sci_inc="$sci_thirdparty_includes"
+    _sci_lib="/usr/local/mdsplus/lib"
+    _sci_inc="/usr/local/mdsplus/include"
   fi
 
   SCI_TRY_LINK(MDSPLUS,mdslib library and headers,[
