@@ -27,6 +27,15 @@ if {[llength [array get env SCIRUN_DATA]] == 0} {
    return
 }
 set DATADIR $env(SCIRUN_DATA)
+if {![file isdirectory $DATADIR]} {
+   puts ""
+   puts "*** Error: $DATADIR is not a valid directory."
+   puts "*** Please exit and make sure the SCIRUN_DATA and SCIRUN_DATA_SET"
+   puts "*** environment variables are set correctly."
+   puts ""
+   ::netedit scheduleok
+   return
+}
 puts "*** Using SCIRUN_DATA $DATADIR"
 
 source $DATADIR/aneurysm/aneurysm.settings
