@@ -1,3 +1,4 @@
+#!/usr/bin/perl
 #
 #  The contents of this file are subject to the University of Utah Public
 #  License (the "License"); you may not use this file except in compliance
@@ -15,7 +16,6 @@
 #  University of Utah. All Rights Reserved.
 #
 
-#!/usr/bin/perl
 # Print out the "connectedness" of the .h files in the tree.
 # This determines how many .o files will get recompiled if you
 # touch the .h file.  It is good to minimize these numbers, to
