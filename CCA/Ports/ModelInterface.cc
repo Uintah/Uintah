@@ -21,3 +21,10 @@ void ModelInterface::activateModel(GridP& , SimulationStateP& , ModelSetup* )
 {
 
 }
+
+void ModelInterface::scheduleCheckNeedAddMaterial(SchedulerP&,
+                                                  const LevelP& ,
+                                                  const ModelInfo*)
+{
+
+}
