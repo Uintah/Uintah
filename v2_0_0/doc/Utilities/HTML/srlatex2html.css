@@ -24,6 +24,26 @@ by the  tool latex2html.
 
 @import url(common.css);
 
-pre,tt {
-color:#006633}
+tt {
+color:#006633;
+font-family: courier;
+font-size: 90%;
+}
 
+pre {
+color:#006633;
+font-family: courier;
+font-size: 75%;
+}
+
+span.textit {
+font-style: oblique;
+}
+
+span.textbf {
+font-weight: bold;
+}
+
+span.texttt {
+font-family: monospace;
+}
