@@ -38,6 +38,7 @@ SRCS     += \
 	$(SRCDIR)/MxNArrayRep.cc \
 	$(SRCDIR)/MxNScheduler.cc \
 	$(SRCDIR)/MxNScheduleEntry.cc \
+	$(SRCDIR)/MxNArrSynch.cc \
 	$(SRCDIR)/HandlerStorage.cc \
 	$(SRCDIR)/HandlerGateKeeper.cc \
 	$(SRCDIR)/ReferenceMgr.cc \

@@ -36,6 +36,7 @@
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Mutex.h>
 #include <sgi_stl_warnings_off.h>
+#include <string>
 #include <map>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
@@ -64,18 +65,18 @@ DESCRIPTION
   public:
     
     //String comparison function for std::map
-    struct ltint
+    struct ltstr
     {
-      bool operator()(const int i1, const int i2) const
+      bool operator()(const std::string s1, const std::string s2) const
       {
-	return (i1 < i2);
+	return (s1.compare(s2) < 0);
       }
     };
 
     //////////////
     //A map of scheduleEntries to distibution names
     typedef std::vector< void*> voidvec;
-    typedef std::map<int, voidvec, ltint> dataList;
+    typedef std::map<std::string, voidvec, ltstr> dataList;
     
     HandlerStorage();
 
@@ -86,15 +87,15 @@ DESCRIPTION
     /////////
     // Clears storage entries. Call without a handler number
     // clears all of the current entries.
-    void clear(int handler_num = 0);
+    void clear();
 
     ////////
     // Adds data to the storage queue 
-    void add(int handler_num, int queue_num, void* data);
+    void add(int handler_num, int queue_num, void* data, std::string uuid, int callID, int numCalls);
 
     ///////
     // Retrieves queue element from storage
-    void* get(int handler_num, int queue_num);
+    void* get(int handler_num, int queue_num, std::string uuid, int callID);
 
   private:
 

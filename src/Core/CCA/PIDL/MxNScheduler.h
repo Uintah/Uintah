@@ -37,6 +37,7 @@
 #include <fstream>
 #include <sgi_stl_warnings_on.h>
 #include <Core/CCA/PIDL/MxNArrayRep.h>
+#include <Core/CCA/PIDL/MxNArrSynch.h>
 #include <Core/CCA/PIDL/MxNScheduleEntry.h>
 
 /**************************************
@@ -61,19 +62,10 @@ namespace SCIRun {
   #define BLOCK(R,S,L) MxNScheduler::makeBlock(R,S,L)
   #define CYCLIC(R,S,L) MxNScheduler::makeCyclic(R,S,L)
 
-  //String comparison function for std::map
-  struct ltstr
-  {
-    bool operator()(const std::string s1, const std::string s2) const
-    {
-      return (s1.compare(s2) < 0);
-    }
-  };
-  
   //////////////
   //A map of scheduleEntries to distibution names
   typedef std::map<std::string, MxNScheduleEntry*, ltstr> schedList;
-  
+
   class MxNScheduler {    
   public:
     
@@ -103,6 +95,13 @@ namespace SCIRun {
     static Index* makeBlock(int rank, int size, int length);
     static Index* makeCyclic(int rank, int size, int length);
     
+    ///////////
+    // (Callee Method)
+    // Report the reception of array distribution metadata. Size denotes the
+    // number of metadata receptions we are expecting.
+    // See Also: MxNScheduleEntry::reportMetaRecvFinished(...)
+    void reportMetaRecvDone(std::string distname, int size);
+
     ////////////
     // (Callee Metods)
     // These methods create a posibility to assign and access
@@ -110,38 +109,28 @@ namespace SCIRun {
     // of the separate data receptions in order to eliminate 
     // copying
     // SeeAlso: similar methods in MxNScheduleEntry Class
-    void* getArray(std::string distname);
-    void* getArrayWait(std::string distname);
-    void setArray(std::string distname, void** arr);
-    void setNewArray(std::string distname, void** arr);
-    
+    void setArray(std::string distname, std::string uuid, int callid, void** arr);
+     
     ////////////
     // (Callee Method)
     // Waits to recieve all distributions necessary
     // before it returns the array. The notification that
     // a distribution has been received comes through the
     // reportRedisDone() method.
-    void* waitCompleteArray(std::string distname);
+    void* waitCompleteArray(std::string distname, std::string uuid, int callid);
  
-    ////////////
-    // (Callee Method)
-    // Marks a particular remote array description as received
-    // when the actual data it describes has been received
-    void reportRedisDone(std::string distname,int rank);
-
-    ///////////
-    // (Callee Method)
-    // Report the reception of array distribution metadata. Size denotes the
-    // number of metadata receptions we are expecting.
-    // See Also: MxNScheduleEntry::reportMetaRecvFinished(...)
-    void reportMetaRecvDone(std::string distname,int size); 
-
-    ///////////
+     ///////////
     // (Caller Method) 
     // It acquires all of the array descriptions that this object
     // needs to send part of its array to
     descriptorList getRedistributionReps(std::string distname);
  
+    //////////
+    // (Callee Method)
+    // Retrieves a pointer to the ArrSynch, which provides access to the recieved
+    // array as well as many other "great" synchronization methods
+    MxNArrSynch* getArrSynch(::std::string distname, ::std::string uuid, int callid);
+
     //////////
     // Erases the ScheduleEntry with a particular name
     void clear(std::string distname);
@@ -160,6 +149,10 @@ namespace SCIRun {
     // that this object participates in.
     schedList entries;
 
+    ////////
+    // Mutex used to control access to MxNScheduleEntry::synchlist
+    Mutex s_mutex;
+    
   };
 
 } // End namespace SCIRun

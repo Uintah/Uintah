@@ -31,9 +31,11 @@
 #include "MxNScheduler.h"
 #include <Core/CCA/PIDL/MxNArrayRep.h>
 #include <iostream>
+#include <sstream>
 using namespace SCIRun;   
 
 MxNScheduler::MxNScheduler()
+  : s_mutex("ArrSynch access mutex")
 {
 }
 
@@ -114,63 +116,86 @@ Index* MxNScheduler::makeCyclic(int rank, int size, int length)
   return (new Index(rank,length,size));  
 }
 
-void* MxNScheduler::getArray(std::string distname)
-{
-  schedList::iterator iter = entries.find(distname);
-  if (iter != entries.end()) {
-    return ((*iter).second)->getArray();
-  }
-  return NULL;
-}
-
-void* MxNScheduler::getArrayWait(std::string distname)
-{
-  schedList::iterator iter = entries.find(distname);
-  if (iter != entries.end()) {
-    return ((*iter).second)->getArrayWait();
-  }
-  return NULL;
-}
-
-void MxNScheduler::setArray(std::string distname,void** arr)
-{
-  schedList::iterator iter = entries.find(distname);
-  if (iter != entries.end()) {
-    ((*iter).second)->setArray(arr);
-  }
-}
-
-void MxNScheduler::setNewArray(std::string distname,void** arr)
-{
-  schedList::iterator iter = entries.find(distname);
-  if (iter != entries.end()) {
-    ((*iter).second)->setNewArray(arr);
-  }
-}
-
-void* MxNScheduler::waitCompleteArray(std::string distname)
-{
-  schedList::iterator iter = entries.find(distname);
-  if (iter != entries.end()) {
-    return ((*iter).second)->waitCompleteArray();
-  }
-  return NULL;
-}
-
-void MxNScheduler::reportRedisDone(std::string distname, int rank)
-{
-  schedList::iterator iter = entries.find(distname);
-  if (iter != entries.end()) {
-    ((*iter).second)->doReceive(rank);
-  }
-}
-
 void MxNScheduler::reportMetaRecvDone(std::string distname, int size)
 {
-  schedList::iterator iter = entries.find(distname);
-  if (iter != entries.end()) {
-    ((*iter).second)->reportMetaRecvDone(size);
+  schedList::iterator sch_iter = entries.find(distname);
+  if (sch_iter != entries.end()) {
+    ((*sch_iter).second)->reportMetaRecvDone(size);
   }
+}
+
+void MxNScheduler::setArray(std::string distname, std::string uuid, int callid, void** arr)
+{
+  ::std::cerr << "MxNSched UUID='" << uuid << "' -- '" << callid << "\n";
+  ::std::ostringstream index;
+  index << uuid << callid;
+  schedList::iterator sch_iter = entries.find(distname);
+  if (sch_iter != entries.end()) {
+    s_mutex.lock();
+    synchList::iterator sy_iter = ((*sch_iter).second)->s_list.find(index.str());
+    if (sy_iter != ((*sch_iter).second)->s_list.end()) {
+      s_mutex.unlock();
+      return ((*sy_iter).second)->setArray(arr);
+    }  
+    else {
+      MxNArrSynch* mxnasync = new MxNArrSynch((*sch_iter).second);
+      ((*sch_iter).second)->s_list[index.str()] = mxnasync;
+      s_mutex.unlock();
+      return mxnasync->setArray(arr);
+    }
+  }
+}
+
+void* MxNScheduler::waitCompleteArray(std::string distname, std::string uuid, int callid)
+{
+  ::std::cerr << "MxNSched UUID='" << uuid << "' -- '" << callid << "\n";
+  ::std::ostringstream index;
+  index << uuid << callid;
+  schedList::iterator sch_iter = entries.find(distname);
+  if (sch_iter != entries.end()) {
+    s_mutex.lock();
+    synchList::iterator sy_iter = ((*sch_iter).second)->s_list.find(index.str());
+    if (sy_iter != ((*sch_iter).second)->s_list.end()) {
+      s_mutex.unlock();
+      return ((*sy_iter).second)->waitCompleteArray();
+      s_mutex.lock();
+      delete ((*sy_iter).second);
+      s_mutex.unlock();
+    }
+    else {
+      MxNArrSynch* mxnasync = new MxNArrSynch((*sch_iter).second);
+      ((*sch_iter).second)->s_list[index.str()] = mxnasync;
+      s_mutex.unlock();
+      return mxnasync->waitCompleteArray();
+      s_mutex.lock();
+      delete mxnasync;
+      s_mutex.unlock();
+    }  
+  }
+  return NULL;
+}
+
+MxNArrSynch* MxNScheduler::getArrSynch(::std::string distname, ::std::string uuid, int callid)
+{
+  ::std::cerr << "MxNSched UUID='" << uuid << "' -- '" << callid << "\n";
+  ::std::ostringstream index;
+  index << uuid << callid;
+  schedList::iterator sch_iter = entries.find(distname);
+  if (sch_iter != entries.end()) {
+    s_mutex.lock();
+    synchList::iterator sy_iter = ((*sch_iter).second)->s_list.find(index.str());
+    if (sy_iter != ((*sch_iter).second)->s_list.end()) {
+      s_mutex.unlock();
+      return ((*sy_iter).second);
+    }
+    else {
+      MxNArrSynch* mxnasync = new MxNArrSynch((*sch_iter).second);
+      ((*sch_iter).second)->s_list[index.str()] = mxnasync;
+      s_mutex.unlock();
+      return mxnasync;
+    }  
+  }
+  return NULL;
 }
  
 descriptorList MxNScheduler::getRedistributionReps(std::string distname)
@@ -194,32 +219,16 @@ void MxNScheduler::clear(std::string distname)
 
 void MxNScheduler::print()
 {
-  //  if (!dbg) {
-    schedList::iterator iter = entries.begin();   
-    std::cerr << "entries.size = " << entries.size() << "\n";
-    for(unsigned int i=0; i < entries.size(); i++, iter++) {
-      std::cerr << "!!!!! Printing '" << ((*iter).first) << "'";
-      if (((*iter).second)->isCaller())
-	std::cerr << " Caller\n"; 
-      else
-	std::cerr << " Callee\n"; 
-      ((*iter).second)->print(std::cerr);
-    }
-  /*
+  schedList::iterator iter = entries.begin();   
+  std::cerr << "entries.size = " << entries.size() << "\n";
+  for(unsigned int i=0; i < entries.size(); i++, iter++) {
+    std::cerr << "!!!!! Printing '" << ((*iter).first) << "'";
+    if (((*iter).second)->isCaller())
+      std::cerr << " Caller\n"; 
+    else
+      std::cerr << " Callee\n"; 
+    ((*iter).second)->print(std::cerr);
   }
-  else {
-    schedList::iterator iter = entries.begin();   
-    dbg << "entries.size = " << entries.size() << "\n";
-    for(unsigned int i=0; i < entries.size(); i++, iter++) {
-      dbg << "!!!!! Printing '" << ((*iter).first) << "'";
-      if (((*iter).second)->isCaller())
-	dbg << " Caller\n"; 
-      else
-	dbg << " Callee\n"; 
-      ((*iter).second)->print(dbg);
-    }
-  }
-  */
 }
 
 
