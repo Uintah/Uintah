@@ -1096,12 +1096,15 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     // print them out
     int alltotal[3];
 
-    MPI_Reduce(total_reloc, &alltotal, 3, MPI_INT, MPI_SUM, 0,
-	       pg->getComm());
-    if(pg->myrank() == 0){
-      ASSERTEQ(alltotal[1], alltotal[2]);
-      if(alltotal[0] != 0)
-	cerr << "Particles crossing patch boundaries: " << alltotal[0] << ", crossing processor boundaries: " << alltotal[1] << '\n';
+    // don't reduce if number of patches on this level is < num procs.  Will wait forever in reduce.
+    if (getLevel(patches)->numPatches() >= pg->size()) {
+      MPI_Reduce(total_reloc, &alltotal, 3, MPI_INT, MPI_SUM, 0,
+                 pg->getComm());
+      if(pg->myrank() == 0){
+        ASSERTEQ(alltotal[1], alltotal[2]);
+        if(alltotal[0] != 0)
+          cerr << "Particles crossing patch boundaries: " << alltotal[0] << ", crossing processor boundaries: " << alltotal[1] << '\n';
+      }
     }
   }
 
