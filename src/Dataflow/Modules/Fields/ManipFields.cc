@@ -12,7 +12,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/share/share.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Dataflow/Network/StrX.h>
 #include <Core/Util/DebugStream.h>
@@ -83,7 +83,7 @@ private:
   FieldHandle                sfield_;
   FieldOPort*                ofield_;
   
-  TCLstring                  name_;
+  GuiString                  name_;
   string                     id_;
   FieldManipFunction         curFun_;
 };
