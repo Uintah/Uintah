@@ -11,16 +11,18 @@
 #include <SCICore/Exceptions/InternalError.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Util/DebugStream.h>
+#include <PSECore/XMLUtil/XMLUtil.h>
 
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <strstream>
+#include <sstream>
 #include <unistd.h>
 
 using namespace Uintah;
 
 using SCICore::Exceptions::InternalError;
+using namespace PSECore::XMLUtil;
 using namespace std;
 static SCICore::Util::DebugStream dbg("MPIScheduler", false);
 
@@ -125,7 +127,7 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
    dbg << '\n';
 
    if(task->visited){
-      ostrstream error;
+      ostringstream error;
       error << "Cycle detected in task graph: already did\n\t"
             << task->getName();
       if(task->getPatch())
@@ -144,7 +146,7 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
 	 map<TaskProduct, Task*>::const_iterator aciter = d_allcomps.find(p);
 	 if(!aciter->second->sorted){
 	    if(aciter->second->visited){
-	       ostrstream error;
+	       ostringstream error;
 	       error << "Cycle detected in task graph: trying to do\n\t"
 		     << task->getName();
 	       if(task->getPatch())
@@ -212,17 +214,8 @@ TaskGraph::allDependenciesCompleted(Task*) const
 }
 
 void
-TaskGraph::dumpDependencies()
+TaskGraph::dumpDependencies(DOM_Element edges) const
 {
-    static int call_nr = 0;
-    
-    // the first call is just some initialization tasks. All subsequent calls
-    // will have the same dependency graph, modulo an output task. The first
-    // non-initialization call will have the output task, so we'll just output
-    // that one.
-    if (call_nr++ != 1)
-    	return;
-	
     ofstream depfile("dependencies");
     if (!depfile) {
 	cerr << "TaskGraph::dumpDependencies: unable to open output file!\n";
@@ -247,13 +240,23 @@ TaskGraph::dumpDependencies()
 		const Task* task1 = task;
 		const Task* task2 = deptask->second;
 
-		depfile << "\"" << task1->getName();
-		if(task1->getPatch())
-		   depfile << "\\nPatch" << task1->getPatch()->getID();
-		depfile << "\" \""  << task2->getName();
-		if(task2->getPatch())
-		   depfile << "\\nPatch" << task2->getPatch()->getID();
-		depfile << "\"" << endl;
+    	    	ostringstream name1;
+		name1 << task1->getName();
+		if (task1->getPatch())
+		    name1 << "\\nPatch" << task1->getPatch()->getID();
+		
+		ostringstream name2;
+		name2 << task2->getName();
+		if (task2->getPatch())
+		    name2 << "\\nPatch" << task2->getPatch()->getID();
+		    
+    	    	depfile << "\"" << name1.str() << "\" \""
+		    	<< name2.str() << "\"\n";
+
+    	    	DOM_Element edge = edges.getOwnerDocument().createElement("edge");
+    	    	appendElement(edge, "source", name1.str());
+		appendElement(edge, "target", name2.str());
+    	    	edges.appendChild(edge);
 	    }
 	}
     }
@@ -273,6 +276,10 @@ Task* TaskGraph::getTask(int idx)
 
 //
 // $Log$
+// Revision 1.3  2000/07/19 21:47:59  jehall
+// - Changed task graph output to XML format for future extensibility
+// - Added statistical information about tasks to task graph output
+//
 // Revision 1.2  2000/06/27 14:59:53  jehall
 // - Removed extra call to dumpDependencies()
 //
