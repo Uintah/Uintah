@@ -11,6 +11,8 @@
 using namespace Uintah;
 using namespace std;
 
+const int Stream::NUM_DEP_VARS = 9;
+
 Stream::Stream()
 {
 }
@@ -469,6 +471,10 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
 
 //
 // $Log$
+// Revision 1.16  2002/04/17 22:33:53  witzel
+// In order to get a compile on bugs.sci, NUM_DEP_VARS must be defined in
+// Stream.cc instead of within the class definition.
+//
 // Revision 1.15  2002/04/08 18:09:43  rawat
 // i) modified sub.mk's to make separate lib's for Mixing and fortran dirs
 // ii) Modified computeStableTImeStep to include diffusion time scale
