@@ -34,21 +34,31 @@ location of this document) - See the bottom of this file.
 
 <html>
 <head>
+
 <script type="text/javascript">
 var treetop="";
 var path = location.pathname;
-while (path.substr(path.lastIndexOf("/")+1) != "doc") {
+var iLimit = 20;
+var i = 0;
+while (i < iLimit && path.substr(path.lastIndexOf("/")+1) != "doc") {
 treetop += "../";
+i += 1;
 path = path.substr(0, path.lastIndexOf("/"));
 }
-document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css' \/>")
+var inDocTree = i < iLimit;
+if (inDocTree) {
+document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'/>")
+}
 </script>
+
 <title>User Documentation Cover Page</title>
 </head>
 <body>
 
 <script type="text/javascript">
+if (inDocTree) {
 document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
+}
 </script>
 
 <!-- Content goes here -->
@@ -105,7 +115,6 @@ the Viewer</a>
 </ul>
 
 <p class="head"><a href="../Developer/Modules/index.html">SCIRun Modules</a></p>
-
 <p class="firstpara">
 Descriptions of all the SCIRun modules, including datatypes used,
 functions performed and explanations of the user interface
@@ -128,8 +137,9 @@ Discussions of user issues.
 </p>
 
 <script type="text/javascript">
-// Include JavaScript code that produces the bottom banner.
+if (inDocTree) {
 document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
+}
 </script>
 
 </body>
