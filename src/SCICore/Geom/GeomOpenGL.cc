@@ -658,7 +658,8 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void GeomBBoxCache::draw(DrawInfoOpenGL* di, Material *m, double time)
 {
-    child->draw(di,m,time);
+		if ( child )
+				child->draw(di,m,time);
 }
 
 void GeomBillboard::draw(DrawInfoOpenGL* di, Material* m, double time)
@@ -3270,55 +3271,54 @@ void GeomBox::draw(DrawInfoOpenGL* di, Material* matl, double)
 	case DrawInfoOpenGL::Gouraud:
 	    {	
 	      glBegin(GL_QUADS);
-	      //front
-	      //	glColor4f(0.0,1.0,0.0,0.8);
-	      glVertex3d(min.x(),min.y(),max.z());
-	      glColor4f(0.0,1.0,0.0,0.2);
-	      glVertex3d(min.x(),max.y(),max.z());
-	      glVertex3d(max.x(),max.y(),max.z());
-	      glVertex3d(max.x(),min.y(),max.z());
-	      //back
-	      //	glColor4f(1.0,0.0,0.0,0.8);
-	      glVertex3d(min.x(),max.y(),min.z());
-	      glColor4f(0.0,1.0,0.0,0.2);
-	      glVertex3d(min.x(),min.y(),min.z());
-	      glVertex3d(max.x(),min.y(),min.z());
-	      glVertex3d(max.x(),max.y(),min.z());
-	      
-	      glColor4f(1.0,0.0,0.0,0.2);
-	      
-	      //left
-	      glVertex3d(min.x(),min.y(),min.z());
-	      //	glColor4f(1.0,0.0,0.0,0.8);
-	      glVertex3d(min.x(),max.y(),min.z());
-	      glVertex3d(min.x(),max.y(),max.z());
-	      glVertex3d(min.x(),min.y(),max.z());
-	      glColor4f(1.0,0.0,0.0,0.2);
-	      
-	      //right
-	      //	glColor4f(0.0,1.0,0.0,0.8);
-	      glVertex3d(max.x(),max.y(),max.z());
-	      glColor4f(1.0,0.0,0.0,0.2);
-	      glVertex3d(max.x(),max.y(),min.z());
-	      glVertex3d(max.x(),min.y(),max.z());
-	      glVertex3d(max.x(),min.y(),min.z());
-	      
-	      glColor4f(0.0,0.0,1.0,0.2);
-	      
-	      //top
-	      //	glColor4f(0.0,1.0,0.0,0.8);
-	      glVertex3d(min.x(),max.y(),min.z());
-	      glColor4f(0.0,0.0,1.0,0.2);
-	      glVertex3d(max.x(),max.y(),min.z());
-	      glVertex3d(max.x(),max.y(),max.z());
-	      glVertex3d(min.x(),max.y(),max.z());
-	      //bottom
-	      //	glColor4f(1.0,0.0,0.0,0.8);
+
+	      // top
+	      glNormal3f(0,0,1);
+	      glColor4f(0.0, 0.0, 1.0, 0.0);
 	      glVertex3d(min.x(),min.y(),max.z());
 	      glVertex3d(max.x(),min.y(),max.z());
-	      glVertex3d(max.x(),min.y(),min.z());
-	      glColor4f(0.0,0.0,1.0,0.2);
+	      glVertex3d(max.x(),max.y(),max.z());
+	      glVertex3d(min.x(),max.y(),max.z());
+
+	      // bottom
+	      glNormal3f(0,0,-1);
+	      glColor4f(0.0, 0.0, 0.5, 0.0);
 	      glVertex3d(min.x(),min.y(),min.z());
+	      glVertex3d(min.x(),max.y(),min.z());
+	      glVertex3d(max.x(),max.y(),min.z());
+	      glVertex3d(max.x(),min.y(),min.z());
+	      
+	      // left
+	      glNormal3f(-1.0,0,0);
+	      glColor4f(0.5, 0.0, 0.0, 0.0);
+	      glVertex3d(min.x(),min.y(),min.z());
+	      glVertex3d(min.x(),min.y(),max.z());
+	      glVertex3d(min.x(),max.y(),max.z());
+	      glVertex3d(min.x(),max.y(),min.z());
+
+	      // right
+	      glNormal3f(1,0,0);
+	      glColor4f(1.0, 0.0, 0.0, 0.0);
+	      glVertex3d(max.x(),min.y(),min.z());
+	      glVertex3d(max.x(),max.y(),min.z());
+	      glVertex3d(max.x(),max.y(),max.z());
+	      glVertex3d(max.x(),min.y(),max.z());
+	      	      
+	      // top
+	      glNormal3f(0,1.0,0);
+	      glColor4f(0.0, 1.0, 0.0, 0.0);
+	      glVertex3d(min.x(),max.y(),min.z());
+	      glVertex3d(min.x(),max.y(),max.z());
+	      glVertex3d(max.x(),max.y(),max.z());
+	      glVertex3d(max.x(),max.y(),min.z());
+
+	      // back
+	      glNormal3f(0,-1,0);
+	      glColor4f(0.0, 0.5, 0.0, 0.0);
+	      glVertex3d(min.x(),min.y(),min.z());
+	      glVertex3d(max.x(),min.y(),min.z());
+	      glVertex3d(max.x(),min.y(),max.z());
+	      glVertex3d(min.x(),min.y(),max.z());
   
 	      glEnd();
 	    }
@@ -4205,6 +4205,9 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.20  2000/07/06 19:34:07  yarden
+// fix GeomBox drawing.
+//
 // Revision 1.19  2000/05/31 21:54:00  kuzimmer
 // Changes to make the ColorMapKey Module work properly
 //
