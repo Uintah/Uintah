@@ -283,7 +283,7 @@ int Network::delete_module(const string& id)
   string tname("Delete module: " + id);
   Thread *mod_deleter = scinew Thread(dm, tname.c_str());
   int rval = dm->status();
-  mod_deleter->join();
+  mod_deleter->detach();
   return rval;
 }
 
