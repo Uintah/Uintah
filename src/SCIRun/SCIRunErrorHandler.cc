@@ -33,7 +33,7 @@
 using namespace std;
 using namespace SCIRun;
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #define IRIX
 #pragma set woff 1375
 #endif
@@ -42,7 +42,7 @@ using namespace SCIRun;
 #include <sax/SAXParseException.hpp>
 #include <parsers/DOMParser.hpp>
 #include <dom/DOM_NamedNodeMap.hpp>
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
 #endif
 

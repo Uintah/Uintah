@@ -20,7 +20,7 @@
 using std::hex;
 using std::dec;
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #define IRIX
 #pragma set woff 1375
 #endif
@@ -29,7 +29,7 @@ using std::dec;
 #include <dom/DOM_Node.hpp>
 #include <dom/DOM_NamedNodeMap.hpp>
 #include <util/XMLURL.hpp>
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
 #endif
 #include <fcntl.h>

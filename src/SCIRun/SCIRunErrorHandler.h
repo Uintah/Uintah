@@ -29,12 +29,12 @@
 #ifndef SCIRun_Framework_SCIRunErrorHandler_h
 #define SCIRun_Framework_SCIRunErrorHandler_h
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #define IRIX
 #pragma set woff 1375
 #endif
 #include <sax/ErrorHandler.hpp>
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
 #endif
 #include <string>
