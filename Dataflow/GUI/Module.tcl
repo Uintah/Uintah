@@ -903,14 +903,9 @@ proc regenModuleMenu { modid menu_id } {
     $menu_id add command -label "Notes" \
 	-command "notesWindow $modid notesDoneModule"
 
-    # 'Destroy Selected' Menu Option
-    if { [$modid is_selected] } { 
-	$menu_id add command -label "Destroy Selected" \
-	    -command "moduleDestroySelected"
-    }
-
     # 'Destroy' module Menu Option
-    $menu_id add command -label "Destroy" -command "moduleDestroy $modid"
+    $menu_id add command -label "Destroy" \
+	-command "moduleDestroySelected $modid"
 
     # 'Duplicate' module Menu Option
     if { ![$modid is_subnet] } {
@@ -1754,9 +1749,16 @@ proc replaceModule { oldmodule package category module } {
 }
 
 
-proc moduleDestroySelected {} {
+proc moduleDestroySelected { module } {
     global CurrentlySelectedModules 
-    foreach mnum $CurrentlySelectedModules { moduleDestroy $mnum }
+
+    if { [llength $CurrentlySelectedModules] <= 1 } {
+	moduleDestroy $module
+    } else {
+	foreach mnum $CurrentlySelectedModules { 
+	    moduleDestroy $mnum
+	}
+    }
 }
 
 
