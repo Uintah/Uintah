@@ -28,8 +28,9 @@ class clString {
 	char* s;		// pointer to data
 	int n;			// reference count
 	srep() { n=1; }
-	inline void* operator new(size_t);
-	inline void operator delete(void*, size_t);
+// Can't do this yet - broken
+//	inline void* operator new(size_t);
+//	inline void operator delete(void*, size_t);
     };
     srep *p;
     clString(int, char*);

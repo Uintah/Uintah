@@ -22,16 +22,27 @@
 
 static TrivialAllocator* srep_alloc=0;
 
+#ifdef BROKEN
+
 inline void* clString::srep::operator new(size_t)
 {
-    if(!srep_alloc)srep_alloc=new TrivialAllocator(sizeof(clString::srep));
-    return srep_alloc->alloc();
+    if(!srep_alloc){
+	srep_alloc=new TrivialAllocator(sizeof(clString::srep));
+	lock=new Mutex;
+    }
+    lock->lock();
+    void* p=srep_alloc->alloc();
+    lock->unlock();
+    return p;
 }
 
 inline void clString::srep::operator delete(void* rp, size_t)
 {
+    lock->lock();
     srep_alloc->free(rp);
+    lock->unlock();
 }
+#endif
 
 #define inline
 #include <Classlib/String.icc>
