@@ -50,6 +50,7 @@ public:
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
   virtual const TypeDescription* get_type_description() const;
+
 private:
   static Persistent* maker();
 };

@@ -53,15 +53,17 @@ public:
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
 
-  bool get_gradient(Vector &, Point &);
-  Vector cell_gradient(TetVolMesh::Cell::index_type);
-
   //! Persistent IO
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const;
   virtual const TypeDescription* get_type_description() const;
+
+  // TetVol specific methods.
+  bool get_gradient(Vector &, Point &);
+  Vector cell_gradient(TetVolMesh::Cell::index_type);
+
 private:
   static Persistent *maker();
 };

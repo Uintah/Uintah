@@ -58,13 +58,13 @@ public:
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const;
   virtual const TypeDescription* get_type_description() const;
+
 private:
   static Persistent *maker();
 };
 
 // Pio defs.
 const int TRI_SURF_VERSION = 1;
-
 
 template <class T>
 Persistent *

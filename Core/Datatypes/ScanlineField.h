@@ -51,8 +51,8 @@ public:
   virtual const string get_type_name(int n = -1) const;
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
-  bool get_gradient(Vector &, Point &);
   virtual const TypeDescription* get_type_description() const;
+
 private:
   static Persistent* maker();
 };
@@ -201,17 +201,6 @@ const TypeDescription*
 ScanlineField<T>::get_type_description() const 
 {
   return SCIRun::get_type_description((ScanlineField<T>*)0);
-}
-
-
-//! compute the gradient g, at point p
-template <> bool ScanlineField<Tensor>::get_gradient(Vector &, Point &p);
-template <> bool ScanlineField<Vector>::get_gradient(Vector &, Point &p);
-
-template <class Data>
-bool ScanlineField<Data>::get_gradient(Vector &, Point &)
-{
-  return false;
 }
 
 
