@@ -12,7 +12,6 @@
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
-using std::ifstream;
 
 static string numbered_str(const string & s, int is)
 {
@@ -89,7 +88,7 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
   }
 }
 
-FileGeometryPiece::FileGeometryPiece(const string& file_name)
+FileGeometryPiece::FileGeometryPiece(const string& /*file_name*/)
 {
 }
 
