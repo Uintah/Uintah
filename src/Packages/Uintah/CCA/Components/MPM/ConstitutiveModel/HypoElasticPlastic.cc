@@ -1653,6 +1653,10 @@ HypoElasticPlastic::scheduleCheckNeedAddMPMMaterial(Task* task,
                                                     const MPMMaterial* matl,
                                                     const PatchSet* patch) const
 {
+  Ghost::GhostType  gnone = Ghost::None;
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::NewDW, pPlasticStrainLabel_preReloc,   matlset, gnone);
+
   task->computes(lb->NeedAddMPMMaterialLabel);
 }
 
@@ -1664,9 +1668,28 @@ void HypoElasticPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
   cout_CST << getpid() << "checkNeedAddMPMMaterial: In : Matl = " << matl
            << " id = " << matl->getDWIndex() <<  " patch = "
            << (patches->get(0))->getID();
-                                                                                
+
   double need_add=0.;
                                                                                 
+  // Loop thru patches
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    int dwi = matl->getDWIndex();
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+    constParticleVariable<double> pPlasticStrain;
+    new_dw->get(pPlasticStrain, pPlasticStrainLabel_preReloc, pset);
+
+    // Loop thru particles
+    ParticleSubset::iterator iter = pset->begin(); 
+    for( ; iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      if(pPlasticStrain[idx]>1.e-1){
+        need_add=1.;
+      }
+    }
+  }
+
   new_dw->put(sum_vartype(need_add),     lb->NeedAddMPMMaterialLabel);
 }
 
