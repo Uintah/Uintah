@@ -16,7 +16,7 @@ using namespace std;
 
 MPMPetscSolver::MPMPetscSolver()
 {
-
+  d_A = 0;
 }
 
 MPMPetscSolver::~MPMPetscSolver()
