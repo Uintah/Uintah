@@ -30,7 +30,7 @@
 #include <math.h>
 #include <Core/Math/LinAlg.h>
 
-double linalg_norm2(int rows, double* data)
+double linalg_norm2(int rows, const double* data)
 {
     double norm=0;
     int i;

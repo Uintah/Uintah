@@ -35,7 +35,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    SCICORESHARE double linalg_norm2(int n, double* data);
+    SCICORESHARE double linalg_norm2(int n, const double* data);
     SCICORESHARE void linalg_mult(int n, double* result, double* a, double* b);
     SCICORESHARE void linalg_sub(int n, double* result, double* a, double* b);
     SCICORESHARE void linalg_add(int n, double* result, double* a, double* b);
