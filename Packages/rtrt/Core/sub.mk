@@ -169,7 +169,8 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/TrisReader.cc \
 	$(SRCDIR)/Parallelogram2.cc \
 	$(SRCDIR)/MIPMaterial.cc \
-	$(SRCDIR)/RServer.cc
+	$(SRCDIR)/RServer.cc \
+	$(SRCDIR)/GeoProbeReader.cc
 #	$(SRCDIR)/LumiDpy.cc \
 #	$(SRCDIR)/LumiCamera.cc \
 
