@@ -176,7 +176,7 @@
 
         <area coords="257,41,397,64" shape="rect" alt="Developer's Guide">
         <xsl:attribute name="href">
-        <xsl:value-of select="concat($swidk,'/doc/DeveloperGuide/devguide.html')" />
+        <xsl:value-of select="concat($swidk,'/doc/DeveloperGuide/devguide.xml?cont=0&amp;dir=2')" />
         </xsl:attribute>
         </area>
  
