@@ -1,7 +1,9 @@
 #include <Core/Geometry/Point.h>
+#include <Packages/rtrt/Core/BV1.h>
 #include <Packages/rtrt/Core/Array1.cc>
 #include <Packages/rtrt/Core/Array3.cc>
 #include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/Grid.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Tri.h>
 #include <Packages/rtrt/Core/Phong.h>
@@ -249,6 +251,12 @@ Object *get_object(ifstream &infile) {
     ((Group*)result)->add(face);
   }
   //  cerr << "ase_load::get_objects::No objects found.\n";
+#if 0
+  if(((Group*)result)->numObjects() > 20)
+    result = new Grid(result, 30);
+  else if(((Group*)result)->numObjects()>2)
+    result = new BV1(result);
+#endif
   return result;
 }
 
