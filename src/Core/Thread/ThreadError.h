@@ -13,7 +13,7 @@
  */
 
 #ifndef SCICore_Thread_ThreadError_h
-#define SCICore_Thread_ThreadError_h=
+#define SCICore_Thread_ThreadError_h
 
 #include <SCICore/share/share.h>
 
@@ -60,6 +60,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.7  1999/09/24 19:18:31  moulding
+// removed an '=' from the end of the include guard #define
+//
 // Revision 1.6  1999/09/24 18:55:08  moulding
 // added SCICORESHARE, for win32, to class declarations
 //
