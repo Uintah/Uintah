@@ -72,11 +72,7 @@ namespace SCIRun {
     // Handler table size
     int table_size;
 
-    /////////////
-    // One message is associated with a channel, this is not reasonalbe!!!
-    SocketMessage* msg;
- 
-    /////////////
+     /////////////
     // If we can kill the accept_thread expicitly, we keep this field,
     Thread *accept_thread;
 

@@ -56,8 +56,6 @@ using namespace std;
 using namespace SCIRun;
 
 SocketEpChannel::SocketEpChannel(){ 
-  int new_fd;  // listen on sock_fd, new connection on new_fd
-
   struct sockaddr_in my_addr;    // my address information
   
   if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -74,7 +72,6 @@ SocketEpChannel::SocketEpChannel(){
   }
 
   handler_table=NULL;
-  msg = NULL;
   object=NULL;
   accept_thread=NULL;
   dead=false;
@@ -82,7 +79,6 @@ SocketEpChannel::SocketEpChannel(){
 
 SocketEpChannel::~SocketEpChannel(){ 
   if(handler_table!=NULL) delete []handler_table;
-  if(msg!=NULL) delete msg;
 }
 
 
@@ -94,8 +90,8 @@ void SocketEpChannel::openConnection() {
 }
 
 void SocketEpChannel::closeConnection() {
-  close(sockfd);
-  sockfd=0;
+  //close(sockfd);
+  //sockfd=-1;
 }
 
 string SocketEpChannel::getUrl() {
@@ -123,10 +119,8 @@ void SocketEpChannel::activateConnection(void* obj){
 }
 
 Message* SocketEpChannel::getMessage() {
-  if (sockfd == 0)
-    return NULL;
-  if (msg == NULL)
-    throw CommError("SocketEpChannel::getMessage", -1);
+  SocketMessage* msg = new SocketMessage(sockfd);
+  msg->setSocketEp(this);
   return msg;
 }
 
@@ -153,7 +147,7 @@ SocketEpChannel::runAccept(){
   fd_set read_fds; // temp file descriptor list for select()
   struct timeval timeout;
   // add the listener to the master set
-  while(!dead){
+  while(!dead && sockfd!=-1){
     timeout.tv_sec=0;
     timeout.tv_usec=0;
     FD_ZERO(&read_fds);
@@ -179,13 +173,20 @@ SocketEpChannel::runAccept(){
       
       Thread *t= new Thread(new SocketThread(this, NULL, -2, new_fd), "SocketServiceThread", 0, Thread::Activated);
       t->detach();
-    }  
-  }
+    } 
+    //::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(object);
+    //cerr<<"Reference Count="<< _sc->d_objptr->getRefCount()<<endl;
+    //if(_sc->d_objptr->getRefCount()==0) break;
+    
+   }
+  close(sockfd);
+  sockfd=-1;
 }
 
 
 void 
 SocketEpChannel::runService(int new_fd){
+  //cerr<<"ServiceThread starts\n";
   while(true){
     int headerSize=sizeof(long)+sizeof(int);
     void *buf=malloc(headerSize);
@@ -226,6 +227,7 @@ SocketEpChannel::runService(int new_fd){
       t->detach();
       if(id==1){
 	close(new_fd);
+	//cerr<<"ServiceThread exits\n";
 	break;
       }
     }

@@ -57,9 +57,11 @@ SocketThread::run()
   else{
     //cerr<<"calling handler #"<<id<<"\n";
     ep->handler_table[id](msg);
-    delete msg;
+    //msg->destroyMessage(); //delete msg;
     if(id==1){
       ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(ep->object);
+      //cerr<<"Reference Count="<< _sc->d_objptr->getRefCount()<<endl;
+	
       if(_sc->d_objptr->getRefCount()==0){
 	//cerr<<"calling accept_thread->exit()...";
 	//ep->accept_thread->stop();

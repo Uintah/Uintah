@@ -42,6 +42,8 @@ namespace SCIRun {
   class SpChannel {
   public:
 
+    virtual ~SpChannel(){};
+
     /////////////////
     // Methods to establish communication
     virtual void openConnection(const URL& ) = 0;

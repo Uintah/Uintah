@@ -41,6 +41,8 @@ namespace SCIRun {
   public:
 
     SocketSpChannel();
+    SocketSpChannel(const SocketSpChannel& copy);
+    SocketSpChannel& operator=(const SocketSpChannel& copy);
     virtual ~SocketSpChannel();
     void openConnection(const URL& url);
     void closeConnection();
@@ -58,13 +60,13 @@ namespace SCIRun {
     string ep_url;
 
     /////////////
-    // The real message: size, handler_id, ...
-    SocketMessage* msg; 
-
-
-    /////////////
     // The server context object
     void *object;
+
+    bool primary;
+
+    static int cnt_c;
+    static int cnt_o;
   };
 }
 

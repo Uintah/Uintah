@@ -242,18 +242,21 @@ SocketMessage::unmarshalSpChannel(SpChannel* channel){
   delete []buf;
   //cerr<<"UnmarshaSp:"<<sp_sitetag<<endl;
 
-  marshalBuf(&object, sizeof(int));  
+  unmarshalBuf(&object, sizeof(int));  
 
   //if(!isLocal(sp_sitetag))
 
-  chan->openConnection(URL(chan->ep_url));
+  //cerr<<"unmarshalSpChannel::openConnection\n";
+  //chan->openConnection(URL(chan->ep_url));
+
+  //chan->ep_url=ep_url;
 
   //This is only a temporary solution
-  Message *msg=chan->getMessage();
+  /*Message *msg=chan->getMessage();
   msg->createMessage();
   msg->sendMessage(-100);  //call deleteReference
   msg->destroyMessage();
-  
+  */
   ////////////////////////////////
 }
 
@@ -267,6 +270,7 @@ SocketMessage::getLocalObj(){
 void SocketMessage::destroyMessage() {
   if(msg!=NULL) free(msg);
   msg=NULL;
+  delete this;
 }
 
 

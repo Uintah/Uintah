@@ -50,20 +50,29 @@
 using namespace std;
 using namespace SCIRun;
 
+int
+SocketSpChannel::cnt_c(0);
+
+int
+SocketSpChannel::cnt_o(0);
+
 SocketSpChannel::SocketSpChannel() { 
+  //cerr<<"SocketSpChannel"<< ++cnt_c<<"\n";
   sockfd = -1;
-  msg = NULL;
   object=NULL;
+  primary=false;
 }
 
 SocketSpChannel::~SocketSpChannel(){
-  /*  if(sockfd!=-1){
+  //cerr<<"~SocketSpChannel "<<--cnt_c<<"\n";
+  if(primary && sockfd!=-1){
     closeConnection();
-    }*/ 
-  if(msg!=NULL) delete msg;
+  }
 }
 
 void SocketSpChannel::openConnection(const URL& url) {
+  //cerr<<"openConnection cnt_o="<<++cnt_o<<"\n";
+  primary=true;
   if(sockfd!=-1) return;
   ep_url=url.getString();
   struct hostent *he;
@@ -91,34 +100,36 @@ void SocketSpChannel::openConnection(const URL& url) {
 SpChannel* SocketSpChannel::SPFactory(bool deep) {
   //I am not sure about this yet.
   SocketSpChannel *new_sp=new SocketSpChannel(); 
+
+  deep=ep_url.size()!=0; //should remove this after clearify what is deep.
+
   if(deep){
+    //cerr<<"SPFactory::openConnection to URL="<<ep_url<<"\n";
+
     new_sp->openConnection(ep_url);
-    Message *msg=new_sp->getMessage();
-    msg->createMessage();
-    msg->sendMessage(-100);  //call deleteReference
-    msg->destroyMessage();
   }
   else{
     new_sp->ep_url=ep_url;
     new_sp->sockfd=sockfd;
-    msg=NULL; // should I copy msg too?
   }
+  new_sp->primary=deep;
   return new_sp;
 }
 
 void SocketSpChannel::closeConnection() {
-  if(msg==NULL)  msg = new SocketMessage(sockfd);
+  //cerr<<"closeConnection cnt_o="<<--cnt_o<<"\n";
+  Message *msg=getMessage();
   msg->createMessage();
   msg->sendMessage(1);  //call deleteReference
+  msg->destroyMessage(); 
   close(sockfd);
   sockfd=-1;
 }
 
+//new message is created and user should call destroyMessage to delete it.
 Message* SocketSpChannel::getMessage() {
-  if (msg == NULL){
-    msg = new SocketMessage(sockfd);
-    msg->setSocketSp(this);
-  }
+  SocketMessage* msg = new SocketMessage(sockfd);
+  msg->setSocketSp(this);
   return msg;
 }
 
