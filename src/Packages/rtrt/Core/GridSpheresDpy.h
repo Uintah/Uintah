@@ -41,6 +41,7 @@ class GridSpheresDpy : public Runnable {
   float* new_color_end;
   int ndata;
   int colordata, newcolordata;
+  int shade_method, new_shade_method;
   char* in_file;
   
   void compute_hist(GLuint fid);
