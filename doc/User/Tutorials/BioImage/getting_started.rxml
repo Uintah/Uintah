@@ -112,10 +112,10 @@ ulimit -n unlimited
 	  launching.</phrase>
 	</textobject>
 	<imageobject>
-	  <imagedata fileref="Figures/gui-launch.gif" format="GIF"/>
+	  <imagedata fileref="Figures/gui-launch.gif" align="center" format="GIF"/>
 	</imageobject>
 	<imageobject>
-	  <imagedata fileref="Figures/gui-launch.eps" format="EPS"/>
+	  <imagedata fileref="Figures/gui-launch.eps" align="center" format="EPS"/>
 	</imageobject>
       </mediaobject>
     </figure>

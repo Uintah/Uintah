@@ -51,7 +51,8 @@ DEALINGS IN THE SOFTWARE.
 	<title>Anatomy of a Filter UI</title>
 	<para>
 	  Each filter UI contains four main components: the visibility icon, label
-	  insert bar, and close button.  In addition to these four things, 
+	  insert bar, and close button as highlighted in 
+	  <xref linkend="fig.anatomy-filter"/>.  In addition to these four things, 
 	  each filter contains a unique interface representing its particular parameters.
 	</para>
 	<para>
@@ -75,15 +76,45 @@ DEALINGS IN THE SOFTWARE.
 	  The red close button will delete the filter from the pipeline.  See
 	  the section Deleting Filters for more information.
 	</para>
+	<figure id="fig.anatomy-filter">
+	  <title>Each filter UI contains four main components: the visibility icon, label insert bar, and close button.</title>
+	  <mediaobject>
+	    <textobject>
+	      <phrase>Anatomy of a filter.</phrase>
+	    </textobject>
+	    <imageobject>
+	      <imagedata fileref="Figures/anatomy-filter.jpg" align="center" format="JPG"/>
+	    </imageobject>
+	    <imageobject>
+	      <imagedata fileref="Figures/anatomy-filter.eps" align="center" format="EPS"/>
+	    </imageobject>
+	  </mediaobject>
+	</figure>
       </section>
       <section>
 	<title>Adding and Inserting Filters</title>
 	<para>
 	  There are two ways to add a new filter to the pipeline.  The first approach
 	  is to click the button for the corresponding filter.  These buttons are 
-	  located directly above the history section. When clicking one of these
+	  located directly above the history section as shown in 
+	  <xref linkend="fig.filter-buttons"/>. When clicking one of these
 	  buttons, the filter will always be added to the end of the pipeline.
 	</para>
+
+	<figure id="fig.filter-buttons">
+	  <title>Filter butttons available in BioImage.</title>
+	  <mediaobject>
+	    <textobject>
+	      <phrase>Filter buttons.</phrase>
+	    </textobject>
+	    <imageobject>
+	      <imagedata fileref="Figures/filter-buttons.jpg" align="center" format="JPG"/>
+	    </imageobject>
+	    <imageobject>
+	      <imagedata fileref="Figures/filter-butons.eps" align="center" format="EPS"/>
+	    </imageobject>
+	  </mediaobject>
+	</figure>
 	<para>
 	  There is another approach to adding filters to the pipeline which allows
 	  the user to insert a filter between two existing filters.  One of these
