@@ -28,6 +28,8 @@ class ProcessorGroup;
  class ArchesLabel;
 
 using namespace SCIRun;
+class BoundaryCondition;
+
 
 /**************************************
 CLASS
@@ -57,14 +59,16 @@ WARNING
    none
 
 ****************************************/
-class Filter{
+class Filter {
 
 public:
 
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
       // Construct an instance of a Filter.
-      Filter(const ArchesLabel* label,const ProcessorGroup* myworld);
+      Filter(const ArchesLabel* label,
+	     BoundaryCondition* bndryCondition,
+	     const ProcessorGroup* myworld);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -93,7 +97,7 @@ public:
       void matrixCreate(const PatchSet* allpatches,
 			const PatchSubset* mypatches);
       void setFilterMatrix(const ProcessorGroup* pc, const Patch* patch,
-			   CellInformation* cellinfo);
+			   CellInformation* cellinfo, constCCVariable<int>& cellType);
       bool applyFilter(const ProcessorGroup* pc, const Patch* patch,
 		       Array3<double>& var, Array3<double>& filterVar);
       bool applyFilter(const ProcessorGroup* pc, const Patch* patch,
@@ -105,6 +109,8 @@ private:
    const ProcessorGroup* d_myworld;
    const PatchSet* d_perproc_patches;
    const ArchesLabel* d_lab;
+   BoundaryCondition* d_boundaryCondition;
+
    bool d_matrixInitialize;
 #ifdef HAVE_PETSC
    map<const Patch*, int> d_petscGlobalStart;

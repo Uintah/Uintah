@@ -165,13 +165,13 @@ Arches::problemSetup(const ProblemSpecP& params,
 
 #ifdef PetscFilter
 #ifdef FILTER_DRHODT
-    d_filter = scinew Filter(d_lab, d_myworld);
+    d_filter = scinew Filter(d_lab, d_boundaryCondition, d_myworld);
     d_filter->problemSetup(db);
     d_turbModel->setFilter(d_filter);
 #else
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)||
       dynamic_cast<const DynamicProcedure*>(d_turbModel)) {
-    d_filter = scinew Filter(d_lab, d_myworld);
+    d_filter = scinew Filter(d_lab, d_boundaryCondition, d_myworld);
     d_filter->problemSetup(db);
     d_turbModel->setFilter(d_filter);
   }
