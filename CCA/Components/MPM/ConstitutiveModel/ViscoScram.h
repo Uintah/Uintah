@@ -6,17 +6,19 @@
 //    Features:
 //      Usage:
 
-
-
 #ifndef __VISCROSCRAM_CONSTITUTIVE_MODEL_H__
 #define __VISCOSCRAM_CONSTITUTIVE_MODEL_H__
 
-#include <math.h>
-#include "ConstitutiveModel.h"	
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+
+#include <math.h>
 #include <vector>
 
 namespace Uintah {
+
       class ViscoScram : public ConstitutiveModel {
       private:
          // Create datatype for storing model parameters
@@ -45,7 +47,7 @@ namespace Uintah {
 	    double CrackRadius;
 	 };
       private:
-         friend const TypeDescription* fun_getTypeDescription(CMData*);
+         friend const Uintah::TypeDescription* fun_getTypeDescription(ViscoScram::StateData*);
 
          CMData d_initialData;
          // Prevent copying of this class
@@ -120,6 +122,9 @@ namespace Uintah {
          const VarLabel* pRandLabel_preReloc;
 
       };
+
+const Uintah::TypeDescription* fun_getTypeDescription(ViscoScram::StateData*);
+
 } // End namespace Uintah
       
 namespace SCIRun {
