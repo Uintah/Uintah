@@ -51,6 +51,7 @@ class LoadBalancer;
 
       virtual void doRestart(std::string restartFromDir, int timestep,
 		     bool fromScratch, bool removeOldDir);
+      virtual void doTimestepClamping() { d_timestepClamping = true; }
       virtual void run();
 
    private:
@@ -85,6 +86,10 @@ class LoadBalancer;
       // If !d_restartFromScratch, then this indicates whether to move
       // or copy the old timesteps.
       bool d_restartRemoveOldDir;
+
+      // this indicates whether to adjust the delt so it lines up with
+      // the output time
+      bool d_timestepClamping;
    };
 
 } // End namespace Uintah
