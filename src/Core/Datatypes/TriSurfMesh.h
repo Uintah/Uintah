@@ -52,6 +52,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MusilRNG.h>
+#include <Core/Containers/StackVector.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -73,7 +74,7 @@ public:
     typedef NodeIndex<under_type>       index_type;
     typedef NodeIterator<under_type>    iterator;
     typedef NodeIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef StackVector<index_type, 4>  array_type;  // Extra for IsoClip quad
   };
 
   struct Edge {

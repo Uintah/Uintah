@@ -560,7 +560,8 @@ HexVolMesh::get_neighbors(Cell::array_type &array, Cell::index_type idx) const
 }
 
 void
-HexVolMesh::get_neighbors(Node::array_type &array, Node::index_type idx) const
+HexVolMesh::get_neighbors(vector<Node::index_type> &array,
+			  Node::index_type idx) const
 {
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
 	    "Must call synchronize NODE_NEIGHBORS_E on HexVolMesh first");

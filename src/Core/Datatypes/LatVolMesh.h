@@ -46,6 +46,7 @@
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/Transform.h>
+#include <Core/Containers/StackVector.h>
 
 namespace SCIRun {
 
@@ -371,11 +372,11 @@ public:
 
   //! Index and Iterator types required for Mesh Concept.
   struct Node {
-    typedef NodeIndex          index_type;
-    typedef NodeIter           iterator;
-    typedef NodeSize           size_type;
-    typedef vector<index_type> array_type;
-    typedef RangeNodeIter      range_iter;
+    typedef NodeIndex                  index_type;
+    typedef NodeIter                   iterator;
+    typedef NodeSize                   size_type;
+    typedef StackVector<index_type, 8> array_type;
+    typedef RangeNodeIter              range_iter;
   };			
   			
   struct Edge {		

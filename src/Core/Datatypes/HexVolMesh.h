@@ -48,6 +48,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Datatypes/LatVolField.h>
+#include <Core/Containers/StackVector.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
@@ -66,7 +67,7 @@ public:
     typedef NodeIndex<under_type>       index_type;
     typedef NodeIterator<under_type>    iterator;
     typedef NodeIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef StackVector<index_type, 8>  array_type;
   };					
 					
   struct Edge {				
@@ -136,7 +137,8 @@ public:
 
   bool get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
 		    Face::index_type idx) const;
-  void get_neighbors(Node::array_type &array, Node::index_type idx) const;
+  void get_neighbors(vector<Node::index_type> &array,
+		     Node::index_type idx) const;
   void get_neighbors(Cell::array_type &array, Cell::index_type idx) const;
 
   //! Get the center point of an element.
@@ -187,7 +189,7 @@ public:
 
   unsigned int get_valence(Node::index_type idx) const
   {
-    Node::array_type nodes;
+    vector<Node::index_type> nodes;
     get_neighbors(nodes, idx);
     return nodes.size();
   }
