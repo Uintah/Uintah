@@ -23,6 +23,7 @@
 
 <!ELEMENT call (#PCDATA)>
   <!ATTLIST call const (yes|no) "no">
+  <!ATTLIST call value (on|off) "off">
 
 <!ELEMENT name (#PCDATA)>
 
@@ -33,7 +34,7 @@
 
 <!ELEMENT parameters (param*)>
 
-<!ELEMENT param (name, type, call)>
+<!ELEMENT param (name, type, call+)>
 
 <!ELEMENT type (#PCDATA)>
 
