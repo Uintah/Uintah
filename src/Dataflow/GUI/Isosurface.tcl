@@ -40,6 +40,9 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-extract-from-new-field 0
 	set $this-algorithm 0
 
+	global $this-type ""
+	global $this-gen 0
+
 	# SAGE vars
 	global $this-visibility $this-value $this-scan
 	global $this-bbox
@@ -87,17 +90,25 @@ itcl_class SCIRun_Visualization_Isosurface {
 	    -command "$this change_isoval"
 
 	bind $w.f.isoval <ButtonRelease> "$this set-isoval"
-	pack $w.f.isoval -fill x
+	
+	button $w.f.extract -text "Extract" -command "$this-c needexecute"
+	pack $w.f.isoval  -fill x
+	pack $w.f.extract
 
 	#  Info
+	
+	global $this-type
+	global $this-gen
 
 	iwidgets::Labeledframe $w.f.info -labelpos nw -labeltext "Info"
 	set info [$w.f.info childsite]
 	
-	label $info.type -text type 
-	label $info.gen -text generation
+	label $info.type_label -text "File Type: " 
+	label $info.type -text [set $this-type]
+	label $info.gen_label -text "Generation: "
+	label $info.gen -text [set $this-gen]
 
-	pack $info.type $info.gen -side left
+	pack $info.type_label $info.type $info.gen_label $info.gen -side left
 	pack $w.f.info -side top -anchor w
 
 	#  Options
@@ -139,18 +150,18 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set alg [$mf.tabs add -label "NOISE"  -command "$this select-alg 1"]
 	set alg [$mf.tabs add -label "SAGE"  -command "$this select-alg 2"]
 
-	iwidgets::checkbox $alg.prune -labeltext "Prune"
-	$alg.prune add value  -text "Value"  -variable $this-value
-	$alg.prune add bbox   -text "BBox"   -variable $this-bbox
-	$alg.prune add scan   -text "Scan"   -variable $this-scan
-	$alg.prune add points -text "Points" -variable $this-reduce
+# 	iwidgets::checkbox $alg.prune -labeltext "Prune"
+# 	$alg.prune add value  -text "Value"  -variable $this-value
+# 	$alg.prune add bbox   -text "BBox"   -variable $this-bbox
+# 	$alg.prune add scan   -text "Scan"   -variable $this-scan
+# 	$alg.prune add points -text "Points" -variable $this-reduce
 
-	iwidgets::checkbox $alg.opt -labeltext "Options"
-	$alg.opt add poll   -text "Poll"   -variable $this-poll
-	$alg.opt add size   -text "Size"   -variable $this-min_size
- 	$alg.opt add all    -text "All"    -variable $this-all
+# 	iwidgets::checkbox $alg.opt -labeltext "Options"
+# 	$alg.opt add poll   -text "Poll"   -variable $this-poll
+# 	$alg.opt add size   -text "Size"   -variable $this-min_size
+#  	$alg.opt add all    -text "All"    -variable $this-all
 
-	pack $alg.prune $alg.opt -side left -anchor n
+# 	pack $alg.prune $alg.opt -side left -anchor n
 	
 	set alg [$mf.tabs add -label "Opt"]
 
@@ -221,7 +232,6 @@ itcl_class SCIRun_Visualization_Isosurface {
 	
 	if { [set $this-algorithm] != $alg } {
 	    set $this-algorithm $alg
-	    puts "select algorith $alg"
 	    if { [set $this-continuous] == 1.0 } {
 		eval "$this-c needexecute"
 	    }
@@ -230,29 +240,37 @@ itcl_class SCIRun_Visualization_Isosurface {
 
     method update-type { w } {
 	global $w
-	
+	global $this-continuous
+
 	set type [$w get]
+	puts "update to $type current is [set $this-continuous]"
 	if { $type == "Auto" } {
 	    set $this-continuous 1
 	} else {
-	    set $this-continuos 0
+	    set $this-continuous 0
 	}
     }
 
 
     method set_info { type generation } {
-	set w .ui[modname]    
+	global $this-type
+	global $this-gen
 
-	set info [$w.f.info childsite]
-	
-	$info.type configure -text $type 
-	$info.gen  configure -text $generation
+	set $this-type $type
+	set $this-gen $generation
+
+	set w .ui[modname]    
+	if [ expr [winfo exists $w] ] {
+	    set info [$w.f.info childsite]
+	    
+	    $info.type configure -text $type 
+	    $info.gen  configure -text $generation
+	}
     }
 
     method set_minmax {min max} {
 	set w .ui[modname]
 
-	puts "set minmax $min $max"
 	global $this-isoval-min $this-isoval-max
 	set $this-isoval-min $min
 	set $this-isoval-max $max
