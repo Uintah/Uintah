@@ -310,8 +310,12 @@ itcl_class Module {
 
 # This menu item was added by Mohamed Dekhil for the CSAFE project
 	$p.menu add command -label "Notes" -command "moduleNotes $name [modname]"
-	$p.menu add command -label "Group Selected" -command "makeMacroModule\
-		$canvas $minicanvas [modname]"
+
+# DMW: commenting this out for now, since MacroModules can't yet be saved as
+#   part of a net
+#	$p.menu add command -label "Group Selected" -command "makeMacroModule\
+#		$canvas $minicanvas [modname]"
+
 	$p.menu add command -label "Destroy Selected" \
 		-command "moduleDestroySelected $canvas $minicanvas $this"
 	$p.menu add command -label "Destroy" \
@@ -1006,6 +1010,7 @@ proc startIPortConnection {imodid iwhich x y} {
     set potential_connection ""
 }
 
+#"
 
 
 proc startOPortConnection {omodid owhich x y} {
@@ -1107,7 +1112,7 @@ proc startOPortConnection {omodid owhich x y} {
     set potential_connection ""
 }
 
-
+#"
 
 
 
@@ -1139,6 +1144,7 @@ proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
     $netedit_mini_canvas lower $connid
 }
 
+#"
 
 proc destroyConnection {connid omodid imodid} {
     global connection_list
