@@ -102,7 +102,7 @@ void ReclassifyInteriorTets::execute(){
     for (i=0; i<4; i++) {
       mesh->get_center(p, nodes[i]);
       if ((p-centroid).length() > threshold) {
-	tv_new->fdata()[*cb]=tag;
+	tv_new->fdata()[*cb]=Vector(tag,tag,tag);
       }
     }
     ++cb;
