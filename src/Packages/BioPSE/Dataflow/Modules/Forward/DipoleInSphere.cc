@@ -1,7 +1,6 @@
-
 /*
- *  DipoleInSphere: User gives us discretization of a surface and a dipole,
- *          we compute potentials
+ *  DipoleInSphere: Calculation of potential on 
+ *                  conducting sphere due to the dipole sources
  *
  *  Written by:
  *   David Weinstein
@@ -9,19 +8,26 @@
  *   University of Utah
  *   October 1994
  *
- *  Copyright (C) 1994 SCI Group
+ *  Modified by:
+ *   Samsonov Alexei
+ *   Department of Computer Science
+ *   University of Utah
+ *   March 2001
+ *
+ *  Copyright (C) 1994, 2001 SCI Group
  */
 
-#include <Packages/DaveW/ThirdParty/NumRec/plgndr.h>
 #include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/SurfacePort.h>
 #include <Core/Containers/String.h>
 #include <Core/Containers/Array1.h>
-#include <Core/Datatypes/SurfTree.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Persistent/Pstreams.h>
 #include <Core/GuiInterface/GuiVar.h>
+
 
 #include <iostream>
 using std::cerr;
@@ -31,131 +37,163 @@ using std::cerr;
 namespace BioPSE {
 using namespace SCIRun;
 
+typedef LockingHandle<TriSurf<double> > TriSurfHandle;
+typedef LockingHandle<TriSurfMesh > TriSurfMeshHandle;
+
 class DipoleInSphere : public Module {
-    SurfaceIPort* isurf;
-    MatrixIPort* imat;
-    SurfaceOPort* osurf;
-    GuiString methodTCL;
+  
+  //! Private Data
+
+  //! input ports
+  MatrixIPort* iportDip_;
+  FieldIPort*  iportGeom_;
+
+  //! output port
+  FieldOPort*  oportPot_;
+
+  //! Private Methods
+  // -- fills in the surface with potentials for single sphere uniform model
+  void fillOneSpherePotentials(DenseMatrix&, TriSurfHandle);
+
 public:
-    DipoleInSphere(const clString& id);
-    void compute_three_sphere_potentials(const Array1<double>&, TriSurface *);
-    void compute_one_sphere_potentials(const Array1<double>&, TriSurface *ts);
-    void compute_infinite_medium_potentials(const Array1<double>& , 
-					    TriSurface *ts);
-    virtual ~DipoleInSphere();
-    virtual void execute();
+  
+  DipoleInSphere(const clString& id);  
+  virtual ~DipoleInSphere();
+  virtual void execute();
 };
 
 extern "C" Module* make_DipoleInSphere(const clString& id)
 {
-    return new DipoleInSphere(id);
+  return new DipoleInSphere(id);
 }
 
 DipoleInSphere::DipoleInSphere(const clString& id)
-: Module("DipoleInSphere", id, Filter), methodTCL("methodTCL", id, this)
+: Module("DipoleInSphere", id, Filter)
 {
-    isurf=new SurfaceIPort(this, "SurfIn", SurfaceIPort::Atomic);
-    add_iport(isurf);
-    imat=new MatrixIPort(this, "Dipoles", MatrixIPort::Atomic);
-    add_iport(imat);
-
-    // Create the output port
-    osurf=new SurfaceOPort(this, "SurfOut", SurfaceIPort::Atomic);
-    add_oport(osurf);
+  // Create the input ports
+  iportGeom_ = new FieldIPort(this, "Sphere", FieldIPort::Atomic);
+  add_iport(iportGeom_);
+  
+  iportDip_ = new MatrixIPort(this, "Dipoles", MatrixIPort::Atomic);
+  add_iport(iportDip_);
+  
+  // Create the output port
+  oportPot_ = new FieldOPort(this, "SphereWithPots", FieldIPort::Atomic);
+  add_oport(oportPot_);
 }
 
 DipoleInSphere::~DipoleInSphere()
 {
 }
 
-void DipoleInSphere::compute_one_sphere_potentials(const Array1<double>& dip, 
-						   TriSurface *ts) {
-    double gamma=1;
-    double R=1;
-    double E[3];
-    for (int i=0;i<ts->points.size();i++) {
-	double V = 0.0;
-	E[0] = ts->points[i].x();
-	E[1] = ts->points[i].y();
-	E[2] = ts->points[i].z();
-
-	double rho = sqrt( pow((E[0] - dip[0]),2) + pow((E[1] - dip[1]),2) + pow((E[2] - dip[2]),2));
-	double S = E[0]*dip[0] + E[1]*dip[1] + E[2]*dip[2];
-
-	for(int k=0;k<3;k++) {
-	    double F[3];
-	    F[k] = (1/(4*M_PI*gamma*rho)) * 
-		(2*(E[k]-dip[k])/pow(rho,2) +
-		 (1/pow(R,2)) * (E[k] + (E[k]*S/R - R*dip[k])/(rho+R-S/R)));
-	    V += F[k]*dip[k+3];
-	}
-	ts->bcVal[i]=V;
-//	cerr << "Point: "<< ts->points[i]<<"  val: "<<V<<"\n";
-    }
-}
-
-void DipoleInSphere::compute_infinite_medium_potentials(const Array1<double>& 
-							dip, TriSurface *ts) {
-}
-
-void DipoleInSphere::compute_three_sphere_potentials(const Array1<double>& 
-						      dip, TriSurface *ts) {
-}
-
 void DipoleInSphere::execute() {
-    update_state(NeedData);
-
-    SurfaceHandle sh;
-    if (!isurf->get(sh))
-	return;
-    if (!sh.get_rep()) {
-	cerr << "Error: empty surftree\n";
-	return;
-    }
-    TriSurface *ts=dynamic_cast<TriSurface *> (sh.get_rep());
-    if (!ts) {
-	cerr << "Error: surface isn't a trisurface\n";
-	return;
-    }
+  
+  update_state(NeedData);
+  
+  FieldHandle field_handle;
+  
+  if (!iportGeom_->get(field_handle)){
+    msgStream_ << "Cann't get data" << endl;
+    return;
+  }
+  
+  if (!field_handle.get_rep()) {
+    msgStream_ << "Error: empty surface" << endl;
+    return;
+  }
+ 
+  if (field_handle->get_type_name(0) == "TriSurf" && field_handle->get_type_name(1) == "double"){
     
-    MatrixHandle mh;
-    if (!imat->get(mh))
-	return;
-    if (!mh.get_rep()) {
-	cerr << "Error: empty matrix\n";
-	return;
-    }
-    if (mh->ncols() != 6) {
-	cerr << "Error - dipoles must have 6 parameters.\n";
-	return;
-    }
     
-    update_state(JustStarted);
+    TriSurf<double>* pSurf = dynamic_cast<TriSurf<double>*>(field_handle.get_rep());
+    TriSurfMeshHandle hMesh = new TriSurfMesh(*(pSurf->get_typed_mesh().get_rep()));
+    TriSurfHandle hNewSurf = new TriSurf<double>(hMesh, Field::NODE);
+    
+    MatrixHandle matrix_handle;
+    
+    if (iportDip_->get(matrix_handle) 
+	&& matrix_handle.get_rep()){
+      
+      if (matrix_handle->ncols()!=6){
+	msgStream_ << "Error: dipoles must have 6 parameters" << endl;
+	return;
+      }
+      
+      DenseMatrix* mtrx = matrix_handle->getDense();
+      
+      if (!mtrx){
+	msgStream_ << "Error: Dipoles should be defined in DenseMatrix" << endl;
+	return;
+      }
+      
+      update_state(JustStarted);
+      fillOneSpherePotentials(*mtrx, hNewSurf);
+      oportPot_->send(FieldHandle(hNewSurf.get_rep()));
+    }
+    else {
+      msgStream_ << "No dipole info found in dipole matrix supplied" << endl;
+    }
+   
+  }
+  else {
+    msgStream_ << "Error: the supplied field is not of type TriSurf<double>" << endl;
+    return;
+  }
+}
 
-    TriSurface *newTS = new TriSurface(*ts);
+void DipoleInSphere::fillOneSpherePotentials(DenseMatrix& dips, TriSurfHandle hSurf) {
+  
+  TriSurfMeshHandle hMesh = hSurf->get_typed_mesh();
+  vector<double>& data = hSurf->fdata();
+  data.resize(*(hMesh->node_end()), 0);
+  BBox bbox = hMesh->get_bounding_box();
+  
+  if (!bbox.valid()){
+    msgStream_ << "No valid mesh" << endl;
+    return;
+  }
 
-    newTS->bcVal.resize(newTS->points.size());
-    newTS->bcIdx.resize(newTS->points.size());
-    newTS->bcVal.initialize(0);
-    int i;
-    clString m=methodTCL.get();
-    for (i=0; i<newTS->bcIdx.size(); i++) newTS->bcIdx[i]=i;
-    for (i=0; i<mh->nrows(); i++) {
-	Array1<double> dipole(6);
-	for (int j=0; j<6; j++) dipole[j]=(*(mh.get_rep()))[i][j];
-	// compute values here
-	if (m=="OneSphere") {
-	    compute_one_sphere_potentials(dipole, newTS);
-	} else if (m=="InfiniteMedium") {
-	    compute_infinite_medium_potentials(dipole, newTS);
-	} else if (m=="ThreeSpheres") {
-	    compute_three_sphere_potentials(dipole, newTS);
-	} else {
-	    cerr << "Error - I don't know method "<< m <<"\n";
-	    return;
+  double R = 0.5*bbox.longest_edge();
+  
+  double gamma=1;
+  double E[3];
+  msgStream_ << "Radius= " << R << endl;
+  Point p;
+
+  if (hMesh->node_begin()!=hMesh->node_end()){ // don't want to iterate if no dipoles
+    
+    TriSurfMesh::node_iterator niter = hMesh->node_begin();
+    
+    // -- for every point
+    while(niter!=hMesh->node_end()) {
+      
+      hMesh->get_point(p, *niter);
+      
+      // -- for every dipole
+      int id;
+      for (id = 0; id < dips.nrows(); ++id){
+	
+	double V = 0.0;
+	E[0] = p.x();
+	E[1] = p.y();
+	E[2] = p.z();
+	
+	double rho = sqrt( pow((E[0] - dips[id][0]),2) + pow((E[1] - dips[id][1]),2) + pow((E[2] - dips[id][2]),2));
+	double S = E[0]*dips[id][0] + E[1]*dips[id][1] + E[2]*dips[id][2];
+	
+	for(int k=0;k<3;k++) {
+	  double F[3];
+	  F[k] = (1/(4*M_PI*gamma*rho)) * (2*(E[k]-dips[id][k])/pow(rho,2) +
+					   (1/pow(R,2)) * (E[k] + (E[k]*S/R - R*dips[id][k])/(rho+R-S/R)));
+	  V += F[k]*dips[id][k+3];
 	}
+	data[*niter] += V;
+	msgStream_ << "Point: " << p << ", pot = " << V << endl;
+      }
+      
+      ++niter;
     }
-    SurfaceHandle sh2(newTS);
-    osurf->send(sh2);
-}    
+  }    
+}
+
 } // End namespace BioPSE
