@@ -2251,6 +2251,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 
   const bool box_p = (display_mode == "Boxes");
   const bool sphere_p = (display_mode == "Ellipsoids");
+  const bool quadric_p = (display_mode == "Quadrics");
   const bool cbox_p = (display_mode == "Colored Boxes");
 
   GeomHandle glyph;
@@ -2263,6 +2264,12 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   {
     glyph = scinew GeomSphere(Point(0.0, 0.0, 0.0), 1.0,
 			      resolution, resolution);
+  }
+  else if (quadric_p)
+  {
+    glyph = scinew GeomCappedCylinder(Point(0.0, 0.0, -1.0),
+				      Point(0.0, 0.0, 1.0),
+				      1.0, resolution, 1, 1);
   }
   else // cbox_p, default
   {
