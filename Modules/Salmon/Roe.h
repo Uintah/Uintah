@@ -26,9 +26,10 @@ class DBContext;
 class GeomObj;
 class GeomPick;
 class Light;
-class Salmon;
-class Vector;
 class Renderer;
+class Salmon;
+class SceneItem;
+class Vector;
 
 class TCLView : public TCLvar {
     TCLPoint eyep;
@@ -76,8 +77,8 @@ public:
     Roe(const Roe&);
     ~Roe();
 
-    void itemAdded(GeomObj*, const clString&);
-    void itemDeleted(GeomObj*);
+    void itemAdded(SceneItem*);
+    void itemDeleted(SceneItem*);
     void rotate(double angle, Vector v, Point p);
     void rotate_obj(double angle, const Vector& v, const Point& p);
     void translate(Vector v);
@@ -99,7 +100,7 @@ public:
     void get_bounds(BBox&);
 
     // Which of the objects do we draw?
-    HashTable<clString, int> visible;
+    HashTable<clString, TCLvarint*> visible;
 
     // Which of the lights are on?
     HashTable<clString, int> light_on;
