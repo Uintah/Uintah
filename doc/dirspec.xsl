@@ -34,43 +34,55 @@
 <center>
 <img usemap="#head-links" height="71" width="600" border="0">
 <xsl:attribute name="src">
-<xsl:value-of select="concat($swidk,'/doc/images/research_menuheader.gif')" />
+<xsl:value-of select="concat($swidk,'/doc/images/research_menuheader.jpg')" />
 </xsl:attribute>
 </img>
 </center>
 <map name="head-links">
-        <area shape="rect" coords="491,15,567,32" href="http://www.sci.utah.edu/research/research.html"/>
-        <area shape="rect" coords="31,9,95,36" href="http://www.sci.utah.edu"/>
+	<area href="http://www.sci.utah.edu" shape="rect" coords="7,4,171,33" alt="SCI Home" />
+	<area href="http://www.sci.utah.edu/software" shape="rect" coords="490,10,586,32" alt="Software" />
+
+	<area shape="rect" coords="340,10,480,32" alt="Documentation">
+        <xsl:attribute name="href">
+        <xsl:value-of select="concat($swidk,'/doc/index.html')" />
+        </xsl:attribute>
+        </area>
  
-        <area coords="0,45,150,70" shape="rect" >
+
+        <area coords="0,41,156,64" shape="rect" alt="Installation Guide">
         <xsl:attribute name="href">
         <xsl:value-of select="concat($swidk,'/doc/InstallGuide/installguide.html')" />
         </xsl:attribute>
         </area>
 
  
-        <area coords="150,45,300,70" shape="rect" > 
+        <area coords="157,41,256,64" shape="rect" alt="User's Guide"> 
         <xsl:attribute name="href">
         <xsl:value-of select="concat($swidk,'/doc/UserGuide/userguide.html')" />
         </xsl:attribute>
         </area>
 
-        <area coords="300,45,450,70" shape="rect" >
+        <area coords="257,41,397,64" shape="rect" alt="Developer's Guide">
         <xsl:attribute name="href">
         <xsl:value-of select="concat($swidk,'/doc/DeveloperGuide/devguide.html')" />
         </xsl:attribute>
         </area>
  
-        <area coords="450,45,600,70" shape="rect" >  
+        <area coords="398,41,535,64" shape="rect" alt="Reference Guide">  
         <xsl:attribute name="href">
         <xsl:value-of select="concat($swidk,'/doc/ReferenceGuide/refguide.html')" />
+        </xsl:attribute>
+        </area>
+
+        <area coords="536,41,600,64" shape="rect" alt="FAQ">  
+        <xsl:attribute name="href">
+        <xsl:value-of select="concat($swidk,'/doc/FAQ/faq.html')" />
         </xsl:attribute>
         </area>
 </map> 
 
 <!-- *************************************************************** -->
 <!-- *************************************************************** -->
-
 
 <p class="title">
 <xsl:value-of select="@name" />
