@@ -21,19 +21,21 @@ while ($numHits != 1 && $counter < 15)
   set numHits = `echo $buildDir|grep -c SCIRun`
 end  
 
-set componentDir = $buildDir/src/Packages/Uintah/CCA/Components
+set componentDir = $buildDir/src/Packages/Uintah/Core/Labels
 
 #__________________________________
 # set which label files to look at
 if($component == "ice" ) then
-  set files = /ICE/ICELabel.cc
+  set files = ICELabel.cc
 else if( $component == "mpmice" ) then
-  set files = (/ICE/ICELabel.cc /MPMICE/MPMICELabel.cc /MPM/MPMLabel.cc)
+  set files = (ICELabel.cc MPMICELabel.cc MPMLabel.cc)
 else if( $component == "mpm" ) then
-  set files = ( /MPM/MPMLabel.cc)
+  set files = ( MPMLabel.cc)
 else if( $component == "arches" ) then
+  set componentDir = $buildDir/src/Packages/Uintah/CCA/Components
   set files = ( /Arches/ArchesLabel.cc)
 else if( $component == "mpmarches" ) then
+  set componentDir = $buildDir/src/Packages/Uintah/CCA/Components
   set files = ( /Arches/ArchesLabel.cc /MPMArches/MPMArchesLabel.cc)
 else 
   echo "\ncomponent $component not found, now exiting\n"
@@ -44,7 +46,7 @@ endif
 # find all the varLabels
 set labels = ""
 foreach file ( $files[*]:q ) 
-  echo "\nI'm examing $file \n "
+  echo "-----------------I'm examing $file"
   set labelFile = $componentDir/$file
   grep "create.*" $labelFile| cut -d\" -f2 |grep -v destroy |sort
 end
