@@ -576,3 +576,10 @@ void TableTest::scheduleComputeStableTimestep(SchedulerP&,
 {
   // None necessary...
 }
+//______________________________________________________________________
+//
+void TableTest::scheduleErrorEstimate(const LevelP&,
+                                       SchedulerP&)
+{
+  // Not implemented yet
+}

@@ -310,3 +310,10 @@ void Mixing::computeSpecificHeat(CCVariable<double>&,
                                  const int)
 {
 }
+//______________________________________________________________________
+//
+void Mixing::scheduleErrorEstimate(const LevelP&,
+                                   SchedulerP&)
+{
+  // Not implemented yet
+}

@@ -456,3 +456,10 @@ void Mixing3::computeSpecificHeat(CCVariable<double>&,
 {
   //do nothing
 }
+//______________________________________________________________________
+//
+void Mixing3::scheduleErrorEstimate(const LevelP&,
+                                         SchedulerP&)
+{
+  // Not implemented yet
+}

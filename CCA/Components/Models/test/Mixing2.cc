@@ -435,4 +435,11 @@ void Mixing2::scheduleModifyThermoTransportProperties(SchedulerP&,
 {
   // do nothing      
 }
+//______________________________________________________________________
+//
+void Mixing2::scheduleErrorEstimate(const LevelP&,
+                                    SchedulerP&)
+{
+  // Not implemented yet
+}
 

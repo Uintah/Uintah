@@ -290,3 +290,10 @@ void PinTo300Test::scheduleComputeStableTimestep(SchedulerP&,
 {
   // None necessary...
 }
+//______________________________________________________________________
+//
+void PinTo300Test::scheduleErrorEstimate(const LevelP&,
+                                         SchedulerP&)
+{
+  // Not implemented yet
+}
