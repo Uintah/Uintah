@@ -931,7 +931,7 @@ void OpenGL::redraw_frame()
 	<< " seconds\" \"" << drawinfo->polycount/timer.time()
 	<< " polygons/second\"" << " \"" << fps_whole << "."
 	<< fps_tenths << " frames/sec\"" << '\0';
-    cerr <<"updatePerf: <" << str.str() << ">\n";	
+//    cerr <<"updatePerf: <" << str.str() << ">\n";	
     if (roe->doingMovie) {
 //      cerr << "Saving a movie!\n";
       unsigned char movie[10];
@@ -1741,6 +1741,9 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.16  1999/11/19 05:44:14  dmw
+// commented out performance reporting so we dont get so many printouts from Salmon
+//
 // Revision 1.15  1999/11/16 23:22:46  yarden
 // more int to GLenum fixes.
 //
