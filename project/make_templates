@@ -24,7 +24,7 @@ rm -f $m
 set tmpls=`cat tmpl_cclist`
 echo "" > $m
 echo "SRCS = \\" >> $m
-awk '/^x.cc/ {printf("\t%s\n",$0);next;} {printf("\t%s \\\n", $0);}' < tmpl_cclist >> $m
+awk '/^x.c/ {printf("\t%s\n",$0);next;} {printf("\t%s \\\n", $0);}' < tmpl_cclist >> $m
 echo "" >> $m
 echo "" >> $m
 echo "OBJS = \\" >> $m
@@ -50,4 +50,4 @@ echo "" >> $m
 
 
 built:
-(cd $1 && make)
+(cd $1 && make -d)

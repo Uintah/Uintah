@@ -538,7 +538,9 @@ XQColor_named_colors.insert("magenta4", RGBColor(0.545098,0,0.545098));
 XQColor_named_colors.insert("orchid1", RGBColor(1,0.513725,0.980392));
 XQColor_named_colors.insert("orchid2", RGBColor(0.933333,0.478431,0.913725));
 XQColor_named_colors.insert("orchid3", RGBColor(0.803922,0.411765,0.788235));
+#endif
 XQColor_named_colors.insert("orchid4", RGBColor(0.545098,0.278431,0.537255));
+#if 0
 XQColor_named_colors.insert("plum1", RGBColor(1,0.733333,1));
 XQColor_named_colors.insert("plum2", RGBColor(0.933333,0.682353,0.933333));
 XQColor_named_colors.insert("plum3", RGBColor(0.803922,0.588235,0.803922));

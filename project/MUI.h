@@ -27,6 +27,7 @@ class FileSelectionBoxC;
 class MUI_widget;
 class MUI_window_private;
 class Point;
+class RowColumnC;
 class ScaleC;
 class UserModule;
 class XQColor;
@@ -136,6 +137,24 @@ public:
     void set_style(Style);
     enum Event {
 	Drag, Value,
+    };
+};
+
+class MUI_choice : public MUI_widget {
+    RowColumnC* radio;
+    int* data;
+    void value_callback(CallbackData*, void*);
+    Array1<clString> choices;
+public:
+    MUI_choice(const clString& name, int* data,
+	       DispatchPolicy,
+	       void* cbdata=0);
+    virtual ~MUI_choice();
+    virtual void attach(MUI_window*, EncapsulatorC*);
+
+    void add_choice(const clString&);
+    enum Event {
+	Value,
     };
 };
 

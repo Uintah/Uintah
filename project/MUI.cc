@@ -32,7 +32,9 @@
 #include <Mt/DialogShell.h>
 #include <Mt/DrawingArea.h>
 #include <Mt/FileSelectionBox.h>
+#include <Mt/Label.h>
 #include <Mt/RowColumn.h>
+#include <Mt/ToggleButton.h>
 #include <Mt/Scale.h>
 extern MtXEventLoop* evl;
 #define MUI_FONTSIZE 14
@@ -336,6 +338,72 @@ void MUI_slider_int::drag_callback(CallbackData* cbdata, void*)
 void MUI_slider_int::value_callback(CallbackData* cbdata, void*)
 {
     int newdata=cbdata->get_int();
+    dispatch(newdata, data, Value);
+}
+
+MUI_choice::MUI_choice(const clString& name, int* data,
+		       DispatchPolicy dp, void* cbdata)
+: MUI_widget(name, cbdata, dp), data(data)
+{
+}
+
+MUI_choice::~MUI_choice()
+{
+}
+
+void MUI_choice::attach(MUI_window* _window, EncapsulatorC* parent)
+{
+    window=_window;
+    NetworkEditor* netedit=window->get_module()->netedit;
+
+    RowColumnC* rc=new RowColumnC;
+    rc->SetOrientation(XmVERTICAL);
+    rc->Create(*parent, "rc");
+
+    LabelC* label=new LabelC;
+    label->Create(*rc, name());
+
+    radio=new RowColumnC;
+    radio->SetOrientation(XmHORIZONTAL);
+    radio->SetRadioAlwaysOne(True);
+    radio->SetRadioBehavior(True);
+    radio->SetPacking(XmPACK_TIGHT);
+    radio->Create(*rc, "radio");
+
+    for(int i=0;i<choices.size();i++){
+	ToggleButtonC* toggle=new ToggleButtonC;
+	if(*data == i)
+	    toggle->SetSet(True);
+	new MotifCallback<MUI_choice>FIXCB(toggle, XmNvalueChangedCallback,
+					   &netedit->mailbox, this,
+					   &MUI_choice::value_callback,
+					   (void*)i, 0);
+	
+	toggle->Create(*radio, choices[i]());
+    }
+}
+
+void MUI_choice::add_choice(const clString& choice)
+{
+    choices.add(choice);
+    if(window){
+	NetworkEditor* netedit=window->get_module()->netedit;
+	int i=choices.size()-1;
+	ToggleButtonC* toggle=new ToggleButtonC;
+	if(*data == i)
+	    toggle->SetSet(True);
+	new MotifCallback<MUI_choice>FIXCB(toggle, XmNvalueChangedCallback,
+					   &netedit->mailbox, this,
+					   &MUI_choice::value_callback,
+					   (void*)i, 0);
+	
+	toggle->Create(*radio, choices[i]());
+    }
+}
+
+void MUI_choice::value_callback(CallbackData* cbdata, void* ud)
+{
+    int newdata=(int)ud;
     dispatch(newdata, data, Value);
 }
 

@@ -50,6 +50,7 @@ public:
     ScalarFieldRG* getRG();
     ScalarFieldUG* getUG();
     void get_minmax(double&, double&);
+    void get_bounds(Point&, Point&);
     double longest_dimension();
     virtual Vector gradient(const Point&)=0;
     virtual int interpolate(const Point&, double&)=0;

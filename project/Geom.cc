@@ -55,8 +55,10 @@ GeomObj::GeomObj(const GeomObj& copy)
 
 GeomObj::~GeomObj()
 {
+#if 0
     if(matl)
 	delete matl;
+#endif
 }
 
 void GeomObj::set_pick(GeomPick* _pick)
@@ -467,6 +469,79 @@ void GeomPt::get_bounds(BBox& bb)
     bb.extend(p1);
 }
 
+GeomLine::GeomLine(const Point& p1, const Point& p2)
+: p1(p1), p2(p2)
+{
+}
+
+GeomLine::GeomLine(const GeomLine& copy)
+: p1(copy.p1), p2(copy.p2)
+{
+}
+
+GeomLine::~GeomLine() {
+}
+
+void GeomLine::draw(DrawInfo* di) {
+    if(matl)
+	di->push_matl(matl);
+    di->polycount++;
+    glBegin(GL_LINE_STRIP);
+    glVertex3d(p1.x(), p1.y(), p1.z());
+    glVertex3d(p2.x(), p2.y(), p2.z());
+    glEnd();
+    if(matl)
+	di->pop_matl();
+}
+
+GeomObj* GeomLine::clone()
+{
+    return new GeomLine(*this);
+}
+
+void GeomLine::get_bounds(BBox& bb)
+{
+    bb.extend(p1);
+    bb.extend(p2);
+}
+
+GeomPolyLine::GeomPolyLine()
+{
+}
+
+GeomPolyLine::GeomPolyLine(const GeomPolyLine& copy)
+: pts(copy.pts)
+{
+}
+
+GeomPolyLine::~GeomPolyLine() {
+}
+
+void GeomPolyLine::draw(DrawInfo* di) {
+    if(matl)
+	di->push_matl(matl);
+    di->polycount+=pts.size()-1;
+    glBegin(GL_LINE_STRIP);
+    for(int i=0;i<pts.size();i++){
+	Point p(pts[i]);
+	glVertex3d(p.x(), p.y(), p.z());
+    }
+    glEnd();
+    if(matl)
+	di->pop_matl();
+}
+
+GeomObj* GeomPolyLine::clone()
+{
+    return new GeomPolyLine(*this);
+}
+
+void GeomPolyLine::get_bounds(BBox& bb)
+{
+    for(int i=0;i<pts.size();i++)
+	bb.extend(pts[i]);
+}
+
 MaterialProp::MaterialProp(const Color& ambient, const Color& diffuse,
 			   const Color& specular, double shininess)
 : ambient(ambient), diffuse(diffuse), specular(specular),
@@ -525,6 +600,27 @@ GeomPick::GeomPick(Module* module, const Vector& v1)
 {
     directions[0]=v1;
     directions[1]=-v1;
+}
+
+GeomPick::GeomPick(Module* module, const Vector& v1, const Vector& v2)
+: module(module), directions(4), mailbox(0), cbdata(0)
+{
+    directions[0]=v1;
+    directions[1]=-v1;
+    directions[2]=v2;
+    directions[3]=-v2;
+}
+
+GeomPick::GeomPick(Module* module, const Vector& v1, const Vector& v2,
+		   const Vector& v3)
+: module(module), directions(6), mailbox(0), cbdata(0)
+{
+    directions[0]=v1;
+    directions[1]=-v1;
+    directions[2]=v2;
+    directions[3]=-v2;
+    directions[4]=v3;
+    directions[5]=-v3;
 }
 
 GeomPick::~GeomPick()

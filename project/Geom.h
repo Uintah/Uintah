@@ -265,4 +265,28 @@ public:
     virtual void get_bounds(BBox&);
 };
 
+class GeomLine : public GeomObj {
+public:
+    Point p1, p2;
+
+    GeomLine(const Point& p1, const Point& p2);
+    GeomLine(const GeomLine&);
+    virtual ~GeomLine();
+    virtual void draw(DrawInfo*);
+    virtual GeomObj* clone();
+    virtual void get_bounds(BBox&);
+};
+
+class GeomPolyLine : public GeomObj {
+public:
+    Array1<Point> pts;
+
+    GeomPolyLine();
+    GeomPolyLine(const GeomPolyLine&);
+    virtual ~GeomPolyLine();
+    virtual void draw(DrawInfo*);
+    virtual GeomObj* clone();
+    virtual void get_bounds(BBox&);
+};
+
 #endif
