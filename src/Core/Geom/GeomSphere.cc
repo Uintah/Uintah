@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  * GeomSphere.cc: Sphere objects
  *
@@ -172,47 +170,3 @@ bool GeomSphere::saveobj(ostream& out, const clString& format,
 } // End namespace GeomSpace
 } // End namespace SCICore
 
-//
-// $Log$
-// Revision 1.10  2000/09/11 22:14:46  bigler
-// Added constructors that take an int and IntVector to allow unique
-// identification in 4 dimensions.
-//
-// Revision 1.9  2000/08/11 15:38:35  bigler
-// Added another constructor that took an IntVector index.
-//
-// Revision 1.8  2000/08/09 18:21:14  kuzimmer
-// Added IntVector indexing to GeomObj & GeomSphere
-//
-// Revision 1.7  2000/01/03 20:12:37  kuzimmer
-//  Forgot to check in these files for picking spheres
-//
-// Revision 1.6  1999/10/07 02:07:45  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/08/29 00:46:55  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.4  1999/08/28 17:54:42  sparker
-// Integrated new Thread library
-//
-// Revision 1.3  1999/08/17 23:50:25  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:13  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:44  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:52  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1.1.1  1999/04/24 23:12:22  dav
-// Import sources
-//
-//

@@ -79,32 +79,5 @@ private:
 #pragma reset woff 1682
 #endif
 
-//
-// $Log$
-// Revision 1.5  2000/06/27 07:57:48  samsonov
-// Added Get/SetLength member function
-//
-// Revision 1.4  2000/06/22 22:39:48  samsonov
-// Added resizing mode
-// Added rotational functionality in respect to base point
-//
-// Revision 1.3  1999/10/07 02:07:23  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/08/17 06:38:27  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:05  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 20:17:22  dav
-// added back PSECore .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//
-
 
 #endif

@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  Pick.cc: Picking information for Geometry objects
  *
@@ -210,23 +208,3 @@ bool GeomPick::saveobj(ostream& out, const clString& format, GeomSave* saveinfo)
 } // End namespace GeomSpace
 } // End namespace SCICore
 
-//
-// $Log$
-// Revision 1.4  2000/08/11 15:49:06  bigler
-// Removed the int index and replaced it with a GeomObj* picked_obj.
-// The index can be accessed though picked_obj->getID(int or IntVector).
-//
-// Revision 1.3  1999/10/07 02:07:43  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/08/17 06:39:10  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:41  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:22  dav
-// Import sources
-//
-//

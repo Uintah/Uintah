@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  DenseMatrix.cc: ?
  *
@@ -663,52 +661,3 @@ void DenseMatrix::mult(double s)
 
 } // End namespace Datatypes
 } // End namespace SCICore
-
-//
-// $Log$
-// Revision 1.12  2000/12/11 23:08:20  oleg
-// Clone function implemented
-//
-// Revision 1.11  2000/10/18 17:26:14  guilkey
-// Added a version of solve which take a vector<double>.
-//
-// Revision 1.10  2000/07/25 16:47:43  yarden
-// add missing include
-//
-// Revision 1.9  2000/07/12 15:45:08  dmw
-// Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
-//
-// Revision 1.8  1999/12/11 05:47:41  dmw
-// sparserowmatrix -- someone had commented out the code that lets you get() a zero entry... I put it back in.    densematrix -- just cleaned up some comments
-//
-// Revision 1.7  1999/12/10 06:58:57  dmw
-// DenseMatrix::solve() now returns an int (instead of void) indicating whether it succeeded or not.
-//
-// Revision 1.6  1999/12/09 20:12:25  dmw
-// shouldn't crash on solving an under-determined system -- rather, just return some vector from the solution space... for now, just return a 0-vector and Rob V will put in the minimum norm solution later today or tomorrow.
-//
-// Revision 1.5  1999/12/09 09:53:23  dmw
-// commented out debug info in DenseMatrix::solve()
-//
-// Revision 1.4  1999/10/07 02:07:31  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/08/25 03:48:32  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:45  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:21  mcq
-// Initial commit
-//
-// Revision 1.1  1999/04/25 04:07:06  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:49  dav
-// Import sources
-//
-//

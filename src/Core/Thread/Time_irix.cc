@@ -1,7 +1,6 @@
 
 /*
  *  Time_unix.cc: Generic unix implementation of the Time class
- *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -254,36 +253,3 @@ Time::waitFor(SysClock time)
     Thread::couldBlockDone(oldstate);
 }
 
-//
-// $Log$
-// Revision 1.6  2000/09/29 03:45:07  sparker
-// Another attempt at 32 bit timer fix
-//
-// Revision 1.5  2000/09/29 03:34:39  samsonov
-// Fixes 32-bit hardware cycle counter
-//
-// Revision 1.4  1999/08/29 00:47:02  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.3  1999/08/28 03:46:53  sparker
-// Final updates before integration with PSE
-//
-// Revision 1.2  1999/08/25 22:53:42  sparker
-// Fixed Time initialization race condition
-//
-// Revision 1.1  1999/08/25 22:36:55  sparker
-// Broke out generic signal naming function into Thread_unix.{h,cc}
-// Added irix hardware counter version of Time class in Time_irix.cc
-//
-// Revision 1.2  1999/08/25 19:00:53  sparker
-// More updates to bring it up to spec
-// Factored out common pieces in Thread_irix and Thread_pthreads
-// Factored out other "default" implementations of various primitives
-//
-// Revision 1.1  1999/08/25 02:38:03  sparker
-// Added namespaces
-// General cleanups to prepare for integration with SCIRun
-//
-//

@@ -79,6 +79,12 @@ void MeshNodeComponent::execute()
 
 //
 // $Log$
+// Revision 1.2  2000/12/15 06:35:42  mcole
+// merge branch back into trunk
+//
+// Revision 1.1.2.1  2000/10/31 02:33:17  dmw
+// Merging SCIRun changes in HEAD into FIELD_REDESIGN branch
+//
 // Revision 1.1  2000/10/29 04:42:23  dmw
 // MeshInterpVals -- fixed a bug
 // MeshNodeComponent -- build a columnmatrix of the x/y/z position of the nodes

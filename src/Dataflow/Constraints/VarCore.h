@@ -125,39 +125,4 @@ VarCore::epsilonequal( const Real Epsilon, const VarCore& v )
 } // End namespace Constraints
 } // End namespace PSECore
 
-//
-// $Log$
-// Revision 1.6  2000/06/15 19:50:56  sparker
-// Fixed warnings
-//
-// Revision 1.5  1999/10/07 02:07:17  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/08/26 23:57:03  moulding
-// changed SCICORESHARE to PSECORESHARE
-//
-// Revision 1.3  1999/08/18 20:20:18  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:38:21  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:57  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 20:17:08  dav
-// added back PSECore .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:52  dav
-// Import sources
-//
-//
-
 #endif

@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  ScaledFrameWidget.cc
  *
@@ -597,26 +595,3 @@ ScaledFrameWidget::GetMaterialName( const Index mindex ) const
 
 } // End namespace Widgets
 } // End namespace PSECore
-
-//
-// $Log$
-// Revision 1.4  2000/06/26 21:54:19  bigler
-// Added new modes to allow for more control over which pieces
-// are rendered.
-//
-// Revision 1.3  2000/06/21 20:57:25  bigler
-// Added additional modes for widget grid.
-// One of the additional modes create a scaled widget frame that allows for resizing, but restricts movement to be axis alligned (no rotation).
-// The other mode allows for rotation without resizing.
-//
-// Revision 1.2  1999/08/17 06:38:32  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:09  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//

@@ -1,7 +1,6 @@
 
 /*
  *  Thread_pthreads.cc: Posix threads implementation of the thread library
- *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -857,69 +856,3 @@ ConditionVariable::conditionBroadcast()
 	throw ThreadError(std::string("pthread_cond_broadcast: ")
 			  +strerror(errno));
 }
-
-//
-// $Log$
-// Revision 1.18  2000/12/01 06:57:10  moulding
-// fixed the rest of the pthread implementation of destructors of IPC primitives.
-// Now destroying a module on linux does not crash the PSE.
-//
-// Revision 1.17  2000/12/01 06:07:44  moulding
-// added call to pthread_mutex_unlock() before call to pthread_mutex_destroy().
-// This prevents the SIGABRT at system exit on linux.
-//
-// Revision 1.16  2000/09/25 18:04:05  sparker
-// Added partial support for debuggin under linux
-// Added environment variable SCI_DBXCOMMAND
-// Misc. reformatting
-//
-// Revision 1.15  2000/06/09 20:35:32  yarden
-// use the return value of pthread_mutex_lock/unlock for reporting
-// the error instead of errno.
-//
-// Revision 1.14  2000/03/29 20:03:52  jas
-// Fixed thread initialization and shutdown when not using PSE for linux.
-// (Actually, Steve did this).
-//
-// Revision 1.13  2000/03/20 21:58:30  yarden
-// Linux port: add a stub : Thread::allow_sgi_OpenGL_page0_sillyness()
-//
-// Revision 1.12  1999/10/15 20:56:52  ikits
-// Fixed conflict w/ get_tid in /usr/include/task.h. Replaced by get_thread_id.
-//
-// Revision 1.11  1999/10/13 21:01:38  sparker
-// Fixed timedWait for pthreads
-//
-// Revision 1.10  1999/10/07 02:08:06  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.9  1999/09/22 19:10:29  sparker
-// Implemented timedWait method for ConditionVariable.  A default
-// implementation of CV is no longer possible, so the code is moved
-// to Thread_irix.cc.  The timedWait method for irix uses uspollsema
-// and select.
-//
-// Revision 1.8  1999/08/29 08:07:39  sparker
-// Fixed bug on linux where main exit before other threads are done.
-//
-// Revision 1.7  1999/08/29 07:50:59  sparker
-// Mods to compile on linux
-//
-// Revision 1.6  1999/08/29 00:47:02  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.5  1999/08/28 03:46:52  sparker
-// Final updates before integration with PSE
-//
-// Revision 1.4  1999/08/25 19:00:52  sparker
-// More updates to bring it up to spec
-// Factored out common pieces in Thread_irix and Thread_pthreads
-// Factored out other "default" implementations of various primitives
-//
-// Revision 1.3  1999/08/25 02:38:02  sparker
-// Added namespaces
-// General cleanups to prepare for integration with SCIRun
-//
-//

@@ -12,6 +12,12 @@
  #  Log Information:
  #
  #  $Log$
+ #  Revision 1.2  2000/12/15 06:34:47  mcole
+ #  merge branch back into trunk
+ #
+ #  Revision 1.1.2.1  2000/10/31 02:33:08  dmw
+ #  Merging SCIRun changes in HEAD into FIELD_REDESIGN branch
+ #
  #  Revision 1.1  2000/10/29 04:42:22  dmw
  #  MeshInterpVals -- fixed a bug
  #  MeshNodeComponent -- build a columnmatrix of the x/y/z position of the nodes

@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  AllocOS.cc: ?
  *
@@ -102,46 +100,3 @@ void OSHunk::free(OSHunk* hunk)
 } // End namespace Malloc
 } // End namespace SCICore
 
-//
-// $Log$
-// Revision 1.7  2000/07/27 17:56:53  yarden
-// include unistd.h for linux
-//
-// Revision 1.6  2000/07/27 07:41:48  sparker
-// Distinguish between "returnable" chunks and non-returnable chucks of memory
-// Make malloc get along with SGI's MPI
-//
-// Revision 1.5  1999/08/23 06:30:37  sparker
-// Linux port
-// Added X11 configuration options
-// Removed many warnings
-//
-// Revision 1.4  1999/08/19 05:30:56  sparker
-// Configuration updates:
-//  - renamed config.h to sci_config.h
-//  - also uses sci_defs.h, since I couldn't get it to substitute vars in
-//    sci_config.h
-//  - Added flags for --enable-scirun, --enable-uintah, and
-//    --enable-davew, to build the specific package set.  More than one
-//    can be specified, and at least one must be present.
-//  - Added a --enable-parallel, to build the new parallel version.
-//    Doesn't do much yet.
-//  - Made construction of config.h a little bit more general
-//
-// Revision 1.3  1999/08/18 18:56:17  sparker
-// Use 64 bit mmap
-// Incorporated missing Hashtable Pio function
-// Fix bug in MAKE_PARALLELISM handling
-// Got rid of lib32 in main/Makefile.in (for 64 bit)
-//
-// Revision 1.2  1999/08/17 06:39:30  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:58  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:23  dav
-// Import sources
-//
-//

@@ -1,6 +1,3 @@
-
-// $Id$
-
 /*
  *  ErrnoException.h: Generic exception for internal errors
  *
@@ -20,35 +17,26 @@
 #include <string>
 
 namespace SCICore {
-   namespace Exceptions {
-      class ErrnoException : public Exception {
-      public:
-	 ErrnoException(const std::string&, int err);
-	 ErrnoException(const ErrnoException&);
-	 virtual ~ErrnoException();
-	 virtual const char* message() const;
-	 virtual const char* type() const;
-	 
-	 int getErrno() const;
-      protected:
-      private:
-	 std::string d_message;
-	 int d_errno;
+namespace Exceptions {
 
-	 ErrnoException& operator=(const ErrnoException&);
-      };
-   }
+class ErrnoException : public Exception {
+public:
+  ErrnoException(const std::string&, int err);
+  ErrnoException(const ErrnoException&);
+  virtual ~ErrnoException();
+  virtual const char* message() const;
+  virtual const char* type() const;
+	 
+  int getErrno() const;
+protected:
+private:
+  std::string d_message;
+  int d_errno;
+
+  ErrnoException& operator=(const ErrnoException&);
+};
+
+}
 }
 
 #endif
-
-//
-// $Log$
-// Revision 1.2  2000/09/25 17:58:57  sparker
-// Do not call variables errno due to #defines on some systems (linux)
-// Correctly implemented copy CTORs
-//
-// Revision 1.1  2000/05/15 19:25:57  sparker
-// Exception class for system calls (ones that use the errno variable)
-//
-//

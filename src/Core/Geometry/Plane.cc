@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  Plane.cc: Uniform Plane containing triangular elements
  *
@@ -90,35 +88,35 @@ Plane::Intersect( Point s, Vector v, Point& hit )
   tmp = Dot( n, v );
 
   if( tmp > -1.e-6 && tmp < 1.e-6 ) // Vector v is parallel to plane
-    {
-      // vector from origin of line to point on plane
+  {
+    // vector from origin of line to point on plane
       
-      Vector temp = s - ptOnPlane;
+    Vector temp = s - ptOnPlane;
 
-      if ( temp.length() < 1.e-5 )
-	{
-	  // the origin of plane and the origin of line are almost
-	  // the same
+    if ( temp.length() < 1.e-5 )
+    {
+      // the origin of plane and the origin of line are almost
+      // the same
 	  
-	  hit = ptOnPlane;
-	  return 1;
-	}
-      else
-	{
-	  // point s and d are not the same, but maybe s lies
-	  // in the plane anyways
-	  
-	  tmp = Dot( temp, n );
-
-	  if(tmp > -1.e-6 && tmp < 1.e-6)
-	    {
-	      hit = s;
-	      return 1;
-	    }
-	  else
-	    return 0;
-	}
+      hit = ptOnPlane;
+      return 1;
     }
+    else
+    {
+      // point s and d are not the same, but maybe s lies
+      // in the plane anyways
+	  
+      tmp = Dot( temp, n );
+
+      if(tmp > -1.e-6 && tmp < 1.e-6)
+      {
+	hit = s;
+	return 1;
+      }
+      else
+	return 0;
+    }
+  }
 
   tmp = - ( ( d + Dot( s, n ) ) / Dot( v, n ) );
 
@@ -139,22 +137,3 @@ Plane::Intersect( Point s, Vector v, Point& hit )
 } // End namespace Geometry
 } // End namespace SCICore
 
-//
-// $Log$
-// Revision 1.4  2000/08/04 19:09:25  dmw
-// fixed shear
-//
-// Revision 1.3  1999/09/08 02:26:52  sparker
-// Various #include cleanups
-//
-// Revision 1.2  1999/08/17 06:39:27  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:56  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:27  dav
-// Import sources
-//
-//

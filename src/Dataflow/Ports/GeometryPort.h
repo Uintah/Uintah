@@ -135,45 +135,5 @@ public:
 } // End namespace Datatypes
 } // End namespace PSECore
 
-//
-// $Log$
-// Revision 1.8  2000/06/06 15:14:31  dahart
-// Added a constant GEOM_TRIANGLES to identify requests for geometry in
-// the OpenGL renderer
-//
-// Revision 1.7  1999/12/03 00:36:09  dmw
-// more files for the setView message
-//
-// Revision 1.6  1999/09/16 23:03:49  mcq
-// Fixed a few little bugs, hopefully didn't introduce more.  Started ../doc
-//
-// Revision 1.5  1999/08/28 17:54:31  sparker
-// Integrated new Thread library
-//
-// Revision 1.4  1999/08/27 00:03:02  moulding
-// changed SCICORESHARE to PSECORESHARE
-//
-// Revision 1.3  1999/08/25 03:48:20  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:08  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:47  mcq
-// Initial commit
-//
-// Revision 1.4  1999/05/06 20:17:01  dav
-// added back PSECore .h files
-//
-// Revision 1.2  1999/04/27 23:18:35  dav
-// looking for lost files to commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:48  dav
-// Import sources
-//
-//
 
 #endif /* SCI_project_GeometryPort_h */

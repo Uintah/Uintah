@@ -1,6 +1,4 @@
 #define protected public
-//static char *id="@(#) $Id$";
-
 /*
  *  Roe.cc:  The Geometry Viewer Window
  *
@@ -79,61 +77,61 @@ void add_pt( Roe *roe, Point p, double s=.2 )
   roe->roe_objs.add(obj);
   roe->need_redraw = 1;
 }
-  
-  Roe::Roe(Salmon* s, const clString& id)
-    : manager(s),
-      id(id),
-      view("view", id, this),
-      homeview(Point(.55, .5, 0), Point(.0, .0, .0), Vector(0,1,0), 25),
-      bgcolor("bgcolor", id, this), 
-      shading("shading", id, this),
-      do_stereo("do_stereo", id, this), 
-      // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
-      do_bawgl("do_bawgl", id, this),  
-      // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-      drawimg("drawimg", id, this),
-      saveprefix("saveprefix", id, this),
-      curFrame(0),curName("movie"),pos("pos", id, this),
-      caxes("caxes", id, this),iaxes("iaxes", id, this), 
-      doingMovie(false),makeMPEG(false)
-  {
-    inertia_mode=0;
-    bgcolor.set(Color(0,0,0));
-    view.set(homeview);
-    TCL::add_command(id+"-c", this, 0);
-    current_renderer=0;
-    maxtag=0;
-    mouse_obj=0;
-    ball = new BallData();
-    ball->Init();
-    // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
-    bawgl = new SCIBaWGL();
-    // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-    roe_objs.add( createGenAxes() );     
-    roe_objs_draw.add(0);              
-    roe_objs_draw[0] = 1;
-    // XXX - UniCam addition:
-    // initialize focus sphere for UniCam
-    // the focus sphere is a sphere object -- let's color it blue.
-    // XXX - note to Utah-- it took a long time to figure out how to
-    // create a simple sphere & get it drawn.  I still can't easily
-    // control it's color.  I know i need to use a GeomMaterial, but
-    // when i include that file above in Roe.cc & try to instantiate
-    // one w/ scinew (like in other example code), it claims
-    // GeomMaterial is an unknown type-- even though it's declaration
-    // has been included!?  very strange.  anyway, gave up on color.
-    // XXX - update:  Ah ha, i think i understand why it couldn't find the
-    // type GeomMaterial-- it isn't enough to just include that classes
-    // header file, you need to also have the declaration:
-    //       using <class name>
-    // In the case of GeomMaterial, it would look like:
-    //       #include <SCICore/Geom/Material.h>
-    //       using SCICore::GeomSpace::GeomMaterial;
-    // 
-    focus_sphere      = scinew GeomSphere;
-    is_dot            = 0;
 
-  }
+Roe::Roe(Salmon* s, const clString& id)
+  : manager(s),
+    id(id),
+    view("view", id, this),
+    homeview(Point(.55, .5, 0), Point(.0, .0, .0), Vector(0,1,0), 25),
+    bgcolor("bgcolor", id, this), 
+    shading("shading", id, this),
+    do_stereo("do_stereo", id, this), 
+    // --  BAWGL -- 
+    do_bawgl("do_bawgl", id, this),  
+    // --  BAWGL -- 
+    drawimg("drawimg", id, this),
+    saveprefix("saveprefix", id, this),
+    curFrame(0),curName("movie"),pos("pos", id, this),
+    caxes("caxes", id, this),iaxes("iaxes", id, this), 
+    doingMovie(false),makeMPEG(false)
+{
+  inertia_mode=0;
+  bgcolor.set(Color(0,0,0));
+  view.set(homeview);
+  TCL::add_command(id+"-c", this, 0);
+  current_renderer=0;
+  maxtag=0;
+  mouse_obj=0;
+  ball = new BallData();
+  ball->Init();
+  // --  BAWGL -- 
+  bawgl = new SCIBaWGL();
+  // --  BAWGL -- 
+  roe_objs.add( createGenAxes() );     
+  roe_objs_draw.add(0);              
+  roe_objs_draw[0] = 1;
+  // XXX - UniCam addition:
+  // initialize focus sphere for UniCam
+  // the focus sphere is a sphere object -- let's color it blue.
+  // XXX - note to Utah-- it took a long time to figure out how to
+  // create a simple sphere & get it drawn.  I still can't easily
+  // control it's color.  I know i need to use a GeomMaterial, but
+  // when i include that file above in Roe.cc & try to instantiate
+  // one w/ scinew (like in other example code), it claims
+  // GeomMaterial is an unknown type-- even though it's declaration
+  // has been included!?  very strange.  anyway, gave up on color.
+  // XXX - update:  Ah ha, i think i understand why it couldn't find the
+  // type GeomMaterial-- it isn't enough to just include that classes
+  // header file, you need to also have the declaration:
+  //       using <class name>
+  // In the case of GeomMaterial, it would look like:
+  //       #include <SCICore/Geom/Material.h>
+  //       using SCICore::GeomSpace::GeomMaterial;
+  // 
+  focus_sphere      = scinew GeomSphere;
+  is_dot            = 0;
+
+}
 
 clString Roe::set_id(const clString& new_id)
 {
@@ -144,28 +142,28 @@ clString Roe::set_id(const clString& new_id)
 
 void Roe::itemAdded(GeomSalmonItem* si)
 {
-    ObjTag* vis;
+  ObjTag* vis;
     
-    viter = visible.find(si->name);
-    if(viter==visible.end()){
-      // Make one...
-      vis=scinew ObjTag;
-      vis->visible=scinew TCLvarint(si->name, id, this);
-      vis->visible->set(1);
-      vis->tagid=maxtag++;
-      visible[si->name] = vis;
-      ostringstream str;
-      str << id << " addObject " << vis->tagid << " \"" << si->name << "\"";
-      TCL::execute(str.str().c_str());
-    } else {
-      vis = (*viter).second;
-      ostringstream str;
-      str << id << " addObject2 " << vis->tagid;
-      TCL::execute(str.str().c_str());
-    }
-    // invalidate the bounding box
-    bb.reset();
-    need_redraw=1;
+  viter = visible.find(si->name);
+  if(viter==visible.end()){
+    // Make one...
+    vis=scinew ObjTag;
+    vis->visible=scinew TCLvarint(si->name, id, this);
+    vis->visible->set(1);
+    vis->tagid=maxtag++;
+    visible[si->name] = vis;
+    ostringstream str;
+    str << id << " addObject " << vis->tagid << " \"" << si->name << "\"";
+    TCL::execute(str.str().c_str());
+  } else {
+    vis = (*viter).second;
+    ostringstream str;
+    str << id << " addObject2 " << vis->tagid;
+    TCL::execute(str.str().c_str());
+  }
+  // invalidate the bounding box
+  bb.reset();
+  need_redraw=1;
 }
 
 void Roe::itemDeleted(GeomSalmonItem *si)
@@ -190,27 +188,27 @@ void Roe::itemDeleted(GeomSalmonItem *si)
 // need to fill this in!   
 #ifdef OLDUI
 void Roe::itemCB(CallbackData*, void *gI) {
-    GeomItem *g = (GeomItem *)gI;
-    g->vis = !g->vis;
-    need_redraw=1;
+  GeomItem *g = (GeomItem *)gI;
+  g->vis = !g->vis;
+  need_redraw=1;
 }
 
 void Roe::spawnChCB(CallbackData*, void*)
 {
-    double mat[16];
-    glGetDoublev(GL_MODELVIEW_MATRIX, mat);
+  double mat[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, mat);
 
-    kids.add(scinew Roe(manager, mat, mtnScl));
-    kids[kids.size()-1]->SetParent(this);
-    for (int i=0; i<geomItemA.size(); i++)
-	kids[kids.size()-1]->itemAdded(geomItemA[i]->geom, geomItemA[i]->name);
+  kids.add(scinew Roe(manager, mat, mtnScl));
+  kids[kids.size()-1]->SetParent(this);
+  for (int i=0; i<geomItemA.size(); i++)
+    kids[kids.size()-1]->itemAdded(geomItemA[i]->geom, geomItemA[i]->name);
 
 }
 #endif
 
 Roe::~Roe()
 {
-    TCL::delete_command( id+"-c" );
+  TCL::delete_command( id+"-c" );
 }
 
 void Roe::get_bounds(BBox& bbox)
@@ -252,7 +250,7 @@ void Roe::get_bounds(BBox& bbox)
   }
 
   // XXX - START - ASF ADDED FOR UNICAM
-//   cerr << "roe_objs.size() = " << roe_objs.size() << endl;
+  //   cerr << "roe_objs.size() = " << roe_objs.size() << endl;
   int objs_size = roe_objs.size();
   int draw_size = roe_objs_draw.size();
   for(int i=0;i<roe_objs.size();i++) {
@@ -265,172 +263,172 @@ void Roe::get_bounds(BBox& bbox)
 
 void Roe::rotate(double /*angle*/, Vector /*v*/, Point /*c*/)
 {
-    NOT_FINISHED("Roe::rotate");
+  NOT_FINISHED("Roe::rotate");
 #ifdef OLDUI
-    evl->lock();
-    make_current();
-    double temp[16];
-    glGetDoublev(GL_MODELVIEW_MATRIX, temp);
-    glPopMatrix();
-    glLoadIdentity();
-    glTranslated(c.x(), c.y(), c.z());
-    glRotated(angle,v.x(), v.y(), v.z());
-    glTranslated(-c.x(), -c.y(), -c.z());
-    glMultMatrixd(temp);
-    for (int i=0; i<kids.size(); i++)
-	kids[i]->rotate(angle, v, c);
-    evl->unlock();
+  evl->lock();
+  make_current();
+  double temp[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, temp);
+  glPopMatrix();
+  glLoadIdentity();
+  glTranslated(c.x(), c.y(), c.z());
+  glRotated(angle,v.x(), v.y(), v.z());
+  glTranslated(-c.x(), -c.y(), -c.z());
+  glMultMatrixd(temp);
+  for (int i=0; i<kids.size(); i++)
+    kids[i]->rotate(angle, v, c);
+  evl->unlock();
 #endif
-    need_redraw=1;
+  need_redraw=1;
 }
 
 void Roe::rotate_obj(double /*angle*/, const Vector& /*v*/, const Point& /*c*/)
 {
-    NOT_FINISHED("Roe::rotate_obj");
+  NOT_FINISHED("Roe::rotate_obj");
 #ifdef OLDUI
-    evl->lock();
-    make_current();
-    glTranslated(c.x(), c.y(), c.z());
-    glRotated(angle, v.x(), v.y(), v.z());
-    glTranslated(-c.x(), -c.y(), -c.z());
-    for(int i=0; i<kids.size(); i++)
-	kids[i]->rotate(angle, v, c);
-    evl->unlock();
+  evl->lock();
+  make_current();
+  glTranslated(c.x(), c.y(), c.z());
+  glRotated(angle, v.x(), v.y(), v.z());
+  glTranslated(-c.x(), -c.y(), -c.z());
+  for(int i=0; i<kids.size(); i++)
+    kids[i]->rotate(angle, v, c);
+  evl->unlock();
 #endif
-    need_redraw=1;
+  need_redraw=1;
 }
 
 void Roe::translate(Vector /*v*/)
 {
-    NOT_FINISHED("Roe::translate");
+  NOT_FINISHED("Roe::translate");
 #ifdef OLDUI
-    evl->lock();
-    make_current();
-    double temp[16];
-    glGetDoublev(GL_MODELVIEW_MATRIX, temp);
-    glPopMatrix();
-    glLoadIdentity();
-    glTranslated(v.x()*mtnScl, v.y()*mtnScl, v.z()*mtnScl);
-    glMultMatrixd(temp);
-    for (int i=0; i<kids.size(); i++)
-	kids[i]->translate(v);
-    evl->unlock();
+  evl->lock();
+  make_current();
+  double temp[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, temp);
+  glPopMatrix();
+  glLoadIdentity();
+  glTranslated(v.x()*mtnScl, v.y()*mtnScl, v.z()*mtnScl);
+  glMultMatrixd(temp);
+  for (int i=0; i<kids.size(); i++)
+    kids[i]->translate(v);
+  evl->unlock();
 #endif
-    need_redraw=1;
+  need_redraw=1;
 }
 
 void Roe::scale(Vector /*v*/, Point /*c*/)
 {
-    NOT_FINISHED("Roe::scale");
+  NOT_FINISHED("Roe::scale");
 #ifdef OLDUI
-    evl->lock();
-    make_current();
-    glTranslated(c.x(), c.y(), c.z());
-    glScaled(v.x(), v.y(), v.z());
-    glTranslated(-c.x(), -c.y(), -c.z());
-    mtnScl*=v.x();
-    for (int i=0; i<kids.size(); i++)
-	kids[i]->scale(v, c);
-    evl->unlock();
+  evl->lock();
+  make_current();
+  glTranslated(c.x(), c.y(), c.z());
+  glScaled(v.x(), v.y(), v.z());
+  glTranslated(-c.x(), -c.y(), -c.z());
+  mtnScl*=v.x();
+  for (int i=0; i<kids.size(); i++)
+    kids[i]->scale(v, c);
+  evl->unlock();
 #endif
-    need_redraw=1;
+  need_redraw=1;
 }
 
 void Roe::mouse_translate(int action, int x, int y, int, int, int)
 {
-    switch(action){
-    case MouseStart:
-	last_x=x;
-	last_y=y;
-	total_x = 0;
-	total_y = 0;
-	update_mode_string("translate: ");
-	break;
-    case MouseMove:
-	{
-	    int xres=current_renderer->xres;
-	    int yres=current_renderer->yres;
-	    double xmtn=double(last_x-x)/double(xres);
-	    double ymtn=-double(last_y-y)/double(yres);
-	    last_x = x;
-	    last_y = y;
-	    // Get rid of roundoff error for the display...
-	    if (Abs(total_x) < .001) total_x = 0;
-	    if (Abs(total_y) < .001) total_y = 0;
+  switch(action){
+  case MouseStart:
+    last_x=x;
+    last_y=y;
+    total_x = 0;
+    total_y = 0;
+    update_mode_string("translate: ");
+    break;
+  case MouseMove:
+    {
+      int xres=current_renderer->xres;
+      int yres=current_renderer->yres;
+      double xmtn=double(last_x-x)/double(xres);
+      double ymtn=-double(last_y-y)/double(yres);
+      last_x = x;
+      last_y = y;
+      // Get rid of roundoff error for the display...
+      if (Abs(total_x) < .001) total_x = 0;
+      if (Abs(total_y) < .001) total_y = 0;
 
-	    View tmpview(view.get());
-	    double aspect=double(xres)/double(yres);
-	    double znear, zfar;
-	    if(!current_renderer->compute_depth(this, tmpview, znear, zfar))
-		return; // No objects...
-	    double zmid=(znear+zfar)/2.;
-	    Vector u,v;
-	    tmpview.get_viewplane(aspect, zmid, u, v);
-	    double ul=u.length();
-	    double vl=v.length();
-	    Vector trans(u*xmtn+v*ymtn);
+      View tmpview(view.get());
+      double aspect=double(xres)/double(yres);
+      double znear, zfar;
+      if(!current_renderer->compute_depth(this, tmpview, znear, zfar))
+	return; // No objects...
+      double zmid=(znear+zfar)/2.;
+      Vector u,v;
+      tmpview.get_viewplane(aspect, zmid, u, v);
+      double ul=u.length();
+      double vl=v.length();
+      Vector trans(u*xmtn+v*ymtn);
 
-	    total_x+=ul*xmtn;
-	    total_y+=vl*ymtn;
+      total_x+=ul*xmtn;
+      total_y+=vl*ymtn;
 
-	    // Translate the view...
-	    tmpview.eyep(tmpview.eyep()+trans);
-	    tmpview.lookat(tmpview.lookat()+trans);
+      // Translate the view...
+      tmpview.eyep(tmpview.eyep()+trans);
+      tmpview.lookat(tmpview.lookat()+trans);
 
-	    // Put the view back...
-	    view.set(tmpview);
+      // Put the view back...
+      view.set(tmpview);
 
-	    need_redraw=1;
-	    ostringstream str;
-	    str << "translate: " << total_x << ", " << total_y;
-	    update_mode_string(str.str().c_str());
-	}
-	break;
-    case MouseEnd:
-	update_mode_string("");
-	break;
+      need_redraw=1;
+      ostringstream str;
+      str << "translate: " << total_x << ", " << total_y;
+      update_mode_string(str.str().c_str());
     }
+    break;
+  case MouseEnd:
+    update_mode_string("");
+    break;
+  }
 }
 
 #if 0
 void Roe::mouse_scale(int action, int x, int y, int, int, int)
 {
-    switch(action){
-    case MouseStart:
-	{
-	    update_mode_string("scale: ");
-	    last_x=x;
-	    last_y=y;
-	    total_scale=1;
-	}
-	break;
-    case MouseMove:
-	{
-	    double scl;
-	    double xmtn=last_x-x;
-	    double ymtn=last_y-y;
-	    xmtn/=30;
-	    ymtn/=30;
-	    last_x = x;
-	    last_y = y;
-	    if (Abs(xmtn)>Abs(ymtn)) scl=xmtn; else scl=ymtn;
-	    if (scl<0) scl=1/(1-scl); else scl+=1;
-	    total_scale*=scl;
+  switch(action){
+  case MouseStart:
+    {
+      update_mode_string("scale: ");
+      last_x=x;
+      last_y=y;
+      total_scale=1;
+    }
+    break;
+  case MouseMove:
+    {
+      double scl;
+      double xmtn=last_x-x;
+      double ymtn=last_y-y;
+      xmtn/=30;
+      ymtn/=30;
+      last_x = x;
+      last_y = y;
+      if (Abs(xmtn)>Abs(ymtn)) scl=xmtn; else scl=ymtn;
+      if (scl<0) scl=1/(1-scl); else scl+=1;
+      total_scale*=scl;
 
-	    View tmpview(view.get());
-	    tmpview.fov(RtoD(2*Atan(scl*Tan(DtoR(tmpview.fov()/2.)))));
+      View tmpview(view.get());
+      tmpview.fov(RtoD(2*Atan(scl*Tan(DtoR(tmpview.fov()/2.)))));
 
-	    view.set(tmpview);
-	    need_redraw=1;
-	    ostringstream str;
-	    str << "scale: " << total_x*100 << "%";
-	    update_mode_string(str.str().c_str());
-	}
-	break;
-    case MouseEnd:
-	update_mode_string("");
-	break;
-    }	
+      view.set(tmpview);
+      need_redraw=1;
+      ostringstream str;
+      str << "scale: " << total_x*100 << "%";
+      update_mode_string(str.str().c_str());
+    }
+    break;
+  case MouseEnd:
+    update_mode_string("");
+    break;
+  }	
 }
 #else
 float Roe::WindowAspect()
@@ -556,21 +554,21 @@ Vector Roe::CameraToWorld(Vector v)
 
 void Roe::choose(int X, int Y)
 {
-//   MyTranslateCamera(Vector(0.1,0,0));
-//   BBox bbox;
-//   get_bounds(bbox);
-//   Point ctr = (bbox.valid() ? bbox.center() : Point(0,0,0));
-//   MyRotateCamera(ctr,
-//                  Vector(0,1,0),
-//                  1 * M_PI/180.0);
+  //   MyTranslateCamera(Vector(0.1,0,0));
+  //   BBox bbox;
+  //   get_bounds(bbox);
+  //   Point ctr = (bbox.valid() ? bbox.center() : Point(0,0,0));
+  //   MyRotateCamera(ctr,
+  //                  Vector(0,1,0),
+  //                  1 * M_PI/180.0);
 
-//   cerr << CameraToWorld(Vector(1,0,0)) << endl;
-//   cerr << CameraToWorld(Vector(0,1,0)) << endl;
-//   cerr << CameraToWorld(Vector(0,0,1)) << endl;
+  //   cerr << CameraToWorld(Vector(1,0,0)) << endl;
+  //   cerr << CameraToWorld(Vector(0,1,0)) << endl;
+  //   cerr << CameraToWorld(Vector(0,0,1)) << endl;
 
-//   float nx, ny;
-//   NormalizeMouseXY(x, y, &nx, &ny);
-//   cerr << nx << "\t" << ny << endl;
+  //   float nx, ny;
+  //   NormalizeMouseXY(x, y, &nx, &ny);
+  //   cerr << nx << "\t" << ny << endl;
 
   int   te[2];  // pixel location
   te[0] = X;
@@ -603,47 +601,47 @@ void Roe::choose(int X, int Y)
   float len = sqrt(sdelt[0] * sdelt[0] + sdelt[1] * sdelt[1]);
   if (fabs(sdelt[ya])/len > 0.9 && tdelt > 0.05) {
     unicam_state = UNICAM_ZOOM;
-//     ptr->set_old(_start_pix);
+    //     ptr->set_old(_start_pix);
   } else if (tdelt < 0.1 && _dist < 0.03)
     return;
   else {
     if (fabs(sdelt[xa])/len > 0.6 )
       unicam_state = UNICAM_PAN;
     else unicam_state = UNICAM_ZOOM;
-//     ptr->set_old(_start_pix);
+    //     ptr->set_old(_start_pix);
   }
 }
 
 void Roe::rot   (int x, int y)
 {
-//  float myTEST = X;
-//  cerr << "myTEST = " << myTEST << "\t" << "X = " << X << endl;
+  //  float myTEST = X;
+  //  cerr << "myTEST = " << myTEST << "\t" << "X = " << X << endl;
   Point center = focus_sphere->cen;
 
-//   this->ComputeWorldToDisplay(center[0], center[1], center[2], cpt);
-// XXX - this code did not seem to work to return normalized window
-// XXX - coordinates.
-// //   float cpt[3];
-// //   View tmpview(view.get());
-// //   Point tmp = tmpview.objspace_to_eyespace(center, WindowAspect());
-// //   cpt[0] = tmp(0);
-// //   cpt[1] = tmp(1);
-// //   NormalizeMouseXY(cpt[0], cpt[1], &cpt[0], &cpt[1]);
+  //   this->ComputeWorldToDisplay(center[0], center[1], center[2], cpt);
+  // XXX - this code did not seem to work to return normalized window
+  // XXX - coordinates.
+  // //   float cpt[3];
+  // //   View tmpview(view.get());
+  // //   Point tmp = tmpview.objspace_to_eyespace(center, WindowAspect());
+  // //   cpt[0] = tmp(0);
+  // //   cpt[1] = tmp(1);
+  // //   NormalizeMouseXY(cpt[0], cpt[1], &cpt[0], &cpt[1]);
   float cpt[3];
   NormalizeMouseXY(_down_x, _down_y, &cpt[0], &cpt[1]);
 
   double radsq = pow(1.0+fabs(cpt[0]),2); // squared rad of virtual cylinder
 
-//   XYpt        tp    = ptr->old(); 
-//   XYpt        te    = ptr->cur();
+  //   XYpt        tp    = ptr->old(); 
+  //   XYpt        te    = ptr->cur();
   float tp[2], te[2];
   NormalizeMouseXY(_last_pix[0], _last_pix[1], &tp[0], &tp[1]);
   NormalizeMouseXY(x, y, &te[0], &te[1]);
   _last_pix[0] = x;
   _last_pix[1] = y;
 
-//    Wvec   op  (tp[0], 0, 0);             // get start and end X coordinates
-//    Wvec   oe  (te[0], 0, 0);             //    of cursor motion
+  //    Wvec   op  (tp[0], 0, 0);             // get start and end X coordinates
+  //    Wvec   oe  (te[0], 0, 0);             //    of cursor motion
   float op[3], oe[3];
   op[0] = tp[0];
   op[1] = 0;
@@ -652,55 +650,55 @@ void Roe::rot   (int x, int y)
   oe[1] = 0;
   oe[2] = 0;
 
-//   double opsq = op * op, oesq = oe * oe;
+  //   double opsq = op * op, oesq = oe * oe;
   double opsq = op[0] * op[0], oesq = oe[0] * oe[0];
 
   double lop  = opsq > radsq ? 0 : sqrt(radsq - opsq);
   double loe  = oesq > radsq ? 0 : sqrt(radsq - oesq);
 
-//   Wvec   nop  = Wvec(op[0], 0, lop).normalize();
-//   Wvec   noe  = Wvec(oe[0], 0, loe).normalize();
+  //   Wvec   nop  = Wvec(op[0], 0, lop).normalize();
+  //   Wvec   noe  = Wvec(oe[0], 0, loe).normalize();
   Vector nop = Vector(op[0], 0, lop).normal();
   Vector noe = Vector(oe[0], 0, loe).normal();
 
-//   double dot  = nop * noe;
+  //   double dot  = nop * noe;
   double dot = Dot(nop, noe);
 
-   if (fabs(dot) > 0.0001) {
-//       data->rotate(Wline(data->center(), Wvec::Y),
-//                    -2*acos(clamp(dot,-1.,1.)) * Sign(te[0]-tp[0]));
+  if (fabs(dot) > 0.0001) {
+    //       data->rotate(Wline(data->center(), Wvec::Y),
+    //                    -2*acos(clamp(dot,-1.,1.)) * Sign(te[0]-tp[0]));
 
-     double angle = -2*acos(clamp(dot,-1.,1.)) * Sign(te[0]-tp[0]);
-     MyRotateCamera(center, Vector(0,1,0), angle);
+    double angle = -2*acos(clamp(dot,-1.,1.)) * Sign(te[0]-tp[0]);
+    MyRotateCamera(center, Vector(0,1,0), angle);
 
 
-     // 2nd part of rotation
-     View tmpview(view.get());
+    // 2nd part of rotation
+    View tmpview(view.get());
 
-//       Wvec   dvec  = data->from() - data->center();
-     Point  from = tmpview.eyep();
-     Vector dvec = (from - center);
+    //       Wvec   dvec  = data->from() - data->center();
+    Point  from = tmpview.eyep();
+    Vector dvec = (from - center);
      
-     double rdist = te[1]-tp[1];
-//      double tdist = acos(Wvec::Y * dvec.normalize());
-     Vector Yvec(0,1,0);
+    double rdist = te[1]-tp[1];
+    //      double tdist = acos(Wvec::Y * dvec.normalize());
+    Vector Yvec(0,1,0);
 
-     double tdist = acos(clamp(Dot(Yvec, dvec.normal()), -1., 1.));
+    double tdist = acos(clamp(Dot(Yvec, dvec.normal()), -1., 1.));
 
-//       CAMdataptr   dd = new CAMdata(*data);
-//       Wline raxe(data->center(),data->right_v());
-//       data->rotate(raxe, rdist);
-     Vector right_v = (film_pt(1, 0) - film_pt(0, 0)).normal();
+    //       CAMdataptr   dd = new CAMdata(*data);
+    //       Wline raxe(data->center(),data->right_v());
+    //       data->rotate(raxe, rdist);
+    Vector right_v = (film_pt(1, 0) - film_pt(0, 0)).normal();
 
-     MyRotateCamera(center, right_v, rdist);
+    MyRotateCamera(center, right_v, rdist);
 
-     tmpview = view.get(); // update tmpview params given last rotation
-     tmpview.up(Vector(0,1,0));
-     view.set(tmpview);
+    tmpview = view.get(); // update tmpview params given last rotation
+    tmpview.up(Vector(0,1,0));
+    view.set(tmpview);
 
-//       if (data->right_v() * dd->right_v() < 0)
-//          *data = *dd;
-   }
+    //       if (data->right_v() * dd->right_v() < 0)
+    //          *data = *dd;
+  }
 }
 
 void Roe::zoom  (int X, int Y)
@@ -765,9 +763,9 @@ void Roe::pan   (int X, int Y)
   Vector right_v = film_pt(1, 0, depth) - film_pt(-1, 0,depth);
   Vector up_v    = film_pt(0, 1, depth) - film_pt( 0,-1,depth);
 
-// add_pt(this, film_pt(0,0,depth), .01);
-// add_pt(this, film_pt(1,0,depth), .01);
-// add_pt(this, film_pt(0,1,depth), .01);
+  // add_pt(this, film_pt(0,0,depth), .01);
+  // add_pt(this, film_pt(1,0,depth), .01);
+  // add_pt(this, film_pt(0,1,depth), .01);
 
   Vector trans = (right_v * (-delta[0]/2) +
                   up_v    * (-delta[1]/2));
@@ -824,509 +822,508 @@ Point Roe::film_pt    (double x, double y, double z)
 
 void Roe::mouse_scale(int action, int x, int y, int, int, int)
 {
-//   static int first=1;
-//   if (first) {
-//     first = 0;
-//     need_redraw = 1;
+  //   static int first=1;
+  //   if (first) {
+  //     first = 0;
+  //     need_redraw = 1;
 
-//     Point l = film_pt(-1, 0, 5);
-//     Point r = film_pt( 1, 0, 5);
-//     double s = (l - r).length() / 20.0;
+  //     Point l = film_pt(-1, 0, 5);
+  //     Point r = film_pt( 1, 0, 5);
+  //     double s = (l - r).length() / 20.0;
 
-//     for(int i=0;i<5;i++) {
-//       double u = double(i) / 4.0;
+  //     for(int i=0;i<5;i++) {
+  //       double u = double(i) / 4.0;
 
-//       Point p = film_pt(-1.0 + u * 2.0, 0, 5);
+  //       Point p = film_pt(-1.0 + u * 2.0, 0, 5);
 
-//       GeomSphere *obj = scinew GeomSphere;
-//       obj->move(p, s);
-//       roe_objs.add(obj);
-//     }
-//   }
+  //       GeomSphere *obj = scinew GeomSphere;
+  //       obj->move(p, s);
+  //       roe_objs.add(obj);
+  //     }
+  //   }
 
-//   if (action == MouseStart) {
-//     Point p;
+  //   if (action == MouseStart) {
+  //     Point p;
 
-//     current_renderer->pick_scene(x, y, &p);
+  //     current_renderer->pick_scene(x, y, &p);
 
-//     Vector at_v = (view.get().lookat() - view.get().eyep()).normal();
-//     Vector vec  = (p - view.get().eyep()) * at_v;
-//     double s = 0.008 * vec.length();
+  //     Vector at_v = (view.get().lookat() - view.get().eyep()).normal();
+  //     Vector vec  = (p - view.get().eyep()) * at_v;
+  //     double s = 0.008 * vec.length();
 
-//     GeomSphere *obj = scinew GeomSphere;
-//     obj->move(p, s);
-//     roe_objs.add(obj);
+  //     GeomSphere *obj = scinew GeomSphere;
+  //     obj->move(p, s);
+  //     roe_objs.add(obj);
     
-//     need_redraw = 1;
-//   }
-// return;    
+  //     need_redraw = 1;
+  //   }
+  // return;    
 
-    switch(action){
-    case MouseStart:
-	{
-            extern int CAPTURE_Z_DATA_HACK;
-            CAPTURE_Z_DATA_HACK = 1;
-            redraw();
+  switch(action){
+  case MouseStart:
+    {
+      extern int CAPTURE_Z_DATA_HACK;
+      CAPTURE_Z_DATA_HACK = 1;
+      redraw();
 
-	    update_mode_string("unicam: ");
-	    last_x=x;
-	    last_y=y;
+      update_mode_string("unicam: ");
+      last_x=x;
+      last_y=y;
 
-            _dtime    = the_time();
-            _dist     = 0;
+      _dtime    = the_time();
+      _dist     = 0;
 
-            // cam manip init
-            float curpt[2];
-            NormalizeMouseXY(x, y, &curpt[0], &curpt[1]);
-            _last_pos[0] = curpt[0];
-            _last_pos[1] = curpt[1];
+      // cam manip init
+      float curpt[2];
+      NormalizeMouseXY(x, y, &curpt[0], &curpt[1]);
+      _last_pos[0] = curpt[0];
+      _last_pos[1] = curpt[1];
 
-            // XXX - erroneously had 'x' be a capital 'X', which was a
-            // bug, but the compiler didn't catch it.  Innocent
-            // mistake was not caught by the compiler for some reason,
-            // caused bad behavior in user interaction, and eventually
-            // was debugged.
-//             _start_pix[0] = _last_pix[0] = X; // doesn't produce error!?
-//             _start_pix[1] = _last_pix[1] = Y; // doesn't produce error!?
-            _start_pix[0] = _last_pix[0] = x;
-            _start_pix[1] = _last_pix[1] = y;
+      // XXX - erroneously had 'x' be a capital 'X', which was a
+      // bug, but the compiler didn't catch it.  Innocent
+      // mistake was not caught by the compiler for some reason,
+      // caused bad behavior in user interaction, and eventually
+      // was debugged.
+      //             _start_pix[0] = _last_pix[0] = X; // doesn't produce error!?
+      //             _start_pix[1] = _last_pix[1] = Y; // doesn't produce error!?
+      _start_pix[0] = _last_pix[0] = x;
+      _start_pix[1] = _last_pix[1] = y;
 
-            // find '_down_pt'  (point in world space under the cursor tip)
-            current_renderer->pick_scene(x, y, &_down_pt);
-            _down_x = x;
-            _down_y = y;
-//             cerr << "_down_x = " << _down_x << endl;
-//             cerr << "_down_y = " << _down_y << endl;
+      // find '_down_pt'  (point in world space under the cursor tip)
+      current_renderer->pick_scene(x, y, &_down_pt);
+      _down_x = x;
+      _down_y = y;
+      //             cerr << "_down_x = " << _down_x << endl;
+      //             cerr << "_down_y = " << _down_y << endl;
             
-            // if someone has already clicked to make a dot and
-            // they're not clicking on it now, OR if the user is
-            // clicking on the perimeter of the screen, then we want
-            // to go into rotation mode.
-            if ((fabs(curpt[0]) > .85 || fabs(curpt[1]) > .9) || is_dot) {
-              if (is_dot)
-                _center = focus_sphere->cen;
+      // if someone has already clicked to make a dot and
+      // they're not clicking on it now, OR if the user is
+      // clicking on the perimeter of the screen, then we want
+      // to go into rotation mode.
+      if ((fabs(curpt[0]) > .85 || fabs(curpt[1]) > .9) || is_dot) {
+	if (is_dot)
+	  _center = focus_sphere->cen;
               
-              unicam_state = UNICAM_ROT;
-            } else {
-              unicam_state = UNICAM_CHOOSE;
-            }
-	}
-	break;
-    case MouseMove:
-	{
-            switch (unicam_state) {
-              case UNICAM_CHOOSE:   choose(x, y); break;
-              case UNICAM_ROT:      rot   (x, y); break;
-              case UNICAM_PAN:      pan   (x, y); break;
-              case UNICAM_ZOOM:     zoom  (x, y); break;
-            }
+	unicam_state = UNICAM_ROT;
+      } else {
+	unicam_state = UNICAM_CHOOSE;
+      }
+    }
+    break;
+  case MouseMove:
+    {
+      switch (unicam_state) {
+      case UNICAM_CHOOSE:   choose(x, y); break;
+      case UNICAM_ROT:      rot   (x, y); break;
+      case UNICAM_PAN:      pan   (x, y); break;
+      case UNICAM_ZOOM:     zoom  (x, y); break;
+      }
 
- 	    need_redraw=1;
+      need_redraw=1;
 
-	    ostringstream str;
-            char *unicamMode[] = {"Choose", "Rotate", "Pan", "Zoom"};
-	    str << "unicam: " << unicamMode[unicam_state];
-	    update_mode_string(str.str().c_str());
-	}
-	break;
+      ostringstream str;
+      char *unicamMode[] = {"Choose", "Rotate", "Pan", "Zoom"};
+      str << "unicam: " << unicamMode[unicam_state];
+      update_mode_string(str.str().c_str());
+    }
+    break;
 
-    case MouseEnd:
-        if (unicam_state == UNICAM_ROT && is_dot ) {
-          HideFocusSphere();
-          is_dot = 0;
-        } else if (unicam_state == UNICAM_CHOOSE) {
-          if (is_dot) {
-            HideFocusSphere();
-            is_dot = 0;
-          } else {
-            // XXX - need to select 's' to make focus_sphere 1/4 or so
-            // inches on the screen always...  how?
-            Vector at_v = (view.get().lookat() - view.get().eyep()).normal();
-            Vector vec  = (_down_pt - view.get().eyep()) * at_v;
-            double s = 0.008 * vec.length();
+  case MouseEnd:
+    if (unicam_state == UNICAM_ROT && is_dot ) {
+      HideFocusSphere();
+      is_dot = 0;
+    } else if (unicam_state == UNICAM_CHOOSE) {
+      if (is_dot) {
+	HideFocusSphere();
+	is_dot = 0;
+      } else {
+	// XXX - need to select 's' to make focus_sphere 1/4 or so
+	// inches on the screen always...  how?
+	Vector at_v = (view.get().lookat() - view.get().eyep()).normal();
+	Vector vec  = (_down_pt - view.get().eyep()) * at_v;
+	double s = 0.008 * vec.length();
 
-            focus_sphere->move(_down_pt, s);
-	    ShowFocusSphere();
-	    is_dot = 1;
-          }
-        }
+	focus_sphere->move(_down_pt, s);
+	ShowFocusSphere();
+	is_dot = 1;
+      }
+    }
         
-        need_redraw = 1;
+    need_redraw = 1;
 
-	update_mode_string("");
-	break;
-    }	
+    update_mode_string("");
+    break;
+  }	
 }
 
 #endif
 
 void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
 {
-    switch(action){
-    case MouseStart:
-	{
-	    if(inertia_mode){
-		inertia_mode=0;
-		redraw();
-	    }
-	    update_mode_string("rotate:");
-	    last_x=x;
-	    last_y=y;
+  switch(action){
+  case MouseStart:
+    {
+      if(inertia_mode){
+	inertia_mode=0;
+	redraw();
+      }
+      update_mode_string("rotate:");
+      last_x=x;
+      last_y=y;
 
-	    // Find the center of rotation...
-	    View tmpview(view.get());
-	    int xres=current_renderer->xres;
-	    int yres=current_renderer->yres;
-	    double aspect=double(xres)/double(yres);
-	    double znear, zfar;
-	    rot_point_valid=0;
-	    if(!current_renderer->compute_depth(this, tmpview, znear, zfar))
-		return; // No objects...
-	    double zmid=(znear+zfar)/2.;
-//             cerr << "zmid = " << zmid << endl;
+      // Find the center of rotation...
+      View tmpview(view.get());
+      int xres=current_renderer->xres;
+      int yres=current_renderer->yres;
+      double aspect=double(xres)/double(yres);
+      double znear, zfar;
+      rot_point_valid=0;
+      if(!current_renderer->compute_depth(this, tmpview, znear, zfar))
+	return; // No objects...
+      double zmid=(znear+zfar)/2.;
+      //             cerr << "zmid = " << zmid << endl;
 
-	    Point ep(0, 0, zmid);
-	    rot_point=tmpview.eyespace_to_objspace(ep, aspect);
+      Point ep(0, 0, zmid);
+      rot_point=tmpview.eyespace_to_objspace(ep, aspect);
 
-	    rot_point = tmpview.lookat();
-	    rot_view=tmpview;
-	    rot_point_valid=1;
+      rot_point = tmpview.lookat();
+      rot_view=tmpview;
+      rot_point_valid=1;
 
-	    double rad = 0.8;
-	    HVect center(0,0,0,1.0);
+      double rad = 0.8;
+      HVect center(0,0,0,1.0);
 	
-	    // we also want to keep the old transform information
-	    // around (so stuff correlates correctly)
-	    // OGL uses left handed coordinate system!
+      // we also want to keep the old transform information
+      // around (so stuff correlates correctly)
+      // OGL uses left handed coordinate system!
 	
-	    Vector z_axis,y_axis,x_axis;
+      Vector z_axis,y_axis,x_axis;
 
-	    y_axis = tmpview.up();
-	    z_axis = tmpview.eyep() - tmpview.lookat();
-	    eye_dist = z_axis.normalize();
-	    x_axis = Cross(y_axis,z_axis);
-	    x_axis.normalize();
-	    y_axis = Cross(z_axis,x_axis);
-	    y_axis.normalize();
-	    tmpview.up(y_axis); // having this correct could fix something?
+      y_axis = tmpview.up();
+      z_axis = tmpview.eyep() - tmpview.lookat();
+      eye_dist = z_axis.normalize();
+      x_axis = Cross(y_axis,z_axis);
+      x_axis.normalize();
+      y_axis = Cross(z_axis,x_axis);
+      y_axis.normalize();
+      tmpview.up(y_axis); // having this correct could fix something?
 
-	    prev_trans.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
+      prev_trans.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
 
-	    ball->Init();
-	    ball->Place(center,rad);
-	    HVect mouse((2.0*x)/xres - 1.0,2.0*(yres-y*1.0)/yres - 1.0,0.0,1.0);
-	    ball->Mouse(mouse);
-	    ball->BeginDrag();
+      ball->Init();
+      ball->Place(center,rad);
+      HVect mouse((2.0*x)/xres - 1.0,2.0*(yres-y*1.0)/yres - 1.0,0.0,1.0);
+      ball->Mouse(mouse);
+      ball->BeginDrag();
 
-	    prev_time[0] = time;
-	    prev_quat[0] = mouse;
-	    prev_time[1] = prev_time[2] = -100;
-	    ball->Update();
-	    last_time=time;
-	    inertia_mode=0;
-	    need_redraw = 1;
-	}
+      prev_time[0] = time;
+      prev_quat[0] = mouse;
+      prev_time[1] = prev_time[2] = -100;
+      ball->Update();
+      last_time=time;
+      inertia_mode=0;
+      need_redraw = 1;
+    }
+    break;
+  case MouseMove:
+    {
+      int xres=current_renderer->xres;
+      int yres=current_renderer->yres;
+      //double aspect=double(xres)/double(yres);
+
+      if(!rot_point_valid)
 	break;
-    case MouseMove:
-	{
-	    int xres=current_renderer->xres;
-	    int yres=current_renderer->yres;
-	    //double aspect=double(xres)/double(yres);
 
-	    if(!rot_point_valid)
-		break;
+      HVect mouse((2.0*x)/xres - 1.0,2.0*(yres-y*1.0)/yres - 1.0,0.0,1.0);
+      prev_time[2] = prev_time[1];
+      prev_time[1] = prev_time[0];
+      prev_time[0] = time;
+      ball->Mouse(mouse);
+      ball->Update();
 
-	    HVect mouse((2.0*x)/xres - 1.0,2.0*(yres-y*1.0)/yres - 1.0,0.0,1.0);
-	    prev_time[2] = prev_time[1];
-	    prev_time[1] = prev_time[0];
-	    prev_time[0] = time;
-	    ball->Mouse(mouse);
-	    ball->Update();
+      prev_quat[2] = prev_quat[1];
+      prev_quat[1] = prev_quat[0];
+      prev_quat[0] = mouse;
 
-	    prev_quat[2] = prev_quat[1];
-	    prev_quat[1] = prev_quat[0];
-	    prev_quat[0] = mouse;
+      // now we should just sendthe view points through
+      // the rotation (after centerd around the ball)
+      // eyep lookat and up
 
-	    // now we should just sendthe view points through
-	    // the rotation (after centerd around the ball)
-	    // eyep lookat and up
+      View tmpview(rot_view);
 
-	    View tmpview(rot_view);
+      Transform tmp_trans;
+      HMatrix mNow;
+      ball->Value(mNow);
+      tmp_trans.set(&mNow[0][0]);
 
-	    Transform tmp_trans;
-	    HMatrix mNow;
-	    ball->Value(mNow);
-	    tmp_trans.set(&mNow[0][0]);
+      Transform prv = prev_trans;
+      prv.post_trans(tmp_trans);
 
-	    Transform prv = prev_trans;
-	    prv.post_trans(tmp_trans);
+      HMatrix vmat;
+      prv.get(&vmat[0][0]);
 
-	    HMatrix vmat;
-	    prv.get(&vmat[0][0]);
+      Point y_a(vmat[0][1],vmat[1][1],vmat[2][1]);
+      Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
 
-	    Point y_a(vmat[0][1],vmat[1][1],vmat[2][1]);
-	    Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
+      tmpview.up(y_a.vector());
+      tmpview.eyep((z_a*(eye_dist)) + tmpview.lookat().vector());
 
-	    tmpview.up(y_a.vector());
-	    tmpview.eyep((z_a*(eye_dist)) + tmpview.lookat().vector());
+      view.set(tmpview);
+      need_redraw=1;
+      update_mode_string("rotate:");
 
-	    view.set(tmpview);
-	    need_redraw=1;
-	    update_mode_string("rotate:");
-
-	    last_time=time;
-	    inertia_mode=0;
-	}
-	break;
-    case MouseEnd:
-	if(time-last_time < 20){
-	    // now setup the normalized quaternion
+      last_time=time;
+      inertia_mode=0;
+    }
+    break;
+  case MouseEnd:
+    if(time-last_time < 20){
+      // now setup the normalized quaternion
  
 
-	    View tmpview(rot_view);
+      View tmpview(rot_view);
 	    
-	    Transform tmp_trans;
-	    HMatrix mNow;
-	    ball->Value(mNow);
-	    tmp_trans.set(&mNow[0][0]);
+      Transform tmp_trans;
+      HMatrix mNow;
+      ball->Value(mNow);
+      tmp_trans.set(&mNow[0][0]);
 	    
-	    Transform prv = prev_trans;
-	    prv.post_trans(tmp_trans);
+      Transform prv = prev_trans;
+      prv.post_trans(tmp_trans);
 	    
-	    HMatrix vmat;
-	    prv.get(&vmat[0][0]);
+      HMatrix vmat;
+      prv.get(&vmat[0][0]);
 	    
-	    Point y_a(vmat[0][1],vmat[1][1],vmat[2][1]);
-	    Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
+      Point y_a(vmat[0][1],vmat[1][1],vmat[2][1]);
+      Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
 	    
-	    tmpview.up(y_a.vector());
-	    tmpview.eyep((z_a*(eye_dist)) + tmpview.lookat().vector());
+      tmpview.up(y_a.vector());
+      tmpview.eyep((z_a*(eye_dist)) + tmpview.lookat().vector());
 	    
-	    view.set(tmpview);
-	    prev_trans = prv;
+      view.set(tmpview);
+      prev_trans = prv;
 
-	    // now you need to use the history to 
-	    // set up the arc you want to use...
+      // now you need to use the history to 
+      // set up the arc you want to use...
 
-	    ball->Init();
-	    double rad = 0.8;
-	    HVect center(0,0,0,1.0);
+      ball->Init();
+      double rad = 0.8;
+      HVect center(0,0,0,1.0);
 
-	    ball->Place(center,rad);
+      ball->Place(center,rad);
 
-	    int index=2;
+      int index=2;
 
-	    if (prev_time[index] == -100)
-		index = 1;
+      if (prev_time[index] == -100)
+	index = 1;
 
-	    ball->vDown = prev_quat[index];
-	    ball->vNow  = prev_quat[0];
-	    ball->dragging = 1;
-	    ball->Update();
+      ball->vDown = prev_quat[index];
+      ball->vNow  = prev_quat[0];
+      ball->dragging = 1;
+      ball->Update();
 	    
-	    ball->qNorm = ball->qNow.Conj();
-	    double mag = ball->qNow.VecMag();
+      ball->qNorm = ball->qNow.Conj();
+      double mag = ball->qNow.VecMag();
 
-	    // Go into inertia mode...
-	    inertia_mode=1;
-	    need_redraw=1;
+      // Go into inertia mode...
+      inertia_mode=1;
+      need_redraw=1;
 
-	    if (mag < 0.00001) { // arbitrary ad-hoc threshold
-		inertia_mode = 0;
-		need_redraw = 1;
-//		cerr << mag << " " << prev_time[0] - prev_time[index] << endl;
-	    }
-	    else {
-		double c = 1.0/mag;
-		double dt = prev_time[0] - prev_time[index];// time between last 2 events
-		ball->qNorm.x *= c;
-		ball->qNorm.y *= c;
-		ball->qNorm.z *= c;
-		angular_v = 2*acos(ball->qNow.w)*1000.0/dt;
-		cerr << dt << endl;
-	    }
-	} else {
-	    inertia_mode=0;
-	}
-	ball->EndDrag();
-	rot_point_valid = 0; // so we don't have to draw this...
-	need_redraw = 1;     // always update this...
-	update_mode_string("");
-	break;
+      if (mag < 0.00001) { // arbitrary ad-hoc threshold
+	inertia_mode = 0;
+	need_redraw = 1;
+      }
+      else {
+	double c = 1.0/mag;
+	double dt = prev_time[0] - prev_time[index];// time between last 2 events
+	ball->qNorm.x *= c;
+	ball->qNorm.y *= c;
+	ball->qNorm.z *= c;
+	angular_v = 2*acos(ball->qNow.w)*1000.0/dt;
+	cerr << dt << endl;
+      }
+    } else {
+      inertia_mode=0;
     }
+    ball->EndDrag();
+    rot_point_valid = 0; // so we don't have to draw this...
+    need_redraw = 1;     // always update this...
+    update_mode_string("");
+    break;
+  }
 }
 
-//>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+// -- BAWGL -- 
 static int prevPrinc;
 void Roe::bawgl_pick(int action, int iv[3], GLfloat fv[3])
 {
-    BState bs;
-    switch(action) {
-    case BAWGL_PICK_START:
-	{
+  BState bs;
+  switch(action) {
+  case BAWGL_PICK_START:
+    {
 	    
-	    current_renderer->get_pick(manager, this, iv[0], iv[1],
-				       pick_obj, pick_pick, pick_n); 
-	    if (pick_obj){
-		update_mode_string(pick_obj);
-		pick_pick->set_picked_obj(pick_obj);
-		pick_pick->pick(this,bs);
-		total_x=0;
-		total_y=0;
-		total_z=0;
-		//need_redraw=1;
-	    } else {
-		update_mode_string("pick: none");
-	    }
+      current_renderer->get_pick(manager, this, iv[0], iv[1],
+				 pick_obj, pick_pick, pick_n); 
+      if (pick_obj){
+	update_mode_string(pick_obj);
+	pick_pick->set_picked_obj(pick_obj);
+	pick_pick->pick(this,bs);
+	total_x=0;
+	total_y=0;
+	total_z=0;
+	//need_redraw=1;
+      } else {
+	update_mode_string("pick: none");
+      }
 
-	}
-    break;
-    case BAWGL_PICK_MOVE:
-	{
-	    if (!pick_obj || !pick_pick) break;
-	    Vector dir(fv[0],fv[1],fv[2]);
-	    //float dv= sqrt(fv[0]*fv[0]+fv[1]*fv[1]+fv[2]*fv[2]);
-	    //pick_pick->moved(0, dv, dir, bs);
-
-	    double maxdot=0;
-	    int prin_dir=-1;
-	    for (int i=0; i<pick_pick->nprincipal(); i++) {
-		double pdot=Dot(dir, pick_pick->principal(i));
-		if(pdot > maxdot){
-		    maxdot=pdot;
-		    prin_dir=i;
-		}
-	    }
-	    if(prin_dir != -1){
-		prevPrinc= prin_dir;
-		double dist=dir.length();
-		Vector mtn(pick_pick->principal(prin_dir)*dist);
-		total_x+=mtn.x();
-		total_y+=mtn.y();
-		total_z+=mtn.z();
-		if (Abs(total_x) < .0001) total_x=0;
-		if (Abs(total_y) < .0001) total_y=0;
-		if (Abs(total_z) < .0001) total_z=0;
-		update_mode_string(pick_obj);
-		pick_pick->moved(prin_dir, dist, mtn, bs);
-	    } else {
-		update_mode_string("pick: Bad direction...");
-	    }
-	}
-    break;
-    case BAWGL_PICK_END:
-	{
-	    if(pick_pick){
-		pick_pick->release( bs );
-	    }
-	    pick_pick=0;
-	    pick_obj=0;
-	    update_mode_string("");
-	}
-    break;
     }
+    break;
+  case BAWGL_PICK_MOVE:
+    {
+      if (!pick_obj || !pick_pick) break;
+      Vector dir(fv[0],fv[1],fv[2]);
+      //float dv= sqrt(fv[0]*fv[0]+fv[1]*fv[1]+fv[2]*fv[2]);
+      //pick_pick->moved(0, dv, dir, bs);
+
+      double maxdot=0;
+      int prin_dir=-1;
+      for (int i=0; i<pick_pick->nprincipal(); i++) {
+	double pdot=Dot(dir, pick_pick->principal(i));
+	if(pdot > maxdot){
+	  maxdot=pdot;
+	  prin_dir=i;
+	}
+      }
+      if(prin_dir != -1){
+	prevPrinc= prin_dir;
+	double dist=dir.length();
+	Vector mtn(pick_pick->principal(prin_dir)*dist);
+	total_x+=mtn.x();
+	total_y+=mtn.y();
+	total_z+=mtn.z();
+	if (Abs(total_x) < .0001) total_x=0;
+	if (Abs(total_y) < .0001) total_y=0;
+	if (Abs(total_z) < .0001) total_z=0;
+	update_mode_string(pick_obj);
+	pick_pick->moved(prin_dir, dist, mtn, bs);
+      } else {
+	update_mode_string("pick: Bad direction...");
+      }
+    }
+    break;
+  case BAWGL_PICK_END:
+    {
+      if(pick_pick){
+	pick_pick->release( bs );
+      }
+      pick_pick=0;
+      pick_obj=0;
+      update_mode_string("");
+    }
+    break;
+  }
 }
-//<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<
+// -- BAWGL --
 
 void Roe::mouse_pick(int action, int x, int y, int state, int btn, int)
 {
-    BState bs;
-    bs.shift=1; // Always for widgets...
-    bs.control= ((state&4)!=0);
-    bs.alt= ((state&8)!=0);
-    bs.btn=btn;
-    switch(action){
-    case MouseStart:
-	{
-	    total_x=0;
-	    total_y=0;
-	    total_z=0;
-	    last_x=x;
-	    last_y=current_renderer->yres-y;
-	    current_renderer->get_pick(manager, this, x, y,
-				       pick_obj, pick_pick, pick_n);
+  BState bs;
+  bs.shift=1; // Always for widgets...
+  bs.control= ((state&4)!=0);
+  bs.alt= ((state&8)!=0);
+  bs.btn=btn;
+  switch(action){
+  case MouseStart:
+    {
+      total_x=0;
+      total_y=0;
+      total_z=0;
+      last_x=x;
+      last_y=current_renderer->yres-y;
+      current_renderer->get_pick(manager, this, x, y,
+				 pick_obj, pick_pick, pick_n);
 
-	    if (pick_obj){
-		update_mode_string(pick_obj);
-		pick_pick->set_picked_obj(pick_obj);
-		pick_pick->pick(this,bs);
+      if (pick_obj){
+	update_mode_string(pick_obj);
+	pick_pick->set_picked_obj(pick_obj);
+	pick_pick->pick(this,bs);
 
-		need_redraw=1;
-	    } else {
-		update_mode_string("pick: none");
-	    }
-	}
-	break;
-    case MouseMove:
-	{
-	    if (!pick_obj || !pick_pick) break;
-// project the center of the item grabbed onto the screen -- take the z
-// component and unprojec the last and current x, y locations to get a 
-// vector in object space.
-	    y=current_renderer->yres-y;
-	    BBox itemBB;
-	    pick_obj->get_bounds(itemBB);
-	    View tmpview(view.get());
-	    Point cen(itemBB.center());
-	    double depth=tmpview.depth(cen);
-	    Vector u,v;
-	    int xres=current_renderer->xres;
-	    int yres=current_renderer->yres;
-	    double aspect=double(xres)/double(yres);
-	    tmpview.get_viewplane(aspect, depth, u, v);
-	    int dx=x-last_x;
-	    int dy=y-last_y;
-	    double ndx=(2*dx/(double(xres)-1));
-	    double ndy=(2*dy/(double(yres)-1));
-	    Vector motionv(u*ndx+v*ndy);
-
-	    double maxdot=0;
-	    int prin_dir=-1;
-	    for (int i=0; i<pick_pick->nprincipal(); i++) {
-		double pdot=Dot(motionv, pick_pick->principal(i));
-		if(pdot > maxdot){
-		    maxdot=pdot;
-		    prin_dir=i;
-		}
-	    }
-	    if(prin_dir != -1){
-		double dist=motionv.length();
-		Vector mtn(pick_pick->principal(prin_dir)*dist);
-		total_x+=mtn.x();
-		total_y+=mtn.y();
-		total_z+=mtn.z();
-		if (Abs(total_x) < .0001) total_x=0;
-		if (Abs(total_y) < .0001) total_y=0;
-		if (Abs(total_z) < .0001) total_z=0;
-		need_redraw=1;
-		update_mode_string(pick_obj);
-		pick_pick->moved(prin_dir, dist, mtn, bs);
-		need_redraw=1;
-	    } else {
-		update_mode_string("pick: Bad direction...");
-	    }
-	    last_x = x;
-	    last_y = y;
-	}
-	break;
-    case MouseEnd:
-	if(pick_pick){
-	    pick_pick->release( bs );
-	    need_redraw=1;
-	}
-	pick_pick=0;
-	pick_obj=0;
-	update_mode_string("");
-	break;
+	need_redraw=1;
+      } else {
+	update_mode_string("pick: none");
+      }
     }
+    break;
+  case MouseMove:
+    {
+      if (!pick_obj || !pick_pick) break;
+      // project the center of the item grabbed onto the screen -- take the z
+      // component and unprojec the last and current x, y locations to get a 
+      // vector in object space.
+      y=current_renderer->yres-y;
+      BBox itemBB;
+      pick_obj->get_bounds(itemBB);
+      View tmpview(view.get());
+      Point cen(itemBB.center());
+      double depth=tmpview.depth(cen);
+      Vector u,v;
+      int xres=current_renderer->xres;
+      int yres=current_renderer->yres;
+      double aspect=double(xres)/double(yres);
+      tmpview.get_viewplane(aspect, depth, u, v);
+      int dx=x-last_x;
+      int dy=y-last_y;
+      double ndx=(2*dx/(double(xres)-1));
+      double ndy=(2*dy/(double(yres)-1));
+      Vector motionv(u*ndx+v*ndy);
+
+      double maxdot=0;
+      int prin_dir=-1;
+      for (int i=0; i<pick_pick->nprincipal(); i++) {
+	double pdot=Dot(motionv, pick_pick->principal(i));
+	if(pdot > maxdot){
+	  maxdot=pdot;
+	  prin_dir=i;
+	}
+      }
+      if(prin_dir != -1){
+	double dist=motionv.length();
+	Vector mtn(pick_pick->principal(prin_dir)*dist);
+	total_x+=mtn.x();
+	total_y+=mtn.y();
+	total_z+=mtn.z();
+	if (Abs(total_x) < .0001) total_x=0;
+	if (Abs(total_y) < .0001) total_y=0;
+	if (Abs(total_z) < .0001) total_z=0;
+	need_redraw=1;
+	update_mode_string(pick_obj);
+	pick_pick->moved(prin_dir, dist, mtn, bs);
+	need_redraw=1;
+      } else {
+	update_mode_string("pick: Bad direction...");
+      }
+      last_x = x;
+      last_y = y;
+    }
+    break;
+  case MouseEnd:
+    if(pick_pick){
+      pick_pick->release( bs );
+      need_redraw=1;
+    }
+    pick_pick=0;
+    pick_obj=0;
+    update_mode_string("");
+    break;
+  }
 }
 
 void Roe::redraw_if_needed()
 {
-    if(need_redraw){
-	need_redraw=0;
-	redraw();
-    }
+  if(need_redraw){
+    need_redraw=0;
+    redraw();
+  }
 }
 
 void Roe::tcl_command(TCLArgs& args, void*)
@@ -1717,21 +1714,21 @@ void Roe::tcl_command(TCLArgs& args, void*)
       return;
     }
     current_renderer->setvisual(args[2], idx, width, height);
-    // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+    // --  BAWGL -- 
   } else if(args[1] == "startbawgl") {
     if( bawgl->start(this, "bench.config")  == 0 )
-      {
-	bawgl_error = 0;
-      }
+    {
+      bawgl_error = 0;
+    }
     else
-      {
-	do_bawgl.set(0);
-	bawgl_error = 1;
-	args.error("Bummer!\n Check if the device daemons are alive!");
-      }
+    {
+      do_bawgl.set(0);
+      bawgl_error = 1;
+      args.error("Bummer!\n Check if the device daemons are alive!");
+    }
   } else if(args[1] == "stopbawgl"){
     if( !bawgl_error ) bawgl->stop();
-    // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+    // --  BAWGL -- 
   } else if(args[1] == "centerGenAxes") { 
     if(caxes.get() == 1) {  // checked
       roe_objs_draw[0] = 1;
@@ -1752,141 +1749,141 @@ void Roe::tcl_command(TCLArgs& args, void*)
 
 void Roe::do_mouse(MouseHandler handler, TCLArgs& args)
 {
-    if(args.count() != 5 && args.count() != 7 && args.count() != 8 && args.count() != 6){
-	args.error(args[1]+" needs start/move/end and x y");
-	return;
-    }
-    int action;
-    if(args[2] == "start"){
-	action=MouseStart;
-    } else if(args[2] == "end"){
-	action=MouseEnd;
-    } else if(args[2] == "move"){
-	action=MouseMove;
-    } else {
-	args.error("Unknown mouse action");
-	return;
-    }
-    int x,y;
-    if(!args[3].get_int(x)){
-	args.error("error parsing x");
-	return;
-    }
-    if(!args[4].get_int(y)){
-	args.error("error parsing y");
-	return;
-    }
-    int state;
-    int btn;
-    if(args.count() == 7){
-       if(!args[5].get_int(state)){
-	  args.error("error parsing state");
-	  return;
+  if(args.count() != 5 && args.count() != 7 && args.count() != 8 && args.count() != 6){
+    args.error(args[1]+" needs start/move/end and x y");
+    return;
+  }
+  int action;
+  if(args[2] == "start"){
+    action=MouseStart;
+  } else if(args[2] == "end"){
+    action=MouseEnd;
+  } else if(args[2] == "move"){
+    action=MouseMove;
+  } else {
+    args.error("Unknown mouse action");
+    return;
+  }
+  int x,y;
+  if(!args[3].get_int(x)){
+    args.error("error parsing x");
+    return;
+  }
+  if(!args[4].get_int(y)){
+    args.error("error parsing y");
+    return;
+  }
+  int state;
+  int btn;
+  if(args.count() == 7){
+    if(!args[5].get_int(state)){
+      args.error("error parsing state");
+      return;
 
-       }
-       if(!args[6].get_int(btn)){
-	  args.error("error parsing btn");
-	  return;
-       }
     }
-    int time;
-    if(args.count() == 8){
-	if(!args[7].get_int(time)){
-	   args.error("err parsing time");
-	   return;
-       }
+    if(!args[6].get_int(btn)){
+      args.error("error parsing btn");
+      return;
     }
-    if(args.count() == 6){
-	if(!args[5].get_int(time)){
-	   args.error("err parsing time");
-	   return;
-       }
+  }
+  int time;
+  if(args.count() == 8){
+    if(!args[7].get_int(time)){
+      args.error("err parsing time");
+      return;
     }
+  }
+  if(args.count() == 6){
+    if(!args[5].get_int(time)){
+      args.error("err parsing time");
+      return;
+    }
+  }
 
-    // We have to send this to the salmon thread...
-    if(!manager->mailbox.trySend(scinew RoeMouseMessage(id, handler, action, x, y, state, btn, time)))
-	cerr << "Mouse event dropped, mailbox full!\n";
+  // We have to send this to the salmon thread...
+  if(!manager->mailbox.trySend(scinew RoeMouseMessage(id, handler, action, x, y, state, btn, time)))
+    cerr << "Mouse event dropped, mailbox full!\n";
 }
 
 void Roe::autoview(const BBox& bbox)
 {
-    if(bbox.valid()){
-        View cv(view.get());
-        // Animate lookat point to center of BBox...
-        cv.lookat(bbox.center());
-        animate_to_view(cv, 2.0);
+  if(bbox.valid()){
+    View cv(view.get());
+    // Animate lookat point to center of BBox...
+    cv.lookat(bbox.center());
+    animate_to_view(cv, 2.0);
         
-        // Move forward/backwards until entire view is in scene...
+    // Move forward/backwards until entire view is in scene...
 
-	// change this a little, make it so that the FOV must
-	// be 60 deg...
+    // change this a little, make it so that the FOV must
+    // be 60 deg...
 
-	// I'm changing this to be 20 degrees - Dave
+    // I'm changing this to be 20 degrees - Dave
 
-	double myfov=20.0;
+    double myfov=20.0;
 
-        Vector diag(bbox.diagonal());
-	double w=diag.length();
-	Vector lookdir(cv.lookat()-cv.eyep()); 
-	lookdir.normalize();
-	const double scale = 1.0/(2*Tan(DtoR(myfov/2.0)));
-	double length = w*scale;
-	cv.fov(myfov);
-	cv.eyep(cv.lookat() - lookdir*length);
-        animate_to_view(cv, 2.0);
+    Vector diag(bbox.diagonal());
+    double w=diag.length();
+    Vector lookdir(cv.lookat()-cv.eyep()); 
+    lookdir.normalize();
+    const double scale = 1.0/(2*Tan(DtoR(myfov/2.0)));
+    double length = w*scale;
+    cv.fov(myfov);
+    cv.eyep(cv.lookat() - lookdir*length);
+    animate_to_view(cv, 2.0);
 
-    }
+  }
 }
 
 void Roe::redraw()
 {
-    need_redraw=0;
-    reset_vars();
+  need_redraw=0;
+  reset_vars();
 
-    // Get animation variables
-    double ct;
-    if(!get_tcl_doublevar(id, "current_time", ct)){
-	manager->error("Error reading current_time");
-	return;
-    }
-    current_renderer->redraw(manager, this, ct, ct, 1, 0);
+  // Get animation variables
+  double ct;
+  if(!get_tcl_doublevar(id, "current_time", ct)){
+    manager->error("Error reading current_time");
+    return;
+  }
+  current_renderer->redraw(manager, this, ct, ct, 1, 0);
 }
 
 void Roe::redraw(double tbeg, double tend, int nframes, double framerate)
 {
-    need_redraw=0;
-    reset_vars();
+  need_redraw=0;
+  reset_vars();
 
-    // Get animation variables
-    current_renderer->redraw(manager, this, tbeg, tend, nframes, framerate);
+  // Get animation variables
+  current_renderer->redraw(manager, this, tbeg, tend, nframes, framerate);
 }
 
 void Roe::update_mode_string(GeomObj* pick_obj)
 {
-    clString ms="pick: ";
-    GeomSalmonItem* si=dynamic_cast<GeomSalmonItem*>(pick_obj);
-    if(!si){
-	ms+="not a GeomSalmonItem?";
-    } else {
-	ms+=si->name;
-    }
-    if(pick_n != 0x12345678)
-	ms+=", index="+to_string(pick_n);
-    update_mode_string(ms);
+  clString ms="pick: ";
+  GeomSalmonItem* si=dynamic_cast<GeomSalmonItem*>(pick_obj);
+  if(!si){
+    ms+="not a GeomSalmonItem?";
+  } else {
+    ms+=si->name;
+  }
+  if(pick_n != 0x12345678)
+    ms+=", index="+to_string(pick_n);
+  update_mode_string(ms);
 }
 
 void Roe::update_mode_string(const clString& msg)
 {
-    ostringstream str;
-    str << id << " updateMode \"" << msg << "\"";
-    TCL::execute(str.str().c_str());
+  ostringstream str;
+  str << id << " updateMode \"" << msg << "\"";
+  TCL::execute(str.str().c_str());
 }
 
 RoeMouseMessage::RoeMouseMessage(const clString& rid, MouseHandler handler,
 				 int action, int x, int y, int state, int btn,
 				 int time)
-: MessageBase(MessageTypes::RoeMouse), rid(rid), handler(handler),
-  action(action), x(x), y(y), state(state), btn(btn), time(time)
+  : MessageBase(MessageTypes::RoeMouse), rid(rid), handler(handler),
+    action(action), x(x), y(y), state(state), btn(btn), time(time)
 {
 }
 
@@ -1896,14 +1893,14 @@ RoeMouseMessage::~RoeMouseMessage()
 
 void Roe::animate_to_view(const View& v, double /*time*/)
 {
-    NOT_FINISHED("Roe::animate_to_view");
-    view.set(v);
-    manager->mailbox.send(scinew SalmonMessage(id));
+  NOT_FINISHED("Roe::animate_to_view");
+  view.set(v);
+  manager->mailbox.send(scinew SalmonMessage(id));
 }
 
 Renderer* Roe::get_renderer(const clString& name)
 {
-    // See if we already have one like that...
+  // See if we already have one like that...
   Renderer* r;
   MapClStringRenderer::iterator riter;
 
@@ -1923,7 +1920,7 @@ Renderer* Roe::get_renderer(const clString& name)
 
 void Roe::force_redraw()
 {
-    need_redraw=1;
+  need_redraw=1;
 }
 
 void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
@@ -1993,212 +1990,98 @@ void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
 
 void Roe::set_current_time(double time)
 {
-    set_tclvar(id, "current_time", to_string(time));
+  set_tclvar(id, "current_time", to_string(time));
 }
 
 void Roe::dump_objects(const clString& filename, const clString& format)
 {
-    if(format == "scirun_binary" || format == "scirun_ascii"){
-	Piostream* stream;
-	if(format == "scirun_binary")
-	    stream=new BinaryPiostream(filename, Piostream::Write);
-	else
-	    stream=new TextPiostream(filename, Piostream::Write);
-	if(stream->error()){
-	    delete stream;
-	    return;
-	}
-	manager->geomlock.readLock();
-	GeomScene scene(bgcolor.get(), view.get(), &manager->lighting,
-			&manager->ports);
-	SCICore::PersistentSpace::Pio(*stream, scene);
-	if(stream->error()){
-	    cerr << "Error writing geom file: " << filename << endl;
-	} else {
-	    cerr << "Done writing geom file: " << filename << endl;
-	}
-	delete stream;
-	manager->geomlock.readUnlock();
-   } else {
-	cerr << "WARNING: format " << format << " not supported!\n";
+  if(format == "scirun_binary" || format == "scirun_ascii"){
+    Piostream* stream;
+    if(format == "scirun_binary")
+      stream=new BinaryPiostream(filename, Piostream::Write);
+    else
+      stream=new TextPiostream(filename, Piostream::Write);
+    if(stream->error()){
+      delete stream;
+      return;
     }
+    manager->geomlock.readLock();
+    GeomScene scene(bgcolor.get(), view.get(), &manager->lighting,
+		    &manager->ports);
+    SCICore::PersistentSpace::Pio(*stream, scene);
+    if(stream->error()){
+      cerr << "Error writing geom file: " << filename << endl;
+    } else {
+      cerr << "Done writing geom file: " << filename << endl;
+    }
+    delete stream;
+    manager->geomlock.readUnlock();
+  } else {
+    cerr << "WARNING: format " << format << " not supported!\n";
+  }
 }
 
 void Roe::getData(int datamask, FutureValue<GeometryData*>* result)
 {
-    if(current_renderer){
-	cerr << "calling current_renderer->getData\n";
-	current_renderer->getData(datamask, result);
-	cerr << "current_renderer...\n";
-    } else {
-	result->send(0);
-    }
+  if(current_renderer){
+    cerr << "calling current_renderer->getData\n";
+    current_renderer->getData(datamask, result);
+    cerr << "current_renderer...\n";
+  } else {
+    result->send(0);
+  }
 }
 
 void Roe::setView(View newView) {
-    view.set(newView);
-    manager->mailbox.send(scinew SalmonMessage(id)); // Redraw
+  view.set(newView);
+  manager->mailbox.send(scinew SalmonMessage(id)); // Redraw
 }
 
 GeomGroup* Roe::createGenAxes() {     
   
-   MaterialHandle dk_red = scinew Material(Color(0,0,0), Color(.2,0,0),
-			 Color(.5,.5,.5), 20);
-   MaterialHandle dk_green = scinew Material(Color(0,0,0), Color(0,.2,0),
-			   Color(.5,.5,.5), 20);
-   MaterialHandle dk_blue = scinew Material(Color(0,0,0), Color(0,0,.2),
-			  Color(.5,.5,.5), 20);
-   MaterialHandle lt_red = scinew Material(Color(0,0,0), Color(.8,0,0),
-			 Color(.5,.5,.5), 20);
-   MaterialHandle lt_green = scinew Material(Color(0,0,0), Color(0,.8,0),
-			   Color(.5,.5,.5), 20);
-   MaterialHandle lt_blue = scinew Material(Color(0,0,0), Color(0,0,.8),
-			  Color(.5,.5,.5), 20);
+  MaterialHandle dk_red = scinew Material(Color(0,0,0), Color(.2,0,0),
+					  Color(.5,.5,.5), 20);
+  MaterialHandle dk_green = scinew Material(Color(0,0,0), Color(0,.2,0),
+					    Color(.5,.5,.5), 20);
+  MaterialHandle dk_blue = scinew Material(Color(0,0,0), Color(0,0,.2),
+					   Color(.5,.5,.5), 20);
+  MaterialHandle lt_red = scinew Material(Color(0,0,0), Color(.8,0,0),
+					  Color(.5,.5,.5), 20);
+  MaterialHandle lt_green = scinew Material(Color(0,0,0), Color(0,.8,0),
+					    Color(.5,.5,.5), 20);
+  MaterialHandle lt_blue = scinew Material(Color(0,0,0), Color(0,0,.8),
+					   Color(.5,.5,.5), 20);
 
-   GeomGroup* xp = scinew GeomGroup; 
-   GeomGroup* yp = scinew GeomGroup;
-   GeomGroup* zp = scinew GeomGroup;
-   GeomGroup* xn = scinew GeomGroup;
-   GeomGroup* yn = scinew GeomGroup;
-   GeomGroup* zn = scinew GeomGroup;
+  GeomGroup* xp = scinew GeomGroup; 
+  GeomGroup* yp = scinew GeomGroup;
+  GeomGroup* zp = scinew GeomGroup;
+  GeomGroup* xn = scinew GeomGroup;
+  GeomGroup* yn = scinew GeomGroup;
+  GeomGroup* zn = scinew GeomGroup;
 
-   double sz = 1.0;
-   xp->add(scinew GeomCylinder(Point(0,0,0), Point(sz, 0, 0), sz/20));
-   xp->add(scinew GeomCone(Point(sz, 0, 0), Point(sz+sz/5, 0, 0), sz/10, 0));
-   yp->add(scinew GeomCylinder(Point(0,0,0), Point(0, sz, 0), sz/20));
-   yp->add(scinew GeomCone(Point(0, sz, 0), Point(0, sz+sz/5, 0), sz/10, 0));
-   zp->add(scinew GeomCylinder(Point(0,0,0), Point(0, 0, sz), sz/20));
-   zp->add(scinew GeomCone(Point(0, 0, sz), Point(0, 0, sz+sz/5), sz/10, 0));
-   xn->add(scinew GeomCylinder(Point(0,0,0), Point(-sz, 0, 0), sz/20));
-   xn->add(scinew GeomCone(Point(-sz, 0, 0), Point(-sz-sz/5, 0, 0), sz/10, 0));
-   yn->add(scinew GeomCylinder(Point(0,0,0), Point(0, -sz, 0), sz/20));
-   yn->add(scinew GeomCone(Point(0, -sz, 0), Point(0, -sz-sz/5, 0), sz/10, 0));
-   zn->add(scinew GeomCylinder(Point(0,0,0), Point(0, 0, -sz), sz/20));
-   zn->add(scinew GeomCone(Point(0, 0, -sz), Point(0, 0, -sz-sz/5), sz/10, 0));
-   GeomGroup* all=scinew GeomGroup;
-   all->add(scinew GeomMaterial(xp, lt_red));
-   all->add(scinew GeomMaterial(yp, lt_green));
-   all->add(scinew GeomMaterial(zp, lt_blue));
-   all->add(scinew GeomMaterial(xn, dk_red));
-   all->add(scinew GeomMaterial(yn, dk_green));
-   all->add(scinew GeomMaterial(zn, dk_blue));
+  double sz = 1.0;
+  xp->add(scinew GeomCylinder(Point(0,0,0), Point(sz, 0, 0), sz/20));
+  xp->add(scinew GeomCone(Point(sz, 0, 0), Point(sz+sz/5, 0, 0), sz/10, 0));
+  yp->add(scinew GeomCylinder(Point(0,0,0), Point(0, sz, 0), sz/20));
+  yp->add(scinew GeomCone(Point(0, sz, 0), Point(0, sz+sz/5, 0), sz/10, 0));
+  zp->add(scinew GeomCylinder(Point(0,0,0), Point(0, 0, sz), sz/20));
+  zp->add(scinew GeomCone(Point(0, 0, sz), Point(0, 0, sz+sz/5), sz/10, 0));
+  xn->add(scinew GeomCylinder(Point(0,0,0), Point(-sz, 0, 0), sz/20));
+  xn->add(scinew GeomCone(Point(-sz, 0, 0), Point(-sz-sz/5, 0, 0), sz/10, 0));
+  yn->add(scinew GeomCylinder(Point(0,0,0), Point(0, -sz, 0), sz/20));
+  yn->add(scinew GeomCone(Point(0, -sz, 0), Point(0, -sz-sz/5, 0), sz/10, 0));
+  zn->add(scinew GeomCylinder(Point(0,0,0), Point(0, 0, -sz), sz/20));
+  zn->add(scinew GeomCone(Point(0, 0, -sz), Point(0, 0, -sz-sz/5), sz/10, 0));
+  GeomGroup* all=scinew GeomGroup;
+  all->add(scinew GeomMaterial(xp, lt_red));
+  all->add(scinew GeomMaterial(yp, lt_green));
+  all->add(scinew GeomMaterial(zp, lt_blue));
+  all->add(scinew GeomMaterial(xn, dk_red));
+  all->add(scinew GeomMaterial(yn, dk_green));
+  all->add(scinew GeomMaterial(zn, dk_blue));
   
-   return all;
+  return all;
 }
 
 } // End namespace Modules
 } // End namespace PSECommon
-
-// $Log$
-// Revision 1.24  2000/12/06 04:36:03  moulding
-// only include roe_objs that are visible in the get_bounds() test.  This prevents
-// the axes from forcing the autoview to use it's bounding box when not visible.
-//
-// Revision 1.23  2000/12/04 17:34:42  yarden
-// fix a bug caused by a clash between darby's last
-// update and the code from Brown.
-//
-// Revision 1.22  2000/12/01 23:24:42  yarden
-// remove Alexi's rotations.
-// add new 3D navigation from Brown.
-//   1. press right button and move *initially* left/right means Pan mode
-//   2. press right button and move *initially* up/down    means Move in/out
-//   3. click right button create a point as origin of rotation
-//      then, press right button to rotate around that point.
-//      after the rotation, the point disappear.
-// Alexi will now reinsert his code.
-//
-// Revision 1.21  2000/11/27 23:09:38  darbyb
-// -Axes are now omnipresent in Roe
-// -Ability to turn axes on/off
-// -Scene initially autoviewed
-//
-// Revision 1.20  2000/11/03 19:08:25  darbyb
-// Added button in Salmon that allows the user to select specific orientations
-//
-// Revision 1.19  2000/10/08 05:42:38  samsonov
-// Added rotation around eye point and corresponding inertia mode; to use the mode , use ALT key and middle mouse button
-//
-// Revision 1.18  2000/09/29 08:06:59  samsonov
-// Changes in stereo implementation
-//
-// Revision 1.17  2000/08/11 15:51:22  bigler
-// Removed set_index(int) calls to GeomPick class and replaced them with
-// set_picked_obj(GeomObj*).
-//
-// Revision 1.16  2000/06/09 17:50:18  kuzimmer
-// Hopefully everything is fixed so that you can use -lifl on SGI's and you can use -lcl on SGI's in32bit mode.
-//
-// Revision 1.15  2000/06/07 20:59:26  kuzimmer
-// Modifications to make the image save menu item work on SGIs
-//
-// Revision 1.14  2000/03/17 09:27:17  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.13  2000/03/11 00:39:52  dahart
-// Replaced all instances of HashTable<class X, class Y> with the
-// Standard Template Library's std::map<class X, class Y, less<class X>>
-//
-// Revision 1.12  1999/12/03 00:28:59  dmw
-// added setView message for Salmon/Roe
-//
-// Revision 1.11  1999/11/19 17:50:11  ikits
-// Put in __sgi to make it compile for linux. Replaced int errcode w/ GLenum errcode in OpenGL.cc.
-//
-// Revision 1.10  1999/11/19 05:44:15  dmw
-// commented out performance reporting so we dont get so many printouts from Salmon
-//
-// Revision 1.9  1999/11/16 00:47:26  yarden
-// put "#ifdef __sgi" around code for BAWGL
-//
-// Revision 1.8  1999/10/21 22:39:06  ikits
-// Put bench.config into PSE/src (where the executable gets invoked from). Fixed bug in the bawgl code and added preliminary navigation and picking.
-//
-// Revision 1.7  1999/10/16 20:50:59  jmk
-// forgive me if I break something -- this fixes picking and sets up sci
-// bench - go to /home/sci/u2/VR/PSE for the latest sci bench technology
-// gota getup to get down.
-//
-// Revision 1.6  1999/10/07 02:06:56  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/09/08 22:04:33  sparker
-// Fixed picking
-// Added messages for pick mode
-//
-// Revision 1.4  1999/08/29 00:46:42  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.3  1999/08/18 20:19:53  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:38  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:52  mcq
-// Initial commit
-//
-// Revision 1.4  1999/07/07 21:10:28  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.3  1999/05/13 20:35:16  dav
-// update
-//
-// Revision 1.2  1999/05/13 18:24:09  dav
-// Removed TCLView from Roe.cc and uncommented a number of pick things
-//
-// Revision 1.1.1.1  1999/04/24 23:12:31  dav
-// Import sources
-//
-//

@@ -57,19 +57,5 @@ namespace SCICore {
 }
 } // end namespace Uintah
 
-//
-// $Log$
-// Revision 1.3  2000/09/25 18:02:33  sparker
-// include errno.h instead of explicitly defining extern int errno
-//
-// Revision 1.2  2000/05/31 15:20:44  jehall
-// - Added ability to remove() directories
-//
-// Revision 1.1  2000/05/15 19:28:12  sparker
-// New directory: OS for operating system interface classes
-// Added a "Dir" class to create and iterate over directories (eventually)
-//
-//
-
 #endif
 

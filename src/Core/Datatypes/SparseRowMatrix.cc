@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  SparseRowMatrix.cc: ?
  *
@@ -346,53 +344,3 @@ void SparseRowMatrix::io(Piostream& stream)
 
 } // End namespace Datatypes
 } // End namespace SCICore
-
-//
-// $Log$
-// Revision 1.10  2000/10/29 04:46:17  dmw
-// changed private/public status, added a flag for whether datavalues were associate with elements or nodes
-//
-// Revision 1.9  2000/07/12 15:45:10  dmw
-// Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
-//
-// Revision 1.8  2000/03/23 10:29:19  sparker
-// Use new exceptions/ASSERT macros
-// Fixed compiler warnings
-//
-// Revision 1.7  2000/03/04 00:18:30  dmw
-// added new Mesh BC and fixed sparserowmatrix bug
-//
-// Revision 1.6  1999/12/11 05:47:41  dmw
-// sparserowmatrix -- someone had commented out the code that lets you get() a zero entry... I put it back in.    densematrix -- just cleaned up some comments
-//
-// Revision 1.5  1999/10/07 02:07:34  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/08/25 03:48:41  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/18 20:20:19  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:38:54  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:28  mcq
-// Initial commit
-//
-// Revision 1.1  1999/04/25 04:07:17  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:51  dav
-// Import sources
-//
-//

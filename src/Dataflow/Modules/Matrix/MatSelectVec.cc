@@ -213,26 +213,3 @@ void MatSelectVec::tcl_command(TCLArgs& args, void* userdata)
 }
 } // End namespace Modules
 } // End namespace PSECommon
-
-//
-// $Log$
-// Revision 1.6  2000/08/04 18:09:06  dmw
-// added widget-based transform generation
-//
-// Revision 1.5  2000/03/17 09:27:07  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.4  1999/10/07 02:06:52  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/16 00:38:11  dmw
-// fixed TCL files for SurfToGeom and SolveMatrix and added SurfToGeom to the Makefile
-//
-// Revision 1.2  1999/09/08 02:26:34  sparker
-// Various #include cleanups
-//
-// Revision 1.1  1999/09/07 04:02:23  dmw
-// more modules that were left behind...
-//

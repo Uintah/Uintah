@@ -543,75 +543,7 @@ void Pio(Piostream& stream, HashTable<Key, Data>& t)
 } // End namespace Containers
 } // End namespace SCICore
 
-//
-// $Log$
-// Revision 1.12  2000/07/27 20:12:16  yarden
-// replace int with unsigned int to make linux compiler happy
-//
-// Revision 1.11  2000/05/15 19:07:06  dav
-// added simple string hash function so I could make string hash tables.  feel free to modify.  but since we are using the stl map now, this might not make any difference.
-//
-// Revision 1.10  1999/09/08 02:26:46  sparker
-// Various #include cleanups
-//
-// Revision 1.9  1999/09/04 06:01:42  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.8  1999/08/30 20:19:26  sparker
-// Updates to compile with -LANG:std on SGI
-// Other linux/irix porting oscillations
-//
-// Revision 1.7  1999/08/28 17:54:34  sparker
-// Integrated new Thread library
-//
-// Revision 1.6  1999/08/25 03:48:29  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.5  1999/08/19 23:52:58  sparker
-// Removed extraneous includes of iostream.h  Fixed a few NotFinished.h
-// problems.  May have broken KCC support.
-//
-// Revision 1.4  1999/08/19 05:30:54  sparker
-// Configuration updates:
-//  - renamed config.h to sci_config.h
-//  - also uses sci_defs.h, since I couldn't get it to substitute vars in
-//    sci_config.h
-//  - Added flags for --enable-scirun, --enable-uintah, and
-//    --enable-davew, to build the specific package set.  More than one
-//    can be specified, and at least one must be present.
-//  - Added a --enable-parallel, to build the new parallel version.
-//    Doesn't do much yet.
-//  - Made construction of config.h a little bit more general
-//
-// Revision 1.3  1999/08/18 18:56:16  sparker
-// Use 64 bit mmap
-// Incorporated missing Hashtable Pio function
-// Fix bug in MAKE_PARALLELISM handling
-// Got rid of lib32 in main/Makefile.in (for 64 bit)
-//
-// Revision 1.2  1999/08/17 06:38:36  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:12  mcq
-// Initial commit
-//
-// Revision 1.4  1999/07/07 21:10:35  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.3  1999/05/06 19:55:43  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:04:31  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:26  dav
-// Import sources
-//
-//
+
 
 #endif
 

@@ -116,52 +116,6 @@ public:
 } // End namespace GeomSpace
 } // End namespace SCICore
 
-//
-// $Log$
-// Revision 1.7  2000/07/28 21:16:44  yarden
-// add dli (display list)  flag to draw info
-//
-// Revision 1.6  1999/10/16 20:51:01  jmk
-// forgive me if I break something -- this fixes picking and sets up sci
-// bench - go to /home/sci/u2/VR/PSE for the latest sci bench technology
-// gota getup to get down.
-//
-// Revision 1.5  1999/09/23 01:10:48  moulding
-// added #include <stddef.h> and <stdlib.h> for types wchar_t needed by the
-// win32 version of glu.h
-//
-// Revision 1.4  1999/08/28 17:54:41  sparker
-// Integrated new Thread library
-//
-// Revision 1.3  1999/08/19 05:30:55  sparker
-// Configuration updates:
-//  - renamed config.h to sci_config.h
-//  - also uses sci_defs.h, since I couldn't get it to substitute vars in
-//    sci_config.h
-//  - Added flags for --enable-scirun, --enable-uintah, and
-//    --enable-davew, to build the specific package set.  More than one
-//    can be specified, and at least one must be present.
-//  - Added a --enable-parallel, to build the new parallel version.
-//    Doesn't do much yet.
-//  - Made construction of config.h a little bit more general
-//
-// Revision 1.2  1999/08/17 06:39:10  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:41  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:56:05  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:04:58  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:18  dav
-// Import sources
-//
-//
 
 #endif /* SCI_Geom_GeomOpenGL_h */
 

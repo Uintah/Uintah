@@ -271,30 +271,3 @@ void BldTransform::tcl_command(TCLArgs& args, void* userdata) {
 
 } // End namespace Modules
 } // End namespace PSECommon
-
-
-//
-// $Log$
-// Revision 1.7  2000/08/13 05:14:18  dmw
-// cleaning up code
-//
-// Revision 1.6  2000/08/13 04:45:02  dmw
-// Fixed widget-based transform
-//
-// Revision 1.5  2000/08/04 18:09:06  dmw
-// added widget-based transform generation
-//
-// Revision 1.4  2000/03/17 09:27:06  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.3  2000/03/13 05:33:22  dmw
-// Transforms are done the same way for ScalarFields, Surfaces and Meshes now - build the transform with the BldTransform module, and then pipe the output matrix into a Transform{Field,Surface,Mesh} module
-//
-// Revision 1.2  1999/10/07 02:06:51  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.1  1999/09/05 05:32:25  dmw
-// updated and added Modules from old tree to new
-//

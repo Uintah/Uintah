@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  Remote.cc: Socket utility functions for remote messaging. 
  *   NOTE: sendRequest() and receiveReply() should be rewritten to take some
@@ -173,31 +171,3 @@ int receiveReply (TCLMessage* msg, int skt)
 } // End namespace SCICore
 
 #endif // win32
-
-//
-// $Log$
-// Revision 1.6  2000/09/27 22:20:53  yarden
-// move include on Remote.h after the system files includes
-//
-// Revision 1.5  2000/08/02 22:27:07  jas
-// Added using namespace std;
-//
-// Revision 1.4  1999/10/07 02:08:03  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/08/23 06:30:40  sparker
-// Linux port
-// Added X11 configuration options
-// Removed many warnings
-//
-// Revision 1.2  1999/08/17 06:39:44  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:15  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:25  dav
-// Import sources
-//
-//
