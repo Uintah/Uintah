@@ -39,7 +39,7 @@ SCICore_Thread_signal_name(int sig, void* addr)
 	sprintf(buf, "SIGTRAP (trace trap)");
 	break;
     case SIGABRT:
-	sprintf(buf, "SIBABRT (Abort)");
+	sprintf(buf, "SIGABRT (Abort)");
 	break;
 #ifdef SIGEMT
     case SIGEMT:
