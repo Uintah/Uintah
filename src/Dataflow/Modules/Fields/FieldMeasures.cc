@@ -17,7 +17,7 @@
 
 
 /*
- *  FieldFieldMeasures.cc:  Unfinished modules
+ *  FieldMeasures.cc:  Unfinished modules
  *
  *  Written by:
  *   David Weinstein
