@@ -34,6 +34,7 @@
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Geom/Material.h>
 
 namespace SCIRun {
 
@@ -90,6 +91,44 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };
+
+
+class SCICORESHARE GeomCones : public GeomObj {
+protected:
+  double radius_;
+  int  nu_;
+  vector<Point> points_;
+  vector<unsigned char> colors_;
+  vector<float> indices_;
+  vector<double> radii_;
+  
+public:
+  GeomCones(int nu = 8, double radius = 1.0);
+  GeomCones(const GeomCones &copy);
+  virtual ~GeomCones();
+
+  virtual GeomObj* clone();
+  virtual void get_bounds(BBox&);
+
+  bool add(const Point &p0, const Point &p1);
+  bool add(const Point &p0, const Point &p1, const MaterialHandle &c);
+  bool add(const Point &p0, const Point &p1, float index);
+
+  bool add_radius(const Point &p0, const Point &p1, double r);
+  bool add_radius(const Point &p0, const Point &p1,
+		  const MaterialHandle &c, double r);
+  bool add_radius(const Point &p0, const Point &p1, float index, double r);
+  void set_radius(double val) { radius_ = val; reset_bbox(); }
+  void set_nu(int nu);
+
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+};
+
 
 } // End namespace SCIRun
 

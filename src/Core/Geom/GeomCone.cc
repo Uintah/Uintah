@@ -36,11 +36,13 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/Trig.h>
+#include <Core/Persistent/PersistentSTL.h>
 #include <iostream>
-using std::cerr;
-using std::ostream;
 
 namespace SCIRun {
+
+using std::cerr;
+using std::ostream;
 
 Persistent* make_GeomCone()
 {
@@ -186,6 +188,173 @@ void GeomCappedCone::io(Piostream& stream)
     Pio(stream, nvdisc2);
     stream.end_class();
 }
+
+
+// GeomCones, accelerated for many objects.
+
+Persistent* make_GeomCones()
+{
+    return new GeomCones();
+}
+
+PersistentTypeID GeomCones::type_id("GeomCones", "GeomObj", make_GeomCones);
+
+GeomCones::GeomCones(int nu, double r)
+  : radius_(r),
+    nu_(nu)
+{
+}
+
+GeomCones::GeomCones(const GeomCones& copy)
+  : radius_(copy.radius_),
+    nu_(copy.nu_),
+    points_(copy.points_),
+    colors_(copy.colors_)
+{
+}
+
+GeomCones::~GeomCones()
+{
+}
+
+GeomObj* GeomCones::clone()
+{
+  return new GeomCones(*this);
+}
+
+void
+GeomCones::get_bounds(BBox& bb)
+{
+  for (unsigned int i = 0; i < points_.size(); i+=2)
+  {
+    Vector axis(points_[i] - points_[i+1]);
+    bb.extend_cylinder(points_[i], axis, radius_);
+    bb.extend_cylinder(points_[i], axis, radius_);
+  }
+}
+
+#define GEOMCONES_VERSION 1
+
+void
+GeomCones::io(Piostream& stream)
+{
+
+  stream.begin_class("GeomCones", GEOMCONES_VERSION);
+  GeomObj::io(stream);
+  Pio(stream, radius_);
+  Pio(stream, nu_);
+  Pio(stream, points_);
+  Pio(stream, colors_);
+  Pio(stream, indices_);
+  Pio(stream, radii_);
+  stream.end_class();
+}
+
+
+static unsigned char
+COLOR_FTOB(double v)
+{
+  const int inter = (int)(v * 255 + 0.5);
+  if (inter > 255) return 255;
+  if (inter < 0) return 0;
+  return (unsigned char)inter;
+}
+
+
+bool
+GeomCones::add(const Point& p1, const Point& p2)
+{
+  if ((p1 - p2).length2() > 1.0e-12)
+  {
+    points_.push_back(p1);
+    points_.push_back(p2);
+    return true;
+  }
+  return false;
+}
+
+bool
+GeomCones::add(const Point& p1, const Point &p2, const MaterialHandle &c)
+{
+  if ((p1 - p2).length2() > 1.0e-12)
+  {
+    points_.push_back(p1);
+    points_.push_back(p2);
+    
+    const unsigned char r0 = COLOR_FTOB(c->diffuse.r());
+    const unsigned char g0 = COLOR_FTOB(c->diffuse.g());
+    const unsigned char b0 = COLOR_FTOB(c->diffuse.b());
+    const unsigned char a0 = COLOR_FTOB(c->transparency);
+
+    colors_.push_back(r0);
+    colors_.push_back(g0);
+    colors_.push_back(b0);
+    colors_.push_back(a0);
+
+    return true;
+  }
+  return false;
+}
+
+bool
+GeomCones::add(const Point& p1, const Point& p2, float index)
+{
+  if ((p1 - p2).length2() > 1.0e-12)
+  {
+    points_.push_back(p1);
+    points_.push_back(p2);
+    indices_.push_back(index);
+    return true;
+  }
+  return false;
+}
+
+
+bool
+GeomCones::add_radius(const Point& p1, const Point& p2, double r)
+{
+  if (add(p1, p2))
+  {
+    radii_.push_back(r);
+    return true;
+  }
+  return false;
+}
+
+
+bool
+GeomCones::add_radius(const Point& p1, const Point &p2,
+		      const MaterialHandle &c, double r)
+{
+  if (add(p1, p2, c))
+  {
+    radii_.push_back(r);
+    return true;
+  }
+  return false;
+}
+
+
+bool
+GeomCones::add_radius(const Point& p1, const Point& p2, float index, double r)
+{
+  if (add(p1, p2, index))
+  {
+    radii_.push_back(r);
+    return true;
+  }
+  return false;
+}
+
+
+void
+GeomCones::set_nu(int nu)
+{
+  if (nu < 3) { nu_ = 3; }
+  if (nu > 40) { nu_ = 40; }
+  else { nu_ = nu; }
+}
+
 
 } // End namespace SCIRun
 
