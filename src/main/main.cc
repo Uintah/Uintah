@@ -127,17 +127,21 @@ int main(int argc, char** argv)
     // task, and the Task* will be deleted by the task manager
     NetworkEditor* gui_task=new NetworkEditor(net);
 
-    // Load in the default packages
-    if(getenv("PACKAGE_PATH")!=NULL)
-      packageDB.loadPackage(getenv("PACKAGE_PATH"));
-    else
-      packageDB.loadPackage(DEFAULT_PACKAGE_PATH);
-
     // Activate the network editor and scheduler.  Arguments and return
     // values are meaningless
     Thread* t2=new Thread(gui_task, "Scheduler");
     t2->setDaemon(true);
     t2->detach();
+
+    // wait for the main window to display before continuing the startup.
+    TCL::eval("tkwait visibility .top.globalViewFrame.canvas",result);
+
+    // Load in the default packages
+    if(getenv("PACKAGE_PATH")!=NULL)
+      packageDB.loadPackage(getenv("PACKAGE_PATH"));
+    else
+      packageDB.loadPackage(DEFAULT_PACKAGE_PATH);
+    
 
 #if 0
     // startup master-side GuiServer, even when no slave..
@@ -168,6 +172,11 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.14  2000/11/28 22:39:41  moulding
+// force a wait for main window to display before system startup continues.
+// This mitigates the lengthy wait between typing "pse" and the window actually
+// appearing.
+//
 // Revision 1.13  2000/06/09 20:37:38  yarden
 // add a wait on a semaphore to prevent the system to start
 // deleting objects too soon.
