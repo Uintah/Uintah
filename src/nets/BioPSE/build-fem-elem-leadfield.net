@@ -114,11 +114,11 @@ respectively (unit current passed between them).  Solving for phi gives us the v
 everywhere at the nodes in the TetVolMesh.
 
 }
-set $m4-target_error 1e-06
+set $m4-target_error 0.000001
 set $m4-orig_error 1
 set $m4-current_error {8.45361e-07}
-set $m4-method {conjugate_gradient_sci}
-set $m4-precond {Diag_P}
+set $m4-method {Conjugate Gradient & Precond. (SCI)}
+set $m4-precond {jacobi}
 set $m4-iteration 176
 set $m4-maxiter 2000
 set $m4-use_previous_soln 1
