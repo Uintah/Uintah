@@ -1075,6 +1075,8 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     // modify density for the whole domain by multiplying with
     // void fraction
 
+    bool fixTemp = true;
+
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
@@ -1090,8 +1092,11 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 	    density[currCell] = 0.0;
 	    if (d_bc->getIfCalcEnergyExchange())
 	      if (d_DORadiationCalc)
-		tempIN_new[currCell] = solidTemp[currCell];
-	    //	      tempIN_new[currCell] = 298.0;
+
+		if (fixTemp) 
+		  tempIN_new[currCell] = 298.0;
+		else
+		  tempIN_new[currCell] = solidTemp[currCell];
 	  }
 	}
       }
