@@ -288,6 +288,8 @@ template <class Mesh, class FData>
 bool
 GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::Node::index_type i) const
 {
+  ASSERTL3(data_at() == NODE);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   if (data_at() != NODE) return false; val = fdata_[i]; return true;
 }
 
@@ -295,6 +297,8 @@ template <class Mesh, class FData>
 bool
 GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::Edge::index_type i) const
 {
+  ASSERTL3(data_at() == EDGE);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   if (data_at() != EDGE) return false; val = fdata_[i]; return true;
 }
 
@@ -302,6 +306,8 @@ template <class Mesh, class FData>
 bool
 GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::Face::index_type i) const
 {
+  ASSERTL3(data_at() == FACE);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   if (data_at() != FACE) return false; val = fdata_[i]; return true;
 }
 
@@ -309,6 +315,8 @@ template <class Mesh, class FData>
 bool
 GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::Cell::index_type i) const
 {
+  ASSERTL3(data_at() == CELL);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   if (data_at() != CELL) return false; val = fdata_[i]; return true;
 } 
 
@@ -317,24 +325,32 @@ template <class Mesh, class FData>
 void
 GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::Node::index_type i)
 {
+  ASSERTL3(data_at() == NODE);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   fdata_[i] = val;
 }
 template <class Mesh, class FData>
 void
 GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::Edge::index_type i)
 {
+  ASSERTL3(data_at() == EDGE);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   fdata_[i] = val;
 }
 template <class Mesh, class FData>
 void
 GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::Face::index_type i)
 {
+  ASSERTL3(data_at() == FACE);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   fdata_[i] = val;
 }
 template <class Mesh, class FData>
 void
 GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::Cell::index_type i)
 {
+  ASSERTL3(data_at() == CELL);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   fdata_[i] = val;
 }
 
@@ -342,24 +358,32 @@ template <class Mesh, class FData>
 const typename GenericField<Mesh, FData>::value_type &
 GenericField<Mesh, FData>::value(typename mesh_type::Node::index_type i) const
 {
+  ASSERTL3(data_at() == NODE);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   return fdata_[i];
 }
 template <class Mesh, class FData>
 const typename GenericField<Mesh, FData>::value_type &
 GenericField<Mesh, FData>::value(typename mesh_type::Edge::index_type i) const
 {
+  ASSERTL3(data_at() == EDGE);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   return fdata_[i];
 }
 template <class Mesh, class FData>
 const typename GenericField<Mesh, FData>::value_type &
 GenericField<Mesh, FData>::value(typename mesh_type::Face::index_type i) const 
 {
+  ASSERTL3(data_at() == FACE);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   return fdata_[i];
 }
 template <class Mesh, class FData>
 const typename GenericField<Mesh, FData>::value_type &
 GenericField<Mesh, FData>::value(typename mesh_type::Cell::index_type i) const 
 {
+  ASSERTL3(data_at() == CELL);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   return fdata_[i];
 }
 
