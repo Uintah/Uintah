@@ -37,7 +37,7 @@
  * 
  * CREATED       : 6/2003
  *
- * MODIFIED      : Tue Aug  5 17:02:11 MDT 2003
+ * MODIFIED      : Thu Feb 26 15:15:13 MST 2004
  *
  * NOTES         : Most of the code contained in this module has been 
  *                 borrowed from the SampleLattice module created by Mike 
@@ -188,7 +188,7 @@ void Reader::execute()
     {
       string fn_str = filename;
       string filepath = dir_str + fn_str;
-      cerr << "(Reader::execute) filename: " << filepath << "\n";
+      cerr << "(Reader::execute) filename: " << filepath << endl;
 
       // Fill mesh
       fill_mesh( filepath, ofp );
@@ -237,9 +237,9 @@ void Reader::tcl_command(GuiArgs& args, void* userdata)
 //
 void Reader::fill_mesh( string filename, FieldOPort * ofp )
 {
-  cerr << "(Reader::fill_mesh) Inside\n";
+  cerr << "(Reader::fill_mesh) Inside" << endl;
 
-  cerr << "(Reader::fill_mesh) filename = " << filename << "\n";
+  cerr << "(Reader::fill_mesh) filename = " << filename << endl;
 
   Point minb, maxb;
   minb = Point(-1.0, -1.0, -1.0);
@@ -262,7 +262,7 @@ void Reader::fill_mesh( string filename, FieldOPort * ofp )
     return;
   }
 
-  cerr << "(Reader::fill_mesh) Creating blank mesh\n";
+  cerr << "(Reader::fill_mesh) Creating blank mesh" << endl;
   
   // Create blank mesh.
   int cube_root = (int) cbrt( num_sols );
@@ -272,12 +272,12 @@ void Reader::fill_mesh( string filename, FieldOPort * ofp )
   sizex = sizey = sizez = Max(2, cube_root) + 1;
   LatVolMeshHandle mesh = scinew LatVolMesh(sizex, sizey, sizez, minb, maxb);
 
-  cerr << "(Reader::fill_mesh) Assign data to cell centers\n";
+  cerr << "(Reader::fill_mesh) Assign data to cell centers" << endl;
   
   // Assign data to cell centers
   Field::data_location data_at = Field::CELL;
 
-  cerr << "(Reader::fill_mesh) Create Image Field\n";
+  cerr << "(Reader::fill_mesh) Create Image Field" << endl;
   // Create Image Field.
   FieldHandle ofh;
 
@@ -295,20 +295,20 @@ void Reader::fill_mesh( string filename, FieldOPort * ofp )
       ++itr;
       i++;
     }
-    cerr << "(Reader::execute) number of field data points = " << i << "\n";
+    cerr << "(Reader::execute) number of field data points = " << i << endl;
   } 
   ofh = lvf;
 
-  cerr << "(Reader::fill_mesh) Deallocate memory for sol_pts array\n";
+  cerr << "(Reader::fill_mesh) Deallocate memory for sol_pts array" << endl;
   
   // Deallocate memory for sol_pts array
   delete[] sol_pts;
 
-  cerr << "(Reader::fill_mesh) Sending data to output field\n";
+  cerr << "(Reader::fill_mesh) Sending data to output field" << endl;
   
   ofp->send_intermediate(ofh);
 
-  cerr << "(Reader::fill_mesh) Leaving\n";
+  cerr << "(Reader::fill_mesh) Leaving" << endl;
 }
 
 /*===========================================================================*/
@@ -329,7 +329,7 @@ void Reader::fill_mesh( string filename, FieldOPort * ofp )
 //
 double * Reader::read_ccfv( string filename, int& size )
 {
-  cerr << "(Reader::read_ccfv) Inside\n";
+  cerr << "(Reader::read_ccfv) Inside" << endl;
   /*
     Here's an sample of what the file should look like:
 
@@ -406,7 +406,7 @@ double * Reader::read_ccfv( string filename, int& size )
   // Close file
   input.close();
 
-  cerr << "(Reader::read_ccfv) Leaving\n";
+  cerr << "(Reader::read_ccfv) Leaving" << endl;
   return sol_pts;
 }
  

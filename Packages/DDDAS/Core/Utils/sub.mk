@@ -10,10 +10,10 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/DDDAS/Core/Datatypes
+SRCDIR   := Packages/DDDAS/Core/Utils
 
 SRCS     += \
-	$(SRCDIR)/PointCloudWrapper.cc\
+	$(SRCDIR)/SocketConnection.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=

@@ -20,48 +20,38 @@
  * C++ (CC) FILE : StreamReader.cc
  *
  * DESCRIPTION   : Connects to a remote host, receives streaming data and 
- *                 buffers the data between specified headers.  Currently 
- *                 this data is LatVol mesh data, so once the data for a
- *                 single mesh has been buffered, an actual LatVol mesh is 
- *                 constructed and sent down the SCIRun pipeline to the 
- *                 Viewer.  There is some data loss between reads because of 
- *                 both network latency and processing that necessarily 
- *                 occurs between reads.  This data loss is ignored for now
- *                 since the solution headers aren't frequent and 
- *                 informational enough to determine which chunks of data 
- *                 have been lost so that they can be replaced.  As a result,
- *                 the LatVol meshes produced almost always have some degree 
- *                 of error and this shows up as nodes in the mesh being
- *                 shifted from their correct position. 
- *                     
- * AUTHOR(S)     : Chad Shannon
- *      	   Center for Computational Sciences, University of Kentucky
- *	           Copyright 2003
+ *                 processes the data.  Currently this streamed data comes in 
+ *                 several formats and is intended to simulate sensor data.
  *
- *                 Jenny Simpson
+ *                 For the stream 2 spec, a point cloud mesh is built from the
+ *                 scalar values and coordinates sent across the stream.
+ *  
+ *                 The stream 3 spec has not yet been tested, but there is some
+ *                 code in place to be used as a starting point.
+ * 
+ *                 The places where code needs to be modified to accommodate
+ *                 new stream data formats is indicated with '==>'.
+ *                     
+ * AUTHOR(S)     : Jenny Simpson
  *                 SCI Institute
  *                 University of Utah
- *         
+ * 
  * CREATED       : 7/9/2003
  *
- * MODIFIED      : Mon Aug  4 09:20:52 MDT 2003
+ * MODIFIED      : Thu Feb 26 15:15:13 MST 2004
  *
  * DOCUMENTATION :
  * 
- * NOTES         : Most of the code contained in this module has been 
- *                 borrowed from the SampleLattice module created by Mike 
- *                 Callahan and the xccs package created by Chad Shannon. Most 
- *                 of the xccs code was stripped from XMMS-1.2.7 source code.
- *
- * Copyright (C) 2003 SCI Group
+ * Copyright (C) 2004 SCI Group
 */
  
 // SCIRun includes
-
+  
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -69,8 +59,10 @@
 #include <Packages/DDDAS/share/share.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Thread.h>
-#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Mutex.h> 
 #include <Core/Thread/ConditionVariable.h>
+#include <Packages/DDDAS/Core/Datatypes/PointCloudWrapper.h>
+#include <Packages/DDDAS/Core/Utils/SocketConnection.h>
 
 // Standard lib includes
 
@@ -78,27 +70,13 @@
 #include <fstream>
 #include <assert.h>
 #include <sys/types.h>
-#include <dirent.h>
 
-// Networking and C includes
+// Defines
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <string.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-#include <stdio.h>
-
-// XCCS defines
-
-#define BUFFER_SIZE	4096
-#define VERSION	"0.0.7" 
-#define PACKAGE	"xccs"
+#define MAX_NUM_VALS    64000 // Maximum number of values that can be sent for
+                              // each sensor packet
+//#define THREAD_ENABLED 1
+#define MAX_ERROR_STRING 1024
 
 namespace DDDAS {
 
@@ -108,6 +86,13 @@ using namespace SCIRun;
 // ****************************************************************************
 // ***************************** Class: StreamReader **************************
 // ****************************************************************************
+
+struct PointCloudValue {
+  string id;
+  Point pt;
+  float data;
+  string data_name;
+};
    
 //! Continually reads and processes data from an mp3 stream
 class DDDASSHARE StreamReader : public Module {
@@ -126,37 +111,50 @@ public:
 
   //! General functions for stream reading and processing
 
-  int find_string( istringstream& input, string str ) const;
-
-  int get_stream();
-
-  void kill_helper( Thread * helper_thread );
+  void read_stream();
 
   void process_stream();
 
-  void read_stream();
+  int find_string( unsigned char * buffer, int buffer_size, string str ) const;
 
-  void remove_headers( unsigned char * old_buffer, unsigned char * new_buffer,
-                       int& num_bytes );
+  int find_header( unsigned char * buffer, int buffer_size, 
+                   string & header_name );
 
-  int seek_header( istringstream& input, int sock, unsigned char * buffer, 
-                   string * headers, int num_headers, string & header_name,
-                   int & nread );
+  int seek_header( unsigned char * buffer, string & header_name, int & nread );
 
-  int update_input( istringstream& input, int sock, unsigned char * buffer );
+  int update_input( unsigned char * buffer );
 
-  //! Functions specific to LatVol mesh data
+  int remove_headers( unsigned char * old_buffer, unsigned char * new_buffer,
+                      int num_bytes );
 
-  void fill_mesh( double * sol_pts, int num_sols ) const;
+  bool checksum_valid( unsigned char * processing_buffer, int num_bytes,
+                       unsigned char checksum );  
 
-  int get_sols( istringstream& input, double * sol_pts, int num_sols );
+  //! Memory management 
 
-  void process_mesh( istringstream& input );
+  void cleanup();
 
-  void read_mesh( istringstream& input, int sock, unsigned char * buffer, 
-                  int start, ssize_t nread );
+  //! Thread related functions
 
-    
+  void kill_helper( Thread * helper_thread );
+
+  //! Stream 2 ( all 64000 sensors get a header)
+
+  void read_sensor_2( unsigned char * buffer, int start, ssize_t nread );
+
+  void process_sensor_2( unsigned char * processing_buffer,
+                         int processing_size );
+
+  void update_pc_mesh( vector<struct PointCloudValue> new_pc_values,
+                       string dn );
+
+  //! Stream 3 ( 25 "poles" of 40 sensors, 1000 total sensors)
+
+  void read_sensor_3( unsigned char * buffer, int start, ssize_t nread );
+
+  void process_sensor_3( unsigned char * processing_buffer,
+                         int processing_size );
+ 
 private:
 
   //! GUI variables
@@ -166,13 +164,26 @@ private:
   GuiString file_write_;
   GuiInt stop_sr_;
 
+  //! Threads
+  Thread * reader_thread_;
+  Thread * proc_thread_;
+
   //! Thread safety
   ConditionVariable     stream_cond_;
   Mutex                 buffer_lock_;
 
   FieldOPort *ofp_;
-  unsigned char * final_buffer_;
 
+  //! Stream variables
+  int stream_socket_; // Socket connection to stream
+  vector<string> headers_; // Headers to look for
+  unsigned char * final_buffer_; // Buffer to contain raw data read from stream
+  int final_size_; // Size of final buffer
+
+  //! Mesh data
+  PointCloudWrapper * pcw_;  
+  
+  bool first_run_;
 };
 
 
@@ -185,7 +196,7 @@ private:
 //! these headers are found.
 class DDDASSHARE ReaderThread : public Runnable {
 public:
-  ReaderThread(StreamReader * sr );
+  ReaderThread( StreamReader * sr );
   virtual ~ReaderThread();
   virtual void run();
 
@@ -233,10 +244,11 @@ ReaderThread::~ReaderThread()
 //
 void ReaderThread::run()
 {
-  cout << "(ReaderThread::run) I'm running!\n";
+  cout << "(ReaderThread::run) I'm running!" << endl;
 
-  // Read and parse the solution points contained in the data from the stream
+  // Read the solution points contained in the data from the stream
   stream_reader_->read_stream();
+
 } 
 
 
@@ -296,7 +308,7 @@ ProcessorThread::~ProcessorThread()
 //
 void ProcessorThread::run()
 {
-  cout << "(ProcessorThread::run) I'm running!\n";
+  cout << "(ProcessorThread::run) I'm running!" << endl;
 
   // Read and parse the solution points contained in the data from the stream
   stream_reader_->process_stream();
@@ -325,6 +337,9 @@ StreamReader::StreamReader(GuiContext* ctx)
     stream_cond_("StreamReader: waits for stream reading/processing to finish."),
     buffer_lock_("StreamReader: controls mutable access to the buffer.")  
 {  
+  cout << "(StreamReader::StreamReader) Inside" << endl;
+  
+  first_run_ = 1;
 }
 
 
@@ -338,6 +353,7 @@ StreamReader::StreamReader(GuiContext* ctx)
 //
 StreamReader::~StreamReader()
 {
+  cleanup();
 }
 
 /*===========================================================================*/
@@ -349,34 +365,62 @@ StreamReader::~StreamReader()
 //
 // Arguments   : none
 //
-void
-StreamReader::execute()
+void StreamReader::execute()
 {
+  cout << "(StreamReader::execute) Inside" << endl;
+
+  // If this isn't the first run of the module, clean up previous memory
+  if( !first_run_ )
+  {
+    cleanup();
+  }
+
+  first_run_ = 0;
+  
+  // Proceed to do normal stuff assuming that we're starting from scratch with
+  // no memory allocated and no variables set
+
   // Declare output field
   ofp_ = (FieldOPort *)get_oport("Output Sample Field");
   if (!ofp_) {
     error("(StreamReader::execute) Unable to initialize oport 'Output Sample Field'.");
-    cerr << "(StreamReader::execute) Unable to initialize oport 'Output Sample Field'.\n";
+    cerr << "(StreamReader::execute) ERROR: Unable to initialize oport 'Output Sample Field'." << endl;
     return;
   }
 
+  // Do some initializations of member variables
   final_buffer_ = 0;
+  final_size_ = 0;
+  pcw_ = 0;
+  stream_socket_ = -1;
+
+  // Assign the headers (also called sync values) that we want to look for in 
+  // the stream
+  // ==> Modify this to look for the header of interest for whatever streaming
+  // ==> data we're using.
+
+  headers_.push_back( "DDDAS-KTU2" );
+  headers_.push_back( "DDDAS-KTU3" );
+
+#ifdef THREAD_ENABLED
 
   // Create two threads, one that reads and caches away the data.
-  // Another that checks for a complete mesh status, and sends it downstream.
+  // Another that processes stream data and sends it downstream.
+  // These threads run as soon as they're declared.
 
   Runnable * r = new ReaderThread( this );
-  Thread * reader_thread =  new Thread( r, "reader" );
+  reader_thread_ =  new Thread( r, "reader" );
 
   Runnable * p = new ProcessorThread( this );
-  Thread * proc_thread =  new Thread( p, "processor" );
+  proc_thread_ =  new Thread( p, "processor" );
 
-  if( final_buffer_ != 0 )
-  {
-    cout << "(StreamReader::execute) Freeing memory from final_buffer_\n";
-    delete [] final_buffer_;
-    final_buffer_ = 0;
-  }
+#else
+
+  // Threads aren't enabled, run code serially
+  read_stream();
+
+#endif
+
 }
 
 /*===========================================================================*/
@@ -398,163 +442,184 @@ void StreamReader::tcl_command(GuiArgs& args, void* userdata)
 
 /*===========================================================================*/
 // 
-// find_string
+// read_stream 
 //
-// Description : Reads an input stream until a specified string is encountered 
-//               or the input ends.  If the string is encountered, returns the 
-//               index of the string in the internal buffer.  Otherwise, 
-//               returns -1.
-//
-// Arguments   :
-//
-// istringstream& input - The input stream that is to be searched for the given
-//                        string
-//
-// string str - The string to find within the given input stream 
-//
-int StreamReader::find_string( istringstream& input, string str ) const
-{
-  cout << "(StreamReader::find_string) Inside\n";
-  string s;
-  while( input >> s )
-  {
-    if( s == str )
-    {
-      int pos = input.tellg();
-      return pos - 8;
-    }
-  }
-
-  cout << "(StreamReader::find_string) Leaving\n";
-
-  // The string was not found, return -1
-  return -1;
-}
-
-/*===========================================================================*/
+// Description : Continually read from the mp3 stream, remove mp3 headers, 
+//               and check for recognized headers.  When the first recognized
+//               header is found, call the appropriate function to read
+//               that data type.  When the reading funtion returns, update
+//               the condition variable to wake up the processing thread so 
+//               that it will check the data. Note that the buffer variable 
+//               must be locked and unlocked so that reads and writes don't 
+//               conflict.
 // 
-// get_stream
-//
-// Description : This is the xccs stream reading code provided by Chad.  It 
-//               uses low-level socket code to open an mp3 file on a specified 
-//               port and host.  Returns the socket descriptor for the stream 
-//               which can then be used to read the stream.  Returns -1 on 
-//               failure.
-//
 // Arguments   : none
 //
-int StreamReader::get_stream()
+void StreamReader::read_stream() 
 {
-  // This code is taken almost entirely from xccs
-  char host[80], filename[80];
-  char url[80];
-  char file[80];
-  char temp[128];
-  char *chost;
-  int error, err_len, cport;
-  fd_set set; // File descriptor set
-  struct hostent *hp; // Host entry
-  struct sockaddr_in address; 
-  struct timeval tv;
-  int going = 1;
-  int sock;
+  // Get stream socket
+  SocketConnection sock_conn;
+  stream_socket_ = sock_conn.get_stream( hostname_.get(), port_.get(),
+                                         file_read_.get() );
 
-  // Get GUI variables
-  string hostname = hostname_.get();
-  int port = port_.get();
-  string file_read = file_read_.get();
-  string file_write = file_write_.get();
-
-  // Set up host, port, url, and filename, and file variables
-  strcpy(host, hostname.c_str());
-  stringstream s;
-  s << port;
-  string port_str = s.str();
-  string url_str = "http://" + hostname + ":" + port_str + "/" + file_read;   
-  strcpy(url, url_str.c_str());
-  strcpy(filename, file_read.c_str());
-  string file_str = "/" + file_read;
-  strcpy(file, file_str.c_str());
-  chost = host;
-  cport =  port;
-
-  // Initialize socket descriptor
-  sock = socket(AF_INET, SOCK_STREAM, 0);
-  //fcntl(sock, F_SETFL, O_NONBLOCK);
-  address.sin_family = AF_INET;
-
-  cout << "(StreamReader::get_stream) LOOKING UP " << chost << "\n";
-
-  if (!(hp = gethostbyname(chost)))
+  if( stream_socket_ == -1 )
   {
-    cerr << "Couldn't look up host " << chost << "\n";
-    return -1;
+    error( "(StreamReader::read_stream) Failed to connect to stream" );
+    cerr << "(StreamReader::read_stream) ERROR: Failed to connect to stream" << endl;
+
+#ifdef THREAD_ENABLED
+
+    // Make sure processing thread stops
+    stop_sr_.set( 1 );
+ 
+    cout << "(StreamReader::read_stream) Broadcasting condition signal" << endl;
+    stream_cond_.conditionBroadcast();
+
+    cout << "(StreamReader::read_stream) Unlocking mutex" << endl;
+    buffer_lock_.unlock();
+
+#endif
+
+    return;
   }
 
-  memcpy(&address.sin_addr.s_addr, *(hp->h_addr_list), sizeof (address.sin_addr.s_addr));
-  address.sin_port = htons(cport);
+  int cnt = 0;
+  cout << "(StreamReader::read_stream) Receiving data....." << endl;
 
-  cout << "(StreamReader::get_stream) CONNECTING TO " << chost << ":" << cport << "\n";
+  // Initialize buffer to store input
+  unsigned char buffer[BUFFER_SIZE];
 
-  if (connect(sock, (struct sockaddr *) &address, sizeof (struct sockaddr_in)) == -1)
+  // Continually read full datasets until told to stop
+  stop_sr_.reset();
+  while( !stop_sr_.get() )
   {
-    if (errno != EINPROGRESS)
+
+#ifdef THREAD_ENABLED
+
+    cout << "(StreamReader::read_stream) Locking mutex" << endl;
+
+    // Lock buffer mutex
+    buffer_lock_.lock();
+
+#endif
+
+    // Continually read small chunks off of the stream until the first header
+    // is found
+
+    string header_name = "NONE";
+    int nread = 0;
+
+    // Read until an appropriate header is found
+    int start = seek_header( buffer, header_name, nread );
+
+    if( start < 0 )
     {
-      cerr << "(StreamReader::get_stream) Couldn't connect to host " << chost 
-           << " connect failed\n";
-      return -1;
-    }
-  }
+      cerr << "(StreamReader::read_stream) WARNING: Failed to find "
+           << "appropriate header" << endl;
 
-  while (going)
-  {
-    tv.tv_sec = 0;
-    tv.tv_usec = 10000;
-    FD_ZERO(&set);
-    FD_SET(sock, &set);
-    if (select(sock + 1, NULL, &set, NULL, &tv) > 0)
+#ifdef THREAD_ENABLED
+
+      // Make sure processing thread stops
+      stop_sr_.set( 1 );
+
+      cout << "(StreamReader::read_stream) Broadcasting condition signal" << endl;
+      stream_cond_.conditionBroadcast();
+
+      cout << "(StreamReader::read_stream) Unlocking mutex" << endl;
+      buffer_lock_.unlock();
+
+#endif
+
+      return; 
+    }
+
+    // Call appropriate read function for this type of data
+    // ==> Modify this to provide a reading/processing function for whatever 
+    // ==> data follows the header that was found.
+    if( header_name == "DDDAS-KTU2" )
     {
-      err_len = sizeof (error);
-      getsockopt(sock, SOL_SOCKET, SO_ERROR, &error, (socklen_t *) &err_len);
-      if (error && errno != EINPROGRESS)
-      {
-	cerr << "(StreamReader::get_stream) Couldn't connect to host " 
-             << chost << ", getsockopt failed\n";
-        perror(NULL);
-	exit(1);
-					
-      }
-      break;
+      cout << "(StreamReader::read_stream) Found DDDAS-KTU2 header" << endl;
+      read_sensor_2( buffer, start, nread );
     }
-  }
+    else if( header_name == "DDDAS-KTU3" )
+    {
+      cout << "(StreamReader::read_stream) Found DDDAS-KTU3 header" << endl;
+      read_sensor_3( buffer, start, nread );
+    }
+    else
+    {
+      char error_string[MAX_ERROR_STRING];
+      sprintf( error_string, 
+               "(StreamReader::read_stream) Unknown header: %s",
+               header_name.c_str() );
+      error( error_string );
+      cerr << "(StreamReader::read_stream) ERROR: Unknown header: " 
+           << header_name << endl;
+    }
 
-  sprintf(temp,"GET %s HTTP/1.0\r\nHost: %s\r\nUser-Agent: %s/%s\r\n%s%s%s%s\r\n", file, host, PACKAGE, VERSION, "", "", "", "");
-				
-  write(sock, temp, strlen(temp));
-	
-  cout << "(StreamReader::get_stream) CONNECTED: WAITING FOR REPLY\n";
+#ifdef THREAD_ENABLED
 
-  return sock;
-}
+    // Signal to processing thread that buffer is available
+    cout << "(StreamReader::read_stream) Broadcasting condition signal" << endl;
+    stream_cond_.conditionBroadcast();
 
-/*===========================================================================*/
-// 
-// kill_helper
-//
-// Description : Kill a specified helper thread.
-//
-// Arguments   :
-//
-// Thread * helper_thread - A pointed to the thread to be killed
-//
-void StreamReader::kill_helper( Thread * helper_thread )  
-{
-  // kill the helper thread
-  if (helper_thread)
+    // Unlock buffer mutex
+    //cout << "(StreamReader::read_stream) Unlocking mutex" << endl;
+    buffer_lock_.unlock();
+
+    // This is a temporary hack to avoid livelock until I fix the threading
+    // bug
+    sleep( 1 ); 
+
+#else
+
+    // Call the processing function explicitly
+    process_stream();
+
+    // Deallocate memory (should have already been done, but check anyway)
+    if( final_buffer_ != 0 )
+    {
+      delete [] final_buffer_;
+      final_buffer_ = 0;
+    }
+ 
+#endif
+
+    cnt++;
+    
+    // Update the stop variable
+    stop_sr_.reset();
+    
+  }	
+
+  // If the module was manually stopped, make sure to signal the processing
+  // thread before returning so it doesn't get stuck. Also free any dynamically
+  // allocated memory still hanging around
+  if( stop_sr_.get() )
   {
-    helper_thread->join();
-    helper_thread = 0;
-  }
+    // Deallocate memory
+    if( final_buffer_ != 0 )
+    {
+      delete [] final_buffer_;
+      final_buffer_ = 0;
+    }
+
+#ifdef THREAD_ENABLED
+
+    // Send signal etc.    
+    cout << "(StreamReader::read_stream) Broadcasting condition signal" << endl;
+    stream_cond_.conditionBroadcast();
+
+    cout << "(StreamReader::read_stream) Unlocking mutex" << endl;
+    buffer_lock_.unlock();
+
+#endif
+
+  } 
+
+  close( stream_socket_ );
+  cout << "(StreamReader::read_stream) Leaving" << endl;  
+
 }
 
 /*===========================================================================*/
@@ -570,21 +635,26 @@ void StreamReader::kill_helper( Thread * helper_thread )
 //
 void StreamReader::process_stream()
 {
-  cout << "(StreamReader::process_stream) Inside\n";
+  cout << "(StreamReader::process_stream) Inside" << endl;
+
+#ifdef THREAD_ENABLED
 
   // Continually wait for the reader to set the condition signal, or for the 
   // user to click the "Stop" button on the UI
-  int stop_sr =stop_sr_.get() ;
-  while( !stop_sr )
+  stop_sr_.reset();
+  while( !stop_sr_.get() )
   {
 
-    cout << "(StreamReader::process_stream) Waiting for condition variable\n";
+    cout << "(StreamReader::process_stream) Waiting for condition signal" 
+         << endl;
 
     // Wait for condition signal from reader.  The condition signal indicates 
-    // that the reader has buffered enough data for processing.
+    // that the reader has buffered enough data for processing.  wait 
+    // automatically locks the mutex once it returns, so I don't need to do 
+    // that myself
     stream_cond_.wait(buffer_lock_);
 
-    cout << "(StreamReader::process_stream) Got the hand-off\n";
+    cout << "(StreamReader::process_stream) Got the hand-off" << endl;
 
     // We got the hand-off from the reader, so now we begin processing the 
     // buffer data
@@ -592,133 +662,355 @@ void StreamReader::process_stream()
     // Make sure the final_buffer_ was allocated
     if( final_buffer_ == 0 )
     {
+      cerr << "(StreamReader::process_stream) WARNING: Final buffer was not "
+           << "allocated" << endl;
+
+      // If we got here, it probably means that this thread grabbed the lock
+      // again before the reader thread had a chance to get it.  
+
+      // Unlock buffer mutex
+      buffer_lock_.unlock();
+
+      // Since the reader didn't grab any data for us, we sleep so that the 
+      // reader can grab the lock.  This is a hack to avoid livelock. 
+      sleep( 1 );
+
+      // Signal to reader thread that buffer is available
+      //stream_cond_.conditionBroadcast();
+
+      // Check stop button
+      stop_sr_.reset();
+      continue;
+    }
+
+#else
+
+    // Make sure the final_buffer_ was allocated
+    if( final_buffer_ == 0 )
+    {
+      cerr << "(StreamReader::process_stream) WARNING: Final buffer was not "
+           << "allocated" << endl;
       return;
     }
 
-    // Convert buffer to input stream since a stream is easier to parse
-    string str = (const char *) final_buffer_;
-    istringstream input( str, istringstream::in );
+#endif
 
-    cout << "(StreamReader::process_stream) Initialized input\n";
+
+    // Make a copy of the final_buffer_ to pass to the specific processing
+    // function.  I've done this so that the final_buffer_ can be given back to
+    // the reader thread as quickly as possible, although I haven't implemented
+    // the thread code to actually do this yet because of threading bugs I need
+    // to fix first
+    int processing_size = final_size_;
+    unsigned char * processing_buffer = new unsigned char[final_size_];
+    memcpy( processing_buffer, final_buffer_, 
+            processing_size * sizeof(unsigned char) );
+
+    cout << "(StreamReader::process_stream) Initialized input" << endl;
 
     // Deallocate final buffer memory
     if( final_buffer_ != 0 ) // Just double check
     {
-      cout << "(StreamReader::process_stream) Freeing mem from final_buffer_\n";
+      cout << "(StreamReader::process_stream) Freeing mem from final_buffer_" << endl;
       delete [] final_buffer_;
       final_buffer_ = 0;
     }
 
-    // Grab the first string in the input stream
-    input >> str;
-
     // Check to see what kind of data to process.  This is indicated by the
     // first string in the buffer.
-    if( str == "solution" )
+    string str;
+    find_header( processing_buffer, processing_size, str );
+
+    if( str == "DDDAS-KTU2" )
     {
-      // This is mesh data containing solution points
-      process_mesh( input );
+      // This is the second test stream in which all 64000 sensors get a 
+      // header
+      process_sensor_2( processing_buffer, processing_size );
+    }
+    else if( str == "DDDAS-KTU3" )
+    {
+      // This is the third test stream with 25 "poles" of 40 sensors, 1000 
+      // total sensors (same spec as sensor 2)
+      process_sensor_3( processing_buffer, processing_size );
     }
     else
     {
       // Got unrecognized data, spit out an error message and return 
-      cerr << "(StreamReader::process_stream) WARNING: Unrecognized header\n";
-      cout << "(StreamReader::process_stream) str = " << str << "\n";
-      return;
+      cerr << "(StreamReader::process_stream) WARNING: Unrecognized header: '" 
+           << str << "'" << endl;
     }
 
-    // Update stop variable
-    stop_sr_ = ctx->subVar("stop-sr");      
-    stop_sr = stop_sr_.get();  
+    // Deallocate processing buffer memory
+    if( processing_buffer != 0 ) // Just double check
+    {
+      cout << "(StreamReader::process_stream) Freeing mem from processing_buffer" << endl;
+      delete [] processing_buffer;
+      processing_buffer = 0;
+    }
 
+#ifdef THREAD_ENABLED
+
+    stop_sr_.reset();    
+
+    // Unlock buffer mutex
+    buffer_lock_.unlock();
   }
 
-  cout << "(StreamReader::process_stream) done\n";
-  cout << "(StreamReader::process_stream) Leaving\n";
+#endif
+
+  cout << "(StreamReader::process_stream) Leaving" << endl;
+}
+
+
+/*===========================================================================*/
+// 
+// find_string
+//
+// Description : Reads an input stream until a specified string is encountered 
+//               or the input ends.  If the string is encountered, returns the 
+//               index of the string in the buffer.  Otherwise, 
+//               returns -1.
+//
+// Arguments   :
+//
+// unsigned char * buffer - The buffer that is to be searched for the given
+//                          string
+//
+// int buffer_size - Number of characters in the buffer
+//
+// string str - The string to find within the given input stream 
+//
+int StreamReader::find_string( unsigned char * buffer, int buffer_size, 
+                               string str ) const
+{
+  cout << "(StreamReader::find_string) Inside" << endl;
+
+  // Check byte by byte for an appropriate header in this chunk of data
+  for( int i = 0; i < buffer_size; i++ )
+  {
+    // If there are enough bytes left in the buffer to possible contain
+    // a string of this size, check for a match
+    int str_len = str.length();
+    if( str_len <= (buffer_size - i + 1) )
+    {
+      // Create the string of that length in the buffer and compare it to
+      // the header
+      unsigned char buf_str [str_len + 1];
+      memcpy( buf_str, &buffer[i], str_len * sizeof(unsigned char) );
+      buf_str[str_len] = '\0'; // null-terminate the string
+      string buf_string = (const char *) buf_str;
+      if( buf_string == str )
+      {
+        // We found a matching string
+        return i;
+      }
+    }
+  }
+
+  cout << "(StreamReader::find_string) Leaving" << endl;
+  
+  // The string was not found, return -1
+  return -1;
 }
 
 /*===========================================================================*/
 // 
-// read_stream 
+// find_header
 //
-// Description : Continually read from the mp3 stream, remove mp3 headers, 
-//               and check for recognized headers.  When the first recognized
-//               header is found, call the appropriate function to process
-//               that data type (i.e. mesh data).  When the processing funtion
-//               returns (i.e. a second solution header is encountered), update
-//               the condition variable to wake up the other thread so that it 
-//               will check the data. Note that the buffer variable must be 
-//               locked and unlocked so that reads and writes don't conflict.
+// Description : Looks for the occurence of any header in the buffer.  Returns
+//               the buffer index of the first header found.  Returns the
+//               name of the header by reference.  If no header is found, 
+//               returns -1.
+//
+// Arguments   :
+//
+// unsigned char * buffer - buffer to be searched for headers
 // 
-// Arguments   : none
+// int buffer_size - size of buffer (in bytes)
+// 
+// string & header_name - name of header found (or unassigned if no header
+//                        is found)
 //
-void StreamReader::read_stream() 
+int StreamReader::find_header( unsigned char * buffer, int buffer_size, 
+                               string & header_name )
 {
-  // Get stream socket
-  int sock = get_stream();
-
-  int cnt = 0;
-  cout << "(StreamReader::read_stream) Receiving data.....\n";
-
-  // Initialize buffer to store input
-  unsigned char buffer[BUFFER_SIZE];
-
-  int stop_sr =stop_sr_.get() ;
-  istringstream input( istringstream::in );
-
-  // Continually read full datasets until told to stop
-  while( !stop_sr )
+  // Check byte by byte for an appropriate header in this chunk of data
+  for( int i = 0; i < buffer_size; i++ )
   {
-
-    // If this is the first time reading, need to lock mutex
-    if( cnt == 0 )
+    // Loop through all the headers, checking for a match
+    int num_headers = (int) headers_.size();
+    for( int j = 0; j < num_headers; j++ ) 
     {
-      cout << "(StreamReader::read_stream) Trying to lock mutex\n"; 
-      // Lock buffer mutex
-      buffer_lock_.lock();
+      // If there are enough bytes left in the buffer to possible contain
+      // a header of this size, check for a match
+      int header_len = headers_[j].length();
+
+      if( header_len <= (buffer_size - i + 1) )
+      {
+        // Create the string of that length in the buffer and compare it to
+        // the header
+        unsigned char buf_str [header_len + 1];
+        memcpy( buf_str, &buffer[i], header_len * sizeof(unsigned char) );
+        buf_str[header_len] = '\0'; // null-terminate the string
+        string buf_hdr = (const char *) buf_str;
+
+        if( buf_hdr == headers_[j] )
+        {
+          // We found a matching header
+          header_name = headers_[j];
+          return i;
+        }
+      }
+    }
+  }
+  return -1;
+}
+
+/*===========================================================================*/
+// 
+// seek_header 
+//
+// Description : Reads data from a stream until a string is found that matches 
+//               one of the entries in the array of header strings.  Returns
+//               the buffer index where the header string begins.  
+//
+// Arguments   :
+//
+// unsigned char * buffer - Buffer to store char data from socket reads
+//
+// string & header_name - This gets assigned the name of the header (if any)
+//                        that is found.
+//
+// int & nread - Returned by reference as the number of bytes read in the last
+//               read
+//
+int StreamReader::seek_header( unsigned char * buffer,  
+                               string & header_name, int & nread ) 
+{
+  int index = -1;
+
+  // Continually read small chunks off of the stream until the first header
+  // is found
+  stop_sr_.reset();      
+  while( !stop_sr_.get() )
+  {
+    cout << "(StreamReader::seek_header) Searching for appropriate header" 
+         << endl; 
+
+    // Read chunk of data from stream
+    nread = update_input( buffer );
+
+    // Check to make sure data was successfully read from the stream
+    if( nread == 0 ) 
+    {
+      cout << "(StreamReader::seek_header) No data read from stream" << endl;
+
+      // Update the stop variable
+      stop_sr_.reset();      
+      continue;
+    }
+    else if( nread < 0 )
+    {
+      return -1;
     }
 
-    // Continually read small chunks off of the stream until the first header
-    // is found
-
-    // Set up the array of header strings to look for
-    const int num_headers = 1;
-    string headers[num_headers];
-    headers[0] = "solution";
-    string header_name = "NONE";
-    int nread = 0;
-
-    // Read until an appropriate header is found
-    int start = seek_header( input, sock, buffer, headers, num_headers, header_name, nread );
-
-    // Call appropriate read function for this type of data
-    if( header_name == "solution" ) 
+    if( (index = find_header( buffer, nread, header_name )) != -1 )
     {
-      read_mesh( input, sock, buffer, start, nread );
+      return index;      
     }
 
-    // Unlock buffer mutex
-    cout << "(StreamReader::read_stream) Unlocking mutex\n";
-    buffer_lock_.unlock();
-
-    // Signal to processing thread that buffer is available
-    cout << "(StreamReader::read_stream) Broadcasting condition signal\n";
-    stream_cond_.conditionBroadcast();
-
-    // Wait for condition signal from processor
-    cout << "(StreamReader::read_stream) Waiting for condition signal\n";
-    stream_cond_.wait(buffer_lock_);
-
-    cnt++;
+    cout << "(StreamReader::seek_header) No header found yet" << endl;
+    stop_sr_.reset();
+  }
   
-    // Update the stop variable
-    stop_sr_ = ctx->subVar("stop-sr");      
-    stop_sr = stop_sr_.get();
-  }	
+  // Should only get here if the user manually stops the execution of the
+  // module
+  return -1;
+}
 
-  cout << "(StreamReader::read_stream) Leaving\n";  
-  close( sock );
+/*===========================================================================*/
+// 
+// update_input
+//
+// Description : Reads the next chunk of data off of the mp3 stream, removes 
+//               the mp3 headers, and updates the input stream and buffer so 
+//               that they contain the updated data.  Returns the number of 
+//               bytes remaining in buffer after mp3 headers have been removed.
+//               Returns
+//               Assumes that buffer is of size BUFFER_SIZE.
+//
+// Arguments   :
+//
+// unsigned char * buffer - Character buffer of size BUFFER_SIZE that is used
+//                          to buffer data read from the mp3 stream.  Data
+//                          in this buffer gets copied to the input string 
+//                          stream.
+//
+int StreamReader::update_input( unsigned char * buffer ) 
+{
+  
+  cout << "(StreamReader::update_input) Inside" << endl; 
+  //cout << "(StreamReader::update_input) stream_socket_ = " << stream_socket_ 
+  //     << endl; 
 
+  int nread = 0;
+
+  bzero( buffer, BUFFER_SIZE );
+
+  // Read chunck of data from stream
+  cout << "(StreamReader::update_input) Attempting to read data from stream" 
+       << endl;
+  if( (nread = read(stream_socket_, buffer, BUFFER_SIZE)) < 0 )
+  {
+    error( "(StreamReader::update_input) Read failed" );
+    cerr << "(StreamReader::update_input) ERROR: Read failed, error follows:" << endl;  
+    perror(NULL);
+    //cout << "(StreamReader::update_input) Leaving" << endl; 
+    return nread; 
+  }
+  else if( nread == 0 )
+  {
+    // End of file
+    cerr << "(StreamReader::update_input) WARNING: Read 0 bytes" << endl;
+    //cout << "(StreamReader::update_input) Leaving" << endl; 
+    return nread;
+  }
+
+  cout << "(StreamReader::update_input) Read succeeded, nread = " << nread 
+       << endl;
+
+  //cout << "(StreamReader::update_input) Removing headers" << endl; 
+
+  // First check for a "404" error message indicating that we weren't 
+  // able to retrieve this file from the stream
+  int index = find_string( buffer, BUFFER_SIZE, "404 Not found" );
+  if( index >= 0 ) 
+  {  
+    char error_string[MAX_ERROR_STRING];
+    sprintf( error_string, 
+        "(StreamReader:::update_input) File '%s' not found on server '%s:%i'", 
+        (file_read_.get()).c_str(), (hostname_.get()).c_str(), port_.get() );
+	error( error_string ); 
+ 
+    cerr << "(StreamReader::update_input) ERROR: File '" 
+         << file_read_.get() << "' not found on server '" << hostname_.get() 
+         << ":" << port_.get() << "'" << endl;
+    return -1;
+  }
+
+  // Remove all mp3 headers, create new buffer without the headers
+  unsigned char new_buffer[BUFFER_SIZE];
+  nread = remove_headers( buffer, new_buffer, nread );
+
+  // Update buffer
+  memcpy( buffer, new_buffer, BUFFER_SIZE * sizeof(unsigned char) );
+
+  //cout << "(StreamReader::update_input) Modifying new input" << endl; 
+
+  assert( nread <= BUFFER_SIZE );
+
+  //cout << "(StreamReader::update_input) Leaving" << endl; 
+  return nread;
 }
 
 /*===========================================================================*/
@@ -726,11 +1018,13 @@ void StreamReader::read_stream()
 // remove_headers
 //
 // Description : Removes all mp3 headers (which occur every 417 bytes) from a 
-//               buffer.  Returns the modified buffer as new_buffer and the 
-//               buffer size by reference as num_bytes. Fills the remaining 
-//               bytes in old_buffer and new_buffer with zeros.  Leaves the 
-//               mp3 headers in old_buffer.  Assumes that both old_buffer and 
-//               new_buffer are of size BUFFER_SIZE.
+//               buffer and puts the remaining bytes in a new buffer.  Returns 
+//               the number of valid bytes in the new buffer. Fills the 
+//               remaining bytes in old_buffer and new_buffer with zeros.  
+//               Leaves the mp3 headers in old_buffer.  Assumes that both 
+//               old_buffer and new_buffer are of size BUFFER_SIZE.  Only 
+//               puts data into new buffer if it is between two mp3 headers
+//               417 bytes apart.
 //
 // Arguments   :
 //
@@ -740,29 +1034,81 @@ void StreamReader::read_stream()
 // unsigned char * new_buffer - The new buffer that gets assigned the old 
 //                              buffer data minus the mp3 headers
 //
-// int& num_bytes - Number of bytes to examine in old_buffer.  Gets modified
-//                  to contains the number of bytes in new_buffer after the mp3
-//                  headers have been stripped.
+// int& num_bytes - Number of bytes to examine in old_buffer. 
 //
-void StreamReader::remove_headers( unsigned char * old_buffer, 
-                                   unsigned char * new_buffer, int& num_bytes )
+int StreamReader::remove_headers( unsigned char * old_buffer, 
+                                  unsigned char * new_buffer, int num_bytes )
 {
   // Grab some extra bytes just in case
   int num = num_bytes;
   num_bytes = 0; 
+  int bytes_since_header = 0; 
+  bool first_header = 1;
+
   for( int i = 0; i < num; i++ )
   {
     unsigned char ch = old_buffer[i];
 
-    if( ch == 0xFF  ) 
+    if( ch == 0xff  ) 
     {
-      // This is the first byte of the mp3 header, skip the header (4 bytes)
-      i += 3;
+      cout << "(StreamReader::remove_headers) bytes_since_header = " 
+           << bytes_since_header << endl;
+ 
+      if( num - i < 4 )
+      {
+        // There aren't enough bytes left in the buffer to fit a header
+        // Don't add the remaining bytes to the new buffer, just return
+        cerr << "(StreamReader::remove_headers) WARNING: Not enough bytes " 
+             << "left to fit header " << endl;
+        break; 
+      }
+      
+      // There are enough bytes left for a header to fit.  Check to see if
+      // the next 3 bytes match the header 
+      printf( "(StreamReader::remove_headers) header = %x %x %x %x\n", 
+              old_buffer[i], old_buffer[i+1], old_buffer[i+2], 
+              old_buffer[i+3] );    
+
+      if( old_buffer[i+1] == 0xfb && old_buffer[i+2] == 0x90 && 
+           old_buffer[i+3] == 0xc0 )
+      {
+        // We've found a matching header. Check the number of bytes read since 
+        // the last header.  
+        if( bytes_since_header == 417)
+        {
+          // Copy the last 417 bytes from the old buffer into the new buffer
+          assert( i >= 417 );
+          memcpy( &(new_buffer[num_bytes]), &(old_buffer[i - 417]), 
+                  417 * sizeof(unsigned char) );     
+          num_bytes += 417;
+        }
+        else if( !first_header )
+        {
+          // We found a header but it didn't come in the right place so the 
+          // data must have been corrupted since the last header.  Respond 
+          // to this by throwing away the remaining data and returning with
+          // what we've read so far.
+          cerr << "(StreamReader::remove_headers) WARNING: Wrong number of " 
+               << "bytes since last header, throwing away remaining data" << endl;
+          return num_bytes;
+        }
+        i += 3;
+        bytes_since_header = 0;
+        first_header = 0;
+
+      }
+      else if( !first_header )
+      {
+        // We must have found a byte somewhere in the data, simply 
+        // keep looking for data 
+        bytes_since_header++;
+      }
+
     }
-    else
+    else if( !first_header )
     {
-      new_buffer[num_bytes] = ch;
-      num_bytes++;
+      // Keep looking for data
+      bytes_since_header++;
     }
   }
 
@@ -778,422 +1124,144 @@ void StreamReader::remove_headers( unsigned char * old_buffer,
     old_buffer[k] = 0;
   }
 
+  return num_bytes;
 }
 
 /*===========================================================================*/
 // 
-// seek_header 
+// checksum_valid
 //
-// Description : Reads data from a stream until a string is found that matches 
-//               one of the entries in the array of header strings.  Returns
-//               the internal buffer index where the header string begins.
-//
-// Arguments   :
-//
-// istringstream& input - Input string stream to search for a valid header
-//
-// int sock - Socket descriptor for an mp3 stream
-//
-// unsigned char * buffer - Buffer to store char data from socket reads
-//
-// string * headers - Array of valid header strings to look for
-//
-// int num_headers - The number of header strings contained in the 'headers'
-//                   array
-//
-// string & header_name, 
-//
-// int & nread - Returned by reference as the number of bytes read in the last
-//               read
-//
-int StreamReader::seek_header( istringstream& input, int sock, 
-                               unsigned char * buffer,  
-                               string * headers, int num_headers, 
-                               string & header_name, int & nread ) 
-{
-  int stop_sr =stop_sr_.get() ;
-
-  // Continually read small chunks off of the stream until the first header
-  // is found
-  while( !stop_sr )
-  {
-    // Read chunk of data from stream
-    nread = update_input( input, sock, buffer );
-
-    // Check for an appropriate header in this chunk of data
-    string s;
-    while( input >> s )
-    {
-      // Check each string to see if it matches any of the valid headers
-      for( int i = 0; i < num_headers; i++ ) 
-      {
-        if( s == headers[i] )
-        {
-          header_name = headers[i];
-          int pos = input.tellg();
-          assert( (pos - 8) < nread );
-          return pos - 8;
-        }
-      }
-    } 
-
-    // Update the stop variable
-    stop_sr_ = ctx->subVar("stop-sr");      
-    stop_sr = stop_sr_.get();
-  }
-  
-  // Should never get here
-  return -1;
-}
-
-/*===========================================================================*/
-// 
-// update_input
-//
-// Description : Reads the next chunk of data off of the mp3 stream, removes 
-//               the mp3 headers, and updates the input stream and buffer so 
-//               that they contain the updated data.  Returns the number of 
-//               bytes remaining in buffer after mp3 headers have been removed.
-//               Assumes that buffer is of size BUFFER_SIZE.
+// Description : Calculates the checksum on this buffer and compares it to the
+//               passed checksum.  If they match, returns true.  Returns
+//               false otherwise.  The checksum is the complement of the 
+//               one-byte sum of all bytes.
 //
 // Arguments   :
 //
-// istringstream& input - Empty input stream that gets assigned the data read
-//                        in from the mp3 stream
-// 
-// int sock - Socket descriptor for the mp3 stream
+// unsigned char * buffer - Buffer of data to run the checksum on.
+// int num_bytes - Number of bytes in the buffer.
+// unsigned char checksum - 1-byte checksum to compare against.
 //
-// unsigned char * buffer - Character buffer of size BUFFER_SIZE that is used
-//                          to buffer data read from the mp3 stream.  Data
-//                          in this buffer gets copied to the input string 
-//                          stream.
-//
-int StreamReader::update_input( istringstream& input, int sock, 
-                                unsigned char * buffer ) 
+bool StreamReader::checksum_valid( unsigned char * buffer, int num_bytes,
+                                   unsigned char checksum )
 {
-  
-  cout << "(StreamReader::update_input) Inside\n"; 
-
-  int nread = 0;
-  // Read chunck of data from stream
-  if( (nread = read(sock, buffer, BUFFER_SIZE)) < 0 )
+  // Calculate the sum of all bytes in the data
+  unsigned int buf_checksum = 0;
+  for( int k = 0; k < num_bytes; k++)
   {
-    cerr << "(StreamReader::update_input) Read failed\n";  
-    perror(NULL);
-    return nread; 
-  }
-  else if( nread == 0 )
-  {
-    // End of file
-    cerr << "(StreamReader::update_input) Read 0 bytes\n";
-    return nread;
-  }
-
-  cout << "(StreamReader::update_input) Read succeeded, nread = " << nread 
-       << "\n";
-
-  cout << "(StreamReader::update_input) Removing headers\n"; 
-
-  // Remove all mp3 headers, create new buffer without the headers
-  unsigned char new_buffer[BUFFER_SIZE];
-  remove_headers( buffer, new_buffer, nread );
-
-  // Update buffer
-  memcpy( buffer, new_buffer, BUFFER_SIZE );
-
-  cout << "(StreamReader::update_input) Modifying new input\n"; 
-
-  // Convert character buffer to istringstream
-  string str_buf = (const char *) buffer;
-  input.clear();
-  input.str( str_buf );
-
-  cout << "(StreamReader::update_input) Done modifying new input\n"; 
-
-  if ( !input )
-  {
-    error( "(StreamReader::update_input)  Failed to open stream." );
-    cerr << "(StreamReader::update_input)  Failed to open stream.\n";
-  }    
-  
-  assert( nread <= BUFFER_SIZE );
-
-  cout << "(StreamReader::update_input) Leaving\n"; 
-  return nread;
-}
-
-/*===========================================================================*/
-// 
-// fill_mesh 
-//
-// Description : Reads solution points from an array, populates a LatVol mesh 
-//               with them, and sends the mesh down the SCIRun pipeline to be 
-//               eventually visualized by the Viewer.
-//
-// Arguments   :
-// 
-// double * sol_pts - Array of doubles, where each entry in the array 
-//                    represents a solution point which is the value of a 
-//                    specific node in a LatVol mesh
-//
-// int num_sols - Number of entries / solution points in the sol_pts array
-//
-void StreamReader::fill_mesh( double * sol_pts, int num_sols ) const
-{
-  Point minb, maxb;
-  minb = Point(-1.0, -1.0, -1.0);
-  maxb = Point(1.0, 1.0, 1.0);
-
-  Vector diag((maxb.asVector() - minb.asVector()) * (0.0/100.0));
-  minb -= diag;
-  maxb += diag;
-  
-  if( sol_pts == 0 ) return;
-
-  // Create blank mesh.
-  int cube_root = (int) cbrt( num_sols );
-  unsigned int sizex;
-  unsigned int sizey;
-  unsigned int sizez;
-  sizex = sizey = sizez = Max(2, cube_root) + 1;
-  LatVolMeshHandle mesh = scinew LatVolMesh(sizex, sizey, sizez, minb, maxb);
-
-  // Assign data to cell centers
-  Field::data_location data_at = Field::CELL;
-
-  // Create Image Field.
-  FieldHandle ofh;
-
-  LatVolField<double> *lvf = scinew LatVolField<double>(mesh, data_at);
-  if (data_at != Field::NONE)
-  {
-    LatVolField<double>::fdata_type::iterator itr = lvf->fdata().begin();
-
-    // Iterator for solution points array
-    int i = 0; 
-    while (itr != lvf->fdata().end())
-    {
-      assert( i < num_sols );
-      *itr = sol_pts[i];
-      ++itr;
-      i++;
-    }
+    buf_checksum += (unsigned int) buffer[k];
+    //cout << "(StreamReader::checksum_valid) buffer[" << k << "] = " 
+    //     << buffer[k] << endl;
   } 
-  ofh = lvf;
-
-  // Send data to output field  
-  ofp_->send_intermediate(ofh);
-
-}
-
-/*===========================================================================*/
-// 
-// get_sols
-// 
-// Description : Reads in the solution points from a stream until all
-//               of the solution points have been read or an error has 
-//               occurred.  Stores the solution points in the sol_pts array.
-//               Returns the number of solution points read.
-//
-// Arguments   :
-//
-// istringstream& input - input stream containing a series of doubles that
-//                        represent solution points
-//
-// double * sol_pts - a previously allocated array that gets populated with 
-//                    solution points
-//
-// int num_sols - size of the sol_pts array and the number of solution points
-//                to read in
-//
-int StreamReader::get_sols( istringstream& input, double * sol_pts, 
-                            int num_sols ) 
-{
-  int num_read = 0;
-  double sol;
-  char ch;
-
-  int stop_sr = stop_sr_.get() ;
-
-  // Read until we get all solution points or encounter an error
-  while( num_read < num_sols && !stop_sr)
-  {
-    cout << "(StreamReader::get_sols) Reading solution points\n";
-    if( input >> sol ) // I can read a double
-    {
-
-          // Store the double in the solution array
-          sol_pts[num_read] = sol;
-          cout << "(StreamReader::get_sols) sol_pts[" << num_read 
-               << "] = " << sol_pts[num_read] << "\n";
-          num_read++;  
-    }
-    else if( (ch = input.peek()) == 's' ) // I've hit mesh header
-    {
-      // If the string is another mesh header, check to see if we read
-      // all the solution points we needed
-      cout << "(StreamReader::get_sols) Got another solution header prematurely\n";
-      break;
-    } 
-    else if( input.eof() ) // I've reached the end of the input stream 
-    {
-      cout << "(StreamReader::get_sols) Reached end of input stream\n";
-      break;
-    } 
-    else  // I've reached something I don't recognize
-    { 
-      cerr << "(StreamReader::get_sols) ERROR: Input '" << ch 
-           << "' unrecognized\n"; 
-
-       // Just discard this for now
-      if( input.fail() )
-      {
-        cerr << "(StreamReader::get_sols) WARNING: Input stream failed\n";
-        input.clear();
-      }   
-      char char_ptr[100];
-      input.getline( char_ptr, 100 );
-      cout << "(StreamReader::get_sols) char_ptr = " << char_ptr << "\n";
-      //break;
-    }
-
-    // Update stop variable
-    stop_sr_ = ctx->subVar("stop-sr");      
-    stop_sr = stop_sr_.get();  
  
-  }
+  // Take the complement of the checksum
+  buf_checksum = ~buf_checksum;  
 
-  return num_sols;
+  // Zero out all but the lowest byte
+  buf_checksum = buf_checksum & 0xff;
+
+  // Get lowest byte to use as final checksum
+  unsigned char buf[sizeof(unsigned int)];
+  memcpy( buf, &buf_checksum, sizeof(unsigned int) );  
+  unsigned char final_checksum = buf[0];
+  
+  // The final_checksum is what should be sent as the one byte checksum 
+  // at the end of the data
+
+  // Print out the checksum and final_checksum just to make sure the bit
+  // operations were done right.  These two values should be equal.
+  //cout << "(StreamReader::checksum_valid) final_checksum = " 
+  //     << (unsigned int) final_checksum 
+  //     << ", checksum = " << (unsigned int) checksum << endl;
+
+  if( final_checksum == checksum )
+  {
+    return true;
+  }
+  return false;
 }
 
 /*===========================================================================*/
 // 
-// process_mesh 
+// cleanup
 //
-// Description : Parse buffered data that contains solution points for a 
-//               LatVol mesh.  Populates an array with all of the solution 
-//               points for a single mesh and then constructs a LatVol mesh 
-//               that is eventually passed downstream to the Viewer.
-//     
+// Description : Clean up memory, close open socket, etc.  
+//
 // Arguments   :
 //
-// istringstream& input - An input stream that begins with a solution header
-//                        that is followed by a list of solution points that
-//                        represent the data for one LatVol mesh
-//
-void StreamReader::process_mesh( istringstream& input ) 
+void StreamReader::cleanup()
 {
-    /*
-    Here's an sample of what the buffer data should look like:
+  cout << "(StreamReader::cleanup) Inside" << endl; 
 
-    Data Format
-    ----------------
-
-    [char *s (file name)]
-    solution u -size=[int Ncells (number of solution pts)] -components=1 -type=nodal
-    [double solution(0) (Solution point 0.  See notes below)]
-    [double solution(1)]
-    [double solution(2)]
-    [double solution(3)]
-    [double solution(4)]
-    [double solution(5)]
-    ...
-    [double solution(Ncells)]
-
-    Sample Data
-    -----------
-
-    sat.out
-    solution u  -size=64000 -components=1 -type=nodal
-    0.584279
-    0.249236
-    0.0711161
-    0.0134137
-    0.00190625
-    0.000223068
-    2.70226e-05
-    ...
-    
-  */
-
-  // Set up variables corresponding to the file values
-  string filename_h;
-  string solution;
-  int components;
-  string type;
-  string str;
-  char ch;
-  int num_sols = 0;
-   
-  cout << "(StreamReader::process_mesh) Got beginning of solution set\n";  
-
-  // Parse the header, assigning variable values
-  input >> solution 
-    >> ch >> ch >> ch >> ch >> ch >> ch 
-    >> num_sols
-    >> ch >> ch >> ch >> ch >> ch >> ch 
-    >> ch >> ch >> ch >> ch >> ch >> ch
-    >> components
-    >> ch >> ch >> ch >> ch >> ch >> ch
-    >> type;
-
-  cout << "(StreamReader::process_mesh) num_sols = " << num_sols << "\n";  
-
-  // Allocate memory for solution points
-  double * sol_pts = new double[num_sols]; // Replace new with scinew?
-
-  // Initialize the field values array with solution points with value 0
-  memset( sol_pts, 0, num_sols );
-        
-  // Read the solution points from the input stream
-  int num_read = get_sols( input, sol_pts, num_sols );
-
-  // Do some error checking to make sure we got a valid mesh
-  if( num_read == num_sols )
+  // Deallocate memory
+  if( final_buffer_ != 0 )
   {
-    if( (ch = input.peek()) != 's' )
-    {
-      cerr << "(StreamReader::process_mesh) WARNING: Next value isn't header\n"; 
-    }
-
-    cout << "(StreamReader::process_mesh) Filling mesh\n"; 
-
-    cout << "(StreamReader::process_mesh) Unlocking mutex\n"; 
-
-    // Unlock buffer mutex
-    buffer_lock_.unlock();
-
-    cout << "(StreamReader::process_mesh) Broadcasting condition signal\n"; 
-    // Signal to reader thread that buffer is available
-    stream_cond_.conditionBroadcast();
-
-    // Fill the mesh with these values
-    fill_mesh( sol_pts, num_sols );
-
-  }
-  else
-  {
-    cout << "(StreamReader::process_mesh) Got incomplete mesh, discarding\n"; 
+    delete [] final_buffer_;
+    final_buffer_ = 0;
   }
 
-  // Deallocate array
-  if( sol_pts != 0 )
+  if( pcw_ != 0 )
   {
-    delete [] sol_pts;
-    sol_pts = 0;
+    delete pcw_;
+    pcw_ = 0;
   }
+
+  headers_.clear();
+
+  // Close open sockets and file descriptors
+
+  if( stream_socket_ != -1 ) close( stream_socket_ );
+
+#ifdef THREADS_ENABLED
+
+  // Kill threads
+  kill_helper( reader_thread_ );
+  kill_helper( proc_thread_ );
+
+#endif
+
+  cout << "(StreamReader::cleanup) Leaving" << endl; 
 }
 
 /*===========================================================================*/
 // 
-// read_mesh
+// kill_helper
 //
-// Description : Reads all of the data for one mesh off of the mp3 stream 
-//               starting from the beginning of a mesh header.
+// Description : Kill a specified helper thread.
 //
 // Arguments   :
 //
-// istringstream& input - Input stream with the first chuck of data for a mesh
+// Thread * helper_thread - A pointed to the thread to be killed
+//
+void StreamReader::kill_helper( Thread * helper_thread )  
+{
+  cout << "(StreamReader::kill_helper) Inside" << endl;
+
+  // kill the helper thread
+  if (helper_thread)
+  {
+    helper_thread->join();
+    helper_thread = 0;
+  }
+
+  cout << "(StreamReader::kill_helper) Leaving" << endl;
+}
+
+
+// ****************************************************************************
+// ********************************* Stream 2 *********************************
+// ****************************************************************************
+
+
+/*===========================================================================*/
+// 
+// read_sensor_2
+// 
+// Description : Puts all of the data for one sensor starting from
+//               the beginning of a sensor header 'DDDAS-KTU2' into the 
+//               final_buffer_ so that it can then be used by process_sensor_2.
+//
+// Arguments   :
 //
 // int sock - Socket descriptor for the mp3 stream
 //
@@ -1205,75 +1273,551 @@ void StreamReader::process_mesh( istringstream& input )
 // ssize_t nread - Number of bytes in the last chunk of data read from the mp3 
 //                 stream 
 //
-void StreamReader::read_mesh( istringstream& input, int sock, 
-                              unsigned char * buffer, int start, 
-                              ssize_t nread )
+void StreamReader::read_sensor_2( unsigned char * buffer, int start, 
+                                  ssize_t nread )
 {
-  
-  // Parse the header to get number of solutions
-  char ch;
-  int num_sols;
-  input >> ch >> ch >> ch >> ch >> ch >> ch >> ch >> num_sols;
 
-  cout << "(StreamReader::read_mesh) num_sols = " << num_sols << "\n";
+  // Check to make sure we read enough bytes to contain at least the minimum
+  // sized sensor update
+  if( nread - start < 100 )
+  {
+    cerr << "(StreamReader::read_sensor_2) WARNING: Too few bytes read for a "
+         << "sensor update, aborting this read" << endl;
+    return;    
+  }
+
+  // In a later iteration of this implementation I should parse the header to 
+  // get number of solutions so that can be factored into the number of bytes 
+  // that need to be copied into the final buffer
 
   // Make new buffer to fit all of the solution points and header
-  int final_size = 100 + num_sols * 13;
-  final_buffer_ = new unsigned char[final_size];
+  int cpy_size = nread - start;
+  final_size_ = cpy_size;
+  final_buffer_ = new unsigned char[final_size_];
 
   // Set all values of final buffer to 0
-  memset( final_buffer_, 0, final_size );
+  memset( final_buffer_, 0, final_size_ );
 
-  cout << "(StreamReader::read_mesh) final_size = " << final_size << "\n";
-  cout << "(StreamReader::read_mesh) start = " << start << "\n";
-      
+  cout << "(StreamReader::read_sensor_2) final_size = " << final_size_ << endl;
+  cout << "(StreamReader::read_sensor_2) start = " << start << endl;
+
   // Copy the first section of the mesh into the final buffer
-  int cpy_size = nread - start;
-  int offset = cpy_size;
-  assert( cpy_size > 0 && cpy_size <= final_size 
+  assert( cpy_size > 0 && cpy_size <= final_size_
           && cpy_size <= (BUFFER_SIZE - start) );
 
-  memcpy( final_buffer_, buffer + start, cpy_size );      
+  memcpy( final_buffer_, buffer + start, cpy_size * sizeof(unsigned char) );   
 
-  int stop_sr = stop_sr_.get() ;
+}
 
-  // Read until the next solution header is found, appending new data to 
-  // the end of the buffer.
-  while( !stop_sr )
+/*===========================================================================*/
+// 
+// process_sensor_2
+//
+// Description : Processing code for second sensor spec.  This is hard-coded
+//               to handle only a specific version of the spec.
+//     
+// Arguments   :
+//
+// unsigned char * processing_buffer - Buffer of raw data read from stream
+//
+// int processing_size - size of processing_buffer (number of entries in the
+//                       array)
+//
+void StreamReader::process_sensor_2( unsigned char * processing_buffer,
+                                     int processing_size ) 
+{
+  cout << "(StreamReader::process_sensor_2) Inside" << endl;
+
+  unsigned char sync[11];
+  unsigned char id[37];
+  unsigned char timestamp[22];
+  unsigned char num_values[2];
+  unsigned char data_name[9];
+  unsigned char data_type[7];
+  double data_value;
+  unsigned char checksum;
+
+  // Open file for output
+  string file_write = file_write_.get();
+  FILE * debug_output;
+  debug_output = fopen( file_write.c_str(), "a" );
+ 
+  // Extract info (string lengths hard-coded)
+  memcpy( &sync, &processing_buffer[0], 10 * sizeof(unsigned char) );
+  sync[10] = '\0';
+
+  memcpy( &id, &processing_buffer[11], 36 * sizeof(unsigned char) );
+  id[36] = '\0';
+
+  memcpy( &timestamp, &processing_buffer[48], 21 * sizeof(unsigned char) );
+  timestamp[21] = '\0';
+
+  memcpy( &num_values, &processing_buffer[70], 1 * sizeof(unsigned char) );
+  num_values[1] = '\0';
+
+  memcpy( &data_name, &processing_buffer[72], 8 * sizeof(unsigned char) );
+  data_name[8] = '\0';
+
+  memcpy( &data_type, &processing_buffer[81], 6 * sizeof(unsigned char) );
+  data_type[6] = '\0';
+
+  memcpy( &data_value, &processing_buffer[88], 8 * sizeof(unsigned char) );
+
+  memcpy( &checksum, &processing_buffer[96], sizeof(unsigned char) );
+
+  // Do format conversions to get data into the right format
+  int num_vals = atoi( (const char *) num_values );
+  string dn = (const char *) data_name;
+  string id_str = (const char *) id;
+
+  // Do format conversions to get 3d coordinates and timestamp
+  float x, y, z;
+  char prefix[80];
+  sscanf( (const char *) id, "%9s-%f-%f-%f", prefix, &x, &y, &z );  
+
+  double ts = atof( (const char *) timestamp );  
+
+  cout << "(StreamReader::process_sensor_2) Sensor data:\n"
+       << "id = " << id << "\n"
+       << "x = " << x << "\n"
+       << "y = " << y << "\n"
+       << "z = " << z << "\n"
+       << "timestamp = " << ts << "\n"
+       << "num_vals = " << num_vals << endl;
+    
+  // Check to see if num_vals is garbage
+  if( num_vals > MAX_NUM_VALS )
   {
-    assert( offset < final_size );
+    cerr << "(StreamReader::process_sensor_2) "
+         << "WARNING: num_vals possibly corrupted, num_vals = " << num_vals 
+         << ", returning" << endl;
+    fprintf( debug_output, "NUM_VALS_CORRUPT\n%i\n\n", num_vals );
+    //cout << "NUM_VALS_CORRUPT\n" << num_vals << "\n\n";
+    fclose( debug_output );
+    return;
+  }
 
-    // Do another read
-    nread = update_input( input, sock, buffer );
+  // Check to see if the id prefix is garbage
+  if( strcmp(prefix, "VirTelem2") != 0 )
+  {
+    cerr << "(StreamReader::process_sensor_2) "
+         << "WARNING: ID possibly corrupted, prefix = " << prefix 
+         << ", returning" << endl;
+    fprintf( debug_output, "ID_PREFIX_CORRUPT\n%s\n\n", prefix );
+    //cout << "ID_PREFIX_CORRUPT\n" << prefix << "\n" << endl;
+    fclose( debug_output );
+    return;
+  }
 
-    // Check for another solution header
-    if( (start = find_string(input, "solution")) >= 0 )
-    {
-      cout << "(StreamReader::read_mesh) Found second header\n";
-      // Copy data up until next header into final buffer
-      assert( start < nread && start <= (final_size - offset) );
-      memcpy( final_buffer_ + offset, buffer, start ); 
-      break;
-    }
-  
-    // Append new data to the end of the final buffer
-    if( nread > (final_size - offset) )
-    {
-      cerr << "(StreamReader::read_mesh) WARNING: Filled buffer before" 
-           << " finding another solution header\n";
-      // Fill remainder of final_buffer_
-      memcpy( final_buffer_ + offset, buffer, (final_size - offset) );      
-      break;
-    }
+  // Set up a queue of values to be added to the point cloud if the CHECKSUM
+  // succeeds
+  vector<struct PointCloudValue> new_pc_values;
 
-    memcpy( final_buffer_ + offset, buffer, nread );      
-    offset += nread;     
-        
-    // Update stop variable
-    stop_sr_ = ctx->subVar("stop-sr");      
-    stop_sr = stop_sr_.get();
+  if( strcmp((const char *) data_type, "scalar") == 0 || 
+      strcmp((const char *) data_type, "Scalar") == 0 )
+  {
+    cout << "(StreamReader::process_sensor_2) Got scalar data" << endl;  
+
+    cout << "(StreamReader::process_sensor_2) data_value " << data_value 
+         << endl;
+     
+    fprintf( debug_output, "<SYNC>\t\t %s\n", sync );
+    fprintf( debug_output, "<ID/LOCATION>\t %s-%f-%f-%f\n", prefix, x, y, z );
+    fprintf( debug_output, "<TIMESTAMP>\t %20.19f\n", ts );
+    fprintf( debug_output, "<NUMVALS>\t %i\n", num_vals );
+    fprintf( debug_output, "<NAME>\t\t %s\n", data_name );
+    fprintf( debug_output, "<TYPE>\t\t %s\n", data_type );
+    fprintf( debug_output, "<DATA>\t\t %f\n", data_value );  
+    fprintf( debug_output, "\n" );  
+
+    cout << "<SYNC> " << sync << endl;
+    cout << "<ID/LOCATION> " << prefix << "-" << x << "-" 
+         << y << "-" << z << endl;
+    cout << "<TIMESTAMP> " << ts << endl;
+    cout << "<NUMVALS> " << num_vals << endl;
+    cout << "<NAME> " << data_name << endl;
+    cout << "<TYPE> " << data_type << endl;
+    cout << "<DATA> " << data_value << endl;
+    cout << endl;
+
+    cout << "(StreamReader::process_sensor_2) Adding data to mesh" << endl;
+
+    // Add this data to a queue of data to be added to the point cloud
+    // mesh if/when the the CHECKSUM check succeeds
+    struct PointCloudValue pcv;
+    Point pt( x, y, z );
+    pcv.id = id_str;
+    pcv.pt = pt; 
+    pcv.data = data_value;
+    pcv.data_name = dn;
+    new_pc_values.push_back( pcv );      
+    cout << "(StreamReader::process_sensor_2) Finished adding data to mesh" << endl;
+  }
+  else
+  {
+    cerr << "(StreamReader::process_sensor_2) WARNING: Unrecognized data type "
+         << "'" << data_type << "'" << endl; 
+    cout << "(StreamReader::process_sensor_2) Processing numvals = " 
+         << num_vals <<  endl;       
+    fprintf( debug_output, "DATA_TYPE_CORRUPT\n%s\n\n", data_type );
+    //cout << "DATA_TYPE_CORRUPT\n" << data_type << "\n" << endl;
+    fclose( debug_output );
+    return;
+  }
+
+  // Check the checksum 
+  // The checksum is the compliment of the one-byte sum of all bytes
+  //cout << "(StreamReader::process_sensor_2) checksum = " << checksum << endl;
+
+  if( !checksum_valid( processing_buffer, 96, checksum) )
+  {
+    cerr << "(StreamReader::process_sensor_2) WARNING: Checksum failed,"
+         << "discarding data" << endl;
+    return;
+  }
+
+  fclose( debug_output );
+
+  // Update the point cloud mesh with the new values and send it downstream
+  update_pc_mesh( new_pc_values, dn );
+
+  cout << "(StreamReader::process_sensor_2) Leaving" << endl;
+}
+
+
+/*===========================================================================*/
+// 
+// update_pc_mesh
+//
+// Description : Update the point cloud mesh with the new values and send it 
+//               downstream.
+//     
+// Arguments   :
+//
+// vector<struct PointCloudValue> new_pc_values - Vector of values to add
+// to the point cloud mesh
+//
+void StreamReader::update_pc_mesh( vector<struct PointCloudValue> 
+                                   new_pc_values, string dn )
+{
+  // Update the point cloud mesh with the new values
+  if( pcw_ == 0 )
+  {
+    cout << "(StreamReader::update_pc_mesh) Allocating point cloud mesh" << endl;
+    pcw_ = new PointCloudWrapper();
+  }
+
+  cout << "(StreamReader::update_pc_mesh) Updating point cloud mesh" << endl;
+
+  int npv_size = (int) new_pc_values.size();
+  for( int j = 0; j < npv_size; j++ ) 
+  {
+    struct PointCloudValue new_pcv = new_pc_values[j]; 
+    pcw_->update_node_value( new_pcv.id, new_pcv.pt, new_pcv.data, 
+                             new_pcv.data_name );
   } 
 
+  cout << "(StreamReader::update_pc_mesh) Freezing point cloud" << endl;
+
+  pcw_->freeze( dn );
+
+
+  cout << "(StreamReader::update_pc_mesh) Getting point cloud field" << endl;
+
+  // Get the field handle
+  PCField pc_fld = pcw_->get_field(dn);
+  FieldHandle fld( pc_fld.get_rep() );
+
+  cout << "(StreamReader::update_pc_mesh) Sending point cloud field downstream" << endl;
+
+  if( fld.get_rep() == 0 )
+  {
+    error( 
+      "(StreamReader::update_pc_mesh) Point Cloud Field is NULL"  );
+    cerr << "(StreamReader::update_pc_mesh) ERROR: "
+         << "Point Cloud Field is NULL" << endl;
+    cout << "(StreamReader::update_pc_mesh) Leaving" << endl;
+    return;
+  }
+
+  // Make a copy of the field
+  fld.detach();  
+  fld->mesh_detach();
+
+  // Send point cloud mesh downstream
+  ofp_->send_intermediate( fld );
+
+}
+
+
+// ****************************************************************************
+// ********************************* Stream 3 *********************************
+// ****************************************************************************
+
+
+/*===========================================================================*/
+// 
+// read_sensor_3
+// 
+// Description : Puts all of the data for one sensor starting from
+//               the beginning of a sensor header 'DDDAS-KTU3' into the 
+//               final_buffer_ so that it can then be used by process_sensor_3. 
+//
+// Arguments   :
+//
+// int sock - Socket descriptor for the mp3 stream
+//
+// unsigned char * buffer - Buffer of char data that contains the last chunk
+//                          of data read from the mp3 stream
+//
+// int start - The index in buffer where the mesh header occurs
+// 
+// ssize_t nread - Number of bytes in the last chunk of data read from the mp3 
+//                 stream 
+//
+void StreamReader::read_sensor_3( unsigned char * buffer, int start, 
+                                  ssize_t nread )
+{
+  // Not implemented
+}
+
+/*===========================================================================*/
+// 
+// process_sensor_3
+//
+// Description : Processing code for third sensor spec.  
+//     
+// Arguments   :
+//
+// unsigned char * processing_buffer - Buffer of raw data read from stream
+//
+// int processing_size - size of processing_buffer (number of entries in the
+//                       array)
+//
+void StreamReader::process_sensor_3( unsigned char * processing_buffer,
+                                    int processing_size ) 
+{
+  cout << "(StreamReader::process_sensor_3) Inside" << endl;
+
+  // This stream spec has not yet been implemented and tested.  Here is some
+  // code that was previously used for sensor 2 and could be used as a starting
+  // point for sensor 3.  I make no guarantees about the correctness of this 
+  // code.
+
+  /*
+  // Convert buffer to input stream since a stream is easier to parse
+  string str = (const char *) processing_buffer;
+  istringstream input( str, istringstream::in );
+
+  //char test[20];
+  //memcpy( test, processing_buffer, sizeof(char) * 20 );
+  //printf( "(StreamReader::process_sensor_3) test = '%s'\n", test );
+
+  // Parse the data information the precedeces the actual data values
+  string id;
+  string timestamp;
+  int num_vals;
+  string data_name;
+  string data_type;
+  string header;
+
+  input >> header >> id >> timestamp >> num_vals;
+
+  // Parse id tp get the unique x,y,z coordinates
+
+  // Do format conversions to get 3d coordinates and timestamp
+  char id_c_str[80]; 
+  float x, y, z;
+  char prefix[80];
+  strcpy( id_c_str, id.c_str() );
+  sscanf( id_c_str, "%9s-%f-%f-%f", prefix, &x, &y, &z );  
+
+  double ts = atof( timestamp.c_str() );  
+
+  cout << "(StreamReader::process_sensor_3) Sensor data:" << endl
+       << "id = " << id << "\n"
+       << "x = " << x << "\n"
+       << "y = " << y << "\n"
+       << "z = " << z << "\n"
+       << "timestamp = " << ts << "\n"
+       << "num_vals = " << num_vals << endl;
+    
+  // Debugging code
+  // Open file for output
+  string file_write = file_write_.get();
+  FILE * debug_output;
+  debug_output = fopen( file_write.c_str(), "a" );
+ 
+
+  // Check to see if num_vals is garbage
+  if( num_vals > MAX_NUM_VALS )
+  {
+    cerr << "(StreamReader::process_sensor_3) "
+         << "ERROR: num_vals possibly corrupted, num_vals = " << num_vals 
+         << endl;
+    return;
+  }
+
+  // Check to see if the id prefix is garbage
+  if( strcmp(prefix, "VirTelem2") != 0 )
+  {
+    cerr << "(StreamReader::process_sensor_3) "
+         << "ERROR: ID possibly corrupted, prefix = " << prefix 
+         << endl;
+    return;
+  }
+
+  // Set up a queue of values to be added to the point cloud if the CHECKSUM
+  // succeeds
+  vector<struct PointCloudValue> new_pc_values;
+
+  int data_offset = 0;
+
+  // Process each "value" sent.  This value can be of type scalar, vector, or
+  // tensor
+  for( int j = 0; j < num_vals; j++ )
+  {
+    int pos = input.tellg();
+
+    // Get the data_name and data_type for this value
+    input >> data_name >> data_type;
+
+    if( data_type == "scalar" || data_type == "Scalar" )
+    {
+      cout << "(StreamReader::process_sensor_3) Got scalar data" << endl;  
+
+      // Check to make sure we have enough bytes left in the buffer to contain 
+      //this data
+      if( processing_size * sizeof(unsigned char) - pos < 30 )
+      {
+        cerr << "(StreamReader::process_sensor_3) WARNING: Too few bytes to "
+             << "process scalar data" << endl;
+        return;
+      }
+
+      // Get the binary double 
+      data_offset = input.tellg();
+      double data;
+
+      assert( sizeof(double) <= 
+              (processing_size * sizeof(unsigned char) - data_offset + 1) );
+      memcpy( &data, &(processing_buffer[data_offset + 1]), sizeof(double) );
+      data_offset += 4;
+
+      cout << "(StreamReader::process_sensor_3) data " << data << endl;
+     
+      fprintf( debug_output, "<SYNC>\t\t DDDAS-KTU2\n" );
+      fprintf( debug_output, "<ID/LOCATION>\t %s-%f-%f-%f\n", prefix, x, y, z );
+      fprintf( debug_output, "<TIMESTAMP>\t %20.19f\n", ts );
+      fprintf( debug_output, "<NUMVALS>\t %i\n", num_vals );
+      fprintf( debug_output, "<NAME>\t\t %s\n", data_name.c_str() );
+      fprintf( debug_output, "<TYPE>\t\t %s\n", data_type.c_str() );
+      fprintf( debug_output, "<DATA>\t\t %f\n", data );  
+      fprintf( debug_output, "\n" );  
+
+      // Add this data to a queue of data to be added to the point cloud
+      // mesh if/when the the CHECKSUM check succeeds
+      struct PointCloudValue pcv;
+      Point pt( x, y, z );
+      pcv.pt = pt; 
+      pcv.data = data;
+      pcv.data_name = data_name;
+      new_pc_values.push_back( pcv );      
+    }
+    else if( data_type == "vector" || data_type == "Vector" )
+    {
+      cout << "(StreamReader::process_sensor_3) Got vector data" << endl;  
+
+      // Check to make sure we have enough bytes left in the buffer to contain 
+      //this data
+      if( processing_size * sizeof(unsigned char) - pos < 50 )
+      {
+        cerr << "(StreamReader::process_sensor_3) WARNING: Too few bytes to "
+             << "process vector data" << endl;
+        return;
+      }
+    }
+    else if( data_type == "tensor" || data_type == "Tensor" )
+    {
+      cout << "(StreamReader::process_sensor_3) Got tensor data" << endl;  
+      // Check to make sure we have enough bytes left in the buffer to contain 
+      //this data
+      if( processing_size * sizeof(unsigned char) - pos < 80 )
+      {
+        cerr << "(StreamReader::process_sensor_3) WARNING: Too few bytes to "
+             << "process tensor data" << endl;
+        return;
+      }
+    }
+    else
+    {
+      cerr << "(StreamReader::process_sensor_3) ERROR: Unrecognized data type "
+           << "'" << data_type << "'" << endl; 
+      cout << "(StreamReader::process_sensor_3) Processing numvals = " 
+           << num_vals <<  endl;       
+      fprintf( debug_output, "DATA_TYPE_CORRUPT\n%s\n\n", data_type.c_str() );
+    }
+  }
+
+  // Grab the checksum and check it
+  // The checksum is the compliment of the one-byte sum of all bytes
+  unsigned char checksum;
+
+  assert( sizeof(unsigned char) <= 
+          (processing_size * sizeof(unsigned char) - data_offset + 1) );
+  memcpy( &checksum, &(processing_buffer[data_offset + 1]), sizeof(unsigned char) );
+
+  cout << "(StreamReader::process_sensor_3) checksum = " << checksum << endl;
+
+  if( !checksum_valid( processing_buffer, data_offset + 1, checksum) )
+  {
+    cerr << "(StreamReader::process_sensor_3) WARNING: Checksum failed,"
+         << "discarding data" << endl;
+    return;
+  }
+
+  // Update the point cloud mesh with the new values
+  if( pcw_ == 0 )
+  {
+    pcw_ = new PointCloudWrapper();
+  }
+
+  int npv_size = (int) new_pc_values.size();
+  for( int j = 0; j < npv_size; j++ ) 
+  {
+    struct PointCloudValue new_pcv = new_pc_values[j]; 
+    pcw_->update_node_value( id, new_pcv.pt, new_pcv.data, 
+                             new_pcv.data_name );
+  } 
+  pcw_->freeze( data_name );
+
+  // Get the field
+  // Get the field handle
+  PCField pc_fld = pcw_->get_field(dn);
+  FieldHandle fld( pc_fld.get_rep() );
+
+  cout << "(StreamReader::process_sensor_3) Sending point cloud field downstream" << endl;
+
+  if( fld.get_rep() == 0 )
+  {
+    cerr << "(StreamReader::process_sensor_3) ERROR: "
+         << "Point Cloud Field is NULL" << endl;
+    cout << "(StreamReader::process_sensor_3) Leaving" << endl;
+    fclose( debug_output );
+    return;
+  }
+
+  // Make a copy of the field
+  fld.detach();  
+  fld->mesh_detach();
+
+  // Send point cloud mesh downstream
+  ofp_->send_intermediate(fld);
+
+  fclose( debug_output );
+  */
+
+  cout << "(StreamReader::process_sensor_3) Leaving" << endl;
 }
 
 } // End namespace DDDAS

@@ -30,12 +30,15 @@ itcl_class DDDAS_DataIO_StreamReader {
         global $this-stop-sr
 	set $this-hostname "arthur.ccs.uky.edu"
 	set $this-port 8000
-	set $this-file-read "test_file.mp3"
+	set $this-file-read "solver_data_2.mp3"
 	set $this-file-write "sample.txt"
 	set $this-stop-sr 0
     }
 
     method ui {} {
+
+        set_defaults
+
         set w .ui[modname]
         if {[winfo exists $w]} {
             raise $w
