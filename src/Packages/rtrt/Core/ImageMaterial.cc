@@ -34,6 +34,8 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
   umode(umode), vmode(vmode), Kd(Kd), specular(specular),
   specpow(specpow), refl(refl),  transp(0), valid_(false)
 {
+  filename_ = texfile;  // Save filename, mostly for debugging.
+
   PPMImage ppm(texfile);
   if (ppm.valid())  {
       valid_=true;
@@ -147,7 +149,8 @@ skip:
                accumcolor, cx);
 }
 
-void ImageMaterial::read_hdr_image(const string &filename)
+void
+ImageMaterial::read_hdr_image(const string &filename)
 {
    char buf[200];
    sprintf(buf, "%s.hdr", filename.c_str());
