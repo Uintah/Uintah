@@ -279,7 +279,7 @@ FieldSlicerAlgo::get_compile_info(const TypeDescription *ftd,
   return rval;
 }
 
-CompileInfo *
+CompileInfoHandle
 FieldSlicerWorkAlgo::get_compile_info(const TypeDescription *iftd,
 				      const TypeDescription *oftd)
 {
