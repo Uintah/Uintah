@@ -457,12 +457,16 @@ template<class Key, class Data>
 HashTable<Key, Data>::HashTable(const HashTable<Key, Data>& copy)
   : hash_size(copy.hash_size), nelems(copy.nelems)
 {
-  table=scinew HashKey<Key, Data>*[hash_size];
-  for(int i=0;i<hash_size;i++){
-    if(copy.table[i])
-      table[i]=scinew HashKey<Key, Data>(*copy.table[i], 1); // Deep copy
-    else
-      table[i]=0;
+  if (hash_size == 0)
+    table = 0;
+  else {
+    table=scinew HashKey<Key, Data>*[hash_size];
+    for(int i=0;i<hash_size;i++){
+      if(copy.table[i])
+	table[i]= scinew HashKey<Key, Data>(*copy.table[i], 1); // Deep copy
+      else
+	table[i]=0;
+    }
   }
 }
 
