@@ -7,6 +7,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariableBase.h>
+#include <Packages/Uintah/Core/Grid/constGridVariable.h>
 #include <Packages/Uintah/CCA/Ports/InputContext.h>
 #include <Packages/Uintah/CCA/Ports/OutputContext.h>
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
@@ -57,12 +58,12 @@ WARNING
 
 template<class T>
 class ParticleVariable : public ParticleVariableBase {
+  friend class constVariable<ParticleVariableBase, ParticleVariable<T>, T, particleIndex>;
 public:
   ParticleVariable();
   virtual ~ParticleVariable();
   ParticleVariable(ParticleSubset* pset);
   ParticleVariable(ParticleData<T>*, ParticleSubset* pset);
-  ParticleVariable(const ParticleVariable<T>&);
       
     //////////
     // Insert Documentation Here:
@@ -76,9 +77,22 @@ public:
       
   //////////
   // Insert Documentation Here:
-  virtual ParticleVariableBase* clone() const;
-  virtual ParticleVariableBase* cloneSubset(ParticleSubset*) const;
-      
+  virtual ParticleVariableBase* clone();
+  virtual const ParticleVariableBase* clone() const;
+  virtual ParticleVariableBase* cloneSubset(ParticleSubset*);
+  virtual const ParticleVariableBase* cloneSubset(ParticleSubset*) const;
+
+  virtual ParticleVariableBase* cloneType() const
+  { return scinew ParticleVariable<T>(); }
+  virtual constParticleVariableBase* cloneConstType() const
+  { return scinew constVariable<ParticleVariableBase, ParticleVariable<T>, T, particleIndex>();
+  }
+
+  
+  void copyData(const ParticleVariable<T>& src);
+  virtual void copyData(const ParticleVariableBase* src)
+  { copyData(castFromBase(src)); }
+  
   //////////
   // Insert Documentation Here:
   inline T& operator[](particleIndex idx) {
@@ -93,8 +107,8 @@ public:
     return d_pdata->data[idx];
   }
       
-  virtual void copyPointer(const ParticleVariable<T>&);
-  virtual void copyPointer(const ParticleVariableBase&);
+  virtual void copyPointer(ParticleVariable<T>&);
+  virtual void copyPointer(ParticleVariableBase&);
   virtual void allocate(ParticleSubset*);
   virtual void allocate(const Patch*)
   { throw InternalError("Should not call ParticleVariable<T>::allocate(const Patch*), use allocate(ParticleSubset*) instead."); }
@@ -130,13 +144,15 @@ public:
     ptr = getBasePointer();
   }
 protected:
+  ParticleVariable(const ParticleVariable<T>&);
   ParticleVariable<T>& operator=(const ParticleVariable<T>&);
 
 private:
     //////////
     // Insert Documentation Here:
   ParticleData<T>* d_pdata;
-      
+
+  static const ParticleVariable<T>& castFromBase(const ParticleVariableBase* srcptr);
   static TypeDescription::Register registerMe;
   static Variable* maker();
 };
@@ -201,17 +217,40 @@ private:
    
   template<class T>
   ParticleVariableBase*
+  ParticleVariable<T>::clone()
+  { return scinew ParticleVariable<T>(*this); }
+
+  template<class T>
+  const ParticleVariableBase*
   ParticleVariable<T>::clone() const
-  {
-    return scinew ParticleVariable<T>(*this);
-  }
+  { return scinew ParticleVariable<T>(*this); }
    
   template<class T>
   ParticleVariableBase*
+  ParticleVariable<T>::cloneSubset(ParticleSubset* pset)
+  { return scinew ParticleVariable<T>(d_pdata, pset); }
+
+  template<class T>
+  const ParticleVariableBase*
   ParticleVariable<T>::cloneSubset(ParticleSubset* pset) const
+  { return scinew ParticleVariable<T>(d_pdata, pset); }
+
+  template<class T>
+  const ParticleVariable<T>& ParticleVariable<T>::castFromBase(const ParticleVariableBase* srcptr)
   {
-    return scinew ParticleVariable<T>(d_pdata, pset);
+    const ParticleVariable<T>* c = dynamic_cast<const ParticleVariable<T>* >(srcptr);
+    if(!c)
+      throw TypeMismatchException("Type mismatch in Particle variable");
+    return *c;
   }
+
+  template<class T>
+  void ParticleVariable<T>::copyData(const ParticleVariable<T>& src)
+  {
+    ASSERT(d_pset == src.d_pset);
+    *d_pdata = *src.d_pdata;
+  }
+
 
   template<class T>
   ParticleVariable<T>::ParticleVariable(ParticleData<T>* pdata,
@@ -232,7 +271,7 @@ private:
    
   template<class T>
   void
-  ParticleVariable<T>::copyPointer(const ParticleVariable<T>& copy)
+  ParticleVariable<T>::copyPointer(ParticleVariable<T>& copy)
   {
     if(this != &copy){
       ParticleVariableBase::operator=(copy);
@@ -246,9 +285,9 @@ private:
    
   template<class T>
   void
-  ParticleVariable<T>::copyPointer(const ParticleVariableBase& copy)
+  ParticleVariable<T>::copyPointer(ParticleVariableBase& copy)
   {
-    const ParticleVariable<T>* c = dynamic_cast<const ParticleVariable<T>* >(&copy);
+    ParticleVariable<T>* c = dynamic_cast<ParticleVariable<T>* >(&copy);
     if(!c)
       throw TypeMismatchException("Type mismatch in particle variable");
     copyPointer(*c);
@@ -453,6 +492,26 @@ private:
 	throw InternalError("ParticleVariable::read RLE data is not consistent with the particle subset size");
     }
   }
+
+  template <class T>
+  class constParticleVariable : public constVariable<ParticleVariableBase, ParticleVariable<T>, T, particleIndex>
+  {
+  public:
+    constParticleVariable()
+      : constVariable<ParticleVariableBase, ParticleVariable<T>, T, particleIndex>() {}
+    
+    constParticleVariable(const ParticleVariable<T>& copy)
+      : constVariable<ParticleVariableBase, ParticleVariable<T>, T, particleIndex>(copy) {}
+
+    ParticleSubset* getParticleSubset() const {
+      return rep_.getParticleSubset();
+    }
+
+    ParticleSet* getParticleSet() const {
+      return rep_.getParticleSet();
+    }    
+  };
+
 } // End namespace Uintah
 
 #endif

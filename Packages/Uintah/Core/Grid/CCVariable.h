@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Packages/Uintah/Core/Grid/CCVariableBase.h>
+#include <Packages/Uintah/Core/Grid/constGridVariable.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -55,6 +56,7 @@ WARNING
 
   template<class T> 
   class CCVariable : public Array3<T>, public CCVariableBase {
+    friend class constVariable<CCVariableBase, CCVariable<T>, T, const IntVector&>;
   public:
     CCVariable();
     virtual ~CCVariable();
@@ -63,14 +65,22 @@ WARNING
     // Insert Documentation Here:
     static const TypeDescription* getTypeDescription();
     
+    inline void copyPointer(CCVariable<T>& copy)
+    { Array3<T>::copyPointer(copy); }
+    
     virtual void copyPointer(CCVariableBase&);
 
-    virtual void rewindow(const IntVector& low, const IntVector& high)
-    { Array3<T>::rewindow(low, high); }
+    virtual bool rewindow(const IntVector& low, const IntVector& high)
+    { return Array3<T>::rewindow(low, high); }
     //////////
     // Insert Documentation Here:
-    virtual CCVariableBase* clone() const;
-      
+    virtual CCVariableBase* clone();
+    virtual const CCVariableBase* clone() const;
+    virtual CCVariableBase* cloneType() const
+    { return scinew CCVariable<T>(); }
+    virtual constCCVariableBase* cloneConstType() const
+    { return scinew constGridVariable<CCVariableBase, CCVariable<T>, T>(); }
+
     //////////
     // Insert Documentation Here:
     virtual void allocate(const IntVector& lowIndex,
@@ -78,14 +88,24 @@ WARNING
       
     virtual void allocate(const Patch* patch)
     { allocate(patch->getCellLowIndex(), patch->getCellHighIndex()); }
+    virtual void allocate(const CCVariable<T>& src)
+    { allocate(src.getLowIndex(), src.getHighIndex()); }
+    virtual void allocate(const CCVariableBase* src)
+    { allocate(castFromBase(src)); }
 
     //////////
     // Insert Documentation Here:
-    void copyPatch(const CCVariableBase* src,
-		   const IntVector& lowIndex,
-		   const IntVector& highIndex);
-    void copyPatch(const CCVariable<T>& src)
-    { copyPatch(&src, src.getLowIndex(), src.getHighIndex()); }
+    void copyPatch(const CCVariable<T>& src,
+		   const IntVector& lowIndex, const IntVector& highIndex);
+    virtual void copyPatch(const CCVariableBase* src,
+			   const IntVector& lowIndex,
+			   const IntVector& highIndex)
+    { copyPatch(castFromBase(src), lowIndex, highIndex); }
+    
+    void copyData(const CCVariable<T>& src)
+    { copyPatch(src, src.getLowIndex(), src.getHighIndex()); }
+    virtual void copyData(const CCVariableBase* src)
+    { copyData(castFromBase(src)); }
     
     virtual void* getBasePointer() const;
     virtual const TypeDescription* virtualGetTypeDescription() const;
@@ -313,7 +333,7 @@ WARNING
     // Update pressure boundary conditions due to hydrostatic pressure
     // Note (*this) = pressure
     void setHydrostaticPressureBC(Patch::FaceType face, Vector& gravity,
-                                CCVariable<double>& rho,
+                                const CCVariable<double>& rho,
                                 const Vector& dx,
 			           IntVector offset = IntVector(0,0,0))
      { 
@@ -432,10 +452,13 @@ WARNING
     virtual RefCounted* getRefCounted() {
       return getWindow();
     }
-  private:
+  protected:
     CCVariable(const CCVariable<T>&);
+
+  private:
     CCVariable<T>& operator=(const CCVariable<T>&);
-   
+
+    static const CCVariable<T>& castFromBase(const CCVariableBase* srcptr);
     static Variable* maker();
   };
 
@@ -478,18 +501,26 @@ WARNING
    
   template<class T>
   CCVariableBase*
+  CCVariable<T>::clone()
+  {
+    return scinew CCVariable<T>(*this);
+  }
+
+  template<class T>
+  const CCVariableBase*
   CCVariable<T>::clone() const
   {
     return scinew CCVariable<T>(*this);
   }
-  template<class T>
+
+template<class T>
   void
   CCVariable<T>::copyPointer(CCVariableBase& copy)
   {
     CCVariable<T>* c = dynamic_cast<CCVariable<T>* >(&copy);
     if(!c)
       throw TypeMismatchException("Type mismatch in CC variable");
-    Array3<T>::copyPointer(*c);
+    copyPointer(*c);
   }
 
  
@@ -525,23 +556,28 @@ WARNING
     Array3<T>::operator=(newdata);
   }
 */
-  
+
   template<class T>
-  void
-  CCVariable<T>::copyPatch(const CCVariableBase* srcptr,
-			   const IntVector& lowIndex,
-			   const IntVector& highIndex)
+  const CCVariable<T>& CCVariable<T>::castFromBase(const CCVariableBase* srcptr)
   {
     const CCVariable<T>* c = dynamic_cast<const CCVariable<T>* >(srcptr);
     if(!c)
       throw TypeMismatchException("Type mismatch in CC variable");
-    const CCVariable<T>& src = *c;
+    return *c;
+  }
+
+  template<class T>
+  void
+  CCVariable<T>::copyPatch(const CCVariable<T>& src,
+			   const IntVector& lowIndex,
+			   const IntVector& highIndex)
+  {
     for(int i=lowIndex.x();i<highIndex.x();i++)
       for(int j=lowIndex.y();j<highIndex.y();j++)
 	for(int k=lowIndex.z();k<highIndex.z();k++)
 	  (*this)[IntVector(i, j, k)] = src[IntVector(i,j,k)];
   }
-  
+
   template<class T>
   void*
   CCVariable<T>::getBasePointer() const
@@ -573,8 +609,18 @@ WARNING
 			(int)(sizeof(T)*siz.y()*siz.x()));
   }
 
-} // end namespace Uintah
+  template <class T>
+  class constCCVariable : public constGridVariable<CCVariableBase, CCVariable<T>, T>
+  {
+  public:
+    constCCVariable()
+      : constGridVariable<CCVariableBase, CCVariable<T>, T>() {}
+    
+    constCCVariable(const CCVariable<T>& copy)
+      : constGridVariable<CCVariableBase, CCVariable<T>, T>(copy) {}
+  };
 
+} // end namespace Uintah
 
 #endif
 
