@@ -345,17 +345,56 @@ MaskedLatVolMesh::update_count(MaskedLatVolMesh::Cell::index_type c,
   const unsigned faces = (i0?0:1)+(i1?0:1)+(j0?0:1)+(j1?0:1)+(k0?0:1)+(k1?0:1);
   unsigned nodes, edges;
 
-  if (faces == 6)			{ nodes = 8; edges = 12; } 
-  else if (faces == 5)			{ nodes = 4; edges = 8; }
-  else if (faces == 1 || faces == 0)	{ nodes = 0; edges = 0; }
-  else if ((i0 == i1) == (j0 == j1) == (k0 == k1)) {
-    if (faces == 4)			{ nodes = 0; edges = 4; }
-    else if (faces == 3)		{ nodes = 1; edges = 3; }
-    else if (faces == 2)		{ nodes = 0; edges = 0; } }
-  else if (faces == 4)			{ nodes = 2; edges = 5; }
-  else if (faces == 3)			{ nodes = 0; edges = 2; }
-  else if (faces == 2)			{ nodes = 0; edges = 1; } 
-
+  if (faces == 6) {  
+	nodes = 8; 
+	edges = 12;
+  } 
+  else {
+	if (faces == 5)	{ 
+	  nodes = 4; edges = 8;
+	}
+	else { 
+	  if (faces == 1 || faces == 0)	{ 
+		nodes = 0; edges = 0; 
+	  }
+	  else { 
+		if(faces == 4) {
+		  if((i0 == i1) && (j0 == j1) && (k0 == k1)) {
+			nodes = 0;
+			edges = 4;
+		  }
+		  else {
+			nodes = 2;
+			edges = 5;
+		  }
+		}
+		else {
+		  if(faces == 3) {
+			if((i0!=i1)&&(j0!=j1)&&(k0!=k1)) {
+			  nodes = 1;
+			  edges = 3;
+			}
+			else {
+			  nodes = 0;
+			  nodes = 2;
+			}
+		  }
+		  else {
+			if(faces == 2) {
+			  if((i0 == i1) && (j0 == j1) && (k0 == k1)) {
+				nodes = 0;
+				edges = 0;
+			  }
+			  else {
+				nodes = 0;
+				edges = 1;
+			  }
+			}
+		  }
+		}
+	  }
+	}
+  }
 
   // These nodes, edges, faces are being implicitly removed from the mesh
   // by the removal of this cell.
@@ -591,7 +630,7 @@ get_neighbors_stencil(vector<pair<bool,Cell::index_type> > &nbrs,
 unsigned int
 MaskedLatVolMesh::get_sequential_node_index(const Node::index_type idx)
 {
-  if (!synchronized_ & NODES_E)
+  if (!(synchronized_ & NODES_E))
   {
     nodes_.clear();
     int i = 0;
@@ -608,7 +647,6 @@ MaskedLatVolMesh::get_sequential_node_index(const Node::index_type idx)
 
   return nodes_[idx];
 }
-
 
 
 #define MASKED_LAT_VOL_MESH_VERSION 1
