@@ -16,6 +16,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ArchiveReader.tcl \
 	$(SRCDIR)/GridVisualizer.tcl\
 	$(SRCDIR)/PatchVisualizer.tcl\
+	$(SRCDIR)/PatchDataVisualizer.tcl\
 	$(SRCDIR)/RescaleColorMap.tcl\
 	$(SRCDIR)/GLTextureBuilder.tcl \
 	$(SRCDIR)/CuttingPlane.tcl\
