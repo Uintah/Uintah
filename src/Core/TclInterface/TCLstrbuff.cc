@@ -44,6 +44,7 @@ TCLstrbuff::TCLstrbuff(const clString& name, const clString& id, TCL* tcl):
 
 TCLstrbuff::~TCLstrbuff(){
   Tcl_UnlinkVar(the_interp, const_cast<char *>(varname()));
+  Tcl_UnsetVar(the_interp, const_cast<char*>(varname()), TCL_GLOBAL_ONLY);
   Tcl_Free(d_buff);
 }
 
