@@ -108,9 +108,6 @@ public:
 			    void (*handler)(void*), void* data);
     void cancel_itimer(int);
 
-    // Interface to select...
-    static int mtselect(int, fd_set*, fd_set*, fd_set*, struct timeval*);
-
     // O/S Interface
     static void coredump(Task*);
     static void debug(Task*);

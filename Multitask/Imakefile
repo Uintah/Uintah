@@ -9,16 +9,11 @@
 #ifdef SCI_MACHINE_SGI
 #define TASK_IMPLEMENTATION_O  Task_irix.o
 #define TASK_IMPLEMENTATION_CC Task_irix.cc
-LOCKS = lock.o
+LOCKS = lock_mips.o
 
-#if defined(SCI_IRIX6) && defined(SCI_64BIT)
-ASOPT = -mips4
-#else
-ASOPT = -mips2
-#endif
-
+ASOPT = SCIBinFlace
 lock.o: lock_mips.s
-	as -o lock.o lock_mips.s $(ASOPT)
+	as -o lock_mips.o lock_mips.s $(ASOPT)
 #endif
 
 #ifdef SCI_MACHINE_SOLARIS

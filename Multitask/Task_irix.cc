@@ -11,11 +11,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-/* Irix 6.1 hacks */
-#define _XOPEN4UX 1
-typedef unsigned int useconds_t;
-typedef int __sigargs;
-
 #include <Multitask/Task.h>
 #include <Multitask/ITC.h>
 #include <Malloc/Allocator.h>
@@ -195,7 +190,8 @@ void Task::activate(int task_arg)
     }
     nsched++;
     priv->tid=sprocsp((void (*)(void*, size_t))runbody,
-		      PR_SADDR|PR_SDIR|PR_SUMASK|PR_SULIMIT|PR_SID,
+		      /*PR_SADDR|PR_SDIR|PR_SUMASK|PR_SULIMIT|PR_SID,*/
+		      PR_SALL,
 		      (void*)args, priv->sp, priv->stacklen);
     if(priv->tid==	-1){
 	perror("sprocsp");
@@ -760,14 +756,6 @@ void Task::debug(Task* task)
 	perror("system");
 }
 
-// Interface to select...
-int Task::mtselect(int nfds, fd_set* readfds, fd_set* writefds,
-		   fd_set* exceptfds, struct timeval* timeout)
-{
-    // Irix has kernel threads, so select works ok...
-    return select(nfds, readfds, writefds, exceptfds, timeout);
-}
-
 static void handle_alrm(int, int, sigcontext_t*)
 {
     Task* task=Task::self();
@@ -842,4 +830,29 @@ void Task::cancel_itimer(int which_timer)
     for(int i=idx;i<ntimers-1;i++)
 	timers[i]=timers[i+1];
     ntimers--;
+}
+
+struct Barrier_private {
+    barrier_t* barrier;
+};
+
+Barrier::Barrier()
+{
+    priv=new Barrier_private;
+    make_arena();
+    priv->barrier=new_barrier(arena);
+    if(!priv->barrier){
+      perror("new_barrier");
+      Task::exit_all(-1);
+    }
+}
+
+Barrier::~Barrier()
+{
+    free_barrier(priv->barrier);
+}
+
+void Barrier::wait(int n)
+{
+    barrier(priv->barrier, n);
 }

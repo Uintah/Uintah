@@ -18,9 +18,13 @@
 #pragma interface
 #endif
 
+struct Barrier_private;
+struct ConditionVariable_private;
 struct CrowdMonitor_private;
 struct Mutex_private;
 struct LibMutex_private;
+struct Semaphore_private;
+
 
 class Mutex {
     Mutex_private* priv;
@@ -43,8 +47,6 @@ public:
     int try_lock();
 };
 
-struct Semaphore_private;
-
 class Semaphore {
     Semaphore_private* priv;
 public:
@@ -55,7 +57,13 @@ public:
     int try_down();
 };
 
-struct ConditionVariable_private;
+class Barrier {
+    Barrier_private* priv;
+public:
+    Barrier();
+    ~Barrier();
+    void wait(int n);
+};
 
 class ConditionVariable {
     ConditionVariable_private* priv;
