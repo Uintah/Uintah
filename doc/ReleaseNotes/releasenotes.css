@@ -1,0 +1,41 @@
+body {
+font-family: Verdana;
+font-size: smaller;
+background: #999999;
+margin-top: 1em;;
+margin-bottom: 1em;
+}
+div.body {
+background: #CCCCCC;
+margin-top: 1em;
+margin-left: 8%;
+padding-left: 2%;
+margin-right: 5%;
+padding-right: 2%;
+padding-bottom: 1em;
+padding-top: 1em;
+}
+h1.doc_title {
+text-align: center;
+font-size: 150%;
+padding-top: 0.5em;
+border-top: thin solid #999999;
+padding-bottom: 0.5em;
+border-bottom: thin solid #999999;
+border-left: none;
+margin-top: 2em;
+}
+h1 {
+font-size: 135%;
+margin-top: 2em;
+border-bottom: thin solid #999999;
+border-left: thin solid #999999;
+}
+h2 {
+margin-top: 2em;
+font-size: 115%;
+}
+li {
+margin-top: 0.25em;
+margin-bottom: 0.25em;
+}
