@@ -34,6 +34,16 @@ const TypeDescription* fun_getTypeDescription(int*)
    return td;
 }
 
+const TypeDescription* fun_getTypeDescription(long*)
+{
+   static TypeDescription* td;
+   if(!td){
+      td = scinew TypeDescription(TypeDescription::long_type,
+				  "long", true);
+   }
+   return td;
+}
+
 const TypeDescription* fun_getTypeDescription(bool*)
 {
    static TypeDescription* td;
@@ -70,6 +80,9 @@ const TypeDescription* fun_getTypeDescription(Vector*)
 
 //
 // $Log$
+// Revision 1.3  2000/06/02 17:22:14  guilkey
+// Added long_type to the the TypeDescription and TypeUtils.
+//
 // Revision 1.2  2000/05/30 20:19:35  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
