@@ -152,7 +152,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	  HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > * hvol = new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > (matl0, dpy, files[i], depth, nworkers);
 	  char buf[1000];
 	  sprintf(buf, "%s_%02d", files[i], i);
-	  hvol->name_ = buf;
+	  hvol->set_name(buf);
 	  hvol->print(cout);
 #endif
 	  group->add(hvol);

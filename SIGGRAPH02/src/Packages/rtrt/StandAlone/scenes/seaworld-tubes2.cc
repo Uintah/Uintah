@@ -187,7 +187,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   south_tube->add(new Cylinder(black, Point(7.4, -6, 1), Point(7.5, -6, 1), 2.2));
 
   Object * bv = new BV1(south_tube);
-  bv->name_ = "south_tube";
+  bv->set_name("south_tube");
   all_tubes->add(bv);
   
 
@@ -221,7 +221,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   north_tube->add(new Cylinder(black, Point(3.9, 10, 1), Point(4, 10, 1), 2.2)); 
   
   bv = new BV1(north_tube);
-  bv->name_ = "north_tube";
+  bv->set_name("north_tube");
   all_tubes->add(bv);
    
   /**********************************************************************/
@@ -256,7 +256,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   west_tube->add(new Cylinder(black, Point(-10, 3.7, 1), Point(-10, 3.8, 1), 2.2)); 
  
   bv = new BV1(west_tube);
-  bv->name_ = "west_tube";
+  bv->set_name("west_tube");
+
   all_tubes->add(bv);
 
       
@@ -325,7 +326,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   east_tube->add(new Cylinder(black, Point(10, 3.9, 1), Point(10, 4, 1), 2.2));
 
   bv = new BV1(east_tube);
-  bv->name_ = "east_tube";
+  bv->set_name("east_tube");
   all_tubes->add(bv);
 
     
@@ -935,7 +936,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Object* temp;
 
   temp = new Grid (shell1, 15);
-  temp->name_ = "shell1";
+  temp->set_name("shell1");
   all_tubes->add(temp);
   all_tubes->add(new Grid (shell2, 15));
   all_tubes->add(new Grid (shell3, 15));
@@ -1073,7 +1074,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   
 
-  bubbles->name_ = "bubbles";
+  bubbles->set_name("bubbles");
 
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;

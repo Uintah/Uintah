@@ -53,7 +53,6 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/multi-scene.mo \
 	$(SRCDIR)/cutdemo.mo  \
 	$(SRCDIR)/basic-sea.mo  \
-	$(SRCDIR)/dtiglyph.mo \
 	$(SRCDIR)/volume_color.mo \
 	$(SRCDIR)/envmap-sphere.mo  \
 	$(SRCDIR)/single-sphere.mo  \
@@ -61,6 +60,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/spinning_instance_demo.mo \
 	$(SRCDIR)/david.mo \
 	$(SRCDIR)/david_old.mo \
+#	$(SRCDIR)/dtiglyph.mo \
 # 	$(SRCDIR)/cbox.mo \
 # 	$(SRCDIR)/david.mo \
 # 	$(SRCDIR)/davidhead.mo \

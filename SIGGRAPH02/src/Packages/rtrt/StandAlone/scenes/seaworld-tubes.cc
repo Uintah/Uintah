@@ -765,8 +765,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(0.1, 0.1, 0.4);
   Scene *scene = new Scene(all_tubes, cam, bgcolor, cdown, cup, groundplane, 0.5);
-  scene->addObjectOfInterest(bubbles, true); 
-  bubbles->name_ = "bubbles";
+  scene->addObjectOfInterest("bubbles", bubbles, true); 
 
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
