@@ -1,4 +1,17 @@
 
+/*
+ *  OpenGL.cc: Render geometry using opengl
+ *
+ *  Written by:
+ *   Steven G. Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   December 1994
+ *
+ *  Copyright (C) 1994 SCI Group
+ */
+
+
 #include <Modules/Salmon/Renderer.h>
 #include <Modules/Salmon/Roe.h>
 #include <Modules/Salmon/Salmon.h>

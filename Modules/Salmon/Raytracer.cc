@@ -1,5 +1,17 @@
 
-#include <Modules/Salmon/Renderer.h>
+/*
+ *  Raytracer.cc: A raytracer for Salmon
+ *
+ *  Written by:
+ *   Steven G. Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   December 1994
+ *
+ *  Copyright (C) 1994 SCI Group
+ */
+
+#include <Modules/Salmon/Raytracer.h>
 #include <Modules/Salmon/Roe.h>
 #include <Modules/Salmon/Salmon.h>
 #include <Classlib/NotFinished.h>
@@ -12,38 +24,6 @@
 #include <strstream.h>
 
 const int STRINGSIZE=200;
-
-class Raytracer : public Renderer {
-    Renderer* rend;
-    char* strbuf;
-    Color bgcolor;
-    int bg_firstonly;
-    GeomObj* topobj;
-    Salmon* salmon;
-    Roe* roe;
-    int max_level;
-    double min_weight;
-    View* current_view;
-    MaterialHandle topmatl;
-
-    Color trace_ray(const Ray& ray, int level, double weight,
-		    double ior);
-    Color shade(const Ray& ray, const Hit&, int level, double weight,
-		double ior);
-    void inside_out(int n, int a, int& b, int& r);
-public:
-    Raytracer();
-    virtual ~Raytracer();
-    virtual clString create_window(Roe* roe,
-				   const clString& name,
-				   const clString& width,
-				   const clString& height);
-    virtual void redraw(Salmon*, Roe*);
-    virtual void get_pick(Salmon*, Roe*, int x, int y,
-			  GeomObj*&, GeomPick*&);
-    virtual void hide();
-    virtual void put_scanline(int y, int width, Color* scanline, int repeat);
-};
 
 static Renderer* make_Raytracer()
 {
@@ -271,3 +251,15 @@ void Raytracer::inside_out(int n, int a, int& b, int& r)
     if(r>n-b)r=n-b;
 }
  
+double Raytracer::light_ray(const Point& from, const Point&,
+			    const Vector& direction, double dist)
+{
+    Point f(from+direction*1.e-6);
+    Ray ray(f, direction);
+    Hit hits;
+    topobj->intersect(ray, topmatl.get_rep(), hits);
+    if(hits.hit() && hits.t() < dist)
+	return 0;
+    else
+	return 1;
+}
