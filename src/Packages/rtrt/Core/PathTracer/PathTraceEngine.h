@@ -44,6 +44,10 @@ namespace rtrt {
 		     int num_samples, int max_depth, bool dilate,
 		     int support, int use_weighted_ave,
 		     float threshold, Semaphore* sem);
+    // Add a colormap
+    void addColormap(Array1<unsigned char>& value, Array1<Color>& map);
+    Color lookupColor(HitInfo& hit);
+    Color lookupColor(int sphere_index);
     
     // Light source
     PathTraceLight light;
@@ -63,9 +67,14 @@ namespace rtrt {
     int support;
     int use_weighted_ave;
     float threshold;
-    
+
     // Semephore for threading
     Semaphore *sem;
+    
+    // Stuff for color map
+    Array1<unsigned char> value;
+    Array1<Color> map;
+    bool useColormap;
     
     // Stuff for PerProcessorContext
     int pp_size;
