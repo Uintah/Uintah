@@ -354,12 +354,6 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
   }
 }
 
-void MWViscoElastic::addInitialComputesAndRequires(Task* ,
-                                                   const MPMMaterial* ,
-                                                   const PatchSet* ) const
-{
-
-}
 
 void MWViscoElastic::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,

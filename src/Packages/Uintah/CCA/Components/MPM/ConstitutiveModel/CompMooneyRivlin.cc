@@ -385,13 +385,6 @@ void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
 #endif
 }
 
-void CompMooneyRivlin::addInitialComputesAndRequires(Task*,
-                                                     const MPMMaterial*,
-                                                     const PatchSet* ) const
-{
-
-}
-
 void CompMooneyRivlin::addComputesAndRequires(Task* task,
 					      const MPMMaterial* matl,
 					      const PatchSet* ) const

@@ -87,7 +87,7 @@ WARNING
 
     virtual void addInitialComputesAndRequires(Task* task,
 					       const MPMMaterial* matl,
-					       const PatchSet* patches) const=0;
+					       const PatchSet* patches) const;
 
     virtual void addComputesAndRequires(Task* task,
 					const MPMMaterial* matl,
