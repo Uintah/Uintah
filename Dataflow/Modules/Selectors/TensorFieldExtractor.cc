@@ -37,6 +37,7 @@ LOG
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
+#include <Packages/Uintah/Core/Datatypes/PatchDataThread.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
@@ -195,6 +196,10 @@ void TensorFieldExtractor::execute()
    // set the index for the correct timestep.
    int idx = handle->timestep();
 
+  int max_workers = Max(Thread::numProcessors()/2, 8);
+  Semaphore* thread_sema = scinew Semaphore( "tensor extractor semahpore",
+					     max_workers); 
+
 
   GridP grid = archive.queryGrid(times[idx]);
   LevelP level = grid->getLevel( 0 );
@@ -208,22 +213,29 @@ void TensorFieldExtractor::execute()
     case TypeDescription::Matrix3:
       {	
 	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	LevelField<Matrix3> *sfd =
+	LevelField<Matrix3> *vfd =
 	  scinew LevelField<Matrix3>( mesh, Field::NODE );
-	LevelField<Matrix3>::fdata_type &data = sfd->fdata();
-	  
+	vector<Array3<Matrix3> >& data = vfd->fdata();
+	data.resize(level->numPatches());
+	vector<Array3<Matrix3> >::iterator it = data.begin();
 	for(Level::const_patchIterator r = level->patchesBegin();
-	    r != level->patchesEnd(); r++ ){
-	  NCVariable< Matrix3 > sv;
-	  archive.query(sv, var, mat, *r, time);
-	  data.push_back( sv );
+	    r != level->patchesEnd(); r++, ++it ){
+	    thread_sema->down();
+	    Thread *thrd =
+	      scinew Thread(new PatchDataThread<NCVariable<Matrix3>,
+			    vector<Array3<Matrix3> >::iterator>
+			    (archive, it, var, mat, *r, time, thread_sema),
+			    "patch_data_worker");
+	    thrd->detach();
 	}
-	sfout->send(sfd);
+	thread_sema->down(max_workers);
+	if( thread_sema ) delete thread_sema;
+	sfout->send(vfd);
 	return;
       }
       break;
     default:
-      cerr<<"NCVariable<?>  Unknown tensor type\n";
+      cerr<<"NCVariable<?>  Unknown vector type\n";
       return;
     }
     break;
@@ -232,22 +244,29 @@ void TensorFieldExtractor::execute()
     case TypeDescription::Matrix3:
       {	
 	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	LevelField<Matrix3> *sfd =
+	LevelField<Matrix3> *vfd =
 	  scinew LevelField<Matrix3>( mesh, Field::CELL );
-	LevelField<Matrix3>::fdata_type &data = sfd->fdata();
-	  
+	vector<Array3<Matrix3> >& data = vfd->fdata();
+	data.resize(level->numPatches());
+	vector<Array3<Matrix3> >::iterator it = data.begin();
 	for(Level::const_patchIterator r = level->patchesBegin();
-	    r != level->patchesEnd(); r++ ){
-	  CCVariable< Matrix3 > sv;
-	  archive.query(sv, var, mat, *r, time);
-	  data.push_back( sv );
+	    r != level->patchesEnd(); r++, ++it ){
+	    thread_sema->down();
+	    Thread *thrd =
+	      scinew Thread(new PatchDataThread<CCVariable<Matrix3>,
+			    vector<Array3<Matrix3> >::iterator>
+			    (archive, it, var, mat, *r, time, thread_sema),
+			    "patch_data_worker");
+	    thrd->detach();
 	}
-	sfout->send(sfd);
+	thread_sema->down(max_workers);
+	if( thread_sema ) delete thread_sema;
+	sfout->send(vfd);
 	return;
       }
       break;
     default:
-      cerr<<"CCVariable<?> Unknown tensor type\n";
+      cerr<<"CCVariable<?> Unknown vector type\n";
       return;
     }
     break;
