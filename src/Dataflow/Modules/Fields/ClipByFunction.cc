@@ -70,12 +70,12 @@ ClipByFunction::ClipByFunction(GuiContext* ctx)
   : Module("ClipByFunction", ctx, Filter, "FieldsCreate", "SCIRun"),
     clipmode_(ctx->subVar("clipmode")),
     clipfunction_(ctx->subVar("clipfunction")),
-    gui_uservar0_(ctx->subVar("uservar0")),
-    gui_uservar1_(ctx->subVar("uservar1")),
-    gui_uservar2_(ctx->subVar("uservar2")),
-    gui_uservar3_(ctx->subVar("uservar3")),
-    gui_uservar4_(ctx->subVar("uservar4")),
-    gui_uservar5_(ctx->subVar("uservar5")),
+    gui_uservar0_(ctx->subVar("u0")),
+    gui_uservar1_(ctx->subVar("u1")),
+    gui_uservar2_(ctx->subVar("u2")),
+    gui_uservar3_(ctx->subVar("u3")),
+    gui_uservar4_(ctx->subVar("u4")),
+    gui_uservar5_(ctx->subVar("u5")),
     last_input_generation_(0)
 {
 }
