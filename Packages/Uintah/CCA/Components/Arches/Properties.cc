@@ -67,6 +67,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   d_mixingModel->problemSetup(db);
   // Read the mixing variable streams, total is noofStreams 0 
   d_numMixingVars = d_mixingModel->getNumMixVars();
+  d_numMixStatVars = d_mixingModel->getNumMixStatVars();
 }
 
 //****************************************************************************
@@ -77,7 +78,9 @@ void
 Properties::computeInletProperties(const InletStream& inStream, 
 				   Stream& outStream)
 {
-  d_mixingModel->computeProps(inStream, outStream);
+  //  d_mixingModel->computeProps(inStream, outStream);
+  vector<double> mixVars = inStream.d_mixVars;
+  outStream = d_mixingModel->speciesStateSpace(mixVars);
 }
   
 //****************************************************************************
@@ -98,6 +101,12 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
   // will only work for one mixing variables
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::None,
 		numGhostCells);
+
+  if (d_numMixStatVars > 0) {
+    tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, Ghost::None,
+		numGhostCells);
+  }
+
   tsk->computes(d_lab->d_refDensity_label);
   tsk->computes(d_lab->d_densityCPLabel);
   if (d_enthalpySolve)
@@ -141,6 +150,12 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
   }
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::None,
 		numGhostCells);
+
+  if (d_numMixStatVars > 0) {
+    tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, Ghost::None,
+		numGhostCells);
+  }
+
   if (!(d_mixingModel->isAdiabatic()))
     tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, Ghost::None,
 		  numGhostCells);
@@ -239,6 +254,14 @@ Properties::computeProps(const ProcessorGroup*,
       new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, 
 		  matlIndex, patch, Ghost::None, nofGhostCells);
 
+    StaticArray<CCVariable<double> > scalarVar(d_numMixStatVars);
+
+    if (d_numMixStatVars > 0) {
+    for (int ii = 0; ii < d_numMixStatVars; ii++)
+      new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
+		  matlIndex, patch, Ghost::None, nofGhostCells);
+    }
+
     // get multimaterial vars
     CCVariable<double> denMicro;
     //CCVariable<double> new_density;
@@ -272,9 +295,16 @@ Properties::computeProps(const ProcessorGroup*,
 
 	  }
 
-	  // after computing variance get that too, for the time being setting the 
-	  // value to zero
-	  //	  inStream.d_mixVarVariance[0] = 0.0;
+	  if (d_numMixStatVars > 0) {
+
+	    for (int ii = 0; ii < d_numMixStatVars; ii++ ) {
+
+	      inStream.d_mixVarVariance[ii] = (scalarVar[ii])[currCell];
+
+	    }
+
+	  }
+
 	  // currently not using any reaction progress variables
 
 	  if (!d_mixingModel->isAdiabatic())
@@ -412,6 +442,15 @@ Properties::reComputeProps(const ProcessorGroup*,
     for (int ii = 0; ii < d_numMixingVars; ii++)
       new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, 
 		  matlIndex, patch, Ghost::None, nofGhostCells);
+
+    StaticArray<CCVariable<double> > scalarVar(d_numMixStatVars);
+
+    if (d_numMixStatVars > 0) {
+      for (int ii = 0; ii < d_numMixStatVars; ii++)
+	new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
+		    matlIndex, patch, Ghost::None, nofGhostCells);
+    }
+
     if (!(d_mixingModel->isAdiabatic()))
       new_dw->get(enthalpy_comp, d_lab->d_enthalpySPLabel, 
 		  matlIndex, patch, Ghost::None, nofGhostCells);
@@ -435,6 +474,16 @@ Properties::reComputeProps(const ProcessorGroup*,
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
 
 	    inStream.d_mixVars[ii] = (scalar[ii])[currCell];
+
+	  }
+
+	  if (d_numMixStatVars > 0) {
+
+	    for (int ii = 0; ii < d_numMixStatVars; ii++ ) {
+
+	      inStream.d_mixVarVariance[ii] = (scalarVar[ii])[currCell];
+
+	    }
 
 	  }
 

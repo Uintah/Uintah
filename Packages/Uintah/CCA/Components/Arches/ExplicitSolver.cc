@@ -129,6 +129,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   // Start the iterations
 
   int nofScalars = d_props->getNumMixVars();
+  int nofScalarVars = d_props->getNumMixStatVars();
 
   //correct inlet velocities to account for change in properties
   // require : densityIN, [u,v,w]VelocityIN (new_dw)
@@ -152,11 +153,21 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   //           scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSS
   // compute drhophidt, compute dphidt and using both of them compute
   // compute drhodt
+
   for (int index = 0;index < nofScalars; index ++) {
     // in this case we're only solving for one scalar...but
     // the same subroutine can be used to solve multiple scalars
     d_scalarSolver->solvePred(sched, patches, matls, index);
   }
+
+  if (nofScalarVars > 0) {
+    for (int index = 0;index < nofScalarVars; index ++) {
+      // in this case we're only solving for one scalarVar...but
+      // the same subroutine can be used to solve multiple scalarVars
+      d_turbModel->sched_computeScalarVariance(sched, patches, matls);
+    }
+  }
+
   if (d_enthalpySolve)
     d_enthalpySolver->solvePred(sched, patches, matls);
 #ifdef correctorstep
@@ -209,7 +220,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   // first computes, hatted velocities and then computes the pressure 
   // poisson equation
   d_pressSolver->solveCorr(level, sched);
-  // Momentum solver2
+  // Momentum solver
   // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
   // viscosityIN (new_dw)
   //           [u,v,w]VelocitySPBC, densityCP (old_dw)
@@ -284,6 +295,16 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
     tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel, 
 		  Ghost::None, numGhostCells);
   }
+
+  int nofScalarVars = d_props->getNumMixStatVars();
+  // warning **only works for one scalarVar
+  if (nofScalarVars > 0) {
+    for (int ii = 0; ii < nofScalarVars; ii++) {
+      tsk->requires(Task::OldDW, d_lab->d_scalarVarSPLabel, 
+		    Ghost::None, numGhostCells);
+    }
+  }
+
   if (d_enthalpySolve)
     tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel, 
 		  Ghost::None, numGhostCells);
@@ -296,9 +317,17 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->computes(d_lab->d_uVelocityINLabel);
   tsk->computes(d_lab->d_vVelocityINLabel);
   tsk->computes(d_lab->d_wVelocityINLabel);
+
   for (int ii = 0; ii < nofScalars; ii++) {
     tsk->computes(d_lab->d_scalarINLabel);
   }
+
+  if (nofScalarVars > 0) {
+    for (int ii = 0; ii < nofScalarVars; ii++) {
+      tsk->computes(d_lab->d_scalarVarINLabel);
+    }
+  }
+
   if (d_enthalpySolve)
     tsk->computes(d_lab->d_enthalpyINLabel);
   tsk->computes(d_lab->d_densityINLabel);
@@ -366,6 +395,13 @@ ExplicitSolver::sched_probeData(SchedulerP& sched, const PatchSet* patches,
 		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
 		Ghost::None, zeroGhostCells);
+
+  int nofScalarVars = d_props->getNumMixStatVars();
+  if (nofScalarVars > 0) {
+    tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, 
+    		  Ghost::None, zeroGhostCells);
+  }
+
   if (d_MAlab)
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
 		  Ghost::None, zeroGhostCells);
@@ -426,6 +462,16 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       old_dw->get(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch, 
 		  Ghost::None, nofGhostCells);
     }
+
+    int nofScalarVars = d_props->getNumMixStatVars();
+    StaticArray< CCVariable<double> > scalarVar (nofScalarVars);
+    if (nofScalarVars > 0) {
+      for (int ii = 0; ii < nofScalarVars; ii++) {
+	old_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch, 
+		    Ghost::None, nofGhostCells);
+      }
+    }
+
     CCVariable<double> enthalpy;
     if (d_enthalpySolve)
       old_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, 
@@ -471,10 +517,19 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     SFCZVariable<double> wVelocity_new;
     new_dw->allocate(wVelocity_new, d_lab->d_wVelocityINLabel, matlIndex, patch);
     wVelocity_new.copyPatch(wVelocity); // copy old into new
+
     StaticArray<CCVariable<double> > scalar_new(nofScalars);
     for (int ii = 0; ii < nofScalars; ii++) {
       new_dw->allocate(scalar_new[ii], d_lab->d_scalarINLabel, matlIndex, patch);
       scalar_new[ii].copyPatch(scalar[ii]); // copy old into new
+    }
+
+    StaticArray<CCVariable<double> > scalarVar_new(nofScalarVars);
+    if (nofScalarVars > 0) {
+      for (int ii = 0; ii < nofScalarVars; ii++) {
+	new_dw->allocate(scalarVar_new[ii], d_lab->d_scalarVarINLabel, matlIndex, patch);
+	scalarVar_new[ii].copyPatch(scalarVar[ii]); // copy old into new
+      }
     }
 
     CCVariable<double> new_enthalpy;
@@ -496,9 +551,17 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     new_dw->put(uVelocity_new, d_lab->d_uVelocityINLabel, matlIndex, patch);
     new_dw->put(vVelocity_new, d_lab->d_vVelocityINLabel, matlIndex, patch);
     new_dw->put(wVelocity_new, d_lab->d_wVelocityINLabel, matlIndex, patch);
+
     for (int ii = 0; ii < nofScalars; ii++) {
       new_dw->put(scalar_new[ii], d_lab->d_scalarINLabel, matlIndex, patch);
     }
+
+    if (nofScalarVars > 0) {
+      for (int ii = 0; ii < nofScalarVars; ii++) {
+	new_dw->put(scalarVar_new[ii], d_lab->d_scalarVarINLabel, matlIndex, patch);
+      }
+    }
+
     if (d_enthalpySolve)
       new_dw->put(new_enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
     new_dw->put(density_new, d_lab->d_densityINLabel, matlIndex, patch);
@@ -651,6 +714,12 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
     new_dw->get(mixtureFraction, d_lab->d_scalarSPLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
     
+    CCVariable<double> mixFracVariance;
+    if (d_props->getNumMixStatVars() > 0) {
+      new_dw->get(mixFracVariance, d_lab->d_scalarVarSPLabel, matlIndex, patch, 
+		  Ghost::None, nofGhostCells);
+    }
+    
     CCVariable<double> gasfraction;
     if (d_MAlab)
       new_dw->get(gasfraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, 
@@ -669,6 +738,9 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
 	cerr << "UVelocity: " << newUVel[*iter] << endl;
 	cerr << "VVelocity: " << newVVel[*iter] << endl;
 	cerr << "WVelocity: " << newWVel[*iter] << endl;
+	if (d_props->getNumMixStatVars() > 0) {
+	  cerr << "MixFracVariance: " << mixFracVariance[*iter] << endl;
+	}
 	if (d_MAlab)
 	  cerr << "gas vol fraction: " << gasfraction[*iter] << endl;
 

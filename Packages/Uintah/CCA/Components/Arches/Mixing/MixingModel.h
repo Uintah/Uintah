@@ -75,6 +75,17 @@ public:
       virtual void computeProps(const InletStream& inStream,
 			       Stream& outStream) = 0;
 
+    /////////////////////////////////////////////////////////////////////////
+      // speciesStateSpace returns the state space (dependent) variables,
+      // including species composition, given a set of mixture fractions. The 
+      // species composition of each stream must be known.
+      // The state space variables returned are: density, temperature, heat 
+      // capacity, molecular weight, enthalpy, mass fractions 
+      // All variables are in SI units with pressure in Pascals.
+      // Parameters:
+      // [in] mixVar is an array of independent variables
+      virtual Stream speciesStateSpace(const std::vector<double>& mixVar) = 0;
+
       // GROUP: Get Methods :
       ///////////////////////////////////////////////////////////////////////
       //

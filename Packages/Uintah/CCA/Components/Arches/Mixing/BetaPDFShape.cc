@@ -41,17 +41,26 @@ BetaPDFShape::computePDFFunction(double* meanMixVar,
 				 double statVar)
 {
   d_validGammaValue = true;
-  cout<<"Beta::meanMixVar ="<<meanMixVar[0]<<" "<<meanMixVar[1]<<endl;
+  //cout<<"Beta::meanMixVar ="<<meanMixVar[0]<<" "<<statVar<<endl;
+  if ((meanMixVar[0]<0.0000001)||(meanMixVar[0]>0.999999)) {
+     d_validGammaValue = false;
+     return;
+  }
+  if (statVar <= 1e-05*meanMixVar[0]) {
+     d_validGammaValue = false;
+     return;
+  }
+  //  cout << " gamma value " << d_validGammaValue << endl;
   d_gammafnValue = computeBetaPDFShape(meanMixVar, statVar);
-  cout<<"Beta::PDFFunction statVar = "<<statVar<<endl;
-  cout << "LN(gammafnValue) = " << d_gammafnValue << endl; 
+  //  cout<<"Beta::PDFFunction statVar = "<<statVar<<endl;
+  //  cout << "LN(gammafnValue) = " << d_gammafnValue << endl; 
   //if (d_gammafnValue < SMALL)  //Old check before Wing put in
   // robust gammafn
   //  d_validGammaValue = false;
   // ***Jennifer's note- This kluge will only work for integration over
-  // ONE variable*** 
-  if (statVar < 1e-05*meanMixVar[0])
-    d_validGammaValue = false;
+  // ONE variable***
+  //What if mixVar=0 or 1??; right now, if var too high, it is reduced
+  // If var too low, mean values will be returned (see next line)
   return;
 }
 
@@ -79,7 +88,7 @@ BetaPDFShape::computeBetaPDFShape(double* meanMixVar,
   }
   double lastMixVars = 1.0 - sumMixVars; // 1.0 - fi's
   sumSqrMixVars += lastMixVars*lastMixVars; //SUM(sqr(fi's))
-  cout<<"statVar = "<<statVar<<endl;
+  //cout<<"statVar = "<<statVar<<endl;
   if (statVar < SMALL) 
     factor = 0.0;
   else
@@ -90,18 +99,20 @@ BetaPDFShape::computeBetaPDFShape(double* meanMixVar,
   vector<double> gammafn(d_dimPDF+1);
   for (int i = 0; i < d_dimPDF; i++) {
     d_coef[i] = meanMixVar[i]*factor; // ai = fi*(1-S)/Q - 1
-    cout << meanMixVar[i] << " Beta(" << i << ") = " << d_coef[i] << endl;
+    //cout << meanMixVar[i] << " Beta(" << i << ") = " << d_coef[i] << endl;
 
     if (d_coef[i] <= 0.0)
       //upper limit, if Q is greater than (1-S), ai becomes negative.  So we reset the new Q = 0.9*fi*(1-fi)/2
       {
+	//	cout << "meanmixvar " << meanMixVar[i] << endl;
 	new_d_statVar = 0.9*meanMixVar[i]*(1-meanMixVar[i])/2.0;
+	cout << "newstatvar = " << new_d_statVar << endl;
 	new_factor = (1.0 - sumSqrMixVars)/new_d_statVar - 1.0;
 	d_coef[i] = meanMixVar[i]*new_factor;
 	cout << "beta is negative, new beta is calculated" << endl;
       }
     gammafn[i] = dgammaln_(&d_coef[i]); // gammaln(ai)
-    cout << "gammaln(" << i << ") = " << gammafn[i] << endl;
+    //cout << "gammaln(" << i << ") = " << gammafn[i] << endl;
     multGamma += gammafn[i]; // LN(gamma(a1))+LN(gamma(a2))...LN(gamma(a(N-1)))
     sumCoefs += d_coef[i];  // a1+a2+...+a(N-1)
   }
@@ -120,11 +131,11 @@ BetaPDFShape::computeBetaPDFShape(double* meanMixVar,
   //  cout << "gammaln(" << i << ") = " << d_gammafn[i] << endl;
   //  cout << "*******************" << endl;
   multGamma += gammafn[d_dimPDF];    // LN(gamma(a1))+...+LN(gamma(aN))
-  cout << "LN(mult) = " << multGamma << endl;
+  //cout << "LN(mult) = " << multGamma << endl;
   sumCoefs += d_coef[d_dimPDF];
   //  cout << "sumCoefs = " << sumCoefs << endl;
   double gammafnNum = dgammaln_(&sumCoefs);   // LN(gamma(a1+a2+...+aN))
-  cout << "LN(sum) = " << gammafnNum << endl;
+  //cout << "LN(sum) = " << gammafnNum << endl;
   return (gammafnNum-multGamma);   
 } // gamma(a1+a2+...+aN)/(gamma(a1)*...*gamma(aN))
 
@@ -151,6 +162,13 @@ BetaPDFShape::computeShapeFunction(double *var) {
 
 //
 // $Log$
+// Revision 1.4  2001/08/25 07:32:45  skumar
+// Incorporated Jennifer's beta-PDF mixing model code with some
+// corrections to the equilibrium code.
+// Added computation of scalar variance for use in PDF model.
+// Properties::computeInletProperties now uses speciesStateSpace
+// instead of computeProps from d_mixingModel.
+//
 // Revision 1.3  2001/07/16 21:15:37  rawat
 // added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
 //
