@@ -72,7 +72,6 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   d_forceIncrementFactor = 1.0;
   d_integrator = Implicit;
   d_dynamic = true;
-  d_useLoadCurves = false;
 }
 
 bool ImpMPM::restartableTimesteps()
@@ -147,7 +146,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
       cout << "single" << endl;
    }
 
-   if(d_useLoadCurves){
+   if(flags->d_useLoadCurves){
     MPMPhysicalBCFactory::create(prob_spec);
     if( (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size()==0) {
      throw ProblemSetupException("No load curve in ups, d_useLoadCurve==true?");
@@ -839,7 +838,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
   // Calculate the force vector at each particle for each bc
   std::vector<double> forceMagPerPart;
   std::vector<NormalForceBC*> nfbcP;
-  if (d_useLoadCurves) {
+  if (flags->d_useLoadCurves) {
     // Currently, only one load curve at a time is supported, but
     // I've left the infrastructure in place to go to multiple
     for (int ii = 0;
@@ -877,7 +876,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
                                                                                 
-      if (d_useLoadCurves) {
+      if (flags->d_useLoadCurves) {
         // Get the external force data and allocate new space for
         // external force
         constParticleVariable<Vector> pExternalForce;
@@ -914,7 +913,8 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
         ParticleSubset::iterator iter = pset->begin();
         for(;iter != pset->end(); iter++){
           particleIndex idx = *iter;
-          pExternalForce_new[idx] = pExternalForce[idx]*d_forceIncrementFactor;
+          pExternalForce_new[idx] = pExternalForce[idx]
+                                       *flags->d_forceIncrementFactor;
         }
       }
     } // matl loop
