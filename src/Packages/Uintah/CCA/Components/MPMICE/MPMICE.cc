@@ -1736,6 +1736,8 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     delY = dx.y();
     delZ = dx.z();
     int prod_indx = -1;
+    delt_vartype doMech;
+    old_dw->get(doMech, Mlb->doMechLabel);
     
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -1810,10 +1812,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       if(mpm_matl && (mpm_matl->getRxProduct() == Material::reactant))  {
         double delt = delT;
         double cv_solid = mpm_matl->getSpecificHeat();
-        
-        delt_vartype doMech;
-        old_dw->get(doMech, Mlb->doMechLabel);
-
+      
        if(doMech < -1.5){
         for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
           IntVector c = *iter;
