@@ -2,7 +2,8 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
-SRCS     = BldEEGMesh.cc Coregister.cc InvEEGSolve.cc RescaleSegFld.cc \
+SRCS     = BldEEGMesh.cc Coregister.cc \
+	   InvEEGSolve.cc RescaleSegFld.cc \
 	   STreeExtractSurf.cc SegFldOps.cc SegFldToSurfTree.cc \
 	   SelectSurfNodes.cc Taubin.cc Thermal.cc
 
