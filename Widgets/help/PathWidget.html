@@ -1,0 +1,30 @@
+\subsection{Path Widget}
+
+\begin{figure}[ht]
+	\hbox to \columnwidth{\hfil \epsffile{figures/Path.eps} \hfil}
+	\caption{Path Widget Design}
+	\label{fig:PathDesign}
+\end{figure}
+
+The Path Widget is composed of a spline or hermite curve and
+several sub-widget ``control points'' as shown in
+figure~\ref{fig:PathDesign} (the ``spline'' in the figure is
+simulated by cylinders).  The control points consist of a
+sphere, an arrow for the tangent (for hermite curves), and two
+arrows which define the ``look at'' and ``up'' directions for
+an object at that point on the path.  The primary use of the
+View Widget is to create either a spline curve or a hermite
+curve.  If this curve is to be used as a path (such as for an
+animation sequence), then the user may control the orientation
+of the object (or camera) at each control point on the path.
+If the user is creating a spline, then the tangent at each
+control point is unnecessary, so they may be turned off by
+changing Modes (see below).  The same is true if the
+orientation is not needed.
+
+The user may drag any arrow about its associated sphere, but
+the distance will remain constrained.  The two orientation
+arrows will maintain their orthogonality throughout
+manipulation by the user.  A control point sub-widget may be
+moved by dragging its sphere.  Finally, the entire widget may
+be dragged by its spline.

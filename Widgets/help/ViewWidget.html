@@ -1,0 +1,21 @@
+\subsection{View Widget}
+
+\begin{figure}[ht]
+	\hbox to \columnwidth{\hfil \epsffile{figures/View.eps} \hfil}
+	\caption{View Widget Design}
+	\label{fig:ViewDesign}
+\end{figure}
+
+The View Widget consists of an eye point, a ``look at'' point,
+and an up point (encompassing the up vector and the field of
+view) as shown in figure~\ref{fig:ViewDesign}.  There is also
+a geometric representation of the viewing frustrum defined by
+the interface components.  The primary use of the View Widget is
+to specify a camera view from within the data space---this is
+useful for producing animations and for better understanding
+and defining a view which is then shown in another window.
+
+The user can independently adjust the eye point, the up
+vector, the field of view, the front clipping plane, and the
+back clipping plane (also the ``look at'' point).
+
