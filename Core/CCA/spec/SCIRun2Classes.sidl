@@ -1,14 +1,5 @@
 distribution array DMatrix <double,2>;
 distribution array DArray <double,1>;
-/*
-class Matrix
-{
-	double getElement(in int row, in int col);
-	void setElement(in int row, in int col, in double val);
-	int numOfRows();
-	int numOfCols();
-}
-*/
 
 interface Loader
 {
@@ -17,22 +8,17 @@ interface Loader
         distribution array dURL <string, 1>;
 
         collective 
-	int createPInstance(in string componentName, in string componentType, 
+	int createPInstance(in string componentName, in string componentType, in TypeMap properties,
 			           out dURL componentURLs);
 
-	int createInstance(in string componentName, in string componentType,  
+	int createInstance(in string componentName, in string componentType,  in TypeMap properties,
 			           out string componentURL);
 
         int destroyInstance(in string componentName, in float timeout);
 
-
 	int getAllComponentTypes(out array<string,1> componentTypes);
-
 
 	int shutdown(in float timeout);
 
 }
 
-interface PingPong {
-        int pingpong(in int test);
-};	
