@@ -505,7 +505,7 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
   bool have_vp = false;
   bool have_tp = false;
   bool have_ids = false;
-  int scalar_type;
+  int scalar_type = TypeDescription::Unknown;
   for(int i = 0; i < (int)names.size() ; i++)
     if (names[i] == psVar.get())
       scalar_type = types[i]->getSubType()->getType();
@@ -569,7 +569,7 @@ void PFEThread::run(){
 
   for(int matl = 0; matl < pfe->num_materials; matl++) {
     string result;
-    ParticleSubset* source_subset;
+    ParticleSubset* source_subset = 0;
     bool have_subset = false;
 
     gui->eval(pfe->id + " isOn p" + to_string(matl), result);
@@ -774,11 +774,16 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
   gui->execute(id + " reset_var_val");
 
   // determine type
-  const TypeDescription *td;
+  const TypeDescription *td = 0;
   for(int i = 0; i < (int)names.size() ; i++)
     if (names[i] == varname)
       td = types[i];
-  
+
+  if (td == 0) {
+    // You are in some serious trouble
+    error("ParticleFieldExtractor::graph::Type for specified variable is not found");
+    return;
+  }
   DataArchive& archive = *((*(this->archiveH.get_rep()))());
   vector< int > indices;
   times.clear();

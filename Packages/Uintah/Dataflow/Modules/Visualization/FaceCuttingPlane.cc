@@ -125,13 +125,13 @@ FaceCuttingPlane::FaceCuttingPlane(GuiContext* ctx) :
   control_lock_("FaceCuttingPlane lock"),
   control_widget_(0),
   control_id_(-1),
+  drawX_(ctx->subVar("drawX")),
+  drawY_(ctx->subVar("drawY")),
+  drawZ_(ctx->subVar("drawZ")),
   need_find(ctx->subVar("need_find")), 
   where(ctx->subVar("where")),
   face_name(ctx->subVar("face_name")), 
   line_size(ctx->subVar("line_size")),
-  drawX_(ctx->subVar("drawX")),
-  drawY_(ctx->subVar("drawY")),
-  drawZ_(ctx->subVar("drawZ")),
   mesh_(0)
 {
     need_find.set(1);
@@ -297,7 +297,6 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
 
 
   int old_grid_id = grid_id;
-  static int find = -1;
   int cmapmin, cmapmax;
 
   BBox b = mesh_->get_bounding_box();
@@ -415,7 +414,6 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
 	sval = lvf->fdata()[node];
  	matl = cmap->lookup( sval);
 	line = new GeomLine(p0,p1);
-	float linesz = line_size.get();
 	line->setLineWidth((float)line_size.get());
 	faces->add( scinew GeomMaterial( line, matl));
       } else {
