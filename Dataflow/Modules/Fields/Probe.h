@@ -194,6 +194,88 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
 }
 
 
+
+class ProbeCenterAlgo : public DynamicAlgoBase
+{
+public:
+  virtual void get_node(MeshHandle mesh_h, const string &index, Point &p) = 0;
+  virtual void get_edge(MeshHandle mesh_h, const string &index, Point &p) = 0;
+  virtual void get_face(MeshHandle mesh_h, const string &index, Point &p) = 0;
+  virtual void get_cell(MeshHandle mesh_h, const string &index, Point &p) = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfo *get_compile_info(const TypeDescription *msrc);
+};
+
+
+template <class MESH>
+class ProbeCenterAlgoT : public ProbeCenterAlgo
+{
+public:
+  virtual void get_node(MeshHandle mesh_h, const string &index, Point &p);
+  virtual void get_edge(MeshHandle mesh_h, const string &index, Point &p);
+  virtual void get_face(MeshHandle mesh_h, const string &index, Point &p);
+  virtual void get_cell(MeshHandle mesh_h, const string &index, Point &p);
+};
+
+
+template <class MESH>
+void
+ProbeCenterAlgoT<MESH>::get_node(MeshHandle mesh_h, const string &indexstr,
+				 Point &p)
+{
+  MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
+
+  istringstream strm(indexstr);
+  typename MESH::Node::index_type index;
+  index << strm;
+  
+  mesh->get_center(p, index);
+}
+
+template <class MESH>
+void
+ProbeCenterAlgoT<MESH>::get_edge(MeshHandle mesh_h, const string &indexstr,
+				 Point &p)
+{
+  MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
+
+  istringstream strm(indexstr);
+  typename MESH::Edge::index_type index;
+  index << strm;
+  
+  mesh->get_center(p, index);
+}
+
+template <class MESH>
+void
+ProbeCenterAlgoT<MESH>::get_face(MeshHandle mesh_h, const string &indexstr,
+				 Point &p)
+{
+  MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
+
+  istringstream strm(indexstr);
+  typename MESH::Face::index_type index;
+  index << strm;
+  
+  mesh->get_center(p, index);
+}
+
+template <class MESH>
+void
+ProbeCenterAlgoT<MESH>::get_cell(MeshHandle mesh_h, const string &indexstr,
+				 Point &p)
+{
+  MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
+
+  istringstream strm(indexstr);
+  typename MESH::Cell::index_type index;
+  index << strm;
+  
+  mesh->get_center(p, index);
+}
+
+
 } // end namespace SCIRun
 
 #endif // Probe_h

@@ -59,7 +59,8 @@ private:
   GuiString gui_edge_;
   GuiString gui_face_;
   GuiString gui_cell_;
-
+  GuiString gui_moveto_;
+  
   bool bbox_similar_to(const BBox &a, const BBox &b);
 
 public:
@@ -88,7 +89,8 @@ Probe::Probe(const string& id)
     gui_node_("node", id, this),
     gui_edge_("edge", id, this),
     gui_face_("face", id, this),
-    gui_cell_("cell", id, this)
+    gui_cell_("cell", id, this),
+    gui_moveto_("moveto", id, this)
 {
   widget_ = scinew PointWidget(this, &widget_lock_, 1.0);
 }
@@ -199,6 +201,57 @@ Probe::execute()
     last_bounds_ = bbox;
   }
 
+  const string &moveto = gui_moveto_.get();
+  if (moveto == "location")
+  {
+    const Point newloc(gui_locx_.get(), gui_locy_.get(), gui_locz_.get());
+    widget_->SetPosition(newloc);
+    gui_moveto_.set("");
+  }
+  else if (moveto != "")
+  {
+    const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
+    CompileInfo *ci = ProbeCenterAlgo::get_compile_info(mtd);
+    DynamicAlgoHandle algo_handle;
+    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+    {
+      error("Could not compile algorithm.");
+      return;
+    }
+    ProbeCenterAlgo *algo =
+      dynamic_cast<ProbeCenterAlgo *>(algo_handle.get_rep());
+    if (algo == 0)
+    {
+      error("Could not get algorithm.");
+      return;
+    }
+    if (moveto == "node")
+    {
+      Point newloc = widget_->GetPosition();
+      algo->get_node(ifieldhandle->mesh(), gui_node_.get(), newloc);
+      widget_->SetPosition(newloc);
+    }
+    else if (moveto == "edge")
+    {
+      Point newloc = widget_->GetPosition();
+      algo->get_edge(ifieldhandle->mesh(), gui_edge_.get(), newloc);
+      widget_->SetPosition(newloc);
+    }
+    else if (moveto == "face")
+    {
+      Point newloc = widget_->GetPosition();
+      algo->get_face(ifieldhandle->mesh(), gui_face_.get(), newloc);
+      widget_->SetPosition(newloc);
+    }
+    else if (moveto == "cell")
+    {
+      Point newloc = widget_->GetPosition();
+      algo->get_cell(ifieldhandle->mesh(), gui_cell_.get(), newloc);
+      widget_->SetPosition(newloc);
+    }
+    gui_moveto_.set("");
+  }
+
   const Point location = widget_->GetPosition();
   PointCloudMesh *mesh = scinew PointCloudMesh();
   PointCloudMesh::Node::index_type pcindex = mesh->add_point(location);
@@ -303,6 +356,28 @@ ProbeLocateAlgo::get_compile_info(const TypeDescription *msrc)
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
   static const string template_class_name("ProbeLocateAlgoT");
   static const string base_class_name("ProbeLocateAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       msrc->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       msrc->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  msrc->fill_compile_info(rval);
+  return rval;
+}
+
+
+CompileInfo *
+ProbeCenterAlgo::get_compile_info(const TypeDescription *msrc)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("ProbeCenterAlgoT");
+  static const string base_class_name("ProbeCenterAlgo");
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
