@@ -238,9 +238,9 @@ Isosurface::execute()
 	error("Can't use quantity tab if Min == Max");
 	return;
       }
-      double di=(qmax - qmin)/(num+1);
+      double di=(qmax - qmin)/(double)num;
       for (int i=0; i<num; i++) 
-	isovals.push_back((i+1)*di+qmin);
+	isovals.push_back(qmin + ((double)i+0.5)*di);
     }
     else if (gui_active_isoval_selection_tab_.get() == "2") { // list
       istringstream vlist(gui_iso_value_list_.get());
