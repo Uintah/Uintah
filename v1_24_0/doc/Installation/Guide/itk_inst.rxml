@@ -131,7 +131,21 @@ setenv PATH $JAVA_HOME/bin:$PATH
       <varlistentry>
 	<term><varname>BUILD_SHARED_LIBS</varname></term>
 	<listitem>
-	  <para>Set this variable to the value <userinput><!--%= doc.ifP(Doc::Linux) {"ON"}; doc.ifP(Doc::OSX) {"OFF"} %--></userinput></para>
+	  <para>Set the value of <varname>BUILD_SHARED_LIBS</varname> to <userinput><!--%= doc.ifP(Doc::Linux) {"ON"}; doc.ifP(Doc::OSX) {"OFF"} %--></userinput></para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><varname>BUILD_TESTING</varname></term>
+	<listitem>
+	  <para>Set the value of <varname>BUILD_TESTING</varname> to
+	  <userinput>OFF</userinput></para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><varname>BUILD_EXAMPLES</varname></term>
+	<listitem>
+	  <para>Set the value of <varname>BUILD_EXAMPLES</varname> to
+	  <userinput>OFF</userinput></para>
 	</listitem>
       </varlistentry>
       <varlistentry>
