@@ -7,14 +7,18 @@ SRCDIR   := Uintah/Components/MPM/ConstitutiveModel
 
 SRCS     += $(SRCDIR)/CompMooneyRivlin.cc $(SRCDIR)/CompNeoHook.cc \
 	$(SRCDIR)/CompNeoHookPlas.cc $(SRCDIR)/ConstitutiveModelFactory.cc \
-	$(SRCDIR)/ConstitutiveModel.cc $(SRCDIR)/ElasticConstitutiveModel.cc \
-	$(SRCDIR)/HyperElasticDamage.cc $(SRCDIR)/ViscoElasticDamage.cc \
+	$(SRCDIR)/ConstitutiveModel.cc \
 	$(SRCDIR)/MPMMaterial.cc $(SRCDIR)/ViscoScram.cc
 
 PSELIBS := Uintah/Grid
 
 #
 # $Log$
+# Revision 1.7  2000/08/22 00:17:49  guilkey
+# Took ElasticConstitutiveModel, HyperElasticDamage and ViscoElasticDamage
+# out of sub.mk and ConstitutiveModelFactory, since they currently aren't
+# up to speed with the UCF.
+#
 # Revision 1.6  2000/08/21 18:37:41  guilkey
 # Initial commit of ViscoScram stuff.  Don't get too excited yet,
 # currently these are just cosmetically modified copies of CompNeoHook.
