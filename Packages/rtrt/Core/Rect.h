@@ -17,6 +17,7 @@ class Rect : public Object, public UVMapping {
     double d2;
     Vector un, vn;
     double du, dv;
+    Vector tex_scale;
 public:
     Rect(Material* matl, const Point& cen, const Vector& u, const Vector& v);
     virtual ~Rect();
@@ -30,6 +31,7 @@ public:
     virtual Vector normal(const Point&, const HitInfo& hit);
     virtual void uv(UV& uv, const Point&, const HitInfo& hit);
     virtual void compute_bounds(BBox&, double offset);
+    void set_tex_scale(const Vector &v) { tex_scale = v; }
 };
 
 } // end namespace rtrt
