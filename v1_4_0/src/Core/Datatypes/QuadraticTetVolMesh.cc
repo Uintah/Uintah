@@ -669,25 +669,22 @@ QuadraticTetVolMesh::calc_jac_derivs(Vector &dxi, Vector &dnu, Vector &dgam,
     Point p;
     get_point(p, node_array[k]);
     double deriv = calc_dphi_dxi(k,xi,nu,gam);
-    const double pxd = p.x() * deriv;
-    const double pyd = p.y() * deriv;
-    const double pzd = p.z() * deriv;
 
-    dxdxi += pxd;
-    dydxi += pyd;
-    dzdxi += pzd;
+    dxdxi += p.x() * deriv;
+    dydxi += p.y() * deriv;
+    dzdxi += p.z() * deriv;
 
     deriv = calc_dphi_dnu(k,xi,nu,gam);
 
-    dxdnu += pxd;
-    dydnu += pyd;
-    dzdnu += pzd;
+    dxdnu += p.x() * deriv;
+    dydnu += p.y() * deriv;
+    dzdnu += p.z() * deriv;
 
     deriv = calc_dphi_dgam(k,xi,nu,gam);
 
-    dxdgam += pxd;
-    dydgam += pyd;
-    dzdgam += pzd;
+    dxdgam += p.x() * deriv;
+    dydgam += p.y() * deriv;
+    dzdgam += p.z() * deriv;
   }
 
   dxi = Vector(dxdxi, dydxi, dzdxi);

@@ -98,3 +98,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PROGRAM := $(SRCDIR)/RawToTriSurf
 SRCS := $(SRCDIR)/RawToTriSurf.cc
 include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/SingleTet
+SRCS := $(SRCDIR)/SingleTet.cc
+include $(SCIRUN_SCRIPTS)/program.mk
