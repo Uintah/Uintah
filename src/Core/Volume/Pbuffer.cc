@@ -203,6 +203,11 @@ struct PbufferImpl
 bool
 Pbuffer::create ()
 {
+#ifdef __ECC
+  // For now no Pbuffer support on the Altix system
+  mSupported = false;
+  return false;
+#else
   if(!mInit) {
 #ifdef HAVE_GLEW
     // extension check
@@ -487,6 +492,7 @@ Pbuffer::create ()
     return false;
   }
   return true;
+#endif
 }
 
 void
