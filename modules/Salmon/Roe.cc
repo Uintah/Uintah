@@ -29,6 +29,7 @@
 #include <MtXEventLoop.h>
 #include <NetworkEditor.h>
 #include <NotFinished.h>
+#include <XFont.h>
 #include <Mt/DialogShell.h>
 #include <Mt/DrawingArea.h>
 #include <Mt/Form.h>
@@ -45,6 +46,7 @@
 #include <Geometry/Vector.h>
 #include <GL/glu.h>
 #include <CallbackCloners.h>
+#include <Classlib/Timer.h>
 #include <Math/Expon.h>
 #include <Math/MiscMath.h>
 #include <Geometry/BBox.h>
@@ -53,6 +55,9 @@
 #include <X11/keysym.h>
 
 extern MtXEventLoop* evl;
+
+#define PERF_FONTFACE XFont::Medium
+#define PERF_FONTSIZE 12
 
 typedef void (Roe::*MouseHandler)(int action, int x, int y,
 				  int x_root, int y_root);
@@ -64,8 +69,8 @@ typedef void (Roe::*MouseHandler)(int action, int x, int y,
 #define META_MASK 4
 
 struct MouseHandlerData {
-    MouseHandler handler;
-    clString title;
+    MouseHandler handler;	
+    clString title;	
     MouseHandlerData(MouseHandler, const clString&);
     ~MouseHandlerData();
 };
@@ -109,7 +114,7 @@ static MouseHandlerData* mouse_handlers[8][3] = {
     0,			// Alt+Control+Shift, button 1
     0,			// Alt+Control+Shift, button 2
     0,			// Alt+Control+Shift, button 3
-};
+};	
 
 static total_salmon_count=1;
 
@@ -142,20 +147,20 @@ void Roe::RoeInit(Salmon* s) {
     dbcontext_st=new DBContext(clString("Salmon<")+to_string(salmon_count)+">");
     dbcontext_st->set_knob(0, "Scale",
 			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
-					       &Roe::DBscale, 0));
+						     &Roe::DBscale, 0));
     dbcontext_st->set_range(0, -3, 3); 
     dbcontext_st->set_value(0, 0.0);
     dbcontext_st->set_knob(6, "Translate X",
 			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
-					       &Roe::DBtranslate, (void*)0));
-    dbcontext_st->set_scale(6, 100);
+						     &Roe::DBtranslate, (void*)0));
+    dbcontext_st->set_scale(6, 100);	
     dbcontext_st->set_knob(4, "Translate Y",
 			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
-					       &Roe::DBtranslate, (void*)1));
+						     &Roe::DBtranslate, (void*)1));
     dbcontext_st->set_scale(4, 100);
     dbcontext_st->set_knob(2, "Translate Z",
 			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
-					       &Roe::DBtranslate, (void*)2));
+						     &Roe::DBtranslate, (void*)2));
     dbcontext_st->set_scale(2, 100);
     dbcontext_st->set_knob(7, "Rotate X",
 			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
@@ -183,8 +188,8 @@ void Roe::RoeInit(Salmon* s) {
     dialog->SetAllowShellResize(true);
     dialog->SetDeleteResponse(XmDESTROY);
     new MotifCallback<Roe>FIXCB(dialog, XmNdestroyCallback,
-				   &manager->mailbox, this,
-				   &Roe::destroyWidgetCB, 0, 0);    
+				&manager->mailbox, this,
+				&Roe::destroyWidgetCB, 0, 0);    
     dialog->SetWidth(600);
     dialog->SetHeight(400);
     dialog->Create("sci", "sci", evl->get_display());
@@ -395,15 +400,29 @@ void Roe::RoeInit(Salmon* s) {
 				0, 0);
     goHome->Create(*viewRC, "Go Home");
 
+    center_options=new RowColumnC;
+    center_options->SetOrientation(XmVERTICAL);
+    center_options->Create(*options, "rc");
+
+    perf=new DrawingAreaC;
+    perf->SetWidth(200);
+    perf->SetHeight(30);
+    perf->SetResizePolicy(XmRESIZE_NONE);
+    new MotifCallback<Roe>FIXCB(perf, XmNexposeCallback,
+				&manager->mailbox, this,
+				&Roe::redraw_perf,
+				0, 0);
+    perf->Create(*center_options, "drawing_a");
 
     buttons=new DrawingAreaC;
     buttons->SetWidth(200);
-    buttons->SetResizePolicy(XmRESIZE_GROW);
+    buttons->SetHeight(70);
+    buttons->SetResizePolicy(XmRESIZE_NONE);
     new MotifCallback<Roe>FIXCB(buttons, XmNexposeCallback,
 				&manager->mailbox, this,
 				&Roe::redraw_buttons,
 				0, 0);
-    buttons->Create(*options, "buttons");
+    buttons->Create(*center_options, "buttons");
     gc=XCreateGC(XtDisplay(*buttons), XtWindow(*buttons), 0, 0);
     ColorManager* cm=manager->netedit->color_manager;
     mod_colors[0]=new XQColor(cm, "black");
@@ -431,6 +450,8 @@ void Roe::RoeInit(Salmon* s) {
 				&Salmon::spawnIndCB,
 				0, 0);
     spawnInd->Create(*spawnRC, "Spawn Independent");
+    perffont=new XFont(PERF_FONTSIZE, PERF_FONTFACE);
+    fgcolor=new XQColor(manager->netedit->color_manager, "black");
     evl->unlock();
 }
 
@@ -455,8 +476,11 @@ void Roe::orthoCB(CallbackData*, void*) {
 	}
     }			
     if (bb.valid()) {
-	double xw=bb.center().x()-bb.min().x();
-	double yw=bb.center().y()-bb.min().y();
+	Point cen(bb.center());
+	double cx=cen.x();
+	double cy=cen.y();
+	double xw=cx-bb.min().x();
+	double yw=cy-bb.min().y();
 	double scl=4/Max(xw,yw);
 	glScaled(scl,scl,scl);
     }
@@ -510,8 +534,11 @@ void Roe::initCB(CallbackData*, void*) {
 	}
     }			
     if (bb.valid()) {
-	double xw=bb.center().x()-bb.min().x();
-	double yw=bb.center().y()-bb.min().y();
+	Point cen(bb.center());
+	double cx=cen.x();
+	double cy=cen.y();
+	double xw=cx-bb.min().x();
+	double yw=cy-bb.min().y();
 	double scl=4/Max(xw,yw);
 	glScaled(scl,scl,scl);
     }
@@ -592,6 +619,10 @@ void Roe::redrawAll()
         make_current();  
 
 	// have to redraw the lights for them to have the right transformation
+	drawinfo->polycount=0;
+	WallClockTimer timer;
+	timer.clear();
+	timer.start();
 	GLfloat light_position[] = { 5,5,-100,1};
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 	glClearColor(0,0,0,1);
@@ -611,6 +642,12 @@ void Roe::redrawAll()
 	}
 	drawinfo->pop_matl();
 	GLwDrawingAreaSwapBuffers(*graphics);
+	timer.stop();
+	perf_string1=to_string(drawinfo->polycount)+" polygons in "
+	    +to_string(timer.time())+" seconds";
+	perf_string2=to_string(double(drawinfo->polycount)/timer.time())
+	    +" polygons/second";
+	redraw_perf(0, 0);
 	evl->unlock();       
     }
 }
@@ -698,6 +735,8 @@ Roe::~Roe()
     delete perspB;
     delete fogB;
     delete options;
+    delete center_options;
+    delete perf;
     delete viewRC;
     delete autoView;
     delete setHome;
@@ -1297,17 +1336,8 @@ void Roe::update_modifier_widget()
     buttons->GetValues();
     int fh=h/5;
     if(fh != old_fh || modefont==0){
-	if(modefont)XUnloadFont(dpy, modefont);
-	old_fh=fh;
-	char pattern[1000];
-	sprintf(pattern, "screen14");
-	int acount;
-	char** fontnames=XListFonts(dpy, pattern, 1, &acount);
-	if(acount==1){
-	    modefont=XLoadFont(dpy, fontnames[0]);
-	    XFreeFontNames(fontnames);
-	    XSetFont(dpy, gc, modefont);
-	}
+	modefont=new XFont(fh, XFont::Bold);
+	XSetFont(dpy, gc, modefont->font->fid);
     }
     int fh2=fh/2;
     int fh4=fh2/2;
@@ -1429,4 +1459,19 @@ void Roe::redraw_if_needed()
     }
     for (int i=0; i<kids.size(); i++)
 	kids[i]->redraw_if_needed();
+}
+
+void Roe::redraw_perf(CallbackData*, void*)
+{
+    evl->lock();
+    Window w=XtWindow(*perf);
+    Display* dpy=XtDisplay(*buttons);
+    XClearWindow(dpy, w);
+    XSetForeground(dpy, gc, fgcolor->pixel());
+    XSetFont(dpy, gc, perffont->font->fid);
+    int ascent=perffont->font->ascent;
+    int height=ascent+perffont->font->descent;
+    XDrawString(dpy, w, gc, 0, ascent, perf_string1(), perf_string1.len());
+    XDrawString(dpy, w, gc, 0, height+ascent, perf_string2(), perf_string2.len());
+    evl->unlock();
 }

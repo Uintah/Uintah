@@ -38,6 +38,7 @@ class ToggleButtonC;
 class PushButtonC;
 class SeparatorC;
 class GeomObj;
+class XFont;
 
 class GeomItem {
 public:
@@ -81,6 +82,8 @@ class Roe {
     RowColumnC* proj_fogRC;
     RowColumnC* projRC;
     RowColumnC* options;
+    RowColumnC* center_options;
+    DrawingAreaC* perf;
     RowColumnC* viewRC;
     ToggleButtonC* orthoB;
     ToggleButtonC* perspB;
@@ -151,9 +154,15 @@ class Roe {
     int buttons_exposed;
     void redraw_buttons(CallbackData*, void*);
     XQColor* mod_colors[8];
-    Font modefont;
+    XFont* modefont;
     clString mode_string;
     void update_mode_string(const clString&);
+
+    void redraw_perf(CallbackData*, void*);
+    clString perf_string1;
+    clString perf_string2;
+    XFont* perffont;
+    XQColor* fgcolor;
 
     int salmon_count;
     int need_redraw;

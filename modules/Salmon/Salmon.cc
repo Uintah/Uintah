@@ -31,6 +31,7 @@
 #include <MtXEventLoop.h>
 #include <NetworkEditor.h>
 #include <NotFinished.h>
+#include <XFont.h>
 #include <XQColor.h>
 #include <Mt/DrawingArea.h>
 #include <PopupMenu.h>
@@ -127,7 +128,7 @@ void Salmon::create_interface()
     int title_ascent;
     int title_descent;
     XCharStruct dim_title;
-    if(!XTextExtents(netedit->name_font, name(), name.len(), &dir,
+    if(!XTextExtents(netedit->name_font->font, name(), name.len(), &dir,
 		     &title_ascent, &title_descent, &dim_title)){
 	cerr << "XTextExtents failed...\n";
 	exit(-1);
@@ -137,7 +138,7 @@ void Salmon::create_interface()
     int time_descent;
     XCharStruct dim_time;
     static char* timestr="88:88";
-    if(!XTextExtents(netedit->time_font, timestr, strlen(timestr), &dir,
+    if(!XTextExtents(netedit->time_font->font, timestr, strlen(timestr), &dir,
 		     &time_ascent, &time_descent, &dim_time)){
 	cerr << "XTextExtents failed...\n";
 	exit(-1);
@@ -323,7 +324,7 @@ void Salmon::redraw_widget(CallbackData*, void*)
     }
 
     // Draw title
-    XSetFont(dpy, gc, netedit->name_font->fid);
+    XSetFont(dpy, gc, netedit->name_font->font->fid);
     XSetForeground(dpy, gc, fgcolor->pixel());
     XDrawString(dpy, win, gc, title_left, widget_ytitle, name(), name.len());
     evl->unlock();
