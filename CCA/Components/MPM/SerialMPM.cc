@@ -95,6 +95,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   NGP     = 1;
   NGN     = 1;
   d_doGridReset = true;
+  d_recompile = false;
   dataArchiver = 0;
 }
 
@@ -190,6 +191,7 @@ void SerialMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
                             SimulationStateP& sharedState)
 {
   // For adding materials mid-Simulation
+  d_recompile = true;
   ProblemSpecP mat_ps =  prob_spec->findBlock("AddMaterialProperties");
   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
@@ -1284,17 +1286,18 @@ void SerialMPM::actuallyInitializeAddedMaterial(const ProcessorGroup*,
     cout_doing <<"Doing actuallyInitializeAddedMaterial on patch "
                << patch->getID() <<"\t\t\t MPM"<< endl;
 
+    int numMPMMatls = d_sharedState->getNumMPMMatls();
+    cout << "num Matls = " << numMPMMatls << endl;
     CCVariable<short int> cellNAPID;
-    for(int m=0;m<matls->size();m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      particleIndex numParticles = mpm_matl->countParticles(patch);
+    int m=numMPMMatls-1;
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    particleIndex numParticles = mpm_matl->countParticles(patch);
 
-      mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
+    mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
 
-      mpm_matl->getConstitutiveModel()->initializeCMData(patch,
-                                                         mpm_matl,
-                                                         new_dw);
-    }
+    mpm_matl->getConstitutiveModel()->initializeCMData(patch,
+                                                       mpm_matl,
+                                                       new_dw);
   }
 }
 
@@ -3255,7 +3258,6 @@ void SerialMPM::scheduleCheckNeedAddMPMMaterial(SchedulerP& sched,
   Task* t = scinew Task("MPM::checkNeedAddMPMMaterial",
                         this, &SerialMPM::checkNeedAddMPMMaterial);
   for(int m = 0; m < numMatls; m++){
-    cout << "schedulingCheckNeedAdd" << endl;
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->scheduleCheckNeedAddMPMMaterial(t, mpm_matl, patches);
@@ -3297,11 +3299,23 @@ void SerialMPM::setNeedAddMaterialFlag(const ProcessorGroup*,
 {
     sum_vartype need_add_flag;
     new_dw->get(need_add_flag, lb->NeedAddMPMMaterialLabel);
-                                                                                
+
     if(need_add_flag>0.1){
       d_sharedState->setNeedAddMaterial(true);
+      flags->d_canAddMPMMaterial=false;
     }
     else{
       d_sharedState->setNeedAddMaterial(false);
     }
+}
+
+bool SerialMPM::needRecompile(double , double , const GridP& )
+{
+  if(d_recompile){
+    d_recompile = false;
+    return true;
+  }
+  else{
+    return false;
+  }
 }
