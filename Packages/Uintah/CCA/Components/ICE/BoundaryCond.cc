@@ -1019,15 +1019,14 @@ void setBC(CCVariable<double>& variable, const string& kind,
        
 
        //__________________________________
-       //  mass Fraction BCs
+       //  mass Fraction/scalar BCs
        bool massFractionBC = false;   // check for massFraction BC
-       string::size_type pos = kind.find ("massFraction");
-       if ( pos != std::string::npos ){
+       string::size_type pos1 = kind.find ("massFraction");
+       string::size_type pos2 = kind.find ("scalar");
+       if ( pos1 != std::string::npos || pos2 !=  std::string::npos){
          massFractionBC = true;
        }
-
        if (massFractionBC) {
-        cout << kind << endl;
          if (bc_kind == "Dirichlet"){
             for (boundary=bound.begin(); boundary != bound.end(); boundary++){ 
               variable[*boundary] = bc_value;
@@ -1089,7 +1088,7 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
        face=Patch::nextFace(face)) {
     
     Vector sign;
-    double spacing;
+    double spacing=0.0;
     if (face == Patch::xminus || face == Patch::xplus) {
       sign=Vector(-1.,1.,1.);
       spacing = dx.x();
