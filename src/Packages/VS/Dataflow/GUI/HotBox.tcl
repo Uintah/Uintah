@@ -38,6 +38,7 @@ itcl_class VS_DataFlow_HotBox {
     global $this-anatomydatasource
     global $this-adjacencydatasource
     global $this-boundingboxdatasource
+    global $this-querytype
 
     set $this-gui_label1 "label1"
     set $this-gui_label2 "label2"
@@ -48,7 +49,7 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_label7 "label7"
     set $this-gui_label8 "label8"
     set $this-gui_label9 "label9"
-    set $this-FME_on "yes"
+    set $this-FME_on "no"
     set $this-enableDraw "no"
     set $this-currentselection ""
     set $this-datafile ""
@@ -56,6 +57,7 @@ itcl_class VS_DataFlow_HotBox {
     set $this-anatomydatasource ""
     set $this-adjacencydatasource ""
     set $this-boundingboxdatasource ""
+    set $this-querytype "1"
   }
   # end method set_defaults
 
@@ -188,6 +190,11 @@ itcl_class VS_DataFlow_HotBox {
   }
   # end method set_data_source
 
+  method set_querytype { querytype } {
+    set $this-querytype $querytype 
+  }
+  # end method set_querytype
+
   #############################################################################
   # method ui
   #
@@ -203,19 +210,19 @@ itcl_class VS_DataFlow_HotBox {
     toplevel $w
     frame $w.files
     frame $w.files.row1
-    label $w.files.row1.anatomylabel -textvar "Anatomy Data Source: "
+    label $w.files.row1.anatomylabel -text "Anatomy Data Source: "
     entry $w.files.row1.filenamentry -textvar $this-anatomydatasource -width 50
-    button  $w.files.row1.browsebutton -textvariable "Browse..." -command "$this launch_filebrowser anatomy"
+    button  $w.files.row1.browsebutton -text "Browse..." -command "$this launch_filebrowser anatomy"
 
     frame $w.files.row2
-    label $w.files.row2.adjacencylabel -textvar "Adjacency Data Source: "
+    label $w.files.row2.adjacencylabel -text "Adjacency Data Source: "
     entry $w.files.row2.filenamentry -textvar $this-adjacencydatasource -width 50
-    button  $w.files.row2.browsebutton -textvariable "Browse..." -command "$this launch_filebrowser adjacency"
+    button  $w.files.row2.browsebutton -text "Browse..." -command "$this launch_filebrowser adjacency"
 
     frame $w.files.row3
-    label $w.files.row3.boundingboxlabel -textvar "Bounding Box Data Source: "
+    label $w.files.row3.boundingboxlabel -text "Bounding Box Data Source: "
     entry $w.files.row3.filenamentry -textvar $this-boundingboxdatasource -width 50
-    button  $w.files.row3.browsebutton -textvariable "Browse..." -command "$this launch_filebrowser boundingbox"
+    button  $w.files.row3.browsebutton -text "Browse..." -command "$this launch_filebrowser boundingbox"
     pack $w.files.row1 $w.files.row2 $w.files.row3 -side top -anchor w
     pack $w.files.row1.anatomylabel $w.files.row1.filenamentry\
 	$w.files.row1.browsebutton\
@@ -256,14 +263,21 @@ itcl_class VS_DataFlow_HotBox {
     radiobutton $w.controls.adjFILES -value 2 -text "Files" -variable datasource -command "$this set_data_source 2"
 
     checkbutton $w.controls.togFME -text "Connect to FME" -command "$this toggle_FME_on"
-    $w.controls.togFME select
 
     checkbutton $w.controls.enableDraw -text "Enable Output Geom" -command "$this toggle_enableDraw"
 
     button $w.controls.close -text "Close" -command "destroy $w"
     pack $w.controls.adjOQAFMA $w.controls.adjFILES $w.controls.togFME $w.controls.enableDraw $w.controls.close -side left -expand yes -fill x
 
-    pack $w.files $w.f $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+    frame $w.controls2
+    label $w.controls2.querytypelabel -text "Query Type: "
+    set ::querytype "1"
+    radiobutton $w.controls2.adjacenttobutton -value 1 -text "Adjacent to" -variable querytype -command "$this set_querytype 1"
+    radiobutton $w.controls2.containsbutton -value 2 -text "Contains" -variable querytype -command "$this set_querytype 2"
+    radiobutton $w.controls2.partsbutton -value 3 -text "Parts" -variable querytype -command "$this set_querytype 3"
+    radiobutton $w.controls2.partcontainsbutton -value 4 -text "Part Contains" -variable querytype -command "$this set_querytype 4"
+    pack $w.controls2.querytypelabel $w.controls2.adjacenttobutton $w.controls2.containsbutton $w.controls2.partsbutton $w.controls2.partcontainsbutton -side left -expand yes -fill x
+    pack $w.files $w.f $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
 # pack $w.title -side top
   }
 # end method ui
