@@ -52,7 +52,6 @@
 namespace Fusion {
 
 using namespace SCIRun;
-using namespace SCITeem;
 
 class PSECORESHARE VULCANConverter : public Module {
 public:

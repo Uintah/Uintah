@@ -59,7 +59,6 @@
 namespace DataIO {
 
 using namespace SCIRun;
-using namespace SCITeem;
 
 DECLARE_MAKER(HDF5DataReader)
 

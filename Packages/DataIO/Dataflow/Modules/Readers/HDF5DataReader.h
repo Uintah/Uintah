@@ -51,7 +51,6 @@
 namespace DataIO {
 
 using namespace SCIRun;
-using namespace SCITeem;
 
 #define MAX_PORTS 8
 #define MAX_DIMS 6

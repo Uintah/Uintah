@@ -59,7 +59,6 @@
 namespace Fusion {
 
 using namespace SCIRun;
-using namespace SCITeem;
 
 class PSECORESHARE VULCANDataReader : public Module {
 public:

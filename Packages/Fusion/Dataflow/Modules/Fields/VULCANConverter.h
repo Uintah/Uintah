@@ -62,7 +62,6 @@
 namespace Fusion {
 
 using namespace SCIRun;
-using namespace SCITeem;
 
 class VULCANConverterAlgo : public DynamicAlgoBase
 {
