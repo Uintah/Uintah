@@ -29,10 +29,18 @@ public:
     const Vector& getGravity(){
       return d_gravity;
     }
-  double getMolecularViscosity() {
+    const double getGravity(int index){
+      if (index == 1) 
+	return d_gravity.x();
+      else if (index == 2)
+	return d_gravity.y();
+      else
+	return d_gravity.z();
+    }
+    double getMolecularViscosity() {
       return d_viscosity;
     }
-  double getabsPressure() {
+    double getabsPressure() {
       return d_absPressure;
     }
     

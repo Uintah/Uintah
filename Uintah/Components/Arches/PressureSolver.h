@@ -103,8 +103,8 @@ class PressureSolver
 			   DataWarehouseP& new_dw);  
  private:
 
-   void buildLinearMatrix(const Region* region,
-			  SchedulerP& sched,
+   void buildLinearMatrix(const ProcessorContext* pc,
+			  const Region* region,
 			  const DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw,
 			  double delta_t);

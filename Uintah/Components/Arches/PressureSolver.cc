@@ -41,7 +41,7 @@ void PressureSolver::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("Finite Differencing scheme "
 		       "not supported: " + finite_diff, db);
   // make source and boundary_condition objects
-  d_source = Source(d_turbModel);
+  d_source = Source(d_turbModel, d_physicalConsts);
   string linear_sol;
   db->require("linear_solver", linear_sol);
   if (linear_sol == "RBGaussSeidel")
@@ -75,11 +75,11 @@ void PressureSolver::solve(double time, double delta_t,
   
 }
 
-void PressureSolver::sched_buildLinearMatrix(double delta_t,
-					     const LevelP& level,
+void PressureSolver::sched_buildLinearMatrix(const LevelP& level,
 					     SchedulerP& sched,
 					     const DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw)
+					     DataWarehouseP& new_dw,
+					     delta_t)
 {
   for(Level::const_regionIterator iter=level->regionsBegin();
       iter != level->regionsEnd(); iter++){
@@ -122,33 +122,34 @@ void PressureSolver::sched_buildLinearMatrix(double delta_t,
 }
 
 
-void PressureSolver::buildLinearMatrix(double delta_t,
-				       const LevelP& level,
-				       SchedulerP& sched,
+void PressureSolver::buildLinearMatrix(const ProcessorContext* pc,
+				       const Region* region,
 				       const DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw)
+				       DataWarehouseP& new_dw,
+				       double delta_t)
 {
   // compute all three componenets of velocity stencil coefficients
   for(int index = 1; index <= NDIM; ++index) {
-    d_discretize->calculateVelocityCoeff(delta_t, index, level, 
-					 sched, old_dw, new_dw);
-    d_source->calculateVelocitySource(index, level, sched, 
-				      old_dw, new_dw);
-    d_boundaryCondition->velocityBC(index, level, sched,
-				    old_dw, new_dw);
+    d_discretize->calculateVelocityCoeff(pc, region, old_dw,
+					 new_dw,delta_t, index);
+    d_source->calculateVelocitySource(pc, region, old_dw,
+				      new_dw,delta_t, index);
+    d_boundaryCondition->velocityBC(pc, region, old_dw,
+				    new_dw,delta_t, index);
     // similar to mascal
-    d_source->modifyMassSource(index, level, sched,
-			       old_dw, new_dw);
-    d_discretize->calculateVelDiagonal(index, level, sched,
-				       old_dw, new_dw);
+    d_source->modifyMassSource(pc, region, old_dw,
+			       new_dw,delta_t, index);
+    d_discretize->calculateVelDiagonal(pc, region, old_dw,
+				       new_dw,delta_t, index);
   }
-  d_discretize->calculatePressureCoeff(level, sched,
-				       old_dw, new_dw);
-  d_source->calculatePressureSource(level, sched,
-				    old_dw, new_dw);
-  d_boundaryCondition->pressureBC(level, sched,
-				  old_dw, new_dw);
-  d_discretize->calculatePressDiagonal(level, sched, old_dw, new_dw);
+  d_discretize->calculatePressureCoeff(pc, region, old_dw,
+				       new_dw,delta_t);
+  d_source->calculatePressureSource(pc, region, old_dw,
+				    new_dw,delta_t);
+  d_boundaryCondition->pressureBC(pc, region, old_dw,
+				  new_dw,delta_t);
+  d_discretize->calculatePressDiagonal(pc, region, old_dw,
+				       new_dw);
 
 }
 

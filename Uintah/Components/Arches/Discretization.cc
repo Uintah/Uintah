@@ -29,57 +29,13 @@ Discretization::~Discretization()
 {
 }
 
-void Discretization::sched_calculateVelocityCoeff(const int index,
-						  const LevelP& level,
-						  SchedulerP& sched,
-						  const DataWarehouseP& old_dw,
-						  DataWarehouseP& new_dw)
-{
-  for(Level::const_regionIterator iter=level->regionsBegin();
-      iter != level->regionsEnd(); iter++){
-    const Region* region=*iter;
-    {
-      Task* tsk = new Task("Discretization::VelocityCoeff",
-			   region, old_dw, new_dw, this,
-			   Discretization::calculateVelocityCoeff,
-			   index);
-      tsk->requires(old_dw, "velocity", region, 1,
-		    FCVariable<Vector>::getTypeDescription());
-      tsk->requires(old_dw, "density", region, 1,
-		    CCVariable<double>::getTypeDescription());
-      tsk->requires(old_dw, "viscosity", region, 1,
-		    CCVariable<double>::getTypeDescription());
-      /// requires convection coeff because of the nodal
-      // differencing
-      if (index == 1){ 
-	tsk->computes(new_dw, "uVelocityConvectCoeff", region, 0,
-		    FCVariable<Vector>::getTypeDescription());
-	tsk->computes(new_dw, "uVelocityCoeff", region, 0,
-		      FCVariable<Vector>::getTypeDescription());
-      } else if (index == 2) {
-	tsk->computes(new_dw, "vVelocityConvectCoeff", region, 0,
-		    FCVariable<Vector>::getTypeDescription());
-	tsk->computes(new_dw, "vVelocityCoeff", region, 0,
-		    FCVariable<Vector>::getTypeDescription());
-      } else if (index == 3) {
-        tsk->computes(new_dw, "wVelocityConvectCoeff", region, 0,
-		    FCVariable<Vector>::getTypeDescription());
-	tsk->computes(new_dw, "wVelocityCoeff", region, 0,
-		    FCVariable<Vector>::getTypeDescription());
-      } else {
-	throw InvalidValue("Invalid component for velocity" +index);
-      }
-      sched->addTask(tsk);
-    }
-
-  }
-}
 
 void Discretization::calculateVelocityCoeff(const ProcessorContext* pc,
 					    const Region* region,
 					    const DataWarehouseP& old_dw,
 					    DataWarehouseP& new_dw,
-					    const int Index)
+					    double delta_t,
+					    const int index)
 {
   FCVariable<Vector> velocity;
   old_dw->get(velocity, "velocity", region, 1);
@@ -100,132 +56,39 @@ void Discretization::calculateVelocityCoeff(const ProcessorContext* pc,
   Array3Index lowIndex = region->getLowIndex();
   Array3Index highIndex = region->getHighIndex();
 
-  //get physical constants
-  SoleVariable<Vector> gravity_var;
-  top_dw->get(gravity_var, "gravity"); 
-  Vector gravity = gravity_var;
-
-  if (Index == 1) {
-    //7pt stencil declaration
-    Stencil<double> uVelocityCoeff(region);
-    // convection coeffs
-    Stencil<double> uVelocityConvectCoeff(region);
-    int ioff = 1;
-    int joff = 0;
-    int koff = 0;
-    // 3-d array for volume - fortran uses it for temporary storage
-    Array3<double> volume(region->getLowIndex(), region->getHighIndex());
-    FORT_VELCOEF(velocity, viscosity, density, gravity.x(), 
-		 uVelocityConvectCoeff, uVelocityCoeff,
-		 ioff, joff, koff, lowIndex, highIndex,
-		 cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
-		 cellinfo->cnn, cellinfo->csn, cellinfo->css,
-		 cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-		 cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-		 cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
-		 cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
-		 cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
-		 cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
-		 cellinfo->tfac, cellinfo->bfac, volume);
-    new_dw->put(uVelocityCoeff, "uVelocityCoeff", region);
-    new_dw->put(uVelocityConvectCoeff, "uVelocityConvectCoeff", region);
-  }
-  else if (Index == 2) {
-    //7pt stencil declaration
-    Stencil<double> vVelocityCoeff(region);
-    // convection coeffs
-    Stencil<double> vVelocityConvectCoeff(region);
-    int ioff = 0;
-    int joff = 1;
-    int koff = 0;
-    // 3-d array for volume - fortran uses it for temporary storage
-    Array3<double> volume(region->getLowIndex(), region->getHighIndex());
-    // pass velocity as v,w, u
-    FORT_VELCOEF(velocity, viscosity, density, gravity.y(), 
-		 vVelocityConvectCoeff, vVelocityCoeff,
-		 ioff, joff, koff, lowIndex, highIndex,
-		 cellinfo->cnnv, cellinfo->csnv, cellinfo->cssv,
-		 cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-		 cellinfo->cee, cellinfo->cwe, cellinfo->cww,
-		 cellinfo->snsv, cellinfo->stb, cellinfo->sew,
-		 cellinfo->dynpv, cellinfo->dztp, cellinfo->dxep,
-		 cellinfo->dyps, cellinfo->fac1v, cellinfo->fac2v,
-		 cellinfo->fac3v, cellinfo->fac4v,cellinfo->jnsdv,
-		 cellinfo->jssdv, cellinfo->tfac, cellinfo->bfac,
-		 cellinfo->efac, cellinfo->wfac, volume);
-    new_dw->put(vVelocityCoeff, "vVelocityCoeff", region);
-    new_dw->put(vVelocityConvectCoeff, "vVelocityConvectCoeff", region);
-  }
-  else if (Index == 3) {
-    //7pt stencil declaration
-    Stencil<double> wVelocityCoeff(region);
-    // convection coeffs
-    Stencil<double> wVelocityConvectCoeff(region);
-    int ioff = 0;
-    int joff = 0;
-    int koff = 1;
-    // 3-d array for volume - fortran uses it for temporary storage
-    Array3<double> volume(region->getLowIndex(), region->getHighIndex());
-    FORT_VELCOEF(wVelocityConvectCoeff, wVelocityCoeff,
-		 velocity, viscosity, density, gravity.z(), 
-		 ioff, joff, koff, lowIndex, highIndex,
-		 cellinfo->cttw, cellinfo->cbtw, cellinfo->cbbw,
-		 cellinfo->cee, cellinfo->cwe, cellinfo->cww,
-		 cellinfo->cnn, cellinfo->csn, cellinfo->css,
-		 cellinfo->stbw, cellinfo->sew, cellinfo->sns,
-		 cellinfo->dztpw, cellinfo->dxep, cellinfo->dynp,
-		 cellinfo->dzpb, cellinfo->fac1w, cellinfo->fac2w,
-		 cellinfo->fac3w, cellinfo->fac4w,cellinfo->ktsdw,
-		 cellinfo->kbsdw, cellinfo->efac, cellinfo->wfac,
-		 cellinfo->enfac, cellinfo->sfac, volume);
-    new_dw->put(wVelocityCoeff, "wVelocityCoeff", region);
-    new_dw->put(wVelocityConvectCoeff, "wVelocityConvectCoeff", region);
-  }
-  else {
-    cerr << "Invalid Index value" << endl;
-  }
+  //7pt stencil declaration
+  Stencil<double> uVelocityCoeff(region);
+  // convection coeffs
+  Stencil<double> uVelocityConvectCoeff(region);
+  int ioff = 1;
+  int joff = 0;
+  int koff = 0;
+  // 3-d array for volume - fortran uses it for temporary storage
+  Array3<double> volume(region->getLowIndex(), region->getHighIndex());
+  FORT_VELCOEF(velocity, viscosity, density,
+	       uVelocityConvectCoeff, uVelocityCoeff, delta_t,
+	       ioff, joff, koff, lowIndex, highIndex,
+	       cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
+	       cellinfo->cnn, cellinfo->csn, cellinfo->css,
+	       cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
+	       cellinfo->sewu, cellinfo->sns, cellinfo->stb,
+	       cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
+	       cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
+	       cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
+	       cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
+	       cellinfo->tfac, cellinfo->bfac, volume);
+  new_dw->put(uVelocityCoeff, "VelocityCoeff", region, index);
+  new_dw->put(uVelocityConvectCoeff, "VelocityConvectCoeff", region, index);
 }
 
 
 
-void Discretization::sched_calculatePressureCoeff(const LevelP& level,
-						  SchedulerP& sched,
-						  const DataWarehouseP& old_dw,
-						  DataWarehouseP& new_dw)
-{
-  for(Level::const_regionIterator iter=level->regionsBegin();
-      iter != level->regionsEnd(); iter++){
-    const Region* region=*iter;
-    {
-      //copies old db to new_db and then uses non-linear
-      //solver to compute new values
-      Task* tsk = new Task("Discretization::PressureCoeff",region,
-			   old_dw, new_dw, this,
-			   Discretization::calculatePressureCoeff);
-      tsk->requires(old_dw, "pressure", region, 1,
-		    CCVariable<double>::getTypeDescription());
-      tsk->requires(old_dw, "velocity", region, 1,
-		    FCVariable<Vector>::getTypeDescription());
-      tsk->requires(old_dw, "density", region, 1,
-		    CCVariable<double>::getTypeDescription());
-      tsk->requires(new_dw, "uVelocityCoeff", region, 0,
-		    FCVariable<Vector>::getTypeDescription());
-      tsk->requires(new_dw, "vVelocityCoeff", region, 0,
-		    FCVariable<Vector>::getTypeDescription());
-      tsk->requires(new_dw, "wVelocityCoeff", region, 0,
-		    FCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "pressureCoeff", region, 0,
-		    CCVariable<Vector>::getTypeDescription());
-      sched->addTask(tsk);
-    }
-
-  }
-}
 
 void Discretization::calculatePressureCoeff(const ProcessorContext*,
 					    const Region* region,
 					    const DataWarehouseP& old_dw,
-					    DataWarehouseP& new_dw)
+					    DataWarehouseP& new_dw,
+					    double delta_t)
 {
   CCVariable<double> pressure;
   old_dw->get(pressure, "pressure", region, 1);
@@ -235,11 +98,14 @@ void Discretization::calculatePressureCoeff(const ProcessorContext*,
   old_dw->get(density, "density", region, 1);
   // need to be consistent, use Stencil
   FCVariable<Vector> uVelCoeff;
-  new_dw->get(uVelCoeff,"uVelocityCoeff",region, 0);
+  int index = 1;
+  new_dw->get(uVelCoeff,"VelocityCoeff",region, 0, index);
+  index++;
   FCVariable<Vector> vVelCoeff;
-  new_dw->get(vVelCoeff,"vVelocityCoeff",region, 0);
+  new_dw->get(vVelCoeff,"VelocityCoeff",region, 0, index);
+  index++;
   FCVariable<Vector> wVelCoeff;
-  new_dw->get(wVelCoeff,"wVelocityCoeff",region, 0);
+  new_dw->get(wVelCoeff,"VelocityCoeff",region, 0, index);
 
   // using chain of responsibility pattern for getting cell information
   DataWarehouseP top_dw = new_dw->getTop();
@@ -267,3 +133,102 @@ void Discretization::calculatePressureCoeff(const ProcessorContext*,
   new_dw->put(pressCoeff, "pressureCoeff", region, 0);
 }
   
+void Discretization::calculateScalarCoeff(const ProcessorContext* pc,
+					  const Region* region,
+					  const DataWarehouseP& old_dw,
+					  DataWarehouseP& new_dw,
+					  double delta_t,
+					  const int index)
+{
+  FCVariable<Vector> velocity;
+  old_dw->get(velocity, "velocity", region, 1);
+  CCVariable<double> density;
+  old_dw->get(density, "density", region, 1);
+  CCVariable<double> viscosity;
+  old_dw->get(viscosity, "viscosity", region, 1);
+  // ithe componenet of scalar vector
+  CCVariable<double> scalar;
+  old_dw->get(scalar, "scalar", region, 1, index);
+  // using chain of responsibility pattern for getting cell information
+  DataWarehouseP top_dw = new_dw->getTop();
+  PerRegion<CellInformation*> cellinfop;
+  if(top_dw->exists("cellinfo", region)){
+    top_dw->get(cellinfop, "cellinfo", region);
+  } else {
+    cellinfop.setData(new CellInformation(region));
+    top_dw->put(cellinfop, "cellinfo", region);
+  } 
+  CellInformation* cellinfo = cellinfop;
+  Array3Index lowIndex = region->getLowIndex();
+  Array3Index highIndex = region->getHighIndex();
+
+  //7pt stencil declaration
+  Stencil<double> scalarCoeff(region);
+  // 3-d array for volume - fortran uses it for temporary storage
+  Array3<double> volume(region->getLowIndex(), region->getHighIndex());
+  FORT_SCALARCOEF(scalarCoeff, scalar, velocity, viscosity, density,
+		  delta_t, lowIndex, highIndex,
+		  cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
+		  cellinfo->cnn, cellinfo->csn, cellinfo->css,
+		  cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
+		  cellinfo->sewu, cellinfo->sns, cellinfo->stb,
+		  cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
+		  cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
+		  cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
+		  cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
+		  cellinfo->tfac, cellinfo->bfac, volume);
+  new_dw->put(scalarCoeff, "ScalarCoeff", region, index);
+}
+
+void Discretization::calculateVelDiagonal(const ProcessorContext*,
+					  const Region* region,
+					  const DataWarehouseP& old_dw,
+					  DataWarehouseP& new_dw,
+					  const int index){
+  
+  Array3Index lowIndex = region->getLowIndex();
+  Array3Index highIndex = region->getHighIndex();
+
+  Stencil<double> uVelCoeff;
+  new_dw->get(uVelCoeff, "VelocityCoeff", region, index, 0);
+  FCVariable<double> uVelLinearSrc;
+  new_dw->get(uVelLinearSrc, "VelLinearSrc", region, index, 0);
+  FORT_APCAL(uVelCoeffvelocity, uVelLinearSrc, lowIndex, highIndex);
+  new_dw->put(uVelCoeff, "VelocityCoeff", region, index, 0);
+}
+
+void Discretization::calculatePressDiagonal(const ProcessorContext*,
+					    const Region* region,
+					    const DataWarehouseP& old_dw,
+					    DataWarehouseP& new_dw) {
+  
+  Array3Index lowIndex = region->getLowIndex();
+  Array3Index highIndex = region->getHighIndex();
+
+  Stencil<double> pressCoeff;
+  new_dw->get(pressCoeff, "PressureCoCoeff", region, 0);
+  FCVariable<double> pressLinearSrc;
+  new_dw->get(pressLinearSrc, "pressureLinearSource", region, 0);
+  FORT_APCAL(pressCoeff, pressLinearSrc, lowIndex, highIndex);
+  new_dw->put(pressCoeff, "pressureLinearSource", region, 0);
+}
+
+void Discretization::calculateScalarDiagonal(const ProcessorContext*,
+					  const Region* region,
+					  const DataWarehouseP& old_dw,
+					  DataWarehouseP& new_dw,
+					  const int index){
+  
+  Array3Index lowIndex = region->getLowIndex();
+  Array3Index highIndex = region->getHighIndex();
+
+  Stencil<double> scalarCoeff;
+  new_dw->get(scalarCoeff, "ScalarCoeff", region, index, 0);
+  FCVariable<double> scalarLinearSrc;
+  new_dw->get(scalarLinearSrc, "ScalarLinearSource", region, index, 0);
+  FORT_APCAL(scalarCoeff, scalarLinearSrc, lowIndex, highIndex);
+  new_dw->put(scalarCoeff, "ScalarCoeff", region, index, 0);
+}
+
+
+
