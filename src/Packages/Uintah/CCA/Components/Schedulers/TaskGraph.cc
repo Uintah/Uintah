@@ -769,54 +769,6 @@ CompTable::findReplaceComp(Task::Dependency* req, const Patch* patch,
   }
 }
 
-
-// Will need to do something about const-ness here.
-template<class T>
-const ComputeSubset<T>* intersection(const ComputeSubset<T>* s1,
-				     const ComputeSubset<T>* s2)
-{
-  if(!s1)
-    return s2;
-  if(!s2)
-    return s1;
-
-  ComputeSubset<T>* result = scinew ComputeSubset<T>;
-
-  if(s1->size() == 0 || s2->size() == 0)
-    return result;
-  T el1 = s1->get(0);
-  for(int i=1;i<s1->size();i++){
-    T el = s1->get(i);
-    if(el <= el1){
-      cerr << "Set not sorted: " << el1 << ", " << el << '\n';
-    }
-    el1=el;
-  }
-  T el2 = s2->get(0);
-  for(int i=1;i<s2->size();i++){
-    T el = s2->get(i);
-    if(el <= el2){
-      cerr << "Set not sorted: " << el2 << ", " << el << '\n';
-    }
-    el2=el;
-  }
-  int i1=0;
-  int i2=0;
-  for(;;){
-    if(s1->get(i1) == s2->get(i2)){
-      result->add(s1->get(i1));
-      i1++; i2++;
-    } else if(s1->get(i1) < s2->get(i2)){
-      i1++;
-    } else {
-      i2++;
-    }
-    if(i1 == s1->size() || i2 == s2->size())
-      break;
-  }
-  return result;
-}
-
 void
 TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 				      const ProcessorGroup* pg)
@@ -830,28 +782,10 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
     DetailedTask* task = dt->getTask(i);
     for(Task::Dependency* comp = task->task->getComputes();
 	comp != 0; comp = comp->next){
-      const PatchSubset* patches;
-      switch(comp->patches_dom){
-      case Task::NormalDomain:
-	patches = intersection(comp->patches, task->patches);
-        break;
-      case Task::OutOfDomain:
-	patches = comp->patches;
-	break;
-      default:
-	throw InternalError("Unknown patches_dom type");
-      }
-      const MaterialSubset* matls;
-      switch(comp->matls_dom){
-      case Task::NormalDomain:
-	matls = intersection(comp->matls, task->matls);
-	break;
-      case Task::OutOfDomain:
-	matls = comp->matls;
-	break;
-      default:
-	throw InternalError("Unknown matls_dom type");
-      }
+      const PatchSubset* patches =
+	comp->getPatchesUnderDomain(task->patches);
+      const MaterialSubset* matls =
+	comp->getMaterialsUnderDomain(task->matls);
       if(!patches) {
 	// Reduction task
 	if (matls && !matls->empty()) {
@@ -952,28 +886,11 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
     if(dbg.active())
       dbg << "req: " << *req << '\n';
     
-    const PatchSubset* patches;
-    switch(req->patches_dom){
-    case Task::NormalDomain:
-      patches = intersection(req->patches, task->patches);
-      break;
-    case Task::OutOfDomain:
-      patches = req->patches;
-      break;
-    default:
-      throw InternalError("Unknown patches_dom type");
-    }
-    const MaterialSubset* matls;
-    switch(req->matls_dom){
-    case Task::NormalDomain:
-      matls = intersection(req->matls, task->matls);
-      break;
-    case Task::OutOfDomain:
-      matls = req->matls;
-      break;
-    default:
-      throw InternalError("Unknown matls_dom type");
-    }
+    const PatchSubset* patches =
+      req->getPatchesUnderDomain(task->patches);
+    const MaterialSubset* matls =
+      req->getMaterialsUnderDomain(task->matls);
+
     if(patches)
       patches->addReference();
     if(matls)
