@@ -19,9 +19,6 @@
 # by Allen R. Sanderson
 # May 2003
 
-# This GUI interface is for selecting a file name via the makeOpenFilebox
-# and other reading functions.
-
 catch {rename Fusion_Fields_NrrdFieldConverter ""}
 
 itcl_class Fusion_Fields_NrrdFieldConverter {
