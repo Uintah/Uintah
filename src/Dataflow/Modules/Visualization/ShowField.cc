@@ -73,6 +73,7 @@ class ShowField : public Module
 
   //! Options for rendering edges.
   GuiInt                   edges_on_;
+  GuiInt                   edges_transparency_;
   bool                     edges_dirty_;
 
   //! Options for rendering faces.
@@ -185,10 +186,11 @@ ShowField::ShowField(GuiContext* ctx) :
   nodes_as_disks_(ctx->subVar("nodes-as-disks")),
   nodes_dirty_(true),
   edges_on_(ctx->subVar("edges-on")),
+  edges_transparency_(ctx->subVar("edges-transparency")),
   edges_dirty_(true),
   faces_on_(ctx->subVar("faces-on")),
   faces_normals_(ctx->subVar("use-normals")),
-  faces_transparency_(ctx->subVar("use-transparency")),
+  faces_transparency_(ctx->subVar("faces-transparency")),
   faces_dirty_(true),
   vectors_on_(ctx->subVar("vectors-on")),
   normalize_vectors_(ctx->subVar("normalize-vectors")),
@@ -600,7 +602,8 @@ ShowField::execute()
 		      def_mat_handle_, data_at_dirty_, color_handle,
 		      ndt, edt, ns, es, vscale, normalize_vectors_.get(),
 		      node_resolution_, edge_resolution_,
-		      faces_normals_.get(), faces_transparency_.get(),
+		      faces_normals_.get(), edges_transparency_.get(),
+		      faces_transparency_.get(),
 		      bidirectional_.get(), arrow_heads_on_.get());
   }
 
@@ -615,8 +618,9 @@ ShowField::execute()
   if (do_edges) {
     edges_dirty_ = false;
     if (renderer_.get_rep() && edges_on_.get()) {
+      const char *name = faces_transparency_.get()?"TransParent Edges":"Edges";
       if (edge_id_) ogeom_->delObj(edge_id_);
-      edge_id_ = ogeom_->addObj(renderer_->edge_switch_, "Edges");
+      edge_id_ = ogeom_->addObj(renderer_->edge_switch_, name);
     }
   }
   if (do_faces) {
@@ -826,6 +830,13 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
       ogeom_->flushViews();
       edge_id_ = 0;
     }
+  } else if (args[1] == "rerender_edges"){
+    edges_dirty_ = true;
+    if (now && edge_id_) {
+      ogeom_->delObj(edge_id_);
+      edge_id_ = 0;
+    }
+    maybe_execute(EDGE);
   } else if (args[1] == "rerender_faces"){
     faces_dirty_ = true;
     if (now && face_id_) {

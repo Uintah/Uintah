@@ -2018,6 +2018,79 @@ GeomCLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
+void
+GeomTranspLines::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if(!pre_draw(di, matl, 0)) return;
+
+  sort();
+
+  GLdouble matrix[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, matrix);
+  const double lvx = fabs(matrix[2]);
+  const double lvy = fabs(matrix[6]);
+  const double lvz = fabs(matrix[10]);
+  if (lvx >= lvy && lvx >= lvz)
+  {
+    di->axis = 0;
+    if (matrix[2] > 0) { di->dir = 1; }
+    else { di->dir = -1; }
+      
+  }
+  else if (lvy >= lvx && lvy >= lvz)
+  {
+    di->axis = 1;
+    if (matrix[6] > 0) { di->dir = 1; }
+    else { di->dir = -1; }
+  }
+  else if (lvz >= lvx && lvz >= lvy)
+  {
+    di->axis = 2;
+    if (matrix[10] > 0) { di->dir = 1; }
+    else { di->dir = -1; }
+  }
+
+  const vector<unsigned int> &clist =
+    (di->axis==0)?xindices_:((di->axis==1)?yindices_:zindices_);
+
+  di->polycount+=points_.size()/6;
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  glLineWidth(line_width_);
+
+  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+  glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
+
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_COLOR_ARRAY);
+
+  if (di->dir == 1)
+  {
+    glDrawElements(GL_LINES, clist.size(), GL_UNSIGNED_INT, &(clist.front()));
+  }
+  else
+  {
+    glBegin(GL_LINES);
+    for (int i = clist.size()-1; i >= 0; i--)
+    {
+      glArrayElement(clist[i]);
+    }
+    glEnd();
+  }
+
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_COLOR_ARRAY);
+
+  glLineWidth(di->line_width_);
+
+  glDisable(GL_BLEND);
+
+  post_draw(di);
+}
+
+
 //const int OD_TEX_INIT = 4096; // 12tg bit of clip planes...
 
 void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
