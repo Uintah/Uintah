@@ -1,11 +1,17 @@
 #ifndef UINTAH_HOMEBREW_CCVARIABLE_H
 #define UINTAH_HOMEBREW_CCVARIABLE_H
 
+#include <Uintah/Grid/Array3.h>
 #include <Uintah/Grid/CCVariableBase.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
+
+#include <SCICore/Exceptions/InternalError.h>
+
 #include <iostream> // TEMPORARY
 
 namespace Uintah {
+
+   using SCICore::Exceptions::InternalError;
 
    class TypeDescription;
 
@@ -38,7 +44,8 @@ WARNING
   
 ****************************************/
 
-   template<class T> class CCVariable : public CCVariableBase {
+template<class T> 
+class CCVariable : public Array3<T>, public CCVariableBase {
    public:
       CCVariable();
       CCVariable(const CCVariable<T>&);
@@ -48,6 +55,8 @@ WARNING
       // Insert Documentation Here:
       static const TypeDescription* getTypeDescription();
       
+      virtual void copyPointer(const CCVariableBase&);
+
       //////////
       // Insert Documentation Here:
       virtual CCVariable<T>* clone() const;
@@ -57,10 +66,6 @@ WARNING
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex);
       
-      //////////
-      // Insert Documentation Here:
-      void copyPointer(const CCVariableBase&);
-
       //////////
       // Insert Documentation Here:
       void copyRegion(CCVariableBase* src,
@@ -84,7 +89,19 @@ WARNING
       const TypeDescription*
       CCVariable<T>::getTypeDescription()
       {
-	 return 0;
+	 // Dd: Whis isn't td a class variable and does it
+	 // need to be deteleted in the destructor?
+	std::cerr << "getting type description from CC var\n";
+
+	 // Dd: Copied this from NC Var... don't know if it is 
+	 // correct.
+	 static TypeDescription* td = 0;
+	 if(!td){
+	    td = new TypeDescription(TypeDescription::CCVariable,
+				     "CCVariable",
+				     fun_getTypeDescription((T*)0));
+	 }
+	 return td;
       }
    
    template<class T>
@@ -125,7 +142,10 @@ WARNING
       void CCVariable<T>::allocate(const IntVector& lowIndex,
 				   const IntVector& highIndex)
       {
-	 std::cerr << "CCVariable::allocate not done!\n";
+	 if(getWindow())
+	    throw InternalError("Allocating a CCvariable that "
+				"is apparently already allocated!");
+	 resize(lowIndex, highIndex);
       }
 
    template<class T>
@@ -154,6 +174,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.11  2000/05/28 17:25:55  dav
+// adding code. someone should check to see if i did it corretly
+//
 // Revision 1.10  2000/05/15 19:39:46  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups
