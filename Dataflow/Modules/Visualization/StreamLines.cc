@@ -292,24 +292,26 @@ FindRK4(vector<Point> &v,
 static void
 FindAdamsBashforth(vector<Point> &v, // storage for points
 		   Point x,          // initial point
-		   double t2,       // square error tolerance
+		   double t2,        // square error tolerance
 		   double s,         // initial step size
 		   int n,            // max number of steps
 		   const VectorFieldInterfaceHandle &vfi) // the field
 {
   FindRK4(v, x, t2, s, Min(n, 5), vfi);
-  if (v.size() < 5) { return; }
+  if (v.size() < 5) {
+    cerr << "Streamlines - FindAdamsBashforth: Ending early, less than 5 points.\n\n";
+    return;
+  }
+
   Vector f[5];
   int i;
 
   for (i = 0; i < 5; i++)
-  {
     interpolate(vfi, v[v.size() - 1 - i], f[i]);
-  }
+  
   x = v[v.size() - 1];
-
-  for (i = 5; i < n; i++)
-  {
+  
+  for (i = 5; i < n; i++) {
     x += (s/720.) * (1901.0 * f[0] - 2774.0 * f[1] +
 		     2616.0 * f[2] - 1274.0 * f[3] +
 		     251.0 * f[4]);
@@ -318,7 +320,17 @@ FindAdamsBashforth(vector<Point> &v, // storage for points
     f[3] = f[2];
     f[2] = f[1];
     f[1] = f[0];
-    if (!interpolate(vfi, x, f[0])) { break; }
+
+    if (!interpolate(vfi, x, f[0])) {
+      cerr << "Streamlines - FindAdamsBashforth: Ending early, can not interpolate\n";
+      cerr << "vfi interpolate returned " << vfi->interpolate(f[0], x) << "\n";
+      cerr << "Point " << x.x() << "  " << x.y() << "  " << x.z() << "\n";
+      cerr << "Value " << f[0].x() << "  " << f[0].y() << "  " << f[0].z() << "\n";
+      cerr << "safe_normalize returned " << f[0].safe_normalize() << "\n\n";
+
+      break; 
+    }
+
     v.push_back(x);
   }
 }
