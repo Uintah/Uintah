@@ -345,7 +345,7 @@ void NormalFracture::computeFracture(
     
     pStress_p_new[pIdx_p] = pStress_p[pIdx_p];
 
-    if(pIsBroken_pg[pIdx_pg] >= 3) continue;
+    if(pIsBroken_pg[pIdx_pg] > 0) continue;
     
     //check toughness
     const Matrix3& stress = pStress_p[pIdx_p];
