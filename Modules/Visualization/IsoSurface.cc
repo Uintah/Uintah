@@ -122,6 +122,10 @@ public:
 #define FACE1 1
 #define ALLFACES (FACE1|FACE2|FACE3|FACE4)
 
+// below determines wether to normalzie normals or not
+
+#define NORMALIZE_NORMALS 1
+ 
 struct MCubeTable {
     int which_case;
     int permute[8];
@@ -1085,9 +1089,11 @@ inline void add_strip_point(const int nvert, GeomTriStripList* group,
 	}
 
     Vector n(Cross(p1-pm2,pm1-pm2));
+#if NORMALIZE_NORMALS
     if (n.length2() > 0){
 	n.normalize();
     }
+#endif
     if (!(i&1)) // this implies a different sign convention
 	n *=-1.0;
     group->add(p1,n);
@@ -1202,12 +1208,13 @@ void inline emit_in_2(int& rf, int& pf,
     pf = ALLFACES&(~F_FACE(eC,eD));
 
     Vector n(Cross(pB-pA,pC-pA));
+    Vector n2(Cross(pB-pC,pD-pC));
+#if NORMALIZE_NORMALS
     if (n.length2() > 0)
 	n.normalize();
-    Vector n2(Cross(pB-pC,pD-pC));
     if (n2.length2() > 0)
 	n2.normalize();
-    
+#endif    
     group->add(pA);
     group->add(pB);
     group->add(pC,n);
@@ -1255,9 +1262,11 @@ int IsoSurface::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
 	    Point p2(Interpolate(n4->p, n2->p, v4/(v4-v2)));
 	    Point p3(Interpolate(n4->p, n3->p, v4/(v4-v3)));
 	    Vector n(Cross(p2-p1,p3-p1));
+#if NORMALIZE_NORMALS
 	    if (n.length2() > 0){
 		n.normalize();
 	    }
+#endif
 	    group->add(p1);
 	    group->add(p2);
 	    group->add(p3,n);  // always add normals from this point on...
@@ -1279,9 +1288,11 @@ int IsoSurface::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
 	    Point p2(Interpolate(n3->p, n2->p, v3/(v3-v2)));
 	    Point p3(Interpolate(n3->p, n4->p, v3/(v3-v4)));
 	    Vector n(Cross(p2-p1,p3-p1));
+#if NORMALIZE_NORMALS
 	    if (n.length2() > 0){
 		n.normalize();
 	    }
+#endif
 	    group->add(p1);
 	    group->add(p2);
 	    group->add(p3,n);
@@ -1320,9 +1331,11 @@ int IsoSurface::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
 	    Point p2(Interpolate(n2->p, n3->p, v2/(v2-v3)));
 	    Point p3(Interpolate(n2->p, n4->p, v2/(v2-v4)));
 	    Vector n(Cross(p2-p1,p3-p1));
+#if NORMALIZE_NORMALS
 	    if (n.length2() > 0){
 		n.normalize();
 	    }
+#endif
 	    group->add(p1);
 	    group->add(p2);
 	    group->add(p3,n);
@@ -1373,9 +1386,11 @@ int IsoSurface::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
 	    Point p2(Interpolate(n1->p, n3->p, v1/(v1-v3)));
 	    Point p3(Interpolate(n1->p, n4->p, v1/(v1-v4)));
 	    Vector n(Cross(p2-p1,p3-p1));
+#if NORMALIZE_NORMALS
 	    if (n.length2() > 0){
 		n.normalize();
 	    }
+#endif
 	    group->add(p1);
 	    group->add(p2);
 	    group->add(p3,n);
