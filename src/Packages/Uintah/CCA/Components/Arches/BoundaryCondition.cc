@@ -2821,7 +2821,7 @@ BoundaryCondition::mmuVelocityBC(const Patch* patch,
 		    vars->uVelocityCoeff[Arches::AB],
 		    vars->uVelNonlinearSrc, vars->uVelLinearSrc,
 		    vars->cellType, 
-		    d_mmWallID, d_flowfieldCellTypeVal,
+		    d_mmWallID,
 		    ioff, joff, koff);
 }
 
@@ -2846,7 +2846,7 @@ BoundaryCondition::mmvVelocityBC(const Patch* patch,
 		    vars->vVelocityCoeff[Arches::AW],
 		    vars->vVelNonlinearSrc, vars->vVelLinearSrc,
 		    vars->cellType, 
-		    d_mmWallID, d_flowfieldCellTypeVal,
+		    d_mmWallID,
 		    ioff, joff, koff);
 }
 
@@ -2870,7 +2870,7 @@ BoundaryCondition::mmwVelocityBC( const Patch* patch,
 		    vars->wVelocityCoeff[Arches::AS],
 		    vars->wVelNonlinearSrc, vars->wVelLinearSrc,
 		    vars->cellType, 
-		    d_mmWallID, d_flowfieldCellTypeVal,
+		    d_mmWallID,
 		    ioff, joff, koff);
 }
 
