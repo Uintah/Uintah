@@ -51,8 +51,6 @@
 using std::cerr;
 using std::endl;
 
-#define PINVAL 0
-
 namespace BioPSE {
 
 using namespace SCIRun;
@@ -151,17 +149,17 @@ void SetupFEMatrix::execute(){
   
   //-- polling Field for Dirichlet BC
   vector<pair<int, double> > dirBC;
-  if (!hField->get("dirichlet", dirBC)){
-    msgStream_ << "The Field Set doesn't contain Dirichlet boundary conditions" << endl;
-    //! Pinging 0 node to 0
-    dirBC.push_back(pair<int, double>(0, 0.0));
-  }
-  else {
-    clString bcFlag = uiBCFlag_.get();
-    if (bcFlag=="PinZero"){
-      msgStream_ << "Pinging to 0" << endl;
+
+  clString bcFlag = uiBCFlag_.get();
+  if (bcFlag != "none") {
+    if (bcFlag=="GroundZero"){
+      msgStream_ << "Grounding node 0" << endl;
       dirBC.erase(dirBC.begin(), dirBC.end());
       dirBC.push_back(pair<int, double>(0, 0.0));
+    } else { // bcFlag == DirSub
+      if (!hField->get("dirichlet", dirBC)){
+	msgStream_ << "The Field Set doesn't contain Dirichlet boundary conditions" << endl;
+      }
     }
   }
 
@@ -173,10 +171,13 @@ void SetupFEMatrix::execute(){
   }
   else {
     msgStream_ << "Using identity conductivity tensors" << endl;
-    tens.resize(256);
+    pair<int,int> minmax;
+    minmax.second=1;
+    field_minmax(*(hCondMesh.get_rep()), minmax);
+    tens.resize(minmax.second+1);
     Array1<double> t(6);
     t[0] = t[3] = t[5] = 1;
-    t[1] = t[2] = t[5] = 0;
+    t[1] = t[2] = t[4] = 0;
     tens.initialize(Tensor(t));
   }
   
