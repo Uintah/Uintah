@@ -7,6 +7,7 @@ SUBDIRS := \
 	$(SRCDIR)/Examples \
 	$(SRCDIR)/Models \
 	$(SRCDIR)/Schedulers \
+	$(SRCDIR)/Regridder \
 	$(SRCDIR)/SimulationController \
 	$(SRCDIR)/MPM \
 	$(SRCDIR)/ICE \
