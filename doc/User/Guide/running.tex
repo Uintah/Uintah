@@ -259,7 +259,7 @@ substitution:
 
 \begin{verbatim}
 HOME=/home/sci/me
-SCI_ON_THE_FLY_LIBS_DIR=$(HOME)/on-the-fly-libs
+SCIRUN_ON_THE_FLY_LIBS_DIR=$(HOME)/on-the-fly-libs
 \end{verbatim}
 
 The expansion of environment variables is not supported.  Only
@@ -338,14 +338,14 @@ environment variable \envar{SCI\_ON\_THE\_FLY\_LIBS\_DIR} to the
 desired directory, for example:
 
 \begin{verbatim}
-SCI_ON_THE_FLY_LIBS_DIR=$Home/on-the-fly-libs
-export SCI_ON_THE_FLY_LIBS_DIR
+SCIRUN_ON_THE_FLY_LIBS_DIR=$Home/on-the-fly-libs
+export SCIRUN_ON_THE_FLY_LIBS_DIR
 \end{verbatim}
 
 for Bourne-like shells (sh, ksh, bash, etc.) or
 
 \begin{verbatim}
-setenv SCI_ON_THE_FLY_LIBS_DIR $HOME/on-the-fly-libs
+setenv SCIRUN_ON_THE_FLY_LIBS_DIR $HOME/on-the-fly-libs
 \end{verbatim}
 
 for csh-like shells.
@@ -355,7 +355,7 @@ your \filename{.scirunrc}
 file. Your \filename{.scirunrc} file would contain, for example:
 
 \begin{verbatim}
-SCI_ON_THE_FLY_LIBS_DIR=/home/me/on-the-fly-libs
+SCIRUN_ON_THE_FLY_LIBS_DIR=/home/me/on-the-fly-libs
 \end{verbatim}
 
 Your \filename{.scirunrc} file is read by \sr{} at startup.
