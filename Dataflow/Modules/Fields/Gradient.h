@@ -67,39 +67,32 @@ GradientAlgoT<IFIELD, OFIELD>::execute(FieldHandle field_h)
 {
   IFIELD *ifield = (IFIELD *) field_h.get_rep();
 
-  if( ifield->query_scalar_interface() ) {
-
-    typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
+  typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
     
-    OFIELD *ofield = scinew OFIELD(imesh, Field::CELL);
+  OFIELD *ofield = scinew OFIELD(imesh, Field::CELL);
 
-    typename IFIELD::mesh_type::Cell::iterator in, end;
-    typename OFIELD::mesh_type::Cell::iterator out;
+  typename IFIELD::mesh_type::Cell::iterator in, end;
+  typename OFIELD::mesh_type::Cell::iterator out;
 
-    imesh->begin( in );
-    imesh->end( end );
+  imesh->begin( in );
+  imesh->end( end );
 
-    ifield->get_typed_mesh()->begin( out );
+  ifield->get_typed_mesh()->begin( out );
 
-    Point pt;
-    Vector vec;
+  Point pt;
+  Vector vec;
 
-    while (in != end) {
-      imesh->get_center(pt, *in);
-      ifield->get_gradient(vec, pt);
-      ofield->set_value(vec, *out);
-      ++in; ++out;
-    }
-
-    ofield->freeze();
-
-    return FieldHandle( ofield );
+  while (in != end)
+  {
+    imesh->get_center(pt, *in);
+    ifield->get_gradient(vec, pt);
+    ofield->set_value(vec, *out);
+    ++in; ++out;
   }
-  else {
-    cerr << "Gradient - Only availible for Scalar data" << endl;
 
-    return NULL;
-  }
+  ofield->freeze();
+
+  return FieldHandle( ofield );
 }
 
 #else
@@ -118,39 +111,32 @@ GradientAlgoT<FIELD, TYPE>::execute(FieldHandle field_h)
 {
   FIELD<TYPE> *ifield = (FIELD<TYPE> *) field_h.get_rep();
 
-  if( ifield->query_scalar_interface() ) {
-
-    typename FIELD<TYPE>::mesh_handle_type imesh = ifield->get_typed_mesh();
+  typename FIELD<TYPE>::mesh_handle_type imesh = ifield->get_typed_mesh();
     
-    FIELD<Vector> *ofield = scinew FIELD<Vector>(imesh, Field::CELL);
+  FIELD<Vector> *ofield = scinew FIELD<Vector>(imesh, Field::CELL);
 
-    typename FIELD<TYPE>::mesh_type::Cell::iterator in, end;
-    typename FIELD<Vector>::mesh_type::Cell::iterator out;
+  typename FIELD<TYPE>::mesh_type::Cell::iterator in, end;
+  typename FIELD<Vector>::mesh_type::Cell::iterator out;
 
-    imesh->begin( in );
-    imesh->end( end );
+  imesh->begin( in );
+  imesh->end( end );
 
-    ifield->get_typed_mesh()->begin( out );
+  ifield->get_typed_mesh()->begin( out );
 
-    Point pt;
-    Vector vec;
+  Point pt;
+  Vector vec;
 
-    while (in != end) {
-      imesh->get_center(pt, *in);
-      ifield->get_gradient(vec, pt);
-      ofield->set_value(vec, *out);
-      ++in; ++out;
-    }
-
-    ofield->freeze();
-
-    return FieldHandle( ofield );
+  while (in != end)
+  {
+    imesh->get_center(pt, *in);
+    ifield->get_gradient(vec, pt);
+    ofield->set_value(vec, *out);
+    ++in; ++out;
   }
-  else {
-    cerr << "Gradient - Only availible for Scalar data" << endl;
 
-    return NULL;
-  }
+  ofield->freeze();
+
+  return FieldHandle( ofield );
 }
 #endif
 

@@ -69,19 +69,28 @@ Gradient::execute()
 
   FieldHandle fieldin;
 
-  if (!ifp) {
+  if (!ifp)
+  {
     error( "Unable to initialize iport 'Input Field'.");
     return;
   }
 
-  if (!(ifp->get(fieldin) && fieldin.get_rep())) {
-    error( "No handle or representation." );
+  if (!(ifp->get(fieldin) && fieldin.get_rep()))
+  {
+    error( "No handle or representation in input field." );
+    return;
+  }
+
+  if (!fieldin->query_scalar_interface())
+  {
+    error( "Only availible for Scalar data." );
     return;
   }
 
   // If no data or a changed recalcute.
   if( !fieldout_.get_rep() ||
-      fGeneration_ != fieldin->generation ) {
+      fGeneration_ != fieldin->generation )
+  {
     fGeneration_ = fieldin->generation;
 
     const TypeDescription *ftd  = fieldin->get_type_description(0);
@@ -89,30 +98,29 @@ Gradient::execute()
 
     CompileInfo *ci = GradientAlgo::get_compile_info(ftd,ttd);
     DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle)) {
+    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+    {
       error( "Could not compile algorithm." );
       return;
     }
     GradientAlgo *algo =
       dynamic_cast<GradientAlgo *>(algo_handle.get_rep());
-    if (algo == 0) {
+    if (algo == 0)
+    {
       error( "Could not get algorithm." );
       return;
     }
 
     fieldout_ = algo->execute(fieldin);
-
-    if( fieldout_.get_rep() == NULL ) {
-      error( "Only availible for Scalar data." );
-      return;
-    }
   }
 
   // Get a handle to the output field port.
-  if( fieldout_.get_rep() ) {
+  if ( fieldout_.get_rep() )
+  {
     FieldOPort* ofp = (FieldOPort *) get_oport("Output Gradient");
 
-    if (!ofp) {
+    if (!ofp)
+    {
       error("Unable to initialize oport 'Output Gradient'.");
       return;
     }

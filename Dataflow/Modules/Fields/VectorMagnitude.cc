@@ -79,6 +79,12 @@ VectorMagnitude::execute()
     return;
   }
 
+  if (!fieldin->query_vector_interface())
+  {
+    error("Only available for Vector data.");
+    return;
+  }
+
   // If no data or a changed recalcute.
   if( !fieldout_.get_rep() ||
       fGeneration_ != fieldin->generation ) {
@@ -106,11 +112,6 @@ VectorMagnitude::execute()
     }
 
     fieldout_ = algo->execute(fieldin);
-
-    if( fieldout_.get_rep() == NULL ) {
-      error( "Only availible for Vector data." );
-      return;
-    }
   }
 
   // Get a handle to the output field port.

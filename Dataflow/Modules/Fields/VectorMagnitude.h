@@ -63,29 +63,21 @@ template< class IFIELD, class OFIELD >
 FieldHandle
 VectorMagnitudeAlgoT<IFIELD, OFIELD>::execute(FieldHandle field_h)
 {
-  if( field_h.get_rep()->query_vector_interface() ) {
+  IFIELD *ifield = (IFIELD *) field_h.get_rep();
 
-    IFIELD *ifield = (IFIELD *) field_h.get_rep();
+  OFIELD *ofield = 
+    scinew OFIELD(ifield->get_typed_mesh(), ifield->data_at());
 
-    OFIELD *ofield = 
-      scinew OFIELD(ifield->get_typed_mesh(), ifield->data_at());
+  typename IFIELD::fdata_type::iterator in  = ifield->fdata().begin();
+  typename IFIELD::fdata_type::iterator end = ifield->fdata().end();
+  typename OFIELD::fdata_type::iterator out = ofield->fdata().begin();
 
-    typename IFIELD::fdata_type::iterator in  = ifield->fdata().begin();
-    typename IFIELD::fdata_type::iterator end = ifield->fdata().end();
-    typename OFIELD::fdata_type::iterator out = ofield->fdata().begin();
-
-    while (in != end) {
-      *out = in->length();;
-      ++in; ++out;
-    }
-
-    return FieldHandle( ofield );
+  while (in != end) {
+    *out = in->length();;
+    ++in; ++out;
   }
-  else {
-    cerr << "VectorMagnitude - Only availible for Vector data" << endl;
 
-    return NULL;
-  }
+  return FieldHandle( ofield );
 }
 
 #else
@@ -103,29 +95,21 @@ template< template<class> class FIELD >
 FieldHandle
 VectorMagnitudeAlgoT<FIELD>::execute(FieldHandle field_h)
 {
-  if( field_h.get_rep()->query_vector_interface() ) {
+  FIELD<Vector> *ifield = (FIELD<Vector> *) field_h.get_rep();
 
-    FIELD<Vector> *ifield = (FIELD<Vector> *) field_h.get_rep();
+  FIELD<double> *ofield = 
+    scinew FIELD<double>(ifield->get_typed_mesh(), ifield->data_at());
 
-    FIELD<double> *ofield = 
-      scinew FIELD<double>(ifield->get_typed_mesh(), ifield->data_at());
+  typename FIELD<Vector>::fdata_type::iterator in  = ifield->fdata().begin();
+  typename FIELD<Vector>::fdata_type::iterator end = ifield->fdata().end();
+  typename FIELD<double>::fdata_type::iterator out = ofield->fdata().begin();
 
-    typename FIELD<Vector>::fdata_type::iterator in  = ifield->fdata().begin();
-    typename FIELD<Vector>::fdata_type::iterator end = ifield->fdata().end();
-    typename FIELD<double>::fdata_type::iterator out = ofield->fdata().begin();
-
-    while (in != end) {
-      *out = in->length();;
-      ++in; ++out;
-    }
-
-    return FieldHandle( ofield );
+  while (in != end) {
+    *out = in->length();;
+    ++in; ++out;
   }
-  else {
-    cerr << "VectorMagnitude - Only availible for Vector data" << endl;
 
-    return NULL;
-  }
+  return FieldHandle( ofield );
 }
 #endif
 
