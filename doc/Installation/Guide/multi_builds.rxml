@@ -29,7 +29,7 @@
 -->
 
 <appendix id="app.multi_builds">
-  <title>Multiple Binaries, Single Source</title>
+  <title>Single Source, Multiple Binaries</title>
   <para>
     It is possible to build &sr; for multiple machine architectures
     within the same source code directory. For instance, if the

@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+
 <!--
 For more information, please see: http://software.sci.utah.edu
 
@@ -39,31 +41,31 @@ DEALINGS IN THE SOFTWARE.
     <para>The <ulink url="http://www.itk.org">Insight Toolkit</ulink>
     (<acronym>ITK</acronym>) is an open-source software library for
     performing segmentation and registration.  When the
-    <acronym>ITK</acronym> toolkit is present, and &sr; is appropriately
-    configured, <acronym>ITK</acronym> filters are encapsulated in &sr;
-    modules for use in &sr; networks.  By default, &sr; encapsulates a
+    <acronym>ITK</acronym> toolkit is present, and SCIRun is appropriately
+    configured, <acronym>ITK</acronym> filters are encapsulated in SCIRun
+    modules for use in SCIRun networks.  By default, SCIRun encapsulates a
     subset of <acronym>ITK</acronym> filters.</para>
 
-    <para>&sr; encapsulates <acronym>ITK</acronym> filters using
+    <para>SCIRun encapsulates <acronym>ITK</acronym> filters using
     <acronym>XML</acronym>-based  description files.  An
-    <acronym>XSLT</acronym> processor generates code for &sr; modules from
+    <acronym>XSLT</acronym> processor generates code for SCIRun modules from
     the <acronym>XML</acronym> descriptions and <acronym>XSL</acronym>
     stylesheets.  Users may encapsulate additional filters by writing
     <acronym>XML</acronym> descriptions of them.  See the <ulink url="(%=
-    doc.treeUrl(%Q{doc/User/Guide/usersguide/srug8.html}) %)">&sr; Users
+    doc.treeUrl(%Q{doc/User/Guide/usersguide/srug8.html}) %)">SCIRun Users
     Guide</ulink> for more information.</para>
 
     <note os="linux">
-      <para>The &sr;/Insight <acronym>RPM</acronym> distribution of &sr;
+      <para>The SCIRun/Insight <acronym>RPM</acronym> distribution of SCIRun
       <emphasis>includes</emphasis> support for <acronym>ITK</acronym>.  The
       <acronym>RPM</acronym> distribution installs Insight libraries in
       /usr/local/lib/InsightTookit.  The instructions in sections <xref
       linkend="sec.obitk"/>, <xref linkend="sec.cmake"/>, and <xref
       linkend="sec.itk_configsr"/> apply only to a source code installation
-      of &sr;.</para>
+      of SCIRun.</para>
     </note>
 
-    <para os="linux">&sr;'s <acronym>ITK</acronym> support depends on
+    <para os="linux">SCIRun's <acronym>ITK</acronym> support depends on
     the presence of Java JDK 1.2.2 or later.  Environment variable
     <envar>JAVA_HOME</envar> must contain the path to the java
     <quote>JDK</quote> directory. The JDK directory is typically
@@ -102,17 +104,19 @@ setenv PATH $JAVA_HOME/bin:$PATH
   <section id="sec.obitk">
     <title id="sec.title.obitk">Obtaining <acronym>ITK</acronym></title>
 
-    <para>The Insight toolkit must be installed before building &sr;.  The
-    Insight toolkit and its installation instructions are available on the
-    <ulink url="http://www.itk.org"><acronym>ITK</acronym> web
-    site</ulink>.  &sr; supports <acronym>ITK</acronym> version 1.6.
-    <acronym>ITK</acronym> installation requires CMake, an open-source,
-    cross-platform build tool.  CMake can be obtained from the <ulink
-    url="http://www.cmake.org">CMake web site</ulink>.</para>
+    <para>The Insight toolkit must be installed before building SCIRun.
+    The Insight toolkit and its installation instructions are
+    available on the <ulink
+    url="http://www.itk.org"><acronym>ITK</acronym> web site</ulink>.
+    SCIRun supports <acronym>ITK</acronym> versions 1.6 and 1.8.
+    <acronym>ITK</acronym> installation requires CMake, an
+    open-source, cross-platform build tool.  CMake can be obtained
+    from the <ulink url="http://www.cmake.org">CMake web
+    site</ulink>.</para>
 
     <note>
-      <para>&sr;'s Insight package must also be downloaded to add support
-      for ITK in &sr;.  See <xref linkend="sec.sources"/>.</para>
+      <para>SCIRun's Insight package must also be downloaded to add support
+      for ITK in SCIRun.  See <xref linkend="sec.sources"/>.</para>
     </note>
 
   </section>
@@ -191,10 +195,10 @@ setenv PATH $JAVA_HOME/bin:$PATH
   </section>
 
   <section id="sec.itk_configsr">
-    <title id="sec.title.itk_configsr">&sr; Insight Configure Options</title>
+    <title id="sec.title.itk_configsr">SCIRun Insight Configure Options</title>
 
     <para>The configure options below add support for Insight
-    in &sr;.  Include these options in the &sr;
+    in SCIRun.  Include these options in the SCIRun
     <command>configure</command> command (see <xref linkend="sec.build-sr"
     />).
     <variablelist>
@@ -213,7 +217,7 @@ setenv PATH $JAVA_HOME/bin:$PATH
       </varlistentry>
     </variablelist>
     </para>
-    <para>Here is an example &sr; <command>configure</command> command:
+    <para>Here is an example SCIRun <command>configure</command> command:
     <literallayout class="monospaced">
 ../src/configure \
 <phrase os="linux">--with-thirdparty=/usr/local/Thirdparty/1.8.0/Linux/gcc-3.2-32bit \</phrase>

@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+
 <!--
 For more information, please see: http://software.sci.utah.edu
 
@@ -36,8 +38,8 @@ DEALINGS IN THE SOFTWARE.
     SCIRun for &pf; provides support for
     <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>, <ulink
     url="http://www-unix.mcs.anl.gov/petsc/petsc-2/"><acronym>PETSc</acronym></ulink>,
-    <ulink url="http://www.itk.org">Insight
-    (<acronym>ITK</acronym>)</ulink>, <ulink
+    <phrase os="linux;osx"><ulink url="http://www.itk.org">Insight
+    (<acronym>ITK</acronym>)</ulink>,</phrase> <ulink
     url="http://www.mdsplus.org"><acronym>MDSplus</acronym></ulink>,
     and <ulink
     url="http://www.hdf.ncsa.uiuc.edu"><acronym>HDF5</acronym></ulink>
@@ -65,7 +67,7 @@ DEALINGS IN THE SOFTWARE.
       </listitem>
 
       <listitem>
-	<para><acronym>PETSC</acronym> library provides equation
+	<para>The <acronym>PETSC</acronym> library provides equation
 	solvers to SCIRun's SolveMatrix module.
 	<acronym>PETSC</acronym> support is only available by building
 	SCIRun from source code.
@@ -89,15 +91,14 @@ DEALINGS IN THE SOFTWARE.
       <listitem>
 	<para><acronym>MDSplus</acronym> libraries gives modules of
 	SCIRun's DataIO package the ability to
-	read<acronym>MDSplus</acronym> data from an
+	read <acronym>MDSplus</acronym> data from an
 	<acronym>MDSplus</acronym> server.</para>
       </listitem>
     </itemizedlist>
   </para>
 
   <para>External thirdparty software must be installed before building
-  SCIRun.  Proceed to <xref linkend="sec.build-sr"/> after installing
-  external thirdparty software.</para>
+  SCIRun.</para>
 
   <para os="irix;linux"><xref linkend="sec.blas_lapack_inst"/>
   provides installation instructions for <acronym>BLAS</acronym> and
@@ -115,5 +116,6 @@ DEALINGS IN THE SOFTWARE.
   <para><xref linkend="sec.mdsplus_inst"/> provides installation
   instructions for the <acronym>MDSplus</acronym> libraries.</para>
 
-  <para>Proceed to <xref linkend="sec.build-sr"/>.</para>
+  <para>Proceed to <xref linkend="sec.build-sr"/> after building
+  external third party software.</para>
 </section>

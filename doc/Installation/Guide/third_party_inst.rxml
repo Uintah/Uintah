@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+
 <!--
 For more information, please see: http://software.sci.utah.edu
 
@@ -45,7 +47,7 @@ standard_loc = Doc::Platform == Doc::OSX ? "/sw/lib" : "/usr/lib"
     <literallayout class="monospaced">
 TEEM_ZLIB=1
 TEEM_PNG=1
-      export TEEM_ZLIB TEEM_PNG	
+export TEEM_ZLIB TEEM_PNG	
     </literallayout>
     for csh-type shells:
     <literallayout class="monospaced">
@@ -69,7 +71,7 @@ setenv TEEM_PNG
     <literallayout class="monospaced">
 TEEM_PNG_LPATH=-I/usr/local/lib
 TEEM_PNG_IPATH=-I/usr/local/include
-export 	TEEM_PNG_LPATH TEEM_PNG_IPATH
+export TEEM_PNG_LPATH TEEM_PNG_IPATH
     </literallayout>
     for csh-type shells:
     <literallayout class="monospaced">
