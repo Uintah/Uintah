@@ -45,6 +45,9 @@
 #ifdef __sgi
 #include <ieeefp.h>
 #endif
+#ifdef __digital__
+#include <fp_class.h>
+#endif
 
 namespace SCIRun {
 
@@ -75,7 +78,15 @@ SCICORESHARE double MakeReal(double value)
 {
   if (!finite(value))
   {
-    const int is_inf = isinf(value);
+#ifndef __digital__
+    const int is_inf  = isinf(value);
+#else
+    // on dec, we have fp_class which can tell us if a number is +/- infinity
+    int fpclass = fp_class(value);
+    int is_inf;
+    if (fpclass == FP_POS_INF) is_inf = 1;
+    if (fpclass == FP_NEG_INF) is_inf = -1;
+#endif
     if (is_inf == 1) value = (double)(0x7fefffffffffffffULL);
     if (is_inf == -1) value = (double)(0x0010000000000000ULL);
     else value = 0.0; // Assumed NaN
