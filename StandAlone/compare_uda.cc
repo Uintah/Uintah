@@ -290,7 +290,7 @@ int main(int argc, char** argv)
       abort_uncomparable();
     }
 
-    for (int i = 0; i < vars.size(); i++) {
+    for (unsigned int i = 0; i < vars.size(); i++) {
       if (vars[i] != vars2[i]) {
 	cerr << "Variable " << vars[i] << " in " << filebase1
 	     << " does not match\n";
