@@ -460,8 +460,8 @@ TetVolMesh::get_edges(Edge::array_type &array, Cell::index_type idx) const
   PEdge e1(cells_[off + 0], cells_[off + 2]);
   PEdge e2(cells_[off + 0], cells_[off + 3]);
   PEdge e3(cells_[off + 1], cells_[off + 2]);
-  PEdge e4(cells_[off + 1], cells_[off + 3]);
-  PEdge e5(cells_[off + 2], cells_[off + 3]);
+  PEdge e4(cells_[off + 2], cells_[off + 3]);
+  PEdge e5(cells_[off + 1], cells_[off + 3]);
 
   array.push_back((*(edge_table_.find(e0))).second);
   array.push_back((*(edge_table_.find(e1))).second);
