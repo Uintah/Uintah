@@ -1,6 +1,6 @@
 #include "ArchiveReader.h"
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Core/Exceptions/InternalError.h>
+#include <Core/Exceptions/Exception.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <iostream> 
@@ -17,7 +17,8 @@ using namespace SCIRun;
   ArchiveReader::ArchiveReader(GuiContext* ctx)
   : Module("ArchiveReader", ctx, Filter, "DataIO", "Uintah"),
     filebase(ctx->subVar("filebase")), 
-    tcl_status(ctx->subVar("tcl_status")), archiveH(0)
+    tcl_status(ctx->subVar("tcl_status")), archiveH(0),
+    aName(""), aName_size(0)
 { 
   if( filebase.get() != "" )
     need_execute = 1;
@@ -32,8 +33,6 @@ ArchiveReader::~ArchiveReader(){}
 
 void ArchiveReader::execute() 
 { 
-  static string aName("");
-  static int aName_size = 0;
   struct stat statbuffer;
 
   tcl_status.set("Executing"); 
@@ -48,8 +47,8 @@ void ArchiveReader::execute()
    if(filebase.get() != aName || aName_size != statbuffer.st_size) {
      try {
        reader = scinew DataArchive(filebase.get());
-     } catch ( const InternalError& ex) {
-       cerr << "ArchiveReader caught exception: " << ex.message() << endl;
+     } catch ( const Exception& ex) {
+       error("ArchiveReader caught exception: " + string(ex.message()));
        return;
      }
      aName = filebase.get();
