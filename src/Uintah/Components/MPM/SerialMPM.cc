@@ -337,11 +337,8 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
     if(mpm_matl){
        cerr << "dwindex=" << matl->getDWIndex() << '\n';
        particleIndex numParticles = mpm_matl->countParticles(region);
-       ParticleVariable<Point> particles;
-       new_dw->allocate(numParticles, particles, pXLabel,
-			matl->getDWIndex(), region);
 
-       mpm_matl->createParticles(particles, region);
+       mpm_matl->createParticles(numParticles, region, new_dw);
        mpm_matl->getConstitutiveModel()->initializeCMData(region, mpm_matl, new_dw);
     }
   }
@@ -708,6 +705,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.35  2000/05/01 16:18:07  sparker
+// Completed more of datawarehouse
+// Initial more of MPM data
+// Changed constitutive model for bar
+//
 // Revision 1.34  2000/04/28 21:08:15  jas
 // Added exception to the creation of Contact factory if contact is not
 // specified.

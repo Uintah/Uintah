@@ -10,15 +10,18 @@
 namespace SCICore {
    namespace Geometry {
       class Point;
+      class Vector;
    }
 }
 
 namespace Uintah {
    class Region;
+   class VarLabel;
    namespace MPM {
       class GeometryObject;
       class ConstitutiveModel;
       using SCICore::Geometry::Point;
+      using SCICore::Geometry::Vector;
       
 /**************************************
      
@@ -62,11 +65,13 @@ WARNING
 	 particleIndex countParticles(const Region*) const;
 	 particleIndex countParticles(GeometryObject* obj,
 				      const Region*) const;
-	 void createParticles(ParticleVariable<Point>& position,
-			      const Region*);
+	 void createParticles(particleIndex numParticles,
+			      const Region*,
+			      DataWarehouseP& new_dw);
 	 particleIndex createParticles(GeometryObject* obj,
 				       particleIndex start,
 				       ParticleVariable<Point>& position,
+				       ParticleVariable<Vector>& velocity,
 				       const Region*);
       private:
 	 
@@ -85,6 +90,13 @@ WARNING
 	 MPMMaterial(const MPMMaterial &mpmm);
 	 MPMMaterial& operator=(const MPMMaterial &mpmm);
 	 
+	 const VarLabel* pDeformationMeasureLabel;
+	 const VarLabel* pStressLabel;
+	 const VarLabel* pVolumeLabel;
+	 const VarLabel* pMassLabel;
+	 const VarLabel* pVelocityLabel;
+	 const VarLabel* pExternalForceLabel;
+	 const VarLabel* pXLabel;
       };
 
 } // end namespace MPM
@@ -93,6 +105,11 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.10  2000/05/01 16:18:12  sparker
+// Completed more of datawarehouse
+// Initial more of MPM data
+// Changed constitutive model for bar
+//
 // Revision 1.9  2000/04/28 21:05:45  jas
 // Cleaned up the creation of a material so it follows the order that is
 // specified in the input file.  Also added the temp field to the MPMMaterial

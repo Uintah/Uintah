@@ -70,6 +70,7 @@ WARNING
       // Insert Documentation Here:
       bool findCellAndWeights(const SCICore::Geometry::Vector& pos,
 				Array3Index ni[8], double S[8]) const{ }
+
       //////////
       // Insert Documentation Here:
       bool findCellAndShapeDerivatives(const SCICore::Geometry::Vector& pos,
@@ -173,6 +174,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.11  2000/05/01 16:18:18  sparker
+// Completed more of datawarehouse
+// Initial more of MPM data
+// Changed constitutive model for bar
+//
 // Revision 1.10  2000/04/28 20:24:44  jas
 // Moved some private copy constructors to public for linux.  Velocity
 // field is now set from the input file.  Simulation state now correctly

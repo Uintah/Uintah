@@ -4,7 +4,7 @@
 
 
 namespace Uintah {
-
+   class ParticleSubset;
    class Region;
 
 /**************************************
@@ -45,7 +45,8 @@ WARNING
       //////////
       // Insert Documentation Here:
       virtual ParticleVariableBase* clone() const = 0;
-      
+
+      virtual void allocate(ParticleSubset*) = 0;
    protected:
       ParticleVariableBase(const ParticleVariableBase&);
       ParticleVariableBase();
@@ -58,6 +59,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/05/01 16:18:18  sparker
+// Completed more of datawarehouse
+// Initial more of MPM data
+// Changed constitutive model for bar
+//
 // Revision 1.3  2000/04/28 07:35:37  sparker
 // Started implementation of DataWarehouse
 // MPM particle initialization now works

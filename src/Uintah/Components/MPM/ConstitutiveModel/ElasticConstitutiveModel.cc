@@ -16,7 +16,10 @@
 
 #include "ConstitutiveModelFactory.h"
 #include "ElasticConstitutiveModel.h"
-
+#include <Uintah/Grid/ParticleVariable.h>
+#include <Uintah/Grid/VarLabel.h>
+#include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 
 #include <Uintah/Components/MPM/Util/Matrix.cc> // for bounded array multiplier	
 #include <fstream>
@@ -31,34 +34,11 @@ using namespace Uintah::MPM;
 
 ElasticConstitutiveModel::ElasticConstitutiveModel(ProblemSpecP &ps)
 {
-  ps->require("youngs_modulus",YngMod);
-  ps->require("poissons_ratio",PoiRat);
-  
-}
+  ps->require("youngs_modulus",d_initialData.YngMod);
+  ps->require("poissons_ratio",d_initialData.PoiRat); 
+  p_cmdata_label = new VarLabel("p.cmdata",
+				ParticleVariable<CMData>::getTypeDescription());
 
-
-
-ElasticConstitutiveModel::ElasticConstitutiveModel(double YM, double PR): 
-  YngMod(YM),PoiRat(PR)
-{
-  // Main constructor
-  // No further initialization
-
-}
-
-ElasticConstitutiveModel::ElasticConstitutiveModel(const ElasticConstitutiveModel &cm):
-  stressTensor(cm.stressTensor),
-  strainTensor(cm.strainTensor),
-  strainIncrement(cm.strainIncrement),
-  stressIncrement(cm.stressIncrement),
-  rotationIncrement(cm.rotationIncrement),
-  YngMod(cm.YngMod),
-  PoiRat(cm.PoiRat)
- 
-{
-  // Copy constructor
- 
- 
 }
 
 ElasticConstitutiveModel::~ElasticConstitutiveModel()
@@ -70,20 +50,6 @@ ElasticConstitutiveModel::~ElasticConstitutiveModel()
 }
 
 
-
-void ElasticConstitutiveModel::setYngMod(double ym)
-{
-  // Assign Youngs Modulus
-
-  YngMod = ym;
-}
-
-void ElasticConstitutiveModel::setPoiRat(double pr)
-{
-  // Assign Poisson's Ratio
-  
-  PoiRat = pr;
-}
 
 void ElasticConstitutiveModel::setStressTensor(Matrix3 st) 
 {
@@ -125,20 +91,6 @@ void ElasticConstitutiveModel::setRotationIncrement(Matrix3 ri)
 
 }
 
-double ElasticConstitutiveModel::getYngMod() const
-{
-  // Return Young's Modulus
-
-  return YngMod;
-}
-
-double ElasticConstitutiveModel::getPoiRat() const
-{
-  // Return Poisson's Ratio
-
-  return PoiRat;
-}
-
 Matrix3 ElasticConstitutiveModel::getStressTensor() const
 {
   // Return the stress tensor (3 x 3 matrix)
@@ -156,6 +108,7 @@ Matrix3 ElasticConstitutiveModel::getDeformationMeasure() const
 }
 
 
+#if 0
 std::vector<double> ElasticConstitutiveModel::getMechProps() const
 {
   // Return Young's Mod and Poisson's ratio
@@ -168,7 +121,7 @@ std::vector<double> ElasticConstitutiveModel::getMechProps() const
   return props;
 
 }
-
+#endif
 
 Matrix3 ElasticConstitutiveModel::getStrainIncrement() const
 {
@@ -194,6 +147,7 @@ Matrix3 ElasticConstitutiveModel::getRotationIncrement() const
 
 }
 
+#if 0
 double ElasticConstitutiveModel::getLambda() const
 {
   // Return the Lame constant lambda
@@ -211,6 +165,7 @@ double ElasticConstitutiveModel::getMu() const
 
   return mu;
 }
+#endif
 
 void ElasticConstitutiveModel::computeRotationIncrement(Matrix3 defInc)
 {
@@ -275,6 +230,7 @@ void ElasticConstitutiveModel::computeRotationIncrement(Matrix3 defInc)
 
 }
 
+#if 0
 void ElasticConstitutiveModel::computeStressIncrement()
 {
   // Computes the stress increment given the strain increment
@@ -309,13 +265,14 @@ void ElasticConstitutiveModel::computeStressIncrement()
   }
 
 }
+#endif
 
 void ElasticConstitutiveModel::computeStressTensor(const Region* region,
 						   const MPMMaterial* matl,
 						   const DataWarehouseP& new_dw,
 						   DataWarehouseP& old_dw)
 {
-  cerr << "computeStrainEnergy not finished\n";
+  cerr << "computeStressTensor not finished\n";
 }
 
 double ElasticConstitutiveModel::computeStrainEnergy(const Region* region,
@@ -329,7 +286,13 @@ void ElasticConstitutiveModel::initializeCMData(const Region* region,
 						const MPMMaterial* matl,
 						DataWarehouseP& new_dw)
 {
-
+   ParticleVariable<CMData> cmdata;
+   new_dw->allocate(cmdata, p_cmdata_label, matl->getDWIndex(), region);
+   ParticleSubset* pset = cmdata.getParticleSubset();
+   for(ParticleSubset::iterator iter = pset->begin();
+       iter != pset->end(); iter++)
+      cmdata[*iter] = d_initialData;
+   new_dw->put(cmdata, p_cmdata_label, matl->getDWIndex(), region);
 }
 
 #ifdef WONT_COMPILE_YET
@@ -411,6 +374,7 @@ ElasticConstitutiveModel::readParametersAndCreate(ProblemSpecP ps)
 
 void ElasticConstitutiveModel::writeRestartParameters(ofstream& out) const
 {
+#if 0
   out << getType() << " ";
   out << YngMod << " " << PoiRat << " ";
   out << (getStressTensor())(1,1) << " "
@@ -419,6 +383,7 @@ void ElasticConstitutiveModel::writeRestartParameters(ofstream& out) const
       << (getStressTensor())(2,2) << " "
       << (getStressTensor())(2,3) << " "
       << (getStressTensor())(3,3) << endl;
+#endif
 }
 
 ConstitutiveModel*
@@ -482,6 +447,7 @@ ElasticConstitutiveModel::copy() const
 #endif
 }
 
+#if 0
 ConstitutiveModel&
 ElasticConstitutiveModel::operator=(const ElasticConstitutiveModel &cm)
 {
@@ -496,6 +462,7 @@ ElasticConstitutiveModel::operator=(const ElasticConstitutiveModel &cm)
 
   return (*this);
 }
+#endif
 
 int ElasticConstitutiveModel::getSize() const
 {
@@ -508,6 +475,11 @@ int ElasticConstitutiveModel::getSize() const
 
 
 // $Log$
+// Revision 1.9  2000/05/01 16:18:11  sparker
+// Completed more of datawarehouse
+// Initial more of MPM data
+// Changed constitutive model for bar
+//
 // Revision 1.8  2000/04/26 06:48:16  sparker
 // Streamlined namespaces
 //
