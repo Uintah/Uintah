@@ -10,12 +10,18 @@ using std::vector;
 using std::string;
 
 namespace Uintah {
+
+namespace Parallel {
+  class ProcessorContext;
+}
+
 namespace Grid {
 
-    using Uintah::Interface::DataWarehouseP;
-class ProcessorContext;
 class Region;
 class TypeDescription;
+
+using Uintah::Parallel::ProcessorContext;
+using Uintah::Interface::DataWarehouseP;
 
 /**************************************
 
@@ -226,6 +232,9 @@ private:
 
 //
 // $Log$
+// Revision 1.5  2000/03/17 18:45:42  dav
+// fixed a few more namespace problems
+//
 // Revision 1.4  2000/03/17 09:30:00  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

@@ -53,7 +53,7 @@ public:
 
     //////////
     // Determines if the Point "p" is geometrically within this SubRegion
-    inline bool contains(const SCICore::Geometry::Vector& p) const {
+    inline bool contains(const SCICore::Geometry::Point& p) const {
 	return p.x() >= d_lower.x() && 
 	       p.y() >= d_lower.y() &&
 	       p.z() >= d_lower.z() &&
@@ -83,6 +83,9 @@ private:
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 18:45:42  dav
+// fixed a few more namespace problems
+//
 // Revision 1.2  2000/03/16 22:08:01  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

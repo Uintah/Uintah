@@ -1,5 +1,5 @@
-#ifndef UINTAH_HOMEBREW_Level_H
-#define UINTAH_HOMEBREW_Level_H
+#ifndef UINTAH_GRID_LEVEL_H
+#define UINTAH_GRID_LEVEL_H
 
 #include <Uintah/Grid/RefCounted.h>
 #include <Uintah/Interface/DataWarehouseP.h>
@@ -72,6 +72,9 @@ private:
 
 //
 // $Log$
+// Revision 1.4  2000/03/17 18:45:42  dav
+// fixed a few more namespace problems
+//
 // Revision 1.3  2000/03/16 22:07:59  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //
