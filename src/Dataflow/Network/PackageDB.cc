@@ -408,7 +408,7 @@ void PackageDB::loadPackage(bool resolve)
       gui->postMessage("Loading package '" + pname + "'", false);
       if (!getenv("SCI_NOSPLASH"))
       {
-	gui->execute(".loading.fb configure -labeltext {Loading package: " +
+	gui->execute(".splash.fb configure -labeltext {Loading package: " +
 		     pname + " }");
 	gui->eval("update idletasks",result);
       }
@@ -443,8 +443,8 @@ void PackageDB::loadPackage(bool resolve)
 	}
 	if (gui && !getenv("SCI_NOSPLASH"))
 	{
-	  gui->execute("if [winfo exists .loading.fb] "
-		       "{.loading.fb step; update idletasks}");
+	  gui->execute("if [winfo exists .splash.fb] "
+		       "{.splash.fb step; update idletasks}");
 	}
       }
     }
@@ -466,8 +466,7 @@ void PackageDB::loadPackage(bool resolve)
     gui->postMessage("\nFinished loading packages.",false);
     if (!getenv("SCI_NOSPLASH"))
     {
-      gui->execute("if [winfo exists .loading] {destroy .loading}");
-      gui->execute("image delete ::img::splash");
+      gui->execute("if [winfo exists .splash] {destroy .splash}");
       gui->eval("update idletasks",result);
     }
   } else {
