@@ -57,8 +57,6 @@ latex2htmloptions:= -info 0 -split 0 -no_white -link 1 -no_navigation \
 rmfiles:=rm -f
 rmdirs:=rm -rf
 
-edition := ../edition.xml
-
 .PHONY: \
   all \
   documentum-html \

@@ -32,7 +32,7 @@
 .PHONY: default docs clean veryclean
 
 SRC:=../../../src
-edition:=../../edition.xml
+edition:=${SRC}/main/sci_version.h
 
 
 .DELETE_ON_ERROR:

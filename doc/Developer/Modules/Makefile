@@ -148,7 +148,7 @@ xmlsrtreetop:=../../../
 xmlpkgtreetop:= ../../../../../
 
 # Edition file
-edition:=../../edition.xml
+edition := ${treetop}/src/main/sci_version.h
 
 # Script that generates package index files
 pkgindexgenscript:=${treetop}/doc/Utilities/HTML/makepkgindex.rb
