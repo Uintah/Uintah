@@ -26,7 +26,7 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Util/ModuleReporter.h>
+#include <Core/Util/ProgressReporter.h>
 #include <Core/Geometry/Tensor.h>
 
 
@@ -168,7 +168,7 @@ ManageFieldDataAlgoFieldTensor<Fld>::execute(FieldHandle ifield_h,
 class ManageFieldDataAlgoMesh : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(ModuleReporter *m,
+  virtual FieldHandle execute(ProgressReporter *m,
 			      MeshHandle src, MatrixHandle mat) = 0;
 
   //! support the dynamically compiled algorithm concept
@@ -182,14 +182,14 @@ class ManageFieldDataAlgoMeshScalar : public ManageFieldDataAlgoMesh
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ModuleReporter *m,
+  virtual FieldHandle execute(ProgressReporter *m,
 			      MeshHandle src, MatrixHandle mat);
 };
 
 
 template <class FOUT>
 FieldHandle
-ManageFieldDataAlgoMeshScalar<FOUT>::execute(ModuleReporter *mod,
+ManageFieldDataAlgoMeshScalar<FOUT>::execute(ProgressReporter *mod,
 					     MeshHandle mesh,
 					     MatrixHandle matrix)
 {
@@ -332,13 +332,13 @@ class ManageFieldDataAlgoMeshVector : public ManageFieldDataAlgoMesh
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ModuleReporter *m,
+  virtual FieldHandle execute(ProgressReporter *m,
 			      MeshHandle src, MatrixHandle mat);
 };
 
 template <class FOUT>
 FieldHandle
-ManageFieldDataAlgoMeshVector<FOUT>::execute(ModuleReporter *mod,
+ManageFieldDataAlgoMeshVector<FOUT>::execute(ProgressReporter *mod,
 					     MeshHandle mesh,
 					     MatrixHandle matrix)
 {
@@ -512,14 +512,14 @@ class ManageFieldDataAlgoMeshTensor : public ManageFieldDataAlgoMesh
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ModuleReporter *m,
+  virtual FieldHandle execute(ProgressReporter *m,
 			      MeshHandle src, MatrixHandle mat);
 };
 
 
 template <class FOUT>
 FieldHandle
-ManageFieldDataAlgoMeshTensor<FOUT>::execute(ModuleReporter *mod,
+ManageFieldDataAlgoMeshTensor<FOUT>::execute(ProgressReporter *mod,
 					     MeshHandle mesh,
 					     MatrixHandle matrix)
 {

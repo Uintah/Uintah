@@ -25,7 +25,7 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Util/ModuleReporter.h>
+#include <Core/Util/ProgressReporter.h>
 #include <algorithm>
 
 namespace SCIRun {
@@ -33,7 +33,7 @@ namespace SCIRun {
 class Interp2TransferAlgo : public DynamicAlgoBase
 {
 public:
-  virtual MatrixHandle execute(ModuleReporter *m, FieldHandle itp) = 0;
+  virtual MatrixHandle execute(ProgressReporter *m, FieldHandle itp) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fitp,
@@ -53,13 +53,13 @@ class Interp2TransferAlgoT : public Interp2TransferAlgo
 {
 public:
   //! virtual interface. 
-  virtual MatrixHandle execute(ModuleReporter *m, FieldHandle itp);
+  virtual MatrixHandle execute(ProgressReporter *m, FieldHandle itp);
 };
 
 
 template <class FITP, class LITP>
 MatrixHandle
-Interp2TransferAlgoT<FITP, LITP>::execute(ModuleReporter *m,
+Interp2TransferAlgoT<FITP, LITP>::execute(ProgressReporter *m,
 					  FieldHandle fitp_h)
 {
   FITP *fitp = (FITP *)(fitp_h.get_rep());

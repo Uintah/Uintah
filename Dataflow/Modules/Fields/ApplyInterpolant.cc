@@ -34,6 +34,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Modules/Fields/ApplyInterpolant.h>
 #include <Core/Containers/Handle.h>
+#include <Core/Util/DynamicCompilation.h>
 #include <iostream>
 #include <stdio.h>
 
@@ -103,7 +104,7 @@ ApplyInterpolant::execute()
 				      fitp_h->get_type_description(),
 				      fitp_h->data_at_type_description());
   Handle<ApplyInterpAlgo> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
+  if (!DynamicCompilation::compile(ci, algo)) return;
 
   ofp = (FieldOPort *)getOPort("Output");
   if (!ofp) {

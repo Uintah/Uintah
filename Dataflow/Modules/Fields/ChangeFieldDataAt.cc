@@ -20,6 +20,7 @@
 //    Date   : July 2002
 
 
+#include <Core/Util/DynamicCompilation.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/FieldInterface.h>
@@ -170,7 +171,7 @@ ChangeFieldDataAt::execute()
   CompileInfoHandle ci = ChangeFieldDataAtAlgoCreate::get_compile_info
     (fsrc_td, fh->get_type_description()->get_name());
   Handle<ChangeFieldDataAtAlgoCreate> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
+  if (!DynamicCompilation::compile(ci, algo, this)) return;
 
   update_state(Executing);
   bool same_value_type_p = false;

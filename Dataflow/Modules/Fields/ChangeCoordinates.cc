@@ -34,6 +34,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Containers/Handle.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Util/DynamicCompilation.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -89,7 +90,7 @@ ChangeCoordinates::execute()
   const TypeDescription *meshtd = field->mesh()->get_type_description();
   CompileInfoHandle ci = ChangeCoordinatesAlgo::get_compile_info(meshtd);
   Handle<ChangeCoordinatesAlgo> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
+  if (!DynamicCompilation::compile(ci, algo, this)) return;
   algo->execute(field->mesh(), oldsystem, newsystem);
   ofld->send(field);
 }

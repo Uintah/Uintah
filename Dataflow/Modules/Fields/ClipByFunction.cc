@@ -28,6 +28,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
+#include <Core/Util/DynamicCompilation.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
@@ -102,7 +103,7 @@ ClipByFunction::execute()
   {
     CompileInfoHandle ci =
       ClipByFunctionAlgo::get_compile_info(ftd, clipfunction_.get(), hoffset);
-    if (!module_maybe_dynamic_compile(ci, algo))
+    if (!DynamicCompilation::compile(ci, algo, true, this))
     {
       DynamicLoader::scirun_loader().remove_cc(*(ci.get_rep()), cout);
       error("Your function would not compile.");

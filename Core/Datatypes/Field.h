@@ -23,6 +23,8 @@
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/FieldInterface.h>
+#include <Core/Util/ProgressReporter.h>
+#include <Core/Util/DynamicCompilation.h>
 
 namespace SCIRun {
  
@@ -59,12 +61,9 @@ public:
   
 
   //! Required interfaces
-  virtual ScalarFieldInterfaceHandle query_scalar_interface(ModuleReporter *m 
-							    = 0);
-  virtual VectorFieldInterfaceHandle query_vector_interface(ModuleReporter *m
-							    = 0);
-  virtual TensorFieldInterfaceHandle query_tensor_interface(ModuleReporter *m
-							    = 0);
+  virtual ScalarFieldInterfaceHandle query_scalar_interface(ProgressReporter * =0);
+  virtual VectorFieldInterfaceHandle query_vector_interface(ProgressReporter * =0);
+  virtual TensorFieldInterfaceHandle query_tensor_interface(ProgressReporter * =0);
 
   //! Persistent I/O.
   static  PersistentTypeID type_id;

@@ -24,7 +24,7 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Util/ModuleReporter.h>
+#include <Core/Util/ProgressReporter.h>
 #include <Core/Datatypes/Clipper.h>
 #include <sci_hash_map.h>
 #include <algorithm>
@@ -38,7 +38,7 @@ class ClipByFunctionAlgo : public DynamicAlgoBase
 {
 public:
 
-  virtual FieldHandle execute(ModuleReporter *m,
+  virtual FieldHandle execute(ProgressReporter *reporter,
 			      FieldHandle fieldh,
 			      int clipmode) = 0;
 
@@ -56,7 +56,7 @@ class ClipByFunctionAlgoT : public ClipByFunctionAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ModuleReporter *m,
+  virtual FieldHandle execute(ProgressReporter *reporter,
 			      FieldHandle fieldh,
 			      int clipmode);
 
@@ -70,7 +70,7 @@ public:
 
 template <class FIELD>
 FieldHandle
-ClipByFunctionAlgoT<FIELD>::execute(ModuleReporter *mod,
+ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
 				    FieldHandle fieldh,
 				    int clipmode)
 {

@@ -32,6 +32,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Modules/Fields/MaskLattice.h>
+#include <Core/Util/DynamicCompilation.h>
 
 #include <iostream>
 #include <sci_hash_map.h>
@@ -102,7 +103,7 @@ MaskLattice::execute()
     const TypeDescription *ltd = ifieldhandle->data_at_type_description();
     CompileInfoHandle ci =
       MaskLatticeAlgo::get_compile_info(ftd, ltd, maskfunction_.get(), hoff);
-    if (!module_maybe_dynamic_compile(ci, algo))
+    if (!DynamicCompilation::compile(ci, algo, true, this))
     {
       DynamicLoader::scirun_loader().remove_cc(*(ci.get_rep()), cout);
       error("Your function would not compile.");

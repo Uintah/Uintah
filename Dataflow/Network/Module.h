@@ -41,8 +41,10 @@
 #include <Core/GuiInterface/GuiInterface.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+#include <Core/Util/DynamicCompilation.h>
 #include <Core/Util/Timer.h>
-#include <Core/Util/ModuleReporter.h>
+//#include <Core/Util/ModuleReporter.h>
+#include <Core/Util/ProgressReporter.h>
 #include <iosfwd>
 #include <string>
 #include <map>
@@ -143,7 +145,7 @@ PortManager<T>::operator[](string item)
   return port_range_type(namemap_.equal_range(item));
 }
 
-class Module : public ModuleReporter, public ModulePickable, public GuiCallback
+class Module : public /*ModuleReporter*/ ProgressReporter, public ModulePickable, public GuiCallback
 {
 public:
   enum SchedClass {
@@ -168,13 +170,15 @@ public:
   // Used by Ports
   bool showStats();
 
-  // Used by modules
+  // ProgressReporter function
   virtual void error(const std::string&);
   virtual void warning(const std::string&);
   virtual void remark(const std::string&);
   virtual void postMessage(const std::string&);
   virtual std::ostream &msgStream() { return msgStream_; }
   virtual void msgStream_flush() { msgStream_.flush(); }
+
+  virtual void report_progress( ProgressState );
 
   port_range_type getIPorts(const string &name);
   port_range_type getOPorts(const string &name);
@@ -217,6 +221,12 @@ public:
 #endif
   // CollabVis code end
   
+  template<class DC>
+  bool Module::module_dynamic_compile( CompileInfoHandle ci, DC &result )
+  {
+    return DynamicCompilation::compile( ci, result, this );
+  }
+
 protected:
 
   virtual void tcl_command(GuiArgs&, void*);

@@ -20,6 +20,7 @@
 //    Date   : July 2002
 
 
+#include <Core/Util/DynamicCompilation.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/FieldInterface.h>
@@ -149,7 +150,7 @@ ChangeFieldDataType::execute()
   CompileInfoHandle create_ci =
     ChangeFieldDataTypeAlgoCreate::get_compile_info(fsrc_td, new_field_type);
   Handle<ChangeFieldDataTypeAlgoCreate> create_algo;
-  if (!module_dynamic_compile(create_ci, create_algo))
+  if (!DynamicCompilation::compile(create_ci, create_algo, this))
   {
     error("Unable to compile creation algorithm.");
     return;
@@ -167,7 +168,7 @@ ChangeFieldDataType::execute()
 
     if (new_data_type == "Vector" && 
 	fh->query_scalar_interface(this).get_rep() ||
-	!module_maybe_dynamic_compile(copy_ci, copy_algo))
+	!DynamicCompilation::compile(copy_ci, copy_algo, true, this))
     {
       warning("Unable to convert the old data from " + old_data_type +
 	      " to " + new_data_type + ", no data transfered.");

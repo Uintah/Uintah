@@ -28,6 +28,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
+#include <Core/Util/DynamicCompilation.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
@@ -174,7 +175,7 @@ ClipField::execute()
     const TypeDescription *ftd = cfieldhandle->mesh()->get_type_description();
     CompileInfoHandle ci = ClipFieldMeshAlgo::get_compile_info(ftd);
     Handle<ClipFieldMeshAlgo> algo;
-    if (!module_dynamic_compile(ci, algo)) return;
+    if (!DynamicCompilation::compile(ci, algo, this)) return;
 
     clipper_ = algo->execute(cfieldhandle->mesh());
     do_clip_p = true;
@@ -289,7 +290,7 @@ ClipField::execute()
     const TypeDescription *ftd = ifieldhandle->get_type_description();
     CompileInfoHandle ci = ClipFieldAlgo::get_compile_info(ftd);
     Handle<ClipFieldAlgo> algo;
-    if (!module_dynamic_compile(ci, algo)) return;
+    if (!DynamicCompilation::compile(ci, algo, this)) return;
 
     // Maybe invert the clipper again.
     ClipperHandle clipper(clipper_);
