@@ -1,8 +1,7 @@
 
-// $Id$
-
 /*
  *  Guard: Automatically lock/unlock a mutex or crowdmonitor.
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -72,9 +71,13 @@ namespace SCICore {
 	    // Release the lock acquired by the constructor.
 	    ~Guard();
 	private:
-	    Which action;
 	    Mutex* d_mutex;
 	    CrowdMonitor* d_monitor;
+	    Which d_action;
+
+	    // Cannot copy them
+	    Guard(const Guard&);
+	    Guard& operator=(const Guard&);
 	};
     }
 }
@@ -83,6 +86,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 03:46:48  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.3  1999/08/25 19:00:48  sparker
 // More updates to bring it up to spec
 // Factored out common pieces in Thread_irix and Thread_pthreads
