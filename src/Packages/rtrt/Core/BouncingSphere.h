@@ -2,7 +2,7 @@
 #ifndef BOUNCINGSPHERE_H
 #define BOUNCINGSPHERE_H 1
 
-#include "Sphere.h"
+#include <Packages/rtrt/Core/Sphere.h>
 
 namespace rtrt {
 

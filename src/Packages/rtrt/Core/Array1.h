@@ -14,7 +14,7 @@
 #ifndef SCI_Classlib_Array1_h
 #define SCI_Classlib_Array1_h 1
 
-#include "Assert.h"
+#include <Packages/rtrt/Core/Assert.h>
 //#include <Core/Util/Assert.h>
 #include <Core/Persistent/Persistent.h>
 

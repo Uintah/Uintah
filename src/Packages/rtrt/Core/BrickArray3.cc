@@ -10,7 +10,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include "BrickArray3.h"
+#include <Packages/rtrt/Core/BrickArray3.h>
 
 using namespace rtrt;
 

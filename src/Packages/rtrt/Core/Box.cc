@@ -1,12 +1,12 @@
 
-#include "Box.h"
-#include "HitInfo.h"
-#include "Ray.h"
-#include "Light.h"
-#include "BBox.h"
-#include "Stats.h"
-#include "TrivialAllocator.h"
-#include "MiscMath.h"
+#include <Packages/rtrt/Core/Box.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/TrivialAllocator.h>
+#include <Packages/rtrt/Core/MiscMath.h>
 #include <iostream>
 #include <float.h>
 

@@ -1,12 +1,12 @@
 
-#include "BV2.h"
-#include "BBox.h"
-#include "Array1.h"
+#include <Packages/rtrt/Core/BV2.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/Array1.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
-#include "Ray.h"
-#include "Stats.h"
-#include "HitInfo.h"
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/HitInfo.h>
 #include <iostream>
 
 using namespace rtrt;

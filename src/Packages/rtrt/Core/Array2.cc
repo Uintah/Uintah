@@ -10,7 +10,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include "Array2.h"
+#include <Packages/rtrt/Core/Array2.h>
 
 namespace rtrt {
 

@@ -1,6 +1,6 @@
 
-#include "BouncingSphere.h"
-#include "BBox.h"
+#include <Packages/rtrt/Core/BouncingSphere.h>
+#include <Packages/rtrt/Core/BBox.h>
 #include <iostream>
 
 using namespace rtrt;

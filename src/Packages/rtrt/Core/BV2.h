@@ -2,7 +2,7 @@
 #ifndef BV2_H
 #define BV2_H 1
 
-#include "Object.h"
+#include <Packages/rtrt/Core/Object.h>
 
 namespace rtrt {
 

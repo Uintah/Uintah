@@ -15,7 +15,7 @@
 #pragma interface
 #endif
 
-#include "Array1.h"
+#include <Packages/rtrt/Core/Array1.h>
 
 #ifndef __ARRAY1_CC__
 #define __ARRAY1_CC__

@@ -3,10 +3,10 @@
 #define BSPLINEMATERIAL_H 1
 
 #include <iostream>
-#include "Material.h"
-#include "Array1.h"
-#include "Array2.h"
-#include "PerProcessorContext.h"
+#include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/Array1.h>
+#include <Packages/rtrt/Core/Array2.h>
+#include <Packages/rtrt/Core/PerProcessorContext.h>
 
 using namespace std;
 

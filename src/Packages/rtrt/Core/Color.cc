@@ -1,5 +1,5 @@
 
-#include "Color.h"
+#include <Packages/rtrt/Core/Color.h>
 #include <iostream>
 
 namespace rtrt {

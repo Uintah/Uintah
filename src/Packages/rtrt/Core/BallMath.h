@@ -1,7 +1,7 @@
 /***** BallMath.h - Essential routines for Arcball.  *****/
 #ifndef _H_BallMath
 #define _H_BallMath
-#include "BallAux.h"
+#include <Packages/rtrt/Core/BallAux.h>
 
 //namespace rtrt {
 
