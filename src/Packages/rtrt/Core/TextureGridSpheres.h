@@ -1,6 +1,6 @@
 
-#ifndef TextureGridSphere_H
-#define TextureGridSphere_H 1
+#ifndef TextureGridSpheres_H
+#define TextureGridSpheres_H 1
 
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/BBox.h>
@@ -14,7 +14,8 @@ using std::string;
   struct MCell;
   class UV;
   
-class TextureGridSphere : public Object, public Material {
+class TextureGridSpheres : public Object, public Material {
+protected:
   float* spheres;
   size_t nspheres;
   float radius;
@@ -58,12 +59,12 @@ class TextureGridSphere : public Object, public Material {
   void get_uv(UV& uv, const Point& hitpos, const Point& cen);
   Color interp_color(unsigned char *image, double u, double v);
 public:
-  TextureGridSphere(float* spheres, size_t nspheres,
+  TextureGridSpheres(float* spheres, size_t nspheres,
 		    float radius,
 		    int *tex_indices,
 		    unsigned char *tex_data, size_t ntextures, int tex_res,
 		    int nsides, int depth);
-  virtual ~TextureGridSphere();
+  virtual ~TextureGridSpheres();
   virtual void io(SCIRun::Piostream &stream);
 
   virtual void intersect(Ray& ray,

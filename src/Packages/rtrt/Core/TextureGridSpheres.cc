@@ -45,7 +45,7 @@ namespace rtrt {
 
 //#define USE_MINMAX_FOR_RENDERING 1
 
-TextureGridSphere::TextureGridSphere(float* spheres, size_t nspheres,
+TextureGridSpheres::TextureGridSpheres(float* spheres, size_t nspheres,
 				     float radius,
 				     int *tex_indices,
 				     unsigned char *tex_data, size_t ntextures,
@@ -63,7 +63,7 @@ TextureGridSphere::TextureGridSphere(float* spheres, size_t nspheres,
 
   min = new float[ndata];
   max = new float[ndata];
-  cerr << "Recomputing min/max for TextureGridSphere\n";
+  cerr << "Recomputing min/max for TextureGridSpheres\n";
   float* p=spheres;
   for(int j = 0; j < ndata; j++){
     min[j]=MAXFLOAT;
@@ -80,14 +80,14 @@ TextureGridSphere::TextureGridSphere(float* spheres, size_t nspheres,
   iradius=1./radius;
 }
 
-TextureGridSphere::~TextureGridSphere()
+TextureGridSpheres::~TextureGridSpheres()
 {
 }
 
 void 
-TextureGridSphere::io(SCIRun::Piostream&)
+TextureGridSpheres::io(SCIRun::Piostream&)
 {
-  ASSERTFAIL("Pio for TextureGridSphere not implemented");
+  ASSERTFAIL("Pio for TextureGridSpheres not implemented");
 }
 
 static inline void calc_se(float* p, const BBox& bbox,
@@ -125,7 +125,7 @@ static inline void calc_se(float* p, const BBox& bbox,
   }
 }
 
-int TextureGridSphere::map_idx(int ix, int iy, int iz, int depth)
+int TextureGridSpheres::map_idx(int ix, int iy, int iz, int depth)
 {
   if(depth==0){
     return ix*cellsize*cellsize+iy*cellsize+iz;
@@ -160,11 +160,11 @@ static void genmap(int depth, int idx, int cs, int*& map){
   }
 }
 
-void TextureGridSphere::preprocess(double, int&, int&)
+void TextureGridSpheres::preprocess(double, int&, int&)
 {
   if (preprocessed) return;
   preprocessed = true;
-  cerr << "Building TextureGridSphere\n";
+  cerr << "Building TextureGridSpheres\n";
   float time=SCIRun::Time::currentSeconds();
   
   cerr << "min: " << min[0] << ", " << min[1] << ", " << min[2] << '\n';
@@ -321,11 +321,11 @@ void TextureGridSphere::preprocess(double, int&, int&)
     }
     cerr << "6/6 Calculating macrocells took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
   }
-  cerr << "Done building TextureGridSphere\n";
+  cerr << "Done building TextureGridSpheres\n";
   icellsize=1./cellsize;
 }
 
-void TextureGridSphere::calc_mcell(int depth, int startidx, MCell& mcell)
+void TextureGridSpheres::calc_mcell(int depth, int startidx, MCell& mcell)
 {
   mcell.nspheres=0;
   int n=ndata;
@@ -369,7 +369,7 @@ void TextureGridSphere::calc_mcell(int depth, int startidx, MCell& mcell)
 }
 
 #if 1
-void TextureGridSphere::intersect(Ray& ray, HitInfo& hit,
+void TextureGridSpheres::intersect(Ray& ray, HitInfo& hit,
 			    DepthStats* st, PerProcessorContext* ppc)
 {
   const Vector dir(ray.direction());
@@ -500,7 +500,7 @@ void TextureGridSphere::intersect(Ray& ray, HitInfo& hit,
 
 #else
 
-void TextureGridSphere::intersect_print(Ray& ray, HitInfo& hit,
+void TextureGridSpheres::intersect_print(Ray& ray, HitInfo& hit,
 				  DepthStats* st, PerProcessorContext* ppc)
 {
   int totalcells=1;
@@ -695,7 +695,7 @@ void TextureGridSphere::intersect_print(Ray& ray, HitInfo& hit,
   }
 }
 
-void TextureGridSphere::intersect(Ray& ray, HitInfo& hit,
+void TextureGridSpheres::intersect(Ray& ray, HitInfo& hit,
 			    DepthStats* st, PerProcessorContext* ppc)
 {
   int totalcells=1;
@@ -958,7 +958,7 @@ static void compare(int depth, char* tag, float have, float want)
 }
 #endif
 
-void TextureGridSphere::isect(int depth, double t,
+void TextureGridSpheres::isect(int depth, double t,
 			double dtdx, double dtdy, double dtdz,
 			double next_x, double next_y, double next_z,
 			int idx, int ix, int iy, int iz,
@@ -1155,17 +1155,17 @@ void TextureGridSphere::isect(int depth, double t,
   //cerr << "Finished depth " << depth << '\n';
 }
 
-void TextureGridSphere::animate(double /*t*/, bool& /*changed*/)
+void TextureGridSpheres::animate(double /*t*/, bool& /*changed*/)
 {
   //  dpy->animate(changed);
 }
 
-void TextureGridSphere::collect_prims(Array1<Object*>& prims)
+void TextureGridSpheres::collect_prims(Array1<Object*>& prims)
 {
   prims.add(this);
 }
 
-void TextureGridSphere::compute_bounds(BBox& bbox, double offset)
+void TextureGridSpheres::compute_bounds(BBox& bbox, double offset)
 {
   bbox.extend(Point(min[0]-radius-offset, min[1]-radius-offset,
 		    min[2]-radius-offset));
@@ -1173,7 +1173,7 @@ void TextureGridSphere::compute_bounds(BBox& bbox, double offset)
 		    max[2]+radius+offset));
 }
 
-Vector TextureGridSphere::normal(const Point& hitpos, const HitInfo& hit)
+Vector TextureGridSpheres::normal(const Point& hitpos, const HitInfo& hit)
 {
   int cell=*(int*)hit.scratchpad;
   float* p=spheres+cell;
@@ -1182,7 +1182,7 @@ Vector TextureGridSphere::normal(const Point& hitpos, const HitInfo& hit)
   return n;    
 }
 
-void TextureGridSphere::shade(Color& result, const Ray& ray,
+void TextureGridSpheres::shade(Color& result, const Ray& ray,
 			      const HitInfo& hit, int /*depth*/,
 			      double /*atten*/, const Color& /*accumcolor*/,
 			      Context* /*cx*/)
@@ -1239,7 +1239,8 @@ void TextureGridSphere::shade(Color& result, const Ray& ray,
   result = surface_color;
 }
 
-void TextureGridSphere::get_uv(UV& uv, const Point& hitpos, const Point& cen) {
+void TextureGridSpheres::get_uv(UV& uv, const Point& hitpos, const Point& cen)
+{
   // Get point on unit sphere
   Point point_on_sphere((hitpos - cen) * iradius);
   double uu,vv,theta,phi;  
@@ -1252,7 +1253,7 @@ void TextureGridSphere::get_uv(UV& uv, const Point& hitpos, const Point& cen) {
   uv.set( uu,vv);
 }
 
-Color TextureGridSphere::interp_color(unsigned char *image,
+Color TextureGridSpheres::interp_color(unsigned char *image,
 				      double u, double v)
 {
 #if 0
