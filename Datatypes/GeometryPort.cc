@@ -55,6 +55,8 @@ void GeometryIPort::finish()
 
 void GeometryOPort::reset()
 {
+    if(nconnections() == 0)
+	return;
     if(!outbox){
 	turn_on(Resetting);
 	Connection* connection=connections[0];
