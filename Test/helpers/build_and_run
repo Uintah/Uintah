@@ -12,6 +12,8 @@ fi
 
 cd "${BUILDROOT}/${mode}/build"
 
+rm -f "$BUILDROOT"/${mode}/configure.log "${BUILDROOT}"/"${mode}"/configure.log.txt
+
 echo ""
 echo "Starting configure on `date`"
 echo "...this is for the ${mode} build using these arguments:"
@@ -22,11 +24,12 @@ chmod a+x configure_command
 ./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
 retval=$?
 if [ $retval != "0" ]; then
+	echo "Configure failed:" > "${BUILDROOT}/${mode}/configure.log.txt"
+	cat "${BUILDROOT}"/"${mode}"/configure.log >> "${BUILDROOT}"/"${mode}"/configure.log.txt
 	echo "*** Configure failed with code $retval"
 	echo ""
 	echo "Showing configure log:"
 	cat "${BUILDROOT}/${mode}/configure.log"
-
 	cd "${BUILD_DIR}"
 	if [ ! -d "configure-${mode}.lock" ]; then
 	    # failed ${mode} configure, set a lock
@@ -44,7 +47,7 @@ echo "Starting build on `date`:"
 
 cd "${BUILDROOT}/${mode}/build"
     
-rm -f "../make.log"
+rm -f "../make.log" "../make_results.log"
 
 nice gmake -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
 retval=$?
@@ -93,22 +96,23 @@ if [ $retval != "0" ]; then
 	if [ $retval == "0" ]; then
 	    echo "*** Make failed with ARCHES, but passed without it."
 	    echo ""
-	    echo "Showing make errors with ARCHES:"
+	    echo "Showing make errors with ARCHES:" > ../make_results.log
 	    WithArches="no"
 	elif  [ -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
 	    echo "*** Make failed, but sus was compiled successfully without ARCHES"
 	    echo ""
-	    echo "Showing make errors with ARCHES:"
+	    echo "Showing make errors with ARCHES:" > ../make_results.log
 	    WithArches="no"
 	else
 	    echo "*** Make failed with code $retval"
 	    echo ""
-	    echo "Showing make errors:"
+	    echo "Showing make errors:"  > ../make_results.log
 	    failed_sus=1
 	fi
 	# show the compile errors (just the stuff it can't compile)
-	cat ../remake_with_arches.log
-	echo ""
+	cat ../remake_with_arches.log >> ../make_results.log
+	
+        echo ""
 
 	# failed make, set a lock for this build
 	if [ ! -d "${BUILD_DIR}/make-${mode}.lock" ]; then
