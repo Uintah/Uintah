@@ -37,7 +37,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Volume/Core/Datatypes/Texture.h>
 #include <Packages/Volume/Core/Datatypes/Brick.h>
-#include <Packages/Teem/Core/Datatypes/NrrdData.h>
+#include <Core/Datatypes/NrrdData.h>
 
 using SCIRun::BBox;
 using SCITeem::NrrdData;

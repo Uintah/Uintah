@@ -37,7 +37,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Volume/Texture.h>
 #include <Core/Volume/Brick.h>
-#include <Packages/Teem/Core/Datatypes/NrrdData.h>
+#include <Core/Datatypes/NrrdData.h>
 
 using SCITeem::NrrdData;
 using SCITeem::NrrdDataHandle;

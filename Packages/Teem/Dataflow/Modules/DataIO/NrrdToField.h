@@ -60,7 +60,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
 
-#include <Teem/Core/Datatypes/NrrdData.h>
+#include <Core/Datatypes/NrrdData.h>
 
 #include <teem/ten.h>
 

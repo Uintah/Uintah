@@ -31,7 +31,6 @@
 
 SRCDIR := Packages/Teem
 SUBDIRS := \
-	$(SRCDIR)/Core \
 	$(SRCDIR)/Dataflow \
 	$(SRCDIR)/StandAlone \
 

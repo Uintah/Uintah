@@ -40,7 +40,7 @@
 #include <Core/Datatypes/QuadraticTetVolField.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Teem/Core/Datatypes/NrrdData.h>
+#include <Core/Datatypes/NrrdData.h>
 #include <Core/Geometry/BBox.h>
 #include <iostream>
 

@@ -46,8 +46,7 @@ SRCS     += \
 	$(SRCDIR)/matlabconverter.cc \
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Packages/Teem/Core/Datatypes \
-	 Core/Datatypes Core/Containers \
+PSELIBS := Core/Datatypes Core/Containers \
 	 Core/Exceptions Core/Thread \
 	 Core/Persistent Core/Geometry \
 	 Core/Util  
