@@ -46,10 +46,6 @@ PROGRAM := $(SRCDIR)/test6
 SRCS := $(SRCDIR)/test6.cc
 include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/test7
-SRCS := $(SRCDIR)/test7.cc
-include $(SRCTOP)/scripts/program.mk
-
 PROGRAM := $(SRCDIR)/test8
 SRCS := $(SRCDIR)/test8.cc
 include $(SRCTOP)/scripts/program.mk
