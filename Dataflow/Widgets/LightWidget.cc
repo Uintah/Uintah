@@ -288,7 +288,7 @@ LightWidget::geom_moved( GeomPick* gp, int axis, double dist,
       arealight->geom_moved(gp, axis, dist, delta, pick, state);
       break;
    default:
-     ASSERT(0)
+     ASSERTFAIL("Bad light type");
    }
    
    execute(0);
@@ -375,7 +375,7 @@ LightWidget::NextMode()
        break;
      }
    default:
-     ASSERT(0);
+     ASSERTFAIL("Bad Light Type");
    }
    
    Index s;
