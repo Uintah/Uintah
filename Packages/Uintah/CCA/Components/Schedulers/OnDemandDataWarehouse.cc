@@ -1319,7 +1319,7 @@ getGridVar(VariableBase& var, DWDatabase& db,
        if (show_warnings) {
 	 cerr << "Reallocation Warning: Reallocation needed for " << label->getName();
 	 if (patch)
-	   cerr << " on patch " << patch;
+	   cerr << " on patch " << patch->getID();
 	 cerr << " for material " << matlIndex;
 	 const Task* currentTask = getCurrentTask();
 	 if (currentTask != 0) {
