@@ -45,9 +45,25 @@ itcl_class SCIRun_FieldsData_ChangeFieldDataAt {
 	set $this-fldname "---"
 	set $this-inputdataat "---"
 
-	# these will be saved
+	# Deprecated, use output-basis now
 	global $this-outputdataat
 	set $this-outputdataat "Nodes"
+	trace variable $this-outputdataat w "$this backcompat-odt"
+
+	global $this-output-basis
+        set $this-output-basis "Linear"
+    }
+
+    method backcompat-odt {a b c} {
+        # Set our new basis variable based upon the contents of the old
+        # dataat variable.
+	global $this-output-basis
+        if {[string equal $this-outputdataat "None"]} {
+            set $this-output-basis "None"
+        } elseif {![string equal $this-outputdataat "Nodes"]} {
+            set $this-output-basis "Constant"
+        }
+        set $this-outputdataat "Nodes"
     }
 
     method ui {} {
@@ -56,7 +72,7 @@ itcl_class SCIRun_FieldsData_ChangeFieldDataAt {
             return
         }
         toplevel $w
-	wm maxsize $w 251 187 
+	wm maxsize $w 276 187 
 
 	iwidgets::Labeledframe $w.att -labelpos nw \
 		               -labeltext "Input Field Attributes" 
@@ -65,7 +81,7 @@ itcl_class SCIRun_FieldsData_ChangeFieldDataAt {
 	set att [$w.att childsite]
 	
 	labelpair $att.l1 "Name" $this-fldname
-	labelpair $att.l2 "Data at" $this-inputdataat
+	labelpair $att.l2 "Basis" $this-inputdataat
 	pack $att.l1 $att.l2 -side top 
 
 	iwidgets::Labeledframe $w.edit -labelpos nw \
@@ -73,8 +89,8 @@ itcl_class SCIRun_FieldsData_ChangeFieldDataAt {
 			       
 	pack $w.edit 
 	set edit [$w.edit childsite]
-	labelcombo $edit.l1 "Data at" {Nodes Edges Faces Cells None} \
-		   $this-outputdataat $this-cdataat
+	labelcombo $edit.l1 "Basis" {Linear Constant None} \
+            $this-output-basis $this-cdataat
 	pack $edit.l1 -side top 
 
 	makeSciButtonPanel $w $w $this
