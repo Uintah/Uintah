@@ -55,13 +55,13 @@ void    ICE::printData(const Patch* patch, int include_GC,
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
-	  IntVector idx(i, j, k);
-	  cerr << "[" << i << "," << j << "," << k << "]~ " 
-	       << q_CC[idx] << "  ";
+         IntVector idx(i, j, k);
+         cerr << "[" << i << "," << j << "," << k << "]~ " 
+              << q_CC[idx] << "  ";
 
-	  /*  cerr << "\n"; */
+         /*  cerr << "\n"; */
         }
-	cerr << "\n";
+       cerr << "\n";
       }
       cerr << "\n";
     }
@@ -105,13 +105,13 @@ void    ICE::printData(const Patch* patch, int include_GC,
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
-	  IntVector idx(i, j, k);
-	  cerr << "[" << i << "," << j << "," << k << "]~ " 
-	       << q_CC[idx] << " ";
+         IntVector idx(i, j, k);
+         cerr << "[" << i << "," << j << "," << k << "]~ " 
+              << q_CC[idx] << " ";
 
-	  /*  cerr << "\n"; */
+         /*  cerr << "\n"; */
         }
-	cerr << "\n";
+       cerr << "\n";
       }
       cerr << "\n";
     }
@@ -158,13 +158,13 @@ void    ICE::printVector(const Patch* patch, int include_GC,
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
-	  IntVector idx(i, j, k);
-	  cerr << "[" << i << "," << j << "," << k << "]~ " 
-	       <<  q_CC[idx](component) << "  ";
+         IntVector idx(i, j, k);
+         cerr << "[" << i << "," << j << "," << k << "]~ " 
+              <<  q_CC[idx](component) << "  ";
 
-	  /*  cerr << "\n"; */
+         /*  cerr << "\n"; */
         }
-	cerr << "\n";
+       cerr << "\n";
       }
       cerr << "\n";
     }
@@ -213,11 +213,11 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
       for(int j = low.y(); j < high.y(); j++) {
       //for(int j = high.y()-1; j >= low.y(); j--) {
         for(int i = low.x(); i < high.x(); i++) {
-	  IntVector idx(i, j, k);
-	  cerr << "[" << i << "," << j << "," << k << "]~ " <<
-	    q_FC[idx] << "  ";
+         IntVector idx(i, j, k);
+         cerr << "[" << i << "," << j << "," << k << "]~ " <<
+           q_FC[idx] << "  ";
 
-	  /* cerr <<"\n"; */
+         /* cerr <<"\n"; */
         }
         cerr << "\n";
       }
@@ -266,11 +266,11 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
       for(int j = low.y(); j < high.y(); j++) {
       //for(int j = high.y()-1; j >= low.y(); j--) {
         for(int i = low.x(); i < high.x(); i++) {
-	  IntVector idx(i, j, k);
-	  cerr << "[" << i << "," << j << "," << k << "]~ " <<  
-	    q_FC[idx] << "  ";
+         IntVector idx(i, j, k);
+         cerr << "[" << i << "," << j << "," << k << "]~ " <<  
+           q_FC[idx] << "  ";
 
-	  /*  cerr << "\n"; */
+         /*  cerr << "\n"; */
         }
         cerr << "\n";
       }
@@ -321,13 +321,13 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
       for(int j = low.y(); j < high.y(); j++) {
       //for(int j = high.y()-1; j >= low.y(); j--) {
         for(int i = low.x(); i < high.x(); i++) {
-	  IntVector idx(i, j, k);
-	  cerr << "[" << i << "," << j << "," << k << "]~ " << 
-	    q_FC[idx] << "  ";
+         IntVector idx(i, j, k);
+         cerr << "[" << i << "," << j << "," << k << "]~ " << 
+           q_FC[idx] << "  ";
 
-	  /*  cerr << "\n"; */
+         /*  cerr << "\n"; */
         }
-	cerr << "\n";
+       cerr << "\n";
       }
       cerr << "\n";
     }
@@ -382,18 +382,18 @@ void    ICE::readData(const Patch* patch, int include_GC,
   for(k = zLo; k < zHi; k++)  {
     for(j = yLo; j < yHi; j++) {
       for(i = xLo; i < xHi; i++) {
-	IntVector idx(i, j, k);
+       IntVector idx(i, j, k);
        
-	char c;
-	fp.get(c);
-	while ( c != '~') {         
-	  fp.get(c);
-	  // cerr << c;
-	}
+       char c;
+       fp.get(c);
+       while ( c != '~') {         
+         fp.get(c);
+         // cerr << c;
+       }
        
-	fp >> number;
-	if (!fp.good())       
-	  Message(1,"ERROR","Having problem reading ",var_name);
+       fp >> number;
+       if (!fp.good())       
+         Message(1,"ERROR","Having problem reading ",var_name);
               
       // cerr << number;
        q_CC[idx] = number;
@@ -522,51 +522,51 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
       hi  = delP_Dilatate.getHighIndex();
       // x_plus
       for (int j = low.y(); j<hi.y(); j++) {
-	for (int k = low.z(); k<hi.z(); k++) {
-	  if( fabs(delP_Dilatate[IntVector(hi.x()-2,j,k)]) > 0.0 )  {
-	    flag = 1;
-	  }
-	}
+       for (int k = low.z(); k<hi.z(); k++) {
+         if( fabs(delP_Dilatate[IntVector(hi.x()-2,j,k)]) > 0.0 )  {
+           flag = 1;
+         }
+       }
       }
       // x_minus
       for (int j = low.y(); j<hi.y(); j++) {
-	for (int k = low.z(); k<hi.z(); k++) {
-	  if( fabs(delP_Dilatate[IntVector(low.x()+1,j,k)]) > 0.0 )  {
-	    flag = 1;
-	  }
-	}
+       for (int k = low.z(); k<hi.z(); k++) {
+         if( fabs(delP_Dilatate[IntVector(low.x()+1,j,k)]) > 0.0 )  {
+           flag = 1;
+         }
+       }
       }
       // y_plus
       for (int i = low.x(); i<hi.x(); i++) {
-	for (int k = low.z(); k<hi.z(); k++) {
-	  if( fabs(delP_Dilatate[IntVector(i,hi.y()-2,k)]) > 0.0 )  {
-	    flag = 1;
-	  }
-	}
+       for (int k = low.z(); k<hi.z(); k++) {
+         if( fabs(delP_Dilatate[IntVector(i,hi.y()-2,k)]) > 0.0 )  {
+           flag = 1;
+         }
+       }
       }
       // y_minus
       for (int i = low.x(); i<hi.x(); i++) {
-	for (int k = low.z(); k<hi.z(); k++) {
-	  if( fabs(delP_Dilatate[IntVector(i,low.y()+1,k)]) > 0.0 )  {
-	    flag = 1;
-	  }
-	}
+       for (int k = low.z(); k<hi.z(); k++) {
+         if( fabs(delP_Dilatate[IntVector(i,low.y()+1,k)]) > 0.0 )  {
+           flag = 1;
+         }
+       }
       }
       // z_plus
       for (int i = low.x(); i<hi.x(); i++) {
-	for (int j = low.y(); j<hi.y(); j++) {
-	  if( fabs(delP_Dilatate[IntVector(i,j,hi.z()-2)]) > 0.0 )   {
-	    flag = 1;
-	  }
-	}
+       for (int j = low.y(); j<hi.y(); j++) {
+         if( fabs(delP_Dilatate[IntVector(i,j,hi.z()-2)]) > 0.0 )   {
+           flag = 1;
+         }
+       }
       }
       // z_minus
       for (int i = low.x(); i<hi.x(); i++) {
-	for (int j = low.y(); j<hi.y(); j++) {
-	  if( fabs(delP_Dilatate[IntVector(i,j,low.z()+1)]) > 0.0 )   {
-	    flag = 1;
-	  }
-	}
+       for (int j = low.y(); j<hi.y(); j++) {
+         if( fabs(delP_Dilatate[IntVector(i,j,low.z()+1)]) > 0.0 )   {
+           flag = 1;
+         }
+       }
       }
     } // end switchTestConservation
   }  // patch loop
@@ -597,7 +597,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
     cerr << "Components Sum: " << mat_total_mom[m] << "\n";
     cerr.setf(ios::scientific,ios::floatfield);
     cerr << m << "Fluid eng[internal " << mat_int_eng[m] <<  ", Kinetic: " 
-	 << mat_KE[m] << "]: " << mat_total_eng[m] << "\n";
+        << mat_KE[m] << "]: " << mat_total_eng[m] << "\n";
   }
   double change_total_mom =
               100.0 * (total_momentum - initial_total_mom)/
