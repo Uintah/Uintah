@@ -16,8 +16,7 @@ PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
         SCICore/TclInterface SCICore/Containers SCICore/Datatypes \
         SCICore/Geom Uintah/Grid Uintah/Interface Uintah/Exceptions \
 	SCICore/Geometry PSECore/Widgets PSECore/XMLUtil \
-	Kurt/Datatypes Kurt/DataArchive Kurt/Geom SCICore/Util \
-	Uintah/Datatypes
+	SCICore/Util Uintah/Datatypes
 
 LIBS := $(XML_LIBRARY) -lm
 
@@ -26,6 +25,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2  2000/06/21 04:15:46  kuzimmer
+# removed uneccesary dependencies on the Kurt directory
+#
 # Revision 1.1  2000/06/20 17:57:19  kuzimmer
 # Moved GridVisualizer to Uintah
 #
