@@ -3,28 +3,22 @@
 # $Id$
 #
 
-include $(SRCTOP)/scripts/largeso_prologue.mk
+include $(SRCTOP)/scripts/smallso_prologue.mk
 
-SRCDIR := Remote
+SRCDIR := Remote/Tools
 
-SUBDIRS := $(SRCDIR)/Modules $(SRCDIR)/GUI $(SRCDIR)/Tools
+SUBDIRS := $(SRCDIR)/Util $(SRCDIR)/Math $(SRCDIR)/Model $(SRCDIR)/Image
 
 include $(SRCTOP)/scripts/recurse.mk
 
-PSELIBS := SCICore PSECore PSECommon
-LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+PSELIBS := 
+LIBS := -lm -L/usr/local/gnu/lib -lfl -ltiff -ljpeg
 
-include $(SRCTOP)/scripts/largeso_epilogue.mk
-
-#  This must be done *after* the library block
-
-SRCDIR := Remote
-SUBDIRS := $(SRCDIR)/remoteViewer
-include $(SRCTOP)/scripts/recurse.mk
+include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
-# Revision 1.2  2000/07/10 20:44:18  dahart
+# Revision 1.1  2000/07/10 20:44:19  dahart
 # initial commit
 #
 # Revision 1.1  2000/06/06 15:29:22  dahart
