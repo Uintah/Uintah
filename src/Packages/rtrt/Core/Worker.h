@@ -53,7 +53,13 @@ public:
 		Context* cx);
   void traceRay(Color& result, const Ray& ray, int depth,
 		double atten, const Color& accum,
+		Context* cx, double &dist);
+  void traceRay(Color& result, const Ray& ray, int depth,
+		double atten, const Color& accum,
 		Context* cx, Object* obj);
+  void traceRay(Color& result, const Ray& ray, int depth,
+		double atten, const Color& accum,
+		Context* cx, Object* obj, double &dist);
   void traceRay(Color& result, const Ray& ray,
 		Point& hitpos, Object*& hitobj);
   Stats* get_stats(int i);

@@ -44,9 +44,9 @@ DielectricMaterial::DielectricMaterial(double n_in, double n_out, bool nothing_i
 
 
 DielectricMaterial::DielectricMaterial( double n_in, double n_out, double R0,
-           double phong_exponent, const Color& extinction_in, const Color& extinction_out, bool nothing_inside) :
+           double phong_exponent, const Color& extinction_in, const Color& extinction_out, bool nothing_inside, double extinction_scale) :
            n_in( n_in ), n_out( n_out ), R0(R0),
-           phong_exponent(phong_exponent), extinction_in(extinction_in), extinction_out(extinction_out), nothing_inside(nothing_inside)
+           phong_exponent(phong_exponent), extinction_in(extinction_in), extinction_out(extinction_out), nothing_inside(nothing_inside), extinction_scale(extinction_scale)
 {
     double er, eg, eb;
     er = log( extinction_in.red() );
@@ -101,12 +101,19 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
     
 
     // compute Phong highlights
-    int nlights=cx->scene->nlights();
+  int ngloblights=cx->scene->nlights();
+  int nloclights=my_lights.size();
+  int nlights=ngloblights+nloclights;
     for(int i=0;i<nlights;i++){
-	Light* light=cx->scene->light(i);
+        Light* light;
+	if (i<ngloblights)
+	  light=cx->scene->light(i);
+	else 
+	  light=my_lights[i-ngloblights];
 	Vector light_dir=light->get_pos()-hitpos;
 	if (ray_objnormal_dot*Dot(normal,light_dir)>0) continue;
-	result+=filter*light->get_color() * phong_term( ray.direction(), light_dir, normal, phong_exponent);
+	result+=light->get_color() * phong_term( ray.direction(), light_dir, normal, phong_exponent);
+//	result+=filter*light->get_color() * phong_term( ray.direction(), light_dir, normal, phong_exponent);
     }
 
     
@@ -151,13 +158,24 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
                          (1 - cosine*cosine);
             if (cosinePrimeSquared <= 0) { // total internal reflection
                Color rcolor;
+	       double dist;
 	       if(!incoming && nothing_inside){
 		   cx->worker->traceRay(rcolor, rray, depth+1, atten,
-					accumcolor, cx, hit.hit_obj);
+					accumcolor, cx, hit.hit_obj, dist);
 	       } else {
 		   cx->worker->traceRay(rcolor, rray, depth+1, atten,
-					accumcolor, cx);
+					accumcolor, cx, dist);
 	       }
+	       double scaled_t = dist * extinction_scale;
+	       if (incoming) {
+		 filter = Color(exp(extinction_constant_out.red()*scaled_t),
+				exp(extinction_constant_out.green()*scaled_t),
+				exp(extinction_constant_out.blue()*scaled_t));
+	       } else {
+		 filter = Color(exp(extinction_constant_in.red()*scaled_t),
+				exp(extinction_constant_in.green()*scaled_t),
+				exp(extinction_constant_in.blue()*scaled_t));
+	       }		 
 	       result+= filter*rcolor;
 	       cx->stats->ds[depth].nrefl++;
                return;
@@ -171,25 +189,46 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
             k *= (k*k)*(k*k);
             double R = R0 * (1-k) + k;
             Color rcolor(0,0,0), tcolor(0,0,0);
+	    double dist;
             if(R*atten > 0.02) {
 		if(!incoming && nothing_inside){
 		    cx->worker->traceRay(rcolor, rray, depth+1, R*atten,
-					 accumcolor, cx, hit.hit_obj);
+					 accumcolor, cx, hit.hit_obj, dist);
 		} else {
 		    cx->worker->traceRay(rcolor, rray, depth+1, R*atten,
-					 accumcolor, cx);
+					 accumcolor, cx, dist);
 		}
+		double scaled_t = dist * extinction_scale;
+		if (incoming) {
+		  filter = Color(exp(extinction_constant_out.red()*scaled_t),
+			 exp(extinction_constant_out.green()*scaled_t),
+			 exp(extinction_constant_out.blue()*scaled_t));
+		} else {
+		  filter = Color(exp(extinction_constant_in.red()*scaled_t),
+				 exp(extinction_constant_in.green()*scaled_t),
+				 exp(extinction_constant_in.blue()*scaled_t));
+		}		 
 		cx->stats->ds[depth].nrefl++;
 		result+= R*(filter*rcolor);
             }
             if((1-R)*atten > 0.02) {
 		if(incoming && nothing_inside){
 		    cx->worker->traceRay(tcolor, tray, depth+1, (1-R)*atten,
-					 accumcolor, cx, hit.hit_obj);
+					 accumcolor, cx, hit.hit_obj, dist);
 		} else {
 		    cx->worker->traceRay(tcolor, tray, depth+1, (1-R)*atten,
-					 accumcolor, cx);
+					 accumcolor, cx, dist);
 		}
+		double scaled_t = dist * extinction_scale;
+		if (incoming) {
+		  filter = Color(exp(extinction_constant_out.red()*scaled_t),
+			 exp(extinction_constant_out.green()*scaled_t),
+			 exp(extinction_constant_out.blue()*scaled_t));
+		} else {
+		  filter = Color(exp(extinction_constant_in.red()*scaled_t),
+				 exp(extinction_constant_in.green()*scaled_t),
+				 exp(extinction_constant_in.blue()*scaled_t));
+		}		 
 		cx->stats->ds[depth].ntrans++;
 		result+= (1-R)*(filter*tcolor);
             }

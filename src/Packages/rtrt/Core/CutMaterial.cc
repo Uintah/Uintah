@@ -70,10 +70,16 @@ void CutMaterial::shade(Color& result, const Ray& ray,
 	  
 	  //don't bother shadowing, it's inside an object and will thus be shaded
 	  //but react to light color
-	  int nlights=cx->scene->nlights();
+	  int ngloblights=cx->scene->nlights();
+	  int nloclights=my_lights.size();
+	  int nlights=ngloblights+nloclights;
 	  cx->stats->ds[depth].nshadow+=nlights;
 	  for(int i=0;i<nlights;i++){
-	    Light* light=cx->scene->light(i);
+	    Light* light;
+	    if (i<ngloblights)
+	      light=cx->scene->light(i);
+	    else 
+	      light=my_lights[i-ngloblights];
 	    
 	    difflight+=light->get_color();
 	  }

@@ -43,10 +43,16 @@ void MetalMaterial::shade(Color& result, const Ray& ray,
 	cosine=-cosine;
 	normal=-normal;
     }
-    int nlights=cx->scene->nlights();
-
+    int ngloblights=cx->scene->nlights();
+    int nloclights=my_lights.size();
+    int nlights=ngloblights+nloclights;
+    
     for(int i=0;i<nlights;i++){
-	Light* light=cx->scene->light(i);
+        Light* light;
+	if (i<ngloblights)
+	  light=cx->scene->light(i);
+	else 
+	  light=my_lights[i-ngloblights];
 	Vector light_dir=light->get_pos()-hitpos;
 	light_dir.normalize();
 	if (ray_objnormal_dot*Dot(normal,light_dir)>0) continue;

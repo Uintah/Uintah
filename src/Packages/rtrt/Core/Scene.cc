@@ -119,6 +119,11 @@ void Scene::add_light(Light* light)
     lights.add(light);
 }
 
+void Scene::add_per_matl_light(Light* light)
+{
+    per_matl_lights.add(light);
+}
+
 void Scene::preprocess(double bvscale, int& pp_offset, int& scratchsize)
 {
   for(int i=0;i<lights.size();i++)

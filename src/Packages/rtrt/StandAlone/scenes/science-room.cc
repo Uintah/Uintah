@@ -61,6 +61,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 				   Color(0.5,0.6,0.6),
 				   Color(0.4,0.55,0.52),
 				   Color(0.35,0.45,0.42));
+  marble1->my_lights.add(new Light(Point(-7.5,7.5,3.9), Color(.7,.4,.4),0));
+  
   Material* marble2=new CrowMarble(7.5,
 				   Vector(-1,3,0),
 				   Color(0.4,0.3,0.2),
@@ -238,7 +240,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     double rad=(65+35*i)*(M_PI/180.);
     t.pre_rotate(rad, Vector(0,0,1));
     t.pre_translate(center.vector()+Vector(cos(rad),sin(rad),0)*2.9);
-    if (!readASEFile("/usr/sci/data/Geometry/models/lebebe.ASE", t, g, matls, env_map)) {
+    if (!readASEFile("/usr/sci/data/Geometry/models/corbusier.ASE", t, g, matls, env_map)) {
       exit(0);
     }
   }
