@@ -66,6 +66,27 @@ ImageExporter::~ImageExporter()
 }
 
 
+
+static
+C_Magick::Quantum
+TO_QUANTUM(double f)
+{
+  if (sizeof(C_Magick::Quantum) == 1)
+  {
+    int tmp = (int)(f * 0xff);
+    if (tmp > 0xff) return 0xff;
+    if (tmp < 0) return 0;
+    return tmp;
+  }
+  else
+  {
+    int tmp = (int)(f * 0xffff);
+    if (tmp > 0xffff) return 0xffff;
+    if (tmp < 0) return 0;
+    return tmp;
+  }
+}
+
 void
 ImageExporter::execute()
 {
@@ -133,9 +154,10 @@ ImageExporter::execute()
     return;
   }
 
-  if (!(nrrd->type == nrrdTypeUShort || nrrd->type == nrrdTypeUChar))
+  if (!(nrrd->type == nrrdTypeUShort || nrrd->type == nrrdTypeUChar ||
+	nrrd->type == nrrdTypeFloat || nrrd->type == nrrdTypeDouble))
   {
-    error("Only Nrrds of type UShort and UChar are currently supported.");
+    error("Only Nrrds of type UShort and UChar, Float, and Double are currently supported.");
     return;
   }
   
@@ -170,9 +192,9 @@ ImageExporter::execute()
 	}
 	else
 	{
-	  pixels[j * w + i].blue = *data++;
-	  pixels[j * w + i].green = *data++;
 	  pixels[j * w + i].red = *data++;
+	  pixels[j * w + i].green = *data++;
+	  pixels[j * w + i].blue = *data++;
 	}
 
 	if (alpha)
@@ -186,7 +208,7 @@ ImageExporter::execute()
       }
     }
   }
-  else
+  else if (nrrd->type == nrrdTypeUChar)
   {
     unsigned char *data = (unsigned char *)nrrd->data;
 
@@ -203,14 +225,80 @@ ImageExporter::execute()
 	}
 	else
 	{
-	  pixels[j * w + i].blue = *data++ << 8;
-	  pixels[j * w + i].green = *data++ << 8;
 	  pixels[j * w + i].red = *data++ << 8;
+	  pixels[j * w + i].green = *data++ << 8;
+	  pixels[j * w + i].blue = *data++ << 8;
 	}
 
 	if (alpha)
 	{
 	  pixels[j * w + i].opacity = *data++ << 8;
+	}
+	else
+	{
+	  pixels[j * w + i].opacity = 0xffff;
+	}
+      }
+    }
+  }
+  else if (nrrd->type == nrrdTypeFloat)
+  {
+    float *data = (float *)nrrd->data;
+
+    // Copy pixels from nrrd to Image.
+    for (unsigned int j = 0; j < h; j++)
+    {
+      for (unsigned int i = 0; i < w; i++)
+      {
+	if (grey)
+	{
+	  pixels[j * w + i].red = TO_QUANTUM(*data);
+	  pixels[j * w + i].green = TO_QUANTUM(*data);
+	  pixels[j * w + i].blue = TO_QUANTUM(*data++);
+	}
+	else
+	{
+	  pixels[j * w + i].red = TO_QUANTUM(*data++);
+	  pixels[j * w + i].green = TO_QUANTUM(*data++);
+	  pixels[j * w + i].blue = TO_QUANTUM(*data++);
+	}
+
+	if (alpha)
+	{
+	  pixels[j * w + i].opacity = TO_QUANTUM(*data++);
+	}
+	else
+	{
+	  pixels[j * w + i].opacity = 0xffff;
+	}
+      }
+    }
+  }
+  else if (nrrd->type == nrrdTypeDouble)
+  {
+    double *data = (double *)nrrd->data;
+
+    // Copy pixels from nrrd to Image.
+    for (unsigned int j = 0; j < h; j++)
+    {
+      for (unsigned int i = 0; i < w; i++)
+      {
+	if (grey)
+	{
+	  pixels[j * w + i].red = TO_QUANTUM(*data);
+	  pixels[j * w + i].green = TO_QUANTUM(*data);
+	  pixels[j * w + i].blue = TO_QUANTUM(*data++);
+	}
+	else
+	{
+	  pixels[j * w + i].red = TO_QUANTUM(*data++);
+	  pixels[j * w + i].green = TO_QUANTUM(*data++);
+	  pixels[j * w + i].blue = TO_QUANTUM(*data++);
+	}
+
+	if (alpha)
+	{
+	  pixels[j * w + i].opacity = TO_QUANTUM(*data++);
 	}
 	else
 	{

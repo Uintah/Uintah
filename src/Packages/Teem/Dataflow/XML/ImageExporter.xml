@@ -22,18 +22,12 @@
 <component name="ImageExporter" category="DataIO">
   <overview>
     <authors>
-      <author>David Weinstein</author>
+      <author>Michael Callahan</author>
     </authors>
-    <summary>Output the NrrdData object via Pio.</summary>
+    <summary>Output a Nrrd as an image file.</summary>
     <description>
-      <p>Save a serialized NrrdData object, which in turn saves the
-nrrd file that it wraps.  So the end result is two saved files. Note
-that these files live side by side, the NrrdData will not load
-properly if they are moved, as it holds the full path to the nrrd it
-wraps. The .nrrd file can of course be relocated on its own, and used
-as any other nrrd independently from the NrrdData (.nd) file.</p>
+      <p>ImageExporter uses the ImageMagick libaries to convert a Nrrd into an image file in one of the many formats supported by ImageMagick.  The Nrrd can be G, RGB, or RGBA data consisting of unsigned characters, unsigned shorts, floats, or doubles.  If the data is float or double then it should be between 0 and 1.  See ImageImporter for more on the data format.</p>
     </description>
-    <examplesr>Teem/nets/test/io.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

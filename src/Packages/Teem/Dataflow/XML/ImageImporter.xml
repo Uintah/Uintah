@@ -22,28 +22,15 @@
 <component name="ImageImporter" category="DataIO">
   <overview>
     <authors>
-      <author>David Weinstein</author>
-      <author>Martin Cole</author>
+      <author>Michael Callahan</author>
     </authors>
-    <summary>Open a raw nrrd or a SCIRun wrapped nrrd.</summary>
+    <summary>Use ImageMagick libraries to open neary any image file.</summary>
     <description>
-      <p>Interface to introdued a NrrdData into the net. ImageImporter
-can open a raw nrrd, or a previously saved SCIRun wrapped nrrd
-(NrrdData). The user needs to verify the tuple axis, by selecting an
-existing axis, or choosing to add a tuple axis.  The tuple axis, is
-the axis along which related but disjoint data sets can be stored, for
-example a pressure data set and a tempurature data set can be stored
-in the same nrrd, by joining them along the tuple axis.  All nrrds
-that pass through SCIRun must have a tuple axis.  Vector and Tensor
-data sets store thier elements along the tuple axis, for example a 3
-dimensional vector field is stored as a 4 dimensional nrrd, with x,y,z
-components encoded in the Vector label along the tuple axis. </p>
-      <p>
-When the user specifies the nrrd to load, all of its axis info is
-shown in the UI, where the user can select an axis to adopt as the
-tuple axis, add tuple axis can be chosen.</p>
+    <p>ImageImporter will open any of the image types supported by
+    ImageMagick.  The image is opened as a 3xWxH nrrd containing float
+    data ranging between 0 and 1.  At this time only the RGB channels
+    of the image are preserved, any opacity channel is discarded.</p>
     </description>
-    <examplesr>Teem/nets/test/io.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">
