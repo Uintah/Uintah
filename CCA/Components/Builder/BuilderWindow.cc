@@ -124,8 +124,19 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
   quitAction->addTo(file);
   exitAction->addTo(file);
 
-  menuBar()->insertItem("&Clusters");
-  menuBar()->insertItem("&Performance");
+  QPopupMenu* cluster = new QPopupMenu(this);
+  menuBar()->insertItem("&Clusters", cluster );
+  cluster->insertItem( "&Add a cluster", this, SLOT( cluster_add() ), Key_F1 );
+  cluster->insertItem( "&Remove a cluster", this, SLOT( cluster_remove() ), Key_F2 );
+  QPopupMenu* mxn = new QPopupMenu( this );
+  menuBar()->insertItem("&MxN", mxn );
+  mxn->insertItem( "&MxN-enabled Component_1", this, SLOT( mxn_add() ), Key_F1 );
+  mxn->insertItem( "&MxN-enabled Component_2", this, SLOT( mxn_add() ), Key_F2 );
+  mxn->insertItem( "&MxN-enabled Component_3", this, SLOT( mxn_add() ), Key_F3 );
+  QPopupMenu* performance = new QPopupMenu(this);
+  menuBar()->insertItem( "&Performance", performance );
+  performance->insertItem( "&Performance Manager", this, SLOT( performance_mngr() ), Key_F1 );
+  performance->insertItem( "&Add Tau component", this, SLOT( performance_tau_add() ), Key_F2 );
 
   buildPackageMenus();
   menuBar()->insertSeparator();
@@ -506,11 +517,35 @@ void BuilderWindow::exit()
   Thread::exitAll(0);
 }
 
+void BuilderWindow::cluster_add()
+{
+  ( new QMessageBox())->about( this, "Cluster: Add", "Under Construction\n\nThis dialog will guide\n the user through the steps of adding\na cluster.\n\n" );
+}
+
+void BuilderWindow::cluster_remove()
+{
+  ( new QMessageBox())->about( this, "Cluster: Remove", "Under Construction\n\nThis dialog will guide\n the user through the steps of removing\na cluster.\n\n" );
+}
+
+void BuilderWindow::mxn_add()
+{
+  ( new QMessageBox())->about( this, "MxN: Add", "Under Construction\n\nWhen this menu item is activated, the chosen parallel component will be added to the \ncanvas.  This will occur in the same manner as when other CCA components \nare instantiated.\n\n" );
+}
+
+void BuilderWindow::performance_mngr()
+{
+  ( new QMessageBox())->about( this, "Performance Manager", "Under Construction\n\nThis dialog will display all components active on the canvas and assist the user in setting performance settings for each.\n\n" );
+}
+
+void BuilderWindow::performance_tau_add()
+{
+  ( new QMessageBox())->about( this, "Tau: Add", "Under Construction\n\nWhen this menu item is activated, a tau component will be added to the canvas.  \nThis will occur in the same manner as when other CCA components are \ninstantiated.\n\n" );
+}
+
 void BuilderWindow::demos()
 {
   ( new QMessageBox())->about( this, "Demos", "CCA Demos\nComing Soon!" );
 }
-
 
 void BuilderWindow::about()
 {
