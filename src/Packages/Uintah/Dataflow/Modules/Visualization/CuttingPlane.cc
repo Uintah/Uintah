@@ -159,14 +159,17 @@ extern "C" Module* make_CuttingPlane(const string& id) {
 //static string module_name("CuttingPlane");
 static string widget_name("CuttingPlane Widget");
 
-CuttingPlane::CuttingPlane(const string& id)
-: Module("CuttingPlane", id, Filter), widget_lock("Cutting plane widget lock"),
+CuttingPlane::CuttingPlane(const string& id) :
+  Module("CuttingPlane", id, Filter),
+  widget_lock("Cutting plane widget lock"),
   cutting_plane_type("cutting_plane_type",id, this),
+  num_contours("num_contours", id, this), 
+  offset("offset", id, this), scale("scale", id, this), 
+  where("where", id, this),
   need_find("need_find",id,this),
-  scale("scale", id, this), offset("offset", id, this),
-  num_contours("num_contours", id, this), where("where", id, this),
   localMinMaxGUI("localMinMaxGUI", id, this), 
-  fullRezGUI("fullRezGUI", id, this), exhaustiveGUI("exhaustiveGUI", id, this)
+  fullRezGUI("fullRezGUI", id, this),
+  exhaustiveGUI("exhaustiveGUI", id, this)
 {
     // Create the input ports
     // Need a scalar field and a ColorMap
@@ -225,8 +228,8 @@ void CuttingPlane::execute()
     ColorMapHandle cmap;
     if (!inColorMap->get( cmap ))
 	return;
-    cmapmin=cmap->getMin();
-    cmapmax=cmap->getMax();
+    cmapmin=(int)cmap->getMin();
+    cmapmax=(int)cmap->getMax();
 
     if (init == 1) 
     {
@@ -363,7 +366,8 @@ void CuttingPlane::execute()
     
     int localMinMax=localMinMaxGUI.get();
 
-    int exhaustive=exhaustiveGUI.get();
+    //int exhaustive=exhaustiveGUI.get();
+
     // Get the scalar values and corresponding
     // colors to put in the cutting plane
     if (cptype != CP_CONTOUR)
@@ -384,7 +388,7 @@ void CuttingPlane::execute()
 	  grid->texture();
 #endif
 
-	int ix = 0;
+	//int ix = 0;
 	int i, j;
 
 	int haveval=0;
@@ -473,7 +477,7 @@ void CuttingPlane::execute()
 
 	if (localMinMax) {
 	    // get the min and max values from this slice
-	    int ix = 0;
+	    // int ix = 0;
 	    int i, j;
 	    int haveval=0;
  
@@ -523,7 +527,7 @@ void CuttingPlane::execute()
 		colrs[i] = new GeomMaterial( col_group[i], matl );
 		cs->add( colrs[i] );
 	    }
-	    int ix=0;
+	    //int ix=0;
 	    // look at areas in the plane to find the contours
 	    for (i = 0; i < u_num-1; i++)
 		for (int j = 0; j < v_num-1; j++)

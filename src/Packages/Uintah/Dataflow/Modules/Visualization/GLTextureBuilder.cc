@@ -149,8 +149,8 @@ void GLTextureBuilder::execute(void)
     }
   }    
 
-  old_min_ = minV;
-  old_max_ = maxV;
+  old_min_ = (int)minV;
+  old_max_ = (int)maxV;
 
   if (tex_.get_rep())
   {
