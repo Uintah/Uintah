@@ -565,14 +565,28 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
   // primitive variable initialization
   Task* tsk = scinew Task( "Arches::computeStableTimeStep",
 			   this, &Arches::computeStableTimeStep);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  if (d_MAlab) {
+    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  }
+  else {
+    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
+
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -598,7 +612,7 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
 }
 
 // ****************************************************************************
-// actually computate stable time step
+// actually compute stable time step
 // ****************************************************************************
 void 
 Arches::computeStableTimeStep(const ProcessorGroup* ,
@@ -645,14 +659,26 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(den, d_lab->d_densityCPLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (d_MAlab) {
+      new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, 
+		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+      new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, 
+		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+      new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, 
+		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+      new_dw->get(den, d_lab->d_densityCPLabel, 
+		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    }
+    else {
+      new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(den, d_lab->d_densityCPLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
     new_dw->get(visc, d_lab->d_viscosityCTSLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
@@ -701,36 +727,65 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     double delta_t = d_deltaT; // max value allowed
     double small_num = 1e-30;
     double delta_t2 = delta_t;
+
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
 	  double tmp_time;
-// if statement to handle Kumar's wall with zero density
-	  if (den[currCell] > 0.0) {
-	    if (d_MAlab) {
-	      tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
-		Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
-		Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
+
+	  if (d_MAlab) {
+	    int flag = 1;
+	    int colXm = colX - 1;
+	    int colXp = colX + 1;
+	    int colYm = colY - 1;
+	    int colYp = colY + 1;
+	    int colZm = colZ - 1;
+	    int colZp = colZ + 1;
+	    if (colXm < indexLow.x()) colXm = indexLow.x();
+	    if (colXp > indexHigh.x())colXp = indexHigh.x();
+	    if (colYm < indexLow.y()) colYm = indexLow.y();
+	    if (colYp > indexHigh.y())colYp = indexHigh.y();
+	    if (colZm < indexLow.z()) colZm = indexLow.z();
+	    if (colZp > indexHigh.z())colZp = indexHigh.z();
+	    IntVector xMinusCell(colXm,colY,colZ);
+	    IntVector xPlusCell(colXp,colY,colZ);
+	    IntVector yMinusCell(colX,colYm,colZ);
+	    IntVector yPlusCell(colX,colYp,colZ);
+	    IntVector zMinusCell(colX,colY,colZm);
+	    IntVector zPlusCell(colX,colY,colZp);
+	    double uvel = uVelocity[currCell];
+	    double vvel = vVelocity[currCell];
+	    double wvel = wVelocity[currCell];
+
+	    if (den[xMinusCell] < 1.0e-12) uvel=uVelocity[xPlusCell];
+	    if (den[yMinusCell] < 1.0e-12) vvel=vVelocity[yPlusCell];
+	    if (den[zMinusCell] < 1.0e-12) wvel=wVelocity[zPlusCell];
+	    if (den[currCell] < 1.0e-12) flag = 0;
+	    if ((den[xMinusCell] < 1.0e-12)&&(den[xPlusCell] < 1.0e-12)) flag = 0;
+	    if ((den[yMinusCell] < 1.0e-12)&&(den[yPlusCell] < 1.0e-12)) flag = 0;
+	    if ((den[zMinusCell] < 1.0e-12)&&(den[zPlusCell] < 1.0e-12)) flag = 0;
+
+	    tmp_time=1.0;
+	    if (flag != 0)
+	      tmp_time=Abs(uvel)/(cellinfo->sew[colX])+
+		Abs(vvel)/(cellinfo->sns[colY])+
+		Abs(wvel)/(cellinfo->stb[colZ])+
 		(visc[currCell]/den[currCell])* 
 		(1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
 		 1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
 		 1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
-		//		2.0*KStabilityU[currCell] +
-		//		2.0*KStabilityV[currCell] +
-		//		2.0*KStabilityW[currCell] +
 		small_num;
-	    }
-	    else {
-	      tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
-		Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
-		Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
-		(visc[currCell]/den[currCell])* 
-		(1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
-		 1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
-		 1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
-		small_num;
-	    }
+	  }
+	  else
+	    tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
+	      Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
+	      Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
+	      (visc[currCell]/den[currCell])* 
+	      (1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
+	       1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
+	       1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
+	      small_num;
 
 	  delta_t2=Min(1.0/tmp_time, delta_t2);
 #if 0								  
@@ -741,7 +796,6 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 	  delta_t2=Min(Abs(cellinfo->stb[colZ]/
 			  (wVelocity[currCell]+small_num)), delta_t2);
 #endif
-	  }
 	}
       }
     }
