@@ -41,10 +41,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Fields
 
 SRCS     += \
-	$(SRCDIR)/ApplyInterpolant.cc\
 	$(SRCDIR)/ApplyMappingMatrix.cc\
 	$(SRCDIR)/AttractNormals.cc\
-	$(SRCDIR)/BuildInterpolant.cc\
 	$(SRCDIR)/BuildMappingMatrix.cc\
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\
@@ -70,7 +68,6 @@ SRCS     += \
 	$(SRCDIR)/GatherFields.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/HexToTet.cc\
-	$(SRCDIR)/InterpolantToTransferMatrix.cc\
 	$(SRCDIR)/IsoClip.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldMesh.cc\
