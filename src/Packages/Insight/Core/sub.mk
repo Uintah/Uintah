@@ -20,7 +20,7 @@ SRCDIR := Packages/Insight/Core
 
 SUBDIRS := \
         $(SRCDIR)/Datatypes \
-        $(SRCDIR)/CodeGenerator \
+#        $(SRCDIR)/CodeGenerator \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

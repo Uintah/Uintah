@@ -50,7 +50,7 @@ INSIGHT_TCL_GEN := $(patsubst sci_%.xml, $(SRCDIR)/%.tcl, $(XMLS))
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 Packages/Insight/Dataflow/GUI/%.tcl:  Packages/Insight/Dataflow/Modules/Filters/XML/sci_%.xml
-	$(CODEGEN) $(PATH_TO_SCIRUN)/Packages/Insight $(CATEGORY) $* -gui 
+	java $(CODEGEN) $(PATH_TO_SCIRUN)/Packages/Insight $(CATEGORY) $* -gui 
 
 $(SRCDIR)/tclIndex: $(INSIGHT_TCL_GEN) \
 	$(SRCDIR)/ImageFileWriter.tcl \

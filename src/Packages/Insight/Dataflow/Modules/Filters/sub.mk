@@ -58,7 +58,7 @@ CODEGEN := Packages/Insight/Core/CodeGenerator/generate
 SRCS += ${SRC_GEN} 
 
 $(SRCDIR)/%.cc : $(SRCDIR)/XML/sci_%.xml
-	$(CODEGEN) $(PATH_TO_SCIRUN)/Packages/Insight $(CATEGORY) $*
+	java $(CODEGEN) $(PATH_TO_SCIRUN)/Packages/Insight $(CATEGORY) $*
 	cp ../src/$@ $@
 
 PSELIBS := Packages/Insight/Core/Datatypes \
