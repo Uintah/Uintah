@@ -85,9 +85,8 @@ struct GTF_HSV {
 };
 
 struct ColorPoint {
-  float  _t;  // time -
+  float  _t;
   Color _rgb;
-  HSVColor _hsv;  // you have both reps...
 };
 
 struct AlphaPoint {
@@ -137,8 +136,8 @@ class GenTransferFunc : public Module {
   void updateViewHSV();
   void loadTs( double Ax, double Ay, double ax, double ay, vector<double>& t);
 
-  void pickle();
-  void unpickle();
+  void tcl_pickle();
+  void tcl_unpickle();
 
 public:
   GenTransferFunc( GuiContext* ctx);
@@ -175,8 +174,10 @@ public:
 
   int makeCurrent(void);
 
-
+  virtual void presave();
 };
+
+
 
 DECLARE_MAKER(GenTransferFunc)
 
@@ -197,9 +198,9 @@ GenTransferFunc::GenTransferFunc( GuiContext* ctx)
     whichWin(-1),
     cmap_generation(-1)
 {
-  cmap = scinew ColorMap; // start as nothing...
+  cmap = scinew ColorMap; // start as nothing.
 
-  // initialize the transfer function
+  // Initialize the transfer function.
   ColorPoint p0, p1;
 
   p0._t = 0.0;
@@ -272,14 +273,92 @@ GenTransferFunc::loadTs( double Ax, double Ay, double ax, double ay,
 
 
 void
-GenTransferFunc::pickle()
+GenTransferFunc::tcl_pickle()
 {
+  unsigned int i;
+
+  ostringstream rgbstream;
+  for (i = 0; i < rgb_points.size(); i++)
+  {
+    rgbstream << rgb_points[i]._t << " "
+	      << rgb_points[i]._rgb.r() << " "
+	      << rgb_points[i]._rgb.g() << " "
+	      << rgb_points[i]._rgb.b() << " ";
+  }
+  rgb_points_pickle_.set(rgbstream.str());
+
+  ostringstream hsvstream;
+  for (i = 0; i < hsv_points.size(); i++)
+  {
+    hsvstream << hsv_points[i]._t << " "
+	      << hsv_points[i]._rgb.r() << " "
+	      << hsv_points[i]._rgb.g() << " "
+	      << hsv_points[i]._rgb.b() << " ";
+  }
+  hsv_points_pickle_.set(hsvstream.str());
+
+  ostringstream astream;
+  for (i = 0; i < alphas.size(); i++)
+  {
+    astream << alphas[i]._t << " "
+	    << alphas[i]._alpha << " ";
+  }
+  alphas_pickle_.set(astream.str());
 }
 
 
 void
-GenTransferFunc::unpickle()
+GenTransferFunc::tcl_unpickle()
 {
+  rgb_points.clear();
+  hsv_points.clear();
+  alphas.clear();
+
+  float r, g, b;
+  istringstream rgbstream(rgb_points_pickle_.get());
+  while (!rgbstream.eof())
+  {
+    ColorPoint p;
+    rgbstream >> p._t;
+    if (rgbstream.fail()) break;
+    rgbstream >> r;
+    if (rgbstream.fail()) break;
+    rgbstream >> g;
+    if (rgbstream.fail()) break;
+    rgbstream >> b;
+    if (rgbstream.fail()) break;
+    p._rgb = Color(r, g, b);
+    rgb_points.push_back(p);
+  }
+
+  float h, s, v;
+  istringstream hsvstream(hsv_points_pickle_.get());
+  while (!hsvstream.eof())
+  {
+    ColorPoint p;
+    hsvstream >> p._t;
+    if (hsvstream.fail()) break;
+    hsvstream >> h;
+    if (hsvstream.fail()) break;
+    hsvstream >> s;
+    if (hsvstream.fail()) break;
+    hsvstream >> v;
+    if (hsvstream.fail()) break;
+    p._rgb = Color(h, s, v);
+    hsv_points.push_back(p);
+  }
+  if (hsv_points.size()) { updateViewHSV(); }
+
+  istringstream astream(alphas_pickle_.get());
+  while (!astream.eof())
+  {
+    AlphaPoint p;
+    astream >> p._t;
+    if (astream.fail()) break;
+    astream >> p._alpha;
+    if (astream.fail()) break;
+    alphas.push_back(p);
+  }
 }
 
 
@@ -675,6 +754,8 @@ GenTransferFunc::tcl_command( GuiArgs& args, void* userdata)
     DrawGraphs(0);
   }else if(args[1] == "closewindow") {
      ctxs[0] = ctxs[1] = ctxs[2] = 0;
+  }else if (args[1] == "unpickle") {
+     tcl_unpickle();
   }else {
     Module::tcl_command(args, userdata);
   }
@@ -880,22 +961,22 @@ GenTransferFunc::DoMotion(int, int x, int y)
 void
 GenTransferFunc::DoDown(int win, int x, int y, int button)
 {
-  // you have to find the point to select...
+  // You have to find the point to select.
 
   float time,val;
-  int cline,cpoint; // closest info...
+  int cline,cpoint; // Closest info.
 
   time = GetTime(x,y);
   val  = GetVal(x,y);
 
-  whichWin = win;  // this has to be pre closest selection...
+  whichWin = win;  // This has to be pre closest selection.
   GetClosest(time,val,cline,cpoint);
 
   ColorPoint p;
 
   if (button == 2) {
-    // you have to find what side of the closest point
-    // you are on...
+    // You have to find what side of the closest point
+    // you are on.
 
     activeLine = cline;
 
@@ -904,8 +985,6 @@ GenTransferFunc::DoDown(int win, int x, int y, int button)
     p._rgb[cline>>1] = val;
     p._rgb[((cline>>1)+1)%3] = 0;
     p._rgb[((cline>>1)+2)%3] = 1;
-
-//     p._hsv = HSVColor(p._rgb);
 
     if (cline != 7) {
       if(!RGBorHSV.get()){  // rgb
@@ -1244,6 +1323,14 @@ GenTransferFunc::makeCurrent()
 
   return 1;
 }
+
+
+void
+GenTransferFunc::presave()
+{
+  tcl_pickle();
+}
+
 
 
 } // End namespace SCIRun
