@@ -3,6 +3,7 @@
 #define MAPBLENDMATERIAL_H 1
 
 #include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/PPMImage.h>
 
 namespace rtrt {
 
