@@ -4,10 +4,14 @@
 #include "VolumeDpy.h"
 #include "HVolumeMaterial.h"
 #include <Core/Math/MinMax.h>
+#ifdef USE_STF
+#include "ScalarTransform1D.h"
+#endif
 
 using namespace rtrt;
 using namespace SCIRun;
 
+#ifndef USE_STF
 Material* HVolumeTransferFunct::index(const float val) {
   int i = (int) ((val - datamin) * scale * (nmatls-1));
   //  cout << ", val = "<<val<<", i = "<<i;
@@ -91,3 +95,40 @@ void HVolumeMaterial::get_min_max(float &in_min, float &in_max) {
   in_min = Min(in_min,min);
   in_max = Max(in_max,max);
 }
+#endif // ifdef USE_STF
+
+HVolumeMaterial::HVolumeMaterial(VolumeDpy *dpy,
+				 ScalarTransform1D<float,float> *f1_to_f2,
+				 ScalarTransform1D<float,Material*> *f2_to_material):
+  vdpy(dpy), f1_to_f2(f1_to_f2), f2_to_material(f2_to_material) {
+
+}
+
+void HVolumeMaterial::shade(Color& result, const Ray& ray,
+			    const HitInfo& hit, int depth,
+			    double atten, const Color& accumcolor,
+			    Context* cx) {
+  // get the current value from vdpy
+  float isoval = vdpy->isoval;
+  // lookup into f1_to_f2
+  float f2 = f1_to_f2->lookup_bound(isoval);
+  // use this value to get the material
+  Material *matl = f2_to_material->lookup(f2);
+  matl->shade(result, ray, hit, depth, atten, accumcolor, cx);
+}
+
+#if 0
+void HVolumeMaterial::get_min_max(float &in_min, float &in_max) {
+  //  cerr << "f1_to_f2->size() = "<<f1_to_f2->size()<<endl;
+  if (f1_to_f2->size() == 0) return;
+  float min, max;
+  min = max = (*f1_to_f2)[0];
+  for(unsigned int i = 0; i < f1_to_f2->size(); i++) {
+    //    cerr << "f1_to_f2[i="<<i<<"] = "<<(*f1_to_f2)[i]<<endl;
+    min = Min(min, (*f1_to_f2)[i]);
+    max = Max(max, (*f1_to_f2)[i]);
+  }
+  in_min = Min(in_min,min);
+  in_max = Max(in_max,max);
+}
+#endif
