@@ -23,11 +23,11 @@ namespace SCIRun {
 class MatrixSelectVector : public Module {
   MatrixIPort* imat_;
   MatrixOPort* ovec_;
-  GuiString row_or_col_;
   GuiInt row_;
   GuiInt row_max_;
   GuiInt col_;
   GuiInt col_max_;
+  GuiString row_or_col_;
   GuiInt animate_;
 public:
   MatrixSelectVector(const clString& id);
@@ -43,10 +43,13 @@ extern "C" Module* make_MatrixSelectVector(const clString& id)
 }
 
 MatrixSelectVector::MatrixSelectVector(const clString& id)
-: Module("MatrixSelectVector", id, Filter), animate_("animate_", id, this),
-  col_("col_", id, this), col_max_("col_max_", id, this),
-  row_("row_", id, this), row_max_("row_max_", id, this),
-  row_or_col_("row_or_col_", id, this)
+: Module("MatrixSelectVector", id, Filter),
+  row_("row_", id, this),
+  row_max_("row_max_", id, this),
+  col_("col_", id, this),
+  col_max_("col_max_", id, this),
+  row_or_col_("row_or_col_", id, this),
+  animate_("animate_", id, this)
 {
   // Create the input port
   imat_=new MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
