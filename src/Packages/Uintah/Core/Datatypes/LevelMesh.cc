@@ -12,6 +12,17 @@ namespace Uintah {
 using SCIRun::IntVector;
 
 PersistentTypeID LevelMesh::type_id("LevelMesh", "MeshBase", maker);
+LevelMesh:: LevelMesh( LevelMesh* mh, int mx, int my, int mz,
+	     int x, int y, int z) :
+  grid_(mh->grid_), level_(mh->level_), 
+  idxLow_(mh->idxLow_ + IntVector( mx, my, mz)),
+  nx_(x), ny_(y), nz_(z), 
+  min_(mh->grid_->getLevel( mh->level_ )->getNodePosition( idxLow_)),
+  max_(mh->grid_->getLevel( mh->level_ )->
+       getNodePosition( idxLow_ + IntVector(x,y,z)))
+{
+  cerr<<"in LevelMesh constructor \n";
+}
 
 void
 LevelMesh::init()
@@ -32,12 +43,17 @@ LevelMesh::init()
   max_ = grid_->getLevel( level_)->getNodePosition( high );
 }  
 
-LevelMesh::LevelIndex::LevelIndex(const LevelMesh *m, unsigned i,
-				unsigned j, unsigned k ) :
-  mesh_(m), i_(i), j_(j), k_(k)
+LevelMesh::LevelIndex::LevelIndex(const LevelMesh *m, int i,
+				int j, int k ) :
+  mesh_(m)
 {
+  i_ = mesh_->idxLow_.x() + i;
+  j_ = mesh_->idxLow_.y() + j;
+  k_ = mesh_->idxLow_.z() + k;
+  cerr<<"i_,j_,k_ = "<<i_<<","<<j_<<","<<k_<<endl;
+
   LevelP l = mesh_->grid_->getLevel( mesh_->level_ );
-  patch_ = l->selectPatch( mesh_->idxLow_ + IntVector(i_,j_,k_));
+  patch_ = l->selectPatchForNodeIndex( IntVector(i_,j_,k_));
 }
 
 BBox LevelMesh::get_bounding_box() const
@@ -73,7 +89,8 @@ LevelMesh::get_nodes(node_array &array, cell_index idx) const
     if( !(array[i].patch_->containsNode( index ) ) )
       array[i].patch_ =
 	array[i].mesh_->
-	  grid_->getLevel(array[i].mesh_->level_)->selectPatch( index ); 
+	  grid_->getLevel(array[i].mesh_->level_)->
+	               selectPatchForNodeIndex( index ); 
   }
 }
 
@@ -123,9 +140,9 @@ LevelMesh::locate(cell_index &cell, const Point &p) const
 {
   IntVector idx = grid_->getLevel(level_)->getCellIndex( p );
 
-  cell.i_ = (unsigned)idx.x();
-  cell.j_ = (unsigned)idx.y();
-  cell.k_ = (unsigned)idx.z();
+  cell.i_ = (int)idx.x();
+  cell.j_ = (int)idx.y();
+  cell.k_ = (int)idx.z();
 
   return true;
 }

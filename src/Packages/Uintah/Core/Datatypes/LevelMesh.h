@@ -17,6 +17,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/MeshBase.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/BBox.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -47,8 +48,8 @@ public:
   struct LevelIndex
   {
     public:
-    LevelIndex(const LevelMesh* m, unsigned i, unsigned j, unsigned k);
-    unsigned i_, j_, k_;
+    LevelIndex(const LevelMesh* m, int i, int j, int k);
+    int i_, j_, k_;
     const LevelMesh *mesh_;
     const Patch* patch_;
     protected:
@@ -58,20 +59,20 @@ public:
   struct CellIndex : public LevelIndex
   {
     CellIndex() : LevelIndex() {}
-    CellIndex(const LevelMesh *m, unsigned i, unsigned j, unsigned k) :
+    CellIndex(const LevelMesh *m, int i, int j, int k) :
       LevelIndex(m,i,j,k) {}    
   };
   
   struct NodeIndex : public LevelIndex
   {
     NodeIndex() : LevelIndex() {}
-    NodeIndex(const LevelMesh *m, unsigned i, unsigned j, unsigned k) :
+    NodeIndex(const LevelMesh *m, int i, int j, int k) :
       LevelIndex(m,i,j,k) {}    
   };
   
   struct LevelIter : public LevelIndex
   {
-    LevelIter(const LevelMesh *m,unsigned i, unsigned j, unsigned k ) :
+    LevelIter(const LevelMesh *m,int i, int j, int k ) :
       LevelIndex(m,i,j,k) {}
     
     const LevelIndex &operator *() { return *this; }
@@ -87,11 +88,10 @@ public:
       return !(*this == a);
     }
   };
-  
-  
+
   struct NodeIter : public LevelIter
   {
-    NodeIter(const LevelMesh *m, unsigned i, unsigned j, unsigned k) 
+    NodeIter(const LevelMesh *m, int i, int j, int k) 
       : LevelIter(m, i, j, k) {}
     
     const NodeIndex &operator *() const { return (const NodeIndex&)(*this); }
@@ -109,7 +109,8 @@ public:
       }
       IntVector idx = IntVector( i_, j_, k_);
       if( !(patch_->containsNode( idx ) ) )
-	patch_ = mesh_->grid_->getLevel(mesh_->level_)-> selectPatch( idx ); 
+	patch_ = mesh_->grid_->getLevel(mesh_->level_)->
+	  selectPatchForNodeIndex( idx ); 
       return *this;
     }
     
@@ -126,7 +127,7 @@ public:
   
   struct CellIter : public LevelIter
   {
-    CellIter(const LevelMesh *m, unsigned i, unsigned j, unsigned k)
+    CellIter(const LevelMesh *m, int i, int j, int k)
       : LevelIter(m, i, j, k) {}
     
     const CellIndex &operator *() const { return (const CellIndex&)(*this); }
@@ -144,7 +145,8 @@ public:
       }
       IntVector idx = IntVector( i_, j_, k_);
       if( !(patch_->containsCell( idx ) ))
-	patch_ = mesh_->grid_->getLevel(mesh_->level_)-> selectPatch( idx ); 
+	patch_ = mesh_->grid_->getLevel(mesh_->level_)-> 
+	  selectPatchForCellIndex( idx ); 
       return *this;
     }
     
@@ -162,28 +164,28 @@ public:
   {
   public:
     UnfinishedIndex() : i_(0) {}
-    UnfinishedIndex(unsigned i) : i_(i) {}
+    UnfinishedIndex(int i) : i_(i) {}
 
-    operator const unsigned() const { return i_; }
+    operator const int() const { return i_; }
 
-    unsigned i_;
+    int i_;
   };
 
   struct EdgeIndex : public UnfinishedIndex
   {
     EdgeIndex() : UnfinishedIndex() {}
-    EdgeIndex(unsigned i) : UnfinishedIndex(i) {}
+    EdgeIndex(int i) : UnfinishedIndex(i) {}
   };
 
   struct FaceIndex : public UnfinishedIndex
   {
     FaceIndex() : UnfinishedIndex() {}
-    FaceIndex(unsigned i) : UnfinishedIndex(i) {}
+    FaceIndex(int i) : UnfinishedIndex(i) {}
   };
 
   struct UnfinishedIter : public UnfinishedIndex
   {
-    UnfinishedIter(const LevelMesh *m, unsigned i) 
+    UnfinishedIter(const LevelMesh *m, int i) 
       : UnfinishedIndex(i), mesh_(m) {}
     
     const UnfinishedIndex &operator *() { return *this; }
@@ -203,7 +205,7 @@ public:
 
   struct EdgeIter : public UnfinishedIter
   {
-    EdgeIter(const LevelMesh *m, unsigned i) 
+    EdgeIter(const LevelMesh *m, int i) 
       : UnfinishedIter(m, i) {}
     
     const EdgeIndex &operator *() const { return (const EdgeIndex&)(*this); }
@@ -222,7 +224,7 @@ public:
 
   struct FaceIter : public UnfinishedIter
   {
-    FaceIter(const LevelMesh *m, unsigned i) 
+    FaceIter(const LevelMesh *m, int i) 
       : UnfinishedIter(m, i) {}
     
     const FaceIndex &operator *() const { return (const FaceIndex&)(*this); }
@@ -277,13 +279,17 @@ public:
   void init();
   // remaining constructors
   LevelMesh( GridP  g, int l) : grid_(g), level_(l) { init();}
+  LevelMesh( LevelMesh* mh, int mx, int my, int mz,
+	     int x, int y, int z); 
   LevelMesh(const LevelMesh &copy) :
     grid_(copy.grid_), level_(copy.level_), idxLow_(copy.idxLow_),
     nx_(copy.nx_), ny_(copy.ny_), nz_(copy.nz_), min_(copy.min_),
     max_(copy.max_) {}
-  virtual LevelMesh *clone(){ return new LevelMesh(*this); }
+  virtual LevelMesh *clone(){ return scinew LevelMesh(*this); }
   virtual ~LevelMesh() {}
 
+  node_index  node(int i, int j, int k) const
+    { return node_index(this, i, j, k); }
   node_iterator node_begin() const { return node_iterator(this, 0, 0, 0); }
   node_iterator node_end() const { return node_iterator(this,0, 0, nz_); }
   node_size_type nodes_size() const {
@@ -297,25 +303,27 @@ public:
   face_iterator face_end() const { return face_iterator(this,0); }
   face_size_type faces_size() const { return face_size_type(0); }
 
-  cell_iterator cell_begin() const { return cell_iterator(this, 0, 0, 0); }
+  cell_index  cell(int i, int j, int k) const
+    { return cell_index(this, i, j, k); }
+   cell_iterator cell_begin() const { return cell_iterator(this, 0, 0, 0); }
   cell_iterator cell_end() const { return cell_iterator(this, 0, 0, nz_-1); }
   cell_size_type cells_size() const {
     return cell_size_type(this, nx_-1, ny_-1, nz_-1);
   }
 
   //! get the mesh statistics
-  unsigned get_nx() const { return nx_; }
-  unsigned get_ny() const { return ny_; }
-  unsigned get_nz() const { return nz_; }
+  int get_nx() const { return nx_; }
+  int get_ny() const { return ny_; }
+  int get_nz() const { return nz_; }
   Point get_min() const { return min_; }
   Point get_max() const { return max_; }
   Vector diagonal() const { return max_ - min_; }
   virtual BBox get_bounding_box() const;
 
   //! set the mesh statistics
-  void set_nx(unsigned x) { nx_ = x; }
-  void set_ny(unsigned y) { ny_ = y; }
-  void set_nz(unsigned z) { nz_ = z; }
+  void set_nx(int x) { nx_ = x; }
+  void set_ny(int y) { ny_ = y; }
+  void set_nz(int z) { nz_ = z; }
   void set_min(Point p) { min_ = p; }
   void set_max(Point p) { max_ = p; }
 
@@ -328,12 +336,12 @@ public:
   void get_faces(face_array &, cell_index) const {}
 
   //! get the parent element(s) of the given index
-  unsigned get_edges(edge_array &, node_index) const { return 0; }
-  unsigned get_faces(face_array &, node_index) const { return 0; }
-  unsigned get_faces(face_array &, edge_index) const { return 0; }
-  unsigned get_cells(cell_array &, node_index) const { return 0; }
-  unsigned get_cells(cell_array &, edge_index) const { return 0; }
-  unsigned get_cells(cell_array &, face_index) const { return 0; }
+  int get_edges(edge_array &, node_index) const { return 0; }
+  int get_faces(face_array &, node_index) const { return 0; }
+  int get_faces(face_array &, edge_index) const { return 0; }
+  int get_cells(cell_array &, node_index) const { return 0; }
+  int get_cells(cell_array &, edge_index) const { return 0; }
+  int get_cells(cell_array &, face_index) const { return 0; }
 
   //! similar to get_cells() with face_index argument, but
   //  returns the "other" cell if it exists, not all that exist
@@ -371,13 +379,13 @@ private:
 
 
   //! the node_index space extents of a LevelMesh (min=0, max=n-1)
-  unsigned nx_, ny_, nz_;
+  int nx_, ny_, nz_;
 
   //! the object space extents of a LevelMesh
   Point min_, max_;
 
   // returns a LevelMesh
-  static Persistent *maker() { return new LevelMesh(); }
+  static Persistent *maker() { return scinew LevelMesh(); }
 };
 
 
