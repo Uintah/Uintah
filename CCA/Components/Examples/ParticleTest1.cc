@@ -119,7 +119,7 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
 
 }
 
-void ParticleTest1::computeStableTimestep(const ProcessorGroup* pg,
+void ParticleTest1::computeStableTimestep(const ProcessorGroup* /*pg*/,
 				     const PatchSubset* /*patches*/,
 				     const MaterialSubset* /*matls*/,
 				     DataWarehouse*,
