@@ -73,117 +73,73 @@ ModuleInfo* GetModuleInfo(const clString& name, const clString& catname,
   return 0;
 }
 
-IPort* FindAndAllocateIPortType(Module* mod, const clString& str,
-				const clString& name)
+void *FindLibrarySymbol(const char* package, const char* type, 
+			const char* symbol)
 {
-  int strlength = strlen(str());
-  char* package = new char[strlength+1];
-  char* datatype = new char[strlength+1];
-  char* libname = new char[strlength*2+15];
-  char* portname = new char[strlength+11];
+  char* libname = new char[strlen(package)+strlen(symbol)+15];
+  void* SymbolAddress = 0;
   LIBRARY_HANDLE so = 0;
+
+  sprintf(libname,"lib%s_Datatypes_%s.so",package,type);
+  so = GetLibraryHandle(libname);
+  if (so) {
+    SymbolAddress = GetHandleSymbolAddress(so,symbol);
+    if (SymbolAddress) goto found;
+  }
+  
+  sprintf(libname,"lib%s_Datatypes.so",package);
+  so = GetLibraryHandle(libname);
+  if (so) {
+    SymbolAddress = GetHandleSymbolAddress(so,symbol);
+    if (SymbolAddress) goto found;
+  }
+
+  sprintf(libname,"lib%s.so",package);
+  so = GetLibraryHandle(libname);
+  if (so) {
+    SymbolAddress = GetHandleSymbolAddress(so,symbol);
+    if (SymbolAddress) goto found;
+  }
+
+  sprintf(libname,"%s",package);
+  so = GetLibraryHandle(libname);
+  if (so) {
+    SymbolAddress = GetHandleSymbolAddress(so,symbol);
+    if (SymbolAddress) goto found;
+  }
+
+ found:
+  delete[] libname;
+  return SymbolAddress;
+}
+
+iport_maker FindIPort(const char* package, const char* datatype)
+{
   iport_maker maker = 0;
+  char* maker_symbol = new char[strlen(datatype)+11];
 
-  sscanf(str(),"%[^:]::%s",package,datatype);
+  sprintf(maker_symbol,"make_%sIPort",datatype);
 
-  if (package[0]=='*') return 0;
-  
-  sprintf(portname,"make_%sIPort",datatype);
+  maker = (iport_maker)FindLibrarySymbol(package,datatype,maker_symbol);
 
-  sprintf(libname,"lib%s_Datatypes_%s.so",package,datatype);
-  so = GetLibraryHandle(libname);
-  if (so) {
-    maker = (iport_maker)GetHandleSymbolAddress(so,portname);
-    if (maker) return maker(mod,name());
-  }
-  
-  sprintf(libname,"lib%s_Datatypes.so",package);
-  so = GetLibraryHandle(libname);
-  if (so) {
-    maker = (iport_maker)GetHandleSymbolAddress(so,portname);
-    if (maker) return maker(mod,name());
-  }
+  delete[] maker_symbol;
 
-  sprintf(libname,"lib%s.so",package);
-  so = GetLibraryHandle(libname);
-  if (so) {
-    maker = (iport_maker)GetHandleSymbolAddress(so,portname);
-    if (maker) return maker(mod,name());
-  }
+  return maker;
+}  
 
-  sprintf(libname,"%s",package);
-  so = GetLibraryHandle(libname);
-  if (so) {
-    maker = (iport_maker)GetHandleSymbolAddress(so,portname);
-    if (maker) return maker(mod,name());
-  }
-
-  std::cerr << "Module: Couldn't find input port for "
-            << package << "::" << datatype << endl;
-
-  delete[] package;
-  delete[] datatype;
-  delete[] libname;
-  delete[] portname;
-
-  return 0;
-}
-
-OPort* FindAndAllocateOPortType(Module* mod, const clString& str,
-				const clString& name)
+oport_maker FindOPort(const char* package, const char* datatype)
 {
-  int strlength = strlen(str());
-  char* package = new char[strlength+1];
-  char* datatype = new char[strlength+1];
-  char* libname = new char[strlength*2+15];
-  char* portname = new char[strlength+11];
-  LIBRARY_HANDLE so = 0;
   oport_maker maker = 0;
+  char* maker_symbol = new char[strlen(datatype)+11];
 
-  sscanf(str(),"%[^:]::%s",package,datatype);
+  sprintf(maker_symbol,"make_%sOPort",datatype);
 
-  if (package[0]=='*') return 0;
-  
-  sprintf(portname,"make_%sOPort",datatype);
+  maker = (oport_maker)FindLibrarySymbol(package,datatype,maker_symbol);
 
-  sprintf(libname,"lib%s_Datatypes_%s.so",package,datatype);
-  so = GetLibraryHandle(libname);
-  if (so) {
-    maker = (oport_maker)GetHandleSymbolAddress(so,portname);
-    if (maker) return maker(mod,name());
-  }
-  
-  sprintf(libname,"lib%s_Datatypes.so",package);
-  so = GetLibraryHandle(libname);
-  if (so) {
-    maker = (oport_maker)GetHandleSymbolAddress(so,portname);
-    if (maker) return maker(mod,name());
-  }
+  delete[] maker_symbol;
 
-  sprintf(libname,"lib%s.so",package);
-  so = GetLibraryHandle(libname);
-  if (so) {
-    maker = (oport_maker)GetHandleSymbolAddress(so,portname);
-    if (maker) return maker(mod,name());
-  }
-
-  sprintf(libname,"%s",package);
-  so = GetLibraryHandle(libname);
-  if (so) {
-    maker = (oport_maker)GetHandleSymbolAddress(so,portname);
-    if (maker) return maker(mod,name());
-  }
-
-  std::cerr << "Module: Couldn't find output port for "
-            << package << "::" << datatype << endl;
-
-  delete[] package;
-  delete[] datatype;
-  delete[] libname;
-  delete[] portname;
-
-  return 0;
-}
+  return maker;
+}  
 
 Module::Module(const clString& name, const clString& id, 
 	       SchedClass sched_class, const clString& cat,
@@ -202,31 +158,66 @@ Module::Module(const clString& name, const clString& id,
   IPort* iport;
   OPort* oport;
 
+  lastportdynamic = 0;
+  dynamic_port_maker = 0;
+
+  // Auto allocate all ports listed in the .xml file for this module,
+  // execpt those whose datatype tag has contents that start with '*'.
   ModuleInfo* info = GetModuleInfo(moduleName,categoryName,packageName);
   if (info) {
-    for (iport_iter i1=info->iports->begin();
-	 i1!=info->iports->end();
-	 i1++) {
-      iport = FindAndAllocateIPortType(this,((*i1).second)->datatype,
-				       ((*i1).second)->name);
-      if (iport) {
-	add_iport(iport);
-	auto_iports.insert(std::pair<clString,
-			   IPort*>(((*i1).second)->name,iport));
-      }
-    }
+    oport_maker maker;
     for (oport_iter i2=info->oports->begin();
 	 i2!=info->oports->end();
 	 i2++) {
-      oport = FindAndAllocateOPortType(this,((*i2).second)->datatype,
-				       ((*i2).second)->name);
-      if (oport) {
-	add_oport(oport);
-	auto_oports.insert(std::pair<clString,
-			   OPort*>(((*i2).second)->name,oport));
+      int strlength = strlen(((*i2).second)->datatype());
+      char* package = new char[strlength+1];
+      char* datatype = new char[strlength+1];
+      sscanf(((*i2).second)->datatype(),"%[^:]::%s",package,datatype);
+      if (package[0]=='*')
+	maker = FindOPort(&package[1],datatype);
+      else
+	maker = FindOPort(package,datatype);	
+      if (maker && package[0]!='*') {
+	oport = maker(this,((*i2).second)->name);
+	if (oport) {
+	  add_oport(oport);
+	  auto_oports.insert(std::pair<clString,
+			     OPort*>(((*i2).second)->name,oport));
+	}
       }
+      delete[] package;
+      delete[] datatype;
     }  
+    for (iport_iter i1=info->iports->begin();
+	 i1!=info->iports->end();
+	 i1++) {
+      int strlength = strlen(((*i1).second)->datatype());
+      char* package = new char[strlength+1];
+      char* datatype = new char[strlength+1];
+      sscanf(((*i1).second)->datatype(),"%[^:]::%s",package,datatype);
+      if (package[0]=='*')
+	dynamic_port_maker = FindIPort(&package[1],datatype);
+      else
+	dynamic_port_maker = FindIPort(package,datatype);	
+      if (dynamic_port_maker && package[0]!='*') {
+	iport = dynamic_port_maker(this,((*i1).second)->name);
+	if (iport) {
+	  add_iport(iport);
+	  auto_iports.insert(std::pair<clString,
+			     IPort*>(((*i1).second)->name,iport));
+	}
+      } else
+	dynamic_port_maker = 0;
+      delete[] package;
+      delete[] datatype;
+    }
   }
+
+  // the last port listed in the .xml file may or may not be dynamic.
+  // if found and lastportdynamic is true, the port is dynamic.
+  // otherwise it is not dynamic.
+  if (lastportdynamic && !dynamic_port_maker)
+    lastportdynamic = 0;
 }
 
 
@@ -350,9 +341,9 @@ OPort* Module::get_oport(char* portname)
   return 0;
 }
 
-void Module::connection(ConnectionMode, int, int)
+void Module::connection(ConnectionMode mode, int which, int)
 {
-    // Default - do nothing...
+  // do nothing by default
 }
 
 void Module::set_context(NetworkEditor* _netedit, Network* _network)
@@ -669,6 +660,10 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
+// Revision 1.17  2000/12/05 19:08:29  moulding
+// added support for dynamic ports to the auto port facility, although it is not
+// yet fully operational.
+//
 // Revision 1.16  2000/11/29 09:46:49  moulding
 // removed a debug print statement
 //
