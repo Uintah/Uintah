@@ -53,7 +53,7 @@ GeomObj::GeomObj() :
   lock(*(lock_pool.getMutex(lock_pool_hash(this)))),
   id_int_(0x1234567),
   id_intvector_(0x1234567,0x1234567,0x1234567),
-  id_longlong_(0x123456789ABCDEF)
+  id_longlong_((long long)(0x1234567))
 {
 }
 
@@ -97,7 +97,7 @@ GeomObj::getId( IntVector& id )
 bool
 GeomObj::getId( long long& id )
 {
-  if ( id_longlong_ == (long long)(0x123456789ABCDEF))
+  if ( id_longlong_ == (long long)(0x1234567))
     return false;
   else {
     id = id_longlong_;
