@@ -1456,11 +1456,11 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,const PatchSet* patches,
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -1566,11 +1566,11 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex,
-		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex,
-		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex,
-		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(cellType, d_lab->d_cellTypeLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
