@@ -10,7 +10,7 @@
 #
 # The input file must be named on the command line, and output goes to stdout.
 
-from string import strip,split
+from string import strip,split,find
 from sys import argv,exit
 
 # These two constants define what nodes and edges look like in daVinci term
@@ -27,12 +27,22 @@ deplist = open(argv[1], 'r')
 nodes = {}
 
 for line in deplist.readlines():
-	names = split(line)
+	# This ugliness exists to split the names (which may contain spaces)
+	names = []
+	i = 0
+	while (i >= 0):
+		i = find(line, '"', i)
+		if i >= 0:
+			(begin, end) = (i + 1, len(line))
+			i = find(line, '"', i + 1)
+			if i >= 0:
+				end = i
+			names.append(line[begin:end])
+			i = i + 1
+	
 	if (len(names) < 1) or (len(names) > 2):
 		print "syntax error: format is \"<obj> [<dependency>]\""
 		exit(1);
-	for name in names:
-		strip(name)
 
 	if (not nodes.has_key(names[0])):
 		nodes[names[0]] = [];
