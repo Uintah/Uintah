@@ -6,7 +6,15 @@
 #include <Packages/Uintah/Core/Math/Sparse.h>
 #include <Core/Containers/StaticArray.h>
 
+#ifdef HAVE_PETSC
+extern "C" {
+#include "petscsles.h"
+}
+#endif
+
 #define MAX_BASIS 27
+
+
 
 namespace Uintah {
 
@@ -65,6 +73,9 @@ WARNING
 						  DataWarehouse* old_dw,
 						  DataWarehouse* new_dw,
 						  SparseMatrix<double,int>& K,
+#ifdef HAVE_PETSC
+						  Mat &A,
+#endif
 						  const bool recursion);
 	 
 	 virtual void computeStressTensorImplicitOnly(const PatchSubset* patches,

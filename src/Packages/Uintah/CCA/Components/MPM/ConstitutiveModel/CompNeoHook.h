@@ -18,6 +18,11 @@
 #include <vector>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 
+#ifdef HAVE_PETSC
+extern "C" {
+#include "petscsles.h"
+}
+#endif
 namespace Uintah {
       class CompNeoHook : public ConstitutiveModel {
       private:
@@ -58,6 +63,7 @@ namespace Uintah {
 						  DataWarehouse* old_dw,
 						  DataWarehouse* new_dw,
 						  SparseMatrix<double,int>& KK,
+						  Mat &A,
 						  const bool recursion);
 
          virtual void computeStressTensorImplicitOnly(const PatchSubset* patches,
