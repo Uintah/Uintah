@@ -105,6 +105,15 @@ AC_COPYRIGHT(
 ##
 )
 
+##
+## Any error/warning/note/remark messages that need to be turned off
+## globally should be appended to this variable.  This should only be
+## done if the message is pervasive and has been determined to be
+## benign.  WOFF_NUMBERS should be a 'space' delimited list of numbers.
+## Eg: '123 124 155'
+##
+WOFF_NUMBERS=
+
 ## Clean up files that could be left around if configure was 
 ## interrupted (by control-c, ^c) because I do not know how to add
 ## cleanup to the builtin AC function that uses the 'trap' command.
@@ -674,6 +683,7 @@ case $host in
     SCI_CHECK_OS_VERSION(6.5,,
       configure: error: wrong Irix version. exiting.;exit)
     NUM_CPUS="`TERM=dumb top -n 1 | fgrep CPUs | cut -d' ' -f1`"    
+    WOFF_NUMBERS="$WOFF_NUMBERS 3625 3649"
     ;;
   *linux*)
     SCI_CHECK_OS_VERSION(2.2.17,,
@@ -3462,7 +3472,7 @@ if test -e $freetype_bin/freetype-config; then
 fi
 
 if test "$found_freetype_config" = "no"; then
-   AC_MSG_RESULT(no.)
+   AC_MSG_RESULT(No 'freetype-config' file found in $freetype_bin.  Skipping Freetype check.)
    if test "$_sci_optional" != "optional"; then
      echo
      AC_MSG_WARN(Cannot find a freetype-config file to get freetype variables.)
@@ -4170,6 +4180,20 @@ AC_SUBST(BUILD_SCIRUN2)
 ##  ---------------------------------------------------------------------
 ##  --------------------  generate output files  ------------------------
 ##  ---------------------------------------------------------------------
+
+if test -n "$WOFF_NUMBERS"; then
+  for num in $WOFF_NUMBERS; do
+    if test -z "$WOFF_COMMA_LIST"; then
+       WOFF_COMMA_LIST="$num"
+    else
+       WOFF_COMMA_LIST="$WOFF_COMMA_LIST,$num"
+    fi
+    WOFF_STRING="$WOFF_STRING -Wl,-woff -Wl,$num"
+  done
+  WOFF_STRING="-woff $WOFF_COMMA_LIST $WOFF_STRING"
+fi
+AC_SUBST(WOFF_STRING)
+
 SCI_ARG_VAR(CXXFLAGS,C++ compiler flags)
 
 scirun_obj_dir=`pwd`;
