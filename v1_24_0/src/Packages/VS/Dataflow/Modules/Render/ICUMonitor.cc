@@ -186,6 +186,9 @@ private:
   GuiInt			       gui_show_time_;
   GuiInt                               gui_plot_count_;
   GuiInt                               gui_geom_;
+  GuiDouble										gui_2ndred_;
+  GuiDouble										gui_2ndgreen_;
+  GuiDouble										gui_2ndblue_;
 
   vector<GuiString*>                   gui_nw_label_;
   vector<GuiString*>                   gui_sw_label_;
@@ -387,6 +390,9 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   gui_show_time_(ctx->subVar("show_time")),
   gui_plot_count_(ctx->subVar("plot_count")),
   gui_geom_(ctx->subVar("geom")),
+  gui_2ndred_(ctx->subVar("2ndplot_color-r")),
+  gui_2ndgreen_(ctx->subVar("2ndplot_color-g")),
+  gui_2ndblue_(ctx->subVar("2ndplot_color-b")),
   ctx_(0),
   dpy_(0),
   win_(0),
@@ -881,7 +887,8 @@ ICUMonitor::draw_plots()
       g.label_->draw((cur_x + (w*cw)) - xoff, cur_y, sx, sy);
     }
 
-    glColor4f(g.r_, g.g_, g.b_, 1.0);
+    //glColor4f(g.r_, g.g_, g.b_, 1.0);
+    glColor4f(1.0, 1.0, 1.0, 1.0);
 
     if (g.draw_aux_data_ == 1) { 
       if (g.aux_data_label_)
@@ -917,6 +924,7 @@ ICUMonitor::draw_plots()
 	g.aux_data_->draw(cur_x + w * cw + cg + 15, cur_y - yoff*1.25, sx, sy);
       }
     }
+    glColor4f(g.r_, g.g_, g.b_, 1.0);
     if (data_.get_rep()) {
       // draw the plot
       const float norm = (float)gr_ht / (g.max_ - g.min_);
@@ -931,6 +939,7 @@ ICUMonitor::draw_plots()
       float start_y = cur_y - gr_ht;
       //glColor4f(0.0, 0.9, 0.1, 1.0);
       glDisable(GL_TEXTURE_2D);
+
       glLineWidth(1.5);
       glBegin(GL_LINE_STRIP);
       for (int i = 0; i < (int)samples; i++) {
@@ -967,8 +976,7 @@ ICUMonitor::draw_plots()
       }
       glEnd();
 
-      if (data2_.get_rep() && g.snd_ == 1) {
-
+		if (data2_.get_rep() && g.snd_ == 1) {
         glBegin(GL_LINE_STRIP);
         for (int i = 0; i < (int)samples; i++) {
           int idx = i + cur_idx_;
@@ -986,7 +994,8 @@ ICUMonitor::draw_plots()
           float val = (tmpdata2 - g.min_) * norm;
           glVertex2f((cur_x + (i * pix_per_sample)) * sx, 
 		     (start_y + val) * sy);
-          glColor4f(.8, .8, .8, 0.8);
+          //glColor4f(.8, .8, .8, 0.8);
+			 glColor4f(gui_2ndred_.get(), gui_2ndgreen_.get(), gui_2ndblue_.get(), 0.8);
         }
         glEnd();
       }
@@ -1110,8 +1119,8 @@ ICUMonitor::addMarkersToMenu()
 
   for (unsigned int c = 0; c < data_->nproperties(); c++) {
      string name = data_->get_property_name(c);
-     // only look at MRKR_<name> values here
-     if(string(name, 0, 5) == "MRKR_")
+     // only look at MKR_<name> values here
+     if(string(name, 0, 4) == "MKR_")
      {
        //data_->get_property(name, value);
        data_->get_property(name, val);
@@ -1120,8 +1129,8 @@ ICUMonitor::addMarkersToMenu()
        ss >> value;
 
        keys.insert(value);
-       // strip off "MRKR_" from name
-       tmpmkrs[value] = string(name, 5, name.size()-5);
+       // strip off "MKR_" from name
+       tmpmkrs[value] = string(name, 4, name.size() - 4);
      }
   }
 
@@ -1324,7 +1333,7 @@ ICUMonitor::setNameAndDateAndTime()
 
   if (name != NULL) {
     string title(name);
-    gui->execute(id + " setWindowTitle {ICU Monitor: " + name + "}");
+    gui->execute(id + " setWindowTitle {Physiology Monitor: " + name + "}");
 
     ostringstream titlestr;
     titlestr << "Name: " << title;
