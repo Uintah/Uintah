@@ -46,11 +46,16 @@
 #include <string.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#ifndef _WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#else
+#include <winsock2.h>
+#define socklen_t int
+#endif
 
 #include <iostream>
 #include <string>
@@ -298,11 +303,17 @@ StringSocket::runRecvingThread()
 	}
 	protocol_id = p->p_proto;
       }
+      int yes = 1;
+#else
+#ifdef _WIN32
+      protocol_id = IPPROTO_TCP;
+      char yes = 1; // the windows version of setsockopt takes a char*
 #else
       protocol_id = SOL_TCP;
-#endif
-      
       int yes = 1;
+#endif
+#endif
+
       if(setsockopt(new_fd, protocol_id, TCP_NODELAY, &yes, sizeof(int))==-1) {
 	perror("setsockopt");
       }
@@ -423,7 +434,13 @@ StringSocket::recvall(int sockfd, void *buf, int len)
   int left=len;
   int total = 0;        // how many bytes we've recved
   while(total < len) {
-    int n = recv(sockfd, (char*)buf+total, left, MSG_WAITALL);
+  int flags;
+#ifdef _WIN32
+    flags = 0;
+#else
+    flags = MSG_WAITALL;
+#endif
+    int n = recv(sockfd, (char*)buf+total, left, flags);
 #if 0
     cerr.setf(ios::hex, ios::basefield);
     unsigned char *blah = (unsigned char *)buf;

@@ -39,7 +39,7 @@ SRCS := \
 	$(SRCDIR)/StringSocket.cc \
 	$(SRCDIR)/StringSocketThread.cc \
 
-LIBS := 
+LIBS := $(SOCKET_LIBRARY)
 
 
 PSELIBS := Core/Exceptions Core/Util Core/Thread 
