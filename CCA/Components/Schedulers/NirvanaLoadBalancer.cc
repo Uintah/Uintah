@@ -139,6 +139,7 @@ int NirvanaLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
     SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints"));
   int pidx = getproc(l, d, layout, patches_per_processor, processors_per_host);
   return pidx;
+  ASSERTRANGE(pidx, 0, group->size());
 }
 
 const PatchSet*

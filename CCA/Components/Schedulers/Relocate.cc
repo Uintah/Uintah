@@ -529,6 +529,7 @@ void MPIScatterRecords::addNeighbor(LoadBalancer* lb, const ProcessorGroup* pg,
 {
   neighbor = neighbor->getRealPatch();
   int toProc = lb->getPatchwiseProcessorAssignment(neighbor, pg);
+  ASSERTRANGE(toProc, 0, pg->size());
   procmaptype::iterator iter = procs.find(toProc);
   if(iter == procs.end()){
     MPIScatterProcessorRecord* pr = scinew MPIScatterProcessorRecord();
@@ -894,6 +895,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
       for(int i=0;i<(int)neighbors.size();i++){
 	const Patch* fromPatch=neighbors[i];
 	int from = lb->getPatchwiseProcessorAssignment(fromPatch->getRealPatch(), pg);
+	ASSERTRANGE(from, 0, pg->size());
 	if(from == me){
 	  ScatterRecord* record = scatter_records.findRecord(fromPatch, patch, matl);
 	  if(record){
