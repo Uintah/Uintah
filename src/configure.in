@@ -599,6 +599,10 @@ SCI_ARG_ENABLE(64bit,
   [  --enable-64bit                    Compile in 64 bit mode],
   [is_64bit="$enableval"],
   [is_64bit=$i{is_64bit='no'}])
+SCI_ARG_ENABLE(32bit,
+  [  --enable-32bit                    Compile in 32 bit mode],
+  [is_32bit="$enableval"],
+  [is_32bit=$i{is_32bit='no'}])
 SCI_ARG_ENABLE(output-avg-walltime,
   [  --enable-output-avg-walltime      Output ellapsed wall-times],
   [output_avg_walltime="$enableval"],
@@ -723,6 +727,9 @@ export MAKE_PARALLELISM
 AC_MSG_CHECKING(host system word length)
 if test "$is_64bit" = "yes"; then
   AC_MSG_RESULT(64 bits)
+  if test "$is_32bit" = "yes"; then
+    AC_MSG_ERROR(Both 64 and 32 bit compiles specified.)
+  fi
 else
   AC_MSG_RESULT(32 bits)
 fi
