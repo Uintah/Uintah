@@ -89,7 +89,6 @@ void computeGridEigens(TensorField* tensorField,
   Point lb(0, 0, 0), ub(0, 0, 0);
   IntVector lowIndex, highIndex;
 
-  tensorField->computeHighLowIndices();
   tensorField->get_bounds(lb, ub);
   tensorField->GetLevel()->getIndexRange(lowIndex, highIndex);
 
