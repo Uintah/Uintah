@@ -173,22 +173,14 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    new_dw->allocate(pparticleID, lb->pParticleIDLabel, subset);
 
    ParticleVariable<int> pIsBroken;
-   ParticleVariable<Vector> pCrackNormal1;
-   ParticleVariable<Vector> pCrackNormal2;
-   ParticleVariable<Vector> pCrackNormal3;
+   ParticleVariable<Vector> pCrackNormal;
    ParticleVariable<double> pToughness;
    
    if(d_fracture) {
      new_dw->allocate(pIsBroken, 
        lb->pIsBrokenLabel, subset);
-     new_dw->allocate(pCrackNormal1, 
-       lb->pCrackNormal1Label, subset);
-     new_dw->allocate(pCrackNormal2, 
-       lb->pCrackNormal2Label, subset);
-     new_dw->allocate(pCrackNormal3, 
-       lb->pCrackNormal3Label, subset);
-     new_dw->allocate(pToughness, 
-       lb->pToughnessLabel, subset);
+     new_dw->allocate(pCrackNormal, lb->pCrackNormalLabel, subset);
+     new_dw->allocate(pToughness, lb->pToughnessLabel, subset);
    }
    
    particleIndex start = 0;
@@ -213,9 +205,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      
      if(d_fracture) {
 	pIsBroken[pIdx] = 0;
-	pCrackNormal1[pIdx] = Vector(0.,0.,0.);
-	pCrackNormal2[pIdx] = Vector(0.,0.,0.);
-	pCrackNormal3[pIdx] = Vector(0.,0.,0.);
+	pCrackNormal[pIdx] = Vector(0.,0.,0.);
      }
 
      pexternalforce[pIdx] = Vector(0.0,0.0,0.0);
@@ -285,15 +275,11 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 
 	 if(vdis > 0 && vdis < particle_half_size * 2) {
 	   pIsBroken[pIdx]++;
-	        if(pIsBroken[pIdx]==1) pCrackNormal1[pIdx] = - bc->e3();
-	   else if(pIsBroken[pIdx]==2) pCrackNormal2[pIdx] = - bc->e3();
-	   else if(pIsBroken[pIdx]==3) pCrackNormal3[pIdx] = - bc->e3();
+	   if(pIsBroken[pIdx]==1) pCrackNormal[pIdx] = - bc->e3();
 	 }
 	 else if(vdis <= 0 && vdis >= -particle_half_size*2) {
 	   pIsBroken[pIdx]++;
-	        if(pIsBroken[pIdx]==1) pCrackNormal1[pIdx] = bc->e3();
-	   else if(pIsBroken[pIdx]==2) pCrackNormal2[pIdx] = bc->e3();
-	   else if(pIsBroken[pIdx]==3) pCrackNormal3[pIdx] = bc->e3();
+	   if(pIsBroken[pIdx]==1) pCrackNormal[pIdx] = bc->e3();
 	 }
        } //"Crack"
        } //fracture
@@ -314,9 +300,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    
    if(d_fracture) {
      new_dw->put(pIsBroken, lb->pIsBrokenLabel);
-     new_dw->put(pCrackNormal1, lb->pCrackNormal1Label);
-     new_dw->put(pCrackNormal2, lb->pCrackNormal2Label);
-     new_dw->put(pCrackNormal3, lb->pCrackNormal3Label);
+     new_dw->put(pCrackNormal, lb->pCrackNormalLabel);
      new_dw->put(pToughness, lb->pToughnessLabel);
    }
 }
