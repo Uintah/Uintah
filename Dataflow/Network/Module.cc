@@ -116,7 +116,7 @@ Module::Module(const string& name, GuiContext* ctx,
     categoryName(cat), sched(0), pid_(0), have_own_dispatch(0),
     helper_done("Module helper finished flag"), id(ctx->getfullname()), 
     abort_flag(0), msgStream_(ctx->subVar("msgStream")), need_execute(0),
-    sched_class(sched_class), state(NeedData), msg_state(Nothing), 
+    sched_class(sched_class), state(NeedData), msg_state(Reset), 
     progress(0),
     show_stat(false), helper(0), network(0), 
     notes(ctx->subVar("notes")), show_status(ctx->subVar("show_status"))
@@ -230,23 +230,29 @@ void Module::update_state(State st)
 void Module::update_msg_state(MsgState st)
 {
   if (!show_stat) return;
-  msg_state=st;
-  char* s="unknown";
-  switch(st){
-  case Remark:
-    s="Remark";
-    break;
-  case Warning:
-    s="Warning";
-    break;
-  case Error:
-    s="Error";
-    break;
-  case Nothing:
-    s="Nothing";
-    break;
+
+  // only change the state if the new state
+  // is of higher priority
+  if( !( ((msg_state == Error) && (st != Reset))  || 
+	 ((msg_state == Warning) && (st == Remark)) ) ) {
+    msg_state=st;
+    char* s="unknown";
+    switch(st){
+    case Remark:
+      s="Remark";
+      break;
+    case Warning:
+      s="Warning";
+      break;
+    case Error:
+      s="Error";
+      break;
+    case Reset:
+      s="Reset";
+      break;
+    }
+    gui->execute(id+" set_msg_state " + s);
   }
-  gui->execute(id+" set_msg_state " + s);
 }
 
 void Module::update_progress(double p)
@@ -671,6 +677,7 @@ void Module::do_execute()
   reset_vars();
 
   // Call the User's execute function...
+  update_msg_state(Reset);
   update_state(JustStarted);
   timer.clear();
   timer.start();
