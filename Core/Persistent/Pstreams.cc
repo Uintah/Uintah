@@ -879,10 +879,18 @@ void FastPiostream::emit_pointer(int& have_data, int& pointer_id)
 // BinaryPiostream -- portable
 BinaryPiostream::~BinaryPiostream()
 {
+#ifdef __APPLE__
+  if (xdr)
+    if ((xdr)->x_ops)
+      if ((xdr)->x_ops->x_destroy)
+	(*(xdr)->x_ops->x_destroy)();
+  delete xdr;
+#else
   if(xdr){
     xdr_destroy(xdr);
     delete xdr;
   }
+#endif
 }
 
 BinaryPiostream::BinaryPiostream(const string& filename, Direction dir)
@@ -1102,10 +1110,15 @@ void BinaryPiostream::io(unsigned long& data)
 void BinaryPiostream::io(long long& data)
 {
   if(err)return;
+#ifndef __APPLE__
   if(!xdr_longlong_t(xdr, (int64_t*)(&data))){
     err=1;
     cerr << "xdr_longlong_t failed\n";
   }
+#else
+  cerr << "xdr_longlong_t is not implemented on Apple\n";
+  err = 1;
+#endif
 }
 
 void BinaryPiostream::io(double& data)
