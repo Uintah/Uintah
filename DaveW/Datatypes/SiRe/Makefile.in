@@ -1,0 +1,9 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../../..
+
+SRCS     = SiRe.cc
+
+INCLUDES = -I$(OBJTOP) 
+
+include $(SRCTOP)/scripts/objs.mk
