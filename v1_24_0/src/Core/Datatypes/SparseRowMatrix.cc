@@ -268,7 +268,7 @@ SparseRowMatrix::getIdx(int i, int j)
 }
 
 
-double&
+double
 SparseRowMatrix::get(int i, int j) const
 {
   int row_idx=rows[i];
@@ -279,9 +279,7 @@ SparseRowMatrix::get(int i, int j) const
   {
     if (h<l)
     {
-      static double zero;
-      zero=0;
-      return zero;
+      return 0.0;
     }
     int m=(l+h)/2;
     if (j<columns[m])

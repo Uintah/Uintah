@@ -82,13 +82,13 @@ public:
   }
   double* get_data() const {return data;}
   void set_data(double* d) {data = d;} 
-  double& get(int r) const      { ASSERTRANGE(r, 0, nrows_); return data[r]; };
+  double  get(int r) const      { ASSERTRANGE(r, 0, nrows_); return data[r]; };
   void    put(int r, double val) { ASSERTRANGE(r, 0, nrows_); data[r] = val; };
 
   void resize(int);
 
   virtual void zero();
-  virtual double& get(int, int) const;
+  virtual double get(int, int) const;
   virtual void put(int row, int col, double val);
   virtual void add(int row, int col, double val);
   virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);

@@ -234,7 +234,7 @@ DenseMatrix::operator=(const DenseMatrix& m)
   return *this;
 }
 
-double& DenseMatrix::get(int r, int c) const
+double DenseMatrix::get(int r, int c) const
 {
   ASSERTRANGE(r, 0, nrows_);
   ASSERTRANGE(c, 0, ncols_);
