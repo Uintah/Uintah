@@ -31,7 +31,7 @@ class Light;
 class Ray;
 class HitInfo;
 class DpyBase;
-class Gui;
+class GGT;
 class Material;
 class ShadowBase;
 class Group;
@@ -353,7 +353,7 @@ private:
 
 //  friend class LumiDpy;
   friend class Dpy;
-  friend class Gui;
+  friend class GGT;
 
 #if !defined(linux) && !defined(__APPLE__)
   // This is just used as a pass through so the make_scene can get
