@@ -239,7 +239,6 @@ ShowField::execute()
     cerr << "ShowField Error: " << msg << endl;
     return;
   } else if (name == "ContourField") {
-#if 0
     if (geom_handle->get_type_name(1) == "double") {
       ContourField<double> *cf = 0;
       ContourField<double> *tv1 = 0;
@@ -255,7 +254,6 @@ ShowField::execute()
     }
     } else if (error) {
     cerr << "ShowField Error: " << msg << endl;
-#endif
     return;
   }
   
