@@ -54,8 +54,8 @@ if [ $yesno == "y" -o $yesno == "yes" ]; then
     echo "failed"
     exit 1
   fi
-  echo "chmod -R g+w $gold_standard_dir/$testname"
-  chmod -R g+w "$gold_standard_dir/$testname"
+  echo "chmod -R g+rwX $gold_standard_dir/$testname"
+  chmod -R g+rwX "$gold_standard_dir/$testname"
   if [ $? != "0" ]; then
     echo "failed"
     exit 1
