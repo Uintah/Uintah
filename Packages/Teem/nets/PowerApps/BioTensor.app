@@ -4568,7 +4568,7 @@ class BioTensorApp {
 	    $dt_tab2.last.ex configure -foreground grey64 -background grey75
 	    
 	    set $mods(ChooseNrrd-KnownB0)-port-index 0
-	    set $mods(ChooseNrrd-B0)-port-index 1	
+	    set $mods(ChooseNrrd-B0)-port-index 0	
 	    set $mods(ChooseNrrd-T2)-port-index $last_B0_port
         }
 
