@@ -140,7 +140,7 @@ class HexFace
 
     FourHexNodes corner;	// Index/pointer array to corner nodes.
 
-    void calc_face ();		// Calculates the centroid and the normal.
+    void calc_face (HexMesh *);		// Calculates the centroid and the normal.
 
   public:
 

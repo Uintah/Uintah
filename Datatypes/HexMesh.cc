@@ -155,7 +155,7 @@ HexFace::HexFace (int i, int e, FourHexNodes & f, HexMesh * m)
 
   // Recalculate the normal, centroid, and planar adherence.
   
-  calc_face ();  
+  calc_face (m);  
 }
 
 
@@ -188,7 +188,7 @@ HexFace::HexFace ()
 * also calculates a measure for the planarity of the corners of the face.
 *******************************************************************************/
 
-void HexFace::calc_face ()
+void HexFace::calc_face (HexMesh * m)
 {
   Vector n;
   double d;
@@ -399,7 +399,7 @@ void HexFace::finish_read (HexMesh * m)
   for (c = 8; c--;)
     corner.node[c] = m->find_node (corner.index[c]);
 
-  calc_face ();
+  calc_face (m);
 }
 
 
