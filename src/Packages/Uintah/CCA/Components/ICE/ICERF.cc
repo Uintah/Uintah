@@ -17,6 +17,9 @@ using namespace Uintah;
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
+#define ANNULUSICE 
+//#undef ANNULUSICE
+
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeDiv_vol_frac_vel_CC--
 _____________________________________________________________________*/
@@ -180,10 +183,9 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++) {
       ICEMaterial* matl = d_sharedState->getICEMaterial(m);
       int indx = matl->getDWIndex();
-      old_dw->get(Temp[m],   lb->temp_CCLabel,  indx,patch,gn,0);
-      old_dw->get(rho_CC[m], lb->rho_CCLabel,   indx,patch,gn,0);
-      old_dw->get(sp_vol_CC[m],
-                             lb->sp_vol_CCLabel,indx,patch,gn,0);
+      old_dw->get(Temp[m],      lb->temp_CCLabel,  indx,patch,gn,0);
+      old_dw->get(rho_CC[m],    lb->rho_CCLabel,   indx,patch,gn,0);
+      old_dw->get(sp_vol_CC[m], lb->sp_vol_CCLabel,indx,patch,gn,0);
       new_dw->allocateAndPut(sp_vol_new[m], lb->sp_vol_CCLabel,    indx,patch);  
       new_dw->allocateAndPut(rho_CC_new[m], lb->rho_CCLabel,       indx,patch);  
       new_dw->allocateAndPut(vol_frac[m],   lb->vol_frac_CCLabel,  indx,patch);  
@@ -383,9 +385,7 @@ template<class T> void ICE::vel_PressDiff_FC
     
     double local_dt = delT + .5*phi*(dx/cstar - delT);
     double dtdx     = local_dt/dx;            //4.10d
-/*`==========TESTING==========*/
-//    dtdx = delT/dx; 
-/*==========TESTING==========`*/
+
     //__________________________________
     // interpolation to the face
     term1 = (vel_CC[L](dir) * sp_vol_CC[R] +
@@ -562,11 +562,12 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
                                   DataWarehouse* old_dw, 
                                   DataWarehouse* new_dw)
 {
+/*`==========TESTING==========*/
 #ifdef ANNULUSICE
   static int n_iter;
   n_iter ++;
-#endif
- 
+#endif 
+/*==========TESTING==========`*/
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing accumulate_energy_source_sinks_RF on patch " 
@@ -722,6 +723,23 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
   
         int_eng_source[c] = (-term1 + term2 - term3) * delT;
       }  // iter loop
+      
+/*`==========TESTING==========*/
+      //__________________________________
+      //  hack      
+#ifdef ANNULUSICE
+      double vol=dx.x()*dx.y()*dx.z();
+      if(n_iter <= 4000){
+        if(m==2){
+          for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){            
+            IntVector c = *iter;
+            int_eng_source[c] += 8.e10 * delT * rho_CC[c] * vol;
+          }
+        }
+      }
+#endif
+
+/*==========TESTING==========`*/
 
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
@@ -1123,6 +1141,9 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
         IntVector c = *iter;
         spec_vol_L[c] = (rho_CC[c] * vol)*sp_vol_CC[c];
       }
+      //  Set Neumann = 0 if symmetric Boundary conditions
+      setBC(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx);
+      
       //__________________________________
       //  add the sources to spec_vol_L
       for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
@@ -1152,7 +1173,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
         ostringstream desc;
         desc <<"BOT_Lagrangian_spVolRF_Mat_"<<indx<< "_patch_"<<patch->getID();
         printData(  patch,1, desc.str(), "Temp",          Temp_CC[m]);
-        printData(  patch,1, desc.str(), "vol_frac[m]",   vol_frac[m]);
+        printData(  patch,1, desc.str(), "vol_frac",      vol_frac[m]);
         printData(  patch,1, desc.str(), "rho_CC",        rho_CC);
         printData(  patch,1, desc.str(), "sp_vol_CC",     sp_vol_CC);
         printData(  patch,1, desc.str(), "Tdot",          Tdot[m]);
@@ -1167,8 +1188,9 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
         cout << "matl            "<< indx << endl;
         cout << "sum_thermal_exp "<< sum_therm_exp[neg_cell] << endl;
         cout << "spec_vol_source "<< spec_vol_source[neg_cell] << endl;
-        cout << "sp_vol_L        "<< spec_vol_L[neg_cell] << endl;
-        cout << "mass "<< (rho_CC[neg_cell]*vol*sp_vol_CC[neg_cell]) << endl;
+        cout << "mass sp_vol_L    "<< spec_vol_L[neg_cell] << endl;
+        cout << "mass sp_vol_L_old"
+             << (rho_CC[neg_cell]*vol*sp_vol_CC[neg_cell]) << endl;
         ostringstream warn;
         warn<<"ERROR ICE::computeLagrangianSpecificVolumeRF, mat "<<indx
             << " cell " <<neg_cell << " spec_vol_L is negative\n";
