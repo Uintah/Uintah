@@ -39,6 +39,9 @@ extern "C" {
 #ifdef __sgi
 #include <sys/sysmp.h>
 #endif
+#ifdef __sun
+#include <sys/param.h>
+#endif
 
 extern "C" {
 ssize_t _read(int fildes, void *buf, size_t nbyte);
@@ -51,7 +54,7 @@ extern "C" {
 #endif
 
 #define DEFAULT_STACK_LENGTH 64*1024
-#define INITIAL_STACK_LENGTH 16*1024
+#define INITIAL_STACK_LENGTH 48*1024
 #define DEFAULT_SIGNAL_STACK_LENGTH 16*1024
 
 #define NOT_FINISHED(what) cerr << what << ": Not Finished " << __FILE__ << " (line " << __LINE__ << ") " << endl
@@ -302,6 +305,7 @@ static char* signal_name(int sig, int code, caddr_t addr)
     return buf;
 }
 
+#ifdef __sgi
 static void handle_halt_signals(int sig, int code, sigcontext_t* context)
 {
     Task* self=Task::self();
@@ -390,6 +394,7 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
 	sigsuspend(0);
     }
 }
+#endif
 
 void Task::exit_all(int)
 {
@@ -400,7 +405,11 @@ void Task::exit_all(int)
 void Task::initialize(char* pn)
 {
     progname=strdup(pn);
+#ifdef __sun
+    pagesize=PAGESIZE;
+#else
     pagesize=getpagesize();
+#endif
     fprintf(stderr, "Open...\n");
     devzero_fd=open("/dev/zero", O_RDWR);
     if(devzero_fd == -1){
@@ -446,6 +455,7 @@ void Task::initialize(char* pn)
     // Setup the seg fault handler...
     // For SIGQUIT
     // halt all threads
+#ifdef __sgi
     // signal(SIGINT, (SIG_PF)handle_halt_signals);
     struct sigaction action;
 #ifdef __sgi
@@ -482,6 +492,7 @@ void Task::initialize(char* pn)
 	    exit(-1);
 	}
     }
+#endif
 }
 
 int Task::nprocessors()

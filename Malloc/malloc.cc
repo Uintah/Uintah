@@ -1,7 +1,12 @@
 
 #include <Allocator.h>
 #include <AllocPriv.h>
+#ifdef __sun
+#include <string.h>
+#define bzero(p,sz)  memset(p,0, sz);
+#else
 #include <bstring.h>
+#endif
 
 extern "C" {
 void* malloc(size_t size);

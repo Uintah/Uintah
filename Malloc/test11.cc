@@ -1,7 +1,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef __sun
+#include <string.h>
+#define bzero(p,sz)  memset(p,0,sz)
+#else
 #include <bstring.h>
+#endif
 
 main()
 {

@@ -12,6 +12,7 @@ class Point;
 class clString;
 class Piostream;
 class ostream;
+class istream;
 
 class Vector {
     double _x,_y,_z;
@@ -70,6 +71,7 @@ public:
 };
 
 ostream& operator<<(ostream& os, const Vector& p);
+istream& operator>>(istream& os, Vector& p);
 
 #include <Math/Expon.h>
 #include <Math/MiscMath.h>

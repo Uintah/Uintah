@@ -13,6 +13,7 @@
 
 #include <Multitask/Task.h>
 #include <Malloc/Allocator.h>
+#include <Multitask/ITC.h>
 #include <iostream.h>
 
 // Task constructure
@@ -63,32 +64,73 @@ TaskInfo::~TaskInfo()
 
 class Multiprocess : public Task {
 public:
-    void (*starter)(void*, int);
-    void* userdata;
-    int processor;
-    Multiprocess(void (*starter)(void*, int), void* userdata, int processor);
-    virtual int body(int);
+  Multiprocess* next;
+  Semaphore sema1;
+  Semaphore sema2;
+  void (*starter)(void*, int);
+  void* userdata;
+  int processor;
+  Multiprocess();
+  virtual int body(int);
 };
 
-Multiprocess::Multiprocess(void (*starter)(void*, int), void* userdata, int processor)
-: Task("Multiprocess helper"), 
-  starter(starter), userdata(userdata), processor(processor)
+Multiprocess::Multiprocess()
+: Task("Multiprocess helper"), sema1(0), sema2(0)
 {
 }
 
 int Multiprocess::body(int)
 {
-    cerr << "started: " << processor << endl;
+  while(1){
+    sema1.down();
     (*starter)(userdata, processor);
-    return 0;
+    sema2.up();
+  }
+  return 0;
 }
+
+static Multiprocess* mpworkers;
+static Mutex workerlock;
 
 void Task::multiprocess(int nprocessors, void (*starter)(void*, int), void* userdata)
 {
+    workerlock.lock();
+
+    Multiprocess* workers=0;
+    Multiprocess* lastw=0;
     for(int i=0;i<nprocessors;i++){
-	Multiprocess* mp=new Multiprocess(starter, userdata, i);
-	cerr << "starting: " << i << endl;
-	mp->activate(0);
+      Multiprocess* w=mpworkers;
+      if(!w){
+	w=new Multiprocess;
+	w->activate(0);
+      } else {
+	mpworkers=w->next;
+      }
+      w->next=workers;
+      workers=w;
+      if(i==0)
+	lastw=w;
     }
+    workerlock.unlock();
+
+    Multiprocess* w=workers;
+    for(i=0;i<nprocessors;i++){
+      w->starter=starter;
+      w->userdata=userdata;
+      w->processor=i;
+      w->sema1.up();
+      w=w->next;
+    }
+
+    w=workers;
+    for(i=0;i<nprocessors;i++){
+      w->sema2.down();
+      w=w->next;
+    }
+
+    workerlock.lock();
+    lastw=mpworkers;
+    mpworkers=workers;
+    workerlock.unlock();
 }
 

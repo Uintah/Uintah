@@ -18,17 +18,17 @@ class HSVColor;
 class Piostream;
 
 class Color {
-    double _r, _g, _b;
+    float _r, _g, _b;
 public:
     Color();
-    Color(double, double, double);
+    Color(float, float, float);
     Color(const Color&);
     Color& operator=(const Color&);
     Color(const HSVColor&);
     ~Color();
 
     Color operator*(const Color&) const;
-    Color operator*(double) const;
+    Color operator*(float) const;
     Color operator+(const Color&) const;
     Color& operator+=(const Color&);
 
@@ -41,33 +41,33 @@ public:
     }
 
     void get_color(float color[4]);
-    inline double r() const {return _r;}
-    inline double g() const {return _g;}
-    inline double b() const {return _b;}
+    inline float r() const {return _r;}
+    inline float g() const {return _g;}
+    inline float b() const {return _b;}
 
     friend void Pio(Piostream&, Color&);
     friend class HSVColor;
 };
 
 class HSVColor {
-    double _hue;
-    double _sat;
-    double _val;
+    float _hue;
+    float _sat;
+    float _val;
 public:
     HSVColor();
-    HSVColor(double hue, double sat, double val);
+    HSVColor(float hue, float sat, float val);
     ~HSVColor();
     HSVColor(const HSVColor&);
     HSVColor(const Color&);
     HSVColor& operator=(const HSVColor&);
 
     // These only affect hue.
-    HSVColor operator*(double);
+    HSVColor operator*(float);
     HSVColor operator+(const HSVColor&);
    
-    inline double hue() const {return _hue;}
-    inline double sat() const {return _sat;}
-    inline double val() const {return _val;}
+    inline float hue() const {return _hue;}
+    inline float sat() const {return _sat;}
+    inline float val() const {return _val;}
 
     friend class Color;
 };
@@ -87,7 +87,7 @@ public:
   CharColor ( char a, char b, char c );
   CharColor ( Color& c );
   
-  CharColor& operator= ( const Color& ) const;
+  CharColor operator= ( const Color& ) const;
 };
 
 

@@ -73,7 +73,7 @@ void MakeScalarField::execute()
     ColumnMatrixHandle rhshandle;
     if(!inrhs->get(rhshandle))
 	return;
-    ScalarFieldUG* sf=scinew ScalarFieldUG;
+    ScalarFieldUG* sf=scinew ScalarFieldUG(ScalarFieldUG::NodalValues);
     sf->mesh=mesh;
     ColumnMatrix& rhs=*rhshandle.get_rep();
     sf->data.resize(rhs.nrows());

@@ -59,6 +59,13 @@ void ScalarField::get_minmax(double& min, double& max)
     max=data_max;
 }
 
+void ScalarField::set_minmax(double min, double max)
+{
+  have_minmax=1;
+  data_min=min;
+  data_max=max;
+}
+
 double ScalarField::longest_dimension()
 {
     if(!have_bounds){

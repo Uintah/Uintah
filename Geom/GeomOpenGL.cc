@@ -40,6 +40,7 @@
 #include <Geom/Tube.h>
 #include <Geom/TriStrip.h>
 #include <Geom/View.h>
+#include <Math/MinMax.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 #include <Geometry/Plane.h>
@@ -810,15 +811,91 @@ void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
     }
 }
 
-void GeomPolyline::draw(DrawInfoOpenGL* di, Material* matl, double)
+void GeomPolyline::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
 {
     pre_draw(di, matl, 0);
     di->polycount+=verts.size()-1;
     glBegin(GL_LINE_STRIP);
-    for(int i=0;i<verts.size();i++){
-	verts[i]->emit_point(di);
+    if(times.size() == verts.size()){
+      for(int i=0;i<verts.size() && currenttime >= times[i];i++){
+	verts[i]->emit_all(di);
+      }
+    } else {
+      for(int i=0;i<verts.size();i++){
+	verts[i]->emit_all(di);
+      }
     }
     glEnd();
+}
+
+void GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
+{
+  if(data.size() == 0)
+    return;
+  pre_draw(di, matl, 0);
+  float* d=&data[0];
+  float* dend=d+data.size();
+  if(drawmode < 1 || drawmode > 3){
+    cerr << "Bad drawmode: " << drawmode << endl;
+  }
+  if(drawmode==1){
+    glBegin(GL_LINE_STRIP);
+    while(d<dend && *d <= currenttime){
+      glColor3fv(d+1);
+      glVertex3fv(d+4);
+      d+=7;
+    }
+    di->polycount+=(d-&data[0])/7-1;
+    glEnd();
+  } else {
+    // Find the start and end points...
+    int n=(dend-d)/7;
+    int l=0;
+    int h=n-1;
+    while(l<h-1){
+      int m=(l+h)/2;
+      if(currenttime < d[7*m]){
+	h=m;
+      } else {
+	l=m;
+      }
+    }
+    int iend=l;
+    l=0;
+    // Leave h - it still bounds us on the top
+    double begtime=Max(0.0, currenttime-drawdist);
+    while(l<h-1){
+      int m=(l+h)/2;
+      if(begtime < d[7*m]){
+	h=m;
+      } else {
+	l=m;
+      }
+    }
+    int istart=l;
+    if(istart==iend)
+      return;
+    d=&data[7*istart];
+    dend=&data[7*iend]+7;
+    di->polycount+=(dend-d)/7-1;
+    glBegin(GL_LINE_STRIP);
+    if(drawmode == 2){
+      while(d<dend){
+	glColor3fv(d+1);
+	glVertex3fv(d+4);
+	d+=7;
+      }
+    } else if(drawmode == 3){
+      while(d<dend){
+	float s=(*d-begtime)/drawdist;
+	glColor3f(d[1]*s, d[2]*s, d[3]*s);
+	glVertex3fv(d+4);
+	d+=7;
+      }
+    }
+    glEnd();
+  }
+
 }
 
 // --------------------------------------------------
@@ -1363,6 +1440,8 @@ void GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void GeomTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
+    if(points.size() == 0)
+      return;
     pre_draw(di,matl,1);
 
     di->polycount += size();
@@ -1427,6 +1506,8 @@ void GeomTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void GeomTrianglesPC::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
+    if(points.size() == 0)
+      return;
     pre_draw(di,matl,1);
 
     di->polycount += size();
@@ -1763,6 +1844,8 @@ void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void GeomTriStripList::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
+    if(pts.size() == 0)
+      return;
     pre_draw(di, matl, 1);
     
     di->polycount += size();
@@ -1884,13 +1967,13 @@ void GeomMVertex::emit_matl(DrawInfoOpenGL* di)
 
 void GeomCVertex::emit_all(DrawInfoOpenGL* /*di*/)
 {
-    glColor3d(color.r(),color.g(),color.b());
+    glColor3f(color.r(),color.g(),color.b());
     glVertex3d(p.x(), p.y(), p.z());
 }
 
 void GeomCVertex::emit_matl(DrawInfoOpenGL* /*di*/)
 {
-    glColor3d(color.r(),color.g(),color.b());
+    glColor3f(color.r(),color.g(),color.b());
 }
 
 void PointLight::opengl_setup(const View&, DrawInfoOpenGL*, int& idx)

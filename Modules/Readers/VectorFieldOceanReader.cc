@@ -85,10 +85,12 @@ void VectorFieldOceanReader::execute()
 	  return;
 	}
 	handle=field;
+	outport->send(handle);
 	if(surfid != 0)
 	  ogeom->delObj(surfid);
 	surfid=ogeom->addObj(field->makesurf(downsample.get()), "Ocean Floor");
 	old_downsample=downsample.get();
+    } else {
+      outport->send(handle);
     }
-    outport->send(handle);
 }

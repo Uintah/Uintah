@@ -8,3 +8,4 @@
 
 set auto_index(ClipField) "source $dir/ClipField.tcl"
 set auto_index(FieldFilter) "source $dir/FieldFilter.tcl"
+set auto_index(Downsample) "source $dir/Downsample.tcl"

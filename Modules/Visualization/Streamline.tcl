@@ -50,11 +50,27 @@ itcl_class Streamline {
 
 	$ss.list selection clear 0 end
 	$ss.list selection set 0
+	entry $w.c2.position
+	bind $w.c2.position <Return> "$this reposition"
+	pack $w.c2.position -side top -padx 2 -pady 2 -ipadx 2 -ipady 2 \
+	    -fill x -anchor nw
+
+	make_labeled_radio $w.c2.drawmode "Drawmode:" "$this-c needexecute" \
+	    left $this-drawmode \
+	    {{"long trace" 1} {"short trace" 2} {"fade trace" 3}}
+	scale $w.c2.drawdist -from 0 -to 1.0 -resolution 0 -orient horizontal \
+	    -label "Draw distance:"
+	pack $w.c2.drawmode $w.c2.drawdist -side top -padx 2 -pady 2 \
+	    -ipadx 2 -ipady 2 -fill x -anchor nw
+
 	selectsource [$ss.list get 0]
+
 
 	button $w.execute -text "Execute" -command "$this-c needexecute "
     }
-
+    method reposition {} {
+	$this-c reposition $currentsource
+    }
     protected ss ""
     method make_sourcesel {c} {
 	set ss $c
@@ -191,7 +207,7 @@ itcl_class Streamline {
 	pack $ii.stepsize -fill x -pady 2
 	
 	scale $ii.maxsteps \
-		-from 0 -to 5000 -label "Maximum steps:" \
+		-from 0 -to 10000 -label "Maximum steps:" \
 		-showvalue true -tickinterval 1000 \
 		-orient horizontal
 	pack $ii.maxsteps -fill x -pady 2
@@ -300,6 +316,18 @@ itcl_class Streamline {
 
 	global $s-widget_scale
 	set $s-widget_scale 1
+
+	global $s-direction
+	set $s-direction Downstream
+
+	global $s-position
+	set $s-position ""
+
+	global $s-drawmode
+	set $s-drawmode 1
+
+	global $s-drawdist
+	set $s-drawdist .1
 	
 	$this-c need_find $sid
 	$this-c needexecute
@@ -355,6 +383,10 @@ itcl_class Streamline {
 
 	change_radio_var $ai.anim $s-animation
 	$ai.anim_steps config -variable $s-animsteps
+	set w .ui$this
+	$w.c2.position config -textvariable $s-position
+	change_radio_var $w.c2.drawmode $s-drawmode
+	$w.c2.drawdist config -variable $s-drawdist
     }
     method changename {newname} {
 	set sid $sourcelist($currentsource)

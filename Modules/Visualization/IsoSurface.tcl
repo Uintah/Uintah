@@ -17,7 +17,7 @@ itcl_class IsoSurface {
 	set $this-emit_surface 0
 	global $this-min $this-max
 	set $this-min 0
-	set $this-max 1
+	set $this-max 100
 	puts "set_defaults"
 	global $this-xmin $this-xmax $this-ymin $this-ymax $this-zmin $this-zmax
 	set $this-xmin 0
@@ -54,9 +54,9 @@ itcl_class IsoSurface {
 		$w.f.seedpoint.seedpoint $w.f.seedpoint.w3d -side left
 
 	global $this-min $this-max
-	scale $w.f.isoval -variable $this-isoval -digits 4 \
+	scale $w.f.isoval -variable $this-isoval \
 		-from [set $this-min] -to [set $this-max] -label "IsoValue:" \
-		-resolution 0 -showvalue true \
+		-resolution 0.000001 -showvalue true \
 		-orient horizontal \
 		-command $n -state disabled
 	pack $w.f.isoval -side top -fill x

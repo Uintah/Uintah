@@ -48,8 +48,9 @@ void Surface::io(Piostream& stream) {
     int version=stream.begin_class("Surface", SURFACE_VERSION);
     Pio(stream, name);
     if (version >= 4){
+	int* repp=(int*)&rep;
+	Pio(stream, *repp);
 	int* btp=(int*)&boundary_type;
-	Pio(stream, rep);
 	Pio(stream, *btp);
 	Pio(stream, boundary_expr);
     }	

@@ -26,6 +26,7 @@ class View;
 typedef Renderer* (*make_Renderer)();
 typedef int (*query_Renderer)();
 class RegisterRenderer;
+class TCLArgs;
 
 class Renderer {
 public:
@@ -44,6 +45,8 @@ public:
     virtual void hide()=0;
     virtual void dump_image(const clString&);
     virtual void put_scanline(int y, int width, Color* scanline, int repeat=1)=0;
+    virtual void listvisuals(TCLArgs&);
+    virtual void setvisual(const clString& wname, int i, int width, int height);
 
     int compute_depth(Roe* roe, const View& view, double& near, double& far);
 

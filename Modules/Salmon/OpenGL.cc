@@ -39,6 +39,7 @@
 
 #ifdef __sgi
 #include <X11/extensions/SGIStereo.h>
+#include "imagelib.h"
 #endif
 
 const int STRINGSIZE=200;
@@ -68,6 +69,7 @@ class OpenGL : public Renderer {
     void pick_draw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
     OpenGLHelper* helper;
     clString my_openglname;
+    Array1<XVisualInfo*> visuals;
 public:
     OpenGL();
     virtual ~OpenGL();
@@ -102,6 +104,10 @@ public:
     GeomObj* ret_pick_obj;
     GeomPick* ret_pick_pick;
     
+
+    virtual void listvisuals(TCLArgs&);
+    virtual void setvisual(const clString&, int i, int width, int height);
+
     // these functions were added to clean things up a bit...
 
 protected:
@@ -215,38 +221,6 @@ void OpenGL::redraw(Salmon* s, Roe* r, double _tbeg, double _tend,
 
 void OpenGL::redraw_loop()
 {
-    // Get window information
-    TCLTask::lock();
-    tkwin=Tk_NameToWindow(the_interp, myname(), Tk_MainWindow(the_interp));
-    if(!tkwin){
-	cerr << "Unable to locate window!\n";
-	TCLTask::unlock();
-	return;
-    }
-    dpy=Tk_Display(tkwin);
-    win=Tk_WindowId(tkwin);
-    cx=OpenGLGetContext(the_interp, myname());
-    if(!cx){
-	cerr << "Unable to create OpenGL Context!\n";
-	TCLTask::unlock();
-	return;
-    }
-    fprintf(stderr, "dpy=%p, win=%p, cx=%p\n", dpy, win, cx);
-    glXMakeCurrent(dpy, win, cx);
-    glXWaitX();
-    current_drawer=this;
-    GLint data[1];
-    glGetIntegerv(GL_MAX_LIGHTS, data);
-    maxlights=data[0];
-    // Look for multisample extension...
-    if(strstr((char*)glGetString(GL_EXTENSIONS), "GL_SGIS_multisample")){
-        cerr << "Enabling multisampling...\n";
-	glEnable(GL_MULTISAMPLE_SGIS);
-	glSamplePatternSGIS(GL_1PASS_SGIS);
-    }
-
-    TCLTask::unlock();
-
     // Tell the Roe that we are started...
     TimeThrottle throttle;
     throttle.start();
@@ -356,6 +330,42 @@ void OpenGL::make_image()
 
 void OpenGL::redraw_frame()
 {
+    // Get window information
+    TCLTask::lock();
+    Tk_Window new_tkwin=Tk_NameToWindow(the_interp, myname(), Tk_MainWindow(the_interp));
+    if(!new_tkwin){
+      cerr << "Unable to locate window!\n";
+      TCLTask::unlock();
+      return;
+    }
+    if(tkwin != new_tkwin){
+      tkwin=new_tkwin;
+      dpy=Tk_Display(tkwin);
+      win=Tk_WindowId(tkwin);
+      cx=OpenGLGetContext(the_interp, myname());
+      if(!cx){
+	cerr << "Unable to create OpenGL Context!\n";
+	TCLTask::unlock();
+	return;
+      }
+      glXMakeCurrent(dpy, win, cx);
+      glXWaitX();
+      current_drawer=this;
+      GLint data[1];
+      glGetIntegerv(GL_MAX_LIGHTS, data);
+      maxlights=data[0];
+      // Look for multisample extension...
+#ifdef __sgi
+      if(strstr((char*)glGetString(GL_EXTENSIONS), "GL_SGIS_multisample")){
+        cerr << "Enabling multisampling...\n";
+	glEnable(GL_MULTISAMPLE_SGIS);
+	glSamplePatternSGIS(GL_1PASS_SGIS);
+      }
+#endif
+    }
+
+    TCLTask::unlock();
+
     // Start polygon counter...
     WallClockTimer timer;
     timer.clear();
@@ -386,6 +396,8 @@ void OpenGL::redraw_frame()
     glViewport(0, 0, xres, yres);
     Color bg(roe->bgcolor.get());
     glClearColor(bg.r(), bg.g(), bg.b(), 1);
+
+    clString saveprefix(roe->saveprefix.get());
 
     // Setup the view...
     View view(roe->view.get());
@@ -580,6 +592,40 @@ void OpenGL::redraw_frame()
 
 	    // Show the pretty picture
 	    glXSwapBuffers(dpy, win);
+#ifdef __sgi
+	    if(saveprefix != ""){
+	      // Save out the image...
+	      char filename[200];
+	      sprintf(filename, "%s%04d.rgb", saveprefix(), t);
+	      unsigned short* reddata=scinew unsigned short[xres*yres];
+	      unsigned short* greendata=scinew unsigned short[xres*yres];
+	      unsigned short* bluedata=scinew unsigned short[xres*yres];
+	      glReadPixels(0, 0, xres, yres, GL_RED, GL_UNSIGNED_SHORT, reddata);
+	      glReadPixels(0, 0, xres, yres, GL_GREEN, GL_UNSIGNED_SHORT, greendata);
+	      glReadPixels(0, 0, xres, yres, GL_BLUE, GL_UNSIGNED_SHORT, bluedata);
+	      IMAGE* image=iopen(filename, "w", RLE(1), 3, xres, yres, 3);
+	      unsigned short* rr=reddata;
+	      unsigned short* gg=greendata;
+	      unsigned short* bb=bluedata;
+	      for(int y=0;y<yres;y++){
+		for(int x=0;x<xres;x++){
+		  rr[x]>>=8;
+		  gg[x]>>=8;
+		  bb[x]>>=8;
+		}
+		putrow(image, rr, y, 0);
+		putrow(image, gg, y, 1);
+		putrow(image, bb, y, 2);
+		rr+=xres;
+		gg+=xres;
+		bb+=xres;
+	      }
+	      iclose(image);
+	      delete[] reddata;
+	      delete[] greendata;
+	      delete[] bluedata;
+	    }
+#endif
 	}
 	throttle.stop();
 	double fps=nframes/throttle.time();
@@ -1112,3 +1158,124 @@ void GeomSalmonItem::draw(DrawInfoOpenGL* di, Material *m, double time)
     }
 }
 
+#define GETCONFIG(attrib) \
+if(glXGetConfig(dpy, &vinfo[i], attrib, &value) != 0){\
+  args.error("Error getting attribute: " #attrib); \
+  return; \
+}
+
+void OpenGL::listvisuals(TCLArgs& args)
+{
+  TCLTask::lock();
+
+  Tk_Window topwin=Tk_NameToWindow(the_interp, args[2](), Tk_MainWindow(the_interp));
+  if(!topwin){
+    cerr << "Unable to locate window!\n";
+    TCLTask::unlock();
+    return;
+  }
+  dpy=Tk_Display(topwin);
+  Array1<clString> visualtags;
+  Array1<int> scores;
+  visuals.remove_all();
+  int nvis;
+  XVisualInfo* vinfo=XGetVisualInfo(dpy, 0, NULL, &nvis);
+  if(!vinfo){
+    args.error("XGetVisualInfo failed");
+    return;
+  }
+  for(int i=0;i<nvis;i++){
+    int score=0;
+    int value;
+    GETCONFIG(GLX_USE_GL);
+    if(!value)
+      continue;
+    GETCONFIG(GLX_RGBA);
+    if(!value)
+      continue;
+    GETCONFIG(GLX_LEVEL);
+    if(value != 0)
+      continue;
+    char buf[20];
+    sprintf(buf, "id=%02x, ", vinfo[i].visualid);
+    clString tag(buf);
+    GETCONFIG(GLX_DOUBLEBUFFER);
+    if(value){
+      score+=200;
+      tag+=clString("double, ");
+    } else {
+      tag+=clString("single, ");
+    }
+    GETCONFIG(GLX_STEREO);
+    if(value){
+      score-=1;
+      tag+=clString("stereo, ");
+    }
+    tag+=clString("rgba=");
+    GETCONFIG(GLX_RED_SIZE);
+    tag+=to_string(value)+":";
+    score+=value;
+    GETCONFIG(GLX_GREEN_SIZE);
+    tag+=to_string(value)+":";
+    score+=value;
+    GETCONFIG(GLX_BLUE_SIZE);
+    tag+=to_string(value)+":";
+    score+=value;
+    GETCONFIG(GLX_ALPHA_SIZE);
+    tag+=to_string(value);
+    score+=value;
+    GETCONFIG(GLX_DEPTH_SIZE);
+    tag+=clString(", depth=")+to_string(value);
+    score+=value*5;
+    GETCONFIG(GLX_STENCIL_SIZE);
+    tag+=clString(", stencil=")+to_string(value);
+    tag+=clString(", accum=");
+    GETCONFIG(GLX_ACCUM_RED_SIZE);
+    tag+=to_string(value)+":";
+    GETCONFIG(GLX_ACCUM_GREEN_SIZE);
+    tag+=to_string(value)+":";
+    GETCONFIG(GLX_ACCUM_BLUE_SIZE);
+    tag+=to_string(value)+":";
+    GETCONFIG(GLX_ACCUM_ALPHA_SIZE);
+    tag+=to_string(value);
+#ifdef __sgi
+    GETCONFIG(GLX_SAMPLE_BUFFERS_SGIS);
+    tag+=clString(", samples=")+to_string(value)+":";
+    GETCONFIG(GLX_SAMPLES_SGIS);
+    if(value)
+      score+=50;
+#endif
+    tag+=to_string(value);
+
+    tag+=clString(", score=")+to_string(score);
+
+    visualtags.add(tag);
+    visuals.add(&vinfo[i]);
+    scores.add(score);
+  }
+  for(i=0;i<scores.size();i++){
+    for(int j=0;j<i-1;j++){
+      if(scores[j] < scores[j+1]){
+	// Swap...
+	int tmp1=scores[i];
+	scores[i]=scores[j];
+	scores[j]=tmp1;
+	clString tmp2=visualtags[i];
+	visualtags[i]=visualtags[j];
+	visualtags[j]=tmp2;
+	XVisualInfo* tmp3=visuals[i];
+	visuals[i]=visuals[j];
+	visuals[j]=tmp3;
+      }
+    }
+  }
+  args.result(TCLArgs::make_list(visualtags));
+  TCLTask::unlock();
+}
+
+void OpenGL::setvisual(const clString& wname, int which, int width, int height)
+{
+  tkwin=0;
+  current_drawer=0;
+  TCL::execute(clString("opengl ")+wname+" -visual "+to_string((int)visuals[which]->visualid)+" -direct true -geometry "+to_string(width)+"x"+to_string(height));
+}

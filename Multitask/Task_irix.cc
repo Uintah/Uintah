@@ -96,9 +96,10 @@ static void make_arena()
 	usconfig(CONF_ARENATYPE, US_SHAREDONLY);
 	usconfig(CONF_INITSIZE, 16*1024*1024);
 	usconfig(CONF_INITUSERS, (unsigned int)800);
-	char* lockfile=tempnam(NULL, "sci");
-	arena=usinit(lockfile);
-	free(lockfile);
+	//char* lockfile=tempnam(NULL, "sci");
+	//arena=usinit(lockfile);
+	//free(lockfile);
+	arena=usinit("/dev/zero");
 	if(!arena){
 	    perror("usinit");
 	    Task::exit_all(-1);
@@ -629,7 +630,7 @@ void Mutex::lock()
     // Simple try first...
     if(Task_try_lock((unsigned long*)&priv) == 0)
 	return;
-    int rt=100000;
+    int rt=1000000;
     int cnt=0;
     while(rt){
 	// Try the lock...

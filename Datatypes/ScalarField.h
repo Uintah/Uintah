@@ -54,6 +54,7 @@ public:
     ScalarFieldUG* getUG();
     ScalarFieldRGchar* getRGChar();
     void get_minmax(double&, double&);
+    void set_minmax(double, double);
     void get_bounds(Point&, Point&);
     double longest_dimension();
     virtual Vector gradient(const Point&)=0;

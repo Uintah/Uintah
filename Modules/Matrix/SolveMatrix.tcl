@@ -21,6 +21,7 @@ itcl_class SolveMatrix {
 	set $this-iteration 0
 	set $this-maxiter 0
 	set $this-use_previous_soln 1
+	set $this-emit_partial 1
     }
     method ui {} {
 	set w .ui$this

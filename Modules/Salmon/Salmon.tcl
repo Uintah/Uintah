@@ -75,6 +75,13 @@ itcl_class Roe {
 	} else {
 	    set $this-renderer [lindex $r 0]
 	}
+	frame $w.wframe -borderwidth 3 -relief sunken
+	pack $w.wframe -expand yes -fill both -padx 4 -pady 4
+	
+	set width 640
+	set height 512
+	set wcommand [$this-c setrenderer [set $this-renderer] $w.wframe.draw $width $height]
+
 	foreach i $r {
 	    $w.menu.renderer.menu add radio -label $i -variable $this-renderer \
 		    -value $i -command "$this switchRenderer $i"
@@ -104,13 +111,29 @@ itcl_class Roe {
 		-command "$w.dialbox connect"
 	$w.menu.dialbox.menu add command -label "Camera..." -underline 0 \
 		-command "$w.dialbox2 connect"
+
+	menubutton $w.menu.visual -text "Visual" -underline 0 \
+	    -menu $w.menu.visual.menu
+	menu $w.menu.visual.menu
+	set i 0
+	global $this-currentvisual
+	set $this-currentvisual 0
+	foreach t [$this-c listvisuals $w] {
+	    $w.menu.visual.menu add radiobutton -value $i -label $t \
+		-variable $this-currentvisual \
+		-font "-adobe-helvetica-bold-r-normal-*-*-90-75-*-*-*-*-*" \
+		-command "$this switchvisual $i"
+	    incr i
+	}
+
 	pack $w.menu.file -side left
 	pack $w.menu.edit -side left
 	pack $w.menu.renderer -side left
 	pack $w.menu.spawn -side left
 	pack $w.menu.dialbox -side left
+	pack $w.menu.visual -side left
 	tk_menuBar $w.menu $w.menu.edit $w.menu.renderer \
-		$w.menu.spawn $w.menu.dialbox
+		$w.menu.spawn $w.menu.dialbox $w.menu.visual
 
 	# Create Dialbox and attach to it
 	Dialbox $w.dialbox "Salmon - Translate/Scale"
@@ -230,16 +253,7 @@ itcl_class Roe {
 		-command "$this-c reset_tracker"
 	pack $m.tracker_reset -side top
 	
-	frame $w.wframe -borderwidth 3 -relief sunken
-	pack $w.wframe -expand yes -fill both -padx 4 -pady 4
-	
-	set width 600
-	set height 500
-	set wcommand [$this-c setrenderer [set $this-renderer] $w.wframe.draw $width $height]
-	eval $wcommand
-	bindEvents $w.wframe.draw
-	pack $w.wframe.draw -expand yes -fill both
-
+	switchvisual 0
 	$this-c startup
     }
     method bindEvents {w} {
@@ -300,6 +314,18 @@ itcl_class Roe {
 	$w.bframe.pf.perf2 configure -text $p2
 	$w.bframe.pf.perf3 configure -text $p3
     }
+
+    method switchvisual {idx} {
+	set w .ui$this
+	if {[winfo exists $w.wframe.draw]} {
+	    destroy $w.wframe.draw
+	}
+	$this-c switchvisual $w.wframe.draw $idx 640 512
+	if {[winfo exists $w.wframe.draw]} {
+	    bindEvents $w.wframe.draw
+	    pack $w.wframe.draw -expand yes -fill both
+	}
+    }	
 
     method makeViewPopup {} {
 	set w .view$this
@@ -569,7 +595,7 @@ itcl_class Roe {
 	pack $w.arate.value -side left
 
 	scale $w.tframes -orient horizontal \
-		-from 0 -to 60 -label "Total frames:" \
+		-from 0 -to 300 -label "Total frames:" \
 		-variable $this-totframes \
 		-showvalue true -tickinterval 10
 	pack $w.tframes -side top -fill x
@@ -586,6 +612,8 @@ itcl_class Roe {
 		-resolution 0.01 -digits 4 \
 		-showvalue true -tickinterval 2
 	pack $w.tbeg $w.tend $w.ct -side top -fill x
+	entry $w.savefile -textvariable $this-saveprefix
+	pack $w.savefile -side top -fill x
     }
     method setFrameRate {rate} {
 	set w .anim$this

@@ -72,10 +72,10 @@ public:
    Index GetMode() const;
 
    void SetMaterial( const Index mindex, const MaterialHandle& matl );
-   const MaterialHandle& GetMaterial( const Index mindex ) const;
+   MaterialHandle GetMaterial( const Index mindex ) const;
 
    void SetDefaultMaterial( const Index mindex, const MaterialHandle& matl );
-   const MaterialHandle& GetDefaultMaterial( const Index mindex ) const;
+   MaterialHandle GetDefaultMaterial( const Index mindex ) const;
 
    virtual clString GetMaterialName( const Index mindex ) const=0;
    virtual clString GetDefaultMaterialName( const Index mindex ) const;
@@ -127,15 +127,17 @@ protected:
    Array1<GeomSwitch*> mode_switches;
    Index CurrentMode;
    // modes contains the bitwise OR of Switch0-Switch8
-   const long Switch0 = 0x0001;
-   const long Switch1 = 0x0002;
-   const long Switch2 = 0x0004;
-   const long Switch3 = 0x0008;
-   const long Switch4 = 0x0010;
-   const long Switch5 = 0x0020;
-   const long Switch6 = 0x0040;
-   const long Switch7 = 0x0080;
-   const long Switch8 = 0x0100;
+   enum {
+	Switch0 = 0x0001,
+        Switch1 = 0x0002,
+        Switch2 = 0x0004,
+        Switch3 = 0x0008,
+        Switch4 = 0x0010,
+        Switch5 = 0x0020,
+        Switch6 = 0x0040,
+        Switch7 = 0x0080,
+        Switch8 = 0x0100,
+  };
 
    GeomSwitch* widget;
    Real widget_scale;

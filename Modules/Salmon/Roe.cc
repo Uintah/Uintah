@@ -53,6 +53,7 @@ Roe::Roe(Salmon* s, const clString& id)
   homeview(Point(.55, .5, 0), Point(.0, .0, .0), Vector(0,1,0), 25),
   bgcolor("bgcolor", id, this), shading("shading", id, this),
   do_stereo("do_stereo", id, this), drawimg("drawimg", id, this),
+  saveprefix("saveprefix", id, this),
   tracker_state("tracker_state", id, this),
   id(id)
 {
@@ -722,7 +723,7 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	    if(!args[5].get_double(framerate)){
 		args.error("Can't figure out framerate");
 		return;
-	    }	    
+	    }
 	    manager->mailbox.send(scinew SalmonMessage(id, tbeg, tend,
 						    nframes, framerate));
 	}
@@ -788,6 +789,29 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	    manager->mailbox.send(scinew SalmonMessage(MessageTypes::RoeDumpObjects,
 						       id, args[2], args[3]));
 	}
+    } else if(args[1] == "listvisuals"){
+        current_renderer->listvisuals(args);
+    } else if(args[1] == "switchvisual"){
+      if(args.count() != 6){
+	args.error("switchvisual needs a window name, a visual index, a width and a height");
+	return;
+      }
+      int idx;
+      if(!args[3].get_int(idx)){
+	args.error("bad index for switchvisual");
+	return;
+      }
+      int width;
+      if(!args[4].get_int(width)){
+	args.error("Bad width");
+	return;
+      }
+      int height;
+      if(!args[5].get_int(height)){
+	args.error("Bad height");
+	return;
+      }
+      current_renderer->setvisual(args[2], idx, width, height);
     } else {
 	args.error("Unknown minor command for Roe");
     }

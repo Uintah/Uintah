@@ -17,6 +17,11 @@ OPENGL_OBJS =
 OPENGL_SRCS =
 #endif
 
+#if defined(SCI_MACHINE_Solaris)
+XLIBDIR = -L/usr/openwin/lib
+XINCLUDE = -I/usr/openwin/include
+#endif
+
 OBJS = tk3d2.o  tkAppInit.o  tkBevel.o  tkCanvBLine.o  tkRange.o \
 	$(OPENGL_OBJS)
 SRCS = tk3d2.c  tkAppInit.c  tkBevel.c  tkCanvBLine.c  tkRange.c \
@@ -28,10 +33,10 @@ LOCALCFLAGS = -woff 835
 	|| defined(SCI_IRIX_BIN_64_mips3) || defined(SCI_IRIX_BIN_64_mips4)
 LOCALCFLAGS = -woff 1233,1692,1498,1174
 #endif
-LOCALINCLUDES = -I../tcl -I../tk -I../itcl/src $(OPENGL_INCLUDES)
+LOCALINCLUDES = -I../tcl -I../tk -I../itcl/src $(OPENGL_INCLUDES) $(XINCLUDE)
 
 SO_LIBS =
-SO_LDFLAGS = -L$(SCILIBDIR) -lBLT -ltkTable -ltk -litcl -ltcl $(OPENGL_LIBS) -lX11 -lc -lm
+SO_LDFLAGS = -L$(SCILIBDIR) $(XLIBDIR) -lBLT -ltkTable -ltk -litcl -ltcl $(OPENGL_LIBS) -lX11 -lc -lm
 
 LIBNAME = scitk
 

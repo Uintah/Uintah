@@ -44,6 +44,8 @@ typedef struct {
     int accumbluesize;
     int accumalphasize;
 
+    int visualid;
+
     GLXContext cx;
     XVisualInfo* vi;
 
@@ -92,6 +94,8 @@ static Tk_ConfigSpec configSpecs[] = {
      "0", Tk_Offset(OpenGL, accumbluesize), 0},
     {TK_CONFIG_INT, "-accumalphasize", "glsize", "glsize",
      "0", Tk_Offset(OpenGL, accumalphasize), 0},
+    {TK_CONFIG_INT, "-visual", "visual", "visual",
+     "0", Tk_Offset(OpenGL, visualid), 0},
     {TK_CONFIG_STRING, "-geometry", "geometry", "Geometry",
      "100x100", Tk_Offset(OpenGL, geometry), 0},
     {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
@@ -174,47 +178,62 @@ OpenGLCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
 
-    /*
-     * Pick the right visual...
-     */
-    attributes[idx++]=GLX_BUFFER_SIZE;
-    attributes[idx++]=OpenGLPtr->buffersize;
-    attributes[idx++]=GLX_LEVEL;
-    attributes[idx++]=OpenGLPtr->level;
-    if(OpenGLPtr->rgba)
+    if(OpenGLPtr->visualid){
+      int n;
+      XVisualInfo tmpl;
+      tmpl.visualid=OpenGLPtr->visualid;
+      vi=XGetVisualInfo(Tk_Display(tkwin), VisualIDMask, &tmpl, &n);
+      if(!vi || n!=1){
+	Tcl_AppendResult(interp, "Error finding visual", NULL);
+	return TCL_ERROR;
+      }
+    } else {
+      /*
+       * Pick the right visual...
+       */
+      attributes[idx++]=GLX_BUFFER_SIZE;
+      attributes[idx++]=OpenGLPtr->buffersize;
+      attributes[idx++]=GLX_LEVEL;
+      attributes[idx++]=OpenGLPtr->level;
+      if(OpenGLPtr->rgba)
 	attributes[idx++]=GLX_RGBA;
-    if(OpenGLPtr->doublebuffer)
+      if(OpenGLPtr->doublebuffer)
 	attributes[idx++]=GLX_DOUBLEBUFFER;
-    if(OpenGLPtr->stereo)
+      if(OpenGLPtr->stereo)
 	attributes[idx++]=GLX_STEREO;
-    attributes[idx++]=GLX_AUX_BUFFERS;
-    attributes[idx++]=OpenGLPtr->auxbuffers;
-    attributes[idx++]=GLX_RED_SIZE;
-    attributes[idx++]=OpenGLPtr->redsize;
-    attributes[idx++]=GLX_GREEN_SIZE;
-    attributes[idx++]=OpenGLPtr->greensize;
-    attributes[idx++]=GLX_BLUE_SIZE;
-    attributes[idx++]=OpenGLPtr->bluesize;
-    attributes[idx++]=GLX_ALPHA_SIZE;
-    attributes[idx++]=OpenGLPtr->alphasize;
-    attributes[idx++]=GLX_DEPTH_SIZE;
-    attributes[idx++]=OpenGLPtr->depthsize;
-    attributes[idx++]=GLX_STENCIL_SIZE;
-    attributes[idx++]=OpenGLPtr->stencilsize;
-    attributes[idx++]=GLX_ACCUM_RED_SIZE;
-    attributes[idx++]=OpenGLPtr->accumredsize;
-    attributes[idx++]=GLX_ACCUM_GREEN_SIZE;
-    attributes[idx++]=OpenGLPtr->accumgreensize;
-    attributes[idx++]=GLX_ACCUM_BLUE_SIZE;
-    attributes[idx++]=OpenGLPtr->accumbluesize;
-    attributes[idx++]=GLX_ACCUM_ALPHA_SIZE;
-    attributes[idx++]=OpenGLPtr->accumalphasize;
-    attributes[idx++]=None;
-    vi = glXChooseVisual(Tk_Display(tkwin), Tk_ScreenNumber(tkwin),
-			 attributes);
-    if(!vi){
+      attributes[idx++]=GLX_AUX_BUFFERS;
+      attributes[idx++]=OpenGLPtr->auxbuffers;
+      attributes[idx++]=GLX_RED_SIZE;
+      attributes[idx++]=OpenGLPtr->redsize;
+      attributes[idx++]=GLX_GREEN_SIZE;
+      attributes[idx++]=OpenGLPtr->greensize;
+      attributes[idx++]=GLX_BLUE_SIZE;
+      attributes[idx++]=OpenGLPtr->bluesize;
+      attributes[idx++]=GLX_ALPHA_SIZE;
+      attributes[idx++]=OpenGLPtr->alphasize;
+      attributes[idx++]=GLX_DEPTH_SIZE;
+      attributes[idx++]=OpenGLPtr->depthsize;
+      attributes[idx++]=GLX_STENCIL_SIZE;
+      attributes[idx++]=OpenGLPtr->stencilsize;
+      attributes[idx++]=GLX_ACCUM_RED_SIZE;
+      attributes[idx++]=OpenGLPtr->accumredsize;
+      attributes[idx++]=GLX_ACCUM_GREEN_SIZE;
+      attributes[idx++]=OpenGLPtr->accumgreensize;
+      attributes[idx++]=GLX_ACCUM_BLUE_SIZE;
+      attributes[idx++]=OpenGLPtr->accumbluesize;
+      attributes[idx++]=GLX_ACCUM_ALPHA_SIZE;
+      attributes[idx++]=OpenGLPtr->accumalphasize;
+#if 0
+      attributes[idx++]=GLX_SAMPLES_SGIS;
+      attributes[idx++]=4;
+#endif
+      attributes[idx++]=None;
+      vi = glXChooseVisual(Tk_Display(tkwin), Tk_ScreenNumber(tkwin),
+			   attributes);
+      if(!vi){
 	Tcl_AppendResult(interp, "Error selecting visual", (char*)NULL);
 	return TCL_ERROR;
+      }
     }
 
 #if 0

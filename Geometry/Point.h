@@ -12,6 +12,7 @@ class Vector;
 class clString;
 class Piostream;
 class ostream;
+class istream;
 
 class Point {
     double _x,_y,_z;
@@ -70,6 +71,7 @@ public:
 };
 
 ostream& operator<<(ostream& os, const Point& p);
+istream& operator>>(istream& os, Point& p);
 
 #include <Geometry/Vector.h>
 #include <Math/MinMax.h>

@@ -7,11 +7,17 @@ TransformCS
 Category: FEM
 ApplyBC
 BuildFEMatrix
+ComposeError
+ErrorInterval
+FEMError
+MeshRefiner
 
 Category: Fields
 ClipField
+Downsample
 FieldFilter
 Gradient
+Magnitude
 
 Category: Matrix
 EditMatrix
@@ -32,6 +38,9 @@ MeshView
 OctreeToGeom
 SelectMesh
 
+Category: Iterators
+MeshIterator
+
 Category: Readers
 ColumnMatrixReader
 ContourSetReader
@@ -43,6 +52,7 @@ PointsReader
 ScalarFieldReader
 SurfaceReader
 VectorFieldReader
+VectorFieldOceanReader
 
 Category: Salmon
 Salmon

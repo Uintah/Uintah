@@ -12,6 +12,7 @@
  */
 
 #include <Classlib/BitArray1.h>
+#include <Classlib/FastHashTable.h>
 #include <Classlib/HashTable.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/Queue.h>
@@ -35,6 +36,7 @@
 #include <Malloc/Allocator.h>
 #include <Math/Expon.h>
 #include <Math/MiscMath.h>
+#include <Multitask/Task.h>
 #include <TCL/TCLvar.h>
 #include <Widgets/ArrowWidget.h>
 #include <iostream.h>
@@ -74,14 +76,22 @@ class IsoSurface : public Module {
     MaterialHandle matl;
 
     int iso_cube(int, int, int, double, GeomTrianglesP*, ScalarFieldRG*);
+    void iso_cube2(int, int, int, double, GeomTrianglesP*, ScalarFieldRG*);
     int iso_tetra(Element*, Mesh*, ScalarFieldUG*, double, GeomTrianglesP*);
     int iso_tetra_s(int,Element*, Mesh*, ScalarFieldUG*, double, 
 		    GeomTriStripList*);
     void iso_tetra_strip(int, Mesh*, ScalarFieldUG*, double, 
 			 GeomGroup*, BitArray1&);
 
+    ScalarFieldRG* rgfield;
+    double the_isoval;
+    GeomGroup* maingroup;
+    Mutex grouplock;
+    int np;
+    void iso_reg_grid();
+public:
+    void parallel_reg_grid(int proc);
     void iso_reg_grid(ScalarFieldRG*, const Point&, GeomTrianglesP*);
-    void iso_reg_grid(ScalarFieldRG*, double, GeomTrianglesP*);
     void iso_tetrahedra(ScalarFieldUG*, const Point&, GeomTrianglesP*);
     void iso_tetrahedra(ScalarFieldUG*, double, GeomTrianglesP*);
 
@@ -106,8 +116,6 @@ class IsoSurface : public Module {
     int need_find;
 
     int init;
-    Point ov[9];
-    Point v[9];
 public:
     IsoSurface(const clString& id);
     IsoSurface(const IsoSurface&, int deep);
@@ -283,7 +291,6 @@ void IsoSurface::execute()
 	}
 	cerr << "at p=" << sp << ", iv=" << iv << endl;
     }
-    GeomTrianglesP* group = scinew GeomTrianglesP;
     GeomGroup* tgroup=scinew GeomGroup;
     GeomObj* topobj=tgroup;
     if(have_colormap && !have_colorfield){
@@ -320,11 +327,15 @@ void IsoSurface::execute()
 				 spacing);
 	}	
 	if(have_seedpoint.get()){
-	    iso_reg_grid(regular_grid, sp, group);
+	  GeomTrianglesP* group = scinew GeomTrianglesP;
+	  iso_reg_grid(regular_grid, sp, group);
+	  tgroup->add(group);
 	} else {
-	    iso_reg_grid(regular_grid, iv, group);
+	  the_isoval=iv;
+	  rgfield=regular_grid;
+	  maingroup=tgroup;
+	  iso_reg_grid();
 	}
-	tgroup->add(group);
     } else if(unstructured_grid){
 	if (emit_surface.get()) {
 	    surf=scinew TriSurface;
@@ -343,6 +354,7 @@ void IsoSurface::execute()
 	    iso_tetrahedra_strip(unstructured_grid,sp,tgroup);
 //	    tgroup->add(group);
 	} else {
+	  GeomTrianglesP* group = scinew GeomTrianglesP;
 	    iso_tetrahedra(unstructured_grid, iv, group);
 	    tgroup->add(group);
 //	    iso_tetrahedra_strip(unstructured_grid,iv,tgroup);
@@ -389,7 +401,7 @@ void IsoSurface::order_and_add_points(const Point &p1, const Point &p2,
 
 
 int IsoSurface::iso_cube(int i, int j, int k, double isoval,
-			 GeomTrianglesP* group, ScalarFieldRG* field)
+			  GeomTrianglesP* group, ScalarFieldRG* field)
 {
     double oval[9];
     oval[1]=field->grid(i, j, k)-isoval;
@@ -400,6 +412,7 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
     oval[6]=field->grid(i+1, j, k+1)-isoval;
     oval[7]=field->grid(i+1, j+1, k+1)-isoval;
     oval[8]=field->grid(i, j+1, k+1)-isoval;
+    Point ov[9];
     ov[1]=field->get_point(i,j,k);
     ov[2]=field->get_point(i+1, j, k);
     ov[3]=field->get_point(i+1, j+1, k);
@@ -416,6 +429,7 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
     }
     MCubeTable* tab=&mcube_table[mask];
     double val[9];
+    Point v[9];
     for(idx=1;idx<=8;idx++){
 	val[idx]=oval[tab->permute[idx-1]];
 	v[idx]=ov[tab->permute[idx-1]];
@@ -703,22 +717,275 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
     return(tab->nbrs);
 }
 
-void IsoSurface::iso_reg_grid(ScalarFieldRG* field, double isoval,
-			      GeomTrianglesP* group)
+void IsoSurface::iso_cube2(int i, int j, int k, double isoval,
+			   GeomTrianglesP* group, ScalarFieldRG* field)
 {
-    int nx=field->nx;
-    int ny=field->ny;
-    int nz=field->nz;
-    for(int i=0;i<nx-1;i++){
-	//update_progress(i, nx);
-	for(int j=0;j<ny-1;j++){
-	    for(int k=0;k<nz-1;k++){
-		iso_cube(i,j,k, isoval, group, field);
-	    }
-	    if(sp && abort_flag)
-		return;
-	}
+    double oval[9];
+    oval[1]=field->grid(i, j, k)-isoval;
+    oval[2]=field->grid(i+1, j, k)-isoval;
+    oval[3]=field->grid(i+1, j+1, k)-isoval;
+    oval[4]=field->grid(i, j+1, k)-isoval;
+    oval[5]=field->grid(i, j, k+1)-isoval;
+    oval[6]=field->grid(i+1, j, k+1)-isoval;
+    oval[7]=field->grid(i+1, j+1, k+1)-isoval;
+    oval[8]=field->grid(i, j+1, k+1)-isoval;
+    int mask=0;
+    int idx;
+    for(idx=1;idx<=8;idx++){
+	if(oval[idx]<0)
+	    mask|=1<<(idx-1);
     }
+    if(mask == 0 || mask == 255)
+      return;
+    Point ov[9];
+    ov[1]=field->get_point(i,j,k);
+    ov[2]=field->get_point(i+1, j, k);
+    ov[3]=field->get_point(i+1, j+1, k);
+    ov[4]=field->get_point(i, j+1, k);
+    ov[5]=field->get_point(i, j, k+1);
+    ov[6]=field->get_point(i+1, j, k+1);
+    ov[7]=field->get_point(i+1, j+1, k+1);
+    ov[8]=field->get_point(i, j+1, k+1);
+    MCubeTable* tab=&mcube_table[mask];
+    double val[9];
+    Point v[9];
+    for(idx=1;idx<=8;idx++){
+	val[idx]=oval[tab->permute[idx-1]];
+	v[idx]=ov[tab->permute[idx-1]];
+    }
+    int wcase=tab->which_case;
+    switch(wcase){
+    case 0:
+	break;
+    case 1:
+	{
+	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
+	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
+	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
+	    group->add(p1, p2, p3);
+	}
+	break;
+    case 2:
+	{
+	    Point p1(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
+	    Point p2(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
+	    Point p3(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
+	    group->add(p1, p2, p3);
+	    Point p4(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
+	    group->add(p3, p4, p1);
+	}
+	break;
+    case 3:
+	{
+	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
+	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
+	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
+	    group->add(p1, p2, p3);
+	    Point p4(Interpolate(v[3], v[2], val[3]/(val[3]-val[2])));
+	    Point p5(Interpolate(v[3], v[7], val[3]/(val[3]-val[7])));
+	    Point p6(Interpolate(v[3], v[4], val[3]/(val[3]-val[4])));
+	    group->add(p4, p5, p6);
+	}
+	break;
+    case 4:
+	{
+	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
+	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
+	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
+	    group->add(p1, p2, p3);
+	    Point p4(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
+	    Point p5(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
+	    Point p6(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
+	    group->add(p4, p5, p6);
+	}
+	break;
+    case 5:
+	{
+	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
+	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
+	    Point p3(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
+	    group->add(p1, p2, p3);
+	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
+	    group->add(p4, p3, p2);
+	    Point p5(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
+	    group->add(p5, p4, p2);
+	}
+	break;
+    case 6:
+	{
+	    Point p1(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
+	    Point p2(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
+	    Point p3(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
+	    group->add(p1, p2, p3);
+	    Point p4(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
+	    group->add(p3, p4, p1);
+	    Point p5(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
+	    Point p6(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
+	    Point p7(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
+	    group->add(p5, p6, p7);
+	}
+	break;
+    case 7:
+	{
+	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
+	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
+	    Point p3(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
+	    group->add(p1, p2, p3);
+	    Point p4(Interpolate(v[4], v[1], val[4]/(val[4]-val[1])));
+	    Point p5(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
+	    Point p6(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
+	    group->add(p4, p5, p6);
+	    Point p7(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
+	    Point p8(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
+	    Point p9(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
+	    group->add(p7, p8, p9);
+	}
+	break;
+    case 8:
+	{
+	    Point p1(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
+	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
+	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
+	    group->add(p1, p2, p3);
+	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
+	    group->add(p4, p1, p3);
+	}
+	break;
+    case 9:
+	{
+	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
+	    Point p2(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
+	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
+	    group->add(p1, p2, p3);
+	    Point p4(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
+	    group->add(p1, p3, p4);
+	    Point p5(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
+	    group->add(p1, p4, p5);
+	    Point p6(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
+	    group->add(p5, p4, p6);
+	}
+	break;
+    case 10:
+	{
+	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
+	    Point p2(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
+	    Point p3(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
+	    group->add(p1, p2, p3);
+	    Point p4(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
+	    group->add(p2, p4, p3);
+	    Point p5(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
+	    Point p6(Interpolate(v[6], v[5], val[6]/(val[6]-val[5])));
+	    Point p7(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
+	    group->add(p5, p6, p7);
+	    Point p8(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
+	    group->add(p2, p8, p3);
+	}
+	break;
+    case 11:
+	{
+	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
+	    Point p2(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
+	    Point p3(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
+	    group->add(p1, p2, p3);
+	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
+	    group->add(p1, p3, p4);
+	    Point p5(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
+	    group->add(p1, p4, p5);
+	    Point p6(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
+	    group->add(p4, p3, p6);
+	}
+	break;
+    case 12:
+	{
+	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
+	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
+	    Point p3(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
+	    group->add(p1, p2, p3);
+	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
+	    group->add(p3, p2, p4);
+	    Point p5(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
+	    group->add(p4, p2, p5);
+	    Point p6(Interpolate(v[4], v[1], val[4]/(val[4]-val[1])));
+	    Point p7(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
+	    Point p8(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
+	    group->add(p6, p7, p8);
+	}
+	break;
+    case 13:
+	{
+	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
+	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
+	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
+	    group->add(p1, p2, p3);
+	    Point p4(Interpolate(v[3], v[2], val[3]/(val[3]-val[2])));
+	    Point p5(Interpolate(v[3], v[7], val[3]/(val[3]-val[7])));
+	    Point p6(Interpolate(v[3], v[4], val[3]/(val[3]-val[4])));
+	    group->add(p4, p5, p6);
+	    Point p7(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
+	    Point p8(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
+	    Point p9(Interpolate(v[6], v[5], val[6]/(val[6]-val[5])));
+	    group->add(p7, p8, p9);
+	    Point p10(Interpolate(v[8], v[5], val[8]/(val[8]-val[5])));
+	    Point p11(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
+	    Point p12(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
+	    group->add(p10, p11, p12);
+	}
+	break;
+    case 14:
+	{
+	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
+	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
+	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
+	    group->add(p1, p2, p3);
+	    Point p4(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
+	    group->add(p1, p3, p4);
+	    Point p5(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
+	    group->add(p1, p4, p5);
+	    Point p6(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
+	    group->add(p3, p6, p4);
+	}
+	break;
+    default:
+	error("Bad case in marching cubes!\n");
+	break;
+    }
+    return;
+}
+
+void IsoSurface::parallel_reg_grid(int proc)
+{
+  int nx=rgfield->nx;
+  int ny=rgfield->ny;
+  int nz=rgfield->nz;
+  int sx=proc*(nx-1)/np;
+  int ex=(proc+1)*(nx-1)/np;
+  GeomTrianglesP* tris=new GeomTrianglesP;
+  for(int i=sx;i<ex;i++){
+    if(proc==0)
+      update_progress(i, ex);
+    for(int j=0;j<ny-1;j++){
+      for(int k=0;k<nz-1;k++){
+	iso_cube2(i,j,k, the_isoval, tris, rgfield);
+      }
+      if(sp && abort_flag)
+	return;
+    }
+  }
+  grouplock.lock();
+  maingroup->add(tris);
+  grouplock.unlock();
+}
+
+static void do_parallel_reg_grid(void* obj, int proc)
+{
+  IsoSurface* module=(IsoSurface*)obj;
+  module->parallel_reg_grid(proc);
+}
+
+void IsoSurface::iso_reg_grid()
+{
+    np=Task::nprocessors();
+    Task::multiprocess(np, do_parallel_reg_grid, this);
 }
 
 void IsoSurface::iso_reg_grid(ScalarFieldRG* field, const Point& p,
@@ -950,12 +1217,69 @@ void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, double isoval,
 {
     Mesh* mesh=field->mesh.get_rep();
     int nelems=mesh->elems.size();
-    for(int i=0;i<nelems;i++){
-	//update_progress(i, nelems);
-	Element* element=mesh->elems[i];
-	iso_tetra(element, mesh, field, isoval, group);
-	if(sp && abort_flag)
-	    return;
+    if(field->typ == ScalarFieldUG::NodalValues){
+	for(int i=0;i<nelems;i++){
+	    //update_progress(i, nelems);
+	  Element* element=mesh->elems[i];
+	  iso_tetra(element, mesh, field, isoval, group);
+	  if(sp && abort_flag)
+	      return;
+	}
+    } else {
+      int ngt=0;
+      double* data=&field->data[0];
+      for(int i=0;i<nelems;i++){
+	  if(data[i] > isoval)
+	      ngt++;
+      }
+      FastHashTable<Face> face_table;
+      if(ngt > 0.5*nelems){
+	// Isosurface the gt side
+	for(int i=0;i<nelems;i++){
+	  Element* e=mesh->elems[i];
+	  if(data[i] > isoval){
+	    for(int j=0;j<4;j++){
+	      if(e->face(j) != -1){
+	        Face* f=new Face(e->n[(j+1)%4], e->n[(j+2)%4], e->n[(j+3)%4]);
+		Face* dummy;
+		if(face_table.lookup(f, dummy)){
+		    face_table.remove(f);
+		    delete f;
+		} else {
+		    face_table.insert(f);
+		}
+	      }
+	    }
+	  }
+	}
+      } else {
+	// Do the lt side
+	for(int i=0;i<nelems;i++){
+	  Element* e=mesh->elems[i];
+	  if(data[i] < isoval){
+	    for(int j=0;j<4;j++){
+	      if(e->face(j) != -1){
+	        Face* f=new Face(e->n[(j+1)%4], e->n[(j+2)%4], e->n[(j+3)%4]);
+		Face* dummy;
+		if(face_table.lookup(f, dummy)){
+		    face_table.remove(f);
+		    delete f;
+		} else {
+		    face_table.insert(f);
+		}
+	      }
+	    }
+	  }
+	}
+      }
+      FastHashTableIter<Face> iter(&face_table);
+      for(iter.first();iter.ok();++iter){
+	Face* f=iter.get_key();
+	Point& p1=mesh->nodes[f->n[0]]->p;
+	Point& p2=mesh->nodes[f->n[1]]->p;
+	Point& p3=mesh->nodes[f->n[2]]->p;
+	group->add(p1, p2, p3);
+      }
     }
 }
 

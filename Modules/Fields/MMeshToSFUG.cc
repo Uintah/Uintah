@@ -95,7 +95,7 @@ void MMeshToSFUG::execute()
     if (total_levels.get() != mmesh_handle->meshes.size()) {
 	total_levels.set(mmesh_handle->meshes.size());
     }	
-    ScalarFieldUG *sfout = new ScalarFieldUG;
+    ScalarFieldUG *sfout = new ScalarFieldUG(sfug->typ);
     sfout->mesh = mmesh_handle->meshes[selected_level.get()-1];
     sfout->mesh.detach();
     sfout->mesh->detach_nodes();

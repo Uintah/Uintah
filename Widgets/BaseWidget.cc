@@ -381,7 +381,7 @@ BaseWidget::SetMaterial( const Index mindex, const MaterialHandle& matl )
 }
 
 
-const MaterialHandle&
+MaterialHandle
 BaseWidget::GetMaterial( const Index mindex ) const
 {
    ASSERT(mindex<NumMaterials);
@@ -417,7 +417,7 @@ BaseWidget::SetDefaultMaterial( const Index mindex, const MaterialHandle& matl )
 }
 
 
-const MaterialHandle&
+MaterialHandle
 BaseWidget::GetDefaultMaterial( const Index mindex ) const
 {
    ASSERT(mindex<NumDefaultMaterials);
@@ -503,7 +503,7 @@ BaseWidget::execute(int always_callback)
 
 
 void
-BaseWidget::geom_pick( GeomPick* pick, Roe* roe, int /* cbdata */, const BState& state )
+BaseWidget::geom_pick( GeomPick* pick, Roe* /*roe*/, int /* cbdata */, const BState& state )
 {
    cerr << "btn=" << state.btn << endl;
    cerr << "alt=" << state.alt << endl;

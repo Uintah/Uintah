@@ -21,6 +21,12 @@
 #include <sys/stat.h>
 #include <iostream.h>
 #include <fcntl.h>
+
+#ifdef __sun
+#define MMAP_TYPE char*
+#else
+#define MMAP_TYPE void*
+#endif
 #include <stdio.h>
 
 static Persistent* maker()
@@ -103,8 +109,8 @@ VectorFieldOcean::VectorFieldOcean(const clString& filename, const clString& dep
 
 VectorFieldOcean::~VectorFieldOcean()
 {
-  munmap(data, 1280*896*20*2*sizeof(float));
-  munmap(depth, 1280*896*sizeof(int));
+  munmap((MMAP_TYPE)data, 1280*896*20*2*sizeof(float));
+  munmap((MMAP_TYPE)depth, 1280*896*sizeof(int));
 }
 
 void VectorFieldOcean::locate(const Point& p, int& ix, int& iy, int& iz)
@@ -173,7 +179,8 @@ int VectorFieldOcean::interpolate(const Point& p, Vector& value)
     int idx=iz*(ny*nx)+iy*nx+ix;
     double fx=x-ix;
     double fy=y-iy;
-    double fz=(p.z()-z2)/(z1-z2);
+    double fz=(p.z()-z1)/(z2-z1);
+    //cerr << "z=" << p.z() << ", iz=" << iz << ", fz=" << fz << endl;
     //cerr << "fz=" << fz << endl;
     double ux00=Interpolate(data[idx], data[idx+1], fx);
     double ux01=Interpolate(data[idx+ny*nx], data[idx+ny*nx+1], fx);

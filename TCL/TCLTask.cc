@@ -31,9 +31,10 @@ static int lock_count;
 
 static void do_lock()
 {
+  ASSERT(Task::self() != 0);
     if(owner == Task::self()){
-	lock_count++;
-	//cerr << "Recursively locked...\n";
+      lock_count++;
+      //cerr << "Recursively locked, count=" << lock_count << endl;
 	return;
     }
     tlock->lock();
@@ -45,13 +46,14 @@ static void do_lock()
 static void do_unlock()
 {
     ASSERT(lock_count>0);
+    //cerr << "Self=" << Task::self() << ", owner=" << owner << endl;
     ASSERT(Task::self() == owner);
     if(--lock_count == 0){
 	owner=0;
 	//cerr << "Unlocked, count=" << lock_count << ", owner=" << owner << ", self=" << Task::self() << endl;
 	tlock->unlock();
     } else {
-	//cerr << "Recursively unlocked" << endl;
+      //cerr << "Recursively unlocked, count=" << lock_count << endl;
     }
 }
 

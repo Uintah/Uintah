@@ -257,7 +257,7 @@ void Hedgehog::execute()
     widscale = width_scale.get(),
     headlen = head_length.get();
     
-    GeomArrows* arrows = new GeomArrows(widscale*ld, 1.0-headlen);
+    GeomArrows* arrows = new GeomArrows(widscale, 1.0-headlen);
     for (int i = 0; i < u_num; i++)
 	for (int j = 0; j < v_num; j++)
 	    for(int k = 0; k < w_num; k++)
@@ -279,8 +279,11 @@ void Hedgehog::execute()
 				{
 				    matl = outcolor;
 				}
-			    arrows->add(p, vv*lenscale, matl, matl, matl);
+
+			    if(vv.length2()*lenscale > 1.e-3)
+			      arrows->add(p, vv*lenscale, matl, matl, matl);
 			} else {
+			  if(vv.length2()*lenscale > 1.e-3)
 			    arrows->add(p, vv*lenscale);
 			}
 		    }

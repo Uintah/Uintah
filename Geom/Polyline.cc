@@ -67,9 +67,80 @@ void GeomPolyline::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomPolyline::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomPolyline::saveobj(ostream&, const clString&, GeomSave*)
 {
     NOT_FINISHED("GeomPolyline::saveobj");
     return false;
+}
+
+GeomPolylineTC::GeomPolylineTC(int drawmode, double drawdist)
+: drawmode(drawmode), drawdist(drawdist)
+{
+}
+
+GeomPolylineTC::~GeomPolylineTC()
+{
+}
+
+void GeomPolylineTC::add(double t, const Point& p, const Color& c)
+{
+  int s=data.size();
+  data.grow(7);
+  data[s]=t;
+  data[s+1]=c.r();
+  data[s+2]=c.g();
+  data[s+3]=c.b();
+  data[s+4]=p.x();
+  data[s+5]=p.y();
+  data[s+6]=p.z();
+  bbox.extend(p);
+}
+
+GeomPolylineTC::GeomPolylineTC(const GeomPolylineTC& copy)
+  : data(copy.data)
+{
+}
+
+GeomObj* GeomPolylineTC::clone()
+{
+  return new GeomPolylineTC(*this);
+}
+
+void GeomPolylineTC::get_bounds(BBox& box)
+{
+  box.extend(bbox);
+}
+
+void GeomPolylineTC::get_bounds(BSphere&)
+{
+  NOT_FINISHED("GeomPolylineTC::get_bounds");
+}
+
+void GeomPolylineTC::make_prims(Array1<GeomObj*>&,
+				Array1<GeomObj*>&)
+{
+  NOT_FINISHED("GeomPolylineTC::make_prims");
+}
+
+void GeomPolylineTC::preprocess()
+{
+  NOT_FINISHED("GeomPolylineTC::preprocess");
+}
+
+void GeomPolylineTC::intersect(const Ray&, Material*, Hit&)
+{
+  NOT_FINISHED("GeomPolylineTC::intersect");
+}
+
+void GeomPolylineTC::io(Piostream& stream)
+{
+  Pio(stream, bbox);
+  Pio(stream, data);
+}
+
+bool GeomPolylineTC::saveobj(ostream&, const clString&, GeomSave*)
+{
+  NOT_FINISHED("GeomPolylineTC::saveobj");
+  return false;
 }
 

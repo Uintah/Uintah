@@ -776,6 +776,80 @@ int Mesh::locate(const Point& p, int& ix, double epsilon1, double epsilon2)
     return 0;
 }
 
+int Mesh::locate2(const Point& p, int& ix, double epsilon1)
+{
+    // Exhaustive search
+    int nelems=elems.size();
+    for(int i=0;i<nelems;i++){
+	Element* elem=elems[i];
+	if(!elem)
+	  continue;
+#ifndef STORE_ELEMENT_BASIS
+	Point p1(nodes[elem->n[0]]->p);
+	Point p2(nodes[elem->n[1]]->p);
+	Point p3(nodes[elem->n[2]]->p);
+	Point p4(nodes[elem->n[3]]->p);
+	double x1=p1.x();
+	double y1=p1.y();
+	double z1=p1.z();
+	double x2=p2.x();
+	double y2=p2.y();
+	double z2=p2.z();
+	double x3=p3.x();
+	double y3=p3.y();
+	double z3=p3.z();
+	double x4=p4.x();
+	double y4=p4.y();
+	double z4=p4.z();
+	double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
+	double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
+	double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
+	double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
+	double iV6=1./(a1+a2+a3+a4);
+
+	double b1=-(y3*z4-y4*z3)-(y4*z2-y2*z4)-(y2*z3-y3*z2);
+	double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);
+	double d1=-(x3*y4-x4*y3)-(x4*y2-x2*y4)-(x2*y3-x3*y2);
+	double s0=iV6*(a1+b1*p.x()+c1*p.y()+d1*p.z());
+
+	double b2=+(y4*z1-y1*z4)+(y1*z3-y3*z1)+(y3*z4-y4*z3);
+	double c2=-(x4*z1-x1*z4)-(x1*z3-x3*z1)-(x3*z4-x4*z3);
+	double d2=+(x4*y1-x1*y4)+(x1*y3-x3*y1)+(x3*y4-x4*y3);
+	double s1=iV6*(a2+b2*p.x()+c2*p.y()+d2*p.z());
+
+	double b3=-(y1*z2-y2*z1)-(y2*z4-y4*z2)-(y4*z1-y1*z4);
+	double c3=+(x1*z2-x2*z1)+(x2*z4-x4*z2)+(x4*z1-x1*z4);
+	double d3=-(x1*y2-x2*y1)-(x2*y4-x4*y2)-(x4*y1-x1*y4);
+	double s2=iV6*(a3+b3*p.x()+c3*p.y()+d3*p.z());
+
+	double b4=+(y2*z3-y3*z2)+(y3*z1-y1*z3)+(y1*z2-y2*z1);
+	double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
+	double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
+	double s3=iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
+#else
+	double s0=elem->a[0]+Dot(elem->g[0], p);
+	double s1=elem->a[1]+Dot(elem->g[1], p);
+	double s2=elem->a[2]+Dot(elem->g[2], p);
+	double s3=elem->a[3]+Dot(elem->g[3], p);
+#endif
+	double min=s0;
+	if(s1<min){
+	    min=s1;
+	}
+	if(s2<min){
+	    min=s2;
+	}
+	if(s3<min){
+	    min=s3;
+	}
+	if(min>-epsilon1){
+	  ix=i;
+	  return 1;
+	}
+    }
+    return 0;
+}
+
 void* Element::operator new(size_t)
 {
     return Element_alloc.alloc();
@@ -920,6 +994,10 @@ int Mesh::face_idx(int p, int f)
 	}
     }
     cerr << "face_idx confused!\n";
+    cerr << "p=" << p << endl;
+    cerr << "f=" << f << endl;
+    cerr << "faces: " << e->faces[0] << " " << e->faces[1] << " " << e->faces[2] << " " << e->faces[3] << endl;
+    cerr << "nfaces: " << ne->faces[0] << " " << ne->faces[1] << " " << ne->faces[2] << " " << ne->faces[3] << endl;
     return 0;
 }
 
@@ -973,7 +1051,10 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
     while(!elems[in_element] && in_element>0)
 	in_element--;
     if(!locate(p, in_element)){
+      if(!locate2(p, in_element)){
+        cerr << "Error locating point: " << p << endl;
 	return 0;
+      }
     }
 
 

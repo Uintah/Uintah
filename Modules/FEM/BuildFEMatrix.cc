@@ -37,8 +37,6 @@ class BuildFEMatrix : public Module {
 		     int s, int e);
     int np;
     Barrier barrier;
-    Semaphore sema;
-    Mutex io;
     int* rows;
     Array1<int> colidx;
     int* allcols;
@@ -54,24 +52,10 @@ public:
     virtual void execute();
 };
 
-class BuildFEMatrixHelper : public Task{
-    int proc;
-    BuildFEMatrix* module;
-public:
-    BuildFEMatrixHelper(BuildFEMatrix* module, int proc);
-    virtual int body(int);
-};
-
-BuildFEMatrixHelper::BuildFEMatrixHelper(BuildFEMatrix* module, int proc)
-: Task("BuildFEMatrixHelper", 1, DEFAULT_PRIORITY), module(module), proc(proc)
+static void do_parallel(void* obj, int proc)
 {
-}
-
-int BuildFEMatrixHelper::body(int)
-{
-    while(1){
-	module->parallel(proc);
-    }
+    BuildFEMatrix* module=(BuildFEMatrix*)obj;
+    module->parallel(proc);
 }
     
 
@@ -83,9 +67,8 @@ Module* make_BuildFEMatrix(const clString& id)
 };
 
 
-
 BuildFEMatrix::BuildFEMatrix(const clString& id)
-: Module("BuildFEMatrix", id, Filter), sema(0)
+: Module("BuildFEMatrix", id, Filter)
 {
     // Create the input port
     inmesh = scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
@@ -99,18 +82,10 @@ BuildFEMatrix::BuildFEMatrix(const clString& id)
 
     // Ask Dave about why this was different originally
     // i.e. it was add_iport(scinew MeshIPort(this,"Geometry",...));
-
-    // Start up parallel threads...
-    np=Task::nprocessors();
-    cerr << "BuildFEMatrix will use " << np << " processors\n";
-    for(int i=0;i<np;i++){
-	Task* t=new BuildFEMatrixHelper(this, i);
-	t->activate(0);
-    }
 }
 
 BuildFEMatrix::BuildFEMatrix(const BuildFEMatrix& copy, int deep)
-: Module(copy, deep), sema(0)
+: Module(copy, deep)
 {
     NOT_FINISHED("BuildFEMatrix::BuildFEMatrix");
 }
@@ -126,7 +101,6 @@ Module* BuildFEMatrix::clone(int deep)
 
 void BuildFEMatrix::parallel(int proc)
 {
-    sema.down();
     int nnodes=mesh->nodes.size();
     int start_node=nnodes*proc/np;
     int end_node=nnodes*(proc+1)/np;
@@ -144,9 +118,23 @@ void BuildFEMatrix::parallel(int proc)
 	}
     }
     colidx[proc]=mycols.size();
-    barrier.wait(np+1);
-    // The main thread will make the array...
-    barrier.wait(np+1);
+    if(proc == 0)
+      update_progress(1,6);
+    barrier.wait(np);
+    int st=0;
+    if(proc == 0){
+      update_progress(2,6);
+      for(i=0;i<np;i++){
+	int ns=st+colidx[i];
+	colidx[i]=st;
+	st=ns;
+      }
+      colidx[np]=st;
+      cerr << "st=" << st << endl;
+      allcols=scinew int[st];
+    }
+      
+    barrier.wait(np);
     int s=colidx[proc];
 
     int n=mycols.size();
@@ -156,11 +144,18 @@ void BuildFEMatrix::parallel(int proc)
     for(i=start_node;i<end_node;i++){
 	rows[i]+=s;
     }
-    barrier.wait(np+1);
+    barrier.wait(np);
 
     // The main thread makes the matrix and rhs...
-    barrier.wait(np+1);
-//io.lock();
+    if(proc == 0){
+     rows[nnodes]=st;
+     update_progress(3,6);
+     cerr << "There are " << st << " non zeros" << endl;
+     gbl_matrix=scinew SymSparseRowMatrix(nnodes, nnodes, rows, allcols, st);
+     rhs=scinew ColumnMatrix(nnodes);
+    }
+    barrier.wait(np);
+
     double* a=gbl_matrix->a;
     for(i=start_node;i<end_node;i++){
 	(*rhs)[i]=0;
@@ -183,23 +178,15 @@ void BuildFEMatrix::parallel(int proc)
 	    add_lcl_gbl(*gbl_matrix,lcl_matrix,*rhs,i,mesh, start_node, end_node);
 	}
     }
-//io.lock();
-//    cerr << "done build, proc=" << proc << endl;
-//io.unlock();
     for(i=start_node;i<end_node;i++){
 	if(mesh->nodes[i]->bc){
 	    // This is just a dummy entry...
 //	    (*gbl_matrix)[i][i]=1;
 	    int id=rows[i];
-//	    cerr << "id=" << id << endl;
 	    a[id]=1;
 	    (*rhs)[i]=mesh->nodes[i]->bc->value;
 	}
     }
-//io.lock();
-//    cerr << "done bc, proc=" << proc << endl;
-//io.unlock();
-    barrier.wait(np+1);
 }
 
 void BuildFEMatrix::execute()
@@ -209,87 +196,12 @@ void BuildFEMatrix::execute()
 	  return;
 
      this->mesh=mesh.get_rep();
-     cerr << "start...\n";
      int nnodes=mesh->nodes.size();
-     int ndof=nnodes;
-     rows=scinew int[ndof+1];
+     rows=scinew int[nnodes+1];
+     np=Task::nprocessors();
      colidx.resize(np+1);
 
-     for(int i=0;i<np;i++)
-	 sema.up();
-#ifdef SERIAL
-     int nnodes=mesh->nodes.size();
-
-     int ndof=nnodes;
-     rows.resize(ndof+1);
-     colidx.resize(nproc);
-     int r=0;
-     int i;
-     for(i=0;i<nnodes;i++){
-	 if(i%2000 == 0)
-	     update_progress(i, 2*nnodes);
-	 rows[r++]=cols.size();
-	 if(mesh->nodes[i]->bc){
-	     cols.add(i); // Just a diagonal term
-	 } else {
-	     mesh->add_node_neighbors(i, cols);
-	 }
-     }
-#endif
-     update_progress(1,6);
-     barrier.wait(np+1);
-
-     cerr << "resize...\n";
-     update_progress(2,6);
-     int s=0;
-     for(i=0;i<np;i++){
-	 int ns=s+colidx[i];
-	 colidx[i]=s;
-	 s=ns;
-     }
-     colidx[np]=s;
-     cerr << "s=" << s << endl;
-     allcols=scinew int[s];
-
-     barrier.wait(np+1);
-     cerr << "collect...\n";
-     update_progress(3,6);
-     barrier.wait(np+1);
-     cerr << "done\n";
-
-     rows[nnodes]=s;
-     update_progress(3,6);
-     cerr << "There are " << s << " non zeros" << endl;
-     gbl_matrix=scinew SymSparseRowMatrix(ndof, ndof, rows, allcols, s);
-     rhs=scinew ColumnMatrix(ndof);
-
-     barrier.wait(np+1);
-#ifdef SERIAL
-     gbl_matrix->zero();
-     ColumnMatrix* rhs=scinew ColumnMatrix(ndof);
-     rhs->zero();
-     double lcl_matrix[4][4];
-
-     int nelems=mesh->elems.size();
-     for (i=0; i<nelems; i++){
-	 if(i%5000 == 0)
-	     update_progress(nelems+i, 2*nelems);
-	 build_local_matrix(mesh->elems[i],lcl_matrix,mesh);
-	 add_lcl_gbl(*gbl_matrix,lcl_matrix,*rhs,i,mesh);
-     }
-     int nbc=0;
-     for(i=0;i<nnodes;i++){
-	 if(mesh->nodes[i]->bc){
-	     nbc++;
-	     // This is just a dummy entry...
-	     (*gbl_matrix)[i][i]=1;
-	     (*rhs)[i]=mesh->nodes[i]->bc->value;
-	 }
-     }
-     cerr << "There are " << nbc << " nodes with boundary conditions" << endl;
-#endif
-     barrier.wait(np+1);
-     cerr << "all done\n";
+     Task::multiprocess(np, do_parallel, this);
 
      outmatrix->send(MatrixHandle(gbl_matrix));
      rhsoport->send(ColumnMatrixHandle(rhs));

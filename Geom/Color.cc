@@ -20,7 +20,7 @@ Color::Color()
 {
 }
 
-Color::Color(double _r, double _g, double _b)
+Color::Color(float _r, float _g, float _b)
 : _r(_r), _g(_g), _b(_b)
 {
 }
@@ -55,7 +55,7 @@ Color Color::operator*(const Color& c) const
     return Color(_r*c._r, _g*c._g, _b*c._b);
 }
 
-Color Color::operator*(double w) const
+Color Color::operator*(float w) const
 {
     return Color(_r*w, _g*w, _b*w);
 }
@@ -85,14 +85,14 @@ Color& Color::operator+=(const Color& c)
 Color::Color(const HSVColor& hsv)
 {
    int hh((int)(hsv._hue/360.0));
-   double hue(hsv._hue-hh*360.0);
+   float hue(hsv._hue-hh*360.0);
    
-   double h6(hue/60.0);
+   float h6(hue/60.0);
    int i((int)h6);
-   double f(h6-i);
-   double p1(hsv._val*(1.0-hsv._sat));
-   double p2(hsv._val*(1.0-(hsv._sat*f)));
-   double p3(hsv._val*(1.0-(hsv._sat*(1-f))));
+   float f(h6-i);
+   float p1(hsv._val*(1.0-hsv._sat));
+   float p2(hsv._val*(1.0-(hsv._sat*f)));
+   float p3(hsv._val*(1.0-(hsv._sat*(1-f))));
    switch(i){
    case 0:
       _r=hsv._val; _g=p3;       _b=p1;   break;
@@ -115,7 +115,7 @@ HSVColor::HSVColor()
 {
 }
 
-HSVColor::HSVColor(double _hue, double _sat, double _val)
+HSVColor::HSVColor(float _hue, float _sat, float _val)
 : _hue(_hue), _sat(_sat), _val(_val)
 {
 }
@@ -131,13 +131,13 @@ HSVColor::HSVColor(const HSVColor& copy)
 
 HSVColor::HSVColor(const Color& rgb)
 {
-   double max(Max(rgb._r,rgb._g,rgb._b));
-   double min(Min(rgb._r,rgb._g,rgb._b));
+   float max(Max(rgb._r,rgb._g,rgb._b));
+   float min(Min(rgb._r,rgb._g,rgb._b));
    _sat = ((max == 0.0) ? 0.0 : ((max-min)/max));
    if (_sat != 0.0) {
-      double rl((max-rgb._r)/(max-min));
-      double gl((max-rgb._g)/(max-min));
-      double bl((max-rgb._b)/(max-min));
+      float rl((max-rgb._r)/(max-min));
+      float gl((max-rgb._g)/(max-min));
+      float bl((max-rgb._b)/(max-min));
       if (max == rgb._r) {
 	 if (min == rgb._g) _hue = 60.0*(5.0+bl);
 	 else _hue = 60.0*(1.0-gl);
@@ -160,7 +160,7 @@ HSVColor& HSVColor::operator=(const HSVColor& copy)
     return *this;
 }
 
-HSVColor HSVColor::operator*(double w)
+HSVColor HSVColor::operator*(float w)
 {
    return HSVColor(_hue*w,_val*w,_sat*w);
 }
@@ -193,7 +193,7 @@ CharColor::CharColor ( Color& c )
 }
 
 
-CharColor&
+CharColor
 CharColor::operator= ( const Color& c ) const
 {
   CharColor f;

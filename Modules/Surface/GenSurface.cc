@@ -303,7 +303,7 @@ void GenSurface::widget_moved(int last)
 	cyl_p2.set(p2);
 	double ratio=cyl_widget->GetRatio();
 	double dist=(p2-p1).length();
-	double radius=2*dist*ratio;
+	//	double radius=2*dist*ratio;
 //	cerr << "Setting rad to: " << radius < endl;
 //	cyl_rad.set(radius);
     } else if(st=="sphere"){

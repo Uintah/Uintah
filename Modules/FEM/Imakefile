@@ -1,14 +1,16 @@
 
 #include <config/sci.cf>
 
-OBJS = ApplyBC.o  BuildFEMatrix.o
-SRCS = ApplyBC.cc BuildFEMatrix.cc
+OBJS = ApplyBC.o  BuildFEMatrix.o  ComposeError.o  \
+	ErrorInterval.o  FEMError.o  MeshRefiner.o
+SRCS = ApplyBC.cc BuildFEMatrix.cc ComposeError.cc \
+	ErrorInterval.cc FEMError.cc MeshRefiner.cc
 
 LIBNAME = FEM
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lClasslib \
-	-lMultitask -lMalloc
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lGeometry \
+	-lTCL -lClasslib -lMultitask -lMalloc
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

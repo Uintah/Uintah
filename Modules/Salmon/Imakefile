@@ -1,30 +1,40 @@
 
 #include <config/sci.cf>
 
+#if defined(SCI_MACHINE_Solaris)
+XLIBDIR = -L/usr/openwin/lib
+XINCLUDE = -I/usr/openwin/include
+#endif
+
 #ifdef SCI_OPENGL
 OPENGLOBJS = OpenGL.o
 OPENGLSRCS = OpenGL.cc
 
 #ifdef SCI_MESA
 OPENGLINCS = -I$(TOP)/Mesa/include
-OPENGLLIBS = -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
+OPENGLLIBS = $(XLIBDIR) -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
 #else
 OPENGLINCS =
-OPENGLLIBS = -lGLU -lGL -lXext -lX11
+OPENGLLIBS = $(XLIBDIR) -lGLU -lGL -lXext -lX11
 #endif
 #else
 OPENGLOBJS =
 OPENGLSRCS = 
 #endif
 
+IMGLIBOBJS = open.o close.o row.o name.o rdwr.o rle.o
+#ifdef __sgi
+LOCALCFLAGS = -woff 835
+#endif
+
 OBJS = Postscript.o  Raytracer.o  Salmon.o  Renderer.o  Roe.o  X11.o \
 	SalmonGeom.o Ball.o BallAux.o BallMath.o\
-	$(OPENGLOBJS)
+	$(OPENGLOBJS) $(IMGLIBOBJS)
 SRCS = Postscript.cc Raytracer.cc Salmon.cc Renderer.cc Roe.cc X11.cc \
 	SalmonGeom.cc Ball.cc BallAux.cc BallMath.cc\
 	$(OPENGLSRCS)
 
-LOCALINCLUDES = $(OPENGLINCS)
+LOCALINCLUDES = $(OPENGLINCS) $(XINCLUDE)
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lDevices -lGeom \
 	-lGeometry -lTCL -lClasslib -lMultitask $(OPENGLLIBS) -ltk -lc -lm

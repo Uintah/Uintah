@@ -133,6 +133,15 @@ void Renderer::redraw(Salmon* salmon, Roe* roe,
     redraw(salmon, roe);
 }
 
+void Renderer::listvisuals(TCLArgs& args)
+{
+  args.result("Only");
+}
+
+void Renderer::setvisual(const clString&, int, int, int)
+{
+}
+
 #ifdef __GNUG__
 
 #include <Classlib/AVLTree.cc>

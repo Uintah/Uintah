@@ -63,6 +63,15 @@ ostream& operator<<( ostream& os, const Vector& v )
    return os;
 }
 
+istream& operator>>( istream& is, Vector& v)
+{
+  double x, y, z;
+  char st;
+  is >> st >> x >> st >> y >> st >> z >> st;
+  v=Vector(x,y,z);
+  return is;
+}
+
 int
 Vector::operator== ( const Vector& v ) const
 {

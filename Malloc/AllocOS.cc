@@ -6,6 +6,12 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#ifdef sun
+#define MMAP_TYPE char
+#else
+#define MMAP_TYPE void
+#endif
+
 static int devzero_fd=-1;
 
 
@@ -35,7 +41,7 @@ OSHunk* OSHunk::alloc(size_t size)
 void OSHunk::free(OSHunk* hunk)
 {
     size_t len=hunk->len;
-    if(munmap((void*)hunk, len) == -1){
+    if(munmap((MMAP_TYPE*)hunk, len) == -1){
 	fprintf(stderr, "Error unmapping memory\nmunmap: errno=%d\n", errno);
 	abort();
     }

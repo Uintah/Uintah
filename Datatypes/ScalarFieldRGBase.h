@@ -15,6 +15,7 @@
 #define SCI_project_ScalarFieldRGBase_h 1
 
 #include <Datatypes/ScalarField.h>
+#include <Classlib/Array1.h>
 #include <Classlib/Array3.h>
 
 class ScalarFieldRGBase : public ScalarField {
@@ -22,6 +23,9 @@ public:
     int nx;
     int ny;
     int nz;
+    Array1<double> xgrid;
+    Array1<double> ygrid;
+    Array1<double> zgrid;
  
     Point get_point(int, int, int);
     void locate(const Point&, int&, int&, int&);

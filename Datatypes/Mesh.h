@@ -138,6 +138,7 @@ public:
     void compute_neighbors();
     int locate(const Point&, int&, double epsilon1=1.e-6, double epsilon2=1.e-6);
     int locate(const RPoint&, int&);
+    int locate2(const Point&, int&, double epsilon1=1.e-6);
     int inside(const Point& p, Element* elem);
     void get_interp(Element* elem, const Point& p, double& s1,
 		    double& s2, double& s3, double& s4);

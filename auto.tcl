@@ -1,3 +1,4 @@
+lappend auto_path $sci_root/Modules/FEM
 lappend auto_path $sci_root/Modules/Fields
 lappend auto_path $sci_root/Modules/Matrix
 lappend auto_path $sci_root/Modules/Mesh

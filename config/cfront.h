@@ -26,7 +26,6 @@
 
 #define CppNeedsIncludes
 #define LinkerNeedsCppFlags
+#define SCI_ShLib CC -G -dy -L/usr/lib -ptr$(TOP)/templates -pti$(TOP) -ptv
+#define SCI_CCLibs 
 
-#define SCI_MakeTemplateLib $(TOP)/etc/make_templates
-#define SCI_TemplateDir $(TOP)/templates
-#define SCI_TemplateLib $(TOP)/templates/fast_templates.o

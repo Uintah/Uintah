@@ -7,8 +7,14 @@
 #include <Allocator.h>
 #include <AllocPriv.h>
 #include <AllocOS.h>
+#ifdef __sun
+#include <string.h>
+#define bcopy(dest,src,n) memcpy(dest,src,n)
+#else
 #include <bstring.h>
+#endif
 #include <stdio.h>
+#include <config.h>
 
 Allocator* default_allocator;
 
@@ -54,6 +60,34 @@ inline AllocBin* Allocator::get_bin(size_t size)
 	return &big_bin;
     }
 }
+
+#ifdef SCI_PTHREADS
+
+#include <pthread.h>
+
+pthread_mutex_t thelock = PTHREAD_MUTEX_INITIALIZER;
+
+void Allocator::initlock()
+{
+}
+
+inline void Allocator::lock()
+{
+  if(pthread_mutex_lock(&thelock) != 0){
+    perror("pthread_mutex_lock");
+    exit(-1);
+  }
+}
+
+inline void Allocator::unlock()
+{
+  if(pthread_mutex_unlock(&thelock) != 0){
+    perror("pthread_mutex_lock");
+    exit(-1);
+  }
+}
+
+#else
 
 #ifdef __sgi
 
@@ -154,6 +188,7 @@ void SetAllocSleeper(void (*s)())
     sleeper=s;
 }
 
+#endif
 #endif
 
 inline size_t Allocator::obj_maxsize(Tag* t)

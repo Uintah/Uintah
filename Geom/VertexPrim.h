@@ -129,6 +129,7 @@ void Pio(Piostream&, GeomVertex*&);
 
 class GeomVertexPrim : public GeomObj {
 public:
+    Array1<double> times;
     Array1<GeomVertex*> verts;
 
     GeomVertexPrim();
@@ -144,6 +145,7 @@ public:
     void add(const Point&, const Color&);
     void add(const Point&, const Vector&, const MaterialHandle&);
     void add(GeomVertex*);
+    void add(double time, GeomVertex*);
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;

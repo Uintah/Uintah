@@ -134,8 +134,8 @@ void CuttingPlane::execute()
 	GeomObj *w = widget->GetWidget() ;
 	widget_id = ogeom->addObj( w, widget_name, &widget_lock );
 	widget->Connect( ogeom );
-	widget->SetRatioR( 0.4 );
-	widget->SetRatioD( 0.4 );
+	widget->SetRatioR( 0.2 );
+	widget->SetRatioD( 0.2 );
     }
     if (need_find != 0)
     {
@@ -262,7 +262,7 @@ void CuttingPlane::execute()
 	if (contours >= 2)
 	{
 	    GeomGroup *cs = new GeomGroup;
-	    Array1<GeomGroup *> col_group( contours);
+	    Array1<GeomLines *> col_group( contours);
 	    Array1<GeomMaterial *> colrs( contours);
 	    Array1<double> values( contours);
 
@@ -275,7 +275,7 @@ void CuttingPlane::execute()
 		values[i] = ((double)i/(contours - 1)) * (max - min) + min;
 		MaterialHandle matl;
 		matl = cmap->lookup( values[i] );
-		col_group[i] = new GeomGroup;
+		col_group[i] = new GeomLines;
 		colrs[i] = new GeomMaterial( col_group[i], matl );
 		cs->add( colrs[i] );
 	    }
@@ -357,7 +357,7 @@ void CuttingPlane::execute()
 			    }
 			    // did we find two points to draw a line with?
 			    if (found == 2)
-				col_group[k]->add(new GeomLine(x1, x2));
+				col_group[k]->add(x1, x2);
 			}
 		    }
 		}

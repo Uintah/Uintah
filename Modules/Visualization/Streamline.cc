@@ -63,6 +63,7 @@ hook up user interface buttons
 
 #include <iostream.h>
 #include <values.h>
+#include <strstream.h>
 
 class Streamline;
 
@@ -73,6 +74,8 @@ struct SLTracer {
     int ix;
     Vector grad;
     double sign;
+    int startstep;
+    double starttime;
 
     SLTracer(const Point&, double s, double t,
 	     const VectorFieldHandle& vfield, double sign);
@@ -119,6 +122,9 @@ struct SLSource {
 				    const VectorFieldHandle& vfield)=0;
     void select();
     void deselect();
+
+    virtual void update_position(const clString& base, const clString& varname)=0;
+    virtual void reposition(const clString& pos)=0;
 };
 
 struct SLPointSource : public SLSource {
@@ -131,6 +137,8 @@ public:
     virtual void get_n(int& s, int& t);
     virtual Vector ribbon_direction(double s, double t, const Point&,
 				    const VectorFieldHandle& vfield);
+    virtual void update_position(const clString& base, const clString& varname);
+    virtual void reposition(const clString& pos);
 };
 
 struct SLLineSource : public SLSource {
@@ -143,6 +151,8 @@ public:
     virtual void get_n(int& s, int& t);
     virtual Vector ribbon_direction(double s, double t, const Point&,
 				    const VectorFieldHandle& vfield);
+    virtual void update_position(const clString& base, const clString& varname);
+    virtual void reposition(const clString& pos);
 };
 
 struct SLRingSource : public SLSource {
@@ -155,6 +165,8 @@ public:
     virtual void get_n(int& s, int& t);
     virtual Vector ribbon_direction(double s, double t, const Point&,
 				    const VectorFieldHandle& vfield);
+    virtual void update_position(const clString& base, const clString& varname);
+    virtual void reposition(const clString& pos);
 };
 
 struct SLSquareSource : public SLSource {
@@ -167,6 +179,8 @@ public:
     virtual void get_n(int& s, int& t);
     virtual Vector ribbon_direction(double s, double t, const Point& p,
 				    const VectorFieldHandle& vfield);
+    virtual void update_position(const clString& base, const clString& varname);
+    virtual void reposition(const clString& pos);
 };
 
 struct SLSourceInfo {
@@ -209,17 +223,18 @@ class Streamline : public Module {
     enum ALGS {
 	Exact, Euler, RK4,
     };
+    ALGS alg_enum;
 
     void make_tracers(SLSource*, Array1<SLTracer*>&,
 		      const VectorFieldHandle& vfield,
-		      ALGS alg_enum, double width=0);
+		      double width=0);
     SLTracer* make_tracer(SLSource* source, double s, double t,
 			  const VectorFieldHandle& vfield,
-			  ALGS alg_enum, double sign);
+			  double sign);
     SLTracer* make_tracer(const Point& p,
 			  double s, double t,
 			  const VectorFieldHandle& vfield,
-			  ALGS alg_enum, double sign);
+			  double sign);
     Array1<SLTracer*> tracers;
     int np;
     double stepsize;
@@ -235,16 +250,17 @@ class Streamline : public Module {
     SLSourceInfo* si;
 
     int upstream, downstream;
+  int drawmode;
+  double drawdist;
 
 public:
-    void do_streamline(SLSourceInfo* si, ALGS alg_enum);
+    void do_streamline(SLSourceInfo* si);
     void parallel_streamline(int proc);
-    void do_streamtube(SLSourceInfo* si, ALGS alg_enum);
+    void do_streamtube(SLSourceInfo* si);
     void parallel_streamtube(int proc);
-    void do_streamribbon(SLSourceInfo* si, ALGS alg_enum,
-			 double ribbonsize);
+    void do_streamribbon(SLSourceInfo* si, double ribbonsize);
     void parallel_streamribbon(int proc);
-    void do_streamsurface(SLSourceInfo* si,ALGS alg_enum,
+    void do_streamsurface(SLSourceInfo* si,
 			  double maxbend);
     inline SLTracer* left_tracer(const Array1<SLTracer*> tracers, int i){
 	return tracers[i*2];
@@ -253,14 +269,14 @@ public:
 	return tracers[i*2+1];
     }
 	    
-    GeomVertex* get_vertex(const Point& p,
+    GeomVertex* get_vertex(double t, double maxt, const Point& p,
 			   const ScalarFieldHandle& sfield,
 			   const ColormapHandle& cmap);
-    GeomVertex* get_vertex(const Point& p,
+    GeomVertex* get_vertex(double t, double maxt, const Point& p,
 			   const ScalarFieldHandle& sfield,
 			   const ColormapHandle& cmap,
 			   const Vector& normal);
-    GeomVertex* get_vertex(const Point& p,
+    GeomVertex* get_vertex(double t, double maxt, const Point& p,
 			   const ScalarFieldHandle& sfield,
 			   const ColormapHandle& cmap,
 			   const Vector& normal,
@@ -344,6 +360,7 @@ void Streamline::execute()
 	}
 
 	si->pick_source(sname, field, this);
+	si->source->update_position(sidstr, "position");
 
 	// Calculate Streamlines
 	if(!get_tcl_doublevar(sidstr, "stepsize", stepsize)){
@@ -404,7 +421,6 @@ void Streamline::execute()
 	    error("Error reading algorithm variable");
 	    return;
 	}
-	ALGS alg_enum;
 	if(alg == "Exact"){
 	    alg_enum=Exact;
 	} else if(alg == "Euler"){
@@ -418,27 +434,35 @@ void Streamline::execute()
 
 	// Do it...
 	if(markertype == "Line"){
-	    do_streamline(si, alg_enum);
+	  if(!get_tcl_intvar(sidstr, "drawmode", drawmode)){
+	    error("Error reading drawmode variable");
+	    return;
+	  }
+	  if(!get_tcl_doublevar(sidstr, "drawdist", drawdist)){
+	    error("Error reading drawdist variable");
+	    return;
+	  }
+	  do_streamline(si);
 	} else if(markertype == "Tube"){
 	    if(!get_tcl_doublevar(sidstr, "tubesize", tubesize)){
 		error("Error reading tubesize variable");
 		return;
 	    }
-	    do_streamtube(si, alg_enum);
+	    do_streamtube(si);
 	} else if(markertype == "Ribbon"){
 	    double ribbonsize;
 	    if(!get_tcl_doublevar(sidstr, "ribbonsize", ribbonsize)){
 		error("Error reading ribbonsize variable");
 		return;
 	    }
-	    do_streamribbon(si, alg_enum, ribbonsize);
+	    do_streamribbon(si, ribbonsize);
 	} else if(markertype == "Surface"){
 	    double maxbend;
 	    if(!get_tcl_doublevar(sidstr, "maxbend", maxbend)){
 		error("Error reading ribbonsize variable");
 		return;
 	    }
-	    do_streamsurface(si, alg_enum, maxbend);
+	    do_streamsurface(si, maxbend);
 	} else {
 	    error("Unknown marketype");
 	    return;
@@ -458,16 +482,16 @@ void Streamline::execute()
 
 SLTracer* Streamline::make_tracer(SLSource* source, double s, double t,
 				  const VectorFieldHandle& vfield,
-				  ALGS alg_enum, double sign)
+				  double sign)
 {
     Point start(source->trace_start(s, t));
-    return make_tracer(start, s, t, vfield, alg_enum, sign);
+    return make_tracer(start, s, t, vfield, sign);
 }
 
 SLTracer* Streamline::make_tracer(const Point& start,
 				  double s, double t,
 				  const VectorFieldHandle& vfield,
-				  ALGS alg_enum, double sign)
+				  double sign)
 {
     switch(alg_enum){
 #if 0
@@ -484,7 +508,6 @@ SLTracer* Streamline::make_tracer(const Point& start,
 
 void Streamline::make_tracers(SLSource* source, Array1<SLTracer*>& tracers,
 			      const VectorFieldHandle& vfield,
-			      ALGS alg_enum,
 			      double ribbonsize)
 {
     int ns, nt;
@@ -494,19 +517,19 @@ void Streamline::make_tracers(SLSource* source, Array1<SLTracer*>& tracers,
 	    Point start(source->trace_start(s, t));
 	    if(ribbonsize == 0){
 	      if(downstream)
-		tracers.add(make_tracer(start, s, t, vfield, alg_enum, 1));
+		tracers.add(make_tracer(start, s, t, vfield, 1));
 	      if(upstream)
-		tracers.add(make_tracer(start, s, t, vfield, alg_enum, -1));
+		tracers.add(make_tracer(start, s, t, vfield, -1));
 	    } else {
 		Vector v(source->ribbon_direction(s, t, start, vfield)
 			 *(ribbonsize/2));
 		if(downstream){
-		  tracers.add(make_tracer(start-v, s, t, vfield, alg_enum, 1));
-		  tracers.add(make_tracer(start+v, s, t, vfield, alg_enum, 1));
+		  tracers.add(make_tracer(start-v, s, t, vfield, 1));
+		  tracers.add(make_tracer(start+v, s, t, vfield, 1));
 		}
 		if(upstream){
-		  tracers.add(make_tracer(start-v, s, t, vfield, alg_enum, -1));
-		  tracers.add(make_tracer(start+v, s, t, vfield, alg_enum, -1));
+		  tracers.add(make_tracer(start-v, s, t, vfield, -1));
+		  tracers.add(make_tracer(start+v, s, t, vfield, -1));
 		}
 	    }
 	}
@@ -528,17 +551,11 @@ GeomGroup* SLSourceInfo::get_group(double t)
 }
 
 void SLSourceInfo::make_anim_groups(const clString& animation, GeomGroup* top,
-				    double total_time, int timesteps)
+				    double total_time, int)
 {
-    if(animation == "Time"){
-	anim_steps=timesteps;
-	anim_begin=0;
-	anim_end=total_time;
-    } else {
-	anim_begin=0;
-	anim_end=1;
-	anim_steps=1;
-    }
+    anim_begin=0;
+    anim_end=1;
+    anim_steps=1;
     anim_groups.remove_all();
     if(anim_steps == 1){
 	anim_groups.add(top);
@@ -560,7 +577,7 @@ void SLSourceInfo::make_anim_groups(const clString& animation, GeomGroup* top,
     }
 }
 
-GeomVertex* Streamline::get_vertex(const Point& p,
+GeomVertex* Streamline::get_vertex(double t, double maxt, const Point& p,
 				   const ScalarFieldHandle& sfield,
 				   const ColormapHandle& cmap)
 {
@@ -570,11 +587,14 @@ GeomVertex* Streamline::get_vertex(const Point& p,
 	    MaterialHandle matl(cmap->lookup(sval));
 	    return new GeomCVertex(p, matl->diffuse);
 	}
+    } else if(cmap.get_rep()){
+      MaterialHandle matl(cmap->lookup2(p.z()/-5200*50)); //cmap->lookup2(t/maxt));
+      return new GeomCVertex(p, matl->diffuse);
     }
     return new GeomVertex(p);
 }
 
-GeomVertex* Streamline::get_vertex(const Point& p,
+GeomVertex* Streamline::get_vertex(double t, double maxt, const Point& p,
 				   const ScalarFieldHandle& sfield,
 				   const ColormapHandle& cmap,
 				   const Vector& normal)
@@ -594,11 +614,14 @@ GeomVertex* Streamline::get_vertex(const Point& p,
 	    MaterialHandle matl(cmap->lookup(sval));
 	    return new GeomNMVertex(p, n, matl);
 	}
+    } else if(cmap.get_rep()){
+      MaterialHandle matl(cmap->lookup2(t/maxt));
+      return new GeomNMVertex(p, n, matl);
     }
     return new GeomNVertex(p, n);
 }
 
-GeomVertex* Streamline::get_vertex(const Point& p,
+GeomVertex* Streamline::get_vertex(double t, double maxt, const Point& p,
 				   const ScalarFieldHandle& sfield,
 				   const ColormapHandle& cmap,
 				   const Vector& normal,
@@ -613,18 +636,23 @@ GeomVertex* Streamline::get_vertex(const Point& p,
 	    MaterialHandle matl(cmap->lookup(sval));
 	    return new GeomNMVertex(p, n, matl);
 	}
+    } else if(cmap.get_rep()){
+      MaterialHandle matl(cmap->lookup2(t/maxt));
+      return new GeomNMVertex(p, n, matl);
     }
     return new GeomNVertex(p, n);
 }
 
 void Streamline::parallel_streamline(int proc)
 {
-  double t=0;
   GeomGroup* group=0;
-  int step=0;
-  int ninside=1;
   int st=proc*tracers.size()/np;
   int et=(proc+1)*tracers.size()/np;
+  double maxt=maxsteps*stepsize;
+#if 0
+  double t=0;
+  int step=0;
+  int ninside=1;
   while(step< maxsteps && ninside){
     step++;
     // If the group is discontinued, we have to start new polylines
@@ -637,8 +665,8 @@ void Streamline::parallel_streamline(int proc)
 	  grouplock.lock();
 	  group->add(lines[i]);
 	  grouplock.unlock();
-	  GeomVertex* vtx=get_vertex(tracers[i]->p, sfield, cmap);
-	  lines[i]->add(vtx);
+	  GeomVertex* vtx=get_vertex(t, maxt, tracers[i]->p, sfield, cmap);
+	  lines[i]->add(t/maxt, vtx);
 	} else {
 	    lines[i]=0;
 	}
@@ -651,13 +679,55 @@ void Streamline::parallel_streamline(int proc)
     for(int i=st;i<et;i++){
       int inside=tracers[i]->advance(field, stepsize, skip);
       if(inside){
-	GeomVertex* vtx=get_vertex(tracers[i]->p, sfield, cmap);
-	lines[i]->add(vtx);
+	GeomVertex* vtx=get_vertex(t, maxt, tracers[i]->p, sfield, cmap);
+	lines[i]->add(t/maxt, vtx);
       }
       ninside+=inside;
     }
   }
+#else
+  group=new GeomGroup;
+  double ss=stepsize/maxt;
   for(int i=st;i<et;i++){
+    int step=tracers[i]->startstep;
+    double t=tracers[i]->starttime;
+    int inside=1;
+    GeomPolylineTC* line=new GeomPolylineTC(drawmode, drawdist);
+    while(step++< maxsteps && inside){
+      inside=tracers[i]->advance(field, stepsize, skip);
+      if(inside){
+	line->add(t, tracers[i]->p,
+		  cmap->lookup2(tracers[i]->p.z()*50/-5200)->diffuse);
+      } else {
+	if(tracers[i]->p.x() >= 1280){
+	  SLTracer* ot=tracers[i];
+	  Point p(ot->p);
+	  cerr << "Went out: x=" << p.x() << endl;
+	  if(p.x() >= 1280){
+	    cerr << "Went out on right\n";
+	    p.x(p.x()-1280);
+	  } else if(p.x()<= 0){
+	    cerr << "Went out on left\n";
+	    p.x(p.x()+1280);
+	  }
+	  SLTracer* nt=make_tracer(p, ot->s, ot->t, field, ot->sign);
+	  tracers[i]=nt;
+	  delete ot;
+	  nt->startstep=step;
+	  nt->starttime=t;
+	  i--;
+	}
+      }
+      t+=ss;
+    }
+    group->add(line);
+  }
+  grouplock.lock();
+  GeomGroup* maingroup=si->get_group(0);
+  maingroup->add(group);
+  grouplock.unlock();
+#endif
+  for(i=st;i<et;i++){
     delete tracers[i];
   }
 }
@@ -668,8 +738,7 @@ static void do_parallel_streamline(void* obj, int proc)
   module->parallel_streamline(proc);
 }
 
-void Streamline::do_streamline(SLSourceInfo* si,
-			       ALGS alg_enum)
+void Streamline::do_streamline(SLSourceInfo* si)
 {
     tracers.remove_all();
     make_tracers(si->source, tracers, field, alg_enum);
@@ -684,8 +753,9 @@ void Streamline::parallel_streamtube(int proc)
     int et=(proc+1)*tracers.size()/np;
     double t=0;
     GeomGroup* group=0;
-    int step=0;
     int ninside=1;
+    double maxt=maxsteps*stepsize;
+    int step=0;
     while(step< maxsteps && ninside){
 	step++;
 	// If the group is discontinued, we have to start new tubes
@@ -695,9 +765,11 @@ void Streamline::parallel_streamtube(int proc)
 	    for(int i=st;i<et;i++){
 		if(tracers[i]->inside){
 		    tubes[i]=scinew GeomTube;
+		    grouplock.lock();
 		    group->add(tubes[i]);
+		    grouplock.unlock();
 		    Vector grad=tracers[i]->grad;
-		    GeomVertex* vtx=get_vertex(tracers[i]->p, sfield, cmap);
+		    GeomVertex* vtx=get_vertex(t, maxt, tracers[i]->p, sfield, cmap);
 		    if(grad.length2() < 1.e-6)
 			grad=Vector(0,0,1);
 		    tubes[i]->add(vtx, tubesize, grad);
@@ -714,7 +786,7 @@ void Streamline::parallel_streamtube(int proc)
 	    int inside=tracers[i]->advance(field, stepsize, skip);
 	    if(inside){
 		Vector grad=tracers[i]->grad;
-		GeomVertex* vtx=get_vertex(tracers[i]->p, sfield, cmap);
+		GeomVertex* vtx=get_vertex(t, maxt, tracers[i]->p, sfield, cmap);
 		if(grad .length2() < 1.e-6)
 		    grad=Vector(0,0,1);
 		tubes[i]->add(vtx, tubesize, grad);
@@ -734,8 +806,7 @@ static void do_parallel_streamtube(void* obj, int proc)
 }
 
 
-void Streamline::do_streamtube(SLSourceInfo* si,
-			       ALGS alg_enum)
+void Streamline::do_streamtube(SLSourceInfo* si)
 {
     SLSource* source=si->source;
     tracers.remove_all();
@@ -746,18 +817,18 @@ void Streamline::do_streamtube(SLSourceInfo* si,
 }
 
 void Streamline::do_streamribbon(SLSourceInfo* si,
-				 ALGS alg_enum,
 				 double ribbonsize)
 
 {
     tracers.remove_all();
     SLSource* source=si->source;
-    make_tracers(source, tracers, field, alg_enum, ribbonsize);
+    make_tracers(source, tracers, field, ribbonsize);
     Array1<GeomTriStrip*> ribbons(tracers.size()/2);
     double t=0;
     GeomGroup* group=0;
     int step=0;
     int ninside=1;
+    double maxt=maxsteps*stepsize;
     while(step< maxsteps && ninside){
 	step++;
 	// If the group is discontinued, we have to start new ribbons
@@ -777,7 +848,7 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 		    Vector grad=left_tracer(tracers, i)->grad;
 		    //field->interpolate(left_tracer(tracers, i)->p, grad);
 		    Vector n1(Cross(vec, grad));
-		    GeomVertex* vtx=get_vertex(left_tracer(tracers, i)->p,
+		    GeomVertex* vtx=get_vertex(t, maxt, left_tracer(tracers, i)->p,
 					       sfield, cmap, n1);
 		    ribbons[i]->add(vtx);
 
@@ -785,7 +856,7 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 		    grad=right_tracer(tracers, i)->grad;
 		    //field->interpolate(right_tracer(tracers, i)->p, grad);
 		    Vector n2(Cross(vec, grad));
-		    vtx=get_vertex(right_tracer(tracers, i)->p,
+		    vtx=get_vertex(t, maxt, right_tracer(tracers, i)->p,
 				   sfield, cmap, n2);
 		    ribbons[i]->add(vtx);
 		} else {
@@ -828,14 +899,14 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 			Vector grad=left_tracer(tracers, i)->grad;
 			//field->interpolate(left_tracer(tracers, i)->p, grad);
 			Vector n1(Cross(vec, grad));
-			GeomVertex* lvtx=get_vertex(left_tracer(tracers, i)->p,
+			GeomVertex* lvtx=get_vertex(t, maxt, left_tracer(tracers, i)->p,
 						    sfield, cmap, n1);
 
 			// Get right vertex
 			grad=right_tracer(tracers, i)->grad;
 			//field->interpolate(right_tracer(tracers, i)->p, grad);
 			Vector n2(Cross(vec, grad));
-			GeomVertex* rvtx=get_vertex(right_tracer(tracers, i)->p,
+			GeomVertex* rvtx=get_vertex(t, maxt, right_tracer(tracers, i)->p,
 						    sfield, cmap, n2);
 
 			ribbons[i]->add(lvtx);
@@ -856,7 +927,6 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 }
 
 void Streamline::do_streamsurface(SLSourceInfo* si,
-				  ALGS alg_enum,
 				  double maxbend)
 {
     tracers.remove_all();
@@ -875,6 +945,7 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
     int ninside=1;
     int splitlast=0;
     double maxcosangle=Cos(maxbend);
+    double maxt=maxsteps*stepsize;
     while(step< maxsteps && ninside){
 	step++;
 	// If the group is discontinued, we have to start new surfaces
@@ -910,12 +981,12 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
 			}
 		    }
 		    if(surfs[i]){
-			GeomVertex* vtx=get_vertex(tracers[i]->p,
+			GeomVertex* vtx=get_vertex(t, maxt, tracers[i]->p,
 						   sfield, cmap, n1);
 			surfs[i]->add(vtx);
 
 			// Right tracer
-			vtx=get_vertex(tracers[i+1]->p,
+			vtx=get_vertex(t, maxt, tracers[i+1]->p,
 				       sfield, cmap, n2);
 			surfs[i]->add(vtx);
 		    }
@@ -960,12 +1031,12 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
 		    }
 		}
 		if(surfs[i]){
-		    GeomVertex* lvtx=get_vertex(left->p,
+		    GeomVertex* lvtx=get_vertex(t, maxt, left->p,
 						sfield, cmap, n1);
 
 		    // Get right vertex
 		    //field->interpolate(right->p, grad);
-		    GeomVertex* rvtx=get_vertex(right->p,
+		    GeomVertex* rvtx=get_vertex(t, maxt, right->p,
 						sfield, cmap, n2);
 
 		    surfs[i]->add(lvtx);
@@ -1111,6 +1182,26 @@ void SLPointSource::get_n(int& ns, int& nt)
     nt=1;
 }
 
+void SLPointSource::update_position(const clString& base, const clString& varname)
+{
+  char buf[1000];
+  ostrstream out(buf, 1000);
+  out << pw->GetPosition();
+  sl->set_tclvar(base, varname, buf);
+}
+
+void SLPointSource::reposition(const clString& pos)
+{
+  istrstream buf(pos());
+  Point p;
+  buf >> p;
+  if(buf){
+    pw->SetPosition(p);
+  } else {
+    sl->error("Error parsing position string");
+  }
+}
+
 Vector SLPointSource::ribbon_direction(double, double,
 				       const Point& p,
 				       const VectorFieldHandle& vfield)
@@ -1154,6 +1245,32 @@ Point SLLineSource::trace_start(double s, double)
     double ratio=gw->GetRatio();
     return p1+axis*s*ratio;
 }
+
+void SLLineSource::reposition(const clString& pos)
+{
+  istrstream buf(pos());
+  Point p1, p2;
+  double ratio;
+  buf >> p1 >> p2 >> ratio;
+  if(buf){
+    gw->SetRatio(ratio);
+    gw->SetEndpoints(p1, p2);
+  } else {
+    sl->error("Error parsing position string");
+  }
+}
+
+void SLLineSource::update_position(const clString& base, const clString& varname)
+{
+  char buf[1000];
+  ostrstream out(buf, 1000);
+  Point p1, p2;
+  gw->GetEndpoints(p1, p2);
+  double ratio=gw->GetRatio();
+  out << p1 << " " << p2 << " " << ratio << '\0';
+  sl->set_tclvar(base, varname, buf);
+}
+
 
 void SLLineSource::get_n(int& ns, int& nt)
 {
@@ -1208,6 +1325,37 @@ Point SLRingSource::trace_start(double s, double)
     return cen+v1*(rad*Cos(angle))+v2*(rad*Sin(angle));
 }
 
+void SLRingSource::reposition(const clString& pos)
+{
+  istrstream buf(pos());
+  Point cen;
+  Vector normal;
+  double rad;
+  double ratio;
+  buf >> cen >> normal >> rad >> ratio;
+  if(buf){
+    rw->SetPosition(cen, normal, rad);
+    rw->SetRadius(rad);
+    rw->SetRatio(ratio);
+  } else {
+    sl->error("Error parsing position string");
+  }
+}
+
+void SLRingSource::update_position(const clString& base, const clString& varname)
+{
+  char buf[1000];
+  ostrstream out(buf, 1000);
+  Point cen;
+  Vector normal;
+  double rad;
+  rw->GetPosition(cen, normal, rad);
+  double ratio=rw->GetRatio();
+  out << cen << " " << normal << " " << rad << " " << ratio << '\0';
+  sl->set_tclvar(base, varname, buf);
+}
+
+
 void SLRingSource::get_n(int& ns, int& nt)
 {
     double ratio=rw->GetRatio();
@@ -1233,8 +1381,8 @@ SLSquareSource::SLSquareSource(Streamline* sl)
 : SLSource(sl, "Square")
 {
     widget=fw=scinew ScaledFrameWidget(sl, &sl->widget_lock, 1);
-    fw->SetRatioR(0.2);
-    fw->SetRatioD(0.2);
+    fw->SetRatioR(0.1);
+    fw->SetRatioD(0.1);
 }
 
 SLSquareSource::~SLSquareSource()
@@ -1269,10 +1417,37 @@ Point SLSquareSource::trace_start(double s, double t)
     return p;
 }
 
+void SLSquareSource::reposition(const clString& pos)
+{
+  istrstream buf(pos());
+  Point center, R, D;
+  double ratioR, ratioD;
+  buf >> center >> R >> D >> ratioR >> ratioD;
+  if(buf){
+    fw->SetPosition(center, R, D);
+    fw->SetRatioR(ratioR);
+    fw->SetRatioD(ratioD);
+  } else {
+    sl->error("Error parsing position string");
+  }
+}
+
+void SLSquareSource::update_position(const clString& base, const clString& varname)
+{
+  char buf[1000];
+  ostrstream out(buf, 1000);
+  Point center, R, D;
+  fw->GetPosition(center, R, D);
+  double ratioR=fw->GetRatioR();
+  double ratioD=fw->GetRatioD();
+  out << center << " " << R << " " << D << " " << ratioR << " " << ratioD << '\0';
+  sl->set_tclvar(base, varname, buf);
+}
+
 void SLSquareSource::get_n(int& ns, int& nt)
 {
-    ns=fw->GetRatioR()*100;
-    nt=fw->GetRatioD()*100;
+    ns=fw->GetRatioR()*500;
+    nt=fw->GetRatioD()*500;
 }
 
 Vector SLSquareSource::ribbon_direction(double, double,
@@ -1288,7 +1463,7 @@ Vector SLSquareSource::ribbon_direction(double, double,
 
 SLTracer::SLTracer(const Point& p, double s, double t,
 		   const VectorFieldHandle& vfield, double sign)
-: p(p), s(s), t(t), inside(1), sign(sign)
+: p(p), s(s), t(t), inside(1), sign(sign), startstep(0), starttime(0)
 {
     // Interpolate initial gradient
     if(!vfield->interpolate(p, grad))
@@ -1424,6 +1599,10 @@ int SLEulerTracer::advance(const VectorFieldHandle& vfield, double stepsize, int
 	    inside=0;
 	    return 0;
 	} else {
+	  if(grad.length2() < 1.e-6){
+	    stagnate=1;
+	  }
+#if 0
 	    if(grad.length2() < 1.e-6){
 		grad*=100000;
 		if(grad.length2() < 1.e-6){
@@ -1434,6 +1613,7 @@ int SLEulerTracer::advance(const VectorFieldHandle& vfield, double stepsize, int
 	    } else {
 		grad.normalize();
 	    }
+#endif
 	    grad*=sign;
 	    p+=(grad*stepsize);
 	}
@@ -1584,6 +1764,28 @@ void Streamline::tcl_command(TCLArgs& args, void* userdata)
 	    return;
 	}
 	si->need_find=1;
+    } else if(args[1] == "reposition"){
+	if(args.count() != 3){
+	    args.error("need_find must have a SID");
+	    return;
+	}
+	int sid;
+	if(!args[2].get_int(sid)){
+	    args.error("need_find has a bad SID");
+	    return;
+	}
+	SLSourceInfo* si;
+	if(!source_info.lookup(sid, si)){
+	    args.error("bad SID for need_find");
+	    return;
+	}
+	clString pos;
+	clString sidstr(id+"-"+to_string(si->sid));
+	if(!get_tcl_stringvar(sidstr, "position", pos)){
+	  args.error("Error reading position");
+	  return;
+	}
+	si->source->reposition(pos);
     } else {
 	Module::tcl_command(args, userdata);
     }

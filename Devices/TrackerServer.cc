@@ -7,7 +7,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <termio.h>
+#ifdef __sun
+#include <string.h>
+#define bzero(p,sz)  memset(p,0,sz)
+#else
 #include <bstring.h>
+#endif
 #include <sys/types.h>
 #include <sys/time.h>
 

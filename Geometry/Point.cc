@@ -83,6 +83,15 @@ ostream& operator<<( ostream& os, const Point& p )
    return os;
 }
 
+istream& operator>>( istream& is, Point& v)
+{
+  double x, y, z;
+  char st;
+  is >> st >> x >> st >> y >> st >> z >> st;
+  v=Point(x,y,z);
+  return is;
+}
+
 void Pio(Piostream& stream, Point& p)
 {
     stream.begin_cheap_delim();

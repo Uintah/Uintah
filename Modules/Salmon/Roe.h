@@ -181,6 +181,8 @@ public:
 
     TCLint drawimg;
 
+    TCLstring saveprefix;
+
     // Object processing utility routines
     void do_for_visible(Renderer*, RoeVisPMF);
 

@@ -175,12 +175,20 @@ void GeomVertexPrim::add(GeomVertex* vtx)
     verts.add(vtx);
 }
 
-#define GEOMVERTEXPRIM_VERSION 1
+void GeomVertexPrim::add(double t, GeomVertex* vtx)
+{
+    times.add(t);
+    verts.add(vtx);
+}
+
+#define GEOMVERTEXPRIM_VERSION 2
 
 void GeomVertexPrim::io(Piostream& stream)
 {
-    stream.begin_class("GeomVertexPrim", GEOMVERTEXPRIM_VERSION);
+    int version=stream.begin_class("GeomVertexPrim", GEOMVERTEXPRIM_VERSION);
     GeomObj::io(stream);
+    if(version >= 2)
+      Pio(stream, times);
     Pio(stream, verts);
     stream.end_class();
 }

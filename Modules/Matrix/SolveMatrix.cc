@@ -52,6 +52,7 @@ public:
     TCLint iteration;
     TCLint maxiter;
     TCLint use_previous_soln;
+    TCLvarint emit_partial;
 };
 
 extern "C" {
@@ -67,7 +68,9 @@ SolveMatrix::SolveMatrix(const clString& id)
   memrefs("memrefs", id, this), memrate("memrate", id, this),
   orig_error("orig_error", id, this), current_error("current_error", id, this),
   method("method", id, this), iteration("iteration", id, this),
-  maxiter("maxiter", id, this), use_previous_soln("use_previous_soln", id, this)
+  maxiter("maxiter", id, this),
+  use_previous_soln("use_previous_soln", id, this),
+  emit_partial("emit_partial", id, this)
 {
     matrixport=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
     add_iport(matrixport);
@@ -84,7 +87,9 @@ SolveMatrix::SolveMatrix(const SolveMatrix& copy, int deep)
   memrefs("memrefs", id, this), memrate("memrate", id, this),
   orig_error("orig_error", id, this), current_error("current_error", id, this),
   method("method", id, this), iteration("iteration", id, this),
-  maxiter("maxiter", id, this), use_previous_soln("use_previous_soln", id, this)
+  maxiter("maxiter", id, this),
+  use_previous_soln("use_previous_soln", id, this),
+  emit_partial("emit_partial", id, this)
 {
     NOT_FINISHED("SolveMatrix::SolveMatrix");
 }
@@ -253,9 +258,10 @@ void SolveMatrix::jacobi(Matrix* matrix,
 
 	    double progress=(log_orig-log(err))/(log_orig-log_targ);
 	    update_progress(progress);
-
-	    if(niter%50 == 0)
+#if 0
+	    if(emit_partial.get() && niter%50 == 0)
 		solport->send_intermediate(rhs.clone());
+#endif
 	}
     }
     iteration.set(niter);
@@ -410,13 +416,13 @@ void SolveMatrix::conjugate_gradient(Matrix* matrix,
 
 	    if(err > 0){
 		double progress=(log_orig-log(err))/(log_orig-log_targ);
-		cerr << "err=" << err << endl;
-		cerr << "log_orig=" << log_orig << endl;
 		update_progress(progress);
 	    }
 
-	    if(niter == 5 || niter%30 == 0)
+#if 0
+	    if(emit_partial.get() && niter == 5 || niter%20 == 0)
 		solport->send_intermediate(lhs.clone());
+#endif
 	}
     }
     iteration.set(niter);

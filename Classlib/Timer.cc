@@ -108,8 +108,18 @@ double CPUTimer::get_time()
 
 WallClockTimer::WallClockTimer()
 {
-    if(ci==0)
+#ifdef __sgiasdf
+  if(!checked_cycle_counter){
+    
+
+    if(have_cycle_counter){
+    } else {
+#endif
+      if(ci==0)
 	ci=1./double(CLOCK_INTERVAL);
+#ifdef __sgiasdf
+    }
+#endif
 }
 
 double WallClockTimer::get_time()
