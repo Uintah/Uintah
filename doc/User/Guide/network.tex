@@ -95,6 +95,9 @@ for all modules and consists of the following elements:
   type has a unique color.  Table~\ref{tab:portcolors} maps port
   colors to data types.  Input ports connect to other modules' output
   ports.  Connections can only be made between ports of the same type.
+  Some modules have a \dfn{dynamic} input port.  When a connection is
+  made to a dynamic input port a new instance of the port will be
+  created.
 
   \begin{table}[htbp]
     \begin{center}
@@ -124,7 +127,7 @@ for all modules and consists of the following elements:
   module's control dialog. Some modules have no dialog, some have
   simple dialogs, and some have complex dialogs that allow elaborate
   control over the module.  Figure~\ref{fig:moddialog} shows the
-  control dialog for \module{Show Field} module.  All module control
+  control dialog for \module{Show Field} module.  Most module control
   dialogs (except for read/writer modules) contain the following
   buttons:
 
@@ -138,7 +141,7 @@ for all modules and consists of the following elements:
     \descitem{Find} Highlights the module in the NetEdit frame
     that owns the control dialog being edited.
 
-    \descitem{? or Help} Displays a module's help information.
+    \descitem{?} Displays a module's help information.
 
   \end{description}
 
@@ -146,23 +149,23 @@ for all modules and consists of the following elements:
   set:
 
   \begin{description}
-    \descitem{Cancel} Closes the control dialog without setting the
-    module's filename value.
-    
-    \descitem{Execute}  Sets the read/writer module's filename value
-    to the chosen filename, executes the module (reads file contents
-    and sends data downstream), and closes the module's
-    control dialog.
-    
-    \descitem{Find} Highlights the module in the NetEdit frame
-    that owns the control dialog being edited.
-    
     \descitem{Set} Sets the read/writer module's filename value to the
     chosen filename then closes the module's control dialog.  In a
     network with multiple reader/writer modules, \guibutton{Set}
     (rather than \guibutton{Execute}) should be used to establish each
     reader/writer module's filename parameter before executing the
     network.
+    
+    \descitem{Execute}  Sets the read/writer module's filename value
+    to the chosen filename, executes the module (reads file contents
+    and sends data downstream), and closes the module's
+    control dialog.
+    
+    \descitem{Cancel} Closes the control dialog without setting the
+    module's filename value.
+    
+    \descitem{Find} Highlights the module in the NetEdit frame
+    that owns the control dialog being edited.
     
   \end{description}
   
@@ -171,14 +174,14 @@ for all modules and consists of the following elements:
   with red, then yellow, then green.  When the Progress bar
   is green, the module is done.
   
-  \descitem{Timer} Displays the amount of CPU time the module has
+  \descitem{Timer} Displays the amount of CPU time (seconds) the module has
   consumed.  Located to the left of the progress bar.
   
   \descitem{Message Indicator} Indicates the presence of messages in a
   module's log.  Colors represent message types.  Blue represents
-  ``remarks'' (informational messages) and yellow represents ``warnings''
-  (attention is needed).  Click the indicator to display the
-  module's log.
+  ``remarks'' (informational messages) and yellow represents
+  ``warnings'' (attention is needed).  Click \keyboard{Button1} on the
+  indicator to display the module's log.
   
   \descitem{Pop-up Menu} Pressing \keyboard{Button3} while the mouse pointer is
   over a module activates a module's pop-up menu.  The content
@@ -186,7 +189,7 @@ for all modules and consists of the following elements:
   window. The following items are available in the pop-up menu:
 
   \begin{description}
-    \menuitemdesc{::Package\_Category\_Name\_Instance} This item is a
+    \menuitemdesc{Package\_Category\_Name\_Instance} This item is a
     label (not a selectable item).  It provides the module's name and
     the category and package to which the module belongs.
     ``Instance'' is a unique number that distinguishes multiple
@@ -209,8 +212,8 @@ for all modules and consists of the following elements:
     \menuitemdesc{Destroy} Destroys the module See \secref{Destroying
       Module(s)}{sec:destroymod}.
 
-    \menuitemdesc{Duplicate} Duplicates the module, its connections,
-    and its state.
+    \menuitemdesc{Duplicate} Duplicates the module, its input connections,
+    and its control dialog state.
     
     \menuitemdesc{Replace With} Replaces the module with the chosen
     one.  \menu{Replace With} is a pop-up menu listing modules that
@@ -229,10 +232,10 @@ for all modules and consists of the following elements:
     a sub-network's pop-up menu.  See \secref{Expanding a
       Sub-Network}{sec:expsubnet}.
     
-    \menuitemdesc{Disable} Disables a module.  See
-    \secref{Disabling/Enabling Modules}{sec:disablemod}.
+    \menuitemdesc{Disable} Disables a module (or selected modules).
+    See \secref{Disabling/Enabling Modules}{sec:disablemod}.
     
-    \menuitemdesc{Enable} Enables a disabled module.  See
+    \menuitemdesc{Enable} Enables a module (or selected modules).  See
     \secref{Disabling/Enabling Modules}{sec:disablemod}.
 
   \end{description}
@@ -247,7 +250,7 @@ A connection lets data flow from one module's output port to (usually) another
 module's input port.  Sometimes a connection will connect a module's
 output port to its input port.
 
-Connections are colored differently if they are enabled or disabled.
+Connections are colored grey if they are disabled.
 
 Pressing \keyboard{Button3} while the mouse pointer is over a connection
 activates a connection's pop-up menu.  The content of the pop-up menu
@@ -283,8 +286,8 @@ menu contains a list of category sub-menus from the \sr{} package and
 other installed packages.  Each category sub-menu provides access to
 modules within the category.
 
-After creating a module, its glyph (or graphic representation) is 
-placed in the NetEdit frame.
+After creating a module, its glyph (or graphic representation---see
+Figure~\ref{fig:modgraphic}) is placed in the NetEdit frame.
 
 \section{Setting Module Properties}
 \label{sec:setmodprops}
@@ -307,8 +310,8 @@ the module's properties.  Each \htmladdnormallinkfoot{module's
   documentation}{\latexhtml{http://software.sci.utah.edu/doc/}{../../../}Developer/Modules/index.html}
 explains the use of its control dialog.  A module's reference
 documentation can be displayed by clicking a module's \guibutton{?}
-(or \guibutton{Help}) button.  Figure~\ref{fig:moddialog} shows the
-control dialog for the \module{Show Field} module.
+button.  Figure~\ref{fig:moddialog} shows the control dialog for the
+\module{Show Field} module.
 
 \begin{figure}[htb]
   \begin{makeimage}
@@ -322,17 +325,17 @@ control dialog for the \module{Show Field} module.
 \label{sec:selectmods}
 
 Some operations (moving, destroying, disabling, and enabling) act on a group of
-modules (see \secref{Moving Module(s)}{sec:movemod},
+selected modules (see \secref{Moving Module(s)}{sec:movemod},
 \secref{Destroying Module(s)}{sec:destroymod}, and \secref{Disabling  
-Modules}{sec:disablemod}).  A group of modules can be created in
-two ways:
+Modules}{sec:disablemod}).  Groups of selected modules can be created two ways:
 
 \begin{enumerate}
 \item Perform \keyboard{Button1-Drag} while the pointer is in the
   NetEdit frame, but not over a module or a connection. This starts a
-  selection box, allowing the user to select multiple modules. Only
-  modules overlapping the selection box are selected. Release Button1
-  to complete the selection.
+  selection box, allowing the user to select multiple modules. 
+  Modules overlapping the selection box are selected.  Release \keyboard{Button1}
+  to complete the selection.  Additional groups of selected modules
+  are created by performing \keyboard{C-Button1-Drag}
   
 \item Select the first module by clicking \keyboard{Button1} while the
   pointer is over a module.  Then add modules to the group by clicking
@@ -342,11 +345,6 @@ two ways:
 
 Selected modules are colored differently from unselected modules.
 
-Modules can be added or removed from a group by pressing the
-\keyboard{Control} key while making selections using the above
-methods.  If the \keyboard{Control} key is not pressed, the previous
-group is forgotten and a new group is created.
-
 \section{Destroying Modules}
 \label{sec:destroymod}
 
@@ -354,23 +352,25 @@ To delete a module, choose menu item \guimenuitem{Destroy} from a module's
 pop-up menu.
 
 Multiple modules can be deleted at one time. Select one or more
-modules, then choose menu item \guimenuitem{Destroy} from a module's
-pop-up menu.
+modules, then choose menu item \guimenuitem{Destroy Selected} from a
+module's pop-up menu.
 
 \section{Moving Modules}
 \label{sec:movemod}
 
 Modules can be moved in the NetEdit frame.  To move a module, perform
-Button1-Drag while the pointer is over a module, and move the module
+\keyboard{Button1-Drag} while the pointer is over a module, and move the module
 to its new location.
 
 Multiple modules can be moved at one time.  Select one or more
-modules, then perform Button1-Drag while the pointer is over any one
+modules, then perform \keyboard{Button1-Drag} while the pointer is over any one
 of the modules in the selected group.
 
 Two modules may be moved by dragging one of the connections between
-them.  To move two modules, perform Button1-Drag when the pointer is
-over a connection between two modules.
+them.  To move two modules, perform \keyboard{Button1-Drag} when the
+pointer is over a connection between two modules.
+
+The NetEdit frame will scroll when a module is moved to the frame's edge.
 
 \section{Disabling and Enabling Modules}
 \label{sec:disablemod}
@@ -386,8 +386,7 @@ the module and prevents the module from executing during execution of
 the network. Disabled modules are drawn in a darker shade of grey.
 
 To enable disabled modules, choose \guimenuitem{Enable} from a disabled
-module's pop-up menu.  Enabling one module enables all modules in a
-disabled module's group.
+module's pop-up menu.  Enabling one module enables all selected modules.
 
 See also \secref{Disabling/Enabling Connections}{sec:disableconnect}.
 
@@ -397,7 +396,7 @@ See also \secref{Disabling/Enabling Connections}{sec:disableconnect}.
 
 %begin{latexonly}
 \newcommand{\subnetgraphicfig}{%
-  \centerline{\includegraphics[bb=0 0 219 132]{Figures/subnetgraphic.eps.gz}}
+  \centerline{\includegraphics[bb=0 0 252 144]{Figures/subnetgraphic.eps.gz}}
 }
 %end{latexonly}
 \begin{htmlonly}
@@ -500,8 +499,7 @@ A sub-network can be renamed by entering its new name into the
 Sub-networks can be saved for reuse in networks and sub-networks.
 
 Sub-networks are saved in the \directory{Subnets} directory of \sr{}'s
-build directory, if it exists and is writable (which applies only when
-\sr{} has been built from its source code).  Otherwise, sub-networks
+build directory, if it exists and is writable).  Otherwise, sub-networks
 are saved in the \directory{SCIRun/Subnets} directory of a user's home
 directory.
 
@@ -541,12 +539,14 @@ Module notes allow the user to document the purpose of each module by
 attaching notes to each module in the NetEdit window.  Notes can be
 displayed or hidden.
 
-To create or edit module notes, choose menu item \guimenuitem{Notes} from
-a module's pop-up menu. Enter new notes or edit existing notes in
-the note editor dialog.
+To create or edit module notes, choose menu item \guimenuitem{Notes}
+from a module's pop-up menu. The note editor dialog can also be
+activated by clicking \keyboard{Button1} on notes displayed in the
+NetEdit window.  Enter new notes or edit existing notes in the note
+editor dialog.
 
 Notes may be hidden, displayed in \dfn{tooltips}, or displayed in the
-NetEdit window.  The note editor provides the following note display
+NetEdit frame.  The note editor provides the following note display
 options: \guibutton{Default}, \guibutton{Tooltip}, \guibutton{Top},
 \guibutton{Left}, \guibutton{Right}, or \guibutton{Bottom}.  Choose a
 display mode by clicking \keyboard{Button1} on the appropriate button.
@@ -563,8 +563,14 @@ Choose \guibutton{None} to hide module notes.  Displayed notes can be
 hidden by clicking \keyboard{Button2} when the pointer is on the
 notes.  Hiding notes does not delete notes.
 
-The note editor dialog can be activated by clicking \keyboard{Button1}
-on notes displayed in the NetEdit window.
+Click button \guibutton{Text Color} to change the color of notes
+displayed in the NetEdit frame.
+
+Click button \guibutton{Cancel} to abort note editing.
+
+Click button \guibutton{Clear} to erase notes.
+
+Click button \guibutton{Done} to accept edited notes.
 
 
 \section{Viewing a Module's Log}
@@ -574,7 +580,7 @@ Each module supports a message log. The module writes error messages
 or other types of messages to its log.
 
 To display a module's log, choose \guimenuitem{Show Log} from a module's
-pop-up menu.
+pop-up menu or click \keyboard{Button1} on a module's message indicator.
 
 
 \section{Creating a Connection}
@@ -582,9 +588,7 @@ pop-up menu.
 \index{connections}
 
 To connect the output (input) port of one module to the input (output)
-port of another module, use \keyboard{Button2}. Clicking
-\keyboard{Button3} on a connection gives access to a pop-up menu. Use
-the pop-up menu to disable, delete, or annotate a connection.
+port of another module, use \keyboard{Button2}.
 
 To make a connection, position the mouse pointer over a module's input
 (output) port.  Then perform \keyboard{Button2-Drag} and drag the
@@ -610,42 +614,49 @@ Connection notes allow the user to document the purpose of
 each connection by attaching notes to each connection in the NetEdit window.
 Notes can be displayed or hidden.
 
-To create or edit connection notes, choose menu item \guimenuitem{Notes} from
-a connection's pop-up menu. Enter new notes or edit existing notes in
-the note editor dialog.
+To create or edit connection notes, choose menu item
+\guimenuitem{Notes} from a connection's pop-up menu. Enter new notes
+or edit existing notes in the note editor dialog.  The note editor
+dialog can also be activated by clicking \keyboard{Button1} on notes
+displayed in the NetEdit window.
 
 Notes may be hidden, displayed in \dfn{tooltips}, or displayed in the
 NetEdit window.  The note editor provides the following note display
-options: \guibutton{Default}, \guibutton{Tooltip}, \guibutton{Top},
-\guibutton{Left}, \guibutton{Right}, or \guibutton{Bottom}.  Choose a
-display mode by clicking \keyboard{Button1} on the appropriate button.
+options: \guibutton{Default}, \guibutton{Tooltip} and \guibutton{Top}.
+Choose a display mode by clicking \keyboard{Button1} on the
+appropriate button.
 
-Choose \guibutton{tooltips} to display notes as tooltips---notes are
+Choose \guibutton{ToolTip} to display notes as tooltips---notes are
 displayed only when the mouse pointer hovers over a connection.
 
-Choose one of \guibutton{Default}, \guibutton{Top}, \guibutton{Left},
-\guibutton{Right}, or \guibutton{Bottom} to display notes in the
-NetEdit to the right, top, left, right, or bottom of the connection
-respectively. 
+Choose \guibutton{Default} or \guibutton{Top} to display notes on top
+of the connection.
 
-Choose \guibutton{None} to hide connection notes.  Displayed notes can be
-hidden by clicking \keyboard{Button2} when the pointer is over the
-notes.  Hiding notes does not delete notes.
+Choose \guibutton{None} to hide connection notes.  Displayed notes can
+also be hidden by clicking \keyboard{Button2} when the pointer is over
+the notes.  Hiding notes does not delete notes.
 
-The note editor dialog can be activated by clicking \keyboard{Button1}
-on notes displayed in the NetEdit window.
+Click button \guibutton{Text Color} to change the color of notes
+displayed in the NetEdit frame.
+
+Click button \guibutton{Cancel} to abort note editing.
+
+Click button \guibutton{Clear} to erase notes.
+
+Click button \guibutton{Done} to accept edited notes.
+
 
 \section{Highlighting Related Connections}
 \label{sec:highlightconnect}
 
-To highlight the tree of connections affecting a connection, click
-\keyboard{Button1} anywhere on a connection.
+To highlight the tree of connections affecting a connection, perform
+\keyboard{C-Button1} anywhere on a connection.
 
 To highlight the tree of connections downstream an output port,
-click \keyboard{Button1} on the output port.
+perform \keyboard{C-Button1} on the output port.
 
 To highlight the tree of connections upstream an input port,
-click \keyboard{Button1} on the input port.
+perform \keyboard{C-Button1} on the input port.
 
 \section{Disabling a Connection}
 \label{sec:disableconnect}
@@ -682,8 +693,8 @@ coordinated fashion.
 
 Note that some modules need to be compiled before they are
 executed (see \secref{Dynamic Compilation}{sec:dyncomp}).  Compilation
-delays execution of the network.  This delay occurs only one time
-(per module).  After a module is compiled, it does not need to be
+delays network execution.  Usually, occurs only one time
+per module.  After a module is compiled, it does not need to be
 compiled again.  Modules change color during compilation.
 
 \subsection{The Basics}
@@ -773,7 +784,7 @@ Save an existing network under a new name using the \guimenuitem{Save
 the network file.  Subsequent uses of \guimenuitem{Save} saves changes
 to the newly created file.
 
-The position and size of the Viewer window, if open, will be saved to
+The position and size of open Viewer windows are saved to
 the network file.
 
 Network files are  \dfna{Tool Command Language}{TCL} scripts.
@@ -785,10 +796,8 @@ the scope of this guide.
 
 To load a network file, select the \guimenuitem{Load} item from the main
 window's \menu{File} menu.   A file browser dialog prompts for the
-name and location of the network file.
-
-Note that loading a network file adds the network to an existing network in
-the NetEdit frame, possibly overlapping the networks.
+name and location of the network file.  The loaded network replaces an
+existing network in the NetEdit frame.
 
 \section{Inserting a Network}
 \label{sec:insertnetwork}
