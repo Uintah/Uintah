@@ -608,7 +608,7 @@ VolumeRenderer::draw()
   } else if(mode_ == MIP) {
     int nc = (*bricks.begin())->data()->nc();
     int nb0 = (*bricks.begin())->data()->nb(0);
-    if(nc > 1) {
+    if(nc == 2 && cmap2_.get_rep()) {
       if(nb0 == 4) {
         if (!VolShader4_2->valid()) {
           VolShader4_2->create();
@@ -706,7 +706,7 @@ VolumeRenderer::draw()
   } else if(mode_ == MIP) {
     int nc = (*bricks.begin())->data()->nc();
     int nb0 = (*bricks.begin())->data()->nb(0);
-    if(nc > 1) {
+    if(nc == 2 && cmap2_.get_rep()) {
       if(nb0 == 4) {
         VolShader4_2->release();
       } else {
