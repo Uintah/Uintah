@@ -34,6 +34,7 @@ MPMFlags::MPMFlags()
   d_artificialDampCoeff = 0.0;
   d_forceIncrementFactor = 1.0;
   d_canAddMPMMaterial = false;
+  d_addFrictionWork = 1.0;  // do frictional heating by default
 }
 
 MPMFlags::~MPMFlags()
@@ -68,6 +69,9 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   ps->get("create_new_particles", d_createNewParticles);
   ps->get("manual_new_material", d_addNewMaterial);
   ps->get("CanAddMPMMaterial", d_canAddMPMMaterial);
+  bool do_contact_friction = true;
+  ps->get("do_contact_friction_heating", do_contact_friction);
+  if (!do_contact_friction) d_addFrictionWork = 0.0;
   ProblemSpecP erosion_ps = ps->findBlock("erosion");
   if (erosion_ps) {
     if (erosion_ps->getAttribute("algorithm", d_erosionAlgorithm)) {
@@ -94,5 +98,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   dbg << "  Erosion Algorithm          = " << d_erosionAlgorithm << endl;
   dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
   dbg << " ForceBC increment factor    = " << d_forceIncrementFactor<< endl;
+  dbg << " Contact Friction Heating    = " << d_addFrictionWork << endl;
   dbg << "---------------------------------------------------------\n";
 }
