@@ -92,22 +92,23 @@ public:
 
       // GROUP: Access functions
       ////////////////////////////////////////////////////////////////////////
-      // Returns pressureBC flag
-      int getPressureBC() { return d_pressBoundary; }
+      bool getWallBC() { return d_wallBoundary; }
+      
+      bool getInletBC() { return d_inletBoundary; }
+      
+      bool getPressureBC() { return d_pressureBoundary; }
 
-      bool getIntrusionBC() {
-	return d_intrusionBoundary;
-      }
+      bool getOutletBC() { return d_outletBoundary; }
+      
+      bool getIntrusionBC() { return d_intrusionBoundary; }
 
+      bool anyArchesPhysicalBC() { 
+       return ((d_wallBoundary)||(d_inletBoundary)||(d_pressureBoundary)||(d_outletBoundary)||(d_intrusionBoundary)); }
+      
       ////////////////////////////////////////////////////////////////////////
       // Get the number of inlets (primary + secondary)
       int getNumInlets() { return d_numInlets; }
 
-      ////////////////////////////////////////////////////////////////////////
-      // Details here
-      int getFlowCellID(int index) {
-	return d_flowInlets[index].d_cellTypeID;
-      }
 
       ////////////////////////////////////////////////////////////////////////
       // mm Wall boundary ID
@@ -117,28 +118,42 @@ public:
 
       ////////////////////////////////////////////////////////////////////////
       // flowfield cell id
-      int getFlowId() const {
+      inline int flowCellType() const {
 	return d_flowfieldCellTypeVal;
       }
-
+      
         ////////////////////////////////////////////////////////////////////////
       // Wall boundary ID
       inline int wallCellType() const { 
-	return d_wallBdry->d_cellTypeID; 
+	int wall_celltypeval = -10;
+	if (d_wallBoundary) wall_celltypeval = d_wallBdry->d_cellTypeID; 
+	return wall_celltypeval;
       }
+
+      ////////////////////////////////////////////////////////////////////////
+      // Inlet boundary ID
+      inline int inletCellType(int index) const {
+	int inlet_celltypeval = -10;
+	if ((d_inletBoundary)&&(index < d_numInlets))
+	   inlet_celltypeval = d_flowInlets[index].d_cellTypeID;
+	return inlet_celltypeval;
+      }
+
+        ////////////////////////////////////////////////////////////////////////
+      // Pressure boundary ID
+      inline int pressureCellType() const {
+	int pressure_celltypeval = -10;
+	if (d_pressureBoundary) pressure_celltypeval = d_pressureBC->d_cellTypeID; 
+	return pressure_celltypeval;
+      }
+
         ////////////////////////////////////////////////////////////////////////
       // Outlet boundary ID
       inline int outletCellType() const { 
 	int outlet_celltypeval = -10;
-	if (d_outletBoundary) outlet_celltypeval=d_outletBC->d_cellTypeID;
+	if (d_outletBoundary) outlet_celltypeval = d_outletBC->d_cellTypeID;
 	return outlet_celltypeval; 
       }
-        ////////////////////////////////////////////////////////////////////////
-      // Pressure boundary ID
-      inline int pressureCellType() const { 
-	return d_pressureBdry->d_cellTypeID; 
-      }
-
       ////////////////////////////////////////////////////////////////////////
       // sets boolean for energy exchange between solid and fluid
       void setIfCalcEnergyExchange(bool calcEnergyExchange)
@@ -684,18 +699,25 @@ private:
       bool d_enthalpySolve;
       // variable labels
       std::vector<int> d_cellTypes;
+      int d_flowfieldCellTypeVal;
+
+      bool d_wallBoundary;
       WallBdry* d_wallBdry;
+      
+      bool d_inletBoundary;
       int d_numInlets;
       int d_numMixingScalars;
       int d_nofScalars;
       std::vector<FlowInlet> d_flowInlets;
-      bool d_pressBoundary;
-      PressureInlet* d_pressureBdry;
+
+      bool d_pressureBoundary;
+      PressureInlet* d_pressureBC;
+
       bool d_outletBoundary;
       FlowOutlet* d_outletBC;
+
       bool d_intrusionBoundary;
       IntrusionBdry* d_intrusionBC;
-      int d_flowfieldCellTypeVal;
 
 }; // End of class BoundaryCondition
 } // End namespace Uintah

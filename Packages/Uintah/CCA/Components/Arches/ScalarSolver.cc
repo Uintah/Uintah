@@ -378,17 +378,17 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				    delta_t, index, cellinfo, 
 				    &scalarVars, &constScalarVars);
     if (d_conv_scheme > 0) {
-      int wallID = d_boundaryCondition->wallCellType();
+      int wall_celltypeval = d_boundaryCondition->wallCellType();
       if (d_conv_scheme == 2)
         d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
 					        maxAbsU, maxAbsV, maxAbsW, 
 				  	        &scalarVars, &constScalarVars,
-						wallID);
+						wall_celltypeval);
       else
         d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
 					       maxAbsU, maxAbsV, maxAbsW, 
 				  	       &scalarVars, &constScalarVars,
-					       wallID); 
+					       wall_celltypeval); 
     } 
 
     // for scalesimilarity model add scalarflux to the source of scalar eqn.
@@ -452,11 +452,13 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     
     
-    d_boundaryCondition->scalarBC(pc, patch,  index, cellinfo, 
-				  &scalarVars, &constScalarVars);
-    if (d_boundaryCondition->getIntrusionBC())
-      d_boundaryCondition->intrusionScalarBC(pc, patch, cellinfo,
-					     &scalarVars, &constScalarVars);
+    if (d_boundaryCondition->anyArchesPhysicalBC()) {
+      d_boundaryCondition->scalarBC(pc, patch,  index, cellinfo, 
+				    &scalarVars, &constScalarVars);
+      if (d_boundaryCondition->getIntrusionBC())
+        d_boundaryCondition->intrusionScalarBC(pc, patch, cellinfo,
+					       &scalarVars, &constScalarVars);
+    }
     // apply multimaterial intrusion wallbc
     if (d_MAlab)
       d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
@@ -685,12 +687,12 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 				    cellinfo);
 
 // Outlet bc is done here not to change old scalar
-    int out_celltypeval = d_boundaryCondition->outletCellType();
-    if (!(out_celltypeval==-10))
+    if (d_boundaryCondition->getOutletBC())
     d_boundaryCondition->scalarOutletBC(pc, patch,  index, cellinfo, 
 				        &scalarVars, &constScalarVars, delta_t,
 					maxUxplus, maxAbsV, maxAbsW);
     
+    if (d_boundaryCondition->getPressureBC())
     d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
 				  	  &scalarVars, &constScalarVars, delta_t);
 

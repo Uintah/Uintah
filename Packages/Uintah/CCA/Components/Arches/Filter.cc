@@ -309,7 +309,7 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
      
      Array3<int> l2g(lowIndex, highIndex);
      l2g.copy(d_petscLocalToGlobal[patch]);
-     int flowID = d_boundaryCondition->getFlowId();
+     int flowID = d_boundaryCondition->flowCellType();
      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
 	 for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
