@@ -28,7 +28,7 @@
 
 #include <SCIRun/Internal/BuilderService.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/PIDL.h>
 #include <SCIRun/PortInstanceIterator.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/CCA/CCAException.h>

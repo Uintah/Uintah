@@ -23,13 +23,11 @@ SRCDIR   := CCA/Components/PHello
 
 SRCS     += \
 	$(SRCDIR)/PHello.cc
-PSELIBS := Core/CCA/Component/SSIDL Core/CCA/Component/PIDL Core/CCA/Component/Comm\
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
 	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
-LIBS := $(QT_LIBRARY)
+LIBS := $(QT_LIBRARY) $(MPI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
-#include $(SCIRUN_SCRIPTS)/program.mk
 
 $(SRCDIR)/PHello.o: Core/CCA/spec/cca_sidl.h

@@ -25,7 +25,7 @@ SRCS     += \
 	$(SRCDIR)/ListForm.cc \
 	$(SRCDIR)/moc_ListForm.cc
 
-PSELIBS := Core/CCA/Component/SSIDL Core/CCA/Component/PIDL Core/CCA/Component/Comm\
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
 	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
 LIBS := $(QT_LIBRARY)

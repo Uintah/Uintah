@@ -39,7 +39,7 @@
 #include <Dataflow/XMLUtil/StrX.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Util/soloader.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/PIDL.h>
 #include <SCIRun/resourceReference.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #ifdef __sgi
@@ -77,7 +77,53 @@ SCIRunLoader::SCIRunLoader(const string &loaderName,  const string & frameworkUR
   */
 }
 
-//int SCIRunLoader::createInstance(const string& componentName, const string& componentType, SSIDL::array1<std::string> &componentURLs) {
+int SCIRunLoader::createPInstance(const string& componentName, const string& componentType, SSIDL::array1<std::string> &componentURLs) {
+
+  //TODO: assume type is always good?
+
+  cerr<<"SCIRunLoader::getRefCount()="<<getRefCount()<<endl;
+
+  
+  string lastname=componentType.substr(componentType.find('.')+1);  
+  string so_name("lib/libCCA_Components_");
+  so_name=so_name+lastname+".so";
+  cerr<<"componentType="<<componentType<<" soname="<<so_name<<endl;
+    
+  LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
+  if(!handle){
+    cerr << "Cannot load component " << componentType << '\n';
+    cerr << SOError() << '\n';
+    return 1;
+  }
+  string makername = "make_"+componentType;
+  for(int i=0;i<(int)makername.size();i++)
+    if(makername[i] == '.')
+      makername[i]='_';
+  
+  void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
+  if(!maker_v){
+    cerr <<"Cannot load component " << componentType << '\n';
+    cerr << SOError() << '\n';
+    return 1;
+  }
+  sci::cca::Component::pointer (*maker)() = (sci::cca::Component::pointer (*)())(maker_v);
+  sci::cca::Component::pointer component = (*maker)();
+  //TODO: need keep a reference in the loader's creatation recored.
+  component->addReference();
+
+  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+  MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+
+  cerr << "SCIRunLoader::createInstance..., rank/size="<<mpi_rank<<"/"<<mpi_size<<"\n";
+  componentURLs.resize(1);
+  componentURLs[0] = component->getURL().getString();
+  //componentURLs.push_back(component->getURL().getString());
+  cerr << "Done, rank/size="<<mpi_rank<<"/"<<mpi_size<<" and URL="<<component->getURL().getString()<<"\n";
+  return 0;
+}
+
+
+
 int SCIRunLoader::createInstance(const string& componentName, const string& componentType, std::string &componentURL) {
 
   //TODO: assume type is always good?
@@ -122,6 +168,7 @@ int SCIRunLoader::createInstance(const string& componentName, const string& comp
   cerr << "SCIRunLoader::createInstance Done, rank/size="<<mpi_rank<<"/"<<mpi_size<<"\n";
   return 0;
 }
+
 
 int SCIRunLoader::destroyInstance(const string& componentName, float time)
 {

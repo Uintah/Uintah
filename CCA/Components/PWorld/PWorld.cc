@@ -51,8 +51,8 @@ void PWorld::setServices(const sci::cca::Services::pointer& svc){
   int mpi_size, mpi_rank;
   MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
   MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-  cerr<<"setServices() is called, rank/size="<<mpi_rank<<"/"<<mpi_size<<"\n";
 
+  cerr<<"setServices() is called, rank/size="<<mpi_rank<<"/"<<mpi_size<<"\n";
   services=svc;
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
   StringPort::pointer strport=StringPort::pointer(new StringPort);

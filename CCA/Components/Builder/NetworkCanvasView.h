@@ -37,7 +37,7 @@
 #include <qcanvas.h>
 #include "Module.h"
 #include "Connection.h"
-#include "Core/CCA/Component/PIDL/PIDL.h"
+#include "Core/CCA/PIDL/PIDL.h"
 #include "Core/CCA/spec/cca_sidl.h"
 
 using namespace std;

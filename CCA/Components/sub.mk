@@ -33,7 +33,7 @@ endif
 
 
 ifeq ($(HAVE_MPI),yes)
-SUBDIRS := $(SUBDIRS) $(SRCDIR)/PWorld
+SUBDIRS := $(SUBDIRS) $(SRCDIR)/PWorld $(SRCDIR)/PHello
 endif
 
 ifeq ($(HAVE_BABEL),yes)

@@ -44,7 +44,7 @@ namespace SCIRun {
     SCIRunLoader(const std::string& loaderName, const std::string& frameworkURL);
     virtual ~SCIRunLoader();
 
-    //virtual int createInstance(const ::std::string& componentType, const std::string& componentName, SSIDL::array1<std::string>& componentURLs);
+    virtual int createPInstance(const ::std::string& componentType, const std::string& componentName, SSIDL::array1<std::string>& componentURLs);
     virtual int createInstance(const std::string& componentType, const std::string& componentName, std::string &componentURL);
 
     virtual int destroyInstance(const std::string& componentName, float timeout);

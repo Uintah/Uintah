@@ -26,9 +26,12 @@
  *
  */
 
+#include <sci_config.h> // For MPIPP_H on SGI
 #include <CCA/Components/PHello/PHello.h>
 #include <iostream>
 #include <CCA/Components/Builder/QtUtils.h>
+#include <Core/CCA/PIDL/PIDL.h>
+#include <mpi.h>
 
 using namespace std;
 using namespace SCIRun;
@@ -46,23 +49,58 @@ PHello::~PHello(){
 }
 
 void PHello::setServices(const sci::cca::Services::pointer& svc){
+  int mpi_size, mpi_rank;
+  MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+
   services=svc;
   cerr<<"svc->createTypeMap...";
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
   cerr<<"Done\n";
 
   myUIPort::pointer uip=myUIPort::pointer(new myUIPort);
-  myGoPort::pointer gop=myGoPort::pointer(new myGoPort(svc));
+  //myGoPort::pointer gop=myGoPort::pointer(new myGoPort(svc));
 
+  typedef char urlString[100] ;
+  urlString s;
+  strcpy(s, uip->getURL().getString().c_str());
+  urlString *buf;
+  if(mpi_rank==0){
+    buf=new urlString[mpi_size];
+  }
+
+  cerr<<"Running MPI_Gather rank/size="<<mpi_rank<<"/"<<mpi_size<<endl;
+  MPI_Gather(  s, 100, MPI_CHAR,    buf, 100, MPI_CHAR,   0, MPI_COMM_WORLD);
+  
   cerr<<"svc->addProvidesPort(uip)...";  
-  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
+
+  //svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
+
   cerr<<"Done\n";
 
-  cerr<<"svc->addProvidesPort(gop)...";  
-  svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", props);
-  cerr<<"Done\n";
+  //  cerr<<"svc->addProvidesPort(gop)...";  
+  //svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", props);
+  //cerr<<"Done\n";
 
-  svc->registerUsesPort("stringport","sci.cca.ports.StringPort", props);
+  if(mpi_rank==0){
+    vector<URL> URLs; 
+    for(int i=0; i<mpi_size; i++){
+      string url(buf[i]);
+      URLs.push_back(url);
+      cerr<<"ui port URLs["<<i<<"]="<<url<<endl;
+    }
+    Object::pointer obj=PIDL::objectFrom(URLs);
+    sci::cca::ports::UIPort::pointer puip0=pidl_cast<sci::cca::ports::UIPort::pointer>(obj);
+    sci::cca::ports::UIPort::pointer puip=puip0;
+    cerr<<"calling UIPort...\n";
+    puip->ui();
+    cerr<<"end calling UIPort...\n";
+    //sci::cca::Port::pointer puip=pidl_cast<sci::cca::Port::pointer>(obj);
+
+    svc->addProvidesPort(puip,"ui","sci.cca.ports.UIPort", props);
+    delete buf;
+  }
+  MPI_Barrier(MPI_COMM_WORLD );
 }
 
 int myUIPort::ui(){

@@ -28,13 +28,13 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#ifndef Component_PIDL_resourceReference_h
-#define Component_PIDL_resourceReference_h
+#ifndef CCA_PIDL_resourceReference_h
+#define CCA_PIDL_resourceReference_h
 
 #include <iostream>
-#include <Core/CCA/Component/SSIDL/array.h>
-#include <Core/CCA/Component/PIDL/URL.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/SSIDL/array.h>
+#include <Core/CCA/PIDL/URL.h>
+#include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
 
@@ -92,6 +92,7 @@ namespace SCIRun {
 			       const std::string& type,
 			       std::vector<int> nodes);
 
+
     sci::cca::Loader::pointer node(int i);
 
   private:
@@ -101,6 +102,8 @@ namespace SCIRun {
     int size;
 
     std::vector<URL> URLs;
+
+    sci::cca::Loader::pointer ploader;
 
   };
   

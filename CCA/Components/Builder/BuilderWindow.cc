@@ -28,7 +28,7 @@
 
 #include <CCA/Components/Builder/BuilderWindow.h>
 #include <CCA/Components/Builder/SCIRun.xpm>
-#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <CCA/Components/Builder/NetworkCanvasView.h>
 #include <CCA/Components/Builder/Module.h>
@@ -687,7 +687,7 @@ void BuilderWindow::addCluster()
   string loaderName="qwerty";
   string domainName="qwerty.sci.utah.edu";
   string login="kzhang";
-  string loaderPath="mpirun -np 1 ploader";
+  string loaderPath="mpirun -np 2 ploader";
   string password="****"; //not used;
 
 

@@ -3,8 +3,8 @@
  * Symbol:        whoc.IDPort-v1.0
  * Symbol Type:   class
  * Babel Version: 0.7.4
- * SIDL Created:  20030306 10:46:00 MST
- * Generated:     20030306 10:46:04 MST
+ * SIDL Created:  20030618 13:12:25 MDT
+ * Generated:     20030618 13:12:32 MDT
  * Description:   Server-side implementation for whoc.IDPort
  * 
  * WARNING: Automatically generated; only changes within splicers preserved

@@ -30,7 +30,7 @@
 #define SCIRun_Framework_ZList_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/PIDL.h>
 #include "ListForm.h"
 
 

@@ -30,7 +30,7 @@
 #define SCIRun_TypeMap_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <Core/CCA/Component/SSIDL/sidl_sidl.h>
+#include <Core/CCA/SSIDL/sidl_sidl.h>
 #include <vector>
 #include <map>
 #include <string>

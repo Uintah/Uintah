@@ -26,9 +26,9 @@
  *
  */
 
-#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include <Core/CCA/Component/PIDL/MalformedURL.h>
+#include <Core/CCA/PIDL/MalformedURL.h>
 #include <Core/Thread/Thread.h>
 #include <SCIRun/SCIRunLoader.h>
 #include <iostream>
@@ -84,12 +84,12 @@ main(int argc, char *argv[] )
 
     //Inform everyone else of my distribution
     //(this is in correspondence with the instantiate() call)
-    /*
-      Index** dr = new Index* [1];
-    dr[0] = new Index((sl->mpi_rank),(sl->mpi_rank),1);  //first, last, stride
+    
+    Index* dr[1];
+    dr[0] = new Index((sl->mpi_rank),(sl->mpi_rank)+1,1);  //first, last, stride
     MxNArrayRep* arrr = new MxNArrayRep(1,dr);
     sl->setCalleeDistribution("dURL",arrr);   //server is callee
-    */
+    
     Object::pointer obj=PIDL::objectFrom(frameworkURL);
     if(obj.isNull()){
       cerr<<"Cannot get framework from url="<<frameworkURL<<endl;

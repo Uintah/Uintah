@@ -40,6 +40,8 @@ resourceReference::resourceReference(const std::string& name,
   this->size= URLs.size();
   for(int i=0; i < size ;i++)
     this->URLs.push_back(URLs[i]); 
+
+
 }
 
 resourceReference::~resourceReference()
@@ -91,40 +93,41 @@ sci::cca::Component::pointer resourceReference::createInstance(const std::string
   //for all nodes
   
   SSIDL::array1<std::string> comURLs1;
-  vector<URL> comURLs;
-  /*
-    sci::cca::Loader::pointer ploader=resourceReference::getPtrToAll();
+  comURLs1.push_back("                                                                   ");
+  comURLs1.push_back("                                                                   ");
+  comURLs1.push_back("                                                                   ");
 
   //Inform everyone else of my distribution
   //(this is in correspondence with the instantiate() call)
   
-  Index** dr = new Index* [1];
-  dr[0] = new Index(0, URLs.size()-1, 1);  //first, last, stride
+
+
+  Index* dr[1]; 
+  cerr<<"URLs.size="<< URLs.size() <<endl;
+  dr[0] = new Index(0, URLs.size(), 1);  //first, last, stride
   MxNArrayRep* arrr = new MxNArrayRep(1,dr);
+  cerr<<"ploader->setCallerDistribution...";
+  ploader=resourceReference::getPtrToAll();
   ploader->setCallerDistribution("dURL",arrr);   //client is caller
+  cerr<<"Done\n";
 
 
  
-  cerr<<"ploader->createInstance(name, type, comURLs1)...";
-  ploader->createInstance(name, type, comURLs1);
+  cerr<<"comURLs1.size before create Instance="<<comURLs1.size()<<endl;
+  cerr<<"ploader->createPInstance(name, type, comURLs1)...";
+  ploader->createPInstance(name, type, comURLs1);
 
   cerr<<"Done\n";
-  cerr<<"comURLs.size="<<comURLs1.size()<<endl;
+  cerr<<"comURLs1.size="<<comURLs1.size()<<endl;
+
+
+  vector<URL> comURLs;
   for(int i=0; i<comURLs1.size(); i++){
     cerr<<"comURLs["<<i<<"]="<<comURLs1[i]<<endl;
     comURLs.push_back(comURLs1[i]);
   }
 
-  */
-
-  for(int i=0; i<URLs.size(); i++){
-    string url;
-    node(i)->createInstance(name, type, url);
-    comURLs.push_back(url);
-    cerr<<"comURLs["<<i<<"]="<<url<<endl;
-  }
-
-  Object::pointer obj=PIDL::objectFrom(comURLs,1,0);
+  Object::pointer obj=PIDL::objectFrom(comURLs);
   sci::cca::Component::pointer pcom=pidl_cast<sci::cca::Component::pointer>(obj);
   return pcom;
 
@@ -160,14 +163,11 @@ sci::cca::Loader::pointer
 resourceReference::node(int i)
 {
   std::string s=URLs[i].getString();
-  cerr<<"trying to get loader from url="<<s<<"...";
   Object::pointer obj=PIDL::objectFrom(s);
-  cerr<<"Done"<<endl;
   if(obj.isNull()){
     cerr<<"Cannot get loader from url="<<URLs[i].getString()<<endl;
     return sci::cca::Loader::pointer(0);
   }
-  //cout<<"Loader obj obtained"<<endl;
   sci::cca::Loader::pointer nd=pidl_cast<sci::cca::Loader::pointer>(obj);
   return nd;
 }
