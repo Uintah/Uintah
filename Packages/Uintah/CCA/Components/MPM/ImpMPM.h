@@ -13,6 +13,12 @@
 #include <Packages/Uintah/Core/Math/Sparse.h>
 #include <valarray>
 
+#ifdef HAVE_PETSC
+extern "C" {
+#include "petscsles.h"
+}
+#endif
+
 namespace Uintah {
 
 using namespace SCIRun;
@@ -167,14 +173,19 @@ private:
 			       DataWarehouse* old_dw,
 			       DataWarehouse* new_dw);
 
-  //////////
-  // Check to see if any particles are ready to burn
   void formStiffnessMatrix(const ProcessorGroup*,
 			   const PatchSubset* patches,
 			   const MaterialSubset* matls,
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw,
 			   const bool recursion);
+
+  void formStiffnessMatrixPetsc(const ProcessorGroup*,
+				const PatchSubset* patches,
+				const MaterialSubset* matls,
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw,
+				const bool recursion);
 
 
 
@@ -204,6 +215,10 @@ private:
 	     const MaterialSubset* matls, DataWarehouse* old_dw,
 	     DataWarehouse* new_dw,const bool recursion);
 
+  void formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
+		  const MaterialSubset* matls, DataWarehouse* old_dw,
+		  DataWarehouse* new_dw,const bool recursion);
+
   void applyRigidBodyCondition(const ProcessorGroup*, 
 			       const PatchSubset* patches,
 			       const MaterialSubset* matls, 
@@ -214,10 +229,20 @@ private:
 		      const MaterialSubset* matls, DataWarehouse* old_dw,
 		      DataWarehouse* new_dw, const bool recursion);
 
+  void removeFixedDOFPetsc(const ProcessorGroup*, 
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls, 
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw, const bool recursion);
+
 
   void solveForDuCG(const ProcessorGroup*, const PatchSubset* patches,
 		    const MaterialSubset* matls, DataWarehouse* old_dw,
 		    DataWarehouse* new_dw, const bool recursion);
+
+  void solveForDuCGPetsc(const ProcessorGroup*, const PatchSubset* patches,
+			 const MaterialSubset* matls, DataWarehouse* old_dw,
+			 DataWarehouse* new_dw, const bool recursion);
 
 
   void updateGridKinematics(const ProcessorGroup*, const PatchSubset* patches,
@@ -366,6 +391,13 @@ private:
 
   // right hand side
   valarray<double> Q;
+
+
+#ifdef HAVE_PETSC
+   Mat A;
+   Vec petscQ,petscTemp2,d_x, d_b, d_u;
+   SLES sles;
+#endif
 
   bool dynamic;
 

@@ -12,7 +12,7 @@
 #include <vector>
 
 #define IMPLICIT
-#undef IMPLICIT
+//#undef IMPLICIT
 
 namespace SCIRun {
   class Point;
