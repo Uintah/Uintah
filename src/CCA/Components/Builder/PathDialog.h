@@ -88,6 +88,7 @@ private:
     QPushButton* buttonHelp;
     QPushButton* buttonOk;
     QPushButton* buttonCancel;
+    QString workingDir;
 
 private slots:
     void fileDialog();

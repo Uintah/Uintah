@@ -40,66 +40,107 @@
 #ifndef MODULE_H
 #define MODULE_H
 
+#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/PIDL/PIDL.h>
+#include <CCA/Components/Builder/PortIcon.h>
+
 #include <qframe.h>
-#include <qpoint.h>
 #include <qrect.h>
 #include <qpopmenu.h>
 #include <qprogressbar.h>
-#include "Core/CCA/spec/cca_sidl.h"
-#include "Core/CCA/PIDL/PIDL.h"
-class NetworkCanvasView;
 
-class Module:public QFrame
+class NetworkCanvasView;
+class PortIcon;
+
+class QPoint;
+class QPushButton;
+
+class Module : public QFrame
 {
-  Q_OBJECT
+    Q_OBJECT
 
 public:
-  enum PortType{USES, PROVIDES}; 
-  Module(NetworkCanvasView *parent, const std::string& name,
-	 SSIDL::array1<std::string> & up, SSIDL::array1<std::string> &pp,
-	 const sci::cca::Services::pointer& services,
-	 const sci::cca::ComponentID::pointer &cid);
-  QPoint usePortPoint(int num);
-  QPoint posInCanvas();
-  QPoint usePortPoint(const std::string &portname);
-	
-  QPoint providePortPoint(int num);
-  QPoint providePortPoint(const std::string &portname);
-  std::string providesPortName(int num);
-  std::string usesPortName(int num);	
-  QRect portRect(int portnum, PortType porttype);
-  bool clickedPort(QPoint localpos, PortType &porttype,
-		   std::string &portname);
+    Module(NetworkCanvasView *parent,
+           const std::string& name,
+           SSIDL::array1<std::string> &up,
+           SSIDL::array1<std::string> &pp,
+           const sci::cca::Services::pointer &services,
+           const sci::cca::ComponentID::pointer &cid);
+    QPoint posInCanvas();
+    PortIcon* clickedPort(QPoint localpos);
+    QPoint usesPortPoint(int num);
+    QPoint providesPortPoint(int num);
+    PortIcon* getPort(const std::string &name, PortIcon::PortType type);
 
-  std::string moduleName;
-  std::string displayName;
+    std::string moduleName() const;
+    std::string displayName() const;
+    sci::cca::ComponentID::pointer componentID() const;
+
+    // defaults -- replace with framework properties?
+    static const int PORT_DIST = 10;
+    static const int PORT_W = 4;
+    static const int PORT_H = 10;
+
 public slots:
-  void go();
-  void stop();
-  void destroy();
-  void ui();
+    void go();
+    void stop();
+    void destroy();
+    void ui();
+    void desc();
+
 signals:
-  void destroyModule(Module *);
+    void destroyModule(Module *);
 
 protected:
-  void paintEvent(QPaintEvent *e);
-  void mousePressEvent(QMouseEvent*);
-  QRect nameRect;
-  //  std::string moduleName;
-  std::string instanceName;
-  SSIDL::array1<std::string> up, pp;
+    virtual void paintEvent(QPaintEvent *);
+    virtual void mousePressEvent(QMouseEvent *);
+    virtual void timerEvent(QTimerEvent *);
+
+    QRect nameRect;
+    std::string instanceName;
+//     SSIDL::array1<std::string> up, pp;
+
 private:
-  sci::cca::Services::pointer services;
-  QPopupMenu *menu;
-  int pd; //distance between two ports
-  int pw; //port width
-  int ph; //prot height
-  bool hasGoPort;
-  bool hasUIPort;
-  QProgressBar *progress;
-  NetworkCanvasView * viewWindow;
-public:
-  sci::cca::ComponentID::pointer cid;
+  PortIcon* port(int portnum, const std::string& model,
+                 const std::string& type, const std::string& portname,
+                 PortIcon::PortType porttype);
+
+    std::string mName;
+    std::string dName;
+    std::string mDesc;
+    sci::cca::Services::pointer services;
+    sci::cca::ComponentID::pointer cid;
+
+    QPushButton *uiButton;
+    //QPushButton *statusButton;
+    QPopupMenu *menu;
+    QProgressBar *progress;
+    NetworkCanvasView *viewWindow;
+    std::vector<PortIcon*> ports;
+
+    int pd; //distance between two ports
+    int pw; //port width
+    int ph; //port height
+    int steps;
+    bool hasGoPort;
+    bool hasUIPort;
+    bool hasComponentIcon;
 };
+
+inline sci::cca::ComponentID::pointer Module::componentID() const
+{
+    return cid;
+}
+
+inline std::string Module::moduleName() const
+{
+    return mName;
+}
+
+inline std::string Module::displayName() const
+{
+    return dName;
+}
+
 
 #endif

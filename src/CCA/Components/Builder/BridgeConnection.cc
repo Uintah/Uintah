@@ -30,9 +30,9 @@
 
 void BridgeConnection::drawShape(QPainter& p)
 {
-  QPointArray par(6);
-  for(int i=0;i<6;i++)	
-    par[i]=(points()[i]+points()[11-i])/2;
+  QPointArray par(Connection::NUM_DRAW_POINTS);
+  Connection::drawConnection(p, points(), par);
+
   QPen pen(color,4);
   pen.setStyle(DotLine);
   p.setPen(pen);

@@ -29,27 +29,18 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-#include <qapplication.h>
-#include <qpushbutton.h>
-#include <qslider.h>
-#include <qlcdnumber.h>
-#include <qfont.h>
-#include <qvbox.h>
-#include <qgrid.h>
-#include <qlabel.h>
-#include <qdialog.h>
-#include <qscrollview.h>
-#include <qmessagebox.h>
-#include <qcanvas.h>
-#include <qwmatrix.h>
-#include <qcursor.h>
-#include <vector>
-#include <qlayout.h>
-#include <qpainter.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include "Module.h"
+#include <CCA/Components/Builder/PortIcon.h>
+
+#include <qcanvas.h>
+#include <qcursor.h>
+#include <qpainter.h>
+
+#include <vector>
 
 using namespace SCIRun;
+
+class Module;
 
 /**
  * \class Connection
@@ -60,19 +51,14 @@ using namespace SCIRun;
 class Connection : public QCanvasPolygon
 {
 public:
-    Connection(Module*, const std::string&,
-               Module*, const std::string&,
-               const sci::cca::ConnectionID::pointer &connID,
-               QCanvasView *cv);
+    Connection(PortIcon *pU, PortIcon* pP, const sci::cca::ConnectionID::pointer &connID, QCanvasView *cv);
     void resetPoints();
-    bool isConnectedTo(Module *);
+    bool isConnectedTo(Module *who);
     sci::cca::ConnectionID::pointer getConnectionID();
     void highlight();
     void setDefault();
-    Module* getUsesModule();
-    Module* getProvidesModule();
-    std::string getUsesPortName();
-    std::string getProvidesPortName();
+    PortIcon* usesPort() const;
+    PortIcon* providesPort() const;
     // TEK 
     sci::cca::ConnectionID::pointer connID;
     // TEK
@@ -84,18 +70,21 @@ public:
     virtual int rtti() const;
 
     static int RTTI;
-    static const int Rtti_Connection = 1001;
+    static const int Rtti_Connection = 2001;
     static const unsigned int NUM_POINTS = 12;
     static const unsigned int NUM_DRAW_POINTS = 6;
 
 protected:
     /** Override QCanvasPolygon::drawShape to draw a polyline not a polygon. */
-    virtual void drawShape(QPainter&);
-    QCanvasView *cv;
-    Module *pUse, *pProvide;
-    std::string portname1, portname2;
+    virtual void drawShape(QPainter &);
     QColor color;
+
+private:
+    QCanvasView *cv;
+    PortIcon *pUse, *pProvide;
+    std::string uPortName, pPortName;
 };
+
 
 inline sci::cca::ConnectionID::pointer Connection::getConnectionID()
 {
@@ -110,32 +99,22 @@ inline int Connection::rtti() const
 
 inline void Connection:: setDefault()
 {
-  color = yellow;
+  color = pUse->color();
 }
 
 inline void Connection:: highlight()
 {
-  color = red;
+  color = pUse->highlight();
 }
 
-inline Module* Connection::getUsesModule()
+inline PortIcon* Connection::usesPort() const
 {
   return pUse;
 }
 
-inline Module* Connection::getProvidesModule()
+inline PortIcon* Connection::providesPort() const
 {
   return pProvide;
-}
-
-inline std::string Connection::getUsesPortName()
-{
-  return portname1;    
-}
-
-inline std::string Connection::getProvidesPortName()
-{
-  return portname2;
 }
 
 inline std::string Connection::getConnectionType()

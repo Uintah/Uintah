@@ -52,6 +52,7 @@
 #include <fstream>
 #include <iostream>
 
+#include <qapplication.h>
 #include <qaction.h>
 #include <qcanvas.h>
 #include <qlabel.h>
@@ -159,7 +160,8 @@ void MenuTree::instantiateComponent()
 }
 
 
-BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
+BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services,
+                             QApplication *app)
   : QMainWindow(0, "SCIRun", WDestructiveClose | WType_TopLevel),
     services(services)
 {
@@ -232,18 +234,19 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
 
     networkCanvas = new QCanvas(2000, 2000);
     networkCanvas->setAdvancePeriod(30);
+    //networkCanvas->setUpdatePeriod(100);
+    networkCanvas->setDoubleBuffering(true);
     networkCanvas->setBackgroundColor(bgcolor);
 
     networkCanvasView = new NetworkCanvasView(this, networkCanvas, vsplit, services);
     // need better help than this!
-    QWhatsThis::add(networkCanvasView, "Network canvas view.");
-    QToolTip::add(networkCanvasView, "View and manipulate components.");
+    QWhatsThis::add(networkCanvasView, "View and manipulate components.");
 
     setCentralWidget(vsplit);
     setupFileActions();
     setupLoaderActions();
+    setupHelpActions();
     buildPackageMenus();
-    insertHelpMenu();
 
     statusBar()->message("SCIRun2 ready");
 
@@ -271,8 +274,8 @@ void BuilderWindow::setupFileActions()
 {
     QPopupMenu* file = new QPopupMenu(this, "File");
     file->setFont(*bFont);
-    int id = menuBar()->insertItem("&File", file);
-    popupMenuIndex.insert(IndexMap::value_type("File", menuBar()->indexOf(id)));
+    int id = menuBar()->insertItem("&File", file, -1, 0);
+    popupMenuID.insert(IntMap::value_type("File", id));
     file->insertTearOffHandle();
 
     QToolBar* fileTools = new QToolBar(this, "file operations");
@@ -360,8 +363,8 @@ void BuilderWindow::setupLoaderActions()
 {
     QPopupMenu* loader = new QPopupMenu(this, "Loader");
     loader->setFont(*bFont);
-    int id = menuBar()->insertItem("&Proxy Frameworks", loader);
-    popupMenuIndex.insert(IndexMap::value_type("Loader", menuBar()->indexOf(id)));
+    int id = menuBar()->insertItem("&Proxy Frameworks", loader, -1, 1);
+    popupMenuID.insert(IntMap::value_type("Loader", id));
     loader->insertTearOffHandle();
 
     // AddLoader
@@ -386,6 +389,10 @@ void BuilderWindow::setupLoaderActions()
     connect(refreshAction, SIGNAL( activated() ), this, SLOT( refresh() ));
     refreshAction->addTo(loader);
 
+    //loader->insertSeparator();
+    //loaderMenu = new QPopupMenu(loader, "Loaders");
+    //loader->insertItem("Loaders", loaderMenu);
+
 #if 0
 /*
     QPopupMenu* mxn = new QPopupMenu( this );
@@ -401,14 +408,16 @@ void BuilderWindow::setupLoaderActions()
 #endif
 }
 
-void BuilderWindow::insertHelpMenu()
+void BuilderWindow::setupHelpActions()
 {
-  menuBar()->insertSeparator();
+  int id = menuBar()->insertSeparator(3);
+  popupMenuID.insert(IntMap::value_type("Separator", id));
   QPopupMenu *help = new QPopupMenu(this, "Help");
   help->setFont(*bFont);
   help->insertTearOffHandle();
-  int id = menuBar()->insertItem( "&Help", help );
-  popupMenuIndex.insert(IndexMap::value_type("Help", menuBar()->indexOf(id)));
+  id = -1;
+  id = menuBar()->insertItem("&Help", help, -1, 4);
+  popupMenuID.insert(IntMap::value_type("Help", id));
 
   // maybe it would be better to create a QActionGroup for these
   help->insertItem( "&About", this, SLOT( about() ), Key_F1 );
@@ -450,7 +459,6 @@ void BuilderWindow::buildRemotePackageMenus(
     const sci::cca::ports::ComponentRepository::pointer &reg,
     const std::string &frameworkURL)
 {
-std::cerr << "BuilderWindow::buildRemotePackageMenus " << frameworkURL << std::endl;
     if (reg.isNull()) {
         displayMsg("Cannot get component registry, not building component menus.\n");
         return;
@@ -497,7 +505,7 @@ std::cerr << "BuilderWindow::buildRemotePackageMenus " << frameworkURL << std::e
 
 void BuilderWindow::buildPackageMenus()
 {
-    statusBar()->message("Building package menus...", 2000);
+    statusBar()->message("Building component menus...");
     setCursor(Qt::WaitCursor);
     componentMenu->clear();
 
@@ -508,10 +516,11 @@ void BuilderWindow::buildPackageMenus()
     if (reg.isNull()) {
         displayMsg("Error: cannot find component registry, not building component menus.\n");
         unsetCursor();
+        statusBar()->clear();
         return;
     }
     std::vector<sci::cca::ComponentClassDescription::pointer> list =
-    reg->getAvailableComponentClasses();
+        reg->getAvailableComponentClasses();
     std::map<std::string, MenuTree*> menus;
 
     for (std::vector<sci::cca::ComponentClassDescription::pointer>::iterator iter =
@@ -542,26 +551,37 @@ void BuilderWindow::buildPackageMenus()
     }
 
     componentMenu->insertItem("Components");
+
+    // component menus should be inserted between the loader menu and
+    // the separator/help menu
+    int insert_index;
+    if (popupMenuID["Separator"]) {
+        insert_index = menuBar()->indexOf(popupMenuID["Separator"]);
+    } else {
+        insert_index = popupMenuID["Loader"];
+    }
     for (std::map<std::string, MenuTree*>::iterator iter = menus.begin();
             iter != menus.end(); iter++) {
         QPopupMenu* menu = new QPopupMenu(this);
         menu->setFont(*bFont);
         int menuID;
         iter->second->populateMenu(menu);
-        IndexMap::iterator found = popupMenuIndex.find(iter->first);
-        if (found != popupMenuIndex.end()) {
-            int id = menuBar()->idAt(popupMenuIndex[iter->first]);
-            menuBar()->removeItemAt(popupMenuIndex[iter->first]);
-            menuID = menuBar()->insertItem(iter->first.c_str(), menu, id,
-                popupMenuIndex[iter->first]);
+        IntMap::iterator found = popupMenuID.find(iter->first);
+        if (found != popupMenuID.end()) {
+            int index = menuBar()->indexOf(popupMenuID[iter->first]);
+            menuBar()->removeItemAt(index);
+            menuID = menuBar()->insertItem(iter->first.c_str(), menu,
+                popupMenuID[iter->first], index);
         } else {
-            menuID = menuBar()->insertItem(iter->first.c_str(), menu);
+            menuID = menuBar()->insertItem(iter->first.c_str(), menu, -1, insert_index++);
         }
-        popupMenuIndex[iter->first] = menuBar()->indexOf(menuID);
+        popupMenuID[iter->first] = menuID;
         componentMenu->insertItem((" " + iter->first).c_str(), menu);
     }
+
     services->releasePort("cca.ComponentRepository");
     unsetCursor();
+    statusBar()->clear();
 }
 
 void BuilderWindow::writeFile()
@@ -575,34 +595,32 @@ void BuilderWindow::writeFile()
 
     saveOutputFile << saveModules.size() << std::endl;
     saveOutputFile << saveConnections.size() << std::endl;
-  
+
     if (saveOutputFile.is_open()) {
-    for (unsigned int j = 0; j < saveModules.size(); j++) {
-        saveOutputFile << saveModules[j]->moduleName << std::endl;
-        saveOutputFile << saveModules[j]->x() << std::endl;
-        saveOutputFile << saveModules[j]->y() << std::endl;
-    }
-
-    for (unsigned int k = 0; k < saveConnections.size(); k++) {
-        Module* getProvidesModule();
-
-        Module* um = saveConnections[k]->getUsesModule();
-        Module* pm = saveConnections[k]->getProvidesModule();
-        unsigned int iu = 0;
-        unsigned int ip = 0;
-        for (unsigned int i = 0; i < saveModules.size();i++) {
-        if (saveModules[i] == um) {
-            iu = i;
+        for (unsigned int j = 0; j < saveModules.size(); j++) {
+            saveOutputFile << saveModules[j]->moduleName() << std::endl;
+            saveOutputFile << saveModules[j]->x() << std::endl;
+            saveOutputFile << saveModules[j]->y() << std::endl;
         }
+        for (unsigned int k = 0; k < saveConnections.size(); k++) {
+            //Module* getProvidesModule();
 
-        if (saveModules[i] == pm) {
-            ip = i;
+            Module* um = saveConnections[k]->usesPort()->module();
+            Module* pm = saveConnections[k]->providesPort()->module();
+            unsigned int iu = 0;
+            unsigned int ip = 0;
+            for (unsigned int i = 0; i < saveModules.size();i++) {
+                if (saveModules[i] == um) {
+                    iu = i;
+                }
+                if (saveModules[i] == pm) {
+                    ip = i;
+                }
+            }
+            saveOutputFile << iu << " " <<
+            saveConnections[k]->usesPort()->name() << " " << ip << " " <<
+            saveConnections[k]->providesPort()->name() << std::endl;
         }
-        }
-        saveOutputFile << iu << " " <<
-        saveConnections[k]->getUsesPortName() << " " << ip << " " <<
-        saveConnections[k]->getProvidesPortName() << std::endl;
-    }
     }
     saveOutputFile.close();
     unsetCursor();
@@ -612,19 +630,18 @@ void BuilderWindow::save()
 {
     if (filename.isEmpty()) {
     QString fn = QFileDialog::getSaveFileName(QString::null,
-                          "Network File (*.net)",
-                                                  this);
-    if (fn.isEmpty()) {
-        statusBar()->message("Saving aborted", 2000);
-    } else {
-        if (fn.endsWith(".net")) {
-        filename = fn;
+                          "Network File (*.net)", this);
+        if (fn.isEmpty()) {
+            statusBar()->message("Saving aborted", 2000);
         } else {
-        QString fnExt = fn + ".net";
-        filename = fnExt;
+            if (fn.endsWith(".net")) {
+                filename = fn;
+            } else {
+                QString fnExt = fn + ".net";
+                filename = fnExt;
+            }
+            writeFile();
         }
-        writeFile();
-    }
     }
 }
 
@@ -724,9 +741,9 @@ void BuilderWindow::clear()
     std::vector<Module*> clearModules = networkCanvasView->getModules();
 
     for (unsigned int j = 0; j < clearModules.size(); j++) {
-    std::cerr << "modules->getName = " <<
-        clearModules[j]->moduleName << std::endl;
-    clearModules[j]->destroy();
+        std::cerr << "modules->getName = " <<
+            clearModules[j]->moduleName() << std::endl;
+        clearModules[j]->destroy();
     }
     unsetCursor();
 }
@@ -769,60 +786,44 @@ void BuilderWindow::about()
   (new QMessageBox())->about(this, "About", "CCA Builder (SCIRun Implementation)");
 }
 
-Module* BuilderWindow::instantiateComponent(
+void BuilderWindow::instantiateComponent(
     const sci::cca::ComponentClassDescription::pointer& cd)
 {
-std::cerr << "BuilderWindow::instantiateComponent from component class description." << std::endl;
-
     statusBar()->message("Instantating component...");
     setCursor(Qt::WaitCursor);
 
     sci::cca::ports::BuilderService::pointer builder =
-    pidl_cast<sci::cca::ports::BuilderService::pointer>(
-        services->getPort("cca.BuilderService")
-    );
+        pidl_cast<sci::cca::ports::BuilderService::pointer>(
+            services->getPort("cca.BuilderService")
+        );
     if (builder.isNull()) {
         std::cerr << "Fatal Error: Cannot find builder service" << std::endl;
         unsetCursor();
-        return NULL;
+        return;
     }
 
     TypeMap *tm = new TypeMap;
     tm->putString("LOADER NAME", cd->getLoaderName());
+    tm->putString("cca.className", cd->getComponentModelName()); // component type
     sci::cca::ComponentID::pointer cid =
-    builder->createInstance(cd->getComponentClassName(),
+        builder->createInstance(cd->getComponentClassName(),
                 cd->getComponentClassName(),
                 sci::cca::TypeMap::pointer(tm));
 
     if (cid.isNull()) {
         std::cerr << "instantiateFailed..." << std::endl;
-        statusBar()->message("Instantiate failed.");
-        unsetCursor();
-        return NULL;
+        statusBar()->message("Instantiate failed.", 2000);
+    } else {
+        statusBar()->clear();
     }
-    SSIDL::array1<std::string> usesPorts = builder->getUsedPortNames(cid);
-    SSIDL::array1<std::string> providesPorts = builder->getProvidedPortNames(cid);
-
-    services->releasePort("cca.BuilderService");
-    statusBar()->clear();
     unsetCursor();
-
-    if (cd->getComponentClassName() != "SCIRun.Builder") {
-        int x = 20;
-        int y = 20;
-    
-        return (networkCanvasView->addModule(cd->getComponentClassName(),
-            x, y, usesPorts, providesPorts, cid, true)); //reposition module
-    }
-    return NULL;
 }
 
-Module* BuilderWindow::instantiateComponent(const std::string& className,
-                        const std::string& type,
-                        const std::string& loaderName)
+Module* BuilderWindow::instantiateBridgeComponent(
+    const std::string& className,
+    const std::string& type,
+    const std::string& loaderName)
 {
-std::cerr << "BuilderWindow::instantiateComponent from className, type, loaderName." << std::endl;
-
     statusBar()->message("Instantating component " + className);
     setCursor(Qt::WaitCursor);
 
@@ -842,11 +843,11 @@ std::cerr << "BuilderWindow::instantiateComponent from className, type, loaderNa
     sci::cca::ComponentID::pointer cid =
         builder->createInstance(className, type, sci::cca::TypeMap::pointer(tm));
 
-    if(cid.isNull()){
-    std::cerr << "instantiateFailed..." << std::endl;
-    statusBar()->message("Instantiate failed.");
-    unsetCursor();
-    return NULL;
+    if (cid.isNull()) {
+        std::cerr << "instantiateFailed..." << std::endl;
+        statusBar()->message("Instantiate failed.");
+        unsetCursor();
+        return NULL;
     }
     SSIDL::array1<std::string> usesPorts = builder->getUsedPortNames(cid);
     SSIDL::array1<std::string> providesPorts = builder->getProvidedPortNames(cid);
@@ -856,19 +857,71 @@ std::cerr << "BuilderWindow::instantiateComponent from className, type, loaderNa
     unsetCursor();
 
     if (className != "SCIRun.Builder") {
-    int x = 20;
-    int y = 20;
-
-    return (networkCanvasView->addModule(className, x, y, usesPorts,
-        providesPorts, cid, true)); //reposition module
+        int x = 20;
+        int y = 20;
+        // reposition module
+        return (networkCanvasView->addModule(className, x, y, usesPorts, providesPorts, cid, true));
     }
     return NULL;
 }
 
 void BuilderWindow::componentActivity(const sci::cca::ports::ComponentEvent::pointer& e)
 {
-    std::cerr << "Got component activity event " << e->getEventType() << " for " << e->getComponentID()->getInstanceName() << '\n';
-    displayMsg("Some event occurs\n");
+    if (e->getComponentID()->getInstanceName() == "QtBuilder") {
+        return;
+    }
+    if (e->getComponentID()->getInstanceName().find("SCIRun.Builder")
+            != std::string::npos) {
+        std::cerr << "Got builder window: " <<
+            e->getComponentID()->getInstanceName() << std::endl;
+        return;
+    }
+
+    bool update = true;
+    //std::cerr << "BuilderWindow::componentActivity: " << e->getComponentID()->getInstanceName() << " " << e->getEventType() << std::endl;
+    if (e->getEventType() == sci::cca::ports::ComponentInstantiated) {
+        std::vector<Module*> modules = networkCanvasView->getModules();
+        for (std::vector<Module*>::iterator iter = modules.begin();
+            iter != modules.end(); iter++) {
+            if ((*iter)->componentID()->getInstanceName() ==
+                    e->getComponentID()->getInstanceName()) {
+                update = false;
+                break;
+            }
+        }
+
+        if (update) {
+            sci::cca::ports::BuilderService::pointer builder =
+                pidl_cast<sci::cca::ports::BuilderService::pointer>(
+                    services->getPort("cca.BuilderService")
+                );
+            if (builder.isNull()) {
+                displayMsg("Error: Cannot find builder service");
+                return;
+            }
+            SSIDL::array1<std::string> usesPorts =
+                builder->getUsedPortNames(e->getComponentID());
+            SSIDL::array1<std::string> providesPorts =
+                builder->getProvidedPortNames(e->getComponentID());
+            // add Module to window
+            int x = 20;
+            int y = 20;
+            // reposition module
+            networkCanvasView->addModule(
+                e->getComponentID()->getInstanceName(),
+                x, y, usesPorts, providesPorts, e->getComponentID(), true);
+            services->releasePort("cca.BuilderService");
+        }
+    } else if (e->getEventType() == sci::cca::ports::ComponentDestroyed) {
+        std::vector<Module*> modules = networkCanvasView->getModules();
+        for (std::vector<Module*>::iterator iter = modules.begin();
+            iter != modules.end(); iter++) {
+            if ((*iter)->componentID()->getInstanceName() ==
+                    e->getComponentID()->getInstanceName()) {
+                networkCanvasView->removeModule(*iter);
+            }
+        }
+    }
 }
 
 void BuilderWindow::displayMsg(const char *msg)
@@ -899,11 +952,11 @@ void BuilderWindow::updateMiniView()
     double scaleV = double( networkCanvas->height() ) / miniCanvas->height();
 
     QCanvasRectangle *viewableRect = new QCanvasRectangle(
-    int( networkCanvasView->contentsX() / scaleH ),
-    int( networkCanvasView->contentsY() / scaleV ),
-    int( networkCanvasView->visibleWidth() / scaleH ),
-    int( networkCanvasView->visibleHeight() / scaleV ),
-    miniCanvas
+        int( networkCanvasView->contentsX() / scaleH ),
+        int( networkCanvasView->contentsY() / scaleV ),
+        int( networkCanvasView->visibleWidth() / scaleH ),
+        int( networkCanvasView->visibleHeight() / scaleV ),
+        miniCanvas
     );
     viewableRect->show();
 
@@ -921,9 +974,9 @@ void BuilderWindow::updateMiniView()
     }
 
     for (unsigned int j = 0; j < connections.size(); j++) {
-    MiniConnection *mc =
-        new MiniConnection(miniView, connections[j]->points(), scaleH, scaleV);
-    mc->show();
+        MiniConnection *mc =
+            new MiniConnection(miniView, connections[j]->points(), scaleH, scaleV);
+        mc->show();
     }
 
     miniCanvas->update();
@@ -946,9 +999,6 @@ void BuilderWindow::addLoader()
     pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(services->getPort("cca.FrameworkProperties"));
 
     ClusterDialog *dialog;
-    //string loaderName="qwerty";
-    //string domainName="qwerty.sci.utah.edu";
-    //string login="kzhang";
     if (fwkProperties.isNull()) {
         displayMsg("Error: Cannot find framework properties\n");
         dialog = new ClusterDialog("qwerty", "qwerty.sci.utah.edu",
@@ -1019,7 +1069,8 @@ void BuilderWindow::rmLoader()
     services->releasePort("cca.BuilderService");
 }
 
-void BuilderWindow::refresh(){
+void BuilderWindow::refresh()
+{
     buildPackageMenus();
 }
 

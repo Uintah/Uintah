@@ -42,13 +42,13 @@
 #define SCIRun_Framework_BuilderWindow_h
 
 #include <Core/CCA/spec/cca_sidl.h>
+#include <CCA/Components/Builder/Module.h>
+#include <CCA/Components/Builder/Connection.h>
 #include <map>
 #include <vector>
 #include <qcanvas.h>
 #include <qtextedit.h>
 #include <qmainwindow.h>
-#include "Module.h"
-#include "Connection.h"
 
 class NetworkCanvasView;
 
@@ -74,9 +74,9 @@ public:
     MenuTree(BuilderWindow* builder, const std::string &url);
     virtual ~MenuTree();
     void add(const std::vector<std::string>& name,
-	     int nameindex,
-	     const sci::cca::ComponentClassDescription::pointer& desc,
-	     const std::string& fullname);
+         int nameindex,
+         const sci::cca::ComponentClassDescription::pointer& desc,
+         const std::string& fullname);
     void coalesce();
     void populateMenu( QPopupMenu* );
     void clear();
@@ -98,34 +98,37 @@ private slots:
  *  SCIRun2 main window
  */
 class BuilderWindow : public QMainWindow,
-		    public sci::cca::ports::ComponentEventListener
+            public sci::cca::ports::ComponentEventListener
 {
     Q_OBJECT
 public:
-    BuilderWindow(const sci::cca::Services::pointer& services);
+    BuilderWindow(const sci::cca::Services::pointer& services,
+                  QApplication *app);
     virtual ~BuilderWindow();
-    Module* instantiateComponent(const sci::cca::ComponentClassDescription::pointer &);
-    Module* instantiateComponent(const std::string& className,
-				const std::string& type,
-				const std::string& loaderName);
+    void instantiateComponent(
+        const sci::cca::ComponentClassDescription::pointer &);
+    // to keep bridge code working...
+    Module* instantiateBridgeComponent(const std::string& className,
+                                       const std::string& type,
+                                       const std::string& loaderName);
     // From sci::cca::ComponentEventListener
-    virtual void componentActivity(const sci::cca::ports::ComponentEvent::pointer &e);
+    virtual void componentActivity(
+        const sci::cca::ports::ComponentEvent::pointer &e);
     void displayMsg(const char *);
     void displayMsg(const QString &);
-    void buildRemotePackageMenus(const sci::cca::ports::ComponentRepository::pointer &reg,
-				 const std::string &frameworkURL);
+    void buildRemotePackageMenus(
+        const sci::cca::ports::ComponentRepository::pointer &reg,
+        const std::string &frameworkURL);
     QPopupMenu* componentContextMenu() const { return componentMenu; }
-
-    //std::vector<Module*> updateMiniView_modules;
-    //std::vector<Connection*> updateMiniView_connections;
+    QApplication* application() const { return app; }
 
 public slots:
     void updateMiniView();
 
 protected:
     void closeEvent( QCloseEvent* );
-    typedef std::map<std::string, int> IndexMap;
-    IndexMap popupMenuIndex;
+    typedef std::map<std::string, int> IntMap;
+    IntMap popupMenuID;
 
 private:
     BuilderWindow(const BuilderWindow&);
@@ -133,8 +136,10 @@ private:
     void setupFileActions();
     void setupLoaderActions();
     void buildPackageMenus();
-    void insertHelpMenu();
+    void setupHelpActions();
     void writeFile();
+
+    QApplication *app;
     QFont *bFont;
     QSplitter *vsplit;
     QSplitter *hsplit;
@@ -142,27 +147,29 @@ private:
     QLabel *msgLabel;
     QTextEdit *msgTextEdit;
     QCanvas *miniCanvas,
-	    *networkCanvas;
+            *networkCanvas;
     QCanvasView *miniView;
     NetworkCanvasView* networkCanvasView;
     QCanvasItemList tempQCL;
     QAction *loadAction,
-	*insertAction,
-	*saveAction,
-	*saveAsAction,
-	*clearAction,
-	*addInfoAction,
-	*addPathAction,
-	*quitAction,
-	*exitAction,
-	*addLoaderAction,
-	*rmLoaderAction,
-	*refreshAction;
+            *insertAction,
+            *saveAction,
+            *saveAsAction,
+            *clearAction,
+            *addInfoAction,
+            *addPathAction,
+            *quitAction,
+            *exitAction,
+            *addLoaderAction,
+            *rmLoaderAction,
+            *refreshAction;
     QPopupMenu *componentMenu;
+    //QPopupMenu *loaderMenu;
 
     QString filename;
     sci::cca::Services::pointer services;
     std::vector<QCanvasRectangle*> miniRect;
+    //std::vector<sci::cca::ComponentID::pointer> windows;
 
 private slots:
     void save();

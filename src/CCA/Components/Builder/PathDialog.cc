@@ -39,6 +39,7 @@
 
 
 #include <CCA/Components/Builder/PathDialog.h>
+#include <Core/Util/Environment.h>
 
 #include <qvariant.h>
 #include <qpushbutton.h>
@@ -51,6 +52,7 @@
 #include <qcombobox.h>
 #include <qlineedit.h>
 
+
 /*
  *  Constructs a PathDialog as a child of 'parent', with the
  *  name 'name' and widget flags set to 'f'.
@@ -61,8 +63,9 @@
 PathDialog::PathDialog( QWidget* parent, const char* name, bool modal, WFlags fl )
     : QDialog( parent, name, modal, fl )
 {
-    if ( !name )
-	setName( "PathDialog" );
+    if ( !name ) {
+        setName( "PathDialog" );
+    }
     setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, 0, 0, sizePolicy().hasHeightForWidth() ) );
     setMinimumSize( QSize( 450, 200 ) );
     setMaximumSize( QSize( 475, 190 ) );
@@ -144,6 +147,7 @@ PathDialog::PathDialog( QWidget* parent, const char* name, bool modal, WFlags fl
     connect( buttonPath, SIGNAL( clicked() ), this, SLOT( fileDialog() ) );
     connect( buttonOk, SIGNAL( clicked() ), this, SLOT( accept() ) );
     connect( buttonCancel, SIGNAL( clicked() ), this, SLOT( reject() ) );
+    workingDir = QString(SCIRun::sci_getenv("SCIRUN_SRCDIR"));
 }
 
 /*
@@ -195,17 +199,16 @@ void PathDialog::insertComponentModels()
 
 void PathDialog::fileDialog()
 {
-    // get SCIRun2 source directory???
-
     QFileDialog* fd = new QFileDialog(this, "Component XML path dialog", TRUE);
     fd->setMode(QFileDialog::DirectoryOnly);
+    fd->setDir(workingDir);
 
     if (fd->exec() == QDialog::Accepted) {
-	QString s = fd->selectedFile().stripWhiteSpace();
-	if (s.endsWith("/", FALSE)) {
-	    s.truncate(s.length() - 1);
-	}
-	lineEditPath->setText(s);
+        QString s = fd->selectedFile().stripWhiteSpace();
+        if (s.endsWith("/", FALSE)) {
+            s.truncate(s.length() - 1);
+        }
+        lineEditPath->setText(s);
     }
 }
 

@@ -38,188 +38,276 @@
  *
  */
 
-#include "Module.h"
+#include <CCA/Components/Builder/Module.h>
+#include <CCA/Components/Builder/NetworkCanvasView.h>
+#include <SCIRun/SCIRunFramework.h>
+#include <SCIRun/PortInstance.h>
+#include <SCIRun/ComponentInstance.h>
+#include <SCIRun/CCA/ComponentID.h>
 
+#include <qapplication.h>
 #include <qpushbutton.h>
 #include <qlabel.h>
-#include <qpainter.h>
 #include <qmessagebox.h>
+#include <qpainter.h>
+#include <qpoint.h>
+#include <qevent.h>
+#include <qwhatsthis.h>
+
 #include <iostream>
 #include <sstream>
-#include "NetworkCanvasView.h"
-using namespace std;
 
-Module::Module(NetworkCanvasView *parent, const string& moduleName,
-	       SSIDL::array1<std::string> & up, SSIDL::array1<std::string> &pp,
-	       const sci::cca::Services::pointer& services,
-	       const sci::cca::ComponentID::pointer& cid)
-  :QFrame(parent, moduleName.c_str() ), moduleName(moduleName), up(up), services(services), cid(cid)
+Module::Module(NetworkCanvasView *parent,
+               const std::string &mName,
+               SSIDL::array1<std::string> &up,
+               SSIDL::array1<std::string> &pp,
+               const sci::cca::Services::pointer &services,
+               const sci::cca::ComponentID::pointer &cid)
+  : QFrame(parent, mName.c_str()), mName(mName), services(services),
+    cid(cid), steps(0)
 {
-  pd=10; //distance between two ports
-  pw=4; //port width
-  ph=10; //prot height
-		
-  int dx=5;
+    pd = PORT_DIST;
+    pw = PORT_W;
+    ph = PORT_H;
+    int top = 5;
+    int w = 120;
+    int h = 60;
+    std::ostringstream nameWithNodes;
+    menu = new QPopupMenu(this);
 
-  int w=120;
-  int h=60;
-
-  sci::cca::ports::BuilderService::pointer bs = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
-  sci::cca::TypeMap::pointer properties=bs->getPortProperties(cid, "");
-  services->releasePort("cca.BuilderService");
-
-  string loaderName="";
-  int nNodes=1;
-  
-  
-  if(!properties.isNull()){
-    loaderName=properties->getString("LOADER NAME",loaderName);
-    nNodes=properties->getInt("np",nNodes);
-  }
-
-  ostringstream nameWithNodes;
-  nameWithNodes<<moduleName;
-  if(nNodes>1){
-    nameWithNodes<<"("<<nNodes<<")";
-  }
-  displayName=nameWithNodes.str();
-  nameRect=QRect(QPoint(dx,dx), (new QLabel(displayName.c_str(),0))->sizeHint() );
-  nameRect.addCoords(0,-2,2,2);
-  if(nameRect.width()+dx*2>w) w=nameRect.width()+dx*2;
-//	QRect uiRect(dx,nameRect.bottom()+d,20,20);
-
-  setGeometry(QRect(0,0,w,h));
-  setFrameStyle(Panel|Raised);
-  setLineWidth(4);
-
-  hasGoPort=hasUIPort=false;
-  bool isSciPort=false;
-  sci::cca::ports::BuilderService::pointer builder = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
-  if(builder.isNull()){
-    cerr << "Fatal Error: Cannot find builder service\n";
-  } 
-  else {
-    SSIDL::array1<string> ports = builder->getProvidedPortNames(cid);
-    for(unsigned int i=0; i < ports.size(); i++){
-      if(ports[i]=="ui") hasUIPort=true;
-      else if(ports[i]=="sci.ui"){
-	hasUIPort=true;
-	isSciPort=true;
-      }
-      else if(ports[i]=="go") hasGoPort=true;
-      else if(ports[i]=="sci.go"){
-	hasGoPort=true;
-	isSciPort=true;
-      }
-      else this->pp.push_back(ports[i]); 
+    // get pointer to the framework that instantiated the component with ComponentID cid
+    // until port properties are implemented properly    
+    ComponentID *compID = dynamic_cast<ComponentID*>(cid.getPointer());
+    SCIRunFramework* fwk = compID->framework;
+    if (!fwk) {
+        std::cerr << "Error: could not get the framework!" << std::endl;
     }
-  }
 
-  if(hasUIPort){
-      QPushButton *ui=new QPushButton("UI", this,"ui");
-      //	ui->setDefault(false);
-      ui->setGeometry(QRect(dx,h-dx-20,20,20));
-      connect(ui,SIGNAL(clicked()), this, SLOT(ui()));
+    sci::cca::ports::BuilderService::pointer bs =
+        pidl_cast<sci::cca::ports::BuilderService::pointer>(
+            services->getPort("cca.BuilderService")
+        );
+    if (bs.isNull()) {
+        std::cerr << "Error: Cannot find builder service." << std::endl;
+    } else {
+        std::string loaderName = "";
+        int nNodes = 1;
+        sci::cca::TypeMap::pointer properties =
+            bs->getPortProperties(cid, "");
+        if (!properties.isNull()) {
+            loaderName = properties->getString("LOADER NAME", loaderName);
+            nNodes = properties->getInt("np", nNodes);
+        }
 
-      string instanceName = cid->getInstanceName();
-      string uiPortName = instanceName+" uiPort";
-      services->registerUsesPort(uiPortName, "sci.cca.ports.UIPort",
-				 sci::cca::TypeMap::pointer(0));
-      builder->connect(services->getComponentID(), uiPortName, cid, isSciPort?"sci.ui":"ui");
-  }
+        nameWithNodes << mName;
+        if (nNodes > 1) {
+            nameWithNodes << "(" << nNodes << ")";
+        }
+        if ( loaderName.empty() ) {
+            menu->insertItem(nameWithNodes.str().c_str());
+        } else {
+            std::string name = nameWithNodes.str() + "@" + loaderName;
+            menu->insertItem(name.c_str());
+        }
+        menu->insertSeparator();  
 
-  menu=new QPopupMenu(this);
-  string displayloader="Loader: ";
-  displayloader+=loaderName;
-  menu->insertItem(displayloader.c_str());
-  menu->insertSeparator();	
 
+        progress = new QProgressBar(100, this);
+        progress->reset();
+        QPalette pal = progress->palette();
+        QColorGroup cg = pal.active();
+        QColor barColor(0, 127, 0);
+        cg.setColor(QColorGroup::Highlight, barColor);
+        pal.setActive(cg);
+        cg = pal.inactive();
+        cg.setColor(QColorGroup::Highlight, barColor);
+        pal.setInactive(cg);
+        cg = pal.disabled();
+        cg.setColor(QColorGroup::Highlight, barColor);
+        pal.setDisabled(cg);
+        progress->setPalette(pal);
+        progress->setPercentageVisible(false);
+        progress->setGeometry(
+            QRect(top + 22, h - top - 20, w - top - 24 - top, 20));
 
-  if(hasGoPort){
-      menu->insertItem("Go",this, SLOT(go()) );
-      //menu->insertItem("Stop",this,  SLOT(stop()) );
-      string instanceName = cid->getInstanceName();
-      string goPortName = instanceName+" goPort";
-      services->registerUsesPort(goPortName, "sci.cca.ports.GoPort",
-				 sci::cca::TypeMap::pointer(0));
-      builder->connect(services->getComponentID(), goPortName, cid,  isSciPort?"sci.go":"go");
-  }
+        //statusButton = new QPushButton(this, "status");
+        //statusButton->setGeometry(QRect(progress->width() + 24, h - top - 20, 15, 15));
+        //if (statusButton->width() + top * 2 > w) {
+        //    w = statusButton->width() + top * 2;
+        //}
 
-  if(hasUIPort || hasGoPort){
-    progress=new QProgressBar(100,this);
-    progress->reset();
-    QPalette pal=progress->palette();
-    QColorGroup cg=pal.active();
-    QColor barColor(0,127,0);
-    cg.setColor( QColorGroup::Highlight, barColor);
-    pal.setActive( cg );
-    cg=pal.inactive();
-    cg.setColor( QColorGroup::Highlight, barColor );
-    pal.setInactive( cg );
-    cg=pal.disabled();
-    cg.setColor( QColorGroup::Highlight, barColor );
-    pal.setDisabled( cg );
-    progress->setPalette( pal );
-    progress->setPercentageVisible(false);
-    progress->setGeometry(QRect(dx+22,h-dx-20,w-dx-24-dx,20));
-  }
-  else{
-    progress=0;
-  }
-  menu->insertItem("Destroy",this,  SLOT(destroy()) );
-  services->releasePort("cca.BuilderService");
-  viewWindow=parent;
+        hasGoPort = hasUIPort = hasComponentIcon = false;
+        bool isSciPort = false;
+        int connectable_ports = 0;
+        for (unsigned int i = 0; i < pp.size(); i++) {
+            if (pp[i] == "ui") {
+                hasUIPort = true;
+            } else if (pp[i] == "sci.ui") {
+                hasUIPort = true;
+                isSciPort = true;
+            } else if (pp[i] == "go") {
+                hasGoPort = true;
+            } else if (pp[i] == "sci.go") {
+                hasGoPort = true;
+                isSciPort = true;
+            } else if (pp[i] == "icon") {
+                hasComponentIcon = true;
+            } else {
+                std::string model = "";
+                std::string type = "";
+                ComponentInstance *ci =
+                    fwk->lookupComponent(cid->getInstanceName());
+                if (ci) {
+                    PortInstance* pi = ci->getPortInstance(pp[i]);
+                    if (pi) {
+                        model = pi->getModel();
+                        type = pi->getType();
+                    }
+                }
+                ports.push_back(
+                    port(connectable_ports++, model, type, pp[i],
+                         PortIcon::PROVIDES)
+                );
+            }
+        }
+        if (hasUIPort) {
+            uiButton = new QPushButton("UI", this, "ui");
+            uiButton->setGeometry(QRect(top, h - top - 20, 20, 20));
+            try {
+                connect(uiButton, SIGNAL(clicked()), this, SLOT(ui()));
+            }
+            catch (const Exception& e) {
+                viewWindow->p2BuilderWindow->displayMsg(e.message());
+            }
+
+            std::string instanceName = cid->getInstanceName();
+            std::string uiPortName = instanceName + " uiPort";
+            services->registerUsesPort(uiPortName, "sci.cca.ports.UIPort",
+                sci::cca::TypeMap::pointer(0));
+                bs->connect(services->getComponentID(), uiPortName,
+                    cid, isSciPort ? "sci.ui" : "ui");
+        } else {
+            uiButton = 0;
+        }
+
+        if (hasGoPort) {
+            menu->insertItem("Go", this, SLOT(go()) );
+            std::string instanceName = cid->getInstanceName();
+            std::string goPortName = instanceName + " goPort";
+            services->registerUsesPort(goPortName, "sci.cca.ports.GoPort",
+                sci::cca::TypeMap::pointer(0));
+            try {
+                bs->connect(services->getComponentID(), goPortName,
+                    cid,  isSciPort ? "sci.go" : "go");
+            }
+            catch (const Exception& e) {
+                viewWindow->p2BuilderWindow->displayMsg(e.message());
+            }
+        }
+
+        if (hasComponentIcon) {
+          // progress bar etc.
+            std::string instanceName = cid->getInstanceName();
+            std::string iconName = instanceName + " icon";
+            services->registerUsesPort(iconName,
+                "sci.cca.ports.ComponentIcon",
+                sci::cca::TypeMap::pointer(0));
+            try {
+                bs->connect(services->getComponentID(), iconName, cid, "icon");
+            }
+            catch (const Exception& e) {
+                viewWindow->p2BuilderWindow->displayMsg(e.message());
+            }
+
+            sci::cca::Port::pointer p = services->getPort(iconName);
+            sci::cca::ports::ComponentIcon::pointer icon =
+                pidl_cast<sci::cca::ports::ComponentIcon::pointer>(p);
+            if (icon.isNull()) {
+                std::cerr << "icon is not connected\n";
+            } else {
+                int totalSteps = icon->getProgressBar();
+                if (totalSteps != 0) {
+                    progress->setTotalSteps(totalSteps);
+                }
+                dName = icon->getDisplayName();
+                mDesc = icon->getDescription();
+                menu->insertItem("Description", this, SLOT(desc()) );
+            }
+        } else {
+            dName = nameWithNodes.str();
+        }
+        nameRect = QRect( QPoint(top, top),
+                          (new QLabel(dName.c_str(), 0))->sizeHint() );
+        nameRect.addCoords(2, -2, 6, 6); // 0, -2, 4, 4
+        if (nameRect.width() + top * 2 > w) {
+            w = nameRect.width() + top * 3;
+        }
+// QRect uiRect(top, nameRect.bottom() + d, 20, 20);
+        setGeometry(QRect(0, 0, w, h));
+        setFrameStyle(Panel | Raised);
+        setLineWidth(4);
+
+        menu->insertItem("Destroy", this, SLOT(destroy()) );
+        services->releasePort("cca.BuilderService");
+    }
+    viewWindow = parent;
+    // fill this in
+    //QWhatsThis::add(this, "Module\nUses Ports:\nProvides Ports:");
+
+    for (unsigned int i = 0; i < up.size(); i++) {
+        std::string model = "";
+        std::string type = "";
+        ComponentInstance *ci = fwk->lookupComponent(cid->getInstanceName());
+        if (ci) {
+            PortInstance* pi = ci->getPortInstance(up[i]);
+            if (pi) {
+                model = pi->getModel();
+                type = pi->getType();
+            }
+        }
+        ports.push_back(port(i, model, type, up[i], PortIcon::USES));
+    }
 }
 
 void Module::paintEvent(QPaintEvent *e)
 {
-  QFrame::paintEvent(e);
-  QPainter p( this );
-  p.setPen( black );
-  p.setFont( QFont( "Times", 10, QFont::Bold ) );
-  p.drawText(nameRect, AlignCenter, displayName.c_str() );
-   
-  p.setPen(green);
-  p.setBrush(green);    
-  for(unsigned int i=0;i<up.size();i++){
-    p.drawRect(portRect(i, USES));
-  }
+    QFrame::paintEvent(e);
+    QPainter p( this );
+    p.setPen(black);
+    p.setFont( QFont("Times", 10, QFont::Bold) );
+    p.drawText(nameRect, AlignCenter, dName.c_str());
 
-  p.setPen(red);
-  p.setBrush(red);
-  for(unsigned int i=0;i<pp.size();i++){
-    p.drawRect(portRect(i,PROVIDES));
-  }
+    for (std::vector<PortIcon*>::iterator it = ports.begin();
+             it != ports.end(); it++) {
+        (*it)->drawPort(p);
+    }
+    p.flush();
 }
 
-QPoint Module::usePortPoint(int num)
+PortIcon* Module::getPort(const std::string &name, PortIcon::PortType type)
 {
-	int y=pd+(ph+pd)*num+ph/2;
-	return QPoint(width(),y);
+    // ui & go ports?
+    for (std::vector<PortIcon*>::iterator it = ports.begin();
+            it != ports.end(); it++) {
+        if ((*it)->name() == name && (*it)->type() == type) {
+            return (*it);
+        }
+    }
+    return 0;
 }
 
-QPoint Module::providePortPoint(int num)
+QPoint Module::usesPortPoint(int num)
 {
-	int y=pd+(ph+pd)*num+ph/2;
-	return QPoint(0,y);	
+    int x = width();
+    int y = pd + (ph + pd) * num + ph / 2;
+    return QPoint(x, y);
 }
 
-QPoint Module::usePortPoint(const std::string &portname)
+QPoint Module::providesPortPoint(int num)
 {
-  for(unsigned int i=0; i<up.size();i++){
-    if(up[i]==portname)
-	return usePortPoint(i);
-  }
-  return QPoint(0,0);
-}
-
-QPoint Module::providePortPoint(const std::string &portname)
-{
-  for(unsigned int i=0; i<pp.size();i++){
-    if(pp[i]==portname)
-	return providePortPoint(i);
-  }
-  return QPoint(0,0);
+    int x = 0;
+    int y = pd + (ph + pd) * num + ph / 2;
+    return QPoint(x, y);
 }
 
 QPoint Module::posInCanvas()
@@ -227,109 +315,128 @@ QPoint Module::posInCanvas()
   return viewWindow->viewportToContents(pos());
 }
 
-std::string Module::usesPortName(int num)
-{
-	return up[num];
-}
-
-std::string Module::providesPortName(int num)
-{
-	return pp[num];
-}
-
 void Module::mousePressEvent(QMouseEvent *e)
 {
-	if(e->button()!=RightButton) QFrame::mousePressEvent(e);
-	else{
-		menu->popup(mapToGlobal(e->pos()));
-	}
-}
-
-bool Module::clickedPort(QPoint localpos, PortType &porttype,
-			 std::string &portname)
-{
-    const int ex=2;		
-    for(unsigned int i=0;i<pp.size();i++){
-        QRect r=portRect(i, PROVIDES);
-	r=QRect(r.x()-ex, r.y()-ex,r.width()+ex*2,r.height()+ex*2);	
-	if(r.contains(localpos)){
-		porttype=PROVIDES ;
-		portname=pp[i];
-		return true;
-	}
-    }	
-    for(unsigned int i=0;i<up.size();i++){
-        QRect r=portRect(i, USES);
-	r=QRect(r.x()-ex, r.y()-ex,r.width()+ex*2,r.height()+ex*2);	
-        if(r.contains(localpos)){ 
-                porttype=USES ;
-                portname=up[i];
-                return true;
+    if (e->button() != RightButton) {
+        QFrame::mousePressEvent(e);
+    } else {
+        PortIcon *port;
+        if ( (port = clickedPort( e->pos() )) ) {
+            port->menu()->popup(mapToGlobal(e->pos()));
+        } else {
+            menu->popup(mapToGlobal(e->pos()));
         }
     }
-    return false;
 }
 
-QRect Module::portRect(int portnum, PortType porttype)
+PortIcon* Module::clickedPort(QPoint localpos)
 {
-	if(porttype==PROVIDES){ //provides	
-		QPoint	r=providePortPoint(portnum);
-		return QRect(r.x(),r.y()-ph/2,pw,ph);
-	}
-	else{
-		QPoint r=usePortPoint(portnum);
-		return QRect(r.x()-pw,r.y()-ph/2,pw,ph);
-	}
+    const int ex = 2;
+    for (std::vector<PortIcon*>::iterator it = ports.begin();
+             it != ports.end(); it++) {
+        QRect r = (*it)->rect();
+        r = QRect(r.x() - ex, r.y() - ex, r.width() + ex * 2, r.height() + ex * 2);
+        if (r.contains(localpos)) {
+            return *it;
+        }
+    }
+    return 0;
+}
+
+PortIcon* Module::port(int portnum, const std::string& model,
+                       const std::string& type, const std::string& name,
+                       PortIcon::PortType porttype)
+{
+    if (porttype == PortIcon::PROVIDES) {
+        QPoint  r = providesPortPoint(portnum);
+        return new PortIcon(this, model, type, name, PortIcon::PROVIDES,
+                            QRect(r.x(), r.y() - ph / 2, pw, ph),
+                            portnum, services);
+    } else { // uses  
+        QPoint r = usesPortPoint(portnum);
+        return new PortIcon(this, model, type, name, PortIcon::USES,
+                            QRect(r.x() - pw, r.y() - ph / 2, pw, ph),
+                            portnum, services);
+    }
+}
+
+void Module::timerEvent(QTimerEvent *e)
+{
+std::cerr << "Module::timerEvent" << std::endl;
+    progress->setProgress(steps++);
+    viewWindow->canvas()->update();
+    //viewWindow->p2BuilderWindow->application()->processEvents();
+    if (steps > progress->totalSteps()) {
+        killTimer(e->timerId());
+    }
 }
 
 void Module::go()
 {
-  string instanceName = cid->getInstanceName();
-  string goPortName = instanceName+" goPort";
-  sci::cca::Port::pointer p = services->getPort(goPortName);
-  sci::cca::ports::GoPort::pointer goPort = pidl_cast<sci::cca::ports::GoPort::pointer>(p);
-  if(goPort.isNull()){
-    cerr << "goPort is not connected, cannot bring up Go!\n";
-  } 
-  else{
-    int status=goPort->go();
-    if(status==0) 
-      progress->setProgress(100);
-    else 
-      progress->setProgress(0);
-    services->releasePort(goPortName);
-  }
+    progress->reset();
+
+    std::string instanceName = cid->getInstanceName();
+    std::string goPortName = instanceName + " goPort";
+    sci::cca::Port::pointer p = services->getPort(goPortName);
+    sci::cca::ports::GoPort::pointer goPort =
+        pidl_cast<sci::cca::ports::GoPort::pointer>(p);
+
+    if (goPort.isNull()) {
+        std::cerr << "goPort is not connected, cannot bring up Go!\n";
+    } else {
+        // exception handling?
+        int t = startTimer(0);
+        int status = goPort->go();
+        killTimers();
+        if (status == 0) {
+            if (progress->progress() < progress->totalSteps()) {
+                progress->setProgress(progress->totalSteps());
+                steps = 0;
+            }
+        } else {
+           //progress->setProgress(0);
+            steps = 0;
+        }
+        services->releasePort(goPortName);
+    }
 }
 
 void Module::stop()
 {
-  cerr<<"stop() not implemented"<<endl;	
+    viewWindow->p2BuilderWindow->displayMsg("stop() not implemented\n");
 }
 
 void Module::destroy()
 {
-  emit destroyModule(this);
+    emit destroyModule(this);
 }
 
 void Module::ui()
 {
-  string instanceName = cid->getInstanceName();
-  string uiPortName = instanceName+" uiPort";
+    progress->reset();
+    std::string instanceName = cid->getInstanceName();
+    std::string uiPortName = instanceName + " uiPort";
 
-  sci::cca::Port::pointer p = services->getPort(uiPortName);
-  sci::cca::ports::UIPort::pointer uiPort = pidl_cast<sci::cca::ports::UIPort::pointer>(p);
-  if(uiPort.isNull()){
-    cerr << "uiPort is not connected, cannot bring up UI!\n";
-  } 
-  else {
-    int status=uiPort->ui();
-
-    if(!hasGoPort){
-      if(status==0) 
-	progress->setProgress(100);
-      else 
-	progress->setProgress(0);
+    sci::cca::Port::pointer p = services->getPort(uiPortName);
+    sci::cca::ports::UIPort::pointer uiPort =
+        pidl_cast<sci::cca::ports::UIPort::pointer>(p);
+    if (uiPort.isNull()) {
+        viewWindow->p2BuilderWindow->displayMsg("uiPort is not connected, cannot bring up UI!\n");
+    } else {
+        int status = uiPort->ui();
+//         if (!hasGoPort) {
+//             if (status == 0) {
+//                 progress->setProgress(100);
+//             } else {
+//                 progress->setProgress(0);
+//             }
+//         }
+        services->releasePort(uiPortName);
     }
-    services->releasePort(uiPortName);
-  }
 }
+
+void Module::desc()
+{
+    QMessageBox::information(this, dName.c_str(), mDesc.c_str());
+}
+
