@@ -124,14 +124,23 @@ class NodeHedgehog : public Module {
   // getGrid -
   GridP getGrid();
 
+  // struct to pass into add_arrow
+  struct ArrowInfo {
+    double arrow_length_scale;
+    double minlen;
+    double maxlen;
+    bool have_sfield;
+    ScalarFieldInterface *sf_interface;
+    bool have_cmap;
+    ColorMapHandle cmap;
+  };
+  
   // GROUP: Private Function:
   //////////////////////
   // add_arrow -
-//    void add_arrow(Vector vv, FieldHandle ssfield,
-//  		 int have_sfield, ColorMapHandle cmap,
-//  		 double lenscale, double minlen, double maxlen,
-//  		 GeomArrows* arrows, Point p);
-
+  void add_arrow(Point &v_origin, Vector &vf_value, GeomArrows *arrows,
+		 ArrowInfo &info);
+		   
   GuiDouble length_scale;
   GuiDouble min_crop_length;
   GuiDouble max_crop_length;
@@ -420,6 +429,43 @@ NodeHedgehog::add_arrow(Vector vv, FieldHandle ssfield,
 }
 #endif
 
+void NodeHedgehog::add_arrow(Point &v_origin, Vector &vf_value,
+			     GeomArrows *arrows, ArrowInfo &info) {
+  //cout << "v_origin = "<<v_origin<<", vf_value = "<<vf_value<<endl;
+
+  // crop the vector based on it's length
+  // we only want to check against max_crop_length if it's greater than 0
+  double length = vf_value.length();
+  if (info.maxlen > 0)
+    if (length > info.maxlen)
+      return;
+  if (length < info.minlen)
+    return;
+
+  // Keep track of the vector with the maximun length and that length
+  if (length > max_length) {
+    max_length = length;
+    max_vector = vf_value;
+  }
+
+  MaterialHandle arrow_color;
+  if (info.have_cmap) {
+    if (info.have_sfield) {
+      // query the scalar field
+      double sf_value;
+      info.sf_interface->find_closest(sf_value, v_origin);
+      arrow_color = info.cmap->lookup( sf_value );
+    } else {
+      // grab a value from the color map
+      arrow_color = info.cmap->lookup( 0 );
+    }
+    arrows->add(v_origin, vf_value * info.arrow_length_scale,
+		arrow_color, arrow_color, arrow_color);
+  } else {
+    arrows->add(v_origin, vf_value * info.arrow_length_scale);
+  }
+}
+
 void NodeHedgehog::execute()
 {
   int old_grid_id = grid_id;
@@ -619,7 +665,14 @@ void NodeHedgehog::execute()
   LatVolMesh *mesh = fld->get_typed_mesh().get_rep();
   // Access length_scale once, because accessing a tcl variable can be
   // expensive if inside of a loop.
-  double arrow_length_scale = length_scale.get();
+  ArrowInfo info;
+  info.arrow_length_scale = length_scale.get();
+  info.minlen = min_crop_length.get();
+  info.maxlen = max_crop_length.get();
+  info.have_sfield = have_sfield;
+  info.sf_interface = sf_interface;
+  info.have_cmap = have_cmap;
+  info.cmap = cmap;
 #ifdef USE_HOG_THREADS
   // break up the volume into smaller pieces and then loop over each piece
 #else
@@ -633,22 +686,7 @@ void NodeHedgehog::execute()
       Point v_origin;
       mesh->get_center(v_origin, *iter);
       Vector vf_value = fld->value(*iter);
-      MaterialHandle arrow_color;
-      if (have_cmap) {
-	if (have_sfield) {
-	  // query the scalar field
-	  double sf_value;
-	  sf_interface->find_closest(sf_value, v_origin);
-	  arrow_color = cmap->lookup( sf_value );
-	} else {
-	  // grab a value from the color map
-	  arrow_color = cmap->lookup( 0 );
-	}
-	arrows->add(v_origin, vf_value * arrow_length_scale,
-		    arrow_color, arrow_color, arrow_color);
-      } else {
-	arrows->add(v_origin, vf_value * arrow_length_scale);
-      }
+      add_arrow(v_origin, vf_value, arrows, info);
     }
   } else if( fld->data_at() == Field::NODE) {
     // Now we need to loop over the data and extract the vector information
@@ -659,23 +697,7 @@ void NodeHedgehog::execute()
       Point v_origin;
       mesh->get_center(v_origin, *iter);
       Vector vf_value = fld->value(*iter);
-      cout << "v_origin = "<<v_origin<<", vf_value = "<<vf_value<<endl;
-      MaterialHandle arrow_color;
-      if (have_cmap) {
-	if (have_sfield) {
-	  // query the scalar field
-	  double sf_value;
-	  sf_interface->find_closest(sf_value, v_origin);
-	  arrow_color = cmap->lookup( sf_value );
-	} else {
-	  // grab a value from the color map
-	  arrow_color = cmap->lookup( 0 );
-	}
-	arrows->add(v_origin, vf_value * arrow_length_scale,
-		    arrow_color, arrow_color, arrow_color);
-      } else {
-	arrows->add(v_origin, vf_value * arrow_length_scale);
-      }
+      add_arrow(v_origin, vf_value, arrows, info);
     }
   }
 #endif // ifdef USE_HOG_THREADS
