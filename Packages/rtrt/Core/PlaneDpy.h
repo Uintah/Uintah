@@ -15,8 +15,9 @@ using SCIRun::Point;
 
 class PlaneDpy : public DpyBase {
 protected:
-  int starty;
+  int starty, startx;
   virtual void move(int x, int y);
+  virtual void offset(int x, int y);
   
   virtual void init();
   virtual void display();
