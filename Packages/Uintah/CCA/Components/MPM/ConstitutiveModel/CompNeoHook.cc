@@ -24,9 +24,6 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-#define IMPLICIT
-#undef IMPLICIT
-
 CompNeoHook::CompNeoHook(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
 {
   lb = Mlb;
@@ -500,12 +497,10 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 
 
      }
-     cout << "Putting pstress, defGrad, pvolume_deformed, bElBar" << endl;
      new_dw->put(pstress,                lb->pStressLabel_preReloc);
      new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc);
      new_dw->put(pvolume_deformed,       lb->pVolumeDeformedLabel);
      new_dw->put(bElBar_new,             lb->bElBarLabel_preReloc);
-     cout << "End of putting pstress, defGrad, pvolume_deformed, bElBar" << endl;
 
    }
  }

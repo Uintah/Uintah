@@ -12,7 +12,7 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
 	$(SRCDIR)/ThermalContact \
 	$(SRCDIR)/GeometrySpecification \
-	$(SRCDIR)/PhysicalBC \
+	$(SRCDIR)/PhysicalBC 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

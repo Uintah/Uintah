@@ -409,7 +409,7 @@ void ImpMPM::scheduleComputeInternalForceR(SchedulerP& sched,
   else
     t->requires(Task::NewDW,lb->pStressLabel,Ghost::AroundNodes,
 		1);
-  t->requires(Task::OldDW,lb->pVolumeDeformedLabel,Ghost::AroundNodes,1);
+  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,Ghost::AroundNodes,1);
   t->requires(Task::OldDW,lb->pXLabel,Ghost::AroundNodes,1);
   t->computes(lb->gInternalForceLabel);  
   
@@ -558,6 +558,7 @@ void ImpMPM::iterate(const ProcessorGroup* pg,
     }
   }
 
+  subsched->get_new_dw()->finalize();
   subsched->advanceDataWarehouse(grid);
 
   // Create the tasks
@@ -845,7 +846,7 @@ void ImpMPM::move_data(const ProcessorGroup*,
       old_dw->get(ext_force,lb->gExternalForceLabel,matlindex,patch,
 		  Ghost::None,0);
       old_dw->get(acc,lb->gAccelerationLabel,matlindex,patch,Ghost::None,0);
-      old_dw->get(dispInc,lb->dispIncLabel,matlindex,patch,Ghost::None,0);
+      //old_dw->get(dispInc,lb->dispIncLabel,matlindex,patch,Ghost::None,0);
       
       ParticleVariable<Point> newpx;
       ParticleVariable<double> newpvol;
@@ -1105,12 +1106,6 @@ void ImpMPM::scheduleCheckConvergenceR(SchedulerP& sched, const LevelP& level,
     t->computes(lb->converged);
   }
 
-#if 0
-  t->hasSubScheduler();
-  LoadBalancer* loadbal = sched->getLoadBalancer();
-  const PatchSet* perproc_patches = loadbal->createPerProcessorPatchSet(level, d_myworld);
- 
-#endif
   sched->addTask(t,patches,matls);
 
   
@@ -1902,7 +1897,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
 
     if (recursion) {
       old_dw->get(dispNew_old, lb->dispNewLabel,matlindex,patch,Ghost::None,0);
-      old_dw->get(dispInc, lb->dispIncLabel, matlindex,patch,Ghost::None,0);
+      new_dw->get(dispInc, lb->dispIncLabel, matlindex,patch,Ghost::None,0);
       new_dw->allocate(dispNew, lb->dispNewLabel, matlindex,patch);
       new_dw->allocate(velocity, lb->gVelocityLabel, matlindex,patch);
     }
@@ -1958,14 +1953,6 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
 			      const bool recursion)
 {
 
-#if 0
-  SchedulerP subsched = sched->createSubScheduler();
-  subsched->initialize();
-  GridP grid = level->getGrid();
-  subsched->advanceDataWarehouse(grid);
-
-#endif
-
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     IntVector nodes = patch->getNNodes();
@@ -1979,7 +1966,7 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
       
       constNCVariable<Vector> dispInc;
       if (recursion)
-	old_dw->get(dispInc,lb->dispIncLabel,matlindex,patch,Ghost::None,0);
+	new_dw->get(dispInc,lb->dispIncLabel,matlindex,patch,Ghost::None,0);
       else
 	new_dw->get(dispInc,lb->dispIncLabel,matlindex,patch,Ghost::None,0);
       double dispIncNorm = 0.;

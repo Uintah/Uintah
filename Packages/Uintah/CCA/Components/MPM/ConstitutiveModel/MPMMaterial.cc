@@ -33,9 +33,6 @@
 #include <Core/Util/NotFinished.h>
 #include <iostream>
 
-#define IMPLICIT
-#undef IMPLICIT
-
 #define d_TINY_RHO 1.0e-100// also defined  ICE.cc and ICEMaterial.cc 
 
 using namespace std;
