@@ -2,7 +2,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/GUVMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -300,10 +299,10 @@ ShellMPM::schedParticleNormalRotRateUpdate(SchedulerP& sched,
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     ShellMaterial* smcm = dynamic_cast<ShellMaterial*>(cm);
     if (smcm) {
-      GUVMaterial* guv = dynamic_cast<GUVMaterial*>(cm);
-      if (guv)
-        guv->addComputesRequiresRotRateUpdate(t, mpm_matl, patches);
-      else
+      //GUVMaterial* guv = dynamic_cast<GUVMaterial*>(cm);
+      //if (guv)
+      //  guv->addComputesRequiresRotRateUpdate(t, mpm_matl, patches);
+      //else
         smcm->addComputesRequiresRotRateUpdate(t, mpm_matl, patches);
     }
   }
@@ -328,10 +327,10 @@ ShellMPM::particleNormalRotRateUpdate(const ProcessorGroup*,
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     ShellMaterial* smcm = dynamic_cast<ShellMaterial*>(cm);
     if (smcm) {
-      GUVMaterial* guv = dynamic_cast<GUVMaterial*>(cm);
-      if (guv)
-        guv->particleNormalRotRateUpdate(patches, mpm_matl, old_dw, new_dw);
-      else
+      //GUVMaterial* guv = dynamic_cast<GUVMaterial*>(cm);
+      //if (guv)
+      //  guv->particleNormalRotRateUpdate(patches, mpm_matl, old_dw, new_dw);
+      //else
         smcm->particleNormalRotRateUpdate(patches, mpm_matl, old_dw, new_dw);
     }
   } 
