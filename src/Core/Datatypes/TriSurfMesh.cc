@@ -79,24 +79,18 @@ void TriSurfMesh::get_random_point(Point &p, const Face::index_type &ei,
   get_point(p2,ra[2]);
 
   // generate the barrycentric coordinates
-  double t,u,v;
+  double u,v;
   if (seed) {
     MusilRNG rng1(seed);
-    t = rng1(); 
     u = rng1(); 
-    v = rng1();
+    v = rng1()*(1.-u);
   } else {
-    t = rng(); 
     u = rng(); 
-    v = rng();
+    v = rng()*(1.-u);
   }
-  double sum = t+u+v;
-  t/=sum;
-  u/=sum;
-  v/=sum;
 
   // compute the position of the random point
-  p = (p0.vector()*t+p1.vector()*u+p2.vector()*v).point();
+  p = p0+((p1-p0)*u)+((p2-p0)*v);
 }
 
 
