@@ -17,7 +17,6 @@ SRCS     += \
 	$(SRCDIR)/DiscreteGaussianImageFilter.cc\
 	$(SRCDIR)/GradientAnisotropicDiffusionImageFilter.cc\
 	$(SRCDIR)/GradientMagnitudeImageFilter.cc\
-	$(SRCDIR)/WatershedImageFilter.cc\
 	$(SRCDIR)/CannySegmentationLevelSetImageFilter.cc\
 	$(SRCDIR)/WatershedSegmenter.cc\
 	$(SRCDIR)/WatershedSegmentTreeGenerator.cc\
