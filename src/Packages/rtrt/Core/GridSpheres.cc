@@ -1418,7 +1418,7 @@ void GridSpheres::shade(Color& result, const Ray& ray,
   }
   
   Color surface = surface_color(hit);
-  phongshade(result, surface, surface, 40, 0,
+  phongshade(result, surface, Color(1,1,1), 20, 0,
              ray, hit, depth, atten, accumcolor, cx);
 }
 
