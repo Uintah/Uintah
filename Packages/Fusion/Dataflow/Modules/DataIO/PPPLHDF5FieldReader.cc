@@ -108,7 +108,7 @@ PPPLHDF5FieldReader::~PPPLHDF5FieldReader() {
 
 void PPPLHDF5FieldReader::execute() {
 
-#ifdef HDF5
+#ifdef HAVE_HDF5
   bool updateAll  = false;
   bool updateFile = false;
 
@@ -440,7 +440,7 @@ void PPPLHDF5FieldReader::execute() {
       return;
     }
 
-    const TypeDescription *ftd = pHandle_->get_type_description(0);
+    const TypeDescription *ftd = pHandle_->get_type_description();
     const TypeDescription *ttd = pHandle_->get_type_description(1);
 
     CompileInfoHandle ci = PPPLHDF5FieldReaderAlgo::get_compile_info(ftd, ttd);
