@@ -55,9 +55,9 @@ Module* make_ViewHist(const clString& id)
 {
    return scinew ViewHist(id);
 }
-};
+}
 
-static clString module_name("ViewHist");
+//static clString module_name("ViewHist");
 
 ViewHist::ViewHist(const clString& id)
 : Module("ViewHist", id, Filter)

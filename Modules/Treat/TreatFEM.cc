@@ -47,7 +47,7 @@ Module* make_TreatFEM(const clString& id)
 {
     return new TreatFEM(id);
 }
-};
+}
 
 TreatFEM::TreatFEM(const clString& id)
 : Module("TreatFEM", id, Filter)
@@ -105,7 +105,7 @@ void TreatFEM::execute()
   Array1<Element*> elementList;
   Property propertyList;
   ofstream fout;
-  int i,j,solve,ss, maxit, num_time_steps, iteration_total, writeEvery;
+  int i,ss, num_time_steps, iteration_total, writeEvery;
   double eps,residual,current_residual;
   char str[20];
   
@@ -190,7 +190,7 @@ void TreatFEM::execute()
   SparseMatrix globalSystem(nodeList, elementList, propertyList);
     
   eps =  propertyList.getEPS();
-  maxit = nodeList.size();
+  //maxit = nodeList.size();
   num_time_steps = propertyList.getTimeSteps();
   iteration_total = 0;
   ss = propertyList.getSS();
@@ -349,7 +349,7 @@ int MatrixAdapter::ncols() const {
 }
 
 
-void MatrixAdapter::getRowNonzeros(int r, Array1<int>& idx, Array1<double>& v) {
+void MatrixAdapter::getRowNonzeros(int, Array1<int>&, Array1<double>&) {
     NOT_FINISHED("MatrixAdapter::getRowNonzeros");
 }
 
@@ -364,14 +364,16 @@ double MatrixAdapter::maxValue() {
 }
 
 void MatrixAdapter::mult(const ColumnMatrix& x, ColumnMatrix& b,
-			 int& flops, int& memrefs, int beg, int end) const {
+			 int&, int&, int, int) const
+{
     double* xx=x.get_rhs();
     double* bb=b.get_rhs();
     mat->mult(xx, bb);
 }
 
-void MatrixAdapter::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
-				   int& flops, int& memrefs, int beg, int end) {
+void MatrixAdapter::mult_transpose(const ColumnMatrix&, ColumnMatrix&,
+				   int&, int&, int, int)
+{
     NOT_FINISHED("MatrixAdapter::mult_transpose");
 }
 
@@ -387,7 +389,7 @@ bool SparseMatrix::solveSCIRun(TreatFEM* module) {
 // rrhs is the right hand side
 // n is the size of the matrix [nxn]
 
-  int n = numberRDOF;
+    //int n = numberRDOF;
 
   //solves for the initial residual vector
   

@@ -52,7 +52,7 @@ Module* make_FieldCage(const clString& id)
 {
     return new FieldCage(id);
 }
-};
+}
 
 FieldCage::FieldCage(const clString& id)
 : Module("FieldCage", id, Filter), numx("numx", id, this), numy("numy", id, this), numz("numz", id, this)

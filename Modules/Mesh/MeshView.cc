@@ -155,7 +155,7 @@ Module* make_MeshView(const clString& id)
 {
     return new MeshView(id);
 }
-};
+}
 
 static clString mesh_name("Mesh");
 static clString widget_name("Crosshair Widget");
@@ -529,18 +529,18 @@ void MeshView::doChecks(const MeshHandle& mesh, const ColorMapHandle& cmap)
  * quantitative measures and manipulative techniques.
  */
 void MeshView::getElements(const MeshHandle& mesh, 
-			   const ColorMapHandle& genColors)
+			   const ColorMapHandle&)
 {
-    int numTetra = mesh -> elems.size();
-    int nL = numLevels.get();
-    int aL = allLevels.get();
-    HashTable<Edge, int> edge_table;
+    //int numTetra = mesh -> elems.size();
+    //int nL = numLevels.get();
+    //int aL = allLevels.get();
+    //HashTable<Edge, int> edge_table;
 
     if (tech.get() == 1 || (tech.get() == 2 && lastTech == 1))
     {
 	// If we're looking at quantitative measures, get the apppropriate
 	// elements
-	int numGroups = getMeas(mesh, genColors);
+	//int numGroups = getMeas(mesh, genColors);
 
 	// Turn the regular group off and the measures on
 	regSwitch -> set_state(0);
@@ -642,14 +642,14 @@ void MeshView::makeLevels(const MeshHandle& mesh)
 void MeshView::getTetra(const MeshHandle& mesh)
 {
     int numTetra = mesh -> elems.size();
-    int numGroups, nL = numLevels.get(), aL = allLevels.get();
+    //int numGroups, nL = numLevels.get(), aL = allLevels.get();
     int i, j;
 
     // First have to remove all elements that were previously shown.
     regGroup -> remove_all();
     tetra.remove_all();
 
-    numGroups = setToDraw(mesh);
+    int numGroups = setToDraw(mesh);
 
     // Switch to see if we're displaying elements in production mode or
     // normal mode.
@@ -992,7 +992,7 @@ void MeshView::calcMeasures(const MeshHandle& mesh, double *min, double *max)
  */
 int MeshView::getMeas(const MeshHandle& mesh, const ColorMapHandle& genColors)
 {
-    GeomGroup *gr = new GeomGroup;
+    //GeomGroup *gr = new GeomGroup;
     int e = elmMeas.get();
     HashTable<Edge, int> edge_table;
     double min, max;

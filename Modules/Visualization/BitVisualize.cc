@@ -88,6 +88,7 @@ public:
 #define FACE4 1
 #define ALLFACES (FACE1|FACE2|FACE3|FACE4)
 
+#if 0
 struct MCubeTable {
     int which_case;
     int permute[8];
@@ -95,13 +96,14 @@ struct MCubeTable {
 };
 
 #include "mcube.h"
+#endif
 
 extern "C" {
 Module* make_BitVisualize(const clString& id)
 {
     return scinew BitVisualize(id);
 }
-};
+}
 
 BitVisualize::BitVisualize(const clString& id)
 : Module("BitVisualize", id, Filter)

@@ -55,9 +55,9 @@ Module* make_Noise(const clString& id)
 {
    return scinew Noise(id);
 }
-};
+}
 
-static clString module_name("Noise");
+//static clString module_name("Noise");
 
 Noise::Noise(const clString& id)
 : Module("Noise", id, Filter), funcname("funcname",id,this)

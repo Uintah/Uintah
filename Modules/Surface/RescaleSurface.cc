@@ -47,9 +47,9 @@ Module* make_RescaleSurface(const clString& id)
 {
     return new RescaleSurface(id);
 }
-};
+}
 
-static clString module_name("RescaleSurface");
+//static clString module_name("RescaleSurface");
 
 RescaleSurface::RescaleSurface(const clString& id)
 : Module("RescaleSurface", id, Filter),

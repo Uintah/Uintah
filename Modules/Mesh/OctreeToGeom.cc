@@ -44,7 +44,7 @@ Module* make_OctreeToGeom(const clString& id)
 {
     return scinew OctreeToGeom(id);
 }
-};
+}
 
 OctreeToGeom::OctreeToGeom(const clString& id)
 : Module("OctreeToGeom", id, Filter)

@@ -15,7 +15,7 @@ int readData(Array1<Node*> &nodeList, Array1<Element*> &elementList,
 // returns 0 on error
 
   double val[8];
-  unsigned long dum;
+  int dum;
   int valint[8];
   ifstream fin;
   int i,j;
@@ -59,7 +59,7 @@ int readData(Array1<Node*> &nodeList, Array1<Element*> &elementList,
     cout << "Unable to open NODES for reading.\n";
     return(0);
   }
-  while(1) { 
+  for(;;) { 
     fin >> dum >> val[0] >> val[1] >> val[2];
     if (fin.eof()) break;
     nodeList.add(new Node); // add this Node to the linked list "node"
@@ -67,7 +67,7 @@ int readData(Array1<Node*> &nodeList, Array1<Element*> &elementList,
   fin.close();
   fin.open("NODES");
   i=0;
-  while(1) {
+  for(;;) {
     fin >> dum >> val[0] >> val[1] >> val[2];
     if (fin.eof()) break;
     nodeList[i]->setNum(dum-1);
@@ -141,7 +141,7 @@ int readData(Array1<Node*> &nodeList, Array1<Element*> &elementList,
     return(0);
   }
   i=0;
-  while(1) {
+  for(;;) {
     fin >> dum >> valint[0] >> val[0];
     if (fin.eof()) break;
     if (dum > nodeList.size() ) {
@@ -178,7 +178,7 @@ int readData(Array1<Node*> &nodeList, Array1<Element*> &elementList,
     cout << "Unable to open ELEMS for reading.\n";
     return(0);
   }
-  while(1) {
+  for(;;) {
     fin >> dum >> valint[0] >> valint[1] >> valint[2] >> valint[3] >>
       valint[4] >> valint[5] >> valint[6] >> valint[7];
     if (fin.eof()) break;
@@ -187,7 +187,7 @@ int readData(Array1<Node*> &nodeList, Array1<Element*> &elementList,
   fin.close();
   fin.open("ELEMS");
   i=0;
-  while(1) {
+  for(;;) {
     fin >> dum >> valint[0] >> valint[1] >> valint[2] >> valint[3] >>
       valint[4] >> valint[5] >> valint[6] >> valint[7];
     if (fin.eof()) break;

@@ -50,9 +50,9 @@ extern "C" {
     {
       return scinew ImageViewer(id);
     }
-};
+}
 
-static clString module_name("ImageViewer");
+//static clString module_name("ImageViewer");
 
 ImageViewer::ImageViewer(const clString& id)
 : Module("ImageViewer", id, Filter)

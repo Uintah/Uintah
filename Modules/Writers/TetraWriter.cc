@@ -37,7 +37,7 @@ Module* make_TetraWriter(const clString& id)
 {
     return new TetraWriter(id);
 }
-};
+}
 
 TetraWriter::TetraWriter(const clString& id)
 : Module("TetraWriter", id, Source), filename("filename", id, this)
@@ -62,11 +62,13 @@ Module* TetraWriter::clone(int deep)
     return new TetraWriter(*this, deep);
 }
 
+#if 0
 static void watcher(double pd, void* cbdata)
 {
     TetraWriter* writer=(TetraWriter*)cbdata;
     writer->update_progress(pd);
 }
+#endif
 
 void TetraWriter::execute()
 {

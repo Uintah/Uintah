@@ -36,7 +36,7 @@ Module* make_TYPEWriter(const clString& id)
 {
     return scinew TYPEWriter(id);
 }
-};
+}
 
 TYPEWriter::TYPEWriter(const clString& id)
 : Module("TYPEWriter", id, Source), filename("filename", id, this),
@@ -63,11 +63,13 @@ Module* TYPEWriter::clone(int deep)
     return scinew TYPEWriter(*this, deep);
 }
 
+#if 0
 static void watcher(double pd, void* cbdata)
 {
     TYPEWriter* writer=(TYPEWriter*)cbdata;
     writer->update_progress(pd);
 }
+#endif
 
 void TYPEWriter::execute()
 {

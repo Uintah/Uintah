@@ -40,7 +40,7 @@ Module* make_SelectMesh(const clString& id)
 {
     return scinew SelectMesh(id);
 }
-};
+}
 
 SelectMesh::SelectMesh(const clString& id)
 : Module("SelectMesh", id, Filter), 

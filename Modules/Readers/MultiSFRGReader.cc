@@ -39,7 +39,7 @@ extern "C" {
     {
       return scinew MultiSFRGReader(id);
     }
-};
+}
 
 MultiSFRGReader::MultiSFRGReader(const clString& id)
 : Module("MultiSFRGReader", id, Source), filename("filename", id, this)

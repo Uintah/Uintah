@@ -49,7 +49,7 @@ Module* make_SegFldOps(const clString& id)
 {
     return new SegFldOps(id);
 }
-};
+}
 
 SegFldOps::SegFldOps(const clString& id)
 : Module("SegFldOps", id, Filter), itype("itype", id, this), 
@@ -148,7 +148,7 @@ void SegFldOps::execute()
 	oscl->send(sfh);
 	ScalarFieldRG* sf=segFldHandle->getBitFld();
 	ScalarFieldHandle s(sf);
-	obit->send(sf);
+	obit->send(s);
     }
 }
 

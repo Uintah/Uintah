@@ -71,9 +71,9 @@ Module* make_Edge(const clString& id)
 {
    return scinew Edge(id);
 }
-};
+}
 
-static clString module_name("Edge");
+//static clString module_name("Edge");
 
 Edge::Edge(const clString& id)
 : Module("Edge", id, Filter), funcname("funcname",id,this),
@@ -373,11 +373,12 @@ void Edge::execute()
       thresh=t1.get();
       thresh2=thresh*2;
 
+      /*
       int nx=blur->grid.dim1();
       int ny=blur->grid.dim2();
       int nz=blur->grid.dim3();
       
-/*      if (genblur!=blur->generation) {
+      if (genblur!=blur->generation) {
 	newgrid=new ScalarFieldRG;
 	orient=new ScalarFieldRG;
 	d1 = new ScalarFieldRG;

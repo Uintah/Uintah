@@ -51,9 +51,9 @@ Module* make_ImageConvolve(const clString& id)
 {
    return scinew ImageConvolve(id);
 }
-};
+}
 
-static clString module_name("ImageConvolve");
+//static clString module_name("ImageConvolve");
 
 ImageConvolve::ImageConvolve(const clString& id)
 : Module("ImageConvolve", id, Filter)

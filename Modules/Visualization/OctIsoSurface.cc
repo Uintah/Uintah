@@ -82,10 +82,10 @@ Module* make_OctIsoSurface(const clString& id)
 {
     return scinew OctIsoSurface(id);
 }
-};
+}
 
-static clString widget_name("OctIsoSurface Widget");
-static clString surface_name("OctIsoSurface");
+//static clString widget_name("OctIsoSurface Widget");
+//static clString surface_name("OctIsoSurface");
 
 OctIsoSurface::OctIsoSurface(const clString& id)
 : Module("OctIsoSurface", id, Filter), isoval("isoval", id, this),

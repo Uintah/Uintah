@@ -40,7 +40,7 @@ Module* make_ImageReader(const clString& id)
 {
     return scinew ImageReader(id);
 }
-};
+}
 
 ImageReader::ImageReader(const clString& id)
 : Module("ImageReader", id, Source), filename("filename", id, this)

@@ -32,7 +32,7 @@ Module* make_FilterImage(const clString& id)
 {
     return scinew FilterImage(id);
 }
-};
+}
 
 FilterImage::FilterImage(const clString& id)
 : Module("FilterImage", id, Filter)

@@ -41,7 +41,7 @@ Module* make_MeshRefiner(const clString& id)
 {
     return new MeshRefiner(id);
 }
-};
+}
 
 MeshRefiner::MeshRefiner(const clString& id)
 : Module("MeshRefiner", id, Filter)
@@ -107,7 +107,7 @@ void MeshRefiner::execute()
     }
 
     MeshHandle mesh(upfug->mesh);
-    double* low=&lowfug->data[0];
+    //double* low=&lowfug->data[0];
     double* up=&upfug->data[0];
     double upper_bound=interval->high;
     Array1<Point> new_points;

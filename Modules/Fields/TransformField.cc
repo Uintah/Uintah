@@ -59,7 +59,7 @@ Module* make_TransformField(const clString& id)
 {
     return scinew TransformField(id);
 }
-};
+}
 
 TransformField::TransformField(const clString& id)
 : Module("TransformField", id, Source), tcl_execute(0),

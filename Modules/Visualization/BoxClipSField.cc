@@ -65,7 +65,7 @@ Module* make_BoxClipSField(const clString& id)
 {
     return new BoxClipSField(id);
 }
-};
+}
 
 static clString module_name("BoxClipSField");
 
@@ -172,14 +172,14 @@ void BoxClipSField::execute()
 }
 
 ScalarField* BoxClipSField::UGtoUG(const Point &minPt, const Point &maxPt,
-				   const Vector &u, const Vector &v, 
-				   const Vector &w, ScalarFieldUG *sfug, 
+				   const Vector &/*u*/, const Vector &/*v*/, 
+				   const Vector &/*w*/, ScalarFieldUG *sfug, 
 				   int isAlligned) {
     ScalarFieldUG* sf = scinew ScalarFieldUG(ScalarFieldUG::NodalValues);
     MeshHandle m=sfug->mesh;
     Array1<int> in_nodes(m->nodes.size());
     Array1<int> in_elements(m->elems.size());
-    Array1<int> new_nodes;
+    //Array1<int> new_nodes;
     if (isAlligned) {
 	for (int i=0; i<m->nodes.size(); i++) {
 	    Point p=m->nodes[i]->p;
@@ -268,7 +268,8 @@ ScalarField* BoxClipSField::UGtoUG(const Point &minPt, const Point &maxPt,
     return sf;
 }
 
-ScalarField* BoxClipSField::RGtoRG_Alligned(int u_num, int v_num, int w_num,
+ScalarField* BoxClipSField::RGtoRG_Alligned(int /*u_num*/, int /*v_num*/,
+					    int /*w_num*/,
 					    const Point &minPt, 
 					    const Point &maxPt,
 					    ScalarFieldRG* sfrg) {
@@ -320,12 +321,13 @@ cerr << "Field is: "<<sfrg->grid.dim1()<<" x "<<sfrg->grid.dim2()<<" x "<<sfrg->
     return sf;
 }
 
-ScalarField* BoxClipSField::RGtoRG_Unalligned(int u_num, int v_num, 
-					      int w_num, const Point &minPt, 
-					      const Vector &u, 
-					      const Vector &v,
-					      const Vector &w, 
-					      ScalarFieldRG* sfrg) {
+ScalarField* BoxClipSField::RGtoRG_Unalligned(int /*u_num*/, int /*v_num*/, 
+					      int /*w_num*/,
+					      const Point &/*minPt*/, 
+					      const Vector &/*u*/, 
+					      const Vector &/*v*/,
+					      const Vector &/*w*/, 
+					      ScalarFieldRG* /*sfrg*/) {
     ScalarFieldRG *sf = scinew ScalarFieldRG;
     NOT_FINISHED("BoxClipSField::RGtoRG_unalligned");
     free(sf);

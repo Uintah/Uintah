@@ -42,7 +42,7 @@ Module* make_MMeshToSFUG(const clString& id)
 {
     return new MMeshToSFUG(id);
 }
-};
+}
 
 MMeshToSFUG::MMeshToSFUG(const clString& id)
 : Module("MMeshToSFUG", id, Filter), 

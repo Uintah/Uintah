@@ -44,7 +44,7 @@ Module* make_TiffReader(const clString& id)
 {
     return scinew TiffReader(id);
 }
-};
+}
 
 TiffReader::TiffReader(const clString& id)
 : Module("TiffReader", id, Source), filename("filename", id, this)
@@ -113,7 +113,7 @@ void TiffReader::execute()
 	  for (row = 0; row < imagelength; row++){
 	    TIFFReadScanline(tif, buf16, row, 0);
 	    for (x=0; x<(xdim*spp); x+=spp)   // hack to force 8bit but still get something 
-	      sf->grid(imagelength-1-row,x / spp,0) = buf16[x];  
+	      sf->grid((int)(imagelength-1-row),x / spp,0) = buf16[x];
 	  }
 	  
 	} else
@@ -124,16 +124,16 @@ void TiffReader::execute()
 	    for (row = 0; row < imagelength; row++){
 	      TIFFReadScanline(tif, buf, row, 0);
 	      for (x=0; x<(xdim); x++)   
-		sf->grid(imagelength-row-1,x,0) = buf[x];   // x / spp, row
+		  sf->grid((int)(imagelength-row-1),x,0) = buf[x];   // x / spp, row
 	    }
 	  }
 	  if (spp==3) {  //Let's try RGB
 	    for (row = 0; row < imagelength; row++){
 	      TIFFReadScanline(tif, buf, row, 0);
 	      for (x=0; x<(xdim*3); x+=3) {
-		sf->grid(imagelength-row-1,x/3,0) = buf[x];
-	        sf->grid(imagelength-row-1,x/3,1) = buf[x+1];
-	        sf->grid(imagelength-row-1,x/3,2) = buf[x+2];
+		  sf->grid((int)(imagelength-row-1),x/3,0) = buf[x];
+		  sf->grid((int)(imagelength-row-1),x/3,1) = buf[x+1];
+		  sf->grid((int)(imagelength-row-1),x/3,2) = buf[x+2];
 	      }
 	    }
 	  }

@@ -49,7 +49,7 @@ Module* make_PartToGeom(const clString& id)
 {
     return scinew PartToGeom(id);
 }
-};
+}
 
 PartToGeom::PartToGeom(const clString& id)
 : Module("PartToGeom", id, Filter), current_time("current_time", id, this),
@@ -93,7 +93,7 @@ void PartToGeom::execute()
 	return;
     }
 
-    double time=current_time.get();
+    //double time=current_time.get();
     Array1<double> timesteps;
     part->list_natural_times(timesteps);
     if(timesteps.size()==0){

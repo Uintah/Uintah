@@ -64,7 +64,7 @@ Module* make_BuildFEMatrix(const clString& id)
 {
     return scinew BuildFEMatrix(id);
 }
-};
+}
 
 
 BuildFEMatrix::BuildFEMatrix(const clString& id)

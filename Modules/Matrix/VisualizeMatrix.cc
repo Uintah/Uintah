@@ -107,7 +107,7 @@ Module* make_VisualizeMatrix(const clString& id)
 {
     return scinew VisualizeMatrix(id);
 }
-};
+}
 
 VisualizeMatrix::VisualizeMatrix(const clString& id)
 : Module("VisualizeMatrix", id, Source), numMatrices("numMatrices", id, this),

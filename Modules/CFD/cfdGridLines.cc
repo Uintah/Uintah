@@ -56,7 +56,7 @@ Module* make_cfdGridLines(const clString& id)
 {
   return new cfdGridLines(id);
 }
-};
+}
 
 cfdGridLines::cfdGridLines(const clString& id)
   : Module("cfdGridLines", id, Filter), rad("rad", id, this),

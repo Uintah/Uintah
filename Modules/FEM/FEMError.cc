@@ -47,7 +47,7 @@ Module* make_FEMError(const clString& id)
 {
     return new FEMError(id);
 }
-};
+}
 
 static void do_parallel(void* obj, int proc)
 {
@@ -177,7 +177,7 @@ void FEMError::execute()
 	return;
     }
     mesh=sfield->mesh.get_rep();
-    int nnodes=mesh->nodes.size();
+    //int nnodes=mesh->nodes.size();
     int nelems=mesh->elems.size();
     upf=scinew ScalarFieldUG(ScalarFieldUG::ElementValues);
     upf->mesh=mesh;

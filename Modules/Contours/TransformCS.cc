@@ -45,7 +45,7 @@ Module* make_TransformCS(const clString& id)
 {
     return new TransformCS(id);
 }
-};
+}
 
 TransformCS::TransformCS(const clString& id)
 : Module("TransformCS", id, Filter)

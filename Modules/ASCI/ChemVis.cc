@@ -73,7 +73,7 @@ Module* make_ChemVis(const clString& id)
 {
     return scinew ChemVis(id);
 }
-};
+}
 
 ChemVis::ChemVis(const clString& id)
 : Module("ChemVis", id, Filter), current_time("current_time", id, this),

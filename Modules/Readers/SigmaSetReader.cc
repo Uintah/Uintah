@@ -37,7 +37,7 @@ Module* make_SigmaSetReader(const clString& id)
 {
     return scinew SigmaSetReader(id);
 }
-};
+}
 
 SigmaSetReader::SigmaSetReader(const clString& id)
 : Module("SigmaSetReader", id, Source), filename("filename", id, this)

@@ -52,10 +52,10 @@ Module* make_Threshold(const clString& id)
 {
    return scinew Threshold(id);
 }
-};
+}
 
-static clString module_name("Threshold");
-static clString widget_name("Threshold Widget");
+//static clString module_name("Threshold");
+//static clString widget_name("Threshold Widget");
 
 Threshold::Threshold(const clString& id)
 : Module("Threshold", id, Filter),

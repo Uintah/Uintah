@@ -71,7 +71,7 @@ Module* make_Hedgehog(const clString& id)
 {
    return scinew Hedgehog(id);
 }
-};
+}
 
 static clString module_name("Hedgehog");
 static clString widget_name("Hedgehog Widget");

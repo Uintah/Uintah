@@ -43,7 +43,7 @@ extern "C" {
     {
       return scinew DukeRawReader(id);
     }
-};
+}
 
 DukeRawReader::DukeRawReader(const clString& id)
 : Module("DukeRawReader", id, Source), filename("filename", id, this)

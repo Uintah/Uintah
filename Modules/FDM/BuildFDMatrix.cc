@@ -60,7 +60,7 @@ Module* make_BuildFDMatrix(const clString& id)
 {
     return scinew BuildFDMatrix(id);
 }
-};
+}
 
 BuildFDMatrix::BuildFDMatrix(const clString& id)
 : Module("BuildFDMatrix", id, Filter)

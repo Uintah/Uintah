@@ -31,7 +31,7 @@ Module* make_GenerateMesh(const clString& id)
 {
     return scinew GenerateMesh(id);
 }
-};
+}
 
 GenerateMesh::GenerateMesh(const clString& id)
 : Module("GenerateMesh", id, Filter)

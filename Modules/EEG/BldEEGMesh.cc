@@ -91,7 +91,7 @@ Module* make_BldEEGMesh(const clString& id)
 {
     return new BldEEGMesh(id);
 }
-};
+}
 
 BldEEGMesh::BldEEGMesh(const clString& id)
 : Module("BldEEGMesh", id, Filter)
@@ -246,7 +246,7 @@ void BldEEGMesh::genPts(SegFldHandle sf, SurfTree *st, int num,
     mesh->nodes.resize(0);
     sf->audit();
     sf->printComponents();
-    Array1<Point> pts;
+    //Array1<Point> pts;
     BBox bb;
     for (int iii=0; iii<st->points.size(); iii++)
 	bb.extend(st->points[iii]);
@@ -334,7 +334,7 @@ void BldEEGMesh::classifyElements(SegFldHandle sf, Mesh *m, SurfTree* st,
 				  int greyMatlIdx, int whiteMatlIdx) {
     Array1<int> popularity(7);
     Array1<Point> samples(10);
-    Point v0, v1, v2, v3;
+    //Point v0, v1, v2, v3;
     int ci, cj, ck;
     cerr << "These are the components(materials) interior to "<<greyMatlIdx<<"(4): ";
     for (int i=0; i<st->inner[greyMatlIdx].size(); i++) {

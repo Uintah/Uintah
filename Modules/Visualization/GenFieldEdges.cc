@@ -41,7 +41,7 @@ Module* make_GenFieldEdges(const clString& id)
 {
     return new GenFieldEdges(id);
 }
-};
+}
 
 GenFieldEdges::GenFieldEdges(const clString& id)
 : Module("GenFieldEdges", id, Filter)

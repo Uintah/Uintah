@@ -90,14 +90,14 @@ public:
   void DoDown(int win, int x, int y, int button);
   void DoRelease(int win, int x, int y, int button);
 
-  float GetTime(int x, int y) 
+  float GetTime(int x, int) 
     { 
       float v = x/(1.0*winX[whichWin]);
       if (v > 1.0) v = 1.0;	
       if (v < 0.0) v = 0.0;
       return v;
     }
-  float GetVal(int x, int y)  
+  float GetVal(int, int y)
     { 
       float v= (winY[whichWin]-y)/(1.0*winY[whichWin]); 
       if (v > 1.0) v = 1.0;	
@@ -126,7 +126,7 @@ extern "C" {
       return scinew GenTransferFunc(id);
     }
 
-};
+}
 
 GenTransferFunc::GenTransferFunc( const clString& id)
 :Module("GenTransferFunc",id,Source),
@@ -537,7 +537,7 @@ GetClosest(float time, float val, int& cline, int& cpoint)
 
 // button must be down
 
-void GenTransferFunc::DoMotion(int win, int x, int y)
+void GenTransferFunc::DoMotion(int, int x, int y)
 {
   if ((selNode == -1) || (activeLine == -1))  // this shouldn't happen!
     return;

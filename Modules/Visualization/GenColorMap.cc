@@ -174,7 +174,7 @@ Module* make_GenColorMap( const clString& id )
 {
     return scinew GenColorMap(id);
 }
-};
+}
 
 GenColorMap::GenColorMap( const clString& id )
 : Module("GenColorMap", id, Source),

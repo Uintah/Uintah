@@ -81,9 +81,9 @@ Module* make_Subsample(const clString& id)
 {
    return scinew Subsample(id);
 }
-};
+}
 
-static clString module_name("Subsample");
+//static clString module_name("Subsample");
 
 Subsample::Subsample(const clString& id)
 : Module("Subsample", id, Filter),  funcname("funcname",id,this)

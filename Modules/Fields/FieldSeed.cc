@@ -94,7 +94,7 @@ extern "C" {
     {
       return scinew FieldSeed(id);
     }
-};
+}
 
 FieldSeed::FieldSeed(const clString& id)
 :Module("FieldSeed", id, Filter),widget(0),num_samps("num_samps",id,this),
@@ -134,7 +134,7 @@ FieldSeed::~FieldSeed()
   // does anything need to be deleted?
 }
 
-Module* FieldSeed::clone(int deep)
+Module* FieldSeed::clone(int)
 {
   return 0; // NOT DONE
 }
@@ -538,7 +538,7 @@ void FieldSeed::Visualize(int which, int onoff)
       double min=1111111,max=-1;
 
       for(int i=0;i<osf->samples.size();i++) {
-	Vector oldv;
+	  //Vector oldv;
 
 	ovf->interpolate(osf->samples[i].loc,vecs[i],cache);
 	mags[i] = vecs[i].length();

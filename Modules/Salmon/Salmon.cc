@@ -31,7 +31,7 @@ Module* make_Salmon(const clString& id)
 {
     return scinew Salmon(id);
 }
-};
+}
 
 Salmon::Salmon(const clString& id)
 : Module("Salmon", id, SalmonSpecial), max_portno(0)
@@ -80,7 +80,7 @@ Module* Salmon::clone(int deep)
 
 void Salmon::do_execute()
 {
-    while(1){
+    for(;;){
 	if(mailbox.nitems() == 0){
 	    // See if anything needs to be redrawn...
 	    int did_some=1;

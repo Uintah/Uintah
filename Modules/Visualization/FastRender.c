@@ -15,7 +15,8 @@
 void
 BasicVolRender( double stepx, double stepy, double stepz, double rayStep,
 	       double begx, double begy, double begz,
-	       double *SVOpacity, double *SVR, double *SVG, double *SVB,
+	       double *SVOpacity, double * SVR,
+	       double * SVG, double * SVB,
 	       double SVmin, double SVMultiplier,
 	       double boxx, double boxy, double boxz,
 	       double ***grid,

@@ -37,7 +37,7 @@ Module* make_TYPEReader(const clString& id)
 {
     return scinew TYPEReader(id);
 }
-};
+}
 
 TYPEReader::TYPEReader(const clString& id)
 : Module("TYPEReader", id, Source), filename("filename", id, this)

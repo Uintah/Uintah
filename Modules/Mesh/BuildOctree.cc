@@ -56,7 +56,7 @@ Module* make_BuildOctree(const clString& id)
 {
     return scinew BuildOctree(id);
 }
-};
+}
 
 BuildOctree::BuildOctree(const clString& id)
 : Module("BuildOctree", id, Filter), same_input("same_input", id, this)

@@ -52,8 +52,8 @@ Module* make_BoundGrid(const clString& id)
 {
    return scinew BoundGrid(id);
 }
-};
-static clString module_name("BoundGrid");
+}
+//static clString module_name("BoundGrid");
 
 BoundGrid::BoundGrid(const clString& id)
 : Module("BoundGrid", id, Filter), 
@@ -225,7 +225,7 @@ void BoundGrid::execute()
 	Point pt = ingrid->get_point(i,j,ingrid->nz-1);
 	Vector vt = ingrid->gradient(i,j,ingrid->nz-1);
 
-	Color ct,cb;
+	//Color cb;
 
 	double sb,st;
 
@@ -249,7 +249,7 @@ void BoundGrid::execute()
 	Point pt = ingrid->get_point(i,ingrid->ny-1,j);
 	Vector vt = ingrid->gradient(i,ingrid->ny-1,j);
 
-	Color ct,cb;
+	//Color cb;
 
 	double sb,st;
 
@@ -273,7 +273,7 @@ void BoundGrid::execute()
 	Point pt = ingrid->get_point(ingrid->nx-1,i,j);
 	Vector vt = ingrid->gradient(ingrid->nx-1,i,j);
 
-	Color ct,cb;
+	//Color cb;
 
 	double sb,st;
 

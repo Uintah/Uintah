@@ -35,7 +35,7 @@ Module* make_BuildFDField(const clString& id)
 {
     return scinew BuildFDField(id);
 }
-};
+}
 
 BuildFDField::BuildFDField(const clString& id)
 : Module("BuildFDField", id, Filter)

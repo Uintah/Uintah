@@ -32,7 +32,7 @@ Module* make_IFFTImage(const clString& id)
 {
     return scinew IFFTImage(id);
 }
-};
+}
 
 IFFTImage::IFFTImage(const clString& id)
 : Module("IFFTImage", id, Filter)

@@ -143,7 +143,7 @@ void Renderer::setvisual(const clString&, int, int, int)
 {
 }
 
-void Renderer::getData(int datamask, AsyncReply<GeometryData*>* result)
+void Renderer::getData(int, AsyncReply<GeometryData*>* result)
 {
     cerr << "Warning Renderer::getData called - only implemented for OpenGL\n";
     result->reply(0);

@@ -55,9 +55,9 @@ Module* make_Sharpen(const clString& id)
 {
    return scinew Sharpen(id);
 }
-};
+}
 
-static clString module_name("Sharpen");
+//static clString module_name("Sharpen");
 
 Sharpen::Sharpen(const clString& id)
 : Module("Sharpen", id, Filter)

@@ -41,7 +41,7 @@ Module* make_ImageGen(const clString& id)
 {
     return scinew ImageGen(id);
 }
-};
+}
 
 ImageGen::ImageGen(const clString& id)
 : Module("ImageGen", id, Filter),

@@ -43,7 +43,7 @@ Module* make_MeshToGeom(const clString& id)
 {
     return scinew MeshToGeom(id);
 }
-};
+}
 MeshToGeom::MeshToGeom(const clString& id)
 : Module("MeshToGeom", id, Filter)
 {

@@ -57,7 +57,7 @@ Module* make_ClipField(const clString& id)
 {
     return new ClipField(id);
 }
-};
+}
 
 ClipField::ClipField(const clString& id)
 : Module("ClipField", id, Filter), 

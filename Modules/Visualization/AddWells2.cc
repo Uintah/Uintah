@@ -42,9 +42,9 @@ Module* make_AddWells2(const clString& id)
 {
    return scinew AddWells2(id);
 }
-};
+}
 
-static clString module_name("AddWells2");
+//static clString module_name("AddWells2");
 
 AddWells2::AddWells2(const clString& id)
 : Module("AddWells2", id, Source),

@@ -44,7 +44,7 @@ Module* make_LaceContours(const clString& id)
 {
     return new LaceContours(id);
 }
-};
+}
 
 LaceContours::LaceContours(const clString& id)
 : Module("LaceContours", id, Filter)

@@ -103,10 +103,10 @@ extern "C" {
     {
       return scinew Gauss(id);
     }
-};
+}
 
-static clString module_name("Gauss");
-static clString widget_name("Gauss Widget");
+//static clString module_name("Gauss");
+//static clString widget_name("Gauss Widget");
 
 Gauss::Gauss(const clString& id)
 : Module("Gauss", id, Filter),
@@ -374,18 +374,18 @@ void Gauss::tcl_command( TCLArgs& args, void* userdata)
   }
 }
 
-void Gauss::DoMotion( int x, int y,int which)
+void Gauss::DoMotion( int, int, int)
 {
 
 }
 
-void Gauss::DoDown(int x, int y, int which)
+void Gauss::DoDown(int, int, int which)
 {
   bdown = which;
 
 }
 
-void Gauss::DoRelease(int x, int y, int)
+void Gauss::DoRelease(int, int, int)
 {
   bdown = -1;
 }

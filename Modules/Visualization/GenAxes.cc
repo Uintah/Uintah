@@ -44,9 +44,9 @@ Module* make_GenAxes(const clString& id)
 {
    return scinew GenAxes(id);
 }
-};
+}
 
-static clString module_name("GenAxes");
+//static clString module_name("GenAxes");
 
 GenAxes::GenAxes(const clString& id)
 : Module("GenAxes", id, Source), size_changed(1), size("size", id, this)

@@ -35,7 +35,7 @@ Module* make_cPhase(const clString& id)
 {
     return scinew cPhase(id);
 }
-};
+}
 
 cPhase::cPhase(const clString& id)
 : Module("cPhase", id, Filter), phase("phase", id, this)

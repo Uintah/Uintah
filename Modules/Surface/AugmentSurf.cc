@@ -47,7 +47,7 @@ Module* make_AugmentSurf(const clString& id)
 {
     return scinew AugmentSurf(id);
 }
-};
+}
 
 AugmentSurf::AugmentSurf(const clString& id)
 : Module("AugmentSurf", id, Filter), last_tsIn(0), last_osh(0), spacing(-1),

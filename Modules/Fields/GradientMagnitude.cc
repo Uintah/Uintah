@@ -45,7 +45,7 @@ extern "C" {
 	{
 	    return new GradientMagnitude(id);
 	}
-};
+}
 
 GradientMagnitude::GradientMagnitude(const clString& id)
     : Module("GradientMagnitude", id, Filter)

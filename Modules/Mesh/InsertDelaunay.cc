@@ -49,7 +49,7 @@ Module* make_InsertDelaunay(const clString& id)
 {
     return scinew InsertDelaunay(id);
 }
-};
+}
 
 InsertDelaunay::InsertDelaunay(const clString& id)
 : Module("InsertDelaunay", id, Filter)

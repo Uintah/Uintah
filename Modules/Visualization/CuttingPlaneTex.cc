@@ -72,9 +72,9 @@ extern "C" {
     {
       return scinew CuttingPlaneTex(id);
     }
-};
+}
 
-static clString module_name("CuttingPlaneTex");
+//static clString module_name("CuttingPlaneTex");
 static clString widget_name("CuttingPlaneTex Widget");
 
 CuttingPlaneTex::CuttingPlaneTex(const clString& id)
@@ -201,13 +201,13 @@ void CuttingPlaneTex::execute()
   u = v1 * 2.0;
   v = v2 * 2.0;
 
-  int cptype = cutting_plane_type.get();
+  //int cptype = cutting_plane_type.get();
   
   // create the grid for the cutting plane
   double u_fac = widget->GetRatioR(),
   v_fac = widget->GetRatioD(),
-  scale_fac = scale.get(),
-  offset_fac = offset.get();
+      //scale_fac = scale.get(),
+      //offset_fac = offset.get();
   
   u_num = (int) (u_fac * 500);
   v_num = (int) (v_fac * 500);
@@ -215,9 +215,9 @@ void CuttingPlaneTex::execute()
   // Get the scalar values and corresponding
   // colors to put in the cutting plane
 
-  Vector unorm=u.normal();
-  Vector vnorm=v.normal();
-  Vector N(Cross(unorm, vnorm));
+  //Vector unorm=u.normal();
+  //Vector vnorm=v.normal();
+  //Vector N(Cross(unorm, vnorm));
 
   cerr << u_num << " " << v_num << " Grid start...\n";
 

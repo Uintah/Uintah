@@ -34,7 +34,7 @@ Module* make_ExtractMeshSF(const clString& id)
 {
     return scinew ExtractMeshSF(id);
 }
-};
+}
 
 ExtractMeshSF::ExtractMeshSF(const clString& id)
 : Module("ExtractMeshSF", id, Filter)

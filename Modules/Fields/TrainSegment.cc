@@ -106,7 +106,7 @@ Module* make_TrainSegment(const clString& id)
 {
     return scinew TrainSegment(id);
 }
-};
+}
 
 TrainSegment::TrainSegment(const clString& id)
 : Module("TrainSegment", id, Source), bias("bias", id, this), tcl_execute(0),

@@ -42,7 +42,7 @@ Module* make_VectorFieldOceanReader(const clString& id)
 {
     return scinew VectorFieldOceanReader(id);
 }
-};
+}
 
 VectorFieldOceanReader::VectorFieldOceanReader(const clString& id)
 : Module("VectorFieldOceanReader", id, Source), filename("filename", id, this),

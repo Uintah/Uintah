@@ -33,9 +33,9 @@ Module* make_GenSigmaSet(const clString& id)
 {
    return scinew GenSigmaSet(id);
 }
-};
+}
 
-static clString module_name("GenSigmaSet");
+//static clString module_name("GenSigmaSet");
 
 GenSigmaSet::GenSigmaSet(const clString& id)
 : Module("GenSigmaSet", id, Source)

@@ -64,9 +64,9 @@ Module* make_Taubin(const clString& id)
 {
    return scinew Taubin(id);
 }
-};
+}
 
-static clString module_name("Taubin");
+//static clString module_name("Taubin");
 
 Taubin::Taubin(const clString& id)
 : Module("Taubin", id, Source), gamma("gamma", id, this), pb("pb", id, this),

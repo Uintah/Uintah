@@ -111,9 +111,9 @@ Module* make_IsoSurfaceMRSG(const clString& id)
 {
     return scinew IsoSurfaceMRSG(id);
 }
-};
+}
 
-static clString module_name("IsoSurfaceMRSG");
+//static clString module_name("IsoSurfaceMRSG");
 static clString surface_name("IsoSurfaceMRSG");
 
 IsoSurfaceMRSG::IsoSurfaceMRSG(const clString& id)

@@ -37,7 +37,7 @@ Module* make_MultiScalarFieldWriter(const clString& id)
 {
     return scinew MultiScalarFieldWriter(id);
 }
-};
+}
 
 MultiScalarFieldWriter::MultiScalarFieldWriter(const clString& id)
 : Module("MultiScalarFieldWriter", id, Source), filename("filename", id, this),
@@ -64,11 +64,13 @@ Module* MultiScalarFieldWriter::clone(int deep)
     return scinew MultiScalarFieldWriter(*this, deep);
 }
 
+#if 0
 static void watcher(double pd, void* cbdata)
 {
     MultiScalarFieldWriter* writer=(MultiScalarFieldWriter*)cbdata;
     writer->update_progress(pd);
 }
+#endif
 
 void MultiScalarFieldWriter::execute()
 {

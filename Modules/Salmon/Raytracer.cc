@@ -183,7 +183,7 @@ Color Raytracer::shade(const Ray& ray, const Hit& hit,
     Lighting& l=salmon->lighting;
     int nlights=l.lights.size();
     OcclusionData od(hit.prim(), this, level, current_view);
-    Color amblight(0,0,0);
+    //Color amblight(0,0,0);
     Color difflight(0,0,0);
     Color speclight(0,0,0);
     MaterialHandle matl(hit.matl());

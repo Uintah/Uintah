@@ -38,7 +38,7 @@ Module* make_RescaleColorMap(const clString& id)
 {
     return scinew RescaleColorMap(id);
 }
-};
+}
 
 RescaleColorMap::RescaleColorMap(const clString& id)
 : Module("RescaleColorMap", id, Filter)

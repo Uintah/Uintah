@@ -178,9 +178,9 @@ Module* make_IsoSurfaceMSRG(const clString& id)
 {
     return scinew IsoSurfaceMSRG(id);
 }
-};
+}
 
-static clString module_name("IsoSurfaceMSRG");
+//static clString module_name("IsoSurfaceMSRG");
 static clString surface_name("IsoSurfaceMSRG");
 static clString widget_name("IsoSurfaceMSRG widget");
 
@@ -1147,7 +1147,7 @@ void IsoSurfaceMSRG::remap_element(int& rval, Element *src, Element *dst)
 // ABCD and generates the correct primitives/codes
 
 void inline emit_in_2(int& rf, int& pf,
-		      int& eA,int& eB,int& eC,int& eD,
+		      int& /*eA*/,int& /*eB*/,int& eC,int& eD,
 		      Point& pA,Point& pB,Point& pC,Point& pD,
 		      GeomTriStripList* group)
 {

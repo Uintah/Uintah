@@ -43,9 +43,9 @@ Module* make_LabelSurface(const clString& id)
 {
     return new LabelSurface(id);
 }
-};
+}
 
-static clString module_name("LabelSurface");
+//static clString module_name("LabelSurface");
 
 LabelSurface::LabelSurface(const clString& id)
 : Module("LabelSurface", id, Filter), generation(-1),

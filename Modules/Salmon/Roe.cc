@@ -46,7 +46,7 @@
 #define MouseMove 2
 
 const int MODEBUFSIZE = 100;
-static DebugSwitch autoview_sw("Roe", "autoview");
+//static DebugSwitch autoview_sw("Roe", "autoview");
 
 Roe::Roe(Salmon* s, const clString& id)
 : manager(s),

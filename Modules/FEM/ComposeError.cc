@@ -39,7 +39,7 @@ Module* make_ComposeError(const clString& id)
 {
     return new ComposeError(id);
 }
-};
+}
 
 ComposeError::ComposeError(const clString& id)
 : Module("ComposeError", id, Filter)

@@ -121,10 +121,10 @@ extern "C" {
     {
       return scinew Ted(id);
     }
-};
+}
 
-static clString module_name("Ted");
-static clString widget_name("Ted Widget");
+//static clString module_name("Ted");
+//static clString widget_name("Ted Widget");
 
 Ted::Ted(const clString& id)
 : Module("Ted", id, Filter),
@@ -580,7 +580,7 @@ void Ted::DoDown(int x, int y, int which)
   bdown = which;
 }
 
-void Ted::DoRelease(int x, int y, int)
+void Ted::DoRelease(int, int, int)
 {
   bdown = -1;
 }

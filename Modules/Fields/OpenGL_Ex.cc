@@ -81,7 +81,7 @@ Module* make_OpenGL_Ex(const clString& id)
 {
     return scinew OpenGL_Ex(id);
 }
-};
+}
 
 OpenGL_Ex::OpenGL_Ex(const clString& id)
 : Module("OpenGL_Ex", id, Source), tcl_execute(0)

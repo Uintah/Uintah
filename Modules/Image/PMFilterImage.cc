@@ -46,7 +46,7 @@ Module* make_PMFilterImage(const clString& id)
 {
     return scinew PMFilterImage(id);
 }
-};
+}
 
 PMFilterImage::PMFilterImage(const clString& id)
 : Module("PMFilterImage", id, Source), inphi("phi", id, this),

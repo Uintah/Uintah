@@ -36,7 +36,7 @@ Module* make_MakeScalarField(const clString& id)
 {
     return scinew MakeScalarField(id);
 }
-};
+}
 
 MakeScalarField::MakeScalarField(const clString& id)
 : Module("MakeScalarField", id, Filter)

@@ -72,9 +72,9 @@ Module* make_ExtractSurfs(const clString& id)
 {
     return scinew ExtractSurfs(id);
 }
-};
+}
 
-static clString module_name("ExtractSurfs");
+//static clString module_name("ExtractSurfs");
 
 ExtractSurfs::ExtractSurfs(const clString& id)
 : Module("ExtractSurfs", id, Filter)

@@ -41,7 +41,7 @@ Module* make_PointsReader(const clString& id)
 {
     return new PointsReader(id);
 }
-};
+}
 
 PointsReader::PointsReader(const clString& id)
 : Module("PointsReader", id, Source), ptsname("ptsname", id, this),

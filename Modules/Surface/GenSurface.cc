@@ -85,7 +85,7 @@ Module* make_GenSurface(const clString& id)
 {
     return scinew GenSurface(id);
 }
-};
+}
 
 GenSurface::GenSurface(const clString& id)
 : Module("GenSurface", id, Source), surfacetype("surfacetype", id, this),
@@ -301,8 +301,8 @@ void GenSurface::widget_moved(int last)
 	cyl_widget->GetEndpoints(p1, p2);
 	cyl_p1.set(p1);
 	cyl_p2.set(p2);
-	double ratio=cyl_widget->GetRatio();
-	double dist=(p2-p1).length();
+	//double ratio=cyl_widget->GetRatio();
+	//double dist=(p2-p1).length();
 	//	double radius=2*dist*ratio;
 //	cerr << "Setting rad to: " << radius < endl;
 //	cyl_rad.set(radius);

@@ -45,7 +45,7 @@ extern "C" {
 Module *make_ColorMapKey(const clString &id) {
   return new ColorMapKey(id);
 }
-};
+}
 
 ColorMapKey::ColorMapKey(const clString &id)
   : Module("ColorMapKey", id, Filter)

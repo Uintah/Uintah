@@ -36,7 +36,7 @@ Module* make_SegFldToSurfTree(const clString& id)
 {
     return new SegFldToSurfTree(id);
 }
-};
+}
 
 SegFldToSurfTree::SegFldToSurfTree(const clString& id)
 : Module("SegFldToSurfTree", id, Filter)
@@ -79,7 +79,7 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 	for (j=1; j<field.ny; j++, js[0]++, js[1]++, js[2]++) {
 	    ks[0]=1; ks[1]=1; ks[2]=0;
 	    for (k=1; k<field.nz; k++, ks[0]++, ks[1]++, ks[2]++) {
-		tripleInt idx(i,j,k);
+		//tripleInt idx(i,j,k);
 		int comp=field.grid(i,j,k);
 		for (int nbr=0; nbr<3; nbr++) {
 		    ii=is[nbr]; jj=js[nbr]; kk=ks[nbr];

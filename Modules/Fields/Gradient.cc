@@ -44,7 +44,7 @@ Module* make_Gradient(const clString& id)
 {
     return new Gradient(id);
 }
-};
+}
 
 Gradient::Gradient(const clString& id)
 : Module("Gradient", id, Filter), interpolate("interpolate", id, this)

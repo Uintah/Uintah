@@ -242,7 +242,7 @@ void OpenGL::redraw_loop()
     TimeThrottle throttle;
     throttle.start();
     double newtime=0;
-    while(1){
+    for(;;){
 	int nreply=0;
 	if(roe->inertia_mode){
 	    double current_time=throttle.time();
@@ -268,7 +268,7 @@ void OpenGL::redraw_loop()
 	    newtime+=frametime;
 	    throttle.wait_for_time(newtime);
 
-	    while(1){
+	    for(;;){
 		int r;
 		if(!send_mb.try_receive(r))
 		    break;
@@ -311,7 +311,7 @@ void OpenGL::redraw_loop()
 	    
 	    roe->view.set(tmpview);	    
 	} else {
-	    while(1){
+	    for(;;){
 		int r=send_mb.receive();
 		if(r == DO_PICK){
 		    real_get_pick(salmon, roe, send_pick_x, send_pick_y, ret_pick_obj, ret_pick_pick);
@@ -651,7 +651,7 @@ void OpenGL::get_pick(Salmon*, Roe*, int x, int y,
     send_pick_x=x;
     send_pick_y=y;
     send_mb.send(DO_PICK);
-    while(1){
+    for(;;){
 	int r=recv_mb.receive();
 	if(r != PICK_DONE){
 	    cerr << "WANTED A PICK!!! (got back " << r << endl;

@@ -52,7 +52,7 @@ Module* make_EditMatrix(const clString& id)
 {
     return scinew EditMatrix(id);
 }
-};
+}
 
 EditMatrix::EditMatrix(const clString& id)
 : Module("EditMatrix", id, Source), Matrixtype("Matrixtype", id, this),

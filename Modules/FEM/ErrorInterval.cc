@@ -38,7 +38,7 @@ Module* make_ErrorInterval(const clString& id)
 {
     return new ErrorInterval(id);
 }
-};
+}
 
 ErrorInterval::ErrorInterval(const clString& id)
 : Module("ErrorInterval", id, Filter), low("low", id, this),

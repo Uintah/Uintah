@@ -30,7 +30,7 @@ IMAGE *imgopen(int f, char *file, char *mode,
 		unsigned int xsize, unsigned int ysize, unsigned int zsize)
 {
 	register IMAGE 	*image;
-	register rw;
+	register int rw;
 	int tablesize;
 	register int i, max;
 

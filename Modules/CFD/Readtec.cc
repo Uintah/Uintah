@@ -106,7 +106,7 @@ Module* make_Readtec(const clString& id)
 {
     return new Readtec(id);
 }
-};
+}
 
 Readtec::Readtec(const clString& id)
 : Module("Readtec", id, Filter), filebase("filebase", id, this),

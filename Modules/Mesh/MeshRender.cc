@@ -46,7 +46,7 @@ Module* make_MeshRender(const clString& id)
 {
     return new MeshRender(id);
 }
-};
+}
 
 MeshRender::MeshRender(const clString& id)
 : Module("MeshRender", id, Filter), to("to", id, this), from("from", id, this)

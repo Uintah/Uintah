@@ -38,7 +38,7 @@ Module* make_Delaunay(const clString& id)
 {
     return scinew Delaunay(id);
 }
-};
+}
 
 Delaunay::Delaunay(const clString& id)
 : Module("Delaunay", id, Filter), nnodes("nnodes", id, this),

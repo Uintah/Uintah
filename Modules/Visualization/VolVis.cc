@@ -375,7 +375,7 @@ extern "C" {
     {
       return scinew VolVis(id);
     }
-};
+}
 
 
 
@@ -940,7 +940,7 @@ VolVis::redraw_all()
   //      glRasterPos2i( x_pixel_size, y_pixel_size * (Image.dim1()+1) );
   
 
-  Color c(1, 0, 1);
+  //Color c(1, 0, 1);
 
   char *pixels=(char *) ( &(Image(0,0)) );
 
@@ -1258,7 +1258,7 @@ VolVis::StepSizeChanged( clString a )
 
 
 void
-VolVis::ViewChanged( clString a )
+VolVis::ViewChanged( clString /* a */)
 {
   // if connected to a Salmon module, retrieve Salmon geometry info
   // and store it in a LevoyS type structure
@@ -1325,7 +1325,7 @@ VolVis::RenderLoop( )
   xmiddle = ymiddle = 50;
   seq = 0x0001;
 
-  while ( 1 )
+  for(;;)
     {
       msg = -1;
       
@@ -1623,7 +1623,7 @@ VolVis::RenderLoop( )
 }
 
 int
-RenderingThread::body( int i )
+RenderingThread::body( int )
 {
   v->RenderLoop();
   return 1;

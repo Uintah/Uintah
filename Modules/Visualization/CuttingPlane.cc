@@ -64,9 +64,9 @@ Module* make_CuttingPlane(const clString& id)
 {
    return scinew CuttingPlane(id);
 }
-};
+}
 
-static clString module_name("CuttingPlane");
+//static clString module_name("CuttingPlane");
 static clString widget_name("CuttingPlane Widget");
 
 CuttingPlane::CuttingPlane(const clString& id)

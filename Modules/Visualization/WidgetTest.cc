@@ -66,7 +66,7 @@ Module* make_WidgetTest(const clString& id)
 {
    return scinew WidgetTest(id);
 }
-};
+}
 
 static clString module_name("WidgetTest");
 

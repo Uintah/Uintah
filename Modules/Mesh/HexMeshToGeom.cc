@@ -43,7 +43,7 @@ Module* make_HexMeshToGeom(const clString& id)
 {
     return scinew HexMeshToGeom(id);
 }
-};
+}
 
 HexMeshToGeom::HexMeshToGeom(const clString& id)
 : Module("HexMeshToGeom", id, Filter)

@@ -102,7 +102,7 @@ Module* make_Coregister(const clString& id)
 {
     return new Coregister(id);
 }
-};
+}
 
 static clString module_name("Coregister");
 
@@ -340,7 +340,7 @@ void Coregister::execute()
 	    w_v = b.diagonal();
 	    w_c = p = b.center();
 	    w_c = b.center();
-	    Vector v_c = Vector(p.x(), p.y(), p.z()); 
+	    //Vector v_c = Vector(p.x(), p.y(), p.z()); 
 	    v_r = Vector(1,0,0);
 	    v_d = Vector(0,1,0);
 	    v_i = Vector(0,0,1);
@@ -642,7 +642,7 @@ void Coregister::auto_register() {
     }
 }
 
-void Coregister::widget_moved(int last)
+void Coregister::widget_moved(int)
 {
     if(!abort_flag)
         {

@@ -107,7 +107,7 @@ Module* make_SolveMatrix(const clString& id)
 {
     return scinew SolveMatrix(id);
 }
-};
+}
 
 
 SolveMatrix::SolveMatrix(const clString& id)
@@ -184,8 +184,8 @@ void SolveMatrix::execute()
 
 
   
-  clString pre=precond.get();
 #ifdef SCI_SPARSELIB
+  clString pre=precond.get();
       if(pre == "Diag_P") flag = 1;
       else if(pre == "IC_P") flag = 2;
       else if(pre == "ILU_P") flag = 3;

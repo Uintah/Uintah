@@ -76,7 +76,7 @@ Module* make_VectorSeg(const clString& id)
 {
     return scinew VectorSeg(id);
 }
-};
+}
 
 VectorSeg::VectorSeg(const clString& id)
 : Module("VectorSeg", id, Filter), numFields("numFields", id, this),
@@ -249,9 +249,10 @@ void VectorSeg::vec_seg()
     Task::multiprocess(np, do_parallel_vec_seg, this);
 }
 
-void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &ifields, 
-			      ScalarFieldRG* ofieldRG) {
-    ScalarFieldRG* rg=ifields[0]->getRG();
+void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &, 
+			      ScalarFieldRG* ofieldRG)
+{
+    //ScalarFieldRG* rg=ifields[0]->getRG();
     isoChanged=0;
     int fld_changed;
     int min_changed;

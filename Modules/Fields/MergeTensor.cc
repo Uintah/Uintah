@@ -41,7 +41,7 @@ Module* make_MergeTensor(const clString& id)
 {
     return new MergeTensor(id);
 }
-};
+}
 
 MergeTensor::MergeTensor(const clString& id)
 : Module("MergeTensor", id, Filter)

@@ -56,9 +56,9 @@ Module* make_Binop(const clString& id)
 {
    return scinew Binop(id);
 }
-};
+}
 
-static clString module_name("Binop");
+//static clString module_name("Binop");
 
 Binop::Binop(const clString& id)
 : Module("Binop", id, Filter),  funcname("funcname",id,this)

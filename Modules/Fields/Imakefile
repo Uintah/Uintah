@@ -1,16 +1,21 @@
 
 #include <config/sci.cf>
 
+#if defined(SCI_MACHINE_Solaris)
+XLIBDIR = -L/usr/openwin/lib
+XINCLUDE = -I/usr/openwin/include
+#endif
+
 #ifdef SCI_OPENGL
 OPENGLOBJS = OpenGL_Ex.o  TrainSegment.o
 OPENGLSRCS = OpenGL_Ex.cc TrainSegment.cc
 
 #ifdef SCI_MESA
-OPENGLINCS = -I$(TOP)/Mesa/include -I/usr/openwin/include
-OPENGLLIBS = -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
+OPENGLINCS = -I$(TOP)/Mesa/include $(XINCLUDE)
+OPENGLLIBS = -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL $(XLIBDIR) -lXext -lX11
 #else
-OPENGLINCS = -I/usr/openwin/include
-OPENGLLIBS = -lGLU -lGL -lXext -lX11
+OPENGLINCS = $(XINCLUDE)
+OPENGLLIBS = $(XLIBDIR) -lGLU -lGL -lXext -lX11
 #endif
 #else
 OPENGLOBJS =

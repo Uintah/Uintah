@@ -68,7 +68,7 @@ Module* make_SurfToGeom(const clString& id)
 {
     return scinew SurfToGeom(id);
 }
-};
+}
 
 SurfToGeom::SurfToGeom(const clString& id)
 : Module("SurfToGeom", id, Filter), range_min("range_min", id, this),

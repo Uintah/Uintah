@@ -36,7 +36,7 @@ Module* make_GeomReader(const clString& id)
 {
     return scinew GeomReader(id);
 }
-};
+}
 
 GeomReader::GeomReader(const clString& id)
 : Module("GeomReader", id, Source), filename("filename", id, this)

@@ -55,9 +55,9 @@ Module* make_Hist(const clString& id)
 {
    return scinew Hist(id);
 }
-};
+}
 
-static clString module_name("Hist");
+//static clString module_name("Hist");
 
 Hist::Hist(const clString& id)
 : Module("Hist", id, Filter)

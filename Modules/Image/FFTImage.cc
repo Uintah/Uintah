@@ -32,7 +32,7 @@ Module* make_FFTImage(const clString& id)
 {
     return scinew FFTImage(id);
 }
-};
+}
 
 FFTImage::FFTImage(const clString& id)
 : Module("FFTImage", id, Filter)
@@ -67,8 +67,6 @@ void FFTImage::execute()
     ImageHandle out=in->clone();
     unsigned long flops, refs;
 
-    int xres=out->xres();
-    int yres=out->yres();
     fft2d_float(out->rows[0], out->xres(), 1, &flops, &refs);
     oport->send(out);
 }

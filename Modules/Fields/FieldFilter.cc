@@ -87,7 +87,7 @@ Module* make_FieldFilter(const clString& id)
 {
     return new FieldFilter(id);
 }
-};
+}
 
 static clString module_name("FieldFilter");
 FieldFilter::FieldFilter(const clString& id)

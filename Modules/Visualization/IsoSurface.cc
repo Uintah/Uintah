@@ -155,9 +155,9 @@ Module* make_IsoSurface(const clString& id)
 {
     return scinew IsoSurface(id);
 }
-};
+}
 
-static clString module_name("IsoSurface");
+//static clString module_name("IsoSurface");
 static clString surface_name("IsoSurface");
 static clString widget_name("IsoSurface widget");
 
@@ -1798,7 +1798,7 @@ void IsoSurface::remap_element(int& rval, Element *src, Element *dst)
 // ABCD and generates the correct primitives/codes
 
 void inline emit_in_2(int& rf, int& pf,
-		      int& eA,int& eB,int& eC,int& eD,
+		      int& /*eA*/,int& /*eB*/,int& eC,int& eD,
 		      Point& pA,Point& pB,Point& pC,Point& pD,
 		      GeomTriStripList* group)
 {

@@ -56,9 +56,9 @@ Module* make_Unop(const clString& id)
 {
    return scinew Unop(id);
 }
-};
+}
 
-static clString module_name("Unop");
+//static clString module_name("Unop");
 
 Unop::Unop(const clString& id)
 : Module("Unop", id, Filter),  funcname("funcname",id,this)

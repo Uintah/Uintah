@@ -228,7 +228,7 @@ class Streamline : public Module {
     virtual void geom_release(GeomPick*, void*);
 
     enum ALGS {
-	Exact, Euler, RK4,
+	Exact, Euler, RK4
     };
     ALGS alg_enum;
 
@@ -308,7 +308,7 @@ Module* make_Streamline(const clString& id)
 {
     return scinew Streamline(id);
 }
-};
+}
 
 static clString widget_name("Streamline Widget");
 static clString module_name("Streamline");
@@ -614,7 +614,7 @@ void SLSourceInfo::make_anim_groups(const clString& animation, GeomGroup* top,
     }
 }
 
-GeomVertex* Streamline::get_vertex(double t, double maxt, const Point& p,
+GeomVertex* Streamline::get_vertex(double, double, const Point& p,
 				   const ScalarFieldHandle& sfield,
 				   const ColorMapHandle& cmap)
 {
@@ -1122,7 +1122,7 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 }
 
 void Streamline::do_streamsurface(SLSourceInfo* si,
-				  double maxbend)
+				  double)
 {
     tracers.remove_all();
     SLSource* source=si->source;
@@ -1139,7 +1139,7 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
     int step=0;
     int ninside=1;
     int splitlast=0;
-    double maxcosangle=Cos(maxbend);
+    //double maxcosangle=Cos(maxbend);
     double maxt=maxsteps*stepsize;
     while(step< maxsteps && ninside){
 	step++;
@@ -1649,10 +1649,10 @@ Vector SLSquareSource::ribbon_direction(double, double,
 				      const Point&,
 				      const VectorFieldHandle&)
 {
-    Point 	corner, center, R, D;
+    Point center, R, D;
     fw->GetPosition( center, R, D);
-    Vector v1 = R - center,
-           v2 = D - center;
+    Vector v1 = R - center;
+    //Vector v2 = D - center;
     return v1;
 }
 

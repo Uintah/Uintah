@@ -53,7 +53,7 @@ Module* make_ContoursToSurf(const clString& id)
 {
     return scinew ContoursToSurf(id);
 }
-};
+}
 
 ContoursToSurf::ContoursToSurf(const clString& id)
 : Module("ContoursToSurf", id, Filter)

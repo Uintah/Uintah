@@ -146,9 +146,9 @@ Module* make_IsoMask(const clString& id)
 {
     return scinew IsoMask(id);
 }
-};
+}
 
-static clString module_name("IsoMask");
+//static clString module_name("IsoMask");
 static clString surface_name("IsoMask");
 static clString widget_name("IsoMask widget");
 
@@ -789,7 +789,7 @@ void IsoMask::iso_reg_grid(ScalarFieldRG* field, double isoval,
 }
 
 void IsoMask::iso_reg_grid(ScalarFieldRG* field, const Point& p,
-			      GeomTrianglesP* group, ScalarFieldRG* mask)
+			      GeomTrianglesP* group, ScalarFieldRG* /*mask*/)
 {
     int nx=field->nx;
     int ny=field->ny;
@@ -1271,7 +1271,7 @@ void IsoMask::remap_element(int& rval, Element *src, Element *dst)
 // ABCD and generates the correct primitives/codes
 
 void inline emit_in_2(int& rf, int& pf,
-		      int& eA,int& eB,int& eC,int& eD,
+		      int& /*eA*/,int& /*eB*/,int& eC,int& eD,
 		      Point& pA,Point& pB,Point& pC,Point& pD,
 		      GeomTriStripList* group)
 {

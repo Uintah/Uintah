@@ -32,7 +32,7 @@ Module* make_ApplyBC(const clString& id)
 {
     return scinew ApplyBC(id);
 }
-};
+}
 
 ApplyBC::ApplyBC(const clString& id)
 : Module("ApplyBC", id, Filter)

@@ -34,7 +34,7 @@ Module* make_WhiteNoiseImage(const clString& id)
 {
     return scinew WhiteNoiseImage(id);
 }
-};
+}
 
 WhiteNoiseImage::WhiteNoiseImage(const clString& id)
 : Module("WhiteNoiseImage", id, Source), xres("xres", id, this),

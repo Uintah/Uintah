@@ -113,7 +113,7 @@ Module* make_BuildMultiMesh(const clString& id)
 {
     return scinew BuildMultiMesh(id);
 }
-};
+}
 
 BuildMultiMesh::BuildMultiMesh(const clString& id)
 : Module("BuildMultiMesh", id, Filter), numSources("numSources", id, this),

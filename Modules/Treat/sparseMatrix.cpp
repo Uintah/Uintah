@@ -325,7 +325,7 @@ int SparseMatrix::solveQMR(int maxit, double eps) {
 
 // stopping criteria is either maxit or (<r,r>/<b,b>)^.5 < eps
 
-  double rho,rho_minus_1,eta,delta,eps1=0,beta,k,ks,rri,rr_inprod_rr,calcerr;
+  double rho,rho_minus_1,eta,delta,eps1=0,beta,k,rr_inprod_rr,calcerr;
   double N,mbets,qtheta=0,qtheta_minus_1,gamma,gamma_minus_1,b_inprod_b;
   double calcerr_last = 0;
 
