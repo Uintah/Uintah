@@ -67,7 +67,8 @@ extern "C" Module* make_SeedField(const clString& id) {
 }
 
 SeedField::SeedField(const clString& id)
-  : Module("SeedField", id, Filter), seedRandTCL_("seedRandTCL", id, this),
+  : Module("SeedField", id, Filter, "Fields", "SCIRun"),
+    seedRandTCL_("seedRandTCL", id, this),
     numDipolesTCL_("numDipolesTCL", id, this),
     dipoleMagnitudeTCL_("dipoleMagnitudeTCL", id, this),
     widget_lock_("StreamLines widget lock"),

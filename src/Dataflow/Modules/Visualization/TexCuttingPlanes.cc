@@ -57,7 +57,7 @@ extern "C" Module* make_TexCuttingPlanes( const clString& id) {
 
 
 TexCuttingPlanes::TexCuttingPlanes(const clString& id)
-  : Module("TexCuttingPlanes", id, Filter), 
+  : Module("TexCuttingPlanes", id, Filter, "Visualization", "SCIRun"), 
   tex(0),
   control_lock("TexCuttingPlanes resolution lock"),
   control_widget(0),

@@ -58,7 +58,7 @@ extern "C" Module* make_CastField(const clString& id)
 
 static clString module_name("CastField");
 CastField::CastField(const clString& id)
-  : Module("CastField", id, Filter),
+  : Module("CastField", id, Filter, "Fields", "SCIRun"),
     haveMinMaxTCL("haveMinMaxTCL", id, this),
     haveOutVoxelTCL("haveOutVoxelTCL", id, this), 
     haveBBoxTCL("haveBBoxTCL", id, this),

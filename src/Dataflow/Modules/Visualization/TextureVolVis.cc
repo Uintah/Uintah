@@ -61,7 +61,7 @@ extern "C" Module* make_TextureVolVis( const clString& id)
 
 
 TextureVolVis::TextureVolVis(const clString& id)
-  : Module("TextureVolVis", id, Filter), 
+  : Module("TextureVolVis", id, Filter, "Visualization", "SCIRun"),
     tex(0),
     control_lock("TextureVolVis resolution lock"),
     control_widget(0),

@@ -49,7 +49,8 @@ extern "C" Module* make_FieldWriter(const clString& id) {
 }
 
 FieldWriter::FieldWriter(const clString& id)
-  : Module("FieldWriter", id, Source), filename_("filename", id, this),
+  : Module("FieldWriter", id, Source, "DataIO", "SCIRun"),
+    filename_("filename", id, this),
     filetype_("filetype", id, this)
 {
   // Create the output port

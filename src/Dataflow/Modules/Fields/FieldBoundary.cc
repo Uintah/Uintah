@@ -67,7 +67,7 @@ extern "C" Module* make_FieldBoundary(const clString& id)
 }
 
 FieldBoundary::FieldBoundary(const clString& id)
-  : Module("FieldBoundary", id, Filter)
+  : Module("FieldBoundary", id, Filter, "Fields", "SCIRun")
 {
   // Create the input port
   inport_ = scinew FieldIPort(this, "Field", FieldIPort::Atomic);

@@ -52,7 +52,8 @@ extern "C" Module* make_FieldReader(const clString& id) {
 }
 
 FieldReader::FieldReader(const clString& id)
-  : Module("FieldReader", id, Source), filename_("filename", id, this),
+  : Module("FieldReader", id, Source, "DataIO", "SCIRun"),
+    filename_("filename", id, this),
     old_filemodification_(0)
 {
   // Create the output port

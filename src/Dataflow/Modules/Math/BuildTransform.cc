@@ -88,7 +88,7 @@ static clString module_name("BuildTransform");
 static clString widget_name("TransformWidget");
 
 BuildTransform::BuildTransform(const clString& id)
-  : Module("BuildTransform", id, Filter),
+  : Module("BuildTransform", id, Filter, "Math", "SCIRun"),
     rotate_x_gui_("rotate_x", id, this),
     rotate_y_gui_("rotate_y", id, this),
     rotate_z_gui_("rotate_z", id, this), 

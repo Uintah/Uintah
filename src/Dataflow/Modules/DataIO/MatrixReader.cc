@@ -52,7 +52,8 @@ extern "C" Module* make_MatrixReader(const clString& id) {
 }
 
 MatrixReader::MatrixReader(const clString& id)
-  : Module("MatrixReader", id, Source), filename_("filename", id, this),
+  : Module("MatrixReader", id, Source, "DataIO", "SCIRun"),
+    filename_("filename", id, this),
     old_filemodification_(0)
 {
   // Create the output port

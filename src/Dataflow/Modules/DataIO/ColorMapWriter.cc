@@ -49,7 +49,8 @@ extern "C" Module* make_ColorMapWriter(const clString& id) {
 }
 
 ColorMapWriter::ColorMapWriter(const clString& id)
-  : Module("ColorMapWriter", id, Source), filename_("filename", id, this),
+  : Module("ColorMapWriter", id, Source, "DataIO", "SCIRun"),
+    filename_("filename", id, this),
     filetype_("filetype", id, this)
 {
   // Create the output port

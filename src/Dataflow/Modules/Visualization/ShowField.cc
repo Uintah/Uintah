@@ -132,7 +132,7 @@ public:
 };
 
 ShowField::ShowField(const clString& id) : 
-  Module("ShowField", id, Filter), 
+  Module("ShowField", id, Filter, "Visualization", "SCIRun"), 
   dbg_("ShowField", true),
   geom_(0),
   data_(0),

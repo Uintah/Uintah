@@ -52,7 +52,8 @@ extern "C" Module* make_PathReader(const clString& id) {
 }
 
 PathReader::PathReader(const clString& id)
-  : Module("PathReader", id, Source), filename_("filename", id, this),
+  : Module("PathReader", id, Source, "DataIO", "SCIRun"),
+    filename_("filename", id, this),
     old_filemodification_(0)
 {
   // Create the output port
