@@ -85,14 +85,6 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 
       piece_num++;
       d_geom_objs.push_back(scinew GeometryObject(this,mainpiece, geom_obj_ps));
-      
-      // Step 4 -- Assign the boundary conditions to the object
-
-      
-      // Step 5 -- Assign the velocity field
-      int vf;
-      ps->require("velocity_field",vf);
-      setVFIndex(vf);
    }
 
    lb = scinew MPMLabel();
@@ -484,6 +476,9 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.57  2001/01/11 21:03:02  guilkey
+// No longer requires velocity_field tag from the problem spec.
+//
 // Revision 1.56  2000/12/30 05:08:09  tan
 // Fixed a problem concerning patch and ghost in fracture computations.
 //
