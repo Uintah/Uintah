@@ -47,7 +47,6 @@
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/FieldIterator.h>
-#include <Core/Datatypes/LatVolField.h>
 #include <Core/Containers/StackVector.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -119,6 +118,11 @@ public:
   void size(Edge::size_type &) const;
   void size(Face::size_type &) const;
   void size(Cell::size_type &) const;
+
+  void to_index(Node::index_type &index, unsigned int i) const { index = i; }
+  void to_index(Edge::index_type &index, unsigned int i) const { index = i; }
+  void to_index(Face::index_type &index, unsigned int i) const { index = i; }
+  void to_index(Cell::index_type &index, unsigned int i) const { index = i; }
 
   //! Get the child elements of the given index
   void get_nodes(Node::array_type &array, Edge::index_type idx) const;

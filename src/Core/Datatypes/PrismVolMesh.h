@@ -334,6 +334,11 @@ public:
   void size(Face::size_type &) const;
   void size(Cell::size_type &) const;
 
+  void to_index(Node::index_type &index, unsigned int i) const { index = i; }
+  void to_index(Edge::index_type &index, unsigned int i) const { index = i; }
+  void to_index(Face::index_type &index, unsigned int i) const { index = i; }
+  void to_index(Cell::index_type &index, unsigned int i) const { index = i; }
+
   void get_nodes(Node::array_type &array, Edge::index_type idx) const;
   void get_nodes(Node::array_type &array, Face::index_type idx) const;
   void get_nodes(Node::array_type &array, Cell::index_type idx) const;

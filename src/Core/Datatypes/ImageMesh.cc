@@ -551,6 +551,16 @@ ImageMesh::size(ImageMesh::Node::size_type &s) const
 
 
 void
+ImageMesh::to_index(ImageMesh::Node::index_type &idx, unsigned int a)
+{
+  const unsigned int i = a % ni_;
+  const unsigned int j = a / ni_;
+  idx = Node::index_type(this, i, j);
+
+}
+
+
+void
 ImageMesh::begin(ImageMesh::Edge::iterator &itr) const
 {
   itr = 0;
@@ -584,6 +594,16 @@ void
 ImageMesh::size(ImageMesh::Face::size_type &s) const
 {
   s = Face::size_type(ni_-1, nj_-1);
+}
+
+
+void
+ImageMesh::to_index(ImageMesh::Face::index_type &idx, unsigned int a)
+{
+  const unsigned int i = a % (ni_-1);
+  const unsigned int j = a / (ni_-1);
+  idx = Face::index_type(this, i, j);
+
 }
 
 
