@@ -29,6 +29,7 @@ void Task::initialize()
   d_hasSubScheduler = false;
   for(int i=0;i<TotalDWs;i++)
     dwmap[i]=Task::InvalidDW;
+  sortedOrder=-1;
 }
 
 Task::ActionBase::~ActionBase()
@@ -130,7 +131,7 @@ Task::requires(WhichDW dw, const VarLabel* var,
   else if (matls != 0 && matls->size() == 0) {
     return; // no materials, no dependency
   }
-  Dependency* dep = scinew Dependency(this, dw, var, patches, matls,
+  Dependency* dep = scinew Dependency(Requires, this, dw, var, patches, matls,
 				      patches_dom, matls_dom,
 				      gtype, numGhostCells);
   dep->next=0;
@@ -225,7 +226,7 @@ Task::requires(WhichDW dw, const VarLabel* var, const Level* level,
   } else if (matls->size() == 0) {
     return; // no materials, no dependency
   }
-  Dependency* dep = scinew Dependency(this, dw, var, level, matls, matls_dom);
+  Dependency* dep = scinew Dependency(Requires, this, dw, var, level, matls, matls_dom);
   dep->next=0;
   if(req_tail)
     req_tail->next=dep;
@@ -253,7 +254,7 @@ Task::computes(const VarLabel* var,
     ASSERT(patches == 0);
   }
   
-  Dependency* dep = scinew Dependency(this, NewDW, var, patches, matls,
+  Dependency* dep = scinew Dependency(Computes, this, NewDW, var, patches, matls,
 				      patches_dom, matls_dom);
   dep->next=0;
   if(comp_tail)
@@ -310,7 +311,7 @@ Task::computes(const VarLabel* var, const Level* level,
     throw InternalError("Computes of an empty material set!");
   }
   
-  Dependency* dep = scinew Dependency(this, NewDW, var, level,
+  Dependency* dep = scinew Dependency(Computes, this, NewDW, var, level,
 				      matls, matls_dom);
   dep->next=0;
   if(comp_tail)
@@ -339,7 +340,7 @@ Task::modifies(const VarLabel* var,
     */
   }  
 
-  Dependency* dep = scinew Dependency(this, NewDW, var, patches, matls,
+  Dependency* dep = scinew Dependency(Modifies, this, NewDW, var, patches, matls,
 				      patches_dom, matls_dom);
   dep->next=0;
   if (mod_tail)
@@ -440,14 +441,14 @@ Task::Dependency* Task::isInDepMap(const DepMap& depMap, const VarLabel* var,
   return 0;
 }
 
-Task::Dependency::Dependency(Task* task, WhichDW whichdw, const VarLabel* var,
-			     const PatchSubset* patches,
+Task::Dependency::Dependency(DepType deptype, Task* task, WhichDW whichdw,
+			     const VarLabel* var, const PatchSubset* patches,
 			     const MaterialSubset* matls,
 			     DomainSpec patches_dom,
 			     DomainSpec matls_dom,
 			     Ghost::GhostType gtype,
 			     int numGhostCells)
-: task(task), var(var), patches(patches), matls(matls),
+: deptype(deptype), task(task), var(var), patches(patches), matls(matls),
   reductionLevel(0), patches_dom(patches_dom), matls_dom(matls_dom),
   gtype(gtype), whichdw(whichdw), numGhostCells(numGhostCells)
 {
@@ -460,11 +461,11 @@ Task::Dependency::Dependency(Task* task, WhichDW whichdw, const VarLabel* var,
     matls->addReference();
 }
 
-Task::Dependency::Dependency(Task* task, WhichDW whichdw, const VarLabel* var,
-			     const Level* reductionLevel,
+Task::Dependency::Dependency(DepType deptype, Task* task, WhichDW whichdw,
+			     const VarLabel* var, const Level* reductionLevel,
 			     const MaterialSubset* matls,
 			     DomainSpec matls_dom)
-: task(task), var(var), patches(0), matls(matls),
+: deptype(deptype), task(task), var(var), patches(0), matls(matls),
   reductionLevel(reductionLevel), patches_dom(NormalDomain),
   matls_dom(matls_dom), gtype(Ghost::None), whichdw(whichdw), numGhostCells(0)
 {
