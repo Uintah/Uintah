@@ -36,53 +36,85 @@ using std::ostream;
 
 namespace SCIRun {
 
-Persistent *make_ColorMapTex() {
+Persistent *make_ColorMapTex()
+{
   return scinew ColorMapTex( Point(0,0,0), Point(0,1,0), Point(1,1,0),
-			   Point(1,0,0) );
+			     Point(1,0,0) );
 }
 
 PersistentTypeID ColorMapTex::type_id("ColorMapTex", "GeomObj", make_ColorMapTex);
 
+
 ColorMapTex::ColorMapTex(const Point &p1, const Point &p2,
-		     const Point &p3, const Point &p4 ) : GeomObj()
+			 const Point &p3, const Point &p4)
+  : GeomObj(),
+    a_(p1),
+    b_(p2),
+    c_(p3),
+    d_(p4),
+    numcolors_(256)
 {
-  a = p1; b = p2; c = p3; d = p4;
+  memset(texture_, 0, numcolors_ * 4);
 }
 
-ColorMapTex::ColorMapTex( const ColorMapTex &copy ) : GeomObj(copy) {
-  a = copy.a; b = copy.b;
-  c = copy.c; d = copy.d;
+
+ColorMapTex::ColorMapTex( const ColorMapTex &copy )
+  : GeomObj(copy),
+    a_(copy.a_),
+    b_(copy.b_),
+    c_(copy.c_),
+    d_(copy.d_),
+    numcolors_(copy.numcolors_)
+{
+  memcpy(texture_, copy.texture_, numcolors_ * 4);
 }
+
 
 ColorMapTex::~ColorMapTex()
 {
 }
 
-GeomObj* ColorMapTex::clone() {
+
+GeomObj*
+ColorMapTex::clone()
+{
   return scinew ColorMapTex( *this );
 }
 
-void ColorMapTex::get_bounds( BBox& bb ) {
-  bb.extend( a );
-  bb.extend( b );
-  bb.extend( c );
-  bb.extend( d );
+
+void
+ColorMapTex::get_bounds( BBox& bb )
+{
+  bb.extend(a_);
+  bb.extend(b_);
+  bb.extend(c_);
+  bb.extend(d_);
 }
+
 
 #define COLORMAPTEX_VERSION 1
 
-void ColorMapTex::io(Piostream& stream) {
-
-  stream.begin_class("ColorMapTex", COLORMAPTEX_VERSION);
+void
+ColorMapTex::io(Piostream& stream)
+{
+  const int ver = stream.begin_class("ColorMapTex", COLORMAPTEX_VERSION);
   GeomObj::io(stream);
-  Pio(stream, a);
-  Pio(stream, b);
-  Pio(stream, c);
-  Pio(stream, d);
+  Pio(stream, a_);
+  Pio(stream, b_);
+  Pio(stream, c_);
+  Pio(stream, d_);
+  if (ver > 1)
+  {
+    Pio(stream, numcolors_);
+    //Pio(stream, texture_);
+  }
   stream.end_class();
 }
 
-bool ColorMapTex::saveobj(ostream&, const string&, GeomSave*) {
+
+bool
+ColorMapTex::saveobj(ostream&, const string&, GeomSave*)
+{
   NOT_FINISHED("ColorMapTex::saveobj");
   return false;
 }
