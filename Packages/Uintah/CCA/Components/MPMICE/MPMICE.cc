@@ -174,8 +174,7 @@ void MPMICE::scheduleTimeAdvance(double, double,
                                                                   mpm_matls_sub,
                                                                   all_matls);
   scheduleInterpolateCCToNC(                      sched, patches, mpm_matls);
-//    d_mpm->scheduleExMomIntegrated(sched, patches, matls);
-//    d_ice->scheduleAddExchangeToMomentumAndEnergy(sched, patches, matls);
+  d_mpm->scheduleExMomIntegrated(                 sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, mpm_matls);
 
   if(d_fracture) {
@@ -301,9 +300,11 @@ void MPMICE::scheduleInterpolateNCToCC(SchedulerP& sched,
    Task* t=scinew Task("MPMICE::interpolateNCToCC",
 		   this, &MPMICE::interpolateNCToCC);
 
-   t->requires(Task::NewDW, Mlb->gVelocityStarLabel,   Ghost::AroundCells, 1);
-   t->requires(Task::NewDW, Mlb->gMassLabel,           Ghost::AroundCells, 1);
-   t->requires(Task::NewDW, Mlb->gTemperatureStarLabel,Ghost::AroundCells, 1);
+   const MaterialSubset* mss = mpm_matls->getUnion();
+
+   t->modifies(             Mlb->gVelocityStarLabel, mss, Ghost::AroundCells,1);
+   t->requires(Task::NewDW, Mlb->gMassLabel,              Ghost::AroundCells,1);
+   t->requires(Task::NewDW, Mlb->gTemperatureStarLabel,   Ghost::AroundCells,1);
 
    t->computes(Ilb->mom_L_CCLabel);
    t->computes(Ilb->int_eng_L_CCLabel);
@@ -352,13 +353,14 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   Task* t=scinew Task("MPMICE::interpolateCCToNC",
 		  this, &MPMICE::interpolateCCToNC);
                 
-  t->requires(Task::NewDW, Mlb->gVelocityStarLabel, Ghost::None);
-  t->requires(Task::NewDW, Mlb->gAccelerationLabel, Ghost::None);
-  t->requires(Task::NewDW, MIlb->dTdt_CCLabel,      Ghost::AroundCells,1);
-  t->requires(Task::NewDW, MIlb->dvdt_CCLabel,      Ghost::AroundCells,1);
+  const MaterialSubset* mss = mpm_matls->getUnion();
+  t->modifies(             Mlb->gVelocityStarLabel, mss, Ghost::None);
+  t->modifies(             Mlb->gAccelerationLabel, mss, Ghost::None);
+  t->requires(Task::NewDW, MIlb->dTdt_CCLabel,           Ghost::AroundCells,1);
+  t->requires(Task::NewDW, MIlb->dvdt_CCLabel,           Ghost::AroundCells,1);
 
-  t->computes(Mlb->gMomExedVelocityStarLabel);
-  t->computes(Mlb->gMomExedAccelerationLabel);
+//  t->computes(Mlb->gMomExedVelocityStarLabel);
+//  t->computes(Mlb->gMomExedAccelerationLabel);
   t->computes(Mlb->dTdt_NCLabel);
 
   sched->addTask(t, patches, mpm_matls);
@@ -1153,7 +1155,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       CCVariable<double> dTdt_CC;
       NCVariable<Vector> gacceleration, gvelocity;
 
-      NCVariable<Vector> gMEacceleration, gMEvelocity;
+//      NCVariable<Vector> gMEacceleration, gMEvelocity;
       NCVariable<double> dTdt_NC;
 
       new_dw->get(gvelocity,    Mlb->gVelocityStarLabel,dwindex, patch,
@@ -1165,29 +1167,29 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       new_dw->get(dTdt_CC,      MIlb->dTdt_CCLabel,     dwindex, patch,
 		    Ghost::AroundCells,1);      
 
-      new_dw->allocate(gMEvelocity, Mlb->gMomExedVelocityStarLabel,
-							  dwindex, patch);
-      new_dw->allocate(gMEacceleration, Mlb->gMomExedAccelerationLabel,
-							  dwindex, patch);
+//      new_dw->allocate(gMEvelocity, Mlb->gMomExedVelocityStarLabel,
+//							  dwindex, patch);
+//      new_dw->allocate(gMEacceleration, Mlb->gMomExedAccelerationLabel,
+//							  dwindex, patch);
       new_dw->allocate(dTdt_NC, Mlb->dTdt_NCLabel,        dwindex, patch);
 
       IntVector cIdx[8];
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         patch->findCellsFromNode(*iter,cIdx);
-	gMEvelocity[*iter]     = gvelocity[*iter];
-	gMEacceleration[*iter] = gacceleration[*iter];
+//	gMEvelocity[*iter]     = gvelocity[*iter];
+//	gMEacceleration[*iter] = gacceleration[*iter];
 	dTdt_NC[*iter]         = 0.0;
 	for(int in=0;in<8;in++){
-	   gMEvelocity[*iter]     +=  dvdt_CC[cIdx[in]]*.125;
-	   gMEacceleration[*iter] += (dvdt_CC[cIdx[in]]/delT)*.125;
-	   dTdt_NC[*iter]         += (dTdt_CC[cIdx[in]]/delT)*.125;
+	   gvelocity[*iter]     +=  dvdt_CC[cIdx[in]]*.125;
+	   gacceleration[*iter] += (dvdt_CC[cIdx[in]]/delT)*.125;
+	   dTdt_NC[*iter]       += (dTdt_CC[cIdx[in]]/delT)*.125;
         }
       }
 
-      new_dw->put(gMEvelocity,Mlb->gMomExedVelocityStarLabel,    dwindex,patch);
-      new_dw->put(gMEacceleration,Mlb->gMomExedAccelerationLabel,dwindex,patch);
-      new_dw->put(dTdt_NC,Mlb->dTdt_NCLabel,                     dwindex,patch);
+      new_dw->modify(gvelocity,      Mlb->gVelocityStarLabel, dwindex,patch);
+      new_dw->modify(gacceleration,  Mlb->gAccelerationLabel, dwindex,patch);
+      new_dw->put(dTdt_NC,           Mlb->dTdt_NCLabel,       dwindex,patch);
     }  
   }  //patches
 }

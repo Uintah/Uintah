@@ -173,8 +173,8 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
     // Store new velocities and accelerations in DataWarehouse
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
-      new_dw->put(gvelocity_star[m],lb->gMomExedVelocityStarLabel,dwi,patch);
-      new_dw->put(gacceleration[m], lb->gMomExedAccelerationLabel,dwi,patch);
+      new_dw->modify(gvelocity_star[m],lb->gVelocityStarLabel,dwi,patch);
+      new_dw->modify(gacceleration[m], lb->gAccelerationLabel,dwi,patch);
     }
   }
 }
@@ -191,12 +191,11 @@ void RigidBodyContact::addComputesAndRequiresInterpolated( Task* t,
 
 void RigidBodyContact::addComputesAndRequiresIntegrated( Task* t,
 					     const PatchSet* ,
-					     const MaterialSet* ) const
+					     const MaterialSet* ms) const
 {
-  t->requires(Task::NewDW, lb->gMassLabel,         Ghost::None);
-  t->requires(Task::NewDW, lb->gVelocityStarLabel, Ghost::None);
-  t->requires(Task::NewDW, lb->gAccelerationLabel, Ghost::None);
+  const MaterialSubset* mss = ms->getUnion();
+  t->requires(Task::NewDW, lb->gMassLabel,              Ghost::None);
 
-  t->computes(lb->gMomExedVelocityStarLabel);
-  t->computes(lb->gMomExedAccelerationLabel);
+  t->modifies(             lb->gVelocityStarLabel, mss, Ghost::None);
+  t->modifies(             lb->gAccelerationLabel, mss, Ghost::None);
 }
