@@ -25,6 +25,8 @@
 	<save label="totalflowIN"/>
 	<save label="totalflowOUT"/>
 	<save label="denAccum"/>
+	<save label = "netflowOUTBC"/>
+	<save label = "totalKineticEnergy"/>
 	<save label="pressurePS"/>
         <save label="newCCUVelocity"/>	
         <save label="newCCVVelocity"/>	
@@ -35,11 +37,20 @@
 	<save label="viscosityCTS"/>
 	<save label="tempIN"/>
         <save label="co2IN"/>
-        <save label="enthalpyRXN"/>
         <save label="enthalpySP"/>
         <save label="absorpIN"/>
         <save label="sootFVIN"/>
+        <save label = "radiationSRCIN"/>
+        <save label = "velocityDivergence"/>
+        <save label = "continuityResidual"/>
+        <save label = "filterdrhodt"/>
 	<save label="cellType"/>
+	<save label = "radiationFluxEIN"/>
+	<save label = "radiationFluxWIN"/>
+	<save label = "radiationFluxNIN"/>
+	<save label = "radiationFluxSIN"/>
+	<save label = "radiationFluxTIN"/>
+	<save label = "radiationFluxBIN"/>
 	<checkpoint interval="0.2" cycle="2"/>
    </DataArchiver>
 
