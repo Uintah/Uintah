@@ -181,16 +181,16 @@ private:
 
 private:
 
+      // const VarLabel* variables 
+      const ArchesLabel* d_lab;
+      const MPMArchesLabel* d_MAlab;
+
       PhysicalConstants* d_physicalConsts;
       BoundaryCondition* d_boundaryCondition;
       double d_CF; //model constant
       double d_factorMesh; // lengthscale = fac_mesh*meshsize
       double d_filterl; // prescribed filter length scale
       double d_CFVar; // model constant for mixture fraction variance
-      // const VarLabel* variables 
-      const ArchesLabel* d_lab;
-      const MPMArchesLabel* d_MAlab;
-
 }; // End class SmagorinkyModel
 } // End namespace Uintah
   

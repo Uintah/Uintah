@@ -279,6 +279,11 @@ private:
 
  private:
 
+      // const VarLabel* (required)
+      const ArchesLabel* d_lab;
+      // for multimaterial
+      const MPMArchesLabel* d_MAlab;
+      
       // computes coefficients
       Discretization* d_discretize;
       // computes sources
@@ -302,12 +307,7 @@ private:
       int d_pressRefProc;
       const PatchSet* d_perproc_patches;
 
-      // const VarLabel* (required)
-      const ArchesLabel* d_lab;
-      
       const ProcessorGroup* d_myworld;
-      // for multimaterial
-      const MPMArchesLabel* d_MAlab;
 #ifdef multimaterialform
       // set the values in problem setup
       MultiMaterialInterface* d_mmInterface;

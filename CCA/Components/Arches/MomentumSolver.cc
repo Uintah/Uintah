@@ -1089,20 +1089,24 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
+
 #ifdef correctorstep
+#ifndef Runge_Kutta_2nd
+#ifndef Runge_Kutta_3d
+#ifndef Runge_Kutta_3d_ssp
   delta_t /= 2.0;
 #endif
-#ifdef Runge_Kutta_2nd
-  delta_t *= 2.0;
 #endif
+#endif
+#endif
+
 #ifdef Runge_Kutta_3d
+#ifndef Runge_Kutta_3d_ssp
   double gamma_1 = 8.0/15.0;
-  delta_t *= 2.0; // since correctorstep is also defined for Runge-Kutta
   delta_t *= gamma_1; 
-#ifdef Runge_Kutta_3d_ssp
-  delta_t /= gamma_1; 
 #endif
 #endif
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -1509,12 +1513,12 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
+
 #ifdef Runge_Kutta_3d
+#ifndef Runge_Kutta_3d_ssp
   double gamma_3 = 3.0/4.0;
   double zeta_2 = -5.0/12.0;
   delta_t *= (gamma_3+zeta_2);
-#ifdef Runge_Kutta_3d_ssp
-  delta_t /= (gamma_3+zeta_2);
 #endif
 #endif
 
@@ -2028,11 +2032,11 @@ MomentumSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
+
+  #ifndef Runge_Kutta_3d_ssp
   double gamma_2 = 5.0/12.0;
   double zeta_1 = -17.0/60.0;
   delta_t *= (gamma_2+zeta_1); 
-  #ifdef Runge_Kutta_3d_ssp
-  delta_t /= (gamma_2+zeta_1); 
   #endif
 
   for (int p = 0; p < patches->size(); p++) {

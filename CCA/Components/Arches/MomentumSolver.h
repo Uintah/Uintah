@@ -176,6 +176,10 @@ private:
    
 private:
 
+      // const VarLabel* (required)
+      const ArchesLabel* d_lab;
+      const MPMArchesLabel* d_MAlab;
+
       // computes coefficients
       Discretization* d_discretize;
       // computes sources
@@ -188,10 +192,6 @@ private:
       BoundaryCondition* d_boundaryCondition;
       // physical constants
       PhysicalConstants* d_physicalConsts;
-
-      // const VarLabel* (required)
-      const ArchesLabel* d_lab;
-      const MPMArchesLabel* d_MAlab;
 
 
 }; // End class MomentumSolver

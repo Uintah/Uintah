@@ -35,8 +35,11 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/apcal_vel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_vel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_modify_prescoef_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/prescoef_fort.h>
+#ifdef divergenceconstraint
 #include <Packages/Uintah/CCA/Components/Arches/fortran/prescoef_var_fort.h>
+#else
+#include <Packages/Uintah/CCA/Components/Arches/fortran/prescoef_fort.h>
+#endif
 #include <Packages/Uintah/CCA/Components/Arches/fortran/scalcoef_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/uvelcoef_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/vvelcoef_fort.h>
