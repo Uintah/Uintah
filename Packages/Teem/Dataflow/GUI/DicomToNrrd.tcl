@@ -24,9 +24,6 @@ itcl_class Teem_DataIO_DicomToNrrd {
 
     method set_defaults {} {
 	global $this-dir
-	#global $this-start-index
-	#global $this-end-index
-        #global $this-browse
         global $this-series-uid
         global $this-series-files
         global $this-messages
@@ -38,11 +35,10 @@ itcl_class Teem_DataIO_DicomToNrrd {
 	global $this-entry-dir
 	global $this-entry-suid
 	global $this-entry-files
+        global $this-num-series
+        global $this-num-files
 
 	set $this-dir [pwd]
-	#set $this-start-index 0
-	#set $this-end-index 0
-	#set $this-browse 0
         set $this-series-uid ""
         set $this-series-files ""
         set $this-messages ""
@@ -54,6 +50,8 @@ itcl_class Teem_DataIO_DicomToNrrd {
 	set $this-entry-dir ""
 	set $this-entry-suid ""
 	set $this-entry-files ""
+        set $this-num-series 0
+        set $this-num-files 0
     }
 
     method ui {} {
@@ -66,7 +64,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
 
 	frame $w.row10
 	frame $w.row8
-	frame $w.row4
+        frame $w.row4
 	frame $w.row3 
 	frame $w.row9
 	frame $w.which -relief groove -borderwidth 2
@@ -77,14 +75,12 @@ itcl_class Teem_DataIO_DicomToNrrd {
 	set listing [$w.listing childsite]
 
         pack $w.row10 $w.row8 $w.which $w.listing \
-        $w.row3 $w.sd $w.row4 $w.row9 -side top -e y -f both -padx 5 -pady 5
+        $w.row4 $w.row3 $w.sd $w.row9 -side top -e y -f both -padx 5 -pady 5
 
 	button $w.row10.browse_button -text " Browse " \
 	    -command "$this ChooseDir; $this UpdateSeriesUIDs"
        
-
-	#entry $w.row10.browse -textvariable $this-browse
-	
+        # Directory selection mechanism
 	label $w.row10.dir_label -text "Directory  " 
 	entry $w.row10.dir -textvariable $this-dir -width 80
 
@@ -105,6 +101,17 @@ itcl_class Teem_DataIO_DicomToNrrd {
         # listbox
         bind $seriesuid <ButtonRelease-1> "$this UpdateSeriesFiles %W $files"
 
+        # Text below Series UID and Files listboxes.  This text says how many
+        # series' are in the Series ID listbox and how many files are in the
+        # Files listbox
+        label $w.row4.num_series_label -text "Number of series' in selected directory :  " 
+        label $w.row4.num_series -textvariable $this-num-series
+
+        label $w.row4.num_files_label -text "       Number of files in selected series :  " 
+        label $w.row4.num_files -textvariable $this-num-files
+ 
+        pack $w.row4.num_series_label $w.row4.num_series $w.row4.num_files_label $w.row4.num_files -side left
+
         # Add button
         button $w.row3.add -text "Add Data" -command "$this AddData"
 
@@ -119,10 +126,6 @@ itcl_class Teem_DataIO_DicomToNrrd {
 
 	pack $sd.selected $sd.delete -side top -fill x -expand yes
         pack $sd.selected -side top -fill x -expand yes
-
-	# button $w.row4.execute -text "Execute" -command "$this-c needexecute"
-	# pack $w.row4.execute -side top -e n -f both
-
 
 	makeSciButtonPanel $w $w $this
 	# Commented this out because the ui
@@ -179,6 +182,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
 		# Delete the first entry in the list -- this is always empty
 		set len [llength $list_suid]
 		set list_suid [lrange $list_suid 1 $len]
+                set $this-num-series [llength $list_suid] 
 		    
 		foreach entry $list_suid {
 		    $seriesuid.list insert end $entry
@@ -221,6 +225,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
         # Delete the first entry in the list -- this is always empty
         set len [llength $list_files]
         set list_files [lrange $list_files 1 $len]
+        set $this-num-files [llength $list_files]
 
         foreach entry $list_files {
             # Grab the filename of the end
@@ -278,9 +283,10 @@ itcl_class Teem_DataIO_DicomToNrrd {
 
                 set start_file [lindex $list_files 0]
                 set end_file [lindex $list_files end]
- 
+                set num_files [llength $list_files]
+
                 # Check to make sure this is a unique entry
-                set entry "DIR: [set $this-dir]   SERIES UID: [set $this-suid-sel]   START FILE: $start_file   END FILE: $end_file"
+                set entry "DIR: [set $this-dir]   SERIES UID: [set $this-suid-sel]   START FILE: $start_file   END FILE: $end_file   NUMBER OF FILES: $num_files"
 
                 set list_sel [$selected.list get 0 end]
 
@@ -357,8 +363,10 @@ itcl_class Teem_DataIO_DicomToNrrd {
 
 	    set start_file [lindex $list_files 0]
 	    set end_file [lindex $list_files end]
+            set num_files [llength $list_files]
+
 	    # Check to make sure this is a unique entry
-	    set entry "DIR: [set $this-entry-dir$which]   SERIES UID: [set $this-entry-suid$which]   START FILE: $start_file   END FILE: $end_file"
+	    set entry "DIR: [set $this-entry-dir$which]   SERIES UID: [set $this-entry-suid$which]   START FILE: $start_file   END FILE: $end_file   NUMBER OF FILES: $num_files"
 	    
 	    
 
