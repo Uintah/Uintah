@@ -75,55 +75,39 @@ ChangeFieldDataAtAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
 
   if (fsrc->data_at() == Field::NODE)
   {
+    typename FSRC::mesh_type::Node::size_type nodesize;
+    mesh->size(nodesize);
+    const int ncols = nodesize;
+
     int nrows;
-    int mult;
+    int *rr = 0;
+    int nnz = 0;
+    int *cc = 0;
+    double *d = 0;
     typename FSRC::mesh_type::Node::array_type tmparray;
+
     if (at == Field::EDGE)
     {
       typename FSRC::mesh_type::Edge::size_type osize;
       mesh->size(osize);
       nrows = osize;
-      mesh->get_nodes(tmparray, typename FSRC::mesh_type::Edge::index_type(0));
-      mult = tmparray.size();
-    }
-    else if (at == Field::FACE)
-    {
-      typename FSRC::mesh_type::Face::size_type osize;
-      mesh->size(osize);
-      nrows = osize;
-      mesh->get_nodes(tmparray, typename FSRC::mesh_type::Face::index_type(0));
-      mult = tmparray.size();
-    }
-    else if (at == Field::CELL)
-    {
-      typename FSRC::mesh_type::Cell::size_type osize;
-      mesh->size(osize);
-      nrows = osize;
-      mesh->get_nodes(tmparray, typename FSRC::mesh_type::Cell::index_type(0));
-      mult = tmparray.size();
-    }
 
-    typename FSRC::mesh_type::Node::size_type nodesize;
-    mesh->size(nodesize);
-    const int ncols = nodesize;
-
-    cout << "rows=" << nrows << ", cols=" << ncols << ", mult=" << mult <<"\n";
-
-    int *rr = scinew int[nrows+1];
-    const int nnz = nrows*mult;
-    int *cc = scinew int[nnz];
-    double *d = scinew double[nnz];
-
-    if (at == Field::EDGE)
-    {
+      rr = scinew int[nrows+1];
       rr[0] = 0;
-      int counter = 0;
+      size_t counter = 0;
       typename FSRC::mesh_type::Edge::iterator itr, eitr;
       mesh->begin(itr);
       mesh->end(eitr);
       while (itr != eitr)
       {
 	mesh->get_nodes(tmparray, *itr);
+	const int mult = tmparray.size();
+	if (counter == 0)
+	{
+	  nnz = nrows*mult;
+	  cc = scinew int[nnz];
+	  d = scinew double[nnz];
+	}
 	for (int i = 0; i < mult; i++)
 	{
 	  cc[counter*mult + i] = tmparray[i];
@@ -137,14 +121,26 @@ ChangeFieldDataAtAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
     }
     else if (at == Field::FACE)
     {
+      typename FSRC::mesh_type::Face::size_type osize;
+      mesh->size(osize);
+      nrows = osize;
+
+      rr = scinew int[nrows+1];
       rr[0] = 0;
-      int counter = 0;
+      size_t counter = 0;
       typename FSRC::mesh_type::Face::iterator itr, eitr;
       mesh->begin(itr);
       mesh->end(eitr);
       while (itr != eitr)
       {
 	mesh->get_nodes(tmparray, *itr);
+	const int mult = tmparray.size();
+	if (counter == 0)
+	{
+	  nnz = nrows*mult;
+	  cc = scinew int[nnz];
+	  d = scinew double[nnz];
+	}
 	for (int i = 0; i < mult; i++)
 	{
 	  cc[counter*mult + i] = tmparray[i];
@@ -158,14 +154,26 @@ ChangeFieldDataAtAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
     }
     else if (at == Field::CELL)
     {
+      typename FSRC::mesh_type::Cell::size_type osize;
+      mesh->size(osize);
+      nrows = osize;
+
+      rr = scinew int[nrows+1];
       rr[0] = 0;
-      int counter = 0;
+      size_t counter = 0;
       typename FSRC::mesh_type::Cell::iterator itr, eitr;
       mesh->begin(itr);
       mesh->end(eitr);
       while (itr != eitr)
       {
 	mesh->get_nodes(tmparray, *itr);
+	const int mult = tmparray.size();
+	if (counter == 0)
+	{
+	  nnz = nrows*mult;
+	  cc = scinew int[nnz];
+	  d = scinew double[nnz];
+	}
 	for (int i = 0; i < mult; i++)
 	{
 	  cc[counter*mult + i] = tmparray[i];
@@ -178,7 +186,14 @@ ChangeFieldDataAtAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
       }
     }
 
-    interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, d);
+    if (rr && cc)
+    {
+      interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, d);
+    }
+    else if (rr)
+    {
+      delete rr;
+    }
   }
 
   fout->copy_properties(fsrc);
