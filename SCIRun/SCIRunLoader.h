@@ -49,36 +49,56 @@
 #include <SCIRun/CCA/CCAComponentDescription.h>
 #include <SCIRun/ComponentInstance.h>
 #include <SCIRun/resourceReference.h>
+
 namespace SCIRun {
 
-  class SCIRunLoader : public sci::cca::Loader{
-  public:
-    SCIRunLoader(const std::string& loaderName, const std::string& frameworkURL);
-    virtual ~SCIRunLoader();
+/**
+ * \class SCIRunLoader
+ *
+ *
+ *
+ */
+class SCIRunLoader : public sci::cca::Loader
+{
+public:
+  SCIRunLoader(const std::string& loaderName, const std::string& frameworkURL);
+  virtual ~SCIRunLoader();
 
-    virtual int createPInstance(const ::std::string& componentType, const std::string& componentName,
-				const sci::cca::TypeMap::pointer& properties, SSIDL::array1<std::string>& componentURLs);
-    virtual int createInstance(const std::string& componentType, const std::string& componentName, 
-			       const sci::cca::TypeMap::pointer& properties, std::string &componentURL);
+  /** */
+  virtual int createPInstance(const ::std::string& componentType,
+                              const std::string& componentName,
+                              const sci::cca::TypeMap::pointer& properties,
+                              SSIDL::array1<std::string>& componentURLs);
 
-    virtual int destroyInstance(const std::string& componentName, float timeout);
+  /** */
+  virtual int createInstance(const std::string& componentType,
+                             const std::string& componentName, 
+                             const sci::cca::TypeMap::pointer& properties,
+                             std::string &componentURL);
+  
+  /** */
+  virtual int destroyInstance(const std::string& componentName, float timeout);
+  
+  /** */
+  virtual int getAllComponentTypes(::SSIDL::array1< ::std::string>& componentTypes);
 
-    virtual int getAllComponentTypes(::SSIDL::array1< ::std::string>& componentTypes);
-    
-    virtual int shutdown(float timeout);
+  /** */
+  virtual int shutdown(float timeout);
 
-    int mpi_rank;
-    int mpi_size;
-    
-  private:
-    void buildComponentList();
-    void readComponentDescription(const std::string& file);
-    void destroyComponentList();
-    std::string masterFrameworkURL;
-    typedef std::map<std::string, CCAComponentDescription*> componentDB_type;
-    componentDB_type components;
-  };
-}
+  /** */
+  int mpi_rank;
+  int mpi_size;
+  
+private:
+  void buildComponentList();
+  void readComponentDescription(const std::string& file);
+  void destroyComponentList();
+  std::string masterFrameworkURL;
+  typedef std::map<std::string, CCAComponentDescription*> componentDB_type;
+  componentDB_type components;
+};
+
+} // end namespace SCIRun
 
 #endif
 
