@@ -1046,10 +1046,7 @@ OpenGL::redraw_frame()
     //      cerr << "Saving a movie!\n";
     if(make_MPEG_p_ ) {
 
-      if(encoding_mpeg_) {
-	AddMpegFrame();
-      } else {
-
+      if(!encoding_mpeg_) {
 	string fname = movie_name_;
 
 	// only add extension if not allready there
@@ -1075,10 +1072,19 @@ OpenGL::redraw_frame()
 	  cerr << "Dumping mpeg " << fname << std::endl;
 
 	  StartMpeg( fname );
-	  AddMpegFrame();
 
+	  current_movie_frame_ = 0;
 	  encoding_mpeg_ = true;
 	}
+      }
+
+      if(encoding_mpeg_) {
+	cerr << "Adding Mpeg Frame " << current_movie_frame_++ << "....  ";
+	view_window_->setMovieFrame(current_movie_frame_);
+	AddMpegFrame();
+	cerr << " done!\n";
+	
+	view_window_->setMovieFrame(current_movie_frame_);
       }
 
     } else { // dump each frame
@@ -2036,7 +2042,6 @@ OpenGL::AddMpegFrame()
   int width, height;
   ImVfbPtr ptr;
 
-  cerr<<"Adding Mpeg Frame\n";
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT,vp);
 
