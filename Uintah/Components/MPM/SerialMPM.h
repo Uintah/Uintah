@@ -109,13 +109,6 @@ protected:
 
   //////////
   // Insert Documentation Here:
-  void labelBrokenCells(const ProcessorGroup*,
-			 	const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw);
-
-  //////////
-  // Insert Documentation Here:
   void interpolateParticlesToGrid(const ProcessorGroup*,
 				  const Patch* patch,
 				  DataWarehouseP& old_dw,
@@ -219,6 +212,9 @@ protected:
    
 //
 // $Log$
+// Revision 1.54  2000/09/05 19:36:59  tan
+// Fracture starts to run in Uintah/MPM!
+//
 // Revision 1.53  2000/09/05 05:11:16  tan
 // Moved Fracture Model to MPMMaterial class.
 //

@@ -25,10 +25,8 @@ findCellAndWeights( int partIdx,
                     bool visiable[8],
                     double S[8] ) const
 {
-  double completeShape[8];
-  
   if( !d_lattice.getPatch()->findCellAndWeights(d_lattice.getpX()[partIdx], 
-     nodeIdx, completeShape) )
+     nodeIdx, S) )
   return false;
 
   for(int i=0;i<8;++i) {
@@ -44,9 +42,8 @@ findCellAndShapeDerivatives( int partIdx,
                              bool visiable[8],
                              Vector d_S[8] ) const
 {
-  double completeShapeDerivative[8];
-  if( !d_lattice.getPatch()->findCellAndWeights(d_lattice.getpX()[partIdx], 
-     nodeIdx, completeShapeDerivative) )
+  if( !d_lattice.getPatch()->findCellAndShapeDerivatives(d_lattice.getpX()[partIdx], 
+     nodeIdx, d_S) )
   return false;
   
   for(int i=0;i<8;++i) {
@@ -64,14 +61,12 @@ findCellAndWeightsAndShapeDerivatives( int partIdx,
 			     double S[8],
                              Vector d_S[8] ) const
 {
-  double completeShape[8];
   if( !d_lattice.getPatch()->findCellAndWeights(d_lattice.getpX()[partIdx], 
-     nodeIdx, completeShape) )
+     nodeIdx, S) )
   return false;
 
-  double completeShapeDerivative[8];
-  if( !d_lattice.getPatch()->findCellAndWeights(d_lattice.getpX()[partIdx], 
-     nodeIdx, completeShapeDerivative) )
+  if( !d_lattice.getPatch()->findCellAndShapeDerivatives(d_lattice.getpX()[partIdx], 
+     nodeIdx, d_S) )
   return false;
   
   for(int i=0;i<8;++i) {
@@ -92,6 +87,9 @@ getVisiability(int partIdx,const IntVector& nodeIdx) const
 } //namespace Uintah
 
 // $Log$
+// Revision 1.5  2000/09/05 19:39:00  tan
+// Fracture starts to run in Uintah/MPM!
+//
 // Revision 1.4  2000/09/05 07:44:27  tan
 // Applied BrokenCellShapeFunction to constitutive models where fracture
 // is involved.

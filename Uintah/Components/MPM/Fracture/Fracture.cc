@@ -48,22 +48,38 @@ initializeFractureModelData(const Patch* patch,
 
 void
 Fracture::
-labelBrokenCells( const Patch* patch,
-                  MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw)
-{
-}
-
-void
-Fracture::
 crackGrow(const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw)
 {
-}
+   ParticleSubset* pset = old_dw->getParticleSubset(mpm_matl->getDWIndex(), 
+      patch);
+   
+   ParticleVariable<Matrix3> pStress;
+   ParticleVariable<int> pIsBroken;
+   ParticleVariable<Vector> pCrackSurfaceNormal;
 
+   new_dw->get(pStress, lb->pStressLabel_preReloc, pset);
+   old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
+   old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
+   
+   for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++)
+   {
+      particleIndex idx = *iter;
+      
+      if(!pIsBroken[idx]) {
+        //crack initiation
+      }
+      else {
+        //crack propagation
+      }
+   }
+
+   new_dw->put(pIsBroken, lb->pIsBrokenLabel_preReloc);
+   new_dw->put(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel_preReloc);
+}
 
 Fracture::
 Fracture(ProblemSpecP& ps)
@@ -81,6 +97,9 @@ Fracture::~Fracture()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.30  2000/09/05 19:38:19  tan
+// Fracture starts to run in Uintah/MPM!
+//
 // Revision 1.29  2000/09/05 05:13:30  tan
 // Moved Fracture Model to MPMMaterial class.
 //
