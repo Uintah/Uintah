@@ -527,7 +527,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                            mpm_matls_sub,
                                                            all_matls);    
                                                                  
-  scheduleModelMassExchange(               sched, level,   all_matls);
+  scheduleComputeModelSources(             sched, level,   all_matls);
 
   scheduleUpdateVolumeFraction(            sched, level,   all_matls);
 
@@ -573,8 +573,6 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                           mpm_matls_sub,
                                                           press_matl,
                                                           all_matls);
-
-  scheduleModelMomentumAndEnergyExchange( sched, level,   all_matls);
 
   scheduleComputeLagrangianValues(        sched, patches, all_matls);
 
@@ -791,15 +789,16 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::scheduleModelMassExchange--
+ Function~  ICE::scheduleComputeModelSources--
 _____________________________________________________________________*/
-void ICE::scheduleModelMassExchange(SchedulerP& sched, const LevelP& level,
-                                const MaterialSet* matls)
+void ICE::scheduleComputeModelSources(SchedulerP& sched, 
+                                      const LevelP& level,
+                                      const MaterialSet* matls)
 {
   if(d_models.size() != 0){
     cout_doing << "ICE::scheduleModelMassExchange" << endl;
-    Task* task = scinew Task("ICE::zeroModelSources",
-                          this, &ICE::zeroModelSources);
+    Task* task = scinew Task("ICE::zeroModelSources",this, 
+                             &ICE::zeroModelSources);
     task->computes(lb->modelMass_srcLabel);
     task->computes(lb->modelMom_srcLabel);
     task->computes(lb->modelEng_srcLabel);
@@ -816,7 +815,7 @@ void ICE::scheduleModelMassExchange(SchedulerP& sched, const LevelP& level,
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
        iter != d_models.end(); iter++){
       ModelInterface* model = *iter;
-      model->scheduleMassExchange(sched, level, d_modelInfo);
+      model->scheduleComputeModelSources(sched, level, d_modelInfo);
     }
   }
 }
@@ -912,22 +911,6 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
   task->computes(lb->pressZ_FCLabel, press_matl, oims);
 
   sched->addTask(task, patches, matls);
-}
-
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleModelMomentumAndEnergyExchange--
-_____________________________________________________________________*/
-void ICE::scheduleModelMomentumAndEnergyExchange(SchedulerP& sched,
-                                           const LevelP& level,
-                                           const MaterialSet* /*matls*/)
-{
-  if(d_models.size() != 0){
-    for(vector<ModelInterface*>::iterator iter = d_models.begin();
-       iter != d_models.end(); iter++){
-      ModelInterface* model = *iter;
-      model->scheduleMomentumAndEnergyExchange(sched, level, d_modelInfo);
-    }
-  }
 }
 
 /* ---------------------------------------------------------------------
