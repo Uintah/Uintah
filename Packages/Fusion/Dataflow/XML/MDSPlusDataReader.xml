@@ -25,6 +25,27 @@
     <authors>
       <author>ARSanderson</author>
     </authors>
+    <summary>
+      <p>
+The MDSPlusDataReader connects to an MDSPlus server and retrieves the
+data specified by in the GUI. Currently this reader is a prototype for
+a more general reader.
+      </p>
+    </summary>
+    <description>
+      <p>
+The MDSPlusDataReader connects to an MDSPlus server and retrieves the
+data specified by in the GUI. Currently this reader is a prototype for
+a more general reader.
+      </p>
+
+<p>The following data fields can be read in by the module, Pressure,
+Magnetic Field, Velosity, and Current. The Server, Tree, and Shot must
+first be specified. It is possible to select which part of the data to
+retireve, either the Realspace or the Imaginary. If the Imaginary is
+selected it is then possible to select which mode, 0, 1, 2, or a
+sum. Finally one or more fields may be selected.</p>
+    </description>
   </overview>
   <implementation>
   </implementation>
@@ -33,8 +54,36 @@
     </inputs>
     <outputs>
       <port>
-	<name>Output Phi Field</name>
-	<datatype>SCIRun::Field</datatype>
+	<name>Output 0 Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+	<name>Output 1 Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+	<name>Output 2 Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+	<name>Output 3 Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+	<name>Output 4 Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+	<name>Output 5 Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+	<name>Output 6 Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+	<name>Output 7 Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
       </port>
     </outputs>
   </io>

@@ -30,16 +30,28 @@ itcl_class Fusion_DataIO_MDSPlusDataReader {
 	global $this-serverName
 	global $this-treeName
 	global $this-shotNumber
+	global $this-signal
 
 	set $this-serverName "atlas.gat.com"
 	set $this-treeName "NIMROD"
 	set $this-shotNumber "10089"
+	set $this-signal "GET THIS SIGNAL"
+
+	global $this-mergeData
+	global $this-assumeSVT
+
+	set $this-mergeData 1
+	set $this-assumeSVT 1
     }
 
     method ui {} {
 	global $this-serverName
 	global $this-treeName
 	global $this-shotNumber
+	global $this-signal
+
+	global $this-mergeData
+	global $this-assumeSVT
 
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -52,6 +64,31 @@ itcl_class Fusion_DataIO_MDSPlusDataReader {
 	labelEntry $w.server "Server" $this-serverName
 	labelEntry $w.tree   "Tree"   $this-treeName
 	labelEntry $w.shot   "Shot"   $this-shotNumber
+ 	labelEntry $w.signal "Signal" $this-signal
+
+
+
+	iwidgets::labeledframe $w.dm -labeltext "Data Management"
+	set dm [$w.dm childsite]
+
+	label $dm.mlikelabel -text "Merge like data" -width 15 -anchor w -just left
+	radiobutton $dm.mergelike -variable $this-mergeData -value 1
+	
+	label $dm.mtimelabel -text "Merge time data" -width 15 -anchor w -just left
+	radiobutton $dm.mergetime -variable $this-mergeData -value 2
+	
+	label $dm.asvt -text "Assume Vector-Tensor data" \
+	    -width 33 -anchor w -just left
+	checkbutton $dm.svt -variable $this-assumeSVT
+	
+	pack $dm.mlikelabel -side left
+	pack $dm.mergelike  -side left
+	pack $dm.mtimelabel -side left -padx  20
+	pack $dm.mergetime  -side left
+	pack $dm.asvt   -side left -padx  20
+	pack $dm.svt    -side left
+
+	pack $w.dm -fill x -expand yes -side top
 
 	button $w.button -text "Download" -command "$this-c needexecute"
 
