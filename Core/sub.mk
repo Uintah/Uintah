@@ -44,12 +44,16 @@ SUBDIRS := \
 #	$(SRCDIR)/Parts \
 #	$(SRCDIR)/PartsGui
 
+
 ifeq ($(BUILD_SCIRUN2),yes)
 SUBDIRS := \
 	$(SUBDIRS) \
-	$(SRCDIR)/globus_threads \
 	$(SRCDIR)/CCA \
-	$(SRCDIR)/Babel
+	$(SRCDIR)/Babel 
+endif
+
+ifeq ($(HAVE_GLOBUS),yes)
+SUBDIRS+=$(SRCDIR)/globus_threads
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
