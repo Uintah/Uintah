@@ -58,11 +58,18 @@ ManageFieldDataAlgoFieldScalar<Fld, Loc>::execute(FieldHandle ifield_h)
 {
   Fld *ifield = dynamic_cast<Fld *>(ifield_h.get_rep());
   typename Fld::mesh_handle_type mesh = ifield->get_typed_mesh();
+  Mesh::synchronized_t sync;
+  sync.set(Mesh::NODES_E);
+  sync.set(Mesh::EDGES_E);
+  sync.set(Mesh::FACES_E);
+  mesh->synchronize(sync);
+  
   typename Loc::size_type ssize;  mesh->size(ssize);
   ColumnMatrix *omatrix = scinew ColumnMatrix(ssize);
   int index = 0;
   typename Loc::iterator iter; mesh->begin(iter);
   typename Loc::iterator eiter; mesh->end(eiter);
+
   while (iter != eiter)
   {
     typename Fld::value_type val = ifield->value(*iter);
