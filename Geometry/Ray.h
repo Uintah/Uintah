@@ -28,7 +28,11 @@ public:
 
     Point origin() const;
     Vector direction() const;
-
+  Point parameter(double t); // returns the Point at parameter t
+			     //  does not pre-normalized direction
+    
+  
+  void normalize(); // normalizes the direction vector
     void direction(const Vector& newdir);
 };
 

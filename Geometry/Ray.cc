@@ -39,9 +39,20 @@ Point Ray::origin() const
     return o;
 }
 
+
 Vector Ray::direction() const
 {
     return d;
+}
+
+Point Ray::parameter(double t)
+{
+  return o + d*t;
+}
+
+void Ray::normalize()
+{
+  d.normalize();
 }
 
 void Ray::direction(const Vector& newdir)
