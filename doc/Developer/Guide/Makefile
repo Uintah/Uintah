@@ -40,8 +40,9 @@ index.html: *.xml dev/*.xml src/*.xml
 
 nochunk: Guide.html
 
+.DELETE_ON_ERROR: Guide.html
 Guide.html: *.xml dev/*.xml src/*.xml
-	-java com.icl.saxon.StyleSheet -w2 \
+	java com.icl.saxon.StyleSheet -w2 \
 	${BOOK} ${STYLESHEET_NOCHUNK} ${PARAMS_NOCHUNK} >$@
 
 clean:
