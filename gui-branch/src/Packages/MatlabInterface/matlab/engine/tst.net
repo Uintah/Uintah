@@ -1,0 +1,36 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global userName
+set userName "oleg"
+
+global runDate
+set runDate " Wed  Sep 12 2001"
+
+global runTime
+set runTime " 10:0:29"
+
+set bbox {10.0 10.0 166 258}
+
+set m0 [addModuleAtPosition "MatlabInterface" "DataIO" "Matlab" 14 95]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 22 201]
+set m2 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 10 10]
+
+addConnection $m2 0 $m0 0
+addConnection $m0 0 $m1 0
+
+set $m0-notes {}
+set $m0-show_status 1
+set $m0-hpTCL {127.0.0.1:5517}
+set $m0-cmdTCL {o1=i1*2;}
+set $m1-notes {}
+set $m1-show_status 1
+set $m1-filename {/res/sci/data12/oleg/scirun/4/SCIRun/src/Packages/MatlabInterface/matlab/engine/res2.mat}
+set $m1-filetype {ASCII}
+set $m1-split 0
+set $m2-notes {}
+set $m2-show_status 1
+set $m2-filename {/res/sci/data12/oleg/scirun/4/SCIRun/src/Packages/MatlabInterface/matlab/engine/res.mat}
+
+::netedit scheduleok

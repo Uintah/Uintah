@@ -1,0 +1,56 @@
+# SCI Network 1.0
+
+global userName
+set userName "dav"
+
+global runDate
+set runDate " Tue  Apr 13 1999"
+
+global runTime
+set runTime " 12:43:5"
+
+set m0 [addModuleAtPosition Salmon 225 413]
+set m1 [addModuleAtPosition GenStandardColorMaps 337 32]
+set m2 [addModuleAtPosition TecplotFileSelector 69 38]
+set m3 [addModuleAtPosition Hedgehog 224 316]
+set m4 [addModuleAtPosition ParticleGridVisControl 144 172]
+
+addConnection $m2 0 $m4 0
+addConnection $m1 0 $m3 2
+addConnection $m4 0 $m3 1
+addConnection $m4 1 $m3 0
+addConnection $m3 0 $m0 0
+
+set Salmon_0-notes {}
+set GenStandardColorMaps_0-notes {}
+set GenStandardColorMaps_0-tcl_status {Calling GenStandardColorMaps!}
+set GenStandardColorMaps_0-mapType 0
+set GenStandardColorMaps_0-minRes 2
+set GenStandardColorMaps_0-resolution 2
+set TecplotFileSelector_0-notes {}
+set TecplotFileSelector_0-tcl_status {Calling TecplotFileSelector!}
+set TecplotFileSelector_0-filebase {}
+set TecplotFileSelector_0-animate 0
+set TecplotFileSelector_0-startFrame 0
+set TecplotFileSelector_0-endFrame 0
+set TecplotFileSelector_0-increment 0
+set Hedgehog_0-notes {}
+set Hedgehog_0-length_scale 0.1
+set Hedgehog_0-width_scale 0.1
+set Hedgehog_0-head_length 0.3
+set Hedgehog_0-type {2D}
+set Hedgehog_0-exhaustive_flag -2147483647
+set Hedgehog_0-drawcylinders 0
+set Hedgehog_0-shaft_rad -1.79769e+308
+set ParticleGridVisControl_0-notes {}
+set ParticleGridVisControl_0-tcl_status {Calling ParticleGridVisControl!}
+set ParticleGridVisControl_0-sVar {}
+set ParticleGridVisControl_0-vVar {}
+set ParticleGridVisControl_0-psVar {}
+set ParticleGridVisControl_0-pvVar {}
+set ParticleGridVisControl_0-sFluid 0
+set ParticleGridVisControl_0-vFluid 0
+set ParticleGridVisControl_0-pFluid 0
+$m1 ui
+$m2 ui
+

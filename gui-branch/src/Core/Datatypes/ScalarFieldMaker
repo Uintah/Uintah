@@ -1,0 +1,31 @@
+# ScalarFieldRGTYPE.h
+# ScalarFieldRGchar.h
+# ScalarFieldRGchar.cc
+# ScalarFieldRGuchar.h
+# ScalarFieldRGuchar.cc
+# ScalarFieldRGshort.h
+# ScalarFieldRGshort.cc
+# ScalarFieldRGint.h
+# ScalarFieldRGint.cc
+# ScalarFieldRGfloat.h
+# ScalarFieldRGfloat.cc
+# ScalarFieldRGdouble.h
+# ScalarFieldRGdouble.cc
+# ScalarFieldRG.h
+# ScalarFieldRG.cc
+
+
+sed 's/TYPE/char/g' < ScalarFieldRGTYPE.h > ScalarFieldRGchar.h
+sed 's/TYPE/char/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGchar.cc
+sed 's/TYPE/uchar/g' < ScalarFieldRGTYPE.h | sed 's/<uchar>/<unsigned char>/g' > ScalarFieldRGuchar.h
+sed 's/TYPE/uchar/g' < ScalarFieldRGTYPE.cc | sed 's/<uchar>/<unsigned char>/g' > ScalarFieldRGuchar.cc
+sed 's/TYPE/short/g' < ScalarFieldRGTYPE.h > ScalarFieldRGshort.h
+sed 's/TYPE/short/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGshort.cc
+sed 's/TYPE/int/g' < ScalarFieldRGTYPE.h > ScalarFieldRGint.h
+sed 's/TYPE/int/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGint.cc
+sed 's/TYPE/float/g' < ScalarFieldRGTYPE.h > ScalarFieldRGfloat.h
+sed 's/TYPE/float/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGfloat.cc
+sed 's/TYPE/double/g' < ScalarFieldRGTYPE.h > ScalarFieldRGdouble.h
+sed 's/TYPE/double/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGdouble.cc
+sed 's/ScalarFieldRGdouble/ScalarFieldRG/g' < ScalarFieldRGdouble.h > ScalarFieldRG.h
+sed 's/ScalarFieldRGdouble/ScalarFieldRG/g' < ScalarFieldRGdouble.cc > ScalarFieldRG.cc

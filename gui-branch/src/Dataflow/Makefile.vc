@@ -1,0 +1,69 @@
+#
+#  The contents of this file are subject to the University of Utah Public
+#  License (the "License"); you may not use this file except in compliance
+#  with the License.
+#  
+#  Software distributed under the License is distributed on an "AS IS"
+#  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+#  License for the specific language governing rights and limitations under
+#  the License.
+#  
+#  The Original Source Code is SCIRun, released March 12, 2001.
+#  
+#  The Original Source Code was developed by the University of Utah.
+#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+#  University of Utah. All Rights Reserved.
+#
+
+# Makefile.vc
+# written by Chris Moulding 8/99
+
+###########################  EDIT HERE  ###########################
+
+## the name of the .dll and/or .exe to be built by linking the OBJS
+DLLNAME = Dataflow
+EXENAME = 
+
+## the files to be compiled. .odll and .oexe extensions indicate
+## that the file will be linked into a dll or exe binary, respectively.
+OBJS = Comm\MessageBase.odll\
+       Constraints\AngleConstraint.odll Constraints\BaseConstraint.odll\
+	   Constraints\BaseVariable.odll Constraints\CenterConstraint.odll\
+	   Constraints\ConstraintSolver.odll Constraints\DistanceConstraint.odll\
+	   Constraints\LineConstraint.odll Constraints\PlaneConstraint.odll\
+	   Constraints\ProjectConstraint.odll Constraints\Pythagorasconstraint.odll\
+	   Constraints\RatioConstraint.odll Constraints\SegmentConstraint.odll\
+	   Constraints\VarCore.odll\
+	   Dataflow\Connection.odll Dataflow\ModuleHelper.odll Dataflow\Network.odll\
+	   Dataflow\Port.odll Dataflow\Module.odll Dataflow\NetworkEditor.odll\
+	   Dataflow\PackageDB.odll\
+	   Datatypes\BooleanPort.odll Datatypes\ColorMapPort.odll\
+	   Datatypes\ColumnMatrixPort.odll\
+	   Datatypes\GeometryPort.odll Datatypes\HexMeshPort.odll\
+	   Datatypes\IntervalPort.odll Datatypes\MatrixPort.odll\
+	   Datatypes\MeshPort.odll Datatypes\ScalarFieldPort.odll\
+	   Datatypes\ScaledBoxWidgetData.odll Datatypes\ScaledBoxWidgetDataPort.odll\
+	   Datatypes\SoundPort.odll Datatypes\SurfacePort.odll\
+	   Datatypes\VectorFieldPort.odll Datatypes\VoidStarPort.odll\
+	   Datatypes\cMatrixPort.odll Datatypes\cVectorPort.odll\
+	   share\DllEntry.odll\
+	   Widgets\ArrowWidget.odll Widgets\BaseWidget.odll Widgets\BoxWidget.odll\
+	   Widgets\CriticalPointWidget.odll Widgets\CrosshairWidget.odll\
+	   Widgets\FrameWidget.odll Widgets\GaugeWidget.odll Widgets\LightWidget.odll\
+	   Widgets\PathWidget.odll Widgets\PointWidget.odll Widgets\RingWidget.odll\
+	   Widgets\ScaledBoxWidget.odll Widgets\ScaledFrameWidget.odll\
+	   Widgets\ViewWidget.odll
+
+## override, or append to, the default compiler and/or linker flags with these
+CF   = -DBUILD_PSECORE
+LF   = 
+
+## add to the default include paths
+INCS = 
+
+## add to the default list of libraries to link against
+LIBS = Core$(APPENDIX).lib
+
+###################################################################
+
+!include <$(TOP)\src\scripts\Makefile.vc.master>

@@ -1,0 +1,83 @@
+#include "CoupledMaterial.h"
+#include "HitInfo.h"
+#include "Light.h"
+#include "Ray.h"
+#include "Scene.h"
+#include "Stats.h"
+#include "Object.h"
+#include "Worker.h"
+#include "Context.h"
+#include <math.h>
+
+using namespace rtrt;
+
+CoupledMaterial::CoupledMaterial(const Color& Rd, double R0, double phong_exponent)
+    : Rd(Rd), R0(R0), phong_exponent(phong_exponent)
+{
+}
+
+CoupledMaterial::~CoupledMaterial()
+{
+}
+
+void CoupledMaterial::shade(Color& result, const Ray& ray,
+		  const HitInfo& hit, int depth, 
+		  double atten, const Color& accumcolor,
+		  Context* cx)
+{
+
+    double nearest=hit.min_t;
+    Object* obj=hit.hit_obj;
+    Point hitpos(ray.origin()+ray.direction()*nearest);
+    Vector normal(obj->normal(hitpos, hit));
+    double cos_prime=-normal.dot(ray.direction());
+    if(cos_prime<0){
+	cos_prime=-cos_prime;
+	normal=-normal;
+    }
+    
+    Color difflight(0,0,0);
+    Color speclight(0,0,0);
+    int nlights=cx->scene->nlights();
+    cx->stats->ds[depth].nshadow+=nlights;
+    double k1 = (1-cos_prime);
+    k1 *= k1*k1*k1*k1;
+    for(int i=0;i<nlights;i++){
+	Light* light=cx->scene->light(i);
+	Vector light_dir=light->get_pos()-hitpos;
+	double dist=light_dir.normalize();
+	Color shadowfactor(1,1,1);
+	if(cx->worker->lit(hitpos, light, light_dir, dist, shadowfactor, depth, cx) ){
+            double cos_theta=light_dir.dot(normal);
+	    if(cos_theta < 0){
+		cos_theta=-cos_theta;
+		light_dir=-light_dir;
+	    }
+            double k2 = (1-cos_theta);
+            k2 *= k2*k2*k2*k2;
+	    difflight+=light->get_color()*((1-k1)*(1-k2)*shadowfactor);
+            speclight+=light->get_color() * shadowfactor * phong_term( ray.direction(), light_dir,
+                                 normal, phong_exponent);
+	} else {
+	    cx->stats->ds[depth].inshadow++;
+	}
+    }
+    
+    Color surfcolor=Rd * (difflight + ambient_hack(cx->scene, hitpos, normal)*(1-k1))
+	+speclight;
+
+    double spec_refl = (R0 + (1-R0)*k1);
+    atten *= spec_refl;
+    if (depth < cx->scene->maxdepth && atten > 0.02){
+            Vector refl_dir = reflection( ray.direction(), normal );
+            Ray rray(hitpos, refl_dir);
+            Color rcolor;
+            cx->worker->traceRay(rcolor, rray, depth+1,  atten,
+                                 accumcolor+difflight+speclight, cx);
+            surfcolor+= rcolor * spec_refl;
+            cx->stats->ds[depth].nrefl++;
+    }
+    
+
+    result=surfcolor;
+}

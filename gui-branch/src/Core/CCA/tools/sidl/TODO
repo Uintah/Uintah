@@ -1,0 +1,44 @@
+Look at babel...
+imports
+versions
+Check CI::cppfullname
+Write framework...
+
+marshalling for array					argtest
+  - multidimensional arrays
+exceptions?						exceptiontest
+ - remove NotFinished.h include from sidl output
+
+memory leaks:
+ - in server for urlcast (in nexus internal_connection_requested)
+
+Thread safety for TypeInfo construction
+Thread safety with argtest
+
+optimize
+ - criticalpath monitor thread?
+
+separate compilation
+ - don't put proxy class in _sidl.cc
+ - real registry?
+
+unknown handlers
+
+final methods in private
+other method modifiers - abstract
+static methods
+classes?
+
+Write CIA stuff...					ciatest
+ - not RPC????
+
+oneway optimization
+
+only update uuid if signature changes, or if parent uuid changes
+ - repository???
+ - Or - just do a more extensive check if the UUID isn't the same?
+
+Better fault_tolerance callback...
+getURL for proxys - requires message?
+
+documentation

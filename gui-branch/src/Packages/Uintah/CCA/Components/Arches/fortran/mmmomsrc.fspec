@@ -1,0 +1,3 @@
+void mmmomsrc(IntVector idxLoU, IntVector idxHiU,
+     Array3<double> su, Array3<double> sp,
+     Array3<double> mmsu, Array3<double> mmsp);

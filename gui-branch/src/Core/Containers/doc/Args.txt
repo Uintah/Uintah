@@ -1,0 +1,98 @@
+/*
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+*/
+
+
+
+The Args.h classes are intended to simplify the addition of command
+line arguments to a large program.  Adding an argument to a program
+consists only of declaring a global object in a particular module.
+
+Upon encountering a bad argument, the argument parser will print
+out each valid argument, along with a usage string summarizing what
+the argument controls.
+
+
+Argument types
+--------------
+
+
+Arg_flag is meant for implementing boolean flags.  The default value is off,
+and specifying the flag name on the command line will turn the value on.
+
+Arg_flag:
+	Arg_flag(const clString& name, const clString& usage_string);
+	int is_set();
+
+	
+Arg_intval, Arg_doubleval, and Arg_stringval are intended for providing
+arguments of the form:
+	-name value
+where value is an integer, floating point number or a string.
+
+Arg_intval:
+	Arg_intval(const clString& name, int default_value,
+		const clString& usage_string);
+	int is_set();
+	int value();
+
+Arg_doubleval:
+	Arg_doubleval(const clString& name, int default_value,
+		const clString& usage_string);
+	int is_set();
+	double value();
+
+Arg_stringval:
+	Arg_stringval(const clString& name, const clString& default_value,
+		const clString& usage_string);
+	int is_set();
+	clString value();
+
+The following are used for specified a single value from a set of
+predetermined values.
+
+Example:
+static Arg_exclusiveset os_arg("os");
+static Arg_item unix_arg(&os_arg, "Unix");
+static Arg_item dos_arg(&os_arg, "Dos");
+static Arg_itemalias(&dos_arg, "Junk");
+
+Specifying -os Unix will cause unix_arg to be set, and specifying -os Dos or
+-os Junk will cause dos_arg to be set.
+
+
+Arg_exclusiveset:
+	Arg_exclusiveset(const clString& name, const clString& usage_string);
+Arg_nonexclusiveset:
+	Arg_nonexclusiveset(const clString& name, const clString& usage_sting);
+Arg_item:
+	Arg_item(Argset*, const clString& name);
+	int is_set();
+Arg_itemalias:
+	Arg_itemalias(Arg_item*, const clString& name);
+
+
+Arg_alias:
+	Arg_alias(Arg_base*, const clString& name);
+Provides an alias for any argument
+
+
+Setting up your main program for use with the Arg Processor
+-----------------------------------------------------------
+
+In order to use the Arg Processor, you must call the following function in
+main.cc:
+    ArgProcessor::process_args(argc, argv);
