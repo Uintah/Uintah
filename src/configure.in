@@ -2468,7 +2468,7 @@ if test "$HAVE_LIBQT_MT" && test $QT_MOC_BIN != "NOMOC"; then
    FOUND_ALL_QT=yes
    DEF_QT="#define HAVE_QT 1"
    HAVE_QT="yes"
-   QT_INCLUDE="-I$LIBQT/../include"
+   QT_INCLUDE="-I$LIBQT_MT/../include"
    QT_LIB="$LIBQT_MT"
 fi
 
