@@ -545,15 +545,15 @@ void BaWGL::quit( void )
 }
 
 /* Get controller id for a given type */
-
-int BaWGL::getControllerID( int type )
+int
+BaWGL::getControllerID( int type )
 {
-  int i, id;
-
-  for( i=0; i<NUM_CONTROLLERS; i++ )
-    if( controller[i].type == type ) id = i;
-
-  return(id);
+  for( int i=0; i<NUM_CONTROLLERS; i++ ) {
+    if( controller[i].type == type ) {
+      return i;
+    }
+  }
+  return -1;
 }
 
 /* space: TRACKER, REAL, SURFACE, MODEL, CAMERA, but not SCREEN */
