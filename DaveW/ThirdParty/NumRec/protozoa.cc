@@ -119,7 +119,7 @@ void solveMatrix(Array2<double>* A, Array1<double>* x, int cols, int rows)
 
 
 void protozoa(double **p, double y[], int ndim, double ftol,
-	    double *(*funk)(int), int *nfunk, int extra)
+	    double *(*funk)(int), int *nfunk, int extra, int *stop)
 {
     int squareTermSize = 2*ndim+1;  // size of the matrix with x, x^2, etc...
     int crossTermSize = squareTermSize+ndim*(ndim-1)/2; // size of the matrix with x, x^2, xy, etc...
@@ -174,7 +174,7 @@ void protozoa(double **p, double y[], int ndim, double ftol,
    // check to see if we are done
    rtol=2.0*fabs(errors[iteration]-errors[iteration-ndim-1])/(fabs(errors[iteration])+fabs(errors[iteration-ndim-1]));
 
-   if (rtol < ftol) {
+   if (rtol < ftol || *stop) {
        y[1] = errors[iteration];
        for(i=1;i<=ndim+extra;i++)
 	   p[1][i] = guesses(i,iteration);
@@ -233,7 +233,7 @@ void protozoa(double **p, double y[], int ndim, double ftol,
    // check to see if we are done
    rtol=2.0*fabs(errors[iteration]-errors[iteration-ndim-1])/(fabs(errors[iteration])+fabs(errors[iteration-ndim-1]));
 
-   if (rtol < ftol) {
+   if (rtol < ftol || *stop) {
        y[1] = errors[iteration];
        for(i=1;i<=ndim+extra;i++)
 	   p[1][i] = guesses(i,iteration);
@@ -293,7 +293,7 @@ void protozoa(double **p, double y[], int ndim, double ftol,
    // check to see if we are done
    rtol=2.0*fabs(errors[iteration]-errors[iteration-ndim-1])/(fabs(errors[iteration])+fabs(errors[iteration-ndim-1]));
 
-   if (rtol < ftol) {
+   if (rtol < ftol || *stop) {
        y[1] = errors[iteration];
        for(i=1;i<=ndim+extra;i++)
 	   p[1][i] = guesses(i,iteration);
@@ -370,7 +370,7 @@ void protozoa(double **p, double y[], int ndim, double ftol,
    // check to see if we are done
    rtol=2.0*fabs(errors[iteration]-errors[iteration-ndim-1])/(fabs(errors[iteration])+fabs(errors[iteration-ndim-1]));
 
-   if (rtol < ftol) {
+   if (rtol < ftol || *stop) {
        y[1] = errors[iteration];
        for(i=1;i<=ndim+extra;i++)
 	   p[1][i] = guesses(i,iteration);
