@@ -20,10 +20,10 @@ class UnionGeometryObject : public GeometryObject {
   virtual ~UnionGeometryObject();
   UnionGeometryObject(const UnionGeometryObject& copy);
 
-  virtual void add(const GeometryObject* go);
-  
   virtual bool inside(const Point &p) const;
   virtual Box getBoundingBox() const;
+  
+  virtual GeometryObject* readParameters(ProblemSpecP &ps);
 
  private:
   std::vector<GeometryObject* > child;

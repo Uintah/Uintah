@@ -57,9 +57,9 @@ class GeometryObject {
   void surface(Point part_pos, int surf[7], int &np);
   void norm(Vector &norm,Point part_pos, int surf[7], int ptype, int &np);
 
-  virtual void add(GeometryObject* go);
   virtual Box getBoundingBox() const;
   virtual bool inside(const Point &p) const;
+  virtual GeometryObject* readParameters(const ProblemSpec &ps);
 
  private:
 
@@ -79,6 +79,9 @@ class GeometryObject {
 
 #endif // __GEOMETRY_OBJECT_H__
 // $Log$
+// Revision 1.8  2000/04/20 15:09:25  jas
+// Added factory methods for GeometryObjects.
+//
 // Revision 1.7  2000/04/19 21:31:08  jas
 // Revamping of the way objects are defined.  The different geometry object
 // subtypes only do a few simple things such as testing whether a point

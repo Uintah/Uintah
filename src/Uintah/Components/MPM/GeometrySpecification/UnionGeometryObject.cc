@@ -1,6 +1,7 @@
 #include "UnionGeometryObject.h"
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Math/MinMax.h>
+#include "GeometryObjectFactory.h"
 
 using SCICore::Geometry::Point;
 using SCICore::Math::Min;
@@ -23,17 +24,6 @@ UnionGeometryObject::~UnionGeometryObject()
     delete child[i];
   }
 }
-
-void UnionGeometryObject::add(const GeometryObject *go)
-{
-
-  // How do I figure out the type of geometry object to create, use RTTI?
-  GeometryObject* new_go;
-
-  // Implement a factory method to create the new type
-  
-}
-
 
 bool UnionGeometryObject::inside(const Point &p) const 
 {
@@ -61,5 +51,11 @@ Box UnionGeometryObject::getBoundingBox() const
   }
 
   return Box(lo,hi);
+}
+
+GeometryObject* UnionGeometryObject::readParameters(ProblemSpecP &ps)
+{
+  
+
 }
 

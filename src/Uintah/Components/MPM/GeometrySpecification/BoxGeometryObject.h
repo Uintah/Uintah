@@ -19,10 +19,10 @@ class BoxGeometryObject : public GeometryObject {
   BoxGeometryObject(Point lower, Point upper);
   virtual ~BoxGeometryObject();
 
-  virtual void add(const BoxGeometryObject* go);
-
   virtual bool inside(const Point &p) const;
   virtual Box getBoundingBox() const;
+
+  virtual GeometryObject* readParameters(ProblemSpecP &ps);
   
  private:
   Box d_box;
@@ -35,6 +35,9 @@ class BoxGeometryObject : public GeometryObject {
 #endif // __BOX_GEOMTRY_OBJECT_H__
 
 // $Log$
+// Revision 1.2  2000/04/20 15:09:25  jas
+// Added factory methods for GeometryObjects.
+//
 // Revision 1.1  2000/04/19 21:31:07  jas
 // Revamping of the way objects are defined.  The different geometry object
 // subtypes only do a few simple things such as testing whether a point

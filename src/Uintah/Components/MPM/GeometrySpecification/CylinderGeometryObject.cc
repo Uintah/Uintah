@@ -1,4 +1,5 @@
 #include "CylinderGeometryObject.h"
+#include "GeometryObjectFactory.h"
 
 using namespace Uintah::Components;
 
@@ -39,8 +40,32 @@ Box CylinderGeometryObject::getBoundingBox() const
 
 }
 
+GeometryObject* CylinderGeometryObject::readParameters(ProblemSpecP &ps)
+{
+  Point orig;
+  double len;
+  double rad;
+  CylinderGeometryObject::AXIS axis;
+  std::string axis_type;
+
+  ps->require("axis",axis_type);
+  ps->require("origin",orig);
+  ps->require("length",len);
+  ps->require("radius",rad);
+  
+  if (axis_type == "X") axis = CylinderGeometryObject::X;
+  if (axis_type == "Y") axis = CylinderGeometryObject::Y;
+  if (axis_type == "Z") axis = CylinderGeometryObject::Z;
+
+  return(new CylinderGeometryObject(axis,orig,len,rad));
+
+}
+
 
 // $Log$
+// Revision 1.2  2000/04/20 15:09:25  jas
+// Added factory methods for GeometryObjects.
+//
 // Revision 1.1  2000/04/19 21:31:07  jas
 // Revamping of the way objects are defined.  The different geometry object
 // subtypes only do a few simple things such as testing whether a point
