@@ -66,6 +66,7 @@ public:
     virtual void finish();
 
     void send(const T&);
+    void send_intermediate(const T&);
 
     virtual int have_data();
     virtual void resend(Connection* conn);

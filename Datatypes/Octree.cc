@@ -36,7 +36,7 @@ OctreeTop::OctreeTop()
 }
 
 OctreeTop::OctreeTop(int nx, int ny, int nz, const BBox& b)
-: nx(nx), ny(ny), nz(nz), tensors(0), scalars(0), vectors(0)
+: nx(nx), ny(ny), nz(nz), vectors(0), scalars(0), tensors(0)
 {
     tree = new Octree(nx, ny, nz, b.min(), b.max());
     tree->trunk=1;
@@ -45,7 +45,7 @@ OctreeTop::OctreeTop(int nx, int ny, int nz, const BBox& b)
 
 OctreeTop::OctreeTop(const OctreeTop& copy)
 : tree(copy.tree), nx(copy.nx), ny(copy.ny), nz(copy.nz), 
-  tensors(copy.tensors), scalars(copy.scalars), vectors(copy.vectors)
+  vectors(copy.vectors), scalars(copy.scalars), tensors(copy.tensors)
 {
 }
 

@@ -14,6 +14,7 @@
 #include <Datatypes/SimplePort.h>
 #include <Classlib/Assert.h>
 #include <Dataflow/Connection.h>
+#include <Dataflow/Module.h>
 #include <Malloc/Allocator.h>
 
 #include <iostream.h>
@@ -103,6 +104,21 @@ void SimpleOPort<T>::send(const T& data)
 	((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
     }
     sent_something=1;
+    turn_off();
+}
+
+template<class T>
+void SimpleOPort<T>::send_intermediate(const T& data)
+{
+    handle=data;
+    if(nconnections() == 0)
+	return;
+    turn_on();
+    for(int i=0;i<nconnections();i++){
+	connections[i]->iport->get_module()->multisend(this);
+	SimplePortComm<T>* msg=scinew SimplePortComm<T>(data);
+	((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
+    }
     turn_off();
 }
 

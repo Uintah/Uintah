@@ -38,7 +38,7 @@ Matrix* Matrix::clone()
 void Matrix::io(Piostream& stream)
 {
     stream.begin_class("Matrix", MATRIX_VERSION);
-    int* tmpsym=(int*)sym;
+    int* tmpsym=(int*)&sym;
     stream.io(*tmpsym);
     stream.end_class();
 }

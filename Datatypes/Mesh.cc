@@ -183,14 +183,14 @@ Node::~Node()
 }
 
 Element::Element(Mesh* mesh, int n1, int n2, int n3, int n4)
-: cond(0), mesh(mesh), generation(0)
+: generation(0), cond(0), mesh(mesh)
 {
     n[0]=n1; n[1]=n2; n[2]=n3; n[3]=n4;
     faces[0]=faces[1]=faces[2]=faces[3]=-2;
 }
 
 Element::Element(const Element& copy, Mesh* mesh)
-: cond(copy.cond), mesh(mesh), generation(0)
+: generation(0), cond(copy.cond), mesh(mesh)
 {
     faces[0]=copy.faces[0];
     faces[1]=copy.faces[1];
@@ -271,9 +271,9 @@ void Element::get_sphere2(Point& cen, double& rad2)
     Point p1(mesh->nodes[n[1]]->p);
     Point p2(mesh->nodes[n[2]]->p);
     Point p3(mesh->nodes[n[3]]->p);
-    Vector v1(p1-p0);
-    Vector v2(p2-p0);
-    Vector v3(p3-p0);
+//    Vector v1(p1-p0);
+//    Vector v2(p2-p0);
+//    Vector v3(p3-p0);
     double mat[3][3];
     mat[0][0]=p1.x()-p0.x();
     mat[0][1]=p1.y()-p0.y();
@@ -1093,11 +1093,9 @@ template void Pio(Piostream&, Array1<NodeVersion1>&);
 template void Pio(Piostream&, Array1<NodeHandle>&);
 template void Pio(Piostream&, NodeHandle&);
 
-#include <Classlib/HashTable.cc>
-template class HashTable<Face, int>;
-template class HashKey<Face, int>;
-template class HashTableIter<Face, int>;
-template int Hash(const Face&, int);
+#include <Classlib/FastHashTable.cc>
+template class FastHashTable<DFace>;
+template class FastHashTableIter<DFace>;
 
 #endif
 
