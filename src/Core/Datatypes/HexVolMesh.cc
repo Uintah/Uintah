@@ -35,6 +35,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 #include <algorithm>
+#include <set>
 #include <sci_hash_map.h>
 #include <Core/Exceptions/InternalError.h>
 
@@ -956,18 +957,21 @@ void
 HexVolMesh::get_weights(const Point &p,
 			Node::array_type &nodes, vector<double> &w)
 {
-//  cerr << "get_weights";
+  synchronize (Mesh::FACES_E);
   Cell::index_type cell;
   if (locate(cell, p))
   {
-//    cerr << "inside";
     get_nodes(nodes,cell);
+    unsigned int nnodes = nodes.size();
+    ASSERT(nnodes == 8);
+    w.resize(nnodes);
+      
     Face::array_type faces;
     get_faces(faces, cell);
     unsigned int nfaces = faces.size();
     vector<double> face_point_volume(nfaces);
     double total_volume = 0.0;
-    vector<vector<bool> > attached(6,vector<bool>(6,false));
+    map<Node::index_type, map<Face::index_type,bool> > attached;
     int f, n;
       
     for (f = 0; f < nfaces; f++)
@@ -978,17 +982,15 @@ HexVolMesh::get_weights(const Point &p,
       total_volume += face_point_volume[f];
       unsigned int n_face_nodes = face_nodes.size();
       for (n = 0; n < n_face_nodes; n++)
-	attached[n][f] = true;
+	attached[face_nodes[n]][faces[f]] = true;
     }
-
-    unsigned int nnodes = nodes.size();
     for (n = 0; n < nnodes; n++)
     {
-      double attached_volume = 0.0;
-      for (f = 0; f < 6; f++)
-	if (attached[n][f])
-	  attached_volume += face_point_volume[f];
-      w[n] = attached_volume / total_volume;
+      double unattached_volume = 0.0;
+      for (f = 0; f < nfaces; f++)
+	if (!attached[nodes[n]][faces[f]])
+	  unattached_volume += face_point_volume[f];
+      w[n] = unattached_volume / total_volume;
     }
   }
 }
