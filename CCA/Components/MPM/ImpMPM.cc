@@ -788,6 +788,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
   t->requires(Task::OldDW, lb->pVolumeOldLabel,        Ghost::None);
+  t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
 
 
   t->computes(lb->pVelocityLabel_preReloc);
@@ -798,6 +799,8 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pVolumeLabel_preReloc);
   t->computes(lb->pVolumeOldLabel_preReloc);
+  t->computes(lb->pTemperatureLabel_preReloc);
+
 
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
@@ -1783,8 +1786,8 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<Point> pxnew;
       constParticleVariable<Vector> pvelocity, pacceleration,pexternalForce;
       ParticleVariable<Vector> pvelocitynew, pexternalForceNew, paccNew;
-      constParticleVariable<double> pmass, pvolume,pvolumeold;
-      ParticleVariable<double> pmassNew,pvolumeNew,newpvolumeold;
+      constParticleVariable<double> pmass, pvolume,pvolumeold,pTempOld;
+      ParticleVariable<double> pmassNew,pvolumeNew,newpvolumeold,pTemp;
   
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> dispNew, gacceleration,gvelocity;
@@ -1804,12 +1807,14 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pexternalForce,        lb->pExternalForceLabel,        pset);
       old_dw->get(pvelocity,             lb->pVelocityLabel,             pset);
       old_dw->get(pacceleration,         lb->pAccelerationLabel,         pset);
+      old_dw->get(pTempOld,              lb->pTemperatureLabel,          pset);
       new_dw->allocateAndPut(pvelocitynew,lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(paccNew,    lb->pAccelerationLabel_preReloc,pset);
       new_dw->allocateAndPut(pxnew,      lb->pXLabel_preReloc,           pset);
       new_dw->allocateAndPut(pmassNew,   lb->pMassLabel_preReloc,        pset);
       new_dw->allocateAndPut(pvolumeNew, lb->pVolumeLabel_preReloc,      pset);
       new_dw->allocateAndPut(newpvolumeold,lb->pVolumeOldLabel_preReloc, pset);
+      new_dw->allocateAndPut(pTemp,      lb->pTemperatureLabel_preReloc, pset);
       new_dw->allocateAndPut(pexternalForceNew,
 			     lb->pExtForceLabel_preReloc,pset);
       pexternalForceNew.copyData(pexternalForce);
@@ -1864,7 +1869,8 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
         pmassNew[idx]        = pmass[idx];
         pvolumeNew[idx]      = pmassNew[idx]/rho;
-        newpvolumeold[idx] = pvolumeold[idx];
+        newpvolumeold[idx]   = pvolumeold[idx];
+        pTemp[idx]           = pTempOld[idx];
 
         if(pmassNew[idx] <= 3.e-15){
           delete_particles->addParticle(idx);
