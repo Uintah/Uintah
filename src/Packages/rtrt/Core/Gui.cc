@@ -83,6 +83,7 @@ static Transform prev_trans;
 #define TOGGLE_HOTSPOTS_ID          190
 #define TOGGLE_TRANSMISSION_MODE_ID 191
 #define SOUND_VOLUME_SPINNER_ID     192
+#define NUM_THREADS_SPINNER_ID      193
 
 // GLUT MENU ITEM IDS
 
@@ -252,7 +253,7 @@ Gui::idleFunc()
 
     if( activeGui->displayRStats_ )
       {
-	activeGui->drawrstats(dpy->nworkers, dpy->workers,
+	activeGui->drawrstats(dpy->nworkers, dpy->workers_,
 			      priv->showing_scene, fontbase2, 
 			      priv->xres, priv->yres,
 			      fontInfo2, priv->left, priv->up,
@@ -261,7 +262,7 @@ Gui::idleFunc()
     if( activeGui->displayPStats_ )
       {
 	Stats * mystats = dpy->drawstats[priv->showing_scene];
-	activeGui->drawpstats(mystats, dpy->nworkers, dpy->workers, 
+	activeGui->drawpstats(mystats, dpy->nworkers, dpy->workers_, 
 			      /*draw_framerate*/true, priv->showing_scene,
 			      fontbase, lasttime, cum_ttime,
 			      cum_dt);
@@ -1284,7 +1285,7 @@ Gui::createLightWindow( GLUI * window )
 
 
 void
-Gui::createMenus( int winId, bool show_gui )
+Gui::createMenus( int winId, bool showGui /* = true */ )
 {
   printf("createmenus\n");
 
@@ -1306,7 +1307,7 @@ Gui::createMenus( int winId, bool show_gui )
 
   // Build GLUI Windows
   activeGui->mainWindow = GLUI_Master.create_glui( "SIGGRAPH", 0, 400, 20 );
-  if (!show_gui) {
+  if( !showGui ){
     activeGui->mainWindow->hide();
     activeGui->mainWindowVisible = false;
   }
@@ -1455,6 +1456,14 @@ Gui::createMenus( int winId, bool show_gui )
   activeGui->mainWindow->add_button_to_panel( otherControls,
 	 "Toggle Transmission Mode", TOGGLE_TRANSMISSION_MODE_ID,
 					      toggleTransmissionModeCB );
+
+  activeGui->numThreadsSpinner_ = activeGui->mainWindow->
+    add_spinner_to_panel( otherControls, "Number of Threads",
+			  GLUI_SPINNER_INT,
+			  &(activeGui->dpy_->numThreadsRequested_),
+			  NUM_THREADS_SPINNER_ID );
+  activeGui->numThreadsSpinner_->set_speed( 0.0001 );
+  activeGui->numThreadsSpinner_->set_int_limits( 1, 128 );
 
   // ...This probably goes to the objects window...
   GLUI_Button * toggleMaterials = activeGui->mainWindow->
@@ -2071,7 +2080,7 @@ Gui::draw_column(XFontStruct* font_struct,
 
 
 void
-Gui::drawpstats(Stats* mystats, int nworkers, Worker** workers,
+Gui::drawpstats(Stats* mystats, int nworkers, vector<Worker*> & workers,
 		bool draw_framerate, int showing_scene,
 		GLuint fontbase, double& lasttime,
 		double& cum_ttime, double& cum_dt)
@@ -2146,7 +2155,7 @@ Gui::drawpstats(Stats* mystats, int nworkers, Worker** workers,
 } // end drawpstats()
 
 void
-Gui::drawrstats(int nworkers, Worker** workers,
+Gui::drawrstats(int nworkers, vector<Worker*> & workers,
 		int showing_scene,
 		GLuint fontbase, int xres, int yres,
 		XFontStruct* font_struct,
