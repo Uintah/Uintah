@@ -175,7 +175,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 #	set alg [$mf.tabs add -label "Opt"]
 
 #	iwidgets::radiobox $alg.orient -labeltext "Tabs position:" \
-	    -command "$this orient $mf $alg" 
+#	    -command "$this orient $mf $alg" 
 
 # 	$alg.orient add n -text "n"
 # 	$alg.orient add w -text "w"
