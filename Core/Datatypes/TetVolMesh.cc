@@ -31,7 +31,10 @@
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Math/MusilRNG.h>
+
 #include <algorithm>
+
+#include <float.h> // for DBL_MAX
 
 namespace SCIRun {
 
@@ -891,7 +894,7 @@ TetVolMesh::locate(Node::index_type &loc, const Point &p)
     Node::array_type nodes;
     get_nodes(nodes, ci);
 
-    double mindist;
+    double mindist = DBL_MAX;
     for (int i=0; i<4; i++)
     {
       const Point &ptmp = point(nodes[i]);
@@ -907,7 +910,7 @@ TetVolMesh::locate(Node::index_type &loc, const Point &p)
   else
   {  // do exhaustive search.
     bool found_p = false;
-    double mindist;
+    double mindist = DBL_MAX;
     Node::iterator bi; begin(bi);
     Node::iterator ei; end(ei);
     while (bi != ei)
@@ -931,7 +934,7 @@ bool
 TetVolMesh::locate(Edge::index_type &edge, const Point &p)
 {
   bool found_p = false;
-  double mindist;
+  double mindist = DBL_MAX;
   Edge::iterator bi; begin(bi);
   Edge::iterator ei; end(ei);
   while (bi != ei)
@@ -955,7 +958,7 @@ bool
 TetVolMesh::locate(Face::index_type &face, const Point &p)
 {
   bool found_p = false;
-  double mindist;
+  double mindist = DBL_MAX;
   Face::iterator bi; begin(bi);
   Face::iterator ei; end(ei);
   while (bi != ei)
@@ -1464,10 +1467,10 @@ TetVolMesh::insert_node_watson(const Point &p, Cell::array_type *new_cells, Cell
   cells_removed.insert(cell);
   cells_checked.insert(cell);
   
-  int face;
+  unsigned int face;
   // set of faces that need to be checked for neighboring tet removal
   set<Face::index_type> faces_todo;
-  for (face = cell*4; face < cell*4+4; ++face)
+  for (face = cell*4; face < (unsigned int)cell*4+4; ++face)
     faces_todo.insert(Face::index_type(face));
 
   // set of node triplets that form face on hull interior
@@ -1507,8 +1510,8 @@ TetVolMesh::insert_node_watson(const Point &p, Cell::array_type *new_cells, Cell
 	    cells_removed.insert(cell);
 	    // Now add all of its faces (minus the one we crossed to get here)
 	    // to be crossed the next time around
-	    for (face = cell*4; face < cell*4+4; ++face)
-	      if (face != nbr) // dont add nbr already crossed
+	    for (face = cell*4; face < (unsigned int)cell*4+4; ++face)
+	      if (face != (unsigned int)nbr) // dont add nbr already crossed
 		faces_todo.insert(Face::index_type(face));
 	  }
 	  else
