@@ -418,7 +418,6 @@ ParticleCreator::countParticles(const Patch* patch,
     sum += countAndCreateParticles(patch,*geom);
   
   return sum;
-  
 }
 
 
