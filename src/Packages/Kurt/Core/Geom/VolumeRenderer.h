@@ -34,7 +34,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include <Core/Datatypes/Brick.h>
+#include <Core/GLVolumeRenderer/Brick.h>
 
 namespace Kurt {
 

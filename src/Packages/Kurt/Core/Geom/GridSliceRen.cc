@@ -1,7 +1,7 @@
 #include <Packages/Kurt/Core/Geom/GridSliceRen.h>
 #include <Packages/Kurt/Core/Geom/BrickGrid.h>
-#include <Core/Datatypes/SliceTable.h>
-#include <Core/Datatypes/VolumeUtils.h>
+#include <Core/GLVolumeRenderer/SliceTable.h>
+#include <Core/GLVolumeRenderer/VolumeUtils.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Geometry/Vector.h>
 #include <iostream>

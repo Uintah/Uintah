@@ -15,10 +15,9 @@
   University of Utah. All Rights Reserved.
 */
 #include <Packages/Kurt/Core/Geom/GridBrick.h>
-#include <Core/Datatypes/Brick.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/VolumeUtils.h>
+#include <Core/GLVolumeRenderer/VolumeUtils.h>
 #include <stdlib.h>
 #include <iostream>
 #include <string>

@@ -34,7 +34,7 @@ SRCS     += $(SRCDIR)/ColorMapPort.cc             \
 
 PSELIBS := Dataflow/Network Dataflow/Comm Core/Containers \
 	Core/Thread Core/Geom Core/Geometry Core/Exceptions \
-	Core/Persistent Core/Datatypes
+	Core/Persistent Core/Datatypes Core/GLVolumeRenderer
 LIBS := 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

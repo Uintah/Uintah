@@ -29,7 +29,6 @@
 #include <Core/Datatypes/ColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
-//#include <Core/Datatypes/ScalarFieldRGBase.h>
 
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Geom/View.h>
@@ -46,7 +45,7 @@
 #include <ios>
 #endif
 #include <algorithm>
-#include <Core/Datatypes/VolumeUtils.h>
+#include <Core/GLVolumeRenderer/VolumeUtils.h>
 
 
 
