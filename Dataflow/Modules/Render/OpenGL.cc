@@ -94,6 +94,7 @@ OpenGL::OpenGL(GuiInterface* gui) :
   get_mb("OpenGL renderer request mailbox", 5),
   img_mb("OpenGL renderer image data mailbox", 5),
   helper_thread_(0),
+  helper(0),
   dead_(false)
 {
   drawinfo=scinew DrawInfoOpenGL;
@@ -373,9 +374,10 @@ OpenGL::redraw_loop()
     }
 
     redraw_frame();
-    for(int i=0;i<nreply;i++)
+    for(int i=0;i<nreply;i++) {
       recv_mb.send(REDRAW_DONE);
-  }
+    }
+  } // end for(;;)
 }
 
 
@@ -570,8 +572,6 @@ OpenGL::render_and_save_image(int x, int y,
     delete[] tmp_row;
     tmp_row = 0;
   }
-
-  cout << "done." << std::endl;
 }
 
 
