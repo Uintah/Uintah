@@ -696,21 +696,21 @@ void build_history_hall (Group* main_group, Scene *scene) {
 		      WestPoint+Vector(0,0,1.0), Vector(0,2,0), Vector(0,0,-2),
 		      historyg); 
 
-  /*  need to hund down KOPIPI.ppm in tv2.mtl */
+//    /*  need to hund down KOPIPI.ppm in tv2.mtl */
 
-  Group *tvg = new Group();
+//    Group *tvg = new Group();
   Transform t;
-  t.pre_rotate (M_PI_2,Vector(0,0,1));
-  //  t.pre_scale (Vector(0,0,0.2));
-  t.pre_translate (WestPoint.vector()+Vector(0,1,0));
-  if (!readObjFile("/usr/sci/data/Geometry/models/museum/tv2.obj",
-		   "/usr/sci/data/Geometry/models/museum/tv.mtl",
-		   t, tvg)) {
-    exit(0);
-  }
-  main_group->add(new Grid(tvg,10));
+//    t.pre_rotate (M_PI_2,Vector(0,0,1));
+//    //  t.pre_scale (Vector(0,0,0.2));
+//    t.pre_translate (WestPoint.vector()+Vector(0,1,0));
+//    if (!readObjFile("/usr/sci/data/Geometry/models/museum/tv2.obj",
+//  		   "/usr/sci/data/Geometry/models/museum/tv.mtl",
+//  		   t, tvg)) {
+//      exit(0);
+//    }
+//    main_group->add(new Grid(tvg,10));
 
-  //  cerr << "West Wall:  " << WestPoint << endl;
+//    //  cerr << "West Wall:  " << WestPoint << endl;
 
 
   /* **************** image on South wall in history hall **************** */
@@ -1745,7 +1745,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
 		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
 
   // read in the venus geometry
-  TriMesh* venus_tm;
+  TriMesh* venus_tm = new TriMesh();
   Group* venusg = new Group();
   read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/venus.ply",flat_white, venus_tm, venusg);
 
