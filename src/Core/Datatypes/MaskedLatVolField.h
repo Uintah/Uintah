@@ -249,7 +249,7 @@ MaskedLatVolField<T>::get_type_description(int n) const
   return td;
 }
 
-#define LAT_VOL_FIELD_VERSION 3
+#define MLAT_VOL_FIELD_VERSION 3
 
 template <class Data>
 Persistent* 
@@ -268,7 +268,7 @@ template <class Data>
 void
 MaskedLatVolField<Data>::io(Piostream &stream)
 {
-  int version = stream.begin_class(type_name(-1), LAT_VOL_FIELD_VERSION);
+  int version = stream.begin_class(type_name(-1), MLAT_VOL_FIELD_VERSION);
   GenericField<MaskedLatVolMesh, MFData3d<Data> >::io(stream);
   stream.end_class();                                                    
   if (version < 2) {
