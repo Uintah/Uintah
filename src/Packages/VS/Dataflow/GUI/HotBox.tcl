@@ -512,45 +512,45 @@ itcl_class VS_DataFlow_HotBox {
     if { [set $this-gui_is_injured(1)] == "1" } {
     button $w.f.row1.nw -background red -textvariable $this-gui_label(1) -command "$this set_selection 1"
     } else {
-    button $w.f.row1.nw  -textvariable $this-gui_label(1) -command "$this set_selection 1"
+    button $w.f.row1.nw -background gray -textvariable $this-gui_label(1) -command "$this set_selection 1"
     }
     if { [set $this-gui_is_injured(2)] == "1" } {
     button $w.f.row1.n -background red -textvariable $this-gui_label(2) -command "$this set_selection 2"
     } else {
-    button $w.f.row1.n   -textvariable $this-gui_label(2) -command "$this set_selection 2"
+    button $w.f.row1.n -background gray -textvariable $this-gui_label(2) -command "$this set_selection 2"
     }
     if { [set $this-gui_is_injured(3)] == "1" } {
     button $w.f.row1.ne -background red -textvariable $this-gui_label(3) -command "$this set_selection 3"
     } else {
-    button $w.f.row1.ne  -textvariable $this-gui_label(3) -command "$this set_selection 3"
+    button $w.f.row1.ne -background gray -textvariable $this-gui_label(3) -command "$this set_selection 3"
     }
     frame $w.f.row2
     if { [set $this-gui_is_injured(4)] == "1" } {
     button $w.f.row2.west -background red -textvariable $this-gui_label(4) -command "$this set_selection 4"
     } else {
-    button $w.f.row2.west -textvariable $this-gui_label(4) -command "$this set_selection 4"
+    button $w.f.row2.west -background gray -textvariable $this-gui_label(4) -command "$this set_selection 4"
     }
     button $w.f.row2.c  -background yellow  -textvariable $this-gui_label(5) -command "$this set_selection 5"
     if { [set $this-gui_is_injured(6)] == "1" } {
     button $w.f.row2.e  -background red -textvariable $this-gui_label(6) -command "$this set_selection 6"
     } else {
-    button $w.f.row2.e   -textvariable $this-gui_label(6) -command "$this set_selection 6"
+    button $w.f.row2.e -background gray -textvariable $this-gui_label(6) -command "$this set_selection 6"
     }
     frame $w.f.row3
     if { [set $this-gui_is_injured(7)] == "1" } {
     button $w.f.row3.sw -background red -textvariable $this-gui_label(7) -command "$this set_selection 7"
     } else {
-    button $w.f.row3.sw  -textvariable $this-gui_label(7) -command "$this set_selection 7"
+    button $w.f.row3.sw -background gray -textvariable $this-gui_label(7) -command "$this set_selection 7"
     }
     if { [set $this-gui_is_injured(8)] == "1" } {
     button $w.f.row3.s  -background red -textvariable $this-gui_label(8) -command "$this set_selection 8"
     } else {
-    button $w.f.row3.s   -textvariable $this-gui_label(8) -command "$this set_selection 8"
+    button $w.f.row3.s -background gray  -textvariable $this-gui_label(8) -command "$this set_selection 8"
     }
     if { [set $this-gui_is_injured(9)] == "1" } {
     button $w.f.row3.se -background red -textvariable $this-gui_label(9) -command "$this set_selection 9"
     } else {
-    button $w.f.row3.se  -textvariable $this-gui_label(9) -command "$this set_selection 9"
+    button $w.f.row3.se -background gray -textvariable $this-gui_label(9) -command "$this set_selection 9"
     }
 
     pack $w.f.row1 $w.f.row2 $w.f.row3 -side top -anchor w
@@ -566,7 +566,7 @@ itcl_class VS_DataFlow_HotBox {
     ######################################
     frame $w.probeUI
     frame $w.probeUI.loc
-    tk_optionMenu $w.probeUI.loc.hotlist $this-selnameloc "Pericardium,94.5,60.1,52.3" "Myocardial zone 7,96.9,60.0,71.4" "Myocardial zone 12,113.9,69.5,83.7"
+    tk_optionMenu $w.probeUI.loc.hotlist $this-selnameloc "Pericardium,94.5,60.1,52.3" "Myocardial zone 7,96.9,60.0,71.4" "Myocardial zone 12,113.9,69.5,83.7" "Myocardial zone 12,80.3,70.3,105.0" "Upper lobe of left lung,87.8,68.3,106.6"
     trace var $this-selnameloc w "$this set_probeSelection"
     label $w.probeUI.loc.locLabel -text "Cursor Location" -just left
     entry $w.probeUI.loc.locx -width 10 -textvariable $this-gui_probeLocx
@@ -576,7 +576,7 @@ itcl_class VS_DataFlow_HotBox {
     bind $w.probeUI.loc.locy <KeyPress-Return> "$this setProbeLoc"
     bind $w.probeUI.loc.locz <KeyPress-Return> "$this setProbeLoc"
     bind $w.probeUI.loc.locz <KeyPress-Return> "$this setProbeLoc"
-    pack $w.probeUI.loc.locLabel $w.probeUI.loc.hotlist $w.probeUI.loc.locx $w.probeUI.loc.locy $w.probeUI.loc.locz \
+    pack $w.probeUI.loc.locLabel $w.probeUI.loc.locx $w.probeUI.loc.locy $w.probeUI.loc.locz $w.probeUI.loc.hotlist \
                 -side left -anchor n -expand yes -fill x
 
     frame $w.probeUI.slideTime
@@ -592,7 +592,6 @@ itcl_class VS_DataFlow_HotBox {
     ######################################
     label $w.probeUI.slideTime.timeLabel -text "Time"
     entry $w.probeUI.slideTime.timeVal -width 5 -textvariable $this-currentTime
-    bind $w.probeUI.slideTime.timeVal <KeyPress-Return> "$this-c needexecute"
     bind $w.probeUI.slideTime.timeVal <KeyPress-Return> "$this-c needexecute"
     pack $w.probeUI.slideTime.slide $w.probeUI.slideTime.timeLabel $w.probeUI.slideTime.timeVal -side left -expand yes -fill x
     pack $w.probeUI.slideTime $w.probeUI.loc -side bottom -expand yes -fill x
@@ -644,6 +643,24 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_parent_list [list [set $this-gui_parent(0)] \
                                     [set $this-gui_parent(1)] \
                                     [set $this-gui_parent(2)] \
+                                    [set $this-gui_parent(3)] \
+                                    [set $this-gui_parent(4)] \
+                                    [set $this-gui_parent(5)] \
+                                    [set $this-gui_parent(6)] \
+                                    [set $this-gui_parent(7)]]
+    set $this-gui_sibling_list [list [set $this-gui_sibling(0)] \
+                                     [set $this-gui_sibling(1)] \
+                                     [set $this-gui_sibling(2)] \
+                                     [set $this-gui_sibling(3)]]
+    set $this-gui_child_list [list [set $this-gui_child(0)] \
+                                   [set $this-gui_child(1)] \
+                                   [set $this-gui_child(2)] \
+                                   [set $this-gui_child(3)] \
+                                   [set $this-gui_child(4)] \
+                                   [set $this-gui_child(5)] \
+                                   [set $this-gui_child(6)] \
+                                   [set $this-gui_child(7)] \
+                                   [set $this-gui_child(8)] \
                                    [set $this-gui_child(9)] \
                                    [set $this-gui_child(10)] \
                                    [set $this-gui_child(11)] \

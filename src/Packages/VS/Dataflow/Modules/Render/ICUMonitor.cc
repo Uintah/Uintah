@@ -137,6 +137,7 @@ private:
       clamp_(0),
       lines_(0),
       draw_aux_data_(0),
+      use_plot_color_(0),
       auxindex_(-1),
       min_(0.0),
       max_(1.0),
@@ -159,6 +160,7 @@ private:
     int       clamp_;
     int       lines_;
     int       draw_aux_data_;
+    int       use_plot_color_;
     int       auxindex_;
     float     min_;
     float     max_;
@@ -177,6 +179,7 @@ private:
   GuiInt                               gui_dump_frames_;
   GuiInt                               gui_time_markers_mode_;
   GuiInt                               gui_selected_marker_;
+  GuiInt                               gui_injury_offset_;
   GuiDouble			       gui_top_margin_;
   GuiDouble			       gui_left_margin_;
   GuiDouble			       gui_plot_spacing_;
@@ -184,8 +187,12 @@ private:
   GuiInt			       gui_show_name_;
   GuiInt			       gui_show_date_;
   GuiInt			       gui_show_time_;
-
   GuiInt                               gui_plot_count_;
+  GuiInt                               gui_geom_;
+  GuiDouble										gui_2ndred_;
+  GuiDouble										gui_2ndgreen_;
+  GuiDouble										gui_2ndblue_;
+
   vector<GuiString*>                   gui_nw_label_;
   vector<GuiString*>                   gui_sw_label_;
   vector<GuiString*>                   gui_label_;
@@ -199,6 +206,7 @@ private:
   vector<GuiInt*>                      gui_clamp_;
   vector<GuiInt*>                      gui_lines_;
   vector<GuiInt*>                      gui_draw_aux_data_;
+  vector<GuiInt*>                      gui_use_plot_color_;
   vector<GuiInt*>                      gui_auxidx_;
   vector<GuiDouble*>                   gui_red_;
   vector<GuiDouble*>                   gui_green_;
@@ -228,7 +236,7 @@ private:
   double                                time_sf_;
   LabelTex 				*name_label;
   string 				name_text;
-  int 					injury_offset_;
+  //int 					injury_offset_;
   LabelTex				*time_label;
   string 				time_text;
   LabelTex 				*date_label;
@@ -245,6 +253,7 @@ private:
   static unsigned int	pow2(const unsigned int);
   void 			setTimeLabel();
   void 			addMarkersToMenu();
+  void			setConfigFromData();
   void 			setNameAndDateAndTime();
   void                  save_image(int x, int y,const string& fname,
 				   const string &ftype);
@@ -275,7 +284,7 @@ void
 RTDraw::run()
 {
   throttle_.start();
-  const double inc = 1./75.;
+  const double inc = 1./33.;
   double t = throttle_.time();
   double tlast = t;
   while (!dead_) {
@@ -376,6 +385,7 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   gui_dump_frames_(ctx->subVar("dump_frames")),
   gui_time_markers_mode_(ctx->subVar("time_markers_mode")),
   gui_selected_marker_(ctx->subVar("selected_marker")),
+  gui_injury_offset_(ctx->subVar("injury_offset")),
   gui_top_margin_(ctx->subVar("top_margin")),
   gui_left_margin_(ctx->subVar("left_margin")),
   gui_plot_spacing_(ctx->subVar("plot_spacing")),
@@ -384,6 +394,10 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   gui_show_date_(ctx->subVar("show_date")),
   gui_show_time_(ctx->subVar("show_time")),
   gui_plot_count_(ctx->subVar("plot_count")),
+  gui_geom_(ctx->subVar("geom")),
+  gui_2ndred_(ctx->subVar("2ndplot_color-r")),
+  gui_2ndgreen_(ctx->subVar("2ndplot_color-g")),
+  gui_2ndblue_(ctx->subVar("2ndplot_color-b")),
   ctx_(0),
   dpy_(0),
   win_(0),
@@ -402,7 +416,7 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   frame_count_(0),
   name_label(0),
   name_text(" "),
-  injury_offset_(0),
+  //injury_offset_(0),
   time_label(0),
   time_text("Time: 00:00:00"),
   date_label(0),
@@ -592,6 +606,7 @@ ICUMonitor::synch_plot_vars(int s)
   clear_vector(gui_clamp_, s);
   clear_vector(gui_lines_, s);
   clear_vector(gui_draw_aux_data_, s);
+  clear_vector(gui_use_plot_color_, s);
   clear_vector(gui_auxidx_, s);
   clear_vector(gui_red_, s);
   clear_vector(gui_green_, s);
@@ -730,6 +745,10 @@ ICUMonitor::init_plots()
       gui_draw_aux_data_[i] = scinew GuiInt(ctx->subVar("draw_aux_data-" + num));
     }
     g.draw_aux_data_ = gui_draw_aux_data_[i]->get();
+    if (! gui_use_plot_color_[i]) {
+      gui_use_plot_color_[i] = scinew GuiInt(ctx->subVar("use_plot_color-" + num));
+    }
+    g.use_plot_color_ = gui_use_plot_color_[i]->get();
 
     if (! gui_red_[i]) {
       gui_red_[i] = scinew GuiDouble(ctx->subVar("plot_color-" + num + "-r"));
@@ -748,7 +767,8 @@ ICUMonitor::init_plots()
     ++i;
   }
 
-}
+} // end ICUMonitor::init_plots()
+
 
 void 
 ICUMonitor::draw_plots()
@@ -756,9 +776,10 @@ ICUMonitor::draw_plots()
   reset_vars();
   const int gr_ht = (int)gui_plot_height_.get();
 
-  CHECK_OPENGL_ERROR("start draw_plots")
-
+  CHECK_OPENGL_ERROR();
+  
   glDrawBuffer(GL_BACK);
+  //glClearColor(1.0, 1.0, 1.0, 1.0);
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
   glEnable(GL_BLEND);
@@ -775,9 +796,9 @@ ICUMonitor::draw_plots()
   float cur_y = h - gui_top_margin_.get();
   float yoff(0.0);
 
+  glEnable(GL_LINE_SMOOTH);
   glLineWidth(1.0);
-// type of stippling (dashed lines) - use  0xFFFF for solid line
-//  glLineStipple(3, 0x1001);
+  // type of stippling (dashed lines) - use  0xFFFF for solid line
   glLineStipple(1, 0x0F0F);
   if (name_label && gui_show_name_.get()) { 
     //float yoff = name_label->tex_height_ * name_label->v_ * 1.5;
@@ -790,14 +811,14 @@ ICUMonitor::draw_plots()
     yoff += date_label->tex_height_ * date_label->v_ * 1.5;
     //float xoff = 0;
     //if (name_label && gui_show_name_.get()) { 
-     // xoff = name_label->tex_width_ * name_label->u_ + cg;
+    // xoff = name_label->tex_width_ * name_label->u_ + cg;
     //}
     //date_label->draw(cur_x + xoff, h - yoff, sx, sy);
-      //float xoff = date_label->tex_width_ * date_label->u_;
-      //g.label_->draw(cur_x + w * cw, cur_y, sx, sy);
-      glColor4f(1.0, 1.0, 1.0, 1.0);
-      //date_label->draw((cur_x + (w*cw)) - xoff, h - yoff, sx, sy);
-      date_label->draw(cur_x, h - yoff, sx, sy);
+    //float xoff = date_label->tex_width_ * date_label->u_;
+    //g.label_->draw(cur_x + w * cw, cur_y, sx, sy);
+    glColor4f(1.0, 1.0, 1.0, 1.0);
+    //date_label->draw((cur_x + (w*cw)) - xoff, h - yoff, sx, sy);
+    date_label->draw(cur_x, h - yoff, sx, sy);
   }
   if (time_label && gui_show_time_.get()) { 
     FreeTypeFace *font = fonts_["anatomical"];
@@ -834,17 +855,16 @@ ICUMonitor::draw_plots()
       g.min_ref_label_->draw(cur_x - xoff, cur_y - gr_ht - yoff, sx, sy);
       if (g.lines_ == 1) {
         glDisable(GL_TEXTURE_2D);
-// added line for stippling
+	// added line for stippling
         glEnable(GL_LINE_STIPPLE);
-//
         glBegin(GL_LINES);
         //glVertex2f((cur_x + xoff) * sx, (cur_y - gr_ht) * sy);
         glVertex2f(cur_x * sx, (cur_y - gr_ht) * sy);
         glVertex2f((cur_x + (w * cw)) * sx, (cur_y - gr_ht) * sy);
         glEnd();
-// added line for stippling
+	// added line for stippling
         glDisable(GL_LINE_STIPPLE);
-//
+	//
         glEnable(GL_TEXTURE_2D);
       }
     }    
@@ -859,17 +879,17 @@ ICUMonitor::draw_plots()
           xoff = g.label_->tex_width_ * g.label_->u_ + gp;
         }
         glDisable(GL_TEXTURE_2D);
-// added line for stippling
+	// added line for stippling
         glEnable(GL_LINE_STIPPLE);
-//
+	//
         glBegin(GL_LINES);
         //glVertex2f((cur_x + xoff) * sx, cur_y * sy);
         glVertex2f(cur_x * sx, cur_y * sy);
         glVertex2f((cur_x + (w * cw) - xoff) * sx, cur_y * sy);
         glEnd();
-// added line for stippling
+	// added line for stippling
         glDisable(GL_LINE_STIPPLE);
-//
+	//
         glEnable(GL_TEXTURE_2D);
       }
     }
@@ -879,42 +899,46 @@ ICUMonitor::draw_plots()
       g.label_->draw((cur_x + (w*cw)) - xoff, cur_y, sx, sy);
     }
 
-    glColor4f(g.r_, g.g_, g.b_, 1.0);
+    if (g.use_plot_color_ == 1)
+      glColor4f(g.b_, g.r_, g.g_, 1.0);
+    else
+      glColor4f(1.0, 1.0, 1.0, 1.0);
 
     if (g.draw_aux_data_ == 1) { 
       if (g.aux_data_label_)
         g.aux_data_label_->draw(cur_x + w * cw + cg, cur_y, sx, sy);
 
       if (data_.get_rep()) {
-         int idx = cur_idx_;
-         if (idx > data_->nrrd->axis[1].size) {
-            idx -= data_->nrrd->axis[1].size;
-         }
-         float *dat = (float *)data_->nrrd->data;
-         int dat_index = idx * data_->nrrd->axis[0].size + g.auxindex_;
+	int idx = cur_idx_;
+	if (idx > data_->nrrd->axis[1].size) {
+	  idx -= data_->nrrd->axis[1].size;
+	}
+	float *dat = (float *)data_->nrrd->data;
+	int dat_index = idx * data_->nrrd->axis[0].size + g.auxindex_;
          
-         int val = (int)dat[dat_index];
+	int val = (int)dat[dat_index];
 
-         ostringstream auxstr;
-         auxstr << val;
-         ostringstream prevstr;
-         prevstr << g.previous_;
+	ostringstream auxstr;
+	auxstr << val;
+	ostringstream prevstr;
+	prevstr << g.previous_;
 
-         FreeTypeFace *font = fonts_["anatomical"];
-         font->set_points(50.0);
-	 if (val == -1)
-           g.aux_data_->set(prevstr.str());
-	 else {
-           g.aux_data_->set(auxstr.str());
-           g.previous_ = val;
-	 }
+	FreeTypeFace *font = fonts_["anatomical"];
+	font->set_points(50.0);
+	if (val == -1)
+	  g.aux_data_->set(prevstr.str());
+	else {
+	  g.aux_data_->set(auxstr.str());
+	  g.previous_ = val;
+	}
 
-         g.aux_data_->bind(font);
+	g.aux_data_->bind(font);
 
-         float yoff = g.aux_data_->tex_height_ * g.aux_data_->v_;
-         g.aux_data_->draw(cur_x + w * cw + cg + 15, cur_y - yoff*1.25, sx, sy);
+	float yoff = g.aux_data_->tex_height_ * g.aux_data_->v_;
+	g.aux_data_->draw(cur_x + w * cw + cg + 15, cur_y - yoff*1.25, sx, sy);
       }
     }
+    glColor4f(g.r_, g.g_, g.b_, 1.0);
     if (data_.get_rep()) {
       // draw the plot
       const float norm = (float)gr_ht / (g.max_ - g.min_);
@@ -929,13 +953,21 @@ ICUMonitor::draw_plots()
       float start_y = cur_y - gr_ht;
       //glColor4f(0.0, 0.9, 0.1, 1.0);
       glDisable(GL_TEXTURE_2D);
+
+      glLineWidth(1.5);
       glBegin(GL_LINE_STRIP);
       for (int i = 0; i < (int)samples; i++) {
+	bool last_tick = false;
+	static bool wrapping = false;
 	int idx = i + cur_idx_;
 	if (idx > data_->nrrd->axis[1].size - 1) {
-	  idx = 0;
+	  idx -= data_->nrrd->axis[1].size - 1;
+	   last_tick = !wrapping;
+	   wrapping = true;
+	} else {
+	  wrapping = false;
 	}
-
+	
 	float *dat = (float*)data_->nrrd->data;
 	int dat_index = idx * data_->nrrd->axis[0].size + g.index_;
         float tmpdat = dat[dat_index];
@@ -948,33 +980,28 @@ ICUMonitor::draw_plots()
 
 	glVertex2f((cur_x + (i * pix_per_sample)) * sx, (start_y + val) * sy);
 
-	if (idx % (int)samp_rate == 0){
+	if (idx % (int)samp_rate == 0 || last_tick){
 	  float tick = gr_ht * .15;// * norm;
 	  if (gui_time_markers_mode_.get()) {
-	     //glColor4f(0.0, 0.1, 0.9, 1.0);
-	     glColor4f(1.0, 1.0, 0.0, 1.0);
-	     //glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
-	     glVertex2f((cur_x + (i * pix_per_sample)) * sx, 
-	   	     (start_y + val + tick) * sy);
-	     //glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
-	     glVertex2f((cur_x + (i * pix_per_sample)) * sx, 
-	   	     (start_y + val - tick) * sy);
-	     //glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
-	     glVertex2f((cur_x + (i * pix_per_sample)) * sx, 
-	   	     (start_y + val) * sy);
+	    glColor4f(1.0, 1.0, 0.0, 1.0);
+	    glVertex2f((cur_x + (i * pix_per_sample)) * sx, 
+		       (start_y + val + tick) * sy);
+	    glVertex2f((cur_x + (i * pix_per_sample)) * sx, 
+		       (start_y + val - tick) * sy);
+	    glVertex2f((cur_x + (i * pix_per_sample)) * sx, 
+		       (start_y + val) * sy);
 	  }
 	  glColor4f(g.r_, g.g_, g.b_, 1.0);
 	}
       }
       glEnd();
 
-
-      if (data2_.get_rep() && data2_->nrrd->axis[1].size == data_->nrrd->axis[1].size && g.snd_ == 1) {
+      if (data2_.get_rep() && g.snd_ == 1) {
         glBegin(GL_LINE_STRIP);
         for (int i = 0; i < (int)samples; i++) {
           int idx = i + cur_idx_;
-          if (idx > data2_->nrrd->axis[1].size) {
-            idx -= data2_->nrrd->axis[1].size;
+          if (idx > data2_->nrrd->axis[1].size - 1) {
+	    idx -= data2_->nrrd->axis[1].size - 1; 
           }
           float *dat = (float*)data2_->nrrd->data;
           int dat_index = idx * data2_->nrrd->axis[0].size + g.index_;
@@ -985,13 +1012,14 @@ ICUMonitor::draw_plots()
           }
           //float val = (dat[dat_index] - g.min_) * norm;
           float val = (tmpdata2 - g.min_) * norm;
-          glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, (start_y + val) * sy);
-
-          glColor4f(0.5, 0.5, 0.5, 0.7);
+          glVertex2f((cur_x + (i * pix_per_sample)) * sx, 
+		     (start_y + val) * sy);
+          //glColor4f(.8, .8, .8, 0.8);
+	  glColor4f(gui_2ndred_.get(), gui_2ndgreen_.get(), gui_2ndblue_.get(), 0.8);
         }
         glEnd();
       }
-
+      glLineWidth(1.0);
       glEnable(GL_TEXTURE_2D);     
     }
 
@@ -1006,7 +1034,7 @@ ICUMonitor::draw_plots()
     fname << frame_count_++ << ".ppm";
     save_image(width_, height_, fname.str(), "ppm");
   }
-  CHECK_OPENGL_ERROR("end draw_plots")
+  CHECK_OPENGL_ERROR();
 }
 
 
@@ -1030,9 +1058,6 @@ ICUMonitor::redraw_all()
 {
   gui->lock();
   if (! make_current()) return;
-
-  glXMakeCurrent(dpy_, win_, ctx_);
-
   init_plots();
 
   glDrawBuffer(GL_BACK);
@@ -1052,6 +1077,8 @@ ICUMonitor::redraw_all()
 void
 ICUMonitor::setup_gl_view()
 {
+  gui->lock();
+  if (! make_current()) return;
   glViewport(0, 0, width_, height_);
 
   glDisable(GL_DEPTH_TEST);
@@ -1067,10 +1094,7 @@ ICUMonitor::setup_gl_view()
   glScaled(2.0, 2.0, 2.0);
   glTranslated(-.5, -.5, -.5);
 
-  glClearColor(0.0, .25, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT);
-
-  //gui->unlock();
+  gui->unlock();
 }
 
 void 
@@ -1080,7 +1104,8 @@ ICUMonitor::setTimeLabel()
     bool neg;
 
     int val = (int)(cur_idx_ / gui_sample_rate_.get());
-    val -= injury_offset_;
+    //val -= injury_offset_;
+    val -= gui_injury_offset_.get();
 
     hrs = val/(60*60);
     min = (val - hrs*60*60)/60;
@@ -1115,14 +1140,19 @@ ICUMonitor::addMarkersToMenu()
 
   for (unsigned int c = 0; c < data_->nproperties(); c++) {
      string name = data_->get_property_name(c);
-     //data_->get_property(name, value);
-     data_->get_property(name, val);
+     // only look at MKR_<name> values here
+     if(string(name, 0, 4) == "MKR_")
+     {
+       //data_->get_property(name, value);
+       data_->get_property(name, val);
  
-     stringstream ss(val);
-     ss >> value;
+       stringstream ss(val);
+       ss >> value;
 
-     keys.insert(value);
-     tmpmkrs[value] = name;
+       keys.insert(value);
+       // strip off "MKR_" from name
+       tmpmkrs[value] = string(name, 4, name.size() - 4);
+     }
   }
 
   markers_.clear();
@@ -1136,13 +1166,301 @@ ICUMonitor::addMarkersToMenu()
 }
 
 void 
+ICUMonitor::setConfigFromData()
+{
+  string value;
+  int intValue, idxDigits;
+  double floatValue;
+  string name;
+
+  // find how many plots we are drawing
+  if(! data_->get_property(string("DSPY_plot_count"), value))
+  { // no properties -- nothing to do
+    return;
+  }
+  // set gui int plot count
+  stringstream plot_ss(value);
+  plot_ss >> intValue;
+  gui_plot_count_.set(intValue);
+
+  reset_vars();
+  synch_plot_vars(gui_plot_count_.get());
+
+  if(intValue < 10) idxDigits = 1;
+  else if(intValue < 100) idxDigits = 2;
+
+  // now that the GUI variables have been allocated, populate them
+  for (unsigned int c = 0; c < data_->nproperties(); c++) {
+     name = data_->get_property_name(c);
+     // only look at DSPY_<name> values here
+     if(string(name, 0, 5) == "DSPY_")
+     {
+       data_->get_property(name, value);
+       // convert value string to various types
+       intValue = atoi(value.c_str());
+       floatValue = atof(value.c_str());
+       // strip off "DSPY_"
+       string ICUvarName = string(name, 5, name.size()-5);
+
+       if(string(ICUvarName, 0, 9) ==  "nw_label-")
+       {
+         // get gui var index
+         string labelIndexStr = string(ICUvarName, 9, idxDigits);
+         int i;
+         i = atoi(labelIndexStr.c_str());
+         const string num = to_string(i);
+         if (! gui_nw_label_[i])
+         {
+           gui_nw_label_[i] = scinew GuiString(ctx->subVar("nw_label-" + num));
+         }
+         // set label string value
+         gui_nw_label_[i]->set(value);
+       }
+       if(string(ICUvarName, 0, 9) ==  "sw_label-")
+       {
+         // get gui var index
+         string labelIndexStr = string(ICUvarName, 9, idxDigits);
+         int i;
+         i = atoi(labelIndexStr.c_str());
+         const string num = to_string(i);
+         if (! gui_sw_label_[i])
+         {
+           gui_sw_label_[i] = scinew GuiString(ctx->subVar("sw_label-" + num));
+         }
+         // set label string value
+         gui_sw_label_[i]->set(value);
+       }
+       if(string(ICUvarName, 0, 14) ==  "min_ref_label-")
+       {
+         // get gui var index
+         string labelIndexStr = string(ICUvarName, 15, idxDigits);
+         int i;
+         i = atoi(labelIndexStr.c_str());
+         const string num = to_string(i);
+         if (! gui_min_ref_label_[i])
+         {
+           gui_min_ref_label_[i] = scinew GuiString(
+                                         ctx->subVar("min_ref_label-" + num));
+         }
+         // set label string value
+         gui_min_ref_label_[i]->set(value);
+       }
+       if(string(ICUvarName, 0, 14) ==  "max_ref_label-")
+       {
+         // get gui var index
+         string labelIndexStr = string(ICUvarName, 15, idxDigits);
+         int i;
+         i = atoi(labelIndexStr.c_str());
+         const string num = to_string(i);
+         if (! gui_max_ref_label_[i])
+         {
+           gui_max_ref_label_[i] = scinew GuiString(
+                                         ctx->subVar("max_ref_label-" + num));
+         }
+         // set label string value
+         gui_max_ref_label_[i]->set(value);
+       }
+       if(string(ICUvarName, 0, 6) ==  "label-")
+       {
+         // get gui var index
+         string labelIndexStr = string(ICUvarName, 6, idxDigits);
+         int i;
+         i = atoi(labelIndexStr.c_str());
+         const string num = to_string(i);
+         if (! gui_label_[i])
+         {
+           gui_label_[i] = scinew GuiString(ctx->subVar("label-" + num));
+         }
+         // set label string value
+         gui_label_[i]->set(value);
+       }
+       if(string(ICUvarName, 0, 15) ==  "aux_data_label-")
+       {
+         // get gui var index
+         string labelIndexStr = string(ICUvarName, 15, idxDigits);
+         int i;
+         i = atoi(labelIndexStr.c_str());
+         const string num = to_string(i);
+         if (! gui_aux_data_label_[i])
+         {
+           gui_aux_data_label_[i] =
+             scinew GuiString(ctx->subVar("aux_data_label-" + num));
+         }
+         // set label string value
+         gui_aux_data_label_[i]->set(value);
+       }
+       if(string(ICUvarName, 0, 4) ==  "min-")
+       {
+         // get gui var index
+         string labelIndexStr = string(ICUvarName, 4, idxDigits);
+         int i;
+         i = atoi(labelIndexStr.c_str());
+         const string num = to_string(i);
+         if (! gui_min_[i])
+         {
+           gui_min_[i] = scinew GuiDouble(ctx->subVar("min-" + num));
+         }
+         // set plot min float value
+         gui_min_[i]->set(floatValue);
+       }
+       if(string(ICUvarName, 0, 4) ==  "max-")
+       {
+         // get gui var index
+         string labelIndexStr = string(ICUvarName, 4, idxDigits);
+         int i;
+         i = atoi(labelIndexStr.c_str());
+         const string num = to_string(i);
+         if (! gui_max_[i])
+         {
+           gui_max_[i] = scinew GuiDouble(ctx->subVar("max-" + num));
+         }
+
+         // set plot max float value
+         gui_max_[i]->set(floatValue);
+       }
+       if(string(ICUvarName, 0, 4) ==  "idx-")
+       {
+         // get gui var index
+         string labelIndexStr = string(ICUvarName, 4, idxDigits);
+         int i;
+         i = atoi(labelIndexStr.c_str());
+         const string num = to_string(i);
+         if (! gui_idx_[i])
+         {
+           gui_idx_[i] = scinew GuiInt(ctx->subVar("idx-" + num));
+         }
+
+         // set plot idx int value
+         gui_idx_[i]->set(intValue);
+       }
+       if(string(ICUvarName, 0, 4) ==  "snd-")
+       {
+         // get gui var index
+         string labelIndexStr = string(ICUvarName, 4, idxDigits);
+         int i;
+         i = atoi(labelIndexStr.c_str());
+         const string num = to_string(i);
+         if (! gui_snd_[i])
+         {
+           gui_snd_[i] = scinew GuiInt(ctx->subVar("snd-" + num));
+         }
+         // set plot snd int value
+         gui_snd_[i]->set(intValue);
+       }
+       if(string(ICUvarName, 0, 6) ==  "clamp-")
+       {
+         // get gui var index
+         string labelIndexStr = string(ICUvarName, 6, idxDigits);
+         int i;
+         i = atoi(labelIndexStr.c_str());
+         const string num = to_string(i);
+         if (! gui_clamp_[i])
+         {
+           gui_clamp_[i] = scinew GuiInt(ctx->subVar("clamp-" + num));
+         }
+         // set plot clamp int value
+         gui_clamp_[i]->set(intValue);
+       }
+       if(string(ICUvarName, 0, 6) ==  "lines-")
+       {
+         // get gui var index
+         string labelIndexStr = string(ICUvarName, 6, idxDigits);
+         int i;
+         i = atoi(labelIndexStr.c_str());
+         const string num = to_string(i);
+         if (! gui_lines_[i])
+         {
+           gui_lines_[i] = scinew GuiInt(ctx->subVar("lines-" + num));
+         }
+         // set plot lines int value
+         gui_lines_[i]->set(intValue);
+       }
+       if(string(ICUvarName, 0, 7) ==  "auxidx-")
+       {
+         // get gui var index
+         string labelIndexStr = string(ICUvarName, 7, idxDigits);
+         int i;
+         i = atoi(labelIndexStr.c_str());
+         const string num = to_string(i);
+         if (! gui_auxidx_[i])
+         {
+           gui_auxidx_[i] = scinew GuiInt(ctx->subVar("auxidx-" + num));
+         }
+         // set plot auxidx int value
+         gui_auxidx_[i]->set(intValue);
+       }
+       if(string(ICUvarName, 0, 14) ==  "draw_aux_data-")
+       {
+         // get gui var index
+         string labelIndexStr = string(ICUvarName, 14, idxDigits);
+         int i;
+         i = atoi(labelIndexStr.c_str());
+         const string num = to_string(i);
+         if (! gui_draw_aux_data_[i])
+         {
+           gui_draw_aux_data_[i] =
+               scinew GuiInt(ctx->subVar("draw_aux_data-" + num));
+         }
+         // set plot draw_aux_data int value
+         gui_draw_aux_data_[i]->set(intValue);
+       }
+       // plot_color is of the form plot_color-0-[r|g|b]
+       if(string(ICUvarName, 0, 11) ==  "plot_color-")
+       {
+         // get gui var index
+         string labelIndexStr = string(ICUvarName, 11, idxDigits);
+         int i;
+         i = atoi(labelIndexStr.c_str());
+         const string num = to_string(i);
+         if (! gui_red_[i])
+         {
+           gui_red_[i] =
+             scinew GuiDouble(ctx->subVar("plot_color-" + num + "-r"));
+         }
+         if (! gui_green_[i])
+         {
+           gui_green_[i] =
+             scinew GuiDouble(ctx->subVar("plot_color-" + num + "-g"));
+         }
+         if (! gui_blue_[i])
+         {
+           gui_blue_[i] =
+             scinew GuiDouble(ctx->subVar("plot_color-" + num + "-b"));
+         }
+
+         string primaryStr = string(ICUvarName, 12+idxDigits, 1);
+         char colorChar;
+         colorChar = primaryStr.c_str()[0];
+         // set plot plot color float value
+         switch(colorChar)
+         {
+           case 'r':
+             gui_red_[i]->set(floatValue);
+             break;
+           case 'g':
+             gui_green_[i]->set(floatValue);
+             break;
+           case 'b':
+             gui_blue_[i]->set(floatValue);
+             break;
+         } // end switch(colorChar)
+       } // end if(string(ICUvarName, 0, 11) ==  "plot_color-")
+     } // end if(string(name, 0, 5) == "DSPY_")
+  } // end for ( c from  0 to data_->nproperties()-1 )
+
+  // tell the ICUMonitor to redraw
+  plots_dirty_ = true;
+
+} // end setConfigFromData()
+
+void 
 ICUMonitor::setNameAndDateAndTime()
 {
   char *name = nrrdKeyValueGet(data_->nrrd, "name");
 
   if (name != NULL) {
     string title(name);
-    gui->execute(id + " setWindowTitle {ICU Monitor: " + name + "}");
+    gui->execute(id + " setWindowTitle {Physiology Monitor: " + name + "}");
 
     ostringstream titlestr;
     titlestr << "Name: " << title;
@@ -1165,17 +1483,17 @@ ICUMonitor::setNameAndDateAndTime()
     plots_dirty_ = true;
   }
 
-  char *inj = nrrdKeyValueGet(data_->nrrd, "injury");
-  if (inj != NULL) {
-     string injoff(inj);
+  //char *inj = nrrdKeyValueGet(data_->nrrd, "injury");
+  //if (inj != NULL) {
+   //  string injoff(inj);
                                                                                 
-     stringstream ss(injoff);
-     ss >> injury_offset_;
+    // stringstream ss(injoff);
+     //ss >> injury_offset_;
                                                                                 
-     injury_offset_ /= gui_sample_rate_.get();
+     //injury_offset_ /= (int)gui_sample_rate_.get();
                                                                                 
-     setTimeLabel();
-  }
+     //setTimeLabel();
+  //}
 }
 
 void
@@ -1205,6 +1523,8 @@ ICUMonitor::execute()
 
   setNameAndDateAndTime();
 
+  setConfigFromData();
+
   NrrdIPort *nrrd2_port = (NrrdIPort*)get_iport("Nrrd2");
 
   if (!nrrd2_port) 
@@ -1215,9 +1535,10 @@ ICUMonitor::execute()
 
   nrrd2_port->get(data2_);
 
-  if (data2_.get_rep() && data2_->nrrd->axis[1].size != data_->nrrd->axis[1].size)
+  if (data2_.get_rep() && data2_->nrrd->axis[1].size != 
+      data_->nrrd->axis[1].size)
   {
-    error ("Axis 1 size for both NRRD files must be identical.");
+    remark ("Axis 1 size for both NRRD files are not identical.");
   } 
   
   if (!runner_) {
@@ -1295,12 +1616,11 @@ ICUMonitor::tcl_command(GuiArgs& args, void* userdata)
                                       Tk_MainWindow(the_interp));
     if(!tkwin) {
       warning("Unable to locate window!");
-      gui->unlock();
+      //gui->unlock();
     } else {
-      //width_ = Tk_Width(tkwin);
+      width_ = Tk_Width(tkwin);
       height_ = Tk_Height(tkwin);
-
-      setup_gl_view();
+      redraw_all();
     }
 
   } else {

@@ -53,6 +53,11 @@ using std::endl;
 
 using namespace SCIRun;
 
+#define check_error(str) \
+  if (str.fail()) { \
+    cerr << "fail state at line: " << __LINE__ << " " << endl; \
+    return 66; }
+
 bool bin_out;
 bool swap_endian;
 
@@ -60,8 +65,6 @@ void setDefaults() {
   bin_out=false;
   swap_endian=false;
 }
-
-#define check_error(str)   if (str.fail()) { cerr << "fail state on stream @ line: " << __LINE__<< endl; return 69;}  
 
 int parseArgs(int argc, char *argv[]) {
   int currArg = 3;
@@ -111,13 +114,14 @@ void swap_endianess_4(unsigned *dw)
 }
 
 template <class T>
-void
+int
 read_n_points(TriSurfMesh *tsm, int n, ifstream &str) {
   T arr[3];
-  if (str.fail()) { cerr << "fail state on stream" << endl; return;}
+  check_error(str);
+
   for(int i = 0; i < n; i++) {
     str.read((char*)arr, sizeof(T) * 3);
-    if (str.fail()) { cerr << "fail state on stream " << i << endl; return;}
+    check_error(str);
     switch (sizeof(T)) {
     case 2 :
 
@@ -134,26 +138,27 @@ read_n_points(TriSurfMesh *tsm, int n, ifstream &str) {
     tsm->add_point(Point(arr[0], arr[1], arr[2]));
     //cout << arr[0] << ", " << arr[1] << ", " << arr[2] << endl;
   }
+  return 0;
 }
 
 template <class T>
-void
+int
 read_n_polys(TriSurfMesh *tsm, int n, ifstream &str) {
   T arr[3];
-  if (str.fail()) { cerr << "fail state on stream" << endl; return;}
+  check_error(str);
   for(int i = 0; i < n; i++) {
     T val;
     str.read((char*)&val, sizeof(T));
-    if (str.fail()) { cerr << "fail state on stream " << i << endl; return;}
+    check_error(str);
     swap_endianess_4(&val);
-    //cout << n << " POLYGONS with " << val << "verticies." << endl;
+
     if (val != 3) {
       cout << "ERROR: can only handle triangle polys atm..." << endl;
       exit(1);
     }
 
     str.read((char*)arr, sizeof(T) * 3);
-    if (str.fail()) { cerr << "fail state on stream " << i << endl; return;}
+    check_error(str);
 
     swap_endianess_4((unsigned*)&arr[0]);
     swap_endianess_4((unsigned*)&arr[1]);
@@ -162,48 +167,28 @@ read_n_polys(TriSurfMesh *tsm, int n, ifstream &str) {
     tsm->add_triangle(arr[0], arr[1], arr[2]);
     //cout << arr[0] << ", " << arr[1] << ", " << arr[2] << endl;
   }
+  return 0;
 }
 
 template <class FLD>
-void
+int
 read_scalar_lookup(FLD *fld, int n, ifstream &str) {
   fld->resize_fdata();
   typedef typename FLD::value_type val_t;
   //val_t last = 0;
   int vset = 0;
-  if (str.fail()) { cerr << "fail state on stream" << endl; return;}
+  check_error(str);
+
   for(int i = 0; i < n; i++) {
     typedef typename FLD::value_type val_t;
     val_t val;
     str.read((char*)&val, sizeof(val_t));
-    if (str.fail()) { cerr << "fail state on stream " << i << endl; return;}
+    check_error(str);
     swap_endianess_4((unsigned*)&val);
     vset++;
     fld->set_value(val, (typename FLD::mesh_type::Face::index_type)i);    
   }
-}
-
-template <class FLD>
-void
-read_vector_lookup(FLD *fld, int n, ifstream &str) {
-  fld->resize_fdata();
-  typedef typename FLD::value_type val_t;
-  //val_t last = 0;
-  int vset = 0;
-  if (str.fail()) { cerr << "fail state on stream" << endl; return;}
-  for(int i = 0; i < n; i++) {
-    typedef typename FLD::value_type val_t;
-    val_t x, y, z;
-    str.read((char*)&x, sizeof(val_t));
-    str.read((char*)&y, sizeof(val_t));
-    str.read((char*)&z, sizeof(val_t));
-    if (str.fail()) { cerr << "fail state on stream " << i << endl; return;}
-    swap_endianess_4((unsigned*)&x);
-    swap_endianess_4((unsigned*)&y);
-    swap_endianess_4((unsigned*)&z);
-    vset++;
-    //fld->set_value(val, (typename FLD::mesh_type::Face::index_type)i);    
-  }
+  return 0;
 }
 
 
@@ -233,10 +218,7 @@ main(int argc, char **argv) {
     return 1;
   }
   ifstream vtk(in, ios::binary);
-  if (vtk.fail()) {
-    cerr << "Error -- Could not open file " << in << "\n";
-    return 2;
-  }
+  check_error(vtk);
 
   char id[256], header[256], format[256];
 
@@ -244,7 +226,7 @@ main(int argc, char **argv) {
   vtk.getline(header, 256);
 
   vtk >> format;
-  //cout << format << endl;  
+  cout << format << endl;  
 
   string dataset;
   vtk >> dataset;
@@ -261,6 +243,8 @@ main(int argc, char **argv) {
 	return 5;
       }
   }
+  check_error(vtk);
+  
   string attrib;
   vtk >> attrib;
 
@@ -270,10 +254,13 @@ main(int argc, char **argv) {
   string type;
   vtk >> type;
   //cout << "attrib is : " << attrib << " " << n << " type is " << type << endl;
+  check_error(vtk);
   vtk.get(); // eat a newline
 
   read_n_points<float>(tsm, n, vtk);
   
+  check_error(vtk);
+
   string poly;
   vtk >> poly;
 
@@ -285,78 +272,60 @@ main(int argc, char **argv) {
   vtk >> n;
   int sz;
   vtk >> sz;
-  //cout << poly << " " << n << " " << sz << endl;
+  cout << poly << " " << n << " " << sz << endl;
 
   vtk.get(); // eat a newline
   read_n_polys<unsigned>(tsm, n, vtk);
-  check_error(vtk)
-
+  check_error(vtk);
+  
   string dat;
   vtk >> dat; 
   vtk >> n;
-  check_error(vtk);
-  //cout << dat << " " << n << endl;
+  check_error(vtk)
+  cout << dat << " " << n << endl;
 
-  TriSurfField<float> *ts = 0;
-  string data, name;
   if (dat == "CELL_DATA") {
-    vtk >> data;
-    check_error(vtk);
-    //cout << data << endl;
-    if (data == "POINT_DATA") {
-      vtk >> n;
-      int count = 0;
-      while (!vtk.eof()) {
-	vtk.get();
-	count++;
-      }
-//       if (count) { 
-// 	cerr << "Warning: Ate " << count 
-// 	     << " bytes until end." << endl;
-//       }
-    } else {
-      vtk >> name >> n;
-      check_error(vtk);
+    vtk >> dat; 
+    vtk >> n;
+    check_error(vtk)
+    cout << dat << " " << n << endl;
+  }
+  
+  
+
+  TriSurfField<float> *ts;
+  string data, name;
+//   vtk >> data;
+//   check_error(vtk);
+//   cout << data << endl;
+//   vtk >> name;
+//   check_error(vtk);
+//   cout << name << endl;
+//   vtk >> type;
+//   check_error(vtk);
+//   cout << type << endl;
+
+  if (dat == "CELL_DATA") {
+    if (type != "float") {
+      cerr << "supporting float only atm..." << endl;
+      return 1;
     }
+    ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), 0);
+    //cout << "putting data at faces" << endl;
+  } else {
+    // node centered data ...
+    if (type != "float") {
+      cerr << "supporting float only atm..." << endl;
+      return 1;
+    }
+    ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), 1);
+  }
+  ts->resize_fdata();
+    
+  while (!vtk.eof()) {
+    vtk.get();
   }
 
-  if (data == "COLOR_SCALARS") {
-    unsigned char r, g, b;
-    for (int i = 0; i < n; i++) {
-      vtk >> r >> g >> b;
-    }
-  }
-  if (! vtk.eof()) {
-    check_error(vtk);
-    if (dat == "CELL_DATA") {
-      if (type != "float") {
-	cerr << "supporting float only. got " << type << endl;
-	return 1;
-      }
-      ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), 0);
-      //cout << "putting data at faces" << endl;
-    } else {
-      // node centered data ...
-      if (type != "float") {
-	cerr << "supporting float only. got " << type << endl;
-	return 1;
-      }
-      ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), 1);
-    }
-    ts->resize_fdata();
-
-    if (data == "NORMALS") {
-      vtk.get(); // eat a newline
-      read_vector_lookup(ts, n, vtk);
-    }  
-    while (!vtk.eof()) {
-      vtk.get();
-    }
-  }  
-
-  if (ts == 0) {
-    ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), -1);
-  }
   FieldHandle ts_handle(ts);
   
   if (bin_out) {
@@ -366,6 +335,6 @@ main(int argc, char **argv) {
     TextPiostream out_stream(out, Piostream::Write);
     Pio(out_stream, ts_handle);
   }
-  
+
   return status;  
 }    

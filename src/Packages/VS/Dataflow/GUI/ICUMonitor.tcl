@@ -50,10 +50,15 @@ itcl_class VS_Render_ICUMonitor {
 	global  $this-left_margin
 	global  $this-plot_spacing
 	global  $this-font_scale
+	global  $this-injury_offset
 	global  $this-show_name
 	global  $this-show_date
 	global  $this-show_time
 	global  $this-dump_frames
+	global  $this-geom
+	global  $this-2ndplot_color-r
+	global  $this-2ndplot_color-g
+	global  $this-2ndplot_color-b
 
 	set $this-edit          0
 	set $this-edit-target   0
@@ -70,15 +75,28 @@ itcl_class VS_Render_ICUMonitor {
 	set $this-left_margin 20
 	set $this-plot_spacing 20
 	set $this-font_scale 1.0
+	set $this-injury_offset 0
 	set $this-show_name 0
 	set $this-show_date 0
 	set $this-show_time 0
 	set $this-dump_frames   0
+	set $this-geom "640x640+0+0"
+	set $this-2ndplot_color-r 0.8
+	set $this-2ndplot_color-g 0.8
+	set $this-2ndplot_color-b 0.8
+    }
+    method do_expose {} {
+	if {[winfo exists .ui[modname]]!= 0} {
+	    set w .ui[modname]
+	    set $this-geom [wm geometry $w]
+	    
+	}
+	$this-c expose
     }
 
     method bind_events {w} {
 	# every time the OpenGL widget is displayed, redraw it
-	bind $w <Expose> "$this-c expose"
+	bind $w <Expose> "$this do_expose"
 # 	bind $w <Shift-ButtonPress-1> "$this-c mouse push %x %y %b 0"
 # 	bind $w <Shift-ButtonPress-2> "$this-c mouse push %x %y %b 0"
 # 	bind $w <Shift-ButtonPress-3> "$this-c mouse push %x %y %b 1"
@@ -244,6 +262,25 @@ itcl_class VS_Render_ICUMonitor {
 
             pack $w.prefs.gen -fill x -expand yes -side top
 
+		iwidgets::labeledframe $w.prefs.time -labeltext "Timeline" \
+			-labelpos nw
+		set time [$w.prefs.time childsite]
+		
+		frame $time.f -borderwidth 2
+		pack $time.f -side top -fill both
+		
+		frame $time.f.offset
+		pack $time.f.offset -side top -fill x -pady 2
+		label $time.f.offset.l -text "Index Offset:"
+		entry $time.f.offset.val -textvariable $this-injury_offset \
+			-width 6
+		label $time.f.offset.u -text "s"
+		pack $time.f.offset.l -side left
+		pack $time.f.offset.val -side left
+		pack $time.f.offset.u -side left
+		
+		pack $w.prefs.time -fill x -expand yes -side top 
+
             iwidgets::labeledframe $w.prefs.plots -labeltext "Plots" \
 		-labelpos nw
             set plots [$w.prefs.plots childsite]
@@ -290,6 +327,11 @@ itcl_class VS_Render_ICUMonitor {
                  -showvalue true -resolution 0.1 \
                  -orient horizontal -command "$this-c init"
 	    #pack $plots.f.fs.font -fill x
+
+	    frame $plots.f.col -borderwidth 2
+		 pack $plots.f.col
+	    addColorSelection $plots.f.col "Secondary Plot Color" $this-2ndplot_color  \
+		"redraw"	   
 
             pack $w.prefs.plots -fill x -expand yes -side top
 
@@ -425,6 +467,9 @@ itcl_class VS_Render_ICUMonitor {
 	    checkbutton  $w.add.f.draw_aux_data -text "Draw Derived Data" \
 		-padx 6 -justify left -relief flat -variable \
 		$this-draw_aux_data-$v -onvalue 1 -offvalue 0 -anchor w
+	    checkbutton  $w.add.f.use_plot_color -text "Use Plot Color" \
+		-padx 6 -justify left -relief flat -variable \
+		$this-use_plot_color-$v -onvalue 1 -offvalue 0 -anchor w
 
 	    frame $w.add.f.col -borderwidth 2
 	    addColorSelection $w.add.f.col "Plot Color" $this-plot_color-$v  \
@@ -439,6 +484,7 @@ itcl_class VS_Render_ICUMonitor {
 		$w.add.f.idxl \
 		$w.add.f.idx $w.add.f.trace $w.add.f.adl $w.add.f.ad \
 		$w.add.f.auxidxl $w.add.f.auxidx $w.add.f.draw_aux_data \
+		$w.add.f.use_plot_color \
 		$w.add.f.col -side top -fill x -padx 2 -pady 2
 
 	    pack $w.add.f -side top -fill x -padx 2 -pady 2
@@ -604,9 +650,9 @@ itcl_class VS_Render_ICUMonitor {
 
 	    SciRaise $w
 
-	    wm title $w "ICU Monitor"
+	    wm title $w "Physiology Monitor"
 	    #wm minsize $w 640 128
-	    wm geometry $w "640x640"
+	    wm geometry $w [set $this-geom]
 	}
     }
 

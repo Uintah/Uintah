@@ -20,6 +20,9 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomLine.h>
@@ -206,8 +209,6 @@ private:
 
   FieldHandle InputFieldHandle_;
   NrrdDataHandle InputNrrdHandle_;
-  ColorMapHandle inputCMapHandle_;
-  ColorMapHandle outputCMapHandle_;
   int probeWidgetid_;
   Point probeLoc_;
   int labelIndexVal_;
@@ -227,12 +228,17 @@ private:
   void executePhysio();
 
 protected:
+  // output injury icon geometry (sphere, cone, ...)
+  FieldHandle injIconFieldHandle_;
+  Transform    inputTransform_;
+  // input selected surface geometry -- from field file
   FieldHandle  selectGeomFilehandle_;
+  // input injured surface geometry -- from field files
   FieldHandle  inj0GeomFilehandle_;
   FieldHandle  inj1GeomFilehandle_;
-  FieldHandle ablateIconFieldHandle_;
-  FieldHandle stunIconFieldHandle_;
-  Transform    inputTransform_;
+  // output injured surface geometry -- created from input mesh + data
+  FieldHandle  inj0GeomFieldhandle_;
+  FieldHandle  inj1GeomFieldhandle_;
   string    geomFilename_;
   string    activeBoundBoxSrc_;
   string    activeInjList_;
@@ -368,10 +374,11 @@ HotBox::execute()
   }
   // get bounding box of input field
   inFieldBBox_ = InputFieldHandle_->mesh()->get_bounding_box();
-  Point bmin = inFieldBBox_.min();
-  Point bmax = inFieldBBox_.max();
+  Point bmin, bmax;
+  bmin = inFieldBBox_.min();
+  bmax = inFieldBBox_.max();
   Vector inFieldBBextent = bmax - bmin;
-  l2norm_ = inFieldBBextent.length();
+  l2norm_ = inFieldBBextent.length() + 0.001;
 
   if(InputFieldHandle_->query_scalar_interface(this).get_rep() != 0)
   {
@@ -439,22 +446,10 @@ HotBox::execute()
 
       // expect one value in the input timeStep
       currentTime_ = (int)data[0];
-      cerr << " matrix value " << data[0] << endl;
+      cerr << " time matrix value " << data[0] << endl;
       gui_curTime_.set(currentTime_);
     }
   } // end else (data on input matrix port)
-
-  // get the input ColorMap port
-  ColorMapIPort *cmap_port = (ColorMapIPort *)get_iport("Input ColorMap");
-
-  if (!cmap_port)
-  {
-    error("Unable to initialize iport 'ColorMap'.");
-  }
-  else if(!cmap_port->get(inputCMapHandle_) || !(inputCMapHandle_.get_rep()))
-  {
-    error( "No colormap handle or representation" );
-  }
 
   // get input Transform matrix port
   MatrixIPort *
@@ -470,6 +465,7 @@ HotBox::execute()
      !inputXFormMatrixHandle.get_rep()))
   {
     remark("No data on input Transform matrix port.");
+    inputTransform_.load_identity();
   }
   else
   {
@@ -500,15 +496,13 @@ HotBox::execute()
       DenseMatrix *dm;
       dm = scinew DenseMatrix(inputXFormMatrixHandle->nrows(),
                               inputXFormMatrixHandle->ncols());
-      // dm->zero();
-      double **xformData = dm->getData2D();
 
       for(int r = 0; r < nrows; r++)
       {
         for(int c = 0; c < ncols; c++)
         {
-          xformData[r][c] = inputXFormMatrixHandle->get(r, c);
-          cerr << xformData[r][c] << " ";
+          (*dm)[r][c] = inputXFormMatrixHandle->get(r, c);
+          cerr << (*dm)[r][c] << " ";
         }
         cerr << endl;
       }
@@ -644,27 +638,28 @@ HotBox::execute()
       boxScale_ = Point(1.0, 1.0, 1.0);
     }
   } // end if(!boundBoxList_)
+  VH_AnatomyBoundingBox *selectBox;
+  if(boundBoxList_ != NULL)
+  {
+    // compare the bounding box of the input field
+    // with the largest bounding volume of the segmentation
+    cerr << "HotBox::execute(): input field(";
+    cerr << inFieldBBox_.min() << "," << inFieldBBox_.max();
+    cerr << "), extent(" << inFieldBBextent << ")" << endl;
+    cerr << "                  segmentation([" << maxSegmentVol_->get_minX();
+    cerr << "," << maxSegmentVol_->get_minY() << ",";
+    cerr << maxSegmentVol_->get_minZ();
+    cerr << "],[" << maxSegmentVol_->get_maxX() << ",";
+    cerr << maxSegmentVol_->get_maxY();
+    cerr << "," << maxSegmentVol_->get_maxZ() << "]), extent(";
+    cerr << maxSegBBextent_ << ")" << endl;
+    cerr << "Max Volume: " <<  maxSegmentVol_->get_anatomyname() << endl;
 
-  // compare the bounding box of the input field
-  // with the largest bounding volume of the segmentation
-  cerr << "HotBox::execute(): input field(" << inFieldBBox_.min();
-  cerr << "," << inFieldBBox_.max() << "), extent(" << inFieldBBextent;
-  cerr << ")" << endl;
-  cerr << "                  segmentation([" << maxSegmentVol_->get_minX();
-  cerr << "," << maxSegmentVol_->get_minY() << ",";
-  cerr << maxSegmentVol_->get_minZ();
-  cerr << "],[" << maxSegmentVol_->get_maxX() << ",";
-  cerr << maxSegmentVol_->get_maxY();
-  cerr << "," << maxSegmentVol_->get_maxZ() << "]), extent(";
-  cerr << maxSegBBextent_ << ")" << endl;
-  cerr << "Max Volume: " <<  maxSegmentVol_->get_anatomyname() << endl;
+    cerr << "boxTran = " << boxTran_ << ", boxScale = " << boxScale_ << endl;
 
-
-  cerr << "boxTran = " << boxTran_ << ", boxScale = " << boxScale_ << endl;
-
-  // get the bounding box information for the selected entity
-  VH_AnatomyBoundingBox *selectBox =
-      VH_Anatomy_findBoundingBox( boundBoxList_, selectName);
+    // get the bounding box information for the selected entity
+    selectBox = VH_Anatomy_findBoundingBox( boundBoxList_, selectName);
+  }
 
   // we now have the anatomy name corresponding to the label value at the voxel
   if(!injListDoc_ || activeInjList_ != injuryListDataSrc)
@@ -856,8 +851,8 @@ HotBox::execute()
     return;
   }
 
-  if(inj0GeomFilehandle_.get_rep() != 0)
-    inj0highlightOutport->send(inj0GeomFilehandle_);
+  if(inj0GeomFieldhandle_.get_rep() != 0)
+    inj0highlightOutport->send(inj0GeomFieldhandle_);
 
   // get output geometry port -- Injury 1 Highlight
   SimpleOPort<FieldHandle> *
@@ -870,8 +865,8 @@ HotBox::execute()
     return;
   }
 
-  if(inj1GeomFilehandle_.get_rep() != 0)
-    inj1highlightOutport->send(inj1GeomFilehandle_);
+  if(inj1GeomFieldhandle_.get_rep() != 0)
+    inj1highlightOutport->send(inj1GeomFieldhandle_);
 
   if(injured_tissue_.size() > 0)
   {
@@ -879,29 +874,17 @@ HotBox::execute()
     makeInjGeometry();
   }
 
-  // get output geometry port -- Ablated Injury Icon
+  // get output geometry port -- Injury Icon
   SimpleOPort<FieldHandle> *
-  ablateInjuryOutport = (SimpleOPort<FieldHandle> *)
-                      getOPort("Ablated Injury Icon");
+  injuryOutport = (SimpleOPort<FieldHandle> *)
+                      getOPort("Injury Icon");
 
   // send the injury field (surface) downstream
-  if (!ablateInjuryOutport) {
-    error("Unable to initialize Ablated Injury oport.");
+  if (!injuryOutport) {
+    error("Unable to initialize oport.");
   }
-  else if(ablateIconFieldHandle_.get_rep() != 0)
-    ablateInjuryOutport->send(ablateIconFieldHandle_);
-
-  // get output geometry port -- Stunned Injury Icon
-  SimpleOPort<FieldHandle> *
-  stunInjuryOutport = (SimpleOPort<FieldHandle> *)
-                      getOPort("Stunned Injury Icon");
-
-  // send the injury field (surface) downstream
-  if (!stunInjuryOutport) {
-    error("Unable to initialize Stunned Injury oport.");
-  }
-  else if(stunIconFieldHandle_.get_rep() != 0)
-    stunInjuryOutport->send(stunIconFieldHandle_);
+  else if(injIconFieldHandle_.get_rep() != 0)
+    injuryOutport->send(injIconFieldHandle_);
 
   // send the NrrdData downstream
   NrrdOPort *nrrdOutPort = (NrrdOPort *)get_oport("Physiology Data");
@@ -912,21 +895,6 @@ HotBox::execute()
   }
   if(InputNrrdHandle_.get_rep())
       nrrdOutPort->send(InputNrrdHandle_);
-
-  // send the ColorMap downstream
-  if(outputCMapHandle_.get_rep() ) {
-    ColorMapOPort *ocolormap_port =
-      (ColorMapOPort *) get_oport("Output ColorMap");
-
-    if (!ocolormap_port) {
-      error("Unable to initialize "+name+"'s oport\n");
-    }
-    else
-    {// Send the data downstream
-      cerr << "Sending colormap" <<endl;
-      ocolormap_port->send( inputCMapHandle_ );
-    }
-  }
 
   if(selectBox && selectionSource == "fromHotBoxUI")
   { // set the Probe location to center of selection
@@ -1151,62 +1119,6 @@ HotBox::execAdjacency()
     VS_HotBoxUI_->set_text(7, string(adjacentName, 0, 18));
   } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 9)
 } // end HotBox::execAdjacency()
-
-/*****************************************************************************
- * method HotBox::execSelColorMap()
- *****************************************************************************/
-
-void
-HotBox::execSelColorMap()
-{
-
-  // detach the input colormap handle
-  if(!inputCMapHandle_.get_rep())
-  {
-    error( "No colormap handle or representation" );
-    return;
-  }
-  // inputCMapHandle_.detach();
-  // scale the colormap to the range of field data values
-  pair<double,double> minmax;
-  ScalarFieldInterfaceHandle sfi = 0;
-  if ((sfi = InputFieldHandle_->query_scalar_interface(this)).get_rep())
-  {
-    sfi->compute_min_max(minmax.first, minmax.second);
-  }
-  else
-  {
-    error("An input field is not a scalar field.");
-    return;
-  }
-  // inputCMapHandle_->Scale( minmax.first, minmax.second);
-
-  // create the output colormap from the modified input
-  // vector<float> rgbt = inputCMapHandle_->get_rgbT();
-
-  // set injury colors
-  // for each element of the injury list
-  for(unsigned int i = 0; i < injured_tissue_.size(); i++)
-  {
-    VH_injury injPtr = (VH_injury)injured_tissue_[i];
-    // find the colorMap entry for this label value
-    int injTissueIndex =
-        anatomytable_->get_labelindex((char *)injPtr.anatomyname.c_str());
-    // set this entry to RED
-    // if(injTissueIndex >= 0)
-        // rgbt[injTissueIndex] = (float)18.0;
-  }
-  // set selection colors
-  // set this entry to YELLOW
-  // rgbt[labelIndexVal_] = (float)19.0;
-
-  // build the output colormap
-  // ColorMap cm(inputCMapHandle_->get_rgbs(), rgbt,
-  //                             inputCMapHandle_->get_alphas(),
-  //                             inputCMapHandle_->get_alphaT(),
-  //                             inputCMapHandle_->resolution());
-  // outputCMapHandle_ = &cm;
-} // end HotBox::execSelColorMap()
 
 /*****************************************************************************
  * method HotBox::executeOQAFMA()
@@ -1937,6 +1849,7 @@ HotBox::makeInjGeometry()
   int mvindx = 0, numQuads = 0;
   CurveMesh *cm = (CurveMesh *)0;
   QuadSurfMesh *qsm = (QuadSurfMesh *)0;
+  vector<double> injIconData;
 
   CurveField<double> *cf;
   QuadSurfField<double> *qsf;
@@ -1950,6 +1863,7 @@ HotBox::makeInjGeometry()
 
     if(injPtr.geom_type == "line")
     {
+      // if it does not already exist, make the CurveMesh
       if(cm == (CurveMesh *)0)
         cm = new CurveMesh();
 
@@ -1962,10 +1876,7 @@ HotBox::makeInjGeometry()
     else if(injPtr.geom_type == "sphere" ||
             injPtr.geom_type == "hollow_sphere")
     {
-      // get the center of the sphere
-      Point sphCenter = Point(injPtr.axisX0, injPtr.axisY0, injPtr.axisZ0);
-
-      // make the QuadSurfMesh
+      // if it does not already exist, make the QuadSurfMesh
       if(qsm == (QuadSurfMesh *)0)
         qsm = new QuadSurfMesh();
 
@@ -1976,12 +1887,25 @@ HotBox::makeInjGeometry()
         for(int j = 0; j <= CYLREZ/2; j++)
         { // make a circle in the X-Y plane
           double pi = 3.14159;
-          double x = injPtr.rad0 * sin(2.0 * pi * j/CYLREZ) * cos(2.0 * pi * k/CYLREZ);
-          double y = injPtr.rad0 * cos(2.0 * pi * j/CYLREZ);
-          double z = injPtr.rad0 * sin(2.0 * pi * j/CYLREZ) * sin(2.0 * pi * k/CYLREZ);
+          double
+          x = injPtr.rad0 * sin(2.0 * pi * j/CYLREZ) * cos(2.0 * pi * k/CYLREZ);
+          double
+          y = injPtr.rad0 * cos(2.0 * pi * j/CYLREZ);
+          double
+          z = injPtr.rad0 * sin(2.0 * pi * j/CYLREZ) * sin(2.0 * pi * k/CYLREZ);
           // rotate the circle into the plane defined by the longitudinal axis
-	  Point p(x, y, z);
+	  Point p(x, y, z, 1.0);
+          // translate to the center of the sphere
+          p += Vector(injPtr.axisX0, injPtr.axisY0, injPtr.axisZ0);
+
           qsm->add_point(p);
+          // add a data value per mesh node
+          if(injPtr.isAblate)
+              injIconData.push_back(1.0);
+          else if(injPtr.isStun)
+              injIconData.push_back(0.5);
+          else
+              injIconData.push_back(0.0);
           if(svindx >= CYLREZ/2)
           {
             qsm->add_quad(mvindx-(CYLREZ/2)-2, mvindx-(CYLREZ/2)-1,
@@ -2019,13 +1943,30 @@ HotBox::makeInjGeometry()
         double x = injPtr.rad0 * cos(2.0 * pi * j/CYLREZ);
         double y = injPtr.rad0 * sin(2.0 * pi * j/CYLREZ);
         // rotate the circle into the plane defined by the cylindrical axis
-        Point pt = cylXform.project(Point(x, y, 0.0));
-        Point p0 = pt;
+        Point p0 = cylXform.project(Point(x, y, 0.0, 1.0));
         p0 += Vector(injPtr.axisX0, injPtr.axisY0, injPtr.axisZ0);
         qsm->add_point(p0);
-        Point p1 = pt;
+        x = injPtr.rad1 * cos(2.0 * pi * j/CYLREZ);
+        y = injPtr.rad1 * sin(2.0 * pi * j/CYLREZ);
+        Point p1 = cylXform.project(Point(x, y, 0.0, 1.0));
         p1 += Vector(injPtr.axisX1, injPtr.axisY1, injPtr.axisZ1);
         qsm->add_point(p1);
+        // add a data value per mesh node
+        if(injPtr.isAblate)
+        {
+            injIconData.push_back(1.0);
+            injIconData.push_back(1.0);
+        }
+        else if(injPtr.isStun)
+        {
+            injIconData.push_back(0.5);
+            injIconData.push_back(0.5);
+        }
+        else
+        {
+            injIconData.push_back(0.0);
+            injIconData.push_back(0.0);
+        }
         if(cvindx > 1)
         {
           qsm->add_quad(mvindx-2, mvindx-1, mvindx+1, mvindx);
@@ -2037,14 +1978,23 @@ HotBox::makeInjGeometry()
   } // end for(int i = 0; i < injured_tissue_.size(); i++)
   if(numLines > 0)
   {
-    cerr << numLines << " lines ";
+    cerr << numLines << " lines " << injIconData.size() << " data vals ";
     cf = scinew CurveField<double>(cm, -1);
   }
   if(numQuads > 0)
   {
-    cerr << numQuads << " quads ";
-    qsf = scinew QuadSurfField<double>(qsm, -1);
-    ablateIconFieldHandle_ = qsf;
+    cerr << numQuads << " quads " << injIconData.size() << " data vals ";
+    qsf = scinew QuadSurfField<double>(qsm, 1);
+    vector<double>::iterator dptr = injIconData.begin();
+    vector<double>::iterator dend = injIconData.end();
+    SCIRun::QuadSurfMesh::Node::index_type index = 0;
+    for(; dptr != dend; dptr++)
+    {
+       qsf->set_value(*dptr, index);
+       index = index + 1;
+    }
+    injIconFieldHandle_ = qsf;
+    injIconData.clear();
   }
 
   cerr << " done" << endl;
@@ -2068,28 +2018,31 @@ HotBox::executePhysio()
   { // there are no physiological parameters corresponding to the selection
     return;
   }
+  // pre-pend full directory path to file name
+  const string hipVarPath(hipvarpath_.get());
   string nrrdFileNameStr(nrrdFileName);
+  string nrrdPathNameStr = hipVarPath + "/" + nrrdFileNameStr;
 
   // Read the status of this file so we can compare modification timestamps.
   struct stat statbuf;
-  if (stat(nrrdFileName, &statbuf) == - 1)
+  if (stat(nrrdPathNameStr.c_str(), &statbuf) == - 1)
   {
-    error(string("NrrdReader error - file not found: '")+nrrdFileNameStr+"'");
+    error(string("NrrdReader error - file not found: '")+nrrdPathNameStr+"'");
     return;
   }
 
   // (else) read the Nrrd file
   InputNrrdHandle_ = 0;
-  int namelen = nrrdFileNameStr.size();
+  int namelen = nrrdPathNameStr.size();
   const string ext(".nd");
 
   // check that the last 3 chars are .nd for us to pio
-  if (nrrdFileNameStr.substr(namelen - 3, 3) == ext)
+  if (nrrdPathNameStr.substr(namelen - 3, 3) == ext)
   {
-    Piostream *stream = auto_istream(nrrdFileNameStr);
+    Piostream *stream = auto_istream(nrrdPathNameStr);
     if (!stream)
     {
-      error("Error reading file '" + nrrdFileNameStr + "'.");
+      error("Error reading file '" + nrrdPathNameStr + "'.");
       return;
     }
 
@@ -2097,7 +2050,7 @@ HotBox::executePhysio()
     Pio(*stream, InputNrrdHandle_);
     if (!InputNrrdHandle_.get_rep() || stream->error())
     {
-      error("Error reading data from file '" + nrrdFileNameStr +"'.");
+      error("Error reading data from file '" + nrrdPathNameStr +"'.");
       delete stream;
       return;
     }
@@ -2106,7 +2059,7 @@ HotBox::executePhysio()
   else
   { // assume it is just a nrrd
     // ICU Monitor needs Properties section of NrrdData file
-    error("Input file must be a '.nd' file");
+    error("Input file '" + nrrdPathNameStr +"' must be a '.nd' file");
   }
 } // end executePhysio()
 
@@ -2131,13 +2084,21 @@ HotBox::executeHighlight()
   string selectGeomFilename = geometryPath;
   selectGeomFilename += "/";
   selectGeomFilename += filePrefix;
-  selectGeomFilename += ".fld";
+  selectGeomFilename += ".ts.fld";
 
   cerr << "executeHighlight: selection " << selectGeomFilename << endl;
 
   if (stat(selectGeomFilename.c_str(), &buf)) {
-    error("File '" + selectGeomFilename + "' not found.");
-    return;
+    remark("File '" + selectGeomFilename + "' not found.");
+    selectGeomFilename = geometryPath;
+    selectGeomFilename += "/";
+    selectGeomFilename += filePrefix;
+    selectGeomFilename += ".fld";
+
+    if (stat(selectGeomFilename.c_str(), &buf)) {
+      error("File '" + selectGeomFilename + "' not found.");
+      return;
+    }
   }
 
   Piostream *selectstream = auto_istream(selectGeomFilename);
@@ -2147,7 +2108,7 @@ HotBox::executeHighlight()
     return;
   }
 
-  // Read the file
+  // Read the selected geometry highlight file
   Pio(*selectstream, selectGeomFilehandle_);
   if (!selectGeomFilehandle_.get_rep() || selectstream->error())
   {
@@ -2182,13 +2143,45 @@ HotBox::executeHighlight()
       return;
     }
 
-    // Read the file
+    // Read the injury 0 highlight geometry file
     Pio(*inj0stream, inj0GeomFilehandle_);
     if (!inj0GeomFilehandle_.get_rep() || inj0stream->error())
     {
       error("Error reading data from file '" + inj0GeomFilename +"'.");
       delete inj0stream;
       return;
+    }
+    if(inj0GeomFilehandle_->get_type_description(0)->get_name() !=
+	"TriSurfField")
+    {
+      cerr << "Error -- input field isn't a TriSurfField (typename=";
+      cerr << inj0GeomFilehandle_->get_type_description(0)->get_name();
+    }
+    else
+    {
+      // get the mesh from the input TriSurfField
+      TriSurfMeshHandle
+      inj0GeomMeshH = dynamic_cast<TriSurfMesh*>
+          (inj0GeomFilehandle_->mesh().get_rep());
+      // iterate over the mesh nodes to create the corresponding data
+      TriSurfMesh::Node::iterator iter;
+      TriSurfMesh::Node::iterator eiter;
+      inj0GeomMeshH->begin(iter);
+      inj0GeomMeshH->end(eiter);
+      // make the output TriSurfField
+      TriSurfField<double>
+      *tsf = scinew TriSurfField<double>(inj0GeomMeshH, 1);
+      vector<double> injIconData;
+      injIconData.push_back((double)injPtr.probability);
+      vector<double>::iterator dataIter = injIconData.begin();
+      // set the data in the output TriSurfField
+      TriSurfMesh::Node::index_type index = 0;
+      for(; iter != eiter; ++iter)
+      {
+         tsf->set_value(*dataIter, index);
+         index = index + 1;
+      }
+      inj0GeomFieldhandle_ = tsf;
     }
     delete inj0stream;
   } // end if(injured_tissue_.size() > 0)
@@ -2223,6 +2216,38 @@ HotBox::executeHighlight()
       delete inj1stream;
       return;
     }
+    if(inj1GeomFilehandle_->get_type_description(0)->get_name() !=
+	"TriSurfField")
+    {
+      cerr << "Error -- input field isn't a TriSurfField (typename=";
+      cerr << inj1GeomFilehandle_->get_type_description(0)->get_name();
+    }
+    else
+    {
+      // get the mesh from the input TriSurfField
+      TriSurfMeshHandle
+      inj1GeomMeshH = dynamic_cast<TriSurfMesh*>
+          (inj1GeomFilehandle_->mesh().get_rep());
+      // iterate over the mesh nodes to create the corresponding data
+      TriSurfMesh::Node::iterator iter;
+      TriSurfMesh::Node::iterator eiter;
+      inj1GeomMeshH->begin(iter);
+      inj1GeomMeshH->end(eiter);
+      // make the output TriSurfField
+      TriSurfField<double>
+      *tsf = scinew TriSurfField<double>(inj1GeomMeshH, 1);
+      // set the data in the output TriSurfField
+      vector<double> injIconData;
+      injIconData.push_back((double)injPtr.probability);
+      vector<double>::iterator dataIter = injIconData.begin();
+      TriSurfMesh::Node::index_type index = 0;
+      for(; iter != eiter; ++iter)
+      {
+         tsf->set_value(*dataIter, index);
+         index = index + 1;
+      }
+      inj1GeomFieldhandle_ = tsf;
+    }
     delete inj1stream;
   } // end if(injured_tissue_.size() > 1)
 } // end executeHighlight()
@@ -2251,36 +2276,24 @@ HotBox::executeProbe() {
     gui_probeLocz_.set(probeLoc_.z());
   }
 
-  const TypeDescription *
-  meshTypeDescr = InputFieldHandle_->mesh()->get_type_description();
-  CompileInfoHandle ci = ProbeLocateAlgo::get_compile_info(meshTypeDescr);
-  Handle<ProbeLocateAlgo> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
+  typedef LatVolField<unsigned short> FLD;
 
-  string nodestr, edgestr, facestr, cellstr;
-  
-  // use probe defaults show-node=1 show-edge=0 show-face=0 show-cell=1
-  algo->execute(InputFieldHandle_->mesh(), probeLoc_,
-                  1, nodestr,
-                  0, edgestr,
-                  0, facestr,
-                  1, cellstr);
+  FLD *labels = dynamic_cast<FLD*>(InputFieldHandle_.get_rep());
 
-  ScalarFieldInterfaceHandle sfi = 0;
-  if ((sfi = InputFieldHandle_->query_scalar_interface(this)).get_rep())
-  {
-    double result;
-    if (!sfi->interpolate(result, probeLoc_))
-    {
-      sfi->find_closest(result, probeLoc_);
-    }
-    labelIndexVal_ = (int)result;
-  } // end if(ifieldhandle->query_scalar_interface(this)).get_rep())
-  else
-  {
-    remark("HotBox::executeProbe(): No data on input field port.");
+  if (! labels) {
+    error("HotBox::executeProbe(): Expected LatVolField<unsigned short>!");
+    return;
   }
-
+  LatVolMesh::Node::index_type index;
+  LatVolMeshHandle lvmh = labels->get_typed_mesh();
+  if (!lvmh->locate(index, probeLoc_)) {
+    warning("Probe is outside of label volume.");
+    labelIndexVal_ = 0;
+    return;
+  }
+  unsigned short val;
+  labels->value(val, index);
+  labelIndexVal_ = val;
 } // end HotBox::executeProbe()
 
 void

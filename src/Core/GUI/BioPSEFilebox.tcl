@@ -90,6 +90,7 @@
 #        Valid 'mode's are 'stop', 'fforward', 'rewind', 'stepb', 'step', and 'play'.  
 #        See FieldReader.tcl for an example.
 
+
 proc makeOpenFilebox {args} {
     biopseFDialog $args
 }
@@ -181,7 +182,6 @@ proc biopseIconList_Create {w} {
     set data(mf_file_list) ""
     # Index of the file (in mf_file_list) to send down
     set data(mf_file_number) 0
-#    puts "set data for mf !"
     # Creates the event bindings.
     bind $data(canvas) <Configure> "biopseIconList_Arrange $w"
 
@@ -905,6 +905,7 @@ proc biopseFDialog_Config {w type argList} {
     }
 }
 
+
 proc biopseFDialog_Create {w} {
 
     set dataName [lindex [split $w .] end]
@@ -987,7 +988,7 @@ static char updir_bits[] = {
         set data(mf_delay) 500
         set data(mf_file_list) ""
         set data(mf_file_number) 0
-#        puts "set data for mf !"
+        
         # load the VCR button bitmaps
         set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
         set rewind   [image create photo -file ${image_dir}/rewind-icon.ppm]
@@ -1235,7 +1236,6 @@ static char updir_bits[] = {
             # ... but allow the entry to expand
             pack $md_tab.f2.current_file_ent -expand y
         }
-#        puts "here: $md_tab"
     }
 
     pack $data(typeMenuLab) -side left -padx 4
@@ -1803,10 +1803,9 @@ proc biopseFDialog_SetCmd {w {whichBtn execute}} {
         set file [biopseFDialog_JoinFile $data(selectPath) $text]
         if {[file isdirectory $file]} {
             biopseFDialog_ListInvoke $w $text
-           # return
+	    return
         }
     }
-
     biopseFDialog_ActivateEnt $w $whichBtn
 }
 
@@ -1944,38 +1943,38 @@ proc biopseFDialog_Done {w {selectFilePath ""} {whichBtn execute}} {
         if { $data(-allowMultipleFiles) != "" && [$w.tabs view] == 1 } {
 	    
             # If allowing multiple files and in multi file mode...
-#            puts "multi file handling... skipping given command"
+            #puts "multi file handling... skipping given command"
 	    
 	    set words [split $selectFilePath /]
 	    set len [llength $words]
             set idx [expr $len - 1]
 	    set justname [lindex $words $idx]
-#	    puts $justname
+	    #puts $justname
             set parts [split $justname 0123456789]
 	    
 	    set tmp_idx [string first [lindex $parts 0] $selectFilePath]
-#	    puts $tmp_idx
+	    #puts $tmp_idx
 	    set base [string range $selectFilePath 0 [expr $tmp_idx - 1]]
 	    append base [lindex $parts 0]
             set ext [lindex $parts end]
 
-#            puts "working with $base ... $ext"
+            #puts "working with $base ... $ext"
 
             set fileList [lsort [glob -nocomplain $base*$ext]]
-#            puts "looking at: $fileList"
+            #puts "looking at: $fileList"
 
-#            puts "this is $data(-allowMultipleFiles)"
+            #puts "this is $data(-allowMultipleFiles)"
 
             set position [lsearch $fileList $selectFilePath]
             if { $position != 0 } {
                 # If the selected file was not the first file in the list, then
                 # trim off all files up to and including the selected file.
                 set fileList [lrange $fileList $position end]
-#                puts "USING this list: $fileList"
+                #puts "USING this list: $fileList"
             }
 
             set delay [$data(md_delay) get]
-#            puts "delay is $delay"
+            #puts "delay is $delay"
 
             # Should get delay from this var: $md_tab.delay_ent
 	    setMultipleFilePlayMode $w "play"
@@ -1988,11 +1987,20 @@ proc biopseFDialog_Done {w {selectFilePath ""} {whichBtn execute}} {
     }
 }
 
+proc bfb_do_single_step { w } {
+    #puts "proc bfb_do_single_step"
+    setMultipleFilePlayMode $w step
+    handleMultipleFiles $w
+}
+
 # Sets the first file in "filesList" to the active file, calls
 # execute, and then delays for "delay".  Repeat until "filesList"
 # is empty.
 proc handleMultipleFiles { w { filesList "" } { delay -1 } } {
     upvar #0 $w data
+    #parray data
+    #puts "------------------------ ----------------- ------------------"
+    #puts $filesList
 
     # handleMultipleFiles can be called two ways, from
     # handleMultipleFiles itself, and from the Reader dialog.  If
@@ -2006,33 +2014,36 @@ proc handleMultipleFiles { w { filesList "" } { delay -1 } } {
     
     if { $delay > 0 } {
 	if { $delay < 1 } {
-#	    puts "WARNING: casting decimal input from seconds to milliseconds!"
+	    puts "WARNING: casting decimal input from seconds to milliseconds!"
 	    # User probably put in .X seconds... translating
 	    set data(mf_delay) [expr int ($delay * 1000)]
 	} else {
 	    # Delays can only be integers...
 	    set data(mf_delay) [expr int ($delay)]
 	}
-#	puts "delaying for $data(mf_delay)"
+	#puts "delaying for $data(mf_delay)"
     }
     
     if { $filesList != "" } {
 	set data(mf_file_list) $filesList
 	set data(mf_file_number) 0
-#	puts "setting file list to $data(mf_file_list)"
+	#puts "setting file list to $data(mf_file_list)"
     }
     
     set num_files [llength $data(mf_file_list)]
-#    puts "num files: $num_files"
+    #puts "num files: $num_files"
     
     if { $num_files == 0 } {
-#	puts "error, no files specified..."
+	puts "error, no files specified..."
 	return
     }
+
     
-#    puts "mode: $data(mf_play_mode)"
+
+    #puts "mode: $data(mf_play_mode)"
     
     if { $data(mf_play_mode) == "stop" } {
+	puts "play mode was stop, returning"
 	return
     }
     
@@ -2054,22 +2065,32 @@ proc handleMultipleFiles { w { filesList "" } { delay -1 } } {
     
     # Send the current file through...
     set currentFile [lindex $data(mf_file_list) $data(mf_file_number)]
+    #puts "working on ([expr $data(mf_file_number)]) '$currentFile'"
+
     incr data(mf_file_number)
-    
-#    puts "working on ([expr $data(mf_file_number)-1]) '$currentFile'"
+    if { $data(mf_file_number) == $num_files } {
+	#loop
+	set data(mf_file_number) 0
+    }    
+
     
     set mfthis $data(-allowMultipleFiles)
     set $mfthis-filename $currentFile
     $mfthis-c needexecute
-    set remainder [lrange $filesList 1 end]
+    #set remainder [lrange $filesList 1 end]
     
-    if { $data(mf_play_mode) == "play" && $data(mf_file_number) != $num_files } {
+
+    if { $data(mf_play_mode) == "play"} {
+	if { $data(mf_file_number) == $num_files } {
+	    #loop
+	    set $data(mf_file_number) 0
+	}
 	# If in play mode, then keep the sequence going...
 	set data(mf_event_id) [after $data(mf_delay) "handleMultipleFiles $w"]
-#	puts "event_id: $data(mf_event_id)"
+	#puts "event_id: $data(mf_event_id)"
     }
 }
-
+    
 proc setMultipleFilePlayMode { w mode } {
     upvar #0 $w data
     set data(mf_play_mode) $mode
