@@ -410,7 +410,7 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	return $result
     }
 	
-    method lookupOldIndex {} {
+    method lookupOldIndex {a b c} {
 	global $this-mapType
 	set index [set $this-mapType]
 	# Old name, new name, reverse?  Note that the order these are
