@@ -124,6 +124,7 @@ typedef struct PlyFile {        /* description of PLY file */
   char **obj_info;              /* list of object info items */
   PlyElement *which_elem;       /* which element we're currently writing */
   PlyOtherElems *other_elems;   /* "other" elements from a PLY file */
+  int swap_endian;              /* set this to true to swap binary data */
 } PlyFile;
 
 /* memory allocation */
