@@ -16,54 +16,49 @@
 */
 
 /*
- *  Viewer.h
+ *  Colormap.h
  *
  *  Written by:
  *   Keming Zhang 
  *   Department of Computer Science
  *   University of Utah
- *   May 2002
+ *   June 2002
  *
  */
 
-#ifndef SCIRun_Viewer_h
-#define SCIRun_Viewer_h
+#ifndef Viewer_Colormap_h
+#define Viewer_Colormap_h
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <qapplication.h>
+#include <qpushbutton.h>
+#include <qmainwindow.h>
+#include <qmessagebox.h>
+#include <qapplication.h>
+#include <qframe.h>
+#include <qpainter.h>
+#include <qcolor.h>
+#include <qscrollview.h>
+#include <math.h>
+#include <stdlib.h>
+#include <iostream.h>
+#include <fstream.h>
+#include "vector2d.h"
 
-//namespace SCIRun {
-
-#define myUIPort ViewerUIPort
-
-class Viewer;
-
-class myUIPort : public virtual gov::cca::ports::UIPort {
+class Colormap:public QFrame
+{
 public:
-   virtual ~myUIPort(){}
-   void setParent(Viewer *com){this->com=com;}
-   virtual int ui();
- private:
-   Viewer *com;
+  Colormap( QWidget *parent, const QString &type="Gray", double min=0.0, double max=1.0);
+  void setValues(double min, double max);
+  int height();
+  QColor getColor(double value);
+  void setType(const QString& type);
+protected:
+  void	paintEvent(QPaintEvent*e);
+  double minVal, maxVal;
+  QString type;
+  int borderY;
 };
 
-
-class Viewer : public gov::cca::Component{
-                
-  public:
-    Viewer();
-    virtual ~Viewer();
-    gov::cca::Services::pointer getServices(){return services;}
-    virtual void setServices(const gov::cca::Services::pointer& svc);
-  private:
-
-    Viewer(const Viewer&);
-    Viewer& operator=(const Viewer&);
-    myUIPort uiPort;
-    gov::cca::Services::pointer services;
-  };
-//}
-
-
-
-
 #endif
+
+
