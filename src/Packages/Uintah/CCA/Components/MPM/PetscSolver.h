@@ -16,7 +16,7 @@
 
 #ifdef HAVE_PETSC
 extern "C" {
-#include "petscsles.h"
+#include "petscksp.h"
 }
 #endif
 
@@ -84,7 +84,6 @@ namespace Uintah {
     Vec d_B;
     Vec d_diagonal;
     Vec d_x;
-    SLES sles;
 #endif
     inline bool compare(double num1, double num2)
       {
