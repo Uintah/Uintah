@@ -840,7 +840,7 @@ TetVolMesh::add_tet_unconnected(const Point &p0,
 void
 TetVolMesh::io(Piostream &stream)
 {
-  int version = stream.begin_class(type_id.type.c_str(), TETVOLMESH_VERSION);
+  /*int version=*/stream.begin_class(type_id.type.c_str(), TETVOLMESH_VERSION);
   MeshBase::io(stream);
 
   SCIRun::Pio(stream, points_);
