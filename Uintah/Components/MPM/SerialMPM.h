@@ -98,6 +98,14 @@ protected:
 				     const Patch* patch,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw);
+
+  //////////
+  // apply physical boundary conditions to particles
+  void applyPhysicalBCToParticles(const ProcessorGroup*,
+					   const Patch* patch,
+					   DataWarehouseP& old_dw,
+					   DataWarehouseP& new_dw);
+
   //////////
   // Insert Documentation Here:
   void interpolateParticlesToGrid(const ProcessorGroup*,
@@ -207,6 +215,10 @@ protected:
    
 //
 // $Log$
+// Revision 1.49  2000/08/07 17:09:35  tan
+// Added applyPhysicalBCToParticles to handle particle boundary conditions
+// in each step.
+//
 // Revision 1.48  2000/08/07 00:37:33  tan
 // Added MPMPhysicalBC class to handle all kinds of physical boundary conditions
 // in MPM.  Current implemented force boundary conditions.

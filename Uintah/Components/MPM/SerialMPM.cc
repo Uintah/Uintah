@@ -185,6 +185,24 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
        iter != level->patchesEnd(); iter++){
 
       const Patch* patch=*iter;
+      
+      {
+	 /*
+	  * applyPhysicalBCToParticles
+	  *   operation(apply physical boundary conditions to particles)
+	  *   currently implemented only force boundary conditions.
+	  * out(P.EXTERNALFORCE)
+	  */
+	 Task* t = scinew Task("SerialMPM::applyPhysicalBCToParticles",
+			    patch, old_dw, new_dw,
+			    this,&SerialMPM::applyPhysicalBCToParticles);
+	 for(int m = 0; m < numMatls; m++)
+	 {
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    t->computes(new_dw, lb->pExternalForceLabel, idx, patch );
+	 }
+      }
 
       if(MPMPhysicalModules::fractureModel) {
 	 /*
@@ -837,6 +855,13 @@ void SerialMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 					      const Patch*,
 					      DataWarehouseP&,
 					      DataWarehouseP&)
+{
+}
+
+void SerialMPM::applyPhysicalBCToParticles(const ProcessorGroup*,
+					   const Patch* patch,
+					   DataWarehouseP& old_dw,
+					   DataWarehouseP& new_dw)
 {
 }
 
@@ -1646,6 +1671,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.112  2000/08/07 17:09:51  tan
+// Added applyPhysicalBCToParticles to handle particle boundary conditions
+// in each step.
+//
 // Revision 1.111  2000/08/07 00:37:48  tan
 // Added MPMPhysicalBC class to handle all kinds of physical boundary conditions
 // in MPM.  Current implemented force boundary conditions.
