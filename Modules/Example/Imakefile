@@ -12,7 +12,7 @@ SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow \
 	-lGeom -lClasslib -lMultitask $(OPENGLLIBS) \
 	-lMalloc -lWidgets -lGeometry \
-	-lm -lC -lc
+	-lm SCI_CCLibs
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

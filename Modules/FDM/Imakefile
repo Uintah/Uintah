@@ -1,8 +1,15 @@
 
 #include <config/sci.cf>
 
-OBJS = BuildFDField.o  BuildFDMatrix.o
-SRCS = BuildFDField.cc BuildFDMatrix.cc
+#ifdef SCI_MACHINE_Linux
+TEMPLATE_OBJS = templates.o
+TEMPLATE_SRCS = templates.cc
+#endif
+
+OBJS = BuildFDField.o  BuildFDMatrix.o \
+	$(TEMPLATE_OBJS)
+SRCS = BuildFDField.cc BuildFDMatrix.cc \
+	$(TEMPLATE_SRCS)
 
 LIBNAME = FDM
 

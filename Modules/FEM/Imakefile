@@ -10,7 +10,7 @@ LIBNAME = FEM
 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lGeometry \
-	-lTCL -lClasslib -lMultitask -lMalloc -lm -lC -lc
+	-lTCL -lClasslib -lMultitask -lMalloc -lm SCI_CCLibs
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
