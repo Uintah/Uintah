@@ -794,8 +794,9 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     counter ++;
     if(pg->myrank() == 0) {
       cout << "Outer iteration " << counter<< " max_rhs "<< max_RHS<< endl;
+
       // bulletproofing
-      if ( ((max_RHS - max_RHS_old) > 2.0 * max_RHS_old) && counter > 1){  
+      if ( ((max_RHS - max_RHS_old) > 1000.0 * max_RHS_old) && counter > 1){  
         ostringstream warn;
          warn <<"ERROR ICE::implicitPressureSolve, solution is diverging"
               <<" try decreasing the cfl or increase the speed of sound knob \n";
