@@ -101,6 +101,7 @@ template class Property<pair<short,short> >;
 template class Property<pair<unsigned char,unsigned char> >;
 template class Property<pair<char,char> >;
 template class Property<vector<pair<string,Tensor> > >;
+template class Property<vector<pair<int,double> > >;
 
 
 //! Compute the gradient g in cell ci.

@@ -107,7 +107,7 @@ void TetVolMesh::get_random_point(Point &p, const Cell::index_type &ei,
   static MusilRNG rng;
 
   // get positions of the vertices
-  Node::array_type ra;
+  Node::array_type ra(4);
   get_nodes(ra,ei);
   Point p0,p1,p2,p3;
   get_point(p0,ra[0]);
@@ -188,7 +188,7 @@ TetVolMesh::hash_face(Node::index_type n1, Node::index_type n2,
   } else {
     PFace f = (*iter).first;
     if (f.cells_[1] != -1) {
-      cerr << "This Mesh has problems." << endl;
+//      cerr << "Bad mesh... ";
       return;
     }
     f.cells_[1] = ci; // add this cell
@@ -276,6 +276,29 @@ TetVolMesh::compute_edges()
     ++e_iter; ++ht_iter;
   }
   edge_table_lock_.unlock();
+}
+
+void
+TetVolMesh::recompute_connectivity() {
+  edge_table_lock_.lock();
+  edges_.clear();
+  edge_table_lock_.unlock();
+  compute_edges();
+
+  face_table_lock_.lock();
+  faces_.clear();
+  face_table_lock_.unlock();
+  compute_faces();
+  
+  nbors_lock_.lock();
+  neighbors_.clear();
+  nbors_lock_.unlock();
+  compute_node_neighbors();
+
+  grid_lock_.lock();
+  grid_=0;
+  grid_lock_.unlock();
+  compute_grid();
 }
 
 void
@@ -390,6 +413,14 @@ TetVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
   array.push_back(cells_[idx * 4 + 3]);
 }
 
+void
+TetVolMesh::set_nodes(Node::array_type &array, Cell::index_type idx)
+{
+  cells_[idx * 4 + 0] = array[0];
+  cells_[idx * 4 + 1] = array[1];
+  cells_[idx * 4 + 2] = array[2];
+  cells_[idx * 4 + 3] = array[3];
+}
 
 void
 TetVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
@@ -515,7 +546,7 @@ void
 TetVolMesh::get_center(Point &p, Edge::index_type idx) const
 {
   const double s = 1./2.;
-  Node::array_type arr;
+  Node::array_type arr(2);
   get_nodes(arr, idx);
   Point p1;
   get_point(p, arr[0]);
@@ -528,7 +559,7 @@ void
 TetVolMesh::get_center(Point &p, Face::index_type idx) const
 {
   const double s = 1./3.;
-  Node::array_type arr;
+  Node::array_type arr(3);
   get_nodes(arr, idx);
   Point p1, p2;
   get_point(p, arr[0]);
@@ -542,7 +573,7 @@ void
 TetVolMesh::get_center(Point &p, Cell::index_type idx) const
 {
   const double s = .25L;
-  Node::array_type arr;
+  Node::array_type arr(4);
   get_nodes(arr, idx);
   Point p1, p2, p3;
   get_point(p, arr[0]);
@@ -747,6 +778,7 @@ TetVolMesh::compute_grid()
   const double one_third = 1.L/3.L;
   Cell::size_type csize;  size(csize);
   int s = (int)ceil(pow((double)csize , one_third));
+  s = s/10 + 1;
   const double cell_epsilon = bb.diagonal().length() * 0.1 / s;
 
   LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));

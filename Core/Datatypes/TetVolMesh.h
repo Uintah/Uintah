@@ -181,6 +181,7 @@ public:
 
   //! (re)create the edge and faces data based on cells.
   virtual void flush_changes();
+  void recompute_connectivity();
   void compute_edges();
   void compute_faces();
   void compute_node_neighbors();
@@ -196,6 +197,7 @@ public:
 
   // Extra functionality needed by this specific geometry.
 
+  void set_nodes(Node::array_type &array, Cell::index_type idx);
   Node::index_type add_find_point(const Point &p, double err = 1.0e-3);
   void add_tet(Node::index_type a, Node::index_type b, Node::index_type c, Node::index_type d);
   void add_tet(const Point &p0, const Point &p1, const Point &p2,
@@ -393,6 +395,10 @@ private:
   typedef LockingHandle<LatticeVol<vector<Cell::index_type> > > grid_handle;
   grid_handle                 grid_;
   Mutex                       grid_lock_; // Bad traffic!
+  
+public:
+  inline grid_handle get_grid() {return grid_;}
+
 };
 
 // Handle type for TetVolMesh mesh.
