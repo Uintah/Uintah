@@ -1217,216 +1217,97 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
     }
   }
 
-  string tuple_type_str(":Scalar");
-  int sink_size = 1;
-  NrrdData *nout = scinew NrrdData(true);
+  string tuple_type_str;
+  int sink_size;
+  int dim_size;
 
+  // If the user asks us to assume vector or tensor data, the
+  // assumption is based on the size of the last dimension.
+  int sz_last_dim = 1;
+  if (assumesvt_)
+    sz_last_dim = count[ndims-1];
+
+  switch (sz_last_dim) {
+  case 1: // Scalar data
+    sink_size = sz_last_dim;
+    dim_size = ndims;
+    tuple_type_str = ":Scalar";
+    break;
+  case 3: // Vector data
+    sink_size = sz_last_dim;
+    dim_size = ndims;
+    tuple_type_str = ":Vector";
+    break;
+  case 6: // Tensor data
+    sink_size = sz_last_dim;
+    dim_size = ndims;
+    tuple_type_str = ":Tensor";
+    break;
+  default: // treat the rest as Scalar data
+    sink_size = 1;
+    dim_size = ndims+1;
+    tuple_type_str = ":Scalar";
+    break;
+  };
+
+  NrrdData *nout = scinew NrrdData(true);
 
   switch(ndims) {
   case 1: 
     nrrdWrap(nout->nrrd, data,
-	     nrrd_type, ndims+1, sink_size, (unsigned int) count[0]);
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode);
+	     nrrd_type, dim_size, sink_size, (unsigned int) count[0]);
+
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+		    nrrdCenterNode, nrrdCenterNode);
     break;
 
   case 2: 
-    {
-      // If the user asks us to assume vector or tensor data, the
-      // assumption is based on the size of the last dimension.
-      int sz_last_dim = 1;
-      if (assumesvt_) { sz_last_dim = count[1];} 
-      
-      switch (sz_last_dim) {
-      case 3: // Vector data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 3, 
-		 (unsigned int) count[0], (unsigned int) count[1]);
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode);
-	tuple_type_str = ":Vector";
-	break;
-	
-      case 6: // Tensor data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 6, 
-		 (unsigned int) count[0], (unsigned int) count[1]);
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode);	
-	tuple_type_str = ":Tensor";
-	break;
-
-      default: // treat the rest as Scalar data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
-		 (unsigned int) count[0], (unsigned int) count[1]);
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode);	
-	break;
-      };
-    }
+    nrrdWrap(nout->nrrd, data, nrrd_type, dim_size, sink_size, 
+	     (unsigned int) count[0], (unsigned int) count[1]);
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
     break;
 
   case 3: 
-    {
-      // If the user asks us to assume vector or tensor data, the
-      // assumption is based on the size of the last dimension.
-      int sz_last_dim = 1;
-      if (assumesvt_) { sz_last_dim = count[2];} 
-      
-      switch (sz_last_dim) {
-      case 3: // Vector data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 3, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2]);
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
-	tuple_type_str = ":Vector";
-	break;
-	
-      case 6: // Tensor data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 6, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2]);
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);	
-	tuple_type_str = ":Tensor";
-	break;
+    nrrdWrap(nout->nrrd, data, nrrd_type, dim_size, sink_size, 
+	     (unsigned int) count[0], (unsigned int) count[1], 
+	     (unsigned int) count[2]);
 
-      default: // treat the rest as Scalar data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2]);
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
-	break;
-      };
-    }
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+		    nrrdCenterNode, nrrdCenterNode,
+		    nrrdCenterNode, nrrdCenterNode);
     break;
 
   case 4: 
-    {
-      // If the user asks us to assume vector or tensor data, the
-      // assumption is based on the size of the last dimension.
-      int sz_last_dim = 1;
-      if (assumesvt_) { sz_last_dim = count[3]; } 
+    nrrdWrap(nout->nrrd, data, nrrd_type, dim_size, sink_size, 
+	     (unsigned int) count[0], (unsigned int) count[1], 
+	     (unsigned int) count[2], (unsigned int) count[3]);
 
-      switch (sz_last_dim) {
-      case 3: // Vector data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 3, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3]);
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode,
-			nrrdCenterNode);
-	tuple_type_str = ":Vector";
-	break;
-	
-      case 6: // Tensor data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 6, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3]);
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode,
-			nrrdCenterNode);
-	
-	tuple_type_str = ":Tensor";
-	break;
-
-      default: // treat the rest as Scalar data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3]);
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode,
-			nrrdCenterNode);
-	break;
-      };
-    }
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+		    nrrdCenterNode, nrrdCenterNode,
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
     break;
 
   case 5: 
-    {
-      // If the user asks us to assume vector or tensor data, the
-      // assumption is based on the size of the last dimension.
-      int sz_last_dim = 1;
-      if (assumesvt_) { sz_last_dim = count[4];} 
-      
-      switch (sz_last_dim) {
-      case 3: // Vector data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 3, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3], 
-		 (unsigned int) count[4]);
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode);
-	tuple_type_str = ":Vector";
-	break;
-	
-      case 6: // Tensor data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 6, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3], 
-		 (unsigned int) count[4]);
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode);	
-	tuple_type_str = ":Tensor";
-	break;
+    nrrdWrap(nout->nrrd, data, nrrd_type, dim_size, sink_size, 
+	     (unsigned int) count[0], (unsigned int) count[1], 
+	     (unsigned int) count[2], (unsigned int) count[3], 
+	     (unsigned int) count[4]);
 
-      default: // treat the rest as Scalar data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3], 
-		 (unsigned int) count[4]);
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode);
-	break;
-      };
-    }
-
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
     break;
 
   case 6: 
-        {
-      // If the user asks us to assume vector or tensor data, the
-      // assumption is based on the size of the last dimension.
-      int sz_last_dim = 1;
-      if (assumesvt_) { sz_last_dim = count[5];} 
-      
-      switch (sz_last_dim) {
-      case 3: // Vector data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 3, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3], 
-		 (unsigned int) count[4], dims[5]);
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+    nrrdWrap(nout->nrrd, data, nrrd_type, dim_size, sink_size, 
+	     (unsigned int) count[0], (unsigned int) count[1], 
+	     (unsigned int) count[2], (unsigned int) count[3], 
+	     (unsigned int) count[4], dims[5]);
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, 
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
-	tuple_type_str = ":Vector";
-	break;
-	
-      case 6: // Tensor data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 6, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3], 
-		 (unsigned int) count[4], dims[5]);
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);	
-	tuple_type_str = ":Tensor";
-	break;
-
-      default: // treat the rest as Scalar data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3], 
-		 (unsigned int) count[4], dims[5]);
-	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
-	break;
-      };
-    }
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode,
+		    nrrdCenterNode);
     break;
   }
 
