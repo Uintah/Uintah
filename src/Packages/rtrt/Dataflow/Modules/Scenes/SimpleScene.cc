@@ -47,7 +47,7 @@ private:
   GuiDouble color_b_;
   GuiDouble color_a_;
   GuiDouble reflectance_;
-  GuiDouble shininess_;
+  GuiInt shininess_;
 
   void update_sphere_material();
   Scene* make_scene();
@@ -80,7 +80,7 @@ void SimpleScene::update_sphere_material()
   double b=color_b_.get();
   double opacity=color_a_.get();
   double reflectance=reflectance_.get();
-  double shininess=shininess_.get();
+  int shininess=shininess_.get();
   if (sphere_matl_) {
     sphere_matl_->set_diffuse(Color(r,g,b));
     sphere_matl_->set_opacity(opacity);
