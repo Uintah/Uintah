@@ -3873,7 +3873,7 @@ C     Data about the machine dependent constants is carried in
 C
 C     COMMON/MACH/SMALL,BIG,EXPARG
 C
-      DATA RU,RUC,PA /8.314E7, 1.987, 1.01325E6/
+      DATA RU,RUC,PA /8.314D7, 1.987D0, 1.01325D6/
 C
 C      THIS STATEMENT WILL NOT COMPILE, MACHINE-DEPENDENT CONSTANTS
 C*****exponent range > +/-30
@@ -6611,6 +6611,7 @@ C  END PROLOGUE
 C
 C*****precision > double
         IMPLICIT DOUBLE PRECISION (A-H, O-Z), INTEGER (I-N)
+        double precision rckwrk, sumyow, y
 C*****END precision > double
 C*****precision > single
 C        IMPLICIT REAL (A-H, O-Z), INTEGER (I-N)
