@@ -56,6 +56,7 @@ using namespace std;
 #undef INTEGRAL_TRACTION
 
 static DebugStream cout_doing("MPM", false);
+static DebugStream cout_dbg("SerialMPM", false);
 static DebugStream amr_doing("AMRMPM", false);
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
@@ -212,7 +213,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   }
 
   // artificial damping coeff initialized to 0.0
-  cout_doing << "Artificial Damping Coeff = " << flags->d_artificialDampCoeff 
+  cout_dbg << "Artificial Damping Coeff = " << flags->d_artificialDampCoeff 
              << " 8 or 27 = " << flags->d_8or27 << endl;
   if (flags->d_artificialDampCoeff > 0.0) {
     t->computes(lb->pDampingRateLabel); 
@@ -314,7 +315,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleCalculateDampingRate(           sched, patches, matls);
-  //scheduleAddNewParticles(                sched, patches, matls);
+  scheduleAddNewParticles(                sched, patches, matls);
   scheduleConvertLocalizedParticles(      sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
 
@@ -754,7 +755,7 @@ void SerialMPM::scheduleAddNewParticles(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls)
 {
-  if (!flags->d_createNewParticles) return;
+  if (!flags->d_addNewMaterial || flags->d_createNewParticles) return;
 
   /*
    * AddNewParticles
@@ -783,7 +784,7 @@ void SerialMPM::scheduleConvertLocalizedParticles(SchedulerP& sched,
                                                   const PatchSet* patches,
                                                   const MaterialSet* matls)
 {
-  if (!flags->d_createNewParticles) return;
+  if (!flags->d_createNewParticles || flags->d_addNewMaterial) return;
 
   Task* t=scinew Task("MPM::convertLocalizedParticles", this, 
                       &SerialMPM::convertLocalizedParticles);
@@ -1036,7 +1037,7 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
 {
   // Get the current time
   double time = 0.0;
-  cout_doing << "Current Time (Initialize Pressure BC) = " << time << endl;
+  cout_dbg << "Current Time (Initialize Pressure BC) = " << time << endl;
 
   // Calculate the force vector at each particle
   int nofPressureBCs = 0;
@@ -1053,7 +1054,7 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
       PressureBC* pbc =
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       pbc->numMaterialPoints(numPart);
-      cout_doing << "    Load Curve = " << nofPressureBCs 
+      cout_dbg << "    Load Curve = " << nofPressureBCs 
                  << " Num Particles = " << numPart << endl;
 
       // Calculate the force per particle at t = 0.0
@@ -1334,15 +1335,15 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
 
   cout_doing <<"Doing computeStressTensor:MPM: \n" ;
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-    cout_doing << " Patch = " << (patches->get(0))->getID();
-    cout_doing << " Mat = " << m;
+    cout_dbg << " Patch = " << (patches->get(0))->getID();
+    cout_dbg << " Mat = " << m;
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    cout_doing << " MPM_Mat = " << mpm_matl;
+    cout_dbg << " MPM_Mat = " << mpm_matl;
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cout_doing << " CM = " << cm;
+    cout_dbg << " CM = " << cm;
     cm->setWorld(d_myworld);
     cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
-    cout_doing << " Exit\n" ;
+    cout_dbg << " Exit\n" ;
   }
 }
 
@@ -1360,13 +1361,13 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
 
-      cout_doing << "updateErosionParameter:: material # = " << m << endl;
+      cout_dbg << "updateErosionParameter:: material # = " << m << endl;
 
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-      cout_doing << "updateErosionParameter:: mpm_matl* = " << mpm_matl
+      cout_dbg << "updateErosionParameter:: mpm_matl* = " << mpm_matl
                  << " dwi = " << dwi << " pset* = " << pset << endl;
 
       // Get the erosion data
@@ -1374,7 +1375,7 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
       ParticleVariable<double> pErosion_new;
       old_dw->get(pErosion, lb->pErosionLabel, pset);
       new_dw->allocateAndPut(pErosion_new, lb->pErosionLabel_preReloc, pset);
-      cout_doing << "updateErosionParameter:: Got Erosion data" << endl;
+      cout_dbg << "updateErosionParameter:: Got Erosion data" << endl;
 
       // Get the localization info
       ParticleVariable<int> isLocalized;
@@ -1383,7 +1384,7 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
       for (; iter != pset->end(); iter++) isLocalized[*iter] = 0;
       mpm_matl->getConstitutiveModel()->getDamageParameter(patch, isLocalized,
                                                            dwi, old_dw,new_dw);
-      cout_doing << "updateErosionParameter:: Got Damage Parameter" << endl;
+      cout_dbg << "updateErosionParameter:: Got Damage Parameter" << endl;
 
       iter = pset->begin(); 
       for (; iter != pset->end(); iter++) {
@@ -1395,10 +1396,10 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
         } 
       }
 
-      cout_doing << "updateErosionParameter:: Updated Erosion " << endl;
+      cout_dbg << "updateErosionParameter:: Updated Erosion " << endl;
 
     }
-    cout_doing <<"Done updateErosionParamter on patch " 
+    cout_dbg <<"Done updateErosionParamter on patch " 
                << patch->getID() << "\t MPM"<< endl;
   }
 }
@@ -1846,8 +1847,10 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
                        !iter.done();iter++){
         IntVector c = *iter;
-        acceleration[c] =
-          (internalforce[c] + externalforce[c])/mass[c] +
+        Vector acc(0.0,0.0,0.0);
+	//if (mass[c] > 1.0e-199)
+	  acc = (internalforce[c] + externalforce[c])/mass[c] ;
+        acceleration[c] = acc +
           gravity + gradPAccNC[c] + AccArchesNC[c];
 //                 acceleration[c] =
 //                    (internalforce[c] + externalforce[c]
@@ -2335,32 +2338,32 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
       
       int numparticles = delset->numParticles();
       if (numparticles != 0) {
-        cout_doing << "Deleted " << numparticles << " particles" << endl;
+        cout_dbg << "Deleted " << numparticles << " particles" << endl;
         ParticleCreator* particle_creator = null_matl->getParticleCreator();
         ParticleSet* set_add = scinew ParticleSet(numparticles);
         ParticleSubset* addset = scinew ParticleSubset(set_add,true,null_dwi,
                                                        patch,numparticles);
 
-        cout_doing << "Address of delset = " << delset << endl;
-        cout_doing << "Address of pset = " << pset << endl;
-        cout_doing << "Address of set_add = " << set_add << endl;
-        cout_doing << "Address of addset = " << addset << endl;
+        //cout_dbg << "Address of delset = " << delset << endl;
+        //cout_dbg << "Address of pset = " << pset << endl;
+        //cout_dbg << "Address of set_add = " << set_add << endl;
+        //cout_dbg << "Address of addset = " << addset << endl;
         
         map<const VarLabel*, ParticleVariableBase*>* newState
           = scinew map<const VarLabel*, ParticleVariableBase*>;
 
-        cout_doing << "Address of newState = " << newState << endl;
+        //cout_dbg << "Address of newState = " << newState << endl;
 
-        cout_doing << "Null Material" << endl;
-        vector<const VarLabel* > particle_labels = 
-          particle_creator->returnParticleState();
+        //cout_dbg << "Null Material" << endl;
+        //vector<const VarLabel* > particle_labels = 
+        //  particle_creator->returnParticleState();
 
-        printParticleLabels(particle_labels, old_dw, null_dwi,patch);
+        //printParticleLabels(particle_labels, old_dw, null_dwi,patch);
 
-        cout_doing << "MPM Material" << endl;
-        vector<const VarLabel* > mpm_particle_labels = 
-          mpm_matl->getParticleCreator()->returnParticleState();
-        printParticleLabels(mpm_particle_labels, old_dw, dwi,patch);
+        //cout_dbg << "MPM Material" << endl;
+        //vector<const VarLabel* > mpm_particle_labels = 
+        //  mpm_matl->getParticleCreator()->returnParticleState();
+        //printParticleLabels(mpm_particle_labels, old_dw, dwi,patch);
 
         particle_creator->allocateVariablesAdd(lb,new_dw,addset,newState,
                                                delset,old_dw);
@@ -2375,10 +2378,10 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
         // Move the particle variable declarations in ParticleCreator.h to one
         // of the functions to save on memory;
         
-        cout_doing << "addset num particles = " << addset->numParticles()
-             << " for material " << addset->getMatlIndex() << endl;
+        //cout_dbg << "addset num particles = " << addset->numParticles()
+        //     << " for material " << addset->getMatlIndex() << endl;
         new_dw->addParticles(patch,null_dwi,newState);
-        cout_doing << "Calling deleteParticles for material: " << dwi << endl;
+        //cout_dbg << "Calling deleteParticles for material: " << dwi << endl;
         new_dw->deleteParticles(delset);
         
       } else
@@ -2409,13 +2412,13 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m+=2){
 
-      cout_doing << "ConvertLocalizeParticles:: material # = " << m << endl;
+      cout_dbg << "ConvertLocalizeParticles:: material # = " << m << endl;
 
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-      cout_doing << "ConvertLocalizeParticles:: mpm_matl* = " << mpm_matl
+      cout_dbg << "ConvertLocalizeParticles:: mpm_matl* = " << mpm_matl
                  << " dwi = " << dwi << " pset* = " << pset << endl;
 
       ParticleVariable<int> isLocalized;
@@ -2432,7 +2435,7 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
       mpm_matl->getConstitutiveModel()->getDamageParameter(patch, isLocalized,
                                                            dwi, old_dw,new_dw);
 
-      cout_doing << "ConvertLocalizeParticles:: Got Damage Parameter" << endl;
+      cout_dbg << "ConvertLocalizeParticles:: Got Damage Parameter" << endl;
 
       iter = pset->begin(); 
       for (; iter != pset->end(); iter++) {
@@ -2442,15 +2445,15 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
         }
       }
 
-      cout_doing << "ConvertLocalizeParticles:: Created Delset ";
+      cout_dbg << "ConvertLocalizeParticles:: Created Delset ";
 
       int numparticles = delset->numParticles();
 
-      cout_doing << "numparticles = " << numparticles << endl;
+      cout_dbg << "numparticles = " << numparticles << endl;
 
       if (numparticles != 0) {
 
-        cout_doing << "Converting " 
+        cout_dbg << "Converting " 
                    << numparticles << " particles of material " 
                    <<  m  << " into particles of material " << (m+1) 
                    << " in patch " << p << endl;
@@ -2484,7 +2487,7 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
                                                              newState, delset,
                                                              old_dw);
 
-        cout_doing << "addset num particles = " << addset->numParticles()
+        cout_dbg << "addset num particles = " << addset->numParticles()
                    << " for material " << addset->getMatlIndex() << endl;
         new_dw->addParticles(patch, conv_dwi, newState);
         new_dw->deleteParticles(delset);
@@ -2493,10 +2496,10 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
       } 
       else delete delset;
     }
-    cout_doing <<"Done convertLocalizedParticles on patch " 
+    cout_dbg <<"Done convertLocalizedParticles on patch " 
                << patch->getID() << "\t MPM"<< endl;
   }
-  cout_doing << "Completed convertLocalizedParticles " << endl;
+  cout_dbg << "Completed convertLocalizedParticles " << endl;
   
 }
 
