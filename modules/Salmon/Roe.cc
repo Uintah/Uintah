@@ -39,6 +39,7 @@
 #include <GL/glu.h>
 #include <CallbackCloners.h>
 #include <Math/MiscMath.h>
+#include <Geometry/BBox.h>
 extern MtXEventLoop* evl;
 
 GeomItem::GeomItem() {
@@ -571,8 +572,36 @@ void Roe::goHomeCB(CallbackData*, void*)
 }
 void Roe::autoViewCB(CallbackData*, void*)
 {
-    NOT_FINISHED("Roe::autoViewCB");
-}
+    BBox bbox;
+    HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
+    for (iter.first(); iter.ok(); ++iter) {
+	HashTable<int, GeomObj*>* serHash=iter.get_data();
+	HashTableIter<int, GeomObj*> serIter(serHash);
+	for (serIter.first(); serIter.ok(); ++serIter) {
+	    GeomObj *geom=serIter.get_data();
+	    for (int i=0; i<geomItemA.size(); i++)
+		if (geomItemA[i]->geom == geom)
+		    if (geomItemA[i]->vis)
+			bbox.extend(geom->bbox());
+	}		
+    }	
+    Point lookat(bbox.center());
+    lookat.z(bbox.max().z());
+    double xwidth=lookat.x()-bbox.min().x();
+    double ywidth=lookat.y()-bbox.min().y();
+    double dist=Max(xwidth, ywidth);
+    make_current();
+    evl->lock();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(90, 1.33, 1, 1000);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(lookat.x(), lookat.y(), lookat.z()+dist, lookat.x(), lookat.y(), lookat.z(), 0, 1, 0);
+    evl->unlock();
+    redrawAll();
+}    
+
 void Roe::setHomeCB(CallbackData*, void*)
 {
     make_current();
