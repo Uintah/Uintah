@@ -13,7 +13,8 @@ using namespace Uintah::MPM;
 ConstitutiveModel::ConstitutiveModel()
 {
    // Constructor
-   px_label = new VarLabel("p.x", ParticleVariable<Point>::getTypeDescription());
+   px_label = new VarLabel("p.x", ParticleVariable<Point>::getTypeDescription(),
+	VarLabel::PositionVariable);
    p_deformationMeasure_label = new VarLabel("p.deformationMeasure",
                                              ParticleVariable<Matrix3>::getTypeDescription());
    p_stress_label = new VarLabel("p.stress",

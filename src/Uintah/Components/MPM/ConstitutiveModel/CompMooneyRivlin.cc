@@ -51,13 +51,24 @@ void CompMooneyRivlin::initializeCMData(const Region* region,
 {
    // Put stuff in here to initialize each particle's
    // constitutive model parameters and deformationMeasure
+   Matrix3 Identity, zero(0.);
+   Identity.Identity();
    ParticleVariable<CMData> cmdata;
    new_dw->allocate(cmdata, p_cmdata_label, matl->getDWIndex(), region);
+   ParticleVariable<Matrix3> deformationGradient;
+   new_dw->allocate(deformationGradient, p_deformationMeasure_label, matl->getDWIndex(), region);
+   ParticleVariable<Matrix3> pstress;
+   new_dw->allocate(pstress, p_stress_label, matl->getDWIndex(), region);
    ParticleSubset* pset = cmdata.getParticleSubset();
    for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++)
+          iter != pset->end(); iter++) {
 	 cmdata[*iter] = d_initialData;
+         deformationGradient[*iter] = Identity;
+         pstress[*iter] = zero;
+   }
    new_dw->put(cmdata, p_cmdata_label, matl->getDWIndex(), region);
+   new_dw->put(deformationGradient, p_deformationMeasure_label, matl->getDWIndex(), region);
+   new_dw->put(pstress, p_stress_label, matl->getDWIndex(), region);
 }
 
 void CompMooneyRivlin::computeStressTensor(const Region* region,
@@ -269,6 +280,9 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 #endif
 
 // $Log$
+// Revision 1.14  2000/05/01 17:10:27  jas
+// Added allocations for mass and volume.
+//
 // Revision 1.13  2000/04/28 07:35:27  sparker
 // Started implementation of DataWarehouse
 // MPM particle initialization now works

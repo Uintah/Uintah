@@ -72,6 +72,8 @@ WARNING
 				       particleIndex start,
 				       ParticleVariable<Point>& position,
 				       ParticleVariable<Vector>& velocity,
+				       ParticleVariable<double>& mass,
+				       ParticleVariable<double>& volume,
 				       const Region*);
       private:
 	 
@@ -105,6 +107,9 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.11  2000/05/01 17:10:28  jas
+// Added allocations for mass and volume.
+//
 // Revision 1.10  2000/05/01 16:18:12  sparker
 // Completed more of datawarehouse
 // Initial more of MPM data

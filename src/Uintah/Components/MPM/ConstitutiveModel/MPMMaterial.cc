@@ -138,13 +138,17 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    ParticleVariable<Point> position;
    new_dw->allocate(numParticles, position, pXLabel,
 		    getDWIndex(), region);
-   ParticleVariable<Vector> velocity;
-   new_dw->allocate(velocity, pVelocityLabel, getDWIndex(), region);
+   ParticleVariable<Vector> pvelocity;
+   new_dw->allocate(pvelocity, pVelocityLabel, getDWIndex(), region);
+   ParticleVariable<double> pmass;
+   new_dw->allocate(pmass, pMassLabel, getDWIndex(), region);
+   ParticleVariable<double> pvolume;
+   new_dw->allocate(pvolume, pVolumeLabel, getDWIndex(), region);
 
    particleIndex start = 0;
    for(int i=0; i<d_geom_objs.size(); i++)
       start += createParticles(d_geom_objs[i], start, position,
-			       velocity, region);
+			       pvelocity,pmass,pvolume, region);
 }
 
 particleIndex MPMMaterial::countParticles(GeometryObject* obj,
@@ -184,6 +188,8 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 					   particleIndex start,
 					   ParticleVariable<Point>& position,
 					   ParticleVariable<Vector>& velocity,
+					   ParticleVariable<double>& mass,
+					   ParticleVariable<double>& volume,
 					   const Region* region)
 {
    GeometryPiece* piece = obj->getPiece();
@@ -207,7 +213,9 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 	       Point p = lower + dxpp*idx;
 	       if(piece->inside(p)){
 		  position[start+count]=p;
+		  volume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
 		  velocity[start+count]=obj->getInitialVelocity();
+		  mass[start+count]=d_density * volume[start+count];
 		  count++;
 	       }
 	    }
