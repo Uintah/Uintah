@@ -4876,23 +4876,39 @@ class BioTensorApp {
 	set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
 	set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
 
-	# Only include axis information for planes that are turned on
-	global $mods(ShowField-X)-faces-on
-	global $mods(ShowField-Y)-faces-on
-	global $mods(ShowField-Z)-faces-on
+	# The ClipByFunction module can now take arguments.
+	#   -u0  $mods(Isosurface)-isoval
+	#   -u1  $span_x
+	#   -u2  $span_y
+	#   -u3  $span_z
 
-	set function "(v > [set $mods(Isosurface)-isoval]) &&"
-	if {[set $mods(ShowField-X)-faces-on]} {
+	# Only include axis information for planes that are turned on
+	global show_plane_x
+	global show_plane_y
+	global show_plane_z
+	
+	global $mods(ClipByFunction-Seeds)-u0
+	global $mods(ClipByFunction-Seeds)-u1
+	global $mods(ClipByFunction-Seeds)-u2
+	global $mods(ClipByFunction-Seeds)-u3
+
+	set $mods(ClipByFunction-Seeds)-u0 [set $mods(Isosurface)-isoval]
+	set function "(v > u0) &&"
+
+	if {$show_plane_x} {
+	    set $mods(ClipByFunction-Seeds)-u1 $span_x
 	    set index [string last "&&" $function]
-	    set function [string replace $function $index end "&& (x $clip_x $span_x) &&"]
+	    set function [string replace $function $index end "&& (x $clip_x u1) &&"]
 	}
-	if {[set $mods(ShowField-Y)-faces-on]} {
+	if {$show_plane_y} {
+	    set $mods(ClipByFunction-Seeds)-u2 $span_y
 	    set index [string last "&&" $function]
-	    set function [string replace $function $index end "&& (y $clip_y $span_y) &&"]
+	    set function [string replace $function $index end "&& (y $clip_y u2) &&"]
 	}
-	if {[set $mods(ShowField-Z)-faces-on]} {
+	if {$show_plane_z} {
+	    set $mods(ClipByFunction-Seeds)-u3 $span_z
 	    set index [string last "&&" $function]
-	    set function [string replace $function $index end "&& (z $clip_z $span_z) &&"]
+	    set function [string replace $function $index end "&& (z $clip_z u3) &&"]
 	}
 	set index [string last "&&" $function]
 	set function [string replace $function $index end ""]
@@ -5953,9 +5969,9 @@ class BioTensorApp {
 	    global $mods(ChooseField-GlyphSeeds)-port-index
 	    global $mods(ShowField-Fibers)-edges-on
 	    global $mods(ChooseField-FiberSeeds)-port-index
-	    if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
+	    # if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
 		$mods(ClipByFunction-Seeds)-c needexecute
-	    }	    	   
+	    # }	    	   
 	    
 	    $mods(SamplePlane-X)-c needexecute
 	    $mods(Viewer)-ViewWindow_0-c redraw
@@ -5994,9 +6010,9 @@ class BioTensorApp {
 	    global $mods(ChooseField-GlyphSeeds)-port-index
 	    global $mods(ShowField-Fibers)-edges-on
 	    global $mods(ChooseField-FiberSeeds)-port-index
-	    if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
+	    # if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
 		$mods(ClipByFunction-Seeds)-c needexecute
-	    }	    
+	    # }	    
 	    
 	    $mods(SamplePlane-Y)-c needexecute
 	    $mods(Viewer)-ViewWindow_0-c redraw
@@ -6035,9 +6051,9 @@ class BioTensorApp {
 	    global $mods(ChooseField-GlyphSeeds)-port-index
 	    global $mods(ShowField-Fibers)-edges-on
 	    global $mods(ChooseField-FiberSeeds)-port-index
-	    if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
+	    # if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
 		$mods(ClipByFunction-Seeds)-c needexecute
-	    }
+	    # }
 	    
 	    $mods(SamplePlane-Z)-c needexecute
 	    $mods(Viewer)-ViewWindow_0-c redraw
@@ -6086,11 +6102,13 @@ class BioTensorApp {
 	    }
 
 	    global show_planes
-	    if {$vis_activated && $show_planes} {
+	    if {$vis_activated} {
 		$mods(GatherPoints)-c needexecute
 		
-		$mods(ShowField-X)-c toggle_display_faces  
-		$mods(Viewer)-ViewWindow_0-c redraw
+		if {$show_planes} {
+		    $mods(ShowField-X)-c toggle_display_faces  
+		    $mods(Viewer)-ViewWindow_0-c redraw
+		}
 	    } else {
 		global exec_planes
 		set exec_planes(GatherPoints) 1
@@ -6116,11 +6134,13 @@ class BioTensorApp {
 	    }
 
 	    global show_planes
-	    if {$vis_activated && $show_planes} {
+	    if {$vis_activated} {
 		$mods(GatherPoints)-c needexecute
-		
-		$mods(ShowField-Y)-c toggle_display_faces
-		$mods(Viewer)-ViewWindow_0-c redraw
+
+		if {$show_planes} {
+		    $mods(ShowField-Y)-c toggle_display_faces
+		    $mods(Viewer)-ViewWindow_0-c redraw
+		}
 	    } else {
 		global exec_planes
 		set exec_planes(GatherPoints) 1
@@ -6147,11 +6167,13 @@ class BioTensorApp {
 	    }
 	    
 	    global show_planes
-	    if {$vis_activated && $show_planes} {
+	    if {$vis_activated} {
 		$mods(GatherPoints)-c needexecute
-		
-		$mods(ShowField-Z)-c toggle_display_faces
-		$mods(Viewer)-ViewWindow_0-c redraw
+
+		if { $show_planes} {
+		    $mods(ShowField-Z)-c toggle_display_faces
+		    $mods(Viewer)-ViewWindow_0-c redraw
+		}
 	    } else {
 		global exec_planes
 		set exec_planes(GatherPoints) 1
@@ -7603,7 +7625,7 @@ class BioTensorApp {
             } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
 		# enable rake
 		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 1
-            } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 3} {
+            } elseif {$vis_activated && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
         }
@@ -8581,7 +8603,7 @@ class BioTensorApp {
             } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
 		# enable rake
 		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 1
-            } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
+            } elseif {$vis_activated && [set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
         }
