@@ -245,6 +245,9 @@ Module::Module(const clString& name, const clString& id,
 
 Module::~Module()
 {
+  // kill the helper thread
+  MessageBase msg(MessageTypes::GoAway);
+  mailbox.send(&msg);
 }
 
 int Module::clone(int)
