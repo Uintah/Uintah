@@ -74,7 +74,7 @@ class FCVariable : public Array3<T>, public FCVariableBase {
       // Insert Documentation Here:
       virtual FCVariableBase* clone() const;
 
- virtual void allocate(const IntVector& lowIndex,
+      virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex);
       
       //////////
@@ -138,6 +138,8 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 	      }
 	    }
 	    break;
+	  case Patch::numFaces:
+	    break;
 	  }
 
 	};
@@ -195,6 +197,8 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 		  (*this)[IntVector(i,j,low.z()+1)] -  value * dx.z();
 	      }
 	    }
+	    break;
+	  case Patch::numFaces:
 	    break;
 	  }
 
@@ -442,6 +446,9 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 
 //
 // $Log$
+// Revision 1.17  2000/11/21 21:57:27  jas
+// More things to get FCVariables to work.
+//
 // Revision 1.16  2000/11/14 03:53:33  jas
 // Implemented getExtraCellIterator.
 //
