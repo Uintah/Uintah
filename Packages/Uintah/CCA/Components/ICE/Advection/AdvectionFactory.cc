@@ -33,9 +33,12 @@ Advector* AdvectionFactory::create(ProblemSpecP& ps,
     else if (advect_type == "SecondOrder") 
       return(scinew SecondOrderAdvector());
 
-    else if (advect_type == "SecondOrderCE") 
-      return(scinew SecondOrderCEAdvector());
-    else
+    else if (advect_type == "SecondOrderCE") {
+      string warn="\n\n ERROR:SecondOrderCE has a bug in it.  "
+                  "\nTodd use ICE/performanceTest.ups to find it\n \n";
+     throw ProblemSetupException(warn);
+      //return(scinew SecondOrderCEAdvector());
+    }else
       throw ProblemSetupException("Unknown advection Type R ("+advect_type+")");
 
 }
