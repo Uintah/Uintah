@@ -14,6 +14,8 @@ SUBDIRS := \
 	$(SRCDIR)/Arches \
 	$(SRCDIR)/Arches/fortran \
 	$(SRCDIR)/Arches/Mixing \
+	$(SRCDIR)/Arches/Radiation \
+	$(SRCDIR)/Arches/Radiation/fortran \
 	$(SRCDIR)/ProblemSpecification \
 	$(SRCDIR)/HETransformation \
 	$(SRCDIR)/PatchCombiner \
