@@ -2890,27 +2890,19 @@ class BioImageApp {
 	    # work if we are reading in a nrrd and is one of our demo datasets
 	    # (i.e. tooth, CThead, engine)
 	    if {!$loading && $port == 0} {
-                set EditColorMap2 [lindex [lindex $filters(0) $modules] 13]
-                global [set EditColorMap2]-filename
-
-                # Figure out if we are loading a sample dataset
+		global mods
                 set NrrdReader [lindex [lindex $filters(0) $modules] $load_nrrd]
-                global [set NrrdReader]-filename
-                set filename [set [set NrrdReader]-filename]
-
-                if {[string first "${data_dir}volume/tooth.nhdr" $filename] != -1 && 
-		    [file exists "${data_dir}volume/tooth.cmap2"]} {
-                    set [set EditColorMap2]-filename "${data_dir}volume/tooth.cmap2"
-                    after 500 "[set EditColorMap2] swatch_load tooth"
-                } elseif {[string first "${data_dir}volume/engine.nhdr" $filename] != -1 && 
-		    [file exists "${data_dir}volume/engine.cmap2"]} {
-                    set [set EditColorMap2]-filename "${data_dir}volume/engine.cmap2"
-                    after 500 "[set EditColorMap2] swatch_load engine"
-                } elseif {[string first "${data_dir}volume/CThead.nhdr" $filename] != -1 && 
-		    [file exists "${data_dir}volume/CThead.cmap2"]} {
-                    set [set EditColorMap2]-filename "${data_dir}volume/CThead.cmap2"
-                    after 500 "[set EditColorMap2] swatch_load CThead"
-                } 
+		upvar \#0 $mods(EditColorMap2D)-filename cm2filename
+		upvar \#0 $NrrdReader-filename nrrdfilename
+		set path [split $nrrdfilename \/]
+		set path [join [lrange $path 0 end-1] \/]
+		foreach dataset {tooth engine CThead} {
+		    if {[string first "volume/${dataset}.nhdr" $nrrdfilename] != -1 && 
+			[file exists "${path}/${dataset}.cmap2"]} {
+			set cm2filename "${path}/${dataset}.cmap2"
+			$mods(EditColorMap2D)-c load
+		    }
+		}
             }
             set 2D_fixed 0
 
@@ -3507,11 +3499,13 @@ class BioImageApp {
 	}
 	    
     }
-    
+
+    # execute modules if volume rendering enabled    
     method execute_vol_ren {} {
-	if {$current_crop != -1} return
-     	# execute modules if volume rendering enabled
- 	global show_vol_ren
+	global mods show_vol_ren
+	upvar #0 $mods(ViewSlices)-crop crop
+	if { $crop } return
+
  	if {$show_vol_ren == 1} {
    	    set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
    	    set Rescale [lindex [lindex $filters(0) $modules] 36] 
