@@ -129,6 +129,9 @@ extern "C"
     void
     FORT_CELLG(const int* domainLow, const int* domainHigh, 
 	       const int* indexLow, const int* indexHigh,
+	       const int* indexLowU, const int* indexHighU,
+	       const int* indexLowV, const int* indexHighV,
+	       const int* indexLowW, const int* indexHighW,
 	       double* sew,double* sns, double* stb,
 	       double* sewu, double* snsv, double* stbw,
 	       double* dxep, double* dynp, double* dztp,
@@ -923,6 +926,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.38  2000/10/04 16:46:23  rawat
+// Parallel solver for pressure is working
+//
 // Revision 1.37  2000/09/29 20:32:35  rawat
 // added underrelax to pressure solver
 //

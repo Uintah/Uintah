@@ -6,6 +6,9 @@ c*********************************************************************
 
       SUBROUTINE cellg(domainLow, domainHigh,
      &     indexLow, indexHigh, 
+     &     indexLowU, indexHighU, 
+     &     indexLowV, indexHighV, 
+     &     indexLowW, indexHighW, 
      &     SEW, SNS, STB,
      &     SEWU, SNSV, STBW,
      &     DXEP, DYNP, DZTP,
@@ -44,6 +47,12 @@ c*********************************************************************
       integer domainHigh(3)
       integer indexLow(3)
       integer indexHigh(3)
+      integer indexLowU(3)
+      integer indexHighU(3)
+      integer indexLowV(3)
+      integer indexHighV(3)
+      integer indexLowW(3)
+      integer indexHighW(3)
       double precision SEW(domainLow(1):domainHigh(1))
       double precision SNS(domainLow(2):domainHigh(2))
       double precision STB(domainLow(3):domainHigh(3))
@@ -125,6 +134,7 @@ c*********************************************************************
       integer iBegGhost, jBegGhost, kBegGhost
       integer iEndGhost, jEndGhost, kEndGhost
       integer IST, JST, KST, IEND, JEND, KEND
+      integer ISTU, JSTV, KSTW, IENDU, JENDV, KENDW
       integer i, j, k, ii, jj, kk
       double precision ESD, PESD, WSD, WWSD
       double precision SSD, PNSD, RNSD, SSSD
@@ -145,6 +155,12 @@ c*********************************************************************
       IEND = indexHigh(1)
       JEND = indexHigh(2)
       KEND = indexHigh(3)
+      ISTU = indexLowU(1)
+      JSTV = indexLowV(2)
+      KSTW = indexLowW(3)
+      IENDU = indexHighU(1)
+      JENDV = indexHighV(2)
+      KENDW = indexHighW(3)
 
 C-----------------------------------------------------------------------
 c     INIT to ZERO
@@ -300,7 +316,7 @@ C-----------------------------------------------------------------------
 
 *     factors for differencing schemes: u-cell
 
-      DO 800 I = IST+1,IEND
+      DO 800 I = ISTU,IENDU
         ESD = PT5*(XU(I+1)+XU(I))
         WSD = PT5*(XU(I)+XU(I-1))
         PESD = XX(I)-ESD
@@ -324,8 +340,8 @@ C-----------------------------------------------------------------------
           IWSDU(I) = -2
         END IF
   800 CONTINUE
-      iwsdu(ist) = 0
-      iesdu(ist) = 0
+c      iwsdu(ist) = 0
+c      iesdu(ist) = 0
 C-----------------------------------------------------------------------
 C     Y-DIRECTION
 C-----------------------------------------------------------------------
@@ -378,7 +394,7 @@ C-----------------------------------------------------------------------
 
 *     factors for differencing schemes: v-cell
 
-      DO 850 J = JST+1,JEND
+      DO 850 J = JSTV,JENDV
         RNSD = PT5*(YV(J+1)+YV(J))
         SSD = PT5*(YV(J)+YV(J-1))
         PNSD = YY(J)-RNSD
@@ -402,8 +418,8 @@ C-----------------------------------------------------------------------
           JSSDV(J) = -2
         END IF
   850 CONTINUE
-        jssdv(jst) = 0
-        jnsdv(jst) = 0
+c        jssdv(jst) = 0
+c        jnsdv(jst) = 0
 
 C-----------------------------------------------------------------------
 C     Z-DIRECTION
@@ -464,7 +480,7 @@ c      IF (LCORD) STBW(kEndGhost) = STBW(KST)
 *     factors for differencing schemes: w-cell
 
 C$DIR NO_RECURRENCE
-      DO 900 K = KST,KEND
+      DO 900 K = KSTW,KENDW
         TSD = PT5*(ZW(K+1)+ZW(K))
         BSD = PT5*(ZW(K)+ZW(K-1))
         PTSD = ZZ(K)-TSD
@@ -478,7 +494,7 @@ C$DIR NO_RECURRENCE
           FAC2W(K) = (ZZ(K)-TSD)/DZPB(K)
           KTSDW(K) = -1
         END IF
-        IF (K.NE.KST) THEN
+        IF (K.NE.KSTW) THEN
           IF (BBSD.LE.ZERO) THEN
             FAC3W(K) = (ZZ(K)-BSD)/DZPB(K)
             FAC4W(K) = (BSD-ZZ(K-1))/DZPB(K)
@@ -489,8 +505,8 @@ C$DIR NO_RECURRENCE
             KBSDW(K) = -2
           END IF
         END IF
-        KBSDW(KST) = 0
-        ktsdw(kst) = 0
+c        KBSDW(KST) = 0
+c        ktsdw(kst) = 0
   900 CONTINUE
       FAC3W(KST) = FAC1W(KEND)
       FAC4W(KST) = FAC2W(KEND)
@@ -500,6 +516,9 @@ C$DIR NO_RECURRENCE
 c*********************************************************************
 c
 c $Log$
+c Revision 1.8  2000/10/04 16:46:29  rawat
+c Parallel solver for pressure is working
+c
 c Revision 1.7  2000/10/02 16:40:30  rawat
 c updated cellinformation for multi-patch
 c
