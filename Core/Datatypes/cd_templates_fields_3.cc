@@ -2,6 +2,7 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/GenericField.h>
+#include <Core/Datatypes/PrismVolField.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/MaskedTetVolField.h>
 #include <Core/Datatypes/QuadraticTetVolField.h>
@@ -17,6 +18,39 @@ cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line =
 #endif
 
 using namespace SCIRun;
+
+template class GenericField<PrismVolMesh, vector<Tensor> >;
+template class GenericField<PrismVolMesh, vector<Vector> >;
+template class GenericField<PrismVolMesh, vector<double> >;
+template class GenericField<PrismVolMesh, vector<float> >;
+template class GenericField<PrismVolMesh, vector<int> >;
+template class GenericField<PrismVolMesh, vector<short> >;
+template class GenericField<PrismVolMesh, vector<char> >;
+template class GenericField<PrismVolMesh, vector<unsigned int> >;
+template class GenericField<PrismVolMesh, vector<unsigned short> >;
+template class GenericField<PrismVolMesh, vector<unsigned char> >;
+
+template class PrismVolField<Tensor>;
+template class PrismVolField<Vector>;
+template class PrismVolField<double>;
+template class PrismVolField<float>;
+template class PrismVolField<int>;
+template class PrismVolField<short>;
+template class PrismVolField<char>;
+template class PrismVolField<unsigned int>;
+template class PrismVolField<unsigned short>;
+template class PrismVolField<unsigned char>;
+
+const TypeDescription* get_type_description(PrismVolField<Tensor> *);
+const TypeDescription* get_type_description(PrismVolField<Vector> *);
+const TypeDescription* get_type_description(PrismVolField<double> *);
+const TypeDescription* get_type_description(PrismVolField<float> *);
+const TypeDescription* get_type_description(PrismVolField<int> *);
+const TypeDescription* get_type_description(PrismVolField<short> *);
+const TypeDescription* get_type_description(PrismVolField<char> *);
+const TypeDescription* get_type_description(PrismVolField<unsigned int> *);
+const TypeDescription* get_type_description(PrismVolField<unsigned short> *);
+const TypeDescription* get_type_description(PrismVolField<unsigned char> *);
 
 template class GenericField<TetVolMesh, vector<Tensor> >;
 template class GenericField<TetVolMesh, vector<Vector> >;

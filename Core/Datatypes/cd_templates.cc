@@ -49,6 +49,7 @@ using namespace SCIRun;
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/MaskedLatVolField.h>
 #include <Core/Datatypes/MaskedTriSurfField.h>
+#include <Core/Datatypes/PrismVolField.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/CurveField.h>
 #include <Core/Datatypes/PointCloudField.h>
@@ -110,12 +111,26 @@ template class Property<vector<pair<int,double> > >;
 
 //! Compute the gradient g in cell ci.
 template <>
-Vector TetVolField<Vector>::cell_gradient(TetVolMesh::Cell::index_type /*ci*/)
+Vector PrismVolField<Vector>::cell_gradient(TetVolMesh::Cell::index_type /*ci*/)
 {
   ASSERT(type_name(1) != "Vector");  // redundant, useful error message
   return Vector(0, 0, 0);
 }
 
+template <>
+Vector PrismVolField<Tensor>::cell_gradient(TetVolMesh::Cell::index_type /*ci*/)
+{
+  ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
+  return Vector(0, 0, 0);
+}
+
+
+template <>
+Vector TetVolField<Vector>::cell_gradient(TetVolMesh::Cell::index_type /*ci*/)
+{
+  ASSERT(type_name(1) != "Vector");  // redundant, useful error message
+  return Vector(0, 0, 0);
+}
 
 template <>
 Vector TetVolField<Tensor>::cell_gradient(TetVolMesh::Cell::index_type /*ci*/)
@@ -124,13 +139,13 @@ Vector TetVolField<Tensor>::cell_gradient(TetVolMesh::Cell::index_type /*ci*/)
   return Vector(0, 0, 0);
 }
 
+
 template <>
 Vector QuadraticTetVolField<Vector>::cell_gradient(TetVolMesh::Cell::index_type)
 {
   ASSERT(type_name(1) != "Vector");  // redundant, useful error message
   return Vector(0, 0, 0);
 }
-
 
 template <>
 Vector QuadraticTetVolField<Tensor>::cell_gradient(TetVolMesh::Cell::index_type)
@@ -139,13 +154,13 @@ Vector QuadraticTetVolField<Tensor>::cell_gradient(TetVolMesh::Cell::index_type)
   return Vector(0, 0, 0);
 }
 
+
 template <>
 Vector HexVolField<Vector>::cell_gradient(HexVolMesh::Cell::index_type /*ci*/)
 {
   ASSERT(type_name(1) != "Vector");  // redundant, useful error message
   return Vector(0, 0, 0);
 }
-
 
 template <>
 Vector HexVolField<Tensor>::cell_gradient(HexVolMesh::Cell::index_type /*ci*/)
@@ -154,13 +169,27 @@ Vector HexVolField<Tensor>::cell_gradient(HexVolMesh::Cell::index_type /*ci*/)
   return Vector(0, 0, 0);
 }
 
+
+template <> bool LatVolField<Vector>::get_gradient(Vector &, const Point &/*p*/)
+{
+  ASSERT(type_name(1) != "Vector");  // redundant, useful error message
+  return false;
+}
+
 template <> bool LatVolField<Tensor>::get_gradient(Vector &, const Point &/*p*/)
 {
   ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
   return false;
 }
 
-template <> bool LatVolField<Vector>::get_gradient(Vector &, const Point &/*p*/)
+
+template <> bool PrismVolField<Vector>::get_gradient(Vector &, const Point &/*p*/)
+{
+  ASSERT(type_name(1) != "Vector");  // redundant, useful error message
+  return false;
+}
+
+template <> bool PrismVolField<Tensor>::get_gradient(Vector &, const Point &/*p*/)
 {
   ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
   return false;
