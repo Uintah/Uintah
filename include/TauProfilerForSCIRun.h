@@ -5,7 +5,10 @@
 // 
 
 #ifdef USE_TAU_PROFILING
-  #include <Profile/Profiler.h>
+
+#  define TAU_DOT_H_LESS_HEADERS
+#  include <Profile/Profiler.h>
+
 #else
 
   // Dummy out all the macros...
