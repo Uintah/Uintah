@@ -16,6 +16,10 @@
 #include <Packages/rtrt/Core/CoupledMaterial.h>
 #include <Packages/rtrt/Core/DielectricMaterial.h>
 #include <Packages/rtrt/Core/ImageMaterial.h>
+#include <Packages/rtrt/Core/MapBlendMaterial.h>
+#include <Packages/rtrt/Core/MultiMaterial.h>
+#include <Packages/rtrt/Core/PBNMaterial.h>
+#include <Packages/rtrt/Core/CrowMarble.h>
 #include <Packages/rtrt/Core/Checker.h>
 #include <iostream>
 #include <math.h>
@@ -40,20 +44,33 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 {
   Camera cam( Point(0,0,0), Point( 0,-1,0 ), Vector(0,0,1), 45.0 );
 
-   ImageMaterial* bookcoverimg = 
-       new ImageMaterial(1,
+  Material *white = new LambertianMaterial(Color(1,1,1));
+
+  ImageMaterial *stadium = 
+    new ImageMaterial(
 #if INSCILAB
-                         "/usr/sci/data/Geometry/textures/i3d97.smaller.gamma",
+                      "/home/sci/moulding/images/StadiumAtNoon.ppm",
 #else
-                         "/home/moulding/i3d97.smaller.gamma",
+                      "/home/moulding/images/StadiumAtNoon.ppm",
 #endif
-                         ImageMaterial::Tile,
-                         ImageMaterial::Tile, 1,
-                         Color(1,1,1), 4000);
+                      ImageMaterial::Tile,
+                      ImageMaterial::Tile, 1,
+                      Color(1,1,1), 4000);
+  
+  ImageMaterial *bookcoverimg = 
+    new ImageMaterial(1,
+#if INSCILAB
+                      "/usr/sci/data/Geometry/textures/i3d97.smaller.gamma",
+#else
+                      "/home/moulding/i3d97.smaller.gamma",
+#endif
+                      ImageMaterial::Tile,
+                      ImageMaterial::Tile, 1,
+                      Color(1,1,1), 4000);
 
   ImageMaterial *matl0 = new ImageMaterial(
 #if INSCILAB                                         
-                                           "/home/cs/moulding/holo.ppm",
+                                           "/home/sci/moulding/holo.ppm",
 #else
                                            "/home/moulding/holo.ppm",
 #endif
@@ -61,14 +78,23 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                                            ImageMaterial::Tile,
                                            4,Color(.5,.5,.5),40,0,0);
 
+  CrowMarble *crow = new CrowMarble(10,Vector(0,1,0),Color(.1,.1,.8),
+                                    Color(.9,.8,.9),Color(.6,.6,.8));
+
+  //MultiMaterial *matl1 = new MultiMaterial();
+  MapBlendMaterial *matl1 = new MapBlendMaterial("/home/sci/moulding/images/scuff.ppm",matl0,white);
+  //PBNMaterial *matl1 = new PBNMaterial("/home/sci/moulding/images/pbnmaterial.ppm");
+
+  //matl1->insert(stadium,255);
+  //matl1->insert(crow,0);
+
   matl0->flip();
   bookcoverimg->flip();
-  Material *white = new LambertianMaterial(Color(1,1,1));
-  
-  UVCylinderArc* uvcylarc0 = new UVCylinderArc(matl0,Point(ROOMCENTER,0),
+
+  UVCylinderArc* uvcylarc0 = new UVCylinderArc(matl1,Point(ROOMCENTER,0),
                                                Point(ROOMCENTER,DOORHEIGHT),
                                                ROOMRADIUS);
-  UVCylinderArc* uvcylarc1 = new UVCylinderArc(matl0,Point(ROOMCENTER,0),
+  UVCylinderArc* uvcylarc1 = new UVCylinderArc(matl1,Point(ROOMCENTER,0),
                                                Point(ROOMCENTER,DOORHEIGHT),
                                                ROOMRADIUS);
   UVCylinderArc* uvcylarc2 = new UVCylinderArc(white,Point(ROOMCENTER,0),
@@ -77,13 +103,13 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   UVCylinderArc* uvcylarc3 = new UVCylinderArc(white,Point(ROOMCENTER,0),
                                                Point(ROOMCENTER,DOORHEIGHT),
                                                ROOMRADIUS+WALLTHICKNESS);
-  UVCylinder* uvcyl0 = new UVCylinder(matl0,Point(ROOMCENTER,DOORHEIGHT),
+  UVCylinder* uvcyl0 = new UVCylinder(matl1,Point(ROOMCENTER,DOORHEIGHT),
                                       Point(ROOMCENTER,ROOMHEIGHT),ROOMRADIUS);
   UVCylinder* uvcyl1 = new UVCylinder(white,Point(ROOMCENTER,DOORHEIGHT),
                                       Point(ROOMCENTER,ROOMHEIGHT),
                                       ROOMRADIUS+WALLTHICKNESS);
 
-  Rect* floor = new Rect(matl0,Point(ROOMCENTER,0),Vector(ROOMRADIUS,0,0),
+  Rect* floor = new Rect(matl1,Point(ROOMCENTER,0),Vector(ROOMRADIUS,0,0),
                           Vector(0,ROOMRADIUS,0));
   Object* obj1 = new Sphere(matl0,Point(5,5,0),1);
   Point p1(ROOMCENTER,.2);
@@ -96,12 +122,12 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   uvcylarc2->set_arc((DOORWIDTH)*M_PI,(.5-DOORWIDTH)*M_PI);
   uvcylarc3->set_arc((.5+DOORWIDTH)*M_PI,(2-DOORWIDTH)*M_PI);
 
-  uvcylarc0->set_tex_scale(Vector(CYLTEXSCALEX,
-                                  CYLTEXSCALEY/HEIGHTRATIO,0));
-  uvcylarc1->set_tex_scale(Vector(CYLTEXSCALEX,
-                                  CYLTEXSCALEY/HEIGHTRATIO,0));
-  uvcyl0->set_tex_scale(Vector(CYLTEXSCALEX,CYLTEXSCALEY,0));
-  floor->set_tex_scale(Vector(5,5,0));
+  //uvcylarc0->set_tex_scale(Vector(CYLTEXSCALEX,
+  //                              CYLTEXSCALEY/HEIGHTRATIO,0));
+  //uvcylarc1->set_tex_scale(Vector(CYLTEXSCALEX,
+  //                              CYLTEXSCALEY/HEIGHTRATIO,0));
+  //uvcyl0->set_tex_scale(Vector(CYLTEXSCALEX,CYLTEXSCALEY,0));
+  //floor->set_tex_scale(Vector(5,5,0));
   
   Group * group = new Group();
   group->add( uvcylarc0 );
@@ -123,7 +149,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   Scene* scene=new Scene(group, cam,
                          bgcolor, cdown, cup, groundplane,
                          ambient_scale, Arc_Ambient);
-  scene->add_light( new Light(Point(ROOMCENTER,9.5), Color(1,1,1), 0.8) );
+  scene->add_light( new Light(Point(ROOMCENTER,9.5), Color(1,1,1), 0.0) );
 
   scene->set_background_ptr( new LinearBackground( Color(1.0, 1.0, 1.0),
                                                    Color(0.0,0.0,0.0),
