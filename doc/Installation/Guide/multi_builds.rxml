@@ -31,37 +31,52 @@
 <appendix id="app.multi_builds">
   <title>Single Source, Multiple Binaries</title>
   <para>
-    It is possible to build &sr; for multiple machine architectures
-    using the same source code directory. For instance, if the
-    <filename>&sr;</filename> source code directory resides on a
+    It is possible to build SCIRun for multiple machine architectures
+    and multiple sets of configure options using the same source code
+    directory.
+  </para>
+  <para>
+    For instance, if the
+    <filename>SCIRun</filename> source code directory resides on a
     shared volume then Linux, 32 bit and 64 bit Irix, and Mac OSX
     versions can be built as follows:
     <literallayout class="monospaced">
-mkdir &sr;/linux
-mkdir &sr;/irix32
-mkdir &sr;/irix64
-mkdir &sr;/osx
+mkdir SCIRun/linux
+mkdir SCIRun/irix32
+mkdir SCIRun/irix64
+mkdir SCIRun/osx
     </literallayout>
     After logging onto the Linux machine:
     <literallayout class="monospaced">
-cd &sr;/linux
+cd SCIRun/linux
 ../src/configure <replaceable>options</replaceable>
 make -j <replaceable>N</replaceable>
     </literallayout>
     Then from the Irix machine(s):
     <literallayout class="monospaced">
-cd &sr;/irix32
+cd SCIRun/irix32
 ../src/configure <replaceable>options</replaceable>
 make -j <replaceable>N</replaceable>
-cd &sr;/irix64
+cd SCIRun/irix64
 ../src/configure --enable-64bit <replaceable>options</replaceable>
 make -j <replaceable>N</replaceable>
     </literallayout>
-    and the &osx; platform(s):
+    and the Mac OSX platform(s):
     <literallayout class="monospaced">
-cd &sr;/osx
-../src/configure <replaceable>options</replaceable> CC=gcc CXX=g++
+cd SCIRun/osx
+../src/configure <replaceable>options</replaceable>
 make -j <replaceable>N</replaceable>
     </literallayout>
-  </para>  
+  </para>
+  <para>
+    It is possible to build SCIRun for different sets of
+    configure options.  For example, a debug version for Mac OSX can
+    be built as follows:
+    <literallayout class="monospaced">
+mkdir SCIRun/osx-debug
+cd SCIRun/osx-debug
+../src/configure --enable-debug <replaceable>more-options</replaceable>      
+make -j <replaceable>N</replaceable>
+    </literallayout>
+  </para>
 </appendix>

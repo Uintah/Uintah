@@ -76,13 +76,14 @@ DEALINGS IN THE SOFTWARE.
 	    Web browser download:
 	    <literallayout>
 <!--%= 
+hdf5_src = "ftp://ftp.ncsa.uiuc.edu/HDF/HDF5/hdf5-1.6.4/src/hdf5-1.6.4.tar.gz"
 doc.doIfHTML {
-  %q{<ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz"/>}
+  %Q{<ulink url="#{hdf5_src}"/>}
 }
 %-->
 <!--%= 
 doc.doIfPrint {
-  "ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz"
+  hdf5_src
 }
 %-->
 	    </literallayout>
@@ -92,7 +93,7 @@ doc.doIfPrint {
 	  <para>
 	    Unpack.  In a terminal window type:
 	    <literallayout>
-gunzip -c hdf5-1.6.3.tar.gz | tar xvf -	      
+gunzip -c hdf5-1.6.4.tar.gz | tar xvf -	      
 	    </literallayout>
 	  </para>
 	</listitem>
