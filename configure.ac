@@ -686,13 +686,42 @@ AC_MSG_RESULT($NUM_CPUS)
 if test "$CC" = ""; then
   # Apparently AC_PROG_CC will set CFLAGS to "-O2 -g" if you don't specify
   # its value first, so...
-  CFLAGS=""
-  AC_PROG_CC()
+  CFLAGS=$CFLAGS
+
+  AC_PROG_CC(cc gcc)
+
+  case "$host" in 
+     *-irix*)
+        AC_MSG_WARN(Configure script only allows SGI compilers on IRIX.)
+        AC_MSG_WARN(If this is a problem email scirun-users@sci.utah.edu.)
+
+        if test $CC != cc; then
+           AC_MSG_ERROR(Configure did not find the 'cc' SGI C compiler.)
+        fi
+	;;
+     *)
+        #qwerty
+        # Check to see if cc is actually gcc
+        is_gcc=`$CC --version | grep -i gcc`
+        if test "$is_gcc"; then
+           if test -f "`which gcc`"; then
+              msg="Note, found 'cc' which is actually 'gcc', so"
+              AC_MSG_WARN($msg)
+              AC_MSG_WARN(we will use 'gcc' for clarity.)
+              CC=gcc
+           fi
+        fi
+
+        ;;
+  esac
   AC_MSG_WARN(C compiler not specified with 'CC' environment variable.\
-	    Using default... $CC)
+              Using default... $CC)
 fi
 
+
+
 if test "$CXX" = ""; then
+
   case "$host" in 
      *-darwin*)
 	CXX=c++
@@ -700,7 +729,7 @@ if test "$CXX" = ""; then
      *)
 	# Apparently AC_PROG_CXX will set CXXFLAGS to "-O2 -g" if you don't specify
         # its value first, so...
-        CXXFLAGS=""
+        CXXFLAGS=$CXXFLAGS
         AC_PROG_CXX(CC g++ c++)
         AC_MSG_WARN(C++ compiler not specified with 'CXX' environment variable.\
 	         Using default... $CXX)
@@ -876,9 +905,6 @@ fi
 
 case $host in 
   *-irix*)
-    AC_MSG_WARN(Configure script only allows SGI compilers on IRIX.)
-    AC_MSG_WARN(If this is a problem email scirun-users@sci.utah.edu.)
-
     ac_objext=o
     SCI_CHECK_VERSION($CC,-version,7.3.1.1,,
                       echo configure: error: wrong $CC version.; exit)
