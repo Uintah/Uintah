@@ -3,24 +3,30 @@
 #define DISC_H 1
 
 #include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/UVMapping.h>
 #include <Core/Geometry/Point.h>
 
 namespace rtrt {
 
-class Disc : public Object {
-    Point cen;
-    Vector n;
-    double d;
-    double radius;
+class Disc : public Object, public UVMapping {
+protected:
+  Point cen;
+  Vector n;
+  double radius;
+  Vector tex_scale;
+  Transform xform;
 public:
-    Disc(Material* matl, const Point& cen, const Vector& n, double radius);
-    virtual ~Disc();
-    virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
-			   PerProcessorContext*);
+  Disc(Material* matl, const Point& cen, const Vector& n, double radius);
+  virtual ~Disc();
+  virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+			 PerProcessorContext*);
   virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
 			       DepthStats* st, PerProcessorContext* ppc);
-    virtual Vector normal(const Point&, const HitInfo& hit);
-    virtual void compute_bounds(BBox&, double offset);
+  virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
+  virtual Vector normal(const Point&, const HitInfo& hit);
+  virtual void compute_bounds(BBox&, double offset);
+  virtual void uv(UV&, const Point&, const HitInfo&);
+  void set_tex_scale(const Vector &v) { tex_scale = v; }
 };
 
 } // end namespace rtrt
