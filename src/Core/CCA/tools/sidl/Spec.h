@@ -34,7 +34,7 @@ class Type;
 class Argument;
 class SymbolTable;
 class Class;
-class Interface;
+class BaseInterface;
 class EmitState;
 class SState;
 class ArrayType;
@@ -113,7 +113,7 @@ public:
   virtual ~CI();
   void detectRedistribution();
   void gatherParents(std::vector<CI*>& parents) const;
-  void gatherParentInterfaces(std::vector<Interface*>& parents) const;
+  void gatherParentInterfaces(std::vector<BaseInterface*>& parents) const;
   void gatherMethods(std::vector<Method*>&) const;
   void gatherVtable(std::vector<Method*>&, bool onlyNewMethods) const;
   std::vector<Method*>& myMethods();
@@ -126,12 +126,12 @@ protected:
   void emit_proxyclass(EmitState& e);
   void emit_handlers(EmitState& e);
   void emit_handler_table(EmitState& e);
-  void emit_handler_table_body(EmitState& k, EmitState& e, int&, bool top);
+  void emit_handler_table_body(EmitState& e, int&, bool top);
   void emit_interface(EmitState& e);
   void emit_proxy(EmitState& e);
   void emit_header(EmitState& e);
   Class* parentclass;
-  std::vector<Interface*> parent_ifaces;
+  std::vector<BaseInterface*> parent_ifaces;
   MethodList* mymethods;
   DistributionArrayList* mydistarrays;
 private:
@@ -238,11 +238,11 @@ public:
   std::vector<Definition*> list;
 };
 
-class Interface : public CI {
+class BaseInterface : public CI {
 public:
-  Interface(const std::string& curfile, int lineno, const std::string& id,
+  BaseInterface(const std::string& curfile, int lineno, const std::string& id,
 	    ScopedNameList* interface_extends, MethodList*, DistributionArrayList* );
-  virtual ~Interface();
+  virtual ~BaseInterface();
   virtual void staticCheck(SymbolTable*);
   virtual void gatherSymbols(SymbolTable*);
   Method* findMethod(const Method*) const;
@@ -271,7 +271,7 @@ public:
   void staticCheck(SymbolTable* names);
 
   void setClass(Class* c);
-  void setInterface(Interface* c);
+  void setInterface(BaseInterface* c);
 
   enum MatchWhich {
     TypesOnly,
@@ -319,7 +319,7 @@ private:
   ScopedNameList* throws_clause;
   Modifier modifier;
   Class* myclass;
-  Interface* myinterface;
+  BaseInterface* myinterface;
   bool checked;
 };
 
@@ -331,7 +331,7 @@ public:
   void add(Method*);
   void staticCheck(SymbolTable*) const;
   void setClass(Class* c);
-  void setInterface(Interface* c);
+  void setInterface(BaseInterface* c);
   Method* findMethod(const Method* match) const;
   void gatherMethods(std::vector<Method*>&) const;
   void gatherVtable(std::vector<Method*>&) const;
