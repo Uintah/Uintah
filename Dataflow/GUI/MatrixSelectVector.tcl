@@ -20,70 +20,70 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 
     constructor {config} {
         set name MatrixSelectVector
+
+        global $this-row_or_col
+        global $this-selectable_min
+        global $this-selectable_max
+        global $this-selectable_inc
+	global $this-selectable_units
+        global $this-range_min
+        global $this-range_max
+
         set_defaults
     }
     method set_defaults {} {    
-        global $this-col
-        global $this-col_max
-        global $this-row
-        global $this-row_max
-        global $this-row_or_col;
-        global $this-animate;
-        set $this-col 0
-        set $this-col_max 100
-        set $this-row 0
-        set $this-row_max 100
-        set $this-row_or_col row
-        set $this-animate 0
+        set $this-row_or_col         row
+        set $this-selectable_min     0
+        set $this-selectable_max     100
+        set $this-selectable_inc     1
+	set $this-selectable_units   Units
+        set $this-range_min          0
+        set $this-range_max          0
     }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
             raise $w
             return;
         }
-
         toplevel $w
-        wm minsize $w 150 30
-        set n "$this-c needexecute "
-
-        global $this-col
-        global $this-col_max
-        global $this-row
-        global $this-row_max
-        global $this-row_or_col
-        global $this-animate
 
         frame $w.f
-        scale $w.f.r -variable $this-row \
-                -from 0 -to [set $this-row_max] \
-                -label "Row #" \
+        scale $w.f.r -variable $this-range_min \
+		-label "Start" \
                 -showvalue true -orient horizontal
-        scale $w.f.c -variable $this-col \
-                -from 0 -to [set $this-col_max] \
-                -label "Column #" \
+        scale $w.f.c -variable $this-range_max \
+		-label "End" \
                 -showvalue true -orient horizontal
         frame $w.f.ff
-        radiobutton $w.f.ff.r -text "Row" -variable $this-row_or_col -value row
-        radiobutton $w.f.ff.c -text "Column" -variable $this-row_or_col -value col
+        radiobutton $w.f.ff.r -text "Row" -variable $this-row_or_col \
+		-value row -command "$this-c needexecute"
+        radiobutton $w.f.ff.c -text "Column" -variable $this-row_or_col \
+		-value col -command "$this-c needexecute"
         pack $w.f.ff.r $w.f.ff.c -side left -fill x -expand 1
         frame $w.f.b
-        button $w.f.b.go -text "Execute" -command $n 
-        checkbutton $w.f.b.a -text "Animate" -variable $this-animate
-        button $w.f.b.stop -text "Stop" -command "$this-c stop" 
-        pack $w.f.b.go $w.f.b.a $w.f.b.stop -side left -fill x -expand 1
+        button $w.f.b.go -text "Execute" -command "$this-c needexecute"
+        pack $w.f.b.go -side left -fill x -expand 1
         pack $w.f.r $w.f.c $w.f.ff $w.f.b -side top -fill x -expand yes
         pack $w.f
+
+	update
     }
 
     method update {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            global $this-col_max
-            global $this-row_max
-            $w.f.r config -to [set $this-row_max]
-            $w.f.c config -to [set $this-col_max]
-            puts "updating!"
+            #puts "updating!"
+
+            $w.f.r config -from [set $this-selectable_min]
+            $w.f.r config -to   [set $this-selectable_max]
+            $w.f.r config -label [concat "Start " [set $this-selectable_units]]
+            $w.f.c config -from [set $this-selectable_min]
+            $w.f.c config -to   [set $this-selectable_max]
+            $w.f.c config -label [concat "End " [set $this-selectable_units]]
+
+	    pack $w.f.r $w.f.c $w.f.ff $w.f.b -side top -fill x -expand yes
         }
     }
 }
