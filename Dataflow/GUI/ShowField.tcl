@@ -53,6 +53,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-text-color-r
 	global $this-text-color-g
 	global $this-text-color-b
+	global $this-text-backface-cull
 	global $this-text-show-data
 	global $this-text-show-nodes
 	global $this-text-show-edges
@@ -87,6 +88,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-text-color-r 1.0
 	set $this-text-color-g 1.0
 	set $this-text-color-b 1.0
+	set $this-text-backface-cull 0
 	set $this-text-show-data 1
 	set $this-text-show-nodes 0
 	set $this-text-show-edges 0
@@ -317,6 +319,11 @@ itcl_class SCIRun_Visualization_ShowField {
 
 	frame $text.def_col -borderwidth 2
 
+	checkbutton $text.backfacecull \
+	    -text "Cull backfacing text if possible" \
+	    -command "$this-c rerender_text" \
+	    -variable $this-text-backface-cull
+
 	frame $text.show 
 	checkbutton $text.show.data \
 	    -text "Show data values" \
@@ -346,7 +353,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	addColorSelection $text.def_col "Text Color" $this-text-color \
 	    "text_color_change"
 
-	pack $text.show_text $text.use_def_col $text.def_col $text.show \
+	pack $text.show_text $text.use_def_col $text.def_col \
+	    $text.backfacecull $text.show \
 	    -side top -fill y -anchor w
     }
 

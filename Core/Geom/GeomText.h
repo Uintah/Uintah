@@ -67,7 +67,7 @@ public:
 
 
 class SCICORESHARE GeomTexts : public GeomObj {
-public:
+protected:
   vector<string> text_;
   vector<Point>  location_;
   vector<Color>  color_;
@@ -79,7 +79,8 @@ public:
   virtual GeomObj* clone();
 
 
-  void add (const string &, const Point &, const Color &c = Color(1,1,1));
+  void add (const string &text, const Point &loc,
+	    const Color &c = Color(1,1,1));
 
   virtual void reset_bbox();
   virtual void get_bounds(BBox&);
@@ -90,6 +91,27 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
+};
+
+
+class SCICORESHARE GeomTextsCulled : public GeomTexts {
+protected:
+  vector<Vector> normal_;
+
+public:
+  GeomTextsCulled();
+  GeomTextsCulled(const GeomTextsCulled &);
+  virtual ~GeomTextsCulled();
+  virtual GeomObj* clone();
+
+  void add (const string &text, const Point &location,
+	    const Vector &normal, const Color &c = Color(1,1,1));
+
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
 };
 
 

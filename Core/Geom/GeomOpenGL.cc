@@ -4627,18 +4627,82 @@ void GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
     di->fontinit = false;
   }
 
+  glDisable(GL_LIGHTING);
+  glPushAttrib(GL_LIST_BIT);
   for (unsigned int i = 0; i < text_.size(); i++)
   {
     glColor3f(color_[i].r(), color_[i].g(), color_[i].b());
-    glDisable(GL_LIGHTING);
     glRasterPos3d( location_[i].x(), location_[i].y(), location_[i].z() );
-    glPushAttrib (GL_LIST_BIT);
     glListBase(di->fontbase);
     glCallLists(text_[i].size(), GL_UNSIGNED_BYTE,
 		(GLubyte *)text_[i].c_str());
-    glPopAttrib ();
-    post_draw(di);
   }
+  glPopAttrib ();
+  post_draw(di);
+#endif
+}
+
+
+//----------------------------------------------------------------------
+void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+#ifndef _WIN32
+  if(!pre_draw(di,matl,0)) return;
+
+  if ( di->fontinit ) {
+    //cerr << "GeomText::draw: Initializing fonts." << endl;
+    di->dpy = XOpenDisplay( NULL );
+    XFontStruct* fontInfo = XLoadQueryFont(di->dpy,
+      //"-adobe-helvetica-bold-r-normal-*-14-120-*-*-p-60-iso8859-1");
+      "-schumacher-clean-medium-r-normal--8-80-75-75-c-50-iso8859-1");
+    if (fontInfo == NULL) {
+      fontInfo =
+	XLoadQueryFont(di->dpy,
+      "-schumacher-clean-medium-r-normal-*-*-60-*-*-*-*-*");
+    }
+    if (fontInfo == NULL)
+    {
+      cerr << "GeomText::draw: no font found.\n";
+      return;
+    }
+    Font id = fontInfo->fid;
+    unsigned int first = fontInfo->min_char_or_byte2;
+    unsigned int last = fontInfo->max_char_or_byte2;
+
+    di->fontbase = glGenLists((GLuint) last+1);
+
+    if (di->fontbase == 0) {
+      printf ("GeomText::draw: Out of display lists\n");
+      return;
+    }
+
+    glXUseXFont(id, first, last-first+1, di->fontbase+first);
+
+    di->fontinit = false;
+  }
+
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_LIGHTING);
+  glPushAttrib(GL_LIST_BIT);
+  
+  double mat[16];
+  for (unsigned int i = 0; i < text_.size(); i++)
+  {
+    glGetDoublev(GL_MODELVIEW_MATRIX, mat);
+    const Vector view (mat[2], mat[6], mat[10]);
+    if (Dot(view, normal_[i]) > 0)
+    {
+      glColor3f(color_[i].r(), color_[i].g(), color_[i].b());
+      glRasterPos3d( location_[i].x(), location_[i].y(), location_[i].z() );
+      glListBase(di->fontbase);
+      glCallLists(text_[i].size(), GL_UNSIGNED_BYTE,
+		  (GLubyte *)text_[i].c_str());
+    }
+  }
+
+  glPopAttrib ();
+  glEnable(GL_DEPTH_TEST);
+  post_draw(di);
 #endif
 }
 
