@@ -17,7 +17,8 @@
 #include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
 #include <Core/Util/NotFinished.h>
 
-#define SMALL_NUM 1.0e-100
+#define d_TINY_RHO 1.0e-100 // also defined ICE.cc and MPMMaterial.cc 
+
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
@@ -206,7 +207,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
-          rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM*rho_micro[*iter];
+          rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO*rho_micro[*iter];
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
           IveBeenHere[*iter]= 1;
@@ -217,7 +218,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
-          rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM*rho_micro[*iter];
+          rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO*rho_micro[*iter];
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
           IveBeenHere[*iter]= 2;
@@ -229,7 +230,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
         vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
         rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
         rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
-                            SMALL_NUM*rho_micro[*iter];
+                            d_TINY_RHO*rho_micro[*iter];
         temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
         speedSound[*iter] = d_speed_of_sound;
         IveBeenHere[*iter]= obj; 

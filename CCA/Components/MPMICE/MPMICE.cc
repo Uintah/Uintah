@@ -55,7 +55,9 @@ MPMICE::MPMICE(const ProcessorGroup* myworld)
   MIlb = scinew MPMICELabel();
   d_mpm      = scinew SerialMPM(myworld);
   d_ice      = scinew ICE(myworld);
-  d_SMALL_NUM = 1.e-100;
+  d_SMALL_NUM = d_ice->d_SMALL_NUM; 
+  d_TINY_RHO  = d_ice->d_TINY_RHO;
+  
   // Turn off all the debuging switches
   switchDebug_InterpolateNCToCC_0 = false;
   switchDebug_InterpolateCCToNC   = false;
@@ -850,7 +852,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       new_dw->allocate(Temp_CC,   MIlb->temp_CCLabel, indx, patch);   
 
       double rho_orig = mpm_matl->getInitialDensity();
-      double very_small_mass = d_SMALL_NUM * cell_vol;
+      double very_small_mass = d_TINY_RHO * cell_vol;
       cmass.initialize(very_small_mass);
       cvolume.initialize( very_small_mass/rho_orig);
          
@@ -986,7 +988,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double cellVol = dx.x()*dx.y()*dx.z();
     double inv_cellVol = 1.0/cellVol;
-    double very_small_mass = d_SMALL_NUM * cellVol; 
+    double very_small_mass = d_TINY_RHO * cellVol; 
     
     constNCVariable<double> NC_CCweight;
     NCVariable<double>NC_CCweight_copy;
@@ -1039,6 +1041,8 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       IntVector nodeIdx[8];
 
       //---- P R I N T   D A T A ------ 
+/*`==========TESTING==========*/
+#if 0
       if(d_ice->switchDebugLagrangianValues) {
          ostringstream desc;
          desc <<"TOP_MPMICE::computeLagrangianValuesMPM_mat_%d_patch_%d "<< 
@@ -1050,6 +1054,8 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
          printNCVector( patch,  1,desc.str(), "gvelocityStar.Y", 1, gvelocity);
          printNCVector( patch,  1,desc.str(), "gvelocityStar.Z", 2, gvelocity);
       }
+#endif 
+/*==========TESTING==========`*/
 
       for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
                                                           iter++){ 
@@ -1102,7 +1108,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
                                                     iter++){ 
           IntVector c = *iter;
           //  must have a minimum mass
-          double min_mass = d_SMALL_NUM * cellVol;
+          double min_mass = d_TINY_RHO * cellVol;
           double inv_cmass = 1.0/cmass[c];
           mass_L[c] = std::max( (cmass[c] + burnedMassCC[c] ), min_mass);
           rho_CC[c] = mass_L[c] * inv_cellVol;
