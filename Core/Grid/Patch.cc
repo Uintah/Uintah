@@ -83,7 +83,7 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
     d_id = -1000 * realPatch->d_id; // temporary
    ids_init.lock();    
     int index = 1;
-    while (patches.find(d_id - index) == patches.end()){
+    while (patches.find(d_id - index) != patches.end()){
       if (++index >= 27) {
 	throw InternalError("A real patch shouldn't have more than 26 (3*3*3 - 1) virtual patches");
       }
@@ -97,7 +97,6 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
   
   for (int i = 0; i < numFaces; i++)
     d_bctypes[i] = realPatch->d_bctypes[i];
-
 }
 
 Patch::~Patch()
