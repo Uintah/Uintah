@@ -52,7 +52,6 @@
 namespace Fusion {
 
 using namespace SCIRun;
-using namespace SCITeem;
 
 class PSECORESHARE NIMRODConverter : public Module {
 public:
@@ -615,14 +614,13 @@ NIMRODConverter::execute(){
     
 
       if( !module_dynamic_compile(ci_mesh, algo_mesh) ) {
-	error( "NO Module" );
+	error_ = true;
 	return;
       }
 
       nHandle_ = algo_mesh->execute( nHandles, mesh_, data_, modes_ );
     } else {
-      error( "Nothing to convert." );
-      error_ = true;
+      warning( "Nothing to convert." );
       return;
     }
 
