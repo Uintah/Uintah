@@ -10,10 +10,12 @@ itcl_class SCIRun_Fields_ManipFields {
 
     method set_defaults {} {
 	global $this-manipulationName
+	global $this-name-list
 	set $this-manipulationName ""
 	set $this-mlibs {}
 	set $this-mlibpath {}
 	set $this-minc {}
+	set $this-name-list {}
 	$this-c needexecute
     }
     # update the libs information 
@@ -81,6 +83,8 @@ itcl_class SCIRun_Fields_ManipFields {
     
     method addManipSettings {f} {
 	global $this-mlibs
+	global $this-name-list
+
 	# Editable Dropdown Combobox
 	iwidgets::combobox $f.name -labeltext "Manipulation:" \
 	     -selectioncommand "$this set_name \"$f.name getcurselection\""
