@@ -411,6 +411,8 @@ NrrdFieldConverter::execute(){
 
     int idim=1, jdim=1, kdim=1;
 
+    string fieldname;
+
     vector<unsigned int> mdims;
     unsigned int mesh_rank = 0;
     unsigned int mesh_coor_rank = 0;
@@ -520,6 +522,9 @@ NrrdFieldConverter::execute(){
 	  const unsigned int nrrdDim = dHandle->nrrd->dim;
 	    
 	  if( ic == 0 ) {
+
+	    fieldname = dataset[0];
+
 	    mesh_rank = nrrdDim - 1;
 		
 	    if( mesh_rank >= 1 ) idim = dHandle->nrrd->axis[1].size;
@@ -614,6 +619,8 @@ NrrdFieldConverter::execute(){
 	vector< string > dataset;
 	dHandle->get_tuple_indecies(dataset);
 
+	fieldname = dataset[0];
+
 	if( dataset[0].find( ":Scalar" ) != string::npos ) {
 	  mesh_rank = dHandle->nrrd->dim - 2;
 	  mesh_coor_rank = dHandle->nrrd->axis[ dHandle->nrrd->dim-1].size;
@@ -658,6 +665,8 @@ NrrdFieldConverter::execute(){
 	  const unsigned int nrrdDim = dHandle->nrrd->dim;
 
 	  if( ic == 0 ) {
+	    fieldname = dataset[0];
+
 	    mesh_rank = nrrdDim - 1;
 	      
 	    if( mesh_rank >= 1 ) idim = dHandle->nrrd->axis[1].size;
@@ -756,6 +765,8 @@ NrrdFieldConverter::execute(){
 	  return;
 	}
 
+	fieldname = dataset[0];
+
 	mdims.clear();
 	mdims.push_back( pHandle->nrrd->axis[1].size );
 
@@ -779,6 +790,9 @@ NrrdFieldConverter::execute(){
 
 	  if( ic == 1 ) {
 	    pHandle = dHandle;
+
+	    fieldname = dataset[0];
+
 	  } else if( pHandle->nrrd->axis[1].size != 
 		     dHandle->nrrd->axis[1].size ) {
 	    error( dataset[0] + " - Mesh size mismatch." );
@@ -918,6 +932,8 @@ NrrdFieldConverter::execute(){
 	}
 
 	if( ic == 0 ) {
+	  fieldname = dataset[0];
+
 	  ddims.clear();
 
 	  for( int jc=1; jc<dHandle->nrrd->dim; jc++ )
@@ -1040,6 +1056,11 @@ NrrdFieldConverter::execute(){
     } else if( topology_ & UNSTRUCTURED ) {
       fHandle_ = algo->execute( mHandle, nHandles, data_ );
     }
+
+    pos = fieldname.find_last_of(":");
+    fieldname.erase( pos, fieldname.size()-pos );
+
+    fHandle_.get_rep()->set_property( "name", fieldname, false );
   }
 
   // Get a handle to the output field port.
