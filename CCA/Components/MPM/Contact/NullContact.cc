@@ -101,16 +101,16 @@ void NullContact::exMomIntegrated(const ProcessorGroup*,
 }
 
 void NullContact::addComputesAndRequiresInterpolated( Task* t,
-						const PatchSet* patches,
-						const MaterialSet* matls) const
+						const PatchSet*,
+						const MaterialSet* ) const
 {
   t->requires( Task::NewDW, lb->gVelocityLabel,Ghost::None);
   t->computes( lb->gMomExedVelocityLabel);
 }
 
 void NullContact::addComputesAndRequiresIntegrated( Task* t,
-					     const PatchSet* patches,
-					     const MaterialSet* matls) const
+					     const PatchSet* ,
+					     const MaterialSet*) const
 {
   t->requires(Task::NewDW, lb->gVelocityStarLabel, Ghost::None);
   t->requires(Task::NewDW, lb->gAccelerationLabel, Ghost::None);

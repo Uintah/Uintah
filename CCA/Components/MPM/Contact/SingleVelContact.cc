@@ -77,8 +77,7 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
     vector<NCVariable<Vector> > gvelocity(numMatls);
     for(int m=0,idx=0;m<matls->size();m++,idx++){
       int dwindex = matls->get(m);
-      new_dw->get(gmass[idx], lb->gMassLabel, dwindex, patch,
-		  Ghost::None, 0);
+      new_dw->get(gmass[idx], lb->gMassLabel, dwindex, patch, Ghost::None, 0);
       new_dw->get(gvelocity[idx], lb->gVelocityLabel, dwindex, patch,
 		  Ghost::None, 0);
     }
@@ -169,8 +168,8 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
 }
 
 void SingleVelContact::addComputesAndRequiresInterpolated( Task* t,
-					     const PatchSet* patches,
-					     const MaterialSet* matls) const
+					     const PatchSet* ,
+					     const MaterialSet*) const
 {
   t->requires( Task::NewDW, lb->gMassLabel,     Ghost::None);
   t->requires( Task::NewDW, lb->gVelocityLabel, Ghost::None);
@@ -179,8 +178,8 @@ void SingleVelContact::addComputesAndRequiresInterpolated( Task* t,
 }
 
 void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
-					     const PatchSet* patches,
-					     const MaterialSet* matls) const
+					     const PatchSet* ,
+					     const MaterialSet*) const
 {
   t->requires(Task::NewDW, lb->gMassLabel,         Ghost::None);
   t->requires(Task::NewDW, lb->gVelocityStarLabel, Ghost::None);
