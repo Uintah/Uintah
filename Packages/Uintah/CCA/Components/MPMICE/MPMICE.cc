@@ -1108,7 +1108,9 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
     }
     //__________________________________
     // carry forward interpolation weight 
-    NC_CCweight_copy.copyData(NC_CCweight);
+    IntVector low = patch->getNodeLowIndex();
+    IntVector hi  = patch->getNodeHighIndex();
+    NC_CCweight_copy.copyPatch(NC_CCweight, low,hi);
     new_dw->put(NC_CCweight_copy, MIlb->NC_CCweightLabel, 0,patch);
   }  //patches
 }
