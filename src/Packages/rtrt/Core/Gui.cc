@@ -765,7 +765,7 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
 	Vector side;
 	double fov;
 	activeGui->camera_->getParams(origin, lookdir2, up, side, fov);
-	lookdir.normalize();
+	lookdir2.normalize();
 	up.normalize();
 	side.normalize();
 	// Move the lights that are fixed to the eye
@@ -2309,7 +2309,10 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
     add_spinner_to_panel( display_panel, "Ray Depth", GLUI_SPINNER_INT, 
 			  &(activeGui->depthValue_), DEPTH_SPINNER_ID, 
 			  updateDepthCB );
-  depthSpinner->set_int_limits( 0, 12 );
+  if (activeGui->dpy_->scene->maxdepth > 12)
+    depthSpinner->set_int_limits( 0, activeGui->dpy_->scene->maxdepth * 3/2);
+  else
+    depthSpinner->set_int_limits( 0, 12 );
   depthSpinner->set_speed( 0.1 );
 
   /////////////////////////////////////////////////////////
