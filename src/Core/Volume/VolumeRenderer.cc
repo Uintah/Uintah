@@ -299,7 +299,7 @@ VolumeRenderer::draw()
     glGetDoublev(GL_MODELVIEW_MATRIX, m);
     Transform mv;
     mv.set_trans(m);
-    Transform t = tex_->transform();
+    const Transform &t = tex_->transform();
     l = mv.unproject(l);
     l = t.unproject(l);
     shader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
@@ -309,7 +309,7 @@ VolumeRenderer::draw()
   //--------------------------------------------------------------------------
   // render bricks
 
-  Transform tform = tex_->transform();
+  const Transform &tform = tex_->transform();
   double mvmat[16];
   tform.get_trans(mvmat);
   glMatrixMode(GL_MODELVIEW);
@@ -418,7 +418,7 @@ VolumeRenderer::draw_wireframe()
 {
   tex_->lock_bricks();
   Ray view_ray = compute_view();
-  Transform tform = tex_->transform();
+  const Transform &tform = tex_->transform();
   double mvmat[16];
   tform.get_trans(mvmat);
   glMatrixMode(GL_MODELVIEW);
@@ -491,7 +491,7 @@ VolumeRenderer::draw_wireframe()
     size.resize(0);
 
     // Scale out dt such that the slices are artificially further apart.
-    b->compute_polygons(view_ray, dt * 50, vertex, texcoord, size);
+    b->compute_polygons(view_ray, dt * 10, vertex, texcoord, size);
     draw_polygons_wireframe(vertex, texcoord, size, false, false, 0);
   }
   if(lighting) glEnable(GL_LIGHTING);
