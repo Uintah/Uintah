@@ -24,11 +24,13 @@
 #include <PSECore/Dataflow/Network.h>
 #include <PSECore/Dataflow/NetworkEditor.h>
 #include <PSECore/Dataflow/Port.h>
+#include <PSECore/Dataflow/PackageDB.h>
 #include <SCICore/Geom/GeomPick.h>
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/Thread/Thread.h>
+#include <SCICore/Util/soloader.h>
 
 using SCICore::Thread::Thread;
 
@@ -36,6 +38,7 @@ using SCICore::Thread::Thread;
 using std::cerr;
 using std::endl;
 #include <stdlib.h>
+#include <stdio.h>
 
 namespace PSECore {
 namespace Dataflow {
@@ -44,19 +47,181 @@ using SCICore::Containers::to_string;
 
 bool global_remote = false;
 
-Module::Module(const clString& name, const clString& id,
-	       SchedClass sched_class)
+extern PackageDB packageDB;
+
+typedef std::map<int,IPortInfo*>::iterator iport_iter;
+typedef std::map<int,OPortInfo*>::iterator oport_iter;
+typedef std::map<clString,IPort*>::iterator auto_iport_iter;
+typedef std::map<clString,OPort*>::iterator auto_oport_iter;
+
+#define AUTO_PORTS 0
+
+ModuleInfo* GetModuleInfo(const clString& name, const clString& catname,
+			  const clString& packname)
+{
+  Packages* db=(Packages*)packageDB.d_db;
+ 
+  Package* package;
+  if (!db->lookup(packname,package))
+    return 0;
+
+  Category* category;
+  if (!package->lookup(catname,category))
+    return 0;
+
+  ModuleInfo* info;
+  if (category->lookup(name,info))
+    return info;
+  return 0;
+}
+
+IPort* FindAndAllocateIPortType(Module* mod, const clString& str,
+				const clString& name)
+{
+  char* package = scinew char[strlen(str())+1];
+  char* datatype = scinew char[strlen(str())+1];
+  char* libname = scinew char[strlen(package)+strlen(datatype)+15];
+  char* portname = scinew char[strlen(datatype)+11];
+  LIBRARY_HANDLE so = 0;
+  iport_maker maker = 0;
+
+  sscanf(str(),"%[^:]::%s",package,datatype);
+
+  if (package[0]=='*') return 0;
+  
+  sprintf(portname,"make_%sIPort",datatype);
+
+  sprintf(libname,"lib%s_Datatypes_%s.so",package,datatype);
+  so = GetLibraryHandle(libname);
+  if (so) {
+    maker = (iport_maker)GetHandleSymbolAddress(so,portname);
+    if (maker) return maker(mod,name());
+  }
+  
+  sprintf(libname,"lib%s_Datatypes.so",package);
+  so = GetLibraryHandle(libname);
+  if (so) {
+    maker = (iport_maker)GetHandleSymbolAddress(so,portname);
+    if (maker) return maker(mod,name());
+  }
+
+  sprintf(libname,"lib%s.so",package);
+  so = GetLibraryHandle(libname);
+  if (so) {
+    maker = (iport_maker)GetHandleSymbolAddress(so,portname);
+    if (maker) return maker(mod,name());
+  }
+
+  sprintf(libname,"%s",package);
+  so = GetLibraryHandle(libname);
+  if (so) {
+    maker = (iport_maker)GetHandleSymbolAddress(so,portname);
+    if (maker) return maker(mod,name());
+  }
+
+  std::cerr << "Module: Couldn't find input port for "
+            << package << "::" << datatype << endl;
+
+  return 0;
+}
+
+OPort* FindAndAllocateOPortType(Module* mod, const clString& str,
+				const clString& name)
+{
+  char* package = scinew char[strlen(str())+1];
+  char* datatype = scinew char[strlen(str())+1];
+  char* libname = scinew char[strlen(package)+strlen(datatype)+15];
+  char* portname = scinew char[strlen(datatype)+11];
+  LIBRARY_HANDLE so = 0;
+  oport_maker maker = 0;
+
+  sscanf(str(),"%[^:]::%s",package,datatype);
+
+  if (package[0]=='*') return 0;
+  
+  sprintf(portname,"make_%sOPort",datatype);
+
+  sprintf(libname,"lib%s_Datatypes_%s.so",package,datatype);
+  so = GetLibraryHandle(libname);
+  if (so) {
+    maker = (oport_maker)GetHandleSymbolAddress(so,portname);
+    if (maker) return maker(mod,name());
+  }
+  
+  sprintf(libname,"lib%s_Datatypes.so",package);
+  so = GetLibraryHandle(libname);
+  if (so) {
+    maker = (oport_maker)GetHandleSymbolAddress(so,portname);
+    if (maker) return maker(mod,name());
+  }
+
+  sprintf(libname,"lib%s.so",package);
+  so = GetLibraryHandle(libname);
+  if (so) {
+    maker = (oport_maker)GetHandleSymbolAddress(so,portname);
+    if (maker) return maker(mod,name());
+  }
+
+  sprintf(libname,"%s",package);
+  so = GetLibraryHandle(libname);
+  if (so) {
+    maker = (oport_maker)GetHandleSymbolAddress(so,portname);
+    if (maker) return maker(mod,name());
+  }
+
+  std::cerr << "Module: Couldn't find output port for "
+            << package << "::" << datatype << endl;
+
+
+  return 0;
+}
+
+Module::Module(const clString& name, const clString& id, 
+	       SchedClass sched_class, const clString& cat,
+	       const clString& pack)
 : state(NeedData), helper(0), have_own_dispatch(0),
     mailbox("Module execution FIFO", 100),
   name(name), abort_flag(0), need_execute(0), sched_class(sched_class),
   id(id), progress(0), handle(0), remote(0), skeleton(0),
   notes("notes", id, this), show_status("show_status", id, this)
 {
-  packageName="error: unset package name";
-  categoryName="error: unset category name";
-  moduleName="error: unset module name";
+  packageName=pack;
+  categoryName=cat;
+  moduleName=name;
   stacksize=0;
+
+  IPort* iport;
+  OPort* oport;
+
+#if AUTO_PORTS
+  ModuleInfo* info = GetModuleInfo(moduleName,categoryName,packageName);
+  if (info) {
+    for (iport_iter i1=info->iports->begin();
+	 i1!=info->iports->end();
+	 i1++) {
+      iport = FindAndAllocateIPortType(this,((*i1).second)->datatype,
+				       ((*i1).second)->name);
+      if (iport) {
+	add_iport(iport);
+	auto_iports.insert(std::pair<clString,
+			   IPort*>(((*i1).second)->name,iport));
+      }
+    }
+    for (oport_iter i2=info->oports->begin();
+	 i2!=info->oports->end();
+	 i2++) {
+      oport = FindAndAllocateOPortType(this,((*i2).second)->datatype,
+				       ((*i2).second)->name);
+      if (oport) {
+	add_oport(oport);
+	auto_oports.insert(std::pair<clString,
+			   OPort*>(((*i2).second)->name,oport));
+      }
+    }  
+  }
+#endif
 }
+
 
 Module::~Module()
 {
@@ -158,6 +323,24 @@ void Module::remove_oport(int)
 void Module::rename_iport(int, const clString&)
 {
     NOT_FINISHED("Module::rename_iport");
+}
+
+IPort* Module::get_iport(char* portname)
+{
+  auto_iport_iter i;
+  i = auto_iports.find(clString(portname));
+  if (i!=auto_iports.end())
+    return (*i).second;
+  return 0;
+}
+
+OPort* Module::get_oport(char* portname)
+{
+  auto_oport_iter i;
+  i = auto_oports.find(clString(portname));
+  if (i!=auto_oports.end())
+    return (*i).second;
+  return 0;
 }
 
 void Module::connection(ConnectionMode, int, int)
@@ -479,6 +662,9 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
+// Revision 1.13  2000/11/21 22:44:30  moulding
+// initial commit of auto-port facility (not yet operational).
+//
 // Revision 1.12  2000/08/11 15:44:43  bigler
 // Changed geom_* functions that took an int index to take a GeomObj* picked_obj.
 //
