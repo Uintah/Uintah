@@ -170,6 +170,7 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -radiusfactor [float]\n";
     cerr << "  -radius [float]\n";
     cerr << "  -rate [float]\n";
+    cerr << "  -dpyconfig [filename] file used to configure the display\n";
     cerr << "*NOTE* ptonly, patch, material, timesteplow, timestephigh \
 are used in conjuntion with -PTvar.\n";
     
@@ -742,6 +743,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   float radius=0;
   string filebase;
   int non_empty_patches = -1;
+  char *dpy_config = 0;
 
   //------------------------------
   // Parse arguments
@@ -785,6 +787,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       rate=atof(argv[i]);
     } else if (s == "-patches") {
       non_empty_patches = atoi(argv[++i]);
+    } else if (s == "-dpyconfig") {
+      i++;
+      dpy_config = argv[i];
     } else if( (s == "-help") || (s == "-h") ) {
       usage( "", argv[0] );
       return(0);
@@ -818,7 +823,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   Group* all = new Group();
   // the value of colordata will be checked later and the
   // program will abort if the value is too large.
-  GridSpheresDpy* display = new GridSpheresDpy(colordata-1);
+  GridSpheresDpy* display = new GridSpheresDpy(colordata-1, dpy_config);
   TimeObj* alltime = new TimeObj(rate);
  
   try {
