@@ -47,9 +47,9 @@ set m30 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 1428 366]
 set m31 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1179 669]
 set m32 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 1243 493]
 set m33 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 1250 578]
-set m34 [addModuleAtPosition "RobV" "Quadratic" "DipoleMatrixSourceRHSQuadratic" 1065 180]
-set m35 [addModuleAtPosition "RobV" "Quadratic" "BuildFEMatrixQuadratic" 842 191]
-set m36 [addModuleAtPosition "RobV" "Quadratic" "TetVol2QuadraticTetVol" 797 98]
+set m34 [addModuleAtPosition "BioPSE" "Forward" "DipoleMatrixSourceRHSQuadratic" 1065 180]
+set m35 [addModuleAtPosition "BioPSE" "Forward" "BuildFEMatrixQuadratic" 842 191]
+set m36 [addModuleAtPosition "SCIRun" "Fields" "TetVol2QuadraticTetVol" 797 98]
 
 addConnection $m1 0 $m2 1
 addConnection $m2 0 $m3 0
@@ -110,7 +110,7 @@ addConnection $m30 1 $m6 5
 
 set $m0-notes {}
 set $m0-show_status {1}
-set $m0-filename {/usr/sci/data/SCIRunData/1.4.0/utahtorso/utahtorso-mesh-01.tvt.fld}
+set $m0-filename {/yikes1/mcole/SCIRunData/utahtorso/utahtorso-mesh-01.tvt.fld}
 
 set $m1-target_error {0.000001}
 set $m1-orig_error {1}
@@ -134,7 +134,7 @@ set $m4-showLastVecGui_ {1}
 set $m4-showLinesGui_ {0}
 set $m5-notes {}
 set $m5-show_status {1}
-set $m5-filename {/usr/sci/data/SCIRunData/1.4.0/utahtorso-lowres/utahtorso-lowres-dipole.pcv.fld}
+set $m5-filename {/yikes1/mcole/SCIRunData/utahtorso-lowres/utahtorso-lowres-dipole.pcv.fld}
 set $m6-notes {}
 set $m6-show_status {1}
 $m6 ui
@@ -231,7 +231,7 @@ set $m9-color-g {0.2}
 set $m9-color-b {0.9}
 set $m10-notes {}
 set $m10-show_status {1}
-set $m10-filename {/usr/sci/data/SCIRunData/1.4.0/utahtorso-lowres/utahtorso-lowres-electrodes.pcd.fld}
+set $m10-filename {/yikes1/mcole/SCIRunData/utahtorso-lowres/utahtorso-lowres-electrodes.pcd.fld}
 set $m11-notes {}
 set $m11-show_status {1}
 set $m11-interp_op_gui {}
@@ -374,7 +374,7 @@ set $m26-color-g {0.2}
 set $m26-color-b {0.9}
 set $m27-notes {}
 set $m27-show_status {1}
-set $m27-filename {/usr/sci/data/SCIRunData/1.4.0/utahtorso-lowres/utahtorso-lowres-electrodes.pcd.fld}
+set $m27-filename {/yikes1/mcole/SCIRunData/utahtorso-lowres/utahtorso-lowres-electrodes.pcd.fld}
 set $m28-notes {}
 set $m28-show_status {1}
 set $m28-interp_op_gui {}
