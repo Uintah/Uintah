@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1" ?>
+<?xml version="1.0" encoding="iso-8859-1" ?> <!-- -*- nxml -*- -->
 
 <!--% require("../../Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
@@ -20,27 +20,19 @@
   University of Utah. All Rights Reserved.
 -->
 
-<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
-"../../Utilities/XML/Docbook_dtd/docbookx.dtd" [
-<!ENTITY sr "SCIRun">
-<!ENTITY sr_bibtex_cit_url "http://software.sci.utah.edu/scirun_citation.bib">
-<!ENTITY biopse_bibtex_cit_url "http://software.sci.utah.edu/biopse_citation.bib">
-<!--%=
+<!--% 
+entities = {"sr"=>"SCIRun", "sr_bibtex_cit_url"=>"http://software.sci.utah.edu/scirun_citation.bib", "biopse_bibtex_cit_url"=>"http://software.sci.utah.edu/biopse_citation.bib"}
+
 doc.doIfHTML {
-<<HTML_TEXT
-<!ENTITY sr_bibtex_cit "javascript:function NewWindow(PageName,wide,tall,scroll){
-window.open(PageName,'','toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=' + scroll + ',resizable=0,width=' + wide + ',height=' + tall + ',left=0,top=0');}NewWindow('&sr_bibtex_cit_url;',
-'600','400','1')">
-<!ENTITY biopse_bibtex_cit "javascript:function NewWindow(PageName,wide,tall,scroll){
-window.open(PageName,'','toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=' + scroll + ',resizable=0,width=' + wide + ',height=' + tall + ',left=0,top=0');}NewWindow('&biopse_bibtex_cit_url;', '600','400','1')">
-HTML_TEXT
+  entities["sr_bibtex_cit"] = "javascript:function NewWindow(PageName,wide,tall,scroll){window.open(PageName,'','toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=' + scroll + ',resizable=0,width=' + wide + ',height=' + tall + ',left=0,top=0');} NewWindow('&sr_bibtex_cit_url;', '600','400','1')"
+  entities["biopse_bibtex_cit"] = "javascript:function NewWindow(PageName,wide,tall,scroll){window.open(PageName,'','toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=' + scroll + ',resizable=0,width=' + wide + ',height=' + tall + ',left=0,top=0');}NewWindow('&biopse_bibtex_cit_url;', '600','400','1')"
 }
+
+doc.insertDocType("article", entities) 
 %-->
-]>
 
 <article class="faq">
 <title>User FAQ (v. <!--%= doc.edition %-->)</title>
-
 
 <qandaset defaultlabel="number">
 
@@ -599,12 +591,3 @@ by using the Math::BuildTransform and Field::TransformField modules.
 </qandaset>
 
 </article>
-
-<!-- Keep this comment at the end of the file
-Local variables:
-mode: xml
-sgml-default-dtd-file:"../../Utilities/XML/docbook-4.2.ced"
-sgml-omittag:nil
-sgml-shorttag:nil
-End:
--->
