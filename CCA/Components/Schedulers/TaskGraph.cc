@@ -877,7 +877,6 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
     }
   }
 
-  int me = pg->myrank();
   // Go through the modifies and find and replace the matching comp
   for(int i=0;i<dt->numTasks();i++){
     DetailedTask* task = dt->getTask(i);
