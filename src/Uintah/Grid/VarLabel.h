@@ -3,6 +3,10 @@
 #define UINTAH_HOMEBREW_VarLabel_H
 
 #include <string>
+#include <ostream>
+
+using std::ostream;
+using std::string;
 
 namespace Uintah {
    class TypeDescription;
@@ -45,15 +49,15 @@ namespace Uintah {
 	 PositionVariable
       };
      
-      VarLabel(const std::string&, const TypeDescription*,
+      VarLabel(const string&, const TypeDescription*,
 	       VarType vartype = Normal);
 
-      // VarLabel(const std::string&, const TypeDescription*);
+      // VarLabel(const string&, const TypeDescription*);
       
-      const std::string& getName() const {
+      const string& getName() const {
 	 return d_name;
       }
-      std::string getFullName(int matlIndex, const Patch* patch) const;
+      string getFullName(int matlIndex, const Patch* patch) const;
       bool isPositionVariable() const {
 	 return d_vartype == PositionVariable;
       }
@@ -68,17 +72,22 @@ namespace Uintah {
       };
 
    private:
-      std::string d_name;
+      string                 d_name;
       const TypeDescription* d_td;
-      VarType d_vartype;
+      VarType                d_vartype;
       
       VarLabel(const VarLabel&);
       VarLabel& operator=(const VarLabel&);
    };
 } // end namespace Uintah
 
+ostream & operator<<( ostream & out, const Uintah::VarLabel & vl );
+
 //
 // $Log$
+// Revision 1.9  2000/08/23 22:36:50  dav
+// added output operator
+//
 // Revision 1.8  2000/07/27 22:39:51  sparker
 // Implemented MPIScheduler
 // Added associated support

@@ -13,14 +13,17 @@ VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
 {
 }
 
-bool VarLabel::Compare::operator()(const VarLabel* v1, const VarLabel* v2) const
+bool
+VarLabel::Compare::operator()(const VarLabel* v1,
+			      const VarLabel* v2) const
 {
    if(v1 == v2)
       return false;
-   return v1->getName() < v2->getName();
+   return v1->d_name < v2->d_name;
 }
 
-string VarLabel::getFullName(int matlIndex, const Patch* patch) const
+string
+VarLabel::getFullName(int matlIndex, const Patch* patch) const
 {
    ostringstream out;
    out << d_name << "(matl=" << matlIndex;
@@ -32,9 +35,19 @@ string VarLabel::getFullName(int matlIndex, const Patch* patch) const
    return out.str();
 }
 
+ostream & 
+operator<<( ostream & out, const Uintah::VarLabel & vl )
+{
+  out << vl.getName();
+  return out;
+}
+
 
 //
 // $Log$
+// Revision 1.7  2000/08/23 22:36:50  dav
+// added output operator
+//
 // Revision 1.6  2000/07/27 22:39:51  sparker
 // Implemented MPIScheduler
 // Added associated support
