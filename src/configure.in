@@ -921,17 +921,11 @@ AC_MSG_RESULT($XML_LIB_DIR)
 
 
 if (test $XML_LIB_DIR &&
-    test -d "$XML_LIB_DIR/../util" &&
-    test -d "$XML_LIB_DIR/../sax" &&
-    test -d "$XML_LIB_DIR/../dom" &&
-    test -d "$XML_LIB_DIR/../parsers") ; then
-  XML_INCLUDE_DIR="$XML_LIB_DIR/.."
-elif (test $XML_LIB_DIR &&
-    test -d "$XML_LIB_DIR/../include/util" &&
-    test -d "$XML_LIB_DIR/../include/sax" &&
-    test -d "$XML_LIB_DIR/../include/dom" &&
-    test -d "$XML_LIB_DIR/../include/parsers") ; then
-  XML_INCLUDE_DIR="$XML_LIB_DIR/../include"
+    test -d "$XML_LIB_DIR/../include/xercesc/util" &&
+    test -d "$XML_LIB_DIR/../include/xercesc/sax" &&
+    test -d "$XML_LIB_DIR/../include/xercesc/dom" &&
+    test -d "$XML_LIB_DIR/../include/xercesc/parsers") ; then
+  XML_INCLUDE_DIR="$XML_LIB_DIR/../include/xercesc"
 else
   AC_MSG_ERROR(Couldn't find the Xerces-C headers.  exiting.)
 fi
