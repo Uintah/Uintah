@@ -295,7 +295,7 @@ SetupFEMatrix::execute()
        tri = true;
        index_based = false;
     } else {
-      error("Input TriSurfField is not of type 'int' of 'Tensor'.");
+      error("Input TriSurfField is not of type 'int' or 'Tensor'.");
       return;
     }
     if (hField->data_at() != Field::FACE)
