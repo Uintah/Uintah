@@ -10,6 +10,24 @@
 
 #include <Core/Thread/Mutex.h>
 
+#ifdef __digital__
+// DEC doesn't have this...
+template <class Iter>
+bool is_sorted(Iter begin, Iter end)
+{
+  if(begin == end)
+    return true;
+  Iter cur = begin;
+  while(cur != end){
+    Iter next = cur; next++;
+    if (*next < *cur)
+      return false;
+    cur = next;
+  }
+  return true;
+}
+#endif
+
 using namespace Uintah;
 
 // Debug: Used to sync cerr so it is readable (when output by
