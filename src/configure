@@ -8171,7 +8171,7 @@ else
 fi
 
 if test "$is_linux" = "linux"; then
-  GLU_OTHERS="pthread"
+  GLU_OTHERS="-lpthread"
 else
   GLU_OTHERS=""
 fi
@@ -8221,7 +8221,7 @@ for i in $_sci_inc; do
 done
 
 
-for i in GLU GL $GLU_OTHERS; do
+for i in GLU GL; do
   if test -z "$_sci_libs"; then
     _sci_libs=-l$i
   else
@@ -8245,7 +8245,7 @@ done
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs  $LIBS"
+LIBS="$_sci_libs $GLU_OTHERS $LIBS"
 
 cat >conftest.$ac_ext <<_ACEOF
 #line $LINENO "configure"
@@ -16680,9 +16680,13 @@ fi
 
 
 ## -- search for java xalan --
+
+## -- first, if any of the following packages are requested then we need xalan-j
 if test "$pkg_Insight" = "yes"; then
 	sci_check_xalan="yes"
 fi
+
+## -- second, if xalan-j is needed then check that the three .jar files are there.
 
 if test "$sci_check_xalan" ; then
   echo "$as_me:$LINENO: checking for xalan-j." >&5
