@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <sstream>
 
@@ -272,16 +273,38 @@ bool
 DynamicLoader::compile_so(const string& file, ostream &serr)
 {
   string command = "cd " + OTF_OBJ_DIR + "; gmake " + file + "so";
-  //command += " > " + file + "log 2>&1";
 
   serr << "DynamicLoader - Executing: " << command << endl;
 
+  FILE *pipe = 0;
+#ifdef __sgi
+  pipe = popen(command.c_str(), "r");
+  if (pipe == NULL)
+  {
+    serr << "DynamicLoader::compile_so() syscal error unable to make.\n";
+  }
+#else
+  command += " > " + file + "log 2>&1";
   const int status = sci_system(command.c_str());
   if(status != 0) {
     serr << "DynamicLoader::compile_so() syscal error " << status << ": "
 	 << "command was '" << command << "'\n";
     return false;
   }
+  pipe = fopen((OTF_OBJ_DIR + "/" + file + "log").c_str(), "r");
+#endif
+
+  char buffer[256];
+  while (pipe && fgets(buffer, 256, pipe) != NULL)
+  {
+    serr << buffer;
+  }
+
+#ifdef __sgi
+  pclose(pipe);
+#else
+  fclose(pipe);
+#endif
 
   serr << "DynamicLoader - Successfully compiled " << file + "so" << endl;
   return true;
@@ -320,7 +343,6 @@ DynamicLoader::create_cc(const CompileInfo &info, ostream &serr)
     ++iter;
   }
 
-
   // generate other includes
   iter = info.includes_.begin();
   while (iter != info.includes_.end()) { 
@@ -341,6 +363,7 @@ DynamicLoader::create_cc(const CompileInfo &info, ostream &serr)
     }
     ++nsiter;
   }
+
 
   fstr << endl;
 
