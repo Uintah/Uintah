@@ -638,10 +638,10 @@ TriSurfMesh::insert_node(const Face::index_type face, const Point &p)
 
   if (do_normals)
   {
-    Vector normal = (p.asVector() +
-		     normals_[faces_[f0]] + 
-		     normals_[faces_[f1]] + 
-		     normals_[faces_[f2]]).normalize();
+    Vector normal = Vector( (p.asVector() +
+			     normals_[faces_[f0]] + 
+			     normals_[faces_[f1]] + 
+			     normals_[faces_[f2]]).normalize() );
 
     normals_.push_back(normals_[faces_[f1]]);
     normals_.push_back(normals_[faces_[f2]]);
@@ -707,8 +707,8 @@ TriSurfMesh::bisect_element(const Face::index_type face)
     nodes.push_back(add_point(p));
 
     if (do_normals)
-      normals[edge] = (normals_[faces_[f0+edge]] + 
-		       normals_[faces_[next(f0+edge)]]).normalize();
+      normals[edge] = Vector((normals_[faces_[f0+edge]] + 
+			     normals_[faces_[next(f0+edge)]]).normalize());
 
   }
 
