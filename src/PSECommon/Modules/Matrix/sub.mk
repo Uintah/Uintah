@@ -34,13 +34,17 @@ SRCS     += \
 PSELIBS := PSECore/Dataflow PSECore/Datatypes SCICore/Persistent \
 	SCICore/Exceptions SCICore/Thread SCICore/Containers \
 	SCICore/TclInterface SCICore/Geometry SCICore/Datatypes \
-	SCICore/Util SCICore/Geom SCICore/TkExtensions
+	SCICore/Util SCICore/Geom SCICore/TkExtensions \
+	PSECore/Widgets
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/12/01 01:03:38  moulding
+# added PSECore/Widgets to PSELIBS.  This provides a complete link on linux.
+#
 # Revision 1.6  2000/11/02 21:43:32  dmw
 # added VecVec module
 #
