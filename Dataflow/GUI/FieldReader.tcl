@@ -41,6 +41,7 @@ itcl_class SCIRun_DataIO_FieldReader {
     }
 
     method set_defaults {} {
+	global $this-types
 	global $this-filetype
     }
 
@@ -63,14 +64,12 @@ itcl_class SCIRun_DataIO_FieldReader {
 	set defext ".fld"
 	set title "Open field file"
 	
-	# file types to appers in filter box
-	set types {
-	    {{Field File}     {.fld}      }
-	    {{All Files} {.*}   }
-	}
-	
 	######################################################
 	
+	# Unwrap $this-types into a list.
+	set tmp1 [set $this-types]
+	set tmp2 [eval "set tmp3 $tmp1"]
+
 	makeOpenFilebox \
 		-parent $w \
 		-filevar $this-filename \
@@ -78,10 +77,11 @@ itcl_class SCIRun_DataIO_FieldReader {
 		-command "$this-c needexecute; wm withdraw $w" \
 		-cancel "wm withdraw $w" \
 		-title $title \
-		-filetypes $types \
+	        -filetypes $tmp2 \
 		-initialdir $initdir \
-		-defaultextension $defext
-
+		-defaultextension $defext \
+	        -selectedfiletype $this-filetype
+	
 	moveToCursor $w	
     }
 }

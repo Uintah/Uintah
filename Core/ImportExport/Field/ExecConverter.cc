@@ -225,7 +225,7 @@ TextCurveField_writer(ProgressReporter *pr,
 
 static FieldIEPlugin
 TextCurveField_plugin("TextCurveField",
-		      "", "",
+		      "{.pts} {.edges}", "",
 		      TextCurveField_reader,
 		      TextCurveField_writer);
 
@@ -237,7 +237,7 @@ TextHexVolField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "TextToHexVolField %e.pts %e.hexes %t";
+    "TextToHexVolField %e.pts %e.hexes %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
 
@@ -265,7 +265,7 @@ TextQuadSurfField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "TextToQuadSurfField %e.pts %e.quads %t";
+    "TextToQuadSurfField %e.pts %e.quads %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
 
@@ -293,7 +293,7 @@ TextTetVolField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "TextToTetVolField %e.pts %e.tets %t";
+    "TextToTetVolField %e.pts %e.tets %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
 
@@ -321,7 +321,7 @@ TextTriSurfField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "TextToTriSurfField %e.pts %e.tets %t";
+    "TextToTriSurfField %e.pts %e.tets %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
 
@@ -350,7 +350,7 @@ TextPointCloudField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "TextToPointCloudField %f %t";
+    "TextToPointCloudField %f %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
 
@@ -377,7 +377,7 @@ TextStructCurveField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "TextToStructCurveField %f %t";
+    "TextToStructCurveField %f %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
 
@@ -404,7 +404,7 @@ TextStructHexVolField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "TextToStructHexVolField %f %t";
+    "TextToStructHexVolField %f %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
 
@@ -430,7 +430,7 @@ TextStructQuadSurfField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "TextToStructQuadSurfField %f %t";
+    "TextToStructQuadSurfField %f %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
 
@@ -449,3 +449,20 @@ TextStructQuadSurfField_plugin("TextStructQuadSurfField",
 			       "", "",
 			       TextStructQuadSurfField_reader,
 			       TextStructQuadSurfField_writer);
+
+
+
+static FieldHandle
+VTKtoTriSurfField_reader(ProgressReporter *pr, const char *filename)
+{
+  const string command =
+    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    "VTKtoTriSurfField %f %t -bin_out";
+  return Exec_reader(pr, filename, command);
+}
+
+static FieldIEPlugin
+VTKtoTriSurfField_plugin("VTKtoTriSurfField",
+			 "", "",
+			 VTKtoTriSurfField_reader,
+			 NULL);

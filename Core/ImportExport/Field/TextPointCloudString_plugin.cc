@@ -162,7 +162,7 @@ TextPointCloudString_writer(ProgressReporter *pr,
 
 static FieldIEPlugin
 TextPointCloudString_plugin("TextPointCloudString",
-			    "pcs.txt", "",
+			    ".pcs.txt", "",
 			    TextPointCloudString_reader,
 			    TextPointCloudString_writer);
 
