@@ -33,7 +33,7 @@ SRCS += $(GENSRCS) \
         $(SRCDIR)/HexMesh.cc		    \
         $(SRCDIR)/Image.cc		    \
         $(SRCDIR)/Interval.cc		    \
-        $(SRCDIR)/Lattice3Geom.cc	    \
+        $(SRCDIR)/LatticeGeom.cc	    \
         $(SRCDIR)/Matrix.cc		    \
         $(SRCDIR)/Mesh.cc		    \
         $(SRCDIR)/MeshGeom.cc		    \
@@ -138,6 +138,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.3.2.17  2000/11/02 20:00:01  michaelc
+# Consolidate Lattice?Geom into LatticeGeom
+#
 # Revision 1.3.2.16  2000/10/31 20:28:47  michaelc
 # fix sub.mk
 #

@@ -14,7 +14,7 @@
 #include <PSECore/Datatypes/ColorMapPort.h>
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <SCICore/Datatypes/Mesh.h>
-#include <SCICore/Datatypes/Lattice3Geom.h>
+#include <SCICore/Datatypes/LatticeGeom.h>
 #include <SCICore/Datatypes/SField.h>
 #include <PSECore/Datatypes/FieldPort.h>
 #include <SCICore/Geom/GeomGroup.h>
@@ -212,7 +212,7 @@ public:
 
     GeomGroup *verts = scinew GeomGroup;
     Geom *geom = d_sfield->get_geom();
-    Lattice3Geom* grid = dynamic_cast<Lattice3Geom*>(geom);
+    LatticeGeom* grid = dynamic_cast<LatticeGeom*>(geom);
     //LatticeGeom *grid = geom->get_latticegeom();
 
     if (grid) {
@@ -267,7 +267,7 @@ public:
   // 
   inline void addConnections(int i, int j, int k, 
 			     bool lastI, bool lastJ, bool lastK,
-			     Lattice3Geom *grid, GeomGroup *g) {
+			     LatticeGeom *grid, GeomGroup *g) {
     Point p0 = grid->getPoint(i, j, k);
     Point p1;
     if (! lastI) {
@@ -288,7 +288,7 @@ public:
   //////////
   // addSphere
   // 
-  inline void addSphere(int i, int j, int k, Lattice3Geom *grid, 
+  inline void addSphere(int i, int j, int k, LatticeGeom *grid, 
 			GeomGroup *g, double size) {
 
     Point p0 = grid->getPoint(i, j, k);
@@ -300,7 +300,7 @@ public:
   // 
   inline void addAxis(int i, int j, int k,
 		      Vector &x, Vector &y, Vector &z, 
-		      Lattice3Geom *grid, GeomGroup *g) {
+		      LatticeGeom *grid, GeomGroup *g) {
 
     Point p0 = grid->getPoint(i, j, k);
     Point p1 = p0 + x;
@@ -382,7 +382,7 @@ public:
   // 
   void setUpDirs(Vector &x, Vector &y, Vector &z, 
 		 double &sx, double &sy,  double &sz, 
-		 Lattice3Geom *grid, BBox &bbox) {
+		 LatticeGeom *grid, BBox &bbox) {
 
     sx = (bbox.max().x() - bbox.min().x()) * 0.2L;
     sy = (bbox.max().y() - bbox.min().y()) * 0.2L;

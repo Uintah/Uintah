@@ -8,11 +8,10 @@
 //
 //  Copyright (C) 2000 SCI Institute
 #include <SCICore/Datatypes/Geom.h>
-#include <SCICore/Datatypes/Lattice3Geom.h>
-#include <SCICore/Datatypes/MeshGeom.h>
+
 
 namespace SCICore {
-  namespace Datatypes {
+namespace Datatypes {
 
 Geom::Geom()
 {
