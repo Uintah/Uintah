@@ -455,7 +455,8 @@ void flameSheet_rxn::testConservation(const ProcessorGroup*,
     }
 
     double sum_mass_f;
-    conservationTest(patch, delT, q_CC, uvel_FC, vvel_FC, wvel_FC, sum_mass_f);
+    conservationTest<double>(patch, delT, q_CC, uvel_FC, vvel_FC, wvel_FC, 
+                            sum_mass_f);
     
     new_dw->put(sum_vartype(sum_mass_f), d_scalar->sum_scalar_fLabel);
   }
