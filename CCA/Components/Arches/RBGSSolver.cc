@@ -994,6 +994,14 @@ RBGSSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 		 vars->scalarCoeff[Arches::AP].getPointer(), 
 		 vars->scalarNonlinearSrc.getPointer(),
 		 &d_underrelax);
+#ifdef ARCHES_COEF_DEBUG
+  cerr << "AFTER Underrelaxation Scalar" << endl;
+  cerr << "SAP - Scalar Coeff " << endl;
+  vars->scalarCoeff[Arches::AP].print(cerr);
+  cerr << "SSU - Scalar Source " << endl;
+  vars->scalarNonlinearSrc.print(cerr);
+#endif
+
 }
 
 //****************************************************************************
@@ -1093,18 +1101,21 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
 		   vars->old_density.getPointer(), 
 		   cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
 		   cellinfo->stb.get_objs(), &delta_t);
-#ifdef ARCHES_VEL_DEBUG
-    cerr << " After Scalar Explicit solve : " << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "Scalar for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(14);
-	  cerr << vars->scalar[IntVector(ii,jj,kk)] << " " ; 
+     for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+       for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+	for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+	  IntVector currCell(ii,jj,kk);
+	  if (vars->scalar[currCell] > 1.0)
+	    vars->scalar[currCell] = 1.0;
+	  else if (vars->scalar[currCell] < 0.0)
+	    vars->scalar[currCell] = 0.0;
 	}
-	cerr << endl;
       }
     }
+#ifdef ARCHES_DEBUG
+    cerr << " After Scalar Explicit solve : " << endl;
+    cerr << "Print Scalar: " << endl;
+    vars->scalar.print(cerr);
 #endif
 
 
@@ -1118,9 +1129,11 @@ RBGSSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
 {
 }
 
-void 
+bool
 RBGSSolver::pressLinearSolve()
 {
+  cerr << "pressure linear solve not implemented for RBGS " << endl;
+  return 0;
 }
 
 void 

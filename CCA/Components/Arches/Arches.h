@@ -162,6 +162,9 @@ private:
       SimulationStateP d_sharedState;
       // Variable labels that are used by the simulation controller
       const ArchesLabel* d_lab;
+#ifdef multimaterialform
+      MultiMaterialInterface* d_mmInterface;
+#endif
 
 }; // end class Arches
 

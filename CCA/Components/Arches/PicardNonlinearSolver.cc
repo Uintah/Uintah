@@ -53,6 +53,7 @@ PicardNonlinearSolver::~PicardNonlinearSolver()
 // ****************************************************************************
 void 
 PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
+  // MultiMaterialInterface* mmInterface
 {
   ProblemSpecP db = params->findBlock("PicardSolver");
   db->require("max_iter", d_nonlinear_its);
@@ -67,21 +68,21 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
     d_pressSolver = scinew PressureSolver(d_lab,
 					  d_turbModel, d_boundaryCondition,
 					  d_physicalConsts, d_myworld);
-    d_pressSolver->problemSetup(db);
+    d_pressSolver->problemSetup(db); // d_mmInterface
   }
   bool calMom;
   db->require("cal_momentum", calMom);
   if (calMom) {
     d_momSolver = scinew MomentumSolver(d_lab, d_turbModel, d_boundaryCondition,
 				     d_physicalConsts);
-    d_momSolver->problemSetup(db);
+    d_momSolver->problemSetup(db); // d_mmInterface
   }
   bool calScalar;
   db->require("cal_mixturescalar", calScalar);
   if (calScalar) {
     d_scalarSolver = scinew ScalarSolver(d_lab, d_turbModel, d_boundaryCondition,
 				      d_physicalConsts);
-    d_scalarSolver->problemSetup(db);
+    d_scalarSolver->problemSetup(db); // d_mmInterface
   }
 }
 
@@ -107,6 +108,11 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   double nlResidual = 2.0*d_resTol;;
   int nofScalars = d_props->getNumMixVars();
   do{
+#ifdef multimaterialform
+    if (!(d_mmInterface == 0)) {
+      d_mmInterface->sched_getMPMVars();
+    }
+#endif
     //correct inlet velocities to account for change in properties
     // require : densityIN, [u,v,w]VelocityIN (new_dw)
     // compute : [u,v,w]VelocitySIVBC
@@ -164,6 +170,11 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     // require : densityCP, viscosityIN, [u,v,w]VelocitySPBC
     // compute : viscosityCTS
     d_turbModel->sched_reComputeTurbSubmodel(level, sched, old_dw, new_dw);
+#ifdef multimaterialform
+    if (!(d_mmInterface == 0)) {
+      d_mmInterface->sched_putCFDVars();
+    }
+#endif
 
 
     ++nlIterations;
@@ -250,7 +261,6 @@ PicardNonlinearSolver::sched_setInitialGuess(const LevelP& level,
       tsk->requires(old_dw, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
       tsk->computes(new_dw, d_lab->d_cellTypeLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_lab->d_cellInfoLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_pressureINLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_uVelocityINLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_vVelocityINLabel, matlIndex, patch);

@@ -185,7 +185,7 @@ public:
 			       const ArchesLabel* lab) = 0;
    
 
-   virtual void pressLinearSolve() = 0;
+   virtual bool pressLinearSolve() = 0;
    virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars) = 0;
    virtual void destroyMatrix() = 0;
 

@@ -142,14 +142,12 @@ ScalarSolver::sched_buildLinearMatrix(const LevelP& level,
       //DataWarehouseP old_dw = new_dw->getTop();
       tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, 
 		    Ghost::AroundCells, numGhostCells);
-      tsk->requires(old_dw, d_lab->d_scalarSPLabel, index, patch, 
-		    Ghost::None, zeroGhostCells);
-      tsk->requires(old_dw, d_lab->d_densityCPLabel, matlIndex, patch, 
+      tsk->requires(new_dw, d_lab->d_scalarINLabel, index, patch, 
 		    Ghost::None, zeroGhostCells);
       tsk->requires(new_dw, d_lab->d_scalarCPBCLabel, index, patch, 
-		    Ghost::None, zeroGhostCells);
-      tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, 
 		    Ghost::AroundCells, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, 
+		    Ghost::AroundCells, numGhostCells+1);
       tsk->requires(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch, 
 		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_uVelocityCPBCLabel, matlIndex, patch, 
@@ -196,8 +194,8 @@ ScalarSolver::sched_scalarLinearSolve(const LevelP& level,
       int nofStencils = 7;
 
       // coefficient for the variable for which solve is invoked
-      tsk->requires(old_dw, d_lab->d_densityCPLabel, index, patch,
-		    Ghost::None);
+      tsk->requires(new_dw, d_lab->d_densityINLabel, index, patch,
+		    Ghost::AroundCells, numGhostCells+1);
       tsk->requires(new_dw, d_lab->d_scalarCPBCLabel, index, patch, 
 		    Ghost::AroundCells, numGhostCells);
       for (int ii = 0; ii < nofStencils; ii++) 
@@ -228,21 +226,25 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   int zeroGhostCells = 0;
   int nofStencils = 7;
 
-  // get old_dw from getTop function
-  //DataWarehouseP old_dw = new_dw->getTop();
-
   // Get the PerPatch CellInformation data
   PerPatch<CellInformationP> cellInfoP;
+  // checkpointing
   //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-  new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  // new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  else {
+    cellInfoP.setData(scinew CellInformation(patch));
+    new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  }
   CellInformation* cellinfo = cellInfoP.get().get_rep();
 
   // from old_dw get PCELL, DENO, FO(index)
   old_dw->get(scalarVars.cellType, d_lab->d_cellTypeLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
-  old_dw->get(scalarVars.old_density, d_lab->d_densityCPLabel, 
+  new_dw->get(scalarVars.old_density, d_lab->d_densityINLabel, 
 	      matlIndex, patch, Ghost::None, zeroGhostCells);
-  old_dw->get(scalarVars.old_scalar, d_lab->d_scalarSPLabel, 
+  new_dw->get(scalarVars.old_scalar, d_lab->d_scalarINLabel, 
 	      index, patch, Ghost::None, zeroGhostCells);
 
   // from new_dw get DEN, VIS, F(index), U, V, W
@@ -286,6 +288,13 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  delta_t, index, cellinfo, 
 				  &scalarVars );
 
+#ifdef multimaterialform
+  if (d_mmInterface) {
+    MultiMaterialVars* mmVars = d_mmInterface->getMMVars();
+    d_mmSGSModel->calculateScalarSource(patch, index, cellinfo,
+					mmVars, &scalarVars);
+  }
+#endif
   // Calculate the scalar boundary conditions
   // inputs : scalarSP, scalCoefSBLM
   // outputs: scalCoefSBLM
@@ -332,23 +341,20 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   // Get the PerPatch CellInformation data
   PerPatch<CellInformationP> cellInfoP;
   // get old_dw from getTop function
+  // checkpointing
   //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-  new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  //  new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
-  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //else {
-  //  cellInfoP.setData(scinew CellInformation(patch));
-  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //}
+  if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  else {
+    cellInfoP.setData(scinew CellInformation(patch));
+    new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  }
   CellInformation* cellinfo = cellInfoP.get().get_rep();
-  old_dw->get(scalarVars.old_density, d_lab->d_densityCPLabel, 
+  new_dw->get(scalarVars.old_density, d_lab->d_densityINLabel, 
 	      matlIndex, patch, Ghost::None, zeroGhostCells);
   // for explicit calculation
-#if 0
-  new_dw->get(scalarVars.old_scalar, d_lab->d_scalarCPBCLabel, 
-	      index, patch, Ghost::AroundCells, numGhostCells);
-#endif
   new_dw->get(scalarVars.scalar, d_lab->d_scalarCPBCLabel, 
 	      index, patch, Ghost::AroundCells, numGhostCells);
   scalarVars.old_scalar.allocate(scalarVars.scalar.getLowIndex(),

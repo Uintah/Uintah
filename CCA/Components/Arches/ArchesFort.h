@@ -42,6 +42,7 @@ WARNING
 #define FORT_PROFV profv_
 #define FORT_PROFSCALAR profscalar_
 #define FORT_SMAGMODEL smagmodel_
+#define FORT_SCALARVARMODEL scalarvarmodel_
 #define FORT_CALPBC calpbc_
 #define FORT_INLBCS inlbcs_
 #define FORT_UVELCOEF uvelcoef_
@@ -204,6 +205,19 @@ extern "C"
 		   const int* domLo, const int* domHi, 
 		   double* sew, double * sns, double* stb, double* mol_visc,
 		   double* cf, double* fac_msh, double* filterl);
+
+
+    ////////////////////////////////////////////////////////////////////////
+    // sub-grid scale scalar variance model
+    void
+    FORT_SCALARVARMODEL ( const int* domLoScalar, const int* domHiScalar, 
+			  double* scalar,
+			  const int* domLoScalarVar, const int* domHiScalarVar, 
+			  const int* idxLoScalVar, const int* idxHiScalVar,
+			  double* scalarVar,
+			  const int* domLo, const int* domHi, 
+			  double* dxpw, double * dyps, double* dzpb,
+			  double* cfvar, double* fac_msh, double* filterl);
 
     ////////////////////////////////////////////////////////////////////////
     // Update inlet velocities in order to match total flow rates while
@@ -744,6 +758,7 @@ extern "C"
     // Calculate the Mixing Scalar coeffs and convection terms
     void
     FORT_SCALARCOEFF(const int* domLo, const int* domHi,
+		     const int* domLoVis, const int* domHiVis,
 		     const int* domLong, const int* domHing,
 		     const int* idxLo, const int* idxHi,
 		     const double* density,

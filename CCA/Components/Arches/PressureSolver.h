@@ -177,7 +177,12 @@ private:
       // const VarLabel* (required)
       const ArchesLabel* d_lab;
 
-   const ProcessorGroup* d_myworld;
+      const ProcessorGroup* d_myworld;
+#ifdef multimaterialform
+      // set the values in problem setup
+      MultiMaterialInterface* d_mmInterface;
+      MultiMaterialSGSModel* d_mmSGSModel;
+#endif
 }; // End class PressureSolver
 
 } // End namespace Uintah
