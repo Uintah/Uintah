@@ -3,6 +3,7 @@
 
 #include <Packages/Ptolemy/Core/PtolemyInterface/ptolemy_scirun_SCIRunJNIActor.h>
 #include <Packages/Ptolemy/Core/PtolemyInterface/PTIISCIRun.h>
+#include <Packages/Ptolemy/Core/PtolemyInterface/JNIUtils.h>
 
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Runnable.h>
@@ -10,67 +11,61 @@
 
 #include <iostream>
 
-
+// eventually all implementations should be moved out of this file
+// and the JNI native implementations should be merely wrapper functions
 
 JNIEXPORT jint JNICALL
-Java_ptolemy_scirun_SCIRunJNIActor_getScirun(JNIEnv *env, jobject obj)
+Java_ptolemy_scirun_SCIRunJNIActor_getScirun(JNIEnv *env, jobject obj, jstring name,
+                                                jstring file, jstring module, jint runNet)
 {
-//    std::cerr << "Thread " << Thread::self()->getThreadName() << "Java_ptolemy_scirun_SCIRunJNIActor_getScirun" << std::endl;
-    StartSCIRun *start = new StartSCIRun();
+	std::string nPath = JNIUtils::GetStringNativeChars(env, name);
+	std::string dPath = JNIUtils::GetStringNativeChars(env, file);
+	JNIUtils::modName = JNIUtils::GetStringNativeChars(env, module);
+
+	StartSCIRun *start = new StartSCIRun(nPath, dPath, JNIUtils::modName, runNet);
+
     Thread *t = new Thread(start, "start scirun", 0, Thread::NotActivated);
-    t->setStackSize(1024*1024);
+    t->setStackSize(1024*2048);
     t->activate(false);
-    //t->detach();
     t->join();
 
-std::cerr << "Thread joined" << std::endl;
-    JNIUtils::setSCIRunStarted(env, obj);
-    return 0;
+	return 1;
 }
 
-
-JNIEXPORT void JNICALL
-Java_ptolemy_scirun_SCIRunJNIActor_scirunGetResults(JNIEnv *env, jobject obj, jobjectArray objArray)
+JNIEXPORT jint JNICALL
+Java_ptolemy_scirun_SCIRunJNIActor_sendSCIRunData(JNIEnv *env, jobject obj, jobject scirunData)
 {
-    printf("scirunGetResults: java object=%#x\n", (unsigned int) obj);
+    jclass cls = env->GetObjectClass(scirunData);
+    jfieldID fidType = env->GetFieldID(cls, "type", "I");
+    // error check
+    ASSERT(fidType);
 
-#if 0
-//     PTIIWorker *w = new PTIIWorker();
-//     Thread *tt = new Thread(w, "wait", 0, Thread::NotActivated);
-//     tt->setStackSize(256*256);
-//     tt->activate(false);
-//     tt->detach();
+    jint type = env->GetIntField(scirunData, fidType); 
+    ASSERT(type);
 
-//     static jclass cls = 0;
-//     static jmethodID mid = 0;
-//     // SCIRunJNIActor class ref
-//     if (0 == cls) {
-//         jclass localRefClass = env->GetObjectClass(obj);
-//         ASSERT(localRefClass);
-//         cls = (jclass) env->NewGlobalRef(localRefClass);
-//         env->DeleteLocalRef(localRefClass);
-//         ASSERT(cls);
-//     }
-//     std::cerr << "Try to get method ID for 'getRecordLabels'" << std::endl;
-//     if (0 == mid) {
-//         mid = env->GetMethodID(cls, "getRecordLabels", "()[Ljava/lang/String;");
-//         ASSERT(mid);
-//     }
-//     std::cerr << "Have method ID for 'getRecordLabels'" << std::endl;
-#endif
+    jfieldID fidData = env->GetFieldID(cls, "data", "Ljava/lang/Object;");
+    // error check
+    ASSERT(fidData);
+    jobject localData = env->GetObjectField(scirunData, fidData); 
+    ASSERT(localData);
+    jobject data = env->NewGlobalRef(localData);
+    ASSERT(data);
 
-    ASSERT(objArray);
-    jobjectArray globalObjArray = (jobjectArray) env->NewGlobalRef(objArray);
-    ASSERT(globalObjArray);
-
-    jsize size = env->GetArrayLength(globalObjArray);
-    std::cerr << "Array size=" << size << std::endl;
-    for (jsize j = 0; j < size; j++) {
-        jstring str = (jstring) env->GetObjectArrayElement(globalObjArray, j);
-        // returns empty string if there's an error
-        std::string result = JNIUtils::GetStringNativeChars(env, str);
-std::cerr << "array element " << j << ": " << result << std::endl;
+    bool ret;
+    switch((int) type) {
+        case JNIUtils::TYPE_MESH:
+            ret = JNIUtils::getSCIRunMesh(env, data);
+            break;
+        default:
+          std::cerr << "Unknown type" << std::endl;
     }
 
-    env->DeleteGlobalRef(globalObjArray);
+    if (! ret) {
+        env->DeleteGlobalRef(data);
+        return 0;
+    }
+	
+    env->DeleteGlobalRef(data);
+    return 1;
 }
+
