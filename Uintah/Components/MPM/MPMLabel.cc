@@ -45,6 +45,9 @@ MPMLabel::MPMLabel()
 
   pTemperatureRateLabel  = new VarLabel( "p.temperatureRate",
 			ParticleVariable<double>::getTypeDescription() );
+
+  pExternalHeatRateLabel = new VarLabel( "p.externalHeatRate",
+			ParticleVariable<double>::getTypeDescription() );
   
   //tan:
   //  pSurfaceNormalLabel is used to define the surface normal of a
@@ -96,6 +99,9 @@ MPMLabel::MPMLabel()
 			ParticleVariable<Vector>::getTypeDescription() );
 
   pTemperatureRateLabel_preReloc  = new VarLabel( "p.temperatureRate+",
+			ParticleVariable<double>::getTypeDescription() );
+
+  pExternalHeatRateLabel_preReloc = new VarLabel( "p.externalHeatRate+",
 			ParticleVariable<double>::getTypeDescription() );
   
   //tan:
@@ -202,6 +208,9 @@ const MPMLabel* MPMLabel::getLabels()
 }
 
 // $Log$
+// Revision 1.14  2000/06/23 21:18:34  tan
+// Added pExternalHeatRateLabel for heat conduction.
+//
 // Revision 1.13  2000/06/23 20:56:14  tan
 // Fixed mistakes in label names of gInternalHeatRateLabel and
 // gExternalHeatRateLabel.

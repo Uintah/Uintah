@@ -30,6 +30,7 @@ namespace Uintah {
       const VarLabel* pTemperatureLabel; //for heat conduction
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pTemperatureRateLabel; //for heat conduction
+      const VarLabel* pExternalHeatRateLabel; //for heat conduction
       const VarLabel* pParticleIDLabel;
       const VarLabel* pIsIgnitedLabel; //for burn models
       const VarLabel* pMassRateLabel; //for burn models
@@ -47,6 +48,7 @@ namespace Uintah {
       const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
       const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
       const VarLabel* pTemperatureRateLabel_preReloc; //for heat conduction
+      const VarLabel* pExternalHeatRateLabel_preReloc; //for heat conduction
       const VarLabel* pParticleIDLabel_preReloc;
       const VarLabel* pIsIgnitedLabel_preReloc; //for burn models
       const VarLabel* pMassRateLabel_preReloc; //for burn models
@@ -82,6 +84,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.12  2000/06/23 21:18:24  tan
+// Added pExternalHeatRateLabel for heat conduction.
+//
 // Revision 1.11  2000/06/16 23:23:35  guilkey
 // Got rid of pVolumeDeformedLabel_preReloc to fix some confusion
 // the scheduler was having.
