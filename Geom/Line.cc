@@ -102,8 +102,12 @@ void GeomLine::io(Piostream& stream)
 
 bool GeomLine::saveobj(ostream&, const clString& format, GeomSave*)
 {
+#if 0
     NOT_FINISHED("GeomLine::saveobj");
     return false;
+#else
+	return true;
+#endif
 }
 
 Persistent* make_GeomLines()
@@ -172,8 +176,12 @@ void GeomLines::io(Piostream& stream)
 
 bool GeomLines::saveobj(ostream&, const clString& format, GeomSave*)
 {
+#if 0
     NOT_FINISHED("GeomLines::saveobj");
     return false;
+#else
+    return true;
+#endif
 }
 
 void GeomLines::add(const Point& p1, const Point& p2)

@@ -79,7 +79,7 @@ void GeomTriStrip::io(Piostream& stream)
 
 bool GeomTriStrip::saveobj(ostream& out, const clString& format, GeomSave* saveinfo)
 {
-    if(format == "vrml") {
+    if(format == "vrml" || format == "iv") {
       NOT_FINISHED("GeomTriStrip::saveobj");
     } else if(format == "rib") {
 	saveinfo->indent(out);

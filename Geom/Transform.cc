@@ -121,7 +121,7 @@ bool GeomTransform::saveobj(ostream& out, const clString& format,
     return false;
 
 #if 0
-    if(format == "vrml"){
+    if(format == "vrml" || format == "iv"){
 	saveinfo->start_sep(out);
 	saveinfo->start_node(out, "Transform");
 	saveinfo->indent(out);

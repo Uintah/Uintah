@@ -177,7 +177,7 @@ void GeomCylinder::io(Piostream& stream)
 bool GeomCylinder::saveobj(ostream& out, const clString& format,
 			   GeomSave* saveinfo)
 {
-    if(format == "vrml"){
+    if(format == "vrml" || format == "iv"){
 	saveinfo->start_tsep(out);
 	saveinfo->orient(out, bottom+axis*0.5, axis);
 	saveinfo->start_node(out, "Cylinder");
@@ -260,7 +260,7 @@ void GeomCappedCylinder::io(Piostream& stream)
 bool GeomCappedCylinder::saveobj(ostream& out, const clString& format,
 				 GeomSave* saveinfo)
 {
-    if(format == "vrml"){
+    if(format == "vrml" || format == "iv"){
 	saveinfo->start_tsep(out);
 	saveinfo->orient(out, bottom+axis*0.5, axis);
 	saveinfo->start_node(out, "Cylinder");

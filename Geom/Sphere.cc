@@ -177,7 +177,7 @@ bool GeomSphere::saveobj(ostream& out, const clString& format,
 			 GeomSave* saveinfo)
 {
     cerr << "saveobj Sphere\n";
-    if(format == "vrml"){
+    if(format == "vrml" || format == "iv"){
 	saveinfo->start_tsep(out);
 	saveinfo->start_node(out, "Sphere");
 	saveinfo->indent(out);

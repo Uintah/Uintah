@@ -37,13 +37,20 @@ bool GeomScene::save(const clString& filename, const clString& format)
     ofstream out(filename());
     if(!out)
 	return false;
-    if(format == "vrml"){
-	out << "#VRML V1.0 ascii\n";
+    if(format == "vrml" || format == "iv"){
+	if(format=="iv")
+	    out << "#Inventor V2.1 ascii\n";
+	else
+	    out << "#VRML V1.0 ascii\n";
 	out << "Separator {\n";
 	GeomSave saveinfo;
 	saveinfo.nindent=4;
 	// Do lights...
 	//lighting->saveobj(out, format, &saveinfo);
+	saveinfo.start_node(out, "ShapeHints");
+	saveinfo.indent(out);
+	out << "vertexOrdering COUNTERCLOCKWISE\n";
+	saveinfo.end_node(out);
 
 	// Do view...
 	saveinfo.start_tsep(out);
@@ -77,7 +84,6 @@ bool GeomScene::save(const clString& filename, const clString& format)
 	    return false;
 	saveinfo.unindent();
 	out << "}\n";
-
     } else if(format == "rib"){
 	//////////////////////////////
 	// RIB Output
@@ -273,7 +279,8 @@ void GeomSave::orient(ostream& out, const Point& center, const Vector& up,
 {
     start_node(out, "Transform");
     indent(out);
-    out << "translation " << -center.x() << " " << -center.y() << " " << -center.z() << "\n";
+    out << "translation " << center.x() << " " << center.y() << " " << center.z() << "\n";
+    indent(out);
     Vector axis(Cross(Vector(0,1,0), up.normal()));
     if(axis.length2() > 1.e-6){
 	double l=axis.normalize();

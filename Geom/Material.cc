@@ -147,7 +147,7 @@ bool GeomMaterial::saveobj(ostream& out, const clString& format,
 			   GeomSave* saveinfo)
 {
     cerr << "saveobj Material\n";
-    if(format == "vrml"){
+    if(format == "vrml" || format == "iv"){
 	saveinfo->start_sep(out);
 	saveinfo->start_node(out, "Material");
 	saveinfo->indent(out);

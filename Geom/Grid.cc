@@ -14,6 +14,7 @@
 #include <Geom/Grid.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
+#include <Geom/Save.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
 #include <Malloc/Allocator.h>
@@ -199,6 +200,7 @@ static void _dummy_(Piostream& p1, Array2<double>& p2)
 #include <Geom/Grid.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
+#include <Geom/Save.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
 #include <Malloc/Allocator.h>
@@ -369,10 +371,164 @@ void GeomGrid::io(Piostream& stream)
     stream.end_class();
 }    
 
-bool GeomGrid::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomGrid::saveobj(ostream& out, const clString& format,
+		       GeomSave* saveinfo)
 {
-    NOT_FINISHED("GeomGrid::saveobj");
-    return false;
+    if(format == "vrml" || format == "iv"){    
+	return;
+	int nu=verts.dim1();
+	int nv=verts.dim2();
+	Vector uu(u/(nu-1));
+	Vector vv(v/(nv-1));
+	saveinfo->start_sep(out);
+	saveinfo->start_node(out, "Coordinate3");
+	saveinfo->indent(out);
+	out << "point [";
+	Point rstart(corner);
+	for(int i=0;i<nu;i++){
+	    Point p1(rstart);
+	    for(int j=0;j<nv;j++){
+		Point pp1(p1+w*verts(i, j));
+		if(i>0 || j>0)
+		    out << ", ";
+		out << '\n';
+		saveinfo->indent(out);
+		out << pp1.x() << " " << pp1.y() << " " << pp1.z();
+		p1+=vv;
+	    }
+	    rstart+=uu;
+	}
+	out << '\n';
+	saveinfo->indent(out);
+	out << " ]\n";
+	saveinfo->end_node(out);
+	saveinfo->start_node(out, "NormalBinding");
+	saveinfo->indent(out);
+	if(have_normals){
+	    out << "value PER_VERTEX_INDEXED\n";
+	} else {
+	    out << "value OVERALL\n";
+	}
+	saveinfo->end_node(out);
+	saveinfo->start_node(out, "Normal");
+	saveinfo->indent(out);
+	if(have_normals){
+	    out << "vector [\n";
+	    for(int i=0;i<nu;i++){
+		for(int j=0;j<nv;j++){
+		    if(i>0 || j>0){
+			out << ',';
+		    }	
+		    out << '\n';
+		    saveinfo->indent(out);
+		    Vector& normal(normals(i, j));
+		    out << normal.x() << ' ' << normal.y() << ' ' << normal.z();
+		}
+	    }
+	    saveinfo->indent(out);
+	    out << " ]\n";
+	} else {
+	    out << "vector " << w.x() << ' ' << w.y() << ' ' << w.z() << '\n';
+	}
+	saveinfo->end_node(out);
+	saveinfo->start_node(out, "MaterialBinding");
+	saveinfo->indent(out);
+	if(have_matls){
+	    out << "value PER_VERTEX_INDEXED\n";
+	} else {
+	    out << "value OVERALL\n";
+	}
+	saveinfo->end_node(out);	
+	if(have_matls){
+	    saveinfo->start_node(out, "Material");
+	    saveinfo->indent(out);
+	    out << "diffuseColor [\n";
+	    for(int i=0;i<nu-1;i++){
+		for(int j=0;j<nv-1;j++){
+		    if(i>0 || j>0){
+			out << ',';
+		    }	
+		    out << '\n';
+		    saveinfo->indent(out);
+		    float c[4];
+		    matls(i,j)->diffuse.get_color(c);
+		    out << c[0] << ' ' << c[1] << ' ' << c[2] << ' ' << c[3];
+		}
+	    }
+	    saveinfo->indent(out);
+	    out << " ]\n";
+	    saveinfo->end_node(out);
+	}
+
+	saveinfo->start_node(out, "IndexedFaceSet");
+	saveinfo->indent(out);
+	out << "coordIndex [";
+	for(i=0;i<nu-1;i++){
+	    for(int j=0;j<nv-1;j++){
+		int i1=i*nv+j;
+		int i2=i1+1;
+		int i3=i1+nv+1;
+		int i4=i1+nv;
+		if(i>0 || j>0){
+		    out << ',';
+		}	
+		out << '\n';
+		saveinfo->indent(out);
+		out << i1 << ", " << i2 << ", " << i3 << ", " << i4 << ", -1";
+	    }
+	}
+	out << '\n';
+	saveinfo->indent(out);
+	out << " ]\n";
+	if(have_matls){
+	    saveinfo->indent(out);
+	    out << "materialIndex [";
+	    for(int i=0;i<nu-1;i++){
+		for(int j=0;j<nv-1;j++){
+		    int i1=i*nv+j;
+		    int i2=i1+1;
+		    int i3=i1+nv+1;
+		    int i4=i1+nv;
+		    if(i>0 || j>0){
+			out << ',';
+		    }
+		    out << '\n';
+		    saveinfo->indent(out);
+		    out << i1 << ", " << i2 << ", " << i3 << ", " << i4 << ", -1";
+		}
+	    }
+	    out << '\n';
+	    saveinfo->indent(out);
+	    out << "]\n";
+	}
+	if(have_normals){
+	    saveinfo->indent(out);
+	    out << "normalIndex [";
+	    for(int i=0;i<nu-1;i++){
+		for(int j=0;j<nv-1;j++){
+		    int i1=i*nv+j;
+		    int i2=i1+1;
+		    int i3=i1+nv+1;
+		    int i4=i1+nv;
+		    if(i>0 || j>0){
+			out << ',';
+		    }
+		    out << '\n';
+		    saveinfo->indent(out);
+		    out << i1 << ", " << i2 << ", " << i3 << ", " << i4 << ", -1";
+		}
+	    }
+	    out << '\n';
+	    saveinfo->indent(out);
+	    out << "]\n";
+	}
+	saveinfo->end_node(out);
+	saveinfo->end_sep(out);
+	return true;
+    } else {
+	NOT_FINISHED("GeomGrid::saveobj");
+	return false;
+    }
 }
 
 #ifdef __GNUG__

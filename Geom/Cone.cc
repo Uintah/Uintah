@@ -182,7 +182,7 @@ void GeomCone::io(Piostream& stream)
 bool GeomCone::saveobj(ostream& out, const clString& format,
 		       GeomSave* saveinfo)
 {
-    if(format == "vrml"){
+    if(format == "vrml" || format == "iv"){
 	saveinfo->start_tsep(out);
 	saveinfo->orient(out, bottom+axis*0.5, axis);
 	saveinfo->start_node(out, "Cone");
@@ -268,7 +268,7 @@ void GeomCappedCone::io(Piostream& stream)
 bool GeomCappedCone::saveobj(ostream& out, const clString& format,
 			   GeomSave* saveinfo)
 {
-    if(format == "vrml"){
+    if(format == "vrml" || format == "iv" ){
 	NOT_FINISHED("GeomCappedCone::saveobj");
 	return false;
     } else if(format == "rib"){

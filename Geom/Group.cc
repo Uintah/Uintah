@@ -268,12 +268,13 @@ bool GeomGroup::saveobj(ostream& out, const clString& format,
     cnt++;
     cerr << "saveobj Group " << cnt << "\n";
 
-    for(int i=0;i<objs.size();i++){ cerr << cnt << ">";
+    for(int i=0;i<objs.size();i++){
 	if(!objs[i]->saveobj(out, format, saveinfo))
 	  { cnt--;
 	    return false;
 	  }
     }
+    cerr << "saveobj Group done " << cnt << "\n";
     cnt--;
     return true;
 }
