@@ -16,8 +16,15 @@
 #include <Dataflow/Module.h>
 
 GeomPick::GeomPick(GeomObj* obj, Module* module)
-: GeomContainer(obj), module(module), mailbox(0), cbdata(0)
+: GeomContainer(obj), module(module), mailbox(0), cbdata(0),
+  directions(6)
 {
+    directions[0]=Vector(1,0,0);
+    directions[1]=Vector(-1,0,0);
+    directions[2]=Vector(0,1,0);
+    directions[3]=Vector(0,-1,0);
+    directions[4]=Vector(0,0,1);
+    directions[5]=Vector(0,0,-1);
 }
 
 GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1)

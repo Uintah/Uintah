@@ -18,13 +18,13 @@
 
 
 GeomTube::GeomTube()
-: GeomObj(0)
+: GeomObj()
 {
 
 }
 
 GeomTube::GeomTube(const GeomTube& copy)
-:GeomObj(0), pts(copy.pts), rad(copy.rad),
+: GeomObj(copy), pts(copy.pts), rad(copy.rad),
  normal(copy.normal)
 {
 }

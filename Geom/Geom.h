@@ -30,12 +30,13 @@ class Ray;
 
 class GeomObj {
 protected:
-    int lit;
+    GeomObj* parent;
 public:
-    GeomObj(int lit);
+    GeomObj();
     GeomObj(const GeomObj&);
     virtual ~GeomObj();
     virtual GeomObj* clone() = 0;
+    void set_parent(GeomObj*);
 
     virtual void reset_bbox();
     virtual void get_bounds(BBox&) = 0;
@@ -43,8 +44,8 @@ public:
 
     // For OpenGL
 #ifdef SCI_OPENGL
-    void draw(DrawInfoOpenGL*, Material*);
-    virtual void objdraw(DrawInfoOpenGL*, Material*)=0;
+    void pre_draw(DrawInfoOpenGL*, Material*, int lit);
+    virtual void draw(DrawInfoOpenGL*, Material*)=0;
 #endif
 
     // For X11

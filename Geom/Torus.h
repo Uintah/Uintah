@@ -1,36 +1,43 @@
 
 /*
- * Sphere.h: Sphere objects
+ * Torus.h: Torus objects
  *
  *  Written by:
- *   Steven G. Parker & David Weinstein
+ *   Steven G. Parker
  *   Department of Computer Science
  *   University of Utah
- *   April 1994
+ *   January 1995
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 1995 SCI Group
  */
 
-#ifndef SCI_Geom_Sphere_h
-#define SCI_Geom_Sphere_h 1
+#ifndef SCI_Geom_Torus_h
+#define SCI_Geom_Torus_h 1
 
 #include <Geom/Geom.h>
 #include <Geometry/Point.h>
 
-class GeomSphere : public GeomObj {
+class GeomTorus : public GeomObj {
 public:
     Point cen;
-    double rad;
+    Vector axis;
+    double rad1;
+    double rad2;
     int nu;
     int nv;
 
-    void adjust();
-    void move(const Point&, double, int nu=20, int nv=10);
+    Vector zrotaxis;
+    double zrotangle;
 
-    GeomSphere(int nu=20, int nv=10);
-    GeomSphere(const Point&, double, int nu=20, int nv=10);
-    GeomSphere(const GeomSphere&);
-    virtual ~GeomSphere();
+    void adjust();
+    void move(const Point&, const Vector&, double, double,
+	      int nu=20, int nv=10);
+
+    GeomTorus(int nu=20, int nv=10);
+    GeomTorus(const Point&, const Vector&, double, double,
+	      int nu=20, int nv=10);
+    GeomTorus(const GeomTorus&);
+    virtual ~GeomTorus();
 
     virtual GeomObj* clone();
     virtual void get_bounds(BBox&);
@@ -47,4 +54,4 @@ public:
     virtual Vector normal(const Point& p, const Hit&);
 };
 
-#endif /* SCI_Geom_Sphere_h */
+#endif /* SCI_Geom_Torus_h */

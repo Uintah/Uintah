@@ -21,12 +21,12 @@
 #include <Classlib/String.h>
 
 GeomCylinder::GeomCylinder(int nu, int nv)
-: GeomObj(1), nu(nu), nv(nv), top(0,0,1), bottom(0,0,0), rad(1)
+: GeomObj(), nu(nu), nv(nv), top(0,0,1), bottom(0,0,0), rad(1)
 {}
 
 GeomCylinder::GeomCylinder(const Point& bottom, const Point& top,
 			   double rad, int nu, int nv)
-: GeomObj(1), bottom(bottom), top(top), rad(rad), nu(nu), nv(nv)
+: GeomObj(), bottom(bottom), top(top), rad(rad), nu(nu), nv(nv)
 {
     adjust();
 }
@@ -43,7 +43,7 @@ void GeomCylinder::move(const Point& _bottom, const Point& _top,
 }
 
 GeomCylinder::GeomCylinder(const GeomCylinder& copy)
-: GeomObj(1), v1(copy.v1), v2(copy.v2), bottom(copy.bottom), top(copy.top),
+: GeomObj(copy), v1(copy.v1), v2(copy.v2), bottom(copy.bottom), top(copy.top),
   rad(copy.rad), nu(copy.nu), nv(copy.nv)
 {
     adjust();
@@ -73,11 +73,8 @@ void GeomCylinder::adjust()
 	zrotaxis=Cross(axis, z);
 	zrotaxis.normalize();
     }
-    cerr << "axis=" << axis << endl;
-    cerr << "zrotaxis=" << zrotaxis << endl;
     double cangle=Dot(z, axis)/height;
     zrotangle=-Acos(cangle);
-    cerr << "zrotangle=" << zrotangle << endl;
 }
 
 GeomObj* GeomCylinder::clone()

@@ -17,12 +17,12 @@
 #include <Geom/Line.h>
 
 GeomPolyline::GeomPolyline()
-: GeomObj(0)
+: GeomObj()
 {
 }
 
 GeomPolyline::GeomPolyline(const GeomPolyline& copy)
-: GeomObj(0), pts(copy.pts)
+: GeomObj(copy), pts(copy.pts)
 {
 }
 

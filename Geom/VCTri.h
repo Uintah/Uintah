@@ -38,7 +38,7 @@ public:
     virtual void get_bounds(BSphere&);
 
 #ifdef SCI_OPENGL
-    virtual void objdraw(DrawInfoOpenGL*, Material*);
+    virtual void draw(DrawInfoOpenGL*, Material*);
 #endif
     virtual void objdraw(DrawInfoX11*, Material*);
     virtual double depth(DrawInfoX11*);

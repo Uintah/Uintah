@@ -33,7 +33,7 @@ public:
     virtual void get_bounds(BSphere&);
 
 #ifdef SCI_OPENGL
-    virtual void objdraw(DrawInfoOpenGL*, Material*);
+    virtual void draw(DrawInfoOpenGL*, Material*);
 #endif
     virtual void make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>& dontfree);

@@ -19,13 +19,13 @@
 #include <Math/Trig.h>
 
 GeomCone::GeomCone(int nu, int nv)
-: GeomObj(1), nu(nu), nv(nv), bottom(0,0,0), top(0,0,1), bot_rad(1), top_rad(0)
+: GeomObj(), nu(nu), nv(nv), bottom(0,0,0), top(0,0,1), bot_rad(1), top_rad(0)
 {
 }
 
 GeomCone::GeomCone(const Point& bottom, const Point& top,
 		   double bot_rad, double top_rad, int nu, int nv)
-: GeomObj(1), bottom(bottom), top(top), bot_rad(bot_rad),
+: GeomObj(), bottom(bottom), top(top), bot_rad(bot_rad),
   top_rad(top_rad), nu(nu), nv(nv)
 {
     adjust();
@@ -44,7 +44,7 @@ void GeomCone::move(const Point& _bottom, const Point& _top,
 }
 
 GeomCone::GeomCone(const GeomCone& copy)
-: GeomObj(1), v1(copy.v1), v2(copy.v2), bottom(copy.bottom), top(copy.top),
+: GeomObj(), v1(copy.v1), v2(copy.v2), bottom(copy.bottom), top(copy.top),
   bot_rad(copy.bot_rad), top_rad(copy.top_rad), nu(copy.nu), nv(copy.nv)
 {
     adjust();

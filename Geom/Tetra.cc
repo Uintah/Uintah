@@ -18,12 +18,12 @@
 
 GeomTetra::GeomTetra(const Point& p1, const Point& p2,
 		     const Point& p3, const Point& p4)
-: GeomObj(1), p1(p1), p2(p2), p3(p3), p4(p4)
+: GeomObj(), p1(p1), p2(p2), p3(p3), p4(p4)
 {
 }
 
 GeomTetra::GeomTetra(const GeomTetra& copy)
-: GeomObj(1), p1(copy.p1), p2(copy.p2), p3(copy.p3), p4(copy.p4)
+: GeomObj(copy), p1(copy.p1), p2(copy.p2), p3(copy.p3), p4(copy.p4)
 {
 }
 

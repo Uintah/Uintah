@@ -17,7 +17,7 @@
 #include <values.h>
 
 GeomGroup::GeomGroup(int del_children)
-: GeomObj(0), objs(0, 100), del_children(del_children), treetop(0)
+: GeomObj(), objs(0, 100), del_children(del_children), treetop(0)
 {
 }
 
@@ -28,6 +28,7 @@ GeomGroup::GeomGroup(const GeomGroup& copy)
     for(int i=0;i<objs.size();i++){
 	GeomObj* cobj=copy.objs[i];
 	objs[i]=cobj->clone();
+	objs[i]->set_parent(this);
     }
 }
 
@@ -43,6 +44,7 @@ GeomGroup::~GeomGroup()
 
 void GeomGroup::add(GeomObj* obj)
 {
+    obj->set_parent(this);
     objs.add(obj);
 }
 

@@ -29,6 +29,7 @@
 #include <Geom/Sphere.h>
 #include <Geom/Switch.h>
 #include <Geom/Tetra.h>
+#include <Geom/Torus.h>
 #include <Geom/Tri.h>
 #include <Geom/Tube.h>
 #include <Geom/TriStrip.h>
@@ -43,10 +44,29 @@
 
 #define MAX_MATL_STACK 100
 
+void GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
+{
+    if(lit && di->lighting && !di->currently_lit){
+	di->currently_lit=1;
+	glEnable(GL_LIGHTING);
+    }
+    if((!lit || !di->lighting) && di->currently_lit){
+	di->currently_lit=0;
+	glDisable(GL_LIGHTING);
+    }
+    di->set_matl(matl);
+}
+
 DrawInfoOpenGL::DrawInfoOpenGL()
 : current_matl(0)
 {
     qobj=gluNewQuadric();
+}
+
+void DrawInfoOpenGL::reset()
+{
+    polycount=0;
+    current_matl=0;
 }
 
 DrawInfoOpenGL::~DrawInfoOpenGL()
@@ -96,67 +116,55 @@ void DrawInfoOpenGL::set_matl(Material* matl)
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
 }
 
-void GeomObj::draw(DrawInfoOpenGL* di, Material* matl)
-{
-    if(lit && di->lighting && !di->currently_lit){
-	di->currently_lit=1;
-	glEnable(GL_LIGHTING);
-    }
-    if((!lit || !di->lighting) && di->currently_lit){
-	di->currently_lit=0;
-	glDisable(GL_LIGHTING);
-    }
-    objdraw(di, matl);
-}
-
-void GeomCone::objdraw(DrawInfoOpenGL* di, Material* matl)
+void GeomCone::draw(DrawInfoOpenGL* di, Material* matl)
 {
     if(height < 1.e-6)return;
-    di->set_matl(matl);
+    pre_draw(di, matl, 1);
     glPushMatrix();
     glTranslated(bottom.x(), bottom.y(), bottom.z());
     glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
-    di->polycount+=nu*nv;
+    di->polycount+=2*(nu-1)*(nv-1);
     gluCylinder(di->qobj, bot_rad, top_rad, height, nu, nv);
     glPopMatrix();
 }
 
-void GeomContainer::objdraw(DrawInfoOpenGL* di, Material* matl)
+void GeomContainer::draw(DrawInfoOpenGL* di, Material* matl)
 {
     child->draw(di, matl);
 }
 
-void GeomCylinder::objdraw(DrawInfoOpenGL* di, Material* matl)
+void GeomCylinder::draw(DrawInfoOpenGL* di, Material* matl)
 {
     if(height < 1.e-6)return;
-    di->set_matl(matl);
+    pre_draw(di, matl, 1);
     glPushMatrix();
     glTranslated(bottom.x(), bottom.y(), bottom.z());
     glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
-    di->polycount+=nu*nv;
+    di->polycount+=2*(nu-1)*(nv-1);
     gluCylinder(di->qobj, rad, rad, height, nu, nv);
     glPopMatrix();
 }
 
-void GeomDisc::objdraw(DrawInfoOpenGL* di, Material* matl)
+void GeomDisc::draw(DrawInfoOpenGL* di, Material* matl)
 {
-    di->set_matl(matl);
+    pre_draw(di, matl, 1);
     glPushMatrix();
     glTranslated(cen.x(), cen.y(), cen.z());
     glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
-    di->polycount+=nu*nv;
+    di->polycount+=2*(nu-1)*(nv-1);
     gluDisk(di->qobj, 0, rad, nu, nv);
     glPopMatrix();
 }
 
-void GeomGroup::objdraw(DrawInfoOpenGL* di, Material* matl)
+void GeomGroup::draw(DrawInfoOpenGL* di, Material* matl)
 {
     for (int i=0; i<objs.size(); i++)
 	objs[i]->draw(di, matl);
 }
 
-void GeomLine::objdraw(DrawInfoOpenGL* di, Material* matl) {
-    di->set_matl(matl);
+void GeomLine::draw(DrawInfoOpenGL* di, Material* matl)
+{
+    pre_draw(di, matl, 0);
     di->polycount++;
     glBegin(GL_LINE_STRIP);
     glVertex3d(p1.x(), p1.y(), p1.z());
@@ -164,12 +172,12 @@ void GeomLine::objdraw(DrawInfoOpenGL* di, Material* matl) {
     glEnd();
 }
 
-void GeomMaterial::objdraw(DrawInfoOpenGL* di, Material* /* old_matl */)
+void GeomMaterial::draw(DrawInfoOpenGL* di, Material* /* old_matl */)
 {
     child->draw(di, matl.get_rep());
 }
 
-void GeomPick::objdraw(DrawInfoOpenGL* di, Material* matl)
+void GeomPick::draw(DrawInfoOpenGL* di, Material* matl)
 {
     if(di->pickmode)
 	glPushName((GLuint)this);
@@ -178,8 +186,9 @@ void GeomPick::objdraw(DrawInfoOpenGL* di, Material* matl)
 	glPopName();
 }
 
-void GeomPolyline::objdraw(DrawInfoOpenGL* di, Material* matl) {
-    di->set_matl(matl);
+void GeomPolyline::draw(DrawInfoOpenGL* di, Material* matl)
+{
+    pre_draw(di, matl, 0);
     di->polycount+=pts.size()-1;
     glBegin(GL_LINE_STRIP);
     for(int i=0;i<pts.size();i++){
@@ -191,8 +200,9 @@ void GeomPolyline::objdraw(DrawInfoOpenGL* di, Material* matl) {
 
 // --------------------------------------------------
 
-void GeomTube::objdraw(DrawInfoOpenGL* di, Material* matl) {
-    di->set_matl(matl);
+void GeomTube::draw(DrawInfoOpenGL* di, Material* matl)
+{
+    pre_draw(di, matl, 1);
     Array1<Point> c1; 
     Array1<Point> c2; 
     Vector n1, n2; 
@@ -231,7 +241,7 @@ void GeomTube::objdraw(DrawInfoOpenGL* di, Material* matl) {
 
 // --------------------------------------------------
 
-void GeomRenderMode::objdraw(DrawInfoOpenGL* di, Material* matl)
+void GeomRenderMode::draw(DrawInfoOpenGL* di, Material* matl)
 {
 //    int save_lighting=di->lighting;
     NOT_FINISHED("GeomRenderMode");
@@ -242,24 +252,25 @@ void GeomRenderMode::objdraw(DrawInfoOpenGL* di, Material* matl)
     }
 }    
 
-void GeomSphere::objdraw(DrawInfoOpenGL* di, Material* matl)
+void GeomSphere::draw(DrawInfoOpenGL* di, Material* matl)
 {
-    di->set_matl(matl);
+    pre_draw(di, matl, 1);
     glPushMatrix();
     glTranslated(cen.x(), cen.y(), cen.z());
-    di->polycount+=nu*nv;
+    di->polycount+=2*(nu-1)*(nv-1);
     gluSphere(di->qobj, rad, nu, nv);
     glPopMatrix();
 }
 
-void GeomSwitch::objdraw(DrawInfoOpenGL* di, Material* matl)
+void GeomSwitch::draw(DrawInfoOpenGL* di, Material* matl)
 {
    if(state)
       child->draw(di, matl);
 }
 
-void GeomTetra::objdraw(DrawInfoOpenGL* di, Material* matl) {
-    di->set_matl(matl);
+void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl)
+{
+    pre_draw(di, matl, 1);
     di->polycount+=4;
     switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
@@ -334,8 +345,128 @@ void GeomTetra::objdraw(DrawInfoOpenGL* di, Material* matl) {
     }
 }
 
-void GeomTri::objdraw(DrawInfoOpenGL* di, Material* matl) {
-    di->set_matl(matl);
+void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl)
+{
+    pre_draw(di, matl, 1);
+    glPushMatrix();
+    glTranslated(cen.x(), cen.y(), cen.z());
+    glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
+    di->polycount+=2*(nu-1)*(nv-1);
+
+    // Draw the torus
+    SinCosTable tab1(nu, 0, 2*Pi);
+    SinCosTable tab2(nv, 0, 2*Pi, rad2);
+    SinCosTable tab2n(nv, 0, 2*Pi, rad2);
+    int u,v;
+    switch(di->get_drawtype()){
+
+	
+    case DrawInfoOpenGL::WireFrame:
+	for(u=0;u<nu;u++){
+	    double rx=tab1.sin(u);
+	    double ry=tab1.cos(u);
+	    glBegin(GL_LINE_LOOP);
+	    for(v=1;v<nv;v++){
+		double z=tab2.cos(v);
+		double rad=rad1+tab2.sin(v);
+		double x=rx*rad;
+		double y=ry*rad;
+		glVertex3d(x, y, z);
+	    }
+	    glEnd();
+	}
+	for(v=1;v<nv;v++){
+	    double z=tab2.cos(v);
+	    double rr=tab2.sin(v);
+	    glBegin(GL_LINE_LOOP);
+	    for(u=1;u<nu;u++){
+		double rad=rad1+rr;
+		double x=tab1.sin(u)*rad;
+		double y=tab1.cos(u)*rad;
+		glVertex3d(x, y, z);
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfoOpenGL::Flat:
+	for(v=0;v<nv-1;v++){
+	    double z1=tab2.cos(v);
+	    double rr1=tab2.sin(v);
+	    double z2=tab2.cos(v+1);
+	    double rr2=tab2.sin(v+1);
+	    glBegin(GL_TRIANGLE_STRIP);
+	    for(u=0;u<nu;u++){
+		double r1=rad1+rr1;
+		double r2=rad1+rr2;
+		double xx=tab1.sin(u);
+		double yy=tab1.cos(u);
+		double x1=xx*r1;
+		double y1=yy*r1;
+		double x2=xx*r2;
+		double y2=yy*r2;
+		glVertex3d(x1, y1, z1);
+		glVertex3d(x2, y2, z2);
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfoOpenGL::Gouraud:
+	for(v=0;v<nv-1;v++){
+	    double z1=tab2.cos(v);
+	    double rr1=tab2.sin(v);
+	    double z2=tab2.cos(v+1);
+	    double rr2=tab2.sin(v+1);
+	    double nz=tab2n.cos(v);
+	    glBegin(GL_TRIANGLE_STRIP);
+	    for(u=0;u<nu;u++){
+		double r1=rad1+rr1;
+		double r2=rad1+rr2;
+		double xx=tab1.sin(u);
+		double yy=tab1.cos(u);
+		double x1=xx*r1;
+		double y1=yy*r1;
+		double x2=xx*r2;
+		double y2=yy*r2;
+		glNormal3d(xx, yy, nz);
+		glVertex3d(x1, y1, z1);
+		glVertex3d(x2, y2, z2);
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfoOpenGL::Phong:
+	for(v=0;v<nv-1;v++){
+	    double z1=tab2.cos(v);
+	    double rr1=tab2.sin(v);
+	    double z2=tab2.cos(v+1);
+	    double rr2=tab2.sin(v+1);
+	    double nz1=tab2n.cos(v);
+	    double nz2=tab2n.cos(v+1);
+	    glBegin(GL_TRIANGLE_STRIP);
+	    for(u=0;u<nu;u++){
+		double r1=rad1+rr1;
+		double r2=rad1+rr2;
+		double xx=tab1.sin(u);
+		double yy=tab1.cos(u);
+		double x1=xx*r1;
+		double y1=yy*r1;
+		double x2=xx*r2;
+		double y2=yy*r2;
+		glNormal3d(xx, yy, nz1);
+		glVertex3d(x1, y1, z1);
+		glNormal3d(xx, yy, nz2);
+		glVertex3d(x2, y2, z2);
+	    }
+	    glEnd();
+	}
+	break;	
+    }
+    glPopMatrix();
+}
+
+void GeomTri::draw(DrawInfoOpenGL* di, Material* matl)
+{
+    pre_draw(di, matl, 1);
     di->polycount++;
     switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
@@ -364,8 +495,9 @@ void GeomTri::objdraw(DrawInfoOpenGL* di, Material* matl) {
     }
 }
 
-void GeomTriStrip::objdraw(DrawInfoOpenGL* di, Material* matl) {
-    di->set_matl(matl);
+void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl)
+{
+    pre_draw(di, matl, 1);
     if(pts.size() <= 2)
 	return;
     di->polycount+=pts.size()-2;
@@ -420,14 +552,15 @@ void GeomTriStrip::objdraw(DrawInfoOpenGL* di, Material* matl) {
     }
 }
 
-void GeomVCTriStrip::objdraw(DrawInfoOpenGL* di, Material* matl) {
+void GeomVCTriStrip::draw(DrawInfoOpenGL* di, Material* matl)
+{
     if(pts.size() <= 2)
 	return;
     di->polycount+=pts.size()-2;
+    pre_draw(di, matl, 1);
     switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
 	{
-	    di->set_matl(matl);
 	    glBegin(GL_LINES);
 	    Point p1(pts[0]);
 	    Point p2(pts[1]);
@@ -452,7 +585,6 @@ void GeomVCTriStrip::objdraw(DrawInfoOpenGL* di, Material* matl) {
 	break;
     case DrawInfoOpenGL::Flat:
 	{
-	    di->set_matl(matl);
 	    glBegin(GL_TRIANGLE_STRIP);
 	    for(int i=0;i<pts.size();i++){
 		Point p(pts[i]);
@@ -490,11 +622,11 @@ void GeomVCTriStrip::objdraw(DrawInfoOpenGL* di, Material* matl) {
     }
 }
 
-void GeomVCTri::objdraw(DrawInfoOpenGL* di, Material* matl) {
+void GeomVCTri::draw(DrawInfoOpenGL* di, Material* matl) {
     di->polycount++;
+    pre_draw(di, matl, 1);
     switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
-	di->set_matl(matl);
 	glBegin(GL_LINE_LOOP);
 	glVertex3d(p1.x(), p1.y(), p1.z());
 	glVertex3d(p2.x(), p2.y(), p2.z());
@@ -502,7 +634,6 @@ void GeomVCTri::objdraw(DrawInfoOpenGL* di, Material* matl) {
 	glEnd();
 	break;
     case DrawInfoOpenGL::Flat:
-	di->set_matl(matl);
 	glBegin(GL_TRIANGLES);
 	glVertex3d(p1.x(), p1.y(), p1.z());
 	glVertex3d(p2.x(), p2.y(), p2.z());

@@ -21,7 +21,7 @@
 #include <iostream.h>
 
 GeomTri::GeomTri(const Point& p1, const Point& p2, const Point& p3)
-: GeomObj(1), p1(p1), p2(p2), p3(p3), n(Cross(p3-p1, p2-p1))
+: GeomObj(), p1(p1), p2(p2), p3(p3), n(Cross(p3-p1, p2-p1))
 {
     if(n.length2() > 0){
 	n.normalize();
@@ -31,7 +31,7 @@ GeomTri::GeomTri(const Point& p1, const Point& p2, const Point& p3)
 }
 
 GeomTri::GeomTri(const GeomTri &copy)
-: GeomObj(1), p1(copy.p1), p2(copy.p2), p3(copy.p3), n(copy.n)
+: GeomObj(copy), p1(copy.p1), p2(copy.p2), p3(copy.p3), n(copy.n)
 {
 }
 

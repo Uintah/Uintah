@@ -15,13 +15,13 @@
 #include <Geometry/Vector.h>
 #include <iostream.h>
 
-GeomObj::GeomObj(int lit)
-: lit(lit)
+GeomObj::GeomObj()
+: parent(0)
 {
 }
 
-GeomObj::GeomObj(const GeomObj& copy)
-: lit(copy.lit)
+GeomObj::GeomObj(const GeomObj&)
+: parent(0)
 {
 }
 
@@ -38,4 +38,12 @@ Vector GeomObj::normal(const Point&, const Hit&)
 {
     cerr << "ERROR: GeomObj::normal() shouldn't get called!!!\n";
     return Vector(0,0,1);
+}
+
+void GeomObj::set_parent(GeomObj* p)
+{
+    if(parent){
+	cerr << "Warning: Object already has parent!\n";
+    }
+    parent=p;
 }

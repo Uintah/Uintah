@@ -54,7 +54,7 @@ public:
 
     // For OpenGL
 #ifdef SCI_OPENGL
-    virtual void objdraw(DrawInfoOpenGL*, Material*);
+    virtual void draw(DrawInfoOpenGL*, Material*);
 #endif
 
     // For all Painter's algorithm based renderers

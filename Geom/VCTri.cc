@@ -19,7 +19,7 @@
 GeomVCTri::GeomVCTri(const Point& p1, const Point& p2, const Point& p3,
 		     const MaterialHandle& m1, const MaterialHandle &m2,
 		     const MaterialHandle& m3)
-: GeomObj(1), p1(p1), p2(p2), p3(p3), m1(m1), m2(m2), m3(m3), 
+: GeomObj(), p1(p1), p2(p2), p3(p3), m1(m1), m2(m2), m3(m3), 
   n(Cross(p3-p1, p2-p1))
 {
     if(n.length2() > 0)
@@ -27,7 +27,7 @@ GeomVCTri::GeomVCTri(const Point& p1, const Point& p2, const Point& p3,
 }
 
 GeomVCTri::GeomVCTri(const GeomVCTri &copy)
-: GeomObj(1), p1(copy.p1), p2(copy.p2), p3(copy.p3), m1(copy.m1), m2(copy.m2),
+: GeomObj(copy), p1(copy.p1), p2(copy.p2), p3(copy.p3), m1(copy.m1), m2(copy.m2),
   m3(copy.m3), n(copy.n)
 {
 }

@@ -5,7 +5,7 @@ public:
     GeomPt(const Point&);
     GeomPt(const GeomPt&);
     virtual ~GeomPt();
-    virtual void objdraw(DrawInfo*);
+    virtual void draw(DrawInfo*);
     virtual GeomObj* clone();
     virtual void get_bounds(BBox&);
     virtual void make_prims(Array1<GeomObj*>& free,

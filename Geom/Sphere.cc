@@ -21,12 +21,12 @@
 #include <Math/Trig.h>
 
 GeomSphere::GeomSphere(int nu, int nv)
-: GeomObj(1), nu(nu), nv(nv), cen(0,0,0), rad(1)
+: GeomObj(), nu(nu), nv(nv), cen(0,0,0), rad(1)
 {
 }
 
 GeomSphere::GeomSphere(const Point& cen, double rad, int nu, int nv)
-: GeomObj(1), cen(cen), rad(rad), nu(nu), nv(nv)
+: GeomObj(), cen(cen), rad(rad), nu(nu), nv(nv)
 {
     adjust();
 }
@@ -41,7 +41,7 @@ void GeomSphere::move(const Point& _cen, double _rad, int _nu, int _nv)
 }
 
 GeomSphere::GeomSphere(const GeomSphere& copy)
-: GeomObj(1), cen(copy.cen), rad(copy.rad), nu(copy.nu), nv(copy.nv)
+: GeomObj(copy), cen(copy.cen), rad(copy.rad), nu(copy.nu), nv(copy.nv)
 {
     adjust();
 }

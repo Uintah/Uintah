@@ -17,20 +17,20 @@
 #include <Geom/Container.h>
 
 class GeomSwitch : public GeomContainer {
-   int state;
+    int state;
     GeomSwitch(const GeomSwitch&);
 public:
     GeomSwitch(GeomObj*, int state=1);
     virtual ~GeomSwitch();
     virtual GeomObj* clone();
-   void set_state(int st);
-   int get_state();
-   virtual void get_bounds(BBox&);
+    void set_state(int st);
+    int get_state();
+    virtual void get_bounds(BBox&);
     virtual void get_bounds(BSphere&);
 
     // For OpenGL
 #ifdef SCI_OPENGL
-    virtual void objdraw(DrawInfoOpenGL*, Material*);
+    virtual void draw(DrawInfoOpenGL*, Material*);
 #endif
     // For all Painter's algorithm based renderers
     virtual void make_prims(Array1<GeomObj*>& free,

@@ -17,12 +17,12 @@
 #include <Geometry/BBox.h>
 
 GeomTriStrip::GeomTriStrip()
-: GeomObj(1)
+: GeomObj()
 {
 }
 
 GeomTriStrip::GeomTriStrip(const GeomTriStrip& copy)
-: GeomObj(1), pts(copy.pts), norms(copy.norms)
+: GeomObj(copy), pts(copy.pts), norms(copy.norms)
 {
 }
 

@@ -14,13 +14,15 @@
 #include <Geom/Container.h>
 
 GeomContainer::GeomContainer(GeomObj* child)
-: GeomObj(0), child(child)
+: GeomObj(), child(child)
 {
+    child->set_parent(this);
 }
 
 GeomContainer::GeomContainer(const GeomContainer& copy)
 : GeomObj(copy), child(copy.child->clone())
 {
+    child->set_parent(this);
 }
 
 GeomContainer::~GeomContainer()

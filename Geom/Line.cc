@@ -17,12 +17,12 @@
 #include <Geometry/BSphere.h>
 
 GeomLine::GeomLine(const Point& p1, const Point& p2)
-: GeomObj(0), p1(p1), p2(p2)
+: GeomObj(), p1(p1), p2(p2)
 {
 }
 
 GeomLine::GeomLine(const GeomLine& copy)
-: GeomObj(0), p1(copy.p1), p2(copy.p2)
+: GeomObj(), p1(copy.p1), p2(copy.p2)
 {
 }
 

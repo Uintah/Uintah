@@ -42,6 +42,8 @@ public:
     void set_matl(Material*);
 
     GLUquadricObj* qobj;
+
+    void reset();
 };
 
 #endif /* SCI_Geom_GeomOpenGL_h */

@@ -22,13 +22,13 @@
 #include <Math/Trig.h>
 
 GeomDisc::GeomDisc(int nu, int nv)
-: GeomObj(1), nu(nu), nv(nv)
+: GeomObj(), nu(nu), nv(nv)
 {
 }
 
 GeomDisc::GeomDisc(const Point& cen, const Vector& n,
 		   double rad, int nu, int nv)
-: GeomObj(1), cen(cen), n(n), rad(rad), nu(nu), nv(nv)
+: GeomObj(), cen(cen), n(n), rad(rad), nu(nu), nv(nv)
 {
     adjust();
 }
@@ -45,7 +45,7 @@ void GeomDisc::move(const Point& _cen, const Vector& _n,
 }
 
 GeomDisc::GeomDisc(const GeomDisc& copy)
-: GeomObj(1), v1(copy.v1), v2(copy.v2), cen(copy.cen), n(copy.n),
+: GeomObj(), v1(copy.v1), v2(copy.v2), cen(copy.cen), n(copy.n),
   rad(copy.rad), nu(copy.nu), nv(copy.nv)
 {
     adjust();
