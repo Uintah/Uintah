@@ -94,18 +94,20 @@ StaticMixingTable::computeProps(const InletStream& inStream,
   	mixFracVars=(2.0/3.0)*mixFracVars;
   // Heat loss for adiabatic case
   double current_heat_loss=0.0;
+  double zero_heat_loss=0.0;
+  double zero_mixFracVars=0.0;
   //Absolute enthalpy
   double enthalpy=0.0;
-  // Adiabatic enthalp
+  // Adiabatic enthalpy
   double adia_enthalpy=0.0;
   double interp_adiab_enthalpy = d_H_fuel*mixFrac+d_H_air*(1.0-mixFrac);
   // Sensible enthalpy
   double sensible_enthalpy=0.0;
   if(!d_adiabatic){
-	sensible_enthalpy=tableLookUp(mixFrac, mixFracVars, current_heat_loss, Hs_index);
+	sensible_enthalpy=tableLookUp(mixFrac, mixFracVars, zero_heat_loss, Hs_index);
 	enthalpy=inStream.d_enthalpy;
 	if (!(Enthalpy_index == -1))
-          adia_enthalpy=tableLookUp(mixFrac, 0.0, current_heat_loss, Enthalpy_index);
+          adia_enthalpy=tableLookUp(mixFrac, zero_mixFracVars, zero_heat_loss, Enthalpy_index);
 	else if (d_adiab_enth_inputs)
 	  adia_enthalpy=interp_adiab_enthalpy;
 	else {
@@ -114,7 +116,7 @@ StaticMixingTable::computeProps(const InletStream& inStream,
 	}
 
         if (inStream.d_initEnthalpy)
-          	current_heat_loss = 0.0;
+          	current_heat_loss = zero_heat_loss;
         else
   		current_heat_loss=(adia_enthalpy-enthalpy)/(sensible_enthalpy+small);
         if(current_heat_loss < -1.0 || current_heat_loss > 1.0){
@@ -126,7 +128,7 @@ StaticMixingTable::computeProps(const InletStream& inStream,
   		cout<< "Mixture fraction variance is :  "<< mixFracVars << endl;
 	}
 	if(fabs(current_heat_loss) < small)
-		current_heat_loss=0.0;
+		current_heat_loss = zero_heat_loss;
         if(current_heat_loss > heatLoss[d_heatlosscount-1])
 		current_heat_loss = heatLoss[d_heatlosscount-1];
 	else if (current_heat_loss < heatLoss[0])

@@ -113,35 +113,36 @@ StandardTable::computeProps(const InletStream& inStream,
   	mixFracVars=(2.0/3.0)*mixFracVars;
   // Heat loss for adiabatic case
   double current_heat_loss=0.0;
+  double zero_heat_loss=0.0;
+  double zero_mixFracVars=0.0;
   //Absolute enthalpy
   double enthalpy=0.0;
-  // Adiabatic enthalp
+  // Adiabatic enthalpy
   double adiab_enthalpy=0.0;
   double interp_adiab_enthalpy = d_H_fuel*mixFrac+d_H_air*(1.0-mixFrac);
   // Sensible enthalpy
   double sensible_enthalpy=0.0;
+
   vector<double> ind_vars;
   ind_vars.push_back(mixFrac);
-  if (!(d_adiabatic))
-    ind_vars.push_back(current_heat_loss);
-  if (d_numMixStatVars > 0)
-    ind_vars.push_back(mixFracVars);
-  double zero_heat_loss=0.0;
+
   vector<double> ind_vars_zero_heat_loss;
-  ind_vars_zero_heat_loss.push_back(mixFrac);
-  if (!(d_adiabatic))
-    ind_vars_zero_heat_loss.push_back(zero_heat_loss);
-  if (d_numMixStatVars > 0)
-    ind_vars_zero_heat_loss.push_back(mixFracVars);
+  vector<double> ind_vars_zero_heat_loss_zero_variance;
+
   if(!d_adiabatic){
-/*	  cout << Hs_index << " <- index" << endl;
-	  cout << ind_vars.size() << "<- ind. vector size"<< endl;
-	  cout << ind_vars[0] << "<- element 0"<<endl;
-	  cout << ind_vars[1] << "<- element 1"<<endl;*/
-	sensible_enthalpy=table->interpolate(Hs_index, ind_vars);
+        ind_vars_zero_heat_loss.push_back(mixFrac);
+        ind_vars_zero_heat_loss.push_back(zero_heat_loss);
+        if (d_numMixStatVars > 0)
+          ind_vars_zero_heat_loss.push_back(mixFracVars);
+	sensible_enthalpy=table->interpolate(Hs_index, ind_vars_zero_heat_loss);
 	enthalpy=inStream.d_enthalpy;
-	if (!(Enthalpy_index == -1))
-          adiab_enthalpy=table->interpolate(Enthalpy_index, ind_vars_zero_heat_loss);
+	if (!(Enthalpy_index == -1)) {
+          ind_vars_zero_heat_loss_zero_variance.push_back(mixFrac);
+          ind_vars_zero_heat_loss_zero_variance.push_back(zero_heat_loss);
+          if (d_numMixStatVars > 0)
+            ind_vars_zero_heat_loss_zero_variance.push_back(zero_mixFracVars);
+          adiab_enthalpy=table->interpolate(Enthalpy_index, ind_vars_zero_heat_loss_zero_variance);
+	}
 	else if (d_adiab_enth_inputs)
 	  adiab_enthalpy=interp_adiab_enthalpy;
 	else {
@@ -150,7 +151,7 @@ StandardTable::computeProps(const InletStream& inStream,
 	}
 
         if (inStream.d_initEnthalpy)
-          	current_heat_loss = 0.0;
+          	current_heat_loss = zero_heat_loss;
         else
   		current_heat_loss=(adiab_enthalpy-enthalpy)/(sensible_enthalpy+small);
         if(current_heat_loss < -1.0 || current_heat_loss > 1.0){
@@ -161,16 +162,20 @@ StandardTable::computeProps(const InletStream& inStream,
   		cout<< "Mixture fraction is :  "<< mixFrac << endl;
   		cout<< "Mixture fraction variance is :  "<< mixFracVars << endl;
 	}
+	if(fabs(current_heat_loss) < small)
+		current_heat_loss=zero_heat_loss;
 // Commented out heat loss table bounds clipping for now
-/*	if(fabs(current_heat_loss) < small)
-		current_heat_loss=0.0;
-        if(current_heat_loss > heatLoss[d_heatlosscount-1])
+/*        if(current_heat_loss > heatLoss[d_heatlosscount-1])
 		current_heat_loss = heatLoss[d_heatlosscount-1];
 	else if (current_heat_loss < heatLoss[0])
 		current_heat_loss = heatLoss[0];*/
+
+        ind_vars.push_back(current_heat_loss);
   }
+  if (d_numMixStatVars > 0)
+    ind_vars.push_back(mixFracVars);
+
   // Looking for the properties corresponding to the heat loss
-  
   outStream.d_temperature=table->interpolate(T_index, ind_vars);  
   outStream.d_density=table->interpolate(Rho_index, ind_vars);  
   outStream.d_cp=table->interpolate(Cp_index, ind_vars);  
