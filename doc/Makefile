@@ -29,18 +29,19 @@ SCIRunDocs.tar: doc_styles.css index.html TechnicalGuide/TOC.html \
 	cd ..; tar cvf doc/SCIRunDocs.tar doc/UserGuide/usersguide \
 		   doc/UserGuide/figures doc/UserGuide/tutorial \
 		   doc/UserGuide/usersguide.ps.gz \
+		   doc/UserGuide/usersguide.pdf.gz \
                    doc/TechnicalGuide/*.html \
                    doc/doc_styles.css doc/index.html doc/images
 
 TechnicalGuide/TOC.html: TechnicalGuide/Makefile
-	cd TechnicalGuide; gmake
+	cd TechnicalGuide; make
 
-UserGuide/usersguide.html: UserGuide/Makefile
-	cd UserGuide; gmake
+UserGuide/usersguide/usersguide.html: UserGuide/Makefile
+	cd UserGuide; make
 
 clean:
 	rm -f SCIRunDocs.tar.gz
 	rm -f SCIRunDocs.tar
-	cd TechnicalGuide; gmake clean
-	cd UserGuide; gmake clean
+	cd TechnicalGuide; make clean
+	cd UserGuide; make clean
 
