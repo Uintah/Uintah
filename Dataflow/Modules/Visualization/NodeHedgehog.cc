@@ -354,34 +354,17 @@ void NodeHedgehog::execute()
   // the sliders is used to determine the density of the
   // vectors.
   Point center, R, D, I;
-  int skip;
-  if(do_3d){
-    widget3d->GetPosition( center, R, D, I);
-    double u_fac = widget3d->GetRatioR();
-    //    double v_fac = widget3d->GetRatioD();
-    //    double w_fac = widget3d->GetRatioI();
-    //    skip = (int)((u_fac*20 + v_fac*20 + w_fac*20)/3);
-    skip = (int)(u_fac*20);
-  } else {
-    widget2d->GetPosition( center, R, D);
-    I = center;
-    double u_fac = widget2d->GetRatioR();
-    //    double v_fac = widget2d->GetRatioD();
-    //    skip = (int)((u_fac*20 + v_fac*20)/2);
-    skip = (int)(u_fac*20);
-  }
   // because skip is used for the interator increment
   // it must be 1 or more otherwise you enter an
   // infinite loop (and that really sucks for performance)
-  skip = skip_node.get();
+  int skip = skip_node.get();
   if (skip < 1)
     skip = 1;
-  //  cerr << "skip = " << skip << endl;
   Vector v1 = R - center;
   Vector v2 = D - center;
   Vector v3 = I - center;
 
-  // calculate the corner and the
+  // calculate the edge points
   Point upper = center + v1 + v2 + v3;
   Point lower = center - v1 - v2 - v3;
 
@@ -418,9 +401,7 @@ void NodeHedgehog::execute()
 	Point p = patch->nodePosition(*iter);
 	Vector vv;
 	int ii = 0;
-	//cerr << "Found a node-*-";
 	if (vfield->interpolate( p, vv, ii, exhaustive)){
-	  cerr << "FoundInterpolation - ";
 	  if(have_sfield) {
 	    // get the color from cmap for p 	    
 	    MaterialHandle matl;
@@ -433,17 +414,14 @@ void NodeHedgehog::execute()
 	    
 	    if(vv.length2()*lenscale > 1.e-3) {
 	      arrows->add(p, vv*lenscale, matl, matl, matl);
-	      cerr << "Addedarror -*- \n";
 	    }
 	  }
 	  else {
 	    if(vv.length2()*lenscale > 1.e-3) {
 	      arrows->add(p, vv*lenscale);
-	      cerr << "Addedarror -*- \n";
 	    }
 	  }
 	}
-	cerr << "vv.length2() = " << vv.length2() << " <<< ";
       }
     }
   }
@@ -501,6 +479,9 @@ void NodeHedgehog::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.2  2000/06/27 17:13:19  bigler
+// Took out some old code.
+//
 // Revision 1.1  2000/06/27 15:23:56  bigler
 // Inital versions of a module that works like Hedgehog
 // except the vectors are originated from the node positions.
