@@ -51,12 +51,13 @@ PersistentTypeID Path::type_id("Path", "Datatype", make_Path);
 
 Path::Path(): sint(30)
 {
-  //upV=scinew Cubic3DPWI<Vector>();
-  //fov=scinew CubicPWI();
-  
-  upV=scinew Linear3DPWI<Vector>();
+  upV=scinew Cubic3DPWI<Vector>();
+  lookatP=scinew Cubic3DPWI<Point>();
+
+  //upV=scinew Linear3DPWI<Vector>();
+
   fov=scinew LinearPWI();
-  lookatP=scinew Linear3DPWI<Point>();
+  //lookatP=scinew Linear3DPWI<Point>();
   speed=scinew LinearPWI();
   eyeP=NULL;
   
@@ -614,6 +615,9 @@ bool Path::get_nextPP(View& v, int& curr_view, double& curr_speed, double& curr_
 
 //
 // $Log$
+// Revision 1.6  2000/10/07 23:46:02  samsonov
+// spline interpolation of lookat point and upvector
+//
 // Revision 1.5  2000/09/29 08:42:34  samsonov
 // Added camera speed support
 //
