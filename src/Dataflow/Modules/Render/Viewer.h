@@ -140,6 +140,8 @@ public:
   string rid;
   string filename;
   string format;
+  int resx;
+  int resy;
   double tbeg, tend;
   int nframes;
   double framerate;
@@ -150,7 +152,8 @@ public:
 		const string& rid, const string& filename);
   ViewerMessage(MessageTypes::MessageType,
 		const string& rid, const string& filename,
-		const string& format);
+		const string& format, const string &resx_string,
+		const string& resy_string);
   virtual ~ViewerMessage();
 };
 
