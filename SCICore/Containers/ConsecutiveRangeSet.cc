@@ -4,6 +4,10 @@
 
 using namespace std;
 
+const ConsecutiveRangeSet ConsecutiveRangeSet::empty;
+const ConsecutiveRangeSet
+  ConsecutiveRangeSet::all(INT_MIN, INT_MAX-1 /* -1 to avoid overflow */);  
+
 ConsecutiveRangeSet::ConsecutiveRangeSet(list<int>& set)
   : d_size(0) // set to zero just to start
 {
@@ -36,10 +40,10 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(list<int>& set)
 ConsecutiveRangeSet::ConsecutiveRangeSet(int low, int high)
 {
   d_rangeSet.reserve(1);
-  if (low <= high)
-    d_rangeSet.push_back(Range(low, high));
-  else
-    d_rangeSet.push_back(Range(high, low));
+  if (low == INT_MAX || high == INT_MAX)
+    cerr << "Warning, initializing ConsectuiveRangeSet with a high of\n"
+	 << "INT_MAX may cause overflow.\n";
+  d_rangeSet.push_back(Range(low, high));
   setSize();
 }
 
@@ -59,7 +63,7 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(std::string setstr)
   bool hasLastNumber = false;
   
   while (!ws(in).eof()) {
-    if (in.peek() == '-') {
+    if (in.peek() == '-' && hasLastNumber && !isInterval) {
       in >> c;
       isInterval = true;
     }
@@ -73,6 +77,10 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(std::string setstr)
 	in >> c;
 	if (c != ',')
 	  throw ConsecutiveRangeSetException(string("ConsecutiveRangeSet cannot parse integer set string: bad character '") + c + "'");
+	else {
+	  if (isInterval)
+	    throw ConsecutiveRangeSetException("ConsecutiveRangeSet cannot parse integer set string: ',' following '-'");
+	}
       }
       else if (isInterval) {
 	if (!hasLastNumber)
@@ -89,6 +97,8 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(std::string setstr)
       }
     }
   }
+  if (hasLastNumber)
+    rangeSet.push_back(Range(lastNumber, lastNumber));
 
   rangeSet.sort();
 
@@ -100,11 +110,11 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(std::string setstr)
   int last_high = (*it).high();
   for (it++; it != rangeSet.end(); it++)
   {
-    if ((long long)last_high + 1 >= (*it).d_low) {
+    if ((unsigned long)last_high + 1 >= (*it).d_low) {
       // combine ranges
       int high = (last_high > (*it).high()) ? last_high : (*it).high();
       it--;
-      (*it).d_extent = high - (*it).d_low;
+      (*it).d_extent = (unsigned long)high - (*it).d_low;
       tmp_it = it;
       rangeSet.erase(++tmp_it);
     }
@@ -120,7 +130,7 @@ void ConsecutiveRangeSet::setSize()
   d_size = 0;
   vector<Range>::iterator it = d_rangeSet.begin();
   for ( ; it != d_rangeSet.end() ; it++) {
-    d_size += (long long)(*it).d_extent + 1;
+    d_size += (unsigned long)(*it).d_extent + 1;
   }
 }
 
@@ -159,13 +169,13 @@ ConsecutiveRangeSet ConsecutiveRangeSet::intersected(const ConsecutiveRangeSet&
   vector<Range>::const_iterator it = d_rangeSet.begin();
   vector<Range>::const_iterator it2 = set2.d_rangeSet.begin();
   while (it != d_rangeSet.end() && it2 != set2.d_rangeSet.end()) {
-    while ((*it).d_low > (*it2).d_low + (*it2).d_extent) {
+    while ((*it).d_low > (*it2).high()) {
       it2++;
       if (it2 == set2.d_rangeSet.end())
 	return ConsecutiveRangeSet(newRangeSet.begin(), newRangeSet.end());
     }
 
-    while ((*it2).d_low > (*it).d_low + (*it).d_extent) {
+    while ((*it2).d_low > (*it).high()) {
       it++;
       if (it == d_rangeSet.end())
 	return ConsecutiveRangeSet(newRangeSet.begin(), newRangeSet.end());
@@ -174,7 +184,7 @@ ConsecutiveRangeSet ConsecutiveRangeSet::intersected(const ConsecutiveRangeSet&
     range.d_low = ((*it).d_low > (*it2).d_low) ? (*it).d_low : (*it2).d_low;
     int high = ((*it).high() < (*it2).high()) ? (*it).high() : (*it2).high();
     if (high >= range.d_low) {
-      range.d_extent = high - range.d_low;
+      range.d_extent =  (unsigned long)high - range.d_low;
       newRangeSet.push_back(range);
       if ((*it).high() < (*it2).high())
 	it++;
@@ -214,10 +224,10 @@ ConsecutiveRangeSet ConsecutiveRangeSet::unioned(const ConsecutiveRangeSet&
     Range& lastRange = newRangeSet.back();
 
     // check for overlap
-    if ((long long)lastRange.high() + 1 >= range.d_low) {
+    if ((unsigned long)lastRange.high() + 1 >= range.d_low) {
       // combine ranges
       if (range.high() > lastRange.high())
-	lastRange.d_extent = range.high() - lastRange.d_low;
+	lastRange.d_extent =  (unsigned long)range.high() - lastRange.d_low;
     }
     else
       newRangeSet.push_back(range);
@@ -231,6 +241,18 @@ string ConsecutiveRangeSet::toString() const
   ostringstream stream;
   stream << *this << '\0';
   return stream.str();
+}
+
+ConsecutiveRangeSet::Range::Range(int low, int high)
+{
+  if (high >= low) {
+    d_low = low;
+    d_extent = (unsigned long)high - low;
+  }
+  else {
+    d_low = high;
+    d_extent = (unsigned long)low - high;
+  }
 }
 
 ostream& operator<<(ostream& out, const ConsecutiveRangeSet& set)

@@ -141,7 +141,7 @@ public:
   inline iterator end()
   { return iterator(this, d_rangeSet.size(), 0); }
 
-  long long size() const
+  unsigned long size() const
   { return d_size; }
 
   std::string toString() const;
@@ -149,6 +149,9 @@ public:
   // used for debugging
   int getNumRanges()
   { return d_rangeSet.size(); }
+
+  static const ConsecutiveRangeSet empty;
+  static const ConsecutiveRangeSet all;  
 private:
   template <class InputIterator>
   ConsecutiveRangeSet(InputIterator begin, InputIterator end)
@@ -158,8 +161,7 @@ private:
   // represents range: [low, low+extent]
   struct Range
   {
-    Range(int low, int high)
-      : d_low(low), d_extent((unsigned int)((long)high - low)) { }
+    Range(int low, int high);
     Range(const Range& r2)
       : d_low(r2.d_low), d_extent(r2.d_extent) { }
 
@@ -177,13 +179,13 @@ private:
 
     inline void display(std::ostream& out) const;
 	
-    int high() const { return d_low + d_extent; }
+    int high() const { return (int)(d_low + d_extent); }
     int d_low;
-    unsigned int d_extent;
+    unsigned long d_extent;
   };
   
   std::vector<Range> d_rangeSet;
-  long long d_size; // sum of range (extent+1)'s
+  unsigned long d_size; // sum of range (extent+1)'s
 };
 
 inline int ConsecutiveRangeSet::iterator::operator*()
@@ -207,5 +209,5 @@ void ConsecutiveRangeSet::Range::display(std::ostream& out) const
   if (d_extent == 0)
     out << d_low;
   else
-    out << d_low << "-" << high();
+    out << d_low << " - " << high();
 }
