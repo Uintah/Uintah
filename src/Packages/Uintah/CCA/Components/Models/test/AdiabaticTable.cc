@@ -154,7 +154,7 @@ if (!oldStyleAdvect.active()){
   d_ref_temp_index  = table->addDependentVariable("reference_Temp");
   table->setup();
 
-#if 1
+#if 0
   ofstream out("graph.dat");
   int ng = 100;
   vector<double> mm;
@@ -370,9 +370,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     }
     
     CellIterator iter = patch->getExtraCellIterator();
-    cerr << "Interpolating density, vars=" << ind_vars.size() << '\n';
     table->interpolate(d_density_index,   rho_micro,   iter, ind_vars);
-    cerr << "done Interpolating density\n";
     table->interpolate(d_gamma_index,     gamma,    iter, ind_vars);
     table->interpolate(d_cv_index,        cv,       iter, ind_vars);
     table->interpolate(d_viscosity_index, viscosity,iter, ind_vars);
