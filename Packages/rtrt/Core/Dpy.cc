@@ -1164,6 +1164,32 @@ void Dpy::run()
       // Sync with the rendering processes...
       frame++;
       drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(), Color(1,0,0));
+
+      if (scene->followpath)
+      {
+	  double eyex, eyey, eyez;
+	  double lookx, looky, lookz;
+	  double upx, upy, upz;
+	  double fov;
+	  char buf[256];
+	  double junk;
+	  
+	  if (fscanf(scene->path_fp,"%lf %lf %s %lf %lf %lf %s %lf %lf %lf %s %lf %lf %lf %s %lf",&junk,&junk,buf,&eyex,&eyey,&eyez,buf,&lookx,&looky,&lookz,buf,&upx,&upy,&upz,buf,&fov) != EOF)
+	  {
+	      
+	      Camera *cam = scene->get_camera(rendering_scene);
+	      cam->set_eye(Point(eyex, eyey, eyez));
+	      cam->set_lookat(Point(lookx, looky, lookz));
+	      cam->set_up(Vector(upx, upy, upz));
+	      cam->set_fov(fov);
+	      cam->setup();
+
+	  } else 
+	  {
+	      scene->followpath = false;
+	  }
+      }
+
       barrier->wait(nworkers+1);
       // exit if you are supposed to
       if (scene->rtrt_engine->stop_execution()) {
