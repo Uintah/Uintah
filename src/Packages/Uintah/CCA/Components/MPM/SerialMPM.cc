@@ -493,6 +493,8 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
               Task::OutOfDomain);
   t->computes(lb->gTemperatureLabel, d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
+  t->computes(lb->gVolumeLabel, d_sharedState->getAllInOneMatl(),
+              Task::OutOfDomain);
   t->computes(lb->gVelocityLabel,    d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
   t->computes(lb->gSp_volLabel);
@@ -683,8 +685,8 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
 
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
-  t->requires(Task::NewDW,lb->gMassLabel, gnone);
-  t->requires(Task::NewDW,lb->gMassLabel, d_sharedState->getAllInOneMatl(),
+  t->requires(Task::NewDW,lb->gVolumeLabel, gnone);
+  t->requires(Task::NewDW,lb->gVolumeLabel, d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain, gnone);
   t->requires(Task::NewDW,lb->pStressLabel_preReloc,      gan,NGP);
   t->requires(Task::NewDW,lb->pVolumeDeformedLabel,       gan,NGP);
@@ -1347,15 +1349,18 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     S.reserve(interpolator->size());
 
 
-    NCVariable<double> gmassglobal,gtempglobal;
+    NCVariable<double> gmassglobal,gtempglobal,gvolumeglobal;
     NCVariable<Vector> gvelglobal;
     new_dw->allocateAndPut(gmassglobal, lb->gMassLabel,
                            d_sharedState->getAllInOneMatl()->get(0), patch);
     new_dw->allocateAndPut(gtempglobal, lb->gTemperatureLabel,
                            d_sharedState->getAllInOneMatl()->get(0), patch);
+    new_dw->allocateAndPut(gvolumeglobal, lb->gVolumeLabel,
+                           d_sharedState->getAllInOneMatl()->get(0), patch);
     new_dw->allocateAndPut(gvelglobal, lb->gVelocityLabel,
                            d_sharedState->getAllInOneMatl()->get(0), patch);
     gmassglobal.initialize(d_SMALL_NUM_MPM);
+    gvolumeglobal.initialize(d_SMALL_NUM_MPM);
     gtempglobal.initialize(0.0);
     gvelglobal.initialize(Vector(0.0));
 
@@ -1411,7 +1416,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                              dwi,patch);
 
       gmass.initialize(d_SMALL_NUM_MPM);
-      gvolume.initialize(0);
+      gvolume.initialize(d_SMALL_NUM_MPM);
       gvelocity.initialize(Vector(0,0,0));
       gexternalforce.initialize(Vector(0,0,0));
       gTemperature.initialize(0);
@@ -1709,7 +1714,6 @@ void SerialMPM::computeContactArea(const ProcessorGroup*,
 
     
     Vector dx = patch->dCell();
-    double cellvol = dx.x()*dx.y()*dx.z();
     
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     
@@ -1731,26 +1735,30 @@ void SerialMPM::computeContactArea(const ProcessorGroup*,
         
         // We are on the boundary, i.e. not on an interior patch
         // boundary, and also on the correct side, 
-        // so do the traction accumulation . . .
-        // loop cells to find boundary areas
+
+        // loop over face nodes to find boundary areas
+	// Because this calculation uses gvolume, particle volumes interpolated to
+	// the nodes, it will give 1/2 the expected value because the particle values
+	// are distributed to all nodes, not just those on this face.  It would require
+	// particles on the other side of the face to "fill" the nodal volumes and give
+	// the correct area when divided by the face normal cell dimension (celldepth).
+	// To correct for this, nodearea incorporates a factor of two.
+
         IntVector projlow, projhigh;
-        patch->getFaceCells(face, 0, projlow, projhigh);
-        // Vector norm = face_norm(face);
+        patch->getFaceNodes(face, 0, projlow, projhigh);
+	const double celldepth  = dx[iface/2];
         
         for (int i = projlow.x(); i<projhigh.x(); i++) {
           for (int j = projlow.y(); j<projhigh.y(); j++) {
             for (int k = projlow.z(); k<projhigh.z(); k++) {
               IntVector ijk(i,j,k);
-              double nodevol = gvolume[ijk];
-              if(nodevol>0) // FIXME: uses node index to get node volume ...
-                {
-                  const double celldepth  = dx[iface/2];
-                  bndyCArea[iface] += cellvol/celldepth;
-                }
+
+	      double nodearea         = 2.0*gvolume[ijk]/celldepth; // node area
+	      bndyCArea[iface] += nodearea;
+
             }
           }
         }
-        
       } // faces
     } // materials
   } // patches
@@ -1792,7 +1800,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     oodx[0] = 1.0/dx.x();
     oodx[1] = 1.0/dx.y();
     oodx[2] = 1.0/dx.z();
-    double cellvol = dx.x()*dx.y()*dx.z();
     Matrix3 Id;
     Id.Identity();
 
@@ -1808,8 +1815,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     int numMPMMatls = d_sharedState->getNumMPMMatls();
 
     NCVariable<Matrix3>       gstressglobal;
-    constNCVariable<double>   gmassglobal;
-    new_dw->get(gmassglobal,  lb->gMassLabel,
+    constNCVariable<double>   gvolumeglobal;
+    new_dw->get(gvolumeglobal,  lb->gVolumeLabel,
                 d_sharedState->getAllInOneMatl()->get(0), patch, Ghost::None,0);
     new_dw->allocateAndPut(gstressglobal, lb->gStressForSavingLabel, 
                            d_sharedState->getAllInOneMatl()->get(0), patch);
@@ -1828,7 +1835,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       constParticleVariable<double>  pErosion;
       NCVariable<Vector>             internalforce;
       NCVariable<Matrix3>            gstress;
-      constNCVariable<double>        gmass;
+      constNCVariable<double>        gvolume;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        Ghost::AroundNodes, NGP,
@@ -1839,7 +1846,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       new_dw->get(pvol,    lb->pVolumeDeformedLabel,         pset);
       new_dw->get(pstress, lb->pStressLabel_preReloc,        pset);
       old_dw->get(psize, lb->pSizeLabel,                   pset);
-      new_dw->get(gmass,   lb->gMassLabel, dwi, patch, Ghost::None, 0);
+      new_dw->get(gvolume,   lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
       new_dw->get(pErosion,lb->pErosionLabel_preReloc,       pset);
 
       new_dw->allocateAndPut(gstress,      lb->gStressForSavingLabel,dwi,patch);
@@ -1871,7 +1878,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 
       internalforce.initialize(Vector(0,0,0));
 
-      Matrix3 stressmass;
+      Matrix3 stressvol;
       Matrix3 stresspress;
       int n8or27 = flags->d_8or27;
 
@@ -1884,7 +1891,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
                                                             psize[idx]);
 
-        stressmass  = pstress[idx]*pmass[idx];
+        stressvol  = pstress[idx]*pvol[idx];
         //stresspress = pstress[idx] + Id*p_pressure[idx];
         stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
         partvoldef += pvol[idx];
@@ -1895,7 +1902,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
                        d_S[k].z()*oodx[2]);
             div *= pErosion[idx];
             internalforce[ni[k]] -= (div * stresspress)  * pvol[idx];
-            gstress[ni[k]]       += stressmass * S[k];
+            gstress[ni[k]]       += stressvol * S[k];
           }
         }
       }
@@ -1903,7 +1910,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
         gstressglobal[c] += gstress[c];
-        gstress[c] /= gmass[c];
+        gstress[c] /= gvolume[c];
       }
 
       // save boundary forces before apply symmetry boundary condition.
@@ -1919,11 +1926,15 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       
         // We are on the boundary, i.e. not on an interior patch
         // boundary, and also on the correct side, 
-        // so do the traction accumulation . . .
-        // loop nodes to find forces
+
         IntVector projlow, projhigh;
         patch->getFaceNodes(face, 0, projlow, projhigh);
         Vector norm = face_norm(face);
+	double celldepth  = dx[iface/2]; // length in direction perpendicular to boundary
+
+	// loop over face nodes to find boundary forces, average stress (traction).
+	// Note that nodearea incorporates a factor of two as described in the
+	// bndyCellArea calculation in order to get node face areas.
         
         for (int i = projlow.x(); i<projhigh.x(); i++) {
           for (int j = projlow.y(); j<projhigh.y(); j++) {
@@ -1932,21 +1943,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
               
               // flip sign so that pushing on boundary gives positive force
               bndyForce[iface] -= internalforce[ijk];
-            }
-          }
-        }
-        
-        patch->getFaceCells(face, 0, projlow, projhigh);
-        for (int i = projlow.x(); i<projhigh.x(); i++) {
-          for (int j = projlow.y(); j<projhigh.y(); j++) {
-            for (int k = projlow.z(); k<projhigh.z(); k++) {
-              IntVector ijk(i,j,k);
-              
-              double celldepth  = dx[iface/2]; // length in direction perpendicular to boundary
-              double dA_c       = cellvol/celldepth; // cell based volume
-              
+
+	      double nodearea   = 2.0*gvolume[ijk]/celldepth; // node area
               for(int ic=0;ic<3;ic++) for(int jc=0;jc<3;jc++) {
-                bndyTraction[iface][ic] += gstress[ijk](ic,jc)*norm[jc]*dA_c;
+		bndyTraction[iface][ic] += gstress[ijk](ic,jc)*norm[jc]*nodearea;
               }
               
             }
@@ -1965,7 +1965,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
-      gstressglobal[c] /= gmassglobal[c];
+      gstressglobal[c] /= gvolumeglobal[c];
     }
     delete interpolator;
   }
@@ -1987,9 +1987,12 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     
     new_dw->put(sumvec_vartype(bndyTraction[iface]),lb->BndyTractionLabel[iface]);
     
+    // Use the face force and traction calculations to provide a second estimate of the
+    // contact area.
     double bndyContactArea_iface = bndyContactCellArea_iface;
-    if(bndyTraction[iface].length2()>0) 
-      bndyContactArea_iface = ::sqrt(bndyForce[iface].length2()/bndyTraction[iface].length2());
+    if(bndyTraction[iface][iface/2]*bndyTraction[iface][iface/2]>1.e-12)
+      bndyContactArea_iface = bndyForce[iface][iface/2]/bndyTraction[iface][iface/2];
+
     new_dw->put(sum_vartype(bndyContactArea_iface), lb->BndyContactAreaLabel[iface]);
   }
 }
