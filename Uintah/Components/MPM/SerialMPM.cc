@@ -70,10 +70,14 @@ void SerialMPM::problemSetup(const ProblemSpecP&, GridP& grid,
 	dw->put(pmass, "p.mass", region, 0);
 	ParticleVariable<Vector> pvel(psubset);
 	dw->put(pvel, "p.velocity", region, 0);
+	ParticleVariable<Matrix3> pstress(psubset);
+	dw->put(pstress, "p.stress", region, 0);
+	ParticleVariable<Matrix3> pdeformationMeasure(psubset);
+	dw->put(pdeformationMeasure, "p.deformationMeasure", region, 0);
 	ParticleVariable<Vector> pexternalforce(psubset);
 	dw->put(pexternalforce, "p.externalforce", region, 0);
-	ParticleVariable<CompMooneyRivlin> pconmod(psubset);
-	dw->put(pconmod, "p.conmod", region, 0);
+	ParticleVariable<CMState> pcmstate(psubset);
+	dw->put(pcmstate, "p.cmstate", region, 0);
 	cerr << "Creating particles for region\n";
 	Enigma.createParticles(region, dw);
     }
@@ -89,9 +93,9 @@ void SerialMPM::computeStableTimestep(const LevelP& level,
 
 	Task* t = new Task("SerialMPM::computeStableTimestep", region, dw, dw,
 			   this, SerialMPM::actuallyComputeStableTimestep);
-	t->requires(dw, "velocity", region, 0,
-		    ParticleVariable<Vector>::getTypeDescription());
 	t->requires(dw, "params", ProblemSpec::getTypeDescription());
+	t->requires(dw, "MaxWaveSpeed",
+				SoleVariable<double>::getTypeDescription());
 	t->computes(dw, "delt", SoleVariable<double>::getTypeDescription());
 	sched->addTask(t);
     }
@@ -135,23 +139,32 @@ void SerialMPM::timeStep(double t, double dt,
 	{
 	    /*
 	     * computeStressTensor
-	     *   in(G.VELOCITY, P.NAT_X, P.CONMOD)
-	     *   operation(evaluate the gradient of G.VELOCITY at P.NAT_X, feed
-	     *             this into P.CONMOD, which will evaluate and store
-	     *             the stress)
-	     * out(P.CONMOD)
+	     *   in(G.VELOCITY, P.X, P.DEFORMATIONMEASURE)
+	     *   operation(evaluate the gradient of G.VELOCITY at P.X, feed
+	     *             this into a constitutive model, which will
+             *	           evaluate the stress and store it in the
+             *             DataWarehouse.  Each CM also computes the maximum
+             *             elastic wave speed for that material in the
+             *             region.  This is used in calculating delt.)
+	     * out(P.DEFORMATIONMEASURE,P.STRESS)
 	     */
 	    Task* t = new Task("SerialMPM::computeStressTensor",
 			       region, old_dw, new_dw,
 			       this, SerialMPM::computeStressTensor);
 	    t->requires(new_dw, "g.velocity", region, 0,
 			NCVariable<Vector>::getTypeDescription());
-	    t->requires(old_dw, "p.conmod", region, 0,
-			ParticleVariable<CompMooneyRivlin>::getTypeDescription());
+	    t->requires(old_dw, "p.cmdata", region, 0,
+			ParticleVariable<CMData>::getTypeDescription());
+	    t->requires(new_dw, "p.deformationMeasure", region, 0,
+			ParticleVariable<Matrix3>::getTypeDescription());
 	    t->requires(old_dw, "delt",
 			SoleVariable<double>::getTypeDescription());
-	    t->computes(new_dw, "p.conmod", region, 0,
-			ParticleVariable<CompMooneyRivlin>::getTypeDescription());
+	    t->computes(new_dw, "p.stress", region, 0,
+			ParticleVariable<Matrix3>::getTypeDescription());
+	    t->computes(new_dw, "p.deformationMeasure", region, 0,
+			ParticleVariable<Matrix3>::getTypeDescription());
+	    t->computes(new_dw, "MaxWaveSpeed",
+			SoleVariable<double>::getTypeDescription());
 	    sched->addTask(t);
 	}
 
@@ -167,8 +180,8 @@ void SerialMPM::timeStep(double t, double dt,
 	    Task* t = new Task("SerialMPM::computeInternalForce",
 			       region, old_dw, new_dw,
 			       this, SerialMPM::computeInternalForce);
-	    t->requires(new_dw, "p.conmod", region, 0,
-			ParticleVariable<CompMooneyRivlin>::getTypeDescription());
+	    t->requires(new_dw, "p.stress", region, 0,
+			ParticleVariable<Matrix3>::getTypeDescription());
 	    t->requires(old_dw, "p.volume", region, 0,
 			ParticleVariable<double>::getTypeDescription());
 	    t->computes(new_dw, "g.internalforce", region, 0,
@@ -228,8 +241,8 @@ void SerialMPM::timeStep(double t, double dt,
 	     * out(P.VELOCITY, P.X, P.NAT_X)
 	     */
 	    Task* t = new Task("SerialMPM::interpolateToParticlesAndUpdate",
-			       region, old_dw, new_dw,
-			       this, SerialMPM::interpolateToParticlesAndUpdate);
+			      region, old_dw, new_dw,
+			      this, SerialMPM::interpolateToParticlesAndUpdate);
 	    t->requires(new_dw, "g.acceleration", region, 0,
 			NCVariable<Vector>::getTypeDescription());
 	    t->requires(new_dw, "g.velocity_star", region, 0,
@@ -247,59 +260,18 @@ void SerialMPM::timeStep(double t, double dt,
     }
 }
 
-#define HEConstant1 100000.0
-#define HEConstant2 20000.0
-#define HEConstant3 70000.0
-#define HEConstant4 1320000.0
-
-inline double getLambda()
-{
-    double C1 = HEConstant1;
-    double C2 = HEConstant2;
-    double C4 = HEConstant4;
-  
-    double PR = (2.*C1 + 5.*C2 + 2.*C4)/(4.*C4 + 5.*C1 + 11.*C2);
-    double mu = 2.*(C1 + C2);
-    double lambda = 2.*mu*(1.+PR)/(3.*(1.-2.*PR)) - (2./3.)*mu;
-
-    return lambda;
-}
-
-inline double getMu()
-{
-  double mu = 2.*(HEConstant1 + HEConstant2);
-
-  return mu;
-}
-
 void SerialMPM::actuallyComputeStableTimestep(const ProcessorContext*,
 					      const Region* region,
 					      const DataWarehouseP& old_dw,
 					      DataWarehouseP& new_dw)
 {
-    ParticleVariable<double> pmass;
-    new_dw->get(pmass, "p.mass", region, 0);
-    ParticleVariable<double> pvolume;
-    new_dw->get(pvolume, "p.volume", region, 0);
-    ParticleSubset* pset = pmass.getParticleSubset();
-    ASSERT(pset == pvolume.getParticleSubset());
+    SoleVariable<double> MaxWaveSpeed;
+    new_dw->get(MaxWaveSpeed, "MaxWaveSpeed");
 
-    double c_dil = 0;
-    double c_rot = 0;
-    for(ParticleSubset::iterator iter = pset->begin();
-	iter != pset->end(); iter++){
-	ParticleSet::index idx = *iter;
-	double lambda = getLambda();
-	double mu = getMu();
-	double density = pmass[idx]/pvolume[idx];
-	c_dil = Max(c_dil, sqrt((lambda + 2.*mu)/density));
-	c_rot = Max(c_rot, sqrt(mu/density));
-    }
-    double c = Max(c_rot, c_dil);
     Vector dCell = region->dCell();
-    double width = Max(dCell.x(), dCell.y(), dCell.z());
-    double delt = 0.5*width/c;
-    new_dw->put(SoleVariable<double>(delt), "delt");
+    double width = Min(dCell.x(), dCell.y(), dCell.z());
+    double delt = 0.5*width/MaxWaveSpeed;
+    new_dw->put(SoleVariable<double>(delt), "delt", DataWarehouse::Min);
 }
 
 void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
@@ -370,65 +342,20 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
     new_dw->put(externalforce, "g.externalforce", region, 0);
 }
 
+
 void SerialMPM::computeStressTensor(const ProcessorContext*,
 				    const Region* region,
 				    const DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
 {
-    Matrix3 velGrad;
-    Vector dx = region->dCell();
-    double oodx[3];
-    oodx[0] = 1.0/dx.x();
-    oodx[1] = 1.0/dx.y();
-    oodx[2] = 1.0/dx.z();
-
-    // Create arrays for the particle position
-    // and the constitutive model
-    ParticleVariable<Vector> px;
-    old_dw->get(px, "p.x", region, 0);
-    ParticleVariable<CompMooneyRivlin> pconmod;
-    old_dw->get(pconmod, "p.conmod", region, 0);
-
-    NCVariable<Vector> gvelocity;
-    new_dw->get(gvelocity, "g.velocity", region, 0);
-    SoleVariable<double> delt;
-    old_dw->get(delt, "delt");
-
-    ParticleSubset* pset = px.getParticleSubset();
-    ASSERT(pset == px.getParticleSubset());
-    ASSERT(pset == pconmod.getParticleSubset());
-
-    for(ParticleSubset::iterator iter = pset->begin();
-       iter != pset->end(); iter++){
-       ParticleSet::index idx = *iter;
-
-       velGrad.set(0.0);
-       // Get the node indices that surround the cell
-       Array3Index ni[8];
-       Vector d_S[8];
-       if(!region->findCellAndShapeDerivatives(px[idx], ni, d_S))
-	   continue;
-
-        for(int k = 0; k < 8; k++) {
-         // While this reflects the smpm version, I think it is
-         // slightly wrong, but should give the same answer. JG 1/24/00
-	    //	    if(region->contains(ni[k])){
-	    Vector& gvel = gvelocity[ni[k]];
-		for (int j = 0; j<3; j++){
-		    for (int i = 0; i<3; i++) {
-			velGrad(i+1,j+1)+=gvel(j) * d_S[k](i) * oodx[i];
-		    }
-		}
-		//}
-        }
-
-	// Compute the stress tensor at each particle location.
-        pconmod[idx].computeStressTensor(velGrad,delt);
-
+    for(int m = 0; m < numMatls; i++){
+        Material* matl = materials[m];
+        MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+        if(mpm_matl){
+            ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+            cm->computeStressTensor(region, mpm_matl, old_dw, new_dw);
+	}
     }
-
-    new_dw->put(pconmod, "p.conmod", region, 0);
-
 }
 
 void SerialMPM::computeInternalForce(const ProcessorContext*,
@@ -449,8 +376,8 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
     old_dw->get(px, "p.x", region, 0);
     ParticleVariable<double> pvol;
     old_dw->get(pvol, "p.volume", region, 0);
-    ParticleVariable<CompMooneyRivlin> pconmod;
-    old_dw->get(pconmod, "p.conmod", region, 0);
+    ParticleVariable<Matrix3> pstress;
+    old_dw->get(pstress, "p.stress", region, 0);
 
     NCVariable<Vector> internalforce;
     new_dw->allocate(internalforce, "g.internalforce", region, 0);
@@ -458,7 +385,7 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
     ParticleSubset* pset = px.getParticleSubset();
     ASSERT(pset == px.getParticleSubset());
     ASSERT(pset == pvol.getParticleSubset());
-    ASSERT(pset == pconmod.getParticleSubset());
+    ASSERT(pset == pstress.getParticleSubset());
 
     internalforce.initialize(Vector(0,0,0));
 
@@ -474,10 +401,7 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
 
        for (int k = 0; k < 8; k++){
 	   Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-	   //if(region->contains(ni[k])){
-	       internalforce[ni[k]] -=
-		   (div * pconmod[idx].getStressTensor() * pvol[idx]);
-	       //}
+	   internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
        }
     }
 
