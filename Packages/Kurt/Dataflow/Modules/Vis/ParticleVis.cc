@@ -153,8 +153,10 @@ void ParticleVis::execute()
     }
     cmap->Scale(min,max);
   }   
+  cerr << "min=" << min << ", max=" << max << '\n';
 
   //--------------------------------------
+  cerr << "numParticles: " << ps->getParticleSet()->numParticles() << '\n';
 
   if( drawspheres.get() == 1 && ps->getParticleSet()->numParticles()) {
     float t = (polygons.get() - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
@@ -266,6 +268,9 @@ extern "C" Module* make_ParticleVis( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.2  2000/05/20 08:03:56  sparker
+// Got vis tools to work
+//
 // Revision 1.1  2000/05/20 02:30:07  kuzimmer
 // Multiple changes for new vis tools
 //
