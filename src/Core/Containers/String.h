@@ -201,7 +201,7 @@ public:
     // A part of the string
     // start=0 is first character
     // length=-1 means to end of string
-    clString substr(int start, int length=-1);
+    clString substr(int start, int length=-1) const;
 
     //////////
     // Convert to double/int.  Returns 1 if ok, 0 if bad
@@ -277,6 +277,9 @@ inline const char* clString::operator()() const
 
 //
 // $Log$
+// Revision 1.5  2000/03/17 08:27:51  sparker
+// Added const to substr
+//
 // Revision 1.4  1999/10/07 02:07:28  sparker
 // use standard iostreams and complex type
 //
