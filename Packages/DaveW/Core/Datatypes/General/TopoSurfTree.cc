@@ -14,10 +14,12 @@
 #include <iostream>
 using std::cerr;
 
+#include <queue>
+using std::queue;
+
 #include <Core/Util/Assert.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Util/NotFinished.h>
-#include <Core/Containers/Queue.h>
 #include <Core/Containers/TrivialAllocator.h>
 #include <Packages/DaveW/Core/Datatypes/General/TopoSurfTree.h>
 #include <Core/Malloc/Allocator.h>
@@ -406,10 +408,11 @@ void TopoSurfTree::BldPatches() {
 	  patchI[currSize].bdryEdgeFace.initialize(-1);
 	}
 
-	Queue<int> q;
-	q.append(ff);
-	while (!q.is_empty()) {
-	  int c=q.pop();
+	queue<int> q;
+	q.push(ff);
+	while (!q.empty()) {
+	  int c = q.front();
+	  q.pop();
 
 	  // put in the edge-neighbor faces that haven't been visited
 
@@ -428,7 +431,7 @@ void TopoSurfTree::BldPatches() {
 
 	      int fidx=localEdgeFaces[eidx][l];
 	      if (!visited[fidx]) {
-		q.append(fidx);
+		q.push(fidx);
 		visited[fidx]=1;
 		//				cerr << "     ...found face "<<fidx<<"\n";
 		int tmpIdx=faceI[fidx].patchIdx;
@@ -787,10 +790,11 @@ void TopoSurfTree::BldWires() {
 	  wireI.resize(currSize+1);
 	}
 
-	Queue<int> q;
-	q.append(ee);
-	while (!q.is_empty()) {
-	  int c=q.pop();
+	queue<int> q;
+	q.push(ee);
+	while (!q.empty()) {
+	  int c = q.front();
+	  q.pop();
 
 	  // put in the node-neighbor edges that haven't been visited
 	  // nidx is a node the face we're looking at
@@ -805,7 +809,7 @@ void TopoSurfTree::BldWires() {
 	    int eidx=localNodeEdges[nidx][k];
 	    //			cerr << "       edge "<<eidx<<" is a neighbor\n";
 	    if (!visited[eidx]) {
-	      q.append(eidx);
+	      q.push(eidx);
 	      visited[eidx]=1;
 	      //			    cerr << "     ...found edge "<<eidx<<"\n";
 	      int tmpIdx=edgeI[eidx].wireIdx;
@@ -828,7 +832,7 @@ void TopoSurfTree::BldWires() {
 	    int eidx=localNodeEdges[nidx][k];
 	    //			cerr << "       edge "<<eidx<<" is a neighbor\n";
 	    if (!visited[eidx]) {
-	      q.append(eidx);
+	      q.push(eidx);
 	      visited[eidx]=1;
 	      //			    cerr << "      ...found edge "<<eidx<<"\n";
 	      int tmpIdx=edgeI[eidx].wireIdx;

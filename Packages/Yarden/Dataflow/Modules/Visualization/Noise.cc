@@ -12,7 +12,6 @@
 
 #include <stdio.h>
 #include <time.h>
-#include <Core/Containers/Queue.h>  
 #include <Core/Persistent/Pstreams.h>          
 #include <Core/Geometry/BBox.h>
 #include <Dataflow/Ports/SurfacePort.h>

@@ -37,7 +37,6 @@
 
 #include <Dataflow/Network/NetworkEditor.h>
   
-#include <Core/Containers/Queue.h>
 #include <Dataflow/Comm/MessageBase.h>
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
@@ -65,10 +64,12 @@
 #endif
 
 #include <fstream>
-using std::ofstream;
 #include <iostream>
+#include <queue>
+using std::ofstream;
 using std::cerr;
 using std::endl;
+using std::queue;
   
 
 //#define DEBUG 1
@@ -206,16 +207,16 @@ void NetworkEditor::do_scheduling(Module* exclude)
     if(!schedule)
 	return;
     int nmodules=net->nmodules();
-    Queue<Module*> needexecute;		
+    queue<Module *> needexecute;		
 
     // build queue of module ptrs to execute
     int i;			    
     for(i=0;i<nmodules;i++){
 	Module* module=net->module(i);
 	if(module->need_execute)
-	    needexecute.append(module);
+	    needexecute.push(module);
     }
-    if(needexecute.is_empty()){
+    if(needexecute.empty()){
 	return;
     }
 
@@ -225,8 +226,9 @@ void NetworkEditor::do_scheduling(Module* exclude)
     // the queue of those to execute based on dataflow dependencies.
 
     Array1<Connection*> to_trigger;
-    while(!needexecute.is_empty()){
-	Module* module=needexecute.pop();
+    while(!needexecute.empty()){
+	Module* module = needexecute.front();
+	needexecute.pop();
 	// Add oports
 	int no=module->noports();
 	int i;
@@ -239,7 +241,7 @@ void NetworkEditor::do_scheduling(Module* exclude)
 		Module* m=iport->get_module();
 		if(m != exclude && !m->need_execute){
 		    m->need_execute=1;
-		    needexecute.append(m);
+		    needexecute.push(m);
 		}
 	    }
 	}
@@ -261,7 +263,7 @@ void NetworkEditor::do_scheduling(Module* exclude)
 				to_trigger.add(conn);
 			    } else {
 				m->need_execute=1;
-				needexecute.append(m);
+				needexecute.push(m);
 			    }
 			}
 		    }

@@ -18,7 +18,6 @@
 
 #include <Tester/TestTable.h>
 #include <Containers/String.h>
-#include <Containers/Queue.h>
 #include <Containers/Array1.h>
 #include <Containers/Array2.h>
 #include <Containers/Array3.h>
@@ -30,7 +29,6 @@ namespace SCIRun {
 
 
 TestTable test_table[] = {
-    {"Queue", Queue<int>::test_rigorous, 0},
     {"Array1", Array1<float>::test_rigorous, 0},
     {"Array2", Array2<int>::test_rigorous, 0},
     {"Array3", Array3<int>::test_rigorous, 0},
