@@ -86,7 +86,7 @@ SCICORESHARE void Pio(Piostream& stream, vector<T>& data)
   
   stream.begin_class("STLVector", STLVECTOR_VERSION);
   
-  int size=data.size();
+  int size=(int)data.size();
   stream.io(size);
   
   if(stream.reading()){
