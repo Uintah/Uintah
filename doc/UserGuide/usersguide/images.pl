@@ -14,11 +14,11 @@ $cached_env_img{$key} = q|<IMG
  SRC="|."$dir".q|img8.gif"
  ALT="\fbox{Default}">|; 
 
-$key = q/nomath_inline}fbox{Visual:}nomath_inline};MSF=1.6;LFS=11;AAT/;
+$key = q/nomath_inline}fbox{Shading}nomath_inline};MSF=1.6;LFS=11;AAT/;
 $cached_env_img{$key} = q|<IMG
- WIDTH="65" HEIGHT="40" ALIGN="MIDDLE" BORDER="0"
- SRC="|."$dir".q|img6.gif"
- ALT="\fbox{Visual:}">|; 
+ WIDTH="73" HEIGHT="40" ALIGN="MIDDLE" BORDER="0"
+ SRC="|."$dir".q|img7.gif"
+ ALT="\fbox{Shading}">|; 
 
 $key = q/nomath_inline}fbox{Autoview:}nomath_inline};MSF=1.6;LFS=11;AAT/;
 $cached_env_img{$key} = q|<IMG
@@ -26,23 +26,23 @@ $cached_env_img{$key} = q|<IMG
  SRC="|."$dir".q|img1.gif"
  ALT="\fbox{Autoview:}">|; 
 
-$key = q/nomath_inline}fbox{Shading}nomath_inline};MSF=1.6;LFS=11;AAT/;
+$key = q/nomath_inline}fbox{Visual:}nomath_inline};MSF=1.6;LFS=11;AAT/;
 $cached_env_img{$key} = q|<IMG
- WIDTH="73" HEIGHT="40" ALIGN="MIDDLE" BORDER="0"
- SRC="|."$dir".q|img7.gif"
- ALT="\fbox{Shading}">|; 
-
-$key = q/nomath_inline}fbox{Views:}nomath_inline};MSF=1.6;LFS=11;AAT/;
-$cached_env_img{$key} = q|<IMG
- WIDTH="62" HEIGHT="39" ALIGN="MIDDLE" BORDER="0"
- SRC="|."$dir".q|img4.gif"
- ALT="\fbox{Views:}">|; 
+ WIDTH="65" HEIGHT="40" ALIGN="MIDDLE" BORDER="0"
+ SRC="|."$dir".q|img6.gif"
+ ALT="\fbox{Visual:}">|; 
 
 $key = q/nomath_inline}fbox{Edit:}nomath_inline};MSF=1.6;LFS=11;AAT/;
 $cached_env_img{$key} = q|<IMG
  WIDTH="50" HEIGHT="40" ALIGN="MIDDLE" BORDER="0"
  SRC="|."$dir".q|img5.gif"
  ALT="\fbox{Edit:}">|; 
+
+$key = q/nomath_inline}fbox{Views:}nomath_inline};MSF=1.6;LFS=11;AAT/;
+$cached_env_img{$key} = q|<IMG
+ WIDTH="62" HEIGHT="39" ALIGN="MIDDLE" BORDER="0"
+ SRC="|."$dir".q|img4.gif"
+ ALT="\fbox{Views:}">|; 
 
 $key = q/nomath_inline}fbox{Gohome:}nomath_inline};MSF=1.6;LFS=11;AAT/;
 $cached_env_img{$key} = q|<IMG

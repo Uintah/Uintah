@@ -101,21 +101,19 @@ The traditional method for solving bioelectric field problems uses
 multiple, non-integrated computer programs.  For example, a scientist using
 a computer simulation to examine the effect of electrode patch placement on
 transcardiac current density in the design of a cardiac implantable
-defibrillator[<A
- HREF="node9.html#CRJ:Sch95b">1</A>] would require geometric modeling, numerical
+defibrillator[] would require geometric modeling, numerical
 simulation, and scientific visualization tools to complete the task.  The
 user might need one program to define the thoracic surfaces from medical
 images and another to create a discrete mesh of the volume contained within
-the surfaces[<A
- HREF="node9.html#CRJ:Sch93b">2</A>].  Another application like Matlab compute a
+the surfaces[].  Another application like Matlab computes a
 finite element simulation of the electric current distribution from the
 defibrillation electrodes through the thoracic volume[<A
- HREF="node9.html#RSM:And93">3</A>].
+ HREF="node9.html#RSM:And93">1</A>].
 Another approach might be to write a Fortran program using a public domain
 numerical library such as LAPACK <A NAME="636"></A>.  To see the output would
 require a scientific visualization package (such as those described
 in[<A
- HREF="node9.html#RSM:All91">4</A>]).  Between each of these steps, it would be necessary to
+ HREF="node9.html#RSM:All91">2</A>]).  Between each of these steps, it would be necessary to
 save the output of one program in a format that the next in the sequence
 could read--this might necessitate separate file format conversion
 utilities.  To find the optimal location, shape, and size parameters for
@@ -216,17 +214,11 @@ to spontaneously explore a problem.
 <P>
 While computational steering is still a young field in computer science,
 there are a number of examples of such systems (besides <I>SCIRun</I>) described in
-the literature.  Burnett[<A
- HREF="node9.html#MM:Bur94">5</A>], and Vetter and
-Schwan[<A
- HREF="node9.html#MM:Vet96">6</A>] give overviews of existing computational steering
-system.  Several notable examples include CUMULVS[<A
- HREF="node9.html#MM:Gei96">7</A>,<A
- HREF="node9.html#MM:Koh97">8</A>],
-<A NAME="656"></A> Progress[<A
- HREF="node9.html#MM:Vet95">9</A>], <A NAME="658"></A> and
-Magellan[<A
- HREF="node9.html#MM:Vet97a">10</A>] <A NAME="660"></A>.
+the literature.  Burnett[], and Vetter and
+Schwan[] give overviews of existing computational steering
+system.  Several notable examples include CUMULVS[,],
+<A NAME="656"></A> Progress[], <A NAME="658"></A> and
+Magellan[] <A NAME="660"></A>.
 
 <P>
 
@@ -242,17 +234,10 @@ package within the hierarchy of computational problem solving environments
 developed at the SCI Institute.  From a historical perspective, <I>SCIRun</I>,
 which we started developing in 1992, was the original implementation of the
 computational
-framework[<A
- HREF="node9.html#CRJ:Joh94c">11</A>,<A
- HREF="node9.html#RSM:Par95">12</A>,<A
- HREF="node9.html#RSM:Par95b">13</A>,<A
- HREF="node9.html#RSM:Par97">14</A>,<A
- HREF="node9.html#RSM:Par97b">15</A>,<A
- HREF="node9.html#CRJ:Parker99b">16</A>].
+framework[,,,,,].
 Since then, <I>SCIRun</I> and its computational workbench infrastructure have been
 the origin of many significant application-specific projects.  Two major
-examples are the DOE sponsored Uintah system [<A
- HREF="node9.html#RSM:Dav2000">17</A>] and the NIH
+examples are the DOE sponsored Uintah system [] and the NIH
 sponsored <I>BioPSE</I> system.  The target applications of the Uintah project are
 combustion, computational fluid dynamics, and mechanical modeling
 implemented on large-scale, distributed, shared memory architectures.  The
@@ -550,8 +535,8 @@ support but we plan to add this within six months of the first release.
   HREF="node10.html">Index</A></B> 
 <!--End of Navigation Panel-->
 <ADDRESS>
-Rob MacLeod
-2001-08-09
+Ted Dustman
+2001-09-07
 </ADDRESS>
 </BODY>
 </HTML>
