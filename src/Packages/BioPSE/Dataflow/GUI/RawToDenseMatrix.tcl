@@ -75,7 +75,7 @@ itcl_class BioPSE_DataIO_RawToDenseMatrix {
             raise $w
             return
         }
-	toplevel $w
+	#toplevel $w
 	set initdir ""
 	
 	#######################################################
@@ -96,8 +96,8 @@ itcl_class BioPSE_DataIO_RawToDenseMatrix {
 	makeOpenFilebox \
 		-parent $w \
 		-filevar $this-filename \
-		-command "$this working_files from-gui; destroy $w" \
-		-cancel "destroy $w" \
+		-command "$this working_files from-gui; destroy " \
+		-cancel "destroy " \
 		-title $title \
 		-filetypes $types \
 		-initialdir $initdir \

@@ -17,7 +17,7 @@ itcl_class Insight_DataIO_ColorImageReaderUChar2D {
 	    raise $child
 	    return;
         }
-        toplevel $w
+        #toplevel $w
 
 	set defext ".mhd"
 	set title "Open image file"
@@ -32,8 +32,8 @@ itcl_class Insight_DataIO_ColorImageReaderUChar2D {
 	makeOpenFilebox \
 		-parent $w \
 		-filevar $this-FileName \
-		-command "$this-c needexecute; destroy $w" \
-		-cancel "destroy $w" \
+		-command "$this-c needexecute; destroy " \
+		-cancel "destroy " \
 		-title "Open Image File" \
                 -filetypes $types \
 		-defaultextension $defext

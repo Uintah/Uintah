@@ -130,7 +130,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    return;
 	}
 
-	toplevel $w
+	#toplevel $w
 	set initdir ""
 	
 	# place to put preferred data directory
@@ -162,8 +162,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	makeOpenFilebox \
 	    -parent $w \
 	    -filevar $this-filename \
-	    -command "$this-c update_file; destroy $w" \
-	    -cancel "destroy $w" \
+	    -command "$this-c update_file; destroy " \
+	    -cancel "destroy " \
 	    -title $title \
 	    -filetypes $types \
 	    -initialdir $initdir \
