@@ -26,6 +26,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 	global $this-direction
 	global $this-color
 	global $this-remove-colinear
+	global $this-method
 
         set_defaults
     }
@@ -37,6 +38,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 	set $this-direction 1
 	set $this-color 1
 	set $this-remove-colinear 1
+	set $this-method 4
     }
 
     method ui {} {
@@ -47,20 +49,23 @@ itcl_class SCIRun_Visualization_StreamLines {
         }
         toplevel $w
 
-	frame $w.row1
-	frame $w.row2
-	frame $w.row3
-	frame $w.row4
+	frame $w.e
+	frame $w.e.labs
+	frame $w.e.ents
+	label $w.e.labs.tolerance -text "Error Tolerance" -just left
+	entry $w.e.ents.tolerance -textvariable $this-tolerance
+	label $w.e.labs.stepsize -text "Step Size" -just left
+	entry $w.e.ents.stepsize -textvariable $this-stepsize
+	label $w.e.labs.maxsteps -text "Maximum Steps" -just left
+	entry $w.e.ents.maxsteps -textvariable $this-maxsteps
 
-	label $w.row1.tolerance_label -text "Error Tolerance"
-	entry $w.row1.tolerance -textvariable $this-tolerance
-	label $w.row2.stepsize_label -text "Step Size"
-	entry $w.row2.stepsize -textvariable $this-stepsize
-	label $w.row3.maxsteps_label -text "Maximum Steps"
-	entry $w.row3.maxsteps -textvariable $this-maxsteps
+	pack $w.e.labs.tolerance $w.e.labs.stepsize $w.e.labs.maxsteps \
+	    -side top -anchor w
+	pack $w.e.ents.tolerance $w.e.ents.stepsize $w.e.ents.maxsteps \
+	    -side top -anchor e
+	pack $w.e.labs $w.e.ents -side left
 
-	frame $w.direction
-
+	frame $w.direction -relief groove -borderwidth 2
 	label $w.direction.label -text "Direction"
 	radiobutton $w.direction.neg -text "Negative" \
 	    -variable $this-direction -value 0
@@ -69,32 +74,50 @@ itcl_class SCIRun_Visualization_StreamLines {
 	radiobutton $w.direction.pos -text "Positive" \
 	    -variable $this-direction -value 2
 
-	frame $w.color
+	pack $w.direction.label -side top -fill both
+	pack $w.direction.neg $w.direction.both $w.direction.pos \
+	    -side left -fill both
 
+
+	frame $w.color -relief groove -borderwidth 2
 	label $w.color.label -text "Color Style"
 	radiobutton $w.color.const -text "Constant" -variable $this-color \
 		-value 0
 	radiobutton $w.color.incr -text "Increment" -variable $this-color \
 		-value 1
 
+	pack $w.color.label -side top -fill both
+	pack $w.color.const $w.color.incr -side top -anchor w
 
-	checkbutton $w.colinear -text "Filter Colinear Points" \
-		-variable $this-remove-colinear
 
-	pack $w.row1.tolerance_label $w.row1.tolerance -side left
-	pack $w.row2.stepsize_label $w.row2.stepsize -side left
-	pack $w.row3.maxsteps_label $w.row3.maxsteps -side left
+	frame $w.meth -relief groove -borderwidth 2
+	label $w.meth.label -text "Computation Method"
+	radiobutton $w.meth.ab -text "Adams-Bashforth Multi-Step" \
+	    -variable $this-method -value 0
+	#radiobutton $w.meth.o2 -text "Adams Moulton Multi Step" -variable $this-method \
+        #	    -value 1
+	radiobutton $w.meth.heun -text "Heun Method" \
+	    -variable $this-method -value 2
+	radiobutton $w.meth.rk4 -text "Classic 4th Order Runge-Kutta" \
+	    -variable $this-method -value 3
+	radiobutton $w.meth.rkf -text "Adaptive Runge-Kutta-Fehlberg" \
+	    -variable $this-method -value 4
+	
+	pack $w.meth.label -side top -fill both
+	pack $w.meth.ab $w.meth.heun $w.meth.rk4 $w.meth.rkf \
+	    -side top -anchor w
 
+
+	checkbutton $w.filter -text "Filter Colinear Points" \
+		-variable $this-remove-colinear -justify left
+
+
+	frame $w.row4
 	button $w.row4.execute -text "Execute" -command "$this-c needexecute"
 	
 	pack $w.row4.execute -side top -e n -f both
 
-	pack $w.direction.label $w.direction.neg $w.direction.both \
-		$w.direction.pos -side left
-
-	pack $w.color.label $w.color.const $w.color.incr -side left
-
-	pack $w.row1 $w.row2 $w.row3 $w.direction $w.color $w.colinear $w.row4 \
+	pack $w.meth $w.e $w.direction $w.color $w.filter $w.row4 \
 		-side top -e y -f both \
 		-padx 5 -pady 5
     }
