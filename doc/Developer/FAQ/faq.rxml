@@ -485,6 +485,33 @@ thread->resume() or thread->activate() (respectively) to start the thread runnin
 </answer>
 </qandaentry>
 
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.20</revnumber>
+<date>12/03/2003</date>
+</revision>
+</revhistory>
+
+<question>
+<para>How come when I added the .tcl file to the GUI directory the
+user interface still doesn't show up in SCIRun.</para>
+</question>
+
+
+<answer>
+<para>After adding the file to the GUI directory two things must be
+done in order for the interface to show up in SCIRun.  First you must
+add the file's name to the sub.mk file located in the
+GUI directory where your file was place.  Add it to SRCS placing it
+before the INSERT FILE HERE comment.  The second thing you need to do
+is recompile.  This generates a new tclIndex file with the information
+SCIRun needs to load your user interface.
+</para>
+</answer>
+</qandaentry>
+
 </qandaset>
 
 </article>
