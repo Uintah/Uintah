@@ -16,11 +16,10 @@
 #define SCI_project_Base_Widget_h 1
 
 #include <Constraints/manifest.h>
+#include <Constraints/BaseConstraint.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
-#include <Constraints/BaseConstraint.h>
-#include <Geom.h>
-
+#include <Geom/Geom.h>
 
 
 class BaseWidget {
