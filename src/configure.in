@@ -1857,46 +1857,49 @@ else
   if test -n "$vers"; then
     TP_COMPILER=MIPSpro-$vers
   else
-    TP_COMPILER=unknown
+    TP_COMPILER=""
   fi
 fi
 
 
+# Only check this is the base dir is around.
 TP_BASE=/usr/sci/projects
-TP_SUBDIR=$TP_ARCH/$TP_COMPILER-${NBITS}bit
-TP_PATH=$TP_BASE/SCIRun/Thirdparty/$TP_VERSION/$TP_SUBDIR
 
-if test -e $TP_PATH; then
-  SCI_LAB_TP_DEFAULT="$SCI_LAB_TP_DEFAULT $TP_PATH"
-else
-  SCI_MSG_ERROR(Default thirdparty directory $TP_PATH does not exists!)
-fi
+if test -e $TP_BASE && test "$TP_ARCH" && test "$TP_COMPILER"; then
+  TP_SUBDIR=$TP_ARCH/$TP_COMPILER-${NBITS}bit
+  TP_PATH=$TP_BASE/SCIRun/Thirdparty/$TP_VERSION/$TP_SUBDIR
 
-CCATP_VERSION=1.0.0
-CCATP_PATH=$TP_BASE/CCA/Thirdparty/$CCATP_VERSION/$TP_SUBDIR
-
-UINTAHTP_VERSION=1.0.0
-UINTAHTP_PATH=$TP_BASE/Uintah/Thirdparty/$UINTAHTP_VERSION/$TP_SUBDIR
-
-if test "$pkg_uintah"="yes"; then
-  if test -e $CCATP_PATH && test -e $UINTAHTP_PATH; then
-    SCI_LAB_TP_DEFAULT="$SCI_LAB_TP_DEFAULT $CCATP_PATH $UINTAHTP_PATH"
-  else
-    SCI_MSG_ERROR(Default Uintah thirdparty directory does not exists!)
-  fi
-fi
-
-RTRTTP_VERSION=1.0.0
-RTRTTP_PATH=$TP_BASE/rtrt/Thirdparty/$RTRTTP_VERSION/$TP_SUBDIR
-
-if test "$pkg_rtrt"="yes"; then
   if test -e $TP_PATH; then
-    SCI_LAB_TP_DEFAULT="$SCI_LAB_TP_DEFAULT $RTRTTP_PATH"
+    SCI_LAB_TP_DEFAULT="$SCI_LAB_TP_DEFAULT $TP_PATH"
   else
-    SCI_MSG_ERROR(Default RTRT thirdparty directory $RTRTTP_PATH does not exists!)
+    AC_MSG_WARN(Default thirdparty directory $TP_PATH does not exists!)
+  fi
+
+  CCATP_VERSION=1.0.0
+  CCATP_PATH=$TP_BASE/CCA/Thirdparty/$CCATP_VERSION/$TP_SUBDIR
+
+  UINTAHTP_VERSION=1.0.0
+  UINTAHTP_PATH=$TP_BASE/Uintah/Thirdparty/$UINTAHTP_VERSION/$TP_SUBDIR
+
+  if test "$pkg_uintah"="yes"; then
+    if test -e $CCATP_PATH && test -e $UINTAHTP_PATH; then
+      SCI_LAB_TP_DEFAULT="$SCI_LAB_TP_DEFAULT $CCATP_PATH $UINTAHTP_PATH"
+    else
+       AC_MSG_WARN(Default Uintah thirdparty directory does not exists!)
+    fi
+  fi
+
+  RTRTTP_VERSION=1.0.0
+  RTRTTP_PATH=$TP_BASE/rtrt/Thirdparty/$RTRTTP_VERSION/$TP_SUBDIR
+
+  if test "$pkg_rtrt"="yes"; then
+    if test -e $TP_PATH; then
+      SCI_LAB_TP_DEFAULT="$SCI_LAB_TP_DEFAULT $RTRTTP_PATH"
+    else
+      AC_MSG_WARN(Default RTRT thirdparty directory $RTRTTP_PATH does not exists!)
+    fi
   fi
 fi
-
 
 for i in $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then
