@@ -17,7 +17,7 @@
 
 
 /*
- *  ClippingPlane.cc:  Make an ImageField that fits the source field.
+ *  SamplePlane.cc:  Make an ImageField that fits the source field.
  *
  *  Written by:
  *   Michael Callahan
@@ -37,11 +37,11 @@
 
 namespace SCIRun {
 
-class ClippingPlane : public Module
+class SamplePlane : public Module
 {
 public:
-  ClippingPlane(const string& id);
-  virtual ~ClippingPlane();
+  SamplePlane(const string& id);
+  virtual ~SamplePlane();
 
   virtual void execute();
 
@@ -52,17 +52,16 @@ private:
   GuiInt axis_;
 
   enum DataTypeEnum { SCALAR, VECTOR, TENSOR };
-  DataTypeEnum datatype_;
 };
 
 
-extern "C" Module* make_ClippingPlane(const string& id) {
-  return new ClippingPlane(id);
+extern "C" Module* make_SamplePlane(const string& id) {
+  return new SamplePlane(id);
 }
 
 
-ClippingPlane::ClippingPlane(const string& id)
-  : Module("ClippingPlane", id, Filter, "Fields", "SCIRun"),
+SamplePlane::SamplePlane(const string& id)
+  : Module("SamplePlane", id, Filter, "Fields", "SCIRun"),
     size_x_("sizex", id, this),
     size_y_("sizey", id, this),
     axis_("axis", id, this)
@@ -71,12 +70,12 @@ ClippingPlane::ClippingPlane(const string& id)
 
 
 
-ClippingPlane::~ClippingPlane()
+SamplePlane::~SamplePlane()
 {
 }
 
 void
-ClippingPlane::execute()
+SamplePlane::execute()
 {
   const int axis = Min(2, Max(0, axis_.get()));
   Transform trans;
@@ -112,20 +111,21 @@ ClippingPlane::execute()
     postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
+  DataTypeEnum datatype;
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
-    datatype_ = SCALAR;
+    datatype = SCALAR;
   }
   else
   {
-    datatype_ = SCALAR;
+    datatype = SCALAR;
     if (ifieldhandle->query_vector_interface())
     {
-      datatype_ = TENSOR;
+      datatype = TENSOR;
     }
     else if (ifieldhandle->query_tensor_interface())
     {
-      datatype_ = VECTOR;
+      datatype = VECTOR;
     }
   
     // Compute Transform.
@@ -164,11 +164,11 @@ ClippingPlane::execute()
 
   // Create Image Field.
   FieldHandle ofh;
-  if (datatype_ == VECTOR)
+  if (datatype == VECTOR)
   {
     ofh = scinew ImageField<Vector>(imagemesh, Field::NODE);
   }
-  else if (datatype_ == TENSOR)
+  else if (datatype == TENSOR)
   {
     ofh = scinew ImageField<Tensor>(imagemesh, Field::NODE);
   }
@@ -180,7 +180,7 @@ ClippingPlane::execute()
   // Transform field.
   ofh->mesh()->transform(trans);
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("Output Clipping Plane");
+  FieldOPort *ofp = (FieldOPort *)get_oport("Output Sample Field");
   if (!ofp) {
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;

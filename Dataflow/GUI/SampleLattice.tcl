@@ -15,20 +15,20 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_ClippingPlane {
+itcl_class SCIRun_Fields_SampleLattice {
     inherit Module
     constructor {config} {
-        set name ClippingPlane
+        set name SampleLattice
         set_defaults
     }
 
     method set_defaults {} {
 	global $this-sizex
 	global $this-sizey
-	global $this-axis
-	set $this-sizex 20
-	set $this-sizey 20
-	set $this-axis 0
+	global $this-sizez
+	set $this-sizex 16
+	set $this-sizey 16
+	set $this-sizez 16
     }
 
     method ui {} {
@@ -47,20 +47,16 @@ itcl_class SCIRun_Fields_ClippingPlane {
 	pack $w.row1 $w.row2 $w.row3 $w.row4 -side top -e y -f both \
 		-padx 5 -pady 5
 	
-	label $w.row1.xsize_label -text "Width    "
+	label $w.row1.xsize_label -text "X Size   "
 	entry $w.row1.xsize -textvariable $this-sizex
-	label $w.row2.ysize_label -text "Height   "
+	label $w.row2.ysize_label -text "Y Size   "
 	entry $w.row2.ysize -textvariable $this-sizey
+	label $w.row3.zsize_label -text "Z Size   "
+	entry $w.row3.zsize -textvariable $this-sizez
 
 	pack $w.row1.xsize_label $w.row1.xsize -side left
 	pack $w.row2.ysize_label $w.row2.ysize -side left
-
-
-	label $w.row3.label -text "Axis: "
-	radiobutton $w.row3.x -text "X    " -variable $this-axis -value 0
-	radiobutton $w.row3.y -text "Y    " -variable $this-axis -value 1
-	radiobutton $w.row3.z -text "Z" -variable $this-axis -value 2
-	pack $w.row3.label $w.row3.x $w.row3.y $w.row3.z -side left
+	pack $w.row3.zsize_label $w.row3.zsize -side left
 
 	button $w.row4.execute -text "Execute" -command "$this-c needexecute"
 	pack $w.row4.execute -side top -e n -f both
