@@ -3,9 +3,10 @@
 # to differentiate among the build names & even directories
 OS=`uname -s`
 
-BUILD_DIR=/usr/sci/projects/Uintah/tester/"$OS"
-SCRIPT_DIR=/usr/sci/projects/Uintah/tester/bin
-TEST_DATA=/usr/sci/projects/Uintah/tester/"$OS"/TestData
+BUILD_DIR=/local/csafe/raid1/tester/"$OS"
+SCRIPT_DIR=/local/csafe/raid1/tester/bin
+TEST_DATA=/usr/sci/projects/Uintah/tester/"$OS"-TestData
+TEMP_DIR=/usr/sci/projects/Uintah/tester/"$OS"
 USE_PREVTREE="no"
 USE_TREE="new"
 SEND_MAIL_TO=""
@@ -15,6 +16,7 @@ DEFAULT_REMAKE_LOG_TO="kuzimmer@cs.utah.edu, bigler@cs.utah.edu, witzel@cs.utah.
 PARALLELISM=0
 VERBOSE="no"
 WEEKLY="0"
+NOTESTS="0"
 MONTHLYBACKUP="no"
 mallocstrict="no"
 LD_LIBRARY_PATH=""
@@ -29,6 +31,7 @@ elif [ "$OS" == "Linux" ]; then
     CC=gcc
     CXX=c++
     F77=g77
+
 else
     echo "Unknown OS. Abort"
     exit -1
@@ -79,6 +82,9 @@ while [ "$#" -gt 0 ]; do
     -weekly)
         WEEKLY="1"
         ;;
+    -build_only)
+        NOTESTS="1"
+        ;;
     -monthlybackup)
         MONTHLYBACKUP="1"
         ;;
@@ -108,6 +114,7 @@ if [ $show_help != "0" ]; then
             -malloc_strict:  Have debug runs use malloc_strict 
 	    -use_tree "tree": Use the given tree instead of checking one out
 	    -use_prevtree: Use the previous (last_ran.lock) checkout and/or build
+	    -build_only:  Test the compilation only.  Don't run the tests.
             -verbose: Display verbose output
             -weekly:  Run longer regression tests (meant for once a week)
 	    -help:    Display this option summary
@@ -119,10 +126,9 @@ if [ "$WEEKLY" == "1" ]; then
   BUILD_DIR="$BUILD_DIR"/Weekly
 fi
 
-PATH="$SCRIPT_DIR":/usr/bin:/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/bin:"$PATH":.
-CVSROOT="csf.cs.utah.edu:/csafe_noexport/cvs/cvsroot"
-CVS_RSH=ssh
-export PATH CVSROOT CVS_RSH WEEKLY mallocstrict
+PATH="$PATH":"$SCRIPT_DIR":/usr/bin:/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/bin:/usr/lib:.
+CVSROOT="/usr/sci/projects/cvsrepository"
+export PATH CVSROOT WEEKLY mallocstrict NOTESTS
 
 # set number of processors to use when building
 if [ "$PARALLELISM" == "0" ]; then
@@ -207,9 +213,9 @@ else
        echo "mkdir $BUILDROOT"
     fi
 
+    umask 002
+
     mkdir "$BUILDROOT"
-    chgrp csafe "$BUILDROOT"
-    chmod g+s "$BUILDROOT"
 
     if [ -L "${BUILD_DIR}/last_ran.lock" ]; then
 	rm -f "${BUILD_DIR}/last_ran.lock" 
@@ -228,12 +234,25 @@ else
     fi
     cd "$BUILD_DIR"
 
-# currently a hack to get SCIRun in the right place w/o using a temp directory
-    cvs checkout -P -N -d SCIRun."$ID" Uintah > "$BUILDROOT"/cvs_co.log 2>&1
-    retval=$?
+    # right now in Linux there's a problem checking out into /local/csafe/raid1
+    if [ $OS = "Linux" ]; then
+	cd "$TEMP_DIR"
+        cvs checkout -P -N -d SCIRun."$ID" Uintah > "$BUILDROOT"/cvs_co.log 2>&1
+	retval=$?
+	mv SCIRun."$ID"/* "$BUILDROOT"
+    else
+        cvs checkout -P -N -d SCIRun."$ID" Uintah > "$BUILDROOT"/cvs_co.log 2>&1
+	retval=$?
+    fi
 
     if [ $VERBOSE == "yes" ]; then
       cat "$BUILDROOT"/cvs_co.log
+    fi
+
+    if [ $retval != "0" ]; then
+	echo "CVS checkout failed with code $retval"
+	echo "Look at ${BUILDROOT}/cvs_co.log for more information"
+	exit 1
     fi
 
     cd "$BUILDROOT"
@@ -251,11 +270,6 @@ else
     if [ $VERBOSE == "yes" ]; then
 	echo "TIME STAMP: CVS CHECKOUT DONE AT:"
 	date
-    fi
-    if [ $retval != "0" ]; then
-	echo "CVS checkout failed with code $retval"
-	echo "Look at ${BUILDROOT}/cvs_co.log for more information"
-	exit 1
     fi
 fi
 
@@ -278,14 +292,6 @@ if [ "$USE_TREE" == "new" -a "$USE_PREVTREE" == "no" -a `date +%d` == "01" -a "$
     fi
     ln -s "$BUILDROOT" "${BUILD_DIR}/1_month.lock" 
 fi
-# set configure command options based on architecture
-if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
-	DBG_CONFIGURE="'--enable-package=Uintah' '--enable-debug' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.1.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b/src/hypre'"
-	OPT_CONFIGURE="'--enable-package=Uintah' '--enable-optimize=-Ofast -G0 -OPT:div_split=OFF' '--disable-sci-malloc' '--enable-assertion-level=0' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.1.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b/src/hypre'"
-else
-	DBG_CONFIGURE="--enable-package='Uintah' --enable-debug --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-32bit/petsc-2.1.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-32bit/hypre-1.7.7b/src/hypre --with-mpi=/usr/local/lam-mpi"
-	OPT_CONFIGURE="--enable-package='Uintah' '--enable-optimize=-march=pentium4 -msse -msse2 -O3' --disable-sci-malloc --enable-assertion-level=0 --with-thirdparty=/usr/sci/projects/SCIRun/Thirdparty/1.7/Linux/gcc-3.2-32bit --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-32bit/petsc-2.1.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-32bit/hypre-1.7.7b/src/hypre --with-mpi=/usr/local/lam-mpi"
-fi
 
 # where the webpage will be, and init webpage
 if [ "$WEEKLY" == "0" ]; then
@@ -294,6 +300,14 @@ if [ "$WEEKLY" == "0" ]; then
 else
     HTMLLOG=/usr/sci/www/worthen/tester/"$OS"/Weekly/SCIRun.${ID}
     WEBLOG=http://www.sci.utah.edu/~worthen/tester/"$OS"/Weekly/SCIRun.${ID}
+fi
+# set configure command options based on architecture
+if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
+	DBG_CONFIGURE="'--enable-package=Uintah' '--enable-debug' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.1.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b/src/hypre'"
+	OPT_CONFIGURE="'--enable-package=Uintah' '--enable-optimize=-Ofast -G0 -OPT:div_split=OFF' '--disable-sci-malloc' '--enable-assertion-level=0' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.1.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b/src/hypre'"
+else
+	DBG_CONFIGURE="--enable-package='Uintah' --enable-debug --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/petsc-2.1.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/hypre-1.7.7b/src/hypre --with-mpi=/usr/local/lam-mpi"
+	OPT_CONFIGURE="--enable-package='Uintah' '--enable-optimize=-march=pentium4 -msse -msse2 -O3' --disable-sci-malloc --enable-assertion-level=0 --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/petsc-2.1.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/hypre-1.7.7b/src/hypre --with-mpi=/usr/local/lam-mpi"
 fi
 
 rm -f $HTMLLOG
@@ -307,7 +321,6 @@ echo "LOG: $HTMLLOG" >> $HTMLLOG
 
 
 PATH="$BUILDROOT"/src/Packages/Uintah/Test/helpers:"$PATH"
-
 export PATH DBG_CONFIGURE OPT_CONFIGURE HTMLLOG WEBLOG VERBOSE
 
 if [ $VERBOSE == "yes" ]; then
@@ -316,6 +329,10 @@ fi
 
 runTests
 retval=$?
+
+chgrp -R csafe $BUILDROOT
+chmod -R g+w $BUILDROOT
+
 
 if [ $VERBOSE == "yes" ]; then
     echo "TIME STAMP: REGRESSION TESTER DONE AT:"

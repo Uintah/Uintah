@@ -1,1 +1,2 @@
-0 23 * * * /usr/sci/projects/Uintah/tester/bin/tcsh_run "/usr/sci/projects/Uintah/tester/bin/startTester -j 2 -sendmail"
+0 0 * * * /local/csafe/raid1/tester/bin/tcsh_run "qsub /local/csafe/raid1/tester/bin/Regress.pbs"
+0 19 * * 5 /local/csafe/raid1/tester/bin/tcsh_run "qsub /local/csafe/raid1/tester/bin/Weekly.pbs"
