@@ -81,3 +81,11 @@ void CrowdMonitor::writeUnlock()
     d_lock.unlock();
 }
 
+//
+// $Log$
+// Revision 1.3  1999/08/25 02:37:55  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//
+

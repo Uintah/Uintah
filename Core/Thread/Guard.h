@@ -1,6 +1,20 @@
 
-#ifndef SCI_THREAD_GUARD_H
-#define SCI_THREAD_GUARD_H 1
+// $Id$
+
+/*
+ *  Guard.h: Automatically lock/unlock a mutex or crowdmonitor.
+ *
+ *  Written by:
+ *   Author: Steve Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: June 1997
+ *
+ *  Copyright (C) 1997 SCI Group
+ */
+
+#ifndef SCICore_Thread_Guard_h
+#define SCICore_Thread_Guard_h
 
 /**************************************
  
@@ -29,35 +43,48 @@ WARNING
    
 ****************************************/
 
-class CrowdMonitor;
-class Mutex;
+class SCICore {
+    class Thread {
+	class CrowdMonitor;
+	class Mutex;
 
-class Guard {
-    Mutex* d_mutex;
-    CrowdMonitor* d_monitor;
-public:
-    //////////
-    // Attach the <b>Guard</b> object to the <i>mutex</i>, and acquire
-    // the mutex.
-    Guard(Mutex* mutex);
-    enum Which {
-	Read,
-	Write
-    };
+	class Guard {
+	    Mutex* d_mutex;
+	    CrowdMonitor* d_monitor;
+	public:
+	    //////////
+	    // Attach the <b>Guard</b> object to the <i>mutex</i>, and
+	    // acquire the mutex.
+	    Guard(Mutex* mutex);
+	    enum Which {
+		Read,
+		Write
+	    };
     
-    //////////
-    // Attach the <b>Guard</b> to the <i>CrowdMonitor</pre> and acquire
-    // one of the locks.  If <i>action</i> is <b>Read</b>, the read lock
-    // will be acquired, and if <i>action</i> is <b>Write</b>, then the
-    // write lock will be acquired.  The appropriate lock will then be
-    // released by the destructor
-    Guard(CrowdMonitor* crowdMonitor, Which action);
+	    //////////
+	    // Attach the <b>Guard</b> to the <i>CrowdMonitor</pre> and
+	    // acquire one of the locks.  If <i>action</i> is
+	    // <b>Guard::Read</b>, the read lock will be acquired, and if
+	    // <i>action</i> is <b>Write</b>, then the write lock will be
+	    // acquired.  The appropriate lock will then be released by the
+	    // destructor
+	    Guard(CrowdMonitor* crowdMonitor, Which action);
     
-    //////////
-    // Release the lock acquired by the constructor.
-    ~Guard();
-private:
-    Which action;
-};
+	    //////////
+	    // Release the lock acquired by the constructor.
+	    ~Guard();
+	private:
+	    Which action;
+	};
+    }
+}
 
 #endif
+
+//
+// $Log$
+// Revision 1.2  1999/08/25 02:37:56  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//

@@ -1,4 +1,19 @@
 
+/* REFERENCED */
+static char *id="$Id$";
+
+/*
+ *  Thread.h: The thread class
+ *
+ *  Written by:
+ *   Author: Steve Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: June 1997
+ *
+ *  Copyright (C) 1997 SCI Group
+ */
+
 #include "Thread.h"
 #include "ThreadGroup.h"
 #include "Parallel.h"
@@ -80,12 +95,6 @@ bool Thread::isDaemon() const
 bool Thread::isDetached() const
 {
     return d_detached;
-}
-
-void Thread::error(const std::string& error)
-{
-    fprintf(stderr, "\n\nThread Error: %s\n ", error.c_str());
-    Thread::niceAbort();
 }
 
 const std::string& Thread::threadName() const
@@ -171,12 +180,11 @@ void Thread::niceAbort()
     }
 }
 
-#include <Thread/TestThreads.h>
+//
+// $Log$
+// Revision 1.3  1999/08/25 02:38:00  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//
 
-void Thread::test_rigorous(RigorousTest* __test)
-{
-    TestThreads tester(__test);
-    Thread::parallel(Parallel<TestThreads>(&tester, &TestThreads::test1),
-		     2, true);
-    TEST(tester.threads_seen==2);
-}
