@@ -119,6 +119,4 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     dbg << " Extra Solver flushes        = " << d_extraSolverFlushes << endl;
     dbg << "---------------------------------------------------------\n";
   }
-
-  cerr << " Extra Solver flushes        = " << d_extraSolverFlushes << endl;
 }
