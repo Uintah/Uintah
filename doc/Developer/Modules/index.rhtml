@@ -40,7 +40,7 @@ while (base != roottag && base != "") {
 }
 var inDocTree = base == roottag;
 if (inDocTree) {
-document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'/>")
+document.write("<link href='",treetop,"doc/Utilities/HTML/pkgindex.css' rel='stylesheet' type='text/css'/>")
 }
 </script>
 
@@ -54,16 +54,26 @@ document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTM
 }
 </script>
 
-<p class="title">Index to Module Descriptions by Package<a>
 <!--%
 version = File.open("../../edition.xml") do |f|
   /<edition>(.*)<\/edition>/.match(f.read())[1]
 end
 %-->
-<p class="subtitle">(for SCIRun version <!--%= version %-->)</p>
-<hr size="1"/>
 
-<table align="center" cellspacing="10">
+<br/>
+<br/>
+
+<table align="center">
+<thead>
+<tr>
+<th colspan="2">
+<div class="title">Module Descriptions by Package</div>
+<div class="subtitle">(for SCIRun version <!--%= version %-->)</div>
+</th>
+</tr>
+</thead>
+<tfoot />
+<tbody>
 <tr>
 <td><a href="SCIRun.html">SCIRun</a></td>
 <td><a href="BioPSE.html">BioPSE</a></td>
@@ -76,13 +86,18 @@ end
 <td><a href="Fusion.html">Fusion</a></td>
 <td><a href="VDT.html">VDT</a></td>
 </tr>
+</tbody>
 </table>
+
+<br/>
+<br/>
 
 <script type="text/javascript">
 if (inDocTree) {
 document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
 }
 </script>
+
 </body>
 </html>
 
