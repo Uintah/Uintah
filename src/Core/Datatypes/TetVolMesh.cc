@@ -27,7 +27,7 @@ const string
 TetVolMesh::type_name(int n)
 {
   ASSERT(n >= -1 && n <= 0);
-  static const string name = "TetVolMesh";
+  static const string name("TetVolMesh");
   return name;
 }
 

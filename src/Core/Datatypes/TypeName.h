@@ -67,19 +67,19 @@ template<class T> class Array2;
 
 template <class T> const string find_type_name(Array1<T>*)
 {
-  static const string name = "Array1" + FTNS + find_type_name((T*)0) + FTNE;
+  static const string name = string("Array1") + FTNS + find_type_name((T*)0) + FTNE;
   return name;
 }
 
 template <class T> const string find_type_name(Array2<T>*)
 {
-  static const string name = "Array2" + FTNS + find_type_name((T*)0) + FTNE;
+  static const string name = string("Array2") + FTNS + find_type_name((T*)0) + FTNE;
   return name;
 }
 
 template <class T> const string find_type_name(vector<T>*)
 {
-  static const string name = "vector" + FTNS + find_type_name((T*)0) + FTNE;
+  static const string name = string("vector") + FTNS + find_type_name((T*)0) + FTNE;
   return name;
 }
 

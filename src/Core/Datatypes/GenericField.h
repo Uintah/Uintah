@@ -183,7 +183,7 @@ GenericField<Mesh, FData>::get_minmax( double &min, double &max)
 
 
 // PIO
-const double GENERICFIELD_VERSION = 1.0;
+const int GENERICFIELD_VERSION = 1;
 
 
 template <class Mesh, class FData>
@@ -210,7 +210,8 @@ const string GenericField<Mesh, FData>::type_name(int n)
   }
   else if (n == 0)
   {
-    return "GenericField";
+    static const string nm("GenericField");
+    return nm;
   }
   else if (n == 1)
   {
