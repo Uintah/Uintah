@@ -572,6 +572,11 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
+  if (d_radiationCalc) {
+    if (d_DORadiationCalc){
+      d_radCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+    }
+  }
 
 #ifdef correctorstep
 #ifndef Runge_Kutta_2nd
@@ -775,7 +780,6 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 	enthalpyVars.ABSKG.initialize(0.0);
 	enthalpyVars.ESRCG.initialize(0.0);
 	// only do it once even for the 3rd RK method
-	d_radCounter++;
 	if (d_radCounter%d_radCalcFreq == 0) {
 	  enthalpyVars.src.initialize(0.0);
 	  enthalpyVars.qfluxw.initialize(0.0);
