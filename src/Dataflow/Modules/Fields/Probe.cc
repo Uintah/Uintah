@@ -494,6 +494,286 @@ ProbeCenterAlgo::get_compile_info(const TypeDescription *msrc)
 }
 
 
+template <>
+bool
+probe_center_compute_index(LatVolMesh::Node::index_type &index,
+			   LatVolMesh::Node::size_type &size,
+			   const LatVolMesh *mesh, const string &indexstr)
+{
+  istringstream istr(indexstr);
+
+  int i;
+  unsigned int idx[3];
+  for (i = 0; i < 3 && !istr.eof() && !istr.fail(); i++)
+  {
+    istr >> idx[i];
+  }
+  if (i == 1)
+  {
+    const int mij = (mesh->get_ni() * mesh->get_nj());
+    idx[2] = idx[0] / mij;
+    idx[1] = idx[0] % mij;
+    idx[0] = idx[1] % mesh->get_ni();
+    idx[1] = idx[1] / mesh->get_ni();
+  }
+  else if (i != 3)
+  {
+    return false;
+  }
+  mesh->size(size);
+  if (idx[0] < size.i_ && idx[1] < size.j_ && idx[2] < size.k_)
+  {
+    index = LatVolMesh::Node::index_type(mesh, idx[0], idx[1], idx[2]);
+    return true;
+  }
+  return false;
+}
+
+template <>
+bool
+probe_center_compute_index(LatVolMesh::Cell::index_type &index,
+			   LatVolMesh::Cell::size_type &size,
+			   const LatVolMesh *mesh, const string &indexstr)
+{
+  istringstream istr(indexstr);
+
+  int i;
+  unsigned int idx[3];
+  for (i = 0; i < 3 && !istr.eof() && !istr.fail(); i++)
+  {
+    istr >> idx[i];
+  }
+  if (i == 1)
+  {
+    const int mij = ((mesh->get_ni()-1) * (mesh->get_nj()-1));
+    idx[2] = idx[0] / mij;
+    idx[1] = idx[0] % mij;
+    idx[0] = idx[1] % (mesh->get_ni()-1);
+    idx[1] = idx[1] / (mesh->get_ni()-1);
+  }
+  else if (i != 3)
+  {
+    return false;
+  }
+  mesh->size(size);
+  if (idx[0] < size.i_ && idx[1] < size.j_ && idx[2] < size.k_)
+  {
+    index = LatVolMesh::Cell::index_type(mesh, idx[0], idx[1], idx[2]);
+    return true;
+  }
+  return false;
+}
+
+
+template <>
+bool
+probe_center_compute_index(StructHexVolMesh::Node::index_type &index,
+			   StructHexVolMesh::Node::size_type &size,
+			   const StructHexVolMesh *mesh,
+			   const string &indexstr)
+{
+  istringstream istr(indexstr);
+
+  int i;
+  unsigned int idx[3];
+  for (i = 0; i < 3 && !istr.eof() && !istr.fail(); i++)
+  {
+    istr >> idx[i];
+  }
+  if (i == 1)
+  {
+    const int mij = (mesh->get_ni() * mesh->get_nj());
+    idx[2] = idx[0] / mij;
+    idx[1] = idx[0] % mij;
+    idx[0] = idx[1] % mesh->get_ni();
+    idx[1] = idx[1] / mesh->get_ni();
+  }
+  else if (i != 3)
+  {
+    return false;
+  }
+  mesh->size(size);
+  if (idx[0] < size.i_ && idx[1] < size.j_ && idx[2] < size.k_)
+  {
+    index = StructHexVolMesh::Node::index_type(mesh, idx[0], idx[1], idx[2]);
+    return true;
+  }
+  return false;
+}
+
+
+template <>
+bool
+probe_center_compute_index(StructHexVolMesh::Cell::index_type &index,
+			   StructHexVolMesh::Cell::size_type &size,
+			   const StructHexVolMesh *mesh,
+			   const string &indexstr)
+{
+  istringstream istr(indexstr);
+
+  int i;
+  unsigned int idx[3];
+  for (i = 0; i < 3 && !istr.eof() && !istr.fail(); i++)
+  {
+    istr >> idx[i];
+  }
+  if (i == 1)
+  {
+    const int mij = ((mesh->get_ni()-1) * (mesh->get_nj()-1));
+    idx[2] = idx[0] / mij;
+    idx[1] = idx[0] % mij;
+    idx[0] = idx[1] % (mesh->get_ni()-1);
+    idx[1] = idx[1] / (mesh->get_ni()-1);
+  }
+  else if (i != 3)
+  {
+    return false;
+  }
+  mesh->size(size);
+  if (idx[0] < size.i_ && idx[1] < size.j_ && idx[2] < size.k_)
+  {
+    index = StructHexVolMesh::Cell::index_type(mesh, idx[0], idx[1], idx[2]);
+    return true;
+  }
+  return false;
+}
+
+
+
+template <>
+bool
+probe_center_compute_index(ImageMesh::Node::index_type &index,
+			   ImageMesh::Node::size_type &size,
+			   const ImageMesh *mesh, const string &indexstr)
+{
+  istringstream istr(indexstr);
+
+  int i;
+  unsigned int idx[2];
+  for (i = 0; i < 2 && !istr.eof() && !istr.fail(); i++)
+  {
+    istr >> idx[i];
+  }
+  if (i == 1)
+  {
+    idx[1] = idx[0] / mesh->get_ni();
+    idx[0] = idx[0] % mesh->get_ni();
+  }
+  else if (i != 2)
+  {
+    return false;
+  }
+  mesh->size(size);
+  if (idx[0] < size.i_ && idx[1] < size.j_)
+  {
+    index = ImageMesh::Node::index_type(mesh, idx[0], idx[1]);
+    return true;
+  }
+  return false;
+}
+
+
+template <>
+bool
+probe_center_compute_index(ImageMesh::Face::index_type &index,
+			   ImageMesh::Face::size_type &size,
+			   const ImageMesh *mesh, const string &indexstr)
+{
+  istringstream istr(indexstr);
+
+  int i;
+  unsigned int idx[2];
+  for (i = 0; i < 2 && !istr.eof() && !istr.fail(); i++)
+  {
+    istr >> idx[i];
+  }
+  if (i == 1)
+  {
+    idx[1] = idx[0] / (mesh->get_ni()-1);
+    idx[0] = idx[0] % (mesh->get_ni()-1);
+  }
+  else if (i != 2)
+  {
+    return false;
+  }
+  mesh->size(size);
+  if (idx[0] < size.i_ && idx[1] < size.j_)
+  {
+    index = ImageMesh::Face::index_type(mesh, idx[0], idx[1]);
+    return true;
+  }
+  return false;
+}
+
+
+template <>
+bool
+probe_center_compute_index(StructQuadSurfMesh::Node::index_type &index,
+			   StructQuadSurfMesh::Node::size_type &size,
+			   const StructQuadSurfMesh *mesh,
+			   const string &indexstr)
+{
+  istringstream istr(indexstr);
+
+  int i;
+  unsigned int idx[2];
+  for (i = 0; i < 2 && !istr.eof() && !istr.fail(); i++)
+  {
+    istr >> idx[i];
+  }
+  if (i == 1)
+  {
+    idx[1] = idx[0] / mesh->get_ni();
+    idx[0] = idx[0] % mesh->get_ni();
+  }
+  else if (i != 2)
+  {
+    return false;
+  }
+  mesh->size(size);
+  if (idx[0] < size.i_ && idx[1] < size.j_)
+  {
+    index = StructQuadSurfMesh::Node::index_type(mesh, idx[0], idx[1]);
+    return true;
+  }
+  return false;
+}
+
+
+template <>
+bool
+probe_center_compute_index(StructQuadSurfMesh::Face::index_type &index,
+			   StructQuadSurfMesh::Face::size_type &size,
+			   const StructQuadSurfMesh *mesh,
+			   const string &indexstr)
+{
+  istringstream istr(indexstr);
+
+  int i;
+  unsigned int idx[2];
+  for (i = 0; i < 2 && !istr.eof() && !istr.fail(); i++)
+  {
+    istr >> idx[i];
+  }
+  if (i == 1)
+  {
+    idx[1] = idx[0] / (mesh->get_ni()-1);
+    idx[0] = idx[0] % (mesh->get_ni()-1);
+  }
+  else if (i != 2)
+  {
+    return false;
+  }
+  mesh->size(size);
+  if (idx[0] < size.i_ && idx[1] < size.j_)
+  {
+    index = StructQuadSurfMesh::Face::index_type(mesh, idx[0], idx[1]);
+    return true;
+  }
+  return false;
+}
+
+
 } // End namespace SCIRun
 
 
