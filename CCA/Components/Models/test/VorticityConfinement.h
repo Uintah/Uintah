@@ -74,6 +74,10 @@ WARNING
                                     
    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                       SchedulerP& sched);
+                                      
+   virtual void scheduleTestConservation(SchedulerP&,
+                                         const PatchSet* patches,
+                                         const ModelInfo* mi);
   private:
     ICELabel* lb;
                                                 
@@ -88,18 +92,9 @@ WARNING
     VorticityConfinement& operator=(const VorticityConfinement&);
 
     ProblemSpecP params;
-
+    SimulationStateP sharedState;
     const Material* d_matl;
     MaterialSet* d_matl_set;
-
-    double oldProbeDumpTime;
-    SimulationStateP sharedState;
-    Output* dataArchiver;
-    vector<Vector> d_probePts;
-    vector<string> d_probePtsNames;
-    bool d_usingProbePts;
-    double d_probeFreq;
-
     double scale;
   };
 }
