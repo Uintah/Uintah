@@ -64,10 +64,10 @@ WARNING
     // Insert Documentation Here:
     virtual void compile(const ProcessorGroup * pc, bool scrub_new, bool scrub_old=true ) = 0;
     virtual void execute(const ProcessorGroup * pc ) = 0;
-    virtual void executeTimestep(const ProcessorGroup * pc ) {};
-    virtual void executeRefine(const ProcessorGroup * pc ) {};
-    virtual void executeCoarsen(const ProcessorGroup * pc ) {};
-    virtual void finalizeTimestep(const GridP& grid) {};
+    virtual void executeTimestep(const ProcessorGroup *  ) {};
+    virtual void executeRefine(const ProcessorGroup * ) {};
+    virtual void executeCoarsen(const ProcessorGroup *  ) {};
+    virtual void finalizeTimestep(const GridP& /*grid*/) {};
 
     virtual SchedulerP createSubScheduler() = 0;
        

@@ -67,8 +67,8 @@ WARNING
       // Insert Documentation Here:
       virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&) = 0;
 
-      virtual void scheduleRefine(/* const */ LevelP& coarseLevel, /* const */ LevelP& fineLevel, SchedulerP& scheduler) {};
-      virtual void scheduleCoarsen(/* const */ LevelP& coarseLevel, /* const */ LevelP& fineLevel, SchedulerP& scheduler) {};
+     virtual void scheduleRefine(/* const */ LevelP& /*coarseLevel*/, /* const */ LevelP& /*fineLevel*/, SchedulerP& /*scheduler*/) {};
+     virtual void scheduleCoarsen(/* const */ LevelP& /*coarseLevel*/, /* const */ LevelP& /*fineLevel*/, SchedulerP& /*scheduler*/) {};
 
    private:
       SimulationInterface(const SimulationInterface&);
