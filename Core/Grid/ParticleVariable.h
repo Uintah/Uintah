@@ -139,7 +139,7 @@ public:
 			   const ProcessorGroup* pg,
 			   ParticleSubset* pset);
   virtual void emitNormal(ostream& out, const IntVector& l,
-			  const IntVector& h, ProblemSpecP varnode);
+			  const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat);
   virtual bool emitRLE(ostream& out, const IntVector& l, const IntVector& h,
 		       ProblemSpecP varnode);
   
@@ -464,7 +464,7 @@ template<class T>
   template<class T>
   void
   ParticleVariable<T>::emitNormal(ostream& out, const IntVector&,
-				  const IntVector&, ProblemSpecP varnode)
+				  const IntVector&, ProblemSpecP varnode, bool /*outputDoubleAsFloat*/ )
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
 

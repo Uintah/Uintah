@@ -69,7 +69,7 @@ public:
 	    const string& compressionMode);
 
   virtual void emitNormal(ostream& out, const IntVector& l,
-			  const IntVector& h, ProblemSpecP varnode) = 0;
+			  const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat ) = 0;
   virtual void readNormal(istream& in, bool swapbytes) = 0;
 
   virtual bool emitRLE(ostream& /*out*/, const IntVector& l,

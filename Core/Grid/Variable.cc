@@ -75,7 +75,7 @@ void Variable::emit(OutputContext& oc, const IntVector& l,
 				   virtualGetTypeDescription()->getName()));
   }
   else
-    emitNormal(outstream, l, h, oc.varnode);
+    emitNormal(outstream, l, h, oc.varnode, oc.outputDoubleAsFloat);
 
   string preGzip = outstream.str();
   string preGzip2;

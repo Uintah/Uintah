@@ -81,7 +81,7 @@ WARNING
     virtual void print(ostream& out)
     { out << value; }
     virtual void emitNormal(ostream& out, const IntVector& /*l*/,
-			    const IntVector& /*h*/, ProblemSpecP /*varnode*/)
+			    const IntVector& /*h*/, ProblemSpecP /*varnode*/, bool /*outputDoubleAsFloat*/)
     { out.write((char*)&value, sizeof(double)); }
     virtual void readNormal(istream& in, bool swapBytes)
     {

@@ -263,16 +263,15 @@ using std::pair;
       int d_nextCheckpointWalltime; // used when d_checkpointWalltimeInterval != 0
       Mutex d_outputLock;
 
-      //--------------------------------------------
+      //-----------------------------------------------------------
       // RNJ - 
       //
-      // In order to avoid having to open and close
-      // index.xml, p<xxxxx>.xml, and p<xxxxx>.data
-      // when we want to update each variable, we
-      // will keep track of some XML docs and file
-      // handles and only open and close them once
-      // per timestep if they are needed.
-      //--------------------------------------------
+      // In order to avoid having to open and close index.xml,
+      // p<xxxxx>.xml, and p<xxxxx>.data when we want to update
+      // each variable, we will keep track of some XML docs and
+      // file handles and only open and close them once per
+      // timestep if they are needed.
+      //-----------------------------------------------------------
 
       // We need to have two separate XML Index Docs
       // because it is possible to do an output
@@ -294,6 +293,36 @@ using std::pair;
 
       map< int, ProblemSpecP > d_XMLDataDocs;
       map< int, ProblemSpecP > d_CheckpointXMLDataDocs;
+
+
+      //-----------------------------------------------------------
+      // RNJ - 
+      //
+      // If the <DataArchiver> section of the .ups file contains:
+      //
+      //   <outputDoubleAsFloat />
+      //
+      // Then we will set the d_OutputDoubleAsFloat boolean to true
+      // and we will try to output floats instead of doubles.
+      //
+      // NOTE: This does not affect checkpoints as they will
+      //       always be outputting doubles for accuracy.
+      //-----------------------------------------------------------
+
+      bool d_outputDoubleAsFloat;
+
+      string TranslateVariableType( string type, bool isThisCheckpoint );
+
+
+      //-----------------------------------------------------------
+      // RNJ - 
+      //
+      // This is the number of times the DataArchiver will retry
+      // a file system operation before it gives up and throws
+      // an exception.
+      //-----------------------------------------------------------
+
+      int d_fileSystemRetrys;
 
 
       DataArchiver(const DataArchiver&);
