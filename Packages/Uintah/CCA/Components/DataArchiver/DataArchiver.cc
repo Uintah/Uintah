@@ -12,6 +12,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -882,6 +883,9 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 {
   dbg << "begin outputTimestep()\n";
 
+  // to check for output nth proc
+  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(getPort("load balancer")); 
+
   int numLevels = grid->numLevels();
   // time should be currentTime+delt
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
@@ -937,6 +941,8 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 	ostringstream lname;
 	lname << "l" << l;
 	for(int i=0;i<d_myworld->size();i++){
+          if (i % lb->getNthProc() != 0 )
+            continue;
 	  ostringstream pname;
 	  pname << lname.str() << "/p" << setw(5) << setfill('0') << i 
 		<< ".xml";
