@@ -534,7 +534,6 @@ using namespace SCIRun;
       bool d_massExchange;
       bool d_RateForm;
       bool d_EqForm;
-      bool d_add_delP_Dilatate; 
       bool d_impICE;
       int d_dbgVar1;
       int d_dbgVar2;
