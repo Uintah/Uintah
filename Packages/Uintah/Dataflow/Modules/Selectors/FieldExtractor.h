@@ -105,8 +105,8 @@ void FieldExtractor::build_field(DataArchive& archive,
   int max_workers = Max(Thread::numProcessors()/2, 2);
   Semaphore* thread_sema = scinew Semaphore( "extractor semaphore",
                                              max_workers);
-  WallClockTimer my_timer;
-  my_timer.start();
+//  WallClockTimer my_timer;
+//  my_timer.start();
   Mutex lock("PatchtoData lock");
   
   double size = level->numPatches();
@@ -157,7 +157,7 @@ void FieldExtractor::build_field(DataArchive& archive,
       
       IntVector min_i(low.x(), low.y(), z);
       IntVector max_i(hi.x(), hi.y(), Min(z+z_step, z_max));
-      update_progress((count++/double(N))/size, my_timer);
+//      update_progress((count++/double(N))/size, my_timer);
       
       thread_sema->down();
 /*       PatchToFieldThread<Var, T> *ptft = */
@@ -177,8 +177,8 @@ void FieldExtractor::build_field(DataArchive& archive,
   }
   thread_sema->down(max_workers);
   if( thread_sema ) delete thread_sema;
-  timer.add( my_timer.time());
-  my_timer.stop();
+//  timer.add( my_timer.time());
+//  my_timer.stop();
 }
 
 
