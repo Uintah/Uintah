@@ -647,7 +647,14 @@ void VolumeVisDpy::animate(bool& changed) {
       cout << "true.\n";
     else
       cout << "false.\n";
-    cout << "course_hash is now "<<course_hash<<endl;
+    cout << "course_hash is now \n\t";
+    size_t num_bits = sizeof(course_hash)*8;
+    for(size_t i = 0; i < num_bits; i++)
+      if (course_hash & ( 1ULL << i ))
+        cout << 1;
+      else
+        cout << 0;
+    cout << "\n";
   }
 }
 
