@@ -676,6 +676,15 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 					     &enthalpyVars, &constEnthalpyVars);
 	  d_DORadiation->boundarycondition(pc, patch, cellinfo,
 					   &enthalpyVars, &constEnthalpyVars);
+
+	  if (d_MAlab) {
+	    constCCVariable<double> solidTemp;
+	    new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
+			matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+	    d_boundaryCondition->mmWallTemperatureBC(pc, patch, constEnthalpyVars.cellType, 
+						     solidTemp, enthalpyVars.temperature);
+	  }
+
 	  d_DORadiation->intensitysolve(pc, patch, cellinfo,
 					&enthalpyVars, &constEnthalpyVars);
 	}
