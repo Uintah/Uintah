@@ -17,10 +17,10 @@
 
 // soloader.cpp written by Chris Moulding 11/98
 
-#include <iostream>
-using std::cerr;
-using std::endl;
 #include <Core/Util/soloader.h>
+#include <iostream>
+#include <string>
+using namespace std;
 
 void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
 {
@@ -78,3 +78,31 @@ const char* SOError()
 #endif
 }
 
+LIBRARY_HANDLE FindLibInPath(const std::string& lib, const std::string& path)
+{
+  LIBRARY_HANDLE handle;
+  string tempPaths = path;
+  string dir;
+
+  // try to find the library in the specified path
+  while (tempPaths!="") {
+    const unsigned int firstColon = tempPaths.find(':');
+    if(firstColon < tempPaths.size()) {
+      dir=tempPaths.substr(0,firstColon);
+      tempPaths=tempPaths.substr(firstColon+1);
+    } else {
+      dir=tempPaths;
+      tempPaths="";
+    }
+
+    handle = GetLibraryHandle((dir+"/"+lib).c_str());
+    if (handle)
+      return handle;
+  }
+
+  // if not yet found, try to find it in the rpath 
+  // or the LD_LIBRARY_PATH (last resort)
+  handle = GetLibraryHandle(lib.c_str());
+    
+  return handle;
+}
