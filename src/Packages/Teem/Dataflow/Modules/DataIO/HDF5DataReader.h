@@ -34,18 +34,16 @@
 
 #include <Core/GuiInterface/GuiVar.h>
 
-#include <Packages/Fusion/share/share.h>
+#include <Packages/Teem/share/share.h>
 
-#define MAX_PORTS 6
-
-namespace Fusion {
+namespace SCITeem {
 
 using namespace SCIRun;
-using namespace SCITeem;
 
+#define MAX_PORTS 6
 #define MAX_DIMS 6
 
-class FusionSHARE HDF5DataReader : public Module {
+class TeemSHARE HDF5DataReader : public Module {
 public:
   HDF5DataReader(GuiContext *context);
 

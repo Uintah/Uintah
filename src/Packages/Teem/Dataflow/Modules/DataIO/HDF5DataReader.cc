@@ -34,7 +34,7 @@
 
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 
-#include <Packages/Fusion/Dataflow/Modules/DataIO/HDF5DataReader.h>
+#include <Packages/Teem/Dataflow/Modules/DataIO/HDF5DataReader.h>
 #include <Packages/Teem/Core/Datatypes/NrrdData.h>
 
 #include <sci_defs.h>
@@ -45,15 +45,14 @@
 #include "hdf5.h"
 #endif
 
-namespace Fusion {
+namespace SCITeem {
 
 using namespace SCIRun;
-using namespace SCITeem;
 
 DECLARE_MAKER(HDF5DataReader)
 
 HDF5DataReader::HDF5DataReader(GuiContext *context)
-  : Module("HDF5DataReader", context, Source, "DataIO", "Fusion"),
+  : Module("HDF5DataReader", context, Source, "DataIO", "Teem"),
     filename_(context->subVar("filename")),
     datasets_(context->subVar("datasets")),
     dumpname_(context->subVar("dumpname")),
@@ -157,7 +156,7 @@ void HDF5DataReader::execute() {
       updateFile = true;
     }
 
-    if( starts_[ic] + counts_[ic] * strides_[ic] > dims_[ic] ) {
+    if( starts_[ic] + (counts_[ic]-1) * strides_[ic] >= dims_[ic] ) {
     
       error( "Data selection exceeds bounds." );
       error( "Decrease the start or count or increase the stride." );
@@ -387,6 +386,9 @@ void HDF5DataReader::parseDatasets( string new_datasets,
 }
 
 vector<int> HDF5DataReader::getDatasetDims( string filename, string group, string dataset ) {
+  vector< int > idims;
+
+#ifdef HAVE_HDF5
   herr_t status;
 
   /* Open the file using default properties. */
@@ -419,12 +421,12 @@ vector<int> HDF5DataReader::getDatasetDims( string filename, string group, strin
   /* Terminate access to the group. */ 
   status = H5Fclose(file_id);
 
-  vector< int > idims;
 
   for( int ic=0; ic<ndims; ic++ )
     idims.push_back( dims[ic] );
 
   delete dims;
+#endif
 
   return idims;
 }
@@ -739,12 +741,11 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       } else {
 	error( string("Could not create dump file: ") + tmp_filename );
       }
-#else
-
-      error( "No HDF5 availible." );
-
-#endif
     }
+#else
+    error( "No HDF5 availible." );
+#endif
+
   } else if (args[1] == "update_selection") {
 #ifdef HAVE_HDF5
     filename_.reset();
@@ -839,10 +840,13 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 	gui->execute(str.str().c_str());
       }
     }
+#else
+    error( "No HDF5 availible." );
 #endif
+
   } else {
     Module::tcl_command(args, userdata);
   }
 }
 
-} // End namespace Fusion
+} // End namespace SCITeem
