@@ -340,7 +340,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	
 	
 	checkbutton $vector.normalize_vectors \
-		-text "Normalize Vectors before scaling" \
+		-text "Normalize before scaling" \
 		-command "$this-c toggle_normalize" \
 		-variable $this-normalize-vectors
 
