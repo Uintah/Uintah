@@ -341,6 +341,8 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 void
 DynamicLoader::cleanup_failed_compile(CompileInfoHandle info)
 {
+  if (sci_getenv_p("SCIRUN_NOCLEANUPCOMPILE")) { return; }
+
   const string base = otf_dir_ + "/" + info->filename_;
 
   const string full_cc = base + "cc";
