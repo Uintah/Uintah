@@ -59,29 +59,35 @@
  */
 
 #include <string>
-
 #include <iostream>
-extern "C" void* BioPSEInit(void *param) 
+
+#include <Packages/BioPSE/Core/Datatypes/TypeName.h>
+
+using namespace std;
+
+extern "C" 
+void*
+BioPSEInit(void *param) 
 {
-  std::cerr << "BioPSEInit called!: " << (int)param << std::endl;
+  cerr << "BioPSEInit called!: " << param << "\n";
   return 0;
 }
 
 
 namespace BioPSE{
-class NeumannBC;
-}
 
-#include <Packages/BioPSE/Core/Datatypes/TypeName.h>
+  class NeumannBC;
+
+}
 
 namespace SCIRun {
 
-using std::string;
+  using std::string;
 
-template<> const string find_type_name(NeumannBC*)
-{
-  static const string name = "NeumannBC";
-  return name;
-}
+  template<> const string find_type_name(BioPSE::NeumannBC*)
+  {
+    static const string name = "NeumannBC";
+    return name;
+  }
 
-} // namespace BioPSE
+} // namespace SCIRun
