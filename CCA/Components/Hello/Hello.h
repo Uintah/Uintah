@@ -66,7 +66,9 @@ namespace SCIRun {
     ~Hello();
     void setServices(const sci::cca::Services::pointer& svc);
   private:
-    
+    void setCommunicator(int comm){
+      //MPI_COMM_COM=MPI_COMM_WORLD; //*(MPI_Comm*)(comm);
+    }    
     Hello(const Hello&);
     Hello& operator=(const Hello&);
     sci::cca::Services::pointer services;
