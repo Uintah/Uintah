@@ -592,11 +592,13 @@ proc CreateNewModuleOk { compaddr compname catname packname psepath} {
 	return
     }
 
-    if {![file exists $psepath/src/$packname]} {
+    if {![file exists $psepath/src/Packages/$packname]} {
 	yesnodialog "PACKAGE NAME WARNING" \
-                    "Package \"$psepath/src/$packname\" does not exist. \
+                    "Package \"$psepath/src/Packages/$packname\" \
+		    does not exist. \
                      Create it now? \n \
-                     (If yes, the category \"$psepath/src/$packname/$catname\"\
+                     (If yes, the category \"$psepath/src/Packages/ \
+		     $packname/$catname\"\
                      will also be created.)" \
 		    "netedit create_pac_cat_mod $psepath $packname\
 		    $catname $compname $compaddr; destroy $w;\
@@ -604,21 +606,23 @@ proc CreateNewModuleOk { compaddr compname catname packname psepath} {
 	return
     }
 
-    if {![file isdirectory $psepath/src/$packname]} {
+    if {![file isdirectory $psepath/src/Packages/$packname]} {
 	messagedialog "PACKAGE NAME ERROR" \
-                      "The name \"$psepath/src/$packname\" is already in use\
+                      "The name \"$psepath/src/Packages/$packname\" \
+		      is already in use\
                        by a non-package file"
 	return
     }
 
-    if {![expr [file exists $psepath/src/$packname/Modules] && \
-               [file isdirectory $psepath/src/$packname/Modules] && \
-               [file exists $psepath/src/$packname/XML] && \
-               [file isdirectory $psepath/src/$packname/XML] && \
-               [file exists $psepath/src/$packname/sub.mk] && \
-               ![file isdirectory $psepath/src/$packname/sub.mk]]} {
+    if {![expr [file exists $psepath/src/Packages/$packname/Modules] && \
+               [file isdirectory $psepath/src/Packages/$packname/Modules] && \
+               [file exists $psepath/src/Packages/$packname/XML] && \
+               [file isdirectory $psepath/src/Packages/$packname/XML] && \
+               [file exists $psepath/src/Packages/$packname/sub.mk] && \
+               ![file isdirectory $psepath/src/Packages/$packname/sub.mk]]} {
 	messagedialog "PACKAGE ERROR" \
-                      "The file \"$psepath/src/$packname\" does not appear\
+                      "The file \"$psepath/src/Packages/$packname\" \
+		      does not appear\
                        to be a valid package or is somehow corrupt.\
                        The module \"$compname\" will not be added.\n\n\
                        See the \"Create A New Module\" documentation for\
@@ -626,9 +630,10 @@ proc CreateNewModuleOk { compaddr compname catname packname psepath} {
 	return
     }
              
-    if {![file exists $psepath/src/$packname/Modules/$catname]} {
+    if {![file exists $psepath/src/Packages/$packname/Modules/$catname]} {
 	yesnodialog "CATEGORY NAME WARNING" \
-                    "Category \"$psepath/src/$packname/Modules/$catname\"\
+                    "Category \
+		    \"$psepath/src/Packages/$packname/Modules/$catname\"\
 		    does not exist.  Create it now?" \
 		    "netedit create_cat_mod $psepath $packname\
 		    $catname $compname $compaddr; destroy $w;\
@@ -636,16 +641,18 @@ proc CreateNewModuleOk { compaddr compname catname packname psepath} {
 	return
     }
 
-    if {![file isdirectory $psepath/src/$packname/Modules/$catname]} {
+    if {![file isdirectory $psepath/src/Packages/$packname/Modules/$catname]} {
 	messagedialog "CATEGORY NAME ERROR" \
-                      "The name \"$psepath/src/$packname/Modules/$catname\"\
+                      "The name \
+		      \"$psepath/src/Packages/$packname/Modules/$catname\"\
                        is already in use by a non-category file"
 	return	
     }
 
-    if {![file exists $psepath/src/$packname/Modules/$catname/sub.mk]} {
+    if {![file exists $psepath/src/Packages/$packname/Modules/$catname/sub.mk]}
+ {
 	messagedialog "CATEGORY ERROR" \
-                      "The file \"$psepath/src/$packname/Modules/$catname\"\
+                      "The file \"$psepath/src/Packages/$packname/Modules/$catname\"\
                        does not appear to be a valid category or is\
                        somehow corrupt.  The Module \"$compname\" will\
                        not be added.\n\n\
@@ -654,10 +661,10 @@ proc CreateNewModuleOk { compaddr compname catname packname psepath} {
 	return
     }
 
-    if {[file exists $psepath/src/$packname/Modules/$catname/$compname.cc]} {
+    if {[file exists $psepath/src/Packages/$packname/Modules/$catname/$compname.cc]} {
 	messagedialog "MODULE NAME ERROR" \
 		      "The name \
-		      \"$psepath/src/$packname/Modules/$catname/$compname\"\
+		      \"$psepath/src/Packages/$packname/Modules/$catname/$compname\"\
                       is already in use by another file"
 	return
     }
