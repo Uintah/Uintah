@@ -26,7 +26,7 @@ else
 	Core/Exceptions
 
 endif
-LIBS := $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBS) $(X11_LIBS) -lXi -lXmu $(FASTM_LIBRARY) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY) $(SOUNDLIBS)
+LIBS := -loogl $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBS) $(X11_LIBS) -lXi -lXmu $(FASTM_LIBRARY) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY) $(SOUNDLIBS)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
