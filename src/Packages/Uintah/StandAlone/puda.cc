@@ -1553,7 +1553,6 @@ int main(int argc, char** argv)
 			NodeIterator iter = patch->getNodeIterator();
 			min=max=value[*iter].length2();
 			for(;!iter.done(); iter++){
-			  cout << "iter = "<<*iter<<" ";
 			  min=Min(min, value[*iter].length2());
 			  max=Max(max, value[*iter].length2());
 			}
