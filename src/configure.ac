@@ -2067,26 +2067,28 @@ fi
 AC_MSG_CHECKING(for $_sci_optional ImageMagick)
 
 found_magic_config="no"
-for dif in "" "$_sci_lib"; do
+for dir in "" $_sci_lib; do
 
-   if test -e $_sci_lib/../bin/Magick-config; then
+   if test -e $dir/../bin/Magick-config; then
        found_magic_config="yes"
-       AC_MSG_RESULT(Using $_sci_lib/../bin/Magick-config to set ImageMagick variables.)
+       echo
+       AC_MSG_RESULT(Using $dir/../bin/Magick-config to set ImageMagick variables.)
 
-       MAG_LIBS=`$_sci_lib/../bin/Magick-config --libs`
-       MAG_DIRS=`$_sci_lib/../bin/Magick-config --ldflags`
+       MAG_LIBS=`$dir/../bin/Magick-config --libs`
+       MAG_DIRS=`$dir/../bin/Magick-config --ldflags`
 
        #MAGICK_LIB_DIR_FLAG=
        #SCI_REMOVE_MINUS_L(MAGICK_LIB_FLAG,$MAG_DIRS,$MAG_LIBS)
 
-       MAGICK_LIB_DIR_FLAG=`$_sci_lib/../bin/Magick-config --ldflags`
-       MAGICK_LIB_FLAG=`$_sci_lib/../bin/Magick-config --libs`
-       includes=`$_sci_lib/../bin/Magick-config --cppflags`
+       MAGICK_LIB_DIR_FLAG=`$dir/../bin/Magick-config --ldflags`
+       MAGICK_LIB_FLAG=`$dir/../bin/Magick-config --libs`
+       includes=`$dir/../bin/Magick-config --cppflags`
 
        SCI_TRY_LINK(MAGICK,ImageMagick library and headers,magick/magick.h,
                     $includes,$MAGICK_LIB_FLAG,$MAGICK_LIB_DIR_FLAG,,,required)
 
        DEF_MAGICK="#define HAVE_MAGICK 1"
+       break
     fi
 done
 
