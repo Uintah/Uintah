@@ -107,7 +107,7 @@ module Print_Output
   # Convert tree absolute url to a sci website link.
   def treeUrl(url)
     raise "Bogus url [#{url}]" if not url =~ /^(doc|src)\//
-    '"' + SCI_SoftwareURL + url + '"'
+    SCI_SoftwareURL + url
   end
 
 end
@@ -116,7 +116,7 @@ module HTML_Output
   # Convert tree absolute url to doc relative url.
   def treeUrl(url)
     raise "Bogus url [#{url}]" if not url =~ /^(doc|src)\//
-    '"' + Doc.docRoot() + url + '"'
+    Doc.docRoot() + url
   end
 end
 
