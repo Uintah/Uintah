@@ -110,15 +110,17 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
 
   imesh->get_dim( dim );
 
-  if( dim.size() == 3 ) {
+  unsigned int rank = dim.size();
+
+  if( rank == 3 ) {
     idim_in = dim[0];
     jdim_in = dim[1];
     kdim_in = dim[2];
-  } else if( dim.size() == 2 ) {
+  } else if( rank == 2 ) {
     idim_in = dim[0];
     jdim_in = dim[1];
     kdim_in = 1;
-  } else if( dim.size() == 1 ) {
+  } else if( rank == 1 ) {
     idim_in = dim[0];
     jdim_in = 1;
     kdim_in = 1;
@@ -130,9 +132,9 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
   if( kstop <= kstart ) kstop += kdim_in;
 
   // Add one because we want the last node.
-  unsigned int idim_out = (istop - istart) / istride + 1;
-  unsigned int jdim_out = (jstop - jstart) / jstride + 1;
-  unsigned int kdim_out = (kstop - kstart) / kstride + 1;
+  unsigned int idim_out = (istop - istart) / istride + (rank >= 1 ? 1 : 0);
+  unsigned int jdim_out = (jstop - jstart) / jstride + (rank >= 2 ? 1 : 0);
+  unsigned int kdim_out = (kstop - kstart) / kstride + (rank >= 3 ? 1 : 0);
 
   unsigned int istop_stride;
   unsigned int jstop_stride;
@@ -142,41 +144,43 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
       field_h->get_type_description(0)->get_name() == "StructQuadSurfField" ||
       field_h->get_type_description(0)->get_name() == "StructCurveField" ) {
 
-    // Account for the modulo of strideping nodes so that the last node will be
+    // Account for the modulo of stride so that the last node will be
     // included even if it "partial" cell when compared to the others.
-    if( (istop - istart) % istride ) idim_out += 1;
-    if( (jstop - jstart) % jstride ) jdim_out += 1;
-    if( (kstop - kstart) % kstride ) kdim_out += 1;
+    if( (istop - istart) % istride ) idim_out += (rank >= 1 ? 1 : 0);
+    if( (jstop - jstart) % jstride ) jdim_out += (rank >= 2 ? 1 : 0);
+    if( (kstop - kstart) % kstride ) kdim_out += (rank >= 3 ? 1 : 0);
 
-    istop_stride = istop + istride;
-    jstop_stride = jstop + jstride;
-    kstop_stride = kstop + kstride; 
+    istop_stride = istop + (rank >= 1 ? istride : 0); 
+    jstop_stride = jstop + (rank >= 2 ? jstride : 0); 
+    kstop_stride = kstop + (rank >= 3 ? kstride : 0); 
+
   } else {
-    istop_stride = istop + 1;
-    jstop_stride = jstop + 1;
-    kstop_stride = kstop + 1; 
+    istop_stride = istop + (rank >= 1 ? 1 : 0);
+    jstop_stride = jstop + (rank >= 2 ? 1 : 0);
+    kstop_stride = kstop + (rank >= 3 ? 1 : 0); 
   }
 
   typename FIELD::mesh_handle_type omesh = scinew typename FIELD::mesh_type();
-  *(PropertyManager *) omesh = *(PropertyManager *)(imesh.get_rep());
 
-  if( dim.size() == 3 ) {
+  *(PropertyManager *) (omesh.get_rep()) = *(PropertyManager *)(imesh.get_rep());
+
+  if( rank == 3 ) {
     dim[0] = idim_out;
     dim[1] = jdim_out;
     dim[2] = kdim_out;
-  } else if( dim.size() == 2 ) {
+  } else if( rank == 2 ) {
     dim[0] = idim_out;
     dim[1] = jdim_out;
-  } else if( dim.size() == 1 ) {
+  } else if( rank == 1 ) {
     dim[0] = idim_out;
   }
 
   omesh->set_dim( dim );
-   
+
   // Now after the mesh has been created, create the field.
   FIELD *ofield = scinew FIELD(omesh, ifield->data_at());
 
-  *(PropertyManager *) ofield = *(PropertyManager *)(ifield_h.get_rep());
+  *(PropertyManager *) ofield = *(PropertyManager *)(ifield);
 
 #ifdef SET_POINT_DEFINED
   Point pt;
@@ -321,6 +325,8 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
 	imesh->get_center(pt, *inodeItr);
 	omesh->set_point(pt, *onodeItr);
 #endif
+
+	//	cout << knode << "  " << jnode << "  " << inode << endl;
 
 	switch( ifield->data_at() ) {
 	case Field::NODE:
