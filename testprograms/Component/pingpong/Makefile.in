@@ -36,6 +36,7 @@ LIBRARIES = $(LDRUN_PREFIX)$(OBJTOP_ABS)/SCICore \
 include $(SRCTOP)/scripts/program.mk
 
 SIDL_EXE = $(OBJTOP)/tools/sidl/sidl
+$(OBJS): PingPong_sidl.h
 
 PingPong_sidl.o: PingPong_sidl.cc PingPong_sidl.h
 
