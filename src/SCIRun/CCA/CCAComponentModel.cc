@@ -217,6 +217,14 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
   return ci;
 }
 
+bool CCAComponentModel::destroyInstance(ComponentInstance *ci)
+{
+  cerr<<"CCAComponentModel::destroyInstance() is not done"<<endl;
+  //make sure why ci->addReference() is called in createInstace();
+  delete ci;  
+  return false;
+}
+
 string CCAComponentModel::getName() const
 {
   return "CCA";

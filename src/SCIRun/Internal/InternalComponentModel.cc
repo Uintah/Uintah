@@ -123,6 +123,13 @@ ComponentInstance* InternalComponentModel::createInstance(const std::string&,
   return 0;
 }
 
+bool InternalComponentModel::destroyInstance(ComponentInstance *ic)
+{
+  cerr<<"Warning: I don't know how to destroy a internal component instance!"<<endl;
+  return true;
+}
+
+
 string InternalComponentModel::getName() const
 {
   return "Internal";

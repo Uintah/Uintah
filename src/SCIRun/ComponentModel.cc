@@ -52,3 +52,9 @@ ComponentInstance* ComponentModel::createInstance(const std::string& name,
   cerr << "Error: this component model does not implement createInstance\n";
   return 0;
 }
+
+bool  ComponentModel::destroyInstance(ComponentInstance* ic)
+{
+  cerr << "Error: this component model does not implement destroyInstance\n";
+  return false;
+}

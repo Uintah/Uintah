@@ -112,6 +112,58 @@ SCIRunFramework::createComponentInstance(const std::string& name,
   return ComponentID::pointer(new ComponentID(this, ci->instanceName));
 }
 
+bool SCIRunFramework::destroyComponentInstance(gov::cca::ComponentID::pointer &cid )
+{
+  ComponentInstance *ci=unregisterComponent(cid->getInstanceName());
+
+  string type=ci->className;
+  // See if the type is of the form:
+  //   model:name
+  // If so, extract the model and look up that component specifically.
+  // Otherwise, look at all models for that component
+  ComponentModel* mod=0;
+  unsigned int firstColon = type.find(':');
+  if(firstColon < type.size()){
+    string modelName = type.substr(0, firstColon);
+    type = type.substr(firstColon+1);
+    // This is a linear search, but we don't expect to have
+    // a ton of models, nor do we expect instantiation to
+    // occur often
+    for(vector<ComponentModel*>::iterator iter=models.begin();
+	iter != models.end(); iter++) {
+      ComponentModel* model = *iter;
+      if(model->prefixName == modelName){
+	mod=model;
+	break;
+      }
+    }
+  } 
+  else {
+    int count=0;
+    for(vector<ComponentModel*>::iterator iter=models.begin();
+	iter != models.end(); iter++) {
+      ComponentModel* model = *iter;
+      if(model->haveComponent(type)){
+	count++;
+	mod=model;
+      }
+    }
+    if(count > 1){
+      cerr << "More than one component model wants to build " << type << '\n';
+      throw InternalError("Need CCA Exception here");
+    }
+  }
+  if(!mod){
+    cerr << "No component model matches component" << type << '\n';
+    return false;
+  }
+  //reverse mod->createInstance (maybe we need decide the modal type first)
+  return mod->destroyInstance(ci);
+
+  return true;
+}
+
+
 void SCIRunFramework::registerComponent(ComponentInstance* ci,
 					const std::string& name)
 {
@@ -127,6 +179,21 @@ void SCIRunFramework::registerComponent(ComponentInstance* ci,
   activeInstances[ci->instanceName] = ci;
   // Get the component event service and send a creation event
   cerr << "Should register a creation event for component " << name << '\n';
+}
+
+ComponentInstance * SCIRunFramework::unregisterComponent(const std::string& instanceName)
+{
+  cerr<<"unregisterComponent() is not done!"<<endl;
+  std::map<std::string, ComponentInstance*>::iterator found=activeInstances.find(instanceName);
+  if(found != activeInstances.end()){
+    ComponentInstance *ci=found->second;
+    activeInstances.erase(found);
+    return ci;
+  }
+  else{
+    cerr<<"Error: component instance "<<instanceName<<" is not found!"<<endl;
+    return 0;
+  }
 }
 
 ComponentInstance*

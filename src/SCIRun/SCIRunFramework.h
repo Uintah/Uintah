@@ -56,12 +56,17 @@ namespace SCIRun {
 
     // Semi-private:
     // Used by builderService
-    gov::cca::ComponentID::pointer createComponentInstance(const std::string& name, const std::string& type);
+    gov::cca::ComponentID::pointer 
+      createComponentInstance( const std::string& name, const std::string& type);
+    
+    bool destroyComponentInstance(gov::cca::ComponentID::pointer &cid ) ;
+
     gov::cca::Port::pointer getFrameworkService(const std::string& type,
 						const std::string& componentName);
     bool releaseFrameworkService(const std::string& type,
 				 const std::string& componentName);
     void registerComponent(ComponentInstance* ci, const std::string& name);
+    ComponentInstance * unregisterComponent(const std::string& instanceName);
     void shutdownComponent(const std::string& name);
     void listAllComponentTypes(std::vector<ComponentDescription*>&,
 			       bool);
@@ -77,3 +82,4 @@ namespace SCIRun {
 }
 
 #endif
+
