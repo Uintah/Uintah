@@ -44,6 +44,7 @@
 #define CORE_CCA_COMM_DT_DTMESSAGE_H
 
 #include <Core/CCA/Comm/DT/DTAddress.h>
+#include <Core/CCA/Comm/DT/DTMessageTag.h>
 #include <iostream>
 #include <string.h>
 namespace SCIRun {
@@ -62,20 +63,20 @@ namespace SCIRun {
     DTPoint *sender;  //sender sp/ep   
     DTAddress fr_addr;  //filled by sender
     DTAddress to_addr;  //filled by recver
-    int tag; 
+    DTMessageTag tag; 
     ~DTMessage();
 
     void display();
-
+    /*
     DTPacketID getPacketID(){
       return DTPacketID(getDestination(), fr_addr);
     }
-
+    */
     DTDestination getDestination(){
       return DTDestination(recver,to_addr);
     }
   private:
-    int offset; //used by DataTransmitter only. It's value is reset in the DataTransmitter.
+    int offset; //used by DataTransmitter only. It is reset in the DataTransmitter.
   };
 
 }// namespace SCIRun

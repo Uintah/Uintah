@@ -56,6 +56,10 @@ namespace SCIRun {
     bool operator==(const DTAddress &p) const{
       return ip==p.ip && port==p.port;
     }
+
+    void display(){
+      std::cerr<<"ip/port="<<ip<<"/"<<port<<std::endl;
+    }
   };
 
 
@@ -92,7 +96,8 @@ namespace SCIRun {
     }
   };
 
-  class DTPacketID{
+  //deprecated, use DTMessageTag instead
+/*  class DTPacketID{
   public:
     DTDestination dest;
     DTAddress fr_addr;
@@ -112,7 +117,7 @@ namespace SCIRun {
       return (dest==pid.dest && fr_addr==pid.fr_addr);
     }
   };
-
+*/
 
 }// namespace SCIRun
 

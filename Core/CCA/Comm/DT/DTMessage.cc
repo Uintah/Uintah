@@ -68,7 +68,7 @@ DTMessage::display(){
 	   <<"\t fr_addr="<<fr_addr.ip<<"/"<<fr_addr.port<<"\n"
 	   <<"\t to_addr="<<to_addr.ip<<"/"<<to_addr.port<<"\n"
 	   <<"\t length="<<length<<"\n"
-	   <<"\t tag="<<tag<<"\n"
+    //	   <<"\t tag="<<tag<<"\n"
 	   <<"\t offset="<<offset<<"\n"
     	   <<"\t buf(id)="<<*((int*)(this->buf))<<"\n";
 #endif      

@@ -125,61 +125,104 @@ DataTransmitter::~DataTransmitter(){
 }
 
 
-void 
+DTMessageTag 
 DataTransmitter::putMessage(DTMessage *msg){
   msg->fr_addr=addr;
-
+  
+  DTMessageTag newTag=currentTag.nextTag();
+  msg->tag=newTag;
   /////////////////////////////////
-  // if the msg is sent to the same process
-  // process it right away.
-  if(msg->to_addr==addr){
+  // if the msg is sent to a local 
+  // address, process it right away.
+  if(isLocal(msg->to_addr)){
     msg->autofree=true;
     DTPoint *pt=msg->recver;
-    SemaphoreMap::iterator found=semamap.find(pt);
-    //cerr<<"Send & Recv Message:\n";
-    //msg->display();
-    
-    if(found!=semamap.end()){
-      if(pt->service!=NULL){
-	pt->service(msg);
-      }
-      else{
-	recvQ_mutex->lock();
-	recv_msgQ.push_back(msg);
-	recvQ_mutex->unlock();
-	found->second->up();
-      }
+
+    //generate a new tag for this message
+    //this is already thread-safe
+    if(pt->service!=NULL){
+      pt->service(msg);
     }
     else{
-      //discard the message
-      cerr<<"warning: message discarded!\n";
+      throw CommError("Client trying to send a message to a client.",-1);
     }
   }
   else{
     msg->offset=0;
     sendQ_mutex->lock();
-    //cerr<<"####BEFORE got new message and send_msgQ.size="<<send_msgQ.size()<<endl;
     send_msgQ.push_back(msg);
     newMsgCnt++;
-    //cerr<<"got new message and send_msgQ.size="<<send_msgQ.size()<<endl;
+    sendQ_mutex->unlock();
+    sendQ_cond->conditionSignal();
+  }
+  return newTag;
+}
+
+void
+DataTransmitter::putReplyMessage(DTMessage *msg){
+  msg->fr_addr=addr;
+
+  /////////////////////////////////
+  // if the msg is sent to a local 
+  // address, process it right away.
+  if(isLocal(msg->to_addr)){
+    msg->autofree=true;
+    DTPoint *pt=msg->recver;
+
+    if(pt->service!=NULL){
+      throw CommError("Server trying to send a message to a server.",-1);
+    }
+    else{
+      recvQ_mutex->lock();
+      recv_msgQ.push_back(msg);
+      SemaphoreMap::iterator found=semamap.find(msg->tag);
+      if(found!=semamap.end())  found->second->up();
+      recvQ_mutex->unlock();
+    }
+  }
+  else{
+    msg->offset=0;
+    sendQ_mutex->lock();
+    send_msgQ.push_back(msg);
+    newMsgCnt++;
     sendQ_mutex->unlock();
     sendQ_cond->conditionSignal();
   }
 }
 
 DTMessage *
-DataTransmitter::getMessage(DTPoint *pt, int tag){
+DataTransmitter::getMessage(const DTMessageTag &tag){
   recvQ_mutex->lock();
   DTMessage *msg=NULL;
   for(vector<DTMessage*>::iterator iter=recv_msgQ.begin(); iter!=recv_msgQ.end(); iter++){
-    if( (*iter)->recver==pt && (*iter)->tag==tag){
+    if( (*iter)->tag==tag){
       msg=*iter;
       recv_msgQ.erase(iter);
-      break;
+      recvQ_mutex->unlock();
+      return msg;
     }
   }
+
+  //now, the expected message has not arrived yet
+  //create a semaphore for it and then wait
+  semamap[tag]=new Semaphore("reply message semaphore", 0);
   recvQ_mutex->unlock();
-  return msg;
+  semamap[tag]->down(); 
+
+  recvQ_mutex->lock();
+  //after the message arrives, fetch it and delete the semaphore
+  delete semamap[tag];
+  semamap.erase(tag);
+  for(vector<DTMessage*>::iterator iter=recv_msgQ.begin(); iter!=recv_msgQ.end(); iter++){
+    if( (*iter)->tag==tag){
+      msg=*iter;
+      recv_msgQ.erase(iter);
+      recvQ_mutex->unlock();
+      return msg;
+    }
+  }
+  throw CommError("Semaphore up but not message received",-1);
+  return NULL;
 }
 
 void 
@@ -325,11 +368,11 @@ DataTransmitter::runRecvingThread(){
 	DTMessage *msg=new DTMessage;
 	if(recvall(iter->second, msg, sizeof(DTMessage))!=0){
 
-	  RVMap::iterator rrIter=recv_msgMap.find(msg->getPacketID());
+	  RVMap::iterator rrIter=recv_msgMap.find(msg->tag);
 	  if(rrIter==recv_msgMap.end()){
 	    //this is the first packet
 	    msg->buf=(char *)malloc(msg->length);	    
-	    recv_msgMap[msg->getPacketID()]=msg;
+	    recv_msgMap[msg->tag]=msg;
 	    recvall(iter->second, msg->buf, msg->offset);
 	    msg->autofree=true;
 	  }
@@ -346,26 +389,17 @@ DataTransmitter::runRecvingThread(){
 	  //check if a complete  message received.
 	  if(msg->offset==msg->length){
 	    DTPoint *pt=msg->recver;
-	    recv_msgMap.erase(msg->getPacketID());
+	    recv_msgMap.erase(msg->tag);
 
-	    SemaphoreMap::iterator found=semamap.find(pt);
-	    //cerr<<"Recv Message:";
-	    //msg->display();
-
-	    if(found!=semamap.end()){
-	      if(pt->service!=NULL){
-		pt->service(msg);
-	      }
-	      else{
-		recvQ_mutex->lock();
-		recv_msgQ.push_back(msg);
-		recvQ_mutex->unlock();
-		found->second->up();
-	      }
+	    if(pt->service!=NULL){
+	      pt->service(msg);
 	    }
 	    else{
-	      //discard the message
-	      cerr<<"warning: message discarded!\n";
+	      recvQ_mutex->lock();
+	      recv_msgQ.push_back(msg);
+	      SemaphoreMap::iterator found=semamap.find(msg->tag);
+	      if(found!=semamap.end()) found->second->up();
+	      recvQ_mutex->unlock();
 	    }
 	  }
 	}
@@ -532,7 +566,7 @@ DataTransmitter::recvall(int sockfd, void *buf, int len)
   }
   return total;
 } 
-
+/*
 void DataTransmitter::registerPoint(DTPoint * pt){
   semamap[pt]=pt->sema;
 }
@@ -540,7 +574,7 @@ void DataTransmitter::registerPoint(DTPoint * pt){
 void DataTransmitter::unregisterPoint(DTPoint * pt){
   semamap.erase(pt);
 }
-
+*/
 DTAddress
 DataTransmitter::getAddress(){
   return addr;

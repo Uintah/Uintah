@@ -49,6 +49,7 @@
 #include <map>
 #include <string>
 #include <Core/CCA/Comm/DT/DTAddress.h>
+#include <Core/CCA/Comm/DT/DTMessageTag.h>
 
 namespace SCIRun {
 
@@ -70,12 +71,28 @@ namespace SCIRun {
     DataTransmitter();
     ~DataTransmitter();
 
-    //interfaces:
-    void putMessage(DTMessage *msg);
-    DTMessage *getMessage(DTPoint *pt, int tag);
+    ///////////////////////////////////////////////////////
+    // This is for sending initial message (caller message)
+    // a message tag is generated and returned.
+    DTMessageTag putMessage(DTMessage *msg);
 
-    void registerPoint(DTPoint *pt);
-    void unregisterPoint(DTPoint *pt);
+    ////////////////////////////////////////////
+    // This is for reply message (callee message)
+    void putReplyMessage(DTMessage *msg);
+
+
+    /////////////////////////////////////////////
+    // This method fetch a message with the given
+    // message tag. 
+    DTMessage *getMessage(const DTMessageTag &tag);
+
+
+    //deprecated!
+    //void registerPoint(DTPoint *pt);
+
+    //deprecated!
+    //void unregisterPoint(DTPoint *pt);
+
 
     std::string getUrl();
 
@@ -83,10 +100,12 @@ namespace SCIRun {
     void run();
     void runSendingThread();
     void runRecvingThread();
+
     DTAddress getAddress();
+
     bool isLocal(DTAddress& addr);
+
     void exit();
-    
   private:
     void sendall(int sockfd, void *buf, int len);
     int recvall(int sockfd, void *buf, int len);
@@ -98,17 +117,19 @@ namespace SCIRun {
     typedef std::map<DTDestination, DTMessage*> RRMap;
     RRMap send_msgMap;
 
-    typedef std::map<DTPacketID, DTMessage*> RVMap;
+    typedef std::map<DTMessageTag, DTMessage*> RVMap;
     RVMap recv_msgMap;
 
 
-    typedef std::map<DTPoint *, Semaphore *> SemaphoreMap;
+    typedef std::map<DTMessageTag, Semaphore *> SemaphoreMap;
     SemaphoreMap semamap;
 
     typedef std::map<DTAddress, int> SocketMap;
 
     SocketMap send_sockmap;
     SocketMap recv_sockmap;
+
+    DTMessageTag currentTag;
 
     int sockfd; //listening socket
 
