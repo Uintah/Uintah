@@ -40,7 +40,6 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/CurveField.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Core/Containers/Array1.h>
 #include <algorithm>
 
 namespace SCIRun {
@@ -531,7 +530,6 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::execute(MeshHandle seed_mesh_h,
 
   return FieldHandle(cf);
 }
-
 
 
 } // end namespace SCIRun
