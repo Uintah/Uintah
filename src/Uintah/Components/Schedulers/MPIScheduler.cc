@@ -743,6 +743,7 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
       ASSERTEQ(start, totalParticles);
 
       new_dw->put(*newpos, reloc_new_posLabel);
+      delete newpos;
 
       for(int v=0;v<reloc_old_labels[m].size();v++){
 	 vector<ParticleVariableBase*> gathervars;
@@ -765,11 +766,15 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 	 }
 	 ASSERTEQ(start, totalParticles);
 	 new_dw->put(*newvar, reloc_new_labels[m][v]);
+	 delete newvar;
       }
-#if 0
+      for(int i=0;i<sr.size();i++){
+	if(sr[i]->matls[m])
+	  delete sr[i]->matls[m];
+	delete sr[i];
+      }
       for(int i=0;i<subsets.size();i++)
 	 delete subsets[i];
-#endif
    }
    for(int i=0;i<neighbors.size();i++){
       ASSERTEQ(recvsize[i], recvpos[i]);
@@ -781,6 +786,9 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.12  2000/08/23 20:56:15  jas
+// Fixed memory leaks.
+//
 // Revision 1.11  2000/08/21 15:40:57  jas
 // Commented out the deletion of subsets.  It may be the cause of some troubles.
 //
