@@ -531,7 +531,7 @@ int main(int argc, char* argv[])
       cerr << pp->getURL().getString() << '\n';
     } else {
       double stime=Time::currentSeconds();
-      PIDL::Object::pointer obj=PIDL::PIDL::objectFrom(client_url);
+      Object::pointer obj=PIDL::objectFrom(client_url);
       Server::pointer rm=pidl_cast<Server::pointer>(obj);
       for(int i=0;i<reps;i++){
 	if(rm->return_int() != 5)
