@@ -38,7 +38,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
-#include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
+#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -189,15 +189,6 @@ GridVisualizer::GridVisualizer(const string& id)
   widget_lock("GridVusualizer widget lock"),
   init(1), need_2d(1), node_selected(false)
 {
-
-  // Create the input port
-  in=scinew ArchiveIPort(this, "Data Archive",
-		      ArchiveIPort::Atomic);
-  add_iport(in);
-
-  // Create the output port
-  ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
-  add_oport(ogeom);
 
   float INIT(0.1);
   widget2d = scinew FrameWidget(this, &widget_lock, INIT);
@@ -383,6 +374,10 @@ void GridVisualizer::execute()
 {
 
   cerr << "\t\tEntering execute.\n";
+  // Create the input port
+  in= (ArchiveIPort *) get_iport("Data Archive");
+  // Create the output port
+  ogeom= (GeometryOPort *) get_oport("Geometry");
 
   old_id_list = id_list;
   // clean out ogeom

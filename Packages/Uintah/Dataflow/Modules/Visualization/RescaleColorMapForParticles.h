@@ -27,7 +27,7 @@ DESCRIPTION
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Module.h>
-#include <Packages/Uintah/Core/Datatypes/ScalarParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
 
 namespace Uintah {
 using namespace SCIRun;

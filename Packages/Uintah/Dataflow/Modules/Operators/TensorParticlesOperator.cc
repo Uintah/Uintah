@@ -17,7 +17,7 @@ extern "C" Module* make_TensorParticlesOperator( const string& id ) {
 
 
 TensorParticlesOperator::TensorParticlesOperator(const string& id)
-  : Module("TensorParticlesOperator",id,Source),
+  : Module("TensorParticlesOperator",id,Source, "Operators", "Uintah"),
     guiOperation("operation", id, this),
     guiRow("row", id, this),
     guiColumn("column", id, this),
@@ -26,17 +26,14 @@ TensorParticlesOperator::TensorParticlesOperator(const string& id)
     guiEigen2DCalcType("eigen2D-calc-type", id, this)
     //    tcl_status("tcl_status", id, this),
 {
-  // Create Ports
-  in = scinew TensorParticlesIPort(this, "TensorField");
-  spout = scinew ScalarParticlesOPort(this, "ScalarField");
-
-  // Add ports to the Module
-  add_iport(in);
-  add_oport(spout);
 }
   
 void TensorParticlesOperator::execute(void) {
   //  tcl_status.set("Calling InPlaneEigenEvaluator!"); 
+ 
+  in = ( TensorParticlesIPort *) get_iport("Tensor Particles");
+  spout = ( ScalarParticlesOPort *) get_oport("Scalar Particles");
+
   TensorParticlesHandle hTF;
   
   if(!in->get(hTF)){

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../../doc/ReferenceGuide/component.dtd">
+<?xml-stylesheet href="../../../../../doc/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
 
 <component name="Hedgehog" category="Visualization">
   <overview>
@@ -12,6 +14,26 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Vector Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Scalar Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>ColorMap</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Geometry</name>
+        <datatype>SCIRun::Geometry</datatype>
+      </port>
+    </outputs>
   </io>
   <testing>
   </testing>

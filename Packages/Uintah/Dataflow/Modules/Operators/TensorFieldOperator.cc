@@ -23,7 +23,7 @@ extern "C" Module* make_TensorFieldOperator( const string& id ) {
 
 
 TensorFieldOperator::TensorFieldOperator(const string& id)
-  : Module("TensorFieldOperator",id,Source),
+  : Module("TensorFieldOperator",id,Source, "Operators", "Uintah"),
     guiOperation("operation", id, this),
     guiRow("row", id, this),
     guiColumn("column", id, this),
@@ -32,17 +32,14 @@ TensorFieldOperator::TensorFieldOperator(const string& id)
     guiEigen2DCalcType("eigen2D-calc-type", id, this)
     //    tcl_status("tcl_status", id, this),
 {
-  // Create Ports
-  in = scinew FieldIPort(this, "TensorField");
-  sfout = scinew FieldOPort(this, "ScalarField");
-
-  // Add ports to the Module
-  add_iport(in);
-  add_oport(sfout);
 }
   
 void TensorFieldOperator::execute(void) {
   //  tcl_status.set("Calling InPlaneEigenEvaluator!"); 
+
+  in = (FieldIPort *) get_iport("Tensor Field");
+  sfout = (FieldOPort *) get_oport("Scalar Field");
+  
   FieldHandle hTF;
   
   if(!in->get(hTF)){

@@ -21,26 +21,11 @@ namespace Uintah {
 using namespace SCIRun;
 
 RescaleColorMapForParticles::RescaleColorMapForParticles(const string& id)
-: Module("RescaleColorMapForParticles", id, Filter),
+: Module("RescaleColorMapForParticles", id, Filter, "Visualization", "Uintah"),
   minVal("minVal", id, this),
   maxVal("maxVal", id, this),
   scaleMode("scaleMode", id, this)
 {
-    // Create the output port
-    omap=scinew ColorMapOPort(this, "ColorMap", ColorMapIPort::Atomic);
-
-    add_oport(omap);
-
-    // Create the input ports
-
-    iPort=scinew ScalarParticlesIPort(this, "ScalarParticles",
-						     ScalarParticlesIPort::Atomic);
-    add_iport(iPort);
-
-
-    imap=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
-    add_iport(imap);
-
     //    scaleMode.set("auto");
 
 }
@@ -51,6 +36,12 @@ RescaleColorMapForParticles::~RescaleColorMapForParticles()
 
 void RescaleColorMapForParticles::execute()
 {
+    // Create the input ports
+  imap= (ColorMapIPort *) get_iport("ColorMap");
+  iPort=  (ScalarParticlesIPort *) get_iport("ScalarParticles");
+    // Create the output port
+  omap= (ColorMapOPort *) get_oport("ColorMap");
+
     ColorMapHandle cmap;
     if(!imap->get(cmap))
 	return;

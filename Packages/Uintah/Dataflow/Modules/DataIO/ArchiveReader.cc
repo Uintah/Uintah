@@ -15,15 +15,10 @@ extern "C" Module* make_ArchiveReader( const string& id ) {
 
 //--------------------------------------------------------------- 
 ArchiveReader::ArchiveReader(const string& id) 
-  : Module("ArchiveReader", id, Filter),
+  : Module("ArchiveReader", id, Filter, "DataIO", "Uintah"),
     filebase("filebase", id, this), 
     tcl_status("tcl_status",id,this) 
 { 
-      // Initialization code goes here 
-  out=scinew ArchiveOPort(this,
-				  "ArchiveReader",
-				  ArchiveIPort::Atomic);
-  add_oport(out);
   if( filebase.get() != "" )
     need_execute = 1;
 } 
@@ -39,7 +34,7 @@ void ArchiveReader::execute()
 { 
   static string aName("");
   tcl_status.set("Executing"); 
-
+  out = (ArchiveOPort *) get_oport("Data Archive");
    std::cerr<<"Filename = "<<filebase.get()<<endl;
    if( filebase.get() == "" )
      return;

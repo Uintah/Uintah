@@ -70,19 +70,10 @@ extern "C" Module* make_ScalarFieldExtractor( const string& id ) {
 
 //--------------------------------------------------------------- 
 ScalarFieldExtractor::ScalarFieldExtractor(const string& id) 
-  : Module("ScalarFieldExtractor", id, Filter),
+  : Module("ScalarFieldExtractor", id, Filter, "Selectors", "Uintah"),
     tcl_status("tcl_status", id, this), sVar("sVar", id, this),
     sMatNum("sMatNum", id, this), type(0)
 { 
-  //////////// Initialization code goes here
-  // Create Ports
-  in=scinew ArchiveIPort(this, "Data Archive",
-		      ArchiveIPort::Atomic);
-  sfout=scinew FieldOPort(this, "Field", FieldIPort::Atomic);
-
-  // Add them to the Module
-  add_iport(in);
-  add_oport(sfout);
 
 } 
 
@@ -94,7 +85,6 @@ ScalarFieldExtractor::~ScalarFieldExtractor(){}
 void ScalarFieldExtractor::setVars()
 {
   string command;
-
   DataArchive& archive = *((*(archiveH.get_rep()))());
 
   vector< string > names;
@@ -171,6 +161,9 @@ void ScalarFieldExtractor::setVars()
 void ScalarFieldExtractor::execute() 
 { 
   tcl_status.set("Calling ScalarFieldExtractor!"); 
+
+  in = (ArchiveIPort *) get_iport("Data Archive");
+  sfout = (FieldOPort *) get_oport("Scalar Field");
   
   ArchiveHandle handle;
   if(!in->get(handle)){

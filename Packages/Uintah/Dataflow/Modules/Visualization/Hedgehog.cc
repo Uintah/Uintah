@@ -165,7 +165,8 @@ extern "C" Module* make_Hedgehog(const string& id) {
 }       
 
 Hedgehog::Hedgehog(const string& id)
-: Module("Hedgehog", id, Filter), widget_lock("Hedgehog widget lock"),
+: Module("Hedgehog", id, Filter, "Visualization", "Uintah"),
+  widget_lock("Hedgehog widget lock"),
   length_scale("length_scale", id, this),
   width_scale("width_scale", id, this),
   head_length("head_length", id, this),
@@ -181,20 +182,6 @@ Hedgehog::Hedgehog(const string& id)
 {
     // Create the input ports
     // Need a scalar field and a ColorMap
-    invectorfield = scinew FieldIPort( this, "Vector Field",
-					     FieldIPort::Atomic);
-    add_iport( invectorfield);
-    inscalarfield = scinew FieldIPort( this, "Scalar Field",
-					FieldIPort::Atomic);
-    add_iport( inscalarfield);
-    inColorMap = scinew ColorMapIPort( this, "ColorMap",
-				     ColorMapIPort::Atomic);
-    add_iport( inColorMap);
-					
-    // Create the output port
-    ogeom = scinew GeometryOPort(this, "Geometry", 
-			      GeometryIPort::Atomic);
-    add_oport(ogeom);
     init = 1;
     float INIT(.1);
 
@@ -216,6 +203,13 @@ Hedgehog::~Hedgehog()
 void Hedgehog::execute()
 {
   int old_grid_id = grid_id;
+    // Create the input port
+    invectorfield = (FieldIPort *) get_iport("Vector Field");
+    inscalarfield = (FieldIPort *) get_iport("Scalar Field");
+    inColorMap = (ColorMapIPort *) get_iport("ColorMap");
+					
+    // Create the output port
+    ogeom = (GeometryOPort *) get_oport("Geometry"); 
 
   // get the scalar field and ColorMap...if you can
   FieldHandle vfield;

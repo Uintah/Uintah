@@ -18,9 +18,6 @@
 #include "ParticleVis.h"
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/ColorMapPort.h>
-#include <Packages/Uintah/Core/Datatypes/ScalarParticlesPort.h>
-#include <Packages/Uintah/Core/Datatypes/VectorParticlesPort.h>
-#include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
 #include <Core/Geom/GeomArrows.h>
 #include <Core/Geom/Color.h>
 #include <Core/Geom/GeomObj.h>
@@ -38,9 +35,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/ColorMapPort.h>
-#include <Packages/Uintah/Core/Datatypes/ScalarParticlesPort.h>
-#include <Packages/Uintah/Core/Datatypes/VectorParticlesPort.h>
-#include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
 #include <Packages/Uintah/Core/Datatypes/PSet.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignParticleVariable.h>
@@ -58,7 +52,7 @@ using namespace SCIRun;
 #endif
 
 ParticleVis::ParticleVis(const string& id) :
-  Module("ParticleVis", id, Filter), 
+  Module("ParticleVis", id, Filter, "Visualization", "Uintah"), 
   min_("min_", id, this),  max_("max_", id, this),
   isFixed("isFixed", id, this),
   current_time("current_time", id, this),
@@ -74,23 +68,6 @@ ParticleVis::ParticleVis(const string& id) :
   MIN_POLYS(8), MAX_POLYS(400),
   MIN_NU(4), MAX_NU(20), MIN_NV(2), MAX_NV(20)
 {
-  // Create the input port
-  spin0=scinew ScalarParticlesIPort(this, "ScalarParticles",
-				    ScalarParticlesIPort::Atomic);
-  spin1=scinew ScalarParticlesIPort(this, "ScaleScalarParticles",
-				    ScalarParticlesIPort::Atomic);
-  vpin=scinew VectorParticlesIPort(this, "VectorParticles",
-				   VectorParticlesIPort::Atomic);
-  tpin=scinew TensorParticlesIPort(this, "TensorParticles",
-				   TensorParticlesIPort::Atomic);
-  add_iport(spin0);
-  add_iport(spin1);
-  add_iport(vpin);
-  add_iport(tpin);
-  cin=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
-  add_iport(cin);
-  ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
-  add_oport(ogeom);
   last_idx=-1;
   last_generation=-1;
   drawspheres.set(1);
@@ -116,6 +93,16 @@ ParticleVis::~ParticleVis()
 
 void ParticleVis::execute()
 {
+
+  // Create the input port
+  spin0= (ScalarParticlesIPort *) get_iport("Scalar Particles");
+  spin1= (ScalarParticlesIPort *) get_iport("Scaling Particles");
+  vpin= (VectorParticlesIPort *) get_iport("Vector Particles");
+  tpin= (TensorParticlesIPort *) get_iport("Tensor Particles");
+  cin= (ColorMapIPort *) get_iport("ColorMap"); 
+  ogeom= (GeometryOPort *) get_oport("Geometry"); 
+
+  
   ScalarParticlesHandle part;
   ScalarParticlesHandle scaleSet;
   VectorParticlesHandle vect;
