@@ -37,9 +37,10 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/ASE-RTRT.mo\
 	$(SRCDIR)/simple_tri.mo \
 	$(SRCDIR)/terrain.mo \
-	$(SRCDIR)/heightfield.mo 
+	$(SRCDIR)/heightfield.mo
 
-ifeq ($(uintah),yes)
+
+ifeq ($(findstring Uintah, $(LOAD_PACKAGE)),Uintah)
 SCENES += \
 	$(SRCDIR)/VolumeVisMod.mo \
 	$(SRCDIR)/uintahdata.mo \
