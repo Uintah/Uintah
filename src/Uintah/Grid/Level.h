@@ -9,6 +9,8 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Geometry/IntVector.h>
+#include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Interface/ProblemSpecP.h>
 #include <string>
 #include <vector>
 
@@ -19,6 +21,7 @@ namespace Uintah {
    using SCICore::Geometry::IntVector;
    class Patch;
    class Task;
+
    
 /**************************************
 
@@ -69,6 +72,7 @@ WARNING
 		      const SCICore::Geometry::IntVector& highIndex,
 		      int ID);
       void finalizeLevel();
+      void assignBCS(const ProblemSpecP& ps);
       
       int numPatches() const;
       long totalCells() const;
@@ -108,6 +112,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.15  2000/06/23 19:20:19  jas
+// Added in the early makings of Grid bcs.
+//
 // Revision 1.14  2000/06/15 21:57:17  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

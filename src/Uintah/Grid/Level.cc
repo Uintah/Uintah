@@ -8,9 +8,12 @@ static char *id="@(#) $Id$";
 #include <Uintah/Exceptions/InvalidGrid.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <iostream>
+#include <PSECore/XMLUtil/XMLUtil.h>
 using namespace Uintah;
 using namespace SCICore::Geometry;
 using namespace std;
+using namespace PSECore::XMLUtil;
+#include <map>
 
 Level::Level(Grid* grid, const Point& anchor, const Vector& dcell)
    : grid(grid), d_anchor(anchor), d_dcell(dcell)
@@ -169,27 +172,215 @@ bool Level::containsPoint(const Point& p) const
 
 void Level::finalizeLevel()
 {
-   for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++){
-      Patch* patch = *iter;
-      // See if there are any neighbors on the 6 faces
-      for(Patch::FaceType face = Patch::startFace;
-	  face < Patch::endFace; face=Patch::nextFace(face)){
-	 IntVector l,h;
-	 patch->getFace(face, 1, l, h);
-	 std::vector<const Patch*> neighbors;
-	 selectPatches(l, h, neighbors);
-	 if(neighbors.size() == 0)
-	    patch->setBCType(face, Patch::None);
-	 else
-	    patch->setBCType(face, Patch::Neighbor);
-      }
-   }
+  for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++){
+    Patch* patch = *iter;
+    // See if there are any neighbors on the 6 faces
+    for(Patch::FaceType face = Patch::startFace;
+	face < Patch::endFace; face=Patch::nextFace(face)){
+      IntVector l,h;
+      patch->getFace(face, 1, l, h);
+      std::vector<const Patch*> neighbors;
+      selectPatches(l, h, neighbors);
+      if(neighbors.size() == 0)
+	patch->setBCType(face, Patch::None);
+      else
+	patch->setBCType(face, Patch::Neighbor);
+    }
+  }
+  
+  d_finalized=true;
+}
 
-   d_finalized=true;
+void Level::assignBCS(const ProblemSpecP& grid_ps)
+{
+
+  // Read the bcs for the grid
+  ProblemSpecP bc_ps = grid_ps->findBlock("BoundaryConditions");
+  if (bc_ps == 0)
+    return;
+  
+  for (ProblemSpecP face_ps = bc_ps->findBlock("Face");
+       face_ps != 0; face_ps=face_ps->findNextBlock("Face")) {
+    map<string,string> values;
+    face_ps->getAttributes(values);
+    //    std::cerr << "face side = " << values["side"] << std::endl;
+    Vector vel;
+    double temp,h_f;
+    bool symm_test = false;
+    bool vel_test = false;
+    bool temp_test = false;
+    bool heat_fl_test = false;
+
+    for (ProblemSpecP bc_ps = face_ps->findBlock("BCType");
+	 bc_ps != 0; bc_ps = bc_ps->findNextBlock("BCType")) {
+      map<string,string> bc_attr;
+      bc_ps->getAttributes(bc_attr);
+      //      std::cerr << "bc type = " << bc_attr["label"] << std::endl;
+      //      std::cerr << "bc var = " << bc_attr["var"] << std::endl;
+      if (bc_attr["var"] == "velocity" ) {
+	bc_ps->require("velocity",vel);
+	//	std::cerr << "velocity = " << vel << std::endl;
+	vel_test = true;
+      }
+      else if (bc_attr["var"] == "temperature" ) {
+	bc_ps->require("temperature",temp);
+	//	std::cerr << "temperature = " << temp << std::endl;
+	temp_test = true;
+      }
+      else if (bc_attr["var"] == "heat_flux" ) {
+	bc_ps->require("heat_flux",h_f);
+	//	std::cerr << "heat_flux = " << h_f << std::endl;
+	heat_fl_test = true;
+      }
+      else if (bc_attr["var"] == "symmetry" ) {
+	// do nothing
+	symm_test = true;
+	//	std::cerr << "symmetry don't do anything" << std::endl;
+      }
+      else {
+	// error
+	//	std::cerr << "Don't know anything about this" << std::endl;
+      }
+    }  // end of looping through the bcs for a given face
+    
+    // Now loop through all the patches and store the bcs for a given
+    // face
+
+    // Do the x- (xminus) face
+  
+    if (values["side"] == "x-" ) {
+      Patch::FaceType f = Patch::xminus;
+      for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); 
+	  iter++){
+	Patch* patch = *iter;
+	if ( patch->getBCType(f) == Patch::None) {
+	  // Assign it to the value given in the prob spec
+	  //	  std::cerr << "xminus is none" << std::endl;
+	  if (vel_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (temp_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (heat_fl_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (symm_test == true)
+	    patch->setBCType(f,Patch::Symmetry);
+	}
+      }
+    }
+    // Do the x+ (xplus) face
+  
+    if (values["side"] == "x+" ) {
+      Patch::FaceType f = Patch::xplus;
+      for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); 
+	  iter++){
+	Patch* patch = *iter;
+	if ( patch->getBCType(f) == Patch::None) {
+	  // Assign it to the value given in the prob spec
+	  //	  std::cerr << "xplus is none" << std::endl;
+	  if (vel_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (temp_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (heat_fl_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (symm_test == true)
+	    patch->setBCType(f,Patch::Symmetry);
+	}
+      }
+    }
+    // Do the y- (yminus) face
+  
+    if (values["side"] == "y-" ) {
+      Patch::FaceType f = Patch::yminus;
+      for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); 
+	  iter++){
+	Patch* patch = *iter;
+	if ( patch->getBCType(f) == Patch::None) {
+	  // Assign it to the value given in the prob spec
+	  //	  std::cerr << "yminus is none" << std::endl;
+	  if (vel_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (temp_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (heat_fl_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (symm_test == true)
+	    patch->setBCType(f,Patch::Symmetry);
+	}
+      }
+    }
+    // Do the y+ (yplus) face
+  
+    if (values["side"] == "y+" ) {
+      Patch::FaceType f = Patch::yplus;
+      for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); 
+	  iter++){
+	Patch* patch = *iter;
+	if ( patch->getBCType(f) == Patch::None) {
+	  // Assign it to the value given in the prob spec
+	  //	  std::cerr << "yplus is none" << std::endl;
+	  if (vel_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (temp_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (heat_fl_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (symm_test == true)
+	    patch->setBCType(f,Patch::Symmetry);
+	}
+      }
+    }
+    // Do the z- (zminus) face
+  
+    if (values["side"] == "z-" ) {
+      Patch::FaceType f = Patch::zminus;
+      for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); 
+	  iter++){
+	Patch* patch = *iter;
+	if ( patch->getBCType(f) == Patch::None) {
+	  // Assign it to the value given in the prob spec
+	  //	  std::cerr << "zminus is none" << std::endl;
+	  if (vel_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (temp_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (heat_fl_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (symm_test == true)
+	    patch->setBCType(f,Patch::Symmetry);
+	}
+      }
+    }
+    // Do the z+ (zplus) face
+  
+    if (values["side"] == "z+" ) {
+      Patch::FaceType f = Patch::zplus;
+      for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); 
+	  iter++){
+	Patch* patch = *iter;
+	if ( patch->getBCType(f) == Patch::None) {
+	  // Assign it to the value given in the prob spec
+	  //	  std::cerr << "zplus is none" << std::endl;
+	  if (vel_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (temp_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (heat_fl_test == true)
+	    patch->setBCType(f,Patch::Fixed);
+	  else if (symm_test == true)
+	    patch->setBCType(f,Patch::Symmetry);
+	}
+      }
+    }
+  } // End of looping through the face_ps
+  
 }
 
 //
 // $Log$
+// Revision 1.12  2000/06/23 19:20:19  jas
+// Added in the early makings of Grid bcs.
+//
 // Revision 1.11  2000/06/15 21:57:16  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data
