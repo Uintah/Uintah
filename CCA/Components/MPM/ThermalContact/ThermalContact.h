@@ -12,6 +12,9 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <math.h>
 
+#define FRACTURE
+#undef FRACTURE
+
 namespace Uintah {
 using namespace SCIRun;
 
