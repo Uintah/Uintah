@@ -77,8 +77,8 @@ typedef struct _BIData {
   int np;
   FieldHandle out_fieldH;
   hash_type dstmap;
-  Mutex maplock;
   Barrier barrier;
+  Mutex maplock;
   
   _BIData() : barrier("BuildInterpolant Barrier"), maplock("BuildInterp Map Lock") {}
 } BIData;
@@ -171,6 +171,19 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
     Thread::parallel(this, 
        &BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::parallel_execute,
        np, true, &d);
+
+  if (out_field)
+  {
+    MSRC *mesh = dynamic_cast<MSRC *>(src_meshH.get_rep());
+    if (mesh)
+    {
+      typename LSRC::size_type size;
+      mesh->size(size);
+      unsigned int range = (unsigned int)size;
+      out_field->set_property("interp-source-range", range, false);
+    }
+  }
+
   return out_field;
 }
 

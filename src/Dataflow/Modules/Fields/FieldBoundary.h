@@ -444,6 +444,19 @@ FieldBoundaryAlgoT<Msh>::execute(ModuleReporter *mod, const MeshHandle mesh,
   {
     mod->error("Boundary module only works on volumes.");
   }
+
+  // Set the source range for the interpolation field.
+  if (interp.get_rep())
+  {
+    Msh *typedmesh = dynamic_cast<Msh *>(mesh.get_rep());
+    if (typedmesh)
+    {
+      typename Msh::Node::size_type msize;
+      typedmesh->size(msize);
+      unsigned int range = (unsigned int)msize;
+      interp->set_property("interp-source-range", range, false);
+    }
+  }
 }
 
 
