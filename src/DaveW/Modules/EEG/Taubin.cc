@@ -39,6 +39,7 @@ class Taubin : public Module {
     double lastPb;
     TCLdouble gamma;
     TCLdouble pb;
+    TCLdouble constraintTCL;
     TCLint N;
     TCLint constrainedTCL;
     SurfaceIPort* isurf;
@@ -67,7 +68,7 @@ public:
     void bldMatrices();
     void bldCols();
     void bldNbrs();
-    void smooth(int);
+    void smooth(int,double);
     void Reset();
     virtual void execute();
     virtual void tcl_command(TCLArgs&, void*);
@@ -83,7 +84,8 @@ Module* make_Taubin(const clString& id)
 Taubin::Taubin(const clString& id)
 : Module("Taubin", id, Source), gamma("gamma", id, this), pb("pb", id, this),
   N("N", id, this), tcl_exec(0), reset(0), init(0), gen(-1),
-  constrainedTCL("constrainedTCL", id, this)
+  constrainedTCL("constrainedTCL", id, this),
+  constraintTCL("constraintTCL", id, this)
 {
    // Create the input port
    isurf=scinew SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);
@@ -135,9 +137,6 @@ void Taubin::bldNbrs() {
 
     // these are the squares of the lengths of the axes of the ellipsoid 
     //   that the nodes can move within
-    dx*=.49; dx=dx*dx;
-    dy*=.49; dy=dy*dy;
-    dz*=.49; dz=dz*dz;
 
     // (x-x0)^2 / dx^2 + (y-y0)^2 / dy^2 + (z-z0)^2 / dz^2 < 1.0
 
@@ -212,9 +211,15 @@ void Taubin::bldCols() {
     }
 }
 
-void Taubin::smooth(int constrained) {
+void Taubin::smooth(int constrained, double cons) {
+    double dx2=dx*.49*cons;
+    dx2*=dx2*dx2;
+    double dy2=dy*.49*cons;
+    dy2=dy2*dy2;
+    double dz2=dz*.49*cons;
+    dz2=dz2*dz2;
     int flops, memrefs;
-    // multiply iteratively
+    // multiplyiteratively
     int iters=N.get();
     for (int iter=0; iter<iters; iter++) {
 	srm->mult(oldX, tmpX, flops, memrefs);
@@ -231,11 +236,11 @@ void Taubin::smooth(int constrained) {
 	    double tmp, d2;
 	    // (x-x0)^2 / dx^2 + (y-y0)^2 / dy^2 + (z-z0)^2 / dz^2 < 1.0
 	    tmp=oldX[i]-origX[i];
-	    d2=tmp*tmp/dx;
+	    d2=tmp*tmp/dx2;
 	    tmp=oldY[i]-origY[i];
-	    d2+=tmp*tmp/dy;
+	    d2+=tmp*tmp/dy2;
 	    tmp=oldZ[i]-origZ[i];
-	    d2+=tmp*tmp/dz;
+	    d2+=tmp*tmp/dz2;
 	    if (d2>1) {
 //		cerr << "Out-of-bounds (d2="<<d2<<") orig=("<<origX[i]<<", "<<origY[i]<<", "<<origZ[i]<<")\n\twants=("<<oldX[i]<<", "<<oldY[i]<<", "<<oldZ[i]<<")\n\tgot="; 
 		// interesct the ellipsoid with the line between the 2 pts
@@ -245,12 +250,12 @@ void Taubin::smooth(int constrained) {
 		p0y=origY[i]; p1y=oldY[i];
 		p0z=origZ[i]; p1z=oldZ[i];
 		double denom=
-		    dy*dz*(p1x*p1x+p0x*p0x)-
-		    2*dy*dz*p1x*p0x+
-		    dx*dz*(p1y*p1y+p0y*p0y)-
-		    2*dx*dz*p1y*p0y+
-		    dx*dy*(p1z*p1z+p0z*p0z)-
-		    2*dx*dy*p1z*p0z;
+		    dy2*dz2*(p1x*p1x+p0x*p0x)-
+		    2*dy2*dz2*p1x*p0x+
+		    dx2*dz2*(p1y*p1y+p0y*p0y)-
+		    2*dx2*dz2*p1y*p0y+
+		    dx2*dy2*(p1z*p1z+p0z*p0z)-
+		    2*dx2*dy2*p1z*p0z;
 //		cerr << "[denom="<<denom<<"] ";
 		t=Sqrt(denom*dx*dy*dz)/denom;
 		oldX[i]=origX[i]+t*(oldX[i]-origX[i]);
@@ -306,7 +311,9 @@ void Taubin::execute()
 	    lastGamma=gamma.get();
 	    bldMatrices();
 	}
-	smooth(constrained);
+	double cons=constraintTCL.get();
+	cerr << "cons="<<cons<<"\n";
+	smooth(constrained, cons);
     }
     SurfaceHandle sh2;
     Array1<int> map, imap;
@@ -355,6 +362,9 @@ void Taubin::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.7  1999/12/09 00:05:24  dmw
+// new modules
+//
 // Revision 1.6  1999/12/07 02:55:56  dmw
 // added constrained surface smoothing for Taubin, fixed ErrorMetric.tcl to work with new bltGraph, and fixed a bug in VDTtoMesh converter
 //

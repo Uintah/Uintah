@@ -19,6 +19,12 @@ prog-JAStoMesh:
 prog-JAStoSurf:
 	@$(MAKE) --no-print-directory SRCS=JAStoSurf.cc PROGRAM=JAStoSurf JAStoSurf
 
+prog-MeshCheck:
+	@$(MAKE) --no-print-directory SRCS=MeshCheck.cc PROGRAM=MeshCheck MeshCheck
+
+prog-MeshFix:
+	@$(MAKE) --no-print-directory SRCS=MeshFix.cc PROGRAM=MeshFix MeshFix
+
 prog-MeshToJAS:
 	@$(MAKE) --no-print-directory SRCS=MeshToJAS.cc PROGRAM=MeshToJAS MeshToJAS
 
