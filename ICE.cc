@@ -1174,12 +1174,15 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::NewDW, lb->mass_L_CCLabel,      gac,2);
   task->requires(Task::NewDW, lb->eng_L_ME_CCLabel,    gac,2);
   task->requires(Task::NewDW, lb->spec_vol_L_CCLabel,  gac,2);
-  
+  task->requires(Task::NewDW, lb->speedSound_CCLabel,  gn, 0);  
 /*`==========TESTING==========*/
 #ifdef LODI_BCS  
-  task->requires(Task::NewDW, lb->press_CCLabel,       press_matl, gn, 0);
-  task->requires(Task::NewDW, lb->speedSound_CCLabel,              gn, 0); 
-  task->requires(Task::NewDW, lb->vol_frac_CCLabel,                gn, 0);
+  task->requires(Task::OldDW, lb->press_CCLabel,    press_matl, gn, 0);      
+  task->requires(Task::OldDW, lb->temp_CCLabel,     ice_matls,  gn, 0);      
+  task->requires(Task::OldDW, lb->rho_CCLabel,      ice_matls,  gn, 0);      
+  task->requires(Task::OldDW, lb->vel_CCLabel,      ice_matls,  gn, 0);      
+  task->requires(Task::OldDW, lb->sp_vol_CCLabel,   ice_matls,  gn, 0);      
+  task->requires(Task::OldDW, lb->vol_frac_CCLabel, ice_matls,  gn, 0);  
 #endif
 /*==========TESTING==========`*/
   task->modifies(lb->rho_CCLabel,   ice_matls);
