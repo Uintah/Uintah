@@ -82,15 +82,11 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
  
   const MaterialSubset* press_matl = one_matl; 
   t->requires( Task::ParentOldDW, lb->delTLabel);
-  t->requires( Task::ParentNewDW, lb->press_equil_CCLabel,press_matl,gn,0);
   
-/*`==========TESTING==========*/
-  if(d_models.size() == 0){  //MODEL REMOVE
-    t->requires( Task::ParentNewDW, lb->burnedMass_CCLabel,          gn,0);
-  } else {
-    t->requires( Task::ParentNewDW, lb->modelMass_srcLabel,          gn,0);
-  }  
-/*==========TESTING==========`*/
+  if(d_models.size() > 0){  
+    t->requires(Task::ParentNewDW, lb->modelMass_srcLabel,           gn,0);
+  } 
+  t->requires( Task::ParentNewDW, lb->press_equil_CCLabel,press_matl,gn,0); 
   t->requires( Task::ParentNewDW, lb->sp_vol_CCLabel,                gn,0);
   t->requires( Task::ParentNewDW, lb->speedSound_CCLabel,            gn,0);
   t->requires( Task::ParentNewDW, lb->vol_frac_CCLabel,              gac,2); 
@@ -264,13 +260,9 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
 
   //__________________________________
   // SetupRHS
-/*`==========TESTING==========*/
-  if(d_models.size() == 0){  //MODEL REMOVE
-    t->requires( Task::NewDW, lb->burnedMass_CCLabel, gn,0);
-  } else {
-    t->requires( Task::NewDW, lb->modelMass_srcLabel, gn,0);
+  if(d_models.size() > 0){  
+    t->requires(Task::NewDW,lb->modelMass_srcLabel, gn,0);
   } 
-/*==========TESTING==========`*/
   t->requires( Task::NewDW, lb->speedSound_CCLabel, gn,0);
   t->requires( Task::OldDW, lb->imp_delPLabel,   press_matl, gn,0);
    
@@ -525,13 +517,10 @@ void ICE::setupRHS(const ProcessorGroup*,
       new_dw->get(vvel_FC,           lb->vvel_FCMELabel,     indx,patch,gac, 2);
       new_dw->get(wvel_FC,           lb->wvel_FCMELabel,     indx,patch,gac, 2);
       parent_new_dw->get(vol_frac,   lb->vol_frac_CCLabel,   indx,patch,gac, 2);
-/*`==========TESTING==========*/
-      if(d_models.size() == 0){   //MODELS REMOVE
-        parent_new_dw->get(burnedMass, lb->burnedMass_CCLabel, indx,patch,gn,0);
-      }else{
-        parent_new_dw->get(burnedMass, lb->modelMass_srcLabel, indx,patch,gn,0);
+      
+      if(d_models.size() > 0){
+        parent_new_dw->get(burnedMass,lb->modelMass_srcLabel,indx,patch,gn,0);
       } 
-/*==========TESTING==========`*/
       parent_new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn,0);
       parent_new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gn,0);
 
