@@ -45,8 +45,12 @@ public:
 };
 
 
+#ifdef __sgi
+template< class FIELD >
+#else
+template< template<class> class FIELD >
+#endif
 
-template <template<class> class FIELD >
 class VectorMagnitudeAlgoT : public VectorMagnitudeAlgo
 {
 public:
@@ -54,7 +58,12 @@ public:
   virtual FieldHandle execute(FieldHandle src);
 };
 
-template <template<class> class FIELD  >
+#ifdef __sgi
+template< class FIELD >
+#else
+template< template<class> class FIELD >
+#endif
+
 FieldHandle
 VectorMagnitudeAlgoT<FIELD>::execute(FieldHandle field_h)
 {
