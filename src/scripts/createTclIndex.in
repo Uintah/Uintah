@@ -20,5 +20,6 @@
 TCLSH << END
 source TCL_INIT_DIR/init.tcl
 package require Itcl
+namespace import -force itcl::*
 auto_mkindex $1
 END
