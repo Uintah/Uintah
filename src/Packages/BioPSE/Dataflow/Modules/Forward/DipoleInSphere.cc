@@ -54,23 +54,10 @@
 namespace BioPSE {
 using namespace SCIRun;
 
-typedef LockingHandle<TriSurfField<double> > TriSurfFieldHandle;
-typedef LockingHandle<TriSurfMesh > TriSurfMeshHandle;
-
 class DipoleInSphere : public Module {
-  
-  //! Private Data
-
-  //! input ports
-  FieldIPort*  iportGeom_;
-  FieldIPort*  iportDip_;
-
-  //! output port
-  FieldOPort*  oportPot_;
-
   //! Private Methods
   // -- fills in the surface with potentials for single sphere uniform model
-  void fillOneSpherePotentials(DenseMatrix&, TriSurfFieldHandle);
+  void fillOneSphere(DenseMatrix&, TriSurfField<double>*, TriSurfField<Vector>*);
 
 public:
   
@@ -94,9 +81,10 @@ DipoleInSphere::~DipoleInSphere()
 void DipoleInSphere::execute() {
   update_state(NeedData);
   
-  iportGeom_ = (FieldIPort *)get_iport("Sphere");
-  iportDip_ = (FieldIPort *)get_iport("Dipole Sources");
-  oportPot_ = (FieldOPort *)get_oport("SphereWithPots");
+  FieldIPort *iportGeom_ = (FieldIPort *)get_iport("Sphere");
+  FieldIPort *iportDip_ = (FieldIPort *)get_iport("Dipole Sources");
+  FieldOPort *oportPot_ = (FieldOPort *)get_oport("SphereWithPots");
+  FieldOPort *oportMag_ = (FieldOPort *)get_oport("SphereWithMagneticField");
   FieldHandle field_handle;
 
   if (!iportGeom_) {
@@ -111,6 +99,10 @@ void DipoleInSphere::execute() {
     error("Unable to initialize oport 'SphereWithPots'.");
     return;
   }
+  if (!oportMag_) {
+    error("Unable to initialize oport 'SphereWithMagneticField'.");
+    return;
+  }
   
   
   if (!iportGeom_->get(field_handle)){
@@ -123,11 +115,13 @@ void DipoleInSphere::execute() {
     return;
   }
  
-  if (field_handle->get_type_name(0) == "TriSurfField" && field_handle->get_type_name(1) == "double"){
-    
-    TriSurfField<double>* pSurf = dynamic_cast<TriSurfField<double>*>(field_handle.get_rep());
-    TriSurfMeshHandle hMesh = new TriSurfMesh(*(pSurf->get_typed_mesh().get_rep()));
-    TriSurfFieldHandle hNewSurf = new TriSurfField<double>(hMesh, Field::NODE);
+  if (field_handle->get_type_name(0) == "TriSurfField") {
+    TriSurfMeshHandle hMesh = 
+      dynamic_cast<TriSurfMesh*>(field_handle->mesh().get_rep());
+    TriSurfField<double>* hNewSurf = 
+      new TriSurfField<double>(hMesh, Field::NODE);
+    TriSurfField<Vector>* hBSurf = 
+      new TriSurfField<Vector>(hMesh, Field::NODE);
     
     FieldHandle dip_handle;
     
@@ -167,8 +161,9 @@ void DipoleInSphere::execute() {
       }
       
       update_state(JustStarted);
-      fillOneSpherePotentials(dip_mtrx, hNewSurf);
-      oportPot_->send(FieldHandle(hNewSurf.get_rep()));
+      fillOneSphere(dip_mtrx, hNewSurf, hBSurf);
+      oportPot_->send(FieldHandle(hNewSurf));
+      oportMag_->send(FieldHandle(hBSurf));
     }
     else {
       warning("No dipole info found in the mesh supplied or supplied field is not of type PointCloudField<Vector>.");
@@ -180,12 +175,13 @@ void DipoleInSphere::execute() {
   }
 }
 
-void DipoleInSphere::fillOneSpherePotentials(DenseMatrix& dips, TriSurfFieldHandle hSurf) {
+void DipoleInSphere::fillOneSphere(DenseMatrix& dips, TriSurfField<double>* hSurf, TriSurfField<Vector>* hBSurf) {
   
   TriSurfMeshHandle hMesh = hSurf->get_typed_mesh();
   vector<double>& data = hSurf->fdata();
+  vector<Vector>& bdata = hBSurf->fdata();
   TriSurfMesh::Node::size_type nsize; hMesh->size(nsize);
-  data.resize(nsize, 0);
+
   BBox bbox = hMesh->get_bounding_box();
   
   if (!bbox.valid()){
@@ -205,7 +201,8 @@ void DipoleInSphere::fillOneSpherePotentials(DenseMatrix& dips, TriSurfFieldHand
 
   // -- for every point
   while (niter != niter_end) {
-      
+    data[*niter]=0;
+    bdata[*niter]=Vector(0,0,0);
     hMesh->get_point(p, *niter);
       
     // -- for every dipole
@@ -216,7 +213,7 @@ void DipoleInSphere::fillOneSpherePotentials(DenseMatrix& dips, TriSurfFieldHand
       E[0] = p.x();
       E[1] = p.y();
       E[2] = p.z();
-	
+
       double rho = sqrt( pow((E[0] - dips[id][0]),2) + pow((E[1] - dips[id][1]),2) + pow((E[2] - dips[id][2]),2));
       double S = E[0]*dips[id][0] + E[1]*dips[id][1] + E[2]*dips[id][2];
 	
@@ -229,9 +226,24 @@ void DipoleInSphere::fillOneSpherePotentials(DenseMatrix& dips, TriSurfFieldHand
       }
 	
       data[*niter] += V;
+
+
+      // magnetic
+      Vector r_vec = p.asVector()*1.01;
+      Vector r0_vec = Vector(dips[id][0], dips[id][1], dips[id][2]);
+      double r_mag = r_vec.length();
+      Vector a_vec = r_vec-r0_vec;
+      double a_mag = a_vec.length();
+      Vector Q_vec(dips[id][3], dips[id][4], dips[id][5]);
+      double F_mag = a_mag*(r_mag*a_mag + r_mag*r_mag - Dot(r0_vec, r_vec));
+      Vector gradF_vec((a_mag*a_mag/r_mag + Dot(a_vec,r_vec)/a_mag + 2*a_mag +
+			2*r_mag)*r_vec -
+		       (a_mag + 2*r_mag + Dot(a_vec,r_vec)/a_mag)*r0_vec);
+      bdata[*niter] += (F_mag*(Cross(Q_vec,r0_vec)) - 
+			Dot(Cross(Q_vec,r0_vec),r_vec)*gradF_vec)/
+	(4*M_PI*F_mag*F_mag);
     }
     ++niter;
   }
 }
-
 } // End namespace BioPSE

@@ -74,6 +74,15 @@
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
+      <port>
+	<name>SphereWithMagneticField</name>
+	<description>
+	  <p> Send the handle to the field object to downstream
+	  module. This is the initial field object and is populated with
+	  magnetic vectors at the sphere nodes.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+      </port>
     </outputs>
 
   </io>
