@@ -61,12 +61,14 @@ using namespace std;
 using SCIRun::Thread;
 
 #define ADD_BRICKBRACK
-#define ADD_VIS_FEM
-#define ADD_HEAD
-#define ADD_CSAFE_FIRE
-#define ADD_GEO_DATA
-#define ADD_SHEEP
+//#define ADD_VIS_FEM
+//#define ADD_HEAD
+//#define ADD_CSAFE_FIRE
+//#define ADD_GEO_DATA
+//#define ADD_SHEEP
 #define ADD_DTIGLYPH
+#define ADD_BOX
+#define ADD_SPHERE
 
 #ifdef ADD_DTIGLYPH
 
@@ -793,6 +795,7 @@ void make_walls_and_posters(Group *g, const Point &center,
   Object* floor=new Rect(cement_floor, Point(-8, 8, 0),
 			 Vector(4, 0, 0), Vector(0, 4, 0));
   ceiling_floor->add(floor);
+
   g->add(ceiling_floor);
   g->add(north_wall);
   g->add(west_wall);
@@ -1030,6 +1033,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 #ifdef ADD_BRICKBRACK
   make_walls_and_posters(g, center, room_lights);
 #endif
+
   Group* table=new Group();
 
   ImageMaterial *cement_pedestal = 
@@ -1039,11 +1043,27 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   
   table->add(new UVCylinder(cement_pedestal, center,
 			    center+Vector(0,0,0.5), 1.5));
-  Material *silver = new MetalMaterial(Color(0.5,0.5,0.5), 12);
+  Material *silver = new MetalMaterial(Color(0.25,0.25,0.25), 12);
   table->add(new Disc(silver, center+Vector(0,0,0.5),
 		      Vector(0,0,1), 1.5));
   g->add(table);
   s->add(table);
+
+#ifdef ADD_BOX
+  Group *boxg = new Group;
+
+  Material *gray = new LambertianMaterial(Color(0.3,0.3,0.3));
+  boxg->add(new Box(gray, center+Vector(0,0,2)-Vector(1,1,1),
+		    center+Vector(0,0,2)+Vector(1,1,1)));
+#endif
+
+//#ifdef ADD_SPHERE
+  Group *sphereg = new Group;
+
+  Material *gray2 = new LambertianMaterial(Color(0.3,0.3,0.3));
+  sphereg->add(new Sphere(gray2, center+Vector(0,0,2), 0.8));
+//#endif
+
 #ifdef ADD_BRICKBRACK
   add_objects(g, s, center, room_lights);
 #endif
@@ -1253,8 +1273,10 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
     HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > *vel =
       new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > >
       (temp_color_map, vel_dpy, buf, 3, nworkers);
-
-
+    CutGroup *fire_cut = new CutGroup(fcpdpy, true);
+    fire_cut->add(fire_inst);
+    fire_cut->name_ = "CSAFE Fire Cut";
+    fire_inst->addCPDpy(fcpdpy);
     fire_geom->add(vel);
   }
 
@@ -1369,6 +1391,16 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   sg->add(glyphs);
 #endif
 
+#ifdef ADD_BOX
+  sg->add(boxg);
+#endif
+
+#ifdef ADD_SPHERE
+  sg->add(sphereg);
+#else
+  g->add(sphereg);
+#endif
+
   sg->set_name("VolVis Selection");
   g->add(sg);
 
@@ -1378,10 +1410,16 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(0.3, 0.3, 0.3);
 
-  //  Scene *scene = new Scene(new Grid(g, 64),
-  //			   cam, bgcolor, cdown, cup, groundplane, 0.3);
-  Scene *scene = new Scene(new BV1(g),
+  Scene *scene = new Scene(new Grid(g, 64),
 			   cam, bgcolor, cdown, cup, groundplane, 0.3);
+
+//  Scene *scene = new Scene(new Grid(g, 64),
+//			   cam, bgcolor, cdown, cup, groundplane, 0.3);
+//  Scene *scene = new Scene(new BV1(g),
+//			   cam, bgcolor, cdown, cup, groundplane, 0.3);
+//  Scene *scene = new Scene(new BV1(g),
+//			   cam, bgcolor, cdown, cup, groundplane, 0.3);
+
   scene->shadowobj = s;
 
 //  Scene *scene = new Scene(new HierarchicalGrid(g, 8, 8, 8, 20, 20, 5),
@@ -1395,8 +1433,6 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
-//  for (l=0; l<room_lights.size(); l++)
-//    scene->add_light(room_lights[l]);
   scene->animate=true;
 
   scene->addObjectOfInterest( sg, true );
