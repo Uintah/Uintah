@@ -199,6 +199,8 @@ void matlabconverter::sciPropertyTOmlProperty(PropertyManager *handle,matlabarra
 long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Module *module)
 {
   infotext = "";
+  if (ma.isempty()) return(0);
+  if (ma.getnumelements() == 0) return(0);
 
   matlabarray::mlclass mclass;
   mclass = ma.getclass();
@@ -216,7 +218,12 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Mod
           postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (dimensions > 2)"));
           return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
         }
-        
+      if (ma.getnumelements() == 0)
+          {   
+          postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (0x0 matrix)"));
+          return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
+        }      
+            
       matlabarray::mitype type;
       type = ma.gettype();
         
@@ -566,6 +573,10 @@ bool matlabconverter::isvalidmatrixname(string name)
 
 long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, string &infostring, Module *module)
 {
+  infostring = "";
+  if (mlarray.isempty()) return(0);
+  if (mlarray.getnumelements() == 0) return(0);
+
   matlabarray::mlclass mclass;
   mclass = mlarray.getclass();
         
@@ -573,7 +584,6 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, string &infost
   // module as the the data needs to be divided over
   // three separate Nrrds
 
-  infostring = "";
  
   // Support for importing strings into SCIRun
   if (mclass == matlabarray::mlSTRING)
@@ -626,7 +636,13 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, string &infost
           postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (matrix dimension is larger than 10)"));
           return(0);    
         }
-        
+      
+      if (subarray.getnumelements() == 0)
+        {   
+          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (0x0 matrix)"));
+          return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
+        }      
+                
       // We expect a double array.
       // This classification is pure for convenience
       // Any integer array can be dealt with as well
@@ -656,6 +672,13 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, string &infost
       postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (matrix is empty)"));
       return(0);
     }
+        
+  if (mlarray.getnumelements() == 0)
+      {   
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (0x0 matrix)"));
+      return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
+    }      
+                    
         
   matlabarray::mitype type;
   type = mlarray.gettype();
@@ -1337,6 +1360,10 @@ void matlabconverter::sciNrrdDataTOmlArray(NrrdDataHandle &scinrrd, matlabarray 
 
 long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring, Module *module)
 {
+
+  infostring = "";
+  if (mlarray.isempty()) return(0);
+  if (mlarray.getnumelements() == 0) return(0);
 
   // If it is regular matrix translate it to a image or a latvol
   // The following section of code rewrites the matlab matrix into a
@@ -3587,6 +3614,7 @@ void matlabconverter::sciFieldTOmlArray(FieldHandle &scifield,matlabarray &mlarr
 
 long matlabconverter::sciBundleCompatible(matlabarray &mlarray, string &infostring, Module *module)
 {
+  infostring = "";
   if (!mlarray.isstruct()) return(0);
   if (mlarray.getnumelements()==0) return(0);
   long nfields = mlarray.getnumfields();
