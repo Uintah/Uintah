@@ -72,7 +72,7 @@ public:
 DECLARE_MAKER(ImageReaderUChar3D)
 ImageReaderUChar3D::ImageReaderUChar3D(GuiContext* ctx)
   : Module("ImageReaderUChar3D", ctx, Source, "DataIO", "Insight"),
-    gui_FileName_(ctx->subVar("FileName"))
+    gui_FileName_(ctx->subVar("filename"))
 {
   prevFile = "";
 }

@@ -105,7 +105,7 @@ DECLARE_MAKER(ImageFileWriter)
 
 ImageFileWriter::ImageFileWriter(GuiContext* ctx)
   : Module("ImageFileWriter", ctx, Source, "DataIO", "Insight"),
-    gui_FileName_(ctx->subVar("FileName"))
+    gui_FileName_(ctx->subVar("filename"))
 {
 }
 
