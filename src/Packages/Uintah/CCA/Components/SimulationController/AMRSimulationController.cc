@@ -7,6 +7,7 @@
 #include <Core/Containers/Array3.h>
 #include <Core/Thread/Time.h>
 #include <Core/OS/Dir.h>
+#include <Core/OS/ProcessInfo.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -35,12 +36,6 @@
 #include <TauProfilerForSCIRun.h>
 #include <iostream>
 #include <iomanip>
-
-#ifdef OUTPUT_AVG_ELAPSED_WALLTIME
-#include <list>
-#include <fstream>
-#include <math.h>
-#endif
 
 #include <Core/Malloc/Allocator.h> // for memory leak tests...
 
@@ -71,9 +66,6 @@ void AMRSimulationController::doRestart(std::string restartFromDir, int timestep
    d_restartFromScratch = fromScratch;
    d_restartRemoveOldDir = removeOldDir;
 }
-
-// currently defined in SimpleSimulationController.cc
-double stdDeviation(double sum_of_x, double sum_of_x_squares, int n);
 
 void AMRSimulationController::run()
 {
@@ -149,7 +141,8 @@ void AMRSimulationController::run()
    if(d_myworld->myrank() == 0){
      cout << "Compiling initialization taskgraph...\n";
    }
-   double start = Time::currentSeconds();
+
+   calcStartTime();
    
    scheduler->initialize(1, 1);
    scheduler->advanceDataWarehouse(currentGrid);
@@ -216,7 +209,7 @@ void AMRSimulationController::run()
    amrout << "Compiling initial schedule\n";
    scheduler->compile();
    
-   double dt=Time::currentSeconds()-start;
+   double dt=Time::currentSeconds() - getStartTime();
    if(d_myworld->myrank() == 0)
      cout << "done taskgraph compile (" << dt << " seconds)\n";
    // No scrubbing for initial step
@@ -258,7 +251,7 @@ void AMRSimulationController::run()
        }
        scheduler->compile();
    
-       double dt=Time::currentSeconds()-start;
+       double dt=Time::currentSeconds() - getStartTime();
        if(d_myworld->myrank() == 0)
          cout << "done taskgraph compile (" << dt << " seconds)\n";
        // No scrubbing for initial step
@@ -267,10 +260,7 @@ void AMRSimulationController::run()
        
      }
 
-   int n = 0;
-   double prevWallTime = Time::currentSeconds();
-   double sum_of_walltime = 0; // sum of all walltimes
-   double sum_of_walltime_squares = 0; // sum all squares of walltimes
+   initSimulationStatsVars();
 
    std::vector<int> levelids;
 
@@ -291,7 +281,9 @@ void AMRSimulationController::run()
      // can access it.  Also increment (by one) the current time step
      // number so components can tell what timestep they are on.  Remember the old
      // timestep to print the stats
-     int lastTimestep = sharedState->getCurrentTopLevelTimeStep();
+
+     // int lastTimestep = sharedState->getCurrentTopLevelTimeStep();  // RNJ Apparently not used.
+
      sharedState->setElapsedTime(t);
      sharedState->incrementCurrentTopLevelTimeStep();
 
@@ -375,7 +367,7 @@ void AMRSimulationController::run()
        totalFine *= currentGrid->getLevel(i)->timeRefinementRatio();
      
      iterations ++;
-     double wallTime = Time::currentSeconds() - start;
+     calcWallTime();
  
      delt_vartype delt_var;
      DataWarehouse* oldDW = scheduler->get_dw(0);
@@ -433,93 +425,16 @@ void AMRSimulationController::run()
 
      prev_delt=delt;
 
-#ifndef DISABLE_SCI_MALLOC
-     size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
-       nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
-       highwater_mmap;
-      
-     GetGlobalStats(DefaultAllocator(),
-		    nalloc, sizealloc, nfree, sizefree,
-		    nfillbin, nmmap, sizemmap, nmunmap,
-		    sizemunmap, highwater_alloc, highwater_mmap);
-     unsigned long memuse = sizealloc - sizefree;
-     unsigned long highwater = highwater_mmap;
-#else
-     unsigned long memuse = (char*)sbrk(0)-start_addr;
-     unsigned long highwater = 0;
-#endif
+     printSimulationStats( sharedState, delt, t );
 
-     unsigned long avg_memuse = memuse;
-     unsigned long max_memuse = memuse;
-     unsigned long avg_highwater = highwater;
-     unsigned long max_highwater = highwater;
-     if (d_myworld->size() > 1) {
-       MPI_Reduce(&memuse, &avg_memuse, 1, MPI_UNSIGNED_LONG, MPI_SUM, 0,
-		  d_myworld->getComm());
-       if(highwater){
-	 MPI_Reduce(&highwater, &avg_highwater, 1, MPI_UNSIGNED_LONG,
-		    MPI_SUM, 0, d_myworld->getComm());
-       }
-       avg_memuse /= d_myworld->size(); // only to be used by processor 0
-       avg_highwater /= d_myworld->size();
-       MPI_Reduce(&memuse, &max_memuse, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0,
-		  d_myworld->getComm());
-       if(highwater){
-	 MPI_Reduce(&highwater, &max_highwater, 1, MPI_UNSIGNED_LONG,
-		    MPI_MAX, 0, d_myworld->getComm());
-       }
-     }
-     
      if(log_dw_mem){
+       // Remember, this isn't logged if DISABLE_SCI_MALLOC is set
+       // (So usually in optimized mode this will not be run.)
        scheduler->logMemoryUse();
        ostringstream fn;
        fn << "alloc." << setw(5) << setfill('0') << d_myworld->myrank() << ".out";
        string filename(fn.str());
        DumpAllocator(DefaultAllocator(), filename.c_str());
-     }
-     
-     // calculate mean/std dev
-     double stdDev, mean;       
-     if (n > 2) // ignore times 0,1,2
-     {
-       //wallTimes.push_back(wallTime - prevWallTime);
-       sum_of_walltime += (wallTime - prevWallTime);
-       sum_of_walltime_squares += pow(wallTime - prevWallTime,2);
-     }
-     if (n > 3) {
-       // divide by n-2 and not n, because we wait till n>2 to keep track
-       // of our stats
-       stdDev = stdDeviation(sum_of_walltime, sum_of_walltime_squares, n-2);
-       mean = sum_of_walltime / (n-2);
-       //	  ofstream timefile("avg_elapsed_walltime.txt");
-       //	  timefile << mean << " +- " << stdDev << endl;
-     }
-     //output timestep statistics
-     if(d_myworld->myrank() == 0){
-       cout << "Time=" << t 
-            << " (timestep " << lastTimestep
-            << "), delT=" << delt << ", elap T = " << wallTime;
-
-       if (n > 3)
-         cout << ", mean: " << mean << " +- " << stdDev;
-       cout << ", Mem Use = ";
-       if (avg_memuse == max_memuse && avg_highwater == max_highwater){
-	 cout << avg_memuse;
-	 if(avg_highwater)
-	   cout << "/" << avg_highwater;
-       } else {
-	 cout << avg_memuse;
-	 if(avg_highwater)
-	   cout << "/" << avg_highwater;
-	 cout << " (avg), " << max_memuse;
-	 if(max_highwater)
-	   cout << "/" << max_highwater;
-	 cout << " (max)";
-       }
-       cout << endl;
-
-       prevWallTime = wallTime;
-       n++;
      }
 
      if(needRecompile(t, delt, currentGrid, sim, output, lb, regridder, levelids) || first){
@@ -559,7 +474,7 @@ void AMRSimulationController::run()
 
        scheduler->compile();
 
-       double dt=Time::currentSeconds()-start;
+       double dt=Time::currentSeconds() - start;
        if(d_myworld->myrank() == 0)
 	 cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
        levelids.resize(currentGrid->numLevels());
