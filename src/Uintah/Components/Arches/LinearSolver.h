@@ -141,17 +141,35 @@ public:
 				      DataWarehouseP& new_dw, int index,
 				      ArchesVariables* vars) = 0;
 
-
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Scalar Underrelaxation
+      //
+      virtual void computeScalarUnderrelax(const ProcessorGroup* pc,
+					   const Patch* patch,
+					   DataWarehouseP& old_dw,
+					   DataWarehouseP& new_dw, int index,
+					   ArchesVariables* vars)= 0;
 
       ////////////////////////////////////////////////////////////////////////
       //
-      // Schedule the scalar solve
+      // Scalar Solve
       //
-      virtual void sched_scalarSolve(const LevelP& level,
-				     SchedulerP& sched,
-				     DataWarehouseP& old_dw,
-				     DataWarehouseP& new_dw,
-				     const int index) = 0;
+      virtual void scalarLisolve(const ProcessorGroup* pc,
+				 const Patch* patch,
+				 DataWarehouseP& old_dw,
+				 DataWarehouseP& new_dw, int index,
+				 ArchesVariables* vars) = 0;
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Calculate Scalar residuals
+      //
+      virtual void computeScalarResidual(const ProcessorGroup* pc,
+					 const Patch* patch,
+					 DataWarehouseP& old_dw,
+					 DataWarehouseP& new_dw, int index,
+					 ArchesVariables* vars) = 0;
 protected:
 
 private:
@@ -164,6 +182,9 @@ private:
 
 //
 // $Log$
+// Revision 1.9  2000/08/01 06:18:37  bbanerje
+// Made ScalarSolver similar to PressureSolver and MomentumSolver.
+//
 // Revision 1.8  2000/07/28 02:31:00  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients

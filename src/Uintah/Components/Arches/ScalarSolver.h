@@ -108,6 +108,16 @@ public:
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw,
 				   double delta_t, int index);
+
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Schedule Linear Solve for Scalar[index]
+      //
+      void sched_scalarLinearSolve(const LevelP& level,
+				   SchedulerP& sched,
+				   DataWarehouseP& new_dw,
+				   DataWarehouseP& matrix_dw,
+				   int index);
 protected:
 
 private:
@@ -131,6 +141,18 @@ private:
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw,
 			     double delta_t, const int index);
+
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Actually Solver the Linear System for Scalar[index]
+      //    [in] 
+      //        add documentation here
+      //
+      void scalarLinearSolve(const ProcessorGroup* pc,
+			     const Patch* patch,
+			     DataWarehouseP& new_dw,
+			     DataWarehouseP& matrix_dw,
+			     int index);
 
 private:
       ArchesVariables* d_scalarVars;
@@ -160,6 +182,9 @@ private:
 
 //
 // $Log$
+// Revision 1.14  2000/08/01 06:18:38  bbanerje
+// Made ScalarSolver similar to PressureSolver and MomentumSolver.
+//
 // Revision 1.13  2000/07/28 02:31:00  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients

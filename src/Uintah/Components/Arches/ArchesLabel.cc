@@ -196,9 +196,9 @@ ArchesLabel::ArchesLabel()
 				       sum_vartype::getTypeDescription() );
   d_wVelTruncPSLabel = scinew VarLabel("wVelTruncPSLabel",
 				       sum_vartype::getTypeDescription() );
-  d_scalarResidPSLabel = scinew VarLabel("scalarResidPSLabel",
+  d_scalarResidLabel = scinew VarLabel("scalarResidLabel",
 				       sum_vartype::getTypeDescription() );
-  d_scalarTruncPSLabel = scinew VarLabel("scalarTruncPSLabel",
+  d_scalarTruncLabel = scinew VarLabel("scalarTruncLabel",
 				       sum_vartype::getTypeDescription() );
   // Unsure stuff
   // Unsure stuff
@@ -225,6 +225,9 @@ ArchesLabel::~ArchesLabel()
 
 //
 // $Log$
+// Revision 1.4  2000/08/01 06:18:37  bbanerje
+// Made ScalarSolver similar to PressureSolver and MomentumSolver.
+//
 // Revision 1.3  2000/07/28 02:30:59  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients

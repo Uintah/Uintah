@@ -28,25 +28,17 @@ static char *id="@(#) $Id$";
 using namespace Uintah::ArchesSpace;
 
 //****************************************************************************
-// Private constructor for PicardNonlinearSolver
-//****************************************************************************
-PicardNonlinearSolver::PicardNonlinearSolver():NonlinearSolver()
-{
-}
-
-//****************************************************************************
 // Default constructor for PicardNonlinearSolver
 //****************************************************************************
-PicardNonlinearSolver::PicardNonlinearSolver(const ArchesLabel* label, Properties* props, 
-					     BoundaryCondition* bc,
-					     TurbulenceModel* turbModel,
-					     PhysicalConstants* physConst):
-                                                NonlinearSolver(),
-                                                d_lab(label), 
-						d_props(props), 
-                                                d_boundaryCondition(bc), 
-                                                d_turbModel(turbModel),
-                                                d_physicalConsts(physConst)
+PicardNonlinearSolver::
+PicardNonlinearSolver(const ArchesLabel* label, 
+		      Properties* props, 
+		      BoundaryCondition* bc,
+		      TurbulenceModel* turbModel,
+		      PhysicalConstants* physConst): NonlinearSolver(),
+		       d_lab(label), d_props(props), 
+		       d_boundaryCondition(bc), d_turbModel(turbModel),
+		       d_physicalConsts(physConst)
 {
 }
 
@@ -203,24 +195,24 @@ PicardNonlinearSolver::sched_setInitialGuess(const LevelP& level,
 			   &PicardNonlinearSolver::setInitialGuess);
       int numGhostCells = 0;
       int matlIndex = 0;
-      tsk->requires(old_dw, d_lab->d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
+      tsk->requires(old_dw, d_lab->d_pressureSPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(old_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(old_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(old_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
 
       int nofScalars = d_props->getNumMixVars();
       for (int ii = 0; ii < nofScalars; ii++) {
-	tsk->requires(old_dw, d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
-		      numGhostCells);
+	tsk->requires(old_dw, d_lab->d_scalarSPLabel, ii, patch, 
+		      Ghost::None, numGhostCells);
       }
-      tsk->requires(old_dw, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
+      tsk->requires(old_dw, d_lab->d_densityCPLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(old_dw, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
 
       tsk->computes(new_dw, d_lab->d_pressureINLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_uVelocityINLabel, matlIndex, patch);
@@ -251,33 +243,33 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
   int nofGhostCells = 0;
 
   CCVariable<double> pressure;
-  old_dw->get(pressure, d_lab->d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
+  old_dw->get(pressure, d_lab->d_pressureSPBCLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
 
   SFCXVariable<double> uVelocity;
-  old_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
+  old_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
   SFCYVariable<double> vVelocity;
-  old_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
+  old_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
   SFCZVariable<double> wVelocity;
-  old_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
+  old_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
 
   int nofScalars = d_props->getNumMixVars();
   vector<CCVariable<double> > scalar(nofScalars);
   for (int ii = 0; ii < nofScalars; ii++) {
-    old_dw->get(scalar[ii], d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
-		nofGhostCells);
+    old_dw->get(scalar[ii], d_lab->d_scalarSPLabel, ii, patch, 
+		Ghost::None, nofGhostCells);
   }
 
   CCVariable<double> density;
-  old_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
+  old_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
 
   CCVariable<double> viscosity;
-  old_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
+  old_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
 
 
   // Create vars for new_dw
@@ -357,6 +349,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.38  2000/08/01 06:18:37  bbanerje
+// Made ScalarSolver similar to PressureSolver and MomentumSolver.
+//
 // Revision 1.37  2000/07/28 02:31:00  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients
