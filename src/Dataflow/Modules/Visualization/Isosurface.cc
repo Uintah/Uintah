@@ -47,18 +47,12 @@ using std::ostringstream;
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/FieldInterface.h>
 
-#include <Core/Algorithms/Visualization/TetMC.h>
-#include <Core/Algorithms/Visualization/HexMC.h>
 #include <Core/Algorithms/Visualization/MarchingCubes.h>
 #include <Core/Algorithms/Visualization/Noise.h>
 #include <Core/Algorithms/Visualization/Sage.h>
 #include <Core/Containers/StringUtil.h>
 
 #include <Dataflow/Network/Module.h>
-
-// Temporaries
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/CurveField.h>
 
 namespace SCIRun {
 
@@ -494,36 +488,13 @@ Isosurface::execute()
 
       // Multiple fields.
       else {
-	const TypeDescription *mtd = fields[0]->get_type_description(0);
-      
-	if( mtd->get_name() == "TriSurfField" ) {
-	  vector<TriSurfField<double> *> tfields(fields.size());
-	  for (unsigned int i=0; i < fields.size(); i++) {
-	    tfields[i] = (TriSurfField<double> *)(fields[i].get_rep());
-	  }
-
-	  fHandle_ = append_fields(tfields);
-
-	} else if( mtd->get_name() == "CurveField" ) {
-
-	  vector<CurveField<double> *> cfields(fields.size());
-	  for (unsigned int i=0; i < fields.size(); i++) {
-	    cfields[i] = (CurveField<double> *)(fields[i].get_rep());
-	  }
-
-	  fHandle_ = append_fields(cfields);
-
-	} else if( mtd->get_name() == "QuadSurfField" ) {
-
-	  vector<QuadSurfField<double> *> qfields(fields.size());
-	  for (unsigned int i=0; i < fields.size(); i++) {
-	    qfields[i] = (QuadSurfField<double> *)(fields[i].get_rep());
-	  }
-
-	  fHandle_ = append_fields(qfields);
-
-	} else
-	  fHandle_ = fields[0];
+	const TypeDescription *ftd = fields[0]->get_type_description(0);
+	CompileInfoHandle ci = IsosurfaceAlgo::get_compile_info(ftd);
+	
+	Handle<IsosurfaceAlgo> algo;
+	if (!module_dynamic_compile(ci, algo)) return;
+	
+	fHandle_ = algo->execute(fields);
       }
 
       // Get the output interpolant handle.
@@ -620,5 +591,26 @@ Isosurface::execute()
     // Send the data downstream
     omatrix_port->send( mHandle_ );
   }
+}
+
+CompileInfoHandle
+IsosurfaceAlgo::get_compile_info(const TypeDescription *ftd)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("IsosurfaceAlgoT");
+  static const string base_class_name("IsosurfaceAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       ftd->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       ftd->get_name() + "<double> ");
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  ftd->fill_compile_info(rval);
+  return rval;
 }
 } // End namespace SCIRun
