@@ -10,27 +10,25 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-//#include <Packages/FieldConverters/Datatypes/ScalarFieldRG.h>
+#include <Packages/FieldConverters/Core/Datatypes/TriSurface.h>
 //#include <Core/Datatypes/LatticeVol.h>
 
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
-#include <stdio.h>
 
 using std::cerr;
 using std::ifstream;
 using std::endl;
 
-//using namespace SCIRun;
-//using namespace FieldConverters;
+using namespace SCIRun;
+using namespace FieldConverters;
 
 main(int argc, char **argv) {
-#if 0
-  ScalarFieldHandle handle;
+  SurfaceHandle handle;
   
   if (argc !=3) {
-    cerr << "Usage: "<<argv[0]<<" OldSFRG NewLatticeVol\n";
+    cerr << "Usage: "<<argv[0]<<" OldSurf NewTriSurf\n";
     exit(0);
   }
   Piostream* stream=auto_istream(argv[1]);
@@ -40,10 +38,15 @@ main(int argc, char **argv) {
   }
   Pio(*stream, handle);
   if (!handle.get_rep()) {
-    cerr << "Error reading ScalarField from file "<<argv[1]<<".  Exiting...\n";
+    cerr << "Error reading Surface from file "<<argv[1]<<".  Exiting...\n";
     exit(0);
   }
-  
+  TriSurface *ts = dynamic_cast<TriSurface*>(handle.get_rep());
+  if (!ts) {
+    cerr << "Error - surface wasn't a TriSurface.\n";
+  }
+
+#if 0
   ScalarFieldRGBase *base=dynamic_cast<ScalarFieldRGBase*>(handle.get_rep());
   if (!base) {
     cerr << "Error - input Field wasn't an SFRG.\n";

@@ -10,23 +10,21 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-//#include <Packages/FieldConverters/Datatypes/ScalarFieldRG.h>
+#include <FieldConverters/Core/Datatypes/ScalarFieldRG.h>
 //#include <Core/Datatypes/LatticeVol.h>
 
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
-#include <stdio.h>
 
 using std::cerr;
 using std::ifstream;
 using std::endl;
 
-//using namespace SCIRun;
-//using namespace FieldConverters;
+using namespace SCIRun;
+using namespace FieldConverters;
 
 main(int argc, char **argv) {
-#if 0
   ScalarFieldHandle handle;
   
   if (argc !=3) {
@@ -50,6 +48,7 @@ main(int argc, char **argv) {
     exit(0);
   }
 
+#if 0
   FieldHandle fH;
 
   // TO_DO:
