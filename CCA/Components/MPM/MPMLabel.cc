@@ -264,10 +264,10 @@ MPMLabel::MPMLabel()
 
   // Implicit MPM labels
 
-  gVelocityOldLabel = VarLabel::create("gVelocityOld",
+  gVelocityOldLabel = VarLabel::create("g.VelocityOld",
 				    NCVariable<Vector>::getTypeDescription()); 
 
-  pVolumeOldLabel = VarLabel::create("pVolumeOld",
+  pVolumeOldLabel = VarLabel::create("p.VolumeOld",
 			       ParticleVariable<double>::getTypeDescription()); 
 
   dispNewLabel = VarLabel::create("dispNew",
@@ -297,10 +297,10 @@ MPMLabel::MPMLabel()
   bElBarLabel = VarLabel::create("bElBar",
 		       ParticleVariable<Matrix3>::getTypeDescription());
 
-  bElBarLabel_preReloc = VarLabel::create("bElBar_preReloc",
+  bElBarLabel_preReloc = VarLabel::create("bElBar+",
 			 ParticleVariable<Matrix3>::getTypeDescription());
 
-  pVolumeOldLabel_preReloc = VarLabel::create("pVolumeOld_preReloc",
+  pVolumeOldLabel_preReloc = VarLabel::create("pVolumeOld+",
 			       ParticleVariable<double>::getTypeDescription()); 
 } 
 
