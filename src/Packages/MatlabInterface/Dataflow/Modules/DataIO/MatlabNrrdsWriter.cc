@@ -136,7 +136,7 @@ MatlabNrrdsWriter::~MatlabNrrdsWriter()
 void MatlabNrrdsWriter::execute()
 {
       NrrdIPort *filenameport;
-      if ((filenameport = static_cast<NrrdIPort *>(get_iport("filename"))))
+      if ((filenameport = static_cast<NrrdIPort *>(getIPort("filename"))))
       {
         NrrdDataHandle nrrdH;
         if (filenameport->get(nrrdH))
