@@ -900,7 +900,9 @@ proc sourcenet {netedit_loadfile} {
 	puts "$netedit_loadfile: no such file"
 	return
     }
-    source $netedit_loadfile
+    global file_to_load
+    set file_to_load $netedit_loadfile
+    uplevel #0 {source $file_to_load}
 }
     
 proc sourcefile {netedit_loadfile} {
