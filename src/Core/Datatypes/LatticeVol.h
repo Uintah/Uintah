@@ -13,7 +13,7 @@ namespace SCIRun {
 using namespace vector;
 
 template <class Data>
-  class FData3d : public Array3<Data>
+class FData3d : public Array3<Data>
 
   typedef Data value_type;
 
@@ -21,13 +21,13 @@ template <class Data>
   virtual ~FData3d(){}
 
   value_type operator[](typename LatVolMesh::cell_index idx) const
-    { return this(idx.x_,idx.y_,idx.z_); } 
+    { return operator(idx.i_,idx.j_,idx.k_); } 
   value_type operator[](typename LatVolMesh::face_index idx) const
-    { return this(idx,idx,idx); }
+    { return operator(idx,idx,idx); }
   value_type operator[](typename LatVolMesh::edge_index idx) const
-    { return this(idx,idx,idx); }
+    { return operator(idx,idx,idx); }
   value_type operator[](typename LatVolMesh::node_index idx) const
-    { return this(idx.x_,idx.y_,idx.z_); }
+    { return operator(idx.i_,idx.j_,idx.k_); }
 };
 
 template <class Data>
