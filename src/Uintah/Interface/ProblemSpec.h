@@ -6,6 +6,11 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <string>
 
+#include <util/PlatformUtils.hpp>
+#include <parsers/DOMParser.hpp>
+#include <dom/DOM_Node.hpp>
+#include <dom/DOM_NamedNodeMap.hpp>
+
 namespace Uintah {
     namespace Grid {
 	class TypeDescription;
@@ -14,6 +19,8 @@ namespace Interface {
 
 using Uintah::Grid::RefCounted;
 using Uintah::Grid::TypeDescription;
+using Uintah::Interface::ProblemSpecP;
+
 
 // This is the "base" problem spec.  There should be ways of breaking
 // this up
@@ -47,12 +54,17 @@ WARNING
   
 ****************************************/
 
+
+
 class ProblemSpec : public RefCounted {
 public:
     ProblemSpec();
     virtual ~ProblemSpec();
+    void setDoc(const DOM_Document& doc);
+    void setNode(const DOM_Node& node);
 
     ProblemSpecP findBlock(const std::string& name) const;
+    DOM_Node findNode(const std::string &name, DOM_Node node) const;
 
     void require(const std::string& name, double& value);
     void require(const std::string& name, int& value);
@@ -63,6 +75,10 @@ public:
 private:
     ProblemSpec(const ProblemSpec&);
     ProblemSpec& operator=(const ProblemSpec&);
+
+    DOM_Document d_doc;
+    DOM_Node d_node;
+ 
 };
 
 } // end namespace Interface
@@ -70,6 +86,9 @@ private:
 
 //
 // $Log$
+// Revision 1.4  2000/03/29 01:59:59  jas
+// Filled in the findBlock method.
+//
 // Revision 1.3  2000/03/23 20:42:24  sparker
 // Added copy ctor to exception classes (for Linux/g++)
 // Helped clean up move of ProblemSpec from Interface to Grid
