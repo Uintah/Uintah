@@ -6,7 +6,7 @@
 <Uintah_specification>
 
    <Meta>
-	<title>symetry test</title>
+       <title>symetry test</title>
    </Meta>
     
     <!--____________________________________________________________________-->
@@ -17,119 +17,118 @@
     <!--   timestep_mulipler= ???????????                                   -->
     <!--____________________________________________________________________-->
    <Time>
-	<maxTime>            0.01        </maxTime>
-	<initTime>           0.0         </initTime>
-	<delt_min>           0.0         </delt_min>
-	<delt_max>           1.0         </delt_max>
-	<delt_init>          1.0e-9      </delt_init>
-	<timestep_multiplier>1.0         </timestep_multiplier>
+       <maxTime>            0.01        </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-9      </delt_init>
+       <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
     <!--   B O U N D A R Y   C O N D I T I O N S                            -->
     <!--____________________________________________________________________-->
     <Grid>
-		<BoundaryConditions>
-		 <Face side = "x-">
-                     <BCType id = "0" label = "Pressure" var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-			<BCType id = "0" label = "Velocity" var = "Neumann">
-                           <value> [0.0,0.0,0.0] </value>
-                        </BCType>
-			<BCType id = "0" label = "Temperature" var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-			<BCType id = "0" label = "Density" var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-                </Face>
-                <Face side = "x+">
-			<BCType id = "0" label = "Pressure" var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-			<BCType id = "0" label = "Velocity" var = "Neumann">
-                           <value> [0.0,0.0,0.0] </value>
-                        </BCType>
-			<BCType id = "0" label = "Temperature" var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-			<BCType id = "0" label = "Density" var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-                </Face>
-                <Face side = "y-">
-			<BCType id = "0" label = "Pressure" var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-			<BCType id = "0" label = "Velocity" var = "Neumann">
-                           <value> [0.0,0.0,0.0] </value>
-                        </BCType>
-			<BCType id = "0" label = "Temperature" var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-			<BCType id = "0" label = "Density"    var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-                </Face>                  
-		<Face side = "y+">
-			<BCType id = "0" label = "Pressure"   var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-			<BCType id = "0" label = "Velocity"   var = "Neumann">
-                           <value> [0.0,0.0,0.0] </value>
-                        </BCType>
-			<BCType id = "0" label = "Temperature" var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-			<BCType id = "0" label = "Density" var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-		</Face>
-		<Face side = "z-">
-			<BCType id = "0" label = "Pressure" var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-			<BCType id = "0" label = "Velocity" var = "Neumann">
-                           <value> [0.0,0.0,0.0] </value>
-                        </BCType>
-			<BCType id = "0" label = "Temperature" var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-			<BCType id = "0" label = "Density" var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-	        </Face>
-		<Face side = "z+">
-			<BCType id = "0" label = "Pressure" var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-			<BCType id = "0" label = "Velocity" var = "Neumann">
-                           <value> [0.0,0.0,0.0] </value>
-                        </BCType>
-			<BCType id = "0" label = "Temperature" var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-			<BCType id = "0" label = "Density" var = "Neumann">
-                           <value> 0.0 </value>
-                        </BCType>
-	        </Face>
-
-	</BoundaryConditions>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"    var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"   var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"   var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
     <!--____________________________________________________________________-->
     <!--     P A T C H   D I M E N S I O N S                                -->
     <!--   lower/upper      = lower and upper physical limits               -->
     <!--   extraCells       = number of extra cells in x,y,z                -->
     <!--   spacing          = resolution                                    -->
     <!--____________________________________________________________________-->
-	<Level>
-	    <Box label="1">
-	    	<lower>       [0,0,0]     </lower>
-	    	<upper>       [5,5,5]     </upper>
-              <extraCells>  [1,1,1]     </extraCells>
-		<patches>     [1,1,1]     </patches>
-	    </Box>
-	    <spacing>[0.5,0.5,0.5] </spacing>
-	</Level>
+       <Level>
+           <Box label="1">
+              <lower>        [0,0,0]    </lower>
+              <upper>        [5,5,5]    </upper>
+              <extraCells>   [1,1,1]    </extraCells>
+              <patches>      [1,1,1]    </patches>
+           </Box>
+           <spacing>[0.5,0.5,0.5] </spacing>
+       </Level>
     </Grid>
    
     <!--____________________________________________________________________-->
@@ -139,12 +138,12 @@
     <!--   save label       = any variable you want to visualize            -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-	<filebase>symetry3D.uda</filebase>
-	<outputInterval>0.00001</outputInterval>
-       <save label="vel_CC"/>
-       <save label="temp_CC"/>
-       <save label="press_CC"/>
-       <save label="delP_Dilatate"/>
+      <filebase>symetry3D.uda</filebase>
+      <outputInterval>0.00001</outputInterval>
+      <save label="vel_CC"/>
+      <save label="temp_CC"/>
+      <save label="press_CC"/>
+      <save label="delP_Dilatate"/>
    </DataArchiver>
    
    <Debug>
@@ -152,37 +151,36 @@
        <dbg_timeStop>        0.01   </dbg_timeStop>
        <dbg_outputInterval>  1e-9   </dbg_outputInterval>
     <!--<debug label = "switchDebugInitialize"/>        
-	<debug label = "switchDebug_equilibration_press"/> 
+       <debug label = "switchDebug_equilibration_press"/> 
        <debug label = "switchDebug_vel_FC"/>                
        <debug label = "switchDebug_explicit_press"/>      
        <debug label = "switchDebug_PressFC"/>             
        <debug label = "switchDebugLagrangianValues"/>    
        <debug label = "switchDebugSource_Sink"/>         
-	<debug label = "switchDebug_advance_advect"/>  
-    -->  	
+       <debug label = "switchDebug_advance_advect"/>  
+    -->         
    </Debug>
     <!--____________________________________________________________________-->
-    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->>
     <!--    cfl             = Standard CFL number                           -->
     <!--    time_integrator = [explicit or implicit]                        -->
     <!--    delt_based_on   = [??????]                                      -->
     <!--____________________________________________________________________-->
-   <CFD>
-  	<cfl>0.5</cfl>
-	<ICE>
-	    <time_integrator>explicit    </time_integrator>
-	    <max_iteration>  100         </max_iteration>
-  	    <delt_based_on>  convective  </delt_based_on>
-           <max_iteration_equilibration> 50 </max_iteration_equilibration>
-	   <advection type = "FirstOrder" />
-	</ICE>	 
+    <CFD>
+         <cfl>0.5</cfl>
+       <ICE>
+           <time_integrator>explicit    </time_integrator>
+           <max_iteration>  100         </max_iteration>
+             <delt_based_on>  convective  </delt_based_on>
+        <max_iteration_equilibration> 50 </max_iteration_equilibration>
+        <advection type = "FirstOrder" />
+      </ICE>        
     </CFD>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
-    <!--    gravity         = (x, y, z dirs)                                -->
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
-	<gravity>[0,0,0]</gravity>
+       <gravity>[0,0,0]</gravity>
     </PhysicalConstants>
     <!--____________________________________________________________________-->
     <!--     MATERIAL PROPERTIES AND INITIAL CONDITIONS                     -->
@@ -193,25 +191,24 @@
     <!--        min/max = Physical dimensions of overlay                    -->
     <!--____________________________________________________________________-->
     <MaterialProperties>
-	<ICE>
-	  <material>
+       <ICE>
+         <material>
             <burn type = "null" />
-	    <EOS type = "ideal_gas">
-		<gas_constant>188.92 </gas_constant>
-	    </EOS>
+           <EOS type = "ideal_gas">
+              <gas_constant>188.92 </gas_constant>
+           </EOS>
            
-	    
-	    <viscosity>              0.0                   </viscosity>
-	    <thermal_conductivity>   0.0                   </thermal_conductivity>
-	    <specific_heat>          652.9                 </specific_heat>
-	    <speed_of_sound>         270.287               </speed_of_sound>
-	    <gamma>                  1.289                 </gamma>
-	    <velocity_field>         0.0                   </velocity_field>
+           
+           <viscosity>              0.0                   </viscosity>
+           <thermal_conductivity>   0.0                   </thermal_conductivity>
+           <specific_heat>          652.9                 </specific_heat>
+           <speed_of_sound>         270.287               </speed_of_sound>
+           <gamma>                  1.289                 </gamma>
            <!--____________________________________ -->
            <!-- How domain gets initialized         -->
            <!--____________________________________ -->
-	    <geom_object>
-	      <difference>
+           <geom_object>
+             <difference>
                 <box label="Whole grid">
                     <min>[ -1.0, -1.0, -1.0 ]           </min>
                     <max>[ 6.0, 6.0, 6.0 ]              </max>
@@ -221,36 +218,36 @@
                     <min>[ 2.0, 2.0, 2.0 ]              </min>
                     <max>[ 3.0, 3.0, 3.0 ]              </max>
                 </box>
-	      </difference>
-	        <res>		   [2,2,2]                  </res>
-	        <velocity>      [0.0,0.0,0.0]            </velocity>
+             </difference>
+               <res>                 [2,2,2]                  </res>
+               <velocity>      [0.0,0.0,0.0]            </velocity>
                <density>       1.7899909957225715000    </density>
                <pressure>      101325.0                 </pressure>
-	        <temperature>   300.0                    </temperature>
-	    </geom_object>
+               <temperature>   300.0                    </temperature>
+           </geom_object>
            
-	    <geom_object>
+           <geom_object>
                 <box label="hot_spot">
                     <min>[ 2.0, 2.0, 2.0 ]              </min>
                     <max>[ 3.0, 3.0, 3.0 ]              </max>
                 </box>
-	        <res>		   [2,2,2]                  </res>
-	        <velocity>      [0.0,0.0,0.0]            </velocity>
+               <res>                 [2,2,2]                  </res>
+               <velocity>      [0.0,0.0,0.0]            </velocity>
                <density>       1.7899909957225715000     </density>
                <pressure>      135266.039564763254020363         </pressure>
-	        <temperature>   400.0                    </temperature>
-	    </geom_object>
+               <temperature>   400.0                    </temperature>
+           </geom_object>
          </material>
-	</ICE>	
-	
-	<exchange_properties> 
-	  <exchange_coefficients>
-	     <momentum>	        []               </momentum>
-	     <heat>                  []               </heat>
-	  </exchange_coefficients>
-	</exchange_properties> 
+      </ICE>       
+       
+       <exchange_properties> 
+         <exchange_coefficients>
+            <momentum>               []               </momentum>
+            <heat>                  []               </heat>
+         </exchange_coefficients>
+       </exchange_properties> 
 
     </MaterialProperties>
                  
-	
+       
 </Uintah_specification>
