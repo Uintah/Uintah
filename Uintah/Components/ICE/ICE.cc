@@ -231,35 +231,45 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
     // Step 1a  computeSoundSpeed
     scheduleStep1a( patch,  sched,  old_dw, new_dw);
     
-    // Step 1b calculate equlibration pressure
-    scheduleStep1b( patch,  sched,  old_dw, new_dw);
+    // calculate equlibration pressure rho_micro, speedSound, vol_frac
+    scheduleComputeEquilibrationPressure( 
+        patch,  sched,  old_dw, new_dw);
     
     // Step 1c compute face centered velocities
-    scheduleStep1c( patch,  sched,  old_dw, new_dw);
+    scheduleComputeFaceCenteredVelocities( 
+        patch,  sched,  old_dw, new_dw);
     
     // Step 1d computes momentum exchange on FC velocities
-    scheduleStep1d( patch,  sched,  old_dw, new_dw);
+    scheduleAddExchangeContributionToFCVel( 
+        patch,  sched,  old_dw, new_dw);
     
     // Step 2 computes delPress and the new pressure
-    scheduleStep2(  patch,  sched,  old_dw, new_dw);
+    scheduleComputeDelPressAndUpdatePressCC(  
+        patch,  sched,  old_dw, new_dw);
     
     // Step 3 compute face centered pressure
-    scheduleStep3(  patch,  sched,  old_dw, new_dw);
+    scheduleComputePressFC(  
+        patch,  sched,  old_dw, new_dw);
     
     // Step 4a compute sources of momentum
-    scheduleStep4a( patch,  sched,  old_dw, new_dw);
+    scheduleAccumulateMomentumSourceSinks( 
+        patch,  sched,  old_dw, new_dw);
     
     // Step 4b compute sources of energy
-    scheduleStep4b( patch,  sched,  old_dw, new_dw);
+    scheduleAccumulateEnergySourceSinks( 
+        patch,  sched,  old_dw, new_dw);
     
     // Step 5a compute lagrangian quantities
-    scheduleStep5a( patch,  sched,  old_dw, new_dw);
+    scheduleComputeLagrangianValues( 
+        patch,  sched,  old_dw, new_dw);
     
     // Step 5b cell centered momentum exchange
-    scheduleStep5b( patch,  sched,  old_dw, new_dw);
+    scheduleAddExchangeToMomentumAndEnergy( 
+        patch,  sched,  old_dw, new_dw);
     
     // Step 6and7 advect and advance in time
-    scheduleStep6and7(patch,sched,  old_dw, new_dw);
+    scheduleAdvectAndAdvanceInTime(
+        patch,  sched,  old_dw, new_dw);
   }
 }
 
@@ -283,14 +293,16 @@ void ICE::scheduleStep1a(const Patch* patch, SchedulerP& sched,
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep1b--
+ Function~  ICE::scheduleComputeEquilibrationPressure--
  Purpose~   Compute the equilibration pressure
 _____________________________________________________________________*/
-void ICE::scheduleStep1b(const Patch* patch, SchedulerP& sched,
-			 DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+void ICE::scheduleComputeEquilibrationPressure(
+             const Patch* patch, SchedulerP& sched,
+		DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  Task* task = scinew Task("ICE::step1b",patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep1b);
+  Task* task = scinew Task("ICE::computeEquilibrationPressure",
+                        patch, old_dw, new_dw,this,
+			   &ICE::computeEquilibrationPressure);
   
   task->requires(old_dw,lb->press_CCLabel, 0,patch,Ghost::None);
   
@@ -317,14 +329,16 @@ void ICE::scheduleStep1b(const Patch* patch, SchedulerP& sched,
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep1c--
+ Function~  ICE::ComputeFaceCenteredVelocities--
  Purpose~   Compute the face-centered velocities
 _____________________________________________________________________*/
-void ICE::scheduleStep1c(const Patch* patch,SchedulerP& sched,
+void ICE::scheduleComputeFaceCenteredVelocities(
+                      const Patch* patch,SchedulerP& sched,
 			 DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  Task* task = scinew Task("ICE::step1c",patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep1c);
+  Task* task = scinew Task("ICE::computeFaceCenteredVelocities",
+                        patch, old_dw, new_dw,this,
+			   &ICE::computeFaceCenteredVelocities);
 
   task->requires(new_dw,lb->press_equil_CCLabel,0,patch,Ghost::None);
 
@@ -345,15 +359,17 @@ void ICE::scheduleStep1c(const Patch* patch,SchedulerP& sched,
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep1d--
+ Function~  ICE::scheduleAddExchangeContributionToFCVel--
  Purpose~   Schedule compute the momentum exchange for the face centered 
             velocities
 _____________________________________________________________________*/
-void ICE::scheduleStep1d(const Patch* patch, SchedulerP& sched,
-			 DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+void ICE::scheduleAddExchangeContributionToFCVel(
+                    const Patch* patch, SchedulerP& sched,
+		      DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  Task* task = scinew Task("ICE::step1d",patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep1d);
+  Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
+                        patch, old_dw, new_dw,this,
+			   &ICE::addExchangeContributionToFCVel);
   int numMatls=d_sharedState->getNumICEMatls();
   
   for (int m = 0; m < numMatls; m++) {
@@ -374,14 +390,16 @@ void ICE::scheduleStep1d(const Patch* patch, SchedulerP& sched,
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep2--
+ Function~  ICE::scheduleComputeDelPressAndUpdatePressCC--
  Purpose~   Schedule compute delpress and new press_CC
 _____________________________________________________________________*/
-void ICE::scheduleStep2(const Patch* patch,SchedulerP& sched,
-			DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+void ICE::scheduleComputeDelPressAndUpdatePressCC(
+                const Patch* patch,SchedulerP& sched,
+		  DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  Task* task = scinew Task("ICE::step2",patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep2);
+  Task* task = scinew Task("ICE::computeDelPressAndUpdatePressCC",
+                        patch, old_dw, new_dw,this,
+			   &ICE::computeDelPressAndUpdatePressCC);
   
   task->requires(new_dw,lb->press_equil_CCLabel, 0,patch,Ghost::None);
   int numMatls=d_sharedState->getNumICEMatls();
@@ -404,14 +422,14 @@ void ICE::scheduleStep2(const Patch* patch,SchedulerP& sched,
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep3--
+ Function~  ICE::scheduleComputePressFC--
  Purpose~   Schedule compute face centered pressure press_FC
 _____________________________________________________________________*/
-void ICE::scheduleStep3(const Patch* patch, SchedulerP& sched,
+void ICE::scheduleComputePressFC(const Patch* patch, SchedulerP& sched,
 			DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  Task* task = scinew Task("ICE::step3",patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep3);
+  Task* task = scinew Task("ICE::computePressFC",patch, old_dw, new_dw,this,
+			   &ICE::computePressFC);
   
   task->requires(   new_dw,lb->press_CCLabel, 0,      patch,  Ghost::None);
   int numMatls = d_sharedState->getNumICEMatls();
@@ -429,14 +447,16 @@ void ICE::scheduleStep3(const Patch* patch, SchedulerP& sched,
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep4a--
+ Function~  ICE::scheduleAccumulateMomentumSourceSinks--
  Purpose~   Schedule compute sources and sinks of momentum
 _____________________________________________________________________*/
-void ICE::scheduleStep4a(const Patch* patch, SchedulerP& sched,
-			 DataWarehouseP& old_dw,DataWarehouseP& new_dw)
+void ICE::scheduleAccumulateMomentumSourceSinks(
+            const Patch* patch, SchedulerP& sched,
+	     DataWarehouseP& old_dw,DataWarehouseP& new_dw)
 {
-  Task* task = scinew Task("ICE::step4a", patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep4a);
+  Task* task = scinew Task("ICE::accumulateMomentumSourceSinks", 
+                        patch, old_dw, new_dw,this,
+			   &ICE::accumulateMomentumSourceSinks);
 
   task->requires(new_dw,    lb->pressX_FCLabel,     0,  patch,  Ghost::None);
   task->requires(new_dw,    lb->pressY_FCLabel,     0,  patch,  Ghost::None);
@@ -459,15 +479,17 @@ void ICE::scheduleStep4a(const Patch* patch, SchedulerP& sched,
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep4b--
+ Function~  ICE::scheduleAccumulateEnergySourceSinks--
  Purpose~   Schedule compute sources and sinks of energy
 _____________________________________________________________________*/
-void ICE::scheduleStep4b(const Patch* patch,SchedulerP& sched,
-			 DataWarehouseP& old_dw,  DataWarehouseP& new_dw)
+void ICE::scheduleAccumulateEnergySourceSinks(
+            const Patch* patch,SchedulerP& sched,
+	     DataWarehouseP& old_dw,  DataWarehouseP& new_dw)
 
 {
-  Task* task = scinew Task("ICE::step4b",patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep4b);
+  Task* task = scinew Task("ICE::accumulateEnergySourceSinks",
+                        patch, old_dw, new_dw,this,
+			   &ICE::accumulateEnergySourceSinks);
   
   task->requires(new_dw,    lb->press_CCLabel,    0, patch, Ghost::None);
   task->requires(new_dw,    lb->delPress_CCLabel, 0, patch, Ghost::None);
@@ -490,14 +512,16 @@ void ICE::scheduleStep4b(const Patch* patch,SchedulerP& sched,
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep5a--
+ Function~  ICE:: scheduleComputeLagrangianValues--
  Purpose~   Schedule compute lagrangian mass momentum and internal energy
 _____________________________________________________________________*/
-void ICE::scheduleStep5a(const Patch* patch, SchedulerP&  sched,
-			 DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+void ICE:: scheduleComputeLagrangianValues(
+            const Patch* patch, SchedulerP&  sched,
+	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  Task* task = scinew Task("ICE::step5a",patch, old_dw, new_dw,this,
-			       &ICE::actuallyStep5a);
+  Task* task = scinew Task("ICE::computeLagrangianValues",
+                            patch, old_dw, new_dw,this,
+			       &ICE::computeLagrangianValues);
   int numMatls=d_sharedState->getNumICEMatls();
   for (int m = 0; m < numMatls; m++)   {
     ICEMaterial* matl = d_sharedState->getICEMaterial(m);
@@ -519,14 +543,16 @@ void ICE::scheduleStep5a(const Patch* patch, SchedulerP&  sched,
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep5b--
+ Function~  ICE::scheduleAddExchangeToMomentumAndEnergy--
  Purpose~   Schedule momentum and energy exchange on the lagrangian quantities
 _____________________________________________________________________*/
-void ICE::scheduleStep5b(const Patch* patch,SchedulerP& sched,
-			 DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+void ICE::scheduleAddExchangeToMomentumAndEnergy(
+            const Patch* patch,SchedulerP& sched,
+	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  Task* task = scinew Task("ICE::step5b",patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep5b);
+  Task* task = scinew Task("ICE::addExchangeToMomentumAndEnergy",
+                        patch, old_dw, new_dw,this,
+			   &ICE::addExchangeToMomentumAndEnergy);
   int numMatls=d_sharedState->getNumICEMatls();
   
   for (int m = 0; m < numMatls; m++)  {
@@ -547,16 +573,18 @@ void ICE::scheduleStep5b(const Patch* patch,SchedulerP& sched,
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep6and7--
+ Function~  ICE::scheduleAdvectAndAdvanceInTime--
  Purpose~   Schedule advance and advect in time for mass, momentum
             and energy.  Note this function puts (*)vel_CC, rho_CC
             and Temp_CC into new dw, not flux variables
 _____________________________________________________________________*/
-void ICE::scheduleStep6and7(const Patch* patch, SchedulerP& sched,
-			    DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+void ICE::scheduleAdvectAndAdvanceInTime(
+            const Patch* patch, SchedulerP& sched,
+	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  Task* task = scinew Task("ICE::step6and7",patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep6and7);
+  Task* task = scinew Task("ICE::advectAndAdvanceInTime",
+                        patch, old_dw, new_dw,this,
+			   &ICE::advectAndAdvanceInTime);
   int numMatls=d_sharedState->getNumICEMatls();
   for (int m = 0; m < numMatls; m++ )   {
     ICEMaterial* matl = d_sharedState->getICEMaterial(m);
@@ -705,43 +733,44 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
     new_dw->put(visc_CC,    lb->viscosity_CCLabel, dwindex,patch);
   
   
+/*`==========TESTING==========*/ 
 #if (todd_debug && switchDebugInitialize)
-  // This is broken and won't work with the above declarations of variables
-  // inside the loop over materials.
-  //__________________________________
-  //    Output initial Cond
   cout << " Initial Conditions" << endl;
   
   IntVector lowIndex     = patch->getInteriorCellLowIndex();
   IntVector highIndex    = patch->getInteriorCellHighIndex();
   cout << "\n\t xLoLimit   = "<<lowIndex.x()<< 
-    "\t yLoLimit   = "<<lowIndex.y()<<
-    "\t zLoLimit   = "<<lowIndex.z()<< endl;
-  cout << "\t xHiLimit   = "<<highIndex.x()<< 
-    "\t yHiLimit   = "<<highIndex.y()<<
-    "\t zHiLimit   = "<<highIndex.z()<< endl;
+    "\t yLoLimit   is "<<lowIndex.y()<<
+    "\t zLoLimit   is "<<lowIndex.z()<< endl;
+  cout << "\t xHiLimit   is "<<highIndex.x()<< 
+    "\t yHiLimit   is "<<highIndex.y()<<
+    "\t zHiLimit   is "<<highIndex.z()<< endl;
   
   IntVector loIndex   = patch->getCellLowIndex();
   IntVector hiIndex   = patch->getCellHighIndex();
-  cout << "\n\txLo_GC   = "<<loIndex.x()<< 
-    "\t yLo_GC   = "<<loIndex.y()<<
-    "\t zLo_GC   = "<<loIndex.z()<< endl;
-  cout << "\t xHi_GC   = "<<hiIndex.x()<< 
-    "\t yHi_GC   = "<<hiIndex.y()<<
-    "\t zHi_GC   = "<<hiIndex.z()<< endl;
+  cout << "\n\txLo_GC   is "<<loIndex.x()<< 
+    "\t yLo_GC   is "<<loIndex.y()<<
+    "\t zLo_GC   is "<<loIndex.z()<< endl;
+  cout << "\t xHi_GC   is "<<hiIndex.x()<< 
+    "\t yHi_GC   is "<<hiIndex.y()<<
+    "\t zHi_GC   is "<<hiIndex.z()<< endl;
   
   Vector dx = patch->dCell();
-  cout << "\n\tdx     = "<< dx.x() << 
-    "\tdy     = "<< dx.y() << 
-    "\tdz     = "<< dx.z() << endl;
-  printData( patch, 1, "initialCond.", "rho",          rho_CC);
-  printData( patch, 1, "initialCond", "rho_micro",     rho_micro);
-  printData( patch, 1, "initialCond", "Temp",          Temp_CC);
-  printData( patch, 1, "initialCond", "vol_frac",      vol_frac_CC);
-  printVector( patch, 1, "initialCond", "uvel_CC", 0,  vel_CC);
-  printVector( patch, 1, "initialCond", "vvel_CC", 1,  vel_CC);
-  printVector( patch, 1, "initialCond", "wvel_CC", 2,  vel_CC);
-#endif    
+  cout << "\n\tdx     is "<< dx.x() << 
+    "\tdy     is "<< dx.y() << 
+    "\tdz     is"<< dx.z() << endl;
+    
+  char description[50];
+  sprintf(description, "Initialization, Mat. %d ",m);
+  printData(   patch, 1, description, "rho_CC",         rho_CC);
+  printData(   patch, 1, description, "rho_micro_CC",   rho_micro);
+  printData(   patch, 1, description, "Temp_CC",        Temp_CC);
+  printData(   patch, 1, description, "vol_frac_CC",    vol_frac_CC);
+  printVector( patch, 1, description, "uvel_CC", 0,  vel_CC);
+  printVector( patch, 1, description, "vvel_CC", 1,  vel_CC);
+  printVector( patch, 1, description, "wvel_CC", 2,  vel_CC);
+#endif 
+ /*==========TESTING==========`*/   
   }
 
 }
@@ -764,7 +793,7 @@ void ICE::actuallyStep1a(const ProcessorGroup*, const Patch* patch,
 }
 
 /* --------------------------------------------------------------------- 
- Function~  ICE::actuallyStep1b--
+ Function~  ICE::computeEquilibrationPressure--
  Purpose~   Find the equilibration pressure  
  Reference: Flow of Interpenetrating Material Phases, J. Comp, Phys
                18, 440-464, 1975, see the equilibration section
@@ -784,11 +813,11 @@ void ICE::actuallyStep1a(const ProcessorGroup*, const Patch* patch,
     - After the solution has converged then set the real 
       array values = local temp values
  
-Note:  The nomenclature follows the reference.             
-Todd              12/28/00    Changed convergence criteria                     
+Note:  The nomenclature follows the reference.                                 
 _____________________________________________________________________*/
-void ICE::actuallyStep1b(const ProcessorGroup*, const Patch* patch,
-			 DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+void ICE::computeEquilibrationPressure(
+            const ProcessorGroup*,  const Patch* patch,
+	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
   double    converg_coeff = 10;              
   double    convergence_crit = converg_coeff * DBL_EPSILON;
@@ -1100,12 +1129,13 @@ void ICE::actuallyStep1b(const ProcessorGroup*, const Patch* patch,
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::actuallyStep1c--
+ Function~  ICE::computeFaceCenteredVelocities--
  Purpose~   compute the face centered velocities minus the exchange
             contribution.
 _____________________________________________________________________*/
-void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
-			 DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+void ICE::computeFaceCenteredVelocities(
+            const ProcessorGroup*,  const Patch* patch,
+	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
   cout << "Doing actually step1c -- compute_face_centered_velocities" << endl;
 
@@ -1249,7 +1279,7 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
 }
 
 /*---------------------------------------------------------------------
- Function~  Add_exchange_contribution_to_FC_vel--
+ Function~  addExchangeContributionToFCVel--
  Purpose~
    This function adds the momentum exchange contribution to the 
    existing face-centered velocities
@@ -1283,8 +1313,9 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
  References: see "A Cell-Centered ICE method for multiphase flow simulations"
  by Kashiwa, above equation 4.13.
  ---------------------------------------------------------------------  */
-void ICE::actuallyStep1d(const ProcessorGroup*,const Patch* patch,
-			 DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+void ICE::addExchangeContributionToFCVel(
+            const ProcessorGroup*,  const Patch* patch,
+            DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
   cout << "Doing actually step1d -- Add_exchange_contribution_to_FC_vel" << endl;
   
@@ -1508,14 +1539,15 @@ void ICE::actuallyStep1d(const ProcessorGroup*,const Patch* patch,
 }
 
 /*---------------------------------------------------------------------
- Function~  explicit_delPress_MM--
+ Function~  ICE::computeDelPressAndUpdatePressCC--
  Purpose~
    This function calculates the change in pressure explicitly. 
  Note:  Units of delpress are [Pa]
  Reference:  Multimaterial Formalism eq. 1.5
  ---------------------------------------------------------------------  */
-void ICE::actuallyStep2(const ProcessorGroup*,const Patch* patch,
-			DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+void ICE::computeDelPressAndUpdatePressCC(
+            const ProcessorGroup*,  const Patch* patch,
+	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
   cout << "Doing actually step2 -- explicit delPress" << endl;
   int numMatls  = d_sharedState->getNumICEMatls();
@@ -1646,7 +1678,7 @@ void ICE::actuallyStep2(const ProcessorGroup*,const Patch* patch,
 }
 
 /* ---------------------------------------------------------------------  
- Function~  ICE::actuallyStep3--
+ Function~  ICE::computePressFC--
  Purpose~
     This function calculates the face centered pressure on each of the 
     cell faces for every cell in the computational domain and a single 
@@ -1654,8 +1686,9 @@ void ICE::actuallyStep2(const ProcessorGroup*,const Patch* patch,
     single layer of ghostcells
     12/28/00    Changed the way press_FC is computed
   ---------------------------------------------------------------------  */
-void ICE::actuallyStep3(const ProcessorGroup*,const Patch* patch,
-			DataWarehouseP& old_dw,DataWarehouseP& new_dw)
+void ICE::computePressFC(
+                    const ProcessorGroup*,   const Patch* patch,
+			DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
   cout << "Doing actually step3 -- press_face_MM" << endl;
   int numMatls = d_sharedState->getNumICEMatls();
@@ -1747,13 +1780,14 @@ void ICE::actuallyStep3(const ProcessorGroup*,const Patch* patch,
 }
 
 /* ---------------------------------------------------------------------
- Function~  accumulate_momentum_source_sinks--
+ Function~  ICE::accumulateMomentumSourceSinks--
  Purpose~   This function accumulates all of the sources/sinks of momentum
             which is added to the current value for the momentum to form
             the Lagrangian momentum
  ---------------------------------------------------------------------  */
-void ICE::actuallyStep4a(const ProcessorGroup*,const Patch* patch,
-			 DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+void ICE::accumulateMomentumSourceSinks(
+            const ProcessorGroup*,  const Patch* patch,
+	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
   cout << "Doing actually step4a -- accumulate_momentum_source_sinks_MM" << endl;
   
@@ -1879,7 +1913,7 @@ void ICE::actuallyStep4a(const ProcessorGroup*,const Patch* patch,
 }
 
 /* --------------------------------------------------------------------- 
- Function~  ICE::actuallyStep4b--
+ Function~  ICE::accumulateEnergySourceSinks--
  Purpose~   This function accumulates all of the sources/sinks of energy
             which is added to the current value for the energy to form
             the Lagrangian energy  
@@ -1887,8 +1921,9 @@ void ICE::actuallyStep4a(const ProcessorGroup*,const Patch* patch,
  Currently the kinetic energy isn't included.
  This is the routine where you would add additional sources/sinks of energy                 
  ---------------------------------------------------------------------  */
-void ICE::actuallyStep4b(const ProcessorGroup*,const Patch* patch,
-			 DataWarehouseP& old_dw,DataWarehouseP& new_dw)
+void ICE::accumulateEnergySourceSinks(
+            const ProcessorGroup*,  const Patch* patch,
+	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
   cout << "Doing actually step4b -- accumulate_energy_source_sinks" << endl;
 
@@ -1948,13 +1983,14 @@ void ICE::actuallyStep4b(const ProcessorGroup*,const Patch* patch,
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::actuallyStep5a--
+ Function~  ICE::computeLagrangianValues--
  Purpose~
    This function calculates the The cell-centered, time n+1, 
    lagrangian mass momentum and energy
  ---------------------------------------------------------------------  */
-void ICE::actuallyStep5a(const ProcessorGroup*, const Patch* patch,
-			 DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+void ICE::computeLagrangianValues(
+            const ProcessorGroup*,  const Patch* patch,
+	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
   cout << "Doing actually step5a -- calculate Lagrangian values for mass, momentum and energy" << endl;
 
@@ -2018,7 +2054,7 @@ void ICE::actuallyStep5a(const ProcessorGroup*, const Patch* patch,
 }
 
 /*---------------------------------------------------------------------
- Function~  ICE::actuallyStep5b--
+ Function~  ICE::addExchangeToMomentumAndEnergy--
  Purpose~
    This function adds the energy exchange contribution to the 
    existing cell-centered lagrangian temperature
@@ -2052,8 +2088,9 @@ void ICE::actuallyStep5a(const ProcessorGroup*, const Patch* patch,
  References: see "A Cell-Centered ICE method for multiphase flow simulations"
  by Kashiwa, above equation 4.13.
  ---------------------------------------------------------------------  */
-void ICE::actuallyStep5b(const ProcessorGroup*,const Patch* patch,
-			 DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+void ICE::addExchangeToMomentumAndEnergy(
+            const ProcessorGroup*,  const Patch* patch,
+	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
   cout << "Doing actually step5b -- Heat and momentum exchange" << endl;
 
@@ -2244,15 +2281,16 @@ void ICE::actuallyStep5b(const ProcessorGroup*,const Patch* patch,
 }
 
 /* --------------------------------------------------------------------- 
- Function~  ICE::actuallyStep6and7--
+ Function~  ICE::advectAndAdvanceInTime--
  Purpose~
    This function calculates the The cell-centered, time n+1, mass, momentum
    and internal energy
 
 Need to include kinetic energy 
  ---------------------------------------------------------------------  */
-void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
-			    DataWarehouseP& old_dw,DataWarehouseP& new_dw)
+void ICE::advectAndAdvanceInTime(
+            const ProcessorGroup*, const Patch* patch,
+	     DataWarehouseP& old_dw,DataWarehouseP& new_dw)
 {
 
   cout << "Doing actually step6 and 7" << endl;
@@ -3778,6 +3816,18 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.87  2001/01/11 14:13:12  harman
+// -changed step names:
+//     step1b  ComputeEquilibrationPressure
+//     step1c  ComputeFaceCenteredVelocities
+//     step1d  AddExchangeContributionToFCVel
+//     step2   ComputeDelPressAndUpdatePressCC
+//     step3   ComputePressFC
+//     step4a  AccumulateMomentumSourceSinks
+//     step4b  AccumulateEnergySourceSinks
+//     step5b  ComputeLagrangianValues
+//     step6&7 AdvectAndAdvanceInTime
+//
 // Revision 1.86  2001/01/11 00:21:18  harman
 // - Updated instrumentation for mm
 // - Hardwired the exchange coefficients
