@@ -89,8 +89,8 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
 				    int basis_order)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
-  map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type> vertex_map;
-  typename map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type>::iterator node_iter;
+  map<typename Msh::Node::index_type, TriSurfMesh::Node::index_type> vertex_map;
+  typename map<typename Msh::Node::index_type, TriSurfMesh::Node::index_type>::iterator node_iter;
   vector<typename Msh::Node::index_type> reverse_map;
   vector<unsigned int> face_map;
 
@@ -256,8 +256,8 @@ FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
 				     int basis_order)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
-  map<typename Msh::Node::index_type, typename QuadSurfMesh::Node::index_type> vertex_map;
-  typename map<typename Msh::Node::index_type, typename QuadSurfMesh::Node::index_type>::iterator node_iter;
+  map<typename Msh::Node::index_type, QuadSurfMesh::Node::index_type> vertex_map;
+  typename map<typename Msh::Node::index_type, QuadSurfMesh::Node::index_type>::iterator node_iter;
   vector<typename Msh::Node::index_type> reverse_map;
   vector<unsigned int> face_map;
 
@@ -424,8 +424,8 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
 				      int basis_order)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
-  map<typename Msh::Node::index_type, typename CurveMesh::Node::index_type> vertex_map;
-  typename map<typename Msh::Node::index_type, typename CurveMesh::Node::index_type>::iterator node_iter;
+  map<typename Msh::Node::index_type, CurveMesh::Node::index_type> vertex_map;
+  typename map<typename Msh::Node::index_type, CurveMesh::Node::index_type>::iterator node_iter;
   vector<typename Msh::Node::index_type> reverse_map;
   vector<unsigned int> edge_map;
 
