@@ -4,7 +4,7 @@
 #include <testprograms/Component/framework/cca.h>
 #include <testprograms/Component/framework/Sender.h>
 #include <testprograms/Component/framework/Provider.h>
-#include <testprograms/Component/framework/scr.h>
+#include <testprograms/Component/framework/REI/scr.h>
 
 #include <sstream>
 #include <iostream>
