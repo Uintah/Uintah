@@ -50,6 +50,13 @@ private:
     Arches& operator=(const Arches&);
     double d_deltaT;
     NonlinearSolver* d_nlSolver;
+  // properties...solves density, temperature and specie concentrations
+    Properties* d_props;
+  
+  // Turbulence Model
+    TurbulenceModel* d_turbModel;
+  // Boundary conditions
+    BoundaryCondition* d_boundaryCondition;
 };
 
 } // end namespace Components
@@ -57,6 +64,9 @@ private:
 
 //
 // $Log$
+// Revision 1.9  2000/04/07 18:30:12  rawat
+// Added problem initialization function in Arches.cc
+//
 // Revision 1.8  2000/03/23 20:05:13  jas
 // Changed the location of ProblemSpec from Grid to Interface in the include
 // file path.

@@ -48,6 +48,7 @@ class MomentumSolver;
 class ScalarSolver;
 class TurbulenceModel;
 class Properties;
+class BoundaryCondition;
 const double MACHINEPRECISSION = 14.0; //used to compute residual
 class PicardNonlinearSolver:
 public NonlinearSolver
@@ -57,7 +58,8 @@ public:
   // GROUP: Constructors:
   ////////////////////////////////////////////////////////////////////////
   //
-  PicardNonlinearSolver();
+  PicardNonlinearSolver(Properties& props, BoundaryCondition& bc,
+			TurbulenceModel& turbModel);
 
 
 
@@ -109,6 +111,8 @@ private:
   
   // Turbulence Model
   TurbulenceModel* d_turbModel;
+  // Boundary conditions
+  BoundaryCondition* d_boundaryCondition;
   
 };
 
