@@ -1,0 +1,10 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../../..
+
+SRCS     = DipoleMatToGeom.cc DipoleSourceRHS.cc ErrorMetric.cc \
+	   RemapVector.cc VecSplit.cc
+
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
+
+include $(SRCTOP)/scripts/objs.mk
