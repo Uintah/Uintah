@@ -196,7 +196,8 @@ void AMRSimulationController::run()
        Task* task = scinew Task("initializeErrorEstimate", this,
                                 &AMRSimulationController::initializeErrorEstimate,
                                 sharedState);
-       task->computes(sharedState->get_refineFlag_label());
+       task->computes(sharedState->get_refineFlag_label(), sharedState->refineFlagMaterials());
+       task->computes(sharedState->get_refinePatchFlag_label(), sharedState->refineFlagMaterials());
        sched->addTask(task, currentGrid->getLevel(i)->eachPatch(),
                       sharedState->allMaterials());
        sim->scheduleInitialErrorEstimate(currentGrid->getLevel(i), scheduler);
@@ -231,6 +232,9 @@ void AMRSimulationController::run()
        cout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
        if (currentGrid == oldGrid)
          break;
+
+       // reset the scheduler here - it doesn't hurt anything here
+       // as we're going to have to recompile the TG anyway.
        scheduler->initialize(1, 1);
        scheduler->advanceDataWarehouse(currentGrid);
 
@@ -241,7 +245,8 @@ void AMRSimulationController::run()
 	 Task* task = scinew Task("initializeErrorEstimate", this,
 				  &AMRSimulationController::initializeErrorEstimate,
 				  sharedState);
-	 task->computes(sharedState->get_refineFlag_label());
+	 task->computes(sharedState->get_refineFlag_label(), sharedState->refineFlagMaterials());
+         task->computes(sharedState->get_refinePatchFlag_label(), sharedState->refineFlagMaterials());
 	 sched->addTask(task, currentGrid->getLevel(i)->eachPatch(),
 			sharedState->allMaterials());
 
@@ -452,6 +457,15 @@ void AMRSimulationController::run()
        scheduler->mapDataWarehouse(Task::NewDW, totalFine);
        
        sim->scheduleTimeAdvance(currentGrid->getLevel(0), scheduler, 0, 1);
+       for(int i=0;i<currentGrid->numLevels();i++){
+	 Task* task = scinew Task("initializeErrorEstimate", this,
+				  &AMRSimulationController::initializeErrorEstimate,
+				  sharedState);
+	 task->computes(sharedState->get_refineFlag_label(), sharedState->refineFlagMaterials());
+         task->computes(sharedState->get_refinePatchFlag_label(), sharedState->refineFlagMaterials());
+	 sched->addTask(task, currentGrid->getLevel(i)->eachPatch(),
+			sharedState->allMaterials());
+       }
        
        if(currentGrid->numLevels() > 1)
 	 subCycle(currentGrid, scheduler, sharedState, 0, totalFine, 1, sim);
@@ -460,15 +474,10 @@ void AMRSimulationController::run()
        scheduler->mapDataWarehouse(Task::OldDW, 0);
        scheduler->mapDataWarehouse(Task::NewDW, totalFine);
        for(int i=0;i<currentGrid->numLevels();i++){
-	 Task* task = scinew Task("initializeErrorEstimate", this,
-				  &AMRSimulationController::initializeErrorEstimate,
-				  sharedState);
-	 task->computes(sharedState->get_refineFlag_label());
-	 sched->addTask(task, currentGrid->getLevel(i)->eachPatch(),
-			sharedState->allMaterials());
 	 sim->scheduleErrorEstimate(currentGrid->getLevel(i), scheduler);
 	 sim->scheduleComputeStableTimestep(currentGrid->getLevel(i), scheduler);
        }
+
        if(output)
 	 output->finalizeTimestep(t, delt, currentGrid, scheduler,true);
 
@@ -580,6 +589,7 @@ AMRSimulationController::needRecompile(double time, double delt,
   return recompile;
 }
 
+
 void
 AMRSimulationController::initializeErrorEstimate(const ProcessorGroup*,
 						 const PatchSubset* patches,
@@ -588,15 +598,16 @@ AMRSimulationController::initializeErrorEstimate(const ProcessorGroup*,
 						 DataWarehouse* new_dw,
 						 SimulationStateP sharedState)
 {
+  // only make one refineFlag per patch.  Do not loop over matls!
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    for(int m = 0;m<matls->size();m++){
-      int matl = matls->get(m);
-
-      CCVariable<int> refineFlag;
-      new_dw->allocateAndPut(refineFlag, sharedState->get_refineFlag_label(),
-			     matl, patch);
-      refineFlag.initialize(0);
-    }
+    CCVariable<int> refineFlag;
+    PerPatch<int> refinePatchFlag(0);
+    new_dw->allocateAndPut(refineFlag, sharedState->get_refineFlag_label(),
+                           0, patch);
+    new_dw->put(refinePatchFlag, sharedState->get_refinePatchFlag_label(),
+                0, patch);
+    refineFlag.initialize(0);
   }
 }
+
