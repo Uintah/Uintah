@@ -34,9 +34,15 @@ location of this document) - See the bottom of this file.
 
 <html>
 <head>
+
 <style type="text/css">
-.index { list-style-type: none;  }
+div.main {
+margin-left: 12em;
+margin-right: 12em;
+}
+div.main h1 { text-align: center }
 </style>
+
 <script type="text/javascript">
 var treetop="";
 var path = location.pathname;
@@ -53,23 +59,19 @@ document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='s
 document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
 </script>
 
-<p class="title">Documentum</p>
-
-<table align="center">
-<tr>
-<td>
-<ul class="index">
+<div class="main">
+<h1>Documentum</h1>
+<ol>
 <li><a href="documentum.html">Overview of SCIRun Documentation</a></li>
 <li><a href="module-latex/index.html">How to Write Module Descriptions (LaTeX Version)</a></li>
 <li><a href="module-xml/index.html">How to Write Module Descriptions (XML Version)</a></li>
-</ul>
-</td>
-</tr>
-</table>
+</ol>
+</div>
 
 <script type="text/javascript">
 document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
 </script>
+
 </body>
 </html>
 
