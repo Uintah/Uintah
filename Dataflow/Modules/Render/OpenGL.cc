@@ -49,7 +49,7 @@
 
 #ifdef HAVE_MAGICK
 namespace C_Magick {
-#include <magick/magick.h>
+#include <magick/api.h>
 }
 #endif
 
