@@ -82,6 +82,17 @@ MPMICE::~MPMICE()
   delete d_ice;
 }
 
+//__________________________________
+//    For restarting implicit pressure solver
+bool MPMICE::restartableTimesteps()
+{
+  return d_ice->d_impICE;
+}
+
+double MPMICE::recomputeTimestep(double current_dt)
+{
+  return current_dt/2;
+} 
 //______________________________________________________________________
 //
 void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
