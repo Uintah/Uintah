@@ -80,9 +80,10 @@ ColorMap::ColorMap(const Array1<Color>& rgb, Array1<float>& rgbT,
   SetRaw(rgb,rgbT,ialpha,alphaT,size);
   
   Color ambient(0,0,0),specular(0.7,0.7,0.7);
-  cerr << "Constructor for ColorMap: " << size << endl;
+  //  cerr << "Constructor for ColorMap: " << size << endl;
   for(int i=0;i<size;i++) {
     colors[i] = scinew Material(ambient,rcolors[i],specular, 10);
+    colors[i]->transparency = alphas[i];
   }
 
   
@@ -135,8 +136,10 @@ void ColorMap::Build1d(const int size)
   float mul = 1.0/(size-1);
 
   rcolors.resize(size);
+  alphas.resize(size);
   for(i=0;i<size;i++) {
     rcolors[i] = FindColor(rawRampColor,rawRampColorT,i*mul);
+    alphas[i] = FindAlpha(rawRampAlpha,rawRampAlphaT,i*mul);
   }
   
 #if 0
