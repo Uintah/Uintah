@@ -101,13 +101,6 @@ int
 sci_system(const char *line)
 /* - cm */
 {
-#if 0
-  int status;
-  LockAllocator(DefaultAllocator());
-  status = system(line);
-  UnLockAllocator(DefaultAllocator());
-  return status;
-#else
   int status, save;
   pid_t pid;
   struct sigaction sa, intr, quit;
@@ -177,32 +170,54 @@ sci_system(const char *line)
 # define UNBLOCK 0
 #endif
 
-  // create the pipe file destriptors
+  // Create the pipe file destriptors.  This has to happen, so that
+  // the parent knows that the child is done with the allocator.  The
+  // parent leaves the fork call before the child is done forking.  If
+  // the parent unlocks the allocator before the child is done then
+  // another process has the oportunity to get a hold of the
+  // allocator, thus causing the child to block.  These pipes provide
+  // a mechanism for the child to tell the parent that it is done
+  // forking.  In the event that vfork is actually implented (parent
+  // blocks until child either calls exec or exit), you will no longer
+  // need the pipe to communicate.
   int pipe_fd[2];
   if (pipe(pipe_fd) == -1) {
-    fprintf(stderr,"Error in piping\n");
+    fprintf(stderr,"sci_system.cc:Error in piping\n");
     return 1;
   }
 
+  // Recursively lock the allocator, to keep other threads out.
   LockAllocator(DefaultAllocator());
   pid = __fork ();
   if (pid == (pid_t) 0)
     {
       /* Child side.  */
 
-      // Send signal to parent that we are past the fork
+      // Close unneeded read pipe.
       if (close(pipe_fd[0]) == -1) {
-	fprintf(stderr, "Error in closing read pipe in child\n");
+	fprintf(stderr, "sci_system.cc:Error in closing read pipe in child\n");
+	fprintf(stderr, "sci_system.cc:If this actually has a problem, the parent will block.\n");
 	exit(1);
       }
-      //	UnLockAllocator(DefaultAllocator());
+
+      // I'm not sure why unlocking this causes a problem in the
+      //child.  I have seen things on the web that indicate that this
+      //mutex may need to be reset before it can be used again.  At
+      //any rate it breaks with it in, and doesn't when it is
+      //commented out.  - James Bigler
+
+      //      UnLockAllocator(DefaultAllocator());
+
+      // Send signal to parent that we are past the fork
       char to_parent[1] = {'n'};
       if (write(pipe_fd[1], to_parent, 1) != 1) {
-	fprintf(stderr, "Error in writing to pipe in child\n");
+	fprintf(stderr, "sci_system.cc:Error in writing to pipe in child\n");
+	fprintf(stderr, "sci_system.cc:If this actually has a problem, the parent will block.\n");
 	exit(1);
       }
+
       if (close(pipe_fd[1]) == -1) {
-	fprintf(stderr, "Error in closing write pipe in child\n");
+	fprintf(stderr, "sci_system.cc:Error in closing write pipe in child\n");
 	exit(1);
       }
       
@@ -237,19 +252,20 @@ sci_system(const char *line)
       
       // Wait for signal from child that it is past the fork
       if (close(pipe_fd[1]) == -1) {
-	fprintf(stderr, "Error in closing write pipe in parent\n");
+	fprintf(stderr, "sci_system.cc:Error in closing write pipe in parent\n");
 	return 1;
       }
       char from_child[1];
       if (read(pipe_fd[0], from_child, 1) != 1) {
-	fprintf(stderr, "Error in reading from pipe in parent\n");
+	fprintf(stderr, "sci_system.cc:Error in reading from pipe in parent\n");
 	UnLockAllocator(DefaultAllocator());
 	return 1;
       }
       // We can unlock the allocator, because the child has
       UnLockAllocator(DefaultAllocator());
+
       if (close(pipe_fd[0]) == -1) {
-	fprintf(stderr, "Error in closing read pipe in parent\n");
+	fprintf(stderr, "sci_system.cc:Error in closing read pipe in parent\n");
 	return 1;
       }
       
@@ -299,7 +315,6 @@ sci_system(const char *line)
 	return -1;
     }
   return status;
-#endif
 }
 /* -cm commented
   weak_alias (__libc_system, system)
