@@ -22,6 +22,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/NodeHedgehog.tcl $(SRCDIR)/ArchiveReader.tcl \
 	$(SRCDIR)/GridVisualizer.tcl\
 	$(SRCDIR)/EigenEvaluator.tcl\
+	$(SRCDIR)/ParticleEigenEvaluator.tcl\
 	$(SRCDIR)/TensorOperator.tcl\
 	$(SRCDIR)/TensorFieldOperator.tcl\
 	$(SRCDIR)/TensorParticlesOperator.tcl\
@@ -33,6 +34,9 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.16  2000/11/21 22:05:16  witzel
+# Oops, didn't mean to remove ParticleEigenEvaluator.tcl
+#
 # Revision 1.15  2000/11/21 22:01:14  witzel
 # Added TensorFieldOperator and TensorParticlesOperator and removed
 # TensorElementEvaluator, InPlaneEigenEvaluator,
