@@ -352,10 +352,12 @@ void CutPlaneDpy::move(int x, int y)
 
 void CutPlaneDpy::animate(double t) {
   if (doanimate) {
-    double rate = 2*0.1;
+    //constant chosen to match the spinning things in the siggraph demo
+#define CPDPY_RATE 2*0.1
     
     Transform prv = *prev_trans; //original plane eqn
-    prv.pre_rotate(t*rate, Vector(0,0,1));
+    prv.pre_rotate(t*CPDPY_RATE, Vector(0,0,1));
+#undef CPDPY_RATE
     HMatrix vmat;
     prv.get(&vmat[0][0]); 
     Vector x_a(vmat[0][2],vmat[1][2],vmat[2][2]); //get x, where we stored the pln normal
@@ -366,7 +368,8 @@ void CutPlaneDpy::animate(double t) {
     n.z(x_a.z());
     
     d = Dot(n, cen); //maintain d to center rotation around initial point  
-    redraw = true;
+    
+    //redraw = true;
   }
 }
 
