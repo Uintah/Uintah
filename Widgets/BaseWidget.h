@@ -53,10 +53,10 @@ protected:
    Index NumGeometries;
    Index NumMaterials;
 
-   BaseConstraint** constraints;
-   Variable** variables;
-   GeomObj** geometries;
-   MaterialProp** materials;
+   Array1<BaseConstraint*> constraints;
+   Array1<Variable*> variables;
+   Array1<GeomObj*> geometries;
+   Array1<MaterialProp*> materials;
 
    ObjGroup* widget;
    double widget_scale;
