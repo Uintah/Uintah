@@ -45,7 +45,6 @@ This filter performs anisotropic diffusion on a scalar itk::Image using the modi
     <output name="OutputImage">
       <type>OutputImageType</type>
       <call>GetOutput</call>
-      <default>0.125</default>
     </output>
   </outputs>
 
