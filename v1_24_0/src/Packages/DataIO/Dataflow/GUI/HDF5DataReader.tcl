@@ -1578,7 +1578,15 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	radiobutton $playmode.inc_w_exec -text "Increment with Execute" \
 	    -variable $this-playmode -value inc_w_exec
 
-	iwidgets::spinint $playmode.delay -labeltext {Step Delay (ms)} -range {0 86400000} -justify right -width 5 -step 10 -textvariable $this-delay -repeatdelay 300 -repeatinterval 10
+	# Save the delay since the iwidget resets it
+	global $this-delay
+	set delay [set $this-delay]
+	iwidgets::spinint $playmode.delay -labeltext {Step Delay (ms)} \
+	    -range {0 86400000} -justify right -width 5 -step 10 \
+	    -textvariable $this-delay -repeatdelay 300 -repeatinterval 10
+	$playmode.delay delete 0 end
+	$playmode.delay insert 0 $delay
+
 	trace variable $this-delay w "$this maybeRestart;\#"
 
 	pack $playmode.once $playmode.loop \
