@@ -1,6 +1,6 @@
 
 /*
- *  MeshInterpVals.cc:  Rescale a surface
+ *  LocateNbrhd.cc:  Rescale a surface
  *
  *  Written by:
  *   David Weinstein
@@ -11,7 +11,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Ports/ColumnMatrixPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/MeshPort.h>
 #include <Dataflow/Ports/SurfacePort.h>
@@ -26,13 +25,13 @@ using std::cerr;
 namespace SCIRun {
 
 
-class MeshInterpVals : public Module
+class LocateNbrhd : public Module
 {
   MeshIPort* imesh_;
   SurfaceIPort* isurf_;
 
-  ColumnMatrixOPort* omatrix_;
-  ColumnMatrixHandle omatrixH_;
+  MatrixOPort* omatrix_;
+  MatrixHandle omatrixH_;
 
   MatrixOPort* omat_;
   MatrixHandle omatH_;
@@ -49,20 +48,20 @@ class MeshInterpVals : public Module
 
 public:
 
-  MeshInterpVals(const clString& id);
-  virtual ~MeshInterpVals();
+  LocateNbrhd(const clString& id);
+  virtual ~LocateNbrhd();
   virtual void execute();
 };
 
 
-extern "C" Module* make_MeshInterpVals(const clString& id)
+extern "C" Module* make_LocateNbrhd(const clString& id)
 {
-  return new MeshInterpVals(id);
+  return new LocateNbrhd(id);
 }
 
 
-MeshInterpVals::MeshInterpVals(const clString& id)
-  : Module("MeshInterpVals", id, Filter),
+LocateNbrhd::LocateNbrhd(const clString& id)
+  : Module("LocateNbrhd", id, Filter),
     method_("method", id, this),
     zeroTCL_("zeroTCL", id, this),
     potMatTCL_("potMatTCL", id, this)
@@ -77,7 +76,7 @@ MeshInterpVals::MeshInterpVals(const clString& id)
   omat_ = scinew MatrixOPort(this, "Matrix", MatrixIPort::Atomic);
   add_oport(omat_);
 
-  omatrix_ = scinew ColumnMatrixOPort(this, "Map", ColumnMatrixIPort::Atomic);
+  omatrix_ = scinew MatrixOPort(this, "Map", MatrixIPort::Atomic);
   add_oport(omatrix_);
 
   osurf_ = scinew SurfaceOPort(this, "NearestNodes", SurfaceIPort::Atomic);
@@ -88,13 +87,13 @@ MeshInterpVals::MeshInterpVals(const clString& id)
 }
 
 
-MeshInterpVals::~MeshInterpVals()
+LocateNbrhd::~LocateNbrhd()
 {
 }
 
 
 void
-MeshInterpVals::execute()
+LocateNbrhd::execute()
 {
   MeshHandle meshH;
   if (!imesh_->get(meshH))

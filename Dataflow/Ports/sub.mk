@@ -5,7 +5,6 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Dataflow/Ports
 
 SRCS     += $(SRCDIR)/ColorMapPort.cc             \
-            $(SRCDIR)/ColumnMatrixPort.cc         \
             $(SRCDIR)/FieldPort.cc                \
             $(SRCDIR)/GeomPort.cc                 \
             $(SRCDIR)/GeometryPort.cc             \

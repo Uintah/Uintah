@@ -42,7 +42,7 @@
 
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/SurfacePort.h>
@@ -99,9 +99,9 @@ struct CGData {
 
 class SolveMatrix : public Module {
   MatrixIPort* matrixport;
-    ColumnMatrixIPort* rhsport;
-    ColumnMatrixOPort* solport;
-    ColumnMatrixHandle solution;
+    MatrixIPort* rhsport;
+    MatrixOPort* solport;
+    MatrixHandle solution;
   
 #ifdef SCI_SPARSELIB
     void conjugate_gradient(Matrix*, ColumnMatrix&, ColumnMatrix&,int flag);
@@ -167,10 +167,10 @@ SolveMatrix::SolveMatrix(const clString& id)
 {
     matrixport=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
     add_iport(matrixport);
-    rhsport=scinew ColumnMatrixIPort(this, "RHS", ColumnMatrixIPort::Atomic);
+    rhsport=scinew MatrixIPort(this, "RHS", MatrixIPort::Atomic);
     add_iport(rhsport);
 
-    solport=scinew ColumnMatrixOPort(this, "Solution", ColumnMatrixIPort::Atomic);
+    solport=scinew MatrixOPort(this, "Solution", MatrixIPort::Atomic);
     add_oport(solport);
 }
 
@@ -184,7 +184,7 @@ void SolveMatrix::execute()
  int flag = 1;
 #endif
   MatrixHandle matrix;
-  ColumnMatrixHandle rhs;
+  MatrixHandle rhs;
   
   int m = matrixport->get(matrix);
   int r = rhsport->get(rhs);
@@ -195,7 +195,7 @@ void SolveMatrix::execute()
   
   if ( !matrix.get_rep() || !rhs.get_rep() ) {
     cerr << "Solve: no input\n";
-    solport->send(ColumnMatrixHandle(0));
+    solport->send(MatrixHandle(0));
     return;
   }
   
@@ -224,6 +224,14 @@ void SolveMatrix::execute()
   else if(pre == "ILU_P") flag = 3;
 #endif
   
+  ColumnMatrix *rhsp = dynamic_cast<ColumnMatrix*>(rhs.get_rep());
+  ColumnMatrix *solp = dynamic_cast<ColumnMatrix*>(solution.get_rep());
+
+  if (!rhsp) {
+    cerr << "Error - rhs isn't a column!\n";
+    return;
+  }
+
   ep=emit_partial.get();
 //  cerr << "emit_partial="<<ep<<"\n";
   clString meth=method.get();
@@ -231,39 +239,39 @@ void SolveMatrix::execute()
     if(meth == "conjugate_gradient"){
       rhs.detach();
 	conjugate_gradient(matrix.get_rep(),
-			   *solution.get_rep(), *rhs.get_rep(),flag);
+			   *solp, *rhsp, flag);
 	solport->send(solution);
     } else if(meth == "quasi_minimal_res"){
 	quasi_minimal_res(matrix.get_rep(),
-	       *solution.get_rep(), *rhs.get_rep(),flag);
+	       *solp, *rhsp, flag);
 	solport->send(solution);
     } else if(meth == "bi_conjugate_gradient"){
 	bi_conjugate_gradient(matrix.get_rep(),
-	       *solution.get_rep(), *rhs.get_rep(),flag);
+	       *solp, *rhsp,flag);
 	solport->send(solution);
     } else if(meth == "bi_conjugate_gradient_stab"){
 	bi_conjugate_gradient_stab(matrix.get_rep(),
-	       *solution.get_rep(), *rhs.get_rep(),flag);
+	       *solp, *rhsp,flag);
 	solport->send(solution);
 
    } else if(meth == "conj_grad_squared"){
 	conj_grad_squared(matrix.get_rep(),
-	       *solution.get_rep(), *rhs.get_rep(),flag);
+	       *solp, *rhsp,flag);
         solport->send(solution);
   } else if(meth == "gen_min_res_iter"){
 	gen_min_res_iter(matrix.get_rep(),
-	       *solution.get_rep(), *rhs.get_rep(),flag);
+	       *solp, *rhsp,flag);
 	solport->send(solution);
 
    } else if(meth == "richardson_iter"){
 	richardson_iter(matrix.get_rep(),
-	       *solution.get_rep(), *rhs.get_rep(),flag);
+	       *solp, *rhsp,flag);
         solport->send(solution);
    } else 
 #endif
    if(meth == "conjugate_gradient_sci"){
      conjugate_gradient_sci(matrix.get_rep(),
-			    *solution.get_rep(), *rhs.get_rep());
+			    *solp, *rhsp);
 //     if (ep)
 //	 solport->send_intermediate(solution);
 //     else
@@ -271,12 +279,12 @@ void SolveMatrix::execute()
      
    } else if(meth == "bi_conjugate_gradient_sci"){
      bi_conjugate_gradient_sci(matrix.get_rep(),
-			       *solution.get_rep(), *rhs.get_rep());
+			       *solp, *rhsp);
      solport->send_intermediate(solution);
      
    } else if(meth == "jacoby_sci"){
      jacobi_sci(matrix.get_rep(),
-		*solution.get_rep(), *rhs.get_rep());
+		*solp, *rhsp);
      solport->send(solution);
      
      

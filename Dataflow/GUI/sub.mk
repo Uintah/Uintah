@@ -5,20 +5,28 @@ SRCDIR := Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
+	$(SRCDIR)/ArrowWidget.tcl \
+	$(SRCDIR)/BaseWidget.tcl \
 	$(SRCDIR)/BldTransform.tcl \
+	$(SRCDIR)/BoxWidget.tcl \
 	$(SRCDIR)/CastField.tcl \
 	$(SRCDIR)/ChangeCellType.tcl \
 	$(SRCDIR)/ColorMapReader.tcl \
 	$(SRCDIR)/ColorMapWriter.tcl \
 	$(SRCDIR)/ComponentWizard.tcl \
+	$(SRCDIR)/CriticalPointWidget.tcl \
+	$(SRCDIR)/CrosshairWidget.tcl \
 	$(SRCDIR)/EditPath.tcl \
 	$(SRCDIR)/ErrorMetric.tcl \
 	$(SRCDIR)/FieldReader.tcl \
 	$(SRCDIR)/FieldWriter.tcl \
+	$(SRCDIR)/FrameWidget.tcl \
 	$(SRCDIR)/GLTextureBuilder.tcl \
+	$(SRCDIR)/GaugeWidget.tcl \
 	$(SRCDIR)/GenStandardColorMaps.tcl \
 	$(SRCDIR)/GenTransferFunc.tcl \
 	$(SRCDIR)/IsoSurface.tcl \
+	$(SRCDIR)/LightWidget.tcl \
 	$(SRCDIR)/LocateNbrhd.tcl \
 	$(SRCDIR)/MacroModule.tcl \
 	$(SRCDIR)/ManipFields.tcl \
@@ -27,14 +35,20 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Module.tcl \
 	$(SRCDIR)/NetworkEditor.tcl \
 	$(SRCDIR)/PathReader.tcl \
+	$(SRCDIR)/PathWidget.tcl \
 	$(SRCDIR)/PathWriter.tcl \
+	$(SRCDIR)/PointWidget.tcl \
 	$(SRCDIR)/RescaleColorMap.tcl \
+	$(SRCDIR)/RingWidget.tcl \
+	$(SRCDIR)/ScaledBoxWidget.tcl \
+	$(SRCDIR)/ScaledFrameWidget.tcl \
 	$(SRCDIR)/SeedField.tcl \
 	$(SRCDIR)/ShowField.tcl \
 	$(SRCDIR)/SolveMatrix.tcl \
 	$(SRCDIR)/Streamline.tcl \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
 	$(SRCDIR)/TextureVolVis.tcl \
+	$(SRCDIR)/ViewWidget.tcl \
 	$(SRCDIR)/Viewer.tcl \
 	$(SRCDIR)/TclStream.tcl \
 	$(SRCDIR)/Rescale.tcl \

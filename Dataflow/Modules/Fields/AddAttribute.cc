@@ -15,7 +15,7 @@
 #include <Core/Containers/String.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Dataflow/Ports/SurfacePort.h>
 #include <Core/Datatypes/TriSurface.h>
@@ -34,7 +34,7 @@ namespace SCIRun {
 class AddAttribute : public Module
 {
   SurfaceIPort      *isurf_;
-  ColumnMatrixIPort *imat_;
+  MatrixIPort *imat_;
   TCLstring          surfid_;
 
   SurfaceOPort      *osurf_;
@@ -56,7 +56,7 @@ AddAttribute::AddAttribute(const clString& id)
 {
   isurf_ = new SurfaceIPort(this, "SurfIn", SurfaceIPort::Atomic);
   add_iport(isurf_);
-  imat_ = new ColumnMatrixIPort(this, "MatIn", ColumnMatrixIPort::Atomic);
+  imat_ = new MatrixIPort(this, "MatIn", MatrixIPort::Atomic);
   add_iport(imat_);
 
   // Create the output port
@@ -90,11 +90,11 @@ AddAttribute::execute()
 
   update_state(JustStarted);
 
-  ColumnMatrixHandle cmh;
+  MatrixHandle cmh;
   if (!imat_->get(cmh)) return;
   if (!cmh.get_rep())
   {
-    cerr << "Error: empty columnmatrix\n";
+    cerr << "Error: empty matrix\n";
     return;
   }
 

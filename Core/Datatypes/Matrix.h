@@ -41,6 +41,7 @@ protected:
 	symsparse,
 	dense,
 	tridiagonal,
+	column,
 	other
     };
 

@@ -1,5 +1,5 @@
 /*
- *  MeshBoundary.cc:  Unfinished modules
+ *  FieldBoundary.cc:  Unfinished modules
  *
  *  Written by:
  *   Peter-Pike Sloan and David Weinstein
@@ -22,23 +22,23 @@ using std::cerr;
 namespace SCIRun {
 
 
-class MeshBoundary : public Module {
+class FieldBoundary : public Module {
     MeshIPort* inport;
     GeometryOPort* outport;
     SurfaceOPort* osurf;
 public:
-    MeshBoundary(const clString& id);
-    virtual ~MeshBoundary();
+    FieldBoundary(const clString& id);
+    virtual ~FieldBoundary();
     virtual void execute();
 };
 
-extern "C" Module* make_MeshBoundary(const clString& id)
+extern "C" Module* make_FieldBoundary(const clString& id)
 {
-    return scinew MeshBoundary(id);
+    return scinew FieldBoundary(id);
 }
 
-MeshBoundary::MeshBoundary(const clString& id)
-: Module("MeshBoundary", id, Filter)
+FieldBoundary::FieldBoundary(const clString& id)
+: Module("FieldBoundary", id, Filter)
 {
    // Create the input port
     inport=scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
@@ -49,11 +49,11 @@ MeshBoundary::MeshBoundary(const clString& id)
     add_oport(osurf);
 }
 
-MeshBoundary::~MeshBoundary()
+FieldBoundary::~FieldBoundary()
 {
 }
 
-void MeshBoundary::execute()
+void FieldBoundary::execute()
 {
     MeshHandle mesh;
     if (!inport->get(mesh))
@@ -105,7 +105,7 @@ void MeshBoundary::execute()
 		    int n2=nodeMap[teste->n[facei[j+2]]];
 		    int n3=nodeMap[teste->n[facei[j+3]]];
 		    if (n1 == -1 || n2 == -1 || n3 == -1) {
-			cerr << "ERROR in MeshBoundary!\n";
+			cerr << "ERROR in FieldBoundary!\n";
 		    }
 		    ts->faces_.add(TSElement(n1,n2,n3));
 		}

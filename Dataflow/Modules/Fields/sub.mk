@@ -22,6 +22,7 @@ SRCS     += \
 	$(SRCDIR)/TransformField.cc\
 #[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/ChangeCellType.cc\
+#	$(SRCDIR)/Gradient.cc\
 
 CFLAGS   := $(CFLAGS)
 
