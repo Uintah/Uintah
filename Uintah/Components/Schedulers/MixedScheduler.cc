@@ -19,9 +19,8 @@
 
 #include <set>
 #include <map>
-#ifdef __aix
 #include <algorithm>
-#endif
+
 
 using namespace Uintah;
 using SCICore::Thread::Time;
@@ -29,6 +28,7 @@ using SCICore::Thread::Time;
 using std::cerr;
 using std::map;
 using std::set;
+using std::find;
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
 extern Mutex * cerrLock;
@@ -402,7 +402,7 @@ This stuff is wrong...
 
       cerr << "\nDependency: " << *(depData.dep) << " needed by " 
 	   << theTasks.size() << ":\n";
-      for( int t = 0; t < theTasks.size(); t++ ){
+      for( int t = 0; t < (int)theTasks.size(); t++ ){
 	cerr << "  " << *(theTasks[t]) << "\n";
       }
     }
@@ -420,7 +420,7 @@ This stuff is wrong...
       taskData.task->displayAll( cerr );
 
       cerr << "\n  Depends on these " << dependencies.size() << " deps:\n";
-      for( int t = 0; t < dependencies.size(); t++ ){
+      for( int t = 0; t < (int)dependencies.size(); t++ ){
 	cerr << "    " << *(dependencies[t].dep) << "\n";
       }
     }
@@ -606,7 +606,7 @@ MixedScheduler::execute(const ProcessorGroup * pc,
     }
   }
   scatterGatherTasks = remove;
-  for( int num = 0; num < remove.size(); num++ ){
+  for( int num = 0; num < (int)remove.size(); num++ ){
     // Remove the scatter/gather tasks from the task list...
     vector<Task *>::iterator loc = find(tasks.begin(), tasks.end(),
 					remove[ num ] );
@@ -806,7 +806,7 @@ MixedScheduler::execute(const ProcessorGroup * pc,
     } // end for all tasks
 
     // Remove the "assigned" tasks from the task list...
-    for( int num = 0; num < done.size(); num++ ){
+    for( int num = 0; num < (int)done.size(); num++ ){
 
       vector<Task *>::iterator loc = find(tasks.begin(), tasks.end(),
 					  done[ num ] );
@@ -913,7 +913,7 @@ MixedScheduler::execute(const ProcessorGroup * pc,
                
       sgargs.dest.resize(reqs.size());
       sgargs.tags.resize(reqs.size());
-      for(int r=0;r<reqs.size();r++){
+      for(int r=0;r<(int)reqs.size();r++){
 	const Task::Dependency* dep = reqs[r];
 	sgargs.dest[r] = dep->d_task->getAssignedResourceIndex();
 	sgargs.tags[r] = dep->d_serialNumber;
@@ -939,7 +939,7 @@ MixedScheduler::execute(const ProcessorGroup * pc,
       const vector<Task::Dependency*>& reqs = task->getRequires();
       sgargs.dest.resize(reqs.size());
       sgargs.tags.resize(reqs.size());
-      for(int r=0;r<reqs.size();r++){
+      for(int r=0;r<(int)reqs.size();r++){
 	Task::Dependency* req = reqs[r];
 	const Task::Dependency* cmp = d_graph.getComputesForRequires(req);
 	sgargs.dest[r] = cmp->d_task->getAssignedResourceIndex();
@@ -1143,7 +1143,7 @@ MixedScheduler::scheduleParticleRelocation(
                             this, &MixedScheduler::scatterParticles);
       for(int m=0;m < numMatls;m++){
          t->requires( new_dw, old_posLabel, m, patch, Ghost::None);
-         for(int i=0;i<old_labels[m].size();i++)
+         for(int i=0;i<(int)old_labels[m].size();i++)
             t->requires( new_dw, old_labels[m][i], m, patch, Ghost::None);
       }
       t->computes(new_dw, scatterGatherVariable, 0, patch);
@@ -1158,11 +1158,11 @@ MixedScheduler::scheduleParticleRelocation(
       IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
       std::vector<const Patch*> neighbors;
       level->selectPatches(l, h, neighbors);
-      for(int i=0;i<neighbors.size();i++)
+      for(int i=0;i<(int)neighbors.size();i++)
          t2->requires(new_dw, scatterGatherVariable, 0, neighbors[i], Ghost::None);
       for(int m=0;m < numMatls;m++){
          t2->computes( new_dw, new_posLabel, m, patch);
-         for(int i=0;i<new_labels[m].size();i++)
+         for(int i=0;i<(int)new_labels[m].size();i++)
             t2->computes(new_dw, new_labels[m][i], m, patch);
       }
       t2->setType(Task::Gather);
@@ -1650,7 +1650,7 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
       if( loc == depDatas.end() ){
 	cerr << "Task is: " << *task << "\n";
 	cerr << "depDatas size is: " << depDatas.size() << "\n";
-	for( int kk = 0; kk < depDatas.size(); kk++ ){
+	for( int kk = 0; kk < (int)depDatas.size(); kk++ ){
 	  cerr << "   " << kk << " dep is: " << *(depDatas[kk].dep) << "\n";
 	}
 	cerr << "Dependency: " << *(d.dep) << " not found in taskToDeps\n";
@@ -1697,6 +1697,11 @@ MixedScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.5  2000/09/28 23:16:45  jas
+// Added (int) for anything returning the size of a STL component.  Added
+// <algorithm> and using std::find.  Other minor modifications to get
+// rid of warnings for g++.
+//
 // Revision 1.4  2000/09/28 20:23:21  bigler
 // Addind #include <algorithm> for aix
 //

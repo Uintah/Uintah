@@ -209,6 +209,7 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
    }
 
    rr->vars[matlIndex]=var;
+
 }
 
 template<class VarType>
@@ -222,6 +223,7 @@ VarType* DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
 			    "no variable name");
 
    NameRecord* nr = nameiter->second;
+
    patchDBtype::const_iterator patchiter = nr->patches.find(patch);
    if(patchiter == nr->patches.end())
       throw UnknownVariable(label->getName(), patch->getID(),
@@ -299,6 +301,11 @@ void DWDatabase<VarType>::print(std::ostream& out)
 
 //
 // $Log$
+// Revision 1.16  2000/09/28 23:16:45  jas
+// Added (int) for anything returning the size of a STL component.  Added
+// <algorithm> and using std::find.  Other minor modifications to get
+// rid of warnings for g++.
+//
 // Revision 1.15  2000/09/27 02:07:18  dav
 // cosmetics and printout fix
 //
