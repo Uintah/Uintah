@@ -376,9 +376,9 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
       constCCVariable<Vector> vel_CC;
       constCCVariable<Vector> D;
       if(ice_matl){
-        old_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac,2);
+        old_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac,1);
       } else {
-        new_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac,2);
+        new_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac,1);
       }
       new_dw->get(D,             lb->DLabel,              indx,patch,gac,1);
       new_dw->get(rho_CC,        lb->rho_CCLabel,         indx,patch,gac,1);
@@ -528,7 +528,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx    = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      new_dw->get(vol_frac[m],lb->vol_frac_CCLabel,  indx, patch, gn,  0);
+      new_dw->get(vol_frac[m],lb->vol_frac_CCLabel,  indx, patch, gac, 1);
       new_dw->get(uvel_FC[m], lb->uvel_FCMELabel,    indx, patch, gac, 1);
       new_dw->get(vvel_FC[m], lb->vvel_FCMELabel,    indx, patch, gac, 1);
       new_dw->get(wvel_FC[m], lb->wvel_FCMELabel,    indx, patch, gac, 1);
