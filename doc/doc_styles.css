@@ -13,9 +13,9 @@ p {margin-left:90px; margin-right:80px; font-family:"serif"}
 
 .head {color:#000000; margin:0px; margin-top:25px; border:none; font-size:large; font-family:"arial", "helvetica", "sans-serif"}
 
-.subhead {margin-left:10px; border:none; margin-top:0px; margin-bottom:0px; font-style:italic; font-size:1.15em; font-family:"arial", "helvetica", "sans-serif"}
+.subhead {margin-left:10px; font-style:italic; font-size:1.15em; font-family:"arial", "helvetica", "sans-serif"}
 
-.subsubhead {background-color:#BBBBBB; margin:0px; border:none;  font-weight:bold; text-indent:80px; margin-bottom:10px; font-family:"arial", "helvetica", "sans-serif"}
+.subsubhead {margin-left:10px; font-weight:bold; font-family:"arial", "helvetica", "sans-serif"}
 
 .firstpara {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"}
 
