@@ -144,7 +144,7 @@ namespace Uintah {
     // getMixEnthalpy returns the mean enthalpy of a mixture in mass units 
     // (J/kg) given temperature(K) and species mass fractions
     //
-    double getMixEnthalpy(double temp, double *Y);
+    double getMixEnthalpy(double temp, const vector<double>& Yvec);
     //////////////////////////////////////////////////////////////////////
     // getMixSpecificHeat returns the mean specific heat at constant pressure
     // (J/kg*K) given temperature(K) and species mass fractions
@@ -159,12 +159,12 @@ namespace Uintah {
     // convertMolestoMass returns the array of species mass fractions
     // given the mole fractions
     //
-    vector<double> convertMolestoMass(const vector<double>& X); 
+    vector<double> convertMolestoMass(const vector<double>& Xvec); 
     //////////////////////////////////////////////////////////////////////
     // convertMasstoMoles returns the array of species mole fractions
     // given the mass fractions
     //
-    vector<double> convertMasstoMoles(const vector<double>& Y);
+    vector<double> convertMasstoMoles(const vector<double>& Yvec);
     //////////////////////////////////////////////////////////////////////
     // getSpeciesEnthalpy returns the array of enthalpies for the species
     // in mass units (J/kg)
@@ -218,7 +218,6 @@ namespace Uintah {
     //int *d_ickwrk;
     // Character work array
     char **d_cckwrk;
-    double *d_speciesEnthalpy;
 
   }; // End Class ChemkinInterface
 } // end namespace uintah

@@ -1,7 +1,8 @@
       SUBROUTINE EQUIL (LOUT, LPRNT, LSAVE, EQST, LCNTUE, ICKWRK,
      1           RCKWRK, LENIEQ, IEQWRK, LENREQ, REQWRK, MM, KK,
      2           ATOM, KSYM, NOP, KMON, REAC, TIN, TEST, PIN, PEST,
-     3           NCON, KCON, XCON, heatLoss, hin, ierr)
+     3           NCON, KCON, XCON, ierr)
+C     3           NCON, KCON, XCON, heatLoss, hin, ierr)
 C
 C*****precision > double
         IMPLICIT DOUBLE PRECISION (A-H, O-Z), INTEGER (I-N)
@@ -44,7 +45,7 @@ C     There is now one output variable
 C             ierr   - integer flag returns 0 if equilibrium calculation 
 C                       was successful, 1 if unsuccessful.
 C
-      integer heatLoss
+C      integer heatLoss
       DIMENSION ICKWRK(*), RCKWRK(*), IEQWRK(*), REQWRK(*), REAC(*),
      1          KCON(*), XCON(*)
       CHARACTER*(*) KSYM(*), ATOM(*)
@@ -87,6 +88,7 @@ C
          IF (NITOT.GT.LENIEQ .OR. NRTOT.GT.LENREQ) THEN
             WRITE (LOUT, *)
      1           '  FATAL ERROR, NOT ENOUGH WORK SPACE PROVIDED'
+            write (lout, *) nitot, lenieq, nrtot, lenreq
             STOP
          ENDIF
 C
@@ -139,12 +141,12 @@ C
       REQWRK(NT1) = TIN
       REQWRK(NTEST) = TEST
 C     ***Jennifer Spinti changed this***12/28/2000
-      if (heatLoss.eq.0) then
+C      if (heatLoss.eq.0) then
          CALL CKHBMS(REQWRK(NT1), REQWRK(NY1), ICKWRK, RCKWRK,
      1        REQWRK(NH1))
-      else
-         reqwrk(nh1) = hin
-      endif
+C      else
+C         reqwrk(nh1) = hin
+C      endif
       CALL CKUBMS(REQWRK(NT1), REQWRK(NY1), ICKWRK, RCKWRK, REQWRK(NU1))
 C
       REQWRK(NP1) =   PIN * PATM

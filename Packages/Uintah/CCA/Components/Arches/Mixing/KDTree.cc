@@ -11,6 +11,7 @@ using namespace Uintah;
 KD_Tree::KD_Tree(int dim, int phiDim){
   d_root = 0;
   d_dim = dim;
+  //cout << "KDTree::d_dim = "<<d_dim<<phiDim<<endl;
   d_dimStateSpaceVars = phiDim;
 }
 
@@ -36,11 +37,13 @@ KD_Tree::IsEmpty () const{
 
 bool
 KD_Tree::Lookup(int key[], vector<double>& Phi){
+  //cout<<"KDTree::Lookup"<<endl;
   KD_Node* x = TreeSearch(d_root,key);
   if ( x == 0) {
     //    cout << "Key not found " <<endl;
     return(false);
   }
+  //cout <<"KDTree::lookup was successful"<<endl;
   Phi = x->Phi;
   return(true);
 }
@@ -175,6 +178,9 @@ KD_Tree::DestroyTree(KD_Node *x){
 
 //
 // $Log$
+// Revision 1.3  2001/07/16 21:15:38  rawat
+// added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
+//
 // Revision 1.2  2001/02/02 01:54:34  rawat
 // cnges made for checkpointing to work
 //

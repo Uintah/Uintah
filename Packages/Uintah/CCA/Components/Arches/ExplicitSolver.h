@@ -47,7 +47,7 @@ class TurbulenceModel;
 class Properties;
 class BoundaryCondition;
 class PhysicalConstants;
-
+class EnthalpySolver;
 class ExplicitSolver: public NonlinearSolver {
 
 public:
@@ -56,12 +56,13 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // Solver initialized with all input data 
       ExplicitSolver(const ArchesLabel* label,
-			    const MPMArchesLabel* MAlb,
-			    Properties* props, 
-			    BoundaryCondition* bc,
-			    TurbulenceModel* turbModel, 
-			    PhysicalConstants* physConst,
-			    const ProcessorGroup* myworld);
+		     const MPMArchesLabel* MAlb,
+		     Properties* props, 
+		     BoundaryCondition* bc,
+		     TurbulenceModel* turbModel, 
+		     PhysicalConstants* physConst,
+		     const bool calcEnthalpy,
+		     const ProcessorGroup* myworld);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -156,6 +157,7 @@ private:
       int d_nonlinear_its;
       // for probing data for debuging or plotting
       bool d_probe_data;
+      bool d_enthalpySolve;
       vector<IntVector> d_probePoints;
       // nonlinear residual tolerance
       double d_resTol;
@@ -165,6 +167,8 @@ private:
       MomentumSolver* d_momSolver;
       // Scalar solver
       ScalarSolver* d_scalarSolver;
+      // enthalpy solver
+      EnthalpySolver* d_enthalpySolver;
       // physcial constatns
       PhysicalConstants* d_physicalConsts;
       // properties...solves density, temperature and specie concentrations

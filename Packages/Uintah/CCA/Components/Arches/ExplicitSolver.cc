@@ -10,6 +10,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/MomentumSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScalarSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/EnthalpySolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -39,10 +40,12 @@ ExplicitSolver(const ArchesLabel* label,
 	       BoundaryCondition* bc,
 	       TurbulenceModel* turbModel,
 	       PhysicalConstants* physConst,
+	       bool calc_enthalpy,
 	       const ProcessorGroup* myworld): 
                NonlinearSolver(myworld),
 	       d_lab(label), d_MAlab(MAlb), d_props(props), 
 	       d_boundaryCondition(bc), d_turbModel(turbModel),
+	       d_enthalpySolve(calc_enthalpy),
 	       d_physicalConsts(physConst)
 {
 }
@@ -96,6 +99,12 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 					 d_physicalConsts);
     d_scalarSolver->problemSetup(db);
   }
+  if (d_enthalpySolve) {
+    d_enthalpySolver = scinew EnthalpySolver(d_lab, d_MAlab,
+					     d_turbModel, d_boundaryCondition,
+					     d_physicalConsts);
+    d_enthalpySolver->problemSetup(db);
+  }
 }
 
 // ****************************************************************************
@@ -148,6 +157,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // the same subroutine can be used to solve multiple scalars
     d_scalarSolver->solvePred(sched, patches, matls, time, delta_t, index);
   }
+  if (d_enthalpySolve)
+    d_enthalpySolver->solvePred(sched, patches, matls, time, delta_t);
 #ifdef correctorstep
   d_props->sched_computePropsPred(sched, patches, matls);
 #else
@@ -273,6 +284,9 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
     tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel, 
 		  Ghost::None, numGhostCells);
   }
+  if (d_enthalpySolve)
+    tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel, 
+		  Ghost::None, numGhostCells);
   tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
 		Ghost::None, numGhostCells);
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,
@@ -285,6 +299,8 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   for (int ii = 0; ii < nofScalars; ii++) {
     tsk->computes(d_lab->d_scalarINLabel);
   }
+  if (d_enthalpySolve)
+    tsk->computes(d_lab->d_enthalpyINLabel);
   tsk->computes(d_lab->d_densityINLabel);
   tsk->computes(d_lab->d_viscosityINLabel);
   if (d_MAlab)
@@ -410,6 +426,10 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       old_dw->get(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch, 
 		  Ghost::None, nofGhostCells);
     }
+    CCVariable<double> enthalpy;
+    if (d_enthalpySolve)
+      old_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, 
+		  Ghost::None, nofGhostCells);
 
     CCVariable<double> density;
     old_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
@@ -457,6 +477,11 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       scalar_new[ii].copyPatch(scalar[ii]); // copy old into new
     }
 
+    CCVariable<double> new_enthalpy;
+    if (d_enthalpySolve) {
+      new_dw->allocate(new_enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
+      new_enthalpy.copy(enthalpy);
+    }
     CCVariable<double> density_new;
     new_dw->allocate(density_new, d_lab->d_densityINLabel, matlIndex, patch);
     density_new.copyPatch(density); // copy old into new
@@ -474,6 +499,8 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     for (int ii = 0; ii < nofScalars; ii++) {
       new_dw->put(scalar_new[ii], d_lab->d_scalarINLabel, matlIndex, patch);
     }
+    if (d_enthalpySolve)
+      new_dw->put(new_enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
     new_dw->put(density_new, d_lab->d_densityINLabel, matlIndex, patch);
     new_dw->put(viscosity_new, d_lab->d_viscosityINLabel, matlIndex, patch);
     if (d_MAlab)

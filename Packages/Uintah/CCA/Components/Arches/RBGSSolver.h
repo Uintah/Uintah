@@ -160,6 +160,20 @@ public:
 			 CellInformation* cellinfo,
 			 const ArchesLabel* lab);
 
+      ////////////////////////////////////////////////////////////////////////
+      // Scalar Underrelaxation
+      void computeEnthalpyUnderrelax(const ProcessorGroup* pc,
+				   const Patch* patch,
+				     ArchesVariables* vars);
+
+      ////////////////////////////////////////////////////////////////////////
+      // Scalar Solve
+      void enthalpyLisolve(const ProcessorGroup* pc,
+			 const Patch* patch,
+			 double delta_t,
+			 ArchesVariables* vars,
+			 CellInformation* cellinfo,
+			 const ArchesLabel* lab);
    virtual void matrixCreate(const PatchSet* allpatches,
 			     const PatchSubset* mypatches);
    virtual void setPressMatrix(const ProcessorGroup* pc, const Patch* patch,

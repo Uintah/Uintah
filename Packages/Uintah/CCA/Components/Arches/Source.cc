@@ -581,6 +581,215 @@ Source::calculateScalarSource(const ProcessorGroup*,
 #endif
 }
 
+
+//****************************************************************************
+// Scalar source calculation
+//****************************************************************************
+void 
+Source::calculateEnthalpySource(const ProcessorGroup*,
+			      const Patch* patch,
+			      double delta_t,
+			      CellInformation* cellinfo,
+			      ArchesVariables* vars) 
+{
+
+  // Get the patch and variable indices
+  int numGhost = 1;
+  IntVector domLo = patch->getGhostCellLowIndex(numGhost);
+  IntVector domHi = patch->getGhostCellHighIndex(numGhost) -
+                                               IntVector(1,1,1);
+  IntVector domLong = vars->old_enthalpy.getFortLowIndex();
+  IntVector domHing = vars->old_enthalpy.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  // 3-d array for volume - fortran uses it for temporary storage
+  // Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
+  // computes remaining diffusion term and also computes 
+  // source due to gravity...need to pass ipref, jpref and kpref
+  FORT_SCALARSOURCE(domLo.get_pointer(), domHi.get_pointer(),
+		    domLong.get_pointer(), domHing.get_pointer(),
+		    idxLo.get_pointer(), idxHi.get_pointer(),
+		    vars->scalarLinearSrc.getPointer(),
+		    vars->scalarNonlinearSrc.getPointer(),
+		    vars->old_density.getPointer(),
+		    vars->old_enthalpy.getPointer(),
+		    cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+		    cellinfo->stb.get_objs(),
+		    &delta_t);
+
+#ifdef ARCHES_SRC_DEBUG
+    cerr << "AFTER Calculate Scalar Source" << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SU for Scalar " << index << " for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->scalarNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << "AFTER Calculate Scalar Source" << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SP for Scalar " << index << " for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->scalarLinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+}
+
+
+//****************************************************************************
+// Scalar source calculation
+//****************************************************************************
+void 
+Source::computeEnthalpyRadFluxes(const ProcessorGroup*,
+				 const Patch* patch,
+				 CellInformation* cellinfo,
+				 ArchesVariables* vars) 
+{
+
+  // Get the patch and variable indices
+  int numGhost = 1;
+  IntVector domLoG = patch->getGhostCellLowIndex(numGhost);
+  IntVector domHiG = patch->getGhostCellHighIndex(numGhost) -
+                                                 IntVector(1,1,1);
+  IntVector domLo = vars->qfluxe.getFortLowIndex();
+  IntVector domHi = vars->qfluxe.getFortHighIndex();
+    
+  IntVector domLoT = vars->temperature.getFortLowIndex();
+  IntVector domHiT = vars->temperature.getFortHighIndex();
+  IntVector domLoA = vars->absorption.getFortLowIndex();
+  IntVector domHiA = vars->absorption.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  //  cerr << "temperature before rad flux calculation:" << endl;
+  //  vars->temperature.print(cerr);
+  // 3-d array for volume - fortran uses it for temporary storage
+  // Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
+  // computes remaining diffusion term and also computes 
+  // source due to gravity...need to pass ipref, jpref and kpref
+  FORT_ENTHALPYRADFLUX(domLo.get_pointer(), domHi.get_pointer(),
+		       idxLo.get_pointer(), idxHi.get_pointer(),
+		       vars->qfluxe.getPointer(),
+		       vars->qfluxw.getPointer(),
+		       vars->qfluxn.getPointer(),
+		       vars->qfluxs.getPointer(),
+		       vars->qfluxt.getPointer(),
+		       vars->qfluxb.getPointer(),
+		       domLoT.get_pointer(), domHiT.get_pointer(),
+		       vars->temperature.getPointer(),
+		       domLoA.get_pointer(), domHiA.get_pointer(),
+		       vars->absorption.getPointer(),
+		       domLoG.get_pointer(), domHiG.get_pointer(),
+		       cellinfo->dxep.get_objs(), cellinfo->dxpw.get_objs(),
+		       cellinfo->dynp.get_objs(), cellinfo->dyps.get_objs(),
+		       cellinfo->dztp.get_objs(), cellinfo->dzpb.get_objs());
+#if 0
+  cerr << "radiation flux information:" << endl;
+  vars->qfluxe.print(cerr);
+  cerr << endl << endl;
+  vars->qfluxw.print(cerr);
+  cerr << endl << endl;
+  vars->qfluxn.print(cerr);
+  cerr << endl << endl;
+  vars->qfluxs.print(cerr);
+  cerr << endl << endl;
+  vars->qfluxt.print(cerr);
+  cerr << endl << endl;
+  vars->qfluxb.print(cerr);
+  cerr << endl << endl;
+#endif
+}
+
+void 
+Source::computeEnthalpyRadSrc(const ProcessorGroup*,
+			      const Patch* patch,
+			      CellInformation* cellinfo,
+			      ArchesVariables* vars) 
+{
+
+  // Get the patch and variable indices
+  int numGhost = 1;
+  IntVector domLoG = patch->getGhostCellLowIndex(numGhost);
+  IntVector domHiG = patch->getGhostCellHighIndex(numGhost) -
+                                                 IntVector(1,1,1);
+  IntVector domLo = vars->qfluxe.getFortLowIndex();
+  IntVector domHi = vars->qfluxe.getFortHighIndex();
+  IntVector domLoS = vars->scalarNonlinearSrc.getFortLowIndex();
+  IntVector domHiS = vars->scalarNonlinearSrc.getFortHighIndex();
+  IntVector domLoT = vars->temperature.getFortLowIndex();
+  IntVector domHiT = vars->temperature.getFortHighIndex();
+  IntVector domLoA = vars->absorption.getFortLowIndex();
+  IntVector domHiA = vars->absorption.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  // 3-d array for volume - fortran uses it for temporary storage
+  // Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
+  // computes remaining diffusion term and also computes 
+  // source due to gravity...need to pass ipref, jpref and kpref
+  FORT_ENTHALPYRADSRC(domLoS.get_pointer(), domHiS.get_pointer(),
+		      idxLo.get_pointer(), idxHi.get_pointer(),
+		      vars->scalarNonlinearSrc.getPointer(),
+		      domLo.get_pointer(), domHi.get_pointer(),
+		      vars->qfluxe.getPointer(),
+		      vars->qfluxw.getPointer(),
+		      vars->qfluxn.getPointer(),
+		      vars->qfluxs.getPointer(),
+		      vars->qfluxt.getPointer(),
+		      vars->qfluxb.getPointer(),
+		      domLoG.get_pointer(), domHiG.get_pointer(),
+		      cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
+		      cellinfo->stb.get_objs());
+#if 0
+  cerr << "radiation source after calculation:" << endl;
+  vars->scalarNonlinearSrc.print(cerr);
+#endif
+
+}
+
+void 
+Source::computeEnthalpyRadThinSrc(const ProcessorGroup*,
+				  const Patch* patch,
+				  CellInformation* cellinfo,
+				  ArchesVariables* vars) 
+{
+
+  // Get the patch and variable indices
+  int numGhost = 1;
+  IntVector domLoG = patch->getGhostCellLowIndex(numGhost);
+  IntVector domHiG = patch->getGhostCellHighIndex(numGhost) -
+                                                 IntVector(1,1,1);
+  IntVector domLo = vars->scalarNonlinearSrc.getFortLowIndex();
+  IntVector domHi = vars->scalarNonlinearSrc.getFortHighIndex();
+    
+  IntVector domLoT = vars->temperature.getFortLowIndex();
+  IntVector domHiT = vars->temperature.getFortHighIndex();
+  IntVector domLoA = vars->absorption.getFortLowIndex();
+  IntVector domHiA = vars->absorption.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  double tref = 298; // warning, read it in
+  FORT_ENTHALPYRADTHINSRC(domLo.get_pointer(), domHi.get_pointer(),
+			  idxLo.get_pointer(), idxHi.get_pointer(),
+			  vars->scalarNonlinearSrc.getPointer(),
+			  domLoT.get_pointer(), domHiT.get_pointer(),
+			  vars->temperature.getPointer(),
+			  domLoA.get_pointer(), domHiA.get_pointer(),
+			  vars->absorption.getPointer(),
+			  domLoG.get_pointer(), domHiG.get_pointer(),
+			  cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
+			  cellinfo->stb.get_objs(),
+			  &tref);
+}
+
 //****************************************************************************
 // Calls Fortran MASCAL
 //****************************************************************************
@@ -777,6 +986,37 @@ Source::modifyScalarMassSource(const ProcessorGroup* ,
   FORT_MASCALSCALAR(domLo.get_pointer(), domHi.get_pointer(),
 		    idxLo.get_pointer(), idxHi.get_pointer(),
 		    vars->scalar.getPointer(),
+		    vars->scalarCoeff[Arches::AE].getPointer(),
+		    vars->scalarCoeff[Arches::AW].getPointer(),
+		    vars->scalarCoeff[Arches::AN].getPointer(),
+		    vars->scalarCoeff[Arches::AS].getPointer(),
+		    vars->scalarCoeff[Arches::AT].getPointer(),
+		    vars->scalarCoeff[Arches::AB].getPointer(),
+		    vars->scalarNonlinearSrc.getPointer(), 
+		    vars->scalarLinearSrc.getPointer(), 
+		    vars->scalarConvectCoeff[Arches::AE].getPointer(),
+		    vars->scalarConvectCoeff[Arches::AW].getPointer(),
+		    vars->scalarConvectCoeff[Arches::AN].getPointer(),
+		    vars->scalarConvectCoeff[Arches::AS].getPointer(),
+		    vars->scalarConvectCoeff[Arches::AT].getPointer(),
+		    vars->scalarConvectCoeff[Arches::AB].getPointer());
+}
+
+void 
+Source::modifyEnthalpyMassSource(const ProcessorGroup* ,
+			       const Patch* patch,
+			       double delta_t, 
+			       ArchesVariables* vars)
+{
+  // Get the patch and variable indices
+  // And call the fortran routine (MASCAL)
+  IntVector domLo = vars->enthalpy.getFortLowIndex();
+  IntVector domHi = vars->enthalpy.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  FORT_MASCALSCALAR(domLo.get_pointer(), domHi.get_pointer(),
+		    idxLo.get_pointer(), idxHi.get_pointer(),
+		    vars->enthalpy.getPointer(),
 		    vars->scalarCoeff[Arches::AE].getPointer(),
 		    vars->scalarCoeff[Arches::AW].getPointer(),
 		    vars->scalarCoeff[Arches::AN].getPointer(),

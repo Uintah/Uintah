@@ -156,7 +156,20 @@ public:
 				 CellInformation* cellinfo,
 				 const ArchesLabel* lab) = 0;
 
+      virtual void computeEnthalpyUnderrelax(const ProcessorGroup* pc,
+					     const Patch* patch,
+					     ArchesVariables* vars)= 0;
+
       ////////////////////////////////////////////////////////////////////////
+      // Scalar Solve
+      virtual void enthalpyLisolve(const ProcessorGroup* pc,
+				   const Patch* patch,
+				   double delta_t,
+				   ArchesVariables* vars,
+				   CellInformation* cellinfo,
+				   const ArchesLabel* lab) = 0;
+
+       ////////////////////////////////////////////////////////////////////////
       // Calculate Scalar residuals
       virtual void computeScalarResidual(const ProcessorGroup* pc,
 					 const Patch* patch,

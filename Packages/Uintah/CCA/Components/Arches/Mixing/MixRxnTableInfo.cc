@@ -34,7 +34,7 @@ MixRxnTableInfo::~MixRxnTableInfo() {
 // Problem Setup for MixRxnTableInfo
 //****************************************************************************
 void 
-MixRxnTableInfo::problemSetup(const ProblemSpecP& params, 
+MixRxnTableInfo::problemSetup(const ProblemSpecP& params, bool mixTableFlag,
 			      const PDFMixingModel* mixModel)
 {
   ProblemSpecP db = params->findBlock("MixRxnTableInfo");
@@ -45,7 +45,7 @@ MixRxnTableInfo::problemSetup(const ProblemSpecP& params,
     enth_db->require("MaxValue",d_maxValue[count]);
     enth_db->require("MinValue",d_minValue[count]);
     enth_db->require("MidValue",d_stoicValue[count]);
-    count ++;
+  count ++;
   }
   if (mixModel->getNumMixVars()) {
     for (ProblemSpecP mixfrac_db = db->findBlock("MixtureFraction");
@@ -57,15 +57,17 @@ MixRxnTableInfo::problemSetup(const ProblemSpecP& params,
     count ++;
     }
   }
-
-  if (mixModel->getNumMixStatVars()) {
-    for (ProblemSpecP mixvar_db = db->findBlock("MixtureVars");
-	 mixvar_db != 0; mixvar_db = db->findNextBlock("MixtureVars")) {
-      mixvar_db->require("NumDivs",d_numDivisions[count]);
-      mixvar_db->require("MaxValue",d_maxValue[count]);
-      mixvar_db->require("MinValue",d_minValue[count]);
-      mixvar_db->require("MidValue",d_stoicValue[count]);
-    count ++;
+ 
+  if (mixTableFlag) {
+    if (mixModel->getNumMixStatVars()) {
+      for (ProblemSpecP mixvar_db = db->findBlock("MixFracVariance");
+	   mixvar_db != 0; mixvar_db = db->findNextBlock("MixFracVariance")) {
+	mixvar_db->require("NumDivs",d_numDivisions[count]);
+	mixvar_db->require("MaxValue",d_maxValue[count]);
+	mixvar_db->require("MinValue",d_minValue[count]);
+	mixvar_db->require("MidValue",d_stoicValue[count]);
+	count ++;
+      }
     }
   }
 
@@ -102,6 +104,9 @@ MixRxnTableInfo::getDensityIndex () const {
 
 //
 // $Log$
+// Revision 1.2  2001/07/16 21:15:38  rawat
+// added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
+//
 // Revision 1.1  2001/01/31 16:35:30  rawat
 // Implemented mixing and reaction models for fire.
 //
