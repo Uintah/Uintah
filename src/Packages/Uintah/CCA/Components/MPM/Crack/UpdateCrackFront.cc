@@ -323,8 +323,16 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
                           << "by raw crack-front points."
                           << endl;
         }
-
+   
       } // End of if(d_doCrackPropagation!="false")
+
+      // Output crack elems, crack points and crack-front nodes
+      // visualization
+      if(doCrackVisualization) {
+        int timestepIdx=d_sharedState->getCurrentTopLevelTimeStep();
+        if(pid==0) OutputCrackGeometry(m,timestepIdx);
+      }
+
     } // End of loop over matls
   } // End of loop over patches
 }
