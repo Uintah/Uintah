@@ -25,6 +25,8 @@ const int MAX_ITERS = 500;		// the max. # of iterations of a
 				// solution
 int STREAMER_LENGTH = 50;
 
+  static bool do_rungekutta = true;
+  
 const double RMAX = (double)(((int)RAND_MAX) + 1);
 inline double dRANDOM() {
   return ((((double)rand()) + 0.5) / RMAX);
@@ -33,9 +35,11 @@ inline double dRANDOM() {
 
 GLAnimatedStreams::GLAnimatedStreams(int id) 
   : GeomObj( id ), mutex("GLAnimatedStreams Mutex"),
-    vfh_(0), _cmapH(0), _pause(false), _normalsOn(false),
+    vfh_(0), _cmapH(0), _pause(false), _normalsOn(false), _lighting(false),
     _stepsize(0.1), fx(0), tail(0), head(0), _numStreams(0),
-    _linewidth(2), flow(0), _usesWidget(false), widgetLocation(0,0,0)
+    _linewidth(2), flow(0), _iterations(1), _inv_iter_per_step(1),
+    _normal_method(STREAM_LIGHT_WIRE), _iter_method(STREAM_USE_STEP_SIZE),
+    _usesWidget(false), widgetLocation(0,0,0)
 {
 
   NOT_FINISHED("GLAnimatedStreams::GLAnimatedStreams(int id, const Texture3D* tex, ColorMap* cmap)");
@@ -46,9 +50,11 @@ GLAnimatedStreams::GLAnimatedStreams(int id,
 				   FieldHandle vfh,
 				   ColorMapHandle map)
   : GeomObj( id ),  mutex("GLAnimatedStreams Mutex"),
-    vfh_(vfh), _cmapH(map), _pause(false), _normalsOn(false),
+    vfh_(vfh), _cmapH(map), _pause(false), _normalsOn(false), _lighting(false),
     _stepsize(0.1), fx(0), tail(0), head(0), _numStreams(0),
-    _linewidth(2), flow(0), _usesWidget(false), widgetLocation(0,0,0)
+    _linewidth(2), flow(0), _iterations(1), _inv_iter_per_step(1),
+    _normal_method(STREAM_LIGHT_WIRE), _iter_method(STREAM_USE_STEP_SIZE),
+    _usesWidget(false), widgetLocation(0,0,0)
 {
   init();
 }
@@ -58,7 +64,9 @@ GLAnimatedStreams::GLAnimatedStreams(const GLAnimatedStreams& copy)
     vfh_(copy.vfh_), _cmapH(copy._cmapH), fx(copy.fx),
     head(copy.head), tail(copy.tail), _numStreams(copy._numStreams),
     _pause(copy._pause), _normalsOn(copy._normalsOn),
-    _linewidth(copy._linewidth), flow(copy.flow),
+    _lighting(copy._lighting), _linewidth(copy._linewidth), flow(copy.flow),
+    _iterations(copy._iterations), _inv_iter_per_step(copy._inv_iter_per_step),
+    _normal_method(copy._normal_method), _iter_method(STREAM_USE_STEP_SIZE),
     _usesWidget(copy._usesWidget), widgetLocation(copy.widgetLocation)
 {
   
@@ -132,6 +140,8 @@ void GLAnimatedStreams::ResetStreams() {
   tail = new streamerNode*[NUMSOLS];
   head = new streamerNode*[NUMSOLS];
 
+  cerr << "GLAnimatedStreams::ResetStreams:end\n";
+
   mutex.unlock();
 }
 
@@ -147,6 +157,10 @@ void GLAnimatedStreams::DecrementFlow() {
   flow--;
   cerr << "decrement flow: " << flow << endl;
   //  mutex.unlock();
+}
+
+void GLAnimatedStreams::SetNormalMethod( int method ) {
+  _normal_method = method;
 }
 
 GLAnimatedStreams::~GLAnimatedStreams()
@@ -177,6 +191,20 @@ GLAnimatedStreams::draw(DrawInfoOpenGL* di, Material* mat, double)
     postDraw();
     cleanup();
   }
+  // now increment the streams
+  // this should be done only if the animation flag is on or there are values
+  // in the flow variable
+  if ( !_pause || flow) {
+    AdvanceStreams(0,_numStreams);
+    if (flow) DecrementFlow();
+    // add streams
+    _numStreams++;
+    // but only up to a certain point
+    if (_numStreams > NUMSOLS) _numStreams = NUMSOLS;
+    // start the new solution if we're
+    // adding one
+    else { newStreamer(_numStreams-1); }     
+  } // end if ( !_pause || flow)
   mutex.unlock();
 
 }
@@ -215,9 +243,19 @@ GLAnimatedStreams::preDraw()
   
   glEnable(GL_LIGHT0);
 #endif
-  //  glEnable(GL_LIGHTING);
-  
-  
+  gl_lighting_disabled = !((bool) glIsEnabled(GL_LIGHTING));
+  if (_lighting && gl_lighting_disabled) {
+    glEnable(GL_LIGHTING);
+    //    GLfloat light_ambient[] = { 1.0,1.0,1.0,1.0 };
+    GLfloat light_ambient[] = { 0.5, 0.5, 0.5, 1.0 };
+    //    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_ambient);
+    //glEnable(GL_LIGHT_MODEL_AMBIENT);
+    //    GLfloat matl_ambient[] = { 0.5, 0.5, 0.5, 1.0 };
+    //glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,matl_ambient);
+    glEnable(GL_COLOR_MATERIAL);
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+  }
 }
 
 void
@@ -226,6 +264,10 @@ GLAnimatedStreams::postDraw()
   // opposite preDraw
   glLineWidth( 1 );
   glPopMatrix();
+  if (_lighting && gl_lighting_disabled) {
+    glDisable(GL_LIGHTING);
+    glDisable(GL_COLOR_MATERIAL);
+  }
 }
 
 
@@ -271,9 +313,10 @@ GLAnimatedStreams::saveobj(std::ostream&, const string&, GeomSave*)
 				// by one step
 void
 GLAnimatedStreams::RungeKutta(Point& x, double h) {
+  cerr << "(h = " << h << ")";
   Vector m1,m2,m3,m4;
   Point  x1,x2,x3;
-  double h2 = _stepsize/2.0;
+  double h2 = h/2.0;
   //int i;  <- Not used (Dd)
   interpolate(vfh_, x,m1);
   x1 = x + m1*h2;
@@ -350,10 +393,9 @@ GLAnimatedStreams::draw()
   
   bounds = vfh_->mesh()->get_bounding_box();
   min = bounds.min(); max = bounds.max();
-  Vector right;
   
   int i;
-  double l, nl;
+  double nl;
   
   nl = maxwidth / 50.0;
   
@@ -375,8 +417,9 @@ GLAnimatedStreams::draw()
       while ( tempNode ) {
 	Color c = tempNode->color.diffuse;
 	glColor3f(c.r(), c.g(), c.b());
-	glNormal3f(tempNode->normal.x(), tempNode->normal.y(),
-		   tempNode->normal.z());
+	if (_lighting)
+	  glNormal3f(tempNode->normal.x(), tempNode->normal.y(),
+		     tempNode->normal.z());
 	glVertex3f(tempNode->position.x(), tempNode->position.y(),
 		   tempNode->position.z());
 
@@ -394,18 +437,58 @@ GLAnimatedStreams::draw()
       }
       glEnd();
   }
+}
 
-  // now increment the streams
-  // this should be done only if the animation flag is on or there are values
-  // in the flow variable
-  if ( !_pause || flow) {
-    for (i = 0; i < _numStreams; i++) {
-      
-				// flow forward	  
-      RungeKutta(fx[i], _stepsize);
+void GLAnimatedStreams::AdvanceStreams(int start, int end) {
+  if (end > _numStreams)
+    end = _numStreams;
+  
+  BBox bounds = vfh_->mesh()->get_bounding_box();
+  GLfloat light_pos[4];
+  glGetLightfv(GL_LIGHT0, GL_POSITION, light_pos);
+  Vector Light(light_pos[0],light_pos[1],light_pos[2]);
+
+  // if you are not using the iteration step method you should only go through
+  // this loop once.
+  if (_iter_method == STREAM_USE_STEP_SIZE)
+    _iterations = 1;
+  cerr << "_inv_iter_per_step = " << _inv_iter_per_step << endl;
+  // iter starts at how many interations to do and goes to 0
+  // iter can be used as a fraction when it's < 1 (it's still > 0, though)
+  for (double iter = _iterations; iter > 0; iter--) {
+    cerr << "iter = " << iter << endl;
+    for (int i = start; i < end; i++) {
+	
+      // flow forward
+      Vector tangent;
+      interpolate(vfh_, fx[i],tangent);
+      // compute the next location
+      if (do_rungekutta) {
+	switch (_iter_method) {
+	case STREAM_USE_STEP_SIZE:
+	  {
+	    RungeKutta(fx[i], _stepsize);
+	    //cerr << "Using step size\n";
+	  } break;
+	case STREAM_USE_ITER_PER_SEC:
+	  {
+	    if (iter >= 1)
+	      RungeKutta(fx[i], _inv_iter_per_step);
+	    else
+	      RungeKutta(fx[i], _inv_iter_per_step * iter);
+	    //cerr << "Using iter_per_sec\n";
+	  } break;
+	} // end switch (_iter_method)
+      } else {
+	if (iter >= 1)
+	  fx[i] += tangent * _inv_iter_per_step;
+	else
+	  fx[i] += tangent * _inv_iter_per_step * iter;
+      }
       if( !bounds.inside(fx[i]) )
 	head[i]->counter = MAX_ITERS;
       
+      streamerNode* tempNode;
       if( head[i]->counter < MAX_ITERS) {
 	head[i]->next = new streamerNode;
 	head[i]->next->counter = head[i]->counter+1;
@@ -413,26 +496,48 @@ GLAnimatedStreams::draw()
 	head[i] = head[i]->next;
 	
 	head[i]->position = fx[i];
-	head[i]->tangent = head[i]->position - tempNode->position;
-	
-	right = Cross( head[i]->tangent,  tempNode->tangent );
-	if (-1e-6 < right.length() && right.length() < 1e-6 ){
-	  right = Cross( head[i]->tangent,  tempNode->normal );
-	head[i]->normal = Cross( right, head[i]->tangent );
-	} else {
-	  head[i]->normal = Cross( right, head[i]->tangent );
+	head[i]->tangent = tangent;
+#if 0
+	if (do_rungekutta)
+	  head[i]->tangent = head[i]->position - tempNode->position;
+	else
+	  head[i]->tangent = tangent;
+#endif
+
+	// compute the normal
+	switch (_normal_method) {
+	case STREAM_LIGHT_WIRE:
+	  {
+	    head[i]->normal = Cross(Cross(head[i]->tangent,
+					  Light - Vector(fx[i])),
+				    head[i]->tangent);
+	  }
+	  break;
+	case STREAM_LIGHT_CURVE:
+	  {
+	    Vector right = Cross( head[i]->tangent,  tempNode->tangent );
+	    if (-1e-6 < right.length() && right.length() < 1e-6 ){
+	      right = Cross( head[i]->tangent,  tempNode->normal );
+	      head[i]->normal = Cross( right, head[i]->tangent );
+	    } else {
+	      head[i]->normal = Cross( right, head[i]->tangent );
+	    }
+	  }
+	  break;
 	}
 
-	l = 1.0/(head[i]->normal.length());
+	// normalize the normal
+	double nl = 1.0/(head[i]->normal.length());
+	head[i]->normal *= nl;
+	//	head[i]->normal.normalize();
 	
-	head[i]->normal *= l;
-	
-	l = head[i]->tangent.length();
+	double l = head[i]->tangent.length();
 	
 	if(-1e-6 < l && l < 1e-6 ){
 	  head[i]->counter = MAX_ITERS;
 	}
 	
+	//	  cerr << "l = " << l << endl;
 	head[i]->color = *(_cmapH->lookup( l ).get_rep());
 	head[i]->next = 0;
       }
@@ -446,25 +551,14 @@ GLAnimatedStreams::draw()
 	  newStreamer(i);
 	}
       }
-    }
-    if (flow) DecrementFlow();
-  } // end if ( !_pause || flow)
-
-                                // add streams
-  _numStreams++;
-				// but only up to a certain point
-  if (_numStreams > NUMSOLS) _numStreams = NUMSOLS;
-  
-				// start the new solution if we're
-				// adding one
-  else { newStreamer(_numStreams-1); }     
-  
+    } // for i = 0 .. _numStreams
+  } // for iter = 0 .. _iterations
 }
 
 bool  
 GLAnimatedStreams::interpolate(FieldHandle texfld_, const Point& p, Vector& val)
 {
-  const string field_type = texfld_->get_type_name(0);
+  //  const string field_type = texfld_->get_type_name(0);
   const string type = texfld_->get_type_name(1);
   if( texfld_->get_type_name(0) == "LevelField" ){
     // this should be faster than the virtual function call, but
