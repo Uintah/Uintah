@@ -13,7 +13,6 @@
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Util/NotFinished.h>
 
 using namespace Uintah;
 using namespace std;

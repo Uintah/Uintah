@@ -7,7 +7,6 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 
@@ -29,7 +28,6 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/NotFinished.h>
 
 #include <iostream>
 #include <string>
@@ -54,8 +52,8 @@ using namespace Uintah;
 extern Mutex cerrLock;
 extern DebugStream mixedDebug;
 
-DebugStream dbg( "OnDemandDataWarehouse", false );
-DebugStream warn( "OnDemandDataWarehouse_warn", true );
+static DebugStream dbg( "OnDemandDataWarehouse", false );
+static DebugStream warn( "OnDemandDataWarehouse_warn", true );
 
 Mutex ssLock( "send state lock" );
 
