@@ -1173,7 +1173,7 @@ if test -z "$thirdparty"; then
   sci_compiler_vers=gcc-3.0.4
   ac_try="$CC -v > /dev/null 2> conftest.out"
   (eval $ac_try) 2>&5
-  vers=`grep "gcc version" conftest.out | cut -d' ' -f 3`
+  vers=`grep "gcc version" conftest.out | sed -e 's/.*gcc version //' | cut -d' ' -f1`
   rm -f conftest.out
   if test -n "$vers"; then
     sci_compiler_vers=gcc-$vers
