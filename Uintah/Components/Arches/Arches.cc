@@ -211,6 +211,10 @@ Arches::scheduleInitialize(const LevelP& level,
     }
 
   }
+  d_boundaryCondition->sched_setProfile(level, sched, dw, dw);
+  d_props->sched_computeProps(level, sched, dw, dw);
+  d_turbModel->sched_computeTurbSubmodel(level, sched, dw, dw);
+  d_boundaryCondition->sched_pressureBC(level, sched, dw, dw);
 }
 
 //****************************************************************************
@@ -354,6 +358,11 @@ Arches::paramInit(const ProcessorContext* ,
 
 //
 // $Log$
+// Revision 1.39  2000/06/16 07:06:16  bbanerje
+// Added init of props, pressure bcs and turbulence model in Arches.cc
+// Changed duplicate task names (setProfile) in BoundaryCondition.cc
+// Commented out nolinear_dw creation in PicardNonlinearSolver.cc
+//
 // Revision 1.38  2000/06/15 22:13:21  rawat
 // modified boundary stuff
 //

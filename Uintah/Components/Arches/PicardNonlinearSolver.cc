@@ -126,8 +126,8 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     //create a new data warehouse to store new values during the
     // non-linear iteration, if the iteration is succesful then
     // it copies the dw to new_dw
-    DataWarehouseP nonlinear_dw = sched->createDataWarehouse(d_generation);
-    ++d_generation;
+    //DataWarehouseP nonlinear_dw = sched->createDataWarehouse(d_generation);
+    //++d_generation;
 
     //correct inlet velocities to account for change in properties
     d_boundaryCondition->sched_setInletVelocityBC(level, sched, new_dw, 
@@ -356,6 +356,11 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.25  2000/06/16 07:06:16  bbanerje
+// Added init of props, pressure bcs and turbulence model in Arches.cc
+// Changed duplicate task names (setProfile) in BoundaryCondition.cc
+// Commented out nolinear_dw creation in PicardNonlinearSolver.cc
+//
 // Revision 1.24  2000/06/16 04:25:40  bbanerje
 // Uncommented BoundaryCondition related stuff.
 //
