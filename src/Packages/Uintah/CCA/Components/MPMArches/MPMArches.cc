@@ -85,6 +85,8 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    ProblemSpecP db = prob_spec->findBlock("Multimaterial");
    db->require("heatExchange", d_calcEnergyExchange);
    db->require("fluidThermalConductivity", d_tcond);
+   db->require("turbulentPrandtNo",prturb);
+   db->require("fluidHeatCapacity",cpfluid);
 
    d_mpm->setMPMLabel(Mlb);
    d_mpm->setWithArches();
@@ -893,6 +895,7 @@ void MPMArches::scheduleEnergyExchange(SchedulerP& sched,
 		      this, &MPMArches::doEnergyExchange);
 
   int numGhostCells = 1;
+  int zeroGhostCells = 0;
 
   // requires, from mpmarches, solid temperatures at cc, fcx, fcy, and 
   // fcz, solid fraction
@@ -907,6 +910,28 @@ void MPMArches::scheduleEnergyExchange(SchedulerP& sched,
 	      mpm_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
   t->requires(Task::NewDW, d_MAlb->tempSolid_FCZLabel, 
   	      mpm_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
+
+  t->requires(Task::NewDW, d_MAlb->xvel_CCLabel, mpm_matls->getUnion(),
+	      Ghost::AroundCells, zeroGhostCells);
+  t->requires(Task::NewDW, d_MAlb->yvel_CCLabel, mpm_matls->getUnion(),
+	      Ghost::AroundCells, zeroGhostCells);
+  t->requires(Task::NewDW, d_MAlb->zvel_CCLabel, mpm_matls->getUnion(),
+	      Ghost::AroundCells, zeroGhostCells);
+
+  t->requires(Task::NewDW, d_MAlb->xvel_FCYLabel, mpm_matls->getUnion(),
+	      Ghost::AroundFaces, zeroGhostCells);
+  t->requires(Task::NewDW, d_MAlb->xvel_FCZLabel, mpm_matls->getUnion(),
+	      Ghost::AroundFaces, zeroGhostCells);
+
+  t->requires(Task::NewDW, d_MAlb->yvel_FCZLabel, mpm_matls->getUnion(),
+	      Ghost::AroundFaces, zeroGhostCells);
+  t->requires(Task::NewDW, d_MAlb->yvel_FCXLabel, mpm_matls->getUnion(),
+	      Ghost::AroundFaces, zeroGhostCells);
+
+  t->requires(Task::NewDW, d_MAlb->zvel_FCXLabel, mpm_matls->getUnion(),
+	      Ghost::AroundFaces, zeroGhostCells);
+  t->requires(Task::NewDW, d_MAlb->zvel_FCYLabel, mpm_matls->getUnion(),
+	      Ghost::AroundFaces, zeroGhostCells);
 
   // computes, for mpm, heat transferred to solid at cell centers 
   // and at all face centers
@@ -932,6 +957,20 @@ void MPMArches::scheduleEnergyExchange(SchedulerP& sched,
   t->requires(Task::NewDW,  d_Alab->d_mmgasVolFracLabel,   
 	      arches_matls->getUnion(), Ghost::AroundCells, numGhostCells);
 
+  t->requires(Task::OldDW, d_Alab->d_newCCUVelocityLabel, 
+	      arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+  t->requires(Task::OldDW, d_Alab->d_newCCVVelocityLabel, 
+	      arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+  t->requires(Task::OldDW, d_Alab->d_newCCWVelocityLabel, 
+	      arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+  
+  t->requires(Task::OldDW, d_Alab->d_densityMicroLabel, 
+	      arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+  
   if (d_DORad) {
   // stuff for radiative heat flux to intrusions
     t->requires(Task::OldDW, d_Alab->d_radiationFluxEINLabel, 
@@ -2871,6 +2910,16 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     StaticArray<constSFCYVariable<double> > tempSolid_fcy(numMPMMatls);
     StaticArray<constSFCZVariable<double> > tempSolid_fcz(numMPMMatls);
     
+    StaticArray<constCCVariable<double> > upCC(numMPMMatls);
+    StaticArray<constCCVariable<double> > vpCC(numMPMMatls);
+    StaticArray<constCCVariable<double> > wpCC(numMPMMatls);
+    StaticArray<constSFCXVariable<double> > vpFCX(numMPMMatls);
+    StaticArray<constSFCXVariable<double> > wpFCX(numMPMMatls);
+    StaticArray<constSFCYVariable<double> > upFCY(numMPMMatls);
+    StaticArray<constSFCYVariable<double> > wpFCY(numMPMMatls);
+    StaticArray<constSFCZVariable<double> > upFCZ(numMPMMatls);
+    StaticArray<constSFCZVariable<double> > vpFCZ(numMPMMatls);
+    
     StaticArray<CCVariable<double> >   heaTranSolid_cc(numMPMMatls);
     StaticArray<SFCXVariable<double> > heaTranSolid_fcx(numMPMMatls);
     StaticArray<SFCYVariable<double> > heaTranSolid_fcy(numMPMMatls);
@@ -2884,7 +2933,11 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     constCCVariable<int> cellType;
     constCCVariable<double> tempGas;
     constCCVariable<double> gas_fraction_cc;
-    
+    constCCVariable<double> ugCC;
+    constCCVariable<double> vgCC;
+    constCCVariable<double> wgCC;
+    constCCVariable<double> denMicro;
+
   // stuff for radiative heat flux to intrusions
 
     CCVariable<double> radfluxE;
@@ -2942,6 +2995,8 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
       Material* matl = d_sharedState->getMPMMaterial( m );
       int idx = matl->getDWIndex();
 
+      int zeroGhostCells = 0;
+
       // gets
 
       new_dw->get(solid_fraction_cc[m], d_MAlb->solid_fraction_CCLabel,
@@ -2958,6 +3013,33 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 
       new_dw->get(tempSolid_fcz[m], d_MAlb->tempSolid_FCZLabel,
       		  idx, patch, Ghost::AroundFaces, numGhostCells);
+
+      new_dw->get(upCC[m], d_MAlb->xvel_CCLabel,
+		  idx, patch, Ghost::None, zeroGhostCells);
+
+      new_dw->get(vpCC[m], d_MAlb->yvel_CCLabel,
+		  idx, patch, Ghost::None, zeroGhostCells);
+
+      new_dw->get(wpCC[m], d_MAlb->zvel_CCLabel,
+		  idx, patch, Ghost::None, zeroGhostCells);
+
+      new_dw->get(upFCY[m], d_MAlb->xvel_FCYLabel,
+		  idx, patch, Ghost::None, zeroGhostCells);
+
+      new_dw->get(upFCZ[m], d_MAlb->xvel_FCZLabel,
+		  idx, patch, Ghost::None, zeroGhostCells);
+
+      new_dw->get(vpFCX[m], d_MAlb->yvel_FCXLabel,
+		  idx, patch, Ghost::None, zeroGhostCells);
+
+      new_dw->get(vpFCZ[m], d_MAlb->yvel_FCZLabel,
+		  idx, patch, Ghost::None, zeroGhostCells);
+
+      new_dw->get(wpFCX[m], d_MAlb->zvel_FCXLabel,
+		  idx, patch, Ghost::None, zeroGhostCells);
+
+      new_dw->get(wpFCY[m], d_MAlb->zvel_FCYLabel,
+		  idx, patch, Ghost::None, zeroGhostCells);
 
       // allocates
       
@@ -3003,6 +3085,18 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 
     new_dw->get(gas_fraction_cc, d_Alab->d_mmgasVolFracLabel, matlIndex, 
 		patch, Ghost::AroundCells, numGhostCellsG);
+
+    old_dw->get(ugCC, d_Alab->d_newCCUVelocityLabel, matlIndex, 
+		patch, Ghost::AroundCells, numGhostCellsG);
+
+    old_dw->get(vgCC, d_Alab->d_newCCVVelocityLabel, matlIndex, 
+		patch, Ghost::AroundCells, numGhostCellsG);
+
+    old_dw->get(wgCC, d_Alab->d_newCCWVelocityLabel, matlIndex, 
+		patch, Ghost::AroundCells, numGhostCellsG);
+
+    old_dw->get(denMicro, d_Alab->d_densityMicroLabel,
+		matlIndex, patch, Ghost::AroundCells, numGhostCellsG);
 
     if (d_DORad && d_calcEnergyExchange) {
 
@@ -3118,6 +3212,8 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     int ffieldid = d_arches->getBoundaryCondition()->getFlowId();
     int mmwallid = d_arches->getBoundaryCondition()->getMMWallId();
     
+    double csmag = d_arches->getTurbulenceModel()->getSmagorinskyConst();
+
     IntVector valid_lo = patch->getCellFORTLowIndex();
     IntVector valid_hi = patch->getCellFORTHighIndex();
 
@@ -3154,6 +3250,19 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 			      tempSolid_fcx[m],
 			      tempSolid_fcy[m],
 			      tempSolid_fcz[m],
+			      ugCC,
+			      vgCC,
+			      wgCC,
+			      upCC[m],
+			      vpCC[m],
+			      wpCC[m],
+			      vpFCX[m],
+			      wpFCX[m],
+			      upFCY[m],
+			      wpFCY[m],
+			      upFCZ[m],
+			      vpFCZ[m],
+			      denMicro,
 			      radfluxE,
 			      radfluxW,
 			      radfluxN,
@@ -3172,6 +3281,9 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 			      cellinfo->zz,
 			      cellinfo->zw,
 			      d_tcond,
+			      csmag,
+			      prturb,
+			      cpfluid,
 			      valid_lo, valid_hi,
 			      cellType, mmwallid, ffieldid);
 

@@ -307,9 +307,26 @@ C-----------------------------------------------------------------------
       double precision dist
       double precision qflux
 
+      logical lmltm
+      double precision turbcond
+      double precision effcond
+      double precision dvdx
+      double precision dwdx
+      double precision dudy
+      double precision dwdy
+      double precision dudz
+      double precision dvdz
+      double precision dudd
+      double precision dvdd
+      double precision dwdd
+      double precision strainrate
+
 c--------------------------------------------------------------------
 *     executable statements
 c--------------------------------------------------------------------
+
+      lmltm = .true.
+      if (.not.lmltm) effcond = tcond
 
 c--------------------------------------------------------------------
 c     part 1: intrusion cells and the cells next to them
@@ -328,10 +345,20 @@ c--------------------------------------------------------------------
                      areayz = sns(j)*stb(k)
 c                     qmult = heat_trans_coeff*areayz*
 c     $                    epss(i,j,k)*epsg(i-1,j,k)
-                     qmult = tcond*
-     $                    epss(i,j,k)*epsg(i-1,j,k)/
-     $                    (xu(i)-xx(i-1))
 
+                     dist = (xu(i)-xx(i-1))
+
+                     if (lmltm) then
+                        dvdx = (vg_cc(i-1,j,k) - vp_fcx(i,j,k))/dist
+                        dwdx = (wg_cc(i-1,j,k) - wp_fcx(i,j,k))/dist
+                        strainrate = sqrt(pt5*(dvdx*dvdx + dwdx*dwdx))
+                        turbcond = (csmag*dist)**2*strainrate*cpfluid*
+     $                       denMicro(i-1,j,k)/prturb
+                        effcond = tcond + turbcond
+                     endif
+
+                     qmult = effcond*
+     $                    epss(i,j,k)*epsg(i-1,j,k)/dist
 
 c     We multiply by epsg because we want to only include the
 c     area that is actually seen by the gas.  The assumption made
@@ -413,9 +440,20 @@ c#endif
                      areayz = sns(j)*stb(k)
 c                     qmult = heat_trans_coeff*areayz*
 c     $                    epss(i,j,k)*epsg(i+1,j,k)
-                     qmult = tcond*
-     $                    epss(i,j,k)*epsg(i+1,j,k)/
-     $                    (xx(i+1)-xu(i+1))
+
+                     dist = (xx(i+1)-xu(i+1))
+
+                     if (lmltm) then
+                        dvdx = (vg_cc(i+1,j,k) - vp_fcx(i+1,j,k))/dist
+                        dwdx = (wg_cc(i+1,j,k) - wp_fcx(i+1,j,k))/dist
+                        strainrate = sqrt(pt5*(dvdx*dvdx + dwdx*dwdx))
+                        turbcond = (csmag*dist)**2*strainrate*cpfluid*
+     $                       denMicro(i+1,j,k)/prturb
+                        effcond = tcond + turbcond
+                     endif
+
+                     qmult = effcond*
+     $                    epss(i,j,k)*epsg(i+1,j,k)/dist
 
                      qflux = qmult*(tg(i+1,j,k) - 
      $                    ts_fcx(i+1,j,k))
@@ -484,9 +522,19 @@ c     south face of intrusion
 c                     qmult = heat_trans_coeff*areaxz*
 c     $                    epsg(i,j-1,k)*epss(i,j,k)
 
-                     qmult = tcond*
-     $                    epsg(i,j-1,k)*epss(i,j,k)/
-     $                    (yv(j)-yy(j-1))
+                     dist = (yv(j)-yy(j-1))
+
+                     if (lmltm) then
+                        dudy = (ug_cc(i,j-1,k) - up_fcy(i,j,k))/dist
+                        dwdy = (wg_cc(i,j-1,k) - wp_fcy(i,j,k))/dist
+                        strainrate = sqrt(pt5*(dudy*dudy + dwdy*dwdy))
+                        turbcond = (csmag*dist)**2*strainrate*cpfluid*
+     $                       denMicro(i,j-1,k)/prturb
+                        effcond = tcond + turbcond
+                     endif
+
+                     qmult = effcond*
+     $                    epsg(i,j-1,k)*epss(i,j,k)/dist
 
                      qflux = qmult*(tg(i,j-1,k) -
      $                    ts_fcy(i,j,k))
@@ -555,9 +603,19 @@ c#endif
 c                     qmult = heat_trans_coeff*areaxz*
 c     $                    epsg(i,j+1,k)*epss(i,j,k)
 
-                     qmult = tcond*
-     $                    epsg(i,j+1,k)*epss(i,j,k)/
-     $                    (yy(j+1)-yv(j+1))
+                     dist = (yy(j+1)-yv(j+1))
+
+                     if (lmltm) then
+                        dudy = (ug_cc(i,j+1,k) - up_fcy(i,j+1,k))/dist
+                        dwdy = (wg_cc(i,j+1,k) - wp_fcy(i,j+1,k))/dist
+                        strainrate = sqrt(pt5*(dudy*dudy + dwdy*dwdy))
+                        turbcond = (csmag*dist)**2*strainrate*cpfluid*
+     $                       denMicro(i,j+1,k)/prturb
+                        effcond = tcond + turbcond
+                     endif
+
+                     qmult = effcond*
+     $                    epsg(i,j+1,k)*epss(i,j,k)/dist
 
                      qflux = qmult*(tg(i,j+1,k) - 
      $                    ts_fcy(i,j+1,k))
@@ -626,9 +684,19 @@ c#endif
 c                     qmult = heat_trans_coeff*areaxy*
 c     $                    epsg(i,j,k-1)*epss(i,j,k)
 
-                     qmult = tcond*
-     $                    epsg(i,j,k-1)*epss(i,j,k)/
-     $                    (zw(k)-zz(k-1))
+                     dist = (zw(k)-zz(k-1))
+
+                     if (lmltm) then
+                        dudz = (ug_cc(i,j,k-1) - up_fcz(i,j,k))/dist
+                        dvdz = (vg_cc(i,j,k-1) - vp_fcz(i,j,k))/dist
+                        strainrate = sqrt(pt5*(dudz*dudz + dvdz*dvdz))
+                        turbcond = (csmag*dist)**2*strainrate*cpfluid*
+     $                       denMicro(i,j,k-1)/prturb
+                        effcond = tcond + turbcond
+                     endif
+
+                     qmult = effcond*
+     $                    epsg(i,j,k-1)*epss(i,j,k)/dist
 
                      qflux = qmult*(tg(i,j,k-1) - 
      $                    ts_fcz(i,j,k))
@@ -696,9 +764,19 @@ c#endif
 c                     qmult = heat_trans_coeff*areaxy*
 c     $                    epsg(i,j,k+1)*epss(i,j,k)
 
-                     qmult = tcond*
-     $                    epsg(i,j,k+1)*epss(i,j,k)/
-     $                    (zz(k+1)-zw(k+1))
+                     dist = (zz(k+1)-zw(k+1))
+
+                     if (lmltm) then
+                        dudz = (ug_cc(i,j,k+1) - up_fcz(i,j,k+1))/dist
+                        dvdz = (vg_cc(i,j,k+1) - vp_fcz(i,j,k+1))/dist
+                        strainrate = sqrt(pt5*(dudz*dudz + dvdz*dvdz))
+                        turbcond = (csmag*dist)**2*strainrate*cpfluid*
+     $                       denMicro(i,j,k+1)/prturb
+                        effcond = tcond + turbcond
+                     endif
+
+                     qmult = effcond*
+     $                    epsg(i,j,k+1)*epss(i,j,k)/dist
 
                      qflux = qmult*(tg(i,j,k+1) - 
      $                    ts_fcz(i,j,k+1))
@@ -790,7 +868,20 @@ c     being passed here.  If there is only one solid material,
 c     then factor = one.
 
 c                  qmult = heat_trans_coeff*area*factor
-                  qmult = tcond*factor/dist
+
+                  if (lmltm) then
+                     dudd = (ug_cc(i,j,k) - up_cc(i,j,k))/dist
+                     dvdd = (vg_cc(i,j,k) - vp_cc(i,j,k))/dist
+                     dwdd = (wg_cc(i,j,k) - wp_cc(i,j,k))/dist
+
+                     strainrate = sqrt((1./3.)*(dudd*dudd + 
+     $                    dvdd*dvdd + dwdd*dwdd))
+                     turbcond = (csmag*dist)**2*strainrate*cpfluid*
+     $                    denMicro(i,j,k)/prturb
+                     effcond = tcond + turbcond
+                  endif
+
+                  qmult = effcond*factor/dist
 
                   qflux = qmult*(tg(i,j,k) - ts_cc(i,j,k))
 
