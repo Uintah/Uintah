@@ -38,19 +38,15 @@ namespace Uintah {
 	    double CrackFriction;
             double InitialCrackRadius;
 	    double CrackGrowthRate;
-	    double G1, G2, G3, G4, G5;
-	    double RTau1, RTau2, RTau3, RTau4, RTau5;
+	    double G[5];
+	    double RTau[5];
             double Beta, Gamma;
 	    double DCp_DTemperature;
 	    int LoadCurveNumber, NumberOfPoints;
          };
 
 	 struct StateData {
-	    Matrix3 DevStress1;
-	    Matrix3 DevStress2;
-	    Matrix3 DevStress3;
-	    Matrix3 DevStress4;
-	    Matrix3 DevStress5;
+	    Matrix3 DevStress[5];
 	    double VolumeChangeHeating;
 	    double ViscousHeating;
 	    double CrackHeating;
@@ -133,6 +129,9 @@ namespace Uintah {
 #endif  // __VISCOSCRAM_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.3  2000/08/22 23:14:40  guilkey
+// More work on ViscoScram done.
+//
 // Revision 1.2  2000/08/21 23:13:54  guilkey
 // Adding actual ViscoScram functionality.  Not done yet, but compiles.
 //

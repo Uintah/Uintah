@@ -1,4 +1,3 @@
-
 #include "ConstitutiveModelFactory.h"
 #include "ViscoScram.h"
 #include <SCICore/Malloc/Allocator.h>
@@ -35,16 +34,16 @@ ViscoScram::ViscoScram(ProblemSpecP& ps)
   ps->require("CrackFriction",d_initialData.CrackFriction);
   ps->require("InitialCrackRadius",d_initialData.InitialCrackRadius);
   ps->require("CrackGrowthRate",d_initialData.CrackGrowthRate);
-  ps->require("G1",d_initialData.G1);
-  ps->require("G2",d_initialData.G2);
-  ps->require("G3",d_initialData.G3);
-  ps->require("G4",d_initialData.G4);
-  ps->require("G5",d_initialData.G5);
-  ps->require("RTau1",d_initialData.RTau1);
-  ps->require("RTau2",d_initialData.RTau2);
-  ps->require("RTau3",d_initialData.RTau3);
-  ps->require("RTau4",d_initialData.RTau4);
-  ps->require("RTau5",d_initialData.RTau5);
+  ps->require("G1",d_initialData.G[1]);
+  ps->require("G2",d_initialData.G[2]);
+  ps->require("G3",d_initialData.G[3]);
+  ps->require("G4",d_initialData.G[4]);
+  ps->require("G5",d_initialData.G[5]);
+  ps->require("RTau1",d_initialData.RTau[1]);
+  ps->require("RTau2",d_initialData.RTau[2]);
+  ps->require("RTau3",d_initialData.RTau[3]);
+  ps->require("RTau4",d_initialData.RTau[4]);
+  ps->require("RTau5",d_initialData.RTau[5]);
   ps->require("Beta",d_initialData.Beta);
   ps->require("Gamma",d_initialData.Gamma);
   ps->require("DCp_DTemperature",d_initialData.DCp_DTemperature);
@@ -87,18 +86,16 @@ void ViscoScram::initializeCMData(const Patch* patch,
 
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
-          statedata[*iter].VolumeChangeHeating = 0.0;
-          statedata[*iter].ViscousHeating = 0.0;
-          statedata[*iter].CrackHeating = 0.0;
-          statedata[*iter].CrackRadius = d_initialData.InitialCrackRadius;
-          statedata[*iter].DevStress1 = zero;
-          statedata[*iter].DevStress2 = zero;
-          statedata[*iter].DevStress3 = zero;
-          statedata[*iter].DevStress4 = zero;
-          statedata[*iter].DevStress5 = zero;
+      statedata[*iter].VolumeChangeHeating = 0.0;
+      statedata[*iter].ViscousHeating = 0.0;
+      statedata[*iter].CrackHeating = 0.0;
+      statedata[*iter].CrackRadius = d_initialData.InitialCrackRadius;
+      for(int imaxwell=0; imaxwell<5; imaxwell++){
+	statedata[*iter].DevStress[imaxwell] = zero;
+      }
 
-          deformationGradient[*iter] = Identity;
-          pstress[*iter] = zero;
+      deformationGradient[*iter] = Identity;
+      pstress[*iter] = zero;
    }
    new_dw->put(statedata, p_statedata_label);
    new_dw->put(deformationGradient, lb->pDeformationMeasureLabel);
@@ -137,8 +134,8 @@ void ViscoScram::computeStableTimestep(const Patch* patch,
   double c_dil = 0.0;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
-  double G = d_initialData.G1 + d_initialData.G2 +
- 	      d_initialData.G3 + d_initialData.G4 + d_initialData.G5;
+  double G = d_initialData.G[1] + d_initialData.G[2] +
+ 	     d_initialData.G[3] + d_initialData.G[4] + d_initialData.G[5];
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
@@ -160,11 +157,12 @@ void ViscoScram::computeStressTensor(const Patch* patch,
                                         DataWarehouseP& old_dw,
                                         DataWarehouseP& new_dw)
 {
-  Matrix3 velGrad,deformationGradientInc,Identity;
+  Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
   double J,U,W,se=0.;
   double c_dil=0.0,Jinc;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
   double onethird = (1.0/3.0);
+  double onesixth = (1.0/6.0);
   double sqrtopf=sqrt(1.5);
   double PI = 3.141592654;
 
@@ -204,8 +202,8 @@ void ViscoScram::computeStressTensor(const Patch* patch,
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
 
-  double G = d_initialData.G1 + d_initialData.G2 +
-	     d_initialData.G3 + d_initialData.G4 + d_initialData.G5;
+  double G = d_initialData.G[1] + d_initialData.G[2] +
+ 	     d_initialData.G[3] + d_initialData.G[4] + d_initialData.G[5];
   double cf = d_initialData.CrackFriction;
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
 
@@ -235,9 +233,9 @@ void ViscoScram::computeStressTensor(const Patch* patch,
       // time step and the velocity gradient and the material constants
       Matrix3 DPrime = D - Identity*onethird*D.Trace();
       double EDeff = sqrtopf*DPrime.Norm();
-      Matrix3 DevStress = statedata[idx].DevStress1 + statedata[idx].DevStress2 
-	                + statedata[idx].DevStress3 + statedata[idx].DevStress4 
-			+ statedata[idx].DevStress5;
+      Matrix3 DevStress =statedata[idx].DevStress[1]+statedata[idx].DevStress[2]
+	                +statedata[idx].DevStress[3]+statedata[idx].DevStress[4]
+			+statedata[idx].DevStress[5];
       double EffStress = sqrtopf*pstress[idx].Norm();
       double DevStressNorm = DevStress.Norm();
       double EffDevStress = sqrtopf*DevStressNorm;
@@ -265,6 +263,135 @@ void ViscoScram::computeStressTensor(const Patch* patch,
       double sk1    = skp*pow((1. + (2./d_initialData.CrackPowerValue)),
 			1./d_initialData.CrackPowerValue);
 
+      if(vres > d_initialData.CrackMaxGrowthRate){
+	vres = d_initialData.CrackMaxGrowthRate;
+      }
+
+      double c    = statedata[idx].CrackRadius;
+      double cdot,cc,rk1c,rk2c,rk3c,rk4c;
+      if(sif < skp ){
+	cdot = vres*pow((sif/sk1),d_initialData.CrackPowerValue);
+	cc   = vres*delT;
+	rk1c = cc*pow(sqrt(PI*c)*(EffStress/sk1),
+				d_initialData.CrackPowerValue);
+	rk2c = cc*pow(sqrt(PI*(c+.5*rk1c))*(EffStress/sk1),
+				d_initialData.CrackPowerValue);
+	rk3c = cc*pow(sqrt(PI*(c+.5*rk2c))*(EffStress/sk1),
+				d_initialData.CrackPowerValue);
+	rk4c = cc*pow(sqrt(PI*(c+rk3c))*(EffStress/sk1),
+				d_initialData.CrackPowerValue);
+      }
+      else{
+	cdot = vres*(1. - rko*rko/(sif*sif));
+	cc   = vres*delT;
+	rk1c = cc*(1. - rko*rko/(PI*c*EffStress*EffStress));
+	rk2c = cc*(1. - rko*rko/(PI*(c+.5*rk1c)*EffStress*EffStress));
+	rk3c = cc*(1. - rko*rko/(PI*(c+.5*rk2c)*EffStress*EffStress));
+	rk4c = cc*(1. - rko*rko/(PI*(c+rk3c)*EffStress*EffStress));
+      }
+
+      a = d_initialData.CrackParameterA;
+      for(int imw=0;imw<5;imw++){
+	// First Runga-Kutta Term
+	double con1 = 3.*c*c*cdot/(a*a*a);
+	double con3 = (c*c*c)/(a*a*a);
+	double con2 = 1. + con3;
+	Matrix3 DevStressOld = statedata[idx].DevStress[imw];
+	Matrix3 DevStressS = zero; 
+	Matrix3 DevStressT = zero;
+	for(int jmaxwell=0;jmaxwell<5;jmaxwell++){
+	  DevStressS += statedata[idx].DevStress[jmaxwell];
+	  DevStressT += statedata[idx].DevStress[jmaxwell]*d_initialData.RTau[jmaxwell];
+	}
+	Matrix3 rk1 = (DPrime*2.*d_initialData.G[imw] - DevStressOld*d_initialData.RTau[imw] -
+		       (DevStressS*con1 +
+			(DPrime*2.*G - DevStressT - DevStressS*con1)*con3/con2)
+		          *(d_initialData.G[imw]/G))*delT;
+
+	// Second Runga-Kutta Term
+	con1 = 3.*(c+.5*rk1c)*(c+.5*rk1c)*cdot/(a*a*a);
+	con3 = (c + .5*rk1c)*(c + .5*rk1c)*(c + .5*rk1c)/(a*a*a);
+	con2 = 1. + con3;
+	DevStressOld = statedata[idx].DevStress[imw] + rk1*.5;
+	DevStressS = zero; 
+	DevStressT = zero;
+	for(int jmaxwell=0;jmaxwell<5;jmaxwell++){
+	  DevStressS += (statedata[idx].DevStress[jmaxwell] + rk1*.5);
+	  DevStressT += (statedata[idx].DevStress[jmaxwell] + rk1*.5)*d_initialData.RTau[jmaxwell];
+	}
+	Matrix3 rk2 = (DPrime*2.*d_initialData.G[imw] - DevStressOld*d_initialData.RTau[imw] -
+		       (DevStressS*con1 +
+			(DPrime*2.*G - DevStressT - DevStressS*con1)*con3/con2)
+		          *(d_initialData.G[imw]/G))*delT;
+
+	// Third Runga-Kutta Term
+	con1 = 3.*(c+.5*rk2c)*(c+.5*rk2c)*cdot/(a*a*a);
+	con3 = (c + .5*rk2c)*(c + .5*rk2c)*(c + .5*rk2c)/(a*a*a);
+	con2 = 1. + con3;
+	DevStressOld = statedata[idx].DevStress[imw] + rk2*.5;
+	DevStressS = zero; 
+	DevStressT = zero;
+	for(int jmaxwell=0;jmaxwell<5;jmaxwell++){
+	  DevStressS += (statedata[idx].DevStress[jmaxwell] + rk2*.5);
+	  DevStressT += (statedata[idx].DevStress[jmaxwell] + rk2*.5)*d_initialData.RTau[jmaxwell];
+	}
+	Matrix3 rk3 = (DPrime*2.*d_initialData.G[imw] -
+			DevStressOld*d_initialData.RTau[imw] -
+		       (DevStressS*con1 +
+			(DPrime*2.*G - DevStressT - DevStressS*con1)*con3/con2)
+		          *(d_initialData.G[imw]/G))*delT;
+
+	// Fourth Runga-Kutta Term
+	con1 = 3.*(c+.5*rk3c)*(c+.5*rk3c)*cdot/(a*a*a);
+	con3 = (c + .5*rk3c)*(c + .5*rk3c)*(c + .5*rk3c)/(a*a*a);
+	con2 = 1. + con3;
+	DevStressOld = statedata[idx].DevStress[imw] + rk3;
+	DevStressS = zero; 
+	DevStressT = zero;
+	for(int jmaxwell=0;jmaxwell<5;jmaxwell++){
+	  DevStressS += (statedata[idx].DevStress[jmaxwell] + rk3);
+	  DevStressT += (statedata[idx].DevStress[jmaxwell] + rk3)*d_initialData.RTau[jmaxwell];
+	}
+	Matrix3 rk4 = (DPrime*2.*d_initialData.G[imw] -
+			DevStressOld*d_initialData.RTau[imw] -
+		        (DevStressS*con1 +
+			(DPrime*2.*G - DevStressT - DevStressS*con1)*con3/con2)
+		          *(d_initialData.G[imw]/G))*delT;
+
+        // Update Deviatoric Stresses
+        statedata[idx].DevStress[imw] =
+		 (rk1 + rk4)*onesixth + (rk2 + rk3)*onethird;
+      }
+      statedata[idx].CrackRadius +=
+		onesixth*(rk1c + rk4c) + onethird*(rk2c + rk3c);
+
+      DevStress = statedata[idx].DevStress[1]+statedata[idx].DevStress[2]
+	        + statedata[idx].DevStress[3]+statedata[idx].DevStress[4]
+		+ statedata[idx].DevStress[5];
+
+      double sumn = 1.;
+
+      c = statedata[idx].CrackRadius;
+      double coa3   = (c*c*c)/(a*a*a);
+      double bot    = 1. + coa3;
+      double topc   = 3.*(coa3/c)*cdot;
+      Matrix3 SRate = (DPrime*2.*G - One*sumn - DevStress*topc)/bot;
+
+      double scrdot =((DevStress(1,1)*DevStress(1,1) +
+		       DevStress(2,2)*DevStress(2,2) +
+		       DevStress(3,3)*DevStress(3,3) +
+		       DevStress(2,3)*DevStress(2,3) +
+		       DevStress(1,2)*DevStress(1,2) +
+		       DevStress(1,3)*DevStress(1,3))*topc
+                    + (DevStress(1,1)*SRate(1,1) + DevStress(2,2)*SRate(2,2) +
+		       DevStress(3,3)*SRate(3,3) + DevStress(2,3)*SRate(2,3) +
+		       DevStress(1,2)*SRate(1,2) + DevStress(1,3)*SRate(1,3))*
+		       coa3)/(2*G);
+
+      p = onethird*(pstress[idx].Trace()) + D.Trace()*bulk*delT;
+
+      pstress[idx] = DevStress + Identity*p;
+
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
       // F_n^np1 = dudx * dt + Identity
@@ -276,29 +403,29 @@ void ViscoScram::computeStressTensor(const Patch* patch,
       deformationGradient[idx] = deformationGradientInc *
                              deformationGradient[idx];
 
-    // get the volumetric part of the deformation
-    J = deformationGradient[idx].Determinant();
+      // get the volumetric part of the deformation
+      J = deformationGradient[idx].Determinant();
 
-    // Compute the strain energy for all the particles
-    U = .5;
-    W = .5;
+      // Compute the strain energy for all the particles
+      U = .5;
+      W = .5;
 
-    pvolume[idx]=Jinc*pvolume[idx];
+      pvolume[idx]=Jinc*pvolume[idx];
 
-    se += (U + W)*pvolume[idx]/J;
+      se += (U + W)*pvolume[idx]/J;
 
-    // Compute wave speed at each particle, store the maximum
+      // Compute wave speed at each particle, store the maximum
 
-    if(pmass[idx] > 0){
-      c_dil = sqrt((bulk + 4.*G/3.)*pvolume[idx]/pmass[idx]);
-    }
-    else{
-      c_dil = 0.0;
-      pvelocity[idx] = Vector(0.0,0.0,0.0);
-    }
-    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-		     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-		     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+      if(pmass[idx] > 0){
+        c_dil = sqrt((bulk + 4.*G/3.)*pvolume[idx]/pmass[idx]);
+      }
+      else{
+        c_dil = 0.0;
+        pvelocity[idx] = Vector(0.0,0.0,0.0);
+      }
+      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+		       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+		       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
 
   WaveSpeed = dx/WaveSpeed;
@@ -380,6 +507,9 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.5  2000/08/22 23:14:40  guilkey
+// More work on ViscoScram done.
+//
 // Revision 1.4  2000/08/22 00:11:21  guilkey
 // Tidied up these files.
 //
