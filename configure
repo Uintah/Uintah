@@ -2850,8 +2850,8 @@ echo "configure:2843: checking if ${CC} talks too much" >&5
       sed "s+VERBOSE_CC+${CXX}+g;" < ${srcdir}/scripts/cc.in > scripts/CC
       chmod 755 scripts/cc scripts/CC
 
-      CC="$(OBJTOP)/scripts/cc"
-      CXX="$(OBJTOP)/scripts/CC"
+      CC="scripts/cc"
+      CXX="scripts/CC"
     else
       echo "$ac_t""no" 1>&6
     fi
