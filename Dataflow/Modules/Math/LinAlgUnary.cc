@@ -13,9 +13,12 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Containers/StringUtil.h>
+#include <Dataflow/Modules/Math/LinAlgUnary.h>
 #include <iostream>
 #include <sstream>
 #include <math.h>
+#include <sci_hash_map.h>
 
 namespace SCIRun {
 
@@ -161,8 +164,42 @@ void LinAlgUnary::execute() {
     int n = m->nrows()*m->ncols();
     Ceil(x, n);
   } else if (op == "Function") {
-    // TODO: Implement this similar to TransformData
-    
+
+    // Remove trailing white-space from the function string.
+    string func = function_.get();
+    while (func.size() && isspace(func[func.size()-1]))
+    {
+      func.resize(func.size()-1);
+    }
+
+    // Compile the function.
+    int hoffset = 0;
+    Handle<LinAlgUnaryAlgo> algo;
+    while (1)
+    {
+      CompileInfoHandle ci =
+	LinAlgUnaryAlgo::get_compile_info(func, hoffset);
+      if (!DynamicCompilation::compile(ci, algo, false, this))
+      {
+	DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+	error("Your function would not compile.");
+	return;
+      }
+      if (algo->identify() == func)
+      {
+	break;
+      }
+      hoffset++;
+    }
+
+    // Get the data from the matrix, iterate over it calling the function.
+    m = mh->clone();
+    double *x = &((*(m.get_rep()))[0][0]);
+    const int n = m->nrows()*m->ncols();
+    for (int i = 0; i < n; i++)
+    {
+      x[i] = algo->user_function(x[i]);
+    }
   } else {
     warning("Don't know operation "+op);
     return;
@@ -170,4 +207,45 @@ void LinAlgUnary::execute() {
 
   omat_->send(MatrixHandle(m));
 }
+
+
+CompileInfoHandle
+LinAlgUnaryAlgo::get_compile_info(const string &function,
+				  int hashoffset)
+
+{
+  hash<const char *> H;
+  unsigned int hashval = H(function.c_str()) + hashoffset;
+
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  const string template_name("LinAlgUnaryInstance" + to_string(hashval));
+  static const string base_class_name("LinAlgUnaryAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_name + ".",
+		       base_class_name,
+		       template_name + ";//",
+		       "");
+
+  // Code for the function.
+  string class_declaration =
+    string("\"\n\nusing namespace SCIRun;\n\n") + 
+    "class " + template_name + " : public LinAlgUnaryAlgo\n" +
+    "{\n" +
+    "  virtual double user_function(double x)\n" +
+    "  {\n" +
+    "    return (" + function + ");\n" +
+    "  }\n" +
+    "\n" +
+    "  virtual string identify()\n" +
+    "  { return string(\"" + string_Cify(function) + "\"); }\n" +
+    "};\n//";
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path + class_declaration);
+  return rval;
+}
+
+
 } // End namespace SCIRun
