@@ -3071,8 +3071,8 @@ class BioImageApp {
     variable num_filters
     variable loading_ui
 
+    variable history0
     variable history1
-    variable history2
 
     variable dimension
 
