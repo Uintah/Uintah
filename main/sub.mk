@@ -38,6 +38,10 @@ endif
 
 PROGRAM := $(PROGRAM_PSE)
 
+ifeq ($(OS_NAME),Darwin)
+  PROGRAM_LDFLAGS := $(PROGRAM_LDFLAGS) -bind_at_load
+endif
+
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ifeq ($(BUILD_SCIRUN2),yes)
