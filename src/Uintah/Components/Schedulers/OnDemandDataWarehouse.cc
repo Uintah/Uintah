@@ -1054,6 +1054,9 @@ OnDemandDataWarehouse::gatherParticles(const ProcessorGroup*,
 	 d_particleDB.put(reloc_new_labels[v], m, patch, newvar, false);
       }
 
+      for(int i=0;i<subsets.size();i++)
+	 delete subsets[i];
+
       psetDBType::key_type key(m, patch);
       if(d_psetDB.find(key) != d_psetDB.end())
 	 throw InternalError("ParticleSet already exists on patch");
@@ -1118,6 +1121,9 @@ OnDemandDataWarehouse::scheduleParticleRelocation(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.37  2000/06/17 07:26:51  sparker
+// Fixed a memory leak in scatter/gather
+//
 // Revision 1.36  2000/06/17 07:04:54  sparker
 // Implemented initial load balancer modules
 // Use ProcessorGroup
