@@ -99,6 +99,7 @@ class ShowField : public Module
   GuiInt                   tensors_on_;
   GuiInt                   has_tensor_data_;
   GuiInt                   tensors_usedefcolor_;
+  GuiDouble                tensors_emphasis_;
 
   GuiInt                   scalars_on_;
   GuiInt                   scalars_transparency_;
@@ -222,6 +223,7 @@ ShowField::ShowField(GuiContext* ctx) :
   tensors_on_(ctx->subVar("tensors-on")),
   has_tensor_data_(ctx->subVar("has_tensor_data")),
   tensors_usedefcolor_(ctx->subVar("tensors-usedefcolor")),
+  tensors_emphasis_(ctx->subVar("tensors-emphasis")),
   scalars_on_(ctx->subVar("scalars-on")),
   scalars_transparency_(ctx->subVar("scalars-transparency")),
   scalars_usedefcolor_(ctx->subVar("scalars-usedefcolor")),
@@ -776,7 +778,8 @@ ShowField::execute()
 					   def_material_,
 					   tensors_usedefcolor_.get(),
 					   tdt, tscale,
-					   data_resolution_);
+					   data_resolution_,
+					   tensors_emphasis_.get());
       data_id_ = ogeom_->addObj(data, fname + "Tensors");
     }
     else if (vfld_handle.get_rep() &&
