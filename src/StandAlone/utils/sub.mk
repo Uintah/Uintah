@@ -27,8 +27,8 @@ PSELIBS := Core/Datatypes Core/Util Core/Containers Core/Persistent \
 endif
 LIBS := $(PLPLOT_LIBRARY) $(XML_LIBRARY) $(M_LIBRARY)
 
-PROGRAM := $(SRCDIR)/PCA
-SRCS := $(SRCDIR)/PCA.cc
+PROGRAM := $(SRCDIR)/PCA-example
+SRCS := $(SRCDIR)/PCA-example.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/MaskLatVolWithHexVol
