@@ -1,6 +1,6 @@
 
 package PingPong {
-    class PingPong {
-	int pingpong(out int);
+    interface PingPong {
+	int pingpong(in int test);
     };
 };
