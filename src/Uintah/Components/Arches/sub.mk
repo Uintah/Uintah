@@ -26,12 +26,16 @@ include $(SRCTOP)/scripts/recurse.mk
 PSELIBS := Uintah/Parallel Uintah/Interface Uintah/Grid Uintah/Exceptions \
 	   SCICore/Exceptions
 LIBS := $(XML_LIBRARY) -lftn -lm
+CFLAGS += -DDEBUG
 #LIBS += -lblas
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.20  2000/08/02 16:27:38  bbanerje
+# Added -DDEBUG to sub.mk and Discretization
+#
 # Revision 1.19  2000/07/28 02:31:00  rawat
 # moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 # coeffecients
