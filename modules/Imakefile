@@ -2,19 +2,21 @@
 #define IHaveSubdirs
 #include <config/sci.cf>
 
-SUBDIRS = IsoSurface LaceContours MeshView Readers Salmon \
+SUBDIRS = CrossFader IsoSurface LaceContours MeshView Readers Salmon \
 	SoundInput SoundFilter SoundMixer SoundOutput SoundReader \
-	SurfToGeom
+	SurfToGeom VoiceRemover
 
 SCISubdirs($(SUBDIRS))
 
 all:: modules.o
 
 MODULES = \
+	CrossFader/CrossFader.o \
 	IsoSurface/IsoSurface.o \
 	LaceContours/LaceContours.o \
 	MeshView/MeshView.o \
 	Readers/ScalarFieldReader.o \
+	Readers/SurfaceReader.o \
 	Salmon/Salmon.o \
 	Salmon/Roe.o \
 	SoundInput/SoundInput.o \
@@ -22,7 +24,8 @@ MODULES = \
 	SoundMixer/SoundMixer.o \
 	SoundOutput/SoundOutput.o \
 	SoundReader/SoundReader.o \
-	SurfToGeom/SurfToGeom.o
+	SurfToGeom/SurfToGeom.o \
+	VoiceRemover/VoiceRemover.o
 
 $(MODULES):
 	@echo "Making in "`dirname $<`
