@@ -64,7 +64,7 @@ class BuildTransform : public Module {
 
   MatrixHandle omatrixH_;
   BoxWidget *box_widget_;
-  GeomSwitch *widget_switch_;
+  GeomHandle widget_switch_;
   CrowdMonitor widget_lock_;
   Transform composite_trans_, latest_trans_, latest_widget_trans_;
   Transform widget_trans_, widget_pose_inv_trans_;
@@ -118,9 +118,9 @@ BuildTransform::BuildTransform(GuiContext* ctx) :
   widgetid_(0)
 {
   
-  box_widget_=scinew BoxWidget(this, &widget_lock_, 0.2, false, false);
+  box_widget_ = scinew BoxWidget(this, &widget_lock_, 0.2, false, false);
   box_widget_->Connect((GeometryOPort*)get_oport("Geometry"));
-  widget_switch_=box_widget_->GetWidget();
+  widget_switch_ = box_widget_->GetWidget();
 }
 
 BuildTransform::~BuildTransform()
@@ -155,7 +155,10 @@ void BuildTransform::execute()
     widget_pose_center_=C;
     box_widget_->SetPosition(C,R,D,I);
     box_widget_->SetCurrentMode(2);
-    if (which_transform != "widget") widget_switch_->set_state(0);
+    if (which_transform != "widget")
+    {
+      ((GeomSwitch *)(widget_switch_.get_rep()))->set_state(0);
+    }
     widgetid_ = ogeom_->addObj(widget_switch_, widget_name, &widget_lock_);
     ogeom_->flushViews();
     have_been_initialized_=1;
@@ -259,10 +262,10 @@ void BuildTransform::widget_moved(bool last)
 
 void BuildTransform::tcl_command(GuiArgs& args, void* userdata) {
   if (args[1] == "hide_widget") {
-    widget_switch_->set_state(0);
+    ((GeomSwitch *)(widget_switch_.get_rep()))->set_state(0);
     if (ogeom_) ogeom_->flushViews();
   } else if (args[1] == "show_widget") {
-    widget_switch_->set_state(1);
+    ((GeomSwitch *)(widget_switch_.get_rep()))->set_state(1);
     if (ogeom_) ogeom_->flushViews();
   } else if (args[1] == "reset_widget" || args[1] == "reset" || 
 	     args[1] == "composite") {

@@ -391,7 +391,7 @@ BaseWidget::SetEpsilon( const double epsilon )
 }
 
 
-GeomSwitch*
+GeomHandle
 BaseWidget::GetWidget()
 {
   return widget_;
@@ -415,14 +415,14 @@ BaseWidget::Move( const Point& p )
 int
 BaseWidget::GetState()
 {
-  return widget_->get_state();
+  return ((GeomSwitch *)(widget_.get_rep()))->get_state();
 }
 
 
 void
 BaseWidget::SetState( const int state )
 {
-  widget_->set_state(state);
+  ((GeomSwitch *)(widget_.get_rep()))->set_state(state);
 }
 
 

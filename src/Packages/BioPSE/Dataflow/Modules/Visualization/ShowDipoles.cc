@@ -47,7 +47,7 @@ class BioPSESHARE ShowDipoles : public Module {
   int lastShowLines_;
 
   string execMsg_;
-  Array1<GeomSwitch *> widget_switch_;
+  Array1<GeomHandle> widget_switch_;
 public:
   ShowDipoles(GuiContext *context);
   virtual ~ShowDipoles();
@@ -149,19 +149,19 @@ ShowDipoles::execute()
       }
       if (field_pcv->fdata().size()<nDips_) {
 	for (unsigned int i=field_pcv->fdata().size(); i<nDips_; i++)
-	  widget_switch_[i]->set_state(0);
+	  ((GeomSwitch *)(widget_switch_[i].get_rep()))->set_state(0);
 	nDips_=field_pcv->fdata().size();
       } else {
 	unsigned int i;
 	for (i=nDips_; i<(unsigned int)(widget_switch_.size()); i++)
-	  widget_switch_[i]->set_state(1);
+	  ((GeomSwitch *)(widget_switch_[i].get_rep()))->set_state(1);
 	for (; i<field_pcv->fdata().size(); i++) {
 	  ArrowWidget *a = scinew ArrowWidget(this, &widget_lock_, widgetSize);
 	  a->Connect(ogeom_);
 	  widget_.add(a);
 	  deflMatl_=widget_[0]->GetMaterial(0);
 	  widget_switch_.add(widget_[i]->GetWidget());
-	  widget_switch_[i]->set_state(1);
+	  ((GeomSwitch *)(widget_switch_[i].get_rep()))->set_state(1);
 	  widget_id_.add(ogeom_->addObj(widget_switch_[i],
 					"Dipole" + to_string((int)i),
 					&widget_lock_));

@@ -165,14 +165,14 @@ void TextureVolVis::execute(void)
   case 1:
     volren->DrawLOS();
     if( control_id == -1){
-      GeomObj *w=control_widget->GetWidget();
+      GeomHandle w = control_widget->GetWidget();
       control_id = ogeom->addObj( w, control_name, &control_lock);
     }
     break;
   case 2:
     volren->DrawROI();
     if( control_id == -1){
-      GeomObj *w=control_widget->GetWidget();
+      GeomHandle w = control_widget->GetWidget();
       control_id = ogeom->addObj( w, control_name, &control_lock);
    }
   }
