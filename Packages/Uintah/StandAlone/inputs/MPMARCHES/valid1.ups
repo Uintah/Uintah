@@ -31,7 +31,6 @@
 	<save label = "CenterOfMassVelocity"/>
 	<save label = "p.particleID"/>
 	<save label = "p.x"/>
-	<save label = "p.volume"/>
 	<save label = "p.temperature"/>
 	<save label="uvwout"/>
 	<save label="totalflowIN"/>
@@ -52,12 +51,14 @@
 	<save label="scalarSP"/>
 	<save label="cellType"/>
 	<save label="tempIN"/>
-        <save label="velocityDivergence"/>
         <save label="continuityResidual"/>
+
+	<save label="radiationFluxWIN"/>
 
 	<save label = "htfluxRadX"/>
 	<save label = "htfluxRadY"/>
 	<save label = "htfluxRadZ"/>
+	<save label = "tempSolid_CC"/>
 
 	<checkpoint cycle = "2" interval = "0.01"/>
 
@@ -181,7 +182,7 @@
 	    <grow_dt>0.01</grow_dt>
 	    <variable_dt>true</variable_dt>
    	    <nonlinear_solver>explicit</nonlinear_solver>
-    	    <turbulence_model>smagorinsky</turbulence_model>
+    	    <turbulence_model>dynamicprocedure</turbulence_model>
             <reacting_flow>true</reacting_flow>
             <solve_enthalpy>true</solve_enthalpy>	
 	    <solve_reactingscalar>false</solve_reactingscalar>
@@ -204,7 +205,7 @@
 	        <ref_point>[-1,-1,-1]</ref_point>
 	        <radiation>true</radiation>
 	        <filter_drhodt>false</filter_drhodt>
-	        <opl>3.0</opl>
+	        <opl>0.108</opl>
 	        <empirical_soot>true</empirical_soot>
                 <discrete_ordinates>true</discrete_ordinates>
 	        <mixing_model>StaticMixingTable</mixing_model>
@@ -223,7 +224,7 @@
 	    <BoundaryConditions>
 	        <ramping_inlet_flowrate>false</ramping_inlet_flowrate>
 		<FlowInlet>
-		    <Flow_rate>0.03044</Flow_rate>
+		    <Flow_rate>0.002</Flow_rate>
 		    <MixtureFraction>
 			<Mixfrac>1.0</Mixfrac>
 	            </MixtureFraction>
@@ -364,7 +365,7 @@
                     <radiationCalcFreq>5</radiationCalcFreq>
                     <radCalcForAllRKSteps>false</radCalcForAllRKSteps>
                     <DORadiationModel>
-	                <opl>3.0</opl>
+	                <opl>0.108</opl>
                         <ordinates>2</ordinates>
                     </DORadiationModel>
 		    <finite_difference>second</finite_difference>
