@@ -26,23 +26,13 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
 # Makefile fragment for this subdirectory
-
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/ImportExport/Matrix
 
 SRCS +=	$(SRCDIR)/ExecConverter.cc \
 	$(SRCDIR)/MatrixIEPlugin.cc
 
-PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
-	Core/Thread Core/Geometry Core/GuiInterface \
-	Core/Math Core/Util Core/Datatypes
-LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
-INCLUDES += $(BLAS_INCLUDE)
+# PSELIBS and LIBS come from the ImportExport sub.mk file (one dir up).
 
 
