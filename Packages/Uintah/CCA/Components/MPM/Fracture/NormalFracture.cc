@@ -241,11 +241,21 @@ void NormalFracture::computeConnectivity(
     for(ParticleSubset::iterator iter = pset_p->begin();
           iter != pset_p->end(); iter++)
     {
-      particleIndex pIdx_p = *iter;
-      particleIndex pIdx_pg = pIdxEx[pIdx_p];
+      bool do_continue;
+      particleIndex pIdx_p, pIdx_pg;
+      do {
+	pIdx_p = *iter;
+	pIdx_pg = pIdxEx[pIdx_p];
 
-      pIsolated_p_new[pIdx_p] = pIsolated_pg[pIdx_pg];
-      if(pIsolated_pg[pIdx_pg]) continue;
+	pIsolated_p_new[pIdx_p] = pIsolated_pg[pIdx_pg];
+
+	// This mess is just to replace "if (pIsolated_pg[pIdx_pg]) continue"
+	// which the LANL compiler can't handle because of an apparent compiler
+	// bug.
+	bool do_continue = pIsolated_pg[pIdx_pg];
+	if (do_continue) iter++;
+      }
+      while(do_continue);
     
       pContactNormal_p_new[pIdx_p] = zero;
     
