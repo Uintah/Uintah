@@ -1844,7 +1844,7 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
       // compute the ColorMap index and retreive the color
       double cmin = color_handle->getMin();
       double cmax = color_handle->getMax();
-      double index = (dval - cmin)/(cmax - cmin);
+      double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
       const Color &c = color_handle->getColor(index);
 
 //        cerr<<"inputting color into the texture, idx = "<<idx
@@ -1892,7 +1892,7 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
        // compute the ColorMap index and retreive the color
        double cmin = color_handle->getMin();
        double cmax = color_handle->getMax();
-       double index = (dval - cmin)/(cmax - cmin);
+       double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
        const Color &c = color_handle->getColor(index);
 
        //        cerr<<"inputting color into the texture, idx = "<<idx
