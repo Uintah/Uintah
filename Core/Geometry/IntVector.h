@@ -194,6 +194,13 @@ inline IntVector Min(const IntVector& a, const IntVector& b) {
 inline IntVector Max(const IntVector& a, const IntVector& b) {
   return IntVector(Max(a.x(), b.x()), Max(a.y(), b.y()), Max(a.z(), b.z()));
 }
+inline IntVector Abs(const IntVector& v)
+{
+    int x=v.x()<0?-v.x():v.x();
+    int y=v.y()<0?-v.y():v.y();
+    int z=v.z()<0?-v.z():v.z();
+    return IntVector(x,y,z);
+}
 
 } // End namespace SCIRun
 
