@@ -38,14 +38,20 @@ itcl_class Teem_UnuAtoM_UnuGamma {
         set_defaults
     }
     method set_defaults {} {
-        global $this-axis
-        set $this-axis 0
+        global $this-gamma
+        set $this-gamma 0
 
         global $this-min
         set $this-min 1.0
 
+	global $this-useinputmin
+	set $this-useinputmin 1
+
         global $this-max
         set $this-max 1.0
+
+	global $this-useinputmax
+	set $this-useinputmax 1
     }
 
     method ui {} {
@@ -62,11 +68,27 @@ itcl_class Teem_UnuAtoM_UnuGamma {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.axis -labeltext "Axis:" -textvariable $this-axis
-        pack $w.f.options.axis -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.min -labeltext "Min:" -textvariable $this-min
+        iwidgets::entryfield $w.f.options.gamma -labeltext "Gamma:" \
+	    -textvariable $this-gamma
+        pack $w.f.options.gamma -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.min -labeltext "Min:" \
+	    -textvariable $this-min
         pack $w.f.options.min -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.max -labeltext "Max:" -textvariable $this-max
+
+        checkbutton $w.f.options.useinputmin \
+	    -text "Use lowest value of input nrrd as min:" \
+	    -variable $this-useinputmin
+        pack $w.f.options.useinputmin -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.max -labeltext "Max:" \
+	    -textvariable $this-max
+	pack $w.f.options.max -side top -expand yes -fill x
+
+        checkbutton $w.f.options.useinputmax \
+	    -text "Use highest value of input nrrd as max:" \
+	    -variable $this-useinputmax
+        pack $w.f.options.useinputmax -side top -expand yes -fill x
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w

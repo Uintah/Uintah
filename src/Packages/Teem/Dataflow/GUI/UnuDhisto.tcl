@@ -43,6 +43,12 @@ itcl_class Teem_UnuAtoM_UnuDhisto {
 
         global $this-log
         set $this-log 1
+
+	global $this-max
+	set $this-max 0
+
+	global $this-usemax
+	set $this-usemax 0
     }
 
     method ui {} {
@@ -59,11 +65,21 @@ itcl_class Teem_UnuAtoM_UnuDhisto {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.height -labeltext "height:" -textvariable $this-height
+        iwidgets::entryfield $w.f.options.height \
+	    -labeltext "Height:" -textvariable $this-height
         pack $w.f.options.height -side top -expand yes -fill x
 
-        checkbutton $w.f.options.log -text "Show log-scaled histogram:" -variable $this-log
+        checkbutton $w.f.options.log \
+	    -text "Show log-scaled histogram:" -variable $this-log
         pack $w.f.options.log -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.max \
+	    -labeltext "Max Number of Hits:" -textvariable $this-max
+        pack $w.f.options.max -side top -expand yes -fill x
+
+        checkbutton $w.f.options.usemax \
+	    -text "Use Max Number of Hits:" -variable $this-usemax
+        pack $w.f.options.usemax -side top -expand yes -fill x
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w

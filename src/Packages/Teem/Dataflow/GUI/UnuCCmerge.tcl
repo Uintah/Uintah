@@ -63,11 +63,29 @@ itcl_class Teem_UnuAtoM_UnuCCmerge {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.dir \
-	    -labeltext "Value Driven Merging:" \
-	    -textvariable $this-dir
-        pack $w.f.options.dir -side top -expand yes -fill x
+	iwidgets::labeledframe $w.f.options.dir \
+	    -labeltext "Value Driven Merging" \
+	    -labelpos nw
+	pack $w.f.options.dir -side top -expand yes -fill x
 
+	set dir [$w.f.options.dir childsite]
+
+	radiobutton $dir.dir1 \
+	    -text "Default - Merging can go either way" \
+	    -variable $this-dir \
+	    -value {0}
+	
+	radiobutton $dir.dir2 \
+	    -text "Dark islands get merged with bright surrounds" \
+	    -variable $this-dir \
+	    -value 1
+
+	radiobutton $dir.dir3 \
+	    -text "Bright surrounds get merged with dark islands" \
+	    -variable $this-dir \
+	    -value {-1}
+
+        pack $dir.dir1 $dir.dir2 $dir.dir3 -side top -anchor nw
         iwidgets::entryfield $w.f.options.maxsize \
 	    -labeltext "Max Size:" -textvariable $this-maxsize
         pack $w.f.options.maxsize -side top -expand yes -fill x

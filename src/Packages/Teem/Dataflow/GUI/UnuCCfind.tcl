@@ -39,6 +39,14 @@ itcl_class Teem_UnuAtoM_UnuCCfind {
     method set_defaults {} {
 	global $this-connectivity
 	set $this-connectivity 1
+
+	global $this-type
+	set $this-type nrrdTypeInt
+
+	global $this-usetype
+	set $this-usetype 1
+
+	trace variable $this-type w "$this set_type"
     }
 
     method ui {} {
@@ -54,6 +62,17 @@ itcl_class Teem_UnuAtoM_UnuCCfind {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
+	iwidgets::optionmenu $w.f.options.type -labeltext "Type:" \
+	    -labelpos w -command "$this update_type $w.f.options.type"
+	$w.f.options.type insert end nrrdTypeUChar \
+	    nrrdTypeUShort nrrdTypeInt 
+	pack $w.f.options.type -side top -anchor nw -padx 3 -pady 3
+	$w.f.options.type select [set $this-type]
+
+	checkbutton $w.f.options.usetype -text "Use smallest for output type" \
+	    -variable $this-usetype
+	pack $w.f.options.usetype -side top -anchor nw -padx 3 -pady 3 
+
         iwidgets::entryfield $w.f.options.connectivity -labeltext "Connectivity:" -textvariable $this-connectivity
         pack $w.f.options.connectivity -side top -expand yes -fill x
 
@@ -61,6 +80,20 @@ itcl_class Teem_UnuAtoM_UnuCCfind {
 	moveToCursor $w
 
 	pack $w.f -expand 1 -fill x
+    }
+
+    method update_type {menu} {
+	global $this-type
+	set which [$menu get]
+	set $this-type $which
+    }
+
+    method set_type { name1 name2 op } {
+	set w .ui[modname]
+	set menu $w.f.options.type
+	if {[winfo exists $menu]} {
+	    $menu select [set $this-type]
+	}
     }
 }
 
