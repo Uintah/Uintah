@@ -56,5 +56,7 @@ public:
 			   Hit& hit);
 };
 
+typedef GeomCone GeomCappedCone;
+
 #endif /* SCI_Geom_Cone_h */
 
