@@ -186,7 +186,7 @@ tkMain(argc, argv)
     if (synchronize) {
 	XSynchronize(Tk_Display(mainWindow), True);
     }
-    Tk_GeometryRequest(mainWindow, 200, 200);
+/*    Tk_GeometryRequest(mainWindow, 200, 200); */
 
     /*
      * Make command-line arguments available in the Tcl variables "argc"
@@ -340,7 +340,6 @@ StdinProc(clientData, mask)
     char *cmd;
     int code, count;
 
-    fprintf(stderr, "Reading from standard input...\n");
     count = read(fileno(stdin), input, BUFFER_SIZE);
     if (count <= 0) {
 	if (!gotPartial) {
