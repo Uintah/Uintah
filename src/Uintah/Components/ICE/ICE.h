@@ -12,7 +12,7 @@ namespace Components {
 using Uintah::Interface::CFDInterface;
 using Uintah::Interface::DataWarehouseP;
 using Uintah::Interface::SchedulerP;
-using Uintah::Grid::ProblemSpecP;
+using Uintah::Interface::ProblemSpecP;
 using Uintah::Grid::LevelP;
 using Uintah::Grid::GridP;
 

@@ -6,13 +6,13 @@
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Interface/SchedulerP.h>
-#include <Uintah/Grid/ProblemSpecP.h>
+#include <Uintah/Interface/ProblemSpecP.h>
 
 namespace Uintah {
 namespace Components {
 
 using Uintah::Parallel::UintahParallelComponent;
-using Uintah::Grid::ProblemSpecP;
+using Uintah::Interface::ProblemSpecP;
 using Uintah::Grid::LevelP;
 using Uintah::Grid::GridP;
 using Uintah::Interface::SchedulerP;
@@ -68,6 +68,10 @@ private:
 
 //
 // $Log$
+// Revision 1.4  2000/03/23 20:42:17  sparker
+// Added copy ctor to exception classes (for Linux/g++)
+// Helped clean up move of ProblemSpec from Interface to Grid
+//
 // Revision 1.3  2000/03/17 20:58:31  dav
 // namespace updates
 //

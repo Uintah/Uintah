@@ -13,7 +13,6 @@ namespace Uintah {
 namespace Interface {
 
 using Uintah::Parallel::UintahParallelPort;
-using Uintah::Interface::ProblemSpecP;
 using Uintah::Grid::LevelP;
 using Uintah::Grid::GridP;
 
@@ -76,6 +75,10 @@ private:
 
 //
 // $Log$
+// Revision 1.6  2000/03/23 20:42:24  sparker
+// Added copy ctor to exception classes (for Linux/g++)
+// Helped clean up move of ProblemSpec from Interface to Grid
+//
 // Revision 1.5  2000/03/23 20:00:16  jas
 // Changed the include files, namespace, and using statements to reflect the
 // move of ProblemSpec from Grid/ to Interface/.
