@@ -54,8 +54,7 @@ class  IntVector;
 class SCICORESHARE GeomObj : public Persistent {
 public:
   int ref_cnt;
-  Mutex lock;
-
+  Mutex &lock;
 
   GeomObj(int id = 0x1234567);
   GeomObj(IntVector id);
@@ -83,6 +82,7 @@ public:
   virtual bool getId( IntVector& ){ return false; }
 
   PropertyManager& properties() { return _properties; }
+
 protected:
 
   int id;
