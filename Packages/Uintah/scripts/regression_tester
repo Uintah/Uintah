@@ -199,7 +199,8 @@ num_proc () {
 
 run_test () {
     cd $results
-    input_file=../$INPUTS/$CASE/$n.ups
+    cp ../$INPUTS/$CASE/$n.ups ../
+    input_file=../$n.ups
    
     num_proc
    
@@ -212,6 +213,7 @@ run_test () {
 
     echo; echo "Running $MPI sus $opts $input_file"
     $MPI ../sus $opts $input_file &> $n.out
+    rm $input_file
 
     success=`grep "successfully" $n.out`
     if test -n "$success";
