@@ -50,10 +50,11 @@ else
 SONAMEFLAG = 
 endif
 
+# Avoid error message when no .d files by specifying nonexistant filename.
 ifneq ($(MAKECMDGOALS),)
-include $(MAKECMDGOALS:.$(SO_OR_A_FILE)=.d)
+-include dummyfile $(MAKECMDGOALS:.$(SO_OR_A_FILE)=.d)
 else
-include $(SRCS:.cc=.d)
+-include dummyfile $(SRCS:.cc=.d)
 endif
 .SECONDARY:
 
@@ -66,14 +67,14 @@ all: $(OTF_LIBS)
           [ -s $@ ] || rm -f $@
 
 %.o : %.cc %.d
+	rm -f $@ $(*).so $(*).dylib
 	$(CXX) -c $(CFLAGS) $(INCLUDES) $< -o $@ 
 
 %.so : %.o 
-	rm -f $@
 	$(CXX) $(CFLAGS) $(INCLUDES) $(SOFLAGS) $< -o $@ 
 
 %.dylib : %.o 
-	rm -f $@
-	$(CXX) $(CFLAGS) $(INCLUDES) $(SOFLAGS) $< -o $@ -L$(LIB_DIR) $(LIBS)
+	$(CXX) $(CFLAGS) $(INCLUDES) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(LIBS)
 
-
+clean::
+	@rm -f *.o *.d *.cc *.dylib *.so *.log *~
