@@ -11,7 +11,7 @@ using namespace Uintah;
 using namespace std;
 using namespace SCIRun;
 
-extern Mutex varLock;
+extern Mutex MPITypeLock;
 
 ParticleVariableBase::~ParticleVariableBase()
 {	
@@ -48,8 +48,6 @@ ParticleVariableBase& ParticleVariableBase::operator=(const ParticleVariableBase
 void ParticleVariableBase::getMPIBuffer(BufferInfo& buffer,
 					ParticleSubset* sendset)
 {
-  varLock.lock();
-
   const TypeDescription* td = virtualGetTypeDescription()->getSubType();
 
   //  cerr << "ParticleVariableBase::getMPIBuffer for a " <<  td->getName() 
@@ -77,13 +75,13 @@ void ParticleVariableBase::getMPIBuffer(BufferInfo& buffer,
     MPI_Datatype datatype;
 
     //    cerr << "cnt: " << count << ", buf: " << buf << "\n";
-
+   MPITypeLock.lock();
     MPI_Type_indexed(count, &blocklens[0],
 		     sendset->getPointer(), td->getMPIType(), &datatype);
     MPI_Type_commit(&datatype);
+   MPITypeLock.unlock();
+    
     buffer.add(buf, 1, datatype, true);
   } 
-
-  varLock.unlock();
 }
 
