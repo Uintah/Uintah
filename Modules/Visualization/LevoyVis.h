@@ -217,5 +217,6 @@ public:
   virtual void PerspectiveTrace( int from, int till );
 };
 
-  
+void ContinuousRedraw();
+
 #endif

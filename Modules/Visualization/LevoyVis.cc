@@ -304,7 +304,6 @@ Levoy::SetUp ( ScalarFieldRG * grid, Array1<double> * ScalarVals,
     CastRay = &Levoy::Eight;
   else // user defined SV-color map
     CastRay = &Levoy::Nine;
-
 }
 /**************************************************************************
  *
@@ -631,8 +630,6 @@ LevoyS::SetUp ( GeometryData * g, int stepsize )
 
   if ( g->yres > VIEW_PORT_SIZE )
     g->yres = VIEW_PORT_SIZE;
-
-  cerr << "The new resolutions are: " << g->xres << " " << g->yres << endl;
 
   // create and initialize the array containing the image
 
@@ -1020,4 +1017,10 @@ Levoy::TraceRays ( int projectionType )
     {
       PerspectiveTrace( 0, xres );
     }
+}
+
+
+void
+ContinuousRedraw()
+{
 }
