@@ -12,8 +12,142 @@
 #include <Packages/Uintah/Core/Grid/fillFace.h>
 #include <typeinfo>
 
+/*`==========TESTING==========*/
+#define JET_BC 0
+/*==========TESTING==========`*/
+
+
 using namespace Uintah;
 namespace Uintah {
+
+/*`==========TESTING==========*/
+/* ---------------------------------------------------------------------
+    Add a source at the boundaries
+    Currently hard coded to a jet
+ ---------------------------------------------------------------------*/    
+bool insideOfObject(const int i, 
+                    const int k, 
+                    const Patch* patch)
+{
+  Vector dx = patch->dCell();
+  //__________________________________
+  //  Hard coded for a jet 
+  Vector origin(0.5, 0.0, 0.0);         // origin of jet
+  double radius = 0.2;                  // radius of jet
+  double x = (double) (i) * dx.x() + dx.x()/2.0;
+  double z = (double) (k) * dx.z() + dx.z()/2.0;
+
+  double delX = origin.x() - x;
+  double delZ = origin.z() - z;
+  double h    = sqrt(delX * delX + delZ * delZ);
+  
+  if (h < radius) {               // if inside the jet then
+    return true;
+  }
+  return false;
+}
+
+/* ---------------------------------------------------------------------
+    Add a source at the boundaries
+    Currently hard coded to a jet
+   ---------------------------------------------------------------------*/
+  template <class V, class T> void 
+      AddSourceBC(V& var, const Patch* patch, 
+		    Patch::FaceType face,                                
+		    const T& value,                                      
+		    IntVector offset = IntVector(0,0,0))                    
+{ 
+  //__________________________________
+  //  hard coded to only apply on yminus
+  Patch::FaceType faceToApplyBC = Patch::yminus;
+  
+  
+  
+  IntVector low,hi;
+  low = var.getLowIndex() + offset;
+  hi = var.getHighIndex() - offset;
+  
+  //__________________________________
+  // 
+  int oneZero = 0;
+  if (typeid(V) == typeid(SFCXVariable<double>)){
+    oneZero = 1;
+  }
+
+  if (typeid(V) == typeid(SFCYVariable<double>)){
+    oneZero = 1;
+  }
+
+  if (typeid(V) == typeid(SFCZVariable<double>)){
+    oneZero = 1;
+  }
+
+
+  if(face == faceToApplyBC) {
+    switch (face) {
+    case Patch::xplus:
+      for (int j = low.y(); j<hi.y(); j++) {
+        for (int k = low.z(); k<hi.z(); k++) {
+         if (insideOfObject(j, k,patch)) {            
+	    var[IntVector(hi.x()-1,j,k)] = value;
+         }
+        }
+      }
+      break;
+    case Patch::xminus:
+      for (int j = low.y(); j<hi.y(); j++) {
+        for (int k = low.z(); k<hi.z(); k++) {
+          if (insideOfObject(j, k,patch)) {
+	     var[IntVector(low.x() + oneZero,j,k)] = value;
+          }
+        }
+      }
+      break;
+    case Patch::yplus:
+      for (int i = low.x(); i<hi.x(); i++) {
+        for (int k = low.z(); k<hi.z(); k++) {
+          if (insideOfObject(i, k,patch)) {
+	     var[IntVector(i,hi.y()-1,k)] = value;
+          }
+        }
+      }
+      break;
+    case Patch::yminus:
+      for (int i = low.x(); i<hi.x(); i++) {
+        for (int k = low.z(); k<hi.z(); k++) {
+          if (insideOfObject(i, k,patch)) {
+	     var[IntVector(i,low.y() + oneZero,k)] = value;
+            cout << " I'm applying BC at "<< IntVector(i,low.y() + oneZero,k) << " " << value << endl;
+          }
+        }
+      }
+      break;
+    case Patch::zplus:
+      for (int i = low.x(); i<hi.x(); i++) {
+        for (int j = low.y(); j<hi.y(); j++) {
+          if (insideOfObject(i, j,patch)) {
+	     var[IntVector(i,j,hi.z()-1)] = value;
+          }
+        }
+      }
+      break;
+    case Patch::zminus:
+      for (int i = low.x(); i<hi.x(); i++) {
+        for (int j = low.y(); j<hi.y(); j++) {
+          if (insideOfObject(i, j,patch)) {
+	     var[IntVector(i,j,low.z() + oneZero)] = value;
+          }
+        }
+      }
+      break;
+    case Patch::numFaces:
+      break;
+    case Patch::invalidFace:
+      break;
+    }
+  }
+} 
+/*==========TESTING==========`*/
 
 //______________________________________________________________________
 // Update pressure boundary conditions due to hydrostatic pressure
@@ -151,7 +285,7 @@ void setBC(CCVariable<double>& press_CC,
             rho_micro_tmp[c] = rho_micro[c];
           }
         }
-       setHydrostaticPressureBC(press_CC,face, gravity, rho_micro, dx, offset);
+       setHydrostaticPressureBC(press_CC,face, gravity, rho_micro_tmp, dx, offset);
       }
     }
   }
@@ -237,6 +371,14 @@ void setBC(CCVariable<double>& variable, const string& kind,
             }  // if(ice_matl) 
           }  // if(gravity)
         }  // if(Neumann)
+/*`==========TESTING==========*/
+#if JET_BC
+        cout << " I'm in Temperature "<< endl;
+        double hardCodedTemperature = 1000;
+        AddSourceBC<CCVariable<double> >(variable, patch, face,
+                               hardCodedTemperature, offset);  
+ #endif 
+/*==========TESTING==========`*/ 
       }  //  if(Temperature)
     }  // if(new_bc)
   }  // Patch loop
@@ -282,8 +424,6 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
     if (new_bcs != 0 && kind == "Velocity") {
       if (new_bcs->getKind() == "Dirichlet"){ 
        fillFace(variable,face,new_bcs->getValue(), offset);
-       
-
       }
 
       if (new_bcs->getKind() == "Neumann") {
@@ -298,31 +438,13 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
       }
       
 /*`==========TESTING==========*/
-#if 0
-        // jet boundary conditions
-         Vector origin(0.5, 0.0, 0.5);
-         double radius = 0.11;
-
-         IntVector low = variable.getLowIndex();
-         IntVector hi  = variable.getHighIndex();
-         for (int i = low.x(); i<hi.x(); i++) {
-           for (int k = low.z(); k<hi.z(); k++) {
-
-             double x = (double) (i) * dx.x() + dx.x()/2.0;
-             double z = (double) (k) * dx.z() + dx.z()/2.0;
-
-             double delX = origin.x() - x;
-             double delZ = origin.z() - z;
-             double h    = sqrt(delX * delX + delZ * delZ);
-
-             if (h < radius) {
-               //cout << "I'm going to set BC "<< i << " , "<< k << endl;
-               variable[IntVector(i,low.y(),k)] = Vector(0.0, 100.0, 0.0);
-             }
-           }
-         }
+#if JET_BC
+        cout << " I'm in VelocityBC "<< endl;
+        Vector hardCodedVelocity(0,10,0);
+        AddSourceBC<CCVariable<Vector> >(variable, patch, face, 
+                                            hardCodedVelocity, offset);  
  #endif 
-/*==========TESTING==========`*/     
+/*==========TESTING==========`*/ 
     }  // end velocity loop
   }  // end face loop
 }
@@ -556,6 +678,15 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
 					  new_bcs->getValue().y(), dx, offset);
       }
     }
+/*`==========TESTING==========*/
+#if JET_BC
+        cout << " I'm in SFCYVariable "<< endl;
+        double hardCodedVelocity = 10;
+        AddSourceBC<SFCYVariable<double> >(variable, patch, face, 
+                                            hardCodedVelocity, offset);  
+ #endif 
+/*==========TESTING==========`*/ 
+
   }
 }
 /* --------------------------------------------------------------------- 
