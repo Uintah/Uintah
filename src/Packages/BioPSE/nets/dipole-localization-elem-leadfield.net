@@ -212,7 +212,7 @@ set $m9-current {0}
 set $m9-execmode {play}
 set $m10-notes {}
 set $m10-show_status {1}
-set $m10-use_cache_gui_ {0}
+set $m10-use_cache_gui_ {1}
 set $m11-notes {}
 set $m11-show_status {1}
 set $m11-filename $DATADIR/$DATASET/$DATASET-dipole.pcv.fld

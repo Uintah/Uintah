@@ -93,6 +93,7 @@ class DipoleSearch : public Module {
   void simplex_search();
   void read_field_ports(int &valid_data, int &new_data);
   void organize_last_send();
+  int find_better_neighbor(int best, Array1<double>& sum);
 public:
   GuiInt use_cache_gui_;
   DipoleSearch(const string& id);
@@ -108,8 +109,8 @@ extern "C" Module* make_DipoleSearch(const string& id) {
 int DipoleSearch::NDIM_ = 3;
 int DipoleSearch::NSEEDS_ = 4;
 int DipoleSearch::NDIPOLES_ = 5;
-int DipoleSearch::MAX_EVALS_ = 100;
-double DipoleSearch::CONVERGENCE_ = 0.001;
+int DipoleSearch::MAX_EVALS_ = 1001;
+double DipoleSearch::CONVERGENCE_ = 0.0001;
 double DipoleSearch::OUT_OF_BOUNDS_MISFIT_ = 1000000;
 
 DipoleSearch::DipoleSearch(const string& id)
@@ -268,7 +269,7 @@ Vector DipoleSearch::eval_test_dipole() {
   if (vol_mesh_->locate(ci, Point(dipoles_(NSEEDS_,0), 
 				  dipoles_(NSEEDS_,1), 
 				  dipoles_(NSEEDS_,2)))) {
-    if (!cell_visited_[ci]) {
+    if (!cell_visited_[ci] || !use_cache_) {
       cell_visited_[ci]=1;
       send_and_get_data(NSEEDS_, ci);
     } else {
@@ -279,6 +280,38 @@ Vector DipoleSearch::eval_test_dipole() {
     misfit_[NSEEDS_]=OUT_OF_BOUNDS_MISFIT_;
     return (Vector(0,0,1));
   }
+}
+
+
+//! Check to see if any of the neighbors of the "best" dipole are better.
+
+int DipoleSearch::find_better_neighbor(int best, Array1<double>& sum) {
+  Point p(dipoles_(best, 0), dipoles_(best, 1), dipoles_(best, 2));
+  TetVolMesh::Cell::index_type ci;
+  vol_mesh_->locate(ci, p);
+  TetVolMesh::Cell::array_type ca;
+  vol_mesh_->get_neighbors(ca, ci);
+  for (int n=0; n<ca.size(); n++) {
+    Point p1;
+    vol_mesh_->get_center(p1, ca[n]);
+    dipoles_(NSEEDS_,0)=p1.x();
+    dipoles_(NSEEDS_,1)=p1.y();
+    dipoles_(NSEEDS_,2)=p1.z();
+    eval_test_dipole();
+    if (misfit_[NSEEDS_] < misfit_[best]) {
+//      cerr << "  test misfit="<<misfit_[NSEEDS_]<<"\n";
+      misfit_[best] = misfit_[NSEEDS_];
+      int i;
+      for (i=0; i<NDIM_; i++) {
+	sum[i] = sum[i] + dipoles_(NSEEDS_,i)-dipoles_(best,i);
+	dipoles_(best,i) = dipoles_(NSEEDS_,i);
+      }
+      for (i=NDIM_; i<NDIM_+3; i++)
+	dipoles_(best,i) = dipoles_(NSEEDS_,i);  // copy orientation data
+    }
+    return 1;
+  }
+  return 0;
 }
 
 
@@ -309,7 +342,6 @@ double DipoleSearch::simplex_step(Array1<double>& sum, double factor,
 
   return misfit_[NSEEDS_];
 }
-
 
 //! The simplex has been constructed -- now let's search for a minimal misfit
 
@@ -347,9 +379,17 @@ void DipoleSearch::simplex_search() {
 	(misfit_[worst]+misfit_[best]);
     }
 
-    if ((relative_tolerance < CONVERGENCE_) || 
-	(num_evals > MAX_EVALS_) || (stop_search_)) 
+    if (num_evals > MAX_EVALS_ || stop_search_) break;
+
+//    cerr << "misfit_["<<best<<"]="<<misfit_[best]<<"\n";
+    // make sure all of our neighbors are worse than us...
+    if (relative_tolerance < CONVERGENCE_) {
+      if (misfit_[best]>1.e-12 && find_better_neighbor(best, sum)) {
+	num_evals++;
+	continue;
+      }
       break;
+    }
 
     double step_misfit = simplex_step(sum, -1, worst);
     num_evals++;
