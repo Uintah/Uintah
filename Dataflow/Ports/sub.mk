@@ -16,7 +16,7 @@ SRCS     += $(SRCDIR)/BooleanPort.cc $(SRCDIR)/ColorMapPort.cc \
 	$(SRCDIR)/SurfacePort.cc $(SRCDIR)/VectorFieldPort.cc \
 	$(SRCDIR)/VoidStarPort.cc $(SRCDIR)/cMatrixPort.cc \
 	$(SRCDIR)/cVectorPort.cc \
-	$(SRCDIR)/SpanSpace.cc\
+	$(SRCDIR)/SpanSpace.cc $(SRCDIR)/SpanPort.cc \
 	$(SRCDIR)/templates.cc \
 	$(SRCDIR)/PathPort.cc
 
@@ -30,6 +30,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/07/27 17:13:22  yarden
+# add SpanPort
+#
 # Revision 1.5  2000/07/24 20:58:47  yarden
 # New datastructure to hold a SpanSpace (part of Noise)
 #
