@@ -50,6 +50,17 @@
        <override_restart_delt> 2.5e-10   </override_restart_delt>
        <!--<max_iterations>      10         </max_iterations>-->
    </Time>
+
+<!--  Use the following if you want to restart on a different
+      number of processors than was originally used.  You also
+      need to add -loadbalancer PLB to your command line.
+   <LoadBalancer>
+    <timestepInterval>5000</timestepInterval>
+    <cellFactor>.5</cellFactor>
+    <dynamicAlgorithm>static</dynamicAlgorithm>
+   </LoadBalancer>
+-->
+
    
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
