@@ -6,7 +6,7 @@ TCL_INCLUDE_DIR  = @TCL_INCLUDE_DIR@
 TK_INCLUDE_DIR   = @TK_INCLUDE_DIR@
 ITCL_INCLUDE_DIR = @ITCL_INCLUDE_DIR@
 
-SRCS     = ClipField.cc Downsample.cc ExtractSurfs.cc FieldFilter.cc \
+SRCS     = ClipField.cc Current.cc Downsample.cc ExtractSurfs.cc FieldFilter.cc \
 	   FieldGainCorrect.cc FieldMedianFilter.cc FieldRGAug.cc \
 	   FieldSeed.cc  GenField.cc Gradient.cc GradientMagnitude.cc \
 	   MergeTensor.cc OpenGL_Ex.cc PadField.cc SFRGfile.cc \

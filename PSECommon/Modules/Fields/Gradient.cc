@@ -76,59 +76,64 @@ void Gradient::execute()
     ScalarFieldRGBase* sfb=sf->getRGBase();
     if (sfug) {
 	VectorFieldUG* vfug;
-	if(interpolate.get()){
-	    vfug=new VectorFieldUG(VectorFieldUG::NodalValues);
-	    vfug->mesh=sfug->mesh;
-	    vfug->data.resize(sfug->data.size());
-	    Mesh* mesh=sfug->mesh.get_rep();
-	    int nnodes=mesh->nodes.size();
-	    Array1<Vector>& gradients=vfug->data;
-	    int i;
-	    for(i=0;i<nnodes;i++)
-		gradients[i]=Vector(0,0,0);
-	    int nelems=mesh->elems.size();
-	    for(i=0;i<nelems;i++){
-		if(i%1000 == 0)
-		    update_progress(i, nelems);
-		Element* e=mesh->elems[i];
-		Point pt;
-		Vector grad1, grad2, grad3, grad4;
-		/*double vol=*/mesh->get_grad(e, pt, grad1, grad2, grad3, grad4);
-		double v1=sfug->data[e->n[0]];
-		double v2=sfug->data[e->n[1]];
-		double v3=sfug->data[e->n[2]];
-		double v4=sfug->data[e->n[3]];
-		Vector gradient(grad1*v1+grad2*v2+grad3*v3+grad4*v4);
-		for(int j=0;j<4;j++){
-		    gradients[e->n[j]]+=gradient;
+	if (sfug->typ == ScalarFieldUG::NodalValues) {
+	    if(interpolate.get()){
+		vfug=new VectorFieldUG(VectorFieldUG::NodalValues);
+		vfug->mesh=sfug->mesh;
+		vfug->data.resize(sfug->data.size());
+		Mesh* mesh=sfug->mesh.get_rep();
+		int nnodes=mesh->nodes.size();
+		Array1<Vector>& gradients=vfug->data;
+		int i;
+		for(i=0;i<nnodes;i++)
+		    gradients[i]=Vector(0,0,0);
+		int nelems=mesh->elems.size();
+		for(i=0;i<nelems;i++){
+		    if(i%1000 == 0)
+			update_progress(i, nelems);
+		    Element* e=mesh->elems[i];
+		    Point pt;
+		    Vector grad1, grad2, grad3, grad4;
+		    /*double vol=*/mesh->get_grad(e, pt, grad1, grad2, grad3, grad4);
+		    double v1=sfug->data[e->n[0]];
+		    double v2=sfug->data[e->n[1]];
+		    double v3=sfug->data[e->n[2]];
+		    double v4=sfug->data[e->n[3]];
+		    Vector gradient(grad1*v1+grad2*v2+grad3*v3+grad4*v4);
+		    for(int j=0;j<4;j++){
+			gradients[e->n[j]]+=gradient;
+		    }
+		}
+		for(i=0;i<nnodes;i++){
+		    if(i%1000 == 0)
+			update_progress(i, nnodes);
+		    NodeHandle& n=mesh->nodes[i];
+		    gradients[i]*=1./(n->elems.size());
+		}
+	    } else {
+		vfug=new VectorFieldUG(VectorFieldUG::ElementValues);
+		vfug->mesh=sfug->mesh;
+		Mesh* mesh=sfug->mesh.get_rep();
+		int nelems=mesh->elems.size();
+		vfug->data.resize(nelems);
+		for(int i=0;i<nelems;i++){
+		    //	    if(i%10000 == 0)
+		    //		update_progress(i, nelems);
+		    Element* e=mesh->elems[i];
+		    Point pt;
+		    Vector grad1, grad2, grad3, grad4;
+		    /*double vol=*/mesh->get_grad(e, pt, grad1, grad2, grad3, grad4);
+		    double v1=sfug->data[e->n[0]];
+		    double v2=sfug->data[e->n[1]];
+		    double v3=sfug->data[e->n[2]];
+		    double v4=sfug->data[e->n[3]];
+		    Vector gradient(grad1*v1+grad2*v2+grad3*v3+grad4*v4);
+		    vfug->data[i]=gradient;
 		}
 	    }
-	    for(i=0;i<nnodes;i++){
-		if(i%1000 == 0)
-		    update_progress(i, nnodes);
-		NodeHandle& n=mesh->nodes[i];
-		gradients[i]*=1./(n->elems.size());
-	    }
 	} else {
-	    vfug=new VectorFieldUG(VectorFieldUG::ElementValues);
-	    vfug->mesh=sfug->mesh;
-	    Mesh* mesh=sfug->mesh.get_rep();
-	    int nelems=mesh->elems.size();
-	    vfug->data.resize(nelems);
-	    for(int i=0;i<nelems;i++){
-		//	    if(i%10000 == 0)
-		//		update_progress(i, nelems);
-		Element* e=mesh->elems[i];
-		Point pt;
-		Vector grad1, grad2, grad3, grad4;
-		/*double vol=*/mesh->get_grad(e, pt, grad1, grad2, grad3, grad4);
-		double v1=sfug->data[e->n[0]];
-		double v2=sfug->data[e->n[1]];
-		double v3=sfug->data[e->n[2]];
-		double v4=sfug->data[e->n[3]];
-		Vector gradient(grad1*v1+grad2*v2+grad3*v3+grad4*v4);
-		vfug->data[i]=gradient;
-	    }
+	    cerr << "Gradient: I don't know how to take element-value gradients.\n";
+	    return;
 	}
 	vf=vfug;
     } else {
@@ -179,6 +184,19 @@ void Gradient::execute()
 
 //
 // $Log$
+// Revision 1.8  2000/10/29 04:34:51  dmw
+// BuildFEMatrix -- ground an arbitrary node
+// SolveMatrix -- when preconditioning, be careful with 0's on diagonal
+// MeshReader -- build the grid when reading
+// SurfToGeom -- support node normals
+// IsoSurface -- fixed tet mesh bug
+// MatrixWriter -- support split file (header + raw data)
+//
+// LookupSplitSurface -- split a surface across a place and lookup values
+// LookupSurface -- find surface nodes in a sfug and copy values
+// Current -- compute the current of a potential field (- grad sigma phi)
+// LocalMinMax -- look find local min max points in a scalar field
+//
 // Revision 1.7  2000/03/17 09:26:58  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

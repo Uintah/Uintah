@@ -31,6 +31,7 @@ class MatrixWriter : public Module {
     MatrixIPort* inport;
     TCLstring filename;
     TCLstring filetype;
+    TCLint split;
 public:
     MatrixWriter(const clString& id);
     virtual ~MatrixWriter();
@@ -43,7 +44,7 @@ extern "C" Module* make_MatrixWriter(const clString& id) {
 
 MatrixWriter::MatrixWriter(const clString& id)
 : Module("MatrixWriter", id, Source), filename("filename", id, this),
-  filetype("filetype", id, this)
+  filetype("filetype", id, this), split("split", id, this)
 {
     // Create the output data handle and port
     inport=scinew MatrixIPort(this, "Input Data", MatrixIPort::Atomic);
@@ -72,6 +73,9 @@ void MatrixWriter::execute()
 	stream=scinew TextPiostream(fn, Piostream::Write);
     }
     // Write the file
+
+    handle->set_raw( split.get() );
+
     Pio(*stream, handle);
     delete stream;
 }
@@ -81,6 +85,19 @@ void MatrixWriter::execute()
 
 //
 // $Log$
+// Revision 1.8  2000/10/29 04:35:00  dmw
+// BuildFEMatrix -- ground an arbitrary node
+// SolveMatrix -- when preconditioning, be careful with 0's on diagonal
+// MeshReader -- build the grid when reading
+// SurfToGeom -- support node normals
+// IsoSurface -- fixed tet mesh bug
+// MatrixWriter -- support split file (header + raw data)
+//
+// LookupSplitSurface -- split a surface across a place and lookup values
+// LookupSurface -- find surface nodes in a sfug and copy values
+// Current -- compute the current of a potential field (- grad sigma phi)
+// LocalMinMax -- look find local min max points in a scalar field
+//
 // Revision 1.7  2000/03/17 09:27:41  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

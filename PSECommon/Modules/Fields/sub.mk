@@ -28,6 +28,7 @@ SRCS     += \
 	$(SRCDIR)/FieldSeed.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/GradientMagnitude.cc\
+	$(SRCDIR)/LocalMinMax.cc\
 	$(SRCDIR)/MergeTensor.cc\
 	$(SRCDIR)/OpenGL_Ex.cc\
 	$(SRCDIR)/SFRGfile.cc\
@@ -51,6 +52,19 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.8  2000/10/29 04:34:52  dmw
+# BuildFEMatrix -- ground an arbitrary node
+# SolveMatrix -- when preconditioning, be careful with 0's on diagonal
+# MeshReader -- build the grid when reading
+# SurfToGeom -- support node normals
+# IsoSurface -- fixed tet mesh bug
+# MatrixWriter -- support split file (header + raw data)
+#
+# LookupSplitSurface -- split a surface across a place and lookup values
+# LookupSurface -- find surface nodes in a sfug and copy values
+# Current -- compute the current of a potential field (- grad sigma phi)
+# LocalMinMax -- look find local min max points in a scalar field
+#
 # Revision 1.7  2000/10/24 05:57:33  moulding
 # new module maker Phase 2: new module maker goes online
 #

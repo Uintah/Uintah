@@ -20,7 +20,8 @@ SRCDIR   := PSECommon/Modules/Surface
 SRCS     += \
 	$(SRCDIR)/GenSurface.cc\
 	$(SRCDIR)/LabelSurface.cc\
-	$(SRCDIR)/SFUGtoSurf.cc\
+	$(SRCDIR)/LookupSurface.cc\
+	$(SRCDIR)/LookupSplitSurface.cc\
 	$(SRCDIR)/SurfGen.cc\
 	$(SRCDIR)/SurfInterpVals.cc\
 	$(SRCDIR)/SurfNewVals.cc\
@@ -38,6 +39,19 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/10/29 04:34:57  dmw
+# BuildFEMatrix -- ground an arbitrary node
+# SolveMatrix -- when preconditioning, be careful with 0's on diagonal
+# MeshReader -- build the grid when reading
+# SurfToGeom -- support node normals
+# IsoSurface -- fixed tet mesh bug
+# MatrixWriter -- support split file (header + raw data)
+#
+# LookupSplitSurface -- split a surface across a place and lookup values
+# LookupSurface -- find surface nodes in a sfug and copy values
+# Current -- compute the current of a potential field (- grad sigma phi)
+# LocalMinMax -- look find local min max points in a scalar field
+#
 # Revision 1.6  2000/10/24 05:57:38  moulding
 # new module maker Phase 2: new module maker goes online
 #
