@@ -6,9 +6,9 @@
  *   James Purciful
  *   Department of Computer Science
  *   University of Utah
- *   Aug. 1994
+ *   Jan. 1995
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 1995 SCI Group
  */
 
 
@@ -17,7 +17,7 @@
 #include <Geometry/Vector.h>
 #include <Classlib/Debug.h>
 
-static DebugSwitch ac_debug("BaseConstraint", "Angle");
+static DebugSwitch ac_debug("Constraints", "Angle");
 
 AngleConstraint::AngleConstraint( const clString& name,
 				  const Index numSchemes,
@@ -43,14 +43,15 @@ AngleConstraint::~AngleConstraint()
 }
 
 
-void
-AngleConstraint::Satisfy( const Index index, const Scheme scheme )
+int
+AngleConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
+			  BaseVariable*& var, VarCore& c )
 {
-   PointVariable& v0 = *vars[0];
-   PointVariable& v1 = *vars[1];
-   PointVariable& v2 = *vars[2];
-   PointVariable& v3 = *vars[3];
-   RealVariable& v4 = *vars[4];
+   PointVariable& center = *vars[0];
+   PointVariable& end1 = *vars[1];
+   PointVariable& end2 = *vars[2];
+   PointVariable& p = *vars[3];
+   RealVariable& angle = *vars[4];
    Vector v;
 
    if (ac_debug) {
@@ -69,28 +70,31 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme )
       NOT_FINISHED("Line Constraint:  end2");
       break;
    case 3:
-      v = ((v1.GetPoint() - v0.GetPoint()) * cos(v4.GetReal())
-	   + (v2.GetPoint() - v0.GetPoint()) * sin(v4.GetReal()));
+      v = (((Point)end1 - center) * cos(angle) + ((Point)end2 - center) * sin(angle));
 
-      if (v.length2() < v3.GetEpsilon()) {
-	 v3.Assign(v1.GetPoint(), scheme);
+      if (v.length2() < Epsilon) {
+	 c = (Point)end1;
       } else {
 	 v.normalize();
-	 Real t = Dot(v3.GetPoint() - v0.GetPoint(), v);
-	 v3.Assign(v0.GetPoint() + (v * t), scheme);
+	 Real t = Dot((Point)p - center, v);
+	 c = (Point)center + (v * t);
       }
-      break;
+      var = vars[3];
+      return 1;
    case 4:
-      v = v3.GetPoint() - v0.GetPoint();
-      Real x(Dot(v1.GetPoint() - v0.GetPoint(),v));
-      Real y(Dot(v2.GetPoint() - v0.GetPoint(),v));
+      v = (Point)p - center;
+      Real x(Dot((Point)end1 - center,v));
+      Real y(Dot((Point)end2 - center,v));
       
-      if ((fabs(x) > v4.GetEpsilon()) || (fabs(y) > v4.GetEpsilon()))
-	 v4.Assign(atan2(y,x), scheme);
+      if ((fabs(x) > Epsilon) || (fabs(y) > Epsilon)) {
+	 var = vars[4];
+	 c = atan2(y,x);
+	 return 1;
+      }
       break;
    default:
       cerr << "Unknown variable in Angle Constraint!" << endl;
       break;
    }
+   return 0;
 }
-

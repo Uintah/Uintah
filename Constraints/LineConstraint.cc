@@ -16,7 +16,7 @@
 #include <Geometry/Vector.h>
 #include <Classlib/Debug.h>
 
-static DebugSwitch lc_debug("BaseConstraint", "Line");
+static DebugSwitch lc_debug("Constraints", "Line");
 
 LineConstraint::LineConstraint( const clString& name,
 				const Index numSchemes,
@@ -38,12 +38,13 @@ LineConstraint::~LineConstraint()
 }
 
 
-void
-LineConstraint::Satisfy( const Index index, const Scheme scheme )
+int
+LineConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
+			 BaseVariable*& var, VarCore& c )
 {
-   PointVariable& v0 = *vars[0];
-   PointVariable& v1 = *vars[1];
-   PointVariable& v2 = *vars[2];
+   PointVariable& p1 = *vars[0];
+   PointVariable& p2 = *vars[1];
+   PointVariable& p3 = *vars[2];
    Vector norm;
 
    if (lc_debug) {
@@ -53,38 +54,42 @@ LineConstraint::Satisfy( const Index index, const Scheme scheme )
    
    switch (ChooseChange(index, scheme)) {
    case 0:
-      norm = v2.GetPoint() - v1.GetPoint();
-      if (norm.length2() < v2.GetEpsilon()) {
-	 v0.Assign(v2.GetPoint(), scheme);
+      norm = (Point)p3 - p2;
+      if (norm.length2() < Epsilon) {
+	 c = (Point)p3;
       } else {
 	 norm.normalize();
-	 Real t = Dot(v0.GetPoint() - v1.GetPoint(), norm);
-	 v0.Assign(v1.GetPoint() + (norm * t), scheme);
+	 Real t = Dot((Point)p1 - p2, norm);
+	 c = (Point)p2 + (norm * t);
       }
-      break;
+      var = vars[0];
+      return 1;
    case 1:
-      norm = v2.GetPoint() - v0.GetPoint();
-      if (norm.length2() < v2.GetEpsilon()) {
-	 v1.Assign(v2.GetPoint(), scheme);
+      norm = (Point)p3 - p1;
+      if (norm.length2() < Epsilon) {
+	 c = (Point)p3;
       } else {
 	 norm.normalize();
-	 Real t = Dot(v1.GetPoint() - v0.GetPoint(), norm);
-	 v1.Assign(v0.GetPoint() + (norm * t), scheme);
+	 Real t = Dot((Point)p2 - p1, norm);
+	 c = (Point)p1 + (norm * t);
       }
-      break;
+      var = vars[1];
+      return 1;
    case 2:
-      norm = v1.GetPoint() - v0.GetPoint();
-      if (norm.length2() < v2.GetEpsilon()) {
-	 v2.Assign(v1.GetPoint(), scheme);
+      norm = (Point)p2 - p1;
+      if (norm.length2() < Epsilon) {
+	 c = (Point)p2;
       } else {
 	 norm.normalize();
-	 Real t = Dot(v2.GetPoint() - v0.GetPoint(), norm);
-	 v2.Assign(v0.GetPoint() + (norm * t), scheme);
+	 Real t = Dot((Point)p3 - p1, norm);
+	 c = (Point)p1 + (norm * t);
       }
-      break;
+      var = vars[2];
+      return 1;
    default:
       cerr << "Unknown variable in Line Constraint!" << endl;
       break;
    }
+   return 0;
 }
 

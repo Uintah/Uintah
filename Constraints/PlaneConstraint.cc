@@ -17,7 +17,7 @@
 #include <Geometry/Vector.h>
 #include <Classlib/Debug.h>
 
-static DebugSwitch pc_debug("BaseConstraint", "Plane");
+static DebugSwitch pc_debug("Constraints", "Plane");
 
 PlaneConstraint::PlaneConstraint( const clString& name,
 				  const Index numSchemes,
@@ -41,13 +41,14 @@ PlaneConstraint::~PlaneConstraint()
 }
 
 
-void
-PlaneConstraint::Satisfy( const Index index, const Scheme scheme )
+int
+PlaneConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
+			  BaseVariable*& var, VarCore& c )
 {
-   PointVariable& v0 = *vars[0];
-   PointVariable& v1 = *vars[1];
-   PointVariable& v2 = *vars[2];
-   PointVariable& v3 = *vars[3];
+   PointVariable& p1 = *vars[0];
+   PointVariable& p2 = *vars[1];
+   PointVariable& p3 = *vars[2];
+   PointVariable& p4 = *vars[3];
    Vector vec1, vec2;
 
    if (pc_debug) {
@@ -57,48 +58,57 @@ PlaneConstraint::Satisfy( const Index index, const Scheme scheme )
    
    switch (ChooseChange(index, scheme)) {
    case 0:
-      vec1 = (v1.GetPoint() - v2.GetPoint());
-      vec2 = (v3.GetPoint() - v2.GetPoint());
-      if (Cross(vec1, vec2).length2() < v0.GetEpsilon()) {
+      vec1 = ((Point)p2 - p3);
+      vec2 = ((Point)p4 - p3);
+      if (Cross(vec1, vec2).length2() < Epsilon) {
 	 if (pc_debug) cerr << "No Plane." << endl;
       } else {
-	 Plane plane(v1.GetPoint(), v2.GetPoint(), v3.GetPoint());
-	 v0.Assign(plane.project(v0.GetPoint()), scheme);
+	 Plane plane(p2, p3, p4);
+	 var = vars[0];
+	 c = plane.project(p1);
+	 return 1;
       }
       break;
    case 1:
-      vec1 = (v0.GetPoint() - v2.GetPoint());
-      vec2 = (v3.GetPoint() - v2.GetPoint());
-      if (Cross(vec1, vec2).length2() < v1.GetEpsilon()) {
+      vec1 = ((Point)p1 - p3);
+      vec2 = ((Point)p4 - p3);
+      if (Cross(vec1, vec2).length2() < Epsilon) {
 	 if (pc_debug) cerr << "No Plane." << endl;
       } else {
-	 Plane plane(v0.GetPoint(), v2.GetPoint(), v3.GetPoint());
-	 v1.Assign(plane.project(v1.GetPoint()), scheme);
+	 Plane plane(p1, p3, p4);
+	 var = vars[1];
+	 c = plane.project(p2);
+	 return 1;
       }
       break;
    case 2:
-      vec1 = (v0.GetPoint() - v1.GetPoint());
-      vec2 = (v3.GetPoint() - v1.GetPoint());
-      if (Cross(vec1, vec2).length2() < v2.GetEpsilon()) {
+      vec1 = ((Point)p1 - p2);
+      vec2 = ((Point)p4 - p2);
+      if (Cross(vec1, vec2).length2() < Epsilon) {
 	 if (pc_debug) cerr << "No Plane." << endl;
       } else {
-	 Plane plane(v0.GetPoint(), v1.GetPoint(), v3.GetPoint());
-	 v2.Assign(plane.project(v2.GetPoint()), scheme);
+	 Plane plane(p1, p2, p4);
+	 var = vars[2];
+	 c = plane.project(p3);
+	 return 1;
       }
       break;
    case 3:
-      vec1 = (v0.GetPoint() - v1.GetPoint());
-      vec2 = (v2.GetPoint() - v1.GetPoint());
-      if (Cross(vec1, vec2).length2() < v3.GetEpsilon()) {
+      vec1 = ((Point)p1 - p2);
+      vec2 = ((Point)p3 - p2);
+      if (Cross(vec1, vec2).length2() < Epsilon) {
 	 if (pc_debug) cerr << "No Plane." << endl;
       } else {
-	 Plane plane(v0.GetPoint(), v1.GetPoint(), v2.GetPoint());
-	 v3.Assign(plane.project(v3.GetPoint()), scheme);
+	 Plane plane(p1, p2, p3);
+	 var = vars[3];
+	 c = plane.project(p4);
+	 return 1;
       }
       break;
    default:
       cerr << "Unknown variable in Plane Constraint!" << endl;
       break;
    }
+   return 0;
 }
 

@@ -15,7 +15,7 @@
 #include <Constraints/PythagorasConstraint.h>
 #include <Classlib/Debug.h>
 
-static DebugSwitch pc_debug("BaseConstraint", "Pythagoras");
+static DebugSwitch pc_debug("Constraints", "Pythagoras");
 
 PythagorasConstraint::PythagorasConstraint( const clString& name,
 					    const Index numSchemes,
@@ -37,12 +37,13 @@ PythagorasConstraint::~PythagorasConstraint()
 }
 
 
-void
-PythagorasConstraint::Satisfy( const Index index, const Scheme scheme )
+int
+PythagorasConstraint::Satisfy( const Index index, const Scheme scheme, const Real,
+			       BaseVariable*& var, VarCore& c )
 {
-   RealVariable& v0 = *vars[0];
-   RealVariable& v1 = *vars[1];
-   RealVariable& v2 = *vars[2];
+   RealVariable& dist1 = *vars[0];
+   RealVariable& dist2 = *vars[1];
+   RealVariable& hypo = *vars[2];
    Real t;
 
    if (pc_debug) {
@@ -50,23 +51,32 @@ PythagorasConstraint::Satisfy( const Index index, const Scheme scheme )
       print();
    }
    
-   /* A^2 + B^2 = C^2 */
    switch (ChooseChange(index, scheme)) {
    case 0:
-      if ((t = v2.GetReal() * v2.GetReal() - v1.GetReal() * v1.GetReal()) >= 0.0)
-	 v0.Assign(sqrt(t), scheme);
+      if ((t = hypo * hypo - dist2 * dist2) >= 0.0) {
+	 var = vars[0];
+	 c = sqrt(t);
+	 return 1;
+      }
       break;
    case 1:
-      if ((t = v2.GetReal() * v2.GetReal() - v0.GetReal() * v0.GetReal()) >= 0.0)
-	 v1.Assign(sqrt(t), scheme);
+      if ((t = hypo * hypo - dist1 * dist1) >= 0.0) {
+	 var = vars[1];
+	 c = sqrt(t);
+	 return 1;
+      }
       break;
    case 2:
-      if ((t = v0.GetReal() * v0.GetReal() + v1.GetReal() * v1.GetReal()) >= 0.0)
-	 v2.Assign(sqrt(t), scheme);
+      if ((t = dist1 * dist1 + dist2 * dist2) >= 0.0) {
+	 var = vars[2];
+	 c = sqrt(t);
+	 return 1;
+      }
       break;
    default:
       cerr << "Unknown variable in Pythagoras Constraint!" << endl;
       break;
    }
+   return 0;
 }
 

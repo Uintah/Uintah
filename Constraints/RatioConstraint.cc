@@ -15,7 +15,7 @@
 #include <Constraints/RatioConstraint.h>
 #include <Classlib/Debug.h>
 
-static DebugSwitch rc_debug("BaseConstraint", "Ratio");
+static DebugSwitch rc_debug("Constraints", "Ratio");
 
 RatioConstraint::RatioConstraint( const clString& name,
 				  const Index numSchemes,
@@ -37,12 +37,13 @@ RatioConstraint::~RatioConstraint()
 }
 
 
-void
-RatioConstraint::Satisfy( const Index index, const Scheme scheme )
+int
+RatioConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
+			  BaseVariable*& var, VarCore& c )
 {
-   RealVariable& v0 = *vars[0];
-   RealVariable& v1 = *vars[1];
-   RealVariable& v2 = *vars[2];
+   RealVariable& numer = *vars[0];
+   RealVariable& denom = *vars[1];
+   RealVariable& ratio = *vars[2];
 
    if (rc_debug) {
       ChooseChange(index, scheme);
@@ -52,25 +53,29 @@ RatioConstraint::Satisfy( const Index index, const Scheme scheme )
    
    switch (ChooseChange(index, scheme)) {
    case 0:
-      v0.Assign(v1.GetReal() * v2.GetReal(), scheme);
-      break;
+      var = vars[0];
+      c = denom * ratio;
+      return 1;
    case 1:
-      if (v2.GetReal() < v1.GetEpsilon())
-	 temp = v1.GetReal(); // Don't change v1 since 0/any == 0
+      if (ratio < Epsilon)
+	 temp = denom; // Don't change denom since 0/any == 0
       else
-	 temp = v0.GetReal() / v2.GetReal();
-      v1.Assign(temp, scheme);
-      break;
+	 temp = numer / ratio;
+      var = vars[1];
+      c = temp;
+      return 1;
    case 2:
-      if (v1.GetReal() < v2.GetEpsilon())
-	 temp = v2.GetReal(); // Don't change v1 since 0/any == 0
+      if (denom < Epsilon)
+	 temp = ratio; // Don't change denom since 0/any == 0
       else
-	 temp = v0.GetReal() / v1.GetReal();
-      v2.Assign(temp, scheme);
-      break;
+	 temp = numer / denom;
+      var = vars[2];
+      c = temp;
+      return 1;
    default:
       cerr << "Unknown variable in Ratio Constraint!" << endl;
       break;
    }
+   return 0;
 }
 

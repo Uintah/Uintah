@@ -6,9 +6,9 @@
  *   James Purciful
  *   Department of Computer Science
  *   University of Utah
- *   Aug. 1994
+ *   Jan. 1995
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 1995 SCI Group
  */
 
 
@@ -28,7 +28,8 @@ public:
    virtual ~AngleConstraint();
 
 protected:
-   virtual void Satisfy( const Index index, const Scheme scheme );
+   virtual int Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
+			BaseVariable*& v, VarCore& c );
 };
 
 #endif

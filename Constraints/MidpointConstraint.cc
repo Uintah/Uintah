@@ -15,7 +15,7 @@
 #include <Constraints/MidpointConstraint.h>
 #include <Classlib/Debug.h>
 
-static DebugSwitch mc_debug("BaseConstraint", "Midpoint");
+static DebugSwitch mc_debug("Constraints", "Midpoint");
 
 MidpointConstraint::MidpointConstraint( const clString& name,
 					const Index numSchemes,
@@ -37,12 +37,13 @@ MidpointConstraint::~MidpointConstraint()
 }
 
 
-void
-MidpointConstraint::Satisfy( const Index index, const Scheme scheme )
+int
+MidpointConstraint::Satisfy( const Index index, const Scheme scheme, const Real,
+			     BaseVariable*& var, VarCore& c )
 {
-   PointVariable& v0 = *vars[0];
-   PointVariable& v1 = *vars[1];
-   PointVariable& v2 = *vars[2];
+   PointVariable& end1 = *vars[0];
+   PointVariable& end2 = *vars[1];
+   PointVariable& p = *vars[2];
 
    if (mc_debug) {
       ChooseChange(index, scheme);
@@ -51,17 +52,21 @@ MidpointConstraint::Satisfy( const Index index, const Scheme scheme )
    
    switch (ChooseChange(index, scheme)) {
    case 0:
-      v0.Assign(v1.GetPoint() + (v2.GetPoint() - v1.GetPoint()) * 2.0, scheme);
-      break;
+      var = vars[0];
+      c = (Point)end2 + ((Point)p - end2) * 2.0;
+      return 1;
    case 1:
-      v1.Assign(v0.GetPoint() + (v2.GetPoint() - v0.GetPoint()) * 2.0, scheme);
-      break;
+      var = vars[1];
+      c = (Point)end1 + ((Point)p - end1) * 2.0;
+      return 1;
    case 2:
-      v2.Assign(v0.GetPoint() + ((v1.GetPoint() - v0.GetPoint()) / 2.0), scheme);
-      break;
+      var = vars[2];
+      c = (Point)end1 + ((Point)end2 - end1) / 2.0;
+      return 1;
    default:
       cerr << "Unknown variable in Midpoint Constraint!" << endl;
       break;
    }
+   return 0;
 }
 

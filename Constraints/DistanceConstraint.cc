@@ -16,7 +16,7 @@
 #include <Geometry/Vector.h>
 #include <Classlib/Debug.h>
 
-static DebugSwitch dc_debug("BaseConstraint", "Distance");
+static DebugSwitch dc_debug("Constraints", "Distance");
 
 DistanceConstraint::DistanceConstraint( const clString& name,
 					const Index numSchemes,
@@ -39,12 +39,13 @@ DistanceConstraint::~DistanceConstraint()
 }
 
 
-void
-DistanceConstraint::Satisfy( const Index index, const Scheme scheme )
+int
+DistanceConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
+			     BaseVariable*& var, VarCore& c )
 {
-   PointVariable& v0 = *vars[0];
-   PointVariable& v1 = *vars[1];
-   RealVariable& v2 = *vars[2];
+   PointVariable& p1 = *vars[0];
+   PointVariable& p2 = *vars[1];
+   RealVariable& dist = *vars[2];
    Vector v;
    Real t;
 
@@ -55,56 +56,60 @@ DistanceConstraint::Satisfy( const Index index, const Scheme scheme )
    
    switch (ChooseChange(index, scheme)) {
    case 0:
-      v = (v0.GetPoint() - v1.GetPoint());
-      if (v.length2() < v0.GetEpsilon())
+      v = ((Point)p1 - p2);
+      if (v.length2() < Epsilon)
 	 v = guess;
       else
 	 v.normalize();
-      if (v2.GetReal() < minimum) {
+      if (dist < minimum) {
 	 t = minimum;
-	 v2.Assign(t, scheme);
       } else
-	 t = v2.GetReal();
-      v0.Assign(v1.GetPoint() + (v * t), scheme);
-      break;
+	 t = dist;
+      var = vars[0];
+      c = (Point)p2 + (v * t);
+      return 1;
    case 1:
-      v = (v1.GetPoint() - v0.GetPoint());
-      if (v.length2() < v1.GetEpsilon())
+      v = ((Point)p2 - p1);
+      if (v.length2() < Epsilon)
 	 v = guess;
       else
 	 v.normalize();
-      if (v2.GetReal() < minimum) {
+      if (dist < minimum) {
 	 t = minimum;
-	 v2.Assign(t, scheme);
       } else
-	 t = v2.GetReal();
-      v1.Assign(v0.GetPoint() + (v * t), scheme);
-      break;
+	 t = dist;
+      var = vars[1];
+      c = (Point)p1 + (v * t);
+      return 1;
    case 2:
-      t = (v1.GetPoint() - v0.GetPoint()).length();
+      t = ((Point)p2 - p1).length();
       if (t < minimum) {
 	 t = minimum;
-	 if (index == 1) {
-	    v = (v1.GetPoint() - v0.GetPoint());
-	    if (v.length2() < v1.GetEpsilon())
-	       v = guess;
-	    else
-	       v.normalize();
-	    v0.Assign(v0.GetPoint() + (v*t), scheme);
-	 } else {
-	    v = (v0.GetPoint() - v1.GetPoint());
-	    if (v.length2() < v0.GetEpsilon())
-	       v = guess;
-	    else
-	       v.normalize();
-	    v1.Assign(v1.GetPoint() + (v*t), scheme);
-	 }
       }
-      v2.Assign(t, scheme);
-      break;
+      var = vars[2];
+      c = t;
+      return 1;
    default:
       cerr << "Unknown variable in Distance Constraint!" << endl;
       break;
    }
+   return 0;
 }
+
+
+void
+DistanceConstraint::SetDefault( const Vector& v )
+{
+   guess = v;
+}
+
+
+void
+DistanceConstraint::SetMinimum( const Real min )
+{
+   ASSERT(min>0.0);
+
+   minimum = min;
+}
+
 

@@ -28,32 +28,17 @@ public:
 
    // Use this to set the default direction used when p1==p2.
    // Defaults to (1,0,0).
-   inline void SetDefault( const Vector& v );
-   inline void SetMinimum( const Real min );
+   void SetDefault( const Vector& v );
+   void SetMinimum( const Real min );
    
 protected:
-   virtual void Satisfy( const Index index, const Scheme scheme );
+   virtual int Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
+			BaseVariable*& var, VarCore& c );
 
 private:
    Vector guess;
    Real minimum;
 };
-
-
-inline void
-DistanceConstraint::SetDefault( const Vector& v )
-{
-   guess = v;
-}
-
-
-inline void
-DistanceConstraint::SetMinimum( const Real min )
-{
-   ASSERT(min>0.0);
-
-   minimum = min;
-}
 
 
 #endif

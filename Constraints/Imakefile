@@ -3,7 +3,10 @@
 
 #ifdef SCI_DIR_Constraints
 
-OBJS = BaseConstraint.o \
+OBJS = VarCore.o \
+	ConstraintSolver.o \
+	BaseVariable.o \
+	BaseConstraint.o \
 	AngleConstraint.o \
 	DistanceConstraint.o \
 	LineConstraint.o \
@@ -12,7 +15,10 @@ OBJS = BaseConstraint.o \
 	PythagorasConstraint.o \
 	RatioConstraint.o \
 	SegmentConstraint.o
-SRCS = BaseConstraint.cc \
+SRCS = VarCore.cc \
+	ConstraintSolver.cc \
+	BaseVariable.cc \
+	BaseConstraint.cc \
 	AngleConstraint.cc \
 	DistanceConstraint.cc \
 	LineConstraint.cc \
