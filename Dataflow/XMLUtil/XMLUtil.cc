@@ -45,12 +45,11 @@ const DOMNode* findNode(const std::string &name, const DOMNode *node)
   // Do the child nodes now - convert to char*
   const DOMNode *child = node->getFirstChild();
   while (child != 0) {
-    char* child_name = XMLString::transcode(child->getNodeName());
+    const char* child_name = to_char_ptr(child->getNodeName());
     if (child_name && strcmp(name.c_str(), child_name) == 0) {
       return child;
     }
     child = child->getNextSibling();
-    delete [] child_name;
   }
   return 0;
 }
@@ -61,12 +60,11 @@ const DOMNode* findNextNode(const std::string& name, const DOMNode* node)
   DOMNode* found_node = node->getNextSibling();
 
   while(found_node != 0){
-    char* found_node_name = XMLString::transcode(found_node->getNodeName());
+    const char* found_node_name = to_char_ptr(found_node->getNodeName());
     if (strcmp(name.c_str(), found_node_name) == 0 ) {
       break;
     }
     found_node = found_node->getNextSibling();
-    delete [] found_node_name;
   }
   return found_node;
 }
