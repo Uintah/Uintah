@@ -65,7 +65,6 @@ static int tty;			/* Non-zero means standard input is a
 				 * terminal-like device.  Zero means it's
 				 * a file. */
 static char errorExitCmd[] = "exit 1";
-int Tk_Started=0;
 
 /*
  * Command-line options:
@@ -284,7 +283,6 @@ tkMain(argc, argv)
      * are no windows left, Tk_MainLoop returns and we exit.
      */
 
-    Tk_Started=1;
     return 0;
 
 error:
