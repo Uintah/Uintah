@@ -33,6 +33,7 @@
 %define plat	mdk9.0
 %define distro  Mandrake 9.2
 %define debug   opt
+%undefine	__check_files
 %define thirdpartydotver 0
 %define thirdpartyversion 1.22
 %define hdf5    hdf5-1.6.2
