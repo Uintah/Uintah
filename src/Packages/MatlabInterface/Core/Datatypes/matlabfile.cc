@@ -664,4 +664,4 @@ void matlabfile::putmatlabarray(matlabarray& ma,std::string matrixname)
 	exportmatlabarray(ma);
 }
 
-};
+} // end namespace MatlabIO
