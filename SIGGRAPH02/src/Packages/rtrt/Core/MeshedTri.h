@@ -33,7 +33,6 @@ protected:
   TriMesh* tm;
   int p1,p2,p3;
   int n1;
-  double d;
 public:
   MeshedTri(Material* matl, TriMesh* tm, 
 	    const int& p1, const int& p2, const int& p3, const int& n1);

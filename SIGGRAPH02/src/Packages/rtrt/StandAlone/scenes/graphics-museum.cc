@@ -1281,12 +1281,8 @@ void build_david_room (Group* main_group, Scene *scene) {
   max = david_bbox.max();
   diag = david_bbox.diagonal();
 
-  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
-	 min.x(),min.y(), min.z(),
-	 max.x(),max.y(), max.z(),
-	 diag.x(),diag.y(),diag.z());
   main_group->add(new HierarchicalGrid(davidg,
-				       16,64,64,32,1024,4));
+				       24,64,64,32,1024,4));
 
 #else
  Transform bender_trans;
@@ -1304,7 +1300,6 @@ void build_david_room (Group* main_group, Scene *scene) {
 		     bt, bender_g)) {
       exit(0);
     }
-
     main_group->add(new Grid(bender_g,25));
 #endif
 
@@ -1558,15 +1553,38 @@ void build_modern_room (Group *main_group, Scene *scene) {
   Point head_ped_top(-10,-11,ped_ht);
   add_pedestal (moderng, head_ped_top-Vector(half_ped_size,half_ped_size,0),
 		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
+  
+  // Add lucy here.
+  Material *dhead_white = new LambertianMaterial(Color(1,1,1));
+  Group* dheadg = new Group();
+  TriMesh* dhead_tm = new TriMesh();
 
-  // along south wall
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_head_1mm_color.ply",dhead_white, dhead_tm, dheadg);
+  BBox dhead_bbox;
+
+  dheadg->compute_bounds(dhead_bbox,0);
+
+  Point dhead_min = dhead_bbox.min();
+  Point dhead_max = dhead_bbox.max();
+  Vector dhead_diag = dhead_bbox.diagonal();
+  Transform dheadT;
+
+  dheadT.pre_translate(-Vector((dhead_max.x()+dhead_min.x())/2.,(dhead_max.y()+dhead_min.y())/2,dhead_min.z())); // center david over 0
+  dheadT.pre_rotate(M_PI/4,Vector(0,0,1));  // make z up
+  dheadT.pre_scale(Vector(.001,.001,.001)); // make units meters
+  dheadT.pre_translate(head_ped_top.asVector());
+
+  dhead_tm->transform(dheadT);
+
+  main_group->add(new HierarchicalGrid(dheadg,23,64,64,32,1024,4));
+
   /* dragon */
   Point dragon_ped_top(-13,-14,ped_ht);
   add_pedestal_and_label (moderng, "/usr/sci/data/Geometry/textures/museum/modern/pillar-text/dragon.ppm",
 			  dragon_ped_top-Vector(half_ped_size,half_ped_size,0),
 		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht), sign_ratio);
 
-  Color dragon_green(.2,.9,.2);
+  Color dragon_green(.15,.7,.15);
   Material* shiny_green = new Phong(dragon_green,
 				    Color(.2,.2,.2),
 				    60);
@@ -1845,12 +1863,37 @@ void build_modern_room (Group *main_group, Scene *scene) {
   main_group->add(new HierarchicalGrid(venusg,16,32,64,8,1024,4));
 
 
-  // center of lucy
-  double lucy_ht = .3;
-  Point lucy_centerpt(-14,-10,lucy_ht);
-  double lucy_radius = 1;
-  add_pedestal (moderng, lucy_centerpt-Vector(lucy_radius,lucy_radius,0),
-		Vector(2*lucy_radius,2*lucy_radius,-lucy_ht));
+//    // center of lucy
+//    double lucy_ht = .3;
+//    Point lucy_centerpt(-14,-10,lucy_ht);
+//    double lucy_radius = 1;
+//    add_pedestal (moderng, lucy_centerpt-Vector(lucy_radius,lucy_radius,0),
+//  		Vector(2*lucy_radius,2*lucy_radius,-lucy_ht));
+//    // Add lucy here.
+//    Material *lucy_white = new LambertianMaterial(Color(1,1,1));
+//    Group* lucyg = new Group();
+//    TriMesh* lucy_tm = new TriMesh();
+//    read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/lucy.ply",lucy_white, lucy_tm, lucyg);
+
+//    BBox lucy_bbox;
+
+//    lucyg->compute_bounds(lucy_bbox,0);
+
+//    Point lucy_min = lucy_bbox.min();
+//    Point lucy_max = lucy_bbox.max();
+//    Vector lucy_diag = lucy_bbox.diagonal();
+//    Transform lucyT;
+
+//    lucyT.pre_translate(-Vector((lucy_max.x()+lucy_min.x())/2.,(lucy_max.y()+lucy_min.y())/2.,lucy_min.z())); // center david over 0
+//  //    lucyT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
+//    lucyT.pre_scale(2*Vector(.001,.001,.001)); // make units meters
+//    lucyT.pre_translate(lucy_centerpt.asVector());
+
+//    lucy_tm->transform(lucyT);
+
+//  //    main_group->add(new HierarchicalGrid(lucyg,32,64,64,16,1024,4));
+//    main_group->add(new HierarchicalGrid(lucyg,24,32,64,16,1024,4));
+
 
   /*
   // St Matthew's Pedestal in northwest corner of room
@@ -1866,6 +1909,47 @@ void build_modern_room (Group *main_group, Scene *scene) {
   moderng->add(StMattPed);
   moderng->add(StMattPedTop);
   */
+
+  // center of lucy
+  double stadium_ht = 1.2;
+  Point stadium_centerpt(-14,-10,stadium_ht);
+  double stadium_radius = 1;
+  add_pedestal (moderng, stadium_centerpt-Vector(stadium_radius,stadium_radius,0),
+		Vector(2*stadium_radius,2*stadium_radius,-stadium_ht));
+
+  Array1<Material*> ase_matls;
+  string env_map;
+
+  Transform stadiumt;
+  stadiumt.load_identity();
+  Group *stadiumg = new Group();
+  if (!readASEFile("/usr/sci/data/Geometry/models/stadium/fordfield3.ase", stadiumt, stadiumg, 
+		   ase_matls, env_map)) return;
+  BBox stadium_bbox;
+
+  stadiumg->compute_bounds(stadium_bbox,0);
+  
+  Point stadium_min = stadium_bbox.min();
+  Point stadium_max = stadium_bbox.max();
+  Vector stadium_diag = stadium_bbox.diagonal();
+
+//    printf("bbox: min %lf %lf %lf max %lf %lf %lf\n",
+//  	 stadium_min.x(), stadium_min.y(), stadium_min.z(),
+//  	 stadium_max.x(), stadium_max.y(), stadium_max.z());
+//    exit(-1);
+
+  Transform stadiumT;
+
+  stadiumT.pre_translate(-Vector((stadium_max.x()+stadium_min.x())/2.,(stadium_min.y()+stadium_max.y()),stadium_min.z())); // center buddha over 0
+  double stadium_scale = stadium_radius*2./(sqrt(stadium_diag.x()*stadium_diag.x()+stadium_diag.y()*stadium_diag.y()));
+  stadiumT.pre_scale(Vector(stadium_scale,
+			    stadium_scale,
+			    stadium_scale));
+  stadiumT.pre_translate(stadium_centerpt.asVector());
+
+  stadiumg->transform(stadiumT);
+
+  main_group->add(new HierarchicalGrid(stadiumg,10,10,10,100,20,4));
 
   /* **************** image on North wall in modern room **************** */
   const float img_size = 1.1;     
@@ -2222,6 +2306,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 			   Constant_Ambient);
   EnvironmentMapBackground *emap = new EnvironmentMapBackground ("/usr/sci/data/Geometry/textures/holo-room/environmap2.ppm", Vector(0,0,1));
   scene->set_ambient_environment_map(emap);
+
+  scene->select_shadow_mode( Hard_Shadows );
+  scene->maxdepth = 8;
 
   Group *solidg = new Group();
   Group *clearg = new Group();

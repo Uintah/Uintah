@@ -150,7 +150,6 @@ MeshedColoredTri::io(SCIRun::Piostream &str)
   SCIRun::Pio(str, p2);
   SCIRun::Pio(str, p3);
   SCIRun::Pio(str, n1);
-  SCIRun::Pio(str, d);
   str.end_class();
 }
 
