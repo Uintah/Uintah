@@ -73,7 +73,7 @@ public:
   }
 
   void resize_fdata() {
-    if (data_at() == NODE) {
+    if (data_at() == NODE)
       mask_.resize(get_typed_mesh()->nodes_size());
     else if (data_at() == EDGE)
       ASSERTFAIL("tetvol doesn't support data at edges (yet)")
