@@ -64,18 +64,18 @@ ParticleVis::ParticleVis(const clString& id)
     MIN_NU(4), MAX_NU(20), MIN_NV(2), MAX_NV(20)
 {
   // Create the input port
-  spin0=new ScalarParticlesIPort(this, "ScalarParticles",
+  spin0=scinew ScalarParticlesIPort(this, "ScalarParticles",
 				ScalarParticlesIPort::Atomic);
-  spin1=new ScalarParticlesIPort(this, "ScaleScalarParticles",
+  spin1=scinew ScalarParticlesIPort(this, "ScaleScalarParticles",
 				ScalarParticlesIPort::Atomic);
-  vpin=new VectorParticlesIPort(this, "VectorParticles",
+  vpin=scinew VectorParticlesIPort(this, "VectorParticles",
 				VectorParticlesIPort::Atomic);
   add_iport(spin0);
   add_iport(spin1);
   add_iport(vpin);
-  cin=new ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
+  cin=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
   add_iport(cin);
-  ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+  ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
   add_oport(ogeom);
   last_idx=-1;
   last_generation=-1;
@@ -91,7 +91,7 @@ ParticleVis::ParticleVis(const clString& id)
   shaft_rad.set(0.1);
   show_nth.set(1); 
 */
-  outcolor=new Material(Color(0.3,0.3,0.3), Color(0.3,0.3,0.3),
+  outcolor=scinew Material(Color(0.3,0.3,0.3), Color(0.3,0.3,0.3),
 			   Color(0.3,0.3,0.3), 0);
     
 }
@@ -141,7 +141,7 @@ void ParticleVis::execute()
     alphaT.add(1.0);
     alphaT.add(1.0);
       
-    cmap = new ColorMap(rgb,rgbT,alphas,alphaT,16);
+    cmap = scinew ColorMap(rgb,rgbT,alphas,alphaT,16);
   }
   double max = -1e30;
   double min = 1e30;
@@ -171,10 +171,10 @@ void ParticleVis::execute()
     float t = (polygons.get() - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
     int nu = int(MIN_NU + t*(MAX_NU - MIN_NU)); 
     int nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
-    GeomGroup *obj = new GeomGroup;
+    GeomGroup *obj = scinew GeomGroup;
     GeomArrows* arrows;
     if( drawVectors.get() == 1){
-      arrows = new GeomArrows(width_scale.get(),
+      arrows = scinew GeomArrows(width_scale.get(),
 			      1.0 - head_length.get(),
 			      drawcylinders.get(),
 			      shaft_rad.get());
@@ -207,16 +207,16 @@ void ParticleVis::execute()
 	  double scalefactor =
 	    (scaleSet->get()[*iter] - smin)/(smax - smin);
 	  if( scalefactor >= 1e-6 )
-	    sp = new GeomSphere( part->getPositions()[*iter],
+	    sp = scinew GeomSphere( part->getPositions()[*iter],
 				 scalefactor * radius.get(),
 				 nu, nv, *iter);
 	} else {
-	  sp = new GeomSphere( part->getPositions()[*iter],
+	  sp = scinew GeomSphere( part->getPositions()[*iter],
 			       radius.get(), nu, nv, *iter);
 	}
 	double value = part->get()[*iter];
 	if( sp != 0)
-	  obj->add( new GeomMaterial( sp,(cmap->lookup(value).get_rep())));
+	  obj->add( scinew GeomMaterial( sp,(cmap->lookup(value).get_rep())));
 	count = 0;
       }
       if( drawVectors.get() == 1 && hasVectors){
@@ -231,17 +231,17 @@ void ParticleVis::execute()
       obj->add( arrows );
     }
     // Let's set it up so that we can pick the particle set -- Kurt Z. 12/18/98
-    GeomPick *pick = new GeomPick( obj, this);
+    GeomPick *pick = scinew GeomPick( obj, this);
     ogeom->delAll();
     ogeom->addObj(pick, "Particles");      
   } else if( ps->getParticleSet()->numParticles() ) { // Particles
-    GeomGroup *obj = new GeomGroup;
-    GeomPts *pts = new GeomPts(ps->getParticleSet()->numParticles());
+    GeomGroup *obj = scinew GeomGroup;
+    GeomPts *pts = scinew GeomPts(ps->getParticleSet()->numParticles());
     pts->pickable = 1;
     int count = 0;
     GeomArrows* arrows;
     if( drawVectors.get() == 1 && hasVectors){
-      arrows = new GeomArrows(width_scale.get(),
+      arrows = scinew GeomArrows(width_scale.get(),
 			      1.0 - head_length.get(),
 			      drawcylinders.get(),
 			      shaft_rad.get());
@@ -267,12 +267,12 @@ void ParticleVis::execute()
     if( drawVectors.get() == 1 && hasVectors){
       obj->add( arrows );
     }
-    // GeomPick *pick = new GeomPick( obj, this);
+    // GeomPick *pick = scinew GeomPick( obj, this);
     ogeom->delAll();
     ogeom->addObj(obj, "Particles");      
   }
 //     GeomMaterial* matl=new GeomMaterial(obj,
-//    					  new Material(Color(0,0,0),
+//    					  scinew Material(Color(0,0,0),
 //    							  Color(0,.6,0), 
 //    							  Color(.5,.5,.5),20));
     
@@ -298,7 +298,7 @@ void ParticleVis::geom_pick(GeomPick* pick, void* userdata, int index)
 }
   
 extern "C" Module* make_ParticleVis( const clString& id ) {
-  return new ParticleVis( id );
+  return scinew ParticleVis( id );
 }
 
 } // End namespace Modules

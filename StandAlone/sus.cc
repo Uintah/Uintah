@@ -172,8 +172,9 @@ int main(int argc, char** argv)
 	sim->attachPort("problem spec", reader);
 
 	// Connect a MPM module if applicable
+	MPMInterface* mpm = 0;
 	if(do_mpm){
-	    MPMInterface* mpm;
+
 	    if(numThreads == 0){
 		mpm = scinew MPM::SerialMPM(world);
 	    } else {
@@ -234,6 +235,15 @@ int main(int argc, char** argv)
 	 * Start the simulation controller
 	 */
 	sim->run();
+
+    delete sim;
+    delete reader;
+    delete mpm;
+    delete cfd;
+    delete output;
+    delete bal;
+    //    delete sched;
+
     } catch (Exception& e) {
 	cerr << "Caught exception: " << e.message() << '\n';
 	if(e.stackTrace())
@@ -244,16 +254,21 @@ int main(int argc, char** argv)
 	cerr << "Caught unknown exception\n";
 	Parallel::finalizeManager(Parallel::Abort);
 	abort();
+
     }
 
     /*
      * Finalize MPI
      */
     Parallel::finalizeManager();
+    
 }
 
 //
 // $Log$
+// Revision 1.19  2000/08/09 03:17:55  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.18  2000/08/08 21:36:52  dav
 // fixed 'usage' fix
 //

@@ -40,6 +40,7 @@ LOG
 using std::ostringstream;
 #include <stdio.h>
 #include <string.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace Uintah {
 namespace Modules {
@@ -47,7 +48,7 @@ namespace Modules {
 using namespace SCICore::Containers;
 
 extern "C" PSECore::Dataflow::Module* make_VizControl( const clString& id ) {
-  return new VizControl( id ); 
+  return scinew VizControl( id ); 
 }
 
 //--------------------------------------------------------------- 
@@ -60,11 +61,11 @@ VizControl::VizControl(const clString& id)
 { 
   //////////// Initialization code goes here
   // Create Ports
-  in=new ParticleGridReaderIPort(this, "ParticleGridReader",
+  in=scinew ParticleGridReaderIPort(this, "ParticleGridReader",
 				    ParticleGridReaderIPort::Atomic);
-  sfout=new ScalarFieldOPort(this, "ScalarField", ScalarFieldIPort::Atomic);
-  vfout=new VectorFieldOPort(this, "VectorField", VectorFieldIPort::Atomic);
-  psout=new ParticleSetOPort(this, "ParticleSet", ParticleSetIPort::Atomic);
+  sfout=scinew ScalarFieldOPort(this, "ScalarField", ScalarFieldIPort::Atomic);
+  vfout=scinew VectorFieldOPort(this, "VectorField", VectorFieldIPort::Atomic);
+  psout=scinew ParticleSetOPort(this, "ParticleSet", ParticleSetIPort::Atomic);
 
   // Add them to the Module
   add_iport(in);

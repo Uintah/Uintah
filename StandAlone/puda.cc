@@ -251,7 +251,7 @@ int main(int argc, char** argv)
   }
   
   try {
-    DataArchive* da = new DataArchive(filebase);
+    DataArchive* da = scinew DataArchive(filebase);
     
     if(do_timesteps){
       vector<int> index;
@@ -1373,6 +1373,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.11  2000/08/09 03:17:55  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.10  2000/08/04 20:36:43  campbell
 // added -asci option to puda.cc for printing particle variables in asci format.
 //
