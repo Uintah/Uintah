@@ -17,6 +17,10 @@
 #include <string>
 
 namespace Uintah {
+
+   using namespace SCIRun;
+
+   class ProblemSetupException : public Exception {
    public:
       ProblemSetupException(const std::string& msg);
       ProblemSetupException(const ProblemSetupException&);

@@ -3,7 +3,8 @@
 #include <Packages/Uintah/share/share.h>
 #include <Core/Malloc/Allocator.h>
 
-namespace Uintah {
+using namespace SCIRun;
+using namespace Uintah;
 
 extern "C" {
 UINTAHSHARE IPort* make_TensorParticlesIPort(Module* module,
@@ -16,9 +17,13 @@ UINTAHSHARE OPort* make_TensorParticlesOPort(Module* module,
 }
 }
 
-template<> clString SimpleIPort<TensorParticlesHandle>::port_type("TensorParticles");
-template<> clString SimpleIPort<TensorParticlesHandle>::port_color("chartreuse4");
+template<>
+clString
+SimpleIPort<TensorParticlesHandle>::port_type("TensorParticles");
 
-} // End namespace Uintah
+template<>
+clString
+SimpleIPort<TensorParticlesHandle>::port_color("chartreuse4");
+
 
 

@@ -2,15 +2,15 @@
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Exceptions
+SRCDIR   := Packages/Uintah/Core/Exceptions
 
 SRCS     += $(SRCDIR)/InvalidGrid.cc $(SRCDIR)/InvalidValue.cc \
 	$(SRCDIR)/ParameterNotFound.cc \
 	$(SRCDIR)/ProblemSetupException.cc \
-	$(SRCDIR)/TypeMismatchException.cc $(SRCDIR)/UnknownVariable.cc
+	$(SRCDIR)/TypeMismatchException.cc 
 
-PSELIBS := Core/Exceptions Uintah/Grid
-LIBS :=
+PSELIBS := Core/Exceptions
+LIBS := 
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 

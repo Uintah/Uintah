@@ -15,7 +15,7 @@
 #ifndef UINTAH_EXCEPTIONS_INVALIDVALUE_H
 #define UINTAH_EXCEPTIONS_INVALIDVALUE_H
 
-#include <Packages/Uintah/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <string>
 
 namespace Uintah {

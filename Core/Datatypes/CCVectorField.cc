@@ -1,6 +1,6 @@
-#include <Packages/Uintah/Grid/Level.h>
-#include <Packages/Uintah/Grid/LevelP.h>
-#include <Packages/Uintah/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Datatypes/CCVectorField.h>
 
 #include <Core/Geometry/Vector.h>
@@ -20,7 +20,7 @@ CCVectorField::CCVectorField()
 }
 
 CCVectorField::CCVectorField(const CCVectorField& copy)
-  //  : Packages/UintahScalarField( copy )
+  //  : UintahScalarField( copy )
   :VectorFieldRG( copy ), grid(copy.grid), level(copy.level),
     _varname(copy._varname), _matIndex(copy._matIndex)
 {
@@ -32,7 +32,7 @@ CCVectorField::CCVectorField(const CCVectorField& copy)
 CCVectorField::CCVectorField(GridP grid, LevelP level,
 				string var, int mat,
 				const vector< CCVariable<Vector> >& vars)
-  //  : Packages/UintahScalarField( grid, level, var, mat )
+  //  : UintahScalarField( grid, level, var, mat )
   : VectorFieldRG(), grid(grid), level(level),
     _varname(var), _matIndex(mat)
 {

@@ -1,13 +1,13 @@
 #ifndef SCI_project_NCScalarField_h
 #define SCI_project_NCScalarField_h 1
 
-#include <Packages/Uintah/Grid/NCVariable.h>
-#include <Packages/Uintah/Grid/Grid.h>
-#include <Packages/Uintah/Grid/GridP.h>
-#include <Packages/Uintah/Grid/Level.h>
-#include <Packages/Uintah/Grid/LevelP.h>
-#include <Packages/Uintah/Grid/Patch.h>
-#include <Packages/Uintah/Grid/NodeIterator.h>
+#include <Packages/Uintah/Core/Grid/NCVariable.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/NodeIterator.h>
 
 #include <Core/Datatypes/ScalarFieldRGBase.h>
 #include <Core/Geometry/Point.h>
@@ -47,7 +47,7 @@ public:
   virtual double get_value( int i, int j, int k);
   void computeHighLowIndices();
 
-//   virtual Packages/UintahScalarField::Rep getType(){ return Packages/UintahScalarField::NC;}
+//   virtual ScalarField::Rep getType(){ return Packages/UintahScalarField::NC;}
 
   void SetGrid( GridP g ){ _grid = g; }
   void SetLevel( LevelP l){ _level = l; }
@@ -80,7 +80,7 @@ NCScalarField<T>::NCScalarField()
 
 template <class T>
 NCScalarField<T>::NCScalarField(const NCScalarField<T>& copy)
-  //  : Packages/UintahScalarField( copy )
+  //  : ScalarField( copy )
   :ScalarFieldRGBase( copy ), _grid(copy._grid), _level(copy._level),
     _varname(copy._varname), _matIndex(copy._matIndex), 
    high(-MAXINT,-MAXINT,-MAXINT),
@@ -100,7 +100,7 @@ template <class T>
 NCScalarField<T>::NCScalarField(GridP grid, LevelP level,
 				string var, int mat,
 				const vector< NCVariable<T> >& vars)
-  //  : Packages/UintahScalarField( grid, level, var, mat )
+  //  : ScalarField( grid, level, var, mat )
   : ScalarFieldRGBase(), _grid(grid), _level(level),
     _varname(var), _matIndex(mat),
    high(-MAXINT,-MAXINT,-MAXINT),
@@ -320,7 +320,7 @@ int NCScalarField<T>::interpolate(const Point& p, double& value, double,
 template <class T>
 Vector NCScalarField<T>::gradient(const Point& p)
 {
-  Packages/Uintah::Box b;
+  Box b;
   int i;
   Level::const_patchIterator r;
   for(i = 0, r = _level->patchesBegin();

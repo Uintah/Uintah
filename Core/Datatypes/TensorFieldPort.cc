@@ -3,9 +3,8 @@
 #include <Packages/Uintah/share/share.h>
 #include <Core/Malloc/Allocator.h>
 
-namespace Uintah {
-
 using namespace SCIRun;
+using namespace Uintah;
 
 extern "C" {
 UINTAHSHARE IPort* make_TensorFieldIPort(Module* module,
@@ -21,4 +20,3 @@ UINTAHSHARE OPort* make_TensorFieldOPort(Module* module,
 template<> clString SimpleIPort<TensorFieldHandle>::port_type("TensorField");
 template<> clString SimpleIPort<TensorFieldHandle>::port_color("yellow4");
 
-} // End namespace Uintah

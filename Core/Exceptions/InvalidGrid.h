@@ -18,7 +18,7 @@
 
 namespace Uintah {
 
-   class InvalidGrid : public SCICore::Exceptions::Exception {
+   class InvalidGrid : public SCIRun::Exception {
    public:
       InvalidGrid(const std::string& msg);
       InvalidGrid(const InvalidGrid&);

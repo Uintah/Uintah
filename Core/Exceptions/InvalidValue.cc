@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 
 using namespace Uintah;
 
@@ -19,5 +19,5 @@ InvalidValue::~InvalidValue()
 
 const char* InvalidValue::type() const
 {
-    return "Packages/Uintah::Exceptions::InvalidValue";
+    return "Uintah::Exceptions::InvalidValue";
 }

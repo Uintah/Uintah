@@ -16,9 +16,10 @@
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
+namespace Uintah {
+
 using namespace SCIRun;
 
-namespace Uintah {
    class TypeMismatchException : public SCIRun::Exception {
    public:
       TypeMismatchException(const std::string& msg);

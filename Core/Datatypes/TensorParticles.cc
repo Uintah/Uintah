@@ -1,8 +1,8 @@
 #include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
-#include <Packages/Uintah/Grid/Level.h>
-#include <Packages/Uintah/Grid/LevelP.h>
-#include <Packages/Uintah/Grid/GridP.h>
-#include <Packages/Uintah/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 
 #include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>

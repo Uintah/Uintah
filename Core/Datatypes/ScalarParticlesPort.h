@@ -1,13 +1,13 @@
 /*
- *  Texture3D.h: The Scalar Field Data type
+ *  ????
  *
  *  Written by:
- *   Steven G. Parker
+ *   ???
  *   Department of Computer Science
  *   University of Utah
- *   March 1994
+ *   March 199?
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 199? SCI Group
  */
 
 #ifndef SCI_project_ScalarParticlesPort_h
@@ -18,7 +18,7 @@
 
 namespace Uintah {
 
-using namespace Uintah::Datatypes;
+using namespace SCIRun;
 
 typedef SimpleIPort<ScalarParticlesHandle> ScalarParticlesIPort;
 typedef SimpleOPort<ScalarParticlesHandle> ScalarParticlesOPort;

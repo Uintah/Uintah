@@ -3,20 +3,25 @@
 #include <Packages/Uintah/share/share.h>
 #include <Core/Malloc/Allocator.h>
 
-namespace Uintah {
+using namespace SCIRun;
+using namespace Uintah;
 
 extern "C" {
-UINTAHSHARE IPort* make_ScalarParticlesIPort(Module* module,
-					     const clString& name) {
-  return scinew SimpleIPort<ScalarParticlesHandle>(module,name);
-}
-UINTAHSHARE OPort* make_ScalarParticlesOPort(Module* module,
-					     const clString& name) {
-  return scinew SimpleOPort<ScalarParticlesHandle>(module,name);
-}
+  UINTAHSHARE IPort*
+  make_ScalarParticlesIPort(Module* module, const clString& name) {
+    return scinew SimpleIPort<ScalarParticlesHandle>(module,name);
+  }
+  UINTAHSHARE OPort*
+  make_ScalarParticlesOPort(Module* module, const clString& name) {
+    return scinew SimpleOPort<ScalarParticlesHandle>(module,name);
+  }
 }
 
-template<> clString SimpleIPort<ScalarParticlesHandle>::port_type("ScalarParticles");
-template<> clString SimpleIPort<ScalarParticlesHandle>::port_color("chartreuse");
+template<>
+clString
+SimpleIPort<ScalarParticlesHandle>::port_type("ScalarParticles");
 
-} // End namespace Uintah
+template<>
+clString
+SimpleIPort<ScalarParticlesHandle>::port_color("chartreuse");
+
