@@ -48,11 +48,24 @@ degenerate(const Point &p0, const Point &p1, const Point &p2)
 void processSCENE(token_list* children1, unsigned loop1, string env_map)
 {
   token_list *children2, *children3;
+  unsigned length2, length3;
   children2 = (*children1)[loop1]->GetChildren();
+
   if (children2) {
-    children3 = (*children2)[0]->GetChildren();
-    if (children3) 
-      env_map = (*(((BitmapToken*)((*children3))[0])->GetArgs()))[0];
+    length2 = children2->size();
+    for (unsigned loop2=0; loop2<length2; ++loop2) {
+      if ((*children2)[loop2]->GetMoniker() == "*SCENE_ENVMAP") {
+        children3 = (*children2)[loop2]->GetChildren();
+        if (children3) {
+          length3 = children3->size();
+          for (unsigned loop3=0; loop3<length3; ++loop3) {
+            if ((*children3)[loop3]->GetMoniker() == "*BITMAP") {
+              env_map = (*((*children3)[loop3]->GetArgs()))[0];
+            }
+          }
+        }
+      }
+    }
   }
 }
 
