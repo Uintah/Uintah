@@ -23,33 +23,46 @@
  *   Department of Computer Science
  *   University of Utah
  *   October 2001
- *
+ *  Modified by:
+ *   Keming Zhang
+ *   March 2002
  */
 
 #ifndef SCIRun_Framework_NetworkCanvas_h
 #define SCIRun_Framework_NetworkCanvas_h
 
 #include <qcanvas.h>
+#include "Module.h"
+#include "Connection.h"
+#include "Core/CCA/Component/PIDL/PIDL.h"
+//namespace SCIRun {
 
-namespace SCIRun {
-  class NetworkCanvasView : public QCanvasView {
-    Q_OBJECT
-  public:
-    NetworkCanvasView(QCanvas* canvas, QWidget* parent=0, const char* name=0,
-		  WFlags f=0);
-    virtual ~NetworkCanvasView();
+class NetworkCanvasView:public QCanvasView
+{
+public:
+  NetworkCanvasView(QCanvas* canvas, QWidget* parent=0);
+  virtual ~NetworkCanvasView();
+  void addModule(const char *name, gov::cca::ports::UIPort::pointer &uip, CIA::array1<std::string> & up, CIA::array1<std::string> &pp);
+  void addConnection(Module *m1, Module *m2);	
+  void removeConnection(QCanvasItem *c);
+protected:
+  void contentsMousePressEvent(QMouseEvent*);
+  void contentsMouseMoveEvent(QMouseEvent*);
+  void contentsMouseReleaseEvent(QMouseEvent*);
+  //void contentsMouseDoubleClickEvent( QMouseEvent * );
+private:
+  Module* moving;
+  Module* connecting;
+  QPoint moving_start;
+  std::vector<Module*> modules;
+  std::vector<Connection*> connections;
+  NetworkCanvasView(const NetworkCanvasView&);
+  NetworkCanvasView& operator=(const NetworkCanvasView&);
 
-  protected:
-    void contentsMousePressEvent(QMouseEvent*);
-    void contentsMouseMoveEvent(QMouseEvent*);
+};
 
-  private:
-    QCanvasItem* moving;
-    QPoint moving_start;
-
-    NetworkCanvasView(const NetworkCanvasView&);
-    NetworkCanvasView& operator=(const NetworkCanvasView&);
-  };
-}
-
+//}
 #endif
+
+
+

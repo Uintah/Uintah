@@ -24,7 +24,9 @@ SRCDIR   := CCA/Components/Builder
 SRCS     += \
 	$(SRCDIR)/Builder.cc $(SRCDIR)/BuilderWindow.cc \
 	$(SRCDIR)/QtUtils.cc $(SRCDIR)/NetworkCanvasView.cc \
-	$(SRCDIR)/ModuleCanvasItem.cc \
+	$(SRCDIR)/Module.cc \
+	$(SRCDIR)/Connection.cc\
+	$(SRCDIR)/moc_Module.cc\
 	$(SRCDIR)/moc_BuilderWindow.cc $(SRCDIR)/moc_NetworkCanvasView.cc
 
 PSELIBS := Core/CCA/Component/CIA Core/CCA/Component/PIDL \

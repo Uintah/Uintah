@@ -28,8 +28,10 @@
 
 #include <CCA/Components/Builder/BuilderWindow.h>
 #include <CCA/Components/Builder/SCIRun.xpm>
+#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/spec/cca_sidl.h>
 #include <CCA/Components/Builder/NetworkCanvasView.h>
-#include <CCA/Components/Builder/ModuleCanvasItem.h>
+#include <CCA/Components/Builder/Module.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Containers/StringUtil.h>
 #include <qaction.h>
@@ -44,8 +46,15 @@
 #include <qvbox.h>
 #include <qwhatsthis.h>
 #include <iostream>
+#include <qiconset.h> 
+#include <qtoolbutton.h> 
+#include "/home/sci/kzhang/SCIRun/src/CCA/Components/Hello/Hello.h"
+
+
 using namespace std;
 using namespace SCIRun;
+using namespace gov::cca;
+
 
 BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   : QMainWindow(0, "SCIRun", WDestructiveClose|WType_TopLevel),
@@ -88,10 +97,24 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
 
   QToolBar* fileTools = new QToolBar(this, "file operations");
   fileTools->setLabel("File Operations");
-  saveAction->addTo(fileTools);
-  loadAction->addTo(fileTools);
-  insertAction->addTo(fileTools);
-  addInfoAction->addTo(fileTools);
+
+#include "load.xpm"
+#include "save.xpm"
+#include "insert.xpm"
+#include "info.xpm"
+ 
+  new QToolButton( QIconSet( QPixmap(load)  ), "Load", QString::null,
+                           this, SLOT(load()), fileTools, "load" );
+  new QToolButton( QIconSet( QPixmap(save)  ), "Save", QString::null,
+                           this, SLOT(save()), fileTools, "save" );
+  new QToolButton( QIconSet( QPixmap(insert_xpm)  ), "Insert", QString::null,
+                           this, SLOT(insert()), fileTools, "insert" );
+  new QToolButton( QIconSet( QPixmap(info)  ), "Add Info", QString::null,
+                           this, SLOT(addInfo()), fileTools, "addInfo" );
+  //saveAction->addTo(fileTools);
+  //loadAction->addTo(fileTools);
+  //insertAction->addTo(fileTools);
+  //addInfoAction->addTo(fileTools);
 
   QPopupMenu* file = new QPopupMenu(this);
   menuBar()->insertItem("&File", file);
@@ -124,17 +147,29 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   QVBox* layout3 = new QVBox(hsplit);
   QHBox* layout4 = new QHBox(layout3);
   QLabel* message_label = new QLabel(" Messages: ", layout4);
-  QMimeSourceFactory::defaultFactory()->setPixmap("fileopen", QPixmap(SCIRun_logo));
-  QLabel* logo_image = new QLabel("SCIRun logo", layout4);
-  //QLabel* logo_image = new QLabel("<img src=\"SCIRun_logo">", layout4);
-  QTextEdit* e = new QTextEdit( layout3, "editor" );
+//  QMimeSourceFactory::defaultFactory()->setPixmap("fileopen", QPixmap(SCIRun_logo));
+//  QLabel* logo_image = new QLabel("SCIRun logo", layout4);
+//  logo_image->setPixmap( QPixmap(SCIRun_logo));
+  e = new QTextEdit( layout3, "editor" );
   e->setFocus();
   e->setReadOnly(true);
   e->setUndoRedoEnabled(false);
+
+  gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.builderService"));
+  if(builder.isNull()){
+    cerr << "Fatal Error: Cannot find builder service\n";
+  }
+  displayMsg("Framework URL=");
+  displayMsg(builder->getFrameworkURL().c_str());
+  displayMsg("\n");  
+   services->releasePort("cca.builderService");
+
+
+
   cerr << "Should append framework URL to message window\n";
-  QCanvas* big_canvas = new QCanvas(2000,2000);
+  QCanvas *big_canvas = new QCanvas(2000,2000);
   big_canvas->setBackgroundColor(bgcolor);
-  NetworkCanvasView* big_view = new NetworkCanvasView(big_canvas, vsplit);
+  big_canvas_view = new NetworkCanvasView(big_canvas, vsplit);
   setCentralWidget( vsplit );
   statusBar()->message( "SCIRun 2.0.0 Ready");
 
@@ -149,11 +184,8 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
 				   listener, true);
     services->releasePort("cca.ComponentEventService");
   }
-  ModuleCanvasItem* i = new ModuleCanvasItem(big_canvas);
-  i->move(20,20);
-  i->show();
 }
-
+ 
 
 BuilderWindow::~BuilderWindow()
 {
@@ -321,6 +353,7 @@ void BuilderWindow::exit()
 void BuilderWindow::about()
 {
   cerr << "BuilderWindow::about not finished\n";
+  (new QMessageBox())->about(this, "About", "CCA Builder (SCIRun Implementation)");
 }
 
 void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescription::pointer& cd)
@@ -331,12 +364,41 @@ void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescripti
     cerr << "Fatal Error: Cannot find builder service\n";
   }
   cerr << "Should put properties on component before creating\n";
-  builder->createInstance(cd->getClassName(), cd->getClassName(), gov::cca::TypeMap::pointer(0));
+
+  gov::cca::ComponentID::pointer cid=builder->createInstance(cd->getClassName(), cd->getClassName(), gov::cca::TypeMap::pointer(0));
+
+  CIA::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
+  cerr<<"Uses Port size="<<usesPorts.size()<<endl;
+
+  for(int i=0;i<usesPorts.size();i++){
+	cerr<<"Uses Port # "<<i<<"="<<usesPorts[i]<<endl;
+  }	
+	
+  CIA::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
+  cerr<<"Provides Port size="<<providesPorts.size()<<endl;
+
+  for(int i=0;i<providesPorts.size();i++){
+        cerr<<"Provides Port # "<<i<<"="<<providesPorts[i]<<endl;
+  }
+
+  gov::cca::Port::pointer uiport=builder->getUIPort(cd->getClassName());
+  	  
+  gov::cca::ports::UIPort::pointer uip=pidl_cast<gov::cca::ports::UIPort::pointer>(uiport);	  
   services->releasePort("cca.builderService");
+  big_canvas_view->addModule(cd->getClassName().c_str(), uip, usesPorts, providesPorts  );
+
 }
 
 void BuilderWindow::componentActivity(const gov::cca::ports::ComponentEvent::pointer& e)
 {
   cerr << "Got component activity event " << e->getEventType() << " for " << e->getComponentID()->getInstanceName() << '\n';
+  displayMsg("Some event occurs\n");
 }
+
+void BuilderWindow::displayMsg(const char *msg)
+{
+  e->insert(msg);
+} 	
+
+
 
