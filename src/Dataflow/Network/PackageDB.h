@@ -68,55 +68,46 @@ namespace SCIRun {
       PackageDB(GuiInterface* gui);
       ~PackageDB();
 
-      void loadPackage(bool resolve=true);
-      void registerModule(ModuleInfo* info);
-      void createAlias(const string& fromPackageName,
-		       const string& fromCategoryName,
-		       const string& fromModuleName,
-		       const string& toPackageName,
-		       const string& toCategoryName,
-		       const string& toModuleName);
-
-      Module* instantiateModule(const string& packageName,
-				const string& categoryName,
-				const string& moduleName,
-				const string& instanceName);
-
-      bool haveModule(const string& packageName,
-		      const string& categoryName,
-		      const string& moduleName) const;
-
-      vector<string> packageNames() const;
-      vector<string> categoryNames(const string& packageName) const;
-      vector<string> moduleNames(const string& packageName,
-                                     const string& categoryName) const;
-      void setGui(GuiInterface* gui);
-      ModuleInfo* GetModuleInfo(const string& name, const string& catname,
-				const string& packname);
-
+      void		loadPackage(bool resolve=true);
+      void		setGui(GuiInterface* gui);
+      Module*		instantiateModule(const string& packageName,
+					  const string& categoryName,
+					  const string& moduleName,
+					  const string& instanceName);
+      bool		haveModule(const string& packageName,
+				   const string& categoryName,
+				   const string& moduleName) const;
+      vector<string>	packageNames () const;
+      vector<string>	categoryNames(const string& packageName) const;
+      vector<string>	moduleNames  (const string& packageName,
+				      const string& categoryName) const;
+      ModuleInfo*	GetModuleInfo(const string& name,
+				      const string& catname,
+				      const string& packname);
       // Used if the module has changed categories.
-      string getCategoryName(const string &packName,
-			     const string &catName,
-			     const string &modName);
-      void setSplashPath(string p);
-      void setLoadingApp(bool b);
-    private:
-      LIBRARY_HANDLE findLibInPath(string,string);
-      bool findMaker(ModuleInfo* info);
+      string		getCategoryName(const string &packName,
+					const string &catName,
+					const string &modName);
 
-      vector<string> delayed_commands;
-      void do_command(const string& cmd);
-      Packages *             db_;
-      vector<string>     packageList_;
-      GuiInterface* gui;
-      string splash_path_;
-      bool loading_app_;
+      // Doesnt belong here, this is the path to the TCL GUI splash screen
+      void		setSplashPath(string p);
+      void		setLoadingApp(bool b);
+    private:
+      LIBRARY_HANDLE	findLib(string);
+      bool		findMaker(ModuleInfo* info);
+      void		registerModule(ModuleInfo* info);
+      void		do_command(const string& cmd);
+      vector<string>	delayed_commands;
+      Packages *        db_;
+      vector<string>    packageList_;
+      GuiInterface *	gui;
+      string		splash_path_;
+      bool		loading_app_;
     };
 
     // PackageDB is intended to be a singleton class, but nothing will break
     // if you instantiate it many times.  This is the singleton instance,
     // on which you should invoke operations:
-
     PSECORESHARE extern PackageDB* packageDB;
 
 } // End namespace SCIRun
