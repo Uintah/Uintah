@@ -32,14 +32,12 @@ itcl_class Teem_DataIO_NrrdReader {
 	global $this-filename
 	global $this-label
 	global $this-type
-	global $this-add
 	global $this-axis
 	global $this-sel
 
 	set $this-filename ""
 	set $this-label unknown
 	set $this-type Scalar
-	set $this-add 0
 	set $this-axis ""
 	set $this-sel ""
     }
@@ -162,7 +160,7 @@ itcl_class Teem_DataIO_NrrdReader {
 	    -textvariable $this-filename
 
 	button $f.sel -text "Browse" \
-	    -command "$this make_file_open_box"
+	    -command "$this make_file_open_box" -width 50
 
 	pack $f.fname $f.sel -side top -fill x -expand yes -padx 4 -pady 4
 	pack $w.f -fill x -expand yes -side top
@@ -170,20 +168,6 @@ itcl_class Teem_DataIO_NrrdReader {
 	# axis info and selection
 	make_axis_info_sel_box $w.rb "$this set_axis $w.rb"
 
-
-	iwidgets::labeledframe $w.add \
-		-labeltext "Tuple Axis Options"
-	set add [$w.add childsite]
-
-	text $add.instr -wrap word -width 50 -height 4 -relief flat 
-	$add.instr insert end "Either Select which axis should be the tuple axis above, or select the add tuple axis option below. The label and type will be used to name the tuple axis."
-
-	checkbutton $add.cb\
-		-text "Add Tuple Axis" \
-		-variable $this-add
-
-	pack $add.instr $add.cb -fill x -expand yes -side top
-	
 
 	# set axis label and type
 	iwidgets::labeledframe $w.f1 \
@@ -201,7 +185,7 @@ itcl_class Teem_DataIO_NrrdReader {
 
 	pack $f1.lab $f1.type -fill x -expand yes -side top -padx 4 -pady 2
 
-	pack $w.add $w.f1 -fill x -expand yes -side top
+	pack $w.f1 -fill x -expand yes -side top
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w

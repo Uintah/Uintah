@@ -52,7 +52,6 @@ private:
   GuiString       label_;
   GuiString       type_;
   GuiString       axis_;
-  GuiInt          add_;
   GuiString       filename_;
   NrrdDataHandle  handle_;
   string          old_filename_;
@@ -70,7 +69,6 @@ NrrdReader::NrrdReader(SCIRun::GuiContext* ctx) :
   label_(ctx->subVar("label")),
   type_(ctx->subVar("type")),
   axis_(ctx->subVar("axis")),
-  add_(ctx->subVar("add")),
   filename_(ctx->subVar("filename")),
   old_filemodification_(0)
 {
@@ -91,8 +89,12 @@ NrrdReader::get_nrrd_info(NrrdDataHandle handle)
   if (!handle.get_rep()) { return; }
   // Send the axis info to the gui.
 
-  // Call the following tcl method
-  // add_axis_info {id label center size spacing min max} 
+  const string addnew =
+    id + " add_axis_info CreateNewTuple FromBelow Unknown --- --- --- ---";
+  gui->execute(addnew);
+
+  // Call the following tcl method:
+  // add_axis_info {id label center size spacing min max}
   for (int i = 0; i < handle->nrrd->dim; i++) {
     ostringstream add; 
     add << id.c_str() << " add_axis_info ";
@@ -212,13 +214,23 @@ NrrdReader::execute()
   }
 
   axis_.reset();
-  add_.reset();
-  if (!add_.get() && axis_.get() == "") {
+  if (axis_.get() == "") {
     error("Please select the axis which is tuple from the UI");
     return;
   }
 
-  if (add_.get()) {
+  // Compute which axis was picked.
+  string ax(axis_.get());
+  cout << "axix_ = '" << ax << "'\n";
+  int axis = 0;
+  if (ax.size()) {
+    axis = atoi(ax.substr(4).c_str()); // Trim 'axis' from the string.
+    cout << "axis = " << axis << "\n";
+  }
+
+  bool added_tuple_axis = false;
+  if (ax == "axisCreateNewTuple")
+  {
     // do add permute work here.
     Nrrd *pn = nrrdNew();
     handle_->nrrd->axis[handle_->nrrd->dim].size = 1;
@@ -226,10 +238,12 @@ NrrdReader::execute()
     const int sz = handle_->nrrd->dim;
     int perm[NRRD_DIM_MAX];
     perm[0] = sz - 1; 
-    for(int i = 1; i < sz; i++) {
+    for (int i = 1; i < sz; i++)
+    {
       perm[i] = i - 1;
     }
-    if (nrrdAxesPermute(pn, handle_->nrrd, perm)){
+    if (nrrdAxesPermute(pn, handle_->nrrd, perm))
+    {
       char *err = biffGetDone(NRRD);
       error(string("Error adding a tuple axis: ") + err);
       free(err);
@@ -239,22 +253,17 @@ NrrdReader::execute()
     newnrrd->nrrd = pn;
     newnrrd->copy_sci_data(*handle_.get_rep());
     handle_ = newnrrd;
+    added_tuple_axis = true;
   }
-
-  string ax(axis_.get());
-  int axis = 0;
-  if (ax.size()) {
-    ax.erase(ax.begin(), ax.begin() + 4); // Trim 'axis' from the string.
-    axis = atoi(ax.c_str());
-  }
-
-  if (axis != 0) {
+  else if (axis != 0)
+  {
     // Permute so that 0 is the tuple axis.
     const int sz = handle_->nrrd->dim;
     int perm[NRRD_DIM_MAX];
     Nrrd *pn = nrrdNew();
     // Init the perm array.
-    for(int i = 0; i < sz; i++) {
+    for(int i = 0; i < sz; i++)
+    {
       perm[i] = i;
     }
 
@@ -262,7 +271,8 @@ NrrdReader::execute()
     perm[0] = axis;
     perm[axis] = 0;
 
-    if (nrrdAxesPermute(pn, handle_->nrrd, perm)){
+    if (nrrdAxesPermute(pn, handle_->nrrd, perm))
+    {
       char *err = biffGetDone(NRRD);
       error(string("Error adding a tuple axis: ") + err);
       free(err);
@@ -277,7 +287,8 @@ NrrdReader::execute()
   // If the tuple label is valid use it. If not use the string provided
   // in the gui.
   vector<string> elems;
-  if (add_.get() || (! handle_->get_tuple_indecies(elems))) {
+  if (added_tuple_axis || (! handle_->get_tuple_indecies(elems)))
+  {
     int axis_size = handle_->nrrd->axis[0].size;
 
     // Set tuple axis name.
