@@ -50,6 +50,9 @@
 
 #include <Packages/DataIO/share/share.h>
 #include <Packages/DataIO/Core/ThirdParty/mdsPlusReader.h>
+#include <Packages/DataIO/Dataflow/Modules/Readers/MDSPlusDump.h>
+
+#include <fstream>
 
 namespace DataIO {
 
@@ -80,6 +83,11 @@ public:
 
 protected:
 
+  GuiString loadServer_;
+  GuiString loadTree_;
+  GuiString loadShot_;
+  GuiString loadSignal_;
+
   GuiInt    nEntries_;
   GuiString sServer_;
   GuiString sTree_;
@@ -89,7 +97,7 @@ protected:
   GuiString searchTree_;
   GuiString searchShot_;
   GuiString searchSignal_;
-  GuiInt    searchRegexp_;
+  GuiInt    searchPath_;
 
   GuiInt mergeData_;
   GuiInt assumeSVT_;
@@ -101,7 +109,12 @@ protected:
   vector< GuiString* > gStatus_;
   vector< GuiString* > gPort_;
 
+  string loadserver_;
+  string loadtree_;
+  string loadshot_;
+
   unsigned int entries_;
+
   string server_;
   string tree_;
   string shot_;
@@ -127,6 +140,11 @@ DECLARE_MAKER(MDSPlusDataReader)
 
 MDSPlusDataReader::MDSPlusDataReader(GuiContext *context)
   : Module("MDSPlusDataReader", context, Source, "Readers", "DataIO"),
+    loadServer_(context->subVar("load-server")),
+    loadTree_(context->subVar("load-tree")),
+    loadShot_(context->subVar("load-shot")),
+    loadSignal_(context->subVar("load-signal")),
+
     nEntries_(context->subVar("num-entries")),
     sServer_(context->subVar("server")),
     sTree_(context->subVar("tree")),
@@ -136,7 +154,7 @@ MDSPlusDataReader::MDSPlusDataReader(GuiContext *context)
     searchTree_(context->subVar("search-tree")),
     searchShot_(context->subVar("search-shot")),
     searchSignal_(context->subVar("search-signal")),
-    searchRegexp_(context->subVar("search-regexp")),
+    searchPath_(context->subVar("search-path")),
 
     mergeData_(context->subVar("mergeData")),
     assumeSVT_(context->subVar("assumeSVT")),
@@ -229,9 +247,9 @@ void MDSPlusDataReader::execute(){
 #ifdef HAVE_MDSPLUS
 
   // Save off the defaults
-  entries_ = nEntries_.get();                  // Number of entries
-  server_ = sServer_.get();                // MDS+ Default Server
-  tree_ = sTree_.get();                    // MDS+ Default Tree 
+  entries_ = nEntries_.get();            // Number of entries
+  server_ = sServer_.get();              // MDS+ Default Server
+  tree_ = sTree_.get();                  // MDS+ Default Tree 
   shot_ = atoi( sShot_.get().c_str() );  // MDS+ Default shot
 
   int entries = gServer_.size();
@@ -947,21 +965,82 @@ void MDSPlusDataReader::tcl_command(GuiArgs& args, void* userdata)
     return;
   }
 
-  if (args[1] == "search") {
+  if (args[1] == "update_tree") {
 #ifdef HAVE_MDSPLUS
+    loadServer_.reset();
+    loadTree_.reset();
+    loadShot_.reset();
+    loadSignal_.reset();
 
+    // Get the load strings;
+    string server( loadServer_.get() );
+    string tree  ( loadTree_.get() );
+    int    shot  ( atoi( loadShot_.get().c_str() ) );
+    string signal( loadSignal_.get() );
+    unsigned int depth = 1;
+
+    if (args[2] == "root") {
+      signal = string( loadSignal_.get() );
+    } else {
+      signal = string( args[2] );
+    }
+
+    string dumpname;
+
+    char* tmpdir = getenv( "SCIRUN_TMP_DIR" );
+    char filename[64];
+
+    sprintf( filename, "%s_%d.mds.dump", tree.c_str(), shot );
+
+    if( tmpdir )
+      dumpname = tmpdir + string( "/" );
+    else
+      dumpname = string( "/tmp/" );
+
+    dumpname.append( filename );
+
+    std::ofstream sPtr( dumpname.c_str() );
+
+    if( !sPtr ) {
+      error( string("Unable to open output file: ") + dumpname );
+      return;
+    }
+  
+    MDSPlusDump mdsdump( &sPtr );
+
+    if( mdsdump.tree(server, tree, shot, signal, depth ) < 0 ) {
+      error( string("Could not create dump file: ") + dumpname );
+      return;
+    }
+
+    sPtr.flush();
+    sPtr.close();
+
+    // Update the treeview in the GUI.
+    ostringstream str;
+    str << id << " build_tree " << dumpname << " " << args[3];
+      
+    gui->execute(str.str().c_str());
+#else
+
+  error( "No MDS PLUS availible." );
+
+#endif
+
+  } else if (args[1] == "search") {
+#ifdef HAVE_MDSPLUS
     searchServer_.reset();
     searchTree_.reset();
     searchShot_.reset();
     searchSignal_.reset();
-    searchRegexp_.reset();
+    searchPath_.reset();
 
     // Get the search strings;
     string server( searchServer_.get() );
     string tree  ( searchTree_.get() );
     int    shot  ( atoi( searchShot_.get().c_str() ) );
     string signal( searchSignal_.get() );
-    int    regexp( searchRegexp_.get() );
+    int    path  ( searchPath_.get() );
 
     MDSPlusReader mds;
 
@@ -1018,9 +1097,25 @@ void MDSPlusDataReader::tcl_command(GuiArgs& args, void* userdata)
 
     vector< string > signals;
 
-    mds.search( signal, regexp, signals );
+    {
+      ostringstream str;
+      str << "Searching " << signal << " for signals ... ";
+      remark( str.str() );
+    }
+
+    mds.names( signal, signals, (bool) path, 1, 0 );
+
+    mds.disconnect();
+
+    {
+      ostringstream str;
+      str << signals.size() << " Signals loaded.. ";
+      remark( str.str() );
+    }
+
 
     for( unsigned int ic=0; ic<signals.size(); ic++ ) {
+
       // Update the list in the GUI.
       ostringstream str;
       str << id << " setEntry {" << signals[ic] << "}";
