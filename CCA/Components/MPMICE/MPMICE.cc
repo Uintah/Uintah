@@ -25,8 +25,8 @@
 #include <stdio.h>
 #include <Core/Util/DebugStream.h>
 
-#define JOHN_BCS
-//#undef JOHN_BCS
+//#define JOHN_BCS
+#undef JOHN_BCS
 
 
 using namespace Uintah;
