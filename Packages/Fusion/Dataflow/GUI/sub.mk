@@ -16,7 +16,9 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/EditFusionField.tcl\
 	$(SRCDIR)/FusionFieldReader.tcl\
 	$(SRCDIR)/FusionSlicer.tcl\
+	$(SRCDIR)/MDSPlusDataReader.tcl\
 	$(SRCDIR)/MDSPlusFieldReader.tcl\
+	$(SRCDIR)/Plot2DViewer.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Fusion/Dataflow/GUI
 
