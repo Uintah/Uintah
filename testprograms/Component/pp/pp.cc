@@ -65,15 +65,14 @@ void usage(char* progname)
 int main(int argc, char* argv[])
 {
     using std::string;
-    //delete sep;
     try{
-      //      PIDL::initialize(argc,argv);
+      PIDL::initialize(argc,argv);
       bool client=false;
       bool server=false;
       bool stop=false;
       bool test=false;
       string url;
-      int reps=100;
+      int reps=1;
       
       for(int i=1;i<argc;i++){
 	string arg(argv[i]);
@@ -87,45 +86,16 @@ int main(int argc, char* argv[])
 	usage(argv[0]);
       
       if(server) {
-	/*PingPong_impl::pointer pp=PingPong_impl::pointer(new PingPong_impl);
+	PingPong_impl::pointer pp=PingPong_impl::pointer(new PingPong_impl);
 	pp->addReference();
 	cerr << "Waiting for pp connections...\n";
 	ofstream f("pp.url");
 	std::string s;
 	f<<pp->getURL().getString();
 	f.close();
-	*/
-	EpChannel *sep=new SocketEpChannel();
-	sep->openConnection();
-	cerr<<"Server URL="<<sep->getUrl()<<endl;
-	ofstream sockf("socket.url");
-	std::string socks;
-	sockf<<sep->getUrl();
-	sockf.close();
-	sep->activateConnection(NULL);
       } 
 
       else if(client){
-	ifstream sockf("socket.url");
-	std::string socks;
-	sockf>>socks;
-	sockf.close();
-	SpChannel *ssp=new SocketSpChannel();
-	ssp->openConnection(socks);
-	Message *msg=ssp->getMessage();
-	int testvalue=1999;
-	msg->marshalInt(&testvalue, 1);
-	cerr<<"sending Message"<<endl;
-	msg->sendMessage(0);
-	msg->destroyMessage();
-	
-	cerr<<"sending deleteReference Message"<<endl;
-	msg->createMessage();
-	msg->sendMessage(1);
-	msg->destroyMessage();
-
-
-	/*
 	ifstream f("pp.url");
 	std::string s;
 	f>>s;
@@ -149,7 +119,7 @@ int main(int argc, char* argv[])
 	else{
 	  cerr << "Successful\n";
 	}
-	*/
+
       }
       else if(stop){
 	ifstream f("pp.url");
@@ -171,17 +141,11 @@ int main(int argc, char* argv[])
 	cerr<<"url="<<url;
 	Object::pointer obj=PIDL::objectFrom(url);
 	cerr << "Object_from completed\n";
-	//PingPong::pointer pp=pidl_cast<PingPong::pointer>(obj);
-	//cerr << "pidl_cast completed\n";
-	/*if(pp.isNull()){
-	  cerr << "pp_isnull\n";
-	  abort();
-	  }*/
       }
 
-      //PIDL::serveObjects();
+      PIDL::serveObjects();
       cerr << "exits\n";
-      //PIDL::finalize();
+      PIDL::finalize();
 
     } catch(const MalformedURL& e) {
 	cerr << "pp.cc: Caught MalformedURL exception:\n";
