@@ -295,7 +295,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleTimeAdvance--
 _____________________________________________________________________*/
-void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
+void ICE::scheduleTimeAdvance(double /*t*/, double /*dt*/,const LevelP& level,
 			      SchedulerP& sched)
 {
 #ifdef DOING
@@ -449,6 +449,7 @@ void  ICE::scheduleMassExchange(SchedulerP& sched,
   Task* task = scinew Task("ICE::massExchange",
 			this, &ICE::massExchange);
   task->requires(Task::NewDW, lb->rho_CCLabel, Ghost::None);
+  task->requires(Task::OldDW, lb->temp_CCLabel, Ghost::None);
   task->computes(lb->burnedMass_CCLabel);
   task->computes(lb->releasedHeat_CCLabel);
   
@@ -1966,7 +1967,7 @@ void ICE::computePressFC(const ProcessorGroup*,
 void ICE::massExchange(const ProcessorGroup*,  
 			  const PatchSubset* patches,
                        const MaterialSubset* /*matls*/,
-			  DataWarehouse* /*old_dw*/,
+			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
@@ -1984,11 +1985,14 @@ void ICE::massExchange(const ProcessorGroup*,
    StaticArray<CCVariable<double> > burnedMass(numMatls);
    StaticArray<CCVariable<double> > releasedHeat(numMatls);
    StaticArray<CCVariable<double> > rho_CC(numMatls);
+   StaticArray<CCVariable<double> > Temp_CC(numMatls);
+   StaticArray<double> cv(numMatls);
    
    int reactant_indx = -1;
 
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
 
       // Look for the reactant material
       if (matl->getRxProduct() == Material::reactant)
@@ -1996,10 +2000,13 @@ void ICE::massExchange(const ProcessorGroup*,
 
       int indx = matl->getDWIndex();
       new_dw->get(rho_CC[m], lb->rho_CCLabel, indx,patch,Ghost::None, 0);
+      old_dw->get(Temp_CC[m],     lb->temp_CCLabel,indx,patch,Ghost::None, 0);
       new_dw->allocate(burnedMass[m],  lb->burnedMass_CCLabel,  indx,patch);
       new_dw->allocate(releasedHeat[m],lb->releasedHeat_CCLabel,indx,patch);
       burnedMass[m].initialize(0.0);
       releasedHeat[m].initialize(0.0); 
+
+      cv[m] = ice_matl->getSpecificHeat();
     }
     //__________________________________
     // Do the exchange if there is a reactant (reactant_indx >= 0)
@@ -2013,6 +2020,9 @@ void ICE::massExchange(const ProcessorGroup*,
            // hardwired wipes out all the mass in one 
           // timestep
            burnedMass[reactant_indx][*iter] =  -burnedMass_tmp;
+	   releasedHeat[reactant_indx][*iter] = -burnedMass_tmp
+					      *  cv[reactant_indx]
+					      *  Temp_CC[reactant_indx][*iter];
         }
       }
       //__________________________________
@@ -2025,6 +2035,8 @@ void ICE::massExchange(const ProcessorGroup*,
 	    for(CellIterator iter=patch->getCellIterator();
 		!iter.done();iter++){
 	      burnedMass[prods][*iter]  -= burnedMass[m][*iter];
+              releasedHeat[prods][*iter] -=
+                                burnedMass[m][*iter]*cv[m]*Temp_CC[m][*iter];
 	    }
 	  }
 	}
@@ -2405,8 +2417,25 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           double min_int_eng = min_mass * cv * temp_CC[*iter];
           double int_eng_tmp = mass * cv * temp_CC[*iter];
 
-          int_eng_L[*iter] = std::max(int_eng_tmp, min_int_eng) + 
-                             int_eng_source[*iter] + releasedHeat[*iter];  
+          //  Glossary:
+          //  int_eng_tmp    = the amount of internal energy for this
+          //                   matl in this cell coming into this task
+          //  int_eng_source = thermodynamic work = f(delPress)
+          //  releasedHeat   = enthalpy of reaction gained by the
+          //                   product gas, PLUS (OR, MINUS) the
+          //                   internal energy of the reactant
+          //                   material that was liberated in the
+          //                   reaction
+          // min_int_eng     = a small amount of internal energy to keep
+          //                   the equilibration pressure from going nuts
+
+
+          int_eng_L[*iter] = int_eng_tmp +
+                             int_eng_source[*iter] +
+                             releasedHeat[*iter];
+
+          int_eng_L[*iter] = std::max(int_eng_L[*iter], min_int_eng);
+
          }
 	cout << "Mass gained by the gas this timestep = " << massGain << endl;
        }  //  if (mass exchange)
@@ -3715,7 +3744,7 @@ void   ICE::hydrostaticPressureAdjustment(const Patch* patch,
 {
   Vector dx             = patch->dCell();
   Vector gravity        = d_sharedState->getGravity();
-  IntVector highIndex   = patch->getInteriorCellHighIndex();
+//  IntVector highIndex   = patch->getInteriorCellHighIndex();
   
                   //ONLY WORKS ON ONE PATCH  Press_ref_* will have to change
   double press_hydro;
@@ -3787,12 +3816,12 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
                                 Patch::FaceType face,
                                 DataWarehouse* old_dw,
                                 CCVariable<double>& press_CC, 
-                          const StaticArray<CCVariable<double> >& rho_micro_CC,
-                          const StaticArray<CCVariable<double> >& rho_CC,
-                          const StaticArray<CCVariable<double> >& vol_frac_CC,
-                          const StaticArray<CCVariable<Vector> >& vel_CC)
+                        const StaticArray<CCVariable<double> >& rho_micro_CC,
+                        const StaticArray<CCVariable<double> >& rho_CC,
+                        const StaticArray<CCVariable<double> >& /*vol_frac_CC*/,
+                        const StaticArray<CCVariable<Vector> >& vel_CC)
 {
-  int numICEMatls = d_sharedState->getNumICEMatls();
+//  int numICEMatls = d_sharedState->getNumICEMatls();
   int numALLMatls = d_sharedState->getNumMatls();
   int surrounding_mat;
   IntVector offset;
@@ -3802,7 +3831,6 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
   double rho_FC, rho_micro_FC;
   double plus_minus_one;
  
-  double tmp, beta;
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
   DenseMatrix K(numALLMatls,numALLMatls), junk(numALLMatls,numALLMatls);
