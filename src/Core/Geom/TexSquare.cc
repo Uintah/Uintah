@@ -57,6 +57,7 @@ PersistentTypeID TexSquare::type_id("TexSquare", "GeomObj", make_TexSquare);
 
 TexSquare::TexSquare()
   : GeomObj(),
+    normal_(1.0, 0.0, 0.0),
     texture(0),
     numcolors(0),
     width_(2),
@@ -94,6 +95,11 @@ TexSquare::set_texture( unsigned char *tex, int num, int w, int h) {
 void
 TexSquare::set_texname(unsigned int texname) {
   texname_ = texname;
+}
+
+void
+TexSquare::set_normal(Vector &normal) {
+  normal_ = normal;
 }
 
 
