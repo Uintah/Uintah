@@ -82,11 +82,6 @@ public:
                                   const MaterialSubset*,
 				      const MaterialSet*);
 
-  /*
-  void scheduleInterpolateVelIncFCToNC(SchedulerP&, 
-                                      const PatchSet*,
-				          const MaterialSet*);
-  */
   
   void scheduleInterpolateNCToCC(SchedulerP&, 
                                 const PatchSet*,
@@ -153,14 +148,6 @@ public:
 			   const MaterialSubset* matls,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw);
-
-  /*
-  void interpolateVelIncFCToNC(const ProcessorGroup*,
-                               const PatchSubset* patch,
-			       const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
-  */
   
   void interpolateNCToCC(const ProcessorGroup*,
                          const PatchSubset* patch,
