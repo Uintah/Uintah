@@ -122,6 +122,8 @@ WARNING
 
      //////////
      // Insert Documentation Here:
+     CellIterator getCellIterator() const;
+     
      CellIterator getCellIterator(const Box& b) const;
      
      //////////
@@ -277,6 +279,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch* r);
 
 //
 // $Log$
+// Revision 1.14  2000/07/11 15:21:24  kuzimmer
+// Patch::getCellIterator()
+//
 // Revision 1.13  2000/06/27 23:18:17  rawat
 // implemented Staggered cell variables. Modified Patch.cc to get ghostcell
 // and staggered cell indexes.

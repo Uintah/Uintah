@@ -255,7 +255,11 @@ Patch::getCellIterator(const Box& b) const
    high = SCICore::Geometry::Min(high, getCellHighIndex());
    return CellIterator(low, high);
 }
-
+CellIterator
+Patch::getCellIterator() const
+{
+   return CellIterator(getCellLowIndex(), getCellHighIndex());
+}
 Box Patch::getGhostBox(const IntVector& lowOffset,
 		       const IntVector& highOffset) const
 {
@@ -458,6 +462,9 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 
 //
 // $Log$
+// Revision 1.16  2000/07/11 15:21:24  kuzimmer
+// Patch::getCellIterator()
+//
 // Revision 1.15  2000/06/27 23:18:17  rawat
 // implemented Staggered cell variables. Modified Patch.cc to get ghostcell
 // and staggered cell indexes.
