@@ -60,7 +60,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP scheduler, const P
 
   rdbg << "HierarchicalRegridder::regrid() HERE 1" << endl;
 
-  for (levelIdx = 0; levelIdx < oldGrid->numLevels(); levelIdx++) {
+  for (levelIdx = 0; levelIdx < oldGrid->numLevels() && levelIdx < d_maxLevels-1; levelIdx++) {
     d_numCreated[levelIdx] = 0;
     d_numDeleted[levelIdx] = 0;
 
@@ -79,13 +79,10 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP scheduler, const P
 
     bool thisLevelExists = false;
 
-    for (int x = 0; x < d_patchNum[levelIdx].x() && !thisLevelExists; x++ ) {                            // Loop over fine level patches
-      for (int y = 0; y < d_patchNum[levelIdx].y() && !thisLevelExists; y++ ) {
-	for (int z = 0; z < d_patchNum[levelIdx].z() && !thisLevelExists; z++ ) {
-	  if ((*d_patchActive[levelIdx])[IntVector(x,y,z)]) {
-	    thisLevelExists = true;
-	  }
-	}
+    for (CellIterator iter(IntVector(0,0,0), d_patchNum[levelIdx]); !iter.done(); iter++) {
+      if ((*d_patchActive[levelIdx])[*iter]) {
+        thisLevelExists = true;
+        break;
       }
     }
 
@@ -110,21 +107,18 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP scheduler, const P
 
     rdbg << "HierarchicalRegridder::regrid(): Setting extra cells to be: " << extraCells << endl;
 
-    for (int x = 0; x < d_patchNum[levelIdx].x(); x++ ) {                            // Loop over fine level patches
-      for (int y = 0; y < d_patchNum[levelIdx].y(); y++ ) {
-	for (int z = 0; z < d_patchNum[levelIdx].z(); z++ ) {
-	  if ((*d_patchActive[levelIdx])[IntVector(x,y,z)]) {
-	    IntVector startCell       = IntVector(x,y,z) * d_patchSize[levelIdx];
-	    IntVector endCell         = (IntVector(x,y,z) + IntVector(1,1,1)) * d_patchSize[levelIdx] - IntVector(1,1,1);
-	    if (x == d_patchNum[levelIdx](0)-1) endCell(0) = d_cellNum[levelIdx](0)-1;
-	    if (y == d_patchNum[levelIdx](1)-1) endCell(1) = d_cellNum[levelIdx](1)-1;
-	    if (z == d_patchNum[levelIdx](2)-1) endCell(2) = d_cellNum[levelIdx](2)-1;
-	    // endCell = Min (endCell, d_cellNum[levelIdx]);
-	    // ignores extra cells, boundary conditions.
-	    /*Patch* newPatch =*/ newLevel->addPatch(startCell, endCell + IntVector(1,1,1) , startCell, endCell + IntVector(1,1,1));
-	    //newPatch->setLayoutHint(oldPatch->layouthint);
-	  }
-	}
+    for (CellIterator iter(IntVector(0,0,0), d_patchNum[levelIdx]); !iter.done(); iter++) {
+      IntVector idx(*iter);
+      if ((*d_patchActive[levelIdx])[idx]) {
+        IntVector startCell       = idx * d_patchSize[levelIdx];
+        IntVector endCell         = (idx + IntVector(1,1,1)) * d_patchSize[levelIdx] - IntVector(1,1,1);
+        if (idx.x() == d_patchNum[levelIdx](0)-1) endCell(0) = d_cellNum[levelIdx](0)-1;
+        if (idx.y() == d_patchNum[levelIdx](1)-1) endCell(1) = d_cellNum[levelIdx](1)-1;
+        if (idx.z() == d_patchNum[levelIdx](2)-1) endCell(2) = d_cellNum[levelIdx](2)-1;
+        // endCell = Min (endCell, d_cellNum[levelIdx]);
+        // ignores extra cells, boundary conditions.
+        /*Patch* newPatch =*/ newLevel->addPatch(startCell, endCell + IntVector(1,1,1) , startCell, endCell + IntVector(1,1,1));
+        //newPatch->setLayoutHint(oldPatch->layouthint);
       }
     }
     if((levelIdx < oldGrid->numLevels()) && oldGrid->getLevel(levelIdx)->getPeriodicBoundaries() != IntVector(0,0,0)) {
@@ -217,6 +211,7 @@ void HierarchicalRegridder::ExtendPatches( const GridP& oldGrid, int levelIdx  )
       rdbg << "Marking child patch at: " << idx << endl;
       IntVector startCell       = idx * d_patchSize[childLevelIdx];
       IntVector endCell         = (idx + IntVector(1,1,1)) * d_patchSize[childLevelIdx] - IntVector(1,1,1);
+
       IntVector parentStartCell = startCell / d_cellRefinementRatio[parentLevelIdx];
       IntVector parentEndCell   = endCell / d_cellRefinementRatio[parentLevelIdx];
       if (idx.x() == d_patchNum[parentLevelIdx](0)-1) parentEndCell(0) = d_cellNum[parentLevelIdx](0)-1;
@@ -233,6 +228,7 @@ void HierarchicalRegridder::ExtendPatches( const GridP& oldGrid, int levelIdx  )
     Dilate(patchCells, dilatedPatchCells, FILTER_BOX, d_minBoundaryCells);
     
     // Loop over parent level patches and mark them as active if their contain dilatedPatchCells
+
     for (CellIterator iter(d_flaggedCells[parentLevelIdx]->getLowIndex()/d_patchSize[parentLevelIdx],
                            d_flaggedCells[parentLevelIdx]->getHighIndex()/d_patchSize[parentLevelIdx]); 
                            !iter.done(); iter++) {

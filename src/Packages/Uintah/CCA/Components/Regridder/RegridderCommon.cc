@@ -76,7 +76,7 @@ bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid)
           get flagged cells on that patch
           if those cells are flagged
            flaggedCells = true;
-      MPI_Allreduce(flaggedCells, and, retval);
+      MPI_Allreduce(flaggedCells, or, retval);
       return retval;
       }
     else {
