@@ -46,14 +46,20 @@ static Persistent* make_Path()
 
 PersistentTypeID Path::type_id("Path", "Datatype", make_Path);
 
+//-----------------------------------------------------------------------------
+// Constructor/Destructor
+
 Path::Path(): sint(30)
 {
   //upV=scinew Cubic3DPWI<Vector>();
   //fov=scinew CubicPWI();
+  
   upV=scinew Linear3DPWI<Vector>();
   fov=scinew LinearPWI();
   lookatP=scinew Linear3DPWI<Point>();
+  speed=scinew LinearPWI();
   eyeP=NULL;
+  
   // lookatP=NULL;
   reset();
 
@@ -72,14 +78,17 @@ Path::~Path()
   delete lookatP;
   delete upV;
   delete fov;
+  delete speed;
 }
+
+//-----------------------------------------------------------------------------
 
 void Path::reset(){
  
   keyViews.remove_all();
   speedVal.remove_all();
   accPatt.remove_all();
-  is_built=is_sampled=is_back=is_loop=0;
+  is_built=is_back=is_loop=0;
   step_size=0.01;
   keyF=0;
   pathP=0;
@@ -92,7 +101,9 @@ Path* Path::clone()
     return scinew Path(*this);
 }
 
-#define Path_VERSION 2
+//-----------------------------------------------------------------------------
+
+#define Path_VERSION 3
 
 void Path::io(Piostream& stream)
 {
@@ -103,7 +114,7 @@ void Path::io(Piostream& stream)
     
     int oldpath=path_t;
 
-    stream.begin_class("Path", Path_VERSION);
+    int version=stream.begin_class("Path", Path_VERSION);
 
     Pio(stream, is_loop);
     Pio(stream, is_back);
@@ -127,16 +138,23 @@ void Path::io(Piostream& stream)
       int newpath=path_t;
       path_t=oldpath;
       set_path_t(newpath);  // to initialize interpolation classes to new type
+      if (version<3){
+	for (int i=0; i<speedVal.size();i++)
+	  speedVal[i]=1;
+      }
     }
+    
     stream.end_class();
 }
+
+//-----------------------------------------------------------------------------
 
 void Path::del_keyF(int i){
   ASSERT(i>=0 && i<keyViews.size());
   keyViews.remove(i);
   speedVal.remove(i);
   accPatt.remove(i);
-  is_built=is_sampled=0;
+  is_built=0;
 }
 
 // helper function to see if points are the same in respect to numerical zero
@@ -166,7 +184,7 @@ bool Path::ins_keyF(int i, const View& v, double speed, int acc_patt){
       return false;
     }
   
-  is_built=is_sampled=0;
+  is_built=0;
   return true;
 }
 
@@ -182,9 +200,11 @@ bool Path::add_keyF(const View& v, double speed, int acc_patt){
   keyViews.add(v);
   speedVal.add(speed);
   accPatt.add(acc_patt);
-  is_built=is_sampled=0;
+  is_built=0;
   return true;
 }
+
+//-----------------------------------------------------------------------------
 
 int  Path::get_num_views() const{
   return keyViews.size();
@@ -237,22 +257,31 @@ int Path::get_acc_t(int n) const{
   return acc_t;
 }
 
+
+//-----------------------------------------------------------------------------
+
 double Path::get_speed_val(int n) const {
   return (n<speedVal.size() && n>=0)? speedVal[n]:-1;
 }
    
-bool Path::get_keyF(int i, View& v){
+bool Path::get_keyF(int i, View& v, double& sp){
   if (i>=0 && i<keyViews.size()){
     v=keyViews[i];
     keyF=i;
+    sp=speedVal[i];
     return true;
   }
   return false;
 }
 
+//-----------------------------------------------------------------------------
+
 bool Path::build_path(){
   if (!is_built){
-    is_sampled=0;
+
+    if(path_t==KEYFRAMED)
+      return is_built=1;
+
     param.remove_all();
    
     double sum=0;
@@ -270,12 +299,14 @@ bool Path::build_path(){
     Array1<Point> lpts;
     Array1<Vector> vects;
     Array1<double> fovs;
+    Array1<double> sps;
 
     for (int i=0; i<keyViews.size(); i++) {
       lpts.add(keyViews[i].lookat());
       epts.add(keyViews[i].eyep());
       vects.add(keyViews[i].up());
       fovs.add(keyViews[i].fov());
+      sps.add(speedVal[i]);
     }
 
     //***************************************************************
@@ -298,8 +329,11 @@ bool Path::build_path(){
       q_param.add(sum);
     }
     
+    if (path_t==CUBIC && param.size()<2)
+      return is_built=0;
+    
     if (eyeP->set_data(param, epts) && lookatP->set_data(param, lpts) && upV->set_data(param, vects) 
-	&& fov->set_data(param, fovs) && resample_path()){
+	&& fov->set_data(param, fovs) && speed->set_data(param, sps) && resample_path()){
 	 is_built=1;
     }
     else {
@@ -307,22 +341,21 @@ bool Path::build_path(){
       lookatP->reset();
       upV->reset();
       fov->reset();
+      speed->reset();
       msg ("Path not built");
-      is_built=is_sampled=0;
+      is_built=0;
     }
   }
   return is_built;
 }
 
 bool Path::resample_path(){
-  is_sampled=0;
+
   ns=1001;
   const double delta=1/(double)(ns-1);
   
   Array1<double> pathPoints;
   pathPoints.resize(ns);
-  
-  is_sampled=1;
   
   Vector dist;
   double w=0;
@@ -356,8 +389,10 @@ bool Path::resample_path(){
     dist_prm[i]=(j*w+(1-w)*(j-1))*delta*paramd;    
   }
 
-  return is_sampled;
+  return 1;
 }
+
+//-----------------------------------------------------------------------------
 
 // return keyframe number right behind the view
 int Path::calc_view(double w, View& v){
@@ -395,6 +430,8 @@ int Path::calc_view(double w, View& v){
   return p;
 }  
 
+//-----------------------------------------------------------------------------
+
 bool Path::set_step(double s){ 
   if (s!=step_size) {
     step_size=s;
@@ -410,7 +447,7 @@ double Path::get_step() const {
 }
 
 bool Path::set_path_t(int t){
-  if (t!=path_t || !eyeP || !lookatP){
+  if (t!=path_t || !eyeP ){
     path_t=t;
     is_run=is_built=0;
     if (path_t!=KEYFRAMED){
@@ -443,6 +480,8 @@ bool Path::get_nextKF(View& v, int& kf_num, double& kf_speed, double& kf_acc_pat
   keyF+=(is_back)?-1:1;
   bool is_valid=true;
   int sz=keyViews.size();
+  if (sz==0)
+    return false;
   if (keyF>=sz || keyF<0){
     keyF=(is_back)?(sz-1):0;
     if (is_loop){
@@ -455,17 +494,23 @@ bool Path::get_nextKF(View& v, int& kf_num, double& kf_speed, double& kf_acc_pat
 
   v=keyViews[keyF];
   kf_num=keyF;
-  kf_speed=0;             // to be changed in full, "accelerated" version
+  kf_speed=speedVal[keyF];
   kf_acc_patt=0;
 
   return is_valid;
 }
 
+//-----------------------------------------------------------------------------
+
 // function providing acceleration patterns support
 double Path::get_delta(){
-  double step=step_size;
+ 
+  double step;
+  speed->get_value(path_prm, step);
+  step=step*step_size;
 
-  if (acc_t==SMOOTH){
+  switch (acc_t){
+  case SMOOTH: {
     double ps=step_size*60/PI;
     int d=1;
     if (ps>path_dist/2){  // ensuring the path point not in first and last acc zones at a time
@@ -477,13 +522,13 @@ double Path::get_delta(){
     bool is_lzone=(!is_back)?(pathP>(path_dist-ps)):(pathP<ps);	     
     is_fzone=((!is_run || is_acc)&& is_fzone)?true:false;
     is_lzone=(!is_loop && is_lzone)?true:false;
-     
+      
     // trigerring acceleration
     if (!is_acc && (is_fzone || is_lzone)){
       count=(is_fzone)?0:29;
       is_acc=1;
     }
-
+    
     if (count>=0 && count<30){
       step=step_size*sint[count];
       if ((pathP>ps && !is_back) || (is_back && pathP<ps)) 
@@ -497,6 +542,16 @@ double Path::get_delta(){
       count=100;
     }
   }
+  break;
+  
+  case USERMODE:
+    break;
+    
+  case NO_ACC:
+  default:
+    step=step_size;
+  }
+  
   is_run=1;
   return step;
 }
@@ -533,12 +588,11 @@ bool Path::get_nextPP(View& v, int& curr_view, double& curr_speed, double& curr_
 	}
       }
       
-      // syncronzing pathP with actual parameter
-      set_param();
-   
       if (is_valid){
+	// syncronzing pathP with actual parameter
+	set_param();
 	keyF=curr_view=calc_view(path_prm, v);
-	curr_speed=step;
+	curr_speed=step/step_size;
 	curr_acc=path_prm;      // not used
 	return true;
       }
@@ -560,6 +614,9 @@ bool Path::get_nextPP(View& v, int& curr_view, double& curr_speed, double& curr_
 
 //
 // $Log$
+// Revision 1.5  2000/09/29 08:42:34  samsonov
+// Added camera speed support
+//
 // Revision 1.4  2000/09/28 05:57:56  samsonov
 // minor fix
 //
