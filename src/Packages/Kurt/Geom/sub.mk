@@ -11,6 +11,9 @@ SRCS     += $(SRCDIR)/MultiBrick.cc $(SRCDIR)/VolumeOctree.cc \
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:36:38  sparker
+# Added VPATH support
+#
 # Revision 1.1  2000/03/17 09:26:31  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository

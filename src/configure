@@ -590,9 +590,9 @@ if test "$package" = ""; then
 fi
 
 PACKAGE_DIRS=$package
-PACKAGE_PATH="\$(OBJTOP_ABS)/PSECommon/components.xml"
+PACKAGE_PATH="\$(SRCTOP_ABS)/PSECommon/components.xml"
 for i in $package; do
-  PACKAGE_PATH=$PACKAGE_PATH,"\$(OBJTOP_ABS)/$i/components.xml"
+  PACKAGE_PATH=$PACKAGE_PATH,"\$(SRCTOP_ABS)/$i/components.xml"
 done
 
 
@@ -3434,7 +3434,10 @@ test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
 
 #
 # $Log$
-# Revision 1.44  2000/03/17 09:25:07  sparker
+# Revision 1.45  2000/03/20 19:35:41  sparker
+# Added VPATH support
+#
+# Revision 1.49  2000/03/17 09:25:08  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository
 # Plus many other changes to make these two things work
