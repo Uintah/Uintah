@@ -64,10 +64,8 @@ WARNING
    
    class ProblemSpec : public RefCounted {
    public:
-      ProblemSpec();
+      ProblemSpec(const DOM_Node& node);
       virtual ~ProblemSpec();
-      void setDoc(const DOM_Document& doc);
-      void setNode(const DOM_Node& node);
       
       ProblemSpecP findBlock(const std::string& name) const;
       ProblemSpecP findBlock() const;
@@ -75,8 +73,6 @@ WARNING
       ProblemSpecP findNextBlock() const;
       
       std::string getNodeName() const;
-      
-      DOM_Node findNode(const std::string &name, DOM_Node node) const;
       
       void require(const std::string& name, double& value);
       void require(const std::string& name, int& value);
@@ -105,15 +101,13 @@ WARNING
       
       static const TypeDescription* getTypeDescription();
       
-
-      DOM_Document getDocument() const {
-	 return d_doc;
+      DOM_Node getNode() const {
+	 return d_node;
       }
    private:
       ProblemSpec(const ProblemSpec&);
       ProblemSpec& operator=(const ProblemSpec&);
       
-      DOM_Document d_doc;
       DOM_Node d_node;
       
    };
@@ -123,6 +117,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.14  2000/05/20 08:09:39  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.13  2000/05/15 19:39:53  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups

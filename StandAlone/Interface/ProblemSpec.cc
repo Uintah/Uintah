@@ -9,12 +9,15 @@ static char *id="@(#) $Id$";
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
 #include <Uintah/Exceptions/ParameterNotFound.h>
+#include <PSECore/XMLUtil/XMLUtil.h>
 //#include <cstdlib>
 using namespace Uintah;
 using namespace std;
 using namespace SCICore::Geometry;
+using namespace PSECore::XMLUtil;
 
-ProblemSpec::ProblemSpec()
+ProblemSpec::ProblemSpec(const DOM_Node& node)
+   : d_node(node)
 {
 }
 
@@ -22,21 +25,9 @@ ProblemSpec::~ProblemSpec()
 {
 }
 
-void ProblemSpec::setDoc(const DOM_Document &doc)
-{
-  d_doc = doc;
-}
-
-void ProblemSpec::setNode(const DOM_Node &node)
-{
-  d_node = node;
-}
-
 ProblemSpecP ProblemSpec::findBlock() const
 {
-  ProblemSpecP prob_spec = new ProblemSpec;
-  prob_spec->setNode(this->d_node);
-  prob_spec->setDoc(this->d_doc);
+  ProblemSpecP prob_spec = new ProblemSpec(d_node);
 
   DOM_Node child = d_node.getFirstChild();
   if (child != 0) {
@@ -44,55 +35,29 @@ ProblemSpecP ProblemSpec::findBlock() const
       child = child.getNextSibling();
     }
   }
-  if (child.isNull() ) {
-    prob_spec = 0;
-  }
-  else {
-    prob_spec->setNode(child);
-  }
-  return prob_spec;
+  if (child.isNull() )
+     return 0;
+  else
+     return new ProblemSpec(child);
 
 }
 
 ProblemSpecP ProblemSpec::findBlock(const std::string& name) const 
 {
-  ProblemSpecP prob_spec = new ProblemSpec;
-  prob_spec->setNode(this->d_node);
-  prob_spec->setDoc(this->d_doc);
-
-  DOM_Node start_element;
-  if (d_node.isNull()) {
-    start_element = prob_spec->d_doc.getDocumentElement();
-  }
-  else {
-    start_element = this->d_node;
-  }
-  if (start_element.isNull()) {
-    cerr << "Didn't find the start . . " << name << endl;
-    cerr << "Setting to Null . . " << endl;
-    return 0;
-  }
-  DOM_Node found_node = findNode(name,start_element);
+   DOM_Node found_node = findNode(name,d_node);
 
   if (found_node.isNull()) {
     cerr << "Didn't find the tag . . " << name << endl;
     cerr << "Setting to Null . . " << endl;
-    prob_spec = 0;
+    return 0;
   }
   else {
-    prob_spec->setNode(found_node);
+     return new ProblemSpec(found_node);
   }
-  
-  return prob_spec;
-
 }
 
 ProblemSpecP ProblemSpec::findNextBlock() const
 {
-  ProblemSpecP prob_spec = new ProblemSpec;
-  prob_spec->setNode(this->d_node);
-  prob_spec->setDoc(this->d_doc);
-  
   DOM_Node found_node = d_node.getNextSibling();
   
   if (found_node != 0) {
@@ -102,33 +67,18 @@ ProblemSpecP ProblemSpec::findNextBlock() const
   }
     
   if (found_node.isNull() ) {
-    prob_spec = 0;
+     return 0;
   }
   else {
-    prob_spec->setNode(found_node);
+     return new ProblemSpec(found_node);
   }
-
-  return prob_spec;
-
 }
 
 ProblemSpecP ProblemSpec::findNextBlock(const std::string& name) const 
 {
-  ProblemSpecP prob_spec = new ProblemSpec;
-  prob_spec->setNode(this->d_node);
-  prob_spec->setDoc(this->d_doc);
-
-  DOM_Node start_element;
-  if (d_node.isNull()) {
-    start_element = prob_spec->d_doc.getDocumentElement();
-  }
-  else {
-    start_element = this->d_node;
-  }
-
   // Iterate through all of the child nodes that have this name
 
-  DOM_Node found_node = start_element.getNextSibling();
+  DOM_Node found_node = d_node.getNextSibling();
 
   DOMString search_name(name.c_str());
   while(found_node != 0){
@@ -143,23 +93,13 @@ ProblemSpecP ProblemSpec::findNextBlock(const std::string& name) const
     found_node = found_node.getNextSibling();
 
   }
-#if 0
-  if (!found_node.isNull()) {
-    if (found_node.getNodeType() == DOM_Node::TEXT_NODE) {
-      found_node = found_node.getNextSibling();
-    }
-  }
-#endif
    
   if (found_node.isNull()) {
-    prob_spec = 0;
+     return 0;
   }
   else {
-    prob_spec->setNode(found_node);
+     return new ProblemSpec(found_node);
   }
-  
-  return prob_spec;
-
 }
 
 
@@ -173,38 +113,6 @@ std::string ProblemSpec::getNodeName() const
 
   return name;
 }
-
-
-
-DOM_Node ProblemSpec::findNode(const std::string &name,DOM_Node node) const
-{
-
-  // Convert string name to a DOMString;
-  
-  DOMString search_name(name.c_str());
-  // Check if the node is equal
-  DOMString node_name = node.getNodeName();
-  if (node_name.equals(search_name))
-    return node;
-      
-  // Do the child nodes now
-  DOM_Node child = node.getFirstChild();
-  while (child != 0) {
-    DOMString child_name = child.getNodeName();
-    char *s = child_name.transcode();
-    std::string c_name(s);
-    delete[] s;
-    if (search_name.equals(child_name) ) {
-      return child;
-    }
-    //DOM_Node tmp = findNode(name,child);
-    child = child.getNextSibling();
-  }
-  
-  DOM_Node unknown;
-  return unknown;
-}
-
 
 ProblemSpecP ProblemSpec::get(const std::string& name, double &value)
 {
@@ -524,6 +432,11 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.18  2000/05/20 08:09:38  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.17  2000/04/27 21:26:37  jas
 // Fixed the parsing of Vector and IntVector, offsets were wrong for the
 // y and z values.
