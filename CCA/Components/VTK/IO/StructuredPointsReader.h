@@ -46,7 +46,8 @@
 #include <vector>
 
 class vtkStructuredPointsReader;
-
+class vtkStructuredPoints;
+class vtkObject;
 namespace SCIRun {
   namespace vtk{
 
@@ -62,7 +63,10 @@ namespace SCIRun {
       //Component interface
       int popupUI();
 
+      vtkObject* getOutput();
+
     private:
+      vtkStructuredPoints* vol;
       vtkStructuredPointsReader *reader;
       StructuredPointsReader(const StructuredPointsReader&);
       StructuredPointsReader& operator=(const StructuredPointsReader&);
