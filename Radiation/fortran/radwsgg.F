@@ -7,7 +7,7 @@ C***********************************************************************
 C      IMPLICIT NONE 
 
       double precision PI,PI1,SIG,twall,temp,a,fracn,fracnsum,fracntot,
-     &scatcoef,phfunc,twalltwo
+     &scatcoef,phfunc,twalltwo,abskgtemp
 
       double precision b(4),c(3,4,4),d(4,4)
 
@@ -88,14 +88,16 @@ C      IMPLICIT NONE
 
             ABSKG(I,J,K) = a*(CO2(I,J,K)+H2O(I,J,K))+
      &      402.834d0*SFV(I,J,K)*TG(I,J,K)
-        if(abskg(i,j,k).eq.0.0d0)abskg(i,j,k) = 1.0d-06
+
+            abskgtemp = abskg(i,j,k)
+        if(abskgtemp.le.1.0d-06)abskgtemp = 1.0d-06
 
 c     Anisotropic scattering properties for the interior nodes
 c     (for spherical harmonics only)
 
             scatcoef = 0.0d0
             phfunc   = 0.0d0
-            shgamma(i,j,k) = 3.0d0*(abskg(i,j,k) + scatcoef) - 
+            shgamma(i,j,k) = 3.0d0*(abskgtemp + scatcoef) - 
      &      phfunc*scatcoef
             shgamma(i,j,k) = 1.0d0/shgamma(i,j,k)
 

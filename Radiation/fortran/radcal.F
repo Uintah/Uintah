@@ -10,7 +10,7 @@ C      IMPLICIT NONE
      &x,y,z,xxx,yyy,zzz,TEMP,ABSKP,FV,FACTOR,
      &MUONE,MUTWO,SUMONE,SUMTWO,FRACNONE,FRACNTWO,FRACN,twall,
      &small,wavemin,wavemax,dom,omega,SDTOTAL,intervals,GDINV,
-     &GDDINV,XSTAR,XC,XD,YC,YD,YCD,scatcoef,phfunc
+     &GDDINV,XSTAR,XC,XD,YC,YD,YCD,scatcoef,phfunc,abskgtemp
 
       Integer I,II,J,K,L,M
 
@@ -292,10 +292,14 @@ c       valid when all walls are at same temperature)
       ABSKG(I,J,K) = ESRCG(I,J,K)/(FRACNSUM(I,J,K)*SIG*PI1*
      &TG(I,J,K)**4)
 
+      abskgtemp = abskg(i,j,k)
+      if(abskgtemp.le.1.0d-06)abskgtemp=1.0d-06
+
       IF (LPATCHMEAN)THEN
 
        ABSKG(I,J,K) = PATCHN(I,J,K)/PATCHD(I,J,K)
-	if(abskg(i,j,k).eq.0.0d0)abskg(i,j,k) = 1.0d-06
+       abskgtemp = abskg(i,j,k)
+       if(abskgtemp.le.1.0d-06)abskgtemp = 1.0d-06
        ESRCG(I,J,K) = FRACNSUM(I,J,K)*SIG*PI1*ABSKG(I,J,K)*TG(I,J,K)**4
 
       END IF
@@ -305,7 +309,7 @@ c     (for spherical harmonics only)
 
             scatcoef = 0.0d0
             phfunc   = 0.0d0
-            shgamma(i,j,k) = 3.0d0*(abskg(i,j,k) + scatcoef) - 
+            shgamma(i,j,k) = 3.0d0*(abskgtemp + scatcoef) - 
      &      phfunc*scatcoef
             shgamma(i,j,k) = 1.0d0/shgamma(i,j,k)
 
