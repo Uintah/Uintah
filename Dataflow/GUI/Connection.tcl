@@ -78,7 +78,8 @@ proc drawConnections { connlist } {
 	set flags "-width [expr $disabled?3:7] -fill \"$color\" -tags $id"
 	set miniflags "-width 1 -fill \"$color\" -tags $id"
 	if { ![canvasExists $canvas $id] } {
-	    eval $canvas create bline $path $flags
+	    set style [expr [envBool SCIRUN_STRAIGHT_CONNECTIONS]?"line":"bline"]
+	    eval $canvas create $style $path $flags
 	    eval $minicanvas create line [scalePath $path] $miniflags
 
 	    $canvas bind $id <1> "$canvas raise $id
@@ -488,7 +489,7 @@ proc routeConnection { conn } {
     set ix [expr int([lindex $inpos 0])]
     set iy [expr int([lindex $inpos 1])]
     if {[envBool SCIRUN_STRAIGHT_CONNECTIONS] } {
-	return [list $ox [expr $oy-3] $ix [expr $iy+3]]
+	return [list $ox $oy $ox [expr $oy+3] $ix [expr $iy-3] $ix $iy]
     } elseif { $ox == $ix && $oy <= $iy } {
 	return [list $ox $oy $ix $iy]
     } elseif {[expr $oy+19] < $iy} {
