@@ -191,10 +191,9 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
 
 
 
-
 int
-main(int argc, char *argv[] )
-{
+main(int argc, char *argv[], char **envp) {
+  store_existing_environment(envp);
   const int startnetno = parse_args( argc, argv );
 
 #if defined(__APPLE__)  
