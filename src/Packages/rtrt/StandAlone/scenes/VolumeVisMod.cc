@@ -79,6 +79,133 @@ void get_material2(Array1<Color> &matls, Array1<AlphaPos> &alphas) {
   alphas.add(AlphaPos(1,        0));  // pos 192
 }
 
+int get_material_nrrd(char * filename,
+		       Array1<Color> &matls, Array1<AlphaPos> &alphas) {
+  // Open the nrrd
+  Nrrd *nrrd = nrrdNew();
+  // load the nrrd in
+  if (nrrdLoad(nrrd,filename)) {
+    char *err = biffGet(NRRD);
+    cerr << "Error reading nrrd "<< filename <<": "<<err<<"\n";
+    free(err);
+    biffDone(NRRD);
+    nrrdNuke(nrrd);
+    return 1;
+  }
+
+  // The nrrd needs to be of type float or double
+  if (nrrd->type != nrrdTypeFloat) {
+    if (nrrd->type != nrrdTypeDouble) {
+      cerr << "Wrong type: \n";
+      nrrdNuke(nrrd);
+      return 1;
+    } else {
+      // convert it to float, since it will be later anyway.
+      Nrrd *new_nrrd = nrrdNew();
+      nrrdConvert(new_nrrd, nrrd, nrrdTypeFloat);
+      // since the data was copied blow away the memory for the old nrrd
+      nrrdNuke(nrrd);
+      nrrd = new_nrrd;
+    }
+  }  
+
+  // We need 2 dimentions
+  // 1. For the r,g,b,a,pos
+  // 2. For the transfer function element
+  if (nrrd->dim != 2) {
+    cerr << "Wrong number of dimenstions: "<<nrrd->dim<<"\n";
+    nrrdNuke(nrrd);
+    return 1;
+  }
+
+  // We need axis[0] to have size of 5
+  if (nrrd->axis[0].size != 5) {
+    cerr << "Axis[0] must have size of 5\n";
+    nrrdNuke(nrrd);
+    return 1;
+  }
+
+  // Ok, now we loop over the data and get ourselves a colormap.
+  float *data = (float*)(nrrd->data);
+  for(int i = 0; i < nrrd->axis[1].size; i++) {
+    float r,g,b,a,pos;
+    r = AIR_CLAMP(0,*data,1); data++;
+    g = AIR_CLAMP(0,*data,1); data++;
+    b = AIR_CLAMP(0,*data,1); data++;
+    a = AIR_CLAMP(0,*data,1); data++;
+    pos = AIR_CLAMP(0,*data,1); data++;
+    cout << "color = ("<<r<<", "<<g<<", "<<b<<")\n";
+    matls.add(Color(r,g,b));
+    cout << "a = "<<a<<", pos = "<<pos<<endl;
+    alphas.add(AlphaPos(pos,a));
+  }
+
+  nrrdNuke(nrrd);
+  return 0;
+}
+
+int get_alpha_nrrd(char * filename, Array1<AlphaPos> &alphas) {
+  // Open the nrrd
+  Nrrd *nrrd = nrrdNew();
+  // load the nrrd in
+  if (nrrdLoad(nrrd,filename)) {
+    char *err = biffGet(NRRD);
+    cerr << "Error reading nrrd "<< filename <<": "<<err<<"\n";
+    free(err);
+    biffDone(NRRD);
+    nrrdNuke(nrrd);
+    return 1;
+  }
+
+  // The nrrd needs to be of type float or double
+  if (nrrd->type != nrrdTypeFloat) {
+    if (nrrd->type != nrrdTypeDouble) {
+      cerr << "Wrong type: \n";
+      nrrdNuke(nrrd);
+      return 1;
+    } else {
+      // convert it to float, since it will be later anyway.
+      Nrrd *new_nrrd = nrrdNew();
+      nrrdConvert(new_nrrd, nrrd, nrrdTypeFloat);
+      // since the data was copied blow away the memory for the old nrrd
+      nrrdNuke(nrrd);
+      nrrd = new_nrrd;
+    }
+  }  
+
+  // We need 2 dimentions
+  // 1. For the r,g,b,a,pos
+  // 2. For the transfer function element
+  if (nrrd->dim != 2) {
+    cerr << "Wrong number of dimenstions: "<<nrrd->dim<<"\n";
+    nrrdNuke(nrrd);
+    return 1;
+  }
+
+  // We need axis[0] to have size of 5
+  if (nrrd->axis[0].size != 2) {
+    cerr << "Axis[0] must have size of 5\n";
+    nrrdNuke(nrrd);
+    return 1;
+  }
+
+  // Reset the alpha values
+  alphas.remove_all();
+  
+  // Ok, now we loop over the data and get ourselves a colormap.
+  float *data = (float*)(nrrd->data);
+  for(int i = 0; i < nrrd->axis[1].size; i++) {
+    float a, pos;
+    a = AIR_CLAMP(0,*data,1); data++;
+    pos = AIR_CLAMP(0,*data,1); data++;
+    cout << "a = "<<a<<", pos = "<<pos<<endl;
+    alphas.add(AlphaPos(pos,a));
+  }
+
+  nrrdNuke(nrrd);
+  return 0;
+}
+
 VolumeVis *create_volume_from_nrrd(char *filename,
 				   bool override_data_min, double data_min_in,
 				   bool override_data_max, double data_max_in,
@@ -286,6 +413,7 @@ VolumeVis *create_volume_default(int scene_type, double val,
 
 #define RAINBOW_COLOR_MAP 0
 #define INVERSE_BLACK_BODY_COLOR_MAP 1
+#define NRRD_COLOR_MAP 2
 
 extern "C" 
 Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
@@ -309,6 +437,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   float data_max_in = -1;
   float frame_rate = 3;
   int color_map_type = RAINBOW_COLOR_MAP;
+  char *nrrd_color_map_file = 0;
+  char *nrrd_alpha_map = 0;
   Color bgcolor(1.,1.,1.);
   
   for(int i=1;i<argc;i++){
@@ -382,11 +512,16 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       if (strcmp(argv[i], "rainbow")==0){
 	color_map_type = RAINBOW_COLOR_MAP;
       } else if (strcmp(argv[i], "inversebb")==0){
-	color_map_type = RAINBOW_COLOR_MAP;
+	color_map_type = INVERSE_BLACK_BODY_COLOR_MAP;
+      } else if (strcmp(argv[i], "nrrd")==0){
+	color_map_type = NRRD_COLOR_MAP;
+	nrrd_color_map_file = argv[++i];
       } else {
 	cerr << "Unknown color map type.  Using rainbow.\n";
 	color_map_type = RAINBOW_COLOR_MAP;
       }
+    } else if(strcmp(argv[i], "-alpha")==0){
+      nrrd_alpha_map = argv[++i];
     } else if(strcmp(argv[i], "-bgcolor")==0){
       float r,g,b;
       r = atof(argv[++i]);
@@ -414,7 +549,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       cerr << " -diffuse [float] - the diffuse factor\n";
       cerr << " -specular [float] - the specular factor\n";
       cerr << " -rate [float] - frame rate of the time steps\n";
-      cerr << " -colormap [string] - \"rainbow\" or \"inverse\"\n";
+      cerr << " -colormap [string] - \"rainbow\" or \"inversebb\"\n";
       cerr << " -bgcolor [float] [float] [float] - the three floats are r, g, b\n";
       return 0;
     }
@@ -440,11 +575,19 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   case INVERSE_BLACK_BODY_COLOR_MAP:
     get_material2(matls,alphas);
     break;
+  case NRRD_COLOR_MAP:
+    if (get_material_nrrd(nrrd_color_map_file, matls, alphas) == 0)
+      break;
+    // else do the rainbow color map
   case RAINBOW_COLOR_MAP:
   default:
     get_material(matls,alphas);
     break;
   }
+  if (nrrd_alpha_map) {
+    get_alpha_nrrd(nrrd_alpha_map, alphas);
+  }
+  
   VolumeVisDpy *dpy = new VolumeVisDpy(matls, alphas, ncolors, t_inc);
 
   // Generate the data
@@ -504,8 +647,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Scene* scene=new Scene(all, cam,
 			 bgcolor, cdown, cup, groundplane, 
 			 ambient_scale);
-  
-  scene->add_light(new Light(Point(500,-300,300), Color(.8,.8,.8), 0));
+
+  Light *light0 = new Light(Point(500,-300,300), Color(.8,.8,.8), 0);
+  light0->name_ = "light 0";
+  scene->add_light(light0);
   //scene->shadow_mode=1;
   scene->attach_display(dpy);
   scene->addObjectOfInterest(obj,true);
