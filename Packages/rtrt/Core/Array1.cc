@@ -14,6 +14,7 @@
 #ifdef __GNUG__
 #pragma interface
 #endif
+namespace rtrt {
 
 template<class T>
 Array1<T>::Array1(const Array1<T>& a)
@@ -104,14 +105,6 @@ void Array1<T>::add(const T& obj)
 }
 
 template<class T>
-int Array1<T>::add2(const T& obj)
-{
-    grow(1, default_grow_size);
-    objs[_size-1]=obj;
-    return _size-1;
-}
-
-template<class T>
 void Array1<T>::insert(int idx, const T& obj)
 {
     grow(1, default_grow_size);
@@ -172,27 +165,33 @@ T* Array1<T>::get_objs()
   return objs;
 }
 
+} // end namespace rtrt
+
+namespace SCIRun {
+
 #define ARRAY1_VERSION 1
 
 template<class T>
-void Pio(Piostream& stream, Array1<T>& array)
-{
-    /* int version= */stream.begin_class("Array1", ARRAY1_VERSION);
-    int size=array._size;
-    Pio(stream, size);
-    if(stream.reading()){
-	array.remove_all();
-	array.grow(size);
-    }
-    for(int i=0;i<size;i++)
-	Pio(stream, array.objs[i]);
-    stream.end_class();
+void Pio(Piostream& stream, rtrt::Array1<T>& array)
+{ 
+  stream.begin_class("rtrtArray1", ARRAY1_VERSION);
+  int size=array.size();
+  Pio(stream, size);
+  if(stream.reading()){
+    array.remove_all();
+    array.grow(size);
+  }
+  T* obj_arr = array.get_objs();
+  for(int i=0;i<size;i++)
+    Pio(stream, obj_arr[i]);
+  stream.end_class();
 }
 
 template<class T>
-void Pio(Piostream& stream, Array1<T>*& array) {
+void Pio(Piostream& stream, rtrt::Array1<T>*& array) {
     if (stream.reading())
-	array=new Array1<T>;
+	array=new rtrt::Array1<T>;
     Pio(stream, *array);
 }
 
+} //end namespace SCIRun
