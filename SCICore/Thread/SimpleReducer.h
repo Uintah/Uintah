@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_SimpleReducer_h
 #define SCICore_Thread_SimpleReducer_h
 
+#include <SCICore/share/share.h>
+
 #include <SCICore/Thread/Barrier.h>
 
 namespace SCICore {
@@ -36,7 +38,7 @@ DESCRIPTION
    thread, and these sums are added together.
    
 ****************************************/
-	class SimpleReducer : public Barrier {
+	class SCICORESHARE SimpleReducer : public Barrier {
 	public:
 	    //////////
 	    // Create a <b> SimpleReducer</i>.
@@ -91,6 +93,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.4  1999/09/24 18:55:07  moulding
+// added SCICORESHARE, for win32, to class declarations
+//
 // Revision 1.3  1999/09/02 16:52:44  sparker
 // Updates to cocoon documentation
 //

@@ -13,7 +13,9 @@
  */
 
 #ifndef SCICore_Thread_ThreadError_h
-#define SCICore_Thread_ThreadError_h
+#define SCICore_Thread_ThreadError_h=
+
+#include <SCICore/share/share.h>
 
 #include <SCICore/Exceptions/Exception.h>
 
@@ -32,7 +34,7 @@ DESCRIPTION
    often not recoverable.
 
 ****************************************/
-	class ThreadError : public SCICore::Exceptions::Exception {
+	class SCICORESHARE ThreadError : public SCICore::Exceptions::Exception {
 	public:
 	    //////////
 	    // Constructor for the ThreadError class.  Message is
@@ -58,6 +60,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.6  1999/09/24 18:55:08  moulding
+// added SCICORESHARE, for win32, to class declarations
+//
 // Revision 1.5  1999/09/02 16:52:44  sparker
 // Updates to cocoon documentation
 //

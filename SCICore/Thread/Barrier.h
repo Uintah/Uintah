@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_Barrier_h
 #define SCICore_Thread_Barrier_h
 
+#include <SCICore/share/share.h>
+
 namespace SCICore {
     namespace Thread {
 	class ThreadGroup;
@@ -40,7 +42,7 @@ WARNING
    
 ****************************************/
 
-	class Barrier {
+	class SCICORESHARE Barrier {
 	public:
 	    //////////
 	    // Create a barrier which will be used by a variable number
@@ -75,6 +77,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.9  1999/09/24 18:55:06  moulding
+// added SCICORESHARE, for win32, to class declarations
+//
 // Revision 1.8  1999/09/02 16:52:41  sparker
 // Updates to cocoon documentation
 //

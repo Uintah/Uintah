@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_ThreadGroup_h
 #define SCICore_Thread_ThreadGroup_h
 
+#include <SCICore/share/share.h>
+
 #include <SCICore/Thread/Mutex.h>
 #include <vector>
 
@@ -36,7 +38,7 @@ DESCRIPTION
    and alerted simultaneously.
  
 ****************************************/
-	class ThreadGroup {
+	class SCICORESHARE ThreadGroup {
 	public:
 	    
 	    //////////
@@ -111,6 +113,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.8  1999/09/24 18:55:08  moulding
+// added SCICORESHARE, for win32, to class declarations
+//
 // Revision 1.7  1999/09/02 16:52:44  sparker
 // Updates to cocoon documentation
 //

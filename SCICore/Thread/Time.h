@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_Time_h
 #define SCICore_Thread_Time_h
 
+#include <SCICore/share/share.h>
+
 namespace SCICore {
     namespace Thread {
 /**************************************
@@ -31,7 +33,7 @@ DESCRIPTION
    on other machines.
 
 ****************************************/
-	class Time {
+	class SCICORESHARE Time {
 	public:
 	    typedef unsigned long long SysClock;
 	    
@@ -81,6 +83,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.6  1999/09/24 18:55:08  moulding
+// added SCICORESHARE, for win32, to class declarations
+//
 // Revision 1.5  1999/09/02 16:52:44  sparker
 // Updates to cocoon documentation
 //

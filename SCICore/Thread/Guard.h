@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_Guard_h
 #define SCICore_Thread_Guard_h
 
+#include <SCICore/share/share.h>
+
 namespace SCICore {
     namespace Thread {
 	class CrowdMonitor;
@@ -42,7 +44,7 @@ DESCRIPTION
    </pre></blockquote>
    
 ****************************************/
-	class Guard {
+	class SCICORESHARE Guard {
 	public:
 	    //////////
 	    // Attach the <b>Guard</b> object to the <i>mutex</i>, and
@@ -81,6 +83,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.6  1999/09/24 18:55:06  moulding
+// added SCICORESHARE, for win32, to class declarations
+//
 // Revision 1.5  1999/09/02 16:52:42  sparker
 // Updates to cocoon documentation
 //

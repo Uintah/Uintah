@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_Semaphore_h
 #define SCICore_Thread_Semaphore_h
 
+#include <SCICore/share/share.h>
+
 namespace SCICore {
     namespace Thread {
 	class Semaphore_private;
@@ -36,7 +38,7 @@ DESCRIPTION
    thread calls the <i>up</i> method.
 
 ****************************************/
-	class Semaphore {
+	class SCICORESHARE Semaphore {
 	public:
 	    //////////
 	    // Create the semaphore, and setup the initial <i>count.name</i>
@@ -83,6 +85,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.8  1999/09/24 18:55:07  moulding
+// added SCICORESHARE, for win32, to class declarations
+//
 // Revision 1.7  1999/09/02 16:52:43  sparker
 // Updates to cocoon documentation
 //

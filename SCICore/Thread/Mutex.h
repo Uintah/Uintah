@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_Mutex_h
 #define SCICore_Thread_Mutex_h
 
+#include <SCICore/share/share.h>
+
 namespace SCICore {
     namespace Thread {
 	class Mutex_private;
@@ -34,7 +36,7 @@ DESCRIPTION
    lock() in a nested call will result in an error or deadlock.
 
 ****************************************/
-	class Mutex {
+	class SCICORESHARE Mutex {
 	public:
 	    //////////
 	    // Create the mutex.  The mutex is allocated in the unlocked
@@ -76,6 +78,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.8  1999/09/24 18:55:07  moulding
+// added SCICORESHARE, for win32, to class declarations
+//
 // Revision 1.7  1999/09/02 16:52:42  sparker
 // Updates to cocoon documentation
 //

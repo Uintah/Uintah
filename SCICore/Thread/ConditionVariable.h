@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_ConditionVariable_h
 #define SCICore_Thread_ConditionVariable_h
 
+#include <SCICore/share/share.h>
+
 struct timespec;
 
 namespace SCICore {
@@ -43,7 +45,7 @@ DESCRIPTION
    
 ****************************************/
 
-	class ConditionVariable {
+	class SCICORESHARE ConditionVariable {
 	public:
 	    //////////
 	    // Create a condition variable. <i>name</i> should be a static
@@ -99,6 +101,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.9  1999/09/24 18:55:06  moulding
+// added SCICORESHARE, for win32, to class declarations
+//
 // Revision 1.8  1999/09/22 19:10:28  sparker
 // Implemented timedWait method for ConditionVariable.  A default
 // implementation of CV is no longer possible, so the code is moved
