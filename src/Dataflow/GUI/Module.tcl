@@ -1502,13 +1502,7 @@ proc moduleDestroy {maincanvas minicanvas modid} {
 	destroyConnection [lindex $i 0] [lindex $i 1] [lindex $i 3]
     }
 
-    # Hack, work around Viewer deletion bug by waiting a moment to destroy
-    # the module after it has been disconnected.
-    if {[string first Viewer $modid] != -1} {
-	after 100 "moduleDestroyAux $maincanvas $minicanvas $modid"
-    } else {
-	moduleDestroyAux $maincanvas $minicanvas $modid
-    }
+    moduleDestroyAux $maincanvas $minicanvas $modid
 }
 
 proc moduleDestroyAux {maincanvas minicanvas modid} {

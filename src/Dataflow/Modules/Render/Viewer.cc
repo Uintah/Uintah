@@ -105,11 +105,11 @@ Viewer::Viewer(GuiContext* ctx)
 //----------------------------------------------------------------------
 Viewer::~Viewer()
 {
+
 }
-
-
 //----------------------------------------------------------------------
-void Viewer::do_execute()
+void
+Viewer::do_execute()
 {
   for(;;)
   {
@@ -130,23 +130,24 @@ void Viewer::do_execute()
 	}
       }
     }
-    if (process_event() == 86)
+    if (process_event() == 86)  
     {
-      //for(unsigned int i=0;i<view_window_.size();i++)
-      //{
-      //	View_Window_* r=view_window_[i];
-      //if (r && r->current_renderer)
-      //{
-      //r->current_renderer->kill_helper();
-      //	}
-      //      }
+      for(unsigned int i=0;i<view_window_.size();i++)
+      {
+      	ViewWindow* r=view_window_[i];
+	if (r && r->current_renderer)
+	{
+	  r->current_renderer->kill_helper();
+      	}
+      }
       return;
     }
   }
 }
 
 //----------------------------------------------------------------------
-int Viewer::process_event()
+int 
+Viewer::process_event()
 {
   MessageBase* msg=mailbox.receive();
   GeometryComm* gmsg=(GeometryComm*)msg;
