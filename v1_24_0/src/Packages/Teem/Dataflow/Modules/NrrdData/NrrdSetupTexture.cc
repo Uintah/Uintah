@@ -284,9 +284,9 @@ NrrdSetupTexture::execute()
   }
 
   // Add the matrix size into the canonical transform.
-  transform.pre_scale(Vector(1.0 / (nin->axis[2].size - 1.0),
-                             1.0 / (nin->axis[1].size - 1.0),
-                             1.0 / (nin->axis[0].size - 1.0)));
+  transform.post_scale(Vector(1.0 / (nin->axis[0].size - 1.0),
+                              1.0 / (nin->axis[1].size - 1.0),
+                              1.0 / (nin->axis[2].size - 1.0)));
   
 
   if (nin->type == nrrdTypeChar)
