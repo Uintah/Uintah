@@ -503,16 +503,16 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
      new_dw->put(bElBar_new,             lb->bElBarLabel_preReloc);
 
    }
- }
+}
 
 
- void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
+void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
 						   const MPMMaterial* matl,
 						   DataWarehouse* old_dw,
 						   DataWarehouse* new_dw)
 
 
- {
+{
    for(int pp=0;pp<patches->size();pp++){
      const Patch* patch = patches->get(pp);
      Matrix3 velGrad,Shear,deformationGradientInc,
@@ -635,12 +635,19 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
      new_dw->put(bElBar_new,             lb->bElBarLabel_preReloc);
 
    }
- }
+}
 
- void CompNeoHook::addComputesAndRequires(Task* task,
+void CompNeoHook::addInitialComputesAndRequires(Task* task,
+                                                const MPMMaterial* matl,
+                                                const PatchSet*) const
+{
+
+}
+
+void CompNeoHook::addComputesAndRequires(Task* task,
 					  const MPMMaterial* matl,
 					  const PatchSet*) const
- {
+{
     const MaterialSubset* matlset = matl->thisMaterial();
     task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
     task->requires(Task::OldDW, lb->pMassLabel,   matlset, Ghost::None);
@@ -660,10 +667,10 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     task->computes(lb->pVolumeDeformedLabel,              matlset);
 
 
- }
+}
 
 
- void CompNeoHook::addComputesAndRequiresImplicit(Task* task,
+void CompNeoHook::addComputesAndRequiresImplicit(Task* task,
 						  const MPMMaterial* matl,
 						  const PatchSet*,
 						  const bool recursion)

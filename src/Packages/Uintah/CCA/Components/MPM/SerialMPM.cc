@@ -180,6 +180,14 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(d_sharedState->get_delt_label());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
 
+  int numMPM = d_sharedState->getNumMPMMatls();
+  const PatchSet* patches = level->eachPatch();
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cm->addInitialComputesAndRequires(t, mpm_matl, patches);
+  }
+
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
   t = scinew Task("SerialMPM::printParticleCount",

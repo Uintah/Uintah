@@ -70,6 +70,10 @@ namespace Uintah {
                                        const MPMMaterial* matl,
                                        DataWarehouse* new_dw);
 
+         virtual void addInitialComputesAndRequires(Task* task,
+                                             const MPMMaterial* matl,
+                                             const PatchSet* patches) const;
+
          virtual void addComputesAndRequires(Task* task,
                                              const MPMMaterial* matl,
                                              const PatchSet* patches) const;
