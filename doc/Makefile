@@ -15,6 +15,9 @@
 #  University of Utah. All Rights Reserved.
 #
 
+.PHONY: faqs techguide userguide clean veryclean
+
+MAKE = make
 FINALTARGET = SCIRunDocs.tar.gz
 
 default: $(FINALTARGET)
@@ -23,25 +26,36 @@ $(FINALTARGET): SCIRunDocs.tar
 	rm -f SCIRunDocs.tar.gz
 	gzip SCIRunDocs.tar
 
-SCIRunDocs.tar: doc_styles.css index.html TechnicalGuide/TOC.html \
-                UserGuide/usersguide/usersguide.html
+SCIRunDocs.tar: doc_styles.css index.html faqs techguide userguide
 	rm -f SCIRunDocs.tar
-	cd ..; tar cvf doc/SCIRunDocs.tar doc/UserGuide/usersguide \
+	cd .. && tar cvf doc/SCIRunDocs.tar doc/UserGuide/usersguide \
 		   doc/UserGuide/figures doc/UserGuide/tutorial \
 		   doc/UserGuide/usersguide.ps.gz \
 		   doc/UserGuide/usersguide.pdf.gz \
                    doc/TechnicalGuide/*.html \
+                   doc/faqs/*.html \
                    doc/doc_styles.css doc/index.html doc/images
 
-TechnicalGuide/TOC.html: TechnicalGuide/Makefile
-	cd TechnicalGuide; make
 
-UserGuide/usersguide/usersguide.html: UserGuide/Makefile
-	cd UserGuide; make
+faqs:
+	cd faqs && $(MAKE)
+
+techguide:
+	cd TechnicalGuide && $(MAKE)
+
+userguide:
+	cd UserGuide && $(MAKE)
 
 clean:
 	rm -f SCIRunDocs.tar.gz
 	rm -f SCIRunDocs.tar
-	cd TechnicalGuide; make clean
-	cd UserGuide; make clean
+	cd TechnicalGuide && $(MAKE) clean
+	cd UserGuide && $(MAKE) clean
+	cd faqs && $(MAKE) clean
 
+veryclean:
+	rm -f SCIRunDocs.tar.gz
+	rm -f SCIRunDocs.tar
+	cd TechnicalGuide && $(MAKE) veryclean
+	cd UserGuide && $(MAKE) veryclean
+	cd faqs && $(MAKE) veryclean
