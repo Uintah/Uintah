@@ -1208,7 +1208,7 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
     bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-    double flowout;
+    double flowout = 0.0;
     if (d_outletBoundary) {
 
       fort_outletbc(uVelocity, vVelocity, wVelocity, scalar[0],

@@ -160,7 +160,7 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
 				      DataWarehouse*,
 				      DataWarehouse* new_dw)
 {
-  double time = d_lab->d_sharedState->getElapsedTime();
+  double time = 0.0;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
