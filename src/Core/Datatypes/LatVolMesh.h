@@ -229,7 +229,7 @@ public:
 
 private:
 
-  //! the node_index space extents of a LatVolMesh (min=0, max=n)
+  //! the node_index space extents of a LatVolMesh (min=0, max=n-1)
   unsigned nx_, ny_, nz_;
 
   //! the object space extents of a LatVolMesh
