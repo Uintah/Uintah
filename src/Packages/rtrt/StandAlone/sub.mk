@@ -31,6 +31,11 @@ SRCS := $(SRCDIR)/multi_rtrt.cc
 PROGRAM := Packages/rtrt/StandAlone/mrtrt
 include $(SCIRUN_SCRIPTS)/program.mk
 
+# genpttex
+SRCS := $(SRCDIR)/genpttex.cc
+PROGRAM := Packages/rtrt/StandAlone/genpttex
+include $(SCIRUN_SCRIPTS)/program.mk
+
 # nrrd2brick
 SRCS := $(SRCDIR)/nrrd2brick.cc
 LIBS += $(TEEM_LIBRARY)
