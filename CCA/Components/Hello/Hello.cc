@@ -30,12 +30,6 @@
 #include <iostream>
 #include <CCA/Components/Builder/QtUtils.h>
 
-//#include <qapplication.h>
-//#include <qpushbutton.h>
-//#include <qmessagebox.h>
-
-
-
 using namespace std;
 using namespace SCIRun;
 
@@ -45,42 +39,68 @@ extern "C" sci::cca::Component::pointer make_SCIRun_Hello()
 }
 
 
-Hello::Hello()
-{
-
+Hello::Hello(){
 }
 
-Hello::~Hello()
-{
-  cerr << "called ~Hello()\n";
+Hello::~Hello(){
 }
 
-void Hello::setServices(const sci::cca::Services::pointer& svc)
-{
+void Hello::setServices(const sci::cca::Services::pointer& svc){
   services=svc;
-  //register provides ports here ...  
-
+  cerr<<"svc->createTypeMap...";
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
-  myUIPort::pointer uip(&uiPort);
-  myGoPort::pointer gop(&goPort);
+  cerr<<"Done\n";
+
+  myUIPort::pointer uip=myUIPort::pointer(new myUIPort);
+  myGoPort::pointer gop=myGoPort::pointer(new myGoPort(svc));
+
+  cerr<<"svc->addProvidesPort(uip)...";  
   svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
+  cerr<<"Done\n";
+
+  cerr<<"svc->addProvidesPort(gop)...";  
   svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", props);
-  // Remember that if the PortInfo is created but not used in a call to the svc object
-  // then it must be freed.
-  // Actually - the ref counting will take care of that automatically - Steve
+  cerr<<"Done\n";
+
+  svc->registerUsesPort("stringport","sci.cca.ports.StringPort", props);
 }
 
-int myUIPort::ui() 
-{
-//  QMessageBox::warning(0, "Hello", "You have clicked the UI button!");
+int myUIPort::ui(){
+  cout<<"UI button is clicked!\n";
   return 0;
 }
 
+myGoPort::myGoPort(const sci::cca::Services::pointer& svc){
+  this->services=svc;
+}
 
-int myGoPort::go() 
-{
-  //QMessageBox::warning(0, "Hello", "Go ...");
-  cout<<"Go Go Go!"<<endl;
+int myGoPort::go(){
+  if(services.isNull()){
+    cerr<<"Null services!\n";
+    return 1;
+  }
+  cerr<<"Hello.go.getPort...";
+  sci::cca::Port::pointer pp=services->getPort("stringport");	
+  cerr<<"Done\n";
+  if(pp.isNull()){
+    cerr<<"stringport is not available!\n";
+    return 1;
+  }  
+  else{
+    cerr<<"stringport is not null\n";
+  }
+  cerr<<"Hello.go.pidl_cast...";
+  sci::cca::ports::StringPort::pointer sp=pidl_cast<sci::cca::ports::StringPort::pointer>(pp);
+  cerr<<"Done\n";
+
+  cerr<<"Hello.go.port.getString...";
+  std::string name=sp->getString();
+  cerr<<"Done\n";
+
+
+  services->releasePort("stringport");
+
+  cout<<"Hello "<<name<<endl;
   return 0;
 }
  
