@@ -283,9 +283,11 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
   switch(label->typeDescription()->getType()){
   case TypeDescription::ParticleVariable:
     {
+      /* Can modify variable now
       if(d_particleDB.exists(label, matlIndex, patch))
 	throw InternalError("Particle Var already exists before MPI recv: "
 			    + label->getFullName(matlIndex, patch));
+      */
       
       // First, get the particle set.  We should already have it
       if(!old_dw->haveParticleSubset(matlIndex, patch)){
@@ -313,9 +315,11 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
     break;
   case TypeDescription::NCVariable:
     {
+      /* Can modify variable now
       if(d_ncDB.exists(label, matlIndex, patch))
 	throw InternalError("Variable already exists before MPI recv: " +
 			    label->getFullName(matlIndex, patch));
+      */
       Variable* v = label->typeDescription()->createInstance();
       NCVariableBase* var = dynamic_cast<NCVariableBase*>(v);
       ASSERT(var != 0);
@@ -328,8 +332,10 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
     break;
   case TypeDescription::CCVariable:
     {
+      /* Can modify variable now
       if(d_ccDB.exists(label, matlIndex, patch))
 	throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+      */
       Variable* v = label->typeDescription()->createInstance();
       CCVariableBase* var = dynamic_cast<CCVariableBase*>(v);
       ASSERT(var != 0);
@@ -342,8 +348,10 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
     break;
   case TypeDescription::SFCXVariable:
     {
+      /* Can modify variable now
       if(d_sfcxDB.exists(label, matlIndex, patch))
 	throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+      */
       Variable* v = label->typeDescription()->createInstance();
       SFCXVariableBase* var = dynamic_cast<SFCXVariableBase*>(v);
       ASSERT(var != 0);
@@ -356,8 +364,10 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
     break;
   case TypeDescription::SFCYVariable:
     {
+      /* Can modify variable now
       if(d_sfcyDB.exists(label, matlIndex, patch))
 	throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+      */
       Variable* v = label->typeDescription()->createInstance();
       SFCYVariableBase* var = dynamic_cast<SFCYVariableBase*>(v);
       ASSERT(var != 0);
@@ -370,8 +380,10 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
     break;
   case TypeDescription::SFCZVariable:
     {
+      /* Can modify variable now
       if(d_sfczDB.exists(label, matlIndex, patch))
 	throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+      */
       Variable* v = label->typeDescription()->createInstance();
       SFCZVariableBase* var = dynamic_cast<SFCZVariableBase*>(v);
       ASSERT(var != 0);
