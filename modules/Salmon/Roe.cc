@@ -334,8 +334,22 @@ void Roe::RoeInit(Salmon* s) {
 				&manager->mailbox, this,
 				&Roe::point1CB,
 				0, 0);
-    point1->SetSet(True);
+    point1->SetSet(False);
     point1->Create(*lightRC, "Point1");
+    point2=new ToggleButtonC;
+    new MotifCallback<Roe>FIXCB(point2, XmNvalueChangedCallback,
+				&manager->mailbox, this,
+				&Roe::point2CB,
+				0, 0);
+    point2->SetSet(False);
+    point2->Create(*lightRC, "Point2");
+    head1=new ToggleButtonC;
+    new MotifCallback<Roe>FIXCB(head1, XmNvalueChangedCallback,
+				&manager->mailbox, this,
+				&Roe::head1CB,
+				0, 0);
+    head1->SetSet(True);
+    head1->Create(*lightRC, "Headlight 1");
 
     opt_proj=new RowColumnC;
     opt_proj->SetOrientation(XmVERTICAL);
@@ -520,12 +534,25 @@ void Roe::initCB(CallbackData*, void*) {
     glLoadIdentity();
     gluLookAt(2,2,5,2,2,2,0,1,0);
 
-    GLfloat light_position[] = { 5,5,-100,1};
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+    GLfloat light_position[] = { 0, 0, -1, 0 };
+    glLightfv(GL_LIGHT2, GL_POSITION, light_position);
+    GLfloat light_white[] = {1,1,1,1};
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_white);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light_white);
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, light_white);
+    glLightfv(GL_LIGHT1, GL_SPECULAR, light_white);
+    glLightfv(GL_LIGHT2, GL_DIFFUSE, light_white);
+    glLightfv(GL_LIGHT2, GL_SPECULAR, light_white);
+    GLfloat light_black[] = {0,0,0,1};
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light_black);;
+    glLightfv(GL_LIGHT1, GL_AMBIENT, light_black);
+    glLightfv(GL_LIGHT2, GL_AMBIENT, light_black);
     glEnable(GL_NORMALIZE);
     glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
+    glDisable(GL_LIGHT0);
+    glDisable(GL_LIGHT1);
+    glEnable(GL_LIGHT2);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_DEPTH_TEST);
     glFogf(GL_FOG_END, 30.0);
@@ -597,8 +624,10 @@ void Roe::redrawAll()
 	WallClockTimer timer;
 	timer.clear();
 	timer.start();
-	GLfloat light_position[] = { 5,5,-100,1};
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	GLfloat light_position0[] = { 500,500,-100,1};
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position0);
+	GLfloat light_position1[] = { -50,-100,100,1};
+	glLightfv(GL_LIGHT1, GL_POSITION, light_position1);
 	glClearColor(0,0,0,1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	drawinfo->push_matl(manager->default_matl);
@@ -702,6 +731,8 @@ Roe::~Roe()
     delete lightRC;
     delete ambient;
     delete point1;
+    delete point2;
+    delete head1;
     delete opt_proj;
     delete proj_fogRC;
     delete projRC;
@@ -835,6 +866,29 @@ void Roe::point1CB(CallbackData*, void*)
     }
     need_redraw=1;
 }
+
+void Roe::point2CB(CallbackData*, void*)
+{
+    make_current();
+    if (!glIsEnabled(GL_LIGHT1)) {
+	glEnable(GL_LIGHT1);
+    } else {
+	glDisable(GL_LIGHT1);
+    }
+    need_redraw=1;
+}
+
+void Roe::head1CB(CallbackData*, void*)
+{
+    make_current();
+    if (!glIsEnabled(GL_LIGHT2)) {
+	glEnable(GL_LIGHT2);
+    } else {
+	glDisable(GL_LIGHT2);
+    }
+    need_redraw=1;
+}
+
 void Roe::goHomeCB(CallbackData*, void*)
 {
     make_current();
