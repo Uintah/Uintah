@@ -2,11 +2,14 @@
 #ifndef RTRT_GUI_H
 #define RTRT_GUI_H
 
-#include <GL/glx.h>
-#include <GL/glu.h>
+#include <Packages/rtrt/Core/ExternalUIInterface.h>
+#include <Core/Thread/Runnable.h>
+
+// #include <GL/glx.h>
+// #include <GL/glu.h>
 
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
+// #include <X11/Xutil.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -46,26 +49,46 @@ class  Trigger;
 class  Object;
 class  Material;
 class  Scene;
+class  DpyGui;
 
 // Because we have to use static functions, only one Gui object may be
 // active at a time.  (My guess is that there will only be one Gui
 // object at a time anyway...)
 
-class Gui {
+class GGT: public SCIRun::Runnable, public ExternalUIInterface {
 
 public:
-  Gui();
-  ~Gui();
+  GGT();
+  virtual ~GGT();
 
-  static void setActiveGui( Gui * gui );
-  static Gui* getActiveGui();
+  // Inherited from Runnable
+  virtual void run();
+  // Inherited from ExternalUIInterface
+  virtual void stop();
+
+protected:
+  bool on_death_row, opened;
+  int mainWindowID;
+  Display *glut_dpy;
+  Window glut_win;
+  void cleanup();
+  void quit(int all = 0);
+public:
+  
+  void setDpyGui(DpyGui* new_gui);
+  
+  static void setActiveGGT( GGT * gui );
+  static GGT* getActiveGGT();
   
   void setDpy( Dpy * dpy );
   void setStealth( Stealth * stealth );
 
-  void setBottomGraphic( Trigger * trig ) { bottomGraphicTrig_ = trig; }
-  void setLeftGraphic( Trigger * trig ) { leftGraphicTrig_ = trig; }
+//   void setBottomGraphic( Trigger * trig ) { bottomGraphicTrig_ = trig; }
+//   void setLeftGraphic( Trigger * trig ) { leftGraphicTrig_ = trig; }
 
+protected:
+  void addSceneLights();
+public:
   void addLight( Light * light );
 
   // Tell the GUI to update all the information in its windows.
@@ -73,6 +96,9 @@ public:
   void update();
 
   // Used by GLUT
+  static void idleFunc();
+  static void displayCB(); // Stub function for Glut that wants it
+  
   static void redrawBackgroundCB();
   static void handleWindowResizeCB( int width, int height );
   static void handleKeyPressCB( unsigned char key,
@@ -88,8 +114,7 @@ public:
   // This must be called after glutInit(...)!
   //   If showGui is false, the gui window will not be displayed.  Use
   //   'G' or right mouse menu to bring it up.
-  static void createMenus( int winId, bool soundOn = false,
-			   bool showGui = true );
+  void createMenus( int winId, bool soundOn = false, bool showGui = true );
 
   ///////////////////////////////////////////////////////////////////
   // 
@@ -117,13 +142,12 @@ private:
 
   friend class Dpy;
 
-  Dpy               * dpy_;
+  Dpy               * rtrt_dpy;
+  DpyGui            * dpygui;
   struct DpyPrivate * priv;
   Camera            * camera_;
   Stealth           * stealth_;
   Sound             * currentSound_;
-
-  int                 glutDisplayWindowId;
 
   // Main Text Trigger (MTT)
   Trigger * activeMTT_; // If queued, the activeMMT is told to deactivate
@@ -422,7 +446,6 @@ private:
   void toggleGui();
   void cycleShadowMode();
   void cycleAmbientMode();
-  void quit();
   void setupFonts();
   void updateSoundPanel();
   void loadAllRoutes();
@@ -430,30 +453,6 @@ private:
   bool checkBackgroundWindow();
   bool setBackgroundImage( int room );
   void drawBackground();
-
-
-  // Functions to draw text, etc on GL window.
-  void displayText(GLuint fontbase, double x, double y,
-		   char *s, const Color& c);
-  void displayShadowText(GLuint fontbase,
-			 double x, double y, char *s, const Color& c);
-  void drawrstats(int nworkers, std::vector<Worker*> & workers,
-		  int showing_scene, GLuint fontbase, int xres, int yres,
-		  XFontStruct* font_struct, int left, int up, double dt);
-  void draw_labels(XFontStruct* font_struct, GLuint fontbase,
-		   int& column, int dy, int top);
-  void draw_column(XFontStruct* font_struct,
-		   GLuint fontbase, char* heading, DepthStats& sum,
-		   int x, int w2, int dy, int top,
-		   bool first=false, double dt=1, int nworkers=0,
-		   int npixels=0);
-  void drawpstats(Stats* mystats, int nworkers, std::vector<Worker*> & workers,
-		  bool draw_framerate, int showing_scene,
-		  GLuint fontbase, double& lasttime,
-		  double& cum_ttime, double& cum_dt);
-
-  ////////////////////////////////////////////////////////////////
-
 };
 
 } // end namespace rtrt
