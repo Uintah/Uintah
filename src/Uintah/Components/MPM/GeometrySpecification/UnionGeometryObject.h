@@ -21,7 +21,6 @@ class UnionGeometryObject : public GeometryObject {
 
   virtual bool inside(const Point &p) const;
   virtual Box getBoundingBox() const;
-
  private:
   std::vector<GeometryObject* > child;
 

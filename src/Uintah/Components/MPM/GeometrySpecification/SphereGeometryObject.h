@@ -19,7 +19,6 @@ class SphereGeometryObject : public GeometryObject {
  
   virtual bool inside(const Point &p) const;
   virtual Box getBoundingBox() const;
-  
  private:
  
   Point d_origin;
@@ -32,6 +31,10 @@ class SphereGeometryObject : public GeometryObject {
 #endif // __SPHERE_GEOMETRY_OBJECT_H__
 
 // $Log$
+// Revision 1.4  2000/04/20 22:58:14  sparker
+// Resolved undefined symbols
+// Trying to make stuff work
+//
 // Revision 1.3  2000/04/20 22:37:14  jas
 // Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
 // to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).

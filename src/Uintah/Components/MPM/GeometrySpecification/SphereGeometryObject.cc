@@ -48,9 +48,11 @@ Box SphereGeometryObject::getBoundingBox() const
 
 }
 
-
-
 // $Log$
+// Revision 1.5  2000/04/20 22:58:14  sparker
+// Resolved undefined symbols
+// Trying to make stuff work
+//
 // Revision 1.4  2000/04/20 22:37:14  jas
 // Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
 // to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).

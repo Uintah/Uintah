@@ -9,8 +9,10 @@ SRCDIR   := Uintah/Grid
 
 SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/DataItem.cc $(SRCDIR)/Grid.cc \
-	$(SRCDIR)/Level.cc $(SRCDIR)/Material.cc $(SRCDIR)/ParticleSet.cc \
-	$(SRCDIR)/ParticleSubset.cc $(SRCDIR)/ReductionVariableBase.cc \
+	$(SRCDIR)/Level.cc $(SRCDIR)/Material.cc \
+	$(SRCDIR)/NCVariableBase.cc $(SRCDIR)/ParticleSet.cc \
+	$(SRCDIR)/ParticleSubset.cc $(SRCDIR)/ParticleVariableBase.cc \
+	$(SRCDIR)/ReductionVariableBase.cc \
 	$(SRCDIR)/RefCounted.cc $(SRCDIR)/Region.cc \
 	$(SRCDIR)/SimulationState.cc \
 	$(SRCDIR)/SimulationTime.cc $(SRCDIR)/SubRegion.cc \
@@ -24,6 +26,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.9  2000/04/20 22:58:20  sparker
+# Resolved undefined symbols
+# Trying to make stuff work
+#
 # Revision 1.8  2000/04/20 22:37:17  jas
 # Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
 # to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).

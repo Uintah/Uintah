@@ -39,7 +39,6 @@ namespace Uintah {
 	 
 	 virtual Box getBoundingBox() const = 0;
 	 virtual bool inside(const Point &p) const = 0;
-
 	 
       private:
 	 IntVector d_num_par_per_cell;
@@ -52,6 +51,10 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.11  2000/04/20 22:58:14  sparker
+// Resolved undefined symbols
+// Trying to make stuff work
+//
 // Revision 1.10  2000/04/20 22:37:13  jas
 // Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
 // to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).

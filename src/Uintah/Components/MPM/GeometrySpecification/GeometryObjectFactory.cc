@@ -17,9 +17,6 @@ using std::endl;
 using namespace Uintah::Components;
 using Uintah::Interface::ProblemSpecP;
 
-
-
-
 void GeometryObjectFactory::create(const ProblemSpecP& ps,
 				   std::vector<GeometryObject*>& objs)
 
@@ -54,11 +51,3 @@ void GeometryObjectFactory::create(const ProblemSpecP& ps,
       }
    }
 }
-
-
-
-
-
-
-
-
