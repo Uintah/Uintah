@@ -83,7 +83,12 @@ ImageMesh::transform(Transform &t)
 void
 ImageMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 {
-  array.resize(4);
+  const int arr_size = 4;
+  array.resize(arr_size);
+
+  for (int i = 0; i < arr_size; i++)
+    array[i].mesh_ = idx.mesh_;
+
   array[0].i_ = idx.i_;   array[0].j_ = idx.j_;
   array[1].i_ = idx.i_+1; array[1].j_ = idx.j_;
   array[2].i_ = idx.i_+1; array[2].j_ = idx.j_+1;
@@ -95,6 +100,7 @@ void
 ImageMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 {
   array.resize(2);
+
   const int yidx = idx - (nx_-1) * ny_;
   if (yidx >= 0)
   {
