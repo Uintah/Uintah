@@ -66,7 +66,14 @@ public:
   CrowdMonitor        geomlock_;
   GeomIndexedGroup    ports_;
 
+  // CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+  Mailbox<ViewWindow*> newViewWindowMailbox;
+#endif 
+  // CollabVis code end
+  
 private:
+  
   void initPort(Mailbox<GeomReply>*);
   void append_port_msg(GeometryComm*);
   void addObj(GeomViewerPort* port, GeomID serial, GeomHandle obj,

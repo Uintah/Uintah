@@ -46,11 +46,6 @@ SRCS     += \
 	$(SRCDIR)/glMath.cc\
 #[INSERT NEW CODE FILE HERE]
 
-ifeq ($(HAVE_COLLAB_VIS),yes)
-#  SRCS += $(SRCDIR)/ViewServer.cc
-#  SUBDIRS += $(SRCDIR)/CollabVis
-endif
-
 PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Dataflow/Comm Core/Persistent Core/Exceptions Core/Geometry \
 	Core/Geom Core/Thread Core/Containers \
@@ -60,6 +55,31 @@ PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
 INCLUDES += $(MPEG_INCLUDE) $(MAGICK_INCLUDE)
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(MPEG_LIBRARY) $(MAGICK_LIBRARY) $(M_LIBRARY)
+
+# CollabVis code begin
+ifeq ($(HAVE_COLLAB_VIS),yes)
+  SRCS += $(SRCDIR)/ViewServer.cc
+
+  # SUBDIRS += $(SRCDIR)/SV_Server
+
+  INCLUDES += -I$(SRCTOP)/$(SRCDIR)/SV_Server
+
+  REMOTELIBS := -L$(SRCTOP)/$(SRCDIR)/SV_Server/lib -L$(SRCTOP)/$(SRCDIR)/SV_Server/Network/RMF/rmf2.0/RAMP/usr/local/lib/ -L$(SRCTOP)/$(SRCDIR)/SV_Server/Network/RMF/rmf2.0/RMF/usr/local/lib/\
+	-lXML \
+	-lCompression\
+	-lExceptions \
+	-lLogging \
+	-lMessage \
+	-lNetwork \
+	-lProperties \
+	-lRendering \
+	-lThread \
+        -lRAMP \
+        -lRMF
+
+  LIBS += $(XML_LIBRARY) $(REMOTELIBS) -lm
+endif
+# CollabVis code end
 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
