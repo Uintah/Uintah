@@ -24,7 +24,7 @@ class PCAGridSpheres : public TextureGridSpheres {
   float getPixel(int x, int y, int channel_index);
   Color interp_color(double u, double v, int index);
 public:
-  PCAGridSpheres(float* spheres, size_t nspheres,
+  PCAGridSpheres(float* spheres, size_t nspheres, int ndata,
 		 float radius,
 		 int *tex_indices,
 		 unsigned char* tex_data, int nbases, int tex_res,
