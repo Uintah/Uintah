@@ -1756,6 +1756,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       int vfindex = matl->getVFIndex();
       // Get the arrays of particle values to be changed
       ParticleVariable<Point> px;
+      ParticleVariable<Point> pxnew;
       ParticleVariable<Vector> pvelocity;
       ParticleVariable<double> pmass;
       ParticleVariable<Vector> pexternalForce;
@@ -1769,6 +1770,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
       old_dw->get(px,        lb->pXLabel, pset);
+      new_dw->allocate(pxnew,lb->pXLabel_preReloc, pset);
       old_dw->get(pvelocity, lb->pVelocityLabel, pset);
       old_dw->get(pmass,     lb->pMassLabel, pset);
       old_dw->get(pexternalForce, lb->pExternalForceLabel, pset);
@@ -1927,7 +1929,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
         // Update the particle's position and velocity
 	if(numVisibleNodes != 0) {
-          px[idx]        += vel * delT;
+          pxnew[idx]      = px[idx] + vel * delT;
           pvelocity[idx] += acc * delT;
           pTemperatureRate[idx] = tempRate;
           pTemperature[idx] += tempRate * delT;
@@ -1936,7 +1938,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	else {        
    	  //for isolated particles in fracture
 	  /*
-          px[idx]        += pvelocity[idx] * delT;
+          pxnew[idx]      =  px[idx] + pvelocity[idx] * delT;
           pvelocity[idx] += (pexternalForce[idx] + pCrackSurfaceContactForce[idx])
 	     /pmass[idx] * delT;
 	     */
@@ -1949,7 +1951,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
 
       // Store the new result
-      new_dw->put(px,        lb->pXLabel_preReloc);
+      new_dw->put(pxnew,        lb->pXLabel_preReloc);
       new_dw->put(pvelocity, lb->pVelocityLabel_preReloc);
       new_dw->put(pexternalForce, lb->pExternalForceLabel_preReloc);
 
@@ -2029,6 +2031,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.152  2000/09/22 19:40:52  guilkey
+// Added a pxnew to interpolateToParticles... so that the data in
+// pXLabel doesn't get changed.
+//
 // Revision 1.151  2000/09/22 07:13:04  tan
 // MPM code works with fracture in three point bending.
 //
