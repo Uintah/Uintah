@@ -126,7 +126,8 @@ void MPMArches::scheduleTimeAdvance(double time, double delt,
   d_mpm->scheduleIntegrateTemperatureRate(        sched, patches, matls);
   d_mpm->scheduleExMomIntegrated(                 sched, patches, matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, matls);
-  d_mpm->scheduleComputeMassRate(                 sched, patches, matls);
+  // Commented out to fix compile - Steve
+  //d_mpm->scheduleComputeMassRate(                 sched, patches, matls);
   if(d_fracture) {
     d_mpm->scheduleComputeFracture(               sched, patches, matls);
   }
