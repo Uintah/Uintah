@@ -33,18 +33,23 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
 SRCDIR := Core/ImportExport
 
+# All sources are in the sub directories.
+SRCS :=
+
 SUBDIRS := \
 	$(SRCDIR)/ColorMap \
 	$(SRCDIR)/Field \
 	$(SRCDIR)/Matrix
 
+PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
+	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
+	Core/Math Core/Util Core/Datatypes
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
-PSELIBS := 
 LIBS := $(PLPLOT_LIBRARY) $(BLT_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) $(TK_LIBRARY) \
 	$(ITK_LIBRARY) $(GL_LIBRARY) $(THREAD_LIBRARY) \
 	$(Z_LIBRARY) $(M_LIBRARY) 
 
-include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
