@@ -55,6 +55,7 @@ SRCS     += \
 	$(SRCDIR)/InterpolantToTransferMatrix.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/MapDataToMeshCoord.cc\
+	$(SRCDIR)/MaskLattice.cc\
 	$(SRCDIR)/QuadToTri.cc\
 	$(SRCDIR)/Probe.cc\
 	$(SRCDIR)/ReplaceScalarDataValue.cc\
