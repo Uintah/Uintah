@@ -178,7 +178,6 @@ itcl_class SCIRun_Visualization_GenAxes {
 
     method auto_needexecute { args } {
 	if { $dont_execute_ } return
-	puts "autoneedexecute: $this $args"
 	$this-c needexecute
     }
 
