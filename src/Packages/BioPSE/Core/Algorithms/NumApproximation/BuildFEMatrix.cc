@@ -126,7 +126,7 @@ void BuildFEMatrix::parallel(int proc)
     sort(neib_nodes.begin(), neib_nodes.end());
     //neib_nodes.erase(unique(neib_nodes.begin(), neib_nodes.end()), neib_nodes.end());
  
-    for (int jj=0; jj<neib_nodes.size(); jj++){
+    for (unsigned int jj=0; jj<neib_nodes.size(); jj++){
       mycols.add(neib_nodes[jj]);
     }
   }
@@ -269,7 +269,7 @@ void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::cell_inde
 
   double (&el_cond)[3][3] = tens_[ind].mat_;
  
-  if(abs(vol) < 1.e-10){
+  if(fabs(vol) < 1.e-10){
     for(int i = 0; i<4; i++)
       for(int j = 0; j<4; j++)
 	lcl_a[i][j]=0;
@@ -311,7 +311,7 @@ void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::cell_inde
 	}
       }
 
-      lcl_a[i][j] *= abs(vol);
+      lcl_a[i][j] *= fabs(vol);
     }
   }
 }
