@@ -202,19 +202,22 @@ Figure~\ref{fig:srwindow}):
     have category sub-menus and module menu items.
   \end{description}
   
-  \descitem{Global View Frame} The Global View Frame is located in the
+  \descitem{Global View Frame} \index{global view frame}
+  The Global View Frame is located in the
   upper left corner of the main window (see
   Figure~\ref{fig:srwindow}). It is used to navigate complex networks
   \secref{Navigating a Network}{sec:navnetwork} describes the use of the Global View Frame.
   
-  \descitem{Message Frame} Messages during program startup are displayed
+  \descitem{Message Frame} \index{message frame}
+  Messages during program startup are displayed
   in the Message frame.  The Message frame is located in the upper right
   corner of the main window (see Figure~\ref{fig:srwindow}).  Errors on
   startup may mean \sr{} has been installed incorrectly or has
   been installed from a buggy distribution.  Please report these
   errors (\hyperref{report}{see Section~}{)}{sec:bugs}).
   
-  \descitem{NetEdit Frame} The NetEdit Frame occupies the bottom of
+  \descitem{NetEdit Frame} \index{netedit frame}
+  The NetEdit Frame occupies the bottom of
   the main window(see Figure~\ref{fig:srwindow}).  It is used to build
   and execute networks (\secref{Working with  Networks}{ch:workwithnets}
   discusses the use of the NetEdit frame).
@@ -245,6 +248,7 @@ prompt \screen{scirun\ra}.  This program is  a modified \dfna{Tool
 \section{\sr{}'s Initialization File---\filename{.scirunrc}}
 \label{sec:scirunrc}
 \index{Environment Variables}
+\index{scirunrc}
 
 \sr{} processes \filename{.scirunrc} file on startup.  File
 \filename{.scirunrc} contains assignments to environment variables
@@ -337,6 +341,7 @@ is a partial list of variables understood by \sr{}:
 
 \section{Remote Display}
 \label{sec:remote-display}
+\index{remote display}
 
 Normally, \sr{}'s main window is displayed on a console that is part
 of the computer on which \sr{} runs.  It is possible, however, to
@@ -386,6 +391,7 @@ to give permission to the local machine:
 
 \section{Dynamic Compilation}
 \label{sec:dyncomp}
+\index{dynamic compilation}
 
 Before executing \sr{},  be aware of the
 \dfn{Dynamic Compilation} feature.
@@ -431,7 +437,8 @@ Setting a unique value of SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR for each
 \sr{} user has the following benefits:
 
 \begin{itemize}
-\item Allows multiple users to run the same instance of \sr{} without
+\item Allows multiple users \index{multiple users} to run the same 
+  instance of \sr{} without
   dynamic compilation conflicts.  For example, by specifying an
   \filename{on-the-fly-libs} directory in their home directory, a user
   can run \sr{} installed in \directory{/usr/local} that another user
