@@ -41,6 +41,7 @@ public:
     int i,j,k;
     if( bricks_ ){
       for( i = 0; i < bricks_->dim1(); i++)
+
 	for( j = 0; j < bricks_->dim2(); j++)
 	  for( k = 0; k < bricks_->dim3(); k++)
 	    delete (*bricks_)(i,j,k);
@@ -62,6 +63,8 @@ public:
   int nx() const { return bricks_->dim1(); }
   int ny() const { return bricks_->dim2(); }
   int nz() const { return bricks_->dim3(); }
+
+  void OrderBricks(vector<Brick*>& bricks, const Ray& view) const;
 
   class iterator {
   public:
@@ -180,6 +183,10 @@ private:
   int brick_size_;
   
 };
+
+
+
+
 
 typedef LockingHandle<BrickGrid>  BrickGridHandle;
 

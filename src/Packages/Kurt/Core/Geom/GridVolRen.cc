@@ -44,8 +44,13 @@ void GridVolRen::draw(const BrickGrid& bg, int slices )
   double tmin, tmax, dt;
   double ts[8];
   int i;
-  BrickGrid::iterator it = bg.begin(viewRay);
-  BrickGrid::iterator it_end = bg.end(viewRay);
+//    BrickGrid::iterator it = bg.begin(viewRay);
+//    BrickGrid::iterator it_end = bg.end(viewRay);
+
+  vector<Brick*> ordered_bricks;
+  bg.OrderBricks(ordered_bricks, viewRay);
+  vector<Brick*>::iterator it = ordered_bricks.begin();
+  vector<Brick*>::iterator it_end = ordered_bricks.end();
   for(; it != it_end; ++it) {
     for(p_it = polys.begin(); p_it != polys.end(); p_it++)
       delete *p_it;

@@ -12,9 +12,14 @@
 #include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
 #include <Packages/Kurt/Core/Geom/BrickGridThread.h>
 #include <iostream>
+#include <vector>
+#include <functional>
 
 using std::cerr;
 using std::endl;
+using std::vector;
+using std::binary_function;
+using std::sort;
 
 namespace Kurt {
 using SCIRun::Thread;
@@ -337,6 +342,31 @@ void BrickGrid::lat_vol_init( LatVolField<Data>& tex )
   if(sema) delete sema;
 }
 
+class gr_distance 
+{
+public:
+  gr_distance(const Ray& view ): view_(view){}
+  bool operator()(Brick *b1, Brick *b2){ 
+    double d1 = (view_.origin() - b1->get_center()).length(); 
+    double d2 = (view_.origin() - b2->get_center()).length(); 
+    return (d1 > d2);
+  }
+protected:
+  Ray view_;
+};
+
+
+void
+BrickGrid::OrderBricks(vector<Brick*>& bricks, const Ray& view) const
+{
+  for(int i=0; i < nx(); i++)
+    for(int j = 0; j < ny(); j++)
+      for(int k = 0; k < nz(); k++)
+	bricks.push_back( (*bricks_)(i,j,k) );
+  
+  sort(bricks.begin(), bricks.end(), gr_distance(view));
+}
+    
 				
 
 BrickGrid::iterator BrickGrid::begin( Ray& view ) const
