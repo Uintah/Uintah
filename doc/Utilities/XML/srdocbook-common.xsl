@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0"?> <!-- -*- nxml -*- -->
 
 <!--
 The contents of this file are subject to the University of Utah Public
@@ -48,20 +48,21 @@ version="1.0">
     </script>
   </xsl:template>
 
-  <!-- Generate SCI header banner -->
+  <!-- Generate page "pre-content" -->
   <xsl:template name="user.header.content">
     <script type="text/javascript">
       if (inDocTree) {
-        document.write('&lt;script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"&gt;&lt;\/script&gt;');
+        document.write('&lt;script type="text/javascript" src="',treetop,'doc/Utilities/HTML/tools.js"&gt;&lt;\/script&gt;');
+	document.write('&lt;script type="text/javascript"&gt;preDBContent();&lt;\/script&gt;');
       }
     </script>
   </xsl:template>
 
-  <!-- Generate SCI footer. -->
+  <!-- Generate page "post-content" -->
   <xsl:template name="user.footer.content">
     <script type="text/javascript">
       if (inDocTree) {
-        document.write('&lt;script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"&gt;&lt;\/script&gt;');
+	document.write('&lt;script type="text/javascript"&gt;postDBContent();&lt;\/script&gt;');
       }
     </script>
   </xsl:template>
