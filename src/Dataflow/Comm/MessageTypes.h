@@ -68,6 +68,7 @@ public:
 	ViewWindowMouse,
 	ViewWindowDumpImage,
 	ViewWindowDumpObjects,
+	ViewWindowEditLight,
 
 	AttachDialbox,
 	DialMoved,
