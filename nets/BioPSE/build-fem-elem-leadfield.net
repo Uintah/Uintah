@@ -26,6 +26,21 @@ if {[llength [array get env SCIRUN_DATA]] == 0} {
    ::netedit scheduleok
    return
 }
+set DATADIR $env(SCIRUN_DATA)
+puts "*** Using SCIRUN_DATA $DATADIR"
+
+if {[llength [array get env SCIRUN_DATASET]] == 0} {
+   puts ""
+   puts "*** Environment variable 'SCIRUN_DATASET' was not set -- 
+   puts "*** using 'sphere' as the default.
+   puts ""
+   set DATASET sphere
+} else {
+   set DATASET $env(SCIRUN_DATASET)
+   puts "*** Using DATASET $DATASET"
+}
+
+source $DATADIR/$DATASET/$DATASET-settings.net
 
 ::netedit dontschedule
 
@@ -47,7 +62,7 @@ mesh and set of electrodes.
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 45 70]
 set m1 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 45 179]
 set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 387 14]
-set m3 [addModuleAtPosition "BioPSE" "LeadField" "BuildLeadField" 262 179]
+set m3 [addModuleAtPosition "BioPSE" "LeadField" "BuildElemLeadField" 262 179]
 set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 244 263]
 set m5 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 393 279]
 set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 226 333]
@@ -73,20 +88,17 @@ addConnection $m0 0 $m1 0
 set $m0-notes {TetVolField input is the finite element mesh -- data values at the elements are conductivity tensors.
 
 }
-set $m0-show_status 1
-set $m0-filename $env(SCIRUN_DATA)/sphere.tvt.fld
+set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
 set $m1-notes {Using the zero'th node as a ground reference, we build the finite element stiffness matrix
 for the incoming TetVolField.  The TetVolField has a conductivity tensor at each element.
 
 }
-set $m1-show_status 1
 set $m1-UseCondTCL 1
 set $m1-BCFlag {GroundZero}
 set $m2-notes {TetVolField specifying the electrode positions (no cells).
 
 }
-set $m2-show_status 1
-set $m2-filename $env(SCIRUN_DATA)/sphere-electrodes.pc.fld
+set $m2-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
 set $m3-notes {Build the element-centered leadfield matrix for the input finite element mesh (port 1) and electrode
 interpolant Field (port 2).  We set the last electrode to ground, and iteratively pair it with
 each of the other electrodes.  For each pairing, we build a right-hand-side column matrix 
@@ -95,20 +107,14 @@ to a solve matrix module, the system is solved, the gradient is computed, and th
 is passed back to us and stored as one column in our lead-field matrix.
 
 }
-set $m3-show_status 1
 set $m4-notes {Solve the: A x phi = flux
-linear system.  A is the stiffness matrix, with node 0 pinned to ground, the flux vetor is all
+linear system.  A is the stiffness matrix, with node 0 pinned to ground, the flux vector is all
 zeroes except for the TetVol source and sink node positions, which have a 1 and a -1 
 respectively (unit current passed between them).  Solving for phi gives us the voltages
 everywhere at the nodes in the TetVolMesh.
 
 }
-set $m4-show_status 1
 set $m4-target_error 1e-06
-set $m4-flops 545710
-set $m4-floprate 22.4704
-set $m4-memrefs 9.67988e+06
-set $m4-memrate 398.583
 set $m4-orig_error 1
 set $m4-current_error {8.45361e-07}
 set $m4-method {conjugate_gradient_sci}
@@ -117,15 +123,13 @@ set $m4-iteration 176
 set $m4-maxiter 2000
 set $m4-use_previous_soln 1
 set $m4-emit_partial 0
-set $m4-status {}
 set $m4-np 16
 set $m5-notes {Store the lead-field.  The size is nr=(# of electrodes - 1) x nc=(# of elements x 3).  Each
 row is stored [ex1 ey1 ez1 ex2 ey2 ez2 ex3 ey3 ez3 ... exn eyn ezn] where [exi eyi ezi] is 
 the electric field vector in element i.
  
 }
-set $m5-show_status 1
-set $m5-filename $env(SCIRUN_DATA)/generated/sphere.leadfield.mat
+set $m5-filename $DATADIR/$DATASET/generated/$DATASET-leadfield.mat
 set $m5-filetype {ASCII}
 set $m5-split 1
 set $m6-notes {Having solving for the voltages at the nodes of the TetVolMesh, we combine those scalar
@@ -133,21 +137,11 @@ values with the TetVolMesh to produce a TetVolField of scalar double potentials 
 nodes.
 
 }
-set $m6-show_status 1
 set $m7-notes {Build the interpolant weights for the electrodes.  For each node in the electrode field (second input
 field port), we record the single nearest node from the finite element mesh and assign it a weight of 1.
 
 }
-set $m7-show_status 1
-set $m7-interp_op_gui {}
-set $m8-notes {}
-set $m8-show_status 1
-set $m8-interpolate -2147483647
-set $m9-notes {}
-set $m9-show_status 1
-set $m10-notes {}
-set $m10-show_status 1
-set $m10-filename $env(SCIRUN_DATA)/sphere.tvd.fld
+set $m10-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
 $m4 ui
 
 ::netedit scheduleok
