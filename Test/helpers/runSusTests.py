@@ -13,6 +13,8 @@ def extra_sus_flags (test):
     return test[2]
 def num_processes (test):
     return test[3]
+def testOS(test):
+    return test[4]
 def inputs_root ():
     return argv[2]
 def date ():
@@ -114,6 +116,8 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   solotest_found = 0
   for test in TESTS:
     if solotest != "" and nameoftest(test) != solotest:
+      continue
+    if testOS(test) != environ['OS'] and testOS(test) != "ALL":
       continue
     solotest_found = 1 # if there is a solotest, that is
     testname = nameoftest(test)
