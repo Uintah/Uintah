@@ -12,6 +12,7 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Volvis2DDpy.h>
 #include <Packages/rtrt/Core/VolumeVis2D.h>
+#include <Packages/rtrt/Core/HVolumeVis2D.h>
 #include <Packages/rtrt/Core/CutPlane.h>
 #include <Core/Thread/Thread.h>
 #include <nrrd.h>
@@ -25,6 +26,11 @@
 using namespace std;
 using namespace rtrt;
 using SCIRun::Thread;
+
+// Whether or not to use the HVolumeVis code
+static bool use_hvolume = false;
+static int np = 1;
+static int depth = 3;
 
 // template<class T>
 VolumeVis2D *create_volume_from_nrrd2( char *filename1, char *filename2,
@@ -207,13 +213,23 @@ VolumeVis2D *create_volume_from_nrrd2( char *filename1, char *filename2,
 
   cout << "minP = "<<minP<<", maxP = "<<maxP<<endl;
 
-  return new VolumeVis2D(data,
-			 Voxel2D<float>(v_data_min, g_data_min),
-			 Voxel2D<float>(v_data_max, g_data_max),
-			 nx, ny, nz,
-			 minP, maxP,
-			 spec_coeff, ambient, diffuse,
-			 specular, dpy);
+  if(use_hvolume)
+    return new HVolumeVis2D<float,VMCell4<float> >(data,
+						   Voxel2D<float>(v_data_min,
+								  g_data_min),
+						   Voxel2D<float>(v_data_max,
+								  g_data_max),
+						   depth, minP, maxP, dpy,
+						   spec_coeff,ambient, diffuse,
+						   specular, np);
+  else
+    return new VolumeVis2D(data,
+			   Voxel2D<float>(v_data_min, g_data_min),
+			   Voxel2D<float>(v_data_max, g_data_max),
+			   nx, ny, nz,
+			   minP, maxP,
+			   spec_coeff, ambient, diffuse,
+			   specular, dpy);
 }
 
 
@@ -386,6 +402,9 @@ VolumeVis2D *create_volume_from_nrrd(char *filename,
 	else if (g_val > g_data_max)
 	  g_data_max = g_val;
 	} // for( x )
+
+
+
 #if 0
   // compute the min and max of the data
   double dmin,dmax;
@@ -405,13 +424,23 @@ VolumeVis2D *create_volume_from_nrrd(char *filename,
 
   cout << "minP = "<<minP<<", maxP = "<<maxP<<endl;
 
-  return new VolumeVis2D(data,
-			 Voxel2D<float>(v_data_min, g_data_min),
-			 Voxel2D<float>(v_data_max, g_data_max),
-			 nx, ny, nz,
-			 minP, maxP,
-			 spec_coeff, ambient, diffuse,
-			 specular, dpy);
+  if(use_hvolume)
+    return new HVolumeVis2D<float,VMCell4<float> >(data,
+						   Voxel2D<float>(v_data_min,
+								  g_data_min),
+						   Voxel2D<float>(v_data_max,
+								  g_data_max),
+						   depth, minP, maxP, dpy,
+						   spec_coeff,ambient, diffuse,
+						   specular, np);
+  else
+    return new VolumeVis2D(data,
+			   Voxel2D<float>(v_data_min, g_data_min),
+			   Voxel2D<float>(v_data_max, g_data_max),
+			   nx, ny, nz,
+			   minP, maxP,
+			   spec_coeff, ambient, diffuse,
+			   specular, dpy);
 }  
 
 
@@ -523,6 +552,18 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       g = atof(argv[++i]);
       b = atof(argv[++i]);
       bgcolor = Color(r,g,b);
+    } else if(strcmp(argv[i], "-usehv")==0){
+      use_hvolume = true;
+    } else if(strcmp(argv[i], "-depth")==0) {
+      depth = atoi(argv[++i]);
+      if (depth < 2) {
+	cerr << "depth should be greater than 1\n";
+	return 0;
+      }
+      if (depth > 5) {
+	cerr << "depth is larger than 5 which it really too much for most applications.  If you want more than 5 recompile this scene file. :)\n";
+	return 0;
+      }
     } else if(strcmp(argv[i], "-loadfile")==0){
       loadWidgetFile = true;
       widgetFile = argv[++i];
