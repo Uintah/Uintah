@@ -46,10 +46,10 @@ Source::~Source()
 // Velocity source calculation
 //****************************************************************************
 void 
-Source::calculateVelocitySource(const ProcessorGroup* pc,
+Source::calculateVelocitySource(const ProcessorGroup* ,
 				const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw,
+				DataWarehouseP& ,
+				DataWarehouseP& ,
 				double delta_t,
 				int index,
 				int eqnType,
@@ -246,8 +246,8 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
 void 
 Source::calculatePressureSource(const ProcessorGroup*,
 				const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw,
+				DataWarehouseP& ,
+				DataWarehouseP& ,
 				double delta_t,
 				CellInformation* cellinfo,
 				ArchesVariables* vars)
@@ -313,8 +313,8 @@ Source::calculatePressureSource(const ProcessorGroup*,
 void 
 Source::calculateScalarSource(const ProcessorGroup*,
 			      const Patch* patch,
-			      DataWarehouseP& old_dw,
-			      DataWarehouseP& new_dw,
+			      DataWarehouseP& ,
+			      DataWarehouseP& ,
 			      double delta_t,
 			      int index, 
 			      CellInformation* cellinfo,
@@ -346,7 +346,7 @@ Source::calculateScalarSource(const ProcessorGroup*,
 // Calls Fortran MASCAL
 //****************************************************************************
 void 
-Source::modifyVelMassSource(const ProcessorGroup* pc,
+Source::modifyVelMassSource(const ProcessorGroup* ,
 			    const Patch* patch,
 			    DataWarehouseP& old_dw,
 			    DataWarehouseP& new_dw,
@@ -437,16 +437,39 @@ Source::modifyVelMassSource(const ProcessorGroup* pc,
 
 //****************************************************************************
 // Documentation here
+// FORT_MASCAL
 //****************************************************************************
 void 
 Source::modifyScalarMassSource(const ProcessorGroup* ,
-			       const Patch* ,
+			       const Patch* patch,
 			       DataWarehouseP& ,
 			       DataWarehouseP& ,
 			       double delta_t, 
 			       int index, ArchesVariables* vars)
 {
-  //FORT_MASCAL
+  // Get the patch and variable indices
+  // And call the fortran routine (MASCAL)
+  IntVector domLo = vars->scalar.getFortLowIndex();
+  IntVector domHi = vars->scalar.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  FORT_MASCAL(domLo.get_pointer(), domHi.get_pointer(),
+	      idxLo.get_pointer(), idxHi.get_pointer(),
+	      vars->scalar.getPointer(),
+	      vars->scalarCoeff[Arches::AE].getPointer(),
+	      vars->scalarCoeff[Arches::AW].getPointer(),
+	      vars->scalarCoeff[Arches::AN].getPointer(),
+	      vars->scalarCoeff[Arches::AS].getPointer(),
+	      vars->scalarCoeff[Arches::AT].getPointer(),
+	      vars->scalarCoeff[Arches::AB].getPointer(),
+	      vars->scalarNonlinearSrc.getPointer(), 
+	      vars->scalarLinearSrc.getPointer(), 
+	      vars->scalarConvectCoeff[Arches::AE].getPointer(),
+	      vars->scalarConvectCoeff[Arches::AW].getPointer(),
+	      vars->scalarConvectCoeff[Arches::AN].getPointer(),
+	      vars->scalarConvectCoeff[Arches::AS].getPointer(),
+	      vars->scalarConvectCoeff[Arches::AT].getPointer(),
+	      vars->scalarConvectCoeff[Arches::AB].getPointer());
 }
 
 //****************************************************************************
@@ -548,6 +571,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.34  2000/07/30 23:13:19  bbanerje
+//Added modifyScalarSource
+//
 //Revision 1.33  2000/07/30 22:59:31  bbanerje
 //Added scalar source term calcs.
 //
