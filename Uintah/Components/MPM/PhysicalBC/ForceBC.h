@@ -3,7 +3,7 @@
 
 #include <Uintah/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/Point.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 
 using namespace Uintah;
@@ -12,7 +12,7 @@ namespace Uintah {
 namespace MPM {
 
   using SCICore::Geometry::Vector;
-  using SCICore::Geometry::BBox;
+  using SCICore::Geometry::Point;
    
 /**************************************
 
@@ -48,16 +48,16 @@ WARNING
       virtual std::string getType() const;
 
       const Vector&  getForceDensity() const;
-      const Vector&   getLowerRange() const;
-      const Vector&   getUpperRange() const;
+      const Point&   getLowerRange() const;
+      const Point&   getUpperRange() const;
          
    private:
       ForceBC(const ForceBC&);
       ForceBC& operator=(const ForceBC&);
       
       Vector d_forceDensity;
-      Vector d_lowerRange;
-      Vector d_upperRange;
+      Point  d_lowerRange;
+      Point  d_upperRange;
    };
    
 } // end namespace MPM
@@ -66,6 +66,9 @@ WARNING
 #endif
 
 // $Log$
+// Revision 1.2  2000/08/07 20:23:21  tan
+// Applied force boundary conditions on particles during each simulation step.
+//
 // Revision 1.1  2000/08/07 00:42:42  tan
 // Added MPMPhysicalBC class to handle all kinds of physical boundary conditions
 // in MPM.  Currently implemented force boundary conditions.
