@@ -50,7 +50,7 @@ template<class T> class Array3 {
       Array3(const IntVector& lowIndex, const IntVector& highIndex) {
 	 d_window = 0;
 	 resize(lowIndex,highIndex);
-      };
+      }
       virtual ~Array3();
       Array3(const Array3& copy)
 	 : d_window(copy.d_window)

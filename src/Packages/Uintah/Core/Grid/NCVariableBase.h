@@ -55,6 +55,7 @@ WARNING
       // Insert Documentation Here:
       virtual NCVariableBase* clone() const = 0;
 
+      virtual void allocate(const Patch* patch) = 0;
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex) = 0;
       virtual void copyPatch(NCVariableBase* src,
