@@ -112,6 +112,7 @@ namespace Uintah {
       const VarLabel* StrainEnergyLabel;
       const VarLabel* KineticEnergyLabel;
       const VarLabel* TotalMassLabel;
+      const VarLabel* NTractionZMinusLabel;
       const VarLabel* CenterOfMassPositionLabel;
       const VarLabel* CenterOfMassVelocityLabel;
 
@@ -125,6 +126,11 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.41  2001/01/15 16:34:59  bard
+// Added .dat file output invoked using <save label="NTractionZMinus"/>.
+// This is the average traction on the z=z_min plane computational
+// boundary.  It does not work for multiple patches.
+//
 // Revision 1.40  2001/01/15 15:54:41  guilkey
 // Added mom_L_ME var labels.
 //

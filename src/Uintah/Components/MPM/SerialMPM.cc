@@ -425,6 +425,7 @@ void SerialMPM::scheduleComputeInternalForce(const Patch* patch,
     t->computes(new_dw, lb->gInternalForceLabel,   idx, patch);
     t->computes(new_dw, lb->gStressForSavingLabel, idx, patch);
   }
+  t->computes(new_dw, lb->NTractionZMinusLabel);
 
   sched->addTask(t);
 }
@@ -1233,6 +1234,9 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 
   int numMatls = d_sharedState->getNumMPMMatls();
 
+  double integralTraction = 0.;
+  double integralArea = 0.;
+
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
@@ -1326,9 +1330,44 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
             gstress[*iter] /= gmass[*iter];
          }
       }
+
+      IntVector low = gstress.getLowIndex();
+      IntVector hi  = gstress.getHighIndex();
+
+      for(Patch::FaceType face = Patch::startFace;
+        face <= Patch::endFace; face=Patch::nextFace(face)){
+
+        // I assume we have the patch variable
+        // Check if the face is on the boundary
+         Patch::BCType bc_type = patch->getBCType(face);
+         if (bc_type == Patch::None) {
+           // We are on the boundary, i.e. not on an interior patch
+           // boundary, so do the traction accumulation . . .
+         if(face==Patch::zminus){
+           int K=low.z();
+           for (int i = low.x(); i<hi.x(); i++) {
+              for (int j = low.y(); j<hi.y(); j++) {
+		integralTraction +=
+			gstress[IntVector(i,j,K)](3,3)*dx.x()*dx.y();
+		if(fabs(gstress[IntVector(i,j,K)](3,3)) > 1.e-12){
+		  integralArea+=dx.x()*dx.y();
+		    }
+              }
+           }
+	}
+        } // end of if (bc_type == Patch::None)
+      }
+
       new_dw->put(internalforce, lb->gInternalForceLabel,   matlindex, patch);
       new_dw->put(gstress,       lb->gStressForSavingLabel, matlindex, patch);
   }
+  if(integralArea > 0.){
+    integralTraction=integralTraction/integralArea;
+  }
+  else{
+    integralTraction=0.;
+  }
+  new_dw->put(sum_vartype(integralTraction), lb->NTractionZMinusLabel);
 }
 
 void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
@@ -2055,6 +2094,11 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.182  2001/01/15 16:34:59  bard
+// Added .dat file output invoked using <save label="NTractionZMinus"/>.
+// This is the average traction on the z=z_min plane computational
+// boundary.  It does not work for multiple patches.
+//
 // Revision 1.181  2001/01/11 23:43:45  guilkey
 // Commented out a block of unused code
 //

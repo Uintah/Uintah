@@ -266,6 +266,9 @@ MPMLabel::MPMLabel()
   TotalMassLabel = scinew VarLabel( "TotalMass",
 				 sum_vartype::getTypeDescription() );
 
+  NTractionZMinusLabel = scinew VarLabel( "NTractionZMinus",
+			sum_vartype::getTypeDescription() );
+
   CenterOfMassPositionLabel = scinew VarLabel( "CenterOfMassPosition",
 				 sumvec_vartype::getTypeDescription() );
 
@@ -365,6 +368,7 @@ MPMLabel::~MPMLabel()
   delete StrainEnergyLabel;
   delete KineticEnergyLabel;
   delete TotalMassLabel;
+  delete NTractionZMinusLabel;
   delete CenterOfMassPositionLabel;
   delete CenterOfMassVelocityLabel;
   delete ppNAPIDLabel;
@@ -389,6 +393,11 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.47  2001/01/15 16:34:59  bard
+// Added .dat file output invoked using <save label="NTractionZMinus"/>.
+// This is the average traction on the z=z_min plane computational
+// boundary.  It does not work for multiple patches.
+//
 // Revision 1.46  2001/01/15 15:54:41  guilkey
 // Added mom_L_ME var labels.
 //
