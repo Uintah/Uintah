@@ -55,10 +55,10 @@ DEALINGS IN THE SOFTWARE.
 	  <phrase>Loading the Tooth dataset.</phrase>
 	</textobject>
 	<imageobject>
-	  <imagedata fileref="Figures/toothload.eps" format="EPS"/>
+	  <imagedata fileref="Figures/toothload.eps" align="center" format="EPS"/>
 	</imageobject>
 	<imageobject>
-	  <imagedata fileref="Figures/toothload.jpg" format="JPG"/>
+	  <imagedata fileref="Figures/toothload.jpg" align="center" format="JPG"/>
 	</imageobject>
       </mediaobject>
     </figure>
@@ -92,10 +92,10 @@ DEALINGS IN THE SOFTWARE.
 	  <phrase>The Viewing Cube.</phrase>
 	</textobject>
 	<imageobject>
-	  <imagedata fileref="Figures/viewcube.eps" format="EPS"/>
+	  <imagedata fileref="Figures/viewcube.eps" align="center" format="EPS"/>
 	</imageobject>
 	<imageobject>
-	  <imagedata fileref="Figures/viewcube.jpg" format="JPG"/>
+	  <imagedata fileref="Figures/viewcube.jpg" align="center" format="JPG"/>
 	</imageobject>
       </mediaobject>
     </figure>
@@ -142,10 +142,10 @@ DEALINGS IN THE SOFTWARE.
 	  <phrase>Adding and using Dynamic Filters.</phrase>
 	</textobject>
 	<imageobject>
-	  <imagedata fileref="Figures/filters.eps" format="EPS"/>
+	  <imagedata fileref="Figures/filters.eps" align="center" format="EPS"/>
 	</imageobject>
 	<imageobject>
-	  <imagedata fileref="Figures/filters.jpg" format="JPG"/>
+	  <imagedata fileref="Figures/filters.jpg" align="center" format="JPG"/>
 	</imageobject>
       </mediaobject>
     </figure>
@@ -177,10 +177,10 @@ DEALINGS IN THE SOFTWARE.
 	  <phrase>3d Viewer Window showing tooth dataset.</phrase>
 	</textobject>
 	<imageobject>
-	  <imagedata fileref="Figures/3dview.eps" format="EPS"/>
+	  <imagedata fileref="Figures/3dview.eps" align="center" format="EPS"/>
 	</imageobject>
 	<imageobject>
-	  <imagedata fileref="Figures/3dview.jpg" format="JPG"/>
+	  <imagedata fileref="Figures/3dview.jpg" align="center" format="JPG"/>
 	</imageobject>
       </mediaobject>
     </figure>
@@ -197,10 +197,10 @@ DEALINGS IN THE SOFTWARE.
 	  <phrase>2d Viewer Window showing tooth dataset.</phrase>
 	</textobject>
 	<imageobject>
-	  <imagedata fileref="Figures/2dview.eps" format="EPS"/>
+	  <imagedata fileref="Figures/2dview.eps" align="center" format="EPS"/>
 	</imageobject>
 	<imageobject>
-	  <imagedata fileref="Figures/2dview.jpg" format="JPG"/>
+	  <imagedata fileref="Figures/2dview.jpg" align="center" format="JPG"/>
 	</imageobject>
       </mediaobject>
     </figure>
@@ -214,10 +214,10 @@ DEALINGS IN THE SOFTWARE.
 	    <phrase>Slider used to move change location of slice plane.</phrase>
 	  </textobject>
 	  <imageobject>
-	    <imagedata fileref="Figures/2dslider.eps" format="EPS"/>
+	    <imagedata fileref="Figures/2dslider.eps" align="center" format="EPS"/>
 	  </imageobject>
 	  <imageobject>
-	    <imagedata fileref="Figures/2dslider.jpg" format="JPG"/>
+	    <imagedata fileref="Figures/2dslider.jpg" align="center" format="JPG"/>
 	  </imageobject>
 	</mediaobject>
       </figure>
@@ -242,10 +242,10 @@ DEALINGS IN THE SOFTWARE.
 	      <phrase>Slice plane slider moved to 68th saggital slice.</phrase>
 	    </textobject>
 	    <imageobject>
-	      <imagedata fileref="Figures/68saggitalBoth.eps" format="EPS"/>
+	      <imagedata fileref="Figures/68saggitalBoth.eps" align="center" format="EPS"/>
 	    </imageobject>
 	    <imageobject>
-	      <imagedata fileref="Figures/68saggitalBoth.jpg" format="JPG"/>
+	      <imagedata fileref="Figures/68saggitalBoth.jpg" align="center" format="JPG"/>
 	    </imageobject>
 	  </mediaobject>
 	</figure>
@@ -274,10 +274,10 @@ DEALINGS IN THE SOFTWARE.
 		<phrase>Options for controlling planes.</phrase>
 	      </textobject>
 	      <imageobject>
-		<imagedata fileref="Figures/planesTab.eps" format="EPS"/>
+		<imagedata fileref="Figures/planesTab.eps" align="center" format="EPS"/>
 	      </imageobject>
 	      <imageobject>
-		<imagedata fileref="Figures/planesTab.jpg" format="JPG"/>
+		<imagedata fileref="Figures/planesTab.jpg" align="center" format="JPG"/>
 	      </imageobject>
 	    </mediaobject>
 	  </figure>	
