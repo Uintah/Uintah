@@ -58,30 +58,33 @@ static Piostream::MapStringPersistentTypeID* table = 0;
   Mutex persistentTypeIDMutex("Persistent Type ID Table Lock");  
 #endif
 
+
 //----------------------------------------------------------------------
 PersistentTypeID::PersistentTypeID(const string& typeName, 
 				   const string& parentName,
 				   Persistent* (*maker)())
   :  type(typeName), parent(parentName), maker(maker)
 {
-  Piostream::MapStringPersistentTypeID *localTable = 
-    scinew Piostream::MapStringPersistentTypeID;
 #if DEBUG
   cerr << "PersistentTypeID constructor: " << typeName << " " << parentName << ", maker: " << maker << "\n";
 #endif
+
   persistentTypeIDMutex.lock();
-  if (!table) {
-    table = localTable;
+  if (!table)
+  {
+    table = scinew Piostream::MapStringPersistentTypeID;
+
 #if DEBUG
     cerr << "table " << &table << ", pointer is " << table << "\n";
 #endif
-  } else delete localTable;
+  }
   
   Piostream::MapStringPersistentTypeID::iterator dummy;
  
   dummy = table->find(type);
 
-  if (dummy != table->end()) {
+  if (dummy != table->end())
+  {
     if ((*dummy).second->maker != maker 
 	|| ((*dummy).second->parent != parentName))
     {
@@ -95,35 +98,47 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
 #if DEBUG
   cerr << "putting in table: PersistentTypeID: " << typeName << " " << parentName << endl;
 #endif
+
   (*table)[type] = this;
   persistentTypeIDMutex.unlock();
 }
+
 
 PersistentTypeID::~PersistentTypeID()
 {
   Piostream::MapStringPersistentTypeID::iterator iter;
 
-  if( table == NULL )
-    {
-      cerr << "WARNING: Persistent.cc: ~PersistentTypeID(): table is NULL\n";
-      cerr << "         For: " << type << ", " << parent << "\n";
-      return;
-    }
+  if (table == NULL)
+  {
+    cerr << "WARNING: Persistent.cc: ~PersistentTypeID(): table is NULL\n";
+    cerr << "         For: " << type << ", " << parent << "\n";
+    return;
+  }
 
   iter = table->find(type);
-  if (iter == table->end()) {
-    cerr << "WARNING: Could not remove type from Object type database: " << type << endl;
-  } else {
+  if (iter == table->end())
+  {
+    cerr << "WARNING: Could not remove type from Object type database: " <<
+      type << endl;
+  }
+  else
+  {
     table->erase(iter);
   }
-  if(table->size() == 0)
+
+  if (table->size() == 0)
+  {
     delete table;
+    table = 0;
+  }
 }
+
 
 //----------------------------------------------------------------------
 Persistent::~Persistent()
 {
 }
+
 
 // GROUP: Piostream class implementation
 //////////
