@@ -136,7 +136,7 @@ set $m16-resolution {7}
 
 set $m17-stepsize [expr 0.004 * ${global-scale}]
 set $m17-tolerance [expr 0.004 * ${global-scale}]
-set $m17-maxsteps {100}
+set $m17-maxsteps {150}
 
 set $m20-def-color-r {0.3}
 set $m20-def-color-g {0.3}
