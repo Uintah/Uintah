@@ -40,7 +40,7 @@ using namespace std;
 
 namespace SCIRun {
 
-//static map<string, FieldIEPlugin>::table = 0;
+map<string, FieldIEPlugin *> *FieldIEPlugin::table = 0;
 
 #ifdef __APPLE__
   // On the Mac, this comes from Core/Util/DynamicLoader.cc because
