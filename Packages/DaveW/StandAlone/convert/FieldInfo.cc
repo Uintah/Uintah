@@ -61,7 +61,7 @@ main(int argc, char **argv) {
     {
       cerr << "Conductivities: \n";
       for (int i=0; i<cond_table.size(); i++) {
-	cerr << "  cond value "<< i "(" << cond_table[i].first << ") : " <<
+	cerr << "  cond value " << i << "(" << cond_table[i].first << ") : " <<
 	  cond_table[i].second.mat_[0][0] << "\n";
       }
     }
