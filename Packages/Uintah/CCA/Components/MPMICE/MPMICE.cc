@@ -1448,7 +1448,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
             mpm_matl->getConstitutiveModel()->
             computeRhoMicroCM(press_new[c],press_ref, mpm_matl); 
             
-            rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
+//            rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
 /*==========TESTING==========`*/
             
           mat_volume[m] = mass_CC[m][c]/rho_micro[m][c]; 
