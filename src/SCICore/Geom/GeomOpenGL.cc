@@ -1,4 +1,4 @@
-/*
+/*g
  *  GeomOpenGL.cc: Rendering for OpenGL windows
  *
  *  Written by:
@@ -47,6 +47,7 @@
 #include <SCICore/Geom/Pt.h>
 #include <SCICore/Geom/RenderMode.h>
 #include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Geom/GeomDL.h>
 #if 0
 #include <SCICore/Geom/Squares.h>
 #endif
@@ -658,8 +659,56 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void GeomBBoxCache::draw(DrawInfoOpenGL* di, Material *m, double time)
 {
-		if ( child )
-				child->draw(di,m,time);
+  if ( child )
+    child->draw(di,m,time);
+}
+
+void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
+{
+  if ( !child ) return;
+
+  if(!pre_draw(di, m, 0)) return;
+  
+  if ( !di->dl ) 
+    child->draw(di,m,time);  // do not use display list
+  else  {
+    // do we need a new dl ?
+    if (!have_dl 
+ 	|| type  != di->get_drawtype() 
+ 	|| lighting != di->lighting ) 
+    {
+      type = di->get_drawtype();
+      lighting = di->lighting; 
+      polygons = di->polycount; // remember poly count
+      
+      // do we need to allocate a dl ?
+      if ( !have_dl ) {
+	dl = glGenLists(1);
+	cerr << "dl = " << dl << endl;
+	if ( dl == 0 ) {
+	  cerr << "can not allocate dl\n";
+	   child->draw(di,m,time);  // do not use display list
+	   post_draw(di);
+	   return;
+	}
+	have_dl = true;
+      }
+      
+      // create a new dl
+      glNewList( dl,  GL_COMPILE_AND_EXECUTE);
+      child->draw(di,m,time);
+      glEndList();
+      // update poly count;
+      polygons = di->polycount - polygons; 
+    } 
+    else {
+      // display the child using the dl
+      glCallList(dl);
+      di->polycount += polygons;
+    }
+  }
+
+  post_draw(di);
 }
 
 void GeomBillboard::draw(DrawInfoOpenGL* di, Material* m, double time)
@@ -4205,6 +4254,10 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.21  2000/07/28 21:13:17  yarden
+// GeomDL: Create and manage a display list for its child.
+// the user can select to ignore it via check buttons in Salmon
+//
 // Revision 1.20  2000/07/06 19:34:07  yarden
 // fix GeomBox drawing.
 //
