@@ -44,7 +44,7 @@ void usage(char *me, const char *unknown = 0) {
   // Print out the usage
   printf("-input  <filename>   input nrrd, channels as fastest axis (null)\n");
   printf("-output <filename>   basename of output nrrds (\"pca\")\n");
-  printf("-numbases <int>      number of basis textures to use (0)");
+  printf("-numbases <int>      number of basis textures to use (0)\n");
   printf("-usegk               use teem's ell library to do 3x3 eigensolves (false)\n");
   printf("-simple              use the LAPACK simple driver (false)\n");
   printf("-v                   print verbose status messages (false)\n");
