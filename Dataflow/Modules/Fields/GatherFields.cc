@@ -132,8 +132,9 @@ GatherFields::execute()
 	same_data_location = false;
       }
     }
-    
-    if (same_field_kind || same_mesh_kind)
+
+    if (fields[0]->mesh()->is_editable() &&
+	(same_field_kind || same_mesh_kind))
     {
       bool copy_data = same_data_location;
       if (!same_data_location)
@@ -157,7 +158,14 @@ GatherFields::execute()
     }
     else
     {
-      warning("Different mesh types detected, outputting PointCloudField.");
+      if (same_field_kind || same_mesh_kind)
+      {
+	warning("Non-editable meshes detected, outputting PointCloudField.");
+      }
+      else
+      {
+	warning("Different mesh types detected, outputting PointCloudField.");
+      }
       PointCloudMeshHandle pc = scinew PointCloudMesh;
       for (i = 0; i < fields.size(); i++)
       {

@@ -154,7 +154,7 @@ GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields, bool cdata)
       imesh->end(nitr_end);
       while (nitr != nitr_end)
       {
-	double val;
+	typename FIELD::value_type val;
 	fields[i]->value(val, *nitr);
 	typename FIELD::mesh_type::Node::index_type
 	  new_index(((unsigned int)(*nitr)) + offset);
