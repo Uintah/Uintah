@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/ReferenceGuide/component.dtd">
+
+<component name="ManipFields" category="Fields">
+  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>
+      General framework for field manipulation
+    </summary>
+    <description>
+      <p>Version Date: Fri Nov 17 12:03:26 MST 2000</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <implementation>
+    <!-- one of (ffile cfile ccfile) -->
+  </implementation>
+  <io>
+    <inputs lastportdynamic="yes">
+      <port>
+        <name>ManipFields</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <!-- one of (device port file) -->
+    </inputs>
+    <outputs>
+      <!-- one of (device port file) -->
+    </outputs>
+  </io>
+
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

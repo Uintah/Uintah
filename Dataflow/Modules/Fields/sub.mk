@@ -20,6 +20,7 @@ SRCS     += \
 	$(SRCDIR)/GenVectorField.cc\
 	$(SRCDIR)/LocateNbrhd.cc\
 	$(SRCDIR)/LocatePoints.cc\
+	$(SRCDIR)/ManipFields.cc\
 	$(SRCDIR)/MeshBoundary.cc\
 	$(SRCDIR)/SeedField.cc\
 	$(SRCDIR)/Smooth.cc\
@@ -37,12 +38,12 @@ SRCS     += \
 #	$(SRCDIR)/ClipField.cc\
 
 
-PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Dataflow/Widgets \
-	Core/Persistent Core/Exceptions Core/Thread \
-	Core/Containers Core/TclInterface Core/Geom \
+PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil \
+	Core/Datatypes Dataflow/Widgets Core/Persistent Core/Exceptions \
+	Core/Thread Core/Containers Core/TclInterface Core/Geom \
 	Core/Datatypes Core/Geometry Core/TkExtensions \
 	Core/Math Core/Util
-LIBS := $(TK_LIBRARY) $(GL_LIBS) $(FLEX_LIBS) -lm
+LIBS := $(TK_LIBRARY) $(GL_LIBS) $(FLEX_LIBS) -lm $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
