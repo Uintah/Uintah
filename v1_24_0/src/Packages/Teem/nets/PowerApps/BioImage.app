@@ -651,7 +651,8 @@ class BioImageApp {
     method build_app {d} {
 	set data_dir $d
 	global mods
-
+	
+	wm withdraw .standalone
 	# Embed the Viewers
 
 	# add a viewer and tabs to each
@@ -748,6 +749,7 @@ class BioImageApp {
 	    wm title .standalone "BioImage - [getFileName $saveFile]"
 	    $this load_session_data
 	} 
+	wm deiconify .standalone
     }
 
     method old_build_viewers {viewer viewimage} {
@@ -2054,7 +2056,6 @@ class BioImageApp {
     method init_Vframe { m case} {
 	global mods
 	global tips
-
 	if { [winfo exists $m] } {
 	    ### Visualization Frame
 	    iwidgets::labeledframe $m.vis \
@@ -2384,55 +2385,68 @@ class BioImageApp {
 
 
         #-----------------------------------------------------------
-        # Sampling
+        # Sample Rate
         #-----------------------------------------------------------
-        frame $page.sampling -relief groove -borderwidth 2
-        pack $page.sampling -padx 2 -pady 2 -fill x
-        label $page.sampling.l -text "Sampling"
+        iwidgets::labeledframe $page.samplingrate \
+            -labeltext "Sampling Rate" -labelpos nw
+        pack $page.samplingrate -side top -anchor nw -expand no -fill x
+        set sratehi [$page.samplingrate childsite]
 
-	scale $page.sampling.srate_hi -variable [set VolumeVisualizer]-sampling_rate_hi \
-            -from 0.5 -to 10.0 -label "Sampling Rate" \
+        scale $sratehi.srate_hi \
+            -variable [set VolumeVisualizer]-sampling_rate_hi \
+            -from 0.5 -to 10.0 \
             -showvalue true -resolution 0.1 \
-            -orient horizontal -width 15 \
+            -orient horizontal -width 15 
+        pack $sratehi.srate_hi -side top -fill x -padx 4
+	bind $sratehi.srate_hi <ButtonRelease> $n
 
-	scale $page.sampling.srate_lo -variable [set VolumeVisualizer]-sampling_rate_lo \
-            -from 0.1 -to 5.0 -label "Interactive Sampling Rate" \
+        #-----------------------------------------------------------
+        # Interactive Sample Rate
+        #-----------------------------------------------------------
+        iwidgets::labeledframe $page.samplingrate_lo \
+            -labeltext "Interactive Sampling Rate" -labelpos nw
+        pack $page.samplingrate_lo -side top -anchor nw \
+            -expand no -fill x
+        set sratelo [$page.samplingrate_lo childsite]
+
+        scale $sratelo.srate_lo \
+            -variable [set VolumeVisualizer]-sampling_rate_lo \
+            -from 0.1 -to 5.0 \
             -showvalue true -resolution 0.1 \
-            -orient horizontal -width 15 \
+            -orient horizontal -width 15 
+        pack $sratelo.srate_lo -side top -fill x -padx 4
+	bind $sratelo.srate_lo <ButtonRelease> $n
 
-	pack $page.sampling.l $page.sampling.srate_hi \
-            $page.sampling.srate_lo -side top -fill x -padx 4 -pady 2
-        
-        #-----------------------------------------------------------
-        # Transfer Function
-        #-----------------------------------------------------------
-        frame $page.tf -relief groove -borderwidth 2
-        pack $page.tf -padx 2 -pady 2 -fill x
-        label $page.tf.l -text "Transfer Function"
 
-	scale $page.tf.stransp -variable [set VolumeVisualizer]-alpha_scale \
-		-from -1.0 -to 1.0 -label "Global Opacity" \
+        #-----------------------------------------------------------
+        # Global Opacity
+        #-----------------------------------------------------------
+        iwidgets::labeledframe $page.opacityframe \
+            -labeltext "Global Opacity" -labelpos nw
+        pack $page.opacityframe -side top -anchor nw \
+            -expand no -fill x
+        set oframe [$page.opacityframe childsite]
+
+	scale $oframe.opacity -variable [set VolumeVisualizer]-alpha_scale \
+		-from -1.0 -to 1.0 \
 		-showvalue true -resolution 0.001 \
 		-orient horizontal -width 15
+        pack $oframe.opacity -side top -fill x -padx 4
+	bind $oframe.opacity <ButtonRelease> $n
 
-	pack $page.tf.l $page.tf.stransp \
-            -side top -fill x -padx 4 -pady 2
 
 
-	bind $page.sampling.srate_hi <ButtonRelease> $n
-	bind $page.sampling.srate_lo <ButtonRelease> $n
 
-	bind $page.tf.stransp <ButtonRelease> $n
-
-        # display window and level
+        #-----------------------------------------------------------
+        # Volume Rendering Window Level Controls
+        #-----------------------------------------------------------
         global vol_width
         global vol_level
 
         iwidgets::labeledframe $page.winlevel \
             -labeltext "Window/Level Controls" \
             -labelpos nw
-        pack $page.winlevel -side top -anchor nw -expand no -fill x \
-            -pady 3
+        pack $page.winlevel -side top -anchor nw -expand no -fill x
         set winlevel [$page.winlevel childsite]
 
         global link_winlevel
@@ -2471,6 +2485,21 @@ class BioImageApp {
         trace variable $mods(ViewSlices)-min w "$this update_volume_window_level_scales"
         trace variable $mods(ViewSlices)-max w "$this update_volume_window_level_scales"
        
+        #-----------------------------------------------------------
+        # Transfer Function Widgets
+        #-----------------------------------------------------------
+        button $page.paint -text "Add Paint Layer" \
+           -command "$mods(ViewSlices)-c add_paint_widget"
+        pack $page.paint -side top -expand 0 -padx 10 -pady 3
+
+        $mods(EditTransferFunc) label_widget_columns $page.widgets_label
+        pack $page.widgets_label -side top -fill x -padx 2
+        iwidgets::scrolledframe $page.widgets -hscrollmode none \
+	    -vscrollmode static
+
+        pack $page.widgets -side top -fill both -expand yes -padx 2
+        $mods(EditTransferFunc) add_frame [$page.widgets childsite]
+
 
         ### Renderer Options Tab
 	create_viewer_tab $vis "3D Options"
