@@ -11,6 +11,13 @@
  *  Copyright (C) 1996 SCI Group
  */
 
+#ifdef __linux
+#define __KERNEL__
+#include <linux/signal.h>
+typedef __sighandler_t SIG_PF;
+typedef struct sigcontext_struct sigcontext_t;
+#endif
+
 #include <Multitask/Task.h>
 #include <Multitask/ITC.h>
 #include <Malloc/Allocator.h>
@@ -20,6 +27,16 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <errno.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+
+extern "C" {
+    size_t getpagesize();
+};
 
 #define DEFAULT_STACK_LENGTH 64*1024
 #define INITIAL_STACK_LENGTH 16*1024
@@ -35,21 +52,19 @@ static int aborting=0;
 static int exit_code;
 static int exiting=0;
 static long tick;
+#endif
 static int pagesize;
 static int devzero_fd;
 static char* progname;
 
 struct TaskPrivate {
-    int tid;
-    int retval;
     caddr_t sp;
     caddr_t stackbot;
     size_t stacklen;
     size_t redlen;
-    void (*handle_alrm)(void*);
-    void* alrm_data;
 };
 
+#if 0
 struct TaskArgs {
     int arg;
     Task* t;
@@ -167,10 +182,12 @@ void Task::activate(int task_arg)
 	Task::exit_all(-1);
     }
 }
+#endif
 
 Task* Task::self()
 {
-    return task_local->current_task;
+    fprintf(stderr, "Task::self not done!\n");
+    exit(1);
 }
 
 static char* signal_name(int sig, int code, caddr_t addr)
@@ -194,9 +211,6 @@ static char* signal_name(int sig, int code, caddr_t addr)
 	break;
     case SIGABRT:
 	sprintf(buf, "SIBABRT (Abort)");
-	break;
-    case SIGEMT:
-	sprintf(buf, "SIGEMT (Emulation Trap)");
 	break;
     case SIGFPE:
 	sprintf(buf, "SIGFPE (Floating Point Exception)");
@@ -224,9 +238,6 @@ static char* signal_name(int sig, int code, caddr_t addr)
 	    sprintf(buf, "SIGSEGV at address %p (segmentation violation - %s)",
 		    addr, why);
 	}
-	break;
-    case SIGSYS:
-	sprintf(buf, "SIGSYS (bad argument to system call)");
 	break;
     case SIGPIPE:
 	sprintf(buf, "SIGPIPE (broken pipe)");
@@ -296,16 +307,16 @@ static void handle_halt_signals(int sig, int code, sigcontext_t* context)
 {
     Task* self=Task::self();
     char* tname=self?self->get_name():"main";
-    if(exiting && sig==SIGQUIT){
-	fprintf(stderr, "Thread \"%s\"(pid %d) exiting...\n", tname, getpid());
-	exit(exit_code);
-    }
-	
     // Kill all of the threads...
+#ifdef __sgi
 #if defined(_LONGLONG)
     caddr_t addr=(caddr_t)context->sc_badvaddr;
 #else
     caddr_t addr=(caddr_t)context->sc_badvaddr.lo32;
+#endif
+#endif
+#ifdef __linux
+    caddr_t addr=(caddr_t)context->eip;
 #endif
     char* signam=signal_name(sig, code, addr);
     fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s.  Going down...\n", tname, getpid(), signam);
@@ -314,14 +325,17 @@ static void handle_halt_signals(int sig, int code, sigcontext_t* context)
 
 static void handle_abort_signals(int sig, int code, sigcontext_t* context)
 {
-    if(aborting)
-	exit(0);
     Task* self=Task::self();
     char* tname=self?self->get_name():"main";
+#ifdef __sgi
 #if defined(_LONGLONG)
     caddr_t addr=(caddr_t)context->sc_badvaddr;
 #else
     caddr_t addr=(caddr_t)context->sc_badvaddr.lo32;
+#endif
+#endif
+#ifdef __linux
+    caddr_t addr=(caddr_t)context->eip;
 #endif
     char* signam=signal_name(sig, code, addr);
 
@@ -332,7 +346,7 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
 	self->priv->redlen -= pagesize;
 	if(self->priv->redlen <= 0){
 	    fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) ran off end of stack! \n",
-		    7,7,7,tname, getpid(), signam);
+		    7,7,7,tname, getpid());
 	    fprintf(stderr, "Stack size was %d bytes\n", self->priv->stacklen-pagesize);
 	} else {
 	    if(mprotect(self->priv->stackbot+self->priv->redlen, pagesize,
@@ -362,7 +376,7 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
 	// Start the debugger...
 	Task::debug(Task::self());
 	while(1){
-	    sigpause(0);
+	    sigsuspend(0);
 	}
     } else {
 	// Abort...
@@ -371,66 +385,29 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
 	getrlimit(RLIMIT_CORE, &rlim);
 	rlim.rlim_cur=RLIM_INFINITY;
 	setrlimit(RLIMIT_CORE, &rlim);
-	aborting=1;
-	signal(SIGABRT, SIG_DFL); // We will dump core, but not other threads
+//	signal(SIGABRT, SIG_DFL); // We will dump core, but not other threads
 	kill(0, SIGABRT);
-	sigpause(0); // Just in case....
+	sigsuspend(0);
     }
 }
 
-void Task::exit_all(int code)
+void Task::exit_all(int)
 {
-    exit_code=code;
-    exiting=1;
-    kill(0, SIGQUIT);
+    fprintf(stderr, "Task::exit_all not done!\n");
+    exit(1);
 }
 
 void Task::initialize(char* pn)
 {
     progname=strdup(pn);
-    tick=CLK_TCK;
     pagesize=getpagesize();
     devzero_fd=open("/dev/zero", O_RDWR);
     if(devzero_fd == -1){
 	perror("open");
 	exit(-1);
     }
-    make_arena();
-    sched_lock=usnewsema(arena, 1);
-    if(!sched_lock){
-	perror("usnewsema");
-	exit(-1);
-    }
-    main_sema=usnewsema(arena, 0);
-    if(!main_sema){
-	perror("main_sema");
-	exit(-1);
-    }
-    
-    // Set up the task local memory...
-    int fd=open("/dev/zero", O_RDWR);
-    if(fd==-1){
-	cerr << "Error opening /dev/zero!\n";
-	exit(-1);
-    }
-#if 1
-    task_local=(TaskLocalMemory*)mmap(0, sizeof(TaskLocalMemory),
-				      PROT_READ|PROT_WRITE,
-				      MAP_PRIVATE|MAP_LOCAL,
-				      fd, 0);
-#endif
-#if 0
-    task_local=(TaskLocalMemory*)mmap((void*)0x50000000, sizeof(TaskLocalMemory),
-				      PROT_READ|PROT_WRITE,
-				      MAP_PRIVATE|MAP_LOCAL|MAP_FIXED,
-				      fd, 0);
-#endif
-    if(!task_local){
-	cerr << "Error mapping /dev/zero!\n";
-	exit(-1);
-    }
-    close(fd);
 
+#ifdef __sgi
     // Set up the signal stack so that we will be able to 
     // Catch the SEGV's that need to grow the stacks...
     int stacklen=DEFAULT_SIGNAL_STACK_LENGTH;
@@ -449,13 +426,18 @@ void Task::initialize(char* pn)
 	perror("sigstack");
 	exit(-1);
     }
+#endif
     
     // Setup the seg fault handler...
     // For SIGQUIT
     // halt all threads
     // signal(SIGINT, (SIG_PF)handle_halt_signals);
     struct sigaction action;
+#ifdef __sgi
     action.sa_flags=SA_ONSTACK;
+#else
+    action.sa_flags=0;
+#endif
     sigemptyset(&action.sa_mask);
     
     action.sa_handler=(SIG_PF)handle_halt_signals;
@@ -489,13 +471,18 @@ void Task::initialize(char* pn)
 
 int Task::nprocessors()
 {
+#ifdef __sgi
     static int nproc=-1;
     if(nproc==-1){
 	nproc = sysmp(MP_NAPROCS);
     }
     return nproc;
+#else
+    return 1;
+#endif
 }
 
+#if 0
 void Task::main_exit()
 {
     uspsema(main_sema);
@@ -717,17 +704,27 @@ void Task::coredump(Task* task)
 {
     kill(task->priv->tid, SIGABRT);
 }
+#endif
 
 void Task::debug(Task* task)
 {
     char buf[1000];
     char* dbx=getenv("SCI_DEBUGGER");
+#ifdef __sgi
     if(!dbx)
 	dbx="winterm -c dbx -p %d &";
     sprintf(buf, dbx, task->priv->tid, progname);
+#endif
+#ifdef __linux
+    if(!dbx)
+	dbx="xterm -e %s %d &";
+    sprintf(buf, dbx, progname, getpid());
+#endif
     if(system(buf) == -1)
 	perror("system");
 }
+
+#if 0
 
 // Interface to select...
 int Task::mtselect(int nfds, fd_set* readfds, fd_set* writefds,
@@ -814,3 +811,10 @@ void Task::cancel_itimer(int which_timer)
 }
 
 #endif
+
+int Task::start_itimer(const TaskTime& start, const TaskTime& interval,
+		       void (*handler)(void*), void* cbdata)
+{
+    fprintf(stderr, "Task::start_itimer not done!\n");
+    exit(1);
+}
