@@ -96,8 +96,6 @@ StreamLinesAlgoT<VMESH, SMESH, SLOC>::execute(MeshHandle vmesh_h,
   vector<Point>::iterator node_iter;
   ContourMesh::Node::index_type n1, n2;
 
-  vmesh->finish_mesh();
-
   // Try to find the streamline for each seed point.
   sloc_iterator seed_iter = smesh->tbegin((sloc_iterator *)0);
   sloc_iterator seed_iter_end = smesh->tend((sloc_iterator *)0);

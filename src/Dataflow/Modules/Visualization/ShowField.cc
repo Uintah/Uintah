@@ -218,8 +218,6 @@ ShowField::execute()
     fld_gen_ = fld_handle->generation;  
     nodes_dirty_ = true; edges_dirty_ = true; 
     faces_dirty_ = true; data_dirty_ = true;
-    MeshHandle mh = fld_handle->mesh();
-    mh->finish_mesh();  
   }
   
   color_->get(color_handle_);

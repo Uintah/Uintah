@@ -154,7 +154,7 @@ public:
 
   double get_element_size(const Elem::index_type &fi) { return get_area(fi); }
 
-  virtual void finish_mesh(); // to get normals calculated.
+  virtual void flush_changes(); // to get normals calculated.
   void compute_normals();
   virtual bool has_normals() const { return true; }
 

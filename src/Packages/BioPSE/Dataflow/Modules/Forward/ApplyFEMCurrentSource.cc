@@ -142,7 +142,6 @@ void ApplyFEMCurrentSource::execute()
   }
   else {
     hCondField = dynamic_cast<TetVol<int>*> (hField.get_rep());
-    hCondField->finish_mesh();
     hMesh = hCondField->get_typed_mesh();
   }
   

@@ -246,6 +246,7 @@ template <class Mesh, class FData>
 MeshHandle
 GenericField<Mesh, FData>::mesh() const
 {
+  mesh_->flush_changes();  // TODO: Fix synchronization on this.
   return MeshHandle(mesh_.get_rep());
 }
 
@@ -253,6 +254,7 @@ template <class Mesh, class FData>
 void
 GenericField<Mesh, FData>::mesh_detach()
 {
+  mesh_->flush_changes();  // TODO: Fix synchronization on this.
   mesh_.detach();
 }
 
@@ -360,6 +362,7 @@ template <class Mesh, class FData>
 GenericField<Mesh, FData>::mesh_handle_type
 GenericField<Mesh, FData>::get_typed_mesh() const
 {
+  mesh_->flush_changes();  // TODO: Fix synchronization on this
   return mesh_;
 }
 
