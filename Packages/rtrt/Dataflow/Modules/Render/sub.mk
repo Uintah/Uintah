@@ -13,7 +13,7 @@ PSELIBS := \
 	Dataflow/Modules/Visualization Core/Datatypes \
         Core/Thread Core/Persistent Core/Exceptions \
         Core/GuiInterface Core/Containers Core/Datatypes \
-        Core/Geom \
+        Core/Geom Core/GeomInterface \
 	Core/Geometry Dataflow/Widgets Dataflow/XMLUtil \
 	Core/Util \
 	Packages/rtrt/Core \
