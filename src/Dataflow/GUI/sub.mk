@@ -72,7 +72,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/LinAlgBinary.tcl \
 	$(SRCDIR)/LinAlgUnary.tcl \
 	$(SRCDIR)/LinearAlgebra.tcl \
-	$(SRCDIR)/MacroModule.tcl \
 	$(SRCDIR)/MapDataToMeshCoord.tcl \
 	$(SRCDIR)/MaskLattice.tcl \
 	$(SRCDIR)/MatrixReader.tcl \

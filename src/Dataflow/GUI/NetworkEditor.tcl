@@ -534,12 +534,12 @@ proc addConnection {omodid owhich imodid iwhich} {
     }
     set portcolor [lindex [lindex [$omodid-c oportinfo] $owhich] 0]
     
-    global connection_list
-    set connection_list "$connection_list {$omodid $owhich $imodid $iwhich $portcolor}"
-    
     buildConnection $connid $portcolor $omodid $owhich $imodid $iwhich
-    configureOPorts $omodid
-    configureIPorts $imodid
+
+    global maincanvas
+    $omodid configureOPorts $maincanvas
+    $imodid configureIPorts $maincanvas
+
     update idletasks
 }
 
@@ -549,7 +549,6 @@ proc popupSaveMenu {} {
     if { $netedit_savefile != "" } {
 	# If we already know the name of the save file, just save it...
 	# ...don't ask user for a name.
-	saveMacroModules
 	netedit savenetwork  $netedit_savefile
     } else {
 	# otherwise, get the user involved...
@@ -568,7 +567,6 @@ proc popupSaveAsMenu {} {
     set netedit_savefile [ tk_getSaveFile -defaultextension {.net} \
 	    -filetypes $types ]
     if { $netedit_savefile != "" } {
-	saveMacroModules
 	netedit savenetwork  $netedit_savefile
 
 	# Cut off the path from the net name and put in on the title bar:
@@ -770,9 +768,6 @@ proc ClearCanvas {} {
 	set netedit_savefile ""
 	
 	#reset Module.tcl variables
-	global connection_list
-	set connection_list ""
-	
 	global selected_color
 	set selected_color darkgray
 	
@@ -784,12 +779,6 @@ proc ClearCanvas {} {
 	
 	global CurrentlySelectedModules
 	set CurrentlySelectedModules ""
-	
-	global CurrentMacroModules
-	set CurrentMacroModules ""
-	
-	global MacroedModules
-	set MacroedModules ""
 	
 	global modules
 	set modules ""
@@ -944,10 +933,6 @@ proc loadnet {netedit_loadfile} {
     set loading 0
     set group_info [sourcenet $netedit_loadfile]
     set loading 1
-
-    if { ! [string match $group_info ""] } {
-	[loadMacroModules $group_info]
-    }
 }
 
 proc sourcenet {netedit_loadfile} {
@@ -975,79 +960,6 @@ proc sourcenet {netedit_loadfile} {
     uplevel #0 {source $file_to_load}
 }
     
-proc loadMacroModules {group_info} {
-    # Generate group lists
-    set mmlist ""
-    foreach ginf $group_info {
-	set num [lindex $ginf 1]
-	set mod [lindex $ginf 0]
-	if { [string match "*group$num*" $mmlist] } {
-	    set group$num "[set group$num] $mod"
-	} else {
-	    set group$num $mod
-	    set mmlist "$mmlist group$num"
-	}
-    }
-
-
-    if { ! [string match $mmlist ""] } {
-	# move the modules into their correct positions
-	global maincanvas
-	global minicanvas
-
-	set mainCanvasWidth 4500
-	set mainCanvasHeight 4500
-
-	
-	foreach l $mmlist {
-	    foreach mod [set $l] {
-		global $mod-lastpos
-		set lastpos [set $mod-lastpos]
-		
-		set lastx [lindex $lastpos 0]
-		set lasty [lindex $lastpos 1]
-
-		
-		set movx [$mod get_x]
-		set movy [$mod get_y]
-		
-		
-
-		set mx [expr -$movx+$lastx]
-		set my [expr -$movy+$lasty]
-		
-		$maincanvas move $mod $mx $my
-		
-
-		# account for any scrolling...
-		
-		set xv [lindex [$maincanvas xview] 0]
-		set yv [lindex [$maincanvas yview] 0]
-
-		set xs [expr $xv*$mainCanvasWidth]
-		set ys [expr $yv*$mainCanvasWidth]
-
-		$maincanvas move $mod $xs $ys
-		
-
-		
-		
-
-	    }
-	}
-	
-
-	foreach l $mmlist {
-	    global CurrentlySelectedModules
-	    set temp $CurrentlySelectedModules
-	    set CurrentlySelectedModules "[set $l]"
-	    set curr_mod [lindex $CurrentlySelectedModules 0]
-	    set macro [makeMacroModule $maincanvas $minicanvas $curr_mod]
-	    rebuildMModuleConnections $macro
-	    set CurrentlySelectedModules $temp
-	}
-    }   
-}
 
 #
 # Ask the user to select a data directory (because the enviroment variable 

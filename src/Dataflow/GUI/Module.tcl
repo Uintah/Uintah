@@ -14,33 +14,27 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
 #  University of Utah. All Rights Reserved.
 #
-
+global port_spacing
 set port_spacing 18
+
+global port_width
 set port_width 13
+
+global port_height
 set port_height 7 
 
 global selected_color
+set selected_color blue
+#set selected_color darkgray
+
 global unselected_color
-
-global connection_list
-set connection_list ""
-
-set selected_color darkgray
 set unselected_color gray
-
-global MModuleFakeConnections
-set MModuleFakeConnections ""
 
 global CurrentlySelectedModules
 set CurrentlySelectedModules ""
 
-global CurrentMacroModules
-set CurrentMacroModules ""
-
-global MacroedModules
-set MacroedModules ""
-
 global modules
+set modules ""
 
 itcl_class Module {
    
@@ -50,11 +44,9 @@ itcl_class Module {
 			
     constructor {config} {
 	set msgLogStream [TclStream msgLogStream#auto]
-        global $this-notes
-	
-	if [info exists $this-notes] {
-	    set dum 0
-	} else {
+
+	global $this-notes	
+	if ![info exists $this-notes] {
 	    set $this-notes ""
 	}
 	
@@ -62,92 +54,36 @@ itcl_class Module {
 	if {[info exists $this-msgStream]} {
 	    $msgLogStream registerVar $this-msgStream
 	}
-
-	set MacroModule ""
-	set Macroed 0
-	set menumod 0
     }
-
+    
     destructor {
 	set w .mLogWnd[modname]
-	if {[winfo exists $w]!=0} {
+	if [winfo exists $w] {
 	    destroy $w
 	}
-	
 	$msgLogStream destructor
-	foreach i "[info vars $this-*]" {
-	    unset $i
-	}
-
+	eval unset [info vars $this-*]
 	destroy $this
     }
     
-    method config {config} {
-    }
-
     public msgLogStream
     public name
-    protected canvases ""
     protected make_progress_graph 1
     protected make_time 1
     protected graph_width 50
     protected old_width 0
-    protected make_msg_indicator 1  
     protected indicator_width 15
-
-    protected mdragged
     protected mconnected {}
-    protected last_pos
-    protected MacroModule
-    protected Macroed
-    protected menumod
-    protected MenuList
     protected made_icon 0
     public state "NeedData" {$this update_state}
     public msg_state "Reset" {$this update_msg_state}
     public progress 0 {$this update_progress}
     public time "00.00" {$this update_time}
-    public group -1
-    public selected 0
-    public show_status 1
 
     method name {} {
 	return $name
     }
     
-    method get_group {} {
-	global $this-group
-	return [eval $$this-group]
-    }
-
-    method set_last_pos { lp } {
-	set last_pos $lp
-    }
-
-    method get_last_pos {} {
-	return $last_pos
-    }
-    
-    method Macroed {} {
-	return $Macroed
-    }
-    
-    method MacroModule {} {
-	if { $MacroModule == "" } {
-	    return [modname]
-	}
-	return $MacroModule
-    }
- 
-    method set_Macroed { m } {
-	set Macroed $m
-    }
-    
-    method set_MacroModule { mm } {
-	set MacroModule $mm
-    }
-   
-
     method set_state {st t} {
 	set state $st
 	set time $t
@@ -170,30 +106,12 @@ itcl_class Module {
 	update idletasks
 	#tk_dialog .xx xx xx "" 0 OK
     }
+
     method set_title {name} {
-	set temp $name
-
-	# remove package from name
-	set l [expr [string length $temp]-1]
-	set index [string first "_" $temp 0]
-	set temp [string range $temp $index $l]
-	
-	# remove _
-	set l [expr [string length $temp]-1]
-	set temp [string range $temp 1 $l]
-	
-	# remove category
-	set l [expr [string length $temp]-1]
-	set index [string first "_" $temp 0]
-	set temp [string range $temp $index $l]
-		
-	# remove _
-	set l [expr [string length $temp]-1]
-	set temp [string range $temp 1 $l]
-	
-	return $temp
+	# index points to the second "_" in the name, after package & category
+	set index [string first "_" $name [expr [string first "_" $name 0]+1]]
+	return [string range $name [expr $index+1] end]
     }
-
 
     method initialize_ui { {my_display "local"} } {
         $this ui
@@ -203,40 +121,6 @@ itcl_class Module {
 	}
     }
 
-    method get_oports { which } {
-	set mmodid [$this MacroModule]
-	if { [string match [$mmodid mod_type] "module"] == 1 } {
-	    return "{$mmodid $which}"
-	} else {
-	    foreach opm [$mmodid get_oport_mapping] {
-		if { [string match [lindex $opm 0] [$this modname]] == 1 } {
-		    if { [string match [lindex $opm 1] $which] == 1 } {
-			return "{$mmodid [lindex $opm 2]}"
-		    }
-		}
-	    }
-	}
-	# routine should never get this far...
-    }
-
-    method get_iports { which } {
-	set mmodid [$this MacroModule]
-	
-	if { [string match [$mmodid mod_type] "module"] == 1 } {
-	    return "{$mmodid $which}"
-	} else {
-	    foreach ipm [$mmodid get_iport_mapping] {
-		if { [string match [lindex $ipm 0] [$this modname]] == 1 } {
-		    if { [string match [lindex $ipm 1] $which] == 1 } {
-			return "{$mmodid [lindex $ipm 2]}"
-		    }
-		}
-	    }
-	}
-	# routine should never get this far...
-    }
-
-
     method have_ui {} {
 	if {[$this info method ui] != ""} {
 	    return 1;
@@ -245,39 +129,31 @@ itcl_class Module {
 	}
     }
 
-    method popup_ui {} {
-	initialize_ui
-    }
-
     #  Make the modules icon on a particular canvas
     method make_icon {canvas minicanvas modx mody} {
 	global $this-done_bld_icon
 	set $this-done_bld_icon 0
 	global modules
-	set modules "$modules [modname]"
+	lappend modules [modname]
 	global mainCanvasWidth mainCanvasHeight
-	#set modx [expr int([expr (([lindex [$canvas xview] 0]*$mainCanvasWidth)+$modx)])]
-	#set mody [expr int([expr (([lindex [$canvas yview] 0]*$mainCanvasHeight)+$mody)])]
 	
-	lappend canvases $canvas
 	set modframe $canvas.module[modname]
 	frame $modframe -relief raised -borderwidth 3 
 	
 	bind $modframe <1> "moduleStartDrag $canvas [modname] %X %Y"
 	bind $modframe <B1-Motion> "moduleDrag $canvas $minicanvas [modname] %X %Y"
 	bind $modframe <ButtonRelease-1> "moduleEndDrag $modframe $canvas"
-
 	bind $modframe <3> "popup_menu %X %Y $canvas $minicanvas [modname]"
 	
 	frame $modframe.ff
 	pack $modframe.ff -side top -expand yes -fill both -padx 5 -pady 6
 	 
 	set p $modframe.ff
-	global ui_font
-	global sci_root
-	if {[$this info method ui] != ""} {
+
+	if {[have_ui]} {
+	    global ui_font
 	    button $p.ui -text "UI" -borderwidth 2 -font $ui_font \
-		    -anchor center -command "$this initialize_ui"
+		-anchor center -command "$this initialize_ui"
 	    pack $p.ui -side left -ipadx 5 -ipady 2
 	}
 	global modname_font
@@ -285,19 +161,15 @@ itcl_class Module {
 
 	#  Make the mini module icon on a particular canvas
 	set miniframe $minicanvas.module[modname]
-
 	frame $miniframe -borderwidth 0
 	frame $miniframe.ff
-	pack $miniframe.ff -side left -expand yes \
-		-fill both -padx 2 -pady 1
+	pack $miniframe.ff -side left -expand yes -fill both -padx 2 -pady 1
 
 	global SCALEX SCALEY
 	global basecolor
-	$minicanvas create rectangle \
-		[expr $modx/$SCALEX] [expr $mody/$SCALEY] \
+	$minicanvas create rectangle [expr $modx/$SCALEX] [expr $mody/$SCALEY]\
 		[expr $modx/$SCALEX + 4] [expr $mody/$SCALEY + 2] \
-		-outline "" -fill $basecolor \
-		-tags [modname]
+		-outline "" -fill $basecolor -tags [modname]
 
 	# Make the title
 	label $p.title -text "$name" -font $modname_font -anchor w
@@ -316,152 +188,111 @@ itcl_class Module {
 
 	# Make the progress graph
 	if {$make_progress_graph} {
-	    frame $p.inset -relief sunken -height 4 -borderwidth 2 \
-		    -width $graph_width
+	    frame $p.inset -relief sunken -height 4 \
+		-borderwidth 2 -width $graph_width
 	    pack $p.inset -side left -fill y -padx 2 -pady 2
-	    frame $p.inset.graph -relief raised -width 0 -borderwidth 2 \
-		    -background green
-	    # Don't pack it in yet - the width is zero... 
-	    #pack $p.inset.graph -fill y -expand yes -anchor nw
+	    frame $p.inset.graph -relief raised \
+		-width 0 -borderwidth 2 -background green
 	}
 
 	# Make the message indicator
-	if {$make_msg_indicator} {
-	    if {!$make_progress_graph} {
-		# No progress graph so pack next to title
-		frame $p.msg -relief sunken -height 15 -borderwidth 1 \
-			-width [expr $indicator_width+2]
-		pack $p.msg -side right  -padx 2 -pady 2
-		frame $p.msg.indicator -relief raised -width 0 -height 0 -borderwidth 2 \
-			-background blue
-	    } else {
-		frame $p.msg -relief sunken -height 15 -borderwidth 1 \
-			-width [expr $indicator_width+2]
-		pack $p.msg -side left  -padx 2 -pady 2
-		frame $p.msg.indicator -relief raised -width 0 -height 0 -borderwidth 2 \
-			-background blue
-	    }
-	    # Don't pack it in yet - the width is zero... 
-	    # pack $p.inset.graph -fill y -expand yes -anchor nw
-	    bind $p.msg.indicator <Button> "$this displayLog"
+	if {!$make_progress_graph} {
+	    # No progress graph so pack next to title
+	    frame $p.msg -relief sunken -height 15 -borderwidth 1 \
+		-width [expr $indicator_width+2]
+	    pack $p.msg -side right  -padx 2 -pady 2
+	    frame $p.msg.indicator -relief raised -width 0 -height 0 \
+		-borderwidth 2 -background blue
+	} else {
+	    frame $p.msg -relief sunken -height 15 -borderwidth 1 \
+		-width [expr $indicator_width+2]
+	    pack $p.msg -side left  -padx 2 -pady 2
+	    frame $p.msg.indicator -relief raised -width 0 -height 0 \
+		-borderwidth 2 -background blue
 	}
+	bind $p.msg.indicator <Button> "$this displayLog"
 
-	# Update the message state
 	update_msg_state
-
-	# Update the progress and time graphs
 	update_progress
 	update_time
 
 	# Stick it in the canvas
 	$canvas create window $modx $mody -window $modframe \
-		-tags [modname] -anchor nw 
-	
+	    -tags [modname] -anchor nw 
+
 	# Set up input/output ports
 	$this configureIPorts $canvas
 	$this configureOPorts $canvas
 	
 	# Try to find a position for the icon where it doesn't
 	# overlap other icons
-	set done 0	
-
-
+	set done 0
 	while { $done == 0 } {
-
 	    set x1 $modx
 	    set y1 $mody
 	    set x2 [expr $modx+120]
 	    set y2 [expr $mody+50]
 	    
 	    set l [llength [$canvas find overlapping $x1 $y1 $x2 $y2]]
-
 	    if { $l == 0 || $l == 1 || $l == 2 } {
 		set done 1
 	    } else {
 		$canvas move [modname] 0 80
 		$minicanvas move [modname] 0 [expr 80 / $SCALEY ]
 		incr mody 80
-
-
 		set canbot [expr int( \
 		       [lindex [$canvas yview] 0]*$mainCanvasHeight + \
 		       [winfo height $canvas] ) ]
 
 		if { $mody > $canbot } {
 		    set mody [expr $mody - [winfo height $canvas]]
-		    incr modx 200
-		    
+		    incr modx 200		    
 		    $canvas coords [modname] $modx $mody
-		    $minicanvas coords [modname] [expr $modx / $SCALEX] [expr $mody / $SCALEY] [expr ($modx+120) / $SCALEX] [expr ($mody+50) /$SCALEY]
+		    $minicanvas coords [modname] \
+			[expr $modx / $SCALEX] [expr $mody / $SCALEY] \
+			[expr ($modx+120) / $SCALEX] [expr ($mody+50) /$SCALEY]
 		}
 	    }
 	}
 	
 	menu $p.menu -tearoff false -disabledforeground white
-	$p.menu add command -label "$this" -state disabled
-	$p.menu add separator
-	$p.menu add command -label "Execute" -command "$this-c needexecute"
-	$p.menu add command -label "Help" -command "moduleHelp [modname]"
 
-# This menu item was added by Mohamed Dekhil for the CSAFE project
-	$p.menu add command -label "Notes" -command "moduleNotes $name [modname]"
-
-# DMW: commenting this out for now, since MacroModules can't yet be saved as
-#   part of a net
-#	$p.menu add command -label "Group Selected" -command "makeMacroModule\
-#		$canvas $minicanvas [modname]"
-
-	$p.menu add command -label "Destroy Selected" \
-		-command "moduleDestroySelected $canvas $minicanvas $this"
-	$p.menu add command -label "Destroy" \
-		-command "moduleDestroy $canvas $minicanvas [modname]"
-	$p.menu add command -label "Show Log" \
-		-command "$this displayLog"
-
-	global $this-show_status
-	$p.menu add checkbutton -variable $this-show_status -label\
-		"Show Status"
-
-	set $this-show_status 1
-	
-# Destroy selected items with a Ctrl-D press
-	bind all <Control-d> "moduleDestroySelected \
-		$canvas $minicanvas lightgray"
-# Clear the canvas
+	# Destroy selected items with a Ctrl-D press
+	bind all <Control-d> "moduleDestroySelected $canvas $minicanvas"
+	# Clear the canvas
 	bind all <Control-l> "ClearCanvas"
-
         
-# Select the clicked item, and unselect all others
+	# Select the clicked item, and unselect all others
 	bind $p <2> "$this toggleSelected $canvas 0"
 	bind $p.title <2> "$this toggleSelected $canvas 0"
 	if {$make_time} {
 	    bind $p.time <2> "$this toggleSelected $canvas 0"
 	    bind $p.inset <2> "$this toggleSelected $canvas 0" 
 	}
-	if {[$this info method ui] != ""} {
+	if {[have_ui]} {
 	    bind $p.ui <2> "$this toggleSelected $canvas 0"
 	}
 
-# Select the item in focus, leaving all others selected
+	# Select the item in focus, leaving all others selected
 	bind $p <Control-Button-2> "$this toggleSelected $canvas 1"
 	bind $p.title <Control-Button-2> "$this toggleSelected $canvas 1"
 	if {$make_time} {
 	    bind $p.time <Control-Button-2> "$this toggleSelected $canvas 1"
 	    bind $p.inset <Control-Button-2> "$this toggleSelected $canvas 1"
 	}
-	if {[$this info method ui] != ""} {
+	if {[have_ui]} {
 	    bind $p.ui <Control-Button-2> "$this toggleSelected $canvas 1"
 	}
 	 
-# Select the item in focus, and unselect all others
-	bind .bot.neteditFrame.canvas <2> "startBox %X %Y $canvas 0"
-	bind .bot.neteditFrame.canvas <Control-Button-2> "startBox %X %Y $canvas 1"
-	bind .bot.neteditFrame.canvas <B2-Motion> "makeBox %X %Y $canvas"
-	bind .bot.neteditFrame.canvas <ButtonRelease-2> "endBox %X %Y $canvas"
+	# Select the item in focus, and unselect all others
+	bind $canvas <2> "startBox %X %Y $canvas 0"
+	bind $canvas <Control-Button-2> "startBox %X %Y $canvas 1"
+	bind $canvas <B2-Motion> "makeBox %X %Y $canvas"
+	bind $canvas <ButtonRelease-2> "endBox %X %Y $canvas"
 
 	bind $p <1> "$canvas raise $this"
+
 	bindtags $p [linsert [bindtags $p] 1 $modframe]
-	
 	bindtags $p.title [linsert [bindtags $p.title] 1 $modframe]
 	if {$make_time} {
 	    bindtags $p.time [linsert [bindtags $p.time] 1 $modframe]
@@ -477,33 +308,18 @@ itcl_class Module {
 	set $this-extra_ports 0
 
 	global $this-font_pixel_width
-	set $this-font_pixel_width [font measure $modname_font\
-		    "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz"]
-	set $this-font_pixel_width [expr [set $this-font_pixel_width]/53.0]
+	set $this-font_pixel_width [expr [font measure $modname_font \
+	    "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz"]/53.0]
     }
-    method set_moduleDragged {  ModuleDragged } {
-	set mdragged $ModuleDragged
-    }
-    method get_moduleDragged {} {
-	return $mdragged
-    }
+    
     method set_moduleConnected { ModuleConnected } {
 	set mconnected $ModuleConnected
     }
+    
     method get_moduleConnected {} {
 	return $mconnected
     }
 
-    method configureAllIPorts {} {
-	foreach t $canvases {
-	    configureIPorts $t
-	}
-    }
-    method configureAllOPorts {} {
-	foreach t $canvases {
-	    configureOPorts $t
-	}
-    }
     method configureIPorts {canvas} {
 	set modframe $canvas.module[modname]
 	set i 0
@@ -527,24 +343,20 @@ itcl_class Module {
 	    } else {
 		set e "top"
 	    }
-	    bevel $modframe.iport$i -width $port_width \
-		    -height $port_height -borderwidth 3 \
-		    -edge $e -background $portcolor \
-		    -pto 2 -pwidth 7 -pborder 2
-	    place $modframe.iport$i -bordermode outside -x $x -y 0 -anchor nw
+	    set port $modframe.iport$i
+	    bevel $port -width $port_width -height $port_height \
+		-borderwidth 3 -edge $e -background $portcolor \
+		-pto 2 -pwidth 7 -pborder 2
+	    place $port -bordermode outside -x $x -y 0 -anchor nw
 	    frame $modframe.iportlight$i -width $port_width -height 4 \
 		    -relief raised -background black -borderwidth 0
 	    place $modframe.iportlight$i -in $modframe.iport$i \
 		    -x 0 -rely 1.0 -anchor nw
-	    bind $modframe.iport$i <2> "startIPortConnection [modname] $i %x %y"
-	    bind $modframe.iport$i <B2-Motion> \
-		    "trackIPortConnection [modname] $i %x %y"
-	    bind $modframe.iport$i <ButtonRelease-2> \
-		    "endPortConnection \"$portcolor\""
-	    bind $modframe.iport$i <ButtonPress-1>\
-		    "IPortTrace [modname] $i $temp"
-	    bind $modframe.iport$i <ButtonRelease-1>\
-		    "IPortReset $temp"
+	    bind $port <2> "startIPortConnection [modname] $i %x %y"
+	    bind $port <B2-Motion> "trackIPortConnection [modname] $i %x %y"
+	    bind $port <ButtonRelease-2> "endPortConnection \"$portcolor\""
+	    bind $port <ButtonPress-1> "IPortTrace [modname] $i $temp"
+	    bind $port <ButtonRelease-1> "IPortReset $temp"
 	    incr i
 	} 
 	rebuildConnections [netedit getconnected [modname]] 0
@@ -561,9 +373,7 @@ itcl_class Module {
 	}
 	set portinfo [$this-c oportinfo]
 	set i 0
-	global port_spacing
-	global port_width
-	global port_height
+	global port_spacing port_width port_height
 	foreach t $portinfo {
 	    set portcolor [lindex $t 0]
 	    set connected [lindex $t 1]
@@ -573,173 +383,105 @@ itcl_class Module {
 	    } else {
 		set e "bottom"
 	    }
-	    bevel $modframe.oport$i -width $port_width -height $port_height \
+	    set port $modframe.oport$i
+	    bevel $port -width $port_width -height $port_height \
 		    -borderwidth 3 -edge $e -background $portcolor \
 		    -pto 2 -pwidth 7 -pborder 2
-	    place $modframe.oport$i -bordermode ignore -rely 1 -anchor sw -x $x
+	    place $port -bordermode ignore -rely 1 -anchor sw -x $x
 	    frame $modframe.oportlight$i -width $port_width -height 4 \
 		    -relief raised -background black -borderwidth 0
-	    place $modframe.oportlight$i -in $modframe.oport$i \
-		    -x 0 -y 0 -anchor sw
-	    bind $modframe.oport$i <2> "startOPortConnection [modname] $i %x %y"
-	    bind $modframe.oport$i <B2-Motion> \
-		    "trackOPortConnection [modname] $i %x %y"
-	    bind $modframe.oport$i <ButtonRelease-2> \
-		    "endPortConnection \"$portcolor\""
-	    bind $modframe.oport$i <ButtonPress-1>\
-		    "OPortTrace [modname] $i temp"
-	    bind $modframe.oport$i <ButtonRelease-1>\
-		    "OPortReset temp"
+	    place $modframe.oportlight$i -in $port -x 0 -y 0 -anchor sw
+	    bind $port <2> "startOPortConnection [modname] $i %x %y"
+	    bind $port <B2-Motion> "trackOPortConnection [modname] $i %x %y"
+	    bind $port <ButtonRelease-2> "endPortConnection \"$portcolor\""
+	    bind $port <ButtonPress-1> "OPortTrace [modname] $i $temp"
+	    bind $port <ButtonRelease-1> "OPortReset $temp"
 	    incr i
 	}
 	rebuildConnections [netedit getconnected [modname]] 0
     }
    
-    method addSelected {canvas color} {
-
-	global CurrentlySelectedModules
+    method setColorAndTitle {canvas color args} {
 	set m [modname]
-	
-
-	if { [string match "*$m*" $CurrentlySelectedModules] == 0 } { 
-	    #Add me to the Currently Selected Module 
-	    set p $canvas.module[modname].ff
-	    
-	    $p configure -background $color
-	    if {[$this info method ui] != ""} {
-		$p.ui configure -background $color
-	    }
-	    $p.title configure -background $color
-	    $canvas.module[modname] configure -background $color
-	    
-	    if {$make_time} {
-		$p.time configure -background $color
-	    }	
-	    
-	    
-	    set CurrentlySelectedModules "$CurrentlySelectedModules [modname]"
-	    $this sel 1
-	    
+	$canvas.module$m configure -background $color
+	$canvas.module$m.ff configure -background $color
+	$canvas.module$m.ff.title configure -background $color
+	if {[$m have_ui]} {
+	    $canvas.module$m.ff.ui configure -background $color
 	}
+	if {$make_time} {
+	    $canvas.module$m.ff.time configure -background $color
+	}
+	
+	if {[llength $args] < 1} {
+	    $canvas.module$m.ff.title configure -text $name -justify left
+	} else {
+	    $canvas.module$m.ff.title configure -text $args -justify left
+	}	
     }
-    
+       
+    method addSelected {canvas color} {
+	if {![$this is_selected]} { 
+	    global CurrentlySelectedModules
+	    lappend CurrentlySelectedModules [modname]
+	    setColorAndTitle $canvas $color
+	}
+    }    
 
     method removeSelected {canvas color} {
-	#Remove me from the Curren2tly Selected Module List
-	global CurrentlySelectedModules
-	set p $canvas.module[modname].ff
-	
-	set tempList ""
-    
-	foreach item $CurrentlySelectedModules {
-	    if { $item != [modname] } {
-		set tempList "$tempList $item"
-	    }
+	if {[$this is_selected]} {
+	    #Remove me from the Currently Selected Module List
+	    global CurrentlySelectedModules
+	    set pos [lsearch $CurrentlySelectedModules [modname]]
+	    set CurrentlySelectedModules \
+		[lreplace $CurrentlySelectedModules $pos $pos]
+	    setColorAndTitle $canvas $color
 	}
-	
-	set CurrentlySelectedModules $tempList
-	
-	$p configure -background $color
-	
-	if {[$this info method ui] != ""} {
-	    $p.ui configure -background $color
-	}
-	$p.title configure -background $color
-	$canvas.module[modname] configure -background $color
-	if { [$this info protected make_time -value] == 1 } {
-	    $p.time configure -background $color
-	}     
-	$this sel 0
-	
     }
     
-    method sel {status} {
-	set selected $status
-    }
-
-    method mod_type {} {
-	return module
-    }
-
     method toggleSelected { canvas option } {
 	global CurrentlySelectedModules
 	global selected_color
-	global unselected_color
-	
 	if { $option == 0 } {
-	    foreach i $CurrentlySelectedModules {
-		$i removeSelected $canvas $unselected_color
-	    }
+	    unselectAll
 	}
-
-
-	set p $canvas.module[modname].ff
-	
-	###Add a module to the selected module list
-	
-	
-	if { $selected == 0 } {
-	    # Add me to the Currently Selected Module List
-	    set color $selected_color
-	    addSelected $canvas $color
-	} 
+	addSelected $canvas $selected_color
     }
-    
     
     method lightOPort {which color} {
-	foreach t $canvases {
-	    set p $t.module[modname].oportlight$which
-	    if {[winfo exists $p]} {
-		$p configure -background $color
-	    }
+	global maincanvas
+	set p $maincanvas.module[modname].oportlight$which
+	if {[winfo exists $p]} {
+	    $p configure -background $color
 	}
     }
+
     method lightIPort {which color} {
-	foreach t $canvases {
-	    set p $t.module[modname].iportlight$which
-	    if {[winfo exists $p]} {
-		$p configure -background $color
-	    }
+	global maincanvas
+	set p $maincanvas.module[modname].iportlight$which
+	if {[winfo exists $p]} {
+	    $p configure -background $color
 	}
     }
-    method flash {} {
-	if {$msg_state == "Error"} {
-	    set log .mLogWnd[modname]
-	    if [winfo exists $log] {
-		puts "Exists"
-	    }
-	    foreach t $canvases {
-		set w $t.module[modname].ff.msg.indicator
-		    if [winfo exists $w] {
-			set c [$w cget -background]
-			if { $c == "red" } {
-			    $w configure -background grey75
-			} else {    
-			    $w configure -background red
-			} 
-			after 500 "$this flash"
-		    }
-	    }
-	}
-    }
+  
     method update_progress {} {
 	if {!$make_progress_graph} return
 	set width [expr int($progress*($graph_width-4))]
 	if {$width == $old_width} return
-	foreach t $canvases {
-	    set modframe $t.module[modname]
-	    if {$width == 0} {
-		place forget $modframe.ff.inset.graph
-	    } else {
-		$modframe.ff.inset.graph configure -width $width
-		if {$old_width == 0} {
-		    place $modframe.ff.inset.graph -relheight 1 \
-			    -anchor nw
-		}
+	global maincanvas
+	set modframe $maincanvas.module[modname]
+	if {$width == 0} {
+	    place forget $modframe.ff.inset.graph
+	} else {
+	    $modframe.ff.inset.graph configure -width $width
+	    if {$old_width == 0} {
+		place $modframe.ff.inset.graph -relheight 1 \
+		    -anchor nw
 	    }
 	}
 	set old_width $width
-   }
+    }
+	
     method update_time {} {
 	if {!$make_time} return
 
@@ -760,87 +502,44 @@ itcl_class Module {
 		set tstr [format "%d::%02d" $hrs $mins]
 	    }
 	}
-	foreach t $canvases {
-	    set modframe $t.module[modname]
-	    $modframe.ff.time configure -text $tstr
-	}
+	global maincanvas
+	$maincanvas.module[modname].ff.time configure -text $tstr
     }
 
     method update_state {} {
 	if {!$make_progress_graph} return
 	if {$state == "JustStarted 1123"} {
-	    set p 0.5
+	    set progress 0.5
 	    set color red
 	} elseif {$state == "Executing"} {
-	    set p 0
+	    set progress 0
 	    set color red
 	} elseif {$state == "NeedData"} {
-	    set p 1
+	    set progress 1
 	    set color yellow
 	} elseif {$state == "Completed"} {
-	    set p 1
+	    set progress 1
 	    set color green
 	} else {
 	    set width 0
 	    set color grey75
-	    set p 0
+	    set progress 0
 	}
-	foreach t $canvases {
-	    set modframe $t.module[modname]
-	    $modframe.ff.inset.graph configure -background $color
-	}
-	# call update_progress
-	set progress $p
+	global maincanvas
+	$maincanvas.module[modname].ff.inset.graph configure -background $color
 	update_progress
     }
 
-    method light_module0 { } {
-	foreach t $canvases {
-	    set modframe $t.module[modname]
-
-	    # add "Dynamically Compiling" text
-	    $modframe.ff.title configure -text "COMPILING" -justify left
-	}
-    }
-
     method light_module { } {
-	# light up module
-	set ir 240
-	set ig 230 
-	set ib 140 
-	set colstring [format #%1x%1x%1x $ir $ig $ib]
-	foreach t $canvases {
-	    set modframe $t.module[modname]
-	    $modframe configure -background $colstring
-	    $modframe.ff configure -background $colstring
-	    if {[winfo exists $modframe.ff.ui] == 1} {
-		$modframe.ff.ui configure -background $colstring
-	    }
-	    $modframe.ff.title configure -background $colstring
-	    $modframe.ff.time configure -background $colstring
-
-	    # add "Dynamically Compiling" text
-	    $modframe.ff.title configure -text "COMPILING" -justify left
-	}
+	global maincanvas
+	setColorAndTitle $maincanvas "\#f0e68c" "COMPILING"
     }
 
     method reset_module_color { } {
-	# light up module
-	foreach t $canvases {
-	    set modframe $t.module[modname]
-	    $modframe configure -background grey75
-	    $modframe.ff configure -background grey75
-	    if {[winfo exists $modframe.ff.ui] == 1} {
-		$modframe.ff.ui configure -background grey75
-	    }
-	    $modframe.ff.title configure -background grey75
-	    $modframe.ff.time configure -background grey75
-	    
-	    # add "Dynamically Compiling" text
-	    $modframe.ff.title configure -text "$name"
-	}
+	global maincanvas
+	setColorAndTitle $maincanvas grey75
     }
-    
+	
     method update_msg_state {} { 
 	if {$msg_state == "Error"} {
 	    set p 1
@@ -855,33 +554,25 @@ itcl_class Module {
 	    set p 1
 	    set color grey75
 	} else {
-	    set color grey75
 	    set p 0
+	    set color grey75
 	}
-
-	foreach t $canvases {
-	    set modframe $t.module[modname]
-
-	    place forget $modframe.ff.msg.indicator
-	    $modframe.ff.msg.indicator configure -width $indicator_width \
-		    -background $color
-	    place $modframe.ff.msg.indicator -relheight 1 \
-		    -anchor nw 
-	    #if {$msg_state == "Error"} {
-		#flash 
-	    #} 
-	}
-
+	global maincanvas
+	set modframe $maincanvas.module[modname]
+	place forget $modframe.ff.msg.indicator
+	$modframe.ff.msg.indicator configure -width $indicator_width \
+	    -background $color
+	place $modframe.ff.msg.indicator -relheight 1 -anchor nw 
     }
+
     method get_x {} {
-	set canvas [lindex $canvases 0]
-	set coords [$canvas coords [modname]]
-	return [lindex $coords 0]
+	global maincanvas
+	return [lindex [$maincanvas coords [modname]] 0]
     }
+
     method get_y {} {
-	set canvas [lindex $canvases 0]
-	set coords [$canvas coords [modname]]
-	return [lindex $coords 1]
+	global maincanvas
+	return [lindex [$maincanvas coords [modname]] 1]
     }
 
     method get_this {} {
@@ -894,40 +585,13 @@ itcl_class Module {
 
     method is_selected {} {
 	global CurrentlySelectedModules
-	foreach csm $CurrentlySelectedModules {
-	    if { [string match [$this modname] $csm] } {
-		return 1
-	    }
+	if {[lsearch $CurrentlySelectedModules [modname]] != -1} {
+	    return 1
 	}
-
 	return 0
     }
 
-    method menu_modified {} {
-	return $menumod
-    }
-
-    method set_menu_modified { status } {
-	if { $status == 0 || $status == 1 } {
-	    set menumod $status
-	}
-    }
-
-    method get_menu_modified {} {
-	return $menumod
-    }
-
-    method set_orig_menu { orig_menu } {
-	set MenuList $orig_menu
-    }
-    
-    method get_orig_menu {} {
-	return $MenuList
-    }
-
     method displayLog {} {
-	#puts "----------- LOG OPENED ----------"
-
 	set w .mLogWnd[modname]
 	
 	# does the window exist?
@@ -969,33 +633,33 @@ itcl_class Module {
     
     method module_grow {ports} {
 	global scirun2
-	if {!$scirun2} {
-	    global maincanvas
-	    global modname_font
-	    global port_spacing
-	    
-	    set temp_spacing [expr $port_spacing+1]
-	    set mod_width [winfo width $maincanvas.module[modname] ]
-	    
-	    #initialize all values first time through
-	    if { [set $this-original_title_size] == 0} {
-		set $this-original_title_size [font measure $modname_font $name]
-	    }
+	if {$scirun2} {
+	    return
+	}
 
-	    # thread problem - if mod_width=1, then
-	    # module isn't done being created and it
-	    # adds on too many extra_ports
-
-	    if {[set $this-done_bld_icon]} {
-		if { [expr $mod_width-[expr $ports*$temp_spacing] ] < \
-			$temp_spacing } {
-		    incr $this-extra_ports 1
-		    set title_width [expr [set $this-original_title_size]+\
-			    [expr $temp_spacing*[set $this-extra_ports]]]
-		    set title_width [expr int(\
-			    [expr ceil([expr $title_width/[set $this-font_pixel_width]])])]
-		    $maincanvas.module[modname].ff.title configure -width $title_width
-		}
+	global maincanvas
+	global modname_font
+	global port_spacing
+	
+	set temp_spacing [expr $port_spacing+1]
+	set mod_width [winfo width $maincanvas.module[modname] ]
+	
+	#initialize all values first time through
+	if { [set $this-original_title_size] == 0} {
+	    set $this-original_title_size [font measure $modname_font $name]
+	}
+	
+	# thread problem - if mod_width=1, then
+	# module isn't done being created and it
+	# adds on too many extra_ports	
+	if {[set $this-done_bld_icon]} {
+	    if { [expr $mod_width-[expr $ports*$temp_spacing] ] < \
+		     $temp_spacing } {
+		incr $this-extra_ports 1
+		set title_width [expr [set $this-original_title_size]+\
+				     [expr $temp_spacing*[set $this-extra_ports]]]
+		set title_width [expr int([expr ceil([expr $title_width/[set $this-font_pixel_width]])])]
+		$maincanvas.module[modname].ff.title configure -width $title_width
 	    }
 	}
     }
@@ -1021,6 +685,7 @@ itcl_class Module {
 	    $maincanvas.module[modname].ff.title configure -width $title_width
 	}
     }
+
     method setDone {} {
 	#module actually mapped to the canvas
 	if {[set $this-done_bld_icon] == 0 } {
@@ -1052,40 +717,9 @@ itcl_class Module {
 
 proc popup_menu {x y canvas minicanvas modid} {
     global CurrentlySelectedModules
-    
     global menu_id
-
     set menu_id "$canvas.module$modid.ff.menu"
-
-    # What to do if the module is not selected
-    
-    if { ! [$modid is_selected] } {
-	# Get rid of the group modules stuff
-	foreach cx [commandIndex $menu_id 1] {
-	    if { [string match [lindex $cx 1] "makeMacroModule"] == 1 } {
-		$menu_id delete [lindex $cx 0]
-	    }
-	}
-	
-	# Get rid of the delete modules stuff
-	foreach cx [commandIndex $menu_id 1] {
-	    if { [string match [lindex $cx 1] "moduleDestroySelected"] == 1 } {
-		$menu_id delete [lindex $cx 0]
-	    }
-	}
-	
-	$modid set_menu_modified 1
-    }
- 
-    # What to do if the module is selected
-    
-    # Regenerate the menu...
-    if { [$modid is_selected] } {
-	if { [$modid get_menu_modified] == 1 } {
-	    regenMenu $modid $menu_id $canvas $minicanvas
-	}
-    }
-        
+    regenMenu $modid $menu_id $canvas $minicanvas 
     # popup the menu
     tk_popup $menu_id $x $y    
 }
@@ -1095,302 +729,96 @@ proc regenMenu {modid menu_id canvas minicanvas} {
     for {set c 0} {$c <= 10 } {incr c } {
 	$menu_id delete $c
     }
-    
-    $menu_id add command -label "[$modid get_this]" -state disabled
+    set thisc [$modid get_this_c]
+    set name [$modid name]
+    $menu_id add command -label "$modid" -state disabled
     $menu_id add separator
-    $menu_id add command -label "Execute" -command\
-	    "[$modid get_this_c] needexecute"
+    $menu_id add command -label "Execute" -command "$thisc needexecute"
     $menu_id add command -label "Help" -command "moduleHelp $modid"
-    $menu_id add command -label "Notes" -command "moduleNotes\
-	    [$modid name] [$modid modname]"
-    $menu_id add command -label "Group Selected" -command "makeMacroModule\
-	    $canvas $minicanvas [$modid modname]"
-    $menu_id add command -label "Destroy Selected" \
-	    -command "moduleDestroySelected $canvas $minicanvas\
-	    [$modid get_this]"
-    $menu_id add command -label "Destroy" \
-	    -command "moduleDestroy $canvas $minicanvas [$modid modname]"
-    global [$modid get_this]-show_status
-    $menu_id add checkbutton -variable [$modid get_this]-show_status -label\
-	    "Show Status"
-
-    set [$modid get_this]-show_status 1
-}
-
-proc commandIndex {menu_id mode} {
-    set commandIndex ""
-
-    if { $mode == 1 } {
-	for {set c 2} {$c < 10} {incr c} {
-	    set command [$menu_id entrycget $c -command]
-	    if { [string match $command ""] } {
-		break
-	    } else {
-		set commandIndex "$commandIndex {$c $command}"
-	    }
-	}
+    $menu_id add command -label "Notes" -command "moduleNotes $name $modid"
+    if [$modid is_selected] { 
+	$menu_id add command -label "Destroy Selected" \
+	    -command "moduleDestroySelected $canvas $minicanvas"
     }
-    
-    return $commandIndex
-    
+    $menu_id add command -label "Destroy" \
+	-command "moduleDestroy $canvas $minicanvas $modid"
+    $menu_id add command -label "Show Log" -command "$modid displayLog"
+
 }
-
-
 
 proc startIPortConnection {imodid iwhich x y} {
-    global mm
-    set mm 0
-    set temp_list ""
-
-
-    # If module is of type macro, save its false connection info,
-    # and copy the names and portnumbers of the real ports into
-    # imodid and iwhich
-
-    if { [string match [$imodid mod_type] macromodule] == 1} {
-	
-	# A flag to let us know we're dealing with a macromodule
-	set mm 1
-	
-	set fake_imodid $imodid
-	set fake_iwhich $iwhich
-
-	set timodid [lindex [lindex [$imodid get_iport_mapping] $iwhich] 0]
-	set tiwhich [lindex [lindex [$imodid get_iport_mapping] $iwhich] 1]
-    
-	set imodid $timodid
-	set iwhich $tiwhich
-
-    }
-
-
-
-
-    # Find all of the OPorts of the same type and draw a temporary line
-    # to them....
-
-    global conn_oports
-    
-    
-    set conn_oports [netedit findoports $imodid $iwhich]
-
-    foreach pt $conn_oports {
-	set m [lindex $pt 0]
-	set ip ""
-	set in_port ""
-
-	if { [$m Macroed] == 1} {
-	
-	    set mmodule [$m MacroModule]
-	    set ip [lindex $pt 1]
-
-	    foreach pmap [$mmodule get_oport_mapping] {
-		if { [string match $m [lindex $pmap 0]] == 1} {
-		    if { [string match $ip [lindex $pmap 1]] ==1} {
-			set in_port [lindex $pmap 2]
-		    }
-		}
-	    }
-	    
-	    set temp_list "$temp_list {$mmodule $in_port}"
-	} else {
-	    set temp_list "$temp_list {$m [lindex $pt 1]}"
-	}
-    }
-    global new_conn_oports
-    set new_conn_oports $temp_list
-
-    global netedit_canvas
-        
-    if { $mm == 1 } {
-	set coords [computeIPortCoords $fake_imodid $fake_iwhich]
-    } else {
-	set coords [computeIPortCoords $imodid $iwhich]
-    }
-
-
-
+    global maincanvas 
+    set coords [computeIPortCoords $imodid $iwhich]
     set typename [lindex [lindex [$imodid-c iportinfo] $iwhich] 2]
     set portname [lindex [lindex [$imodid-c iportinfo] $iwhich] 3]
     set fullname $typename:$portname
+    frame $maincanvas.frame
+    label $maincanvas.frame.label -text $fullname -foreground white -bg #036
+    pack $maincanvas.frame $maincanvas.frame.label    
+    $maincanvas create window [lindex $coords 0] [lindex $coords 1] \
+	-window $maincanvas.frame -anchor sw -tags "tempname" 
 
-    frame $netedit_canvas.frame
-    label $netedit_canvas.frame.label -text $fullname -foreground white -bg #036
-    pack $netedit_canvas.frame $netedit_canvas.frame.label    
-    $netedit_canvas create window [lindex $coords 0]\
-	    [lindex $coords 1] -window $netedit_canvas.frame \
-	    -anchor sw -tags "tempname" 
-    
-#    set curtext [eval $netedit_canvas create text [lindex $coords 0]\
-#	    [lindex $coords 1] -anchor sw -text {$fullname} -tags "tempname"]
-#    $curtext configure -foreground white
+    # Find all of the OPorts of the same type and draw a temporary line
+    # to them....    
+    global new_conn_oports
+    set new_conn_oports [netedit findoports $imodid $iwhich]
     foreach i $new_conn_oports {
 	set omodid [lindex $i 0]
-	set owhich [lindex $i 1]
-	
-	if { $mm == 1 } {
-	    set path [join [routeConnection $omodid $owhich \
-		    $fake_imodid $fake_iwhich]]
-	} else {
-	    set path [join [routeConnection $omodid $owhich $imodid $iwhich]]
-	}
-
-	eval $netedit_canvas create line $path -width 2 \
+	set owhich [lindex $i 1]	
+	set path [routeConnection $omodid $owhich $imodid $iwhich]
+	eval $maincanvas create line $path -width 2 \
 	    -tags \"tempconnections iconn$owhich$omodid\"
     }
     global potential_connection
     set potential_connection ""
 }
 
-#"
-
-
 proc startOPortConnection {omodid owhich x y} {
-    # Find all of the IPorts of the same type and draw a temporary line
-    # to them....
-
-    global mm
-    set mm 0
-
-    
-    set temp_list ""
-
-    # If module is of type macro, save its false connection info,
-    # and copy the names and portnumbers of the real ports into
-    # omodid and owhich
-
-    if { [string match [$omodid mod_type] macromodule] == 1} {
-	# A flag to let us know we're dealing with a macromodule...
-	set mm 1
-
-	set fake_omodid $omodid
-	set fake_owhich $owhich
-
-	set tomodid [lindex [lindex [$omodid get_oport_mapping] $owhich] 0]
-	set towhich [lindex [lindex [$omodid get_oport_mapping] $owhich] 1]
-
-	set omodid $tomodid
-	set owhich $towhich
-    	
-    }
-
-
-    global conn_iports
-    set conn_iports [netedit findiports $omodid $owhich]
-    
-
-    foreach pt $conn_iports {
-	set m [lindex $pt 0]
-	set op ""
-	set out_port ""
-	
-	if { [$m Macroed] == 1 } {
-	    set mmodule [$m MacroModule]
-	    set op [lindex $pt 1]
-
-	    foreach pmap [$mmodule get_iport_mapping] {
-		if { [string match $m [lindex $pmap 0]] == 1} {
-		    if { [string match $op [lindex $pmap 1]] } {
-			set out_port [lindex $pmap 2]
-		    }
-		}
-	    }
-	    
-	    set temp_list "$temp_list {$mmodule $out_port}"
-	    
-	} else {
-	    set temp_list "$temp_list {$m [lindex $pt 1]}"
-	}
-    }
-    global new_conn_iports
-    set new_conn_iports $temp_list
-    
-
-    global netedit_canvas
-
-    if { $mm == 1 } {
-	set coords [computeOPortCoords $fake_omodid $fake_owhich]
-    } else {
-	set coords [computeOPortCoords $omodid $owhich]
-    }
-
+    global maincanvas
+    set coords [computeOPortCoords $omodid $owhich]
     set typename [lindex [lindex [$omodid-c oportinfo] $owhich] 2]
     set portname [lindex [lindex [$omodid-c oportinfo] $owhich] 3]
     set fullname $typename:$portname
-    frame $netedit_canvas.frame
-    label $netedit_canvas.frame.label -text $fullname -foreground white -bg #036
-    pack $netedit_canvas.frame $netedit_canvas.frame.label    
-    $netedit_canvas create window [lindex $coords 0]\
-	    [lindex $coords 1] -window $netedit_canvas.frame \
-	    -anchor nw -tags "tempname" 
-    
-#    eval $netedit_canvas create text [lindex $coords 0] [lindex $coords 1] \
-#	    -anchor nw -text {$fullname} -tags "tempname"
+    frame $maincanvas.frame
+    label $maincanvas.frame.label -text $fullname -foreground white -bg #036
+    pack $maincanvas.frame $maincanvas.frame.label    
+    $maincanvas create window [lindex $coords 0] [lindex $coords 1] \
+	-window $maincanvas.frame -anchor nw -tags "tempname" 
+
+    # Find all of the IPorts of the same type and draw a temporary line
+    # to them....    
+    global new_conn_iports
+    set new_conn_iports [netedit findiports $omodid $owhich]
     foreach i $new_conn_iports {
 	set imodid [lindex $i 0]
-	set iwhich [lindex $i 1]
-	
-	if { $mm == 1 } {
-	    set path [join [routeConnection\
-		    $fake_omodid $fake_owhich $imodid $iwhich]]
-	} else {
-	    set path [join [routeConnection $omodid $owhich $imodid $iwhich]]
-	}
-
-	eval $netedit_canvas create line $path -width 2 \
+	set iwhich [lindex $i 1]	
+	set path [routeConnection $omodid $owhich $imodid $iwhich]
+	eval $maincanvas create line $path -width 2 \
 	    -tags \"tempconnections oconn$iwhich$imodid\"
     }
     global potential_connection
     set potential_connection ""
 }
 
-#"
-
-
 
 proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
-
-
+    global maincanvas minicanvas
     set path [routeConnection $omodid $owhich $imodid $iwhich]
-    set minipath ""
     set temp "a"
-    global SCALEX SCALEY
-    set doingX 1
-    foreach point $path {
-	if [expr $doingX ] {
-	    lappend minipath [expr $point/$SCALEX] 
-	} else {
-	    lappend minipath [expr $point/$SCALEY] 
-	}
-	set doingX [expr !$doingX]
-    }
 
-    global netedit_canvas netedit_mini_canvas
-    eval $netedit_canvas create bline $path -width 7 \
-	-borderwidth 2 -fill \"$portcolor\" \
-	-tags $connid
-
-    $netedit_canvas bind $connid <ButtonPress-3> \
-	"destroyConnection $connid $omodid $imodid"
-
-    $netedit_canvas bind $connid <ButtonPress-1> \
-	"lightPipe $temp $omodid $owhich $imodid $iwhich"
+    eval $maincanvas create bline $path -width 7 -borderwidth 2 -fill \"$portcolor\" -tags $connid
 
     global $connid-block
     set $connid-block 0
-    $netedit_canvas bind $connid <ButtonRelease-2> \
-	"block_pipe $connid $omodid $owhich $imodid $iwhich $portcolor"
+    $maincanvas bind $connid <ButtonRelease-2> "block_pipe $connid $omodid $owhich $imodid $iwhich $portcolor"
+    $maincanvas bind $connid <ButtonPress-3> "destroyConnection $connid $omodid $imodid"
+    $maincanvas bind $connid <ButtonPress-1> "lightPipe $temp $omodid $owhich $imodid $iwhich"
+    $maincanvas bind $connid <ButtonRelease-1> "resetPipe $temp $omodid $imodid"
+    $maincanvas bind $connid <Control-Button-1> "raisePipe $connid"
 
-    $netedit_canvas bind $connid <ButtonRelease-1> \
-	"resetPipe $temp $omodid $imodid"
-    
-    $netedit_canvas bind $connid <Control-Button-1> \
-	"raisePipe $connid"
+    eval $minicanvas create line [scalePath $path] -width 1 -fill \"$portcolor\" -tags $connid
 
-    eval $netedit_mini_canvas create line $minipath -width 1 \
-	-fill \"$portcolor\" -tags $connid
-
-    $netedit_mini_canvas lower $connid
+    $minicanvas lower $connid
 }
 
 proc IPortTrace { imodid which temp } {
@@ -1403,22 +831,11 @@ proc IPortTrace { imodid which temp } {
 	if { [string match $toName $imodid] && \
 		[string match $which $toPort] } {
 	    # light up the pipe
-	    global netedit_canvas netedit_mini_canvas
+	    global maincanvas minicanvas
 	    set path [routeConnection $fromName $fromPort $toName $toPort]
-	    eval $netedit_canvas create bline $path -width 7 \
+	    eval $maincanvas create bline $path -width 7 \
 		    -borderwidth 2 -fill red -tags $temp
-	    set minipath ""
-	    global SCALEX SCALEY
-	    set doingX 1
-	    foreach point $path {
-		if [expr $doingX ] {
-		    lappend minipath [expr $point/$SCALEX] 
-		} else {
-		    lappend minipath [expr $point/$SCALEY] 
-		}
-		set doingX [expr !$doingX]
-	    }
-	    eval $netedit_mini_canvas create bline $minipath -width 1 \
+	    eval $minicanvas create bline [scalePath $path] -width 1 \
 		    -fill red -tags $temp
 	}
     }
@@ -1442,22 +859,11 @@ proc OPortTrace { omodid which temp } {
 	if { [string match $fromName $omodid] && \
 		[string match $which $fromPort] } {
 	    # light up the pipe
-	    global netedit_canvas netedit_mini_canvas
+	    global maincanvas minicanvas
 	    set path [routeConnection $fromName $fromPort $toName $toPort]
-	    eval $netedit_canvas create bline $path -width 7 \
+	    eval $maincanvas create bline $path -width 7 \
 		    -borderwidth 2 -fill red -tags $temp
-	    set minipath ""
-	    global SCALEX SCALEY
-	    set doingX 1
-	    foreach point $path {
-		if [expr $doingX ] {
-		    lappend minipath [expr $point/$SCALEX] 
-		} else {
-		    lappend minipath [expr $point/$SCALEY] 
-		}
-		set doingX [expr !$doingX]
-	    }
-	    eval $netedit_mini_canvas create bline $minipath -width 1 \
+	    eval $minicanvas create bline [scalePath $path] -width 1 \
 		    -fill red -tags $temp
 	}
     }
@@ -1469,7 +875,6 @@ proc OPortReset { temp } {
     $netedit_mini_canvas delete $temp
 }
   
-
 proc block_pipe { connid omodid owhich imodid iwhich pcolor} {
     global netedit_canvas
     global netedit_mini_canvas
@@ -1487,33 +892,20 @@ proc block_pipe { connid omodid owhich imodid iwhich pcolor} {
 	netedit unblockconnection $connid
     }
     $netedit_mini_canvas raise $connid
- }
-
+}
 
 proc lightPipe { temp omodid owhich imodid iwhich } {
-    global netedit_canvas
+    global maincanvas minicanvas
     set path [routeConnection $omodid $owhich $imodid $iwhich]
-    eval $netedit_canvas create bline $path -width 7 \
+    eval $maincanvas create bline $path -width 7 \
 	-borderwidth 2 -fill red  -tags $temp
-    global netedit_mini_canvas
-    set minipath ""
-    global SCALEX SCALEY
-    set doingX 1
-    foreach point $path {
-	if [expr $doingX ] {
-	    lappend minipath [expr $point/$SCALEX] 
-	} else {
-	    lappend minipath [expr $point/$SCALEY] 
-	}
-	set doingX [expr !$doingX]
-    }
-    eval $netedit_mini_canvas create line $minipath -width 1 \
+    eval $minicanvas create line [scalePath $path] -width 1 \
 	-fill red -tags $temp
 
-    eval $netedit_mini_canvas itemconfigure $omodid -fill green
-    eval $netedit_mini_canvas itemconfigure $imodid -fill green
+    eval $minicanvas itemconfigure $omodid -fill green
+    eval $minicanvas itemconfigure $imodid -fill green
 
-    $netedit_mini_canvas raise $temp
+    $minicanvas raise $temp
 }
 
 proc resetPipe { temp omodid imodid } {
@@ -1534,111 +926,60 @@ proc raisePipe { connid } {
 }
 
 proc destroyConnection {connid omodid imodid} { 
-    global netedit_canvas netedit_mini_canvas
-    $netedit_canvas delete $connid
-    $netedit_mini_canvas delete $connid
+    global maincanvas minicanvas
+    $maincanvas delete $connid
+    $minicanvas delete $connid
     netedit deleteconnection $connid $omodid 
-    configureOPorts $omodid
-    configureIPorts $imodid
+    $omodid configureOPorts $maincanvas
+    $imodid configureIPorts $maincanvas
 }
-	
-proc rebuildConnection {connid omodid owhich imodid iwhich} {
-    set path [routeConnection $omodid $owhich $imodid $iwhich]
-    
-    global netedit_canvas netedit_mini_canvas
 
-    eval $netedit_canvas coords $connid $path
-
+proc scalePath { path } {
     set minipath ""
     global SCALEX SCALEY
-
     set doingX 1
     foreach point $path {
-	if [expr $doingX ] {
+	if $doingX {
 	    lappend minipath [expr round($point/$SCALEX)] 
 	} else {
 	    lappend minipath [expr round($point/$SCALEY)] 
 	}
 	set doingX [expr !$doingX]
     }
-    eval $netedit_mini_canvas coords $connid $minipath
+    return $minipath
+}
+    
+	
+proc rebuildConnection { connid omodid owhich imodid iwhich} {    
+    global maincanvas minicanvas
+    set path [routeConnection $omodid $owhich $imodid $iwhich]
+    eval $maincanvas coords $connid $path
+    eval $minicanvas coords $connid [scalePath $path]
 }
 
 proc rebuildConnections {list color} {
-    set maincanvas .bot.neteditFrame.canvas
-    set minicanvas .top.globalViewFrame.canvas
-
-    global MacroedModules
-
-    set temp_list ""
-
-    if { $MacroedModules != "" } {
-	foreach l $list {
-	    
-	    if { [[lindex $l 1] Macroed] == 1 } {
-		rebuildMModuleConnections [[lindex $l 1] MacroModule]
-		continue
-	    }
-	    
-	    if { [[lindex $l 3] Macroed] == 1 } {
-		rebuildMModuleConnections [[lindex $l 3] MacroModule]
-		continue
-	    }
-	    
-	    # if neither module is macroed
-	    
-	    set temp_list "$temp_list {$l}"
-	}
-	set list $temp_list
-    }   
-
+    global maincanvas
     foreach i $list {
-	$maincanvas raise [lindex $i 0]
-	
-	if { $color == 1 } {
-	    $minicanvas itemconfigure [lindex $i 0] \
-		    -fill [$maincanvas itemcget [lindex $i 0] -fill]
+	set id [lindex $i 0]
+	$maincanvas raise $id	
+	if {$color} {
+	    $minicanvas itemconfigure $id -fill [$maincanvas itemcget $id -fill]
 	}
-	
-	set connid [lindex $i 0]
-	set omodid [lindex $i 1]
-	set owhich [lindex $i 2]
-	set imodid [lindex $i 3]
-	set iwhich [lindex $i 4]
-
-	rebuildConnection $connid $omodid $owhich $imodid $iwhich
+	eval rebuildConnection $i
     }
 }
 
 proc trackIPortConnection {imodid which x y} {
-    global mm
-    set mm 0
-    if { [string match [$imodid mod_type] "macromodule"] == 1 } {
-	set mm 1
-	set fake_imodid $imodid
-	set fake_iwhich $which
-	
-	set timodid [lindex [lindex [$imodid get_iport_mapping] $which] 0]
-	set tiwhich [lindex [lindex [$imodid get_iport_mapping] $which] 1]
-	
-	set imodid $timodid
-	set which $tiwhich
-    }
-
     # Get coords in canvas
-    global netedit_canvas
-    set ox1 [winfo x $netedit_canvas.module$imodid.iport$which]
-    set ox2 [lindex [$netedit_canvas coords $imodid] 0]
+    global maincanvas
+    set ox1 [winfo x $maincanvas.module$imodid.iport$which]
+    set ox2 [lindex [$maincanvas coords $imodid] 0]
     set x [expr $x+$ox1+$ox2]
-    set oy1 [winfo y $netedit_canvas.module$imodid.iport$which]
-    set oy2 [lindex [$netedit_canvas coords $imodid] 1]
+    set oy1 [winfo y $maincanvas.module$imodid.iport$which]
+    set oy2 [lindex [$maincanvas coords $imodid] 1]
     set y [expr $y+$oy1+$oy2]
 
-    if { $mm == 1 } {
-	set c [computeIPortCoords $fake_imodid $fake_iwhich]
-    } else {
-	set c [computeIPortCoords $imodid $which]
-    }
+    set c [computeIPortCoords $imodid $which]
 
     set ix [lindex $c 0]
     set iy [lindex $c 1]
@@ -1646,13 +987,10 @@ proc trackIPortConnection {imodid which x y} {
     set minport ""
     global new_conn_oports
     
-
-
     foreach i $new_conn_oports {
 	set omodid [lindex $i 0]
 	set owhich [lindex $i 1]
-	
-	
+		
 	set c [computeOPortCoords $omodid $owhich]
 
 	set ox [lindex $c 0]
@@ -1663,59 +1001,33 @@ proc trackIPortConnection {imodid which x y} {
 	    set minport $i
 	}
     }
-    $netedit_canvas itemconfigure tempconnections -fill black
+    $maincanvas itemconfigure tempconnections -fill black
 
     global potential_connection
     if {$minport != ""} {
 	set omodid [lindex $minport 0]
 	set owhich [lindex $minport 1]
-	$netedit_canvas itemconfigure iconn$owhich$omodid -fill red
-	if { $mm == 1 } {
-	    set potential_connection [list $omodid $owhich $fake_imodid\
-		    $fake_iwhich]
-	} else {
-	    set potential_connection [list $omodid $owhich $imodid $which]
-	}
+	$maincanvas itemconfigure iconn$owhich$omodid -fill red
+	set potential_connection [list $omodid $owhich $imodid $which]
     } else {
 	set potential_connection ""
     }
 }
 
 proc trackOPortConnection {omodid which x y} {
-    global mm
-    set mm 0
-
-    if { [string match [$omodid mod_type] "macromodule"] == 1 } {
-	set mm 1
-	set fake_omodid $omodid
-	set fake_owhich $which
-	
-	set tomodid [lindex [lindex [$omodid get_oport_mapping] $which] 0]
-	set towhich [lindex [lindex [$omodid get_oport_mapping] $which] 1]
-
-	set omodid $tomodid
-	set which $towhich
-    }
-
     # Get coords in canvas
-    global netedit_canvas
-    set ox1 [winfo x $netedit_canvas.module$omodid.oport$which]
-    set ox2 [lindex [$netedit_canvas coords $omodid] 0]
+    global maincanvas
+    set ox1 [winfo x $maincanvas.module$omodid.oport$which]
+    set ox2 [lindex [$maincanvas coords $omodid] 0]
     set x [expr $x+$ox1+$ox2]
-    set oy1 [winfo y $netedit_canvas.module$omodid.oport$which]
-    set oy2 [lindex [$netedit_canvas coords $omodid] 1]
+    set oy1 [winfo y $maincanvas.module$omodid.oport$which]
+    set oy2 [lindex [$maincanvas coords $omodid] 1]
     set y [expr $y+$oy1+$oy2]
 
-
-    if { $mm == 1 } {
-	set c [computeOPortCoords $fake_omodid $fake_owhich]
-    } else {
-	set c [computeOPortCoords $omodid $which]
-    }
+    set c [computeOPortCoords $omodid $which]
 
     set ix [lindex $c 0]
     set iy [lindex $c 1]
-
     set mindist [computeDist $x $y $ix $iy]
     set minport ""
     global new_conn_iports
@@ -1725,58 +1037,40 @@ proc trackOPortConnection {omodid which x y} {
 	set iwhich [lindex $i 1]
 
 	set c [computeIPortCoords $imodid $iwhich]
+
 	set ox [lindex $c 0]
 	set oy [lindex $c 1]
-
 	set dist [computeDist $x $y $ox $oy]
 	if {$dist < $mindist} {
 	    set mindist $dist
 	    set minport $i
 	}
     }
-    $netedit_canvas itemconfigure tempconnections -fill black
+    $maincanvas itemconfigure tempconnections -fill black
+
     global potential_connection
     if {$minport != ""} {
 	set imodid [lindex $minport 0]
 	set iwhich [lindex $minport 1]
-	$netedit_canvas itemconfigure oconn$iwhich$imodid -fill red
-	
-	if { $mm == 1 } {
-	    set potential_connection\
-		    [list $fake_omodid $fake_owhich $imodid $iwhich]
-	} else {
-	    set potential_connection [list $omodid $which $imodid $iwhich]
-	}
+	$maincanvas raise oconn$iwhich$imodid
+	$maincanvas itemconfigure oconn$iwhich$imodid -fill red
+	set potential_connection [list $omodid $which $imodid $iwhich]
     } else {
 	set potential_connection ""
     }
 }
 
 proc endPortConnection {portcolor} {
-    global netedit_canvas
-    $netedit_canvas delete tempconnections
-    $netedit_canvas delete tempname
-    destroy $netedit_canvas.frame
+    global maincanvas
+    $maincanvas delete tempconnections
+    $maincanvas delete tempname
+    destroy $maincanvas.frame
     global potential_connection
     if { $potential_connection != "" } {
-
-	set omodid [lindex $potential_connection 0]
-	set owhich [lindex $potential_connection 1]
-	set imodid [lindex $potential_connection 2]
-	set iwhich [lindex $potential_connection 3]
-
-	# Update connection_list
-	global connection_list
-	set connection_list "$connection_list {$omodid $owhich $imodid\
-		    $iwhich $portcolor}"
-	
-
-	set connid [netedit addconnection $omodid $owhich $imodid $iwhich]
-	buildConnection $connid $portcolor $omodid $owhich $imodid $iwhich
-	
-	configureOPorts $omodid
-	configureIPorts $imodid
-	
+	set connid [eval netedit addconnection $potential_connection]
+	eval buildConnection $connid $portcolor $potential_connection
+	[lindex $potential_connection 0] configureOPorts $maincanvas
+	[lindex $potential_connection 2] configureIPorts $maincanvas
     }
 }
 
@@ -1804,42 +1098,28 @@ proc routeConnection {omodid owhich imodid iwhich} {
     }
 }
 
-proc computeIPortCoords {modid which} {
-    global netedit_canvas
+proc computePortCoords {modid which isoport} {
+    global maincanvas
     global port_spacing
     global port_width
-    set px [expr $which*$port_spacing+6+$port_width/2]
-    set at [$netedit_canvas coords $modid]
-    
-    set mx [lindex $at 0]
-    set my [lindex $at 1]
-        
-    set x [expr $px+$mx]
-    set y $my
+    set at [$maincanvas coords $modid]
+    set x [expr $which*$port_spacing+6+$port_width/2+[lindex $at 0]]
+    if {$isoport} {
+	set y [expr [winfo height $maincanvas.module$modid]+[lindex $at 1]]
+    } else {
+	set y [lindex $at 1]
+    }
     return [list $x $y]
 }
 
-proc computeOPortCoords {modid which} {
-    global netedit_canvas
-    global port_spacing
-    global port_width
-    set px [expr $which*$port_spacing+6+$port_width/2]
-    set at [$netedit_canvas coords $modid]
-    set mx [lindex $at 0]
-    set my [lindex $at 1]
-    
-    # For compatibility with macromodules
-    
-    if {[string match "*MacroModule*" $modid]} {
-	set h [winfo height $netedit_canvas.macromodule$modid]
-    } else {
-	set h [winfo height $netedit_canvas.module$modid]
-    }
-    
-    set x [expr $px+$mx]
-    set y [expr $my+$h]
-    return [list $x $y]
+proc computeIPortCoords {modid which} {
+    return [computePortCoords $modid $which 0]
 }
+
+proc computeOPortCoords {modid which} {
+    return [computePortCoords $modid $which 1]
+}
+
 
 proc computeDist {x1 y1 x2 y2} {
     set dx [expr $x2-$x1]
@@ -1847,173 +1127,80 @@ proc computeDist {x1 y1 x2 y2} {
     return [expr sqrt($dx*$dx+$dy*$dy)]
 }
 
-proc generate_current_connections {} {
-    global connection_list
-    
-    set c_list ""
-    
-    foreach c $connection_list {
-	set color [lindex $c 4] 
-	set oConinf "[[lindex $c 0] get_oports [lindex $c 1]]"
-	set oConinf [string trim $oConinf "{}"]
-	set omodid [lindex $oConinf 0]
-	set owhich [lindex $oConinf 1]
-	if { [string match $omodid ""] } {
-	    continue
-	}
-	
-
-	set iConinf [[lindex $c 2] get_iports [lindex $c 3]]
-	set iConinf [string trim $iConinf "{}"]
-	set imodid [lindex $iConinf 0]
-	set iwhich [lindex $iConinf 1]
-	if { [string match $imodid ""] } {
-	    continue
-	}
-	
-	set connid $omodid
-	append connid "_p$owhich"
-	append connid "_to_$imodid"
-	append connid "_p$iwhich"
-	
-	set c_list "$c_list {$connid $color $omodid $owhich $imodid $iwhich}"
-    }
-
-
-    return $c_list
-
-}
-
-
-
-
-
 proc moduleStartDrag {maincanvas modid x y} {
-    global lastX lastY
-    global module_group
-    global CurrentMacroModules
-    global CurrentlySelectedModules
-    global current_connections
-    global sel_module_box
-    
+    #raise the module icon
     set wname "$maincanvas.module$modid"
     raise $wname
 
-    set sel_module_box 0
-
-    set module_group [string match "*$modid*" $CurrentlySelectedModules]
+    #set module movement coordinates
+    global lastX lastY
     set lastX $x
     set lastY $y
-    
+       
+    #if clicked module isnt selected, unselect all and select this
+    if { ! [$modid is_selected] } {
+	$modid toggleSelected $maincanvas 0
+    }
 
-    
-
-    if {$module_group == 1} {
-	foreach csm $CurrentlySelectedModules {
-	    $csm set_moduleDragged 0
-	    $csm set_moduleConnected [netedit getconnected $modid]
-	}
-    } else {
-	$modid set_moduleDragged 0
-	$modid set_moduleConnected [netedit getconnected $modid]
-    }  
-    
-    set current_connections ""
-    
-    set count 0
-    
+    #build connection lists for all selected modules to draw pipes when moving
+    global CurrentlySelectedModules
     foreach csm $CurrentlySelectedModules {
-	incr count
-	foreach i [netedit getconnected $csm] {
-	    set l [lindex $i 0]
-	    if {[string match "*$l*" $current_connections] == 0} {
-
-	    }
-	}
-}       
-
-
-  # Hide the network lines which are not to be redrawn during
-  # the drag
-  if { ($count >= 2)&&([string match "*$modid*" $CurrentlySelectedModules]==1) } {
-      #Draw Box
-      set bbox [compute_bbox $maincanvas]
-      set sel_module_box [$maincanvas create rectangle [lindex $bbox 0] \
-	      [lindex $bbox 1] [lindex $bbox 2] [lindex $bbox 3]]
-      $maincanvas itemconfigure $sel_module_box -outline darkgray
-      
-      foreach c $current_connections {
-	  $maincanvas lower $c
-	  .top.globalViewFrame.canvas itemconfigure $c -fill #036
-      }
-  }
+	$csm set_moduleConnected [netedit getconnected $csm]
+    }
+    
+    #create a gray bounding box around moving modules
+    global sel_module_box
+    set sel_module_box [$maincanvas create rectangle [compute_bbox $maincanvas]]
+    $maincanvas itemconfigure $sel_module_box -outline darkgray
 }
 
-
 proc moduleDrag {maincanvas minicanvas modid x y} {
-    global module_group
     global grouplastX
     global grouplastY
     global lastX
     global lastY
-    global CurrentlySelectedModules
-    global sel_module_box
 
+    set bbox [compute_bbox $maincanvas]
+    # When the user tries to drag a group of modules off the canvas,
+    # Offset the lastX and or lastY variable, so that they can only drag
+    #groups to the border of the canvas
+    set min_possibleX [expr [lindex $bbox 0] + ($x-$lastX)]
+    set min_possibleY [expr [lindex $bbox 1] + ($y-$lastY)]
     
-    if {$module_group == 1 } {
-	
-	set bbox [compute_bbox $maincanvas]
-
-
-	# When the user tries to drag a group of modules off the canvas,
-	# Offset the lastX and or lastY variable, so that they can only drag
-	#groups to the border of the canvas
-	
-	
-
-	
-	set min_possibleX [expr [lindex $bbox 0] + ($x-$lastX)]
-	set min_possibleY [expr [lindex $bbox 1] + ($y-$lastY)]
-	
-	if {$min_possibleX <= 0} {
-	    set lastX [expr $lastX+$min_possibleX]
-	}
-	if {$min_possibleY <= 0} {
-	    set lastY [expr $lastY+$min_possibleY]
-	}
-
-	set max_possibleX [expr [lindex $bbox 2] + ($x-$lastX)]
-	set max_possibleY [expr [lindex $bbox 3] + ($y-$lastY)]
-
-	if {$max_possibleX >= 4500} {
-	    set diff [expr $max_possibleX-4500]
-	    set lastX $lastX-$diff
-	}
-	if {$max_possibleY >= 4500} {
-	    set diff [expr $max_possibleY-4500]
-	    set lastY $lastY-$diff
-	}
-
-
-	####################
-	
-	foreach csm $CurrentlySelectedModules {
-	    do_moduleDrag $maincanvas $minicanvas $csm $x $y
-	}	
-	
-	set lastX $grouplastX
-	set lastY $grouplastY
-		
-    } else {
-	do_moduleDrag $maincanvas $minicanvas $modid $x $y
-	set lastX $grouplastX
-	set lastY $grouplastY
+    if {$min_possibleX <= 0} {
+	set lastX [expr $lastX+$min_possibleX]
     }
+    if {$min_possibleY <= 0} {
+	set lastY [expr $lastY+$min_possibleY]
+    }
+    
+    set max_possibleX [expr [lindex $bbox 2] + ($x-$lastX)]
+    set max_possibleY [expr [lindex $bbox 3] + ($y-$lastY)]
+    
+    if {$max_possibleX >= 4500} {
+	set diff [expr $max_possibleX-4500]
+	set lastX $lastX-$diff
+    }
+    if {$max_possibleY >= 4500} {
+	set diff [expr $max_possibleY-4500]
+	set lastY $lastY-$diff
+    }
+    
+    # Move each module individually and redraw all connections
+    global CurrentlySelectedModules
+    foreach csm $CurrentlySelectedModules {
+	do_moduleDrag $maincanvas $minicanvas $csm $x $y
+	rebuildConnections [$csm get_moduleConnected] 0
+    }	
+    
+    set lastX $grouplastX
+    set lastY $grouplastY
+    
+    global sel_module_box
+    $maincanvas coords $sel_module_box [compute_bbox $maincanvas]
 }    
 
-
 proc do_moduleDrag {maincanvas minicanvas modid x y} {
-    global module_group
     global xminwarped
     global xmaxwarped
     global yminwarped
@@ -2076,13 +1263,8 @@ proc do_moduleDrag {maincanvas minicanvas modid x y} {
     #############################################
     
     # if user attempts to drag module off near end of canvas
-    
     if { [expr $modxpos+($x-$lastX)] <= $currminxbdr} {
-	
-	
-
 	#if viewable canvas is not on the border of the main canvas
-
 	if { $currminxbdr > 0} {
 	    set xbegView [lindex [$maincanvas xview] 0]
 	    set xdiff [expr ($modxpos+($x-$lastX))-$currminxbdr]
@@ -2091,19 +1273,16 @@ proc do_moduleDrag {maincanvas minicanvas modid x y} {
 	}
     
 	#if viewable canvas is on the border of the main canvas
-
 	if { [expr $modxpos+($x-$lastX)] <= 0 } {
 	    $maincanvas move $modid [expr -$modxpos] 0
 	    $minicanvas move $modid [expr (-$modxpos)/$SCALEX] 0
 	    set lastX $x
 	}
 
-}
+    }
     
     #if user attempts to drag module off far end of canvas
-
     if { [expr $mmodxpos+($x-$lastX)] >= $currxbdr} {
-		
 	if {$currxbdr < $mainCanvasWidth} {
 	    #if not on edge of canvas, move viewable area right	 
 	    set xbegView [lindex [$maincanvas xview] 0]
@@ -2114,21 +1293,16 @@ proc do_moduleDrag {maincanvas minicanvas modid x y} {
 	
 	# if the right side of the module is at the right edge
 	# of the canvas.
-
 	if { [expr $mmodxpos+($x-$lastX)] >= $mainCanvasWidth} {
-
 	    # dont' let the module move off the right side of the
 	    # entire canvas
-	    
 	    $maincanvas move $modid [expr ($mainCanvasWidth-$mmodxpos)] 0
 	    $minicanvas move $modid [expr (($mainCanvasWidth-$mmodxpos)/$SCALEX)] 0
 	    set lastX $x
 	} 
-
     }
     
     #cursor-boundary check and warp for x-axis
-
     if { [expr $x-$Xbounds] > $canwidth } {
 	cursor warp $maincanvas $canwidth [expr $y-$Ybounds]
 	set currx $canwidth
@@ -2139,39 +1313,30 @@ proc do_moduleDrag {maincanvas minicanvas modid x y} {
 	cursor warp $maincanvas 0 [expr $y-$Ybounds]
 	set currx 0
 	set xminwarped 1
-	
     }
     
     #Y boundary checks
-
     if { [expr $modypos+($y-$lastY)] <= $currminybdr} {
 	if {$currminybdr > 0} {
 	    set ybegView [lindex [$maincanvas yview] 0]
 	    set ydiff [expr ($modypos+($y-$lastY))-$currminybdr]
 	    set mvy [expr (($ydiff/$mainCanvasHeight)+$ybegView)]	    
 	    $maincanvas yview moveto $mvy
-	}
-    
+	}    
 	#if viewable canvas is on the border of the main canvas
-
 	if { [expr $modypos+($y-$lastY)] <= 0 } {
 	    $maincanvas move $modid 0 [expr -$modypos]
 	    $minicanvas move $modid 0 [expr (-$modypos)/$SCALEY]
 	    set lastY $y
 	}
-
     }
  
-#if user attempts to drag module off far end of canvas
-    
-#round currybdr
+    #if user attempts to drag module off far end of canvas
+    #round currybdr
     set currybdr [expr int($currybdr+.5)]
-
-if { [expr $mmodypos+($y-$lastY)] >= $currybdr} {
-		
+    if { [expr $mmodypos+($y-$lastY)] >= $currybdr} {
 	if {$currybdr < $mainCanvasHeight} {
 	    #if not on edge of canvas, move viewable area down
-
 	    set ybegView [lindex [$maincanvas yview] 0]
 	    set ydiff [expr ($mmodypos+($y-$lastY))-$currybdr]
 	    set mvy [expr (($ydiff/$mainCanvasHeight)+$ybegView)]
@@ -2180,23 +1345,16 @@ if { [expr $mmodypos+($y-$lastY)] >= $currybdr} {
 	
 	# if the bottom side of the module is at the bottom edge
 	# of the canvas.
-
 	if { [expr $mmodypos+($y-$lastY)] >= $mainCanvasHeight} {
-
 	    # dont' let the module move off the bottom side of the
 	    # entire canvas
-	    
 	    $maincanvas move $modid 0 [expr ($mainCanvasHeight-$mmodypos)]
 	    $minicanvas move $modid 0 [expr (($mainCanvasHeight-$mmodypos)/$SCALEY)]
 	    set lastY $y
 	}
-
     }
 
-
-
-#cursor-boundary check and warp for y-axis
-
+    #cursor-boundary check and warp for y-axis
     if { [expr $y-$Ybounds] < 0 } {
 	cursor warp $maincanvas $currx 0
 	set yminwarped 1
@@ -2206,23 +1364,14 @@ if { [expr $mmodypos+($y-$lastY)] >= $currybdr} {
 	cursor warp $maincanvas $currx $canheight
 	set ymaxwarped 1
     }
-
     
     #####################################################################
-    
-
     $maincanvas move $modid [expr $x-$lastX] [expr $y-$lastY]
-    
     $minicanvas move $modid [expr ( $x - $lastX ) / $SCALEX ] \
 	                    [expr ( $y - $lastY ) / $SCALEY ]
-    
     #####################################################################
-    
-    
+        
     #if the mouse has been warped, adjust $lastX accordingly
-    
- 
-
     if { $xmaxwarped } {
 	set lastX [expr $maxx - [.bot.neteditFrame.vscroll cget -width] - 5]
 	set xs 1
@@ -2245,7 +1394,6 @@ if { [expr $mmodypos+($y-$lastY)] >= $currybdr} {
     if { $ys==0 } {
 	set lastY $y
     }
-
     
     global grouplastX
     global grouplastY
@@ -2255,106 +1403,12 @@ if { [expr $mmodypos+($y-$lastY)] >= $currybdr} {
 
     set lastX $templastX
     set lastY $templastY
-    
-   
-    #Rebuild the network connections only if one module is selected
-
-    set i 0
-
-    if {$module_group == 1} {
-	foreach csm $CurrentlySelectedModules {
-	    $csm set_moduleDragged 1
-	    incr i
-	}
-	if {$i <= 1} {
-	    rebuildConnections [$csm get_moduleConnected] 0
-	}
-    } else {
-	$modid set_moduleDragged 1
-	rebuildConnections [$modid get_moduleConnected] 0
-    }
-    
-    set i 0
-    
-    set bbox [compute_bbox $maincanvas]
-
-    if { $sel_module_box != 0 } {
-	    $maincanvas coords $sel_module_box [lindex $bbox 0] \
-		    [lindex $bbox 1] [lindex $bbox 2] [lindex $bbox 3]
-    }
-
 }
 
 proc moduleEndDrag {mframe maincanvas} {
-    global module_group
-    global CurrentlySelectedModules
-    global current_connections
     global sel_module_box
-
-
-    #Update all network lines on the canvas if a group of modules was moved
-    
-
-    global MacroedModules
-
-    if {$module_group == 1} {
-	set maincanvas .bot.neteditFrame.canvas
-	global mainCanvasWidth mainCanvasHeight
-	
-	set overlap [$maincanvas find overlapping 0 0 $mainCanvasWidth \
-		$mainCanvasHeight] 
-	foreach i  $overlap {
-	    set s "[$maincanvas itemcget $i -tags]"
-	    if {[$maincanvas type $s] == "window"} {
-		if {[string match [$s mod_type] "module"]} {
-		    rebuildConnections [netedit getconnected $s] 0
-		}
-	    }
-	}		
-    }
-
-    
-
-    
-
-
-    # Raise the lines hidden during the drag; do not
-    # raise the lines hidded because of a MacroModule
-    foreach c $current_connections {
-	set t 0
-	foreach m $MacroedModules {
-	    if { [string match "*$m*" $c] == 1 } {
-		set t 1
-	    }
-	}
-	if {$t == 0} {
-	    $maincanvas raise $c
-	}
-    }
-
-
-
-    foreach c $current_connections {
- 	$maincanvas raise $c
-	.top.globalViewFrame.canvas itemconfigure $c -fill \
-		[$maincanvas itemcget $c -fill]
-    }
-
     $maincanvas delete $sel_module_box
-
     computeModulesBbox
-}
-
-proc configureIPorts {modid} {
-    if {[info command $modid] != ""} {
-	$modid configureAllIPorts
-    }
-}
-
-proc configureOPorts {modid} {
-    if {[info command $modid] != ""} {
-	$modid configureAllOPorts
-    }
 }
 
 proc moduleHelp {modid} {
@@ -2387,7 +1441,6 @@ proc moduleHelp {modid} {
 }
 
 # By Mohamed Dekhil
-
 proc moduleNotes {name mclass} {    
     global $mclass-notes
     set w .module_notes
@@ -2403,65 +1456,30 @@ proc moduleNotes {name mclass} {
 }
 
 # By Mohamed Dekhil
-
 proc okNotes {w mclass} {
     global $mclass-notes
-    set  $mclass-notes [$w.tnotes get 1.0 end]
+    set $mclass-notes [$w.tnotes get 1.0 end]
     destroy $w
 }
 
 proc moduleDestroy {maincanvas minicanvas modid} {
     # Remove me from the modules list
-
     global modules
-    set templist ""
-    foreach m $modules {
-	if { ! [string match $m $modid] } {
-	    set templist "$templist $m"
-	}
-    }
-
-    set modules $templist
+    set pos [lsearch $modules $modid]
+    set modules [lreplace $modules $pos $pos]
 
     #Remove me from the Currently Selected Module List
     global CurrentlySelectedModules
-    set p $maincanvas.module[$modid modname].ff
-    
-    set tempList ""
-    
-    foreach item $CurrentlySelectedModules {
-	if { $item != [$modid modname] } {
-	    set tempList "$tempList $item"
-	}
-    }
-    
-    set CurrentlySelectedModules $tempList
+    set pos [lsearch $CurrentlySelectedModules [$modid modname]]
+    set CurrentlySelectedModules [lreplace $CurrentlySelectedModules $pos $pos]
     
     set modList [netedit getconnected $modid]  
-    # go through list from end to start to work for
+    # go through list from backwards to work for
     # dynamic modules also
-    set size [llength $modList]
-    set size [expr $size-1]
+    set size [expr [llength $modList]-1]
     for {set j $size} {$j >= 0} {incr j -1} {
 	set i [lindex $modList $j]
-	set connid [lindex $i 0]
-	set omodid [lindex $i 1]
-	set owhich [lindex $i 2]
-	set imodid [lindex $i 3]
-	set iwhich [lindex $i 4]
-	set iinfo [lindex [lindex [$omodid get_oports $owhich] 0] 0]
-	
-	set romodid [lindex [lindex [$omodid get_oports $owhich] 0] 0]
-	set rowhich [lindex [lindex [$omodid get_oports $owhich] 0] 1]
-	set rimodid [lindex [lindex [$imodid get_iports $iwhich] 0] 0]
-	set riwhich [lindex [lindex [$imodid get_iports $iwhich] 0] 1]
-	
-	set rconnid "$romodid"
-	append rconnid "_p$rowhich"
-	append rconnid "_to_$rimodid"
-	append rconnid "_p$riwhich"
-	
-	destroyConnection $rconnid $romodid $rimodid
+	destroyConnection [lindex $i 0] [lindex $i 1] [lindex $i 3]
     }
 
     # Hack, work around Viewer deletion bug by waiting a moment to destroy
@@ -2472,7 +1490,6 @@ proc moduleDestroy {maincanvas minicanvas modid} {
 	moduleDestroyAux $maincanvas $minicanvas $modid
     }
 }
-
 
 proc moduleDestroyAux {maincanvas minicanvas modid} {
     $maincanvas delete $modid
@@ -2488,168 +1505,102 @@ proc moduleDestroyAux {maincanvas minicanvas modid} {
     computeModulesBbox
 }
 
-
-proc moduleDestroySelected {maincanvas minicanvas module} {
+proc moduleDestroySelected {maincanvas minicanvas} {
     global CurrentlySelectedModules 
-       
     foreach mnum $CurrentlySelectedModules {
 	moduleDestroy $maincanvas $minicanvas $mnum
     }
 }
 
-global startx starty
-global rect
-global rectlastx rectlasty
+global startx starty rect
+global InitiallySelectedModules
 
-global TempList
-
-proc startBox {X Y maincanvas option} {
+proc startBox {X Y maincanvas keepselected} {
     global CurrentlySelectedModules
+    global InitiallySelectedModules
     global mainCanvasWidth mainCanvasHeight
-    global startx starty
-    global TempList
-    global rect
-    global rectlastx rectlasty
-    global selected_color unselected_color
-    
-    set TempList ""
-    
+    global startx starty rect
 
-    if { $option == 0 } {
-	foreach i $CurrentlySelectedModules {
-	    $i removeSelected $maincanvas $unselected_color
-	}
-	set $CurrentlySelectedModules ""
-    } 
-
+    if {!$keepselected} {
+	unselectAll
+	set InitiallySelectedModules ""
+    } else {
+	set InitiallySelectedModules $CurrentlySelectedModules
+    }
     
     set sx [expr $X-[winfo rootx $maincanvas]]
     set sy [expr $Y-[winfo rooty $maincanvas]]
     
-    set startx [expr $sx+int([expr (([lindex [.bot.neteditFrame.canvas xview] 0]*$mainCanvasWidth))])]
-    
-    set starty [expr $sy+int([expr (([lindex [.bot.neteditFrame.canvas yview] 0]*$mainCanvasHeight))])]
+    set startx [expr $sx + \
+	int([expr (([lindex [$maincanvas xview] 0]*$mainCanvasWidth))])]
+    set starty [expr $sy + \
+        int([expr (([lindex [$maincanvas yview] 0]*$mainCanvasHeight))])]
   
     #Begin the bounding box
     set rect [$maincanvas create rectangle $startx $starty $startx $starty] 
     
-    set rectlastx $X
-    set rectlasty $Y
-    
     global rx ry
-
     set rx [winfo rootx $maincanvas]
-    set ry [winfo rooty $maincanvas]
-    
+    set ry [winfo rooty $maincanvas]    
 }
 
 proc makeBox {X Y maincanvas} {
     global CurrentlySelectedModules
+    global InitiallySelectedModules
     global mainCanvasWidth mainCanvasHeight
     global selected_color unselected_color
-    global TempList
-    global startx
-    global starty 
+    global startx starty rx ry
     global rect
-    global rx ry
     
     #Canvas Relative current X and Y positions
+    set currx [expr [expr ($X-$rx)] + \
+       int([expr (([lindex [$maincanvas xview] 0]*$mainCanvasWidth))])]
+    set curry [expr [expr ($Y-$ry)] + \
+       int([expr (([lindex [$maincanvas yview] 0]*$mainCanvasHeight))])]
 
-    set tx [expr ($X-$rx)]
-    set ty [expr ($Y-$ry)]
-    
-    set currx [expr $tx+int([expr (([lindex [.bot.neteditFrame.canvas xview] 0]*$mainCanvasWidth))])]
-    
-    set curry [expr $ty+int([expr (([lindex [.bot.neteditFrame.canvas yview] 0]*$mainCanvasHeight))])]
-   
-    $maincanvas coords $rect $startx $starty $currx $curry
-    
+    #redraw box
+    $maincanvas coords $rect $startx $starty $currx $curry    
 
     # select all modules which overlap the current bounding box
-    
-    set ol ""
-
+    set overlappingModules ""
     set overlap [$maincanvas find overlapping $startx $starty $currx $curry]
     foreach i $overlap {
 	set s "[$maincanvas itemcget $i -tags]"
 	if {[$maincanvas type $s] == "window"} {
-	    if { [string match [$s mod_type] "module"] } {
+	    lappend overlappingModules $s
+	    if {[lsearch $CurrentlySelectedModules $s] == -1} {
 		$s addSelected $maincanvas $selected_color
-		set TempList "$TempList $s"    
-		set ol "$ol $s"
 	    }
 	}
     }
 
-
-    #For each element of $TempList, check to see if it is still selected.  If
-    #so, leave it selected and in TempList.  If not, remove if from the
-    #templist, and unselect it.
-    
-    set ttlist ""
-    
-
-    foreach t $TempList {
-	if { [string match "*$t*" $ol] == 1 } {
-	    set ttlist "$ttlist $t"
-	} else {
-	    $t removeSelected $maincanvas $unselected_color
+    # remove those not initally selected or overlapped by box
+    foreach mod $CurrentlySelectedModules {
+	if {[lsearch $overlappingModules $mod] == -1 && \
+		[lsearch $InitiallySelectedModules $mod] == -1} {
+	    $mod removeSelected $maincanvas $unselected_color
 	}
     }
-    
-    #Update TempList
-    set TempList $ttlist
-
-
 }
 
 proc endBox {X Y maincanvas} {
     global rect
-    global TempList
     $maincanvas delete $rect
-    set TempList ""
 }
 
-proc SelectAll {} {
-    set maincanvas .bot.neteditFrame.canvas
-    global mainCanvasWidth mainCanvasHeight
-    global selected_color
-
-    set overlap [$maincanvas find overlapping 0 0 $mainCanvasWidth \
-	    $mainCanvasHeight] 
-    foreach i $overlap {
-	set s "[$maincanvas itemcget $i -tags]"
-	
-	if {[$maincanvas type $s] == "window"} {
-	    $s addSelected $maincanvas $selected_color
-	}
+proc unselectAll {} {
+    global CurrentlySelectedModules maincanvas unselected_color
+    foreach i $CurrentlySelectedModules {
+	$i removeSelected $maincanvas $unselected_color
     }
 }
-    
-#proc ClearCanvas {} {
-#    set maincanvas .bot.neteditFrame.canvas
-#    set minicanvas .top.globalViewFrame.canvas
-#    global mainCanvasWidth mainCanvasHeight
-    
-#    set overlap [$maincanvas find overlapping 0 0 $mainCanvasWidth \
-#    $mainCanvasHeight] 
-#    foreach i $overlap {
-#	set s "[$maincanvas itemcget $i -tags]"
-	 
-#	if {[$maincanvas type $s] == "window"} {
-#	    moduleDestroy $maincanvas $minicanvas $s
-#	}
-#    }
-#}
 
 proc compute_bbox {maincanvas} {
     #Compute and return the coordinated of a bounding box containing all
     #CurrentlySelectedModules
-
     global CurrentlySelectedModules
     set maxx 0
     set maxy 0
-
     set minx 4500
     set miny 4500
 
@@ -2665,7 +1616,6 @@ proc compute_bbox {maincanvas} {
 	}
 
 	#Find $minx and $miny
-
 	if { [lindex $curr_coords 0] <= $minx} {
 	    set minx [lindex $curr_coords 0]
 	}
@@ -2676,345 +1626,3 @@ proc compute_bbox {maincanvas} {
     
     return "$minx $miny $maxx $maxy"
 }
-
-
-
-############
-
-proc makeMacroModule {maincanvas minicanvas curr_module} {
-    set mmod [groupModules $maincanvas $minicanvas $curr_module]
-}
-
-proc groupModules {maincanvas minicanvas curr_module} {
-    createMacroModule $maincanvas $minicanvas $curr_module 1 0 0
-}
-
-proc createMacroModule {maincanvas minicanvas curr_module at_cursor xpos ypos } {
-    global CurrentlySelectedModules
-    
-    
-    # Execute this procedure only if there are selected modules
-    set i 0
-    foreach csm $CurrentlySelectedModules {
-	incr i
-    }
-
-    if { $i > 0 } {
-
-	# Calculate the coordinates of the current module, and use them as the 
-	# position at which to create the new MacroModule
-	if { $at_cursor == 1 } {
-	    set xpos [$curr_module get_x]
-	    set ypos [$curr_module get_y]
-	}
-	
-	set m MacroModule[mmodnum]
-	
-	macromodule $m
-	$m set_members $CurrentlySelectedModules
-	
-    
-	####
-	
-	set mmodule_connections ""
-
-	foreach csm $CurrentlySelectedModules {
-	    foreach i [netedit getconnected $csm] {
-		set l [lindex $i 0]
-		if {[string match "*$l*" $mmodule_connections] == 0} {
-		    set mmodule_connections "$mmodule_connections $l"
-		}
-	    }
-	}   
-    
-	# Hide the "real" network lines
-	foreach mod $mmodule_connections {
-	    $maincanvas delete $mod
-	    $minicanvas delete $mod
-	    
-	    #$maincanvas lower $mod
-	    #$minicanvas itemconfigure $mod -fill #036
-	}
-
-	#$m set_connections $mmodule_connections
-    
-	
-	# Tag the selected Module classes with the name of the MacroModule
-	# they are joining
-	
-	foreach csm $CurrentlySelectedModules {
-	    $csm set_Macroed 1
-	    $csm set_MacroModule $m
-	}
-
-	# Hide the "real" modules
-	# At this point, there is no way to "unmap" window objects,
-	# so, as a temporary fix, modules are uniformly moved up and to
-	# the right by 10^3 pixels
-	
-	foreach csm $CurrentlySelectedModules {
-	    
-	    $csm set_last_pos "[$csm get_x] [$csm get_y]"
-	    $maincanvas delete $csm
-	    $minicanvas itemconfigure $csm -fill #036
-	}
-	
-	# Unselect the Modules which comprise the newly created MacroModule
-	global unselected_color
-
-	foreach i $CurrentlySelectedModules {
-	    $i removeSelected $maincanvas $unselected_color
-	}
-	set $CurrentlySelectedModules ""
-
-	# Make and pack the new macromodule's icon
-	$m make_icon $maincanvas $minicanvas $xpos $ypos
-	
-    }
-    
-    rebuildMModuleConnections $m
-    
-    return $m
-}
-
-# Assign an ID number to a macromodule
-proc mmodnum  {} {
-    global CurrentMacroModules
-    set num "1"
-    while {1} {
-	if {[string match "*$num*" $CurrentMacroModules] == 1} {
-	    incr num
-	} else {
-	    return $num
-	}
-    }
-}
-
-proc ungroup_modules {maincanvas minicanvas mmodid} {
-    global MacroedModules
-    global CurrentMacroModules
-    global SCALEX SCALEY
-    global mainCanvasWidth mainCanvasHeight
-
-    set fcons [$mmodid get_FakeConnections]
-
-    # Destroy the macromodule's icon
-    $maincanvas delete $mmodid
-    $minicanvas delete $mmodid
-
-    set mems [$mmodid get_members]
-
-    # If the selected module is connected to another
-    # macromodule, modify that module's connections
-    # appropriately
-
-    foreach c [$mmodid get_FakeConnections] {
-	if { [string match [lindex $c 1] $mmodid] } {
-	    if { [string match [[lindex $c 3] mod_type] "macromodule"] } {
-		foreach mfc [[lindex $c 3] get_FakeConnections] {
-		    if { [string match [lindex $mfc 0] [lindex $c 0]] } {
-			set old_con_name [lindex $mfc 0]
-			set omodid [lindex $mfc 1]
-			set owhich [lindex $mfc 2]
-			set imodid [lindex $mfc 3]
-			set iwhich [lindex $mfc 4]
-			foreach inf [$mmodid get_oport_mapping] {
-			    if { [string match [lindex $inf 2] $owhich] } {
-				set real_omodid [lindex $inf 0]
-				set real_owhich [lindex $inf 1]
-			    }
-			}
-			set con_name $real_omodid
-			append con_name "_p$real_owhich"
-			append con_name "_to_$imodid"
-			append con_name "_p$iwhich"
-			
-			set templist ""
-			
-			foreach nmfc [$imodid get_FakeConnections] {
-			    if { [string match $old_con_name [lindex $nmfc 0]\
-				    ] } {
-				set templist "$templist {$con_name\
-					$real_omodid $real_owhich $imodid\
-					$iwhich}"
-			    } else {
-				set templist "$templist {$nmfc}"
-			    }
-			}
-			
-			$imodid set_FakeConnections $templist
-		    }
-		}
-	    }
-	}
-    
-
-	if { [string match [lindex $c 3] $mmodid] } {
-	    if { [string match [[lindex $c 1] mod_type] "macromodule"] } {
-		foreach mfc [[lindex $c 1] get_FakeConnections] {
-		    if { [string match [lindex $mfc 0] [lindex $c 0]] } {
-			set old_con_name [lindex $mfc 0]
-			set omodid [lindex $mfc 1]
-			set owhich [lindex $mfc 2]
-			set imodid [lindex $mfc 3]
-			set iwhich [lindex $mfc 4]
-			foreach inf [$mmodid get_iport_mapping] {
-			    if { [string match [lindex $inf 2] $iwhich] } {
-				set real_imodid [lindex $inf 0]
-				set real_iwhich [lindex $inf 1]
-			    }
-			}
-
-			set con_name $omodid
-			append con_name "_p$owhich"
-			append con_name "_to_$real_imodid"
-			append con_name "_p$real_iwhich"
-			
-			set templist ""
-
-			foreach nmfc [$omodid get_FakeConnections] {
-			    if { [string match $old_con_name [lindex $nmfc 0]\
-				    ] } {
-				set templist "$templist {$con_name\
-					$omodid $owhich $real_imodid\
-					$real_iwhich}"
-			    } else {
-				set templist "$templist {$nmfc}"
-			    }
-			
-			    $omodid set_FakeConnections $templist
-			}
-		    }
-		}
-	    }
-	}
-    }
-
-    # Untag the modules
-    foreach member $mems {
-	$member set_Macroed 0
-	$member set_MacroModule ""
-	
-
-	foreach c [$mmodid get_FakeConnections] {
-	    $maincanvas delete [lindex $c 0]
-	    $minicanvas delete [lindex $c 0]
-	}
-	
-	$mmodid set_FakeConnections ""
-    }
-
-    foreach member $mems {
-	set last_x [lindex [$member get_last_pos] 0]
-	set last_y [lindex [$member get_last_pos] 1]
-	
-	
-	# Place the modules back on the canvas in their
-	# Original Position(s)
-
-	set xv [lindex [$maincanvas xview] 0]
-	set yv [lindex [$maincanvas yview] 0]
-		
-	set last_x [expr $last_x+($xv*$mainCanvasWidth)]
-	set last_y [expr $last_y+($yv*$mainCanvasHeight)]
-
-	$maincanvas create window $last_x $last_y -window \
-		$maincanvas.module$member \
-		-tags $member -anchor nw    
-
-	# $minicanvas itemconfigure $member -fill gray
-	
-	$minicanvas create rectangle \
-		[expr $last_x/$SCALEX] [expr $last_y/$SCALEY] \
-		[expr $last_x/$SCALEX+4] [expr $last_y/$SCALEY + 2]\
-		-outline "" -fill gray -tags $member
-	
-
-
-
-
-
-	# Remove member from MacroedModules list
-	set tlist ""
-	foreach m $MacroedModules {
-	    
-	    if { [string match $member $m] == 0 } {
-		set tlist "$tlist $m"
-	    }
-	    set MacroedModules $tlist
-	}
-
-	#configureOPorts $member
-	#configureIPorts $member
-    }
-
-    destroy ${maincanvas}.macromodule$mmodid
-    destroy ${minicanvas}.macromodule$mmodid
-    
-
-    
-    # Rebuild the connections
-    foreach curr_con [generate_current_connections] {
-	if { [string match [$maincanvas gettags [lindex $curr_con 0]]\
-		[lindex $curr_con 0]] == 0 } {
-
-	    buildConnection [lindex $curr_con 0] [lindex $curr_con 1]\
-		    [lindex $curr_con 2] [lindex $curr_con 3]\
-		    [lindex $curr_con 4] [lindex $curr_con 5]	    
-
-	    configureOPorts [lindex $curr_con 2]
-	    configureIPorts [lindex $curr_con 4]
-	} 
-    }
-    
-
-    foreach member [$mmodid get_members] {
-	configureOPorts $member
-	configureIPorts $member
-    }
-
-
-    $mmodid delete
-    
-
-    global CurrentMacroModules
-    
-    set templist ""
-    foreach cmm $CurrentMacroModules {
-	if { [string match $mmodid $cmm] == 0 } {
-	    set templist "$templist $cmm"
-	}
-    }
-    
-    set CurrentMacroModules $templist
-    
-}
-
-
-
-proc get_real_iport { mmodid iwhich } {
-    set mapping [$mmodid get_iport_mapping]
-    
-    foreach m $mapping {
-	if { [string match [lindex $m 2] $iwhich] == 1 } {
-	    set info "[lindex $m 0] [lindex $m 1]"
-	    return $info
-	}
-    }
-
-    # we should never get this far...
-}
-
-proc get_real_oport { mmodid owhich } {
-    set mapping [$mmodid get_oport_mapping]
-    
-    foreach m $mapping {
-	if { [string match [lindex $m 2] $owhich] == 1 } {
-	    set info "[lindex $m 0] [lindex $m 1]"
-	    return $info
-	}
-    }
-    
-    # we should never get this far...
-}
-

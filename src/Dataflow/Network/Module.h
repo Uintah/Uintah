@@ -166,8 +166,7 @@ public:
   bool haveUI();
   void popupUI();
 
-  // Used by Ports
-  bool showStats();
+  bool showStats() { return true; }
 
   // ProgressReporter function
   virtual void error(const std::string&);
@@ -270,7 +269,6 @@ protected:
     Reset
   };
   void update_state(State);
-  virtual void light_module0();
   virtual void light_module();
   virtual void reset_module_color();
   void update_msg_state(MsgState);  
@@ -296,7 +294,6 @@ private:
   State state;
   MsgState msg_state;  
   double progress;
-  bool show_stat;
     
   PortManager<OPort*> oports;
   PortManager<IPort*> iports;
@@ -309,7 +306,6 @@ private:
   Network* network;
 
   GuiString  notes ;
-  GuiInt show_status;
 
   Module(const Module&);
   Module& operator=(const Module&);

@@ -139,12 +139,10 @@ Module::Module(const string& name, GuiContext* ctx,
     state(NeedData),
     msg_state(Reset), 
     progress(0),
-    show_stat(false),
     helper(0),
     helper_thread(0),
     network(0), 
-    notes(ctx->subVar("notes")),
-    show_status(ctx->subVar("show_status"))
+    notes(ctx->subVar("notes"))
 {
   stacksize=0;
 
@@ -240,11 +238,9 @@ void Module::report_progress( ProgressState state )
   //static bool reset_color = false;
   switch ( state ) {
   case ProgressReporter::Starting:
-    //light_module0();
     //reset_color = false;
     break;
   case ProgressReporter::Compiling:
-    light_module0();
     light_module();
     remark("Dynamically compiling some code.");
     break;
@@ -262,7 +258,6 @@ void Module::report_progress( ProgressState state )
 
 void Module::update_state(State st)
 {
-  if (!show_stat) return;
   state=st;
   char* s="unknown";
   switch(st){
@@ -289,8 +284,6 @@ void Module::update_state(State st)
 
 void Module::update_msg_state(MsgState st)
 {
-  if (!show_stat) return;
-
   // only change the state if the new state
   // is of higher priority
   if( !( ((msg_state == Error) && (st != Reset))  || 
@@ -317,7 +310,6 @@ void Module::update_msg_state(MsgState st)
 
 void Module::update_progress(double p)
 {
-  if (!show_stat) return;
   if (state == JustStarted)
     update_state(Executing);
   if (p < 0.0) p = 0.0;
@@ -333,7 +325,6 @@ void Module::update_progress(double p)
 
 void Module::update_progress(double p, Timer &t)
 {
-  if (!show_stat) return;
   if (state == JustStarted)
     update_state(Executing);
   if (p < 0.0) p = 0.0;
@@ -369,10 +360,6 @@ void Module::accumulate_progress(int n)
   update_progress(double(current_)/double(max_));
 }
 
-void Module::light_module0()
-{
-  gui->execute(id+" light_module0 ");
-}
 
 void Module::light_module()
 {
@@ -706,6 +693,7 @@ void Module::tcl_command(GuiArgs& args, void*)
     }
     args.result(args.make_list(info));
   } else if(args[1] == "needexecute"){
+    std::cerr << "EXECUTING\n";
     if(!abort_flag){
       abort_flag=1;
       want_to_execute();
@@ -776,7 +764,6 @@ void Module::postMessage(const string& str)
 void Module::do_execute()
 {
   abort_flag=0;
-  show_stat=show_status.get();
 
   // Reset all of the ports...
   for(int i=0;i<oports.size();i++){
@@ -831,14 +818,14 @@ void Module::reconfigure_iports()
 {
   if(id.size()==0)
     return;
-  gui->execute("configureIPorts "+id);
+  //  gui->execute("global maincanvas\n"+id+" configureIPorts $maincanvas");
 }
 
 void Module::reconfigure_oports()
 {
   if (id.size()==0)
     return;
-  gui->execute("configureOPorts "+id);
+  //gui->execute("global maincanvas\n"+id+" configureOPorts $maincanvas");
 }
 
 void Module::request_multisend(OPort* p1)
@@ -861,10 +848,6 @@ void Module::emit_vars(std::ostream& out, const std::string& modname)
   ctx->emit(out, modname);
 }
 
-bool Module::showStats()
-{
-  return show_stat;
-}
 
 GuiInterface* Module::getGui()
 {
