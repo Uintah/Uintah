@@ -47,7 +47,10 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
+#include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #ifdef _WIN32
 #include <afxwin.h>
@@ -259,7 +262,34 @@ main(int argc, char *argv[] )
 
     // Since the dot file is optional report only if it was found.
     if( foundrc )
+    {
       cout << str.str();
+    }
+    else
+    {
+      // check to make sure home directory is writeable.
+      char* HOME = getenv("HOME");
+      if (HOME)
+      {
+	string homerc = string(HOME) + "/.scirunrc";
+	if (creat(homerc.c_str(), S_IREAD | S_IWRITE) != -1)
+	{
+	  cout << "Home directory found and is writeable.\n";
+
+	  string tclresult;
+	  gui->eval("showEULA", tclresult);
+	  if (result == "cancel")
+	  {
+	    unlink(homerc.c_str());
+	    Thread::exitAll(1);
+	  }
+	  else if (result == "later")
+	  {
+	    unlink(homerc.c_str());
+	  }
+	}
+      }	  
+    }
   }
 
   // wait for the main window to display before continuing the startup.

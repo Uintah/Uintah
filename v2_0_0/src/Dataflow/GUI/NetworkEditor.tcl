@@ -969,7 +969,7 @@ proc showSplash { {steps none} } {
     update idletasks
 }
 
-proc licenseDialog { {firsttime 1} } {
+proc licenseDialog { {firsttime 0} } {
     global SCIRUN_SRCDIR
     set filename [file join $SCIRUN_SRCDIR LICENSE]
     set stream [open $filename r]
@@ -1011,7 +1011,10 @@ proc licenseDialog { {firsttime 1} } {
     grab .license
 }
 
-
+proc showEULA {} {
+    licenseDialog 1
+    return "later"
+}
 
 # Removes the element at pos from a list without a set - similar to lappend
 # ex: 
