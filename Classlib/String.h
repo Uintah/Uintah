@@ -13,6 +13,8 @@
 #ifndef SCI_Classlib_String_h
 #define SCI_Classlib_String_h 1
 
+#include <stdlib.h> // For size_t
+
 class ostream;
 class istream;
 class Piostream;
@@ -25,8 +27,9 @@ class clString {
     struct srep {
 	char* s;		// pointer to data
 	int n;			// reference count
-	int len;
 	srep() { n=1; }
+	inline void* operator new(size_t);
+	inline void operator delete(void*, size_t);
     };
     srep *p;
     clString(int, char*);
