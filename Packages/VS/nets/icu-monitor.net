@@ -30,7 +30,7 @@ set c2 [addConnection $m3 0 $m2 1]
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
 set $m1-filename $DATADIR/$DATASET/CH105_040412_1016_w_100.nrrd
-set $m3-filename $DATADIR/$DATASET/CH105_040412_1051_w_107.nrrd 
+set $m3-filename $DATADIR/$DATASET/CH105_040412_1051_w_107.nrrd
 
 # Set GUI variables for the VS->Render->ICUMonitor Module
 set $m2-time {0.008}

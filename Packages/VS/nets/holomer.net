@@ -299,7 +299,7 @@ set $m10-specular {0.388}
 set $m10-shine {24}
 
 $m11 addViewer
-set $m11-ViewWindow_0-geometry 757x998+1608+40
+set $m11-ViewWindow_0-geometry 757x998+0+40
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m11-ViewWindow_0-view-eyep-x {-82.6323605947}
