@@ -285,8 +285,9 @@ class Crack
     void FindCrackFrontNodeIndexes(const int&);
     // Detect if a point is within or around the real global grid
     short PhysicalGlobalGridContainsPoint(const double&,const Point&);
-    // Find the intersection between a line-segment and global grid boundary
-    void FindIntersectionLineAndGridBoundary(const Point&, Point&);
+    // Trim line-segment with a cell
+    short TrimCrackFrontWithGrid(const Point&, Point&,
+	 	                 const Point&, const Point&);
     // Apply symmetric boundary condition to crack points
     void ApplySymmetricBCsToCrackPoints(const Vector&,const Point&,Point&); 
     // Output crack-front position and fracture parameters
