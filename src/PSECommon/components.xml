@@ -4,11 +4,70 @@
 
 <package name="PSECommon">
   <guiPath>GUI</guiPath>
+
+  <scirun-library category="Domain">
+  <soNames>
+    <soName>libPSECommon_Modules_Domain.so</soName>
+    <soName>libPSECommon.so</soName>
+  </soNames>
+
+  <dataflow-component name="DomainManager">
+    <meta>
+      <authors>
+         <author>Eric Kuehne</author>
+      </authors>
+      <version-date>March 2000</version-date>
+      <version>1.0</version>
+      <description>A Domain Manager</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+    <creationFunction>make_DomainManager</creationFunction>
+    </implementation>
+  </dataflow-component> 
+
+  <dataflow-component name="Extractor">
+    <meta>
+      <authors>
+         <author>Eric Kuehne</author>
+      </authors>
+      <version-date>March 2000</version-date>
+      <version>1.0</version>
+      <description>Extracts a field from a domain</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+    <creationFunction>make_Extractor</creationFunction>
+    </implementation>
+  </dataflow-component> 
+
+  <dataflow-component name="Register">
+    <meta>
+      <authors>
+         <author>Eric Kuehne</author>
+      </authors>
+      <version-date>April 2000</version-date>
+      <version>1.0</version>
+      <description>Registers a field to a domain</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+    <creationFunction>make_Register</creationFunction>
+    </implementation>
+  </dataflow-component> 
+
+  </scirun-library>
   <scirun-library category="FEM">
   <soNames>
     <soName>libPSECommon_Modules_FEM.so</soName>
     <soName>libPSECommon.so</soName>
-  </soNames>
+  </soNames> 
 
   <dataflow-component name="BuildFEMatrix">
     <meta>
@@ -376,7 +435,8 @@
     </implementation>
   </dataflow-component>
 
-
+ 
+  
   </scirun-library>
   <scirun-library category="Salmon">
   <soNames>
@@ -1066,6 +1126,22 @@
     </implementation>
   </dataflow-component>
 
+  <dataflow-component name="GenField">
+    <meta>
+      <authors>
+        <author>Eric Kuehne</author>
+      </authors>
+      <version-date>March 2000</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GenField</creationFunction>
+    </implementation>
+  </dataflow-component>
 
   <dataflow-component name="MergeTensor">
     <meta>
