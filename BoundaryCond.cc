@@ -203,10 +203,6 @@ bool are_We_Using_LODI_BC(const Patch* patch,
     }
     BC_dbg << " using LODI on face " << is_LODI_face[face] << endl;
   }
-  if (using_lodi) {
-    cout << "\n WARNING:  LODI boundary conditions are "
-         << " NOT set during the problem initialization \n " << endl;
-  }
   return using_lodi;
 }
 
