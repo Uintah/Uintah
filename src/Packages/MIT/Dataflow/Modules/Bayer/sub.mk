@@ -45,7 +45,6 @@ PSELIBS := Packages/MIT/Core/Datatypes \
 	Dataflow/Network Dataflow/Ports \
 	Core/2d \
 	Core/Datatypes \
-	Core/Algorithms/DataIO \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \

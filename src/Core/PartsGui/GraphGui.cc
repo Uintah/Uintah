@@ -21,7 +21,7 @@
  *
  *  Written by:
  *   Yarden Livnat
- *   Deinterfacement of Computer Science
+ *   Department of Computer Science
  *   University of Utah
  *   Sep 2001
  *
@@ -48,6 +48,7 @@ GraphGui::~GraphGui()
 void
 GraphGui::add_values( vector<double> &v )
 {
+  return;
   cerr << "GraphGui ";
   for (unsigned i=0; i<v.size(); i++)
     cerr << v[i] << " ";
@@ -57,7 +58,7 @@ GraphGui::add_values( vector<double> &v )
 void 
 GraphGui::attach( PartInterface *interface )
 {
-  GraphPart *graph = dynamic_cast<GraphPart *>(interface);
+  GraphPart *graph = (GraphPart *)interface;
   if ( !graph ) {
     cerr << "GraphGui[connect]: got the wrong interface type\n";
     return;

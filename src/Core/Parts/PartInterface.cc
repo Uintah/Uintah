@@ -32,7 +32,7 @@
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Parts/PartInterface.h>
 #include <Core/Parts/GraphPart.h>
-
+#include <typeinfo>
 
 namespace SCIRun {
 
@@ -40,20 +40,13 @@ PartInterface::PartInterface( Part *part, PartInterface *parent,
 			      const string &type )
   : type_(type), part_(part),  parent_(parent)
 {
-  cerr << "PI = " << part->name() << endl;
-  cerr << this << "  part = " << part << endl;
-  if ( !dynamic_cast<GraphPart *>(this) )
-    cerr <<"could not cast\n";
-  else
-    cerr <<"ok\n";
+    const type_info &ti = typeid(this); 
+    cerr << "PartInterface: typeid = " << ti.name() << endl;
 
-  if ( !dynamic_cast<GraphPart *>(part) )
-    cerr <<"could not cast part\n";
-  else
-    cerr <<"part ok\n";
-  if ( parent )
-    parent->add_child(this);
-  
+    //if ( parent )
+    //  parent->add_child(this);  // can't call add_child from constructor
+                                  // because 'this' isn't fully typed yet
+    // Must put in derived type instead (see GraphPart.cc)
 }
  
 PartInterface::~PartInterface()
