@@ -137,3 +137,47 @@ void GeomCylinder::intersect(const Ray&, Material*,
 {
     NOT_FINISHED("GeomCylinder::intersect");
 }
+
+// Capped Geometry....
+
+GeomCappedCylinder::GeomCappedCylinder(int nu, int nv, int nvdisc)
+: GeomCylinder(nu, nv), nvdisc(nvdisc)
+{
+}
+
+GeomCappedCylinder::GeomCappedCylinder(const Point& bottom, const Point& top,
+				       double rad, int nu, int nv, int nvdisc)
+: GeomCylinder(bottom, top, rad, nu, nv), nvdisc(nvdisc)
+{
+}
+
+GeomCappedCylinder::GeomCappedCylinder(const GeomCappedCylinder& copy)
+: GeomCylinder(copy), nvdisc(copy.nvdisc)
+{
+}
+
+GeomCappedCylinder::~GeomCappedCylinder()
+{
+}
+
+GeomObj* GeomCappedCylinder::clone()
+{
+    return new GeomCappedCylinder(*this);
+}
+
+void GeomCappedCylinder::make_prims(Array1<GeomObj*>&,
+				    Array1<GeomObj*>&)
+{
+    NOT_FINISHED("GeomCappedCylinder::make_prims");
+}
+
+void GeomCappedCylinder::preprocess()
+{
+    NOT_FINISHED("GeomCappedCylinder::preprocess");
+}
+
+void GeomCappedCylinder::intersect(const Ray&, Material*,
+			     Hit&)
+{
+    NOT_FINISHED("GeomCappedCylinder::intersect");
+}

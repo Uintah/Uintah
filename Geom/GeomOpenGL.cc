@@ -116,6 +116,25 @@ void DrawInfoOpenGL::set_matl(Material* matl)
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
 }
 
+void GeomCappedCylinder::draw(DrawInfoOpenGL* di, Material* matl)
+{
+    if(height < 1.e-6)return;
+    pre_draw(di, matl, 1);
+    glPushMatrix();
+    glTranslated(bottom.x(), bottom.y(), bottom.z());
+    glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
+    di->polycount+=2*(nu-1)*(nv-1);
+    gluCylinder(di->qobj, rad, rad, height, nu, nv);
+    // Bottom endcap
+    di->polycount+=2*(nu-1)*(nvdisc-1);
+    gluDisk(di->qobj, 0, rad, nu, nvdisc);
+    // Top endcap
+    glTranslated(0, 0, height);
+    di->polycount+=2*(nu-1)*(nvdisc-1);
+    gluDisk(di->qobj, 0, rad, nu, nvdisc);
+    glPopMatrix();
+}
+
 void GeomCone::draw(DrawInfoOpenGL* di, Material* matl)
 {
     if(height < 1.e-6)return;
@@ -416,7 +435,8 @@ void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl)
 	    double rr1=tab2.sin(v);
 	    double z2=tab2.cos(v+1);
 	    double rr2=tab2.sin(v+1);
-	    double nz=tab2n.cos(v);
+	    double nr=-tab2n.sin(v);
+	    double nz=-tab2n.cos(v);
 	    glBegin(GL_TRIANGLE_STRIP);
 	    for(u=0;u<nu;u++){
 		double r1=rad1+rr1;
@@ -427,7 +447,7 @@ void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl)
 		double y1=yy*r1;
 		double x2=xx*r2;
 		double y2=yy*r2;
-		glNormal3d(xx, yy, nz);
+		glNormal3d(nr*xx, nr*yy, nz);
 		glVertex3d(x1, y1, z1);
 		glVertex3d(x2, y2, z2);
 	    }
@@ -440,8 +460,10 @@ void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl)
 	    double rr1=tab2.sin(v);
 	    double z2=tab2.cos(v+1);
 	    double rr2=tab2.sin(v+1);
-	    double nz1=tab2n.cos(v);
-	    double nz2=tab2n.cos(v+1);
+	    double nr1=-tab2n.sin(v);
+	    double nr2=-tab2n.sin(v+1);
+	    double nz1=-tab2n.cos(v);
+	    double nz2=-tab2n.cos(v+1);
 	    glBegin(GL_TRIANGLE_STRIP);
 	    for(u=0;u<nu;u++){
 		double r1=rad1+rr1;
@@ -452,9 +474,9 @@ void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl)
 		double y1=yy*r1;
 		double x2=xx*r2;
 		double y2=yy*r2;
-		glNormal3d(xx, yy, nz1);
+		glNormal3d(nr1*xx, nr1*yy, nz1);
 		glVertex3d(x1, y1, z1);
-		glNormal3d(xx, yy, nz2);
+		glNormal3d(nr2*xx, nr2*yy, nz2);
 		glVertex3d(x2, y2, z2);
 	    }
 	    glEnd();

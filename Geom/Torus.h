@@ -31,11 +31,11 @@ public:
 
     void adjust();
     void move(const Point&, const Vector&, double, double,
-	      int nu=20, int nv=10);
+	      int nu=50, int nv=8);
 
-    GeomTorus(int nu=20, int nv=10);
+    GeomTorus(int nu=50, int nv=8);
     GeomTorus(const Point&, const Vector&, double, double,
-	      int nu=20, int nv=10);
+	      int nu=50, int nv=8);
     GeomTorus(const GeomTorus&);
     virtual ~GeomTorus();
 

@@ -19,6 +19,7 @@
 #include <Geometry/Vector.h>
 
 class GeomCylinder : public GeomObj {
+protected:
     Vector v1;
     Vector v2;
 
@@ -33,10 +34,10 @@ public:
     int nu;
     int nv;
     void adjust();
-    void move(const Point&, const Point&, double, int nu=20, int nv=4);
+    void move(const Point&, const Point&, double, int nu=20, int nv=10);
 
     GeomCylinder(int nu=20, int nv=10);
-    GeomCylinder(const Point&, const Point&, double, int nu=20, int nv=4);
+    GeomCylinder(const Point&, const Point&, double, int nu=20, int nv=10);
     GeomCylinder(const GeomCylinder&);
     virtual ~GeomCylinder();
 
@@ -54,4 +55,23 @@ public:
 			   Hit& hit);
 };
 
+class GeomCappedCylinder : public GeomCylinder {
+    int nvdisc;
+public:
+    GeomCappedCylinder(int nu=20, int nv=10, int nvdisc=4);
+    GeomCappedCylinder(const Point&, const Point&, double, int nu=20, int nv=10, int nvdisc=4);
+    GeomCappedCylinder(const GeomCappedCylinder&);
+    virtual ~GeomCappedCylinder();
+
+    virtual GeomObj* clone();
+#ifdef SCI_OPENGL
+    virtual void draw(DrawInfoOpenGL*, Material*);
+#endif
+    virtual void make_prims(Array1<GeomObj*>& free,
+			    Array1<GeomObj*>& dontfree);
+    virtual void preprocess();
+    virtual void intersect(const Ray& ray, Material*,
+			   Hit& hit);
+};
+    
 #endif /* SCI_Geom_Cylinder_h */
