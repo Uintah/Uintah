@@ -248,6 +248,8 @@ ArchesLabel::ArchesLabel()
 				  CCVariable<double>::getTypeDescription() );
   d_h2oINLabel = VarLabel::create("h2oIN",
 				  CCVariable<double>::getTypeDescription() );
+  d_c2h2INLabel = VarLabel::create("c2h2IN",
+				  CCVariable<double>::getTypeDescription() );
 
 
 
@@ -581,6 +583,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_cpINLabel);
   VarLabel::destroy(d_co2INLabel);
   VarLabel::destroy(d_h2oINLabel);
+  VarLabel::destroy(d_c2h2INLabel);
   VarLabel::destroy(d_denRefArrayLabel);
   VarLabel::destroy(d_densityMicroLabel);
   VarLabel::destroy(d_densityMicroINLabel);
