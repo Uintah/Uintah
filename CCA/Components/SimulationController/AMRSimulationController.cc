@@ -242,6 +242,13 @@ void AMRSimulationController::run()
 	      << " to minimum: " << timeinfo.delt_min << '\n';
        delt = timeinfo.delt_min;
      }
+     if(t <= timeinfo.initial_delt_range && delt > timeinfo.max_initial_delt){
+       if(d_myworld->myrank() == 0)
+	 cerr << "WARNING: lowering delt from " << delt 
+	      << " to maxmimum: " << timeinfo.max_initial_delt
+	      << " (for initial timesteps)\n";
+       delt = timeinfo.max_initial_delt;
+     }
      if(delt > timeinfo.delt_max){
        if(d_myworld->myrank() == 0)
 	 cerr << "WARNING: lowering delt from " << delt 
