@@ -327,6 +327,9 @@ itcl_class expscale {
     }	
 }
 
+#############################################################################
+# SciRaise window
+#
 # The method to raise a window varies depending on the windows state
 # (at least on the Mac).  This is a convenience function for taking
 # care of the raise.
@@ -336,5 +339,42 @@ proc SciRaise { window } {
     } else {
 	wm deiconify $window
     }
+}
+
+#############################################################################
+# centerWindow w1 w2 
+#
+# Centers window w1 over window w2.  If w2 is blank, then the window is 
+# centered in the middle of the screen.
+#
+proc centerWindow { w1 { w2 "" } } {
+    update
+#    wm overrideredirect $w1 1
+    wm geometry $w1 ""
+    update idletasks
+    if { [winfo exists $w2] } {
+	set w [winfo width $w2]
+	set h [winfo height $w2]
+	set x [winfo x $w2]
+	set y [winfo y $w2]
+    } else {
+	set w 0
+	set h 0
+	set x 0
+	set y 0
+    }
+
+    if {$w < 2} { set w [winfo screenwidth .] }
+    if {$h < 2} { set h [winfo screenheight .] }    
+
+    set x [expr $x+($w - [winfo width $w1])/2]
+    set y [expr $y+($h - [winfo height $w1])/2]
+    wm geometry $w1 +${x}+${y}
+    if { [winfo ismapped $w1] } {
+	raise $w1
+    } else {
+	wm deiconify $w1
+    }
+    grab $w1
 }
 
