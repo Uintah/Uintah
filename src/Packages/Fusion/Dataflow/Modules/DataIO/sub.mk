@@ -12,7 +12,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Fusion/Dataflow/Modules/DataIO
 
-INCLUDES += $(MDSPLUS_INCLUDE) $(HDF5_INCLUDE) -DHDF5_PATH='"$(HDF5_LIB_DIR)/../bin"'
+INCLUDES += $(MDSPLUS_INCLUDE) $(HDF5_INCLUDE)
 
 SRCS     += \
 	$(SRCDIR)/FusionFieldReader.cc\

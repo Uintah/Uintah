@@ -68,8 +68,7 @@ public:
   virtual void execute(MeshHandle mHandle,
 		       vector< NrrdDataHandle > nHandles,
 		       vector< int > mesh,
-		       int idim, int jdim, int kdim,
-		       int iwrap, int jwrap, int kwrap) = 0;
+		       int idim, int jdim, int kdim) = 0;
 };
 
 
@@ -81,8 +80,7 @@ public:
   virtual void execute(MeshHandle mHandle,
 		       vector< NrrdDataHandle > nHandles,
 		       vector< int > mesh,
-		       int idim, int jdim, int kdim,
-		       int iwrap, int jwrap, int kwrap);
+		       int idim, int jdim, int kdim);
 };
 
 
@@ -92,8 +90,7 @@ StructuredNrrdFieldConverterMeshAlgoT< MESH, PNTYPE, CNTYPE >::
 execute(MeshHandle mHandle,
 	vector< NrrdDataHandle > nHandles,
 	vector< int > mesh,
-	int idim, int jdim, int kdim,
-	int iwrap, int jwrap, int kwrap)
+	int idim, int jdim, int kdim)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
   typename MESH::Node::iterator inodeItr;
@@ -110,42 +107,16 @@ execute(MeshHandle mHandle,
   
     PNTYPE *ptr = (PNTYPE *)(nHandles[mesh[0]]->nrrd->data);
 
-    for( k=0; k<kdim + kwrap; k++ ) {
-      for( j=0; j<jdim + jwrap; j++ ) {
-	for( i=0; i<idim + iwrap; i++ ) {
+    for( k=0; k<kdim; k++ ) {
+      for( j=0; j<jdim; j++ ) {
+	for( i=0; i<idim; i++ ) {
 	
-	  int index = ((i%idim) * jdim + (j%jdim)) * kdim + (k%kdim);
+	  int index = (i * jdim + j) * kdim + k;
 
 	  // Mesh
 	  float xVal = ptr[index*3 + 0];
 	  float yVal = ptr[index*3 + 1];
 	  float zVal = ptr[index*3 + 2];
-	
-	  imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
-
-	  ++inodeItr;
-	}
-      }
-    }
-  } else if( property.find("Cylindrical - NIMROD") != std::string::npos ) {
-    PNTYPE *ptrR   = (PNTYPE *)(nHandles[mesh[0]]->nrrd->data);
-    PNTYPE *ptrZ   = (PNTYPE *)(nHandles[mesh[1]]->nrrd->data);
-    PNTYPE *ptrPhi = (PNTYPE *)(nHandles[mesh[2]]->nrrd->data);
-    
-    for( i=0; i<idim + iwrap; i++ ) {
-      int iPhi = (i%idim);
-      double cosphi = cos( ptrPhi[iPhi] );
-      double sinphi = sin( ptrPhi[iPhi] );
-
-      for( j=0; j<jdim + jwrap; j++ ) {
-	for( k=0; k<kdim + kwrap; k++ ) {
-	
-	  int iRZ = (j%jdim) * kdim + (k%kdim);
-
-	  // Mesh
-	  float xVal =  ptrR[iRZ] * cosphi;
-	  float yVal = -ptrR[iRZ] * sinphi;
-	  float zVal =  ptrZ[iRZ];
 	
 	  imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
 
@@ -222,8 +193,7 @@ public:
   virtual FieldHandle execute(MeshHandle mHandle,
 			      vector< NrrdDataHandle > nHandles,
 			      vector< int > data,
-			      int idim, int jdim, int kdim,
-			      int iwrap, int jwrap, int kwrap) = 0;
+			      int idim, int jdim, int kdim) = 0;
   
   virtual FieldHandle execute(MeshHandle mHandle,
 			      vector< NrrdDataHandle > nHandles,
@@ -244,8 +214,7 @@ public:
   virtual FieldHandle execute(MeshHandle mHandle,
 			      vector< NrrdDataHandle > nHandles,
 			      vector< int > data,
-			      int idim, int jdim, int kdim,
-			      int iwrap, int jwrap, int kwrap);
+			      int idim, int jdim, int kdim);
 
   virtual FieldHandle execute(MeshHandle mHandle,
 			      vector< NrrdDataHandle > nHandles,
@@ -259,8 +228,7 @@ NrrdFieldConverterFieldAlgoScalar<FIELD, MESH, NTYPE>::
 execute(MeshHandle mHandle,
 	vector< NrrdDataHandle > nHandles,
 	vector< int > data,
-	int idim, int jdim, int kdim,
-	int iwrap, int jwrap, int kwrap)
+	int idim, int jdim, int kdim)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
   FIELD *ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
@@ -274,11 +242,11 @@ execute(MeshHandle mHandle,
 
     register int i, j, k;
 
-    for( i=0; i<idim + iwrap; i++ ) {
-      for( j=0; j<jdim + jwrap; j++ ) {
-	for( k=0; k<kdim + kwrap; k++ ) {
+    for( i=0; i<idim; i++ ) {
+      for( j=0; j<jdim; j++ ) {
+	for( k=0; k<kdim; k++ ) {
 	
-	  int index = ((i%idim) * jdim + (j%jdim)) * kdim + (k%kdim);
+	  int index = (i * jdim + j) * kdim + k;
 	
 	  // Value
 	  ifield->set_value( ptr[index], *inodeItr);
@@ -337,8 +305,7 @@ public:
   virtual FieldHandle execute(MeshHandle mHandle,
 		       vector< NrrdDataHandle > nHandles,
 		       vector< int > data,
-		       int idim, int jdim, int kdim,
-		       int iwrap, int jwrap, int kwrap);
+		       int idim, int jdim, int kdim);
 
   virtual FieldHandle execute(MeshHandle mHandle,
 			      vector< NrrdDataHandle > nHandles,
@@ -352,89 +319,29 @@ NrrdFieldConverterFieldAlgoVector<FIELD, MESH, NTYPE>::
 execute(MeshHandle mHandle,
 	vector< NrrdDataHandle > nHandles,
 	vector< int > data,
-	int idim, int jdim, int kdim,
-	int iwrap, int jwrap, int kwrap)
+	int idim, int jdim, int kdim)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
   FIELD *ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
 
-  typename FIELD::mesh_type::Node::iterator inodeItr;
+  if( data.size() == 1 ) {
+    typename FIELD::mesh_type::Node::iterator inodeItr;
 
-  imesh->begin( inodeItr );
+    imesh->begin( inodeItr );
 
-  register int i, j, k, iPhi;
-  double xVal, yVal, zVal, cosPhi, sinPhi;
+    register int i, j, k;
 				  
-  if( data.size() == 2 ) {
-    NTYPE *ptrData = (NTYPE *)(nHandles[data[0]]->nrrd->data);
-    NTYPE *ptrPhi  = (NTYPE *)(nHandles[data[1]]->nrrd->data);
+    NTYPE *ptr = (NTYPE *)(nHandles[data[0]]->nrrd->data);
 
-    for( i=0; i<idim + iwrap; i++ ) {
-      iPhi = (i%idim);
-      
-      cosPhi = cos( ptrPhi[iPhi] );
-      sinPhi = sin( ptrPhi[iPhi] );
-      
-      for( j=0; j<jdim + jwrap; j++ ) {
-	for( k=0; k<kdim + kwrap; k++ ) {
+     for( i=0; i<idim; i++ ) {
+      for( j=0; j<jdim; j++ ) {
+	for( k=0; k<kdim; k++ ) {
 	
-	  int index = (((i%idim) * jdim + (j%jdim)) * kdim + (k%kdim)) * 3;
+	  int index = (i * jdim + j) * kdim + k;
 	
-	  xVal =  ptrData[index] * cosPhi - ptrData[index+2] * sinPhi;
-	  yVal = -ptrData[index] * sinPhi - ptrData[index+2] * cosPhi;
-	  zVal =  ptrData[index+1];
-
-	  // Value
-	  ifield->set_value( Vector( xVal, yVal, zVal ), *inodeItr);
-	
-	  ++inodeItr;
-	}
-      }
-    }
-  } else if( data.size() == 4 ) {
-
-    NTYPE *ptrR = NULL;
-    NTYPE *ptrZ = NULL;
-    NTYPE *ptrPhi = NULL;
-    NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[data[3]]->nrrd->data);
-
-    for( int ic=0; ic<3; ic++ ) {
-	vector< string > dataset;
-	
-	nHandles[data[ic]]->get_tuple_indecies(dataset);
-
-	if( dataset[0].find( "R:Scalar" ) != std::string::npos ) {
-	  ptrR = (NTYPE *)(nHandles[data[ic]]->nrrd->data);
-	}
-	else if( dataset[0].find( "Z:Scalar" ) != std::string::npos ) {
-	  ptrZ = (NTYPE *)(nHandles[data[ic]]->nrrd->data);
-	}
-	else if( dataset[0].find( "PHI:Scalar" ) != std::string::npos ) {
-	  ptrPhi = (NTYPE *)(nHandles[data[ic]]->nrrd->data);
-	}
-    }
-
-    if( !ptrR || !ptrZ || !ptrPhi )
-      return;
-
-    for( i=0; i<idim + iwrap; i++ ) {
-      iPhi = (i%idim);
-
-      cosPhi = cos( ptrMeshPhi[iPhi] );
-      sinPhi = sin( ptrMeshPhi[iPhi] );
-
-      for( j=0; j<jdim + jwrap; j++ ) {
-	for( k=0; k<kdim + kwrap; k++ ) {
-	
-	  int index = ((i%idim) * jdim + (j%jdim)) * kdim + (k%kdim);
-	
-	  // Value
-	  xVal =  ptrR[index] * cosPhi - ptrPhi[index] * sinPhi;
-	  yVal = -ptrR[index] * sinPhi - ptrPhi[index] * cosPhi;
-	  zVal =  ptrZ[index];
-
-	  // Value
-	  ifield->set_value( Vector( xVal, yVal, zVal ), *inodeItr);
+	  ifield->set_value( Vector( ptr[index*3  ],
+				     ptr[index*3+1],
+				     ptr[index*3+2] ), *inodeItr);
 	
 	  ++inodeItr;
 	}
@@ -465,7 +372,6 @@ execute(MeshHandle mHandle,
 
     int npts = nHandles[data[0]]->nrrd->axis[1].size;
 
-    // Value
     for( int i=0; i<npts; i++ ) {
 
       ifield->set_value( Vector( ptr[i*3  ],

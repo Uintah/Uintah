@@ -15,9 +15,7 @@ SRCDIR   := Packages/Fusion/Dataflow/Modules/Fields
 SRCS     += \
 	$(SRCDIR)/FusionSlicePlot.cc\
 	$(SRCDIR)/NrrdFieldConverter.cc\
-	$(SRCDIR)/NIMRODNrrdConverter.cc\
-	$(SRCDIR)/PPPLNrrdConverter.cc\
-	$(SRCDIR)/PrismNrrdConverter.cc\
+	$(SRCDIR)/NIMRODConverter.cc\
 	$(SRCDIR)/Prism.cc\
 #	$(SRCDIR)/RadialGridDifferent.cc\
 #	$(SRCDIR)/TransCoorSys.cc\

@@ -510,13 +510,23 @@ void MDSPlusFieldReader::execute(){
 	
 	    buf = sNode + sFieldStr[n];
 
-	    if( space_ == REALSPACE ) {
-	      remark( spaceStr[0] + "." + buf );
+	    int i=0; ncomps=0;
+	    
+	    if( space == REALSPACE ) {
+	      i = 0;
+	      ncomps = i+1;
+	    } else if( space_ == PERTURBED ) {
+	      i = 1;
+	      ncomps = i+2;
+	    }
 
-	      scalar_data[n][0] =
-		mds.slice_data( name, spaceStr[0].c_str(), buf.c_str(), dims );
+	    for( ; i<ncomps; i++ ) { // Real and imaginary perturbed parts
+	      remark( spaceStr[i] + "." + buf );
 
-	      if( scalar_data[n][0] == NULL ) {
+	      scalar_data[n][i] =
+		mds.slice_data( name, spaceStr[i].c_str(), buf.c_str(), dims );
+
+	      if( scalar_data[n][i] == NULL ) {
 		error( "Error can not get Scalar data" );
 		if( ! sliceRange_ ) {
 		  error_ = true;
@@ -538,36 +548,6 @@ void MDSPlusFieldReader::execute(){
 		}
 	      }
 	    }
-	    else if( space_ == PERTURBED ){
-	      for( int i=1; i<3; i++ ) { // Real and imaginary perturbed parts
-		remark( spaceStr[i] + "." + buf );
-
-		scalar_data[n][i] =
-		  mds.slice_data( name, spaceStr[i].c_str(), buf.c_str(), dims );
-
-		if( scalar_data[n][i] == NULL ) {
-		  error( "Error can not get Scalar data" );
-		  if( ! sliceRange_ ) {
-		    error_ = true;
-		    mds.disconnect();
-		    return;
-		  }
-		} else if( nRadial != dims[0] ||
-			   nTheta  != dims[1] ||
-			   nMode   != dims[2] ) {
-
-		  ostringstream str;
-		  str << "Error dimensions do not match Grid dimensions: ";
-		  str << dims[0] << " " << dims[1] << " " << dims[2];
-		  error( str.str() );
-		  if( ! sliceRange_ ) {
-		    error_ = true;
-		    mds.disconnect();
-		    return;
-		  }
-		}
-	      }
-	    }
 	  }
 	}
 
@@ -583,16 +563,26 @@ void MDSPlusFieldReader::execute(){
 
 	  if( bVector_[n] ) {
 
+	    int i=0; ncomps=0;
+	    
 	    if( space == REALSPACE ) {
+	      i = 0;
+	      ncomps = i+1;
+	    } else if( space_ == PERTURBED ) {
+	      i = 1;
+	      ncomps = i+2;
+	    }
+
+	    for( ; i<ncomps; i++ ) { // Real and imaginary perturbed parts
 	      for( int j=0; j<3; j++ ) {  // R, Z, Phi parts.
 		buf = vNode + vFieldStr[n][j];
 
-		remark( spaceStr[0] + "." + buf );
+		remark( spaceStr[i] + "." + buf );
 
-		vector_data[n][0][j] =
-		  mds.slice_data( name, spaceStr[0].c_str(), buf.c_str(), dims );
+		vector_data[n][i][j] =
+		  mds.slice_data( name, spaceStr[i].c_str(), buf.c_str(), dims );
 
-		if( vector_data[n][0][j] == NULL ) {
+		if( vector_data[n][i][j] == NULL ) {
 		  error( "Error can not get Vector data" );
 		  if( ! sliceRange_ ) {
 		    error_ = true;
@@ -611,39 +601,6 @@ void MDSPlusFieldReader::execute(){
 		    error_ = true;
 		    mds.disconnect();
 		    return;
-		  }
-		}
-	      }
-	    } else if( space_ == PERTURBED ) {
-	      for( int i=1; i<3; i++ ) { // Real and imaginary perturbed parts
-		for( int j=0; j<3; j++ ) {  // R, Z, Phi parts.
-		  buf = vNode + vFieldStr[n][j];
-
-		  remark( spaceStr[i] + "." + buf );
-
-		  vector_data[n][i][j] =
-		    mds.slice_data( name, spaceStr[i].c_str(), buf.c_str(), dims );
-
-		  if( vector_data[n][i][j] == NULL ) {
-		    error( "Error can not get Vector data" );
-		    if( ! sliceRange_ ) {
-		      error_ = true;
-		      mds.disconnect();
-		      return;
-		    }
-		  } else if( nRadial != dims[0] ||
-			     nTheta  != dims[1] ||
-			     nMode   != dims[2] ) {
-
-		    ostringstream str;
-		    str << "Error dimensions do not match Grid dimensions: ";
-		    str << dims[0] << " " << dims[1] << " " << dims[2];
-		    error( str.str() );
-		    if( ! sliceRange_ ) {
-		      error_ = true;
-		      mds.disconnect();
-		      return;
-		    }
 		  }
 		}
 	      }
@@ -735,7 +692,7 @@ void MDSPlusFieldReader::execute(){
 
 		      index = m*idim*jdim + j*idim + i;
 
-		      angle = grid_data[3][m] * phi;
+		      angle = grid_data[3][m] * phi; // Mode * phi slice.
 
 		      scalar_data[n][0][cc] +=
 			2.0 * ( cos( angle ) * scalar_data[n][1][index] -
@@ -753,20 +710,23 @@ void MDSPlusFieldReader::execute(){
 		    for( l=0; l<3; l++ )
 		      vector_data[n][0][l][cc] = 0;
 
+		    //  If summing start at 0 otherwise start with the mode
 		    if( mode_ == 3 ) m = 0;
 		    else	       m = mode_;
 
-		    for( ; m<mdim; m++ ) {
+		    for( ; m<mdim; m++ ) {  // Mode loop.
+
 
 		      index = m*idim*jdim + j*idim + i;
 
-		      angle = grid_data[3][m] * phi;
+		      angle = grid_data[3][m] * phi; // Mode * phi slice.
 
 		      for( l=0; l<3; l++ )
 			vector_data[n][0][l][cc] +=
 			  2.0 * ( cos( angle ) * vector_data[n][1][l][index] -
 				  sin( angle ) * vector_data[n][2][l][index] );
 
+		      //  Not summing so quit.
 		      if( mode_ < 3 )
 			break;
 		    }
