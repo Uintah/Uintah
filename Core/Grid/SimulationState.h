@@ -148,6 +148,9 @@ public:
   Material* parseAndLookupMaterial(ProblemSpecP& params,
 				   const std::string& name) const;
   Material* getMaterialByName(const std::string& name) const;
+
+  bool isCopyDataTimestep() { return d_isCopyDataTimestep; }
+  void setCopyDataTimestep(bool is_cdt) { d_isCopyDataTimestep = is_cdt; }
 private:
 
   void registerMaterial(Material*);
@@ -183,9 +186,14 @@ private:
 
   // The time step that the top level (w.r.t. AMR) is at during a
   // simulation.  Usually corresponds to the Data Warehouse generation
-  // number (it does for non-restarted simulations).  I'm going to
+  // number (it does for non-restarted, non-amr simulations).  I'm going to
   // attempt to make sure that it does also for restarts.
   int    d_topLevelTimeStep;
+
+  // some places need to know if this is a copy data timestep or
+  // a normal timestep.  (A copy data timestep is AMR's current 
+  // method of getting data from an old to a new grid).
+  bool d_isCopyDataTimestep;
 
 }; // end class SimulationState
 
