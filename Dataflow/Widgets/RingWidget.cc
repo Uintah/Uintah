@@ -51,8 +51,7 @@ const Index NumVars = 8;
 const Index NumGeoms = 10;
 const Index NumPcks = 10;
 const Index NumMatls = 5;
-const Index NumMdes = 4;
-const Index NumSwtchs = 3;
+const Index NumSwtchs = 4;
 const Index NumSchemes = 5;
 
 enum { ConstRD, ConstRC, ConstDC, ConstPyth, ConstRadius, ConstAngle };
@@ -71,9 +70,10 @@ enum { PickSphU, PickSphR, PickSphD, PickSphL,
  * Much of the work is accomplished in the BaseWidget constructor which
  *      includes some consistency checking to ensure full initialization.
  */
-RingWidget::RingWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-  : BaseWidget(module, lock, "RingWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
-    oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0)
+RingWidget::RingWidget( Module* module, CrowdMonitor* lock, double widget_scale , bool is_slideable)
+  : BaseWidget(module, lock, "RingWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, 0, NumSwtchs, widget_scale),
+    oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0),
+    is_slideable_(is_slideable)
 {
   const double INIT = 5.0*widget_scale;
   // Scheme4/5 are used to resize.
@@ -199,22 +199,43 @@ RingWidget::RingWidget( Module* module, CrowdMonitor* lock, double widget_scale 
   materials[ResizeMatl] = scinew GeomMaterial(resulr, DefaultResizeMaterial);
 
   GeomGroup* w = scinew GeomGroup;
-  w->add(materials[PointMatl]);
+  //w->add(materials[PointMatl]);
   w->add(materials[HalfResizeMatl]);
   w->add(materials[ResizeMatl]);
-  CreateModeSwitch(1, w);
+  CreateModeSwitch(1, materials[PointMatl]);
+  CreateModeSwitch(2, w);
 
   geometries[GeomSlider] = scinew GeomCappedCylinder;
   picks_[PickSlider] = scinew GeomPick(geometries[GeomSlider], module, this,
 				      PickSlider);
   picks(PickSlider)->set_highlight(DefaultHighlightMaterial);
   materials[SliderMatl] = scinew GeomMaterial(picks_[PickSlider], DefaultSliderMaterial);
-  CreateModeSwitch(2, materials[SliderMatl]);
+  CreateModeSwitch(3, materials[SliderMatl]);
 
-  SetMode(Mode0, Switch0|Switch1|Switch2);
-  SetMode(Mode1, Switch0|Switch1);
-  SetMode(Mode2, Switch0|Switch2);
-  SetMode(Mode3, Switch0);
+  // Switch0 are the bars
+  // Switch1 are the rotation points
+  // Switch2 are the resize cylinders
+  // Switch3 are the sliders
+  if (is_slideable_)
+  {
+    SetNumModes(8);
+    SetMode(Mode0, Switch0|Switch1|Switch2|Switch3);
+    SetMode(Mode1, Switch0);
+    SetMode(Mode2, Switch0|Switch1);
+    SetMode(Mode3, Switch0|Switch2);
+    SetMode(Mode4, Switch0|Switch1|Switch2);
+    SetMode(Mode5, Switch0|Switch3);
+    SetMode(Mode6, Switch0|Switch1|Switch3);
+    SetMode(Mode7, Switch0|Switch2|Switch3);
+  }
+  else
+  {
+    SetNumModes(4);
+    SetMode(Mode0, Switch0|Switch1|Switch2);
+    SetMode(Mode1, Switch0);
+    SetMode(Mode2, Switch0|Switch1);
+    SetMode(Mode3, Switch0|Switch2);
+  }
 
   FinishWidget();
 }
@@ -268,6 +289,9 @@ RingWidget::redraw()
     geometry<GeomSphere*>(GeomPointR)->move(R, widget_scale_);
     geometry<GeomSphere*>(GeomPointD)->move(D, widget_scale_);
     geometry<GeomSphere*>(GeomPointL)->move(L, widget_scale_);
+  }
+  if (mode_switches[2]->get_state())
+  {
     geometry<GeomCappedCylinder*>(GeomResizeU)->move(U, U - (GetDownAxis() * 1.5 * widget_scale_),
 						     0.5*widget_scale_);
     geometry<GeomCappedCylinder*>(GeomResizeR)->move(R, R + (GetRightAxis() * 1.5 * widget_scale_),
@@ -288,7 +312,7 @@ RingWidget::redraw()
   {
     slide = GetRightAxis();
   }
-  if (mode_switches[2]->get_state())
+  if (mode_switches[3]->get_state())
   {
     geometry<GeomCappedCylinder*>(GeomSlider)->
       move(variables[SliderVar]->point() - (slide * 0.3 * widget_scale_),
@@ -453,7 +477,10 @@ RingWidget::geom_moved( GeomPickHandle, int axis, double dist,
     break;
 
   case PickSlider:
-    variables[SliderVar]->SetDelta(delta);
+    if (is_slideable_)
+    {
+      variables[SliderVar]->SetDelta(delta);
+    }
     break;
 
   case PickRing:
