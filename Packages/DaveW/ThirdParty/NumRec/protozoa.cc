@@ -20,22 +20,21 @@ using namespace std;
 using namespace SCICore::Containers;
 #define GET_PSUM \
 for (j=1;j<=ndim;j++) {\
-   for (sum=0.0,i=1;i<=ndim;i++) sum += p[i][j];\
+   for (sum=0.0,k=1;k<=mpts;k++) sum += p[k][j];\
       psum[j]=sum;}
 #define SWAP(a,b) {swap=(a);(a)=(b);(b)=swap;}
 
 void protozoa(double **p, double y[], int ndim, double ftol,
-	    double *(*funk)(double []), int *nfunk, int extra)
+	    double *(*funk)(int), int *nfunk, int extra)
 {
-    double *amotry(double **p, double y[], double psum[], int ndim,
-		   double *(*funk)(double []), int ihi, double fac, int extra);
+
     int i,k,maxrow,ihi,ilo,inhi,j,mpts=2*ndim+1;
     double rtol,sum,swap,ysave,*ytry,tmp;
     Array1<double> x(mpts+1);
     Array1<double> fac(mpts+1);
     Array1<double> row(mpts+2);
     Array2<double> A(mpts+2,mpts+1);
-    Array1<double> psum(mpts);
+    Array1<double> psum(mpts+1);
     Array1<int> indx(mpts+1);
     
     int NMAX=*nfunk;
@@ -54,35 +53,12 @@ void protozoa(double **p, double y[], int ndim, double ftol,
 		} else if (y[i] > y[inhi] && i != ihi) inhi=i;
 	    }
 	    rtol=2.0*fabs(y[ihi]-y[ilo])/(fabs(y[ihi])+fabs(y[ilo]));
-	    cerr << "\n\nAMOEBA   rtol="<<rtol<<"  ftol="<<ftol<<"\n";
-	    cerr << "   y="<<y[1]<<" "<<y[2]<<" "<<y[3]<<" "<<y[4]<<"\n\n\n";
-#if 0
-	    cerr << "   ilo="<<ilo<<" ihi="<<ihi<<" inhi="<<inhi<<"\n";
-	    cerr << "   ndim="<<ndim<<" extra="<<extra<<" mpts="<<mpts<<"\n";
-	    cerr << "Here are the dipoles (from in amoeba):\n";
-	    for (i=1; i<=ndim+4; i++) {
-		cerr << "   "<<i<<" = ";
-		for (int jj=1; jj<=ndim+3; jj++) {
-		    cerr << p[i][jj] << " ";
-		}
-		cerr << "\n";
-	    }
-#endif
+
 	    if (rtol < ftol) {
 		SWAP(y[1],y[ilo])
 		    for (i=1;i<=ndim+extra;i++) SWAP(p[1][i],p[ilo][i])
 						    break;
 	    }
-#if 0
-	    cerr << "Here are the dipoles (from in amoeba2):\n";
-	    for (i=1; i<=ndim+2; i++) {
-		cerr << "   "<<i<<" = ";
-		for (int jj=1; jj<=ndim+3; jj++) {
-		    cerr << p[i][jj] << " ";
-		}
-		cerr << "\n";
-	    }
-#endif
 	    if (*nfunk >= NMAX) {
 		cerr << "NMAX exceeded";
 		break;
@@ -141,11 +117,17 @@ void protozoa(double **p, double y[], int ndim, double ftol,
 
    // so you have the matrix solution.  Now to find the minimum value for the quadratic equation you take the derivative of ax^2 + bx (for each dimension x,y,z) and set it to zero so x = -b/2a
    for (i=1;i<=ndim;i++){
-       p[ihi][i] = -x[i]/(2*x[i+ndim]);	
-		//		cerr << " " << p[ihi][i];
+       if (x[i+ndim] <=  0) {  // it is convex instead of concave
+	   GET_PSUM
+	   p[ihi][i] = psum[i]/mpts;
+       }
+       else
+	   p[ihi][i] = -x[i]/(2*x[i+ndim]);	
+       cerr << " " << p[ihi][i];
    }
 	    //	    cerr << "ihi " << ihi << endl;
-   y[ihi] = *((*funk)(p[ihi]));
+   y[ihi] = *((*funk)(ihi));
+   cerr << " " << y[ihi] << endl;
    //  cerr << "Error (from in Amoeba)" << y[ihi] << endl;
    *nfunk += 1;
 		    //		    GET_PSUM
