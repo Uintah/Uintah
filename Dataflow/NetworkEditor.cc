@@ -99,7 +99,8 @@ void NetworkEditor::do_scheduling(Module* exclude)
 	return;
     Queue<Module*> needexecute;
     int nmodules=net->nmodules();
-    for(int i=0;i<nmodules;i++){
+    int i;
+    for(i=0;i<nmodules;i++){
 	Module* module=net->module(i);
 	if(module->need_execute)
 	    needexecute.append(module);
@@ -114,7 +115,8 @@ void NetworkEditor::do_scheduling(Module* exclude)
 	Module* module=needexecute.pop();
 	// Add oports
 	int no=module->noports();
-	for(int i=0;i<no;i++){
+	int i;
+	for(i=0;i<no;i++){
 	    OPort* oport=module->oport(i);
 	    int nc=oport->nconnections();
 	    for(int c=0;c<nc;c++){
@@ -131,7 +133,6 @@ void NetworkEditor::do_scheduling(Module* exclude)
 
 	// Now, look upstream...
 	int ni=module->niports();
-	int i;
 	for(i=0;i<ni;i++){
 	    IPort* iport=module->iport(i);
 	    if(iport->nconnections()){
@@ -155,7 +156,6 @@ void NetworkEditor::do_scheduling(Module* exclude)
     }
 
     // Trigger the ports in the trigger list...
-    int i;
     for(i=0;i<to_trigger.size();i++){
 	Connection* conn=to_trigger[i];
 	OPort* oport=conn->oport;
