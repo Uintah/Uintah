@@ -212,6 +212,18 @@ DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
     // Also: if a source is outside of the destination volume,
     //   and the "exhaustive search" option is not selected,
     //   that source will not be mapped to any destination.
+    if (proc == 0) {
+      typename LDST::iterator itr, end_itr;
+      dst_mesh->begin(itr);
+      dst_mesh->end(end_itr);
+      typename FOUT::value_type val = 0;
+      while (itr != end_itr) {
+	out_field->set_value(val, *itr);
+	++itr;
+      }
+    }
+    d->barrier.wait(np);
+
     typename LSRC::iterator itr, end_itr;
     src_mesh->begin(itr);
     src_mesh->end(end_itr);
