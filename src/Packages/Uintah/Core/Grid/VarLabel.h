@@ -45,7 +45,7 @@ class Patch;
       
       ****************************************/
     
-   class VarLabel : private RefCounted {
+   class VarLabel : public RefCounted {
    public:
       enum VarType {
 	 Normal,
@@ -117,6 +117,8 @@ class Patch;
      
       static void setDefaultCompressionMode(string compressionMode)
       { defaultCompressionMode = compressionMode; }
+
+      static void printAll(); // for debugging
      
       string                 d_name;
    private:
