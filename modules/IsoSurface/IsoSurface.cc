@@ -95,6 +95,7 @@ Module* IsoSurface::clone(int deep)
 
 void IsoSurface::execute()
 {
+    abort_flag=0;
     ogeom->delAll();
     Field3DHandle field;
     if(!infield->get_field(field))
@@ -384,6 +385,8 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, double isoval,
 	    for(int k=0;k<nz-1;k++){
 		iso_cube(i,j,k, isoval, group, field);
 	    }
+	    if(abort_flag)
+		return;
 	}
     }
 }
@@ -415,6 +418,8 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
     visitedPts.insert(pLoc, 0);
     surfQ.append(pLoc);
     while(!surfQ.is_empty()) {
+	if(abort_flag)
+	    return;
 	pLoc=surfQ.pop();
 	pz=pLoc/(nx*ny);
 	dummy=pLoc%(nx*ny);
