@@ -120,8 +120,7 @@ void TensorFieldOperator::initField(TensorField* tensorField,
   fmh->set_nx(tmh->get_nx());
   fmh->set_ny(tmh->get_ny());
   fmh->set_nz(tmh->get_nz());
-  fmh->set_min( box.min() );
-  fmh->set_max( box.max() );
+  fmh->set_transform(tmh->get_transform());
   //resize the data storage
   field->resize_fdata();
 
