@@ -13,10 +13,11 @@ SRCDIR   := Packages/BioPSE/Dataflow/Modules/Forward
 SRCS     += \
 	$(SRCDIR)/ApplyFEMCurrentSource.cc\
 	$(SRCDIR)/BuildFDMatrix.cc\
+	$(SRCDIR)/BuildBEMatrix.cc\
 	$(SRCDIR)/BuildFEMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
-#	$(SRCDIR)/BuildFEMatrix.cc\
 #	$(SRCDIR)/DipoleInSphere.cc\
+	#
 
 PSELIBS := Packages/BioPSE/Core/Datatypes Core/Datatypes \
 	Dataflow/Network Dataflow/Ports \
