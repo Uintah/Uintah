@@ -20,11 +20,16 @@
 
 # ########## Variables
 
+treetop := ../../..
+
 # edition file
-edition := ../../edition.xml
+edition := ${treetop}/doc/edition.xml
 
 # Latex command
 latex := latex -interaction=nonstopmode
+
+# Latex2html command
+latex2html := ${treetop}/doc/Utilities/TeX/latex2html
 
 # Name of root doc sans extension.
 bn := usersguide
@@ -33,7 +38,6 @@ mainfile := ${bn}.tex
 dvifile := ${bn}.dvi
 pdffile := ${bn}.pdf
 htmldir := ${bn}
-treetop := ../../..
 texutils := ${treetop}/doc/Utilities/TeX
 
 # Locations of scirun-doc style files
@@ -69,6 +73,7 @@ itk_sr.tex ${stylefile1} ${stylefile2} ${stylefile3}
 latex2htmloptions = -split 4 -no_white -link 1 -bottom_navigation \
 -html_version 4.0,math -show_section_numbers -local_icons \
 -long_titles 1 -prefix srug -image_type gif \
+-init_file ${treetop}/doc/Utilities/TeX/latex2html-init \
 -style ${treetop}/../doc/Utilities/HTML/srlatex2html.css
 
 # Remove list of directories
@@ -112,7 +117,7 @@ ${macrosfile}: ${rmacrosfile} ${edition}
 
 ${htmldir}: ${dvifile} ${htmlfigs}
 	${call rmdirs,${htmldir}}
-	latex2html ${latex2htmloptions} ${mainfile}
+	TREETOP=${treetop}/.. ${latex2html} ${latex2htmloptions} ${mainfile}
 
 ${pdffile}: ${dvifile}
 	dvipdfm -o ${pdffile} -p letter ${dvifile}
