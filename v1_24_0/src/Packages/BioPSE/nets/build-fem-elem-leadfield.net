@@ -63,11 +63,10 @@ set m3 [addModuleAtPosition "BioPSE" "LeadField" "BuildElemLeadField" 440 319]
 set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 422 403]
 set m5 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 600 403]
 set m6 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 404 473]
-set m7 [addModuleAtPosition "SCIRun" "FieldsData" "BuildInterpolant" 458 192]
+set m7 [addModuleAtPosition "SCIRun" "FieldsData" "BuildMappingMatrix" 458 192]
 set m8 [addModuleAtPosition "SCIRun" "FieldsData" "Gradient" 404 543]
 set m9 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 404 612]
 set m10 [addModuleAtPosition "SCIRun" "FieldsData" "ChangeFieldDataAt" 458 106]
-set m11 [addModuleAtPosition "SCIRun" "FieldsOther" "InterpolantToTransferMatrix" 458 255]
 
 # Set the Module Notes Dispaly Options
 set Notes($m0-Position) {def}
@@ -91,8 +90,7 @@ addConnection $m0 0 $m10 0
 addConnection $m10 0 $m7 0
 addConnection $m0 0 $m6 0
 addConnection $m0 0 $m3 0
-addConnection $m11 0 $m3 1
-addConnection $m7 0 $m11 0
+addConnection $m7 0 $m3 1
 addConnection $m9 1 $m3 2
 
 set $m0-notes {TetVolField input is the finite element mesh --  
@@ -179,7 +177,5 @@ set $m9-show_status {1}
 set $m10-notes {}
 set $m10-show_status {1}
 set $m10-outputdataat {Nodes}
-set $m11-notes {}
-set $m11-show_status {1}
 
 ::netedit scheduleok
