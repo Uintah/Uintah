@@ -138,7 +138,7 @@ void CompMooneyRivlin::allocateCMDataAdd(DataWarehouse* new_dw,
     pstress[*n] = zero;
 #ifdef FRACTURE
     pdispGrads[*n] = o_dispGrads[*o];
-    pstrainEnergyDensity[*n] = o_strainEnergy[*o];
+    pstrainEnergyDensity[*n] = o_strainEnergyDensity[*o];
 #endif
   }
 
@@ -248,6 +248,9 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pdispGrads,          lb->pDispGradsLabel,          pset);
     old_dw->get(pstrainEnergyDensity,lb->pStrainEnergyDensityLabel,pset);
 
+    ParticleVariable<Matrix3> pvelGrads;
+    new_dw->allocateAndPut(pvelGrads,  lb->pVelGradsLabel,  pset);
+
     ParticleVariable<Matrix3> pdispGrads_new;
     ParticleVariable<double> pstrainEnergyDensity_new;
     new_dw->allocateAndPut(pdispGrads_new, lb->pDispGradsLabel_preReloc, pset);
@@ -295,6 +298,9 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
 	  for (int i = 0; i<3; i++) {
 	    velGrad(i+1,j+1) += gvel[i] * d_SXoodx;
 	    //	      velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+#ifdef FRACTURE
+            pvelGrads[idx](i+1,j+1)  = velGrad(i+1,j+1);
+#endif
 	  }
 	}
       }
@@ -405,6 +411,7 @@ void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
 
    to.push_back(lb->pDeformationMeasureLabel_preReloc);
    to.push_back(lb->pStressLabel_preReloc);
+
 #ifdef FRACTURE
    from.push_back(lb->pDispGradsLabel);
    from.push_back(lb->pStrainEnergyDensityLabel);
@@ -435,7 +442,9 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
   task->requires(Task::NewDW, lb->pgCodeLabel,             matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDispGradsLabel,         matlset,Ghost::None);
   task->requires(Task::OldDW,lb->pStrainEnergyDensityLabel,matlset,Ghost::None);
+
   task->computes(lb->pDispGradsLabel_preReloc,             matlset);
+  task->computes(lb->pVelGradsLabel,                       matlset);
   task->computes(lb->pStrainEnergyDensityLabel_preReloc,   matlset);
 #endif
 
