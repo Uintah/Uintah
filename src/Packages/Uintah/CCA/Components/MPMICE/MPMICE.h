@@ -157,6 +157,13 @@ public:
                           DataWarehouse*,
                           DataWarehouse* new_dw);
                          
+
+  void actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
+                                          const PatchSubset* patch,
+                                          const MaterialSubset* matls,
+                                          DataWarehouse*,
+                                          DataWarehouse* new_dw);
+                         
                                                     
   void interpolateNCToCC_0(const ProcessorGroup*,
                            const PatchSubset* patch,
