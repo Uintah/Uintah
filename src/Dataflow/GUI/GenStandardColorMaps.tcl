@@ -133,6 +133,12 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	    { "Dark Gray" {
 		{   0  0  0 }    {  0 0 0 }
 		{ 128 128 128 } { 255 255 255 }}}
+	    { "Red Tint" { { 20 0 0 } { 255 235 235 } } }
+	    { "Orange Tint" { { 20 10 0 } { 255 245 235 } } }
+	    { "Yelow Tint" { { 20 20 0 } { 255 255 235 } } }
+	    { "Green Tint" { { 0 20 0 } { 235 255 235 } } }
+	    { "Blue Tint" { { 0 0 20 } { 235 235 255 } } }
+	    { "Purple Tint" { { 10 0 20 } { 245 235 255 } } }
 	}
     }
     
@@ -206,6 +212,12 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 		    { "Inverse Blackbody" 8} \
 		    { "Don" 9} \
 		    { "Dark Gray" 10} \
+		    { "Red Tint" 11} \
+		    { "Orange Tint" 12} \
+		    { "Yelow Tint" 13} \
+		    { "Green Tint" 14} \
+		    { "Blue Tint" 15} \
+		    { "Purple Tint" 16} \
 		}
 	    
 	pack $w.f2.types -in $w.f2 -side left
