@@ -38,7 +38,7 @@ const Index NumVars = 10;
 const Index NumGeoms = 18;
 const Index NumPcks = 11;
 const Index NumMatls = 4;
-const Index NumMdes = 6;
+const Index NumMdes = 7;
 const Index NumSwtchs = 4;
 const Index NumSchemes = 5;
 
@@ -203,6 +203,7 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock, Real w
    SetMode(Mode3, Switch0);
    SetMode(Mode4, Switch0|Switch1|Switch3);
    SetMode(Mode5, Switch0|Switch2|Switch3);
+   SetMode(Mode6, Switch0|Switch2);
    
    FinishWidget();
 }
@@ -599,6 +600,10 @@ ScaledFrameWidget::GetMaterialName( const Index mindex ) const
 
 //
 // $Log$
+// Revision 1.4  2000/06/26 21:54:19  bigler
+// Added new modes to allow for more control over which pieces
+// are rendered.
+//
 // Revision 1.3  2000/06/21 20:57:25  bigler
 // Added additional modes for widget grid.
 // One of the additional modes create a scaled widget frame that allows for resizing, but restricts movement to be axis alligned (no rotation).
