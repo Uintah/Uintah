@@ -207,6 +207,7 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > rho_CC(numMatls);
     StaticArray<constCCVariable<double> > Temp(numMatls);
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
+    StaticArray<constCCVariable<double> > placeHolder(0);
 
     constCCVariable<double> press;
     CCVariable<double> press_new, press_copy; 
@@ -282,15 +283,17 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
     } // for(CellIterator...)
 
     //__________________________________
-    //  Set BCs matl_press, press
-    // implicit pressure calc. needs two copies of the pressure
+    // - update Boundary conditions
+    //   Don't set Lodi bcs, we already compute Press
+    //   in all the extra cells.
+    // - make copy of press for implicit calc.
     for (int m = 0; m < numMatls; m++)   {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      setBC(matl_press[m], rho_micro[SURROUND_MAT],
+      setBC(matl_press[m], rho_micro, placeHolder,
             "rho_micro", "Pressure", patch, d_sharedState, indx, new_dw);
     }  
-    setBC(press_new,  rho_micro[SURROUND_MAT],
+    setBC(press_new,  rho_micro, placeHolder,
          "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
          
     press_copy.copyData(press_new);
@@ -374,7 +377,7 @@ void ICE::computeDivThetaVel_CC(const ProcessorGroup*,
         }
       }
       
-      setBC(D, "Neumann", patch, indx);
+      setBC(D, "Neumann", patch, d_sharedState, indx);
     }  // matls loop
   } // patches
 } 
@@ -1087,7 +1090,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     for (int m = 0; m < numALLMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int dwindex = matl->getDWIndex();
-      setBC(vel_CC[m], "Velocity",   patch,dwindex);
+      setBC(vel_CC[m], "Velocity",   patch, d_sharedState, dwindex);
       setBC(Temp_CC[m],"Temperature",patch, d_sharedState, dwindex);
     }
     //__________________________________
