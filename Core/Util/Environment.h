@@ -41,10 +41,8 @@ namespace SCIRun {
   // store_existing_env) If the environment key existed when the
   // program was run, then it will not be overwritten.  This follows
   // the Unix convention of using environment variables to supercede
-  // default program settings and .rc files.  Note we actually use tcl
-  // to store the environment so that it remains consistent on both
-  // the tcl and the C sides.  Therefore it is HIGHLY RECOMMENDED that
-  // you use the sci versions of putenv and getenv to keep things
+  // default program settings and .rc files. It is HIGHLY RECOMMENDED
+  // that you use the sci versions of putenv and getenv to keep things
   // consistent.
   void sci_putenv( const string & key, const string & val );
 
@@ -54,10 +52,7 @@ namespace SCIRun {
   // insensitive)
   bool sci_getenv_p( const string & key );
 
-  // Use the following function to get environment variables.  If you
-  // don't, there is a chance that the Tcl and C side environments
-  // will not be aligned and you will get incorrect values.  Also, you
-  // must free the char* returned, or you will have a memory leak.
+  // Use the following function to get environment variables.
   char *sci_getenv( const string & key );
 }
 

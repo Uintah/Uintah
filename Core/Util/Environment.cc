@@ -28,26 +28,16 @@
 #include <set>
 #include <sgi_stl_warnings_on.h>
 
-
-// We are now using Tcl itself to manage the environment variables and
-// to keep things consistent between the TCL and the C sides.  These
-// routines/variable come from TCL:
-#include <tcl.h>
-extern char **_environ;
-extern "C" void TclSetEnv(char * name, char * value);
-extern "C" char * TclGetEnv(char * name, Tcl_DString * value);
-
 namespace SCIRun {
 
 using namespace std;
 
-// According to other software (tcl) you should lock before 
-// messing with the environment.  Since we are now using Tcl
-// to manage the environment, tcl takes care of the locking.
-// If we ever again do it ourself, we need to consider locking.
+// WARNING: According to other software (tcl) you should lock before
+// messing with the environment.
 
 // MacroSubstitute takes var_val returns a string with the environment
 // variables expanded out.  Performs one level of substitution
+//   Note: Must delete the returned string when you are done with it.
 char*
 MacroSubstitute( char * var_val )
 {
@@ -98,34 +88,27 @@ MacroSubstitute( char * var_val )
   return retval;
 }
 
-// You must delete the char* returned or you will leak memory
 char *
 sci_getenv( const string & key )
 {
   char keya[1024];
   sprintf( keya, "%s", key.c_str() );
-  Tcl_DString tclvalue;
-  char * value = TclGetEnv( keya, &tclvalue );
 
-  if( value == NULL )
-    return NULL;
+  char * value = getenv( keya );
 
-  char * result = new char[ tclvalue.length + 1 ];
-  sprintf( result, "%s", value );
-
-  return result;
+  return value;
 }
 
 void
 sci_putenv( const string &key, const string &val )
 {
-  // Can't pass const char* to TclSetEnv, so have to copy them into
-  // a temp location.
   char keya[1024], vala[1024];
   sprintf( keya, "%s", key.c_str() );
   sprintf( vala, "%s", val.c_str() );
 
-  TclSetEnv( keya, vala );
+  printf( "Adding to environment: %s = %s\n", keya,vala );
+
+  setenv( keya, vala, 1 );
 }  
 
 // emptryOrComment returns true if the 'line' passed in is a comment
@@ -185,7 +168,16 @@ parse_scirunrc( const string rcfile )
 	removeLTWhiteSpace(var);
 	removeLTWhiteSpace(var_val);
 	char* sub = MacroSubstitute(var_val);
-	sci_putenv(var,sub);
+
+	// Only put the variable into the environment if it is not
+	// already there.
+	if( !sci_getenv( var ) ) {
+	  sci_putenv(var,sub);
+	} 
+	// begin DEBUGGING
+	else { printf("not putting %s into the environment as it is already there\n", var); }
+	// end   DEBUGGING
+
 	delete[] sub;
       }
     } else { // Couldn't find a string of the format var=var_val
