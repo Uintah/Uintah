@@ -12,7 +12,7 @@
 
 using namespace Uintah;
 using std::vector;
-using std::find;
+using std::remove;
 
 ImplicitParticleCreator::ImplicitParticleCreator(MPMMaterial* matl,
                                                 MPMLabel* lb,int n8or27) 
@@ -130,4 +130,11 @@ ImplicitParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
 
   particle_state.push_back(lb->pAccelerationLabel);
   particle_state_preReloc.push_back(lb->pAccelerationLabel_preReloc);
+
+  // Remove the pSp_volLabel and pSp_volLabel_preReloc
+  remove(particle_state.begin(), particle_state.end(),lb->pSp_volLabel);
+
+  remove(particle_state_preReloc.begin(), particle_state_preReloc.end(),
+	 lb->pSp_volLabel_preReloc);
+  
 }
