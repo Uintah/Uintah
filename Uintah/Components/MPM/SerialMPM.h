@@ -119,6 +119,15 @@ WARNING
 				   const Region* region,
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw);
+
+	 //////////
+	 // Insert Documentation Here:
+         void computeHeatRateGeneratedByInternalHeatFlux(
+                                     const ProcessorContext*,
+				     const Region* region,
+				     DataWarehouseP& old_dw,
+				     DataWarehouseP& new_dw);
+
 	 //////////
 	 // Insert Documentation Here:
 	 void solveEquationsMotion(const ProcessorContext*,
@@ -180,6 +189,8 @@ WARNING
 	 const VarLabel* gInternalForceLabel;
 	 const VarLabel* gSelfContactLabel; //for fracture
 	 const VarLabel* gTemperatureLabel; //for heat conduction
+	 const VarLabel* gInternalHeatRateLabel; //for heat conduction
+	 const VarLabel* gExternalHeatRateLabel; //for heat conduction
 	 
 	 const VarLabel* cSelfContactLabel; //for fracture, CCVariable
 	 const VarLabel* cSurfaceNormalLabel; //for fracture, CCVariable
@@ -191,6 +202,10 @@ WARNING
    
 //
 // $Log$
+// Revision 1.31  2000/05/26 02:27:38  tan
+// Added computeHeatRateGeneratedByInternalHeatFlux() for thermal field
+// computation.
+//
 // Revision 1.30  2000/05/25 22:06:21  tan
 // A boolean variable d_heatConductionInvolved is set to true when
 // heat conduction considered in the simulation.
