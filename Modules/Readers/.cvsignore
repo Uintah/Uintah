@@ -12,3 +12,4 @@ SurfaceReader.cc SurfaceReader.tcl
 VectorFieldReader.cc VectorFieldReader.tcl
 ColorMapReader.cc ColorMapReader.tcl
 VoidStarReader.cc VoidStarReader.tcl
+ParticleSetReader.cc ParticleSetReader.tcl

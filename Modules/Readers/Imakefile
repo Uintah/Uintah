@@ -10,10 +10,11 @@ OBJS = ColorMapReader.o   ColumnMatrixReader.o   ContourSetReader.o   \
 GENSRCS = ColorMapReader.cc ColumnMatrixReader.cc ContourSetReader.cc  \
 	MatrixReader.cc   MeshReader.cc   MultiSFRGReader.cc \
 	MultiMeshReader.cc  ScalarFieldReader.cc   SigmaSetReader.cc \
-	SurfaceReader.cc  VectorFieldReader.cc  VoidStarReader.cc 
+	SurfaceReader.cc  VectorFieldReader.cc  VoidStarReader.cc \
+        ParticleSetReader.cc
 SRCS = $(GENSRCS) GeomReader.cc PointsReader.cc \
 	VectorFieldOceanReader.cc MultiSFRGReader.cc SigmaSetReader.cc \
-	DukeRawRead.cc ImageReader.cc TiffReader.cc ParticleSetReader.cc
+	DukeRawRead.cc ImageReader.cc TiffReader.cc 
 
 GENTCLS = ColorMapReader.tcl ColumnMatrixReader.tcl ContourSetReader.tcl \
 	MatrixReader.tcl MeshReader.tcl \

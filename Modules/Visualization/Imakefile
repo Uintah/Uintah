@@ -25,7 +25,7 @@ OBJS = BitVisualize.o  BoxClipSField.o BoundGrid.o \
 SRCS = BB.cc RenderRG.cc  BitVisualize.cc BoxClipSField.cc BoundGrid.cc \
 	CuttingPlane.cc FastRender.c    \
 	GenAxes.cc GenColorMap.cc GenFieldEdges.cc GenTransferFunc.cc \
-	Hedgehog.cc IsoMask.o  IsoSurface.cc IsoSurfaceSP.cc IsoSurfaceMRSG.cc\
+	Hedgehog.cc IsoMask.cc  IsoSurface.cc IsoSurfaceSP.cc IsoSurfaceMRSG.cc\
 	 OctIsoSurface.cc   CuttingPlaneTex.cc \
 	RescaleColorMap.cc Streamline.cc VectorSeg.cc  VolVis.cc \
 	WidgetTest.cc ImageViewer.cc Ted.cc AddWells.cc FieldCage.cc \
