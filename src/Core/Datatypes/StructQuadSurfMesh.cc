@@ -104,15 +104,15 @@ StructQuadSurfMesh::get_nodes(Node::array_type &array, Edge::index_type idx) con
   {
     const int i = yidx / (nj_ - 1);
     const int j = yidx % (nj_ - 1);
-    array[0] = Node::index_type(i, j);
-    array[1] = Node::index_type(i, j+1);
+    array[0] = Node::index_type(this, i, j);
+    array[1] = Node::index_type(this, i, j+1);
   }
   else
   {
     const int i = idx % (ni_ - 1);
     const int j = idx / (ni_ - 1);
-    array[0] = Node::index_type(i, j);
-    array[1] = Node::index_type(i+1, j);
+    array[0] = Node::index_type(this, i, j);
+    array[1] = Node::index_type(this, i+1, j);
   }
 }
 
