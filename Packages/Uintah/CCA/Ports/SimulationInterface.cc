@@ -61,3 +61,8 @@ bool SimulationInterface::restartableTimesteps()
   return false;
 }
 
+void SimulationInterface::addMaterial(const ProblemSpecP& params, GridP& grid,
+                                      SimulationStateP& state)
+{
+  throw InternalError("addMaterial not implemented for this component");
+}

@@ -107,9 +107,14 @@ public:
   ICEMaterial* getICEMaterial(int idx) const {
     return ice_matls[idx];
   }
-
   Vector getGravity() const {
     return d_gravity;
+  }
+  void setNeedAddMaterial(bool nAM) {
+    d_needAddMaterial = nAM;
+  }
+  bool needAddMaterial() const {
+    return d_needAddMaterial;
   }
 
   void finalizeMaterials();
@@ -171,6 +176,7 @@ private:
 
   double d_ref_press;
   double d_elapsed_time;
+  double d_needAddMaterial;
 
   // The time step that the top level (w.r.t. AMR) is at during a
   // simulation.  Usually corresponds to the Data Warehouse generation

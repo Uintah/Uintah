@@ -93,6 +93,11 @@ WARNING
      // ask the component if it needs to be recompiled
      virtual bool needRecompile(double /*time*/, double /*dt*/,
 				const GridP& /*grid*/) {return false;}
+
+     // direct component to add a new material
+     virtual void addMaterial(const ProblemSpecP& params, GridP& grid,
+                              SimulationStateP& state);
+ 
    private:
      SimulationInterface(const SimulationInterface&);
      SimulationInterface& operator=(const SimulationInterface&);
