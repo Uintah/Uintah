@@ -2,7 +2,7 @@
 #ifndef MIPGROUP_H
 #define MIPGROUP_H 1
 
-#include "Group.h"
+#include <Packages/rtrt/Core/Group.h>
 
 namespace rtrt {
 

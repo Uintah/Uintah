@@ -2,8 +2,8 @@
 #ifndef IMAGEMATERIAL_H
 #define IMAGEMATERIAL_H 1
 
-#include "Material.h"
-#include "Array2.h"
+#include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/Array2.h>
 
 namespace rtrt { 
 

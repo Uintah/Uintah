@@ -2,11 +2,11 @@
 #ifndef GridSpheres_H
 #define GridSpheres_H 1
 
-#include "Object.h"
-#include "BBox.h"
-#include "Color.h"
-#include "Material.h"
-#include "GridSpheresDpy.h"
+#include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/Color.h>
+#include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/GridSpheresDpy.h>
 #include <string>
 
 using std::string;

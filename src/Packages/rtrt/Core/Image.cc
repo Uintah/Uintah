@@ -1,5 +1,5 @@
 
-#include "Image.h"
+#include <Packages/rtrt/Core/Image.h>
 #include <GL/gl.h>
 #include <fstream>
 #include <stdio.h>

@@ -1,14 +1,14 @@
 
-#include "HVolumeBrick.h"
-#include "BBox.h"
-#include "HitInfo.h"
-#include "Ray.h"
-#include "Color.h"
+#include <Packages/rtrt/Core/HVolumeBrick.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Color.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Mutex.h>
-#include "VolumeDpy.h"
+#include <Packages/rtrt/Core/VolumeDpy.h>
 #include <stdio.h>
 #include <fstream>
 #include <sys/types.h>

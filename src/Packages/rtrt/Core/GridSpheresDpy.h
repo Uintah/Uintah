@@ -4,7 +4,7 @@
 
 #include <GL/glx.h>
 #include <GL/glu.h>
-#include "Array1.h"
+#include <Packages/rtrt/Core/Array1.h>
 #include <Core/Thread/Runnable.h>
 #include <string>
 

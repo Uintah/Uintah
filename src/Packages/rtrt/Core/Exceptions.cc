@@ -15,7 +15,7 @@
 #pragma implementation
 #endif
 
-#include "Exceptions.h"
+#include <Packages/rtrt/Core/Exceptions.h>
 #include <iostream>
 using namespace std;
 #include <stdlib.h>		// for abort()

@@ -2,8 +2,8 @@
 #ifndef HASHTABLE_H
 #define HASHTABLE_H 1
 
-#include "Hash.h"
-#include "HashTableEntry.h"
+#include <Packages/rtrt/Core/Hash.h>
+#include <Packages/rtrt/Core/HashTableEntry.h>
 
 namespace rtrt {
 
