@@ -490,6 +490,8 @@ itcl_class ViewWindow {
 	global "$this-global-movieName"
 	global "$this-global-movieFrame"
 	global "$this-global-resize"
+	global "$this-x-resize"
+	global "$this-y-resize"
 	
 	global $this-do_stereo
 	global $this-sbase
@@ -509,7 +511,8 @@ itcl_class ViewWindow {
 	set "$this-global-movieName" "movie"
 	set "$this-global-movieFrame" 0
 	set "$this-global-resize" 0
-	    
+	set "$this-x-resize" 640
+	set "$this-y-resize" 512
 	set $this-do_bawgl 0
 	set $this-tracker_state 0
 	
@@ -559,15 +562,21 @@ itcl_class ViewWindow {
         pack $m.eframe.f -side top -anchor w
         label $m.eframe.f.l -text "Record Movie as:"
         pack $m.eframe.f.l -side top 
-        checkbutton $m.eframe.f.resize -text "Resize 352x240" \
+	checkbutton $m.eframe.f.resize -text "Resize: " \
 	    -variable $this-global-resize \
 	    -offvalue 0 -onvalue 1 -command "$this resize; $this-c redraw"
-        checkbutton $m.eframe.f.resize2 -text "Resize 1024x768" \
-	    -variable $this-global-resize \
-	    -offvalue 0 -onvalue 2 -command "$this resize; $this-c redraw"
-        checkbutton $m.eframe.f.resize3 -text "Resize 1600x1024" \
-	    -variable $this-global-resize \
-	    -offvalue 0 -onvalue 3 -command "$this resize; $this-c redraw"
+	entry $m.eframe.f.e1 -textvariable $this-x-resize -width 4
+	label $m.eframe.f.x -text x
+	entry $m.eframe.f.e2 -textvariable $this-y-resize -width 4
+#         checkbutton $m.eframe.f.resize -text "Resize 352x240" \
+# 	    -variable $this-global-resize \
+# 	    -offvalue 0 -onvalue 1 -command "$this resize; $this-c redraw"
+#         checkbutton $m.eframe.f.resize2 -text "Resize 1024x768" \
+# 	    -variable $this-global-resize \
+# 	    -offvalue 0 -onvalue 2 -command "$this resize; $this-c redraw"
+#         checkbutton $m.eframe.f.resize3 -text "Resize 1600x1024" \
+# 	    -variable $this-global-resize \
+# 	    -offvalue 0 -onvalue 3 -command "$this resize; $this-c redraw"
         radiobutton $m.eframe.f.none -text "Stop Recording" \
             -variable $this-global-movie -value 0 -command "$this-c redraw"
 	radiobutton $m.eframe.f.raw -text "Raw Frames" \
@@ -586,8 +595,8 @@ itcl_class ViewWindow {
         pack $m.eframe.f.none $m.eframe.f.raw $m.eframe.f.mpeg \
             -side top  -anchor w
         pack $m.eframe.f.moviebase -side top -anchor w -padx 2 -pady 2
-	pack $m.eframe.f.resize $m.eframe.f.resize2 \
-	    $m.eframe.f.resize3 -side top  -anchor w
+	pack $m.eframe.f.resize $m.eframe.f.e1 \
+	    $m.eframe.f.x $m.eframe.f.e2 -side left  -anchor w
 
 	make_labeled_radio $m.shade "Shading:" $r top $this-global-type \
 		{Wire Flat Gouraud}
@@ -645,6 +654,14 @@ itcl_class ViewWindow {
 #	    puts "Non-existing frame to initialize!"
 #	}
 
+	bind $m.eframe.f.e1 <Return> "$this resize"
+	bind $m.eframe.f.e2 <Return> "$this resize"
+	if {[set $this-global-resize] == 0} {
+	    set color "#505050"
+	    $m.eframe.f.x configure -foreground $color
+	    $m.eframe.f.e1 configure -state disabled -foreground $color
+	    $m.eframe.f.e2 configure -state disabled -foreground $color
+	}
     }
 
     method resize { } {
@@ -652,24 +669,34 @@ itcl_class ViewWindow {
 	if { [set $this-global-resize] == 0 } {
 	    wm geometry $w "="
 	    pack configure $w.wframe -expand yes -fill both
-	} elseif { [set $this-global-resize] == 1 }  {
-	    if { $IsAttached == 1 } { $this switch_frames }
-	    set size "352x240"
-	    wm geometry $w "=654x639"
-	    pack configure $w.wframe -expand no -fill none
-	    $w.wframe.draw configure -geometry $size
-	} elseif { [set $this-global-resize] == 2 } {
-	    if { $IsAttached == 1 } { $this switch_frames }
-	    set size "1024x768"
-	    wm geometry $w "=1038x895"
-	    pack configure $w.wframe -expand no -fill none
-	    $w.wframe.draw configure -geometry $size
+
+	    set color "#505050"
+	    if { $IsAttached == 1 } {
+		set m $w.mframe.f
+		$m.eframe.f.x configure -foreground $color
+		$m.eframe.f.e1 configure -state disabled -foreground $color
+		$m.eframe.f.e2 configure -state disabled -foreground $color
+	    } else {
+		set m $w.detached.f
+		$m.eframe.f.x configure -foreground $color
+		$m.eframe.f.e1 configure -state disabled -foreground $color
+		$m.eframe.f.e2 configure -state disabled -foreground $color
+	    }
 	} else {
 	    if { $IsAttached == 1 } { $this switch_frames }
-	    set size "1600x1024"
-	    wm geometry $w "=1614x1151"
+	    set m $w.detached.f
+	    set xsize [set $this-x-resize]
+	    set ysize [set $this-y-resize]
+	    set size "$xsize\x$ysize"
+	    set xsize [expr $xsize + 14]
+	    set ysize [expr $ysize + 123]
+	    set geomsize "$xsize\x$ysize"
+	    wm geometry $w "=$geomsize"
 	    pack configure $w.wframe -expand no -fill none
 	    $w.wframe.draw configure -geometry $size
+	    $m.eframe.f.x configure -foreground black
+	    $m.eframe.f.e1 configure -state normal -foreground black
+	    $m.eframe.f.e2 configure -state normal -foreground black
 	}
     }
 
