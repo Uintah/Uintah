@@ -14,7 +14,7 @@ class TensorField;
 
 typedef LockingHandle<TensorField> TensorFieldHandle;
 
-class SCICORESHARE TensorField : public Datatype {
+class TensorField : public Datatype {
 public:
   TensorField()
     : have_bounds(0) {}

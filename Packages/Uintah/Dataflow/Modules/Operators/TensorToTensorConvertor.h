@@ -7,13 +7,12 @@
 #include <Uintah/Core/Variables/ShareAssignParticleVariable.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/share/share.h>
 
 namespace Uintah {
 
   using namespace SCIRun;
 
-  class PSECORESHARE TensorToTensorConvertor : public Module {
+  class TensorToTensorConvertor : public Module {
   public:
     TensorToTensorConvertor(GuiContext*);
 

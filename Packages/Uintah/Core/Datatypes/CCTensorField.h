@@ -20,7 +20,7 @@ namespace Uintah {
   using namespace SCIRun;
   using std::vector;
   
-class SCICORESHARE CCTensorField: public TensorField {
+class CCTensorField: public TensorField {
 public:
   int nx;
   int ny;

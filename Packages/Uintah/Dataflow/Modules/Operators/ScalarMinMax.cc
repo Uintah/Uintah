@@ -28,7 +28,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Dataflow/share/share.h>
 
 #include <Core/Containers/Handle.h>
 #include <Core/Geometry/BBox.h>
