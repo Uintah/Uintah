@@ -29,6 +29,7 @@ class ScalarFieldRGdouble;
 class ScalarFieldRGfloat;
 class ScalarFieldRGint;
 class ScalarFieldRGshort;
+class ScalarFieldRGushort;
 class ScalarFieldRGchar;
 class ScalarFieldRGuchar;
 
@@ -39,6 +40,7 @@ public:
 	Float,
 	Int,
 	Short,
+	Ushort,
 	Char,
 	Uchar,
 	Void
@@ -62,6 +64,7 @@ public:
     ScalarFieldRGfloat* getRGFloat();
     ScalarFieldRGint* getRGInt();
     ScalarFieldRGshort* getRGShort();
+    ScalarFieldRGushort* getRGUshort();
     ScalarFieldRGchar* getRGChar();
     ScalarFieldRGuchar* getRGUchar();
 
@@ -96,6 +99,9 @@ public:
 
 //
 // $Log$
+// Revision 1.5  2000/12/06 04:16:07  kuzimmer
+// Added ScalarFieldRGushort* getRGUshort(); to be changed with new Field Redesign
+//
 // Revision 1.4  1999/09/05 23:14:15  dmw
 // added virtual accessor method
 //
