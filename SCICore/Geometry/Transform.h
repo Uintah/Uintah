@@ -15,7 +15,9 @@
 #define Geometry_Transform_h 1
 
 #include <SCICore/share/share.h>
-
+#include <SCICore/Geometry/Plane.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
 namespace SCICore {
 namespace Geometry {
 
@@ -30,7 +32,7 @@ class SCICORESHARE Transform {
     void install_mat(double[4][4]);
     void build_permute(double m[4][4], int, int, int, int pre);
     void build_rotate(double m[4][4], double, const Vector&);
-    void build_shear(double mat[4][4], Vector, const Vector&, double);
+    void build_shear(double mat[4][4], const Vector&, const Plane&);
     void build_scale(double m[4][4], const Vector&);
     void build_translate(double m[4][4], const Vector&);
     void pre_mulmat(double[4][4]);
@@ -63,8 +65,8 @@ public:
     void post_permute(int xmap, int ymap, int zmap);
     void pre_scale(const Vector&);
     void post_scale(const Vector&);
-    void pre_shear(const Vector&, const Vector&, double);
-    void post_shear(const Vector&, const Vector&, double);
+    void pre_shear(const Vector&, const Plane&);
+    void post_shear(const Vector&, const Plane&);
     void pre_rotate(double, const Vector& axis);
     void post_rotate(double, const Vector& axis);
     void pre_translate(const Vector&);
@@ -89,6 +91,9 @@ public:
 
 //
 // $Log$
+// Revision 1.5  2000/08/04 19:09:25  dmw
+// fixed shear
+//
 // Revision 1.4  2000/07/27 05:21:17  samsonov
 // Added friend class Quaternion
 //

@@ -24,6 +24,12 @@ Plane::Plane()
 {
 }
 
+Plane::Plane(double a, double b, double c, double d) : n(Vector(a,b,c)), d(d) {
+    double l=n.length();
+    d/=l;
+    n.normalize();
+}
+
 Plane::Plane(const Plane &copy)
 : n(copy.n), d(copy.d)
 {
@@ -46,16 +52,21 @@ void Plane::flip() {
    n.z(-n.z());
 }
 
-double Plane::eval_point(const Point &p) {
+double Plane::eval_point(const Point &p) const {
     return Dot(p, n)+d;
 }
 
-Point Plane::project(const Point& p)
+Point Plane::project(const Point& p) const
 {
    return p-n*(d+Dot(p,n));
 }
 
-Vector Plane::normal()
+Vector Plane::project(const Vector& v) const
+{
+    return v-n*Dot(v,n);
+}
+
+Vector Plane::normal() const
 {
    return n;
 }
@@ -130,6 +141,9 @@ Plane::Intersect( Point s, Vector v, Point& hit )
 
 //
 // $Log$
+// Revision 1.4  2000/08/04 19:09:25  dmw
+// fixed shear
+//
 // Revision 1.3  1999/09/08 02:26:52  sparker
 // Various #include cleanups
 //
