@@ -41,7 +41,7 @@ public:
   typedef Data * iterator;
 
   Data *begin() { return &(*this)(0,0); }
-   Data *end() { return &((*this)(dim1()-1,dim2()-1))+1; }
+  Data *end() { return &((*this)(dim1()-1,dim2()-1))+1; }
     
   FData2d() : Array2<Data>() {}
   FData2d(int) : Array2<Data>() {} //default var sgi bug workaround.
