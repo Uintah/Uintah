@@ -3,18 +3,21 @@
 
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Stencil7.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Containers/StaticArray.h>
 
-
-
 /*`==========TESTING==========*/
-//#define LODI_BCS
-#undef  LODI_BCS 
+#undef JET_BC    // needed if you want a jet for either LODI or ORG_BCS
+
+#undef LODI_BCS  // note for LODI_BCs you also need ORG_BCS turned on
+
+#undef ORG_BCS    // original setBC 
+
+#define JOHNS_BC   // DEFAULT BOUNDARY CONDITIONS.
 /*==========TESTING==========`*/
 namespace Uintah {
   class DataWarehouse;
@@ -40,14 +43,13 @@ namespace Uintah {
   void setBC(CCVariable<Vector>& variable,const std::string& type,
              const Patch* p, const int mat_id);
 
-// The following codes are written for chracteristic boundary condition
 /*`==========TESTING==========*/
-#ifdef LODI_BCS
 void setBCPress_LODI(CCVariable<double>& press_CC,
-                     StaticArray<constCCVariable<double> >& sp_vol_CC,
+                     StaticArray<CCVariable<double> >& var_CC,
                      StaticArray<constCCVariable<double> >& Temp_CC,
-                     StaticArray<constCCVariable<double> >& f_theta,
-                     const string& kind, 
+                     StaticArray<CCVariable<double> >& f_theta,
+                     const string& which_Var, 
+                     const string& kind,
                      const Patch* patch,
                      SimulationStateP& sharedState, 
                      const int mat_id,
@@ -191,7 +193,7 @@ void computeLODISecondOrdder(CCVariable<double>& d1_x,
                        const Patch* patch,
                        const int mat_id);
 // end of characteristic boundary condition
-#endif
+
 /*==========TESTING==========`*/
   template<class T> void Neuman_SFC(T& var, const Patch* patch,
                                 Patch::FaceType face,
