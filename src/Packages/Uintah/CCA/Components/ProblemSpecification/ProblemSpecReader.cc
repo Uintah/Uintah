@@ -113,18 +113,14 @@ void ProblemSpecReader::resolveIncludes(ProblemSpecP params)
 	    params->getNode()->insertBefore(newnode->getNode(), child->getNode());
 	    incChild = incChild->getNextSibling();
 	  }
+	  ProblemSpecP temp = child->getNextSibling();
 	  params->removeChild(child);
+	  child = temp;
+	  continue;
 	}
 	else {
 	  throw ProblemSetupException("No href attributes in include tag");
-}
-
-	//make include be created from same document that created params
-	//	ProblemSpecP newnode = child->importNode(include, true);
-	//	resolveIncludes(newnode);
-	//	params->replaceChild(newnode, child);
-		child = child->getNextSibling();
-		continue;
+	}
       }
       // recurse on child's children
       resolveIncludes(child);
