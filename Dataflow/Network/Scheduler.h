@@ -43,7 +43,6 @@
 #ifndef SCIRun_Dataflow_Network_Scheduler_h
 #define SCIRun_Dataflow_Network_Scheduler_h
 
-#include <Dataflow/share/share.h>
 #include <Dataflow/Comm/MessageBase.h>
 #include <Core/GuiInterface/GuiCallback.h>
 #include <Core/Thread/Mailbox.h>
@@ -59,7 +58,7 @@ namespace SCIRun {
   class Network;
   class OPort;
 
-  class PSECORESHARE Scheduler : public Runnable  {
+  class Scheduler : public Runnable  {
     Network* net;
     void multisend(OPort*);
     void do_scheduling(Module*);
@@ -84,7 +83,7 @@ namespace SCIRun {
 
   };
 
-  class PSECORESHARE Scheduler_Module_Message : public MessageBase {
+  class Scheduler_Module_Message : public MessageBase {
   public:
     Connection* conn;
     Scheduler_Module_Message();
@@ -92,7 +91,7 @@ namespace SCIRun {
     virtual ~Scheduler_Module_Message();
   };
 
-  class PSECORESHARE Module_Scheduler_Message : public MessageBase {
+  class Module_Scheduler_Message : public MessageBase {
   public:
     OPort* p1;
     Module_Scheduler_Message();

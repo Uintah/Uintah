@@ -44,13 +44,12 @@
 #define SCI_project_ModuleHelper_h 1
 
 #include <Core/Thread/Runnable.h>
-#include <Dataflow/share/share.h>
 
 namespace SCIRun {
 
 class Module;
 
-class PSECORESHARE ModuleHelper : public Runnable {
+class ModuleHelper : public Runnable {
     Module* module;
 public:
     ModuleHelper(Module* module);
