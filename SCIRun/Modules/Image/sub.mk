@@ -7,17 +7,36 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := SCIRun/Modules/Image
 
-SRCS     += $(SRCDIR)/Binop.cc $(SRCDIR)/Edge.cc $(SRCDIR)/FFT.cc \
-	$(SRCDIR)/FFTImage.cc $(SRCDIR)/FilterImage.cc \
-	$(SRCDIR)/Gauss.cc $(SRCDIR)/Hist.cc $(SRCDIR)/HistEq.cc \
-	$(SRCDIR)/IFFT.cc $(SRCDIR)/IFFTImage.cc \
-	$(SRCDIR)/ImageConvolve.cc $(SRCDIR)/ImageGen.cc \
-	$(SRCDIR)/ImageSel.cc $(SRCDIR)/ImageToGeom.cc \
-	$(SRCDIR)/Noise.cc $(SRCDIR)/PMFilterImage.cc \
-	$(SRCDIR)/Radon.cc $(SRCDIR)/Segment.cc $(SRCDIR)/Sharpen.cc \
-	$(SRCDIR)/Snakes.cc $(SRCDIR)/Subsample.cc $(SRCDIR)/Ted.cc \
-	$(SRCDIR)/Threshold.cc $(SRCDIR)/Transforms.cc $(SRCDIR)/Turk.cc \
-	$(SRCDIR)/Unop.cc $(SRCDIR)/ViewHist.cc $(SRCDIR)/WhiteNoiseImage.cc
+SRCS     += \
+	$(SRCDIR)/Binop.cc\
+	$(SRCDIR)/Edge.cc\
+	$(SRCDIR)/FFT.cc\
+	$(SRCDIR)/FFTImage.cc\
+	$(SRCDIR)/FilterImage.cc\
+	$(SRCDIR)/Gauss.cc\
+	$(SRCDIR)/Hist.cc\
+	$(SRCDIR)/HistEq.cc\
+	$(SRCDIR)/IFFT.cc\
+	$(SRCDIR)/IFFTImage.cc\
+	$(SRCDIR)/ImageConvolve.cc\
+	$(SRCDIR)/ImageGen.cc\
+	$(SRCDIR)/ImageSel.cc\
+	$(SRCDIR)/ImageToGeom.cc\
+	$(SRCDIR)/Noise.cc\
+	$(SRCDIR)/PMFilterImage.cc\
+	$(SRCDIR)/Radon.cc\
+	$(SRCDIR)/Segment.cc\
+	$(SRCDIR)/Sharpen.cc\
+	$(SRCDIR)/Snakes.cc\
+	$(SRCDIR)/Subsample.cc\
+	$(SRCDIR)/Ted.cc\
+	$(SRCDIR)/Threshold.cc\
+	$(SRCDIR)/Transforms.cc\
+	$(SRCDIR)/Turk.cc\
+	$(SRCDIR)/Unop.cc\
+	$(SRCDIR)/ViewHist.cc\
+	$(SRCDIR)/WhiteNoiseImage.cc\
+#[INSERT NEW MODULE HERE]
 
 PSELIBS := SCIRun/Datatypes/Image PSECore/Dataflow PSECore/Datatypes \
 	SCICore/Datatypes SCICore/Persistent SCICore/Exceptions \
@@ -29,6 +48,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/06/07 17:32:58  moulding
+# made changes to allow the module maker to add to and edit this file
+#
 # Revision 1.2  2000/03/20 19:38:12  sparker
 # Added VPATH support
 #

@@ -186,6 +186,8 @@
       <creationFunction>make_MeshBoundary</creationFunction>
     </implementation>
   </dataflow-component>
+
+  <!-- INSERT NEW Mesh COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Image">
   <soNames>
@@ -657,6 +659,8 @@
       <creationFunction>make_Binop</creationFunction>
     </implementation>
   </dataflow-component>
+
+  <!-- INSERT NEW Image COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Writers">
   <soNames>
@@ -680,5 +684,9 @@
       <creationFunction>make_TiffWriter</creationFunction>
     </implementation>
   </dataflow-component>
+
+  <!-- INSERT NEW Writers COMPONENT HERE -->
   </scirun-library>
+
+  <!-- INSERT NEW CATEGORY HERE -->
 </package>
