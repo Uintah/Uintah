@@ -6,9 +6,8 @@
 #include <Core/Geometry/Point.h>
 #include <vector>
 
-using std::vector;
-
 namespace Uintah {
+using std::vector;
 
 /**************************************
 	

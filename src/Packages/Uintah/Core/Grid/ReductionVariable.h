@@ -94,8 +94,9 @@ WARNING
     }
 
     virtual const TypeDescription* virtualGetTypeDescription() const;
-    virtual void getMPIBuffer(void*& buf, int& count,
-			      MPI_Datatype& datatype, MPI_Op& op);
+    virtual void getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op);
+    virtual void getMPIData(vector<char>& buf, int& index);
+    virtual void putMPIData(vector<char>& buf, int& index);
     virtual void getSizeInfo(string& elems, unsigned long& totsize,
 			     void*& ptr) const {
       elems="1";
