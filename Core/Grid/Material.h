@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 
 namespace Uintah {
+  class Burn;
 
 /**************************************
 
@@ -54,10 +55,13 @@ WARNING
       // velocity field
       int getVFIndex() const;
 
+      virtual Burn* getBurnModel() = 0;
+
       void setDWIndex(int);
       void setVFIndex(int);
    protected:
-      
+
+      Burn* d_burn;
       // Index associated with this material's spot in the DW
       int d_dwindex;
       // Index associated with this material's velocity field
