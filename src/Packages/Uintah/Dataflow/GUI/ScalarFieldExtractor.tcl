@@ -135,21 +135,32 @@ itcl_class Uintah_Visualization_ScalarFieldExtractor {
     }
 
  
-    method buildMaterials { ns } {
-	set parent $gf
-	set buttontype radiobutton
-	set c "$this-c needexecute"
-	frame $parent.m -relief flat -borderwidth 2
-	pack $parent.m -side top
-	label $parent.m.l -text Materials
-	pack $parent.m.l -side top
-	frame $parent.m.m -relief flat 
-	pack $parent.m.m  -side top -expand yes -fill both
-	for {set i 0} { $i < $ns} {incr i} {
-	    $buttontype $parent.m.m.b$i -text $i \
-		-variable $this-sMatNum -command $c -value $i
-	    pack $parent.m.m.b$i -side left
-	}
+    method buildMaterials { args } {
+        set parent $gf
+        set buttontype radiobutton
+        set c "$this-c needexecute"
+        frame $parent.m -relief flat -borderwidth 2
+        pack $parent.m -side top
+        label $parent.m.l -text Materials
+        pack $parent.m.l -side top
+        frame $parent.m.m -relief flat 
+        pack $parent.m.m  -side top -expand yes -fill both
+        for {set j 0} { $j < [llength $args] } {incr j} {
+            set i [lindex $args $j]
+            $buttontype $parent.m.m.b$i -text $i \
+                -variable $this-sMatNum -command $c -value $i
+            pack $parent.m.m.b$i -side left
+        }
+
+        if { [set $this-sMatNum] != "" } {
+            if { [lsearch $args [set $this-sMatNum]] == -1 } {
+                if { [llength $args] == 0 } {
+                    set $this-sMatNum ""
+                } else {
+                    set $this-sMatNum [lindex $args 0]
+                }
+            }
+        }
     }
 
     method isOn { bval } {
