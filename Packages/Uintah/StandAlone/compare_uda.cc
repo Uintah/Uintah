@@ -917,13 +917,13 @@ int main(int argc, char** argv)
 	  for(iter = level2->patchesBegin();
 	      iter != level2->patchesEnd(); iter++) {
 	    const Patch* patch = *iter;
-	    if (matls != da2->queryMaterials(var, patch, time)) {
+	    if (matls != da2->queryMaterials(var, patch, time2)) {
 	      cerr << "Inconsistent material sets for variable "
 		   << var << " on patch2 = " << patch->getID()
 		   << ", time " << time << endl;
 	      cerr << filebase1 << " (1) has material set: " << matls << ".\n";
 	      cerr << filebase2 << " (2) has material set: "
-		   << da2->queryMaterials(var, patch, time) << ".\n";
+		   << da2->queryMaterials(var, patch, time2) << ".\n";
 	      abort_uncomparable();  
 	    }
 	  }
