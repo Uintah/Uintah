@@ -4,6 +4,7 @@
 #include <Uintah/Interface/Output.h>
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <SCICore/OS/Dir.h>
+#include <SCICore/Containers/ConsecutiveRangeSet.h>
 
 namespace Uintah {
    class VarLabel;
@@ -89,6 +90,8 @@ namespace Uintah {
       virtual const std::string& getLastTimestepOutputLocation() const
       { return d_lastTimestepLocation; }
    private:
+      void initSaveLabels(SchedulerP& sched);
+     
       std::string d_filebase;
       double d_outputInterval;
       double d_nextOutputTime;
@@ -98,6 +101,24 @@ namespace Uintah {
       std::string d_lastTimestepLocation;
       bool d_wasOutputTimestep;
 
+      // d_saveLabelNames is a temporary list containing VarLabel
+      // names to be saved and the materials to save them for.  The
+      // information will be basically transferred to d_saveLabels or
+      // d_saveReductionLabels after mapping VarLabel names to their
+      // actual VarLabel*'s.
+      struct SaveNameItem {
+	 std::string labelName;
+         ConsecutiveRangeSet matls;
+      };
+      std::list< SaveNameItem > d_saveLabelNames;
+
+      struct SaveItem {
+	 const VarLabel* label;
+         ConsecutiveRangeSet matls;
+      };
+      std::vector< SaveItem > d_saveLabels;
+      std::vector< SaveItem > d_saveReductionLabels;
+
       DataArchiver(const DataArchiver&);
       DataArchiver& operator=(const DataArchiver&);
       
@@ -106,6 +127,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.12  2000/12/06 23:59:40  witzel
+// Added variable save functionality via the DataArchiver problem spec
+//
 // Revision 1.11  2000/09/08 17:00:11  witzel
 // Added functions for getting the last timestep directory, the current
 // timestep, and whether the last timestep was one in which data was

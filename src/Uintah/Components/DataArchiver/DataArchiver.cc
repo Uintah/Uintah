@@ -1,4 +1,3 @@
-
 #include <Uintah/Components/DataArchiver/DataArchiver.h>
 #include <SCICore/Exceptions/ErrnoException.h>
 #include <SCICore/Exceptions/InternalError.h>
@@ -14,6 +13,7 @@
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Parallel/Parallel.h>
 #include <Uintah/Parallel/ProcessorGroup.h>
+#include <Uintah/Exceptions/ProblemSetupException.h>
 #include <PSECore/XMLUtil/SimpleErrorHandler.h>
 #include <PSECore/XMLUtil/XMLUtil.h>
 #include <SCICore/Util/DebugStream.h>
@@ -62,6 +62,29 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    if(!p->get("outputInterval", d_outputInterval))
       d_outputInterval = 1.0;
 
+   SaveNameItem saveItem;
+   ProblemSpecP save = p->findBlock("save");
+   while (save != NULL) {
+      map<string, string> attributes;
+      save->getAttributes(attributes);
+      saveItem.labelName = attributes["label"];
+      try {
+         saveItem.matls = ConsecutiveRangeSet(attributes["material"]);
+      }
+      catch (ConsecutiveRangeSetException) {
+	throw ProblemSetupException("'" + attributes["material"] + "'" +
+	       " cannot be parsed as a set of material" +
+	       " indices for saving '" + saveItem.labelName + "'");
+      }
+
+      if (saveItem.matls.size() == 0)
+	// if materials aren't specified, all valid materials will be saved
+	saveItem.matls = ConsecutiveRangeSet::all;
+
+      d_saveLabelNames.push_back(saveItem);
+      save = save->findNextBlock("save");
+   }
+   
    d_currentTimestep = 0;
    d_lastTimestepLocation = "invalid";
    d_wasOutputTimestep = false;
@@ -179,6 +202,11 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 				    const LevelP& level, SchedulerP& sched,
 				    DataWarehouseP& new_dw)
 {
+   if (d_saveLabelNames.size() > 0 &&
+       !(time == 0 && delt == 0) /* skip the initialization timestep for this
+				    because it needs all computes to be set
+				    to find the save labels */)
+      initSaveLabels(sched);
   
    if (d_outputInterval == 0.0)
       return;
@@ -307,10 +335,6 @@ void DataArchiver::finalizeTimestep(double time, double delt,
       }
    }
       
-   vector<const VarLabel*> vars;
-   vector<int> number;
-   new_dw->getSaveSet(vars, number);
-
    // Schedule a bunch o tasks - one for each variable, for each patch
    // This will need to change for parallel code
    int n=0;
@@ -318,12 +342,16 @@ void DataArchiver::finalizeTimestep(double time, double delt,
    for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
 
       const Patch* patch=*iter;
-      for(int i=0;i<(int)vars.size();i++){
-	 for(int j=0;j<number[i];j++){
-	    Task* t = scinew Task("DataArchiver::output", patch, new_dw, new_dw,
-				  this, &DataArchiver::output, timestep,
-				  vars[i], j);
-	    t->requires(new_dw, vars[i], j, patch, Ghost::None);
+      vector< SaveItem >::iterator saveIter;
+      for(saveIter = d_saveLabels.begin(); saveIter!= d_saveLabels.end();
+	  saveIter++) {
+	 ConsecutiveRangeSet::iterator matlIter = (*saveIter).matls.begin();
+	 for ( ; matlIter != (*saveIter).matls.end(); matlIter++) {
+	    Task* t = scinew Task("DataArchiver::output", patch, new_dw,
+				  new_dw, this, &DataArchiver::output,
+				  timestep, (*saveIter).label, *matlIter);
+	    t->requires(new_dw, (*saveIter).label, *matlIter, patch,
+			Ghost::None);
 	    sched->addTask(t);
 	    n++;
 	 }
@@ -345,19 +373,28 @@ void DataArchiver::outputReduction(const ProcessorGroup*,
 {
    // Dump the stuff in the reduction saveset into files in the uda
 
-   vector<const VarLabel*> ivars;
-   new_dw->getIntegratedSaveSet(ivars);
-   for(int i=0;i<(int)ivars.size();i++){
-      const VarLabel* var = ivars[i];
-      string filename = d_dir.getName()+"/"+var->getName()+".dat";
+   for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
+      SaveItem& saveItem = d_saveReductionLabels[i];
+      const VarLabel* var = saveItem.label;
+      for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
+	   matIt != saveItem.matls.end(); matIt++) {
+         int matlIndex = *matIt;
+         ostringstream filename;
+         filename << d_dir.getName() << "/" << var->getName();
+         if (matlIndex < 0)
+	    filename << ".dat\0";
+	 else
+	    filename << "_" << matlIndex << ".dat\0";
+	  
 #ifdef __GNUG__
-      ofstream out(filename.c_str(), ios::app);
+	 ofstream out(filename.str().c_str(), ios::app);
 #else
-      ofstream out(filename.c_str(), ios_base::app);
+	 ofstream out(filename.str().c_str(), ios_base::app);
 #endif
-      out << setprecision(17) << time << "\t";
-      new_dw->emit(out, var);
-      out << "\n";
+	 out << setprecision(17) << time << "\t";
+	 new_dw->emit(out, var, matlIndex);
+	 out << "\n";
+      }
    }
 }
 
@@ -642,8 +679,39 @@ static Dir makeVersionedDir(const std::string nameBase)
    return Dir(dir.getName());
 }
 
+void  DataArchiver::initSaveLabels(SchedulerP& sched)
+{
+   SaveItem saveItem;
+  
+   d_saveLabels.resize(d_saveLabelNames.size());
+   Scheduler::VarLabelMaterialMap* pLabelMatlMap;
+   pLabelMatlMap = sched->makeVarLabelMaterialMap();
+   for (list<SaveNameItem>::iterator it = d_saveLabelNames.begin();
+        it != d_saveLabelNames.end(); it++) {
+      Scheduler::VarLabelMaterialMap::iterator found =
+	 pLabelMatlMap->find((*it).labelName);
+
+      if (found == pLabelMatlMap->end())
+         throw ProblemSetupException((*it).labelName +
+				     " variable label not found to save.");
+      
+      saveItem.label = (*found).second.first;
+      saveItem.matls = ConsecutiveRangeSet((*found).second.second);
+      saveItem.matls = saveItem.matls.intersected((*it).matls);
+      
+      if (saveItem.label->typeDescription()->isReductionVariable())
+         d_saveReductionLabels.push_back(saveItem);
+      else
+         d_saveLabels.push_back(saveItem);
+   }
+   d_saveLabelNames.clear();
+}
+
 //
 // $Log$
+// Revision 1.22  2000/12/06 23:59:40  witzel
+// Added variable save functionality via the DataArchiver problem spec
+//
 // Revision 1.21  2000/09/29 05:41:57  sparker
 // Quiet g++ warnings
 //
