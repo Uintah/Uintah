@@ -25,6 +25,7 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ModuleReporter.h>
+#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Clipper.h>
 #include <sci_hash_map.h>
 #include <algorithm>
