@@ -74,7 +74,7 @@ set show_plane_y 0
 set show_plane_z 0
 set show_guidelines 1
 global planes_mapType
-set planes_mapType 2
+set planes_mapType 0
 
 # volume rendering
 global show_vol_ren
