@@ -144,23 +144,21 @@ cd Thirdparty_install.x.x.x
 <para>
 Run the third party installation script:
 <literallayout class="monospaced">
-python install <replaceable>dir</replaceable> <replaceable>OS-name</replaceable> <replaceable>compiler</replaceable> <replaceable>32|64</replaceable> <replaceable>jobs</replaceable>
+python install <replaceable>dir</replaceable> <replaceable>32|64</replaceable> <replaceable>jobs</replaceable>
 </literallayout>
 where <replaceable>dir</replaceable> is the directory in which the
 third-party software will be installed (although it is actually
 installed in a sub-directory of the specified one),
-<replaceable>OS-name</replaceable> is the name of the OS (Irix or
-Linux), <replaceable>compiler</replaceable> is your compiler's name and
-version (e.g. gcc-3.04), <replaceable>32|64</replaceable> specifies
+<replaceable>32|64</replaceable> specifies
 one of 32 bit or 64 bit binaries, and <replaceable>jobs</replaceable>
 is the number of jobs that make will create when building the
 software.  For example:
 <literallayout class="monospaced">
-python install /usr/local/SCIRun_Third_Party Irix CC 64 2
+python install /usr/local/SCIRun_Third_Party 64 2
 </literallayout>
 or
 <literallayout class="monospaced">
-python install /usr/local/SCIRun_Third_Party Linux gcc-3.1 32 2
+python install /usr/local/SCIRun_Third_Party 32 1
 </literallayout>
 When finished, the installation script will display the complete name
 of the third-party software installation directory&mdash;make note of
