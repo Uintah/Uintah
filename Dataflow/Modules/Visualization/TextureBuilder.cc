@@ -43,7 +43,6 @@
 #include <Core/Volume/Texture.h>
 #include <Dataflow/Ports/TexturePort.h>
 #include <Core/Algorithms/Visualization/TextureBuilderAlgo.h>
-
 #include <Core/Util/DebugStream.h>
 
 namespace SCIRun {
@@ -146,6 +145,15 @@ TextureBuilder::execute()
         // new field
         if(!new_gfield(gfield)) return;
         gfield_last_generation_ = gfield->generation;
+      }
+      // this field must share a mesh and must have the same basis_order.
+      if (vfield->basis_order() != gfield->basis_order()) {
+	error("both input fields must have the same basis order.");
+	return;
+      }
+      if (vfield->mesh().get_rep() != gfield->mesh().get_rep()) {
+	error("both input fields must share a mesh.");
+	return;
       }
     }
   }
