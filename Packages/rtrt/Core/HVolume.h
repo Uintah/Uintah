@@ -34,22 +34,52 @@ struct VMCell {
   T min;
 };
 
+template<class T>
+class TypeInfo {
+public:
+  static T get_min() {
+    ASSERTFAIL("TypeInfo::get_min():not implemented for this type");
+    return 0;
+  }
+  static T get_max() {
+    ASSERTFAIL("TypeInfo::get_max():not implemented for this type");
+    return 0;
+  }
+};
+
+class TypeInfo<unsigned char> {
+public:
+  static unsigned char get_min() { return 0; }
+  static unsigned char get_max() { return 255; }
+};
+
+class TypeInfo<short> {
+public:
+  static short get_min() { return MAXSHORT+1; }
+  static short get_max() { return MAXSHORT; }
+};
+
+class TypeInfo<int> {
+public:
+  static int get_min() { return -MAXINT-1; }
+  static int get_max() { return MAXINT; }
+};
+
+class TypeInfo<float> {
+public:
+  static float get_min() { return -MAXFLOAT; }
+  static float get_max() { return MAXFLOAT; }
+};
+  
+class TypeInfo<double> {
+public:
+  static double get_min() { return -MAXDOUBLE; }
+  static double get_max() { return MAXDOUBLE; }
+};
+  
 template<class T, class A, class B>
 class HVolume : public VolumeBase {
 protected:
-  // You should add different functions to add types
-  unsigned char get_type_max(unsigned char&) { return 255; }
-  int get_type_max(int&) { return MAXINT; }
-  short get_type_max(short&) { return MAXSHORT; }
-  float get_type_max(float&) { return MAXFLOAT; }
-  double get_type_max(double&) { return MAXDOUBLE; }
-
-  unsigned char get_type_min(unsigned char&) { return 0; }
-  int get_type_min(int&) { return -MAXINT-1; }
-  short get_type_min(short&) { return MAXSHORT+1; }
-  float get_type_min(float&) { return -MAXFLOAT; }
-  double get_type_min(double&) { return -MAXDOUBLE; }
-
   inline int bound(const int val, const int min, const int max) {
     return (val>min?(val<max?val:max):min);
   }
@@ -117,7 +147,6 @@ public:
   
 
 extern Mutex io_lock_;
-extern Mutex xlock;
   
 template<class T, class A, class B>
 HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
@@ -578,16 +607,8 @@ template<class T, class A, class B>
 void HVolume<T,A,B>::calc_mcell(int depth, int startx, int starty, int startz,
 				VMCell<T>& mcell)
 {
-  // <<<<<<< This may need to be changed to something that's not
-  //         type dependant >>>>>>
-  //  mcell.min=FLT_MAX;
-  //  mcell.max=-FLT_MAX;
-  // Now this is a complete hack.  I'll create a dummy variable of type T.
-  // With this variable I'll call get_type_max function, which will call
-  // a different overloaded function depending on the type passed in.
-  T type_var;
-  mcell.min=get_type_max(type_var);
-  mcell.max=get_type_min(type_var);
+  mcell.min=TypeInfo<T>::get_max();
+  mcell.max=TypeInfo<T>::get_min();
   int endx=startx+xsize[depth];
   int endy=starty+ysize[depth];
   int endz=startz+zsize[depth];
