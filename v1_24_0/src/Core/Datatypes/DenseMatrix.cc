@@ -304,7 +304,7 @@ int DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
 
   double **A;
   DenseMatrix *cpy = NULL;
-  if (!overwrite) {cpy=clone(); A=cpy->getData2D();}
+  if (!overwrite) {cpy=clone(); A=cpy->data;}
   else A=data;
 
   // Gauss-Jordan with partial pivoting
@@ -406,7 +406,7 @@ int DenseMatrix::solve(const vector<double>& rhs, vector<double>& lhs,
 
   double **A;
   DenseMatrix *cpy = NULL;
-  if (!overwrite) {cpy=clone(); A=cpy->getData2D();}
+  if (!overwrite) {cpy=clone(); A=cpy->data;}
   else A=data;
 
   // Gauss-Jordan with partial pivoting
