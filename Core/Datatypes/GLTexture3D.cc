@@ -68,8 +68,11 @@ GLTexture3D::GLTexture3D() :
 }
 
 GLTexture3D::GLTexture3D(FieldHandle texfld) :
-  texfld_(0), mesh_(0), X_(0), Y_(0),
-  Z_(0), xmax_(0), ymax_(0), zmax_(0), isCC_(false)
+  texfld_(texfld),
+  mesh_(0),
+  X_(0), Y_(0), Z_(0),
+  xmax_(0), ymax_(0), zmax_(0),
+  isCC_(false)
 {
   if (texfld_->get_type_name(0) != "LatticeVol") {
     cerr << "GLTexture3D constructor error - can only make a GLTexture3D from a LatticeVol\n";
@@ -78,7 +81,7 @@ GLTexture3D::GLTexture3D(FieldHandle texfld) :
 
   pair<double,double> minmax;
 
-  string type = texfld_->get_type_name(1);
+  const string type = texfld_->get_type_name(1);
   if (type == "double") {
     LatticeVol<double> *fld =
       dynamic_cast<LatticeVol<double>*>(texfld_.get_rep());
