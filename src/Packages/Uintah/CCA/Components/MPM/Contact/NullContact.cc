@@ -21,14 +21,10 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 using namespace Uintah;
 
-NullContact::NullContact(ProblemSpecP& ps, SimulationStateP& d_sS,
+NullContact::NullContact(SimulationStateP& d_sS,
 			 MPMLabel* Mlb,MPMFlags* MFlags)
 {
   // Constructor
- 
-  IntVector v_f;
-  ps->require("vel_fields",v_f);
-
   d_sharedState = d_sS;
   lb = Mlb;
   flag = MFlags;
