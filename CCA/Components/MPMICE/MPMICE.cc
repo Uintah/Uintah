@@ -6,7 +6,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/GUVMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
@@ -57,7 +56,6 @@ MPMICE::MPMICE(const ProcessorGroup* myworld)
   d_SMALL_NUM = d_ice->d_SMALL_NUM; 
   d_TINY_RHO  = d_ice->d_TINY_RHO;
   d_rigidMPM = false;
-  d_shellMPM = false;
   
   // Turn off all the debuging switches
   switchDebug_InterpolateNCToCC_0 = false;
@@ -72,7 +70,6 @@ MPMICE::MPMICE(const ProcessorGroup* myworld, MPMType mpmtype)
   Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
   d_rigidMPM = false;
-  d_shellMPM = false;
 
   switch(mpmtype) {
     case RIGID_MPMICE:
@@ -81,7 +78,6 @@ MPMICE::MPMICE(const ProcessorGroup* myworld, MPMType mpmtype)
       break;
     case SHELL_MPMICE:
       d_mpm = scinew ShellMPM(myworld);
-      d_shellMPM = true;
       break;
     default:
       d_mpm = scinew SerialMPM(myworld);
@@ -483,21 +479,6 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
    t->computes(Ilb->sp_vol_CCLabel, mss);
    t->computes(Ilb->rho_CCLabel, mss); 
    
-   if (d_shellMPM) {
-     int numMatls = d_sharedState->getNumMPMMatls();
-     for(int m = 0; m < numMatls; m++){
-       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-       const MaterialSubset* matlset = mpm_matl->thisMaterial();
-       GUVMaterial* guv = 
-         dynamic_cast<GUVMaterial*> (mpm_matl->getConstitutiveModel());
-       if (guv) {
-         t->requires(Task::NewDW, Mlb->gTypeLabel, matlset, 
-                     Ghost::AroundCells, 1);
-         t->computes(MIlb->cTypeLabel, matlset );
-       }
-     }
-   }
-
    sched->addTask(t, patches, mpm_matls);
 }
 
@@ -626,19 +607,6 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->modifies(Ilb->rho_CCLabel,         mpm_matls); 
   t->computes(Ilb->sp_vol_CCLabel,      ice_matls);
   t->computes(Ilb->rho_CCLabel,         ice_matls);
-
-  if (d_shellMPM) {
-    int numMatls = d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      const MaterialSubset* matlset = mpm_matl->thisMaterial();
-      GUVMaterial* guv = 
-        dynamic_cast<GUVMaterial*> (mpm_matl->getConstitutiveModel());
-      if (guv) 
-        t->requires(Task::NewDW, MIlb->cTypeLabel, matlset, Ghost::None);
-    }
-  }
-
   sched->addTask(t, patches, all_matls);
 }
 //______________________________________________________________________
@@ -742,25 +710,14 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       setBC(rho_micro, "Density",      patch, d_sharedState, indx);    
       setBC(Temp_CC,   "Temperature",  patch, d_sharedState, indx);    
       setBC(vel_CC,    "Velocity",     patch, d_sharedState, indx);                   
-      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-      GUVMaterial* guv = dynamic_cast<GUVMaterial*>(cm);
-      CellIterator iter = patch->getExtraCellIterator();
-      if (guv) {
-        for (; !iter.done(); iter++){
-          IntVector c = *iter;
-          sp_vol_CC[c] = 1.0/rho_micro[c];
-          guv->computePressEOSCM(rho_micro[c], junk, p_ref, junk, tmp, 
-                                 mpm_matl, 0.0);
-          speedSound[c] = sqrt(tmp);
-        }
-      } else {
-        for (; !iter.done(); iter++){
-          IntVector c = *iter;
-          sp_vol_CC[c] = 1.0/rho_micro[c];
-          cm->computePressEOSCM(rho_micro[c], junk, p_ref, junk, tmp, 
-                                mpm_matl);
-          speedSound[c] = sqrt(tmp);
-        }
+      for (CellIterator iter = patch->getExtraCellIterator();
+                                                        !iter.done();iter++){
+        IntVector c = *iter;
+        sp_vol_CC[c] = 1.0/rho_micro[c];
+
+        mpm_matl->getConstitutiveModel()->
+            computePressEOSCM(rho_micro[c],junk, p_ref, junk, tmp,mpm_matl); 
+        speedSound[c] = sqrt(tmp);
       }
       
       //__________________________________
@@ -978,28 +935,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       old_dw->get(Temp_CC_ice,  MIlb->temp_CCLabel,     indx, patch,gn, 0);
       old_dw->get(vel_CC_ice,   MIlb->vel_CCLabel,      indx, patch,gn, 0);
       IntVector nodeIdx[8];
-
-      // Special: Type interpolation for GUV materials
-      constNCVariable<double> gType;
-      CCVariable<double> cType;
-      if (d_shellMPM) {
-        GUVMaterial* guv = 
-          dynamic_cast<GUVMaterial*> (mpm_matl->getConstitutiveModel());
-        if (guv) {
-          new_dw->allocateAndPut(cType, MIlb->cTypeLabel, indx, patch);  
-          cType.initialize(0.0);
-          new_dw->get(gType, Mlb->gTypeLabel, indx, patch, gac, 1);
-
-          CellIterator iter = patch->getExtraCellIterator();
-          for(;!iter.done();iter++){
-            IntVector c = *iter;
-            patch->findNodesFromCell(c,nodeIdx);
-            for (int in=0;in<8;in++)
-              cType[c]  += NC_CCweight[nodeIdx[in]] * gType[nodeIdx[in]];
-          }
-        }
-      }
-
       
       //---- P R I N T   D A T A ------ 
 #if 0
@@ -1443,9 +1378,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > placeHolder(0);
     StaticArray<constCCVariable<double> > cv(numALLMatls);
     StaticArray<constCCVariable<double> > gamma(numALLMatls);
-    // GUV material type
-    StaticArray<constCCVariable<double> > type_CC(numALLMatls);
-
     StaticArray<constCCVariable<double> > sp_vol_CC(numALLMatls); 
     StaticArray<constCCVariable<double> > Temp(numALLMatls);
     StaticArray<constCCVariable<double> > rho_CC_old(numALLMatls);
@@ -1460,7 +1392,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     new_dw->allocateAndPut(press_new, Ilb->press_equil_CCLabel, 0,patch);
     new_dw->allocateAndPut(press_copy,Ilb->press_CCLabel,       0,patch);
     new_dw->allocateTemporary(delPress_tmp, patch); 
-
 
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -1482,14 +1413,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         new_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,indx,patch,gn,0); 
         new_dw->get(rho_CC_old[m],Ilb->rho_CCLabel,  indx,patch,gn,0);
 
-        if (d_shellMPM) {
-          GUVMaterial* guv = 
-            dynamic_cast<GUVMaterial*> (mpm_matl->getConstitutiveModel());
-          if (guv) {
-            new_dw->get(type_CC[m], MIlb->cTypeLabel, indx,patch,gn,0);
-          }
-        }
-
       }
       new_dw->allocateTemporary(rho_micro[m],  patch);
       new_dw->allocateAndPut(rho_CC_new[m], Ilb->rho_CCLabel,indx, patch);
@@ -1498,7 +1421,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       new_dw->allocateAndPut(speedSound[m], Ilb->speedSound_CCLabel,indx,patch);
       new_dw->allocateAndPut(sp_vol_new[m], Ilb->sp_vol_CCLabel,    indx,patch);
       speedSound[m].initialize(0.0);
-
     }
     
     press_new.copyData(press);
@@ -1527,26 +1449,18 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         } 
 
         if(mpm_matl){                //  M P M
-          ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-          GUVMaterial* guv = dynamic_cast<GUVMaterial*>(cm);
-          if (guv) {
-            double type = type_CC[m][c];
-            rho_micro[m][c] = guv->computeRhoMicroCM(press_new[c], press_ref, 
-                                                     mpm_matl, type); 
-            guv->computePressEOSCM(rho_micro[m][c], press_eos[m], press_ref,
-                                   dp_drho[m], c_2, mpm_matl, type);
-          } else {
-            /*`==========TESTING==========*/
-            // This might be wrong.  Try 1/sp_vol -- Todd 11/22
-            rho_micro[m][c] = cm->computeRhoMicroCM(press_new[c], press_ref, 
-                                                    mpm_matl); 
+/*`==========TESTING==========*/
+// This might be wrong.  Try 1/sp_vol -- Todd 11/22
+           rho_micro[m][c] =  
+            mpm_matl->getConstitutiveModel()->
+            computeRhoMicroCM(press_new[c],press_ref, mpm_matl); 
             
-            //            rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
-            /*==========TESTING==========`*/
-            cm->computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
-                                  dp_drho[m], c_2,mpm_matl);
+//            rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
+/*==========TESTING==========`*/
+          mpm_matl->getConstitutiveModel()->
+            computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
+                              dp_drho[m], c_2,mpm_matl);
             
-          }
         }
     //  speedSound[m][c] = sqrt(c_2)/gamma[m];  // Isothermal speed of sound
         speedSound[m][c] = sqrt(c_2);           // Isentropic speed of sound
@@ -1604,16 +1518,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                              press_eos[m], dp_drho[m],dp_de[m]);
          }
          if(mpm_matl){    // MPM
-           ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-           GUVMaterial* guv = dynamic_cast<GUVMaterial*>(cm);
-           if (guv) {
-             double type = type_CC[m][c];
-             guv->computePressEOSCM(rho_micro[m][c], press_eos[m], press_ref,
-                                    dp_drho[m], c_2, mpm_matl, type);
-           } else {
-             cm->computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
+            mpm_matl->getConstitutiveModel()->
+                 computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
                                    dp_drho[m], c_2,mpm_matl);
-           }
          }
        }
 
@@ -1650,17 +1557,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                                   cv[m][c],Temp[m][c]);
          }
          if(mpm_matl){
-           ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-           GUVMaterial* guv = dynamic_cast<GUVMaterial*>(cm);
-           if (guv) {
-             double type = type_CC[m][c];
-             rho_micro[m][c] = guv->computeRhoMicroCM(press_new[c], 
-                                                      press_ref, mpm_matl, 
-                                                      type); 
-           } else {
-             rho_micro[m][c] = cm->computeRhoMicroCM(press_new[c], press_ref,
-                                                     mpm_matl);
-           }
+           rho_micro[m][c] =  
+             mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
+                                          press_new[c],press_ref,mpm_matl);
          }
        }
        //__________________________________
@@ -1685,16 +1584,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                       (press_eos[m]/(rho_micro[m][c]*rho_micro[m][c]));
          }
          if(mpm_matl){
-           ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-           GUVMaterial* guv = dynamic_cast<GUVMaterial*>(cm);
-           if (guv) {
-             double type = type_CC[m][c];
-             guv->computePressEOSCM(rho_micro[m][c], press_eos[m], press_ref,
-                                    dp_drho[m], c_2, mpm_matl, type);
-           } else {
-             cm->computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
-                                    dp_drho[m],c_2,mpm_matl);
-           }
+            mpm_matl->getConstitutiveModel()->
+                 computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
+                                   dp_drho[m],c_2,mpm_matl);
          }
 
      //  speedSound[m][c] = sqrt(c_2)/gamma[m];// Isothermal speed of sound
@@ -1721,7 +1613,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         binaryPressureSearch( Temp, rho_micro, vol_frac, rho_CC_new,
                               speedSound,  dp_drho,  dp_de, 
                               press_eos, press, press_new, press_ref,
-                              cv, gamma, type_CC, convergence_crit, 
+                              cv, gamma, convergence_crit, 
                               numALLMatls, count, sum, c);
 
      }
@@ -1843,7 +1735,6 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
                             double press_ref,
                             StaticArray<constCCVariable<double> > & cv,
                             StaticArray<constCCVariable<double> > & gamma,
-                            StaticArray<constCCVariable<double> > & type_CC,
                             double convergence_crit,
                             int numALLMatls,
                             int & count,
@@ -1874,15 +1765,9 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
                                            cv[m][c],Temp[m][c]);
      }
      if(mpm_matl){        // MPM
-       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-       GUVMaterial* guv = dynamic_cast<GUVMaterial*>(cm);
-       if (guv) {
-         double type = type_CC[m][c];
-         rho_micro[m][c] = guv->computeRhoMicroCM(Pm, press_ref, mpm_matl,
-                                                  type); 
-       } else {
-         rho_micro[m][c] = cm->computeRhoMicroCM(Pm, press_ref, mpm_matl);
-       }
+       rho_micro[m][c] =
+         mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
+                                      Pm,press_ref,mpm_matl);
      }
      vol_frac[m][c] = rho_CC_new[m][c]/rho_micro[m][c];
      sum += vol_frac[m][c];
@@ -1908,16 +1793,9 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
                      (press_eos[m]/(rho_micro[m][c]*rho_micro[m][c]));
         }
         if(mpm_matl){       // MPM
-          ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-          GUVMaterial* guv = dynamic_cast<GUVMaterial*>(cm);
-          if (guv) {
-            double type = type_CC[m][c];
-            guv->computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
-                                   dp_drho[m],c_2,mpm_matl,type);
-          } else {
-            cm->computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
+           mpm_matl->getConstitutiveModel()->
+                computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
                                   dp_drho[m],c_2,mpm_matl);
-          }
         }
         speedSound[m][c] = sqrt(c_2);     // Isentropic speed of sound
      }
@@ -1947,16 +1825,12 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
                       computeRhoMicro(Pleft, gamma[m][c],cv[m][c],Temp[m][c]);
      }
      if(mpm_matl){        //  MPM
-       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-       GUVMaterial* guv = dynamic_cast<GUVMaterial*>(cm);
-       if (guv) {
-         double type = type_CC[m][c];
-         rhoMicroR = guv->computeRhoMicroCM(Pright,press_ref,mpm_matl,type);
-         rhoMicroL = guv->computeRhoMicroCM(Pleft, press_ref,mpm_matl,type);
-       } else {
-         rhoMicroR = cm->computeRhoMicroCM(Pright,press_ref,mpm_matl);
-         rhoMicroL = cm->computeRhoMicroCM(Pleft, press_ref,mpm_matl);
-       }
+       rhoMicroR =
+         mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
+                                      Pright,press_ref,mpm_matl);
+       rhoMicroL =
+         mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
+                                      Pleft, press_ref,mpm_matl);
      }
      vfR[m] = rho_CC_new[m][c]/rhoMicroR;
      vfL[m] = rho_CC_new[m][c]/rhoMicroL;

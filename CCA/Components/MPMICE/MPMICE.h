@@ -211,7 +211,6 @@ public:
                             double press_ref,
                             StaticArray<constCCVariable<double> > & cv,
                             StaticArray<constCCVariable<double> > & gamma,
-                            StaticArray<constCCVariable<double> > & type,
                             double convergence_crit,
                             int numALLMatls,
                             int & count,
@@ -241,7 +240,6 @@ protected:
   MPMICELabel* MIlb;
   bool             d_burns;
   bool             d_rigidMPM;
-  bool             d_shellMPM;
   SerialMPM*       d_mpm;
   ICE*             d_ice;
   int              d_8or27;
