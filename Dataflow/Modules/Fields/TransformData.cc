@@ -79,12 +79,6 @@ TransformData::execute()
     error("Input field is empty.");
     return;
   }
-  
-  if (ifieldhandle->query_vector_interface(this).get_rep() == 0)
-  {
-    error("This module only works on vector fields.");
-    return;
-  }
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   const TypeDescription *ltd = ifieldhandle->data_at_type_description();
