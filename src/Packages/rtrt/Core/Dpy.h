@@ -7,6 +7,7 @@
 #include <Core/Thread/Barrier.h>
 
 #include <Packages/rtrt/Core/Scene.h> // for ShadowType
+#include <Packages/rtrt/Core/DynamicInstance.h>
 
 #include <X11/Xlib.h>
 
@@ -54,10 +55,15 @@ class Dpy : public Runnable {
   Light    * turnOffLight_;
   Light    * turnOnLight_;
 
-  // End Gui Interaction Flags.
-
   Camera   * guiCam_;
+  Stealth  * objectStealth_;
+
   Stealth  * stealth_;
+
+  DynamicInstance * attachedObject_;
+  float             objectRotationMatrix_[4][4];
+
+  // End Gui Interaction Flags.
 
   Scene    * scene;
   char     * criteria1;
