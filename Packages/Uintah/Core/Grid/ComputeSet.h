@@ -474,7 +474,14 @@ WARNING
     }
     return true;
   }
+
 } // end namespace Uintah
+
+std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
+std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
+std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
+std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
+
 
 #ifdef __PGI
 #include <Packages/Uintah/Core/Grid/ComputeSet_special.cc>
