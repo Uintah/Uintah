@@ -373,7 +373,7 @@ void IsoSurface::execute()
 	    delete surf;
 	isosurface_id=0;
     } else {
-	isosurface_id=ogeom->addObj(group, surface_name);
+	isosurface_id=ogeom->addObj(topobj, surface_name);
 	if (emit_surface.get()) {
 	    osurf->send(surf);
 	}
