@@ -548,21 +548,9 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
           }
 	}
       }
-      //cout << "----------------------------------- " << endl;
-      //cout << "Particle = " << idx << endl << endl;
-      //cout << "Velocity Gradient = " << endl;
-      //cout << velGrad << endl;
-      //cout << "Rotation Gradient = " << endl;
-      //cout << rotGrad << endl;
-
       // Project the velocity gradient and rotation gradient on
       // to surface of the shell
       calcInPlaneGradient(pNormal[idx], velGrad, rotGrad);
-
-      //cout << "In-plane Velocity Gradient = " << endl;
-      //cout << velGrad << endl;
-      //cout << "In-plane Rotation Gradient = " << endl;
-      //cout << rotGrad << endl;
 
       // Calculate the layer-wise velocity gradient for stress
       // calculations
@@ -573,58 +561,102 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
       Matrix3 velGradCen = velGrad + rn ;
       Matrix3 velGradBot = (velGrad - rotGrad*zBot) + rn ;
 
-      //cout << "In-plane Velocity Gradient (top) = " << endl;
-      //cout << velGradTop << endl;
-      //cout << "In-plane Velocity Gradient (cen) = " << endl;
-      //cout << velGradCen << endl;
-      //cout << "In-plane Velocity Gradient (bot) = " << endl;
-      //cout << velGradBot << endl;
-
       // Compute the deformation gradient increment using the time_step
       // velocity gradient (F_n^np1 = dudx * dt + Identity).
       Matrix3 defGradIncTop = velGradTop*delT + One;
       Matrix3 defGradIncCen = velGradCen*delT + One;
       Matrix3 defGradIncBot = velGradBot*delT + One;
 
-      //cout << "In-plane Def Gradient Inc (top) = " << endl;
-      //cout << defGradIncTop << endl;
-      //cout << "In-plane Def Gradient Inc (cen) = " << endl;
-      //cout << defGradIncCen << endl;
-      //cout << "In-plane Def Gradient Inc (bot) = " << endl;
-      //cout << defGradIncBot << endl;
-
       // Update the deformation gradient tensor to its time n+1 value.
       Matrix3 defGradTop_new = defGradIncTop*pDefGradTop[idx];
       Matrix3 defGradCen_new = defGradIncCen*pDefGradCen[idx];
       Matrix3 defGradBot_new = defGradIncBot*pDefGradBot[idx];
 
-      //cout << "New In-plane Def Gradient (top) = " << endl;
-      //cout << defGradTop_new << endl;
-      //cout << "New In-plane Def Gradient (cen) = " << endl;
-      //cout << defGradCen_new << endl;
-      //cout << "New In-plane Def Gradient (bot) = " << endl;
-      //cout << defGradBot_new << endl;
+      // Compute stress using a constitutive relation
+      //Matrix3 sigTop(0.0), sigBot(0.0), sigCen(0.0);
+      //computeShellElasticStress(defGradTop_new, sigTop);
+      //computeShellElasticStress(defGradCen_new, sigCen);
+      //computeShellElasticStress(defGradBot_new, sigBot);
 
+      // Rotate the deformation gradient so that the 33 direction
+      // is along the direction of the normal
+      Matrix3 R; R.Identity();
+      calcTotalRotation(Vector(0,0,1), pNormal[idx], R);
+      defGradTop_new = R*defGradTop_new*R.Transpose();
+      defGradCen_new = R*defGradCen_new*R.Transpose();
+      defGradBot_new = R*defGradBot_new*R.Transpose();
+      
       // Enforce the no normal stress condition (Sig33 = 0)
       // (we call this condition, roughly, plane stress)
       Matrix3 sigTop(0.0), sigBot(0.0), sigCen(0.0);
-      computePlaneStressDefGrad(defGradTop_new, sigTop);
-      computePlaneStressDefGrad(defGradCen_new, sigCen);
-      computePlaneStressDefGrad(defGradBot_new, sigBot);
-      pDefGradTop_new[idx] = defGradTop_new;
-      pDefGradCen_new[idx] = defGradCen_new;
-      pDefGradBot_new[idx] = defGradBot_new;
-      pDefGrad_new[idx] = pDefGradCen_new[idx];
+      if (!computePlaneStressAndDefGrad(defGradTop_new, sigTop)) {
+        cerr << "----------------------------------- " << endl;
+        cerr << "Particle = " << idx << endl << endl;
+        cerr << "Velocity Gradient = " << endl;
+        cerr << velGrad << endl;
+        cerr << "Rotation Gradient = " << endl;
+        cerr << rotGrad << endl;
+        cerr << "In-plane Velocity Gradient (top) = " << endl;
+        cerr << velGradTop << endl;
+        cerr << "In-plane Velocity Gradient (cen) = " << endl;
+        cerr << velGradCen << endl;
+        cerr << "In-plane Velocity Gradient (bot) = " << endl;
+        cerr << velGradBot << endl;
+        cerr << "In-plane Def Gradient Inc (top) = " << endl;
+        cerr << defGradIncTop << endl;
+        cerr << "In-plane Def Gradient Inc (cen) = " << endl;
+        cerr << defGradIncCen << endl;
+        cerr << "In-plane Def Gradient Inc (bot) = " << endl;
+        cerr << defGradIncBot << endl;
+        cerr << "New In-plane Def Gradient (top) = " << endl;
+        cerr << defGradTop_new << endl;
+        cerr << "New In-plane Def Gradient (cen) = " << endl;
+        cerr << defGradCen_new << endl;
+        cerr << "New In-plane Def Gradient (bot) = " << endl;
+        cerr << defGradBot_new << endl;
+        cerr << "Normal = " << pNormal[idx] << endl;
+        cerr << "R = " << R << endl;
+        cerr << "defGradTop = " << defGradTop_new << endl;
+        cerr << "SigTop = " << sigTop << endl;
+        exit(1);
+      }
+      if (!computePlaneStressAndDefGrad(defGradCen_new, sigCen)) {
+        cerr << "Normal = " << pNormal[idx] << endl;
+        cerr << "R = " << R << endl;
+        cerr << "defGradCen = " << defGradCen_new << endl;
+        cerr << "SigCen = " << sigCen << endl;
+        exit(1);
+      }
+      if (!computePlaneStressAndDefGrad(defGradBot_new, sigBot)) {
+        cerr << "Normal = " << pNormal[idx] << endl;
+        cerr << "R = " << R << endl;
+        cerr << "defGradBot = " << defGradBot_new << endl;
+        cerr << "SigBot = " << sigBot << endl;
+        exit(1);
+      }
 
-      // Calculate the change in thickness
-      double zTopInc = 0.5*(pDefGradTop_new[idx](3,3)+
-                            pDefGradCen_new[idx](3,3));
-      double zBotInc = 0.5*(pDefGradBot_new[idx](3,3)+
-                            pDefGradCen_new[idx](3,3));
+      // Calculate the change in thickness in the direction of
+      // the normal
+      double zTopInc = 0.5*(defGradTop_new(3,3)+defGradCen_new(3,3));
+      double zBotInc = 0.5*(defGradBot_new(3,3)+defGradCen_new(3,3));
       pThickTop_new[idx] = zTopInc*pThickTop0[idx];
       pThickBot_new[idx] = zBotInc*pThickBot0[idx];
       pThickTop0_new[idx] = pThickTop0[idx];
       pThickBot0_new[idx] = pThickBot0[idx];
+
+      // Rotate back to global co-ordinates
+      defGradTop_new = R.Transpose()*defGradTop_new*R;
+      defGradCen_new = R.Transpose()*defGradCen_new*R;
+      defGradBot_new = R.Transpose()*defGradBot_new*R;
+      sigTop = R.Transpose()*sigTop*R;
+      sigCen = R.Transpose()*sigCen*R;
+      sigBot = R.Transpose()*sigBot*R;
+
+      // Update the deformation gradients
+      pDefGradTop_new[idx] = defGradTop_new;
+      pDefGradCen_new[idx] = defGradCen_new;
+      pDefGradBot_new[idx] = defGradBot_new;
+      pDefGrad_new[idx] = pDefGradCen_new[idx];
 
       // Get the volumetric part of the deformation
       double Je = pDefGrad_new[idx].Determinant();
@@ -632,8 +664,6 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
 
       // Calculate the average stress over the thickness of the shell
       // using the trapezoidal rule
-      Matrix3 nn(pNormal[idx], pNormal[idx]);
-      Matrix3 Is = One - nn;
       double ht = pThickTop_new[idx]; 
       double hb = pThickBot_new[idx];
       double h = (ht+hb)*2.0;
@@ -648,6 +678,8 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
       pStress_new[idx] = avStress;
 
       // Calculate the average moment over the thickness of the shell
+      Matrix3 nn(pNormal[idx], pNormal[idx]);
+      Matrix3 Is = One - nn;
       Matrix3 avMoment = (sigTop*(ht*ht) - sigBot*(hb*hb))*(0.5/h);
       pAvMoment[idx] = (Is*avMoment*Is)*pVolume_new[idx];
 
@@ -950,6 +982,9 @@ ShellMaterial::particleNormalRotRateUpdate(const PatchSubset* patches,
 
       // Update the normal 
       pNormal_new[idx] = Rinc*pNormal[idx];
+      double len = pNormal_new[idx].length();
+      ASSERT(len > 0.0);
+      pNormal_new[idx] = pNormal_new[idx]/len;
       pNormal0_new[idx] = pNormal0[idx];
 
       // Rotate the rotation rate
@@ -1029,16 +1064,18 @@ ShellMaterial::calcIncrementalRotation(const Vector& r,
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Calculate the total rotation matrix for a shell particle
-// (WARNING: Can be optimised considerably .. add to TODO list)
-// n0 == initial shell normal
-// n == current shell normal
+// (WARNING: Can be optimized considerably .. add to TODO list)
+// n0 == initial normal
+// n == current normal
 //
-Matrix3 
+void 
 ShellMaterial::calcTotalRotation(const Vector& n0, 
-                                 const Vector& n)
+                                 const Vector& n,
+                                 Matrix3& R)
 {
   // Calculate the rotation angle (assume n0 and n are unit vectors)
-  double phi = acos(Dot(n,n0));
+  double phi = acos(Dot(n,n0)/(n.length()*n0.length()));
+  if (phi == 0.0) return;
 
   // Find the rotation axis
   Vector a = Cross(n,n0);
@@ -1046,7 +1083,7 @@ ShellMaterial::calcTotalRotation(const Vector& n0,
   a /= (a.length());
 
   // Return the rotation matrix
-  return Matrix3(phi, a);
+  R = Matrix3(phi, a);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1100,13 +1137,33 @@ ShellMaterial::calcInPlaneGradient(const Vector& n,
 
 ////////////////////////////////////////////////////////////////////////////////
 //
+// Calculate the shell elastic stress
+//
+void
+ShellMaterial::computeShellElasticStress(Matrix3& F, Matrix3& sig)
+{
+  // Initialize bulk, shear
+  double bulk = d_initialData.Bulk;
+  double shear = d_initialData.Shear;
+  Matrix3 One; One.Identity();
+
+  double J = F.Determinant();
+  ASSERT(J > 0.0);
+  double p = (0.5*bulk)*(J - 1.0/J);
+  Matrix3 b = (F*F.Transpose())/pow(J, 2.0/3.0);
+  Matrix3 s = (b - One*(b.Trace()/3.0))*(shear/J);
+  sig = One*p + s;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
 // Calculate the plane stress deformation gradient corresponding
 // to sig33 = 0 (Use an iterative Newton method)
 // WARNING : Assume that the shear components of bbar_elastic are not affected
 // when sig33 is set to zero.  Can be optimized considerably later.
 //
-void
-ShellMaterial::computePlaneStressDefGrad(Matrix3& F, Matrix3& sig)
+bool
+ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig)
 {
   // Initialize bulk, shear
   double bulk = d_initialData.Bulk;
@@ -1139,7 +1196,11 @@ ShellMaterial::computePlaneStressDefGrad(Matrix3& F, Matrix3& sig)
   do {
     // Central value
     J = F.Determinant();
-    ASSERT(J > 0);
+    if (!(J > 0.0)) {
+       cerr << "** ERROR ** F = " << F << " det F = " << J << endl;
+       return false;
+    }
+    //ASSERT(J > 0.0);
     p = (0.5*bulk)*(J - 1.0/J);
     b = (F*F.Transpose())/pow(J, 2.0/3.0);
     s = (b - One*(b.Trace()/3.0))*(shear/J);
@@ -1148,7 +1209,11 @@ ShellMaterial::computePlaneStressDefGrad(Matrix3& F, Matrix3& sig)
     // Left value
     Fp(3,3) = 1.01*F(3,3);
     Jp = Fp.Determinant();
-    ASSERT(Jp > 0);
+    if (!(Jp > 0.0)) {
+       cerr << "** ERROR ** Fp = " << Fp << " det Fp = " << Jp << endl;
+       return false;
+    }
+    //ASSERT(Jp > 0.0);
     pp = (0.5*bulk)*(Jp - 1.0/Jp);
     bp = (Fp*Fp.Transpose())/pow(Jp, 2.0/3.0);
     sp = (bp - One*(bp.Trace()/3.0))*(shear/Jp);
@@ -1157,7 +1222,11 @@ ShellMaterial::computePlaneStressDefGrad(Matrix3& F, Matrix3& sig)
     // Right value
     Fm(3,3) = 0.99*F(3,3);
     Jm = Fm.Determinant();
-    ASSERT(Jm > 0);
+    if (!(Jm > 0.0)) {
+       cerr << "** ERROR ** Fm = " << Fm << " det Fm = " << Jm << endl;
+       return false;
+    }
+    //ASSERT(Jm > 0.0);
     pm = (0.5*bulk)*(Jm - 1.0/Jm);
     bm = (Fm*Fm.Transpose())/pow(Jm, 2.0/3.0);
     sm = (bm - One*(bm.Trace()/3.0))*(shear/Jm);
@@ -1170,4 +1239,5 @@ ShellMaterial::computePlaneStressDefGrad(Matrix3& F, Matrix3& sig)
 
   } while (fabs(delta) > epsilon);
   sig(3,3) = 0.0;
+  return true;
 }
