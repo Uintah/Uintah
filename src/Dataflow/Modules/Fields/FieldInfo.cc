@@ -144,13 +144,15 @@ FieldInfo::update_input_attributes(FieldHandle f)
 
   gui_typename_.set(tname);
 
+  static char *at_table[4] = { "Nodes", "Edges", "Faces", "Cells" };
   switch(f->basis_order())
   {
   case 1:
-    gui_dataat_.set("Nodes");
+    gui_dataat_.set("Nodes (linear basis)");
     break;
   case 0:
-    gui_dataat_.set("Cells");
+    gui_dataat_.set(at_table[f->mesh()->dimensionality()] +
+                    string(" (constant basis)"));
     break;
   case -1:
     gui_dataat_.set("None");
@@ -247,9 +249,9 @@ FieldInfo::execute()
   {
     generation_ = fh.get_rep()->generation;
     update_input_attributes(fh);
-
   }
 }
+
 
 CompileInfoHandle
 FieldInfoAlgoCount::get_compile_info(const TypeDescription *mesh_td)

@@ -77,13 +77,15 @@ ChangeFieldDataAt::~ChangeFieldDataAt()
 void
 ChangeFieldDataAt::update_input_attributes(FieldHandle f) 
 {
+  static char *at_table[4] = { "Nodes", "Edges", "Faces", "Cells" };
   switch(f->basis_order())
   {
-  case 0: 
-    inputdataat_.set("Cells");
-    break;
   case 1:
-    inputdataat_.set("Nodes");
+    inputdataat_.set("Nodes (linear basis)");
+    break;
+  case 0:
+    inputdataat_.set(at_table[f->mesh()->dimensionality()] +
+                     string(" (constant basis)"));
     break;
   case -1: 
     inputdataat_.set("None");
