@@ -56,14 +56,14 @@ TreatFEM::TreatFEM(const clString& id)
     add_oport(outmatrix);
     outrhs=new ColumnMatrixOPort(this, "RHS", ColumnMatrixIPort::Atomic);
     add_oport(outrhs);
-    outmesh=new HexMeshOPort*this, "Mesh", HexMeshOPort::Atomic);
+    outmesh=new HexMeshOPort(this, "Mesh", HexMeshIPort::Atomic);
     add_oport(outmesh);
     outfield=new ScalarFieldOPort(this, "Temp", ScalarFieldIPort::Atomic);
     add_oport(outfield);
     outpower=new ScalarFieldOPort(this, "Power Field", ScalarFieldIPort::Atomic);
     add_oport(outpower);
-    outvfield=new VectorFieldOPort(this, "Velocity", VectorFieldOPort::Atomic);
-    add_oport(outfield);
+    outvfield=new VectorFieldOPort(this, "Velocity", VectorFieldIPort::Atomic);
+    add_oport(outvfield);
 }
 
 TreatFEM::TreatFEM(const TreatFEM& copy, int deep)
@@ -121,7 +121,7 @@ void TreatFEM::execute()
     cout << "All data files read successfully." << endl;
   }
 
-  cout << "Creating HexMesh data structure\n";
+  cout << "Creating HexMesh data structure" << endl;
   HexMesh* hexmesh=new HexMesh;
   for(i=0;i<nodeList.size();i++){
       Node* n=nodeList[i];
@@ -144,17 +144,19 @@ void TreatFEM::execute()
   ScalarFieldHUG* pfield=new ScalarFieldHUG(hexmesh);
   pfield->data.resize(nodeList.size()+1);
   for (i=0;i<nodeList.size();i++) {
-      pfield->data[i+1]=nodeList[i]->getSarc();
+      pfield->data[nodeList[i]->getNum()]=nodeList[i]->getSarc();
   }
   outpower->send(pfield);
-  
+
+#if 0  
   VectorFieldHUG* vfield=new VectorFieldHUG(hexmesh);
   vfield->data.resize(nodeList.size()+1);
   for (i=0;i<nodeList.size();i++) {
       Node* n=nodeList[i];
-      vfield->data[i+1]=Vector(n->getVX(), n->getVY(), n->getVZ());
+      vfield->data[n->getNum()]=Vector(n->getVX(), n->getVY(), n->getVZ());
   }
   outfield->send(vfield);
+#endif
 
   cout << "Number of nodes:   " << nodeList.size() << endl;
   cout << "Number of element: " << elementList.size() << endl;

@@ -106,6 +106,7 @@ int readData(Array1<Node*> &nodeList, Array1<Element*> &elementList,
   i=0;
   for (j=0;j<nodeList.size();j++) {
     fin >> dum >> val[0];
+    val[0]=0;
     nodeList[i]->setTemp(val[0]);
     nodeList[i]->setTempPast(val[0]);
     i++;
