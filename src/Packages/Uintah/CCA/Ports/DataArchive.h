@@ -33,8 +33,10 @@
 #include <unistd.h>
 
 namespace Uintah {
-  using namespace SCIRun;
-  using namespace std;
+
+using namespace SCIRun;
+using std::string;
+using std::vector;
 
 class VarLabel;
   class DataWarehouse;
@@ -85,6 +87,10 @@ private:
   /* Helper classes for storing hash maps of variable data. */
   class PatchHashMaps;
   class MaterialHashMaps;
+  class TimeHashMaps;
+  friend class PatchHashMaps;
+  friend class MaterialHashMaps;
+  friend class TimeHashMaps;
   
   // Top of data structure for storing hash maps of variable data
   // - containing data for each time step.
@@ -151,7 +157,7 @@ private:
   };
   
 public:
-  DataArchive(const std::string& filebase,
+  DataArchive(const string& filebase,
 	      int processor=0 /* use if you want to different processors
 				 to read different parts of the archive */,
 	      int numProcessors=1);
@@ -171,12 +177,12 @@ public:
   // variables. We also need to determine the type of each variable.
   // Get a list of scalar or vector variable names and  
   // a list of corresponding data types
-  void queryVariables( std::vector< std::string>& names,
-		       std::vector< const TypeDescription *>&  );
-  void queryGlobals( std::vector< std::string>& names,
-		     std::vector< const TypeDescription *>&  );
-  void queryTimesteps( std::vector<int>& index,
-		       std::vector<double>& times );
+  void queryVariables( vector< string>& names,
+		       vector< const TypeDescription *>&  );
+  void queryGlobals( vector< string>& names,
+		     vector< const TypeDescription *>&  );
+  void queryTimesteps( vector<int>& index,
+		       vector<double>& times );
   GridP queryGrid( double time );
 
   void purgeTimestepCache(double time)
@@ -185,7 +191,7 @@ public:
 #if 0
   //////////
   // Does a variable exist in a particular patch?
-  bool exists(const std::string&, const Patch*, int) {
+  bool exists(const string&, const Patch*, int) {
     return true;
   }
 #endif
@@ -198,12 +204,12 @@ public:
   // how long does a patch live?  Not variable specific
   void queryLifetime( double& min, double& max, const Patch* patch);
   
-  ConsecutiveRangeSet queryMaterials(const std::string& name,
+  ConsecutiveRangeSet queryMaterials(const string& name,
 				     const Patch* patch, double time);
   
   int queryNumMaterials(const Patch* patch, double time);
   
-  void query( Variable& var, const std::string& name,
+  void query( Variable& var, const string& name,
 	      int matlIndex, const Patch* patch, double tine );
   
   //////////
@@ -211,7 +217,7 @@ public:
   // T = double/float/vector/Tensor I'm not sure of the proper
   // syntax.
   template<class T>
-  void query( ParticleVariable< T >&, const std::string& name, int matlIndex,
+  void query( ParticleVariable< T >&, const string& name, int matlIndex,
 	      particleId id,
 	      double min, double max);
   
@@ -220,7 +226,7 @@ public:
   // T = double/float/vector/Tensor I'm not sure of the proper
   // syntax.
   template<class T>
-  void query( NCVariable< T >&, const std::string& name, int matlIndex,
+  void query( NCVariable< T >&, const string& name, int matlIndex,
 	      const IntVector& index,
 	      double min, double max);
   
@@ -229,21 +235,21 @@ public:
   // T = double/float/vector/Tensor I'm not sure of the proper
   // syntax.
   template<class T>
-  void query( CCVariable< T >&, const std::string& name, int matlIndex,
+  void query( CCVariable< T >&, const string& name, int matlIndex,
 	      const IntVector& index,
 	      double min, double max);
   
   //////////
   // query the variable value for a particular particle  overtime;
   template<class T>
-  void query(std::vector<T>& values, const std::string& name,
+  void query(vector<T>& values, const string& name,
 	     int matlIndex, long64 particleID,
 	     double startTime, double endTime) ;
   //////////
   // similarly, we want to be able to track variable values in a particular
   // patch cell over time.
   template<class T>
-  void query(std::vector<T>& values, const std::string& name, int matlIndex,
+  void query(vector<T>& values, const string& name, int matlIndex,
 	     IntVector loc, double startTime, double endTime);
 
   //////////
@@ -255,7 +261,7 @@ public:
   // In other cases we will have noticed something interesting and we
   // will want to access some small portion of a patch.  We will need
   // to request some range of data in index space.
-  template<class T> void get(T& data, const std::string& name,
+  template<class T> void get(T& data, const string& name,
 			     const Patch* patch, cellIndex min, cellIndex max);
 #endif
 
@@ -328,7 +334,7 @@ private:
 
    
   template<class T>
-  void DataArchive::query( NCVariable< T >&, const std::string& name, int matlIndex,
+  void DataArchive::query( NCVariable< T >&, const string& name, int matlIndex,
 			   const IntVector& index,
 			   double min, double max)
   {
@@ -336,7 +342,7 @@ private:
   }
   
   template<class T>
-  void DataArchive::query( CCVariable< T >&, const std::string& name, int matlIndex,
+  void DataArchive::query( CCVariable< T >&, const string& name, int matlIndex,
 			   const IntVector& index,
 			   double min, double max)
   {
@@ -344,7 +350,7 @@ private:
   }
   
   template<class T>
-  void DataArchive::query(ParticleVariable< T >& var, const std::string& name,
+  void DataArchive::query(ParticleVariable< T >& var, const string& name,
 			  int matlIndex, particleId id,
 			  double min, double max)
   {
@@ -353,7 +359,7 @@ private:
   
   
   template<class T>
-  void DataArchive::query(std::vector<T>& values, const std::string& name,
+  void DataArchive::query(vector<T>& values, const string& name,
 			  int matlIndex, long64 particleID,
 			  double startTime, double endTime)
   {
@@ -412,7 +418,7 @@ private:
   }  
   
   template<class T>
-  void DataArchive::query(std::vector<T>& values, const std::string& name,
+  void DataArchive::query(vector<T>& values, const string& name,
 			  int matlIndex, IntVector loc,
 			  double startTime, double endTime)
   {
