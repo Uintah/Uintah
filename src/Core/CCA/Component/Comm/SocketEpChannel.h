@@ -38,6 +38,8 @@ namespace SCIRun {
     void registerHandler(int num, void* handle);
     void bind(SpChannel* spchan);
 
+    void runAccept();
+
   private:
   
     /////////////

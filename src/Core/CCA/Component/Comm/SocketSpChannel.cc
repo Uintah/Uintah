@@ -30,6 +30,8 @@
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
 #include <Core/CCA/Component/Comm/SocketMessage.h>
 #include <Core/CCA/Component/PIDL/URL.h>
+
+using namespace std;
 using namespace SCIRun;
 
 SocketSpChannel::SocketSpChannel() { 
@@ -54,15 +56,18 @@ void SocketSpChannel::openConnection(const URL& url) {
   if( (sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
     throw CommError("socket", errno);
   }
-  
+
   their_addr.sin_family = AF_INET;                   // host byte order 
   their_addr.sin_port = htons(url.getPortNumber());  // short, network byte order 
   their_addr.sin_addr = *((struct in_addr *)he->h_addr);
   memset(&(their_addr.sin_zero), '\0', 8);  // zero the rest of the struct 
 
   if(connect(sockfd, (struct sockaddr *)&their_addr,sizeof(struct sockaddr)) == -1) {
+    perror("connect");
     throw CommError("connect", errno);
   }
+
+  
   
   /*  if ((numbytes=recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
     perror("recv");
