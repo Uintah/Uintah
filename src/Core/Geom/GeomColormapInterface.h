@@ -38,8 +38,8 @@ namespace SCIRun {
 class SCICORESHARE GeomColormapInterface {
 public:
     virtual MaterialHandle& lookup2(double value)=0;
-    virtual double getMin()=0;
-    virtual double getMax()=0;
+    virtual double getMin() const = 0;
+    virtual double getMax() const = 0;
 };
 
 } // End namespace SCIRun
