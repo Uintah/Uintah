@@ -290,7 +290,7 @@ int NCScalarField<T>::interpolate(const Point& p, double& value, double,
       
       IntVector ni[8];
       double S[8];
-      if( patch->findCell( p, *ni) ){
+      if( (*r)->findCell( p, *ni) ){
 	(*r)->findCellAndWeights(p, ni, S);
 	value=0;
 	for(int k = 0; k < 8; k++){
