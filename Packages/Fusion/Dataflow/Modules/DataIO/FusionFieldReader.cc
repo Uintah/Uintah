@@ -283,7 +283,7 @@ void FusionFieldReader::execute(){
     
 
     //    remark( idim + "  " + jdim + "  " + kdim );
-
+ 
     // Create the grid, and scalar and vector data matrices.
     StructHexVolMesh *hvm = NULL;
 
@@ -488,7 +488,7 @@ void FusionFieldReader::execute(){
 	      xVal = yVal = zVal = 1.0e-12;
 	    }
 
-	      bfield->set_value(Vector(xVal, yVal, zVal), node);
+	    bfield->set_value(Vector(xVal, yVal, zVal), node);
 	    }
 	  }
 
@@ -514,7 +514,6 @@ void FusionFieldReader::execute(){
 	    errors.push_back( zVal );
 
 	    efield->set_value(errors, node);
-
 	  }
 	  else if( readOrder[VFIELD_R_PHI_Z] > -1 ) {
 
