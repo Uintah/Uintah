@@ -14,26 +14,15 @@ SRCDIR   := Dataflow/Modules/Fields
 SRCS     += \
 	$(SRCDIR)/AddAttribute.cc\
 	$(SRCDIR)/CastField.cc\
-	$(SRCDIR)/GenScalarField.cc\
-	$(SRCDIR)/GenVectorField.cc\
+	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/LocateNbrhd.cc\
 	$(SRCDIR)/LocatePoints.cc\
 	$(SRCDIR)/ManipFields.cc\
-	$(SRCDIR)/MeshBoundary.cc\
 	$(SRCDIR)/SeedField.cc\
-	$(SRCDIR)/Smooth.cc\
 	$(SRCDIR)/TransformField.cc\
-	$(SRCDIR)/TransformMesh.cc\
-	$(SRCDIR)/TransformSurface.cc\
 #[INSERT NEW CODE FILE HERE]
-#	$(SRCDIR)/Coregister.cc\
-#	$(SRCDIR)/ExtractSepSurfs.cc\
-#	$(SRCDIR)/LaceContours.cc\
-#	$(SRCDIR)/SimpAbs.cc\
-#	$(SRCDIR)/SimpSurface.cc\
-#	$(SRCDIR)/TransformContours.cc\
-#	$(SRCDIR)/ClipField.cc\
 #	$(SRCDIR)/ChangeCellType.cc\
+#	$(SRCDIR)/Gradient.cc\
 
 CFLAGS   := $(CFLAGS)
 

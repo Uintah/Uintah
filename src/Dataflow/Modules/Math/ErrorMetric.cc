@@ -25,8 +25,6 @@ GENERAL INFORMATION
 
   Creation Date: June 1999
   
-  C-SAFE
-  
   Copyright (C) 1999 SCI Group
 
 KEYWORDS: 
@@ -46,7 +44,8 @@ POSSIBLE REVISIONS:
 
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Expon.h>
 #include <Core/Math/MinMax.h>
@@ -79,9 +78,9 @@ public:
 
 private:
 
-  ColumnMatrixIPort* d_ivec1P;
-  ColumnMatrixIPort* d_ivec2P;
-  ColumnMatrixOPort* d_errorP;
+  MatrixIPort* d_ivec1P;
+  MatrixIPort* d_ivec2P;
+  MatrixOPort* d_errorP;
   TCLint d_haveUI;
   TCLstring d_methodTCL;
   TCLstring d_pTCL;
@@ -98,13 +97,13 @@ ErrorMetric::ErrorMetric(const clString& id)
     d_pTCL("pTCL", id, this), d_haveUI("haveUI", id, this)
 {
     // Create the input port
-    d_ivec1P=scinew ColumnMatrixIPort(this, "Vec1",ColumnMatrixIPort::Atomic);
+    d_ivec1P=scinew MatrixIPort(this, "Vec1",MatrixIPort::Atomic);
     add_iport(d_ivec1P);
-    d_ivec2P=scinew ColumnMatrixIPort(this, "Vec2", ColumnMatrixIPort::Atomic);
+    d_ivec2P=scinew MatrixIPort(this, "Vec2", MatrixIPort::Atomic);
     add_iport(d_ivec2P);
 
     // Create the output ports
-    d_errorP=scinew ColumnMatrixOPort(this,"Error out",ColumnMatrixIPort::Atomic);
+    d_errorP=scinew MatrixOPort(this,"Error out",MatrixIPort::Atomic);
     add_oport(d_errorP);
 }
 
@@ -114,13 +113,13 @@ ErrorMetric::~ErrorMetric()
 
 void ErrorMetric::execute()
 {
-     ColumnMatrixHandle ivec1H;
+     MatrixHandle ivec1H;
      ColumnMatrix* ivec1;
-     if (!d_ivec1P->get(ivec1H) || !(ivec1=ivec1H.get_rep())) return;
+     if (!d_ivec1P->get(ivec1H) || !(ivec1=dynamic_cast<ColumnMatrix*>(ivec1H.get_rep()))) return;
 
-     ColumnMatrixHandle ivec2H;
+     MatrixHandle ivec2H;
      ColumnMatrix *ivec2;
-     if (!d_ivec2P->get(ivec2H) || !(ivec2=ivec2H.get_rep())) return;
+     if (!d_ivec2P->get(ivec2H) || !(ivec2=dynamic_cast<ColumnMatrix*>(ivec2H.get_rep()))) return;
      
      if (ivec1->nrows() != ivec2->nrows()) {
          cerr << "Error - can't compute error on vectors of different lengths!\n";
@@ -133,7 +132,7 @@ void ErrorMetric::execute()
 
      ColumnMatrix* error=scinew ColumnMatrix(1);
      double *val=error->get_rhs();
-     ColumnMatrixHandle errorH(error);
+     MatrixHandle errorH(error);
 
      // compute CC
      

@@ -83,7 +83,7 @@ private:
     TriSurface *composite_surf;
     Array1<int> start_pts;
     Array1<int> start_elems;
-    Array1<Array1<TSElement> > all_elems;
+    Array1<Array1<TSElement*> > all_elems;
     Array1<Array1<Point> > all_pts;
     Array1<GeomTrianglesP*> all_tris;
     Array1<Semaphore*> all_sems;
@@ -111,19 +111,19 @@ private:
     void printIt(clString s, int i, int j, int k, int c, int idx);
 
     int iso_cubeRing(int, int, int, double, GeomTrianglesP*,
-		     Array1<TSElement>&, Array1<Point>&,
+		     Array1<TSElement*>&, Array1<Point>&,
 		     int, int, int, int, Ring<int>*, Ring<int>*, 
 		     Ring<int>*, Ring<int>*, int &, int &, int &, int &);
     int iso_cubeRingFast(int, int, int, double, GeomTrianglesP*,
-			 Array1<TSElement>&, Array1<Point>&, 
+			 Array1<TSElement*>&, Array1<Point>&, 
 			 Ring<int>*, Ring<int>*, int &, int &);
 
     int iso_cubeHash(int,int,int,double, GeomTrianglesP*,
-		     Array1<TSElement>&, Array1<Point>&,
+		     Array1<TSElement*>&, Array1<Point>&,
 		     MapIntInt*, MapIntInt*, int, int);
 
     int iso_cubeTS(int, int, int, double, GeomTrianglesP*, 
-		     Array1<TSElement>&, Array1<Point>&);
+		     Array1<TSElement*>&, Array1<Point>&);
 
     int iso_tetra(Element*, Mesh*, ScalarFieldUG*, double, GeomTrianglesP*);
     void iso_tetrahedra(ScalarFieldUG*, double, GeomTrianglesP*);
@@ -356,7 +356,7 @@ void IsoSurfaceDW::printIt(clString s, int i, int j, int k, int c, int idx) {
 
 int IsoSurfaceDW::iso_cubeTS(int i, int j, int k, double isoval,
 			     GeomTrianglesP* group, 
-			     Array1<TSElement>& elems, 
+			     Array1<TSElement*>& elems, 
 			     Array1<Point>& pts) {
 
     double val[8];
@@ -448,7 +448,7 @@ int IsoSurfaceDW::iso_cubeTS(int i, int j, int k, double isoval,
 	    pts.add(p[0]);
 	    pts.add(p[1]);
 	    pts.add(p[2]);
-	    elems.add(TSElement(idx[0], idx[1], idx[2]));
+	    elems.add(new TSElement(idx[0], idx[1], idx[2]));
 	}
     }
     return(tcase->nbrs);
@@ -583,7 +583,7 @@ void IsoSurfaceDW::parallel_reg_grid(int proc)
 
     myThreadTime.start();
     myOuterExtract.start();
-    Array1<TSElement> *elems=0;
+    Array1<TSElement *>* elems=0;
     Array1<Point>* pts=0;
     if (emit) {
 	elems=&all_elems[proc];
@@ -611,8 +611,8 @@ void IsoSurfaceDW::parallel_reg_grid(int proc)
 		start_pts[i]=npts; start_elems[i]=nelems;
 		npts+=all_pts[i].size(); nelems+=all_elems[i].size();
 	    }
-	    composite_surf->points_.resize(npts);
-	    composite_surf->faces_.resize(nelems);
+	    composite_surf->points.resize(npts);
+	    composite_surf->elements.resize(nelems);
 	}
 
 	barrier.wait(np);
@@ -622,14 +622,14 @@ void IsoSurfaceDW::parallel_reg_grid(int proc)
 
 	int i;
 	for(i=0;i<all_pts[proc].size();i++)
-	    composite_surf->points_[i+start_pt]=all_pts[proc][i];
+	    composite_surf->points[i+start_pt]=all_pts[proc][i];
 	
 	for(i=0;i<all_elems[proc].size();i++){
-	    TSElement &e = all_elems[proc][i];
-	    e.i1 += start_pt; 
-	    e.i2 += start_pt;
-	    e.i3 += start_pt;
-	    composite_surf->faces_[i+start_elem]=e;
+	    TSElement* e=all_elems[proc][i];
+	    e->i1 += start_pt; 
+	    e->i2 += start_pt;
+	    e->i3 += start_pt;
+	    composite_surf->elements[i+start_elem]=e;
 	}
     }
 
@@ -639,7 +639,7 @@ void IsoSurfaceDW::parallel_reg_grid(int proc)
 }
 
 int IsoSurfaceDW::iso_cubeHash(int i, int j, int k, double isoval, 
-    GeomTrianglesP* group, Array1<TSElement>& elems, 
+    GeomTrianglesP* group, Array1<TSElement*>& elems, 
     Array1<Point>& pts, MapIntInt* hash, MapIntInt* Bdry,
     int first, int last)
 {
@@ -775,9 +775,9 @@ int IsoSurfaceDW::iso_cubeHash(int i, int j, int k, double isoval,
 	if (pidx[0]>=0 && pidx[1]>=0 && pidx[2]>=0) {
 	    group->add(pts[pidx[0]], pts[pidx[1]], pts[pidx[2]]);
 	    if (emit) 
-		elems.add(TSElement(pidx[0], pidx[1], pidx[2]));
+		elems.add(new TSElement(pidx[0], pidx[1], pidx[2]));
 	} else {
-	    elems.add(TSElement(pidx[0], pidx[1], pidx[2]));
+	    elems.add(new TSElement(pidx[0], pidx[1], pidx[2]));
 	}
     }
     return(tcase->nbrs);
@@ -818,7 +818,7 @@ void IsoSurfaceDW::parallel_reg_grid_hash(int proc)
 
     myThreadTime.start();
     myOuterExtract.start();
-    Array1<TSElement> *elems = &all_elems[proc];
+    Array1<TSElement *>* elems=&all_elems[proc];
     Array1<Point>* pts=&all_pts[proc];
     
     MapIntInt* hash = new MapIntInt;
@@ -880,8 +880,8 @@ void IsoSurfaceDW::parallel_reg_grid_hash(int proc)
 	    start_pts[i]=npts; start_elems[i]=nelems;
 	    npts+=all_pts[i].size(); nelems+=all_elems[i].size();
 	}
-	composite_surf->points_.resize(npts);
-	composite_surf->faces_.resize(nelems);
+	composite_surf->points.resize(npts);
+	composite_surf->elements.resize(nelems);
     }
 
     barrier.wait(np);
@@ -892,38 +892,38 @@ void IsoSurfaceDW::parallel_reg_grid_hash(int proc)
     if (proc != np-1)
 	next_start_pt=start_pts[proc+1];
     for(i=0;i<all_pts[proc].size();i++)
-	composite_surf->points_[i+start_pt]=all_pts[proc][i];
+	composite_surf->points[i+start_pt]=all_pts[proc][i];
 	
     barrier.wait(np);
 
     for(i=0;i<all_elems[proc].size();i++){
-        TSElement &e=all_elems[proc][i];
+	TSElement* e=all_elems[proc][i];
 	int flag=0;
 	//int ii1, ii2, ii3;
 	//ii1=e->i1; ii2=e->i2; ii3=e->i3;
-	if (e.i1<0) {
+	if (e->i1<0) {
 	    flag=1;
-	    e.i1 = -2 - e.i1 + next_start_pt;
+	    e->i1 = -2 - e->i1 + next_start_pt;
 	} else {
-	    e.i1 += start_pt; 
+	    e->i1 += start_pt; 
 	}
-	if (e.i2 < 0) {
+	if (e->i2 < 0) {
 	    flag=1;
-	    e.i2 = -2 - e.i2 + next_start_pt;
+	    e->i2 = -2 - e->i2 + next_start_pt;
 	} else {
-	    e.i2 += start_pt;
+	    e->i2 += start_pt;
 	}
-	if (e.i3 < 0) {
+	if (e->i3 < 0) {
 	    flag=1;
-	    e.i3 = -2 - e.i3 + next_start_pt;
+	    e->i3 = -2 - e->i3 + next_start_pt;
 	} else {
-	    e.i3 += start_pt;
+	    e->i3 += start_pt;
 	}
-	composite_surf->faces_[i+start_elem] = e;
+	composite_surf->elements[i+start_elem]=e;
 	if (flag) {	// need to add this boundary GeomTri
-	    all_tris[proc]->add(composite_surf->points_[e.i1],
-				composite_surf->points_[e.i2],
-				composite_surf->points_[e.i3]);
+	    all_tris[proc]->add(composite_surf->points[e->i1],
+				composite_surf->points[e->i2],
+				composite_surf->points[e->i3]);
 	}	
     }
     myLace.stop();
@@ -985,8 +985,8 @@ void IsoSurfaceDW::iso_reg_grid_hash()
     cerr << "TOTAL: "<<outerExtract.time()+lace.time()<<"\n";
 
     if (emit) {
-	int total_pts=composite_surf->points_.size();
-	int total_tris=composite_surf->faces_.size();
+	int total_pts=composite_surf->points.size();
+	int total_tris=composite_surf->elements.size();
 	if ((total_pts-2)*2 != total_tris) {
 	    cerr << "NOT A SINGLE SURFACE --  # pts: "<<total_pts<<"   # tris: "<<total_tris<<"\n";
 	    } else {
@@ -1044,8 +1044,8 @@ void IsoSurfaceDW::iso_reg_grid()
     cerr << "TOTAL: "<<outerExtract.time()<<"\n";
 
     if (emit) {
-	int total_pts=composite_surf->points_.size();
-	int total_tris=composite_surf->faces_.size();
+	int total_pts=composite_surf->points.size();
+	int total_tris=composite_surf->elements.size();
 	if ((total_pts-2)*2 != total_tris) {
 	    cerr << "NOT A SINGLE SURFACE --  # pts: "<<total_pts<<"   # tris: "<<total_tris<<"\n";
 	    } else {
@@ -1059,7 +1059,7 @@ void IsoSurfaceDW::iso_reg_grid()
 
 int IsoSurfaceDW::iso_cubeRing(int i, int j, int k, double isoval,
 			     GeomTrianglesP* group, 
-			     Array1<TSElement>& elems, Array1<Point>& pts,
+			     Array1<TSElement*>& elems, Array1<Point>& pts,
 			     int first, int last, int lastY, int proc0,
 			     Ring<int>* RX, Ring<int>* RY,
 			     Ring<int>* BdryFirst, Ring<int>* BdryLast,
@@ -1331,9 +1331,9 @@ int IsoSurfaceDW::iso_cubeRing(int i, int j, int k, double isoval,
 	    p1=pts[idx1];
 	    p2=pts[idx2];
 	    group->add(p0, p1, p2);
-	    if (emit) elems.add(TSElement(idx0, idx1, idx2));
+	    if (emit) elems.add(new TSElement(idx0, idx1, idx2));
 	} else {
-	    elems.add(TSElement(idx0, idx1, idx2));
+	    elems.add(new TSElement(idx0, idx1, idx2));
 	}
     }
     return(tcase->nbrs);
@@ -1341,7 +1341,7 @@ int IsoSurfaceDW::iso_cubeRing(int i, int j, int k, double isoval,
 
 int IsoSurfaceDW::iso_cubeRingFast(int i, int j, int k, double isoval,
 				 GeomTrianglesP* group, 
-				 Array1<TSElement>& elems, Array1<Point>& pts,
+				 Array1<TSElement*>& elems, Array1<Point>& pts,
 				 Ring<int>* RX, Ring<int>* RY,int &Z1,int &Z2){
     double val[8];
     if (rgfield_uc) {
@@ -1486,7 +1486,7 @@ int IsoSurfaceDW::iso_cubeRingFast(int i, int j, int k, double isoval,
 	idx2=e_idx[edges[2]];
 	if (group->add(pts[idx0], pts[idx1], pts[idx2]))
 	    if (emit || idx0<0 || idx<1 || idx<2)
-		elems.add(TSElement(idx0, idx1, idx2));
+		elems.add(new TSElement(idx0, idx1, idx2));
     }
     return(tcase->nbrs);
 }
@@ -1526,7 +1526,7 @@ void IsoSurfaceDW::parallel_reg_grid_rings(int proc)
 
     myThreadTime.start();
     myOuterExtract.start();
-    Array1<TSElement>* elems=&all_elems[proc];
+    Array1<TSElement *>* elems=&all_elems[proc];
     Array1<Point>* pts=&all_pts[proc];
     Ring<int>* RX = new Ring<int>((ny*nz+1)*2);
     Ring<int>* RY = new Ring<int>((nz+1)*2);
@@ -1611,8 +1611,8 @@ void IsoSurfaceDW::parallel_reg_grid_rings(int proc)
 	    start_pts[i]=npts; start_elems[i]=nelems;
 	    npts+=all_pts[i].size(); nelems+=all_elems[i].size();
 	}
-	composite_surf->points_.resize(npts);
-	composite_surf->faces_.resize(nelems);
+	composite_surf->points.resize(npts);
+	composite_surf->elements.resize(nelems);
     }
 
     barrier.wait(np);
@@ -1623,38 +1623,38 @@ void IsoSurfaceDW::parallel_reg_grid_rings(int proc)
     if (proc != np-1)
 	next_start_pt=start_pts[proc+1];
     for(i=0;i<all_pts[proc].size();i++)
-	composite_surf->points_[i+start_pt]=all_pts[proc][i];
+	composite_surf->points[i+start_pt]=all_pts[proc][i];
 	
     barrier.wait(np);
 
     for(i=0;i<all_elems[proc].size();i++){
-        TSElement &e=all_elems[proc][i];
+	TSElement* e=all_elems[proc][i];
 	int flag=0;
 	//int ii1, ii2, ii3;
-	//ii1=e.i1; ii2=e.i2; ii3=e.i3;
-	if (e.i1<0) {
+	//ii1=e->i1; ii2=e->i2; ii3=e->i3;
+	if (e->i1<0) {
 	    flag=1;
-	    e.i1 = -2 - e.i1 + next_start_pt;
+	    e->i1 = -2 - e->i1 + next_start_pt;
 	} else {
-	    e.i1 += start_pt; 
+	    e->i1 += start_pt; 
 	}
-	if (e.i2 < 0) {
+	if (e->i2 < 0) {
 	    flag=1;
-	    e.i2 = -2 - e.i2 + next_start_pt;
+	    e->i2 = -2 - e->i2 + next_start_pt;
 	} else {
-	    e.i2 += start_pt;
+	    e->i2 += start_pt;
 	}
-	if (e.i3 < 0) {
+	if (e->i3 < 0) {
 	    flag=1;
-	    e.i3 = -2 - e.i3 + next_start_pt;
+	    e->i3 = -2 - e->i3 + next_start_pt;
 	} else {
-	    e.i3 += start_pt;
+	    e->i3 += start_pt;
 	}
-	composite_surf->faces_[i+start_elem] = e;
+	composite_surf->elements[i+start_elem]=e;
 	if (flag) {	// need to add this boundary GeomTri
-	    all_tris[proc]->add(composite_surf->points_[e.i1],
-				composite_surf->points_[e.i2],
-				composite_surf->points_[e.i3]);
+	    all_tris[proc]->add(composite_surf->points[e->i1],
+				composite_surf->points[e->i2],
+				composite_surf->points[e->i3]);
 	}	
     }
     myLace.stop();
@@ -1716,8 +1716,8 @@ void IsoSurfaceDW::iso_reg_grid_rings()
     cerr << "TOTAL: "<<outerExtract.time()+lace.time()<<"\n";
 
     if (emit) {
-	int total_pts=composite_surf->points_.size();
-	int total_tris=composite_surf->faces_.size();
+	int total_pts=composite_surf->points.size();
+	int total_tris=composite_surf->elements.size();
 	if ((total_pts-2)*2 != total_tris) {
 	    cerr << "NOT A SINGLE SURFACE --  # pts: "<<total_pts<<"   # tris: "<<total_tris<<"\n";
 	} else {

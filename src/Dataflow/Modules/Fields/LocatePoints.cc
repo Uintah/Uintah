@@ -1,6 +1,6 @@
 
 /*
- *  MeshFindSurfNodes.cc:  Rescale a surface
+ *  LocatePoints.cc:  Rescale a surface
  *
  *  Written by:
  *   David Weinstein
@@ -11,7 +11,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Ports/ColumnMatrixPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/MeshPort.h>
 #include <Dataflow/Ports/SurfacePort.h>
@@ -26,7 +25,7 @@ using std::cerr;
 namespace SCIRun {
 
 
-class MeshFindSurfNodes : public Module {
+class LocatePoints : public Module {
     MeshIPort* imesh;
     SurfaceIPort* isurf;
     MatrixOPort* omat;
@@ -34,18 +33,18 @@ class MeshFindSurfNodes : public Module {
     int meshGen;
     int surfGen;
 public:
-    MeshFindSurfNodes(const clString& id);
-    virtual ~MeshFindSurfNodes();
+    LocatePoints(const clString& id);
+    virtual ~LocatePoints();
     virtual void execute();
 };
 
-extern "C" Module* make_MeshFindSurfNodes(const clString& id)
+extern "C" Module* make_LocatePoints(const clString& id)
 {
-    return new MeshFindSurfNodes(id);
+    return new LocatePoints(id);
 }
 
-MeshFindSurfNodes::MeshFindSurfNodes(const clString& id)
-: Module("MeshFindSurfNodes", id, Filter)
+LocatePoints::LocatePoints(const clString& id)
+: Module("LocatePoints", id, Filter)
 {
     imesh=scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
     add_iport(imesh);
@@ -58,7 +57,7 @@ MeshFindSurfNodes::MeshFindSurfNodes(const clString& id)
     surfGen=-1;
 }
 
-MeshFindSurfNodes::~MeshFindSurfNodes()
+LocatePoints::~LocatePoints()
 {
 }
 
@@ -76,7 +75,7 @@ void sortpts(double *dist, int *idx) {
   }
 }
 
-void MeshFindSurfNodes::execute()
+void LocatePoints::execute()
 {
     MeshHandle meshH;
     if(!imesh->get(meshH))

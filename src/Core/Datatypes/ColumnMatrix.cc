@@ -19,6 +19,7 @@
 #include <Core/Math/LinAlg.h>
 #include <iostream>
 using std::endl;
+using std::cerr;
 
 namespace SCIRun {
 
@@ -30,7 +31,7 @@ static Persistent* maker()
 PersistentTypeID ColumnMatrix::type_id("ColumnMatrix", "Datatype", maker);
 
 ColumnMatrix::ColumnMatrix(int rows)
-: rows(rows)
+  : rows(rows), Matrix(Matrix::non_symmetric, Matrix::column)
 {
     if(rows)
 	data=scinew double[rows];
@@ -39,7 +40,7 @@ ColumnMatrix::ColumnMatrix(int rows)
 }
 
 ColumnMatrix::ColumnMatrix(const ColumnMatrix& c)
-: rows(c.rows)
+: rows(c.rows), Matrix(Matrix::non_symmetric, Matrix::column)
 {
     if(rows){
 	data=scinew double[rows];
@@ -50,8 +51,7 @@ ColumnMatrix::ColumnMatrix(const ColumnMatrix& c)
     }
 }
 
-ColumnMatrix* ColumnMatrix::clone() const
-{
+ColumnMatrix* ColumnMatrix::clone() {
     return scinew ColumnMatrix(*this);
 }
 
@@ -130,19 +130,109 @@ void ColumnMatrix::print(std::ostream& str)
     }
 }
 
-#define COLUMNMATRIX_VERSION 1
+void ColumnMatrix::print() {
+  print(cerr);
+}
+
+double& ColumnMatrix::get(int r, int c)
+{
+    ASSERTRANGE(r, 0, rows);
+    ASSERTEQ(c, 0);
+    return data[r];
+}
+
+double& ColumnMatrix::get(int r)
+{
+    ASSERTRANGE(r, 0, rows);
+    return data[r];
+}
+
+void ColumnMatrix::put(int r, int c, const double& d)
+{
+    ASSERTRANGE(r, 0, rows);
+    ASSERTEQ(c, 0);
+    data[r]=d;
+}
+
+void ColumnMatrix::put(int r, const double& d)
+{
+    ASSERTRANGE(r, 0, rows);
+    data[r]=d;
+}
+
+int ColumnMatrix::ncols() const
+{
+    return 1;
+}
+
+double ColumnMatrix::sumOfCol(int c) {
+  ASSERTEQ(c, 0);
+  double sum = 0;
+  for (int i=0; i<rows; i++)
+    sum+=data[i];
+  return sum;
+}
+
+double ColumnMatrix::minValue() {
+  double minVal=data[0];
+  for (int r=0; r<rows; r++)
+    if (data[r] < minVal)
+      minVal = data[r];
+  return minVal;
+}
+
+double ColumnMatrix::maxValue() {
+  double maxVal=data[0];
+  for (int r=0; r<rows; r++)
+    if (data[r] > maxVal)
+      maxVal = data[r];
+  return maxVal;
+}
+
+void ColumnMatrix::getRowNonzeros(int r, Array1<int>& idx, 
+				  Array1<double>& val) { 
+  idx.resize(1);
+  val.resize(1);
+  idx[0]=0;
+  val[0]=data[r];
+}
+
+int ColumnMatrix::solve(ColumnMatrix&) { 
+  ASSERTFAIL("Error - called solve on a columnmatrix.\n");
+}
+
+int ColumnMatrix::solve(vector<double>&) { 
+  ASSERTFAIL("Error - called solve on a columnmatrix.\n");
+}
+
+void ColumnMatrix::mult(const ColumnMatrix&, ColumnMatrix&,
+			int& , int& , int , int , int) const {
+  ASSERTFAIL("Error - called mult on a columnmatrix.\n");
+}
+
+void ColumnMatrix::mult_transpose(const ColumnMatrix&, ColumnMatrix&,
+				  int&, int&, int, int, int) {
+  ASSERTFAIL("Error - called mult_transpose on a columnmatrix.\n");
+}
+
+#define COLUMNMATRIX_VERSION 2
 
 void ColumnMatrix::io(Piostream& stream)
 {
-    stream.begin_class("ColumnMatrix", COLUMNMATRIX_VERSION);
+    int version=stream.begin_class("ColumnMatrix", COLUMNMATRIX_VERSION);
+    
+    if (version > 1) {
+      // New version inherits from Matrix
+      Matrix::io(stream);
+    }
 
     stream.io(rows);
     if(stream.reading()){
-	data=scinew double[rows];
+      data=scinew double[rows];
     }
     int i;
     for(i=0;i<rows;i++)
-	stream.io(data[i]);
+      stream.io(data[i]);
     stream.end_class();
 }
 

@@ -14,25 +14,12 @@ SRCDIR   := Dataflow/Modules/DataIO
 SRCS     += \
 	$(SRCDIR)/ColorMapReader.cc\
 	$(SRCDIR)/ColorMapWriter.cc\
-	$(SRCDIR)/ColumnMatrixReader.cc\
-	$(SRCDIR)/ColumnMatrixWriter.cc\
 	$(SRCDIR)/FieldReader.cc\
 	$(SRCDIR)/FieldWriter.cc\
-	$(SRCDIR)/GeomReader.cc\
-	$(SRCDIR)/GeomWriter.cc\
-	$(SRCDIR)/ImageReader.cc\
 	$(SRCDIR)/MatrixReader.cc\
 	$(SRCDIR)/MatrixWriter.cc\
-	$(SRCDIR)/MeshReader.cc\
-	$(SRCDIR)/MeshWriter.cc\
 	$(SRCDIR)/PathReader.cc\
 	$(SRCDIR)/PathWriter.cc\
-	$(SRCDIR)/ScalarFieldReader.cc\
-	$(SRCDIR)/ScalarFieldWriter.cc\
-	$(SRCDIR)/SurfaceReader.cc\
-	$(SRCDIR)/SurfaceWriter.cc\
-	$(SRCDIR)/VectorFieldReader.cc\
-	$(SRCDIR)/VectorFieldWriter.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Core/Persistent \

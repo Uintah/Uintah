@@ -42,14 +42,33 @@ public:
   friend SCICORESHARE inline double Dot(const Vector&, const Point&);
   inline Vector& operator=(const Vector&);
 
+  /* !!!
+  () index from 0
+  [] index from 1
+  !!! */
+
+  //Note vector(0)=vector.x();vector(1)=vector.x();vector(2)=vector.z()
   inline double& operator()(int idx) {
     // Ugly, but works
     return (&_x)[idx];
   }
 
+  //Note vector(0)=vector.x();vector(1)=vector.x();vector(2)=vector.z()
   inline double operator()(int idx) const {
     // Ugly, but works
     return (&_x)[idx];
+  }
+
+  //Note vector[1]=vector.x();vector[2]=vector.y();vector[3]=vector.z()
+  inline double& operator[](int idx) {
+    // Ugly, but works
+    return (&_x)[idx-1];
+  }
+
+  //Note vector[1]=vector.x();vector[2]=vector.y();vector[3]=vector.z()
+  inline double operator[](int idx) const {
+    // Ugly, but works
+    return (&_x)[idx-1];
   }
 
   // checks if one vector is exactly the same as another

@@ -21,6 +21,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <Core/Datatypes/BasicSurfaces.h>
 #include <Core/Datatypes/ColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
@@ -30,6 +31,7 @@
 #include <Dataflow/Ports/SurfacePort.h>
 #include <Core/Datatypes/ScalarField.h>
 #include <Core/Datatypes/TriSurface.h>
+//#include <Dataflow/Datatypes/ScalarTriSurface.h>
 #include <Core/Geom/GeomArrows.h>
 #include <Core/Geom/GeomCylinder.h>
 #include <Core/Geom/Color.h>

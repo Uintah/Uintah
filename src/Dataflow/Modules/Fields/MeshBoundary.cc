@@ -93,7 +93,7 @@ void MeshBoundary::execute()
 	if (bdryNodes[i]) {
 	    nodeMap[i] = count;
 	    count++;
-	    ts->points_.add(mesh->point(i));
+	    ts->points.add(mesh->point(i));
 	}
     }
     for (i=0; i<mesh->elemsize(); i++) {
@@ -107,7 +107,7 @@ void MeshBoundary::execute()
 		    if (n1 == -1 || n2 == -1 || n3 == -1) {
 			cerr << "ERROR in MeshBoundary!\n";
 		    }
-		    ts->faces_.add(TSElement(n1,n2,n3));
+		    ts->elements.add(new TSElement(n1,n2,n3));
 		}
 	    }
 	}

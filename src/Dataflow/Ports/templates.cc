@@ -16,7 +16,6 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 #include <Core/Datatypes/ScalarField.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/ColorMap.h>
-#include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/VectorField.h>
 #include <Core/Datatypes/Mesh.h>
 
@@ -33,9 +32,6 @@ template class SimpleOPort<MatrixHandle>;
 
 template class SimpleIPort<ColorMapHandle>;
 template class SimpleOPort<ColorMapHandle>;
-
-template class SimpleIPort<ColumnMatrixHandle>;
-template class SimpleOPort<ColumnMatrixHandle>;
 
 template class SimpleIPort<VectorFieldHandle>;
 template class SimpleOPort<VectorFieldHandle>;
