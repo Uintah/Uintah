@@ -35,6 +35,7 @@ using std::endl;
 #include <sstream>
 using std::ostringstream;
 
+//#include <typeinfo>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
@@ -47,6 +48,7 @@ using std::ostringstream;
 #include <Core/Algorithms/Visualization/HexMC.h>
 #include <Core/Algorithms/Visualization/MarchingCubes.h>
 #include <Core/Algorithms/Visualization/Noise.h>
+#include <Core/Algorithms/Visualization/Sage.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
@@ -107,6 +109,7 @@ class Isosurface : public Module {
 
   MarchingCubesAlg *mc_alg;
   NoiseAlg *noise_alg;
+  SageAlg *sage_alg;
   Loader loader;
   Loader minmax_loader;
 
@@ -140,8 +143,8 @@ Isosurface::Isosurface(const clString& id)
     // Create the input ports
   infield=scinew FieldIPort(this, "Field", FieldIPort::Atomic);
   add_iport(infield);
-  incolorfield=scinew FieldIPort(this, "Color Field", FieldIPort::Atomic);
-  add_iport(incolorfield);
+//   incolorfield=scinew FieldIPort(this, "Color Field", FieldIPort::Atomic);
+//   add_iport(incolorfield);
   inColorMap=scinew ColorMapIPort(this, "Color Map", ColorMapIPort::Atomic);
   add_iport(inColorMap);
   
@@ -160,6 +163,7 @@ Isosurface::Isosurface(const clString& id)
   last_generation = -1;
   mc_alg = 0;
   noise_alg = 0;
+  sage_alg = 0;
   init = true;
 }
 
@@ -195,7 +199,7 @@ void Isosurface::execute()
   }
 
   // Color the surface
-  have_colorfield=incolorfield->get(colorfield);
+//   have_colorfield=incolorfield->get(colorfield);
   have_ColorMap=inColorMap->get(cmap);
   
   iso_value = gui_iso_value.get();
@@ -204,14 +208,13 @@ void Isosurface::execute()
     // for now, use a trivial MC
     if ( !mc_alg ) {
       string type = string("MC::") + field->get_type_name();
-      cerr << "look for alg = " << type << endl;
       if ( !loader.get( type, mc_alg ) ) {
 	error( "can not work with this field\n");
 	return;
       }
-      mc_alg->set_field( field.get_rep() );
     }
     // mc_alg should be set now
+    mc_alg->set_field( field.get_rep() );
     surface = mc_alg->search( iso_value );
 
     break;
@@ -229,8 +232,21 @@ void Isosurface::execute()
     surface = noise_alg->search( iso_value );
     break;
   case 2:  // View Dependent
-    error("View dependent not implemented\n");
-    surface = 0;
+    if ( !sage_alg ) {
+      string type = string("Sage::") + field->get_type_name();
+      cerr <<"look for alg = " << type << endl;
+      if ( !loader.get( type, sage_alg ) ) {
+	error( "SAGE can not work with this field\n");
+	return;
+      }
+      sage_alg->set_field( field.get_rep() );
+    }
+    {
+      GeomGroup *group = new GeomGroup;
+      GeomPts *points = new GeomPts(1000);
+      sage_alg->search( iso_value, group, points );
+      surface = group;
+    }
     break;
   default: // Error
     error("Unknow Algorithm requested\n");
@@ -257,11 +273,11 @@ Isosurface::send_results()
 
   GeomObj *geom;
   
-  if(have_ColorMap && !have_colorfield){
+  if(have_ColorMap /* && !have_colorfield */){
     // Paint entire surface based on ColorMap
     geom=scinew GeomMaterial( surface , cmap->lookup(iso_value) );
-  } else if(have_ColorMap && have_colorfield){
-    geom = surface;     // Nothing - done per vertex
+//   } else if(have_ColorMap && have_colorfield){
+//     geom = surface;     // Nothing - done per vertex
   } else {
     geom=scinew GeomMaterial( surface, matl); // Default material
   }
@@ -276,32 +292,12 @@ Isosurface::send_results()
 //   }
 }
 
-void
-Isosurface::initialize()
-{
-  minmax_loader.store("TetVol<double>", new Minmax<TetVol<double> > );
-  loader.store("MC::TetVol<double>", 
-	       new MarchingCubes<Module,TetMC<TetVol<double> > >(this) );
-  loader.store("Noise::TetVol<double>", 
-	       new Noise<Module,TetMC<TetVol<double> > >(this) );
-
-  minmax_loader.store("LatticeVol<double>", new Minmax<LatticeVol<double> > );
-  loader.store("MC::LatticeVol<double>", 
-	       new MarchingCubes<Module,HexMC<LatticeVol<double> > >(this) );
-  loader.store("Noise::LatticeVol<double>", 
-	       new Noise<Module,HexMC<LatticeVol<double> > >(this) );
-
-  
-//   widget_id = ogeom->addObj(widget->GetWidget(), widget_name, &widget_lock);
-//   widget->Connect(ogeom);
-}
 
 
 void
 Isosurface::new_field( FieldHandle &field )
 {
   string type = field->get_type_name();
-  cerr << "field type = " << type << endl;
 
   if ( !field->is_scalar() ) {
     cerr << "Isosurface: not a scalar field\n";
@@ -339,7 +335,87 @@ Isosurface::new_field( FieldHandle &field )
   // delete any algorithms created for the previous field.
   if ( mc_alg ) { mc_alg->release(); mc_alg = 0;}
   if ( noise_alg ) { noise_alg->release(); noise_alg = 0;}
+  if ( sage_alg ) { sage_alg->release(); sage_alg = 0;}
 }
 
+void
+Isosurface::initialize()
+{
+  // min max
+  minmax_loader.store("TetVol<char>",   new Minmax<TetVol<char> > );
+  minmax_loader.store("TetVol<short>",  new Minmax<TetVol<short> > );
+  minmax_loader.store("TetVol<int>",    new Minmax<TetVol<int> > );
+  minmax_loader.store("TetVol<float>",  new Minmax<TetVol<float> > );
+  minmax_loader.store("TetVol<double>", new Minmax<TetVol<double> > );
+
+  minmax_loader.store("LatticeVol<char>",   new Minmax<LatticeVol<char> > );
+  minmax_loader.store("LatticeVol<short>",  new Minmax<LatticeVol<short> > );
+  minmax_loader.store("LatticeVol<int>",    new Minmax<LatticeVol<int> > );
+  minmax_loader.store("LatticeVol<float>",  new Minmax<LatticeVol<float> > );
+  minmax_loader.store("LatticeVol<double>", new Minmax<LatticeVol<double> > );
+
+
+  // MC::TetVol
+  loader.store("MC::TetVol<char>", 
+	       new MarchingCubes<Module,TetMC<TetVol<char> > >(this) );
+  loader.store("MC::TetVol<short>", 
+	       new MarchingCubes<Module,TetMC<TetVol<short> > >(this) );
+  loader.store("MC::TetVol<int>", 
+	       new MarchingCubes<Module,TetMC<TetVol<int> > >(this) );
+  loader.store("MC::TetVol<float>", 
+	       new MarchingCubes<Module,TetMC<TetVol<float> > >(this) );
+  loader.store("MC::TetVol<double>", 
+	       new MarchingCubes<Module,TetMC<TetVol<double> > >(this) );
+
+  // Noise::TetVol
+  loader.store("Noise::TetVol<char>", 
+	       new Noise<Module,TetMC<TetVol<char> > >(this) );
+  loader.store("Noise::TetVol<short>", 
+	       new Noise<Module,TetMC<TetVol<short> > >(this) );
+  loader.store("Noise::TetVol<int>", 
+	       new Noise<Module,TetMC<TetVol<int> > >(this) );
+  loader.store("Noise::TetVol<float>", 
+	       new Noise<Module,TetMC<TetVol<float> > >(this) );
+  loader.store("Noise::TetVol<double>", 
+	       new Noise<Module,TetMC<TetVol<double> > >(this) );
+
+
+  // MC:LatticeVol
+
+  loader.store("MC::LatticeVol<char>", 
+	       new MarchingCubes<Module,HexMC<LatticeVol<char> > >(this) );
+  loader.store("MC::LatticeVol<short>", 
+	       new MarchingCubes<Module,HexMC<LatticeVol<short> > >(this) );
+  loader.store("MC::LatticeVol<int>", 
+	       new MarchingCubes<Module,HexMC<LatticeVol<int> > >(this) );
+  loader.store("MC::LatticeVol<float>", 
+	       new MarchingCubes<Module,HexMC<LatticeVol<float> > >(this) );
+  loader.store("MC::LatticeVol<double>", 
+	       new MarchingCubes<Module,HexMC<LatticeVol<double> > >(this) );
+
+  // Noise::LatticeVol
+  loader.store("Noise::LatticeVol<char>", 
+	       new Noise<Module,HexMC<LatticeVol<char> > >(this) );
+  loader.store("Noise::LatticeVol<short>", 
+	       new Noise<Module,HexMC<LatticeVol<short> > >(this) );
+  loader.store("Noise::LatticeVol<int>", 
+	       new Noise<Module,HexMC<LatticeVol<int> > >(this) );
+  loader.store("Noise::LatticeVol<float>", 
+	       new Noise<Module,HexMC<LatticeVol<float> > >(this) );
+  loader.store("Noise::LatticeVol<double>", 
+	       new Noise<Module,HexMC<LatticeVol<double> > >(this) );
+
+  // Sage::LatticeVol
+  loader.store("Sage::LatticeVol<char>", 
+	       new Sage<Module,LatticeVol<char> >(this) );
+  loader.store("Sage::LatticeVol<short>", 
+	       new Sage<Module,LatticeVol<short> >(this) );
+  loader.store("Sage::LatticeVol<int>", 
+	       new Sage<Module,LatticeVol<int> >(this) );
+  loader.store("Sage::LatticeVol<float>", 
+	       new Sage<Module,LatticeVol<float> >(this) );
+  loader.store("Sage::LatticeVol<double>", 
+	       new Sage<Module,LatticeVol<double> >(this) );
+}
 
 } // End namespace SCIRun
