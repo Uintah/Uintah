@@ -39,7 +39,7 @@ namespace SCIRun {
 class GraphHelper;
 
 class Graph : public DrawGui {
-  friend GraphHelper;
+  friend class SCIRun::GraphHelper;
 private:
   DrawGui *obj_;
   GraphHelper *helper_;
