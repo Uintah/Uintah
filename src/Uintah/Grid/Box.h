@@ -42,6 +42,12 @@ namespace Uintah {
       ~Box();
       Box(const Box&);
       Box& operator=(const Box&);
+
+      inline void set( int lx, int ly, int lz,
+		       int ux, int uy, int uz ) {
+	d_lower.x( lx ); d_lower.y( ly ); d_lower.z( lz );
+	d_upper.x( ux ); d_upper.y( uy ); d_upper.z( uz );
+      }
      
       Box(const Point& lower, const Point& upper);
 
@@ -77,6 +83,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Box& b);
 
 //
 // $Log$
+// Revision 1.6  2000/05/28 17:25:05  dav
+// adding mpi stuff
+//
 // Revision 1.5  2000/05/10 20:02:59  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

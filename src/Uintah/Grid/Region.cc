@@ -2,15 +2,16 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Grid/Region.h>
-#include <SCICore/Math/MiscMath.h>
 #include <Uintah/Exceptions/InvalidGrid.h>
-#include <SCICore/Exceptions/InternalError.h>
 #include <Uintah/Grid/CellIterator.h>
 #include <Uintah/Grid/NodeIterator.h>
 #include <Uintah/Grid/NodeSubIterator.h>
 #include <Uintah/Grid/SubRegion.h>
 #include <Uintah/Math/Primes.h>
+
+#include <SCICore/Exceptions/InternalError.h>
 #include <SCICore/Thread/AtomicCounter.h>
+
 #include <values.h>
 #include <iostream>
 
@@ -25,14 +26,20 @@ Region::Region(const Point& lower, const Point& upper,
 	       const IntVector& lowIndex, const IntVector& highIndex,
 	       int id)
     : d_box(lower, upper), d_lowIndex(lowIndex), d_highIndex(highIndex),
-      d_id(id)
+      d_id( id )
 {
    d_res = highIndex - lowIndex;
+
    if(d_id == -1)
       d_id = ids++;
+
    for(int i=0;i<27;i++)
-      neighbors[i]=0;
-   neighbors[1*9+1*3+1]=this;
+      d_neighbors[i]=0;
+   d_neighbors[1*9+1*3+1]=this;
+
+   int gc = 2; // Number of ghostcells for this region...
+
+   determineGhostRegions( gc );
 }
 
 Region::~Region()
@@ -276,7 +283,7 @@ const Region* Region::getNeighbor(const IntVector& n) const
    int iy=n.y()+1;
    int iz=n.z()+1;
    int idx = ix*9+iy*3+iz;
-   return neighbors[idx];
+   return d_neighbors[idx];
 }
 
 IntVector Region::getNodeHighIndex() const
@@ -300,12 +307,59 @@ void Region::setNeighbor(const IntVector& n, const Region* neighbor)
    int iz=n.z()+1;
    int idx = ix*9+iy*3+iz;
    cerr << "Region " << getID() << " neighbor " << n << " is now " << neighbor->getID() << '\n';
-   neighbors[idx]=neighbor;
+   d_neighbors[idx]=neighbor;
+}
+
+void
+Region::determineGhostRegions( int numGhostCells )
+{
+   int gc = numGhostCells;
+
+   // Determine the coordinates of all the sub-ghostRegions around
+   // this region.
+
+   int minX = Min( d_box.lower().x(), d_box.upper().x() );
+   int minY = Min( d_box.lower().y(), d_box.upper().y() );
+   int minZ = Min( d_box.lower().z(), d_box.upper().z() );
+
+   int maxX = Max( d_box.lower().x(), d_box.upper().x() );
+   int maxY = Max( d_box.lower().y(), d_box.upper().y() );
+   int maxZ = Max( d_box.lower().z(), d_box.upper().z() );
+
+   d_top.set( minX, minY, maxZ, maxX, maxY, maxZ + gc );
+   d_topRight.set( maxX, minY, maxZ, maxX + gc, maxY, maxZ + gc );
+   d_topLeft.set( minX - gc, minY, maxZ ,minX, maxY, maxZ + gc );
+   d_topBack.set( minX, maxY, maxZ ,maxX, maxY + gc, maxZ + gc );
+   d_topFront.set( minX, minY - gc, maxZ , maxX, minY, maxZ + gc );
+   d_topRightBack.set( maxX, maxY, maxZ, maxX + gc, maxY + gc, maxZ + gc );
+   d_topRightFront.set( maxX, minY, maxZ, maxX + gc, minY - gc, maxZ + gc );
+   d_topLeftBack.set( minX, maxY, maxZ, minX - gc, maxY + gc, maxZ + gc );
+   d_topLeftFront.set( minX - gc, minY - gc, maxX, minX, minY, maxZ + gc );
+   d_bottom.set( minX, minY, minZ - gc, maxX, maxY, minZ );
+   d_bottomRight.set( maxX, minY, minZ - gc, maxX + gc, maxY, minZ );
+   d_bottomLeft.set( minX - gc, minY, minZ - gc, minX, maxY, minZ );
+   d_bottomBack.set( minX, maxY, minZ - gc, maxX, maxY + gc, minZ );
+   d_bottomFront.set( minX, minY - gc, minZ - gc, maxX, minY, minZ );
+   d_bottomRightBack.set( maxX, maxY, minZ, maxX + gc, maxY + gc, minZ - gc );
+   d_bottomRightFront.set( maxX, minY, minZ, maxX + gc, minY - gc, minZ - gc );
+   d_bottomLeftBack .set( minX, maxY, minZ, minX - gc, maxY + gc, minZ - gc );
+   d_bottomLeftFront.set( minX, minY, minZ, minX - gc, minY - gc, minZ - gc );
+   d_right.set( maxX, minY, minZ, maxX + gc, maxY, maxZ );
+   d_left.set( minX, minY, minZ, minX - gc, maxY, maxZ );
+   d_back.set( minX, maxY, minZ, maxX, maxY + gc, maxZ );
+   d_front.set( minX, minY, minZ, maxX, minY - gc, maxZ );
+   d_rightBack.set( maxX, maxY, minZ, maxX + gc, maxY + gc, maxZ );
+   d_rightFront.set( maxX, minY, minZ, maxX + gc, maxY, minZ - gc );
+   d_leftBack.set( minX, maxY, minZ, minX - gc, maxY - gc, maxZ );
+   d_leftFront.set( minX, minY, minZ, minX - gc, minY - gc, maxZ );
 }
       
 
 //
 // $Log$
+// Revision 1.20  2000/05/28 17:25:06  dav
+// adding mpi stuff
+//
 // Revision 1.19  2000/05/20 08:09:26  sparker
 // Improved TypeDescription
 // Finished I/O
