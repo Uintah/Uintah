@@ -44,17 +44,24 @@ class LoadBalancer;
   WARNING
       
 ****************************************/
-    
+
+   //! The main component that controls the execution of the 
+   //! entire simulation.
    class SimulationController : public UintahParallelComponent {
    public:
       SimulationController(const ProcessorGroup* myworld);
       virtual ~SimulationController();
 
+      //! Notifies (before calling run) the SimulationController
+      //! that this is simulation is a restart.
       virtual void doRestart(std::string restartFromDir, int timestep,
 		     bool fromScratch, bool removeOldDir) = 0;
+
+      //! Execute the simulation
       virtual void run() = 0;
 
-      // default just gives an error
+      // notifies (before calling run) the simulationController
+      //! that this run is a combinePatches run.
       virtual void doCombinePatches(std::string fromDir);
      
       // for calculating memory usage when sci-malloc is disabled.
@@ -62,11 +69,12 @@ class LoadBalancer;
 
    protected:
 
-      double getWallTime   ( void );
-      void   calcWallTime  ( void );
+      double getWallTime     ( void );
+      void   calcWallTime    ( void );
 
-      double getStartTime  ( void );
-      void   calcStartTime ( void );
+      double getStartTime    ( void );
+      void   calcStartTime   ( void );
+      void   setStartSimTime ( double t );
 
       void initSimulationStatsVars ( void );
       void printSimulationStats    ( Uintah::SimulationStateP sharedState, double delt, double time );
@@ -74,8 +82,9 @@ class LoadBalancer;
    private:
 
       int    d_n;
-      double d_wallTime;
-      double d_startTime;
+      double d_wallTime;              // current wall time
+      double d_startTime;             // starting wall time
+      double d_startSimTime;          // starting sim time
       double d_prevWallTime;
       double d_sumOfWallTimes;
       double d_sumOfWallTimeSquares;
