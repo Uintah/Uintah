@@ -105,85 +105,111 @@ proc updateSubnetName { subnet name1 name2 op } {
     }
 }
 
-proc setSubnetName { subnet name } {
-    global Subnet
-    set Subnet(Subnet${subnet}_Name) $name 
-    return 1
-}
 
 proc makeSubnet { from_subnet x y { bbox "0 0 0 0" }} {
     global Subnet mainCanvasHeight mainCanvasWidth Color
+
+    # Setup default Subnet Variables
     incr Subnet(num)
     set Subnet(Subnet$Subnet(num))		$Subnet(num)
     set Subnet(Subnet$Subnet(num)_Name)		"Sub-Network \#$Subnet(num)"
     set Subnet(Subnet$Subnet(num)_Modules)	""
     set Subnet(Subnet$Subnet(num)_connections)	""
 
+    # Automatically update icon and window title when Subnet name changes
     trace variable Subnet(Subnet$Subnet(num)_Name) w \
 	"updateSubnetName $Subnet(num)"
 
     set w .subnet$Subnet(num)
-    if {[winfo exists $w]} { destroy $w }
+    
+    # TODO: probably should raise Subnet window
+    if {[winfo exists $w]} { puts here; wm deiconfiy $w; return }
 
+    # Create the Subnet window and hide it
     toplevel $w -width [getAdjWidth $bbox] -height [getAdjHeight $bbox] 
     wm withdraw $w
-    update idletasks
+
     wm title $w "$Subnet(Subnet$Subnet(num)_Name) Sub-Network Editor"
     wm protocol $w WM_DELETE_WINDOW "wm withdraw $w"
-    
-    frame $w.can -relief flat -borderwidth 0
-    frame $w.can.can -relief sunken -borderwidth 3
-    pack $w.can.can -fill both -expand yes -pady 8
+    update idletasks
 
-    set Subnet(Subnet$Subnet(num)_canvas) "$w.can.can.canvas"
-    set canvas $Subnet(Subnet$Subnet(num)_canvas)
+    # Make the Subnet Menu Bar
+    frame $w.main_menu -relief raised -borderwidth 3
 
-    canvas $canvas -bg $Color(SubnetEditor) \
-        -scrollregion "0 0 $mainCanvasWidth $mainCanvasHeight"
-    $canvas create rectangle -1 -1 $mainCanvasWidth $mainCanvasWidth \
-	-fill $Color(SubnetEditor) -tags "bgRect"
-    pack $canvas -expand yes -fill both
-    
+    # Make the File menu item
+    menubutton $w.main_menu.file -text "File" -underline 0 \
+	-menu $w.main_menu.file.menu
+    menu $w.main_menu.file.menu -tearoff false
+    $w.main_menu.file.menu add command -label "Save As Template..." \
+	-underline 0 -command "saveSubnet $Subnet(num)"
+    pack $w.main_menu.file -side left
+
+    # Make the Edit menu item
+    menubutton $w.main_menu.edit -text "Edit" -underline 0 \
+	-menu $w.main_menu.file.menu
+#    menu $w.main_menu.file.edit -tearoff false
+    pack $w.main_menu.edit -side left
+
+
+    # Make the Packages menu item
+    menubutton $w.main_menu.packages -text "Packages" -underline 0 \
+	-menu $w.main_menu.file.packages
+    menu $w.main_menu.file.packagesnew -tearoff false
+    pack $w.main_menu.packages -side left
+
+
+    # Make the Subnet Name Entry Field
     frame $w.fname -borderwidth 2
     label $w.fname.label -text "Name"
     entry $w.fname.entry -validate all -textvariable Subnet(Subnet$Subnet(num)_Name)
-    #	-validatecommand "setSubnetName $Subnet(num) \"%P\""
     pack $w.fname.label $w.fname.entry -side left -pady 5
 
-    frame $w.buttons -borderwidth 2
-    button $w.buttons.save -text "Save" -command "saveSubnet $Subnet(num)"
-    button $w.buttons.close -text "Close" -command "wm withdraw $w"
-    pack $w.buttons.save $w.buttons.close -side left -pady 5 -padx 20
-        
+    # Make the Subnet Canvas
+    frame $w.can -relief flat -borderwidth 0
+    frame $w.can.can -relief sunken -borderwidth 3
+    pack $w.can.can -fill both -expand yes -pady 8
+    set Subnet(Subnet$Subnet(num)_canvas) "$w.can.can.canvas"
+    set canvas $Subnet(Subnet$Subnet(num)_canvas)
+    canvas $canvas -bg $Color(SubnetEditor) \
+        -scrollregion "0 0 $mainCanvasWidth $mainCanvasHeight"
+    pack $canvas -expand yes -fill both
+
+    # Create A BOGUS minicanvas for Subnet/Main Editor code compatibility
+    set Subnet(Subnet$Subnet(num)_minicanvas) $w.can.minicanvas
+    canvas $Subnet(Subnet$Subnet(num)_minicanvas)
+    
+    # Make the background square in the canvas to catch all mouse events
+    $canvas create rectangle 0 0 $mainCanvasWidth $mainCanvasWidth \
+	-fill $Color(SubnetEditor) -tags "bgRect"
+
+    # Create the Canvas Scrollbars
     scrollbar $w.hscroll -relief sunken -orient horizontal \
 	-command "$canvas xview"
     scrollbar $w.vscroll -relief sunken -command "$canvas yview" 
 
+    # Configure the Subnet Editor Canvas Scrollbars
     $canvas configure \
 	-yscrollcommand "drawSubnetConnections $Subnet(num);$w.vscroll set" \
 	-xscrollcommand "drawSubnetConnections $Subnet(num);$w.hscroll set"
-    grid $w.can $w.hscroll $w.vscroll $w.fname $w.buttons
-	
+
+
+    # Create Grid Layout for all Items in Subnet Editor Window
+    grid $w.can $w.hscroll $w.vscroll $w.fname	
     grid columnconfigure $w 0 -weight 1
     grid rowconfigure    $w 0 -weight 0 
-    grid rowconfigure    $w 1 -weight 1 
-    grid rowconfigure    $w 2 -weight 0
+    grid rowconfigure    $w 0 -weight 0
+    grid rowconfigure    $w 2 -weight 1
     grid rowconfigure    $w 3 -weight 0
-
-    grid config $w.fname -column 0 -row 0 \
-	    -columnspan 1 -rowspan 1 -sticky "snew" 
-    grid config $w.can -column 0 -row 1 \
-	    -columnspan 1 -rowspan 1 -sticky "snew" 
-    grid config $w.hscroll -column 0 -row 2 \
-	    -columnspan 1 -rowspan 1 -sticky "ew" -pady 2
-    grid config $w.vscroll -column 1 -row 1 \
-	    -columnspan 1 -rowspan 1 -sticky "sn" -padx 2
-    grid config $w.buttons -column 0 -row 3 \
-	    -columnspan 2 -rowspan 1 -sticky "sn" -padx 2
-
-
-    set Subnet(Subnet$Subnet(num)_minicanvas) $w.can.minicanvas
-    canvas $Subnet(Subnet$Subnet(num)_minicanvas)
+    grid config $w.main_menu -column 0 -row 0 \
+	    -columnspan 2 -rowspan 1 -sticky nwe
+    grid config $w.fname -column 0 -row 1 \
+	    -columnspan 1 -rowspan 1 -sticky news
+    grid config $w.can -column 0 -row 2 \
+	    -columnspan 1 -rowspan 1 -sticky news 
+    grid config $w.hscroll -column 0 -row 3 \
+	    -columnspan 1 -rowspan 1 -sticky ew -pady 2
+    grid config $w.vscroll -column 1 -row 2 \
+	    -columnspan 1 -rowspan 1 -sticky sn -padx 2
 
     # Create the icon for the new Subnet on the old canvas
     set Subnet(SubnetIcon$Subnet(num)) $from_subnet
@@ -200,9 +226,11 @@ proc makeSubnet { from_subnet x y { bbox "0 0 0 0" }} {
     $canvas bind bgRect <Control-Button-1> "startBox $canvas %X %Y 1"
     $canvas bind bgRect <B1-Motion> "makeBox $canvas %X %Y"
     $canvas bind bgRect <ButtonRelease-1> "$canvas delete tempbox"
+
     # SubCanvas up-down bound to mouse scroll wheel
     bind $w <ButtonPress-5>  "canvasScroll $canvas 0.0 0.01"
     bind $w <ButtonPress-4>  "canvasScroll $canvas 0.0 -0.01"
+
     # Canvas movement on arrow keys press
     bind $w <KeyPress-Down>  "canvasScroll $canvas 0.0 0.01"
     bind $w <KeyPress-Up>    "canvasScroll $canvas 0.0 -0.01"
@@ -211,12 +239,10 @@ proc makeSubnet { from_subnet x y { bbox "0 0 0 0" }} {
     bind $canvas <Configure> "drawSubnetConnections $Subnet(num)"
 
     bind all <Control-d> "moduleDestroySelected"
-    # Clear the canvas
     bind all <Control-l> "ClearCanvas 1 $Subnet(num)"
     bind all <Control-z> "undo"
     bind all <Control-a> "selectAll $Subnet(num)"
     bind all <Control-y> "redo"
-
     return $Subnet(num)
 }
 
@@ -503,26 +529,15 @@ proc loadSubnet { filename { x 0 } { y 0 } } {
 }
 
 
-proc saveSubnet { subnet } {
-    global Subnet SCIRUN_SRCDIR
-    set name [join [split $Subnet(Subnet${subnet}_Name) "/"] ""].net
-    set dir [file join $SCIRUN_SRCDIR Subnets]
-    catch "file mkdir $dir"
-    if ![validDir $dir] {
-	set home [file nativename ~]
-	set dir [file join $home SCIRun Subnets]
-	catch "file mkdir $dir"
+proc writeSubnets { filename { subnet 0 } } {
+    global Subnet
+    set Subnet(Subnet${subnet}_instance) [join $Subnet(Subnet${subnet}_Name) ""]
+    foreach module $Subnet(Subnet${subnet}_Modules) {
+	if [isaSubnetIcon $module] {
+	    writeSubnets $filename $Subnet(${module}_num)
+	}
     }
-    set name [file join $dir $name]
-    set Subnet(Subnet${subnet}_filename) $name
-    if ![file writable $dir] {
-	tk_messageBox -type ok -parent . -icon error -message \
-	    "Cannot save Sub-Network $Subnet(Subnet${subnet}_Name) with filename $name to $SCIRUN_SRCDIR/Subnets or $home/SCIRun/Subnets" 
-	return
-    }
-    netedit savenetwork $name $subnet
-    createModulesMenu $subnet
-    return $name
+    writeSubnet $filename $subnet
 }
 
 
@@ -532,97 +547,148 @@ proc modVarName { filename modid } {
     if [info exists modVar($token)] {return $modVar($token)} else { return "" }
 }
 
-proc writeSubnetModulesAndConnections { filename {subnet 0}} {
-    global Subnet SCIRUN_SRCDIR modVar Disabled Notes
-    set out [open $filename {WRONLY APPEND}]
 
-    puts $out "set bbox \{[subnet_bbox $subnet]\}"
-    puts -nonewline $out "set Name \{"
-    puts $out "$Subnet(Subnet${subnet}_Name)\}"
-    set i 0
+proc isaDefaultValue { var } {
+    set scope [string first :: $var]
+    if { $scope == 0 } { set var [string range $var 2 end] }
+    # Find string position where Module and Variable name are deliniated by -
+    set pos [string first - $var]
+    # Get the module instantiations name
+    set module [string range $var 0 [expr $pos-1]]
+    # Get the variables name
+    set varname [string range $var [expr $pos+1] end]
+    # Get where in the package hierarchy the module resides
+    set modulePath [list [netedit packageName $module] \
+			 [netedit categoryName $module] \
+			 [netedit moduleName $module]]
+    # Get the name of the TCL instance of the modules GUI
+    set classname [join $modulePath _]
+    if { ![llength [info commands $classname]] } { 
+	error "TCL Class not found while writing guiVar $var"	
+	return 0 
+    }
+    # If it doesn't already exist from a previous check...
+    set command ${classname}-DEFAULT
+    if { ![llength [info commands $command]] } {
+	# Then try and create a default TCL instance of that modules GUI
+	eval $classname $command
+    }
+    # If the default variable hasn't been created in TCL yet...
+    if { [llength [uplevel \#0 info vars $command-$varname]] != 1 } { 
+	# Assume the variable we're checknig is DEFAULT and return TRUE
+	return 1
+    }
+    # Get the variables at the global level
+    upvar \#0 $command-$varname tocheck_value $module-$varname default_value
+    # Compare strings values exactly, returns FALSE if there is any differnce
+    return [string equal $tocheck_value $default_value]
+}
+
+
+proc addSubnetInstanceAtPosition { name x y } {
+    global Subnet
+    set from $Subnet(Loading)    
+    set to [makeSubnet $from $x $y]
+    set Subnet(Loading) $to
+    instantiateSubnet$name
+    set Subnet(Loading) $from
+    return SubnetIcon$to
+}
+
+
+proc writeSubnet { filename subnet } {
+    global Subnet Disabled Notes
+    set out [open $filename {WRONLY APPEND}]
     set connections ""
-    set modVar($filename-Subnet${subnet}) "Subnet"
-    puts $out "\n\# Create the Modules"
+    set modVar(Subnet${subnet}) "Subnet"
+    
+    if $subnet {
+	set tab "   "
+	puts $out "proc instantiateSubnet$Subnet(Subnet${subnet}_instance) \{\} \{"
+    } else {
+	set tab ""
+    }
+    
+    puts $out "${tab}global Subnet"
+    puts $out "${tab}set Subnet(Subnet\$Subnet(Loading)_Name) \{$Subnet(Subnet${subnet}_Name)\}"
+    puts $out "${tab}set bbox \{[subnet_bbox $subnet]\}"
+    close $out
+
+    set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
+	set out [open $filename {WRONLY APPEND}]
+	set modVar($module) "\$m$i"
 	if { [isaSubnetIcon $module] } {
-	    set iconsubnet $Subnet(${module}_num)
-	    # this will always save subnets and set $Subnet(Subnet${iconsubnet}_filename)
-	    #[string length $Subnet(Subnet${iconsubnet}_filename)
-	    
-	    if ![string length [saveSubnet $iconsubnet]] {
-		#dont save this module if we cant save the subnet
-		continue
-	    }
-	    set modVar($filename-$module) "\$m$i"
-	    puts -nonewline $out "set m$i \[loadSubnet "
-	    set splitname [file split $Subnet(Subnet${iconsubnet}_filename)] 
-	    puts -nonewline $out "\"[lindex $splitname end]\" "
+	    puts $out "\n${tab}\# Instiantiate a SCIRun Sub-Network"
+	    set number $Subnet(${module}_num)
+	    puts -nonewline $out "${tab}set m$i \[addSubnetInstanceAtPosition $Subnet(Subnet${number}_instance) "
 	} else {
-	    set modVar($filename-$module) "\$m$i"
-	    puts -nonewline $out  "set m$i \[addModuleAtPosition "
-	    puts -nonewline $out  "\"[netedit packageName $module]\" "
-	    puts -nonewline $out  "\"[netedit categoryName $module]\" "
-	    puts -nonewline $out  "\"[netedit moduleName $module]\" "
+	    set modulePath [list [netedit packageName $module] \
+				 [netedit categoryName $module] \
+				 [netedit moduleName $module]]
+	    puts $out "\n${tab}\# Create a [join $modulePath ->] Module"
+	    puts -nonewline $out  "${tab}set m$i \[addModuleAtPosition "
+	    foreach elem $modulePath { puts -nonewline $out "\"${elem}\" " }
 	}
+	# Write the x,y position of the modules icon on the network graph
 	puts $out "[expr int([$module get_x])] [expr int([$module get_y])]\]"
+	# Cache all connections to a big list to write out later in the file
 	eval lappend connections $Subnet(${module}_connections)
-	incr i
-    }
-    puts $out "\n\# Set the Module Notes Dispaly Options"
-    foreach module $Subnet(Subnet${subnet}_Modules) {
-	if ![info exists modVar($filename-$module)] continue
-	if [info exists Notes($module-Color)] {
-	    puts $out "set Notes($modVar($filename-$module)-Color) \{$Notes($module-Color)\}"
-	}
+	# Write user notes 
 	if [info exists Notes($module-Position)] {
-	    puts $out "set Notes($modVar($filename-$module)-Position) \{$Notes($module-Position)\}"
+	    puts $out "${tab}set Notes($modVar($module)-Position) \{$Notes($module-Position)\}"
 	}
-    }
-    
-    puts $out "\n\# Create the Connections between Modules"
-    # sort by output port # to handle dynamic ports
+	if [info exists Notes($module-Color)] {
+	    puts $out "${tab}set Notes($modVar($module)-Color) \{$Notes($module-Color)\}"
+	}
+	# Must close the file before C-side can append to it 
+	close $out
+	# C-side knows which GUI vars to write out
+	if { ![isaSubnetIcon $module] } { 
+	    $module-c emit_vars $filename "${tab}set \$m$i"
+	}
+
+	# Write file to open GUI on load if it was open on save
+	if [windowIsMapped .ui$module] {
+	    set out [open $filename {WRONLY APPEND}] ;# Re-Open for appending
+	    puts $out "${tab}\$m$i initialize_ui"
+	    close $out
+	}	
+	incr i
+    }   
+    set out [open $filename {WRONLY APPEND}] ;# Re-Open file for appending
+    # Uniquely sort connections list by output port # to handle dynamic ports
     set connections [lsort -integer -index 3 [lsort -unique $connections]]
-    set i 0
-    foreach conn $connections {
-	if {![info exists modVar($filename-[oMod conn])] || 
-	    ![info exists modVar($filename-[iMod conn])]} continue
-	puts -nonewline $out "set c$i \[addConnection "
-	puts $out \
-	    "$modVar($filename-[oMod conn]) [oNum conn] $modVar($filename-[iMod conn]) [iNum conn]\]"
-	incr i
+    if [llength $connections] {
+	puts $out "\n${tab}\# Create the Connections between Modules"
     }
-    
-    puts $out "\n\# Mark which Connections are Disabled"
     set i 0
     foreach conn $connections {
-	if {![info exists modVar($filename-[oMod conn])] || ![info exists modVar($filename-[iMod conn])]} continue
-	set id [makeConnID $conn]
-	if { [info exists Disabled($id)] && $Disabled($id) } {
-	    puts $out "set Disabled(\$c$i) \{1\}"
+	if {![info exists modVar([oMod conn])] || 
+	    ![info exists modVar([iMod conn])]} {
+	    puts "Error finding modules for Connection: \{$conn\}"
+	    continue
 	}
-	incr i
-    }
-    
-    puts $out "\n\# Set the Connection Notes and Dislpay Options"
-    set i 0
-    foreach conn $connections {
-	if {![info exists modVar($filename-[oMod conn])] || ![info exists modVar($filename-[iMod conn])]} continue
+	puts -nonewline $out "${tab}set c$i \[addConnection "
+	puts $out "$modVar([oMod conn]) [oNum conn] $modVar([iMod conn]) [iNum conn]\]"
 	set id [makeConnID $conn]
-	if { [info exists Notes($id)] && [string length $Notes($id)] } {
-	    puts $out "set Notes(\$c$i) \{$Notes($id)\}"
-	}
 	if [info exists Notes($id-Color)] {
-	    puts $out "set Notes(\$c$i-Color) \{$Notes($id-Color)\}"
+	    puts $out "${tab}set Notes(\$c$i-Color) \{$Notes($id-Color)\}"
+	}	
+	if { [info exists Disabled($id)] && $Disabled($id) } {
+	    puts $out "${tab}set Disabled(\$c$i) \{1\}"
 	}
-	
+	if { [info exists Notes($id)] && [string length $Notes($id)] } {
+	    puts $out "${tab}set Notes(\$c$i) \{$Notes($id)\}"
+	}
 	if [info exists Notes($id-Position)] {
-	    puts $out "set Notes(\$c$i-Position) \{$Notes($id-Position)\}"
+	    puts $out "${tab}set Notes(\$c$i-Position) \{$Notes($id-Position)\}"
 	}
 	incr i
+    }	
+    if $subnet {
+	puts $out "\}\n"
     }
-	
-    puts $out "\n\# Set the GUI variables for each Module"
-	
     close $out
 }		          
 
@@ -647,7 +713,8 @@ proc getAdjHeight { bbox } {
     
 proc showSubnetWindow { subnet { bbox "" } } {
     wm deiconify .subnet${subnet}
-    raise .subnet${subnet}
+#    raise .subnet${subnet}
+    update idletasks
     global Subnet
     if { $bbox == "" } {
 	set bbox [subnet_bbox $subnet]
