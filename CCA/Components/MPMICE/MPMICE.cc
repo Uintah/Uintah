@@ -268,7 +268,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   d_ice->scheduleComputeTempFC(                   sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   all_matls);
-  d_ice->scheduleModelMassExchange(               sched, level,   all_matls);
+  d_ice->scheduleComputeModelSources(             sched, level,   all_matls);
 
   d_ice->scheduleUpdateVolumeFraction(            sched, level,   all_matls);
   
@@ -331,8 +331,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   d_mpm->scheduleSolveHeatEquations(              sched, patches, mpm_matls);
   d_mpm->scheduleIntegrateAcceleration(           sched, patches, mpm_matls);
   d_mpm->scheduleIntegrateTemperatureRate(        sched, patches, mpm_matls);
-
-  d_ice->scheduleModelMomentumAndEnergyExchange(  sched, level,   all_matls);
   
   scheduleComputeLagrangianValuesMPM(             sched, patches, one_matl,
                                                                   mpm_matls); 
