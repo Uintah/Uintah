@@ -43,6 +43,7 @@
 // temporary file, then read in that file.
 
 #include <Core/ImportExport/Field/FieldIEPlugin.h>
+#include <Core/ImportExport/ExecConverter.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/sci_system.h>
@@ -55,7 +56,9 @@
 using namespace std;
 using namespace SCIRun;
 
-static void
+namespace SCIRun {
+
+void
 Exec_setup_command(const char *cfilename, const string &precommand,
 		   string &command, string &tmpfilename)
 {
@@ -77,7 +80,7 @@ Exec_setup_command(const char *cfilename, const string &precommand,
 
   // Temporary filename.
   tmpfilename = "/tmp/" + basenoext + "-" +
-    to_string((unsigned int)(getpid())) + ".fld";
+    to_string((unsigned int)(getpid())) + ".sci";
 
   // Filename with first extension removed.
   loc = filename.find_last_of(".");
@@ -100,7 +103,7 @@ Exec_setup_command(const char *cfilename, const string &precommand,
 }
 
 
-static bool
+bool
 Exec_execute_command(ProgressReporter *pr,
 		     const string &icommand, const string &tmpfilename)
 {
@@ -147,70 +150,7 @@ Exec_execute_command(ProgressReporter *pr,
   return result;
 }
 
-
-static FieldHandle
-Exec_reader(ProgressReporter *pr,
-	    const char *cfilename, const string &precommand)
-{
-  string command, tmpfilename;
-  Exec_setup_command(cfilename, precommand, command, tmpfilename);
-
-  if (Exec_execute_command(pr, command, tmpfilename))
-  {
-    Piostream *stream = auto_istream(tmpfilename);
-    if (!stream)
-    {
-      pr->error("ExecConverter - Error reading converted file '" +
-		tmpfilename + "'.");
-      return 0;
-    }
-    
-    // Read the file
-    FieldHandle handle;
-    Pio(*stream, handle);
-
-    pr->remark(string("ExecConverter - Successfully converted ")
-	       + cfilename + ".");
-
-    unlink(tmpfilename.c_str());
-    
-    return handle;
-  }
-
-  unlink(tmpfilename.c_str());
-  return 0;
-}
-
-
-
-static bool
-Exec_writer(ProgressReporter *pr,
-	    FieldHandle handle,
-	    const char *cfilename, const string &precommand)
-{
-  string command, tmpfilename;
-  bool result = true;
-
-  Exec_setup_command(cfilename, precommand, command, tmpfilename);
-
-  Piostream *stream = scinew BinaryPiostream(tmpfilename, Piostream::Write);
-  if (stream->error())
-  {
-    delete stream;
-    pr->error("ExecConverter - Could not open temporary file '" + tmpfilename +
-	      "' for writing.");
-    result = false;
-  }
-  else
-  {
-    Pio(*stream, handle);
-    delete stream;
-    result = Exec_execute_command(pr, command, tmpfilename);
-  }
-  unlink(tmpfilename.c_str());
-
-  return result;
-}
+} // namespace SCIRun
 
 
 
@@ -223,7 +163,9 @@ TextCurveField_reader(ProgressReporter *pr, const char *filename)
   const string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToCurveField %e.pts %e.edge %t -binOutput";
-  return Exec_reader(pr, filename, command);
+  FieldHandle result;
+  Exec_reader(pr, result, filename, command);
+  return result;
 }
 
 static bool
@@ -253,7 +195,9 @@ TextHexVolField_reader(ProgressReporter *pr, const char *filename)
   const string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToHexVolField %e.pts %e.hex %t -binOutput";
-  return Exec_reader(pr, filename, command);
+  FieldHandle result;
+  Exec_reader(pr, result, filename, command);
+  return result;
 }
 
 static bool
@@ -283,7 +227,9 @@ TextQuadSurfField_reader(ProgressReporter *pr, const char *filename)
   const string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToQuadSurfField %e.pts %e.quad %t -binOutput";
-  return Exec_reader(pr, filename, command);
+  FieldHandle result;
+  Exec_reader(pr, result, filename, command);
+  return result;
 }
 
 static bool
@@ -313,7 +259,9 @@ TextTetVolField_reader(ProgressReporter *pr, const char *filename)
   const string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToTetVolField %e.pts %e.tet %t -binOutput";
-  return Exec_reader(pr, filename, command);
+  FieldHandle result;
+  Exec_reader(pr, result, filename, command);
+  return result;
 }
 
 static bool
@@ -343,7 +291,9 @@ TextTriSurfField_reader(ProgressReporter *pr, const char *filename)
   const string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToTriSurfField %e.pts %e.fac %t -binOutput";
-  return Exec_reader(pr, filename, command);
+  FieldHandle result;
+  Exec_reader(pr, result, filename, command);
+  return result;
 }
 
 static bool
@@ -374,7 +324,9 @@ TextPointCloudField_reader(ProgressReporter *pr, const char *filename)
   const string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToPointCloudField %f %t -binOutput";
-  return Exec_reader(pr, filename, command);
+  FieldHandle result;
+  Exec_reader(pr, result, filename, command);
+  return result;
 }
 
 static bool
@@ -403,7 +355,9 @@ TextStructCurveField_reader(ProgressReporter *pr, const char *filename)
   const string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToStructCurveField %f %t -binOutput";
-  return Exec_reader(pr, filename, command);
+  FieldHandle result;
+  Exec_reader(pr, result, filename, command);
+  return result;
 }
 
 static bool
@@ -432,7 +386,9 @@ TextStructHexVolField_reader(ProgressReporter *pr, const char *filename)
   const string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToStructHexVolField %f %t -binOutput";
-  return Exec_reader(pr, filename, command);
+  FieldHandle result;
+  Exec_reader(pr, result, filename, command);
+  return result;
 }
 
 static bool
@@ -460,7 +416,9 @@ TextStructQuadSurfField_reader(ProgressReporter *pr, const char *filename)
   const string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToStructQuadSurfField %f %t -binOutput";
-  return Exec_reader(pr, filename, command);
+  FieldHandle result;
+  Exec_reader(pr, result, filename, command);
+  return result;
 }
 
 static bool
@@ -490,7 +448,9 @@ VTKtoTriSurfFieldswap_reader(ProgressReporter *pr, const char *filename)
   const string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "VTKtoTriSurfField %f %t -swap_endian -bin_out";
-  return Exec_reader(pr, filename, command);
+  FieldHandle result;
+  Exec_reader(pr, result, filename, command);
+  return result;
 }
 
 static FieldIEPlugin
@@ -507,7 +467,9 @@ VTKtoTriSurfField_reader(ProgressReporter *pr, const char *filename)
   const string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "VTKtoTriSurfField %f %t -_endian -bin_out";
-  return Exec_reader(pr, filename, command);
+  FieldHandle result;
+  Exec_reader(pr, result, filename, command);
+  return result;
 }
 
 static FieldIEPlugin
@@ -521,7 +483,9 @@ static FieldHandle
 wget_field_reader(ProgressReporter *pr, const char *filename)
 {
   const string command = "wget -O %t %f";
-  return Exec_reader(pr, filename, command);
+  FieldHandle result;
+  Exec_reader(pr, result, filename, command);
+  return result;
 }
 
 static FieldIEPlugin
@@ -539,7 +503,9 @@ VgridTetGmv_reader(ProgressReporter *pr, const char *filename)
    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/gmvToPts -t %f %t1 && " +
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToTetVolField %t1.pts %t1.tet %t -binOutput";
-  return Exec_reader(pr, filename, command);
+  FieldHandle result;
+  Exec_reader(pr, result, filename, command);
+  return result;
 }
 
 static FieldIEPlugin
@@ -557,7 +523,9 @@ VgridHexGmv_reader(ProgressReporter *pr, const char *filename)
    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/gmvToPts -h %f %t1 && " +
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToHexVolField %t1.pts %t1.hex %t -binOutput";
-  return Exec_reader(pr, filename, command);
+  FieldHandle result;
+  Exec_reader(pr, result, filename, command);
+  return result;
 }
 
 static FieldIEPlugin
@@ -575,7 +543,9 @@ NeuroFEMTetGeo_reader(ProgressReporter *pr, const char *filename)
    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/geoToPts -t %f %t1 && " +
    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
    "TextToTetVolField %t1.pts %t1.tet %t -binOutput";
-  return Exec_reader(pr, filename, command);
+  FieldHandle result;
+  Exec_reader(pr, result, filename, command);
+  return result;
 }
 
 static FieldIEPlugin
@@ -593,7 +563,9 @@ NeuroFEMHexGeo_reader(ProgressReporter *pr, const char *filename)
    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/geoToPts -h %f %t1 && " +
    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
    "TextToHexVolField %t1.pts %t1.hex %t -binOutput";
-  return Exec_reader(pr, filename, command);
+  FieldHandle result;
+  Exec_reader(pr, result, filename, command);
+  return result;
 }
 
 static FieldIEPlugin
