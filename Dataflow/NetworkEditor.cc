@@ -63,6 +63,7 @@ void NetworkEditor::main_loop()
 	switch(msg->type){
 	case MessageTypes::MultiSend:
 	    {
+	      cerr << "Got multisend\n";
 		Module_Scheduler_Message* mmsg=(Module_Scheduler_Message*)msg;
 		multisend(mmsg->p1);
 		if(mmsg->p2)
@@ -126,7 +127,7 @@ void NetworkEditor::do_scheduling(Module* exclude)
 		Connection* conn=oport->connection(c);
 		IPort* iport=conn->iport;
 		Module* m=iport->get_module();
-		if(!m->need_execute){
+		if(m != exclude && !m->need_execute){
 		    m->need_execute=1;
 		    needexecute.append(m);
 		}
@@ -161,6 +162,7 @@ void NetworkEditor::do_scheduling(Module* exclude)
 	Connection* conn=to_trigger[i];
 	OPort* oport=conn->oport;
 	Module* module=oport->get_module();
+	cerr << "Triggering " << module->name << endl;
 	if(module->need_execute){
 	    // Executing this module, don't actually trigger....
 	} else {
@@ -171,9 +173,11 @@ void NetworkEditor::do_scheduling(Module* exclude)
     // Trigger any modules that need executing...
     for(i=0;i<nmodules;i++){
 	Module* module=net->module(i);
-	if(module->need_execute)
+	if(module->need_execute){
 	    module->mailbox.send(scinew Scheduler_Module_Message);
-	module->need_execute=0;
+	    module->need_execute=0;
+	    cerr << "Firing " << module->name << endl;
+	}
     }
 
 #ifdef STUPID_SCHEDULER

@@ -336,6 +336,7 @@ void Module::reconfigure_oports()
 
 void Module::multisend(OPort* p1, OPort* p2)
 {
+  cerr << "Module: " << name << " called multisend on port " << p1 << endl;
     netedit->mailbox.send(new Module_Scheduler_Message(p1, p2));
 }
 
