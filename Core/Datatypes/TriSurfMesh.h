@@ -80,8 +80,6 @@ public:
 
   typedef Face Elem;
 
-  typedef vector<double>     weight_array;
-
   TriSurfMesh();
   TriSurfMesh(const TriSurfMesh &copy);
   virtual TriSurfMesh *clone() { return new TriSurfMesh(*this); }

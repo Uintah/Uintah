@@ -280,8 +280,6 @@ public:
     typedef vector<index_type> array_type;
   };
 
-  typedef vector<double>      weight_array;
-
   friend class NodeIter;
   friend class CellIter;
   friend class EdgeIter;

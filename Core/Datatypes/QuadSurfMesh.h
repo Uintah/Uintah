@@ -80,8 +80,6 @@ public:
 
   typedef Face Elem;
 
-  typedef vector<double>     weight_array;
-
   QuadSurfMesh();
   QuadSurfMesh(const QuadSurfMesh &copy);
   virtual QuadSurfMesh *clone() { return new QuadSurfMesh(*this); }

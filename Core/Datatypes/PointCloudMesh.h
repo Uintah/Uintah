@@ -79,9 +79,6 @@ public:
 
   typedef Node Elem;
 
-  // storage types for get_* functions
-  typedef vector<double>      weight_array;
-
   PointCloudMesh() {}
   PointCloudMesh(const PointCloudMesh &copy)
     : points_(copy.points_) {}

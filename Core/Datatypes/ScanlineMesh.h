@@ -80,9 +80,6 @@ public:
 
   typedef Edge Elem;
 
-  // storage types for get_* functions
-  typedef vector<double>      weight_array;
-
   ScanlineMesh() : offset_(0), length_(0) {}
   ScanlineMesh(unsigned int length, const Point &min, const Point &max);
   ScanlineMesh(ScanlineMesh* mh, unsigned int offset, unsigned int length)
