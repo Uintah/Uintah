@@ -26,6 +26,8 @@ public:
     TCLvar(const clString& name, const clString& id, TCL* tcl);
     ~TCLvar();
     void reset();
+
+    clString str();
 };
 
 class TCLstring : public TCLvar {
@@ -78,5 +80,30 @@ public:
     void set(int);
 };
 
+class Point;
+class TCLPoint : public TCLvar {
+    TCLdouble x;
+    TCLdouble y;
+    TCLdouble z;
+public:
+    TCLPoint(const clString& name, const clString& id, TCL* tcl);
+    ~TCLPoint();
+
+    Point get();
+    void set(const Point&);
+};
+
+class Vector;
+class TCLVector : public TCLvar {
+    TCLdouble x;
+    TCLdouble y;
+    TCLdouble z;
+public:
+    TCLVector(const clString& name, const clString& id, TCL* tcl);
+    ~TCLVector();
+
+    Vector get();
+    void set(const Vector&);
+};
 
 #endif
