@@ -5,4 +5,5 @@ ScalarFieldRGdouble.h ScalarFieldRGdouble.cc
 ScalarFieldRGchar.h ScalarFieldRGchar.cc
 ScalarFieldRGint.h ScalarFieldRGint.cc
 ScalarFieldRGfloat.h ScalarFieldRGfloat.cc
+ScalarFieldRGshort.h ScalarFieldRGshort.cc
 ScalarFieldRG.h ScalarFieldRG.cc

@@ -21,7 +21,8 @@ OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	VectorFieldZone.o LockArray3.o \
 	VectorFieldPort.o  VectorFieldRG.o  VectorFieldUG.o \
         HexMesh.o HexMeshPort.o  ScalarFieldHUG.o VectorFieldHUG.o \
-	VoidStar.o  VoidStarPort.o 
+	VoidStar.o  VoidStarPort.o cMatrix.o cSMatrix.o cDMatrix.o \
+	cVector.o cVectorPort.o cMatrixPort.o
 GENSRCS = ScalarFieldRGchar.cc  ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
 	ScalarFieldRGdouble.cc  ScalarFieldRG.cc
 SRCS = $(GENSRCS) BasicSurfaces.cc  \
