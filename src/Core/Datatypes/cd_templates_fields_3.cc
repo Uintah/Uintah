@@ -4,7 +4,7 @@
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/MaskedTetVol.h>
-
+#include <Core/Datatypes/QuadraticTetVol.h>
 
 using namespace SCIRun;
 
@@ -63,6 +63,39 @@ const TypeDescription* get_type_description(MaskedTetVol<unsigned int> *);
 const TypeDescription* get_type_description(MaskedTetVol<unsigned short> *);
 const TypeDescription* get_type_description(MaskedTetVol<unsigned char> *);
 
+
+template class GenericField<QuadraticTetVolMesh, vector<Tensor> >;
+template class GenericField<QuadraticTetVolMesh, vector<Vector> >;
+template class GenericField<QuadraticTetVolMesh, vector<double> >;
+template class GenericField<QuadraticTetVolMesh, vector<float> >;
+template class GenericField<QuadraticTetVolMesh, vector<int> >;
+template class GenericField<QuadraticTetVolMesh, vector<short> >;
+template class GenericField<QuadraticTetVolMesh, vector<char> >;
+template class GenericField<QuadraticTetVolMesh, vector<unsigned int> >;
+template class GenericField<QuadraticTetVolMesh, vector<unsigned short> >;
+template class GenericField<QuadraticTetVolMesh, vector<unsigned char> >;
+
+template class QuadraticTetVol<Tensor>;
+template class QuadraticTetVol<Vector>;
+template class QuadraticTetVol<double>;
+template class QuadraticTetVol<float>;
+template class QuadraticTetVol<int>;
+template class QuadraticTetVol<short>;
+template class QuadraticTetVol<char>;
+template class QuadraticTetVol<unsigned int>;
+template class QuadraticTetVol<unsigned short>;
+template class QuadraticTetVol<unsigned char>;
+
+const TypeDescription* get_type_description(QuadraticTetVol<Tensor> *);
+const TypeDescription* get_type_description(QuadraticTetVol<Vector> *);
+const TypeDescription* get_type_description(QuadraticTetVol<double> *);
+const TypeDescription* get_type_description(QuadraticTetVol<float> *);
+const TypeDescription* get_type_description(QuadraticTetVol<int> *);
+const TypeDescription* get_type_description(QuadraticTetVol<short> *);
+const TypeDescription* get_type_description(QuadraticTetVol<char> *);
+const TypeDescription* get_type_description(QuadraticTetVol<unsigned int> *);
+const TypeDescription* get_type_description(QuadraticTetVol<unsigned short> *);
+const TypeDescription* get_type_description(QuadraticTetVol<unsigned char> *);
 
 
 template <>
@@ -137,5 +170,78 @@ TetVol<unsigned char>::query_scalar_interface() const
   return scinew SFInterface<TetVol<unsigned char> >(this);
 }
 
+//-------
+
+template <>
+TensorFieldInterface *
+QuadraticTetVol<Tensor>::query_tensor_interface() const
+{
+  return scinew TFInterface<QuadraticTetVol<Tensor> >(this);
+}
+
+
+template <>
+VectorFieldInterface *
+QuadraticTetVol<Vector>::query_vector_interface() const
+{
+  return scinew VFInterface<QuadraticTetVol<Vector> >(this);
+}
+
+
+template <>
+ScalarFieldInterface *
+QuadraticTetVol<double>::query_scalar_interface() const
+{
+  return scinew SFInterface<QuadraticTetVol<double> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+QuadraticTetVol<float>::query_scalar_interface() const
+{
+  return scinew SFInterface<QuadraticTetVol<float> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+QuadraticTetVol<int>::query_scalar_interface() const
+{
+  return scinew SFInterface<QuadraticTetVol<int> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+QuadraticTetVol<short>::query_scalar_interface() const
+{
+  return scinew SFInterface<QuadraticTetVol<short> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+QuadraticTetVol<char>::query_scalar_interface() const
+{
+  return scinew SFInterface<QuadraticTetVol<char> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+QuadraticTetVol<unsigned int>::query_scalar_interface() const
+{
+  return scinew SFInterface<QuadraticTetVol<unsigned int> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+QuadraticTetVol<unsigned short>::query_scalar_interface() const
+{
+  return scinew SFInterface<QuadraticTetVol<unsigned short> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+QuadraticTetVol<unsigned char>::query_scalar_interface() const
+{
+  return scinew SFInterface<QuadraticTetVol<unsigned char> >(this);
+}
 
 

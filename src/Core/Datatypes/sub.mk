@@ -40,6 +40,7 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/PointCloudMesh.cc         	\
 	$(SRCDIR)/PropertyManager.cc	    	\
 	$(SRCDIR)/QuadSurfMesh.cc               \
+	$(SRCDIR)/QuadraticTetVolMesh.cc        \
 	$(SRCDIR)/ScanlineMesh.cc           	\
 	$(SRCDIR)/SparseRowMatrix.cc	    	\
 	$(SRCDIR)/TetVolMesh.cc 	    	\

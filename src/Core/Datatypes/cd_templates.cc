@@ -42,6 +42,7 @@ using namespace SCIRun;
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/QuadraticTetVol.h>
 #include <Core/Datatypes/HexVol.h>
 #include <Core/Datatypes/MaskedTetVol.h>
 #include <Core/Datatypes/MaskedHexVol.h>
@@ -115,6 +116,21 @@ Vector TetVol<Vector>::cell_gradient(TetVolMesh::Cell::index_type /*ci*/)
 
 template <>
 Vector TetVol<Tensor>::cell_gradient(TetVolMesh::Cell::index_type /*ci*/)
+{
+  ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
+  return Vector(0, 0, 0);
+}
+
+template <>
+Vector QuadraticTetVol<Vector>::cell_gradient(TetVolMesh::Cell::index_type)
+{
+  ASSERT(type_name(1) != "Vector");  // redundant, useful error message
+  return Vector(0, 0, 0);
+}
+
+
+template <>
+Vector QuadraticTetVol<Tensor>::cell_gradient(TetVolMesh::Cell::index_type)
 {
   ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
   return Vector(0, 0, 0);
