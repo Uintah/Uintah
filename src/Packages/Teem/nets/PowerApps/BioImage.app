@@ -446,8 +446,7 @@ class BioImageApp {
  		set [set UnuJhisto]-mins "$min nan"
 
 		upvar \#0 $mods(ViewSlices)-min min_val 
-		upvar \#0 $mods(ViewSlices)-background_threshold thresh
-		set thresh $min_val
+                setGlobal $mods(ViewSlices)-background_threshold $min_val
 
                 set 2D_fixed 1
 
@@ -2582,6 +2581,26 @@ class BioImageApp {
         #-----------------------------------------------------------
         # Transfer Function Widgets
         #-----------------------------------------------------------
+
+        # Gradient threshold
+        set f $page.gthresh
+        frame $f
+        label $f.l -text "Gradient Threshold:"
+        set command "$mods(ViewSlices)-c gradient_thresh; 
+                     $mods(ViewSlices)-c redrawall"
+        scale $f.s \
+          -from 0.0 -to 1.0 -resolution 0.002 \
+ 	  -orient horizontal -showvalue false \
+ 	  -length 100 -width 14 \
+	  -variable $mods(ViewSlices)-gradient_threshold \
+          -command $command
+        bind $f <Button1-Motion> $command
+        entry $f.l2 -width 4\
+           -textvariable $mods(ViewSlices)-gradient_threshold
+        pack $f.l -side left -anchor w
+        pack $f.l2 $f.s -side right -anchor e -padx 2
+        pack $f -side top -fill x -expand 0
+
 	frame $page.buttons -bd 0
         button $page.buttons.paint -text "Add Paint Layer" \
            -command "$mods(EditColorMap2D)-c addpaint"
@@ -4980,8 +4999,10 @@ class BioImageApp {
 
 
     method update_planes_threshold_slider_min_max { min max } {
-	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.thresh.s configure -from $min -to $max
-	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.thresh.s configure -from $min -to $max
+	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.thresh.s \
+	    configure -from $min -to $max
+	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.thresh.s \
+	    configure -from $min -to $max
     }
 
     method toggle_show_guidelines {} {
