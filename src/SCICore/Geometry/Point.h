@@ -42,7 +42,7 @@ class SCICORESHARE Point {
     double _x,_y,_z;
 public:
     inline explicit Point(const Vector& v);
-    inline Point(double x, double y, double z): _x(x), _y(y), _z(z)
+    inline Point(double x, double y = 0.0, double z = 0.0): _x(x), _y(y), _z(z)
 	    {}
     Point(double, double, double, double);
     inline Point(const Point&);
@@ -273,6 +273,9 @@ inline double Dot(const Point& p1, const Point& p2)
 
 //
 // $Log$
+// Revision 1.6.2.1  2000/09/11 17:43:25  kuehne
+// change Point to handle 1 and 2 D construction
+//
 // Revision 1.6  2000/04/12 22:56:00  sparker
 // Added IntVector (a vector of you-guess-what)
 // Added explicit ctors from point to vector and vice-versa
