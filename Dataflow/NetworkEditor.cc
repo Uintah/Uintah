@@ -93,8 +93,9 @@ void NetworkEditor::do_scheduling()
     // A module is considered 'Repeat' if any of it's downstream modules
     // are 'Repeat'
     //
-    int changed=1;
     int nmodules=net->nmodules();
+#ifdef BROKEN
+    int changed=1;
     int any_changed=1;
     while(changed){
 	changed=0;
@@ -119,6 +120,16 @@ void NetworkEditor::do_scheduling()
 	    }
 	}
 	first_schedule=0;
+    }
+#endif
+    for(int i=0;i<nmodules;i++){
+	Module* module=net->module(i);
+
+	// Tell it to trigger...
+	module->mailbox.send(new Scheduler_Module_Message);
+
+	// Reset the state...
+	module->sched_state=Module::SchedDormant;
     }
 }
 
