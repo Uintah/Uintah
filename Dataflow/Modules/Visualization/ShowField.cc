@@ -99,6 +99,7 @@ class ShowField : public Module
   GuiInt                   bidirectional_;
   GuiInt                   arrow_heads_on_;
   bool                     data_dirty_;
+  string                   cur_field_data_type_;
   
   //! default color and material
   GuiDouble                def_color_r_;
@@ -179,6 +180,7 @@ ShowField::ShowField(GuiContext* ctx) :
   bidirectional_(ctx->subVar("bidirectional")),
   arrow_heads_on_(ctx->subVar("arrow-heads-on")),
   data_dirty_(true),
+  cur_field_data_type_("none"),
   def_color_r_(ctx->subVar("def-color-r")),
   def_color_g_(ctx->subVar("def-color-g")),
   def_color_b_(ctx->subVar("def-color-b")),
@@ -235,6 +237,10 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle)
 {
   const TypeDescription *ftd = fld_handle->get_type_description();
   const TypeDescription *ltd = fld_handle->data_at_type_description();
+  // description for just the data in the field
+  const TypeDescription *data_type_description = 
+    fld_handle->get_type_description(1);
+  cur_field_data_type_ = data_type_description->get_name();
 
   // Get the Algorithm.
   CompileInfo *ci = RenderFieldBase::get_compile_info(ftd, ltd);
@@ -285,7 +291,13 @@ ShowField::determine_dirty(FieldHandle fld_handle)
   } else if (!mesh_new && field_new) {
     // same geometry, new data.
     check_for_vector_data(fld_handle);
-    //if (!fetch_typed_algorithm(fld_handle)) { return false; }
+
+    const TypeDescription *data_type_description = 
+      fld_handle->get_type_description(1);
+    string fdt = data_type_description->get_name();
+    if (cur_field_data_type_ != fdt && !fetch_typed_algorithm(fld_handle)) { 
+      return false; 
+    }
     data_at_dirty_ = true; //we need to rerender colors..
   } //else both are the same as last time, nothing dirty.
   
