@@ -2530,7 +2530,9 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
     cerr << "fixedDOF = " << *iter << endl;
   }
   cerr << "Before setting to zero" << endl;
+#ifdef HAVE_PETSC
   VecView(petscQ,PETSC_VIEWER_STDOUT_WORLD);
+#endif
   for (set<int>::iterator iter = fixedDOF.begin(); iter != fixedDOF.end(); 
        iter++) {
     Q[*iter] = 0.;
@@ -2734,8 +2736,10 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
       dof[2] = l2g_node_num+2;
       dispInc[n] = Vector(xPetsc[dof[0]],xPetsc[dof[1]],xPetsc[dof[2]]);
 #else
-      int node_num = n.x() + (nodes.x())*(n.y()) + (nodes.y())*
-	(nodes.x())*(n.z());
+//      int node_num = n.x() + (nodes.x())*(n.y()) + (nodes.y())*
+//	(nodes.x())*(n.z());
+      int node_num = n.x() + (n.x())*(n.y()) + (n.y())*
+	(n.x())*(n.z());
       dof[0] = 3*node_num;
       dof[1] = 3*node_num+1;
       dof[2] = 3*node_num+2;
