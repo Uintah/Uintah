@@ -75,11 +75,14 @@ ProblemSpecP ProblemSpec::findNextBlock(const std::string& name) const
   // Iterate through all of the child nodes that have this name
 
   DOM_Node found_node = start_element.getNextSibling();
-
+ 
+  if (!found_node.isNull()) {
+    if (found_node.getNodeType() == DOM_Node::TEXT_NODE) {
+      found_node = found_node.getNextSibling();
+    }
+  }
    
   if (found_node.isNull()) {
-    cerr << "Didn't find the tag . . " << endl;
-    cerr << "Setting to Null . . " << endl;
     prob_spec = 0;
   }
   else {
@@ -281,6 +284,9 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.8  2000/04/07 18:40:51  jas
+// Fixed bug in getNextBlock.
+//
 // Revision 1.7  2000/04/06 02:33:33  jas
 // Added findNextBlock which will find all of the tags named name within a
 // given block.
