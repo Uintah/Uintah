@@ -248,8 +248,12 @@ SeedField::execute_rake()
     
     rake_.SetScale(quarterl2norm*.06); // this size seems empirically good
     
-    rake_.SetEndpoints(Point(center.x()-quarterl2norm,center.y(),center.z()),
-		       Point(center.x()+quarterl2norm,center.y(),center.z()));
+    rake_.SetEndpoints(Point(center.x()-quarterl2norm,
+			     center.y()-quarterl2norm/3,
+			     center.z()-quarterl2norm/4),
+		       Point(center.x()+quarterl2norm,
+			     center.y()+quarterl2norm/2,
+			     center.z()+quarterl2norm/3));
   }
 
   GeomGroup *widget_group = scinew GeomGroup;
