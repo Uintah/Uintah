@@ -21,12 +21,8 @@
 <filter-gui name="ReflectImageFilter">
   <parameters>
     <param name="direction">
-      <gui>radiobutton</gui>
-      <values>
-      <val>0</val>
-      <val>1</val>
-      </values>
-      <default>1</default>
+      <gui>text-entry</gui>
+      <default>0</default>
     </param>
   </parameters>
 

@@ -42,7 +42,7 @@
     </param>
     <param name="max_iterations">
       <gui>text-entry</gui>
-      <default>1200</default>
+      <default>120</default>
     </param>
     <param name="max_rms_change">
       <gui>text-entry</gui>
