@@ -151,10 +151,8 @@ protected:
   Vector frame_right;
   Vector frame_front;
 
-  Point mousep;
-  GeomSphere* mouse_obj;
-  Array1<GeomObj*> viewwindow_objs;
-  Array1<char> viewwindow_objs_draw;   
+  vector<GeomHandle> viewwindow_objs;
+  vector<bool> viewwindow_objs_draw;   
 
   void animate_to_view(const View& v, double time);
   void redraw();
@@ -258,7 +256,6 @@ public:
   Point _center;  // center of camera rotation
 
   GeomSphere     *focus_sphere;
-  int             is_dot;  // is the focus_sphere being displayed?
 
   enum {UNICAM_CHOOSE = 0, UNICAM_ROT, UNICAM_PAN, UNICAM_ZOOM};
   int  unicam_state;
@@ -349,7 +346,7 @@ public:
   
   void getData(int datamask, FutureValue<GeometryData*>* result);
   void setView(View view);
-  GeomGroup* createGenAxes();   
+  GeomHandle createGenAxes();   
   void emit_vars(std::ostream& out, const std::string& midx);
 };
 
