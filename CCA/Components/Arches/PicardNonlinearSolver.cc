@@ -569,6 +569,8 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
 
     subsched->compile();
     int nlIterations = 0;
+    double scalar_clipped = 0.0;
+    double reactscalar_clipped = 0.0;
     double norm;
     double init_norm;
     subsched->advanceDataWarehouse(grid);
@@ -657,21 +659,6 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       if(pg->myrank() == 0)
        cout << "PicardSolver init norm: " << init_norm << " current norm: " << norm << endl;
       
-
-      ++nlIterations;
-    
-    }while ((nlIterations < d_nonlinear_its)&&(norm > d_resTol));
-    if ((nlIterations == d_nonlinear_its)&&(norm > d_resTol))
-    if(pg->myrank() == 0)
-       cout << "Maximum allowed number of iterations reached" << endl;
-    if (norm/(init_norm+1.0e-10) > 1) {
-    if(pg->myrank() == 0)
-       cout << "WARNING! Iterations diverge! Restarting timestep." << endl;
-      new_dw->abortTimestep();
-      new_dw->restartTimestep();
-    }
-    double scalar_clipped = 0.0;
-    double reactscalar_clipped = 0.0;
     max_vartype sc;
     max_vartype rsc;
     if (nofScalars > 0) {
@@ -681,6 +668,23 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     if (d_reactingScalarSolve) {
       subsched->get_dw(3)->get(rsc, d_lab->d_ReactScalarClippedLabel);
       reactscalar_clipped = rsc;
+    }
+
+      ++nlIterations;
+    
+    }while ((nlIterations < d_nonlinear_its)&&
+	    (norm > d_resTol)&&
+	    (scalar_clipped == 0.0)&&
+	    (reactscalar_clipped == 0.0));
+
+    if ((nlIterations == d_nonlinear_its)&&(norm > d_resTol))
+    if(pg->myrank() == 0)
+       cout << "Maximum allowed number of iterations reached" << endl;
+    if (norm/(init_norm+1.0e-10) > 1) {
+    if(pg->myrank() == 0)
+       cout << "WARNING! Iterations diverge! Restarting timestep." << endl;
+      new_dw->abortTimestep();
+      new_dw->restartTimestep();
     }
     if ((scalar_clipped > 0.0)||(reactscalar_clipped > 0.0)) {
     if(pg->myrank() == 0)
