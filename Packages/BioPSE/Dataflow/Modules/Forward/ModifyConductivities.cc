@@ -86,15 +86,15 @@ ModifyConductivities::update_gui(const vector<pair<string, Tensor> > &tensors)
   for (unsigned int i=0; i < tensors.size(); i++)
   {
     string command = id + " set_item i" + to_string(i) +
-      " { Material \"" + tensors[i].first + "\" Scale 1.0 M00 " +
-      to_string(tensors[i].second.mat_[0][0]) + " M01 " +
-      to_string(tensors[i].second.mat_[0][1]) + " M02 " +
-      to_string(tensors[i].second.mat_[0][2]) + " M10 " +
-      to_string(tensors[i].second.mat_[1][0]) + " M11 " +
-      to_string(tensors[i].second.mat_[1][1]) + " M12 " +
-      to_string(tensors[i].second.mat_[1][2]) + " M20 " +
-      to_string(tensors[i].second.mat_[2][0]) + " M21 " +
-      to_string(tensors[i].second.mat_[2][1]) + " M22 " +
+      " { Material \"" + tensors[i].first + "\" Scale 1.0 C00 " +
+      to_string(tensors[i].second.mat_[0][0]) + " C01 " +
+      to_string(tensors[i].second.mat_[0][1]) + " C02 " +
+      to_string(tensors[i].second.mat_[0][2]) + " C10 " +
+      to_string(tensors[i].second.mat_[1][0]) + " C11 " +
+      to_string(tensors[i].second.mat_[1][1]) + " C12 " +
+      to_string(tensors[i].second.mat_[1][2]) + " C20 " +
+      to_string(tensors[i].second.mat_[2][0]) + " C21 " +
+      to_string(tensors[i].second.mat_[2][1]) + " C22 " +
       to_string(tensors[i].second.mat_[2][2]) + " }";
 
     TCL::eval(command, result);
@@ -132,55 +132,55 @@ ModifyConductivities::push_changes(vector<pair<string, Tensor> > &tensors)
 
     tensors[i].first = getafter("Material", result);
 
-    const string m00 = getafter("M00", result);
+    const string m00 = getafter("C00", result);
     if (m00 != to_string(tensors[i].second.mat_[0][0]))
     {
       tensors[i].second.mat_[0][0] = atof(m00.c_str());
     }
 
-    const string m01 = getafter("M01", result);
+    const string m01 = getafter("C01", result);
     if (m01 != to_string(tensors[i].second.mat_[0][1]))
     {
       tensors[i].second.mat_[0][1] = atof(m01.c_str());
     }
 
-    const string m02 = getafter("M02", result);
+    const string m02 = getafter("C02", result);
     if (m02 != to_string(tensors[i].second.mat_[0][2]))
     {
       tensors[i].second.mat_[0][2] = atof(m02.c_str());
     }
 
-    const string m10 = getafter("M10", result);
+    const string m10 = getafter("C10", result);
     if (m10 != to_string(tensors[i].second.mat_[1][0]))
     {
       tensors[i].second.mat_[1][0] = atof(m10.c_str());
     }
 
-    const string m11 = getafter("M11", result);
+    const string m11 = getafter("C11", result);
     if (m11 != to_string(tensors[i].second.mat_[1][1]))
     {
       tensors[i].second.mat_[1][1] = atof(m11.c_str());
     }
 
-    const string m12 = getafter("M12", result);
+    const string m12 = getafter("C12", result);
     if (m12 != to_string(tensors[i].second.mat_[1][2]))
     {
       tensors[i].second.mat_[1][2] = atof(m12.c_str());
     }
 
-    const string m20 = getafter("M20", result);
+    const string m20 = getafter("C20", result);
     if (m20 != to_string(tensors[i].second.mat_[2][0]))
     {
       tensors[i].second.mat_[2][0] = atof(m20.c_str());
     }
 
-    const string m21 = getafter("M21", result);
+    const string m21 = getafter("C21", result);
     if (m21 != to_string(tensors[i].second.mat_[2][1]))
     {
       tensors[i].second.mat_[2][1] = atof(m21.c_str());
     }
 
-    const string m22 = getafter("M22", result);
+    const string m22 = getafter("C22", result);
     if (m22 != to_string(tensors[i].second.mat_[2][2]))
     {
       tensors[i].second.mat_[2][2] = atof(m22.c_str());
