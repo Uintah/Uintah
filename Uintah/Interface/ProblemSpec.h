@@ -5,6 +5,8 @@
 #include <Uintah/Grid/RefCounted.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <string>
+#include <map>
+using namespace std;
 
 #ifdef __sgi
 #define IRIX
@@ -84,8 +86,8 @@ WARNING
 
    // Get any optional attributes associated with a tag
 
-   void requireOptional(const std::string& name, std::string& value);
-   ProblemSpecP getOptional(const std::string& name, std::string& value);
+      void requireOptional(const std::string& name, std::string& value);
+      ProblemSpecP getOptional(const std::string& name, std::string& value);
 
       
       ProblemSpecP get(const std::string& name, double& value);
@@ -98,7 +100,9 @@ WARNING
 		       SCICore::Geometry::Vector& value);
       ProblemSpecP get(const std::string& name, 
 		       SCICore::Geometry::Point& value);
-      
+
+      void getAttributes(std::map<std::string,std::string>& value);
+
       static const TypeDescription* getTypeDescription();
       
       DOM_Node getNode() const {
@@ -117,6 +121,12 @@ WARNING
 
 //
 // $Log$
+// Revision 1.15  2000/06/23 19:24:57  jas
+// Added method to parse out the attributes for a given tag, i.e.
+// <sample label = "test" stuff = "extra" >.  A map is used with indices
+// label and stuff for the values "test" and "extra" in this particular
+// example.
+//
 // Revision 1.14  2000/05/20 08:09:39  sparker
 // Improved TypeDescription
 // Finished I/O

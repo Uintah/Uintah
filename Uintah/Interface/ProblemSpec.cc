@@ -12,6 +12,7 @@ static char *id="@(#) $Id$";
 #include <PSECore/XMLUtil/XMLUtil.h>
 #include <SCICore/Malloc/Allocator.h>
 //#include <cstdlib>
+#include <map>
 using namespace Uintah;
 using namespace std;
 using namespace SCICore::Geometry;
@@ -21,7 +22,6 @@ ProblemSpec::ProblemSpec(const DOM_Node& node)
    : d_node(node)
 {
 }
-
 ProblemSpec::~ProblemSpec()
 {
 }
@@ -386,6 +386,7 @@ ProblemSpecP ProblemSpec::getOptional(const std::string& name,
   ProblemSpecP ps = this;
   DOM_Node attr_node;
   DOM_Node found_node = findNode(name,this->d_node);
+  std::cout << "node name = " << found_node.getNodeName() << std::endl;
   if (found_node.isNull()) {
     ps = 0;
     return ps;
@@ -424,6 +425,23 @@ void ProblemSpec::requireOptional(const std::string& name, std::string& value)
  
 }
 
+void ProblemSpec::getAttributes(map<string,string>& attributes)
+{
+
+  DOM_Node attr_node = d_node;
+  
+  DOM_NamedNodeMap attr = attr_node.getAttributes();
+  int num_attr = attr.getLength();
+
+  for (int i = 0; i<num_attr; i++) {
+    string name(toString(attr.item(i).getNodeName()));
+    string value(toString(attr.item(i).getNodeValue()));
+		
+    attributes[name]=value;
+  }
+
+}
+
 
 const TypeDescription* ProblemSpec::getTypeDescription()
 {
@@ -433,6 +451,12 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.20  2000/06/23 19:24:57  jas
+// Added method to parse out the attributes for a given tag, i.e.
+// <sample label = "test" stuff = "extra" >.  A map is used with indices
+// label and stuff for the values "test" and "extra" in this particular
+// example.
+//
 // Revision 1.19  2000/05/30 20:19:41  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
