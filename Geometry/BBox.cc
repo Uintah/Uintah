@@ -5,6 +5,8 @@
 #include <Classlib/Exceptions.h>
 #include <Math/MinMax.h>
 #include <Classlib/Persistent.h>
+#include <stdlib.h>
+#include <iostream.h>
 
 BBox::BBox()
 {
@@ -14,6 +16,10 @@ BBox::BBox()
 BBox::BBox(const BBox& copy)
 : have_some(copy.have_some), cmin(copy.cmin), cmax(copy.cmax) 
 {
+  int i;
+
+  for ( i = 0; i < 6; i++ )
+    sides[i] = copy.sides[i];
 }
     
 BBox::~BBox()
@@ -148,3 +154,183 @@ void Pio(Piostream &stream, BBox& box) {
     }
     stream.end_cheap_delim();
 }
+
+
+
+void
+BBox::SetupSides( )
+{
+  sides[0].ChangeBBoxSide( corner(0), corner(1), corner(3), corner(2) );
+  
+  sides[1].ChangeBBoxSide( corner(0), corner(1), corner(5), corner(4) );
+
+  sides[2].ChangeBBoxSide( corner(0), corner(2), corner(6), corner(4) );
+  
+  sides[3].ChangeBBoxSide( corner(4), corner(6), corner(7), corner(5) );
+  
+  sides[4].ChangeBBoxSide( corner(1), corner(3), corner(7), corner(5) );
+  
+  sides[5].ChangeBBoxSide( corner(2), corner(3), corner(7), corner(6) );
+}
+
+/*******************************************************************
+ *
+ * finds 2 points of intersection of a line and the bbox.
+ * if no intersection is found, the routine returns false.
+ *
+*******************************************************************/
+
+int
+BBox::Intersect( Point s, Vector v, Point& hitNear, Point& hitFar )
+{
+  int i;
+  Point tmp;
+  double near, far;
+  int flag;
+
+  near = 10000;
+  far = 0;
+  flag = 0;
+
+  for ( i = 0; i < 6; i++ )
+    {
+      if ( sides[i].Intersect( s, v, tmp ) )
+	{
+	  if ( ( s - tmp ).length() < near )
+	    {
+	      hitNear = tmp;
+	      near = ( s - tmp ).length();
+	      flag = 1;
+	    }
+	  if ( ( s - tmp ).length() > far )
+	    {
+	      hitFar = tmp;
+	      far = ( s - tmp ).length();
+	      flag = 1;
+	    }
+	}
+    }
+
+  return( flag );
+}
+
+
+BBoxSide::BBoxSide( )
+{
+}
+
+
+
+BBoxSide::BBoxSide( Point a, Point b, Point c, Point d )
+{
+  perimeter[0][0] = b - a;
+  perimeter[0][1] = c - b;
+  perimeter[0][2] = a - c;
+  perimeter[1][0] = d - c;
+  perimeter[1][1] = a - d;
+  perimeter[1][2] = c - a;
+
+  pl.ChangePlane( a, b, c );
+
+  pts[0][0] = a;
+  pts[0][1] = b;
+  pts[0][2] = c;
+  
+  pts[1][0] = c;
+  pts[1][1] = d;
+  pts[1][2] = a;
+  
+  next = NULL;
+}
+
+void
+BBoxSide::ChangeBBoxSide( Point a, Point b, Point c, Point d )
+{
+  perimeter[0][0] = b - a;
+  perimeter[0][1] = c - b;
+  perimeter[0][2] = a - c;
+  perimeter[1][0] = d - c;
+  perimeter[1][1] = a - d;
+  perimeter[1][2] = c - a;
+
+  pl.ChangePlane( a, b, c );
+  
+  pts[0][0] = a;
+  pts[0][1] = b;
+  pts[0][2] = c;
+  
+  pts[1][0] = c;
+  pts[1][1] = d;
+  pts[1][2] = a;
+  
+  next = NULL;
+}
+
+int
+BBoxSide::Intersect( Point s, Vector v, Point& hit )
+{
+  int i, j;
+  Vector r[3][3];
+
+  if (  pl.Intersect( s, v, hit ) )  // line intersects plane
+    {
+      for ( j = 0; j < 2; j++ )
+	for ( i = 0; i < 3; i++ )
+	  {
+	    r[j][i] = Cross( hit - pts[j][i], perimeter[j][i] );
+	  }
+
+      // if the point lies on the line connecting 2 coordinates,
+      // then draw yourself a picture and check what i'm doing here
+
+      for ( j = 0; j < 2; j++ )
+	for ( i = 0; i < 3; i++ )
+	  if ( r[j][i].IsNull() )
+	    {
+
+	      if ( ( hit - pts[j][i] ).IsNull() ) // hit the corner
+		{
+//		  cerr << "!";
+		  return 1;
+		}
+	      
+	      if ( ( hit - pts[j][(i+1)%3] ).IsNull() ) // hit the corner
+		{
+//		  cerr << "!";
+		  return 1;
+		}
+
+	      r[j][(i+1) % 3].normalize();
+	      r[j][(i+2) % 3].normalize();
+
+	      // if both are positive, or both are negative, then
+	      // the hit point lies on the boundary of the BBoxSide
+	      
+	      if ( ( r[j][(i+1) % 3] + r[j][(i+2) % 3] ).IsNull() )
+		return 0;
+	      else
+		  return 1;
+	    }
+
+      // normalize each cross product
+      // then, add the normal in order to determine whether
+      // each of the cross products pointed in the same direction
+      
+      for ( j = 0; j < 2; j++ )
+	for( i = 0; i < 3; i++ )
+	  {
+	    r[j][i].normalize();
+	    r[j][i] = r[j][i] + pl.normal();
+	  }
+
+      for ( j = 0; j < 2; j++ )
+      if ( ( r[j][0].IsNull() && r[j][1].IsNull() &&
+	    r[j][2].IsNull() )     ||
+	   ( ! r[j][0].IsNull() && ! r[j][1].IsNull() &&
+	   ! r[j][2].IsNull() ) )
+	  return 1;
+    }
+
+  return 0;
+}
+
