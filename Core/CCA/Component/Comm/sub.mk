@@ -36,7 +36,7 @@ SRCS     += \
 	$(SRCDIR)/NexusHandlerThread.cc \
 	$(SRCDIR)/CommNexus.cc
 
-PSELIBS := Core/Exceptions Core/Thread Core/globus_threads
+PSELIBS := Core/Exceptions Core/Util Core/Thread Core/globus_threads
 LIBS := $(GLOBUS_COMMON_LIBRARY) $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
