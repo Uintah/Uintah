@@ -20,7 +20,7 @@
 
 class HypotenousConstraint : public BaseConstraint {
 public:
-   HypotenousConstraint( const char* name,
+   HypotenousConstraint( const clString& name,
 			 const Index numSchemes,
 			 Variable* HypoInX, Variable* distInX );
    ~HypotenousConstraint();

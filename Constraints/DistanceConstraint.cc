@@ -15,7 +15,7 @@
 #include <Constraints/DistanceConstraint.h>
 #include <Geometry/Vector.h>
 
-DistanceConstraint::DistanceConstraint( const char* name,
+DistanceConstraint::DistanceConstraint( const clString& name,
 					const Index numSchemes,
 					Variable* p1, Variable* p2,
 					Variable* distInX )

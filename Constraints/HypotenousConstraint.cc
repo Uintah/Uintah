@@ -15,7 +15,7 @@
 #include <Constraints/HypotenousConstraint.h>
 
 
-HypotenousConstraint::HypotenousConstraint( const char* name,
+HypotenousConstraint::HypotenousConstraint( const clString& name,
 					    const Index numSchemes,
 					    Variable* HypoInX, Variable* distInX )
 :BaseConstraint(name, numSchemes, 2)

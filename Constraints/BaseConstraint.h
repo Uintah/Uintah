@@ -18,6 +18,7 @@
 #include <Constraints/manifest.h>
 #include <Geometry/Point.h>
 #include <Classlib/Array1.h>
+#include <Classlib/String.h>
 
 
 /* Priority levels */
@@ -34,7 +35,7 @@ class BaseConstraint;
 class Variable {
    friend class BaseConstraint;
 public:
-   Variable( const char *name, const Scheme s, const Point& initialValue );
+   Variable( const clString& name, const Scheme s, const Point& initialValue );
    ~Variable();
 
    void Order(); // Use to let the Variable order its constraints.
@@ -56,7 +57,7 @@ public:
    void print( ostream& os=cout );
 
 private:
-   char name[20];
+   clString name;
    Point value;
 
    Index levellevel, level;
@@ -79,7 +80,7 @@ inline ostream& operator<<( ostream& os, Variable& v );
 class BaseConstraint {
    friend class Variable;
 public:
-   BaseConstraint( const char* name, const Index numSchemes,
+   BaseConstraint( const clString& name, const Index numSchemes,
 		   const Index VariableCount );
    ~BaseConstraint();
 
@@ -108,13 +109,13 @@ public:
    void print( ostream& os=cout );
 
 protected:
-   char name[20];
+   clString name;
    Index nschemes;
    
    Index varCount;
-   Variable** vars;
-   Index* var_indexs; // The var's index for this constraint.
-   Index** var_choices;
+   Array1<Variable*> vars;
+   Array1<Index> var_indexs; // The var's index for this constraint.
+   Array1<Index*> var_choices;
    Index whichMethod, callingMethod;
 
    void Register();
