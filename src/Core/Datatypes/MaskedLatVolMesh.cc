@@ -521,31 +521,31 @@ MaskedLatVolMesh::num_masked_cells() const
 void 
 MaskedLatVolMesh::
 get_neighbors_stencil(vector<pair<bool,Cell::index_type> > &nbrs, 
-		      Cell::index_type &idx) const
+					  Cell::index_type idx) const
 {
   nbrs.clear();
   for (int k = idx.k_ - 1; k <= int(idx.k_ + 1); k++)
     for (int j = idx.j_ - 1; j <= int(idx.j_ + 1); j++)
-      for (int i = idx.i_ - 1; k <= int(idx.i_ + 1); i++)
-	if (i != int(idx.i_) || j != int(idx.j_) || k != int(idx.k_))
-	  if (i >= int(min_i_) && j >= int(min_j_) && k >= int(min_k_) &&
-	      i <= int(min_i_+ni_)-1 && j <= int(min_j_+nj_)-1 && 
-	      i <= int(min_k_+nk_)-1 && check_valid(i,j,k))
-	    nbrs.push_back(make_pair(true,Cell::index_type(this,i,j,k)));
-	  else
-	    nbrs.push_back(make_pair(false,Cell::index_type(0,0,0,0)));
+      for (int i = idx.i_ - 1; i <= int(idx.i_ + 1); i++)
+		if (i != int(idx.i_) || j != int(idx.j_) || k != int(idx.k_))
+		  if (i >= int(min_i_) && j >= int(min_j_) && k >= int(min_k_) &&
+			  i <= int(min_i_+ni_)-1 && j <= int(min_j_+nj_)-1 && 
+			  i <= int(min_k_+nk_)-1 && check_valid(i,j,k))
+			nbrs.push_back(make_pair(true,Cell::index_type(this,i,j,k)));
+		  else
+			nbrs.push_back(make_pair(false,Cell::index_type(0,0,0,0)));
 }
 
 
 void 
 MaskedLatVolMesh::
 get_neighbors_stencil(vector<pair<bool,Node::index_type> > &nbrs, 
-		      Node::index_type &idx) const
+		      Node::index_type idx) const
 {
   nbrs.clear();
   for (int k = idx.k_ - 1; k <= int(idx.k_) + 1; k++)
     for (int j = idx.j_ - 1; j <= int(idx.j_) + 1; j++)
-      for (int i = idx.i_ - 1; k <= int(idx.i_) + 1; i++)
+      for (int i = idx.i_ - 1; i <= int(idx.i_) + 1; i++)
 	if (i != int(idx.i_) || j != int(idx.j_) || k != int(idx.k_))
 	  if (i >= int(min_i_) && j >= int(min_j_) && k >= int(min_k_) &&
 	      i <= int(min_i_+ni_) && j <= int(min_j_+nj_) &&
@@ -560,18 +560,18 @@ get_neighbors_stencil(vector<pair<bool,Node::index_type> > &nbrs,
 void 
 MaskedLatVolMesh::
 get_neighbors_stencil(vector<pair<bool,Cell::index_type> > &nbrs, 
-		      Node::index_type &idx) const
+					  Node::index_type idx) const
 {
   nbrs.clear();
   for (int k = idx.k_ - 1; k <= int(idx.k_); k++)
     for (int j = idx.j_ - 1; j <= int(idx.j_); j++)
-      for (int i = idx.i_ - 1; k <= int(idx.i_); i++)
-	if (i >= int(min_i_) && j >= int(min_j_) && k >= int(min_k_) &&
-	    i <= int(min_i_+ni_)-1 && j <= int(min_j_+nj_)-1 &&
-	    i <= int(min_k_+nk_)-1 && check_valid(i,j,k))
-	  nbrs.push_back(make_pair(true,Cell::index_type(this,i,j,k)));
-	else
-	  nbrs.push_back(make_pair(false,Cell::index_type(0,0,0,0)));
+      for (int i = idx.i_ - 1; i <= int(idx.i_); i++)
+		if (i >= int(min_i_) && j >= int(min_j_) && k >= int(min_k_) &&
+			i <= int(min_i_+ni_)-1 && j <= int(min_j_+nj_)-1 &&
+			i <= int(min_k_+nk_)-1 && check_valid(i,j,k))
+		  nbrs.push_back(make_pair(true,Cell::index_type(this,i,j,k)));
+		else
+		  nbrs.push_back(make_pair(false,Cell::index_type(0,0,0,0)));
 }
 
     
