@@ -52,7 +52,7 @@ public:
 		      bool def_col, ColorMapHandle color_handle,
 		      const string &ndt, const string &edt, 
 		      double ns, double es, double vs, bool normalize, 
-		      int res) = 0;
+		      int res, bool use_normals) = 0;
 
   virtual ~RenderFieldBase();
 
@@ -98,12 +98,15 @@ public:
 		    const string &edge_display_type,
 		    bool use_def_color,
 		    double edge_scale);
-  void render_faces(const Fld *fld, bool use_def_color);
+  void render_faces(const Fld *fld, 
+		    bool use_def_color,
+		    bool use_normals);
 
   void render_all(const Fld *fld,  
 		  bool nodes, bool edges, bool faces, bool data, 
 		  bool def_col, const string &ndt, const string &edt, 
-		  double ns, double es, double vs, bool normalize);
+		  double ns, double es, double vs, bool normalize,
+		  bool use_normals);
 
   void render_data(const Fld *fld, 
 		   const string &data_display_type, bool def_color,
@@ -116,7 +119,7 @@ public:
 		      bool def_col, ColorMapHandle color_handle,
 		      const string &ndt, const string &edt, 
 		      double ns, double es, double vs, bool normalize, 
-		      int res);
+		      int res, bool use_normals);
     
 private:
   inline void add_sphere(const Point &p, double scale, GeomGroup *g, 
@@ -216,7 +219,7 @@ RenderField<Fld>::render(FieldHandle fh,  bool nodes,
 			 bool def_col, ColorMapHandle color_handle,
 			 const string &ndt, const string &edt,
 			 double ns, double es, double vs, bool normalize, 
-			 int res)
+			 int res, bool use_normals)
 {
   Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
   ASSERT(fld != 0);
@@ -224,7 +227,7 @@ RenderField<Fld>::render(FieldHandle fh,  bool nodes,
   color_handle_ = color_handle;
   res_ = res;
   render_all(fld, nodes, edges, faces, data, def_col,  ndt, edt, ns, es, vs, 
-	     normalize);
+	     normalize, use_normals);
 }
 
 template <class Fld> template <class Iter>
@@ -439,10 +442,11 @@ RenderField<Fld>::render_edges(const Fld *sfld,
 template <class Fld>
 void 
 RenderField<Fld>::render_faces(const Fld *sfld,
-			       bool use_def_color)
+			       bool use_def_color,
+			       bool use_normals)
 {
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
-  const bool with_normals = mesh->has_normals();
+  const bool with_normals = (use_normals && mesh->has_normals());
 
   GeomTriangles* faces = scinew GeomTriangles;
   face_switch_ = scinew GeomSwitch(faces);
@@ -541,11 +545,12 @@ RenderField<Fld>::render_all(const Fld *fld, bool nodes,
 			     bool edges, bool faces, bool data,
 			     bool def_col,
 			     const string &ndt, const string &edt,
-			     double ns, double es, double vs, bool normalize)
+			     double ns, double es, double vs, bool normalize,
+			     bool use_normals)
 {
   if (nodes) render_nodes(fld, ndt, def_col, ns);
   if (edges) render_edges(fld, edt, def_col, es);
-  if (faces) render_faces(fld, def_col);
+  if (faces) render_faces(fld, def_col, use_normals);
   
   if (data) {
     vec_node_ = scinew GeomArrows(0.15, 0.6);
