@@ -403,8 +403,37 @@ WARNING
 
      Vector getVirtualOffsetVector() const
      { return cellPosition(d_lowIndex) -
-       cellPosition(getRealPatch()->d_lowIndex); }     
+	 cellPosition(getRealPatch()->d_lowIndex); }     
+
+   public:
      
+    /********************
+      The following are needed in order to use Patch as a Box in
+      Core/Container/SuperBox.h (see
+      Packages/Uintah/CCA/Components/Schedulers/LocallyComputedPatchVarMap.cc)
+    *********************/
+    
+    IntVector getLow() const
+    { return getLowIndex(); }
+    
+    IntVector getHigh() const
+    { return getHighIndex(); }
+    
+    int getVolume() const
+    { return getVolume(getLow(), getHigh()); }
+    
+    int getArea(int side) const
+    {
+      int area = 1;
+      for (int i = 0; i < 3; i++)
+	if (i != side)
+	  area *= getHigh()[i] - getLow()[i];
+      return area;
+    }
+    
+    static int getVolume(IntVector low, IntVector high)
+    { return (high.x() - low.x()) * (high.y() - low.y()) *
+	(high.z() - low.z()); }    
    protected:
      friend class Level;
      friend class NodeIterator;     
