@@ -316,7 +316,7 @@ public:
                            double angle);
   Vector CameraToWorld(Vector v);
   void   NormalizeMouseXY( int X, int Y, float *NX, float *NY);
-  void   UnNormalizeMouseXY( float NX, float NY, int *NX, int *NY);
+  void   UnNormalizeMouseXY( float NX, float NY, int *X, int *Y);
   float  WindowAspect();
 
   // for 'film_dir' and 'film_pt', x & y should be in the range [-1, 1].
