@@ -16,18 +16,22 @@
 */
 
 
-#include "NexusEpChannel.h"
-#include "NexusHandlerThread.h"
+#include <Core/CCA/Component/Comm/NexusEpChannel.h>
+#include <Core/CCA/Component/Comm/NexusHandlerThread.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/PIDL/Warehouse.h>
 #include <Core/CCA/Component/PIDL/ServerContext.h>
 #include <Core/CCA/Component/Comm/CommError.h>
 #include <Core/CCA/Component/Comm/NexusEpMessage.h>
 #include <Core/CCA/Component/Comm/NexusSpChannel.h>
+
+#include <Core/Util/DebugStream.h>
 #include <Core/Thread/Thread.h>
+
 #include <iostream>
 #include <sstream>
 #include <globus_nexus.h>
+
 using namespace SCIRun;
 using namespace std;
 
@@ -39,10 +43,7 @@ static char* hostname;
 // Port to listen to. Nexus assigns this.
 static unsigned short port;
 
-void NexusEpChannel::printDebug(const string& d) {
-  cout << d << endl;
-}
-
+static DebugStream dbg( "NexusEpChannel", false );
 
 static globus_nexus_handler_t emptytable[] = {{GLOBUS_NEXUS_HANDLER_TYPE_THREADED,0}};
 
@@ -102,7 +103,8 @@ static int approval_fn(void*, char* urlstring, globus_nexus_startpoint_t* sp)
 
 int NexusEpChannel::approve(globus_nexus_startpoint_t* sp, Object* obj)
 { 
-  if (kDEBUG) printDebug("NexusEpChannel::approve()");
+  dbg << "NexusEpChannel::approve()\n";
+
   if(int gerr=globus_nexus_startpoint_bind(sp, &d_endpoint)){
     std::cerr << "Failed to bind startpoint: " 
 	      << ", rejecting client (code=1004)\n";
@@ -116,7 +118,7 @@ int NexusEpChannel::approve(globus_nexus_startpoint_t* sp, Object* obj)
 }
 
 NexusEpChannel::NexusEpChannel() { 
-  if (kDEBUG) printDebug("NexusEpChannel::NexusEpChannel()");
+  dbg << "NexusEpChannel::NexusEpChannel()\n";
 }
 
 NexusEpChannel::~NexusEpChannel() {
@@ -126,7 +128,7 @@ void NexusEpChannel::openConnection() {
   static bool once = false;
   if(!once){
     once=true;
-    if (kDEBUG) printDebug("NexusEpChannel::openConnection()");
+    dbg << "NexusEpChannel::openConnection()\n";
   
     if(int gerr=globus_module_activate(GLOBUS_NEXUS_MODULE))
       throw CommError("Unable to initialize nexus", gerr);
@@ -137,7 +139,7 @@ void NexusEpChannel::openConnection() {
 }
 
 void NexusEpChannel::closeConnection() {
-  if (kDEBUG) printDebug("NexusEpChannel::closeConnection()");
+  dbg << "NexusEpChannel::closeConnection()\n";
 
   if(int gerr=globus_nexus_endpoint_destroy(&d_endpoint))
     throw CommError("endpoint_destroy", gerr);
@@ -152,13 +154,13 @@ string NexusEpChannel::getUrl() {
 }
 
 Message* NexusEpChannel::getMessage() {
-  if (kDEBUG) printDebug("NexusEpChannel::getMessage()");
+  dbg << "NexusEpChannel::getMessage()\n";
   return (new NexusEpMessage(d_endpoint,msgbuffer));
 }
 
 
 void NexusEpChannel::activateConnection(void * obj) {
-  if (kDEBUG) printDebug("NexusEpChannel::activateConnection()");
+  dbg << "NexusEpChannel::activateConnection()\n";
 
   globus_nexus_endpointattr_t attr;
   if(int gerr=globus_nexus_endpointattr_init(&attr))
@@ -179,7 +181,7 @@ void NexusEpChannel::activateConnection(void * obj) {
 }
 
 void NexusEpChannel::allocateHandlerTable(int size) {
-  if (kDEBUG) printDebug("NexusEpChannel::allocateHandlerTable()");
+  dbg << "NexusEpChannel::allocateHandlerTable()\n";
   handler_table = new HPF[size];
   table_size = size;
 }
