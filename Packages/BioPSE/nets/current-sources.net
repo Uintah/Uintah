@@ -15,6 +15,10 @@
 # The Original Source Code was developed by the University of Utah.
 # Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
 # University of Utah. All Rights Reserved.
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
 global Subnet
 set Subnet(Subnet$Subnet(Loading)_Name) {Main}
 set bbox {9 6 771 1167}
@@ -134,7 +138,7 @@ set c38 [addConnection $m7 0 $m11 3]
 set c39 [addConnection $m20 0 $m21 3]
 
 # Setup GUI for the SCIRun->DataIO->FieldReader Module
-setGlobal $m1-filename {/scratch/callahan/SCIRunData/sphere/sphere-mesh.tvt.fld}
+setGlobal $m1-filename "$DATADIR/$DATASET/$DATASET-mesh.tvt.fld"
 
 # Setup GUI for the SCIRun->FieldsCreate->SampleField Module
 setGlobal $m2-endpoints {0}

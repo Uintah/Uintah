@@ -15,6 +15,10 @@
 # The Original Source Code was developed by the University of Utah.
 # Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
 # University of Utah. All Rights Reserved.
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
 global userName
 set userName ""
 
@@ -61,7 +65,7 @@ set c7 [addConnection $m5 1 $m1 1]
 # Setup GUI for the SCIRun->FieldsData->AttractNormals Module
 
 # Setup GUI for the SCIRun->DataIO->FieldReader Module
-setGlobal $m2-filename {/scratch/callahan/SCIRunData/sphere/sphere-voltage.tvd.fld}
+setGlobal $m2-filename "$DATADIR/$DATASET/$DATASET-voltage.tvd.fld"
 
 # Setup GUI for the SCIRun->Visualization->ShowField Module
 setGlobal $m3-nodes-on {0}
@@ -165,8 +169,6 @@ setGlobal $m4-ViewWindow_0-clip-normal-x-6 {}
 setGlobal $m4-ViewWindow_0-clip-normal-y-6 {}
 setGlobal $m4-ViewWindow_0-clip-normal-z-6 {}
 setGlobal $m4-ViewWindow_0-clip-normal-d-6 {}
-setGlobal $m4-ViewWindow_0-unused {1}
-setGlobal $m4-ViewWindow_0-unused {1}
 
 # Setup GUI for the SCIRun->FieldsCreate->Probe Module
 setGlobal $m5-locx {-0.345607}
