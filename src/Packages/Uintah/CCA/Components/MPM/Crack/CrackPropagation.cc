@@ -24,9 +24,11 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Containers/StaticArray.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -95,7 +97,7 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
         // Clear up cfSegPtsT-Positions of crack-front nodes after propagation
         cfSegPtsT[m].clear();
 
-        int cfNodeSize=cfSegNodes[m].size();
+        int cfNodeSize= (int) cfSegNodes[m].size();
         short*  cp=new  short[cfNodeSize];
         Vector* da=new Vector[cfNodeSize];
 
@@ -311,7 +313,7 @@ void Crack::addComputesAndRequiresConstructNewCrackFrontElems(Task* t,
 void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
                       const PatchSubset* patches,
                       const MaterialSubset* /*matls*/,
-                      DataWarehouse* old_dw,
+                      DataWarehouse* /*old_dw*/,
                       DataWarehouse* /*new_dw*/)
 {
   for(int p=0; p<patches->size(); p++) {
@@ -344,7 +346,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
         cfSegNodesT.clear();
         cfSegVel[m].clear();
 	
-        int ncfSegs=cfSegNodes[m].size()/2;
+        int ncfSegs= (int) cfSegNodes[m].size()/2;
         int preIdxAtMin=-1;	
         for(int i=0; i<ncfSegs; i++) { // Loop over front segs
           // Relations of this seg with the left and right segs
@@ -425,7 +427,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
           // Detect if the seg is the first seg of a crack
           switch(CASE) { 
             case 0:  // Two ends of the segment do not propagate
-              if(firstSegOfEnclosedCrack) preIdxAtMin=cfSegNodesT.size();    
+              if(firstSegOfEnclosedCrack) preIdxAtMin= (int) cfSegNodesT.size();    
               cfSegNodesT.push_back(n1);
               cfSegNodesT.push_back(n2);
 	      
@@ -469,7 +471,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               ce[m].push_back(IntVector(n1,n1p,n2));
 
               // The new crack-front segment
-	      if(firstSegOfEnclosedCrack) preIdxAtMin=cfSegNodesT.size(); 
+	      if(firstSegOfEnclosedCrack) preIdxAtMin= (int) cfSegNodesT.size(); 
               cfSegNodesT.push_back(n1p);
               cfSegNodesT.push_back(n2);
 
@@ -493,7 +495,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               ce[m].push_back(IntVector(n1,n2p,n2));
 
               // The new crack-front segment
-	      if(firstSegOfEnclosedCrack) preIdxAtMin=cfSegNodesT.size();  
+	      if(firstSegOfEnclosedCrack) preIdxAtMin= (int) cfSegNodesT.size();  
               cfSegNodesT.push_back(n1);
               cfSegNodesT.push_back(n2p);
 
@@ -535,7 +537,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
 	      ce[m].push_back(IntVector(nmc,n1p,n2p));
 	      
               // The new crack-front segment
-              if(firstSegOfEnclosedCrack) preIdxAtMin=cfSegNodesT.size(); 	     
+              if(firstSegOfEnclosedCrack) preIdxAtMin= (int) cfSegNodesT.size(); 	     
 	      cfSegNodesT.push_back(n1p);
               cfSegNodesT.push_back(n2p);
 	      
@@ -565,7 +567,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               ce[m].push_back(IntVector(n1,nc,n2));
 
               // Two new crack-front segment
-	      if(firstSegOfEnclosedCrack) preIdxAtMin=cfSegNodesT.size();  
+	      if(firstSegOfEnclosedCrack) preIdxAtMin= (int) cfSegNodesT.size();  
               cfSegNodesT.push_back(n1p);
               cfSegNodesT.push_back(nc);
               cfSegNodesT.push_back(nc);
@@ -599,7 +601,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               ce[m].push_back(IntVector(n2,nc,n2p));
 
               // Two new crack-front segments
-	      if(firstSegOfEnclosedCrack) preIdxAtMin=cfSegNodesT.size();  
+	      if(firstSegOfEnclosedCrack) preIdxAtMin= (int) cfSegNodesT.size();  
               cfSegNodesT.push_back(n1);
               cfSegNodesT.push_back(nc);
               cfSegNodesT.push_back(nc);
@@ -650,7 +652,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               ce[m].push_back(IntVector(nmc,n1p,nc));
 			    
               // Two new crack-front segments
-	      if(firstSegOfEnclosedCrack) preIdxAtMin=cfSegNodesT.size();  
+	      if(firstSegOfEnclosedCrack) preIdxAtMin= (int) cfSegNodesT.size();  
               cfSegNodesT.push_back(n1p);
               cfSegNodesT.push_back(nc);
               cfSegNodesT.push_back(nc);

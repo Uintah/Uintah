@@ -25,11 +25,13 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Containers/StaticArray.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <sgi_stl_warnings_on.h>
 
 // The AIX header files have hz defined for some reason
 // and programmers like to use this as a variable name so...

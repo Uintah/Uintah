@@ -23,9 +23,11 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Containers/StaticArray.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -789,7 +791,7 @@ void Crack::DiscretizeRectangularCracks(const int& m,int& nstart0)
         Point pt2=rectangles[m][k][j1];
         for(i=0; i<(int)ce[m].size(); i++) {
           int ii=i;
-          if(j>1) ii=ce[m].size()-(i+1);
+          if(j>1) ii= (int) ce[m].size()-(i+1);
           n1=ce[m][ii].x();
           n2=ce[m][ii].y();
           n3=ce[m][ii].z();
@@ -885,7 +887,7 @@ void Crack::DiscretizeTriangularCracks(const int&m, int& nstart0)
         Point pt2=triangles[m][k][j1];
         for(i=0; i<(int)ce[m].size(); i++) {
           int ii=i;
-          if(j>1) ii=ce[m].size()-(i+1);
+          if(j>1) ii= (int) ce[m].size()-(i+1);
           n1=ce[m][ii].x();
           n2=ce[m][ii].y();
           n3=ce[m][ii].z();
