@@ -20,14 +20,19 @@
 SRCDIR := Core/GUI
 
 SRCS := \
-	$(SRCDIR)/BaseDial.tcl $(SRCDIR)/ColorPicker.tcl \
+	$(SRCDIR)/BaseDial.tcl \
+	$(SRCDIR)/ColorPicker.tcl \
 	$(SRCDIR)/Dial.tcl \
-	$(SRCDIR)/Dialbox.tcl $(SRCDIR)/Doublefile.tcl \
-	$(SRCDIR)/Filebox.tcl $(SRCDIR)/HelpPage.tcl \
+	$(SRCDIR)/Dialbox.tcl\
+	$(SRCDIR)/Filebox.tcl \
+	$(SRCDIR)/HelpPage.tcl \
 	$(SRCDIR)/BioPSEFilebox.tcl\
-	$(SRCDIR)/Histogram.tcl $(SRCDIR)/MaterialEditor.tcl \
-	$(SRCDIR)/MemStats.tcl $(SRCDIR)/PointVector.tcl \
-	$(SRCDIR)/ThreadStats.tcl $(SRCDIR)/Util.tcl \
+	$(SRCDIR)/Histogram.tcl \
+	$(SRCDIR)/MaterialEditor.tcl \
+	$(SRCDIR)/MemStats.tcl \
+	$(SRCDIR)/PointVector.tcl \
+	$(SRCDIR)/ThreadStats.tcl \
+	$(SRCDIR)/Util.tcl \
 	$(SRCDIR)/VTRDial.tcl\
 	$(SRCDIR)/Graph.tcl \
 	$(SRCDIR)/Diagram.tcl \
