@@ -468,6 +468,12 @@ itcl_class Module {
     method clearStreamOutput { } {
 	# Clear the text widget 
 	$msgLogStream clearTextWidget
+
+	# Clear the module indicator color if
+        # not in an error state
+	if {$msg_state != "Error"} {
+	    set_msg_state "Reset"
+	}
     }
     
     method destroyStreamOutput {w} {
