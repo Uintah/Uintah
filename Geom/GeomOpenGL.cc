@@ -138,7 +138,6 @@ void GeomCone::objdraw(DrawInfoOpenGL* di)
 
 void GeomCylinder::objdraw(DrawInfoOpenGL* di)
 {
-   cerr << "Cylinder: top=" << top << ", bottom=" << bottom << ", radius=" << rad << endl;
     glPushMatrix();
     glTranslated(bottom.x(), bottom.y(), bottom.z());
     glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
@@ -183,7 +182,6 @@ void GeomPolyline::objdraw(DrawInfoOpenGL* di) {
 
 void GeomSphere::objdraw(DrawInfoOpenGL* di)
 {
-   cerr << "Sphere: cen=" << cen << ", radius=" << rad << endl;
     glPushMatrix();
     glTranslated(cen.x(), cen.y(), cen.z());
     di->polycount+=nu*nv;

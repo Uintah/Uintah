@@ -90,9 +90,7 @@ void GeomPick::moved(int axis, double distance, const Vector& delta)
 	// Send a message...
         mailbox->send(new GeomPickMessage(module, axis, distance, delta, cbdata));
     } else {
-	cerr << "Calling moved...\n";
 	module->geom_moved(axis, distance, delta, cbdata);
-	cerr << "done\n";
     }
 }
 
