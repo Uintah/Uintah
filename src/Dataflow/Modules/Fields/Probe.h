@@ -71,12 +71,12 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
 
   {
     typename MESH::Node::index_type index;
-//    typename MESH::Node::index_type index = 0;
     bool found_p = true;
     if (!mesh->locate(index, p))
     {
       found_p = false;
-      double mindist = 1.0e6;
+      double mindist;
+      bool first_p = true;
       typename MESH::Node::iterator bi; mesh->begin(bi);
       typename MESH::Node::iterator ei; mesh->end(ei);
       while (bi != ei)
@@ -84,8 +84,9 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
 	Point c;
 	mesh->get_center(c, *bi);
 	const double dist = (p - c).length2();
-	if (dist < mindist)
+	if (first_p || dist < mindist)
 	{
+	  first_p = false
 	  mindist = dist;
 	  index = *bi;
 	  found_p = true;
@@ -107,7 +108,8 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
     if (!mesh->locate(index, p))
     {
       found_p = false;
-      double mindist = 1.0e6;
+      double mindist;
+      bool first_p = true;
       typename MESH::Edge::iterator bi; mesh->begin(bi);
       typename MESH::Edge::iterator ei; mesh->end(ei);
       while (bi != ei)
@@ -115,8 +117,9 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
 	Point c;
 	mesh->get_center(c, *bi);
 	const double dist = (p - c).length2();
-	if (dist < mindist)
+	if (first_p || dist < mindist)
 	{
+	  first_p = false;
 	  mindist = dist;
 	  index = *bi;
 	  found_p = true;
@@ -138,7 +141,8 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
     if (!mesh->locate(index, p))
     {
       found_p = false;
-      double mindist = 1.0e6;
+      double mindist;
+      bool first_p = true;
       typename MESH::Face::iterator bi; mesh->begin(bi);
       typename MESH::Face::iterator ei; mesh->end(ei);
       while (bi != ei)
@@ -146,8 +150,9 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
 	Point c;
 	mesh->get_center(c, *bi);
 	const double dist = (p - c).length2();
-	if (dist < mindist)
+	if (first_p || dist < mindist)
 	{
+	  first_p = false;
 	  mindist = dist;
 	  index = *bi;
 	  found_p = true;
@@ -170,7 +175,8 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
     if (!mesh->locate(index, p))
     {
       found_p = false;
-      double mindist = 1.0e6;
+      double mindist;
+      bool first_p = true;
       typename MESH::Cell::iterator bi; mesh->begin(bi);
       typename MESH::Cell::iterator ei; mesh->end(ei);
       while (bi != ei)
@@ -178,8 +184,9 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
 	Point c;
 	mesh->get_center(c, *bi);
 	const double dist = (p - c).length2();
-	if (dist < mindist)
+	if (first_p || dist < mindist)
 	{
+	  first_p = false;
 	  mindist = dist;
 	  index = *bi;
 	  found_p = true;
