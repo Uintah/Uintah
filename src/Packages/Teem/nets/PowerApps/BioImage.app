@@ -555,10 +555,10 @@ class BioImageApp {
 	    change_indicator_labels "Done Performing Histogram Equilization"
 	} elseif {[string first "UnuCmedian" $which 0] != -1 && $state == "JustStarted"} {
 	    change_indicate_val 1
-	    change_indicator_labels "Performing Median/Mode Filtering..."
+	    change_indicator_labels "Performing Median Filtering..."
 	} elseif {[string first "UnuCmedian" $which 0] != -1 && $state == "Completed"} {
 	    change_indicate_val 2
-	    change_indicator_labels "Done Performing Median/Mode Filtering"
+	    change_indicator_labels "Done Performing Median Filtering"
 	} elseif {[string first "ScalarFieldStats" $which] != -1 && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Building Histogram..."
@@ -1094,11 +1094,11 @@ class BioImageApp {
 		-command "$this add_Crop -1"
 	    Tooltip $filter.crop "Crop the image"
 
-	    button $filter.cmedian -text "Cmedian" \
+	    button $filter.cmedian -text "Median Filtering" \
 		-background $scolor -padx 3 \
 		-activebackground "#6c90ce" \
 		-command "$this add_Cmedian -1"
-	    Tooltip $filter.cmedian "Median/mode filtering"
+	    Tooltip $filter.cmedian "Perform median filtering"
 
 	    button $filter.histo -text "Histogram" \
 		-background $scolor -padx 3 \
@@ -2193,24 +2193,24 @@ class BioImageApp {
             label $winlevel.ww.l -text "Window Width"
             scale $winlevel.ww.s \
                 -variable $mods(ViewSlices)-axial-viewport0-clut_ww \
-                -from 0 -to 9999 -length 130 -width 14 \
+                -from 0 -to 9999 -length 120 -width 14 \
                 -showvalue false -orient horizontal \
                 -command "$this change_window_width"
             Tooltip $winlevel.ww.s "Control the window width of\nthe 2D viewers"
             bind $winlevel.ww.s <ButtonRelease> "$this execute_vol_ren_when_linked"
-            entry $winlevel.ww.e -textvariable $mods(ViewSlices)-axial-viewport0-clut_ww 
+            entry $winlevel.ww.e -textvariable $mods(ViewSlices)-axial-viewport0-clut_ww -width 6
             bind $winlevel.ww.e <Return> "$this change_window_width 1; $this execute_vol_ren_when_linked"
             pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left
 
             label $winlevel.wl.l -text "Window Level "
             scale $winlevel.wl.s \
                 -variable $mods(ViewSlices)-axial-viewport0-clut_wl \
-                -from 0 -to 9999 -length 130 -width 14 \
+                -from 0 -to 9999 -length 120 -width 14 \
                 -showvalue false -orient horizontal \
                 -command "$this change_window_level"
             Tooltip $winlevel.wl.s "Control the window level of\nthe 2D viewers"
             bind $winlevel.wl.s <ButtonRelease> "$this execute_vol_ren_when_linked"
-            entry $winlevel.wl.e -textvariable $mods(ViewSlices)-axial-viewport0-clut_wl 
+            entry $winlevel.wl.e -textvariable $mods(ViewSlices)-axial-viewport0-clut_wl -width 6
             bind $winlevel.wl.e <Return> "$this change_window_level 1; $this execute_vol_ren_when_linked"
             pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left
 
@@ -2220,17 +2220,17 @@ class BioImageApp {
             frame $page.thresh 
             pack $page.thresh -side top -anchor nw -expand no -fill x
 
-            label $page.thresh.l -text "Background Threshold:"
+            label $page.thresh.l -text "Background\nThreshold:"
 
             scale $page.thresh.s \
                 -from 0 -to 100 \
  	        -orient horizontal -showvalue false \
- 	        -length 100 -width 14 \
+ 	        -length 140 -width 14 \
 	        -variable $mods(ViewSlices)-background_threshold \
                 -command "$mods(ViewSlices)-c background_thresh"
 	    bind $page.thresh.s <Button1-Motion> "$mods(ViewSlices)-c background_thresh"
             bind $page.thresh.s <ButtonPress-1> "$this check_crop"
-            entry $page.thresh.l2 -textvariable $mods(ViewSlices)-background_threshold -width 4
+            entry $page.thresh.l2 -textvariable $mods(ViewSlices)-background_threshold -width 6
             Tooltip $page.thresh.s "Clip out values less than\nspecified background threshold"
 
             pack $page.thresh.l -side left -anchor w
@@ -2428,17 +2428,6 @@ class BioImageApp {
    	    pack $page.fmode.mode $page.fmode.modeo $page.fmode.modem \
                 -side left -fill x -padx 4 -pady 4
 
-            frame $page.fres
-            pack $page.fres -padx 2 -pady 2 -fill x
-            label $page.fres.res -text "Resolution (bits)"
-	    radiobutton $page.fres.b0 -text 8 -variable [set VolumeVisualizer]-blend_res -value 8 \
-	        -command $n
-    	    radiobutton $page.fres.b1 -text 16 -variable [set VolumeVisualizer]-blend_res -value 16 \
-	        -command $n
- 	    radiobutton $page.fres.b2 -text 32 -variable [set VolumeVisualizer]-blend_res -value 32 \
-	        -command $n
-	    pack $page.fres.res $page.fres.b0 $page.fres.b1 $page.fres.b2 \
-                -side left -fill x -padx 4 -pady 4
 
         #----------------------------------------------------------
         # Disable Lighting
@@ -2461,54 +2450,29 @@ class BioImageApp {
         Tooltip $page.shading "If computed, turn use of shading on/off"
         pack $page.shading -side top -fill x -padx 4
 
-        #-----------------------------------------------------------
-        # Light
-        #-----------------------------------------------------------
- 	frame $page.f5
- 	pack $page.f5 -padx 2 -pady 2 -fill x
- 	label $page.f5.light -text "Attach Light to"
- 	radiobutton $page.f5.light0 -text "Light 0" -relief flat \
-            -variable [set VolumeVisualizer]-light -value 0 \
-            -anchor w -command $n
- 	radiobutton $page.f5.light1 -text "Light 1" -relief flat \
-            -variable [set VolumeVisualizer]-light -value 1 \
-            -anchor w -command $n
-        pack $page.f5.light $page.f5.light0 $page.f5.light1 \
-            -side left -fill x -padx 4
-
 
         #-----------------------------------------------------------
-        # Sample Rate
+        # Sample Rates
         #-----------------------------------------------------------
         iwidgets::labeledframe $page.samplingrate \
-            -labeltext "Sampling Rate" -labelpos nw
+            -labeltext "Sampling Rates" -labelpos nw
         pack $page.samplingrate -side top -anchor nw -expand no -fill x
         set sratehi [$page.samplingrate childsite]
 
-        scale $sratehi.srate_hi \
+        scale $sratehi.srate_hi -label "Final Rate" \
             -variable [set VolumeVisualizer]-sampling_rate_hi \
-            -from 0.5 -to 10.0 \
+            -from 0.5 -to 20.0 \
             -showvalue true -resolution 0.1 \
             -orient horizontal -width 15 
-        pack $sratehi.srate_hi -side top -fill x -padx 4
-	bind $sratehi.srate_hi <ButtonRelease> $n
 
-        #-----------------------------------------------------------
-        # Interactive Sample Rate
-        #-----------------------------------------------------------
-        iwidgets::labeledframe $page.samplingrate_lo \
-            -labeltext "Interactive Sampling Rate" -labelpos nw
-        pack $page.samplingrate_lo -side top -anchor nw \
-            -expand no -fill x
-        set sratelo [$page.samplingrate_lo childsite]
-
-        scale $sratelo.srate_lo \
+        scale $sratehi.srate_lo -label "Interactive Rate" \
             -variable [set VolumeVisualizer]-sampling_rate_lo \
-            -from 0.1 -to 5.0 \
+            -from 0.1 -to 20.0 \
             -showvalue true -resolution 0.1 \
             -orient horizontal -width 15 
-        pack $sratelo.srate_lo -side top -fill x -padx 4
-	bind $sratelo.srate_lo <ButtonRelease> $n
+        pack $sratehi.srate_hi $sratehi.srate_lo -side left -fill x -expand yes -padx 4
+	bind $sratehi.srate_hi <ButtonRelease> $n
+	bind $sratehi.srate_lo <ButtonRelease> $n
 
 
         #-----------------------------------------------------------
@@ -2521,10 +2485,13 @@ class BioImageApp {
         set oframe [$page.opacityframe childsite]
 
 	scale $oframe.opacity -variable [set VolumeVisualizer]-alpha_scale \
-		-from -1.0 -to 1.0 \
-		-showvalue true -resolution 0.001 \
+		-from -1.0 -to 1.0 -length 150 \
+		-showvalue false -resolution 0.001 \
 		-orient horizontal -width 15
-        pack $oframe.opacity -side top -fill x -padx 4
+        entry $oframe.opacityl -textvariable [set VolumeVisualizer]-alpha_scale -width 4 \
+            -relief flat
+        pack $oframe.opacity -side left -fill x -expand yes -padx 4
+        pack $oframe.opacityl -side left -fill x -padx 4
 	bind $oframe.opacity <ButtonRelease> $n
 
 
@@ -2555,23 +2522,23 @@ class BioImageApp {
 
         label $winlevel.ww.l -text "Window Width"
         scale $winlevel.ww.s -variable vol_width \
-            -from 0 -to 9999 -length 130 -width 15 \
+            -from 0 -to 9999 -length 120 -width 15 \
             -showvalue false -orient horizontal \
             -command "$this change_volume_window_width_and_level"
         Tooltip $winlevel.ww.s "Control the window width of\nthe volume rendering"
         bind $winlevel.ww.s <ButtonRelease> "$this execute_vol_ren"
-        entry $winlevel.ww.e -textvariable vol_width 
+        entry $winlevel.ww.e -textvariable vol_width -width 6
 	bind $winlevel.ww.e <Return> "$this change_volume_window_width_and_level 1; $mods(ViewSlices)-c background_thresh"
         pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left
 
         label $winlevel.wl.l -text "Window Level "
         scale $winlevel.wl.s -variable vol_level \
-            -from 0 -to 9999 -length 130 -width 15 \
+            -from 0 -to 9999 -length 120 -width 15 \
             -showvalue false -orient horizontal \
             -command "$this change_volume_window_width_and_level"
         Tooltip $winlevel.wl.s "Control the window width of\nthe volume rendering"
        bind $winlevel.wl.s <ButtonRelease> "$this execute_vol_ren"
-       entry $winlevel.wl.e -textvariable vol_level
+       entry $winlevel.wl.e -textvariable vol_level -width 6
        bind $winlevel.wl.e <Return> "$this change_volume_window_width_and_level 1; $mods(ViewSlices)-c background_thresh"
         pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left
 
@@ -2595,7 +2562,7 @@ class BioImageApp {
 	  -variable $mods(ViewSlices)-gradient_threshold \
           -command $command
         bind $f <Button1-Motion> $command
-        entry $f.l2 -width 4\
+        entry $f.l2 -width 6 \
            -textvariable $mods(ViewSlices)-gradient_threshold
         pack $f.l -side left -anchor w
         pack $f.l2 $f.s -side right -anchor e -padx 2
@@ -2811,7 +2778,7 @@ class BioImageApp {
 	$menu_id add command -label "Insert Resample" -command "$this add_Resample $which"
 	$menu_id add command -label "Insert Crop" -command "$this add_Crop $which"
 	$menu_id add command -label "Insert Histogram" -command "$this add_Histo $which"
-	$menu_id add command -label "Insert Cmedian" -command "$this add_Cmedian $which"
+	$menu_id add command -label "Insert Median Filtering" -command "$this add_Cmedian $which"
     }
 
     method execute_Data {} {
@@ -3163,7 +3130,7 @@ class BioImageApp {
 	}
 
         # add to filters array
-        set filters($num_filters) [list cmedian [list $m1] [list $m1 0] [list $m1 0] $which [lindex $filters($which) $next_index] $choose $row 1 "Cmedian - Unknown"]
+        set filters($num_filters) [list cmedian [list $m1] [list $m1 0] [list $m1 0] $which [lindex $filters($which) $next_index] $choose $row 1 "Median Filtering - Unknown"]
 
 	# Make current frame regular
 	set p $which.f$which
@@ -3193,7 +3160,7 @@ class BioImageApp {
 	set num_filters [expr $num_filters + 1]
 	set grid_rows [expr $grid_rows + 1]
 
-        change_indicator_labels "Press Update to Perform Median/Mode Filtering..."
+        change_indicator_labels "Press Update to Perform Median Filtering..."
 
         $this enable_update 1 2 3
 
@@ -3979,7 +3946,7 @@ class BioImageApp {
 	grid config $history.$which.eye$which -column 0 -row 0 -sticky "nw"
 
 	iwidgets::labeledframe $history.$which.f$which \
-	    -labeltext "Cmedian" \
+	    -labeltext "Median Filtering" \
 	    -labelpos nw \
 	    -borderwidth 2 
 	grid config $history.$which.f$which -column 1 -row 0 -sticky "nw"
@@ -3996,8 +3963,8 @@ class BioImageApp {
 	    -anchor nw \
 	    -command "$this change_visibility $which" \
 	    -relief flat
-        Tooltip $w.expand.b "Click to minimize/show\nthe Cmedian UI"
-	label $w.expand.l -text "Cmedian - Unknown" -width $label_width \
+        Tooltip $w.expand.b "Click to minimize/show\nthe Median Filtering UI"
+	label $w.expand.l -text "Median Filtering - Unknown" -width $label_width \
 	    -anchor nw
 	Tooltip $w.expand.l "Right click to edit label"
 
