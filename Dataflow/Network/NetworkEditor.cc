@@ -470,7 +470,7 @@ void NetworkEditor::save_network(const string& filename)
         string result;
 	TCL::eval("winfo exists .ui" + module->id, result);
 	int res;
-	if(string_to_int(result, res)) {
+	if(string_to_int(result, res) && (res == 1)) {
 	    out << "$m" << i << " ui\n";
 	}
     }
