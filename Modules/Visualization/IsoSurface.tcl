@@ -33,7 +33,7 @@ proc uiIsoSurface {modid} {
     fscale $w.f.isoval -variable isoval,$modid -digits 4 \
 	    -from 0.0 -to 1.0 -label "IsoValue:" \
 	    -resolution .01 -showvalue true \
-	    -activeforeground SteelBlue2 -orient horizontal \
+	    -orient horizontal \
 	    -command $n -state disabled
     pack $w.f.isoval -side top -fill x
 

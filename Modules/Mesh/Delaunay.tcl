@@ -13,7 +13,7 @@ proc old_uiDelaunay {modid} {
 
     fscale $w.f.maxnode -variable maxnode,$modid -from 0 -to 1400 \
 	    -showvalue true -tickinterval 200 \
-	    -activeforeground SteelBlue2 -orient horizontal
+	    -orient horizontal
     pack $w.f.maxnode -fill x -side top
     button $w.f.go -text "Go" -command $n
     pack $w.f.go

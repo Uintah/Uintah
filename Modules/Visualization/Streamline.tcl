@@ -42,7 +42,7 @@ proc uiStreamline {modid} {
     fscale $w.f.lineradius -variable lineradius,$modid -digits 3 \
 	-from 0.0 -to 5.0 -label "Line/Ribbon Scale:" \
 	-resolution .01 -showvalue true -tickinterval .2 \
-	-activeforeground SteelBlue2 -orient horizontal
+	-orient horizontal
     pack $w.f.lineradius -fill x -pady 2
 
     frame $w.f.alg
@@ -67,7 +67,7 @@ proc uiStreamline {modid} {
     fscale $w.f.stepsize -variable stepsize,$modid -digits 3 \
 	-from -2.0 -to 2.0 -label "Step size:" \
 	-resolution .01 -showvalue true -tickinterval 2 \
-	-activeforeground SteelBlue2 -orient horizontal
+	-orient horizontal
     pack $w.f.stepsize -fill x -pady 2
 
     global maxsteps,$modid
@@ -75,7 +75,7 @@ proc uiStreamline {modid} {
     fscale $w.f.maxsteps -variable maxsteps,$modid \
 	-from 0 -to 1000 -label "Maximum steps:" \
 	-showvalue true -tickinterval 200 \
-	-activeforeground SteelBlue2 -orient horizontal
+	-orient horizontal
     pack $w.f.maxsteps -fill x -pady 2
 
 #    global widget_scale,$modid
@@ -87,10 +87,10 @@ proc uiStreamline {modid} {
     fscale $w.f.min -variable range_min,$modid -digits 4 \
 	    -from -2.0 -to 2.0 -label "Color min:" \
 	    -resolution .01 -showvalue true \
-	    -activeforeground SteelBlue2 -orient horizontal
+	    -orient horizontal
     fscale $w.f.max -variable range_max,$modid -digits 4 \
 	    -from -2.0 -to 2.0 -label "Color max:" \
 	    -resolution .01 -showvalue true \
-	    -activeforeground SteelBlue2 -orient horizontal
+	    -orient horizontal
     pack $w.f.min $w.f.max -side top -fill x
 }
