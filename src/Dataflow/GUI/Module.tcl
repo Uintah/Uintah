@@ -299,9 +299,6 @@ itcl_class Module {
 	} else {
 	    $graph configure -width $width
 	    if {$old_width == 0} { place $graph -relheight 1 -anchor nw }
-	    if {[winfo exists .standalone]} {
-		app update_progress [modname] $state
-	    }
 	}
 	set old_width $width
     }
@@ -350,6 +347,11 @@ itcl_class Module {
 	    set color grey75
 	    set progress 0
 	}
+
+	if {[winfo exists .standalone]} {
+	    app update_progress [modname] $state
+	}
+	
 	global Subnet
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
 	$canvas.module[modname].ff.inset.graph configure -background $color
