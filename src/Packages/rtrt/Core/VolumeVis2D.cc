@@ -16,6 +16,7 @@
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
+//#include <Packages/rtrt/Core/VolumeCutPlane.h>
 #include <float.h>
 #include <iostream>
 
@@ -30,15 +31,15 @@ using namespace rtrt;
 // PersistentTypeID VolumeVis2D::type_id("VolumeVis2D", "Object", vv_maker);
 
 // template<class T>
-VolumeVis2D::VolumeVis2D(BrickArray3<Voxel2D<float> >& _data,
-			 Voxel2D<float> data_min, Voxel2D<float> data_max,
-			 int nx, int ny, int nz,
-			 Point min, Point max,
-			 double spec_coeff, double ambient, double diffuse,
-			 double specular, Volvis2DDpy *dpy):
-  Object(this), dpy(dpy), diag(max - min),
-  data_min(data_min), data_max(data_max),
-  nx(nx), ny(ny), nz(nz),
+VolumeVis2D::VolumeVis2D( BrickArray3<Voxel2D<float> >& _data,
+			  Voxel2D<float> data_min, Voxel2D<float> data_max,
+			  int nx, int ny, int nz,
+			  Point min, Point max,
+			  double spec_coeff, double ambient, double diffuse,
+			  double specular, Volvis2DDpy *dpy ):
+  Object(this), dpy(dpy), cdpy(0), cutplane_active(false),
+  data_min(data_min), data_max(data_max), diag(max - min),
+  nx(nx), ny(ny), nz(nz), use_cutplane_material(false),
   min(min), max(max), spec_coeff(spec_coeff),
   ambient(ambient), diffuse(diffuse), specular(specular)
 {
@@ -79,12 +80,25 @@ VolumeVis2D::VolumeVis2D(BrickArray3<Voxel2D<float> >& _data,
 }
 
 // template<class T>
+void
+VolumeVis2D::initialize_cuttingPlane( PlaneDpy *cdpy ) {
+  if(cdpy) {
+    this->cdpy = cdpy;
+    cutplane_normal = cdpy->n;
+    cutplane_displacement = cdpy->d;
+    cutplane_active = true;
+    use_cutplane_material = true;
+    // set_material( cdpy );
+  }
+}
+
+// template<class T>
 VolumeVis2D::~VolumeVis2D() {
 }
 
 // template<class T>
-void VolumeVis2D::intersect(Ray& ray, HitInfo& hit, DepthStats*,
-			    PerProcessorContext*) {
+void VolumeVis2D::intersect(Ray& ray, HitInfo& hit, DepthStats* ,
+			    PerProcessorContext* ) {
   // determines the min and max t of the intersections with the boundaries
   double t1, t2, tx1, tx2, ty1, ty2, tz1, tz2;
 
@@ -130,19 +144,80 @@ void VolumeVis2D::intersect(Ray& ray, HitInfo& hit, DepthStats*,
   t2 = tx2;
   if (ty2 < t2) t2 = ty2;
   if (tz2 < t2) t2 = tz2;
-
-  // t1 is t_min and t2 is t_max
+  
   if (t2 > t1) {
-    if (t1 > FLT_EPSILON) {
-      hit.hit(this, t1);
-      float* tmax=(float*)hit.scratchpad;
-      *tmax = t2;
-    }
-    //else if (t2 > FLT_EPSILON)
-    //hit.hit(this, t2);
+    if (cutplane_active) {
+      VolumeVis2D_scratchpad vs;
+      vs.coe = Neither;
+      // Compute cutting plane intersection (t_cp)
+      double dt = Dot( ray.direction(), cutplane_normal );
+      double plane = Dot( cutplane_normal, ray.origin() ) -
+	                  cutplane_displacement;
+      double t_cp = (cutplane_displacement -
+		     Dot( cutplane_normal, ray.origin() ))/dt;
+      if( plane > 0 || (plane <= 0 && t_cp < t2) ) {
+	if( dt > 1.e-6 || dt < -1.e-6 ) {
+	  // and determine what to do with t_cp
+	  if( t_cp >= t1 && t_cp <= t2 ) {
+//  	  if( plane > 0 ) {
+	    // Determine which direction the normal is facing
+	    if( dt < 0 ) {
+	      vs.coe = OverwroteTMax;
+	      t2 = t_cp;
+	    } else if( dt > 0 ) {
+	      vs.coe = OverwroteTMin;
+	      t1 = t_cp;
+	    }
+//  	    vs.coe = OverwroteTMin;
+//  	    t1 = t_cp;
+//  	  } else if( t_cp <= 0 ) {
+//  	    vs.coe = Neither;
+//  	  } else {
+//  	    vs.coe = OverwroteTMax;
+//  	    t2 = t_cp;
+//  	  }
+//  	  } else if ( plane < 0 ) {
+//  	    return;
+//  	  }
+	  } else if( t_cp < t1 ) {
+	    if( dt < 0 ) {
+	      return;
+	    }
+	  } else if( t_cp > t2 ) {
+	    if( dt > 0 ) {
+	      return;
+	    }
+	  }
+	}
+//  	} else if( dt <= 1.e-6 && dt >= -1.e-6 ) {
+	// if perpendicular to the cutting plane, don't overwrite t values
+	// Check to see which side of the plane the origin of the ray is
+      } else if( plane <= 0 ) {
+	// on the back side of the plane, so there is no intersection
+	return;
+      }
+      // We need to just compute the intersection with the object
+      if( t1 > FLT_EPSILON ) {
+	if( hit.hit( this, t1 ) ) {
+	  vs.tmax = t2;
+	  VolumeVis2D_scratchpad* vsp=(VolumeVis2D_scratchpad*)hit.scratchpad;
+	  *vsp = vs;
+	}
+      } // if active cutting plane
+      
+      
+    } else 
+      // if cutting plane is not being used in computation
+      if( t1 > FLT_EPSILON ) {
+	if( hit.hit( this, t1 ) ) {
+	  float* tmax = (float*)hit.scratchpad;
+	  *tmax = t2;
+	}
+      }
   }
-   
-}
+} // intersect()
+
+
 
 // All incoming vectors should be normalized
 
@@ -269,11 +344,21 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
 			double atten, const Color& accumcolor,
 			Context* cx) {
 
-  unsigned int render_mode = dpy->render_mode;
-
+  //  cerr <<__LINE__<<"Number of lights in the scene is "<<cx->scene->nlights()<<"\n";
+  // deal with whether or not a cutting plane is being used
+  VolumeVis2D_scratchpad* vsp;
   float t_min = hit.min_t;
-  float* t_maxp = (float*)hit.scratchpad;
-  float t_max = *t_maxp;
+  float* t_maxp;
+  float t_max;
+  if(cutplane_active ) {
+    vsp = (VolumeVis2D_scratchpad*)hit.scratchpad;
+    t_max = vsp->tmax;
+  } else {
+    t_maxp = (float*)hit.scratchpad;
+    t_max = *t_maxp;
+  }
+  unsigned int render_mode = dpy->render_mode;
+  //#endif
 
   // alpha is the accumulating opacities
   // alphas are in levels of opacity: 1 - completly opaque
@@ -292,7 +377,7 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
 
   float step;
   int x_low, x_high, y_low, y_high, z_low, z_high;
-  float x_weight_low, y_weight_low, y_interpolate, z_weight_low, z_interpolate;
+  float x_weight_low, y_weight_low, z_weight_low;
   Voxel2D<float> a,b,c,d,e,f,g,h;
   Voxel2D<float> lz1, lz2, lz3, lz4, ly1, ly2, value;
   float alpha_factor;
@@ -301,13 +386,24 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
   float dy1, dy2;
   float dz1, dz2, dz3, dz4, dzly1, dzly2;
 
+  //  cerr <<__LINE__<<"("<<cx->scene->nlights()<<")Number of lights in the scene\n"; cerr.flush();
   Light* light=cx->scene->light(0);
   Vector light_dir;
-  
+
+  // If the cutting plane is in front add the cutting plane's color
+  if(cutplane_active ) {
+    if (vsp->coe == OverwroteTMin) {
+      total = Color(1,0,1);
+      alpha = 1;
+    }
+  }
   for(float t = t_min; t < t_max; t += dpy->t_inc) {
+    // opaque values are 1, so terminate the ray at alpha values close to one
+    if( alpha >= RAY_TERMINATION_THRESHOLD )
+      break;
     // get the point to interpolate
     p += p_inc;
-    
+
     ////////////////////////////////////////////////////////////
     // interpolate the point
     
@@ -321,13 +417,11 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
     y_low = bound((int)step, 0, data.dim2()-2);
     y_high = y_low+1;
     y_weight_low = y_high - step;
-    y_interpolate = 1 - y_weight_low;
     
     step = p.z() * norm_step_z;
     z_low = bound((int)step, 0, data.dim3()-2);
     z_high = z_low+1;
     z_weight_low = z_high - step;
-    z_interpolate = 1 - z_weight_low;
     
     ////////////////////////////////////////////////////////////
     // do the interpolation
@@ -345,15 +439,18 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
     e = data(x_high, y_low,  z_low);
     h = data(x_high, y_high, z_high);
     
-    lz1 = a * z_weight_low + b * (z_interpolate);
-    lz2 = c * z_weight_low + d * (z_interpolate);
-    lz3 = e * z_weight_low + f * (z_interpolate);
-    lz4 = g * z_weight_low + h * (z_interpolate);
+    lz1 = a * z_weight_low + b * (1 - z_weight_low);
+    lz2 = c * z_weight_low + d * (1 - z_weight_low);
+    lz3 = e * z_weight_low + f * (1 - z_weight_low);
+    lz4 = g * z_weight_low + h * (1 - z_weight_low);
     
-    ly1 = lz1 * y_weight_low + lz2 * (y_interpolate);
-    ly2 = lz3 * y_weight_low + lz4 * (y_interpolate);
+    ly1 = lz1 * y_weight_low + lz2 * (1 - y_weight_low);
+    ly2 = lz3 * y_weight_low + lz4 * (1 - y_weight_low);
       
     value = ly1 * x_weight_low + ly2 * (1 - x_weight_low);
+    if( value.v() < dpy->current_vmin || value.v() > dpy->current_vmax ||
+	value.g() < dpy->current_gmin || value.g() > dpy->current_gmax )
+      continue;
 
     //cout << "value = " << value << endl;
 #if 0
@@ -392,8 +489,8 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
       dz2 = d.v() - c.v();
       dz3 = f.v() - e.v();
       dz4 = h.v() - g.v();
-      dzly1 = dz1 * y_weight_low + dz2 * (y_interpolate);
-      dzly2 = dz3 * y_weight_low + dz4 * (y_interpolate);
+      dzly1 = dz1 * y_weight_low + dz2 * (1 - y_weight_low);
+      dzly2 = dz3 * y_weight_low + dz4 * (1 - y_weight_low);
       dz = dzly1 * x_weight_low + dzly2 * (1 - x_weight_low);
       
       Vector gradient;
@@ -412,9 +509,15 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
 			 value_color,light->get_color());
       total += temp * alpha_factor;
       alpha += alpha_factor;
-      // opaque values are 1, so terminate the ray at alpha values close to one
-      if( alpha >= RAY_TERMINATION_THRESHOLD )
-	break;
+    }
+  }
+
+  if (alpha < RAY_TERMINATION_THRESHOLD) {
+    if (vsp->coe == OverwroteTMax ) {
+      float alpha_factor = 1;
+      alpha_factor *= 1 - alpha;
+      total += Color(1,0,1) * alpha_factor;
+      alpha += alpha_factor;
     }
   }
   
@@ -432,6 +535,18 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
 // template<class T>
 void VolumeVis2D::animate(double, bool& changed)
 {
+  if( cdpy ) {
+    if( cdpy->n != cutplane_normal ||
+	cdpy->d != cutplane_displacement ||
+	cdpy->active != cutplane_active ||
+	cdpy->use_material != use_cutplane_material ) {
+      changed = true;
+      cutplane_normal = cdpy->n;
+      cutplane_displacement = cdpy->d;
+      cutplane_active = cdpy->active;
+      use_cutplane_material = cdpy->use_material;
+    }
+  }
   dpy->animate(changed);
 }
 
