@@ -215,7 +215,6 @@ ShellMaterial::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pStressTop,  pStressTopLabel,     pset);
   new_dw->allocateAndPut(pStressCen,  pStressCenLabel,     pset);
   new_dw->allocateAndPut(pStressBot,  pStressBotLabel,     pset);
-
   ParticleVariable<Matrix3> pDefGrad, pStress;
   new_dw->allocateAndPut(pDefGrad, lb->pDeformationMeasureLabel, pset);
   new_dw->allocateAndPut(pStress,  lb->pStressLabel,             pset);
@@ -238,58 +237,90 @@ ShellMaterial::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
+void ShellMaterial::allocateCMDataAddRequires(Task* task,
+					      const MPMMaterial* matl,
+					      const PatchSet* patch,
+					      MPMLabel* lb) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+
+  task->requires(Task::OldDW,pNormalRotRateLabel, Ghost::None);
+  task->requires(Task::OldDW,pDefGradTopLabel,    Ghost::None);
+  task->requires(Task::OldDW,pDefGradCenLabel,    Ghost::None);
+  task->requires(Task::OldDW,pDefGradBotLabel,    Ghost::None);
+  task->requires(Task::OldDW,pStressTopLabel,     Ghost::None);
+  task->requires(Task::OldDW,pStressCenLabel,     Ghost::None);
+  task->requires(Task::OldDW,pStressBotLabel,     Ghost::None);
+  task->requires(Task::OldDW,lb->pStressLabel,     Ghost::None);
+  task->requires(Task::OldDW,lb->pDeformationMeasureLabel,Ghost::None);
+
+}
+
+
 void 
 ShellMaterial::allocateCMDataAdd(DataWarehouse* new_dw,
-				 ParticleSubset* subset,
+				 ParticleSubset* addset,
 				 map<const VarLabel*, ParticleVariableBase*>* newState,
 				 ParticleSubset* delset,
 				 DataWarehouse* old_dw)
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
-  Matrix3 One, Zero(0.0); One.Identity();
-
+  Matrix3 Zero(0.0); 
 
   ParticleVariable<Vector>  pRotRate; 
   ParticleVariable<Matrix3> pDefGradTop, pDefGradCen, pDefGradBot, 
                             pStressTop, pStressCen, pStressBot;
-  new_dw->allocateTemporary(pRotRate, subset);
-  new_dw->allocateTemporary(pDefGradTop, subset);
-  new_dw->allocateTemporary(pDefGradCen, subset);
-  new_dw->allocateTemporary(pDefGradBot, subset);
-  new_dw->allocateTemporary(pStressTop, subset);
-  new_dw->allocateTemporary(pStressCen, subset);
-  new_dw->allocateTemporary(pStressBot, subset);
-
   ParticleVariable<Matrix3> pDefGrad, pStress;
-  new_dw->allocateTemporary(pDefGrad, subset);
-  new_dw->allocateTemporary(pStress,  subset);
 
-  ParticleSubset::iterator iter = subset->begin();
-  for(; iter != subset->end(); iter++) {
-    particleIndex pidx = *iter;
-    pRotRate[pidx]    = Vector(0.0,0.0,0.0);
-    pDefGradTop[pidx] = One;
-    pDefGradCen[pidx] = One;
-    pDefGradBot[pidx] = One;
-    pStressTop[pidx]  = Zero;
-    pStressCen[pidx]  = Zero;
-    pStressBot[pidx]  = Zero;
+  constParticleVariable<Vector> o_RotRate;
+  constParticleVariable<Matrix3> o_DefGradTop, o_DefGradCen, o_DefGradBot,
+    o_StressTop, o_StressCen, o_StressBot, o_DefGrad, o_Stress;
 
-    pDefGrad[*iter] = One;
-    pStress[*iter] = Zero;
+  new_dw->allocateTemporary(pRotRate, addset);
+  new_dw->allocateTemporary(pDefGradTop, addset);
+  new_dw->allocateTemporary(pDefGradCen, addset);
+  new_dw->allocateTemporary(pDefGradBot, addset);
+  new_dw->allocateTemporary(pStressTop, addset);
+  new_dw->allocateTemporary(pStressCen, addset);
+  new_dw->allocateTemporary(pStressBot, addset);
+  new_dw->allocateTemporary(pDefGrad, addset);
+  new_dw->allocateTemporary(pStress,  addset);
+
+  old_dw->get(o_RotRate,pNormalRotRateLabel,delset);
+  old_dw->get(o_DefGradTop,pDefGradTopLabel,delset);
+  old_dw->get(o_DefGradCen,pDefGradCenLabel,delset);
+  old_dw->get(o_DefGradBot,pDefGradBotLabel,delset);
+  old_dw->get(o_StressTop,pStressTopLabel,delset);
+  old_dw->get(o_StressCen,pStressCenLabel,delset);
+  old_dw->get(o_StressBot,pStressBotLabel,delset);
+  old_dw->get(o_Stress,lb->pStressLabel,delset);
+  old_dw->get(o_DefGrad,lb->pDeformationMeasureLabel,delset);
+
+
+  ParticleSubset::iterator o,n = addset->begin();
+  for(o=delset->begin(); o != delset->end(); o++,n++) {
+    pRotRate[*n]    = o_RotRate[*o];
+    pDefGradTop[*n] = o_DefGradTop[*o];
+    pDefGradCen[*n] = o_DefGradCen[*o];
+    pDefGradBot[*n] = o_DefGradBot[*o];
+    pStressTop[*n]  = o_StressTop[*o];
+    pStressCen[*n]  = o_StressCen[*o];
+    pStressBot[*n]  = o_StressBot[*o];
+    pDefGrad[*n] = o_DefGrad[*o];
+    pStress[*n] = Zero;
   }
 
-   (*newState)[pNormalRotRateLabel]=pRotRate.clone();
-   (*newState)[pDefGradTopLabel]=pDefGradTop.clone();
-   (*newState)[pDefGradCenLabel]=pDefGradCen.clone();
-   (*newState)[pDefGradBotLabel]=pDefGradBot.clone();
-   (*newState)[pStressTopLabel]=pStressTop.clone();
-   (*newState)[pStressCenLabel]=pStressCen.clone();
-   (*newState)[pStressBotLabel]=pStressBot.clone();
-   (*newState)[lb->pDeformationMeasureLabel]=pDefGrad.clone();
-   (*newState)[lb->pStressLabel]=pStress.clone();
- 
+  (*newState)[pNormalRotRateLabel]=pRotRate.clone();
+  (*newState)[pDefGradTopLabel]=pDefGradTop.clone();
+  (*newState)[pDefGradCenLabel]=pDefGradCen.clone();
+  (*newState)[pDefGradBotLabel]=pDefGradBot.clone();
+  (*newState)[pStressTopLabel]=pStressTop.clone();
+  (*newState)[pStressCenLabel]=pStressCen.clone();
+  (*newState)[pStressBotLabel]=pStressBot.clone();
+  (*newState)[lb->pDeformationMeasureLabel]=pDefGrad.clone();
+  (*newState)[lb->pStressLabel]=pStress.clone();
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
