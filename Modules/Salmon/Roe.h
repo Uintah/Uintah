@@ -39,6 +39,9 @@ class GeomSalmonItem;
 class Vector;
 struct DrawInfoOpenGL;
 class BallData;
+struct GeometryData;
+template<class T> class AsyncReply;
+
 
 struct ObjTag {
     TCLvarint* visible;
@@ -189,6 +192,8 @@ public:
     void set_current_time(double time);
 
     void dump_objects(const clString&, const clString& format);
+
+    void getData(int datamask, AsyncReply<GeometryData*>* result);
 };
 
 class RoeMouseMessage : public MessageBase {

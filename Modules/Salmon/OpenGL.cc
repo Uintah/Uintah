@@ -36,6 +36,8 @@
 #include <fstream.h>
 #include "image.h"
 #include <string.h>
+#include <Datatypes/Image.h>
+#include <Multitask/AsyncReply.h>
 
 #ifdef __sgi
 #include <X11/extensions/SGIStereo.h>
@@ -47,8 +49,16 @@ class OpenGLHelper;
 
 #define DO_REDRAW 0
 #define DO_PICK 1
+#define DO_GETDATA 2
 #define REDRAW_DONE 4
 #define PICK_DONE 5
+
+struct GetReq {
+    int datamask;
+    AsyncReply<GeometryData*>* result;
+    GetReq(int, AsyncReply<GeometryData*>* result);
+    GetReq();
+};
 
 class OpenGL : public Renderer {
     Tk_Window tkwin;
@@ -89,6 +99,7 @@ public:
     void redraw_loop();
     Mailbox<int> send_mb;
     Mailbox<int> recv_mb;
+    Mailbox<GetReq> get_mb;
 
     Salmon* salmon;
     Roe* roe;
@@ -108,12 +119,17 @@ public:
     virtual void listvisuals(TCLArgs&);
     virtual void setvisual(const clString&, int i, int width, int height);
 
+    View lastview;
+    double znear, zfar;
+
     // these functions were added to clean things up a bit...
 
 protected:
     
     void initState(void);
 
+    virtual void getData(int datamask, AsyncReply<GeometryData*>* result);
+    virtual void real_getData(int datamask, AsyncReply<GeometryData*>* result);
 };
 
 static OpenGL* current_drawer=0;
@@ -140,7 +156,7 @@ static int query_OpenGL()
 RegisterRenderer OpenGL_renderer("OpenGL", &query_OpenGL, &make_OpenGL);
 
 OpenGL::OpenGL()
-: tkwin(0), send_mb(10), recv_mb(10), helper(0)
+: tkwin(0), send_mb(10), recv_mb(10), helper(0), get_mb(5)
 {
     strbuf=scinew char[STRINGSIZE];
     drawinfo=scinew DrawInfoOpenGL;
@@ -198,6 +214,12 @@ int OpenGLHelper::body(int)
 void OpenGL::redraw(Salmon* s, Roe* r, double _tbeg, double _tend,
 		    int _nframes, double _framerate)
 {
+    salmon=s;
+    roe=r;
+    tbeg=_tbeg;
+    tend=_tend;
+    nframes=_nframes;
+    framerate=_framerate;
     // This is the first redraw - if there is not an OpenGL thread,
     // start one...
     if(!helper){
@@ -205,12 +227,7 @@ void OpenGL::redraw(Salmon* s, Roe* r, double _tbeg, double _tend,
 	helper=new OpenGLHelper(my_openglname(), this);
 	helper->activate(0);
     }
-    salmon=s;
-    roe=r;
-    tbeg=_tbeg;
-    tend=_tend;
-    nframes=_nframes;
-    framerate=_framerate;
+
     send_mb.send(DO_REDRAW);
     int rc=recv_mb.receive();
     if(rc != REDRAW_DONE){
@@ -258,8 +275,11 @@ void OpenGL::redraw_loop()
 		if(r == DO_PICK){
 		    real_get_pick(salmon, roe, send_pick_x, send_pick_y, ret_pick_obj, ret_pick_pick);
 		    recv_mb.send(PICK_DONE);
+		} else if(r== DO_GETDATA){
+		    GetReq req(get_mb.receive());
+		    real_getData(req.datamask, req.result);
 		} else {
-		    // Gobbly them up...
+		    // Gobble them up...
 		    nreply++;
 		}
 	    }
@@ -296,6 +316,9 @@ void OpenGL::redraw_loop()
 		if(r == DO_PICK){
 		    real_get_pick(salmon, roe, send_pick_x, send_pick_y, ret_pick_obj, ret_pick_pick);
 		    recv_mb.send(PICK_DONE);
+		} else if(r== DO_GETDATA){
+		    GetReq req(get_mb.receive());
+		    real_getData(req.datamask, req.result);
 		} else {
 		    nreply++;
 		    break;
@@ -401,14 +424,13 @@ void OpenGL::redraw_frame()
 
     // Setup the view...
     View view(roe->view.get());
+    lastview=view;
     double aspect=double(xres)/double(yres);
     double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov()/2.))));
 
     drawinfo->reset();
 
     // Compute znear and zfar...
-    double znear;
-    double zfar;
     if(compute_depth(roe, view, znear, zfar)){
 
 
@@ -1283,4 +1305,71 @@ void OpenGL::setvisual(const clString& wname, int which, int width, int height)
   tkwin=0;
   current_drawer=0;
   TCL::execute(clString("opengl ")+wname+" -visual "+to_string((int)visuals[which]->visualid)+" -direct true -geometry "+to_string(width)+"x"+to_string(height));
+}
+
+void OpenGL::getData(int datamask, AsyncReply<GeometryData*>* result)
+{
+    send_mb.send(DO_GETDATA);
+    get_mb.send(GetReq(datamask, result));
+}
+
+void OpenGL::real_getData(int datamask, AsyncReply<GeometryData*>* result)
+{
+    GeometryData* res=new GeometryData;
+    if(datamask&GEOM_VIEW){
+	res->view=new View(lastview);
+	res->xres=xres;
+	res->yres=yres;
+	res->znear=znear;
+	res->zfar=zfar;
+    }
+    if(datamask&(GEOM_COLORBUFFER|GEOM_DEPTHBUFFER)){
+	TCLTask::lock();
+    }
+    if(datamask&GEOM_COLORBUFFER){
+	Image* img=res->colorbuffer=new Image(xres, yres);
+	float* data=new float[xres*yres*3];
+	cerr << "xres=" << xres << ", yres=" << yres << endl;
+	glReadPixels(0, 0, xres, yres, GL_RGB, GL_FLOAT, data);
+	cerr << "Read done...\n";
+	float* p=data;
+	for(int y=0;y<yres;y++){
+	    for(int x=0;x<xres;x++){
+		img->put_pixel(x, y, Color(p[0], p[1], p[2]));
+		p+=3;
+	    }
+	}
+	delete[] data;
+    }
+    if(datamask&GEOM_DEPTHBUFFER){
+	DepthImage* img=res->depthbuffer=new DepthImage(xres, yres);
+	float* data=new float[xres*yres*3];
+	cerr << "reading depth...\n";
+	glReadPixels(0, 0, xres, yres, GL_DEPTH_COMPONENT, GL_FLOAT, data);
+	cerr << "done\n";
+	float* p=data;
+	for(int y=0;y<yres;y++){
+	    for(int x=0;x<xres;x++){
+		img->put_pixel(x, y, *p++);
+	    }
+	}
+	delete[] data;
+    }
+    if(datamask&(GEOM_COLORBUFFER|GEOM_DEPTHBUFFER)){
+	int errcode;
+	while((errcode=glGetError()) != GL_NO_ERROR){
+	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+	}
+	TCLTask::unlock();
+    }
+    result->reply(res);
+}
+
+GetReq::GetReq()
+{
+}
+
+GetReq::GetReq(int datamask, AsyncReply<GeometryData*>* result)
+: datamask(datamask), result(result)
+{
 }

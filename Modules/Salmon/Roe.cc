@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <strstream.h>
+#include <Multitask/AsyncReply.h>
 
 #define MouseStart 0
 #define MouseEnd 1
@@ -1140,6 +1141,16 @@ void Roe::dump_objects(const clString& filename, const clString& format)
     } else {
 	cerr << "WARNING: format " << format << " not supported!\n";
     }
+}
+
+void Roe::getData(int datamask, AsyncReply<GeometryData*>* result)
+{
+    if(current_renderer){
+	cerr << "calling current_renderer->getData\n";
+	current_renderer->getData(datamask, result);
+	cerr << "current_renderer...\n";
+    } else
+	result->reply(0);
 }
 
 #ifdef __GNUG__

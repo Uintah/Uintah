@@ -23,6 +23,7 @@
 #include <Modules/Salmon/SalmonGeom.h>
 #include <Geom/HeadLight.h>
 #include <Malloc/Allocator.h>
+#include <Multitask/AsyncReply.h>
 #include <iostream.h>
 
 extern "C" {
@@ -193,6 +194,18 @@ int Salmon::process_event(int block)
 	    for(int i=0;i<roe.size();i++)
 		roe[i]->redraw_if_needed();
 	    gmsg->wait->up();
+	}
+	break;
+    case MessageTypes::GeometryGetNRoe:
+	gmsg->nreply->reply(roe.size());
+	break;
+    case MessageTypes::GeometryGetData:
+	if(gmsg->which_roe >= roe.size()){
+	    gmsg->datareply->reply(0);
+	} else {
+	    cerr << "Calling roe->getData\n";
+	    roe[gmsg->which_roe]->getData(gmsg->datamask, gmsg->datareply);
+	    cerr << "getDat done\n";
 	}
 	break;
     case MessageTypes::TrackerMoved:

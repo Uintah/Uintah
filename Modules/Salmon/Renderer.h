@@ -27,6 +27,9 @@ typedef Renderer* (*make_Renderer)();
 typedef int (*query_Renderer)();
 class RegisterRenderer;
 class TCLArgs;
+struct GeometryData;
+class Semaphore;
+template<class T> class AsyncReply;
 
 class Renderer {
 public:
@@ -51,6 +54,7 @@ public:
     int compute_depth(Roe* roe, const View& view, double& near, double& far);
 
     int xres, yres;
+    virtual void getData(int datamask, AsyncReply<GeometryData*>* result);
 };
 
 class RegisterRenderer {

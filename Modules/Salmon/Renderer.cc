@@ -21,6 +21,7 @@
 #include <iostream.h>
 #include <values.h>
 #include <Classlib/NotFinished.h>
+#include <Multitask/AsyncReply.h>
 
 static AVLTree<clString, RegisterRenderer*>* known_renderers=0;
 static int db_trimmed=0;
@@ -141,6 +142,13 @@ void Renderer::listvisuals(TCLArgs& args)
 void Renderer::setvisual(const clString&, int, int, int)
 {
 }
+
+void Renderer::getData(int datamask, AsyncReply<GeometryData*>* result)
+{
+    cerr << "Warning Renderer::getData called - only implemented for OpenGL\n";
+    result->reply(0);
+}
+
 
 #ifdef __GNUG__
 
