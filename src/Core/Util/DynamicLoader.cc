@@ -283,6 +283,7 @@ DynamicLoader::compile_so(const string& file, ostream &serr)
   //{
   //command += " >> " + file + "log 2>&1";
   //}
+  command += " 2>&1";
   pipe = popen(command.c_str(), "r");
   if (pipe == NULL)
   {
