@@ -292,9 +292,9 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       void CCVariable<T>::allocate(const IntVector& lowIndex,
 				   const IntVector& highIndex)
       {
-	 if(getWindow())
-	    throw InternalError("Allocating a CCvariable that "
-				"is apparently already allocated!");
+	if(getWindow())
+	  throw InternalError("Allocating a CCvariable that "
+			      "is apparently already allocated!");
 	 resize(lowIndex, highIndex);
       }
 
@@ -364,6 +364,9 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
 //
 // $Log$
+// Revision 1.21  2000/09/22 22:06:16  rawat
+// fixed some bugs in staggered variables call
+//
 // Revision 1.20  2000/08/08 01:32:46  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.
