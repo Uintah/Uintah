@@ -30,7 +30,7 @@
 
 
 #include <sci_defs.h>
-
+#include <Core/Util/Environment.h>
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/logo.h>
 #include <Core/Containers/StringUtil.h>
@@ -613,7 +613,7 @@ OpenGL::render_and_save_image(int x, int y,
     tmp_row = 0;
   }
 
-  if (getenv("SCI_REGRESSION_TESTING"))
+  if (sci_getenv("SCI_REGRESSION_TESTING"))
   {
     Thread::exitAll(0);
   }

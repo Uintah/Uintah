@@ -40,6 +40,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/FutureValue.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Util/Environment.h>
 
 #include <iostream>
 using std::cerr;
@@ -787,7 +788,7 @@ void Viewer::flushPort(int portid)
   }
   if (all)
   {
-    if (getenv("SCI_REGRESSION_TESTING"))
+    if (sci_getenv("SCI_REGRESSION_TESTING"))
     {
       geomlock_.writeUnlock();
       for (unsigned int i = 0; i < view_window_.size(); i++)

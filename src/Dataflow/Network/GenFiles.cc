@@ -25,6 +25,7 @@
 #include <Dataflow/Network/SkeletonFiles.h>
 #include <Dataflow/Network/GenFiles.h>
 #include <Dataflow/Network/FileUtils.h>
+#include <Core/Util/Environment.h>
 
 #define PERM S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH
 
@@ -223,7 +224,7 @@ int GenComponent(component_node* n, char* package, char* psepath)
 	  psepath,packdir,n->category,n->name);
   file = fopen(filename,"w");
   fprintf(file,component_skeleton,n->name,
-	  getenv("USER"),"TODAY'S DATE HERE",
+	  sci_getenv("USER"),"TODAY'S DATE HERE",
 	  package,
 	  n->name,n->name,n->name,
 	  n->name,n->name,n->name,n->name,

@@ -30,6 +30,7 @@
 
 #include <Core/GuiInterface/GuiContext.h>
 #include <Core/GuiInterface/GuiInterface.h>
+#include <Core/Util/Environment.h>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -222,16 +223,17 @@ string GuiContext::format_varname()
 
 void GuiContext::emit(std::ostream& out,
 		      const string& midx,
-		      const string& prefix)
+		      const string& indent)
 {
+  const string prefix = indent + (indent.length()==0?"set ":"setGlobal ");
   if(save){
     string result;
     gui->get(name, result);
-    if (usedatadir && getenv("SCIRUN_NET_SUBSTITUTE_DATADIR"))
+    if (usedatadir && sci_getenv("SCIRUN_NET_SUBSTITUTE_DATADIR"))
     {
-      char *tmp;
+      const char *tmp;
       // Replace DATADIR
-      if ((tmp = getenv("SCIRUN_DATA")))
+      if ((tmp = sci_getenv("SCIRUN_DATA")))
       {
 	const string datadir(tmp);
 	const string::size_type loc = result.find(datadir);
@@ -242,7 +244,7 @@ void GuiContext::emit(std::ostream& out,
       }
       
       // Replace DATASET
-      if ((tmp = getenv("SCIRUN_DATASET")))
+      if ((tmp = sci_getenv("SCIRUN_DATASET")))
       {
 	const string dataset(tmp);
 	while (1)
@@ -259,22 +261,20 @@ void GuiContext::emit(std::ostream& out,
 	}
       }
 
-      out << prefix << "setGlobal " << midx << "-" << format_varname() << " \""
+      out << prefix << midx << "-" << format_varname() << " \""
 	  << result << "\"" << std::endl;
     }
     else
     {
-      string isDefault;
-      gui->eval("isaDefaultValue {"+name+"}",isDefault);
-      if (isDefault == "0") {
-	out << prefix << "setGlobal " << midx << "-" << format_varname() << " {"
+      if (gui->eval("isaDefaultValue {"+name+"}") == "0") {
+	out << prefix << midx << "-" << format_varname() << " {"
 	    << result << "}" << std::endl;
       }
     }
   }
   for(vector<GuiContext*>::iterator iter = children.begin();
       iter != children.end(); ++iter)
-    (*iter)->emit(out, midx, prefix);
+    (*iter)->emit(out, midx, indent);
 }
 
 void GuiContext::reset()
