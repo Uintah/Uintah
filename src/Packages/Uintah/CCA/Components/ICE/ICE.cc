@@ -4129,7 +4129,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
       //__________________________________
       // Advect  model variables 
       if(d_modelSetup && d_modelSetup->tvars.size() > 0){
-       vector<TransportedVariable*>::iterator t_iter;
+        vector<TransportedVariable*>::iterator t_iter;
         for( t_iter  = d_modelSetup->tvars.begin();
              t_iter != d_modelSetup->tvars.end(); t_iter++){
           TransportedVariable* tvar = *t_iter;
@@ -4138,35 +4138,35 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
             constCCVariable<double> q_L_CC,q_src;
             CCVariable<double> q_new, q_CC;
             
-	     old_dw->get(q_L_CC, tvar->var, indx, patch, gac, 2);         
-	     if(tvar->src){ 
+	     old_dw->get(q_L_CC,   tvar->var, indx, patch, gac, 2);         
+	     if(tvar->src){
 	       new_dw->get(q_src,  tvar->src, indx, patch, gac, 2);
-            }         
-	     new_dw->allocateTemporary(q_new, patch, gac, 2);
-            new_dw->allocateAndPut(q_CC, tvar->var, indx, patch);
+             }
+             new_dw->allocateTemporary(q_new, patch, gac, 2);
+             new_dw->allocateAndPut(q_CC, tvar->var, indx, patch);
 
-	     if(tvar->src){  // if transported variable has a source
-	       for(CellIterator iter(q_L_CC.getLowIndex(), q_L_CC.getHighIndex());
-		    !iter.done(); iter++){
+             if(tvar->src){  // if transported variable has a source
+              for(CellIterator iter(q_L_CC.getLowIndex(),q_L_CC.getHighIndex());
+                               !iter.done(); iter++){
 		  IntVector c = *iter;                            
 		  q_new[c]  = (q_L_CC[c] + q_src[c])*mass_L[c];
-	       }
+              }
 	     } else {
-	       for(CellIterator iter(q_L_CC.getLowIndex(),q_L_CC.getHighIndex());
-		    !iter.done(); iter++){
+              for(CellIterator iter(q_L_CC.getLowIndex(),q_L_CC.getHighIndex());
+                              !iter.done(); iter++){
 		  IntVector c = *iter;                            
 		  q_new[c]  = q_L_CC[c]*mass_L[c];
-	       }
+	      }
 	     }
-            advector->advectQ(q_new,patch,q_advected, new_dw);
+             advector->advectQ(q_new,patch,q_advected, new_dw);
             
-            update_q_CC<CCVariable<double>, double>
+             update_q_CC<CCVariable<double>, double>
                   ("q_new",q_CC, q_new, q_advected, 
                    mass_L, mass_new, mass_advected, PH, PH2, patch);
-            
-            //  Set Boundary Conditions 
-            string Labelname = tvar->var->getName();
-	     setBC(q_CC, Labelname,  patch, d_sharedState, indx);
+
+             //  Set Boundary Conditions 
+             string Labelname = tvar->var->getName();
+             setBC(q_CC, Labelname,  patch, d_sharedState, indx);
           }
         }
       }
