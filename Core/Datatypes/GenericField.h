@@ -41,21 +41,21 @@ public:
     Field(),
     mesh_(mesh_handle_type(new mesh_type())),
     fdata_(fdata_type())
-  {};
+  {}
 
   GenericField(data_location data_at) : 
     Field(data_at),
     mesh_(mesh_handle_type(new mesh_type())),
     fdata_(fdata_type())
-  {};
+  {}
 
   GenericField(mesh_handle_type mesh, data_location data_at) : 
     Field(data_at),
     mesh_(mesh),
     fdata_(fdata_type())
-  {};
+  { resize_fdata(); }
 
-  virtual ~GenericField() {};
+  virtual ~GenericField() {}
 
   //! Required virtual functions from field base.
   virtual MeshBaseHandle mesh() const
@@ -84,6 +84,8 @@ public:
   { return fdata_[i]; }
   value_type value(typename mesh_type::cell_index i) const 
   { return fdata_[i]; }
+
+  virtual void resize_fdata();
 
   fdata_type& fdata() { return fdata_; }
   const fdata_type& fdata() const { return fdata_; }
@@ -154,6 +156,34 @@ GenericField<Mesh, FData>::query_interpolate() const
 {
   return new GInterp<value_type>(this); 
 }
+
+
+template <class Mesh, class FData>
+void
+GenericField<Mesh, FData>::resize_fdata()
+{
+  if (data_at() == NODE)
+  {
+    fdata().resize(get_typed_mesh()->nodes_size());
+  }
+  else if (data_at() == EDGE)
+  {
+    fdata().resize(get_typed_mesh()->edges_size());
+  }
+  else if (data_at() == FACE)
+  {
+    ASSERTFAIL("tetvol can't have data at faces (yet)");
+  }
+  else if (data_at() == CELL)
+  {
+    fdata().resize(get_typed_mesh()->cells_size());
+  }
+  else
+  {
+    ASSERTFAIL("data at unrecognized location");
+  }
+}
+
 
 #if 0
 template <class Mesh, class FData>

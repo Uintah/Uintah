@@ -189,6 +189,17 @@ public:
 				       (ny_-1)*(nz_-1) + 
 				       (nx_-1)*(nz_-1); }
 
+
+  node_index nodes_size() { return node_index(nx_, ny_, nz_); }
+  edge_index edges_size()
+  { return nx_*ny_*nz_*3 - nx_*ny_ - ny_*nz_ -  nx_*nz_; } 
+  face_index faces_size()
+  {
+    return (nx_-1)*(ny_-1)*(nz_-1)*3 +
+      (nx_-1)*(ny_-1) + (ny_-1)*(nz_-1) + (nx_-1)*(nz_-1);
+  }
+  cell_index cells_size() { return cell_index(nx_-1, ny_-1, nz_-1); }
+
   //! get the mesh statistics
   unsigned get_nx() const { return nx_; }
   unsigned get_ny() const { return ny_; }
