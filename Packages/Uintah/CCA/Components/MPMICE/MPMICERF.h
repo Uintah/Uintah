@@ -106,13 +106,6 @@ public:
                                                const MaterialSubset*,
 					       const MaterialSet*);
 
-  void scheduleComputeFCPressDiff(             SchedulerP&, 
-                                               const PatchSet*,
-                                               const MaterialSubset*,
-                                               const MaterialSubset*,
-                                               const MaterialSubset*,
-					       const MaterialSet*);
-
   void scheduleComputeEquilibrationPressure(SchedulerP&, 
                                             const PatchSet*,
                                             const MaterialSubset*,
@@ -165,12 +158,6 @@ public:
                          DataWarehouse* new_dw);
 
   void computeNonEquilibrationPressure(const ProcessorGroup*,
-				       const PatchSubset* patch,
-				       const MaterialSubset* matls,
-				       DataWarehouse*, 
-				       DataWarehouse*);
-
-  void computeFCPressDiff(             const ProcessorGroup*,
 				       const PatchSubset* patch,
 				       const MaterialSubset* matls,
 				       DataWarehouse*, 
