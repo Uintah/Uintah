@@ -23,9 +23,16 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+  void glTextAnchor(double* pos);
+  void glTextNormal(double* norm);
+  void glTextUp(double* up);
+  void glTextSize(double width, double height);
+  void glTextAlign(int align);
+  int  glprintf(const char* format, ...);
   
-  int glprintf(float* pos, float* norm, float* up, float width, float height,
-	       const char* format, ...);
+  //int glprintf(float* pos, float* norm, float* up, float width, float height,
+  //	         const char* format, ...);
   void init_glprintf();
   
 #ifdef __cplusplus

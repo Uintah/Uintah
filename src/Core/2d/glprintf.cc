@@ -31,7 +31,13 @@
 #include "texture.h"
 #include <iostream>
 
-Texture* Font = 0;
+Texture *Font = 0;
+double _gl_text_anchor_[3] = {0,0,0};
+double _gl_text_normal_[3] = {0,0,-1};
+double _gl_text_up_[3] = {0,1,0};
+double _gl_text_width_ = 1.0;
+double _gl_text_height_ = 1.0;
+double _gl_text_align_ = GL_LEFT;
 
 void init_glprintf()
 {
@@ -41,19 +47,59 @@ void init_glprintf()
     UseTexture(Font);
 }
 
-/*
+void glTextAnchor(double* pos) 
+{
+  // no degenerate vectors allowed
+  if ( (pos[0]*pos[0]+
+	pos[1]*pos[1]+
+	pos[2]*pos[2]) > 1e-30 ) {
+    _gl_text_anchor_[0] = pos[0];
+    _gl_text_anchor_[1] = pos[1];
+    _gl_text_anchor_[2] = pos[2];
+  }
+}
 
-  position      : 3D anchor point for start of text (upper left hand corner
-                  of first character)
-  normal        : the normal of the plane in which the text sits
-  up            : the up vector for the text 
-  width, height : the size of one character (used for all chars in text)
-  format        : same as format string to printf() function
-  ...           : same as unlimited arguments to printf() function
+void glTextNormal(double* norm)
+{
+  // no degenerate vectors allowed
+  if ( (norm[0]*norm[0]+
+	norm[1]*norm[1]+
+	norm[2]*norm[2]) > 1e-30 ) {
+    _gl_text_normal_[0] = norm[0];
+    _gl_text_normal_[1] = norm[1];
+    _gl_text_normal_[2] = norm[2];
+  }
+}
 
- */
+void glTextUp(double* up)
+{
+  // no degenerate vectors allowed
+  if ( (up[0]*up[0]+
+	up[1]*up[1]+
+	up[2]*up[2]) > 1e-30 ) {
+    _gl_text_up_[0] = up[0];
+    _gl_text_up_[1] = up[1];
+    _gl_text_up_[2] = up[2];
+  }
+}
 
-int glprintf(float* position, float* normal, float* up, float width, float height, const char* format, ...)
+void glTextSize(double width, double height)
+{
+  // no negative sizes allowed
+  if (width > 0 )
+    _gl_text_width_ = width;
+  if (height > 0 )
+    _gl_text_height_ = height;
+}
+
+void glTextAlign(int align)
+{
+  // must be GL_LEFT or GL_RIGHT
+  if (align == GL_LEFT || align == GL_RIGHT)
+    _gl_text_align_ = align;
+}
+
+int glprintf(const char* format, ...)
 {
   int length1 = strlen(format)+100;
   int length2 = length1;
@@ -61,25 +107,28 @@ int glprintf(float* position, float* normal, float* up, float width, float heigh
   char* string = new char[length1];
   va_list args;
   int x,y;
-  float fx,fy;
-  float dx,dy;
-  float right[3];
-  float h;
-  float locpos[3];
-  float xsmidge = 2.5/TABLE_PIXEL_WIDTH;
-  float ysmidge = 1.5/TABLE_PIXEL_HEIGHT;
+  double fx,fy;
+  double dx,dy;
+  double right[3];
+  double h;
+  double locpos[3];
+  double xsmidge = 2.5/TABLE_PIXEL_WIDTH;
+  double ysmidge = 1.5/TABLE_PIXEL_HEIGHT;
   
-  //width = height*(float)CHAR_PIXEL_WIDTH/CHAR_PIXEL_HEIGHT;
+  //width = height*(double)CHAR_PIXEL_WIDTH/CHAR_PIXEL_HEIGHT;
   
-  locpos[0] = position[0];
-  locpos[1] = position[1];
-  locpos[2] = position[2];
+  locpos[0] = _gl_text_anchor_[0];
+  locpos[1] = _gl_text_anchor_[1];
+  locpos[2] = _gl_text_anchor_[2];
   
-  right[0]=normal[1]*up[2]-normal[2]*up[1];
-  right[1]=normal[2]*up[0]-normal[0]*up[2];
-  right[2]=normal[0]*up[1]-normal[1]*up[0];
-  h = (float)sqrt(right[0]*right[0]+right[1]*right[1]+right[2]*right[2]);
-  if (h>-0.00001&&h<0.00001) {
+  right[0]=_gl_text_normal_[1]*_gl_text_up_[2]-
+    _gl_text_normal_[2]*_gl_text_up_[1];
+  right[1]=_gl_text_normal_[2]*_gl_text_up_[0]-
+    _gl_text_normal_[0]*_gl_text_up_[2];
+  right[2]=_gl_text_normal_[0]*_gl_text_up_[1]-
+    _gl_text_normal_[1]*_gl_text_up_[0];
+  h = (double)sqrt(right[0]*right[0]+right[1]*right[1]+right[2]*right[2]);
+  if (h>-1e-30&&h<1e-30) {
     right[0]/=h;
     right[1]/=h;
     right[2]/=h;
@@ -89,7 +138,7 @@ int glprintf(float* position, float* normal, float* up, float width, float heigh
 
   memset(string,0,length1);
   while (vsnprintf(string,length2,format,args)==-1) {
-    length2*=4;
+    length2*=8;
     delete[] string;
     string = new char[length2];
     memset(string,0,length2);
@@ -108,33 +157,70 @@ int glprintf(float* position, float* normal, float* up, float width, float heigh
   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
   
   glBegin(GL_QUADS);
-  for(loop1=0;loop1<length2;loop1++) {
-    if (string[loop1]=='\0') break;
-    y = (string[loop1]-' ')/TABLE_CHAR_WIDTH;
-    x = (string[loop1]-' ')%TABLE_CHAR_WIDTH;
-    //printf("char = \"%c\"; x,y = %d,%d\n",string[loop1],x,y);
-    fx = ((float)(x*CHAR_PIXEL_WIDTH)/TABLE_PIXEL_WIDTH)*Font->wslop;
-    fy = ((float)(y*CHAR_PIXEL_HEIGHT)/TABLE_PIXEL_HEIGHT)*Font->hslop;
-    //printf("fx,fy = %f,%f\n",fx,fy);
-    dx = ((float)CHAR_PIXEL_WIDTH/TABLE_PIXEL_WIDTH)*Font->wslop;
-    dy = ((float)CHAR_PIXEL_HEIGHT/TABLE_PIXEL_HEIGHT)*Font->hslop;
-    glTexCoord2f(fx+xsmidge,fy+ysmidge);
-    glVertex3f(locpos[0],locpos[1],locpos[2]);
-    glTexCoord2f(fx+xsmidge,fy+dy-ysmidge);
-    glVertex3f(locpos[0]-height*up[0],
-	       locpos[1]-height*up[1],
-	       locpos[2]-height*up[2]);
-    glTexCoord2f(fx+dx-xsmidge,fy+dy-ysmidge);
-    glVertex3f(locpos[0]-height*up[0]+width*right[0],
-	       locpos[1]-height*up[1]+width*right[1],
-	       locpos[2]-height*up[2]+width*right[2]);
-    glTexCoord2f(fx+dx-xsmidge,fy+ysmidge);
-    glVertex3f(locpos[0]+width*right[0],
-	       locpos[1]+width*right[1],
-	       locpos[2]+width*right[2]);
-    locpos[0]+=width*right[0];
-    locpos[1]+=width*right[1];
-    locpos[2]+=width*right[2];
+  if (_gl_text_align_ == GL_LEFT) {
+    for(loop1=0;loop1<length2;--loop1) {
+      if (string[loop1]=='\0') break;
+      y = (string[loop1]-' ')/TABLE_CHAR_WIDTH;
+      x = (string[loop1]-' ')%TABLE_CHAR_WIDTH;
+      //printf("char = \"%c\"; x,y = %d,%d\n",string[loop1],x,y);
+      fx = ((double)(x*CHAR_PIXEL_WIDTH)/TABLE_PIXEL_WIDTH)*Font->wslop;
+      fy = ((double)(y*CHAR_PIXEL_HEIGHT)/TABLE_PIXEL_HEIGHT)*Font->hslop;
+      //printf("fx,fy = %f,%f\n",fx,fy);
+      dx = ((double)CHAR_PIXEL_WIDTH/TABLE_PIXEL_WIDTH)*Font->wslop;
+      dy = ((double)CHAR_PIXEL_HEIGHT/TABLE_PIXEL_HEIGHT)*Font->hslop;
+      glTexCoord2f(fx+xsmidge,fy+ysmidge);
+      glVertex3f(locpos[0],locpos[1],locpos[2]);
+      glTexCoord2f(fx+xsmidge,fy+dy-ysmidge);
+      glVertex3f(locpos[0]-_gl_text_height_*_gl_text_up_[0],
+		 locpos[1]-_gl_text_height_*_gl_text_up_[1],
+		 locpos[2]-_gl_text_height_*_gl_text_up_[2]);
+      glTexCoord2f(fx+dx-xsmidge,fy+dy-ysmidge);
+      glVertex3f(locpos[0]-_gl_text_height_*_gl_text_up_[0]+
+		 _gl_text_width_*right[0],
+		 locpos[1]-_gl_text_height_*_gl_text_up_[1]+
+		 _gl_text_width_*right[1],
+		 locpos[2]-_gl_text_height_*_gl_text_up_[2]+
+		 _gl_text_width_*right[2]);
+      glTexCoord2f(fx+dx-xsmidge,fy+ysmidge);
+      glVertex3f(locpos[0]+_gl_text_width_*right[0],
+		 locpos[1]+_gl_text_width_*right[1],
+		 locpos[2]+_gl_text_width_*right[2]);
+      locpos[0]+=_gl_text_width_*right[0];
+      locpos[1]+=_gl_text_width_*right[1];
+      locpos[2]+=_gl_text_width_*right[2];
+    }
+  } else if (_gl_text_align_==GL_RIGHT) {
+    for(loop1=length2-1;loop1>=0;--loop1) {
+      if (string[loop1]=='\0') break;
+      y = (string[loop1]-' ')/TABLE_CHAR_WIDTH;
+      x = (string[loop1]-' ')%TABLE_CHAR_WIDTH;
+      //printf("char = \"%c\"; x,y = %d,%d\n",string[loop1],x,y);
+      fx = ((double)(x*CHAR_PIXEL_WIDTH)/TABLE_PIXEL_WIDTH)*Font->wslop;
+      fy = ((double)(y*CHAR_PIXEL_HEIGHT)/TABLE_PIXEL_HEIGHT)*Font->hslop;
+      //printf("fx,fy = %f,%f\n",fx,fy);
+      dx = ((double)CHAR_PIXEL_WIDTH/TABLE_PIXEL_WIDTH)*Font->wslop;
+      dy = ((double)CHAR_PIXEL_HEIGHT/TABLE_PIXEL_HEIGHT)*Font->hslop;
+      glTexCoord2f(fx+dx-xsmidge,fy+ysmidge);
+      glVertex3f(locpos[0]+_gl_text_width_*right[0],
+		 locpos[1]+_gl_text_width_*right[1],
+		 locpos[2]+_gl_text_width_*right[2]);
+      glTexCoord2f(fx+dx-xsmidge,fy+dy-ysmidge);
+      glVertex3f(locpos[0]-_gl_text_height_*_gl_text_up_[0]+
+		 _gl_text_width_*right[0],
+		 locpos[1]-_gl_text_height_*_gl_text_up_[1]+
+		 _gl_text_width_*right[1],
+		 locpos[2]-_gl_text_height_*_gl_text_up_[2]+
+		 _gl_text_width_*right[2]);
+      glTexCoord2f(fx+xsmidge,fy+dy-ysmidge);
+      glVertex3f(locpos[0]-_gl_text_height_*_gl_text_up_[0],
+		 locpos[1]-_gl_text_height_*_gl_text_up_[1],
+		 locpos[2]-_gl_text_height_*_gl_text_up_[2]);
+      glTexCoord2f(fx+xsmidge,fy+ysmidge);
+      glVertex3f(locpos[0],locpos[1],locpos[2]);
+      locpos[0]-=_gl_text_width_*right[0];
+      locpos[1]-=_gl_text_width_*right[1];
+      locpos[2]-=_gl_text_width_*right[2];
+    }
   }
   glEnd();
   

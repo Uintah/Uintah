@@ -181,9 +181,9 @@ HairObj::draw( bool )
 void
 XAxis::draw( bool pick )
 {
-  float loc[] = {0,0,0};
-  float norm[] = {0,0,-1};
-  float up[] = {0,1,0};
+  double loc[] = {0,0,0};
+  double norm[] = {0,0,-1};
+  double up[] = {0,1,0};
   int loop;
   
   if (!initialized_) {
@@ -200,6 +200,10 @@ XAxis::draw( bool pick )
     
     double delta = 2./(num_tics_+1);
     
+    glTextNormal(norm);
+    glTextAlign(GL_LEFT);
+    glTextSize(CHAR_W,CHAR_H);
+
     // set the projection to NDC
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -209,11 +213,15 @@ XAxis::draw( bool pick )
     up[0] = 0.544;
     up[1] = 0.839;
     up[2] = 0.;
+    glTextUp(up);
     loc[1] = pos-0.0163;
     for (loop=1;loop<=num_tics_;++loop) {
       loc[0] = (loop*delta)-(.5*CHAR_W)-1.;
-      glprintf(loc,norm,up,CHAR_W,CHAR_H,"%-1.3f",
-	       parent_->x_get_at((loc[0]+1.)/2.));
+      glTextAnchor(loc);
+      glprintf("%-1.3f",parent_->x_get_at((loc[0]+1.)/2.));
+
+      //glprintf(loc,norm,up,CHAR_W,CHAR_H,"%-1.3f",
+      //       parent_->x_get_at((loc[0]+1.)/2.));
     }
 
     glPopMatrix();
@@ -223,9 +231,9 @@ XAxis::draw( bool pick )
 void
 YAxis::draw( bool pick )
 {
-  float loc[] = {0,0,0};
-  float norm[] = {0,0,-1};
-  float up[] = {0,1,0};
+  double loc[] = {0,0,0};
+  double norm[] = {0,0,-1};
+  double up[] = {0,1,0};
   int loop;
   
   if (!initialized_) {
@@ -241,6 +249,10 @@ YAxis::draw( bool pick )
     double pos = pos_*2.-1.;
 
     double delta = 2./(num_tics_+1);
+
+    glTextNormal(norm);
+    glTextAlign(GL_LEFT);
+    glTextSize(CHAR_W,CHAR_H);
     
     // set the projection to NDC
     glMatrixMode(GL_PROJECTION);
@@ -251,11 +263,14 @@ YAxis::draw( bool pick )
     up[0] = 0.;
     up[1] = 1.;
     up[2] = 0.;      
+    glTextUp(up);
     loc[0] = pos+0.01;
     for (loop=1;loop<=num_tics_;++loop) {
       loc[1] = (loop*delta)+(.5*CHAR_H)-1.;
-      glprintf(loc,norm,up,CHAR_W,CHAR_H,"%-1.3f",
-	       parent_->y_get_at((loc[1]+1.)/2.));
+      glTextAnchor(loc);
+      glprintf("%-1.3f",parent_->y_get_at((loc[1]+1.)/2.));
+      //      glprintf(loc,norm,up,CHAR_W,CHAR_H,"%-1.3f",
+      //       parent_->y_get_at((loc[1]+1.)/2.));
     }
     
     glPopMatrix();
