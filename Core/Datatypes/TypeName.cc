@@ -1,6 +1,6 @@
 /*
  *   TypeName.h :  specializations of template<class T> 
- *                 findTypeName() function for build-in 
+ *                 find_type_name() function for build-in 
  *                 and simple types not deriving from Core::Datatype
  *                 
  *   Created by:
@@ -28,84 +28,102 @@ class Point;
 
 //////////
 // Floating-point types
-template<> string findTypeName(float*){
-  return string("float");
+template<> const string find_type_name(float*)
+{
+  return "float";
 }
 
-template<> string findTypeName(double*){
-  return string("double");
+template<> const string find_type_name(double*)
+{
+  return "double";
 }
 
-template<> string findTypeName(long double*){
-  return string("long double");
+template<> const string find_type_name(long double*)
+{
+  return "long double";
 }
 
 //////////
 // Integer types
-template<> string findTypeName(short*){
-  return string("short");
+template<> const string find_type_name(short*)
+{
+  return "short";
 }
 
-template<> string findTypeName(unsigned short*){
-  return string("unsigned short");
+template<> const string find_type_name(unsigned short*)
+{
+  return "unsigned short";
 }
 
-template<> string findTypeName(int*){
-  return string("int");
+template<> const string find_type_name(int*)
+{
+  return "int";
 }
 
-template<> string findTypeName(unsigned int*){
-  return string("unsigned int");
+template<> const string find_type_name(unsigned int*)
+{
+  return "unsigned int";
 }
 
-template<> string findTypeName(long*){
-  return string("long");
+template<> const string find_type_name(long*)
+{
+  return "long";
 }
 
-template<> string findTypeName(unsigned long*){
-  return string("unsigned long");
+template<> const string find_type_name(unsigned long*)
+{
+  return "unsigned long";
 }
 
-template<> string findTypeName(long long*){
-  return string("long long");
+template<> const string find_type_name(long long*)
+{
+  return "long long";
 }
 
-template<> string findTypeName(unsigned long long*){
-  return string("unsigned long long");
+template<> const string find_type_name(unsigned long long*)
+{
+  return "unsigned long long";
 }
 
 //////////
 // Character types
-template<> string findTypeName(char*){
-  return string("char");
+template<> const string find_type_name(char*)
+{
+  return "char";
 }
 
-template<> string findTypeName(unsigned char*){
-  return string("unsigned char");
+template<> const string find_type_name(unsigned char*)
+{
+  return "unsigned char";
 }
 
 //////////
 // Boolean type
-template<> string findTypeName(bool*){
-  return string("bool");
+template<> const string find_type_name(bool*)
+{
+  return "bool";
 }
 
 //////////
 // Template function specializations for some primitives
-template<> string findTypeName(Vector*){
-  return string("Vector");
+template<> const string find_type_name(Vector*)
+{
+  return "Vector";
 }
 
-template<> string findTypeName(Point*){
-  return string("Point");
+template<> const string find_type_name(Point*)
+{
+  return "Point";
 }
 
-template<> string findTypeName(Transform*){
-  return string("Transform");
+template<> const string find_type_name(Transform*)
+{
+  return "Transform";
 }
 
-template<> string findTypeName(string*){
-  return string("string");
+template<> const string find_type_name(string*)
+{
+  return "string";
 }
 
 } // namespace SCIRun

@@ -26,7 +26,7 @@ namespace SCIRun {
 
 
 template <class G, class A>
-  class SCICORESHARE GeneralField : public Field
+class SCICORESHARE GeneralField : public Field
 {
   public:
 
@@ -97,7 +97,7 @@ template <class G, class A>
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  static string typeName();
+  static const string type_name();
   static Persistent* maker();
 
 private:
@@ -118,13 +118,14 @@ GeneralField<G,A>::maker() {
 }
 
 template <class G, class A>
-string GeneralField<G,A>::typeName() {
-  static string typeName = string("GeneralField<") + findTypeName((G*)0) +","+ findTypeName((A*)0) + ">";
-  return typeName;
+const string GeneralField<G,A>::type_name()
+{
+  static string type_name = string("GeneralField<") + find_type_name((G*)0) +","+ findTypeName((A*)0) + ">";
+  return type_name;
 }
 
 template <class G, class A>
-PersistentTypeID GeneralField<G,A>::type_id(GeneralField<G,A>::typeName(), 
+PersistentTypeID GeneralField<G,A>::type_id(GeneralField<G,A>::type_name(), 
 					 "Field", 
 					 GeneralField<G,A>::maker);
 
