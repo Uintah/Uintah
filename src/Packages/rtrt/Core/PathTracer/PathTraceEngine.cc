@@ -9,6 +9,7 @@
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/Point2D.h>
 #include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Background.h>
 
 #include <Core/Thread/Runnable.h>
 
@@ -25,9 +26,10 @@ using namespace std;
 PathTraceContext::PathTraceContext(const Color &color,
 				   const PathTraceLight &light,
 				   Object* geometry,
+				   Background *background,
                                    int num_samples, int max_depth):
-  light(light), color(color), geometry(geometry), num_samples(num_samples),
-  max_depth(max_depth)
+  light(light), color(color), geometry(geometry), background(background),
+  num_samples(num_samples), max_depth(max_depth)
 {
   // Fix num_samples to be a complete square
   num_samples_root = (int)(ceil(sqrt((double)num_samples)));
@@ -44,8 +46,9 @@ PathTraceContext::PathTraceContext(const Color &color,
   geometry->preprocess(bvscale, pp_size, pp_scratchsize);
 }
 
-PathTraceWorker::PathTraceWorker(Group *group, PathTraceContext *ptc, char *texname):
-  ptc(ptc), local_spheres(group), rng(10)
+PathTraceWorker::PathTraceWorker(Group *group, PathTraceContext *ptc,
+				 char *texname, size_t offset):
+  ptc(ptc), local_spheres(group), rng(10), offset(offset)
 {
   // Generate groups of random samples
   double inc = 1./ptc->num_samples_root;
@@ -82,6 +85,7 @@ PathTraceWorker::PathTraceWorker(Group *group, PathTraceContext *ptc, char *texn
 PathTraceWorker::~PathTraceWorker() {
   if (ppc) delete ppc;
   if (depth_stats) delete depth_stats;
+  if (basename) free(basename);
 }
 
 void PathTraceWorker::run() {
@@ -224,6 +228,9 @@ void PathTraceWorker::run() {
 	    }
 	    else {
 	      // Accumulate bg color?
+	      Color bgcolor;
+	      ptc->background->color_in_direction(ray.direction(), bgcolor);
+	      result += bgcolor*ptc->color;
 	      break;
 	    }
 	  } // end depth
@@ -237,7 +244,11 @@ void PathTraceWorker::run() {
       } // end texel
     cout << "Finished sphere "<<sindex<<"\n";
   } // end sphere
-  
+
+  cout << "Computing width and height for all.\n";
+  int width = -1;
+  int height = -1;
+  bool do_separate = false;
   // Write out textures
   for(int sindex = 0; sindex < local_spheres->objs.size(); sindex++) {
     TextureSphere *sphere  =
@@ -246,8 +257,76 @@ void PathTraceWorker::run() {
       // Something has gone horribly wrong
       continue;
     }
+    if (width > 0) {
+      if (width != sphere->texture.dim1()) {
+	do_separate = true;
+	break;
+      }
+    } else {
+      width = sphere->texture.dim1();
+    }
+    if (height > 0) {
+      if (height != sphere->texture.dim2()) {
+	do_separate = true;
+	break;
+      }
+    } else {
+      height = sphere->texture.dim2();
+    }
+  }
 
-    sphere->writeTexture(basename,sindex);
+  if (!do_separate) {
+    char *buf = new char[strlen(basename) + 20];
+    sprintf(buf, "%s%05lu.nrrd", basename, offset);
+    FILE *out = fopen(buf, "wb");
+    if (!out) {
+      cerr << "Cannot open "<<buf<<" for writing\n";
+      return;
+    }
+
+    cout << "Writing combined texture to "<<buf<<"\n";
+
+    fprintf(out, "NRRD0001\n");
+    fprintf(out, "type: float\n");
+    fprintf(out, "dimension: 4\n");
+    fprintf(out, "sizes: 3 %d %d %d\n", width, height, local_spheres->objs.size());
+    fprintf(out, "spacings: NaN 1 1 NaN\n");
+#ifdef __sgi
+    fprintf(out, "endian: big\n");
+#else
+    fprintf(out, "endian: little\n");
+#endif
+    fprintf(out, "labels: \"rgb\" \"x\" \"y\" \"sphere\"\n");
+    fprintf(out, "encoding: raw\n");
+    fprintf(out, "\n");
+    
+    for(int sindex = 0; sindex < local_spheres->objs.size(); sindex++) {
+      TextureSphere *sphere  =
+	dynamic_cast<TextureSphere*>(local_spheres->objs[sindex]);
+      if (!sphere) {
+	// Something has gone horribly wrong
+	cerr << "Warning object is not a TextureSphere.  You in big trouble mister!  Nrrd will not have the right amount of data.\n";
+	continue;
+      }
+      
+      sphere->writeData(out);
+  
+    }
+
+    fclose(out);
+  } else {
+    // This really shouldn't happen now
+    cerr << "Textures do not all have the same size.  You will now get individual textures.\n";
+    for(int sindex = 0; sindex < local_spheres->objs.size(); sindex++) {
+      TextureSphere *sphere  =
+	dynamic_cast<TextureSphere*>(local_spheres->objs[sindex]);
+      if (!sphere) {
+	// Something has gone horribly wrong
+	cerr << "Warning object is not a TextureSphere.  You in big trouble mister!  Nrrd will not have the right amount of data.\n";
+	continue;
+      }
+      sphere->writeTexture(basename, sindex);
+    }
   }
 }
 
@@ -257,11 +336,11 @@ TextureSphere::TextureSphere(const Point &cen, double radius, int tex_res):
   texture.initialize(Color(0,0,0));
 }
 
-void TextureSphere::writeTexture(char* basename, int index)
+void TextureSphere::writeTexture(char* basename, size_t index)
 {
   // Create the filename
   char *buf = new char[strlen(basename) + 20];
-  sprintf(buf, "%s%05d.nrrd", basename, index);
+  sprintf(buf, "%s%05lu.nrrd", basename, (unsigned long)index);
   FILE *out = fopen(buf, "wb");
   if (!out) {
     cerr << "Cannot open "<<buf<<" for writing\n";
@@ -280,21 +359,30 @@ void TextureSphere::writeTexture(char* basename, int index)
 #else
   fprintf(out, "endian: little\n");
 #endif
+  fprintf(out, "labels: \"rgb\" \"x\" \"y\"\n");
   fprintf(out, "encoding: raw\n");
   fprintf(out, "\n");
+
+  writeData(out);
+  
+  fclose(out);
+}
+
+void TextureSphere::writeData(FILE *outfile) {
   // Iterate over each texel
+  int width = texture.dim1();
+  int height = texture.dim2();
   for(int v = 0; v < height; v++)
     for(int u = 0; u < width; u++) {
       float data[3];
       data[0] = texture(u,v).red();
       data[1] = texture(u,v).green();
       data[2] = texture(u,v).blue();
-      if (fwrite(data, sizeof(float), 3, out) != 3) {
-	cerr << "Trouble writing texel for sphere "<<index<<" at ["<<u<<", "<<v<<"]\n";
+      if (fwrite(data, sizeof(float), 3, outfile) != 3) {
+	cerr << "Trouble writing texel for sphere at ["<<u<<", "<<v<<"]\n";
 	return;
       }
     }
-  fclose(out);
 }
 
 PathTraceLight::PathTraceLight(const Point &cen, double radius,
