@@ -29,15 +29,16 @@ SRCS     += $(SRCDIR)/Arches.cc \
 	$(SRCDIR)/Source.cc \
 	$(SRCDIR)/TurbulenceModel.cc
 
-ifneq ($(HAVE_PETSC),)
-SRCS +=	$(SRCDIR)/PetscSolver.cc \
-	$(SRCDIR)/Filter.cc
+ifeq ($(HAVE_PETSC),yes)
+  SRCS += $(SRCDIR)/PetscSolver.cc $(SRCDIR)/Filter.cc
 else
-SRCS +=	$(SRCDIR)/FakePetscSolver.cc
+  SRCS += $(SRCDIR)/FakePetscSolver.cc
 endif
-ifneq ($(HYPRE_DIR),)
-SRCS += $(SRCDIR)/HypreSolver.cc
+
+ifeq ($(HAVE_HYPRE),yes)
+  SRCS += $(SRCDIR)/HypreSolver.cc
 endif
+
 # SUBDIRS := $(SRCDIR)/fortran 
 # include $(SCIRUN_SCRIPTS)/recurse.mk
 
