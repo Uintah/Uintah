@@ -89,7 +89,7 @@ ostream& operator<<( ostream& os, const Point& p )
    return os;
 }
 
-#if 0
+#if 1 
 istream& operator>>( istream& is, Point& v)
 {
   double x, y, z;
