@@ -554,8 +554,8 @@ void FusionFieldReader::execute(){
 	      zVal =  data[index+1];
 
 	      if( xVal * xVal + yVal * yVal + zVal * zVal < 1.0e-24 ) {
-		//		cerr << "Small Vector " << xVal << "  " << yVal << "  " << zVal << endl;
-		xVal = yVal = zVal = 1.0e-24;
+		remark( "Replaced a zero length vector" );
+		xVal = yVal = zVal = 1.0e-12;
 	      }
 
 	      vfield->set_value(Vector(xVal, yVal, zVal), node);
@@ -609,7 +609,6 @@ void FusionFieldReader::execute(){
 /*      if( !repeated )
       {
         StructHexVolMesh::Node::index_type node0;
-
 	Point pt;
 
 	node.j_ = jdim;
