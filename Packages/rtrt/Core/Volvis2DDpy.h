@@ -56,10 +56,12 @@ namespace rtrt {
     virtual void button_released(MouseButton button, const int x, const int y);
     virtual void button_motion(MouseButton button, const int x, const int y);
     //
-    virtual void lookup( Voxel2D<float> voxel, Color &color, float &alpha );
-    virtual void attach( VolumeVis2D* volume );
   
   public:
+    void lookup( Voxel2D<float> voxel, Color &color, float &alpha );
+    void attach( VolumeVis2D* volume );
+    virtual void animate(bool &changed);
+
     float t_inc;
     vector<Widget*> widgets;           // collection of widgets to be controlled in any function
     int pickedIndex;                   // index of currently selected widget by frame
