@@ -13,6 +13,10 @@
 #include <SCICore/Malloc/Allocator.h>
 //#include <cstdlib>
 #include <map>
+#include <vector>
+#include <algorithm>
+#include <string>
+#include <sstream>
 using namespace Uintah;
 using namespace std;
 using namespace SCICore::Geometry;
@@ -271,6 +275,50 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 }
 
 ProblemSpecP ProblemSpec::get(const std::string& name, 
+			      vector<double>& value)
+{
+
+  std::string string_value;
+  ProblemSpecP ps = this;
+  DOM_Node found_node = findNode(name, this->d_node);
+  if (found_node.isNull()) {
+    ps = 0;
+    return ps;
+  }
+  else {
+    for (DOM_Node child = found_node.getFirstChild(); child != 0;
+	 child = child.getNextSibling()) {
+      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
+	DOMString val = child.getNodeValue();
+	char *s = val.transcode();
+	string_value = std::string(s);
+	delete[] s;
+
+	istringstream in(string_value);
+	char c,next;
+	string result;
+	while (!in.eof()) {
+	  in >> c;
+	  if (c == '[' || c == ',' || c == ']')
+	    continue;
+	  next = in.peek();
+	  result += c;
+	  if (next == ',' || next == ']') {
+	    // turn the result into a number
+	    double val = atof(result.c_str());
+	    value.push_back(val);
+	    result.erase();
+	  }
+	}
+      }
+    }
+  }
+          
+  return ps;
+
+}
+
+ProblemSpecP ProblemSpec::get(const std::string& name, 
 			      IntVector &value)
 {
 
@@ -352,6 +400,17 @@ void ProblemSpec::require(const std::string& name, std::string& value)
 
 void ProblemSpec::require(const std::string& name, 
 			  Vector  &value)
+{
+
+  // Check if the prob_spec is NULL
+
+ if (! this->get(name,value))
+      throw ParameterNotFound(name);
+
+}
+
+void ProblemSpec::require(const std::string& name, 
+			  vector<double>& value)
 {
 
   // Check if the prob_spec is NULL
@@ -455,6 +514,10 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.26  2000/12/21 21:53:09  jas
+// Added capability to read in an arbitrary length vector described by
+// [num,num,num,num,num].
+//
 // Revision 1.25  2000/10/13 19:50:29  sparker
 // Commented out chatter
 //
