@@ -4,6 +4,7 @@
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Grid.h>
 #include "CCTensorField.h"
+#include <values.h>
 
 using std::vector;
 
@@ -20,8 +21,10 @@ CCTensorField::CCTensorField()
 
 CCTensorField::CCTensorField(const CCTensorField& copy)
   //  : UintahScalarField( copy )
-  :TensorField( copy ), grid(copy.grid), level(copy.level),
-    _varname(copy._varname), _matIndex(copy._matIndex)
+  :TensorField( copy ), _grid(copy._grid), _level(copy._level),
+    _varname(copy._varname), _matIndex(copy._matIndex),
+   high(copy.high), low(copy.low), nx(copy.nx),
+   ny(copy.ny), nz(copy.nz)
 {
   for(int i = 0; i < copy._vars.size(); i++){
     _vars.push_back( copy._vars[i] );
@@ -33,14 +36,43 @@ CCTensorField::CCTensorField(GridP grid, LevelP level,
 				string var, int mat,
 				const vector< CCVariable<Matrix3> >& vars)
   //  : UintahScalarField( grid, level, var, mat )
-  : TensorField(), grid(grid), level(level),
-    _varname(var), _matIndex(mat)
+  : TensorField(), _grid(grid), _level(level),
+    _varname(var), _matIndex(mat),
+   high(-MAXINT,-MAXINT,-MAXINT),
+   low(MAXINT,MAXINT,MAXINT)
 {
   for(int i = 0; i < vars.size(); i++){
     _vars.push_back( vars[i]);
   }
+  computeHighLowIndices();
+  nx = high.x() - low.x();
+  ny = high.y() - low.y();
+  nz = high.z() - low.z();
 }
 
+void CCTensorField::computeHighLowIndices()
+{
+  for(Level::const_patchIterator r = _level->patchesBegin();
+      r != _level->patchesEnd(); r++){
+    low = SCICore::Geometry::Min( low, (*r)->getNodeLowIndex());
+    high = SCICore::Geometry::Max( high, (*r)->getNodeHighIndex());
+  }
+}
+
+Matrix3
+CCTensorField::grid(int i, int j, int k)
+{
+  IntVector id(i,j,k);
+  id = low + id;
+  int ii = 0;
+  Matrix3 m;
+  for(Level::const_patchIterator r = _level->patchesBegin();
+      r != _level->patchesEnd(); r++, ii++){
+      if( (*r)->containsNode( id ) )
+	return _vars[ii][id];
+  }
+  return m;
+}
 
 
 void CCTensorField::AddVar( const CCVariable<Matrix3>& v)
@@ -63,8 +95,8 @@ void CCTensorField::compute_bounds()
   Point min(1e30,1e30,1e30);
   Point max(-1e30,-1e30,-1e30);
  
-  for(Level::const_patchIterator r = level->patchesBegin();
-      r != level->patchesEnd(); r++){
+  for(Level::const_patchIterator r = _level->patchesBegin();
+      r != _level->patchesEnd(); r++){
     min = SCICore::Geometry::Min( min, (*r)->getBox().lower());
     max = SCICore::Geometry::Max( max, (*r)->getBox().upper());
   }

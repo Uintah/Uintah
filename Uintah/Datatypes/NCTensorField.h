@@ -7,6 +7,7 @@
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
 #include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/IntVector.h>
 #include <vector>
 
 namespace SCICore {
@@ -18,6 +19,9 @@ using std::vector;
 
 class SCICORESHARE NCTensorField: public TensorField {
 public:
+  int nx;
+  int ny;
+  int nz;
   NCTensorField();
   NCTensorField(const NCTensorField&);
   NCTensorField(GridP grid, LevelP level, string var, int mat,
@@ -27,18 +31,23 @@ public:
 
   virtual void compute_bounds();
   virtual void get_boundary_lines(Array1<Point>& lines);
+  void computeHighLowIndices();
 
-  void SetGrid( GridP g ){ grid = g; }
-  void SetLevel( LevelP l){ level = l; }
+
+  Matrix3 grid(int i, int j, int k);
+  void SetGrid( GridP g ){ _grid = g; }
+  void SetLevel( LevelP l){ _level = l; }
   void SetName( string vname ) { _varname = vname; }
   void SetMaterial( int index) { _matIndex = index; }
   void AddVar( const NCVariable<Matrix3>& var);
 private:
   vector< NCVariable<Matrix3> > _vars;
-  GridP grid;
-  LevelP level;
+  GridP _grid;
+  LevelP _level;
   string _varname;
   int _matIndex;
+  IntVector low;
+  IntVector high;
 };
 
 } // End namespace Datatypes
