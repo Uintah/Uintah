@@ -1155,12 +1155,13 @@ ViewImage::compute_crop_pick_boxes(SliceWindow &window, BBox &bbox)
 void
 ViewImage::update_crop_bbox_from_gui() 
 {
-  crop_draw_bbox_.min()(0) = double(crop_min_x_());
-  crop_draw_bbox_.min()(1) = double(crop_min_y_());
-  crop_draw_bbox_.min()(2) = double(crop_min_z_());
-  crop_draw_bbox_.max()(0) = double(crop_max_x_())+1.0;
-  crop_draw_bbox_.max()(1) = double(crop_max_y_())+1.0;
-  crop_draw_bbox_.max()(2) = double(crop_max_z_())+1.0;
+  crop_draw_bbox_ = 
+    BBox(Point(double(crop_min_x_()),
+	       double(crop_min_y_()),
+	       double(crop_min_z_())),
+	 Point(double(crop_max_x_()),
+	       double(crop_max_y_()),
+	       double(crop_max_z_())));
 }
 
 void
