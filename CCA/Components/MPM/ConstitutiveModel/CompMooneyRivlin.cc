@@ -115,7 +115,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
   Matrix3 Identity,deformationGradientInc,B,velGrad;
   double invar1,invar2,invar3,J,w1,w2,w3,i3w3,w1pi1w2;
   Identity.Identity();
-  double c_dil = 0.0,se=0.0;
+  double c_dil = 0.0,se=0.0,Jinc;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
   Vector dx = patch->dCell();
@@ -218,6 +218,12 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
       // F_n^np1 = dudx * dt + Identity
       deformationGradientInc = velGrad * delT + Identity;
       
+      Jinc = deformationGradientInc.Determinant();
+
+      // Update particle volumes
+
+      pvolume[idx]=Jinc*pvolume[idx];
+
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient[idx] = deformationGradientInc * deformationGradient[idx];
 
@@ -279,7 +285,6 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 
     new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
 
-    // Volume is currently just carried forward, but will be updated.
     new_dw->put(pvolume, lb->pVolumeDeformedLabel);
 }
 
