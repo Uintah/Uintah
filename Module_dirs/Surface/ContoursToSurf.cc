@@ -22,6 +22,7 @@
 #include <Datatypes/SurfacePort.h>
 #include <Datatypes/TriSurface.h>
 #include <Geometry/Grid.h>
+#include <Malloc/Allocator.h>
 #include <Math/MiscMath.h>
 #include <Math/MinMax.h>
 #include <Math/Expon.h>
@@ -50,7 +51,7 @@ public:
 
 static Module* make_ContoursToSurf(const clString& id)
 {
-    return new ContoursToSurf(id);
+    return scinew ContoursToSurf(id);
 }
 
 static RegisterModule db1("Contours", "ContoursToSurf", make_ContoursToSurf);
@@ -62,11 +63,11 @@ ContoursToSurf::ContoursToSurf(const clString& id)
 : Module("ContoursToSurf", id, Filter)
 {
     // Create the input port
-    incontours.add(new ContourSetIPort(this, "ContourSet", 
+    incontours.add(scinew ContourSetIPort(this, "ContourSet", 
 				       ContourSetIPort::Atomic));
 
     add_iport(incontours[0]);
-    osurface=new SurfaceOPort(this, "Surface", SurfaceIPort::Atomic);
+    osurface=scinew SurfaceOPort(this, "Surface", SurfaceIPort::Atomic);
     add_oport(osurface);
 }
 
@@ -79,7 +80,7 @@ void ContoursToSurf::connection(ConnectionMode mode, int which_port,
 	delete incontours[which_port];
 	incontours.remove(which_port);
     } else {
-	ContourSetIPort* ci=new ContourSetIPort(this, "ContourSet", 
+	ContourSetIPort* ci=scinew ContourSetIPort(this, "ContourSet", 
 						ContourSetIPort::Atomic);
 	add_iport(ci);
 	incontours.add(ci);
@@ -98,7 +99,7 @@ ContoursToSurf::~ContoursToSurf()
 
 Module* ContoursToSurf::clone(int deep)
 {
-    return new ContoursToSurf(*this, deep);
+    return scinew ContoursToSurf(*this, deep);
 }
 
 void ContoursToSurf::execute()
@@ -108,7 +109,7 @@ void ContoursToSurf::execute()
 	if (!incontours[i]->get(contours[i]))
 	    flag=1;
     if (flag) return;
-    TriSurface* surf=new TriSurface;
+    TriSurface* surf=scinew TriSurface;
     contours_to_surf(contours, surf);
     surf->remove_empty_index();		// just in case
     osurface->send(surf);

@@ -19,6 +19,7 @@
 #include <Constraints/RatioConstraint.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Sphere.h>
+#include <Malloc/Allocator.h>
 
 const Index NumCons = 5;
 const Index NumVars = 7;
@@ -47,15 +48,15 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale,
 {
    Real INIT = 10.0*widget_scale;
    // Scheme5 are used by the pick in GeomMoved!!
-   variables[EyeVar] = new PointVariable("Eye", solve, Scheme1, Point(0, 0, -5*INIT));
-   variables[ForeVar] = new PointVariable("Fore", solve, Scheme2, Point(0, 0, -3*INIT));
-   variables[UpVar] = new PointVariable("UpVar", solve, Scheme3, Point(0, INIT, -3*INIT));
-   variables[LookAtVar] = new PointVariable("LookAt", solve, Scheme4, Point(0, 0, 0));
-   variables[UpDistVar] = new RealVariable("UpDist", solve, Scheme5, INIT);
-   variables[EyeDistVar] = new RealVariable("EyeDist", solve, Scheme1, 2*INIT);
-   variables[FOVVar] = new RealVariable("FOVDist", solve, Scheme1, 0.5);
+   variables[EyeVar] = scinew PointVariable("Eye", solve, Scheme1, Point(0, 0, -5*INIT));
+   variables[ForeVar] = scinew PointVariable("Fore", solve, Scheme2, Point(0, 0, -3*INIT));
+   variables[UpVar] = scinew PointVariable("UpVar", solve, Scheme3, Point(0, INIT, -3*INIT));
+   variables[LookAtVar] = scinew PointVariable("LookAt", solve, Scheme4, Point(0, 0, 0));
+   variables[UpDistVar] = scinew RealVariable("UpDist", solve, Scheme5, INIT);
+   variables[EyeDistVar] = scinew RealVariable("EyeDist", solve, Scheme1, 2*INIT);
+   variables[FOVVar] = scinew RealVariable("FOVDist", solve, Scheme1, 0.5);
 
-   constraints[ConstProject] = new ProjectConstraint("Project",
+   constraints[ConstProject] = scinew ProjectConstraint("Project",
 						     NumSchemes,
 						     variables[ForeVar],
 						     variables[UpVar],
@@ -67,7 +68,7 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale,
    constraints[ConstProject]->VarChoices(Scheme4, 1, 1, 1, 1);
    constraints[ConstProject]->VarChoices(Scheme5, 1, 1, 1, 1);
    constraints[ConstProject]->Priorities(P_Lowest, P_Lowest, P_Lowest);
-   constraints[ConstSegment] = new LineConstraint("Segment",
+   constraints[ConstSegment] = scinew LineConstraint("Segment",
 						     NumSchemes,
 						     variables[EyeVar],
 						     variables[LookAtVar],
@@ -78,7 +79,7 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale,
    constraints[ConstSegment]->VarChoices(Scheme4, 2, 2, 2);
    constraints[ConstSegment]->VarChoices(Scheme5, 2, 2, 2);
    constraints[ConstSegment]->Priorities(P_Highest, P_Highest, P_Highest);
-   constraints[ConstUpDist] = new DistanceConstraint("UpDist",
+   constraints[ConstUpDist] = scinew DistanceConstraint("UpDist",
 						     NumSchemes,
 						     variables[UpVar],
 						     variables[ForeVar],
@@ -89,7 +90,7 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale,
    constraints[ConstUpDist]->VarChoices(Scheme4, 0, 0, 0);
    constraints[ConstUpDist]->VarChoices(Scheme5, 2, 2, 2);
    constraints[ConstUpDist]->Priorities(P_HighMedium, P_HighMedium, P_HighMedium);
-   constraints[ConstEyeDist] = new DistanceConstraint("EyeDist",
+   constraints[ConstEyeDist] = scinew DistanceConstraint("EyeDist",
 						     NumSchemes,
 						     variables[EyeVar],
 						     variables[ForeVar],
@@ -100,7 +101,7 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale,
    constraints[ConstEyeDist]->VarChoices(Scheme4, 1, 1, 1);
    constraints[ConstEyeDist]->VarChoices(Scheme5, 1, 1, 1);
    constraints[ConstEyeDist]->Priorities(P_HighMedium, P_HighMedium, P_HighMedium);
-   constraints[ConstFOV] = new RatioConstraint("FOV",
+   constraints[ConstFOV] = scinew RatioConstraint("FOV",
 					       NumSchemes,
 					       variables[UpDistVar],
 					       variables[EyeDistVar],
@@ -112,80 +113,80 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale,
    constraints[ConstFOV]->VarChoices(Scheme5, 2, 2, 2);
    constraints[ConstFOV]->Priorities(P_Default, P_Default, P_Default);
 
-   GeomGroup* eyes = new GeomGroup;
-   geometries[GeomEye] = new GeomSphere;
-   picks[PickEye] = new GeomPick(geometries[GeomEye], module, this, PickEye);
+   GeomGroup* eyes = scinew GeomGroup;
+   geometries[GeomEye] = scinew GeomSphere;
+   picks[PickEye] = scinew GeomPick(geometries[GeomEye], module, this, PickEye);
    picks[PickEye]->set_highlight(DefaultHighlightMaterial);
    eyes->add(picks[PickEye]);
 
-   geometries[GeomUp] = new GeomSphere;
-   picks[PickUp] = new GeomPick(geometries[GeomUp], module, this, PickUp);
+   geometries[GeomUp] = scinew GeomSphere;
+   picks[PickUp] = scinew GeomPick(geometries[GeomUp], module, this, PickUp);
    picks[PickUp]->set_highlight(DefaultHighlightMaterial);
    eyes->add(picks[PickUp]);
 
-   geometries[GeomFore] = new GeomSphere;
-   picks[PickFore] = new GeomPick(geometries[GeomFore], module, this, PickFore);
+   geometries[GeomFore] = scinew GeomSphere;
+   picks[PickFore] = scinew GeomPick(geometries[GeomFore], module, this, PickFore);
    picks[PickFore]->set_highlight(DefaultHighlightMaterial);
    eyes->add(picks[PickFore]);
 
-   geometries[GeomLookAt] = new GeomSphere;
-   picks[PickLookAt] = new GeomPick(geometries[GeomLookAt], module, this, PickLookAt);
+   geometries[GeomLookAt] = scinew GeomSphere;
+   picks[PickLookAt] = scinew GeomPick(geometries[GeomLookAt], module, this, PickLookAt);
    picks[PickLookAt]->set_highlight(DefaultHighlightMaterial);
    eyes->add(picks[PickLookAt]);
-   materials[EyesMatl] = new GeomMaterial(eyes, DefaultPointMaterial);
+   materials[EyesMatl] = scinew GeomMaterial(eyes, DefaultPointMaterial);
 
    Index geom;
-   GeomGroup* resizes = new GeomGroup;
-   geometries[GeomResizeUp] = new GeomCappedCylinder;
-   picks[PickResizeUp] = new GeomPick(geometries[GeomResizeUp], module, this, PickResizeUp);
+   GeomGroup* resizes = scinew GeomGroup;
+   geometries[GeomResizeUp] = scinew GeomCappedCylinder;
+   picks[PickResizeUp] = scinew GeomPick(geometries[GeomResizeUp], module, this, PickResizeUp);
    picks[PickResizeUp]->set_highlight(DefaultHighlightMaterial);
    resizes->add(picks[PickResizeUp]);
-   geometries[GeomResizeEye] = new GeomCappedCylinder;
-   picks[PickResizeEye] = new GeomPick(geometries[GeomResizeEye], module,
+   geometries[GeomResizeEye] = scinew GeomCappedCylinder;
+   picks[PickResizeEye] = scinew GeomPick(geometries[GeomResizeEye], module,
 				       this, PickResizeEye);
    picks[PickResizeEye]->set_highlight(DefaultHighlightMaterial);
    resizes->add(picks[PickResizeEye]);
-   materials[ResizeMatl] = new GeomMaterial(resizes, DefaultResizeMaterial);
+   materials[ResizeMatl] = scinew GeomMaterial(resizes, DefaultResizeMaterial);
 
-   GeomGroup* shafts = new GeomGroup;
-   geometries[GeomUpVector] = new GeomCylinder;
+   GeomGroup* shafts = scinew GeomGroup;
+   geometries[GeomUpVector] = scinew GeomCylinder;
    shafts->add(geometries[GeomUpVector]);
-   geometries[GeomShaft] = new GeomCylinder;
+   geometries[GeomShaft] = scinew GeomCylinder;
    shafts->add(geometries[GeomShaft]);
-   picks[PickShaft] = new GeomPick(shafts, module, this, PickShaft);
+   picks[PickShaft] = scinew GeomPick(shafts, module, this, PickShaft);
    picks[PickShaft]->set_highlight(DefaultHighlightMaterial);
-   materials[ShaftMatl] = new GeomMaterial(picks[PickShaft], DefaultEdgeMaterial);
+   materials[ShaftMatl] = scinew GeomMaterial(picks[PickShaft], DefaultEdgeMaterial);
 
-   GeomGroup* w = new GeomGroup;
+   GeomGroup* w = scinew GeomGroup;
    w->add(materials[EyesMatl]);
    w->add(materials[ResizeMatl]);
    w->add(materials[ShaftMatl]);
    CreateModeSwitch(0, w);
 
-   GeomGroup* cyls = new GeomGroup;
+   GeomGroup* cyls = scinew GeomGroup;
    for (geom = GeomPointUL; geom <= GeomPointDL; geom++) {
-      geometries[geom] = new GeomSphere;
+      geometries[geom] = scinew GeomSphere;
       cyls->add(geometries[geom]);
    }
    for (geom = GeomCylU; geom <= GeomCylL; geom++) {
-      geometries[geom] = new GeomCylinder;
+      geometries[geom] = scinew GeomCylinder;
       cyls->add(geometries[geom]);
    }
    for (geom = GeomCornerUL; geom <= GeomCornerDL; geom++) {
-      geometries[geom] = new GeomSphere;
+      geometries[geom] = scinew GeomSphere;
       cyls->add(geometries[geom]);
    }
    for (geom = GeomEdgeU; geom <= GeomEdgeL; geom++) {
-      geometries[geom] = new GeomCylinder;
+      geometries[geom] = scinew GeomCylinder;
       cyls->add(geometries[geom]);
    }
    for (geom = GeomDiagUL; geom <= GeomDiagDL; geom++) {
-      geometries[geom] = new GeomCylinder;
+      geometries[geom] = scinew GeomCylinder;
       cyls->add(geometries[geom]);
    }
-   picks[PickCyls] = new GeomPick(cyls, module, this, PickCyls);
+   picks[PickCyls] = scinew GeomPick(cyls, module, this, PickCyls);
    picks[PickCyls]->set_highlight(DefaultHighlightMaterial);
-   materials[FrustrumMatl] = new GeomMaterial(picks[PickCyls], DefaultEdgeMaterial);
+   materials[FrustrumMatl] = scinew GeomMaterial(picks[PickCyls], DefaultEdgeMaterial);
    CreateModeSwitch(1, materials[FrustrumMatl]);
 
    SetMode(Mode0, Switch0|Switch1);
@@ -295,7 +296,7 @@ ViewWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
       MoveDelta(delta);
       break;
    }
-   execute();
+   execute(0);
 }
 
 
@@ -307,7 +308,7 @@ ViewWidget::MoveDelta( const Vector& delta )
    variables[UpVar]->MoveDelta(delta);
    variables[LookAtVar]->MoveDelta(delta);
 
-   execute();
+   execute(1);
 }
 
 
@@ -349,7 +350,7 @@ ViewWidget::SetView( const View& view )
    variables[EyeDistVar]->Move((view.lookat-view.eyep).length()/2.0);
    variables[FOVVar]->Set(tan(view.fov/2.0)); // Should Set UpVar/UpDistVar...
    
-   execute();
+   execute(0);
 }
 
 
@@ -365,7 +366,7 @@ ViewWidget::SetAspectRatio( const Real aspect )
 {
    ratio = aspect;
 
-   execute();
+   execute(0);
 }
 
 

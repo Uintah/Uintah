@@ -13,6 +13,7 @@
 
 #include <Classlib/Pstreams.h>
 #include <Classlib/String.h>
+#include <Malloc/Allocator.h>
 #include <fstream.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -41,7 +42,7 @@ TextPiostream::TextPiostream(const clString& filename, Direction dir)
 	cerr << "TextPiostream CTOR not finished...\n";
     } else {
 	istr=0;
-	ostr=new ofstream(filename());
+	ostr=scinew ofstream(filename());
 	ofstream& out=*ostr;
 	if(!out){
 	    cerr << "Error opening file: " << filename << " for writing\n";
@@ -532,7 +533,7 @@ BinaryPiostream::BinaryPiostream(ifstream* istr, int version)
 : Piostream(Read, version), have_peekname(0)
 {
     int fd=istr->rdbuf()->fd();
-    xdr=new XDR;
+    xdr=scinew XDR;
 #ifdef SCI_NOMMAP_IO
     fp=fdopen(istr->rdbuf()->fd(), "r");
     rewind(fp);
@@ -591,7 +592,7 @@ BinaryPiostream::BinaryPiostream(const clString& filename, Direction dir)
 	    err=1;
 	    return;
 	}
-	xdr=new XDR;
+	xdr=scinew XDR;
 	xdrstdio_create(xdr, fp, XDR_ENCODE);
 	char hdr[100];
 	version=PERSISTENT_VERSION;

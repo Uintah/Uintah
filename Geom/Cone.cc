@@ -17,6 +17,7 @@
 #include <Geometry/BBox.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
+#include <Malloc/Allocator.h>
 
 GeomCone::GeomCone(int nu, int nv)
 : GeomObj(), bottom(0,0,0), top(0,0,1), bot_rad(1), top_rad(0),
@@ -58,7 +59,7 @@ GeomCone::~GeomCone()
 
 GeomObj* GeomCone::clone()
 {
-    return new GeomCone(*this);
+    return scinew GeomCone(*this);
 }
 
 void GeomCone::adjust()
@@ -120,10 +121,10 @@ void GeomCone::make_prims(Array1<GeomObj*>& free,
 	    Vector rv2(rv2a+rv2b);
 	    Point p2(b2+rv2);
 	    if(j>0){
-		GeomTri* t1=new GeomTri(l1, l2, p1);
+		GeomTri* t1=scinew GeomTri(l1, l2, p1);
 //		t1->set_matl(matl);
 		free.add(t1);
-		GeomTri* t2=new GeomTri(l2, p1, p2);
+		GeomTri* t2=scinew GeomTri(l2, p1, p2);
 //		t2->set_matl(matl);
 		free.add(t2);
 	    }
@@ -170,7 +171,7 @@ GeomCappedCone::~GeomCappedCone()
 
 GeomObj* GeomCappedCone::clone()
 {
-    return new GeomCappedCone(*this);
+    return scinew GeomCappedCone(*this);
 }
 
 void GeomCappedCone::make_prims(Array1<GeomObj*>&,

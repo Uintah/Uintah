@@ -26,6 +26,7 @@
 #include <Geom/Tetra.h>
 #include <Geom/Line.h>
 #include <Geom/Switch.h>
+#include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 #include <Widgets/CrosshairWidget.h>
 #include <iostream.h>
@@ -116,7 +117,7 @@ public:
 
 static Module* make_MeshView(const clString& id)
 {
-    return new MeshView(id);
+    return scinew MeshView(id);
 }
 
 static RegisterModule db1("Fields", "MeshView", make_MeshView);
@@ -134,11 +135,11 @@ MeshView::MeshView(const clString& id)
 {
 
     // Create an input port, of type Mesh
-    inport=new MeshIPort(this, "Mesh", MeshIPort::Atomic);
+    inport=scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
     add_iport(inport);
 
     // Create the output port
-    ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+    ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 
     // Initialize the 'old' values
@@ -148,11 +149,11 @@ MeshView::MeshView(const clString& id)
     oldMeas = 10;
 
     // Set up Material Properties
-    mat1=new Material(Color(.5, .5, .5), Color(.5, .5, .5),
+    mat1=scinew Material(Color(.5, .5, .5), Color(.5, .5, .5),
 		      Color(.1, .1, .1), 10);
-    mat2=new Material(Color(1, 0, 0), Color(1, 0, 0),
+    mat2=scinew Material(Color(1, 0, 0), Color(1, 0, 0),
 		      Color(.1, .1, .1), 10);
-    mat3=new Material(Color(0, 1, 1), Color(0, 1, 1),
+    mat3=scinew Material(Color(0, 1, 1), Color(0, 1, 1),
 		      Color(.1, .1, .1), 10);
     oldMin = Point(0.0, 0.0, 0.0);
     oldMax = Point(0.0, 0.0, 0.0);
@@ -161,9 +162,9 @@ MeshView::MeshView(const clString& id)
     switchSet = 0;
 
     oldmMin = 10000; oldmMax = 10000;
-    startingTet = new CrosshairWidget(this, &widget_lock, 0.01);
-    measTetra = new GeomGroup;
-    measAuxTetra = new GeomGroup;
+    startingTet = scinew CrosshairWidget(this, &widget_lock, 0.01);
+    measTetra = scinew GeomGroup;
+    measAuxTetra = scinew GeomGroup;
 }	
 
 MeshView::MeshView(const MeshView& copy, int deep)
@@ -184,7 +185,7 @@ MeshView::~MeshView()
 
 Module* MeshView::clone(int deep)
 {
-    return new MeshView(*this, deep);
+    return scinew MeshView(*this, deep);
 }
 
 void MeshView::execute()
@@ -252,7 +253,7 @@ void MeshView::execute()
 
 
     geom_lock.write_lock();
-    GeomGroup *group = new GeomGroup;
+    GeomGroup *group = scinew GeomGroup;
     int needAux = 0;
     int start, finish;
 
@@ -352,7 +353,7 @@ void MeshView::makeLevels(const MeshHandle& mesh)
 {
     int counter = 0;
 
-    GeomGroup *group = new GeomGroup;
+    GeomGroup *group = scinew GeomGroup;
     int numTetra=mesh->elems.size();
     levels.remove_all();
     levels.grow(numTetra);
@@ -367,7 +368,7 @@ void MeshView::makeLevels(const MeshHandle& mesh)
     levStor.grow(1);
     levTetra.remove_all();
     levTetra.grow(1);
-    levTetra[0] = new GeomGroup;
+    levTetra[0] = scinew GeomGroup;
     levSwitch.remove_all();
     deep = 0;
     while(counter < numTetra)
@@ -379,7 +380,7 @@ void MeshView::makeLevels(const MeshHandle& mesh)
             q.append(-2);
 	    levStor.grow(1);
 	    levTetra.grow(1);
-	    levTetra[deep] = new GeomGroup;
+	    levTetra[deep] = scinew GeomGroup;
         } 
         else if (levels[x] == -1)
         {
@@ -392,7 +393,7 @@ void MeshView::makeLevels(const MeshHandle& mesh)
 	    Point p3(mesh->nodes[e->n[2]]->p);
 	    Point p4(mesh->nodes[e->n[3]]->p);
 	    
-	    GeomTetra *nTet = new GeomTetra(p1, p2, p3, p4);                
+	    GeomTetra *nTet = scinew GeomTetra(p1, p2, p3, p4);                
 	    levTetra[deep] -> add(nTet);
 	    for(int i = 0; i < 4; i++)
             {
@@ -422,20 +423,20 @@ void MeshView::makeLevels(const MeshHandle& mesh)
     {
 	if (!EdgeOnly)
 	{
-	    GeomTetra *dumT = new GeomTetra(Point(0,0,0), Point(0, 0, 0.01),
+	    GeomTetra *dumT = scinew GeomTetra(Point(0,0,0), Point(0, 0, 0.01),
 					    Point(0,0.01,0), Point(0.1,0,0));
-	    auxTetra[i] = new GeomGroup;
+	    auxTetra[i] = scinew GeomGroup;
 	    auxTetra[i] -> add(dumT);
-	    levMatl[i]=new GeomMaterial(levTetra[i], mat1);
-	    auxMatl[i]= new GeomMaterial(auxTetra[i], mat1);
-	    levSwitch[i] = new GeomSwitch(levMatl[i], 0);
-	    auxSwitch[i] = new GeomSwitch(auxMatl[i], 0);
+	    levMatl[i]=scinew GeomMaterial(levTetra[i], mat1);
+	    auxMatl[i]= scinew GeomMaterial(auxTetra[i], mat1);
+	    levSwitch[i] = scinew GeomSwitch(levMatl[i], 0);
+	    auxSwitch[i] = scinew GeomSwitch(auxMatl[i], 0);
 	    group -> add(levSwitch[i]);
 	    group -> add(auxSwitch[i]);
 	}
 	else
 	{
-	    levMatl[i]=new GeomMaterial(levEdges[i], mat1);
+	    levMatl[i]=scinew GeomMaterial(levEdges[i], mat1);
 	}
     }
 
@@ -472,12 +473,12 @@ double cNY, double cZ, double cNZ, const MeshHandle& mesh)
  	    ((p1.z() <= cNZ) && (p2.z() <= cNZ) && (p3.z() <= cNZ) && 
          (p4.z() <= cNZ)))
 	{		
-	    GeomTetra *t = new GeomTetra(p1, p2, p3, p4);
+	    GeomTetra *t = scinew GeomTetra(p1, p2, p3, p4);
 	    auxTetra[ind] ->add(t);
 	
 	}
     }
-    auxMatl[ind] = new GeomMaterial(auxTetra[ind], mat1);
+    auxMatl[ind] = scinew GeomMaterial(auxTetra[ind], mat1);
 
 }
 
@@ -555,7 +556,7 @@ cerr << "Size (min, max) = " << *min << ", " << *max << endl;
 
 void MeshView::getMeas(const MeshHandle& mesh)
 {
-    GeomGroup *gr = new GeomGroup;
+    GeomGroup *gr = scinew GeomGroup;
     int e = elmMeas.get();
     HashTable<MVEdge, int> edge_table;
     double min = mMin.get(); 
@@ -587,7 +588,7 @@ void MeshView::getMeas(const MeshHandle& mesh)
 		Point p3(mesh->nodes[elm->n[2]]->p);
 		Point p4(mesh->nodes[elm->n[3]]->p);
 	    
-		GeomTetra *nTet = new GeomTetra(p1, p2, p3, p4);
+		GeomTetra *nTet = scinew GeomTetra(p1, p2, p3, p4);
 		measTetra -> add(nTet);
 	    }
 	    else
@@ -619,7 +620,7 @@ void MeshView::getMeas(const MeshHandle& mesh)
 		if (!(edge_table.lookup(e6, dummy)))
 		    edge_table.insert(e6, 0);
 
-//		GeomTetra *nTet = new GeomTetra(p1, p2, p3, p4);
+//		GeomTetra *nTet = scinew GeomTetra(p1, p2, p3, p4);
 //		measAuxTetra -> add(nTet);
 	    }
 
@@ -637,10 +638,10 @@ void MeshView::getMeas(const MeshHandle& mesh)
 
 	if (!switchSet)
 	{
-	    measMatl = new GeomMaterial(measTetra, mat3);
-	    measSwitch = new GeomSwitch(measMatl, 0);
-	    measAuxMatl = new GeomMaterial(measAuxTetra, mat1);
-	    measAuxSwitch = new GeomSwitch(measAuxMatl, 0);
+	    measMatl = scinew GeomMaterial(measTetra, mat3);
+	    measSwitch = scinew GeomSwitch(measMatl, 0);
+	    measAuxMatl = scinew GeomMaterial(measAuxTetra, mat1);
+	    measAuxSwitch = scinew GeomSwitch(measAuxMatl, 0);
 	    gr -> add(measAuxSwitch);
 	    gr -> add(measSwitch);
 	}
@@ -870,7 +871,7 @@ void MeshView::makeEdges(const MeshHandle& mesh)
     for (i = 0; i < deep; i++)
     {
 	HashTableIter<MVEdge, int> eiter(&edge_table[i]);
-	levEdges[i] = new GeomGroup;
+	levEdges[i] = scinew GeomGroup;
 	for(eiter.first(); eiter.ok(); ++eiter)
 	{	
 	    MVEdge e(eiter.get_key());

@@ -17,6 +17,7 @@
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/ScalarFieldUG.h>
 #include <Geometry/Point.h>
+#include <Malloc/Allocator.h>
 
 class ExtractMeshSF : public Module {
     ScalarFieldIPort* inport;
@@ -31,7 +32,7 @@ public:
 
 static Module* make_ExtractMeshSF(const clString& id)
 {
-    return new ExtractMeshSF(id);
+    return scinew ExtractMeshSF(id);
 }
 
 static RegisterModule db1("Unfinished", "ExtractMeshSF", make_ExtractMeshSF);
@@ -39,11 +40,11 @@ static RegisterModule db1("Unfinished", "ExtractMeshSF", make_ExtractMeshSF);
 ExtractMeshSF::ExtractMeshSF(const clString& id)
 : Module("ExtractMeshSF", id, Filter)
 {
-    inport=new ScalarFieldIPort(this, "Geometry", ScalarFieldIPort::Atomic);
+    inport=scinew ScalarFieldIPort(this, "Geometry", ScalarFieldIPort::Atomic);
     add_iport(inport);
 
     // Create the output port
-    outport=new MeshOPort(this, "Geometry", MeshIPort::Atomic);
+    outport=scinew MeshOPort(this, "Geometry", MeshIPort::Atomic);
     add_oport(outport);
 }
 
@@ -59,7 +60,7 @@ ExtractMeshSF::~ExtractMeshSF()
 
 Module* ExtractMeshSF::clone(int deep)
 {
-    return new ExtractMeshSF(*this, deep);
+    return scinew ExtractMeshSF(*this, deep);
 }
 
 void ExtractMeshSF::execute()

@@ -25,8 +25,17 @@
 #error "This machine does not have a Task library port..."
 #endif
 
-OBJS = ITC.o  Task.o  TASK_IMPLEMENTATION_O
+#ifdef SCI_MACHINE_SGI
+LOCKS = lock.o
+#endif
+
+OBJS = ITC.o  Task.o  TASK_IMPLEMENTATION_O  $(LOCKS)
 SRCS = ITC.cc Task.cc TASK_IMPLEMENTATION_CC
+
+#ifdef SCI_MACHINE_SGI
+lock.o: lock_mips.s
+	as -o lock.o lock_mips.s -mips2
+#endif
 
 LIBNAME = Multitask
 

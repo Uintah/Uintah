@@ -14,10 +14,11 @@
 #include <Datatypes/ScalarFieldUG.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
+#include <Malloc/Allocator.h>
 
 static Persistent* maker()
 {
-    return new ScalarFieldUG;
+    return scinew ScalarFieldUG;
 }
 
 PersistentTypeID ScalarFieldUG::type_id("ScalarFieldUG", "ScalarField", maker);

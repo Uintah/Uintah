@@ -29,12 +29,12 @@ MemStats::MemStats()
 		   old_bytes_free, old_bytes_fragmented, old_bytes_inuse,
 		   old_bytes_inhunks);
 
-    old_ssize=new size_t[nbins];
-    old_lsize=new size_t[nbins];
-    old_reqd=new size_t[nbins];
-    old_deld=new size_t[nbins];
-    old_inlist=new size_t[nbins];
-    lines=new int[nbins];
+    old_ssize=scinew size_t[nbins];
+    old_lsize=scinew size_t[nbins];
+    old_reqd=scinew size_t[nbins];
+    old_deld=scinew size_t[nbins];
+    old_inlist=scinew size_t[nbins];
+    lines=scinew int[nbins];
     nnz=0;
     for(int i=0;i<nbins;i++){
 	GetBinStats(a, i, old_ssize[i], old_lsize[i],
@@ -158,9 +158,9 @@ void MemStats::tcl_command(TCLArgs& args, void*)
 		    "Long locks: %ld (%.2f%%)\n"
 		    "Naps: %ld (%.2f%%)\n"
 		    "\nBreakdown:\n"
-		    "Overhead: %d bytes (%.2f%%)\n"
 		    "Inuse: %d bytes (%.2f%%)\n"
 		    "Free: %d bytes (%.2f%%)\n"
+		    "Overhead: %d bytes (%.2f%%)\n"
 		    "Fragmentation: %d bytes (%.2f%%)\n"
 		    "Left in hunks: %d bytes (%.2f%%)\n"
 		    "Total: %d bytes (%.2f%%)\n"
@@ -175,10 +175,10 @@ void MemStats::tcl_command(TCLArgs& args, void*)
 		    highwater_mmap,
 		    nlonglocks, 100.*(double)nlonglocks/(double)ncalls,
 		    nnaps, 100.*(double)nnaps/(double)ncalls,
-		    bytes_overhead, 100.*(double)bytes_overhead/(double)total,
-		    bytes_free, 100.*(double)bytes_free/(double)total,
-		    bytes_fragmented, 100.*(double)bytes_fragmented/(double)total,
 		    bytes_inuse, 100.*(double)bytes_inuse/(double)total,
+		    bytes_free, 100.*(double)bytes_free/(double)total,
+		    bytes_overhead, 100.*(double)bytes_overhead/(double)total,
+		    bytes_fragmented, 100.*(double)bytes_fragmented/(double)total,
 		    bytes_inhunks, 100.*(double)bytes_inhunks/(double)total,
 		    total, 100.);
 	    args.result(buf);
@@ -189,6 +189,8 @@ void MemStats::tcl_command(TCLArgs& args, void*)
     } else if(args[1] == "audit"){
 	AuditAllocator(a);
 	fprintf(stderr, "Memory audit OK\n");
+    } else if(args[1] == "dump"){
+	DumpAllocator(a);
     } else {
 	args.error("Unknown minor command for memstats");
     }

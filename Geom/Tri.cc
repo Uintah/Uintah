@@ -17,6 +17,7 @@
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
 #include <Geometry/Ray.h>
+#include <Malloc/Allocator.h>
 #include <Math/MinMax.h>
 #include <iostream.h>
 
@@ -59,7 +60,7 @@ GeomTri::~GeomTri()
 
 GeomObj* GeomTri::clone()
 {
-    return new GeomTri(*this);
+    return scinew GeomTri(*this);
 }
 
 void GeomTri::get_bounds(BSphere& bs)

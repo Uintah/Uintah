@@ -18,6 +18,7 @@
 #include <Geom/Cone.h>
 #include <Geom/Group.h>
 #include <Geom/Material.h>
+#include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 
 class GenAxes : public Module {
@@ -41,7 +42,7 @@ public:
 
 static Module* make_GenAxes(const clString& id)
 {
-   return new GenAxes(id);
+   return scinew GenAxes(id);
 }
 
 static RegisterModule db1("Visualization", "GenAxes", make_GenAxes);
@@ -52,19 +53,19 @@ GenAxes::GenAxes(const clString& id)
 : Module("GenAxes", id, Source), size_changed(1), size("size", id, this)
 {
    // Create the output port
-   ogeom = new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+   ogeom = scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
    add_oport(ogeom);
-   dk_red = new Material(Color(0,0,0), Color(.2,0,0),
+   dk_red = scinew Material(Color(0,0,0), Color(.2,0,0),
 			 Color(.5,.5,.5), 20);
-   dk_green = new Material(Color(0,0,0), Color(0,.2,0),
+   dk_green = scinew Material(Color(0,0,0), Color(0,.2,0),
 			   Color(.5,.5,.5), 20);
-   dk_blue = new Material(Color(0,0,0), Color(0,0,.2),
+   dk_blue = scinew Material(Color(0,0,0), Color(0,0,.2),
 			  Color(.5,.5,.5), 20);
-   lt_red = new Material(Color(0,0,0), Color(.8,0,0),
+   lt_red = scinew Material(Color(0,0,0), Color(.8,0,0),
 			 Color(.5,.5,.5), 20);
-   lt_green = new Material(Color(0,0,0), Color(0,.8,0),
+   lt_green = scinew Material(Color(0,0,0), Color(0,.8,0),
 			   Color(.5,.5,.5), 20);
-   lt_blue = new Material(Color(0,0,0), Color(0,0,.8),
+   lt_blue = scinew Material(Color(0,0,0), Color(0,0,.8),
 			  Color(.5,.5,.5), 20);
 }
 
@@ -80,7 +81,7 @@ GenAxes::~GenAxes()
 
 Module* GenAxes::clone(int deep)
 {
-   return new GenAxes(*this, deep);
+   return scinew GenAxes(*this, deep);
 }
 
 void GenAxes::execute()
@@ -88,33 +89,33 @@ void GenAxes::execute()
    if (!size_changed) return;
    size_changed=0;
    ogeom->delAll();
-   GeomGroup* xp = new GeomGroup;
-   GeomGroup* yp = new GeomGroup;
-   GeomGroup* zp = new GeomGroup;
-   GeomGroup* xn = new GeomGroup;
-   GeomGroup* yn = new GeomGroup;
-   GeomGroup* zn = new GeomGroup;
+   GeomGroup* xp = scinew GeomGroup;
+   GeomGroup* yp = scinew GeomGroup;
+   GeomGroup* zp = scinew GeomGroup;
+   GeomGroup* xn = scinew GeomGroup;
+   GeomGroup* yn = scinew GeomGroup;
+   GeomGroup* zn = scinew GeomGroup;
    double sz=size.get();
 //   cerr << "Size= " <<size.get() << "\n";
-   xp->add(new GeomCylinder(Point(0,0,0), Point(sz, 0, 0), sz/20));
-   xp->add(new GeomCone(Point(sz, 0, 0), Point(sz+sz/5, 0, 0), sz/10, 0));
-   yp->add(new GeomCylinder(Point(0,0,0), Point(0, sz, 0), sz/20));
-   yp->add(new GeomCone(Point(0, sz, 0), Point(0, sz+sz/5, 0), sz/10, 0));
-   zp->add(new GeomCylinder(Point(0,0,0), Point(0, 0, sz), sz/20));
-   zp->add(new GeomCone(Point(0, 0, sz), Point(0, 0, sz+sz/5), sz/10, 0));
-   xn->add(new GeomCylinder(Point(0,0,0), Point(-sz, 0, 0), sz/20));
-   xn->add(new GeomCone(Point(-sz, 0, 0), Point(-sz-sz/5, 0, 0), sz/10, 0));
-   yn->add(new GeomCylinder(Point(0,0,0), Point(0, -sz, 0), sz/20));
-   yn->add(new GeomCone(Point(0, -sz, 0), Point(0, -sz-sz/5, 0), sz/10, 0));
-   zn->add(new GeomCylinder(Point(0,0,0), Point(0, 0, -sz), sz/20));
-   zn->add(new GeomCone(Point(0, 0, -sz), Point(0, 0, -sz-sz/5), sz/10, 0));
-   GeomGroup* all=new GeomGroup;
-   all->add(new GeomMaterial(xp, lt_red));
-   all->add(new GeomMaterial(yp, lt_green));
-   all->add(new GeomMaterial(zp, lt_blue));
-   all->add(new GeomMaterial(xn, dk_red));
-   all->add(new GeomMaterial(yn, dk_green));
-   all->add(new GeomMaterial(zn, dk_blue));
+   xp->add(scinew GeomCylinder(Point(0,0,0), Point(sz, 0, 0), sz/20));
+   xp->add(scinew GeomCone(Point(sz, 0, 0), Point(sz+sz/5, 0, 0), sz/10, 0));
+   yp->add(scinew GeomCylinder(Point(0,0,0), Point(0, sz, 0), sz/20));
+   yp->add(scinew GeomCone(Point(0, sz, 0), Point(0, sz+sz/5, 0), sz/10, 0));
+   zp->add(scinew GeomCylinder(Point(0,0,0), Point(0, 0, sz), sz/20));
+   zp->add(scinew GeomCone(Point(0, 0, sz), Point(0, 0, sz+sz/5), sz/10, 0));
+   xn->add(scinew GeomCylinder(Point(0,0,0), Point(-sz, 0, 0), sz/20));
+   xn->add(scinew GeomCone(Point(-sz, 0, 0), Point(-sz-sz/5, 0, 0), sz/10, 0));
+   yn->add(scinew GeomCylinder(Point(0,0,0), Point(0, -sz, 0), sz/20));
+   yn->add(scinew GeomCone(Point(0, -sz, 0), Point(0, -sz-sz/5, 0), sz/10, 0));
+   zn->add(scinew GeomCylinder(Point(0,0,0), Point(0, 0, -sz), sz/20));
+   zn->add(scinew GeomCone(Point(0, 0, -sz), Point(0, 0, -sz-sz/5), sz/10, 0));
+   GeomGroup* all=scinew GeomGroup;
+   all->add(scinew GeomMaterial(xp, lt_red));
+   all->add(scinew GeomMaterial(yp, lt_green));
+   all->add(scinew GeomMaterial(zp, lt_blue));
+   all->add(scinew GeomMaterial(xn, dk_red));
+   all->add(scinew GeomMaterial(yn, dk_green));
+   all->add(scinew GeomMaterial(zn, dk_blue));
    ogeom->addObj(all, "Axes");
    ogeom->flushViews();
 }

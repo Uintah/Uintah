@@ -14,10 +14,11 @@
 #include <Datatypes/VectorFieldUG.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
+#include <Malloc/Allocator.h>
 
 static Persistent* maker()
 {
-    return new VectorFieldUG;
+    return scinew VectorFieldUG;
 }
 
 PersistentTypeID VectorFieldUG::type_id("VectorFieldUG", "VectorField", maker);

@@ -16,6 +16,7 @@
 #include <Datatypes/MeshPort.h>
 #include <Geometry/BBox.h>
 #include <Geometry/Point.h>
+#include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 
 class Delaunay : public Module {
@@ -33,7 +34,7 @@ public:
 
 static Module* make_Delaunay(const clString& id)
 {
-    return new Delaunay(id);
+    return scinew Delaunay(id);
 }
 
 static RegisterModule db1("Mesh", "Delaunay", make_Delaunay);
@@ -42,10 +43,10 @@ Delaunay::Delaunay(const clString& id)
 : Module("Delaunay", id, Filter), nnodes("nnodes", id, this),
   cleanup("cleanup", id, this)
 {
-    iport=new MeshIPort(this, "Input Mesh", MeshIPort::Atomic);
+    iport=scinew MeshIPort(this, "Input Mesh", MeshIPort::Atomic);
     add_iport(iport);
     // Create the output port
-    oport=new MeshOPort(this, "Delaunay Mesh", MeshIPort::Atomic);
+    oport=scinew MeshOPort(this, "Delaunay Mesh", MeshIPort::Atomic);
     add_oport(oport);
 }
 
@@ -62,7 +63,7 @@ Delaunay::~Delaunay()
 
 Module* Delaunay::clone(int deep)
 {
-    return new Delaunay(*this, deep);
+    return scinew Delaunay(*this, deep);
 }
 
 void Delaunay::execute()

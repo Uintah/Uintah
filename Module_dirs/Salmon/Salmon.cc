@@ -23,11 +23,12 @@
 #include <Datatypes/GeometryComm.h>
 #include <Geom/Geom.h>
 #include <Geom/HeadLight.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 
 static Module* make_Salmon(const clString& id)
 {
-    return new Salmon(id);
+    return scinew Salmon(id);
 }
 
 static RegisterModule db1("Geometry", "Salmon", make_Salmon);
@@ -37,10 +38,10 @@ Salmon::Salmon(const clString& id)
 : Module("Salmon", id, Sink), max_portno(0)
 {
     // Add a headlight
-    lighting.lights.add(new HeadLight("Headlight", Color(1,1,1)));
+    lighting.lights.add(scinew HeadLight("Headlight", Color(1,1,1)));
     // Create the input port
-    add_iport(new GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
-    default_matl=new Material(Color(.1,.1,.1), Color(.6,0,0),
+    add_iport(scinew GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
+    default_matl=scinew Material(Color(.1,.1,.1), Color(.6,0,0),
 			      Color(.7,.7,.7), 10);
     busy_bit=1;
     have_own_dispatch=1;
@@ -49,11 +50,11 @@ Salmon::Salmon(const clString& id)
     // light source icons, etc.
     int portid=max_portno++;
     // Create the port
-    PortInfo* pi=new PortInfo;
+    PortInfo* pi=scinew PortInfo;
     portHash.insert(portid, pi);
     pi->msg_head=pi->msg_tail=0;
     pi->portno=portid;
-    pi->objs=new HashTable<int, SceneItem*>;
+    pi->objs=scinew HashTable<int, SceneItem*>;
 
     // Fill it up with the defaults...
     for(int i=0;i<lighting.lights.size();i++){
@@ -69,7 +70,7 @@ Salmon::~Salmon()
 
 Module* Salmon::clone(int deep)
 {
-    return new Salmon(*this, deep);
+    return scinew Salmon(*this, deep);
 }
 
 void Salmon::do_execute()
@@ -203,11 +204,11 @@ void Salmon::initPort(Mailbox<GeomReply>* reply)
 {
     int portid=max_portno++;
     // Create the port
-    PortInfo* pi=new PortInfo;
+    PortInfo* pi=scinew PortInfo;
     portHash.insert(portid, pi);
     pi->msg_head=pi->msg_tail=0;
     pi->portno=portid;
-    pi->objs=new HashTable<int, SceneItem*>;
+    pi->objs=scinew HashTable<int, SceneItem*>;
     reply->send(GeomReply(portid, &busy_bit));
 }
 
@@ -221,7 +222,7 @@ void Salmon::addObj(PortInfo* port, int serial, GeomObj *obj,
 		    const clString& name, CrowdMonitor* lock)
 {
     clString pname(name+" ("+to_string(port->portno)+")");
-    SceneItem* si=new SceneItem(obj, pname, lock);
+    SceneItem* si=scinew SceneItem(obj, pname, lock);
     port->objs->insert(serial, si);
     for (int i=0; i<roe.size(); i++)
 	roe[i]->itemAdded(si);
@@ -269,7 +270,7 @@ void Salmon::delTopRoe(Roe *r)
 #ifdef OLDUI
 void Salmon::spawnIndCB(CallbackData*, void*)
 {
-  topRoe.add(new Roe(this));
+  topRoe.add(scinew Roe(this));
   topRoe[topRoe.size()-1]->SetTop();
   GeomItem *item;
   for (int i=0; i<topRoe[0]->geomItemA.size(); i++) {
@@ -291,7 +292,7 @@ void Salmon::connection(ConnectionMode mode, int which_port, int)
     if(mode==Disconnected){
 	remove_iport(which_port);
     } else {
-	add_iport(new GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
+	add_iport(scinew GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
     }
 }
 
@@ -306,7 +307,7 @@ void Salmon::tcl_command(TCLArgs& args, void* userdata)
 	    args.error("addroe must have a RID");
 	    return;
 	}
-	Roe* r=new Roe(this, args[2]);
+	Roe* r=scinew Roe(this, args[2]);
 	roe.add(r);
     } else if(args[1] == "listrenderers"){
 	Array1<clString> list;

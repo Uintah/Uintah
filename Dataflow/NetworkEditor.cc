@@ -20,6 +20,7 @@
 #include <Dataflow/ModuleList.h>
 #include <Dataflow/Network.h>
 #include <Dataflow/Port.h>
+#include <Malloc/Allocator.h>
 #include <Math/MiscMath.h>
 #include <TCL/TCL.h>
 
@@ -103,7 +104,7 @@ void NetworkEditor::do_scheduling()
 
 	    // Tell it to trigger...
 	    if(module->sched_state != Module::SchedDormant){
-		module->mailbox.send(new Scheduler_Module_Message);
+		module->mailbox.send(scinew Scheduler_Module_Message);
 
 		// Reset the state...
 		module->sched_state=Module::SchedDormant;
@@ -116,7 +117,7 @@ void NetworkEditor::do_scheduling()
 	Module* module=net->module(i);
 
 	// Tell it to trigger...
-	module->mailbox.send(new Scheduler_Module_Message);
+	module->mailbox.send(scinew Scheduler_Module_Message);
 
 	// Reset the state...
 	module->sched_state=Module::SchedDormant;

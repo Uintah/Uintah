@@ -12,6 +12,7 @@
  */
 
 #include <Classlib/Queue.h>
+#include <Malloc/Allocator.h>
 
 #ifdef __GNUG__
 #pragma interface
@@ -34,7 +35,7 @@ template<class T> Queue<T>::~Queue()
 
 template<class T> void Queue<T>::append(const T& item)
 {
-    QueueNode<T>* p=new QueueNode<T>(item, 0);
+    QueueNode<T>* p=scinew QueueNode<T>(item, 0);
     if(tail){
 	tail->next=p;
 	tail=p;

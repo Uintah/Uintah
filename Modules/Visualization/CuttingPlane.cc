@@ -18,6 +18,7 @@
 #include <Datatypes/ColormapPort.h>
 #include <Geom/Grid.h>
 #include <Geometry/Point.h>
+#include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 
 #include <Widgets/ScaledFrameWidget.h>
@@ -35,7 +36,7 @@ class CuttingPlane : public Module {
    int init;
    int widget_id;
    ScaledFrameWidget *widget;
-   virtual void widget_moved();
+   virtual void widget_moved(int last);
    TCLint cutting_plane_type;
    TCLdouble scale;
    TCLdouble offset;
@@ -55,7 +56,7 @@ public:
 
 static Module* make_CuttingPlane(const clString& id)
 {
-   return new CuttingPlane(id);
+   return scinew CuttingPlane(id);
 }
 
 static RegisterModule db1("Fields", "CuttingPlane", make_CuttingPlane);
@@ -70,26 +71,26 @@ CuttingPlane::CuttingPlane(const clString& id)
 {
     // Create the input ports
     // Need a scalar field and a colormap
-    inscalarfield = new ScalarFieldIPort( this, "Scalar Field",
+    inscalarfield = scinew ScalarFieldIPort( this, "Scalar Field",
 					ScalarFieldIPort::Atomic);
     add_iport( inscalarfield);
-    incolormap = new ColormapIPort( this, "Colormap",
+    incolormap = scinew ColormapIPort( this, "Colormap",
 				     ColormapIPort::Atomic);
     add_iport( incolormap);
 					
     // Create the output port
-    ogeom = new GeometryOPort(this, "Geometry", 
+    ogeom = scinew GeometryOPort(this, "Geometry", 
 			      GeometryIPort::Atomic);
     add_oport(ogeom);
     init = 1;
     float INIT(.1);
 
-    widget = new ScaledFrameWidget(this, &widget_lock, INIT);
+    widget = scinew ScaledFrameWidget(this, &widget_lock, INIT);
     grid_id=0;
 
     need_find=1;
     
-    outcolor=new Material(Color(0,0,0), Color(0,0,0), Color(0,0,0), 0);
+    outcolor=scinew Material(Color(0,0,0), Color(0,0,0), Color(0,0,0), 0);
 }
 
 CuttingPlane::CuttingPlane(const CuttingPlane& copy, int deep)
@@ -105,7 +106,7 @@ CuttingPlane::~CuttingPlane()
 
 Module* CuttingPlane::clone(int deep)
 {
-   return new CuttingPlane(*this, deep);
+   return scinew CuttingPlane(*this, deep);
 }
 
 void CuttingPlane::execute()
@@ -187,7 +188,7 @@ void CuttingPlane::execute()
         v_num = (int) (v_fac * 100);
 
     cout << "u fac = " << u_fac << "\nv fac = " << v_fac << endl;
-    GeomGrid* grid = new GeomGrid( u_num, v_num, corner, u, v);
+    GeomGrid* grid = scinew GeomGrid( u_num, v_num, corner, u, v);
 
     // Get the scalar values and corresponding
     // colors to put in the cutting plane
@@ -231,9 +232,9 @@ void CuttingPlane::execute()
 	ogeom->delObj( old_grid_id );
 }
 
-void CuttingPlane::widget_moved()
+void CuttingPlane::widget_moved(int last)
 {
-    if(!abort_flag)
+    if(last && !abort_flag)
     {
 	abort_flag=1;
 	want_to_execute();

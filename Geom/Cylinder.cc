@@ -16,6 +16,7 @@
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
+#include <Malloc/Allocator.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 #include <Classlib/String.h>
@@ -81,7 +82,7 @@ void GeomCylinder::adjust()
 
 GeomObj* GeomCylinder::clone()
 {
-    return new GeomCylinder(*this);
+    return scinew GeomCylinder(*this);
 }
 
 void GeomCylinder::get_bounds(BBox& bb)
@@ -115,10 +116,10 @@ void GeomCylinder::make_prims(Array1<GeomObj*>& free,
 	    Point p1(b1+rv);
 	    Point p2(b2+rv);
 	    if(j>0){
-		GeomTri* t1=new GeomTri(l1, l2, p1);
+		GeomTri* t1=scinew GeomTri(l1, l2, p1);
 //		t1->set_matl(matl);
 		free.add(t1);
-		GeomTri* t2=new GeomTri(l2, p1, p2);
+		GeomTri* t2=scinew GeomTri(l2, p1, p2);
 //		t2->set_matl(matl);
 		free.add(t2);
 	    }
@@ -163,7 +164,7 @@ GeomCappedCylinder::~GeomCappedCylinder()
 
 GeomObj* GeomCappedCylinder::clone()
 {
-    return new GeomCappedCylinder(*this);
+    return scinew GeomCappedCylinder(*this);
 }
 
 void GeomCappedCylinder::make_prims(Array1<GeomObj*>&,

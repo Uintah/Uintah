@@ -26,6 +26,7 @@
 #include <Geom/Geom.h>
 #include <Geom/Pick.h>
 #include <Geom/PointLight.h>
+#include <Malloc/Allocator.h>
 #include <Math/Trig.h>
 #include <TCL/TCLTask.h>
 #include <iostream.h>
@@ -50,8 +51,8 @@ Roe::Roe(Salmon* s, const clString& id)
     view.set(homeview);
     TCL::add_command(id+"-c", this, 0);
     current_renderer=0;
-    modebuf=new char[MODEBUFSIZE];
-    modecommand=new char[MODEBUFSIZE];
+    modebuf=scinew char[MODEBUFSIZE];
+    modecommand=scinew char[MODEBUFSIZE];
     maxtag=0;
 }
 
@@ -96,8 +97,8 @@ void Roe::itemAdded(SceneItem* si)
     ObjTag* vis;
     if(!visible.lookup(si->name, vis)){
 	// Make one...
-	vis=new ObjTag;
-	vis->visible=new TCLvarint(si->name, id, this);
+	vis=scinew ObjTag;
+	vis->visible=scinew TCLvarint(si->name, id, this);
 	vis->visible->set(1);
 	vis->tagid=maxtag++;
 	visible.insert(si->name, vis);
@@ -145,7 +146,7 @@ void Roe::spawnChCB(CallbackData*, void*)
   double mat[16];
   glGetDoublev(GL_MODELVIEW_MATRIX, mat);
 
-  kids.add(new Roe(manager, mat, mtnScl));
+  kids.add(scinew Roe(manager, mat, mtnScl));
   kids[kids.size()-1]->SetParent(this);
   for (int i=0; i<geomItemA.size(); i++)
       kids[kids.size()-1]->itemAdded(geomItemA[i]->geom, geomItemA[i]->name);
@@ -682,7 +683,7 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
 	    cerr << "Redraw event dropped, mailbox full!\n";
 	} else {
-	    manager->mailbox.send(new SalmonMessage(id, args[2]));
+	    manager->mailbox.send(scinew SalmonMessage(id, args[2]));
 	}
     } else if(args[1] == "startup"){
 	// Fill in the visibility database...
@@ -716,7 +717,7 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
 	    cerr << "Redraw event dropped, mailbox full!\n";
 	} else {
-	    manager->mailbox.send(new SalmonMessage(id));
+	    manager->mailbox.send(scinew SalmonMessage(id));
 	}
     } else if(args[1] == "anim_redraw"){
 	// We need to dispatch this one to the remote thread
@@ -749,7 +750,7 @@ void Roe::tcl_command(TCLArgs& args, void*)
 		args.error("Can't figure out framerate");
 		return;
 	    }	    
-	    manager->mailbox.send(new SalmonMessage(id, tbeg, tend,
+	    manager->mailbox.send(scinew SalmonMessage(id, tbeg, tend,
 						    nframes, framerate));
 	}
     } else if(args[1] == "mtranslate"){
@@ -764,7 +765,7 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	homeview=view.get();
     } else if(args[1] == "gohome"){
 	view.set(homeview);
-	manager->mailbox.send(new SalmonMessage(id)); // Redraw
+	manager->mailbox.send(scinew SalmonMessage(id)); // Redraw
     } else if(args[1] == "autoview"){
 	BBox bbox;
 	get_bounds(bbox);
@@ -833,7 +834,7 @@ void Roe::do_mouse(MouseHandler handler, TCLArgs& args)
     if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
 	cerr << "Mouse event dropped, mailbox full!\n";
     } else {
-	manager->mailbox.send(new RoeMouseMessage(id, handler, action, x, y, state, btn));
+	manager->mailbox.send(scinew RoeMouseMessage(id, handler, action, x, y, state, btn));
     }
 }
 
@@ -936,7 +937,7 @@ void Roe::animate_to_view(const View& v, double /*time*/)
 {
     NOT_FINISHED("Roe::animate_to_view");
     view.set(v);
-    manager->mailbox.send(new SalmonMessage(id));
+    manager->mailbox.send(scinew SalmonMessage(id));
 }
 
 Renderer* Roe::get_renderer(const clString& name)

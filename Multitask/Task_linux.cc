@@ -99,7 +99,7 @@ public:
 TaskQueue::TaskQueue(int size)
 : size(size), first(0), last(0), nitems(0)
 {
-    q=new Task*[size];
+    q=scinew Task*[size];
     spin_unlock(lock);
 }
 
@@ -258,7 +258,7 @@ void Task::activate(int task_arg)
 	exit(-1);
     }
     activated=1;
-    priv=new TaskPrivate;
+    priv=scinew TaskPrivate;
     if(single_threaded.is_set()){
 	priv->retval=body(task_arg);
     } else {
@@ -497,9 +497,9 @@ void Task::initialize(char* pn)
 #endif
 
 	// Make a Task* for the main thread...
-	current_task=new MainTask;
+	current_task=scinew MainTask;
 	current_task->activated=1;
-	current_task->priv=new TaskPrivate;
+	current_task->priv=scinew TaskPrivate;
 	tasks[ntasks++]=current_task;
 
 	// Setup the seg fault handler...
@@ -627,7 +627,7 @@ struct Semaphore_private {
 Semaphore::Semaphore(int count)
 {
     if(!single_threaded.is_set()){
-	priv=new Semaphore_private;
+	priv=scinew Semaphore_private;
 	priv->count=count;
 	spin_unlock(priv->lock);
     } else {
@@ -684,7 +684,7 @@ struct Mutex_private {
 Mutex::Mutex()
 {
     if(!single_threaded.is_set()){
-	priv=new Mutex_private;
+	priv=scinew Mutex_private;
 	spin_unlock(priv->lock);
     } else {
 	priv=0;
@@ -767,7 +767,7 @@ ConditionVariable_private::ConditionVariable_private()
 ConditionVariable::ConditionVariable()
 {
     if(!single_threaded.is_set()){
-	priv=new ConditionVariable_private;
+	priv=scinew ConditionVariable_private;
     } else {
 	priv=0;
     }
@@ -825,7 +825,7 @@ void Task::sleep(const TaskTime& time)
 TaskInfo* Task::get_taskinfo()
 {
     lock_scheduler();
-    TaskInfo* ti=new TaskInfo(ntasks);
+    TaskInfo* ti=scinew TaskInfo(ntasks);
     for(int i=0;i<ntasks;i++){
 	ti->tinfo[i].name=tasks[i]->name;
 	ti->tinfo[i].stacksize=tasks[i]->priv->stacklen-pagesize;
@@ -976,7 +976,7 @@ int Task::start_itimer(const TaskTime& start, const TaskTime& interval,
 	NOT_FINISHED("Multiple timers in a single thread");
 	return 0;
     }
-    ITimer** new_timers=new ITimer*[ntimers+1];
+    ITimer** new_timers=scinew ITimer*[ntimers+1];
     if(timers){
 	for(int i=0;i<ntimers;i++){
 	    new_timers[i]=timers[i];
@@ -984,7 +984,7 @@ int Task::start_itimer(const TaskTime& start, const TaskTime& interval,
 	delete[] timers;
     }
     timers=new_timers;
-    ITimer* t=new ITimer;
+    ITimer* t=scinew ITimer;
     timers[ntimers]=t;
     ntimers++;
     t->start=start;

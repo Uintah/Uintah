@@ -18,6 +18,7 @@
 #include <Dataflow/Connection.h>
 #include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
+#include <Malloc/Allocator.h>
 
 #include <iostream.h>
 #include <stdlib.h>
@@ -82,7 +83,7 @@ Connection* Network::connection(int i)
 
 clString Network::connect(Module* m1, int p1, Module* m2, int p2)
 {
-    Connection* conn=new Connection(m1, p1, m2, p2);
+    Connection* conn=scinew Connection(m1, p1, m2, p2);
     clString id(m1->id+"_p"+to_string(p1)+"_to_"+m2->id+"_p"+to_string(p2));
     conn->id=id;
     conn->connect();

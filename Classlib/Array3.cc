@@ -12,6 +12,7 @@
 
 #include <Classlib/Array3.h>
 #include <Classlib/String.h>
+#include <Malloc/Allocator.h>
 
 #ifdef __GNUG__
 #pragma interface
@@ -26,9 +27,9 @@ Array3<T>::Array3()
 template<class T>
 void Array3<T>::allocate()
 {
-    objs=new T**[dm1];
-    T** p=new T*[dm1*dm2];
-    T* pp=new T[dm1*dm2*dm3];
+    objs=scinew T**[dm1];
+    T** p=scinew T*[dm1*dm2];
+    T* pp=scinew T[dm1*dm2*dm3];
     for(int i=0;i<dm1;i++){
 	objs[i]=p;
 	p+=dm2;
@@ -122,7 +123,7 @@ void Pio(Piostream& stream, Array3<T>& data)
 template<class T>
 void Pio(Piostream& stream, Array3<T>*& data) {
     if (stream.reading()) {
-	data=new Array3<T>;
+	data=scinew Array3<T>;
     }
     Pio(stream, *data);
 }

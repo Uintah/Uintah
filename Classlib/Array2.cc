@@ -12,6 +12,7 @@
 
 #include <Classlib/Array2.h>
 #include <Classlib/String.h>
+#include <Malloc/Allocator.h>
 
 #ifdef __GNUG__
 #pragma interface

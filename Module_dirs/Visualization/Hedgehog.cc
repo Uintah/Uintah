@@ -21,6 +21,7 @@
 #include <Geom/Material.h>
 #include <Geom/Line.h>
 #include <Geometry/Point.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 
 class Hedgehog : public Module {
@@ -52,7 +53,7 @@ public:
 
 static Module* make_Hedgehog(const clString& id)
 {
-    return new Hedgehog(id);
+    return scinew Hedgehog(id);
 }
 
 static RegisterModule db1("Fields", "Hedgehog", make_Hedgehog);
@@ -64,46 +65,46 @@ Hedgehog::Hedgehog(const clString& id)
 : Module("Hedgehog", id, Filter)
 {
     // Create the input ports
-    infield=new VectorFieldIPort(this, "Vector Field",
+    infield=scinew VectorFieldIPort(this, "Vector Field",
 				 VectorFieldIPort::Atomic);
     add_iport(infield);
 
     // Create the output port
-    ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+    ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 
     min=Point(0,0,0);
     max=Point(1,1,1);
 #ifdef OLDUI
-    ui_min=new MUI_point("Min: ", &min, MUI_widget::Immediate, 0);
+    ui_min=scinew MUI_point("Min: ", &min, MUI_widget::Immediate, 0);
     add_ui(ui_min);
-    ui_max=new MUI_point("Max: ", &max, MUI_widget::Immediate, 0);
+    ui_max=scinew MUI_point("Max: ", &max, MUI_widget::Immediate, 0);
     add_ui(ui_max);
     space_x=space_y=space_z=1;
-    ui_space_x=new MUI_slider_real("X spacing", &space_x,
+    ui_space_x=scinew MUI_slider_real("X spacing", &space_x,
 				   MUI_widget::Immediate, 0);
     add_ui(ui_space_x);
-    ui_space_y=new MUI_slider_real("Y spacing", &space_y,
+    ui_space_y=scinew MUI_slider_real("Y spacing", &space_y,
 				   MUI_widget::Immediate, 0);
     add_ui(ui_space_y);
-    ui_space_z=new MUI_slider_real("Z spacing", &space_z,
+    ui_space_z=scinew MUI_slider_real("Z spacing", &space_z,
 				   MUI_widget::Immediate, 0);
     add_ui(ui_space_z);
     length_scale=1;
-    ui_length_scale=new MUI_slider_real("Length Scale", &length_scale,
+    ui_length_scale=scinew MUI_slider_real("Length Scale", &length_scale,
 					MUI_widget::Immediate, 0);
     ui_length_scale->set_minmax(0, 10);
     add_ui(ui_length_scale);
     radius=0;
-    ui_radius=new MUI_slider_real("Radius", &radius,
+    ui_radius=scinew MUI_slider_real("Radius", &radius,
 				  MUI_widget::Immediate, 0);
     add_ui(ui_radius);
 
     need_minmax=1;
 
-    front_matl=new MaterialProp(Color(0,0,0), Color(.6, 0, 0),
+    front_matl=scinew MaterialProp(Color(0,0,0), Color(.6, 0, 0),
 				Color(.5,0,0), 20);
-    back_matl=new MaterialProp(Color(0,0,0), Color(0, 0, .6),
+    back_matl=scinew MaterialProp(Color(0,0,0), Color(0, 0, .6),
 			       Color(0,0,.5), 20);
     hedgehog_id=0;
 #endif
@@ -121,7 +122,7 @@ Hedgehog::~Hedgehog()
 
 Module* Hedgehog::clone(int deep)
 {
-    return new Hedgehog(*this, deep);
+    return scinew Hedgehog(*this, deep);
 }
 
 void Hedgehog::execute()
@@ -148,7 +149,7 @@ void Hedgehog::execute()
 	length_scale=Min(space_x, space_y, space_z)*.75;
 	need_minmax=0;
     }
-    GeomGroup* group=new GeomGroup;
+    GeomGroup* group=scinew GeomGroup;
     cerr << "length_scale=" << length_scale << endl;
     for(double x=min.x();x<=max.x();x+=space_x){
 	for(double y=min.y();y<=max.y();y+=space_y){

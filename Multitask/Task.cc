@@ -12,6 +12,7 @@
  */
 
 #include <Multitask/Task.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 
 // Task constructure
@@ -51,7 +52,7 @@ TaskTime::TaskTime()
 }
 
 TaskInfo::TaskInfo(int ntasks)
-: ntasks(ntasks), tinfo(new Info[ntasks])
+: ntasks(ntasks), tinfo(scinew Info[ntasks])
 {
 }
 

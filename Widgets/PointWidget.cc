@@ -14,6 +14,7 @@
 
 #include <Widgets/PointWidget.h>
 #include <Geom/Sphere.h>
+#include <Malloc/Allocator.h>
 
 const Index NumCons = 0;
 const Index NumVars = 1;
@@ -30,11 +31,11 @@ enum { Pick };
 PointWidget::PointWidget( Module* module, CrowdMonitor* lock, double widget_scale )
 : BaseWidget(module, lock, "PointWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale)
 {
-   variables[PointVar] = new PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
+   variables[PointVar] = scinew PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
 
-   geometries[GeomPoint] = new GeomSphere;
-   materials[PointMatl] = new GeomMaterial(geometries[GeomPoint], DefaultPointMaterial);
-   picks[Pick] = new GeomPick(materials[PointMatl], module, this, Pick);
+   geometries[GeomPoint] = scinew GeomSphere;
+   materials[PointMatl] = scinew GeomMaterial(geometries[GeomPoint], DefaultPointMaterial);
+   picks[Pick] = scinew GeomPick(materials[PointMatl], module, this, Pick);
    picks[Pick]->set_highlight(DefaultHighlightMaterial);
    CreateModeSwitch(0, picks[Pick]);
 
@@ -67,7 +68,7 @@ PointWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
       MoveDelta(delta);
       break;
    }
-   execute();
+   execute(0);
 }
 
 
@@ -76,7 +77,7 @@ PointWidget::MoveDelta( const Vector& delta )
 {
    variables[PointVar]->MoveDelta(delta);
 
-   execute();
+   execute(1);
 }
 
 
@@ -92,7 +93,7 @@ PointWidget::SetPosition( const Point& p )
 {
    variables[PointVar]->Move(p);
 
-   execute();
+   execute(0);
 }
 
 

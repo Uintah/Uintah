@@ -1,6 +1,7 @@
 
 #include <Modules/Salmon/Renderer.h>
 #include <Classlib/NotFinished.h>
+#include <Malloc/Allocator.h>
 
 class Postscript : public Renderer {
 public:
@@ -19,7 +20,7 @@ public:
 
 static Renderer* make_Postscript()
 {
-    return new Postscript;
+    return scinew Postscript;
 }
 
 static int query_Postscript()

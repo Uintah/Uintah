@@ -17,6 +17,7 @@
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/ScalarFieldUG.h>
+#include <Malloc/Allocator.h>
 #include <Geometry/Point.h>
 
 class MakeScalarField : public Module {
@@ -33,7 +34,7 @@ public:
 
 static Module* make_MakeScalarField(const clString& id)
 {
-    return new MakeScalarField(id);
+    return scinew MakeScalarField(id);
 }
 
 static RegisterModule db1("Unfinished", "MakeScalarField", make_MakeScalarField);
@@ -41,12 +42,12 @@ static RegisterModule db1("Unfinished", "MakeScalarField", make_MakeScalarField)
 MakeScalarField::MakeScalarField(const clString& id)
 : Module("MakeScalarField", id, Filter)
 {
-    inmesh=new MeshIPort(this, "Mesh", MeshIPort::Atomic);
+    inmesh=scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
     add_iport(inmesh);
-    inrhs=new ColumnMatrixIPort(this, "RHS", ColumnMatrixIPort::Atomic);
+    inrhs=scinew ColumnMatrixIPort(this, "RHS", ColumnMatrixIPort::Atomic);
     add_iport(inrhs);
     // Create the output port
-    ofield=new ScalarFieldOPort(this, "ScalarField", ScalarFieldIPort::Atomic);
+    ofield=scinew ScalarFieldOPort(this, "ScalarField", ScalarFieldIPort::Atomic);
     add_oport(ofield);
 }
 
@@ -62,7 +63,7 @@ MakeScalarField::~MakeScalarField()
 
 Module* MakeScalarField::clone(int deep)
 {
-    return new MakeScalarField(*this, deep);
+    return scinew MakeScalarField(*this, deep);
 }
 
 void MakeScalarField::execute()
@@ -73,7 +74,7 @@ void MakeScalarField::execute()
     ColumnMatrixHandle rhshandle;
     if(!inrhs->get(rhshandle))
 	return;
-    ScalarFieldUG* sf=new ScalarFieldUG;
+    ScalarFieldUG* sf=scinew ScalarFieldUG;
     sf->mesh=mesh;
     ColumnMatrix& rhs=*rhshandle.get_rep();
     sf->data.resize(rhs.nrows());

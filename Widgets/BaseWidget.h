@@ -105,7 +105,7 @@ protected:
 
    ConstraintSolver* solve;
    
-   void execute();
+   void execute(int always_callback);
    virtual void redraw()=0;
    Index NumVariables;
    Index NumConstraints;

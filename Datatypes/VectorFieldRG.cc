@@ -13,11 +13,12 @@
 
 #include <Datatypes/VectorFieldRG.h>
 #include <Classlib/String.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 
 static Persistent* maker()
 {
-    return new VectorFieldRG;
+    return scinew VectorFieldRG;
 }
 
 PersistentTypeID VectorFieldRG::type_id("VectorFieldRG", "VectorField", maker);
@@ -132,5 +133,5 @@ void VectorFieldRG::set_minmax(const Point& min,
 
 VectorField* VectorFieldRG::clone()
 {
-    return new VectorFieldRG(*this);
+    return scinew VectorFieldRG(*this);
 }

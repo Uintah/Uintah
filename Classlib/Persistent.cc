@@ -15,6 +15,7 @@
 #include <Classlib/Pstreams.h>
 #include <Classlib/HashTable.h>
 #include <Classlib/String.h>
+#include <Malloc/Allocator.h>
 #include <Multitask/Task.h>
 #include <fstream.h>
 
@@ -25,7 +26,7 @@ PersistentTypeID::PersistentTypeID(char* type, char* parent,
 : type(type), parent(parent), maker(maker)
 {
     if(!table){
-	table=new HashTable<clString, PersistentTypeID*>;
+	table=scinew HashTable<clString, PersistentTypeID*>;
     }
     clString typestring(type);
     PersistentTypeID* dummy;
@@ -146,7 +147,7 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 
 	    // Insert this pointer in the database
 	    if(!inpointers)
-		inpointers=new HashTable<int, Persistent*>;
+		inpointers=scinew HashTable<int, Persistent*>;
 	    inpointers->insert(pointer_id, data);
 	} else {
 	    // Look it up...
@@ -180,7 +181,7 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 
 Piostream* auto_istream(const clString& filename)
 {
-    ifstream* inp=new ifstream(filename());
+    ifstream* inp=scinew ifstream(filename());
     ifstream& in=(*inp);
     if(!in){
 	cerr << "file not found: " << filename << endl;
@@ -213,9 +214,9 @@ Piostream* auto_istream(const clString& filename)
 	}
     } while(m != '\n');
     if(m1 == 'B' && m2 == 'I' && m3 == 'N'){
-	return new BinaryPiostream(inp, version);
+	return scinew BinaryPiostream(inp, version);
     } else if(m1 == 'A' && m2 == 'S' && m3 == 'C'){
-	return new TextPiostream(inp, version);
+	return scinew TextPiostream(inp, version);
     } else {
 	cerr << filename << " is an unknown type!\n";
 	return 0;

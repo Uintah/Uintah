@@ -33,6 +33,9 @@ proc showMemStats {} {
 	button .msw.canvas.audit -text "Audit" -command "memstats audit" \
 		-borderwidth 3
 	.msw.canvas create window 9c 1c -window .msw.canvas.audit
+	button .msw.canvas.dump -text "Dump" -command "memstats dump" \
+		-borderwidth 3
+	.msw.canvas create window 9c 2c -window .msw.canvas.dump
 	after 0 updateMemStats $lineheight $gleft $gwidth
     }
 }

@@ -17,12 +17,13 @@
 #include <Classlib/String.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
+#include <Malloc/Allocator.h>
 #include <Math/MinMax.h>
 #include <Math/MiscMath.h>
 
 Grid::Grid(int x, int y, int z, const Point &m, double sp) 
 : spacing(sp), min(m) {
-    e=new Array3<Array1<int> *>(x,y,z);
+    e=scinew Array3<Array1<int> *>(x,y,z);
     e->initialize((Array1<int>*)0);
 }
 
@@ -60,7 +61,7 @@ void Grid::get_element(const Point &p, int *i, int *j, int *k, double *dist) {
 
 void Grid::add_member(int id, int x, int y, int z) {
     if (!(*e)(x,y,z)) {
-	(e->get_dataptr())[x][y][z] = new Array1<int>(0,4,4);
+	(e->get_dataptr())[x][y][z] = scinew Array1<int>(0,4,4);
     }
     (e->get_dataptr())[x][y][z]->add(id);
 }

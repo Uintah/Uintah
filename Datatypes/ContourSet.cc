@@ -15,13 +15,14 @@
 #include <Classlib/String.h>
 #include <Datatypes/Surface.h>
 #include <Geometry/Transform.h>
+#include <Malloc/Allocator.h>
 
 #include <iostream.h>
 
 #define Sqr(x) ((x)*(x))
 
 static Persistent* make_ContourSet(){
-    return new ContourSet;
+    return scinew ContourSet;
 }
 
 PersistentTypeID ContourSet::type_id("ContourSet", "Datatype", make_ContourSet);
@@ -125,5 +126,5 @@ void ContourSet::io(Piostream& stream)
 
 ContourSet* ContourSet::clone()
 {
-    return new ContourSet(*this);
+    return scinew ContourSet(*this);
 }

@@ -14,6 +14,7 @@
 #include <Classlib/String.h>
 #include <Classlib/TrivialAllocator.h>
 #include <Datatypes/Octree.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 #include <fstream.h>
 
@@ -23,7 +24,7 @@ static TrivialAllocator Octree_alloc(sizeof(Octree));
 
 static Persistent* make_OctreeTop()
 {
-    return new OctreeTop;
+    return scinew OctreeTop;
 }
 
 PersistentTypeID OctreeTop::type_id("Octree", "Datatype", make_OctreeTop);
@@ -49,7 +50,7 @@ OctreeTop::OctreeTop(const OctreeTop& copy)
 }
 
 OctreeTop* OctreeTop::clone() {
-    return new OctreeTop(*this);
+    return scinew OctreeTop(*this);
 }
 
 OctreeTop::~OctreeTop() {

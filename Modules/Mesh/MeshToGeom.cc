@@ -22,6 +22,7 @@
 #include <Geom/Tri.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/Mesh.h>
+#include <Malloc/Allocator.h>
 
 class MeshToGeom : public Module {
     MeshIPort* imesh;
@@ -38,7 +39,7 @@ public:
 
 static Module* make_MeshToGeom(const clString& id)
 {
-    return new MeshToGeom(id);
+    return scinew MeshToGeom(id);
 }
 
 static RegisterModule db1("Mesh", "MeshToGeom", make_MeshToGeom);
@@ -50,9 +51,9 @@ MeshToGeom::MeshToGeom(const clString& id)
 : Module("MeshToGeom", id, Filter)
 {
     // Create the input port
-    imesh=new MeshIPort(this, "Mesh", MeshIPort::Atomic);
+    imesh=scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
     add_iport(imesh);
-    ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+    ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 }
 
@@ -68,7 +69,7 @@ MeshToGeom::~MeshToGeom()
 
 Module* MeshToGeom::clone(int deep)
 {
-    return new MeshToGeom(*this, deep);
+    return scinew MeshToGeom(*this, deep);
 }
 
 void MeshToGeom::execute()
@@ -77,24 +78,24 @@ void MeshToGeom::execute()
     if (!imesh->get(mesh))
 	return;
 
-    GeomGroup* group = new GeomGroup;
+    GeomGroup* group = scinew GeomGroup;
     
     for (int i=0; i<mesh->elems.size(); i++) {
-	group->add(new GeomTri(mesh->nodes[mesh->elems[i]->n[0]]->p,
+	group->add(scinew GeomTri(mesh->nodes[mesh->elems[i]->n[0]]->p,
 			       mesh->nodes[mesh->elems[i]->n[1]]->p,
 			       mesh->nodes[mesh->elems[i]->n[2]]->p));
-	group->add(new GeomTri(mesh->nodes[mesh->elems[i]->n[1]]->p,
+	group->add(scinew GeomTri(mesh->nodes[mesh->elems[i]->n[1]]->p,
 			       mesh->nodes[mesh->elems[i]->n[2]]->p,
 			       mesh->nodes[mesh->elems[i]->n[3]]->p));
-	group->add(new GeomTri(mesh->nodes[mesh->elems[i]->n[0]]->p,
+	group->add(scinew GeomTri(mesh->nodes[mesh->elems[i]->n[0]]->p,
 			       mesh->nodes[mesh->elems[i]->n[1]]->p,
 			       mesh->nodes[mesh->elems[i]->n[3]]->p));
-	group->add(new GeomTri(mesh->nodes[mesh->elems[i]->n[0]]->p,
+	group->add(scinew GeomTri(mesh->nodes[mesh->elems[i]->n[0]]->p,
 			       mesh->nodes[mesh->elems[i]->n[2]]->p,
 			       mesh->nodes[mesh->elems[i]->n[3]]->p));
     }
-    GeomMaterial* matl=new GeomMaterial(group,
-					new Material(Color(0,0,0),
+    GeomMaterial* matl=scinew GeomMaterial(group,
+					scinew Material(Color(0,0,0),
 						     Color(0,.6,0), 
 						     Color(.5,.5,.5), 20));
     ogeom->delAll();

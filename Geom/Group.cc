@@ -13,6 +13,7 @@
 
 #include <Geom/Group.h>
 #include <Classlib/Array2.h>
+#include <Malloc/Allocator.h>
 #include <values.h>
 
 GeomGroup::GeomGroup(int del_children)
@@ -62,7 +63,7 @@ int GeomGroup::size()
 
 GeomObj* GeomGroup::clone()
 {
-    return new GeomGroup(*this);
+    return scinew GeomGroup(*this);
 }
 
 void GeomGroup::get_bounds(BBox& in_bb)
@@ -156,7 +157,7 @@ void GeomGroup::preprocess()
     Array1<ITree*> current(s);
     Array1<BSphere> bounds(s);
     for(i=0;i<s;i++){
-	current[i]=new ITreeLeaf(objs[i]);
+	current[i]=scinew ITreeLeaf(objs[i]);
 	volumes(i, i)=MAXDOUBLE;
 	objs[i]->get_bounds(bounds[i]);
 	for(int j=0;j<i;j++){
@@ -188,18 +189,18 @@ void GeomGroup::preprocess()
 	double vwhole=min;
 	if(v1*1.1 < vwhole || v2*1.1 < vwhole){
 	    // Volume changes a lot, make this one a BSphere node
-	    newnode=new ITreeNodeBSphere(current[obj1], current[obj2],
+	    newnode=scinew ITreeNodeBSphere(current[obj1], current[obj2],
 					 bounds[obj1], bounds[obj2]);
 	    newnode->volume=vwhole;
 	} else {
-	    newnode=new ITreeNode(current[obj1], current[obj2]);
+	    newnode=scinew ITreeNode(current[obj1], current[obj2]);
 	    newnode->volume=Min(v1, v2);
 	}
 	// Fix up the arrays...
 	current[obj1]=newnode;
 	bounds[obj1].extend(bounds[obj2]);
 	if(next < objs.size()){
-	    current[obj2]=new ITreeLeaf(objs[next]);
+	    current[obj2]=scinew ITreeLeaf(objs[next]);
 	    objs[next]->get_bounds(bounds[obj2]);
 	    for(int i=0;i<s;i++){
 		if(current[i] && i!=obj2){

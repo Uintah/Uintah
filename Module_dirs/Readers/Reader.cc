@@ -16,6 +16,7 @@
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/TYPEPort.h>
 #include <Datatypes/TYPE.h>
+#include <Malloc/Allocator.h>
 #include <TCL/TCLTask.h>
 #include <TCL/TCLvar.h>
 
@@ -34,7 +35,7 @@ public:
 
 static Module* make_TYPEReader(const clString& id)
 {
-    return new TYPEReader(id);
+    return scinew TYPEReader(id);
 }
 
 #include "TYPERegister.h"
@@ -43,7 +44,7 @@ TYPEReader::TYPEReader(const clString& id)
 : Module("TYPEReader", id, Source), filename("filename", id, this)
 {
     // Create the output data handle and port
-    outport=new TYPEOPort(this, "Output Data", TYPEIPort::Atomic);
+    outport=scinew TYPEOPort(this, "Output Data", TYPEIPort::Atomic);
     add_oport(outport);
 }
 
@@ -59,7 +60,7 @@ TYPEReader::~TYPEReader()
 
 Module* TYPEReader::clone(int deep)
 {
-    return new TYPEReader(*this, deep);
+    return scinew TYPEReader(*this, deep);
 }
 
 #ifdef BROKEN

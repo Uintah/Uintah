@@ -15,6 +15,7 @@
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/GeometryPort.h>
 #include <Geometry/Point.h>
+#include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 
 #include <Widgets/PointWidget.h>
@@ -49,7 +50,7 @@ private:
 
    BaseWidget* widgets[NumWidgetTypes];
 
-   virtual void widget_moved();
+   virtual void widget_moved(int);
 
 public:
    WidgetTest(const clString& id);
@@ -63,7 +64,7 @@ public:
 
 static Module* make_WidgetTest(const clString& id)
 {
-   return new WidgetTest(id);
+   return scinew WidgetTest(id);
 }
 
 static RegisterModule db1("Fields", "WidgetTest", make_WidgetTest);
@@ -77,24 +78,24 @@ WidgetTest::WidgetTest(const clString& id)
   init(1)
 {
    // Create the output port
-   ogeom = new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+   ogeom = scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
    add_oport(ogeom);
 
    float INIT(0.01);
 
-   widgets[WT_Point] = new PointWidget(this, &widget_lock, INIT);
-   widgets[WT_Arrow] = new ArrowWidget(this, &widget_lock, INIT);
-   widgets[WT_Crit] = new CriticalPointWidget(this, &widget_lock, INIT);
-   widgets[WT_Cross] = new CrosshairWidget(this, &widget_lock, INIT);
-   widgets[WT_Gauge] = new GaugeWidget(this, &widget_lock, INIT);
-   widgets[WT_Ring] = new RingWidget(this, &widget_lock, INIT);
-   widgets[WT_Frame] = new FrameWidget(this, &widget_lock, INIT);
-   widgets[WT_SFrame] = new ScaledFrameWidget(this, &widget_lock, INIT);
-   widgets[WT_Box] = new BoxWidget(this, &widget_lock, INIT);
-   widgets[WT_SBox] = new ScaledBoxWidget(this, &widget_lock, INIT);
-   widgets[WT_View] = new ViewWidget(this, &widget_lock, INIT);
-   widgets[WT_Light] = new LightWidget(this, &widget_lock, INIT);
-   widgets[WT_Path] = new PathWidget(this, &widget_lock, INIT);
+   widgets[WT_Point] = scinew PointWidget(this, &widget_lock, INIT);
+   widgets[WT_Arrow] = scinew ArrowWidget(this, &widget_lock, INIT);
+   widgets[WT_Crit] = scinew CriticalPointWidget(this, &widget_lock, INIT);
+   widgets[WT_Cross] = scinew CrosshairWidget(this, &widget_lock, INIT);
+   widgets[WT_Gauge] = scinew GaugeWidget(this, &widget_lock, INIT);
+   widgets[WT_Ring] = scinew RingWidget(this, &widget_lock, INIT);
+   widgets[WT_Frame] = scinew FrameWidget(this, &widget_lock, INIT);
+   widgets[WT_SFrame] = scinew ScaledFrameWidget(this, &widget_lock, INIT);
+   widgets[WT_Box] = scinew BoxWidget(this, &widget_lock, INIT);
+   widgets[WT_SBox] = scinew ScaledBoxWidget(this, &widget_lock, INIT);
+   widgets[WT_View] = scinew ViewWidget(this, &widget_lock, INIT);
+   widgets[WT_Light] = scinew LightWidget(this, &widget_lock, INIT);
+   widgets[WT_Path] = scinew PathWidget(this, &widget_lock, INIT);
 }
 
 WidgetTest::WidgetTest(const WidgetTest& copy, int deep)
@@ -111,14 +112,14 @@ WidgetTest::~WidgetTest()
 
 Module* WidgetTest::clone(int deep)
 {
-   return new WidgetTest(*this, deep);
+   return scinew WidgetTest(*this, deep);
 }
 
 void WidgetTest::execute()
 {
    if (init == 1) {
       init = 0;
-      GeomGroup* w = new GeomGroup;
+      GeomGroup* w = scinew GeomGroup;
       for(int i = 0; i < NumWidgetTypes; i++)
 	 w->add(widgets[i]->GetWidget());
       widget_id = ogeom->addObj(w, module_name, &widget_lock);
@@ -127,8 +128,10 @@ void WidgetTest::execute()
    }
 }
 
-void WidgetTest::widget_moved()
+void WidgetTest::widget_moved(int last)
 {
+    if(last)
+	cerr << "Last callback...\n";
    cerr << "WidgetTest: begin widget_moved" << endl;
    // Update Arrow/Critical point widget
    if ((widgets[WT_Arrow]->ReferencePoint()-Point(0,0,0)).length2() >= 1e-6)
@@ -143,7 +146,7 @@ void WidgetTest::widget_moved()
    widget_lock.read_unlock();
 
    // If your module needs to execute when the widget moves, add these lines:
-   //if(!abort_flag){
+   //if(last && !abort_flag){
    //    abort_flag=1;
    //    want_to_execute();
    //}

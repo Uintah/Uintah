@@ -16,6 +16,7 @@
 #include <Classlib/AVLTree.h>
 #include <Classlib/HashTable.h>
 #include <Classlib/Exceptions.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 #include <stdlib.h>
 
@@ -27,7 +28,7 @@ static clString progname;
 void ArgProcessor::register_arg(const clString& name, Arg_base* handler)
 {
     if(!known_args)
-	known_args=new HashTable<clString, Arg_base*>;
+	known_args=scinew HashTable<clString, Arg_base*>;
     Arg_base* dummy;
     if(known_args->lookup(name, dummy))
 	EXCEPTION(General("Duplicate argument added to argument database"));
@@ -39,7 +40,7 @@ void ArgProcessor::process_args(int argc, char** argv)
     int idx=1;
     progname=argv[0];
     x_argc=1;
-    x_argv=new char*[argc+1];
+    x_argv=scinew char*[argc+1];
     x_argv[0]=argv[0];
     while(idx < argc){
 	char* arg=argv[idx];

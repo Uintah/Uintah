@@ -14,6 +14,7 @@
 #include <Datatypes/SimplePort.h>
 #include <Classlib/Assert.h>
 #include <Dataflow/Connection.h>
+#include <Malloc/Allocator.h>
 
 #include <iostream.h>
 
@@ -77,7 +78,7 @@ void SimpleOPort<T>::finish()
 	// Tell them that we didn't send anything...
 	turn_on(Finishing);
 	for(int i=0;i<nconnections();i++){
-	    SimplePortComm<T>* msg=new SimplePortComm<T>();
+	    SimplePortComm<T>* msg=scinew SimplePortComm<T>();
 	    ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
 	}
 	turn_off();
@@ -95,7 +96,7 @@ void SimpleOPort<T>::send(const T& data)
     }
     turn_on();
     for(int i=0;i<nconnections();i++){
-	SimplePortComm<T>* msg=new SimplePortComm<T>(data);
+	SimplePortComm<T>* msg=scinew SimplePortComm<T>(data);
 	((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
     }
     sent_something=1;

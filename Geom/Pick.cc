@@ -13,6 +13,7 @@
 
 #include <Geom/Pick.h>
 #include <Dataflow/Module.h>
+#include <Malloc/Allocator.h>
 #include <Widgets/BaseWidget.h>
 
 GeomPick::GeomPick(GeomObj* obj, Module* module)
@@ -80,7 +81,7 @@ GeomPick::GeomPick(const GeomPick& copy)
 
 GeomObj* GeomPick::clone()
 {
-    return new GeomPick(*this);
+    return scinew GeomPick(*this);
 }
 
 GeomPick::~GeomPick()

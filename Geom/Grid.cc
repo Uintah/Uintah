@@ -15,6 +15,7 @@
 #include <Classlib/NotFinished.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
+#include <Malloc/Allocator.h>
 
 GeomGrid::GeomGrid(int nu, int nv, const Point& corner,
 		   const Vector& u, const Vector& v)
@@ -119,7 +120,7 @@ void GeomGrid::make_prims(Array1<GeomObj*>&,
 
 GeomObj* GeomGrid::clone()
 {
-    return new GeomGrid(*this);
+    return scinew GeomGrid(*this);
 }
 
 void GeomGrid::preprocess()

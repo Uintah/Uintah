@@ -17,6 +17,7 @@
 #include <Classlib/String.h>
 #include <Classlib/TrivialAllocator.h>
 #include <Datatypes/ColumnMatrix.h>
+#include <Malloc/Allocator.h>
 #include <Math/Mat.h>
 #include <iostream.h>
 #include <fstream.h>
@@ -26,7 +27,7 @@ static TrivialAllocator Node_alloc(sizeof(Node));
 
 static Persistent* make_Mesh()
 {
-    return new Mesh;
+    return scinew Mesh;
 }
 
 static Persistent* make_Node()
@@ -83,7 +84,7 @@ Mesh::~Mesh()
 
 Mesh* Mesh::clone()
 {
-    return new Mesh(*this);
+    return scinew Mesh(*this);
 }
 
 #define MESH_VERSION 2

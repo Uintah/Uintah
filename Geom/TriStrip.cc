@@ -15,6 +15,7 @@
 #include <Classlib/NotFinished.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
+#include <Malloc/Allocator.h>
 
 GeomTriStrip::GeomTriStrip()
 {
@@ -36,7 +37,7 @@ void GeomTriStrip::make_prims(Array1<GeomObj*>&,
 
 GeomObj* GeomTriStrip::clone()
 {
-    return new GeomTriStrip(*this);
+    return scinew GeomTriStrip(*this);
 }
 
 void GeomTriStrip::preprocess()

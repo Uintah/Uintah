@@ -23,6 +23,7 @@
 #include <Geometry/BBox.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
+#include <Malloc/Allocator.h>
 #include <Multitask/ITC.h>
 #include <TCL/TCLvar.h>
 #include <Widgets/CrosshairWidget.h>
@@ -53,7 +54,7 @@ public:
 
 static Module* make_BuildOctree(const clString& id)
 {
-    return new BuildOctree(id);
+    return scinew BuildOctree(id);
 }
 
 static RegisterModule db1("Mesh", "BuildOctree", make_BuildOctree);
@@ -63,15 +64,15 @@ BuildOctree::BuildOctree(const clString& id)
 : Module("BuildOctree", id, Filter), same_input("same_input", id, this)
 {
     waiting_command = "";
-    isf=new ScalarFieldIPort(this, "ScalarField", ScalarFieldIPort::Atomic);
+    isf=scinew ScalarFieldIPort(this, "ScalarField", ScalarFieldIPort::Atomic);
     add_iport(isf);
-    ivf=new VectorFieldIPort(this, "VectorField", VectorFieldIPort::Atomic);
+    ivf=scinew VectorFieldIPort(this, "VectorField", VectorFieldIPort::Atomic);
     add_iport(ivf);
-    otree=new OctreeOPort(this, "Output Octree", OctreeIPort::Atomic);
+    otree=scinew OctreeOPort(this, "Output Octree", OctreeIPort::Atomic);
     add_oport(otree);
-    owidget=new GeometryOPort(this, "Widget Geometry", GeometryIPort::Atomic);
+    owidget=scinew GeometryOPort(this, "Widget Geometry", GeometryIPort::Atomic);
     add_oport(owidget);
-    widget = new CrosshairWidget(this, &widget_lock, .1);
+    widget = scinew CrosshairWidget(this, &widget_lock, .1);
     owidget->addObj(widget->GetWidget(), "CrosshairWidget", &widget_lock);
     owidget->flushViews();
 }
@@ -88,7 +89,7 @@ BuildOctree::~BuildOctree()
 
 Module* BuildOctree::clone(int deep)
 {
-    return new BuildOctree(*this, deep);
+    return scinew BuildOctree(*this, deep);
 }
 
 void BuildOctree::geom_moved(GeomPick*, int, double, const Vector&,
@@ -200,7 +201,7 @@ void BuildOctree::execute()
 	    sfrg->get_bounds(pmin, pmax);
 	    bb.extend(pmin);
 	    bb.extend(pmax);
-	    treeHandle = new OctreeTop(sfrg->nx, sfrg->ny, sfrg->nz, bb);
+	    treeHandle = scinew OctreeTop(sfrg->nx, sfrg->ny, sfrg->nz, bb);
 	    treeHandle->scalars=1;
 	    treeHandle->tree->insert_scalar_field(sfrg);
 	    treeHandle->tree->build_scalar_tree();
@@ -255,7 +256,7 @@ void BuildOctree::execute()
 		vfrg->get_bounds(pmin, pmax);
 	    bb.extend(pmin);
 	    bb.extend(pmax);
-	    treeHandle = new OctreeTop(vfrg->nx, vfrg->ny, vfrg->nz, bb);
+	    treeHandle = scinew OctreeTop(vfrg->nx, vfrg->ny, vfrg->nz, bb);
 	    treeHandle->vectors=1;
 	    treeHandle->tree->insert_vector_field(vfrg);
 	    treeHandle->tree->build_vector_tree();

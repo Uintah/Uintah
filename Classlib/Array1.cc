@@ -17,6 +17,7 @@
 
 #include <Classlib/Array1.h>
 #include <Classlib/Persistent.h>
+#include <Malloc/Allocator.h>
 
 template<class T>
 Array1<T>::Array1(const Array1<T>& a)

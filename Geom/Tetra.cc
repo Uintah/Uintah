@@ -15,6 +15,7 @@
 #include <Classlib/NotFinished.h>
 #include <Geom/Line.h>
 #include <Geometry/BBox.h>
+#include <Malloc/Allocator.h>
 
 GeomTetra::GeomTetra(const Point& p1, const Point& p2,
 		     const Point& p3, const Point& p4)
@@ -33,7 +34,7 @@ GeomTetra::~GeomTetra()
 
 GeomObj* GeomTetra::clone()
 {
-    return new GeomTetra(*this);
+    return scinew GeomTetra(*this);
 }
 
 void GeomTetra::get_bounds(BBox& bb)

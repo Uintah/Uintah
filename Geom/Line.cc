@@ -16,6 +16,7 @@
 #include <Classlib/TrivialAllocator.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
+#include <Malloc/Allocator.h>
 
 static TrivialAllocator Line_alloc(sizeof(GeomLine));
 

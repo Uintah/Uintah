@@ -5,6 +5,7 @@
 #include <Classlib/Assert.h>
 #include <Classlib/Exceptions.h>
 #include <Datatypes/ColumnMatrix.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 
 SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
@@ -13,9 +14,9 @@ SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
 : Matrix(Matrix::symmetric), nnrows(nnrows), nncols(nncols)
 {
     nnz=in_cols.size();
-    a=new double[nnz];
-    columns=new int[nnz];
-    rows=new int[nnz];
+    a=scinew double[nnz];
+    columns=scinew int[nnz];
+    rows=scinew int[nnz];
     for(int i=0;i<in_rows.size();i++){
 	rows[i]=in_rows[i];
     }

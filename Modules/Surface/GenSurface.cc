@@ -20,6 +20,7 @@
 #include <Geom/Pick.h>
 #include <Geom/Sphere.h>
 #include <Geometry/Point.h>
+#include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 
 static clString widget_name("GenSurface Widget");
@@ -54,7 +55,7 @@ public:
 
 static Module* make_GenSurface(const clString& id)
 {
-    return new GenSurface(id);
+    return scinew GenSurface(id);
 }
 
 static RegisterModule db1("Unfinished", "GenSurface", make_GenSurface);
@@ -68,9 +69,9 @@ GenSurface::GenSurface(const clString& id)
   widget_color("widget_color", id, this)
 {
     // Create the output port
-    outport=new SurfaceOPort(this, "Geometry", SurfaceIPort::Atomic);
+    outport=scinew SurfaceOPort(this, "Geometry", SurfaceIPort::Atomic);
     add_oport(outport);
-    ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+    ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 }
 
@@ -91,7 +92,7 @@ GenSurface::~GenSurface()
 
 Module* GenSurface::clone(int deep)
 {
-    return new GenSurface(*this, deep);
+    return scinew GenSurface(*this, deep);
 }
 
 void GenSurface::execute()
@@ -102,12 +103,12 @@ void GenSurface::execute()
     if(st != oldst){
 	ogeom->delAll();
 	if(st=="point"){
-	    GeomSphere* widget=new GeomSphere(point_pos.get(), point_rad.get());
-	    MaterialHandle widget_matl(new Material(Color(0,0,0),
+	    GeomSphere* widget=scinew GeomSphere(point_pos.get(), point_rad.get());
+	    MaterialHandle widget_matl(scinew Material(Color(0,0,0),
 						    widget_color.get(),
 						    Color(.6, .6, .6), 10));
-	    GeomMaterial* matl=new GeomMaterial(widget, widget_matl);
-	    GeomPick* pick=new GeomPick(matl, this,
+	    GeomMaterial* matl=scinew GeomMaterial(widget, widget_matl);
+	    GeomPick* pick=scinew GeomPick(matl, this,
 					Vector(1,0,0), Vector(0,1,0),
 					Vector(0,0,1));
 	    ogeom->addObj(pick, widget_name);
@@ -120,10 +121,10 @@ void GenSurface::execute()
 
     // Spit out the surface
     if(st=="cylinder"){
-	surf=new CylinderSurface(cyl_p1.get(), cyl_p2.get(), cyl_rad.get(),
+	surf=scinew CylinderSurface(cyl_p1.get(), cyl_p2.get(), cyl_rad.get(),
 				 cyl_nu.get(), cyl_nv.get(), cyl_ndiscu.get());
     } else if(st=="point"){
-	surf=new PointSurface(point_pos.get());
+	surf=scinew PointSurface(point_pos.get());
     } else {
 	error("Unknown surfacetype: "+st);
     }

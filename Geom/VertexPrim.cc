@@ -14,6 +14,7 @@
 #include <Geom/VertexPrim.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
+#include <Malloc/Allocator.h>
 
 GeomVertexPrim::GeomVertexPrim()
 {
@@ -46,23 +47,23 @@ void GeomVertexPrim::get_bounds(BSphere& bs)
 
 void GeomVertexPrim::add(const Point& p)
 {
-    verts.add(new GeomVertex(p));
+    verts.add(scinew GeomVertex(p));
 }
 
 void GeomVertexPrim::add(const Point& p, const Vector& normal)
 {
-    verts.add(new GeomNVertex(p, normal));
+    verts.add(scinew GeomNVertex(p, normal));
 }
 
 void GeomVertexPrim::add(const Point& p, const MaterialHandle& matl)
 {
-    verts.add(new GeomMVertex(p, matl));
+    verts.add(scinew GeomMVertex(p, matl));
 }
 
 void GeomVertexPrim::add(const Point& p, const Vector& normal,
 			 const MaterialHandle& matl)
 {
-    verts.add(new GeomNMVertex(p, normal, matl));
+    verts.add(scinew GeomNMVertex(p, normal, matl));
 }
 
 void GeomVertexPrim::add(GeomVertex* vtx)
@@ -86,7 +87,7 @@ GeomVertex::~GeomVertex()
 
 GeomVertex* GeomVertex::clone()
 {
-    return new GeomVertex(*this);
+    return scinew GeomVertex(*this);
 }
 
 GeomNVertex::GeomNVertex(const Point& p, const Vector& normal)
@@ -101,7 +102,7 @@ GeomNVertex::GeomNVertex(const GeomNVertex& copy)
 
 GeomVertex* GeomNVertex::clone()
 {
-    return new GeomNVertex(*this);
+    return scinew GeomNVertex(*this);
 }
 
 GeomNVertex::~GeomNVertex()
@@ -121,7 +122,7 @@ GeomNMVertex::GeomNMVertex(const GeomNMVertex& copy)
 
 GeomVertex* GeomNMVertex::clone()
 {
-    return new GeomNMVertex(*this);
+    return scinew GeomNMVertex(*this);
 }
 
 GeomNMVertex::~GeomNMVertex()
@@ -140,7 +141,7 @@ GeomMVertex::GeomMVertex(const GeomMVertex& copy)
 
 GeomVertex* GeomMVertex::clone()
 {
-    return new GeomMVertex(*this);
+    return scinew GeomMVertex(*this);
 }
 
 GeomMVertex::~GeomMVertex()

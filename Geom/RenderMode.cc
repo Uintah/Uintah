@@ -14,6 +14,7 @@
 #include <Geom/RenderMode.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
+#include <Malloc/Allocator.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 
@@ -35,7 +36,7 @@ GeomRenderMode::~GeomRenderMode()
 
 GeomObj* GeomRenderMode::clone()
 {
-    return new GeomRenderMode(*this);
+    return scinew GeomRenderMode(*this);
 }
 
 void GeomRenderMode::make_prims(Array1<GeomObj*>& free,

@@ -14,6 +14,7 @@
 #include <Geom/PointLight.h>
 #include <Classlib/NotFinished.h>
 #include <Geom/Sphere.h>
+#include <Malloc/Allocator.h>
 
 PointLight::PointLight(const clString& name,
 		       const Point& p, const Color& c)
@@ -35,7 +36,7 @@ void PointLight::compute_lighting(const View&, const Point& at,
 
 GeomObj* PointLight::geom()
 {
-    return new GeomSphere(p, 1.0);
+    return scinew GeomSphere(p, 1.0);
 }
 
 void PointLight::lintens(const OcclusionData&, const Point&,

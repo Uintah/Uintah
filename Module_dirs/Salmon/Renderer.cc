@@ -17,6 +17,7 @@
 #include <Classlib/HashTable.h>
 #include <Classlib/String.h>
 #include <Geometry/BBox.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 #include <values.h>
 #include <Classlib/NotFinished.h>
@@ -31,7 +32,7 @@ RegisterRenderer::RegisterRenderer(const clString& name,
 {
     RegisterRenderer* tmp;
     if(!known_renderers)
-	known_renderers=new AVLTree<clString, RegisterRenderer*>;
+	known_renderers=scinew AVLTree<clString, RegisterRenderer*>;
     if(known_renderers->lookup(name, tmp)){
 	cerr << "Error: Two renderers of the same name!" << endl;
     } else {

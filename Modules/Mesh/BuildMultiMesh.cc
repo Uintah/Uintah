@@ -30,6 +30,7 @@
 #include <Geometry/BBox.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
+#include <Malloc/Allocator.h>
 #include <Math/Expon.h>
 #include <Math/MusilRNG.h>
 #include <Multitask/ITC.h>
@@ -95,7 +96,7 @@ public:
 
 static Module* make_BuildMultiMesh(const clString& id)
 {
-    return new BuildMultiMesh(id);
+    return scinew BuildMultiMesh(id);
 }
 
 static RegisterModule db1("Mesh", "BuildMultiMesh", make_BuildMultiMesh);
@@ -110,15 +111,15 @@ BuildMultiMesh::BuildMultiMesh(const clString& id)
 {
     myid=id;
     widget_changed=0;
-    imesh=new MeshIPort(this, "Input Mesh", MeshIPort::Atomic);
+    imesh=scinew MeshIPort(this, "Input Mesh", MeshIPort::Atomic);
     add_iport(imesh);
-    icmap=new ColormapIPort(this, "Input ColorMap", ColormapIPort::Atomic);
+    icmap=scinew ColormapIPort(this, "Input ColorMap", ColormapIPort::Atomic);
     add_iport(icmap);
-    ommesh=new MultiMeshOPort(this, "Output MultiMesh",MultiMeshIPort::Atomic);
+    ommesh=scinew MultiMeshOPort(this, "Output MultiMesh",MultiMeshIPort::Atomic);
     add_oport(ommesh);
-    opoints=new GeometryOPort(this, "Node Geometry", GeometryIPort::Atomic);
+    opoints=scinew GeometryOPort(this, "Node Geometry", GeometryIPort::Atomic);
     add_oport(opoints);
-    owidgets.add(new GeometryOPort(this, "Node Geometry", GeometryIPort::Atomic));
+    owidgets.add(scinew GeometryOPort(this, "Node Geometry", GeometryIPort::Atomic));
     add_oport(owidgets[0]);
 }
 
@@ -138,7 +139,7 @@ BuildMultiMesh::~BuildMultiMesh()
 
 Module* BuildMultiMesh::clone(int deep)
 {
-    return new BuildMultiMesh(*this, deep);
+    return scinew BuildMultiMesh(*this, deep);
 }
 
 void BuildMultiMesh::connection(ConnectionMode mode, int which_port, 
@@ -153,33 +154,33 @@ void BuildMultiMesh::connection(ConnectionMode mode, int which_port,
 	    widget_changed=1;
 	} else {
 	    numSources.set(numSources.get()+1);
-	    GeometryOPort* g=new 
+	    GeometryOPort* g=scinew 
 		GeometryOPort(this, "Attractor Widget", GeometryIPort::Atomic);
 	    add_oport(g);
 	    owidgets.add(g);
-	    PointWidget *new_pw=new PointWidget(this, &widget_lock, 1);
+	    PointWidget *new_pw=scinew PointWidget(this, &widget_lock, 1);
 	    widgets.add(new_pw);
-	    GeomSwitch *gs=new GeomSwitch(new_pw->GetWidget(),1);
+	    GeomSwitch *gs=scinew GeomSwitch(new_pw->GetWidget(),1);
 	    geom_switches.add(gs);
 	    need_to_addObj_widget++;
 	    clString srcName;
 	    srcName = "s" + to_string(widgets.size());
-	    source_sel.add(new TCLint(srcName, myid, this));
+	    source_sel.add(scinew TCLint(srcName, myid, this));
 	    source_sel[source_sel.size()-1]->set(1);
 	    last_source_sel.add(1);
 	    clString chrName;
 	    chrName = "ch" + to_string(widgets.size());
-	    charge.add(new TCLdouble(chrName, myid, this));
+	    charge.add(scinew TCLdouble(chrName, myid, this));
 	    charge[charge.size()-1]->set(1);
 	    last_charge.add(1);
 	    clString faName;
 	    faName = "fa" + to_string(widgets.size());
-	    falloff.add(new TCLdouble(faName, myid, this));
+	    falloff.add(scinew TCLdouble(faName, myid, this));
 	    falloff[falloff.size()-1]->set(.01);
 	    last_falloff.add(.01);
 	    clString szName;
 	    szName = "sz" + to_string(widgets.size());
-	    wsize.add(new TCLdouble(szName, myid, this));
+	    wsize.add(scinew TCLdouble(szName, myid, this));
 	    wsize[wsize.size()-1]->set(.1);
 	    last_wsize.add(.1);
 	    widget_changed=1;
@@ -292,7 +293,7 @@ void BuildMultiMesh::partial_execute() {
 	ColormapHandle cmap;
 	int have_cmap=icmap->get(cmap);
 	if (!have_cmap) {
-	    cmap=new Colormap(30, min, max);
+	    cmap=scinew Colormap(30, min, max);
 	    cmap->build_default();
 	}
 	// set source widget sizes and colors, and on/off switches
@@ -343,7 +344,7 @@ void BuildMultiMesh::partial_execute() {
 	    if (level_sets[i].size()) {
 		level_matl[i]=cmap->lookup(min+(max-min)*i/(last_levels-1.));
 	    } else {
-		level_matl[i]=new Material(Color(0,0,0), Color(.7,.7,.7),
+		level_matl[i]=scinew Material(Color(0,0,0), Color(.7,.7,.7),
 					   Color(.5,.5,.5), 20);
 	    }
 	}
@@ -359,11 +360,11 @@ void BuildMultiMesh::partial_execute() {
 	// create and send new node geometry
 	point_ids.resize(last_levels);
 	for (i=0; i<last_levels; i++) {
-	    GeomPts *geomPts=new GeomPts(level_sets[i].size());
+	    GeomPts *geomPts=scinew GeomPts(level_sets[i].size());
 	    for (int j=0; j<level_sets[i].size(); j++) {
 		geomPts->pts.add(mesh->nodes[(level_sets[i])[j]]->p);
 	    }
-	    GeomMaterial *geomMat=new GeomMaterial(geomPts, level_matl[i]);
+	    GeomMaterial *geomMat=scinew GeomMaterial(geomPts, level_matl[i]);
 	    clString pntName="Nodes Level " + to_string(i+1);
 	    point_ids[i]=opoints->addObj(geomMat, pntName);
 	}
@@ -391,9 +392,9 @@ void BuildMultiMesh::execute()
     need_full_execute=0;
 
     mmeshHndl=mmesh=0;
-    mmeshHndl=mmesh=new MultiMesh;
+    mmeshHndl=mmesh=scinew MultiMesh;
     mmesh->meshes.resize(last_levels);
-    MeshHandle mesh = new Mesh;
+    MeshHandle mesh = scinew Mesh;
 
     BBox bbox;
     int nn=mesh_handle->nodes.size();

@@ -12,11 +12,12 @@
 
 #include <Datatypes/MultiMesh.h>
 #include <Classlib/String.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 
 static Persistent* make_MultiMesh()
 {
-    return new MultiMesh;
+    return scinew MultiMesh;
 }
 
 PersistentTypeID MultiMesh::type_id("MultiMesh", "Datatype", make_MultiMesh);
@@ -48,7 +49,7 @@ void MultiMesh::clean_up() {
 
 MultiMesh* MultiMesh::clone()
 {
-    return new MultiMesh(*this);
+    return scinew MultiMesh(*this);
 }
 
 #define MultiMesh_VERSION 1

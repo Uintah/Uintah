@@ -16,6 +16,7 @@
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
+#include <Malloc/Allocator.h>
 
 class GenerateMesh : public Module {
 public:
@@ -28,7 +29,7 @@ public:
 
 static Module* make_GenerateMesh(const clString& id)
 {
-    return new GenerateMesh(id);
+    return scinew GenerateMesh(id);
 }
 
 static RegisterModule db1("Unfinished", "GenerateMesh", make_GenerateMesh);
@@ -36,12 +37,12 @@ static RegisterModule db1("Unfinished", "GenerateMesh", make_GenerateMesh);
 GenerateMesh::GenerateMesh(const clString& id)
 : Module("GenerateMesh", id, Filter)
 {
-    add_iport(new SurfaceIPort(this, "Geometry", SurfaceIPort::Atomic));
-    add_iport(new SurfaceIPort(this, "Geometry", SurfaceIPort::Atomic));
-    add_iport(new SurfaceIPort(this, "Geometry", SurfaceIPort::Atomic));
-    add_iport(new SurfaceIPort(this, "Geometry", SurfaceIPort::Atomic));
+    add_iport(scinew SurfaceIPort(this, "Geometry", SurfaceIPort::Atomic));
+    add_iport(scinew SurfaceIPort(this, "Geometry", SurfaceIPort::Atomic));
+    add_iport(scinew SurfaceIPort(this, "Geometry", SurfaceIPort::Atomic));
+    add_iport(scinew SurfaceIPort(this, "Geometry", SurfaceIPort::Atomic));
     // Create the output port
-    add_oport(new MeshOPort(this, "Geometry", MeshIPort::Atomic));
+    add_oport(scinew MeshOPort(this, "Geometry", MeshIPort::Atomic));
 }
 
 GenerateMesh::GenerateMesh(const GenerateMesh& copy, int deep)
@@ -56,7 +57,7 @@ GenerateMesh::~GenerateMesh()
 
 Module* GenerateMesh::clone(int deep)
 {
-    return new GenerateMesh(*this, deep);
+    return scinew GenerateMesh(*this, deep);
 }
 
 void GenerateMesh::execute()

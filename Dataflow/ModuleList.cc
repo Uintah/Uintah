@@ -12,6 +12,7 @@
  */
 
 #include <Dataflow/ModuleList.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 
 static ModuleDB* top=0;
@@ -20,14 +21,14 @@ static ModuleCategory* all_modules=0;
 ModuleDB* ModuleList::get_db()
 {
     if(!top)
-	top=new ModuleDB;
+	top=scinew ModuleDB;
     return top;
 }
 
 ModuleCategory* ModuleList::get_all()
 {
     if(!all_modules)
-	all_modules=new ModuleCategory;
+	all_modules=scinew ModuleCategory;
     return all_modules;
 }
 
@@ -48,7 +49,7 @@ void ModuleList::insert(ModuleCategory* cat,
 	cat->insert(name, maker);
 	// Insert it in the master list as well...
 	if(!all_modules)
-	    all_modules=new ModuleCategory;
+	    all_modules=scinew ModuleCategory;
 	if(all_modules->lookup(name, old_maker)){
 	    // Already there, just make sure that the maker's are the same...
 	    if(old_maker != maker){
@@ -64,10 +65,10 @@ void ModuleList::insert(ModuleCategory* cat,
 ModuleCategory* ModuleList::make_category(const clString& cat_name)
 {
     if(!top)
-	top=new ModuleDB;
+	top=scinew ModuleDB;
     ModuleCategory* cat;
     if(!top->lookup(cat_name, cat)){
-	cat=new ModuleCategory;
+	cat=scinew ModuleCategory;
 	top->insert(cat_name, cat);
     }
     return cat;

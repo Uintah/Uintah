@@ -13,9 +13,10 @@
  */
 
 #include <Classlib/BitArray1.h>
+#include <Malloc/Allocator.h>
 
 BitArray1::BitArray1(int size, int initial)
-: size(size), nbits(size/8), bits(new unsigned char[nbits])
+: size(size), nbits(size/8), bits(scinew unsigned char[nbits])
 {
     if(initial)
 	set_all();

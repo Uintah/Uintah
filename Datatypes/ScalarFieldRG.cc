@@ -13,11 +13,12 @@
 
 #include <Datatypes/ScalarFieldRG.h>
 #include <Classlib/String.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 
 static Persistent* maker()
 {
-    return new ScalarFieldRG;
+    return scinew ScalarFieldRG;
 }
 
 PersistentTypeID ScalarFieldRG::type_id("ScalarFieldRG", "ScalarField", maker);
@@ -189,5 +190,5 @@ int ScalarFieldRG::interpolate(const Point& p, double& value)
 
 ScalarField* ScalarFieldRG::clone()
 {
-    return new ScalarFieldRG(*this);
+    return scinew ScalarFieldRG(*this);
 }

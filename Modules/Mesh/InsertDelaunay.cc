@@ -19,6 +19,7 @@
 #include <Datatypes/TriSurface.h>
 #include <Geometry/BBox.h>
 #include <Geometry/Point.h>
+#include <Malloc/Allocator.h>
 #include <Math/MusilRNG.h>
 #include <TCL/TCLvar.h>
 
@@ -36,7 +37,7 @@ public:
 
 static Module* make_InsertDelaunay(const clString& id)
 {
-    return new InsertDelaunay(id);
+    return scinew InsertDelaunay(id);
 }
 
 static RegisterModule db1("Mesh", "InsertDelaunay", make_InsertDelaunay);
@@ -44,19 +45,19 @@ static RegisterModule db1("Mesh", "InsertDelaunay", make_InsertDelaunay);
 InsertDelaunay::InsertDelaunay(const clString& id)
 : Module("InsertDelaunay", id, Filter), surfports(4)
 {
-    iport=new MeshIPort(this, "Input Mesh", MeshIPort::Atomic);
+    iport=scinew MeshIPort(this, "Input Mesh", MeshIPort::Atomic);
     add_iport(iport);
-    surfports[0]=new SurfaceIPort(this, "Added Surface", SurfaceIPort::Atomic);
+    surfports[0]=scinew SurfaceIPort(this, "Added Surface", SurfaceIPort::Atomic);
     add_iport(surfports[0]);
-    surfports[1]=new SurfaceIPort(this, "Added Surface", SurfaceIPort::Atomic);
+    surfports[1]=scinew SurfaceIPort(this, "Added Surface", SurfaceIPort::Atomic);
     add_iport(surfports[1]);
-    surfports[2]=new SurfaceIPort(this, "Added Surface", SurfaceIPort::Atomic);
+    surfports[2]=scinew SurfaceIPort(this, "Added Surface", SurfaceIPort::Atomic);
     add_iport(surfports[2]);
-    surfports[3]=new SurfaceIPort(this, "Added Surface", SurfaceIPort::Atomic);
+    surfports[3]=scinew SurfaceIPort(this, "Added Surface", SurfaceIPort::Atomic);
     add_iport(surfports[3]);
 
     // Create the output port
-    oport=new MeshOPort(this, "InsertDelaunay Mesh", MeshIPort::Atomic);
+    oport=scinew MeshOPort(this, "InsertDelaunay Mesh", MeshIPort::Atomic);
     add_oport(oport);
 }
 
@@ -72,7 +73,7 @@ InsertDelaunay::~InsertDelaunay()
 
 Module* InsertDelaunay::clone(int deep)
 {
-    return new InsertDelaunay(*this, deep);
+    return scinew InsertDelaunay(*this, deep);
 }
 
 void InsertDelaunay::execute()

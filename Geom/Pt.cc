@@ -16,6 +16,7 @@
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
 #include <Geometry/Ray.h>
+#include <Malloc/Allocator.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 #include <Classlib/NotFinished.h>
@@ -35,7 +36,7 @@ GeomPts::~GeomPts()
 
 GeomObj* GeomPts::clone()
 {
-    return new GeomPts(*this);
+    return scinew GeomPts(*this);
 }
 
 void GeomPts::get_bounds(BBox& bb)

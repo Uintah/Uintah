@@ -17,6 +17,7 @@
 #include <Constraints/PythagorasConstraint.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Sphere.h>
+#include <Malloc/Allocator.h>
 
 const Index NumCons = 4;
 const Index NumVars = 6;
@@ -41,14 +42,14 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale 
 {
    Real INIT = 5.0*widget_scale;
    // Schemes 5/6 are used by the picks in GeomMoved!!
-   variables[CenterVar] = new PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
-   variables[PointRVar] = new PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
-   variables[PointDVar] = new PointVariable("PntD", solve, Scheme2, Point(0, INIT, 0));
-   variables[DistRVar] = new RealVariable("RDIST", solve, Scheme3, INIT);
-   variables[DistDVar] = new RealVariable("DDIST", solve, Scheme4, INIT);
-   variables[HypoVar] = new RealVariable("HYPO", solve, Scheme3, sqrt(2*INIT*INIT));
+   variables[CenterVar] = scinew PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
+   variables[PointRVar] = scinew PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
+   variables[PointDVar] = scinew PointVariable("PntD", solve, Scheme2, Point(0, INIT, 0));
+   variables[DistRVar] = scinew RealVariable("RDIST", solve, Scheme3, INIT);
+   variables[DistDVar] = scinew RealVariable("DDIST", solve, Scheme4, INIT);
+   variables[HypoVar] = scinew RealVariable("HYPO", solve, Scheme3, sqrt(2*INIT*INIT));
 
-   constraints[ConstRD] = new DistanceConstraint("ConstRD",
+   constraints[ConstRD] = scinew DistanceConstraint("ConstRD",
 						 NumSchemes,
 						 variables[PointRVar],
 						 variables[PointDVar],
@@ -58,7 +59,7 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale 
    constraints[ConstRD]->VarChoices(Scheme3, 2, 2, 1);
    constraints[ConstRD]->VarChoices(Scheme4, 2, 2, 0);
    constraints[ConstRD]->Priorities(P_Default, P_Default, P_Default);
-   constraints[ConstPyth] = new PythagorasConstraint("ConstPyth",
+   constraints[ConstPyth] = scinew PythagorasConstraint("ConstPyth",
 						     NumSchemes,
 						     variables[DistRVar],
 						     variables[DistDVar],
@@ -68,7 +69,7 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale 
    constraints[ConstPyth]->VarChoices(Scheme3, 2, 2, 1);
    constraints[ConstPyth]->VarChoices(Scheme4, 2, 2, 0);
    constraints[ConstPyth]->Priorities(P_Highest, P_Highest, P_Highest);
-   constraints[ConstRC] = new DistanceConstraint("ConstRC",
+   constraints[ConstRC] = scinew DistanceConstraint("ConstRC",
 						 NumSchemes,
 						 variables[PointRVar],
 						 variables[CenterVar],
@@ -78,7 +79,7 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale 
    constraints[ConstRC]->VarChoices(Scheme3, 2, 2, 2);
    constraints[ConstRC]->VarChoices(Scheme4, 0, 0, 0);
    constraints[ConstRC]->Priorities(P_Highest, P_Highest, P_Default);
-   constraints[ConstDC] = new DistanceConstraint("ConstDC",
+   constraints[ConstDC] = scinew DistanceConstraint("ConstDC",
 					       NumSchemes,
 					       variables[PointDVar],
 					       variables[CenterVar],
@@ -90,40 +91,40 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale 
    constraints[ConstDC]->Priorities(P_Highest, P_Highest, P_Default);
 
    Index geom, pick;
-   GeomGroup* cyls = new GeomGroup;
+   GeomGroup* cyls = scinew GeomGroup;
    for (geom = GeomSPointUL; geom <= GeomSPointDL; geom++) {
-      geometries[geom] = new GeomSphere;
+      geometries[geom] = scinew GeomSphere;
       cyls->add(geometries[geom]);
    }
    for (geom = GeomCylU; geom <= GeomCylL; geom++) {
-      geometries[geom] = new GeomCylinder;
+      geometries[geom] = scinew GeomCylinder;
       cyls->add(geometries[geom]);
    }
-   picks[PickCyls] = new GeomPick(cyls, module, this, PickCyls);
+   picks[PickCyls] = scinew GeomPick(cyls, module, this, PickCyls);
    picks[PickCyls]->set_highlight(DefaultHighlightMaterial);
-   materials[EdgeMatl] = new GeomMaterial(picks[PickCyls], DefaultEdgeMaterial);
+   materials[EdgeMatl] = scinew GeomMaterial(picks[PickCyls], DefaultEdgeMaterial);
    CreateModeSwitch(0, materials[EdgeMatl]);
 
-   GeomGroup* pts = new GeomGroup;
+   GeomGroup* pts = scinew GeomGroup;
    for (geom = GeomPointU, pick = PickSphU;
 	geom <= GeomPointL; geom++, pick++) {
-      geometries[geom] = new GeomSphere;
-      picks[pick] = new GeomPick(geometries[geom], module, this, pick);
+      geometries[geom] = scinew GeomSphere;
+      picks[pick] = scinew GeomPick(geometries[geom], module, this, pick);
       picks[pick]->set_highlight(DefaultHighlightMaterial);
       pts->add(picks[pick]);
    }
-   materials[PointMatl] = new GeomMaterial(pts, DefaultPointMaterial);
+   materials[PointMatl] = scinew GeomMaterial(pts, DefaultPointMaterial);
    CreateModeSwitch(1, materials[PointMatl]);
    
-   GeomGroup* resizes = new GeomGroup;
+   GeomGroup* resizes = scinew GeomGroup;
    for (geom = GeomResizeU, pick = PickResizeU;
 	geom <= GeomResizeL; geom++, pick++) {
-      geometries[geom] = new GeomCappedCylinder;
-      picks[pick] = new GeomPick(geometries[geom], module, this, pick);
+      geometries[geom] = scinew GeomCappedCylinder;
+      picks[pick] = scinew GeomPick(geometries[geom], module, this, pick);
       picks[pick]->set_highlight(DefaultHighlightMaterial);
       resizes->add(picks[pick]);
    }
-   materials[ResizeMatl] = new GeomMaterial(resizes, DefaultResizeMaterial);
+   materials[ResizeMatl] = scinew GeomMaterial(resizes, DefaultResizeMaterial);
    CreateModeSwitch(2, materials[ResizeMatl]);
 
    SetMode(Mode0, Switch0|Switch1|Switch2);
@@ -257,7 +258,7 @@ FrameWidget::geom_moved( GeomPick*, int axis, double dist,
       MoveDelta(delta);
       break;
    }
-   execute();
+   execute(0);
 }
 
 
@@ -268,7 +269,7 @@ FrameWidget::MoveDelta( const Vector& delta )
    variables[PointRVar]->MoveDelta(delta);
    variables[PointDVar]->MoveDelta(delta);
 
-   execute();
+   execute(1);
 }
 
 
@@ -288,7 +289,7 @@ FrameWidget::SetPosition( const Point& center, const Point& R, const Point& D )
    variables[DistDVar]->Move((D-center).length());
    variables[CenterVar]->Set(center, Scheme3); // This should set Hypo...
 
-   execute();
+   execute(0);
 }
 
 
@@ -314,7 +315,7 @@ FrameWidget::SetPosition( const Point& center, const Vector& normal,
    variables[DistRVar]->Move(size1);
    variables[DistDVar]->Set(size2); // This should set the Hypo...
 
-   execute();
+   execute(0);
 }
 
 
@@ -346,7 +347,7 @@ FrameWidget::SetSize( const Real sizeR, const Real sizeD )
    variables[DistRVar]->Move(sizeR);
    variables[DistDVar]->Set(sizeD); // This should set the Hypo...
 
-   execute();
+   execute(0);
 }
 
 void

@@ -20,6 +20,7 @@
 #include <Dataflow/Connection.h>
 #include <Dataflow/Module.h>
 #include <Dataflow/Port.h>
+#include <Malloc/Allocator.h>
 
 #include <iostream.h>
 
@@ -65,7 +66,7 @@ void GeometryOPort::reset()
 	outbox=&mod->mailbox;
 	// Send the registration message...
 	Mailbox<GeomReply> tmp(1);
-	outbox->send(new GeometryComm(&tmp));
+	outbox->send(scinew GeometryComm(&tmp));
 	GeomReply reply=tmp.receive();
 	portid=reply.portid;
 	busy_bit=reply.busy_bit;
@@ -77,7 +78,7 @@ void GeometryOPort::reset()
 void GeometryOPort::finish()
 {
     if(dirty){
-	GeometryComm* msg=new GeometryComm(MessageTypes::GeometryFlush, portid);
+	GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryFlush, portid);
 	if(outbox){
 	    turn_on(Finishing);
 	    outbox->send(msg);
@@ -93,7 +94,7 @@ GeomID GeometryOPort::addObj(GeomObj* obj, const clString& name,
 {
     turn_on();
     GeomID id=serial++;
-    GeometryComm* msg=new GeometryComm(portid, id, obj, name, lock);
+    GeometryComm* msg=scinew GeometryComm(portid, id, obj, name, lock);
     if(outbox){
 	outbox->send(msg);
     } else {
@@ -107,7 +108,7 @@ GeomID GeometryOPort::addObj(GeomObj* obj, const clString& name,
 void GeometryOPort::delObj(GeomID id)
 {
     turn_on();
-    GeometryComm* msg=new GeometryComm(portid, id);
+    GeometryComm* msg=scinew GeometryComm(portid, id);
     if(outbox)
 	outbox->send(msg);
     else
@@ -119,7 +120,7 @@ void GeometryOPort::delObj(GeomID id)
 void GeometryOPort::delAll()
 {
     turn_on();
-    GeometryComm* msg=new GeometryComm(MessageTypes::GeometryDelAll, portid);
+    GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryDelAll, portid);
     if(outbox)
 	outbox->send(msg);
     else
@@ -131,7 +132,7 @@ void GeometryOPort::delAll()
 void GeometryOPort::flushViews()
 {
     turn_on();
-    GeometryComm* msg=new GeometryComm(MessageTypes::GeometryFlushViews, portid);
+    GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryFlushViews, portid);
     if(outbox)
 	outbox->send(msg);
     else

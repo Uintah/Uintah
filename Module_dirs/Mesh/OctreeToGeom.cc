@@ -24,6 +24,7 @@
 #include <Geom/Tri.h>
 #include <Datatypes/OctreePort.h>
 #include <Datatypes/Octree.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 
 class OctreeToGeom : public Module {
@@ -41,7 +42,7 @@ public:
 
 static Module* make_OctreeToGeom(const clString& id)
 {
-    return new OctreeToGeom(id);
+    return scinew OctreeToGeom(id);
 }
 
 static RegisterModule db1("Octree", "OctreeToGeom", make_OctreeToGeom);
@@ -53,9 +54,9 @@ OctreeToGeom::OctreeToGeom(const clString& id)
 : Module("OctreeToGeom", id, Filter)
 {
     // Create the input port
-    itree=new OctreeIPort(this, "Octree", OctreeIPort::Atomic);
+    itree=scinew OctreeIPort(this, "Octree", OctreeIPort::Atomic);
     add_iport(itree);
-    ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+    ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 }
 
@@ -71,12 +72,12 @@ OctreeToGeom::~OctreeToGeom()
 
 Module* OctreeToGeom::clone(int deep)
 {
-    return new OctreeToGeom(*this, deep);
+    return scinew OctreeToGeom(*this, deep);
 }
 
 void add_tree_to_geom(Octree *tree, GeomGroup *group) {
     if (tree->leaf) {
-//	group->add(new GeomSphere(Point((min.x()+max.x())/2, 
+//	group->add(scinew GeomSphere(Point((min.x()+max.x())/2, 
 //					(min.y()+max.y())/2,
 //					(min.z()+max.z())/2), 
 //				  ((max-min)/2).length()));
@@ -131,11 +132,11 @@ void OctreeToGeom::execute()
 
     if (!treeHandle.get_rep()) return;
     Octree* tree = treeHandle.get_rep()->tree;
-    GeomGroup* group = new GeomGroup;
+    GeomGroup* group = scinew GeomGroup;
     
     if (tree) add_tree_to_geom(tree, group);
-    GeomMaterial* matl=new GeomMaterial(group,
-					new Material(Color(0,0,0),
+    GeomMaterial* matl=scinew GeomMaterial(group,
+					scinew Material(Color(0,0,0),
 						     Color(0,0,.6), 
 						     Color(.4,.4,.7), 20));
     ogeom->delAll();

@@ -15,6 +15,7 @@
 #pragma interface
 #endif
 
+#include <Malloc/Allocator.h>
 #include <Multitask/ITC.h>
 #include <Multitask/Task.h>
 #include <iostream.h>
@@ -33,7 +34,7 @@ struct CrowdMonitor_private {
 
 CrowdMonitor::CrowdMonitor()
 {
-    priv=new CrowdMonitor_private;
+    priv=scinew CrowdMonitor_private;
     priv->nreaders_waiting=0;
     priv->nwriters_waiting=0;
     priv->nreaders=0;

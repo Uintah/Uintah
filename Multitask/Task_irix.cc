@@ -34,6 +34,8 @@
 #define INITIAL_STACK_LENGTH 16*1024
 #define DEFAULT_SIGNAL_STACK_LENGTH 16*1024
 
+extern "C" int Task_try_lock(unsigned long*);
+
 static int aborting=0;
 static int exit_code;
 static int exiting=0;
@@ -172,11 +174,11 @@ void Task::activate(int task_arg)
 	Task::exit_all(-1);
     }
     activated=1;
-    priv=new TaskPrivate;
+    priv=scinew TaskPrivate;
     if(single_threaded.is_set()){
 	priv->retval=body(task_arg);
     } else {
-	TaskArgs* args=new TaskArgs;
+	TaskArgs* args=scinew TaskArgs;
 	args->arg=task_arg;
 	args->t=this;
 	priv->running=usnewsema(arena, 0);
@@ -583,7 +585,7 @@ struct Semaphore_private {
 Semaphore::Semaphore(int count)
 {
     if(!single_threaded.is_set()){
-	priv=new Semaphore_private;
+	priv=scinew Semaphore_private;
 	make_arena();
 	priv->semaphore=usnewsema(arena, count);
 	if(!priv->semaphore){
@@ -623,119 +625,50 @@ void Semaphore::up()
     }
 }
 
-//
-// Mutex implementation
-//
-struct Mutex_private {
-    ulock_t lock;
-};
-
 Mutex::Mutex()
 {
-    if(!single_threaded.is_set()){
-	priv=new Mutex_private;
-	make_arena();
-	priv->lock=usnewlock(arena);
-	if(!priv->lock){
-	    perror("usnewlock");
-	    Task::exit_all(-1);
-	}
-    } else {
-	priv=0;
-    }
+    priv=0;
 }
 
 Mutex::~Mutex()
 {
-    if(priv){
-	usfreelock(priv->lock, arena);
-	delete priv;
-    }
 }
 
 void Mutex::lock()
 {
-    if(!single_threaded.is_set()){
-	if(ussetlock(priv->lock) == -1){
-	    perror("ussetlock");
-	    Task::exit_all(-1);
+    // Simple try first...
+    if(Task_try_lock((unsigned long*)&priv) == 0)
+	return;
+    int rt=10000;
+    int cnt=0;
+    while(rt){
+	// Try the lock...
+	for(int i=0;i<10;i++){
+	    if(Task_try_lock((unsigned long*)&priv) == 0)
+		return;
 	}
+	// Sleep...
+	if(cnt++ < 1000)
+	    sginap(0);
+	else
+	    sginap(1);
+
+	rt--;
     }
+    fprintf(stderr, "Possible deadlock after 10000 retries\n");
+    Task::exit_all(-1);
 }
 
 void Mutex::unlock()
 {
-    if(!single_threaded.is_set()){
-	if(usunsetlock(priv->lock) == -1){
-	    perror("usunsetlock");
-	    Task::exit_all(-1);
-	}
-    }
+    priv=0;
 }
 
 int Mutex::try_lock()
 {
-    if(!single_threaded.is_set()){
-	int val=uscsetlock(priv->lock, 5);
-	if(val == -1){
-	    perror("uscsetlock");
-	    Task::exit_all(-1);
-	}
-	return val;
-    } else {
+    if(Task_try_lock((unsigned long*)&priv) == 0)
 	return 1;
-    }
-}
-
-
-//
-// Library Mutex implementation
-//
-struct LibMutex_private {
-    ulock_t lock;
-};
-
-LibMutex::LibMutex()
-{
-    priv=new LibMutex_private;
-    make_arena();
-    priv->lock=usnewlock(arena);
-    if(!priv->lock){
-	perror("usnewlock");
-	Task::exit_all(-1);
-    }
-}
-
-LibMutex::~LibMutex()
-{
-    usfreelock(priv->lock, arena);
-    delete priv;
-}
-
-void LibMutex::lock()
-{
-    if(ussetlock(priv->lock) == -1){
-	perror("upsema");
-	Task::exit_all(-1);
-    }
-}
-
-void LibMutex::unlock()
-{
-    if(usunsetlock(priv->lock) == -1){
-	perror("usvsema");
-	Task::exit_all(-1);
-    }
-}
-
-int LibMutex::try_lock()
-{
-    int val=uscsetlock(priv->lock, 5);
-    if(val == -1){
-	perror("uscsetlock");
-	Task::exit_all(-1);
-    }
-    return val;
+    return 0;
 }
 
 //
@@ -757,7 +690,7 @@ ConditionVariable_private::ConditionVariable_private()
 ConditionVariable::ConditionVariable()
 {
     if(!single_threaded.is_set()){
-	priv=new ConditionVariable_private;
+	priv=scinew ConditionVariable_private;
     } else {
 	priv=0;
     }
@@ -818,7 +751,7 @@ TaskInfo* Task::get_taskinfo()
 	perror("uspsema");
 	Task::exit_all(-1);
     }
-    TaskInfo* ti=new TaskInfo(ntasks);
+    TaskInfo* ti=scinew TaskInfo(ntasks);
     for(int i=0;i<ntasks;i++){
 	ti->tinfo[i].name=tasks[i]->name;
 	ti->tinfo[i].stacksize=tasks[i]->priv->stacklen-pagesize;
@@ -871,7 +804,7 @@ int Task::start_itimer(const TaskTime& start, const TaskTime& interval,
 	NOT_FINISHED("Multiple timers in a single thread");
 	return 0;
     }
-    ITimer** new_timers=new ITimer*[ntimers+1];
+    ITimer** new_timers=scinew ITimer*[ntimers+1];
     if(timers){
 	for(int i=0;i<ntimers;i++){
 	    new_timers[i]=timers[i];
@@ -879,7 +812,7 @@ int Task::start_itimer(const TaskTime& start, const TaskTime& interval,
 	delete[] timers;
     }
     timers=new_timers;
-    ITimer* t=new ITimer;
+    ITimer* t=scinew ITimer;
     timers[ntimers]=t;
     ntimers++;
     t->start=start;

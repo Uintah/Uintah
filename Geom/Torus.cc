@@ -18,6 +18,7 @@
 #include <Geometry/BSphere.h>
 #include <Geometry/Ray.h>
 #include <Classlib/NotFinished.h>
+#include <Malloc/Allocator.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 
@@ -75,7 +76,7 @@ void GeomTorus::adjust()
 
 GeomObj* GeomTorus::clone()
 {
-    return new GeomTorus(*this);
+    return scinew GeomTorus(*this);
 }
 
 GeomTorusArc::GeomTorusArc(int nu, int nv)
@@ -126,7 +127,7 @@ void GeomTorusArc::adjust()
 
 GeomObj* GeomTorusArc::clone()
 {
-    return new GeomTorusArc(*this);
+    return scinew GeomTorusArc(*this);
 }
 
 void GeomTorus::get_bounds(BBox& bb)

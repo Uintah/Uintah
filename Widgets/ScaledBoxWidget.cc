@@ -18,6 +18,7 @@
 #include <Constraints/RatioConstraint.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Sphere.h>
+#include <Malloc/Allocator.h>
 
 const Index NumCons = 12;
 const Index NumVars = 16;
@@ -51,24 +52,24 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
   oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0), oldinaxis(0, 0, 1)
 {
    Real INIT = 5.0*widget_scale;
-   variables[CenterVar] = new PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
-   variables[PointRVar] = new PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
-   variables[PointDVar] = new PointVariable("PntD", solve, Scheme2, Point(0, INIT, 0));
-   variables[PointIVar] = new PointVariable("PntI", solve, Scheme3, Point(0, 0, INIT));
-   variables[DistRVar] = new RealVariable("DISTR", solve, Scheme4, INIT);
-   variables[DistDVar] = new RealVariable("DISTD", solve, Scheme5, INIT);
-   variables[DistIVar] = new RealVariable("DISTI", solve, Scheme6, INIT);
-   variables[HypoRDVar] = new RealVariable("HYPOR", solve, Scheme4, sqrt(2*INIT*INIT));
-   variables[HypoDIVar] = new RealVariable("HYPOD", solve, Scheme5, sqrt(2*INIT*INIT));
-   variables[HypoIRVar] = new RealVariable("HYPOI", solve, Scheme6, sqrt(2*INIT*INIT));
-   variables[SDistRVar] = new RealVariable("SDistR", solve, Scheme7, INIT/2.0);
-   variables[SDistDVar] = new RealVariable("SDistD", solve, Scheme7, INIT/2.0);
-   variables[SDistIVar] = new RealVariable("SDistI", solve, Scheme7, INIT/2.0);
-   variables[RatioRVar] = new RealVariable("RatioR", solve, Scheme1, 0.5);
-   variables[RatioDVar] = new RealVariable("RatioD", solve, Scheme1, 0.5);
-   variables[RatioIVar] = new RealVariable("RatioI", solve, Scheme1, 0.5);
+   variables[CenterVar] = scinew PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
+   variables[PointRVar] = scinew PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
+   variables[PointDVar] = scinew PointVariable("PntD", solve, Scheme2, Point(0, INIT, 0));
+   variables[PointIVar] = scinew PointVariable("PntI", solve, Scheme3, Point(0, 0, INIT));
+   variables[DistRVar] = scinew RealVariable("DISTR", solve, Scheme4, INIT);
+   variables[DistDVar] = scinew RealVariable("DISTD", solve, Scheme5, INIT);
+   variables[DistIVar] = scinew RealVariable("DISTI", solve, Scheme6, INIT);
+   variables[HypoRDVar] = scinew RealVariable("HYPOR", solve, Scheme4, sqrt(2*INIT*INIT));
+   variables[HypoDIVar] = scinew RealVariable("HYPOD", solve, Scheme5, sqrt(2*INIT*INIT));
+   variables[HypoIRVar] = scinew RealVariable("HYPOI", solve, Scheme6, sqrt(2*INIT*INIT));
+   variables[SDistRVar] = scinew RealVariable("SDistR", solve, Scheme7, INIT/2.0);
+   variables[SDistDVar] = scinew RealVariable("SDistD", solve, Scheme7, INIT/2.0);
+   variables[SDistIVar] = scinew RealVariable("SDistI", solve, Scheme7, INIT/2.0);
+   variables[RatioRVar] = scinew RealVariable("RatioR", solve, Scheme1, 0.5);
+   variables[RatioDVar] = scinew RealVariable("RatioD", solve, Scheme1, 0.5);
+   variables[RatioIVar] = scinew RealVariable("RatioI", solve, Scheme1, 0.5);
 
-   constraints[ConstRatioR] = new RatioConstraint("ConstRatioR",
+   constraints[ConstRatioR] = scinew RatioConstraint("ConstRatioR",
 						  NumSchemes,
 						  variables[SDistRVar],
 						  variables[DistRVar],
@@ -81,7 +82,7 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
    constraints[ConstRatioR]->VarChoices(Scheme6, 0, 0, 0);
    constraints[ConstRatioR]->VarChoices(Scheme7, 2, 2, 2);
    constraints[ConstRatioR]->Priorities(P_Highest, P_Highest, P_Highest);
-   constraints[ConstRatioD] = new RatioConstraint("ConstRatioD",
+   constraints[ConstRatioD] = scinew RatioConstraint("ConstRatioD",
 						  NumSchemes,
 						  variables[SDistDVar],
 						  variables[DistDVar],
@@ -94,7 +95,7 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
    constraints[ConstRatioD]->VarChoices(Scheme6, 0, 0, 0);
    constraints[ConstRatioD]->VarChoices(Scheme7, 2, 2, 2);
    constraints[ConstRatioD]->Priorities(P_Highest, P_Highest, P_Highest);
-   constraints[ConstRatioI] = new RatioConstraint("ConstRatioI",
+   constraints[ConstRatioI] = scinew RatioConstraint("ConstRatioI",
 						  NumSchemes,
 						  variables[SDistIVar],
 						  variables[DistIVar],
@@ -107,7 +108,7 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
    constraints[ConstRatioI]->VarChoices(Scheme6, 0, 0, 0);
    constraints[ConstRatioI]->VarChoices(Scheme7, 2, 2, 2);
    constraints[ConstRatioI]->Priorities(P_Highest, P_Highest, P_Highest);
-   constraints[ConstRD] = new DistanceConstraint("ConstRD",
+   constraints[ConstRD] = scinew DistanceConstraint("ConstRD",
 						 NumSchemes,
 						 variables[PointRVar],
 						 variables[PointDVar],
@@ -120,7 +121,7 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
    constraints[ConstRD]->VarChoices(Scheme6, 2, 2, 0);
    constraints[ConstRD]->VarChoices(Scheme7, 1, 0, 1);
    constraints[ConstRD]->Priorities(P_Default, P_Default, P_Default);
-   constraints[ConstPythRD] = new PythagorasConstraint("ConstPythRD",
+   constraints[ConstPythRD] = scinew PythagorasConstraint("ConstPythRD",
 						     NumSchemes,
 						     variables[DistRVar],
 						     variables[DistDVar],
@@ -133,7 +134,7 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
    constraints[ConstPythRD]->VarChoices(Scheme6, 2, 2, 0);
    constraints[ConstPythRD]->VarChoices(Scheme7, 1, 0, 1);
    constraints[ConstPythRD]->Priorities(P_Highest, P_Highest, P_Highest);
-   constraints[ConstDI] = new DistanceConstraint("ConstDI",
+   constraints[ConstDI] = scinew DistanceConstraint("ConstDI",
 						 NumSchemes,
 						 variables[PointDVar],
 						 variables[PointIVar],
@@ -146,7 +147,7 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
    constraints[ConstDI]->VarChoices(Scheme6, 2, 2, 0);
    constraints[ConstDI]->VarChoices(Scheme7, 1, 0, 1);
    constraints[ConstDI]->Priorities(P_Default, P_Default, P_Default);
-   constraints[ConstPythDI] = new PythagorasConstraint("ConstPythDI",
+   constraints[ConstPythDI] = scinew PythagorasConstraint("ConstPythDI",
 						     NumSchemes,
 						     variables[DistDVar],
 						     variables[DistIVar],
@@ -159,7 +160,7 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
    constraints[ConstPythDI]->VarChoices(Scheme6, 2, 2, 0);
    constraints[ConstPythDI]->VarChoices(Scheme7, 1, 0, 1);
    constraints[ConstPythDI]->Priorities(P_Highest, P_Highest, P_Highest);
-   constraints[ConstIR] = new DistanceConstraint("ConstIR",
+   constraints[ConstIR] = scinew DistanceConstraint("ConstIR",
 						 NumSchemes,
 						 variables[PointIVar],
 						 variables[PointRVar],
@@ -172,7 +173,7 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
    constraints[ConstIR]->VarChoices(Scheme6, 2, 2, 0);
    constraints[ConstIR]->VarChoices(Scheme7, 1, 0, 1);
    constraints[ConstIR]->Priorities(P_Default, P_Default, P_Default);
-   constraints[ConstPythIR] = new PythagorasConstraint("ConstPythIR",
+   constraints[ConstPythIR] = scinew PythagorasConstraint("ConstPythIR",
 						     NumSchemes,
 						     variables[DistIVar],
 						     variables[DistRVar],
@@ -185,7 +186,7 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
    constraints[ConstPythIR]->VarChoices(Scheme6, 2, 2, 0);
    constraints[ConstPythIR]->VarChoices(Scheme7, 1, 0, 1);
    constraints[ConstPythIR]->Priorities(P_Highest, P_Highest, P_Highest);
-   constraints[ConstRC] = new DistanceConstraint("ConstRC",
+   constraints[ConstRC] = scinew DistanceConstraint("ConstRC",
 						 NumSchemes,
 						 variables[PointRVar],
 						 variables[CenterVar],
@@ -198,7 +199,7 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
    constraints[ConstRC]->VarChoices(Scheme6, 0, 0, 0);
    constraints[ConstRC]->VarChoices(Scheme7, 1, 0, 1);
    constraints[ConstRC]->Priorities(P_Highest, P_Highest, P_Default);
-   constraints[ConstDC] = new DistanceConstraint("ConstDC",
+   constraints[ConstDC] = scinew DistanceConstraint("ConstDC",
 					       NumSchemes,
 					       variables[PointDVar],
 					       variables[CenterVar],
@@ -211,7 +212,7 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
    constraints[ConstDC]->VarChoices(Scheme6, 0, 0, 0);
    constraints[ConstDC]->VarChoices(Scheme7, 1, 0, 1);
    constraints[ConstDC]->Priorities(P_Highest, P_Highest, P_Default);
-   constraints[ConstIC] = new DistanceConstraint("ConstIC",
+   constraints[ConstIC] = scinew DistanceConstraint("ConstIC",
 					       NumSchemes,
 					       variables[PointIVar],
 					       variables[CenterVar],
@@ -226,56 +227,56 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
    constraints[ConstIC]->Priorities(P_Highest, P_Highest, P_Default);
 
    Index geom, pick;
-   GeomGroup* cyls = new GeomGroup;
+   GeomGroup* cyls = scinew GeomGroup;
    for (geom = SmallSphereIUL; geom <= SmallSphereODL; geom++) {
-      geometries[geom] = new GeomSphere;
+      geometries[geom] = scinew GeomSphere;
       cyls->add(geometries[geom]);
    }
    for (geom = CylIU; geom <= CylOL; geom++) {
-      geometries[geom] = new GeomCylinder;
+      geometries[geom] = scinew GeomCylinder;
       cyls->add(geometries[geom]);
    }
-   picks[PickCyls] = new GeomPick(cyls, module, this, PickCyls);
+   picks[PickCyls] = scinew GeomPick(cyls, module, this, PickCyls);
    picks[PickCyls]->set_highlight(DefaultHighlightMaterial);
-   materials[EdgeMatl] = new GeomMaterial(picks[PickCyls], DefaultEdgeMaterial);
+   materials[EdgeMatl] = scinew GeomMaterial(picks[PickCyls], DefaultEdgeMaterial);
    CreateModeSwitch(0, materials[EdgeMatl]);
 
-   GeomGroup* pts = new GeomGroup;
+   GeomGroup* pts = scinew GeomGroup;
    for (geom = SphereR, pick = PickSphR;
 	geom <= SphereO; geom++, pick++) {
-      geometries[geom] = new GeomSphere;
-      picks[pick] = new GeomPick(geometries[geom], module, this, pick);
+      geometries[geom] = scinew GeomSphere;
+      picks[pick] = scinew GeomPick(geometries[geom], module, this, pick);
       picks[pick]->set_highlight(DefaultHighlightMaterial);
       pts->add(picks[pick]);
    }
-   materials[PointMatl] = new GeomMaterial(pts, DefaultPointMaterial);
+   materials[PointMatl] = scinew GeomMaterial(pts, DefaultPointMaterial);
    CreateModeSwitch(1, materials[PointMatl]);
    
-   GeomGroup* resizes = new GeomGroup;
+   GeomGroup* resizes = scinew GeomGroup;
    for (geom = GeomResizeR, pick = PickResizeR;
 	geom <= GeomResizeO; geom++, pick++) {
-      geometries[geom] = new GeomCappedCylinder;
-      picks[pick] = new GeomPick(geometries[geom], module, this, pick);
+      geometries[geom] = scinew GeomCappedCylinder;
+      picks[pick] = scinew GeomPick(geometries[geom], module, this, pick);
       picks[pick]->set_highlight(DefaultHighlightMaterial);
       resizes->add(picks[pick]);
    }
-   materials[ResizeMatl] = new GeomMaterial(resizes, DefaultResizeMaterial);
+   materials[ResizeMatl] = scinew GeomMaterial(resizes, DefaultResizeMaterial);
    CreateModeSwitch(2, materials[ResizeMatl]);
 
-   GeomGroup* sliders = new GeomGroup;
-   geometries[SliderCylR] = new GeomCappedCylinder;
-   picks[PickSliderR] = new GeomPick(geometries[SliderCylR], module, this, PickSliderR);
+   GeomGroup* sliders = scinew GeomGroup;
+   geometries[SliderCylR] = scinew GeomCappedCylinder;
+   picks[PickSliderR] = scinew GeomPick(geometries[SliderCylR], module, this, PickSliderR);
    picks[PickSliderR]->set_highlight(DefaultHighlightMaterial);
    sliders->add(picks[PickSliderR]);
-   geometries[SliderCylD] = new GeomCappedCylinder;
-   picks[PickSliderD] = new GeomPick(geometries[SliderCylD], module, this, PickSliderD);
+   geometries[SliderCylD] = scinew GeomCappedCylinder;
+   picks[PickSliderD] = scinew GeomPick(geometries[SliderCylD], module, this, PickSliderD);
    picks[PickSliderD]->set_highlight(DefaultHighlightMaterial);
    sliders->add(picks[PickSliderD]);
-   geometries[SliderCylI] = new GeomCappedCylinder;
-   picks[PickSliderI] = new GeomPick(geometries[SliderCylI], module, this, PickSliderI);
+   geometries[SliderCylI] = scinew GeomCappedCylinder;
+   picks[PickSliderI] = scinew GeomPick(geometries[SliderCylI], module, this, PickSliderI);
    picks[PickSliderI]->set_highlight(DefaultHighlightMaterial);
    sliders->add(picks[PickSliderI]);
-   materials[SliderMatl] = new GeomMaterial(sliders, DefaultSliderMaterial);
+   materials[SliderMatl] = scinew GeomMaterial(sliders, DefaultSliderMaterial);
    CreateModeSwitch(3, materials[SliderMatl]);
 
    SetMode(Mode0, Switch0|Switch1|Switch2|Switch3);
@@ -477,7 +478,7 @@ ScaledBoxWidget::geom_moved( GeomPick*, int axis, double dist,
       MoveDelta(delta);
       break;
    }
-   execute();
+   execute(0);
 }
 
 
@@ -489,7 +490,7 @@ ScaledBoxWidget::MoveDelta( const Vector& delta )
    variables[PointDVar]->MoveDelta(delta);
    variables[PointIVar]->MoveDelta(delta);
 
-   execute();
+   execute(1);
 }
 
 

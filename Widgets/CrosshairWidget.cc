@@ -15,6 +15,7 @@
 #include <Widgets/CrosshairWidget.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Sphere.h>
+#include <Malloc/Allocator.h>
 
 const Index NumCons = 0;
 const Index NumVars = 1;
@@ -32,23 +33,23 @@ CrosshairWidget::CrosshairWidget( Module* module, CrowdMonitor* lock, double wid
 : BaseWidget(module, lock, "CrosshairWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   axis1(1, 0, 0), axis2(0, 1, 0), axis3(0, 0, 1)
 {
-   variables[CenterVar] = new PointVariable("Crosshair", solve, Scheme1, Point(0, 0, 0));
+   variables[CenterVar] = scinew PointVariable("Crosshair", solve, Scheme1, Point(0, 0, 0));
 
-   geometries[GeomCenter] = new GeomSphere;
-   materials[PointMatl] = new GeomMaterial(geometries[GeomCenter], DefaultPointMaterial);
-   picks[PickAxes] = new GeomPick(materials[PointMatl], module, this, PickAxes);
+   geometries[GeomCenter] = scinew GeomSphere;
+   materials[PointMatl] = scinew GeomMaterial(geometries[GeomCenter], DefaultPointMaterial);
+   picks[PickAxes] = scinew GeomPick(materials[PointMatl], module, this, PickAxes);
    picks[PickAxes]->set_highlight(DefaultHighlightMaterial);
    CreateModeSwitch(0, picks[PickAxes]);
 
-   GeomGroup* axes = new GeomGroup;
-   geometries[GeomAxis1] = new GeomCappedCylinder;
+   GeomGroup* axes = scinew GeomGroup;
+   geometries[GeomAxis1] = scinew GeomCappedCylinder;
    axes->add(geometries[GeomAxis1]);
-   geometries[GeomAxis2] = new GeomCappedCylinder;
+   geometries[GeomAxis2] = scinew GeomCappedCylinder;
    axes->add(geometries[GeomAxis2]);
-   geometries[GeomAxis3] = new GeomCappedCylinder;
+   geometries[GeomAxis3] = scinew GeomCappedCylinder;
    axes->add(geometries[GeomAxis3]);
-   materials[AxesMatl] = new GeomMaterial(axes, DefaultEdgeMaterial);
-   picks[Pick] = new GeomPick(materials[AxesMatl], module, this, Pick);
+   materials[AxesMatl] = scinew GeomMaterial(axes, DefaultEdgeMaterial);
+   picks[Pick] = scinew GeomPick(materials[AxesMatl], module, this, Pick);
    picks[Pick]->set_highlight(DefaultHighlightMaterial);
    CreateModeSwitch(1, picks[Pick]);
 
@@ -101,7 +102,7 @@ CrosshairWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
       MoveDelta(delta);
       break;
    }
-   execute();
+   execute(0);
 }
 
 
@@ -110,7 +111,7 @@ CrosshairWidget::MoveDelta( const Vector& delta )
 {
    variables[CenterVar]->MoveDelta(delta);
 
-   execute();
+   execute(1);
 }
 
 
@@ -126,7 +127,7 @@ CrosshairWidget::SetPosition( const Point& p )
 {
    variables[CenterVar]->Move(p);
 
-   execute();
+   execute(0);
 }
 
 
@@ -147,7 +148,7 @@ CrosshairWidget::SetAxes( const Vector& v1, const Vector& v2, const Vector& v3 )
       axis2 = v2.normal();
       axis3 = v3.normal();
 
-      execute();
+      execute(0);
    }
 }
 

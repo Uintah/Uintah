@@ -18,6 +18,7 @@
 #include <Classlib/String.h>
 #include <Dataflow/Connection.h>
 #include <Dataflow/Port.h>
+#include <Malloc/Allocator.h>
 
 #include <iostream.h>
 
@@ -148,7 +149,7 @@ void SoundOPort::finish()
 	in=(SoundIPort*)connection->iport;
     }
     if(ptr != 0){
-	SoundComm* comm=new SoundComm;
+	SoundComm* comm=scinew SoundComm;
 	comm->action=SoundComm::SoundData;
 	comm->sbufsize=ptr;
 	comm->samples=sbuf;
@@ -156,7 +157,7 @@ void SoundOPort::finish()
 	sbuf=0;
 	ptr=0;
     }
-    SoundComm* comm=new SoundComm;
+    SoundComm* comm=scinew SoundComm;
     comm->action=SoundComm::EndOfStream;
     in->mailbox.send(comm);
     state=End;
@@ -187,7 +188,7 @@ void SoundOPort::put_sample(double s)
     if(state == Begin){
 	// Send the Parameters message...
 	turn_on();
-	SoundComm* comm=new SoundComm;
+	SoundComm* comm=scinew SoundComm;
 	comm->action=SoundComm::Parameters;
 	comm->sample_rate=rate;
 	comm->nsamples=total_samples;
@@ -203,14 +204,14 @@ void SoundOPort::put_sample(double s)
 	turn_off();
     }
     if(!sbuf){
-	sbuf=new double[sbufsize];
+	sbuf=scinew double[sbufsize];
 	ptr=0;
     }
     sbuf[ptr++]=s;
     if(ptr >= sbufsize){
 	// Send it away...
 	turn_on();
-	SoundComm* comm=new SoundComm;
+	SoundComm* comm=scinew SoundComm;
 	comm->action=SoundComm::SoundData;
 	comm->sbufsize=sbufsize;
 	comm->samples=sbuf;

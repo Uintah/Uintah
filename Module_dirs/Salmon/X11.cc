@@ -21,6 +21,7 @@
 #include <Geometry/Transform.h>
 #include <Geom/Geom.h>
 #include <Geom/GeomX11.h>
+#include <Malloc/Allocator.h>
 #include <Math/Trig.h>
 #include <TCL/TCLTask.h>
 
@@ -59,7 +60,7 @@ public:
 
 static Renderer* make_X11()
 {
-    return new X11;
+    return scinew X11;
 }
 
 static int query_X11()
@@ -72,7 +73,7 @@ RegisterRenderer X11_renderer("X11", &query_X11, &make_X11);
 X11::X11()
 : tkwin(0), drawinfo(0), tkcolors(0)
 {
-    strbuf=new char[STRINGSIZE];
+    strbuf=scinew char[STRINGSIZE];
 }
 
 X11::~X11()
@@ -108,7 +109,7 @@ void X11::setup_window()
 	}
     }
     if(!drawinfo)
-	drawinfo=new DrawInfoX11;
+	drawinfo=scinew DrawInfoX11;
     else if(drawinfo->colors)
 	delete[] drawinfo->colors;
     drawinfo->dpy=Tk_Display(tkwin);
@@ -129,7 +130,7 @@ void X11::setup_window()
     while(1){
 	int failed=0;
 	ncolors=sr*sg*sb;
-	tkcolors=new XColor*[ncolors];
+	tkcolors=scinew XColor*[ncolors];
 	int idx=0;
 	cerr << sr << "x" << sg << "x" << sb << endl;
 	for(int i=0;i<sr && !failed;i++){
@@ -176,7 +177,7 @@ void X11::setup_window()
     drawinfo->blue_max=sb-1;
     drawinfo->red_mult=sg*sb;
     drawinfo->green_mult=sb;
-    drawinfo->colors=new unsigned long[ncolors];
+    drawinfo->colors=scinew unsigned long[ncolors];
     for(int i=0;i<ncolors;i++)
 	drawinfo->colors[i]=tkcolors[i]->pixel;
     TCLTask::unlock();

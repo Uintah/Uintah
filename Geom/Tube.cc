@@ -14,6 +14,7 @@
 #include <Geometry/BBox.h>
 #include <Geom/Line.h>
 #include <Classlib/NotFinished.h>
+#include <Malloc/Allocator.h>
 #include <Math/Trig.h>
 #include <Math/TrigTable.h>
 
@@ -34,7 +35,7 @@ GeomTube::~GeomTube()
 
 GeomObj* GeomTube::clone() 
 {
-    return new GeomTube(*this); 
+    return scinew GeomTube(*this); 
 }
 
 void  GeomTube::get_bounds(BBox& bb)

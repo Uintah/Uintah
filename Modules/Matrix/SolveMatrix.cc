@@ -17,6 +17,7 @@
 #include <Datatypes/MatrixPort.h>
 #include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
+#include <Malloc/Allocator.h>
 
 class SolveMatrix : public Module {
     MatrixIPort* matrixport;
@@ -33,7 +34,7 @@ public:
 
 static Module* make_SolveMatrix(const clString& id)
 {
-    return new SolveMatrix(id);
+    return scinew SolveMatrix(id);
 }
 
 static RegisterModule db1("Unfinished", "SolveMatrix", make_SolveMatrix);
@@ -41,12 +42,12 @@ static RegisterModule db1("Unfinished", "SolveMatrix", make_SolveMatrix);
 SolveMatrix::SolveMatrix(const clString& id)
 : Module("SolveMatrix", id, Filter)
 {
-    matrixport=new MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
+    matrixport=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
     add_iport(matrixport);
-    rhsport=new ColumnMatrixIPort(this, "RHS", ColumnMatrixIPort::Atomic);
+    rhsport=scinew ColumnMatrixIPort(this, "RHS", ColumnMatrixIPort::Atomic);
     add_iport(rhsport);
 
-    solport=new ColumnMatrixOPort(this, "Solution", ColumnMatrixIPort::Atomic);
+    solport=scinew ColumnMatrixOPort(this, "Solution", ColumnMatrixIPort::Atomic);
     add_oport(solport);
 }
 
@@ -62,7 +63,7 @@ SolveMatrix::~SolveMatrix()
 
 Module* SolveMatrix::clone(int deep)
 {
-    return new SolveMatrix(*this, deep);
+    return scinew SolveMatrix(*this, deep);
 }
 
 void SolveMatrix::execute()
@@ -74,7 +75,7 @@ void SolveMatrix::execute()
     if(!rhsport->get(rhs))
 	return;
     if(!solution.get_rep()){
-	solution=new ColumnMatrix(rhs->nrows());
+	solution=scinew ColumnMatrix(rhs->nrows());
 	solution->zero();
     } else {
 	solution.detach();

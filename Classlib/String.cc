@@ -16,6 +16,7 @@
 #include <Classlib/Assert.h>
 #include <Classlib/Persistent.h>
 #include <Classlib/TrivialAllocator.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 #include <stdio.h>
 #include <string.h>
@@ -26,8 +27,8 @@ static TrivialAllocator* srep_alloc=0;
 inline void* clString::srep::operator new(size_t)
 {
     if(!srep_alloc){
-	srep_alloc=new TrivialAllocator(sizeof(clString::srep));
-	lock=new Mutex;
+	srep_alloc=scinew TrivialAllocator(sizeof(clString::srep));
+	lock=scinew Mutex;
     }
     lock->lock();
     void* p=srep_alloc->alloc();
@@ -49,16 +50,16 @@ inline void clString::srep::operator delete(void* rp, size_t)
 
 clString::clString(const char* s)
 {
-    p=new srep;
+    p=scinew srep;
     int len=strlen(s);
-    p->s=new char[len+1];
+    p->s=scinew char[len+1];
     strcpy(p->s,s);
 }
 
 clString clString::operator+(const clString& str) const
 {
     int newlen=(p?strlen(p->s):0) + (str.p?strlen(str.p->s):0);
-    char* ns=new char[newlen+1];
+    char* ns=scinew char[newlen+1];
     if(p && p->s)strcpy(ns, p->s);
     else ns[0]=0;
     if(str.p && str.p->s)strcat(ns, str.p->s);
@@ -68,7 +69,7 @@ clString clString::operator+(const clString& str) const
 clString clString::operator+(const char* c) const
 {
     int newlen=(p?strlen(p->s):0)+strlen(c);
-    char* ns=new char[newlen+1];
+    char* ns=scinew char[newlen+1];
     if(p && p->s)strcpy(ns, p->s);
     else ns[0]=0;
     strcat(ns, c);
@@ -78,7 +79,7 @@ clString clString::operator+(const char* c) const
 clString operator+(const char* c, const clString& str)
 {
     int newlen=(str.p?strlen(str.p->s):0)+strlen(c);
-    char* ns=new char[newlen+1];
+    char* ns=scinew char[newlen+1];
     strcpy(ns, c);
     if(str.p && str.p->s)strcat(ns, str.p->s);
     return clString(0, ns);
@@ -115,7 +116,7 @@ ostream& operator<<(ostream& s, const clString& str)
 
 istream& operator>>(istream& s, clString& str)
 {
-    char* buf=new char[1000];
+    char* buf=scinew char[1000];
     s.get(buf,1000,'\n');
 #ifdef broken
     char c;
@@ -125,7 +126,7 @@ istream& operator>>(istream& s, clString& str)
 	int size=1000;
 	while(grow){
 	    int newsize=size << 1; /* Double size... */
-	    char* p=new char[newsize];
+	    char* p=scinew char[newsize];
 	    strncpy(p, buf, size);
 	    s.get(buf+size,size,'\n');
 	    if(cin.get(c) && c!='\n'){
@@ -164,7 +165,7 @@ clString clString::substr(int start, int length)
     ASSERTRANGE(start, 0, len);
     int l=length==-1?len-start:length;
     ASSERTRANGE(start+l, 0, len+1);
-    char* tmp=new char[l+1];
+    char* tmp=scinew char[l+1];
     for(int i=0;i<l;i++){
 	tmp[i]=p->s[i+start];
     }
@@ -204,9 +205,9 @@ clString& clString::operator+=(char c)
 	if(p->n != 1){
 	    // detach...
 	    srep* oldp=p;
-	    p=new srep;
+	    p=scinew srep;
 	    int len=strlen(oldp->s);
-	    p->s=new char[len+2];
+	    p->s=scinew char[len+2];
 	    strcpy(p->s, oldp->s);
 	    p->s[len]=c;
 	    p->s[len+1]=0;
@@ -215,16 +216,16 @@ clString& clString::operator+=(char c)
 	} else {
 	    char* olds=p->s;
 	    int len=strlen(olds);
-	    p->s=new char[len+2];
+	    p->s=scinew char[len+2];
 	    strcpy(p->s, olds);
 	    p->s[len]=c;
 	    p->s[len+1]=0;
 	    delete[] olds;
 	}
     } else {
-	p=new srep;
+	p=scinew srep;
 	p->n=1;
-	p->s=new char[2];
+	p->s=scinew char[2];
 	p->s[0]=c;
 	p->s[1]=0;
     }
@@ -234,17 +235,17 @@ clString& clString::operator+=(char c)
 clString& clString::operator+=(const clString& str)
 {
     int newlen=(p?strlen(p->s):0)+(str.p?strlen(str.p->s):0);
-    char* ns=new char[newlen+1];
+    char* ns=scinew char[newlen+1];
     if(p && p->s)strcpy(ns, p->s);
     else ns[0]=0;
     if(str.p && str.p->s)strcat(ns, str.p->s);
     if(p && p->n > 1){
 	if(p)p->n--;
-	p=new srep;
+	p=scinew srep;
     } else {
 	if(p && p->s)delete[] p->s;
 	if(!p)
-	    p=new srep;
+	    p=scinew srep;
     }
     p->s=ns;
     return *this;

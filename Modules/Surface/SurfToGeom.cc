@@ -27,6 +27,7 @@
 #include <Geom/Material.h>
 #include <Geom/Group.h>
 #include <Geom/Tri.h>
+#include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 
 
@@ -51,7 +52,7 @@ public:
 
 static Module* make_SurfToGeom(const clString& id)
 {
-    return new SurfToGeom(id);
+    return scinew SurfToGeom(id);
 }
 
 static RegisterModule db1("Surfaces", "SurfToGeom", make_SurfToGeom);
@@ -64,13 +65,13 @@ SurfToGeom::SurfToGeom(const clString& id)
   range_max("range_max", id, this)
 {
     // Create the input port
-    isurface=new SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);
+    isurface=scinew SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);
     add_iport(isurface);
-    ifield=new ScalarFieldIPort(this, "ScalarField", ScalarFieldIPort::Atomic);
+    ifield=scinew ScalarFieldIPort(this, "ScalarField", ScalarFieldIPort::Atomic);
     add_iport(ifield);
-    icmap = new ColormapIPort(this, "ColorMap", ColormapIPort::Atomic);
+    icmap = scinew ColormapIPort(this, "ColorMap", ColormapIPort::Atomic);
     add_iport(icmap);
-    ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+    ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 }
 
@@ -87,7 +88,7 @@ SurfToGeom::~SurfToGeom()
 
 Module* SurfToGeom::clone(int deep)
 {
-    return new SurfToGeom(*this, deep);
+    return scinew SurfToGeom(*this, deep);
 }
 
 void SurfToGeom::execute()
@@ -103,7 +104,7 @@ void SurfToGeom::execute()
     ScalarFieldHandle sfield;
 
     int have_sf=ifield->get(sfield);
-    GeomGroup* group = new GeomGroup;
+    GeomGroup* group = scinew GeomGroup;
     TriSurface* ts=surf->getTriSurface();
 
     if(ts){
@@ -125,7 +126,7 @@ void SurfToGeom::execute()
 		    mat3=cmap->lookup(interp);
 		else ok=0;
 		if (ok) {
-		    group->add(new GeomTri(ts->points[ts->elements[i]->i1], 
+		    group->add(scinew GeomTri(ts->points[ts->elements[i]->i1], 
 					   ts->points[ts->elements[i]->i2],
 					   ts->points[ts->elements[i]->i3],
 					   mat1, mat2, mat3));
@@ -133,7 +134,7 @@ void SurfToGeom::execute()
 		    cerr << "One of the points was out of the field.\n";
 		}
 	    } else {
-		group->add(new GeomTri(ts->points[ts->elements[i]->i1], 
+		group->add(scinew GeomTri(ts->points[ts->elements[i]->i1], 
 				       ts->points[ts->elements[i]->i2],
 				       ts->points[ts->elements[i]->i3]));
 	    }
@@ -143,7 +144,7 @@ void SurfToGeom::execute()
     }
     GeomObj* topobj=group;
     if (surf->name == "sagital.scalp") {
-	topobj=new GeomMaterial(group, new Material(Color(0,0,0),
+	topobj=scinew GeomMaterial(group, scinew Material(Color(0,0,0),
 						    Color(0,.6,0), 
 						    Color(.5,.5,.5), 20));
     }

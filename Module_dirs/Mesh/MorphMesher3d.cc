@@ -27,6 +27,7 @@
 #include <Geometry/Point.h>
 #include <Geometry/BBox.h>
 #include <Geometry/Grid.h>
+#include <Malloc/Allocator.h>
 #include <Math/Expon.h>
 #include <TCL/TCLvar.h>
 #include <stdlib.h>		//rand()
@@ -88,7 +89,7 @@ public:
 
 static Module* make_MorphMesher3d(const clString& id)
 {
-    return new MorphMesher3d(id);
+    return scinew MorphMesher3d(id);
 }
 
 static RegisterModule db1("Surfaces", "MorphMesher3d", make_MorphMesher3d);
@@ -99,12 +100,12 @@ MorphMesher3d::MorphMesher3d(const clString& id)
 : Module("MorphMesher3d", id, Filter), num_layers("num_layers", id, this)
 {
     // Create the input port
-    isurfaces.add(new SurfaceIPort(this, "Surface", SurfaceIPort::Atomic));
+    isurfaces.add(scinew SurfaceIPort(this, "Surface", SurfaceIPort::Atomic));
     add_iport(isurfaces[0]);
-    omesh=new MeshOPort(this, "Mesh", MeshIPort::Atomic);
+    omesh=scinew MeshOPort(this, "Mesh", MeshIPort::Atomic);
     add_oport(omesh);
 ///
-//    ofield=new ScalarFieldOPort(this, "Field", ScalarFieldIPort::Atomic);
+//    ofield=scinew ScalarFieldOPort(this, "Field", ScalarFieldIPort::Atomic);
 //    add_oport(ofield);
 ///
 }
@@ -121,7 +122,7 @@ MorphMesher3d::~MorphMesher3d()
 
 Module* MorphMesher3d::clone(int deep)
 {
-    return new MorphMesher3d(*this, deep);
+    return scinew MorphMesher3d(*this, deep);
 }
 
 
@@ -134,7 +135,7 @@ void MorphMesher3d::connection(ConnectionMode mode, int which_port,
 	delete isurfaces[which_port];
 	isurfaces.remove(which_port);
     } else {
-	SurfaceIPort* si=new SurfaceIPort(this,"Surface",SurfaceIPort::Atomic);
+	SurfaceIPort* si=scinew SurfaceIPort(this,"Surface",SurfaceIPort::Atomic);
 	add_iport(si);
 	isurfaces.add(si);
     }
@@ -151,9 +152,9 @@ void MorphMesher3d::execute()
 	error("MorphMesher3d only works with TriSurfaces");
 	return;
     }
-    Mesh* mesh=new Mesh;
+    Mesh* mesh=scinew Mesh;
 ///
-//    field=new ScalarFieldRG();
+//    field=scinew ScalarFieldRG();
 ///
     morph_mesher_3d(surfs, mesh);
     omesh->send(mesh);
@@ -509,7 +510,7 @@ void MorphMesher3d::mesh_mult_surfs(const Array1<SurfaceHandle> &surfs,
 //count_grid(*outer->grid, outer->elements.size());
 
     for (i=0; i<num_layers.get(); i++) {
-        new_surf=new TriSurface;
+        new_surf=scinew TriSurface;
 	new_surf->construct_grid(outer->grid->dim1()+1, outer->grid->dim2()+1, 
 				 outer->grid->dim3()+1, 
 				 outer->grid->get_min()+
@@ -741,7 +742,7 @@ void MorphMesher3d::mesh_single_surf(const Array1<SurfaceHandle> &surfs,
     TriSurface *new_surf;
 
     for (i=0; i<num_layers.get(); i++) {
-        new_surf=new TriSurface;
+        new_surf=scinew TriSurface;
         double gr_sp=ts->grid->get_spacing();
 	new_surf->construct_grid(ts->grid->dim1()+1, ts->grid->dim2()+1, 
 				 ts->grid->dim3()+1, 
@@ -896,7 +897,7 @@ void MorphMesher3d::lace_surfaces(const SurfaceHandle &outHand, TriSurface* in,
     cond_index=mesh->cond_tensors.size();
     TriSurface* out=outHand->getTriSurface();
 
-    Array1<double> *cond=new Array1<double>(6);
+    Array1<double> *cond=scinew Array1<double>(6);
     if (out->conductivity.size()!=0) {
 	for (int i=0; i<6; i++) {
 	    (*cond)[i]=out->conductivity[i];

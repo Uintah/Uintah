@@ -17,6 +17,7 @@
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
 #include <Geometry/Ray.h>
+#include <Malloc/Allocator.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 
@@ -57,7 +58,7 @@ void GeomSphere::adjust()
 
 GeomObj* GeomSphere::clone()
 {
-    return new GeomSphere(*this);
+    return scinew GeomSphere(*this);
 }
 
 void GeomSphere::get_bounds(BBox& bb)
@@ -94,12 +95,12 @@ void GeomSphere::make_prims(Array1<GeomObj*>& free,
 	    Point p3(x0*r1+cx, y0*r1+cy, z1+cz);
 	    Point p4(x1*r1+cx, y1*r1+cy, z1+cz);
 	    if(j<nv-2){
-		GeomTri* t1=new GeomTri(p1, p3, p4);
+		GeomTri* t1=scinew GeomTri(p1, p3, p4);
 //		t1->set_matl(matl);
 		free.add(t1);
 	    }
 	    if(j>0){
-		GeomTri* t2=new GeomTri(p1, p4, p2);
+		GeomTri* t2=scinew GeomTri(p1, p4, p2);
 //		t2->set_matl(matl);
 		free.add(t2);
 	    }

@@ -13,12 +13,13 @@
 
 #include <Datatypes/BasicSurfaces.h>
 #include <Classlib/NotFinished.h>
+#include <Malloc/Allocator.h>
 #include <Math/Trig.h>
 #include <Math/TrigTable.h>
 
 static Persistent* make_CylinderSurface()
 {
-    return new CylinderSurface(Point(0,0,0), Point(0,0,1),1,10,10,10);
+    return scinew CylinderSurface(Point(0,0,0), Point(0,0,1),1,10,10,10);
 }
 
 PersistentTypeID CylinderSurface::type_id("CylinderSurface", "Surface",
@@ -53,7 +54,7 @@ CylinderSurface::CylinderSurface(const CylinderSurface& copy)
 
 Surface* CylinderSurface::clone()
 {
-    return new CylinderSurface(*this);
+    return scinew CylinderSurface(*this);
 }
 
 int CylinderSurface::inside(const Point& p)
@@ -125,7 +126,7 @@ void CylinderSurface::construct_grid()
 
 static Persistent* make_PointSurface()
 {
-    return new PointSurface(Point(0,0,0));
+    return scinew PointSurface(Point(0,0,0));
 }
 
 PersistentTypeID PointSurface::type_id("PointSurface", "Surface",
@@ -147,7 +148,7 @@ PointSurface::PointSurface(const PointSurface& copy)
 
 Surface* PointSurface::clone()
 {
-    return new PointSurface(*this);
+    return scinew PointSurface(*this);
 }
 
 int PointSurface::inside(const Point&)

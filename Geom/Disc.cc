@@ -58,7 +58,7 @@ GeomDisc::~GeomDisc()
 
 GeomObj* GeomDisc::clone()
 {
-    return new GeomDisc(*this);
+    return scinew GeomDisc(*this);
 }
 
 void GeomDisc::adjust()
@@ -112,11 +112,11 @@ void GeomDisc::make_prims(Array1<GeomObj*>& free,
 	    Point p2(cen+rv2);
 	    if(j>0){
 		if(i>0){
-		    GeomTri* t1=new GeomTri(l1, l2, p1);
+		    GeomTri* t1=scinew GeomTri(l1, l2, p1);
 //		    t1->set_matl(matl);
 		    free.add(t1);
 		}
-		GeomTri* t2=new GeomTri(l2, p1, p2);
+		GeomTri* t2=scinew GeomTri(l2, p1, p2);
 //		t2->set_matl(matl);
 		free.add(t2);
 	    }

@@ -18,31 +18,31 @@
 #include <Dataflow/Module.h>
 #include <Modules/Salmon/Roe.h>
 #include <Datatypes/GeometryPort.h>
-
+#include <Malloc/Allocator.h>
 
 static const Index NumDefaultMaterials = 6;
 
-MaterialHandle BaseWidget::DefaultPointMaterial(new Material(Color(0,0,0),
+MaterialHandle BaseWidget::DefaultPointMaterial(scinew Material(Color(0,0,0),
 							     Color(.54,.60,1),
 							     Color(.5,.5,.5),
 							     20));
-MaterialHandle BaseWidget::DefaultEdgeMaterial(new Material(Color(0,0,0),
+MaterialHandle BaseWidget::DefaultEdgeMaterial(scinew Material(Color(0,0,0),
 							    Color(.54,.60,.66),
 							    Color(.5,.5,.5),
 							    20));
-MaterialHandle BaseWidget::DefaultSliderMaterial(new Material(Color(0,0,0),
+MaterialHandle BaseWidget::DefaultSliderMaterial(scinew Material(Color(0,0,0),
 							      Color(.66,.60,.40),
 							      Color(.5,.5,.5),
 							      20));
-MaterialHandle BaseWidget::DefaultResizeMaterial(new Material(Color(0,0,0),
+MaterialHandle BaseWidget::DefaultResizeMaterial(scinew Material(Color(0,0,0),
 							      Color(.54,1,.60),
 							      Color(.5,.5,.5),
 							      20));
-MaterialHandle BaseWidget::DefaultSpecialMaterial(new Material(Color(0,0,0),
+MaterialHandle BaseWidget::DefaultSpecialMaterial(scinew Material(Color(0,0,0),
 							       Color(1,.54,.60),
 							       Color(.5,.5,.5),
 							       20));
-MaterialHandle BaseWidget::DefaultHighlightMaterial(new Material(Color(0,0,0),
+MaterialHandle BaseWidget::DefaultHighlightMaterial(scinew Material(Color(0,0,0),
 								 Color(.8,0,0),
 								 Color(.5,.5,.5),
 								 20));
@@ -69,7 +69,7 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
 			const Index NumSwitches,
 			const Real widget_scale )
 : module(module), lock(lock), name(name),
-  solve(new ConstraintSolver), 
+  solve(scinew ConstraintSolver), 
   NumVariables(NumVariables), NumConstraints(NumConstraints),
   NumGeometries(NumGeometries), NumPicks(NumPicks), NumMaterials(NumMaterials),
   constraints(NumConstraints), variables(NumVariables),
@@ -77,7 +77,7 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
   NumModes(NumModes), NumSwitches(NumSwitches),
   modes(NumModes), mode_switches(NumSwitches), CurrentMode(0),
   widget_scale(widget_scale), id(make_id(name)), tclmat("material", id, this),
-  epsilon(1e-6)
+  epsilon(1e-3)
 {
 
    for (Index i=0; i<NumSwitches; i++)
@@ -224,7 +224,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 return;
       }
       reset_vars();
-      MaterialHandle mat(new Material(tclmat.get()));
+      MaterialHandle mat(scinew Material(tclmat.get()));
       pmat(mat);
       SetDefaultMaterial(mati, mat);
    } else if(args[1] == "setmat"){
@@ -241,7 +241,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 return;
       }
       reset_vars();
-      MaterialHandle mat(new Material(tclmat.get()));
+      MaterialHandle mat(scinew Material(tclmat.get()));
       pmat(mat);
       SetMaterial(mati, mat);
    } else if(args[1] == "scale"){
@@ -255,6 +255,8 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 return;
       }
       SetScale(GetScale()*us);
+   } else if(args[1] == "dialdone"){
+      module->widget_moved(1);
    } else {
       widget_tcl(args);
    }
@@ -276,7 +278,7 @@ BaseWidget::SetScale( const double scale )
    widget_scale = scale;
    solve->SetEpsilon(epsilon*widget_scale);
    TCL::execute(id+" scale_changed "+to_string(widget_scale));
-   execute();
+   execute(0);
 }
 
 
@@ -340,7 +342,7 @@ BaseWidget::NextMode()
       else
 	 mode_switches[s]->set_state(0);
 
-   execute();
+   execute(0);
 }
 
 
@@ -466,10 +468,10 @@ BaseWidget::flushViews() const
 
 
 void
-BaseWidget::execute()
+BaseWidget::execute(int always_callback)
 {
-   if (solve->VariablesChanged()) {
-      module->widget_moved();
+   if (always_callback || solve->VariablesChanged()) {
+      module->widget_moved(0);
       solve->ResetChanged();
    }
 
@@ -505,6 +507,7 @@ BaseWidget::geom_pick( GeomPick* pick, Roe* roe, int /* cbdata */, const BState&
 void
 BaseWidget::geom_release( GeomPick*, int /* cbdata */, const BState& )
 {
+    module->widget_moved(1);
 }
 
 void
@@ -512,7 +515,7 @@ BaseWidget::CreateModeSwitch( const Index snum, GeomObj* o )
 {
    ASSERT(snum<NumSwitches);
    ASSERT(mode_switches[snum]==NULL);
-   mode_switches[snum] = new GeomSwitch(o);
+   mode_switches[snum] = scinew GeomSwitch(o);
 }
 
 
@@ -563,7 +566,7 @@ BaseWidget::FinishWidget()
 	 exit(-1);
       }
    
-   GeomGroup* sg = new GeomGroup;
+   GeomGroup* sg = scinew GeomGroup;
    for (i=0; i<NumSwitches; i++) {
       if (modes[CurrentMode]&(1<<i))
 	 mode_switches[i]->set_state(1);
@@ -571,7 +574,7 @@ BaseWidget::FinishWidget()
 	 mode_switches[i]->set_state(0);
       sg->add(mode_switches[i]);
    }
-   widget = new GeomSwitch(sg);
+   widget = scinew GeomSwitch(sg);
 
    // Init variables.
    for (Index vindex=0; vindex<NumVariables; vindex++)

@@ -14,6 +14,7 @@
 #include <Dataflow/DebugSettings.h>
 
 #include <Classlib/Debug.h>
+#include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 
 #include <iostream.h>
@@ -59,7 +60,7 @@ void DebugSettings::tcl_command(TCLArgs& args, void*)
 	    DebugSwitch* sw=debug_vars[j];
 	    vars[j]=sw->get_var();
 	    if(makevars)
-		variables.add(new TCLvarintp(sw->get_flagpointer(),
+		variables.add(scinew TCLvarintp(sw->get_flagpointer(),
 					     sw->get_module(), sw->get_var(),
 					     0));
 	}

@@ -20,6 +20,7 @@
 #include <Geom/Sphere.h>
 #include <Geom/Torus.h>
 #include <Geometry/Plane.h>
+#include <Malloc/Allocator.h>
 #include <Math/Expon.h>
 #include <Math/Trig.h>
 
@@ -46,16 +47,16 @@ RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
 {
    Real INIT = 5.0*widget_scale;
    // Scheme4/5 are used to resize.
-   variables[PointRVar] = new PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
-   variables[PointDVar] = new PointVariable("PntD", solve, Scheme2, Point(0, INIT, 0));
-   variables[CenterVar] = new PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
-   variables[SliderVar] = new PointVariable("Slider", solve, Scheme3, Point(INIT, 0, 0));
-   variables[DistVar] = new RealVariable("Dist", solve, Scheme1, INIT);
-   variables[HypoVar] = new RealVariable("HYPO", solve, Scheme1, sqrt(2*INIT*INIT));
-   variables[Sqrt2Var] = new RealVariable("Sqrt2", solve, Scheme1, sqrt(2));
-   variables[AngleVar] = new RealVariable("Angle", solve, Scheme3, 0);
+   variables[PointRVar] = scinew PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
+   variables[PointDVar] = scinew PointVariable("PntD", solve, Scheme2, Point(0, INIT, 0));
+   variables[CenterVar] = scinew PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
+   variables[SliderVar] = scinew PointVariable("Slider", solve, Scheme3, Point(INIT, 0, 0));
+   variables[DistVar] = scinew RealVariable("Dist", solve, Scheme1, INIT);
+   variables[HypoVar] = scinew RealVariable("HYPO", solve, Scheme1, sqrt(2*INIT*INIT));
+   variables[Sqrt2Var] = scinew RealVariable("Sqrt2", solve, Scheme1, sqrt(2));
+   variables[AngleVar] = scinew RealVariable("Angle", solve, Scheme3, 0);
 
-   constraints[ConstAngle] = new AngleConstraint("ConstAngle",
+   constraints[ConstAngle] = scinew AngleConstraint("ConstAngle",
 						 NumSchemes,
 						 variables[CenterVar],
 						 variables[PointRVar],
@@ -69,7 +70,7 @@ RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
    constraints[ConstAngle]->VarChoices(Scheme5, 3, 3, 3, 3, 3);
    constraints[ConstAngle]->Priorities(P_Lowest, P_Lowest, P_Lowest,
 				       P_Highest, P_Highest);
-   constraints[ConstRadius] = new DistanceConstraint("ConstRadius",
+   constraints[ConstRadius] = scinew DistanceConstraint("ConstRadius",
 						     NumSchemes,
 						     variables[CenterVar],
 						     variables[SliderVar],
@@ -80,7 +81,7 @@ RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
    constraints[ConstRadius]->VarChoices(Scheme4, 1, 1, 1);
    constraints[ConstRadius]->VarChoices(Scheme5, 1, 1, 1);
    constraints[ConstRadius]->Priorities(P_Lowest, P_HighMedium, P_Lowest);
-   constraints[ConstRD] = new DistanceConstraint("ConstRD",
+   constraints[ConstRD] = scinew DistanceConstraint("ConstRD",
 						 NumSchemes,
 						 variables[PointRVar],
 						 variables[PointDVar],
@@ -91,7 +92,7 @@ RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
    constraints[ConstRD]->VarChoices(Scheme4, 1, 1, 1);
    constraints[ConstRD]->VarChoices(Scheme5, 0, 0, 0);
    constraints[ConstRD]->Priorities(P_Default, P_Default, P_Default);
-   constraints[ConstPyth] = new RatioConstraint("ConstPyth",
+   constraints[ConstPyth] = scinew RatioConstraint("ConstPyth",
 						NumSchemes,
 						variables[HypoVar],
 						variables[DistVar],
@@ -102,7 +103,7 @@ RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
    constraints[ConstPyth]->VarChoices(Scheme4, 1, 0, 0);
    constraints[ConstPyth]->VarChoices(Scheme5, 1, 0, 0);
    constraints[ConstPyth]->Priorities(P_Highest, P_Highest, P_Highest);
-   constraints[ConstRC] = new DistanceConstraint("ConstRC",
+   constraints[ConstRC] = scinew DistanceConstraint("ConstRC",
 						 NumSchemes,
 						 variables[PointRVar],
 						 variables[CenterVar],
@@ -113,7 +114,7 @@ RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
    constraints[ConstRC]->VarChoices(Scheme4, 2, 2, 2);
    constraints[ConstRC]->VarChoices(Scheme5, 0, 0, 0);
    constraints[ConstRC]->Priorities(P_Highest, P_Highest, P_Default);
-   constraints[ConstDC] = new DistanceConstraint("ConstDC",
+   constraints[ConstDC] = scinew DistanceConstraint("ConstDC",
 					       NumSchemes,
 					       variables[PointDVar],
 					       variables[CenterVar],
@@ -126,57 +127,57 @@ RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
    constraints[ConstDC]->Priorities(P_Highest, P_Highest, P_Default);
 
    Index geom, pick;
-   geometries[GeomRing] = new GeomTorus;
-   picks[PickRing] = new GeomPick(geometries[GeomRing], module, this, PickRing);
+   geometries[GeomRing] = scinew GeomTorus;
+   picks[PickRing] = scinew GeomPick(geometries[GeomRing], module, this, PickRing);
    picks[PickRing]->set_highlight(DefaultHighlightMaterial);
-   materials[RingMatl] = new GeomMaterial(picks[PickRing], DefaultEdgeMaterial);
+   materials[RingMatl] = scinew GeomMaterial(picks[PickRing], DefaultEdgeMaterial);
    CreateModeSwitch(0, materials[RingMatl]);
 
-   GeomGroup* pts = new GeomGroup;
+   GeomGroup* pts = scinew GeomGroup;
    for (geom = GeomPointU, pick = PickSphU;
 	geom <= GeomPointL; geom++, pick++) {
-      geometries[geom] = new GeomSphere;
-      picks[pick] = new GeomPick(geometries[geom], module, this, pick);
+      geometries[geom] = scinew GeomSphere;
+      picks[pick] = scinew GeomPick(geometries[geom], module, this, pick);
       picks[pick]->set_highlight(DefaultHighlightMaterial);
       pts->add(picks[pick]);
    }
-   materials[PointMatl] = new GeomMaterial(pts, DefaultPointMaterial);
+   materials[PointMatl] = scinew GeomMaterial(pts, DefaultPointMaterial);
    
-   geometries[GeomResizeL] = new GeomCappedCylinder;
-   picks[PickResizeL] = new GeomPick(geometries[GeomResizeL],
+   geometries[GeomResizeL] = scinew GeomCappedCylinder;
+   picks[PickResizeL] = scinew GeomPick(geometries[GeomResizeL],
 				     module, this, PickResizeL);
    picks[PickResizeL]->set_highlight(DefaultHighlightMaterial);
-   materials[HalfResizeMatl] = new GeomMaterial(picks[PickResizeL], DefaultSpecialMaterial);
+   materials[HalfResizeMatl] = scinew GeomMaterial(picks[PickResizeL], DefaultSpecialMaterial);
 
-   GeomGroup* resulr = new GeomGroup;
-   geometries[GeomResizeU] = new GeomCappedCylinder;
-   picks[PickResizeU] = new GeomPick(geometries[GeomResizeU],
+   GeomGroup* resulr = scinew GeomGroup;
+   geometries[GeomResizeU] = scinew GeomCappedCylinder;
+   picks[PickResizeU] = scinew GeomPick(geometries[GeomResizeU],
 				     module, this, PickResizeU);
    picks[PickResizeU]->set_highlight(DefaultHighlightMaterial);
    resulr->add(picks[PickResizeU]);
-   geometries[GeomResizeD] = new GeomCappedCylinder;
-   picks[PickResizeD] = new GeomPick(geometries[GeomResizeD],
+   geometries[GeomResizeD] = scinew GeomCappedCylinder;
+   picks[PickResizeD] = scinew GeomPick(geometries[GeomResizeD],
 				     module, this, PickResizeD);
    picks[PickResizeD]->set_highlight(DefaultHighlightMaterial);
    resulr->add(picks[PickResizeD]);
-   geometries[GeomResizeR] = new GeomCappedCylinder;
-   picks[PickResizeR] = new GeomPick(geometries[GeomResizeR],
+   geometries[GeomResizeR] = scinew GeomCappedCylinder;
+   picks[PickResizeR] = scinew GeomPick(geometries[GeomResizeR],
 				     module, this, PickResizeR);
    picks[PickResizeR]->set_highlight(DefaultHighlightMaterial);
    resulr->add(picks[PickResizeR]);
-   materials[ResizeMatl] = new GeomMaterial(resulr, DefaultResizeMaterial);
+   materials[ResizeMatl] = scinew GeomMaterial(resulr, DefaultResizeMaterial);
 
-   GeomGroup* w = new GeomGroup;
+   GeomGroup* w = scinew GeomGroup;
    w->add(materials[PointMatl]);
    w->add(materials[HalfResizeMatl]);
    w->add(materials[ResizeMatl]);
    CreateModeSwitch(1, w);
 
-   geometries[GeomSlider] = new GeomCappedCylinder;
-   picks[PickSlider] = new GeomPick(geometries[GeomSlider], module, this,
+   geometries[GeomSlider] = scinew GeomCappedCylinder;
+   picks[PickSlider] = scinew GeomPick(geometries[GeomSlider], module, this,
 				    PickSlider);
    picks[PickSlider]->set_highlight(DefaultHighlightMaterial);
-   materials[SliderMatl] = new GeomMaterial(picks[PickSlider], DefaultSliderMaterial);
+   materials[SliderMatl] = scinew GeomMaterial(picks[PickSlider], DefaultSliderMaterial);
    CreateModeSwitch(2, materials[SliderMatl]);
 
    SetMode(Mode0, Switch0|Switch1|Switch2);
@@ -325,7 +326,7 @@ RingWidget::geom_moved( GeomPick*, int axis, double dist,
       MoveDelta(delta);
       break;
    }
-   execute();
+   execute(0);
 }
 
 
@@ -337,7 +338,7 @@ RingWidget::MoveDelta( const Vector& delta )
    variables[CenterVar]->MoveDelta(delta);
    variables[SliderVar]->MoveDelta(delta);
 
-   execute();
+   execute(1);
 }
 
 
@@ -357,7 +358,7 @@ RingWidget::SetPosition( const Point& center, const Vector& normal, const Real r
    variables[PointRVar]->Move(center+v1*radius);
    variables[PointDVar]->Set(center+v2*radius);
 
-   execute();
+   execute(0);
 }
 
 
@@ -378,7 +379,7 @@ RingWidget::SetRatio( const Real ratio )
    ASSERT((ratio>=0.0) && (ratio<=1.0));
    variables[AngleVar]->Set(ratio*2.0*Pi - Pi);
 
-   execute();
+   execute(0);
 }
 
 
@@ -406,7 +407,7 @@ RingWidget::SetRadius( const Real radius )
 
    variables[DistVar]->Set(variables[DistVar]->real()*ratio); // This should set the slider...
 
-   execute();
+   execute(0);
 }
 
 

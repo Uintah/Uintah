@@ -14,10 +14,11 @@
 #include <Datatypes/TriSurface.h>
 #include <Classlib/Assert.h>
 #include <Classlib/NotFinished.h>
+#include <Classlib/TrivialAllocator.h>
+#include <Geometry/BBox.h>
 #include <Geometry/Grid.h>
 #include <Math/MiscMath.h>
-#include <Geometry/BBox.h>
-#include <Classlib/TrivialAllocator.h>
+#include <Malloc/Allocator.h>
 
 static TrivialAllocator TSElement_alloc(sizeof(TSElement));
 
@@ -33,7 +34,7 @@ void TSElement::operator delete(void* rp, size_t)
 
 static Persistent* make_TriSurface()
 {
-    return new TriSurface;
+    return scinew TriSurface;
 }
 
 PersistentTypeID TriSurface::type_id("TriSurface", "Surface", make_TriSurface);
@@ -91,7 +92,7 @@ int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
     BBox bb;
     bb.extend(p1); bb.extend(p2); bb.extend(p3);
 
-    TriSurface* surf=new TriSurface;
+    TriSurface* surf=scinew TriSurface;
     surf->construct_grid(grid->dim1(), grid->dim2(), grid->dim3(), 
 			 grid->get_min(), grid->get_spacing());
     surf->add_point(p1);
@@ -186,7 +187,7 @@ void TriSurface::construct_grid(int xdim, int ydim, int zdim,
 				const Point &min, double spacing) {
     remove_empty_index();
     if (grid) delete grid;
-    grid = new Grid(xdim, ydim, zdim, min, spacing);
+    grid = scinew Grid(xdim, ydim, zdim, min, spacing);
     for (int i=0; i<elements.size(); i++)
 	grid->add_triangle(i, points[elements[i]->i1],
 			   points[elements[i]->i2], points[elements[i]->i3]);
@@ -202,7 +203,7 @@ void TriSurface::construct_hash(int xdim, int ydim, const Point &p, double res) 
     if (pntHash) {
 	delete pntHash;
     }
-    pntHash = new HashTable<int, int>;
+    pntHash = scinew HashTable<int, int>;
     for (int i=0; i<points.size(); i++) {
 	int val=(Round((points[i].z()-p.z())/res)*ydim+
 		 Round((points[i].y()-p.y())/res))*xdim+
@@ -545,7 +546,7 @@ void Pio(Piostream& stream, TSElement*& data)
 
 Surface* TriSurface::clone()
 {
-    return new TriSurface(*this);
+    return scinew TriSurface(*this);
 }
 
 void TriSurface::construct_grid()

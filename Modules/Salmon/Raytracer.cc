@@ -20,6 +20,7 @@
 #include <Geom/Lighting.h>
 #include <Geom/Light.h>
 #include <Geometry/Ray.h>
+#include <Malloc/Allocator.h>
 #include <Math/Trig.h>
 #include <strstream.h>
 
@@ -27,7 +28,7 @@ const int STRINGSIZE=200;
 
 static Renderer* make_Raytracer()
 {
-    return new Raytracer;
+    return scinew Raytracer;
 }
 
 static int query_Raytracer()
@@ -42,7 +43,7 @@ Raytracer::Raytracer()
 {
     max_level=3;
     min_weight=0.01;
-    strbuf=new char[STRINGSIZE];
+    strbuf=scinew char[STRINGSIZE];
 }
 
 Raytracer::~Raytracer()
@@ -102,7 +103,7 @@ void Raytracer::redraw(Salmon* _salmon, Roe* _roe)
     v*=width;
 
     topmatl=salmon->default_matl;
-    Color* scanline=new Color[xres];
+    Color* scanline=scinew Color[xres];
 
     // Preprocess the scene
     topobj->preprocess();

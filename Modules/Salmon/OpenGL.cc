@@ -22,6 +22,7 @@
 #include <Geom/GeomOpenGL.h>
 #include <Geom/RenderMode.h>
 #include <Geom/Light.h>
+#include <Malloc/Allocator.h>
 #include <Math/Trig.h>
 #include <TCL/TCLTask.h>
 #include <tcl/tcl/tcl.h>
@@ -72,7 +73,7 @@ extern Tcl_Interp* the_interp;
 
 static Renderer* make_OpenGL()
 {
-    return new OpenGL;
+    return scinew OpenGL;
 }
 
 static int query_OpenGL()
@@ -89,8 +90,8 @@ RegisterRenderer OpenGL_renderer("OpenGL", &query_OpenGL, &make_OpenGL);
 OpenGL::OpenGL()
 : tkwin(0)
 {
-    strbuf=new char[STRINGSIZE];
-    drawinfo=new DrawInfoOpenGL;
+    strbuf=scinew char[STRINGSIZE];
+    drawinfo=scinew DrawInfoOpenGL;
     fpstimer.start();
 }
 
@@ -414,7 +415,7 @@ void OpenGL::dump_image(const clString& name) {
     GLint vp[4];
     glGetIntegerv(GL_VIEWPORT,vp);
     int n=3*vp[2]*vp[3];
-    unsigned char* pxl=new unsigned char[n];
+    unsigned char* pxl=scinew unsigned char[n];
     glReadBuffer(GL_FRONT);
     glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
     dumpfile.write(pxl,n);
@@ -423,7 +424,7 @@ void OpenGL::dump_image(const clString& name) {
 
 void OpenGL::put_scanline(int y, int width, Color* scanline, int repeat)
 {
-    float* pixels=new float[width*3];
+    float* pixels=scinew float[width*3];
     float* p=pixels;
     for(int i=0;i<width;i++){
 	*p++=scanline[i].r();

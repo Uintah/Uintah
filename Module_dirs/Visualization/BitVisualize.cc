@@ -34,6 +34,7 @@
 #include <Geom/Group.h>
 #include <Geom/Material.h>
 #include <Geom/Tri.h>
+#include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 #include <iostream.h>
 #include <strstream.h>
@@ -93,7 +94,7 @@ struct MCubeTable {
 
 static Module* make_BitVisualize(const clString& id)
 {
-    return new BitVisualize(id);
+    return scinew BitVisualize(id);
 }
 
 static RegisterModule db1("Fields", "BitVisualize", make_BitVisualize);
@@ -104,10 +105,10 @@ BitVisualize::BitVisualize(const clString& id)
   show_progress("show_progress", id, this)
 {
     // Create the input ports
-    infield=new ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);
+    infield=scinew ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);
     add_iport(infield);
     // Create the output port
-    ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+    ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
     last_emit_surf=0;
     groups.resize(NUM_MATERIALS);
@@ -115,21 +116,21 @@ BitVisualize::BitVisualize(const clString& id)
     surfs.resize(NUM_MATERIALS);
     surf_hands.resize(NUM_MATERIALS);
     for (int i=0; i<NUM_MATERIALS; i++) {
-	osurfs.add(new SurfaceOPort(this, "Surface", SurfaceIPort::Atomic));
+	osurfs.add(scinew SurfaceOPort(this, "Surface", SurfaceIPort::Atomic));
 	surf_hands[i]=surfs[i]=0;
 	add_oport(osurfs[i]);
 	geom_allocated.add(0);
 	calc_mat.add(0);
 	BitVisualize_id.add(0);
-	surfs.add(new TriSurface);
+	surfs.add(scinew TriSurface);
 	clString str;
 	str = "iso" + to_string(i+1);
-	isovals.add(new TCLint(str, id, this));
+	isovals.add(scinew TCLint(str, id, this));
 	isovals[i]->set(0);
 	int r=(i+1)%2;		// 1 0 1 0 1 0
 	int g=(((i+2)/3)%2);	// 0 1 1 1 0 0
 	int b=((i/3)%2);	// 0 0 0 1 1 1
-	matls.add(new Material(Color(0,0,0), Color(r*.6, g*.6, b*.6), 
+	matls.add(scinew Material(Color(0,0,0), Color(r*.6, g*.6, b*.6), 
 			       Color(r*.5, g*.5, b*.5), 20));
     }	
 }
@@ -147,7 +148,7 @@ BitVisualize::~BitVisualize()
 
 Module* BitVisualize::clone(int deep)
 {
-    return new BitVisualize(*this, deep);
+    return scinew BitVisualize(*this, deep);
 }
 
 void BitVisualize::execute()
@@ -169,8 +170,8 @@ void BitVisualize::execute()
 		    } else {			    //     not allocated
 			geom_allocated[i]=1; 	    // 	      MARK as ALLOCED
 		    }
-		    groups[i]=new GeomGroup;	    //	   ALLOCATE THEM
-		    geomPts[i]=new GeomPts(10000);
+		    groups[i]=scinew GeomGroup;	    //	   ALLOCATE THEM
+		    geomPts[i]=scinew GeomPts(10000);
 		    calc_mat[i]=1;		    //	   *Calculate mat.*
 		} else {			    //   don't want material...
 		    if (geom_allocated[i]) {	    //     it's allocated...
@@ -185,8 +186,8 @@ void BitVisualize::execute()
 			calc_mat[i]=0;		    //	      *Don't calc. mat*
 		    } else {			    //	   not allocated
 			geom_allocated[i]=1;	    //	      MARK
-			groups[i]=new GeomGroup;    //	      ALLOCATE THEM
-			geomPts[i]=new GeomPts(10000);
+			groups[i]=scinew GeomGroup;    //	      ALLOCATE THEM
+			geomPts[i]=scinew GeomPts(10000);
 			calc_mat[i]=1;		    //	      *Calcluate mat*
 		    }		
 		} else {			    //   don't want material
@@ -202,7 +203,7 @@ void BitVisualize::execute()
 	for (i=0; i<NUM_MATERIALS; i++) {
 	    if (calc_mat[i]) {
 		groups[i]->add(geomPts[i]);
-		GeomObj* topobj=new GeomMaterial(groups[i], matls[i]);
+		GeomObj* topobj=scinew GeomMaterial(groups[i], matls[i]);
 		clString nm = "Material " + to_string(i+1);
 		BitVisualize_id[i] = ogeom->addObj(topobj, nm);
 	    }
@@ -281,7 +282,7 @@ void BitVisualize::iso_reg_grid(ScalarFieldRG* field) {
     for (int i=0; i<NUM_MATERIALS; i++) {
 	if (calc_mat[i]) {
 	    surf_hands[i]=surfs[i]=0;
-	    surf_hands[i]=surfs[i]=new TriSurface();
+	    surf_hands[i]=surfs[i]=scinew TriSurface();
 	    surfs[i]->points.grow(1000);
 	    surfs[i]->points.grow(-1000);
 	    surfs[i]->elements.grow(1000);

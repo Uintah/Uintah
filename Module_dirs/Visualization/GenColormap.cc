@@ -17,6 +17,7 @@
 #include <Datatypes/ColormapPort.h>
 #include <Datatypes/Colormap.h>
 #include <Geom/Material.h>
+#include <Malloc/Allocator.h>
 #include <Math/CatmullRomSpline.h>
 
 #include <TCL/TCLvar.h>
@@ -166,7 +167,7 @@ MaterialKey::operator=( const Material& m )
 static Module*
 make_GenColormap( const clString& id )
 {
-    return new GenColormap(id);
+    return scinew GenColormap(id);
 }
 
 static RegisterModule db1("Visualization", "GenColormap", make_GenColormap);
@@ -183,7 +184,7 @@ GenColormap::GenColormap( const clString& id )
    spline.setData(keys);
    
    // Create the output port
-   outport=new ColormapOPort(this, "Colormap", ColormapIPort::Atomic);
+   outport=scinew ColormapOPort(this, "Colormap", ColormapIPort::Atomic);
    add_oport(outport);
 
 }
@@ -204,7 +205,7 @@ GenColormap::~GenColormap()
 Module*
 GenColormap::clone( int deep )
 {
-    return new GenColormap(*this, deep);
+    return scinew GenColormap(*this, deep);
 }
 
 void
@@ -392,9 +393,9 @@ void
 GenColormap::execute()
 {
    int nl(nlevels.get()-1);
-   ColormapHandle cmap(new Colormap(nl+1, 0, 1));
+   ColormapHandle cmap(scinew Colormap(nl+1, 0, 1));
    for(int i=0;i<=nl;i++){
-      cmap->colors[i]=new Material(find_level(i/(double)nl));
+      cmap->colors[i]=scinew Material(find_level(i/(double)nl));
    }
    outport->send(cmap);
 }

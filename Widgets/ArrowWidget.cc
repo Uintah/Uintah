@@ -16,6 +16,7 @@
 #include <Geom/Cone.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Sphere.h>
+#include <Malloc/Allocator.h>
 
 const Index NumCons = 0;
 const Index NumVars = 1;
@@ -33,19 +34,19 @@ ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scal
 : BaseWidget(module, lock, "ArrowWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   direction(0, 0, 1)
 {
-   variables[PointVar] = new PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
+   variables[PointVar] = scinew PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
 
-   GeomGroup* arr = new GeomGroup;
-   geometries[GeomPoint] = new GeomSphere;
-   materials[PointMatl] = new GeomMaterial(geometries[GeomPoint], DefaultPointMaterial);
+   GeomGroup* arr = scinew GeomGroup;
+   geometries[GeomPoint] = scinew GeomSphere;
+   materials[PointMatl] = scinew GeomMaterial(geometries[GeomPoint], DefaultPointMaterial);
    arr->add(materials[PointMatl]);
-   geometries[GeomShaft] = new GeomCylinder;
-   materials[ShaftMatl] = new GeomMaterial(geometries[GeomShaft], DefaultEdgeMaterial);
+   geometries[GeomShaft] = scinew GeomCylinder;
+   materials[ShaftMatl] = scinew GeomMaterial(geometries[GeomShaft], DefaultEdgeMaterial);
    arr->add(materials[ShaftMatl]);
-   geometries[GeomHead] = new GeomCappedCone;
-   materials[HeadMatl] = new GeomMaterial(geometries[GeomHead], DefaultEdgeMaterial);
+   geometries[GeomHead] = scinew GeomCappedCone;
+   materials[HeadMatl] = scinew GeomMaterial(geometries[GeomHead], DefaultEdgeMaterial);
    arr->add(materials[HeadMatl]);
-   picks[Pick] = new GeomPick(arr, module, this, Pick);
+   picks[Pick] = scinew GeomPick(arr, module, this, Pick);
    picks[Pick]->set_highlight(DefaultHighlightMaterial);
    CreateModeSwitch(0, picks[Pick]);
 
@@ -93,7 +94,7 @@ ArrowWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
 	MoveDelta(delta);
 	break;
     }
-    execute();
+    execute(0);
 }
 
 
@@ -102,7 +103,7 @@ ArrowWidget::MoveDelta( const Vector& delta )
 {
    variables[PointVar]->MoveDelta(delta);
 
-   execute();
+   execute(1);
 }
 
 
@@ -118,7 +119,7 @@ ArrowWidget::SetPosition( const Point& p )
 {
    variables[PointVar]->Move(p);
 
-   execute();
+   execute(0);
 }
 
 
@@ -134,7 +135,7 @@ ArrowWidget::SetDirection( const Vector& v )
 {
    direction = v;
 
-   execute();
+   execute(0);
 }
 
 

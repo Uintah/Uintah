@@ -74,7 +74,7 @@ public:
     virtual void geom_pick(GeomPick*, void*);
     virtual void geom_release(GeomPick*, void*);
     virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
-    virtual void widget_moved();
+    virtual void widget_moved(int);
 
     // Port manipulations
     void add_iport(IPort*);

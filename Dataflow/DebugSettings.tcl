@@ -19,7 +19,7 @@ proc showDebugSettings {} {
 	wm minsize .dsw 100 100
 	set DebugSettings_window .dsw
 
-	canvas .dsw.canvas -yscroll ".dsw.scroll set" -borderwidth 0 \
+	canvas .dsw.canvas -yscrollcommand ".dsw.scroll set" -borderwidth 0 \
 		-scrollregion {0c 0c 8c 50c} \
 		-width 8c -height 8c
 	pack .dsw.canvas -side left -padx 2 -pady 2 -fill both -expand yes

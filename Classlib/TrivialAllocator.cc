@@ -13,6 +13,7 @@
  */
 
 #include <Classlib/TrivialAllocator.h>
+#include <Malloc/Allocator.h>
 
 #define PAGESIZE 8176  // Leave some room for malloc's overhead
 
@@ -37,7 +38,7 @@ void* TrivialAllocator::alloc()
     lock.lock();
     List* p=freelist;
     if(!p){
-	List* q=(List*)new char[alloc_size];
+	List* q=(List*)scinew char[alloc_size];
 	q->next=chunklist;
 	chunklist=q;
 	q++;

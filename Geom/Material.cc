@@ -13,10 +13,11 @@
 
 #include <Geom/Material.h>
 #include <Classlib/String.h>
+#include <Malloc/Allocator.h>
 
 static Persistent* make_Material()
 {
-    return new Material;
+    return scinew Material;
 }
 
 PersistentTypeID Material::type_id("Material", "Persistent", make_Material);
@@ -64,7 +65,7 @@ Material& Material::operator=(const Material& copy)
 
 Material* Material::clone()
 {
-    return new Material(*this);
+    return scinew Material(*this);
 }
 
 #define MATERIAL_VERSION 1
@@ -108,7 +109,7 @@ GeomMaterial::~GeomMaterial()
 
 GeomObj* GeomMaterial::clone()
 {
-    return new GeomMaterial(*this);
+    return scinew GeomMaterial(*this);
 }
 
 void GeomMaterial::make_prims(Array1<GeomObj*>& free,

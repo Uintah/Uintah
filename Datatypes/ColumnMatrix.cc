@@ -14,6 +14,7 @@
 #include <Datatypes/ColumnMatrix.h>
 #include <Classlib/Assert.h>
 #include <Classlib/NotFinished.h>
+#include <Malloc/Allocator.h>
 #include <Math/Expon.h>
 #include <iostream.h>
 
@@ -22,20 +23,20 @@ PersistentTypeID ColumnMatrix::type_id("ColumnMatrix", "Datatype", 0);
 ColumnMatrix::ColumnMatrix(int rows)
 : rows(rows)
 {
-    data=new double[rows];
+    data=scinew double[rows];
 }
 
 ColumnMatrix::ColumnMatrix(const ColumnMatrix& c)
 : rows(c.rows)
 {
-    data=new double[rows];
+    data=scinew double[rows];
     for(int i=0;i<rows;i++)
 	data[i]=c.data[i];
 }
 
 ColumnMatrix* ColumnMatrix::clone()
 {
-    return new ColumnMatrix(*this);
+    return scinew ColumnMatrix(*this);
 }
 
 ColumnMatrix& ColumnMatrix::operator=(const ColumnMatrix& c)
@@ -43,7 +44,7 @@ ColumnMatrix& ColumnMatrix::operator=(const ColumnMatrix& c)
     if(rows != c.rows){
 	if(data)delete[] data;
 	rows=c.rows;
-	data=new double[rows];
+	data=scinew double[rows];
     }
     for(int i=0;i<rows;i++)
 	data[i]=c.data[i];

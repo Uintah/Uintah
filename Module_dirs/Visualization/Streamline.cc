@@ -53,6 +53,7 @@ hook up user interface buttons
 #include <Geom/Switch.h>
 #include <Geom/Tube.h>
 #include <Geometry/Point.h>
+#include <Malloc/Allocator.h>
 #include <Widgets/GaugeWidget.h>
 #include <Widgets/PointWidget.h>
 #include <Widgets/RingWidget.h>
@@ -237,7 +238,7 @@ public:
 
 static Module* make_Streamline(const clString& id)
 {
-    return new Streamline(id);
+    return scinew Streamline(id);
 }
 
 static RegisterModule db1("Fields", "Streamline", make_Streamline);
@@ -250,17 +251,17 @@ Streamline::Streamline(const clString& id)
 : Module(module_name, id, Filter), first_execute(1)
 {
     // Create the input ports
-    infield=new VectorFieldIPort(this, "Vector Field",
+    infield=scinew VectorFieldIPort(this, "Vector Field",
 				 ScalarFieldIPort::Atomic);
     add_iport(infield);
-    incolorfield=new ScalarFieldIPort(this, "Color Field",
+    incolorfield=scinew ScalarFieldIPort(this, "Color Field",
 				      ScalarFieldIPort::Atomic);
     add_iport(incolorfield);
-    incolormap=new ColormapIPort(this, "Colormap", ColormapIPort::Atomic);
+    incolormap=scinew ColormapIPort(this, "Colormap", ColormapIPort::Atomic);
     add_iport(incolormap);
 
     // Create the output port
-    ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+    ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 }
 
@@ -276,7 +277,7 @@ Streamline::~Streamline()
 
 Module* Streamline::clone(int deep)
 {
-    return new Streamline(*this, deep);
+    return scinew Streamline(*this, deep);
 }
 
 void Streamline::execute()
@@ -337,7 +338,7 @@ void Streamline::execute()
 	    error("Error reading anim_timesteps variable");
 	    return;
 	}
-	GeomGroup* group=new GeomGroup;
+	GeomGroup* group=scinew GeomGroup;
 	si->make_anim_groups(animation, group, maxsteps*stepsize,
 			     anim_timesteps);
 
@@ -420,9 +421,9 @@ SLTracer* Streamline::make_tracer(const Point& start,
 {
     switch(alg_enum){
     case Euler:
-	return new SLEulerTracer(start, s, t, vfield);
+	return scinew SLEulerTracer(start, s, t, vfield);
     case RK4:
-	return new SLRK4Tracer(start, s, t, vfield);
+	return scinew SLRK4Tracer(start, s, t, vfield);
     }
     return 0;
 }
@@ -487,9 +488,9 @@ void SLSourceInfo::make_anim_groups(const clString& animation, GeomGroup* top,
 		tbeg=double(i)/double(anim_steps)*total_time;
 		tend=1.e100;
 	    }
-	    GeomGroup* timegroup=new GeomGroup;
+	    GeomGroup* timegroup=scinew GeomGroup;
 	    anim_groups.add(timegroup);
-	    GeomTimeSwitch* timeswitch=new GeomTimeSwitch(timegroup, tbeg, tend);
+	    GeomTimeSwitch* timeswitch=scinew GeomTimeSwitch(timegroup, tbeg, tend);
 	    top->add(timeswitch);
 	}
     }
@@ -503,10 +504,10 @@ GeomVertex* Streamline::get_vertex(const Point& p,
 	double sval;
 	if(sfield->interpolate(p, sval)){
 	    MaterialHandle matl(cmap->lookup(sval));
-	    return new GeomMVertex(p, matl);
+	    return scinew GeomMVertex(p, matl);
 	}
     }
-    return new GeomVertex(p);
+    return scinew GeomVertex(p);
 }
 
 GeomVertex* Streamline::get_vertex(const Point& p,
@@ -518,10 +519,10 @@ GeomVertex* Streamline::get_vertex(const Point& p,
 	double sval;
 	if(sfield->interpolate(p, sval)){
 	    MaterialHandle matl(cmap->lookup(sval));
-	    return new GeomNMVertex(p, normal, matl);
+	    return scinew GeomNMVertex(p, normal, matl);
 	}
     }
-    return new GeomNVertex(p, normal);
+    return scinew GeomNVertex(p, normal);
 }
 
 void Streamline::do_streamline(SLSourceInfo* si,
@@ -547,7 +548,7 @@ void Streamline::do_streamline(SLSourceInfo* si,
 	    group=newgroup;
 	    for(int i=0;i<lines.size();i++){
 		if(tracers[i]->inside){
-		    lines[i]=new GeomPolyline;
+		    lines[i]=scinew GeomPolyline;
 		    group->add(lines[i]);
 		    GeomVertex* vtx=get_vertex(tracers[i]->p, sfield, cmap);
 		    lines[i]->add(vtx);
@@ -595,7 +596,7 @@ void Streamline::do_streamtube(SLSourceInfo* si,
 	    group=newgroup;
 	    for(int i=0;i<tubes.size();i++){
 		if(tracers[i]->inside){
-		    tubes[i]=new GeomTube;
+		    tubes[i]=scinew GeomTube;
 		    group->add(tubes[i]);
 		    Vector grad=tracers[i]->grad;
 		    field->interpolate(tracers[i]->p, grad);
@@ -649,7 +650,7 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 	    for(int i=0;i<ribbons.size();i++){
 		if(left_tracer(tracers, i)->inside
 		   && right_tracer(tracers, i)->inside){
-		    ribbons[i]=new GeomTriStrip;
+		    ribbons[i]=scinew GeomTriStrip;
 		    group->add(ribbons[i]);
 		    // Compute vector between points
 		    Point p1(left_tracer(tracers, i)->p);
@@ -750,7 +751,7 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
 	    for(int i=0;i<surfs.size();i++){
 		if( (newgroup != group || !surfs[i]) &&
 		   tracers[i]->inside && tracers[i+1]->inside){
-		    surfs[i]=new GeomTriStrip;
+		    surfs[i]=scinew GeomTriStrip;
 		    group->add(surfs[i]);
 		    // Compute vector between points
 		    Point p1(tracers[i]->p);
@@ -918,7 +919,7 @@ void SLSource::deselect()
 SLPointSource::SLPointSource(Streamline* sl)
 : SLSource(sl, "Point")
 {
-    widget=pw=new PointWidget(sl, &sl->widget_lock, 1);
+    widget=pw=scinew PointWidget(sl, &sl->widget_lock, 1);
 }
 
 SLPointSource::~SLPointSource()
@@ -958,7 +959,7 @@ Vector SLPointSource::ribbon_direction(double, double,
 SLLineSource::SLLineSource(Streamline* sl)
 : SLSource(sl, "Line")
 {
-    widget=gw=new GaugeWidget(sl, &sl->widget_lock, 1);
+    widget=gw=scinew GaugeWidget(sl, &sl->widget_lock, 1);
 }
 
 SLLineSource::~SLLineSource()
@@ -1010,7 +1011,7 @@ Vector SLLineSource::ribbon_direction(double, double,
 SLRingSource::SLRingSource(Streamline* sl)
 : SLSource(sl, "Ring")
 {
-    widget=rw=new RingWidget(sl, &sl->widget_lock, 1);
+    widget=rw=scinew RingWidget(sl, &sl->widget_lock, 1);
 }
 
 SLRingSource::~SLRingSource()
@@ -1152,11 +1153,11 @@ SLSourceInfo::SLSourceInfo(int sid, Streamline* module, GeometryOPort* ogeom)
 : sid(sid), widget_group(0), widget_geomid(0), geomid(0),
   source(0), need_find(1)
 {
-    sources.add(new SLPointSource(module));
-    sources.add(new SLLineSource(module));
-    sources.add(new SLRingSource(module));
+    sources.add(scinew SLPointSource(module));
+    sources.add(scinew SLLineSource(module));
+    sources.add(scinew SLRingSource(module));
     // Make the group;
-    widget_group=new GeomGroup;
+    widget_group=scinew GeomGroup;
     for(int i=0;i<sources.size();i++)
 	widget_group->add(sources[i]->widget->GetWidget());
     widget_geomid=ogeom->addObj(widget_group,

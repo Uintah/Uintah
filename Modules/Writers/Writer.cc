@@ -17,6 +17,7 @@
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/TYPEPort.h>
 #include <Datatypes/TYPE.h>
+#include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 
 class TYPEWriter : public Module {
@@ -33,7 +34,7 @@ public:
 
 static Module* make_TYPEWriter(const clString& id)
 {
-    return new TYPEWriter(id);
+    return scinew TYPEWriter(id);
 }
 
 #include "TYPERegister.h"
@@ -43,7 +44,7 @@ TYPEWriter::TYPEWriter(const clString& id)
   filetype("filetype", id, this)
 {
     // Create the output data handle and port
-    inport=new TYPEIPort(this, "Input Data", TYPEIPort::Atomic);
+    inport=scinew TYPEIPort(this, "Input Data", TYPEIPort::Atomic);
     add_iport(inport);
 }
 
@@ -60,7 +61,7 @@ TYPEWriter::~TYPEWriter()
 
 Module* TYPEWriter::clone(int deep)
 {
-    return new TYPEWriter(*this, deep);
+    return scinew TYPEWriter(*this, deep);
 }
 
 static void watcher(double pd, void* cbdata)
@@ -80,9 +81,9 @@ void TYPEWriter::execute()
     Piostream* stream;
     clString ft(filetype.get());
     if(ft=="Binary"){
-	stream=new BinaryPiostream(fn, Piostream::Write);
+	stream=scinew BinaryPiostream(fn, Piostream::Write);
     } else {
-	stream=new TextPiostream(fn, Piostream::Write);
+	stream=scinew TextPiostream(fn, Piostream::Write);
     }
     // Write the file
     //stream->watch_progress(watcher, (void*)this);

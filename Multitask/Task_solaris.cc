@@ -67,9 +67,9 @@ void Task::activate(int task_arg)
 	cerr << "Error: task is being activated twice!" << endl;
 	exit(-1);
     }
-    priv=new TaskPrivate;
+    priv=scinew TaskPrivate;
     if(multi_threaded.is_set()){
-	TaskArgs* args=new TaskArgs;
+	TaskArgs* args=scinew TaskArgs;
 	args->arg=task_arg;
 	args->t=this;
 	if(thr_create(NULL, 0, runbody, (void*)args,
@@ -158,7 +158,7 @@ struct Mutex_private {
 Mutex::Mutex(int always)
 {
     if(always || multi_threaded.is_set()){
-	priv=new Mutex_private;
+	priv=scinew Mutex_private;
 	if(mutex_init(&priv->mutex, USYNC_THREAD, 0) != 0){
 	    perror("mutex_init");
 	    exit(-1);	
@@ -210,7 +210,7 @@ struct Semaphore_private {
 Semaphore::Semaphore(int count)
 {
     if(multi_threaded.is_set()){
-	priv=new Semaphore_private;
+	priv=scinew Semaphore_private;
 	if(sema_init(&priv->semaphore, count, USYNC_THREAD, 0) != 0){
 	    perror("sema_init");
 	    exit(-1);	
@@ -262,7 +262,7 @@ struct ConditionVariable_private {
 ConditionVariable::ConditionVariable()
 {
     if(multi_threaded.is_set()){
-	priv=new ConditionVariable_private;
+	priv=scinew ConditionVariable_private;
 	if(cond_init(&priv->condition, USYNC_THREAD, 0) != 0){
 	    perror("cond_init");
 	    exit(-1);

@@ -22,6 +22,7 @@
 #include <Datatypes/Mesh.h>
 #include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
+#include <Malloc/Allocator.h>
 
 class BuildFEMatrix : public Module {
     MeshIPort* inmesh;
@@ -39,7 +40,7 @@ public:
 
 static Module* make_BuildFEMatrix(const clString& id)
 {
-    return new BuildFEMatrix(id);
+    return scinew BuildFEMatrix(id);
 }
 
 static RegisterModule db1("Matrix", "BuildFEMatrix", make_BuildFEMatrix);
@@ -48,17 +49,17 @@ BuildFEMatrix::BuildFEMatrix(const clString& id)
 : Module("BuildFEMatrix", id, Filter)
 {
     // Create the input port
-    inmesh = new MeshIPort(this, "Mesh", MeshIPort::Atomic);
+    inmesh = scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
     add_iport(inmesh);
 
     // Create the output ports
-    outmatrix=new MatrixOPort(this, "FEM Matrix", MatrixIPort::Atomic);
+    outmatrix=scinew MatrixOPort(this, "FEM Matrix", MatrixIPort::Atomic);
     add_oport(outmatrix);
-    rhsoport=new ColumnMatrixOPort(this, "RHS", ColumnMatrixIPort::Atomic);
+    rhsoport=scinew ColumnMatrixOPort(this, "RHS", ColumnMatrixIPort::Atomic);
     add_oport(rhsoport);
 
     // Ask Dave about why this was different originally
-    // i.e. it was add_iport(new MeshIPort(this,"Geometry",...));
+    // i.e. it was add_iport(scinew MeshIPort(this,"Geometry",...));
 }
 
 BuildFEMatrix::BuildFEMatrix(const BuildFEMatrix& copy, int deep)
@@ -73,7 +74,7 @@ BuildFEMatrix::~BuildFEMatrix()
 
 Module* BuildFEMatrix::clone(int deep)
 {
-    return new BuildFEMatrix(*this, deep);
+    return scinew BuildFEMatrix(*this, deep);
 }
 
 void BuildFEMatrix::execute()
@@ -110,9 +111,9 @@ void BuildFEMatrix::execute()
 	 }
      }
      rows[r]=cols.size();
-     Matrix* gbl_matrix=new SymSparseRowMatrix(ndof, ndof, rows, cols);
+     Matrix* gbl_matrix=scinew SymSparseRowMatrix(ndof, ndof, rows, cols);
      gbl_matrix->zero();
-     ColumnMatrix* rhs=new ColumnMatrix(ndof);
+     ColumnMatrix* rhs=scinew ColumnMatrix(ndof);
      rhs->zero();
      DenseMatrix lcl_matrix(4, 4);
 

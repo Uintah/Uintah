@@ -18,6 +18,7 @@
 #include <Datatypes/Colormap.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/ScalarField.h>
+#include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 
 class RescaleColormap : public Module {
@@ -34,7 +35,7 @@ public:
 
 static Module* make_RescaleColormap(const clString& id)
 {
-    return new RescaleColormap(id);
+    return scinew RescaleColormap(id);
 }
 
 static RegisterModule db1("Visualization", "RescaleColormap", make_RescaleColormap);
@@ -43,13 +44,13 @@ RescaleColormap::RescaleColormap(const clString& id)
 : Module("RescaleColormap", id, Filter)
 {
     // Create the output port
-    omap=new ColormapOPort(this, "Colormap", ColormapIPort::Atomic);
+    omap=scinew ColormapOPort(this, "Colormap", ColormapIPort::Atomic);
     add_oport(omap);
 
     // Create the input ports
-    imap=new ColormapIPort(this, "Colormap", ColormapIPort::Atomic);
+    imap=scinew ColormapIPort(this, "Colormap", ColormapIPort::Atomic);
     add_iport(imap);
-    ifield=new ScalarFieldIPort(this, "ScalarField", ScalarFieldIPort::Atomic);
+    ifield=scinew ScalarFieldIPort(this, "ScalarField", ScalarFieldIPort::Atomic);
     add_iport(ifield);
 }
 
@@ -65,7 +66,7 @@ RescaleColormap::~RescaleColormap()
 
 Module* RescaleColormap::clone(int deep)
 {
-    return new RescaleColormap(*this, deep);
+    return scinew RescaleColormap(*this, deep);
 }
 
 void RescaleColormap::execute()

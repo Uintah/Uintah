@@ -15,6 +15,7 @@
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
+#include <Malloc/Allocator.h>
 
 class ApplyBC : public Module {
     SurfaceIPort* iport;
@@ -29,7 +30,7 @@ public:
 
 static Module* make_ApplyBC(const clString& id)
 {
-    return new ApplyBC(id);
+    return scinew ApplyBC(id);
 }
 
 static RegisterModule db1("Unfinished", "ApplyBC", make_ApplyBC);
@@ -37,10 +38,10 @@ static RegisterModule db1("Unfinished", "ApplyBC", make_ApplyBC);
 ApplyBC::ApplyBC(const clString& id)
 : Module("ApplyBC", id, Filter)
 {
-    iport=new SurfaceIPort(this, "Geometry", SurfaceIPort::Atomic);
+    iport=scinew SurfaceIPort(this, "Geometry", SurfaceIPort::Atomic);
     add_iport(iport);
     // Create the output port
-    oport=new SurfaceOPort(this, "Geometry", SurfaceIPort::Atomic);
+    oport=scinew SurfaceOPort(this, "Geometry", SurfaceIPort::Atomic);
     add_oport(oport);
 }
 
@@ -56,7 +57,7 @@ ApplyBC::~ApplyBC()
 
 Module* ApplyBC::clone(int deep)
 {
-    return new ApplyBC(*this, deep);
+    return scinew ApplyBC(*this, deep);
 }
 
 void ApplyBC::execute()

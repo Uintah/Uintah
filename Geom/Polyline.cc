@@ -30,7 +30,7 @@ GeomPolyline::~GeomPolyline() {
 
 GeomObj* GeomPolyline::clone()
 {
-    return new GeomPolyline(*this);
+    return scinew GeomPolyline(*this);
 }
 
 void GeomPolyline::make_prims(Array1<GeomObj*>&,

@@ -25,6 +25,7 @@
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldUG.h>
 #include <Datatypes/ScalarFieldPort.h>
+#include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 #include <stdio.h>
 
@@ -61,7 +62,7 @@ public:
 
 static Module* make_VectorSeg(const clString& id)
 {
-    return new VectorSeg(id);
+    return scinew VectorSeg(id);
 }
 
 static RegisterModule db2("Visualization", "VectorSeg", make_VectorSeg);
@@ -73,11 +74,11 @@ VectorSeg::VectorSeg(const clString& id)
 {
     myid=id;
     // Create the input port
-    ifields.add(new ScalarFieldIPort(this, "ContourSet", 
+    ifields.add(scinew ScalarFieldIPort(this, "ContourSet", 
 				       ScalarFieldIPort::Atomic));
 
     add_iport(ifields[0]);
-    ofield = new ScalarFieldOPort(this, "Surface", ScalarFieldIPort::Atomic); 
+    ofield = scinew ScalarFieldOPort(this, "Surface", ScalarFieldIPort::Atomic); 
     add_oport(ofield);
     fieldRG=0;
 }
@@ -97,7 +98,7 @@ void VectorSeg::connection(ConnectionMode mode, int which_port,
 	ifields.remove(which_port);
     } else {
 	numFields.set(numFields.get()+1);
-	ScalarFieldIPort* ci=new ScalarFieldIPort(this, "ScalarField", 
+	ScalarFieldIPort* ci=scinew ScalarFieldIPort(this, "ScalarField", 
 						ScalarFieldIPort::Atomic);
 	add_iport(ci);
 	ifields.add(ci);
@@ -118,7 +119,7 @@ VectorSeg::~VectorSeg()
 
 Module* VectorSeg::clone(int deep)
 {
-    return new VectorSeg(*this, deep);
+    return scinew VectorSeg(*this, deep);
 }
 
 void VectorSeg::execute()
@@ -151,7 +152,7 @@ void VectorSeg::execute()
     }
     if (!have_ever_executed || !sameInput.get()) {
 	fieldHndl=fieldRG=0;
-	fieldHndl=fieldRG=new ScalarFieldRG;
+	fieldHndl=fieldRG=scinew ScalarFieldRG;
 	last_min.newsize(numFields.get(), NUM_MATERIALS);
 	last_max.newsize(numFields.get(), NUM_MATERIALS);
 	last_fld_sel.resize(numFields.get());
@@ -166,15 +167,15 @@ void VectorSeg::execute()
 	for (int fld=1; fld<=numFields.get(); fld++) {
 	    clString fldName;
 	    fldName = "f" + to_string(fld);
-	    fld_sel[fld-1]=new TCLint(fldName, myid, this);
+	    fld_sel[fld-1]=scinew TCLint(fldName, myid, this);
 	    last_fld_sel[fld-1]=0;
 	    for (int mat=1; mat<=NUM_MATERIALS; mat++) {
 		clString minName;
 		minName = "f" + to_string(fld)+ "m" + to_string(mat) + "min";
-		min(fld-1,mat-1)=new TCLint(minName, myid, this);
+		min(fld-1,mat-1)=scinew TCLint(minName, myid, this);
 		clString maxName;
 		maxName = "f" + to_string(fld)+ "m" + to_string(mat) + "max";
-		max(fld-1,mat-1)=new TCLint(maxName, myid, this);
+		max(fld-1,mat-1)=scinew TCLint(maxName, myid, this);
 	    }
 	}
 	have_ever_executed=1;

@@ -11,6 +11,7 @@
  */
 
 #include <Classlib/Debug.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 #include <string.h>
 
@@ -24,7 +25,7 @@ DebugSwitch::DebugSwitch(const clString& module, const clString& var)
 	cerr << "DebugSwitch was added after we were already initialized!";
     }
     if(debugs==0){
-	debugs=new Debug;
+	debugs=scinew Debug;
     }
 
     // Init flag
@@ -40,7 +41,7 @@ DebugSwitch::DebugSwitch(const clString& module, const clString& var)
 	return;
     }
 
-    DebugVars* arr=new DebugVars;
+    DebugVars* arr=scinew DebugVars;
     DebugSwitch* that=this;
     arr->add(that);
     debugs->insert(module, arr);

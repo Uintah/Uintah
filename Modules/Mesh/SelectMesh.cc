@@ -18,6 +18,7 @@
 #include <Datatypes/Mesh.h>
 #include <Datatypes/MultiMesh.h>
 #include <Datatypes/MultiMeshPort.h>
+#include <Malloc/Allocator.h>
 #include <Multitask/ITC.h>
 #include <TCL/TCLvar.h>
 
@@ -37,7 +38,7 @@ public:
 
 static Module* make_SelectMesh(const clString& id)
 {
-    return new SelectMesh(id);
+    return scinew SelectMesh(id);
 }
 
 static RegisterModule db1("Mesh", "SelectMesh", make_SelectMesh);
@@ -48,9 +49,9 @@ SelectMesh::SelectMesh(const clString& id)
   total_levels("total_levels", id, this), 
   selected_level("selected_level", id, this)
 {
-    immesh=new MultiMeshIPort(this, "Input MultiMesh",MultiMeshIPort::Atomic);
+    immesh=scinew MultiMeshIPort(this, "Input MultiMesh",MultiMeshIPort::Atomic);
     add_iport(immesh);
-    omesh=new MeshOPort(this, "Output Mesh", MeshIPort::Atomic);
+    omesh=scinew MeshOPort(this, "Output Mesh", MeshIPort::Atomic);
     add_oport(omesh);
 }
 
@@ -68,7 +69,7 @@ SelectMesh::~SelectMesh()
 
 Module* SelectMesh::clone(int deep)
 {
-    return new SelectMesh(*this, deep);
+    return scinew SelectMesh(*this, deep);
 }
 
 void SelectMesh::execute()

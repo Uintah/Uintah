@@ -17,6 +17,7 @@
 #include <Constraints/PythagorasConstraint.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Sphere.h>
+#include <Malloc/Allocator.h>
 
 const Index NumCons = 9;
 const Index NumVars = 10;
@@ -49,18 +50,18 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
   aligned(aligned)
 {
    Real INIT = 5.0*widget_scale;
-   variables[CenterVar] = new PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
-   variables[PointRVar] = new PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
-   variables[PointDVar] = new PointVariable("PntD", solve, Scheme2, Point(0, INIT, 0));
-   variables[PointIVar] = new PointVariable("PntI", solve, Scheme3, Point(0, 0, INIT));
-   variables[DistRVar] = new RealVariable("DISTR", solve, Scheme4, INIT);
-   variables[DistDVar] = new RealVariable("DISTD", solve, Scheme5, INIT);
-   variables[DistIVar] = new RealVariable("DISTI", solve, Scheme6, INIT);
-   variables[HypoRDVar] = new RealVariable("HYPOR", solve, Scheme4, sqrt(2*INIT*INIT));
-   variables[HypoDIVar] = new RealVariable("HYPOD", solve, Scheme5, sqrt(2*INIT*INIT));
-   variables[HypoIRVar] = new RealVariable("HYPOI", solve, Scheme6, sqrt(2*INIT*INIT));
+   variables[CenterVar] = scinew PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
+   variables[PointRVar] = scinew PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
+   variables[PointDVar] = scinew PointVariable("PntD", solve, Scheme2, Point(0, INIT, 0));
+   variables[PointIVar] = scinew PointVariable("PntI", solve, Scheme3, Point(0, 0, INIT));
+   variables[DistRVar] = scinew RealVariable("DISTR", solve, Scheme4, INIT);
+   variables[DistDVar] = scinew RealVariable("DISTD", solve, Scheme5, INIT);
+   variables[DistIVar] = scinew RealVariable("DISTI", solve, Scheme6, INIT);
+   variables[HypoRDVar] = scinew RealVariable("HYPOR", solve, Scheme4, sqrt(2*INIT*INIT));
+   variables[HypoDIVar] = scinew RealVariable("HYPOD", solve, Scheme5, sqrt(2*INIT*INIT));
+   variables[HypoIRVar] = scinew RealVariable("HYPOI", solve, Scheme6, sqrt(2*INIT*INIT));
 
-   constraints[ConstRD] = new DistanceConstraint("ConstRD",
+   constraints[ConstRD] = scinew DistanceConstraint("ConstRD",
 						 NumSchemes,
 						 variables[PointRVar],
 						 variables[PointDVar],
@@ -72,7 +73,7 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
    constraints[ConstRD]->VarChoices(Scheme5, 2, 2, 0);
    constraints[ConstRD]->VarChoices(Scheme6, 2, 2, 0);
    constraints[ConstRD]->Priorities(P_Default, P_Default, P_Default);
-   constraints[ConstPythRD] = new PythagorasConstraint("ConstPythRD",
+   constraints[ConstPythRD] = scinew PythagorasConstraint("ConstPythRD",
 						     NumSchemes,
 						     variables[DistRVar],
 						     variables[DistDVar],
@@ -84,7 +85,7 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
    constraints[ConstPythRD]->VarChoices(Scheme5, 2, 2, 0);
    constraints[ConstPythRD]->VarChoices(Scheme6, 2, 2, 0);
    constraints[ConstPythRD]->Priorities(P_Highest, P_Highest, P_Highest);
-   constraints[ConstDI] = new DistanceConstraint("ConstDI",
+   constraints[ConstDI] = scinew DistanceConstraint("ConstDI",
 						 NumSchemes,
 						 variables[PointDVar],
 						 variables[PointIVar],
@@ -96,7 +97,7 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
    constraints[ConstDI]->VarChoices(Scheme5, 2, 2, 0);
    constraints[ConstDI]->VarChoices(Scheme6, 2, 2, 0);
    constraints[ConstDI]->Priorities(P_Default, P_Default, P_Default);
-   constraints[ConstPythDI] = new PythagorasConstraint("ConstPythDI",
+   constraints[ConstPythDI] = scinew PythagorasConstraint("ConstPythDI",
 						     NumSchemes,
 						     variables[DistDVar],
 						     variables[DistIVar],
@@ -108,7 +109,7 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
    constraints[ConstPythDI]->VarChoices(Scheme5, 2, 2, 0);
    constraints[ConstPythDI]->VarChoices(Scheme6, 2, 2, 0);
    constraints[ConstPythDI]->Priorities(P_Highest, P_Highest, P_Highest);
-   constraints[ConstIR] = new DistanceConstraint("ConstIR",
+   constraints[ConstIR] = scinew DistanceConstraint("ConstIR",
 						 NumSchemes,
 						 variables[PointIVar],
 						 variables[PointRVar],
@@ -120,7 +121,7 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
    constraints[ConstIR]->VarChoices(Scheme5, 2, 2, 0);
    constraints[ConstIR]->VarChoices(Scheme6, 2, 2, 0);
    constraints[ConstIR]->Priorities(P_Default, P_Default, P_Default);
-   constraints[ConstPythIR] = new PythagorasConstraint("ConstPythIR",
+   constraints[ConstPythIR] = scinew PythagorasConstraint("ConstPythIR",
 						     NumSchemes,
 						     variables[DistIVar],
 						     variables[DistRVar],
@@ -132,7 +133,7 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
    constraints[ConstPythIR]->VarChoices(Scheme5, 2, 2, 0);
    constraints[ConstPythIR]->VarChoices(Scheme6, 2, 2, 0);
    constraints[ConstPythIR]->Priorities(P_Highest, P_Highest, P_Highest);
-   constraints[ConstRC] = new DistanceConstraint("ConstRC",
+   constraints[ConstRC] = scinew DistanceConstraint("ConstRC",
 						 NumSchemes,
 						 variables[PointRVar],
 						 variables[CenterVar],
@@ -144,7 +145,7 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
    constraints[ConstRC]->VarChoices(Scheme5, 0, 0, 0);
    constraints[ConstRC]->VarChoices(Scheme6, 0, 0, 0);
    constraints[ConstRC]->Priorities(P_Highest, P_Highest, P_Default);
-   constraints[ConstDC] = new DistanceConstraint("ConstDC",
+   constraints[ConstDC] = scinew DistanceConstraint("ConstDC",
 					       NumSchemes,
 					       variables[PointDVar],
 					       variables[CenterVar],
@@ -156,7 +157,7 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
    constraints[ConstDC]->VarChoices(Scheme5, 2, 2, 2);
    constraints[ConstDC]->VarChoices(Scheme6, 0, 0, 0);
    constraints[ConstDC]->Priorities(P_Highest, P_Highest, P_Default);
-   constraints[ConstIC] = new DistanceConstraint("ConstIC",
+   constraints[ConstIC] = scinew DistanceConstraint("ConstIC",
 					       NumSchemes,
 					       variables[PointIVar],
 					       variables[CenterVar],
@@ -170,40 +171,40 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
    constraints[ConstIC]->Priorities(P_Highest, P_Highest, P_Default);
 
    Index geom, pick;
-   GeomGroup* cyls = new GeomGroup;
+   GeomGroup* cyls = scinew GeomGroup;
    for (geom = SmallSphereIUL; geom <= SmallSphereODL; geom++) {
-      geometries[geom] = new GeomSphere;
+      geometries[geom] = scinew GeomSphere;
       cyls->add(geometries[geom]);
    }
    for (geom = CylIU; geom <= CylOL; geom++) {
-      geometries[geom] = new GeomCylinder;
+      geometries[geom] = scinew GeomCylinder;
       cyls->add(geometries[geom]);
    }
-   picks[PickCyls] = new GeomPick(cyls, module, this, PickCyls);
+   picks[PickCyls] = scinew GeomPick(cyls, module, this, PickCyls);
    picks[PickCyls]->set_highlight(DefaultHighlightMaterial);
-   materials[EdgeMatl] = new GeomMaterial(picks[PickCyls], DefaultEdgeMaterial);
+   materials[EdgeMatl] = scinew GeomMaterial(picks[PickCyls], DefaultEdgeMaterial);
    CreateModeSwitch(0, materials[EdgeMatl]);
 
-   GeomGroup* pts = new GeomGroup;
+   GeomGroup* pts = scinew GeomGroup;
    for (geom = SphereR, pick = PickSphR;
 	geom <= SphereO; geom++, pick++) {
-      geometries[geom] = new GeomSphere;
-      picks[pick] = new GeomPick(geometries[geom], module, this, pick);
+      geometries[geom] = scinew GeomSphere;
+      picks[pick] = scinew GeomPick(geometries[geom], module, this, pick);
       picks[pick]->set_highlight(DefaultHighlightMaterial);
       pts->add(picks[pick]);
    }
-   materials[PointMatl] = new GeomMaterial(pts, DefaultPointMaterial);
+   materials[PointMatl] = scinew GeomMaterial(pts, DefaultPointMaterial);
    CreateModeSwitch(1, materials[PointMatl]);
    
-   GeomGroup* resizes = new GeomGroup;
+   GeomGroup* resizes = scinew GeomGroup;
    for (geom = GeomResizeR, pick = PickResizeR;
 	geom <= GeomResizeO; geom++, pick++) {
-      geometries[geom] = new GeomCappedCylinder;
-      picks[pick] = new GeomPick(geometries[geom], module, this, pick);
+      geometries[geom] = scinew GeomCappedCylinder;
+      picks[pick] = scinew GeomPick(geometries[geom], module, this, pick);
       picks[pick]->set_highlight(DefaultHighlightMaterial);
       resizes->add(picks[pick]);
    }
-   materials[ResizeMatl] = new GeomMaterial(resizes, DefaultResizeMaterial);
+   materials[ResizeMatl] = scinew GeomMaterial(resizes, DefaultResizeMaterial);
    CreateModeSwitch(2, materials[ResizeMatl]);
 
    SetMode(Mode0, Switch0|Switch1|Switch2);
@@ -367,7 +368,7 @@ BoxWidget::geom_moved( GeomPick*, int /* axis*/, double /*dist*/,
       MoveDelta(delta);
       break;
    }
-   execute();
+   execute(0);
 }
 
 
@@ -379,7 +380,7 @@ BoxWidget::MoveDelta( const Vector& delta )
    variables[PointDVar]->MoveDelta(delta);
    variables[PointIVar]->MoveDelta(delta);
 
-   execute();
+   execute(1);
 }
 
 
@@ -466,6 +467,6 @@ BoxWidget::AxisAligned( const Index yesno )
       oldinaxis = Vector(0,0,1);
    }
    
-   execute();
+   execute(0);
 }
 

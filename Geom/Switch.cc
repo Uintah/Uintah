@@ -11,6 +11,7 @@
  *  Copyright (C) 1995 SCI Group
  */
 #include <Geom/Switch.h>
+#include <Malloc/Allocator.h>
 
 GeomSwitch::GeomSwitch(GeomObj* obj, int state)
 : GeomContainer(obj), state(state)
@@ -28,7 +29,7 @@ GeomSwitch::~GeomSwitch()
 
 GeomObj* GeomSwitch::clone()
 {
-    return new GeomSwitch(*this);
+    return scinew GeomSwitch(*this);
 }
 
 void GeomSwitch::set_state(int st)
@@ -86,5 +87,5 @@ GeomTimeSwitch::~GeomTimeSwitch()
 
 GeomObj* GeomTimeSwitch::clone()
 {
-    return new GeomTimeSwitch(*this);
+    return scinew GeomTimeSwitch(*this);
 }

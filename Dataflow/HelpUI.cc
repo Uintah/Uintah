@@ -13,6 +13,7 @@
 
 #include <Classlib/String.h>
 #include <Dataflow/HelpUI.h>
+#include <Malloc/Allocator.h>
 #include <Multitask/Task.h>
 
 #include <iostream.h>
@@ -52,7 +53,7 @@ void HelpUI::load(const clString& name)
 
     // Start up mosaic if it's not already running...
     if(!mosaic_running){
-	MosaicTask* mtask=new MosaicTask(clString(buf));
+	MosaicTask* mtask=scinew MosaicTask(clString(buf));
 	mtask->activate(0);
     } else {
 	// Send it a signal...

@@ -2,6 +2,7 @@
 #include <Datatypes/DenseMatrix.h>
 #include <Classlib/Assert.h>
 #include <Datatypes/ColumnMatrix.h>
+#include <Malloc/Allocator.h>
 #include <Math/MiscMath.h>
 #include <iostream.h>
 
@@ -12,8 +13,8 @@ DenseMatrix::DenseMatrix(int r, int c)
     ASSERT(c>0);
     nr=r;
     nc=c;
-    data=new double*[nr];
-    double* tmp=new double[nr*nc];
+    data=scinew double*[nr];
+    double* tmp=scinew double[nr*nc];
     dataptr=tmp;
     for(int i=0;i<nr;i++){
 	data[i]=tmp;
@@ -32,8 +33,8 @@ DenseMatrix::DenseMatrix(const DenseMatrix& m)
 {
     nc=m.nc;
     nr=m.nr;
-    data=new double*[nr];
-    double* tmp=new double[nr*nc];
+    data=scinew double*[nr];
+    double* tmp=scinew double[nr*nc];
     dataptr=tmp;
     for(int i=0;i<nr;i++){
 	data[i]=tmp;
@@ -50,8 +51,8 @@ DenseMatrix& DenseMatrix::operator=(const DenseMatrix& m)
     delete[] data;
     nc=m.nc;
     nr=m.nr;
-    data=new double*[nr];
-    double* tmp=new double[nr*nc];
+    data=scinew double*[nr];
+    double* tmp=scinew double[nr*nc];
     dataptr=tmp;
     for(int i=0;i<nr;i++){
 	data[i]=tmp;

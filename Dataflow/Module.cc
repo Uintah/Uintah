@@ -20,6 +20,7 @@
 #include <Dataflow/NetworkEditor.h>
 #include <Dataflow/Port.h>
 #include <Geom/Pick.h>
+#include <Malloc/Allocator.h>
 #include <TCL/TCL.h>
 
 #include <stdlib.h>
@@ -120,7 +121,7 @@ void Module::set_context(NetworkEditor* _netedit, Network* _network)
     network=_network;
 
     // Start up the event loop
-    helper=new ModuleHelper(this);
+    helper=scinew ModuleHelper(this);
     helper->activate(0);
 }
 
@@ -148,7 +149,7 @@ void Module::want_to_execute()
 {
     sched_state=SchedNewData;
     state=NeedData;
-    netedit->mailbox.send(new Module_Scheduler_Message);
+    netedit->mailbox.send(scinew Module_Scheduler_Message);
 }
 
 void Module::geom_pick(GeomPick*, void*)
@@ -166,7 +167,7 @@ void Module::geom_moved(GeomPick*, int, double, const Vector&, void*)
     cerr << "Caught stray moved event!\n";
 }
 
-void Module::widget_moved()
+void Module::widget_moved(int)
 {
     cerr << "Caught stray widget_moved event!\n";
 }
