@@ -2752,15 +2752,15 @@ class BioImageApp {
                 if {[string first "$data_dir/volume/tooth.nhdr" $filename] != -1 && 
 		    [file exists "$data_dir/volume/tooth.xff"]} {
                     set [set EditColorMap2]-filename "$data_dir/volume/tooth.xff"
-                    [set EditColorMap2] swatch_load tooth
+                    after 500 "[set EditColorMap2] swatch_load tooth"
                 } elseif {[string first "$data_dir/volume/engine.nhdr" $filename] != -1 && 
 		    [file exists "$data_dir/volume/engine.xff"]} {
                     set [set EditColorMap2]-filename "$data_dir/volume/engine.xff"
-                    [set EditColorMap2] swatch_load engine
+                    after 500 "[set EditColorMap2] swatch_load engine"
                 } elseif {[string first "$data_dir/volume/CThead.nhdr" $filename] != -1 && 
 		    [file exists "$data_dir/volume/CThead.xff"]} {
                     set [set EditColorMap2]-filename "$data_dir/volume/CThead.xff"
-                    [set EditColorMap2] swatch_load CThead
+                    after 500 "[set EditColorMap2] swatch_load CThead"
                 } 
             }
             set 2D_fixed 0
