@@ -14,8 +14,22 @@ using namespace std;
 
 Stream::Stream()
 {
- d_CO2index = 0;
- d_H2Oindex = 0;
+  d_CO2index = 0;
+  d_H2Oindex = 0;
+  d_speciesConcn = vector<double>(0); // initialize with 0
+  d_pressure = 0.0;
+  d_density = 0.0;
+  d_temperature = 0.0;
+  d_enthalpy = 0.0;
+  d_sootFV = 0.0;
+  d_sensibleEnthalpy = 0.0;
+  d_moleWeight = 0.0;
+  d_cp = 0.0;
+  d_drhodf = 0.0;
+  d_drhodh = 0.0;
+  d_mole = false;
+  d_numMixVars = 0;
+  d_numRxnVars = 0;
 }
 
 Stream::Stream(int numSpecies,  int numElements)
@@ -539,6 +553,10 @@ Stream::print_oneline(std::ofstream& out) {
 
 //
 // $Log$
+// Revision 1.25  2003/09/09 01:43:23  desam
+//      Modified to be used with static mixing tables and the previous intended
+//      mixing models
+//
 // Revision 1.24  2003/01/31 18:22:46  spinti
 // Removed conversion from stream to vector. Tables now stored as vector of streams.
 //
