@@ -107,16 +107,6 @@ WARNING
 	 // copy constructor
 	 MPMMaterial(const MPMMaterial &mpmm);
 	 MPMMaterial& operator=(const MPMMaterial &mpmm);
-	 
-	 const VarLabel* pDeformationMeasureLabel;
-	 const VarLabel* pStressLabel;
-	 const VarLabel* pVolumeLabel;
-	 const VarLabel* pMassLabel;
-	 const VarLabel* pVelocityLabel;
-	 const VarLabel* pExternalForceLabel;
-	 const VarLabel* pXLabel;
-	 const VarLabel* pSurfLabel;
-         const VarLabel* pTemperatureLabel;
       };
 
 } // end namespace MPM
@@ -125,6 +115,10 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.19  2000/06/02 17:26:36  guilkey
+// Removed VarLabels from the constructor.  Now using the MPMLabel class
+// instead.
+//
 // Revision 1.18  2000/05/31 22:01:46  tan
 // Added d_heatTransferCoefficient for heat exchange on thermal contact.
 //
