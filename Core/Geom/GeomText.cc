@@ -556,12 +556,12 @@ static Persistent* make_GeomFTGLFontRenderer()
 PersistentTypeID GeomFTGLFontRenderer::type_id("GeomFTGLFontRenderer", "GeomObj", make_GeomFTGLFontRenderer);
 
 GeomFTGLFontRenderer::GeomFTGLFontRenderer(const string &fontfile, 
-					   double ptSize,
+					   int ptRez,
 					   int screenRez)
 {
   font_ = scinew FTGLTextureFont(fontfile.c_str());
   font_->CharMap(ft_encoding_unicode);
-  set_resolution(ptSize,screenRez);
+  set_resolution(ptRez,screenRez);
 }
 
 GeomFTGLFontRenderer::GeomFTGLFontRenderer(const GeomFTGLFontRenderer& copy)
@@ -575,9 +575,9 @@ GeomObj* GeomFTGLFontRenderer::clone()
 }
 
 void
-GeomFTGLFontRenderer::set_resolution(double ptSize, int screenRez)
+GeomFTGLFontRenderer::set_resolution(int ptRez, int screenRez)
 {
-  int ptRez = int(ptSize*screenRez);
+  //  int ptRez = int(ptSize*screenRez);
   if (screenRez_ != screenRez || ptRez_ != ptRez) {
     ptRez_ = ptRez;
     screenRez_ = screenRez;
