@@ -15,7 +15,8 @@ SRCS     += $(SRCDIR)/GLTextureBuilder.cc  $(SRCDIR)/PadField.cc \
 		$(SRCDIR)/KurtScalarFieldReader.cc \
 		$(SRCDIR)/VisControl.cc \
 		$(SRCDIR)/RescaleColorMapForParticles.cc \
-		$(SRCDIR)/ParticleVis.cc
+		$(SRCDIR)/ParticleVis.cc \
+		$(SRCDIR)/GridVisualizer.cc
 
 
 
@@ -33,6 +34,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/06/05 21:10:31  bigler
+# Added new module to visualize UINTAH grid
+#
 # Revision 1.4  2000/05/25 18:24:24  kuzimmer
 # removing old volvis directory
 #
