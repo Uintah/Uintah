@@ -53,52 +53,22 @@ using std::vector;
 class Renderer;
 class ViewWindow;
 
-#if 0
-struct SceneItem {
-  GeomObj* obj;
-  string name;
-  CrowdMonitor* lock;
-
-  SceneItem(GeomObj*, const string&, CrowdMonitor* lock);
-  ~SceneItem();
-};
-
-struct PortInfo {
-  GeometryComm* msg_head;
-  GeometryComm* msg_tail;
-  int portno;
-
-  typedef map<int, SceneItem*> MapIntSceneItem;
-  MapIntSceneItem* objs;
-};
-#endif
-
 class Viewer : public Module {
-    
 public:
-  typedef map<string, void*>	        MapStringVoid;
-#if 0    
-  typedef map<int, PortInfo*>		MapIntPortInfo;
-#endif
+
+  Viewer(const string& id);
+  virtual ~Viewer();
+  virtual void do_execute();
+  virtual void execute();
+
+  void delete_viewwindow(ViewWindow* r);
+
+  MaterialHandle      default_material_;
+  Lighting            lighting_;
+  CrowdMonitor        geomlock_;
+  GeomIndexedGroup    ports_;
 
 private:
-  vector<ViewWindow*> viewwindow;
-  int busy_bit;
-  vector<ViewWindow*> topViewWindow;
-  virtual void do_execute();
-
-  int max_portno;
-  //virtual void connection(Module::ConnectionMode, int, int);
-
-  MapStringVoid specific;
-    
-public:
-  MaterialHandle default_matl;
-  friend class ViewWindow;
-  Viewer(const string& id);
-  Viewer(const string& id, const string& moduleName);
-  virtual ~Viewer();
-  virtual void execute();
   void initPort(Mailbox<GeomReply>*);
   void append_port_msg(GeometryComm*);
   void addObj(GeomViewerPort* port, GeomID serial, GeomObj *obj,
@@ -110,30 +80,18 @@ public:
   void addTopViewWindow(ViewWindow *r);
   void delTopViewWindow(ViewWindow *r);
 
-  void delete_viewwindow(ViewWindow* r);
-
   void tcl_command(TCLArgs&, void*);
 
   virtual void emit_vars(std::ostream& out, 
 			 string& midx); // Override from class TCL
+  int process_event();
 
-				// The scene...
-  GeomIndexedGroup ports;	// this contains all of the ports...
-
-#if 0    
-  MapIntPortInfo portHash;
-#endif
-
-				// Lighting
-  Lighting lighting;
-
-  int process_event(int block);
-
-  int lookup_specific(const string& key, void*&);
-  void insert_specific(const string& key, void* data);
-
-  CrowdMonitor geomlock;
+  vector<ViewWindow*> view_window_;
+  vector<ViewWindow*> top_view_window_;
+  int                 max_portno_;
 };
+
+
 
 class ViewerMessage : public MessageBase {
 public:

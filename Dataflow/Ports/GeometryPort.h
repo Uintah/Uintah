@@ -85,7 +85,6 @@ class PSECORESHARE GeometryOPort : public OPort {
     int portid;
     GeomID serial;
     int dirty;
-    int* busy_bit;
     Mutex* lock;
 
     GeometryComm* save_msgs;
@@ -109,8 +108,6 @@ public:
     void flushViewsAndWait();
 
     void forward(GeometryComm* msg);
-
-    int busy();
 
     virtual int have_data();
     virtual void resend(Connection*);

@@ -592,7 +592,7 @@ void OpenGL::redraw_frame()
   
   // Get a lock on the geometry database...
   // Do this now to prevent a hold and wait condition with TCLTask
-  viewer->geomlock.readLock();
+  viewer->geomlock_.readLock();
   
   TCLTask::lock();
   
@@ -767,7 +767,7 @@ void OpenGL::redraw_frame()
 	    
 	    // Set up Lighting
 	    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-	    Lighting& l=viewer->lighting;
+	    const Lighting& l=viewer->lighting_;
 	    int idx=0;
 	    int ii;
 	    for(ii=0;ii<l.lights.size();ii++){
@@ -1035,7 +1035,7 @@ void OpenGL::redraw_frame()
 	glXSwapBuffers(dpy, win);
       }
       
-      viewer->geomlock.readUnlock();
+      viewer->geomlock_.readUnlock();
       
 				// Look for errors
       GLenum errcode;
@@ -1173,7 +1173,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
   }
   // Setup the view...
   View view(viewwindow->view.get());
-  viewer->geomlock.readLock();
+  viewer->geomlock_.readLock();
   
   // Compute znear and zfar...
   double znear;
@@ -1311,7 +1311,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
       //cerr << "pick_pick=" << pick_pick << ", pick_index="<<pick_index<<"\n";
     }
   }
-  viewer->geomlock.readUnlock();
+  viewer->geomlock_.readUnlock();
 }
 
 void OpenGL::dump_image(const string& name, const string& /* type */)
@@ -1379,13 +1379,13 @@ void OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomObj* obj)
   glPushName((GLuint)obj);
   glPushName(0x12345678);
 #endif
-  obj->draw(drawinfo, viewer->default_matl.get_rep(), current_time);
+  obj->draw(drawinfo, viewer->default_material_.get_rep(), current_time);
 }
 
 void OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj)
 {
   drawinfo->viewwindow = viewwindow;
-  obj->draw(drawinfo, viewer->default_matl.get_rep(), current_time);
+  obj->draw(drawinfo, viewer->default_material_.get_rep(), current_time);
 }
 
 void ViewWindow::setState(DrawInfoOpenGL* drawinfo,string tclID)

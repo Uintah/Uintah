@@ -45,9 +45,8 @@ namespace SCIRun {
 
 struct GeomReply {
     int portid;
-    int* busy_bit;
     GeomReply();
-    GeomReply(int, int*);
+    GeomReply(int);
 };
 
 class PSECORESHARE GeometryComm : public MessageBase {
