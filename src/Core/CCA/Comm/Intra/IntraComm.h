@@ -34,7 +34,7 @@ namespace SCIRun {
 
   class IntraComm {
   public:
-    virtual ~IntraComm() = 0;
+    virtual ~IntraComm(){};
 
     ////////////////
     // Retrieved this process' rank
