@@ -16213,11 +16213,10 @@ _sci_libs=''
 _sci_includes=''
 
 
-
   if test "$HAVE_PETSC_UNI" = "yes" ; then
     DEF_PETSC_UNI="#define PETSC_UNI 1"
-    PETSC_UNI_LIB_FLAG="$PETSC_LIB_FLAG"
-    PETSC_UNI_LIB_DIR_FLAG="$PETSC_LIB_DIR_FLAG"
+#    PETSC_UNI_LIB_FLAG="$PETSC_UNI_LIB_FLAG"
+#    PETSC_UNI_LIB_DIR_FLAG="$PETSC_UNI_LIB_DIR_FLAG"
   fi
 
 else
