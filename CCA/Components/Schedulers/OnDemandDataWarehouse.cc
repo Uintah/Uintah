@@ -990,7 +990,7 @@ void
 OnDemandDataWarehouse::allocate(CCVariableBase& var,
 				const VarLabel* label,
 				int matlIndex,
-				const Patch* patch)
+				const Patch* patch, const IntVector gc)
 {
   d_lock.writeLock();
    // Error checking
@@ -998,7 +998,7 @@ OnDemandDataWarehouse::allocate(CCVariableBase& var,
       throw InternalError("CC variable already exists: "+label->getName());
 
    // Allocate the variable
-   var.allocate(patch->getCellLowIndex(), patch->getCellHighIndex());
+   var.allocate(patch->getCellLowIndex()-gc, patch->getCellHighIndex()+gc);
   d_lock.writeUnlock();
 }
 
