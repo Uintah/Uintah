@@ -7,12 +7,19 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := PSECommon/Modules/Writers
 
-SRCS     += $(SRCDIR)/ColorMapWriter.cc $(SRCDIR)/ColumnMatrixWriter.cc \
-	$(SRCDIR)/GeometryWriter.cc $(SRCDIR)/MatrixWriter.cc \
-	$(SRCDIR)/MeshWriter.cc $(SRCDIR)/MultiScalarFieldWriter.cc \
-	$(SRCDIR)/ScalarFieldWriter.cc $(SRCDIR)/SurfaceWriter.cc \
-	$(SRCDIR)/TetraWriter.cc $(SRCDIR)/VectorFieldWriter.cc \
-	$(SRCDIR)/VoidStarWriter.cc
+SRCS     += \
+	$(SRCDIR)/ColorMapWriter.cc\
+	$(SRCDIR)/ColumnMatrixWriter.cc\
+	$(SRCDIR)/GeometryWriter.cc\
+	$(SRCDIR)/MatrixWriter.cc\
+	$(SRCDIR)/MeshWriter.cc\
+	$(SRCDIR)/MultiScalarFieldWriter.cc\
+	$(SRCDIR)/ScalarFieldWriter.cc\
+	$(SRCDIR)/SurfaceWriter.cc\
+	$(SRCDIR)/TetraWriter.cc\
+	$(SRCDIR)/VectorFieldWriter.cc\
+	$(SRCDIR)/VoidStarWriter.cc\
+#[INSERT NEW MODULE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes SCICore/Persistent \
 	SCICore/Thread SCICore/Exceptions SCICore/TclInterface \
@@ -23,6 +30,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/06/07 00:11:42  moulding
+# made some modifications that will allow the module make to edit and add
+# to this file
+#
 # Revision 1.2  2000/03/20 19:37:08  sparker
 # Added VPATH support
 #
