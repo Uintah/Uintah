@@ -275,10 +275,10 @@ void Module::update_progress(double p)
   if (!show_stat) return;
   if (state == JustStarted)
     update_state(Executing);
+  if (p < 0.0) p = 0.0;
+  if (p > 1.0) p = 1.0;
   int opp=(int)(progress*100);
   int npp=(int)(p*100);
-  if (npp < 0) npp = 0;
-  if (npp > 100) npp = 100;
   if(opp != npp){
     double time=timer.time();
     gui->execute(id+" set_progress "+to_string(p)+" "+to_string(time));
@@ -291,10 +291,10 @@ void Module::update_progress(double p, Timer &t)
   if (!show_stat) return;
   if (state == JustStarted)
     update_state(Executing);
+  if (p < 0.0) p = 0.0;
+  if (p > 1.0) p = 1.0;
   int opp=(int)(progress*100);
   int npp=(int)(p*100);
-  if (npp < 0) npp = 0;
-  if (npp > 100) npp = 100;
   if(opp != npp){
     double time=t.time();
     gui->execute(id+" set_progress "+to_string(p)+" "+to_string(time));
