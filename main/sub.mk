@@ -46,7 +46,8 @@ PROGRAM := $(PROGRAM_PSE)
 CFLAGS_MAIN   := $(CFLAGS) -DPSECORETCL=\"$(SRCTOP_ABS)/Dataflow/GUI\" \
                       -DSCICORETCL=\"$(SRCTOP_ABS)/Core/GUI\" \
                       -DITCL_WIDGETS=\"$(ITCL_WIDGETS)\" \
-                      -DDEFAULT_PACKAGE_PATH=\"$(PACKAGE_PATH)\"
+                      -DDEFAULT_PACKAGE_PATH=\"$(PACKAGE_PATH)\" \
+	              -DSRCTOP=\"$(SRCTOP)\" -DOBJTOP=\"$(OBJTOP)\"
 
 $(SRCDIR)/main.o:	$(SRCDIR)/main.cc Makefile
 	$(CXX) $(CFLAGS_MAIN) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@

@@ -65,7 +65,9 @@ int global_argc;
 char** global_argv;
 
 namespace SCIRun {
-env_map scirunrc;  //  contents of .scirunrc are stored here.
+env_map scirunrc;              // contents of .scirunrc are stored here.
+string SCIRUN_SRCTOP(SRCTOP);  // = INSTALL_DIR/SCIRun/src
+string SCIRUN_OBJTOP(OBJTOP);  // = BUILD_DIR
 }
 
 #ifndef PSECORETCL
