@@ -1,23 +1,23 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- @version: -->
-<?helium 1m plume?>
 <Uintah_specification>
 
    <Meta>
-	<title>Arches Helium Plume Multi Patch Run for Sandia 1m case</title>
+	<title>Arches Helium Plume Multi Patch Run</title>
    </Meta>
 
    <Time>
-	<maxTime>1.0</maxTime>
+	<maxTime>20.0</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.01</delt_max>
-	<timestep_multiplier>0.2</timestep_multiplier>
+	<timestep_multiplier>0.8</timestep_multiplier>
    </Time>
 
    <DataArchiver>
-        <filebase>heliumplumeexplicit.uda</filebase>
-	<outputInterval>0.1</outputInterval>
+        <filebase>sandia_helium.uda</filebase>
+	<outputInterval>0.5</outputInterval>
+	<save label="totalKineticEnergy"/>
 	<save label = "pressurePS"/>
         <save label = "newCCUVelocity"/>	
         <save label = "newCCVVelocity"/>	
@@ -26,7 +26,8 @@
 	<save label = "scalarSP"/>
 	<save label = "densityCP"/>
 	<save label = "viscosityCTS"/>
-	<checkpoint cycle = "2" interval = "0.1"/>
+        <save label="CsLabel"/>
+	<checkpoint cycle = "2" interval = "0.5"/>
    </DataArchiver>
 
     <PhysicalConstants>
@@ -40,9 +41,9 @@
 	    <Box label = "1">
 	        <lower>[0,0,0]</lower>
 	        <upper>[3,3,3]</upper>
-	        <resolution>[10,10,10]</resolution>
+	        <resolution>[100,100,100]</resolution>
                 <extraCells>[1,1,1]</extraCells>
-		<patches>[1,1,1]</patches>
+		<patches>[4,4,4]</patches>
 	    </Box>
 	</Level>
     </Grid>
@@ -52,22 +53,25 @@
 	<!-- ARCHES specification -->
 
 	<ARCHES>
-	    <grow_dt>0.05</grow_dt>
+	    <grow_dt>0.01</grow_dt>
 	    <variable_dt>true</variable_dt>
    	    <nonlinear_solver>explicit</nonlinear_solver>
-    	    <turbulence_model>smagorinsky</turbulence_model>
+    	    <turbulence_model>dynamicprocedure</turbulence_model>
             <reacting_flow>false</reacting_flow>
             <solve_enthalpy>false</solve_enthalpy>	
 	    <solve_reactingscalar>false</solve_reactingscalar>
 	    <Turbulence>
-		<cf>0.001</cf>
+		<cf>0.17</cf>
 		<fac_mesh>1.0</fac_mesh>
 		<filterl>0.000001</filterl>
 	        <var_const>0.1</var_const>
 	    </Turbulence>
+            <ScaleSimilarity>
+                <cf>0.9</cf>
+            </ScaleSimilarity>
 
 	    <Properties>
-		<denUnderrelax>0.9</denUnderrelax>
+		<denUnderrelax>1.0</denUnderrelax>
 	        <ref_point>[3,3,3]</ref_point>
 	        <radiation>false</radiation>
 	        <mixing_model>coldFlowMixingModel</mixing_model>
@@ -113,7 +117,7 @@
 
 	    <BoundaryConditions>
 		<FlowInlet>
-		    <Flow_rate>0.03093</Flow_rate>
+		    <Flow_rate>0.03666</Flow_rate>
 		    <MixtureFraction>
 			<Mixfrac>1.0</Mixfrac>
 	            </MixtureFraction>
@@ -131,7 +135,7 @@
 		    <geom_object>
 		      <box label = "botWall">
 			<min>[-1,-1,-1]</min>
-			<max>[0,5,5]</max>
+			<max>[0,4,4]</max>
 		      </box>
 		    </geom_object>
 		</WallBC>
@@ -145,19 +149,19 @@
 		    <geom_object>
 		      <box label = "posY_xzWall">
 			<min>[0,3,-1]</min>
-			<max>[3,5,5]</max>
+			<max>[3,4,4]</max>
 		      </box>
 		      <box label = "zeroY_xzWall">
 			<min>[0,-1,-1]</min>
-			<max>[3,0,5]</max>
+			<max>[3,0,4]</max>
 		      </box>
 		      <box label = "posZ_xyWall">
 			<min>[0,-1,3]</min>
-			<max>[3,5,5]</max>
+			<max>[3,4,4]</max>
 		      </box>
                       <box label = "zeroZ_xyWall">	
 			<min>[0,-1,-1]</min>
-			<max>[3,5,0]</max>
+			<max>[3,4,0]</max>
 		      </box>
 		    </geom_object>
 		</PressureBC>
@@ -171,7 +175,7 @@
 		    <geom_object>
 		      <box label = "topWall">
 			<min>[3,-1,-1]</min>
-			<max>[5,5,5]</max>
+			<max>[4,4,4]</max>
 		      </box>
 		    </geom_object>
 		</outletBC>
@@ -187,12 +191,12 @@
 	    <ExplicitSolver>
 		<max_iter>0</max_iter>	
 		<res_tol>2.0</res_tol>
-		<probe_data>true</probe_data>
+		<probe_data>false</probe_data>
 	        <ProbePoints>
-	           <probe_point>[5,50,50]</probe_point>
+	           <probe_point>[30,75,75]</probe_point>
 		</ProbePoints>
                 <ProbePoints>
-	           <probe_point>[35,50,50]</probe_point>
+	           <probe_point>[60,75,75]</probe_point>
 		</ProbePoints>
 	        <cal_pressure>true</cal_pressure>
 		<PressureSolver>
@@ -200,12 +204,13 @@
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>petsc</linear_solver>
 		    <LinearSolver>
-			<ksptype>cg</ksptype>
-			<pctype>jacobi</pctype>
-			<overlap>1</overlap>
+	                <ksptype>cg</ksptype>
+			<pctype>bjac</pctype>
+			<fill>1</fill>		!---for ilu preconditioner
+			<overlap>1</overlap>	!---for asm preconditioner
 			<max_iter>75</max_iter>
 			<res_tol>0.0003</res_tol>
-		        <underrelax>0.97</underrelax>
+		        <underrelax>0.997</underrelax>
 		    </LinearSolver>
 		</PressureSolver>
 
@@ -216,7 +221,7 @@
 		    <LinearSolver>
 			<max_iter>8</max_iter>
 			<res_tol>0.0003</res_tol>
-			<underrelax>0.9</underrelax>
+			<underrelax>1.0</underrelax>
 		    </LinearSolver>
 		</MomentumSolver>
 
@@ -227,7 +232,7 @@
 		    <LinearSolver>
 			<max_iter>6</max_iter>
 			<res_tol>0.0003</res_tol>
-			<underrelax>0.9</underrelax>
+			<underrelax>1.0</underrelax>
 		    </LinearSolver>
 		</MixtureFractionSolver>
 		<cal_enthalpy>false</cal_enthalpy>
