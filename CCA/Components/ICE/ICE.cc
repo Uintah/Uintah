@@ -598,7 +598,7 @@ void ICE:: scheduleComputeLagrangianValues(const Patch* patch,
                             patch, old_dw, new_dw,this,
 			       &ICE::computeLagrangianValues);
 
-  int numICEMatls=d_sharedState->getICENumMatls();
+  int numICEMatls=d_sharedState->getNumICEMatls();
   for (int m = 0; m < numICEMatls; m++)   {
     Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
@@ -1625,6 +1625,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     }
   }
   /*==========DEBUG============`*/
+  #if 0
 /**/  int i, j, k;
 /**/  double d_uvel_FCME, d_vvel_FCME, d_wvel_FCME;
 /**/  double d_uvel_FC, d_vvel_FC, d_wvel_FC;
@@ -1643,6 +1644,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
 /**/     d_wvel_FC  = wvel_FC[m][curcell];
 /**/    }
 /**/  }
+#endif
   for(int m = 0; m < numMatls; m++) {
     Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
@@ -1880,12 +1882,6 @@ void ICE::computePressFC(const ProcessorGroup*,   const Patch* patch,
       pressZ_FC[curcell]=A/((1/sum_rho)+(1.0/sum_rho_adj));
     }
   }
-#if 0
-                                                     // should be rho_micro_CC
-  setBC(pressX_FC, rho_CC[SURROUND_MAT], "Pressure",patch);
-  setBC(pressY_FC, rho_CC[SURROUND_MAT], "Pressure",patch);
-  setBC(pressZ_FC, rho_CC[SURROUND_MAT], "Pressure",patch); 
-#endif
 
   new_dw->put(pressX_FC,lb->pressX_FCLabel, 0, patch);
   new_dw->put(pressY_FC,lb->pressY_FCLabel, 0, patch);
@@ -2137,7 +2133,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,  const Patch* patch,
   vector<CCVariable<double> > int_eng_L(numICEMatls); 
   vector<CCVariable<double> > mass_L(numICEMatls);  
 /**/  int i, j, k;
-/**/      double d_rho, d_cv, d_temp;
+/**/  double d_rho, d_cv, d_temp;
   
   //__________________________________ 
   //  Compute the Lagrangian quantities
@@ -2159,7 +2155,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,  const Patch* patch,
     double cv = ice_matl->getSpecificHeat();
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
 	iter++) {
-    IntVector curcell = *iter;       
+        IntVector curcell = *iter;       
 /**/    i = curcell.x();
 /**/    j = curcell.y();
 /**/    k = curcell.z();
@@ -2926,111 +2922,13 @@ void ICE::setBC(CCVariable<Vector>& variable, const string& kind,
       
       if (bc->getKind() == "Neumann") 
 	variable.fillFaceFlux(face,bc->getValue(),dx);
-       //__________________________________
-       // set BC value = -interior value
+       
       if (bc->getKind() == "NegInterior") {
          variable.fillFaceFlux(face,Vector(0.0,0.0,0.0),dx, -1.0);
-      #if 0
-          low = variable.getLowIndex();
-          hi  = variable.getHighIndex();
-          switch (face) {
-          case Patch::xplus:
-            for (int j = low.y(); j<hi.y(); j++) {
-              for (int k = low.z(); k<hi.z(); k++) {
-                variable[IntVector(hi.x()-1,j,k)] = -variable[IntVector(hi.x()-2,j,k)];
-              }
-            }
-            break;
-          case Patch::xminus:
-            for (int j = low.y(); j<hi.y(); j++) {
-              for (int k = low.z(); k<hi.z(); k++) {
-                variable[IntVector(low.x(),j,k)] = -variable[IntVector(low.x()+1,j,k)];
-              }
-            }
-            break;
-          case Patch::yplus:
-            for (int i = low.x(); i<hi.x(); i++) {
-              for (int k = low.z(); k<hi.z(); k++) {
-                variable[IntVector(i,hi.y()-1,k)] = -variable[IntVector(i,hi.y()-2,k)];
-              }
-            }
-            break;
-          case Patch::yminus:
-            for (int i = low.x(); i<hi.x(); i++) {
-              for (int k = low.z(); k<hi.z(); k++) {
-                variable[IntVector(i,low.y(),k)] = -variable[IntVector(i,low.y()+1,k)];
-              }
-            }
-            break;
-          case Patch::zplus:
-            for (int i = low.x(); i<hi.x(); i++) {
-              for (int j = low.y(); j<hi.y(); j++) {
-                variable[IntVector(i,j,hi.z()-1)] = -variable[IntVector(i,j,hi.z()-2)];
-              }
-            }
-            break;
-          case Patch::zminus:
-            for (int i = low.x(); i<hi.x(); i++) {
-              for (int j = low.y(); j<hi.y(); j++) {
-                variable[IntVector(i,j,low.z())] = -variable[IntVector(i,j,low.z()+1)];
-              }
-            }
-            break;
-          case Patch::numFaces:
-            break;
-          case Patch::invalidFace:
-            break;        
-        }  //end switch(face)
-        #endif
-      }  //end NegInterior conditional
+      }  
     }  // end velocity loop
   }  // end face loop
 }
-#if 0 // MAY BE EXTRA AS OF 3.1.01
-/* --------------------------------------------------------------------- 
- Function~  ICE::setBC--      
- Purpose~   Takes care of Press_FC.x
- ---------------------------------------------------------------------  */
-void ICE::setBC(SFCXVariable<double>& variable, CCVariable<double>& rho_micro,
-              const string& kind, 
-		const Patch* patch)
-{
-
-  Vector dx = patch->dCell();
-  Vector gravity = d_sharedState->getGravity();
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCondBase* > bcs;
-    bcs = patch->getBCValues(face);
-    if (bcs.size() == 0) continue;
-    
-    BoundCondBase* bc_base = 0;
-    for (int i = 0; i<(int)bcs.size(); i++ ) {
-      if (bcs[i]->getType() == kind) {
-	bc_base = bcs[i];
-	break;
-      }
-    }
-
-    if (bc_base == 0)
-      continue;
-    
-    if (bc_base->getType() == "Pressure") {
-      PressureBoundCond* bc = dynamic_cast<PressureBoundCond*>(bc_base);
-      if (bc->getKind() == "Dirichlet") 
-	variable.fillFace(face,bc->getValue());
-      
-      if (bc->getKind() == "Neumann") 
-	variable.fillFaceFlux(face,bc->getValue(),dx);
-       
-      if ( fabs(gravity.x()) > 0.0  || 
-           fabs(gravity.y()) > 0.0  || fabs(gravity.z()) > 0.0) {
-        variable.setHydrostaticPressureBC(face, gravity, rho_micro, dx);
-      }
-    }
-  }
-}
-#endif
 /* --------------------------------------------------------------------- 
  Function~  ICE::setBC--      
  Purpose~   Takes care of vel_FC.x()
@@ -3079,50 +2977,6 @@ void ICE::setBC(SFCXVariable<double>& variable, const  string& kind,
   }
 
 }
-#if 0 // MAY BE EXTRA AS OF 3.1.01
-/* --------------------------------------------------------------------- 
- Function~  ICE::setBC--      
- Purpose~   Takes care of Press_FC.y
- ---------------------------------------------------------------------  */
-void ICE::setBC(SFCYVariable<double>& variable, CCVariable<double>& rho_micro,
-              const string& kind, 
-		const Patch* patch)
-{
-  Vector dx = patch->dCell();
-  Vector gravity = d_sharedState->getGravity();
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCondBase* > bcs;
-    bcs = patch->getBCValues(face);
-    if (bcs.size() == 0) continue;
-    
-    BoundCondBase* bc_base = 0;
-    for (int i = 0; i<(int)bcs.size(); i++ ) {
-      if (bcs[i]->getType() == kind) {
-	bc_base = bcs[i];
-	break;
-      }
-    }
-
-    if (bc_base == 0)
-      continue;
-    
-    if (bc_base->getType() == "Pressure") {
-      PressureBoundCond* bc = dynamic_cast<PressureBoundCond*>(bc_base);
-      if (bc->getKind() == "Dirichlet") 
-	variable.fillFace(face,bc->getValue());
-      
-      if (bc->getKind() == "Neumann") 
-	variable.fillFaceFlux(face,bc->getValue(),dx);
-       
-      if ( fabs(gravity.x()) > 0.0  || 
-           fabs(gravity.y()) > 0.0  || fabs(gravity.z()) > 0.0) {
-        variable.setHydrostaticPressureBC(face, gravity, rho_micro, dx);
-      }
-    }
-  }
-}
-#endif
 /* --------------------------------------------------------------------- 
  Function~  ICE::setBC--      
  Purpose~   Takes care of vel_FC.y()
@@ -3171,49 +3025,6 @@ void ICE::setBC(SFCYVariable<double>& variable, const  string& kind,
   }
 
 }
-#if 0 // MAY BE EXTRA AS OF 3.1.01
-/* --------------------------------------------------------------------- 
- Function~  ICE::setBC--      
- Purpose~   Takes care of Press_FC.z
- ---------------------------------------------------------------------  */
-void ICE::setBC(SFCZVariable<double>& variable, CCVariable<double>& rho_micro,
-              const string& kind, 
-		const Patch* patch)
-{
-
-  Vector dx = patch->dCell();
-  Vector gravity = d_sharedState->getGravity();
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCondBase* > bcs;
-    bcs = patch->getBCValues(face);
-    if (bcs.size() == 0) continue;
-    
-    BoundCondBase* bc_base = 0;
-    for (int i = 0; i<(int)bcs.size(); i++ ) {
-      if (bcs[i]->getType() == kind) {
-	bc_base = bcs[i];
-	break;
-      }
-    }
-    if (bc_base == 0)
-      continue;
-
-    if (bc_base->getType() == "Pressure") {
-      PressureBoundCond* bc = dynamic_cast<PressureBoundCond*>(bc_base);
-      if (bc->getKind() == "Dirichlet") 
-	variable.fillFace(face,bc->getValue());
-      
-      if (bc->getKind() == "Neumann") 
-	variable.fillFaceFlux(face,bc->getValue(),dx);
-      if ( fabs(gravity.x()) > 0.0  || 
-           fabs(gravity.y()) > 0.0  || fabs(gravity.z()) > 0.0) {
-        variable.setHydrostaticPressureBC(face, gravity, rho_micro, dx);
-      }
-    }
-  }
-}
-#endif
 /* --------------------------------------------------------------------- 
  Function~  ICE::setBC--      
  Purpose~   Takes care of vel_FC.z()
@@ -3281,8 +3092,6 @@ Implementation notes:
 The outflux of volume is calculated in each cell in the computational domain
 + one layer of extra cells  surrounding the domain.The face-centered velocity 
 needs to be defined on all faces for these cells 
-
-01/02/01    Added corner flux terms and completed 3d edges
 
 See schematic diagram at bottom of ice.cc for del* definitions
  ---------------------------------------------------------------------  */

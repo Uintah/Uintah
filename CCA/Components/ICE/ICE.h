@@ -142,20 +142,11 @@ using namespace SCIRun;
       void setBC(CCVariable<Vector>& variable,const std::string& type,
 		 const Patch* p);
                
-      void setBC(SFCXVariable<double>& variable, CCVariable<double>&rho,
-                const std::string& type, const Patch* p);
-               
       void setBC(SFCXVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);
-  
-      void setBC(SFCYVariable<double>& variable, CCVariable<double>&rho,
-                const std::string& type, const Patch* p);
                
       void setBC(SFCYVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);
-               
-      void setBC(SFCZVariable<double>& variable, CCVariable<double>&rho,
-                const std::string& type, const Patch* p);
                
       void setBC(SFCZVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);      
