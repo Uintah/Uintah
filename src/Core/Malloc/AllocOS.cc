@@ -61,7 +61,7 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable)
 	     abort();
 	  }
        }
-#ifdef SCI_64BIT
+#ifdef SCI_64BITS
        ptr=mmap64(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
 		  devzero_fd, 0);
 #else
@@ -74,7 +74,7 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable)
 
     OSHunk* hunk=(OSHunk*)ptr;
     if((long)ptr == -1){
-#ifdef SCI_64BIT
+#ifdef SCI_64BITS
        fprintf(stderr, "Error allocating memory (%ld bytes requested)\nmmap: errno=%d\n", asize, errno);
 #else
        fprintf(stderr, "Error allocating memory (%d bytes requested)\nmmap: errno=%d\n", asize, errno);
