@@ -346,8 +346,7 @@ void TaskGraph::addDependencyEdges(Task* task, Task::Dependency* req,
 	    else
 	      cerr << "requires '";
 	    cerr << req->var->getName() << "' was added before computing task";
-	    cerr << ", '" << edge->comp->task->getName() << "'"
-		 << endl << endl;
+	    cerr << ", '" << edge->comp->task->getName() << "'\n\n";
 	  }
 	  count++;
 	  if(dbg.active()){
@@ -514,8 +513,10 @@ TaskGraph::addTask(Task* task, const PatchSet* patchset,
       dbg << "Killing empty task: " << *task << "\n";
   } else {
     d_tasks.push_back(task);
-    if(dbg.active())
-      dbg << "Adding task: " << *task << "\n";
+    if(dbg.active()) {
+      dbg << "Adding task:\n";
+      task->displayAll( dbg );
+    }
   }
 
   //  maintain d_initRequires and d_initRequiredVars
@@ -691,7 +692,17 @@ void CompTable::remembercomp(DetailedTask* task, Task::Dependency* comp,
       for(int m=0;m<matls->size();m++){
 	int matl = matls->get(m);
 	Data* newData = new Data(task, comp, patch, matl);
-	ASSERT(data.lookup(newData, dummy) == 0); // no multiple computes
+
+	if( data.lookup(newData, dummy) != 0 ){ // multiple compute found???
+	  cout << "Multiple compute found for\n";
+	  cout << "matl: " << matl << "\n";
+	  cout << "patch: " << *patch << "\n";
+	  cout << *comp << "\n";
+	  cout << *task << "\n";
+	  cout << "IT WAS IN:\n";
+	  dummy->task->getTask()->displayAll(cout);
+	  exit(1);
+	}
 	data.insert(newData);
       }
     }
@@ -766,8 +777,16 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
   CompTable ct;
   for(int i=0;i<dt->numTasks();i++){
     DetailedTask* task = dt->getTask(i);
+
+    if( dbg.active() ) {
+      dbg << "createDetailedDependencies for: " << task->task->getName() 
+	  << "\n";
+      task->task->displayAll( dbg );
+    }
+
     for(Task::Dependency* comp = task->task->getComputes();
 	comp != 0; comp = comp->next){
+
       if (comp->var->typeDescription()->isReductionVariable() &&
 	  task->getTask()->getType() != Task::Reduction) {
 	// create internal dependencies to reduction tasks from any task
@@ -802,8 +821,9 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	    ct.remembercomp(task, comp, 0, 0);
 	  }
 	}
-	else if(!patches->empty() && !matls->empty())
+	else if(!patches->empty() && !matls->empty()) {
 	  ct.remembercomp(task, comp, patches.get_rep(), matls.get_rep());
+	}
       }
     }
   }
@@ -924,7 +944,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 		}
 		else {
 		  cerr << "Failure finding " << *req << " for " << *task
-		       << endl;
+		       << "\n";
 		  cerr << "creator=" << *creator << '\n';
 		  cerr << "neighbor=" << *neighbor << '\n';
 		  cerr << "me=" << me << '\n';
@@ -953,7 +973,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 		  if (dbg.active()) {
 		    dbg << "Requires to modifies dependency from "
 			<< prevReqTask->getTask()->getName()
-			<< " to " << task->getTask()->getName() << endl;
+			<< " to " << task->getTask()->getName() << "\n";
 		  }
 		  dt->possiblyCreateDependency(prevReqTask, 0, 0, task, req, 0,
 					       matl, l, h);
@@ -981,7 +1001,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	bool didFind = ct.findcomp(req, 0, matl, creator, comp);
 	if(!didFind) {
 	  cerr << "Failure finding " << *req << " for " 
-	       << task->getTask()->getName() << endl; 
+	       << task->getTask()->getName() << "\n"; 
 	  throw InternalError("Failed to find comp for dep!");
 	}
 	if(task->getAssignedResourceIndex() ==
