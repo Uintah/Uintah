@@ -8,7 +8,8 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h> 
+#include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h> 
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Exceptions/InternalError.h>
@@ -780,7 +781,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   //  Iteration Loop
   int counter = 0;
   max_vartype max_RHS = 1/d_SMALL_NUM;
-  
+  double max_RHS_old = max_RHS;
   while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance) {
     subsched->advanceDataWarehouse(grid);   // move subscheduler forward
     
@@ -793,6 +794,15 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     counter ++;
     if(pg->myrank() == 0) {
       cout << "Outer iteration " << counter<< " max_rhs "<< max_RHS<< endl;
+      // bulletproofing
+      if ( ((max_RHS - max_RHS_old) > 2.0 * max_RHS_old) && counter > 1){  
+        ostringstream warn;
+         warn <<"ERROR ICE::implicitPressureSolve, solution is diverging"
+              <<" try decreasing the cfl or increase the speed of sound knob \n";
+        throw ConvergenceFailure(warn.str(),counter,max_RHS,
+                                 d_outer_iter_tolerance);
+      }
+      max_RHS_old = max_RHS;
     }
   }
   //__________________________________
@@ -800,13 +810,12 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   if ( (counter == d_max_iter_implicit)   && 
        (max_RHS > d_outer_iter_tolerance) &&
        counter > 1) {
-    IntVector c(-9, -9, -9);
-    ostringstream warn;
-    warn <<"ERROR ICE::implicitPressureSolve, the maximum number of outer"
-         <<" iterations was reached. \n " 
-         << "Try either increasing the max_outer_iterations "
-         <<" or decrease outer_iteration_tolerance\n ";
-    throw InternalError(warn.str());
+    ostringstream s;
+    s <<"ERROR ICE::implicitPressureSolve, the maximum number of outer"
+      <<" iterations was reached. \n " 
+      << "Try either increasing the max_outer_iterations "
+      <<" or decrease outer_iteration_tolerance\n ";
+    throw ConvergenceFailure(s.str(),counter,max_RHS,d_outer_iter_tolerance);
   }
 
   //__________________________________
