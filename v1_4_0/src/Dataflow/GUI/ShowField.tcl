@@ -44,6 +44,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-resolution
 	global $this-active_tab
 	global $this-has_vec_data
+	global $this-interactive_mode
 	set $this-node_display_type Spheres
 	set $this-edge_display_type Lines
 	set $this-node_scale 0.03
@@ -64,6 +65,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-active_tab "Nodes"
 	set $this-use-normals 0
 	set $this-use-transparency 0
+	set $this-interactive_mode "Interactive"
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-has_vec_data w "$this vec_tab_changed"
 	trace variable $this-nodes-as-disks w "$this disk_render_status_changed"
@@ -169,7 +171,7 @@ itcl_class SCIRun_Visualization_ShowField {
 		-variable $this-node_scale -command "$this-c node_scale"
 
 	bind $nodes.slide.scale <ButtonRelease> \
-		"$this-c needexecute"
+		"$this-c node_scale"
     }
 
     # Edges Tab
@@ -195,7 +197,7 @@ itcl_class SCIRun_Visualization_ShowField {
 		-variable $this-edge_scale -command "$this-c edge_scale"
 
 	bind $edge.slide.scale <ButtonRelease> \
-		"$this-c needexecute"
+		"$this-c edge_scale"
     }
 
     # Faces Tab
@@ -247,7 +249,7 @@ itcl_class SCIRun_Visualization_ShowField {
 		-variable $this-vectors_scale -command "$this-c data_scale"
 
 	bind $vector.slide.scale <ButtonRelease> \
-		"$this-c needexecute"
+		"$this-c data_scale"
     }
 
     method disk_render_status_changed {name1 name2 op} {
@@ -308,6 +310,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	}
 
 	global $this-active_tab
+	global $this-interactive_mode
 	# view the active tab
 	$dof.tabs view [set $this-active_tab]	
 	$dof.tabs configure -tabpos "n"
@@ -333,12 +336,19 @@ itcl_class SCIRun_Visualization_ShowField {
 	scale $res.scale -orient horizontal -variable $this-resolution \
 		-from 3 -to 20 -showvalue true -resolution 1
 
+	# execute policy
+	make_labeled_radio $window.control.exc_policy \
+		"Execute Policy" "$this-c execute_policy" top \
+		$this-interactive_mode \
+		{{"Interactively update" Interactive} {"Execute button only" OnExecute}}
+
 	pack $res.scale -side top -fill both -expand 1
 
 	pack $window.options -padx 2 -pady 2 -side top
 	pack $window.resolution -padx 2 -pady 2 -side top -fill x -expand 1
 	pack $window.def_col $window.control -padx 2 -pady 2 -side top
 
+	pack $window.control.exc_policy -side top
 	button $window.control.execute -text Execute -command $n
 	button $window.control.dismiss -text Dismiss -command "destroy $window"
 	pack $window.control.execute $window.control.dismiss -side left 

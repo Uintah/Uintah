@@ -22,6 +22,18 @@
 
 namespace SCIRun {
 
+RenderFieldBase::RenderFieldBase() :
+  node_switch_(0),
+  edge_switch_(0),
+  face_switch_(0),
+  data_switch_(0),
+  vec_node_(0),
+  def_mat_handle_(0),
+  color_handle_(0),
+  res_(0),
+  mats_(0)
+{}
+
 RenderFieldBase::~RenderFieldBase()
 {}
 
