@@ -42,6 +42,8 @@ private:
   GuiInt maxcol_;
   GuiInt minrow_;
   GuiInt maxrow_;
+  GuiInt nrow_;
+  GuiInt ncol_;
 
 public:
   Submatrix(const string& id);
@@ -62,7 +64,9 @@ Submatrix::Submatrix(const string& id)
     mincol_("mincol", id, this),
     maxcol_("maxcol", id, this),
     minrow_("minrow", id, this),
-    maxrow_("maxrow", id, this)
+    maxrow_("maxrow", id, this),
+    nrow_("nrow", id, this),
+    ncol_("ncol", id, this)
 {
 }
 
@@ -81,6 +85,8 @@ Submatrix::execute()
   {
     return;
   }
+  nrow_.set(imatrix->nrows());
+  ncol_.set(imatrix->ncols());
   
   MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
   if (!omp)
@@ -118,56 +124,45 @@ Submatrix::execute()
       mincol = 0;
       maxcol = imatrix->ncols() - 1;
     }
-
-    mincol = Max(0, mincol);
-    minrow = Max(0, minrow);
-    maxcol = Min(maxcol + 1, imatrix->ncols());
-    maxrow = Min(maxrow + 1, imatrix->nrows());
-
-    mincol_.set(mincol);
-    maxcol_.set(maxcol);
-    minrow_.set(minrow);
-    maxrow_.set(maxrow);
   }
   else
   {
-    // Get the bounds, clip to the input matrix size.
-    if (mincol_.get() < 0) { mincol_.set(0); }
-    if (minrow_.get() < 0) { minrow_.set(0); }
-    if (maxcol_.get() < 0) { maxcol_.set(imatrix->ncols() - 1); }
-    if (maxrow_.get() < 0) { maxrow_.set(imatrix->nrows() - 1); }
-
-    mincol = mincol_.get();
-    maxcol = maxcol_.get();
     minrow = minrow_.get();
     maxrow = maxrow_.get();
-
-    mincol = Max(0, mincol);
-    minrow = Max(0, minrow);
-    maxcol = Min(maxcol + 1, imatrix->ncols());
-    maxrow = Min(maxrow + 1, imatrix->nrows());
+    mincol = mincol_.get();
+    maxcol = maxcol_.get();
   }
+
+  minrow = Min(Max(0, minrow), imatrix->nrows()-1);
+  maxrow = Min(Max(0, maxrow), imatrix->nrows()-1);
+  mincol = Min(Max(0, mincol), imatrix->ncols()-1);
+  maxcol = Min(Max(0, maxcol), imatrix->ncols()-1);
+
+  minrow_.set(minrow);
+  maxrow_.set(maxrow);
+  mincol_.set(mincol);
+  maxcol_.set(maxcol);
     
-  if (mincol >= maxcol || minrow >= maxrow)
+  if (mincol > maxcol || minrow > maxrow)
   {
-    warning("Zero size output matrix, disregarding.");
+    warning("Max range must be greater than or equal to min range, disregarding.");
     return;
   }
 
   // No need to clip if the matrices are identical.
-  if (minrow == 0 && maxrow == imatrix->nrows() &&
-      mincol == 0 && maxcol == imatrix->ncols())
+  if (minrow == 0 && maxrow == (imatrix->nrows()-1) &&
+      mincol == 0 && maxcol == (imatrix->ncols()-1))
   {
     omp->send(imatrix);
     return;
   }
 
   // Build a dense matrix with the clipped values in it.
-  DenseMatrix *omatrix = scinew DenseMatrix(maxrow - minrow, maxcol - mincol);
+  DenseMatrix *omatrix = scinew DenseMatrix(maxrow-minrow+1, maxcol-mincol+1);
   int r, c;
-  for (r = minrow; r < maxrow; r++)
+  for (r = 0; r <=maxrow-minrow; r++)
   {
-    for (c = mincol; c < maxcol; c++)
+    for (c = 0; c<=maxcol-mincol; c++)
     {
       omatrix->put(r, c, imatrix->get(r + minrow, c + mincol));
     }
