@@ -272,7 +272,7 @@ TextDumper::TextDumper(DataArchive* da, string datadir, bool onedim, bool tserie
   // and the Dir.create fails.  This exception is ignored. 
   Dir dumpdir;
   try {
-    dumpdir.create(datadir);
+    dumpdir.create(datadir_);
   } catch (Exception& /*e*/) {
     ;
   }
@@ -2069,7 +2069,7 @@ HistogramDumper::HistogramDumper(DataArchive* da, string datadir, int nbins)
   // and the Dir.create fails.  This exception is ignored. 
   Dir dumpdir;
   try {
-    dumpdir.create(datadir);
+    dumpdir.create(datadir_);
   } catch (Exception& /*e*/) {
     ;
   }
@@ -2148,8 +2148,8 @@ HistogramDumper::Step::Step(DataArchive * da, string datadir, int index, double 
   Dir stepdir;
   try {
     stepdir.create(stepdname_);
-  } catch (...) {
-    ; // 
+  } catch (ErrornoException & e) {
+    cerr << "WARNING " << e.message() << endl;
   }
 }
 
@@ -2354,6 +2354,10 @@ HistogramDumper::Step::storeField(string fieldname, const Uintah::TypeDescriptio
         double xmid = minval+(ibin+0.5)*(maxval-minval)/nbins_;
         os << xmid << " " << bins[ibin] << endl;
       }
+      
+      if(!os)
+        throw InternalError("Failed to write histogram file '"+fname+"'");
+      
     } // idiag
   } // imat
 }
@@ -2370,18 +2374,18 @@ void usage(const string& badarg, const string& progname)
     cerr << "Error parsing argument: " << badarg << endl;
   cerr << "Usage: " << progname << " [options] <archive file>\n\n";
   cerr << "Valid options are:\n";
-  cerr << "  -bin                dump in binary format\n";
-  cerr << "  -onemesh            only store single mesh (ensight only)\n";
-  cerr << "  -onedim             generate one dim plots (dx/text only)\n";
-  cerr << "  -tseries            generate single time series file (text only)\n";
-  cerr << "  -withpart           include particles (ensight only)\n";
-  cerr << "  -nbins              number of particle bins\n";
-  cerr << "  -timesteplow  [int] (only outputs timestep from int)\n";
-  cerr << "  -timestephigh [int] (only outputs timesteps upto int)\n";
-  cerr << "  -timestepinc  [int] (only outputs every int timesteps)\n";
-  cerr << "  -basename     [bnm] basename to write to\n";
-  cerr << "  -format       [fmt] output format, one of (text,ensight,dx,histogram)\n";
-  cerr << "  -field        [fld] field to dump\n";
+  cerr << "  -bin                   dump in binary format\n";
+  cerr << "  -onemesh               only store single mesh (ensight only)\n";
+  cerr << "  -onedim                generate one dim plots (dx/text only)\n";
+  cerr << "  -tseries               generate single time series file (text only)\n";
+  cerr << "  -withpart              include particles (ensight only)\n";
+  cerr << "  -nbins                 number of particle bins\n";
+  cerr << "  -timesteplow  [int]    (only outputs timestep from int)\n";
+  cerr << "  -timestephigh [int]    (only outputs timesteps upto int)\n";
+  cerr << "  -timestepinc  [int]    (only outputs every int timesteps)\n";
+  cerr << "  -basename     [bnm]    basename to write to\n";
+  cerr << "  -format       [fmt]    output format, one of (text,ensight,dx,histogram)\n";
+  cerr << "  -field        [fld]    field to dump\n";
   exit(1);
 }
 
