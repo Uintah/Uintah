@@ -33,6 +33,7 @@
 #include <Packages/Uintah/CCA/Components/Examples/Poisson3.h>
 #include <Packages/Uintah/CCA/Components/Examples/SimpleCFD.h>
 #include <Packages/Uintah/CCA/Components/Examples/AMRSimpleCFD.h>
+#include <Packages/Uintah/CCA/Components/Models/ModelFactory.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SimpleScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
@@ -502,6 +503,9 @@ main( int argc, char** argv )
 	ctl->attachPort("sim", sim);
 	comp->attachPort("solver", solve);
 	comp->attachPort("output", output);
+
+	ModelMaker* modelmaker = scinew ModelFactory(world);
+	comp->attachPort("modelmaker", modelmaker);
 
 	if(world->myrank() == 0){
 	   cerr << "Using scheduler: " << scheduler 

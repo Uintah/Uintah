@@ -52,6 +52,7 @@ else
         Packages/Uintah/Core/Disclosure \
         Packages/Uintah/Core/Exceptions \
         Packages/Uintah/CCA/Ports \
+	Packages/Uintah/CCA/Components/Models \
         Packages/Uintah/CCA/Components/MPM \
         Packages/Uintah/CCA/Components/MPMICE \
         Packages/Uintah/CCA/Components/DataArchiver \
