@@ -186,6 +186,7 @@
 	        <lower>[0,0,0]</lower>
 	        <upper>[1,1,1]</upper>
 	        <resolution>[61,41,41]</resolution>
+                <extraCells>[1,1,1]</extraCells>
 		<patches>[1,1,1]</patches>
 	    </Box>
 	</Level>
