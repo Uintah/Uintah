@@ -73,6 +73,7 @@ public:
   }
   
   virtual ~ScalarFieldInterface() {}
+  virtual bool minmax( pair<double, double>& mm) const = 0;
   virtual bool interpolate(double &result, const Point &p) const = 0;
   virtual void interpolate_many(vector<double> &results,
 				vector<bool> &success,
@@ -90,7 +91,8 @@ public:
     fld_(fld),
     interp_(this)
   {}
-  
+
+  virtual bool minmax( pair<double, double>& mm) const;
   virtual bool interpolate(double &result, const Point &p) const;
   virtual void interpolate_many(vector<double> &results,
 				vector<bool> &success,
@@ -178,6 +180,12 @@ private:
   const F        *fld_;
   linear_interp   interp_;
 };
+
+template <class Fld>
+bool SFInterface<Fld>::minmax(pair<double, double>& mm) const
+{
+  ASSERTFAIL("not implemented");
+}
 
 template <class Fld>
 bool SFInterface<Fld>::interpolate(double &result, const Point &p) const
