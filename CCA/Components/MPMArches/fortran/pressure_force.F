@@ -169,6 +169,9 @@ c--------------------------------------------------------------------
      $     pressforcez_fcz, zero,
      $     dim_lo_fcz, dim_hi_fcz, valid_lo, valid_hi)
 
+c     debug, sk, April 14, 2001
+      print*, 'printing pressure force values'
+
 *     west, south, and bottom faces of intrusion
 
       do 120 k = valid_lo(3), valid_hi(3)
@@ -186,6 +189,10 @@ c--------------------------------------------------------------------
      $                    pressforcex_fcx(i,j,k) +
      $                    pres(i-1,j,k)*areayz
      $                    *epsg(i-1,j,k)*epsg_solid(i,j,k)
+
+c     debug, sk, April 14, 2001
+                     print*, i,j,k, pres(i-1,j,k), 
+     $                    pressforcex_fcx(i,j,k)
 
                   endif
 
@@ -234,6 +241,10 @@ c--------------------------------------------------------------------
      $                    pressforcex_fcx(i+1,j,k) -
      $                    pres(i+1,j,k)*areayz
      $                    *epsg(i+1,j,k)*epsg_solid(i,j,k)
+
+c     debug, sk, April 14, 2001
+                     print*, i+1,j,k, pres(i+1,j,k), 
+     $                    pressforcex_fcx(i+1,j,k)
 
                   endif
 

@@ -375,6 +375,14 @@ c     solid and fluid at the cell center; and is later interpolated for
 c     the solid to the face centers.
 c     
 
+c     debug, sk, April 14, 2001
+
+      if (ioff.eq.1) then
+         print*, 'printing drag forces'
+      endif
+
+c     end debug
+
       do 120 k = valid_lo(3), valid_hi(3)
          do 110 j = valid_lo(2), valid_hi(2)
             do 100 i = valid_lo(1), valid_hi(1)
@@ -384,7 +392,7 @@ c     $              eps_Gas(i,j,k)
 c     later we will get discrete fraction from mpm to input here.
 
                eps_Gas_cont = eps_Gas(i,j,k)
-               if (eps_Gas_cont.lt.one .and. 
+               if (eps_Gas_cont.lt.(one - small).and. 
      $              pcell(i,j,k).ne.wall) then
 
                   idf  = ioff*i + joff*j + koff*k
@@ -413,6 +421,14 @@ c     later we will get discrete fraction from mpm to input here.
                   dragforcex_cc(i,j,k) = dragforcex_cc(i,j,k) +
      $                 tmult*area*
      $                 (ug_cc(i,j,k) - up_cc(i,j,k))
+
+c     debug, sk, April 14, 2001
+
+                  if (ioff.eq.1) then
+c                     print*, i,j,k, dragforcex_cc(i,j,k)
+                  endif
+
+c     end debug
 
                end if
 
