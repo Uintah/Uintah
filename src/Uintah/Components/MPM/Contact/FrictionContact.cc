@@ -67,6 +67,24 @@ FrictionContact::~FrictionContact()
 
 }
 
+void FrictionContact::initializeContact(const Region* region,
+                                        int vfindex,
+                                        DataWarehouseP& new_dw)
+{
+  NCVariable<double> normtraction;
+  NCVariable<Vector> surfnorm;
+
+  new_dw->allocate(normtraction,gNormTractionLabel,vfindex , region);
+  new_dw->allocate(surfnorm, gSurfNormLabel,vfindex , region);
+
+  normtraction.initialize(0.0);
+  surfnorm.initialize(Vector(0.0,0.0,0.0));
+
+  new_dw->put(normtraction,gNormTractionLabel,vfindex , region);
+  new_dw->put(surfnorm, gSurfNormLabel,vfindex , region);
+
+}
+
 void FrictionContact::exMomInterpolated(const ProcessorContext*,
 					const Region* region,
 					const DataWarehouseP& old_dw,
@@ -456,6 +474,10 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.13  2000/05/08 18:42:46  guilkey
+// Added an initializeContact function to all contact classes.  This is
+// a null function for all but the FrictionContact.
+//
 // Revision 1.12  2000/05/06 11:03:25  guilkey
 // Removed some hardwired crap.  Now using getLowIndex and getHighIndex.
 //

@@ -69,7 +69,7 @@ WARNING
 	 gMomExedAccelerationLabel = new VarLabel( "g.momexedacceleration",
                               NCVariable<Vector>::getTypeDescription() );
 	 deltLabel          = new VarLabel( "delt",
-					    delt_vartype::getTypeDescription() );
+				    delt_vartype::getTypeDescription() );
 
 	 };
 
@@ -83,6 +83,10 @@ WARNING
 				      const Region* region,
 				      const DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw) = 0;
+
+	 virtual void initializeContact(const Region* region,
+					int vfindex,
+					DataWarehouseP& new_dw) = 0;
 	 
 	 
 	 // Auxilliary methods to supply data needed by some of the
@@ -123,6 +127,10 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.12  2000/05/08 18:42:46  guilkey
+// Added an initializeContact function to all contact classes.  This is
+// a null function for all but the FrictionContact.
+//
 // Revision 1.11  2000/05/02 18:41:18  guilkey
 // Added VarLabels to the MPM algorithm to comply with the
 // immutable nature of the DataWarehouse. :)

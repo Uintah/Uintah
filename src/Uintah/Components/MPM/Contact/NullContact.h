@@ -55,6 +55,11 @@ WARNING
       
       // Destructor
       virtual ~NullContact();
+
+      // Initialize contact data areas
+      virtual void initializeContact(const Region* region,
+				     int vfindex,
+				     DataWarehouseP& new_dw);
       
       // Basic contact methods
       virtual void exMomInterpolated(const ProcessorContext*,
@@ -73,6 +78,10 @@ WARNING
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.6  2000/05/08 18:42:46  guilkey
+// Added an initializeContact function to all contact classes.  This is
+// a null function for all but the FrictionContact.
+//
 // Revision 1.5  2000/04/27 21:28:58  jas
 // Contact is now created using a factory.
 //
