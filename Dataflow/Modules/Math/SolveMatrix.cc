@@ -61,6 +61,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
@@ -1183,16 +1184,7 @@ SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
   CPUTimer timer;
   timer.start();
   int np = tcl_np.get();
-  Matrix *trans;
-  if (matrix->getSymSparseRow()) trans=matrix;
-  else if (matrix->getSparseRow()) {
-      SparseRowMatrix *tr = scinew SparseRowMatrix;
-      trans = tr;
-      tr->transpose( *matrix->getSparseRow() );
-  } else {
-      error("Input matrix isn't sparse of sym-sparse - can't use CG (no transpose)");
-      return;
-  }
+  Matrix *trans = matrix->transpose();
 
 //  data=new CGData;
   data.module=this;

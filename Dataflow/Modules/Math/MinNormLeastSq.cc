@@ -185,13 +185,13 @@ MinNormLeastSq::execute()
       x[i] += w[j]*((*v[j])[i]-dc[j]);
   }
    
-  ColumnMatrix* w_vec = new ColumnMatrix(4);
-  w_vec->put_lhs(w);   
+  ColumnMatrix* w_vec = new ColumnMatrix(3);
+  w_vec->set_data(w);   
   MatrixHandle w_vecH(w_vec);
   w_omat_->send(w_vecH);
 
   ColumnMatrix* x_vec = new ColumnMatrix(size);
-  x_vec->put_lhs(x);
+  x_vec->set_data(x);
   MatrixHandle x_vecH(x_vec);
   x_omat_->send(x_vecH);
 }    

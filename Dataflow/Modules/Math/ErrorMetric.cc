@@ -144,7 +144,7 @@ void ErrorMetric::execute()
      int ne=ivec2->nrows();
 
      ColumnMatrix* errorM = scinew ColumnMatrix(1);
-     double *val=errorM->get_rhs();
+     double *val=errorM->get_data();
      MatrixHandle errorH(errorM);
 
      // compute CC

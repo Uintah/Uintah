@@ -30,7 +30,10 @@ SRCDIR   := Dataflow/Modules/Math
 
 SRCS     += \
 	$(SRCDIR)/BuildTransform.cc\
+	$(SRCDIR)/CastMatrix.cc\
 	$(SRCDIR)/ErrorMetric.cc\
+	$(SRCDIR)/LinAlgBinary.cc\
+	$(SRCDIR)/LinAlgUnary.cc\
         $(SRCDIR)/MatrixSelectVector.cc\
         $(SRCDIR)/MinNormLeastSq.cc\
 	$(SRCDIR)/SolveMatrix.cc\
