@@ -29,16 +29,20 @@ grep elap $out | cut -d"=" -f4 | cut -d "," -f1 >& .elapsedTime
 grep mean $out | cut -d" " -f 3 >> .meanTime
 grep elap $out | cut -d"=" -f2 | cut -d"," -f1 >& .physicalTime
 grep delT $out | cut -d"=" -f3 | cut -d"," -f1 >& .delT
-grep delT $out | cut -d"=" -f5 >& .memUse
-paste -d "  " .elapsedTime .meanTime .physicalTime .delT .memUse>& .data
+#grep delT $out | cut -d"=" -f5 | cut -d" " -f1 >& .memUse
+grep delT $out | cut -d"=" -f5 | cut -d" " -f2 | cut -d"/" -f1 > .memUse1
+grep delT $out | cut -d"=" -f5 | cut -d" " -f2 | cut -d"/" -f2 > .memUse2
+grep delT $out | cut -d"=" -f5 | cut -d" " -f4 | cut -d"/" -f1 > .memUse3
+grep delT $out | cut -d"=" -f5 | cut -d" " -f4 | cut -d"/" -f2 > .memUse4
+paste -d "  " .elapsedTime .meanTime .physicalTime .delT .memUse1 .memUse2 .memUse3 .memUse4>& .data
 
 rm -f .elapsedTime .meanTime .physicalTime .delT .memUse
 #__________________________________
 # generate the  plot script
 cat > gp << fin
 set multiplot
-set size 1.0,0.50 # for two plots
-set origin 0.0,0.5
+set size 1.0,0.33 # for three plots
+set origin 0.0,0.33
 set autoscale
 set xdata time
 set timefmt "%s"
@@ -49,12 +53,19 @@ set y2tics
 plot '.data' using 1:3           t 'Physical Time' with lines,\
      '.data' using 1:2 axes x1y2 t 'meanTime/timestep' with lines
     #----------second plot-------------
-set size 1.0,0.51       
+set size 1.0,0.33       
+set origin 0.0,0.66
+
+plot '.data' using 1:4 t 'Delt' with lines
+
+    #----------third plot-------------
+set size 1.0,0.33       
 set origin 0.0,0.0
 set xlabel "ElapsedTime"
-
-plot '.data' using 1:4 t 'Delt' with lines,\
-     '.data' using 1:5 axes x1y2 t 'memory usage' with lines
+plot '.data' using 1:5 axes x1y2 t 'avg1' with lines, \
+     '.data' using 1:6 axes x1y2 t 'avg2' with lines, \
+     '.data' using 1:7 axes x1y2 t 'max1' with lines, \
+     '.data' using 1:8 axes x1y2 t 'max2' with lines
 set nomultiplot
 pause -1 "Hit return to kill plot"
 fin
