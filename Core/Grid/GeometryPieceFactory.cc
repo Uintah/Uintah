@@ -3,6 +3,7 @@
 #include <Packages/Uintah/Core/Grid/SphereGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/SphereMembraneGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/CylinderGeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/ConeGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/TriGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/UnionGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/DifferenceGeometryPiece.h>
@@ -38,6 +39,9 @@ void GeometryPieceFactory::create(const ProblemSpecP& ps,
 
       else if (go_type ==  "cylinder")
 	 objs.push_back(new CylinderGeometryPiece(child));
+
+      else if (go_type ==  "cone")
+	 objs.push_back(new ConeGeometryPiece(child));
 
       else if (go_type == "tri")
 	 objs.push_back(new TriGeometryPiece(child));
