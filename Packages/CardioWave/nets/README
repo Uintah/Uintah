@@ -3,20 +3,22 @@ SCIRun conversion programs to get data into and out of CardioWave
 simulations.
 
 NOTE: I will refer to the place where the data files are being stored as
-        $DUKEDATA -- on the SCI machines, this is ~dmw/mydata/duke/mesh/
-	and the root of SCIRun as $SCIRUN -- I'm using ~dmw/SCIRun/
-
+        $CWDATA, and the root of SCIRun as $SCIRUN.  In orde to run
+	the nets I have created in $SCIRun/src/Packages/CardioWave/nets/ 
+	you have to have two enviornment variables set:
+	setenv CWDATA /scratch/data/ (or wherever you want to put it)
+	setenv CWRES 128 (or whatever resolution you want to use)
 
 
 Resampling the Original Data Files
 ==================================
 
-Original data is in $DUKEDATA/../OriginalAucklandHEART.dat
+Original data is in $CWDATA/../OriginalAucklandHEART.dat
 That data was split into position (.pts) and orientation (.f1, .f2) files
-	using $DUKEDATA/../splitData.csh
+	using $CWDATA/../splitData.csh
 The .pts, .f1, and .f2 files were resampled to produce smaller versions
 	using the "SubsetPts" utility:
-    % cd $DUKEDATA
+    % cd $CWDATA
     % $SCIRUN/src/Packages/CardioWave/StandAlone/convert/SubsetPts \
       ../OriginalAucklandHEART.pts 0.1 0.1.pts
 We're using 10% (randomly chosen) of the original data for these
@@ -38,7 +40,7 @@ Running SCIRun and CardioWave
 We start by building SCIRun matrices from the .f1 and .f2 files --
 	we do this with the StandAlone/convert/RawToColumnMatrix
 	program -- this results in 0.1.f1.mat and 0.1.f2.mat
-   % cd $DUKEDATA
+   % cd $CWDATA
    % $SCIRUN/src/StandAlone/convert/RawToDenseMatrix \
      0.1.f1 sr-data/0.1.f1.mat
    % $SCIRUN/src/StandAlone/convert/RawToDenseMatrix \
@@ -96,7 +98,7 @@ Having generated the input files for CardioWave, we can now run
         simulations to output activation times.  First, though, we
         must convert the cell-type ColumnMatrix into a CardioWave .vec
         file.  We do this using another SCIRun converter:
-   % cd $DUKEDATA
+   % cd $CWDATA
    % $SCIRUN/src/Packages/CardioWave/StandAlone/convert/ColumnMatToCardioWave \
      sr-data/0.1.32.ct.mat cw-data/0.1.32.ct.vec
 	After the file has been converted, we run CardioWave, which

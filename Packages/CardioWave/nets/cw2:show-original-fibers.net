@@ -1,4 +1,33 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
 # SCI Network 1.0
+
+if {[llength [array get env CWDATA]] == 0} {
+   puts ""
+   puts "*** Error: this net depends on the CWDATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv SCIRUN_DATA /scratch/data/)"
+   puts ""
+   ::netedit scheduleok
+   return
+}
+set CWDATA $env(CWDATA)
+puts "*** Using CWDATA $CWDATA"
 
 ::netedit dontschedule
 
@@ -33,7 +62,7 @@ addConnection $m0 0 $m2 0
 
 set $m0-notes {}
 set $m0-show_status 1
-set $m0-filename {/home/sci/dmw/mydata/duke/mesh/sr-data/0.1.resized-no-interior.tvv.fld}
+set $m0-filename $CWDATA/sr-data/0.1.resized-no-interior.tvv.fld
 set $m1-notes {}
 set $m1-show_status 1
 $m1 ui
@@ -94,12 +123,12 @@ set $m2-notes {}
 set $m2-show_status 1
 set $m3-notes {}
 set $m3-show_status 1
-set $m3-filename {/home/sci/dmw/mydata/duke/mesh/sr-data/0.1.f2.mat}
+set $m3-filename $CWDATA/sr-data/0.1.f2.mat
 set $m4-notes {}
 set $m4-show_status 1
 set $m5-notes {}
 set $m5-show_status 1
-set $m5-filename {/home/sci/dmw/mydata/duke/mesh/sr-data/0.1.f1.mat}
+set $m5-filename $CWDATA/sr-data/0.1.f1.mat
 set $m6-notes {}
 set $m6-show_status 1
 set $m6-nodes-on 0
