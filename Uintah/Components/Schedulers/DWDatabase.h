@@ -47,7 +47,7 @@ public:
    bool exists(const VarLabel* label, int matlIndex, const Patch* patch) const;
    bool exists(const VarLabel* label, const Patch* patch) const;
    void put(const VarLabel* label, int matlindex, const Patch* patch,
-	    const VarType& var, bool replace);
+	    VarType* var, bool replace);
    void get(const VarLabel* label, int matlindex, const Patch* patch,
 	    VarType& var) const;
    VarType* get(const VarLabel* label, int matlindex,
@@ -169,7 +169,7 @@ bool DWDatabase<VarType>::exists(const VarLabel* label, const Patch* patch) cons
 template<class VarType>
 void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
 			      const Patch* patch,
-			      const VarType& var,
+			      VarType* var,
 			      bool replace)
 {
    nameDBtype::const_iterator nameiter = names.find(label);
@@ -203,7 +203,7 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
 	 throw InternalError("Put replacing old variable");
    }
 
-   rr->vars[matlIndex]=var.clone();
+   rr->vars[matlIndex]=var;
 }
 
 template<class VarType>
@@ -258,7 +258,7 @@ void DWDatabase<VarType>::copyAll(const DWDatabase& from,
 
    for(int i=0;i<rr->vars.size();i++){
       if(rr->vars[i])
-	 put(label, i, patch, *rr->vars[i], false);
+	 put(label, i, patch, rr->vars[i]->clone(), false);
    }
 }
 
@@ -266,6 +266,11 @@ void DWDatabase<VarType>::copyAll(const DWDatabase& from,
 
 //
 // $Log$
+// Revision 1.11  2000/06/15 21:57:11  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.10  2000/05/31 17:55:50  sparker
 // Fixed database so that carryForward won't die when there are no
 // particles.

@@ -34,6 +34,7 @@
 //      Usage:
 
 
+#include <SCICore/Exceptions/InternalError.h>
 #include "ConstitutiveModelFactory.h"
 #include "HyperElasticDamage.h"
 #include <SCICore/Malloc/Allocator.h>
@@ -41,6 +42,7 @@
 #include <iostream>
 using namespace std;
 using namespace Uintah::MPM;
+using SCICore::Exceptions::InternalError;
 
 HyperElasticDamage::HyperElasticDamage(ProblemSpecP& ps)
 {
@@ -178,6 +180,13 @@ std::vector<double> HyperElasticDamage::getMechProps() const
 
   return props;
 
+}
+
+
+void HyperElasticDamage::addParticleState(std::vector<const VarLabel*>& from,
+					std::vector<const VarLabel*>& to)
+{
+   throw InternalError("HyperElasticDamage won't work");
 }
 
 void HyperElasticDamage::computeStressTensor(const Patch* patch,
@@ -425,6 +434,11 @@ int HyperElasticDamage::getSize() const
 
 //
 // $Log$
+// Revision 1.11  2000/06/15 21:57:05  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.10  2000/06/09 21:07:33  jas
 // Added code to get the fudge factor directly into the constitutive model
 // inititialization.

@@ -14,7 +14,7 @@ void  ParticlesNeighbor::buildIncluding(const particleIndex& pIndex,
 {
   CellsNeighbor cellsNeighbor;
   cellsNeighbor.buildIncluding(
-    lattice.getPatch()->findCell(lattice.getParticlesPosition()[pIndex]),
+    lattice.getPatch()->getLevel()->getCellIndex(lattice.getParticlesPosition()[pIndex]),
     lattice);
   
   for(CellsNeighbor::const_iterator iter_cell = cellsNeighbor.begin();
@@ -36,7 +36,7 @@ void  ParticlesNeighbor::buildExcluding(const particleIndex& pIndex,
 {
   CellsNeighbor cellsNeighbor;
   cellsNeighbor.buildIncluding(
-    lattice.getPatch()->findCell(lattice.getParticlesPosition()[pIndex]),
+    lattice.getPatch()->getLevel()->getCellIndex(lattice.getParticlesPosition()[pIndex]),
     lattice);
   
   for(CellsNeighbor::const_iterator iter_cell = cellsNeighbor.begin();
@@ -73,6 +73,11 @@ interpolatedouble(const ParticleVariable<double>& pdouble,
 } //namespace Uintah
 
 // $Log$
+// Revision 1.4  2000/06/15 21:57:10  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.3  2000/06/06 01:58:25  tan
 // Finished functions build particles neighbor for a given particle
 // index.

@@ -217,12 +217,6 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       const TypeDescription*
       CCVariable<T>::getTypeDescription()
       {
-	 // Dd: Whis isn't td a class variable and does it
-	 // need to be deleted in the destructor?
-	std::cerr << "getting type description from CC var\n";
-
-	 // Dd: Copied this from NC Var... don't know if it is 
-	 // correct.
 	static TypeDescription* td;
 	if(!td){
 	  td = scinew TypeDescription(TypeDescription::CCVariable,
@@ -353,6 +347,11 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
 //
 // $Log$
+// Revision 1.17  2000/06/15 21:57:16  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.16  2000/06/13 21:28:30  jas
 // Added missing TypeUtils.h for fun_forgottherestofname and copy constructor
 // was wrong for CellIterator.

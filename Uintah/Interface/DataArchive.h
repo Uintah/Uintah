@@ -4,6 +4,7 @@
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/GridP.h>
+#include <SCICore/Thread/Mutex.h>
 #include <string>
 #include <vector>
 
@@ -22,6 +23,7 @@
 
 namespace Uintah {
    class Patch;
+   using SCICore::Thread::Mutex;
    
    /**************************************
      
@@ -165,6 +167,8 @@ private:
    std::vector<DOM_Node> d_tstop;
    std::vector<XMLURL> d_tsurl;
 
+   Mutex d_lock;
+
    DOM_Node findVariable(const string& name, const Patch* patch,
 			 int matl, double time, XMLURL& url);
 };
@@ -173,6 +177,11 @@ private:
 
 //
 // $Log$
+// Revision 1.6  2000/06/15 21:57:22  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.5  2000/05/30 20:19:40  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

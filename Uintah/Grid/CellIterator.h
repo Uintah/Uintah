@@ -47,10 +47,10 @@ WARNING
       inline CellIterator operator++(int) {
 	 CellIterator old(*this);
 	 
-	 if(++d_iz >= d_ez){
-	    d_iz = d_sz;
-	    if(++d_iy >= d_ey){
-	       d_iy = d_sy;
+	 if(++d_iz >= d_e.z()){
+	    d_iz = d_s.z();
+	    if(++d_iy >= d_e.y()){
+	       d_iy = d_s.y();
 	       ++d_ix;
 	    }
 	 }
@@ -60,7 +60,7 @@ WARNING
       //////////
       // Insert Documentation Here:
       inline bool done() const {
-	 return d_ix >= d_ex || d_iy >= d_ey || d_iz >= d_ez;
+	 return d_ix >= d_e.x() || d_iy >= d_e.y() || d_iz >= d_e.z();
       }
 
       IntVector operator*() {
@@ -69,36 +69,34 @@ WARNING
       IntVector index() const {
 	 return IntVector(d_ix, d_iy, d_iz);
       }
-      inline CellIterator(int ix, int iy, int iz, int ex, int ey, int ez)
-	 : d_sx(ix), d_sy(iy), d_sz(iz), d_ix(ix), d_iy(iy), d_iz(iz), d_ex(ex), d_ey(ey), d_ez(ez) {
+      inline CellIterator(const IntVector& s, const IntVector& e)
+	 : d_s(s), d_e(e) {
+	    d_ix = s.x();
+	    d_iy = s.y();
+	    d_iz = s.z();
       }
       inline IntVector current() const {
 	 return IntVector(d_ix, d_iy, d_iz);
       }
       inline IntVector begin() const {
-	 return IntVector(d_sx, d_sy, d_sz);
+	 return d_s;
       }
       inline IntVector end() const {
-	 return IntVector(d_ex, d_ey, d_ez);
+	 return d_e;
       }
       inline CellIterator(const CellIterator& copy)
 	 : d_ix(copy.d_ix), d_iy(copy.d_iy), d_iz(copy.d_iz),
-	   d_sx(copy.d_sx), d_sy(copy.d_sy), d_sz(copy.d_sz),
-	   d_ex(copy.d_ex), d_ey(copy.d_ey), d_ez(copy.d_ez) {
+	   d_s(copy.d_s), d_e(copy.d_e) {
       }
 
    private:
       CellIterator();
       CellIterator& operator=(const CellIterator& copy);
-      inline CellIterator(const Patch* patch, int ix, int iy, int iz)
-	 : d_sx(ix), d_sy(iy), d_sz(iz), d_ix(ix), d_iy(iy), d_iz(iz), d_ex(patch->getNCells().x()), d_ey(patch->getNCells().y()), d_ez(patch->getNCells().z()) {
-      }
       
       //////////
       // Insert Documentation Here:
-      int     d_ix, d_iy, d_iz;
-      int     d_sx, d_sy, d_sz;
-      int     d_ex, d_ey, d_ez;
+      IntVector d_s,d_e;
+      int d_ix, d_iy, d_iz;
    };
    
 } // end namespace Uintah
@@ -107,6 +105,11 @@ std::ostream& operator<<(std::ostream& out, const Uintah::CellIterator& b);
 
 //
 // $Log$
+// Revision 1.6  2000/06/15 21:57:16  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.5  2000/06/13 21:28:30  jas
 // Added missing TypeUtils.h for fun_forgottherestofname and copy constructor
 // was wrong for CellIterator.

@@ -58,8 +58,8 @@ setParticleStatus(Fracture::ParticleStatus status,Vector* particleSurfaceNormal)
 
 void
 Fracture::
-materialDefectsInitialize(const Patch* patch,
-                          DataWarehouseP& new_dw)
+materialDefectsInitialize(const Patch* /*patch*/,
+                          DataWarehouseP& /*new_dw*/)
 {
 }
 
@@ -125,22 +125,22 @@ labelCellSurfaceNormal (
   ParticleVariable<Point> px;
   ParticleVariable<Vector> pSurfaceNormal;
 
-  old_dw->get(px, lb->pXLabel, matlindex, patch,
-              Ghost::None, 0);
-  old_dw->get(pSurfaceNormal, lb->pSurfaceNormalLabel, matlindex, patch,
-              Ghost::None, 0);
+  ParticleSubset* subset = old_dw->getParticleSubset(matlindex, patch);
+  old_dw->get(px, lb->pXLabel, subset);
+  old_dw->get(pSurfaceNormal, lb->pSurfaceNormalLabel, subset);
 
   CCVariable<Vector> cSurfaceNormal;
   new_dw->allocate(cSurfaceNormal, lb->cSurfaceNormalLabel, vfindex, patch);
 
   ParticleSubset* pset = px.getParticleSubset();
   cSurfaceNormal.initialize(Vector(0,0,0));
+  const Level* level = patch->getLevel();
 
   for(ParticleSubset::iterator part_iter = pset->begin();
       part_iter != pset->end(); part_iter++)
   {
     particleIndex pIdx = *part_iter;
-    IntVector cIdx = patch->findCell(px[pIdx]);
+    IntVector cIdx = level->getCellIndex(px[pIdx]);
 
     Vector cellSurfaceNormal = cSurfaceNormal[cIdx];
     if( cellStatus(cellSurfaceNormal) == HAS_SEVERAL_BOUNDARY_SURFACE)
@@ -322,6 +322,11 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.21  2000/06/15 21:57:09  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.20  2000/06/05 02:07:59  tan
 // Finished labelSelfContactNodesAndCells(...).
 //

@@ -1,20 +1,17 @@
+
 Classes:
  - DataWarehouse/scheduler in detail
  - Peformance analysis
  - 
-Use debugstream for tasks, queries, output, etc.
 Flag -nooutput
 Profile/optimize
-Gather all stuff from Jim, etc.
 Fix boundary/initial condition stuff
 Parallelism
 More info in xml files:
  - variable min/max for some types
  - encoding: RLE?
 Optimize!
-Regions - common origin,etc.
-Make ghost cells work for get
-Compute gets/puts with task data
+Compare gets/puts with task data
 Nix DataItem?
 Particle IDs
 ParticleSet associated with Region/Patch

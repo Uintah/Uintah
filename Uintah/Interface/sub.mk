@@ -15,13 +15,18 @@ SRCS     += $(SRCDIR)/CFDInterface.cc $(SRCDIR)/DataArchive.cc \
 	$(SRCDIR)/MDInterface.cc
 
 PSELIBS := Uintah/Parallel Uintah/Grid Uintah/Exceptions PSECore/XMLUtil \
-	SCICore/Thread SCICore/Exceptions SCICore/Geometry
+	SCICore/Thread SCICore/Exceptions SCICore/Geometry SCICore/Util
 LIBS := $(XML_LIBRARY) -lmpi
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.11  2000/06/15 21:57:22  sparker
+# Added multi-patch support (bugzilla #107)
+# Changed interface to datawarehouse for particle data
+# Particles now move from patch to patch
+#
 # Revision 1.10  2000/06/09 16:52:24  tan
 # Created MDInterface for molecular dynamics simulation.
 #

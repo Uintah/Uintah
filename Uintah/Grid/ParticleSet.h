@@ -7,6 +7,7 @@ namespace Uintah {
 
    typedef int particleIndex;
    typedef int particleId;
+   class ParticleSubset;
 
 /**************************************
 
@@ -62,6 +63,7 @@ WARNING
       particleIndex numParticles() {
 	 return d_numParticles;
       }
+
    private:
       //////////
       // Insert Documentation Here:
@@ -75,6 +77,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.10  2000/06/15 21:57:17  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.9  2000/05/30 20:19:30  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

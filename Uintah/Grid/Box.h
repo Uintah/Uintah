@@ -43,11 +43,13 @@ namespace Uintah {
       Box(const Box&);
       Box& operator=(const Box&);
 
+#if 0
       inline void set( int lx, int ly, int lz,
 		       int ux, int uy, int uz ) {
 	d_lower.x( lx ); d_lower.y( ly ); d_lower.z( lz );
 	d_upper.x( ux ); d_upper.y( uy ); d_upper.z( uz );
       }
+#endif
      
       Box(const Point& lower, const Point& upper);
 
@@ -83,6 +85,11 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Box& b);
 
 //
 // $Log$
+// Revision 1.7  2000/06/15 21:57:15  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.6  2000/05/28 17:25:05  dav
 // adding mpi stuff
 //

@@ -19,6 +19,8 @@ namespace Uintah {
 class DataItem;
 class TypeDescription;
 class Patch;
+class ProcessorContext;
+class ScatterRecord;
 
 /**************************************
 
@@ -64,14 +66,18 @@ public:
    virtual void put(const ReductionVariableBase&, const VarLabel*);
 
    // Particle Variables
-   virtual void allocate(int numParticles, ParticleVariableBase&,
-			 const VarLabel*, int matlIndex, const Patch*);
+   virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
+						int matlIndex, const Patch*);
+   virtual ParticleSubset* getParticleSubset(int matlIndex,
+					     const Patch*);
+   virtual ParticleSubset* getParticleSubset(int matlIndex,
+			 const Patch*, Ghost::GhostType, int numGhostCells,
+			 const VarLabel* posvar);
    virtual void allocate(ParticleVariableBase&, const VarLabel*,
-			 int matlIndex, const Patch*);
-   virtual void get(ParticleVariableBase&, const VarLabel*, int matlIndex,
-		    const Patch*, Ghost::GhostType, int numGhostCells);
-   virtual void put(const ParticleVariableBase&, const VarLabel*,
-		    int matlIndex, const Patch*);
+			 ParticleSubset*);
+   virtual void get(ParticleVariableBase&, const VarLabel*,
+		    ParticleSubset*);
+   virtual void put(const ParticleVariableBase&, const VarLabel*);
 
    // NCVariables Variables
    virtual void allocate(NCVariableBase&, const VarLabel*,
@@ -107,6 +113,16 @@ public:
    // Insert Documentation Here:
    virtual void carryForward(const DataWarehouseP& from);
 
+   //////////
+   // Insert Documentation Here:
+   virtual void scheduleParticleRelocation(const LevelP& level,
+					   SchedulerP& sched,
+					   DataWarehouseP& dw,
+					   const VarLabel* old_posLabel,
+					   const vector<const VarLabel*>& old_labels,
+					   const VarLabel* new_posLabel,
+					   const vector<const VarLabel*>& new_labels,
+					   int numMatls);
    //////////
    // When the Scheduler determines that another MPI node will be
    // creating a piece of data (ie: a sibling DataWarehouse will have
@@ -153,6 +169,15 @@ public:
 
 private:
 
+   void scatterParticles(const ProcessorContext*,
+			 const Patch* patch,
+			 DataWarehouseP& old_dw,
+			 DataWarehouseP& new_dw);
+   void gatherParticles(const ProcessorContext*,
+			const Patch* patch,
+			DataWarehouseP& old_dw,
+			DataWarehouseP& new_dw);
+   const VarLabel* scatterGatherVariable;
    void sendMpiDataRequest( const string & varName,
 			          Patch * patch,
 			          int      numGhostCells );
@@ -169,6 +194,7 @@ private:
    typedef std::vector<dataLocation*> variableListType;
    typedef std::map<const VarLabel*, ReductionRecord*, VarLabel::Compare> reductionDBtype;
    typedef std::map<const VarLabel*, variableListType*, VarLabel::Compare> dataLocationDBtype;
+   typedef std::map<pair<int, const Patch*>, ParticleSubset*> psetDBType;
 
    DWDatabase<NCVariableBase>       d_ncDB;
    DWDatabase<CCVariableBase>       d_ccDB;
@@ -176,6 +202,7 @@ private:
    DWDatabase<ParticleVariableBase> d_particleDB;
    reductionDBtype                  d_reductionDB;
    DWDatabase<PerPatchBase>         d_perpatchDB;
+   psetDBType			    d_psetDB;
 
    // Record of which DataWarehouse has the data for each variable...
    //  Allows us to look up the DW to which we will send a data request.
@@ -192,17 +219,29 @@ private:
    
    // Internal VarLabel for the position of this DataWarehouse
    // ??? with respect to what ???? 
-   const VarLabel * d_positionLabel;
+   //const VarLabel * d_positionLabel;
 
    std::vector<const VarLabel*> d_saveset;
    std::vector<const VarLabel*> d_saveset_integrated;
    std::vector<int> d_savenumbers;
+
+   const VarLabel* reloc_old_posLabel;
+   std::vector<const VarLabel*> reloc_old_labels;
+   const VarLabel* reloc_new_posLabel;
+   std::vector<const VarLabel*> reloc_new_labels;
+   int reloc_numMatls;
+   std::map<pair<const Patch*, const Patch*>, ScatterRecord* > d_sgDB;
 };
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.27  2000/06/15 21:57:12  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.26  2000/06/14 23:39:26  jas
 // Added FCVariables.
 //

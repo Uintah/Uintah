@@ -96,15 +96,15 @@ Properties::computeProps(const ProcessorContext*,
   old_dw->get(density, d_densityLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
-  // Get the low and high index for the patch
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
-
   // Create the CCVariable for storing the computed density
   CCVariable<double> new_density;
   new_dw->allocate(new_density, d_densityLabel, matlIndex, patch);
 
 #ifdef WONT_COMPILE_YET
+  // Get the low and high index for the patch
+  IntVector lowIndex = patch->getCellLowIndex();
+  IntVector highIndex = patch->getCellHighIndex();
+
   // Calculate the properties
   // this calculation will be done by MixingModel class
   // for more complicated cases...this will only work for
@@ -136,6 +136,11 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.13  2000/06/15 21:56:58  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.12  2000/06/14 20:40:49  rawat
 // modified boundarycondition for physical boundaries and
 // added CellInformation class

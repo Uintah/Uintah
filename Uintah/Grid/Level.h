@@ -14,6 +14,9 @@
 
 namespace Uintah {
 
+   using SCICore::Geometry::Point;
+   using SCICore::Geometry::Vector;
+   using SCICore::Geometry::IntVector;
    class Patch;
    class Task;
    
@@ -49,7 +52,7 @@ WARNING
 
    class Level : public RefCounted {
    public:
-      Level(Grid* grid);
+      Level(Grid* grid, const Point& anchor, const Vector& dcell);
       virtual ~Level();
       
       typedef std::vector<Patch*>::iterator patchIterator;
@@ -59,16 +62,13 @@ WARNING
       patchIterator patchesBegin();
       patchIterator patchesEnd();
       
-      Patch* addPatch(const SCICore::Geometry::Point& lower,
-			const SCICore::Geometry::Point& upper,
-			const SCICore::Geometry::IntVector& lowIndex,
-			const SCICore::Geometry::IntVector& highIndex);
+      Patch* addPatch(const SCICore::Geometry::IntVector& lowIndex,
+		      const SCICore::Geometry::IntVector& highIndex);
       
-      Patch* addPatch(const SCICore::Geometry::Point& lower,
-			const SCICore::Geometry::Point& upper,
-			const SCICore::Geometry::IntVector& lowIndex,
-			const SCICore::Geometry::IntVector& highIndex,
-			int ID);
+      Patch* addPatch(const SCICore::Geometry::IntVector& lowIndex,
+		      const SCICore::Geometry::IntVector& highIndex,
+		      int ID);
+      void finalizeLevel();
       
       int numPatches() const;
       long totalCells() const;
@@ -78,18 +78,41 @@ WARNING
       
       void performConsistencyCheck() const;
       GridP getGrid() const;
+
+      Vector dCell() const {
+	 return d_dcell;
+      }
+      Point getAnchor() const {
+	 return d_anchor;
+      }
+      Point getNodePosition(const IntVector&) const;
+      IntVector getCellIndex(const Point&) const;
+      Point positionToIndex(const Point&) const;
+
+      void selectPatches(const IntVector&, const IntVector&,
+			 std::vector<const Patch*>&) const;
+
+      bool containsPoint(const Point&) const;
    private:
       Level(const Level&);
       Level& operator=(const Level&);
       
       std::vector<Patch*> d_patches;
       Grid* grid;
+      Point d_anchor;
+      Vector d_dcell;
+      bool d_finalized;
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.14  2000/06/15 21:57:17  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.13  2000/05/30 20:19:29  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

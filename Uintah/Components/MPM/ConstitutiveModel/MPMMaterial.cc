@@ -45,7 +45,6 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
    d_cm = ConstitutiveModelFactory::create(ps);
    if(!d_cm)
       throw ParameterNotFound("No constitutive model");
-   std::cerr << "works here after cm factory" << std::endl;
 
    d_burn = HEBurnFactory::create(ps);
    if (!d_burn)
@@ -78,7 +77,6 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
       }
 
       piece_num++;
-      cerr << "piece: " << piece_num << '\n';
       d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps));
 
       // Step 4 -- Assign the boundary conditions to the object
@@ -127,27 +125,26 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 				  const Patch* patch,
 				  DataWarehouseP& new_dw)
 {
-
    const MPMLabel* lb = MPMLabel::getLabels();
 
+   ParticleSubset* subset = new_dw->createParticleSubset(numParticles,
+							 getDWIndex(), patch);
    ParticleVariable<Point> position;
-   new_dw->allocate(numParticles, position, lb->pXLabel,
-		    getDWIndex(), patch);
+   new_dw->allocate(position, lb->pXLabel, subset);
    ParticleVariable<Vector> pvelocity;
-   new_dw->allocate(pvelocity, lb->pVelocityLabel, getDWIndex(), patch);
+   new_dw->allocate(pvelocity, lb->pVelocityLabel, subset);
    ParticleVariable<Vector> pexternalforce;
-   new_dw->allocate(pexternalforce, lb->pExternalForceLabel,
-					getDWIndex(), patch);
+   new_dw->allocate(pexternalforce, lb->pExternalForceLabel, subset);
    ParticleVariable<double> pmass;
-   new_dw->allocate(pmass, lb->pMassLabel, getDWIndex(), patch);
+   new_dw->allocate(pmass, lb->pMassLabel, subset);
    ParticleVariable<double> pvolume;
-   new_dw->allocate(pvolume, lb->pVolumeLabel, getDWIndex(), patch);
+   new_dw->allocate(pvolume, lb->pVolumeLabel, subset);
    ParticleVariable<int> pissurf;
-   new_dw->allocate(pissurf, lb->pSurfLabel, getDWIndex(), patch);
+   new_dw->allocate(pissurf, lb->pSurfLabel, subset);
    ParticleVariable<double> ptemperature;
-   new_dw->allocate(ptemperature, lb->pTemperatureLabel, getDWIndex(), patch);
+   new_dw->allocate(ptemperature, lb->pTemperatureLabel, subset);
    ParticleVariable<long> pparticleID;
-   new_dw->allocate(pparticleID, lb->pParticleIDLabel, getDWIndex(), patch);
+   new_dw->allocate(pparticleID, lb->pParticleIDLabel, subset);
 
    particleIndex start = 0;
    for(int i=0; i<d_geom_objs.size(); i++){
@@ -156,15 +153,14 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 				pissurf,ptemperature,pparticleID,NAPID,patch);
    }
 
-   new_dw->put(position, lb->pXLabel, getDWIndex(), patch);
-   new_dw->put(pvelocity, lb->pVelocityLabel, getDWIndex(), patch);
-   new_dw->put(pexternalforce, lb->pExternalForceLabel, getDWIndex(), patch);
-   new_dw->put(pmass, lb->pMassLabel, getDWIndex(), patch);
-   new_dw->put(pvolume, lb->pVolumeLabel, getDWIndex(), patch);
-   new_dw->put(pissurf, lb->pSurfLabel, getDWIndex(), patch);
-   new_dw->put(ptemperature, lb->pTemperatureLabel, getDWIndex(), patch);
-   new_dw->put(pparticleID, lb->pParticleIDLabel, getDWIndex(), patch);
-
+   new_dw->put(position, lb->pXLabel);
+   new_dw->put(pvelocity, lb->pVelocityLabel);
+   new_dw->put(pexternalforce, lb->pExternalForceLabel);
+   new_dw->put(pmass, lb->pMassLabel);
+   new_dw->put(pvolume, lb->pVolumeLabel);
+   new_dw->put(pissurf, lb->pSurfLabel);
+   new_dw->put(ptemperature, lb->pTemperatureLabel);
+   new_dw->put(pparticleID, lb->pParticleIDLabel);
 }
 
 particleIndex MPMMaterial::countParticles(GeometryObject* obj,
@@ -189,13 +185,16 @@ particleIndex MPMMaterial::countParticles(GeometryObject* obj,
 	    for(int iz=0;iz < ppc.z(); iz++){
 	       IntVector idx(ix, iy, iz);
 	       Point p = lower + dxpp*idx;
+	       if(!b2.contains(p))
+		  throw InternalError("Particle created outside of patch?");
+
 	       if(piece->inside(p))
 		  count++;
 	    }
 	 }
       }
    }
-   cerr << "Count1 for obj: " << count << '\n';
+   cerr << "Created " << count << " particles on patch: " << patch->getID() << '\n';
    return count;
 }
 
@@ -254,7 +253,6 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 	 }
       }
    }
-   cerr << "Count2 for obj: " << count << '\n';
    return count;
 }
 
@@ -311,6 +309,11 @@ double  MPMMaterial::getHeatTransferCoefficient() const
 }
 
 // $Log$
+// Revision 1.32  2000/06/15 21:57:06  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.31  2000/06/09 21:02:40  jas
 // Added code to get the fudge factor directly into the constitutive model
 // inititialization.

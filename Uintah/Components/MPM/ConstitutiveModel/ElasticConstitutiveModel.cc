@@ -20,6 +20,7 @@
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Uintah/Components/MPM/MPMLabel.h>
 
 #include <Uintah/Components/MPM/Util/Matrix.cc> // for bounded array multiplier	
 #include <fstream>
@@ -38,7 +39,16 @@ ElasticConstitutiveModel::ElasticConstitutiveModel(ProblemSpecP &ps)
   ps->require("poissons_ratio",d_initialData.PoiRat); 
   p_cmdata_label = scinew VarLabel("p.cmdata",
 				ParticleVariable<CMData>::getTypeDescription());
+  p_cmdata_label_preReloc = scinew VarLabel("p.cmdata+",
+				ParticleVariable<CMData>::getTypeDescription());
 
+}
+
+void ElasticConstitutiveModel::addParticleState(std::vector<const VarLabel*>& from,
+						std::vector<const VarLabel*>& to)
+{
+   from.push_back(p_cmdata_label);
+   to.push_back(p_cmdata_label_preReloc);
 }
 
 ElasticConstitutiveModel::~ElasticConstitutiveModel()
@@ -275,24 +285,26 @@ void ElasticConstitutiveModel::computeStressTensor(const Patch* /*patch*/,
   cerr << "computeStressTensor not finished\n";
 }
 
-double ElasticConstitutiveModel::computeStrainEnergy(const Patch* patch,
-						     const MPMMaterial* matl,
-						     DataWarehouseP& new_dw)
+double ElasticConstitutiveModel::computeStrainEnergy(const Patch* /*patch*/,
+						     const MPMMaterial* /*matl*/,
+						     DataWarehouseP& /*new_dw*/)
 {
   cerr << "computeStrainEnergy not finished\n";
+  return -1;
 }
 
 void ElasticConstitutiveModel::initializeCMData(const Patch* patch,
 						const MPMMaterial* matl,
 						DataWarehouseP& new_dw)
 {
+   const MPMLabel* lb = MPMLabel::getLabels();
+   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
    ParticleVariable<CMData> cmdata;
-   new_dw->allocate(cmdata, p_cmdata_label, matl->getDWIndex(), patch);
-   ParticleSubset* pset = cmdata.getParticleSubset();
+   new_dw->allocate(cmdata, p_cmdata_label, pset);
    for(ParticleSubset::iterator iter = pset->begin();
        iter != pset->end(); iter++)
       cmdata[*iter] = d_initialData;
-   new_dw->put(cmdata, p_cmdata_label, matl->getDWIndex(), patch);
+   new_dw->put(cmdata, p_cmdata_label);
 }
 
 #ifdef WONT_COMPILE_YET
@@ -352,10 +364,10 @@ void ElasticConstitutiveModel::computeStressTensor
 #endif
 
 void ElasticConstitutiveModel::addComputesAndRequires(Task* task,
-						      const MPMMaterial* matl,
+						      const MPMMaterial* /*matl*/,
 						      const Patch* patch,
-						      DataWarehouseP& old_dw,
-						      DataWarehouseP& new_dw) const
+						      DataWarehouseP& /*old_dw*/,
+						      DataWarehouseP& /*new_dw*/) const
 {
    cerr << "ElasticConsitutive::addComputesAndRequires needs to be filled in\n";
 }
@@ -503,6 +515,11 @@ int ElasticConstitutiveModel::getSize() const
 
 
 // $Log$
+// Revision 1.16  2000/06/15 21:57:05  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.15  2000/06/09 21:07:33  jas
 // Added code to get the fudge factor directly into the constitutive model
 // inititialization.

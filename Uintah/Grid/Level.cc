@@ -12,9 +12,10 @@ using namespace Uintah;
 using namespace SCICore::Geometry;
 using namespace std;
 
-Level::Level(Grid* grid)
-   : grid(grid)
+Level::Level(Grid* grid, const Point& anchor, const Vector& dcell)
+   : grid(grid), d_anchor(anchor), d_dcell(dcell)
 {
+   d_finalized=false;
 }
 
 Level::~Level()
@@ -44,19 +45,17 @@ Level::patchIterator Level::patchesEnd()
     return d_patches.end();
 }
 
-Patch* Level::addPatch(const Point& lower, const Point& upper,
-			 const IntVector& lowIndex, const IntVector& highIndex)
+Patch* Level::addPatch(const IntVector& lowIndex, const IntVector& highIndex)
 {
-    Patch* r = scinew Patch(lower, upper, lowIndex, highIndex);
+    Patch* r = scinew Patch(this, lowIndex, highIndex);
     d_patches.push_back(r);
     return r;
 }
 
-Patch* Level::addPatch(const Point& lower, const Point& upper,
-			 const IntVector& lowIndex, const IntVector& highIndex,
-			 int ID)
+Patch* Level::addPatch(const IntVector& lowIndex, const IntVector& highIndex,
+		       int ID)
 {
-    Patch* r = scinew Patch(lower, upper, lowIndex, highIndex, ID);
+    Patch* r = scinew Patch(this, lowIndex, highIndex, ID);
     d_patches.push_back(r);
     return r;
 }
@@ -68,6 +67,8 @@ int Level::numPatches() const
 
 void Level::performConsistencyCheck() const
 {
+   if(!d_finalized)
+      throw InvalidGrid("Consistency check cannot be performed until Level is finalized");
   for(int i=0;i<d_patches.size();i++){
     Patch* r = d_patches[i];
     r->performConsistencyCheck();
@@ -101,6 +102,7 @@ void Level::getIndexRange(BBox& b)
     b.extend(upper);
   }
 }
+
 void Level::getSpatialRange(BBox& b)
 {
   for(int i=0;i<d_patches.size();i++){
@@ -123,8 +125,76 @@ GridP Level::getGrid() const
    return grid;
 }
 
+Point Level::getNodePosition(const IntVector& v) const
+{
+   return d_anchor+d_dcell*v;
+}
+
+IntVector Level::getCellIndex(const Point& p) const
+{
+   Vector v((p-d_anchor)/d_dcell);
+   return IntVector((int)v.x(), (int)v.y(), (int)v.z());
+}
+
+Point Level::positionToIndex(const Point& p) const
+{
+   return Point((p-d_anchor)/d_dcell);
+}
+
+void Level::selectPatches(const IntVector& low, const IntVector& high,
+			  std::vector<const Patch*>& neighbors) const
+{
+   // This sucks - it should be made faster.  -Steve
+   for(const_patchIterator iter=d_patches.begin();
+       iter != d_patches.end(); iter++){
+      const Patch* patch = *iter;
+      IntVector l=SCICore::Geometry::Max(patch->getCellLowIndex(), low);
+      IntVector u=SCICore::Geometry::Min(patch->getCellHighIndex(), high);
+      if(u.x() > l.x() && u.y() > l.y() && u.z() > l.z())
+	 neighbors.push_back(*iter);
+   }
+}
+
+bool Level::containsPoint(const Point& p) const
+{
+   // This sucks - it should be made faster.  -Steve
+   for(const_patchIterator iter=d_patches.begin();
+       iter != d_patches.end(); iter++){
+      const Patch* patch = *iter;
+      if(patch->getBox().contains(p))
+	 return true;
+   }
+   return false;
+}
+
+void Level::finalizeLevel()
+{
+   for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++){
+      Patch* patch = *iter;
+      // See if there are any neighbors on the 6 faces
+      for(Patch::FaceType face = Patch::startFace;
+	  face < Patch::endFace; face=Patch::nextFace(face)){
+	 IntVector l,h;
+	 patch->getFace(face, 1, l, h);
+	 std::vector<const Patch*> neighbors;
+	 selectPatches(l, h, neighbors);
+	 if(neighbors.size() == 0)
+	    patch->setBCType(face, Patch::None);
+	 else
+	    patch->setBCType(face, Patch::Neighbor);
+      }
+   }
+
+   d_finalized=true;
+}
+
 //
 // $Log$
+// Revision 1.11  2000/06/15 21:57:16  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.10  2000/05/30 20:19:29  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

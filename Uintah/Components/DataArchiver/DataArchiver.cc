@@ -14,6 +14,7 @@
 #include <Uintah/Interface/Scheduler.h>
 #include <PSECore/XMLUtil/SimpleErrorHandler.h>
 #include <PSECore/XMLUtil/XMLUtil.h>
+#include <SCICore/Util/DebugStream.h>
 #include <iomanip>
 #include <errno.h>
 #include <fstream>
@@ -33,8 +34,10 @@ using namespace std;
 using namespace SCICore::OS;
 using namespace SCICore::Exceptions;
 using namespace PSECore::XMLUtil;
+using namespace SCICore::Util;
 
 static Dir makeVersionedDir(const std::string nameBase);
+static DebugStream dbg("DataArchiver", false);
 
 DataArchiver::DataArchiver(int MpiRank, int MpiProcesses)
    : UintahParallelComponent(MpiRank, MpiProcesses)
@@ -109,6 +112,8 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 
    sched->addTask(t);
 
+   dbg << "Created reduction variable output task" << endl;
+
    d_currentTimestep++;
    if(time<d_nextOutputTime)
       return;
@@ -152,6 +157,8 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 
 	 appendElement(levelElem, "numPatches", level->numPatches());
 	 appendElement(levelElem, "totalCells", level->totalCells());
+	 appendElement(levelElem, "cellspacing", level->dCell());
+	 appendElement(levelElem, "anchor", level->getAnchor());
 	 Level::const_patchIterator iter;
 	 for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
 	    const Patch* patch=*iter;
@@ -160,7 +167,6 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 	    appendElement(patchElem, "id", patch->getID());
 	    appendElement(patchElem, "lowIndex", patch->getCellLowIndex());
 	    appendElement(patchElem, "highIndex", patch->getCellHighIndex());
-	    appendElement(patchElem, "resolution", patch->getNCells());
 	    Box box = patch->getBox();
 	    appendElement(patchElem, "lower", box.lower());
 	    appendElement(patchElem, "upper", box.upper());
@@ -231,7 +237,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 	 }
       }
    }
-   cerr << "Created " << n << " output tasks\n";
+   dbg << "Created " << n << " output tasks\n";
 }
 
 static bool get(const DOM_Node& node, int &value)
@@ -279,7 +285,7 @@ void DataArchiver::output(const ProcessorContext*,
    if (d_outputInterval == 0.0)
       return;
 
-   cerr << "output called on patch: " << patch->getID() << ", variable: " << var->getName() << ", material: " << matlIndex << " at time: " << timestep << "\n";
+   dbg << "output called on patch: " << patch->getID() << ", variable: " << var->getName() << ", material: " << matlIndex << " at time: " << timestep << "\n";
    
    ostringstream tname;
    tname << "t" << setw(4) << setfill('0') << timestep;
@@ -551,6 +557,11 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 //
 // $Log$
+// Revision 1.11  2000/06/15 21:56:59  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.10  2000/06/14 21:50:54  guilkey
 // Changed DataArchiver to create uda files based on a per time basis
 // rather than a per number of timesteps basis.

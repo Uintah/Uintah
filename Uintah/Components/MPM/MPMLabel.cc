@@ -13,7 +13,6 @@ using namespace Uintah::MPM;
 MPMLabel::MPMLabel()
 {
   // Particle Variables
-
   pDeformationMeasureLabel = new VarLabel("p.deformationMeasure",
 			ParticleVariable<Matrix3>::getTypeDescription());
   
@@ -66,6 +65,61 @@ MPMLabel::MPMLabel()
 			ParticleVariable<int>::getTypeDescription() );
   
   pMassRateLabel  = new VarLabel( "p.massRate",
+			ParticleVariable<double>::getTypeDescription() );
+  
+  // Particle Variables 
+  pDeformationMeasureLabel_preReloc = new VarLabel("p.deformationMeasure+",
+			ParticleVariable<Matrix3>::getTypeDescription());
+  
+  pStressLabel_preReloc = new VarLabel( "p.stress+",
+			ParticleVariable<Matrix3>::getTypeDescription() );
+  
+  pVolumeLabel_preReloc = new VarLabel( "p.volume+",
+			ParticleVariable<double>::getTypeDescription());
+  
+  pVolumeDeformedLabel_preReloc = new VarLabel( "p.volumedeformed+",
+			ParticleVariable<double>::getTypeDescription());
+  
+  pMassLabel_preReloc = new VarLabel( "p.mass+",
+			ParticleVariable<double>::getTypeDescription() );
+  
+  pVelocityLabel_preReloc = new VarLabel( "p.velocity+", 
+			ParticleVariable<Vector>::getTypeDescription() );
+  
+  pExternalForceLabel_preReloc = new VarLabel( "p.externalforce+",
+			ParticleVariable<Vector>::getTypeDescription() );
+  
+  pXLabel_preReloc = new VarLabel( "p.x+", ParticleVariable<Point>::getTypeDescription(),
+			VarLabel::PositionVariable);
+  
+  pTemperatureLabel_preReloc = new VarLabel( "p.temperature+",
+			ParticleVariable<double>::getTypeDescription() );
+  
+  pTemperatureGradientLabel_preReloc = new VarLabel( "p.temperatureGradient+",
+			ParticleVariable<Vector>::getTypeDescription() );
+
+  pTemperatureRateLabel_preReloc  = new VarLabel( "p.temperatureRate+",
+			ParticleVariable<double>::getTypeDescription() );
+  
+  //tan:
+  //  pSurfaceNormalLabel is used to define the surface normal of a
+  //  boundary particle.
+  //  For the interior particle, the p.surfaceNormal vector is set to (0,0,0)
+  //  in this way we can distinguish boundary particles to interior particles
+  //
+  pSurfLabel_preReloc = new VarLabel( "p.surface+",
+			ParticleVariable<int>::getTypeDescription() );
+
+  pSurfaceNormalLabel_preReloc = new VarLabel( "p.surfaceNormal+",
+			ParticleVariable<Vector>::getTypeDescription() );
+
+  pParticleIDLabel_preReloc = new VarLabel("p.particleID+",
+			ParticleVariable<long>::getTypeDescription() );
+
+  pIsIgnitedLabel_preReloc  = new VarLabel( "p.isIgnited+",
+			ParticleVariable<int>::getTypeDescription() );
+  
+  pMassRateLabel_preReloc  = new VarLabel( "p.massRate+",
 			ParticleVariable<double>::getTypeDescription() );
   
   // Node Centered Variables
@@ -130,6 +184,9 @@ MPMLabel::MPMLabel()
   KineticEnergyLabel = new VarLabel( "KineticEnergy",
 			sum_vartype::getTypeDescription() );
 
+  TotalMassLabel = new VarLabel( "TotalMass",
+				 sum_vartype::getTypeDescription() );
+
   // PerPatch variables
 
   ppNAPIDLabel = new VarLabel("NAPID",PerPatch<long>::getTypeDescription() );
@@ -145,6 +202,11 @@ const MPMLabel* MPMLabel::getLabels()
 }
 
 // $Log$
+// Revision 1.10  2000/06/15 21:57:00  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.9  2000/06/13 23:06:38  guilkey
 // Added a CCVariable for the burned particle mass to go into.
 //

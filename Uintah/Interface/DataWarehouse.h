@@ -4,6 +4,7 @@
 
 #include <Uintah/Grid/Handle.h>
 #include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/CCVariableBase.h>
 #include <Uintah/Grid/Ghost.h>
 #include <Uintah/Grid/RefCounted.h>
@@ -13,6 +14,7 @@
 #include <Uintah/Grid/ReductionVariableBase.h>
 #include <Uintah/Grid/PerPatchBase.h>
 #include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Interface/SchedulerP.h>
 
 #include <iosfwd>
 
@@ -75,14 +77,18 @@ WARNING
       virtual void put(const ReductionVariableBase&, const VarLabel*) = 0;
       
       // Particle Variables
-      virtual void allocate(int numParticles, ParticleVariableBase&,
-			    const VarLabel*, int matlIndex, const Patch*) = 0;
-      virtual void allocate(ParticleVariableBase&, const VarLabel*, 
-			    int matlIndex, const Patch*) = 0;
-      virtual void get(ParticleVariableBase&, const VarLabel*, int matlIndex,
-		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
-      virtual void put(const ParticleVariableBase&, const VarLabel*,
-		       int matlIndex, const Patch*) = 0;
+      virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
+						   int matlIndex, const Patch*) = 0;
+      virtual ParticleSubset* getParticleSubset(int matlIndex,
+						const Patch*) = 0;
+      virtual ParticleSubset* getParticleSubset(int matlIndex,
+			 const Patch*, Ghost::GhostType, int numGhostCells,
+			 const VarLabel* posvar) = 0;
+      virtual void allocate(ParticleVariableBase&, const VarLabel*,
+			    ParticleSubset*) = 0;
+      virtual void get(ParticleVariableBase&, const VarLabel*,
+		       ParticleSubset*) = 0;
+      virtual void put(const ParticleVariableBase&, const VarLabel*) = 0;
       
       // Node Centered (NC) Variables
       virtual void allocate(NCVariableBase&, const VarLabel*,
@@ -117,6 +123,17 @@ WARNING
       //////////
       // Insert Documentation Here:
       virtual void carryForward(const DataWarehouseP& from) = 0;
+
+      //////////
+      // Insert Documentation Here:
+      virtual void scheduleParticleRelocation(const LevelP& level,
+					      SchedulerP& sched,
+					      DataWarehouseP& dw,
+					      const VarLabel* posLabel,
+					      const vector<const VarLabel*>& labels,
+					      const VarLabel* new_posLabel,
+					      const vector<const VarLabel*>& new_labels,
+					      int numMatls) = 0;
 
       //////////
       // When the Scheduler determines that another MPI node will be
@@ -169,6 +186,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.29  2000/06/15 21:57:22  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.28  2000/06/14 23:38:55  jas
 // Added FCVariables.
 //

@@ -4,6 +4,7 @@
 #include <Uintah/Grid/SubPatch.h>
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/Box.h>
+#include <Uintah/Grid/Level.h>
 
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
@@ -72,29 +73,24 @@ WARNING
      };
      
      enum FaceType {
-       xplus,
        xminus,
-       yplus,
+       xplus,
        yminus,
+       yplus,
+       zminus,
        zplus,
-       zminus
+       startFace = xminus,
+       endFace = zplus,
+       numFaces // 6
      };
 
       //////////
       // Insert Documentation Here:
       Vector dCell() const {
-	 return (d_box.upper()-d_box.lower())/d_res;
+	 // This will need to change for stretched grids
+	 return d_level->dCell();
       }
       
-      //////////
-      // Insert Documentation Here:
-      void findCell(const Point& pos, int& ix, int& iy, int& iz) const;
-
-      //////////
-      // Find the index of a cell contaning the given Point. 
-      //    --tan
-      IntVector findCell(const Point& pos) const;
-
       //////////
       // Find the index of a cell contaning the given Point. 
       bool findCell(const Point& pos, IntVector& ci) const;
@@ -133,15 +129,6 @@ WARNING
       // Insert Documentation Here:
       NodeIterator getNodeIterator() const;
 
-      //////////
-      // Insert Documentation Here:
-      void subpatchIteratorPair(int i, int n,
-				 NodeSubIterator& iter,
-				 NodeSubIterator& end) const;
-      //////////
-      // Insert Documentation Here:
-      SubPatch subpatch(int i, int n) const;
-      
       IntVector getNodeLowIndex() const {
 	 return d_lowIndex;
       }
@@ -154,20 +141,17 @@ WARNING
       }
       
       inline Box getBox() const {
-	 return d_box;
-      }
-      
-      inline IntVector getNCells() const {
-	 return d_res;
+	 return Box(d_level->getNodePosition(d_lowIndex),
+		    d_level->getNodePosition(d_highIndex));
       }
 
       inline IntVector getNFaces() const {
 	// This is wrong for now
-	return d_res;
+	return getNodeHighIndex()-getNodeLowIndex();
       }
 
       inline IntVector getNNodes() const {
-	 return d_res+IntVector(1,1,1);
+	 return getNodeHighIndex()-getNodeLowIndex();
       }
       
       long totalCells() const;
@@ -175,111 +159,72 @@ WARNING
       void performConsistencyCheck() const;
 
       BCType getBCType(FaceType face) const;
+      void setBCType(FaceType face, BCType newbc);
+      bool atEdge(FaceType face) const;
+      static FaceType nextFace(FaceType face) {
+	 return (FaceType)((int)face+1);
+      }
       
       //////////
       // Insert Documentation Here:
       inline bool containsNode(const IntVector& idx) const {
 	 IntVector l(getNodeLowIndex());
 	 IntVector h(getNodeHighIndex());
-	 return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.x()
+	 return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
 	    && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
       }
 
       //////////
-      // Determines if "patch" is within (or the same as) this
-      // patch.
-      inline bool contains(const Patch& patch) const {
-	    int myMinX = Min( d_box.lower().x(), d_box.upper().x() );
-	    int myMinY = Min( d_box.lower().y(), d_box.upper().y() );
-	    int myMinZ = Min( d_box.lower().z(), d_box.upper().z() );
-
-	    int myMaxX = Max( d_box.lower().x(), d_box.upper().x() );
-	    int myMaxY = Max( d_box.lower().y(), d_box.upper().y() );
-	    int myMaxZ = Max( d_box.lower().z(), d_box.upper().z() );
-
-	    int regMinX = Min( patch.d_box.lower().x(), 
-			       patch.d_box.upper().x() );
-	    int regMinY = Min( patch.d_box.lower().y(), 
-			       patch.d_box.upper().y() );
-	    int regMinZ = Min( patch.d_box.lower().z(),
-			       patch.d_box.upper().z() );
-
-	    int regMaxX = Max( patch.d_box.lower().x(),
-			       patch.d_box.upper().x() );
-	    int regMaxY = Max( patch.d_box.lower().y(),
-			       patch.d_box.upper().y() );
-	    int regMaxZ = Max( patch.d_box.lower().z(),
-			       patch.d_box.upper().z() );
-
-	 return( myMinX >= regMinX && myMaxX <= regMaxX && 
-		 myMinY >= regMinY && myMaxY <= regMaxY && 
-		 myMinZ >= regMinZ && myMaxZ <= regMaxZ );
+      // Insert Documentation Here:
+      inline bool containsCell(const IntVector& idx) const {
+	 IntVector l(getCellLowIndex());
+	 IntVector h(getCellHighIndex());
+	 return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
+	    && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
       }
 
       //////////
       // Insert Documentation Here:
       Point nodePosition(const IntVector& idx) const {
-	 return d_box.lower() + dCell()*idx;
+	 return d_level->getNodePosition(idx);
       }
 
-      Box getGhostBox(int l, int h) const {
-	 return Box(nodePosition(getCellLowIndex()+IntVector(l,l,l)),
-		    nodePosition(getCellHighIndex()+IntVector(h,h,h)));
-      }
-      
+      Box getGhostBox(const IntVector& lowOffset,
+		      const IntVector& highOffset) const;
+
       string toString() const;
 
       int getID() const {
 	 return d_id;
       }
-      const Patch* getNeighbor(const IntVector&) const;
-      void setNeighbor(const IntVector&, const Patch*);
+      const Level* getLevel() const {
+	 return d_level;
+      }
+      void getFace(FaceType face, int offset, IntVector& l, IntVector& h) const;
    protected:
       friend class Level;
       
       //////////
       // Insert Documentation Here:
-      Patch(const SCICore::Geometry::Point& min,
-	     const SCICore::Geometry::Point& max,
-	     const SCICore::Geometry::IntVector& d_lowIndex,
-	     const SCICore::Geometry::IntVector& d_highIndex,
-	     int id=-1);
+      Patch(const Level*,
+	    const SCICore::Geometry::IntVector& d_lowIndex,
+	    const SCICore::Geometry::IntVector& d_highIndex,
+	    int id=-1);
       ~Patch();
 
    private:
       Patch(const Patch&);
       Patch& operator=(const Patch&);
-      
-      //////////
-      // Insert Documentation Here:
-      Box d_box;
 
-      //////////
-      // These are just coordinates of the ghostcell boxes around
-      // this patch.  There are 26 of them.
-      Box d_top, d_topRight, d_topLeft, d_topBack, d_topFront,
-	  d_topRightBack, d_topRightFront, d_topLeftBack, 
-	  d_topLeftFront;
-      Box d_bottom, d_bottomRight, d_bottomLeft, d_bottomBack,
-	  d_bottomFront, d_bottomRightBack, d_bottomRightFront,
-	  d_bottomLeftBack, d_bottomLeftFront;
-      Box d_right, d_left, d_back, d_front, d_rightBack,
-	  d_rightFront, d_leftBack, d_leftFront;
-      
-      ////////// 
-      // Pre-calculates the upper/lower points of the 26 adjacent
-      // patches based on the number of ghost cells.
-      void determineGhostPatches( int numGhostCells );
+      const Level* d_level;
 
       //////////
       // Insert Documentation Here:
       IntVector d_lowIndex;
       IntVector d_highIndex;
-      IntVector d_res;
 
-      const Patch* d_neighbors[27];
-      
       int d_id;
+      BCType d_bctypes[numFaces];
       friend class NodeIterator;
    };
    
@@ -289,6 +234,11 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch* r);
 
 //
 // $Log$
+// Revision 1.9  2000/06/15 21:57:19  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.8  2000/06/14 21:59:36  jas
 // Copied CCVariable stuff to make FCVariables.  Implementation is not
 // correct for the actual data storage and iteration scheme.

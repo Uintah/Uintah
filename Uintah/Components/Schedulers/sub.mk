@@ -11,13 +11,18 @@ SRCS     += $(SRCDIR)/BrainDamagedScheduler.cc \
 	$(SRCDIR)/OnDemandDataWarehouse.cc
 
 PSELIBS := Uintah/Grid Uintah/Interface SCICore/Thread Uintah/Parallel \
-	Uintah/Exceptions SCICore/Exceptions
+	Uintah/Exceptions SCICore/Exceptions SCICore/Util PSECore/XMLUtil
 LIBS := $(XML_LIBRARY) -lmpi
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/06/15 21:57:12  sparker
+# Added multi-patch support (bugzilla #107)
+# Changed interface to datawarehouse for particle data
+# Particles now move from patch to patch
+#
 # Revision 1.5  2000/05/21 08:19:07  sparker
 # Implement NCVariable read
 # Do not fail if variable type is not known

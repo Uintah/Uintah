@@ -15,6 +15,7 @@ static char *id="@(#) $Id$";
 #include <SCICore/Thread/Time.h>
 #include <SCICore/Thread/ThreadPool.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Util/DebugStream.h>
 
 #include <algorithm>
 #include <fstream>
@@ -29,7 +30,10 @@ using SCICore::Thread::SimpleReducer;
 using SCICore::Thread::Thread;
 using SCICore::Thread::Time;
 using SCICore::Thread::ThreadPool;
+using SCICore::Util::DebugStream;
 using namespace std;
+
+static DebugStream dbg("BrainDamagedScheduler", false);
 
 BrainDamagedScheduler::BrainDamagedScheduler( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
@@ -97,7 +101,8 @@ BrainDamagedScheduler::setupTaskConnections()
 	       it = reductionTasks.find(var);
 	       it->second->computes(dep->d_dw, var, -1, 0);
 	    }
-	    it->second->requires(dep->d_dw, var, 0, dep->d_patch, Ghost::None);
+	    it->second->requires(dep->d_dw, var, -1, task->task->getPatch(),
+				 Ghost::None);
 	 }
       }
    }
@@ -124,7 +129,7 @@ BrainDamagedScheduler::setupTaskConnections()
 	    TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
 	    map<TaskProduct, TaskRecord*>::iterator aciter = d_allcomps.find(p);
 	    if(aciter == d_allcomps.end())
-	       throw InternalError("Scheduler could not find production for variable: "+dep->d_var->getName());
+	       throw InternalError("Scheduler could not find production for variable: "+dep->d_var->getName()+", required for task: "+task->task->getName());
 	    if(dep->d_var->typeDescription() != aciter->first.getLabel()->typeDescription())
 	       throw TypeMismatchException("Type mismatch for variable: "+dep->d_var->getName());
 	 }
@@ -136,14 +141,18 @@ void
 BrainDamagedScheduler::performTask(TaskRecord* task,
 				   const ProcessorContext * pc) const
 {
-   //   cerr << "Looking at task: " << task->task->getName() << " on patch " << (void*)task->task->getPatch()->getID() << '\n';
-   if(task->visited) {
+   dbg << "Looking at task: " << task->task->getName();
+   if(task->task->getPatch())
+      dbg << " on patch " << task->task->getPatch()->getID();
+   dbg << '\n';
+   if(task->visited){
       ostrstream error;
       error << "Cycle detected in task graph: already did\n\t"
             << task->task->getName() << " on patch "
             << task->task->getPatch()->getID() << "\n";
       throw InternalError(error.str());
    }
+
    task->visited=true;
    const vector<Task::Dependency*>& reqs = task->task->getRequires();
    for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
@@ -158,14 +167,13 @@ BrainDamagedScheduler::performTask(TaskRecord* task,
       }
    }
 
-#if 0
    double start = Time::currentSeconds();
-#endif
    task->task->doit(pc);
-#if 0
    double dt = Time::currentSeconds()-start;
-   cout << "Completed task: " << task->task->getName() << " on patch: " << task->task->getPatch()->getID() << " (" << dt << " seconds)\n";
-#endif
+   dbg << "Completed task: " << task->task->getName();
+   if(task->task->getPatch())
+      dbg << " on patch " << task->task->getPatch()->getID();
+   dbg << " (" << dt << " seconds)\n";
 }
 
 void
@@ -176,7 +184,9 @@ BrainDamagedScheduler::execute(const ProcessorContext * pc,
 	cerr << "WARNING: Scheduler executed, but no tasks\n";
 	return;
     }
+    dbg << "Executing " << d_tasks.size() << " tasks\n";
     setupTaskConnections();
+    dbg << "After setup, there are " << d_tasks.size() << " tasks\n";
 
     dumpDependencies();
 
@@ -185,6 +195,7 @@ BrainDamagedScheduler::execute(const ProcessorContext * pc,
        TaskRecord* task = *iter;
        if(!task->task->isCompleted()){
 
+#if 0
 	 const Patch * patch = task->task->getPatch();
 
 	 // Figure out which MPI node should be doing this task.
@@ -196,6 +207,10 @@ BrainDamagedScheduler::execute(const ProcessorContext * pc,
 	   taskLocation = 1;
 	 else
 	    throw InternalError("BrainDamagedScheduler: Unknown patch");		                              
+#else
+	 int taskLocation=0;
+#endif
+	 
 	 // If it is this node, then kick off the task.
 	 // Either way, record which node is doing the task so
 	 // so that if one of our tasks needs data from it, we
@@ -220,7 +235,6 @@ BrainDamagedScheduler::execute(const ProcessorContext * pc,
 	 }
        }
     }
-	  
 #if 0
     int totalcompleted = 0;
     int numThreads = pc->numThreads();
@@ -307,15 +321,11 @@ BrainDamagedScheduler::addTask(Task* task)
    for(vector<Task::Dependency*>::const_iterator iter = comps.begin();
        iter != comps.end(); iter++){
       Task::Dependency* dep = *iter;
-      if(task->isReductionTask() ||
-	  !dep->d_var->typeDescription()->isReductionVariable()){
-	 TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
-	 map<TaskProduct,TaskRecord*>::iterator aciter = d_allcomps.find(p);
-	 if(aciter != d_allcomps.end()) {
-	    throw InternalError("Two tasks compute the same result: "+dep->d_var->getName());
-	 }
-	 d_allcomps[p] = tr;
-      }
+      TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
+      map<TaskProduct,TaskRecord*>::iterator aciter = d_allcomps.find(p);
+      if(aciter != d_allcomps.end()) 
+	 throw InternalError("Two tasks compute the same result: "+dep->d_var->getName()+" (tasks: "+task->getName()+" and "+aciter->second->task->getName()+")");
+      d_allcomps[p] = tr;
    }
 }
 
@@ -410,6 +420,11 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.20  2000/06/15 21:57:11  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.19  2000/06/14 23:43:25  jehall
 // - Made "cycle detected" exception more informative
 //

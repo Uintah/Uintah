@@ -82,7 +82,7 @@ namespace Uintah {
 	 if(d_window && d_window->removeReference())
 	    delete d_window;
 	 IntVector size = highIndex-lowIndex;
-	 d_window=scinew Array3Window<T>(new Array3Data<T>(size), lowIndex, highIndex);
+	 d_window=scinew Array3Window<T>(new Array3Data<T>(size), lowIndex, lowIndex, highIndex);
 	 d_window->addReference();
       }
       T& operator[](const IntVector& idx) const {
@@ -137,6 +137,11 @@ namespace Uintah {
    
 //
 // $Log$
+// Revision 1.15  2000/06/15 21:57:15  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.14  2000/06/11 04:05:06  bbanerje
 // Added first cut of getPointer() needed for fortran calls.
 //

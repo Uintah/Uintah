@@ -89,11 +89,15 @@ namespace Uintah {
          static ConstitutiveModel* readRestartParametersAndCreate(
                                                         ProblemSpecP ps);
 
+	 virtual void addParticleState(std::vector<const VarLabel*>& from,
+				       std::vector<const VarLabel*>& to);
          // class function to create a new object from parameters
          static ConstitutiveModel* create(double *p_array);
 
          const VarLabel* p_cmdata_label;
          const VarLabel* bElBarLabel;
+         const VarLabel* p_cmdata_label_preReloc;
+         const VarLabel* bElBarLabel_preReloc;
 
       };
       
@@ -104,6 +108,11 @@ namespace Uintah {
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.12  2000/06/15 21:57:04  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.11  2000/05/30 20:19:02  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

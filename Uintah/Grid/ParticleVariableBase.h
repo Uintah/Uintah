@@ -3,10 +3,12 @@
 #define UINTAH_HOMEBREW_ParticleVariableBase_H
 
 #include <vector>
+#include <Uintah/Grid/ParticleSubset.h>
 
 namespace Uintah {
    class OutputContext;
    class ParticleSubset;
+   class ParticleSet;
    class Patch;
 
 /**************************************
@@ -53,18 +55,38 @@ WARNING
 			  std::vector<ParticleSubset*> subsets,
 			  std::vector<ParticleVariableBase*> srcs) = 0;
       virtual void emit(OutputContext&) = 0;
+
+      //////////
+      // Insert Documentation Here:
+      ParticleSubset* getParticleSubset() const {
+	 return d_pset;
+      }
+
+      //////////
+      // Insert Documentation Here:
+      ParticleSet* getParticleSet() const {
+	 return d_pset->getParticleSet();
+      }
+      
    protected:
       ParticleVariableBase(const ParticleVariableBase&);
-      ParticleVariableBase();
-      
-   private:
+      ParticleVariableBase(ParticleSubset* pset);
       ParticleVariableBase& operator=(const ParticleVariableBase&);
+      
+      ParticleSubset*  d_pset;
+
+   private:
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.8  2000/06/15 21:57:19  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.7  2000/05/30 20:19:31  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
