@@ -5,7 +5,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/DataWarehouse.h>
 
-using Uintah::Components::Arches;
+using namespace Uintah::Components;
 using namespace Uintah::Grid;
 
 namespace Uintah {
@@ -18,8 +18,9 @@ Properties::Properties()
 Properties::~Properties()
 {
 }
-#if 0
-void Properties::problemSetup(const ProblemSpecP& params)
+
+void Properties::problemSetup(const ProblemSpecP& params,
+			      DataWarehouseP&)
 {
   ProblemSpecP db = params->findBlock("Properties");
   db->require("denUnderrelax", d_denUnderrelax);
@@ -31,6 +32,7 @@ void Properties::problemSetup(const ProblemSpecP& params)
   }
 }
 
+#if 0
 void Properties::sched_computeProps(const LevelP& level,
 				    SchedulerP&, DataWarehouseP& old,
 				    DataWarehouseP& new)
@@ -70,17 +72,18 @@ void Properties::computeProps(const ProcessorContext* pc,
   new_dw->put(new_density, "density", region);
 }
 
+#endif
 
-void Stream::Stream() {
+Properties::Stream::Stream()
+{
 }
 
-void Stream::problemSetup(ProblemSpecP& params)
+void Properties::Stream::problemSetup(ProblemSpecP& params)
 {
   params->require("Density", d_density);
   params->require("Temperature", d_temperature);
 }
 
-#endif
 
 } // end namespace Components
 } // end namespace Uintah

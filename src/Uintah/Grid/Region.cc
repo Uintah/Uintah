@@ -6,6 +6,8 @@ static char *id="@(#) $Id$";
 #include <Uintah/Math/Primes.h>
 #include <Uintah/Grid/SubRegion.h>
 #include <SCICore/Math/MiscMath.h>
+#include <Uintah/Exceptions/InvalidGrid.h>
+using Uintah::Exceptions::InvalidGrid;
 
 #include <values.h>
 
@@ -14,13 +16,12 @@ using SCICore::Geometry::Vector;
 using SCICore::Geometry::Max;
 using SCICore::Geometry::Min;
 using SCICore::Math::Floor;
-
-namespace Uintah {
-namespace Grid {
+using Uintah::Grid::Region;
+using std::ostream;
 
 Region::Region(const Point& lower, const Point& upper,
 	       const IntVector& res)
-    : d_lower(lower), d_upper(upper), d_res(res)
+    : d_box(lower, upper), d_res(res)
 {
 }
 
@@ -206,11 +207,28 @@ SubRegion Region::subregion(int i, int n) const
 }
 #endif
 
-} // end namespace Grid
-} // end namespace Uintah
+ostream& operator<<(ostream& out, const Region* r)
+{
+  out << "(Region: box=" << r->getBox() << ", res=" << r->getNCells() << ")";
+  return out;
+}
+
+long Region::totalCells() const
+{
+  return d_res.x()*d_res.y()*d_res.z();
+}
+
+void Region::performConsistencyCheck() const
+{
+  if(d_res.x() < 1 || d_res.y() < 1 || d_res.z() < 1)
+    throw InvalidGrid("Degenerate region");
+}
 
 //
 // $Log$
+// Revision 1.5  2000/04/13 06:51:01  sparker
+// More implementation to get this to work
+//
 // Revision 1.4  2000/04/12 23:00:49  sparker
 // Starting problem setup code
 // Other compilation fixes

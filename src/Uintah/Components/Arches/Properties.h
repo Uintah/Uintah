@@ -33,7 +33,7 @@ public:
     void sched_computeProps(const LevelP& level,
 			    SchedulerP&, DataWarehouseP& old_dw,
 			    DataWarehouseP& new_dw);
-    const int getNumMixVars() const{
+    int getNumMixVars() const{
       return d_numMixingVars;
     }
 private:
@@ -47,13 +47,13 @@ private:
     int d_numMixingVars;
     double d_denUnderrelax;
 //temp soln...limits num of mixing streams
-    Stream d_streams[MAX_MIXSTREAMS]; 
     struct Stream {
       double d_density;
       double d_temperature;
       Stream();
-      problemSetup(ProblemSpecP&);
+      void problemSetup(ProblemSpecP&);
     };
+    Stream d_streams[MAX_MIXSTREAMS]; 
 };
 
 } // end namespace Components

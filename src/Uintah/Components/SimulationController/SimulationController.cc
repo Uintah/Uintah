@@ -2,31 +2,46 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Components/SimulationController/SimulationController.h>
+#include <SCICore/Geometry/IntVector.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/Thread/Time.h>
 #include <Uintah/Exceptions/ProblemSetupException.h>
-#include <Uintah/Interface/ProblemSpecInterface.h>
-#include <Uintah/Interface/ProblemSpecP.h>
-#include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
-#include <SCICore/Thread/Time.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/IntVector.h>
-#include <SCICore/Math/MiscMath.h>
+#include <Uintah/Grid/SimulationTime.h>
+#include <Uintah/Grid/SoleVariable.h>
+#include <Uintah/Interface/CFDInterface.h>
+#include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Interface/MPMInterface.h>
+#include <Uintah/Interface/Output.h>
+#include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Interface/ProblemSpecInterface.h>
+#include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Parallel/ProcessorContext.h>
 #include <iostream>
 using std::cerr;
+using std::cout;
 
+using SCICore::Geometry::IntVector;
+using SCICore::Geometry::Point;
+using SCICore::Geometry::Vector;
+using SCICore::Math::Abs;
 using SCICore::Thread::Time;
-
-using Uintah::Exceptions::ProblemSetupException;
-using Uintah::Interface::ProblemSpecInterface;
 using Uintah::Components::SimulationController;
-using Uintah::Parallel::UintahParallelPort;
+using Uintah::Exceptions::ProblemSetupException;
 using Uintah::Grid::Grid;
 using Uintah::Grid::Level;
-using SCICore::Geometry::IntVector;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
-using SCICore::Math::Abs;
+using Uintah::Grid::SimulationTime;
+using Uintah::Grid::SoleVariable;
+using Uintah::Interface::CFDInterface;
+using Uintah::Interface::MPMInterface;
+using Uintah::Interface::Output;
+using Uintah::Interface::ProblemSpecInterface;
+using Uintah::Interface::Scheduler;
+using Uintah::Parallel::ProcessorContext;
+using Uintah::Parallel::UintahParallelPort;
 
 SimulationController::SimulationController()
 {
@@ -65,51 +80,72 @@ void SimulationController::run()
     grid->performConsistencyCheck();
     grid->printStatistics();
 
-#if 0
-
+    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+    SchedulerP scheduler(sched);
     DataWarehouseP old_ds = scheduler->createDataWarehouse();
 
-    //old_ds->put(grid, "grid");
-
+    CFDInterface* cfd = dynamic_cast<CFDInterface*>(getPort("cfd"));
     if(cfd)
-	cfd->problemSetup(params, grid, old_ds);
+	cfd->problemSetup(ups, grid, old_ds);
+
+    MPMInterface* mpm = dynamic_cast<MPMInterface*>(getPort("mpm"));
     if(mpm)
-	mpm->problemSetup(params, grid, old_ds);
+	mpm->problemSetup(ups, grid, old_ds);
+
+    old_ds->setGrid(grid);
 
     // For AMR, this will need to change
     if(grid->numLevels() != 1)
 	throw ProblemSetupException("AMR problem specified; cannot do it yet");
     LevelP level = grid->getLevel(0);
 
+    // Parse time struct
+    SimulationTime timeinfo(ups);
+
+    // Print out meta data
+
     double start_time = Time::currentSeconds();
-    double t = params->getStartTime();
+    double t = timeinfo.initTime;
 
     scheduler->initialize();
-    computeStableTimestep(level, scheduler, old_ds);
+    scheduleStableTimestep(level, scheduler, old_ds, cfd, mpm);
+
     ProcessorContext* pc = ProcessorContext::getRootContext();
     scheduler->execute(pc);
-    SoleVariable<double> delt;
-    old_ds->get(delt, "delt");
-    do {
-	double wallTime = Time::currentSeconds() - start_time;
-	cout << "Time=" << t << ", delt=" << delt << ", elapsed time = " << wallTime << '\n';
-	scheduler->initialize();
-	DataWarehouseP new_ds = scheduler->createDataWarehouse();
-	timeAdvance(t, delt, level, scheduler, old_ds, new_ds);
+
+    Output* output = dynamic_cast<Output*>(getPort("output"));
+
+    while(t < timeinfo.maxTime) {
+      double wallTime = Time::currentSeconds() - start_time;
+      SoleVariable<double> delt_var;
+      old_ds->get(delt_var, "delt");
+      double delt = delt_var;
+      if(delt < timeinfo.delt_min){
+	cerr << "WARNING: raising delt from " << delt << " to minimum: " << timeinfo.delt_min << '\n';
+	delt = timeinfo.delt_min;
+      }
+      if(delt < timeinfo.delt_max){
+	cerr << "WARNING: lowering delt from " << delt << " to maxmimum: " << timeinfo.delt_max << '\n';
+	delt = timeinfo.delt_max;
+      }
+
+      cout << "Time=" << t << ", delt=" << delt << ", elapsed time = " << wallTime << '\n';
+      scheduler->initialize();
+      DataWarehouseP new_ds = scheduler->createDataWarehouse();
+      scheduleTimeAdvance(t, delt, level, scheduler, old_ds, new_ds,
+			  cfd, mpm);
+      if(output)
 	output->finalizeTimestep(t, delt, level, scheduler, new_ds);
-	t += delt;
+      t += delt;
 	
-	// Begin next time step...
-	computeStableTimestep(level, scheduler, new_ds);
-	scheduler->addTarget("delt");
-	scheduler->execute(pc);
+      // Begin next time step...
+      scheduleStableTimestep(level, scheduler, new_ds, cfd, mpm);
+      scheduler->addTarget("delt");
+      scheduler->execute(pc);
 
-	new_ds->get(delt, "delt");
-	old_ds = new_ds;
-    } while(t < params->getMaximumTime());
-
-    cerr << "nlevels: " << grid->numLevels() << '\n';
-#endif
+      new_ds->get(delt_var, "delt");
+      old_ds = new_ds;
+    }
 }
 
 void SimulationController::problemSetup(const ProblemSpecP& params,
@@ -168,7 +204,7 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 			    IntVector ncells = endcell-startcell;
 			    level->addRegion(lower+diag*Vector(i,j,k)*scale,
 					     lower+diag*Vector(i+1,j+1,k+1)*scale,
-					     resolution);
+					     ncells);
 			}
 		    }
 		}
@@ -180,36 +216,32 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
     }
 }
 
-void SimulationController::computeStableTimestep(LevelP& level,
-						 SchedulerP& sched,
-						 DataWarehouseP& new_ds)
+void SimulationController::scheduleStableTimestep(LevelP& level,
+						  SchedulerP& sched,
+						  DataWarehouseP& new_ds,
+						  CFDInterface* cfd,
+						  MPMInterface* mpm)
 {
-#if 0
-    if(cfd && mpm){
-	cfd->computeStableTimestep(level, sched, new_ds);
-	mpm->computeStableTimestep(level, sched, new_ds);
-	//throw ProblemSetupException("MPM+CFD doesn't work");
-	/*
-	double dt_cfd = cfd->computeStableTimestep(params, grid, Scheduler);
-	double dt_mpm = mpm->computeStableTimestep(params, grid, Scheduler);
-	return dt_cfd<dt_mpm? dt_cfd:dt_mpm;
-	*/
-    } else if(cfd){
-	cfd->computeStableTimestep(level, sched, new_ds);
-    } else if(mpm){
-	mpm->computeStableTimestep(level, sched, new_ds);
-    } else {
-	throw ProblemSetupException("Neither MPM or CFD specified");
-    }
-#endif
+    if(cfd)
+      cfd->scheduleStableTimestep(level, sched, new_ds);
+    if(mpm)
+      mpm->scheduleStableTimestep(level, sched, new_ds);
 }
 
-void SimulationController::timeAdvance(double t, double delt,
-				       LevelP& level,
-				       SchedulerP& sched,
-				       const DataWarehouseP& old_ds,
-				       DataWarehouseP& new_ds)
+void SimulationController::scheduleTimeAdvance(double t, double delt,
+					       LevelP& level,
+					       SchedulerP& sched,
+					       const DataWarehouseP& old_ds,
+					       DataWarehouseP& new_ds,
+					       CFDInterface* cfd,
+					       MPMInterface* mpm)
 {
+    // Temporary - when cfd/mpm are coupled this will need help
+    if(cfd)
+	cfd->scheduleTimeAdvance(t, delt, level, sched, old_ds, new_ds);
+    if(mpm)
+	mpm->scheduleTimeAdvance(t, delt, level, sched, old_ds, new_ds);
+
 #if 0
 
     /* If we aren't doing any chemistry, skip this step */
@@ -217,12 +249,6 @@ void SimulationController::timeAdvance(double t, double delt,
     if(chem)
        chem->calculateChemistryEffects();
 #endif
-
-    // Temporary
-    if(cfd)
-	cfd->timeStep(t, delt, level, sched, old_ds, new_ds);
-    if(mpm)
-	mpm->timeStep(t, delt, level, sched, old_ds, new_ds);
 
     /* If we aren't doing MPM, skip this step */
     if(mpm){
@@ -314,6 +340,9 @@ void SimulationController::timeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.6  2000/04/13 06:50:59  sparker
+// More implementation to get this to work
+//
 // Revision 1.5  2000/04/12 23:00:09  sparker
 // Start of reading grids
 //

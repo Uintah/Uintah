@@ -8,19 +8,23 @@ static char *id="@(#) $Id$";
 #include <SCICore/Thread/Guard.h>
 #include <iostream>
 
-namespace Uintah {
-namespace Components {
+using namespace Uintah::Components;
 
-    using SCICore::Exceptions::InternalError;
+using SCICore::Exceptions::InternalError;
 using SCICore::Thread::Guard;
 using Uintah::Exceptions::TypeMismatchException;
 using Uintah::Exceptions::UnknownVariable;
 using std::cerr;
 
 OnDemandDataWarehouse::OnDemandDataWarehouse()
-    : d_lock("DataWarehouse lock")
+  : d_lock("DataWarehouse lock")
 {
-    d_allowCreation = true;
+  d_allowCreation = true;
+}
+
+void OnDemandDataWarehouse::setGrid(const GridP& grid)
+{
+  this->grid=grid;
 }
 
 OnDemandDataWarehouse::~OnDemandDataWarehouse()
@@ -198,11 +202,11 @@ OnDemandDataWarehouse::DataRecord::DataRecord(DataItem* di,
 {
 }
 
-} // end namespace Components
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.5  2000/04/13 06:50:57  sparker
+// More implementation to get this to work
+//
 // Revision 1.4  2000/04/11 07:10:40  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications

@@ -23,13 +23,13 @@ public:
 
     virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
 			      DataWarehouseP&);
-    virtual void computeStableTimestep(const LevelP&, SchedulerP&,
+    virtual void scheduleStableTimestep(const LevelP&, SchedulerP&,
 				       DataWarehouseP&);
     void actuallyComputeStableTimestep(const ProcessorContext*,
 				       const Region* region,
 				       const DataWarehouseP&,
 				       DataWarehouseP&);
-    virtual void timeStep(double t, double dt, const LevelP&, SchedulerP&,
+    virtual void scheduleTimeAdvance(double t, double dt, const LevelP&, SchedulerP&,
 			  const DataWarehouseP&, DataWarehouseP&);
     void actuallyTimeStep(const ProcessorContext*,
 			  const Region* region,

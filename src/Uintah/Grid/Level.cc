@@ -1,9 +1,11 @@
 /* REFERENCED */
 static char *id="@(#) $Id$";
 
-#include "Level.h"
-#include "Handle.h"
-#include "Region.h"
+#include <Uintah/Grid/Level.h>
+#include <Uintah/Grid/Handle.h>
+#include <Uintah/Grid/Region.h>
+#include <Uintah/Exceptions/InvalidGrid.h>
+using Uintah::Exceptions::InvalidGrid;
 
 #include <iostream>
 using SCICore::Geometry::Point;
@@ -51,8 +53,40 @@ Region* Level::addRegion(const Point& lower, const Point& upper,
     return r;
 }
 
+int Level::numRegions() const
+{
+  return (int)d_regions.size();
+}
+
 void Level::performConsistencyCheck() const
 {
+  for(int i=0;i<d_regions.size();i++){
+    Region* r = d_regions[i];
+    r->performConsistencyCheck();
+  }
+
+  // This is O(n^2) - we should fix it someday if it ever matters
+  for(int i=0;i<d_regions.size();i++){
+    Region* r1 = d_regions[i];
+    for(int j=i+1;j<d_regions.size();j++){
+      Region* r2 = d_regions[j];
+      if(r1->getBox().overlaps(r2->getBox())){
+	cerr << "r1: " << r1 << '\n';
+	cerr << "r2: " << r2 << '\n';
+	throw InvalidGrid("Two regions overlap");
+      }
+    }
+  }
+
+  // See if abutting boxes have consistent bounds
+}
+
+long Level::totalCells() const
+{
+  long total=0;
+  for(int i=0;i<d_regions.size();i++)
+    total+=d_regions[i]->totalCells();
+  return total;
 }
 
 } // end namespace Grid
@@ -60,6 +94,9 @@ void Level::performConsistencyCheck() const
 
 //
 // $Log$
+// Revision 1.4  2000/04/13 06:51:01  sparker
+// More implementation to get this to work
+//
 // Revision 1.3  2000/04/12 23:00:47  sparker
 // Starting problem setup code
 // Other compilation fixes

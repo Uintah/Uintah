@@ -3,12 +3,10 @@ static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/Arches.h>
 #include <Uintah/Components/Arches/PicardNonlinearSolver.h>
-#if 0
 #include <Uintah/Components/Arches/PhysicalConstants.h>
 #include <Uintah/Components/Arches/SmagorinskyModel.h>
 #include <Uintah/Components/Arches/BoundaryCondition.h>
 #include <Uintah/Components/Arches/Properties.h>
-#endif
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/DataWarehouse.h>
@@ -21,6 +19,7 @@ using std::cerr;
 using std::endl;
 
 using Uintah::Components::Arches;
+using Uintah::Exceptions::InvalidValue;
 using namespace Uintah::Grid;
 
 namespace Uintah {
@@ -38,23 +37,22 @@ Arches::~Arches()
 void Arches::problemSetup(const ProblemSpecP& params, GridP&,
 			  DataWarehouseP& dw)
 {
-#if 0
-  ProblemSpecP db = params->findBlock("Arches");
+  ProblemSpecP db = params->findBlock("CFD")->findBlock("Arches");
 
   db->require("grow_dt", d_deltaT);
   // physical constants
   d_physicalConsts = new PhysicalConstants();
-  d_physicalConsts->problemSetup(db);
+  d_physicalConsts->problemSetup(params);
   // read properties, boundary and turbulence model
   d_props = new Properties();
   d_props->problemSetup(db, dw);
   string turbModel;
   db->require("turbulence_model", turbModel);
   if (turbModel == "Smagorinsky") 
-    d_turbModel = new SmagorinskyModel();
+    d_turbModel = new SmagorinskyModel(d_physicalConsts);
   else 
-    throw InvalidValue("Turbulence Model not supported" + turbModel, db);
-  d_turbModel->problemSetup(db, dw);
+    throw InvalidValue("Turbulence Model not supported" + turbModel);
+  d_turbModel->problemSetup(db);
   d_boundaryCondition = new BoundaryCondition(d_turbModel);
   d_boundaryCondition->problemSetup(db, dw);
   string nlSolver;
@@ -63,13 +61,10 @@ void Arches::problemSetup(const ProblemSpecP& params, GridP&,
     d_nlSolver = new PicardNonlinearSolver(d_props, d_boundaryCondition,
 					   d_turbModel, d_physicalConsts);
   else
-    throw InvalidValue("Nonlinear solver not supported: "+nlSolver, db);
+    throw InvalidValue("Nonlinear solver not supported: "+nlSolver);
 
   //d_nlSolver->problemSetup(db, dw); /* 2 params ? */
   d_nlSolver->problemSetup(db);
-#else
-  NOT_FINISHED("Arches::problemSetup");
-#endif
 }
 
 void Arches::problemInit(const LevelP& level,
@@ -89,13 +84,13 @@ void Arches::problemInit(const LevelP& level,
 #endif
 }
 
-void Arches::computeStableTimestep(const LevelP& level,
+void Arches::scheduleStableTimestep(const LevelP& level,
 				   SchedulerP& sched, DataWarehouseP& dw)
 {
   dw->put(SoleVariable<double>(d_deltaT), "delt"); 
 }
 
-void Arches::timeStep(double time, double dt,
+void Arches::scheduleTimeAdvance(double time, double dt,
 	      const LevelP& level, SchedulerP& sched,
 	      const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
@@ -177,6 +172,9 @@ void Arches::paramInit(const ProcessorContext*,
 
 //
 // $Log$
+// Revision 1.18  2000/04/13 06:50:50  sparker
+// More implementation to get this to work
+//
 // Revision 1.17  2000/04/12 22:58:29  sparker
 // Resolved conflicts
 // Making it compile

@@ -8,7 +8,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Uintah/Components/Arches
 
 SRCS     += $(SRCDIR)/Arches.cc \
-	$(SRCDIR)/NonlinearSolver.cc
+	$(SRCDIR)/NonlinearSolver.cc $(SRCDIR)/PhysicalConstants.cc \
+	$(SRCDIR)/Properties.cc
 #$(SRCDIR)/Discretization.cc $(SRCDIR)/PicardNonlinearSolver.cc \
 #	$(SRCDIR)/PressureSolver.cc
 PSELIBS := Uintah/Parallel Uintah/Interface Uintah/Grid Uintah/Exceptions
@@ -18,6 +19,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/04/13 06:50:52  sparker
+# More implementation to get this to work
+#
 # Revision 1.6  2000/04/12 22:58:30  sparker
 # Resolved conflicts
 # Making it compile

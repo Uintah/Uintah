@@ -10,6 +10,7 @@
 #include <Uintah/Interface/CFDInterface.h>
 #include <Uintah/Grid/Region.h>
 #include <Uintah/Parallel/ProcessorContext.h>
+#include <SCICore/Geometry/Vector.h>
 
 namespace Uintah {
 namespace Components {
@@ -17,6 +18,7 @@ namespace Components {
   using Uintah::Parallel::UintahParallelComponent;
   using Uintah::Interface::ProblemSpecP;
   using Uintah::Interface::DataWarehouseP;
+  using SCICore::Geometry::Vector;
 
 class PhysicalConstants {
 public:
@@ -27,10 +29,10 @@ public:
     const Vector& getGravity(){
       return d_gravity;
     }
-    const double getMolecularViscosity() {
+  double getMolecularViscosity() {
       return d_viscosity;
     }
-    const double getabsPressure() {
+  double getabsPressure() {
       return d_absPressure;
     }
     

@@ -149,6 +149,7 @@ public:
    // used for calculating wall boundary conditions
    TurbulenceModel* d_turb_model;
    // Diff BC types
+#if 0
    struct FlowInlet {
      // define enum for cell type
      CellTypeInfo inletType; 
@@ -188,6 +189,7 @@ public:
      problemSetup(ProblemSpecP& params,
 		  DataWarehouseP& dw);
    };
+#endif
 };
 }
 }

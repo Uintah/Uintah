@@ -9,65 +9,76 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 
 namespace Uintah {
-namespace Components {
-
-using Uintah::Parallel::UintahParallelComponent;
-using Uintah::Interface::ProblemSpecP;
-using Uintah::Grid::LevelP;
-using Uintah::Grid::GridP;
-using Uintah::Interface::SchedulerP;
-using Uintah::Interface::DataWarehouseP;
-
-/**************************************
-
-CLASS
-   SimulationController
-   
-   Short description...
-
-GENERAL INFORMATION
-
-   SimulationController.h
-
-   Steven G. Parker
-   Department of Computer Science
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   Copyright (C) 2000 SCI Group
-
-KEYWORDS
-   Simulation_Controller
-
-DESCRIPTION
-   Long description...
-  
-WARNING
-  
-****************************************/
-
-class SimulationController : public UintahParallelComponent {
-public:
-    SimulationController();
-    virtual ~SimulationController();
-
-    void run();
-private:
-    void problemSetup(const ProblemSpecP&, GridP&);
-    void computeStableTimestep(LevelP&, SchedulerP&, DataWarehouseP&);
-    void timeAdvance(double t, double delt, LevelP&, SchedulerP&,
-		     const DataWarehouseP&, DataWarehouseP&);
-
-    SimulationController(const SimulationController&);
-    SimulationController& operator=(const SimulationController&);
-};
-
-} // end namespace Components
+  namespace Interface {
+    class CFDInterface;
+    class MPMInterface;
+  }
+  namespace Components {
+    
+    using Uintah::Parallel::UintahParallelComponent;
+    using Uintah::Interface::ProblemSpecP;
+    using Uintah::Grid::LevelP;
+    using Uintah::Grid::GridP;
+    using Uintah::Interface::SchedulerP;
+    using Uintah::Interface::DataWarehouseP;
+    using Uintah::Interface::MPMInterface;
+    using Uintah::Interface::CFDInterface;
+    
+    /**************************************
+      
+      CLASS
+        SimulationController
+      
+	Short description...
+      
+      GENERAL INFORMATION
+      
+        SimulationController.h
+      
+	Steven G. Parker
+	Department of Computer Science
+	University of Utah
+      
+	Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+      
+	Copyright (C) 2000 SCI Group
+      
+      KEYWORDS
+        Simulation_Controller
+      
+      DESCRIPTION
+        Long description...
+      
+      WARNING
+      
+      ****************************************/
+    
+    class SimulationController : public UintahParallelComponent {
+    public:
+      SimulationController();
+      virtual ~SimulationController();
+      
+      void run();
+    private:
+      void problemSetup(const ProblemSpecP&, GridP&);
+      void scheduleStableTimestep(LevelP&, SchedulerP&, DataWarehouseP&,
+				  CFDInterface*, MPMInterface*);
+      void scheduleTimeAdvance(double t, double delt, LevelP&, SchedulerP&,
+			       const DataWarehouseP&, DataWarehouseP&,
+			       CFDInterface*, MPMInterface*);
+      
+      SimulationController(const SimulationController&);
+      SimulationController& operator=(const SimulationController&);
+    };
+    
+  } // end namespace Components
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.5  2000/04/13 06:50:59  sparker
+// More implementation to get this to work
+//
 // Revision 1.4  2000/03/23 20:42:17  sparker
 // Added copy ctor to exception classes (for Linux/g++)
 // Helped clean up move of ProblemSpec from Interface to Grid
