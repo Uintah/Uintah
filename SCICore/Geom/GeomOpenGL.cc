@@ -145,6 +145,8 @@ int GeomObj::post_draw(DrawInfoOpenGL* di)
 	glPopName();//pops the face index once the obj is rendered
 	glPopName();
     }
+
+	return 1;  // needed to quiet visual c++ 
 }
 
 static void quad_error(GLenum code)
@@ -4152,6 +4154,9 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.14  1999/10/26 21:48:11  moulding
+// added "return 1;" to the end of GeomObj::post_draw to quiet the visual C++ compiler
+//
 // Revision 1.13  1999/10/21 22:39:07  ikits
 // Put bench.config into PSE/src (where the executable gets invoked from). Fixed bug in the bawgl code and added preliminary navigation and picking.
 //
