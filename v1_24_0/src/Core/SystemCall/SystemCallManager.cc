@@ -647,7 +647,7 @@ int    SystemCallManager::getstdin(int processid)
     if (exit_)
     {
         unlock();
-        return;
+        return -1;
     }
 
     std::list<SystemCallProcess*>::iterator it = processlist_.begin();
