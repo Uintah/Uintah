@@ -5,6 +5,7 @@
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Components/Models/test/SimpleRxn.h>
 #include <Packages/Uintah/CCA/Components/Models/test/TestModel.h>
+#include <Packages/Uintah/CCA/Components/Models/HEChem/Simple_Burn.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
@@ -37,6 +38,8 @@ void ModelFactory::makeModels(const ProblemSpecP& params, GridP&,
       models.push_back(scinew SimpleRxn(d_myworld, model));
     else if(type == "Test")
       models.push_back(scinew TestModel(d_myworld, model));
+    else if(type == "Simple_Burn")
+      models.push_back(scinew Simple_Burn(d_myworld, model));
     else
       throw ProblemSetupException("Unknown model: "+type);
   }
