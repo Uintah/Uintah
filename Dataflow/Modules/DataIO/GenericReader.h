@@ -29,7 +29,6 @@
 
 /*
  * Limitations:
- *   The port name in the XML file must be called "Output Data"
  *   Uses .tcl file with "filename"
  *   Output port must be of type SimpleOPort
  */
@@ -119,7 +118,7 @@ GenericReader<HType>::execute()
   }
 
   // Send the data downstream.
-  SimpleOPort<HType> *outport = (SimpleOPort<HType> *)get_oport("Output Data");
+  SimpleOPort<HType> *outport = (SimpleOPort<HType> *)get_oport(0);
   outport->send(handle_);
 }
 
