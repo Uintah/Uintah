@@ -153,9 +153,9 @@ using std::vector;
       const VarLabel* pDampingRateLabel; // Damping rate summed over particles
       const VarLabel* pDampingCoeffLabel; // Calculated damping coefficient
 
-      // for Fracture ------------------------------------------
-      const VarLabel* pX0Label;
-      const VarLabel* pX0Label_preReloc;
+      // for Fracture ----------
+      const VarLabel* pDispLabel;
+      const VarLabel* pDispLabel_preReloc;
 
       const VarLabel* pgCodeLabel;
 
@@ -182,7 +182,7 @@ using std::vector;
       const VarLabel* GDisplacementLabel;
       const VarLabel* GSp_volLabel;      
       const VarLabel* GSp_vol_srcLabel; 
-      // --------------------------------------------------------
+      // ------------------------------
 
     };
 } // End namespace Uintah

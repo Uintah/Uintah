@@ -330,81 +330,79 @@ MPMLabel::MPMLabel()
   bElBarLabel_preReloc = VarLabel::create("bElBar+",
 			 ParticleVariable<Matrix3>::getTypeDescription());
 
-  // for Farcture -------------------------------------------------------
-  pX0Label         = VarLabel::create("p.x0",
-			   ParticleVariable<Point>::getTypeDescription(),
-				      IntVector(0,0,0),
-				      VarLabel::PositionVariable);
-  pX0Label_preReloc= VarLabel::create( "p.x0+",
-                        ParticleVariable<Point>::getTypeDescription(),
-				      IntVector(0,0,0),
-                        VarLabel::PositionVariable);
+  // for Farcture ----------------------------
+  pDispLabel = VarLabel::create("p.dispalcement",
+	          ParticleVariable<Vector>::getTypeDescription());
+  pDispLabel_preReloc = VarLabel::create( "p.displacement+",
+                  ParticleVariable<Vector>::getTypeDescription());
 
-  pgCodeLabel    = VarLabel::create("p.gcode",
-                    ParticleVariable<Short27>::getTypeDescription());
+  pgCodeLabel = VarLabel::create("p.gcode",
+                  ParticleVariable<Short27>::getTypeDescription());
 
   GCrackNormLabel= VarLabel::create("G.cracknormal",
-                    NCVariable<Vector>::getTypeDescription());
+                  NCVariable<Vector>::getTypeDescription());
 
   gNumPatlsLabel = VarLabel::create("g.numPatls",
-                     NCVariable<int>::getTypeDescription());
+                  NCVariable<int>::getTypeDescription());
 
   GNumPatlsLabel = VarLabel::create("G.numPatls",
-                     NCVariable<int>::getTypeDescription());
+                  NCVariable<int>::getTypeDescription());
 
-  GMassLabel     = VarLabel::create("G.mass",
-                     NCVariable<double>::getTypeDescription());
+  GMassLabel = VarLabel::create("G.mass",
+                  NCVariable<double>::getTypeDescription());
 
-  GVolumeLabel   = VarLabel::create("G.volume",
-                     NCVariable<double>::getTypeDescription());
+  GVolumeLabel = VarLabel::create("G.volume",
+                  NCVariable<double>::getTypeDescription());
 
   GVelocityLabel = VarLabel::create("G.velocity",
-                     NCVariable<Vector>::getTypeDescription());
+                  NCVariable<Vector>::getTypeDescription());
 
-  GTemperatureLabel      = VarLabel::create("G.temperature",
-                           NCVariable<double>::getTypeDescription());
+  GTemperatureLabel = VarLabel::create("G.temperature",
+                  NCVariable<double>::getTypeDescription());
 
-  GTemperatureNoBCLabel  = VarLabel::create("G.temperatureiNoBC",
-                           NCVariable<double>::getTypeDescription());
+  GTemperatureNoBCLabel = VarLabel::create("G.temperatureiNoBC",
+                  NCVariable<double>::getTypeDescription());
 
-  GExternalForceLabel    = VarLabel::create("G.externalforce",
-                           NCVariable<Vector>::getTypeDescription());
+  GExternalForceLabel = VarLabel::create("G.externalforce",
+                  NCVariable<Vector>::getTypeDescription());
 
   GExternalHeatRateLabel = VarLabel::create("G.externalheatrate",
-                           NCVariable<double>::getTypeDescription());
+                  NCVariable<double>::getTypeDescription());
 
-  GThermalContactHeatExchangeRateLabel =
-                 VarLabel::create("G.thermalContactHeatExchangeRate",
-                       NCVariable<double>::getTypeDescription());
+  GThermalContactHeatExchangeRateLabel = VarLabel::create(
+                  "G.thermalContactHeatExchangeRate",
+                  NCVariable<double>::getTypeDescription());
 
-  GInternalForceLabel    = VarLabel::create("G.internalforce",
-                           NCVariable<Vector>::getTypeDescription());
+  GInternalForceLabel = VarLabel::create("G.internalforce",
+                  NCVariable<Vector>::getTypeDescription());
 
   GInternalHeatRateLabel = VarLabel::create("G.internalHeatRate",
-                           NCVariable<double>::getTypeDescription());   
+                  NCVariable<double>::getTypeDescription());   
 
   GTemperatureRateLabel = VarLabel::create("G.temperatureRate",
-                        NCVariable<double>::getTypeDescription());
+                  NCVariable<double>::getTypeDescription());
      
   GTemperatureStarLabel = VarLabel::create("G.temperatureStar",
-                        NCVariable<double>::getTypeDescription());
+                  NCVariable<double>::getTypeDescription());
                    
-  GVelocityStarLabel     = VarLabel::create("G.velocityg_star",
-                        NCVariable<Vector>::getTypeDescription() );
+  GVelocityStarLabel = VarLabel::create("G.velocityg_star",
+                  NCVariable<Vector>::getTypeDescription() );
+
   GAccelerationLabel = VarLabel::create( "G.acceleration",
-                        NCVariable<Vector>::getTypeDescription() );
+                  NCVariable<Vector>::getTypeDescription() );
 
   gDisplacementLabel = VarLabel::create("g.displacement",
-                        NCVariable<Vector>::getTypeDescription() );
-  GDisplacementLabel = VarLabel::create("G.displacement",
-                        NCVariable<Vector>::getTypeDescription() );
+                  NCVariable<Vector>::getTypeDescription() );
 
-  GSp_volLabel     =  VarLabel::create("G.sp_vol",
-                        NCVariable<double>::getTypeDescription());
+  GDisplacementLabel = VarLabel::create("G.displacement",
+                  NCVariable<Vector>::getTypeDescription() );
+
+  GSp_volLabel = VarLabel::create("G.sp_vol",
+                  NCVariable<double>::getTypeDescription());
 
   GSp_vol_srcLabel =  VarLabel::create("G.sp_vol_src",
-                        NCVariable<double>::getTypeDescription()); 
-  // -----------------------------------------------------------------------
+                  NCVariable<double>::getTypeDescription()); 
+  // ------------------------------------------------------
 
   pVolumeOldLabel_preReloc = VarLabel::create("pVolumeOld+",
 			       ParticleVariable<double>::getTypeDescription()); 
@@ -540,9 +538,9 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(bElBarLabel_preReloc);
   VarLabel::destroy(pVolumeOldLabel_preReloc);
 
- // for Farcture ----------------------------------
-  VarLabel::destroy(pX0Label);
-  VarLabel::destroy(pX0Label_preReloc);
+ // for Farcture --------------
+  VarLabel::destroy(pDispLabel);
+  VarLabel::destroy(pDispLabel_preReloc);
 
   VarLabel::destroy(pgCodeLabel);
 
@@ -571,7 +569,8 @@ MPMLabel::~MPMLabel()
 
   VarLabel::destroy(GSp_volLabel);
   VarLabel::destroy(GSp_vol_srcLabel);
-  // ------------------------------------------
+  // --------------------------------
+
   // Destroy Material point erosion labels
   VarLabel::destroy(pErosionLabel);
   VarLabel::destroy(pErosionLabel_preReloc);
