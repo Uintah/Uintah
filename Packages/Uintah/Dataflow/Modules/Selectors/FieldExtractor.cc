@@ -207,9 +207,18 @@ FieldExtractor::get_periodic_bcs_range(IntVector cellmax, IntVector datamax,
     newrange.z( range.z() );
 }
 
+#if 0
+template<class T>
+void getVariable(QueryInfo &qinfo, IntVector &low,
+		 IntVector &range, BBox &box, string &filename) {
+}
+
+#endif
+
 void
 FieldExtractor::execute()
-{ 
+{
+  //  const char* old_tag1 = AllocatorSetDefaultTag("FieldExtractor::execute");
   tcl_status.set("Calling FieldExtractor!"); 
   ArchiveIPort *in = (ArchiveIPort *) get_iport("Data Archive");
   FieldOPort *fout = (FieldOPort *) get_oport("Field");
@@ -217,6 +226,7 @@ FieldExtractor::execute()
   ArchiveHandle handle;
   if (!(in->get(handle) && handle.get_rep())) {
     warning("VariableExtractor::execute() - No data from input port.");
+    //    AllocatorSetDefaultTag(old_tag1);
     return;
   }
    
@@ -234,6 +244,7 @@ FieldExtractor::execute()
 
   if(type == 0){
     warning( "No variables found.");
+    //    AllocatorSetDefaultTag(old_tag1);
     return;
   }
   
@@ -271,12 +282,13 @@ FieldExtractor::execute()
     level->getSpatialRange(box);
     //      IntVector cellHi, cellLo;
     //      level->findCellIndexRange(cellLo, cellHi);
-
+    
     //     cerr<<"before anything data range is:  "<<range.x()<<"x"<<range.y()<<"x"<<
     //       range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
-
+    
+    FieldHandle fHandle_;
     switch( type->getType() ) {
-
+      
     case TypeDescription::NCVariable:
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
@@ -290,8 +302,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::NCVariable,
                                      TypeDescription::double_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::NCVariable, mesh_handle_);
@@ -300,8 +311,7 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::NCVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
       case TypeDescription::float_type:
@@ -315,8 +325,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::NCVariable,
                                      TypeDescription::float_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::NCVariable, mesh_handle_);
@@ -325,8 +334,7 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::NCVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
       case TypeDescription::int_type:
@@ -340,8 +348,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::NCVariable,
                                      TypeDescription::int_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::NCVariable, mesh_handle_);
@@ -350,8 +357,7 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::NCVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
       case TypeDescription::long64_type:
@@ -365,8 +371,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::NCVariable,
                                      TypeDescription::long64_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::NCVariable, mesh_handle_);
@@ -375,8 +380,7 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::NCVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
       case TypeDescription::Vector:
@@ -390,8 +394,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::NCVariable,
                                      TypeDescription::Vector, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::NCVariable, mesh_handle_);
@@ -402,8 +405,7 @@ FieldExtractor::execute()
                                    TypeDescription::NCVariable);
             build_field( archive, level, low, var, mat, time, gridVar, vfd );
             // send the field out to the port
-            fout->send(vfd);
-            return;
+            fHandle_ = vfd;
           }
         }
       case TypeDescription::Matrix3:
@@ -417,8 +419,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::NCVariable,
                                      TypeDescription::Matrix3, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::NCVariable, mesh_handle_);
@@ -428,15 +429,16 @@ FieldExtractor::execute()
             set_tensor_properties( tfd, low, TypeDescription::NCVariable);
             build_field( archive, level, low, var, mat, time, gridVar, tfd );
             // send the field out to the port
-            fout->send(tfd);
+            fHandle_ = tfd;
             //  DumpAllocator(default_allocator, "TensorDump.allocator");
-            return;
           }
         }
       default:
         error("NCVariable<?>  Unknown scalar type.");
+        //        AllocatorSetDefaultTag(old_tag1);
         return;
       }
+      break;
     case TypeDescription::CCVariable:
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
@@ -454,8 +456,7 @@ FieldExtractor::execute()
                                      TypeDescription::CCVariable,
                                      TypeDescription::double_type, mrfield);
             //      cerr<<"multi-level field built\n";
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             //      cerr<<"Before update_mesh_handled: type = "<<
             //        TypeDescription::CCVariable<<"\n";
@@ -469,10 +470,10 @@ FieldExtractor::execute()
             //      cerr<<"properties set...building field\n";
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
             //      cerr<<"field built\n";
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::float_type:
         {
           CCVariable<float> gridVar;
@@ -484,8 +485,7 @@ FieldExtractor::execute()
                                      dt, 0,
                                      TypeDescription::CCVariable,
                                      TypeDescription::float_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::CCVariable, mesh_handle_);
@@ -494,10 +494,10 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::CCVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::int_type:
         {
           CCVariable<int> gridVar;
@@ -509,8 +509,7 @@ FieldExtractor::execute()
                                      dt, 0,
                                      TypeDescription::CCVariable,
                                      TypeDescription::int_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::CCVariable, mesh_handle_);
@@ -519,10 +518,10 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::CCVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::bool_type:
         {
           CCVariable<unsigned char> gridVar;
@@ -534,8 +533,7 @@ FieldExtractor::execute()
                                      dt, 0,
                                      TypeDescription::CCVariable,
                                      TypeDescription::bool_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::CCVariable, mesh_handle_);
@@ -544,10 +542,10 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::CCVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::long64_type:
       case TypeDescription::long_type:
         {
@@ -560,8 +558,7 @@ FieldExtractor::execute()
                                      dt, 0,
                                      TypeDescription::CCVariable,
                                      TypeDescription::long64_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::CCVariable, mesh_handle_);
@@ -570,10 +567,10 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::CCVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::Vector:
         {       
           CCVariable<Vector> gridVar;
@@ -585,8 +582,7 @@ FieldExtractor::execute()
                                      dt, 0,
                                      TypeDescription::CCVariable,
                                      TypeDescription::Vector, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::CCVariable, mesh_handle_);
@@ -597,10 +593,10 @@ FieldExtractor::execute()
                                    TypeDescription::CCVariable);
             build_field( archive, level, low, var, mat, time, gridVar, vfd );
             // send the field out to the port
-            fout->send(vfd);
-            return;
+            fHandle_ = vfd;
           }
         }
+        break;
       case TypeDescription::Matrix3:
         {
           CCVariable<Matrix3> gridVar;
@@ -612,8 +608,7 @@ FieldExtractor::execute()
                                      dt, 0,
                                      TypeDescription::CCVariable,
                                      TypeDescription::Matrix3, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::CCVariable, mesh_handle_);
@@ -623,15 +618,17 @@ FieldExtractor::execute()
             set_tensor_properties( tfd, low, TypeDescription::CCVariable);
             build_field( archive, level, low, var, mat, time, gridVar, tfd );
             // send the field out to the port
-            fout->send(tfd);
+            fHandle_ = tfd;
             //  DumpAllocator(default_allocator, "TensorDump.allocator");
-            return;
           }
         }
+        break;
       default:
         error("CCVariable<?> Unknown scalar type.");
+        //        AllocatorSetDefaultTag(old_tag1);
         return;
       }
+      break;
     case TypeDescription::SFCXVariable:
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
@@ -645,8 +642,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCXVariable,
                                      TypeDescription::double_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCXVariable, mesh_handle_);
@@ -655,10 +651,10 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::SFCXVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::float_type:
         {
           SFCXVariable<float> gridVar;
@@ -670,8 +666,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCXVariable,
                                      TypeDescription::float_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCXVariable, mesh_handle_);
@@ -680,10 +675,10 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::SFCXVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break; 
       case TypeDescription::int_type:
         {
           SFCXVariable<int> gridVar;
@@ -695,8 +690,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCXVariable,
                                      TypeDescription::int_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCXVariable, mesh_handle_);
@@ -705,10 +699,10 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::SFCXVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::long64_type:
       case TypeDescription::long_type:
         {
@@ -721,8 +715,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCXVariable,
                                      TypeDescription::long64_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCXVariable, mesh_handle_);
@@ -731,10 +724,10 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::SFCXVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::Vector:
         {       
           SFCXVariable<Vector> gridVar;
@@ -746,8 +739,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCXVariable,
                                      TypeDescription::Vector, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCXVariable, mesh_handle_);
@@ -758,10 +750,10 @@ FieldExtractor::execute()
                                    TypeDescription::SFCXVariable);
             build_field( archive, level, low, var, mat, time, gridVar, vfd );
             // send the field out to the port
-            fout->send(vfd);
-            return;
+            fHandle_ = vfd;
           }
         }
+        break;
       case TypeDescription::Matrix3:
         {
           SFCXVariable<Matrix3> gridVar;
@@ -773,8 +765,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCXVariable,
                                      TypeDescription::Matrix3, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCXVariable, mesh_handle_);
@@ -786,16 +777,17 @@ FieldExtractor::execute()
             tfd->set_property( "offset", IntVector(low), true);
             build_field( archive, level, low, var, mat, time, gridVar, tfd );
             // send the field out to the port
-            fout->send(tfd);
+            fHandle_ = tfd;
             //  DumpAllocator(default_allocator, "TensorDump.allocator");
-            return;
           }
         }
+        break;
       default:
         error("SFCXVariable<?> Unknown scalar type.");
+        //        AllocatorSetDefaultTag(old_tag1);
         return;
       }
-      
+      break;
     case TypeDescription::SFCYVariable:
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
@@ -809,8 +801,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCYVariable,
                                      TypeDescription::double_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCYVariable, mesh_handle_);
@@ -819,10 +810,10 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::SFCYVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::float_type:
         {
           SFCYVariable<float> gridVar;
@@ -834,8 +825,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCYVariable,
                                      TypeDescription::float_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCYVariable, mesh_handle_);
@@ -844,10 +834,10 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::SFCYVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::int_type:
         {
           SFCYVariable<int> gridVar;
@@ -859,8 +849,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCYVariable,
                                      TypeDescription::int_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCYVariable, mesh_handle_);
@@ -869,10 +858,10 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::SFCYVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::long64_type:
       case TypeDescription::long_type:
         {
@@ -885,8 +874,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCYVariable,
                                      TypeDescription::long64_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCYVariable, mesh_handle_);
@@ -895,10 +883,10 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::SFCYVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::Vector:
         {       
           SFCYVariable<Vector> gridVar;
@@ -910,8 +898,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCYVariable,
                                      TypeDescription::Vector, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCYVariable, mesh_handle_);
@@ -922,10 +909,10 @@ FieldExtractor::execute()
                                    TypeDescription::SFCYVariable);
             build_field( archive, level, low, var, mat, time, gridVar, vfd );
             // send the field out to the port
-            fout->send(vfd);
-            return;
+            fHandle_ = vfd;
           }
         }
+        break;
       case TypeDescription::Matrix3:
         {
           SFCYVariable<Matrix3> gridVar;
@@ -937,8 +924,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCYVariable,
                                      TypeDescription::Matrix3, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCYVariable, mesh_handle_);
@@ -950,15 +936,17 @@ FieldExtractor::execute()
             tfd->set_property( "offset", IntVector(low), true);
             build_field( archive, level, low, var, mat, time, gridVar, tfd );
             // send the field out to the port
-            fout->send(tfd);
+            fHandle_ = tfd;
             //  DumpAllocator(default_allocator, "TensorDump.allocator");
-            return;
           }
         }
+        break;
       default:
         error("SFCYVariable<?> Unknown scalar type.");
+        //        AllocatorSetDefaultTag(old_tag1);
         return;
       }
+      break;
     case TypeDescription::SFCZVariable:
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
@@ -972,8 +960,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCZVariable,
                                      TypeDescription::double_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCZVariable, mesh_handle_);
@@ -982,10 +969,10 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::SFCZVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::float_type:
         {
           SFCZVariable<float> gridVar;
@@ -997,8 +984,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCZVariable,
                                      TypeDescription::float_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCZVariable, mesh_handle_);
@@ -1007,10 +993,10 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::SFCZVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::int_type:
         {
           SFCZVariable<int> gridVar;
@@ -1022,8 +1008,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCZVariable,
                                      TypeDescription::int_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCZVariable, mesh_handle_);
@@ -1032,10 +1017,10 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::SFCZVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::long64_type:
       case TypeDescription::long_type:
         {
@@ -1048,8 +1033,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCZVariable,
                                      TypeDescription::long64_type, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCZVariable, mesh_handle_);
@@ -1058,12 +1042,12 @@ FieldExtractor::execute()
             set_scalar_properties( sfd, var, time, low, 
                                    TypeDescription::SFCZVariable);
             build_field( archive, level, low, var, mat, time, gridVar, sfd );
-            fout->send(sfd);
-            return;
+            fHandle_ = sfd;
           }
         }
+        break;
       case TypeDescription::Vector:
-        {       
+        {
           SFCZVariable<Vector> gridVar;
           if(get_all_levels){
             GridP newGrid = build_minimal_patch_grid( grid );
@@ -1073,8 +1057,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCZVariable,
                                      TypeDescription::Vector, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCZVariable, mesh_handle_);
@@ -1085,10 +1068,10 @@ FieldExtractor::execute()
                                    TypeDescription::SFCZVariable);
             build_field( archive, level, low, var, mat, time, gridVar, vfd );
             // send the field out to the port
-            fout->send(vfd);
-            return;
+            fHandle_ = vfd;
           }
         }
+        break;
       case TypeDescription::Matrix3:
         {
           SFCZVariable<Matrix3> gridVar;
@@ -1100,8 +1083,7 @@ FieldExtractor::execute()
                                      dt, 1,
                                      TypeDescription::SFCZVariable,
                                      TypeDescription::Matrix3, mrfield);
-            fout->send(mrfield);
-            return;
+            fHandle_ = mrfield;
           } else {
             update_mesh_handle( level, hi, range, box,
                                 TypeDescription::SFCZVariable, mesh_handle_);
@@ -1112,20 +1094,26 @@ FieldExtractor::execute()
                                int(TypeDescription::SFCZVariable),true);
             build_field( archive, level, low, var, mat, time, gridVar, tfd );
             // send the field out to the port
-            fout->send(tfd);
+            fHandle_ = tfd;
             //  DumpAllocator(default_allocator, "TensorDump.allocator");
-            return;
           }
         }
+        break;
       default:
         error("SFCZVariable<?> Unknown type.");
+        //        AllocatorSetDefaultTag(old_tag1);
         return;
       }
+      break;
     default:
       error("Not a Uintah type.");
+      //      AllocatorSetDefaultTag(old_tag1);
       return;
     }
+
+    fout->send(fHandle_);
   }
+  //  AllocatorSetDefaultTag(old_tag1);
 }
 
 GridP 
