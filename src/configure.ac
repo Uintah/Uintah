@@ -1997,6 +1997,28 @@ AC_SUBST(Z_LIB_DIR_FLAG)
 AC_SUBST(INC_Z_H)
 AC_SUBST(DEF_Z)
 
+##  --  search for unp --------------------------------------
+
+if test "$with_unp" = "yes"; then
+  AC_MSG_ERROR(Please provide the location of the UNP package.)
+fi
+
+if test "$with_unp"; then
+  _sci_lib="$with_unp/lib"
+  _sci_inc="$with_unp/include"
+else
+  _sci_lib="$sci_thirdparty_libs"
+  _sci_inc="$sci_thirdparty_includes"
+fi
+
+SCI_TRY_LINK(UNP,unp socket library and headers,extern_C unpv12e/unp.h unpv12e/unpthread.h,$_sci_inc,unp,$_sci_lib,,[
+  Connect(0, NULL, 0);
+],optional)
+
+AC_SUBST(UNP_LIB_FLAG)
+AC_SUBST(UNP_LIB_DIR_FLAG)
+AC_SUBST(INC_UNP_H)
+
 ##  --  search for png --------------------------------------
 
 # Default values:
@@ -2572,7 +2594,8 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPIUNI" = "yes") &&
                petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
                $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
                $INC_MPI_H,
-               ,optional)
+               ,
+               optional)
 
   if test "$HAVE_PETSC" = "yes" ; then
     DEF_PETSC="#define HAVE_PETSC 1"
