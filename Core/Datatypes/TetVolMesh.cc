@@ -445,7 +445,7 @@ TetVolMesh::create_cell_faces(Cell::index_type c)
 {
   //ASSERT(!is_frozen());
   face_lock_.lock();
-  for (int i = c*6; i < c*6+6; ++i)
+  for (int i = c*4; i < c*4+4; ++i)
   {
     faces_.insert(i);
     all_faces_.insert(i);
