@@ -66,7 +66,8 @@ enum { PickSource, PickDirect, PickCone, PickAxis, PickArrow };
  * Much of the work is accomplished in the BaseWidget constructor which
  *      includes some consistency checking to ensure full initialization.
  */
-LightWidget::LightWidget( Module* module, CrowdMonitor* lock, double widget_scale )
+LightWidget::LightWidget( Module* module, CrowdMonitor* lock, 
+			  double widget_scale )
   : BaseWidget(module, lock, "LightWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
     ltype(DirectionalLight), oldaxis(1, 0, 0)
 {
@@ -78,7 +79,29 @@ LightWidget::LightWidget( Module* module, CrowdMonitor* lock, double widget_scal
   variables[DistVar] = scinew RealVariable("Dist", solve, Scheme1, INIT);
   variables[RadiusVar] = scinew RealVariable("Radius", solve, Scheme1, INIT);
   variables[RatioVar] = scinew RealVariable("Ratio", solve, Scheme1, 1.0);
+  init( module );
+}
 
+LightWidget::LightWidget( Module* module, CrowdMonitor* lock, 
+			  double widget_scale, Point source, 
+			  Point direct, Point cone, double rad, double rat)
+  : BaseWidget(module, lock, "LightWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+    ltype(DirectionalLight), oldaxis(1, 0, 0)
+{
+  const double INIT = 10.0*widget_scale_;
+  // Scheme4 is used for the Arrow.
+  variables[SourceVar] = scinew PointVariable("Source", solve, Scheme1, source);
+  variables[DirectVar] = scinew PointVariable("Direct", solve, Scheme2, direct);
+  variables[ConeVar] = scinew PointVariable("Cone", solve, Scheme3, cone );
+  variables[DistVar] = scinew RealVariable("Dist", solve, Scheme1, INIT);
+  variables[RadiusVar] = scinew RealVariable("Radius", solve, Scheme1, rad);
+  variables[RatioVar] = scinew RealVariable("Ratio", solve, Scheme1, rat);
+  init( module );
+}
+
+void
+LightWidget::init( Module* module)
+{
   constraints[ConstAdjacent] = scinew DistanceConstraint("ConstAdjacent",
 							 NumSchemes,
 							 variables[SourceVar],
@@ -404,10 +427,22 @@ LightWidget::GetPointAt() const
   Point at(variables[DirectVar]->point());
   return at;
 }
+Point
+LightWidget::GetCone() const
+{
+  Point at(variables[ConeVar]->point());
+  return at;
+}
+
 void 
 LightWidget::SetPointAt( const Point& pt)
 {
   variables[DirectVar]->Set( pt, Scheme2 );
+}
+void 
+LightWidget::SetCone( const Point& pt)
+{
+  variables[ConeVar]->Set( pt, Scheme3 );
 }
 
 double 
@@ -420,6 +455,18 @@ void
 LightWidget::SetRadius( double rad )
 {
   variables[RadiusVar]->Set( rad, Scheme1 );
+}
+
+double 
+LightWidget::GetRatio() const
+{
+  return variables[RatioVar]->real();
+}
+
+void
+LightWidget::SetRatio( double rat )
+{
+  variables[RatioVar]->Set( rat, Scheme1 );
 }
 
 void
