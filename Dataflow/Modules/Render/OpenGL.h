@@ -264,6 +264,9 @@ private:
 
   // These functions were added to clean things up a bit.
   void real_getData(int datamask, FutureValue<GeometryData*>* result);
+
+  void render_rotation_axis(const View &view,
+			    bool do_stereo, int i, const Vector &eyesep);
 };
 
 
