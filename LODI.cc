@@ -5,11 +5,9 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Packages/Uintah/Core/Labels/ICELabel.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Math/MiscMath.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Math/MiscMath.h>
@@ -25,11 +23,12 @@ static DebugStream cout_dbg("LODI_DBG_COUT", false);
 
 /* ---------------------------------------------------------------------
  Function~  read_LODI_BC_inputs--   
- Purpose~   returns if we are using LODI BC on any face and reads in
-            any lodi parameters 
+ Purpose~   returns if we are using LODI BC on any face,
+            reads in any lodi parameters 
+            sets which boundaries are lodi
  ---------------------------------------------------------------------  */
 bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
-                         Lodi_user_inputs* userInputs)
+                         Lodi_variable_basket* userInputs)
 {
   //__________________________________
   // search the BoundaryConditions problem spec
@@ -41,13 +40,18 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
   
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
                     face_ps=face_ps->findNextBlock("Face")) {
+    map<string,string> face;
+    face_ps->getAttributes(face);
+    bool is_Lodi_boundary = false;
     
     for(ProblemSpecP bc_iter = face_ps->findBlock("BCType"); bc_iter != 0;
                      bc_iter = bc_iter->findNextBlock("BCType")){
       map<string,string> bc_type;
       bc_iter->getAttributes(bc_type);
+      
       if (bc_type["var"] == "LODI") {
        usingLODI = true;
+       is_Lodi_boundary = true;
       }
     }
   }
@@ -70,6 +74,59 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
   }
   return usingLODI;
 }
+/* --------------------------------------------------------------------- 
+ Function~  getMaxMach_face_VarLabel--   
+ Purpose~   returns varLabel for maxMach_<xminus.....zplus>
+ ---------------------------------------------------------------------  */
+VarLabel* getMaxMach_face_VarLabel( Patch::FaceType face)
+{
+  string labelName = "maxMach_" + Patch::getFaceName(face);
+  VarLabel* V_Label = VarLabel::find(labelName); 
+  if (V_Label == NULL){
+    throw InternalError("Label " + labelName+ " doesn't exist");
+  }
+  return V_Label;
+}
+
+/* --------------------------------------------------------------------- 
+ Function~  Lodi_maxMach_patchSubset--   
+ Purpose~   The reduction variables maxMach_<xminus, xplus....>
+            need a patchSubset for each face.
+ ---------------------------------------------------------------------  */
+void Lodi_maxMach_patchSubset(const LevelP& level,
+                               SimulationStateP& sharedState,
+                               vector<PatchSubset*> & maxMach_patchSubset)
+{
+  cout_doing << "Lodi_maxMach_patchSubset "<< endl;
+  //__________________________________
+  // Iterate over all patches on this levels
+  vector<const Patch*> p[Patch::numFaces];
+  for(Level::const_patchIterator iter = level->patchesBegin();
+                                 iter != level->patchesEnd(); iter++){
+    const Patch* patch = *iter;
+    
+    //_________________________________
+    // Iterate over just the boundary faces
+    vector<Patch::FaceType>::const_iterator itr;
+    for (itr  = patch->getBoundaryFaces()->begin(); 
+         itr != patch->getBoundaryFaces()->end(); ++itr){
+      Patch::FaceType face = *itr;
+      //__________________________________
+      //  if Lodi face then keep track of the patch
+      if (is_LODI_face(patch,face, sharedState) ) {
+        p[face].push_back(patch);
+      }
+    }
+  }
+  //__________________________________
+  // now put each patch into a patchSubsets
+  for (int f = 0; f<Patch::numFaces; f++) {
+    PatchSubset* subset = scinew PatchSubset(p[f].begin(), p[f].end());
+    subset->addReference();
+    maxMach_patchSubset[f]=subset;
+  } 
+}
+
 /* --------------------------------------------------------------------- 
  Function~  is_LODI_face--   
  Purpose~   returns true if this face on this patch is using LODI bcs
@@ -307,7 +364,7 @@ inline void Di(StaticArray<CCVariable<Vector> >& d,
                const IntVector& c,
                const Patch::FaceType face,
                const Vector domainLength,
-               const Lodi_user_inputs* user_inputs,
+               const Lodi_variable_basket* user_inputs,
                const double maxMach,
                const vector<double>& s,
                const double press,
@@ -448,10 +505,11 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
                constCCVariable<double>& rho,              
                const CCVariable<double>& press,                   
                constCCVariable<Vector>& vel,                  
-               constCCVariable<double>& speedSound,                    
+               constCCVariable<double>& speedSound,              
                const Patch* patch,
+               DataWarehouse* new_dw,
                SimulationStateP& sharedState,
-               const Lodi_user_inputs* user_inputs)                              
+               const Lodi_variable_basket* user_inputs)                              
 {
   cout_doing << "LODI computeDi "<< endl;
   Vector dx = patch->dCell();
@@ -475,52 +533,52 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
   for (iter  = patch->getBoundaryFaces()->begin(); 
        iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
- 
-    cout_dbg << " computing DI on face " << face 
-             << " patch " << patch->getID()<<endl;
-    //_____________________________________
-    // S I D E S
-    IntVector axes = patch->faceAxes(face);
-    int P_dir = axes[0]; // find the principal dir
-    double delta = dx[P_dir];
     
-    IntVector R_offset(0,0,0);
-    IntVector L_offset(0,0,0);     //  find the one sided derivative offsets
+    if (is_LODI_face(patch,face, sharedState) ) {
+      cout_dbg << " computing DI on face " << face 
+               << " patch " << patch->getID()<<endl;
+      //_____________________________________
+      // S I D E S
+      IntVector axes = patch->faceAxes(face);
+      int P_dir = axes[0]; // find the principal dir
+      double delta = dx[P_dir];
 
-    if (face == Patch::xminus || face == Patch::yminus || face == Patch::zminus){
-      R_offset[P_dir] += 1; 
-    }
-    if (face == Patch::xplus || face == Patch::yplus || face == Patch::zplus){
-      L_offset[P_dir] -= 1;
-    }
-    
-    IntVector dir = Sutherland_Vector_Components(face);
-/*`==========TESTING==========*/
-    // find max Mach Number
-    double maxMach = 0.0;
-    for(CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells"); 
-        !iter.done();iter++) {
-      IntVector c = *iter;
-      maxMach = Max(maxMach, fabs(vel[c][P_dir]/speedSound[c]));
-    } 
-/*===========TESTING==========`*/
-    for(CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells"); 
-        !iter.done();iter++) {
-      IntVector c = *iter;
-      IntVector r = c + R_offset;
-      IntVector l = c + L_offset;
+      IntVector R_offset(0,0,0);
+      IntVector L_offset(0,0,0);     //  find the one sided derivative offsets
 
-      double drho_dx = (rho[r]   - rho[l])/delta; 
-      double dp_dx   = (press[r] - press[l])/delta;
-      Vector dVel_dx = (vel[r]   - vel[l])/delta;
+      if (face == Patch::xminus || face == Patch::yminus || face == Patch::zminus){
+        R_offset[P_dir] += 1; 
+      }
+      if (face == Patch::xplus || face == Patch::yplus || face == Patch::zplus){
+        L_offset[P_dir] -= 1;
+      }
 
-      vector<double> s(6);
-      characteristic_source_terms(dir, P_dir, grav, rho[c], speedSound[c], s);
+      IntVector dir = Sutherland_Vector_Components(face);
       
-      Di(d, dir, c, face, domainLength, user_inputs, maxMach, s, press[c],
-         speedSound[c], rho[c], vel[c], drho_dx, dp_dx, dVel_dx); 
+      // get the maxMach for that face
+      VarLabel* V_Label = getMaxMach_face_VarLabel(face);
+      max_vartype maxMach;
+      new_dw->get(maxMach,   V_Label);
+      
+      //__________________________________
+      for(CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells"); 
+          !iter.done();iter++) {
+        IntVector c = *iter;
+        IntVector r = c + R_offset;
+        IntVector l = c + L_offset;
 
-    }  // faceCelliterator 
+        double drho_dx = (rho[r]   - rho[l])/delta; 
+        double dp_dx   = (press[r] - press[l])/delta;
+        Vector dVel_dx = (vel[r]   - vel[l])/delta;
+
+        vector<double> s(6);
+        characteristic_source_terms(dir, P_dir, grav, rho[c], speedSound[c], s);
+
+        Di(d, dir, c, face, domainLength, user_inputs, maxMach, s, press[c],
+           speedSound[c], rho[c], vel[c], drho_dx, dp_dx, dVel_dx); 
+
+      }  // faceCelliterator 
+    }  // is Lodi face
   }  // loop over faces
 }// end of function
 
@@ -744,7 +802,7 @@ void  lodi_bc_preprocess( const Patch* patch,
 
   //compute Di at boundary cells
   computeDi(di, rho_old,  press_tmp, vel_old, 
-            speedSound, patch, sharedState, lv->user_inputs);
+            speedSound, patch, new_dw, sharedState, lv->var_basket);
 }  
  
 /*________________________________________________________
