@@ -710,7 +710,7 @@ ICUMonitor::init_plots()
     }
     g.auxindex_ = gui_auxidx_[i]->get();
     if (! gui_draw_aux_data_[i]) {
-      gui_draw_aux_data_[i] = scinew GuiInt(ctx->subVar("draw_aux_data_-" + num));
+      gui_draw_aux_data_[i] = scinew GuiInt(ctx->subVar("draw_aux_data-" + num));
     }
     g.draw_aux_data_ = gui_draw_aux_data_[i]->get();
 
