@@ -112,12 +112,13 @@ enum rgbe_error_codes {
   rgbe_read_error,
   rgbe_write_error,
   rgbe_format_error,
-  rgbe_memory_error,
+  rgbe_memory_error
 };
 
 /* default error routine.  change this to change error handling */
-static int rgbe_error(int rgbe_error_code, char *msg)
+static int rgbe_error(int rgbe_error_code, char * msg)
 {
+  printf("Msg: %s\n", msg);
   switch (rgbe_error_code) {
   case rgbe_read_error:
     Error("LIBGFX: Read error on RGBE file!");
