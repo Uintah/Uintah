@@ -4,8 +4,7 @@ static char *id="@(#) $Id$";
 #include "ProblemSpec.h"
 
 #include <iostream>
-#include <cstdlib>
-
+//#include <cstdlib>
 
 using std::cerr;
 using std::endl;
@@ -176,7 +175,8 @@ ProblemSpecP ProblemSpec::get(const std::string& name, std::string &value)
       if (child.getNodeType() == DOM_Node::TEXT_NODE) {
 	DOMString val = child.getNodeValue();
 	char *s = val.transcode();
-	value = string(s);
+	//value = string(s);
+	value = std::string(s);
 	delete[] s;
       }
     }
@@ -237,6 +237,10 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.6  2000/03/31 17:52:08  moulding
+// removed #include <cstdlib> and changed line 178 from "value = string(s);" to
+// "value = std::string(s);"
+//
 // Revision 1.5  2000/03/31 00:55:07  jas
 // Let the include stuff know we are using endl.
 //
