@@ -60,6 +60,11 @@ DECLARE_MAKER(Viewer)
 Viewer::Viewer(GuiContext* ctx)
   : Module("Viewer", ctx, ViewerSpecial,"Render","SCIRun"),
     geomlock_("Viewer geometry lock"),
+    // CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+    newViewWindowMailbox( "NewViewWindowMailbox", 10 ),
+#endif
+    // CollabVis code end
     max_portno_(0)
 {
 				// Add a headlight
@@ -87,6 +92,7 @@ Viewer::Viewer(GuiContext* ctx)
   GeomViewerPort *pi = new GeomViewerPort(portid);
 
   ports_.addObj(pi,portid);
+
 }
 
 
@@ -456,6 +462,18 @@ void Viewer::tcl_command(GuiArgs& args, void* userdata)
   }
   if(args[1] == "addviewwindow")
   {
+    // CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+    //std::cerr << "[HAVE_COLLAB_VIS] (Viewer::tcl_command) 0\n";
+    if ( args.count() == 4 ) {
+      ViewWindow* r=scinew ViewWindow(this, gui, gui->createContext(args[2]));
+      view_window_.push_back(r);
+      newViewWindowMailbox.send(r);
+      return;
+    }
+#endif
+    // CollabVis code end
+    
     if(args.count() != 3)
     {
       args.error("addviewwindow must have a RID");

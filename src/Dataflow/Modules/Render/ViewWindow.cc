@@ -68,13 +68,18 @@ using std::cerr;
 #include <sstream>
 using std::ostringstream;
 
+// CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+#include <Dataflow/Network/Network.h>
+#endif
+// CollabVis code end
+
 #define MouseStart 0
 #define MouseEnd 1
 #define MouseMove 2
 
 namespace SCIRun {
-
-
+  
 //static DebugSwitch autoview_sw("ViewWindow", "autoview");
 static ViewWindow::MapStringObjTag::iterator viter;
 
@@ -100,6 +105,15 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     curFrame(0),
     curName("movie"),
     dolly_throttle(0),
+    // CollabVis code begin
+    HaveCollabVis_(ctx->subVar("have_collab_vis")),
+#ifdef HAVE_COLLAB_VIS
+    groupInfo( NULL ),
+    groupInfoLock( "GroupInfoLock" ),
+    handlingOneTimeRequest( false ),
+    viewStateLock("ViewStateLock"),
+#endif
+    // CollabVis code end
     show_rotation_axis(false),
     id(ctx->getfullname()),
     view(ctx->subVar("view")),
@@ -154,7 +168,36 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
   Color c(0.0, 0.0, 1.0);
   MaterialHandle focus_color = scinew Material(c);
   viewwindow_objs.push_back(scinew GeomMaterial(focus_sphere, focus_color));
-  viewwindow_objs_draw.push_back(false);              
+  viewwindow_objs_draw.push_back(false);
+
+  // CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+  //cerr << "[HAVE_COLLAB_VIS] (ViewWindow::ViewWindow) 1\n";
+
+  // Allocate memory for server object
+  server = scinew ViewServer();
+  
+  // Add the view server to the network. All further module adds/subs/mods
+  // will now be noted.
+  s->getNetwork()->write_lock();
+  //s->getNetwork()->server = &server;
+  s->getNetwork()->server = server;
+  //server.network = s->getNetwork();
+  server->network = s->getNetwork();
+  s->getNetwork()->write_unlock();
+
+  //cout << "[HAVE_COLLAB_VIS] (ViewWindow::ViewWindow) Setting HaveCollabVis_ to 1\n";
+  // Set have_collab_vis variable to true in the GUI
+  HaveCollabVis_.set(1);
+  
+#else
+
+  // Set have_collab_vis variable to false in the GUI
+  HaveCollabVis_.set(0);
+  
+#endif
+  // CollabVis code end
+
 }
 
 
@@ -226,7 +269,6 @@ void ViewWindow::spawnChCB(CallbackData*, void*)
   kids[kids.size()-1]->SetParent(this);
   for (int i=0; i<geomItemA.size(); i++)
     kids[kids.size()-1]->itemAdded(geomItemA[i]->geom, geomItemA[i]->name);
-
 }
 #endif
 
@@ -295,6 +337,314 @@ void ViewWindow::get_bounds(BBox& bbox)
     bbox.extend(Point(1.0, 1.0, 1.0));
   }
 }
+
+// CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+
+#define _sub(a,x,y) a[ (x) + (y) * xres * 3 ]
+
+void ViewWindow::sendImageToServer( char * image, int xres, int yres ) {
+  //cout << "[HAVE_COLLAB_VIS] (ViewWindow::sendImageToServer) 0\n";
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::sendImageToServer) entered\n" );
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::sendImageToServer) locking groupInfoLock\n" );
+
+  //groupInfoLock.lock();
+  if( !groupInfoLock.tryLock() )
+  {
+    Log::log( SemotusVisum::Logging::WARNING, "(ViewWindow::sendImageToServer) failed to lock groupInfoLock\n" );
+    return;
+  }
+
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::sendImageToServer) before ImageRenderer *ir\n" );
+  
+  ImageRenderer *ir = (ImageRenderer *)(groupInfo->group->getRenderer());
+
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::sendImageToServer) before getSubimage\n" );
+  
+  if ( ir->getSubimage() ) {
+    WallClockTimer t;
+    t.start();
+    // Try this - see how much of the image is non-background.
+    int left = 0, top = 0;
+    int right = xres-1, bottom = yres-1;
+    char THRESHOLD = 4; // if it's within this, it's background!
+    
+    Color bg(bgcolor.get());
+    char r = (char)(bg.r() * 255) % 255;
+    char g = (char)(bg.g() * 255) % 255;
+    char b = (char)(bg.b() * 255) % 255;
+    
+    
+    // Top
+    for ( int i = top; i < bottom; i++ )
+      for ( int j = left; j < right*3; j+=3 )
+	if ( Abs( _sub( image, j, i ) - r ) > THRESHOLD ||
+	     Abs( _sub( image, j+1, i ) - g ) > THRESHOLD ||
+	     Abs( _sub( image, j+2, i ) - b ) > THRESHOLD ) {
+	  top = i;
+	  goto left;
+	}
+  left:
+    for ( int i = left; i < right*3; i+=3 )
+      for ( int j = top; j < bottom; j++ )
+	if ( Abs( _sub( image, i, j ) - r ) > THRESHOLD ||
+	     Abs( _sub( image, i+1, j ) - g ) > THRESHOLD ||
+	     Abs( _sub( image, i+2, j ) - b ) > THRESHOLD ) {
+	  left = i/3;
+	  goto bottom;
+	}
+  bottom:
+    for ( int i = bottom; i > top; i-- )
+      for ( int j = left; j < right*3; j+=3 )
+	if ( Abs( _sub( image, j, i ) - r ) > THRESHOLD ||
+	     Abs( _sub( image, j+1, i ) - g ) > THRESHOLD ||
+	     Abs( _sub( image, j+2, i ) - b ) > THRESHOLD ) {
+	  bottom = i;
+	  goto right;
+	}
+  right:
+    for ( int i = right*3; i > left; i-=3 )
+      for ( int j = top; j < bottom; j++ )    
+	if ( Abs( _sub( image, i, j ) - r ) > THRESHOLD ||
+	     Abs( _sub( image, i+1, j ) - g ) > THRESHOLD ||
+	     Abs( _sub( image, i+2, j ) - b ) > THRESHOLD ) {
+	  right = i/3;
+	  goto done;
+	}
+  done:
+    t.stop();
+    cerr << "Subimage Took " << t.time() * 1000.0 << " ms." << endl;
+    
+    int xdim = right-left;
+    int ydim = bottom-top;
+    
+    char *newImage = scinew char[ xdim * ydim * 3 ];
+    for ( int i = 0, y = top; i < ydim; i++, y++ )
+      memcpy( &newImage[ i*xdim*3 ],
+	      &image[ left*3 + y*xres*3 ],
+	      xdim*3 );
+    //server.sendImage( newImage, xdim, ydim, left, top, xres, yres, bg,
+    //	      groupInfo->group->getRenderer() );
+    Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::sendImageToServer) before server->sendImage 1\n" );
+    server->sendImage( newImage, xdim, ydim, left, top, xres, yres, bg,
+    	      groupInfo->group->getRenderer() );
+    delete[] image;
+  }
+  else
+  {
+    //server.sendImage( image, xres, yres, groupInfo->group->getRenderer() );
+    Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::sendImageToServer) before server->sendImage 2\n" );
+    server->sendImage( image, xres, yres, groupInfo->group->getRenderer() );
+  }
+
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::sendImageToServer) unlocking groupInfoLock\n" );
+  groupInfoLock.unlock();
+
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::sendImageToServer) leaving\n" );
+  cerr << "End of ViewWindow::sendImageToServer\n";
+}
+
+#undef _sub
+	   
+void  ViewWindow::getViewState( ViewWindowState &state ) {
+  //cout << "[HAVE_COLLAB_VIS] (ViewWindow::getViewState) 0" << endl;
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) entered\n" );
+  char buffer[1000];
+  snprintf( buffer, 1000,
+	    "(ViewWindow::getViewState) Getting view state for state 0x%x, window 0x%x",
+	    (void *)(&state), (void *)this );
+  Log::log( SemotusVisum::Logging::DEBUG, buffer );
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) calling viewStateLock.readLock()" );
+  viewStateLock.readLock();
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) finished calling viewStateLock.readLock()" );
+  state.angular_v = angular_v;
+  state.ball = *ball;
+  state.dolly_total = dolly_total;
+  state.dolly_vector = dolly_vector;
+  state.dolly_throttle = dolly_throttle;
+  state.eye_dist = eye_dist;
+  state.inertia_mode = inertia_mode;
+  state.last_x = last_x;
+  state.last_y = last_y;
+  state.last_time = last_time;
+  state.prev_quat[0] = prev_quat[0];
+  state.prev_quat[1] = prev_quat[1];
+  state.prev_quat[2] = prev_quat[2];
+  state.prev_time[0] = prev_time[0];
+  state.prev_time[1] = prev_time[1];
+  state.prev_time[2] = prev_time[2];
+  state.prev_trans = prev_trans;
+  state.rot_point = rot_point;
+  state.rot_point_valid = rot_point_valid;
+  state.rot_view = rot_view;
+  state.total_scale = total_scale;
+  state.total_x = total_x; 
+  state.total_y = total_y; 
+  state.total_z = total_z;
+  // New 5-25-02
+
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) checking state.view" );
+  
+  if ( state.view == NULL )
+  {
+    //state.view = scinew GuiView(view); // this function isn't actually implemented
+    state.view = scinew GuiView(ctx);
+    *state.view = view;
+  }
+  else
+  {
+    *state.view = view;
+  }
+
+
+  /*
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) before logging statements" );
+  
+  // Old state.view = view;
+
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) before state.view->get()" );
+  View v = state.view->get();
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) before eye" );
+  snprintf( buffer, 1000, "Eye for get state 0x%x: (%f,%f,%f)",
+	    (void *)(&state),
+	    v.eyep().x(),
+	    v.eyep().y(),
+	    v.eyep().z() );
+  Log::log( SemotusVisum::Logging::DEBUG, buffer );
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) before lookat" );
+  snprintf( buffer, 1000, "Lookat for get state 0x%x: (%f,%f,%f)",
+	    (void *)(&state),
+	    v.lookat().x(),
+	    v.lookat().y(),
+	    v.lookat().z() );
+  Log::log( SemotusVisum::Logging::DEBUG, buffer );
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) before up" );
+  snprintf( buffer, 1000, "Up for get state 0x%x: (%f,%f,%f)",
+	    (void *)(&state),
+	    v.up().x(),
+	    v.up().y(),
+	    v.up().z() );
+  Log::log( SemotusVisum::Logging::DEBUG, buffer );
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) before fov" );
+  snprintf( buffer, 1000, "Fov for get state 0x%x: %f",
+	    (void *)(&state),
+	    v.fov() );
+  Log::log( SemotusVisum::Logging::DEBUG, buffer );
+  */
+  
+	    
+  // GUI parameters 
+  //get_gui_stringvar( id, "global-light", state.lighting ); 
+  //get_gui_stringvar( id, "global-fog", state.fog ); 
+  //get_gui_stringvar( id, "global-type", state.shading );
+ 
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) calling viewStateLock.readUnlock()" );
+  
+  viewStateLock.readUnlock();
+  snprintf( buffer, 1000,
+	    "Got view state for state 0x%x, window 0x%x",
+	    (void *)(&state), (void *)this );
+  Log::log( SemotusVisum::Logging::DEBUG, buffer );
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) leaving\n" );
+}
+
+void  ViewWindow::setViewState( const ViewWindowState &state ) {
+  //cout << "[HAVE_COLLAB_VIS] (ViewWindow::setViewState) 0" << endl;
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::setViewState) entered" );
+  char buffer[1000];
+  snprintf( buffer, 1000,
+	    "Setting view state for state 0x%x, window 0x%x",
+	    (void *)(&state), (void *)this );
+
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::setViewState) before setting state" );
+  
+  viewStateLock.writeLock();
+  angular_v = state.angular_v;
+  *ball = state.ball;
+  dolly_total = state.dolly_total;
+  dolly_vector = state.dolly_vector;
+  dolly_throttle = state.dolly_throttle;
+  eye_dist = state.eye_dist;
+  inertia_mode = state.inertia_mode;
+  last_x = state.last_x;
+  last_y = state.last_y;
+  last_time = state.last_time;
+  prev_quat[0] = state.prev_quat[0];
+  prev_quat[1] = state.prev_quat[1];
+  prev_quat[2] = state.prev_quat[2];
+  prev_time[0] = state.prev_time[0];
+  prev_time[1] = state.prev_time[1];
+  prev_time[2] = state.prev_time[2];
+  prev_trans = state.prev_trans;
+  rot_point = state.rot_point;
+  rot_point_valid = state.rot_point_valid;
+  rot_view = state.rot_view;
+  total_scale = state.total_scale;
+  total_x = state.total_x;
+  total_y = state.total_y;
+  total_z = state.total_z;
+
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::setViewState) before checking state view" );
+   
+  // New 5-25-2
+  if ( state.view == NULL ) {
+    Log::log( WARNING, "Loading a view window with a NULL view!" );
+  }
+  else
+    view = *state.view;
+    // Old view = state.view;
+
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::setViewState) before logging state" );
+
+  /*
+  View v = view.get();
+  snprintf( buffer, 1000, "Eye for set state 0x%x: (%f,%f,%f)",
+	    (void *)(&state),
+	    v.eyep().x(),
+	    v.eyep().y(),
+	    v.eyep().z() );
+  Log::log( SemotusVisum::Logging::DEBUG, buffer );
+  snprintf( buffer, 1000, "Lookat for set state 0x%x: (%f,%f,%f)",
+	    (void *)(&state),
+	    v.lookat().x(),
+	    v.lookat().y(),
+	    v.lookat().z() );
+  Log::log( SemotusVisum::Logging::DEBUG, buffer );
+  snprintf( buffer, 1000, "Up for set state 0x%x: (%f,%f,%f)",
+	    (void *)(&state),
+	    v.up().x(),
+	    v.up().y(),
+	    v.up().z() );
+  Log::log( SemotusVisum::Logging::DEBUG, buffer );
+  snprintf( buffer, 1000, "Fov for set state 0x%x: %f",
+	    (void *)(&state),
+	    v.fov() );
+  Log::log( SemotusVisum::Logging::DEBUG, buffer );
+  */
+  
+  // GUI parameters
+  //set_guivar( id, "global-light", state.lighting );
+  //set_guivar( id, "global-fog", state.fog );
+  //set_guivar( id, "global-type", state.shading );
+
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::setViewState) before writeUnlock" );
+   
+  viewStateLock.writeUnlock();
+  snprintf( buffer, 1000,
+	    "Set view state for state 0x%x, window 0x%x",
+	    (void *)(&state), (void *)this );
+  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::setViewState) leaving" );
+}
+
+
+Array1<GeomObj*> ViewWindow::getGeometry() {
+  //cout << "[HAVE_COLLAB_VIS] (ViewWindow::getGeometry) 0" << endl;
+
+}
+
+// CollabVis code end
+#endif
+
 
 void ViewWindow::rotate(double /*angle*/, Vector /*v*/, Point /*c*/)
 {
@@ -371,7 +721,6 @@ void ViewWindow::scale(Vector /*v*/, Point /*c*/)
 
 void ViewWindow::mouse_translate(int action, int x, int y, int, int, int)
 {
-
   switch(action){
   case MouseStart:
     {
@@ -518,7 +867,7 @@ void ViewWindow::mouse_dolly(int action, int x, int y, int, int, int)
   case MouseEnd:
     update_mode_string("");
     break;
-  }	
+  }
 }
 
 void ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
@@ -562,7 +911,7 @@ void ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
   case MouseEnd:
     update_mode_string("");
     break;
-  }	
+  }
 }
 
 float ViewWindow::WindowAspect()
@@ -1641,6 +1990,7 @@ void ViewWindow::redraw_if_needed()
     need_redraw=0;
     redraw();
   }
+
 }
 
 void ViewWindow::tcl_command(GuiArgs& args, void*)
@@ -2047,6 +2397,22 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
     if(iaxes.get() == 1) {
     } else {    
     }
+    // CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+    //cerr << "[HAVE_COLLAB_VIS] (tcl_command) 0\n";
+  } else if (args[1] == "doServer") {
+    //cerr << "GET: " << view_server.get() << endl;
+    if ( server->existsDataViewWindow( this ) ) {
+      //cerr << "Removing data window: " << this << endl;
+      server->removeDataViewWindow( this );
+    }
+    else {
+      //cerr << "Adding data window: " << this << endl;
+      server->addDataViewWindow( this );
+      //cerr << "DONE!" << endl;
+    }
+    // CollabVis code end  
+#endif
   }else
     args.error("Unknown minor command '" + args[1] + "' for ViewWindow");
 }
@@ -2275,7 +2641,6 @@ void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
     }
   }
 }
-
 
 void ViewWindow::set_current_time(double time)
 {

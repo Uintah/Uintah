@@ -49,12 +49,21 @@
 #include <Dataflow/Modules/Render/SCIBaWGL.h>
 // --  BAWGL -- 
 
+// CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+#include <Dataflow/Modules/Render/ViewServer.h>
+#undef ASIP_SHORT_NAMES
+#endif
+// CollabVis code end
+
 #include <map>
 
 // define 'the_time()' function for UniCam
 #ifdef WIN32
 #include <windows.h>
 #include <winbase.h>
+
+
 
 inline double the_time() {
     return double(GetTickCount())/1000.0;
@@ -120,7 +129,12 @@ public:
   GuiString pos;  
   GuiInt caxes;
   GuiInt raxes;
-  GuiInt iaxes;  
+  GuiInt iaxes;
+
+  // CollabVis code begin
+  GuiInt HaveCollabVis_;
+  // CollabVis code end
+  
 protected:
   friend class Viewer;
   
@@ -147,6 +161,12 @@ protected:
   int bawgl_error;
   // --  BAWGL -- 
 
+  // CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+  ViewServer * server;
+#endif
+  // CollabVis code end
+  
   Point orig_eye;
   Vector frame_up;
   Vector frame_right;
@@ -195,6 +215,33 @@ public:
   double dolly_throttle;
   double dolly_throttle_scale;
 
+  // CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+  
+  RenderGroupInfo *groupInfo;
+  Mutex groupInfoLock;
+  bool handlingOneTimeRequest;
+  void sendImageToServer( char * image, int xres, int yres );
+  inline bool serverNeedsImage() {
+    bool returnval;
+    groupInfoLock.lock();
+    returnval = ( groupInfo != NULL );
+    groupInfoLock.unlock();
+    return returnval;
+  }
+  
+  Array1<GeomObj*> getGeometry();
+  
+  void  getViewState( ViewWindowState &state );
+  void  setViewState( const ViewWindowState &state );
+  CrowdMonitor viewStateLock;
+
+  inline GuiInterface * getGui() { return gui; }
+  
+  
+#endif
+  // CollabVis code end
+  
   void LoadTexture1D(TexStruct1D*);
   void LoadTexture2D(TexStruct2D*);
   void LoadTexture3D(TexStruct3D*);

@@ -38,6 +38,12 @@
 #include <values.h>
 #endif
 
+// CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+#include <Core/Datatypes/Image.h>
+#endif
+// CollabVis code end
+
 #ifdef HAVE_MAGICK
 namespace C_Magick {
 #include <magick/magick.h>
@@ -96,6 +102,12 @@ OpenGL::OpenGL(GuiInterface* gui) :
   helper_thread_(0),
   helper(0),
   dead_(false)
+  // CollabVis Code begin
+#ifdef HAVE_COLLAB_VIS
+  ,doZTexView(false),
+  doZTexTransform(false)
+#endif
+  // CollabVis code end
 {
   drawinfo=scinew DrawInfoOpenGL;
   fpstimer.start();
@@ -598,7 +610,6 @@ OpenGL::make_image()
 void
 OpenGL::redraw_frame()
 {
-  // Get window information
   gui->lock();
   Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname_),
 				      Tk_MainWindow(the_interp));
@@ -1073,6 +1084,49 @@ OpenGL::redraw_frame()
       // Show the pretty picture
       glXSwapBuffers(dpy, win);
 
+      // CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+      if ( viewwindow->serverNeedsImage() ) {
+	/* BUG - we need to grab an image whose dimensions are a multiple
+	   of 4. */
+	int _x = xres - ( xres % 4 );
+	int _y = yres - ( yres % 4 );
+	char * image = scinew char[_x*_y*3];
+
+        // test code
+        for ( int i = 0; i < 640 * 512 * 3; i+=3 ) {
+          image[i] = 0;
+          image[i+1] = 0;
+          image[i+2] = 0;
+        }
+
+
+        glReadBuffer(GL_BACK);
+	glReadPixels( 0, 0, _x, _y, GL_RGB, GL_UNSIGNED_BYTE,
+		      (GLubyte *)image);
+	
+        cerr << "Dimensions: " << _x << " x " << _y << endl;
+        // DEBUG CODE
+        unsigned char * testImage = (unsigned char *) image;
+        int numColoredPixels = 0;
+        for ( int i = 0; i < 640 * 512 * 3; i+=3 ) {
+          if((unsigned int)testImage[ i ] != 0 || (unsigned int)testImage[ i+1 ] != 0 || (unsigned int)testImage[ i+2 ] != 0){
+            //cerr << "<" << (unsigned int)testImage[ i ] << ", " << (unsigned int)testImage[ i+1 ] << ", " << (unsigned int)testImage[ i+2 ] << ">  ";
+            numColoredPixels++;
+          }
+        }
+        cerr << "**************************NUM COLORED PIXELS = " << numColoredPixels << endl;
+ 
+        // test code
+        glRasterPos2i( 0, 0 );
+        glDrawPixels( _x, _y, GL_RGB, GL_UNSIGNED_BYTE, image);
+
+	viewwindow->sendImageToServer( image, _x, _y );
+	
+      }
+#endif
+      // CollabVis code end
+      
       //  #ifdef __sgi
       //  	  if(saveprefix != ""){
       //  	    // Save out the image...
@@ -1251,6 +1305,7 @@ OpenGL::redraw_frame()
   }
   gui->execute(str.str());
   gui->unlock();
+
 }
 
 
@@ -2075,14 +2130,27 @@ OpenGL::saveImage(const string& fname,
   img_mb.send(ImgReq(fname,type,x,y));
 }
 
+// CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+
+void OpenGL::setZTexTransform( double * matrix ) {
+  ZTexTransform.set( matrix );
+  doZTexTransform = true;
+}
+
+void OpenGL::setZTexView( const View &v ) {
+  ZTexView = v;
+  doZTexView = true;
+}
+#endif
+// CollabVis code end
+
 void
 OpenGL::getData(int datamask, FutureValue<GeometryData*>* result)
 {
   send_mb.send(DO_GETDATA);
   get_mb.send(GetReq(datamask, result));
 }
-
-
 
 void
 OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
@@ -2096,7 +2164,7 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
     res->znear=znear;
     res->zfar=zfar;
   }
-  if(datamask&(GEOM_COLORBUFFER|GEOM_DEPTHBUFFER))
+  if(datamask&(GEOM_COLORBUFFER|GEOM_DEPTHBUFFER/*CollabVis*/|GEOM_MATRICES))
   {
     gui->lock();
   }
@@ -2107,6 +2175,12 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
     cerr << "xres=" << xres << ", yres=" << yres << "\n";
     WallClockTimer timer;
     timer.start();
+    // CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+    //cerr << "[HAVE_COLLAB_VIS] (OpenGL::real_getData) 0" << endl;
+    glReadBuffer(GL_FRONT);
+#endif
+    // CollabVis code end
     glReadPixels(0, 0, xres, yres, GL_RGB, GL_FLOAT, data);
     timer.stop();
     cerr << "done in " << timer.time() << " seconds\n";
@@ -2131,6 +2205,9 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
     glReadPixels(0, 0, xres, yres, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, data);
     timer.stop();
     cerr << "done in " << timer.time() << " seconds\n";
+    // CollabVis code begin
+#ifndef HAVE_COLLAB_VIS
+    //cerr << "[HAVE_COLLAB_VIS] (OpenGL::real_getData) 1" << endl;
     unsigned int* p=data;
     for(int y=0;y<yres;y++)
     {
@@ -2140,8 +2217,25 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
       }
     }
     delete[] data;
+#else
+    res->depthbuffer = (DepthImage *)data;
+#endif
+    // CollabVis code end
   }
-  if(datamask&(GEOM_COLORBUFFER|GEOM_DEPTHBUFFER))
+  // CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+  //cerr << "[HAVE_COLLAB_VIS] (OpenGL::real_getData) 2" << endl;
+  if (datamask&GEOM_MATRICES) {
+    /* Get the necessary matrices */
+    glGetDoublev(GL_MODELVIEW_MATRIX, res->modelview);
+    glGetDoublev(GL_PROJECTION_MATRIX, res->projection);
+    glGetIntegerv(GL_VIEWPORT, res->viewport);
+  }
+  
+#endif
+// CollabVis code end
+
+  if(datamask&(GEOM_COLORBUFFER|GEOM_DEPTHBUFFER/*CollabVis*/|GEOM_MATRICES))
   {
     GLenum errcode;
     while((errcode=glGetError()) != GL_NO_ERROR)
@@ -2151,10 +2245,33 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
     }
     gui->unlock();
   }
+
+  // CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+  if ( datamask & GEOM_TRIANGLES ) {
+    triangles = new Array1<float>;
+    viewwindow->do_for_visible(this,
+			       (ViewWindowVisPMF)&OpenGL::collect_triangles);
+    res->depthbuffer = (DepthImage*)triangles;
+  }
+  // CollabVis code end
+#endif
+  
   result->send(res);
 }
 
+// CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+void OpenGL::collect_triangles(Viewer *viewer,
+			       ViewWindow *viewwindow,
+			       GeomObj *obj) {
+  cerr << "[HAVE_COLLAB_VIS] (OpenGL::collect_triangles) 0" << endl;
+  obj->get_triangles(*triangles);
+  cerr << "found " << (*triangles).size()/3 << "  triangles" << endl;
 
+}
+// CollabVis code end
+#endif
 
 void
 OpenGL::StartMpeg(const string& fname)

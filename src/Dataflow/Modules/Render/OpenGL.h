@@ -72,6 +72,15 @@
 #include <Core/Geom/GeomTri.h>
 #include <Core/Geom/GeomText.h>
 
+// CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+#if ( HAVE_MPEG == 0 )
+#undef HAVE_MPEG
+#endif
+#endif
+// CollabVis code end
+
+
 #ifdef HAVE_MPEG
 #include <mpege.h>
 #endif // HAVE_MPEG
@@ -146,7 +155,13 @@ public:
   void saveImage(const string& fname,
 		 const string& type = "ppm", int x=640, int y=512);
 
-
+   // CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+  void setZTexTransform( double * matrix );
+  void setZTexView( const View &v );
+#endif
+  // CollabVis code end
+  
 protected:
   int xres, yres;
 
@@ -169,6 +184,7 @@ protected:
 	      int ntimesteps, double frametime);
 
   void getData(int datamask, FutureValue<GeometryData*>* result);
+  
   
 private:
 
@@ -195,6 +211,17 @@ private:
   void pick_draw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj);
 
 
+  // CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+  void collect_triangles(Viewer *viewer, ViewWindow *viewwindow, GeomObj *obj);
+  Array1<float> *triangles;
+  Transform ZTexTransform;
+  View ZTexView;
+  bool doZTexView;
+  bool doZTexTransform;
+#endif
+  // CollabVis code end
+  
   // MPEG SUPPORT
   void StartMpeg(const string& fname);
   void AddMpegFrame();
