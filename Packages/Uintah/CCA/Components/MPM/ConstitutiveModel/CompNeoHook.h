@@ -16,6 +16,7 @@
 #include "ConstitutiveModel.h"	
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <vector>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 
 namespace Uintah {
       class CompNeoHook : public ConstitutiveModel {
@@ -51,6 +52,18 @@ namespace Uintah {
                                           const MPMMaterial* matl,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
+
+         virtual void computeStressTensorImplicit(const PatchSubset* patches,
+						  const MPMMaterial* matl,
+						  DataWarehouse* old_dw,
+						  DataWarehouse* new_dw,
+						  SparseMatrix<double,int>& KK);
+
+         virtual void computeStressTensorImplicitOnly(const PatchSubset* patches,
+						  const MPMMaterial* matl,
+						  DataWarehouse* old_dw,
+						  DataWarehouse* new_dw,
+						  SparseMatrix<double,int>& KK);
 
          // initialize  each particle's constitutive model data
          virtual void initializeCMData(const Patch* patch,
@@ -92,8 +105,8 @@ namespace Uintah {
          // class function to create a new object from parameters
          static ConstitutiveModel* create(double *p_array);
 
-	//const VarLabel* bElBarLabel;
-	//const VarLabel* bElBarLabel_preReloc;
+	const VarLabel* bElBar_oldLabel;
+	const VarLabel* bElBar_newLabel;
 
       };
 } // End namespace Uintah

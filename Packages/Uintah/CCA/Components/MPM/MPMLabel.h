@@ -106,6 +106,20 @@ using std::vector;
 
       vector<vector<const VarLabel* > > d_particleState;
       vector<vector<const VarLabel* > > d_particleState_preReloc;
+
+
+      // Implicit MPM labels
+      const VarLabel* gVelocityNewLabel;
+      const VarLabel* gVelocityOldLabel;
+      const VarLabel* dispNewLabel;
+      const VarLabel* dispIncLabel;
+      const VarLabel* gAccelerationOldLabel;
+      const VarLabel* pAccelerationLabel;
+      const VarLabel* converged;
+      const VarLabel* dispIncQNorm0;
+      const VarLabel* dispIncNormMax;
+
+      const VarLabel* pAccelerationLabel_preReloc;
     };
 } // End namespace Uintah
 

@@ -33,7 +33,6 @@
 #include <stdio.h>
 #include <algorithm>
 
-
 using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
@@ -712,12 +711,12 @@ int main(int argc, char** argv)
    		
 		// dumps header and variable info to file
 		//int variable_count =0;
-		char fnum[5];
+		ostringstream fnum;
    		string filename;
    		int stepnum=ts/freq;
-	        sprintf(fnum,"%04d",stepnum);
-   		string partroot("partout");
-                filename = partroot+fnum;
+		fnum << setw(4) << setfill('0') << stepnum;
+		string partroot("partout");
+                filename = partroot+ fnum.str();
    		ofstream partfile(filename.c_str());
 
    		partfile << "TITLE = \"Time Step # " << time <<"\"," << endl;
@@ -1062,14 +1061,14 @@ int main(int argc, char** argv)
 		  int matl = *matlIter;
 		  
 		  // dumps header and variable info to file
-		  char fnum[5], matnum[5];
+		  ostringstream fnum, matnum;
 		  string filename;
-		  unsigned long timestepnum=t+1;
-		  sprintf(fnum,"%04lld",timestepnum);
-		  sprintf(matnum,"%04d",matl);
+		  int timestepnum=t+1;
+		  fnum << setw(4) << setfill('0') << timestepnum;
+		  matnum << setw(4) << setfill('0') << matl;
 		  string partroot("stress.t");
 		  string partext(".m");
-		  filename = partroot+fnum+partext+matnum;
+		  filename = partroot+fnum.str()+partext+matnum.str();
 		  ofstream partfile(filename.c_str());
 		  partfile << "# x, y, z, st11, st12, st13, st21, st22, st23, st31, st32, st33" << endl;
 		  
