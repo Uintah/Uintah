@@ -56,6 +56,7 @@ public:
     void set_wraprange(int, double, double);
     void set_value(int, double);
     void set_scale(int, double);
+    double get_value(int);
 };
 
 class DBCallbackBase {

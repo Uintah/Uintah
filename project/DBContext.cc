@@ -67,6 +67,11 @@ void DBContext::set_value(int which, double value)
     knobs[which].value=value;
 }
 
+double DBContext::get_value(int which)
+{
+    return knobs[which].value;
+}
+
 template<class T>
 DBCallback<T>::DBCallback(Mailbox<MessageBase*>* mailbox, T* obj,
 			  void (DBCallbackBase::*method)(DBContext*, int, double, double, void*),
