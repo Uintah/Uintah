@@ -2503,57 +2503,8 @@ void ICE::setBC(CCVariable<double>& variable, const string& kind,
     }
   }
 }
-/*`==========TESTING==========*/ 
-/* --------------------------------------------------------------------- 
- Function~  ICE::setBC--   JOHN is there any reason to keep this around
-                           since velocity is no longer a double?
-                           
- Purpose~   Takes care of Velocity_CC Boundary conditions
- ---------------------------------------------------------------------  */
-void ICE::setBC(CCVariable<double>& variable, const  string& kind, 
-		const string& comp, const Patch* patch) 
-{
-  Vector dx = patch->dCell();
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCondBase* > bcs;
-    bcs = patch->getBCValues(face);
-    if (bcs.size() == 0) continue;
-    
-    BoundCondBase* bc_base = 0;
-    for (int i = 0; i<(int)bcs.size(); i++ ) {
-      if (bcs[i]->getType() == kind) {
-	bc_base = bcs[i];
-	break;
-      }
-    }
-    
-    if (bc_base == 0)
-      continue;
 
-    if (bc_base->getType() == "Velocity") {
-      VelocityBoundCond* bc = dynamic_cast<VelocityBoundCond*>(bc_base);
-      if (bc->getKind() == "Dirichlet") {
-	if (comp == "x")
-	  variable.fillFace(face,bc->getValue().x());
-	if (comp == "y")
-	  variable.fillFace(face,bc->getValue().y());
-	if (comp == "z")
-	  variable.fillFace(face,bc->getValue().z());
-      }
-      
-      if (bc->getKind() == "Neumann") {
-	if (comp == "x")
-	  variable.fillFaceFlux(face,bc->getValue().x(),dx);
-	if (comp == "y")
-	  variable.fillFaceFlux(face,bc->getValue().y(),dx);
-	if (comp == "z")
-	  variable.fillFaceFlux(face,bc->getValue().z(),dx);
-      }
-    }
-  }
-}
- /*==========TESTING==========`*/
+
 /* --------------------------------------------------------------------- 
  Function~  ICE::setBC--        
  Purpose~   Takes care of Velocity_CC Boundary conditions
@@ -3816,6 +3767,10 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.95  2001/01/16 18:27:30  jas
+// Move setBC() to public: in ICE.h.
+// Remove setBC() used for setting the individual components of velocity.
+//
 // Revision 1.94  2001/01/16 01:40:26  harman
 // Added NegInterior type BC for velocity in setBC, vel[BC] = -vel[interior]
 // Removed some dead wood from setBC and addExchangeToMomentumAndEnergy

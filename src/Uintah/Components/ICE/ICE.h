@@ -129,20 +129,11 @@ namespace Uintah {
       void advectAndAdvanceInTime(
             const ProcessorGroup*,const Patch* patch,   DataWarehouseP&,
             DataWarehouseP&);
-      
-      
-    private:
-      friend const TypeDescription* fun_getTypeDescription(fflux*);
-      friend const TypeDescription* fun_getTypeDescription(eflux*);
-      friend const TypeDescription* fun_getTypeDescription(cflux*);
-      
+
       void setBC(CCVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
       void setBC(CCVariable<Vector>& variable,const std::string& type,
 		 const Patch* p);
-      void setBC(CCVariable<double>& variable,const std::string& type,
-		 const std::string& comp, const Patch* p);
-      
       void setBC(SFCXVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
       void setBC(SFCXVariable<double>& variable,const std::string& type,
@@ -154,7 +145,13 @@ namespace Uintah {
       void setBC(SFCZVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
       void setBC(SFCZVariable<double>& variable,const std::string& type,
-		 const std::string& comp, const Patch* p);
+		 const std::string& comp, const Patch* p);      
+      
+    private:
+      friend const TypeDescription* fun_getTypeDescription(fflux*);
+      friend const TypeDescription* fun_getTypeDescription(eflux*);
+      friend const TypeDescription* fun_getTypeDescription(cflux*);
+      
       
       void influxOutfluxVolume(const SFCXVariable<double>& uvel_CC,
 			       const SFCYVariable<double>& vvel_CC,
@@ -322,6 +319,10 @@ namespace Uintah {
 #endif
 
 // $Log$
+// Revision 1.55  2001/01/16 18:27:30  jas
+// Move setBC() to public: in ICE.h.
+// Remove setBC() used for setting the individual components of velocity.
+//
 // Revision 1.54  2001/01/13 01:42:32  harman
 // -eliminated step1a
 // -changed rho_micro_equil_CCLabel -> rho_micro_CCLabel
