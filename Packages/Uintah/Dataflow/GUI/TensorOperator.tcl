@@ -181,9 +181,9 @@ itcl_class Uintah_Visualization_TensorOperator {
 	radiobutton $w.calc.r1 -text "|e2 - e1|" \
 		-variable $this-eigen2D-calc-type -value 0 \
 		-command "$this eigen2D_absDiffCalc"
-	radiobutton $w.calc.r2 -text "sin(|e2 - e1| / Delta)" \
+	radiobutton $w.calc.r2 -text "cos(|e2 - e1| / Delta)" \
 		-variable $this-eigen2D-calc-type -value 1 \
-		-command "$this eigen2D_sinDiffCalc"
+		-command "$this eigen2D_cosDiffCalc"
 	pack $w.calc.l -anchor w
 	pack $w.calc.r1 $w.calc.r2 -side left
 
@@ -201,7 +201,7 @@ itcl_class Uintah_Visualization_TensorOperator {
 	$w.opts.delta.l configure -foreground $color
 	$this-c needexecute
     }
-    method eigen2D_sinDiffCalc {} {
+    method eigen2D_cosDiffCalc {} {
 	set w .ui[modname]
 	$w.opts.delta.e configure -state normal
 	$w.opts.delta.e configure -foreground black
