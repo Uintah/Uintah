@@ -35,12 +35,15 @@
 //  DEBUGGING SWITCHES
 #define  todd_debug                         1       // TURN THIS OFF
 #define  switchDebugInitialize              0
-#define  switchDebug_PressFC                0
-#define  switch_Debug_advectQFirst          0
-#define  switchDebug_equilibration_press    0 
+#define  switchDebug_equilibration_press    1 
+#define  switchDebug_vel_FC                 0
+#define  switchDebug_Exchange_FC            0
 #define  switchDebug_explicit_press         0
-#define  switchDebug_advance_advect         1
+#define  switchDebug_PressFC                0
+#define  switchDebugLagrangianValues        0
 #define  switchDebugSource_Sink             0
+#define  switchDebug_advance_advect         1
+#define  switch_Debug_advectQFirst          0
 
 
 using std::vector;
@@ -108,7 +111,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& grid,
 		       SimulationStateP&   sharedState)
 {
   d_sharedState = sharedState;
-  d_SMALL_NUM = 1.e-12;
+  d_SMALL_NUM = 1.e-100;
 
   cerr << "In the preprocessor . . ." << endl;
 
@@ -579,8 +582,6 @@ void ICE::scheduleStep6and7(const Patch* patch, SchedulerP& sched,
  Function~  ICE::actuallyComputeStableTimestep--
  Purpose~   Compute next time step based on speed of sound and 
             maximum velocity in the domain
-            
-             C U R R E N T L Y   T U R N E D   O F F
 _____________________________________________________________________*/
 void ICE::actuallyComputeStableTimestep(
     const ProcessorGroup*,
@@ -596,7 +597,7 @@ void ICE::actuallyComputeStableTimestep(
     double delt_CFL = 100000,delt_stability = 1000000,fudge_factor = 1.;
     CCVariable<double> speedSound;
     CCVariable<Vector> vel;
-    double CFL,N_ITERATIONS_TO_STABILIZE = 2;
+    double CFL,N_ITERATIONS_TO_STABILIZE = 1;
     
     ::iterNum++;
     if (iterNum < N_ITERATIONS_TO_STABILIZE) {
@@ -636,7 +637,7 @@ void ICE::actuallyComputeStableTimestep(
     }
     dT = std::min(delt_stability, delt_CFL);
   }
-  cout << "new dT = " << dT << endl;
+  cout << "new dT is " << dT << endl;
   new_dw->put(delt_vartype(dT), lb->delTLabel);
   computeDt = true;
 
@@ -702,7 +703,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
     new_dw->put(vvel_FC,    lb->vvel_FCLabel,      dwindex,patch);
     new_dw->put(wvel_FC,    lb->wvel_FCLabel,      dwindex,patch);
     new_dw->put(visc_CC,    lb->viscosity_CCLabel, dwindex,patch);
-  }
+  
   
 #if (todd_debug && switchDebugInitialize)
   // This is broken and won't work with the above declarations of variables
@@ -733,18 +734,16 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
   cout << "\n\tdx     = "<< dx.x() << 
     "\tdy     = "<< dx.y() << 
     "\tdz     = "<< dx.z() << endl;
-  
-  for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) {
-    printData( patch, 1, "initialCond.", "rho",          rho_CC);
-    printData( patch, 1, "initialCond", "rho_micro",     rho_micro);
-    printData( patch, 1, "initialCond", "Temp",          Temp_CC);
-    printData( patch, 1, "initialCond", "vol_frac",      vol_frac_CC);
-    printVector( patch, 1, "initialCond", "uvel_CC", 0,  vel);
-    printVector( patch, 1, "initialCond", "vvel_CC", 1,  vel);
-    printVector( patch, 1, "initialCond", "wvel_CC", 2,  vel);
-    
+  printData( patch, 1, "initialCond.", "rho",          rho_CC);
+  printData( patch, 1, "initialCond", "rho_micro",     rho_micro);
+  printData( patch, 1, "initialCond", "Temp",          Temp_CC);
+  printData( patch, 1, "initialCond", "vol_frac",      vol_frac_CC);
+  printVector( patch, 1, "initialCond", "uvel_CC", 0,  vel_CC);
+  printVector( patch, 1, "initialCond", "vvel_CC", 1,  vel_CC);
+  printVector( patch, 1, "initialCond", "wvel_CC", 2,  vel_CC);
+#endif    
   }
-#endif
+
 }
 
 /* --------------------------------------------------------------------- 
@@ -791,7 +790,7 @@ _____________________________________________________________________*/
 void ICE::actuallyStep1b(const ProcessorGroup*, const Patch* patch,
 			 DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  double    converg_coeff = 2;              
+  double    converg_coeff = 10;              
   double    convergence_crit = converg_coeff * DBL_EPSILON;
   double    sum;
 
@@ -856,12 +855,15 @@ void ICE::actuallyStep1b(const ProcessorGroup*, const Patch* patch,
   }
   /*`==========DEBUG============*/ 
 #if ( todd_debug && switchDebug_equilibration_press)
+
     printData( patch, 1, "TOP_equilibration", "Press_CC_top", press);
               
    for (int m = 0; m < numMatls; m++)  {
-     printData( patch, 1, "TOP", "rho_CC",          rho[m]);
-     printData( patch, 1, "TOP", "speedSound",      speedSound_old[m]);
-     printData( patch, 1, "TOP", "Temp_CC",         Temp[m]);
+     char description[50];
+     sprintf(description, "TOP_equilibration, Mat. %d ",m);
+     printData( patch, 1, description, "rho_CC",          rho[m]);
+     printData( patch, 1, description, "speedSound",      speedSound_old[m]);
+     printData( patch, 1, description, "Temp_CC",         Temp[m]);
     }
 #endif
  /*==========DEBUG============`*/
@@ -869,7 +871,13 @@ void ICE::actuallyStep1b(const ProcessorGroup*, const Patch* patch,
  
   int count, test_max_iter = 0;
   for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
-  
+    
+    IntVector curcell = *iter;    //So I have a chance at finding the bug
+    int i,j,k;
+    i   = curcell.x();
+    j   = curcell.y();
+    k   = curcell.z();
+      
     double delPress = 0.;
     bool converged  = false;
     count           = 0;
@@ -897,11 +905,12 @@ void ICE::actuallyStep1b(const ProcessorGroup*, const Patch* patch,
      vector<double> Q(numMatls),y(numMatls);     
      for (int m = 0; m < numMatls; m++)   {
        Q[m] =  press_new[*iter] - press_eos[m];
-       y[m] =  rho[m][*iter]/(vol_frac[m][*iter]*vol_frac[m][*iter]) * 
-	 dp_drho[m];
+       y[m] =  rho[m][*iter]/
+               ((vol_frac[m][*iter]*vol_frac[m][*iter])* dp_drho[m] +
+               d_SMALL_NUM);
        A   +=  vol_frac[m][*iter];
-       B   +=  Q[m]/y[m];
-       C   +=  1./y[m];
+       B   +=  Q[m]/(y[m] + d_SMALL_NUM);
+       C   +=  1.0/(y[m]  + d_SMALL_NUM);
      }
      double vol_frac_not_close_packed = 1.;
      delPress = (A - vol_frac_not_close_packed - B)/C;
@@ -922,7 +931,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*, const Patch* patch,
      // - compute the updated volume fractions
      //  There are two different way of doing it
      for (int m = 0; m < numMatls; m++)  {
-       delVol_frac[m]       = -(Q[m] + delPress)/y[m];
+       delVol_frac[m]       = -(Q[m] + delPress)/( y[m] + d_SMALL_NUM );
      //vol_frac[m][*iter]   += delVol_frac[m];
        vol_frac[m][*iter]   = rho[m][*iter]/rho_micro[m][*iter];
      }
@@ -957,11 +966,15 @@ void ICE::actuallyStep1b(const ProcessorGroup*, const Patch* patch,
     
     //__________________________________
     //      BULLET PROOFING
-    IntVector curcell = *iter;
-    int i,j,k;
-    i   = curcell.x();
-    j   = curcell.y();
-    k   = curcell.z();
+    if(test_max_iter == d_max_iter_equilibration)
+    {
+        sprintf(warning, 
+        " cell[%d][%d][%d], iter %d, n_passes %d,Now exiting ",
+        i,j,k,count,n_passes);
+         Message(1,"calc_equilibration_press:",
+            " Maximum number of iterations was reached ", warning);
+    }
+    
      for (int m = 0; m < numMatls; m++) {
          ASSERT(( vol_frac[m][*iter] > 0.0 ) ||
                 ( vol_frac[m][*iter] < 1.0));
@@ -991,10 +1004,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*, const Patch* patch,
             " rho_micro < 0 || vol_frac < 0", warning);
     }
   }     // end of cell interator
-    if(test_max_iter == d_max_iter_equilibration)
-    Message(1,"ERROR: equilibration pressure calculation",
-            " Maximum number of iterations was reached ",
-            " in one of the cells, now exiting");
+
               
     fprintf(stderr, "\n max number of iterations in any cell %i\n",test_max_iter);
   // Update the boundary conditions for the variables:
@@ -1078,9 +1088,11 @@ void ICE::actuallyStep1b(const ProcessorGroup*, const Patch* patch,
     printData( patch, 1, "BOTTOM", "Press_CC_equil", press_new);
               
    for (int m = 0; m < numMatls; m++)  {
-     printData( patch, 1, "BOTTOM", "rho_micro",     rho_micro[m]);
-     printData( patch, 1, "BOTTOM", "vol_frac",      vol_frac[m]);
-     printData( patch, 1, "BOTTOM", "speedSound",    speedSound[m]);
+     char description[50];
+     sprintf(description, "BOT_equilibration, Mat. %d ",m);
+     printData( patch, 1, description, "rho_CC",          rho[m]);
+     printData( patch, 1, description, "speedSound",      speedSound_old[m]);
+     printData( patch, 1, description, "Temp_CC",         Temp[m]);
     }
 #endif
  /*==========DEBUG============`*/
@@ -1148,7 +1160,7 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
 	//__________________________________
 	// interpolation to the face
 	term1 = (rho_CC[adjcell] * vel_CC[adjcell].y() +
-		 rho_CC[curcell] * vel_CC[curcell].y())/rho_FC;            
+		 rho_CC[curcell] * vel_CC[curcell].y())/(rho_FC);            
 	//__________________________________
 	// pressure term
 	press_coeff = 2.0/(rho_micro_FC);
@@ -1172,7 +1184,7 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
 	//__________________________________
 	// interpolation to the face
 	term1 = (rho_CC[adjcell] * vel_CC[adjcell].x() +
-		 rho_CC[curcell] * vel_CC[curcell].x())/rho_FC;
+		 rho_CC[curcell] * vel_CC[curcell].x())/(rho_FC);
 	//__________________________________
 	// pressure term
 	press_coeff = 2.0/(rho_micro_FC);
@@ -1199,7 +1211,7 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
 	//__________________________________
 	// interpolation to the face
 	term1 = (rho_CC[adjcell] * vel_CC[adjcell].z() +
-		 rho_CC[curcell] * vel_CC[curcell].z())/rho_FC;
+		 rho_CC[curcell] * vel_CC[curcell].z())/(rho_FC);
 	
 	//__________________________________
 	// pressure term
@@ -1216,8 +1228,7 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
       }
     }
     
-    // Todd:  Why are we setting the velocity bcs but not storing them??
-    setBC(vel_CC,"Velocity",patch);
+
     setBC(uvel_FC,"Velocity","x",patch);
     setBC(vvel_FC,"Velocity","y",patch);
     setBC(wvel_FC,"Velocity","z",patch);
@@ -1225,6 +1236,15 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
     new_dw->put(uvel_FC, lb->uvel_FCLabel, dwindex, patch);
     new_dw->put(vvel_FC, lb->vvel_FCLabel, dwindex, patch);
     new_dw->put(wvel_FC, lb->wvel_FCLabel, dwindex, patch);
+/*`==========DEBUG============*/ 
+#if (todd_debug && switchDebug_vel_FC )
+     char description[50];
+     sprintf(description, "bottom of vel_FC, Mat. %d ",m);
+    printData_FC( patch,1, description, "uvel_FC", uvel_FC);
+    printData_FC( patch,1, description, "vvel_FC", vvel_FC);
+    printData_FC( patch,1, description, "wvel_FC", wvel_FC);
+#endif
+ /*==========DEBUG============`*/
   }
 }
 
@@ -1295,6 +1315,13 @@ void ICE::actuallyStep1d(const ProcessorGroup*,const Patch* patch,
     K[numMatls-1-i][i] = d_K_mom[i];
   }
   
+//__________________________________
+//    H A R D W I R E   E X C H A N G E   
+  K[0][0] = 0.0;
+  K[0][1] = 1.e10;
+  K[1][0] = 1.e10;
+  K[1][1] = 0.0;
+  
   for(int m = 0; m < numMatls; m++) {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
     int dwindex = matl->getDWIndex();
@@ -1359,7 +1386,7 @@ void ICE::actuallyStep1d(const ProcessorGroup*,const Patch* patch,
       }
       //__________________________________
       //      S  O  L  V  E  
-      //   - backout velocities      
+      //   - backout velocities              
       itworked = a.solve(b);
       for(int m = 0; m < numMatls; m++)  {
 	vvel_FCME[m][*iter] = vvel_FC[m][*iter] + b[m];
@@ -1459,7 +1486,17 @@ void ICE::actuallyStep1d(const ProcessorGroup*,const Patch* patch,
     setBC(vvel_FCME[m],"Velocity","y",patch);
     setBC(wvel_FCME[m],"Velocity","z",patch);
   }
-
+   /*`==========DEBUG============*/ 
+#if (todd_debug && switchDebug_Exchange_FC )
+  for (int m = 0; m < numMatls; m++)  {
+    char description[50];
+    sprintf(description, "Exchange FC before BC, Mat. %d ",m);
+    printData_FC( patch,1, description, "uvel_FCME", uvel_FCME[m]);
+    printData_FC( patch,1, description, "vvel_FCME", vvel_FCME[m]);
+    printData_FC( patch,1, description, "wvel_FCME", wvel_FCME[m]);
+  }
+#endif
+ /*==========DEBUG============`*/
   for(int m = 0; m < numMatls; m++) {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
     int dwindex = matl->getDWIndex();
@@ -1559,11 +1596,11 @@ void ICE::actuallyStep2(const ProcessorGroup*,const Patch* patch,
 /*`==========DEBUG============*/ 
 #if (todd_debug && switchDebug_explicit_press )
 #if 1
-    printData_FC( patch,1,"middle of explicit Pressure",   "uvel_FC", uvel_FC);
-    printData_FC( patch,1," ",                             "vvel_FC", vvel_FC);
-    printData_FC( patch,1," ",                             "wvel_FC", wvel_FC);
-    printData( patch, 0, "middle of explicit Pressure",     "q_advected", q_advected);
-    printData( patch, 0, " ",                               "vol_frac",   vol_frac);
+    char description[50];
+    sprintf(description, "middle of explicit Pressure, Mat. %d ",m);
+    printData_FC( patch,1, description, "uvel_FC", uvel_FC);
+    printData_FC( patch,1, description, "vvel_FC", vvel_FC);
+    printData_FC( patch,1, description, "wvel_FC", wvel_FC);
 #endif
 #endif
  /*==========DEBUG============`*/
@@ -1831,9 +1868,11 @@ void ICE::actuallyStep4a(const ProcessorGroup*,const Patch* patch,
     new_dw->put(mom_source, lb->mom_source_CCLabel, dwindex, patch);
  /*`==========TESTING==========*/ 
 #if (todd_debug && switchDebugSource_Sink)
-    printVector( patch, 1, "sources/sinks",    "xmom_source", 0, xmom_source);
-    printVector( patch, 1, "sources/sinks",    "ymom_source", 1, ymom_source);
-    printVector( patch, 1, "sources/sinks",    "zmom_source", 2, zmom_source);
+    char description[50];
+    sprintf(description, "sources/sinks, Mat. %d ",m);
+    printVector( patch, 1, description,    "xmom_source", 0, mom_source);
+    printVector( patch, 1, description,    "ymom_source", 1, mom_source);
+    printVector( patch, 1, description,    "zmom_source", 2, mom_source);
 #endif
  /*==========TESTING==========`*/
   }
@@ -1898,8 +1937,10 @@ void ICE::actuallyStep4b(const ProcessorGroup*,const Patch* patch,
       int_eng_source[*iter] = (A/B) * delPress[*iter];
     }
 /*`==========TESTING==========*/
-#if todd_debug && switchDebugSource_Sink
-    printData( patch, 1, "sources/sinks",    "int_eng_source",  int_eng_source);
+#if (todd_debug && switchDebugSource_Sink)
+    char description[50];
+    sprintf(description, "sources/sinks, Mat. %d ",m);
+    printData( patch, 1, description,    "int_eng_source",  int_eng_source);
 #endif
 /*==========TESTING==========`*/
     new_dw->put(int_eng_source,lb->int_eng_source_CCLabel,dwindex,patch);
@@ -1962,7 +2003,18 @@ void ICE::actuallyStep5a(const ProcessorGroup*, const Patch* patch,
     new_dw->put(mom_L,     lb->mom_L_CCLabel,     dwindex,patch);
     new_dw->put(int_eng_L, lb->int_eng_L_CCLabel, dwindex,patch);
     new_dw->put(mass_L,    lb->mass_L_CCLabel,    dwindex,patch);
-  }
+  
+ /*`==========DEBUG============*/ 
+#if (todd_debug && switchDebugLagrangianValues )
+    char description[50];
+    sprintf(description, "Bot Lagrangian Values, Mat. %d ",m);
+    printVector( patch,1, description, "xmom_L_CC", 0, mom_L);
+    printVector( patch,1, description, "ymom_L_CC", 1, mom_L);
+    printVector( patch,1, description, "zmom_L_CC", 2, mom_L);
+    printData(   patch,1, description, "int_eng_L_CC",int_eng_L);
+#endif
+ /*==========DEBUG============`*/
+   }
 }
 
 /*---------------------------------------------------------------------
@@ -2048,11 +2100,18 @@ void ICE::actuallyStep5b(const ProcessorGroup*,const Patch* patch,
       K[numMatls-1-i][i] = d_K_mom[i];
       H[numMatls-1-i][i] = d_K_heat[i];
   }
-  
+
+//__________________________________
+//    H A R D W I R E   E X C H A N G E   
+  K[0][0] = 0.0;        H[0][0] = 0.0;
+  K[0][1] = 1.e10;      H[0][1] = 0.0;
+  K[1][0] = 1.e10;      H[1][0] = 0.0;
+  K[1][1] = 0.0;        H[1][1] = 0.0;
+      
   // Set (*)mom_L_ME = (*)mom_L
   // if you have only 1 mat then there is no exchange
   for (int m = 0; m < numMatls; m++) {
-    mom_L_ME[m] = mom_L[m];
+    mom_L_ME[m]     = mom_L[m];
     int_eng_L_ME[m] = int_eng_L[m];
   }
 
@@ -2169,8 +2228,10 @@ void ICE::actuallyStep5b(const ProcessorGroup*,const Patch* patch,
     }
   }
   
+ // THIS IS WRONG YOU CANT UPDATE FLUX WITH PRIMITVIE VARS
   for (int m = 0; m < numMatls; m++)  {
     setBC(mom_L_ME[m],"Velocity",patch);
+    setBC(int_eng_L_ME[m],"Temperature",patch);
   }
   
   for(int m = 0; m < numMatls; m++) {
@@ -2333,15 +2394,17 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
 
     /*`==========DEBUG============*/  
 #if (todd_debug && switchDebug_advance_advect )
-    printData( patch,1, "AFTER Advection before BC's",   "rho_CC",      rho_CC);
-    printData( patch,1, "",   "Temp_CC",temp);
-    printVector( patch,1, "", "uvel_CC", 0, vel_CC);
-    printVector( patch,1, "", "vvel_CC", 1, vel_CC);
-    printVector( patch,1, "", "wvel_CC", 2, vel_CC);
-    printVector( patch,1, "", "xmom_L_CC", 0, mom_L_ME);
-    printVector( patch,1, "", "ymom_L_CC", 0, mom_L_ME);
-    printVector( patch,1, "", "zmom_L_CC", 0, mom_L_ME);
-    printData( patch,1, "",   "int_eng_L_CC",int_eng_L_ME);
+    char description[50];
+    sprintf(description, "AFTER Advection after BC's, Mat. %d ",m);
+    printData( patch,1, description,   "rho_CC",      rho_CC);
+    printData( patch,1, description,   "Temp_CC",temp);
+    printVector( patch,1, description, "uvel_CC", 0, vel_CC);
+    printVector( patch,1, description, "vvel_CC", 1, vel_CC);
+    printVector( patch,1, description, "wvel_CC", 2, vel_CC);
+    printVector( patch,1, description, "xmom_L_CC", 0, mom_L_ME);
+    printVector( patch,1, description, "ymom_L_CC", 1, mom_L_ME);
+    printVector( patch,1, description, "zmom_L_CC", 2, mom_L_ME);
+    printData( patch,1, description,   "int_eng_L_CC",int_eng_L_ME);
 #endif
     /*==========DEBUG============`*/
     
@@ -3313,7 +3376,7 @@ void    ICE::printData(const Patch* patch, int include_GC,
     for(j = yLo; j < yHi; j++) {
       for(i = xLo; i < xHi; i++) {
 	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]= %20.19f  ",
+	fprintf(stderr,"[%d,%d,%d]= %15.14f  ",
 		i,j,k, q_CC[idx]);
 	
 	/*  fprintf(stderr,"\n"); */
@@ -3363,7 +3426,7 @@ void    ICE::printVector(const Patch* patch, int include_GC,
     for(j = yLo; j < yHi; j++) {
       for(i = xLo; i < xHi; i++) {
 	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]= %10.9f  ",
+	fprintf(stderr,"[%d,%d,%d]= %15.14f  ",
 		i,j,k, q_CC[idx](component));
 	
 	/*  fprintf(stderr,"\n"); */
@@ -3413,7 +3476,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     for(j = yLo; j < yHi; j++) {
       for(i = xLo; i < xHi; i++) {
 	IntVector idx(i+1, j, k);
-	fprintf(stderr,"[%d,%d,%d]= %10.9f  ",
+	fprintf(stderr,"[%d,%d,%d]= %15.14f  ",
 		i,j,k, q_FC[idx]);
 	
 	/*  fprintf(stderr,"\n"); */
@@ -3461,7 +3524,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     for(j = yLo; j < yHi; j++) {
       for(i = xLo; i < xHi; i++) {
 	IntVector idx(i,j+1, k);
-	fprintf(stderr,"[%d,%d,%d]= %10.9f  ",
+	fprintf(stderr,"[%d,%d,%d]= %15.14f  ",
 		i,j,k, q_FC[idx]);
 	
 	/*  fprintf(stderr,"\n"); */
@@ -3510,7 +3573,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     for(j = yLo; j < yHi; j++) {
       for(i = xLo; i < xHi; i++) {
 	IntVector idx(i,j, k+1);
-	fprintf(stderr,"[%d,%d,%d]= %10.9f  ",
+	fprintf(stderr,"[%d,%d,%d]= %15.14f  ",
 		i,j,k, q_FC[idx]);
 	
 	/*  fprintf(stderr,"\n"); */
@@ -3715,6 +3778,11 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.86  2001/01/11 00:21:18  harman
+// - Updated instrumentation for mm
+// - Hardwired the exchange coefficients
+// - Loose convergence constraint on step 1b.
+//
 // Revision 1.85  2001/01/10 01:14:16  harman
 // remove a missed change "sharedState->registerMaterial(mat);"
 //
