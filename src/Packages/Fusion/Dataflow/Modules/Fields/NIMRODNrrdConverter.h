@@ -33,6 +33,9 @@
 #include <Core/Datatypes/StructQuadSurfField.h>
 #include <Core/Datatypes/StructCurveField.h>
 
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Tensor.h>
+
 #include <Teem/Core/Datatypes/NrrdData.h>
 
 namespace Fusion {
@@ -47,7 +50,7 @@ class NIMRODNrrdConverterMeshAlgo : public DynamicAlgoBase
 public:
   virtual void execute(MeshHandle mHandle,
 		       vector< NrrdDataHandle > nHandles,
-		       int gridR, int gridZ, int gridPhi,
+		       vector< int > grid,
 		       int idim, int jdim, int kdim,
 		       int iwrap, int jwrap, int kwrap) = 0;
 
@@ -63,7 +66,7 @@ class NIMRODNrrdConverterMeshAlgoT : public NIMRODNrrdConverterMeshAlgo
 public:
   virtual void execute(MeshHandle mHandle,
 		       vector< NrrdDataHandle > nHandles,
-		       int gridR, int gridZ, int gridPhi,
+		       vector< int > grid,
 		       int idim, int jdim, int kdim,
 		       int iwrap, int jwrap, int kwrap);
 };
@@ -72,7 +75,7 @@ template< class MESH, class NTYPE >
 void
 NIMRODNrrdConverterMeshAlgoT< MESH, NTYPE >::execute(MeshHandle mHandle,
 				     vector< NrrdDataHandle > nHandles,
-				     int gridR, int gridZ, int gridPhi,
+				     vector< int > grid,
 				     int idim, int jdim, int kdim,
 				     int iwrap, int jwrap, int kwrap)
 {
@@ -83,19 +86,19 @@ NIMRODNrrdConverterMeshAlgoT< MESH, NTYPE >::execute(MeshHandle mHandle,
 
   register int i, j, k;
   
-  NTYPE *ptrR   = (NTYPE *)(nHandles[gridR]->nrrd->data);
-  NTYPE *ptrZ   = (NTYPE *)(nHandles[gridZ]->nrrd->data);
-  NTYPE *ptrPhi = (NTYPE *)(nHandles[gridPhi]->nrrd->data);
+  NTYPE *ptrR   = (NTYPE *)(nHandles[grid[0]]->nrrd->data);
+  NTYPE *ptrZ   = (NTYPE *)(nHandles[grid[1]]->nrrd->data);
+  NTYPE *ptrPhi = (NTYPE *)(nHandles[grid[2]]->nrrd->data);
 
-  for( k=0; k<kdim + kwrap; k++ ) {
-    int iPhi = (k%kdim);
+  for( i=0; i<idim + iwrap; i++ ) {
+    int iPhi = (i%idim);
     double cosphi = cos( ptrPhi[iPhi] );
     double sinphi = sin( ptrPhi[iPhi] );
 
     for( j=0; j<jdim + jwrap; j++ ) {
-      for( i=0; i<idim + iwrap; i++ ) {
+      for( k=0; k<kdim + kwrap; k++ ) {
 	
-	int iRZ = (j%jdim) * idim + (i%idim);
+	int iRZ = (j%jdim) * kdim + (k%kdim);
 
 	// Grid
 	float xVal =  ptrR[iRZ] * cosphi;
@@ -115,7 +118,8 @@ class NIMRODNrrdConverterFieldAlgo : public DynamicAlgoBase
 {
 public:
   virtual void execute(FieldHandle fHandle,
-		       NrrdDataHandle nHandle,
+		       vector< NrrdDataHandle > nHandles,
+		       vector< int > data,
 		       int idim, int jdim, int kdim,
 		       int iwrap, int jwrap, int kwrap) = 0;
   
@@ -131,7 +135,8 @@ class NIMRODNrrdConverterFieldAlgoScalar : public NIMRODNrrdConverterFieldAlgo
 public:
   //! virtual interface.
   virtual void execute(FieldHandle fHandle,
-		       NrrdDataHandle nHandle,
+		       vector< NrrdDataHandle > nHandles,
+		       vector< int > data,
 		       int idim, int jdim, int kdim,
 		       int iwrap, int jwrap, int kwrap);
 };
@@ -140,7 +145,8 @@ public:
 template< class FIELD, class NTYPE >
 void
 NIMRODNrrdConverterFieldAlgoScalar<FIELD, NTYPE>::execute(FieldHandle fHandle,
-					   NrrdDataHandle nHandle,
+					   vector< NrrdDataHandle > nHandles,
+					   vector< int > data,
 					   int idim, int jdim, int kdim,
 					   int iwrap, int jwrap, int kwrap)
 {
@@ -150,15 +156,15 @@ NIMRODNrrdConverterFieldAlgoScalar<FIELD, NTYPE>::execute(FieldHandle fHandle,
 
   imesh->begin( inodeItr );
 
-  NTYPE *ptr = (NTYPE *)(nHandle->nrrd->data);
+  NTYPE *ptr   = (NTYPE *)(nHandles[data[0]]->nrrd->data);
 
   register int i, j, k;
   
-  for( k=0; k<kdim + kwrap; k++ ) {
+  for( i=0; i<idim + iwrap; i++ ) {
     for( j=0; j<jdim + jwrap; j++ ) {
-      for( i=0; i<idim + iwrap; i++ ) {
+      for( k=0; k<kdim + kwrap; k++ ) {
 	
-	int index = ((k%kdim) * jdim + (j%jdim)) * idim + (i%idim);
+	int index = ((i%idim) * jdim + (j%jdim)) * kdim + (k%kdim);
 	
 	// Value
 	ifield->set_value( ptr[index], *inodeItr);
@@ -175,7 +181,8 @@ class NIMRODNrrdConverterFieldAlgoVector : public NIMRODNrrdConverterFieldAlgo
 public:
   //! virtual interface.
   virtual void execute(FieldHandle fHandle,
-		       NrrdDataHandle nHandle,
+		       vector< NrrdDataHandle > nHandles,
+		       vector< int > data,
 		       int idim, int jdim, int kdim,
 		       int iwrap, int jwrap, int kwrap);
 };
@@ -184,7 +191,8 @@ public:
 template< class FIELD, class NTYPE >
 void
 NIMRODNrrdConverterFieldAlgoVector<FIELD, NTYPE>::execute(FieldHandle fHandle,
-					   NrrdDataHandle nHandle,
+					   vector< NrrdDataHandle > nHandles,
+					   vector< int > data,
 					   int idim, int jdim, int kdim,
 					   int iwrap, int jwrap, int kwrap)
 {
@@ -194,23 +202,79 @@ NIMRODNrrdConverterFieldAlgoVector<FIELD, NTYPE>::execute(FieldHandle fHandle,
 
   imesh->begin( inodeItr );
 
-  NTYPE *ptr = (NTYPE *)(nHandle->nrrd->data);
+  register int i, j, k, iPhi;
+  double xVal, yVal, zVal, cosPhi, sinPhi;
+				  
+  if( data.size() == 2 ) {
+    NTYPE *ptrData = (NTYPE *)(nHandles[data[0]]->nrrd->data);
+    NTYPE *ptrPhi  = (NTYPE *)(nHandles[data[1]]->nrrd->data);
 
-  register int i, j, k;
+    for( i=0; i<idim + iwrap; i++ ) {
+      iPhi = (i%idim);
+      
+      cosPhi = cos( ptrPhi[iPhi] );
+      sinPhi = sin( ptrPhi[iPhi] );
+      
+      for( j=0; j<jdim + jwrap; j++ ) {
+	for( k=0; k<kdim + kwrap; k++ ) {
+	
+	  int index = (((i%idim) * jdim + (j%jdim)) * kdim + (k%kdim)) * 3;
+	
+	  xVal =  ptrData[index] * cosPhi - ptrData[index+2] * sinPhi;
+	  yVal = -ptrData[index] * sinPhi - ptrData[index+2] * cosPhi;
+	  zVal =  ptrData[index+1];
 
-  for( k=0; k<kdim + kwrap; k++ ) {
-    for( j=0; j<jdim + jwrap; j++ ) {
-      for( i=0; i<idim + iwrap; i++ ) {
+	  // Value
+	  ifield->set_value( Vector( xVal, yVal, zVal ), *inodeItr);
 	
-	int index = (((k%kdim) * jdim + (j%jdim)) * idim + (i%idim)) * 3;
+	  ++inodeItr;
+	}
+      }
+    }
+  } else if( data.size() == 4 ) {
+
+    NTYPE *ptrR = NULL;
+    NTYPE *ptrZ = NULL;
+    NTYPE *ptrPhi = NULL;
+    NTYPE *ptrGridPhi = (NTYPE *)(nHandles[data[3]]->nrrd->data);
+
+    for( int ic=0; ic<3; ic++ ) {
+	vector< string > dataset;
 	
-	// Value
-	ifield->set_value( Vector( ptr[index],
-				   ptr[index+1],
-				   ptr[index+2]),
-			   *inodeItr);
+	nHandles[data[ic]]->get_tuple_indecies(dataset);
+
+	if( dataset[0].find( "-R:Scalar" ) != std::string::npos ) {
+	  ptrR = (NTYPE *)(nHandles[data[ic]]->nrrd->data);
+	}
+	else if( dataset[0].find( "-Z:Scalar" ) != std::string::npos ) {
+	  ptrZ = (NTYPE *)(nHandles[data[ic]]->nrrd->data);
+	}
+	else if( dataset[0].find( "-PHI:Scalar" ) != std::string::npos ) {
+	  ptrPhi = (NTYPE *)(nHandles[data[ic]]->nrrd->data);
+	}
+    }
+
+    for( i=0; i<idim + iwrap; i++ ) {
+      iPhi = (i%idim);
+
+      cosPhi = cos( ptrGridPhi[iPhi] );
+      sinPhi = sin( ptrGridPhi[iPhi] );
+
+      for( j=0; j<jdim + jwrap; j++ ) {
+	for( k=0; k<kdim + kwrap; k++ ) {
 	
-	++inodeItr;
+	  int index = ((i%idim) * jdim + (j%jdim)) * kdim + (k%kdim);
+	
+	  // Value
+	  xVal =  ptrR[index] * cosPhi - ptrPhi[index] * sinPhi;
+	  yVal = -ptrR[index] * sinPhi - ptrPhi[index] * cosPhi;
+	  zVal =  ptrZ[index];
+
+	  // Value
+	  ifield->set_value( Vector( xVal, yVal, zVal ), *inodeItr);
+	
+	  ++inodeItr;
+	}
       }
     }
   }
