@@ -549,7 +549,7 @@ EnthalpySolver::sched_buildLinearMatrixPred(const LevelP& level,
   tsk->computes(d_lab->d_enthDiffCoefPredLabel, d_lab->d_stencilMatl,
 		Task::OutOfDomain);
   tsk->computes(d_lab->d_enthNonLinSrcPredLabel);
-  if (d_radiationCalc) {
+  if (d_DORadiationCalc) {
     tsk->computes(d_lab->d_abskgINLabel);
     tsk->computes(d_lab->d_radiationSRCINLabel);
     tsk->computes(d_lab->d_radiationFluxWINLabel);
@@ -665,15 +665,6 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
       enthalpyVars.qfluxe.allocate(patch->getCellLowIndex(),
 				   patch->getCellHighIndex());
       enthalpyVars.qfluxe.initialize(0.0);
-#if 0
-      enthalpyVars.qfluxw.allocate(patch->getCellLowIndex(),
-				   patch->getCellHighIndex());
-#endif
-      new_dw->allocateAndPut(enthalpyVars.qfluxw, d_lab->d_radiationFluxWINLabel,
-			     matlIndex, patch);
-      old_dw->copyOut(enthalpyVars.qfluxw, d_lab->d_radiationFluxWINLabel,
-		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      //      enthalpyVars.qfluxw.initialize(0.0);
       enthalpyVars.qfluxn.allocate(patch->getCellLowIndex(),
 				   patch->getCellHighIndex());
       enthalpyVars.qfluxn.initialize(0.0);
@@ -691,16 +682,14 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
       old_dw->getCopy(enthalpyVars.absorption, d_lab->d_absorpINLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       if (d_DORadiationCalc) {
-#if 0
-      enthalpyVars.src.allocate(patch->getCellLowIndex(),
-				   patch->getCellHighIndex());
-#endif
+      new_dw->allocateAndPut(enthalpyVars.qfluxw,
+			     d_lab->d_radiationFluxWINLabel,matlIndex, patch);
+      old_dw->copyOut(enthalpyVars.qfluxw, d_lab->d_radiationFluxWINLabel,
+		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocateAndPut(enthalpyVars.src, d_lab->d_radiationSRCINLabel,
 			     matlIndex, patch);
       old_dw->copyOut(enthalpyVars.src, d_lab->d_radiationSRCINLabel,
 		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-
-      // enthalpyVars.src.initialize(0.0);
 
       old_dw->getCopy(enthalpyVars.co2, d_lab->d_co2INLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -708,6 +697,11 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       old_dw->getCopy(enthalpyVars.sootFV, d_lab->d_sootFVINLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      }
+      else {
+        enthalpyVars.qfluxw.allocate(patch->getCellLowIndex(),
+				     patch->getCellHighIndex());
+        enthalpyVars.qfluxw.initialize(0.0);
       }
 
     }
