@@ -74,8 +74,7 @@ itcl_class VS_DataFlow_HotBox {
     }
 
     # extansion to append if no extension supplied by user
-    # set defext ".csv"
-    # set title "Open LabelMap file"
+    set defext ".csv"
 
     # file types to appers in filter box
     set types {
@@ -86,31 +85,28 @@ itcl_class VS_DataFlow_HotBox {
     ######################################################
                                                                                 
     if {$whichdatasource == "anatomy"} {
+    set title "Open LabelMap file"
     makeOpenFilebox \
-        -parent $w \
         -filevar $this-anatomydatasource \
-        -command "$this-c needexecute; wm withdraw $w" \
-        -cancel "wm withdraw $w" \
+        -command "$this-c needexecute" \
         -title $title \
         -filetypes $types \
         -initialdir $initdir \
         -defaultextension $defext
   } elseif {$whichdatasource == "adjacency"} {
+    set title "Open Adjacency Map file"
     makeOpenFilebox \
-        -parent $w \
         -filevar $this-adjacencydatasource \
-        -command "$this-c needexecute; wm withdraw $w" \
-        -cancel "wm withdraw $w" \
+        -command "$this-c needexecute" \
         -title $title \
         -filetypes $types \
         -initialdir $initdir \
         -defaultextension $defext
   } elseif {$whichdatasource == "boundingbox"} {
+    set title "Open Bounding Box file"
     makeOpenFilebox \
-        -parent $w \
         -filevar $this-boundingboxdatasource \
-        -command "$this-c needexecute; wm withdraw $w" \
-        -cancel "wm withdraw $w" \
+        -command "$this-c needexecute" \
         -title $title \
         -filetypes $types \
         -initialdir $initdir \
@@ -124,7 +120,6 @@ itcl_class VS_DataFlow_HotBox {
       # toggle FME control off
       set $this-FME_on "no"
     } else {set $this-FME_on "yes"}
-
   }
   # end method toggle_FME_on
 
@@ -210,27 +205,27 @@ itcl_class VS_DataFlow_HotBox {
     frame $w.files.row1
     label $w.files.row1.anatomylabel -textvar "Anatomy Data Source: "
     entry $w.files.row1.filenamentry -textvar $this-anatomydatasource -width 50
-    button  $w.files.row1.browsebutton -textvariable "Browse..." -command "$this-launch_filebrowser anatomy"
-    pack $w.files.row1.anatomylabel $w.files.row1.filenamentry\
-	$w.files.row1.browsebutton\
-        -side left -anchor n -expand yes -fill x
+    button  $w.files.row1.browsebutton -textvariable "Browse..." -command "$this launch_filebrowser anatomy"
 
     frame $w.files.row2
     label $w.files.row2.adjacencylabel -textvar "Adjacency Data Source: "
     entry $w.files.row2.filenamentry -textvar $this-adjacencydatasource -width 50
-    button  $w.files.row2.browsebutton -textvariable "Browse..." -command "$this-launch_filebrowser adjacency"
-    pack $w.files.row2.adjacencylabel $w.files.row2.filenamentry\
-	$w.files.row2.browsebutton\
-        -side left -anchor n -expand yes -fill x
+    button  $w.files.row2.browsebutton -textvariable "Browse..." -command "$this launch_filebrowser adjacency"
 
     frame $w.files.row3
     label $w.files.row3.boundingboxlabel -textvar "Bounding Box Data Source: "
     entry $w.files.row3.filenamentry -textvar $this-boundingboxdatasource -width 50
-    button  $w.files.row3.browsebutton -textvariable "Browse..." -command "$this-launch_filebrowser boundingbox"
+    button  $w.files.row3.browsebutton -textvariable "Browse..." -command "$this launch_filebrowser boundingbox"
+    pack $w.files.row1 $w.files.row2 $w.files.row3 -side top -anchor w
+    pack $w.files.row1.anatomylabel $w.files.row1.filenamentry\
+	$w.files.row1.browsebutton\
+        -side left -anchor n -expand yes -fill x
+    pack $w.files.row2.adjacencylabel $w.files.row2.filenamentry\
+	$w.files.row2.browsebutton\
+        -side left -anchor n -expand yes -fill x
     pack $w.files.row3.boundingboxlabel $w.files.row3.filenamentry\
 	$w.files.row3.browsebutton\
         -side left -anchor n -expand yes -fill x
-    pack $w.files.row1 $w.files.row2 $w.files.row3 -side top -anchor w
 
     frame $w.f
     # the UI buttons for selecting anatomical names (adjacencies)
