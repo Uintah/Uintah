@@ -1,4 +1,3 @@
-
 #include "ConstitutiveModelFactory.h"
 #include "CompNeoHook.h"
 #include <Core/Malloc/Allocator.h>
@@ -32,19 +31,22 @@ CompNeoHook::CompNeoHook(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
   ps->require("bulk_modulus", d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
 
-  bElBar_oldLabel = VarLabel::create("bElBar_old",
+#if 0
+  bElBarLabel = VarLabel::create("bElBar",
 		       ParticleVariable<Matrix3>::getTypeDescription());
-  bElBar_newLabel = VarLabel::create("bElBar_new",
-		       ParticleVariable<Matrix3>::getTypeDescription());
-
+  bElBarLabel_preReloc = VarLabel::create("bElBar_preReloc",
+			 ParticleVariable<Matrix3>::getTypeDescription());
+#endif
   d_8or27 = n8or27;
 
 }
 
 CompNeoHook::~CompNeoHook()
 {
-  VarLabel::destroy(bElBar_oldLabel);  
-  VarLabel::destroy(bElBar_newLabel);  
+#if 0
+  VarLabel::destroy(bElBarLabel);  
+  VarLabel::destroy(bElBarLabel_preReloc);  
+#endif
 }
 
 void CompNeoHook::initializeCMData(const Patch* patch,
@@ -78,11 +80,15 @@ void CompNeoHook::addParticleState(std::vector<const VarLabel*>& from,
 {
    from.push_back(lb->pDeformationMeasureLabel);
    from.push_back(lb->pStressLabel);
-//   from.push_back(bElBar_oldLabel);
+#if 0
+   from.push_back(bElBarLabel);
+#endif
 
    to.push_back(lb->pDeformationMeasureLabel_preReloc);
    to.push_back(lb->pStressLabel_preReloc);
-//   to.push_back(bElBar_newLabel);
+#if 0
+   to.push_back(bElBarLabel_preReloc);
+#endif
 }
 
 void CompNeoHook::computeStableTimestep(const Patch* patch,
@@ -298,14 +304,14 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    old_dw->get(bElBar_old, bElBar_oldLabel, pset);
+    old_dw->get(bElBar_old, bElBarLabel, pset);
     old_dw->get(dispNew,lb->dispNewLabel,matlindex,patch,Ghost::AroundCells,1);
 
     new_dw->allocate(pstress,        lb->pStressLabel_preReloc, pset);
     new_dw->allocate(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
     new_dw->allocate(deformationGradient_new,
 		     lb->pDeformationMeasureLabel_preReloc, pset);
-    new_dw->allocate(bElBar_new,bElBar_newLabel, pset);
+    new_dw->allocate(bElBar_new,bElBarLabel_preReloc, pset);
 
 
 
@@ -497,25 +503,23 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     new_dw->put(pstress,                lb->pStressLabel_preReloc);
     new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc);
     new_dw->put(pvolume_deformed,       lb->pVolumeDeformedLabel);
-    new_dw->put(bElBar_new,             bElBar_newLabel);
+    new_dw->put(bElBar_new,             bElBarLabel_preReloc);
 
   }
 }
 
 
 void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
-					      const MPMMaterial* matl,
-					      DataWarehouse* old_dw,
-					      DataWarehouse* new_dw,
-					      SparseMatrix<double,int>& KK)
+						  const MPMMaterial* matl,
+						  DataWarehouse* old_dw,
+						  DataWarehouse* new_dw)
+						  
 
 {
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     Matrix3 velGrad,Shear,deformationGradientInc,
       dispGrad,fbar;
-    DenseMatrix kmat(24,24);
-    DenseMatrix kgeo(24,24);
     
     Matrix3 Identity;
 
@@ -538,24 +542,20 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    old_dw->get(bElBar_old, bElBar_oldLabel, pset);
+    old_dw->get(bElBar_old, bElBarLabel, pset);
     old_dw->get(dispNew,lb->dispNewLabel,matlindex,patch,Ghost::AroundCells,1);
 
     new_dw->allocate(pstress,        lb->pStressLabel_preReloc, pset);
     new_dw->allocate(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
     new_dw->allocate(deformationGradient_new,
 		     lb->pDeformationMeasureLabel_preReloc, pset);
-    new_dw->allocate(bElBar_new,bElBar_newLabel, pset);
+    new_dw->allocate(bElBar_new,bElBarLabel_preReloc, pset);
 
 
 
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
 
-
-    DenseMatrix B(6,24);
-    DenseMatrix Bnl(3,24);
-    
     IntVector nodes = patch->getNNodes();
     for(ParticleSubset::iterator iter = pset->begin();
 	iter != pset->end(); iter++){
@@ -585,36 +585,6 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
 	     dispGrad(i+1,j+1) += disp(i) * d_S[k](j)* oodx[j];
 	   }
 	 }
-	 B[0][3*k] = d_S[k](0)*oodx[0];
-	 B[3][3*k] = d_S[k](1)*oodx[1];
-	 B[5][3*k] = d_S[k](2)*oodx[2];
-	 B[1][3*k] = 0.;
-	 B[2][3*k] = 0.;
-	 B[4][3*k] = 0.;
-
-	 B[1][3*k+1] = d_S[k](1)*oodx[1];
-	 B[3][3*k+1] = d_S[k](0)*oodx[0];
-	 B[4][3*k+1] = d_S[k](2)*oodx[2];
-	 B[0][3*k+1] = 0.;
-	 B[2][3*k+1] = 0.;
-	 B[5][3*k+1] = 0.;
-
-	 B[2][3*k+2] = d_S[k](2)*oodx[2];
-	 B[4][3*k+2] = d_S[k](1)*oodx[1];
-	 B[5][3*k+2] = d_S[k](0)*oodx[0];
-	 B[0][3*k+2] = 0.;
-	 B[1][3*k+2] = 0.;
-	 B[3][3*k+2] = 0.;
-
-	 Bnl[0][3*k] = d_S[k](0)*oodx[0];
-	 Bnl[1][3*k] = 0.;
-	 Bnl[2][3*k] = 0.;
-	 Bnl[0][3*k+1] = 0.;
-	 Bnl[1][3*k+1] = d_S[k](1)*oodx[1];
-	 Bnl[2][3*k+1] = 0.;
-	 Bnl[0][3*k+2] = 0.;
-	 Bnl[1][3*k+2] = 0.;
-	 Bnl[2][3*k+2] = d_S[k](2)*oodx[2];
        }
        
        // Find the stressTensor using the displacement gradient
@@ -654,48 +624,6 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
       double strainEnergyDensity = .5*(bulk*(pow(log(J),2.)) + 
 				shear*(bElBar_new[idx].Trace() - 3.));
 
-      double coef1 = bulk;
-      double coef2 = 2.*bulk*log(J);
-
-      DenseMatrix D(6,6);
-
-      D[0][0] = coef1 - coef2 + 2.*mubar*1./3. - 2./3.*(2.*shrTrl(1,1));
-      D[0][1] = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(1,1) + shrTrl(2,2));
-      D[0][2] = coef1 -2.*mubar*1./3. - 2./3.*(shrTrl(1,1) + shrTrl(3,3));
-      D[0][3] =  - 2./3.*(shrTrl(1,2));
-      D[0][4] =  - 2./3.*(shrTrl(1,3));
-      D[0][5] =  - 2./3.*(shrTrl(2,3));
-      D[1][1] = coef1 - coef2 + 2.*mubar*1./3. - 2./3.*(2.*shrTrl(2,2));
-      D[1][2] = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(2,2) + shrTrl(3,3));
-      D[1][3] =  - 2./3.*(shrTrl(1,2));
-      D[1][4] =  - 2./3.*(shrTrl(1,3));
-      D[1][5] =  - 2./3.*(shrTrl(2,3));
-      D[2][2] = coef1 - coef2 + 2.*mubar*1./3. - 2./3.*(2.*shrTrl(3,3));
-      D[2][3] =  - 2./3.*(shrTrl(1,2));
-      D[2][4] =  - 2./3.*(shrTrl(1,3));
-      D[2][5] =  - 2./3.*(shrTrl(2,3));
-      D[3][3] =  -.5*coef2 + mubar;
-      D[3][4] = 0.;
-      D[3][5] = 0.;
-      D[4][4] =  -.5*coef2 + mubar;
-      D[4][5] = 0.;
-      D[5][5] =  -.5*coef2 + mubar;
-
-      D[1][0]=D[0][1];
-      D[2][0]=D[0][2];
-      D[2][1]=D[1][2];
-      D[3][0]=D[0][3];
-      D[3][1]=D[1][3];
-      D[3][2]=D[2][3];
-      D[4][0]=D[0][4];
-      D[4][1]=D[1][4];
-      D[4][2]=D[2][4];
-      D[4][3]=D[3][4];
-      D[5][0]=D[0][5];
-      D[5][1]=D[1][5];
-      D[5][2]=D[2][5];
-      D[5][3]=D[3][5];
-      D[5][4]=D[4][5];
 
       DenseMatrix sig(3,3);
       for (int i = 0; i < 3; i++) {
@@ -704,43 +632,14 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
 	}
       }
      
-
-      double volold = pvolume[idx];
-      double volnew = pvolume[idx]*J;
-
-      pvolume_deformed[idx] = volnew;
-
-      // Perform kmat = B.transpose()*D*B*volold
-      DenseMatrix out(24,6);
-      DenseMatrix Btrans = B;
-      Btrans.transpose();
-      Mult(out,Btrans,D);
-      Mult(kmat,out,B);
-      kmat.mult(volold);
-
-      // Perform kgeo = Bnl.transpose*sig*Bnl*volnew;
-      DenseMatrix out1(24,3);
-      DenseMatrix Bnltrans = Bnl;
-      Bnltrans.transpose();
-      Mult(out1,Bnltrans,sig);
-      Mult(kgeo,out1,Bnl);
-      kgeo.mult(volnew);
-
-      for (int I = 0; I < 24;I++) {
-	int dofi = dof[I];
-	for (int J = 0; J < 24; J++) {
-	  int dofj = dof[J];
-	  KK[dofi][dofj] = KK[dofi][dofj] + (kmat[I][J] + kgeo[I][J]);
-	}
-      }
-      
+      pvolume_deformed[idx] = pvolume[idx]*J;
 
     }
 
     new_dw->put(pstress,                lb->pStressLabel_preReloc);
     new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc);
     new_dw->put(pvolume_deformed,       lb->pVolumeDeformedLabel);
-    new_dw->put(bElBar_new,             bElBar_newLabel);
+    new_dw->put(bElBar_new,             bElBarLabel_preReloc);
 
   }
 }
@@ -755,9 +654,13 @@ void CompNeoHook::addComputesAndRequires(Task* task,
    task->requires(Task::OldDW, lb->pVelocityLabel, matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
 						 matlset, Ghost::None);
-//   task->requires(Task::OldDW,bElBar_oldLabel,matlset,Ghost::None);
+#if 0
+   task->requires(Task::OldDW,bElBarLabel,matlset,Ghost::None);
+#endif
    task->requires(Task::NewDW,lb->gVelocityLabel,matlset,Ghost::AroundCells,1);
-//   task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
+#if 0
+   task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
+#endif
    
    task->requires(Task::OldDW, lb->delTLabel);
 
@@ -768,7 +671,9 @@ void CompNeoHook::addComputesAndRequires(Task* task,
    task->computes(lb->pStressLabel_preReloc,             matlset);
    task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
    task->computes(lb->pVolumeDeformedLabel,              matlset);
-//   task->computes(bElBar_newLabel,matlset);
+#if 0
+   task->computes(bElBarLabel_preReloc,matlset);
+#endif
    
 }
 

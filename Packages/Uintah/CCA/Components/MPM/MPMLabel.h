@@ -109,11 +109,8 @@ using std::vector;
 
 
       // Implicit MPM labels
-      const VarLabel* gVelocityNewLabel;
-      const VarLabel* gVelocityOldLabel;
       const VarLabel* dispNewLabel;
       const VarLabel* dispIncLabel;
-      const VarLabel* gAccelerationOldLabel;
       const VarLabel* pAccelerationLabel;
       const VarLabel* converged;
       const VarLabel* dispIncQNorm0;
