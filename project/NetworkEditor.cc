@@ -31,6 +31,7 @@
 #include <Network.h>
 #include <NotFinished.h>
 #include <Port.h>
+#include <ThreadStats.h>
 #include <XFont.h>
 #include <XQColor.h>
 #include <Math/MiscMath.h>
@@ -66,7 +67,7 @@ NetworkEditor::NetworkEditor(Network* net, Display* display,
 			     ColorManager* color_manager)
 : Task("Network Editor", 1), net(net), display(display),
   color_manager(color_manager), mailbox(100), first_schedule(1),
-  memstats(0), making_connection(0)
+  memstats(0), threadstats(0), making_connection(0)
 {
 }
 
@@ -104,6 +105,12 @@ int NetworkEditor::body(int)
     new MotifCallback<NetworkEditor>FIXCB(membutton, XmNactivateCallback,
 					  &mailbox, this,
 					  &NetworkEditor::popup_memstats,
+					  0, 0);
+
+    PushButtonC* thrbutton=stats->AddButton("Threads...");
+    new MotifCallback<NetworkEditor>FIXCB(thrbutton, XmNactivateCallback,
+					  &mailbox, this,
+					  &NetworkEditor::popup_threadstats,
 					  0, 0);
 
     PanedWindowC pane;
@@ -350,6 +357,14 @@ void NetworkEditor::popup_memstats(CallbackData*, void*)
 	memstats=new MemStats(this);
     else
 	memstats->popup();
+}
+
+void NetworkEditor::popup_threadstats(CallbackData*, void*)
+{
+    if(!threadstats)
+	threadstats=new ThreadStats(this);
+    else
+	threadstats->popup();
 }
 
 void NetworkEditor::list1_cb(CallbackData* cbdata, void*)

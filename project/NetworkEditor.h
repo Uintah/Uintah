@@ -32,6 +32,7 @@ class MessageBase;
 class Module;
 class Network;
 class TextC;
+class ThreadStats;
 class XFont;
 
 class NetworkEditor : public Task {
@@ -40,6 +41,8 @@ class NetworkEditor : public Task {
     int first_schedule;
     MemStats* memstats;
     void popup_memstats(CallbackData*, void*);
+    ThreadStats* threadstats;
+    void popup_threadstats(CallbackData*, void*);
     void quit(CallbackData*, void*);
 
     void redraw(CallbackData*, void*);

@@ -50,7 +50,7 @@ int main(int argc, char** argv)
     }
 
     // Initialize the multithreader
-    TaskManager::initialize();
+    TaskManager::initialize(argv[0]);
 
     // Fork off a task for the Event loop handler...
     evl=new MtXEventLoop();
