@@ -1,4 +1,3 @@
-
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
@@ -25,7 +24,6 @@
 #include <map>
 #include <sstream>
 #include <unistd.h>
-#include <sci_hash_map.h>
 
 using namespace Uintah;
 
@@ -580,7 +578,6 @@ TaskGraph::createDetailedTasks( const ProcessorGroup* pg,
 namespace Uintah {
   
 class CompTable {
-  typedef hash<const char*> CompTable_StringHash;
   struct Data {
     Data* next;
     DetailedTask* task;
@@ -588,14 +585,20 @@ class CompTable {
     const Patch* patch;
     int matl;
     unsigned int hash;
-    
+
+    unsigned int string_hash(const char* p) {
+      unsigned int sum=0;
+      while(*p)
+	sum = sum*7 + (unsigned char)*p;
+      return sum;
+    }
+
     Data(DetailedTask* task, Task::Dependency* comp,
 	 const Patch* patch, int matl)
       : task(task), comp(comp), patch(patch), matl(matl)
     {
-      CompTable_StringHash h;
       hash=(unsigned int)(((unsigned int)comp->mapDataWarehouse()<<3)
-			  ^(h(comp->var->getName().c_str()))
+			  ^(string_hash(comp->var->getName().c_str()))
 			  ^matl);
       if(patch)
 	hash ^= (unsigned int)(patch->getID()<<4);
