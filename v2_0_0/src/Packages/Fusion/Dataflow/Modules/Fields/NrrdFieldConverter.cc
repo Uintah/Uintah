@@ -872,9 +872,9 @@ NrrdFieldConverter::tcl_command(GuiArgs& args, void* userdata)
 }
 
 
-static void get_nrrd_compile_type( const unsigned int type,
-				   string & typeStr,
-				   string & typeName )
+void get_nrrd_compile_type( const unsigned int type,
+			    string & typeStr,
+			    string & typeName )
 {
   switch (type) {
   case nrrdTypeChar :  
