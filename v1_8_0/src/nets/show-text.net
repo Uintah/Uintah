@@ -47,13 +47,13 @@ source $DATADIR/$DATASET/$DATASET.settings
 global notes
 set notes ""
 
-set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 107 47]
-set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 202 468]
-set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 286 331]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 383 23]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 363 153]
-set m5 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 171 149]
-set m6 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 136 229]
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 12 11]
+set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 143 400]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 143 335]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 161 191]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 161 272]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 37 97]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 12 191]
 
 addConnection $m2 0 $m1 0
 addConnection $m3 0 $m4 0

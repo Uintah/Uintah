@@ -45,14 +45,14 @@ if {[llength [array get env SCIRUN_DATASET]] == 0} {
 global notes
 set notes ""
 
-set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 72 2]
-set m1 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 207 93]
-set m2 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 91 182]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 47 367]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 426 93]
-set m5 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 376 276]
-set m6 [addModuleAtPosition "SCIRun" "Render" "Viewer" 147 482]
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 281 365]
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 13 11]
+set m1 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 34 96]
+set m2 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 13 174]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 13 332]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 206 173]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 206 253]
+set m6 [addModuleAtPosition "SCIRun" "Render" "Viewer" 188 418]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 188 332]
 
 addConnection $m0 0 $m1 0
 addConnection $m1 1 $m2 1
