@@ -39,7 +39,7 @@ namespace SCIRun {
 class QuadToTriAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool execute(FieldHandle, FieldHandle&, std::ostream & ) = 0;
+  virtual bool execute(FieldHandle, FieldHandle&, ProgressReporter *) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *data_td);
@@ -51,14 +51,14 @@ class QuadToTriAlgoT : public QuadToTriAlgo
 {
 public:
   //! virtual interface. 
-  virtual bool execute(FieldHandle src, FieldHandle& dst, std::ostream &msg);
+  virtual bool execute(FieldHandle src, FieldHandle& dst, ProgressReporter *);
 };
 
 
 template <class FSRC>
 bool
 QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
-			      std::ostream &msg)
+			      ProgressReporter *mod)
 {
   FSRC *qsfield = dynamic_cast<FSRC*>(srcH.get_rep());
 
@@ -181,10 +181,123 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       tvfield->set_value(val, (TriSurfMesh::Elem::index_type)(i*2+1));
     }
   } else {
-    msg << "Warning: did not load data values, use DirectInterp" << endl;
+    mod->warning("Could not load data values, use DirectInterp if needed.");
   }
   return true;
 }
+
+
+
+class ImgToTriAlgo : public DynamicAlgoBase
+{
+public:
+  virtual bool execute(FieldHandle, FieldHandle&, ProgressReporter *) = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfoHandle get_compile_info(const TypeDescription *data_td);
+};
+
+
+template <class FSRC>
+class ImgToTriAlgoT : public ImgToTriAlgo
+{
+public:
+  //! virtual interface. 
+  virtual bool execute(FieldHandle src, FieldHandle& dst, ProgressReporter *m);
+};
+
+
+template <class FSRC>
+bool
+ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH, 
+			     ProgressReporter *mod)
+{
+  FSRC *ifield = dynamic_cast<FSRC*>(srcH.get_rep());
+
+  typename FSRC::mesh_type *imesh = ifield->get_typed_mesh().get_rep();
+  TriSurfMeshHandle tmesh = scinew TriSurfMesh();
+
+  // Copy points directly, assuming they will have the same order.
+  typename FSRC::mesh_type::Node::iterator nbi, nei;
+  imesh->begin(nbi); imesh->end(nei);
+  while (nbi != nei)
+  {
+    Point p;
+    imesh->get_center(p, *nbi);
+    tmesh->add_point(p);
+    ++nbi;
+  }
+
+  typedef TriSurfMesh::Node::index_type nindex_type;
+  
+  typename FSRC::mesh_type::Elem::iterator bi, ei;
+  imesh->begin(bi); imesh->end(ei);
+  while (bi != ei)
+  {
+    typename FSRC::mesh_type::Node::array_type inodes;
+    imesh->get_nodes(inodes, *bi);
+    if (((*bi).i_ ^ (*bi).j_)&1)
+    {
+      tmesh->add_triangle(nindex_type((unsigned int)inodes[0]),
+			  nindex_type((unsigned int)inodes[1]),
+			  nindex_type((unsigned int)inodes[2]));
+
+      tmesh->add_triangle(nindex_type((unsigned int)inodes[0]),
+			  nindex_type((unsigned int)inodes[2]),
+			  nindex_type((unsigned int)inodes[3]));
+    }
+    else
+    {
+      tmesh->add_triangle(nindex_type((unsigned int)inodes[0]),
+			  nindex_type((unsigned int)inodes[1]),
+			  nindex_type((unsigned int)inodes[3]));
+
+      tmesh->add_triangle(nindex_type((unsigned int)inodes[1]),
+			  nindex_type((unsigned int)inodes[2]),
+			  nindex_type((unsigned int)inodes[3]));
+    }
+    ++bi;
+  }
+  
+  TriSurfField<typename FSRC::value_type> *tfield = 
+    scinew TriSurfField<typename FSRC::value_type>(tmesh, ifield->data_at());
+  *(PropertyManager *)tfield = *(PropertyManager *)ifield;
+  dstH = tfield;
+
+  typename FSRC::value_type val;
+
+  if (ifield->data_at() == Field::NODE)
+  {
+    imesh->begin(nbi); imesh->end(nei);
+    while (nbi != nei)
+    {
+      ifield->value(val, *nbi);
+      tfield->set_value(val,
+			(TriSurfMesh::Node::index_type)(unsigned int)(*nbi));
+      ++nbi;
+    }
+  }
+  else if (ifield->data_at() == Field::FACE)
+  {
+    typename FSRC::mesh_type::Cell::iterator cbi, cei;    
+    imesh->begin(cbi); imesh->end(cei);
+    while (cbi != cei)
+    {
+      ifield->value(val, *cbi);
+      unsigned int i = (unsigned int)*cbi;
+      tfield->set_value(val, (TriSurfMesh::Cell::index_type)(i*2+0));
+      tfield->set_value(val, (TriSurfMesh::Cell::index_type)(i*2+1));
+      ++cbi;
+    }
+  }
+  else
+  {
+    mod->warning("Could not load data values, use DirectInterp if needed.");
+  }
+  return true;
+}
+
+
 }
 
 #endif
