@@ -27,6 +27,7 @@ SRCS     += \
 	$(SRCDIR)/VectorFieldReader.cc\
 	$(SRCDIR)/VoidStarReader.cc\
 	$(SRCDIR)/PathReader.cc\
+	$(SRCDIR)/ReadField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Core/Datatypes \
