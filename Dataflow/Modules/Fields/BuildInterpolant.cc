@@ -402,7 +402,21 @@ public:
 			 FOUT *);
 
   double point_distance(const Point &p1, const Point &p2);
+  double point_distance2(const Point &p1, const Point &p2);
   void normalize(vector<pair<int, double> > &v);
+
+  template <class Mesh>
+  void find_closest_node(Mesh *mesh, typename Mesh::node_index &idx, Point &p);
+
+  template <class Mesh>
+  void find_closest_edge(Mesh *mesh, typename Mesh::edge_index &idx, Point &p);
+
+  template <class Mesh>
+  void find_closest_face(Mesh *mesh, typename Mesh::face_index &idx, Point &p);
+
+  template <class Mesh>
+  void find_closest_cell(Mesh *mesh, typename Mesh::cell_index &idx, Point &p);
+
 };
 
 extern "C" Module* make_BuildInterpolant(const clString& id)
@@ -420,7 +434,6 @@ BuildInterpolant::~BuildInterpolant()
 {
 }
 
-
 double
 BuildInterpolant::point_distance(const Point &p1, const Point &p2)
 {
@@ -429,6 +442,122 @@ BuildInterpolant::point_distance(const Point &p1, const Point &p2)
   const double dz = p2.z() - p1.z();
 
   return sqrt(dx * dx + dy * dy + dz * dz);
+}
+
+double
+BuildInterpolant::point_distance2(const Point &p1, const Point &p2)
+{
+  const double dx = p2.x() - p1.x();
+  const double dy = p2.y() - p1.y();
+  const double dz = p2.z() - p1.z();
+
+  return dx * dx + dy * dy + dz * dz;
+}
+
+
+
+template <class Mesh>
+void
+BuildInterpolant::find_closest_node(Mesh *mesh, typename Mesh::node_index &idx,
+				    Point &p)
+{
+  bool first_p = true;
+  double min_dist = 1.0e6;
+  typename Mesh::node_iterator itr = mesh->node_begin();
+  while (itr != mesh->node_end())
+  {
+    Point p2;
+
+    mesh->get_center(p2, *itr);
+
+    const double dist = point_distance2(p, p2);
+    if (dist < min_dist || first_p)
+    {
+      idx = *itr;
+      min_dist = dist;
+      first_p = false;
+    }
+   
+    ++itr;
+  }
+}
+
+template <class Mesh>
+void
+BuildInterpolant::find_closest_edge(Mesh *mesh, typename Mesh::edge_index &idx,
+				    Point &p)
+{
+  bool first_p = true;
+  double min_dist = 1.0e6;
+  typename Mesh::edge_iterator itr = mesh->edge_begin();
+  while (itr != mesh->edge_end())
+  {
+    Point p2;
+
+    mesh->get_center(p2, *itr);
+
+    const double dist = point_distance2(p, p2);
+    if (dist < min_dist || first_p)
+    {
+      idx = *itr;
+      min_dist = dist;
+      first_p = false;
+    }
+   
+    ++itr;
+  }
+}
+
+template <class Mesh>
+void
+BuildInterpolant::find_closest_face(Mesh *mesh, typename Mesh::face_index &idx,
+				    Point &p)
+{
+  bool first_p = true;
+  double min_dist = 1.0e6;
+  typename Mesh::face_iterator itr = mesh->face_begin();
+  while (itr != mesh->face_end())
+  {
+    Point p2;
+
+    mesh->get_center(p2, *itr);
+
+    const double dist = point_distance2(p, p2);
+    if (dist < min_dist || first_p)
+    {
+      idx = *itr;
+      min_dist = dist;
+      first_p = false;
+    }
+   
+    ++itr;
+  }
+}
+
+template <class Mesh>
+void
+BuildInterpolant::find_closest_cell(Mesh *mesh, typename Mesh::cell_index &idx,
+				    Point &p)
+{
+  bool first_p = true;
+  double min_dist = 1.0e6;
+  typename Mesh::cell_iterator itr = mesh->cell_begin();
+  while (itr != mesh->cell_end())
+  {
+    Point p2;
+
+    mesh->get_center(p2, *itr);
+
+    const double dist = point_distance2(p, p2);
+    if (dist < min_dist || first_p)
+    {
+      idx = *itr;
+      min_dist = dist;
+      first_p = false;
+    }
+   
+    ++itr;
+  }
 }
 
 
@@ -452,6 +581,7 @@ BuildInterpolant::normalize(vector<pair<int, double> > &v)
 }
 
 
+
 template <class FOUT, class MDST, class MSRC>
 void
 BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
@@ -471,23 +601,29 @@ BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
 	Point p;
 	mdst->get_center(p, *itr);
     
-	typename MSRC::cell_index idx;
-	msrc->locate(idx, p);
 	vector<pair<typename MSRC::node_index, double> > v;
-
-	typename MSRC::node_array array;
-	msrc->get_nodes(array, idx);
-  
-	typename MSRC::node_array::iterator array_itr =
-	  array.begin();
-	while (array_itr != array.end())
+	typename MSRC::cell_index idx;
+	if (msrc->locate(idx, p))
 	{
-	  Point p2;
-	  msrc->get_center(p2, *array_itr);
-	  
-	  v.push_back(pair<typename MSRC::node_index, double>
-		      (*array_itr, point_distance(p, p2)));
-	  ++array_itr;
+	  typename MSRC::node_array array;
+	  msrc->get_nodes(array, idx);
+  
+	  typename MSRC::node_array::iterator array_itr = array.begin();
+	  while (array_itr != array.end())
+	  {
+	    Point p2;
+	    msrc->get_center(p2, *array_itr);
+	    
+	    v.push_back(pair<typename MSRC::node_index, double>
+			(*array_itr, point_distance(p, p2)));
+	    ++array_itr;
+	  }
+	}
+	else
+	{
+	  typename MSRC::node_index idx2;
+	  find_closest_node(msrc, idx2, p);
+	  v.push_back(pair<typename MSRC::node_index, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -503,23 +639,29 @@ BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
 	Point p;
 	mdst->get_center(p, *itr);
     
-	typename MSRC::cell_index idx;
-	msrc->locate(idx, p);
 	vector<pair<typename MSRC::node_index, double> > v;
-
-	typename MSRC::node_array array;
-	msrc->get_nodes(array, idx);
-  
-	typename MSRC::node_array::iterator array_itr =
-	  array.begin();
-	while (array_itr != array.end())
+	typename MSRC::cell_index idx;
+	if (msrc->locate(idx, p))
 	{
-	  Point p2;
-	  msrc->get_center(p2, *array_itr);
+	  typename MSRC::node_array array;
+	  msrc->get_nodes(array, idx);
+  
+	  typename MSRC::node_array::iterator array_itr = array.begin();
+	  while (array_itr != array.end())
+	  {
+	    Point p2;
+	    msrc->get_center(p2, *array_itr);
 	  
-	  v.push_back(pair<typename MSRC::node_index, double>
-		      (*array_itr, point_distance(p, p2)));
-	  ++array_itr;
+	    v.push_back(pair<typename MSRC::node_index, double>
+			(*array_itr, point_distance(p, p2)));
+	    ++array_itr;
+	  }
+	}
+	else
+	{
+	  typename MSRC::node_index idx2;
+	  find_closest_node(msrc, idx2, p);
+	  v.push_back(pair<typename MSRC::node_index, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -535,23 +677,29 @@ BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
 	Point p;
 	mdst->get_center(p, *itr);
     
-	typename MSRC::cell_index idx;
-	msrc->locate(idx, p);
 	vector<pair<typename MSRC::node_index, double> > v;
-
-	typename MSRC::node_array array;
-	msrc->get_nodes(array, idx);
-  
-	typename MSRC::node_array::iterator array_itr =
-	  array.begin();
-	while (array_itr != array.end())
+	typename MSRC::cell_index idx;
+	if (msrc->locate(idx, p))
 	{
-	  Point p2;
-	  msrc->get_center(p2, *array_itr);
+	  typename MSRC::node_array array;
+	  msrc->get_nodes(array, idx);
+  
+	  typename MSRC::node_array::iterator array_itr = array.begin();
+	  while (array_itr != array.end())
+	  {
+	    Point p2;
+	    msrc->get_center(p2, *array_itr);
 	  
-	  v.push_back(pair<typename MSRC::node_index, double>
-		      (*array_itr, point_distance(p, p2)));
-	  ++array_itr;
+	    v.push_back(pair<typename MSRC::node_index, double>
+			(*array_itr, point_distance(p, p2)));
+	    ++array_itr;
+	  }
+	}
+	else
+	{
+	  typename MSRC::node_index idx2;
+	  find_closest_node(msrc, idx2, p);
+	  v.push_back(pair<typename MSRC::node_index, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -567,23 +715,29 @@ BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
 	Point p;
 	mdst->get_center(p, *itr);
     
-	typename MSRC::cell_index idx;
-	msrc->locate(idx, p);
 	vector<pair<typename MSRC::node_index, double> > v;
-
-	typename MSRC::node_array array;
-	msrc->get_nodes(array, idx);
-  
-	typename MSRC::node_array::iterator array_itr =
-	  array.begin();
-	while (array_itr != array.end())
+	typename MSRC::cell_index idx;
+	if (msrc->locate(idx, p))
 	{
-	  Point p2;
-	  msrc->get_center(p2, *array_itr);
+	  typename MSRC::node_array array;
+	  msrc->get_nodes(array, idx);
+  
+	  typename MSRC::node_array::iterator array_itr = array.begin();
+	  while (array_itr != array.end())
+	  {
+	    Point p2;
+	    msrc->get_center(p2, *array_itr);
 	  
-	  v.push_back(pair<typename MSRC::node_index, double>
-		      (*array_itr, point_distance(p, p2)));
-	  ++array_itr;
+	    v.push_back(pair<typename MSRC::node_index, double>
+			(*array_itr, point_distance(p, p2)));
+	    ++array_itr;
+	  }
+	}
+	else
+	{
+	  typename MSRC::node_index idx2;
+	  find_closest_node(msrc, idx2, p);
+	  v.push_back(pair<typename MSRC::node_index, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -599,6 +753,7 @@ BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
   FieldOPort *ofp = (FieldOPort *)get_oport("Interpolant");
   ofp->send(fh);
 }
+
 
 template <class FOUT, class MDST, class MSRC>
 void
@@ -619,23 +774,29 @@ BuildInterpolant::dispatch_src_edge(MDST *mdst, MSRC *msrc,
 	Point p;
 	mdst->get_center(p, *itr);
     
-	typename MSRC::cell_index idx;
-	msrc->locate(idx, p);
 	vector<pair<typename MSRC::edge_index, double> > v;
-
-	typename MSRC::edge_array array;
-	msrc->get_edges(array, idx);
-  
-	typename MSRC::edge_array::iterator array_itr =
-	  array.begin();
-	while (array_itr != array.end())
+	typename MSRC::cell_index idx;
+	if (msrc->locate(idx, p))
 	{
-	  Point p2;
-	  msrc->get_center(p2, *array_itr);
+	  typename MSRC::edge_array array;
+	  msrc->get_edges(array, idx);
+  
+	  typename MSRC::edge_array::iterator array_itr = array.begin();
+	  while (array_itr != array.end())
+	  {
+	    Point p2;
+	    msrc->get_center(p2, *array_itr);
 	  
-	  v.push_back(pair<typename MSRC::edge_index, double>
-		      (*array_itr, point_distance(p, p2)));
-	  ++array_itr;
+	    v.push_back(pair<typename MSRC::edge_index, double>
+			(*array_itr, point_distance(p, p2)));
+	    ++array_itr;
+	  }
+	}
+	else
+	{
+	  typename MSRC::edge_index idx2;
+	  find_closest_edge(msrc, idx2, p);
+	  v.push_back(pair<typename MSRC::edge_index, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -651,23 +812,29 @@ BuildInterpolant::dispatch_src_edge(MDST *mdst, MSRC *msrc,
 	Point p;
 	mdst->get_center(p, *itr);
     
-	typename MSRC::cell_index idx;
-	msrc->locate(idx, p);
 	vector<pair<typename MSRC::edge_index, double> > v;
-
-	typename MSRC::edge_array array;
-	msrc->get_edges(array, idx);
-  
-	typename MSRC::edge_array::iterator array_itr =
-	  array.begin();
-	while (array_itr != array.end())
+	typename MSRC::cell_index idx;
+	if (msrc->locate(idx, p))
 	{
-	  Point p2;
-	  msrc->get_center(p2, *array_itr);
+	  typename MSRC::edge_array array;
+	  msrc->get_edges(array, idx);
+  
+	  typename MSRC::edge_array::iterator array_itr = array.begin();
+	  while (array_itr != array.end())
+	  {
+	    Point p2;
+	    msrc->get_center(p2, *array_itr);
 	  
-	  v.push_back(pair<typename MSRC::edge_index, double>
-		      (*array_itr, point_distance(p, p2)));
-	  ++array_itr;
+	    v.push_back(pair<typename MSRC::edge_index, double>
+			(*array_itr, point_distance(p, p2)));
+	    ++array_itr;
+	  }
+	}
+	else
+	{
+	  typename MSRC::edge_index idx2;
+	  find_closest_edge(msrc, idx2, p);
+	  v.push_back(pair<typename MSRC::edge_index, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -683,23 +850,29 @@ BuildInterpolant::dispatch_src_edge(MDST *mdst, MSRC *msrc,
 	Point p;
 	mdst->get_center(p, *itr);
     
-	typename MSRC::cell_index idx;
-	msrc->locate(idx, p);
 	vector<pair<typename MSRC::edge_index, double> > v;
-
-	typename MSRC::edge_array array;
-	msrc->get_edges(array, idx);
-  
-	typename MSRC::edge_array::iterator array_itr =
-	  array.begin();
-	while (array_itr != array.end())
+	typename MSRC::cell_index idx;
+	if (msrc->locate(idx, p))
 	{
-	  Point p2;
-	  msrc->get_center(p2, *array_itr);
+	  typename MSRC::edge_array array;
+	  msrc->get_edges(array, idx);
+  
+	  typename MSRC::edge_array::iterator array_itr = array.begin();
+	  while (array_itr != array.end())
+	  {
+	    Point p2;
+	    msrc->get_center(p2, *array_itr);
 	  
-	  v.push_back(pair<typename MSRC::edge_index, double>
-		      (*array_itr, point_distance(p, p2)));
-	  ++array_itr;
+	    v.push_back(pair<typename MSRC::edge_index, double>
+			(*array_itr, point_distance(p, p2)));
+	    ++array_itr;
+	  }
+	}
+	else
+	{
+	  typename MSRC::edge_index idx2;
+	  find_closest_edge(msrc, idx2, p);
+	  v.push_back(pair<typename MSRC::edge_index, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -715,23 +888,29 @@ BuildInterpolant::dispatch_src_edge(MDST *mdst, MSRC *msrc,
 	Point p;
 	mdst->get_center(p, *itr);
     
-	typename MSRC::cell_index idx;
-	msrc->locate(idx, p);
 	vector<pair<typename MSRC::edge_index, double> > v;
-
-	typename MSRC::edge_array array;
-	msrc->get_edges(array, idx);
-  
-	typename MSRC::edge_array::iterator array_itr =
-	  array.begin();
-	while (array_itr != array.end())
+	typename MSRC::cell_index idx;
+	if (msrc->locate(idx, p))
 	{
-	  Point p2;
-	  msrc->get_center(p2, *array_itr);
+	  typename MSRC::edge_array array;
+	  msrc->get_edges(array, idx);
+  
+	  typename MSRC::edge_array::iterator array_itr = array.begin();
+	  while (array_itr != array.end())
+	  {
+	    Point p2;
+	    msrc->get_center(p2, *array_itr);
 	  
-	  v.push_back(pair<typename MSRC::edge_index, double>
-		      (*array_itr, point_distance(p, p2)));
-	  ++array_itr;
+	    v.push_back(pair<typename MSRC::edge_index, double>
+			(*array_itr, point_distance(p, p2)));
+	    ++array_itr;
+	  }
+	}
+	else
+	{
+	  typename MSRC::edge_index idx2;
+	  find_closest_edge(msrc, idx2, p);
+	  v.push_back(pair<typename MSRC::edge_index, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -768,23 +947,29 @@ BuildInterpolant::dispatch_src_face(MDST *mdst, MSRC *msrc,
 	Point p;
 	mdst->get_center(p, *itr);
     
-	typename MSRC::cell_index idx;
-	msrc->locate(idx, p);
 	vector<pair<typename MSRC::face_index, double> > v;
-
-	typename MSRC::face_array array;
-	msrc->get_faces(array, idx);
-  
-	typename MSRC::face_array::iterator array_itr =
-	  array.begin();
-	while (array_itr != array.end())
+	typename MSRC::cell_index idx;
+	if (msrc->locate(idx, p))
 	{
-	  Point p2;
-	  msrc->get_center(p2, *array_itr);
+	  typename MSRC::face_array array;
+	  msrc->get_faces(array, idx);
+  
+	  typename MSRC::face_array::iterator array_itr = array.begin();
+	  while (array_itr != array.end())
+	  {
+	    Point p2;
+	    msrc->get_center(p2, *array_itr);
 	  
-	  v.push_back(pair<typename MSRC::face_index, double>
-		      (*array_itr, point_distance(p, p2)));
-	  ++array_itr;
+	    v.push_back(pair<typename MSRC::face_index, double>
+			(*array_itr, point_distance(p, p2)));
+	    ++array_itr;
+	  }
+	}
+	else
+	{
+	  typename MSRC::face_index idx2;
+	  find_closest_face(msrc, idx2, p);
+	  v.push_back(pair<typename MSRC::face_index, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -800,23 +985,29 @@ BuildInterpolant::dispatch_src_face(MDST *mdst, MSRC *msrc,
 	Point p;
 	mdst->get_center(p, *itr);
     
-	typename MSRC::cell_index idx;
-	msrc->locate(idx, p);
 	vector<pair<typename MSRC::face_index, double> > v;
-
-	typename MSRC::face_array array;
-	msrc->get_faces(array, idx);
-  
-	typename MSRC::face_array::iterator array_itr =
-	  array.begin();
-	while (array_itr != array.end())
+	typename MSRC::cell_index idx;
+	if (msrc->locate(idx, p))
 	{
-	  Point p2;
-	  msrc->get_center(p2, *array_itr);
+	  typename MSRC::face_array array;
+	  msrc->get_faces(array, idx);
+  
+	  typename MSRC::face_array::iterator array_itr = array.begin();
+	  while (array_itr != array.end())
+	  {
+	    Point p2;
+	    msrc->get_center(p2, *array_itr);
 	  
-	  v.push_back(pair<typename MSRC::face_index, double>
-		      (*array_itr, point_distance(p, p2)));
-	  ++array_itr;
+	    v.push_back(pair<typename MSRC::face_index, double>
+			(*array_itr, point_distance(p, p2)));
+	    ++array_itr;
+	  }
+	}
+	else
+	{
+	  typename MSRC::face_index idx2;
+	  find_closest_face(msrc, idx2, p);
+	  v.push_back(pair<typename MSRC::face_index, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -832,23 +1023,29 @@ BuildInterpolant::dispatch_src_face(MDST *mdst, MSRC *msrc,
 	Point p;
 	mdst->get_center(p, *itr);
     
-	typename MSRC::cell_index idx;
-	msrc->locate(idx, p);
 	vector<pair<typename MSRC::face_index, double> > v;
-
-	typename MSRC::face_array array;
-	msrc->get_faces(array, idx);
-  
-	typename MSRC::face_array::iterator array_itr =
-	  array.begin();
-	while (array_itr != array.end())
+	typename MSRC::cell_index idx;
+	if (msrc->locate(idx, p))
 	{
-	  Point p2;
-	  msrc->get_center(p2, *array_itr);
+	  typename MSRC::face_array array;
+	  msrc->get_faces(array, idx);
+  
+	  typename MSRC::face_array::iterator array_itr = array.begin();
+	  while (array_itr != array.end())
+	  {
+	    Point p2;
+	    msrc->get_center(p2, *array_itr);
 	  
-	  v.push_back(pair<typename MSRC::face_index, double>
-		      (*array_itr, point_distance(p, p2)));
-	  ++array_itr;
+	    v.push_back(pair<typename MSRC::face_index, double>
+			(*array_itr, point_distance(p, p2)));
+	    ++array_itr;
+	  }
+	}
+	else
+	{
+	  typename MSRC::face_index idx2;
+	  find_closest_face(msrc, idx2, p);
+	  v.push_back(pair<typename MSRC::face_index, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -864,23 +1061,29 @@ BuildInterpolant::dispatch_src_face(MDST *mdst, MSRC *msrc,
 	Point p;
 	mdst->get_center(p, *itr);
     
-	typename MSRC::cell_index idx;
-	msrc->locate(idx, p);
 	vector<pair<typename MSRC::face_index, double> > v;
-
-	typename MSRC::face_array array;
-	msrc->get_faces(array, idx);
-  
-	typename MSRC::face_array::iterator array_itr =
-	  array.begin();
-	while (array_itr != array.end())
+	typename MSRC::cell_index idx;
+	if (msrc->locate(idx, p))
 	{
-	  Point p2;
-	  msrc->get_center(p2, *array_itr);
+	  typename MSRC::face_array array;
+	  msrc->get_faces(array, idx);
+  
+	  typename MSRC::face_array::iterator array_itr = array.begin();
+	  while (array_itr != array.end())
+	  {
+	    Point p2;
+	    msrc->get_center(p2, *array_itr);
 	  
-	  v.push_back(pair<typename MSRC::face_index, double>
-		      (*array_itr, point_distance(p, p2)));
-	  ++array_itr;
+	    v.push_back(pair<typename MSRC::face_index, double>
+			(*array_itr, point_distance(p, p2)));
+	    ++array_itr;
+	  }
+	}
+	else
+	{
+	  typename MSRC::face_index idx2;
+	  find_closest_face(msrc, idx2, p);
+	  v.push_back(pair<typename MSRC::face_index, double>(idx2, 1.0));
 	}
 	ofield->set_value(v, *itr);
 	++itr;
@@ -917,10 +1120,18 @@ BuildInterpolant::dispatch_src_cell(MDST *mdst, MSRC *msrc,
 	Point p;
 	mdst->get_center(p, *itr);
     
-	typename MSRC::cell_index idx;
-	msrc->locate(idx, p);
 	vector<pair<typename MSRC::cell_index, double> > v;
-	v.push_back(pair<typename MSRC::cell_index, double>(idx, 1.0));
+	typename MSRC::cell_index idx;
+	if (msrc->locate(idx, p))
+	{
+	  v.push_back(pair<typename MSRC::cell_index, double>(idx, 1.0));
+	}
+	else
+	{
+	  typename MSRC::cell_index idx2;
+	  find_closest_cell(msrc, idx2, p);
+	  v.push_back(pair<typename MSRC::cell_index, double>(idx2, 1.0));
+	}
 
 	ofield->set_value(v, *itr);
 	++itr;
@@ -936,10 +1147,18 @@ BuildInterpolant::dispatch_src_cell(MDST *mdst, MSRC *msrc,
 	Point p;
 	mdst->get_center(p, *itr);
     
-	typename MSRC::cell_index idx;
-	msrc->locate(idx, p);
 	vector<pair<typename MSRC::cell_index, double> > v;
-	v.push_back(pair<typename MSRC::cell_index, double>(idx, 1.0));
+	typename MSRC::cell_index idx;
+	if (msrc->locate(idx, p))
+	{
+	  v.push_back(pair<typename MSRC::cell_index, double>(idx, 1.0));
+	}
+	else
+	{
+	  typename MSRC::cell_index idx2;
+	  find_closest_cell(msrc, idx2, p);
+	  v.push_back(pair<typename MSRC::cell_index, double>(idx2, 1.0));
+	}
 
 	ofield->set_value(v, *itr);
 	++itr;
@@ -955,10 +1174,18 @@ BuildInterpolant::dispatch_src_cell(MDST *mdst, MSRC *msrc,
 	Point p;
 	mdst->get_center(p, *itr);
     
-	typename MSRC::cell_index idx;
-	msrc->locate(idx, p);
 	vector<pair<typename MSRC::cell_index, double> > v;
-	v.push_back(pair<typename MSRC::cell_index, double>(idx, 1.0));
+	typename MSRC::cell_index idx;
+	if (msrc->locate(idx, p))
+	{
+	  v.push_back(pair<typename MSRC::cell_index, double>(idx, 1.0));
+	}
+	else
+	{
+	  typename MSRC::cell_index idx2;
+	  find_closest_cell(msrc, idx2, p);
+	  v.push_back(pair<typename MSRC::cell_index, double>(idx2, 1.0));
+	}
 
 	ofield->set_value(v, *itr);
 	++itr;
@@ -974,10 +1201,18 @@ BuildInterpolant::dispatch_src_cell(MDST *mdst, MSRC *msrc,
 	Point p;
 	mdst->get_center(p, *itr);
     
-	typename MSRC::cell_index idx;
-	msrc->locate(idx, p);
 	vector<pair<typename MSRC::cell_index, double> > v;
-	v.push_back(pair<typename MSRC::cell_index, double>(idx, 1.0));
+	typename MSRC::cell_index idx;
+	if (msrc->locate(idx, p))
+	{
+	  v.push_back(pair<typename MSRC::cell_index, double>(idx, 1.0));
+	}
+	else
+	{
+	  typename MSRC::cell_index idx2;
+	  find_closest_cell(msrc, idx2, p);
+	  v.push_back(pair<typename MSRC::cell_index, double>(idx2, 1.0));
+	}
 
 	ofield->set_value(v, *itr);
 	++itr;
