@@ -178,6 +178,10 @@ set m137 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxinfo"  269 666]
 set m138 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSave" 198 850]
 set m139 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 199 771]
 set m156 [addModuleAtPosition "SCIRun" "FieldsGeometry" "Unstructure" 1492 1606]
+set m157 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSlice" 558 312]
+set m158 [addModuleAtPosition "Teem" "UnuAtoM" "UnuCrop" 428 173]
+set m159 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 428 239]
+set m160 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 606 101]
 
 setProgressText "Loading BioTensor Connections, Please Wait..."
 # Create the Connections between Modules
@@ -248,9 +252,13 @@ set c62 [addConnection $m12 0 $m34 0]
 set c63 [addConnection $m12 0 $m122 0]
 set c64 [addConnection $m54 0 $m124 0]
 set c65 [addConnection $m54 0 $m102 0]
-set c66 [addConnection $m45 0 $m62 0]
-set c67 [addConnection $m45 0 $m2 0]
-set c68 [addConnection $m45 0 $m1 0]
+# set c66 [addConnection $m45 0 $m62 0]
+# set c67 [addConnection $m45 0 $m2 0]
+# set c68 [addConnection $m45 0 $m1 0]
+set c66 [addConnection $m159 0 $m62 0]
+set c67 [addConnection $m159 0 $m2 0]
+set c68 [addConnection $m159 0 $m1 0]
+
 set c69 [addConnection $m98 0 $m47 0]
 set c70 [addConnection $m104 0 $m3 0]
 set c71 [addConnection $m105 0 $m5 0]
@@ -323,7 +331,9 @@ set c137 [addConnection $m21 0 $m24 1]
 set c138 [addConnection $m21 0 $m27 1]
 set c139 [addConnection $m21 0 $m34 1]
 set c140 [addConnection $m21 0 $m122 1]
-set c141 [addConnection $m45 0 $m105 1]
+#set c141 [addConnection $m45 0 $m105 1]
+set c141 [addConnection $m159 0 $m105 1]
+
 set c142 [addConnection $m49 0 $m3 1]
 set c143 [addConnection $m105 0 $m47 1]
 #set c144 [addConnection $m113 0 $m114 1]
@@ -369,6 +379,12 @@ set c182 [addConnection $m137 0 $m114 1]
 set c182 [addConnection $m114 0 $m139 0]
 set c183 [addConnection $m139 0 $m138 0]
 set c184 [addConnection $m156 0 $m89 0]
+set c185 [addConnection $m45 0 $m157 0]
+set c186 [addConnection $m45 0 $m158 0]
+set c187 [addConnection $m157 0 $m98 3]
+set c188 [addConnection $m45 0 $m159 0]
+set c189 [addConnection $m158 0 $m159 1]
+set c190 [addConnection $m45 0 $m160 0]
 
 setProgressText "Loading BioTensor Settings, Please Wait..."
 
@@ -1579,6 +1595,9 @@ set mods(DicomToNrrd1) $m97
 set mods(AnalyzeToNrrd1) $m96
 set mods(ChooseNrrd1) $m45
 set mods(NrrdInfo1) $m62
+set mods(UnuCrop-DWI) $m158
+set mods(ChooseNrrd-B0) $m159
+set mods(NrrdInfo-full) $m160
 
 ### Original Data Stuff
 set mods(UnuSlice1) $m1
@@ -1907,6 +1926,8 @@ class BioTensorApp {
 	set c_left_tab "Vis Options"
 	set c_vis_tab "Variance"
 
+	set last_B0_port 0
+
         set proc_tab1 ""
         set proc_tab2 ""
 
@@ -2032,7 +2053,9 @@ class BioTensorApp {
 	set tips(AnalyzeFiles) \
 	    "Load Analyze files\nusing our Analyze\nLoader."
 	set tips(LoadModeDWIknownB0) \
-	    "Load a set of Diffusion\nWeighted Images. These\ncan be registered and\nused to build diffusion\ntensors."
+	    "Load a set of Diffusion\nWeighted Images. These\ncan be registered and\nused to build diffusion\ntensors. B0 is in a\nseparate file."
+	set tips(LoadModeB0DWI) \
+	    "Load a set of Diffusion\nWeighted Images. These\ncan be registered and\nused to build diffusion\ntensors. B0 is first\nimage in 4D volume."
 	set tips(LoadModeDWI) \
 	    "Load a set of Diffusion\nWeighted Images\nwithout any B.  These\ncan be registered and\nused to build diffusion\ntensors."
 	set tips(LoadModeTensor) \
@@ -2199,6 +2222,9 @@ class BioTensorApp {
 	
         disableModule $mods(DicomToNrrd-T2) 1
         disableModule $mods(AnalyzeToNrrd-T2) 1
+
+	disableModule $mods(UnuCrop-DWI) 1
+	disableModule $mods(ChooseNrrd-B0) 1
 
 	# Blocking Registration
         disableModule $mods(TendEpireg) 1
@@ -2394,22 +2420,28 @@ class BioTensorApp {
 
 	    Tooltip $step_tab.mode1 $tips(LoadModeDWI)
 
-            radiobutton $step_tab.mode2 -text "DWI with B0 Reference Data" \
+            radiobutton $step_tab.mode2 -text "DWI with separate B0 Reference Data" \
                 -variable data_mode -value "DWIknownB0" \
                 -command "$this toggle_data_mode"
 
 	    Tooltip $step_tab.mode2 $tips(LoadModeDWIknownB0)
 
-            radiobutton $step_tab.mode3 -text "Tensor Volumes" \
+            radiobutton $step_tab.mode3 -text "B0 Reference Data and DWI (single file)" \
+                -variable data_mode -value "B0DWI" \
+                -command "$this toggle_data_mode"
+
+	    Tooltip $step_tab.mode3 $tips(LoadModeB0DWI)
+
+            radiobutton $step_tab.mode4 -text "Tensor Volumes" \
                 -variable data_mode -value "tensor" \
                 -command "$this toggle_data_mode"
 
-	    Tooltip $step_tab.mode3 $tips(LoadModeTensor)
+	    Tooltip $step_tab.mode4 $tips(LoadModeTensor)
 
-            pack $step_tab.mode1 $step_tab.mode2 $step_tab.mode3 -side top -anchor nw -padx 3 -pady 3
+            pack $step_tab.mode1 $step_tab.mode2 $step_tab.mode3 $step_tab.mode4 -side top -anchor nw -padx 3 -pady 3
 
 	    global $mods(TendEstim)-knownB0
-	    if { $data_mode == "DWIknownB0" } {
+	    if { $data_mode == "DWIknownB0" || $data_mode == "B0DWI"} {
 	       set $mods(TendEstim)-knownB0 1
 	    } else {
 		set $mods(TendEstim)-knownB0 0
@@ -3615,6 +3647,7 @@ class BioTensorApp {
 		# needs to be looked into more for 1.20.2
 		global mods
 		global data_mode
+
 		if {$data_mode == "DWIknownB0"} {
 		    # Check AnalyzeToNrrd-T2
 		    global $mods(AnalyzeToNrrd-T2)-num-files
@@ -3904,6 +3937,51 @@ class BioTensorApp {
 	    if {!$loading} {
 		activate_vis
 	    }
+	} elseif {$which == $mods(NrrdInfo-full) && $state == "Completed"} {
+	    global data_mode
+	    if {$data_mode == "B0DWI"} {
+		global $mods(NrrdInfo-full)-size0
+		global $mods(NrrdInfo-full)-size1
+		global $mods(NrrdInfo-full)-size2
+		global $mods(NrrdInfo-full)-size3
+
+		set v [expr [set $mods(NrrdInfo-full)-size0] - 1]
+		set x [expr [set $mods(NrrdInfo-full)-size1] - 1]
+		set y [expr [set $mods(NrrdInfo-full)-size2] - 1]
+		set z [expr [set $mods(NrrdInfo-full)-size3] - 1]
+
+		global $mods(UnuCrop-DWI)-num-axes
+		global $mods(UnuCrop-DWI)-minAxis0 $mods(UnuCrop-DWI)-minAxis1 $mods(UnuCrop-DWI)-minAxis2
+		global $mods(UnuCrop-DWI)-minAxis3 $mods(UnuCrop-DWI)-maxAxis0 $mods(UnuCrop-DWI)-maxAxis1
+		global $mods(UnuCrop-DWI)-maxAxis2 $mods(UnuCrop-DWI)-maxAxis3 $mods(UnuCrop-DWI)-absMaxAxis0
+		global $mods(UnuCrop-DWI)-absMaxAxis1 $mods(UnuCrop-DWI)-absMaxAxis2 
+		global $mods(UnuCrop-DWI)-absMaxAxis3
+		
+		set $mods(UnuCrop-DWI)-num-axes 4
+		set $mods(UnuCrop-DWI)-minAxis0 1
+		set $mods(UnuCrop-DWI)-minAxis1 0
+		set $mods(UnuCrop-DWI)-minAxis2 0
+		set $mods(UnuCrop-DWI)-minAxis3 0
+		
+		set $mods(UnuCrop-DWI)-maxAxis0 $v
+		set $mods(UnuCrop-DWI)-maxAxis1 $x
+		set $mods(UnuCrop-DWI)-maxAxis2 $y
+		set $mods(UnuCrop-DWI)-maxAxis3 $z
+		
+		set $mods(UnuCrop-DWI)-absmaxAxis0 $v
+		set $mods(UnuCrop-DWI)-absmaxAxis1 $x
+		set $mods(UnuCrop-DWI)-absmaxAxis2 $y
+		set $mods(UnuCrop-DWI)-absmaxAxis3 $z
+		
+		disableModule $mods(UnuCrop-DWI) 0
+		disableModule $mods(ChooseNrrd-B0) 0
+		disableModule $mods(TendEpireg) 1
+		$mods(UnuCrop-DWI)-c needexecute
+	    } else {
+		disableModule $mods(ChooseNrrd-B0) 0
+		disableModule $mods(TendEpireg) 1
+		$mods(ChooseNrrd-B0)-c needexecute
+	    }
 	} elseif {$which == $mods(NrrdInfo1) && $state == "JustStarted"} {
 	    change_indicate_val 1
 	} elseif {$which == $mods(NrrdInfo1) && $state == "Completed"} {
@@ -3930,7 +4008,7 @@ class BioTensorApp {
 		set size_x [expr [set $mods(NrrdInfo1)-size1] - 1]
 		set size_y [expr [set $mods(NrrdInfo1)-size2] - 1]
 		set size_z [expr [set $mods(NrrdInfo1)-size3] - 1]
-
+		
 		set spacing_x [set $mods(NrrdInfo1)-spacing1]
 		set spacing_y [set $mods(NrrdInfo1)-spacing2]
 		set spacing_z [set $mods(NrrdInfo1)-spacing3]
@@ -3951,7 +4029,7 @@ class BioTensorApp {
 		set glyph_scale_val 0.5
 
 		
-		if {$data_mode == "DWI" || $data_mode == "DWIknownB0"} {
+		if {$data_mode == "DWI" || $data_mode == "DWIknownB0" || $data_mode == "B0DWI"} {
 		    # new data has been loaded, configure
 		    # the vis tabs and sync their values
 		    
@@ -4107,7 +4185,7 @@ class BioTensorApp {
 	}
 
 	# configure t2 reference image stuff if loading tensors directly
-	if {$data_mode == "DWI" || $data_mode == "DWIknownB0"} {
+	if {$data_mode == "DWI" || $data_mode == "DWIknownB0" || $data_mode == "B0DWI"} {
 	    toggle_data_mode
 	} 
 
@@ -4130,7 +4208,7 @@ class BioTensorApp {
 	global data_mode
 	global $mods(ChooseNrrd1)-port-index
 
-	if {$data_mode == "DWI" || $data_mode == "DWIknownB0"} {
+	if {$data_mode == "DWI" || $data_mode == "DWIknownB0" || $data_mode == "B0DWI"} {
 	    # determine if we are loading nrrd, dicom, or analyze
 	    # and check if both DWI and T2 files have been specified
 	    if {[set $mods(ChooseNrrd1)-port-index] == 0} {
@@ -4275,10 +4353,15 @@ class BioTensorApp {
         global $mods(ChooseNrrd-DT)-port-index
 	global $mods(NrrdReader1)-type
 	global $mods(ChooseNrrd-KnownB0)-port-index
+	global $mods(ChooseNrrd-B0)-port-index
+	global $mods(ChooseNrrd-T2)-port-index
 	global $mods(TendEstim)-knownB0
 	
         if {$data_mode == "DWIknownB0"} {
 	    configure_readers all
+
+	    disableModule $mods(UnuCrop-DWI) 1
+	    disableModule $mods(ChooseNrrd-B0) 1
 	    
 	    # configure text for DWI Volume
 	    $nrrd_tab1.dwil configure -text "DWI Volume:"
@@ -4308,8 +4391,6 @@ class BioTensorApp {
 	    $analyze_tab1.load2 configure -state normal
 	    $analyze_tab2.load2 configure -state normal
 	    
-	    set $mods(NrrdReader1)-type Scalar
-
 	    # configure ChooseNrrd
 	    set $mods(ChooseNrrd-DT)-port-index 0
 	    
@@ -4321,9 +4402,12 @@ class BioTensorApp {
 	    set $mods(TendEstim)-knownB0 1
 	    set $mods(ChooseNrrd-KnownB0)-port-index 0
 
+	    set $mods(ChooseNrrd-B0)-port-index 0
+	    set $mods(ChooseNrrd-T2)-port-index $last_B0_port
+
         } elseif {$data_mode == "DWI"} {
 	    configure_readers all
-	    
+
 	    # configure text for DWI Volume
 	    $nrrd_tab1.dwil configure -text "DWI Volume:"
 	    $nrrd_tab2.dwil configure -text "DWI Volume:"
@@ -4352,8 +4436,6 @@ class BioTensorApp {
 	    $analyze_tab1.load2 configure -state disabled
 	    $analyze_tab2.load2 configure -state disabled
 	    
-	    set $mods(NrrdReader1)-type Scalar
-
 	    # configure ChooseNrrd
 	    set $mods(ChooseNrrd-DT)-port-index 0
 	    
@@ -4364,9 +4446,62 @@ class BioTensorApp {
 
 	    set $mods(TendEstim)-knownB0 0
 	    set $mods(ChooseNrrd-KnownB0)-port-index 1
-	    
-        } else {
+
+	    set $mods(ChooseNrrd-B0)-port-index 0
+	    set $mods(ChooseNrrd-T2)-port-index $last_B0_port
+        } elseif {$data_mode == "B0DWI"} {
 	    configure_readers all
+
+	    disableModule $mods(UnuCrop-DWI) 1
+	    disableModule $mods(ChooseNrrd-B0) 1
+	    
+	    # configure text for DWI Volume
+	    $nrrd_tab1.dwil configure -text "B0/DWI Volume:"
+	    $nrrd_tab2.dwil configure -text "B0/DWI Volume:"
+	    
+	    $dicom_tab1.dwil configure -text "B0/DWI Volume:"
+	    $dicom_tab2.dwil configure -text "B0/DWI Volume:"
+	    
+	    $analyze_tab1.dwil configure -text "B0/DWI Volume:"
+	    $analyze_tab2.dwil configure -text "B0/DWI Volume:"
+
+	    # disable T2 stuff
+	    $nrrd_tab1.t2l configure -state disabled
+	    $nrrd_tab2.t2l configure -state disabled
+	    $nrrd_tab1.file2 configure -state disabled -foreground grey64
+	    $nrrd_tab2.file2 configure -state disabled -foreground grey64
+	    $nrrd_tab1.load2 configure -state disabled
+	    $nrrd_tab2.load2 configure -state disabled
+	    
+	    $dicom_tab1.t2l configure -state disabled
+	    $dicom_tab2.t2l configure -state disabled
+	    $dicom_tab1.load2 configure -state disabled
+	    $dicom_tab2.load2 configure -state disabled
+	    
+	    $analyze_tab1.t2l configure -state disabled
+	    $analyze_tab2.t2l configure -state disabled
+	    $analyze_tab1.load2 configure -state disabled
+	    $analyze_tab2.load2 configure -state disabled
+	    
+	    # configure ChooseNrrd
+	    set $mods(ChooseNrrd-DT)-port-index 0
+	    
+	    # enable registration and dt tabs
+	    #activate_registration
+	    
+	    #activate_dt
+
+	    set $mods(TendEstim)-knownB0 0
+	    set $mods(ChooseNrrd-KnownB0)-port-index 1
+
+	    set $mods(ChooseNrrd-B0)-port-index 1
+
+	    set $mods(ChooseNrrd-T2)-port-index 3
+	} else {
+	    configure_readers all
+
+	    disableModule $mods(UnuCrop-DWI) 1
+	    disableModule $mods(ChooseNrrd-B0) 1
 	    
 	    # configure labels
 	    $nrrd_tab1.dwil configure -text "Tensor Volume:"
@@ -4395,8 +4530,6 @@ class BioTensorApp {
 	    $analyze_tab2.t2l configure -state disabled
 	    $analyze_tab1.load2 configure -state disabled
 	    $analyze_tab2.load2 configure -state disabled
-	    
-	    set $mods(NrrdReader1)-type Tensor
 	    
 	    # configure ChooseNrrd
 	    set $mods(ChooseNrrd-DT)-port-index 1
@@ -4433,7 +4566,9 @@ class BioTensorApp {
 	    $dt_tab1.last.ex configure -foreground grey64 -background grey75
 	    $dt_tab2.last.ex configure -foreground grey64 -background grey75
 	    
-	    set $mods(ChooseNrrd-KnownB0)-port-index 0	
+	    set $mods(ChooseNrrd-KnownB0)-port-index 0
+	    set $mods(ChooseNrrd-B0)-port-index 1	
+	    set $mods(ChooseNrrd-T2)-port-index $last_B0_port
         }
 
     }
@@ -4455,6 +4590,7 @@ class BioTensorApp {
 	if {$which == "Nrrd"} {
 	    set $mods(ChooseNrrd1)-port-index 0
 	    set $mods(ChooseNrrd-T2)-port-index 0
+	    set last_B0_port 0	    
 	    set $mods(ChooseNrrd-ToProcess)-port-index 0
 
 	    disableModule $mods(NrrdReader1) 0
@@ -4474,6 +4610,7 @@ class BioTensorApp {
         } elseif {$which == "Dicom"} {
 	    set $mods(ChooseNrrd1)-port-index 1
 	    set $mods(ChooseNrrd-T2)-port-index 1
+	    set last_B0_port 1
 	    set $mods(ChooseNrrd-ToProcess)-port-index 1
 
 	    disableModule $mods(NrrdReader1) 1
@@ -4494,6 +4631,7 @@ class BioTensorApp {
 	    # Analyze
 	    set $mods(ChooseNrrd1)-port-index 2
 	    set $mods(ChooseNrrd-T2)-port-index 2
+	    set last_B0_port 2
 	    set $mods(ChooseNrrd-ToProcess)-port-index 2
 
 	    disableModule $mods(NrrdReader1) 1
@@ -9017,7 +9155,7 @@ class BioTensorApp {
 		    # been enabled when the B0 volume has been provided.
 		    # This could have been missed being enabled if
 		    # registration was skipped.
-		    if {$data_mode == "DWIknownB0" && $data_completed} {
+		    if {($data_mode == "DWIknownB0" || $data_mode == "B0DWI") && $data_completed} {
 			disableModule $mods(UnuJoin) 0
 		    } else {
 			disableModule $mods(UnuJoin) 1
@@ -9238,6 +9376,8 @@ class BioTensorApp {
     variable c_data_tab
     variable c_left_tab
     variable c_vis_tab
+
+    variable last_B0_port
 
     
     # Procedures frame tabnotebook
