@@ -352,7 +352,7 @@ void BCReader::combineBCS()
 	
 	if (count_if(bcd_itr->second.begin(),
 		     bcd_itr->second.end(),
-		     cmp_type<SideBCData>) == 1 && 
+		     cmp_type<SideBCData>()) == 1 && 
 	    bcd_itr->second.size() == 1) {
 	  BCGeomBase* bc = bcd_itr->second[0];
 	  rearranged.addBCData(mat_id,bc->clone());
@@ -362,7 +362,7 @@ void BCReader::combineBCS()
 	  vector<BCGeomBase*>::const_iterator index;
 	  index = find_if(bcd_itr->second.begin(),
 			  bcd_itr->second.end(),
-			  cmp_type<SideBCData>);
+			  cmp_type<SideBCData>());
 	
 	  
 	  if (index != bcd_itr->second.end()) {
@@ -376,7 +376,7 @@ void BCReader::combineBCS()
 #endif
 	    index = find_if(original.d_BCDataArray[-1].begin(),
 			    original.d_BCDataArray[-1].end(),
-			    cmp_type<SideBCData>);
+			    cmp_type<SideBCData>());
 	    if (index != d_BCReaderData[face].d_BCDataArray[-1].end()){
 #ifdef PRINT
 	      cout << "Using the 'all' case" << endl;
@@ -394,7 +394,7 @@ void BCReader::combineBCS()
 	  vector<BCGeomBase*>::iterator itr, new_end = 
 	    remove_if(union_bc->child.begin(),
 		      union_bc->child.end(),
-		      cmp_type<SideBCData>);
+		      cmp_type<SideBCData>());
 	  
 #ifdef PRINT
 	  cout << endl << "Before deleting" << endl;
