@@ -68,8 +68,13 @@ public:
       // Number of dimensions in the problem
       //
       static const int NDIM = 3;
-      enum velName {VEL, UVEL, VVEL, WVEL};
-      enum stencilName {AP, AE, AW, AN, AS, AT, AB};
+
+      // GROUP: Constants:
+      ////////////////////////////////////////////////////////////////////////
+      //
+      enum d_eqnType { PRESSURE, MOMENTUM, SCALAR };
+      enum d_velName { VEL, UVEL, VVEL, WVEL };
+      enum d_stencilName { AP, AE, AW, AN, AS, AT, AB };
 
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
@@ -203,6 +208,9 @@ private:
 
 //
 // $Log$
+// Revision 1.32  2000/07/08 23:42:53  bbanerje
+// Moved all enums to Arches.h and made corresponding changes.
+//
 // Revision 1.31  2000/07/08 08:03:32  bbanerje
 // Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
 // made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc

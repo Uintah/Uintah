@@ -5,7 +5,6 @@ static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/SmagorinskyModel.h>
 #include <Uintah/Components/Arches/PhysicalConstants.h>
-#include <Uintah/Components/Arches/Discretization.h>
 #include <Uintah/Components/Arches/CellInformation.h>
 #include <Uintah/Components/Arches/ArchesFort.h>
 #include <Uintah/Grid/Stencil.h>
@@ -442,7 +441,7 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
   SFCYVariable<double> vVelocity;
   SFCZVariable<double> wVelocity;
   switch(eqnType) {
-  case Discretization::PRESSURE:
+  case Arches::PRESSURE:
     old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
     old_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
@@ -450,7 +449,7 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
     old_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
     break;
-  case Discretization::MOMENTUM:
+  case Arches::MOMENTUM:
     old_dw->get(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
     old_dw->get(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
@@ -499,7 +498,7 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
   SFCZVariable<double> wVelNonLinearSrc; // SU in Arches
 
   switch(eqnType) {
-  case Discretization::PRESSURE:
+  case Arches::PRESSURE:
     switch(index) {
     case 0:
       new_dw->get(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch, 
@@ -523,7 +522,7 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
       throw InvalidValue("Index can only be 0, 1 or 2");
     }
     break;
-  case Discretization::MOMENTUM:
+  case Arches::MOMENTUM:
     switch(index) {
     case 0:
       new_dw->get(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch, 
@@ -638,7 +637,7 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
   }
 
   switch(eqnType) {
-  case Discretization::PRESSURE:
+  case Arches::PRESSURE:
     switch(index) {
     case 0:
       new_dw->put(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch);
@@ -656,7 +655,7 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
       throw InvalidValue("Index can only be 0, 1 or 2");
     }
     break;
-  case Discretization::MOMENTUM:
+  case Arches::MOMENTUM:
     switch(index) {
     case 0:
       new_dw->put(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch);
@@ -694,6 +693,9 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.26  2000/07/08 23:42:55  bbanerje
+// Moved all enums to Arches.h and made corresponding changes.
+//
 // Revision 1.25  2000/07/03 05:30:16  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //

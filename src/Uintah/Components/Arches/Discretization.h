@@ -59,15 +59,6 @@ class Discretization {
 
 public:
 
-      // GROUP: Constants:
-      ////////////////////////////////////////////////////////////////////////
-      //
-      enum d_eqnType {
-	PRESSURE,
-        MOMENTUM,
-        SCALAR
-      };
-
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
       //
@@ -229,6 +220,9 @@ private:
   
 //
 // $Log$
+// Revision 1.24  2000/07/08 23:42:54  bbanerje
+// Moved all enums to Arches.h and made corresponding changes.
+//
 // Revision 1.23  2000/07/08 08:03:34  bbanerje
 // Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
 // made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc

@@ -230,14 +230,14 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // outputs: [u,v,w]VelConvCoefMBLM, [u,v,w]VelCoefMBLM
   d_discretize->calculateVelocityCoeff(pc, patch, old_dw, new_dw, 
 				       delta_t, index,
-				       Discretization::MOMENTUM);
+				       Arches::MOMENTUM);
 
   // Calculate velocity source
   // inputs : [u,v,w]VelocityCPBC, densityCP, viscosityCTS
   // outputs: [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
   d_source->calculateVelocitySource(pc, patch, old_dw, new_dw, 
 				    delta_t, index,
-				    Discretization::MOMENTUM);
+				    Arches::MOMENTUM);
 
   // Velocity Boundary conditions
   //  inputs : densityCP, [u,v,w]VelocityCPBC, [u,v,w]VelCoefMBLM
@@ -246,7 +246,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   //           [u,v,w]VelNonLinSrcMBLM
   d_boundaryCondition->velocityBC(pc, patch, old_dw, new_dw, 
 				  index,
-				  Discretization::MOMENTUM);
+				  Arches::MOMENTUM);
 
   // similar to mascal
   // inputs :
@@ -259,7 +259,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   //  outputs: [u,v,w]VelCoefMBLM
   d_discretize->calculateVelDiagonal(pc, patch, new_dw, new_dw, 
 				     index,
-				     Discretization::MOMENTUM);
+				     Arches::MOMENTUM);
 
   // Add the pressure source terms
   // inputs :
@@ -270,6 +270,9 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.15  2000/07/08 23:42:54  bbanerje
+// Moved all enums to Arches.h and made corresponding changes.
+//
 // Revision 1.14  2000/07/03 05:30:14  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //

@@ -972,7 +972,7 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
   old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
   switch(eqnType) {
-  case Discretization::PRESSURE:
+  case Arches::PRESSURE:
     new_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		nofGhostCells);
     new_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
@@ -980,7 +980,7 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
     new_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		nofGhostCells);
     break;
-  case Discretization::MOMENTUM:
+  case Arches::MOMENTUM:
     new_dw->get(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		nofGhostCells);
     new_dw->get(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
@@ -1025,12 +1025,12 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
     break;
   }
   // Calculate the velocity wall BC
-  // For Discretization::PRESSURE
+  // For Arches::PRESSURE
   //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
   //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
   //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM, 
   //           [u,v,w]VelNonLinSrcPBLM
-  // For Discretization::MOMENTUM
+  // For Arches::MOMENTUM
   //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefMBLM
   //           [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
   //  outputs: [u,v,w]VelCoefMBLM, [u,v,w]VelLinSrcMBLM, 
@@ -1068,7 +1068,7 @@ BoundaryCondition::uVelocityBC(DataWarehouseP& new_dw,
   IntVector domHi = linearSrc.getFortHighIndex();
 
   switch(eqnType) {
-  case Discretization::PRESSURE:
+  case Arches::PRESSURE:
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->get(velocityCoeff[ii], d_uVelCoefPBLMLabel, ii, patch, 
 		  Ghost::None, numGhostCells);
@@ -1078,7 +1078,7 @@ BoundaryCondition::uVelocityBC(DataWarehouseP& new_dw,
     new_dw->get(nonlinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch, 
 		Ghost::None, numGhostCells);
     break;
-  case Discretization::MOMENTUM:
+  case Arches::MOMENTUM:
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->get(velocityCoeff[ii], d_uVelCoefMBLMLabel, ii, patch, 
 		  Ghost::None, numGhostCells);
@@ -1116,14 +1116,14 @@ BoundaryCondition::uVelocityBC(DataWarehouseP& new_dw,
 #endif
 
   switch(eqnType) {
-  case Discretization::PRESSURE:
+  case Arches::PRESSURE:
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->put(velocityCoeff[ii], d_uVelCoefPBLMLabel, ii, patch);
     }
     new_dw->put(linearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch);
     new_dw->put(nonlinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch);
     break;
-  case Discretization::MOMENTUM:
+  case Arches::MOMENTUM:
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->put(velocityCoeff[ii], d_uVelCoefMBLMLabel, ii, patch);
     }
@@ -1165,7 +1165,7 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
   IntVector domHi = linearSrc.getFortHighIndex();
 
   switch(eqnType) {
-  case Discretization::PRESSURE:
+  case Arches::PRESSURE:
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->get(velocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch, 
 		  Ghost::None, numGhostCells);
@@ -1175,7 +1175,7 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
     new_dw->get(nonlinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch, 
 		Ghost::None, numGhostCells);
     break;
-  case Discretization::MOMENTUM:
+  case Arches::MOMENTUM:
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->get(velocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch, 
 		  Ghost::None, numGhostCells);
@@ -1213,14 +1213,14 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
 #endif
 
   switch(eqnType) {
-  case Discretization::PRESSURE:
+  case Arches::PRESSURE:
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->put(velocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch);
     }
     new_dw->put(linearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch);
     new_dw->put(nonlinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
     break;
-  case Discretization::MOMENTUM:
+  case Arches::MOMENTUM:
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->put(velocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch);
     }
@@ -1262,7 +1262,7 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
   IntVector domHi = linearSrc.getFortHighIndex();
 
   switch(eqnType) {
-  case Discretization::PRESSURE:
+  case Arches::PRESSURE:
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->get(velocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch, 
 		  Ghost::None, numGhostCells);
@@ -1272,7 +1272,7 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
     new_dw->get(nonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch, 
 		Ghost::None, numGhostCells);
     break;
-  case Discretization::MOMENTUM:
+  case Arches::MOMENTUM:
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->get(velocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch, 
 		  Ghost::None, numGhostCells);
@@ -1310,14 +1310,14 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
 #endif
 
   switch(eqnType) {
-  case Discretization::PRESSURE:
+  case Arches::PRESSURE:
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->put(velocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch);
     }
     new_dw->put(linearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch);
     new_dw->put(nonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
     break;
-  case Discretization::MOMENTUM:
+  case Arches::MOMENTUM:
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->put(velocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch);
     }
@@ -1377,13 +1377,13 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
   //fortran call
   FORT_PRESSBC(domLo.get_pointer(), domHi.get_pointer(),
 	       idxLo.get_pointer(), idxHi.get_pointer(),
-	       pressCoeff[StencilMatrix::AP].getPointer(),
-	       pressCoeff[StencilMatrix::AE].getPointer(),
-	       pressCoeff[StencilMatrix::AW].getPointer(),
-	       pressCoeff[StencilMatrix::AN].getPointer(),
-	       pressCoeff[StencilMatrix::AS].getPointer(),
-	       pressCoeff[StencilMatrix::AT].getPointer(),
-	       pressCoeff[StencilMatrix::AB].getPointer(),
+	       pressCoeff[Arches::AP].getPointer(),
+	       pressCoeff[Arches::AE].getPointer(),
+	       pressCoeff[Arches::AW].getPointer(),
+	       pressCoeff[Arches::AN].getPointer(),
+	       pressCoeff[Arches::AS].getPointer(),
+	       pressCoeff[Arches::AT].getPointer(),
+	       pressCoeff[Arches::AB].getPointer(),
 	       pressure.getPointer(), 
 	       cellType.getPointer());
 #endif
@@ -1446,13 +1446,13 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
   //fortran call
   FORT_SCALARBC(domLo.get_pointer(), domHi.get_pointer(),
 		idxLo.get_pointer(), idxHi.get_pointer(),
-		scalarCoeff[Stencilmatrix::AP].getPointer(), 
-		scalarCoeff[Stencilmatrix::AE].getPointer(), 
-		scalarCoeff[Stencilmatrix::AW].getPointer(), 
-		scalarCoeff[Stencilmatrix::AN].getPointer(), 
-		scalarCoeff[Stencilmatrix::AS].getPointer(), 
-		scalarCoeff[Stencilmatrix::AT].getPointer(), 
-		scalarCoeff[Stencilmatrix::AB].getPointer(), 
+		scalarCoeff[Arches::AP].getPointer(), 
+		scalarCoeff[Arches::AE].getPointer(), 
+		scalarCoeff[Arches::AW].getPointer(), 
+		scalarCoeff[Arches::AN].getPointer(), 
+		scalarCoeff[Arches::AS].getPointer(), 
+		scalarCoeff[Arches::AT].getPointer(), 
+		scalarCoeff[Arches::AB].getPointer(), 
 		scalar.getPointer(), 
 		cellType.getPointer());
 #endif
@@ -1963,6 +1963,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.38  2000/07/08 23:42:53  bbanerje
+// Moved all enums to Arches.h and made corresponding changes.
+//
 // Revision 1.37  2000/07/08 08:03:33  bbanerje
 // Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
 // made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
