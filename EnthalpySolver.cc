@@ -1143,11 +1143,11 @@ EnthalpySolver::sched_buildLinearMatrixCorr(const LevelP& level,
     tsk->requires(Task::NewDW, d_lab->d_absorpINIntermLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     if (d_DORadiationCalc) {
-    tsk->requires(Task::OldDW, d_lab->d_co2INIntermLabel,
+    tsk->requires(Task::NewDW, d_lab->d_co2INIntermLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::OldDW, d_lab->d_h2oINIntermLabel,
+    tsk->requires(Task::NewDW, d_lab->d_h2oINIntermLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::OldDW, d_lab->d_sootFVINIntermLabel,
+    tsk->requires(Task::NewDW, d_lab->d_sootFVINIntermLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     }
   #else
@@ -1156,11 +1156,11 @@ EnthalpySolver::sched_buildLinearMatrixCorr(const LevelP& level,
     tsk->requires(Task::NewDW, d_lab->d_absorpINPredLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     if (d_DORadiationCalc) {
-    tsk->requires(Task::OldDW, d_lab->d_co2INPredLabel,
+    tsk->requires(Task::NewDW, d_lab->d_co2INPredLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::OldDW, d_lab->d_h2oINPredLabel,
+    tsk->requires(Task::NewDW, d_lab->d_h2oINPredLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::OldDW, d_lab->d_sootFVINPredLabel,
+    tsk->requires(Task::NewDW, d_lab->d_sootFVINPredLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     }
   #endif
@@ -1337,6 +1337,11 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
       enthalpyVars.qfluxb.allocate(patch->getCellLowIndex(),
 				   patch->getCellHighIndex());
       enthalpyVars.qfluxb.initialize(0.0);
+      if (d_DORadiationCalc) {
+      enthalpyVars.src.allocate(patch->getCellLowIndex(),
+				   patch->getCellHighIndex());
+      enthalpyVars.src.initialize(0.0);
+      }
   #ifdef Runge_Kutta_3d
       new_dw->getCopy(enthalpyVars.temperature, d_lab->d_tempINIntermLabel, 
 		      matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1344,9 +1349,6 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
       if (d_DORadiationCalc) {
-      enthalpyVars.src.allocate(patch->getCellLowIndex(),
-				   patch->getCellHighIndex());
-      enthalpyVars.src.initialize(0.0);
       new_dw->getCopy(enthalpyVars.co2, d_lab->d_co2INIntermLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->getCopy(enthalpyVars.h2o, d_lab->d_h2oINIntermLabel, 
@@ -1751,11 +1753,11 @@ EnthalpySolver::sched_buildLinearMatrixInterm(const LevelP& level, SchedulerP& s
     tsk->requires(Task::NewDW, d_lab->d_absorpINPredLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     if (d_DORadiationCalc) {
-    tsk->requires(Task::OldDW, d_lab->d_co2INPredLabel,
+    tsk->requires(Task::NewDW, d_lab->d_co2INPredLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::OldDW, d_lab->d_h2oINPredLabel,
+    tsk->requires(Task::NewDW, d_lab->d_h2oINPredLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::OldDW, d_lab->d_sootFVINPredLabel,
+    tsk->requires(Task::NewDW, d_lab->d_sootFVINPredLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     }
   }      // added one more argument of index to specify enthalpy component
