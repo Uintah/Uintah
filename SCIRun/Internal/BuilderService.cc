@@ -90,7 +90,13 @@ BuilderService::connect(const sci::cca::ComponentID::pointer& c1,
         throw CCAException("Cannot connect components from different frameworks");
     }
     ComponentInstance* comp1 = framework->lookupComponent(cid1->name);
+    if (!comp1) {
+        throw CCAException("Unknown ComponentInstance");
+    }
     ComponentInstance* comp2 = framework->lookupComponent(cid2->name);
+    if (!comp2) {
+        throw CCAException("Unknown ComponentInstance");
+    }
     PortInstance* pr1 = comp1->getPortInstance(port1);
     if (!pr1) {
         throw CCAException("Unknown port");
@@ -162,7 +168,7 @@ void
 BuilderService::destroyInstance(const sci::cca::ComponentID::pointer &toDie, float timeout)
 {
   framework->destroyComponentInstance(toDie, timeout);
-  return ;
+  return;
 }
 
 SSIDL::array1<std::string>
@@ -231,7 +237,7 @@ BuilderService::getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::poin
 }
 
 sci::cca::TypeMap::pointer
-BuilderService::getConnectionProperties(const sci::cca::ConnectionID::pointer& /*connID*/)
+BuilderService::getConnectionProperties(const sci::cca::ConnectionID::pointer& connID)
 {
   std::cerr << "BuilderService::getConnectionProperties not finished\n";
   return sci::cca::TypeMap::pointer(0);
@@ -287,13 +293,16 @@ SSIDL::array1<std::string>  BuilderService::getCompatiblePortList(
   ComponentInstance* comp1=framework->lookupComponent(cid1->name);
   ComponentInstance* comp2=framework->lookupComponent(cid2->name);
 
-  std::cerr<<"Component: "<<cid2->getInstanceName()<<std::endl;
+  std::cerr << "Component: "<<cid2->getInstanceName() << std::endl;
   PortInstance* pr1=comp1->getPortInstance(port1);
-  if (!pr1)
+  if (!pr1) {
     throw CCAException("Unknown port");
-
+  }
 
   SSIDL::array1<std::string> availablePorts;
+  if (cid1 == cid2) { // same component
+    return availablePorts;
+  }
   for(PortInstanceIterator* iter = comp2->getPorts(); !iter->done();
       iter->next()) {
     PortInstance* pr2 = iter->get();
@@ -325,6 +334,9 @@ SSIDL::array1<std::string> BuilderService::getBridgablePortList(
     throw CCAException("Unknown port");
 
   SSIDL::array1<std::string> availablePorts;
+  if (cid1 == cid2) { // same component
+    return availablePorts;
+  }
   for(PortInstanceIterator* iter = comp2->getPorts(); !iter->done();
       iter->next()) {
     PortInstance* pr2 = iter->get();
