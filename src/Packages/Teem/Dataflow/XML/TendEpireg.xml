@@ -35,6 +35,10 @@
         <name>nin</name>
 	<datatype>Teem::Nrrd</datatype>
       </port>
+      <port>
+        <name>ngrad</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>

@@ -42,6 +42,7 @@ private:
   bool extract_gradients(vector<double> &d);
 
   NrrdIPort*      inrrd_;
+  NrrdIPort*      igrad_; 
   NrrdOPort*      onrrd_;
 
   GuiString    gradient_list_;
@@ -106,39 +107,52 @@ void
 TendEpireg::execute()
 {
   NrrdDataHandle nrrd_handle;
+  NrrdDataHandle grad_handle;
   update_state(NeedData);
   inrrd_ = (NrrdIPort *)get_iport("nin");
+  igrad_ = (NrrdIPort *)get_iport("ngrad");
   onrrd_ = (NrrdOPort *)get_oport("nout");
 
   if (!inrrd_) {
-    error("Unable to initialize iport 'Nrrd'.");
+    error("Unable to initialize iport 'nin'.");
     return;
   }
   if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
+    error("Unable to initialize oport 'nout'.");
     return;
   }
+  if (!igrad_) {
+    error("Unage to initialize iport 'ngrad'.");
+    return;
+  }
+
+  bool we_own_the_data;
+  vector<double> *mat=0;
+
   if (!inrrd_->get(nrrd_handle))
     return;
-
   if (!nrrd_handle.get_rep()) {
     error("Empty input Nrrd.");
     return;
   }
+  Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *ngrad;
 
-  reset_vars();
-  vector<double> *mat = new vector<double>;
-  if (! extract_gradients(*mat)) {
-    error("Please adjust your input in the gui to represent a 3 x N set.");
-    return;
+  if (igrad_->get(grad_handle) && grad_handle.get_rep()) {
+    we_own_the_data = false;
+    ngrad = grad_handle->nrrd;
+  } else {
+    we_own_the_data = false;
+    mat = new vector<double>;
+    if (! extract_gradients(*mat)) {
+      error("Please adjust your input in the gui to represent a 3 x N set.");
+      return;
+    }
+    ngrad = nrrdNew();
+    nrrdWrap(ngrad, &(*mat)[0], nrrdTypeDouble, 2, 3, (*mat).size() / 3);
   }
 
-  Nrrd *ngrad = nrrdNew();
-  nrrdWrap(ngrad, &(*mat)[0], nrrdTypeDouble, 2, 3, (*mat).size() / 3);
- 
-
-  Nrrd *nin = nrrd_handle->nrrd;
-
+  reset_vars();
 
   NrrdKernel *kern;
   double p[NRRD_KERNEL_PARMS_NUM];
@@ -176,8 +190,10 @@ TendEpireg::execute()
     return;
   }
       
-  nrrdNix(ngrad);
-  delete mat;
+  if (we_own_the_data) {
+    nrrdNix(ngrad);
+    delete mat;
+  }
 
   NrrdData *output = scinew NrrdData;
   output->nrrd = nout;

@@ -93,31 +93,32 @@ TendBmat::execute()
   onrrd_ = (NrrdOPort *)get_oport("nout");
 
   if (!inrrd_) {
-    error("Unable to initialize iport 'Nrrd'.");
+    error("Unable to initialize iport 'nin'.");
     return;
   }
   if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
-    return;
-  }
-  //if (!inrrd_->get(nrrd_handle))
-  //return;
-
-  //if (!nrrd_handle.get_rep()) {
-  //error("Empty input Nrrd.");
-  //return;
-  //}
-  
-  reset_vars();
-  vector<double> *mat = new vector<double>;
-  if (! extract_gradients(*mat)) {
-    error("Please adjust your input in the gui to represent a 3 x N set.");
+    error("Unable to initialize oport 'nout'.");
     return;
   }
 
-  Nrrd *nin = nrrdNew();
-  nrrdWrap(nin, &(*mat)[0], nrrdTypeDouble, 2, 3, (*mat).size() / 3);
-  
+  bool we_own_the_data;
+  vector<double> *mat=0;
+  Nrrd *nin;
+
+  if (inrrd_->get(nrrd_handle) && nrrd_handle.get_rep()) {
+    we_own_the_data = false;
+    nin = nrrd_handle->nrrd;
+  } else {
+    we_own_the_data = true;
+    mat = new vector<double>;
+    if (! extract_gradients(*mat)) {
+      error("Please adjust your input in the gui to represent a 3 x N set.");
+      return;
+    }
+    nin = nrrdNew();
+    nrrdWrap(nin, &(*mat)[0], nrrdTypeDouble, 2, 3, (*mat).size() / 3);
+  }
+
   Nrrd *nout = nrrdNew();
   if (tenBMatrix(nout, nin)) {
     char *err = biffGetDone(TEN);
@@ -126,15 +127,17 @@ TendBmat::execute()
     return;
   }
   
-
   Nrrd *ntup = nrrdNew();
   nrrdAxesInsert(ntup, nout, 0);
   ntup->axis[0].label = strdup("BMat:Scalar");
   ntup->axis[1].label = strdup("tensor components");
   ntup->axis[2].label = strdup("n");
   nrrdNuke(nout);
-  nrrdNix(nin);
-  delete mat;
+
+  if (we_own_the_data) {
+    nrrdNix(nin);
+    delete mat;
+  }
 
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = ntup;
