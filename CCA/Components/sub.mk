@@ -24,7 +24,8 @@ SRCDIR   := CCA/Components
 ifeq ($(HAVE_QT),yes)
 SUBDIRS := $(SRCDIR)/Builder $(SRCDIR)/TxtBuilder $(SRCDIR)/Hello  $(SRCDIR)/ListPlotter \
 	$(SRCDIR)/ZList $(SRCDIR)/Viewer $(SRCDIR)/LinSolver \
-	$(SRCDIR)/FileReader $(SRCDIR)/FEM $(SRCDIR)/Tri
+	$(SRCDIR)/FileReader $(SRCDIR)/FEM $(SRCDIR)/Tri \
+	$(SRCDIR)/TableTennis
 else
 SUBDIRS :=$(SRCDIR)/TxtBuilder $(SRCDIR)/Hello
 endif
