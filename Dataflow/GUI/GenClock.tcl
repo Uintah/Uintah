@@ -37,11 +37,10 @@ itcl_class SCIRun_Visualization_GenClock {
 	global $this-type
 	global $this-showtime
 	global $this-bbox
+	global $this-format
 	global $this-min
 	global $this-max
 	global $this-current
-	global $this-units
-	global $this-exp
 	global $this-size
 	global $this-location
 	global $this-color-r
@@ -51,11 +50,11 @@ itcl_class SCIRun_Visualization_GenClock {
 	set $this-type 0
 	set $this-showtime 0
 	set $this-bbox 1
+	set $this-format "%8.3f seconds"
 	set $this-min 0
 	set $this-max 1
 	set $this-current 0
-	set $this-units seconds
-	set $this-exp 1.0
+	set $this- 1.0
 	set $this-size 100
 	set $this-location "Top Left"
 	set $this-color-r 1.0
@@ -149,9 +148,19 @@ itcl_class SCIRun_Visualization_GenClock {
 # Style - color
 	frame $style.color
 	addColorSelection $style.color "Color" $this-color "color_change"
-	pack $style.color -side left
+	pack $style.color -side left -padx 5
 
 	pack $w.style -fill x -expand yes -side top
+
+# Style - format
+	frame $style.format
+	label $style.format.label -text "C Style Format" -width 15 \
+	    -anchor w -just left
+	entry $style.format.entry -width 16 -text $this-format
+
+	pack $style.format.label $style.format.entry -side left
+
+	pack $style.format -side left -padx 5
 
 
 # Range
@@ -164,6 +173,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	entry $range.min.entry -width 6 -text $this-min
 
 	pack $range.min.label $range.min.entry -side left
+	pack $range.min -side left
 
 # Range - maximum
 	frame $range.max
@@ -171,45 +181,23 @@ itcl_class SCIRun_Visualization_GenClock {
 	entry $range.max.entry -width 6 -text $this-max
 
 	pack $range.max.label $range.max.entry -side left
+	pack $range.max -side left -padx 5
 
+# Range - maximum
 	frame $range.current
 	label $range.current.label -text "Current"  -width 7 -anchor w -just left
 	entry $range.current.entry -width 6 -text $this-current
 
 	pack $range.current.label $range.current.entry -side left
-
-	pack $range.min $range.max $range.current -side left
+	pack $range.current -side left -padx 5
 
 	pack $w.range -fill x -expand yes -side top
 
-
-# Range - units
-	iwidgets::labeledframe $w.units -labeltext "Clock Units"
-	set units [$w.units childsite]
-
-	frame $units.units
-	label $units.units.label -text "Units"  -width 6 -anchor w -just left
-	entry $units.units.entry -width 10 -text $this-units
-
-	pack $units.units.label $units.units.entry -side left
-
-	frame $units.exp
-	label $units.exp.label -text "Exp."  -width 5 -anchor w -just left
-	entry $units.exp.entry -width 6 -text $this-exp
-
-	pack $units.exp.label $units.exp.entry -side left
-
-	pack $units.units $units.exp -side left
-
-	pack $w.units -fill x -expand yes -side top
-
-
-
-# Range - size
+# Size
 	iwidgets::labeledframe $w.size -labeltext "Clock Size"
 	set size [$w.size childsite]
 
-# Range - size - small
+# Size - small
 	frame $size.small
 
 	radiobutton $size.small.button -variable $this-size -value 50 \
@@ -218,19 +206,20 @@ itcl_class SCIRun_Visualization_GenClock {
 	    -anchor w -just left
 	
 	pack $size.small.button $size.small.label -side left
+	pack $size.small -side left -padx 5
 
-# Range - size - medium
+# Size - medium
 	frame $size.medium
 
 	radiobutton $size.medium.button -variable $this-size -value 100 \
 	    -command "$this-c needexecute"
 	label $size.medium.label -text "Medium" -width 6 \
 	    -anchor w -just left
-
 	
 	pack $size.medium.button $size.medium.label -side left
+	pack $size.medium -side left -padx 5
 
-# Range - size - large
+# Size - large
 	frame $size.large
 
 	radiobutton $size.large.button -variable $this-size -value 150 \
@@ -239,8 +228,9 @@ itcl_class SCIRun_Visualization_GenClock {
 	    -anchor w -just left
 	
 	pack $size.large.button $size.large.label -side left
+	pack $size.large -side left -padx 5
 
-# Range - size - custom
+# Size - custom
 	frame $size.custom
 	label $size.custom.label -text "Custom"  -width 7 -anchor w -just left
 	entry $size.custom.entry -width 4 -text $this-size
@@ -248,18 +238,17 @@ itcl_class SCIRun_Visualization_GenClock {
 
 	pack $size.custom.label $size.custom.entry $size.custom.percent \
 	    -side left
-
-	pack $size.small $size.medium $size.large $size.custom -side left
+	pack $size.custom -side left -padx 5
 	
 	pack $w.size -fill x -expand yes -side top
 
 
 
-# Range - location
+# Location
 	iwidgets::labeledframe $w.location -labeltext "Clock Location"
 	set location [$w.location childsite]
 
-# Range - location - top left
+# Location - top left
 	frame $location.top_left
 
 	radiobutton $location.top_left.button -variable $this-location \
@@ -269,7 +258,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	
 	pack $location.top_left.button $location.top_left.label -side left
 
-# Range - location - top right
+# Location - top right
 	frame $location.top_right
 
 	radiobutton $location.top_right.button -variable $this-location \
@@ -279,7 +268,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	
 	pack $location.top_right.button $location.top_right.label -side left
 
-# Range - location - bottom left
+# Location - bottom left
 	frame $location.bottom_left
 
 	radiobutton $location.bottom_left.button -variable $this-location \
@@ -289,7 +278,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	
 	pack $location.bottom_left.button $location.bottom_left.label -side left
 
-# Range - location - bottom right
+# Location - bottom right
 	frame $location.bottom_right
 
 	radiobutton $location.bottom_right.button -variable $this-location \
