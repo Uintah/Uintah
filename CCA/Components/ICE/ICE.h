@@ -161,6 +161,8 @@ using namespace SCIRun;
       void scheduleUpdatePressure(  SchedulerP&,
                                    const LevelP&,
                                    const PatchSet*,
+                                   const MaterialSubset*,         
+                                   const MaterialSubset*, 
                                    const MaterialSubset*,
                                    const MaterialSet*);
                                    

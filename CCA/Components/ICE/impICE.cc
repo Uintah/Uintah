@@ -1,5 +1,6 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -117,6 +118,8 @@ _____________________________________________________________________*/
 void ICE::scheduleUpdatePressure(  SchedulerP& sched,
                                    const LevelP&,
                                    const PatchSet* patches,
+                                   const MaterialSubset* ice_matls,          
+                                   const MaterialSubset* mpm_matls,
                                    const MaterialSubset* press_matl,
                                    const MaterialSet* all_matls)
 {
@@ -129,6 +132,13 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
   t = scinew Task("ICE::updatePressure", this, &ICE::updatePressure);
   t->requires(Task::OldDW,         lb->press_CCLabel,        press_matl,  gn);
   t->requires(Task::NewDW,         lb->imp_delPLabel,        press_matl,  gn);
+/*`==========TESTING==========*/
+#ifdef LODI_BCS
+  t->requires(Task::ParentOldDW,   lb->temp_CCLabel,     ice_matls, gn);    
+  t->requires(Task::ParentNewDW,  MIlb->temp_CCLabel,     mpm_matls, gn);    
+  t->requires(Task::ParentNewDW,   lb->f_theta_CCLabel,             gn);
+#endif 
+/*==========TESTING==========`*/
   t->computes(lb->press_CCLabel,      press_matl); 
   sched->addTask(t, patches, all_matls);                 
 } 
@@ -268,7 +278,13 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   // Update Pressure
   t->requires( Task::NewDW, lb->rho_CCLabel,                 gac,1);            
   t->requires( Task::NewDW, lb->press_CCLabel,   press_matl, gac,1);  
-  
+/*`==========TESTING==========*/
+#ifdef LODI_BCS
+  t->requires(Task::OldDW, lb->temp_CCLabel,     ice_matls, gn);    
+  t->requires(Task::NewDW,MIlb->temp_CCLabel,    mpm_matls, gn);    
+  t->requires(Task::NewDW, lb->f_theta_CCLabel,             gn);
+#endif 
+/*==========TESTING==========`*/  
   //__________________________________
   // ImplicitVel_FC
   t->requires(Task::OldDW,lb->vel_CCLabel,       ice_matls,  gac,1);    
@@ -640,7 +656,48 @@ void ICE::updatePressure(const ProcessorGroup*,
 
     setBC(press_CC, sp_vol_CC[SURROUND_MAT],
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw);
+ /*`==========TESTING==========*/
+#ifndef LODI_BCS
+    setBC(press_CC, sp_vol_CC[SURROUND_MAT],
+          "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw);
+#else 
+    //__________________________________
+    // TO CLEAN THIS UP FIGURE OUT A WAY TO TEMPLATE SETPRESSLODI
+    // FOR EITHER StaticArray<constCCVariable<double> or 
+    //           StaticArray<CCVariable<double>
     
+   DataWarehouse* parent_old_dw = 
+    old_dw->getOtherDataWarehouse(Task::ParentOldDW);
+    
+    StaticArray<constCCVariable<double> > Temp_CC(numMatls);
+    StaticArray<constCCVariable<double> > f_theta_tmp(numMatls);  
+    StaticArray<CCVariable<double> > f_theta(numMatls);
+    StaticArray<CCVariable<double> > sp_vol_tmp(numMatls);
+    
+    for(int m = 0; m < numMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+ 
+      if(ice_matl){                // I C E
+        parent_old_dw->get(Temp_CC[m],     lb->temp_CCLabel,   indx,patch,gn,0); 
+        parent_new_dw->get(f_theta_tmp[m], lb->f_theta_CCLabel,indx,patch,gn,0);  
+      }
+      if(mpm_matl){                // M P M
+        parent_new_dw->get(Temp_CC[m],     lb->temp_CCLabel,   indx,patch,gn,0);  
+        parent_new_dw->get(f_theta_tmp[m], lb->f_theta_CCLabel,indx,patch,gn,0);  
+      }
+      new_dw->allocateTemporary(f_theta[m],     patch);
+      new_dw->allocateTemporary(sp_vol_tmp[m],  patch);
+      
+      f_theta[m].copyData(f_theta_tmp[m]);
+      sp_vol_tmp[m].copyData(sp_vol_CC[m]);
+    }
+    setBCPress_LODI( press_CC, sp_vol_tmp, Temp_CC, f_theta,
+                    "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw); 
+#endif
+/*==========TESTING==========`*/    
     //---- P R I N T   D A T A ------  
     if (switchDebug_updatePressure) {
       ostringstream desc;
@@ -794,7 +851,9 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                         lb->rhsLabel,    lb->initialGuessLabel,
                         Task::NewDW,     solver_parameters);
                         
-  scheduleUpdatePressure( subsched,  level, patch_set,  press_matl,  
+  scheduleUpdatePressure( subsched,  level, patch_set,  ice_matls,
+                                                        mpm_matls, 
+                                                        press_matl,  
                                                         all_matls);
 
   subsched->compile(d_myworld);      
