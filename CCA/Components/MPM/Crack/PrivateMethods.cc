@@ -1286,78 +1286,80 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
 // for visualization during crack propagagtion
 void Crack::OutputCrackGeometry(const int& m, const int& timestep)
 {
-  bool timeToDump = dataArchiver->wasOutputTimestep();
-  if(timeToDump) {
-    // Create output files in format:
-    // ce.matXXX.timestepYYYYY (crack elems)
-    // cx.matXXX.timestepYYYYY (crack points)
-    // cf.matXXX.timestepYYYYY (crack front nodes)
-    // Those files are stored in .uda.XXX/tXXXXX/crackData/
+  if(ce[m].size()>0) { // for the materials with cracks	
+    bool timeToDump = dataArchiver->wasOutputTimestep();
+    if(timeToDump) {
+      // Create output files in format:
+      // ce.matXXX.timestepYYYYY (crack elems)
+      // cx.matXXX.timestepYYYYY (crack points)
+      // cf.matXXX.timestepYYYYY (crack front nodes)
+      // Those files are stored in .uda.XXX/tXXXXX/crackData/
 
-    char timestepbuf[10],matbuf[10];
-    sprintf(timestepbuf,"%d",timestep);
-    sprintf(matbuf,"%d",m);
+      char timestepbuf[10],matbuf[10];
+      sprintf(timestepbuf,"%d",timestep);
+      sprintf(matbuf,"%d",m);
 
-    // Task 1: Create output directories
-    char crackDir[200]="";
-    strcat(crackDir,udaDir.c_str());
-    strcat(crackDir,"/t");
-    if(timestep<10) strcat(crackDir,"0000");
-    else if(timestep<100) strcat(crackDir,"000");
-    else if(timestep<1000) strcat(crackDir,"00");
-    else if(timestep<10000) strcat(crackDir,"0");
-    strcat(crackDir,timestepbuf);
-    strcat(crackDir,"/crackData");
+      // Task 1: Create output directories
+      char crackDir[200]="";
+      strcat(crackDir,udaDir.c_str());
+      strcat(crackDir,"/t");
+      if(timestep<10) strcat(crackDir,"0000");
+      else if(timestep<100) strcat(crackDir,"000");
+      else if(timestep<1000) strcat(crackDir,"00");
+      else if(timestep<10000) strcat(crackDir,"0");
+      strcat(crackDir,timestepbuf);
+      strcat(crackDir,"/crackData");
     
-    mkdir(crackDir,0777);
+      mkdir(crackDir,0777);
 
-    // Task 2: Specify output file names 
-    char ceFileName[200]="";
-    strcat(ceFileName,crackDir); 
-    strcat(ceFileName,"/ce.mat");
-    if(m<10) strcat(ceFileName,"00");
-    else if(m<100) strcat(ceFileName,"0");
-    strcat(ceFileName,matbuf);
+      // Task 2: Specify output file names 
+      char ceFileName[200]="";
+      strcat(ceFileName,crackDir); 
+      strcat(ceFileName,"/ce.mat");
+      if(m<10) strcat(ceFileName,"00");
+      else if(m<100) strcat(ceFileName,"0");
+      strcat(ceFileName,matbuf);
 
-    char cxFileName[200]="";
-    strcat(cxFileName,crackDir);
-    strcat(cxFileName,"/cx.mat");
-    if(m<10) strcat(cxFileName,"00");
-    else if(m<100) strcat(cxFileName,"0");
-    strcat(cxFileName,matbuf);
+      char cxFileName[200]="";
+      strcat(cxFileName,crackDir);
+      strcat(cxFileName,"/cx.mat");
+      if(m<10) strcat(cxFileName,"00");
+      else if(m<100) strcat(cxFileName,"0");
+      strcat(cxFileName,matbuf);
 
-    char cfFileName[200]="";
-    strcat(cfFileName,crackDir);
-    strcat(cfFileName,"/cf.mat");
-    if(m<10) strcat(cfFileName,"00");
-    else if(m<100) strcat(cfFileName,"0");
-    strcat(cfFileName,matbuf);
+      char cfFileName[200]="";
+      strcat(cfFileName,crackDir);
+      strcat(cfFileName,"/cf.mat");
+      if(m<10) strcat(cfFileName,"00");
+      else if(m<100) strcat(cfFileName,"0");
+      strcat(cfFileName,matbuf);
 
-    ofstream outputCE(ceFileName, ios::out);
-    ofstream outputCX(cxFileName, ios::out);
-    ofstream outputCF(cfFileName, ios::out);
+      ofstream outputCE(ceFileName, ios::out);
+      ofstream outputCX(cxFileName, ios::out);
+      ofstream outputCF(cfFileName, ios::out);
 
-    if(!outputCE || !outputCX || !outputCF) {
-      cout << "Failure to open files for storing crack geometry" << endl;
-      exit(1);
+      if(!outputCE || !outputCX || !outputCF) {
+        cout << "Failure to open files for storing crack geometry" << endl;
+        exit(1);
+      }
+
+      // Output crack elems 
+      for(int i=0; i<(int)ce[m].size(); i++) {
+        outputCE << ce[m][i].x() << " " << ce[m][i].y() << " "
+                 << ce[m][i].z() << endl;
+      }
+
+      // Output crack points
+      for(int i=0; i<(int)cx[m].size(); i++) {
+        outputCX << cx[m][i].x() << " " << cx[m][i].y() << " "
+                 << cx[m][i].z() << endl;
+      }
+
+      // Output crack-front nodes
+      for(int i=0; i<(int)cfSegNodes[m].size()/2; i++) {
+        outputCF << cfSegNodes[m][2*i] << " "
+                 << cfSegNodes[m][2*i+1] << endl;
+      }
     }
-
-    // Output crack elems 
-    for(int i=0; i<(int)ce[m].size(); i++) {
-      outputCE << ce[m][i].x() << " " << ce[m][i].y() << " "
-               << ce[m][i].z() << endl;
-    }
-
-    // Output crack points
-    for(int i=0; i<(int)cx[m].size(); i++) {
-      outputCX << cx[m][i].x() << " " << cx[m][i].y() << " "
-               << cx[m][i].z() << endl;
-    }
-
-    // Output crack-front nodes
-    for(int i=0; i<(int)cfSegNodes[m].size()/2; i++) {
-      outputCF << cfSegNodes[m][2*i] << " "
-               << cfSegNodes[m][2*i+1] << endl;
-    }
-  }
-}
+  } // End if(ce[m].size()>0)
+}  
