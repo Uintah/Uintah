@@ -87,7 +87,7 @@ if [ ! -f $gold_standard_dir/$testname/timestamp ]; then
 else
 
   # replace the performance results (both normal and restart)
-  if [ "$force" = "-f" ]; then
+  if [ "$force" != "-f" ]; then
     echo "Replace $testname performance results? (Enter 'yes' or 'y' to continue.)"
     read yesno
   fi
