@@ -37,7 +37,7 @@ public:
   virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
   //! All instantiable classes need to define this.
-  virtual const string get_type_name(int n) const = 0;
+  virtual const string get_type_name(int n = -1) const = 0;
   
 protected:
 
