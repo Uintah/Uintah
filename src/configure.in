@@ -62,7 +62,7 @@ AC_CONFIG_AUX_DIR(scripts)
 IFS=' '
 
 ##  initialize the recognized argument lists
-SCI_ARG_WITH_LIST=""
+SCI_ARG_WITH_LIST="--no-create --no-recursion"
 SCI_ARG_ENABLE_LIST=""
 
 ##  ---------------------------------------------------------------------
@@ -662,15 +662,9 @@ for i in $myargs; do
     FOUND_ARG=no
     continue
   else
-    if test "$i" = "--no-create"; then
-      echo
-      AC_MSG_ERROR('$i' is not supported by this configure script.)
-      echo
-    else
-      echo
-      AC_MSG_ERROR(unknown (or mis-spelled) argument: $i.)
-      echo
-    fi
+    echo
+    AC_MSG_ERROR(unknown (or mis-spelled) argument: $i.)
+    echo
   fi
 done
 
@@ -1912,6 +1906,10 @@ output_files="configVars.mk \
 if test "$uintah" = "yes" ; then
    output_files="$output_files Packages/Uintah/tools/fspec.pl"
 fi 
+
+#  ignore --no-create and --no-recursion flags
+no_create=no
+no_recursion=no
 
 AC_OUTPUT( [$output_files], echo timestamp > stamp-h )
 
