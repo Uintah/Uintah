@@ -54,6 +54,9 @@ WARNING
       // Insert Documentation Here:
       virtual void scheduleInitialize(const LevelP& level,
 				      SchedulerP&) = 0;
+      //////////
+      // Insert Documentation Here:
+      virtual void restartInitialize() {}
       
       //////////
       // Insert Documentation Here:
