@@ -2590,6 +2590,39 @@ fi
 
 
 
+##-- Find libimage -----------------------------------------------------------
+
+LIBIMAGE_DEF_FLAG=""
+LIBIMAGE_PREFIX=""
+if test "${with_libimage+set}" = set; then
+  withval="$with_libimage"
+  if test "$withval" != "yes" ; then
+    if test -e "${withval}/include/image.h"; then
+      LIBIMAGE_PREFIX="$withval"
+    else
+      echo "\n*** Error - could not find libimage at ${withval}/include/image.h\n"
+    fi
+  else
+    if test -e "$thirdparty/include/image.h" ; then
+      LIBIMAGE_PREFIX=$thirdparty
+    else
+      echo "\n*** Error - could not find libimage in $thirdparty/include/image.h\n";
+    fi
+  fi
+fi
+
+if test "$LIBIMAGE_PREFIX" != "" ; then
+  echo -n "checking for libimage... "
+  LIBIMAGE_DEF_FLAG="-DLIBIMAGE"
+  LIBIMAGE_INCLUDE="-I${LIBIMAGE_PREFIX}/include"
+  LIBIMAGE_LIBRARY="-L${LIBIMAGE_PREFIX}/lib -limage"
+  echo "${LIBIMAGE_PREFIX}"
+fi
+
+
+
+
+
 
 ##-- Find Nektar--------------------------------------------------------------
 
@@ -4211,6 +4244,9 @@ s%@NRRD_LIB_DIR@%$NRRD_LIB_DIR%g
 s%@MPEG_INCLUDE@%$MPEG_INCLUDE%g
 s%@MPEG_LIBRARY@%$MPEG_LIBRARY%g
 s%@MPEG_DEF_FLAG@%$MPEG_DEF_FLAG%g
+s%@LIBIMAGE_INCLUDE@%$LIBIMAGE_INCLUDE%g
+s%@LIBIMAGE_LIBRARY@%$LIBIMAGE_LIBRARY%g
+s%@LIBIMAGE_DEF_FLAG@%$LIBIMAGE_DEF_FLAG%g
 s%@NEKTAR_INCLUDE_DIR@%$NEKTAR_INCLUDE_DIR%g
 s%@NEKTAR_LIB_DIR@%$NEKTAR_LIB_DIR%g
 s%@NEKTAR_LIB_FLAG@%$NEKTAR_LIB_FLAG%g
