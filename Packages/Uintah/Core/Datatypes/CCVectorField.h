@@ -2,7 +2,7 @@
 #define SCI_project_CCVectorField_h 1
 
 //#include "UintahVectorField.h"
-#include <SCICore/Datatypes/VectorField.h>
+#include <SCICore/Datatypes/VectorFieldRG.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
@@ -17,7 +17,7 @@ using namespace Uintah;
 using std::vector;
 
 
-class SCICORESHARE CCVectorField : public VectorField {
+class SCICORESHARE CCVectorField : public VectorFieldRG {
 public:
   CCVectorField();
   CCVectorField(const CCVectorField&);
