@@ -165,10 +165,10 @@ namespace Uintah {
                                           const MaterialSubset*,
                                           const MaterialSet*); 
                              
-      void schedulePrintConservedQuantities(SchedulerP&, 
-                                            const PatchSet*,
-                                            const MaterialSubset*,
-                                            const MaterialSet*);
+      void scheduleTestConservation(SchedulerP&, 
+                                    const PatchSet*,
+                                    const MaterialSubset*,
+                                    const MaterialSet*);
                                        
       void scheduleCheckNeedAddMaterial(SchedulerP&, 
                                         const LevelP& level,
@@ -529,11 +529,11 @@ namespace Uintah {
 //__________________________________ 
 //   O T H E R                            
                                
-      void printConservedQuantities(const ProcessorGroup*,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* matls,
-                                    DataWarehouse*,
-                                    DataWarehouse*);
+      void TestConservation(const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse*,
+                            DataWarehouse*);
                                     
       void printData_problemSetup(const ProblemSpecP& prob_spec);
 
@@ -634,7 +634,6 @@ namespace Uintah {
       bool switchDebugMomentumExchange_CC;
       bool switchDebugSource_Sink;
       bool switchDebug_advance_advect;
-      bool switchTestConservation; 
       
       // debugging variables
       int d_dbgVar1;
@@ -768,6 +767,15 @@ namespace Uintah {
       bool d_convective;
       int d_conv_fluid_matlindex;
       int d_conv_solid_matlindex;
+
+       // flags for the conservation test
+       struct conservationTest_flags{
+        bool onOff;
+        bool momentum;
+        bool energy;
+        bool exchange;
+       };
+       conservationTest_flags* d_conservationTest;
 
       ICE(const ICE&);
       ICE& operator=(const ICE&);
