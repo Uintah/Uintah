@@ -22,56 +22,38 @@ namespace Uintah {
     double press_infinity;  
     double sigma;
     vector<Patch::FaceType> LodiFaces;
-  };
-  //_____________________________________________________________
-  // This struct contains the additional variables required to 
-  // apply the Lodi pressure bcs.
-  struct Lodi_vars_pressBC{
-    Lodi_vars_pressBC(int /*numMatls*/):Li(6){};
-    CCVariable<double> speedSound;
-    CCVariable<double> rho_CC;
-    constCCVariable<Vector> vel_CC;
-    StaticArray<CCVariable<Vector> > Li;
-    bool usingLODI;
-    bool setLodiBcs;                 
-  };
-      
+  };    
   //____________________________________________________________
   // This struct contains the additional variables required to 
   // apply the Lodi Temperature, density and velocity BC.
   struct Lodi_vars{                
     Lodi_vars() : Li(6) {}  
-
     constCCVariable<double> speedSound;
     constCCVariable<double> gamma;   
-
-    CCVariable<double> rho_CC;
-    CCVariable<Vector> vel_CC;
-    CCVariable<double> press_tmp;        
-    CCVariable<double> temp_CC;            
-    StaticArray<CCVariable<Vector> > Li; 
-    bool setLodiBcs; 
-    Lodi_variable_basket* var_basket;           
+    constCCVariable<double> rho_CC;
+    constCCVariable<Vector> vel_CC;
+    constCCVariable<double> press_CC;        
+    constCCVariable<double> temp_CC;            
+    StaticArray<CCVariable<Vector> > Li;        
   };
   
-
-
-  void lodi_bc_preprocess( const Patch* patch,
-                            Lodi_vars* lv,
-                            ICELabel* lb,            
-                            const int indx,
-                            CCVariable<double>& rho_CC,
-                            CCVariable<Vector>& vel_CC,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw,
-                            SimulationStateP& sharedState);
-                            
-  void lodi_getVars_pressBC( const Patch* patch,
-                             Lodi_vars_pressBC* lodi_vars,
-                             ICELabel* lb,
-                             SimulationStateP sharedState,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw);
+  void addRequires_Lodi(Task* t, 
+                      const string& where,
+                      ICELabel* lb,
+                      const MaterialSubset* ice_matls,
+                      Lodi_variable_basket* lv);
+                      
+  void preprocess_Lodi_BCs(DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          ICELabel* lb,
+                          const Patch* patch,
+                          const string& where,
+                          const int indx,
+                          SimulationStateP& sharedState,
+                          bool& setLodiBcs,
+                          Lodi_vars* lv,
+                          Lodi_variable_basket* lvb);
+                           
 
   bool read_LODI_BC_inputs(const ProblemSpecP&,
                            Lodi_variable_basket*);
@@ -83,8 +65,8 @@ namespace Uintah {
                                  vector<PatchSubset*> &);
                                   
   bool is_LODI_face(const Patch* patch,
-                  Patch::FaceType face,
-                  SimulationStateP& sharedState);                            
+                    Patch::FaceType face,
+                    SimulationStateP& sharedState);                            
                             
 
   void computeLi(StaticArray<CCVariable<Vector> >& L,
@@ -129,7 +111,7 @@ namespace Uintah {
                       StaticArray<CCVariable<double> >& rho_micro,
                       SimulationStateP& sharedState, 
                       Patch::FaceType face,
-                      Lodi_vars_pressBC* lv);
+                      Lodi_vars* lv);
 
                           
 } // End namespace Uintah
