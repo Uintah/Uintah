@@ -695,12 +695,15 @@ void MPMICE::scheduleSolveEquationsMotion(SchedulerP& sched,
 {
   d_mpm->scheduleSolveEquationsMotion(sched,patches,matls);
 
-  Task* t = scinew Task("MPMICE::solveEquationsMotion",
-                        this, &MPMICE::solveEquationsMotion);
-  
-  t->requires(Task::NewDW, Mlb->gradPAccNCLabel,  Ghost::None);
-  t->modifies(Mlb->gAccelerationLabel);
-  sched->addTask(t,patches,matls);
+  if (!d_rigidMPM) {
+    
+    Task* t = scinew Task("MPMICE::solveEquationsMotion",
+			  this, &MPMICE::solveEquationsMotion);
+    
+    t->requires(Task::NewDW, Mlb->gradPAccNCLabel,  Ghost::None);
+    t->modifies(Mlb->gAccelerationLabel);
+    sched->addTask(t,patches,matls);
+  }
 }
 
 void MPMICE::solveEquationsMotion(const ProcessorGroup* pg,
