@@ -48,6 +48,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/DirectInterpolate.tcl \
 	$(SRCDIR)/EditPath.tcl \
 	$(SRCDIR)/ErrorMetric.tcl \
+	$(SRCDIR)/FieldCage.tcl\
 	$(SRCDIR)/FieldInfo.tcl\
 	$(SRCDIR)/FieldMeasures.tcl \
 	$(SRCDIR)/FieldReader.tcl \
