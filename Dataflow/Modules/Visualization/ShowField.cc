@@ -212,7 +212,39 @@ ShowField::ShowField(GuiContext* ctx) :
   render_state_[DATA] = vectors_on_.get();
 }
 
-ShowField::~ShowField() {}
+ShowField::~ShowField()
+{
+  bool changed_visibility = false;
+  if (node_id_)
+  {
+    ogeom_->delObj(node_id_);
+    changed_visibility = true;
+    node_id_ = 0;
+  }
+  if (edge_id_)
+  {
+    ogeom_->delObj(edge_id_);
+    changed_visibility = true;
+    edge_id_ = 0;
+  }
+  if (face_id_)
+  {
+    ogeom_->delObj(face_id_);
+    changed_visibility = true;
+    face_id_ = 0;
+  }
+  if (data_id_)
+  {
+    ogeom_->delObj(data_id_);
+    changed_visibility = true;
+    data_id_ = 0;
+  }
+  if (changed_visibility)
+  {
+    ogeom_->flushViews();
+  }
+}
+
 
 void
 ShowField::check_for_vector_data(FieldHandle fld_handle) {
