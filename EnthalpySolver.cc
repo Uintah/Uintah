@@ -87,6 +87,7 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   db->require("radiation",d_radiationCalc);
   if (d_radiationCalc) {
     db->getWithDefault("radiationCalcFreq",d_radCalcFreq,3);
+    db->getWithDefault("radCalcForAllRKSteps",d_radRKsteps,true);
 //    if (db->findBlock("radiationCalcFreq"))
 //      db->require("radiationCalcFreq",d_radCalcFreq);
 //    else
@@ -660,7 +661,10 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 	
       enthalpyVars.ESRCG.initialize(0.0);
 
-      if (d_radCounter%d_radCalcFreq == 0) {
+      bool first_step = 
+	(timelabels->integrator_step_number == TimeIntegratorStepNumber::First);
+      if (d_radCounter%d_radCalcFreq == 0)
+        if (first_step || (!first_step && d_radRKsteps)) {
 	enthalpyVars.src.initialize(0.0);
 	enthalpyVars.qfluxe.initialize(0.0);
 	enthalpyVars.qfluxw.initialize(0.0);
@@ -684,18 +688,18 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 
 	  d_DORadiation->intensitysolve(pc, patch, cellinfo,
 					&enthalpyVars, &constEnthalpyVars);
-	}
-	IntVector indexLow = patch->getCellFORTLowIndex();
-	IntVector indexHigh = patch->getCellFORTHighIndex();
-	for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-	  for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	    for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	      IntVector currCell(colX, colY, colZ);
-              double vol=cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-	      enthalpyVars.scalarNonlinearSrc[currCell] += vol*enthalpyVars.src[currCell];
-	    }
+      }
+      IntVector indexLow = patch->getCellFORTLowIndex();
+      IntVector indexHigh = patch->getCellFORTHighIndex();
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	  for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	    IntVector currCell(colX, colY, colZ);
+            double vol=cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+	    enthalpyVars.scalarNonlinearSrc[currCell] += vol*enthalpyVars.src[currCell];
 	  }
 	}
+      }
 #if 0
 	d_DORadiation->d_linearSolver->destroyMatrix();
 #endif
