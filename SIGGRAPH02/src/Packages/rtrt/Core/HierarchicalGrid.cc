@@ -382,9 +382,19 @@ void HierarchicalGrid::gridit(int proc)
       kk=i-ii*nynz-jj*nz;
       if (proc==0 && (i%10 == 5)) {
 	cerr << "HGrid parallel preprocess: ("<<i<<" of "<<sx<<"-"<<ex<<") of "<<nx*ny*nz <<"\n";
-	cerr <<"   "<<L1CellsWithChildren*100./L1Cells<<"% of L1 cells have children\n";
-	cerr <<"   "<<L2CellsWithChildren*100./L2Cells<<"% of L2 cells have children\n";
-	cerr <<"   "<<TotalLeafPrims*1./LeafCells<<" tris / leaf.\n";
+	if(L1Cells)
+	  cerr <<"   "<<L1CellsWithChildren*100./L1Cells<<"% of L1 cells have children\n";
+	else
+	  cerr <<"   no  L1 children\n";
+	if(L2Cells)
+	  cerr <<"   "<<L2CellsWithChildren*100./L2Cells<<"% of L2 cells have children\n";
+	else
+	  cerr <<"   no L2 children\n";
+	if(LeafCells)
+	  cerr <<"   "<<TotalLeafPrims*1./LeafCells<<" tris / leaf.\n";
+	else
+	  cerr <<"   no leafs\n";
+	
       }
       if( pdata.whichCell[i] > 0 && !grid[pdata.whichCellPos[i]] ) {
 	BBox b(Point(bbox.min()+Vector(ii*pdata.dx, jj*pdata.dy, kk*pdata.dz)),
