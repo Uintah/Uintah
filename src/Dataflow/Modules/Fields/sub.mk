@@ -43,7 +43,6 @@ SRCS     += \
 	$(SRCDIR)/ConvertTet.cc\
 	$(SRCDIR)/Coregister.cc\
 	$(SRCDIR)/DirectInterpolate.cc\
-	$(SRCDIR)/EditField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/FieldInfo.cc\
 	$(SRCDIR)/FieldMeasures.cc\

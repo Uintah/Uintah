@@ -70,7 +70,7 @@ set $m0-extract-from-new-field {1}
 set $m0-algorithm {0}
 set $m0-build_trisurf {0}
 set $m0-np {1}
-set $m0-active-isoval-selection-tab {2}
+set $m0-active-isoval-selection-tab {1}
 set $m0-active_tab {MC}
 set $m0-update_type {on release}
 set $m0-color-r {0.4}

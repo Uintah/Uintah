@@ -53,19 +53,17 @@ set runDate " Tue  Mar 13 2001"
 global runTime
 set runTime " 0:22:14"
 
-set bbox {8.0 8.0 715 646}
-
-set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 8 8]
-set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 202 602]
-set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 8 392]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 151 95]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 202 366]
-set m5 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 373 268]
-set m6 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 391 166]
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 429 514]
-set m8 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 373 88]
-set m9 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 596 347]
-set m10 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 578 421]
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 7 10]
+set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 373 552]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 7 468]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 25 367]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 180 457]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 389 239]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 407 176]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 353 446]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 389 96]
+set m9 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 371 303]
+set m10 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 353 368]
 
 addConnection $m3 0 $m2 1
 addConnection $m0 0 $m2 0
@@ -73,8 +71,6 @@ addConnection $m2 0 $m1 0
 addConnection $m0 0 $m4 0
 addConnection $m3 0 $m4 1
 addConnection $m4 1 $m1 1
-addConnection $m6 1 $m1 2
-addConnection $m7 0 $m1 3
 addConnection $m3 0 $m7 1
 addConnection $m6 0 $m5 1
 addConnection $m0 0 $m8 0
@@ -85,6 +81,8 @@ addConnection $m10 0 $m7 0
 addConnection $m0 0 $m9 0
 addConnection $m0 0 $m10 0
 addConnection $m8 0 $m5 0
+addConnection $m7 0 $m1 2
+addConnection $m6 1 $m1 3
 
 set $m0-notes {}
 set $m0-show_status 1
@@ -139,10 +137,15 @@ set $m4-np 1
 set $m4-active_tab {MC}
 set $m4-update_type {on release}
 set $m5-notes {}
-set $m5-show_status 1
-set $m5-stepsize 0.1
-set $m5-tolerance 0.001
-set $m5-maxsteps 200
+set $m5-show_status {1}
+set $m5-stepsize {0.1}
+set $m5-tolerance {0.001}
+set $m5-maxsteps {200}
+set $m5-direction {1}
+set $m5-color {1}
+set $m5-remove-colinear {1}
+set $m5-method {3}
+set $m5-np {1}
 set $m6-notes {}
 set $m6-show_status 1
 set $m6-maxseeds 15

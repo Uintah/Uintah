@@ -53,25 +53,23 @@ set runDate " Wed  May 23 2001"
 global runTime
 set runTime " 14:50:24"
 
-set bbox {6.0 7.0 773 631}
-
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 220 146]
 set m1 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 218 238]
-set m2 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 416 151]
+set m2 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 443 151]
 set m3 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 266 7]
 set m4 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 24 85]
-set m5 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 398 235]
-set m6 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 353 574]
-set m7 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 434 15]
-set m8 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 434 91]
-set m9 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 629 101]
-set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 629 170]
-set m11 [addModuleAtPosition "SCIRun" "Render" "Viewer" 611 252]
-set m12 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 398 378]
-set m13 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 511 297]
-set m14 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 380 437]
-set m15 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 380 299]
-set m16 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 380 496]
+set m5 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 425 235]
+set m6 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 380 574]
+set m7 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 461 15]
+set m8 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 461 91]
+set m9 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 656 101]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 656 170]
+set m11 [addModuleAtPosition "SCIRun" "Render" "Viewer" 638 252]
+set m12 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 425 378]
+set m13 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 551 299]
+set m14 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 407 437]
+set m15 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 407 299]
+set m16 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 407 496]
 set m17 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 235 299]
 set m18 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMVoltageSource" 6 147]
 

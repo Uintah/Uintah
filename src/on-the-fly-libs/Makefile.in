@@ -23,6 +23,7 @@ default: all
 include @abs_conftop_dir@/configVars.mk
 SCIRUN_SRCTOP       := @abs_srcdir@
 SCIRUN_OBJTOP       := @abs_conftop_dir@
+LIBDIR	            := $(SCIRUN_OBJTOP)/lib/
 
 INCLUDES = -I$(SCIRUN_SRCTOP)/include -I$(SCIRUN_SRCTOP) -I$(SCIRUN_OBJTOP) -I$(SCIRUN_SRCTOP)/Packages @INC_TCL_H@ @INC_TK_H@ @INC_ITCL_H@ @INC_BLT_H@ @INC_GLOBUS_H@ @INC_XERCESC_H@ @INC_PETSC_H@ $(TAU_INCLUDE) $(MPI_INCLUDE)
 
