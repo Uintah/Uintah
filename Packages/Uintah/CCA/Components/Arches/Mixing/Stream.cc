@@ -16,7 +16,7 @@ Stream::Stream()
 {
 }
 
-Stream::Stream(const int numSpecies,  int numElements)
+Stream::Stream(int numSpecies,  int numElements)
 {
   d_speciesConcn = vector<double>(numSpecies, 0.0); // initialize with 0
   d_pressure = 0.0;
@@ -38,8 +38,8 @@ Stream::Stream(const int numSpecies,  int numElements)
 }
 
 
-Stream::Stream(const int numSpecies, const int numElements, 
-	       const int numMixVars, const int numRxnVars, bool lsoot): 
+Stream::Stream(int numSpecies, int numElements, 
+	       int numMixVars, int numRxnVars, bool lsoot): 
   d_numMixVars(numMixVars), d_numRxnVars(numRxnVars), d_lsoot(lsoot)
 {
   d_speciesConcn = vector<double>(numSpecies, 0.0); // initialize with 0
@@ -142,7 +142,7 @@ Stream::addSpecies(const ChemkinInterface* chemInterf,
 
 void 
 Stream::addStream(const Stream& strm, ChemkinInterface* chemInterf,
-		  const double factor) 
+		  double factor) 
 {
   vector<double> spec_mfrac;
   if (strm.d_mole) // convert to mass fraction
@@ -216,7 +216,7 @@ Stream::getValue(int count, bool lfavre)
 	return d_sootData[count-NUM_DEP_VARS-d_speciesConcn.size()-
 			 3*d_numRxnVars];
       else {
-	cerr << "Invalid count value" << '/n';
+	cerr << "Invalid count value" << '\n';
 	return 0;
       }
     }	
@@ -246,7 +246,7 @@ Stream::getValue(int count, bool lfavre)
       case 6:
 	return d_cp;
       default:
-	cerr << "Invalid count value" << '/n';
+	cerr << "Invalid count value" << '\n';
 	return 0;
       }
     }
@@ -264,9 +264,9 @@ Stream::normalizeStream() {
 }  
 	
 void
-Stream::convertVecToStream(const vector<double>& vec_stateSpace, const bool lfavre,
-                           const int numMixVars, const int numRxnVars,
-			   const bool lsoot) {
+Stream::convertVecToStream(const vector<double>& vec_stateSpace, bool lfavre,
+                           int numMixVars, int numRxnVars,
+			   bool lsoot) {
   d_depStateSpaceVars = vec_stateSpace.size();
   d_pressure = vec_stateSpace[0];
   d_density = vec_stateSpace[1];
@@ -319,7 +319,7 @@ Stream::convertVecToStream(const vector<double>& vec_stateSpace, const bool lfav
 }     
 
 vector<double>
-//Stream::convertStreamToVec(const bool lsoot)
+//Stream::convertStreamToVec(bool lsoot)
 Stream::convertStreamToVec()
 {
   vector<double> vec_stateSpace;
@@ -446,6 +446,9 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
 
 //
 // $Log$
+// Revision 1.11  2002/02/21 01:32:51  dav
+// there is no such thing as a const int, etc, so I removed the const.  Also, I fixed a couple of \n that had been written /n
+//
 // Revision 1.10  2001/11/17 00:23:00  spinti
 // 1. Modified addStream in Stream.cc to correct a problem with Newton iteration
 // 2. Made changes to several "const" values in header files
