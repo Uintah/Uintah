@@ -742,10 +742,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       
       //__________________________________
       //  User specified source/sink   
-      static int n_iter;
-      if (patch->getID() == 0 && indx == 0){
-        n_iter ++;
-      }  
+      int n_iter = dataArchiver->getCurrentTimestep();
       
       if(d_add_heat && n_iter <= d_add_heat_iters){
         double vol = dx.x() * dx.y() * dx.z();
