@@ -351,6 +351,7 @@ private:
   bool             d_burns;
   double           d_nextOutputTime;
   double           d_outputInterval;
+  double           d_SMALL_NUM_MPM;
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;
