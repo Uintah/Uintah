@@ -197,7 +197,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
         # to be modified for particular reader
 
         # extansion to append if no extension supplied by user
-        set defext ".xff"
+        set defext ".cmap2"
 
         # name to appear initially
         set defname "TransferFunc01"
@@ -205,7 +205,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 
         # file types to appers in filter box
         set types {
-            {{All Files}       {.xff}   }
+            {{All Files}       {.cmap .cmap2}   }
         }
 
         ######################################################
@@ -244,12 +244,12 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
         # to be modified for particular reader
 
         # extansion to append if no extension supplied by user
-        set defext ".xff"
+        set defext ".cmap2"
         set title "Open SCIRun Transfer Function file"
 
         # file types to appers in filter box
         set types {
-            {{SCIRun Transfer Function}     {.xff}      }
+            {{SCIRun Transfer Function}     {.cmap .cmap2}      }
             {{All Files} {.*}   }
         }
 
@@ -302,7 +302,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
                 set num [lindex [split $r "."] 0]
                 image create photo img-$r -format "ppm" -file $path/$num.ppm
                 #Load in the image to diplay on the button and do that.
-                button $f.swatchFrame$row.swatch$num -image img-$r -command "set $this-filename $path/$num.ppm.xff; $this swatch_load $num"
+                button $f.swatchFrame$row.swatch$num -image img-$r -command "set $this-filename $path/$num.ppm.cmap2; $this swatch_load $num"
                 grid configure $f.swatchFrame$row.swatch$num -row $row -col $col -sticky "nw"
                 incr col
           }
@@ -332,7 +332,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
             #Load in the image to diplay on the button and do that.
             
             button $f.swatchFrame$row.swatch$num -image img-$r \
-		-command "set $this-filename [netedit getenv HOME]/SCIRun/$num.ppm.xff; $this swatch_load $num"
+		-command "set $this-filename [netedit getenv HOME]/SCIRun/$num.ppm.cmap2; $this swatch_load $num"
             grid configure $f.swatchFrame$row.swatch$num -row $row \
 		-col $col -sticky "nw"
             
@@ -359,7 +359,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
         set basename [lindex [split $basename "."] 0]
         set path "[netedit getenv HOME]/SCIRun"
         file delete "$path/$basename.ppm"
-        file delete "$path/$basename.ppm.xff"
+        file delete "$path/$basename.ppm.cmap2"
 
         set w .ui[modname]
         if {[winfo exists $w.swatchpicker]} {
@@ -378,7 +378,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	# prepare the global filename for swatch_delete to work on.  
         global deleteSwatch
         set path "[netedit getenv HOME]/SCIRun"
-        set deleteSwatch "$path/$swatchNum.ppm.xff"
+        set deleteSwatch "$path/$swatchNum.ppm.cmap2"
         $this-c load
     }
 
