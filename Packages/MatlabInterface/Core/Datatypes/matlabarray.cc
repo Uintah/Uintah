@@ -1103,8 +1103,8 @@ void matlabarray::reorder_permute(std::vector<long> &newindices,std::vector<long
 		ndims[p] = dims[permorder[p]];
 	}
 	
-	long numel = newindices.size();
-	for (long p = 0; p < numel; p++)
+	size_t numel = newindices.size();
+	for (size_t p = 0; p < numel; p++)
 	{
 		newindices[p] = 0;
 		for (long q = 0;q < size; q++) {newindices[p] += index[q]*ncdims[q];}
