@@ -207,7 +207,7 @@ ShowField::execute()
     nodes_as_disks_.reset();
     if (fld_handle->query_vector_interface() != 0) {
       if (! has_vec_data_.get()) { has_vec_data_.set(1); }
-      cout << "data at" << fld_handle->data_at() << endl;
+//      cout << "data at" << fld_handle->data_at() << endl;
       if (fld_handle->data_at() == Field::NODE && nodes_as_disks_.get() == 0) {
 	nodes_as_disks_.set(1); 
       }
@@ -215,7 +215,7 @@ ShowField::execute()
       nodes_as_disks_.set(0);
     }
     
-    error(td->get_h_file_path().c_str());
+//    error(td->get_h_file_path().c_str());
 
     // Get the Algorithm.
     CompileInfo *ci = RenderFieldBase::get_compile_info(td);
@@ -238,9 +238,15 @@ ShowField::execute()
     def_mat_handle_ = m;
   }
   
-  color_->get(color_handle_);
+  // if no colormap was attached, the argument doesn't get changed,
+  // so we need to set it manually
+  // if the user had a colormap attached for a previous execution,
+  // and then detached it, we need to set color_handle_ to be empty
+
+  if(!color_->get(color_handle_)) color_handle_=0;
+
   if(!color_handle_.get_rep()){
-    warning("No ColorMap in port 2 ColorMap.");
+//    warning("No ColorMap in port 2 ColorMap.");
     if (colm_gen_ != -1) {
       nodes_dirty_ = true; edges_dirty_ = true; 
       faces_dirty_ = true; data_dirty_ = true;
