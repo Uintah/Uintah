@@ -33,10 +33,8 @@ FrictionContact::FrictionContact(ProblemSpecP& ps,SimulationStateP& d_sS,
                                  MPMLabel* Mlb,MPMFlags* Mflag)
 {
   // Constructor
-  IntVector v_f;
   d_vol_const=0.;
-
-  ps->require("vel_fields",v_f);
+  
   ps->require("mu",d_mu);
   ps->get("volume_constraint",d_vol_const);
 
