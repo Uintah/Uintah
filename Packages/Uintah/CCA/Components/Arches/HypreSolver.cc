@@ -162,7 +162,9 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   nx = idxHi.x() - idxLo.x() + 1;
   ny = idxHi.y() - idxLo.y() + 1;
   nz = idxHi.z() - idxLo.z() + 1;
-  
+     
+  int d_A_num_ghost[6] = {0, 0, 0, 0, 0, 0};
+
   d_volume  = nx*ny*nz;    //number of nodes per processor
   bx = 1;
   by = 1;
@@ -198,6 +200,12 @@ HypreSolver::gridSetup(const ProcessorGroup*,
       d_iupper[i] = hypre_CTAlloc(int, d_dim);
     }
 
+  for (int i = 0; i < d_dim; i++)
+    {
+     d_A_num_ghost[2*i] = 1;
+     d_A_num_ghost[2*i + 1] = 1;
+    }
+  
   /* compute d_ilower and d_iupper from (p,q,r), (bx,by,bz), and (nx,ny,nz) */
   int ib = 0;
   
@@ -332,6 +340,7 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
 
   HYPRE_StructMatrixCreate(MPI_COMM_WORLD, d_grid, d_stencil, &d_A);
   HYPRE_StructMatrixSetSymmetric(d_A, 1);
+  HYPRE_StructMatrixSetNumGhost(d_A, d_A_num_ghost);
   HYPRE_StructMatrixInitialize(d_A); 
 
    /*-----------------------------------------------------------
@@ -394,12 +403,12 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-   	  d_value[i] = vars->pressNonlinearSrc[IntVector(colX,colY,colZ)]; 
-	  //cerr << "b[" << i << "] =" << d_value[i] << endl;
-	  i++;
-	}
+	d_value[i] = vars->pressNonlinearSrc[IntVector(colX,colY,colZ)]; 
+	//cerr << "b[" << i << "] =" << d_value[i] << endl;
+	i++;
       }
     }
+  }
     
   for (int ib = 0; ib < d_nblocks; ib++)
     {
@@ -412,7 +421,7 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 	d_value[i] = vars->pressure[IntVector(colX, colY, colZ)];
-	//cerr << "b[" << i << "] =" << d_value[i] << endl;
+	//cerr << "x0[" << i << "] =" << d_value[i] << endl;
 	i++;;
       }
     }
