@@ -47,20 +47,30 @@ end
 <revhistory>
 <revision>
 <revnumber>1.0</revnumber>
-<date>3/14/03</date>
+<date>3/15/03</date>
 </revision>
 </revhistory>
 
 <question>
-<para>Could you provide me with BibTeX and plain text citations for
-SCIRun and BioPSE?</para>
+<para>
+What citation should I use when referring to &sr; and BioPSE in a
+paper or grant application?
+</para>
 </question>
 
 <answer>
 <para>
-Yes&mdash;here is the <ulink url="&sr_bibtex_cit;">&sr;
-citation</ulink> and here is the <ulink
-url="&biopse_bibtex_cit;">BioPSE citation</ulink>.
+We have <quote>BibTeX</quote> and <quote>plain text</quote>
+citations. Here are the <ulink url="&sr_bibtex_cit;">&sr;
+citations</ulink> and here are the <ulink
+url="&biopse_bibtex_cit;">BioPSE citations</ulink>.
+</para>
+<para>
+Thank you for your citation(s).  Citations of the use of
+SCIRun/BioPSE in your projects and publications helps a lot with the
+continued funding of the SCIRun/BioPSE project.  Please <ulink
+url="mailto:macleod@cvrti.utah.edu">send us</ulink> your citations
+too.
 </para>
 </answer>
 
