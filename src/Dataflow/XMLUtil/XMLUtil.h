@@ -9,6 +9,8 @@ namespace SCICore {
    }
 }
 
+#include <SCICore/Containers/String.h>
+
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1375
@@ -33,6 +35,7 @@ namespace PSECore {
      using SCICore::Geometry::Point;
      using SCICore::Geometry::Vector;
      using SCICore::Geometry::IntVector;
+     using SCICore::Containers::clString;
      
       DOM_Node findNode(const std::string &name,DOM_Node node);
       DOM_Node findNextNode(const std::string& name, DOM_Node node);
@@ -111,12 +114,22 @@ namespace PSECore {
       //
       
       char* removeWhiteSpace(char* string);
+
       
+      clString xmlto_string(const DOMString& str);
+      clString xmlto_string(const XMLCh* const str);
+      void invalidNode(const DOM_Node& n, const clString& filename);
+      DOMString findText(DOM_Node& node);
+	
+
    } // end namespace XMLUtil
 } // end namespace PSECore
 
 //
 // $Log$
+// Revision 1.5  2000/10/21 18:36:52  moulding
+// removed some utility functions from PackageDB.cc and put them into XMLUtil.
+//
 // Revision 1.4  2000/10/15 04:34:32  moulding
 // more of Phase 1 for new module maker
 //
