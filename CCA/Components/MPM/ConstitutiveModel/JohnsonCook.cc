@@ -67,6 +67,10 @@ JohnsonCook::JohnsonCook(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 			ParticleVariable<double>::getTypeDescription());
   pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
 			ParticleVariable<double>::getTypeDescription());
+  pDamageLabel = VarLabel::create("p.damage",
+			ParticleVariable<double>::getTypeDescription());
+  pDamageLabel_preReloc = VarLabel::create("p.damage+",
+			ParticleVariable<double>::getTypeDescription());
 
 }
 
@@ -81,6 +85,8 @@ JohnsonCook::~JohnsonCook()
   VarLabel::destroy(pDeformRatePlasticLabel_preReloc);
   VarLabel::destroy(pPlasticStrainLabel);
   VarLabel::destroy(pPlasticStrainLabel_preReloc);
+  VarLabel::destroy(pDamageLabel);
+  VarLabel::destroy(pDamageLabel_preReloc);
 }
 
 void JohnsonCook::addParticleState(std::vector<const VarLabel*>& from,
@@ -98,6 +104,7 @@ void JohnsonCook::addParticleState(std::vector<const VarLabel*>& from,
 
   from.push_back(pDeformRatePlasticLabel);
   from.push_back(pPlasticStrainLabel);
+  from.push_back(pDamageLabel);
 
   to.push_back(pLeftStretchLabel_preReloc);
   to.push_back(pRotationLabel_preReloc);
@@ -107,6 +114,7 @@ void JohnsonCook::addParticleState(std::vector<const VarLabel*>& from,
 
   to.push_back(pDeformRatePlasticLabel_preReloc);
   to.push_back(pPlasticStrainLabel_preReloc);
+  to.push_back(pDamageLabel_preReloc);
 }
 
 void JohnsonCook::initializeCMData(const Patch* patch,
@@ -120,7 +128,7 @@ void JohnsonCook::initializeCMData(const Patch* patch,
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
   ParticleVariable<Matrix3> pDeformGrad, pStress, pDeformRatePlastic;
   ParticleVariable<Matrix3> pLeftStretch, pRotation;
-  ParticleVariable<double> pPlasticStrain;
+  ParticleVariable<double> pPlasticStrain, pDamage;
 
   new_dw->allocateAndPut(pLeftStretch, pLeftStretchLabel, pset);
   new_dw->allocateAndPut(pRotation, pRotationLabel, pset);
@@ -130,6 +138,7 @@ void JohnsonCook::initializeCMData(const Patch* patch,
 
   new_dw->allocateAndPut(pDeformRatePlastic, pDeformRatePlasticLabel, pset);
   new_dw->allocateAndPut(pPlasticStrain, pPlasticStrainLabel, pset);
+  new_dw->allocateAndPut(pDamage, pDamageLabel, pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
 
@@ -144,6 +153,7 @@ void JohnsonCook::initializeCMData(const Patch* patch,
 
     pDeformRatePlastic[*iter] = zero;
     pPlasticStrain[*iter] = 0.0;
+    pDamage[*iter] = 0.0;
   }
 
   computeStableTimestep(patch, matl, new_dw);
@@ -276,11 +286,13 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> pDeformRatePlastic;
     constParticleVariable<double> pPlasticStrain;
     constParticleVariable<double> pTemperature;
+    constParticleVariable<double> pDamage;
 
     old_dw->get(pStress, lb->pStressLabel, pset);
     old_dw->get(pDeformRatePlastic, pDeformRatePlasticLabel, pset);
     old_dw->get(pPlasticStrain, pPlasticStrainLabel, pset);
     old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
+    old_dw->get(pDamage, pDamageLabel, pset);
     
     // Get the time increment (delT)
     delt_vartype delT;
@@ -293,6 +305,7 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
 
     ParticleVariable<Matrix3> pDeformRatePlastic_new;
     ParticleVariable<double> pPlasticStrain_new;
+    ParticleVariable<double> pDamage_new;
     ParticleVariable<double> pVolume_deformed;
 
     new_dw->allocateAndPut(pLeftStretch_new, pLeftStretchLabel_preReloc, pset);
@@ -301,7 +314,9 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pStress_new, lb->pStressLabel_preReloc, pset);
     new_dw->allocateAndPut(pDeformRatePlastic_new, pDeformRatePlasticLabel_preReloc, pset);
     new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel_preReloc, pset);
+    new_dw->allocateAndPut(pDamage_new, pDamageLabel_preReloc, pset);
     new_dw->allocateAndPut(pVolume_deformed, lb->pVolumeDeformedLabel, pset);
+
 
     // Loop thru particles
     for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
@@ -336,14 +351,11 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
       // the plastic rate of deformation tensor, and the Cauchy stress
       // back to the material configuration and calculate their
       // deviatoric parts
+      //cout << " tensorL = \n" << tensorL << endl;
+      //cout << " tensorD = \n" << tensorD << endl;
+      //cout << " tensorR = \n" << tensorR << endl;
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
       tensorEta = tensorD - one*(tensorD.Trace()/3.0);
-
-      /*
-      tensorDp = pDeformRatePlastic[idx];
-      tensorDp = (tensorR.Transpose())*(tensorDp*tensorR);
-      tensorEtap = tensorDp; // Assumption of plastic incompressibility
-      */
 
       tensorSig = pStress[idx];
       tensorSig = (tensorR.Transpose())*(tensorSig*tensorR);
@@ -351,12 +363,6 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
       Matrix3 tensorHy = tensorSig - tensorS;
 
       // Integrate the stress rate equation to get a elastic trial stress
-      /*
-      Matrix3 tensorDe = tensorD - tensorDp;
-      Matrix3 trialSig = tensorSig + 
-	                 (one*(tensorDe.Trace()*bulk) + tensorDe*(2.0*shear))*delT;
-      Matrix3 trialS = trialSig - one*(trialSig.Trace()/3.0);
-      */
       Matrix3 trialSig = tensorSig + 
 	                 (one*(tensorD.Trace()*bulk) + tensorD*(2.0*shear))*delT;
       Matrix3 trialS = trialSig - one*(trialSig.Trace()/3.0);
@@ -369,12 +375,9 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
       // from the plastic strain rate, the plastic strain and  
       // the particle temperature
       
-      /*
-      plasticStrainRate = sqrt(tensorEtap.NormSquared()*2.0/3.0);
-      plasticStrain = pPlasticStrain[idx];
-      */
       plasticStrainRate = sqrt(tensorEta.NormSquared()*2.0/3.0);
       plasticStrain = pPlasticStrain[idx] + plasticStrainRate*delT;
+      //cout << "epdot = " << plasticStrainRate << " ep = " << plasticStrain << endl;
 
       temperature = pTemperature[idx];
       flowStress = evaluateFlowStress(plasticStrain, plasticStrainRate, temperature);
@@ -383,7 +386,6 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
       // Calculate the J2 equivalent stress (assuming isotropic yield surface)
       equivStress = (trialS.NormSquared())*1.5;
 
-      //cout << "Equivalent Stress = " << sqrt(equivStress) << " Flow Stress = " << sqrt(flowStress) << "\n";
       if (flowStress > equivStress) {
 
         // For the elastic region : the updated stress is the trial stress
@@ -406,13 +408,6 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
         pStress_new[idx] = tensorSig;
         pPlasticStrain_new[idx] = pPlasticStrain[idx];
 
-        // Compute the deformation gradient increment 
-        // get the volumetric part of the deformation
-        //tensorF = pDeformGrad[idx];
-        //Matrix3 deformationGradientInc = tensorF_new*(tensorF.Inverse());
-        //double Jinc = deformationGradientInc.Determinant();
-        //pVolume_deformed[idx]=Jinc*pVolume[idx];
-
       } else {
 
         // Using the algorithm from Zocher, Maudlin, Chen, Flower-Maudlin
@@ -426,9 +421,6 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
         Matrix3 tensorU = tensorS*(sqrtThree/sqrtSxS);
 
         // Calculate cplus and initial values of dstar, gammadot and theta
-        /*
-        double gammadotplus = tensorEtap.Contract(tensorS.Inverse())*sqrtSxS/sqrtThree;
-        */
         double gammadotplus = tensorEta.Contract(tensorS.Inverse())*sqrtSxS/sqrtThree;
         double cplus = tensorU.NormSquared(); ASSERT(cplus != 0);
         double sqrtcplus = sqrt(cplus);
@@ -451,14 +443,6 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
 	  ++count;
         } while (fabs(dstar-dstar_old) > tolerance && count < 5);
 
-        // Calculate sig(T+delT)
-        /*
-        sqrtEtaxEta = tensorEta.Norm();
-        plasticStrainRate = (sqrtTwo*sqrtEtaxEta)/sqrtThree;
-        plasticStrain += plasticStrainRate*delT;
-        double sig = evaluateFlowStress(plasticStrain, plasticStrainRate, temperature);
-        ASSERT(sig != 0);
-        */
         double sig = sqrt(flowStress); ASSERT(sig != 0);
 
         // Calculate delGammaEr
@@ -474,7 +458,6 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
         // Do radial return adjustment
         tensorS = Stilde*(sig*sqrtTwo/(sqrtThree*Stilde.Norm()));
         equivStress = sqrt((tensorS.NormSquared())*1.5);
-        //cout << "After plastic step : equivStress = " << equivStress << " new flowstress = " << sig << endl;
 
         // Update the total stress tensor
         tensorSig = tensorS + tensorHy;
@@ -496,10 +479,19 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
         pStress_new[idx] = tensorSig;
         pPlasticStrain_new[idx] = plasticStrain;
 
-        // No volume change ???
-        //pVolume_deformed[idx]=pVolume[idx];
       }
 
+      // Calculate the updated scalar damage parameter
+      double epsFrac = calcStrainAtFracture(pStress_new[idx], plasticStrainRate, temperature);
+      double epsInc = pPlasticStrain_new[idx] - pPlasticStrain[idx];
+      if (epsFrac == 0) 
+        pDamage_new[idx] = pDamage[idx];
+      else 
+        pDamage_new[idx] = pDamage[idx] + epsInc/epsFrac;
+      //cout << "Dnew = " << pDamage_new[idx] << " Dold = " << pDamage[idx]
+      //     << " epsFrac = " << epsFrac << " epsInc = " << epsInc << endl;
+
+      // Calculate the deformed volume
       tensorF = pDeformGrad[idx];
       Matrix3 deformationGradientInc = tensorF_new*(tensorF.Inverse());
       double Jinc = deformationGradientInc.Determinant();
@@ -530,6 +522,7 @@ JohnsonCook::addInitialComputesAndRequires(Task* task,
   task->computes(pRotationLabel, matlset);
   task->computes(pDeformRatePlasticLabel, matlset);
   task->computes(pPlasticStrainLabel, matlset);
+  task->computes(pDamageLabel, matlset);
 }
 
 void 
@@ -556,6 +549,7 @@ JohnsonCook::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pRotationLabel, matlset,Ghost::None);
   task->requires(Task::OldDW, pDeformRatePlasticLabel, matlset,Ghost::None);
   task->requires(Task::OldDW, pPlasticStrainLabel, matlset,Ghost::None);
+  task->requires(Task::OldDW, pDamageLabel, matlset,Ghost::None);
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
@@ -563,6 +557,7 @@ JohnsonCook::addComputesAndRequires(Task* task,
   task->computes(pRotationLabel_preReloc, matlset);
   task->computes(pDeformRatePlasticLabel_preReloc,  matlset);
   task->computes(pPlasticStrainLabel_preReloc, matlset);
+  task->computes(pDamageLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
 }
 
@@ -582,9 +577,11 @@ JohnsonCook::computeVelocityGradient(const Patch* patch,
 
   patch->findCellAndShapeDerivatives27(px, ni, d_S, psize);
 
+  //cout << "ni = " << ni << endl;
   for(int k = 0; k < d_8or27; k++) {
     //if(patch->containsNode(ni[k])) {
       const Vector& gvel = gVelocity[ni[k]];
+      //cout << "GridVel = " << gvel << endl;
       for (int j = 0; j<3; j++){
 	for (int i = 0; i<3; i++) {
 	  velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
@@ -592,6 +589,7 @@ JohnsonCook::computeVelocityGradient(const Patch* patch,
       }
     //}
   }
+  //cout << "VelGrad = " << velGrad << endl;
   return velGrad;
 }
 
@@ -612,12 +610,14 @@ JohnsonCook::computeVelocityGradient(const Patch* patch,
 
   for(int k = 0; k < d_8or27; k++) {
     const Vector& gvel = gVelocity[ni[k]];
+    //cout << "GridVel = " << gvel << endl;
     for (int j = 0; j<3; j++){
       for (int i = 0; i<3; i++) {
 	velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
       }
     }
   }
+  //cout << "VelGrad = " << velGrad << endl;
   return velGrad;
 }
 
@@ -708,9 +708,9 @@ JohnsonCook::computeRateofRotation(const Matrix3& tensorV,
 }
 
 double 
-JohnsonCook::evaluateFlowStress(double& ep, 
-                                double& epdot,
-                                double& T)
+JohnsonCook::evaluateFlowStress(const double& ep, 
+                                const double& epdot,
+                                const double& T)
 {
   double strainPart = d_initialData.A + d_initialData.B*pow(ep,d_initialData.n);
   double strainRatePart = 1.0;
@@ -721,30 +721,40 @@ JohnsonCook::evaluateFlowStress(double& ep,
   double Tr = d_initialData.TRoom;
   double Tm = d_initialData.TMelt;
   double m = d_initialData.m;
-  double t = (T-Tr)/(Tm-Tr);
-  if (fabs(t) < 1.0e-8) t = 0.0;
-  ASSERT(t > -1.0e-8);
-  //cout << "t = " << t << endl;
-  double tm = pow(t,m);
+  double Tstar = (T-Tr)/(Tm-Tr);
+  if (fabs(Tstar) < 1.0e-8) Tstar = 0.0;
+  if (Tstar < 0.0) {
+    cout << " ep = " << ep << " Strain Part = " << strainPart << endl;
+    cout << "epdot = " << epdot << " Strain Rate Part = " << strainRatePart << endl;
+    cout << "Tstar = " << Tstar << " T = " << T << " Tr = " << Tr << " Tm = " << Tm << endl;
+  }
+  ASSERT(Tstar > -1.0e-8);
+  double tm = pow(Tstar,m);
   double tempPart = 1.0 - tm;
-  //cout << "tempPart = " << tempPart << " T = " << T << " Tm = " << Tm << 
-  //        " Tr = " << Tr << " t = " << t << " m = " << m << " tm = " << tm << endl;
   return (strainPart*strainRatePart*tempPart);
 }
 
 double 
-JohnsonCook::calcStrainAtFracture(double& sig, 
-                                  double& epdot,
-                                  double& T)
+JohnsonCook::calcStrainAtFracture(const Matrix3& stress, 
+                                  const double& epdot,
+                                  const double& T)
 {
-  double stressPart = d_initialData.D1 + d_initialData.D2*exp(d_initialData.D3*sig);
+  double sigMean = stress.Trace()/3.0;
+  double sigEquiv = sqrt((stress.NormSquared())*1.5);
+  double sigStar = 0.0;
+  if (sigEquiv != 0) sigStar = sigMean/sigEquiv;
+  double stressPart = d_initialData.D1 + d_initialData.D2*exp(d_initialData.D3*sigStar);
+  //cout << "sigMean = " << sigMean << " sigEquiv = " << sigEquiv << " sigStar = " << sigStar 
+  //     << " Stress Part = " << stressPart << endl;
   double strainRatePart = 1.0;
   if (epdot < 1.0) 
     strainRatePart = pow((1.0 + epdot),d_initialData.D4);
   else
-    strainRatePart = 1 + d_initialData.D4*log(epdot);
-  double tempPart = 1 + d_initialData.D5*(T-d_initialData.TRoom)/
-                   (d_initialData.TMelt-d_initialData.TRoom);
+    strainRatePart = 1.0 + d_initialData.D4*log(epdot);
+  //cout << "epdot = " << epdot << " Strain Rate Part = " << strainRatePart << endl;
+  double Tstar = (T-d_initialData.TRoom)/(d_initialData.TMelt-d_initialData.TRoom);
+  double tempPart = 1.0 + d_initialData.D5*Tstar;
+  //cout << "Tstar = " << Tstar << " Temp. Part = " << tempPart << endl;
   return (stressPart*strainRatePart*tempPart);
 }
 
