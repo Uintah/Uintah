@@ -179,6 +179,12 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
   tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   
+  // Require densityIN from old_dw for consistency with
+  // gets/requires of nonlinearSolve (we don't do anything 
+  // with this densityIN)
+  tsk->requires(Task::OldDW, d_lab->d_densityINLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+
   if (d_reactingFlow) {
     tsk->requires(Task::OldDW, d_lab->d_tempINLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -201,7 +207,8 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
   tsk->computes(d_lab->d_densityCPLabel);
   tsk->computes(d_lab->d_refDensity_label);
   tsk->computes(d_lab->d_densityMicroLabel);
-  tsk->computes(d_lab->d_densityINLabel);
+
+  tsk->modifies(d_lab->d_densityINLabel);
 
   if (d_reactingFlow) {
     tsk->computes(d_lab->d_tempINLabel);
@@ -591,7 +598,14 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 			   matlIndex, patch);
 
     CCVariable<double> densityIN;
-    new_dw->allocateAndPut(densityIN, d_lab->d_densityINLabel, matlIndex, patch);
+    new_dw->getModifiable(densityIN, d_lab->d_densityINLabel, matlIndex, patch);
+
+    // Get densityIN from old_dw for consistency with
+    // gets/requires of nonlinearSolve (we don't do 
+    // anything with this densityIN)
+
+    CCVariable<double> densityIN_old;
+    old_dw->getModifiable(densityIN_old, d_lab->d_densityINLabel, matlIndex, patch);
 
     CCVariable<double> denMicro_new;
     new_dw->allocateAndPut(denMicro_new, d_lab->d_densityMicroLabel, 
@@ -676,11 +690,12 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 
 	  double local_den = denMicro[currCell]*voidFraction[currCell];
 
-	  if (cellType[currCell] != d_bc->getMMWallId())
+	  if (cellType[currCell] != d_bc->getMMWallId()) {
 	    density[currCell] = local_den;
-	  else
+	  }
+	  else{
 	    density[currCell] = 0.0;
-
+	  }
 	}
       }
     }

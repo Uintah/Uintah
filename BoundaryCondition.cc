@@ -440,7 +440,7 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
     CCVariable<double> mmvoidFrac;
     new_dw->allocateAndPut(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
     mmvoidFrac.copyData(voidFrac);
-	
+
     IntVector domLo = mmcellType.getFortLowIndex();
     IntVector domHi = mmcellType.getFortHighIndex();
     IntVector idxLo = domLo;
@@ -520,6 +520,7 @@ BoundaryCondition::mmWallCellTypeInit_first(const ProcessorGroup*,
     IntVector domHi = mmcellType.getFortHighIndex();
     IntVector idxLo = domLo;
     IntVector idxHi = domHi;
+
     // resets old mmwall type back to flow field and sets cells with void fraction
     // of less than .01 to mmWall
 
@@ -2453,7 +2454,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-    
+
     // loop thru the flow inlets to set all the components of velocity and density
     for (int indx = 0; indx < d_numInlets; indx++) {
       sum_vartype area_var;
