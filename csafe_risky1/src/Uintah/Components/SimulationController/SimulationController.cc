@@ -32,7 +32,7 @@
 #include <iostream>
 #include <values.h>
 
-#ifdef OUTPUT_AVE_ELLAPSED_WALLTIME
+#ifdef OUTPUT_AVG_ELAPSED_WALLTIME
 #include <list>
 #include <fstream>
 #include <math.h>
@@ -62,7 +62,7 @@ SimulationController::~SimulationController()
 {
 }
 
-#ifdef OUTPUT_AVE_ELLAPSED_WALLTIME
+#ifdef OUTPUT_AVG_ELAPSED_WALLTIME
 double stdDeviation(list<double>& vals, double& mean)
 {
   if (vals.size() < 2)
@@ -175,7 +175,7 @@ void SimulationController::run()
 
    scheduler->execute(d_myworld, old_dw, old_dw);
 
-#ifdef OUTPUT_AVE_ELLAPSED_WALLTIME
+#ifdef OUTPUT_AVG_ELAPSED_WALLTIME
    int n = 0;
    list<double> wallTimes;
    double prevWallTime;
@@ -227,14 +227,14 @@ void SimulationController::run()
 	       << ", DW: " << old_dw->getID() << ", Mem Use = " 
 	       << sizealloc - sizefree << "\n";
 	  
-#ifdef OUTPUT_AVE_ELLAPSED_WALLTIME
+#ifdef OUTPUT_AVG_ELAPSED_WALLTIME
 	  if (n > 1) // ignore first set of elapsed times
 	    wallTimes.push_back(wallTime - prevWallTime);
 
 	  if (wallTimes.size() > 1) {
 	    double stdDev, mean;
 	    stdDev = stdDeviation(wallTimes, mean);
-	    ofstream timefile("ave_ellapsed_walltime.txt");
+	    ofstream timefile("avg_elapsed_walltime.txt");
 	    timefile << __DATE__ << " " << __TIME__ << endl;
 	    timefile << mean << " +- " << stdDev << endl;
 	  }
@@ -529,6 +529,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.47.4.4  2000/11/01 21:25:48  witzel
+// changed OUTPUT_AVE_ELLAPSED_WALLTIME to OUTPUT_AVG_ELAPSED_WALLTIME
+//
 // Revision 1.47.4.3  2000/11/01 02:03:27  witzel
 // Added code to output average ellapsed wall clock times between
 // time steps to a file "ave_ellapsed_walltime.txt" if the
