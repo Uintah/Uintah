@@ -27,8 +27,8 @@
 #include <Packages/Uintah/Core/Grid/ReductionVariable.h>
 #include <Packages/Uintah/Core/Grid/Reductions.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/GeometryPieceFactory.h>
-#include <Packages/Uintah/Core/Grid/UnionGeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/UnionGeometryPiece.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
