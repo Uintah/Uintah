@@ -7,12 +7,20 @@
 #include <string>
 
 namespace Uintah {
+
+  namespace Grid {
+    class Task;
+  }
+
+  namespace Parallel {
+    class ProcessorContext;
+  }
+
 namespace Interface {
 
 using Uintah::Parallel::UintahParallelPort;
-
-class ProcessorContext;
-class Task;
+using Uintah::Parallel::ProcessorContext;
+using Uintah::Grid::Task;
 
 /**************************************
 
@@ -78,6 +86,9 @@ private:
 
 //
 // $Log$
+// Revision 1.4  2000/03/17 21:02:08  dav
+// namespace mods
+//
 // Revision 1.3  2000/03/16 22:08:23  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //
