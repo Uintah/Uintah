@@ -294,7 +294,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
     } else {
       // find matching texture object
       for(unsigned int i=0; i<tex_pool_.size() && idx[c]<0; i++) {
-        if(tex_pool_[i].id != 0
+        if(tex_pool_[i].id != 0 && c == tex_pool_[i].comp
            && nx == tex_pool_[i].nx && ny == tex_pool_[i].ny
            && nz == tex_pool_[i].nz && nb == tex_pool_[i].nb) {
           idx[c] = i;
