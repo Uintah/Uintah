@@ -87,6 +87,10 @@ WARNING
          double getHeatTransferCoefficient() const;
          double getInitialDensity() const;
 
+         // for temperature dependent plasticity models
+         double getRoomTemperature() const;
+         double getMeltTemperature() const;
+
          // For MPMICE
          double getGamma() const;
          void initializeCCVariables(CCVariable<double>& rhom,
@@ -117,6 +121,10 @@ WARNING
          double d_specificHeat;
          
          double d_gamma;
+
+         // for temperature dependent plasticity models
+         double d_troom;
+         double d_tmelt;
 
          //for ThermalContactModel
          double d_heatTransferCoefficient;

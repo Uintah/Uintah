@@ -15,7 +15,14 @@ SRCS     += \
 	$(SRCDIR)/MWViscoElastic.cc           	\
 	$(SRCDIR)/IdealGasMP.cc               	\
 	$(SRCDIR)/Membrane.cc 			\
-	$(SRCDIR)/JohnsonCook.cc 		
+	$(SRCDIR)/JohnsonCook.cc 		\
+	$(SRCDIR)/DamageModel.cc \
+	$(SRCDIR)/DamageModelFactory.cc \
+	$(SRCDIR)/HypoElasticPlastic.cc \
+	$(SRCDIR)/JohnsonCookDamage.cc \
+	$(SRCDIR)/JohnsonCookPlastic.cc \
+	$(SRCDIR)/PlasticityModel.cc \
+	$(SRCDIR)/PlasticityModelFactory.cc 
 
 PSELIBS := Packages/Uintah/Core/Grid \
 	Packages/Uintah/CCA/Components/ICE \
