@@ -57,8 +57,7 @@ Persistent* make_GeomCappedCone()
 PersistentTypeID GeomCappedCone::type_id("GeomCappedCone", "GeomObj", make_GeomCappedCone);
 
 GeomCone::GeomCone(int nu, int nv)
-: GeomObj(), bottom(0,0,0), top(0,0,1), bot_rad(1), top_rad(0),
-  nu(nu), nv(nv)
+  : GeomObj(), bottom(0,0,0), top(0,0,1), bot_rad(1), top_rad(0), nu(nu), nv(nv)
 {
     adjust();
 }
@@ -66,7 +65,7 @@ GeomCone::GeomCone(int nu, int nv)
 GeomCone::GeomCone(const Point& bottom, const Point& top,
 		   double bot_rad, double top_rad, int nu, int nv)
 : GeomObj(), bottom(bottom), top(top), bot_rad(bot_rad),
-  top_rad(top_rad), nu(nu), nv(nv)
+top_rad(top_rad), nu(nu), nv(nv)
 {
     adjust();
 }
@@ -85,7 +84,7 @@ void GeomCone::move(const Point& _bottom, const Point& _top,
 
 GeomCone::GeomCone(const GeomCone& copy)
 : GeomObj(), v1(copy.v1), v2(copy.v2), bottom(copy.bottom), top(copy.top),
-  bot_rad(copy.bot_rad), top_rad(copy.top_rad), nu(copy.nu), nv(copy.nv)
+bot_rad(copy.bot_rad), top_rad(copy.top_rad), nu(copy.nu), nv(copy.nv)
 {
     adjust();
 }

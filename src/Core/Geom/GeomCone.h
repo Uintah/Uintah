@@ -51,9 +51,10 @@ public:
     Vector axis;
     double bot_rad;
     double top_rad;
+protected:
     int nu;
     int nv;
-
+public:
     void adjust();
     void move(const Point&, const Point&, double, double, int nu=20, int nv=1);
 
