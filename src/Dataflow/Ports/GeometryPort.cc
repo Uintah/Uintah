@@ -99,7 +99,6 @@ void GeometryOPort::reset()
 	outbox->send(scinew GeometryComm(&tmp));
 	GeomReply reply=tmp.receive();
 	portid=reply.portid;
-	busy_bit=reply.busy_bit;
 	if (module->show_stat) turn_off();
     }
     dirty=0;
@@ -205,11 +204,6 @@ void GeometryOPort::flushViewsAndWait()
     waiter.down();
     dirty=0;
     if (module->show_stat) turn_off();
-}
-
-int GeometryOPort::busy()
-{
-    return *busy_bit;
 }
 
 void GeometryOPort::save_msg(GeometryComm* msg)
@@ -355,9 +349,8 @@ GeomReply::GeomReply()
 {
 }
 
-GeomReply::GeomReply(int portid, int* busy_bit)
-  : portid(portid),
-    busy_bit(busy_bit)
+GeomReply::GeomReply(int portid)
+  : portid(portid)
 {
 }
 

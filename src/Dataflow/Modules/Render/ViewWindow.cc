@@ -238,7 +238,7 @@ void ViewWindow::get_bounds(BBox& bbox)
 {
   bbox.reset();
 
-  GeomIndexedGroup::IterIntGeomObj iter = manager->ports.getIter();
+  GeomIndexedGroup::IterIntGeomObj iter = manager->ports_.getIter();
     
   for ( ; iter.first != iter.second; iter.first++) {
 	
@@ -1671,7 +1671,7 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
 					 id, args[2], args[3],args[4],args[5]));
   }else if (args[1] == "startup") {
     // Fill in the visibility database...
-    GeomIndexedGroup::IterIntGeomObj iter = manager->ports.getIter();
+    GeomIndexedGroup::IterIntGeomObj iter = manager->ports_.getIter();
     
     for ( ; iter.first != iter.second; iter.first++) {
       
@@ -2235,7 +2235,7 @@ void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
 
   vector<GeomViewerItem*> transp_objs; // transparent objects - drawn last
 
-  GeomIndexedGroup::IterIntGeomObj iter = manager->ports.getIter();
+  GeomIndexedGroup::IterIntGeomObj iter = manager->ports_.getIter();
   
   for ( ; iter.first != iter.second; iter.first++) {
       
@@ -2305,9 +2305,9 @@ void ViewWindow::dump_objects(const string& filename, const string& format)
       delete stream;
       return;
     }
-    manager->geomlock.readLock();
-    GeomScene scene(bgcolor.get(), view.get(), &manager->lighting,
-		    &manager->ports);
+    manager->geomlock_.readLock();
+    GeomScene scene(bgcolor.get(), view.get(), &manager->lighting_,
+		    &manager->ports_);
     Pio(*stream, scene);
     if(stream->error()){
       cerr << "Error writing geom file: " << filename << "\n";
@@ -2315,7 +2315,7 @@ void ViewWindow::dump_objects(const string& filename, const string& format)
       cerr << "Done writing geom file: " << filename << "\n";
     }
     delete stream;
-    manager->geomlock.readUnlock();
+    manager->geomlock_.readUnlock();
   } else {
     cerr << "WARNING: format " << format << " not supported!\n";
   }
