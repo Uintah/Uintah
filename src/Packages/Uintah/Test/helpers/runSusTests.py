@@ -244,7 +244,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     command = "%s/sus -%s %s" % (susdir, algo, extra_flags)
     mpimsg = ""
   else:
-    command = "mpirun -np %s %s/sus -%s %s" % (int(np), susdir, algo, extra_flags)
+    command = "mpirun -np %s %s/sus -mpi -%s %s" % (int(np), susdir, algo, extra_flags)
     mpimsg = " (mpi %s proc)" % (int(np))
 
   if do_restart == "yes":
