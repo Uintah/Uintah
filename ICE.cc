@@ -4101,62 +4101,35 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
            iter != d_modelSetup->tvars.end(); iter++){
           TransportedVariable* tvar = *iter;
           if(tvar->matls->contains(indx)){
-            constCCVariable<double> q_L_CC;
-	    old_dw->get(q_L_CC,          tvar->var, indx, patch, gac, 2);
-
-	    constCCVariable<double> q_src;
-	    new_dw->get(q_src, tvar->src, indx, patch, gac, 2);
-	    CCVariable<double> q_new;
-	    new_dw->allocateTemporary(q_new, patch, gac, 2);
-	    if(tvar->src){
-	      for(CellIterator iter(q_L_CC.getLowIndex(), q_L_CC.getHighIndex());
-		  !iter.done(); iter++){
-		IntVector c = *iter;                            
-		q_new[c]  = (q_L_CC[c] + q_src[c])*mass_L[c];
-	      }
-	      advector->advectQ(q_new,patch,q_advected, new_dw);
-	    } else {
-	      advector->advectQ(q_L_CC,patch,q_advected, new_dw);
-	    }
-            
-            CCVariable<double> q_CC;
+            constCCVariable<double> q_L_CC,q_src;
+            CCVariable<double> q_new, q_CC;
+	     old_dw->get(q_L_CC, tvar->var, indx, patch, gac, 2);         
+	     new_dw->get(q_src,  tvar->src, indx, patch, gac, 2);         
+	     new_dw->allocateTemporary(q_new, patch, gac, 2);
             new_dw->allocateAndPut(q_CC, tvar->var, indx, patch);
+            
+	     if(tvar->src){  // if transported variable has a source
+	       for(CellIterator iter(q_L_CC.getLowIndex(), q_L_CC.getHighIndex());
+		    !iter.done(); iter++){
+		  IntVector c = *iter;                            
+		  q_new[c]  = (q_L_CC[c] + q_src[c])*mass_L[c];
+	       }
+	       advector->advectQ(q_new,patch,q_advected, new_dw);
+	     } else {
+	       advector->advectQ(q_L_CC,patch,q_advected, new_dw);
+	     }
 
-#if 1
-	    // Origina  way
-	    for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
-	      IntVector c = *iter;
-	      double q_tmp      = q_new[c]/mass_L[c];
-	      //cerr << "c=" << c;
-	      //cerr << ", mass_L=" << mass_L[c];
-	      //cerr << ", q_L_CC=" << q_L_CC[c] << ", q_tmp=" << q_tmp;
-	      double q_a = (q_advected[c] - q_tmp * mass_advected[c])/
-                          ( mass_new[c]);
-	      //cerr << ", q_a=" << q_a;
-	      q_CC[c]    = q_tmp + q_a; 
-	      //cerr << ", q_CC=" << q_CC[c] << '\n';
-	    }
-#endif
-#if 0
-	    // Todd's way
-            for(CellIterator iter = patch->getCellIterator();
-		!iter.done(); iter++){
-              IntVector c = *iter;                            
-              q_CC[c]  = q_L_CC[c] + q_src[c] + q_advected[c]; 
-            }
-#endif
-#if 0
-	    // No advection
-            for(CellIterator iter = patch->getCellIterator();
-		!iter.done(); iter++){
-              IntVector c = *iter;                            
-              q_CC[c]  = q_L_CC[c] + q_src[c];
-            }
-#endif
-
-           //  Set Neumann = 0 if symmetric Boundary conditions
-           //setBC(q_CC, "set_if_sym_BC",patch, d_sharedState, indx); 
-	   setBC(q_CC,    "zeroNeumann",  patch, d_sharedState, indx); 
+	     for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
+	       IntVector c = *iter;
+	       double q_tmp = q_new[c]/mass_L[c];
+	       double q_a   = (q_advected[c] - q_tmp * mass_advected[c])/
+                             ( mass_new[c]);
+	       q_CC[c] = q_tmp + q_a; 
+	     }
+            
+            //  Set Boundary Conditions 
+            string Labelname = tvar->var->getName();
+	     setBC(q_CC, Labelname,  patch, d_sharedState, indx); 
           }
         }
       }
