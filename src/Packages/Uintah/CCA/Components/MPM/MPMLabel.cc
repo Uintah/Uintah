@@ -95,6 +95,9 @@ MPMLabel::MPMLabel()
   pIsBrokenLabel = scinew VarLabel( "p.isBroken",
 			ParticleVariable<int>::getTypeDescription() );
 
+  pIsolatedLabel = scinew VarLabel( "p.isolated",
+			ParticleVariable<int>::getTypeDescription() );
+
   pCrackNormalLabel = scinew VarLabel( "p.crackNormal",
 			ParticleVariable<Vector>::getTypeDescription() );
 
@@ -155,6 +158,9 @@ MPMLabel::MPMLabel()
 			ParticleVariable<int>::getTypeDescription() );
 
   pIsBrokenLabel_preReloc = scinew VarLabel( "p.isBroken+",
+			ParticleVariable<int>::getTypeDescription() );
+
+  pIsolatedLabel_preReloc = scinew VarLabel( "p.isolated+",
 			ParticleVariable<int>::getTypeDescription() );
 
   pCrackNormalLabel_preReloc = scinew VarLabel( "p.crackNormal+",
@@ -332,6 +338,7 @@ MPMLabel::~MPMLabel()
   delete pExternalHeatRateLabel;
   delete pSurfLabel;
   delete pIsBrokenLabel;
+  delete pIsolatedLabel;
   delete pCrackNormalLabel;
   delete pTipNormalLabel;
   delete pExtensionDirectionLabel;
@@ -355,6 +362,7 @@ MPMLabel::~MPMLabel()
   delete pExternalHeatRateLabel_preReloc;
   delete pSurfLabel_preReloc;
   delete pIsBrokenLabel_preReloc;
+  delete pIsolatedLabel_preReloc;
   delete pCrackNormalLabel_preReloc;
   delete pTipNormalLabel_preReloc;
   delete pExtensionDirectionLabel_preReloc;

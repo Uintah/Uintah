@@ -179,6 +179,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    new_dw->allocate(pparticleID, lb->pParticleIDLabel, subset);
 
    ParticleVariable<int> pIsBroken;
+   ParticleVariable<int> pIsolated;
    ParticleVariable<Vector> pCrackNormal;
    ParticleVariable<Vector> pTipNormal;
    ParticleVariable<Vector> pExtensionDirection;
@@ -186,8 +187,8 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    ParticleVariable<double> pCrackSurfacePressure;
    
    if(d_fracture) {
-     new_dw->allocate(pIsBroken, 
-       lb->pIsBrokenLabel, subset);
+     new_dw->allocate(pIsBroken, lb->pIsBrokenLabel, subset);
+     new_dw->allocate(pIsolated, lb->pIsolatedLabel, subset);
      new_dw->allocate(pCrackNormal, lb->pCrackNormalLabel, subset);
      new_dw->allocate(pTipNormal, lb->pTipNormalLabel, subset);
      new_dw->allocate(pExtensionDirection, lb->pExtensionDirectionLabel, subset);
@@ -217,6 +218,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      
      if(d_fracture) {
 	pIsBroken[pIdx] = 0;
+	pIsolated[pIdx] = 0;
 	pCrackNormal[pIdx] = Vector(0.,0.,0.);
 	pTipNormal[pIdx] = Vector(0.,0.,0.);
 	pExtensionDirection[pIdx] = Vector(0.,0.,0.);
@@ -368,6 +370,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    
    if(d_fracture) {
      new_dw->put(pIsBroken, lb->pIsBrokenLabel);
+     new_dw->put(pIsolated, lb->pIsolatedLabel);
      new_dw->put(pCrackNormal, lb->pCrackNormalLabel);
      new_dw->put(pTipNormal, lb->pTipNormalLabel);
      new_dw->put(pExtensionDirection, lb->pExtensionDirectionLabel);

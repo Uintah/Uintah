@@ -173,12 +173,14 @@ void NormalFracture::computeConnectivity(
     ParticleVariable<Point>  pX_pg;
     ParticleVariable<double> pVolume_pg;
     ParticleVariable<int>    pIsBroken_pg;
+    ParticleVariable<int>    pIsolated_pg;
     ParticleVariable<Vector> pCrackNormal_pg;
     ParticleVariable<Vector> pTouchNormal_pg;
 
     old_dw->get(pX_pg, lb->pXLabel, pset_pg);
     old_dw->get(pVolume_pg, lb->pVolumeLabel, pset_pg);
     old_dw->get(pIsBroken_pg, lb->pIsBrokenLabel, pset_pg);
+    old_dw->get(pIsolated_pg, lb->pIsolatedLabel, pset_pg);
     old_dw->get(pCrackNormal_pg, lb->pCrackNormalLabel, pset_pg);
     new_dw->get(pTouchNormal_pg, lb->pTouchNormalLabel, pset_pg);
 
@@ -193,8 +195,10 @@ void NormalFracture::computeConnectivity(
     fit(pset_p,pX_p,pset_pg,pX_pg,pIdxEx);
 
     ParticleVariable<int>       pConnectivity_p_new;
+    ParticleVariable<int>       pIsolated_p_new;
     ParticleVariable<Vector>    pContactNormal_p_new;
     new_dw->allocate(pConnectivity_p_new, lb->pConnectivityLabel, pset_p);
+    new_dw->allocate(pIsolated_p_new, lb->pIsolatedLabel, pset_p);
     new_dw->allocate(pContactNormal_p_new, lb->pContactNormalLabel, pset_p);
 
     Lattice lattice(pX_pg);
@@ -207,6 +211,9 @@ void NormalFracture::computeConnectivity(
     {
       particleIndex pIdx_p = *iter;
       particleIndex pIdx_pg = pIdxEx[pIdx_p];
+
+      pIsolated_p_new[pIdx_p] = pIsolated_pg[pIdx_pg];
+      if(pIsolated_pg[pIdx_pg]) continue;
     
       pContactNormal_p_new[pIdx_p] = zero;
     
@@ -270,9 +277,20 @@ void NormalFracture::computeConnectivity(
 
       Connectivity connectivity(conn);
       pConnectivity_p_new[pIdx_p] = connectivity.flag();
+
+/*
+      int numConnected = 0;
+      for(int k=0;k<8;++k) {
+        if(conn[k] == 1) numConnected++;
+      }
+      if(numConnected<1) {
+        pIsolated_p_new[pIdx_p] = 1;
+      }
+*/
     }
   
     new_dw->put(pConnectivity_p_new, lb->pConnectivityLabel);
+    new_dw->put(pIsolated_p_new, lb->pIsolatedLabel_preReloc);
     new_dw->put(pContactNormal_p_new, lb->pContactNormalLabel);
   }
 }
