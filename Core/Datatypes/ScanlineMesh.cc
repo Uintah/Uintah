@@ -146,6 +146,31 @@ ScanlineMesh::locate(Node::index_type &node, const Point &p)
 
 void
 ScanlineMesh::get_weights(const Point &p,
+			  Node::array_type &locs, vector<double> &weights)
+{
+  const Point r = transform_.unproject(p);
+  Node::index_type node0, node1;
+
+  node0 = (unsigned int)r.x();
+
+  if (node0 >= 0 && node0 < (length_-1))
+  {
+    const double dx1 = r.x() - node0;
+    const double dx0 = 1.0 - dx1;
+
+    node1 = node0 + 1;
+
+    locs.push_back(node0);
+    locs.push_back(node1);
+
+    weights.push_back(dx0);
+    weights.push_back(dx1);
+  }
+}
+
+
+void
+ScanlineMesh::get_weights(const Point &p,
 			  Edge::array_type &l, vector<double> &w)
 {
   Edge::index_type idx;

@@ -166,6 +166,46 @@ ImageMesh::locate(Node::index_type &node, const Point &p)
 
 void
 ImageMesh::get_weights(const Point &p,
+		       Node::array_type &locs, vector<double> &weights)
+{
+  const Point r = transform_.unproject(p);
+  Node::index_type node0, node1, node2, node3;
+
+  node0.i_ = (unsigned int)r.x();
+  node0.j_ = (unsigned int)r.y();
+
+  if (node0.i_ >= 0 && node0.i_ < (nx_-1) ||
+      node0.j_ >= 0 && node0.j_ < (ny_-1))
+  {
+    const double dx1 = r.x() - node0.i_;
+    const double dy1 = r.y() - node0.j_;
+    const double dx0 = 1.0 - dx1;
+    const double dy0 = 1.0 - dy1;
+
+    node1.i_ = node0.i_ + 1;
+    node1.j_ = node0.j_ + 0;
+
+    node2.i_ = node0.i_ + 1;
+    node2.j_ = node0.j_ + 1;
+
+    node3.i_ = node0.i_ + 0;
+    node3.j_ = node0.j_ + 1;
+
+    locs.push_back(node0);
+    locs.push_back(node1);
+    locs.push_back(node2);
+    locs.push_back(node3);
+
+    weights.push_back(dx0 * dy0);
+    weights.push_back(dx1 * dy0);
+    weights.push_back(dx1 * dy1);
+    weights.push_back(dx0 * dy1);
+  }
+}
+
+
+void
+ImageMesh::get_weights(const Point &p,
 		       Face::array_type &l, vector<double> &w)
 {
   Face::index_type idx;
