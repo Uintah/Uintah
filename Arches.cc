@@ -189,6 +189,12 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : densitySP, [u,v,w]VelocitySP, scalarSP
   d_boundaryCondition->sched_setProfile(sched, patches, matls);
 
+  // if multimaterial, update celltype for mm intrusions
+  // require: voidFrac_CC, cellType
+  // compute: mmcellType, mmgasVolFrac
+  if (d_MAlab)
+    d_boundaryCondition->sched_mmWallCellTypeInit_first(sched, patches, matls);
+
   // Compute props (output Varlabel have CP appended to them)
   // require : densitySP
   // require scalarSP
