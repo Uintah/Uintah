@@ -20,8 +20,6 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/MetalMaterial.cc \
 	$(SRCDIR)/PhongMaterial.cc \
 	$(SRCDIR)/Material.cc \
-	$(SRCDIR)/Point.cc \
-	$(SRCDIR)/Transform.cc \
 	$(SRCDIR)/LambertianMaterial.cc \
 	$(SRCDIR)/CoupledMaterial.cc \
 	$(SRCDIR)/DielectricMaterial.cc \
@@ -32,7 +30,6 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Group.cc \
 	$(SRCDIR)/Rect.cc \
 	$(SRCDIR)/Checker.cc \
-	$(SRCDIR)/Vector.cc \
 	$(SRCDIR)/BBox.cc \
 	$(SRCDIR)/Exceptions.cc \
 	$(SRCDIR)/Stats.cc \
@@ -91,7 +88,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Disc.cc
 
 PSELIBS :=  \
-	Core/Thread Core/Exceptions Packages/rtrt/visinfo
+	Core/Thread Core/Exceptions Core/Geometry Packages/rtrt/visinfo
 
 LIBS := $(GL_LIBS) -lfastm -lm -lelf -lfetchop -lperfex
 
