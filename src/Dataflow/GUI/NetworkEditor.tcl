@@ -1267,13 +1267,13 @@ proc showProgress { { show_image 0 } { steps none } { okbutton 0 } } {
     update idletasks
     set w .splash
     if { ![winfo exists $w] } {
-	toplevel $w
+	toplevel $w -bd 2 -relief raised
 	wm withdraw $w
 	wm protocol $w WM_DELETE_WINDOW hideProgress
     }
     setProgressTitle "Welcome to SCIRun v[netedit getenv SCIRUN_VERSION]"
     if { ![winfo exists $w.frame] } {
-	frame $w.frame -relief raised -bd 4
+	frame $w.frame
 	pack $w.frame -expand 1 -fill both
     }
     set w $w.frame
