@@ -143,7 +143,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>imp_stage_NG_BCs_extFlow.uda</filebase>
-      <!--<outputTimestepInterval>10</outputTimestepInterval> -->
+      <!--<outputTimestepInterval>1</outputTimestepInterval>-->
       <outputInterval>1e-4</outputInterval>
       <save label = "press_equil_CC"/>
       <save label = "speedSound_CC"/>
@@ -267,7 +267,7 @@
                  <name>1stStage</name>
                </tri>         
                <res>                [2,2,1]          </res>
-               <velocity>           [0.2,0.,0.]      </velocity>
+               <velocity>           [0.160627,0.,0.] </velocity>
                <temperature>        224.23           </temperature>
              </geom_object>
           </material>
