@@ -42,6 +42,8 @@ ICELabel::ICELabel()
     VarLabel::create("mass_CC",      CCVariable<double>::getTypeDescription());
   speedSound_CCLabel =
     VarLabel::create("speedSound_CC",CCVariable<double>::getTypeDescription());
+  Kappa_CCLabel =
+    VarLabel::create("Kappa",CCVariable<double>::getTypeDescription());
   div_velfc_CCLabel =
     VarLabel::create("div_velfc_CC", CCVariable<double>::getTypeDescription());
   vol_frac_CCLabel =
@@ -179,6 +181,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(releasedHeat_CCLabel);
     VarLabel::destroy(created_vol_CCLabel);
     VarLabel::destroy(speedSound_CCLabel);
+    VarLabel::destroy(Kappa_CCLabel);
     VarLabel::destroy(div_velfc_CCLabel);
     VarLabel::destroy(vol_frac_CCLabel);
     VarLabel::destroy(viscosity_CCLabel);
