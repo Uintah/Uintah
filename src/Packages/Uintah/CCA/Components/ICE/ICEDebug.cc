@@ -132,7 +132,7 @@ _______________________________________________________________________ */
 void    ICE::printVector(const Patch* patch, int include_EC,
         const string&    message1,       /* message1                     */
         const string&    message2,       /* message to user              */
-        int     component,              /*  x = 0,y = 1, z = 1          */
+        int   component,                 /*  x = 0,y = 1, z = 1          */
         const CCVariable<Vector>& q_CC)
 {
 
@@ -155,24 +155,36 @@ void    ICE::printVector(const Patch* patch, int include_EC,
     }
     adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
     
-    
+    string var_name;
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(d_dbgSigFigs);  
-    cerr << "______________________________________________\n";
-    cerr << "$" << message1 << "\n";
-    cerr << "$" << message2 << "\n";
-    for(int k = low.z(); k < high.z(); k++)  {
-      for(int j = low.y(); j < high.y(); j++) {
-        for(int i = low.x(); i < high.x(); i++) {
-         IntVector idx(i, j, k);
-         cerr << "[" << i << "," << j << "," << k << "]~ " 
-              <<  q_CC[idx](component) << "  ";
-
-         /*  cerr << "\n"; */
-        }
-       cerr << "\n";
+    cerr.precision(d_dbgSigFigs); 
+    
+    for (int dir = 0; dir < 3 ; dir ++ ) { 
+      if (dir == 0 ) {
+        var_name="X_" + message2;
       }
-      cerr << "\n";
+      if (dir == 1 ) {
+        var_name="Y_" + message2;
+      }
+      if (dir == 2 ) {
+        var_name="Z_" + message2;
+      }
+      cerr << "______________________________________________\n";
+      cerr << "$" << message1 << "\n";
+      cerr << "$" << var_name << "\n";
+      for(int k = low.z(); k < high.z(); k++)  {
+        for(int j = low.y(); j < high.y(); j++) {
+          for(int i = low.x(); i < high.x(); i++) {
+           IntVector idx(i, j, k);
+           cerr << "[" << i << "," << j << "," << k << "]~ " 
+                <<  q_CC[idx](dir) << "  ";
+
+           /*  cerr << "\n"; */
+          }
+         cerr << "\n";
+        }
+        cerr << "\n";
+      }
     }
     cerr << " ______________________________________________\n";
     cerr.setf(ios::scientific, ios::floatfield);
