@@ -81,13 +81,13 @@ FieldSlicer::FieldSlicer(GuiContext *context)
     Axis_(context->subVar("axis")),
     Dims_(context->subVar("dims")),
 
-    iDim_(context->subVar("idim")),
-    jDim_(context->subVar("jdim")),
-    kDim_(context->subVar("kdim")),
+    iDim_(context->subVar("i-dim")),
+    jDim_(context->subVar("j-dim")),
+    kDim_(context->subVar("k-dim")),
 
-    iIndex_(context->subVar("iindex")),
-    jIndex_(context->subVar("jindex")),
-    kIndex_(context->subVar("kindex")),
+    iIndex_(context->subVar("i-index")),
+    jIndex_(context->subVar("j-index")),
+    kIndex_(context->subVar("k-index")),
 
     axis_(2),
 

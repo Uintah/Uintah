@@ -197,8 +197,7 @@ itcl_class SCIRun_Fields_FieldSubSample {
     method manualSliderEntry { start stop var1 var2 } {
 
 	if { [set $var2] < $start } {
-	    set $var2 $start
-	}
+	    set $var2 $start }
 	
 	if { [set $var2] > $stop } {
 	    set $var2 $stop }
@@ -233,8 +232,10 @@ itcl_class SCIRun_Fields_FieldSubSample {
 	    $w.$index.start.s configure -from 0 -to $stop_val
 	    $w.$index.stop.s configure -from $start_val -to [expr [set $this-$index-dim] - 1]
 
-	    bind $w.$index.start.e <Return> "$this manualSliderEntry4 0 $stop_val $this-$index-start $this-$index-start2 $index"
-	    bind $w.$index.stop.e  <Return> "$this manualSliderEntry $start_val  [expr [set $this-$index-dim] - 1] $this-$index-stop $this-$index-stop2"
+	    bind $w.$index.start.e <Return> \
+		"$this manualSliderEntry4 0 $stop_val $this-$index-start $this-$index-start2 $index"
+	    bind $w.$index.stop.e  <Return> \
+		"$this manualSliderEntry $start_val  [expr [set $this-$index-dim] - 1] $this-$index-stop $this-$index-stop2"
 	}
     }
 
@@ -248,12 +249,12 @@ itcl_class SCIRun_Fields_FieldSubSample {
 
 	entry $win.e -width 4 -text $var2
 
-	bind $win.e <Return> "$this manualSliderEntry4 $start $stop $var1 $var2 $index"
+	bind $win.e <Return> \
+	    "$this manualSliderEntry4 $start $stop $var1 $var2 $index"
 
 	pack $win.s -side left
 	pack $win.e -side bottom -padx 5
     }
-
 
     method updateSliderEntry4 { index someUknownVar } {
 
@@ -271,8 +272,7 @@ itcl_class SCIRun_Fields_FieldSubSample {
     method manualSliderEntry4 { start stop var1 var2 index } {
 
 	if { [set $var2] < $start } {
-	    set $var2 $start
-	}
+	    set $var2 $start }
 	
 	if { [set $var2] > $stop } {
 	    set $var2 $stop }
@@ -283,6 +283,18 @@ itcl_class SCIRun_Fields_FieldSubSample {
     }
 
     method set_size {dims idim jdim kdim wrap} {
+	global $this-wrap
+	global $this-dims
+	global $this-i-dim
+	global $this-j-dim
+	global $this-k-dim
+
+	set $this-wrap $wrap
+	set $this-dims $dims
+	set $this-i-dim $idim
+	set $this-j-dim $jdim
+	set $this-k-dim $kdim
+
 	set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
@@ -299,18 +311,6 @@ itcl_class SCIRun_Fields_FieldSubSample {
 		pack $w.l $w.i $w.misc -side top -padx 10 -pady 5	    
 	    }
 	}
-
-	global $this-wrap
-	global $this-dims
-	global $this-i-dim
-	global $this-j-dim
-	global $this-k-dim
-
-	set $this-wrap $wrap
-	set $this-dims $dims
-	set $this-i-dim $idim
-	set $this-j-dim $jdim
-	set $this-k-dim $kdim
 
 	for {set i 0} {$i < 3} {incr i 1} {
 	    if { $i == 0 } {
@@ -330,8 +330,8 @@ itcl_class SCIRun_Fields_FieldSubSample {
 
 	    set $this-$index-wrap 0
 
-	    set start_val 1
-	    set stop_val [expr [set $this-$index-dim] - 2]
+	    set stop_val1 [expr [set $this-$index-dim] - 1]
+	    set stop_val2 [expr [set $this-$index-dim] - 2]
 
 	    if [ expr [winfo exists $w] ] {
 
@@ -341,19 +341,22 @@ itcl_class SCIRun_Fields_FieldSubSample {
 		    $w.$index.wrap configure -state disabled 
 		}
 
-		# Update the sliders to have the new bounds.
-		$w.$index.start.s configure -from          0 -to $stop_val
-		$w.$index.stop.s  configure -from $start_val -to [expr [set $this-$index-dim] - 1]
-		$w.$index.skip.s  configure -from 1 -to [expr [set $this-$index-dim] - 1]
+		# Update the sliders to the new bounds.
+		$w.$index.start.s configure -from 0 -to $stop_val2
+		$w.$index.stop.s  configure -from 0 -to $stop_val1
+		$w.$index.skip.s  configure -from 1 -to $stop_val1
 
-		bind $w.$index.start.e <Return> "$this manualSliderEntry4          0 $stop_val $this-$index-start $this-$index-start2 i"
-		bind $w.$index.stop.e  <Return> "$this manualSliderEntry  $start_val [expr [set $this-$index-dim] - 1] $this-$index-stop $this-$index-stop2"
-		bind $w.$index.skip.e  <Return> "$this manualSliderEntry  1 [expr [set $this-$index-dim] - 1] $this-$index-skip $this-$index-skip2"
+		bind $w.$index.start.e <Return> \
+		    "$this manualSliderEntry4 0 $stop_val2 $this-$index-start $this-$index-start2 $index"
+		bind $w.$index.stop.e  <Return> \
+		    "$this manualSliderEntry  1 $stop_val1 $this-$index-stop $this-$index-stop2"
+		bind $w.$index.skip.e  <Return> \
+		    "$this manualSliderEntry  1 $stop_val1 $this-$index-skip $this-$index-skip2"
 	    }
 
 	    # Update the stop values to be at the initials values.
 	    set $this-$index-start 0	    
-	    set $this-$index-stop  [expr [set $this-$index-dim] - 1]
+	    set $this-$index-stop  $stop_val1
 	    set $this-$index-skip  1
 
 	    # Update the text values.

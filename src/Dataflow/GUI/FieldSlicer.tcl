@@ -32,66 +32,42 @@ itcl_class SCIRun_Fields_FieldSlicer {
 
     method set_defaults {} {
 
+	global $this-dims
 	global $this-axis
 
-	global $this-idim
-	global $this-jdim
-	global $this-kdim
-
-	global $this-iindex
-	global $this-jindex
-	global $this-kindex
-
-	global $this-iindex2
-	global $this-jindex2
-	global $this-kindex2
-
-	global $this-dims
-
 	set $this-axis 2
-
-	set $this-idim 1
-	set $this-jdim 1
-	set $this-kdim 1
-
-	set $this-iindex 1
-	set $this-jindex 0
-	set $this-kindex 0
-
-	set $this-iindex2 "0"
-	set $this-jindex2 "0"
-	set $this-kindex2 "0"
-
 	set $this-dims 3
+
+	for {set i 0} {$i < 3} {incr i 1} {
+	    if { $i == 0 } {
+		set index i
+	    } elseif { $i == 1 } {
+		set index j
+	    } elseif { $i == 2 } {
+		set index k
+	    }
+
+	    global $this-$index-dim
+	    global $this-$index-index
+	    global $this-$index-index2
+
+	    set $this-$index-dim 1
+	    set $this-$index-index 1
+	    set $this-$index-index2 "0"
+	}
     }
 
     method ui {} {
 
-	global $this-idim
-	global $this-jdim
-	global $this-kdim
-
-	global $this-iindex
-	global $this-kindex
-	global $this-jindex
-
-	global $this-iindex2
-	global $this-kindex2
-	global $this-jindex2
-
 	global $this-axis
-
 	global $this-dims
-
-	set $this-axis [expr [set $this-dims]-1]
-
-	set tmp 0.0
 
         set w .ui[modname]
         if {[winfo exists $w]} {
             raise $w
             return
         }
+
         toplevel $w
 
 	frame $w.l
@@ -101,41 +77,32 @@ itcl_class SCIRun_Fields_FieldSlicer {
 	pack $w.l.direction -side left
 	pack $w.l.index     -side left -padx 75
 
-	frame $w.i
+	for {set i 0} {$i < 3} {incr i 1} {
+	    if { $i == 0 } {
+		set index i
+	    } elseif { $i == 1 } {
+		set index j
+	    } elseif { $i == 2 } {
+		set index k
+	    }
 
-	radiobutton $w.i.l -text "i axis" -width 9 -anchor w -just left -variable $this-axis -value 0
+	    global $this-$index-dim
+	    global $this-$index-index
+	    global $this-$index-index2
 
-	pack $w.i.l -side left
+	    frame $w.$index
 
-	scaleEntry2 $w.i.index \
-		0 [expr [set $this-idim] - 1] 200 $this-iindex $this-iindex2
+	    radiobutton $w.$index.l -text "$index axis" -width 6 \
+		-anchor w -just left -variable $this-axis -value $i
 
-	pack $w.i.l $w.i.index -side left
+	    pack $w.$index.l -side left
 
+	    scaleEntry2 $w.$index.index \
+		0 [expr [set $this-$index-dim] - 1] 200 \
+		$this-$index-index $this-$index-index2
 
-	frame $w.j
-
-	radiobutton $w.j.l -text "j axis" -width 9 -anchor w -just left -variable $this-axis -value 1
-
-	pack $w.j.l -side left
-
-	scaleEntry2 $w.j.index \
-		0 [expr [set $this-jdim] - 1] 200 $this-jindex $this-jindex2
-
-	pack $w.j.index -side left
-
-
-	frame $w.k
-
-	radiobutton $w.k.l -text "k axis" -width 9 -anchor w -just left -variable $this-axis -value 2
-
-	pack $w.k.l -side left
-
-	scaleEntry2 $w.k.index \
-		0 [expr [set $this-kdim] - 1] 200 $this-kindex $this-kindex2
-
-	pack $w.k.index -side left
-
+	    pack $w.$index.l $w.$index.index -side left
+	}
 
 	frame $w.misc
 
@@ -176,8 +143,7 @@ itcl_class SCIRun_Fields_FieldSlicer {
     method manualSliderEntry { start stop var1 var2 } {
 
 	if { [set $var2] < $start } {
-	    set $var2 $start
-	}
+	    set $var2 $start }
 	
 	if { [set $var2] > $stop } {
 	    set $var2 $stop }
@@ -185,66 +151,27 @@ itcl_class SCIRun_Fields_FieldSlicer {
 	set $var1 [set $var2]
     }
 
-    method set_size {dim idim jdim kdim} {
+    method set_size {dims idim jdim kdim} {
 	set w .ui[modname]
 
-	global $this-idim
-	global $this-jdim
-	global $this-kdim
-
-	global $this-iindex
-	global $this-jindex
-	global $this-kindex
-
-	global $this-iindex2
-	global $this-jindex2
-	global $this-kindex2
-
 	global $this-axis
-
 	global $this-dims
 
-	set $this-dims $dim
-	set $this-idim $idim
-	set $this-jdim $jdim
-	set $this-kdim $kdim
+	global $this-i-dim
+	global $this-j-dim
+	global $this-k-dim
 
-	# Reset all of the slider values to the index values.
-	if { [set $this-iindex] > [expr [set $this-idim]-1] } {
-	    set $this-iindex [expr [set $this-idim]-1]
-	}
-	if { [set $this-jindex] > [expr [set $this-jdim]-1] } {
-	    set $this-jindex [expr [set $this-jdim]-1]
-	}
-	if { [set $this-kindex] > [expr [set $this-kdim]-1] } {
-	    set $this-kindex [expr [set $this-kdim]-1]
-	}
+	set $this-dims $dims
 
-	if { [set $this-axis] > [expr [set $this-dims]-1] } {
+	if { [set $this-axis] >= $dims } {
 	    set $this-axis [expr [set $this-dims]-1]
 	}
 
-	if [ expr [winfo exists $w] ] {
+	set $this-i-dim $idim
+	set $this-j-dim $jdim
+	set $this-k-dim $kdim
 
-	    # Update the sliders to have the new end values.
-	    $w.i.index.s configure -from 0 -to [expr $idim - 1]
-	    $w.j.index.s configure -from 0 -to [expr $jdim - 1]
-	    $w.k.index.s configure -from 0 -to [expr $kdim - 1]
-
-	    bind $w.i.index.e \
-		<Return> "$this manualSliderEntry 0 [expr $idim - 1] $this-iindex $this-iindex2"
-	    bind $w.j.index.e \
-		<Return> "$this manualSliderEntry 0 [expr $jdim - 1] $this-jindex $this-jindex2"
-	    bind $w.k.index.e \
-		<Return> "$this manualSliderEntry 0 [expr $kdim - 1] $this-kindex $this-kindex2"
-	}
-
-	# Update the text values.
-	set $this-iindex2 [set $this-iindex]
-	set $this-jindex2 [set $this-jindex]
-	set $this-kindex2 [set $this-kindex]
-
-        if {[winfo exists $w]} {
+	if {[winfo exists $w]} {
 	    pack forget $w.i
 	    pack forget $w.k
 	    pack forget $w.j
@@ -258,8 +185,38 @@ itcl_class SCIRun_Fields_FieldSlicer {
 		pack $w.l $w.i $w.misc -side top -padx 10 -pady 5	    
 	    }
 	}
+
+	for {set i 0} {$i < 3} {incr i 1} {
+	    if { $i == 0 } {
+		set index i
+	    } elseif { $i == 1 } {
+		set index j
+	    } elseif { $i == 2 } {
+		set index k
+	    }
+
+	    global $this-$index-index
+	    global $this-$index-index2
+
+	    set stop_val [expr [set $this-$index-dim]-1]
+
+	    if [ expr [winfo exists $w] ] {
+
+		# Update the sliders to the new bounds.
+		$w.$index.index.s configure -from 0 -to $stop_val
+
+		bind $w.$index.index.e \
+		    <Return> "$this manualSliderEntry 0 $stop_val $this-$index-index $this-$index-index2"
+	    }
+
+	    # Reset all of the slider values to the index values.
+	    if { [set $this-$index-index] > $stop_val } {
+		set $this-$index-index $stop_val
+	    }
+
+	    # Update the text values.
+	    set $this-$index-index2 [set $this-$index-index]
+	}
     }
 }
-
-
 
