@@ -186,8 +186,11 @@ FieldBoundaryAlgoT<Msh>::execute(const MeshBaseHandle mesh,
       cout << "Could not compile algorithm." << std::endl;
       return;
     }
-    FieldBoundaryAlgoAux *algo =
-      dynamic_cast<FieldBoundaryAlgoAux *>(algo_handle.get_rep());
+    
+    // No dynamic cast to satisfy dynamic_cast bug on SGI. 
+    // If we get this far we really have the right algorithm...
+    FieldBoundaryAlgoAux *algo =(FieldBoundaryAlgoAux *)algo_handle.get_rep();
+
     if (algo == 0)
     {
       cout << "Could not get algorithm." << std::endl;
