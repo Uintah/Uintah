@@ -376,6 +376,9 @@ namespace Uintah {
       const VarLabel* d_densityMicroLabel;
       const VarLabel* d_densityMicroINLabel;
       const VarLabel* d_pressPlusHydroLabel;
+      // predicted
+      const VarLabel* d_tempINPredLabel;
+      const VarLabel* d_co2INPredLabel;
 
       // for outlet bc
       const VarLabel* d_uvwoutLabel;
@@ -448,6 +451,44 @@ namespace Uintah {
       // Scalar NonLinear Src
 
       const VarLabel* d_reactscalNonLinSrcCorrLabel;
+      // for corrector
+      const VarLabel* d_uVelCoefPBLMCorrLabel;
+
+      // U-Velocity Convection Coeff Labels computed in pressuresolver and momentumsolver
+      const VarLabel* d_uVelConvCoefPBLMCorrLabel;
+
+      // U-Velocity Linear Src Labels
+      const VarLabel* d_uVelLinSrcPBLMCorrLabel;
+
+      // U-Velocity Non Linear Src Labels
+      const VarLabel* d_uVelNonLinSrcPBLMCorrLabel;
+
+      const VarLabel* d_vVelCoefPBLMCorrLabel;
+
+      // U-Velocity Convection Coeff Labels computed in pressuresolver and momentumsolver
+      const VarLabel* d_vVelConvCoefPBLMCorrLabel;
+
+      // U-Velocity Linear Src Labels
+      const VarLabel* d_vVelLinSrcPBLMCorrLabel;
+
+      // U-Velocity Non Linear Src Labels
+      const VarLabel* d_vVelNonLinSrcPBLMCorrLabel;
+
+
+      const VarLabel* d_wVelCoefPBLMCorrLabel;
+
+      // U-Velocity Convection Coeff Labels computed in pressuresolver and momentumsolver
+      const VarLabel* d_wVelConvCoefPBLMCorrLabel;
+
+      // U-Velocity Linear Src Labels
+      const VarLabel* d_wVelLinSrcPBLMCorrLabel;
+
+      // U-Velocity Non Linear Src Labels
+      const VarLabel* d_wVelNonLinSrcPBLMCorrLabel;
+
+      const VarLabel* d_uVelRhoHatCorrLabel;
+      const VarLabel* d_vVelRhoHatCorrLabel;
+      const VarLabel* d_wVelRhoHatCorrLabel;
 
 
       // for density
@@ -458,6 +499,7 @@ namespace Uintah {
       const VarLabel* d_wVelRhoHatLabel;
 
       const VarLabel* d_pressurePredLabel;
+      const VarLabel* d_pressureCorrSPBCLabel;
 
       const VarLabel* d_presCoefCorrLabel;
 
@@ -480,6 +522,7 @@ namespace Uintah {
       const VarLabel* d_enthalpySPLabel;
       // for validation
       const VarLabel* d_enthalpyRXNLabel;
+      const VarLabel* d_enthalpyRXNPredLabel;
       // computed as a part of pressure boundary calculations
 
       const VarLabel* d_enthalpyCPBCLabel;
@@ -536,6 +579,10 @@ namespace Uintah {
       const VarLabel* d_sootFVINLabel;
       // reactive scalar source term from properties
       const VarLabel* d_reactscalarSRCINLabel;
+      const VarLabel* d_absorpINPredLabel;
+      const VarLabel* d_sootFVINPredLabel;
+      // reactive scalar source term from properties
+      const VarLabel* d_reactscalarSRCINPredLabel;
     }; // End class ArchesLabel
 } // End namespace Uintah
 
