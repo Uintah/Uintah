@@ -87,12 +87,12 @@ if( $ARGV[0] eq "-a" ){
 		$url2->query_form(Job_ID => $jobid);   
 		$simNM = get($url2);
 		$url3->query_form(Job_ID => $jobid);   
-		$simNM = get($url3);		    
+		$version = get($url3);		    
 		$ftp = Net::FTP->new("rapture.cs.utah.edu")             or die "Can't connect: $@\n";
 		$ftp->login('blazer','onfire4u')       or die "Couldn't login\n";       
-		$ftp->mkdir($simNM)                    or die "Couldn't mkdir\n";               
+		$ftp->mkdir($simNM)                    or print("");               
 		$ftp->cwd($simNM)                  or die "Couldn't change directory\n"; 
-		$ftp->mkdir($version)                  or die "Couldn't mkdir\n";
+		$ftp->mkdir($version)                  or print("");
 		$ftp->cwd($version)                  or die "Couldn't change directory\n"; 
 		$ftp->type("I");	
 		$ftp->put($fileNM);
