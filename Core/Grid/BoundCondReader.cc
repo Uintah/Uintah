@@ -11,8 +11,7 @@
 #include <Packages/Uintah/Core/Grid/DifferenceBCData.h>
 #include <Packages/Uintah/Core/Grid/BCData.h>
 #include <Core/Malloc/Allocator.h>
-using namespace std;
-using namespace Uintah;
+
 #include <iostream>
 #include <utility>
 #include <typeinfo>
@@ -25,6 +24,9 @@ using namespace Uintah;
 
 #define PRINT
 #undef PRINT
+
+using namespace std;
+using namespace Uintah;
 
 BCReader::BCReader() 
 {
@@ -425,4 +427,7 @@ void print(BCGeomBase* p) {
   cout << "type = " << typeid(*p).name() << endl;
 }
 
-};
+}
+
+
+
