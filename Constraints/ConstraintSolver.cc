@@ -120,7 +120,7 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 
       switch (item.rtype) {
       case RecurseInitial:
-	 int reallynew = !epsilonequal(Epsilon, v->data, newval);
+	 int reallynew = !(v->data.epsilonequal(Epsilon, newval));
 	 if (!reallynew) {
 	    stack.pop();
 	    break;

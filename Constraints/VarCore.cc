@@ -18,64 +18,6 @@
 
 
 int
-epsilonequal( const Real Epsilon, const VarCore& p1, const VarCore& p2 )
-{
-   if (p1.isPoint() && p2.isPoint())
-      return ((RealAbs(p1.pointvalue.x()-p2.pointvalue.x()) < Epsilon)
-	      && (RealAbs(p1.pointvalue.y()-p2.pointvalue.y()) < Epsilon)
-	      && (RealAbs(p1.pointvalue.z()-p2.pointvalue.z()) < Epsilon));
-   else if (p1.isReal() && p2.isReal())
-      return (RealAbs(p1.realvalue-p2.realvalue) < Epsilon);
-   else {
-      ASSERT(!"Can't compare PointVariable with RealVariable!!");
-      return 0;
-   }
-}
-
-
-VarCore&
-VarCore::operator=( const VarCore& c )
-{
-   if (rigidity == Rigid) {
-      ASSERT(vartype == c.vartype);
-      if (vartype == PointVar) pointvalue = c.pointvalue;
-      else realvalue = c.realvalue;
-   } else {
-      vartype = c.vartype;
-      if (vartype == PointVar) pointvalue = c.pointvalue;
-      else realvalue = c.realvalue;
-   }
-   return *this;
-}
-
-
-VarCore&
-VarCore::operator=( const Point& p )
-{
-   if (rigidity == Rigid) {
-      ASSERT(vartype == PointVar);
-   } else {
-      vartype = PointVar;
-   }
-   pointvalue = p;
-   return *this;
-}
-
-
-VarCore&
-VarCore::operator=( const Real r )
-{
-   if (rigidity == Rigid) {
-      ASSERT(vartype == RealVar);
-   } else {
-      vartype = RealVar;
-   }
-   realvalue = r;
-   return *this;
-}
-
-
-int
 VarCore::operator==( const VarCore& c ) const
 {
    if (vartype == c.vartype) {

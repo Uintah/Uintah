@@ -44,9 +44,9 @@ public:
    inline operator Real() const { ASSERT(vartype==RealVar); return realvalue; }
 
    // CAN assign different types.
-   VarCore& operator=( const VarCore& c );
-   VarCore& operator=( const Point& p );
-   VarCore& operator=( const Real r );
+   inline VarCore& operator=( const VarCore& c );
+   inline VarCore& operator=( const Point& p );
+   inline VarCore& operator=( const Real r );
    int operator==( const VarCore& c ) const;
    int operator==( const Point& p ) const;
    int operator==( const Real r ) const;
@@ -54,7 +54,7 @@ public:
    VarCore& operator+=( const Vector& v );
    VarCore& operator+=( const Real r );
 
-   friend int epsilonequal( const Real Epsilon, const VarCore& p1, const VarCore& p2 );
+   inline int epsilonequal( const Real Epsilon, const VarCore& v );
    friend ostream& operator<<( ostream& os, VarCore& c );
 private:
    Rigidity rigidity;
@@ -62,6 +62,62 @@ private:
    Point pointvalue;
    Real realvalue;
 };
+
+
+inline VarCore&
+VarCore::operator=( const VarCore& c )
+{
+   if (rigidity == Rigid) {
+      ASSERT(vartype == c.vartype);
+   } else {
+      vartype = c.vartype;
+   }
+   if (vartype == PointVar) pointvalue = c.pointvalue;
+   else realvalue = c.realvalue;
+   return *this;
+}
+
+
+inline VarCore&
+VarCore::operator=( const Point& p )
+{
+   if (rigidity == Rigid) {
+      ASSERT(vartype == PointVar);
+   } else {
+      vartype = PointVar;
+   }
+   pointvalue = p;
+   return *this;
+}
+
+
+inline VarCore&
+VarCore::operator=( const Real r )
+{
+   if (rigidity == Rigid) {
+      ASSERT(vartype == RealVar);
+   } else {
+      vartype = RealVar;
+   }
+   realvalue = r;
+   return *this;
+}
+
+
+inline int
+VarCore::epsilonequal( const Real Epsilon, const VarCore& v )
+{
+   if (isPoint() && v.isPoint())
+      return ((RealAbs(pointvalue.x()-v.pointvalue.x()) < Epsilon)
+	      && (RealAbs(pointvalue.y()-v.pointvalue.y()) < Epsilon)
+	      && (RealAbs(pointvalue.z()-v.pointvalue.z()) < Epsilon));
+   else if (isReal() && v.isReal())
+      return (RealAbs(realvalue-v.realvalue) < Epsilon);
+   else {
+      ASSERT(!"Can't compare PointVariable with RealVariable!!");
+      return 0;
+   }
+}
 
 
 #endif
