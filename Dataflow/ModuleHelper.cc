@@ -13,9 +13,9 @@
 
 #include <Dataflow/ModuleHelper.h>
 
+#include <Comm/MessageBase.h>
 #include <Comm/MessageTypes.h>
 #include <Dataflow/Module.h>
-#include <Geom/PickMessage.h>
 
 #include <iostream.h>
 
@@ -40,25 +40,6 @@ int ModuleHelper::body(int)
 	    switch(msg->type){
 	    case MessageTypes::ExecuteModule:
 		module->do_execute();
-		break;
-	    case MessageTypes::GeometryPick:
-		{
-		    GeomPickMessage* gmsg=(GeomPickMessage*)msg;
-		    gmsg->module->geom_pick(gmsg->cbdata);
-		}
-		break;
-	    case MessageTypes::GeometryRelease:
-		{
-		    GeomPickMessage* gmsg=(GeomPickMessage*)msg;
-		    gmsg->module->geom_release(gmsg->cbdata);
-		}
-		break;
-	    case MessageTypes::GeometryMoved:
-		{
-		    GeomPickMessage* gmsg=(GeomPickMessage*)msg;
-		    gmsg->module->geom_moved(gmsg->axis, gmsg->distance,
-					     gmsg->delta, gmsg->cbdata);
-		}
 		break;
 	    default:
 		cerr << "Illegal Message type: " << msg->type << endl;
