@@ -1323,7 +1323,7 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
     t->requires(Task::NewDW, lb->vol_frac_CCLabel,           gac,1);          
   }
   t->computes(lb->int_eng_source_CCLabel);
-  
+  t->computes(lb->heatCond_src_CCLabel);
   sched->addTask(t, patches, matls);
 }
 
@@ -3579,6 +3579,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
 
       int indx    = matl->getDWIndex();   
       CCVariable<double> int_eng_source;
+      CCVariable<double> heatCond_src;
       
       new_dw->get(sp_vol_CC,    lb->sp_vol_CCLabel,     indx,patch,gac,1);
       new_dw->get(rho_CC,       lb->rho_CCLabel,        indx,patch,gac,1);
@@ -3587,7 +3588,10 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
        
       new_dw->allocateAndPut(int_eng_source, 
                                lb->int_eng_source_CCLabel,indx,patch);
+      new_dw->allocateAndPut(heatCond_src, 
+                               lb->heatCond_src_CCLabel,  indx,patch);
       int_eng_source.initialize(0.0);
+      heatCond_src.initialize(0.0);
      
       //__________________________________
       //  Source due to conduction ICE only
@@ -3609,7 +3613,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
           bool use_vol_frac = true; // include vol_frac in diffusion calc.
           scalarDiffusionOperator(new_dw, patch, use_vol_frac, Temp_CC,
                                   vol_fracX_FC, vol_fracY_FC, vol_fracZ_FC,
-                                  int_eng_source, thermalCond, delT);
+                                  heatCond_src, thermalCond, delT);
         }
       }
                                      
@@ -3622,7 +3626,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
           IntVector c = *iter;
           A = vol * vol_frac[c] * press_CC[c] * sp_vol_CC[c];
           B = speedSound[c] * speedSound[c];
-          int_eng_source[c] += (A/B) * delP_Dilatate[c]; 
+          int_eng_source[c] += (A/B) * delP_Dilatate[c] + heatCond_src[c]; 
         }
       }
 
