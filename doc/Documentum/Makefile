@@ -30,6 +30,9 @@ latex2htmloptions:= -info 0 -split 0 -no_white -link 1 -no_navigation \
 -long_titles 1 -prefix module-latex -image_type gif \
 -style ../../Utilities/HTML/srlatex2html.css
 
+rmfiles:=rm -f
+rmdirs:=rm -rf
+
 
 default: documentum module-xml module-latex
 
@@ -59,8 +62,8 @@ module-latex.dvi: module-latex.tex
 	latex2html ${latex2htmloptions} $<
 
 clean:
-	-rm *.aux *.dvi *.lot *.toc *.log
+	-${rmfiles} *.aux *.dvi *.lot *.toc *.log
 
 veryclean: clean
-	-rm documentum.html *.ps *.gz *~
-	-rm -rf module-xml module-latex
+	-${rmfiles} documentum.html *.ps *.gz *~
+	-${rmdirs} module-xml module-latex
