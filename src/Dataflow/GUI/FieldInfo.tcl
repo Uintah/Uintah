@@ -83,7 +83,7 @@ itcl_class SCIRun_FieldsOther_FieldInfo {
 	iwidgets::Labeledframe $w.att -labelpos nw \
 		               -labeltext "Input Field Attributes" 
 			       
-	pack $w.att 
+	pack $w.att -fill x
 	set att [$w.att childsite]
 	
 	labelpair $att.l1 "Name" $this-fldname
@@ -107,8 +107,12 @@ itcl_class SCIRun_FieldsOther_FieldInfo {
 	label $win.l1 -text $text1 -width [set $this-firstwidth] \
 		      -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left 
-	label $win.l2 -textvar $text2 -width 40 -anchor w -just left \
-		-fore darkred -borderwidth 0
+
+	entry $win.l2 -textvar $text2 \
+	    -width 40 \
+	    -relief flat \
+	    -just left \
+	    -fore darkred -borderwidth 0
 	pack $win.l1 $win.colon $win.l2 -side left
     } 
 
