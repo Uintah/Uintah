@@ -100,14 +100,12 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
   // Grab time_integrator, default is explicit
    string integrator_type = "explicit";
    d_integrator = Explicit;
-   if( mpm_soln_ps ) {
-     mpm_soln_ps->get("time_integrator",integrator_type);
-     if (integrator_type == "implicit"){
-       d_integrator = Implicit;
-     }
-     if (integrator_type == "explicit") {
-       d_integrator = Explicit;
-     }
+   mpm_soln_ps->get("time_integrator",integrator_type);
+   if (integrator_type == "implicit"){
+     d_integrator = Implicit;
+   }
+   if (integrator_type == "explicit") {
+     d_integrator = Explicit;
    }
    
    MPMPhysicalBCFactory::create(prob_spec);
@@ -722,22 +720,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       double totalmass = 0;
       Vector total_mom(0.0,0.0,0.0);
 
-#if 0
-      for(ParticleSubset::iterator iter = pset->begin();
-                iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-
-        if(px[idx].z() < -0.0475 && fabs(px[idx].x()) < .03
-                                 && fabs(px[idx].y()) < .03){
-          pexternalheatrate[idx]=20.0;
-        }
-        else{
-          pexternalheatrate[idx]=0.0;
-        }
-      }
-#endif
       IntVector ni[MAX_BASIS];
       double S[MAX_BASIS];
+      Vector pmom;
 
       for(ParticleSubset::iterator iter = pset->begin();
 						iter != pset->end(); iter++){
@@ -751,6 +736,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
   	    patch->findCellAndWeights27(px[idx], ni, S, psize[idx]);
           }
 
+          pmom = pvelocity[idx]*pmass[idx];
           total_mom += pvelocity[idx]*pmass[idx];
 
 	  // Add each particles contribution to the local mass & velocity 
@@ -758,11 +744,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	  for(int k = 0; k < d_8or27; k++) {
 	    if(patch->containsNode(ni[k])) {
 	       gmass[ni[k]]          += pmass[idx]                     * S[k];
+	       gvelocity[ni[k]]      += pmom                           * S[k];
 	       gvolume[ni[k]]        += pvolume[idx]                   * S[k];
 	       gexternalforce[ni[k]] += pexternalforce[idx]            * S[k];
-	       gvelocity[ni[k]]      += pvelocity[idx]    * pmass[idx] * S[k];
 	       gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
-	       gtempglobal[ni[k]]    += pTemperature[idx] * pmass[idx] * S[k];
                gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
                gnumnearparticles[ni[k]] += 1.0;
 	    }
@@ -773,7 +758,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         IntVector c = *iter; 
         totalmass       += gmass[c];
         gmassglobal[c]  += gmass[c];
-	gvelocity[c]    /= gmass[c];
+        gvelocity[c]    /= gmass[c];
+        gtempglobal[c]  += gTemperature[c];
         gTemperature[c] /= gmass[c];
         gTemperatureNoBC[c] = gTemperature[c];
       }
@@ -917,34 +903,38 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       IntVector ni[MAX_BASIS];
       double S[MAX_BASIS];
       Vector d_S[MAX_BASIS];
+      Matrix3 stressmass;
+      Matrix3 stresspress;
 
       for(ParticleSubset::iterator iter = pset->begin();
 						iter != pset->end(); iter++){
           particleIndex idx = *iter;
   
           // Get the node indices that surround the cell
-           if(d_8or27==8){
-             patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,  d_S);
-           }
-           else if(d_8or27==27){
-             patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S,d_S,
-                                                            psize[idx]);
-           }
+          if(d_8or27==8){
+            patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,  d_S);
+          }
+          else if(d_8or27==27){
+            patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S,d_S,
+                                                           psize[idx]);
+          }
+
+          stressmass  = pstress[idx]*pmass[idx];
+          stresspress = pstress[idx] + Id*p_pressure[idx];
 
           for (int k = 0; k < d_8or27; k++){
 	    if(patch->containsNode(ni[k])){
 	       Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 						d_S[k].z()*oodx[2]);
-	       internalforce[ni[k]] -=
-                      (div * (pstress[idx] + Id*p_pressure[idx]) * pvol[idx]);
-               gstress[ni[k]]       += pstress[idx] * pmass[idx] * S[k];
-               gstressglobal[ni[k]] += pstress[idx] * pmass[idx] * S[k];
+	       internalforce[ni[k]] -= (div * stresspress)  * pvol[idx];
+               gstress[ni[k]]       += stressmass * S[k];
 	     }
           }
       }
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
+        gstressglobal[c] += gstress[c];
         gstress[c] /= gmass[c];
     }
 
@@ -1495,16 +1485,16 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
    // Performs the interpolation from the cell vertices of the grid
    // acceleration and velocity to the particles to update their
    // velocity and position respectively
-   Vector vel(0.0,0.0,0.0);
-   Vector acc(0.0,0.0,0.0);
  
    // DON'T MOVE THESE!!!
    double thermal_energy = 0.0;
    Vector CMX(0.0,0.0,0.0);
    Vector CMV(0.0,0.0,0.0);
    double ke=0;
-   double massLost=0;
    int numMPMMatls=d_sharedState->getNumMPMMatls();
+   delt_vartype delT;
+   old_dw->get(delT, d_sharedState->get_delt_label() );
+
 
    for(int m = 0; m < numMPMMatls; m++){
      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1524,17 +1514,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
      constNCVariable<double> gTemperatureRate, gTemperature, gTemperatureNoBC;
      constNCVariable<double> dTdt, massBurnFraction, frictionTempRate;
 
-     delt_vartype delT;
-
      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
      old_dw->get(px,                    lb->pXLabel,                     pset);
      old_dw->get(pmass,                 lb->pMassLabel,                  pset);
-     new_dw->get(pvolume,               lb->pVolumeDeformedLabel,        pset);
-     old_dw->get(pexternalForce,        lb->pExternalForceLabel,         pset);
-     old_dw->get(pTemperature,          lb->pTemperatureLabel,           pset);
-     old_dw->get(pvelocity,             lb->pVelocityLabel,              pset);
      old_dw->get(pids,                  lb->pParticleIDLabel,            pset);
+     new_dw->get(pvolume,               lb->pVolumeDeformedLabel,        pset);
+     old_dw->get(pvelocity,             lb->pVelocityLabel,              pset);
+     old_dw->get(pTemperature,          lb->pTemperatureLabel,           pset);
+     old_dw->get(pexternalForce,        lb->pExternalForceLabel,         pset);
 
      new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
      new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
@@ -1577,8 +1565,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       massBurnFraction = massBurnFraction_create; // reference created data
      }
 
-     old_dw->get(delT, d_sharedState->get_delt_label() );
-
      double Cp=mpm_matl->getSpecificHeat();
      double rho_init=mpm_matl->getInitialDensity();
 
@@ -1599,8 +1585,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                                            psize[idx]);
           }
 
-          vel = Vector(0.0,0.0,0.0);
-          acc = Vector(0.0,0.0,0.0);
+          Vector vel(0.0,0.0,0.0);
+          Vector acc(0.0,0.0,0.0);
           double tempRate = 0;
           double burnFraction = 0;
 
@@ -1635,7 +1621,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           ke += .5*pmass[idx]*pvelocitynew[idx].length2();
 	  CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
 	  CMV += pvelocitynew[idx]*pmass[idx];
-          massLost += (pmass[idx] - pmassNew[idx]);
      }
 
      new_dw->deleteParticles(delset);      

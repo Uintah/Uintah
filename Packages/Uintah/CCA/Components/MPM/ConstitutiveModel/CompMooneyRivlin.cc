@@ -117,8 +117,8 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    Matrix3 Identity,deformationGradientInc,B,velGrad;
-    double invar1,invar2,invar3,J,w1,w2,w3,i3w3,w1pi1w2;
+    Matrix3 Identity,defGradInc,B,velGrad;
+    double invar1,invar2,invar3,J,w3,i3w3,C1pi1C2;
     Identity.Identity();
     double c_dil = 0.0,se=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
@@ -136,10 +136,9 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass;
     ParticleVariable<double> pvolume_deform;
-    constParticleVariable<Vector> pvelocity;
+    constParticleVariable<Vector> pvelocity,psize;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
-    constParticleVariable<Vector> psize;
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
@@ -158,10 +157,6 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch, gac, NGN);
     old_dw->get(delT, lb->delTLabel);
 
-    constParticleVariable<int> pConnectivity;
-    ParticleVariable<Vector> pRotationRate;
-    ParticleVariable<double> pStrainEnergy;
-
     double C1 = d_initialData.C1;
     double C2 = d_initialData.C2;
     double C3 = .5*C1 + C2;
@@ -170,12 +165,9 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
 
     double rho_orig = matl->getInitialDensity();
 
-    for(ParticleSubset::iterator iter = pset->begin();
-	iter != pset->end(); iter++){
+    for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
       particleIndex idx = *iter;
 
-      velGrad.set(0.0);
-     
       // Get the node indices that surround the cell
       IntVector ni[MAX_BASIS];
       Vector d_S[MAX_BASIS];
@@ -188,11 +180,15 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
          patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
        }
      
+       velGrad.set(0.0);
+     
        for(int k = 0; k < d_8or27; k++) {
 	  const Vector& gvel = gvelocity[ni[k]];
 	  for (int j = 0; j<3; j++){
+            double d_SXoodx = d_S[k][j] * oodx[j];
 	    for (int i = 0; i<3; i++) {
-	      velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+	      velGrad(i+1,j+1) += gvel[i] * d_SXoodx;
+//	      velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
 	    }
 	  }
        }
@@ -200,13 +196,10 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
       // F_n^np1 = dudx * dt + Identity
-      deformationGradientInc = velGrad * delT + Identity;
+      defGradInc = velGrad * delT + Identity;
 
       // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient_new[idx] =
-				deformationGradientInc*deformationGradient[idx];
-
-      // Actually calculate the stress from the n+1 deformation gradient.
+      deformationGradient_new[idx] = defGradInc*deformationGradient[idx];
 
       // Compute the left Cauchy-Green deformation tensor
       B = deformationGradient_new[idx]*deformationGradient_new[idx].Transpose();
@@ -217,15 +210,14 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       J = deformationGradient_new[idx].Determinant();
       invar3 = J*J;
 
-      w1 = C1;
-      w2 = C2;
       w3 = -2.0*C3/(invar3*invar3*invar3) + 2.0*C4*(invar3 -1.0);
 
       // Compute T = 2/sqrt(I3)*(I3*W3*Identity + (W1+I1*W2)*B - W2*B^2)
-      w1pi1w2 = w1 + invar1*w2;
+      // W1 = C1, W2 = C2
+      C1pi1C2 = C1 + invar1*C2;
       i3w3 = invar3*w3;
 
-      pstress[idx]=(B*w1pi1w2 - (B*B)*w2 + Identity*i3w3)*2.0/J;
+      pstress[idx]=(B*C1pi1C2 - (B*B)*C2 + Identity*i3w3)*2.0/J;
       
       // Update particle volumes
       pvolume_deform[idx]=(pmass[idx]/rho_orig)*J;
@@ -238,8 +230,8 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
 			 ,(pstress[idx])(3,3))/J)
 		   *pvolume_deform[idx]/pmass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-		     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-		     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+                       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
 
       // Compute the strain energy for all the particles
       double e = (C1*(invar1-3.0) + C2*(invar2-3.0) +
