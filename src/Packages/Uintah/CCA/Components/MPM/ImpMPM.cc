@@ -724,7 +724,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       double new_dt;
 
       subsched->get_dw(3)->allocateAndPut(newdisp,lb->dispNewLabel,matl,patch);
-      subsched->get_dw(3)->saveParticleSubset(matl, patch, pset);
+      subsched->get_dw(3)->saveParticleSubset(pset, matl, patch);
 
       newdisp.copyData(dispNew);
 
