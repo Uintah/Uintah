@@ -82,6 +82,10 @@ valarray<double> cgSolve(SparseMatrix<double, int>& A,
       break;
     }
 
+    if (i%1000 == 0){
+      cout << "Iteration " << i << ", residual is " << t << endl;
+    }
+
     if (i == max_iterations) {
       cout << "No convergence" << endl;
     }
