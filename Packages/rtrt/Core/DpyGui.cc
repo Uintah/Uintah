@@ -14,6 +14,7 @@
 #include <Packages/rtrt/Core/PerProcessorContext.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/Worker.h>
+#include <Packages/rtrt/Core/Stealth.h>
 
 #include <Core/Thread/Thread.h>
 
@@ -313,8 +314,8 @@ void DpyGui::key_pressed(unsigned long key) {
   case XK_v:
     // Autoview
     {
-      //if(followPath) { followPath = false; }
-      //stealth->stopAllMovement();
+      if(rtrt_dpy->priv->followPath) { rtrt_dpy->priv->followPath = false; }
+      rtrt_dpy->stealth_->stopAllMovement();
 
       // Animate lookat point to center of BBox...
       Object* obj= rtrt_dpy->scene->get_object();
@@ -335,9 +336,64 @@ void DpyGui::key_pressed(unsigned long key) {
       rtrt_dpy->priv->dumpFrame = 1;
     }
     break;
+
+  //////////////////////////////////////
+  // Stealth stuff
+  case XK_KP_Add: // Keypad +
+    rtrt_dpy->stealth_->accelerate();
+    break;
+  case XK_KP_Subtract: // Keypad -
+    rtrt_dpy->stealth_->decelerate();
+    break;
+  case XK_KP_End: // Keypad 1
+    break;
+  case XK_KP_Down:  // Keypad 2
+    rtrt_dpy->stealth_->pitchUp();
+    break;
+  case XK_KP_Page_Down: // Keypad 3
+    break;
+  case XK_KP_Left: // Keypad 4
+    rtrt_dpy->stealth_->turnLeft();
+    break;
+  case XK_KP_Begin: // Keypad 5
+    rtrt_dpy->stealth_->stopPitchAndRotate();
+    break;
+  case XK_KP_Right: // Keypad 6
+    rtrt_dpy->stealth_->turnRight();
+    break;
+  case XK_KP_Home: // Keypad 7
+    rtrt_dpy->stealth_->slideLeft();
+    break;
+  case XK_KP_Up: // Keypad 8
+    rtrt_dpy->stealth_->pitchDown();
+    break;
+  case XK_KP_Page_Up: // Keypad 9
+    rtrt_dpy->stealth_->slideRight();
+    break;
+  case XK_KP_Insert: // Keypad 0
+    rtrt_dpy->stealth_->stopAllMovement();
+    break;
+  case XK_KP_Delete: // Keypad .
+    rtrt_dpy->stealth_->slowDown();
+    break;
+  case XK_KP_Multiply: // Keypad *
+    rtrt_dpy->stealth_->goUp();
+    break;
+  case XK_KP_Divide: // Keypad /
+    rtrt_dpy->stealth_->goDown();
+    break;
+  case XK_KP_Enter: // Keypad Enter
+    break;
+  case XK_Num_Lock:
+    break;
+
+  ////////////////////////////////////
   case XK_Escape:
     Thread::exitAll(0);
     break;
+  default:
+    cerr << "DpyGui::key_pressed: Unknown key: "<<key<<" (";
+    cerr << hex << key << dec << ")\n";
   }
 }
 
