@@ -21,50 +21,31 @@
 <component name="SetupBEMatrix" category="Forward">
   <overview>
     <authors>
-      <author>Alexei Samsonov</author>
+      <author>Saeed B. Zadeh , Michael Callahan</author>
     </authors>
-    <summary>The module takes two triangulated meshes that represent two
-    closed surfaces, one inside the other, and calculates transfer
-    matrix to transfer potential values from inner to outer surfaces.
+    <summary>
+      TODO: WRITE THIS
     </summary>
     
     <description>
-      <p>Version Date: March 2001</p><p>Version: 1.0</p>
-      <p>The basic idea underlying the module implementation was taken
-      from [1]. The methods in numerical estimation of integral parts
-      of the problem setup were provided by Rob MacLeod and Guo Tang</p>
-      
-      <p>References:
-      </p>
-      <orderedlist>
-	<listitem>
-	  <p>R.C.Barr, et.al., "Relating Epicardial to Body Surface
-	    Potential Distributions by Means of Transfer Coefficients
-	    Based on Geometry Measurements", IEEE Trans Biom Eng, v.24,
-	    no.1, Jan. 1977</p>
-	</listitem>
-      </orderedlist>      
-      <note>
-	<p>The actual computation of the matrix is done by the
-	  BioPSE::Algorithm::BuildBEMatrix::build_BEMatrix()</p>
-      </note>
+      TODO: WRITE THIS
     </description>
   </overview>
 
   <io>
-    <inputs lastportdynamic="no">
+    <inputs lastportdynamic="yes">
       <!-- one of (device port file) -->
       <port>
-	<name>Inner Surface</name>
+	<name>Conductivity Tensors</name>
 	<description>
-	  <p>Takes a handle to Field object representing inner surface</p>
+	  <p>Conductivity tensors for the input surfaces.</p>
 	</description>
-	<datatype>SCIRun::Field</datatype>
+	<datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
-	<name>Outer Surface</name>
+	<name>Surface</name>
 	<description>
-	  <p>Takes a handle to Field object representing outer surface</p>
+	  <p>A surface in the module.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
@@ -73,7 +54,7 @@
     <outputs>
       <!-- one of (device port file) -->
       <port>
-	<name>Zbh Matrix</name>
+	<name>BEM Forward Matrix</name>
 	<description>
 	  <p>Sends a handle to the transfer matrix</p>
 	  <note>
@@ -81,16 +62,6 @@
 	  </note>
 	</description>
 	<datatype>SCIRun::Matrix</datatype>
-      </port>
-      <port>
-	<name>Outer Surf with Pots</name>
-	<description>
-	  <p>Sends handle to the field object containing outer surface
-	  and calculated potentials at the nodes. If no potentials
-	  were supplied on inner surface, the field contains zero potentials</p>
-	</description>
-	<datatype>SCIRun::Field</datatype>
-	<componentname>ShowField</componentname>
       </port>
     </outputs>
   </io>

@@ -6,7 +6,6 @@ SRCDIR   := Packages/BioPSE/Core/Algorithms/NumApproximation
 
 SRCS += \
 	$(SRCDIR)/BuildFEMatrix.cc \
-	$(SRCDIR)/BuildBEMatrix.cc \
 	$(SRCDIR)/BuildHexFEMatrix.cc \
 	$(SRCDIR)/BuildTriFEMatrix.cc \
 	$(SRCDIR)/ReferenceElement.cc \
