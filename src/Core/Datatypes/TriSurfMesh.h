@@ -83,7 +83,7 @@ public:
 
   TriSurfMesh();
   TriSurfMesh(const TriSurfMesh &copy);
-  virtual MeshBase *clone() { return new TriSurfMesh(*this); }
+  virtual TriSurfMesh *clone() { return new TriSurfMesh(*this); }
   virtual ~TriSurfMesh();
 
   virtual BBox get_bounding_box() const;

@@ -49,7 +49,7 @@ public:
     GenericField<TriSurfMesh, vector<T> >(data_at) {}
   TriSurf(TriSurfMeshHandle mesh, Field::data_location data_at) : 
     GenericField<TriSurfMesh, vector<T> >(mesh, data_at) {} 
-  virtual Field *clone() { return new TriSurf(*this); }
+  virtual TriSurf<T> *clone() { return new TriSurf(*this); }
   virtual ~TriSurf() {};
   
   void    io(Piostream &stream);
