@@ -52,6 +52,8 @@ namespace Uintah {
     void sort() {
       std::sort(items.begin(), items.end());
     }
+    const vector<T>& getVector() const 
+    { return items; }
   private:
     vector<T> items;
 
