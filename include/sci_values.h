@@ -24,6 +24,18 @@
 #if !defined(SCI_VALUES_H)
 #define SCI_VALUES_H
 
+#ifdef __APPLE__
+
+#include <float.h>
+#define MAXDOUBLE DBL_MAX
+#define MAXSHORT  SHRT_MAX
+#define MAXINT    INT_MAX
+
+#else
+
+#include <values.h>
+
+#endif
 
 
 #endif  /* #define SCI_VALUES_H */
