@@ -30,6 +30,7 @@ class MatlabInterfaceSHARE Matlab : public Module
 
   char hport[256];
   int wordy;            // how wordy debug output is
+  bool force_execute_;
 
   static bool engine_running;   // ==1 if engine runs under SCIRun
 
@@ -37,6 +38,7 @@ public:
   Matlab(GuiContext *context);
   virtual ~Matlab();
   virtual void execute();
+  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -46,7 +48,8 @@ DECLARE_MAKER(Matlab)
 Matlab::Matlab(GuiContext *context) :
   Module("Matlab", context, Source, "DataIO", "MatlabInterface"), 
   hpTCL(context->subVar("hpTCL")),
-  cmdTCL(context->subVar("cmdTCL"))
+  cmdTCL(context->subVar("cmdTCL")),
+  force_execute_(0)
 {
   for (int i = 0; i < 5; i++)
   {
@@ -198,11 +201,13 @@ Matlab::execute()
 
   // If input data and the script have not changed since last execute
   // then there is nothing to do.
-  if (!different_p)
+  if (!different_p && !force_execute_)
   {
     remark("No change in data or script.");
+    force_execute_=0;
     return;
   }
+  force_execute_=0;
 
   /* START THE MATLAB ENGINE */
   /* OBTAIN GUI STRING - HOST:PORT  AND WORDY PARAMETER */
@@ -285,6 +290,17 @@ Matlab::execute()
   }
 }
 
+void Matlab::tcl_command(GuiArgs& args, void *userdata) {
+  if (args.count() < 2) {
+    args.error("Matlab needs a minor command");
+    return;
+  }
+  if (args[1] == "ForceExecute") {
+    force_execute_=1;
+    want_to_execute();
+  } else {
+    Module::tcl_command(args, userdata);
+  }
+}
 
 } // End namespace MatlabInterface
-
