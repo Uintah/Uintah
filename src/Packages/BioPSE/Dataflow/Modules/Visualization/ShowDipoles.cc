@@ -127,7 +127,7 @@ void ShowDipoles::execute(){
 	nDips_=field_pcv->fdata().size();
       } else {
 	unsigned int i;
-	for (i=nDips_; i<widget_switch_.size(); i++)
+	for (i=nDips_; i<(unsigned int)(widget_switch_.size()); i++)
 	  widget_switch_[i]->set_state(1);
 	for (; i<field_pcv->fdata().size(); i++) {
 	  widget_.add(scinew ArrowWidget(this, &widget_lock_, widgetSize));
