@@ -372,6 +372,8 @@ public:
   void get_normal(Vector &/* result */, Node::index_type /* index */) const
   { ASSERTFAIL("not implemented") }
 
+  void get_random_point(Point &p, const Face::index_type &fi, 
+			int seed=0) const;
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
