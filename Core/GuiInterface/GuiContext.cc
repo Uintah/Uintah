@@ -226,7 +226,7 @@ void GuiContext::emit(std::ostream& out, const string& prefix)
       if ((tmp = getenv("SCIRUN_DATA")))
       {
 	const string datadir(tmp);
-	const string::size_type loc = result.find(data
+	const string::size_type loc = result.find(datadir);
 	if (loc != string::npos)
 	{
 	  result.replace(loc, datadir.size(), "$DATADIR");
