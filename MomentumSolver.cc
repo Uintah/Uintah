@@ -341,11 +341,11 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 						   &velocityVars,
 						   &constVelocityVars);
     }
-    int out_celltypeval = d_boundaryCondition->outletCellType();
-//    if (!(out_celltypeval==-10))
+    if ((d_boundaryCondition->getOutletBC())||(d_boundaryCondition->getPressureBC()))
     d_boundaryCondition->addPresGradVelocityOutletBC(pc, patch, index, cellinfo,
 						     delta_t, &velocityVars,
 						     &constVelocityVars);
+    if (d_boundaryCondition->getPressureBC())
     d_boundaryCondition->velocityPressureBC(pc, patch, index, cellinfo,
 					    &velocityVars, &constVelocityVars);
 
@@ -385,14 +385,17 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
       }
       new_dw->put(max_vartype(maxAbsU), timelabels->maxabsu_out); 
 
-      if ((!(out_celltypeval==-10))&&(xplus)) {
+      if ((d_boundaryCondition->getOutletBC())&&(xplus)) {
+        int outlet_celltypeval = d_boundaryCondition->outletCellType();
         int colX = ixHigh.x();
         for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
           for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
 
               IntVector currCell(colX, colY, colZ);
+              IntVector xplusCell(colX+1, colY, colZ);
 
-	      maxUxplus = Max(velocityVars.uVelRhoHat[currCell], maxUxplus);
+	      if (constVelocityVars.cellType[xplusCell] == outlet_celltypeval)
+	        maxUxplus = Max(velocityVars.uVelRhoHat[currCell], maxUxplus);
           }
         }
       }
@@ -1183,19 +1186,20 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM, 
       //           [u,v,w]VelNonLinSrcPBLM
       
-      d_boundaryCondition->velocityBC(pc, patch, 
-				    index,
-				    cellinfo, &velocityVars,
-				    &constVelocityVars);
+      if (d_boundaryCondition->anyArchesPhysicalBC()) {
+        d_boundaryCondition->velocityBC(pc, patch, 
+				        index,
+				        cellinfo, &velocityVars,
+				        &constVelocityVars);
 
-      if (d_boundaryCondition->getIntrusionBC()) {
-	d_boundaryCondition->intrusionMomExchangeBC(pc, patch, index,
-						    cellinfo, &velocityVars,
-						    &constVelocityVars);
-	d_boundaryCondition->intrusionVelocityBC(pc, patch, index, 
-						 cellinfo, &velocityVars,
-						 &constVelocityVars);
-
+        if (d_boundaryCondition->getIntrusionBC()) {
+	  d_boundaryCondition->intrusionMomExchangeBC(pc, patch, index,
+						      cellinfo, &velocityVars,
+						      &constVelocityVars);
+	  d_boundaryCondition->intrusionVelocityBC(pc, patch, index, 
+						   cellinfo, &velocityVars,
+						   &constVelocityVars);
+	}
       }
     // apply multimaterial velocity bc
     // treats multimaterial wall as intrusion
@@ -1274,18 +1278,20 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 #endif
     
     }
+    if (d_boundaryCondition->getInletBC())
     d_boundaryCondition->velRhoHatInletBC(pc, patch, cellinfo,
 					  &velocityVars, &constVelocityVars);
+    if (d_boundaryCondition->getPressureBC())
     d_boundaryCondition->velRhoHatPressureBC(pc, patch, cellinfo, delta_t,
 					     &velocityVars, &constVelocityVars);
-    int out_celltypeval = d_boundaryCondition->outletCellType();
-    if (!(out_celltypeval==-10))
+    if (d_boundaryCondition->getOutletBC())
     d_boundaryCondition->velRhoHatOutletBC(pc, patch, cellinfo, delta_t,
 					   &velocityVars, &constVelocityVars,
 					   maxUxplus, maxAbsV, maxAbsW);
     /*
   if (d_pressure_correction) {
-    if (!(out_celltypeval==-10)) {
+  int outlet_celltypeval = d_boundaryCondition->outletCellType();
+  if (!(outlet_celltypeval==-10)) {
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
@@ -1303,7 +1309,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
-        if (constVelocityVars.cellType[xminusCell] == out_celltypeval) {
+        if (constVelocityVars.cellType[xminusCell] == outlet_celltypeval) {
            double avdenlow = 0.5 * (constVelocityVars.new_density[currCell] +
 			            constVelocityVars.new_density[xminusCell]);
 
@@ -1324,7 +1330,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         IntVector xplusplusCell(colX+2, colY, colZ);
-        if (constVelocityVars.cellType[xplusCell] == out_celltypeval) {
+        if (constVelocityVars.cellType[xplusCell] == outlet_celltypeval) {
            double avden = 0.5 * (constVelocityVars.new_density[xplusCell] +
 			         constVelocityVars.new_density[currCell]);
 
@@ -1343,7 +1349,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
 	IntVector yminusCell(colX, colY-1, colZ);
-        if (constVelocityVars.cellType[yminusCell] == out_celltypeval) {
+        if (constVelocityVars.cellType[yminusCell] == outlet_celltypeval) {
            double avdenlow = 0.5 * (constVelocityVars.new_density[currCell] +
 			            constVelocityVars.new_density[yminusCell]);
 
@@ -1364,7 +1370,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         IntVector yplusplusCell(colX, colY+2, colZ);
-        if (constVelocityVars.cellType[yplusCell] == out_celltypeval) {
+        if (constVelocityVars.cellType[yplusCell] == outlet_celltypeval) {
            double avden = 0.5 * (constVelocityVars.new_density[yplusCell] +
 			         constVelocityVars.new_density[currCell]);
 
@@ -1384,7 +1390,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
 	IntVector zminusCell(colX, colY, colZ-1);
-        if (constVelocityVars.cellType[zminusCell] == out_celltypeval) {
+        if (constVelocityVars.cellType[zminusCell] == outlet_celltypeval) {
            double avdenlow = 0.5 * (constVelocityVars.new_density[currCell] +
 			            constVelocityVars.new_density[zminusCell]);
 
@@ -1405,7 +1411,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
         IntVector zplusplusCell(colX, colY, colZ+2);
-        if (constVelocityVars.cellType[zplusCell] == out_celltypeval) {
+        if (constVelocityVars.cellType[zplusCell] == outlet_celltypeval) {
            double avden = 0.5 * (constVelocityVars.new_density[zplusCell] +
 			         constVelocityVars.new_density[currCell]);
 
@@ -1604,8 +1610,8 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
       }
     }
 
-  int out_celltypeval = d_boundaryCondition->outletCellType();
-  int press_celltypeval = d_boundaryCondition->pressureCellType();
+  int outlet_celltypeval = d_boundaryCondition->outletCellType();
+  int pressure_celltypeval = d_boundaryCondition->pressureCellType();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -1625,7 +1631,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
         IntVector xminusyminusCell(colX-1, colY-1, colZ);
         IntVector xminuszminusCell(colX-1, colY, colZ-1);
 
- 	if (cellType[xminusCell] == press_celltypeval)
+ 	if (cellType[xminusCell] == pressure_celltypeval)
 	   new_uvel[currCell] = new_uvel[xplusCell];
 	else
 	   new_uvel[currCell] = (factor_old*old_uvel[currCell]*
@@ -1634,8 +1640,8 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 		(temp_density[currCell]+temp_density[xminusCell]))/
 		(factor_divide*(new_density[currCell]+new_density[xminusCell]));
 
- 	if ((cellType[xminusCell] == out_celltypeval)||
-	    (cellType[xminusCell] == press_celltypeval)) {
+ 	if ((cellType[xminusCell] == outlet_celltypeval)||
+	    (cellType[xminusCell] == pressure_celltypeval)) {
 
            new_uvel[xminusCell] = new_uvel[currCell];
 
@@ -1669,7 +1675,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
         IntVector xpluszminusCell(colX+1, colY, colZ-1);
         IntVector xplusplusCell(colX+2, colY, colZ);
 
- 	if (cellType[xplusCell] == press_celltypeval)
+ 	if (cellType[xplusCell] == pressure_celltypeval)
            new_uvel[xplusCell] = new_uvel[currCell];
 	else
 	   new_uvel[xplusCell] = (factor_old*old_uvel[xplusCell]*
@@ -1678,8 +1684,8 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 		(temp_density[xplusCell]+temp_density[currCell]))/
 		(factor_divide*(new_density[xplusCell]+new_density[currCell]));
 
- 	if ((cellType[xplusCell] == out_celltypeval)||
-	    (cellType[xplusCell] == press_celltypeval)) {
+ 	if ((cellType[xplusCell] == outlet_celltypeval)||
+	    (cellType[xplusCell] == pressure_celltypeval)) {
 
            new_uvel[xplusplusCell] = new_uvel[xplusCell];
 
@@ -1714,7 +1720,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
         IntVector yminusxminusCell(colX-1, colY-1, colZ);
         IntVector yminuszminusCell(colX, colY-1, colZ-1);
 
- 	if (cellType[yminusCell] == press_celltypeval)
+ 	if (cellType[yminusCell] == pressure_celltypeval)
 	   new_vvel[currCell] = new_vvel[yplusCell];
 	else
 	   new_vvel[currCell] = (factor_old*old_vvel[currCell]*
@@ -1723,8 +1729,8 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 		(temp_density[currCell]+temp_density[yminusCell]))/
 		(factor_divide*(new_density[currCell]+new_density[yminusCell]));
 
- 	if ((cellType[yminusCell] == out_celltypeval)||
-	    (cellType[yminusCell] == press_celltypeval)) {
+ 	if ((cellType[yminusCell] == outlet_celltypeval)||
+	    (cellType[yminusCell] == pressure_celltypeval)) {
 
            new_vvel[yminusCell] = new_vvel[currCell];
 
@@ -1758,7 +1764,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
         IntVector ypluszminusCell(colX, colY+1, colZ-1);
         IntVector yplusplusCell(colX, colY+2, colZ);
 
- 	if (cellType[yplusCell] == press_celltypeval)
+ 	if (cellType[yplusCell] == pressure_celltypeval)
 	   new_vvel[yplusCell] = new_vvel[currCell];
 	else
 	   new_vvel[yplusCell] = (factor_old*old_vvel[yplusCell]*
@@ -1767,8 +1773,8 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 		(temp_density[yplusCell]+temp_density[currCell]))/
 		(factor_divide*(new_density[yplusCell]+new_density[currCell]));
 
- 	if ((cellType[yplusCell] == out_celltypeval)||
-	    (cellType[yplusCell] == press_celltypeval)) {
+ 	if ((cellType[yplusCell] == outlet_celltypeval)||
+	    (cellType[yplusCell] == pressure_celltypeval)) {
 
            new_vvel[yplusplusCell] = new_vvel[yplusCell];
 
@@ -1803,7 +1809,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
         IntVector zminusxminusCell(colX-1, colY, colZ-1);
         IntVector zminusyminusCell(colX, colY-1, colZ-1);
 
- 	if (cellType[zminusCell] == press_celltypeval)
+ 	if (cellType[zminusCell] == pressure_celltypeval)
 	   new_wvel[currCell] = new_wvel[zplusCell];
 	else
 	   new_wvel[currCell] = (factor_old*old_wvel[currCell]*
@@ -1813,8 +1819,8 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 		(factor_divide*
 		(new_density[currCell]+new_density[zminusCell]));
 
- 	if ((cellType[zminusCell] == out_celltypeval)||
-	    (cellType[zminusCell] == press_celltypeval)) {
+ 	if ((cellType[zminusCell] == outlet_celltypeval)||
+	    (cellType[zminusCell] == pressure_celltypeval)) {
 
            new_wvel[zminusCell] = new_wvel[currCell];
 
@@ -1848,7 +1854,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
         IntVector zplusyminusCell(colX, colY-1, colZ+1);
         IntVector zplusplusCell(colX, colY, colZ+2);
 
- 	if (cellType[zplusCell] == press_celltypeval)
+ 	if (cellType[zplusCell] == pressure_celltypeval)
 	   new_wvel[zplusCell] = new_wvel[currCell];
 	else
 	   new_wvel[zplusCell] = (factor_old*old_wvel[zplusCell]*
@@ -1857,8 +1863,8 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 		(temp_density[zplusCell]+temp_density[currCell]))/
 		(factor_divide*(new_density[zplusCell]+new_density[currCell]));
 
- 	if ((cellType[zplusCell] == out_celltypeval)||
-	    (cellType[zplusCell] == press_celltypeval)) {
+ 	if ((cellType[zplusCell] == outlet_celltypeval)||
+	    (cellType[zplusCell] == pressure_celltypeval)) {
 
            new_wvel[zplusplusCell] = new_wvel[zplusCell];
 
