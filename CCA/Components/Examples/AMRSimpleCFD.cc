@@ -577,7 +577,7 @@ void AMRSimpleCFD::scheduleCoarsen(const LevelP& coarseLevel,
 }
 //______________________________________________________________________
 //  This is only used to flag indicating which cells need to be refined.
-//  Nothing is done with with this.
+//  Nothing is done with this.
 void AMRSimpleCFD::scheduleErrorEstimate(const LevelP& coarseLevel,
 					 SchedulerP& sched)
 {
