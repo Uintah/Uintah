@@ -23,9 +23,13 @@
 
 main(int argc, char **argv) {
 
-    if (argc != 2) {
-	cerr << "Need name of set (ie axial/scalp)\n";
+    if (argc < 2) {
+	cerr << "Need name of set (ie dave/contours/axial/scalp) and optionally a sample rate\n";
 	exit(0);
+    }
+    int sample=1;
+    if (argc > 2) {
+	sample=atoi(argv[2]);
     }
     ContourSetHandle set=new ContourSet;
     char hdrname[100];
@@ -60,7 +64,12 @@ main(int argc, char **argv) {
         Array1<Point> temp;
 	while (instream) {
 	    double x, y, z;
-	    instream >> x >> y >> z;
+	    int count=sample;
+	    if (i==num) count=1;
+	    while (instream && count>0) {
+		instream >> x >> y >> z;
+	        count--;
+	    }
 	    temp.add(Point(x,y,i));
 	}
 	temp.remove(temp.size()-1);
@@ -71,7 +80,7 @@ main(int argc, char **argv) {
     char csname[100];
     for (i=0; argv[1][i]!='\0'; i++)
 	if (argv[1][i] == '/') argv[1][i]='.';
-    sprintf(csname, "/home/grad/dweinste/mydata/%s.cs", argv[1]); 
+    sprintf(csname, "/home/grad/dweinste/mydata/%s.%d.cs", argv[1], sample); 
     TextPiostream stream(csname, Piostream::Write);
     Pio(stream, set);
 }

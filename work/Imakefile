@@ -78,6 +78,35 @@ JAS_LIBS = \
 JAS_LDFLAGS = SCI_LM
 SCIProgramTarget2($(JAS_TARGET), $(JAS_OBJS), $(JAS_LIBS), $(JAS_LDFLAGS))
 
+SJAS_TARGET = JAStoSurf
+SJAS_SRCS = JAStoSurf.cc
+SJAS_OBJS = JAStoSurf.o
+SJAS_LIBS = \
+	Datatypes/TriSurface.o \
+	Datatypes/libDatatypes.a \
+	Geometry/libGeometry.a \
+	Multitask/libMultitask.a \
+	Classlib/libClasslib.a \
+	Malloc/libMalloc.a
+
+SJAS_LDFLAGS = SCI_LM
+SCIProgramTarget2($(SJAS_TARGET), $(SJAS_OBJS), $(SJAS_LIBS), $(SJAS_LDFLAGS))
+
+IVES_TARGET = ScFldToIves
+IVES_SRCS = ScFldToIves.cc
+IVES_OBJS = ScFldToIves.o
+IVES_LIBS = \
+	Datatypes/ScalarField.o \
+	Datatypes/ScalarFieldRG.o \
+	Datatypes/libDatatypes.a \
+	Geometry/libGeometry.a \
+	Multitask/libMultitask.a \
+	Classlib/libClasslib.a \
+	Malloc/libMalloc.a
+
+IVES_LDFLAGS = SCI_LM
+SCIProgramTarget2($(IVES_TARGET), $(IVES_OBJS), $(IVES_LIBS), $(IVES_LDFLAGS))
+
 VP_TARGET = VPtoTriSurf
 VP_SRCS = VPtoTriSurf.cc
 VP_OBJS = VPtoTriSurf.o
@@ -119,7 +148,23 @@ MESH_LIBS = \
 MESH_LDFLAGS = SCI_LM
 SCIProgramTarget2($(MESH_TARGET), $(MESH_OBJS), $(MESH_LIBS), $(MESH_LDFLAGS))
 
-SRCS = $(SR_SRCS) $(SEG_SRCS) $(JAS_SRCS) $(SC_SRCS) $(MESH_SRCS) $(VP_SRCS)
+JASUG_TARGET = JAStoUG
+JASUG_SRCS = JAStoUG.cc
+JASUG_OBJS = JAStoUG.o
+JASUG_LIBS = \
+	Datatypes/libDatatypes.a \
+	Classlib/libClasslib.a \
+	Geometry/libGeometry.a \
+	Multitask/libMultitask.a \
+	Classlib/libClasslib.a \
+	Math/libMath.a \
+	Malloc/libMalloc.a
+
+JASUG_LDFLAGS = SCI_LM
+SCIProgramTarget2($(JASUG_TARGET), $(JASUG_OBJS), $(JASUG_LIBS), $(JASUG_LDFLAGS))
+
+SRCS = $(SR_SRCS) $(SEG_SRCS) $(JAS_SRCS) $(SC_SRCS) $(MESH_SRCS) $(VP_SRCS) \
+	$(IVES_SRCS) $(JASUG_SRCS) $(SJAS_SRCS)
 SCIDependTarget($(SRCS))
 
 World:
