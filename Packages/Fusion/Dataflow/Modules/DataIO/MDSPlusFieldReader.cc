@@ -809,7 +809,7 @@ void MDSPlusFieldReader::execute(){
 	      yVal = -rad * sin( phi );
 	      zVal =  grid_data[1][index];
 
-	      hvm->set_point(node, Point( xVal, yVal, zVal ) );
+	      hvm->set_point( Point( xVal, yVal, zVal ), node );
 
 	      for( n=0; n<MAX_SCALAR; n++ ) {
 		if( bScalar_[n] ) {
@@ -822,10 +822,10 @@ void MDSPlusFieldReader::execute(){
 	      for( n=0; n<MAX_VECTOR; n++ ) {
 		if( bVector_[n] ) {
 		  xVal =  vector_data[n][0][0][cc] * cos(phi) -
-		    vector_data[n][0][2][cc] * sin(phi);
+		          vector_data[n][0][2][cc] * sin(phi);
 
 		  yVal = -vector_data[n][0][0][cc] * sin(phi) -
-		    vector_data[n][0][2][cc] * cos(phi);
+		          vector_data[n][0][2][cc] * cos(phi);
 	      
 		  zVal =  vector_data[n][0][1][cc];
 
