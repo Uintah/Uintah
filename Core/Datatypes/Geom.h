@@ -16,6 +16,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Persistent/Persistent.h>
 
 #include <vector>
 #include <string>
@@ -64,6 +65,19 @@ public:
 
   inline void setName(string iname) { d_name = iname; };
   inline string getName() { return d_name; };
+
+  /////////
+  // Casts down to handle to attribute of specific type.
+  // Returns empty handle if it was not successeful cast
+  template <class T> LockingHandle<T> downcast(T*) {
+    T* rep = dynamic_cast<T *>(this);
+    return LockingHandle<T>(rep);
+  }
+
+  //////////
+  // Persistent IO
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
   
   // ...
 protected:
