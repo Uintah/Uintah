@@ -39,13 +39,27 @@ variable, to let the server know which file permissions should be assigned
 to files you add or modify:</font><font face="Courier New,Courier"><font color="#000000"></font></font>
 <p><font face="Courier New,Courier"><font color="#000000">&nbsp; <b>setenv
 CVSUMASK 000</b></font></font>
-<br>&nbsp;
+<p><font color="#000099">Once you have all the environment variables set,
+you can use CVS to check-out code, add or modify code, and commit (or check-in)
+code.</font><font color="#000099"></font>
 <p><b><u><font color="#000099"><font size=+1>Checking Out Code From the
 Repository</font></font></u></b><b><u><font color="#000099"><font size=+1></font></font></u></b>
+<p><font color="#000099">Checking out code more or less means downloading
+the whole source tree for the latest version of a software project.&nbsp;
+To initiate the download you should type the following:</font><font color="#000099"></font>
+<p><b><font face="Courier New,Courier"><font color="#000000">&nbsp; cd
+PATH</font></font></b>
+<br><b><font face="Courier New,Courier"><font color="#000000">&nbsp; cvs
+checkout PROJECT</font></font></b><b><font face="Courier New,Courier"><font color="#000000"></font></font></b>
+<p><font color="#000099">where PATH is the path to where you would like
+the root of the new source tree to be located, and PROJECT is the name
+of the project you wish to get.&nbsp; For the PSE project the cvs command
+would look like:</font><font color="#000099"></font>
+<p><b><font face="Courier New,Courier"><font color="#000000">&nbsp; cvs
+checkout PSE</font></font></b>
+<br><b><font face="Courier New,Courier"><font color="#000000"></font></font></b>&nbsp;<b><u><font color="#000099"><font size=+1></font></font></u></b>
 <p><b><u><font color="#000099"><font size=+1>Adding a New File or Directory
 To the Repository</font></font></u></b>
-<p><font color="#000099">First, make sure that you have your environment
-variables properly set.</font>
 <p><font color="#000099">To add a new directory to the repository, type
 the following:</font><font color="#000099"></font>
 <p><font color="#000099">&nbsp;&nbsp;&nbsp;&nbsp; </font><b><font face="Courier New,Courier"><font color="#000000">cd
@@ -54,8 +68,8 @@ PATH</font></font></b>
 add NEW_DIR</font></font></b><b><font face="Courier New,Courier"><font color="#000000"></font></font></b>
 <p><font color="#000099">Where PATH is the path to the directory you want
 to add, and NEW_DIR is the name of the new directory.</font>
-<p><font color="#000099">To add a new file to the repository, type the
-following:</font>
+<p><font color="#000099">To add a new non-directory file to the repository,
+type the following:</font>
 <p><font face="Courier New,Courier">&nbsp; <b>cd PATH</b></font>
 <br><font face="Courier New,Courier">&nbsp; <b>cvs add NEW_FILE</b></font>
 <br><b><font face="Courier New,Courier">&nbsp; cvs commit -m "initial commit
