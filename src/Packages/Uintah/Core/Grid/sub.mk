@@ -45,6 +45,7 @@ SRCS     += \
 	$(SRCDIR)/DifferenceBCData.cc \
 	$(SRCDIR)/SideBCData.cc \
 	$(SRCDIR)/CircleBCData.cc \
+	$(SRCDIR)/AnnulusBCData.cc \
 	$(SRCDIR)/RectangleBCData.cc \
 	$(SRCDIR)/UnknownVariable.cc \
 	$(SRCDIR)/SimpleMaterial.cc \
