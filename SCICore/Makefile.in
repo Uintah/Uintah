@@ -20,7 +20,7 @@ endif
 
 SUBDIRS = Containers Datatypes Exceptions Geom Geometry Malloc Math \
           Process TclInterface Thread TkExtensions Tester Persistent \
-	  Util $(GLOBUS_THREADS)
+	  Util $(GLOBUS_THREADS) GUI
 SOLIB   = libSCICore.so
 
 SOLIBRARIES = -lGLU -lGL \
