@@ -36,35 +36,35 @@
     <td bgcolor="white"> 
       <div align="left"> <font color="#8b0000" size="4"><b>Introduction: Using 
         this Tutorial</b></font> 
-        <p> By simultaneously running SCIRun and this tutorial, the user can easily 
+        <p> By simultaneously running SCIRun, and this tutorial, users can easily 
           follow these instructions. This tutorial also serves as a visual reference 
           guide toward building a sample net. To demonstrate this process, users 
           are introduced to the SCIRun software and to the BioPSE package through 
           a forward finite element problem. </p>
-        <p>This tutorial is not meant as a comprehensive guide to the SCIRun/BioPSE 
-          software system. You will benefit greatly by reading the full <a href="http://software.sci.utah.edu/software/1_0_1/doc/index.html" target="_blank"><b>documentation</b></a> 
+        <p>This tutorial is not intended to be a comprehensive guide to the SCIRun/BioPSE 
+          software system. You will greatly benefit by reading the full <a href="http://software.sci.utah.edu/software/1_0_1/doc/index.html" target="_blank"><b>documentation</b></a> 
           contents for SCIRun /BioPSE. Additionally, for more descriptive information 
           about tutorial modules, you may access the module <a href="http://software.sci.utah.edu/software/1_0_1/doc/UserGuide/scirun_modules.html" target="_blank"><b>catalog.</b></a> 
         </p>
         <p>You can also click on the various statements that are linked throughout 
           this document<i>. </i>If your browser supports frames, visual cues will 
-          appear on the right window as a guide to building your net.</p>
+          appear in the right window as a guide to building your net.</p>
         <p>&nbsp;</p>
         <p><font size="4" color="#8b0000"><b>Problem Statement</b></font></p>
         <p>Using a volume conductor model and an equivalent dipole source, we 
-          hope to compute the potentials and electric field induced by the source 
-          through the domain. An analytic solution exists for the problem of very 
+          seek to compute the potentials and electric field induced by the source 
+          through the domain. an analytic solution exists for the problem of very 
           specific geometric models (e.g., <a href="../../cylinders_and_spheres%20Folder/cylinders_and_spheres/index.html" target="display">analytic 
           cylinders or spheres</a>). However, for a real-world problem, only discretization 
           determines the solution. For this problem, we discretize our domain 
           into tetrahedral finite elements where each element contains a conductivity 
           tensor. This defines how electricity travels through its region of the 
-          domain. Within each element, we will assume a piece-wise linear potential 
+          domain. Within each element, we assume a piece-wise linear potential 
           field (piece-wise constant electric field).<br>
         </p>
         <p>The above problem is governed mathematically by Poisson's equation:<br>
           <br>
-          <img src="equation.gif" align="absbottom">,</p>
+          <img src="equation.gif" align="absbottom"><b><font size="5">,</font></b></p>
         <p>where <img height="16" width="11" src="sigma.gif"> is the local conductivity 
           tensor, <img height="16" width="13" src="phi.gif"> is the voltage over 
           the domain, and <img height="19" width="36" src="i.gif" align="texttop"> 
@@ -114,9 +114,9 @@
           For Steps 1 and 2, we use FieldReader modules to read in the mesh and 
           a dipole. To access the FieldReader module, first select <a href="../../figure_1%20Folder/figure_1/index.html" target="display"><b>SCIRun&gt;Data 
           IO&gt;FieldReader</b></a> from the menu bar. The FieldReader module 
-          appears in the upper left corner of the network pane. Note that various 
-          modules contain a user interface (UI) button. Clicking these give you 
-          a full view of the module's <a href="../../figure_2%20Folder/figure_2/index.html" target="display">interface</a>, 
+          appears in the upper left corner of the network pane. </p>
+        <p>Note that various modules contain a user interface (UI) button. Clicking 
+          these give you a full view of the module's <a href="../../figure_2%20Folder/figure_2/index.html" target="display">interface</a>, 
           as well as the ability to change variables at any point in your computation. 
           For this tutorial, we use the sphere dataset. You can also run [it] 
           on the cyl3 dataset. Our first FieldReader reads in the mesh which, 
@@ -126,9 +126,9 @@
         </div>
       <div align="left"> 
         <p><b>**</b> Note that SCIRun can be installed into any directory, within 
-          a user home directory or a system application directory. There is no 
-          &quot;make install&quot; step in the build process, so SCIRun will be 
-          installed in the chosen directory.<br>
+          a user's home directory or a system application directory. There is 
+          no &quot;make install&quot; step in the build process, so SCIRun will 
+          be installed in the chosen directory.<br>
           <br>
           The chosen install directory will be referred to as <font color="#228b22"><i><b>DATA_DIR</b></i></font> 
           from now on.<br>
@@ -333,7 +333,7 @@
         <p>You have now built the forward-fem.net using SCIRun. From an individual 
           module's interface, you can adjust settings and re-execute the net. 
           To visualize the results, try different Iso values or move the StreamLines 
-          rake by pressing Ctrl-left-mouse and dragging the rake to the desired 
+          rake by pressing Ctrl-left-mouse, and dragging the rake to the desired 
           position. You can do the same with the dipole source.</p>
         <p>For this tutorial we used a simple sphere geometry from which an analytic 
           solution can be obtained. This same network can also be applied to more 
