@@ -81,14 +81,14 @@ WARNING
       inline IntVector end() const {
 	 return IntVector(d_ex, d_ey, d_ez);
       }
-
-   private:
-      CellIterator();
       inline CellIterator(const CellIterator& copy)
 	 : d_ix(copy.d_ix), d_iy(copy.d_iy), d_iz(copy.d_iz),
 	   d_sx(copy.d_sx), d_sy(copy.d_sx), d_sz(copy.d_sz),
 	   d_ex(copy.d_ex), d_ey(copy.d_ey), d_ez(copy.d_ez) {
       }
+
+   private:
+      CellIterator();
       CellIterator& operator=(const CellIterator& copy);
       inline CellIterator(const Region* region, int ix, int iy, int iz)
 	 : d_sx(ix), d_sy(iy), d_sz(iz), d_ix(ix), d_iy(iy), d_iz(iz), d_ex(region->getNCells().x()), d_ey(region->getNCells().y()), d_ez(region->getNCells().z()) {
@@ -107,6 +107,11 @@ std::ostream& operator<<(std::ostream& out, const Uintah::CellIterator& b);
 
 //
 // $Log$
+// Revision 1.3  2000/04/28 20:24:43  jas
+// Moved some private copy constructors to public for linux.  Velocity
+// field is now set from the input file.  Simulation state now correctly
+// determines number of velocity fields.
+//
 // Revision 1.2  2000/04/28 03:58:20  sparker
 // Fixed countParticles
 // Implemented createParticles, which doesn't quite work yet because the

@@ -42,6 +42,7 @@ void Region::findCell(const Vector& pos, int& ix, int& iy, int& iz) const
     iz = Floor(cellpos.z());
 }
 
+
 bool Region::findCellAndWeights(const Vector& pos,
 				Array3Index ni[8], double S[8]) const
 {
@@ -73,7 +74,9 @@ bool Region::findCellAndWeights(const Vector& pos,
     S[6] = fx * fy * fz1;
     S[7] = fx * fy * fz;
     return ix>= 0 && iy>=0 && iz>=0 && ix<d_nx && iy<d_ny && iz<d_nz;
+
 }
+
 
 bool Region::findCellAndShapeDerivatives(const Vector& pos,
 					 Array3Index ni[8],
@@ -231,6 +234,11 @@ CellIterator Region::getCellIterator(const Box& b) const
 
 //
 // $Log$
+// Revision 1.9  2000/04/28 20:24:44  jas
+// Moved some private copy constructors to public for linux.  Velocity
+// field is now set from the input file.  Simulation state now correctly
+// determines number of velocity fields.
+//
 // Revision 1.8  2000/04/28 03:58:20  sparker
 // Fixed countParticles
 // Implemented createParticles, which doesn't quite work yet because the

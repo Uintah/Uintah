@@ -70,12 +70,13 @@ WARNING
       inline bool operator!=(const NodeIterator& n) const {
 	 return d_ix != n.d_ix || d_iy != n.d_iy || d_iz != n.d_iz;
       }
-   private:
-      NodeIterator();
       inline NodeIterator(const NodeIterator& copy)
 	 : d_region(copy.d_region),
 	   d_ix(copy.d_ix), d_iy(copy.d_iy), d_iz(copy.d_iz) {
       }
+
+   private:
+      NodeIterator();
       NodeIterator& operator=(const NodeIterator& copy);
       inline NodeIterator(const Region* region, int ix, int iy, int iz)
 	 : d_region(region),
@@ -94,6 +95,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.7  2000/04/28 20:24:43  jas
+// Moved some private copy constructors to public for linux.  Velocity
+// field is now set from the input file.  Simulation state now correctly
+// determines number of velocity fields.
+//
 // Revision 1.6  2000/04/26 06:48:50  sparker
 // Streamlined namespaces
 //
