@@ -8,6 +8,7 @@
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/VolumeVis.h>
+#include <Packages/rtrt/Core/VolumeVisDpy.h>
 #include <Packages/rtrt/Core/CutPlane.h>
 #include <Packages/rtrt/Core/PlaneDpy.h>
 #include <Core/Thread/Thread.h>
@@ -22,7 +23,7 @@ using namespace rtrt;
 using SCIRun::Thread;
 
 void get_material(Array1<Color*> &matls, Array1<float> &alphas,
-		  bool do_phong, int ncolors) {
+		  int ncolors) {
   CatmullRomSpline<Color> spline(0);
 #if 1
   spline.add(Color(0,0,1));
@@ -111,7 +112,7 @@ void get_material(Array1<Color*> &matls, Array1<float> &alphas,
 #endif
   }
 #else
-  if (do_phong) {
+  if (true) {
     float Ka=1;
     float Kd=1;
     float Ks=1;
@@ -146,8 +147,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   char *nrrd_file = 0;
   bool cut=false;
   bool do_phong = true;
-  int ncolors=5000;
-  float t_inc = 1;
+  int ncolors=256;
+  float t_inc = 0.01;
   double spec_coeff = 64;
   double ambient = 0.5;
   double diffuse = 1.0;
@@ -248,7 +249,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group* all = new Group();
   Array1<Color*> matls;
   Array1<float> alphas;
-  get_material(matls,alphas,do_phong,ncolors);
+  get_material(matls,alphas,ncolors);
 #if 0
   cout << "alphas :\n";
   for(unsigned int i = 0; i < alphas.size(); i++)
@@ -402,13 +403,15 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     data_max = data_max_in;
 
   cout << "minP = "<<minP<<", maxP = "<<maxP<<endl;
+  VolumeVisDpy *dpy = new VolumeVisDpy();
   Object* obj = (Object*) new VolumeVis(data, data_min, data_max,
 					nx, ny, nz,
 					minP, maxP,
 					matls, matls.size(),
 					alphas, alphas.size(),
 					spec_coeff, ambient, diffuse,
-					specular, t_inc);
+					specular, t_inc, dpy);
+  new Thread(dpy, "VolumeVis display thread");
   
   if(cut){
     PlaneDpy* pd=new PlaneDpy(Vector(0,0,1), Point(0,0,0));

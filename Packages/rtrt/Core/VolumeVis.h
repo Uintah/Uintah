@@ -15,8 +15,13 @@ namespace rtrt {
 #define MAXUNSIGNEDSHORT 65535
 #endif
 
+class VolumeVisDpy;
+  
 class VolumeVis : public Object, public Material {
 protected:
+  friend class VolumeVisDpy;
+  VolumeVisDpy *dpy;
+  
   Vector diag;
   Vector inv_diag;
   BrickArray3<float> data;
@@ -31,7 +36,9 @@ protected:
   int nalphas;
   //  ScalarTransform1D<float,float> *alpha_transform;
   float delta_x2, delta_y2, delta_z2;
-  int bound(const int val, const int min, const int max);
+  inline int bound(const int val, const int min, const int max) {
+    return (val>min?(val<max?val:max):min);
+  }
   Color color(const Vector &N, const Vector &V, const Vector &L, 
 	      const Color &object_color, const Color &light_color);
 public:
@@ -39,7 +46,8 @@ public:
 	    int nx, int ny, int nz,
 	    Point min, Point max, const Array1<Color*> &matls, int nmatls,
 	    const Array1<float> &alphas, int nalphas, double spec_coeff,
-	    double ambient, double diffuse, double specular, float _t_inc);
+	    double ambient, double diffuse, double specular, float _t_inc,
+	    VolumeVisDpy *dpy);
   virtual ~VolumeVis();
   virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
