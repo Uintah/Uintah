@@ -19,13 +19,6 @@ itcl_class DaveW_SiRe_SiReInput {
         set name SiReInput
         set_defaults
     }
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
     method set_defaults {} {
 	global $this-PFileStr
 	global $this-NPasses

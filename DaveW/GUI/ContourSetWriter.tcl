@@ -2,13 +2,6 @@ catch {rename DaveW_Writers_ContourSetWriter ""}
 
 itcl_class DaveW_Writers_ContourSetWriter {
     inherit Module
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
     constructor {config} {
 	set name ContourSetWriter
 	set_defaults

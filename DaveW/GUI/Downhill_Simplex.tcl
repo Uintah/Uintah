@@ -2,13 +2,6 @@ catch {rename DaveW_ISL_Downhill_Simplex ""}
 
 itcl_class DaveW_ISL_Downhill_Simplex {
     inherit Module
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
 
     constructor {config} {
 	set name Downhill_Simplex

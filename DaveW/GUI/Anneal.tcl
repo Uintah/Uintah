@@ -3,13 +3,6 @@ catch {rename DaveW_EGI_Anneal ""}
 
 itcl_class DaveW_EGI_Anneal {
     inherit Module
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
     constructor {config} {
 	set name Anneal
 	set_defaults

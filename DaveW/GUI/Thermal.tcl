@@ -2,13 +2,6 @@ catch {rename DaveW_EEG_Thermal ""}
 
 itcl_class DaveW_EEG_Thermal {
     inherit Module
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
     constructor {config} {
 	set name Thermal
 	set_defaults
