@@ -33,14 +33,14 @@ DESCRIPTION
 WARNING
    none
 ****************************************/
-
-#include <Packages/Uintah/CCA/Components/Arches/SmagorinskyModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 
 namespace Uintah {
 class PhysicalConstants;
 class BoundaryCondition;
 
-class ScaleSimilarityModel: public SmagorinskyModel {
+class ScaleSimilarityModel: public TurbulenceModel {
 
 public:
 
@@ -86,9 +86,48 @@ public:
 						  const PatchSet* patches,
 						  const MaterialSet* matls,
 			                 const TimeIntegratorLabel* timelabels);
+      ///////////////////////////////////////////////////////////////////////
+      // Get the molecular viscosity
+      double getMolecularViscosity() const; 
+
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule the initialization of the Smagorinsky Coefficient
+      //    [in] 
+      //        data User data needed for solve 
+      virtual void sched_initializeSmagCoeff(SchedulerP&,
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls,
+                                             const TimeIntegratorLabel* timelabels);
+      
+      // GROUP: Access Methods :
+      ///////////////////////////////////////////////////////////////////////
+      // Get the molecular viscosity
+//      double getMolecularViscosity() const; 
+
+      ////////////////////////////////////////////////////////////////////////
+      // Get the Smagorinsky model constant
+      double getSmagorinskyConst() const {
+	return d_CF;
+      }
+      inline void set3dPeriodic(bool periodic) {}
+      inline double getTurbulentPrandtlNumber() const {
+	return d_turbPrNo;
+      }
+      inline bool getDynScalarModel() const {
+	return false;
+      }
+      ///////////////////////////////////////////////////////////////////////
 
 protected:
-
+      PhysicalConstants* d_physicalConsts;
+      BoundaryCondition* d_boundaryCondition;
+      double d_turbPrNo; // turbulent prandtl number
+//      bool d_filter_cs_squared; //option for filtering Cs^2 in CompDynamic Procedure
+//      bool d_3d_periodic;
+      bool d_dynScalarModel;
+      double d_lower_limit;
+      double d_CL;
+      double d_CB;
 private:
 
       // GROUP: Constructors (not instantiated):
@@ -125,6 +164,17 @@ private:
 				    DataWarehouse* old_dw,
 				    DataWarehouse* new_dw,
 			            const TimeIntegratorLabel* timelabels);
+      // GROUP: Action Methods (private)  :
+
+
+      void initializeSmagCoeff( const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw,
+                                const TimeIntegratorLabel* timelabels);
+
+      ///////////////////////////////////////////////////////////////////////
 
 private:
       double d_CF; //model constant

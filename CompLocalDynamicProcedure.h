@@ -1,32 +1,32 @@
-//----- SmagorinskyModel.h --------------------------------------------------
+//----- CompLocalDynamicProcedure.h --------------------------------------------------
 
-#ifndef Uintah_Component_Arches_SmagorinskyModel_h
-#define Uintah_Component_Arches_SmagorinskyModel_h
+#ifndef Uintah_Component_Arches_CompLocalDynamicProcedure_h
+#define Uintah_Component_Arches_CompLocalDynamicProcedure_h
 
 /**************************************
 CLASS
-   SmagorinskyModel
+   CompLocalDynamicProcedure
    
-   Class SmagorinskyModel is an LES model for
+   Class CompLocalDynamicProcedure is an LES model for
    computing sub-grid scale turbulent viscosity.
 
 
 GENERAL INFORMATION
-   SmagorinskyModel.h - declaration of the class
+   CompLocalDynamicProcedure.h - declaration of the class
    
-   Author: Rajesh Rawat (rawat@crsim.utah.edu)
+   Author: Zhaosheng Gao (zgao@crsim.utah.edu)
       
-   Creation Date:   Mar 1, 2000
+   Creation Date:   Feb 1, 2005
    
    C-SAFE 
    
-   Copyright U of U 2000
+   Copyright U of U 2005
 
 KEYWORDS
 
 
 DESCRIPTION
-   Class SmagorinskyModel is an LES model for
+   Class CompLocalDynamicProcedure is an LES model for
    computing sub-grid scale turbulent viscosity.
 
 
@@ -36,28 +36,30 @@ WARNING
 
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#include <iostream>
+using namespace std;
 
 namespace Uintah {
 class PhysicalConstants;
 class BoundaryCondition;
 
 
-class SmagorinskyModel: public TurbulenceModel {
+class CompLocalDynamicProcedure: public TurbulenceModel {
 
 public:
 
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
-      // Blank constructor for SmagorinskyModel.
-      SmagorinskyModel(const ArchesLabel* label, 
+      // Blank constructor for CompLocalDynamicProcedure.
+      CompLocalDynamicProcedure(const ArchesLabel* label, 
 		       const MPMArchesLabel* MAlb,
 		       PhysicalConstants* phyConsts,
 		       BoundaryCondition* bndryCondition);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
-      // Virtual destructor for SmagorinskyModel.
-      virtual ~SmagorinskyModel();
+      // Virtual destructor for CompLocalDynamicProcedure.
+      virtual ~CompLocalDynamicProcedure();
 
       // GROUP: Problem Setup :
       ///////////////////////////////////////////////////////////////////////
@@ -78,26 +80,24 @@ public:
       // Schedule the recomputation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
-      virtual void sched_reComputeTurbSubmodel(SchedulerP&,
-					       const PatchSet* patches,
+      void sched_reComputeSmagCoeff( SchedulerP& sched, 
+                                     const PatchSet* patches,
+                                     const MaterialSet* matls,
+                                     const TimeIntegratorLabel* timelabels );
+
+      virtual void sched_reComputeTurbSubmodel(SchedulerP&, const PatchSet* patches,
 					       const MaterialSet* matls,
-			    		 const TimeIntegratorLabel* timelabels);
+			                 const TimeIntegratorLabel* timelabels);
 
-
-
-      // GROUP: Schedule Action :
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the computation of Turbulence Model data
-      //    [in] 
-      //        data User data needed for solve 
-      virtual void sched_computeScalarVariance(SchedulerP&,
-					       const PatchSet* patches,
+      virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
 					       const MaterialSet* matls,
-			    		 const TimeIntegratorLabel* timelabels);
+			    		const TimeIntegratorLabel* timelabels);
+
       virtual void sched_computeScalarDissipation(SchedulerP&,
 						  const PatchSet* patches,
 					          const MaterialSet* matls,
 			    		 const TimeIntegratorLabel* timelabels);
+
       // GROUP: Access Methods :
       ///////////////////////////////////////////////////////////////////////
       // Get the molecular viscosity
@@ -106,19 +106,20 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // Get the Smagorinsky model constant
       double getSmagorinskyConst() const {
-	return d_CF;
+	cerr << "There is no Smagorinsky constant in CompDynamic Procedure" << endl;
+	exit(0);
+	return 0;
       }
-      inline void set3dPeriodic(bool periodic) {}
+      inline void set3dPeriodic(bool periodic) {
+	d_3d_periodic = periodic;
+      }
       inline double getTurbulentPrandtlNumber() const {
 	return d_turbPrNo;
       }
       inline bool getDynScalarModel() const {
-	return false;
+	return d_dynScalarModel;
       }
-//      inline bool getMixedModel() const {
-//	return d_mixedModel;
-//      }
-
+      Arches* d_arches;
 protected:
       PhysicalConstants* d_physicalConsts;
       BoundaryCondition* d_boundaryCondition;
@@ -127,11 +128,11 @@ private:
 
       // GROUP: Constructors (not instantiated):
       ////////////////////////////////////////////////////////////////////////
-      // Blank constructor for SmagorinskyModel.
-      SmagorinskyModel();
+      // Blank constructor for CompLocalDynamicProcedure.
+      CompLocalDynamicProcedure();
 
       // GROUP: Action Methods (private)  :
-      ///////////////////////////////////////////////////////////////////////
+
 
       void initializeSmagCoeff( const ProcessorGroup*,
                                 const PatchSubset* patches,
@@ -140,6 +141,7 @@ private:
                                 DataWarehouse* new_dw,
                                 const TimeIntegratorLabel* timelabels);
 
+      ///////////////////////////////////////////////////////////////////////
       // Actually reCalculate the Turbulence sub model
       //    [in] 
       //        documentation here
@@ -150,6 +152,28 @@ private:
 				 DataWarehouse* new_dw,
 			         const TimeIntegratorLabel* timelabels);
  
+      void reComputeStrainRateTensors(const ProcessorGroup*,
+				 const PatchSubset* patches,
+				 const MaterialSubset* matls,
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw,
+			         const TimeIntegratorLabel* timelabels);
+ 
+      void reComputeFilterValues(const ProcessorGroup*,
+				 const PatchSubset* patches,
+				 const MaterialSubset* matls,
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw,
+			         const TimeIntegratorLabel* timelabels);
+ 
+      void reComputeSmagCoeff(const ProcessorGroup*,
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw,
+			      const TimeIntegratorLabel* timelabels);
+
+
       ///////////////////////////////////////////////////////////////////////
       // Actually Calculate the subgrid scale variance
       //    [in] 
@@ -168,17 +192,21 @@ private:
 			            const TimeIntegratorLabel* timelabels);
 
  protected:
-      double d_CF; //model constant
       double d_factorMesh; // lengthscale = fac_mesh*meshsize
       double d_filterl; // prescribed filter length scale
       double d_CFVar; // model constant for mixture fraction variance
       double d_turbPrNo; // turbulent prandtl number
+      bool d_filter_cs_squared; //option for filtering Cs^2 in CompDynamic Procedure
+      bool d_3d_periodic;
+      bool d_dynScalarModel;
+      double d_lower_limit;
+
 
  private:
 
       // const VarLabel* variables 
 
-}; // End class SmagorinskyModel
+ }; // End class CompLocalDynamicProcedure
 } // End namespace Uintah
   
   

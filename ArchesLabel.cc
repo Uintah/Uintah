@@ -289,7 +289,8 @@ ArchesLabel::ArchesLabel()
 				  CCVariable<double>::getTypeDescription() );
   d_h2oINLabel = VarLabel::create("h2oIN",
 				  CCVariable<double>::getTypeDescription() );
-
+  d_c2h2INLabel = VarLabel::create("c2h2IN",
+				  CCVariable<double>::getTypeDescription() );
   d_h2sINLabel = VarLabel::create("h2sIN",
 				  CCVariable<double>::getTypeDescription() );
   d_so2INLabel = VarLabel::create("so2IN",
@@ -299,8 +300,7 @@ ArchesLabel::ArchesLabel()
   d_coINLabel = VarLabel::create("coIN",
 				  CCVariable<double>::getTypeDescription() );
 
-  d_c2h2INLabel = VarLabel::create("c2h2IN",
-				  CCVariable<double>::getTypeDescription() );
+
 
   // Array containing the reference density multiplied by the void fraction
   // used for correct reference density subtraction in the multimaterial
@@ -437,8 +437,24 @@ ArchesLabel::ArchesLabel()
   // required for scalesimilarity
   d_stressTensorCompLabel = VarLabel::create("stressTensorComp",
 					     CCVariable<double>::getTypeDescription() );
-
+  d_stressSFCXdivLabel = VarLabel::create("stressSFCXdiv",
+		                             SFCXVariable<double>::getTypeDescription() );  
+  d_stressSFCYdivLabel = VarLabel::create("stressSFCYdiv",
+		                             SFCYVariable<double>::getTypeDescription() );  
+  d_stressSFCZdivLabel = VarLabel::create("stressSFCZdiv",
+		                             SFCZVariable<double>::getTypeDescription() );
+  d_stressCCXdivLabel = VarLabel::create("stressCCXdiv",
+		                             CCVariable<double>::getTypeDescription() );  
+  d_stressCCYdivLabel = VarLabel::create("stressCCYdiv",
+		                             CCVariable<double>::getTypeDescription() );  
+  d_stressCCZdivLabel = VarLabel::create("stressCCZdiv",
+		                             CCVariable<double>::getTypeDescription() );
+  
   d_strainTensorCompLabel = VarLabel::create("strainTensorComp",
+					     CCVariable<double>::getTypeDescription() );
+  d_betaIJCompLabel = VarLabel::create("betaIJComp",
+					     CCVariable<double>::getTypeDescription() );
+  d_LIJCompLabel = VarLabel::create("LIJComp",
 					     CCVariable<double>::getTypeDescription() );
 
   d_scalarFluxCompLabel = VarLabel::create("scalarFluxComp",
@@ -450,12 +466,33 @@ ArchesLabel::ArchesLabel()
 					     CCVariable<double>::getTypeDescription() );
   d_strainMagnitudeMMLabel = VarLabel::create("strainMagnitudeMMLabel",
 					     CCVariable<double>::getTypeDescription() );
+  d_lalphaLabel = VarLabel::create("lalphaLabel",
+					     CCVariable<double>::getTypeDescription() );
+  d_cbetaHATalphaLabel = VarLabel::create("cbetaHATalphaLabel",
+					     CCVariable<double>::getTypeDescription() );
+  d_alphaalphaLabel = VarLabel::create("alphaalphaLabel",
+					     CCVariable<double>::getTypeDescription() );
 
   d_CsLabel = VarLabel::create("CsLabel",
 			       CCVariable<double>::getTypeDescription() );
+  // required for odt model label
+//   d_odtDataLabel = VarLabel::create("odtDataLabel",CCVariable<odtData>::getTypeDescription());
+  d_sumUUULabel = VarLabel::create("sumUUU",sum_vartype::getTypeDescription());
+  d_sumDllLabel = VarLabel::create("sumDll",sum_vartype::getTypeDescription());
+  d_sumSijSijLabel = VarLabel::create("sumSijSij",sum_vartype::getTypeDescription());
+  d_sumDllMinusLabel = VarLabel::create("sumDllMinus",sum_vartype::getTypeDescription());
+  d_sumPointsLabel = VarLabel::create("sumPoints",sum_vartype::getTypeDescription());
+  d_sumUUUPredLabel = VarLabel::create("sumUUUPred",sum_vartype::getTypeDescription());
+  d_sumDllPredLabel = VarLabel::create("sumDllPred",sum_vartype::getTypeDescription());
+  d_sumSijSijPredLabel = VarLabel::create("sumSijSijPred",sum_vartype::getTypeDescription());
+  d_sumDllMinusPredLabel = VarLabel::create("sumDllMinusPred",sum_vartype::getTypeDescription());
+  d_sumPointsPredLabel = VarLabel::create("sumPointsPred",sum_vartype::getTypeDescription());
+  d_sumUUUIntermLabel = VarLabel::create("sumUUUInterm",sum_vartype::getTypeDescription());
+  d_sumDllIntermLabel = VarLabel::create("sumDllInterm",sum_vartype::getTypeDescription());
+  d_sumSijSijIntermLabel = VarLabel::create("sumSijSijInterm",sum_vartype::getTypeDescription());
+  d_sumDllMinusIntermLabel = VarLabel::create("sumDllMinusInterm",sum_vartype::getTypeDescription());
+  d_sumPointsIntermLabel = VarLabel::create("sumPointsInterm",sum_vartype::getTypeDescription());
 
-
-  
   // Runge-Kutta 3d order properties labels
   d_refDensityInterm_label = VarLabel::create("refDensityIntermLabel",
 				       sum_vartype::getTypeDescription() );
@@ -465,6 +502,15 @@ ArchesLabel::ArchesLabel()
 				    CCVariable<double>::getTypeDescription() );
   d_velocityDivergenceLabel = VarLabel::create("velocityDivergence", 
 				   CCVariable<double>::getTypeDescription() );
+  d_vorticityXLabel = VarLabel::create("vorticityX", 
+				   CCVariable<double>::getTypeDescription() );
+  d_vorticityYLabel = VarLabel::create("vorticityY", 
+				   CCVariable<double>::getTypeDescription() );
+  d_vorticityZLabel = VarLabel::create("vorticityZ", 
+				   CCVariable<double>::getTypeDescription() );
+  d_vorticityLabel = VarLabel::create("vorticity", 
+				   CCVariable<double>::getTypeDescription() );
+
   d_velDivResidualLabel = VarLabel::create("velDivResidual", 
 				   CCVariable<double>::getTypeDescription() );
   d_velocityDivergenceBCLabel = VarLabel::create("velocityDivergenceBC", 
@@ -646,7 +692,25 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_strainMagnitudeLabel);
   VarLabel::destroy(d_strainMagnitudeMLLabel);
   VarLabel::destroy(d_strainMagnitudeMMLabel);
+  VarLabel::destroy(d_lalphaLabel);
+  VarLabel::destroy(d_cbetaHATalphaLabel);
+  VarLabel::destroy(d_alphaalphaLabel);
   VarLabel::destroy(d_CsLabel);
+  VarLabel::destroy(d_sumUUULabel);
+  VarLabel::destroy(d_sumDllLabel);
+  VarLabel::destroy(d_sumSijSijLabel);
+  VarLabel::destroy(d_sumDllMinusLabel);
+  VarLabel::destroy(d_sumPointsLabel);
+  VarLabel::destroy(d_sumUUUPredLabel);
+  VarLabel::destroy(d_sumDllPredLabel);
+  VarLabel::destroy(d_sumSijSijPredLabel);
+  VarLabel::destroy(d_sumDllMinusPredLabel);
+  VarLabel::destroy(d_sumPointsPredLabel);
+  VarLabel::destroy(d_sumUUUIntermLabel);
+  VarLabel::destroy(d_sumDllIntermLabel);
+  VarLabel::destroy(d_sumSijSijIntermLabel);
+  VarLabel::destroy(d_sumDllMinusIntermLabel);
+  VarLabel::destroy(d_sumPointsIntermLabel);
   VarLabel::destroy(d_cellInfoLabel);
   VarLabel::destroy(d_cellTypeLabel);
   VarLabel::destroy(d_totalflowINLabel);
@@ -725,13 +789,11 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_cpINLabel);
   VarLabel::destroy(d_co2INLabel);
   VarLabel::destroy(d_h2oINLabel);
-
+  VarLabel::destroy(d_c2h2INLabel);
   VarLabel::destroy(d_h2sINLabel);
   VarLabel::destroy(d_so2INLabel);
   VarLabel::destroy(d_so3INLabel);
   VarLabel::destroy(d_coINLabel);
-
-  VarLabel::destroy(d_c2h2INLabel);
   VarLabel::destroy(d_denRefArrayLabel);
   VarLabel::destroy(d_densityMicroLabel);
   VarLabel::destroy(d_densityMicroINLabel);
@@ -778,9 +840,22 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_pressureIntermLabel);
 // labels for scale similarity model
   VarLabel::destroy(d_stressTensorCompLabel);
+  VarLabel::destroy(d_stressSFCXdivLabel);  
+  VarLabel::destroy(d_stressSFCYdivLabel);
+  VarLabel::destroy(d_stressSFCZdivLabel); 
+  VarLabel::destroy(d_stressCCXdivLabel);  
+  VarLabel::destroy(d_stressCCYdivLabel);
+  VarLabel::destroy(d_stressCCZdivLabel); 
+  
   VarLabel::destroy(d_strainTensorCompLabel);
+  VarLabel::destroy(d_betaIJCompLabel);
+  VarLabel::destroy(d_LIJCompLabel);
   VarLabel::destroy(d_scalarFluxCompLabel);
   VarLabel::destroy(d_velocityDivergenceLabel);
+  VarLabel::destroy(d_vorticityXLabel);
+  VarLabel::destroy(d_vorticityYLabel);
+  VarLabel::destroy(d_vorticityZLabel);
+  VarLabel::destroy(d_vorticityLabel);
   VarLabel::destroy(d_velDivResidualLabel);
   VarLabel::destroy(d_velocityDivergenceBCLabel);
   VarLabel::destroy(d_continuityResidualLabel);
@@ -792,6 +867,10 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_vVelNormLabel);
   VarLabel::destroy(d_wVelNormLabel);
   VarLabel::destroy(d_rhoNormLabel);
+
+// label for odt model
+  VarLabel::destroy(d_odtDataLabel);
+
 // labels for max(abs(velocity)) for Lax-Friedrichs flux
   VarLabel::destroy(d_maxAbsU_label);
   VarLabel::destroy(d_maxAbsV_label);
