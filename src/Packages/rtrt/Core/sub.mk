@@ -20,6 +20,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Object.cc \
 	$(SRCDIR)/Phong.cc \
 	$(SRCDIR)/ASEReader.cc \
+	$(SRCDIR)/ObjReader.cc \
 	$(SRCDIR)/InvisibleMaterial.cc \
 	$(SRCDIR)/CycleMaterial.cc \
 	$(SRCDIR)/MetalMaterial.cc \
