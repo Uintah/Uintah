@@ -75,38 +75,65 @@ problems.  It is divided into the following categories:
 \section{Teem}
 \label{sec:teempackage}
 
-Modules in the Teem package encapsulate much of the functionality
-found in the \htmladdnormallinkfoot{Teem}
-{http://teem.sourceforge.net/} project's, NRRD and Ten libraries.
+\scidoclink{Modules}{Developer/Modules/Teem\_bycat.html} of the Teem
+package provide functionality of the \htmladdnormallinkfoot{Teem}
+{http://teem.sourceforge.net/} project's \command{unu} and
+\command{tend} command-line programs and corresponding NRRD and Ten
+libraries.
 
-The NRRD library is used for representing and processing N-dimensional
-raster data.  The Ten library is used for diffusion tensor processing,
+The Teem project's NRRD library provides data types and functions for
+representing and processing N-dimensional raster data.  The Ten
+library provides types and functions for diffusion tensor processing,
 analysis, and visualization.
 
-It is divided into the following categories:
+Typically, multiple instances of commands \command{unu} and
+\command{tend} are connected by pipes to solve a problem---the
+data-flow network equivalent is available in \sr{} using the Teem
+package.  In other words, the Teem package provides a
+``visual'' programming equivalent to the \command{unu} and
+\command{tend} command-line tools.
+
+The Teem package is divided into the following categories:
 
 \begin{itemize}
-\item DataIO
-\item NrrdData
-\item Tend
-\item Unu
+\item DataIO Modules read/write NRRD data from/to files and
+  modules that transform data to/from the NRRD representation.
+\item NrrdData Modules for displaying and setting NRRD property values
+  and for performing miscellaneous operations on NRRD data.
+\item Tend Modules equivalent to commands of the \command{tend}
+  program.  For example, module \module{TendAnhist} implements the
+  command \command{tend anhist}
+\item Segmentation  algorithms operating on NRRD data.
+\item Unu Modules equivalent to commands of the \command{unu} program.
+  For example, module \module{UnuMinMax} implements the command
+  \command{unu minmax}
 \end{itemize}
+
+See \scidoclink{Teem module
+  documentation}{Developer/Modules/Teem\_bycat.html} for more
+information.
 
 \section{Matlabinterface}
 \label{sec:matlabpackage}
 
-The Matlabinterface package provides modules that interact with the
-Matlab system.  It is divided into the following categories:
+Modules of the Matlabinterface package allow \sr{} to use the
+facilities of Matlab via interactive commands and Matlab scripts.
 
-\begin{itemize}
-\item DataIO
-\end{itemize}
+Matlabinterface modules can be used simply, for example, to convert
+data files between \sr{} and Matlab formats. Or, Matlabinterface
+modules can be part of \sr{} networks that invoke Matlab scripts to
+perform complex calculations.
+
+See Matlabinterface \scidoclink{module
+  documentation}{Developer/Modules/MatlabInterface.html} for more
+information.
 
 \section{Insight (ITK)}
 \label{sec:insightpackage}
 
-The Insight package provides modules that encapsulate
-\htmladdnormallinkfoot{ITK toolkit}{http://www.itk.org} filters.
+The \scidoclink{Insight}{Developer/Modules/Insight\_bycat.html}
+package provides modules encapsulating \htmladdnormallinkfoot{ITK
+  toolkit}{http://www.itk.org} filters.
 
 \begin{itemize}
 \item Converters
@@ -114,9 +141,14 @@ The Insight package provides modules that encapsulate
 \item Filters
 \end{itemize}
 
-%%\section{DataIO}
-%%\label{sec:dataiopackage}
+\section{DataIO}
+\label{sec:dataiopackage}
 
+Package \scidoclink{DataIO}{Developer/Modules/DataIO\_bycat.html}
+provides modules for reading data stored in non-SCIRun formats.
+Formats HDF5 and MDSplus are currently supported. The modules convert
+both geometry and data into NRRDS. The Teem package must also be
+installed.
 
 %%% Local Variables: 
 %%% mode: latex
