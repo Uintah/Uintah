@@ -343,7 +343,22 @@ void Transform::rotate(const Vector& from, const Vector& to)
   }
   double sinth=axis.length();
   double costh=Dot(f,t);
-  pre_rotate(atan2(sinth, costh), axis.normal());
+  if(Abs(sinth) < 1.e-9){
+    if(costh > 0)
+      return; // no rotate;
+    else {
+      // from and to are in opposite directions, find an axis of rotation
+      // Try the Z axis first.  This will fail if from is along Z, so try
+      // Y next.  Then rotate 180 degrees.
+      axis = Cross(from, Vector(0,0,1));
+      if(axis.length2() < 1.e-9)
+        axis = Cross(from, Vector(0,1,0));
+      axis.normalize();
+      pre_rotate(M_PI, axis);
+    }
+  } else {
+    pre_rotate(atan2(sinth, costh), axis.normal());
+  }
 }
 
 void Transform::build_permute(double m[4][4],int xmap, int ymap, int zmap, 
