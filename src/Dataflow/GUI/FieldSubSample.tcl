@@ -199,7 +199,7 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 
 	entry $win.e -width 4 -text $var2
 
-	bind $win.e <Return> "$this manualSliderEntry $start $stop $var1 $var2"
+	bind $win.e <KeyRelease> "$this manualSliderEntry $start $stop $var1 $var2"
 
 	pack $win.s -side left
 	pack $win.e -side bottom -padx 5
@@ -210,6 +210,9 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
     }
 
     method manualSliderEntry { start stop var1 var2 } {
+
+	if { ![string is integer [set $var2]] } {
+	    set $var2 [set $var1] }
 
 	if { [set $var2] < $start } {
 	    set $var2 $start }
@@ -247,9 +250,9 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	    $w.main.$index.start.s configure -from 0 -to $stop_val
 	    $w.main.$index.stop.s configure -from $start_val -to [expr [set $this-$index-dim] - 1]
 
-	    bind $w.main.$index.start.e <Return> \
+	    bind $w.main.$index.start.e <KeyRelease> \
 		"$this manualSliderEntry4 0 $stop_val $this-$index-start $this-$index-start2 $index"
-	    bind $w.main.$index.stop.e  <Return> \
+	    bind $w.main.$index.stop.e  <KeyRelease> \
 		"$this manualSliderEntry $start_val  [expr [set $this-$index-dim] - 1] $this-$index-stop $this-$index-stop2"
 	}
     }
@@ -264,7 +267,7 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 
 	entry $win.e -width 4 -text $var2
 
-	bind $win.e <Return> \
+	bind $win.e <KeyRelease> \
 	    "$this manualSliderEntry4 $start $stop $var1 $var2 $index"
 
 	pack $win.s -side left
@@ -285,6 +288,9 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
     }
 
     method manualSliderEntry4 { start stop var1 var2 index } {
+
+	if { ![string is integer [set $var2]] } {
+	    set $var2 [set $var1] }
 
 	if { [set $var2] < $start } {
 	    set $var2 $start }
@@ -354,11 +360,11 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 		$w.main.$index.stop.s  configure -from 0 -to $stop_val1
 		$w.main.$index.stride.s  configure -from 1 -to $stop_val1
 
-		bind $w.main.$index.start.e <Return> \
+		bind $w.main.$index.start.e <KeyRelease> \
 		    "$this manualSliderEntry4 0 $stop_val2 $this-$index-start $this-$index-start2 $index"
-		bind $w.main.$index.stop.e  <Return> \
+		bind $w.main.$index.stop.e  <KeyRelease> \
 		    "$this manualSliderEntry  1 $stop_val1 $this-$index-stop $this-$index-stop2"
-		bind $w.main.$index.stride.e  <Return> \
+		bind $w.main.$index.stride.e  <KeyRelease> \
 		    "$this manualSliderEntry  1 $stop_val1 $this-$index-stride $this-$index-stride2"
 	    }
 

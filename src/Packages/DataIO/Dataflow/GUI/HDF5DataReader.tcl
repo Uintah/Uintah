@@ -171,8 +171,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	
 	######################################################
 	
-	global current_cursor
-	
+	global current_cursor	
 	$w config -cursor $current_cursor
 
 	makeOpenFilebox \
@@ -552,7 +551,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	entry $win.e -width 4 -text $var2
 
-	bind $win.e <Return> "$this manualSliderEntry $start $count $var1 $var2"
+	bind $win.e <KeyRelease> \
+	    "$this manualSliderEntry $start $count $var1 $var2"
 
 	pack $win.s -side left
 	pack $win.e -side bottom -padx 5
@@ -563,6 +563,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
     }
 
     method manualSliderEntry { start count var1 var2 } {
+	if { ![string is integer [set $var2]] } {
+	    set $var2 [set $var1] }
+
 	if { [set $var2] < $start } {
 	    set $var2 $start }
 	
@@ -852,12 +855,12 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		    $sample.$i.count.s  configure -from 1 -to $count_val
 		    $sample.$i.stride.s configure -from 1 -to $count_val
 
-		    bind $sample.$i.start.e <Return> \
-			"$this manualSliderEntry 0 $count_val1 $this-$i-start $this-$i-start2 $i"
-		    bind $sample.$i.count.e  <Return> \
-			"$this manualSliderEntry 1 $count_val $this-$i-count $this-$i-count2"
-		    bind $sample.$i.stride.e  <Return> \
-			"$this manualSliderEntry 1 $count_val $this-$i-stride $this-$i-stride2"
+		    bind $sample.$i.start.e <KeyRelease> \
+			"$this manualSliderEntry 0 $count_val1 $this-$i-start  $this-$i-start2"
+		    bind $sample.$i.count.e  <KeyRelease> \
+			"$this manualSliderEntry 1 $count_val  $this-$i-count  $this-$i-count2"
+		    bind $sample.$i.stride.e <KeyRelease> \
+			"$this manualSliderEntry 1 $count_val  $this-$i-stride $this-$i-stride2"
 		}
 
 		# Update the count values to be at the initials values.
@@ -1440,8 +1443,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
-
-	    puts stderr "watch cursor"
 	    $w config -cursor watch
 	    update idletasks
 	}
@@ -1451,7 +1452,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
-	    puts stderr "arrow cursor"
 	    global current_cursor
 	    $w config -cursor $current_cursor
 	    update idletasks
