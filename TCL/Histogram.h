@@ -42,12 +42,15 @@ public:
    void ShowGrid() const;
    void HideGrid() const;
    
-   void SetData( const Array1<double> values );
-   void ui() const;
-   void update() const;
+   void ShowRange() const;
+   void HideRange() const;
 
    void GetRange( double& left, double& right );
    void SetRange( const double left, const double right );
+   
+   void SetData( const Array1<double> values );
+   void ui() const;
+   void update() const;
 };
 
 #endif

@@ -19,6 +19,7 @@ itcl_class Histogram {
     # `freqs' is a list of integers
     public freqs {}
     public grid no
+    public range no
 
     constructor {config} {
 	set canvasx 745
@@ -135,29 +136,33 @@ itcl_class Histogram {
 	}
 	.ui$this.f.canvas create text [expr $canvasx/2.0] $ymin -tags text \
 		-text "" -anchor s -justify center
-	set i1 [expr int(($rangeleft-$xmin)*($datasize-1)/double($xrange))]
-	set i2 [expr int(($rangeright-$xmin)*($datasize-1)/double($xrange))]
-	set val1 [expr $minval+$i1*$valrange/($datasize-1)]
-	set val2 [expr $minval+$i2*$valrange/($datasize-1)]
-	.ui$this.f.canvas create text 4 [expr $canvasy-4] -tags range \
-		-text "Range($val1--$val2)" -anchor sw -justify left
 
-	.ui$this.f.canvas create rectangle \
-		[expr $rangeleft-5] $ymax $rangeleft $ymin \
-		-tags left \
-		-fill #ffff00000000 \
-		-outline #ffff00000000
-	.ui$this.f.canvas create rectangle \
-		$rangeright $ymax [expr $rangeright+5] $ymin \
-		-tags right \
-		-fill #ffff00000000 \
-		-outline #ffff00000000
-	.ui$this.f.canvas bind left <Button1-Motion> \
-		"$this mouseleft %x"
-	.ui$this.f.canvas bind right <Button1-Motion> \
-		"$this mouseright %x"
+	if [expr (([string compare $range "y"]==0) \
+		|| ([string compare $range "yes"]==0))] {
+	    set i1 [expr int(($rangeleft-$xmin)*($datasize-1)/double($xrange))]
+	    set i2 [expr int(($rangeright-$xmin)*($datasize-1)/double($xrange))]
+	    set val1 [expr $minval+$i1*$valrange/($datasize-1)]
+	    set val2 [expr $minval+$i2*$valrange/($datasize-1)]
+	    .ui$this.f.canvas create text 4 [expr $canvasy-4] -tags range \
+		    -text "Range($val1--$val2)" -anchor sw -justify left
+	    
+	    .ui$this.f.canvas create rectangle \
+		    [expr $rangeleft-5] $ymax $rangeleft $ymin \
+		    -tags left \
+		    -fill #ffff00000000 \
+		    -outline #ffff00000000
+	    .ui$this.f.canvas create rectangle \
+		    $rangeright $ymax [expr $rangeright+5] $ymin \
+		    -tags right \
+		    -fill #ffff00000000 \
+		    -outline #ffff00000000
+	    .ui$this.f.canvas bind left <Button1-Motion> \
+		    "$this mouseleft %x"
+	    .ui$this.f.canvas bind right <Button1-Motion> \
+		    "$this mouseright %x"
 
-	$this repaint
+	    $this repaint
+	}
     }
 
     protected rangeleft 200

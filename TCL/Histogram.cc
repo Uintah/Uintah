@@ -156,6 +156,20 @@ Histogram::HideGrid() const
 
 
 void
+Histogram::ShowRange() const
+{
+   TCL::execute(id+" config -range y");
+}
+
+
+void
+Histogram::HideRange() const
+{
+   TCL::execute(id+" config -range n");
+}
+
+
+void
 Histogram::GetRange( double& left, double& right )
 {
    reset_vars();
