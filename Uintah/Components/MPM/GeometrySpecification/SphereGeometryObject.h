@@ -10,15 +10,56 @@ using SCICore::Geometry::Point;
 namespace Uintah {
 namespace Components {
 
+
+/**************************************
+	
+CLASS
+   SphereGeometryObject
+	
+   Short description...
+	
+GENERAL INFORMATION
+	
+   SphereGeometryObject.h
+	
+   John A. Schmidt
+   Department of Mechanical Engineering
+   University of Utah
+	
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+	
+ 
+	
+KEYWORDS
+   SphereGeometryObject
+	
+DESCRIPTION
+   Long description...
+	
+WARNING
+	
+****************************************/
+
+
 class SphereGeometryObject : public GeometryObject {
 
  public:
-
+  //////////
+  // Insert Documentation Here:
   SphereGeometryObject(ProblemSpecP &);
+
+  //////////
+  // Insert Documentation Here:
   virtual ~SphereGeometryObject();
- 
+
+  //////////
+  // Insert Documentation Here: 
   virtual bool inside(const Point &p) const;
+
+  //////////
+  // Insert Documentation Here:
   virtual Box getBoundingBox() const;
+
  private:
  
   Point d_origin;
@@ -31,6 +72,10 @@ class SphereGeometryObject : public GeometryObject {
 #endif // __SPHERE_GEOMETRY_OBJECT_H__
 
 // $Log$
+// Revision 1.5  2000/04/22 16:51:04  jas
+// Put in a skeleton framework for documentation (coccoon comment form).
+// Comments still need to be filled in.
+//
 // Revision 1.4  2000/04/20 22:58:14  sparker
 // Resolved undefined symbols
 // Trying to make stuff work

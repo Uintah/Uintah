@@ -13,14 +13,54 @@ using SCICore::Geometry::Point;
 namespace Uintah {
 namespace Components {
 
+/**************************************
+	
+CLASS
+   UnionGeometryObject
+	
+   Short description...
+	
+GENERAL INFORMATION
+	
+   UnionGeometryObject.h
+	
+   John A. Schmidt
+   Department of Mechanical Engineering
+   University of Utah
+	
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+	
+ 
+	
+KEYWORDS
+   UnionGeometryObject
+	
+DESCRIPTION
+   Long description...
+	
+WARNING
+	
+****************************************/
+
 class UnionGeometryObject : public GeometryObject {
 
  public:
+  //////////
+  // Insert Documentation Here:
   UnionGeometryObject(ProblemSpecP &);
+
+  //////////
+  // Insert Documentation Here:
   virtual ~UnionGeometryObject();
 
+  //////////
+  // Insert Documentation Here:
   virtual bool inside(const Point &p) const;
+
+  //////////
+  // Insert Documentation Here:
   virtual Box getBoundingBox() const;
+
  private:
   std::vector<GeometryObject* > child;
 

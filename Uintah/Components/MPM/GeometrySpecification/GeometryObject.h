@@ -23,21 +23,64 @@ namespace Uintah {
       using SCICore::Geometry::Vector;
       using SCICore::Geometry::IntVector;
       using Uintah::Grid::Box;
+
+/**************************************
+	
+CLASS
+   GeometryObject
+	
+   Short description...
+	
+GENERAL INFORMATION
+	
+   GeometryObject.h
+	
+   John A. Schmidt
+   Department of Mechanical Engineering
+   University of Utah
+	
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+	
+ 
+	
+KEYWORDS
+   GeometryObject
+	
+DESCRIPTION
+   Long description...
+	
+WARNING
+	
+****************************************/
+
       
       class GeometryObject {
 	 
       public:
-	 
+	//////////
+	// Insert Documentation Here:
 	 GeometryObject();
+
+	 //////////
+	 // Insert Documentation Here:
 	 virtual ~GeometryObject();
-	 
+	
+	 //////////
+	 // Insert Documentation Here:
 	 IntVector getObjInfoNumParticlesPerCell();
 #ifdef FUTURE
+	 //////////
+	 // Insert Documentation Here:
 	 void surface(Point part_pos, int surf[7], int &np);
+	 //////////
+	 // Insert Documentation Here:
 	 void norm(Vector &norm,Point part_pos, int surf[7], int ptype, int &np);
 #endif
-	 
+	 //////////
+	 // Insert Documentation Here:
 	 virtual Box getBoundingBox() const = 0;
+	 //////////
+	 // Insert Documentation Here:
 	 virtual bool inside(const Point &p) const = 0;
 	 
       private:
@@ -51,6 +94,10 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.12  2000/04/22 16:51:04  jas
+// Put in a skeleton framework for documentation (coccoon comment form).
+// Comments still need to be filled in.
+//
 // Revision 1.11  2000/04/20 22:58:14  sparker
 // Resolved undefined symbols
 // Trying to make stuff work
