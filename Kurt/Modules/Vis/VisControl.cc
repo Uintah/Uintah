@@ -44,7 +44,7 @@ LOG
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/Level.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/NodeIterator.h>
 #include <iostream> 
 #include <sstream>
@@ -62,7 +62,7 @@ using SCICore::Containers::to_string;
 using Uintah::DataArchive;
 using Uintah::TypeDescription;
 using Uintah::Level;
-using Uintah::Region;
+using Uintah::Patch;
 using Uintah::Grid;
 using Uintah::GridP;
 using namespace SCICore::TclInterface;
@@ -222,7 +222,7 @@ void VisControl::tcl_command( TCLArgs& args, void* userdata)
   // get the number of materials for the NC & particle Variables
   GridP grid = archive.queryGrid(times[0]);
   LevelP level = grid->getLevel( 0 );
-  Region* r = *(level->regionsBegin());
+  Patch* r = *(level->patchesBegin());
   int numpsMatls = archive.queryNumMaterials(psVar.get()(), r, times[0]);
   int numgsMatls = archive.queryNumMaterials(gsVar.get()(), r, times[0]);
   int numgvMatls = archive.queryNumMaterials(gvVar.get()(), r, times[0]);
@@ -415,9 +415,9 @@ VisControl::buildData(DataArchive& archive, vector< double >& times,
   ParticleVariable< Point > positions(dest_subset);
   ParticleVariable< double > scalars(dest_subset);
 
-  // iterate over regions
-  for(Level::const_regionIterator r = level->regionsBegin();
-      r != level->regionsEnd(); r++ ){
+  // iterate over patches
+  for(Level::const_patchIterator r = level->patchesBegin();
+      r != level->patchesEnd(); r++ ){
     NCVariable< Vector >  vv;
     NCVariable< double >  sv;
     ParticleVariable< Vector > pv;
