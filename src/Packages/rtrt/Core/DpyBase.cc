@@ -286,16 +286,7 @@ void DpyBase::cleanup() {
 }
 
 void DpyBase::stop() {
-  cerr << "DpyBase::stop() called for "<<window_name<<"\n";
   on_death_row = true;
-
-  // Need to figure out a better event for this, but this works for
-  // now.
-  XEvent event;
-  event.type = Expose;
-  if (useXThreads) XLockDisplay(dpy);
-  XSendEvent(dpy, win, false, 0, &event);
-  if (useXThreads) XUnlockDisplay(dpy);
 }
 
 void DpyBase::init() {
