@@ -173,8 +173,7 @@ Mesh* Mesh::clone()
 
 void Mesh::io(Piostream& stream)
 {
-  //using SCICore::Containers::Pio;
-  //using SCICore::PersistentSpace::Pio;
+    using SCICore::Containers::Pio;
 
     int version=stream.begin_class("Mesh", MESH_VERSION);
     if(version == 1){
@@ -204,7 +203,7 @@ void Mesh::io(Piostream& stream)
 	Pio(stream, cond_tensors);
     }
 
-    if (version >= 5) Pio(stream, bld_grid);
+    if (version >= 5) SCICore::PersistentSpace::Pio(stream, bld_grid);
 
     stream.end_class();
     if(stream.reading()){
@@ -1983,6 +1982,9 @@ void Pio(Piostream& stream, SCICore::Datatypes::ElementVersion1& elem)
 
 //
 // $Log$
+// Revision 1.15  2000/03/20 23:16:45  dav
+// Had to specify the namespace for Pio directly so that it will compile on both SGI and linux
+//
 // Revision 1.14  2000/03/20 22:00:48  yarden
 // Linux port: commented out 'using SCICore:*:Pio' in Mesh:io
 //
