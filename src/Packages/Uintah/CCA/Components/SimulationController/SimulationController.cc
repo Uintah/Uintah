@@ -61,11 +61,12 @@ SimulationController::~SimulationController()
 }
 
 void SimulationController::doRestart(std::string restartFromDir, int timestep,
-				     bool removeOldDir)
+				     bool fromScratch, bool removeOldDir)
 {
    d_restarting = true;
    d_restartFromDir = restartFromDir;
    d_restartTimestep = timestep;
+   d_restartFromScratch = fromScratch;
    d_restartRemoveOldDir = removeOldDir;
 }
 
@@ -190,7 +191,7 @@ void SimulationController::run()
 				scheduler->get_new_dw(), &t, &delt);
       
       output->restartSetup(restartFromDir, d_restartTimestep, t,
-			   d_restartRemoveOldDir);
+			   d_restartFromScratch, d_restartRemoveOldDir);
       // in case restart initialize doesn't put delt
       delt_vartype delt_var(delt);
       scheduler->get_new_dw()->put(delt_var, sharedState->get_delt_label());

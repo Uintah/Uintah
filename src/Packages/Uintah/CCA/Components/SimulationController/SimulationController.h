@@ -51,7 +51,7 @@ class MDInterface;
       virtual ~SimulationController();
 
       void doRestart(std::string restartFromDir, int timestep,
-		     bool removeOldDir);
+		     bool fromScratch, bool removeOldDir);
       void run();
 
       // for calculating memory usage when sci-malloc is disabled.
@@ -83,6 +83,15 @@ class MDInterface;
       bool           d_restarting;
       std::string d_restartFromDir;
       int d_restartTimestep;
+
+      // If d_restartFromScratch is true then don't copy or move any of
+      // the old timesteps or dat files from the old directory.  Run as
+      // as if it were running from scratch but with initial conditions
+      // given by the restart checkpoint.
+      bool d_restartFromScratch;
+
+      // If !d_restartFromScratch, then this indicates whether to move
+      // or copy the old timesteps.
       bool d_restartRemoveOldDir;
    };
 
