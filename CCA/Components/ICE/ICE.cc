@@ -1190,7 +1190,9 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->computes(lb->temp_CCLabel,  ice_matls);
   task->computes(lb->vel_CCLabel,   ice_matls);
   task->computes(lb->machLabel,     ice_matls);  
-
+/*`==========TESTING==========*/
+ task->computes(lb->scratchLabel,     ice_matls);
+/*==========TESTING==========`*/
   //__________________________________
   // Model Variables.
   if(d_modelSetup && d_modelSetup->tvars.size() > 0){
@@ -4171,8 +4173,8 @@ cout << "using LODI BCS" <<endl;
       constCCVariable<double> press_old, rho_old, temp_old, sp_vol_old;
       constCCVariable<double> vol_frac_old;
       constCCVariable<Vector> vel_old;
-      CCVariable<double> press_tmp;
-      CCVariable<double> nux, nuy, nuz, e;    
+      CCVariable<double> press_tmp,e;   
+      CCVariable<Vector> nu; 
       double gamma = ice_matl->getGamma();
 
                                 //  O L D   D W
@@ -4184,14 +4186,10 @@ cout << "using LODI BCS" <<endl;
       old_dw->get(vol_frac_old, lb->vol_frac_CCLabel, indx,patch,gn,0);
  
       new_dw->allocateTemporary(press_tmp,  patch);
-      new_dw->allocateTemporary(nux, patch);  
-      new_dw->allocateTemporary(nuy, patch);  
-      new_dw->allocateTemporary(nuz, patch);  
+      new_dw->allocateTemporary(nu, patch);
       new_dw->allocateTemporary(e,   patch);
      
-      nux.initialize(0.0);
-      nuy.initialize(0.0);  
-      nuz.initialize(0.0);  
+      nu.initialize(Vector(0,0,0)); 
       press_tmp.initialize(0.0);  
       e.initialize(0.0);
       
@@ -4210,7 +4208,7 @@ cout << "using LODI BCS" <<endl;
       } 
 
       //compute dissipation coefficients
-      computeNu(nux, nuy, nuz, press_tmp, patch);
+      computeNu(nu, press_tmp, patch);
       
       //compute Di at boundary cells
       computeDi(di,rho_old,  press_tmp, vel_old, 
@@ -4222,9 +4220,7 @@ cout << "using LODI BCS" <<endl;
       printData(   indx, patch,1, desc.str(), "press_tmp",    press_tmp);
       printData(   indx, patch,1, desc.str(), "rho_old",        rho_old);
       printVector( indx, patch,1, desc.str(), "vel_old", 0, vel_old);
-      printData(   indx, patch,1, desc.str(), "nux",    nux);
-      printData(   indx, patch,1, desc.str(), "nuy",    nuy);
-      printData(   indx, patch,1, desc.str(), "nuz",    nuz);
+      printVector( indx, patch,1, desc.str(), "nu",      0, nu);
       printVector( indx, patch,1, desc.str(), "d1",      0, di[1]);    
       printVector( indx, patch,1, desc.str(), "d2",      0, di[2]);    
       printVector( indx, patch,1, desc.str(), "d3",      0, di[3]);    
@@ -4233,18 +4229,17 @@ cout << "using LODI BCS" <<endl;
      
        //--------------------TESTING---------------------//             
     #endif          
-      setBCDensityLODI(rho_CC,di,
-                       nux, nuy, nuz,
+      setBCDensityLODI(rho_CC,di,nu,
                        rho_old, press_tmp, 
                        vel_old, delT, patch, indx);
 
-      setBCVelLODI(vel_CC, di,
-                           nux, nuy, nuz, rho_old, press_tmp, 
+      setBCVelLODI(vel_CC, di,nu,
+                           rho_old, press_tmp, 
                            vel_old, delT, patch, indx);
                      
                        
-      setBCTempLODI(temp, di, 
-                          e, rho_CC, nux, nuy, nuz, 
+      setBCTempLODI(temp, di,
+                          e, rho_CC, nu,
                           rho_old, press_tmp, vel_old, 
                           delT, cv, gamma, patch, indx);
 #endif

@@ -1426,10 +1426,8 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
             for Density
  ---------------------------------------------------------------------  */
 void setBCDensityLODI(CCVariable<double>& rho_CC,
-                StaticArray<CCVariable<Vector> >& di,                       
-                const CCVariable<double>& nux,
-                const CCVariable<double>& nuy,
-                const CCVariable<double>& nuz,
+                StaticArray<CCVariable<Vector> >& di,
+                const CCVariable<Vector>& nu,
                 constCCVariable<double>& rho_tmp,
                 const CCVariable<double>& p,
                 constCCVariable<Vector>& vel,
@@ -1460,8 +1458,7 @@ void setBCDensityLODI(CCVariable<double>& rho_CC,
     }
  
     if(rho_new_bcs != 0 && rho_new_bcs->getKind() == "LODI"){ 
-      fillFaceDensityLODI(rho_CC, di,
-                          nux, nuy, nuz, rho_tmp, vel,  
+      fillFaceDensityLODI(rho_CC, di, nu, rho_tmp, vel,  
                           face, delT, dx); 
     }
   }  
@@ -1514,9 +1511,7 @@ void setBCDensityLODI(CCVariable<double>& rho_CC,
  ---------------------------------------------------------------------  */
 void setBCVelLODI(CCVariable<Vector>& vel_CC,
             StaticArray<CCVariable<Vector> >& di,
-            const CCVariable<double>& nux,
-            const CCVariable<double>& nuy,
-            const CCVariable<double>& nuz,
+            const CCVariable<Vector>& nu,
             constCCVariable<double>& rho_tmp,
             const CCVariable<double>& p,
             constCCVariable<Vector>& vel,
@@ -1547,8 +1542,7 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
       continue;
     } 
     if (vel_new_bcs != 0 && kind == "Velocity" && vel_new_bcs->getKind() == "LODI") {
-      fillFaceVelLODI(vel_CC,di, 
-                      nux, nuy, nuz, rho_tmp, p, vel,  
+      fillFaceVelLODI(vel_CC,di, nu, rho_tmp, p, vel,  
                       face, delT, dx);
     }
   } 
@@ -1606,9 +1600,7 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
               StaticArray<CCVariable<Vector> >& di,
               const CCVariable<double>& e,
               const CCVariable<double>& rho_CC,
-              const CCVariable<double>& nux,
-              const CCVariable<double>& nuy,
-              const CCVariable<double>& nuz,
+              const CCVariable<Vector>& nu,
               constCCVariable<double>& rho_tmp,
               const CCVariable<double>& p,
               constCCVariable<Vector>& vel,
@@ -1642,7 +1634,7 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
 
     if (temp_new_bcs != 0 && temp_new_bcs->getKind() == "LODI") {
        fillFaceTempLODI(temp_CC, di,
-                        e, rho_CC, nux, nuy, nuz, rho_tmp, 
+                        e, rho_CC, nu, rho_tmp, 
                         p, vel, face, delT, cv, gamma,
                         dx);
     }
@@ -1808,9 +1800,7 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
  Function~ computeNu--                    L   O   D   I
  Purpose~  compute dissipation coefficients 
  __________________________________________*/ 
-void computeNu(CCVariable<double>& nux, 
-               CCVariable<double>& nuy, 
-               CCVariable<double>& nuz,
+void computeNu(CCVariable<Vector>& nu,
                const CCVariable<double>& p, 
                const Patch* patch)
 {
@@ -1837,14 +1827,14 @@ void computeNu(CCVariable<double>& nux,
             IntVector t  =  IntVector(xFaceCell,  j+1, k);
             IntVector b  =  IntVector(xFaceCell,  j-1, k);
             IntVector r  =  IntVector(xFaceCell,  j,   k);
-            nuy[r] = fabs(p[t] - 2.0 * p[r] + p[b])/
-                    (fabs(p[t] - p[r]) + fabs(p[r] - p[b])  + d_SMALL_NUM);
+            nu[r].y( fabs(p[t] - 2.0 * p[r] + p[b])/
+                    (fabs(p[t] - p[r]) + fabs(p[r] - p[b])  + d_SMALL_NUM) );
           }
         }
          
         for (int k = low.z(); k <= hi_z; k++) {
-         nuy[IntVector(xFaceCell,hi_y,k)]    = nuy[IntVector(xFaceCell,hi_y-1,k)];
-         nuy[IntVector(xFaceCell,low.y(),k)] = nuy[IntVector(xFaceCell,low.y()+1,k)];
+         nu[IntVector(xFaceCell,hi_y,k)].y(    nu[IntVector(xFaceCell,hi_y-1,k)].y() );
+         nu[IntVector(xFaceCell,low.y(),k)].y( nu[IntVector(xFaceCell,low.y()+1,k)].y() );
         }
 
         for(int j = low.y(); j <= hi_y; j++) {
@@ -1852,14 +1842,14 @@ void computeNu(CCVariable<double>& nux,
             IntVector r  =  IntVector(xFaceCell,  j,   k);
             IntVector f  =  IntVector(xFaceCell,  j,   k+1);
             IntVector bk =  IntVector(xFaceCell,  j,   k-1);
-            nuz[r] = fabs(p[f] - 2.0 * p[r] + p[bk])/
-                    (fabs(p[f] - p[r]) + fabs(p[r] - p[bk]) + d_SMALL_NUM);
+            nu[r].z( fabs(p[f] - 2.0 * p[r] + p[bk])/
+                    (fabs(p[f] - p[r]) + fabs(p[r] - p[bk]) + d_SMALL_NUM) );
           }
         }
 
         for(int j = low.y(); j <= hi_y; j++) {
-          nuz[IntVector(xFaceCell,j,low.z())] = nuz[IntVector(xFaceCell,j,low.z()+1)];
-          nuz[IntVector(xFaceCell,j,hi_z)]    = nuz[IntVector(xFaceCell,j,hi_z-1)];
+          nu[IntVector(xFaceCell,j,low.z())].z( nu[IntVector(xFaceCell,j,low.z()+1)].z() );
+          nu[IntVector(xFaceCell,j,hi_z)].z(    nu[IntVector(xFaceCell,j,hi_z-1)].z() );
         }
       }
       //__________________________________
@@ -1876,14 +1866,14 @@ void computeNu(CCVariable<double>& nux,
             IntVector r  =  IntVector(i+1, yFaceCell,   k);
             IntVector l  =  IntVector(i-1, yFaceCell,   k);
             IntVector c  =  IntVector(i,   yFaceCell,   k);
-            nux[c] = fabs(p[r] - 2.0 * p[c] + p[l])/
-                    (fabs(p[r] - p[c]) + fabs(p[c] - p[l])  + d_SMALL_NUM);
+            nu[c].x( fabs(p[r] - 2.0 * p[c] + p[l])/
+                    (fabs(p[r] - p[c]) + fabs(p[c] - p[l])  + d_SMALL_NUM) );
           }
         }
 
         for (int k = low.z(); k <= hi_z; k++) {
-          nux[IntVector(low.x(),yFaceCell,k)] = nux[IntVector(low.x()+1, yFaceCell, k)];
-          nux[IntVector(hi_x,   yFaceCell,k)] = nux[IntVector(hi_x-1,    yFaceCell, k)];
+          nu[IntVector(low.x(),yFaceCell,k)].x( nu[IntVector(low.x()+1, yFaceCell, k)].x() );
+          nu[IntVector(hi_x,   yFaceCell,k)].x( nu[IntVector(hi_x-1,    yFaceCell, k)].x() );
         }
 
 
@@ -1892,14 +1882,14 @@ void computeNu(CCVariable<double>& nux,
             IntVector c  =  IntVector(i,   yFaceCell,   k);
             IntVector f  =  IntVector(i,   yFaceCell,   k+1);
             IntVector bk =  IntVector(i,   yFaceCell,   k-1);
-            nuz[c] = fabs(p[f] - 2.0 * p[c] + p[bk])/
-                    (fabs(p[f] - p[c]) + fabs(p[c] - p[bk]) + d_SMALL_NUM);
+            nu[c].z( fabs(p[f] - 2.0 * p[c] + p[bk])/
+                    (fabs(p[f] - p[c]) + fabs(p[c] - p[bk]) + d_SMALL_NUM) );
           }
         }
 
         for (int i = low.x(); i <= hi_x; i++) {
-          nuz[IntVector(i,yFaceCell,low.z())] = nuz[IntVector(i,yFaceCell,low.z()+1)];
-          nuz[IntVector(i,yFaceCell,hi_z)]    = nuz[IntVector(i,yFaceCell,hi_z-1)];
+          nu[IntVector(i,yFaceCell,low.z())].z( nu[IntVector(i,yFaceCell,low.z()+1)].z() );
+          nu[IntVector(i,yFaceCell,hi_z)].z(    nu[IntVector(i,yFaceCell,hi_z-1)].z() );
         }
       }  
      //__________________________________
@@ -1913,17 +1903,17 @@ void computeNu(CCVariable<double>& nux,
       }     
       for(int i = low.x()+1; i < hi_x; i++) {
          for (int j = low.y(); j <= hi_y; j++) {
-           IntVector r = IntVector(i+1, j,   zFaceCell);  
+           IntVector r = IntVector(i+1, j,   zFaceCell); 
            IntVector l = IntVector(i-1, j,   zFaceCell);  
            IntVector c = IntVector(i,   j,   zFaceCell);  
-           nux[c] = fabs(p[r] - 2.0 * p[c] + p[l])/
-                   (fabs(p[r] - p[c]) + fabs(p[c] - p[l])  + d_SMALL_NUM);
+           nu[c].x( fabs(p[r] - 2.0 * p[c] + p[l])/
+                   (fabs(p[r] - p[c]) + fabs(p[c] - p[l])  + d_SMALL_NUM) );
          }
        }
 
        for (int j = low.y(); j <= hi_y; j++) {
-         nux[IntVector(low.x(),j,zFaceCell)] = nux[IntVector(low.x()+1, j, zFaceCell)];
-         nux[IntVector(hi_x,   j,zFaceCell)] = nux[IntVector(hi_x-1,    j, zFaceCell)];
+         nu[IntVector(low.x(),j,zFaceCell)].x( nu[IntVector(low.x()+1, j, zFaceCell)].x() );
+         nu[IntVector(hi_x,   j,zFaceCell)].x( nu[IntVector(hi_x-1,    j, zFaceCell)].x() );
        }
 
        for(int i = low.x(); i <= hi_x; i++) {
@@ -1931,14 +1921,14 @@ void computeNu(CCVariable<double>& nux,
            IntVector t = IntVector(i, j+1, zFaceCell);    
            IntVector b = IntVector(i, j-1, zFaceCell);    
            IntVector c = IntVector(i, j,   zFaceCell);    
-           nuy[c] = fabs(p[t] - 2.0 * p[c] + p[b])/
-                   (fabs(p[t] - p[c]) + fabs(p[c] - p[b]) + d_SMALL_NUM);
+           nu[c].y( fabs(p[t] - 2.0 * p[c] + p[b])/
+                   (fabs(p[t] - p[c]) + fabs(p[c] - p[b]) + d_SMALL_NUM) );
         }
       }
 
       for (int i = low.x(); i <= hi_x; i++) {
-        nuy[IntVector(i,low.y(),zFaceCell)] = nuy[IntVector(i,low.y()+1,zFaceCell)];
-        nuy[IntVector(i,hi_y,   zFaceCell)] = nuy[IntVector(i,hi_y-1,   zFaceCell)];
+        nu[IntVector(i,low.y(),zFaceCell)].y( nu[IntVector(i,low.y()+1,zFaceCell)].y() );
+        nu[IntVector(i,hi_y,   zFaceCell)].y( nu[IntVector(i,hi_y-1,   zFaceCell)].y() );
       }
     }
   }
