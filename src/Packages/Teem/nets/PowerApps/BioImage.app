@@ -2764,7 +2764,7 @@ class BioImageApp {
                     [set EditColorMap2] swatch_load CThead
                 } 
             }
-	    
+            set 2D_fixed 0
 	    $mod-c needexecute
 	    set has_executed 1
 	} else {
