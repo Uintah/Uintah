@@ -177,16 +177,13 @@ MPMLabel::MPMLabel()
   gAccelerationLabel = VarLabel::create( "g.acceleration",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gMomExedAccelerationLabel = VarLabel::create( "g.momexedacceleration",
-			NCVariable<Vector>::getTypeDescription() );
-  
   gMassLabel = VarLabel::create( "g.mass",
 			NCVariable<double>::getTypeDescription() );
   
   gVelocityLabel = VarLabel::create( "g.velocity",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gMomExedVelocityLabel = VarLabel::create( "g.momexedvelocity",
+  gVelocityInterpLabel = VarLabel::create( "g.velocityInterp",
 			NCVariable<Vector>::getTypeDescription() );
   
   gExternalForceLabel = VarLabel::create( "g.externalforce",
@@ -202,9 +199,6 @@ MPMLabel::MPMLabel()
 			NCVariable<int>::getTypeDescription() );
   
   gVelocityStarLabel = VarLabel::create( "g.velocity_star",
-			NCVariable<Vector>::getTypeDescription() );
-  
-  gMomExedVelocityStarLabel = VarLabel::create( "g.momexedvelocity_star",
 			NCVariable<Vector>::getTypeDescription() );
   
   gTemperatureLabel = VarLabel::create("g.temperature",
@@ -604,16 +598,14 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pFiberDirLabel);
 
   VarLabel::destroy(gAccelerationLabel);
-  VarLabel::destroy(gMomExedAccelerationLabel);
   VarLabel::destroy(gMassLabel);
   VarLabel::destroy(gVelocityLabel);
-  VarLabel::destroy(gMomExedVelocityLabel);
+  VarLabel::destroy(gVelocityInterpLabel);
   VarLabel::destroy(gExternalForceLabel);
   VarLabel::destroy(gInternalForceLabel);
   VarLabel::destroy(gContactForceLabel);
   VarLabel::destroy(gContactLabel);
   VarLabel::destroy(gVelocityStarLabel);
-  VarLabel::destroy(gMomExedVelocityStarLabel);
   VarLabel::destroy(gNormTractionLabel);
   VarLabel::destroy(gStressLabel);
   VarLabel::destroy(gSurfNormLabel);
