@@ -16,14 +16,15 @@
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
+#include <TCL/TCLvar.h>
 
 struct SoundMixer_PortInfo {
-    double gain;
+    TCLvardouble* gain;
     SoundIPort* isound;
 };
 
 class SoundMixer : public Module {
-    double overall_gain;
+    TCLvardouble overall_gain;
     SoundOPort* osound;
     Array1<SoundMixer_PortInfo*> portinfo;
 public:
@@ -43,16 +44,8 @@ static Module* make_SoundMixer(const clString& id)
 static RegisterModule db1("Sound", "SoundMixer", make_SoundMixer);
 
 SoundMixer::SoundMixer(const clString& id)
-: Module("SoundMixer", id, Filter)
+: Module("SoundMixer", id, Filter), overall_gain("overall_gain", id, this)
 {
-    // Create the overall gain slider.
-    overall_gain=1.0;
-#ifdef OLDUI
-    MUI_slider_real* slider=new MUI_slider_real("overall gain", &overall_gain,
-						MUI_widget::Immediate, 1);
-    add_ui(slider);
-#endif
-
     // Create the output data handle and port
     osound=new SoundOPort(this, "Sound Output",
 			  SoundIPort::Stream|SoundIPort::Atomic);
@@ -67,7 +60,7 @@ SoundMixer::SoundMixer(const clString& id)
 }
 
 SoundMixer::SoundMixer(const SoundMixer& copy, int deep)
-: Module(copy, deep)
+: Module(copy, deep), overall_gain("overall_gain", id, this)
 {
     NOT_FINISHED("SoundMixer::SoundMixer");
 }
@@ -135,7 +128,7 @@ void SoundMixer::execute()
 	double sum=0;
 	nend=0;
 	for(int i=0;i<ni;i++){
-	    double gain=portinfo[i]->gain;
+	    double gain=portinfo[i]->gain->get();
 	    SoundIPort* isound=portinfo[i]->isound;
 	    double sample;
 	    if(isound->end_of_stream()){
@@ -147,7 +140,7 @@ void SoundMixer::execute()
 	    sum+=gain*sample;
 	}
 	if(nend != ni){
-	    sum*=overall_gain;
+	    sum*=overall_gain.get();
 	    osound->put_sample(sum);
 
 	    // Tell everyone how we are doing...
@@ -202,7 +195,6 @@ void SoundMixer::connection(ConnectionMode mode, int which_port,
 	// Add a slider for the one that we just connected;
 	pi=portinfo[which_port];
 	clString sname(clString("Gain (")+to_string(which_port)+clString(")"));
-	pi->gain=1.0;
 #ifdef OLDUI
 	MUI_slider_real* slider=new MUI_slider_real(sname, &pi->gain,
 						    MUI_widget::Immediate, 1);
