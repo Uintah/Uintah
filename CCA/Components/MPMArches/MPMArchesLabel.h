@@ -110,6 +110,13 @@ using std::vector;
 
       const VarLabel* void_frac_CCLabel;
 
+      // Stability Factor Labels
+      
+      const VarLabel* KStabilityULabel;
+      const VarLabel* KStabilityVLabel;
+      const VarLabel* KStabilityWLabel;
+      const VarLabel* KStabilityHLabel;
+
       // reqd by momentum eqns:
       // u-momentum equation source labels
 
