@@ -10,6 +10,7 @@
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/Stencil7.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
@@ -352,6 +353,13 @@ using namespace SCIRun;
                         const string& message1,
                         const string& message2, int component, 
                         const CCVariable<Vector>& q_CC);
+
+      void printStencil( int matl,
+                         const Patch* patch,                 
+                         int include_EC,                     
+                         const string&    message1,          
+                         const string&    message2,          
+                         const CCVariable<Stencil7>& q_CC);   
                      
       void adjust_dbg_indices( const int include_EC,
                                const  Patch* patch,
@@ -410,6 +418,9 @@ using namespace SCIRun;
       bool switchDebug_PressDiffRF;
       bool switchDebug_Exchange_FC;
       bool switchDebug_explicit_press;
+      bool switchDebug_setupMatrix;
+      bool switchDebug_setupRHS;
+      bool switchDebug_updatePressure;
       bool switchDebug_PressFC;
       bool switchDebugLagrangianValues;
       bool switchDebugLagrangianSpecificVol;
