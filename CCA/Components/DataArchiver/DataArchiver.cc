@@ -54,6 +54,7 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld)
     d_outputLock("DataArchiver output lock"),
     d_outputReductionLock("DataArchiver reduction output lock")
 {
+  theDataArchiver = this;
   d_wasOutputTimestep = false;
   d_wasCheckpointTimestep = false;
   d_currentTime=-1;
