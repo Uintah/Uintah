@@ -18,7 +18,7 @@
 //    Date   : Fri May 18 14:36:19 2001
 
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/Core/Grid/VarLabelMatlPatch.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 
 namespace Uintah {
@@ -31,14 +31,18 @@ public:
   void clear()
   { map_.erase(map_.begin(), map_.end()); }
   
-  void includeOffsets(const VarLabel* var, Ghost::GhostType gtype,
-		      int numGhostCells);
+  void includeOffsets(const VarLabel* var,
+		      const MaterialSubset* matls, const PatchSubset* patches,
+		      Ghost::GhostType gtype, int numGhostCells);
 
-  // get the minumum extents that cover both the specified ghost cells
-  // as well as the expected ghost cells (the included offsets).
-  void getExtents(const VarLabel* var, const Patch* patch,
-		  Ghost::GhostType gtype, int numGhostCells,
-		  IntVector& lowIndex, IntVector& highIndex) const;
+  // requiredLow and requiredHigh will be the extents that cover the
+  // expected ghost cells from all requires.  requestedLow and requestedHigh
+  // will cover that as well as the requested ghost cells (which may be more
+  // than what will be required by future tasks).
+  void getExtents(const VarLabelMatlPatch& vmp,
+		  Ghost::GhostType requestedGType, int requestedNumGhostCells,
+		  IntVector& requiredLow, IntVector& requiredHigh,
+		  IntVector& requestedLow, IntVector& requestedHigh) const;
 private:
   // Note:  The offsets should be >= 0 in each dimension.  You should subtract,
   // not add, the low offset.
@@ -54,6 +58,10 @@ private:
       return *this;
     }
 
+    bool operator==(const Offsets& other) const
+    { return lowOffset_ == other.lowOffset_ &&
+	highOffset_ == other.highOffset_; }
+
     void encompassOffsets(IntVector lowOffset, IntVector highOffset);
 
     void getOffsets(IntVector& lowOffset, IntVector& highOffset) const
@@ -63,7 +71,7 @@ private:
     IntVector highOffset_;
   };
 
-  typedef map<const VarLabel*, Offsets, VarLabel::Compare> Map;
+  typedef map<VarLabelMatlPatch, Offsets> Map;
   Map map_;
 };
 
