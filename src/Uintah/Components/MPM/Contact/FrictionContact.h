@@ -60,14 +60,6 @@ WARNING
          // Coefficient of friction
          double d_mu;
 
-         // VarLabels specific to Frictional contact
-	 const VarLabel* gNormTractionLabel;
-	 const VarLabel* gSurfNormLabel; 
-	 const VarLabel* gStressLabel; 
-	 // const VarLabel* pStressLabel; 
-	 //const VarLabel* pXLabel; 
-	
-	 
       public:
 	 // Constructor
 	 FrictionContact(ProblemSpecP& ps, SimulationStateP& d_sS);
@@ -110,6 +102,9 @@ WARNING
 #endif /* __FRICTION_H__ */
 
 // $Log$
+// Revision 1.12  2000/08/16 22:59:00  bard
+// Moved the varlabels to MPMLabel.
+//
 // Revision 1.11  2000/06/17 07:06:37  sparker
 // Changed ProcessorContext to ProcessorGroup
 //
