@@ -43,9 +43,8 @@ void IdealGas::computeTempCC(const Patch* patch,
                                 CCVariable<double>& Temp,
                                 Patch::FaceType face)
 {
-  const IntVector gc(1,1,1);  // include ghostcells in the calc.
   if(comp_domain == "WholeDomain") {
-    for (CellIterator iter = patch->getCellIterator(gc);!iter.done();iter++) {                     
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {                     
       Temp[*iter]= press[*iter]/ ( (gamma - 1.0) * cv * rho_micro[*iter] );
     }
   } 
