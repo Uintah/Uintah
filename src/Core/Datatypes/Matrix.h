@@ -55,12 +55,23 @@ class SCICORESHARE Matrix : public PropertyManager
 public:
   //! make a duplicate, needed to support detach from LockingHandle
   virtual Matrix* clone() = 0;
+
   //! convert this matrix to a DenseMatrix.
   virtual DenseMatrix* dense() = 0;
   //! convert this matrix to a SparseRowMatrix.
   virtual SparseRowMatrix* sparse() = 0;
   //! convert this matrix to a ColumnMatrix.
   virtual ColumnMatrix* column() = 0;
+
+  bool is_dense();
+  bool is_sparse();
+  bool is_column();
+
+  // No conversion is done.
+  // NULL is returned if the matrix is not of the appropriate type.
+  DenseMatrix *as_dense();
+  SparseRowMatrix *as_sparse();
+  ColumnMatrix *as_column();
 
   virtual Matrix* transpose() = 0;
   virtual double* get_val() { return 0; }
