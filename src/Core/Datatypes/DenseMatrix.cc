@@ -214,165 +214,197 @@ void DenseMatrix::zero()
   }
 }
 
-int DenseMatrix::solve(ColumnMatrix& sol)
+int DenseMatrix::solve(ColumnMatrix& sol, int overwrite)
+{
+  ColumnMatrix b(sol);
+  return solve(b, sol, overwrite);
+}
+
+int DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs, 
+		       int overwrite)
 {
   ASSERT(nr==nc);
-  ASSERT(sol.nrows()==nc);
-  ColumnMatrix b(sol);
+  ASSERT(rhs.nrows()==nc);
+  lhs=rhs;
+
+  double **A;
+  DenseMatrix *cpy;
+  if (!overwrite) {cpy=clone(); A=cpy->getData2D();}
+  else A=data;
 
   // Gauss-Jordan with partial pivoting
   int i;
   for(i=0;i<nr;i++){
     //	cout << "Solve: " << i << " of " << nr << endl;
-    double max=Abs(data[i][i]);
+    double max=Abs(A[i][i]);
     int row=i;
     int j;
     for(j=i+1;j<nr;j++){
-      if(Abs(data[j][i]) > max){
-	max=Abs(data[j][i]);
+      if(Abs(A[j][i]) > max){
+	max=Abs(A[j][i]);
 	row=j;
       }
     }
     //	ASSERT(Abs(max) > 1.e-12);
     if (Abs(max) < 1.e-12) {
-      sol=b;
+      lhs=rhs;
+      if (!overwrite) delete cpy;
       return 0;
     }
     if(row != i){
       // Switch rows (actually their pointers)
-      double* tmp=data[i];
-      data[i]=data[row];
-      data[row]=tmp;
-      double dtmp=sol[i];
-      sol[i]=sol[row];
-      sol[row]=dtmp;
+      double* tmp=A[i];
+      A[i]=A[row];
+      A[row]=tmp;
+      double dtmp=lhs[i];
+      lhs[i]=lhs[row];
+      lhs[row]=dtmp;
     }
-    double denom=1./data[i][i];
-    double* r1=data[i];
-    double s1=sol[i];
+    double denom=1./A[i][i];
+    double* r1=A[i];
+    double s1=lhs[i];
     for(j=i+1;j<nr;j++){
-      double factor=data[j][i]*denom;
-      double* r2=data[j];
+      double factor=A[j][i]*denom;
+      double* r2=A[j];
       for(int k=i;k<nr;k++)
 	r2[k]-=factor*r1[k];
-      sol[j]-=factor*s1;
+      lhs[j]-=factor*s1;
     }
   }
 
   // Back-substitution
   for(i=1;i<nr;i++){
     //	cout << "Solve: " << i << " of " << nr << endl;
-    //	ASSERT(Abs(data[i][i]) > 1.e-12);
-    if (Abs(data[i][i]) < 1.e-12) {
-      sol=b;
+    //	ASSERT(Abs(A[i][i]) > 1.e-12);
+    if (Abs(A[i][i]) < 1.e-12) {
+      lhs=rhs;
+      if (!overwrite) delete cpy;
       return 0;
     }
-    double denom=1./data[i][i];
-    double* r1=data[i];
-    double s1=sol[i];
+    double denom=1./A[i][i];
+    double* r1=A[i];
+    double s1=lhs[i];
     for(int j=0;j<i;j++){
-      double factor=data[j][i]*denom;
-      double* r2=data[j];
+      double factor=A[j][i]*denom;
+      double* r2=A[j];
       for(int k=i;k<nr;k++)
 	r2[k]-=factor*r1[k];
-      sol[j]-=factor*s1;
+      lhs[j]-=factor*s1;
     }
   }
 
   // Normalize
   for(i=0;i<nr;i++){
     //	cout << "Solve: " << i << " of " << nr << endl;
-    //	ASSERT(Abs(data[i][i]) > 1.e-12);
-    if (Abs(data[i][i]) < 1.e-12) {
-      sol=b;
+    //	ASSERT(Abs(A[i][i]) > 1.e-12);
+    if (Abs(A[i][i]) < 1.e-12) {
+      lhs=rhs;
+      if (!overwrite) delete cpy;
       return 0;
     }
-    double factor=1./data[i][i];
+    double factor=1./A[i][i];
     for(int j=0;j<nr;j++)
-      data[i][j]*=factor;
-    sol[i]*=factor;
+      A[i][j]*=factor;
+    lhs[i]*=factor;
   }
+  if (!overwrite) delete cpy;
   return 1;
 }
 
-int DenseMatrix::solve(vector<double>& sol)
+int DenseMatrix::solve(vector<double>& sol, int overwrite)
+{
+  vector<double> b(sol);
+  return solve(b, sol, overwrite);
+}
+
+int DenseMatrix::solve(const vector<double>& rhs, vector<double>& lhs, 
+		       int overwrite)
 {
   ASSERT(nr==nc);
-  ASSERT(sol.size()==(unsigned)nc);
-  vector<double> b(sol);
+  ASSERT(rhs.size()==(unsigned)nc);
+  lhs=rhs;
+
+  double **A;
+  DenseMatrix *cpy;
+  if (!overwrite) {cpy=clone(); A=cpy->getData2D();}
+  else A=data;
 
   // Gauss-Jordan with partial pivoting
   int i;
   for(i=0;i<nr;i++){
     //	cout << "Solve: " << i << " of " << nr << endl;
-    double max=Abs(data[i][i]);
+    double max=Abs(A[i][i]);
     int row=i;
     int j;
     for(j=i+1;j<nr;j++){
-      if(Abs(data[j][i]) > max){
-	max=Abs(data[j][i]);
+      if(Abs(A[j][i]) > max){
+	max=Abs(A[j][i]);
 	row=j;
       }
     }
     //	ASSERT(Abs(max) > 1.e-12);
     if (Abs(max) < 1.e-12) {
-      sol=b;
+      lhs=rhs;
+      if (!overwrite) delete cpy;
       return 0;
     }
     if(row != i){
       // Switch rows (actually their pointers)
-      double* tmp=data[i];
-      data[i]=data[row];
-      data[row]=tmp;
-      double dtmp=sol[i];
-      sol[i]=sol[row];
-      sol[row]=dtmp;
+      double* tmp=A[i];
+      A[i]=A[row];
+      A[row]=tmp;
+      double dtmp=lhs[i];
+      lhs[i]=lhs[row];
+      lhs[row]=dtmp;
     }
-    double denom=1./data[i][i];
-    double* r1=data[i];
-    double s1=sol[i];
+    double denom=1./A[i][i];
+    double* r1=A[i];
+    double s1=lhs[i];
     for(j=i+1;j<nr;j++){
-      double factor=data[j][i]*denom;
-      double* r2=data[j];
+      double factor=A[j][i]*denom;
+      double* r2=A[j];
       for(int k=i;k<nr;k++)
 	r2[k]-=factor*r1[k];
-      sol[j]-=factor*s1;
+      lhs[j]-=factor*s1;
     }
   }
 
   // Back-substitution
   for(i=1;i<nr;i++){
-    //	cout << "Solve: " << i << " of " << nr << endl;
-    //	ASSERT(Abs(data[i][i]) > 1.e-12);
-    if (Abs(data[i][i]) < 1.e-12) {
-      sol=b;
+    //	cout << "Lhsve: " << i << " of " << nr << endl;
+    //	ASSERT(Abs(A[i][i]) > 1.e-12);
+    if (Abs(A[i][i]) < 1.e-12) {
+      lhs=rhs;
+      if (!overwrite) delete cpy;
       return 0;
     }
-    double denom=1./data[i][i];
-    double* r1=data[i];
-    double s1=sol[i];
+    double denom=1./A[i][i];
+    double* r1=A[i];
+    double s1=lhs[i];
     for(int j=0;j<i;j++){
-      double factor=data[j][i]*denom;
-      double* r2=data[j];
+      double factor=A[j][i]*denom;
+      double* r2=A[j];
       for(int k=i;k<nr;k++)
 	r2[k]-=factor*r1[k];
-      sol[j]-=factor*s1;
+      lhs[j]-=factor*s1;
     }
   }
 
   // Normalize
   for(i=0;i<nr;i++){
     //	cout << "Solve: " << i << " of " << nr << endl;
-    //	ASSERT(Abs(data[i][i]) > 1.e-12);
-    if (Abs(data[i][i]) < 1.e-12) {
-      sol=b;
+    //	ASSERT(Abs(A[i][i]) > 1.e-12);
+    if (Abs(A[i][i]) < 1.e-12) {
+      lhs=rhs;
+      if (!overwrite) delete cpy;
       return 0;
     }
-    double factor=1./data[i][i];
+    double factor=1./A[i][i];
     for(int j=0;j<nr;j++)
-      data[i][j]*=factor;
-    sol[i]*=factor;
+      A[i][j]*=factor;
+    lhs[i]*=factor;
   }
+  if (!overwrite) delete cpy;
   return 1;
 }
 
@@ -408,7 +440,7 @@ void DenseMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
     
 void DenseMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 				 int& flops, int& memrefs, int beg, int end,
-				 int spVec)
+				 int spVec) const
 {
   // Compute At*x=b
   ASSERT(x.nrows() == nr);
@@ -439,8 +471,8 @@ void DenseMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 
 void DenseMatrix::print() const
 {
-  cerr << "Dense Matrix: " << nr << " by " << nc << endl;
-  print(cerr);
+  std::cout << "Dense Matrix: " << nr << " by " << nc << std::endl;
+  print(std::cout);
 }
 
 void DenseMatrix::print(ostream& ostr) const

@@ -82,12 +82,12 @@ public:
 		    int spVec=0) const;
   virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 			      int& flops, int& memrefs,
-			      int beg=-1, int end=-1, int spVec=0);
+			      int beg=-1, int end=-1, int spVec=0) const;
   virtual void print();
 
-  double vector_norm();
-  double vector_norm(int& flops, int& memrefs);
-  double vector_norm(int& flops, int& memrefs, int beg, int end);
+  double vector_norm() const;
+  double vector_norm(int& flops, int& memrefs) const;
+  double vector_norm(int& flops, int& memrefs, int beg, int end) const;
   
   friend SCICORESHARE void Mult(ColumnMatrix&, const ColumnMatrix&, double s);
   friend SCICORESHARE void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
@@ -112,7 +112,10 @@ public:
 				      int beg, int end);
   
   friend SCICORESHARE void Copy(ColumnMatrix&, const ColumnMatrix&);
-  friend SCICORESHARE void Copy(ColumnMatrix&, const ColumnMatrix&, int& flops, int& refs,
+  friend SCICORESHARE void Copy(ColumnMatrix&, const ColumnMatrix&, 
+				int& flops, int& refs);
+  friend SCICORESHARE void Copy(ColumnMatrix&, const ColumnMatrix&, 
+				int& flops, int& refs,
 				int beg, int end);
   friend SCICORESHARE void AddScMult(ColumnMatrix&, const ColumnMatrix&, double s, const ColumnMatrix&);
   friend SCICORESHARE void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);

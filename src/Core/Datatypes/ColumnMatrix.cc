@@ -158,7 +158,7 @@ void ColumnMatrix::zero()
 extern "C" double cm_vnorm(int beg, int end, double* data);
 extern "C" double dnrm2(int n, double* x, int incx);
 
-double ColumnMatrix::vector_norm()
+double ColumnMatrix::vector_norm() const
 {
 //    double norm=Sqrt(cm_vnorm(0, rows, data));
 //    double norm=dnrm2(rows, data, 1);
@@ -166,14 +166,14 @@ double ColumnMatrix::vector_norm()
     return norm; 
 }
 
-double ColumnMatrix::vector_norm(int& flops, int& memrefs)
+double ColumnMatrix::vector_norm(int& flops, int& memrefs) const
 {
     flops+=rows*2;
     memrefs+=rows*sizeof(double);
     return vector_norm();
 }
 
-double ColumnMatrix::vector_norm(int& flops, int& memrefs, int beg, int end)
+double ColumnMatrix::vector_norm(int& flops, int& memrefs, int beg, int end) const
 {
     ASSERTRANGE(end, 0, rows+1);
     ASSERTRANGE(beg, 0, end);
@@ -260,7 +260,7 @@ void ColumnMatrix::mult(const ColumnMatrix&, ColumnMatrix&,
 }
 
 void ColumnMatrix::mult_transpose(const ColumnMatrix&, ColumnMatrix&,
-				  int&, int&, int, int, int) {
+				  int&, int&, int, int, int) const {
   ASSERTFAIL("Error - called mult_transpose on a columnmatrix.\n");
 }
 
@@ -393,6 +393,14 @@ void Copy(ColumnMatrix& out, const ColumnMatrix& in)
     ASSERTEQ(out.rows, in.rows);
     for(int i=0;i<out.rows;i++)
 	out.data[i]=in.data[i];
+}
+
+void Copy(ColumnMatrix& out, const ColumnMatrix& in, int&, int& refs)
+{
+    ASSERTEQ(out.rows, in.rows);
+    for(int i=0;i<out.rows;i++)
+	out.data[i]=in.data[i];
+    refs+=sizeof(double)*out.rows;
 }
 
 void Copy(ColumnMatrix& out, const ColumnMatrix& in, int&, int& refs,
