@@ -28,9 +28,11 @@
  */
 
 
-#include <Core/CCA/Component/Comm/DT/DTAddress.h>
+
 #include <iostream>
 #include <string.h>
+#include <Core/CCA/Component/Comm/DT/DTMessage.h>
+#include <Core/CCA/Component/Comm/DT/DTAddress.h>
 using namespace SCIRun;
 
 
