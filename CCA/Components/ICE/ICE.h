@@ -230,6 +230,17 @@ using namespace SCIRun;
                              DataWarehouse*,
                              DataWarehouse*);
                              
+      template<class T> void computeVelFaceRF(int dir, CellIterator it,
+                                       IntVector adj_offset,double dx,
+                                       double delT, double gravity,
+                                       constCCVariable<double>& sp_vol_CC,
+                                       constCCVariable<Vector>& vel_CC,
+                                       constCCVariable<double>& vol_frac,
+                                       constCCVariable<double>& matl_press_CC,
+                                       constCCVariable<double>& press_CC,
+                                       const T& sig_bar_FC,
+                                       T& vel_FC);
+                                                                    
       void computeFaceCenteredVelocitiesRF(const ProcessorGroup*, 
                                          const PatchSubset* patch,
                                          const MaterialSubset* matls,
