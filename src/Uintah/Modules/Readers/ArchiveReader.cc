@@ -52,7 +52,7 @@ void ArchiveReader::execute()
      try {
        reader = scinew DataArchive( string(filebase.get()()) );
      } catch ( const SCICore::Exceptions::InternalError& ex) {
-       cerr<<"Caught and exception\n";
+       cerr << "ArchiveReader caught exception: " << ex.message() << endl;
        return;
      }
      aName = string(filebase.get()());
