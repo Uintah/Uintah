@@ -8,6 +8,6 @@ using SCIRun::DebugStream;
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)
 Mutex cerrLock( "cerr lock" );
-DebugStream mixedDebug( "MixedScheduler Debug Output Stream", false );
-DebugStream fullDebug( "MixedScheduler Full Debug", false );
+DebugStream mixedDebug( "MixedScheduler", false );
+DebugStream fullDebug( "MixedSchedulerFull", false );
 

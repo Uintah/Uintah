@@ -994,22 +994,22 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     cerrLock.unlock();
   }
 
-#if 0
-this is bad for the MixedScheduler... I think it is ok to
-just remove it... at least for now... as it is only for info
-and debug purposes...
-  // Communicate the number of particles to processor zero, and
-  // print them out
-  int alltotal[3];
+  if(!mixedDebug.active()){
+    // this is bad for the MixedScheduler... I think it is ok to
+    // just remove it... at least for now... as it is only for info
+    // and debug purposes...
+    // Communicate the number of particles to processor zero, and
+    // print them out
+    int alltotal[3];
 
-  MPI_Reduce(total_reloc, &alltotal, 3, MPI_INT, MPI_SUM, 0,
-	     pg->getComm());
-  if(pg->myrank() == 0){
-    ASSERTEQ(alltotal[1], alltotal[2]);
-    if(alltotal[0] != 0)
-      cerr << "Particles crossing patch boundaries: " << alltotal[0] << ", crossing processor boundaries: " << alltotal[1] << '\n';
+    MPI_Reduce(total_reloc, &alltotal, 3, MPI_INT, MPI_SUM, 0,
+	       pg->getComm());
+    if(pg->myrank() == 0){
+      ASSERTEQ(alltotal[1], alltotal[2]);
+      if(alltotal[0] != 0)
+	cerr << "Particles crossing patch boundaries: " << alltotal[0] << ", crossing processor boundaries: " << alltotal[1] << '\n';
+    }
   }
-#endif
 
   // Wait to make sure that all of the sends completed
   int numsends = (int)sendrequests.size();

@@ -27,7 +27,7 @@ static DebugStream scrubout("Scrubbing", false);
 DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
 			     const TaskGraph* taskgraph,
 			     bool mustConsiderInternalDependencies /*= false*/)
-  : sc(sc), taskgraph(taskgraph),
+  : sc(sc), d_myworld(pg), taskgraph(taskgraph),
     mustConsiderInternalDependencies_(mustConsiderInternalDependencies),
     currentDependencyGeneration_(1),
     readyQueueMutex_("DetailedTasks Ready Queue"),
@@ -270,7 +270,9 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	  for(int i=0;i<neighbors.size();i++){
 	    const Patch* neighbor=neighbors[i];
 	    for (int m=0;m<matls->size();m++){
-	      scrubout << "  decrementing scrub count for requires of " << dws[dw]->getID() << "/" << neighbor->getID() << "/" << matls->get(m) << "/" << req->var->getName() << '\n';
+	      if(scrubout.active()){
+		scrubout << "  decrementing scrub count for requires of " << dws[dw]->getID() << "/" << neighbor->getID() << "/" << matls->get(m) << "/" << req->var->getName() << '\n';
+	      }
 	      dws[dw]->decrementScrubCount(req->var, matls->get(m), neighbor);
 	    }
 	  }
@@ -334,6 +336,8 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 void DetailedTasks::addScrubCount(const VarLabel* var, int matlindex,
 				  const Patch* patch, int dw)
 {
+  if(patch->isVirtual())
+    patch = patch->getRealPatch();
   VarLabelMatlPatchDW key(var, matlindex, patch, dw);
   ScrubCountMap::iterator iter = scrubCountMap_.find(key);
   if(iter == scrubCountMap_.end()){
@@ -347,6 +351,7 @@ void DetailedTasks::setScrubCount(const VarLabel* label, int matlIndex,
 				  const Patch* patch, int dw,
 				  vector<OnDemandDataWarehouseP>& dws)
 {
+  ASSERT(!patch->isVirtual());
   DataWarehouse::ScrubMode scrubmode = dws[dw]->getScrubMode();
   const set<const VarLabel*, VarLabel::Compare>& initialRequires
     = getTaskGraph()->getInitialRequiredVars();
@@ -365,15 +370,9 @@ void DetailedTasks::setScrubCount(const VarLabel* label, int matlIndex,
 bool DetailedTasks::getScrubCount(const VarLabel* label, int matlIndex,
 				  const Patch* patch, int dw, int& count)
 {
+  ASSERT(!patch->isVirtual());
   VarLabelMatlPatchDW key(label, matlIndex, patch, dw);
   ScrubCountMap::iterator iter = scrubCountMap_.find(key);
-  if(scrubout.active()){
-    scrubout << "getScrubCount for: " << dw << "/" << patch->getID() << "/" << matlIndex << "/" << label->getName() << ": ";
-    if(iter == scrubCountMap_.end())
-      scrubout << "not found\n";
-    else
-      scrubout << iter->second << '\n';
-  }
 
   if(iter == scrubCountMap_.end())
     return false;
@@ -433,6 +432,7 @@ void DetailedTasks::createScrubCounts()
 	       << rec.matlIndex_ << '/' <<  rec.label_->getName()
 	       << "\t\t" << iter->second << '\n';
     }
+    scrubout << "end scrub counts\n";
   }
 }
 
@@ -481,11 +481,11 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   ASSERT(from->getAssignedResourceIndex() != -1);
   ASSERT(to->getAssignedResourceIndex() != -1);
   if(dbg.active()) {
-    dbg << "        " << *to << " depends on " << *from << "\n";
+    dbg << d_myworld->myrank() << "        " << *to << " depends on " << *from << "\n";
     if(comp)
-      dbg << "          From comp " << *comp;
+      dbg << d_myworld->myrank() << "          From comp " << *comp;
     else
-      dbg << "          From OldDW ";
+      dbg << d_myworld->myrank() << "          From OldDW ";
     dbg << " to req " << *req << '\n';
   }
 
@@ -506,7 +506,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     bool newRequireBatch = to->addRequires(batch);
     ASSERT(newRequireBatch);
     if(dbg.active())
-      dbg << "NEW BATCH!\n";
+      dbg << d_myworld->myrank() << " NEW BATCH!\n";
   } else if (mustConsiderInternalDependencies_) { // i.e. threaded mode
     if (to->addRequires(batch)) {
       // this is a new requires batch for this task, so add
@@ -514,7 +514,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
       batch->toTasks.push_back(to);
     }
     if(dbg.active())
-      dbg << "USING PREVIOUSLY CREATED BATCH!\n";
+      dbg << d_myworld->myrank() << " USING PREVIOUSLY CREATED BATCH!\n";
   }
   DetailedDep* dep = batch->head;
   for(;dep != 0; dep = dep->next){
@@ -529,7 +529,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 			     low, high);
     batch->head = dep;
     if(dbg.active()) {
-      dbg << "          ADDED " << low << " " << high << ", fromPatch = ";
+      dbg << d_myworld->myrank() << "          ADDED " << low << " " << high << ", fromPatch = ";
       if (fromPatch)
 	dbg << fromPatch->getID() << '\n';
       else
@@ -557,7 +557,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
       }
     }
     if(dbg.active()){
-      dbg << "          EXTENDED from " << dep->low << " " << dep->high << " to " << l << " " << h << "\n";
+      dbg << d_myworld->myrank() << "          EXTENDED from " << dep->low << " " << dep->high << " to " << l << " " << h << "\n";
       dbg << *req->var << '\n';
       dbg << *dep->req->var << '\n';
       if(comp)

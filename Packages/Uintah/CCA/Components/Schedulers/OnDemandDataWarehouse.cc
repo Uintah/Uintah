@@ -526,6 +526,7 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
     cerrLock.unlock();
   }
 
+  dbg << d_myworld->myrank() << " allreduce, buf=" << sendbuf << ", count=" << recvcount << ", datatype=" << recvdatatype << ", op=" << recvop << '\n';
   int error = MPI_Allreduce(sendbuf, recvbuf, recvcount,
                             recvdatatype, recvop, world->getComm());
 
@@ -2467,7 +2468,7 @@ namespace Uintah {
   int getDB_ID(const Patch* patch) {
     if(!patch)
       return -1;
-    ASSERT(!patch->isVirtual());
+    //ASSERT(!patch->isVirtual());
     if(patch->isVirtual())
       patch = patch->getRealPatch();
     return patch->getID();

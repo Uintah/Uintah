@@ -34,10 +34,11 @@ namespace Uintah {
         fromPatch(fromPatch), low(low), high(high), matl(matl)
     {
       ASSERT(Min(high - low, IntVector(1, 1, 1)) == IntVector(1, 1, 1));
-      ASSERT(fromPatch == 0 || (Min(low, fromPatch->getNodeLowIndex()) ==
-	     fromPatch->getNodeLowIndex()) );
-      ASSERT(fromPatch == 0 || (Max(high, fromPatch->getNodeHighIndex()) ==
-	     fromPatch->getNodeHighIndex()));      
+      Patch::VariableBasis basis = Patch::translateTypeToBasis(req->var->typeDescription()->getType(), true);
+      ASSERT(fromPatch == 0 || (Min(low, fromPatch->getLowIndex(basis, req->var->getBoundaryLayer())) ==
+				fromPatch->getLowIndex(basis, req->var->getBoundaryLayer())));
+      ASSERT(fromPatch == 0 || (Max(high, fromPatch->getHighIndex(basis, req->var->getBoundaryLayer())) ==
+				fromPatch->getHighIndex(basis, req->var->getBoundaryLayer())));
       toTasks.push_back(toTask);
     }
 
@@ -297,6 +298,7 @@ namespace Uintah {
 		       const Patch* patch, int dw, int& count);
 
     SchedulerCommon* sc;
+    const ProcessorGroup* d_myworld;
     vector<DetailedTask*> tasks;
 #if 0
     vector<DetailedReq*> initreqs;
