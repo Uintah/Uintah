@@ -21,7 +21,7 @@ GENERAL INFORMATION
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
-   Copyright (C) 2000 University of Utah
+   Copyright (C) 2003 University of Utah
 
 KEYWORDS
    cut cells, complex geometry
@@ -36,16 +36,19 @@ WARNING
 #include <Packages/Uintah/CCA/Components/MPMArches/CutCellInfoP.h>
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <Core/Containers/OffsetArray1.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Array3.h>
 namespace Uintah {
   using namespace SCIRun;
 
 struct CutCellInfo : public RefCounted {
 
-  int nwalls;
-  int iwst;
-  int jwst;
-  int kwst;
-  int nccells;
+  int patchindex;
+  int tot_cutp;
+  int tot_cutu;
+  int tot_cutv;
+  int tot_cutw;
+  int tot_walls;
   int iccst;
   int jccst;
   int kccst;

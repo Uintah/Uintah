@@ -380,6 +380,44 @@ MPMArchesLabel::MPMArchesLabel()
   				  CCVariable<cutcell>::getTypeDescription());
   d_cutCellInfoLabel = VarLabel::create("cutCellInfo", 
 					PerPatch<CutCellInfoP>::getTypeDescription());
+  /*
+    Stuff below (upto pGasAreaFracZT) should be removed when
+    we use the d_cutcell struct
+   */
+  d_normal1Label = VarLabel::create("normal1",
+				    CCVariable<double>::getTypeDescription() );
+  d_normal2Label = VarLabel::create("normal2",
+				    CCVariable<double>::getTypeDescription() );
+  d_normal3Label = VarLabel::create("normal3",
+				    CCVariable<double>::getTypeDescription() );
+  d_centroid1Label = VarLabel::create("centroid1",
+				      CCVariable<double>::getTypeDescription() );
+  d_centroid2Label = VarLabel::create("centroid2",
+				      CCVariable<double>::getTypeDescription() );
+  d_centroid3Label = VarLabel::create("centroid3",
+				      CCVariable<double>::getTypeDescription() );
+  d_totAreaLabel = VarLabel::create("totArea",
+				    CCVariable<double>::getTypeDescription() );
+  d_pGasAreaFracXPLabel = VarLabel::create("pGasAreaFracXP",
+				    CCVariable<double>::getTypeDescription() );
+  d_pGasAreaFracXELabel = VarLabel::create("pGasAreaFracXE",
+				    CCVariable<double>::getTypeDescription() );
+  d_pGasAreaFracYPLabel = VarLabel::create("pGasAreaFracYP",
+				    CCVariable<double>::getTypeDescription() );
+  d_pGasAreaFracYNLabel = VarLabel::create("pGasAreaFracYN",
+				    CCVariable<double>::getTypeDescription() );
+  d_pGasAreaFracZPLabel = VarLabel::create("pGasAreaFracZP",
+				    CCVariable<double>::getTypeDescription() );
+  d_pGasAreaFracZTLabel = VarLabel::create("pGasAreaFracZT",
+				    CCVariable<double>::getTypeDescription() );
+  /*
+  */
+  d_nextCutCellILabel = VarLabel::create("nextCutCellI", 
+				    CCVariable<double>::getTypeDescription() );
+  d_nextCutCellJLabel = VarLabel::create("nextCutCellJ", 
+				    CCVariable<double>::getTypeDescription() );
+  d_nextCutCellKLabel = VarLabel::create("nextCutCellK", 
+				    CCVariable<double>::getTypeDescription() );
 
 } 
 
@@ -517,13 +555,31 @@ MPMArchesLabel::~MPMArchesLabel()
   VarLabel::destroy( d_enth_mmLinSrc_FCZLabel);
   VarLabel::destroy( d_enth_mmLinSrc_CCLabel);
 
-  VarLabel::destroy( d_enth_mmNonLinSrc_tmp_CCLabel);
-  VarLabel::destroy( d_enth_mmNonLinSrc_FCXLabel);
-  VarLabel::destroy( d_enth_mmNonLinSrc_FCYLabel);
-  VarLabel::destroy( d_enth_mmNonLinSrc_FCZLabel);
-  VarLabel::destroy( d_enth_mmNonLinSrc_CCLabel);
+  VarLabel::destroy(d_enth_mmNonLinSrc_tmp_CCLabel);
+  VarLabel::destroy(d_enth_mmNonLinSrc_FCXLabel);
+  VarLabel::destroy(d_enth_mmNonLinSrc_FCYLabel);
+  VarLabel::destroy(d_enth_mmNonLinSrc_FCZLabel);
+  VarLabel::destroy(d_enth_mmNonLinSrc_CCLabel);
 
-  VarLabel::destroy( cutCellLabel);
+  VarLabel::destroy(cutCellLabel);
   VarLabel::destroy(d_cutCellInfoLabel);
+  VarLabel::destroy(d_normal1Label);
+  VarLabel::destroy(d_normal2Label);
+  VarLabel::destroy(d_normal3Label);
+  VarLabel::destroy(d_centroid1Label);
+  VarLabel::destroy(d_centroid2Label);
+  VarLabel::destroy(d_centroid3Label);
+  VarLabel::destroy(d_totAreaLabel);
+
+  VarLabel::destroy(d_pGasAreaFracXPLabel);
+  VarLabel::destroy(d_pGasAreaFracXELabel);
+  VarLabel::destroy(d_pGasAreaFracYPLabel);
+  VarLabel::destroy(d_pGasAreaFracYNLabel);
+  VarLabel::destroy(d_pGasAreaFracZPLabel);
+  VarLabel::destroy(d_pGasAreaFracZTLabel);
+
+  VarLabel::destroy(d_nextCutCellILabel);
+  VarLabel::destroy(d_nextCutCellJLabel);
+  VarLabel::destroy(d_nextCutCellKLabel);
 
 }
