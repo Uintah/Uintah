@@ -1,6 +1,5 @@
 
-This is the preliminary version of SCIRun/BioPSE release notes for
-release version 1.10 (scheduled to ship on Apr 23, 2003.)
+Release Notes - SCIRun Version 1.10 - Apr 23, 2003
 
 Future Plans
 ------------
