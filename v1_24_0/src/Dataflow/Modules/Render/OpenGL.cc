@@ -506,10 +506,7 @@ OpenGL::render_and_save_image(int x, int y,
     scinew unsigned char[hi_res_.resx*vp[3]*pix_size];
 
   // Start writing image_file
-  static unsigned char* tmp_row = 0;
-  if (!tmp_row )
-    tmp_row = scinew unsigned char[hi_res_.resx*pix_size];
-
+  unsigned char* tmp_row = scinew unsigned char[hi_res_.resx*pix_size];
 
   for (hi_res_.row = nrows - 1; hi_res_.row >= 0; --hi_res_.row)
   {
@@ -602,11 +599,7 @@ OpenGL::render_and_save_image(int x, int y,
 
   gui_->unlock();
 
-  if (tmp_row)
-  {
-    delete[] tmp_row;
-    tmp_row = 0;
-  }
+  delete[] tmp_row;
 
   if (sci_getenv("SCI_REGRESSION_TESTING"))
   {
@@ -2099,9 +2092,7 @@ OpenGL::AddMpegFrame()
 #endif
 
   int r=3*width;
-  static unsigned char* row = 0;
-  if( !row )
-    row = scinew unsigned char[r];
+  unsigned char* row = scinew unsigned char[r];
   unsigned char* p0, *p1;
 
   int k, j;
@@ -2113,6 +2104,7 @@ OpenGL::AddMpegFrame()
     memcpy( p0, p1, r);
     memcpy( p1, row, r);
   }
+  delete[] row;
 
   if( !MPEGe_image(image, &mpeg_options_) )
   {
