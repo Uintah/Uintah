@@ -46,6 +46,8 @@ set runDate " Tue  Jan 1 2002"
 global runTime
 set runTime " 14:25:13"
 
+initGlobal global-scale 1
+
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 9 8]
 set m1 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 27 194]
 set m2 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 45 288]
