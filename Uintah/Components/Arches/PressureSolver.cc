@@ -50,8 +50,12 @@ PressureSolver::PressureSolver(int nDim,
   // Inputs
   d_pressureSPBCLabel = scinew VarLabel("pressureSPBC",
 			     CCVariable<double>::getTypeDescription() );
-  d_pressureINLabel = scinew VarLabel("pressureIN",
-			     CCVariable<double>::getTypeDescription() );
+  d_uVelocitySPBCLabel = scinew VarLabel("uVelocitySPBC",
+				 SFCXVariable<double>::getTypeDescription() );
+  d_vVelocitySPBCLabel = scinew VarLabel("vVelocitySPBC",
+				 SFCYVariable<double>::getTypeDescription() );
+  d_wVelocitySPBCLabel = scinew VarLabel("wVelocitySPBC",
+				 SFCZVariable<double>::getTypeDescription() );
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
 				 SFCXVariable<double>::getTypeDescription() );
   d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
@@ -153,7 +157,8 @@ void PressureSolver::solve(const LevelP& level,
   //++d_generation;
 
   //computes stencil coefficients and source terms
-  // require : pressureSPBC, densityCP, viscosityCTS, [u,v,w]VelocitySIVBC
+  // require : old_dw -> pressureSPBC, densityCP, viscosityCTS, [u,v,w]VelocitySPBC
+  //           new_dw -> pressureSPBC, densityCP, viscosityCTS, [u,v,w]VelocitySIVBC
   // compute : uVelConvCoefPBLM, vVelConvCoefPBLM, wVelConvCoefPBLM
   //           uVelCoefPBLM, vVelCoefPBLM, wVelCoefPBLM, uVelLinSrcPBLM
   //           vVelLinSrcPBLM, wVelLinSrcPBLM, uVelNonLinSrcPBLM 
@@ -210,14 +215,14 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
 		    numGhostCells);
       tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_uVelocitySIVBCLabel, matlIndex, patch, 
+      tsk->requires(old_dw, d_uVelocitySPBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_vVelocitySIVBCLabel, matlIndex, patch, 
+      tsk->requires(old_dw, d_vVelocitySPBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_wVelocitySIVBCLabel, matlIndex, patch, 
+      tsk->requires(old_dw, d_wVelocitySPBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
       // from new_dw
-      tsk->requires(new_dw, d_pressureINLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
@@ -354,6 +359,9 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.35  2000/07/13 06:32:10  bbanerje
+// Labels are once more consistent for one iteration.
+//
 // Revision 1.34  2000/07/12 23:59:21  rawat
 // added wall bc for u-velocity
 //

@@ -130,6 +130,10 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 {
   //initializes and allocates vars for new_dw
   // set initial guess
+  // require : old_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP, densityCP,
+  //                     viscosityCTS
+  // compute : new_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP, densityCP,
+  //                     viscosityCTS
   sched_setInitialGuess(level, sched, old_dw, new_dw);
 
   int nlIterations = 0;
@@ -144,11 +148,11 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     //correct inlet velocities to account for change in properties
     // require : densityCP, [u,v,w]VelocitySPBC
     // compute : [u,v,w]VelocitySIVBC
-    d_boundaryCondition->sched_setInletVelocityBC(level, sched, old_dw, 
-						  new_dw);
+    d_boundaryCondition->sched_setInletVelocityBC(level, sched, old_dw, new_dw);
 
     // linearizes and solves pressure eqn
-    // require : pressureSPBC, densityCP, viscosityCTS, [u,v,w]VelocitySIVBC
+    // require : pressureSPBC, densityCP, viscosityCTS, [u,v,w]VelocitySPBC,
+    //           [u,v,w]VelocitySIVBC
     // compute : [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM, 
     //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM,
     //           presResidualPS, presCoefPS, presNonLinSrcPS, pressurePS
@@ -250,10 +254,10 @@ PicardNonlinearSolver::sched_setInitialGuess(const LevelP& level,
       tsk->requires(old_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
-      tsk->computes(new_dw, d_pressureINLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_uVelocitySPLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelocitySPLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelocitySPLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_pressureSPBCLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_uVelocitySPBCLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_vVelocitySPBCLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_wVelocitySPBCLabel, matlIndex, patch);
       for (int ii = 0; ii < nofScalars; ii++) {
 	tsk->computes(new_dw, d_scalarSPLabel, ii, patch);
       }
@@ -310,17 +314,17 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 
   // Create vars for new_dw
   CCVariable<double> pressure_new;
-  new_dw->allocate(pressure_new, d_pressureINLabel, matlIndex, patch);
+  new_dw->allocate(pressure_new, d_pressureSPBCLabel, matlIndex, patch);
   pressure_new = pressure; // copy old into new
 
   SFCXVariable<double> uVelocity_new;
-  new_dw->allocate(uVelocity_new, d_uVelocitySPLabel, matlIndex, patch);
+  new_dw->allocate(uVelocity_new, d_uVelocitySPBCLabel, matlIndex, patch);
   uVelocity_new = uVelocity; // copy old into new
   SFCYVariable<double> vVelocity_new;
-  new_dw->allocate(vVelocity_new, d_vVelocitySPLabel, matlIndex, patch);
+  new_dw->allocate(vVelocity_new, d_vVelocitySPBCLabel, matlIndex, patch);
   vVelocity_new = vVelocity; // copy old into new
   SFCZVariable<double> wVelocity_new;
-  new_dw->allocate(wVelocity_new, d_wVelocitySPLabel, matlIndex, patch);
+  new_dw->allocate(wVelocity_new, d_wVelocitySPBCLabel, matlIndex, patch);
   wVelocity_new = wVelocity; // copy old into new
 
   vector<CCVariable<double> > scalar_new(nofScalars);
@@ -338,10 +342,10 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
   viscosity_new = viscosity; // copy old into new
 
   // Copy the variables into the new datawarehouse
-  new_dw->put(pressure_new, d_pressureINLabel, matlIndex, patch);
-  new_dw->put(uVelocity_new, d_uVelocitySPLabel, matlIndex, patch);
-  new_dw->put(vVelocity_new, d_vVelocitySPLabel, matlIndex, patch);
-  new_dw->put(wVelocity_new, d_wVelocitySPLabel, matlIndex, patch);
+  new_dw->put(pressure_new, d_pressureSPBCLabel, matlIndex, patch);
+  new_dw->put(uVelocity_new, d_uVelocitySPBCLabel, matlIndex, patch);
+  new_dw->put(vVelocity_new, d_vVelocitySPBCLabel, matlIndex, patch);
+  new_dw->put(wVelocity_new, d_wVelocitySPBCLabel, matlIndex, patch);
   for (int ii = 0; ii < nofScalars; ii++) {
     new_dw->put(scalar_new[ii], d_scalarSPLabel, ii, patch);
   }
@@ -385,6 +389,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.36  2000/07/13 06:32:10  bbanerje
+// Labels are once more consistent for one iteration.
+//
 // Revision 1.35  2000/07/11 15:46:27  rawat
 // added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
 //

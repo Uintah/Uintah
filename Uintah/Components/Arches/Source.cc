@@ -213,7 +213,7 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
 	      numGhostCells);
   new_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   // Get the PerPatch CellInformation data
@@ -1039,6 +1039,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.27  2000/07/13 06:32:10  bbanerje
+//Labels are once more consistent for one iteration.
+//
 //Revision 1.26  2000/07/12 23:23:23  bbanerje
 //Added pressure source .. modified Kumar's version a bit.
 //

@@ -180,6 +180,9 @@ private:
       const VarLabel* d_cellTypeLabel;
       const VarLabel* d_pressureINLabel;
       const VarLabel* d_pressureSPBCLabel;
+      const VarLabel* d_uVelocitySPBCLabel;
+      const VarLabel* d_vVelocitySPBCLabel;
+      const VarLabel* d_wVelocitySPBCLabel;
       const VarLabel* d_uVelocitySIVBCLabel;
       const VarLabel* d_vVelocitySIVBCLabel;
       const VarLabel* d_wVelocitySIVBCLabel;
@@ -215,6 +218,9 @@ private:
 
 //
 // $Log$
+// Revision 1.24  2000/07/13 06:32:10  bbanerje
+// Labels are once more consistent for one iteration.
+//
 // Revision 1.23  2000/07/12 23:59:21  rawat
 // added wall bc for u-velocity
 //
