@@ -93,13 +93,12 @@ Scene* make_scene(int argc, char* argv[])
 
     Scene* scene=new Scene(obj, cam,
                            bgcolor, cdown, cup, groundplane,
-                           ambient_scale);
+                           ambient_scale, Arc_Ambient);
     scene->add_light(new Light(Point(50,-30,30), Color(1,1,.8), 10*light_radius));
     scene->set_background_ptr( new LinearBackground(
                                Color(0.2, 0.4, 0.9),
                                Color(0.0,0.0,0.0),
                                Vector(0,0,1)) );
-    scene->ambient_hack = true;
 
     scene->shadow_mode=1;
     return scene;

@@ -116,7 +116,7 @@ SHLambertianMaterial::shade( Color& result, const Ray& ray,
 	normal=-normal;
     }
     
-    // result = albedo * ( irradCoeffs( normal ) + ambient_hack(cx->scene, hitpos, normal ) );
+    // result = albedo * ( irradCoeffs( normal ) + ambient(cx->scene, hitpos, normal ) );
     result = fudgeFactor * albedo * irradCoeffs( normal );
     int ngloblights=cx->scene->nlights();
     int nloclights=my_lights.size();

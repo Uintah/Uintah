@@ -70,7 +70,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     Color cup(0.1, 0.3, 0.8);
     Scene* scene=new Scene(group, cam,
 			   bgcolor, cdown, cup, groundplane, 
-			   ambient_scale);
+			   ambient_scale, Arc_Ambient);
     scene->add_light(new Light(Point(50,30,60), Color(0.9,0.6,0.2), light_radius));
     scene->set_background_ptr( new LinearBackground(
                                Color(0.2, 0.4, 0.9),
@@ -78,6 +78,5 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                                Vector(0,0,1)) );
 
     scene->select_shadow_mode(Hard_Shadows);
-    scene->ambient_hack = true;
     return scene;
 }

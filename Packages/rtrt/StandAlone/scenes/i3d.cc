@@ -52,10 +52,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Plane groundplane ( Point(0, 0, 0), Vector(0, 0, 10) );
   Camera cam(Eye,Lookat,Up,fov);
   Scene* scene=new Scene(g, cam,
-			 bgcolor, groundcolor*averagelight, bgcolor, groundplane,
-			 ambient_scale);
+			 bgcolor, groundcolor*averagelight, bgcolor, 
+			 groundplane, ambient_scale, Arc_Ambient);
   scene->add_light(new Light(Point(5,-3,3), Color(1,1,.8)*2, 0));
-  scene->ambient_hack = true;
   
   scene->select_shadow_mode( Hard_Shadows );
   return scene;

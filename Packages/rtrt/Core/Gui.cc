@@ -251,12 +251,10 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     break;
 
   case 's':
-    activeGui->updateShadowMode();
+    activeGui->cycleShadowMode();
     break;
   case 'h':
-    printf("ambient_hack was %d\n", activeGui->dpy_->scene->ambient_hack );
-
-    activeGui->dpy_->scene->ambient_hack=!activeGui->dpy_->scene->ambient_hack;
+    activeGui->cycleAmbientMode();
     break;
 
   case 'v':
@@ -1029,6 +1027,15 @@ Gui::createMenus( int winId )
 				      ShadowBase::shadowTypeNames[5] );
   activeGui->shadowModeLB_->set_int_val( activeGui->dpy_->scene->shadow_mode );
 
+  // Ambient
+  GLUI_Panel * ambient = 
+    activeGui->mainWindow->add_panel_to_panel( display_panel, "Ambient" );
+  activeGui->shadowModeLB_ = activeGui->mainWindow->
+    add_listbox_to_panel( shadows, "Mode:", &activeGui->dpy_->ambientMode_ );
+  activeGui->ambientModeLB_->add_item( Constant_Ambient, "Constant" );
+  activeGui->ambientModeLB_->add_item( Arc_Ambient, "Arc" );
+  activeGui->ambientModeLB_->add_item( Sphere_Ambient, "Sphere" );
+
   // Jitter
   GLUI_Panel * jitter = 
     activeGui->mainWindow->add_panel_to_panel( display_panel, "Jitter" );
@@ -1217,7 +1224,7 @@ Gui::toggleGui()
 void
 Gui::updateIntensityCB( int /*id*/ )
 {
-  cout << "set light intensity to " << activeGui->lightBrightness_ << "\n";
+//  cout << "set light intensity to " << activeGui->lightBrightness_ << "\n";
 
   if( activeGui->lights_.size() == 0 ) return;
 
@@ -1415,7 +1422,22 @@ Gui::toggleJitterCB( int /*id*/ )
 }
 
 void
-Gui::updateShadowMode()
+Gui::cycleAmbientMode()
+{
+  if( dpy_->ambientMode_ == Sphere_Ambient )
+    {
+      dpy_->ambientMode_ = Constant_Ambient;
+    }
+  else
+    {
+      dpy_->ambientMode_++;
+    }
+
+  ambientModeLB_->set_int_val( dpy_->ambientMode_ );
+}
+
+void
+Gui::cycleShadowMode()
 {
   if( dpy_->shadowMode_ == Uncached_Shadows )
     {

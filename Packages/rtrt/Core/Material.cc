@@ -17,16 +17,13 @@
 
 using namespace rtrt;
 
-Material::Material()
+Material::Material() : local_ambient_mode(Global_Ambient)
 {
 }
 
 Material::~Material()
 {
 }
-
-// A bunch of ambient_hack code was here... check previous version if
-// you want it.
 
 Vector Material::reflection(const Vector& v, const Vector n) const {
      return v - n * (2*Dot(v, n));
@@ -108,7 +105,7 @@ void Material::phongshade(Color& result,
     }
   }
     
-  const Color & amb = ambient_hack( cx->scene, normal );
+  const Color & amb = ambient( cx->scene, normal );
 
   Color surfcolor = diffuse*(amb+difflight) + (specular*speclight);
   if (depth < cx->scene->maxdepth && (refl>0 )){

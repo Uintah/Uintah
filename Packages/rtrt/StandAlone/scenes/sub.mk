@@ -46,6 +46,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/seaworld-tubes.mo \
 	$(SRCDIR)/multi-scene.mo \
 	$(SRCDIR)/cutdemo.mo  \
+	$(SRCDIR)/envmap-sphere.mo  \
 	$(SRCDIR)/ramsey.mo
 
 ifeq ($(findstring Uintah, $(LOAD_PACKAGE)),Uintah)

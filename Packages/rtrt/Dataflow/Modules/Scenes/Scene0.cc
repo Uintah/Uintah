@@ -254,9 +254,8 @@ Scene* Scene0::make_scene()
   Plane groundplane ( Point(0, 0, 0), Vector(0, 0, 3) );
   Scene* scene=new Scene(obj, cam,
 			 bgcolor, cdown, cup, groundplane,
-			 ambient_scale);
+			 ambient_scale, Arc_Ambient);
   scene->add_light(new Light(Point(5,-3,3), Color(1,1,.8)*2, light_radius));
-  scene->ambient_hack = true;
   
   scene->set_background_ptr( new LinearBackground(Color(0.2, 0.4, 0.9),
 						  Color(0.0,0.0,0.0),

@@ -473,7 +473,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(0.1, 0.1, 0.6);
   Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane, 0.5);
-  scene->ambient_hack = false;
 
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;

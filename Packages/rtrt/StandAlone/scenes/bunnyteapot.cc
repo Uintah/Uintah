@@ -145,8 +145,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Color cdown(0.03, 0.05, 0.35);
   
   rtrt::Plane groundplane ( Point(1000, 0, 0), Vector(0, 2, 1) );
-  Scene *scene = new Scene(g,cam,bgcolor,cdown, cup,groundplane,ambient_scale);
-  scene->ambient_hack = true;
+  Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane,
+			   ambient_scale, Arc_Ambient);
   scene->set_background_ptr( new LinearBackground(
 						  Color(1.0, 1.0, 1.0),
 						  Color(0.0,0.0,0.0),

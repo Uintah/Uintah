@@ -81,7 +81,7 @@ void PhongMaterial::shade(Color& result, const Ray& ray,
 	}
     }
     
-    Color surfcolor=Rd * opac * (difflight + ambient_hack(cx->scene, normal)) + Rphong*speclight;
+    Color surfcolor=Rd * opac * (difflight + ambient(cx->scene, normal)) + Rphong*speclight;
 
     // fire the reflection ray
     if (reflects && depth < cx->scene->maxdepth && 

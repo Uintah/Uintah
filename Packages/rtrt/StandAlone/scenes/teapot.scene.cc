@@ -428,8 +428,8 @@ Material *brick = new Speckle(0.01, Color(0.5,0.5,0.5), Color(0.6, 0.62, 0.64) )
 
       rtrt::Plane groundplane ( teapotT.project(Point(0, 0, 0)), Vector(1, 1, 1) );
       Color bgcolor(0.3, 0.3, 0.3);
-      Scene *scene = new Scene(g,cam,bgcolor,cdown, cup,groundplane,ambient_scale);
-      scene->ambient_hack = true;
+      Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane,
+			       ambient_scale, Arc_Ambient);
 
       scene->select_shadow_mode( Hard_Shadows );
       scene->maxdepth = 8;

@@ -171,10 +171,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
     rtrt::Plane groundplane ( Point(0, 0, 0), Vector(0, 0, 10) );
     Scene* scene=new Scene(obj, cam,
-			   bgcolor, groundcolor*averagelight, bgcolor, groundplane,
-			   ambient_scale);
+			   bgcolor, groundcolor*averagelight, bgcolor, 
+			   groundplane, ambient_scale, Arc_Ambient);
     scene->add_light(new Light(Point(5,-3,3), Color(1,1,.8)*2, light_radius));
-    scene->ambient_hack = true;
 
     scene->select_shadow_mode( Single_Soft_Shadow );
     return scene;

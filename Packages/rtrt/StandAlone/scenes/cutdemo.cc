@@ -403,7 +403,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(0.3, 0.3, 0.3);
   Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane, 0.5);
-  scene->ambient_hack = false;
 
   scene->maxdepth = 8;
   scene->add_light(new Light(Point(-8, 8, 3.9), Color(.8,.8,.8), 0));

@@ -128,7 +128,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
                                Color(0.0,0.0,0.0),
                                Vector(1, 0, 0)) );
     //scene->shadow_mode=0;
-    scene->ambient_hack=false;
     scene->maxdepth=0;
     scene->attach_display(dpy);
     //scene->attach_display(pdpy);

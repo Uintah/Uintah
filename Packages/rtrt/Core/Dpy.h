@@ -43,7 +43,8 @@ class Dpy : public Runnable {
   Image    * showImage_;
   bool       doAutoJitter_; // Jitter when not moving
   bool       doJitter_;     // Jitter on/off
-  int        shadowMode_;   // Must be an int so GLUI can write to it.
+  int        shadowMode_;  // Must be an int so GLUI can write to it.
+  int        ambientMode_; // Must be an int so GLUI can write to it.
 
   bool       showLights_;    // Display lights as spheres  
   bool       lightsShowing_; // Lights are being displayed as spheres.

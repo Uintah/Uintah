@@ -36,7 +36,7 @@ void LambertianMaterial::shade(Color& result, const Ray& ray,
     }
     double ray_objnormal_dot(Dot(ray.direction(),normal));
     
-    result = R * ambient_hack(cx->scene, normal);
+    result = R * ambient(cx->scene, normal);
     int ngloblights=cx->scene->nlights();
     int nloclights=my_lights.size();
     int nlights=ngloblights+nloclights;

@@ -58,7 +58,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     Scene* scene=new Scene(group, cam,
 			   bgcolor, groundcolor*averagelight, bgcolor, groundplane,
 			   ambient_scale);
-    scene->ambient_hack=false;
     scene->select_shadow_mode( No_Shadows );
     return scene;
 }
