@@ -308,6 +308,9 @@ herr_t HDF5Dump_dataset(hid_t dataset_id, const char * name, ostream* iostr) {
     */
   }
 
+  H5Aiterate(dataset_id, NULL, HDF5Dump_attr, iostr);
+
+
   HDF5Dump_indent--;
   HDF5Dump_tab( iostr );
   *iostr << "}" << endl;

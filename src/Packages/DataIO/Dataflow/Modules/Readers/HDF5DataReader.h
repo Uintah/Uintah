@@ -59,7 +59,8 @@ public:
 			vector< string >& paths,
 			vector< string >& datasets,
 			bool last,
-			bool cache );
+			bool cache,
+			int which );
 
   void parseDatasets( string new_datasets,
 		      vector<string>& paths,
@@ -93,12 +94,12 @@ protected:
   GuiInt         range_min_;
   GuiInt         range_max_;
   GuiString      playmode_;
+  GuiString      dependence_;
   GuiInt         current_;
-  GuiString      execmode_;
   GuiInt         delay_;
   GuiInt         inc_amount_;
   int            inc_;
-  bool           stop_;
+  string         execmode_;
   int            last_input_;
   NrrdDataHandle last_output_;
 

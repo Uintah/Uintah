@@ -58,6 +58,7 @@ public:
   virtual void tcl_command(GuiArgs&, void*);
 
 protected:
+  GuiInt    permute_;
   GuiInt    noMesh_;
   GuiString datasetsStr_;
 
@@ -78,6 +79,7 @@ protected:
 DECLARE_MAKER(NrrdFieldConverter)
 NrrdFieldConverter::NrrdFieldConverter(GuiContext* context)
   : Module("NrrdFieldConverter", context, Source, "Fields", "Fusion"),
+    permute_(context->subVar("permute")),
     noMesh_(context->subVar("nomesh")),
     datasetsStr_(context->subVar("datasets")),
 
@@ -93,7 +95,7 @@ NrrdFieldConverter::~NrrdFieldConverter(){
 void
 NrrdFieldConverter::execute(){
 
-  register unsigned int ic, jc, kc;
+  register unsigned int cc, ic, jc, kc;
 
   reset_vars();
 
@@ -108,6 +110,8 @@ NrrdFieldConverter::execute(){
     return;
 
   port_map_type::iterator pi = range.first;
+
+  cc = 0;
 
   while (pi != range.second) {
     NrrdIPort *inrrd_port = (NrrdIPort*) get_iport(pi->second); 
@@ -141,7 +145,7 @@ NrrdFieldConverter::execute(){
 	int *max = scinew int[nrrdDim];
 
 	// Keep the same dims except for the tuple axis.
-	for( ic=1; ic<nrrdDim; ic++) {
+	for( ic=1; ic<nrrdDim; ic++ ) {
 	  min[ic] = 0;
 	  max[ic] = nHandle->nrrd->axis[ic].size-1;
 	}
@@ -188,13 +192,19 @@ NrrdFieldConverter::execute(){
 	delete max;
       }
     } else if( pi != range.second ) {
-      error( "No handle or representation" );
+      ostringstream str;
+      
+      str << "No handle or representation for port ";
+      str << cc << "  " << inrrd_port->get_portname();
+      error( str.str() );
       return;
     }
+
+    cc++;
   }
 
   if( nHandles.size() == 0 ){
-    error( "No handle or representation" );
+    error( "No handles." );
     return;
   }
 
@@ -220,7 +230,7 @@ NrrdFieldConverter::execute(){
 
     // Save all of the current generation values.
     nGenerations_.resize( nHandles.size() );
-    for( ic=0; ic++; ic<nHandles.size() )
+    for( ic=0; ic<nHandles.size(); ic++ )
       nGenerations_[ic] = nHandles[ic]->generation;
 
     topology_ = UNKNOWN;
@@ -329,19 +339,23 @@ NrrdFieldConverter::execute(){
 	    error_ = true;
 	    return;
 	  }
+	} else {
+	  error( dataset[0] + " - Unknown topology mesh data found." );
+	  error_ = true;
+	  return;
 	}
-    } else
-      // Anything else is considered to be data.
-      data_.push_back( ic );
+      } else
+	// Anything else is considered to be data.
+	data_.push_back( ic );
     }
-
+    
     datasetsStr_.reset();
     
     if( datasetsStr != datasetsStr_.get() ) {
       // Update the dataset names and dims in the GUI.
       ostringstream str;
       str << id << " set_names {" << datasetsStr << "}";
-
+      
       gui->execute(str.str().c_str());
     }
   }
@@ -397,12 +411,14 @@ NrrdFieldConverter::execute(){
 
     int idim=1, jdim=1, kdim=1;
 
+    string fieldname;
+
     vector<unsigned int> mdims;
-    int mesh_rank = 0;
-    int mesh_coor_rank = 0;
+    unsigned int mesh_rank = 0;
+    unsigned int mesh_coor_rank = 0;
 
     vector<unsigned int> ddims;
-    int data_rank = 0;
+    unsigned int data_rank = 0;
 
     NrrdDataHandle dHandle;
 
@@ -420,15 +436,23 @@ NrrdFieldConverter::execute(){
 	dHandle->get_tuple_indecies(dataset);
 	  
 	if( dataset[0].find( ":Scalar" ) != string::npos ) {
-	  mesh_rank = dHandle->nrrd->dim - 2;
-	  mesh_coor_rank = dHandle->nrrd->axis[ dHandle->nrrd->dim-1].size;
+	  if( dHandle->nrrd->dim == 2 ) {
+	    mesh_rank = 1;
+	    mesh_coor_rank = 1;
+	  } else {
+	    mesh_rank = dHandle->nrrd->dim - 2;
+	    mesh_coor_rank = dHandle->nrrd->axis[ dHandle->nrrd->dim-1].size;
+	  }
 	} else if( dataset[0].find( ":Vector" ) != string::npos ) {
 	  mesh_rank = dHandle->nrrd->dim - 1;
 	  mesh_coor_rank = 3;
 	}
 	  
-	if( mesh_rank != 1 || mesh_coor_rank < 2 || 3 < mesh_coor_rank ) {
-	  error( dataset[0] + " Mesh dataset does not contain points." );
+	if( mesh_coor_rank < 1 || 3 < mesh_coor_rank ) {
+	  error( dataset[0] +
+		 " Mesh dataset does not contain 1D, 2D or 3D points." );
+	  cerr << mesh_coor_rank << endl;
+
 	  error_ = true;
 	  return;
 	}
@@ -442,30 +466,27 @@ NrrdFieldConverter::execute(){
 
 	mesh_coor_rank = mesh_.size();
 
-	for( unsigned int ic=0; ic<mesh_.size(); ic++ ) {
+	for( ic=0; ic<mesh_.size(); ic++ ) {
+
 	  dHandle = nHandles[mesh_[ic]];
 	    
 	  // Get the tuple axis name - there is only one.
 	  vector< string > dataset;
 	  dHandle->get_tuple_indecies(dataset);
-
+	  
+	  // If more than one dataset then all axii must be Scalar
 	  if( dataset[0].find( ":Scalar" ) == string::npos ) {
 	    error( dataset[0] + " - Data type must be scalar." );
 	    error_ = true;
 	    return;
 	  }
-
+	  
+	  const unsigned int nrrdDim = dHandle->nrrd->dim;
+	
 	  if( ic == 0 ) {
-	    mesh_rank = dHandle->nrrd->dim - 1;
-	      
-	    if( mesh_rank != 1 ) {
-	      error( dataset[0] +
-		     " Mesh dataset does not contain points." );
-	      error_ = true;
-	      return;
-	    }
+	    mesh_rank = nrrdDim - 1;
 	  } else {
-	    if( mesh_rank != dHandle->nrrd->dim-1 ) {
+	    if( mesh_rank != nrrdDim-1 ) {
 	      error( dataset[0] + " - Mesh rank mismatch." );
 	      error_ = true;
 	      return;
@@ -480,12 +501,12 @@ NrrdFieldConverter::execute(){
 	  }
 	}
       } else {
-	error( "Mesh datasets do not contain points." );
+	error( "Mesh datasets do not contain recognizable points." );
 	error_ = true;
 	return;
       }
 
-
+      // No mesh so set the mesh size based on the data.
       if( data_.size() == 1 || data_.size() == 3 || data_.size() == 6 ) {
 
 	for( ic=0; ic<data_.size(); ic++ ) {
@@ -508,6 +529,9 @@ NrrdFieldConverter::execute(){
 	  const unsigned int nrrdDim = dHandle->nrrd->dim;
 	    
 	  if( ic == 0 ) {
+
+	    fieldname = dataset[0];
+
 	    mesh_rank = nrrdDim - 1;
 		
 	    if( mesh_rank >= 1 ) idim = dHandle->nrrd->axis[1].size;
@@ -520,20 +544,28 @@ NrrdFieldConverter::execute(){
 	    if( kdim > 1) { mdims.push_back( kdim ); }
 
 	  } else {
-	    if( mesh_rank != dHandle->nrrd->dim-1 ) {
-	      error( dataset[0] + " - Mesh rank mismatch." );
+	    if( mesh_rank != nrrdDim-1 ) {
+	      error( dataset[0] + "Data are not of the same rank." );
+
+	      ostringstream str;
+
+	      str << "Mesh rank " << mesh_rank << "  ";
+	      str << "Data rank " << nrrdDim-1;
+	      error( str.str() );
 	      error_ = true;
 	      return;
 	    }
 
-	    for( jc=0, kc=0; jc<nrrdDim; jc++ )
-	      if( dHandle->nrrd->axis[jc].size > 1 &&
-		  mdims[kc++] != (unsigned int) dHandle->nrrd->axis[jc].size ) {
+	    for( jc=0, kc=0; jc<nrrdDim; jc++ ) {
+	      unsigned int size = dHandle->nrrd->axis[jc].size;
+
+	      if( size > 1 && mdims[kc++] != size ) {
 		error(  dataset[0] + "Data set sizes do not match." );
 		    
 		error_ = true;
 		return;
 	      }
+	    }
 	  }
 	}
       } else {
@@ -544,13 +576,16 @@ NrrdFieldConverter::execute(){
 
       // Create the mesh.
       if( mdims.size() == 3 ) {
+	maxpt = Point( mdims[0], mdims[1], mdims[2] ); 	
 	// 3D LatVolMesh
 	mHandle =
 	  scinew LatVolMesh( mdims[0], mdims[1], mdims[2], minpt, maxpt );
       } else if( mdims.size() == 2 ) {
+	maxpt = Point( mdims[0], mdims[1], 0 );
 	// 2D ImageMesh
 	mHandle = scinew ImageMesh( mdims[0], mdims[1], minpt, maxpt );
       } else if( mdims.size() == 1 ) {
+	maxpt = Point( mdims[0], 0, 0 );
 	// 1D ScanlineMesh
 	mHandle = scinew ScanlineMesh( mdims[0], minpt, maxpt );
       } else {
@@ -591,16 +626,25 @@ NrrdFieldConverter::execute(){
 	vector< string > dataset;
 	dHandle->get_tuple_indecies(dataset);
 
+	fieldname = dataset[0];
+
 	if( dataset[0].find( ":Scalar" ) != string::npos ) {
-	  mesh_rank = dHandle->nrrd->dim - 2;
-	  mesh_coor_rank = dHandle->nrrd->axis[ dHandle->nrrd->dim-1].size;
+	  if( dHandle->nrrd->dim == 2 ) {
+	    mesh_rank = 1;
+	    mesh_coor_rank = 1;
+	  } else {
+	    mesh_rank = dHandle->nrrd->dim - 2;
+	    mesh_coor_rank = dHandle->nrrd->axis[ dHandle->nrrd->dim-1].size;
+	  }
 	} else if( dataset[0].find( ":Vector" ) != string::npos ) {
 	  mesh_rank = dHandle->nrrd->dim - 1;
 	  mesh_coor_rank = 3;
 	}
 	  
-	if( mesh_coor_rank < 2 || 3 < mesh_coor_rank ) {
-	  error( dataset[0] + " Mesh dataset does not contain points." );
+	if( mesh_coor_rank < 1 || 3 < mesh_coor_rank ) {
+	  error( dataset[0] +
+		 " Mesh dataset does not contain 1D, 2D or 3D points." );
+	  cerr << mesh_coor_rank << endl;
 	  error_ = true;
 	  return;
 	}
@@ -618,7 +662,7 @@ NrrdFieldConverter::execute(){
 
 	mesh_coor_rank = mesh_.size();
 
-	for( unsigned int ic=0; ic<mesh_.size(); ic++ ) {
+	for( ic=0; ic<mesh_.size(); ic++ ) {
 	  dHandle = nHandles[mesh_[ic]];
 	    
 	  // Get the tuple axis name - there is only one.
@@ -631,8 +675,12 @@ NrrdFieldConverter::execute(){
 	    return;
 	  }
 
+	  const unsigned int nrrdDim = dHandle->nrrd->dim;
+
 	  if( ic == 0 ) {
-	    mesh_rank = dHandle->nrrd->dim - 1;
+	    fieldname = dataset[0];
+
+	    mesh_rank = nrrdDim - 1;
 	      
 	    if( mesh_rank >= 1 ) idim = dHandle->nrrd->axis[1].size;
 	    if( mesh_rank >= 2 ) jdim = dHandle->nrrd->axis[2].size;
@@ -644,20 +692,22 @@ NrrdFieldConverter::execute(){
 	    if( kdim > 1) { mdims.push_back( kdim ); }
 
 	  } else {
-	    if( mesh_rank != dHandle->nrrd->dim-1 ) {
+	    if( mesh_rank != nrrdDim-1 ) {
 	      error( dataset[0] + " - Mesh rank mismatch." );
 	      error_ = true;
 	      return;
 	    }
 
-	    for( int jc=0, kc=0; jc<dHandle->nrrd->dim; jc++ )
-	      if( dHandle->nrrd->axis[jc].size > 1 &&
-		  mdims[kc++] != (unsigned int) dHandle->nrrd->axis[jc].size ) {
+	    for( jc=0, kc=0; jc<nrrdDim; jc++ ) {
+	      unsigned int size = dHandle->nrrd->axis[jc].size;
+
+	      if( size > 1 && mdims[kc++] != size ) {
 		error(  dataset[0] + "Data set sizes do not match." );
 		    
 		error_ = true;
 		return;
 	      }
+	    }
 	  }
 	}
       } else {
@@ -697,7 +747,7 @@ NrrdFieldConverter::execute(){
       if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return;
     
       algo_mesh->execute(mHandle, nHandles, mesh_,
-			 idim, jdim, kdim);
+			 idim, jdim, kdim );
     
     } else if( topology_ & UNSTRUCTURED ) {
 
@@ -719,14 +769,19 @@ NrrdFieldConverter::execute(){
 	    dataset[0].find( ":Scalar" ) != string::npos )
 	  mesh_coor_rank = pHandle->nrrd->axis[2].size;
 	else if( pHandle->nrrd->dim == 2 &&
+		 dataset[0].find( ":Scalar" ) != string::npos )
+	  mesh_coor_rank = 1;
+	else if( pHandle->nrrd->dim == 2 &&
 		 dataset[0].find( ":Vector" ) != string::npos )
 	  mesh_coor_rank = 3;
 	      
-	if( mesh_coor_rank < 2 || 3 < mesh_coor_rank ) {
-	  error( dataset[0] + " - Mesh does not contain points." );
+	if( mesh_coor_rank < 1 || 3 < mesh_coor_rank ) {
+	  error( dataset[0] + " - Mesh does not contain 1D, 2D or 3D points." );
 	  error_ = true;
 	  return;
 	}
+
+	fieldname = dataset[0];
 
 	mdims.clear();
 	mdims.push_back( pHandle->nrrd->axis[1].size );
@@ -751,6 +806,9 @@ NrrdFieldConverter::execute(){
 
 	  if( ic == 1 ) {
 	    pHandle = dHandle;
+
+	    fieldname = dataset[0];
+
 	  } else if( pHandle->nrrd->axis[1].size != 
 		     dHandle->nrrd->axis[1].size ) {
 	    error( dataset[0] + " - Mesh size mismatch." );
@@ -833,7 +891,8 @@ NrrdFieldConverter::execute(){
 	      !(connectivity == 6 &&
 		dataset[0].find( ":Tensor" ) != string::npos ) ) {
 
-	    error( dataset[0] + "- Connectivity list set does not contain enough points for the cell type." );
+	    error( dataset[0] +
+		   "- Connectivity list set does not contain enough points for the cell type." );
 	    error_ = true;
 	    return;
 	  }
@@ -889,6 +948,8 @@ NrrdFieldConverter::execute(){
 	}
 
 	if( ic == 0 ) {
+	  fieldname = dataset[0];
+
 	  ddims.clear();
 
 	  for( int jc=1; jc<dHandle->nrrd->dim; jc++ )
@@ -1006,11 +1067,16 @@ NrrdFieldConverter::execute(){
     
     if( topology_ & STRUCTURED ) {
       fHandle_ = algo->execute( mHandle, nHandles, data_,
-			        idim, jdim, kdim );
+			        idim, jdim, kdim, permute_.get() );
 
     } else if( topology_ & UNSTRUCTURED ) {
       fHandle_ = algo->execute( mHandle, nHandles, data_ );
     }
+
+    pos = fieldname.find_last_of(":");
+    fieldname.erase( pos, fieldname.size()-pos );
+
+    fHandle_.get_rep()->set_property( "name", fieldname, false );
   }
 
   // Get a handle to the output field port.
@@ -1156,7 +1222,7 @@ NrrdFieldConverterFieldAlgo::get_compile_info(const TypeDescription *mtd,
                        base_class_name,
                        base_class_name + extension, 
 		       fname +
-		       "< " + (rank==1 ? typeName : extension) + " >" + ", " + 
+		       "< " + (rank==1 ? typeStr : extension) + " >" + ", " + 
 		       mtd->get_name() + ", " + 
 		       typeStr );
 

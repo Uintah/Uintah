@@ -31,6 +31,13 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
     method set_defaults {} {
 
+	global have_groups
+	global have_attributes
+	global have_datasets
+
+	set have_groups     0
+	set have_attributes 0
+	set have_datasets   0
  
         global $this-selectable_min
         global $this-selectable_max
@@ -38,6 +45,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
         global $this-range_min
         global $this-range_max
 	global $this-playmode
+	global $this-dependence
 	global $this-current
 	global $this-execmode
 	global $this-delay
@@ -49,10 +57,11 @@ itcl_class DataIO_Readers_HDF5DataReader {
         set $this-range_min          0
         set $this-range_max          0
 	set $this-playmode           once
+	set $this-dependence         independent
 	set $this-current            0
 	set $this-execmode           "init"
 	set $this-delay              0
-	set $this-inc-amount        1
+	set $this-inc-amount         1
 
 
 	global $this-mergeData
@@ -123,7 +132,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set w [format "%s-filebox" .ui[modname]]
 
 	if {[winfo exists $w]} {
-	    return
+	    moveToCursor $w
+	    wm deiconify $w
+	    return;
 	}
 
 	toplevel $w -class TkFDialog
@@ -158,12 +169,15 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	makeOpenFilebox \
 	    -parent $w \
 	    -filevar $this-filename \
-	    -command "$this-c update_file; wm withdrawn $w" \
-	    -cancel "wm withdrawn $w" \
+	    -command "$this-c update_file; wm withdraw $w" \
+	    -cancel "wm withdraw $w" \
 	    -title $title \
 	    -filetypes $types \
 	    -initialdir $initdir \
 	    -defaultextension $defext
+
+       moveToCursor $w
+       wm deiconify $w
     }
 
     method ui {} {
@@ -215,14 +229,13 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 
 	option add *TreeView.font { Courier 12 }
-	#option add *TreeView.Button.background grey95
-	#option add *TreeView.Button.activeBackground grey90
-	#option add *TreeView.Column.background grey90
+#	option add *TreeView.Button.background grey95
+#	option add *TreeView.Button.activeBackground grey90
+#	option add *TreeView.Column.background grey90
 	option add *TreeView.Column.titleShadow { grey70 1 }
-	#option add *TreeView.Column.titleFont { Helvetica 12 bold }
+#	option add *TreeView.Column.titleFont { Helvetica 12 bold }
 	option add *TreeView.Column.font { Courier 12 }
 
-#	iwidgets::scrolledframe $w.treeview
 	iwidgets::labeledframe $w.treeview -labeltext "File Treeview"
 
 	set treeframe [$w.treeview childsite]
@@ -231,7 +244,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set tree [blt::tree create]    
 
 	set treeview [Scrolled_Treeview $treeframe.tree \
-			  -width 0 \
+			  -width 600 -height 225 \
 			  -selectmode multiple \
 			  -selectcommand [list $this SelectNotify] \
 			  -tree $tree]
@@ -243,7 +256,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	$treeview column configure "Node-Type" "Data-Type" "Value" \
 	    -justify left -edit no
 	$treeview column configure treeView -hide no -edit no
-	$treeview text configure -selectborderwidth 0
+#	$treeview text configure -selectborderwidth 0
 
 	focus $treeview
 
@@ -261,9 +274,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    $treeview column configure $column \
 		-command [list $this SortColumn $column]
 	}
-
-	pack $treeview -fill x -expand yes -side top
-
 
 	iwidgets::labeledframe $w.sel -labeltext "Search Selection"
 	set sel [$w.sel childsite]
@@ -285,7 +295,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	iwidgets::labeledframe $w.sd -labeltext "Selected Data"
 	set sd [$w.sd childsite]
 
-	set listbox [Scrolled_Listbox $sd.listbox -width 100 -height 10 -selectmode extended]
+	set listbox [Scrolled_Listbox $sd.listbox \
+			 -width 100 -height 8 \
+			 -selectmode extended]
 
 	if { [string first "\{" $datasets] == 0 } {
 	    set tmp $datasets
@@ -480,18 +492,21 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 		# Reselect the datasets
 		foreach dataset $tmp {
-		    set id [eval $treeview find -exact -full "{$dataset}"]
-
-		    if {"$id" != ""} {
-			if { [eval $treeview entry isopen $id] == 0 } {
-			    $treeview open $id
+		    set ids [eval $treeview find -exact -full "{$dataset}"]
+		    
+		    foreach id $ids {
+			if {"$id" != ""} {
+			    if { [eval $treeview entry isopen $id] == 0 } {
+				$treeview open $id
+			    }
+			    
+			    $treeview selection set $id
+			} else {
+			    set message "Could not find dataset: "
+			    append message $dataset
+			    $this-c error $message
+			    return
 			}
-
-			$treeview selection set $id
-		    } else {
-			set message "Could not find dataset: "
-			append message $dataset
-			$this-c error $message
 		    }
 		}
 	    }
@@ -577,6 +592,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		process_file $tree root $fileId $line
 	    } else {
 		$this-c error "Not an HDF5 file."
+		return
 	    }
 
 	    close $fileId
@@ -594,12 +610,21 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
     method process_file { tree parent fileId input } {
 
+	global have_groups
+	global have_attributes
+	global have_datasets
+
+	set have_groups     0
+	set have_attributes 0
+	set have_datasets   0
+ 
 	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
 
 	    if { [string first "GROUP" $line] != -1 } {
 		process_group $tree $parent $fileId $line
 	    } else {
 		$this-c error "File hierarchy mal formed."
+		return
 	    }
 	}
     }
@@ -614,6 +639,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set node [$tree insert $parent -tag "group" -label $gname \
 		      -data [array get info]]
 
+	global have_groups
+	set have_groups 1
+
 	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
 
 	    if { [string first "GROUP" $line] != -1 } {
@@ -625,7 +653,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    } else {
 		set message "Unknown token: "
 		append message $line
-		$this-c error message
+		$this-c error $message
+		return
 	    }
 	}
     }
@@ -636,7 +665,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    [string first "DATA" $line] == -1} {
 	    set message "Bad attribute data formation: "
 	    append message $line
-	    $this-c error message
+	    $this-c error $message
+	    return
 	}
 
 	set attr ""
@@ -656,7 +686,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	if {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
 	    set message "Bad attribute formation: "
 	    append message $line
-	    $this-c error message
+	    $this-c error $message
+	    return
 	} else {
 	    set aname [process_name $input]
 	    set info(type) ""
@@ -665,6 +696,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set info(Value) $attr
 	    $tree insert $parent -tag "attribute" -label $aname \
 		-data [array get info]
+
+	    global have_attributes
+	    set have_attributes 1
 	}
     }
 
@@ -674,7 +708,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    [string first "DATATYPE" $line] == -1} {
 	    set message "Bad dataset formation: "
 	    append message $line
-	    $this-c error message
+	    $this-c error $message
 	    return
 	}
 
@@ -686,7 +720,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    [string first "DATASPACE" $line] == -1} {
 	    set message "Bad dataset formation: "
 	    append message $line
-	    $this-c error message
+	    $this-c error $message
 	    return
 	}
 
@@ -694,18 +728,27 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set end   [string  last ")" $line]
 	set dims  [string range $line $start $end]
 
-	if {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
-	    set message "Bad dataset formation: "
-	    append message $line
-	    $this-c error message
-	} else {
-	    set dsname [process_name $input]
-	    set info(type) ""
-	    set info(Node-Type) "DataSet"
-	    set info(Data-Type) $type
-	    set info(Value) $dims
-	    $tree insert $parent -tag "dataset" -label $dsname \
-		-data [array get info]
+	set dsname [process_name $input]
+	set info(type) ""
+	set info(Node-Type) "DataSet"
+	set info(Data-Type) $type
+	set info(Value) $dims
+	set node [$tree insert $parent -tag "dataset" -label $dsname \
+		      -data [array get info]]
+  
+	global have_datasets
+	set have_datasets 1
+
+	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
+
+	    if { [string first "ATTRIBUTE" $line] != -1 } {
+		process_attribute $tree $node $fileId $line
+	    } else {
+		set message "Unknown token: "
+		append message $line
+		$this-c error $message
+		return
+	    }
 	}
     }
 
@@ -834,14 +877,27 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		set treeframe [$w.treeview childsite]
 		set treeview $treeframe.tree.tree
 
-		set groups     [$treeview tag nodes "group"]
-		set attributes [$treeview tag nodes "attribute"]
-
 		focus $treeview
 
 		set ids [$treeview curselection]
 
 		if { $ids != "" } {
+
+		    global have_groups
+		    global have_attributes
+
+		    if { $have_groups == 1 } {
+			set groups [$treeview tag nodes "group"]
+		    } else {
+			set groups ""
+		    }
+
+		    if { $have_attributes == 1 } {
+			set attributes [$treeview tag nodes "attribute"]
+		    } else {
+			set attributes ""
+		    }
+
 		    foreach id $ids {
 
 			# Check to see if the selection is an attribute
@@ -879,8 +935,20 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set treeframe [$w.treeview childsite]
 	    set treeview $treeframe.tree.tree
 
-	    set datasets [$treeview tag nodes "dataset"]
-	    set groups   [$treeview tag nodes "group"]
+	    global have_groups
+	    global have_datasets
+
+	    if { $have_groups == 1 } {
+		set groups [$treeview tag nodes "group"]
+	    } else {
+		set groups ""
+	    }
+
+	    if { $have_datasets == 1 } {
+		set datasets [$treeview tag nodes "dataset"]
+	    } else {
+		set datasets ""
+	    }
 
 	    set children [eval $treeview entry children $parent]
 	    
@@ -1040,15 +1108,18 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 		foreach idx $indices {
 		    if { $index == $idx } { 
-			set id [eval $treeview find -exact -full "{$dataset}"]
+			set ids [eval $treeview find -exact -full "{$dataset}"]
 			
-			if {"$id" != ""} {
-			    $treeview selection clear $id
-			    $treeview open $id
-			} else {			    
-			    set message "Could not find dataset: "
-			    append message $dataset
-			    $this-c error $message
+			foreach id $ids {
+			    if {"$id" != ""} {
+				$treeview selection clear $id
+				$treeview open $id
+			    } else {			    
+				set message "Could not find dataset: "
+				append message $dataset
+				$this-c error $message
+				return
+			    }
 			}
 		    }
 		}
@@ -1110,15 +1181,14 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		  -xscrollcommand [list $f.xscroll set] \
 		  -yscrollcommand [list $f.yscroll set]}
 	eval {$f.tree configure} $args
-
 	scrollbar $f.xscroll -orient horizontal \
 	    -command [list $f.tree xview]
 	scrollbar $f.yscroll -orient vertical \
 	    -command [list $f.tree yview]
-#	grid $f.tree $f.yscroll -sticky news
-#	grid $f.xscroll -sticky news
-#	grid rowconfigure $f 0 -weight 1
-#	grid columnconfigure $f 0 -weight 1
+	grid $f.tree $f.yscroll -sticky news
+	grid $f.xscroll -sticky news
+	grid rowconfigure $f 0 -weight 1
+	grid columnconfigure $f 0 -weight 1
 	return $f.tree
     }
 
@@ -1144,16 +1214,14 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	}
     }
 
-    method run_step {} {
-	set $this-execmode "step"
-	$this-c needexecute
+    method execmode { mode } {
+	$this-c $mode
+
+	if { "$mode" != "stop" } {
+	    $this-c needexecute
+	}
     }
 
-    method run_play {} {
-	set $this-execmode "play"
-	$this-c needexecute
-    }
-    
     method make_animate_box {} {
 	set w [format "%s-animate" .ui[modname]]
 
@@ -1168,9 +1236,10 @@ itcl_class DataIO_Readers_HDF5DataReader {
         toplevel $w
 
 	
-	frame $w.loc -borderwidth 2
-	frame $w.playmode -relief groove -borderwidth 2
-	frame $w.execmode -relief groove -borderwidth 2
+	frame $w.loc                       -borderwidth 2
+	frame $w.playmode   -relief groove -borderwidth 2
+	frame $w.dependence -relief groove -borderwidth 2
+	frame $w.execmode   -relief groove -borderwidth 2
 
         scale $w.loc.min -variable $this-range_min -label "Start " \
 		-showvalue true -orient horizontal -relief groove -length 200
@@ -1209,8 +1278,20 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	radiobutton $w.playmode.bounce2 -text "Bounce2" \
 		-variable $this-playmode -value bounce2
 
+
 	radiobutton $w.playmode.inc_w_exec -text "Increment with Execute" \
 	    -variable $this-playmode -value inc_w_exec
+
+	label $w.dependence.label -text "Downstream Dependencies"
+	radiobutton $w.dependence.independent -text \
+	        "Column and Index are Independent" \
+	        -variable $this-dependence -value independent
+	radiobutton $w.dependence.dependent -text \
+	        "Column and Index are Dependent" \
+		-variable $this-dependence -value dependent
+	pack $w.dependence.label -side top -expand yes -fill both
+	pack $w.dependence.independent $w.dependence.dependent \
+	        -side top -anchor w
 
 	frame $w.playmode.delay
 	label $w.playmode.delay.label -text "Delay (ms)" \
@@ -1226,13 +1307,13 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    $w.playmode.delay -side top -anchor w
 
 
-        button $w.execmode.play -text "Play" -command "$this run_play"
-        button $w.execmode.stop -text "Stop" -command "$this-c stop"
-        button $w.execmode.step -text "Step" -command "$this run_step"
+        button $w.execmode.play -text "Play" -command "$this execmode play"
+        button $w.execmode.stop -text "Stop" -command "$this execmode stop"
+        button $w.execmode.step -text "Step" -command "$this execmode step"
         pack $w.execmode.play $w.execmode.stop $w.execmode.step \
 		-side left -fill both -expand yes
 
-        pack $w.loc $w.playmode $w.execmode \
+        pack $w.loc $w.playmode $w.dependence $w.execmode \
 		-padx 5 -pady 5 -fill both -expand yes
 
 	update_animate_range [set $this-selectable_min] [set $this-selectable_max]

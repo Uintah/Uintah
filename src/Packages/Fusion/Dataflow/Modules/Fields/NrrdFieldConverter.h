@@ -72,9 +72,9 @@ public:
 class RegularNrrdFieldConverterMeshAlgo : public NrrdFieldConverterMeshAlgo
 {
 public:
-  virtual void execute(MeshHandle mHandle,
-		       vector< NrrdDataHandle > nHandles,
-		       vector< int > mesh) = 0;
+  virtual void execute(MeshHandle& mHandle,
+		       vector< NrrdDataHandle >& nHandles,
+		       vector< int >& mesh) = 0;
 };
 
 
@@ -83,17 +83,17 @@ class RegularNrrdFieldConverterMeshAlgoT :
   public RegularNrrdFieldConverterMeshAlgo
 {
 public:
-  virtual void execute(MeshHandle mHandle,
-		       vector< NrrdDataHandle > nHandles,
-		       vector< int > mesh);
+  virtual void execute(MeshHandle& mHandle,
+		       vector< NrrdDataHandle >& nHandles,
+		       vector< int >& mesh);
 };
 
 template< class MESH, class PNTYPE, class CNTYPE >
 void
 RegularNrrdFieldConverterMeshAlgoT< MESH, PNTYPE, CNTYPE >::
-execute(MeshHandle mHandle,
-	vector< NrrdDataHandle > nHandles,
-	vector< int > mesh)
+execute(MeshHandle& mHandle,
+	vector< NrrdDataHandle >& nHandles,
+	vector< int >& mesh)
 {
   Point minpt, maxpt;
 
@@ -103,9 +103,13 @@ execute(MeshHandle mHandle,
     int rank = 0;
     string label(nHandles[mesh[0]]->nrrd->axis[0].label);
 
-    if( label.find( ":Scalar" ) != string::npos )
-      rank = nHandles[mesh[0]]->nrrd->axis[ nHandles[mesh[0]]->nrrd->dim-1].size;
-    else if( label.find( ":Vector" ) != string::npos )
+    if( label.find( ":Scalar" ) != string::npos ) {
+      if( nHandles[mesh[0]]->nrrd->dim == 2 )
+	rank = 1;
+      else
+	rank =
+	  nHandles[mesh[0]]->nrrd->axis[ nHandles[mesh[0]]->nrrd->dim-1].size;
+    } else if( label.find( ":Vector" ) != string::npos )
       rank = 3;
 
     float xVal = 0, yVal = 0, zVal = 0;
@@ -184,9 +188,9 @@ execute(MeshHandle mHandle,
 class StructuredNrrdFieldConverterMeshAlgo : public NrrdFieldConverterMeshAlgo
 {
 public:
-  virtual void execute(MeshHandle mHandle,
-		       vector< NrrdDataHandle > nHandles,
-		       vector< int > mesh,
+  virtual void execute(MeshHandle& mHandle,
+		       vector< NrrdDataHandle >& nHandles,
+		       vector< int >& mesh,
 		       int idim, int jdim, int kdim) = 0;
 };
 
@@ -197,9 +201,9 @@ class StructuredNrrdFieldConverterMeshAlgoT :
 {
 public:
 
-  virtual void execute(MeshHandle mHandle,
-		       vector< NrrdDataHandle > nHandles,
-		       vector< int > mesh,
+  virtual void execute(MeshHandle& mHandle,
+		       vector< NrrdDataHandle >& nHandles,
+		       vector< int >& mesh,
 		       int idim, int jdim, int kdim);
 };
 
@@ -207,9 +211,9 @@ public:
 template< class MESH, class PNTYPE, class CNTYPE >
 void
 StructuredNrrdFieldConverterMeshAlgoT< MESH, PNTYPE, CNTYPE >::
-execute(MeshHandle mHandle,
-	vector< NrrdDataHandle > nHandles,
-	vector< int > mesh,
+execute(MeshHandle& mHandle,
+	vector< NrrdDataHandle >& nHandles,
+	vector< int >& mesh,
 	int idim, int jdim, int kdim)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
@@ -225,9 +229,13 @@ execute(MeshHandle mHandle,
     int rank = 0;
     string label(nHandles[mesh[0]]->nrrd->axis[0].label);
 
-    if( label.find( ":Scalar" ) != string::npos )
-      rank = nHandles[mesh[0]]->nrrd->axis[ nHandles[mesh[0]]->nrrd->dim-1].size;
-    else if( label.find( ":Vector" ) != string::npos )
+    if( label.find( ":Scalar" ) != string::npos ) {
+      if( nHandles[mesh[0]]->nrrd->dim == 2 )
+	rank = 1;
+      else
+	rank =
+	  nHandles[mesh[0]]->nrrd->axis[ nHandles[mesh[0]]->nrrd->dim-1].size;
+    } else if( label.find( ":Vector" ) != string::npos )
       rank = 3;
 
     for( k=0; k<kdim; k++ ) {
@@ -270,7 +278,7 @@ execute(MeshHandle mHandle,
 	  if( ptr[0] ) xVal = ptr[0][index];
 	  if( ptr[1] ) yVal = ptr[1][index];
 	  if( ptr[2] ) zVal = ptr[2][index];
-	
+
 	  imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
 
 	  ++inodeItr;
@@ -286,9 +294,9 @@ class UnstructuredNrrdFieldConverterMeshAlgo :
   public NrrdFieldConverterMeshAlgo
 {
 public:
-  virtual void execute(MeshHandle mHandle,
-		       vector< NrrdDataHandle > nHandles,
-		       vector< int > mesh,
+  virtual void execute(MeshHandle& mHandle,
+		       vector< NrrdDataHandle >& nHandles,
+		       vector< int >& mesh,
 		       unsigned int connectivity) = 0;
 };
 
@@ -297,9 +305,9 @@ class UnstructuredNrrdFieldConverterMeshAlgoT :
   public UnstructuredNrrdFieldConverterMeshAlgo
 {
 public:
-  virtual void execute(MeshHandle mHandle,
-		       vector< NrrdDataHandle > nHandles,
-		       vector< int > mesh,
+  virtual void execute(MeshHandle& mHandle,
+		       vector< NrrdDataHandle >& nHandles,
+		       vector< int >& mesh,
 		       unsigned int connectivity);
 };
 
@@ -307,9 +315,9 @@ public:
 template< class MESH, class PNTYPE, class CNTYPE >
 void
 UnstructuredNrrdFieldConverterMeshAlgoT< MESH, PNTYPE, CNTYPE >::
-execute(MeshHandle mHandle,
-	vector< NrrdDataHandle > nHandles,
-	vector< int > mesh,
+execute(MeshHandle& mHandle,
+	vector< NrrdDataHandle >& nHandles,
+	vector< int >& mesh,
 	unsigned int connectivity)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
@@ -325,9 +333,13 @@ execute(MeshHandle mHandle,
     int rank = 0;
     string label(nHandles[mesh[1]]->nrrd->axis[0].label);
   
-    if( label.find( ":Scalar" ) != string::npos )
-      rank = nHandles[mesh[1]]->nrrd->axis[ nHandles[mesh[1]]->nrrd->dim-1].size;
-    else if( label.find( ":Vector" ) != string::npos )
+    if( label.find( ":Scalar" ) != string::npos ) {
+      if( nHandles[mesh[1]]->nrrd->dim == 2 )
+	rank = 1;
+      else
+	rank =
+	  nHandles[mesh[1]]->nrrd->axis[ nHandles[mesh[1]]->nrrd->dim-1].size;
+    } else if( label.find( ":Vector" ) != string::npos )
       rank = 3;
 
     for( int index=0; index<npts; index++ ) {
@@ -387,14 +399,14 @@ execute(MeshHandle mHandle,
 class NrrdFieldConverterFieldAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(MeshHandle mHandle,
-			      vector< NrrdDataHandle > nHandles,
-			      vector< int > data,
-			      int idim, int jdim, int kdim) = 0;
+  virtual FieldHandle execute(MeshHandle& mHandle,
+			      vector< NrrdDataHandle >& nHandles,
+			      vector< int >& data,
+			      int idim, int jdim, int kdim, int permute) = 0;
   
-  virtual FieldHandle execute(MeshHandle mHandle,
-			      vector< NrrdDataHandle > nHandles,
-			      vector< int > data) = 0;
+  virtual FieldHandle execute(MeshHandle& mHandle,
+			      vector< NrrdDataHandle >& nHandles,
+			      vector< int >& data) = 0;
   
    //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *mtd,
@@ -408,24 +420,24 @@ class NrrdFieldConverterFieldAlgoScalar : public NrrdFieldConverterFieldAlgo
 {
 public:
   //! virtual interface.
-  virtual FieldHandle execute(MeshHandle mHandle,
-			      vector< NrrdDataHandle > nHandles,
-			      vector< int > data,
-			      int idim, int jdim, int kdim);
+  virtual FieldHandle execute(MeshHandle& mHandle,
+			      vector< NrrdDataHandle >& nHandles,
+			      vector< int >& data,
+			      int idim, int jdim, int kdim, int permute);
 
-  virtual FieldHandle execute(MeshHandle mHandle,
-			      vector< NrrdDataHandle > nHandles,
-			      vector< int > data);  
+  virtual FieldHandle execute(MeshHandle& mHandle,
+			      vector< NrrdDataHandle >& nHandles,
+			      vector< int >& data);  
 };
 
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
 NrrdFieldConverterFieldAlgoScalar<FIELD, MESH, NTYPE>::
-execute(MeshHandle mHandle,
-	vector< NrrdDataHandle > nHandles,
-	vector< int > data,
-	int idim, int jdim, int kdim)
+execute(MeshHandle& mHandle,
+	vector< NrrdDataHandle >& nHandles,
+	vector< int >& data,
+	int idim, int jdim, int kdim, int permute)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
   FIELD *ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
@@ -437,12 +449,15 @@ execute(MeshHandle mHandle,
 
     NTYPE *ptr = (NTYPE *)(nHandles[data[0]]->nrrd->data);
 
-    register int i, j, k;
+    register int i, j, k, index;
 
     for( k=0; k<kdim; k++ ) {
       for( j=0; j<jdim; j++ ) {
 	for( i=0; i<idim; i++ ) {
-	  int index = (i * jdim + j) * kdim + k;
+	  if( permute )
+	    index = (k * jdim + j) * idim + i;
+	  else 
+	    index = (i * jdim + j) * kdim + k;
 	
 	  // Value
 	  ifield->set_value( ptr[index], *inodeItr);
@@ -461,9 +476,9 @@ execute(MeshHandle mHandle,
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
 NrrdFieldConverterFieldAlgoScalar<FIELD, MESH, NTYPE>::
-execute(MeshHandle mHandle,
-	vector< NrrdDataHandle > nHandles,
-	vector< int > data)
+execute(MeshHandle& mHandle,
+	vector< NrrdDataHandle >& nHandles,
+	vector< int >& data)
 
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
@@ -498,24 +513,24 @@ class NrrdFieldConverterFieldAlgoVector : public NrrdFieldConverterFieldAlgo
 {
 public:
   //! virtual interface.
-  virtual FieldHandle execute(MeshHandle mHandle,
-		       vector< NrrdDataHandle > nHandles,
-		       vector< int > data,
-		       int idim, int jdim, int kdim);
+  virtual FieldHandle execute(MeshHandle& mHandle,
+		       vector< NrrdDataHandle >& nHandles,
+		       vector< int >& data,
+		       int idim, int jdim, int kdim, int permute);
 
-  virtual FieldHandle execute(MeshHandle mHandle,
-			      vector< NrrdDataHandle > nHandles,
-			      vector< int > data);  
+  virtual FieldHandle execute(MeshHandle& mHandle,
+			      vector< NrrdDataHandle >& nHandles,
+			      vector< int >& data);  
 };
 
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
 NrrdFieldConverterFieldAlgoVector<FIELD, MESH, NTYPE>::
-execute(MeshHandle mHandle,
-	vector< NrrdDataHandle > nHandles,
-	vector< int > data,
-	int idim, int jdim, int kdim)
+execute(MeshHandle& mHandle,
+	vector< NrrdDataHandle >& nHandles,
+	vector< int >& data,
+	int idim, int jdim, int kdim, int permute)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
   FIELD *ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
@@ -525,14 +540,17 @@ execute(MeshHandle mHandle,
 
     imesh->begin( inodeItr );
 
-    register int i, j, k;
+    register int i, j, k, index;
 				  
     NTYPE *ptr = (NTYPE *)(nHandles[data[0]]->nrrd->data);
 
     for( k=0; k<kdim; k++ ) {
       for( j=0; j<jdim; j++ ) {
 	for( i=0; i<idim; i++ ) {
-	  int index = (i * jdim + j) * kdim + k;
+	  if( permute )
+	    index = (k * jdim + j) * idim + i;
+	  else 
+	    index = (i * jdim + j) * kdim + k;
 	
 	  ifield->set_value( Vector( ptr[index*3  ],
 				     ptr[index*3+1],
@@ -547,7 +565,7 @@ execute(MeshHandle mHandle,
 
     imesh->begin( inodeItr );
 
-    register int i, j, k;
+    register int i, j, k, index;
 				  
     NTYPE *ptr[3] ={NULL,NULL,NULL};
 
@@ -558,7 +576,10 @@ execute(MeshHandle mHandle,
     for( k=0; k<kdim; k++ ) {
       for( j=0; j<jdim; j++ ) {
 	for( i=0; i<idim; i++ ) {
-	  int index = (i * jdim + j) * kdim + k;
+	  if( permute )
+	    index = (k * jdim + j) * idim + i;
+	  else 
+	    index = (i * jdim + j) * kdim + k;
 	
 	  ifield->set_value( Vector( ptr[0][index],
 				     ptr[1][index],
@@ -577,9 +598,9 @@ execute(MeshHandle mHandle,
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
 NrrdFieldConverterFieldAlgoVector<FIELD, MESH, NTYPE>::
-execute(MeshHandle mHandle,
-	vector< NrrdDataHandle > nHandles,
-	vector< int > data)
+execute(MeshHandle& mHandle,
+	vector< NrrdDataHandle >& nHandles,
+	vector< int >& data)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
   FIELD *ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
