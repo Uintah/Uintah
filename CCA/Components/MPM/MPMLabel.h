@@ -17,9 +17,6 @@ using std::vector;
       MPMLabel();
       ~MPMLabel();
 
-      void registerPermanentParticleState(int i,const VarLabel* l,
-					  const VarLabel* lp);
-
       const VarLabel* delTLabel;
       const VarLabel* doMechLabel;
 
@@ -216,36 +213,6 @@ using std::vector;
       const VarLabel* gNormalRotMomentLabel; 
       const VarLabel* gNormalRotMassLabel; 
       const VarLabel* gNormalRotAccLabel; 
-
-      // Labels for newly added particles
-      const VarLabel* pXLabel_Add;
-      const VarLabel* pDeformationMeasureLabel_Add;
-      const VarLabel* pStressLabel_Add;
-      const VarLabel* pStress_veLabel_Add;
-      const VarLabel* pStress_eLabel_Add;
-      const VarLabel* pStress_ve_vLabel_Add;
-      const VarLabel* pStress_ve_dLabel_Add;
-      const VarLabel* pStress_e_vLabel_Add;
-      const VarLabel* pStress_e_dLabel_Add;
-      const VarLabel* pCrackRadiusLabel_Add;
-      const VarLabel* pVolumeLabel_Add;
-      const VarLabel* pMassLabel_Add;
-      const VarLabel* pVelocityLabel_Add;
-      const VarLabel* pExternalForceLabel_Add;
-      const VarLabel* pSurfLabel_Add;
-      const VarLabel* pTemperatureLabel_Add; //for heat conduction
-      const VarLabel* pSp_volLabel_Add; 
-      const VarLabel* pExternalHeatRateLabel_Add; //for heat conduction
-      const VarLabel* pParticleIDLabel_Add;
-      const VarLabel* pSizeLabel_Add;
-
-      const VarLabel* pTang1Label_Add;
-      const VarLabel* pTang2Label_Add;
-      const VarLabel* pNormLabel_Add;
-      const VarLabel* pDispLabel_Add;
-      const VarLabel* pCellNAPIDLabel_Add;
-      const VarLabel* pLoadCurveIDLabel_Add;
-
 
     };
 } // End namespace Uintah
