@@ -16,9 +16,8 @@ SCIProgramTarget(name, name.o, , $(SO_LDFLAGS)) @@\
 SCIDependTarget(name.cc)
 
 
-ConvertProgram(runsolve)
+ConvertProgram(DENtoSF)
 ConvertProgram(ConvMesh)
-ConvertProgram(First)
 ConvertProgram(GEtoSF)
 ConvertProgram(GenMesh)
 ConvertProgram(GenMesh2)
