@@ -491,6 +491,8 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     d_momSolver->solveVelHat(level, subsched, d_timeIntegratorLabels[curr_level]);
     // using RKSSP averaging to perform underrelaxation
     if (d_timeIntegratorLabels[curr_level]->factor_new < 1.0) {
+       sched_saveFECopies(subsched, local_patches, local_matls,
+			   	      d_timeIntegratorLabels[curr_level]);
       d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::Second;
       d_props->sched_averageRKProps(subsched, local_patches, local_matls,
 			   	    d_timeIntegratorLabels[curr_level]);
@@ -640,6 +642,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       subsched->advanceDataWarehouse(grid);
       subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
       subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
+      d_enthalpySolver->set_iteration_number(nlIterations);
       subsched->execute();    
       
       delt_vartype delT;
@@ -648,7 +651,8 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       delta_t *= d_timeIntegratorLabels[curr_level]->time_multiplier;
       max_vartype nm;
       subsched->get_dw(3)->get(nm, d_lab->d_InitNormLabel);
-      norm = delta_t*nm+d_rho_norm+d_u_norm+d_v_norm+d_w_norm;
+      double current_norm = nm;
+      norm = delta_t*current_norm+d_rho_norm+d_u_norm+d_v_norm+d_w_norm;
       if (nlIterations == 0) init_norm = norm;
       if(pg->myrank() == 0)
        cout << "PicardSolver init norm: " << init_norm << " current norm: " << norm << endl;
@@ -663,6 +667,24 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     if (norm/(init_norm+1.0e-10) > 1) {
     if(pg->myrank() == 0)
        cout << "WARNING! Iterations diverge! Restarting timestep." << endl;
+      new_dw->abortTimestep();
+      new_dw->restartTimestep();
+    }
+    double scalar_clipped = 0.0;
+    double reactscalar_clipped = 0.0;
+    max_vartype sc;
+    max_vartype rsc;
+    if (nofScalars > 0) {
+      subsched->get_dw(3)->get(sc, d_lab->d_ScalarClippedLabel);
+      scalar_clipped = sc;
+    }
+    if (d_reactingScalarSolve) {
+      subsched->get_dw(3)->get(rsc, d_lab->d_ReactScalarClippedLabel);
+      reactscalar_clipped = rsc;
+    }
+    if ((scalar_clipped > 0.0)||(reactscalar_clipped > 0.0)) {
+    if(pg->myrank() == 0)
+       cout << "WARNING! Scalars got clipped! Restarting timestep." << endl;
       new_dw->abortTimestep();
       new_dw->restartTimestep();
     }
@@ -2885,6 +2907,77 @@ PicardNonlinearSolver::syncRhoF(const ProcessorGroup*,
 	  }
         }
       }
+    }
+  }
+}
+//****************************************************************************
+// Schedule saving of FE copies of variables
+//****************************************************************************
+void 
+PicardNonlinearSolver::sched_saveFECopies(SchedulerP& sched, const PatchSet* patches,
+				  const MaterialSet* matls,
+			   	  const TimeIntegratorLabel* timelabels)
+{
+  string taskname =  "PicardNonlinearSolver::saveFECopies" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this,
+			  &PicardNonlinearSolver::saveFECopies,
+			  timelabels);
+
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  if (d_reactingScalarSolve)
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (d_enthalpySolve)
+    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+ 
+  tsk->computes(d_lab->d_scalarFELabel);
+  if (d_reactingScalarSolve)
+    tsk->computes(d_lab->d_reactscalarFELabel);
+  if (d_enthalpySolve)
+    tsk->computes(d_lab->d_enthalpyFELabel);
+
+  sched->addTask(tsk, patches, matls);
+}
+//****************************************************************************
+// Actually save temp copies here
+//****************************************************************************
+void 
+PicardNonlinearSolver::saveFECopies(const ProcessorGroup*,
+			   const PatchSubset* patches,
+			   const MaterialSubset*,
+			   DataWarehouse*,
+			   DataWarehouse* new_dw,
+			   const TimeIntegratorLabel*)
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->
+		     getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> temp_scalar;
+    CCVariable<double> temp_reactscalar;
+    CCVariable<double> temp_enthalpy;
+
+    new_dw->allocateAndPut(temp_scalar, d_lab->d_scalarFELabel,
+			  matlIndex, patch);
+    new_dw->copyOut(temp_scalar, d_lab->d_scalarSPLabel,
+		     matlIndex, patch);
+    if (d_reactingScalarSolve) {
+    new_dw->allocateAndPut(temp_reactscalar, d_lab->d_reactscalarFELabel,
+			  matlIndex, patch);
+    new_dw->copyOut(temp_reactscalar, d_lab->d_reactscalarSPLabel,
+		     matlIndex, patch);
+    }
+    if (d_enthalpySolve) {
+    new_dw->allocateAndPut(temp_enthalpy, d_lab->d_enthalpyFELabel,
+			  matlIndex, patch);
+    new_dw->copyOut(temp_enthalpy, d_lab->d_enthalpySPLabel,
+		     matlIndex, patch);
     }
   }
 }

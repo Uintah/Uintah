@@ -489,6 +489,8 @@ ReactiveScalarSolver::sched_reactscalarLinearSolve(SchedulerP& sched,
 
 
   tsk->modifies(d_lab->d_reactscalarSPLabel);
+  if (timelabels->recursion)
+    tsk->computes(d_lab->d_ReactScalarClippedLabel);
   
   sched->addTask(tsk, patches, matls);
 }
@@ -577,6 +579,30 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
     d_linearSolver->scalarLisolve(pc, patch, index, delta_t, 
                                   &reactscalarVars, &constReactscalarVars,
 				  cellinfo);
+
+  double reactscalar_clipped = 0.0;
+  // Get the patch bounds and the variable bounds
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+      for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+	IntVector currCell(ii,jj,kk);
+	if (reactscalarVars.scalar[currCell] > 1.0) {
+	  reactscalarVars.scalar[currCell] = 1.0;
+	  reactscalar_clipped = 1.0;
+	  cout << "reactscalar got clipped to 1 at " << currCell << endl;
+	}  
+	else if (reactscalarVars.scalar[currCell] < 0.0) {
+	  reactscalarVars.scalar[currCell] = 0.0;
+	  reactscalar_clipped = 1.0;
+	  cout << "reactscalar got clipped to 0 at " << currCell << endl;
+	}
+      }
+    }
+  }
+  if (timelabels->recursion)
+    new_dw->put(max_vartype(reactscalar_clipped), d_lab->d_ReactScalarClippedLabel);
 
 // Outlet bc is done here not to change old scalar
     if (d_boundaryCondition->getOutletBC())
