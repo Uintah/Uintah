@@ -53,7 +53,7 @@ StructHexVolMesh::StructHexVolMesh():
 StructHexVolMesh::StructHexVolMesh(unsigned int i,
 				   unsigned int j,
 				   unsigned int k) :
-  LatVolMesh(i, k, j, Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0)),
+  LatVolMesh(i, j, k, Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0)),
   points_(i, j, k),
   grid_lock_("StructHexVolMesh grid lock")
 {}
