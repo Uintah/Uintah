@@ -42,13 +42,14 @@ extern "C" Module* make_Viewer(const clString& id) {
 
 //----------------------------------------------------------------------
 Viewer::Viewer(const clString& id)
-: Module("Viewer", id, ViewerSpecial), max_portno(0), geomlock("Viewer geometry lock")
+  : Module("Viewer", id, ViewerSpecial,"Render","SCIRun"), max_portno(0), geomlock("Viewer geometry lock")
 {
 				// Add a headlight
     lighting.lights.add(scinew HeadLight("Headlight", Color(1,1,1)));
     
 				// Create the input port
-    add_iport(scinew GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
+    //add_iport(scinew GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
+    //add_iport(scinew GeometryIPort(this, "0", GeometryIPort::Atomic));
     default_matl=scinew Material(Color(.1,.1,.1), Color(.6,0,0),
 			      Color(.7,.7,.7), 50);
     busy_bit=1;
@@ -79,7 +80,7 @@ Viewer::Viewer(const clString& id)
 
 //----------------------------------------------------------------------
 Viewer::Viewer(const clString& id, const clString& moduleName):
-  Module(moduleName, id, ViewerSpecial), max_portno(0),
+  Module(moduleName, id, ViewerSpecial,"Render","SCIRun"), max_portno(0),
   geomlock((moduleName + clString(" geometry lock"))())
 {
 
@@ -87,7 +88,8 @@ Viewer::Viewer(const clString& id, const clString& moduleName):
     lighting.lights.add(scinew HeadLight("Headlight", Color(1,1,1)));
     
 				// Create the input port
-    add_iport(scinew GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
+    //add_iport(scinew GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
+    //add_iport(scinew GeometryIPort(this, "0", GeometryIPort::Atomic));
     default_matl=scinew Material(Color(.1,.1,.1), Color(.6,0,0),
 			      Color(.7,.7,.7), 50);
     busy_bit=1;
@@ -375,15 +377,14 @@ void Viewer::spawnIndCB(CallbackData*, void*)
 #endif
 
 //----------------------------------------------------------------------
-void Viewer::connection(ConnectionMode mode, int which_port, int)
-{
-    if(mode==Disconnected){
-	remove_iport(which_port);
-    } else {
-	add_iport(scinew GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
-    }
-}
-
+//void Viewer::connection(ConnectionMode mode, int which_port, int)
+//{
+//    if(mode==Disconnected){
+//	remove_iport(which_port);
+//    } else {
+//	add_iport(scinew GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
+//    }
+//}
 //----------------------------------------------------------------------
 void Viewer::delete_viewwindow(ViewWindow* delviewwindow)
 {

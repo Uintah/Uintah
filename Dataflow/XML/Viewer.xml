@@ -12,6 +12,12 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="yes">
+      <port>
+        <name>Viewer</name>
+	<datatype>SCIRun::Geometry</datatype>
+      </port>
+    </inputs>
   </io>
   <testing>
   </testing>
