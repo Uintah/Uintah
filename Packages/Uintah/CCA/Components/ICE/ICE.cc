@@ -49,7 +49,7 @@ using namespace Uintah;
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
-//#define ANNULUSICE
+//#define ANNULUSICE 
 #undef ANNULUSICE
 
 ICE::ICE(const ProcessorGroup* myworld) 
@@ -634,6 +634,7 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
  
   t->computes(lb->doMechLabel);
   t->computes(lb->mom_source_CCLabel);
+  t->computes(lb->press_force_CCLabel);
   sched->addTask(t, patches, matls);
 }
 
@@ -2164,10 +2165,9 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     constSFCYVariable<double> press_diffY_FC;
     constSFCZVariable<double> press_diffZ_FC;
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(pressX_FC,lb->pressX_FCLabel, 0, patch,Ghost::AroundCells, 1);
-    new_dw->get(pressY_FC,lb->pressY_FCLabel, 0, patch,Ghost::AroundCells, 1);
-    new_dw->get(pressZ_FC,lb->pressZ_FCLabel, 0, patch,Ghost::AroundCells, 1);
-
+    new_dw->get(pressX_FC,lb->pressX_FCLabel, 0, patch, gac, 1);
+    new_dw->get(pressY_FC,lb->pressY_FCLabel, 0, patch, gac, 1);
+    new_dw->get(pressZ_FC,lb->pressZ_FCLabel, 0, patch, gac, 1);
   //__________________________________
   //  Matl loop 
     for(int m = 0; m < numMatls; m++) {
@@ -2178,18 +2178,16 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
 
       new_dw->get(rho_CC,  lb->rho_CCLabel,      indx,patch,Ghost::None, 0);
       new_dw->get(vol_frac,lb->vol_frac_CCLabel, indx,patch,Ghost::None, 0);
-      CCVariable<Vector>   mom_source;
+      CCVariable<Vector>   mom_source, press_force;
       new_dw->allocate(mom_source,  lb->mom_source_CCLabel,  indx, patch);
+      new_dw->allocate(press_force, lb->press_force_CCLabel, indx, patch); 
+      press_force.initialize(Vector(0.,0.,0.));
       mom_source.initialize(Vector(0.,0.,0.));
       
       if(d_RateForm){        // R A T E  F O R M 
-
-        new_dw->get(press_diffX_FC,
-                   lb->press_diffX_FCLabel,indx,patch,Ghost::AroundCells, 1);
-        new_dw->get(press_diffY_FC,
-                   lb->press_diffY_FCLabel,indx,patch,Ghost::AroundCells, 1);
-        new_dw->get(press_diffZ_FC,
-                   lb->press_diffZ_FCLabel,indx,patch,Ghost::AroundCells, 1);
+        new_dw->get(press_diffX_FC,lb->press_diffX_FCLabel,indx,patch,gac, 1);
+        new_dw->get(press_diffY_FC,lb->press_diffY_FCLabel,indx,patch,gac, 1);
+        new_dw->get(press_diffZ_FC,lb->press_diffZ_FCLabel,indx,patch,gac, 1);
       }
       if(doMechOld < -1.5){
       //__________________________________
@@ -2225,6 +2223,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
         mass = rho_CC[c] * vol;
+
         right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
         top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
         front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
@@ -2235,7 +2234,9 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         //__________________________________
         //    X - M O M E N T U M 
         pressure_source = (pressX_FC[right]-pressX_FC[left]) * vol_frac[c];
-
+        
+        press_force[c](0) = -pressure_source * delY * delZ; 
+               
         viscous_source=(tau_X_FC[right].x() - tau_X_FC[left].x())  *delY*delZ+
                        (tau_Y_FC[top].x()   - tau_Y_FC[bottom].x())*delX*delZ+
                        (tau_Z_FC[front].x() - tau_Z_FC[back].x())  *delX*delY;
@@ -2245,8 +2246,10 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                            mass * gravity.x() * include_term) * delT );
         //__________________________________
         //    Y - M O M E N T U M
-         pressure_source = (pressY_FC[top]-pressY_FC[bottom])* vol_frac[c];
-
+        pressure_source = (pressY_FC[top]-pressY_FC[bottom])* vol_frac[c];
+         
+        press_force[c](1) = -pressure_source * delX * delZ;
+        
         viscous_source=(tau_X_FC[right].y() - tau_X_FC[left].y())  *delY*delZ+
                        (tau_Y_FC[top].y()   - tau_Y_FC[bottom].y())*delX*delZ+
                        (tau_Z_FC[front].y() - tau_Z_FC[back].y())  *delX*delY;
@@ -2257,7 +2260,9 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       //__________________________________
       //    Z - M O M E N T U M
         pressure_source = (pressZ_FC[front]-pressZ_FC[back]) * vol_frac[c];
-
+        
+        press_force[c](2) = -pressure_source * delX * delY;
+        
         viscous_source=(tau_X_FC[right].z() - tau_X_FC[left].z())  *delY*delZ+
                        (tau_Y_FC[top].z()   - tau_Y_FC[bottom].z())*delX*delZ+
                        (tau_Z_FC[front].z() - tau_Z_FC[back].z())  *delX*delY;
@@ -2298,14 +2303,16 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         }
       }
       } // if doMechOld
-      new_dw->put(mom_source, lb->mom_source_CCLabel, indx, patch);
-      new_dw->put(doMechOld,  lb->doMechLabel);
+      new_dw->put(mom_source,   lb->mom_source_CCLabel,  indx, patch);
+      new_dw->put(press_force,  lb->press_force_CCLabel, indx, patch);
+      new_dw->put(doMechOld,    lb->doMechLabel);
 
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
         ostringstream desc;
         desc << "sources/sinks_Mat_" << indx << "_patch_"<<  patch->getID();
-        printVector(patch, 1, desc.str(), "mom_source", 0, mom_source);
+        printVector(patch, 1, desc.str(), "mom_source",  0, mom_source);
+      //printVector(patch, 1, desc.str(), "press_force", 0, press_force);        
       }
     }
   }
