@@ -81,7 +81,10 @@ public:
     static void drawConnection(QPainter& p,
                                const QPointArray& points,
                                QPointArray& drawPoints);
+    virtual int rtti() const;
 
+    static int RTTI;
+    static const int Rtti_Connection = 1001;
     static const unsigned int NUM_POINTS = 12;
     static const unsigned int NUM_DRAW_POINTS = 6;
 
@@ -94,11 +97,57 @@ protected:
     QColor color;
 };
 
+inline sci::cca::ConnectionID::pointer Connection::getConnectionID()
+{
+  return connID;
+}
+
+// Distinguish between QCanvasItems on a QCanvas.
+inline int Connection::rtti() const
+{
+    return RTTI;
+}
+
+inline void Connection:: setDefault()
+{
+  color = yellow;
+}
+
+inline void Connection:: highlight()
+{
+  color = red;
+}
+
+inline Module* Connection::getUsesModule()
+{
+  return pUse;
+}
+
+inline Module* Connection::getProvidesModule()
+{
+  return pProvide;
+}
+
+inline std::string Connection::getUsesPortName()
+{
+  return portname1;    
+}
+
+inline std::string Connection::getProvidesPortName()
+{
+  return portname2;
+}
+
+inline std::string Connection::getConnectionType()
+{
+  return "Connection";
+}
+
 inline void Connection::drawConnection(QPainter& p,
-		    const QPointArray& points, QPointArray& drawPoints)
+            const QPointArray& points, QPointArray& drawPoints)
 {
     for (unsigned int i = 0; i < NUM_DRAW_POINTS; i++) {
-	drawPoints[i] = ( points[i] + points[NUM_POINTS - 1 - i] ) / 2;
+        drawPoints[i] = ( points[i] + points[NUM_POINTS - 1 - i] ) / 2;
     }
 }
 
