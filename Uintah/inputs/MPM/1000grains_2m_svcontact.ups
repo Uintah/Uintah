@@ -20,7 +20,7 @@
     </MPM>
 
     <DataArchiver>
-        <filebase>1000grains_svcontact.uda</filebase>
+        <filebase>1000grains_2m_svcontact.uda</filebase>
         <outputInterval>.05</outputInterval>
     </DataArchiver>
 
