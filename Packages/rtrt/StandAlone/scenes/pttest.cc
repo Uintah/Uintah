@@ -9,6 +9,8 @@
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/UVSphere2.h>
 #include <Packages/rtrt/Core/SharedTexture.h>
+#include <Packages/rtrt/Core/PPMImage.h>
+#include <Packages/rtrt/Core/TextureGridSpheres.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -61,11 +63,66 @@ Group *make_geometry(char* tex_names[NUM_TEXTURES])
     return 0;
 }
 
+Group *make_geometry_tg(char* tex_names[NUM_TEXTURES], int tex_res) {
+  Group* group = new Group();
+  
+  float* spheres = new float[NUM_TEXTURES*3];
+  unsigned char *tex_data = new unsigned char[NUM_TEXTURES*3*tex_res*tex_res];
+  int nspheres = 0;
+  for(int z = -1; z <= 1; z+=2)
+    for(int y = -1; y <= 1; y+=2)
+      for(int x = -1; x <= 1; x+=2)
+	{
+	  float *sphere = spheres + nspheres * 3;
+	  sphere[0] = x;
+	  sphere[1] = y;
+	  sphere[2] = z;
+	  PPMImage image(tex_names[nspheres]);
+	  if (!image.valid()) {
+	    cerr << "Error loading texture "<<tex_names[nspheres]<<endl;
+	    return 0;
+	  }
+	  Array2<Color> image_data;
+	  int width = 0, height = 0;
+	  image.get_dimensions_and_data(image_data, width, height);
+	  if (width != tex_res) {
+	    cerr << "Texture width ("<<width<<") does not match tex_res ("<<tex_res<<").\n";
+	    return 0;
+	  }
+	  if (height != tex_res) {
+	    cerr << "Texture height ("<<height<<") does not match tex_res ("<<tex_res<<").\n";
+	    return 0;
+	  }
+
+	  // Copy the data over
+	  unsigned char *pixel = tex_data + (nspheres * tex_res * tex_res * 3);
+	  for (int j = 0; j < height; j++)
+	    for (int i = 0; i < width; i++) {
+	      Color c = image(i,j) * 255;
+	      pixel[0] = c.red();
+	      pixel[1] = c.green();
+	      pixel[2] = c.blue();
+	      pixel+=3;
+	    }
+	  
+          nspheres++;
+	}
+
+  int *tex_indices = 0;
+  group->add(new 
+	     TextureGridSphere(spheres, nspheres, radius, tex_indices,
+		    tex_data, nspheres, tex_res,
+		    6, 2));
+
+  return group;
+}
+
 extern "C" 
 Scene* make_scene(int argc, char** argv, int /*nworkers*/)
 {
   char *bg="/home/sci/cgribble/research/datasets/mpm/misc/envmap.ppm";
   char *tex_basename="./sphere";
+  int tex_res = -1;
 
   for (int i=1;i<argc;i++)
   {
@@ -75,6 +132,8 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
       tex_basename = argv[++i];
     else if(strcmp(argv[i],"-radius")==0)
       radius=atof(argv[++i]);
+    else if(strcmp(argv[i],"-tex_res")==0)
+      tex_res=atoi(argv[++i]);
     else
     {
       cerr << "unrecognized option \"" << argv[i] << "\"" << endl;
@@ -90,10 +149,17 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
     sprintf(tex_names[i], "%s%d.ppm", tex_basename, i); 
   }
   
-  Group *group=make_geometry(tex_names);
-  if (!group)
+  Group *group=0;
+  if (tex_res > 0)
+    group = make_geometry_tg(tex_names, tex_res);
+  else
+    group = make_geometry(tex_names);
+  
+  if (!group) {
+    cerr << "Could not generate geometry successfully.\n";
     // Then something went wrong and you should kill the scene
     return 0;
+  }
 
   Camera cam(Point(0,0,10), Point(0,0,0), Vector(0,1,0), 45.0);
 
