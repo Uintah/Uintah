@@ -403,7 +403,7 @@ void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
   t->requires(Task::OldDW, d_sharedState->get_delt_label());
 
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
-      
+  t->requires(Task::NewDW, lb->gVelocityLabel,      Ghost::None);     
   t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
   t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
   t->requires(Task::OldDW, lb->doMechLabel);
