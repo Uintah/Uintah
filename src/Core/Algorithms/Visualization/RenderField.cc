@@ -64,7 +64,7 @@ RenderFieldBase::get_compile_info(const TypeDescription *ftd,
     template_class_name0 += "Image";
   }
 
-  CompileInfo *rval = scinew CompileInfo(template_class_name + "." +
+  CompileInfo *rval = scinew CompileInfo(template_class_name0 + "." +
 					 ftd->get_filename() + "." +
 					 ltd->get_filename() + ".",
 					 base_class_name, 
