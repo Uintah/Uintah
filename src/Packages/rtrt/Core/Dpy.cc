@@ -643,7 +643,10 @@ Dpy::renderFrame() {
       glMatrixMode(GL_MODELVIEW);
       glLoadIdentity();
       glTranslatef(0.375, 0.375, 0.0);
-      displayedImage->draw( renderWindowSize_, fullScreenMode_ );
+      if (!scene->display_depth)
+        displayedImage->draw( renderWindowSize_, fullScreenMode_ );
+      else
+        displayedImage->draw_depth( 50 );
       if (priv->show_frame_rate) {
 	// Figure out how wide the string is
 	int width = calc_width(fontInfo, buf);
