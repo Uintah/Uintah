@@ -29,11 +29,10 @@
 #ifndef TriMC_h
 #define TriMC_h
 
-#include <Core/Geometry/Point.h>
 #include <Core/Geom/GeomLine.h>
-#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/CurveField.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
+#include <sci_hash_map.h>
 
 namespace SCIRun {
 
@@ -60,11 +59,50 @@ private:
   mesh_handle_type mesh_;
   GeomLines *lines_;
   CurveMeshHandle out_mesh_;
-  map<long int, CurveMesh::Node::index_type> vertex_map_;
   int nnodes_;
-  vector<long int> node_vector_;
 
-  CurveMesh::Node::index_type find_or_add_edgepoint(int, int, const Point &);
+  struct edgepair_t
+  {
+    unsigned int first;
+    unsigned int second;
+    double dfirst;
+  };
+
+  struct edgepairequal
+  {
+    bool operator()(const edgepair_t &a, const edgepair_t &b) const
+    {
+      return a.first == b.first && a.second == b.second;
+    }
+  };
+
+#ifdef HAVE_HASH_MAP
+  struct edgepairhash
+  {
+    unsigned int operator()(const edgepair_t &a) const
+    {
+      hash<unsigned int> h;
+      return h(a.first ^ a.second);
+    }
+  };
+
+  typedef hash_map<edgepair_t,
+		   CurveMesh::Node::index_type,
+		   edgepairhash,
+		   edgepairequal> edge_hash_type;
+#else
+  typedef map<edgepair_t,
+	      CurveMesh::Node::index_type,
+	      edgepairequal> edge_hash_type;
+#endif
+
+  edge_hash_type   edge_map_;  // Unique edge cuts when surfacing node data
+  vector<long int> node_map_;  // Unique nodes when surfacing cell data.
+
+  CurveMesh::Node::index_type find_or_add_edgepoint(unsigned int n0,
+						    unsigned int n1,
+						    double d0,
+						    const Point &p);
   CurveMesh::Node::index_type find_or_add_nodepoint(node_index_type &idx);
 
   void extract_n( cell_index_type, double );
@@ -91,7 +129,7 @@ TriMC<Field>::~TriMC()
 template<class Field>
 void TriMC<Field>::reset( int n, bool build_field, bool build_geom )
 {
-  vertex_map_.clear();
+  edge_map_.clear();
   typename Field::mesh_type::Node::size_type nsize;
   mesh_->size(nsize);
   nnodes_ = nsize;
@@ -100,7 +138,7 @@ void TriMC<Field>::reset( int n, bool build_field, bool build_geom )
   {
     mesh_->synchronize(Mesh::EDGES_E);
     mesh_->synchronize(Mesh::EDGE_NEIGHBORS_E);
-    if (build_field) { node_vector_ = vector<long int>(nsize, -1); }
+    if (build_field) { node_map_ = vector<long int>(nsize, -1); }
   }
 
   lines_ = 0;
@@ -119,19 +157,23 @@ void TriMC<Field>::reset( int n, bool build_field, bool build_geom )
 
 template<class Field>
 CurveMesh::Node::index_type
-TriMC<Field>::find_or_add_edgepoint(int n0, int n1, const Point &p) 
+TriMC<Field>::find_or_add_edgepoint(unsigned int u0, unsigned int u1,
+				    double d0, const Point &p) 
 {
-  map<long int, CurveMesh::Node::index_type>::iterator node_iter;
-  CurveMesh::Node::index_type node_idx;
-  long int key = (n0 < n1) ? n0*nnodes_+n1 : n1*nnodes_+n0;
-  node_iter = vertex_map_.find(key);
-  if (node_iter == vertex_map_.end()) { // first time to see this node
-    node_idx = out_mesh_->add_node(p);
-    vertex_map_[key] = node_idx;
-  } else {
-    node_idx = (*node_iter).second;
+  edgepair_t np;
+  if (u0 < u1)  { np.first = u0; np.second = u1; np.dfirst = d0; }
+  else { np.first = u1; np.second = u0; np.dfirst = 1.0 - d0; }
+  const typename edge_hash_type::iterator loc = edge_map_.find(np);
+  if (loc == edge_map_.end())
+  {
+    const CurveMesh::Node::index_type nodeindex = out_mesh_->add_point(p);
+    edge_map_[np] = nodeindex;
+    return nodeindex;
   }
-  return node_idx;
+  else
+  {
+    return (*loc).second;
+  }
 }
 
 
@@ -140,13 +182,13 @@ CurveMesh::Node::index_type
 TriMC<Field>::find_or_add_nodepoint(node_index_type &tri_node_idx)
 {
   CurveMesh::Node::index_type curve_node_idx;
-  long int i = node_vector_[(long int)(tri_node_idx)];
+  long int i = node_map_[(long int)(tri_node_idx)];
   if (i != -1) curve_node_idx = (CurveMesh::Node::index_type) i;
   else {
     Point p;
     mesh_->get_point(p, tri_node_idx);
     curve_node_idx = out_mesh_->add_point(p);
-    node_vector_[(long int)tri_node_idx] = (long int)curve_node_idx;
+    node_map_[(long int)tri_node_idx] = (long int)curve_node_idx;
   }
   return curve_node_idx;
 }
@@ -177,9 +219,11 @@ void TriMC<Field>::extract_n( cell_index_type cell, double v )
     const int a = clip[code];
     const int b = (a + 1) % 3;
     const int c = (a + 2) % 3;
-
-    Point p0(Interpolate(p[a], p[b], (v-value[a])/double(value[b]-value[a])));
-    Point p1(Interpolate(p[a], p[c], (v-value[a])/double(value[c]-value[a])));
+    
+    const double d0 = (v-value[a])/double(value[b]-value[a]);
+    const double d1 = (v-value[a])/double(value[c]-value[a]);
+    const Point p0(Interpolate(p[a], p[b], d0));
+    const Point p1(Interpolate(p[a], p[c], d1));
 
     if (lines_)
     {
@@ -188,8 +232,8 @@ void TriMC<Field>::extract_n( cell_index_type cell, double v )
     if (out_mesh_.get_rep())
     {
       CurveMesh::Node::array_type cnode(2);
-      cnode[0] = find_or_add_edgepoint(node[a], node[b], p0);
-      cnode[1] = find_or_add_edgepoint(node[a], node[c], p1);
+      cnode[0] = find_or_add_edgepoint(node[a], node[b], d0, p0);
+      cnode[1] = find_or_add_edgepoint(node[a], node[c], d1, p1);
       out_mesh_->add_elem(cnode);
     }
   }
@@ -266,7 +310,38 @@ template<class Field>
 MatrixHandle
 TriMC<Field>::get_interpolant()
 {
-  return 0;
+  if (field_->data_at() == Field::NODE)
+  {
+    const int nrows = edge_map_.size();
+    const int ncols = nnodes_;
+    int *rr = scinew int[nrows+1];
+    int *cc = scinew int[nrows*2];
+    double *dd = scinew double[nrows*2];
+
+    typename edge_hash_type::iterator eiter = edge_map_.begin();
+    while (eiter != edge_map_.end())
+    {
+      const int ei = (*eiter).second;
+
+      cc[ei * 2 + 0] = (*eiter).first.first;
+      cc[ei * 2 + 1] = (*eiter).first.second;
+      dd[ei * 2 + 0] = 1.0 - (*eiter).first.dfirst;
+      dd[ei * 2 + 1] = (*eiter).first.dfirst;
+      
+      ++eiter;
+    }
+
+    for (int i = 0; i <= nrows; i++)
+    {
+      rr[i] = i * 2;
+    }
+
+    return scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows*2, dd);
+  }
+  else
+  {
+    return 0;
+  }
 }
 
      
