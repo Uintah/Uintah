@@ -20,7 +20,7 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
     constructor {config} {
         set name AnalyzeToNrrd
         set_defaults
-    } 
+    }
 
     method set_defaults {} {
 	global $this-file
@@ -51,7 +51,7 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
         $w.sd $w.row4 $w.row9 -side top -e y -f both -padx 5 -pady 2
 
 	button $w.row10.browse_button -text "Open Analyze File" \
-	    -command "$this ChooseFile; $this AddData"
+	    -command "$this ChooseFile"
 
 	pack $w.row10.browse_button -side right -fill x -expand yes
 
@@ -62,12 +62,15 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
         pack $sd.selected -side top -fill x -expand yes
 
 	makeSciButtonPanel $w $w $this
-	moveToCursor $w
+	# Commented this out because the ui
+	# would no longer popup in BioTensor
+	# moveToCursor $w
     }
 
 
     method ChooseFile { } {
-        set w .ui[modname]
+        #set w .ui[modname]
+	set w [format "%s-fb" .ui[modname]]
 
 	if { [winfo exists $w] } {
 	    if { [winfo ismapped $w] == 1} {
@@ -77,6 +80,9 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
 	    }
 	    return
 	}
+	
+	#toplevel $w
+	toplevel $w -class TkFDialog
 
 	set defext ".hdr"
 	
@@ -85,15 +91,26 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
 	    {{Analyze Header File}        {.hdr} }
 	}
 	
-	set $this-file [tk_getOpenFile  \
-			    -parent $w \
-			    -title "Open Analyze File" \
-			    -filetypes $types \
-			    -defaultextension $defext]
+# 	set $this-file [tk_getOpenFile  \
+# 			    -parent $w \
+# 			    -title "Open Analyze File" \
+# 			    -filetypes $types \
+# 			    -defaultextension $defext]
+	
+	makeOpenFilebox \
+	    -parent $w \
+	    -filevar $this-file \
+	    -cancel "wm withdraw $w" \
+	    -title "Open Analyze File" \
+	    -filetypes $types \
+	    -defaultextension $defext \
+	    -command "wm withdraw $w; $this AddData" \
+
+	moveToCursor $w
+	wm deiconify $w	
     }
 
     method AddData { } {
-    
         set w .ui[modname]
   
 	if [ expr [winfo exists $w] ] {
