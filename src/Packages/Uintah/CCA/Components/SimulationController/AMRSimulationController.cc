@@ -355,7 +355,6 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
   d_scheduler->advanceDataWarehouse(currentGrid);
   
   // for dynamic lb's, set up patch config after changing grid
-  d_lb->doRegridTimestep();
   d_lb->possiblyDynamicallyReallocate(currentGrid, false); 
   
   for(int i=0;i<currentGrid->numLevels();i++) {
@@ -396,7 +395,6 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
     //for(int i=1;i<oldGrid->numLevels();i++)
     //numDWs *= oldGrid->getLevel(i)->timeRefinementRatio();
 
-    d_lb->doRegridTimestep();
     d_lb->possiblyDynamicallyReallocate(currentGrid, false); 
     
 
