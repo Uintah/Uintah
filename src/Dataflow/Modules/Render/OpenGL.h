@@ -63,7 +63,6 @@
 #include <Core/Thread/FutureValue.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Thread.h>
-#include <Core/Geom/OpenGLContext.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Geom/Light.h>
@@ -162,7 +161,7 @@ public:
   bool			make_MPEG_p_;
   int			current_movie_frame_;
   string		movie_name_;
-  OpenGLContext *	context_;
+
 private:
   void			redraw_frame();
   void			setFrustumToWindowPortion();
@@ -189,7 +188,10 @@ private:
   GuiInterface*		gui_;
   Runnable *		helper_;
   Thread *		helper_thread_;
-
+  Tk_Window		tkwin_;
+  Window		x11_win_;
+  Display*		x11_dpy_;
+  GLXContext		x11_gl_context_;
   string		myname_;
   Viewer*		viewer_;
   ViewWindow*		view_window_;
