@@ -25,6 +25,7 @@ static char *id="@(#) $Id$";
 
 using namespace Uintah::MPM;
 using SCICore::Geometry::Vector;
+using SCICore::Geometry::Dot;
 using SCICore::Geometry::IntVector;
 using std::vector;
 using std::string;
@@ -36,14 +37,13 @@ FrictionContact::FrictionContact(ProblemSpecP& ps,
 {
   // Constructor
   IntVector v_f;
-  double mu;
 
   ps->require("vel_fields",v_f);
-  ps->require("mu",mu);
+  ps->require("mu",d_mu);
 
   d_sharedState = d_sS;
 
-  gTractionLabel = new VarLabel( "g.traction",
+  gNormTractionLabel = new VarLabel( "g.normtraction",
                    NCVariable<double>::getTypeDescription() );
 
   gSurfNormLabel = new VarLabel( "g.surfnorm",
@@ -69,7 +69,7 @@ FrictionContact::~FrictionContact()
 
 void FrictionContact::exMomInterpolated(const ProcessorContext*,
 					const Region* region,
-					const DataWarehouseP&,
+					const DataWarehouseP& old_dw,
 					DataWarehouseP& new_dw)
 {
   Vector zero(0.0,0.0,0.0);
@@ -84,6 +84,8 @@ void FrictionContact::exMomInterpolated(const ProcessorContext*,
   // vectors of NCVariables
   vector<NCVariable<double> > gmass(NVFs);
   vector<NCVariable<Vector> > gvelocity(NVFs);
+  vector<NCVariable<double> > normtraction(NVFs);
+  vector<NCVariable<Vector> > surfnorm(NVFs);
 
   // Retrieve necessary data from DataWarehouse
   for(int m = 0; m < numMatls; m++){
@@ -93,6 +95,8 @@ void FrictionContact::exMomInterpolated(const ProcessorContext*,
       int vfindex = matl->getVFIndex();
       new_dw->get(gmass[vfindex], gMassLabel,vfindex , region, 0);
       new_dw->get(gvelocity[vfindex], gVelocityLabel, vfindex, region, 0);
+      old_dw->get(normtraction[vfindex],gNormTractionLabel,vfindex , region, 0);
+      old_dw->get(surfnorm[vfindex], gSurfNormLabel,vfindex , region, 0);
     }
   }
 
@@ -104,11 +108,48 @@ void FrictionContact::exMomInterpolated(const ProcessorContext*,
       centerOfMassMass+=gmass[n][*iter]; 
     }
 
-    // Set each field's velocity equal to the center of mass velocity
+    // Apply Coulomb friction contact
+    // For grid points with mass calculate velocity
     if(!compare(centerOfMassMass,0.0)){
       centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
+
+      // Loop over velocity fields.  Only proceed if velocity field
+      // is nonzero (not numerical noise) and the difference from
+      // the centerOfMassVelocity is nonzero (More than one velocity
+      // field is contributing to grid vertex).
       for(int n = 0; n < NVFs; n++){
-	gvelocity[n][*iter] = centerOfMassVelocity;
+        Vector deltaVelocity=gvelocity[n][*iter]-centerOfMassVelocity;
+        if(!compare(gvelocity[n][*iter].length(),0.0)
+           && !compare(deltaVelocity.length(),0.0)){
+
+          // Apply frictional contact if the surface is in compression
+          // or the surface is stress free and surface is approaching.
+          // Otherwise apply free surface conditions (do nothing).
+          double normalDeltaVelocity=Dot(deltaVelocity,surfnorm[n][*iter]);
+          if((normtraction[n][*iter] < 0.0) ||
+             (!compare(fabs(normtraction[n][*iter]),0.0) &&
+              normalDeltaVelocity>0.0)){
+
+              // Specialize algorithm in case where approach velocity
+              // is in direction of surface normal.
+              if(compare( (deltaVelocity
+                        -surfnorm[n][*iter]*normalDeltaVelocity).length(),0.0)){
+                gvelocity[n][*iter]-= surfnorm[n][*iter]*normalDeltaVelocity;
+              }
+	      else{
+                Vector surfaceTangent=
+		(deltaVelocity-surfnorm[n][*iter]*normalDeltaVelocity)/
+                (deltaVelocity-surfnorm[n][*iter]*normalDeltaVelocity).length();
+                double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
+                double frictionCoefficient=
+                  Min(d_mu,tangentDeltaVelocity/normalDeltaVelocity);
+                gvelocity[n][*iter]-=
+                  (surfnorm[n][*iter]+surfaceTangent*frictionCoefficient)*
+                                                      normalDeltaVelocity;
+	     }
+
+          }
+	}
       }
     }
   }
@@ -165,9 +206,6 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 //      IntVector highi(gsurfnorm.getHighIndex());
       IntVector lowi(0,0,0);
       IntVector highi(20,20,3);
-
-      cerr << "Low = " << lowi << endl;
-      cerr << "High = " << highi << endl;
 
       for(int i = lowi.x()+1; i < highi.x(); i++){
         for(int j = lowi.y()+1; j < highi.y(); j++){
@@ -315,17 +353,19 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
       NCVariable<Matrix3>      gstress;
-      NCVariable<double>       gtraction;
+      NCVariable<double>       gnormtraction;
       NCVariable<Vector>       gsurfnorm;
       new_dw->get(gstress, gStressLabel, vfindex, region,0);
       new_dw->get(gsurfnorm, gSurfNormLabel, vfindex, region,0);
-      new_dw->allocate(gtraction, gTractionLabel, vfindex, region);
+      new_dw->allocate(gnormtraction, gNormTractionLabel, vfindex, region);
 
       for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
-	gtraction[*iter]=SCICore::Geometry::Dot(gsurfnorm[*iter]*gstress[*iter],gsurfnorm[*iter]);
+//	gnormtraction[*iter]=SCICore::Geometry::Dot(gsurfnorm[*iter]*gstress[*iter],gsurfnorm[*iter]);
+	gnormtraction[*iter]=
+			Dot(gsurfnorm[*iter]*gstress[*iter],gsurfnorm[*iter]);
       }
 
-      new_dw->put(gtraction, gTractionLabel, vfindex, region);
+      new_dw->put(gnormtraction, gNormTractionLabel, vfindex, region);
     }
   }
 
@@ -376,6 +416,9 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.10  2000/05/05 22:37:27  bard
+// Added frictional contact logic.  Compiles but doesn't yet work.
+//
 // Revision 1.9  2000/05/05 19:32:00  guilkey
 // Implemented more of FrictionContact.  Fixed some problems, put in
 // some code to write tecplot files :(  .

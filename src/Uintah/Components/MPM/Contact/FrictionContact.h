@@ -58,8 +58,11 @@ WARNING
 	 
 	 SimulationStateP d_sharedState;
 
+         // Coefficient of friction
+         double d_mu;
+
          // VarLabels specific to Frictional contact
-	 const VarLabel* gTractionLabel;
+	 const VarLabel* gNormTractionLabel;
 	 const VarLabel* gSurfNormLabel; 
 	 const VarLabel* gStressLabel; 
 	 const VarLabel* pStressLabel; 
@@ -91,6 +94,9 @@ WARNING
 #endif /* __FRICTION_H__ */
 
 // $Log$
+// Revision 1.4  2000/05/05 22:37:27  bard
+// Added frictional contact logic.  Compiles but doesn't yet work.
+//
 // Revision 1.3  2000/05/05 02:24:35  guilkey
 // Added more stuff to FrictionContact, most of which is currently
 // commented out until a compilation issue is resolved.
