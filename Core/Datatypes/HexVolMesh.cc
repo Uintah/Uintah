@@ -74,8 +74,6 @@ HexVolMesh::HexVolMesh() :
   points_lock_("HexVolMesh points_ fill lock"),
   cells_(0),
   cells_lock_("HexVolMesh cells_ fill lock"),
-  neighbors_(0),
-  nbors_lock_("HexVolMesh neighbors_ fill lock"),
   faces_(0),
   face_table_(),
   face_table_lock_("HexVolMesh faces_ fill lock"),
@@ -84,8 +82,11 @@ HexVolMesh::HexVolMesh() :
   edge_table_lock_("HexVolMesh edge_ fill lock"),
   node_nbor_lock_("HexVolMesh node_neighbors_ fill lock"),
   grid_(0),
-  grid_lock_("HexVolMesh grid_ fill lock")
+  grid_lock_("HexVolMesh grid_ fill lock"),
+  synchronized_(0)
 {
+  synchronized_.set(NODES_E);
+  synchronized_.set(CELLS_E);
 }
 
 HexVolMesh::HexVolMesh(const HexVolMesh &copy):
@@ -93,8 +94,6 @@ HexVolMesh::HexVolMesh(const HexVolMesh &copy):
   points_lock_("HexVolMesh points_ fill lock"),
   cells_(copy.cells_),
   cells_lock_("HexVolMesh cells_ fill lock"),
-  neighbors_(copy.neighbors_),
-  nbors_lock_("HexVolMesh neighbors_ fill lock"),
   faces_(copy.faces_),
   face_table_(copy.face_table_),
   face_table_lock_("HexVolMesh faces_ fill lock"),
@@ -103,7 +102,8 @@ HexVolMesh::HexVolMesh(const HexVolMesh &copy):
   edge_table_lock_("HexVolMesh edge_ fill lock"),
   node_nbor_lock_("HexVolMesh node_neighbors_ fill lock"),
   grid_(copy.grid_),
-  grid_lock_("HexVolMesh grid_ fill lock")
+  grid_lock_("HexVolMesh grid_ fill lock"),
+  synchronized_(copy.synchronized_)
 {
 }
 
@@ -182,8 +182,6 @@ void
 HexVolMesh::compute_faces()
 {
   face_table_lock_.lock();
-  if (faces_.size() > 0) {face_table_lock_.unlock(); return;}
-  cerr << "HexVolMesh::computing faces...\n";
 
   Cell::iterator ci, cie;
   begin(ci); end(cie);
@@ -210,6 +208,8 @@ HexVolMesh::compute_faces()
     (*ht_iter).second = i;
     ++f_iter; ++ht_iter; i++;
   }
+
+  synchronized_.set(FACES_E);
   face_table_lock_.unlock();
 }
 
@@ -232,8 +232,6 @@ void
 HexVolMesh::compute_edges()
 {
   edge_table_lock_.lock();
-  if (edges_.size() > 0) {edge_table_lock_.unlock(); return;}
-  cerr << "HexVolMesh::computing edges...\n";
 
   Cell::iterator ci, cie;
   begin(ci); end(cie);
@@ -267,94 +265,113 @@ HexVolMesh::compute_edges()
     (*ht_iter).second = static_cast<Edge::index_type>(e_iter - edges_.begin());
     ++e_iter; ++ht_iter;
   }
+  
+  synchronized_.set(EDGES_E);
   edge_table_lock_.unlock();
 }
 
-void
-HexVolMesh::flush_changes()
+
+
+
+bool
+HexVolMesh::synchronize(const synchronized_t &tosync)
 {
-  compute_edges();
-  compute_faces();
-//  compute_node_neighbors();
-  compute_grid();
+  if (tosync[EDGES_E] && !synchronized_[EDGES_E]) compute_edges();
+  if (tosync[FACES_E] && !synchronized_[FACES_E]) compute_faces();
+  if (tosync[GRID_E] && !synchronized_[GRID_E]) compute_grid();
+  if (tosync[NODE_NEIGHBORS_E] && !synchronized_[NODE_NEIGHBORS_E]) compute_node_neighbors();
+  return true;
 }
 
 
 void
 HexVolMesh::begin(HexVolMesh::Node::iterator &itr) const
 {
+  ASSERTMSG(synchronized_[NODES_E], "Must call synchronize NODES_E on HexVolMesh first");
   itr = 0;
 }
 
 void
 HexVolMesh::end(HexVolMesh::Node::iterator &itr) const
 {
+  ASSERTMSG(synchronized_[NODES_E], "Must call synchronize NODES_E on HexVolMesh first");
   itr = static_cast<Node::iterator>(points_.size());
 }
 
 void
 HexVolMesh::size(HexVolMesh::Node::size_type &s) const
 {
+  ASSERTMSG(synchronized_[NODES_E], "Must call synchronize NODES_E on HexVolMesh first");
   s = static_cast<Node::size_type>(points_.size());
 }
 
 void
 HexVolMesh::begin(HexVolMesh::Edge::iterator &itr) const
 {
+  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on HexVolMesh first");
   itr = 0;
 }
 
 void
 HexVolMesh::end(HexVolMesh::Edge::iterator &itr) const
 {
+  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on HexVolMesh first");
   itr = static_cast<Edge::iterator>(edges_.size());
 }
 
 void
 HexVolMesh::size(HexVolMesh::Edge::size_type &s) const
 {
+  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on HexVolMesh first");
   s = static_cast<Edge::size_type>(edges_.size());
 }
 
 void
 HexVolMesh::begin(HexVolMesh::Face::iterator &itr) const
 {
+  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on HexVolMesh first");
   itr = 0;
 }
 
 void
 HexVolMesh::end(HexVolMesh::Face::iterator &itr) const
 {
+  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on HexVolMesh first");
   itr = static_cast<Face::iterator>(faces_.size());
 }
 
 void
 HexVolMesh::size(HexVolMesh::Face::size_type &s) const
 {
+  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on HexVolMesh first");
   s = static_cast<Face::size_type>(faces_.size());
 }
 
 void
 HexVolMesh::begin(HexVolMesh::Cell::iterator &itr) const
 {
+  ASSERTMSG(synchronized_[CELLS_E], "Must call synchronize CELLS_E on HexVolMesh first");
   itr = 0;
 }
 
 void
 HexVolMesh::end(HexVolMesh::Cell::iterator &itr) const
 {
+  ASSERTMSG(synchronized_[CELLS_E], "Must call synchronize CELLS_E on HexVolMesh first");
   itr = static_cast<Cell::iterator>(cells_.size() >> 3);
 }
 
 void
 HexVolMesh::size(HexVolMesh::Cell::size_type &s) const
 {
+  ASSERTMSG(synchronized_[CELLS_E], "Must call synchronize CELLS_E on HexVolMesh first");
   s = static_cast<Cell::size_type>(cells_.size() >> 3);
 }
 
 void
 HexVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 {
+  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on HexVolMesh first");
   array.clear();
   PEdge e = edges_[idx];
   array.push_back(e.nodes_[0]);
@@ -365,6 +382,7 @@ HexVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 void
 HexVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 {
+  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on HexVolMesh first");
   array.clear();
   const PFace &f = faces_[idx];
   array.push_back(f.nodes_[0]);
@@ -391,6 +409,7 @@ HexVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 void
 HexVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
 {
+  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on HexVolMesh first");
   array.clear();
   const PFace &f = faces_[idx];
   PEdge e0(f.nodes_[0], f.nodes_[1]);
@@ -398,6 +417,7 @@ HexVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
   PEdge e2(f.nodes_[2], f.nodes_[3]);
   PEdge e3(f.nodes_[3], f.nodes_[0]);
 
+  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on HexVolMesh first");
   array.push_back((*(edge_table_.find(e0))).second);
   array.push_back((*(edge_table_.find(e1))).second);
   array.push_back((*(edge_table_.find(e2))).second);
@@ -423,6 +443,7 @@ HexVolMesh::get_edges(Edge::array_type &array, Cell::index_type idx) const
   PEdge e10(cells_[off + 2], cells_[off + 6]);
   PEdge e11(cells_[off + 7], cells_[off + 3]);
 
+  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on HexVolMesh first");
   array.push_back((*(edge_table_.find(e00))).second);
   array.push_back((*(edge_table_.find(e01))).second);
   array.push_back((*(edge_table_.find(e02))).second);
@@ -452,6 +473,7 @@ HexVolMesh::get_faces(Face::array_type &array, Cell::index_type idx) const
   PFace f5(cells_[off + 1], cells_[off + 5], cells_[off + 6], cells_[off + 2]);
 
   // operator[] not const safe...
+  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on HexVolMesh first");
   array.push_back((*(face_table_.find(f0))).second);
   array.push_back((*(face_table_.find(f1))).second);
   array.push_back((*(face_table_.find(f2))).second);
@@ -464,6 +486,7 @@ bool
 HexVolMesh::get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
 			 Face::index_type idx) const
 {
+  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on HexVolMesh first");
   const PFace &f = faces_[idx];
 
   if (from == f.cells_[0]) {
@@ -494,6 +517,7 @@ HexVolMesh::get_neighbors(Cell::array_type &array, Cell::index_type idx) const
 void
 HexVolMesh::get_neighbors(Node::array_type &array, Node::index_type idx) const
 {
+  ASSERTMSG(synchronized_[NODE_NEIGHBORS_E], "Must call synchronize NODE_NEIGHBORS_E on HexVolMesh first");
   array.clear();
   array.insert(array.end(), node_neighbors_[idx].begin(),
 	       node_neighbors_[idx].end());
@@ -503,13 +527,12 @@ void
 HexVolMesh::compute_node_neighbors()
 {
   node_nbor_lock_.lock();
-  if (node_neighbors_.size() > 0) {node_nbor_lock_.unlock(); return;}
-  cerr << "HexVolMesh::computing node neighbors...\n";
   node_neighbors_.clear();
   node_neighbors_.resize(points_.size());
   Edge::iterator ei, eie;
   begin(ei); end(eie);
   for_each(ei, eie, FillNodeNeighbors(node_neighbors_, *this));
+  synchronized_.set(NODE_NEIGHBORS_E);
   node_nbor_lock_.unlock();
 }
 
@@ -690,6 +713,7 @@ HexVolMesh::locate(Face::index_type &face, const Point &p)
 bool
 HexVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
+  ASSERTMSG(synchronized_[GRID_E], "Must call synchronize GRID_E on HexVolMesh first");
   if (grid_.get_rep() == 0)
   {
     compute_grid();
@@ -845,7 +869,6 @@ HexVolMesh::compute_grid()
   grid_lock_.lock();
   if (grid_.get_rep() != 0) {grid_lock_.unlock(); return;} // only create once.
 
-  cerr << "HexVolMesh::compute_grid starting" << endl;
   BBox bb = get_bounding_box();
   if (!bb.valid()) { grid_lock_.unlock(); return; }
 
@@ -890,7 +913,8 @@ HexVolMesh::compute_grid()
     }
     ++ci;
   }
-  cerr << "HexVolMesh::compute_grid done." << endl << endl;
+
+  synchronized_.set(GRID_E);
   grid_lock_.unlock();
 }
 
@@ -972,84 +996,6 @@ HexVolMesh::add_hex(Node::index_type a, Node::index_type b,
 }
 
 
-void
-HexVolMesh::connect(double err)
-{
-  // Collapse point set by err.
-  // TODO: average in stead of first found for new point?
-  vector<Point> points(points_);
-  vector<int> mapping(points_.size());
-  vector<Point>::size_type i;
-  points_.clear();
-  for (i = 0; i < points.size(); i++)
-  {
-    mapping[i] = add_find_point(points[i], err);
-  }
-
-  // Repair faces.
-  for (i=0; i < cells_.size(); i++)
-  {
-    cells_[i] = mapping[i];
-  }
-
-  // TODO: Remove all degenerate cells here.
-
-  // TODO: fix forward/backward facing problems.
-
-  // TODO: Find neighbors
-  vector<list<unsigned long> > edgemap(points_.size());
-  for (i=0; i< cells_.size(); i++)
-  {
-    edgemap[cells_[i]].push_back(i);
-  }
-
-#if 0
-  for (i=0; i<edgemap.size(); i++)
-  {
-    list<int>::iterator li1 = edgemap[i].begin();
-
-    while (li1 != edgemap[i].end())
-    {
-      int e1 = *li1;
-      li1++;
-
-      list<int>::iterator li2 = li1;
-      while (li2 != edgemap[i].end())
-      {
-	int e2 = *li2;
-	li2++;
-	
-	if ( faces_[next(e1)] == faces_[prev(e2)])
-	{
-	  neighbors_[e1] = e2;
-	  neighbors_[e2] = e1;
-	}
-      }
-    }
-  }
-#endif
-
-  // Remove unused points.
-  // Reuse mapping array, edgemap array.
-  vector<Point> dups(points_);
-  points_.clear();
-
-  for (i=0; i<dups.size(); i++)
-  {
-    if(edgemap[i].begin() != edgemap[i].end())
-    {
-      points_.push_back(dups[i]);
-      mapping[i] = points_.size() - 1;
-    }
-  }
-
-  // Repair faces.
-  for (i=0; i < cells_.size(); i++)
-  {
-    cells_[i] = mapping[i];
-  }
-}
-
 
 HexVolMesh::Node::index_type
 HexVolMesh::add_point(const Point &p)
@@ -1071,22 +1017,6 @@ HexVolMesh::add_hex(const Point &p0, const Point &p1,
 	  add_find_point(p6), add_find_point(p7));
 }
 
-void
-HexVolMesh::add_hex_unconnected(const Point &p0,
-				const Point &p1,
-				const Point &p2,
-				const Point &p3,
-				const Point &p4,
-				const Point &p5,
-				const Point &p6,
-				const Point &p7)
-{
-  add_hex(add_point(p0), add_point(p1), 
-	  add_point(p2), add_point(p3),
-	  add_point(p4), add_point(p5),
-	  add_point(p6), add_point(p7));
-}
-
 
 HexVolMesh::Elem::index_type
 HexVolMesh::add_elem(Node::array_type a)
@@ -1103,23 +1033,29 @@ HexVolMesh::add_elem(Node::array_type a)
 }
 
 
-#define HEXVOLMESH_VERSION 1
+#define HEXVOLMESH_VERSION 2
 
 void
 HexVolMesh::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), HEXVOLMESH_VERSION);
+  const int version = stream.begin_class(type_name(-1), HEXVOLMESH_VERSION);
   Mesh::io(stream);
 
   SCIRun::Pio(stream, points_);
   SCIRun::Pio(stream, cells_);
-  SCIRun::Pio(stream, neighbors_);
+  if (version == 1)
+  {
+    vector<under_type>  face_neighbors;
+    SCIRun::Pio(stream, face_neighbors);
+  }
 
   stream.end_class();
 
   if (stream.reading())
   {
-    flush_changes();
+    synchronized_.reset();
+    synchronized_.set(NODES_E);
+    synchronized_.set(CELLS_E);
   }
 }
 
@@ -1194,6 +1130,89 @@ get_type_description(HexVolMesh::Cell *)
   }
   return td;
 }
+
+
+
+#if 0
+void
+HexVolMesh::compute_face_neighbors(double err)
+{
+  // Collapse point set by err.
+  // TODO: average in stead of first found for new point?
+  vector<Point> points(points_);
+  vector<int> mapping(points_.size());
+  vector<Point>::size_type i;
+  points_.clear();
+  for (i = 0; i < points.size(); i++)
+  {
+    mapping[i] = add_find_point(points[i], err);
+  }
+
+  // Repair faces.
+  for (i=0; i < cells_.size(); i++)
+  {
+    cells_[i] = mapping[i];
+  }
+
+  // TODO: Remove all degenerate cells here.
+
+  // TODO: fix forward/backward facing problems.
+
+  // TODO: Find neighbors
+  vector<list<unsigned long> > edgemap(points_.size());
+  for (i=0; i< cells_.size(); i++)
+  {
+    edgemap[cells_[i]].push_back(i);
+  }
+
+
+  for (i=0; i<edgemap.size(); i++)
+  {
+    list<int>::iterator li1 = edgemap[i].begin();
+
+    while (li1 != edgemap[i].end())
+    {
+      int e1 = *li1;
+      li1++;
+
+      list<int>::iterator li2 = li1;
+      while (li2 != edgemap[i].end())
+      {
+	int e2 = *li2;
+	li2++;
+	
+	if ( faces_[next(e1)] == faces_[prev(e2)])
+	{
+	  neighbors_[e1] = e2;
+	  neighbors_[e2] = e1;
+	}
+      }
+    }
+  }
+
+
+  // Remove unused points.
+  // Reuse mapping array, edgemap array.
+  vector<Point> dups(points_);
+  points_.clear();
+
+  for (i=0; i<dups.size(); i++)
+  {
+    if(edgemap[i].begin() != edgemap[i].end())
+    {
+      points_.push_back(dups[i]);
+      mapping[i] = points_.size() - 1;
+    }
+  }
+
+  // Repair faces.
+  for (i=0; i < cells_.size(); i++)
+  {
+    cells_[i] = mapping[i];
+  }
+}
+#endif
+
 
 
 } // namespace SCIRun
