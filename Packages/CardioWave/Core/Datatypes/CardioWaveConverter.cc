@@ -317,11 +317,30 @@ bool CardioWaveConverter::cwFileTOsciMatrix(std::string filename,MatrixHandle& m
             if (coef[s] != 0.0)
             {
               k = rr[r]+t[r];
-              cc[k] = jcoef[s];
+              cc[k] = jcoef[s]-1;
               d[k] = coef[s];
+              t[r]++;
             }
           }
-      
+        
+        double td;
+        int tcc;
+        
+        for (int q=0;q<nrows;q++)
+        {
+          for (int r=rr[q];r<rr[q+1];r++)
+          {
+            k = r;
+            for (int v=r+1; v<rr[q+1];v++) if (cc[v] < cc[k]) {k = v;} 
+            td = d[r];
+            tcc = cc[r];
+            d[r] = d[k];
+            cc[r] = cc[k];
+            d[k] = td;
+            cc[k] = tcc;
+          }
+        }
+         
         SparseRowMatrix *srm = scinew SparseRowMatrix(nrows,ncols,rr,cc,nnz,d);
   
         if (srm == 0)
@@ -549,7 +568,361 @@ bool CardioWaveConverter::cwFileTOsciMatrix(std::string filename,MatrixHandle& m
 
 bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename,ProgressReporter *pr,std::string filetype)
 {
-  posterror(pr,"This function has not yet been implemented");
+  if (filetype == "")
+  {
+    if (mh->is_sparse()) filetype = "spr"; else filetype = "vec";
+  }
+  
+  if ((filetype != "spr")&&(filetype != "vec")&&(filetype != "ivec")&&(filetype != "bvec"))
+  {
+    posterror(pr,"Specified file type is not supported");
+    return(false);
+  }
+  
+  if (filetype == "bvec")
+  {
+ 
+    if (mh->is_sparse())
+    {
+      posterror(pr,"Data is a sparse matrix and not a column vector as needed to export data");
+      return(false);    
+    }
+         
+    double *data = mh->get_data_pointer();
+    size_t size =  mh->get_data_size();
+    
+    if ((data == 0)||(size==0))
+    {
+      posterror(pr,"No data is stored in matrix, stopping due to empty matrix condition");
+      return(false);
+    }
+    
+    if (!((mh->nrows()==1)||(mh->ncols()==1)))
+    {
+      posterror(pr,"Matrix is no row/column vector");
+      return(false);  
+    }
+     
+    std::string header('\0',static_cast<size_t>(128));
+    header[0] = 'B';
+    header[1] = 'B';
+    header[2] = '1'; // We do not yet support byte vectors of size 2
+    header[3] = ':';
+    header[4] = ' ';
+    if (byteswapmachine() == true) header[1] = 'L';
+    
+    std::ostringstream oss;
+    oss << size;
+    std::string ssize = oss.str();
+    header.replace(5,ssize.size(),ssize);
+    
+    // OK we created a header
+    
+    char *buffer = scinew char[size];
+    
+    for (int p=0;p<size;p++) buffer[p] = static_cast<char>(data[p]);
+    
+    FILE *fid =fopen(filename.c_str(),"w");
+    if (fid == 0)
+    {
+      posterror(pr,"Could not open file");
+      delete[] buffer;
+      return(false);    
+    }
+    
+    if ( fwrite(static_cast<void *>(&(header[0])),1,128,fid) != 128 )
+    {
+       posterror(pr,"Could not write to file");
+       fclose(fid);
+       delete[] buffer;
+       return(false);      
+    }
+
+    if ( fwrite(static_cast<void *>(buffer),1,size,fid) != size )
+    {
+       posterror(pr,"Could not write to file");
+       fclose(fid);
+       delete[] buffer;
+       return(false);      
+    }
+    
+    delete[] buffer;
+    fclose(fid);
+    return(true);
+  }
+  
+  if (filetype == "ivec")
+  {
+
+    if (mh->is_sparse())
+    {
+      posterror(pr,"Data is a sparse matrix and not a column vector as needed to export data");
+      return(false);    
+    }
+       
+    double *data = mh->get_data_pointer();
+    size_t size =  mh->get_data_size();
+    
+    if ((data == 0)||(size==0))
+    {
+      posterror(pr,"No data is stored in matrix, stopping due to empty matrix condition");
+      return(false);
+    }
+    
+    if (!((mh->nrows()==1)||(mh->ncols()==1)))
+    {
+      posterror(pr,"Matrix is no row/column vector");
+      return(false);  
+    }
+     
+    std::string header('\0',static_cast<size_t>(128));
+    header[0] = 'I';
+    header[1] = 'B';
+    header[2] = '4'; // We do not yet support byte vectors of size 2
+    header[3] = ':';
+    header[4] = ' ';
+    if (byteswapmachine() == true) header[1] = 'L';
+    
+    std::ostringstream oss;
+    oss << size;
+    std::string ssize = oss.str();
+    header.replace(5,ssize.size(),ssize);
+    
+    // OK we created a header
+    
+    int *buffer = scinew int[size];
+    
+    for (int p=0;p<size;p++) buffer[p] = static_cast<int>(data[p]);
+    
+    FILE *fid =fopen(filename.c_str(),"w");
+    if (fid == 0)
+    {
+      posterror(pr,"Could not open file");
+      delete[] buffer;
+      return(false);    
+    }
+    
+    if ( fwrite(static_cast<void *>(&(header[0])),1,128,fid) != 128 )
+    {
+       posterror(pr,"Could not write to file");
+       fclose(fid);
+       delete[] buffer;
+       return(false);      
+    }
+
+    if ( fwrite(static_cast<void *>(buffer),4,size,fid) != size )
+    {
+       posterror(pr,"Could not write to file");
+       fclose(fid);
+       delete[] buffer;
+       return(false);      
+    }
+    
+    delete[] buffer;
+    fclose(fid);
+    return(true);
+  }
+  
+  if (filetype == "vec")
+  {
+   
+    if (mh->is_sparse())
+    {
+      posterror(pr,"Data is a sparse matrix and not a column vector as needed to export data");
+      return(false);    
+    }
+   
+    double* data = mh->get_data_pointer();
+    size_t size =  mh->get_data_size();
+    
+    if ((data == 0)||(size==0))
+    {
+      posterror(pr,"No data is stored in matrix, stopping due to empty matrix condition");
+      return(false);
+    }
+    
+    if (!((mh->nrows()==1)||(mh->ncols()==1)))
+    {
+      posterror(pr,"Matrix is no row/column vector");
+      return(false);  
+    }
+     
+    std::string header('\0',static_cast<size_t>(128));
+    header[0] = 'B';
+    header[1] = 'B';
+    header[2] = '8'; // We do not yet support byte vectors of size 2
+    header[3] = ':';
+    header[4] = ' ';
+    if (byteswapmachine() == true) header[1] = 'L';
+    
+    std::ostringstream oss;
+    oss << size;
+    std::string ssize = oss.str();
+    header.replace(5,ssize.size(),ssize);
+    
+    // OK we created a header
+  
+    FILE *fid =fopen(filename.c_str(),"w");
+    if (fid == 0)
+    {
+      posterror(pr,"Could not open file");
+      return(false);    
+    }
+    
+    if ( fwrite(static_cast<void *>(&(header[0])),1,128,fid) != 128 )
+    {
+       posterror(pr,"Could not write to file");
+       fclose(fid);
+       return(false);      
+    }
+
+    if ( fwrite(static_cast<void *>(data),8,size,fid) != size )
+    {
+       posterror(pr,"Could not write to file");
+       fclose(fid);
+       return(false);      
+    }
+    
+    fclose(fid);
+    return(true);
+  }
+  
+  
+  if (filetype == "spr")
+  {
+    if (!(mh->is_sparse()))
+    {
+       posterror(pr,"SPR fileformat is for sparse matrices only");
+       return(false);       
+    }
+    
+    // Determine bandwith
+    
+    SparseRowMatrix* sp = dynamic_cast<SparseRowMatrix *>(mh.get_rep()); 
+    
+    int nz = 1;
+    int bwp = 0;
+    int bwn = 0;
+    
+    int *rr = sp->rows;
+    int *cc = sp->columns;
+    double *d = sp->a;
+    int nnz = sp->nnz;
+    int nrows = sp->nrows();
+    int ncols = sp->ncols();
+    
+    int diag = 0;
+    
+    for (int p = 0; p < nrows; p++)
+    {
+      diag = 1;
+      for (int r=rr[p];r<rr[p+1];r++)
+      {
+        if (cc[r] == p) diag = 0;
+        if (bwp < (cc[r]-p)) bwp = cc[r]-p;
+        if (bwn > (cc[r]-p)) bwn = cc[r]-p;
+      }
+      if ((rr[p+1]-rr[p]+diag)<nz) nz = (rr[p+1]-rr[p])+diag;
+    }
+    
+    std::string header('\0',static_cast<size_t>(128));
+    header[0] = 'S';
+    header[1] = 'B';
+    header[2] = '8'; // We do not yet support byte vectors of size 2
+    header[3] = '4';
+    header[4] = ':';
+    header[5] = ' ';
+    if (byteswapmachine() == true) header[1] = 'L';
+    
+    std::ostringstream oss;
+    oss << nrows << " " << ncols << " " << bwp << " " << bwn << " " << "1" << " " << nz;
+    
+    std::string ssize = oss.str();
+    header.replace(6,ssize.size(),ssize);
+    
+    double *coef = scinew double[nz*nrows];
+    int *jcoef = scinew int[nz*nrows];
+    
+    int s;
+    for (int p = 0; p < nrows; p++)
+    {
+      for (int r = 0; r < nz; r++)
+      {
+        coef[p+r*nrows] = 0.0;
+        jcoef[p+r*nrows] =  p + 1;
+      }
+    }
+
+    for (int p = 0; p < nrows; p++)
+    {
+      for (int r = rr[p]; r < rr[p+1]; r++)
+      {
+        s = cc[r];
+        if (s == p)
+        {
+          coef[s] = d[r];
+        }
+        else
+        {
+          for (int t=1; t < nz; t++)
+          {
+            if (jcoef[s+t*nrows] == p+1)
+            {
+              jcoef[s+t*nrows] = s+1;
+              coef[s+t*nrows] = d[r];
+              break;
+            }
+          }  
+        }
+      }
+    }
+    
+  // OK we created a header
+  
+    FILE *fid =fopen(filename.c_str(),"w");
+    if (fid == 0)
+    {
+      posterror(pr,"Could not open file");
+      delete[] coef;
+      delete[] jcoef;
+      return(false);    
+    }
+    
+    if ( fwrite(static_cast<void *>(&(header[0])),1,128,fid) != 128 )
+    {
+       posterror(pr,"Could not write to file");
+       fclose(fid);
+       delete[] coef;
+       delete[] jcoef;
+       return(false);      
+    }
+
+    if ( fwrite(static_cast<void *>(jcoef),4,nrows*nz,fid) != nrows*nz )
+    {
+       posterror(pr,"Could not write to file");
+       delete[] coef;
+       delete[] jcoef;
+       fclose(fid);
+       return(false);      
+    }
+
+    if ( fwrite(static_cast<void *>(coef),8,nrows*nz,fid) != nrows*nz )
+    {
+       posterror(pr,"Could not write to file");
+       delete[] coef;
+       delete[] jcoef;
+       fclose(fid);
+       return(false);      
+    }
+    
+    fclose(fid);
+    return(true);
+    
+  }
+  
+  
+  
+  return(false);
 }
 
 
