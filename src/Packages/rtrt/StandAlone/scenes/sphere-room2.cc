@@ -29,8 +29,8 @@ using namespace std;
 #define DOORWIDTH              1.5
 #define DOORHEIGHT             2.3
 #define DOOROFFSET             5.25
-#define ROOMHEIGHT             30
 #define ROOMFLOOR              .5
+#define ROOMHEIGHT             30+ROOMFLOOR
 #define ROOMRADIUS             50
 #define ROOMOFFSET             4
 #define PORTALOFFSET           .001
