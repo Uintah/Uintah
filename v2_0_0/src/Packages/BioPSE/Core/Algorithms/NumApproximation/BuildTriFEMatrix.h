@@ -24,6 +24,9 @@
  *   University of Utah
  *   March 2001   
  *  Copyright (C) 2001 SCI Group
+ *
+ *  Modified (adapted from BuildTetFEMatrix.h):
+ *   Lorena Kreda, Northeastern University, October 2003
  */
 
 //#include <Dataflow/Network/Module.h>
@@ -44,13 +47,16 @@ using namespace SCIRun;
 
 class BuildTriFEMatrix;
 typedef LockingHandle<TriSurfField<int> >   TriSurfFieldIntHandle;
+typedef LockingHandle<TriSurfField<Tensor> >   TriSurfFieldTensorHandle;
 typedef LockingHandle<BuildTriFEMatrix>   BuildTriFEMatrixHandle;
 
 class BuildTriFEMatrix: public Datatype {
   
   //! Private data members
-  TriSurfFieldIntHandle                 hField_;
-  TriSurfMeshHandle                hMesh_;
+  TriSurfFieldIntHandle           hFieldInt_;
+  TriSurfFieldTensorHandle        hFieldTensor_;
+  bool                            index_based_;
+  TriSurfMeshHandle               hMesh_;
   MatrixHandle&                   hA_;
   SparseRowMatrix*                pA_;
   int                             np_;
@@ -72,12 +78,17 @@ class BuildTriFEMatrix: public Datatype {
 public:
    //! Constructor
   BuildTriFEMatrix(TriSurfFieldIntHandle,
-		vector<pair<string, Tensor> >&,
-		MatrixHandle&, 
-		int, double);
+		   TriSurfFieldTensorHandle,
+		   bool index_based,
+		   vector<pair<string, Tensor> >&,
+		   MatrixHandle&, 
+		   int, double);
   static bool build_FEMatrix(TriSurfFieldIntHandle,
+			     TriSurfFieldTensorHandle,
+			     bool,
 			     vector<pair<string, Tensor> > &,
-			     MatrixHandle&, double);
+			     MatrixHandle&, double,
+			     int num_procs = -1);
   //! Destuctor
   virtual ~BuildTriFEMatrix();
   virtual void io(Piostream&);

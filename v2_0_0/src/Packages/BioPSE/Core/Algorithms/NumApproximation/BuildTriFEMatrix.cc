@@ -24,6 +24,9 @@
  *   University of Utah
  *   March 2001   
  *  Copyright (C) 2001 SCI Group
+ *
+ *  Modified (adapted from BuildTetFEMatrix.cc):
+ *   Lorena Kreda, Northeastern University, October 2003
  */
 
 #include <Core/Datatypes/Mesh.h>
@@ -39,12 +42,16 @@ using namespace SCIRun;
 
 //! Constructor
 // -- it's private, no occasional object creation
-BuildTriFEMatrix::BuildTriFEMatrix(TriSurfFieldIntHandle hField,
-			     vector<pair<string, Tensor> >& tens,
-			     MatrixHandle& hA, 
-			     int np, double unitsScale):
+BuildTriFEMatrix::BuildTriFEMatrix(TriSurfFieldIntHandle hFieldInt,
+				   TriSurfFieldTensorHandle hFieldTensor,
+				   bool index_based,
+				   vector<pair<string, Tensor> >& tens,
+				   MatrixHandle& hA, 
+				   int np, double unitsScale):
   // ---------------------------------------------
-  hField_(hField),
+  hFieldInt_(hFieldInt),
+  hFieldTensor_(hFieldTensor),
+  index_based_(index_based),
   hA_(hA),
   np_(np),
   barrier_("BuildTriFEMatrix barrier"),
@@ -52,17 +59,22 @@ BuildTriFEMatrix::BuildTriFEMatrix(TriSurfFieldIntHandle hField,
   tens_(tens),
   unitsScale_(unitsScale)
 {
-  hMesh_=hField->get_typed_mesh();
+  if (index_based_) hMesh_ = hFieldInt->get_typed_mesh();
+  else hMesh_ = hFieldTensor->get_typed_mesh();
+
   TriSurfMesh::Node::size_type nsize; hMesh_->size(nsize);
   unsigned int nNodes = nsize;
   rows_ = scinew int[nNodes+1];
-  cerr << "unitsScale_ = "<< unitsScale_ << "\n";
+//  cerr << "unitsScale_ = "<< unitsScale_ << "\n";
 }
 BuildTriFEMatrix::~BuildTriFEMatrix(){}
 
-bool BuildTriFEMatrix::build_FEMatrix(TriSurfFieldIntHandle hField,
-				   vector<pair<string, Tensor> >& tens,
-				   MatrixHandle& hA, double unitsScale)
+bool BuildTriFEMatrix::build_FEMatrix(TriSurfFieldIntHandle hFieldInt,
+				      TriSurfFieldTensorHandle hFieldTensor,
+				      bool index_based,
+				      vector<pair<string, Tensor> >& tens,
+				      MatrixHandle& hA, double unitsScale,
+				      int num_procs)
   //------------------------------------------------
 {
   int np=Thread::numProcessors();
@@ -74,10 +86,13 @@ bool BuildTriFEMatrix::build_FEMatrix(TriSurfFieldIntHandle hField,
     }
   }
 
+  if (num_procs > 0) { np = num_procs; }
+
   hA = 0;
 
   BuildTriFEMatrixHandle hMaker =
-    new BuildTriFEMatrix(hField, tens, hA, np, unitsScale);
+    new BuildTriFEMatrix(hFieldInt, hFieldTensor, index_based, tens, 
+			 hA, np, unitsScale);
   cerr << "SetupFEMatrix: number of threads being used = " << np << endl;
 
   Thread::parallel(Parallel<BuildTriFEMatrix>(hMaker.get_rep(), 
@@ -133,6 +148,7 @@ void BuildTriFEMatrix::parallel(int proc)
       mycols.add(neib_nodes[jj]);
     }
   }
+
   colIdx_[proc]=mycols.size();
   
   //! check point
@@ -207,14 +223,18 @@ void BuildTriFEMatrix::parallel(int proc)
   barrier_.wait(np_);
 }
 
-void BuildTriFEMatrix::build_local_matrix(double lcl_a[3][3], TriSurfMesh::Face::index_type f_ind)
+void BuildTriFEMatrix::build_local_matrix(double lcl_a[3][3], 
+					  TriSurfMesh::Face::index_type f_ind)
 {
   Vector grad1, grad2, grad3;
   double area = hMesh_->get_gradient_basis(f_ind, grad1, grad2, grad3);
  
-  int  ind = hField_->value(f_ind);
-  double (&el_cond)[3][3] = tens_[ind].second.mat_;
- 
+  typedef double onerow[3]; // This 'hack' is necessary to compile under IRIX CC
+  onerow *el_cond;
+
+  if (index_based_) el_cond = tens_[hFieldInt_->value(f_ind)].second.mat_;
+  else el_cond = hFieldTensor_->value(f_ind).mat_;
+
   if(fabs(area) < 1.e-10){
     for(int i = 0; i<3; i++)
       for(int j = 0; j<3; j++)
