@@ -1,22 +1,10 @@
 #include <teem/nrrd.h>
 #include <teem/ell.h>
 
-//#define USE_MTL 1
-
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>
-#ifdef USE_MTL
-#  include <complex>
-#endif
 #include <sgi_stl_warnings_on.h>
-
-#ifdef USE_MTL
-#  include <mtl/mtl2lapack.h>
-#  include <mtl/dense1D.h>
-#  include <mtl/utils.h>
-using namespace mtl2lapack;
-#endif
 
 extern "C" {
   void dsyev_(const char& jobz, const char& uplo,
@@ -36,6 +24,7 @@ void usage(char *me, const char *unknown = 0) {
   printf("-input  <filename>\n");
   printf("-output <filename>\n");
   printf("-numbases <int>\n");
+  printf("-usegk\n");
 
   if (unknown)
     exit(1);
@@ -49,6 +38,7 @@ int main(int argc, char *argv[]) {
   // -1 defaults to all
   int num_bases = 0;
   int num_channels;
+  bool usegk = false;
 
   if (argc < 2) {
     usage(me);
@@ -63,6 +53,8 @@ int main(int argc, char *argv[]) {
       outfilename_base = argv[++i];
     } else if (arg == "-numbases" ) {
       num_bases = atoi(argv[++i]);
+    } else if (arg == "-usegk" ) {
+      usegk = true;
     } else {
       usage(me, arg.c_str());
     }
@@ -86,14 +78,11 @@ int main(int argc, char *argv[]) {
   
   num_channels = nin->axis[0].size;
 
-#ifndef USE_MTL
-  // verify size of axis[0]
-  if (num_channels != 3) {
+  if (usegk && num_channels != 3) {
     cerr << me << ":  size of axis[0] is not equal to 3" << endl;
     exit(2);
   }
-#endif
-
+  
   // Determine the number of eigen thingies to use
   if (num_bases < 1)
     // Use all of them
@@ -188,6 +177,7 @@ int main(int argc, char *argv[]) {
   nrrdEmpty(slab);
   nrrdEmpty(pixel);
 
+  if (0)
   {
     double *cov_data = (double*)(cov->data);
     for(int c = 0; c < cov->axis[1].size; c++)
@@ -213,6 +203,7 @@ int main(int argc, char *argv[]) {
 	}
   }
 
+  if (0)
   {
     cout << "After minux mean\n";
     double *cov_data = (double*)(cov->data);
@@ -231,24 +222,21 @@ int main(int argc, char *argv[]) {
 
   // Compute eigen values/vectors
 
-#ifndef USE_MTL
-  // Here's where the general solution diverges to the RGB case.
-  double eval[3];
-  double *evec_data = new double[9];
-  int roots = ell_3m_eigensolve_d(eval, evec_data, (double*)(cov->data), 1);
-  if (roots != ell_cubic_root_three) {
-    cerr << me << "Something with the eighen solve went haywire.  Did not get three roots but "<<roots<<" roots.\n";
-    exit(2);
-  }
-
-  delete[] evec_data;
-
-  cout << "Eigen values are ["<<eval[0]<<", "<<eval[1]<<", "<<eval[2]<<"]\n";
-
+  double *eval = new double[num_channels];
   double *cov_data = (double*)(cov->data);
-  {
+  double *evec_data = 0;
+
+  if (usegk) {
+    // Here's where the general solution diverges to the RGB case.
+    evec_data = new double[9];
+    int roots = ell_3m_eigensolve_d(eval, evec_data, (double*)(cov->data), 1);
+    if (roots != ell_cubic_root_three) {
+      cerr << me << "Something with the eighen solve went haywire.  Did not get three roots but "<<roots<<" roots.\n";
+      exit(2);
+    }
+  } else {
     const char jobz = 'V';
-    const char uplo = 'U';
+    const char uplo = 'L';
     const int N = num_channels;
     const int lda = N;
     const int lwork = 3*N-1;
@@ -256,41 +244,17 @@ int main(int argc, char *argv[]) {
     int info;
     dsyev_(jobz, uplo, N, cov_data, lda, eval, work, lwork, info);
     delete[] work;
-    cout << "info  = "<<info<<"\n";
+    if (info != 0) {
+      cout << "Eigen solver did not converge.\n";
+      cout << "info  = "<<info<<"\n";
+      exit(2);
+    }
+    evec_data = cov_data;
   }
 
   cout << "Eigen values are ["<<eval[0]<<", "<<eval[1]<<", "<<eval[2]<<"]\n";
-
-  evec_data = cov_data;
+  delete[] eval;
   
-#else
-  // ... with MTL
-  double *cov_data=(double*)(cov->data);
-  double *evec_data = new double[2*num_channels * num_channels];
-  const int N=num_channels;
-  lapack_matrix<double,external>::type A(cov_data, N, N);
-  lapack_matrix<double,external>::type evec(evec_data, 2*N, N);
-  lapack_matrix<double,external>::type unused((double*)0, N, N);
-  mtl::dense1D< std::complex<double> > eval_complex(N);
-  mtl::print_all_matrix(A);
-  
-  // Compute the eigenvalues and right eigenvectors of A.
-  int info;
-  info = geev(GEEV_CALC_RIGHT, A, eval_complex, unused, evec);
-  if (info > 0) {
-    cout << "QR failed to converge, INFO = " << info << endl;
-    return 0;
-  }
-  
-  // Print the eigenvalues and eigenvectors.
-  cout << "eigenvalues" << endl;
-  mtl::print_vector(eval_complex);
-  
-  cout << "eigenvectors" << endl;
-  mtl::print_all_matrix(evec);
-  
-#endif
-
   // Cull our eigen vectors
   Nrrd *transform = nrrdNew();
   if (nrrdAlloc(transform, nrrdTypeFloat, 2, num_channels, num_bases)) {
@@ -302,25 +266,36 @@ int main(int argc, char *argv[]) {
   {
     float *tdata = (float*)(transform->data);
     double *edata = evec_data;
-    for(int channel = 0; channel < num_channels; channel++) {
+    if (usegk) {
       for (int basis = 0; basis < num_bases; basis++) {
-	*tdata = *edata;
-	tdata++;
-	edata++;
+	for(int channel = 0; channel < num_channels; channel++) {
+	  *tdata = edata[basis * num_channels + channel];
+	  tdata++;
+	}
+      }
+    } else {
+      int basis_start = num_channels - 1;
+      int basis_end = basis_start - num_bases;
+      for (int basis = basis_start; basis > basis_end; basis--) {
+	for(int channel = 0; channel < num_channels; channel++) {
+	  *tdata = edata[basis * num_channels + channel];
+	  tdata++;
+	}
       }
     }
 
     cout << "\ntransform matrix\n";
     tdata = (float*)(transform->data);
-    for(int c = 0; c < transform->axis[1].size; c++)
+    for(int c = 0; c < num_bases; c++)
       {
 	cout << "[";
-	for(int r = 0; r < transform->axis[0].size; r++)
+	for(int r = 0; r < num_channels; r++)
 	  {
-	    cout << tdata[c*transform->axis[0].size + r] << ", ";
+	    cout << tdata[c*num_channels + r] << ", ";
 	  }
 	cout << "]\n";
       }
+    cout << "\n\n";
   }
   
   // Compute our basis textures
@@ -358,10 +333,10 @@ int main(int argc, char *argv[]) {
 	// Now do transform * pixel_data
 	float *tdata = (float*)(transform->data);
 
-	for(int c = 0; c < transform->axis[1].size; c++)
-	  for(int r = 0; r < transform->axis[0].size; r++)
+	for(int c = 0; c < num_bases; c++)
+	  for(int r = 0; r < num_channels; r++)
 	    {
-	      btdata[c] += tdata[c*transform->axis[0].size+r]*pixel_data[r];
+	      btdata[c] += tdata[c*num_channels+r]*pixel_data[r];
 	    }
 	btdata += num_bases;
       }
@@ -388,10 +363,10 @@ int main(int argc, char *argv[]) {
       // Now do transform_transpose * btdata
       float *tdata = (float*)(transform->data);
 	  
-      for(int r = 0; r < transform->axis[0].size; r++)
-	for(int c = 0; c < transform->axis[1].size; c++)
+      for(int r = 0; r < num_channels; r++)
+	for(int c = 0; c < num_bases; c++)
 	  {
-	    outdata[r] += tdata[c*transform->axis[0].size+r] * btdata[c];
+	    outdata[r] += tdata[c*num_channels+r] * btdata[c];
 	  }
 
       // Add the mean
