@@ -1275,7 +1275,7 @@ PrismVolMesh::compute_grid()
   BBox bb = get_bounding_box();
   if (!bb.valid()) { grid_lock_.unlock(); return; }
   // cubed root of number of cells to get a subdivision ballpark
-  const double one_third = 1.L/3.L;
+  const double one_third = 1.L/6.L;
   Cell::size_type csize;  size(csize);
   const int s = ((int)ceil(pow((double)csize , one_third))) / 2 + 2;
   const Vector cell_epsilon = bb.diagonal() * (0.01 / s);
