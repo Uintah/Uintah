@@ -1,6 +1,15 @@
+
+
+#ifdef USE_VAMPIR
+
 extern "C" {
 #include <VT.h>
+extern void VTsetup();
 }
+#else
+#define VT_end(x)
+#define VT_begin(x)
+#endif
 
 #define VT_SEND_PARTICLES 100
 #define VT_RECV_PARTICLES 101
@@ -12,4 +21,3 @@ extern "C" {
 #define VT_PERFORM_TASK 201
 #define VT_EXECUTE 200
 
-extern void VTsetup();
