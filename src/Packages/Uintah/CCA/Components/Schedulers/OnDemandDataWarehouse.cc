@@ -1649,8 +1649,10 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
    }
    IntVector l, h;
    if(patch)
+     // save with the boundary layer, otherwise restarting from the DataArchive
+     // won't work.
      patch->computeVariableExtents(label->typeDescription()->getType(),
-				   IntVector(0,0,0), Ghost::None, 0,
+				   label->getBoundaryLayer(), Ghost::None, 0,
 				   l, h);
    else
      l=h=IntVector(-1,-1,-1);
@@ -2064,7 +2066,7 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
 #endif
   
   var.allocate(superLowIndex, superHighIndex);
-  
+
   Patch::selectType encompassedPatches;
   if (requiredSuperLow == lowIndex && requiredSuperHigh == highIndex) {
     // only encompassing the patch currently being allocated
@@ -2236,13 +2238,23 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 
           // or else the readLock in haveParticleSubset will hang
           d_lock.writeUnlock();
+          ParticleSubset* subset;
           if (!haveParticleSubset(matl, copyPatch)) {
             ParticleSubset* oldsubset = fromDW->getParticleSubset(matl, patch);
-            createParticleSubset(oldsubset->numParticles(), matl, copyPatch);
+            subset = createParticleSubset(oldsubset->numParticles(), matl, copyPatch);
           }
+          else
+            subset = getParticleSubset(matl, copyPatch);
           d_lock.writeLock();
 	  ParticleVariableBase* v = fromDW->d_particleDB.get(var, matl, patch);
-	  d_particleDB.put(var, matl, copyPatch, v->clone(), replace);
+          if (patch == copyPatch)
+            d_particleDB.put(var, matl, copyPatch, v->clone(), replace);
+          else {
+            ParticleVariableBase* newv = v->cloneType();
+            newv->copyPointer(*v);
+            newv->setParticleSubset(subset);
+            d_particleDB.put(var, matl, copyPatch, newv, replace);
+          }
 	}
 	break;
       case TypeDescription::PerPatch:
