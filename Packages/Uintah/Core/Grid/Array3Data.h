@@ -71,6 +71,13 @@ WARNING
 	return d_data;
       }
 
+      inline T*** get3DPointer() {
+	return d_data3;
+      }
+      inline T*** get3DPointer() const {
+	return d_data3;
+      }
+
    private:
       T*    d_data;
       T***  d_data3;
