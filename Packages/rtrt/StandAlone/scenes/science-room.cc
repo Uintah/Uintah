@@ -1,5 +1,6 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Grid.h>
+#include <Packages/rtrt/Core/HierarchicalGrid.h>
 #include <Packages/rtrt/Core/Disc.h>
 #include <Packages/rtrt/Core/Ring.h>
 #include <Packages/rtrt/Core/Group.h>
@@ -62,7 +63,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 				   Color(0.5,0.6,0.6),
 				   Color(0.4,0.55,0.52),
 				   Color(0.35,0.45,0.42));
-  marble1->my_lights.add(new Light(Point(-7.5,7.5,3.9), Color(.7,.4,.4),0));
+//  marble1->my_lights.add(new Light(Point(-7.5,7.5,3.9), Color(.7,.4,.4),0));
   
   Material* marble2=new CrowMarble(7.5,
 				   Vector(-1,3,0),
@@ -146,60 +147,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   double i2m = 1./36.;             // convert inches to meters
   Point center(-8, 8, 0);
 
-#if 0
-  // N/S horizontal bar to support glass
-  table->add(new Box(silver, center+Vector(-1,-24,31.85)*i2m, 
-		     center+Vector(1,24,32.15)*i2m));
-  
-  // E/W horizontal bar to support glass
-  table->add(new Box(silver, center+Vector(-24,-1,31.85)*i2m,
-		     center+Vector(24,1,32.15)*i2m));
-		     
-  
-  // connecting circle for glass supports
-  table->add(new Cylinder(silver, center+Vector(0,0,32.15)*i2m, 
-			  center+Vector(0,0,31.85)*i2m, 3*i2m));
-  table->add(new Disc(silver, center+Vector(0,0,32.15)*i2m, 
-			  Vector(0,0,1), 3*i2m));
-  table->add(new Disc(silver, center+Vector(0,0,31.85)*i2m, 
-			  Vector(0,0,-1), 3*i2m));
-
-  // glass
-  table->add(new Cylinder(air_to_glass, center+Vector(0,0,32.151)*i2m,
-			  center+Vector(0,0,32.451)*i2m, 23.75*i2m));
-  table->add(new Disc(air_to_glass, center+Vector(0,0,32.451)*i2m,
-		      Vector(0,0,1), 23.75*i2m));
-  table->add(new Disc(air_to_glass, center+Vector(0,0,32.151)*i2m,
-		      Vector(0,0,-1), 23.75*i2m));
-
-  // rim
-  table->add(new Cylinder(silver, center+Vector(0,0,32.151)*i2m,
-			  center+Vector(0,0,32.451)*i2m, 23.80*i2m));
-  table->add(new Cylinder(silver, center+Vector(0,0,32.151)*i2m,
-			  center+Vector(0,0,32.451)*i2m, 24.80*i2m));
-  table->add(new Ring(silver, center+Vector(0,0,32.151)*i2m, Vector(0,0,-1),
-		      23.80*i2m, 1.*i2m));
-  table->add(new Ring(silver, center+Vector(0,0,32.451)*i2m, Vector(0,0,1),
-		      23.80*i2m, 1.*i2m));
-
-  // N leg
-  table->add(new Box(silver, center+Vector(22.8,-1,0)*i2m, 
-		     center+Vector(24.8,1,31.672)*i2m));
-  
-  // S leg
-  table->add(new Box(silver, center+Vector(-24.8,-1,0)*i2m, 
-		     center+Vector(-22.8,1,31.672)*i2m));
-  
-  // E leg
-  table->add(new Box(silver, center+Vector(-1,22.8,0)*i2m, 
-		     center+Vector(1,24.8,31.672)*i2m));
-  
-  // W leg
-  table->add(new Box(silver, center+Vector(-1,-24.8,0)*i2m, 
-		     center+Vector(1,-22.8,31.672)*i2m));
-
-#endif
-  
   // table base
   table->add(new Cylinder(silver, center+Vector(0,0,0.01)*i2m,
 			  center+Vector(0,0,24)*i2m, 12*i2m));
@@ -227,26 +174,45 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   g->add(east_wall);
   g->add(table);
 
+  Transform room_trans;
+  room_trans.pre_translate(center.vector());
+
+  string pathname("/usr/sci/data/Geometry/models/science-room/");
+  Array1<string> names;
+  names.add(string("386dx"));
+  names.add(string("3dglasses1"));
+  names.add(string("3dglasses2"));
+  names.add(string("abacus"));
+  names.add(string("coffee-mug2"));
+  names.add(string("coffee-mug3"));
+  names.add(string("coffee-mug4"));
+  names.add(string("coffee-mug5"));
+  names.add(string("corbu-float1"));
+  names.add(string("corbu-float2"));
+  names.add(string("corbu-float3"));
+  names.add(string("corbu-float4"));
+  names.add(string("corbu-float5"));
+  names.add(string("counterbase"));
+  names.add(string("countertop"));
+  names.add(string("end-table1"));
+  names.add(string("end-table2"));
+  names.add(string("end-table3"));
+  names.add(string("end-table4"));
+  names.add(string("end-table5"));
+  names.add(string("futuristic-curio1"));
+  names.add(string("futuristic-curio2"));
+  names.add(string("hmd"));
+  names.add(string("microscope"));
+  names.add(string("molecule"));
+  names.add(string("plant-01"));
+  
   Array1<Material *> matls;
-  string env_map;
-  Transform corbusier_trans;
-
-  // first, get it centered at the origin (in x and y), and scale it
-  corbusier_trans.pre_scale(Vector(0.007, 0.007, 0.007));
-  corbusier_trans.pre_translate(Vector(0.5,0.2,0));
-
-  // now rotate/translate it to the right angle/position
-  for (int i=0; i<5; i++) {
-    Transform t(corbusier_trans);
-    double rad=(65+35*i)*(M_PI/180.);
-    t.pre_rotate(rad, Vector(0,0,1));
-    t.pre_translate(center.vector()+Vector(cos(rad),sin(rad),0)*2.9);
-
-//    if (!readASEFile("/usr/sci/data/Geometry/models/corbusier.ASE", t, g, matls, env_map)) {
-    if (!readObjFile("/usr/sci/data/Geometry/models/corbu-ch.obj",
-		     "/usr/sci/data/Geometry/models/cc.mtl", t, g)) {
+  for (int i=0; i<names.size(); i++) {
+    cerr << "Reading: "<<names[i]<<"\n";
+    string objname(pathname+names[i]+string(".obj"));
+    string mtlname(pathname+names[i]+string(".mtl"));
+    if (!readObjFile(objname, mtlname, room_trans, g))
       exit(0);
-    }
   }
 
   Color cdown(0.1, 0.1, 0.1);
@@ -254,11 +220,12 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(0.3, 0.3, 0.3);
-  Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane, 0.5);
+  Scene *scene = new Scene(new HierarchicalGrid(g, 8, 8, 8, 20, 20, 5),
+			   cam, bgcolor, cdown, cup, groundplane, 0.3);
 
-  scene->select_shadow_mode( No_Shadows );
+  scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
-  scene->add_light(new Light(Point(-8, 8, 3.9), Color(.8,.8,.8), 0));
+  scene->add_light(new Light(Point(-8, 8, 3.9), Color(.7,.7,.7), 0));
   scene->animate=false;
   return scene;
 }
