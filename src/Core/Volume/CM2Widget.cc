@@ -1497,11 +1497,9 @@ PaintCM2Widget::io(Piostream &stream)
 
 PaintCM2Widget::PaintCM2Widget() : 
   CM2Widget(),
-  strokes_(),
-  pixels_(256, 256, 4)
+  strokes_()
 {
   name_ = "Paint";
-  pixels_.initialize(0.0);
 }
 
 PaintCM2Widget::~PaintCM2Widget()
@@ -1511,7 +1509,6 @@ PaintCM2Widget::PaintCM2Widget(PaintCM2Widget& copy) :
   CM2Widget(copy),
   strokes_(copy.strokes_)
 {
-  pixels_.copy(copy.pixels_);
 }
 
 CM2Widget*
@@ -1524,7 +1521,7 @@ void
 PaintCM2Widget::rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer)
 {
   if(!onState_) return;
-
+  normalize();
   CM2BlendType blend = CM2_BLEND_RASTER;
   if(pbuffer) {
     if(pbuffer->need_shader())
@@ -1543,10 +1540,7 @@ PaintCM2Widget::rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer)
     
   GLdouble modelview[16];
   glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
-  //    double panx = (modelview[12]+1.0)/2.0;
   double pany = (modelview[13]+1.0)/2.0;
-  //double scalex = (modelview[0])/2.0;
-  //double scaley = (modelview[5])/2.0;
   
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT, vp);
@@ -1602,7 +1596,7 @@ PaintCM2Widget::rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer)
   }
   glShadeModel(GL_FLAT);
   shader->release();
-  
+  un_normalize();
   CHECK_OPENGL_ERROR("paintcm2widget rasterize end");
 }
 
@@ -1691,6 +1685,8 @@ void
 PaintCM2Widget::rasterize(Array3<float>& array)
 {
   if(!onState_) return;
+  const float offset = -value_range_.first;
+  const float scale = array.dim2()/(value_range_.second-value_range_.first);
 
   for (unsigned int s = 0; s < strokes_.size(); ++s)
   {
@@ -1698,49 +1694,23 @@ PaintCM2Widget::rasterize(Array3<float>& array)
     if (coordinates == 1)
       splat(array, 
 	    Floor(strokes_[s][0].second* array.dim1()), 
-	    Floor(strokes_[s][0].first * array.dim2()));
+	    Floor((strokes_[s][0].first+offset)*scale));
     else
       for (unsigned c = 1; c < coordinates; ++c)
 	line(array,
 	     Floor(strokes_[s][c-1].second * array.dim1()), 
-	     Floor(strokes_[s][c-1].first  * array.dim2()), 
+	     Floor((strokes_[s][c-1].first+offset)*scale),
 	     Floor(strokes_[s][c].second   * array.dim1()), 
-	     Floor(strokes_[s][c].first    * array.dim2()),
+	     Floor((strokes_[s][c].first+offset)*scale),
 	     (c == 1));
   }
 }
-
-#if 0
-void
-PaintCM2Widget::set_value_range(range_t &)
-{
-
-  if ((fabs(value_min_ - min) > 0.001) || 
-      (fabs(value_scale_ - scale) > 0.001)) 
-
-  const double offset = (value_min_ - min) / scale;
-  const double scale_factor = value_scale_ / scale;
-
-  Segments::iterator siter = segments_.begin();
-  const Segments::iterator send = segments_.end();
-  while (siter != send) {
-    siter->first.first = siter->first.first * scale_factor + offset;
-    siter->second.first = siter->second.first * scale_factor + offset;
-    ++siter;
-  }
-  value_min_ = min;
-  value_scale_ = scale;
-
-}
-#endif
-
 
 void
 PaintCM2Widget::draw()
 {
   // no widget controls to draw.
 }
-
 
 void
 PaintCM2Widget::add_stroke()
@@ -1761,8 +1731,6 @@ PaintCM2Widget::add_coordinate(const Coordinate &coordinate)
   strokes_.back().push_back(coordinate);
 }
 
-
-
 bool
 PaintCM2Widget::pop_stroke()
 {
@@ -1771,12 +1739,22 @@ PaintCM2Widget::pop_stroke()
   return true;
 }
 
-
-
 void
 PaintCM2Widget::normalize()
-{}
+{
+  const float offset = -value_range_.first;
+  const float scale = 1.0/(value_range_.second-value_range_.first);
+  for (unsigned int s = 0; s < strokes_.size(); ++s)
+    for (unsigned int c = 0; c < strokes_[s].size(); ++c)
+      strokes_[s][c].first = (strokes_[s][c].first + offset) * scale;
+}
 
 void
 PaintCM2Widget::un_normalize()
-{}
+{
+  const float offset = -value_range_.first;
+  const float scale = 1.0/(value_range_.second-value_range_.first);
+  for (unsigned int s = 0; s < strokes_.size(); ++s)
+    for (unsigned int c = 0; c < strokes_[s].size(); ++c)
+      strokes_[s][c].first = strokes_[s][c].first/scale - offset;
+}
