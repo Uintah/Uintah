@@ -373,7 +373,7 @@ int AnalyzeNrrdReader::build_nrrds( vector<Nrrd*> & array )
     int dim = image.get_dimension();
     if( dim == 3 ) 
     {
-      if( nrrdWrap(nrrd, image.get_pixel_buffer(), image.get_nrrd_type(), 
+      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeFloat, 
                3, image.get_size(0), 
                image.get_size(1), image.get_size(2)) ) 
       {
@@ -404,7 +404,7 @@ int AnalyzeNrrdReader::build_nrrds( vector<Nrrd*> & array )
     }
     else if( dim == 2 ) 
     {
-      if( nrrdWrap(nrrd, image.get_pixel_buffer(), image.get_nrrd_type(), 
+      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeFloat, 
                2, image.get_size(0), image.get_size(1)) ) 
       {
         error( "(AnalyzeNrrdReader::execute) Error creating nrrd." );
