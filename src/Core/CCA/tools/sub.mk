@@ -21,10 +21,13 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
 SRCDIR := Core/CCA/tools
 
-SUBDIRS := \
+SUBDIRS := $(SRCDIR)/sidl
+
+ifeq ($(HAVE_RUBY),yes)
+SUBDIRS += \
 	$(SRCDIR)/strauss \
-        $(SRCDIR)/sidl \
 	$(SRCDIR)/kwai 
+endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

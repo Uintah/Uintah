@@ -19,6 +19,9 @@
 
 SRCDIR   := CCA/Components/VtkTest
 
+INCLUDES := $(VTK_INCLUDE) $(INCLUDES)
+LIBS := $(VTK_LIBRARY) $(LIBS)
+
 SUBDIRS := $(SRCDIR)/Renderer \
 	   $(SRCDIR)/Actor \
 	   $(SRCDIR)/PolyDataMapper \
