@@ -37,6 +37,7 @@ class GuiInterface;
 class ClipByFunctionAlgo : public DynamicAlgoBase
 {
 public:
+  double u0, u1, u2, u3, u4, u5;
 
   virtual FieldHandle execute(ProgressReporter *reporter,
 			      FieldHandle fieldh,

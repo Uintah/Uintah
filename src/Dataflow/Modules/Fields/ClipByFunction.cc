@@ -48,6 +48,12 @@ class ClipByFunction : public Module
 private:
   GuiString clipmode_;
   GuiString clipfunction_;
+  GuiDouble gui_uservar0_;
+  GuiDouble gui_uservar1_;
+  GuiDouble gui_uservar2_;
+  GuiDouble gui_uservar3_;
+  GuiDouble gui_uservar4_;
+  GuiDouble gui_uservar5_;
   int  last_input_generation_;
 
 public:
@@ -64,6 +70,12 @@ ClipByFunction::ClipByFunction(GuiContext* ctx)
   : Module("ClipByFunction", ctx, Filter, "FieldsCreate", "SCIRun"),
     clipmode_(ctx->subVar("clipmode")),
     clipfunction_(ctx->subVar("clipfunction")),
+    gui_uservar0_(ctx->subVar("uservar0")),
+    gui_uservar1_(ctx->subVar("uservar1")),
+    gui_uservar2_(ctx->subVar("uservar2")),
+    gui_uservar3_(ctx->subVar("uservar3")),
+    gui_uservar4_(ctx->subVar("uservar4")),
+    gui_uservar5_(ctx->subVar("uservar5")),
     last_input_generation_(0)
 {
 }
@@ -135,6 +147,14 @@ ClipByFunction::execute()
   {
     clipmode = -1;
   }
+
+  // User Variables.
+  algo->u0 = gui_uservar0_.get();
+  algo->u1 = gui_uservar1_.get();
+  algo->u2 = gui_uservar2_.get();
+  algo->u3 = gui_uservar3_.get();
+  algo->u4 = gui_uservar4_.get();
+  algo->u5 = gui_uservar5_.get();
 
   FieldHandle ofield =
     algo->execute(this, ifieldhandle, clipmode);
