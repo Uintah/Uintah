@@ -144,6 +144,22 @@ private:
    const VarLabel* g_velocity_label;
    const VarLabel* p_deformationMeasure_label;
    const VarLabel* p_stress_label;
+
+   const VarLabel* deltLabel;
+
+   const VarLabel* pVolumeLabel;
+   const VarLabel* pMassLabel;
+   const VarLabel* pVelocityLabel;
+   const VarLabel* pExternalForceLabel;
+   const VarLabel* pXLabel;
+
+   const VarLabel* gMassLabel;
+   const VarLabel* gAccelerationLabel;
+   const VarLabel* gVelocityLabel;
+   const VarLabel* gVelocityStarLabel;
+   const VarLabel* gExternalForceLabel;
+   const VarLabel* gInternalForceLabel;
+  
 };
 
 } // end namespace Components
@@ -151,6 +167,9 @@ private:
 
 //
 // $Log$
+// Revision 1.12  2000/04/20 22:13:41  dav
+// making SerialMPM compile
+//
 // Revision 1.11  2000/04/20 18:56:16  sparker
 // Updates to MPM
 //
