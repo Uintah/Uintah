@@ -26,18 +26,12 @@
     <authors>
       <author>Michael Callahan</author>
     </authors>
-    <summary>Interpolate Source field onto the Destination field.</summary>
+    <summary>The DirectInterpolate module takes two Fields as input, the first of which, Source, contains geometry and data values; the second, Destination, contains geometry only. DirectInterpolate takes a field and finds data values for the destination geometry and outputs the resulting Field.</summary>
     <description>
       <p>
-        DirectInterpolate generates a new field that contains the
-        geometry of the destination field, but with all of the
-        data values linearly interpolated from the source field.
-        It should work correctly with all of the current field
-        and data types.  The data will be stored at the elements
-        specified in the destination field.  Elements that are not
-        within the source field are set to their closest in-field
-        values.
+        DirectInterpolate will find the corresponding data value in the Source for each node in the Destination Field. The data values can be stored at the nodes, cells, edges, or faces of the mesh at either the input or output ports.  If the geometires of the input ports are different, the module will calculate data values for the Destination by interpolation.
       </p>
+<p> The DirectInterpolate GUI contains a check box for Enable Interpolation and Use Closest Element If Not Interpable.  The Enable Interpolation check box allows the user to select the option of interpolation.  The user can also select the option of choosing the closest element when a data value cannot be interpolated.  The Maximum Closeness option indicates the maximum distance between points of interpolation and data values.</p>
     </description>
   </overview>
   <io>
@@ -61,3 +55,4 @@
   <testing>
   </testing>
 </component>
+
