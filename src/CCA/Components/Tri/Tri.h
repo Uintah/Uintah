@@ -39,7 +39,7 @@
 
 class Tri;
   
-class myUIPort : public virtual gov::cca::ports::UIPort {
+class myUIPort : public virtual sci::cca::ports::UIPort {
 public:
    virtual ~myUIPort(){}
    virtual int ui();
@@ -47,7 +47,7 @@ public:
    Tri *com;
 };
 
-class myGoPort : public virtual gov::cca::ports::GoPort {
+class myGoPort : public virtual sci::cca::ports::GoPort {
 public:
    virtual ~myGoPort(){}
    virtual int go();
@@ -55,24 +55,24 @@ public:
    Tri *com;
 };
 
-class myMeshPort: public virtual gov::cca::ports::MeshPort{
+class myMeshPort: public virtual sci::cca::ports::MeshPort{
  public:
   virtual ~myMeshPort(){}
-  virtual SIDL::array1<int> getTriangles();
-  virtual SIDL::array1<double> getNodes();
+  virtual SSIDL::array1<int> getTriangles();
+  virtual SSIDL::array1<double> getNodes();
   void setParent(Tri *com){this->com=com;}
   Tri *com;  
 };
 
-class Tri : public gov::cca::Component{
+class Tri : public sci::cca::Component{
                 
   public:
     Tri();
     virtual ~Tri();
 
-    virtual void setServices(const gov::cca::Services::pointer& svc);
+    virtual void setServices(const sci::cca::Services::pointer& svc);
     Delaunay *mesh;
-    gov::cca::Services::pointer getServices(){return services;}
+    sci::cca::Services::pointer getServices(){return services;}
   private:
 
     Tri(const Tri&);
@@ -80,7 +80,7 @@ class Tri : public gov::cca::Component{
     myUIPort uiPort;
     myGoPort goPort;
     myMeshPort meshPort;
-    gov::cca::Services::pointer services;
+    sci::cca::Services::pointer services;
   };
 //}
 
