@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <Packages/Uintah/Core/ProblemSpec/Handle.h>
+#include <Packages/Uintah/Core/Grid/BoundCondBase.h>
 
 using std::vector;
 using std::map;
@@ -12,7 +13,6 @@ using std::string;
 
 namespace Uintah {
 
-  class BoundCondBase;
 /**************************************
 
 CLASS
