@@ -43,6 +43,8 @@
 #ifndef SCI_Geom_Light_h
 #define SCI_Geom_Light_h 1
 
+#include <sci_defs/ogl_defs.h>
+
 #include <Core/share/share.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Thread/Mutex.h>
