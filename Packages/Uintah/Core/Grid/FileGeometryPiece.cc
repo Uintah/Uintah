@@ -66,7 +66,9 @@ void FileGeometryPiece::readPoints(const string& f_name, bool var)
     min = Min(*itr,min);
     max = Max(*itr,max);
   }
-
+  Vector fudge(1.e-5,1.e-5,1.e-5);
+  min = min - fudge;
+  max = max + fudge;
   d_box = Box(min,max);
 }
 
