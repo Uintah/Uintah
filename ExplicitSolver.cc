@@ -1162,12 +1162,12 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 
 	  double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
 	  residual[idx] = (0.5*(density[idxU]+density[idx])*newUVel[idxU]-
-			   0.5*(density[idx]+density[idxxminus])*newUVel[idx])*vol/cellinfo->sew[ii]+
+			   0.5*(density[idx]+density[idxxminus])*newUVel[idx])/cellinfo->sew[ii]+
 		          (0.5*(density[idxV]+density[idx])*newVVel[idxV]-
-			   0.5*(density[idx]+density[idxyminus])*newVVel[idx])*vol/cellinfo->sns[jj]+
+			   0.5*(density[idx]+density[idxyminus])*newVVel[idx])/cellinfo->sns[jj]+
 			  (0.5*(density[idxW]+density[idx])*newWVel[idxW]-
-			   0.5*(density[idx]+density[idxzminus])*newWVel[idx])*vol/cellinfo->stb[kk]+
-			  drhodt[idx];
+			   0.5*(density[idx]+density[idxzminus])*newWVel[idx])/cellinfo->stb[kk]+
+			  drhodt[idx]/vol;
 	}
       }
     }

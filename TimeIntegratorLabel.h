@@ -82,6 +82,8 @@ namespace Uintah {
     const VarLabel* denAccum;
     const VarLabel* floutbc;
     const VarLabel* areaOUT;
+    const VarLabel* maxuxplus_in;
+    const VarLabel* maxuxplus_out;
 
 
     TimeIntegratorLabel(const ArchesLabel* lab, 
@@ -115,6 +117,8 @@ namespace Uintah {
 	    denAccum = lab->d_denAccumLabel;
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
+	    maxuxplus_in = lab->d_maxUxplus_label;
+	    maxuxplus_out = lab->d_maxUxplus_label;
 	  break;
 
 	  case TimeIntegratorStepType::FE:
@@ -143,6 +147,8 @@ namespace Uintah {
 	    denAccum = lab->d_denAccumLabel;
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
+	    maxuxplus_in = lab->d_maxUxplus_label;
+	    maxuxplus_out = lab->d_maxUxplus_label;
 	  break;
 
 	  case TimeIntegratorStepType::Predictor:
@@ -171,6 +177,8 @@ namespace Uintah {
 	    denAccum = lab->d_denAccumPredLabel;
 	    floutbc = lab->d_netflowOUTBCPredLabel;
 	    areaOUT = lab->d_totalAreaOUTPredLabel;
+	    maxuxplus_in = lab->d_maxUxplus_label;
+	    maxuxplus_out = lab->d_maxUxplusPred_label;
 	  break;
 
 	  case TimeIntegratorStepType::OldPredictor:
@@ -199,6 +207,8 @@ namespace Uintah {
 	    denAccum = lab->d_denAccumPredLabel;
 	    floutbc = lab->d_netflowOUTBCPredLabel;
 	    areaOUT = lab->d_totalAreaOUTPredLabel;
+	    maxuxplus_in = lab->d_maxUxplus_label;
+	    maxuxplus_out = lab->d_maxUxplusPred_label;
 	  break;
 
 	  case TimeIntegratorStepType::Corrector:
@@ -227,6 +237,8 @@ namespace Uintah {
 	    denAccum = lab->d_denAccumLabel;
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
+	    maxuxplus_in = lab->d_maxUxplusPred_label;
+	    maxuxplus_out = lab->d_maxUxplus_label;
 	  break;
 
 	  case TimeIntegratorStepType::OldCorrector:
@@ -255,6 +267,8 @@ namespace Uintah {
 	    denAccum = lab->d_denAccumLabel;
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
+	    maxuxplus_in = lab->d_maxUxplusPred_label;
+	    maxuxplus_out = lab->d_maxUxplus_label;
 	  break;
 
 	  case TimeIntegratorStepType::CorrectorRK3:
@@ -283,6 +297,8 @@ namespace Uintah {
 	    denAccum = lab->d_denAccumLabel;
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
+	    maxuxplus_in = lab->d_maxUxplusInterm_label;
+	    maxuxplus_out = lab->d_maxUxplus_label;
 	  break;
 
 	  case TimeIntegratorStepType::Intermediate:
@@ -311,6 +327,8 @@ namespace Uintah {
 	    denAccum = lab->d_denAccumIntermLabel;
 	    floutbc = lab->d_netflowOUTBCIntermLabel;
 	    areaOUT = lab->d_totalAreaOUTIntermLabel;
+	    maxuxplus_in = lab->d_maxUxplusPred_label;
+	    maxuxplus_out = lab->d_maxUxplusInterm_label;
 	  break;
 
 	  case TimeIntegratorStepType::BEEmulation1:
@@ -339,6 +357,8 @@ namespace Uintah {
 	    denAccum = lab->d_denAccumPredLabel;
 	    floutbc = lab->d_netflowOUTBCPredLabel;
 	    areaOUT = lab->d_totalAreaOUTPredLabel;
+	    maxuxplus_in = lab->d_maxUxplus_label;
+	    maxuxplus_out = lab->d_maxUxplusPred_label;
 	  break;
 
 	  case TimeIntegratorStepType::BEEmulation2:
@@ -367,6 +387,8 @@ namespace Uintah {
 	    denAccum = lab->d_denAccumIntermLabel;
 	    floutbc = lab->d_netflowOUTBCIntermLabel;
 	    areaOUT = lab->d_totalAreaOUTIntermLabel;
+	    maxuxplus_in = lab->d_maxUxplusPred_label;
+	    maxuxplus_out = lab->d_maxUxplusInterm_label;
 	  break;
 
 	  case TimeIntegratorStepType::BEEmulation3:
@@ -395,6 +417,8 @@ namespace Uintah {
 	    denAccum = lab->d_denAccumLabel;
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
+	    maxuxplus_in = lab->d_maxUxplusInterm_label;
+	    maxuxplus_out = lab->d_maxUxplus_label;
 	  break;
 
 	  default: 
