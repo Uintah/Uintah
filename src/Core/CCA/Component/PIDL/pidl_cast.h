@@ -76,7 +76,7 @@ pidl_cast(const F& ptr)
   PIDL::Object* result=typeinfo->pidl_cast(ptr.getPointer());
   if(result){
     ptr_type* p=dynamic_cast<ptr_type*>(result);
-    if(p)
+    if(!p)
       throw SCIRun::InternalError("TypeInfo::pidl_cast returned wrong object!");
     return T(p);
   } else {
