@@ -126,6 +126,27 @@ public:
 				   const MaterialSet* matls,
 				   int index);
 
+      void solveVelHatPred(const LevelP& level,
+			   SchedulerP&,
+			   const int Runge_Kutta_current_step,
+			   const bool Runge_Kutta_last_step);
+   
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule the build of the linearized eqn
+      void sched_buildLinearMatrixVelHatPred(SchedulerP&, const PatchSet* patches,
+					     const MaterialSet* matls);
+ 
+      void solveVelHatCorr(const LevelP& level,
+			   SchedulerP&,
+			   const int Runge_Kutta_current_step,
+			   const bool Runge_Kutta_last_step);
+   
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule the build of the linearized eqn
+      void sched_buildLinearMatrixVelHatCorr(SchedulerP&, const PatchSet* patches,
+					     const MaterialSet* matls);
+ 
+
 
 protected: 
 
@@ -173,6 +194,22 @@ private:
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
 			     int index);
+
+
+      void buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
+				       const PatchSubset* patches,
+				       const MaterialSubset* matls,
+				       DataWarehouse*,
+				       DataWarehouse* );
+
+      void buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
+				       const PatchSubset* patches,
+				       const MaterialSubset* matls,
+				       DataWarehouse*,
+				       DataWarehouse*);
+
+
+
    
 private:
 
