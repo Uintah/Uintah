@@ -13,6 +13,7 @@
 using namespace Uintah;
 using std::cerr;
 using namespace SCICore::Exceptions;
+using std::string;
 
 static bool usingMPI;
 static MPI_Comm worldComm;
@@ -101,6 +102,9 @@ Parallel::getRootProcessorGroup()
 
 //
 // $Log$
+// Revision 1.10  2000/09/25 18:44:59  sparker
+// Added using statement for std::string
+//
 // Revision 1.9  2000/09/25 18:13:51  sparker
 // Correctly handle mpich
 //
