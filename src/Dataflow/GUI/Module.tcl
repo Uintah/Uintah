@@ -605,7 +605,6 @@ itcl_class Module {
 	    set time_width [winfo width $canvas.module[modname].ff.time]
 	}
 	set min_text_width [expr $progress_width+$time_width]
-	puts "min text width: $min_text_width"
 	
 	resize_icon
 	drawNotes [modname]
@@ -1290,7 +1289,6 @@ proc textHelp { modid } {
 }
 
 proc setBrowser { browser url } {
-    puts "setBrowser $browser"
     if { ![openBrowser $browser $url] } { 
 	if { [winfo exists .choosebrowser] } {
 	    destroy .choosebrowser
