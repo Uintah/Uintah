@@ -297,10 +297,105 @@ void Pio(Piostream& stream, HashTable<Key, Data>& t)
 }
 
 #include <iostream.h>
+#include <Classlib/String.h>
+
 
 void HashTable<char*, int>::test_rigorous(RigorousTest* __test)
 {
-    TEST(0==0);
+    HashTable<clString,int> table;
+
+    TEST(table.size()==0);
+    table.insert("one",1);
+    TEST(table.size()==1);
+    table.insert("two",2);
+    TEST(table.size()==2);
+    table.insert("three",3);
+    TEST(table.size()==3);
+    table.insert("four",4);
+    TEST(table.size()==4);
+    table.insert("five",5);
+    TEST(table.size()==5);
+    table.insert("six",6);
+    TEST(table.size()==6);
+    table.insert("seven",7);
+    TEST(table.size()==7);
+    table.insert("eight",8);
+    TEST(table.size()==8);
+    table.insert("nine",9);
+    TEST(table.size()==9);
+    table.insert("ten",10);
+    TEST(table.size()==10);
+
+    int i = 0;
+    TEST(table.lookup("one",i)&&i==1);
+    TEST(table.lookup("two",i)&&i==2);
+    TEST(table.lookup("three",i)&&i==3);
+    TEST(table.lookup("four",i)&&i==4);
+    TEST(table.lookup("five",i)&&i==5);
+    TEST(table.lookup("six",i)&&i==6);
+    TEST(table.lookup("seven",i)&&i==7);
+    TEST(table.lookup("eight",i)&&i==8);
+    TEST(table.lookup("nine",i)&&i==9);
+    TEST(table.lookup("ten",i)&&i==10);
+
+    
+    HashTable<clString,int>table2=table;
+    i = 0;
+    TEST(table2.lookup("one",i)&&i==1);
+    TEST(table2.lookup("two",i)&&i==2);
+    TEST(table2.lookup("three",i)&&i==3);
+    TEST(table2.lookup("four",i)&&i==4);
+    TEST(table2.lookup("five",i)&&i==5);
+    TEST(table2.lookup("six",i)&&i==6);
+    TEST(table2.lookup("seven",i)&&i==7);
+    TEST(table2.lookup("eight",i)&&i==8);
+    TEST(table2.lookup("nine",i)&&i==9);
+    TEST(table2.lookup("ten",i)&&i==10); 
+
+    HashTable<int,int> int_table;
+    TEST(int_table.size()==0);
+    
+    int y;
+    for(int x=1;x<=1000;x++){
+	y=x*11;
+	int_table.insert(x,y);
+	TEST(int_table.size()==x);
+    }
+
+    for(x=1;x<=1000;x++){
+	i=0;
+	y=x*11;
+	TEST(int_table.lookup(x,i)&&i==y);
+    }
+
+    
+    for(x=1;x<=1000;x++){
+	i=0;
+	TEST(int_table.remove(x)==1);
+	TEST(!int_table.lookup(x,i));
+	TEST(int_table.size()==(1000-x));
+    }
+
+    TEST(int_table.size()==0);
+
+    //Create a hash table containing the ASCII values 97-122 and their
+    //corresponding characters (a-z)
+    
+    HashTable<char,int> char_table;
+
+    y=0;
+    char z=0;
+    for(z=97;z<=122;z++){
+	y=int(z);
+	char_table.insert(z,y);
+	++y;
+	TEST(char_table.size()==y);
+    }
+	
+    TEST(y==26&&char_table.size()==26);
+
+
+
 }
 
 
