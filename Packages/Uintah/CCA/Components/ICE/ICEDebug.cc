@@ -41,7 +41,7 @@ void    ICE::printData(const Patch* patch, int include_GC,
     for(int j = low.y(); j < high.y(); j++) {
       for(int i = low.x(); i < high.x(); i++) {
 	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]~ %10.9f  ",
+	fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
 		i,j,k, q_CC[idx]);
 	
 	/*  fprintf(stderr,"\n"); */
@@ -123,7 +123,7 @@ void    ICE::printVector(const Patch* patch, int include_GC,
     for(int j = low.y(); j < high.y(); j++) {
       for(int i = low.x(); i < high.x(); i++) {
 	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]~ %10.9f  ",
+	fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
 		i,j,k, q_CC[idx](component));
 	
 	/*  fprintf(stderr,"\n"); */
@@ -165,7 +165,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     //for(int j = high.y()-1; j >= low.y(); j--) {
       for(int i = low.x(); i < high.x(); i++) {
 	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]~ %10.9f  ",
+	fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
 		i,j,k, q_FC[idx]);
 	
 	/*  fprintf(stderr,"\n"); */
@@ -200,13 +200,13 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     low   = patch->getInteriorCellLowIndex();
     high  = patch->getInteriorCellHighIndex();
   }
-  
+ 
   for(int k = low.z(); k < high.z(); k++)  {
     for(int j = low.y(); j < high.y(); j++) {
     //for(int j = high.y()-1; j >= low.y(); j--) {
       for(int i = low.x(); i < high.x(); i++) {
 	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]~ %10.9f  ",
+	fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
 		i,j,k, q_FC[idx]);
 	
 	/*  fprintf(stderr,"\n"); */
@@ -248,7 +248,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     //for(int j = high.y()-1; j >= low.y(); j--) {
       for(int i = low.x(); i < high.x(); i++) {
 	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]~ %10.9f  ",
+	fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
 		i,j,k, q_FC[idx]);
 	
 	/*  fprintf(stderr,"\n"); */
@@ -320,7 +320,7 @@ void    ICE::readData(const Patch* patch, int include_GC,
        if (num != 1)       
          Message(1,"ERROR","Having problem reading ",var_name);
               
-      // fprintf(stderr,"%10.9f  ",number);
+      // fprintf(stderr,"%16.15E  ",number);
        q_CC[idx] = number;
       }
       fscanf(fp,"\n");
