@@ -31,15 +31,18 @@ using namespace std;
 using namespace SCICore::Math;
 #include <SCICore/Math/fnparser.h>
 
+/* for some reason yywrap gets broken by the fn prefix
+   this seems to solve the problem */
+//#undef yywrap
+
+int yywrap() { return 1;}
+#define YY_SKIP_YYWRAP
+
 namespace SCICore {
 namespace Math {
 
 int linenumber = 1;
 int waserror = 0;
-
-/* for some reason yywrap gets broken by the fn prefix
-   this seems to solve the problem */
-#undef yywrap
 
 char*	getId(int lowerit);	// Helping function to obtain string
 				// lexemes.
