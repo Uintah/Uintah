@@ -37,6 +37,9 @@ endif
 # The libraries are specified like Core/Thread but get
 # name-mangled to Core_Thread
 PSELIBS := $(subst /,_,$(PSELIBS))
+ifneq ($(REPOSITORY_FLAGS),)
+REPOSITORIES_$(LIBNAME) := $(REPOSITORY_FLAGS) $(SRCDIR)/ptrepository $(patsubst %,$(REPOSITORY_FLAGS) %/ptrepository, $(PSELIBS))
+endif
 
 #  These targets will be used to "make all"
 ALLTARGETS := $(ALLTARGETS) $(LIBNAME)
@@ -70,7 +73,7 @@ PACK_PSELIBS = $(patsubst SCIRUN%,,$(TMP_PACK_PSELIBS))
 
 $(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)%,$(CORE_PSELIBS)) $(patsubst %,$(LIBDIR)%,$(PACK_PSELIBS))
 	rm -f $@
-	$(CXX) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $($(notdir $@)_LIBS)
+	$(CXX) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS)
 
 #$(LIBNAME).pure: $(LIBNAME)
 #	$(purify) $(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@.pure $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)lib%.so,-l%,$(filter %.so,$^)) $($(notdir $@)_LIBS)
@@ -78,6 +81,9 @@ $(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)%,$(CORE_PSELIBS)) $(patsubst %
 #  These will get removed on make clean
 CLEANLIBS := $(CLEANLIBS) $(LIBNAME)
 CLEANOBJS := $(CLEANOBJS) $(OBJS)
+ifneq ($(REPOSITORY_FLAGS),)
+  ALL_LIB_ASSOCIATIONS := $(ALL_LIB_ASSOCIATIONS) $(patsubst %,$(SRCDIR)/ptrepository:%,$(OBJS))
+endif
 
 # Try to prevent user error
 SRCS := INVALID_SRCS.cc
@@ -89,4 +95,3 @@ ALLGEN := $(ALLGEN) $(GENHDRS)
 $(OBJS): $(GENHDRS)
 GENHDRS :=
 endif
-
