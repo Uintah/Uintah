@@ -71,12 +71,12 @@ private:
 
   bool build_weight_table_sfi(MeshBaseHandle mesh_h,
 			      ScalarFieldInterface *sfi,
-			      DistTable<Mesh> &table,
+			      DistTable &table,
 			      const string &dist);
 
   bool build_weight_table_vfi(MeshBaseHandle mesh_h,
 			      VectorFieldInterface *vfi,
-			      DistTable<Mesh> &table,
+			      DistTable &table,
 			      const string &dist);
 
 public:
@@ -117,7 +117,7 @@ template <class Mesh>
 bool 
 SeedFieldAlgoT<Mesh>::build_weight_table_sfi(MeshBaseHandle mesh_h,
 					     ScalarFieldInterface *sfi,
-					     DistTable<Mesh> &table,
+					     DistTable &table,
 					     const string &dist)
 {
   typedef typename Mesh::Elem::iterator   elem_iterator;
@@ -214,7 +214,7 @@ template <class Mesh>
 bool 
 SeedFieldAlgoT<Mesh>::build_weight_table_vfi(MeshBaseHandle mesh_h,
 					     VectorFieldInterface *vfi,
-					     DistTable<Mesh> &table,
+					     DistTable &table,
 					     const string &dist)
 {
   typedef typename Mesh::Elem::iterator   elem_iterator;
@@ -316,7 +316,7 @@ SeedFieldAlgoT<Mesh>::execute(FieldHandle field,
 			      int rng_seed,
 			      const string &dist)
 {
-  DistTable<Mesh> table;
+  DistTable table;
   table.clear();
 
   ScalarFieldInterface *sfi = field->query_scalar_interface();
@@ -346,7 +346,7 @@ SeedFieldAlgoT<Mesh>::execute(FieldHandle field,
   unsigned int loop;
   for (loop=0; loop < num_seeds; loop++) {
     Point p;
-    typename DistTable<Mesh>::table_entry_type e;
+    typename DistTable::table_entry_type e;
     table.search(e,rng() * max);             // find random cell
     // Find random point in that cell.
     mesh->get_random_point(p, e.second, rng_seed + loop);
