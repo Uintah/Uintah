@@ -48,10 +48,6 @@ namespace Uintah {
     const VarLabel* ymom_L_ME_CCLabel;
     const VarLabel* zmom_L_ME_CCLabel;
     const VarLabel* int_eng_L_ME_CCLabel;
-    const VarLabel* IFS_CCLabel;
-    const VarLabel* OFS_CCLabel;
-    const VarLabel* IFE_CCLabel;
-    const VarLabel* OFE_CCLabel;
     const VarLabel* q_CCLabel;
     const VarLabel* q_advectedLabel;
     const VarLabel* term1Label;
@@ -78,6 +74,12 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.15  2001/01/03 00:51:53  harman
+// - added cflux, OFC, IFC, q_in_CF, q_out_CF
+// - Advection operator now in 3D, not fully tested
+// - A little house cleaning on #includes
+// - Removed *_old from step6&7 except cv_old
+//
 // Revision 1.14  2000/11/28 03:50:28  jas
 // Added {X,Y,Z}FCVariables.  Things still don't work yet!
 //
