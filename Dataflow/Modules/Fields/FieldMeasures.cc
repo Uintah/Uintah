@@ -128,10 +128,18 @@ FieldMeasures::execute()
   m_->synchronize(syncflag);
 
   const bool nnormals =
-    normalsFlag_.get() && fieldhandle->data_at() == Field::NODE;
+    normalsFlag_.get() && simplexString_.get() == "Node";
   const bool fnormals =
-    normalsFlag_.get() && fieldhandle->data_at() == Field::FACE;
-  if (nnormals) { m_->synchronize(Mesh::NORMALS_E); }
+    normalsFlag_.get() && simplexString_.get() == "Face";
+  if (nnormals)
+  {
+    m_->synchronize(Mesh::NORMALS_E);
+    remark("Node normals are only implemented for surface meshes.");
+  }
+  if (normalsFlag_.get() && !(nnormals || fnormals))
+  {
+    warning("Cannot compute normals at that simplex location.");
+  }
 
   const TypeDescription *meshtd = m_->get_type_description();
   const TypeDescription *simptd = 
@@ -171,8 +179,11 @@ FieldMeasuresAlgo::get_compile_info(const TypeDescription *mesh_td,
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(__FILE__);
-  static const string template_class_name("FieldMeasuresAlgoT");
+  string template_class_name("FieldMeasuresAlgoT");
   static const string base_class_name("FieldMeasuresAlgo");
+
+  if (nnormals) { template_class_name += "NN"; }
+  if (fnormals) { template_class_name += "FN"; }
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +

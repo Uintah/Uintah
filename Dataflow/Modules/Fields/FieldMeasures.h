@@ -107,17 +107,183 @@ FieldMeasuresAlgoT<MESH,SIMPLEX>::execute(MeshHandle meshH, bool x, bool y,
   while (si != sie) {
     int col=0;
     if (x || y || z) mesh->get_center(p, *si);
-    if (x)     { m->get(row,col++) = p.x(); }
-    if (y)     { m->get(row,col++) = p.y(); }
-    if (z)     { m->get(row,col++) = p.z(); }
-    if (idx)   { m->get(row,col++) = row; }
-    if (nnbrs) { m->get(row,col++) = mesh->get_valence(*si); }
-    if (size)  { m->get(row,col++) = mesh->get_size(*si); }
+    if (x)     { m->get(row, col++) = p.x(); }
+    if (y)     { m->get(row, col++) = p.y(); }
+    if (z)     { m->get(row, col++) = p.z(); }
+    if (idx)   { m->get(row, col++) = row; }
+    if (nnbrs) { m->get(row, col++) = mesh->get_valence(*si); }
+    if (size)  { m->get(row, col++) = mesh->get_size(*si); }
     ++si;
     row++;
   }
   return m;
 }
+
+
+
+template <class MESH, class SIMPLEX>
+class FieldMeasuresAlgoTNN : public FieldMeasuresAlgo
+{
+public:
+  //! virtual interface. 
+  virtual Matrix *execute(MeshHandle meshH, bool x, bool y, bool z, bool idx,
+			  bool nnbrs, bool size, bool nbr_enum);
+};
+
+//! MESH -- e.g. TetVolMeshHandle
+//! SIMPLEX -- e.g. TetVolMesh::Node
+
+// We have to pass in nbr_enum, in order to call synchronize neighbor info...
+//   maybe there's a better way?
+
+template <class MESH, class SIMPLEX>
+Matrix *
+FieldMeasuresAlgoTNN<MESH,SIMPLEX>::execute(MeshHandle meshH, bool x, bool y, 
+					    bool z, bool idx, bool size,
+					    bool nnbrs, bool nbr_enum)
+{
+  MESH *mesh = dynamic_cast<MESH *>(meshH.get_rep());
+  int ncols=0;
+
+  if (x)     ncols++;
+  if (y)     ncols++;
+  if (z)     ncols++;
+  if (idx)   ncols++;
+  if (nnbrs) ncols++;
+  if (size)  ncols++;
+  ncols+=3;
+
+  if (ncols==0) {
+    cerr << "Error -- no measures selected.\n";
+    return 0;
+  }
+
+  typename SIMPLEX::size_type nsimplices;
+  mesh->size(nsimplices);
+  Matrix *m;
+  if (ncols==1) m = scinew ColumnMatrix(nsimplices);
+  else m = scinew DenseMatrix(nsimplices, ncols);
+
+  if (nnbrs) mesh->synchronize(nbr_enum);
+  typename SIMPLEX::array_type nbrs;
+
+  typename SIMPLEX::iterator si, sie;
+  mesh->begin(si);
+  mesh->end(sie);
+  Point p;
+  Vector n;
+  int row=0;
+  while (si != sie) {
+    int col=0;
+    if (x || y || z) mesh->get_center(p, *si);
+    if (x)     { m->get(row, col++) = p.x(); }
+    if (y)     { m->get(row, col++) = p.y(); }
+    if (z)     { m->get(row, col++) = p.z(); }
+    if (idx)   { m->get(row, col++) = row; }
+    if (nnbrs) { m->get(row, col++) = mesh->get_valence(*si); }
+    if (size)  { m->get(row, col++) = mesh->get_size(*si); }
+
+    // Add in the node normals.
+    mesh->get_normal(n, *si);
+    m->get(row, col++) = n.x();
+    m->get(row, col++) = n.y();
+    m->get(row, col++) = n.z();
+
+    ++si;
+    row++;
+  }
+  return m;
+}
+
+template <class MESH, class SIMPLEX>
+class FieldMeasuresAlgoTFN : public FieldMeasuresAlgo
+{
+public:
+  //! virtual interface. 
+  virtual Matrix *execute(MeshHandle meshH, bool x, bool y, bool z, bool idx,
+			  bool nnbrs, bool size, bool nbr_enum);
+};
+
+//! MESH -- e.g. TetVolMeshHandle
+//! SIMPLEX -- e.g. TetVolMesh::Node
+
+// We have to pass in nbr_enum, in order to call synchronize neighbor info...
+//   maybe there's a better way?
+
+template <class MESH, class SIMPLEX>
+Matrix *
+FieldMeasuresAlgoTFN<MESH,SIMPLEX>::execute(MeshHandle meshH, bool x, bool y, 
+					    bool z, bool idx, bool size,
+					    bool nnbrs, bool nbr_enum)
+{
+  MESH *mesh = dynamic_cast<MESH *>(meshH.get_rep());
+  int ncols=0;
+
+  if (x)     ncols++;
+  if (y)     ncols++;
+  if (z)     ncols++;
+  if (idx)   ncols++;
+  if (nnbrs) ncols++;
+  if (size)  ncols++;
+  ncols+=3;
+
+  if (ncols==0) {
+    cerr << "Error -- no measures selected.\n";
+    return 0;
+  }
+
+  typename SIMPLEX::size_type nsimplices;
+  mesh->size(nsimplices);
+  Matrix *m;
+  if (ncols==1) m = scinew ColumnMatrix(nsimplices);
+  else m = scinew DenseMatrix(nsimplices, ncols);
+
+  if (nnbrs) mesh->synchronize(nbr_enum);
+  typename SIMPLEX::array_type nbrs;
+  typename SIMPLEX::iterator si, sie;
+  mesh->begin(si);
+  mesh->end(sie);
+
+  typename MESH::Node::array_type nodes;
+  Point p0, p1, p2;
+  Point p;
+  Vector n;
+
+  int row=0;
+  while (si != sie) {
+    int col=0;
+    if (x || y || z) mesh->get_center(p, *si);
+    if (x)     { m->get(row, col++) = p.x(); }
+    if (y)     { m->get(row, col++) = p.y(); }
+    if (z)     { m->get(row, col++) = p.z(); }
+    if (idx)   { m->get(row, col++) = row; }
+    if (nnbrs) { m->get(row, col++) = mesh->get_valence(*si); }
+    if (size)  { m->get(row, col++) = mesh->get_size(*si); }
+
+    // Add in the face normals.
+    mesh->get_nodes(nodes, *si);
+    if (nodes.size() >= 3)
+    {
+      mesh->get_point(p0, nodes[0]);
+      mesh->get_point(p1, nodes[1]);
+      mesh->get_point(p2, nodes[2]);
+      n = Cross(p1-p0, p2-p0);
+      n.safe_normalize();
+    }
+    else
+    {
+      n = Vector(0.0, 0.0, 0.0);
+    }
+    m->get(row, col++) = n.x();
+    m->get(row, col++) = n.y();
+    m->get(row, col++) = n.z();
+
+    ++si;
+    row++;
+  }
+  return m;
+}
+
 
 
 }

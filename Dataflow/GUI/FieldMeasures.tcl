@@ -27,6 +27,7 @@ itcl_class SCIRun_FieldsOther_FieldMeasures {
 	global $this-idxFlag
 	global $this-sizeFlag
 	global $this-numNbrsFlag
+	global $this-normalsFlag
         set_defaults
     }
 
@@ -38,6 +39,7 @@ itcl_class SCIRun_FieldsOther_FieldMeasures {
 	set $this-idxFlag 0
 	set $this-sizeFlag 0
 	set $this-numNbrsFlag 0
+	set $this-normalsFlag 0
     }
 
     method ui {} {
@@ -71,8 +73,9 @@ itcl_class SCIRun_FieldsOther_FieldMeasures {
 	checkbutton $w.general.idx -text "Index" -variable $this-idxFlag
 	checkbutton $w.general.nnbrs -text "Valence" -variable $this-numNbrsFlag
 	checkbutton $w.general.size -text "Size (Length, Area, or Volume)" -variable $this-sizeFlag
+	checkbutton $w.general.norm -text "Normals (Nodes and Faces only)" -variable $this-normalsFlag
 	pack $w.general.l -side top
-	pack $w.general.x $w.general.y $w.general.z $w.general.idx $w.general.nnbrs $w.general.size -anchor nw
+	pack $w.general.x $w.general.y $w.general.z $w.general.idx $w.general.nnbrs $w.general.size $w.general.norm -anchor nw
 
 	pack $w.which $w.general -side top -fill x -expand 1
     }
