@@ -61,6 +61,7 @@ MPMICE::MPMICE(const ProcessorGroup* myworld)
   // Turn off all the debuging switches
   switchDebug_InterpolateNCToCC_0 = false;
   switchDebug_InterpolateCCToNC   = false;
+  switchDebug_InterpolatePAndGradP= false;
 }
 
 MPMICE::~MPMICE()
@@ -117,10 +118,12 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
         child = child->findNextBlock("debug")) {
       map<string,string> debug_attr;
       child->getAttributes(debug_attr);
-      if (debug_attr["label"] == "switchDebug_InterpolateNCToCC_0")
+      if (debug_attr["label"]      == "switchDebug_InterpolateNCToCC_0")
         switchDebug_InterpolateNCToCC_0 = true;
       else if (debug_attr["label"] == "switchDebug_InterpolateCCToNC")
-        switchDebug_InterpolateCCToNC = true;       
+        switchDebug_InterpolateCCToNC   = true;
+      else if (debug_attr["label"] == "switchDebug_InterpolatePAndGradP")
+        switchDebug_InterpolatePAndGradP   = true;       
     }
   }
   cout_norm << "Done with problemSetup \t\t\t MPMICE" <<endl;
@@ -345,22 +348,18 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
  
    Task* t=scinew Task("MPMICE::interpolatePAndGradP",
                  this, &MPMICE::interpolatePAndGradP);
-
+   Ghost::GhostType  gac = Ghost::AroundCells;
    t->requires(Task::OldDW, d_sharedState->get_delt_label());
    
-   t->requires(Task::NewDW, MIlb->press_NCLabel,    press_matl, 
-                                                    Ghost::AroundCells, 1);
-   t->requires(Task::OldDW, Mlb->pXLabel,           mpm_matl,    
-                                                    Ghost::None);
-   t->requires(Task::NewDW, Ilb->mom_source_CCLabel,mpm_matl, 
-                                                    Ghost::AroundCells, 1);
-   t->requires(Task::NewDW, MIlb->cMassLabel,       mpm_matl,
-                                                    Ghost::AroundCells, 1);
+   t->requires(Task::NewDW, MIlb->press_NCLabel,    press_matl,gac, 1);
+   t->requires(Task::NewDW, Ilb->pressX_FCLabel,    press_matl,gac, 1);    
+   t->requires(Task::NewDW, Ilb->pressY_FCLabel,    press_matl,gac, 1);    
+   t->requires(Task::NewDW, Ilb->pressZ_FCLabel,    press_matl,gac, 1);
+   t->requires(Task::NewDW, MIlb->cMassLabel,       mpm_matl,  gac, 1);
+   t->requires(Task::OldDW, Mlb->pXLabel,           mpm_matl, Ghost::None);
    if(d_8or27==27){
-     t->requires(Task::OldDW, Mlb->pSizeLabel,      mpm_matl,    
-                                                    Ghost::None);
+     t->requires(Task::OldDW, Mlb->pSizeLabel,      mpm_matl, Ghost::None);
    }
-
    t->computes(Mlb->pPressureLabel,   mpm_matl);
    t->computes(Mlb->gradPAccNCLabel,  mpm_matl);
    sched->addTask(t, patches, all_matls);
@@ -734,21 +733,44 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
 
     cout_doing<<"Doing interpolatePressureToParticles on patch "<<
       patch->getID()<<"\t\t MPMICE" << endl;
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label());
 
-    constNCVariable<double> pressNC;
     IntVector ni[MAX_BASIS];
     double S[MAX_BASIS];
     IntVector cIdx[8];
     double p_ref = d_sharedState->getRefPress();
-    new_dw->get(pressNC,MIlb->press_NCLabel,0,patch,Ghost::AroundCells,1);
-
-    delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
-
+    IntVector right, left, top, bottom, front, back;
+    constNCVariable<double>   pressNC; 
+    constCCVariable<double>   vol_frac;   
+    constSFCXVariable<double> pressX_FC;
+    constSFCYVariable<double> pressY_FC;
+    constSFCZVariable<double> pressZ_FC;
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->get(pressNC, MIlb->press_NCLabel,  0, patch, gac, 1);
+    new_dw->get(pressX_FC,Ilb->pressX_FCLabel, 0, patch, gac, 1);
+    new_dw->get(pressY_FC,Ilb->pressY_FCLabel, 0, patch, gac, 1);
+    new_dw->get(pressZ_FC,Ilb->pressZ_FCLabel, 0, patch, gac, 1);
+    Vector dx   = patch->dCell();
+    double delX = dx.x();
+    double delY = dx.y();
+    double delZ = dx.z();
+    
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwindex = mpm_matl->getDWIndex();
-      ParticleSubset* pset = old_dw->getParticleSubset(dwindex, patch);
+      int indx = mpm_matl->getDWIndex();
+      CCVariable<Vector> press_force;
+      constCCVariable<double> mass;
+      NCVariable<Vector> gradPAccNC;
+      
+      new_dw->get(vol_frac,         Ilb->vol_frac_CCLabel,  indx,patch,
+                                                               Ghost::None, 0); 
+      new_dw->get(mass,             MIlb->cMassLabel,       indx,patch, gac,1); 
+      new_dw->allocate(gradPAccNC,  Mlb->gradPAccNCLabel,   indx, patch);
+      new_dw->allocate(press_force, MIlb->scratchVecLabel,  indx, patch);
+      gradPAccNC.initialize(Vector(0.,0.,0.));    
+        
+      ParticleSubset* pset = old_dw->getParticleSubset(indx, patch);
       ParticleVariable<double> pPressure;
       constParticleVariable<Point> px;
       constParticleVariable<Vector> psize;
@@ -759,7 +781,8 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
       new_dw->allocate(pPressure, Mlb->pPressureLabel,      pset);
       old_dw->get(px,             Mlb->pXLabel,             pset);
 
-      // Interpolate NC pressure to particles
+     //__________________________________
+     // Interpolate NC pressure to particles
       for(ParticleSubset::iterator iter = pset->begin();
          iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -777,26 +800,52 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
         }
         pPressure[idx] = press-p_ref;
       }
-
-      constCCVariable<Vector> mom_source;
-      constCCVariable<double> mass;
-      NCVariable<Vector> gradPAccNC;
-      new_dw->get(mom_source,       Ilb->mom_source_CCLabel, dwindex, patch,
-                                                  Ghost::AroundCells, 1);
-      new_dw->get(mass,             MIlb->cMassLabel,        dwindex, patch,
-                                                  Ghost::AroundCells, 1);
-      new_dw->allocate(gradPAccNC,  Mlb->gradPAccNCLabel,   dwindex, patch);
-      gradPAccNC.initialize(Vector(0.,0.,0.));
+ 
+      //__________________________________
       // Interpolate CC pressure gradient (mom_source) to nodes (gradP*dA*dt)
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+      press_force.initialize(Vector(0.,0.,0.));
+      for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        right  = c + IntVector(1,0,0);    left   = c + IntVector(0,0,0);      
+        top    = c + IntVector(0,1,0);    bottom = c + IntVector(0,0,0);      
+        front  = c + IntVector(0,0,1);    back   = c + IntVector(0,0,0);
+        double vol_frac_CC = vol_frac[c];
+        press_force[c](0) = -(pressX_FC[right] - pressX_FC[left])
+                           * vol_frac_CC * delY * delZ;
+        press_force[c](1) = -(pressY_FC[top]   - pressY_FC[bottom]) 
+                           * vol_frac_CC * delX * delZ;
+        press_force[c](2) = -(pressZ_FC[front] - pressZ_FC[back])   
+                           * vol_frac_CC * delX * delY;
+      }
+
+     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+    
         patch->findCellsFromNode(*iter,cIdx);
         for (int in=0;in<8;in++){
-         gradPAccNC[*iter]+=(mom_source[cIdx[in]]/(mass[cIdx[in]]*delT))*.125;
-         }
+          IntVector c = cIdx[in];
+          double mass_CC = mass[c];      
+                                    // force /mass
+          gradPAccNC[*iter](0) += (press_force[c](0)/mass_CC) * .125;
+                                
+          gradPAccNC[*iter](1) += (press_force[c](1)/mass_CC) * .125;
+                                
+          gradPAccNC[*iter](2) += (press_force[c](2)/mass_CC) * .125 ;      
+    //    gradPAccNC[*iter]+=(mom_source[cIdx[in]]/(mass[cIdx[in]]*delT))*.125;
+        }
+      }
+      //---- P R I N T   D A T A ------ 
+      if(switchDebug_InterpolatePAndGradP) {
+        ostringstream desc;
+        desc<< "BOT_MPMICE::interpolatePAndGradP_mat_"<< indx<<"_patch_"
+            <<patch->getID();       
+        d_ice-> printData_FC( patch,0,desc.str(), "press_FC_LEFT",  pressX_FC);
+        d_ice-> printData_FC( patch,0,desc.str(), "press_FC_BOTTOM",pressY_FC);
+        d_ice-> printData_FC( patch,0,desc.str(), "press_FC_BACK",  pressZ_FC);            
+        printNCVector( patch, 1,desc.str(),"gradPAccNC",0,gradPAccNC);
       }
       new_dw->put(pPressure,   Mlb->pPressureLabel);
-      new_dw->put(gradPAccNC,  Mlb->gradPAccNCLabel, dwindex, patch);
-    }
+      new_dw->put(gradPAccNC,  Mlb->gradPAccNCLabel, indx, patch);
+    }  // numMPMMatls
   } //patches
 }
 
@@ -870,7 +919,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       IntVector nodeIdx[8];
       
       //---- P R I N T   D A T A ------ 
-/*`==========TESTING==========*/
 #if 0
       if(switchDebug_InterpolateNCToCC_0) {
         ostringstream desc;
@@ -879,12 +927,9 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         printData(     patch, 1,desc.str(), "gmass",       gmass);
         printData(     patch, 1,desc.str(), "gvolume",     gvolume);
         printData(     patch, 1,desc.str(), "gtemperatue", gtemperature);
-        printNCVector( patch, 1,desc.str(), "gvelocity.X", 0, gvelocity);
-        printNCVector( patch, 1,desc.str(), "gvelocity.Y", 1, gvelocity);
-        printNCVector( patch, 1,desc.str(), "gvelocity.Z", 2, gvelocity);
+        printNCVector( patch, 1,desc.str(), "gvelocity", 0, gvelocity);
       }
 #endif 
-/*==========TESTING==========`*/
       //__________________________________
       //  compute CC Variables
       for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
@@ -935,7 +980,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
           }
         }
       } 
-
 /*`==========TESTING==========*/
       //  Set BC's
       setBC(Temp_CC, "Temperature",patch, d_sharedState, indx);
@@ -1045,9 +1089,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
          d_ice->printData(patch,1,desc.str(), "cmass",    cmass);
          printData(     patch,  1,desc.str(), "gmass",    gmass);
          printData(     patch,  1,desc.str(), "gtemStar", gtempstar);
-         printNCVector( patch,  1,desc.str(), "gvelocityStar.X", 0, gvelocity);
-         printNCVector( patch,  1,desc.str(), "gvelocityStar.Y", 1, gvelocity);
-         printNCVector( patch,  1,desc.str(), "gvelocityStar.Z", 2, gvelocity);
+         printNCVector( patch,  1,desc.str(), "gvelocityStar", 0, gvelocity);
       }
 
       for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
@@ -1223,12 +1265,8 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
         desc<< "BOT_MPMICE::interpolateCCToNC_mat_"<< indx<<"_patch_"
             <<patch->getID();                   
         printData(     patch, 1,desc.str(), "dTdt_NC",     dTdt_NC);
-        printNCVector( patch, 1,desc.str(),"gvelocity.X",    0,gvelocity);
-        printNCVector( patch, 1,desc.str(),"gvelocity.Y",    1,gvelocity);
-        printNCVector( patch, 1,desc.str(),"gvelocity.Z",    2,gvelocity);
-        printNCVector( patch, 1,desc.str(),"gacceleration.X",0,gacceleration);
-        printNCVector( patch, 1,desc.str(),"gacceleration.Y",1,gacceleration);
-        printNCVector( patch, 1,desc.str(),"gacceleration.Z",2,gacceleration);
+        printNCVector( patch, 1,desc.str(),"gvelocity",    0,gvelocity);
+        printNCVector( patch, 1,desc.str(),"gacceleration",0,gacceleration);
       }
       new_dw->put(dTdt_NC,           Mlb->dTdt_NCLabel,       indx,patch);
     }  
@@ -1349,8 +1387,18 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 
         if(ice_matl){                // I C E
-         rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
          double gamma   = ice_matl->getGamma(); 
+         rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
+/*`==========TESTING==========*/
+#if 0
+         // Not sure about this - Todd
+         // This wipes out the pressurization in the annulus problem, but
+         // it sure feels like the right thing to do.
+         ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma,cv[m],
+                                        Temp[m][c]);  
+#endif 
+/*==========TESTING==========`*/
+
          ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma,
                                          cv[m],Temp[m][c],
                                          press_eos[m],dp_drho[m],dp_de[m]);
