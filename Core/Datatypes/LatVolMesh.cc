@@ -37,6 +37,7 @@ LatVolMesh::get_bounding_box() const
 void 
 LatVolMesh::get_nodes(node_array &array, cell_index idx) const
 {
+  array.resize(8);
   array[0].i_ = idx.i_;   array[0].j_ = idx.j_;   array[0].k_ = idx.k_; 
   array[1].i_ = idx.i_+1; array[1].j_ = idx.j_;   array[1].k_ = idx.k_; 
   array[2].i_ = idx.i_+1; array[2].j_ = idx.j_+1; array[2].k_ = idx.k_; 
