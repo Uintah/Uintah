@@ -58,6 +58,17 @@ ItPDSimPartGui::set_df( float v )
 }
 
 void 
+ItPDSimPartGui::set_mean( const vector<double> &values )
+{
+  
+  tcl_ << "set-mean ";
+  for (unsigned i=0; i<values.size(); i++)
+    tcl_ << " " << values[i];
+  tcl_exec();
+}
+
+
+void 
 ItPDSimPartGui::attach( PartInterface *interface)
 {
   ItPDSimPart *pi = dynamic_cast<ItPDSimPart *>(interface);
@@ -67,7 +78,13 @@ ItPDSimPartGui::attach( PartInterface *interface)
   }
 
   connect( pi->df_changed, this, &ItPDSimPartGui::set_df );
+  connect( pi->mean_changed, this, &ItPDSimPartGui::set_mean );
   connect( df, pi, &ItPDSimPart::df );
+  connect( means, pi, &ItPDSimPart::means );
+  connect( mean, pi, &ItPDSimPart::mean );
+
+  set_df( pi->df() );
+  set_mean( pi->mean() );
 }
 
 void 
@@ -76,8 +93,23 @@ ItPDSimPartGui::tcl_command( TCLArgs &args, void *data)
   double v;
   if ( args[1] == "df") {
     string_to_double(args[2], v);
-    cerr << "df " << v << endl;
     df(v);
+  }
+  else if ( args[1] == "mean-all" ) {
+    vector<double> v(args.count()-1);
+    for (int i=0; i<args.count()-1; i++) {
+      string_to_double(args[i+1],v[i]);
+    }
+    means(v);
+  }
+  else if ( args[1] == "mean" ) {
+    int i;
+    double v;
+
+    string_to_int( args[2], i );
+    string_to_double( args[3], v );
+
+    mean( i, v );
   }
   else
     PartGui::tcl_command( args, data);

@@ -64,7 +64,6 @@ ItPDSimPart::compute( vector<double> &,
   Array2<double> &lkappa = sampler_->get_lkappa();
     
   double v = sqrt( df_ / genchi_(df_) );
-  cerr << "df = " << df_ << endl;
   for (int i=0; i<n; i++) {
     double mult = 0;
     for (int j=0; j<n; j++)
@@ -82,6 +81,18 @@ ItPDSimPart::lpr( vector<double> &theta )
   mvtpdf_( &theta[0], &mean_[0], *(lkappa.get_dataptr()), 
 	   df_, value, n );
   return value;
+}
+
+void
+ItPDSimPart::means( const vector<double> &values )
+{
+  mean_ = values;
+}
+
+void
+ItPDSimPart::mean( int i, double v ) 
+{
+  mean_[i] = v;
 }
 
 } // End namespace MIT
