@@ -1,4 +1,3 @@
-  % -*-latex-*-
 %< require("../../Utilities/Publish/srdoc.rb") %>
 %< doc = Doc.create(Doc::TeX) %>
 
