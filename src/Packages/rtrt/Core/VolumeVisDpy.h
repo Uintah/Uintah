@@ -76,10 +76,10 @@ public:
   void create_color_transfer();
   void create_alpha_hash();
   inline float lookup_alpha(float val) {
-    return alpha_transform.lookup(val);
+    return alpha_transform.lookup_bound(val);
   }
   inline Color* lookup_color(float val) {
-    return color_transform.lookup(val);
+    return color_transform.lookup_bound(val);
   }
 
   float t_inc;
