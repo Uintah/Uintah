@@ -29,6 +29,7 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 
+#include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/CurveField.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/QuadSurfField.h>
@@ -65,6 +66,120 @@ public:
 					     const unsigned int ctype);
 
 };
+
+
+
+class RegularNrrdFieldConverterMeshAlgo : public NrrdFieldConverterMeshAlgo
+{
+public:
+  virtual void execute(MeshHandle mHandle,
+		       vector< NrrdDataHandle > nHandles,
+		       vector< int > mesh) = 0;
+};
+
+
+template< class MESH, class PNTYPE, class CNTYPE >
+class RegularNrrdFieldConverterMeshAlgoT : 
+  public RegularNrrdFieldConverterMeshAlgo
+{
+public:
+  virtual void execute(MeshHandle mHandle,
+		       vector< NrrdDataHandle > nHandles,
+		       vector< int > mesh);
+};
+
+template< class MESH, class PNTYPE, class CNTYPE >
+void
+RegularNrrdFieldConverterMeshAlgoT< MESH, PNTYPE, CNTYPE >::
+execute(MeshHandle mHandle,
+	vector< NrrdDataHandle > nHandles,
+	vector< int > mesh)
+{
+  Point minpt, maxpt;
+
+  if( mesh.size() == 1 ) {
+    PNTYPE *ptr = (PNTYPE *)(nHandles[mesh[0]]->nrrd->data);
+    
+    int rank = 0;
+    string label(nHandles[mesh[0]]->nrrd->axis[0].label);
+
+    if( label.find( ":Scalar" ) != string::npos )
+      rank = nHandles[mesh[0]]->nrrd->axis[ nHandles[mesh[0]]->nrrd->dim-1].size;
+    else if( label.find( ":Vector" ) != string::npos )
+      rank = 3;
+
+    float xVal = 0, yVal = 0, zVal = 0;
+    
+    if( rank >= 1 ) xVal = ptr[0];
+    if( rank >= 2 ) yVal = ptr[1];
+    if( rank >= 3 ) zVal = ptr[2];
+    
+    minpt = Point( xVal, yVal, zVal );
+
+    xVal = 0; yVal = 0; zVal = 0;
+	    
+    if( rank >= 1 ) xVal = ptr[rank + 0];
+    if( rank >= 2 ) yVal = ptr[rank + 1];
+    if( rank >= 3 ) zVal = ptr[rank + 2];
+    
+    maxpt = Point( xVal, yVal, zVal );
+
+  } else {
+    int rank = mesh.size();
+
+    PNTYPE *ptr[3] = {NULL, NULL, NULL};
+
+    if( rank >= 1 ) ptr[0] = (PNTYPE *)(nHandles[mesh[0]]->nrrd->data);
+    if( rank >= 2 ) ptr[1] = (PNTYPE *)(nHandles[mesh[1]]->nrrd->data);
+    if( rank >= 3 ) ptr[2] = (PNTYPE *)(nHandles[mesh[2]]->nrrd->data);
+
+    float xVal = 0, yVal = 0, zVal = 0;
+
+    if( ptr[0] ) xVal = ptr[0][0];
+    if( ptr[1] ) yVal = ptr[1][0];
+    if( ptr[2] ) zVal = ptr[2][0];
+	
+    minpt = Point( xVal, yVal, zVal );
+
+    xVal = 0; yVal = 0; zVal = 0;
+	    
+    if( ptr[0] ) xVal = ptr[0][1];
+    if( ptr[1] ) yVal = ptr[1][1];
+    if( ptr[2] ) zVal = ptr[2][1];
+	
+    maxpt = Point( xVal, yVal, zVal );
+  }
+
+  MESH *imesh = (MESH *) mHandle.get_rep();
+
+  vector<unsigned int> array;
+  imesh->get_dim(array);
+
+  Transform trans;
+
+  if( array.size() == 1 )
+    trans.pre_scale(Vector(1.0 / (array[0]-1.0),
+			   1.0,
+			   1.0));
+
+  else if( array.size() == 2 )
+    trans.pre_scale(Vector(1.0 / (array[0]-1.0),
+			   1.0 / (array[1]-1.0),
+			   1.0));
+
+  else  if( array.size() == 3 )
+    trans.pre_scale(Vector(1.0 / (array[0]-1.0),
+			   1.0 / (array[1]-1.0),
+			   1.0 / (array[2]-1.0)));
+
+  trans.pre_scale(maxpt - minpt);
+
+  trans.pre_translate(minpt.asVector());
+  trans.compute_imat();
+
+  imesh->set_transform(trans);
+}
+
 
 class StructuredNrrdFieldConverterMeshAlgo : public NrrdFieldConverterMeshAlgo
 {
@@ -104,81 +219,77 @@ execute(MeshHandle mHandle,
 
   register int i, j, k;
 
-  std::string property;
-
-  nHandles[mesh[0]]->get_property( "Coordinate System", property );
-
-  if( property.find("Cartesian") != std::string::npos ) {
-  
-    if( mesh.size() == 1 ) {
-      PNTYPE *ptr = (PNTYPE *)(nHandles[mesh[0]]->nrrd->data);
+  if( mesh.size() == 1 ) {
+    PNTYPE *ptr = (PNTYPE *)(nHandles[mesh[0]]->nrrd->data);
     
-      int rank = 0;
-      string label(nHandles[mesh[0]]->nrrd->axis[0].label);
+    int rank = 0;
+    string label(nHandles[mesh[0]]->nrrd->axis[0].label);
 
-      if( label.find( ":Scalar" ) != string::npos )
-	rank = nHandles[mesh[0]]->nrrd->axis[ nHandles[mesh[0]]->nrrd->dim-1].size;
-      else if( label.find( ":Vector" ) != string::npos )
-	rank = 3;
+    if( label.find( ":Scalar" ) != string::npos )
+      rank = nHandles[mesh[0]]->nrrd->axis[ nHandles[mesh[0]]->nrrd->dim-1].size;
+    else if( label.find( ":Vector" ) != string::npos )
+      rank = 3;
 
-      for( k=0; k<kdim; k++ ) {
-	for( j=0; j<jdim; j++ ) {
-	  for( i=0; i<idim; i++ ) {
+    for( k=0; k<kdim; k++ ) {
+      for( j=0; j<jdim; j++ ) {
+	for( i=0; i<idim; i++ ) {
 	  
-	    int index = (i * jdim + j) * kdim + k;
+	  int index = (i * jdim + j) * kdim + k;
 
-	    float xVal = 0, yVal = 0, zVal = 0;
+	  float xVal = 0, yVal = 0, zVal = 0;
 
-	    // Mesh
-	    if( rank >= 1 ) xVal = ptr[index*rank + 0];
-	    if( rank >= 2 ) yVal = ptr[index*rank + 1];
-	    if( rank >= 3 ) zVal = ptr[index*rank + 2];
+	  // Mesh
+	  if( rank >= 1 ) xVal = ptr[index*rank + 0];
+	  if( rank >= 2 ) yVal = ptr[index*rank + 1];
+	  if( rank >= 3 ) zVal = ptr[index*rank + 2];
 	
-	    imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
+	  imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
 
-	    ++inodeItr;
-	  }
+	  ++inodeItr;
 	}
       }
-    } else {
-      int rank = mesh.size();
+    }
+  } else {
+    int rank = mesh.size();
 
-      PNTYPE *ptr[3] = {NULL, NULL, NULL};
+    PNTYPE *ptr[3] = {NULL, NULL, NULL};
 
-      if( rank >= 1 ) ptr[0] = (PNTYPE *)(nHandles[mesh[0]]->nrrd->data);
-      if( rank >= 2 ) ptr[1] = (PNTYPE *)(nHandles[mesh[1]]->nrrd->data);
-      if( rank >= 3 ) ptr[2] = (PNTYPE *)(nHandles[mesh[2]]->nrrd->data);
+    if( rank >= 1 ) ptr[0] = (PNTYPE *)(nHandles[mesh[0]]->nrrd->data);
+    if( rank >= 2 ) ptr[1] = (PNTYPE *)(nHandles[mesh[1]]->nrrd->data);
+    if( rank >= 3 ) ptr[2] = (PNTYPE *)(nHandles[mesh[2]]->nrrd->data);
 
-      for( k=0; k<kdim; k++ ) {
-	for( j=0; j<jdim; j++ ) {
-	  for( i=0; i<idim; i++ ) {
+    for( k=0; k<kdim; k++ ) {
+      for( j=0; j<jdim; j++ ) {
+	for( i=0; i<idim; i++ ) {
 	  
-	    int index = (i * jdim + j) * kdim + k;
+	  int index = (i * jdim + j) * kdim + k;
 
-	    float xVal = 0, yVal = 0, zVal = 0;
+	  float xVal = 0, yVal = 0, zVal = 0;
 
-	    // Mesh
-	    if( ptr[0] ) xVal = ptr[0][index];
-	    if( ptr[1] ) yVal = ptr[1][index];
-	    if( ptr[2] ) zVal = ptr[2][index];
+	  // Mesh
+	  if( ptr[0] ) xVal = ptr[0][index];
+	  if( ptr[1] ) yVal = ptr[1][index];
+	  if( ptr[2] ) zVal = ptr[2][index];
 	
-	    imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
+	  imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
 
-	    ++inodeItr;
-	  }
+	  ++inodeItr;
 	}
       }
     }
   }
 }
 
+
+
 class UnstructuredNrrdFieldConverterMeshAlgo : 
   public NrrdFieldConverterMeshAlgo
 {
 public:
   virtual void execute(MeshHandle mHandle,
-		       NrrdDataHandle pHandle,
-		       NrrdDataHandle cHandle) = 0;
+		       vector< NrrdDataHandle > nHandles,
+		       vector< int > mesh,
+		       unsigned int connectivity) = 0;
 };
 
 template< class MESH, class PNTYPE, class CNTYPE >
@@ -187,8 +298,9 @@ class UnstructuredNrrdFieldConverterMeshAlgoT :
 {
 public:
   virtual void execute(MeshHandle mHandle,
-		       NrrdDataHandle pHandle,
-		       NrrdDataHandle cHandle);
+		       vector< NrrdDataHandle > nHandles,
+		       vector< int > mesh,
+		       unsigned int connectivity);
 };
 
 
@@ -196,51 +308,78 @@ template< class MESH, class PNTYPE, class CNTYPE >
 void
 UnstructuredNrrdFieldConverterMeshAlgoT< MESH, PNTYPE, CNTYPE >::
 execute(MeshHandle mHandle,
-	NrrdDataHandle pHandle,
-	NrrdDataHandle cHandle)
+	vector< NrrdDataHandle > nHandles,
+	vector< int > mesh,
+	unsigned int connectivity)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
   typename MESH::Node::iterator inodeItr;
 
   imesh->begin( inodeItr );
 
-  PNTYPE *pPtr = (PNTYPE *)(pHandle->nrrd->data);
-  CNTYPE *cPtr = (CNTYPE *)(cHandle->nrrd->data);
+  int npts = nHandles[mesh[1]]->nrrd->axis[1].size;
 
-  int npts = pHandle->nrrd->axis[1].size;
+  if( mesh.size() == 2 ) {
+    PNTYPE *pPtr = (PNTYPE *)(nHandles[mesh[1]]->nrrd->data);
 
-  int rank = 0;
-  string label(pHandle->nrrd->axis[0].label);
+    int rank = 0;
+    string label(nHandles[mesh[1]]->nrrd->axis[0].label);
   
-  if( label.find( ":Scalar" ) != string::npos )
-    rank = pHandle->nrrd->axis[ pHandle->nrrd->dim-1].size;
-  else if( label.find( ":Vector" ) != string::npos )
-    rank = 3;
+    if( label.find( ":Scalar" ) != string::npos )
+      rank = nHandles[mesh[1]]->nrrd->axis[ nHandles[mesh[1]]->nrrd->dim-1].size;
+    else if( label.find( ":Vector" ) != string::npos )
+      rank = 3;
 
-  for( int index=0; index<npts; index++ ) {
-    float xVal = 0, yVal = 0, zVal = 0;
+    for( int index=0; index<npts; index++ ) {
+      float xVal = 0, yVal = 0, zVal = 0;
 
-    // Mesh
-    if( rank >= 1 ) xVal = pPtr[index*rank + 0];
-    if( rank >= 2 ) yVal = pPtr[index*rank + 1];
-    if( rank >= 3 ) zVal = pPtr[index*rank + 2];
+      // Mesh
+      if( rank >= 1 ) xVal = pPtr[index*rank + 0];
+      if( rank >= 2 ) yVal = pPtr[index*rank + 1];
+      if( rank >= 3 ) zVal = pPtr[index*rank + 2];
     
-    imesh->add_point( Point(xVal, yVal, zVal) );
+      imesh->add_point( Point(xVal, yVal, zVal) );
+    }
+  } else {
+    int rank = mesh.size() - 1;
+    
+    PNTYPE *pPtr[3] = {NULL, NULL, NULL};
+    
+    if( rank >= 1 ) pPtr[0] = (PNTYPE *)(nHandles[mesh[1]]->nrrd->data);
+    if( rank >= 2 ) pPtr[1] = (PNTYPE *)(nHandles[mesh[2]]->nrrd->data);
+    if( rank >= 3 ) pPtr[2] = (PNTYPE *)(nHandles[mesh[3]]->nrrd->data);
+
+    for( int index=0; index<npts; index++ ) {
+      float xVal = 0, yVal = 0, zVal = 0;
+
+      // Mesh
+      if( rank >= 1 ) xVal = pPtr[0][index];
+      if( rank >= 2 ) yVal = pPtr[1][index];
+      if( rank >= 3 ) zVal = pPtr[2][index];
+    
+      imesh->add_point( Point(xVal, yVal, zVal) );
+    }
   }
 
-  int nelements = cHandle->nrrd->axis[1].size;
 
-  typename MESH::Node::array_type array(6);
+  if( connectivity > 0 ) {
+    NrrdDataHandle cHandle = nHandles[mesh[0]];
 
-  for( int i=0; i<nelements; i++ ) {
-    for( unsigned int j=0; j<6; j++ ) {
-      array[j] = (int) cPtr[i*6+j];
+    CNTYPE *cPtr = cPtr = (CNTYPE *)(cHandle->nrrd->data);
+
+    int nelements = cHandle->nrrd->axis[1].size;
+
+    typename MESH::Node::array_type array(connectivity);
+
+    for( int i=0; i<nelements; i++ ) {
+      for( unsigned int j=0; j<connectivity; j++ ) {
+	array[j] = (int) cPtr[i*connectivity+j];
+      }
+
+      imesh->add_elem( array );
     }
-
-    imesh->add_elem( array );
   }
 }
-
 
 
 
