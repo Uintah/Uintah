@@ -1012,11 +1012,10 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 		    set tmpval [subDATADIRandDATASET $val]
 		    append script "${tab}set $varname \"${tmpval}\"\n"
 		} else {
-		    set len [string length $val]
-		    if { $len > 9 } {
-			set failed [catch "set num [format %.${len}e $val]"]
+		    if { [llength $val] == 1 && ![string is integer $val] } {
+			set failed [catch "set num [format %.[string length $val]e $val]"]
 			if { !$failed } {
-			    append script "${tab}set $varname \{${num}\}\n"
+			    append script "${tab}set $varname \{[expr $num]\}\n"
 			    continue
 			}
 		    }
