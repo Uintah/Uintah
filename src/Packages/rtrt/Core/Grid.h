@@ -11,12 +11,17 @@ struct GridTree;
 struct BoundedObject;
 
 class Grid : public Object {
+
+protected: 
+    // It's ugly, but we should be able to access this data
+    // from the derived class as well
     Object* obj;
     BBox bbox;
     int nx, ny, nz;
     Object** grid;
     int* counts;
     int nsides;
+
 public:
     Grid(Object* obj, int nside);
     virtual ~Grid();
