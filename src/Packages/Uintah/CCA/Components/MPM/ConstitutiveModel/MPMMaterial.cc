@@ -183,14 +183,6 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      new_dw->allocateAndPut(pNorm, lb->pNormLabel,  subset);
    }
 
-   ParticleVariable<int> pIsBroken;
-   ParticleVariable<Vector> pCrackNormal;
-   ParticleVariable<Vector> pTipNormal;
-   ParticleVariable<Vector> pExtensionDirection;
-   ParticleVariable<double> pCrackSurfacePressure;
-   ParticleVariable<Vector> pDisplacement;
-
-   
    particleIndex start = 0;
    if(!d_membrane){
      for(int i=0; i<(int)d_geom_objs.size(); i++){
