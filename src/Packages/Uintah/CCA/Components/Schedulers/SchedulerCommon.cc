@@ -45,6 +45,8 @@ SchedulerCommon::~SchedulerCommon()
     delete dw[1];
   if(dt)
     delete dt;
+  if(memlogfile)
+    delete memlogfile;
 }
 
 void
@@ -256,6 +258,25 @@ DataWarehouse*
 SchedulerCommon::get_new_dw()
 {
   return dw[1];
+}
+
+void
+SchedulerCommon::logMemoryUse()
+{
+  if(!memlogfile){
+    ostringstream fname;
+    fname << "uintah_memuse.log.p" << setw(5) << setfill('0') << d_myworld->myrank();
+    memlogfile = new ofstream(fname.str().c_str());
+    if(!*memlogfile){
+      cerr << "Error opening file: " << fname.str() << '\n';
+    }
+  }
+  *memlogfile << '\n';
+  if(dw[0])
+    dw[0]->logMemoryUse(*memlogfile, "OldDW");
+  if(dw[1])
+    dw[1]->logMemoryUse(*memlogfile, "NewDW");
+  memlogfile->flush();
 }
 
 // Makes and returns a map that maps strings to VarLabels of

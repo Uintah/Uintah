@@ -166,6 +166,8 @@ public:
 		  const ProcessorGroup* world);
 
    void scrub(const VarLabel*);
+
+  void logMemoryUse(ostream& out, const string& tag);
 private:
 
    struct dataLocation {
