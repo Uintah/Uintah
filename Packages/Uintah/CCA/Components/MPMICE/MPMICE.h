@@ -106,10 +106,21 @@ public:
                              DataWarehouseP&,
                              DataWarehouseP&);
 
+  void scheduleInterpolateCCToNC(const Patch* patch,
+				 SchedulerP&,
+				 DataWarehouseP&,
+				 DataWarehouseP&);
+
   void scheduleComputeEquilibrationPressure(const Patch* patch,
 					    SchedulerP&,
 					    DataWarehouseP&,
 					    DataWarehouseP&);
+
+
+  void scheduleInterpolatePressCCToPressNC(const Patch* patch,
+					   SchedulerP&,
+					   DataWarehouseP&,
+					   DataWarehouseP&);
 
   void scheduleInterpolatePAndGradP(const Patch* patch,
 				    SchedulerP&,
@@ -120,7 +131,7 @@ public:
 //       A C T U A L   S T E P S : 
                           
   void finishMPMICEproblemSetup(const ProblemSpecP& params, 
-                            GridP& grid,
+				GridP& grid,
 				SimulationStateP&);   
                             
   void finishMPMICEinitialize(const ProcessorGroup*, 
@@ -152,6 +163,17 @@ public:
                        const Patch* patch,
                        DataWarehouseP& old_dw,
                        DataWarehouseP& new_dw);
+
+  void interpolateCCToNC(const ProcessorGroup*,
+                         const Patch* patch,
+                         DataWarehouseP& old_dw,
+                         DataWarehouseP& new_dw);
+
+  void interpolatePressCCToPressNC(const ProcessorGroup*,
+				   const Patch* patch,
+				   DataWarehouseP& old_dw,
+				   DataWarehouseP& new_dw);
+
 
   void interpolatePAndGradP(const ProcessorGroup*,
                             const Patch* patch,
