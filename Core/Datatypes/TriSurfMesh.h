@@ -182,13 +182,10 @@ public:
 
 private:
 
+  bool inside3_p(int, const Point &p) const;
+
   int next(int i) { return ((i%3)==2) ? (i-2) : (i+1); }
   int prev(int i) { return ((i%3)==0) ? (i+2) : (i-1); }
-
-
-
-  bool inside4_p(int, const Point &p);
-
 
   vector<Point>  points_;
   vector<int>    faces_;
