@@ -95,7 +95,16 @@ void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 			     SimulationStateP& sharedState)
 {
    d_sharedState = sharedState;
-
+   
+/*`==========TESTING==========*/
+cout << " getting DataArchiver " << endl;
+   dataArchiver = dynamic_cast<Output*>(getPort("output"));
+cout << " Have dataArchiver " << endl;
+   if(dataArchiver == 0){
+     cout<<"dataArchiver in FMPM is null now exiting; "<<endl;
+     exit(1);
+   } 
+/*===========TESTING==========`*/
    ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
 
    if(mpm_soln_ps) {
@@ -147,13 +156,11 @@ void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 		 ThermalContactFactory::create(prob_spec, sharedState, lb);
 
    // for Fracture 
-   crackMethod = scinew Crack(prob_spec,sharedState,lb,d_8or27);
+   crackMethod = scinew Crack(prob_spec,sharedState,dataArchiver,lb,d_8or27);
   
    ProblemSpecP p = prob_spec->findBlock("DataArchiver");
    if(!p->get("outputInterval", d_outputInterval))
       d_outputInterval = 1.0;
-   if(!p->get("outputCFInterval", crackMethod->d_outputCFInterval))
-      crackMethod->d_outputCFInterval=0.; 
 
    //Search for the MaterialProperties block and then get the MPM section
 
