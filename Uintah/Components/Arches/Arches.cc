@@ -82,7 +82,7 @@ Arches::problemSetup(const ProblemSpecP& params, GridP&,
   else 
     throw InvalidValue("Turbulence Model not supported" + turbModel);
   d_turbModel->problemSetup(db);
-  d_boundaryCondition = scinew BoundaryCondition(d_turbModel);
+  d_boundaryCondition = scinew BoundaryCondition(d_turbModel, d_props);
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->problemSetup(db);
   string nlSolver;
@@ -246,6 +246,9 @@ Arches::paramInit(const ProcessorContext* ,
 
 //
 // $Log$
+// Revision 1.32  2000/06/01 19:29:46  rawat
+// Modified BoundaryCondition to read multiple flowinlets
+//
 // Revision 1.31  2000/05/31 23:44:52  rawat
 // modified arches and properties
 //

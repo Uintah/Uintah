@@ -2,6 +2,7 @@
 #include <Uintah/Components/Arches/Discretization.h>
 #include <Uintah/Grid/Stencil.h>
 #include <Uintah/Components/Arches/TurbulenceModel.h>
+#include <Uintah/Components/Arches/Properties.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/FCVariable.h>
@@ -23,15 +24,19 @@ using SCICore::Geometry::Vector;
 BoundaryCondition::BoundaryCondition()
 {
   //construct 3d array for storing boundary type 
-  //  IntVector lowIndex = (0,0,0);
+  //  const IntVector lowIndex = IntVector(0,0,0);
+  // change...
+  // max res for a domain, temp cluge for cell type
+  // change cellTypes later to define on individual patches
+  //  const IntVector DOMAIN_HIGH = IntVector(200, 100, 100);
   //  cellTypes = scinew Array3<int>(lowIndex, DOMAIN_HIGH);
 }
 
-BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model)
-  :d_turbModel(turb_model)
+BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
+				     Properties* props)
+  :d_turbModel(turb_model), d_props(props)
 {
-  //  IntVector lowIndex = (0,0,0);
-  //  cellTypes = scinew Array3<int>(lowIndex, DOMAIN_HIGH);
+
 }
 
 BoundaryCondition::~BoundaryCondition()
@@ -40,22 +45,17 @@ BoundaryCondition::~BoundaryCondition()
 
 void BoundaryCondition::problemSetup(const ProblemSpecP& params)
 {
-#if 0
+
   ProblemSpecP db = params->findBlock("BoundaryConditions");
-  int numFlowInlets;
-  db->require("numFlowInlets", numFlowInlets);
-  dw->put(numFlowInlets, "NumFlowInlets");
-  int numMixingScalars;
-  // set number of scalars in properties based on
-  // num of streams read
-  // change
-  dw->get(numMixingScalars, "NumMixingScalars");
-  for (int i = 0; i < numFlowInlets; i++) {
-    FlowInlet* flow_inlet = scinew FlowInlet(numMixingScalars);
-    // put flow_inlet to the database, use celltype info to
-    // differentiate between different inlets
-    flow_inlet->problemSetup(db, dw);
+  d_numInlets = 0;
+  int numMixingScalars = d_props->getNumMixVars();
+  for (ProblemSpecP inlet_db = db->findBlock("FlowInlet");
+       inlet_db != 0; inlet_db->findNextBlock("FlowInlet")) {
+    d_flowInlets.push_back(FlowInlet(numMixingScalars));
+    d_flowInlets[d_numInlets].problemSetup(inlet_db);
+    ++d_numInlets;
   }
+#if 0
   bool pressureBC;
   // set the boolean in the section where cell type info is read
   dw->get(pressureBC, "bool_pressureBC");

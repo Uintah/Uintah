@@ -40,20 +40,19 @@ none
 #include <Uintah/Parallel/ProcessorContext.h>
 #include <Uintah/Grid/Array3.h>
 #include <SCICore/Containers/Array1.h>
-
+#include <vector>
 namespace Uintah {
 namespace ArchesSpace {
 class StencilMatrix;
  using namespace SCICore::Containers;
 
- class TurbulenceModel; 
+ class TurbulenceModel;
+ class Properties;
 
 class BoundaryCondition
 {
 public:
-  // max res for a domain, temp cluge for cell type
-  // change cellTypes later to define on individual patches
-  //  static const IntVector DOMAIN_HIGH = (200, 100, 100);
+
   // GROUP: Constructors:
   ////////////////////////////////////////////////////////////////////////
   //
@@ -68,7 +67,7 @@ public:
    
    BoundaryCondition();
 
-   BoundaryCondition(TurbulenceModel* d_turb_model);
+   BoundaryCondition(TurbulenceModel* turb_model, Properties* props);
   // GROUP: Destructors:
   ////////////////////////////////////////////////////////////////////////
   // Destructor
@@ -148,14 +147,11 @@ public:
 		 const int index);
    // used for calculating wall boundary conditions
    TurbulenceModel* d_turbModel;
-   // Diff BC types
-   Array3<int>* cellTypes;
-   int numInlets;
-#if 0
-   bool d_;
+   // used to get properties of different streams
+   Properties* d_props;
    struct FlowInlet {
      // define enum for cell type
-     CellTypeInfo inletType; 
+     //     CellTypeInfo inletType; 
      // input vars
      double flowRate;
      // array of size numMixingVars -1
@@ -169,6 +165,13 @@ public:
      FlowInlet(int numMix);
      problemSetup(ProblemSpecP& params);
    };
+   // Diff BC types
+   Array3<int>* cellTypes;
+   int d_numInlets;
+   int d_numMixingScalars;
+   std::vector<FlowInlet> d_flowInlets;
+   bool d_pressBoundary;
+#if 0
    struct PressureInlet {
      CellTypeInfo pressureType;
      // array of size numMixingVars -1
