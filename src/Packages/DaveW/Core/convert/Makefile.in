@@ -10,6 +10,9 @@ all:: prog-SurfToJAS
 prog-CVRTItoMesh:
 	@$(MAKE) --no-print-directory SRCS=CVRTItoMesh.cc PROGRAM=CVRTItoMesh CVRTItoMesh
 
+prog-GenSegFld:
+	@$(MAKE) --no-print-directory SRCS=GenSegFld.cc PROGRAM=GenSegFld GenSegFld
+
 prog-JAStoMesh:
 	@$(MAKE) --no-print-directory SRCS=JAStoMesh.cc PROGRAM=JAStoMesh JAStoMesh
 
