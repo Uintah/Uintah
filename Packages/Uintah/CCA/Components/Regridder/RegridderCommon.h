@@ -73,6 +73,9 @@ WARNING
     //! Asks if we are going to do regridding
     virtual bool isAdaptive() { return d_isAdaptive; }
 
+    //! Schedules task to initialize the error flags to 0
+    virtual void scheduleInitializeErrorEstimate(SchedulerP& sched, const LevelP& level);
+
     //! Asks if we are going to do regridding
     virtual bool flaggedCellsOnFinestLevel(const GridP& grid, SchedulerP& sched);
 
@@ -90,6 +93,12 @@ WARNING
       DILATE_PATCH
     };
   
+    //! initialize the refineFlag variable for this domain (a task callback)
+    void initializeErrorEstimate(const ProcessorGroup*,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse*, DataWarehouse* new_dw);
+
     void Dilate2(const ProcessorGroup*,
                  const PatchSubset* patches,
                  const MaterialSubset* ,
