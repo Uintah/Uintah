@@ -467,7 +467,7 @@ void  ICE::scheduleMassExchange(SchedulerP& sched,
 #endif 
   Task* task = scinew Task("ICE::massExchange",
 			this, &ICE::massExchange);
-  task->requires(Task::NewDW, lb->rho_CCLabel, Ghost::None);
+  task->requires(Task::NewDW, lb->rho_CCLabel,  Ghost::None);
   task->requires(Task::OldDW, lb->temp_CCLabel, Ghost::None);
   task->computes(lb->burnedMass_CCLabel);
   task->computes(lb->releasedHeat_CCLabel);
@@ -505,10 +505,10 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                                                       Ghost::None); 
   task->requires( Task::NewDW, lb->vel_CCLabel,       mpm_matls, 
                                                       Ghost::None);     
- task->requires(Task::NewDW,lb->burnedMass_CCLabel,   Ghost::None);
-    
-  task->computes(lb->press_CCLabel,    press_matl);
-  task->computes(lb->delPress_CCLabel, press_matl);
+  task->requires(Task::NewDW,lb->burnedMass_CCLabel,  Ghost::None);
+  task->computes(lb->press_CCLabel,        press_matl);
+  task->computes(lb->delP_DilatateLabel, press_matl);
+  task->computes(lb->delP_MassXLabel,      press_matl);
   
   sched->addTask(task, patches, matls);
 }
@@ -585,14 +585,15 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   Task* task = scinew Task("ICE::accumulateEnergySourceSinks",
                      this, &ICE::accumulateEnergySourceSinks);
   
-  task->requires(Task::NewDW, lb->press_CCLabel,      press_matl,Ghost::None);
-  task->requires(Task::NewDW, lb->delPress_CCLabel,   press_matl,Ghost::None);
-  task->requires(Task::NewDW, lb->rho_micro_CCLabel,             Ghost::None);
-  task->requires(Task::NewDW, lb->speedSound_CCLabel,            Ghost::None);
-  task->requires(Task::NewDW, lb->vol_frac_CCLabel,              Ghost::None);
+  task->requires(Task::NewDW, lb->press_CCLabel,     press_matl,Ghost::None);
+  task->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,Ghost::None);
+  task->requires(Task::NewDW, lb->delP_MassXLabel,   press_matl,Ghost::None);
+  task->requires(Task::NewDW, lb->rho_micro_CCLabel,            Ghost::None);
+  task->requires(Task::NewDW, lb->speedSound_CCLabel,           Ghost::None);
+  task->requires(Task::NewDW, lb->vol_frac_CCLabel,             Ghost::None);
 
 #ifdef ANNULUSICE
-  task->requires(Task::NewDW, lb->rho_CCLabel,                   Ghost::None);
+  task->requires(Task::NewDW, lb->rho_CCLabel,                  Ghost::None);
 #endif
   
   task->computes(lb->int_eng_source_CCLabel);
@@ -704,8 +705,8 @@ void ICE::schedulePrintConservedQuantities(SchedulerP& sched,
   Task* task = scinew Task("ICE::printConservedQuantities",
                      this, &ICE::printConservedQuantities);
 
-  task->requires(Task::NewDW, lb->press_CCLabel,press_matl,Ghost::None);
-  task->requires(Task::NewDW, lb->delPress_CCLabel, press_matl,Ghost::None);
+  task->requires(Task::NewDW,lb->press_CCLabel,      press_matl,Ghost::None);
+  task->requires(Task::NewDW,lb->delP_DilatateLabel, press_matl,Ghost::None);
   task->requires(Task::NewDW,lb->rho_CCLabel, Ghost::None);
   task->requires(Task::NewDW,lb->vel_CCLabel, Ghost::None);
   task->requires(Task::NewDW,lb->temp_CCLabel,Ghost::None);
@@ -898,7 +899,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                 patch->getID());
         printData(   patch, 1, description, "rho_CC",      rho_top_cycle[m]);
         printData(   patch, 1, description, "rho_micro_CC",rho_micro[m]);
-      // printData(   patch, 1, description, "sp_vol_CC",  sp_vol_CC[m]);
+     // printData(   patch, 1, description, "sp_vol_CC",  sp_vol_CC[m]);
         printData(   patch, 1, description, "Temp_CC",     Temp_CC[m]);
         printData(   patch, 1, description, "vol_frac_CC", vol_frac_CC[m]);
         printVector( patch, 1, description, "uvel_CC", 0,  vel_CC[m]);
@@ -992,7 +993,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       new_dw->allocate(speedSound_new[m],lb->speedSound_CCLabel,indx, patch);
       new_dw->allocate(rho_micro[m],     lb->rho_micro_CCLabel, indx, patch);
       new_dw->allocate(vol_frac[m],      lb->vol_frac_CCLabel,  indx, patch);
-      new_dw->allocate(rho_CC_new[m],    lb->rho_CCLabel, indx, patch);
+      new_dw->allocate(rho_CC_new[m],    lb->rho_CCLabel,       indx, patch);
       cv[m] = matl->getSpecificHeat();
     }
 
@@ -1313,7 +1314,7 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       if(doMechOld < -1.5){
       //__________________________________
       //   B O T T O M   F A C E S 
-      int offset=0; // 0=Compute all faces in computational domain
+      int offset=1; // 0=Compute all faces in computational domain
                     // 1=Skip the faces at the border between interior and gc
       for(CellIterator iter=patch->getSFCYIterator(offset);!iter.done();iter++){
 	 IntVector curcell = *iter;
@@ -1513,7 +1514,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     //  Note this includes b[m][m]
     //  You need to make sure that mom_exch_coeff[m][m] = 0
     //   - form off diagonal terms of (a) 
-    int offset=0;   // 0=Compute all faces in computational domain
+    int offset=1;   // 0=Compute all faces in computational domain
                     // 1=Skip the faces at the border between interior and gc
     for(CellIterator iter=patch->getSFCYIterator(offset);!iter.done();iter++){
       IntVector curcell = *iter;
@@ -1703,7 +1704,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
  Function~  ICE::computeDelPressAndUpdatePressCC--
  Purpose~
    This function calculates the change in pressure explicitly. 
- Note:  Units of delpress are [Pa]
+ Note:  Units of delp_Dilatate and delP_MassX are [Pa]
  Reference:  Multimaterial Formalism eq. 1.5
  ---------------------------------------------------------------------  */
 void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,  
@@ -1731,14 +1732,16 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     CCVariable<eflux> OFE;
     CCVariable<cflux> OFC;                    
     CCVariable<double> pressure;
-    CCVariable<double> delPress;
+    CCVariable<double> delP_Dilatate;
+    CCVariable<double> delP_MassX;
     CCVariable<double> press_CC;
     CCVariable<double> burnedMass;
    
     const IntVector gc(1,1,1);
 
     new_dw->get(pressure,       lb->press_equil_CCLabel,0,patch,Ghost::None,0);
-    new_dw->allocate(delPress,  lb->delPress_CCLabel,   0, patch);
+    new_dw->allocate(delP_Dilatate,lb->delP_DilatateLabel,0, patch);
+    new_dw->allocate(delP_MassX,lb->delP_MassXLabel,    0, patch);
     new_dw->allocate(press_CC,  lb->press_CCLabel,      0, patch);
     new_dw->allocate(q_CC,      lb->q_CCLabel,          0, patch,gc);
     new_dw->allocate(q_advected,lb->q_advectedLabel,    0, patch);
@@ -1756,7 +1759,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     term1.initialize(0.);
     term2.initialize(0.);
     term3.initialize(0.);
-    delPress.initialize(0.0);
+    delP_Dilatate.initialize(0.0);
+    delP_MassX.initialize(0.0);
 
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -1840,9 +1844,10 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     }  //matl loop
     press_CC.copyPatch(pressure);
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
-
-      delPress[*iter] = (delT * term1[*iter] - term2[*iter])/(term3[*iter]);
-      press_CC[*iter]  = pressure[*iter] + delPress[*iter];    
+      delP_MassX[*iter]    = (delT * term1[*iter])/term3[*iter];
+      delP_Dilatate[*iter] = -term2[*iter]/term3[*iter];
+      press_CC[*iter]      = pressure[*iter] + 
+                             delP_MassX[*iter] + delP_Dilatate[*iter];    
     }
 /*`==========TESTING==========*/ 
   #if oldStyle_setBC
@@ -1855,16 +1860,18 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     #endif
  /*==========TESTING==========`*/
 
-    new_dw->put(delPress, lb->delPress_CCLabel, 0, patch);
-    new_dw->put(press_CC, lb->press_CCLabel,    0, patch);
+    new_dw->put(delP_Dilatate, lb->delP_DilatateLabel, 0, patch);
+    new_dw->put(delP_MassX,    lb->delP_MassXLabel,    0, patch);
+    new_dw->put(press_CC,      lb->press_CCLabel,      0, patch);
 
    //---- P R I N T   D A T A ------  
     if (switchDebug_explicit_press) {
       char description[50];
       sprintf(description, "Bottom_of_explicit_Pressure_patch_%d ", 
                   patch->getID());
-      printData( patch, 1,description, "delPress_CC", delPress);
-      printData( patch, 1,description, "Press_CC",    press_CC);
+      printData( patch, 1,description, "delP_Dilatate", delP_Dilatate);
+    //printData( patch, 1,description, "delP_MassX",    delP_MassX);
+      printData( patch, 1,description, "Press_CC",      press_CC);
     }
   }  // patch loop
 }
@@ -2273,10 +2280,10 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
     CCVariable<double> speedSound;
     CCVariable<double> vol_frac;
     CCVariable<double> press_CC;
-    CCVariable<double> delPress;
+    CCVariable<double> delP_Dilatate;
 
-    new_dw->get(press_CC,lb->press_CCLabel,    0, patch,Ghost::None, 0);
-    new_dw->get(delPress,lb->delPress_CCLabel, 0, patch,Ghost::None, 0);
+    new_dw->get(press_CC,     lb->press_CCLabel,      0, patch,Ghost::None, 0);
+    new_dw->get(delP_Dilatate,lb->delP_DilatateLabel, 0, patch,Ghost::None, 0);
 
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -2297,12 +2304,13 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       new_dw->allocate(int_eng_source, lb->int_eng_source_CCLabel,indx,patch);
 
       //__________________________________
-      //   Compute int_eng_source 
+      //   Compute source from volume dilatation
+      //   Exclude contribution from delP_MassX
       int_eng_source.initialize(0.);
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         A = vol * vol_frac[*iter] * press_CC[*iter];
         B = rho_micro_CC[*iter]   * speedSound[*iter] * speedSound[*iter];
-        int_eng_source[*iter] = (A/B) * delPress[*iter];
+        int_eng_source[*iter] = (A/B) * delP_Dilatate[*iter];
       }
 
 #ifdef ANNULUSICE
@@ -2450,7 +2458,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           //  Glossary:
           //  int_eng_tmp    = the amount of internal energy for this
           //                   matl in this cell coming into this task
-          //  int_eng_source = thermodynamic work = f(delPress)
+          //  int_eng_source = thermodynamic work = f(delP_Dilatation)
           //  releasedHeat   = enthalpy of reaction gained by the
           //                   product gas, PLUS (OR, MINUS) the
           //                   internal energy of the reactant
@@ -3147,13 +3155,14 @@ void ICE::setBC(SFCXVariable<double>& variable, const  string& kind,
 	   variable.fillFace(patch, face,new_bcs->getValue().x(),offset);
       }
 /*`==========TESTING==========*/ 
-#if 0
+#if 1
 // fillFaceFlux is broken and can probably be deleted
 // currently vel_FC[gc] = vel_FC[interior] which is WRONG
       if (new_bcs->getKind() == "Neumann") {
-	 if (comp == "x")
+	 if (comp == "x") {
           Vector dx = patch->dCell();
 	   variable.fillFaceFlux(patch, face,new_bcs->getValue().x(),dx,offset);
+        }
       }
 #endif
  /*==========TESTING==========`*/
@@ -3185,13 +3194,14 @@ void ICE::setBC(SFCYVariable<double>& variable, const  string& kind,
       }
  
 /*`==========TESTING==========*/
-#if 0
+#if 1
 // fillFaceFlux is broken and can probably be deleted
 // currently vel_FC[gc] = vel_FC[interior] which is WRONG
       if (new_bcs->getKind() == "Neumann") {
-	 if (comp == "y")
+	 if (comp == "y") {
          Vector dx = patch->dCell();
 	  variable.fillFaceFlux(patch, face,new_bcs->getValue().y(),dx, offset);
+        }
       }
 #endif
  /*==========TESTING==========`*/
@@ -3223,13 +3233,14 @@ void ICE::setBC(SFCZVariable<double>& variable, const  string& kind,
       }
 
 /*`==========TESTING==========*/
-#if 0
+#if 1
 // fillFaceFlux is broken and can probably be deleted
 // currently vel_FC[gc] = vel_FC[interior] which is WRONG     
       if (new_bcs->getKind() == "Neumann") {
-	 if (comp == "z")
+	 if (comp == "z"){
           Vector dx = patch->dCell();
 	   variable.fillFaceFlux(patch, face,new_bcs->getValue().z(),dx,offset);
+        }
       }
 #endif
  /*==========TESTING==========`*/
