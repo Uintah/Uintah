@@ -17,7 +17,7 @@ ThermalContact::ThermalContact()
 
 void ThermalContact::computeHeatExchange(const ProcessorContext*,
 					const Patch* patch,
-					DataWarehouseP& old_dw,
+					DataWarehouseP& /*old_dw*/,
 					DataWarehouseP& new_dw)
  {
   int numMatls = d_sharedState->getNumMatls();
@@ -81,16 +81,16 @@ void ThermalContact::computeHeatExchange(const ProcessorContext*,
 
 }
 
-void ThermalContact::initializeThermalContact(const Patch* patch,
-					int vfindex,
-					DataWarehouseP& new_dw)
+void ThermalContact::initializeThermalContact(const Patch* /*patch*/,
+					int /*vfindex*/,
+					DataWarehouseP& /*new_dw*/)
 {
 }
 
 void ThermalContact::addComputesAndRequires(Task* t,
                                              const MPMMaterial* matl,
                                              const Patch* patch,
-                                             DataWarehouseP& old_dw,
+                                             DataWarehouseP& /*old_dw*/,
                                              DataWarehouseP& new_dw) const
 {
   int idx = matl->getDWIndex();
@@ -105,6 +105,9 @@ void ThermalContact::addComputesAndRequires(Task* t,
 
 //
 // $Log$
+// Revision 1.4  2000/06/03 05:22:37  sparker
+// Adding .cvsignore
+//
 // Revision 1.3  2000/05/31 22:29:33  tan
 // Finished addComputesAndRequires function.
 //
