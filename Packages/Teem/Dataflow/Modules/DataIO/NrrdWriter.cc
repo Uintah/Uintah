@@ -91,6 +91,10 @@ void NrrdWriter::execute()
   ifstream in (fn.c_str(), ios::in);
   if( in ) { //succeeded file already exists
     //hack find . insert number there
+#if 0
+    // The stream method was problematic (it would add extra junk in the stream
+    // for no appearent reason).  Therefor, I'll write it the C way. Phooey
+    // on C++. -- James Bigler
     ostrstream convert;
     // width pads the number to 4 digits
     convert.width(4);
@@ -102,6 +106,12 @@ void NrrdWriter::execute()
     //add count to file name
     
     fn.insert(pos, convert.str());
+#else
+    char number[10];
+    sprintf(number, "%04d\0", counter);
+    unsigned long pos = fn.find(".");
+    fn.insert(pos, number);
+#endif
     ++counter;
   }
   in.close();
