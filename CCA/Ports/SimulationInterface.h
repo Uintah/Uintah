@@ -2,7 +2,6 @@
 #define UINTAH_HOMEBREW_SimulationInterface_H
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/ProblemSpec/Handle.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
@@ -40,6 +39,7 @@ WARNING
   
 ****************************************/
 
+  class DataWarehouse;
    class SimulationInterface : public UintahParallelPort {
    public:
      SimulationInterface();
