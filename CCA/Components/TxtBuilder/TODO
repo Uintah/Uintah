@@ -1,7 +1,7 @@
 
 
 Command line should do at least the following,
-list all: 		list all components
+$list all: 		list all components
 $list components: 	list all active components
 $list ports <comp>:	list ports of component <comp>
 $list compatible <comp>:	list compatible ports for component <comp>
@@ -27,8 +27,6 @@ $help:			provide help information
 
 
 
-! how to delete ci: component instance?
-! what is ci->addReference?
 
 
 

@@ -68,6 +68,13 @@ void TxtBuilder::setServices(const gov::cca::Services::pointer& services)
     return;
   }
 
+  cr=pidl_cast<gov::cca::ports::ComponentRepository::pointer>
+    (svc->getPort("cca.ComponentRepository"));
+  if(bs.isNull()){
+    cerr << "Fatal Error: cannot get ComponentRepository port\n";
+    return;
+  }
+
   startup=new Semaphore("TxtBuilder Thread startup wait", 0);
   Thread* t = new Thread(this, "SCIRun Builder");
   t->detach();
@@ -100,7 +107,7 @@ enum TxtCmd{
 };
 
 char *cmddesc[]={
-  "list all:                    list all active components",
+  "list all:                    list all available components",
   "list components:             list all active components",
   "list ports <comp>:           list ports of component <comp>",
   "list compatible <comp>:      list compatible ports for component <comp>",
@@ -124,7 +131,9 @@ char *cmddesc[]={
 void TxtBuilder::run()
 {
   startup->up();
-  cout<<"TxtBuilder starts...\n";
+  system("sleep 2");
+  cout<<"\n\n\nTxtBuilder starts...\n";
+  cout<<"Type help for commands usage\n";
 
   while(true){
     const int n=256;
@@ -199,7 +208,11 @@ int TxtBuilder::parse(string cmdline, string args[])
 
 void TxtBuilder::list_all(string args[])
 {
-  cerr<<"args="<<args[0]<<"$"<<args[1]<<"$"<<args[2]<<"$"<<args[3]<<"$"<<endl;
+  SIDL::array1<ComponentClassDescription::pointer> cds=cr->getAvailableComponentClasses();
+  cout<<"Available Component Classes:\n";
+  for(unsigned i=0; i<cds.size();i++){
+    cout<<"#"<<i<<":\t"<<cds[i]->getComponentClassName()<<endl;
+  }
 }
 
 void TxtBuilder::list_components(string args[])
