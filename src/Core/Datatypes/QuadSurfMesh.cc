@@ -603,6 +603,8 @@ struct edgecompare
 };
 
 
+#ifdef HAVE_HASH_MAP
+
 struct edgehash
 {
   size_t operator()(const pair<int, int> &a) const
@@ -612,11 +614,21 @@ struct edgehash
   }
 };
 
+#endif
+
 
 void
 QuadSurfMesh::compute_edges()
 {
+#ifdef HAVE_HASH_MAP
+
   hash_map<pair<int, int>, int, edgehash, edgecompare> edge_map;
+
+#else
+
+  map<pair<int, int>, int, edgecompare> edge_map;
+
+#endif
   
   int i;
   for (i=faces_.size()-1; i >= 0; i--)
@@ -633,7 +645,15 @@ QuadSurfMesh::compute_edges()
     edge_map[nodes] = i;
   }
 
+#ifdef HAVE_HASH_MAP
+
   hash_map<pair<int, int>, int, edgehash, edgecompare>::iterator itr;
+
+#else
+
+  map<pair<int, int>, int, edgecompare>::iterator itr;
+
+#endif
 
   for (itr = edge_map.begin(); itr != edge_map.end(); ++itr)
   {
@@ -651,7 +671,15 @@ QuadSurfMesh::compute_edge_neighbors()
   ASSERTMSG(synchronized_ & EDGES_E,
 	    "Must call synchronize EDGES_E on TriSurfMesh first");
 
+#ifdef HAVE_HASH_MAP
+
   hash_map<pair<int, int>, int, edgehash, edgecompare> edge_map;
+
+#else
+
+  map<pair<int, int>, int, edgecompare> edge_map;
+
+#endif
   
   edge_neighbors_.resize(faces_.size());
   for (unsigned int j = 0; j < edge_neighbors_.size(); j++)
@@ -672,7 +700,16 @@ QuadSurfMesh::compute_edge_neighbors()
 
     pair<int, int> nodes(n0, n1);
     
+#ifdef HAVE_HASH_MAP
+
     hash_map<pair<int, int>, int, edgehash, edgecompare>::iterator maploc;
+
+#else
+
+    map<pair<int, int>, int, edgecompare>::iterator maploc;
+
+#endif
+
     maploc = edge_map.find(nodes);
     if (maploc != edge_map.end())
     {
