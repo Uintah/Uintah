@@ -83,6 +83,7 @@ WARNING
 
     MaterialSet* mymatls;
     double rate;
+    double d_cv_0;  //specific heat
   };
 }
 
