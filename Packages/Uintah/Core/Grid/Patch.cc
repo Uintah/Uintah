@@ -444,9 +444,22 @@ Patch::getFaceCellIterator(const FaceType& face, const string& domain) const
   
   IntVector lowPt  = d_inLowIndex;
   IntVector highPt = d_inHighIndex;
+  int offset = 0;
   if(domain == "plusEdgeCells"){
     lowPt   = d_lowIndex;
     highPt  = d_highIndex;
+  }
+  // This will allow you to hit all the nodes/faces on the border of
+  // the extracells
+  if(domain == "NC_vars"|| domain == "FC_vars"){  
+    lowPt   = d_inLowIndex;
+    highPt  = d_highIndex;
+    offset  = 1;
+  }
+  if(domain == "FC_vars"){  
+    lowPt   = d_lowIndex;
+    highPt  = d_highIndex;
+    offset  = 1;
   }
 
   if (face == Patch::xplus) {           //  X P L U S
@@ -454,24 +467,24 @@ Patch::getFaceCellIterator(const FaceType& face, const string& domain) const
      highPt.x(d_inHighIndex.x()+1);
   }
   if(face == Patch::xminus){            //  X M I N U S
-    highPt.x(d_inLowIndex.x());
-    lowPt.x(d_inLowIndex.x()-1);
+    highPt.x(d_inLowIndex.x()  + offset);
+    lowPt.x(d_inLowIndex.x()-1 + offset);
   }
   if(face == Patch::yplus) {            //  Y P L U S
     lowPt.y(d_inHighIndex.y());
     highPt.y(d_inHighIndex.y()+1);
   }
   if(face == Patch::yminus) {           //  Y M I N U S
-    highPt.y(d_inLowIndex.y());
-    lowPt.y(d_inLowIndex.y()-1);
+    highPt.y(d_inLowIndex.y()  + offset);
+    lowPt.y(d_inLowIndex.y()-1 + offset);
   }
   if (face == Patch::zplus) {           //  Z P L U S
-    lowPt.z(d_inHighIndex.z());
+    lowPt.z(d_inHighIndex.z() );
     highPt.z(d_inHighIndex.z()+1);
   }
   if (face == Patch::zminus) {          //  Z M I N U S
-    highPt.z(d_inLowIndex.z());
-    lowPt.z(d_inLowIndex.z()-1);
+    highPt.z(d_inLowIndex.z()  + offset);
+    lowPt.z(d_inLowIndex.z()-1 + offset);
   } 
   return CellIterator(lowPt, highPt);
 }
