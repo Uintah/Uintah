@@ -25,8 +25,8 @@
         <save label="KineticEnergy"/>
         <save label="TotalMass"/>
         <save label="StrainEnergy"/>
-        <save label="g.mass"/>
-        <save label="g.stressFS"/>
+	<save label = "g.mass" material = "29"/>
+	<save label = "g.stressFS" material = "29"/>
 	<checkpoint cycle = "2" interval = "0.1"/>
     </DataArchiver>
 
