@@ -1,0 +1,76 @@
+Ok, here's how you go about checking out a *brand-new* PSE tree.  Some of
+these steps might be unnecessary/over-kill, but I just tried them and this
+does do the job.  Steve/John can let us know if any of these lines are
+unnecessary, but for now just cut/paste them into your .cshrc (or
+.customs.cshrc) at the bottom.
+
+But before you do that, make sure you get the same output when you type
+these commands:
+
+% which cvs
+/home/sci/local/bin/cvs
+% which patch
+/home/sci/local/bin/patch
+% which ssh
+/usr/local/bin/ssh
+% which gmake
+/usr/local/gnu/bin/gmake
+% which wish
+/home/sci/local/bin/wish
+
+If not, either change your path or just set them using aliases (in your
+.aliases file).
+
+Now, here are the lines to put in your .cshrc (or .customs.cshrc) --
+(replace MYROOT to be wherever you want PSE to live... ~/ is one option).
+================
+
+setenv MYROOT ~/
+set path = (/home/sci/u2/dmw/itcltk-8.0.4/bin $path)
+unsetenv TCL_LIBRARY
+unsetenv TK_LIBRARY
+setenv ITCL_LIBRARY /home/sci/u2/dmw/itcltk-8.0.4/lib/itcl3.0
+setenv ITK_LIBRARY /home/sci/u2/dmw/itcltk-8.0.4/lib/itk3.0
+
+setenv CVS_RSH ssh
+setenv CVSROOT csf.cs.utah.edu:/csafe_noexport/cvs/cvsroot
+setenv PSE_SRC $MYROOT/PSE/src
+
+if ($?LD_LIBRARY_PATH) then
+        setenv LD_LIBRARY_PATH \
+		"$LD_LIBRARY_PATH":$PSE_SRC/PSECore:$PSE_SRC/SCICore
+else
+        setenv LD_LIBRARY_PATH $PSE_SRC/PSECore:$PSE_SRC/SCICore
+endif
+
+setenv PACKAGE_PATH $MYROOT/PSE/src/PSECommon/libPSECommon.so\($MYROOT/PSE/src/PSECommon/GUI\):$MYROOT/PSE/src/SCIRun/libSCIRun.so\($MYROOT/PSE/src/SCIRun/GUI\):$MYROOT/PSE/src/Uintah/libUintah.so\($MYROOT/PSE/src/Uintah/GUI\):$MYROOT/PSE/src/DaveW/libDaveW.so\($MYROOT/PSE/src/DaveW/GUI\)
+
+================
+
+Now you're ready to checkout a tree.  Login to whatever machine you want
+to compile/run on (rapture is a *very* good choice -- lots of CPU's = fast
+compile times), make sure you've sourced the above commands, and then
+type:
+
+[Editor's Note: the "--enable-" flags (in line 4 below) specify which
+parts of PSE you want to build.  If you're not part of the Uintah project,
+replace "--enable-uintah" with "--disable-uintah".  If you don't want any
+of the DaveW stuff (my feeling won't be hurt), just leave off that flag.
+ Everyone will want the SCIRun stuff, so leave that flag enabled.  See the
+file $MYROOT/PSE/src/README.PSE for more details.]
+
+===============
+
+%cd $MYROOT
+%cvs checkout PSE
+%cd PSE/src
+%./configure --enable-scirun --enable-uintah --enable-davew
+%gmake
+
+===============
+
+Good luck!  Let me and/or the scirun-develop list know if you have any
+questions/problems.
+
+-Dave
+
