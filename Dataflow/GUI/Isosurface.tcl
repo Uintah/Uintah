@@ -447,7 +447,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	    -tickinterval [expr ($stop - $start)/3.001] \
 	    -variable $var1 -orient horizontal -showvalue false \
 	    -command "$this updateSliderEntry $var1 $var2" \
-	    -resolution 0.001
+	    -resolution 0.00000001
 
 	entry $win.r.e -width 7 -text $var2
 
