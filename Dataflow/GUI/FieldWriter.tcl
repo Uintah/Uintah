@@ -47,7 +47,6 @@ itcl_class SCIRun_DataIO_FieldWriter {
 	    set $this-confirm 0
 	}
 
-	# set $this-split 0
     }
     method overwrite {} {
 	global $this-confirm $this-filetype
@@ -103,8 +102,8 @@ itcl_class SCIRun_DataIO_FieldWriter {
 	        -initialfile $defname \
 		-initialdir $initdir \
 		-defaultextension $defext \
-	        -confirmvar $this-confirm
-		#-splitvar $this-split
+	        -confirmvar $this-confirm \
+	        -formatvar $this-filetype
 
 	moveToCursor $w	
     }
