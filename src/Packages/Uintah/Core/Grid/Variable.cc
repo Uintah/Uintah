@@ -134,7 +134,7 @@ string* Variable::gzipCompress(string* pUncompressed, string* pBuffer)
     (unsigned long)(ceil((double)uncompressedSize * 1.01) + 12); 
 
   pBuffer->resize(compressBufsize + sizeof(unsigned long));
-  char* buf = (char*)pBuffer->c_str(); // casting from const, careful
+  char* buf = const_cast<char*>(pBuffer->c_str()); // casting from const
   buf += sizeof(unsigned long); /* the first part will give the size of
 				   the uncompressed data */
   
@@ -186,8 +186,8 @@ void Variable::read(InputContext& ic, long end, const string& compressionMode)
   string* uncompressedData = &data;
 
   data.resize(datasize);
-  // casting from const char* below to char* -- use caution
-  ssize_t s = ::read(ic.fd, (char*)data.c_str(), datasize);
+  // casting from const char* -- use caution
+  ssize_t s = ::read(ic.fd, const_cast<char*>(data.c_str()), datasize);
   if(s != datasize)
     throw ErrnoException("Variable::read (read call)", errno);
 
