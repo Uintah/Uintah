@@ -129,6 +129,7 @@ create_scanline_field(NrrdDataHandle &nrd)
       fill_data((ScanlineField<double>*)fh.get_rep(), n, iter, end);
       break;
     }
+    break;
   case 2: // Vector
     fh = new ScanlineField<Vector>(mh, Field::NODE);
     fill_data((ScanlineField<Vector>*)fh.get_rep(), n, iter, end);

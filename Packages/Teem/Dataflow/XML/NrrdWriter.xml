@@ -24,10 +24,16 @@
     <authors>
       <author>David Weinstein</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Output the NrrdData object via Pio.</summary>
     <description>
-      <p>Version Date: February 2001</p><p>Version: 1.0</p>
+      <p>Save a serialized NrrdData object, which in turn saves the
+nrrd file that it wraps.  So the end result is two saved files. Note
+that these files live side by side, the NrrdData will not load
+properly if they are moved, as it holds the full path to the nrrd it
+wraps. The .nrrd file can of course be relocated on its own, and used
+as any other nrrd independently from the NrrdData (.nd) file.</p>
     </description>
+    <examplesr>Teem/nets/test/io.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

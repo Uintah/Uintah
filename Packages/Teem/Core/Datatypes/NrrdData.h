@@ -45,7 +45,6 @@ public:
   //////////
   // 
   Nrrd *nrrd;
-  string fname;
 
   NrrdData(bool owned = true);
   NrrdData(const NrrdData&);
@@ -72,6 +71,9 @@ private:
   //! a handle to the mesh this data originally belonged with. 
   //! has a rep == 0 if there was no such mesh.
   FieldHandle           originating_field_; 
+
+  // To help with pio
+  string                nrrd_fname_;
 };
 
 typedef LockingHandle<NrrdData> NrrdDataHandle;

@@ -127,6 +127,7 @@ NrrdReader::read_nrrd()
 {
   // Read the status of this file so we can compare modification timestamps
   struct stat buf;
+  filename_.reset();
   string fn(filename_.get());
 
   if (stat(fn.c_str(), &buf)) {
@@ -148,17 +149,40 @@ NrrdReader::read_nrrd()
     old_filemodification_ = new_filemodification;
     old_filename_=fn;
 
-    NrrdData *n = scinew NrrdData;
-    if (nrrdLoad(n->nrrd=nrrdNew(), strdup(fn.c_str()))) {
-      char *err = biffGetDone(NRRD);
-      error("Read error on '" + fn + "': " + err);
-      free(err);
-      return;
+
+    int len = fn.size();
+    const string ext(".nd");
+
+    // check that the last 3 chars are .nd for us to pio
+    if (fn.substr(len - 3, 3) == ext) {
+      Piostream *stream = auto_istream(fn);
+      if (!stream)
+      {
+	error("Error reading file '" + fn + "'.");
+	return;
+      }
+
+      // Read the file
+      Pio(*stream, handle_);
+      if (!handle_.get_rep() || stream->error())
+      {
+	error("Error reading data from file '" + fn +"'.");
+	delete stream;
+	return;
+      }
+      delete stream;
+    } else { // assume it is just a nrrd
+
+      NrrdData *n = scinew NrrdData;
+      if (nrrdLoad(n->nrrd=nrrdNew(), strdup(fn.c_str()))) {
+	char *err = biffGetDone(NRRD);
+	error("Read error on '" + fn + "': " + err);
+	free(err);
+	return;
+      }
+      handle_ = n;
     }
-    handle_ = n;
   }
-
-
 }
 
 void NrrdReader::execute()

@@ -79,7 +79,8 @@ itcl_class Teem_DataIO_NrrdReader {
 	
 	# file types to appers in filter box
 	set types {
-	    {{Field File}     {.nrrd}      }
+	    {{NrrdData File}     {.nd}      }
+            {{Any Nrrd File}     {.nrrd}    }
 	    {{All Files} {.*}   }
 	}
 	
