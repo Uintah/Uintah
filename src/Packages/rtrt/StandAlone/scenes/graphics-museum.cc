@@ -36,6 +36,7 @@ rtrt -np 14 -eye -10.2111 -16.2099 1.630637 -lookat -11.7826 -20.5142 0.630637 -
 #include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/PhongMaterial.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
+#include <Packages/rtrt/Core/ASEReader.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <iostream>
 #include <math.h>
@@ -1197,8 +1198,9 @@ historyg);
 /* **************** david room **************** */
 
 void build_david_room (Group* main_group, Scene *scene) {
-//    Material* david_white = new LambertianMaterial(Color(.8,.75,.7));
-  Material* david_white = new PhongMaterial(Color(.8,.75,.7),1,.2,40);
+  Material* david_white = new LambertianMaterial(Color(.8,.75,.7));
+//    Material* david_white = new Phong(Color(.8,.75,.7),
+//  				    Color(.2,.2,.2),40);
   Material* flat_white = new LambertianMaterial(Color(.8,.8,.8));
   Material* light_marble1 
     = new CrowMarble(4.5, Vector(.3, .3, 0), Color(.9,.9,.9), 
@@ -1239,58 +1241,46 @@ void build_david_room (Group* main_group, Scene *scene) {
     
 
 #else
-    /*  
-  Transform david_pedT;
 
-  david_pedT.pre_translate(dav_ped_top.asVector());
+//      Group* davidg = new Group();
+//      TriMesh* david_tm = new TriMesh();
+//      read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_2mm.ply",david_white, david_tm, davidg);
 
-  Group* davidg = new Group();
-  davidg->add(new Box(david_white,
-		      david_pedT.project(Point(-1.033567, -0.596689, 0.000000)),
-		      david_pedT.project(Point(1.033567, 0.596689, 5.240253))));
-  // david model or surrogate
-  g->add(davidg);
-    */
+//    BBox david_bbox;
 
-    Group* davidg = new Group();
-    TriMesh* david_tm = new TriMesh();
-    read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_2mm.ply",david_white, david_tm, davidg);
+//    davidg->compute_bounds(david_bbox,0);
 
-  BBox david_bbox;
+//    Point min = david_bbox.min();
+//    Point max = david_bbox.max();
+//    Vector diag = david_bbox.diagonal();
+//    /*
+//    printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+//  	 min.x(),min.y(), min.z(),
+//  	 max.x(),max.y(), max.z(),
+//  	 diag.x(),diag.y(),diag.z());
+//    */
+//    Transform davidT;
 
-  davidg->compute_bounds(david_bbox,0);
+//    davidT.pre_translate(-Vector((max.x()+min.x())/2.,min.y(),(max.z()+min.z())/2.)); // center david over 0
+//    davidT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
+//    davidT.pre_scale(Vector(.001,.001,.001)); // make units meters
+//    davidT.pre_translate(dav_ped_top.asVector());
 
-  Point min = david_bbox.min();
-  Point max = david_bbox.max();
-  Vector diag = david_bbox.diagonal();
-  /*
-  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
-	 min.x(),min.y(), min.z(),
-	 max.x(),max.y(), max.z(),
-	 diag.x(),diag.y(),diag.z());
-  */
-  Transform davidT;
+//    david_tm->transform(davidT);
 
-  davidT.pre_translate(-Vector((max.x()+min.x())/2.,min.y(),(max.z()+min.z())/2.)); // center david over 0
-  davidT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
-  davidT.pre_scale(Vector(.001,.001,.001)); // make units meters
-  davidT.pre_translate(dav_ped_top.asVector());
+//    david_bbox.reset();
+//    davidg->compute_bounds(david_bbox,0);
 
-  david_tm->transform(davidT);
+//    min = david_bbox.min();
+//    max = david_bbox.max();
+//    diag = david_bbox.diagonal();
 
-  david_bbox.reset();
-  davidg->compute_bounds(david_bbox,0);
-
-  min = david_bbox.min();
-  max = david_bbox.max();
-  diag = david_bbox.diagonal();
-
-  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
-	 min.x(),min.y(), min.z(),
-	 max.x(),max.y(), max.z(),
-	 diag.x(),diag.y(),diag.z());
-  main_group->add(new HierarchicalGrid(davidg,
-				       16,64,64,32,1024,4));
+//    printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+//  	 min.x(),min.y(), min.z(),
+//  	 max.x(),max.y(), max.z(),
+//  	 diag.x(),diag.y(),diag.z());
+//    main_group->add(new HierarchicalGrid(davidg,
+//  				       24,64,64,32,1024,4));
 
 #endif
 
@@ -1544,7 +1534,36 @@ void build_modern_room (Group *main_group, Scene *scene) {
   add_pedestal (moderng, head_ped_top-Vector(half_ped_size,half_ped_size,0),
 		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
 
-  /*  Gooch NPR models  */
+//    /*  David's Head */
+//    Point dhead_ped_top(-10,-10,ped_ht);
+//    add_pedestal (moderng, dhead_ped_top-Vector(half_ped_size,half_ped_size,0),
+//  		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
+  
+//    // Add lucy here.
+//    Material *dhead_white = new LambertianMaterial(Color(1,1,1));
+//    Group* dheadg = new Group();
+//    TriMesh* dhead_tm = new TriMesh();
+
+//    read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_head_1mm_color.ply",dhead_white, dhead_tm, dheadg);
+//    BBox dhead_bbox;
+
+//    dheadg->compute_bounds(dhead_bbox,0);
+
+//    Point dhead_min = dhead_bbox.min();
+//    Point dhead_max = dhead_bbox.max();
+//    Vector dhead_diag = dhead_bbox.diagonal();
+//    Transform dheadT;
+
+//    dheadT.pre_translate(-Vector((dhead_max.x()+dhead_min.x())/2.,dhead_min.y(),(dhead_max.z()+dhead_min.z())/2.)); // center david over 0
+//    dheadT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
+//    dheadT.pre_scale(Vector(.001,.001,.001)); // make units meters
+//    dheadT.pre_translate(dhead_ped_top.asVector());
+
+//    dhead_tm->transform(dheadT);
+
+//    main_group->add(new HierarchicalGrid(dhead,24,64,64,32,1024,4));
+
+  /*  Gooch NPR models */
   Point npr_ped_top(-10,-13,ped_ht);
   add_pedestal_and_label (moderng, "/usr/sci/data/Geometry/textures/museum/modern/pillar-text/npr.ppm",
 			  npr_ped_top-Vector(half_ped_size,half_ped_size,0),
@@ -1559,7 +1578,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
 
   Color dragon_green(.2,.9,.2);
   Material* shiny_green = new Phong(dragon_green,
-				    Color(1,1,1),
+				    Color(.2,.2,.2),
 				    60);
 
   // read in the dragon geometry
@@ -1680,29 +1699,61 @@ buddha_ped_top-Vector(half_ped_size,half_ped_size,0),
   */
   Transform buddhaT;
 
-  buddhaT.pre_translate(-Vector((bmax.x()+bmin.x())/2.,bmin.y(),(bmax.z()+bmin.z())/2.)); // center buddha over 0
-  buddhaT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
-  buddhaT.pre_rotate(M_PI_2,Vector(0,0,1));  // make z up
-  double buddha_scale = .375*2./(sqrt(bdiag.x()*bdiag.x()+bdiag.z()*bdiag.z()));
-  buddhaT.pre_scale(Vector(buddha_scale,
-			   buddha_scale,
-			   buddha_scale));
-  buddhaT.pre_translate(buddha_ped_top.asVector());
+//    // along west wall 
+//    /* buddha */
+//    Point buddha_ped_top(-18,-12,0.3*ped_ht);
+//    add_pedestal (moderng, buddha_ped_top-Vector(half_ped_size,half_ped_size,0),
+//  		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
 
-  buddha_tm->transform(buddhaT);
+//    // read in the buddha geometry
+//    Color buddha_diff(113./255.,  53./255.,  17./255.);
+//    Color buddha_spec(180./255.,  180./255.,  180./255.);
+//    Material* buddha_mat = new Phong(buddha_diff,
+//  				    buddha_spec,
+//  				    40);
 
-  buddha_bbox.reset();
-  buddhag->compute_bounds(buddha_bbox,0);
+//    TriMesh* buddha_tm = new TriMesh();
+//    Group* buddhag = new Group();
+//    read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip_res2.ply",buddha_mat,buddha_tm,buddhag);
 
-  bmin = buddha_bbox.min();
-  bmax = buddha_bbox.max();
-  bdiag = buddha_bbox.diagonal();
+//    BBox buddha_bbox;
 
-  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
-	 bmin.x(),bmin.y(), bmin.z(),
-	 bmax.x(),bmax.y(), bmax.z(),
-	 bdiag.x(),bdiag.y(),bdiag.z());
-  main_group->add(new HierarchicalGrid(buddhag,16,16,64,16,1024,4));
+//    buddhag->compute_bounds(buddha_bbox,0);
+
+//    Point bmin = buddha_bbox.min();
+//    Point bmax = buddha_bbox.max();
+//    Vector bdiag = buddha_bbox.diagonal();
+//    /*
+//    printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+//  	 bmin.x(),bmin.y(), bmin.z(),
+//  	 bmax.x(),bmax.y(), bmax.z(),
+//  	 bdiag.x(),bdiag.y(),bdiag.z());
+//    */
+//    Transform buddhaT;
+
+//    buddhaT.pre_translate(-Vector((bmax.x()+bmin.x())/2.,bmin.y(),(bmax.z()+bmin.z())/2.)); // center buddha over 0
+//    buddhaT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
+//    buddhaT.pre_rotate(M_PI_2,Vector(0,0,1));  // make z up
+//    double buddha_scale = .375*2./(sqrt(bdiag.x()*bdiag.x()+bdiag.z()*bdiag.z()));
+//    buddhaT.pre_scale(Vector(buddha_scale,
+//  			   buddha_scale,
+//  			   buddha_scale));
+//    buddhaT.pre_translate(buddha_ped_top.asVector());
+
+//    buddha_tm->transform(buddhaT);
+
+//    buddha_bbox.reset();
+//    buddhag->compute_bounds(buddha_bbox,0);
+
+//    bmin = buddha_bbox.min();
+//    bmax = buddha_bbox.max();
+//    bdiag = buddha_bbox.diagonal();
+
+//    printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+//  	 bmin.x(),bmin.y(), bmin.z(),
+//  	 bmax.x(),bmax.y(), bmax.z(),
+//  	 bdiag.x(),bdiag.y(),bdiag.z());
+//    main_group->add(new HierarchicalGrid(buddhag,16,16,64,16,1024,4));
 
 
   /*  UNC well */
@@ -1783,62 +1834,85 @@ buddha_ped_top-Vector(half_ped_size,half_ped_size,0),
 
   main_group->add (new HierarchicalGrid(bunny,8,16,16,16,1024,4));
 
-  Point venus_ped_top(-13,-6,0.2*ped_ht);
-  add_pedestal (moderng,venus_ped_top-Vector(half_ped_size,half_ped_size,0),
-		Vector(2.*half_ped_size,2.*half_ped_size,-0.2*ped_ht));
-  /*  Venus  */
-  // read in the venus geometry
-  TriMesh* venus_tm = new TriMesh();
-  Group* venusg = new Group();
-  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/venus.ply",flat_white, venus_tm, venusg);
+//    /*  Venus  */
+//    Point venus_ped_top(-13,-6,0.2*ped_ht);
+//      add_pedestal (moderng,venus_ped_top-Vector(half_ped_size,half_ped_size,0),
+//		Vector(2.*half_ped_size,2.*half_ped_size,-0.2*ped_ht));
 
-  BBox venus_bbox;
+//    // read in the venus geometry
+//    TriMesh* venus_tm = new TriMesh();
+//    Group* venusg = new Group();
+//    read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/venus.ply",flat_white, venus_tm, venusg);
 
-  venusg->compute_bounds(venus_bbox,0);
+//    BBox venus_bbox;
 
-  Point vmin = venus_bbox.min();
-  Point vmax = venus_bbox.max();
-  Vector vdiag = venus_bbox.diagonal();
-  /*
-  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
-	 vmin.x(),vmin.y(), vmin.z(),
-	 vmax.x(),vmax.y(), vmax.z(),
-	 vdiag.x(),vdiag.y(),vdiag.z());
-  */
-  Transform venusT;
+//    venusg->compute_bounds(venus_bbox,0);
 
-  venusT.pre_translate(-Vector((vmax.x()+vmin.x())/2.,vmin.y(),(vmax.z()+vmin.z())/2.)); // center david over 0
-  venusT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
-  double ven_scale = .375*2./(sqrt(vdiag.x()*vdiag.x()+vdiag.z()*vdiag.z()));
-  venusT.pre_scale(Vector(ven_scale,ven_scale,ven_scale)); // make units meters
-  venusT.pre_translate(venus_ped_top.asVector());
+//    Point vmin = venus_bbox.min();
+//    Point vmax = venus_bbox.max();
+//    Vector vdiag = venus_bbox.diagonal();
+//    /*
+//    printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+//  	 vmin.x(),vmin.y(), vmin.z(),
+//  	 vmax.x(),vmax.y(), vmax.z(),
+//  	 vdiag.x(),vdiag.y(),vdiag.z());
+//    */
+//    Transform venusT;
 
-  venus_tm->transform(venusT);
+//    venusT.pre_translate(-Vector((vmax.x()+vmin.x())/2.,vmin.y(),(vmax.z()+vmin.z())/2.)); // center david over 0
+//    venusT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
+//    double ven_scale = .375*2./(sqrt(vdiag.x()*vdiag.x()+vdiag.z()*vdiag.z()));
+//    venusT.pre_scale(Vector(ven_scale,ven_scale,ven_scale)); // make units meters
+//    venusT.pre_translate(venus_ped_top.asVector());
 
-  venus_bbox.reset();
-  venusg->compute_bounds(venus_bbox,0)
-;
-  vmin = venus_bbox.min();
-  vmax = venus_bbox.max();
-  vdiag = venus_bbox.diagonal();
+//    venus_tm->transform(venusT);
 
-  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
-	 vmin.x(),vmin.y(), vmin.z(),
-	 vmax.x(),vmax.y(), vmax.z(),
-	 vdiag.x(),vdiag.y(),vdiag.z());
-  main_group->add(new HierarchicalGrid(venusg,16,32,64,8,1024,4));
+//    venus_bbox.reset();
+//    venusg->compute_bounds(venus_bbox,0)
+//  ;
+//    vmin = venus_bbox.min();
+//    vmax = venus_bbox.max();
+//    vdiag = venus_bbox.diagonal();
 
-  // center of room
-  /* lucy */
-  Point lucy_centerpt(-14,-10,short_ped_ht);
-  double lucy_radius = .6;
+//    printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+//  	 vmin.x(),vmin.y(), vmin.z(),
+//  	 vmax.x(),vmax.y(), vmax.z(),
+//  	 vdiag.x(),vdiag.y(),vdiag.z());
+//    main_group->add(new HierarchicalGrid(venusg,16,32,64,8,1024,4));
 
-  add_pedestal_and_label (moderng, "/usr/sci/data/Geometry/textures/museum/modern/pillar-text/lucy.ppm",lucy_centerpt-Vector(lucy_radius,lucy_radius,0),
-		Vector(1.2,1.2,short_ped_ht), sign_ratio);
 
-  Point stadium_centerpt(-18,-6,short_ped_ht);
-  add_pedestal (moderng, stadium_centerpt-Vector(0.5,0.5,0),
-		Vector(1.0,1.0,-short_ped_ht));
+//    // center of lucy
+//    double lucy_ht = .3;
+//    Point lucy_centerpt(-14,-10,lucy_ht);
+//    double lucy_radius = 1;
+//    add_pedestal (moderng, lucy_centerpt-Vector(lucy_radius,lucy_radius,0),
+//  		Vector(2*lucy_radius,2*lucy_radius,-lucy_ht));
+//    // Add lucy here.
+//    Material *lucy_white = new LambertianMaterial(Color(1,1,1));
+//    Group* lucyg = new Group();
+//    TriMesh* lucy_tm = new TriMesh();
+//    read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/lucy.ply",lucy_white, lucy_tm, lucyg);
+
+//    BBox lucy_bbox;
+
+//    lucyg->compute_bounds(lucy_bbox,0);
+
+//    Point lucy_min = lucy_bbox.min();
+//    Point lucy_max = lucy_bbox.max();
+//    Vector lucy_diag = lucy_bbox.diagonal();
+//    Transform lucyT;
+
+//    lucyT.pre_translate(-Vector((lucy_max.x()+lucy_min.x())/2.,(lucy_max.y()+lucy_min.y())/2.,lucy_min.z())); // center david over 0
+//  //    lucyT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
+//    lucyT.pre_scale(2*Vector(.001,.001,.001)); // make units meters
+//    lucyT.pre_translate(lucy_centerpt.asVector());
+
+//    lucy_tm->transform(lucyT);
+
+//  //    main_group->add(new HierarchicalGrid(lucyg,32,64,64,16,1024,4));
+//    main_group->add(new HierarchicalGrid(lucyg,24,32,64,16,1024,4));
+
+
   /*
   // St Matthew's Pedestal in northwest corner of room
   UVCylinderArc* StMattPed = (new UVCylinderArc(light_marble1, 
@@ -1853,6 +1927,43 @@ buddha_ped_top-Vector(half_ped_size,half_ped_size,0),
   moderng->add(StMattPed);
   moderng->add(StMattPedTop);
   */
+
+//    double stadium_ht = .3;
+//    Point stadium_centerpt(-14,-10,stadium_ht);
+
+//    Array1<Material*> ase_matls;
+//    string env_map;
+
+//    Transform stadiumt;
+//    stadiumt.load_identity();
+//    Group *stadiumg = new Group();
+//    if (!readASEFile("/usr/sci/data/Geometry/models/stadium/fordfield3.ase", stadiumt, stadiumg, 
+//  		   ase_matls, env_map)) return;
+//    BBox stadium_bbox;
+
+//    stadiumg->compute_bounds(stadium_bbox,0);
+  
+//    Point stadium_min = stadium_bbox.min();
+//    Point stadium_max = stadium_bbox.max();
+//    Vector stadium_diag = stadium_bbox.diagonal();
+
+//  //    printf("bbox: min %lf %lf %lf max %lf %lf %lf\n",
+//  //  	 stadium_min.x(), stadium_min.y(), stadium_min.z(),
+//  //  	 stadium_max.x(), stadium_max.y(), stadium_max.z());
+//  //    exit(-1);
+
+//    Transform stadiumT;
+
+//    stadiumT.pre_translate(-Vector((stadium_max.x()+stadium_min.x())/2.,stadium_min.y(),(stadium_max.z()+stadium_min.z())/2.)); // center buddha over 0
+//    double stadium_scale = .375*2./(sqrt(stadium_diag.x()*stadium_diag.x()+stadium_diag.z()*stadium_diag.z()));
+//    stadiumT.pre_scale(Vector(stadium_scale,
+//  			    stadium_scale,
+//  			    stadium_scale));
+//    stadiumT.pre_translate(stadium_centerpt.asVector());
+
+//    stadiumg->transform(stadiumT);
+
+//    main_group->add(new HierarchicalGrid(stadiumg,10,10,10,16,16,4));
 
   /* **************** image on North wall in modern room **************** */
   const float img_size = 1.1;     
@@ -2179,8 +2290,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
 
-  build_david_room (g,scene);
-  build_history_hall (g,scene); 
+//    build_david_room (g,scene);
+//    build_history_hall (g,scene); 
   build_modern_room (g,scene);
 
   Transform outlet_trans;
