@@ -466,7 +466,7 @@ this:
 <listitem>
 <para>Copy the tarball to
 <filename>/usr/sci/projects/SCIRun/docs</filename> and unpack it using
-GNU tar.</para>
+GNU tar (<command>tar zxf &lt;tarball&gt;</command>).</para>
 </listitem>
 <listitem>
 <para><command>Cd</command> to
@@ -491,10 +491,43 @@ site is <filename>http://software2.sci.utah.edu</filename>.  Use this
 site to test documentation (from the release branch of the CVS tree)
 prior to a software release.</para> 
 
-<para> To publish the docs on the
-test site follow the directions in the next section substituting
-<quote>dante.sci.utah.edu</quote> for
-<quote>virgil.sci.utah.edu</quote>.
+<para>To publish the docs on SCI's external web site do this:
+<orderedlist>
+<listitem>
+<para>Build a doc tarball from the sources on the release branch.
+Rename the tarball to reflect its release number,
+e.g. <filename>SCIRunDocs-1.6.1.tar.gz</filename>.</para> 
+</listitem>
+<listitem>
+<para>Copy the doc tarball to the directory
+<filename>/w01/docs/scirun-biopse</filename> on
+<filename>dante.sci.utah.edu</filename>.</para>
+</listitem>
+<listitem>
+<para>Unpack the tarball using GNU tar.</para>
+</listitem>
+<listitem>
+<para>Rename the resulting directory to match the name of the tarball,
+e.g. <filename>SCIRunDocs-1.6.1</filename>.</para>
+</listitem>
+<listitem>
+<para><command>cd</command> to
+<filename>/w01/sciweb/software</filename>.</para>
+</listitem>
+<listitem>
+<para>Remove the symbolic links <filename>doc</filename> and <filename>src</filename>.</para>
+</listitem>
+<listitem>
+<para>Create new symbolic links.  The link <filename>doc</filename>
+should point to
+<filename>../../docs/scirun-biopse/&lt;doc-directory&gt;/doc</filename>
+and <filename>src</filename>
+should point to
+<filename>../../docs/scirun-biopse/&lt;doc-directory&gt;/src</filename>
+where <filename>&lt;doc-directory&gt;</filename> is the name of
+directory created (and renamed) previously.</para>
+</listitem>
+</orderedlist>
 </para>
 
 </section>
@@ -510,6 +543,11 @@ web site.</para>
 <para>To publish the docs on SCI's external web site do this:
 <orderedlist>
 <listitem>
+<para>Build a doc tarball from the sources on the release branch.
+Rename the tarball to reflect its release number,
+e.g. <filename>SCIRunDocs-1.6.1.tar.gz</filename>.</para> 
+</listitem>
+<listitem>
 <para>Copy the doc tarball to the directory
 <filename>/w01/docs/scirun-biopse</filename> on
 <filename>virgil.sci.utah.edu</filename>.</para>
@@ -518,8 +556,8 @@ web site.</para>
 <para>Unpack the tarball using GNU tar.</para>
 </listitem>
 <listitem>
-<para>Rename the resulting directory to an appropriate version number,
-e.g. 1.6.0.</para>
+<para>Rename the resulting directory to match the name of the tarball,
+e.g. <filename>SCIRunDocs-1.6.1</filename>.</para>
 </listitem>
 <listitem>
 <para><command>Cd</command> to
@@ -531,15 +569,16 @@ e.g. 1.6.0.</para>
 <listitem>
 <para>Create new symbolic links.  The link <filename>doc</filename>
 should point to
-<filename>../../docs/scirun-biopse/&lt;version-number&gt;/doc</filename>
+<filename>../../docs/scirun-biopse/&lt;doc-directory&gt;/doc</filename>
 and <filename>src</filename>
 should point to
-<filename>../../docs/scirun-biopse/&lt;version-number&gt;/src</filename>
-where <filename>&lt;version-number&gt;</filename> is the name of
-directory created previously.</para>
+<filename>../../docs/scirun-biopse/&lt;doc-directory&gt;/src</filename>
+where <filename>&lt;doc-directory&gt;</filename> is the name of
+directory created (and renamed) previously.</para>
 </listitem>
 </orderedlist>
 </para>
+
 </section>
 
 </section>
