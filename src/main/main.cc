@@ -53,7 +53,6 @@
 #include <Core/Thread/Thread.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <tcl.h>
 
 #if defined(__APPLE__)
 #  include <Core/Datatypes/MacForceLoad.h>
@@ -239,12 +238,9 @@ public:
   void run()
   {
     string buffer;
-    Tcl_Parse parse;
     while (1) {
       buffer.append(transmitter_->getMessage());
-      char *src = scinew char[buffer.length()+1];
-      strcpy (src, buffer.c_str());
-      if (Tcl_ParseCommand(0, src, buffer.length()+1, 1, &parse) == TCL_OK) {
+      if (gui_->complete_command(buffer)) {
 	buffer = gui_->eval(buffer);
 	if (!buffer.empty()) buffer.append("\n");
 	transmitter_->putMessage(buffer+"scirun> ");
@@ -252,7 +248,6 @@ public:
       } else {
 	transmitter_->putMessage("scirun>> ");
       }
-      delete src;
     }
   }
 };
