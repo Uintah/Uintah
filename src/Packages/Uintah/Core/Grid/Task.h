@@ -253,9 +253,6 @@ WARNING
       :  d_taskName(taskName),
 	 d_action(0)
     {
-      d_usesThreads = false;
-      d_usesMPI = false;
-      d_subpatchCapable = false;
       d_tasktype = type;
       initialize();
     }
@@ -271,9 +268,6 @@ WARNING
       : d_taskName( taskName ), 
 	d_action( scinew Action<T>(ptr, pmf) )
     {
-      d_usesThreads = false;
-      d_usesMPI = false;
-      d_subpatchCapable = false;
       d_tasktype = Normal;
       initialize();
     }
@@ -291,9 +285,6 @@ WARNING
       : d_taskName( taskName ), 
 	d_action( scinew Action1<T, Arg1>(ptr, pmf, arg1) )
     {
-      d_usesThreads = false;
-      d_usesMPI = false;
-      d_subpatchCapable = false;
       d_tasktype = Normal;
       initialize();
     }
@@ -311,9 +302,6 @@ WARNING
       : d_taskName( taskName ), 
 	d_action( scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2) )
     {
-      d_usesThreads = false;
-      d_usesMPI = false;
-      d_subpatchCapable = false;
       d_tasktype = Normal;
       initialize();
     }
@@ -331,9 +319,6 @@ WARNING
       : d_taskName( taskName ), 
 	d_action( scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3) )
     {
-      d_usesThreads = false;
-      d_usesMPI = false;
-      d_subpatchCapable = false;
       d_tasktype = Normal;
       initialize();
     }
@@ -351,9 +336,6 @@ WARNING
       : d_taskName( taskName ), 
 	d_action( scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4) )
     {
-      d_usesThreads = false;
-      d_usesMPI = false;
-      d_subpatchCapable = false;
       d_tasktype = Normal;
       initialize();
     }
@@ -362,6 +344,7 @@ WARNING
     
     ~Task();
     
+    void hasSubScheduler(bool state = true);
     void usesMPI(bool state=true);
     void usesThreads(bool state);
     bool usesThreads() const {
@@ -625,7 +608,8 @@ WARNING
     bool                d_usesMPI;
     bool                d_usesThreads;
     bool                d_subpatchCapable;
-    TaskType		  d_tasktype;
+    bool                d_hasSubScheduler;
+    TaskType		d_tasktype;
     
     Task(const Task&);
     Task& operator=(const Task&);

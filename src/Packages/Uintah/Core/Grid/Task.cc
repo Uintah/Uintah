@@ -19,6 +19,10 @@ void Task::initialize()
   mod_head=mod_tail=0;
   patch_set=0;
   matl_set=0;
+  d_usesThreads = false;
+  d_usesMPI = false;
+  d_subpatchCapable = false;
+  d_hasSubScheduler = false;
   taskNumber=-1;
 }
 
@@ -79,6 +83,12 @@ void
 Task::usesMPI(bool state)
 {
   d_usesMPI = state;
+}
+
+void
+Task::hasSubScheduler(bool state)
+{
+  d_hasSubScheduler = state;
 }
 
 void
