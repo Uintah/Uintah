@@ -653,21 +653,21 @@ itcl_class ViewWindow {
 	    wm geometry $w "="
 	    pack configure $w.wframe -expand yes -fill both
 	} elseif { [set $this-global-resize] == 1 }  {
+	    if { $IsAttached == 1 } { $this switch_frames }
 	    set size "352x240"
 	    wm geometry $w "=654x639"
-	    if { $IsAttached == 1 } { $this switch_frames }
 	    pack configure $w.wframe -expand no -fill none
 	    $w.wframe.draw configure -geometry $size
 	} elseif { [set $this-global-resize] == 2 } {
+	    if { $IsAttached == 1 } { $this switch_frames }
 	    set size "1024x768"
 	    wm geometry $w "=1038x895"
-	    if { $IsAttached == 1 } { $this switch_frames }
 	    pack configure $w.wframe -expand no -fill none
 	    $w.wframe.draw configure -geometry $size
 	} else {
+	    if { $IsAttached == 1 } { $this switch_frames }
 	    set size "1600x1024"
 	    wm geometry $w "=1614x1151"
-	    if { $IsAttached == 1 } { $this switch_frames }
 	    pack configure $w.wframe -expand no -fill none
 	    $w.wframe.draw configure -geometry $size
 	}
