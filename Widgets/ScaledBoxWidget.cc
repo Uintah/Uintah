@@ -548,6 +548,48 @@ ScaledBoxWidget::ReferencePoint() const
 }
 
 
+void
+ScaledBoxWidget::SetPosition( const Point& center, const Point& R, const Point& D,
+			      const Point& I )
+{
+   variables[PointRVar]->Move(R);
+   variables[PointDVar]->Move(D);
+   variables[PointIVar]->Move(I);
+   Real sizeR((R-center).length());
+   Real sizeD((D-center).length());
+   Real sizeI((I-center).length());
+   variables[DistRVar]->Move(sizeR);
+   variables[DistDVar]->Move(sizeD);
+   variables[DistIVar]->Move(sizeI);
+   variables[CenterVar]->Set(center, Scheme3); // This should set Hypo...
+   variables[SDistRVar]->Set(sizeR*variables[RatioRVar]->real(), Scheme1); // Slider1...
+   variables[SDistDVar]->Set(sizeD*variables[RatioDVar]->real(), Scheme1); // Slider2...
+   variables[SDistIVar]->Set(sizeI*variables[RatioIVar]->real(), Scheme1); // Slider3...
+
+   execute(0);
+}
+
+
+void
+ScaledBoxWidget::GetPosition( Point& center, Point& R, Point& D, Point& I )
+{
+   center = variables[CenterVar]->point();
+   R = variables[PointRVar]->point();
+   D = variables[PointDVar]->point();
+   I = variables[PointIVar]->point();
+}
+
+
+void
+ScaledBoxWidget::SetRatioR( const Real ratio )
+{
+   ASSERT((ratio>=0.0) && (ratio<=1.0));
+   variables[RatioRVar]->Set(ratio);
+   
+   execute(0);
+}
+
+
 Real
 ScaledBoxWidget::GetRatioR() const
 {
@@ -555,10 +597,30 @@ ScaledBoxWidget::GetRatioR() const
 }
 
 
+void
+ScaledBoxWidget::SetRatioD( const Real ratio )
+{
+   ASSERT((ratio>=0.0) && (ratio<=1.0));
+   variables[RatioDVar]->Set(ratio);
+   
+   execute(0);
+}
+
+
 Real
 ScaledBoxWidget::GetRatioD() const
 {
    return (variables[RatioDVar]->real());
+}
+
+
+void
+ScaledBoxWidget::SetRatioI( const Real ratio )
+{
+   ASSERT((ratio>=0.0) && (ratio<=1.0));
+   variables[RatioIVar]->Set(ratio);
+   
+   execute(0);
 }
 
 

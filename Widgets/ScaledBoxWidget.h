@@ -30,8 +30,15 @@ public:
    virtual void MoveDelta( const Vector& delta );
    virtual Point ReferencePoint() const;
 
+   void SetPosition( const Point& center, const Point& R, const Point& D,
+		     const Point& I );
+   void GetPosition( Point& center, Point& R, Point& D, Point& I );
+
+   void SetRatioR( const Real ratio );
    Real GetRatioR() const;
+   void SetRatioD( const Real ratio );
    Real GetRatioD() const;
+   void SetRatioI( const Real ratio );
    Real GetRatioI() const;
 
    const Vector& GetRightAxis();
