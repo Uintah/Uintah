@@ -327,7 +327,7 @@ void Plot2DViewer::tcl_command(GuiArgs& args, void* userdata)
 
   } else if (args[1] == "add_GUIVar") {
     
-    scinew GuiInt(ctx->subVar(args[2]), 1);
+    scinew GuiInt(ctx->subVar(args[2]), atoi(args[3].c_str())  );
 
   } else if (args[1] == "remove_GUIVar") {
     
