@@ -2,10 +2,11 @@
 
 SRCDIR := Packages/Uintah/Core
 SUBDIRS := \
-	$(SRCDIR)/Parallel \
-	$(SRCDIR)/Math \
-	$(SRCDIR)/Exceptions \
-	$(SRCDIR)/Grid \
+	$(SRCDIR)/Parallel    \
+	$(SRCDIR)/Disclosure  \
+	$(SRCDIR)/Math        \
+	$(SRCDIR)/Exceptions  \
+	$(SRCDIR)/Grid        \
 	$(SRCDIR)/ProblemSpec \
 	$(SRCDIR)/Datatypes
 
