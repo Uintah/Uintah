@@ -66,7 +66,7 @@ namespace SCIRun {
     ~PHello();
     void setServices(const sci::cca::Services::pointer& svc);
     void setCommunicator(int comm);
-    MPI_Comm MPI_COMM_COM;
+    //    MPI_Comm MPI_COMM_COM;
   private:
     PHello(const PHello&);
     PHello& operator=(const PHello&);

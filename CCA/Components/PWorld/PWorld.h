@@ -55,7 +55,7 @@ namespace SCIRun {
     PWorld(const PWorld&);
     PWorld& operator=(const PWorld&);
     void setCommunicator(int comm);
-    MPI_Comm MPI_COMM_COM;
+    //    MPI_Comm MPI_COMM_COM;
     sci::cca::Services::pointer services;
   };
   
