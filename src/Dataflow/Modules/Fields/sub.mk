@@ -68,9 +68,6 @@ SRCS     += \
 	$(SRCDIR)/Unstructure.cc\
 	$(SRCDIR)/VectorMagnitude.cc\
 #[INSERT NEW CODE FILE HERE]
-#	$(SRCDIR)/CastField.cc\
-#	$(SRCDIR)/ChangeCellType.cc\
-#	$(SRCDIR)/ManipFields.cc\
 
 
 PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil Dataflow/Widgets \
