@@ -4,10 +4,12 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <iostream>
 
 using namespace Uintah;
 using namespace SCIRun;
 
+using namespace std;
 
 //////////
 // Constructor : Initialize stuff
@@ -25,6 +27,13 @@ PlaneShellPiece::PlaneShellPiece(ProblemSpecP& ps)
     SCI_THROW(ProblemSetupException("PlaneShell: Incorrect plane dimensions."));
   if (d_numRadius < 1.0)
     SCI_THROW(ProblemSetupException("PlaneShell: Incorrect subdivision of plane."));
+
+  cout << "Creating a plane shell" << endl;
+  cout << "   Center = " << d_center << endl;
+  cout << "   Normal = " << d_normal << endl;
+  cout << "   Radius = " << d_radius << endl;
+  cout << "   Thickness = " << d_thickness << endl;
+  cout << "   Particles in radial direction = " << d_numRadius << endl;
 }
 
 //////////
@@ -138,6 +147,8 @@ PlaneShellPiece::createParticles(const Patch* patch,
 				 ParticleVariable<Vector>& psiz,
 				 particleIndex start)
 {
+  cout << "Calling plane shell particle creator" << endl;
+
   // Get the bounding patch box
   Box b = patch->getBox();
 
