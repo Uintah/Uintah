@@ -1,7 +1,7 @@
 
 #include <config/sci.cf>
 
-#ifdef SCI_MACHINE_SGI
+#ifdef SCI_MACHINE_SGI_BROKEN
 SOBJS = SoundInput.o  SoundOutput.o  SoundReader.o
 SSRCS = SoundInput.cc SoundOutput.cc SoundReader.cc
 #else
