@@ -93,8 +93,8 @@ void init_notes ()
 
     t1 = time(NULL) ;
     t2 = localtime (&t1) ;
-    sprintf (d, " %s  %s %0d 19%0d", days[t2->tm_wday], months[t2->tm_mon], 
-	     t2->tm_mday, t2->tm_year) ;
+    sprintf (d, " %s  %s %0d %d", days[t2->tm_wday], months[t2->tm_mon], 
+	     t2->tm_mday, t2->tm_year+1900) ;
     sprintf (t, " %0d:%0d:%0d", t2->tm_hour, t2->tm_min, t2->tm_sec) ;
 
     /* myvalue = */
