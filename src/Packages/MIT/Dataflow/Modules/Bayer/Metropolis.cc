@@ -31,6 +31,7 @@ extern "C" {
 #include <Core/2d/Polyline.h>
 #include <Core/2d/Diagram.h>
 #include <Core/2d/Graph.h>
+#include <Core/2d/Axes.h>
 
 #include <Packages/MIT/Core/Datatypes/MetropolisData.h>
 #include <Packages/MIT/Dataflow/Ports/MetropolisPorts.h>
@@ -99,6 +100,7 @@ private:
   Diagram *diagram;
   ResultsHandle results;
   Array1<Polyline *> poly;
+  Axes *axes;
 
   UNUR_GEN *gen;
 public:
@@ -197,6 +199,8 @@ Metropolis::init()
   graph = scinew Graph( id+"-Graph" );
   diagram = scinew Diagram("Metropolis");
   graph->add("Theta", diagram);
+  axes = scinew Axes(20,10,"axes");
+  diagram->add(axes);
 
   
 }
