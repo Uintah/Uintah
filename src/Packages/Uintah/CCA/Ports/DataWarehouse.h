@@ -98,6 +98,8 @@ WARNING
 			    ParticleSubset*) = 0;
       virtual void get(constParticleVariableBase&, const VarLabel*,
 		       ParticleSubset*) = 0;
+      virtual void get(constParticleVariableBase&, const VarLabel*,
+		       int matlIndex, const Patch* patch) = 0;
       void getCopy(ParticleVariableBase&, const VarLabel*,
 		   ParticleSubset*);
       void copyOut(ParticleVariableBase&, const VarLabel*,
@@ -109,6 +111,8 @@ WARNING
      
       virtual ParticleVariableBase* getParticleVariable(const VarLabel*,
 							ParticleSubset*) = 0;
+      virtual ParticleVariableBase*
+      getParticleVariable(const VarLabel*, int matlIndex, const Patch*) = 0;
 
       // Generic grid based variables
      

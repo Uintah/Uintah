@@ -219,7 +219,16 @@ DataArchive::queryGrid( double time )
       }
       ASSERTEQ(level->numPatches(), numPatches);
       ASSERTEQ(level->totalCells(), totalCells);
-      level->finalizeLevel();
+      
+      IntVector periodicBoundaries;
+      if(get(n, "periodic", periodicBoundaries)){
+	level->finalizeLevel(periodicBoundaries.x() != 0,
+			     periodicBoundaries.y() != 0,
+			     periodicBoundaries.z() != 0);
+      }
+      else {
+	level->finalizeLevel();
+      }
       grid->addLevel(level);
     } else if(n.getNodeType() != DOM_Node::TEXT_NODE){
       cerr << "WARNING: Unknown grid data: " << toString(n.getNodeName()) << '\n';
