@@ -1159,11 +1159,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	}
     }
 
-    method run_update {} {
-	set $this-execmode "update"
-	$this-c needexecute
-    }
-
     method run_step {} {
 	set $this-execmode "step"
 	$this-c needexecute
