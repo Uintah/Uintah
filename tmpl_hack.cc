@@ -23,7 +23,7 @@ typedef ScalarFieldHandle hack6;
 #include <Datatypes/VectorField.h>
 typedef VectorFieldHandle hack7;
 
-#include <Datatypes/GeometryPort.h>
+#include <Datatypes/GeometryComm.h>
 typedef Mailbox<GeomReply> hack8;
 
 #include <Datatypes/MeshPort.h>
