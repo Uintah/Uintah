@@ -87,7 +87,7 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
   typename FSRC::mesh_type::Elem::iterator bi, ei;
   hvmesh->begin(bi); hvmesh->end(ei);
 
-  const unsigned int surfsize = pow(hesize, 2.0 / 3.0);
+  const unsigned int surfsize = (unsigned int)pow(hesize, 2.0 / 3.0);
   vector<typename FSRC::mesh_type::Elem::index_type> buffers[2];
   buffers[0].reserve(surfsize);
   buffers[1].reserve(surfsize);
@@ -218,6 +218,155 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
   }
   return true;
 }
+
+
+class LatToTetAlgo : public DynamicAlgoBase
+{
+public:
+  virtual bool execute(FieldHandle src, FieldHandle& dst) = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfoHandle get_compile_info(const TypeDescription *data_td);
+};
+
+
+template <class FSRC>
+class LatToTetAlgoT : public LatToTetAlgo
+{
+public:
+  //! virtual interface. 
+  virtual bool execute(FieldHandle src, FieldHandle& dst);
+};
+
+
+template <class FSRC>
+bool
+LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
+{
+  FSRC *hvfield = dynamic_cast<FSRC*>(srcH.get_rep());
+
+  typename FSRC::mesh_type *hvmesh = hvfield->get_typed_mesh().get_rep();
+  TetVolMeshHandle tvmesh = scinew TetVolMesh();
+
+  // Copy points directly, assuming they will have the same order.
+  typename FSRC::mesh_type::Node::iterator nbi, nei;
+  hvmesh->begin(nbi); hvmesh->end(nei);
+  while (nbi != nei)
+  {
+    Point p;
+    hvmesh->get_center(p, *nbi);
+    tvmesh->add_point(p);
+    ++nbi;
+  }
+
+  hvmesh->synchronize(Mesh::NODE_NEIGHBORS_E);
+  hvmesh->synchronize(Mesh::FACES_E);
+
+  typename FSRC::mesh_type::Elem::iterator bi, ei;
+  hvmesh->begin(bi); hvmesh->end(ei);
+  while (bi != ei)
+  {
+    typename FSRC::mesh_type::Node::array_type hvnodes(8);
+    hvmesh->get_nodes(hvnodes, *bi);
+    if (((*bi).i_ ^ (*bi).j_ ^ (*bi).k_)&1)
+    {
+      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[0]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[1]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[2]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[5]));
+
+      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[0]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[2]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[3]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[7]));
+
+      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[0]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[5]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[2]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[7]));
+
+      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[0]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[5]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[7]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[4]));
+
+      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[5]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[2]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[7]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[6]));
+    }
+    else
+    {
+      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[0]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[1]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[3]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[4]));
+
+      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[1]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[2]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[3]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[6]));
+
+      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[1]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[3]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[4]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[6]));
+
+      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[1]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[5]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[6]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[4]));
+
+      tvmesh->add_tet((TetVolMesh::Node::index_type)((unsigned int)hvnodes[3]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[4]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[6]),
+		      (TetVolMesh::Node::index_type)((unsigned int)hvnodes[7]));
+    }
+    ++bi;
+  }
+  
+  TetVolField<typename FSRC::value_type> *tvfield = 
+    scinew TetVolField<typename FSRC::value_type>(tvmesh, hvfield->data_at());
+  *(PropertyManager *)tvfield = *(PropertyManager *)hvfield;
+  dstH = tvfield;
+
+  typename FSRC::value_type val;
+
+  if (hvfield->data_at() == Field::NODE) {
+    hvmesh->begin(nbi); hvmesh->end(nei);
+    while (nbi != nei)
+    {
+      hvfield->value(val, *nbi);
+      tvfield->set_value(val,
+			 (TetVolMesh::Node::index_type)(unsigned int)(*nbi));
+      ++nbi;
+    }
+  }
+  else if (hvfield->data_at() == Field::CELL)
+  {
+    typename FSRC::mesh_type::Cell::iterator cbi, cei;    
+    hvmesh->begin(cbi); hvmesh->end(cei);
+    while (cbi != cei)
+    {
+      hvfield->value(val, *cbi);
+      unsigned int i = (unsigned int)*cbi;
+      tvfield->set_value(val, (TetVolMesh::Cell::index_type)(i*5+0));
+      tvfield->set_value(val, (TetVolMesh::Cell::index_type)(i*5+1));
+      tvfield->set_value(val, (TetVolMesh::Cell::index_type)(i*5+2));
+      tvfield->set_value(val, (TetVolMesh::Cell::index_type)(i*5+3));
+      tvfield->set_value(val, (TetVolMesh::Cell::index_type)(i*5+4));
+      ++cbi;
+    }
+  } else if (hvfield->data_at() == Field::NONE) {
+    // nothing to copy
+  } else {
+    cerr << "Error -- don't know how to handle data_at == "<<hvfield->data_at()<<"\n";
+    dstH=0;
+    return false;
+  }
+  return true;
+}
+
 }
 
 #endif

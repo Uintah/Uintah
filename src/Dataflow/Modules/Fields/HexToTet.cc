@@ -100,19 +100,39 @@ HexToTet::execute()
   last_generation_ = ifieldhandle->generation;
   
   const TypeDescription *src_td = ifieldhandle->get_type_description();
-  CompileInfoHandle ci = HexToTetAlgo::get_compile_info(src_td);
-  Handle<HexToTetAlgo> algo;
-  if (!module_maybe_dynamic_compile(ci, algo)) {
-    error("HexToTet only supported for Hex types -- failed for "+
-	  src_td->get_name());
-    return;
+  CompileInfoHandle hci = HexToTetAlgo::get_compile_info(src_td);
+  Handle<HexToTetAlgo> halgo;
+  if (module_maybe_dynamic_compile(hci, halgo))
+  {
+    if (!halgo->execute(ifieldhandle, ofieldhandle))
+    {
+      warning("HexToTet conversion failed to copy data.");
+      return;
+    }
   }
-  if (!algo->execute(ifieldhandle, ofieldhandle)) {
-    error("HexToTet conversion failed.");
-    return;
-  } 
+  else
+  {
+    CompileInfoHandle lci = LatToTetAlgo::get_compile_info(src_td);
+    Handle<LatToTetAlgo> lalgo;
+    if (module_maybe_dynamic_compile(lci, lalgo))
+    {
+      if (!lalgo->execute(ifieldhandle, ofieldhandle))
+      {
+	warning("LatToTet conversion failed to copy data.");
+	return;
+      }
+    }
+    else
+    {
+      error("HexToTet only supported for Hex types -- failed for "+
+	    src_td->get_name());
+      return;
+    }
+  }
+
   ofp->send(ofieldhandle);
 }
+
 
 CompileInfoHandle
 HexToTetAlgo::get_compile_info(const TypeDescription *src_td)
@@ -134,5 +154,28 @@ HexToTetAlgo::get_compile_info(const TypeDescription *src_td)
   src_td->fill_compile_info(rval);
   return rval;
 }
+
+
+CompileInfoHandle
+LatToTetAlgo::get_compile_info(const TypeDescription *src_td)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("LatToTetAlgoT");
+  static const string base_class_name("LatToTetAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       src_td->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       src_td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  src_td->fill_compile_info(rval);
+  return rval;
+}
+
 
 } // End namespace SCIRun
