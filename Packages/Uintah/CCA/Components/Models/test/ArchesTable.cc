@@ -2,6 +2,7 @@
 #include <Packages/Uintah/CCA/Components/Models/test/ArchesTable.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
+#include <fstream>
 using namespace std;
 
 using namespace Uintah;
