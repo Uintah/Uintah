@@ -31,7 +31,7 @@
 
 #include <Core/CCA/spec/cca_sidl.h>
 
-class Matrix: public gov::cca::Matrix{
+class Matrix: public sci::cca::Matrix{
 public:
   Matrix();
   Matrix(int nRow, int nCol);

@@ -40,9 +40,9 @@
 using namespace std;
 using namespace SCIRun;
 
-extern "C" gov::cca::Component::pointer make_SCIRun_FEM()
+extern "C" sci::cca::Component::pointer make_SCIRun_FEM()
 {
-  return gov::cca::Component::pointer(new FEM());
+  return sci::cca::Component::pointer(new FEM());
 }
 
 
@@ -59,20 +59,20 @@ FEM::~FEM()
 {
 }
 
-void FEM::setServices(const gov::cca::Services::pointer& svc)
+void FEM::setServices(const sci::cca::Services::pointer& svc)
 {
   services=svc;
   //register provides ports here ...  
 
-  gov::cca::TypeMap::pointer props = svc->createTypeMap();
+  sci::cca::TypeMap::pointer props = svc->createTypeMap();
   //myUIPort::pointer uip(&uiPort);
   myGoPort::pointer gop(&goPort);
   myPDEMatrixPort::pointer matrixp(&matrixPort);
-  //svc->addProvidesPort(uip,"ui","gov.cca.UIPort", props);
-  svc->addProvidesPort(gop,"go","gov.cca.GoPort", props);
-  svc->addProvidesPort(matrixp,"matrix","gov.cca.PDEMatrixPort", props);
-  svc->registerUsesPort("mesh","gov.cca.MeshPort", props);
-  svc->registerUsesPort("pde","gov.cca.PDEDescriptionPort", props);
+  //svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
+  svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", props);
+  svc->addProvidesPort(matrixp,"matrix","sci.cca.ports.PDEMatrixPort", props);
+  svc->registerUsesPort("mesh","sci.cca.ports.MeshPort", props);
+  svc->registerUsesPort("pde","sci.cca.ports.PDEDescriptionPort", props);
   // Remember that if the PortInfo is created but not used in a call to the svc object
   // then it must be freed.
   // Actually - the ref counting will take care of that automatically - Steve
@@ -129,13 +129,13 @@ void FEM::localMatrices(double A[3][3], double f[3],
 
 
 //create the global matrices from the local matrices
-void FEM::globalMatrices(const SIDL::array1<double> &nodes1d,
-			 const SIDL::array1<int> &tmesh1d)
+void FEM::globalMatrices(const SSIDL::array1<double> &nodes1d,
+			 const SSIDL::array1<int> &tmesh1d)
 {
  int N=nodes1d.size()/2; 
 
  Ag=new Matrix(N,N);
- SIDL::array1<double> fg;
+ SSIDL::array1<double> fg;
 
  for(int i=0; i<N; i++){
    fg.push_back(0);
@@ -218,29 +218,29 @@ int myUIPort::ui()
 
 int myGoPort::go() 
 {
-  gov::cca::Port::pointer pp=com->getServices()->getPort("mesh");	
+  sci::cca::Port::pointer pp=com->getServices()->getPort("mesh");	
   if(pp.isNull()){
     QMessageBox::warning(0, "FEM", "Port mesh is not available!");
     return 1;
   }  
-  gov::cca::ports::MeshPort::pointer meshPort=
-    pidl_cast<gov::cca::ports::MeshPort::pointer>(pp);
+  sci::cca::ports::MeshPort::pointer meshPort=
+    pidl_cast<sci::cca::ports::MeshPort::pointer>(pp);
   
 
-  gov::cca::Port::pointer pp2=com->getServices()->getPort("pde");	
+  sci::cca::Port::pointer pp2=com->getServices()->getPort("pde");	
   if(pp2.isNull()){
     QMessageBox::warning(0, "FEM", "Port pde is not available!");
     return 1;
   }  
   
 
-  gov::cca::ports::PDEDescriptionPort::pointer pdePort=
-    pidl_cast<gov::cca::ports::PDEDescriptionPort::pointer>(pp2);
+  sci::cca::ports::PDEDescriptionPort::pointer pdePort=
+    pidl_cast<sci::cca::ports::PDEDescriptionPort::pointer>(pp2);
 
 
-  SIDL::array1<int> tmesh1d=meshPort->getTriangles();
+  SSIDL::array1<int> tmesh1d=meshPort->getTriangles();
   
-  SIDL::array1<double> nodes1d=pdePort->getNodes();
+  SSIDL::array1<double> nodes1d=pdePort->getNodes();
 
   com->dirichletNodes=pdePort->getDirichletNodes();
 
@@ -260,12 +260,12 @@ int myGoPort::go()
 }
  
 
-gov::cca::Matrix::pointer myPDEMatrixPort::getMatrix()
+sci::cca::Matrix::pointer myPDEMatrixPort::getMatrix()
 {
-   return gov::cca::Matrix::pointer(com->Ag );
+   return sci::cca::Matrix::pointer(com->Ag );
 }
 
-SIDL::array1<double> myPDEMatrixPort::getVector()
+SSIDL::array1<double> myPDEMatrixPort::getVector()
 {
   return com->fg;
 }
