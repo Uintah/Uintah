@@ -25,6 +25,7 @@ typedef st_map::iterator      stm_iter;
 
 
 #define IGNORE_UNKNOWN_TOKENS 1
+#define DEBUG 0
 
 
 
