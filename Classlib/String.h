@@ -18,6 +18,8 @@
 class ostream;
 class istream;
 class Piostream;
+class RigorousTest;
+class PerfTest;
 
 #ifdef __GNUG__
 #pragma interface
@@ -61,6 +63,7 @@ class clString {
     };
     srep *p;
     clString(int, char*);
+
 public:
     //////////
     // Constructores
@@ -85,7 +88,6 @@ public:
     //<i>No documentation provided</i>
     friend istream& operator>>(istream& s, clString&);
 
-    
 
     //////////
     //<i>No documentation provided</i>
@@ -95,6 +97,7 @@ public:
     //////////
     //<i>No documentation provided</i>
     clString& operator=(const char*);
+    // Comparison
 
     //////////
     //Comparison
@@ -201,12 +204,14 @@ public:
     //////////
     // Remove directory name
     friend clString basename(const clString&);
+
+    static void test_rigorous(RigorousTest* __test);
+    static void test_performance(PerfTest* __pt);
 };
 
 // Build a string from an int/double
 clString to_string(int);
 clString to_string(double);
-clString basename(const clString&);
 
 #endif
 
