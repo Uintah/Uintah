@@ -87,7 +87,7 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
   }
 
   // if nothing was specified, just call it node-centered (arbitrary)
-  if (data_center = nrrdCenterUnknown) data_center = nrrdCenterNode;
+  if (data_center == nrrdCenterUnknown) data_center = nrrdCenterNode;
 
   Point min(0., 0., 0.);
   Point max;
