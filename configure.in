@@ -33,12 +33,16 @@ AC_ARG_ENABLE(mcq,
 	[  --enable-mcq                 Build John McQ's modules],
 	[mcq="$enableval"],
 	[mcq=${mcq='no'}])
+AC_ARG_ENABLE(kurt,
+	[  --enable-kurt                 Build Kurt's modules],
+	[kurt="$enableval"],
+	[kurt=${kurt='no'}])
 AC_ARG_ENABLE(exename,
 	[  --enable-exename		Override the default executable name],
 	[exename="$enableval"],
 	[exename=${exename='default'}])
 
-if test "$scirun" = "no" -a "$uintah" = "no" -a "$phil" = "no" -a "$davew" = "no" -a "$yarden" = "no" -a "$mcq" = "no"; then
+if test "$scirun" = "no" -a "$uintah" = "no" -a "$davew" = "no" -a "$yarden" = "no" -a "$mcq" = "no" -a "$kurt" = "no" ;then
   echo "Please at least use one of:"
   echo "  --enable-scirun"
   echo "  --enable-uintah"
@@ -46,6 +50,7 @@ if test "$scirun" = "no" -a "$uintah" = "no" -a "$phil" = "no" -a "$davew" = "no
   echo "  --enable-phil"
   echo "  --enable-yarden"
   echo "  --enable-mcq"
+  echo "  --enable-kurt"
   exit 1
 fi
 
@@ -147,6 +152,16 @@ if test "$mcq" = "yes"; then
               McQ/Makefile \
               McQ/Euler/Makefile \
               McQ/MPM/Makefile \
+              "
+fi
+if test "$kurt" = "yes"; then
+  PACKAGE_DIRS=$PACKAGE_DIRS" Kurt"
+  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/Kurt/libKurt.so\(\$(SRCTOP_ABS)/Kurt/GUI\)"
+  package_output="$package_output \
+              Kurt/Makefile \
+              Kurt/Modules/Makefile \
+              Kurt/GUI/Makefile \
+              Kurt/Geom/Makefile \
               "
 fi
 
