@@ -91,7 +91,7 @@ class CuttingPlane : public Module {
    int widget_id;
    int init;
    FrameWidget *widget;
-   virtual void widget_moved(bool last);
+   virtual void widget_moved(bool last, BaseWidget*);
    GuiInt cutting_plane_type;
    GuiInt num_contours;   
    GuiDouble offset;
@@ -714,7 +714,7 @@ void CuttingPlane::execute()
 
 }
 
-void CuttingPlane::widget_moved(bool last)
+void CuttingPlane::widget_moved(bool last, BaseWidget*)
 {
     if(last && !abort_flag)
     {

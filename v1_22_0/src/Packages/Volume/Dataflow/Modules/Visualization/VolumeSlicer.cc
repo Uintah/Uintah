@@ -42,7 +42,7 @@ public:
   virtual ~VolumeSlicer();
 
   virtual void execute();
-  virtual void widget_moved(bool last);    
+  virtual void widget_moved(bool last, BaseWidget*);
   virtual void tcl_command(GuiArgs&, void*);
 private:
   
@@ -300,7 +300,7 @@ void
 	w += view*ddview_*atof(args[3].c_str());
       }
       control_widget_->SetPosition(w);
-      widget_moved(true);
+      widget_moved(true,0);
       control_x_.set( w.x() );
       control_y_.set( w.y() );
       control_z_.set( w.z() );
@@ -315,7 +315,7 @@ void
 
 
 void
-VolumeSlicer::widget_moved(bool)
+VolumeSlicer::widget_moved(bool,BaseWidget*)
 {
   if( slice_ren_ ){
       slice_ren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
