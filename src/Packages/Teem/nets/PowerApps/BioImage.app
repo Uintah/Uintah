@@ -96,6 +96,12 @@ global slab_min slab_max
 set slab_min 0
 set slab_max 124
 
+global turn_off_crop
+set turn_off_crop 0
+global updating_crop_ui
+set updating_crop_ui 0
+
+
 # volume rendering
 global show_vol_ren
 set show_vol_ren 0
@@ -122,7 +128,7 @@ class BioImageApp {
 	set i_width 260
 
 	set viewer_width 436
-	set viewer_height 540 
+	set viewer_height 670 
 	
 	set notebook_width 305
 	set notebook_height [expr $viewer_height - 50]
@@ -276,19 +282,21 @@ class BioImageApp {
 		global $mods(ViewImage)-axial-viewport0-axis
 		global $mods(ViewImage)-sagittal-viewport0-axis
 		global $mods(ViewImage)-coronal-viewport0-axis
-		global $mods(ViewImage)-axial-viewport0-clut_ww
-		global $mods(ViewImage)-sagittal-viewport0-clut_ww
-		global $mods(ViewImage)-coronal-viewport0-clut_ww
-		global $mods(ViewImage)-axial-viewport0-clut_wl
-		global $mods(ViewImage)-sagittal-viewport0-clut_wl
-		global $mods(ViewImage)-coronal-viewport0-clut_wl
+ 		global $mods(ViewImage)-axial-viewport0-clut_ww
+ 		global $mods(ViewImage)-sagittal-viewport0-clut_ww
+ 		global $mods(ViewImage)-coronal-viewport0-clut_ww
+ 		global $mods(ViewImage)-axial-viewport0-clut_wl
+ 		global $mods(ViewImage)-sagittal-viewport0-clut_wl
+ 		global $mods(ViewImage)-coronal-viewport0-clut_wl
 
 		set $mods(ViewImage)-axial-viewport0-axis 2
 		set $mods(ViewImage)-sagittal-viewport0-axis 0
 		set $mods(ViewImage)-coronal-viewport0-axis 1
 
-		set ww 221
-		set wl 137
+# 		set ww 221
+# 		set wl 137
+                set ww [set $mods(ViewImage)-axial-viewport0-clut_ww]
+                set wl [set $mods(ViewImage)-axial-viewport0-clut_wl]
 
 		set $mods(ViewImage)-axial-viewport0-clut_ww $ww
 		set $mods(ViewImage)-sagittal-viewport0-clut_ww $ww
@@ -1175,9 +1183,9 @@ class BioImageApp {
 	    global $m1-filename
 #	    set $m1-filename $data_dir/volume/CThead.nhdr
 #	    set $m1-filename $data_dir/brain-dt/demo-B0.nrrd
-#	    set $m1-filename $data_dir/volume/tooth.nhdr
+	    set $m1-filename $data_dir/volume/tooth.nhdr
 #	    set $m1-filename "/home/darbyb/work/data/TR0600-TE020.nhdr"
-	    set $m1-filename $data_dir/mrca2_t1_or-fixed.nhdr
+#	    set $m1-filename $data_dir/mrca2_t1_or-fixed.nhdr
 
 	    global $m8-nbits
 	    set $m8-nbits {8}
@@ -1208,28 +1216,40 @@ class BioImageApp {
 	    global $m14-name-0 $m14-name-1 $m14-name-2 $m14-name-3
 	    global $m14-0-color-r $m14-0-color-g $m14-0-color-b $m14-0-color-a
 	    global $m14-1-color-r $m14-1-color-g $m14-1-color-b $m14-1-color-a
-#	    global $m14-2-color-r $m14-2-color-g $m14-2-color-b $m14-2-color-a
-#	    global $m14-3-color-r $m14-3-color-g $m14-3-color-b $m14-3-color-a
+	    global $m14-2-color-r $m14-2-color-g $m14-2-color-b $m14-2-color-a
+	    global $m14-3-color-r $m14-3-color-g $m14-3-color-b $m14-3-color-a
 	    global $m14-state-0 $m14-state-1 $m14-state-2 $m14-state-3
 	    global $m14-marker
 
 	    # CHANGE THESE VARS FOR TRANSFER FUNCTION 
 	    set $m14-faux {1}
 	    set $m14-histo {0.5}
+	    set $m14-num-entries {4}
 	    set $m14-name-0 {Generic}
-	    set $m14-0-color-r {1.0}
-	    set $m14-0-color-g {1.0}
-	    set $m14-0-color-b {0.7}
-	    set $m14-0-color-a {0.560000002384}
-	    set $m14-state-0 {r 0 0.0957033 0.214844 0.324219 0.187501 0.25}
+	    set $m14-0-color-r {0.8}
+	    set $m14-0-color-g {0.17}
+	    set $m14-0-color-b {0.17}
+	    set $m14-0-color-a {1.0}
+	    set $m14-state-0 {r 0 0.0429688 0.335938 0.367187 0.453125 0.427807}
 	    set $m14-name-1 {Generic}
-	    set $m14-1-color-r {0.5}
-	    set $m14-1-color-g {0.0}
-	    set $m14-1-color-b {0.0}
-	    set $m14-1-color-a {1.0}
-	    set $m14-state-1 {r 0 0.732422 0.101562 0.259766 0.132812 0.25}
+	    set $m14-1-color-r {0.82}
+	    set $m14-1-color-g {0.84}
+	    set $m14-1-color-b {0.33}
+	    set $m14-1-color-a {0.600000023842}
+	    set $m14-state-1 {t 0.462891 0.0679688 0.554687 0.295832 0.304965}
+	    set $m14-name-2 {Generic}
+	    set $m14-2-color-r {0.38}
+	    set $m14-2-color-g {0.4}
+	    set $m14-2-color-b {1.0}
+	    set $m14-2-color-a {0.72000002861}
+	    set $m14-state-2 {r 0 0.607422 0.222656 0.277344 0.300781 0.465753}
+	    set $m14-name-3 {Generic}
+	    set $m14-3-color-r {1.0}
+	    set $m14-3-color-g {1.0}
+	    set $m14-3-color-b {1.0}
+	    set $m14-3-color-a {0.810000002384}
+	    set $m14-state-3 {r 0 0.443359 0.722656 0.367188 0.253906 0.515625}
 	    set $m14-marker {end}
-
 
 	    global $m15-sw_raster $m15-alpha_scale
 	    global $m15-shading $m15-ambient
@@ -1272,6 +1292,16 @@ class BioImageApp {
 
 	    global $m24-operator
 	    set $m24-operator {log}
+
+            global $m26-crop_min_x $m26-crop_max_x
+            global $m26-crop_min_y $m26-crop_max_y
+            global $m26-crop_min_z $m26-crop_max_z
+	    trace variable $m26-crop_min_x w "$this update_crop_values"
+	    trace variable $m26-crop_min_y w "$this update_crop_values"
+	    trace variable $m26-crop_min_z w "$this update_crop_values"
+	    trace variable $m26-crop_max_x w "$this update_crop_values"
+	    trace variable $m26-crop_max_y w "$this update_crop_values"
+	    trace variable $m26-crop_max_z w "$this update_crop_values"
 
             global $m27-mapType planes_mapType
 	    set $m27-mapType $planes_mapType
@@ -1441,6 +1471,8 @@ class BioImageApp {
 	    -command "$this update_orientations"
 	Tooltip $w.orient "Edit the entries to indicate the various orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
 	grid config $w.orient -row 0 -column 1 -columnspan 3 -rowspan 4 -sticky "n"
+
+	bind $w.orient <ButtonPress-1> "$this change_current $which"
 	
 
 	# Top entry
@@ -1448,12 +1480,14 @@ class BioImageApp {
 	entry $w.tentry -textvariable top -width 3
 	Tooltip $w.tentry "Edit the entries to indicate the various orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
 	grid config $w.tentry -row 0 -column 0 -sticky "e"
+	bind $w.tentry <ButtonPress-1> "$this change_current $which"
 
 	# Front entry
 	global front
 	entry $w.fentry -textvariable front -width 3
 	Tooltip $w.fentry "Edit the entries to indicate the various orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
 	grid config $w.fentry -row 4 -column 2 -sticky "nw"
+	bind $w.fentry <ButtonPress-1> "$this change_current $which"
 	
 	
 	# Side entry
@@ -1461,7 +1495,7 @@ class BioImageApp {
 	entry $w.sentry -textvariable side -width 3
 	Tooltip $w.sentry "Edit the entries to indicate the various orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
 	grid config $w.sentry -row 1 -column 4 -sticky "n"
-	
+	bind $w.sentry <ButtonPress-1> "$this change_current $which"
     }
 
     method open_nrrd_reader_ui {i} {
@@ -1882,6 +1916,7 @@ class BioImageApp {
             grid configure $page.planes.ym -row 1 -column 1 -sticky "w"
             grid configure $page.planes.zp -row 2 -column 0 -sticky "w"
             grid configure $page.planes.zm -row 2 -column 1 -sticky "w"
+
 
 
             # Background threshold
@@ -2413,7 +2448,7 @@ class BioImageApp {
 	}
 
         # add to filters array
-        set filters($num_filters) [list crop [list $m1] [list $m1 0] [list $m1 0] $current [lindex $filters($current) $next_index] $choose $row 1]
+        set filters($num_filters) [list crop [list $m1] [list $m1 0] [list $m1 0] $current [lindex $filters($current) $next_index] $choose $row 1 [list 0 0 0 0 0 0]]
 
 	# Make current frame regular
 	set p f$current
@@ -2422,6 +2457,36 @@ class BioImageApp {
 
         $this add_Crop_UI $history0 $row $num_filters
         $this add_Crop_UI $history1 $row $num_filters
+
+        # turn on Cropping widgets in ViewImage windows
+        $mods(ViewImage)-c startcrop
+        global turn_off_crop
+        set turn_off_crop 1
+
+        # update crop values to be actual bounds (not M) if available
+        global $m1-maxAxis0
+        global $m1-maxAxis1
+        global $m1-maxAxis2
+        if {$has_executed == 1} {
+	    global $mods(ViewImage)-crop_max_x
+            global $mods(ViewImage)-crop_max_y
+            global $mods(ViewImage)-crop_max_z
+            set $m1-maxAxis0 [set $mods(ViewImage)-crop_max_x]
+            set $m1-maxAxis1 [set $mods(ViewImage)-crop_max_y]
+            set $m1-maxAxis2 [set $mods(ViewImage)-crop_max_z]     
+        } else {
+            set $m1-maxAxis0 "M"
+            set $m1-maxAxis1 "M"
+	    set $m1-maxAxis2 "M"
+        }
+
+        # put traces on changing these
+        trace variable $m1-minAxis0 w "$this update_crop_ui "
+        trace variable $m1-maxAxis0 w "$this update_crop_ui "
+        trace variable $m1-minAxis1 w "$this update_crop_ui "
+        trace variable $m1-maxAxis1 w "$this update_crop_ui "
+        trace variable $m1-minAxis2 w "$this update_crop_ui "
+        trace variable $m1-maxAxis2 w "$this update_crop_ui "
 
         if {!$insert} {
 	    $attachedPFr.f.p.sf justify bottom
@@ -2440,6 +2505,8 @@ class BioImageApp {
 
 	set num_filters [expr $num_filters + 1]
 	set grid_rows [expr $grid_rows + 1]
+
+        change_indicator_labels "Press Update to crop volume..."
     }
     
     method add_Cmedian {} {
@@ -2507,6 +2574,7 @@ class BioImageApp {
 
 	set num_filters [expr $num_filters + 1]
 	set grid_rows [expr $grid_rows + 1]
+
     }
 
     method add_Histo {} {
@@ -2819,7 +2887,7 @@ class BioImageApp {
 	    global [set UnuCrop]-maxAxis$i
             if {!$loading_ui} {
 	        set [set UnuCrop]-minAxis$i 0
-		set [set UnuCrop]-maxAxis$i "M"
+                #set [set UnuCrop]-maxAxis$i "M"
 	    }
 
 	    frame $w.ui.$i
@@ -2854,6 +2922,84 @@ class BioImageApp {
         $w.ui.2.minl configure -text "Inferior:" -width 10
         $w.ui.2.maxl configure -text "Superior:" -width 10
     }	
+
+
+    method update_crop_values { varname varele varop } {
+	    global mods updating_crop_ui
+            
+
+	    # verify that a crop is selected
+	    if {[lindex $filters($current) $filter_type] != "crop"} {
+                return
+             }
+
+            # determine which crop to update
+            set UnuCrop [lindex [lindex $filters($current) $modules] 0]
+          
+            set updating_crop_ui 1
+
+            # get list of pad values
+            set pad_vals [lindex $filters($current) 9]
+            # update the correct UnuCrop variable
+            if {[string first "crop_min_x" $varname] != -1} {
+	        global [set UnuCrop]-minAxis0
+                global $mods(ViewImage)-crop_min_x
+                set [set UnuCrop]-minAxis0 [set $mods(ViewImage)-crop_min_x] 
+            } elseif {[string first "crop_max_x" $varname] != -1} {
+	        global [set UnuCrop]-maxAxis0
+                global $mods(ViewImage)-crop_max_x
+                set [set UnuCrop]-maxAxis0 [set $mods(ViewImage)-crop_max_x] 
+            } elseif {[string first "crop_min_y" $varname] != -1} {
+	        global [set UnuCrop]-minAxis1
+                global $mods(ViewImage)-crop_min_y
+                set [set UnuCrop]-minAxis1 [set $mods(ViewImage)-crop_min_y] 
+	    } elseif {[string first "crop_max_y" $varname] != -1} {
+	        global [set UnuCrop]-maxAxis1
+                global $mods(ViewImage)-crop_max_y
+                set [set UnuCrop]-maxAxis1 [set $mods(ViewImage)-crop_max_y] 
+            } elseif {[string first "crop_min_z" $varname] != -1} {
+	        global [set UnuCrop]-minAxis2
+                global $mods(ViewImage)-crop_min_z
+                set [set UnuCrop]-minAxis2 [set $mods(ViewImage)-crop_min_z] 
+	    } elseif {[string first "crop_max_z" $varname] != -1} {
+	        global [set UnuCrop]-maxAxis2
+                global $mods(ViewImage)-crop_max_z
+                set [set UnuCrop]-maxAxis2 [set $mods(ViewImage)-crop_max_z] 
+            }
+  
+#             # update the correct UnuCrop variable
+#             if {[string first "crop_min_x" $varname] != -1} {
+# 	        global [set UnuCrop]-minAxis0
+#                 global $mods(ViewImage)-crop_min_x
+#                 set [set UnuCrop]-minAxis0 [expr [set $mods(ViewImage)-crop_min_x] - \
+# 						[lindex $pad_vals 0]]
+#             } elseif {[string first "crop_max_x" $varname] != -1} {
+# 	        global [set UnuCrop]-maxAxis0
+#                 global $mods(ViewImage)-crop_max_x
+#                 set [set UnuCrop]-maxAxis0 [expr [set $mods(ViewImage)-crop_max_x] + \
+# 						[lindex $pad_vals 1]]
+#             } elseif {[string first "crop_min_y" $varname] != -1} {
+# 	        global [set UnuCrop]-minAxis1
+#                 global $mods(ViewImage)-crop_min_y
+#                 set [set UnuCrop]-minAxis1 [expr [set $mods(ViewImage)-crop_min_y] - \
+# 						[lindex $pad_vals 2]]
+# 	    } elseif {[string first "crop_max_y" $varname] != -1} {
+# 	        global [set UnuCrop]-maxAxis1
+#                 global $mods(ViewImage)-crop_max_y
+#                 set [set UnuCrop]-maxAxis1 [expr [set $mods(ViewImage)-crop_max_y] + \
+# 						[lindex $pad_vals 3]]
+#             } elseif {[string first "crop_min_z" $varname] != -1} {
+# 	        global [set UnuCrop]-minAxis2
+#                 global $mods(ViewImage)-crop_min_z
+#                 set [set UnuCrop]-minAxis2 [expr [set $mods(ViewImage)-crop_min_z] - \
+# 						[lindex $pad_vals 4]]
+# 	    } elseif {[string first "crop_max_z" $varname] != -1} {
+# 	        global [set UnuCrop]-maxAxis2
+#                 global $mods(ViewImage)-crop_max_z
+#                 set [set UnuCrop]-maxAxis2 [expr [set $mods(ViewImage)-crop_max_z] + \
+# 						[lindex $pad_vals 5]]
+#             }
+    }
 
 
     method add_Cmedian_UI {history row which} {
@@ -3135,6 +3281,27 @@ class BioImageApp {
 	$mod-c needexecute
 
         set has_executed 1
+
+        # for any crops in the pipeline, save out crop values as pads
+	# for ViewImage crop widget
+ 	for {set i 0} {$i < $num_filters} {incr i} {
+            if {[lindex $filters($i) $filter_type] == "crop"} {
+                set UnuCrop [lindex [lindex $filters($i) $modules] 0]
+                global [set UnuCrop]-minAxis0 [set UnuCrop]-maxAxis0
+                global [set UnuCrop]-minAxis1 [set UnuCrop]-maxAxis1
+                global [set UnuCrop]-minAxis2 [set UnuCrop]-maxAxis2
+                set pad_vals [list [set [set UnuCrop]-minAxis0] [set [set UnuCrop]-maxAxis0] [set [set UnuCrop]-minAxis1] [set [set UnuCrop]-maxAxis1] [set [set UnuCrop]-minAxis2] [set [set UnuCrop]-maxAxis2]]
+                set filters($i) [lreplace $filters($i) 9 9 $pad_vals]
+ 	    }
+ 	}
+
+        # If crop widget is on, call update on it to recenter the widget
+        global turn_off_crop
+        if {$turn_off_crop == 1} {
+            global mods
+            $mods(ViewImage)-c stopcrop
+            set turn_off_crop 0
+        }
     }
 
     method move_down_filters {row} {
@@ -3220,11 +3387,53 @@ class BioImageApp {
 	set p f$current
 	$history0.$p configure -background grey75 -foreground black -borderwidth 2
 	$history1.$p configure -background grey75 -foreground black -borderwidth 2
+
+        # if old filter was a Crop, turn off cropping widgets in ViewImage windows
+        global turn_off_crop
+        if {$turn_off_crop == 1 && [lindex $filters($current) $filter_type] == "crop"} {
+            $mods(ViewImage)-c stopcrop
+            set turn_off_crop 0
+	}
 	
 	set current $which
 	set p f$current
 	$history0.$p configure -background $scolor -foreground white -borderwidth 2
 	$history1.$p configure -background $scolor -foreground white -borderwidth 2
+
+        # if new filter is a Crop, turn on the cropping widgets in the ViewImage windows
+        # and set the variables appropriately and change the eye to be the previous filter
+       if {[lindex $filters($current) $filter_type] == "crop"} {
+           set UnuCrop [lindex [lindex $filters($current) $modules] 0]
+	   global $mods(ViewImage)-crop_min_x $mods(ViewImage)-crop_max_x
+	   global $mods(ViewImage)-crop_min_y $mods(ViewImage)-crop_max_y
+	   global $mods(ViewImage)-crop_min_z $mods(ViewImage)-crop_max_z
+           global [set UnuCrop]-minAxis0 [set UnuCrop]-maxAxis0 
+           global [set UnuCrop]-minAxis1 [set UnuCrop]-maxAxis1 
+           global [set UnuCrop]-minAxis2 [set UnuCrop]-maxAxis2 
+
+           #puts "FIX ME: set ViewImage crop variables to be that of the current crops...but must handle M stuff"
+
+           set t1 [set [set UnuCrop]-minAxis0]
+           set t2 [set [set UnuCrop]-maxAxis0]
+           set t3 [set [set UnuCrop]-minAxis1]
+           set t4 [set [set UnuCrop]-maxAxis1]
+           set t5 [set [set UnuCrop]-minAxis2]
+           set t6 [set [set UnuCrop]-maxAxis2]
+
+           $mods(ViewImage)-c startcrop
+
+           set $mods(ViewImage)-crop_min_x $t1 
+           set $mods(ViewImage)-crop_min_y $t3
+           set $mods(ViewImage)-crop_min_z $t5
+
+           set $mods(ViewImage)-crop_max_x $t2
+           set $mods(ViewImage)-crop_max_y $t4
+           set $mods(ViewImage)-crop_max_z $t6
+
+           $mods(ViewImage)-c updatecrop
+           set turn_off_crop 1
+
+       }
     }
 
     method change_label {x y which} {
