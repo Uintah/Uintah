@@ -29,6 +29,7 @@ itcl_class SCIRun_Math_SolveMatrix {
 	global $this-memrefs $this-memrate $this-maxiter
 	global $this-use_previous_so
 	global $this-np
+	global $this-emit_partial $this-emit_iter
 	
         set $this-target_error 1.0
 	set $this-method "Conjugate Gradient & Precond. (SCI)"
@@ -43,6 +44,7 @@ itcl_class SCIRun_Math_SolveMatrix {
 	set $this-maxiter 200
 	set $this-use_previous_soln 1
 	set $this-emit_partial 1
+	set $this-emit_iter 50
 	set $this-np 4
     }
     
@@ -90,7 +92,7 @@ itcl_class SCIRun_Math_SolveMatrix {
 	pack $w.np -side top
 	
 	label $w.np.label -text "Number of threads"
-	entry $w.np.entry -width 2 -relief flat -textvariable $this-np 
+	entry $w.np.entry -width 2 -textvariable $this-np 
 	
 	pack $w.np.label $w.np.entry -side left -anchor w
 	
@@ -177,6 +179,15 @@ itcl_class SCIRun_Math_SolveMatrix {
 	scale $w.maxiter -orient horizontal -label "Maximum Iterations:" \
 		-variable $this-maxiter -from 0 -to 20000
 	pack $w.maxiter -side top -fill x -pady 2
+
+	checkbutton $w.emit -variable $this-emit_partial \
+		-text "Emit partial solutions"
+	pack $w.emit -side top -fill x -pady 2
+
+	scale $w.emititer -orient horizontal \
+		-label "Partial Solution Emitted Every:" \
+		-variable $this-emit_iter -from 0 -to 2000
+	pack $w.emititer -side top -fill x -pady 2
 	
 	checkbutton $w.use_prev -variable $this-use_previous_soln \
 		-text "Use previous solution as initial guess"
