@@ -726,6 +726,10 @@ ArchesLabel::ArchesLabel()
 				    CCVariable<double>::getTypeDescription() );
   d_sootFVINIntermLabel = VarLabel::create("sootFVINInterm",
 				    CCVariable<double>::getTypeDescription() );
+  d_denRefArrayIntermLabel = VarLabel::create("denRefArrayInterm",
+				CCVariable<double>::getTypeDescription() );
+  d_refDensityInterm_label = VarLabel::create("refDensityIntermLabel",
+				       sum_vartype::getTypeDescription() );
 
   // Runge-Kutta 3d order pressure and momentum labels
   d_uVelCoefPBLMIntermLabel = VarLabel::create("uVelCoefPBLMInterm",
@@ -783,6 +787,14 @@ ArchesLabel::ArchesLabel()
   d_velocityDivergenceBCLabel = VarLabel::create("velocityDivergenceBC", 
 				   CCVariable<double>::getTypeDescription() );
 */
+
+// labels for max(abs(velocity)) for Lax-Friedrichs flux
+  d_maxAbsU_label = VarLabel::create("maxAbsU",
+				       max_vartype::getTypeDescription() );
+  d_maxAbsV_label = VarLabel::create("maxAbsV",
+				       max_vartype::getTypeDescription() );
+  d_maxAbsW_label = VarLabel::create("maxAbsW",
+				       max_vartype::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -1039,6 +1051,8 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_reactscalarSRCINIntermLabel); 
   VarLabel::destroy(d_absorpINIntermLabel); 
   VarLabel::destroy(d_sootFVINIntermLabel); 
+  VarLabel::destroy(d_denRefArrayIntermLabel);
+  VarLabel::destroy(d_refDensityInterm_label);
  // Runge-Kutta 3d order pressure and momentum labels
   VarLabel::destroy(d_uVelCoefPBLMIntermLabel);
   VarLabel::destroy(d_uVelConvCoefPBLMIntermLabel);
@@ -1067,6 +1081,11 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_wVelocityIntermLabel);
 //  VarLabel::destroy(d_velocityDivergenceLabel);
 //  VarLabel::destroy(d_velocityDivergenceBCLabel);
+
+// labels for max(abs(velocity)) for Lax-Friedrichs flux
+  VarLabel::destroy(d_maxAbsU_label);
+  VarLabel::destroy(d_maxAbsV_label);
+  VarLabel::destroy(d_maxAbsW_label);
 			
 }
 

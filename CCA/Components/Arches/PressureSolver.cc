@@ -3229,7 +3229,7 @@ PressureSolver::sched_buildLinearMatrixInterm(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    tsk->requires(Task::NewDW, d_lab->d_denRefArrayLabel,
+    tsk->requires(Task::NewDW, d_lab->d_denRefArrayIntermLabel,
     		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 #ifdef divergenceconstraint
@@ -3376,7 +3376,7 @@ PressureSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->getCopy(pressureVars.viscosity, d_lab->d_viscosityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(pressureVars.denRefArray, d_lab->d_denRefArrayLabel,
+    new_dw->getCopy(pressureVars.denRefArray, d_lab->d_denRefArrayIntermLabel,
     		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #ifdef divergenceconstraint
     new_dw->getCopy(pressureVars.scalar, d_lab->d_scalarIntermLabel,
