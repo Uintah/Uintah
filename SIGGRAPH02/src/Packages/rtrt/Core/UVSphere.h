@@ -12,7 +12,7 @@ Email:		ramsey@cs.utah.edu
 
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/UVMapping.h>
-#include <Packages/rtrt/Core/vec.h>
+//#include <Packages/rtrt/Core/vec.h>
 #include <Packages/rtrt/Core/UV.h>
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/HitInfo.h>
@@ -41,6 +41,17 @@ class UVSphere : public Object, public UVMapping {
   Transform xform;
   Transform ixform;
 
+
+  inline double _DET2(const Vector &v0, const Vector &v1, int i0, int i1) {
+    return (v0(i0)* v1(i1) + v0(i1)*-v1(i0));
+  }
+
+  inline void VXV3(Vector &to, const Vector &v1, const Vector &v2) {
+    to(0) =  _DET2(v1,v2, 1,2);
+    to(1) = -_DET2(v1,v2, 0,2);
+    to(2) =  _DET2(v1,v2, 0,1);
+  }
+  
  public:
   UVSphere(Material *m, Point c, double r, const Vector &up=Vector(0,0,1),
            const Vector &right=Vector(1,0,0));
