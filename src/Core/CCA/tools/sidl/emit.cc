@@ -29,6 +29,7 @@
  
 
 #include <sci_defs/config_defs.h>
+#include <sci_defs/mpi_defs.h>
 #include "Spec.h"
 #include "SymbolTable.h"
 #include "uuid_wrapper.h"
