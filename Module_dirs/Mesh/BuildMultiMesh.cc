@@ -241,23 +241,18 @@ void BuildMultiMesh::partial_execute() {
     }
 
     // update "last" values
-//cerr << "Updating values\n";
     last_levels=levels.get();
     last_gl_falloff=gl_falloff.get();
     for (int i=0; i<numSources.get(); i++) {
 	last_source_sel[i]=source_sel[i]->get();
-//cerr << "  Source #: " << i << "   is " << last_source_sel[i] << "\n";
 	widget_lock.write_lock();
 	geom_switches[i]->set_state(last_source_sel[i]);
 	widget_lock.write_unlock();
 	last_charge[i]=charge[i]->get();
 	last_falloff[i]=falloff[i]->get();
 	last_wsize[i]=wsize[i]->get();
-//cerr << "   Charge = " << last_charge[i] << "\n";
-//cerr << "   Falloff = " << last_falloff[i] << "\n";
     }
     if (data_changed) {
-//cerr << "Computing new node weightings...\n";
 	numNodes=mesh->nodes.size();
 	weightings.resize(numNodes);
 	Array1<double> rand_list(numNodes);
@@ -284,20 +279,13 @@ void BuildMultiMesh::partial_execute() {
 	}
 	for (i=0; i<numNodes; i++) {
 	    weightings[i]-=min;
-//cerr << "Weightings[" << i <<"] = " << weightings[i] << "\n";	    
 	}
 	total-=min*numNodes;
 	double recip_avg=numNodes/total;
-//cerr << "Total = " << total << "\n";
-//cerr << "Min = " << min << "\n";
-//cerr << "Max = " << max << "\n";
-//cerr << "Avg = " << 1/recip_avg << "\n";
 	for (i=0; i<numSources.get(); i++) {
 	    if (last_charge[i] > max) max=last_charge[i];
 	    if (last_charge[i] < min) min=last_charge[i];
 	}
-//cerr << "New Min = " << min << "\n";
-//cerr << "New Max = " << max << "\n";
 	// update min and max values of colormap -- build cmap if necessary
 	min_weight.set(min);
 	max_weight.set(max);
@@ -307,7 +295,6 @@ void BuildMultiMesh::partial_execute() {
 	    cmap=new Colormap(30, min, max);
 	    cmap->build_default();
 	}
-//cerr << "Made it here...\n";
 	// set source widget sizes and colors, and on/off switches
 	for (i=0; i<numSources.get(); i++) {
 	    widgets[i]->SetMaterial(cmap->lookup(last_charge[i]));
@@ -317,13 +304,16 @@ void BuildMultiMesh::partial_execute() {
 	    widget_lock.write_unlock();
 	}
 	while (need_to_addObj_widget) {
-	    clString name = "Source " + to_string(widgets.size()+1-need_to_addObj_widget);
-	    owidgets[owidgets.size()-1-need_to_addObj_widget]->addObj(geom_switches[geom_switches.size()-need_to_addObj_widget], name, &widget_lock);
+	    clString name = "Source " + 
+		to_string(widgets.size()+1-need_to_addObj_widget);
+	    owidgets[owidgets.size()-1-need_to_addObj_widget]->
+		addObj(geom_switches[geom_switches.size()-
+				     need_to_addObj_widget], name, 
+		       &widget_lock);
 	    need_to_addObj_widget--;
 	}
 	owidgets[0]->flushViews();
 
-//cerr << "and to here...\n";
 	// calculate cut-off percentages for each level
 	Array1<double> cut_offs(last_levels);
 	for (i=0; i<last_levels; i++) {
@@ -333,31 +323,23 @@ void BuildMultiMesh::partial_execute() {
 	    } else {
 		cut_offs[i]=cut_offs[i-1]*last_gl_falloff/100.;
 	    }
-//cerr << "Cutoff percentage [" << i << "] = " << cut_offs[i] << "\n";
 	}
 
 	// add nodes to level_sets
 	for (i=0; i<numNodes; i++) {
-	    for (int done=0, lvl=last_levels-1; !done && lvl>0; lvl--) {
-		if (rand_list[i] < weightings[i]*recip_avg*cut_offs[lvl]) {
+	    for (int done=0, lvl=0; !done && lvl<last_levels-1; lvl++) {
+		if (rand_list[i] > weightings[i]*recip_avg*cut_offs[lvl]) {
 		    level_sets[lvl].add(i);
 		    done=1;
 		}
 	    }
 	    if (!done) {
-		level_sets[0].add(i);
+		level_sets[last_levels-1].add(i);
 	    }
 	}
 
 	// set level_materials
 	for (i=0; i<last_levels; i++) {
-//cerr << "Level " << i << " has " << level_sets[i].size() << " nodes.  (";
-//cerr << level_sets[i].size()*1./numNodes << "%) -- cutoff was ";
-//cerr << cut_offs[i] << "\n    Weight            Random\n";
-//for (int ii=0; ii<level_sets[i].size(); ii++) {
-//cerr << "  "  << weightings[(level_sets[i])[ii]] << "    ";
-//cerr << rand_list[(level_sets[i])[ii]] << "\n";
-//}
 	    if (level_sets[i].size()) {
 		level_matl[i]=cmap->lookup(min+(max-min)*i/(last_levels-1.));
 	    } else {
@@ -408,78 +390,56 @@ void BuildMultiMesh::execute()
     if (!mesh_handle.get_rep() || !need_full_execute) return;
     need_full_execute=0;
 
-//    Array1<int> marked(mesh_handle->nodes.size());
-//    int failed=0;
-//    int qq=0;
-//    for (int i=0; i<level_sets.size(); i++) {
-//	for (int j=0; j<level_sets[i].size(); j++) {
-//	    if (qq < marked.size()) {
-//		marked[qq]=(level_sets[i])[j];
-//	    } else {
-//		cerr << "Found too many nodes!\n";
-//		failed=1;
-//	    }
-//	    qq++;
-//	}
-//    }
-//    if (qq != marked.size()) {
-//	cerr << "Only found " << qq << "nodes!  Was looking for " << marked.size() << "\n";
-//	failed=1;
-//    }
-
-//    if (!failed) {
-//	cerr << "Checking for duplicates...\n";
-//	for (i=0; i<marked.size()-1; i++) {
-//	    for (int j=i+1; j<marked.size(); j++) {
-//		if (marked[i] == marked[j]) {
-//		    cerr << "Node " << i << " == Node " << j << "\n";
-//		}
-//	    }
-//	}
- //   }
-	     
-    // we have already built the node weightings -- now build the multimesh
-//cerr << "Made it into full execute!\n";
-//cerr << "Still going...\n";
-
     mmeshHndl=mmesh=0;
     mmeshHndl=mmesh=new MultiMesh;
     mmesh->meshes.resize(last_levels);
-    MeshHandle new_mesh = mesh_handle->clone();
-    mmesh->add_mesh(new_mesh, level_sets.size()-1);
-    new_mesh->compute_neighbors();
+    MeshHandle mesh = new Mesh;
+
+    BBox bbox;
+    int nn=mesh_handle->nodes.size();
+    for(int i=0;i<nn;i++)
+        bbox.extend(mesh_handle->nodes[i]->p);
+
+    double epsilon=1.e-4;
+
+    // Extend by max-(eps, eps, eps) and min+(eps, eps, eps) to
+    // avoid thin/degenerate bounds
+    bbox.extend(bbox.max()-Vector(epsilon, epsilon, epsilon));
+    bbox.extend(bbox.min()+Vector(epsilon, epsilon, epsilon));
+
+    // Make the bbox square...
+    Point center(bbox.center());
+    double le=1.0001*bbox.longest_edge();
+    Vector diag(le, le, le);
+    Point bmin(center-diag/2.);
+
+    // Make the initial mesh with a tetra which encloses the bounding
+    // box.  The first point is at the minimum point.  The other 3
+    // have one of the coordinates at bmin+diagonal*5??
+
+    mesh->nodes.add(new Node(bmin-Vector(le, le, le)));
+    mesh->nodes.add(new Node(bmin+Vector(le*5, 0, 0)));
+    mesh->nodes.add(new Node(bmin+Vector(0, le*5, 0)));
+    mesh->nodes.add(new Node(bmin+Vector(0, 0, le*5)));
+
+    Element* el=new Element(mesh.get_rep(), 0, 1, 2, 3);
+    el->orient();
+    el->faces[0]=el->faces[1]=el->faces[2]=el->faces[3]=-1;
+    mesh->elems.add(el);
 
     int count=0;
-
-//cerr << "Starting Delaunay removal...\n";
-//    int ccc=0;
-    for (int i=0; i<level_sets.size()-1; i++) {
-//cerr << "Starting Level " << i << " insertion.\n";
+mmesh->add_mesh(mesh_handle.get_rep(), 0);
+    for (i=0; i<level_sets.size(); i++) {
 	for (int j=0; j<level_sets[i].size(); j++) {
-//cerr << "Inserting Node " << j << "\n";
-	    new_mesh->remove_delaunay((level_sets[i])[j], 0);
-	    new_mesh->pack_elems();
-//	    new_mesh->compute_neighbors();
-//	    new_mesh->compute_face_neighbors();
-//	    clString fn="temp/Mesh" + to_string(ccc) + ".mesh";
-//	    Piostream* stream=new TextPiostream(fn, Piostream::Write);
-//	    Pio(*stream, new_mesh);
-//	    delete stream;
-//	    ccc++;
-	    if (!((count++)%50)) {	//update progress every fifty nodes
-		update_progress(count, mesh_handle->nodes.size());
-	    }
+	    mesh->insert_delaunay(mesh_handle->nodes[(level_sets[i])[j]]->p);
+//	    if (!((count++)%50)) {	//update progress every fifty nodes
+//		update_progress(count, mesh_handle->nodes.size());
+//	    }
 	}
-//cerr << "Adding this mesh to multimesh\n";
-	mmesh->add_mesh(new_mesh, level_sets.size()-2-i);
+//	mesh->pack_elems();
+//	mmesh->add_mesh(mesh_handle.get_rep(), i);
     }
-//cerr << "Cleaning up\n";
 //    mmesh->clean_up();
-//cerr << "Sending out the mesh handle\n";
-//    cerr << "In BuildMultiMesh...\n";
-//    for (i=0; i<level_sets.size(); i++) {
-//	cerr << "  Mesh " << i << " has " << mmeshHndl->meshes[i]->elems.size() << " elements.\n";
-//    }
     ommesh->send(mmeshHndl);
 }
 
