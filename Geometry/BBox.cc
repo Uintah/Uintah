@@ -93,19 +93,19 @@ double BBox::longest_edge()
     return Max(diagonal.x(), diagonal.y(), diagonal.z());
 }
 
-Point BBox::min()
+Point BBox::min() const
 {
     ASSERT(have_some);
     return cmin;
 }
 
-Point BBox::max()
+Point BBox::max() const
 {
     ASSERT(have_some);
     return cmax;
 }
 
-Vector BBox::diagonal()
+Vector BBox::diagonal() const
 {
     ASSERT(have_some);
     return cmax-cmin;

@@ -65,7 +65,7 @@ public:
     friend void Pio(Piostream&, Vector&);
 };
 
-ostream& operator<<(ostream& os, Vector& p);
+ostream& operator<<(ostream& os, const Vector& p);
 
 #include <Math/Expon.h>
 #include <Math/MiscMath.h>

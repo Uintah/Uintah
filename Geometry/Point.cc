@@ -77,7 +77,7 @@ Point AffineCombination(const Point& p1, double w1,
 		 p1._z*w1+p2._z*w2+p3._z*w3+p4._z*w4);
 }
 
-ostream& operator<<( ostream& os, Point& p )
+ostream& operator<<( ostream& os, const Point& p )
 {
    os << p.string();
    return os;

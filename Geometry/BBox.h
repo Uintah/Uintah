@@ -25,9 +25,9 @@ public:
     double longest_edge();
     void translate(const Vector &v);
     void scale(double s, const Vector &o);
-    Point min();
-    Point max();
-    Vector diagonal();
+    Point min() const;
+    Point max() const;
+    Vector diagonal() const;
     Point corner(int);
 };
 

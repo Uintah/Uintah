@@ -69,7 +69,7 @@ public:
     friend void Pio(Piostream&, Point&);
 };
 
-ostream& operator<<(ostream& os, Point& p);
+ostream& operator<<(ostream& os, const Point& p);
 
 #include <Geometry/Vector.h>
 #include <Math/MinMax.h>
