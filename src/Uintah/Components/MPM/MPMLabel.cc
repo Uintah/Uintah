@@ -74,7 +74,10 @@ MPMLabel::MPMLabel()
   pMicrocrackPositionLabel = scinew VarLabel( "p.microcrackPosition",
 			ParticleVariable<double>::getTypeDescription() );
 
-  pCrackingSpeedLabel  = scinew VarLabel( "p.crackingSpeed",
+  pCrackingSpeedLabel = scinew VarLabel( "p.crackingSpeed",
+			ParticleVariable<double>::getTypeDescription() );
+
+  pEnergyReleaseRateLabel = scinew VarLabel( "p.energyReleaseRateLabel",
 			ParticleVariable<double>::getTypeDescription() );
 
   pParticleIDLabel = scinew VarLabel("p.particleID",
@@ -136,6 +139,9 @@ MPMLabel::MPMLabel()
 			ParticleVariable<double>::getTypeDescription() );
 
   pCrackingSpeedLabel_preReloc  = scinew VarLabel( "p.crackingSpeed+",
+			ParticleVariable<double>::getTypeDescription() );
+
+  pEnergyReleaseRateLabel_preReloc = scinew VarLabel( "p.energyReleaseRateLabel+",
 			ParticleVariable<double>::getTypeDescription() );
 
   pParticleIDLabel_preReloc = scinew VarLabel("p.particleID+",
@@ -266,6 +272,7 @@ MPMLabel::~MPMLabel()
   delete pMicrocrackSizeLabel;
   delete pMicrocrackPositionLabel;
   delete pCrackingSpeedLabel;
+  delete pEnergyReleaseRateLabel;
   delete pParticleIDLabel;
   delete pIsIgnitedLabel;
   delete pMassRateLabel;
@@ -287,6 +294,7 @@ MPMLabel::~MPMLabel()
   delete pMicrocrackSizeLabel_preReloc;
   delete pMicrocrackPositionLabel_preReloc;
   delete pCrackingSpeedLabel_preReloc;
+  delete pEnergyReleaseRateLabel_preReloc;
   delete pParticleIDLabel_preReloc;
   delete pIsIgnitedLabel_preReloc;
   delete pMassRateLabel_preReloc;
@@ -339,6 +347,9 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.36  2000/09/11 03:12:20  tan
+// Added energy release rate computations for fracture.
+//
 // Revision 1.35  2000/09/11 01:08:37  tan
 // Modified time step calculation (in constitutive model computeStressTensor(...))
 // when fracture cracking speed involved.
