@@ -101,15 +101,15 @@ void DipoleInSphere::execute() {
   FieldHandle field_handle;
 
   if (!iportGeom_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Sphere'.");
     return;
   }
   if (!iportDip_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Dipole Sources'.");
     return;
   }
   if (!oportPot_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'SphereWithPots'.");
     return;
   }
   

@@ -101,23 +101,23 @@ void BuildElemLeadField::execute() {
   leadfield_oport_ = (MatrixOPort *)get_oport("Leadfield (nelecs x nelemsx3)");
 
   if (!mesh_iport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Domain Mesh'.");
     return;
   }
   if (!interp_iport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Electrode Interpolant'.");
     return;
   }
   if (!sol_iport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Solution Vectors'.");
     return;
   }
   if (!rhs_oport_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'RHS Vector'.");
     return;
   }
   if (!leadfield_oport_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Leadfield (nelecs x nelemsx3)'.");
     return;
   }
   

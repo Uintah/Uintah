@@ -236,15 +236,15 @@ void SolveMatrix::execute()
   solport = (MatrixOPort *)get_oport("Solution");
   
   if (!matrixport) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Matrix'.");
     return;
   }
   if (!rhsport) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'RHS'.");
     return;
   }
   if (!solport) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Solution'.");
     return;
   }
   

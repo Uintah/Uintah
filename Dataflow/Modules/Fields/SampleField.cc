@@ -250,15 +250,15 @@ SampleField::execute()
   ogport_ = (GeometryOPort *)get_oport("Sampling Widget");
 
   if (!ifport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Field to Sample'.");
     return;
   }
   if (!ofport_)  {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Samples'.");
     return;
   }
   if (!ogport_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Sampling Widget'.");
     return;
   }
   // The field input is required.

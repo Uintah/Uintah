@@ -253,20 +253,20 @@ void StreamLines::execute()
   
   //must find vector field input port
   if (!vfport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Flow field'.");
     return;
   }
    
 
   // must find seed field input port
   if (!sfport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Seeds'.");
     return;
   }
 
   // must find output port
   if (!oport_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Streamlines'.");
     return;
   }
   

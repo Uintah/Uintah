@@ -239,27 +239,27 @@ namespace BioPSE
 
     if (!iportForMat) 
       {
-    	postMessage("Unable to initialize "+name+"'s iport\n");
+    	error("Unable to initialize iport 'ForwardMat'.");
     	return;
       }
     if (!iportRegMat) 
       {
-    	postMessage("Unable to initialize "+name+"'s iport\n");
+    	error("Unable to initialize iport 'RegularizationMat'.");
 	return;
       }
     if (!iportMeasDat) 
       {
-    	postMessage("Unable to initialize "+name+"'s iport\n");
+    	error("Unable to initialize iport 'MeasuredPots'.");
 	return;
       }
     if (!oportInvSol) 
       {
-    	postMessage("Unable to initialize "+name+"'s oport\n");
+    	error("Unable to initialize oport 'InverseSoln'.");
 	return;
       }
     if (!oportRegForMat) 
       {
-    	postMessage("Unable to initialize "+name+"'s oport\n");
+    	error("Unable to initialize oport 'RegForwardMat'.");
 	return;
       }
     /*

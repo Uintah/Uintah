@@ -30,15 +30,9 @@
 #include <Dataflow/Modules/Visualization/RescaleColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Core/Datatypes/ColorMap.h>
-#include <Core/Datatypes/FieldInterface.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/CurveField.h>
-#include <Core/Datatypes/ScanlineField.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/FieldInterface.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -65,11 +59,11 @@ RescaleColorMap::execute()
   ColorMapIPort *imap = (ColorMapIPort *)get_iport("ColorMap");
   ColorMapOPort *omap = (ColorMapOPort *)get_oport("ColorMap");
   if (!imap) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'ColorMap'.");
     return;
   }
   if (!omap) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'ColorMap'.");
     return;
   }
   if(!imap->get(cmap)) {
@@ -86,14 +80,14 @@ RescaleColorMap::execute()
     {
       FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);
       if (!ifield) {
-	postMessage("Unable to initialize "+name+"'s iport\n");
+	error("Unable to initialize iport '" + to_string(pi->second) + "'.");
 	return;
       }
       FieldHandle field;
       if (ifield->get(field) && field.get_rep()) {
 
-	ScalarFieldInterface *sfi = field->query_scalar_interface();
-	VectorFieldInterface *vfi = field->query_vector_interface();
+	//ScalarFieldInterface *sfi = field->query_scalar_interface();
+	//VectorFieldInterface *vfi = field->query_vector_interface();
 	string units;
 	if (field->get_property("units", units))
 	  cmap->units=units;
@@ -109,7 +103,7 @@ RescaleColorMap::execute()
     {
       FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);
       if (!ifield) {
-	postMessage("Unable to initialize "+name+"'s iport\n");
+	error("Unable to initialize iport '" + to_string(pi->second) + "'.");
 	return;
       }
       FieldHandle field;

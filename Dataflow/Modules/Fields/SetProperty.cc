@@ -44,11 +44,11 @@ void SetProperty::execute() {
   FieldOPort *ofield = (FieldOPort *)get_oport("Output");
 
   if (!ifield) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Input'.");
     return;
   }
   if (!ofield) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Output'.");
     return;
   }
   

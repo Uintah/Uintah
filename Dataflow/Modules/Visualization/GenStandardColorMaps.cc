@@ -129,7 +129,7 @@ void GenStandardColorMaps::execute()
 {
    outport = (ColorMapOPort *)get_oport("ColorMap");
    if (!outport) {
-     postMessage("Unable to initialize "+name+"'s oport\n");
+     error("Unable to initialize oport 'ColorMap'.");
      return;
    }
    static int res = -1;

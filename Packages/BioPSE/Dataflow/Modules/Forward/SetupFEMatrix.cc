@@ -105,11 +105,11 @@ void SetupFEMatrix::execute(){
   oportMtrx_ = (MatrixOPort *)get_oport("Stiffness Matrix");
 
   if (!iportField_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Mesh'.");
     return;
   }
   if (!oportMtrx_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Stiffness Matrix'.");
     return;
   }
 

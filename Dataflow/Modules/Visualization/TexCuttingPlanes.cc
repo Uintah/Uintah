@@ -120,15 +120,15 @@ void TexCuttingPlanes::execute(void)
   ogeom_ = (GeometryOPort *)get_oport("Geometry");
 
   if (!intexture_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'GL Texture'.");
     return;
   }
   if (!incolormap_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Color Map'.");
     return;
   }
   if (!ogeom_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Geometry'.");
     return;
   }
   

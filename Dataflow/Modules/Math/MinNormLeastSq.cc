@@ -123,27 +123,27 @@ MinNormLeastSq::execute()
   w_omat_  = (MatrixOPort *)get_oport("WeightVec(Row)");
   x_omat_  = (MatrixOPort *)get_oport("ResultVec(Col)");
   if (!v0_imat_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'BasisVec1(Col)'.");
     return;
   }
   if (!v1_imat_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'BasisVec2(Col)'.");
     return;
   }
   if (!v2_imat_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'BasisVec3(Col)'.");
     return;
   }
   if (!b_imat_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'TargetVec(Col)'.");
     return;
   }
   if (!w_omat_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'WeightVec(Col)'.");
     return;
   }
   if (!x_omat_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'ResultVec(Col)'.");
     return;
   }
   

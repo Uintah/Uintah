@@ -57,7 +57,7 @@ void ShowLeads::execute(){
 
   iport_ = (MatrixIPort *)get_iport("Potentials");
   if (!iport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Potentials'.");
     return;
   }
   MatrixHandle mh;

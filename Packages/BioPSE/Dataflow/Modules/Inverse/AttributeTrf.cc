@@ -234,11 +234,11 @@ void AttributeTrf::execute(){
   MatrixOPort *oportAttrib = (MatrixOPort *)get_oport("OutputMat");
 
   if (!iportGeomF) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'InputFld'.");
     return;
   }
   if (!oportAttrib) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'OutputMat'.");
     return;
   }
 

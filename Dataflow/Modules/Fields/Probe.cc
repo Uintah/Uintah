@@ -392,7 +392,7 @@ Probe::execute()
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Probe Point");
   if (!ofp) {
-    postMessage("Unable to initialize " + name + "'s oport\n");
+    error("Unable to initialize oport 'Probe Point'.");
     return;
   }
   ofp->send(ofield);
@@ -400,7 +400,7 @@ Probe::execute()
   MatrixOPort *mp = (MatrixOPort *)get_oport("Element Index");
   if (!mp)
   {
-    postMessage("Unable to initialize " + name + "'s oport\n");
+    error("Unable to initialize oport 'Element Index'.");
     return;
   }
   unsigned int index = 0;

@@ -68,11 +68,11 @@ void CastMatrix::execute() {
   omat_ = (MatrixOPort *)get_oport("Output");
 
   if (!imat_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Input'.");
     return;
   }
   if (!omat_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Output'.");
     return;
   }
   

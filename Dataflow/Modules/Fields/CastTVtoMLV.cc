@@ -54,13 +54,13 @@ void CastTVtoMLV::execute()
   FieldIPort *iport_ = (FieldIPort*)get_iport("TetVolFieldMask");
 
   if (!iport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'TetVolFieldMask'.");
     return;
   }
   
   FieldOPort *oport_ = (FieldOPort*)get_oport("LatVolField");
   if (!oport_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'LatVolField'.");
     return;
   }
 
@@ -73,7 +73,7 @@ void CastTVtoMLV::execute()
   if ( ifieldH.get_rep()->get_type_description()->get_name() ==
        "TetVolField<Vector>" )
   {
-    postMessage("CastTVtoMLV: ERROR: input volume is not a TetVolField<Vector>.  Exiting.");
+    error("Input volume is not a TetVolField<Vector>.");
     return;
   }                     
 

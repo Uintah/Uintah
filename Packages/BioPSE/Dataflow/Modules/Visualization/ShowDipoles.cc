@@ -98,15 +98,15 @@ void ShowDipoles::execute(){
   ogeom_ = (GeometryOPort *)get_oport("Geometry");
 
   if (!ifield_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'dipoleFld'.");
     return;
   }
   if (!ofield_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'dipoleFld'.");
     return;
   }
   if (!ogeom_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Geometry'.");
     return;
   }
   

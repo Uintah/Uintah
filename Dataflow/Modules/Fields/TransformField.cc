@@ -93,7 +93,7 @@ TransformField::execute()
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifield;
   if (!ifp) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Input Field'.");
     return;
   }
   if (!(ifp->get(ifield) && ifield.get_rep()))
@@ -104,7 +104,7 @@ TransformField::execute()
   MatrixIPort *imp = (MatrixIPort *)get_iport("Transform Matrix");
   MatrixHandle imatrix;
   if (!imp) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Transform Matrix'.");
     return;
   }
   if (!(imp->get(imatrix) && imatrix.get_rep()))
@@ -128,7 +128,7 @@ TransformField::execute()
     
     FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
     if (!ofp) {
-      postMessage("Unable to initialize "+name+"'s oport\n");
+      error("Unable to initialize oport 'Transformed Field'.");
       return;
     }
     ofp->send(ofield);

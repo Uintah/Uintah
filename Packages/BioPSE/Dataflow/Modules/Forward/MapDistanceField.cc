@@ -83,7 +83,7 @@ MapDistanceField::execute()
   FieldHandle fdst_h;
 
   if (!dst_port) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Surface'.");
     return;
   }
   if (!(dst_port->get(fdst_h) && fdst_h.get_rep()))
@@ -94,7 +94,7 @@ MapDistanceField::execute()
   src_port = (FieldIPort *)get_iport("Contour");
   FieldHandle fsrc_h;
   if(!src_port) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Contour'.");
     return;
   }
   if (!(src_port->get(fsrc_h) && fsrc_h.get_rep()))
@@ -127,14 +127,14 @@ MapDistanceField::execute()
 
   FieldOPort *ofp1 = (FieldOPort *)get_oport("From Contour Interpolant");
   if(!ofp1) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'From Contour Interpolant'.");
     return;
   }
   ofp1->send(result.second);
 
   FieldOPort *ofp2 = (FieldOPort *)get_oport("From Surface Interpolant");
   if(!ofp2) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'From Surface Interpolant'.");
     return;
   }
   ofp2->send(result.first);

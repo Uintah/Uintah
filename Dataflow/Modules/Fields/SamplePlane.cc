@@ -106,7 +106,7 @@ SamplePlane::execute()
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
   if (!ifp) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Input Field'.");
     return;
   }
   DataTypeEnum datatype;
@@ -180,7 +180,7 @@ SamplePlane::execute()
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Sample Field");
   if (!ofp) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Output Sample Field'.");
     return;
   }
   ofp->send(ofh);

@@ -247,7 +247,7 @@ ModifyConductivities::execute()
   // Read in the LatVolField<double>, clone it.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input");
   if (!ifp) {
-    postMessage("Unable to initialize " + name + "'s Input iport\n");
+    error("Unable to initialize iport 'Input'.");
     return;
   }
   FieldHandle field;

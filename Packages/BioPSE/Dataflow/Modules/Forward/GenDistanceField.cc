@@ -31,6 +31,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Packages/BioPSE/Dataflow/Modules/Forward/GenDistanceField.h>
+#include <Core/Containers/StringUtil.h>
 #include <iostream>
 
 
@@ -69,7 +70,7 @@ GenDistanceField::execute()
   // Read in the LatVolField<double>, clone it.
   FieldIPort *dst_port = (FieldIPort *)get_iport("Destination");
   if (!dst_port) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Destination'.");
     return;
   }
   FieldHandle dfieldhandle;
@@ -90,7 +91,7 @@ GenDistanceField::execute()
   {
     FieldIPort *port = (FieldIPort *)get_iport(pi->second);
     if (!port) {
-      postMessage("Unable to initialize "+name+"'s iport\n");
+      error("Unable to initialize iport '" + to_string(pi->second) + "'.");
       return;
     }
     ++pi;

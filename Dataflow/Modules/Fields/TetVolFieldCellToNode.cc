@@ -66,7 +66,7 @@ void TetVolFieldCellToNode::execute()
 
   if (!inport_)
   {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Cell centered volume'.");
     return;
   }
   if (!inport_->get(inhandle_) || 
@@ -78,7 +78,7 @@ void TetVolFieldCellToNode::execute()
   outport_ = (FieldOPort*)get_oport("Node centered volume");
   if (!outport_)
   {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Node centered volume'.");
     return;
   }
 
@@ -86,15 +86,13 @@ void TetVolFieldCellToNode::execute()
   if (inhandle_.get_rep()->get_type_description()->get_name() !=
       "TetVolField<Vector>" )
   {
-    postMessage("TetVolFieldCellToNode: ERROR: Cell centered volume is not a "
-		"TetVolField of Vectors.  Exiting.");
+    error("Cell centered volume is not a TetVolField of vectors.");
     return;
   }                     
 
   if (infield_->data_at() != Field::CELL)
   {
-    postMessage("TetVolFieldCellToNode: ERROR: Cell centered volume is not "
-		"cell centered.  Exiting.");
+    error("Cell centered volume is not cell centered.");
     return;
   }
                         

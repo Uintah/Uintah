@@ -43,20 +43,22 @@ ComputeCurrent::~ComputeCurrent()
 {
 }
 
-void ComputeCurrent::execute() {
+void
+ComputeCurrent::execute()
+{
   FieldIPort* efield_port = (FieldIPort *) get_iport("TetMesh EField");
   FieldIPort* sigmas_port = (FieldIPort *) get_iport("TetMesh Sigmas");
   FieldIPort* trisurf_port = (FieldIPort *) get_iport("TriSurf");
   if (!efield_port) {
-    postMessage("Unable to initialize "+name+"'s TetMesh EField port\n");
+    error("Unable to initialize iport 'TetMesh EField'.");
     return;
   }
   if (!sigmas_port) {
-    postMessage("Unable to initialize "+name+"'s TetMesh Sigmas port\n");
+    error("Unable to initialize iport 'TetMesh Sigmas'.");
     return;
   }
   if (!trisurf_port) {
-    postMessage("Unable to initialize "+name+"'s TriSurf port\n");
+    error("Unable to initialize iport 'TriSurf'.");
     return;
   }
   

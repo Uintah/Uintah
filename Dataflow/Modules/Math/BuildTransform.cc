@@ -128,15 +128,15 @@ void BuildTransform::execute()
   string which_transform=which_transform_gui_.get();
 
   if (!imatrix_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Matrix'.");
     return;
   }
   if (!omatrix_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Matrix'.");
     return;
   }
   if (!ogeom_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Geometry'.");
     return;
   }
   // create the widget

@@ -77,13 +77,13 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which,
 {
   MatrixOPort *ovec = (MatrixOPort *)get_oport("Vector");
   if (!ovec) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Vector'.");
     return;
   }
 
   MatrixOPort *osel = (MatrixOPort *)get_oport("Selected Index");
   if (!osel) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Selected Index'.");
     return;
   }
 
@@ -203,7 +203,7 @@ MatrixSelectVector::execute()
 
   MatrixIPort *imat = (MatrixIPort *)get_iport("Matrix");
   if (!imat) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Matrix'.");
     return;
   }
   MatrixHandle mh;
@@ -317,7 +317,7 @@ MatrixSelectVector::execute()
   // matrix.  It's not clear what this has to do with MatrixSelectVector.
   MatrixIPort *ivec = (MatrixIPort *)get_iport("Weight Vector");
   if (!ivec) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Weight Vector'.");
     return;
   }
   MatrixHandle weightsH;
@@ -325,7 +325,7 @@ MatrixSelectVector::execute()
   {
     MatrixOPort *ovec = (MatrixOPort *)get_oport("Vector");
     if (!ovec) {
-      postMessage("Unable to initialize "+name+"'s oport\n");
+      error("Unable to initialize oport 'Vector'.");
       return;
     }
 
@@ -369,7 +369,7 @@ MatrixSelectVector::execute()
   // If there is a current index matrix, use it.
   MatrixIPort *icur = (MatrixIPort *)get_iport("Current Index");
   if (!icur) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Current Index'.");
     return;
   }
   MatrixHandle currentH;

@@ -130,19 +130,19 @@ void SetupBEMatrix::execute(){
   oportSurfOut_ = (FieldOPort *)get_oport("Outer Surf with Pots");
 
   if (!iportSurfInn_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Inner Surface'.");
     return;
   }
   if (!iportSurfOut_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Outer Surface'.");
     return;
   }
   if (!oportMatrix_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Zbh Matrix'.");
     return;
   }
   if (!oportSurfOut_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Outer Surf with Pots'.");
     return;
   }
    

@@ -76,7 +76,7 @@ GenericWriter<HType>::execute()
 {
   SimpleIPort<HType> *inport = (SimpleIPort<HType> *)getIPort(0);
   if (!inport) {
-    postMessage("Unable to initialize "+moduleName+"'s iport\n");
+    error("Unable to initialize iport.");
     return;
   }
 
