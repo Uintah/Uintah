@@ -383,6 +383,8 @@
        <!-- or these paths won't work.                                     -->
        <include href="inputs/MPM/MaterialData/IsotropicElastic4340Steel.xml"/>
        <include href="inputs/MPM/MaterialData/MieGruneisenEOS4340Steel.xml"/>
+       <include href="inputs/MPM/MaterialData/ConstantShear.xml"/>
+       <include href="inputs/MPM/MaterialData/ConstantTm.xml"/>
        <include href="inputs/MPM/MaterialData/JohnsonCookPlastic4340Steel.xml"/>
        <include href="inputs/MPM/MaterialData/GursonYieldSteel.xml"/>
        <include href="inputs/MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>
@@ -433,6 +435,8 @@
        <!-- or these paths won't work.                                     -->
        <include href="inputs/MPM/MaterialData/IsotropicElastic4340Steel.xml"/>
        <include href="inputs/MPM/MaterialData/MieGruneisenEOS4340Steel.xml"/>
+       <include href="inputs/MPM/MaterialData/ConstantShear.xml"/>
+       <include href="inputs/MPM/MaterialData/ConstantTm.xml"/>
        <include href="inputs/MPM/MaterialData/JohnsonCookPlastic4340Steel.xml"/>       <include href="inputs/MPM/MaterialData/GursonYieldSteel.xml"/>
        <include href="inputs/MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>       <include href="inputs/MPM/MaterialData/JohnsonCookDamage4340Steel.xml"/>
           <initial_material_temperature>  300.0 </initial_material_temperature>
