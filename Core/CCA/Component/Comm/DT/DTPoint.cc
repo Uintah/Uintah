@@ -36,6 +36,7 @@
 using namespace SCIRun;
 
 DTPoint::DTPoint(){
+  object=NULL;
   sema=new Semaphore("DTPoint semaphore", 0);
   PIDL::getDT()->registerPoint(this);
 }

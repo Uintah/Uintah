@@ -54,7 +54,6 @@ namespace SCIRun {
     DTPoint *sp;
     DTAddress ep_addr;
     DTPoint *ep;
-    void *object;
   };
 }
 

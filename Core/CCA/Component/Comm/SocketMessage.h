@@ -64,7 +64,6 @@ namespace SCIRun {
     void unmarshalSpChannel(SpChannel* channel);
     void destroyMessage();
 
-    void setLocalObject(void *obj);
   private:
     inline void marshalBuf(const void *buf, int fullsize);
     inline void unmarshalBuf(void *buf, int fullsize);
@@ -76,7 +75,6 @@ namespace SCIRun {
     int capacity;
     int msg_size;
     static const int INIT_SIZE=1024;
-    void *object;
     SocketEpChannel *epchan;
     SocketSpChannel *spchan;
     DTMessage *dtmsg;

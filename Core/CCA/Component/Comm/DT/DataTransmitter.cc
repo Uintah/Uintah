@@ -41,6 +41,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <Core/Thread/Time.h>
+#include <sys/time.h>
 
 
 #include <iostream>
@@ -55,6 +57,20 @@
 
 using namespace SCIRun;
 using namespace std;
+
+static void showTime(char *s, DTMessage *msg)
+{
+  //if(msg==NULL || msg->buf==NULL) return; 
+  //int id=*((int*)(msg->buf));
+  //if(id!=7) return;
+  //static int t=int(SCIRun::Time::currentSeconds()*1000*1000);
+  //int t1=(int)(SCIRun::Time::currentSeconds()*1000*1000);
+  timeval tm;
+  gettimeofday(&tm, NULL);
+  long t=tm.tv_sec%100*10+tm.tv_usec/100000;
+  std::cerr<<"Time for "<<s<<" ="<<t<<"  (0.1 sec)\n";
+  //t=t1;
+}
 
 
 DataTransmitter::DataTransmitter(){
@@ -105,25 +121,28 @@ DataTransmitter::~DataTransmitter(){
   delete recvQ_cond;
 }
 
+
 void 
 DataTransmitter::putMessage(DTMessage *msg){
-  //cerr<<"putMessage to point="<<(long)msg->recver<<endl;
+  //showTime("begin putMessage", msg);
   msg->fr_addr=addr;
   //need synchronization
   sendQ_mutex->lock();
   send_msgQ.push_back(msg);
   sendQ_mutex->unlock();
   sendQ_cond->conditionSignal();
+  //showTime("end putMessage", msg);
 }
 
 DTMessage *
 DataTransmitter::getMessage(DTPoint *pt){
+  //showTime("begin getMessage", NULL);  
   //cerr<<"getMessage for point="<<(long)pt<<endl;
   //assuming only one or zero thread can access getMessage
   recvQ_mutex->lock();
-  while(recv_msgQ.size()==0){
+  /*while(recv_msgQ.size()==0){
       recvQ_cond->wait(*recvQ_mutex);
-  }
+      }*/
   DTMessage *msg=NULL;
   deque<DTMessage*>::iterator iter=recv_msgQ.begin();
   for(deque<DTMessage*>::iterator iter=recv_msgQ.begin(); iter!=recv_msgQ.end(); iter++){
@@ -135,6 +154,7 @@ DataTransmitter::getMessage(DTPoint *pt){
   }
   //  recv_msgQ.pop_front();
   recvQ_mutex->unlock();
+  //showTime("end getMessage", msg);  
   return msg;
 }
 
@@ -188,7 +208,7 @@ DataTransmitter::runListeningThread(){
       newAddr.port=ntohs(their_addr.sin_port);
       recvall(new_fd, &(newAddr.port), sizeof(short));
       sockmap[newAddr]=new_fd;
-      cerr<<"Accept connection from port"<<newAddr.port<<"  sockmap.size="<<sockmap.size()<<endl;
+      //cerr<<"Accept connection from port"<<newAddr.port<<"  sockmap.size="<<sockmap.size()<<endl;
     }
   }
   close(sockfd);
@@ -219,6 +239,7 @@ DataTransmitter::runSendingThread(){
     SocketMap::iterator iter=sockmap.find(msg->to_addr);
     int new_fd;
     if(iter==sockmap.end()){
+      cerr<<"Build new connection\n";
       new_fd=socket(AF_INET, SOCK_STREAM, 0);
       if( new_fd  == -1){
 	throw CommError("socket", errno);
@@ -239,24 +260,29 @@ DataTransmitter::runSendingThread(){
       sendall(new_fd, &addr.port, sizeof(short));
 
       sockmap[msg->to_addr]=new_fd;
-      //cerr<<"add an entry to sockmap, new size="<<sockmap.size()<<endl;
+      cerr<<"add an entry to sockmap, new size="<<sockmap.size()<<endl;
     }
     else{
+      cerr<<"Use old connection\n";
       new_fd=iter->second;
     }
-
+    /*
     sendall(new_fd, &(msg->recver), sizeof(void *));
     sendall(new_fd, &(msg->sender), sizeof(void *));
     sendall(new_fd, &(msg->fr_addr), sizeof(DTAddress));
     sendall(new_fd, &(msg->length), sizeof(long));
+    */
+
+    sendall(new_fd, msg, sizeof(DTMessage));
     sendall(new_fd, msg->buf, msg->length);
-    cerr<<"Message is sent to point="<<(long)msg->recver<<endl;
+    showTime("server sent Message", msg);   
+    //cerr<<"Message is sent to point="<<(long)msg->recver<<endl;
     msg->display();
     delete msg;
-
     sendQ_mutex->lock();
     send_msgQ.pop_front();
     sendQ_mutex->unlock();
+    //showTime("server pop Message", msg);   
   }
 }
 
@@ -281,7 +307,7 @@ DataTransmitter::runRecvingThread(){
     }
     // run through the existing connections looking for data to read
 
-    for(SocketMap::iterator iter=sockmap.begin(); iter!=sockmap.end(); iter++){
+    /*    for(SocketMap::iterator iter=sockmap.begin(); iter!=sockmap.end(); iter++){
       if(FD_ISSET(iter->second, &read_fds)){
 	DTMessage *msg=new DTMessage;
 
@@ -290,21 +316,26 @@ DataTransmitter::runRecvingThread(){
 	  recvall(iter->second, &(msg->fr_addr), sizeof(DTAddress));
 	  recvall(iter->second, &(msg->length), sizeof(long));
 	  msg->buf=(char *)malloc(msg->length);
+
+    */
+    for(SocketMap::iterator iter=sockmap.begin(); iter!=sockmap.end(); iter++){
+      if(FD_ISSET(iter->second, &read_fds)){
+	DTMessage *msg=new DTMessage;
+	if(recvall(iter->second, msg, sizeof(DTMessage))!=0){
+	  msg->buf=(char *)malloc(msg->length);
 	  recvall(iter->second, msg->buf, msg->length);
-	  
+	  showTime("server received msg", msg);	
 	  msg->to_addr=addr;
 	  msg->autofree=true;
 	  msg->fr_addr=iter->first;
-	  
 	  msg->display();
-	
-	  recvQ_mutex->lock();
+	  //recvQ_mutex->lock();
 	  recv_msgQ.push_back(msg);
-	  recvQ_mutex->unlock();
-	  recvQ_cond->conditionSignal();
-	  
+	  //recvQ_mutex->unlock();
+	  //recvQ_cond->conditionSignal();
 	  SemaphoreMap::iterator found=semamap.find(msg->recver);
 	  if(found!=semamap.end()){
+	    //showTime("server call sema up", msg);
 	    found->second->up();
 	  }
 	  else{
@@ -313,14 +344,14 @@ DataTransmitter::runRecvingThread(){
 	  }
 	}
 	else{//catch(DTException){
-	  cerr<<"receive 0 bytes"<<endl;
+	  //cerr<<"receive 0 bytes"<<endl;
 	  close(iter->second);
 	  sockmap.erase(iter);
 	}
       }
     }
   }
-  cerr<<"RecvThread quits when recvQ size="<<recv_msgQ.size()<<endl;
+  //cerr<<"RecvThread quits when recvQ size="<<recv_msgQ.size()<<endl;
 }
 
 
