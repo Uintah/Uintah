@@ -130,7 +130,9 @@ PROGRAM := $(SRCDIR)/TextToTriSurfField
 SRCS := $(SRCDIR)/TextToTriSurfField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-
+PROGRAM := $(SRCDIR)/VTKtoTriSurfField
+SRCS := $(SRCDIR)/VTKtoTriSurfField.cc
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToColumnMatrix
 SRCS := $(SRCDIR)/TextToColumnMatrix.cc
