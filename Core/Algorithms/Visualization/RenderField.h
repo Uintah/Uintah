@@ -60,7 +60,7 @@ public:
 
   static string dyn_file_name(const TypeDescription *td) {
     // add no extension.
-    return template_class_name() + "." + to_filename(td->get_name()) + ".";
+    return template_class_name() + "." + td->get_filename() + ".";
   }
 
   static const string base_class_name() {

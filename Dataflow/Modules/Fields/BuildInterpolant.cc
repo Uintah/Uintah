@@ -151,10 +151,10 @@ BuildInterpAlgo::get_compile_info(const TypeDescription *msrc,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       to_filename(msrc->get_name()) + "." +
-		       to_filename(lsrc->get_name()) + "." +
-		       to_filename(fdst->get_name()) + "." +
-		       to_filename(ldst->get_name()) + ".",
+		       msrc->get_filename() + "." +
+		       lsrc->get_filename() + "." +
+		       fdst->get_filename() + "." +
+		       ldst->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
                        msrc->get_name() + ", " +

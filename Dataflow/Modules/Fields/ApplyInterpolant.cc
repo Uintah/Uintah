@@ -146,9 +146,9 @@ ApplyInterpAlgo::get_compile_info(const TypeDescription *fsrc,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       to_filename(fsrc->get_name()) + "." +
-		       to_filename(fitp->get_name()) + "." +
-		       to_filename(litp->get_name()) + ".",
+		       fsrc->get_filename() + "." +
+		       fitp->get_filename() + "." +
+		       litp->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
                        fsrc->get_name() + ", " +

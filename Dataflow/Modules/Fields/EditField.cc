@@ -512,7 +512,7 @@ EditFieldAlgoCount::get_compile_info(const TypeDescription *mesh_td)
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       to_filename(mesh_td->get_name()) + ".",
+		       mesh_td->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
                        mesh_td->get_name());
@@ -535,7 +535,7 @@ EditFieldAlgoCopy::get_compile_info(const TypeDescription *field_td,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       to_filename(field_td->get_name()) + "." +
+		       field_td->get_filename() + "." +
 		       to_filename(fdstname) + ".",
                        base_class_name, 
                        template_class_name, 

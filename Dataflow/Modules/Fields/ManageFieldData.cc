@@ -198,8 +198,8 @@ ManageFieldDataAlgoField::get_compile_info(const TypeDescription *fsrc,
 
   CompileInfo *rval = 
     scinew CompileInfo(base_class_name + extension + "." +
-		       to_filename(fsrc->get_name()) + "." +
-		       to_filename(lsrc->get_name()) + ".",
+		       fsrc->get_filename() + "." +
+		       lsrc->get_filename() + ".",
                        base_class_name, 
                        base_class_name + extension, 
                        fsrc->get_name() + ", " + lsrc->get_name());
@@ -246,7 +246,7 @@ ManageFieldDataAlgoMesh::get_compile_info(const TypeDescription *msrc,
 
   CompileInfo *rval = 
     scinew CompileInfo(base_class_name + extension + "." +
-		       to_filename(msrc->get_name()) + "." +
+		       msrc->get_filename() + "." +
 		       to_filename(fout) + ".",
                        base_class_name, 
                        base_class_name + extension, 
