@@ -104,6 +104,7 @@ class BioImageApp {
     constructor {} {
 	global mods
 	toplevel .standalone
+	wm withdraw .standalone
 	wm title .standalone "BioImage"	 
 	set win .standalone
 
@@ -644,7 +645,6 @@ class BioImageApp {
 
 	set data_dir $d
 	global mods
-	wm withdraw .standalone
 	incrProgress 5
 	# Embed the Viewers
 
@@ -1572,7 +1572,8 @@ class BioImageApp {
 	}
 	
 	set f [add_Load_UI $history 0 0]
-
+	# Add insert bar
+	$this add_insert_bar $f 0
     }
     
     method add_Load_UI {history row which} {
@@ -1848,6 +1849,7 @@ class BioImageApp {
 	    $m-c needexecute
 	}
     }
+
     method update_orientations {} {
 	global top front side
 
@@ -2158,22 +2160,12 @@ class BioImageApp {
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 1
-# 	    if {$initialized != 0} {
-# 		$data_tab0 view "Nrrd"
-# 		$data_tab1 view "Nrrd"
-# 		set c_data_tab "Nrrd"
-# 	    }
         } elseif {$which == "Dicom"} {
 	    set $ChooseNrrd-port-index 1
 	    disableModule $NrrdReader 1
 	    disableModule $DicomNrrdReader 0
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 1
-#             if {$initialized != 0} {
-# 		$data_tab0 view "Dicom"
-# 		$data_tab1 view "Dicom"
-# 		set c_data_tab "Dicom"
-# 	    }
         } elseif {$which == "Analyze"} {
 	    # Analyze
 	    set $ChooseNrrd-port-index 2
@@ -2181,11 +2173,6 @@ class BioImageApp {
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 0
 	    disableModule $FieldReader 1
-# 	    if {$initialized != 0} {
-# 		$data_tab0 view "Analyze"
-# 		$data_tab1 view "Analyze"
-# 		set c_data_tab "Analyze"
-# 	    }
         } elseif {$which == "Field"} {
 	    # Field
 	    set $ChooseNrrd-port-index 3
@@ -2193,11 +2180,6 @@ class BioImageApp {
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 0
-# 	    if {$initialized != 0} {
-# 		$data_tab0 view "Field"
-# 		$data_tab1 view "Field"
-# 		set c_data_tab "Field"
-# 	    }
 	} elseif {$which == "all"} {
 	    if {[set $ChooseNrrd-port-index] == 0} {
 		# nrrd
@@ -2448,7 +2430,9 @@ class BioImageApp {
 	    }
 
             #######
-            set page [$vis.tnb add -label "Volume Rendering" -command "$this change_vis_frame \"Volume Rendering\"; $this check_crop"]
+            set page [$vis.tnb add -label "Volume Rendering" \
+			  -command "$this change_vis_frame \"Volume Rendering\"; 
+                                    $this check_crop"]
 
             global show_volume_ren
 	    checkbutton $page.toggle -text "Show Volume Rendering" \
@@ -2460,7 +2444,8 @@ class BioImageApp {
 
             button $page.vol -text "Edit Transfer Function" \
 		-command "$this open_transfer_function_editor"
-	    Tooltip $page.vol "Open up the interface\nfor editing the transfer function"
+	    TooltipMultiline $page.vol "Open up the interface\n" \
+		"for editing the transfer function"
             pack $page.vol -side top -anchor n -padx 3 -pady 3
             
             set VolumeVisualizer [lindex [lindex $filters(0) $modules] 14]
@@ -2565,7 +2550,8 @@ class BioImageApp {
 	    checkbutton $winlevel.link -text "Link to Slice Window/Level" \
 		-variable link_winlevel \
 		-command "$this link_windowlevels 1"
-	    Tooltip $winlevel.link "Link the changes of the\nwindow controls below to\nthe planes window controls"
+	    TooltipMultiline $winlevel.link "Link the changes of the\n" \
+		"window controls below to\nthe planes window controls"
 	    pack $winlevel.link -side top -anchor nw -pady 1
 	    
 	    set wwf $winlevel.ww
@@ -2681,21 +2667,11 @@ class BioImageApp {
 
     method toggle_compute_shading {} {
         set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10]
-        global $NrrdSetupTexture-valuesonly
-
-        if {[set $NrrdSetupTexture-valuesonly] == 0} {
-	    # lighting computed
-	    .standalone.detachedV.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
-		configure -state normal
-	    .standalone.attachedV.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
-		configure -state normal
-	} else {
-	    # lighting not computed
-	    .standalone.detachedV.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
-		configure -state disabled
-	    .standalone.attachedV.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
-		configure -state disabled
-	}
+	upvar \#0 $NrrdSetupTexture-valuesonly valuesonly
+	set f f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading 
+	set state [expr $valuesonly?"disabled":"normal"]
+	.standalone.detachedV.$f configure -state $state
+	.standalone.attachedV.$f configure -state $state
         $NrrdSetupTexture-c needexecute
     }
     
@@ -2778,27 +2754,11 @@ class BioImageApp {
     # Method called when Visualization tabs are changed from
     # the standard options to the global viewer controls
     method change_vis_frame { which } {
-
-	$this check_crop
-
+	if {!$initialized} return
 	# change tabs for attached and detached
-        if {$initialized != 0} {
-	    if {$which == "Planes"} {
-		# Vis Options
-		$vis_frame_tab1 view "Planes"
-		$vis_frame_tab2 view "Planes"
-		set c_vis_tab "Planes"
-	    } elseif {$which == "Volume Rendering"} {
-		# Vis Options
-		$vis_frame_tab1 view "Volume Rendering"
-		$vis_frame_tab2 view "Volume Rendering"
-		set c_vis_tab "Volume Rendering"
-	    } else {
- 		$vis_frame_tab1 view "3D Options"
- 		$vis_frame_tab2 view "3D Options"
-		set c_vis_tab "3D Options"
-	    }
-	}
+	$vis_frame_tab1 view $which
+	$vis_frame_tab2 view $which
+	set c_vis_tab $which
     }
 
     method add_insert_bar {f which} {
@@ -2853,267 +2813,122 @@ class BioImageApp {
 	# execute the appropriate reader
 	# and verify valid loading file
 	set valid_data 0
-	
-	set ChooseNrrd  [lindex [lindex $filters(0) $modules] $load_choose_input]
-        global $ChooseNrrd-port-index
-        set port [set $ChooseNrrd-port-index]
-        set mod ""
-        if {$port == 0} {
-	    # Nrrd
+	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_input]
+	upvar \#0 $ChooseNrrd-port-index port
+        if {$port == 0} {       ; # Nrrd
             set mod [lindex [lindex $filters(0) $modules] $load_nrrd]
-            global $mod-filename
-            if {[info exists $mod-filename] && [file exists [set $mod-filename]]} {
-		set valid_data 1
-	    }  
-	} elseif {$port == 1} {
-	    # Dicom
+	    upvar \#0 $mod-filename filename
+	} elseif {$port == 1} { ; # Dicom
             set mod [lindex [lindex $filters(0) $modules] $load_dicom]
-            global $mod-entry-dir0
-            global $mod-series-files
-            if {[info exists $mod-entry-dir0] && [file isdirectory [set $mod-entry-dir0]] && \
-                [info exists $mod-series-files] && [llength $mod-series-files] > 0 && \
-                [file exists [file join [set $mod-entry-dir0] [lindex [set $mod-series-files] 0]]]} {
-		set valid_data 1
-            }  
-          
-	} elseif {$port == 2} {
-	    # Analyze
+	    upvar \#0 $mod-entry-dir0 entry $mod-series-files files
+            if { [info exists entry] && [info exists files] } {
+		set filename [file join $entry [lindex $files 0]]
+	    }
+	} elseif {$port == 2} { ; # Analyze
             set mod [lindex [lindex $filters(0) $modules] $load_analyze]
-	    global $mod-filenames0
-            if {[info exists $mod-filenames0] && [file exists [set $mod-filenames0]]} {
-		set valid_data 1
-	    }  
-	} else {
-	    #Field
+	    upvar \#0 $mod-filenames0 filename
+	} else {                ; # Field
             set mod [lindex [lindex $filters(0) $modules] $load_field]
-            global $mod-filename
-            if {[info exists $mod-filename] && [file exists [set $mod-filename]]} {
-		set valid_data 1
-	    } 
+	    upvar \#0 $mod-filename filename
 	}
 
-	if {$valid_data == 1} {
-	    # try to load a corresponding xff file into the EditColorMap2 module
-	    # currenlty, we only have nrrd demo data sets so this will only
-	    # work if we are reading in a nrrd and is one of our demo datasets
-	    # (i.e. tooth, CThead, engine)
-	    if {!$loading && $port == 0} {
-		global mods
-                set NrrdReader [lindex [lindex $filters(0) $modules] $load_nrrd]
-		upvar \#0 $mods(EditColorMap2D)-filename cm2filename
-		upvar \#0 $NrrdReader-filename nrrdfilename
-		set path [split $nrrdfilename \/]
-		set path [join [lrange $path 0 end-1] \/]
-		foreach dataset {tooth engine CThead} {
-		    if {[string first "volume/${dataset}.nhdr" $nrrdfilename] != -1 && 
-			[file exists "${path}/${dataset}.cmap2"]} {
-			set cm2filename "${path}/${dataset}.cmap2"
-			$mods(EditColorMap2D)-c load
-		    }
-		}
-            }
-            set 2D_fixed 0
-
-            # for some reason, the choosenrrds don't execute properly -- downstream
-            # ones execute before the upstream ones so a new dataset isn't propagated            
-            set execute_choose 1
-
-	    $mod-c needexecute
-
-	    set has_executed 1
-	} else {
-	    tk_messageBox -message "Invalid filename specified.  Please select a valid filename\nand click the Update button." -type ok -icon info -parent .standalone
+	if { ![info exists filename] || ![validFile $filename] } {
+	    tk_messageBox -type ok -icon info -parent .standalone \
+		-message "Invalid filename specified.  Please select a valid filename\nand click the Update button." 
 	    return
-        } 
-    }
+	}
 
-
-    method add_Resample {which} {
-	# a which of -1 indicates to add to the end
-	if {$which == -1} {
-	    # find previous valid module starting with $num_filters - 1
-            if {$grid_rows == 1} {
-                set which 0
-            } else {
-                  for {set i [expr $num_filters - 1]} { $i > 0 } {incr i -1} {
-                    if {[lindex $filters($i) $which_row] != -1} {
-                        set which $i
-		        break
-                    }
-                }
-            }
-        }
-
-        $this check_crop
-
-	global mods
-
-	# Figure out what choose port to use
-	set choose [$this determine_choose_port]
-
-	# add modules
-	set m1 [add_filter_mod Teem UnuNtoZ UnuResample]
+	# try to load a corresponding xff file into the EditColorMap2 module
+	# currenlty, we only have nrrd demo data sets so this will only
+	# work if we are reading in a nrrd and is one of our demo datasets
+	# (i.e. tooth, CThead, engine)
+	if {!$loading && $port == 0} {
+	    global mods
+	    set NrrdReader [lindex [lindex $filters(0) $modules] $load_nrrd]
+	    upvar \#0 $mods(EditColorMap2D)-filename cm2filename
+	    upvar \#0 $NrrdReader-filename nrrdfilename
+	    set path [split $nrrdfilename \/]
+	    set path [join [lrange $path 0 end-1] \/]
+	    foreach dataset {tooth engine CThead} {
+		if {[string first "volume/${dataset}.nhdr" $nrrdfilename] != -1 && 
+		    [file exists "${path}/${dataset}.cmap2"]} {
+		    set cm2filename "${path}/${dataset}.cmap2"
+		    $mods(EditColorMap2D)-c load
+		}
+	    }
+	}
+	set 2D_fixed 0
 	
+	# for some reason, the choosenrrds don't execute properly. 
+	# Downstream ones execute before the upstream ones,
+	# so a new dataset isn't propagated            
+	set execute_choose 1
+	
+	$mod-c needexecute
+	
+	set has_executed 1
+    } 
+
+    method add_Resample { { which -1 } } {
+	if { $which == -1 } {
+	    set which [find_last_filter]
+	}
+	# add modules
+	set m1 [addModule Teem UnuNtoZ UnuResample]
 	# add connection to Choose module and new module
-	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis]
 	set output_mod [lindex [lindex $filters($which) $output] 0]
 	set output_port [lindex [lindex $filters($which) $output] 1]
 	addConnection $output_mod $output_port $m1 0
-	addConnection $m1 0 $ChooseNrrd $choose
-
-	set row $grid_rows
-	# if inserting, disconnect current to current's next and
-	# connect current to new and new to current's next
-	set insert 0
-	if {[lindex $filters($which) $next_index] != "end"} {
-            set insert 1
-	    set n [lindex $filters($which) $next_index] 
-	    set next_mod [lindex [lindex $filters($n) $input] 0]
-	    set next_port [lindex [lindex $filters($n) $input] 1]
-
-	    set current_mod [lindex [lindex $filters($which) $output] 0]
-	    set current_port [lindex [lindex $filters($which) $output] 1]
-
-	    destroyConnection "$current_mod $current_port $next_mod $next_port"
-	    addConnection $m1 0 $next_mod $next_port
-	    
-	    set row [expr [lindex $filters($which) $which_row] + 1]
-	    
-	    $this move_down_filters $row
-	}
-
         # add to filters array
+	set choose [connect_filter_module_to_choose $m1]
+	set next [lindex $filters($which) $next_index]
         set filters($num_filters) \
-	    [list resample [list $m1] [list $m1 0] [list $m1 0] $which \
-		 [lindex $filters($which) $next_index] $choose $row 1 \
-		 "Resample - Unknown"]
-
-
-	# Make current frame regular
-	set p $which.f$which
-	foreach h "$history0 $history1" {
-	    $h.$p configure -background grey75 -foreground black -borderwidth 2
-	    set f [add_Resample_UI $h $row $num_filters]
-	    $this add_insert_bar $f $num_filters
-	}
-
-        if {!$insert} {
-	    $attachedPFr.f.p.sf justify bottom
-	    $detachedPFr.f.p.sf justify bottom
-	}
-
-	# update vars
+	    [list resample "$m1" "$m1 0" "$m1 0" \
+		 $which $next $choose $grid_rows 1 "Resample - Unknown"]
+	# update previous filter to expect us as next filter
 	set filters($which) \
 	    [lreplace $filters($which) $next_index $next_index $num_filters]
+	# patch up connections if inserting
+	insert_filter $num_filters
+	# add the UI to the left pane
+	create_filter_UI $num_filters
 
-        #change_current $num_filters
-
-	set num_filters [expr $num_filters + 1]
-	set grid_rows [expr $grid_rows + 1]
+	incr num_filters
 
         change_indicator_labels "Press Update to Resample Volume..."
-        $this enable_update [expr $which+1]
+        $this enable_update $num_filters
     }
 
 
-    method add_Crop {which} {
-	# a which of -1 indicates to add to the end
-	if {$which == -1} {
-	    # find previous valid module starting with $num_filters - 1
-            if {$grid_rows == 1} {
-                set which 0
-            } else {
-                for {set i [expr $num_filters - 1]} { $i > 0 } {incr i -1} {
-                    if {[lindex $filters($i) $which_row] != -1} {
-                        set which $i
-		        break
-                    }
-                }
-            }	    
-        }
-
-        $this check_crop
-
-	global mods
-
-	# Figure out what choose port to use
-	set choose [$this determine_choose_port]
+    method add_Crop { which } {
+	if { $which == -1 } {
+	    set which [find_last_filter]
+	}
 
 	# add modules
-	set m1 [add_filter_mod Teem UnuAtoM UnuCrop 0 0]
-	set m2 [add_filter_mod Teem NrrdData NrrdInfo 1 0]
-	
+	set m1 [addModule Teem UnuAtoM UnuCrop]
+	set m2 [addModule Teem NrrdData NrrdInfo]	
 	# add connection to Choose module and new module
-	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis]
 	set output_mod [lindex [lindex $filters($which) $output] 0]
 	set output_port [lindex [lindex $filters($which) $output] 1]
 	addConnection $output_mod $output_port $m1 0
 	addConnection $output_mod $output_port $m2 0
-	addConnection $m1 0 $ChooseNrrd $choose
-
-	set row $grid_rows
-	# if inserting, disconnect current to current's next 
-	# and connect current to new and new to current's next
-	set insert 0
-	if {[lindex $filters($which) $next_index] != "end"} {
-            set insert 1
-	    set n [lindex $filters($which) $next_index] 
-	    set next_mod [lindex [lindex $filters($n) $input] 0]
-	    set next_port [lindex [lindex $filters($n) $input] 1]
-
-	    set current_mod [lindex [lindex $filters($which) $output] 0]
-	    set current_port [lindex [lindex $filters($which) $output] 1]
-
-	    destroyConnection "$current_mod $current_port $next_mod $next_port"
-	    addConnection $m1 0 $next_mod $next_port
-	    
-	    set row [expr [lindex $filters($which) $which_row] + 1]
-	    
-	    $this move_down_filters $row
-	}
-
         # add to filters array
+	set choose [connect_filter_module_to_choose $m1]
+	set next [lindex $filters($which) $next_index]
         set filters($num_filters) \
-	    [list crop [list $m1 $m2] [list $m1 0] [list $m1 0] $which \
-		 [lindex $filters($which) $next_index] $choose $row 1 \
+	    [list crop "$m1 $m2" "$m1 0 $m2 0" "$m1 0" \
+		 $which $next $choose $grid_rows 1 "Crop - Unknown" \
 		 "Crop - Unknown" [list 0 0 0] 0 [list 0 0 0 0 0 0]]
-
-
-	# Make current frame regular
-	set p $which.f$which
-	foreach h "$history0 $history1" {
-	    $h.$p configure -background grey75 -foreground black -borderwidth 2
-	    set f [add_Crop_UI $h $row $num_filters]
-	    $this add_insert_bar $f $num_filters
-	}
-
-        # update crop values to be actual bounds (not M) if available
-        global $m1-maxAxis0
-        global $m1-maxAxis1
-        global $m1-maxAxis2
-        if {$has_executed == 1} {
-	    global $mods(ViewSlices)-crop_maxAxis0
-            global $mods(ViewSlices)-crop_maxAxis1
-            global $mods(ViewSlices)-crop_maxAxis2
-            set $m1-maxAxis0 [set $mods(ViewSlices)-crop_maxAxis0]
-            set $m1-maxAxis1 [set $mods(ViewSlices)-crop_maxAxis1]
-            set $m1-maxAxis2 [set $mods(ViewSlices)-crop_maxAxis2]     
-        } 
-
-        if {!$insert} {
-	    $attachedPFr.f.p.sf justify bottom
-	    $detachedPFr.f.p.sf justify bottom
-	}
-
-	# update vars
+	# update previous filter to expect us as next filter
 	set filters($which) \
 	    [lreplace $filters($which) $next_index $next_index $num_filters]
 
-	set num_filters [expr $num_filters + 1]
-	set grid_rows [expr $grid_rows + 1]
+	insert_filter $num_filters
+	create_filter_UI $num_filters
+	incr num_filters
 
         change_indicator_labels "Press Update to Crop Volume..."
-
         $this disable_update
 
         if {!$loading} {
@@ -3123,132 +2938,52 @@ class BioImageApp {
         }
     }
     
-    method add_Cmedian {which} {
-	# a which of -1 indicates to add to the end
-	if {$which == -1} {
-	    # find previous valid module starting with $num_filters - 1
-            if {$grid_rows == 1} {
-                set which 0
-            } else {
-                for {set i [expr $num_filters - 1]} { $i > 0 } {incr i -1} {
-                    if {[lindex $filters($i) $which_row] != -1} {
-                        set which $i
-		        break
-                    }
-                }
-            }
-        }
-
-        $this check_crop
-
-	global mods
-
-	# Figure out what choose port to use
-	set choose [$this determine_choose_port]
-
-	# add modules
-	set m1 [add_filter_mod Teem UnuAtoM UnuCmedian]
-	
-	# add connection to Choose module and new module
-	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis]
+    method add_Cmedian { which } {
+	if { $which == -1 } {
+	    set which [find_last_filter]
+	}
+       	# add modules
+	set m1 [addModule Teem UnuAtoM UnuCmedian]
 	set output_mod [lindex [lindex $filters($which) $output] 0]
 	set output_port [lindex [lindex $filters($which) $output] 1]
-
+	# add connections
 	addConnection $output_mod $output_port $m1 0
-	addConnection $m1 0 $ChooseNrrd $choose
-
-	set row $grid_rows
-	# if inserting, disconnect current to current's next
-	# and connect current to new and new to current's next
-	set insert 0
-	if {[lindex $filters($which) $next_index] != "end"} {
-            set insert 1
-	    set n [lindex $filters($which) $next_index] 
-	    set next_mod [lindex [lindex $filters($n) $input] 0]
-	    set next_port [lindex [lindex $filters($n) $input] 1]
-
-	    set current_mod [lindex [lindex $filters($which) $output] 0]
-	    set current_port [lindex [lindex $filters($which) $output] 1]
-
-	    destroyConnection "$current_mod $current_port $next_mod $next_port"
-	    addConnection $m1 0 $next_mod $next_port
-	    
-	    set row [expr [lindex $filters($which) $which_row] + 1]
-	    
-	    $this move_down_filters $row
-	}
-
         # add to filters array
+	set next [lindex $filters($which) $next_index]
+	set choose [connect_filter_module_to_choose $m1]
         set filters($num_filters) \
-	    [list cmedian [list $m1] [list $m1 0] [list $m1 0] $which \
-		 [lindex $filters($which) $next_index] $choose $row 1 \
-		 "Median Filtering - Unknown"]
-
-	# Make current frame regular
-	set p $which.f$which
-	foreach h "$history0 $history1" {
-	    $h.$p configure -background grey75 -foreground black -borderwidth 2
-	    set f [add_Cmedian_UI $h $row $num_filters]
-	    $this add_insert_bar $f $num_filters
-	}
-
-        if {!$insert} {
-	    $attachedPFr.f.p.sf justify bottom
-	    $detachedPFr.f.p.sf justify bottom
-	}
-
-	# update vars
+	    [list cmedian "$m1" "$m1 0" "$m1 0" $which $next \
+		 $choose $grid_rows 1 "Median Filtering - Unknown"]
+	# update previous filter to expect us as next filter
 	set filters($which) \
 	    [lreplace $filters($which) $next_index $next_index $num_filters]
 
-	set num_filters [expr $num_filters + 1]
-	set grid_rows [expr $grid_rows + 1]
+	insert_filter $num_filters
+	create_filter_UI $num_filters
+	incr num_filters
 
         change_indicator_labels "Press Update to Perform Median Filtering..."
-
-        $this enable_update [expr $which+1]
-
+        $this enable_update $num_filters
     }
 
     method add_Histo {which} {
-	# a which of -1 indicates to add to the end
-	if {$which == -1} {
-	    # find previous valid module starting with $num_filters - 1
-            if {$grid_rows == 1} {
-                set which 0
-            } else {
-                for {set i [expr $num_filters - 1]} { $i > 0 } {incr i -1} {
-                    if {[lindex $filters($i) $which_row] != -1} {
-                        set which $i
-		        break
-                    }
-                }
-            }	    
-        }
-
-        $this check_crop
-
-	global mods
-
-	# Figure out what choose port to use
-	set choose [$this determine_choose_port]
-
+       	if { $which == -1} {
+	    set which [find_last_filter]
+	}
 	# add modules
-	set m1 [add_filter_mod Teem UnuAtoM UnuHeq 0 0]	
-	set m2 [add_filter_mod Teem UnuNtoZ UnuQuantize 0 1]	
-	set m3 [add_filter_mod Teem Converters NrrdToField 1 0]
-	set m4 [add_filter_mod SCIRun FieldsOther ScalarFieldStats 1 1]
-	
-	# add connection to Choose module and new module
-	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis]
+	set m1 [addModule Teem UnuAtoM UnuHeq]	
+	set m2 [addModule Teem UnuNtoZ UnuQuantize]	
+	set m3 [addModule Teem Converters NrrdToField]
+	set m4 [addModule SCIRun FieldsOther ScalarFieldStats]
+	# add connections
 	set output_mod [lindex [lindex $filters($which) $output] 0]
 	set output_port [lindex [lindex $filters($which) $output] 1]
 	addConnection $output_mod $output_port $m3 2
 	addConnection $m3 0 $m4 0
 	addConnection $output_mod $output_port $m1 0
 	addConnection $m1 0 $m2 0
-	addConnection $m2 0 $ChooseNrrd $choose
 
+	global mods
 	upvar \#0 $mods(ViewSlices)-min vmin $mods(ViewSlices)-max vmax
         set min $vmin
         set max $vmax
@@ -3259,66 +2994,29 @@ class BioImageApp {
 	    set max 255
 	}
 
-        setGlobal $m4-setdata 1
-        global $m4-args
-        trace variable $m4-args w \
-	    "$this update_histo_graph_callback $num_filters"
-
         setGlobal $m1-bins 3000
-
         setGlobal $m2-nbits 8
         setGlobal $m2-minf $min
         setGlobal $m2-maxf $max
         setGlobal $m2-useinputmin 1
         setGlobal $m2-useinputmax 1
-
-
-	set row $grid_rows
-	# if inserting, disconnect current to current's next and 
-	# connect current to new and new to current's next
-	set insert 0
-	if { [lindex $filters($which) $next_index] != "end" } {
-            set insert 1
-	    set n [lindex $filters($which) $next_index] 
-	    set next_mod [lindex [lindex $filters($n) $input] 0]
-	    set next_port [lindex [lindex $filters($n) $input] 1]
-
-	    set current_mod [lindex [lindex $filters($which) $output] 0]
-	    set current_port [lindex [lindex $filters($which) $output] 1]
-
-	    destroyConnection "$current_mod $current_port $next_mod $next_port"
-	    addConnection $m1 0 $next_mod $next_port
-	    
-	    set row [expr [lindex $filters($which) $which_row] + 1]
-	    
-	    $this move_down_filters $row
-	}
-
-        # add to filters array
+        setGlobal $m4-setdata 1
+        global $m4-args
+        trace variable $m4-args w \
+	    "$this update_histo_graph_callback $num_filters"
+	# Create the filter array, must be set before maybe_insert_filter
+	set choose [connect_filter_module_to_choose $m2]
+	set next [lindex $filters($which) $next_index]
         set filters($num_filters) \
-	    [list histo [list $m1 $m2 $m3 $m4] [list $m1 0] [list $m2 0] \
-		 $which [lindex $filters($which) $next_index] $choose $row 1 \
-		 "Histo - Unknown"]
-
-	# Make current frame regular
-	set p $which.f$which
-	foreach h "$history0 $history1" {
-	    $h.$p configure -background grey75 -foreground black -borderwidth 2
-	    set f [add_Histo_UI $h $row $num_filters]
-	    $this add_insert_bar $f $num_filters
-	}
-	    
-        if {!$insert} {
-	    $attachedPFr.f.p.sf justify bottom
-	    $detachedPFr.f.p.sf justify bottom
-	}
-
-	# update vars
+	    [list histo "$m1 $m3 $m2 $m4" "$m1 0 $m3 2" "$m2 0" \
+		 $which $next $choose $grid_rows 1 "Histo-Unknown"]
+	# update previous filter to expect us as next filter
 	set filters($which) \
 	    [lreplace $filters($which) $next_index $next_index $num_filters]
-
+	
+	insert_filter $num_filters
+	create_filter_UI $num_filters
 	incr num_filters
-	incr grid_rows
 
         # execute histogram part so that is visible to user
         if { $has_executed } {
@@ -3327,7 +3025,6 @@ class BioImageApp {
 
         change_indicator_labels \
 	    "Press Update to Perform Histogram Equalization..."
-
 	$this enable_update [expr $which+1]
     }
 
@@ -3965,7 +3662,7 @@ class BioImageApp {
 	
 
         set UnuHeq  [lindex [lindex $filters($which) $modules] 0]
-        set UnuQuantize [lindex [lindex $filters($which) $modules] 1]
+        set UnuQuantize [lindex [lindex $filters($which) $modules] 2]
         set ScalarFieldStats [lindex [lindex $filters($which) $modules] 3]
 
         ### Histogram
@@ -4044,18 +3741,18 @@ class BioImageApp {
     }
 
 
-    method determine_choose_port {} {
+    method connect_filter_module_to_choose { mod } {
 	global Subnet
   	set choose 0
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis]
-
-        foreach conn $Subnet(${ChooseNrrd}_connections) { ;# all module connections
-  	    if {[lindex $conn 2] == $ChooseNrrd} {
-  		set choose [expr $choose + 1]
+	# all module connections
+        foreach conn $Subnet(${ChooseNrrd}_connections) { 
+  	    if { [lindex $conn 2] == $ChooseNrrd } {
+		incr choose
   	    }
   	}
+	addConnection $mod 0 $ChooseNrrd $choose
   	return $choose
-
     }
 
 
@@ -4149,10 +3846,6 @@ class BioImageApp {
 	if { !$has_executed } {
 	    $this execute_Data
 	    $this disable_update
-	    # Add insert bar
-	    $this add_insert_bar $history0.0 0
-	    $this add_insert_bar $history1.0 0
-
 	    return
 	}
 
@@ -4201,9 +3894,9 @@ class BioImageApp {
 	# below us and move them down a row
 	set re_pack [list]
 	for {set i 1} {$i < $num_filters} {incr i} {
-	    if {[info exists filters($i)]} {
+	    if { [info exists filters($i)] } {
 		set tmp_row [lindex $filters($i) $which_row]
-		if {$tmp_row != -1 && ($tmp_row > $row || $tmp_row == $row)} {
+		if { $tmp_row >= $row } {
 		    grid forget $history0.$i
 		    grid forget $history1.$i
 		    
@@ -4952,21 +4645,77 @@ class BioImageApp {
 	}
     }
 
-    method reset_app {} {
-	global Subnet
-	foreach module $Subnet(Subnet0_Modules) {
-            disableModule $module 0
-        }
+    method find_last_filter { } {
+	set prev 0
+	set cur [lindex $filters($prev) $next_index]
+	while {$cur != "end"} {
+	    set prev $cur
+	    set cur [lindex $filters($cur) $next_index]
+	}
+	return $prev
     }
 
-    method add_filter_mod { cat pack mod { xoff 0 } { yoff 0 } } {
-	setGlobal inserting 1
-	setGlobal insertOffset "0 0"
-	set x [expr  500 + $num_filters *  20 + ($xoff * 200)]
-	set y [expr  000 + $num_filters * 160 + ($yoff *  80)]
-	set mod [addModuleAtPosition $cat $pack $mod $x $y]
-	setGlobal inserting 0
-	return $mod
+    method insert_filter { cur } {
+	if { [lindex $filters($cur) $next_index] == "end"} return
+	set p [lindex $filters($cur) $prev_index] 
+	set n [lindex $filters($cur) $next_index] 
+	# if inserting, disconnect current to current's next 
+	# and connect current to new and new to current's next
+	set cur_mod [lindex [lindex $filters($cur) $output] 0]
+	set cur_port [lindex [lindex $filters($cur) $output] 1]
+	set prev_mod [lindex [lindex $filters($p) $output] 0]
+	set prev_port [lindex [lindex $filters($p) $output] 1]
+	foreach {mod port} [lindex $filters($n) $input] {
+	    destroyConnection "$prev_mod $prev_port $mod $port"
+	    addConnection $cur_mod $cur_port $mod $port
+	}
+	# set the row for cur filter to be the row of the next filter
+	set row [lindex $filters($n) $which_row]
+	set filters($cur) [lreplace $filters($cur) $which_row $which_row $row]
+	# move all filters after this one down a row
+	$this move_down_filters $row
+	# set the next filters previous index to point to current
+	set filters($n) [lreplace $filters($n) $prev_index $prev_index $cur]
+    }
+
+
+    method create_filter_UI { cur } {
+	arrange_filter_modules
+	set row [lindex $filters($cur) $which_row]
+
+	# Make current frame regular
+	set type [string totitle [lindex $filters($cur) $filter_type]]
+	foreach h "$history0 $history1" {
+	    set f [add_${type}_UI $h $row $num_filters]
+	    $this add_insert_bar $f $num_filters
+	}
+	incr grid_rows	
+        if { [lindex $filters($cur) $next_index] == "end" } {
+	    $attachedPFr.f.p.sf justify bottom
+	    $detachedPFr.f.p.sf justify bottom
+	}
+    }
+
+    method arrange_filter_modules {} {
+	global Subnet
+	set canvas $Subnet(Subnet0_canvas)
+	set i 0
+	set cur [lindex $filters(0) $next_index]
+	while {$cur != "end"} {
+	    set mods [lindex $filters($cur) $modules]
+	    for {set m 0} {$m < [llength $mods]} {incr m} {
+		set mod [lindex $mods $m]
+		set bbox [$canvas bbox $mod]
+		set x [expr 500 + $i*20 +($m%2)*200-[lindex $bbox 0]]
+		set y [expr 100 + $i*160 +($m/2)*80-[lindex $bbox 1]]
+		if {$x != 0 || $y != 0 } {
+		    $canvas move $mod $x $y
+		    drawConnections $Subnet(${mod}_connections)
+		}
+	    }
+	    set cur [lindex $filters($cur) $next_index]
+	    incr i
+	}
     }
 
     # Application placing and size
