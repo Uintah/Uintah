@@ -114,7 +114,8 @@ DEALINGS IN THE SOFTWARE.
     of the data displayed in the visualization windows.</para>
 
     <para>To add a Resample filter, click the "Resample" button.  A
-    new window will appear immediately below the Load Data window.  <xfref linkend="fig.filter"/>
+    new window will appear immediately above the Load Data window.  
+    <xref linkend="fig.filter"/>
     This window allows for resampling in each dimension as well as a
     parameterized method for resampling.  To downsample this data set
     in each dimension, change the "x1" to "x0.5" in each dimension.
@@ -131,7 +132,8 @@ DEALINGS IN THE SOFTWARE.
     indication of the area of the dataset that will remain after the
     application of the Cropping filter.  The small yellow circles at
     the corners can be clicked-and-dragged in order to interactively
-    change the size of the cropping filter.</para>
+    change the size of the cropping filter. Section <xref linkend="chap.filters"/>
+    discusses each filter in more detail and their common uses.</para>
 
     <para>Click the "Update" button to finalize and apply the Crop
     filter to the Resampled dataset.</para>
@@ -154,13 +156,15 @@ DEALINGS IN THE SOFTWARE.
     from the Load Data window to the last filter in the list.  To
     remove a filter from the list of filters to apply to the data,
     simply click on the red 'X' button in the appropriate filter.  
-    This will remove the filter from the pipeline completely.</para>
+    This will remove the filter from the pipeline completely. See
+    <xref linkend="sec.dynamic_filters"/> for more information regarding
+    dynamic filters and how to insert and delete them.</para>
 
     <para>Click the "Update" button to finalize and apply the new
     filter rules.  Only after clicking the Update button will any
     changes made to the data be applied to the data being
     visualized.</para>
-  </section><!-- end:Dynamic Filters -->
+  </section><!-- end:Resampling and Cropping -->
 
   <section><title>Visualization</title>
     <section><title>Viewer Layout</title>

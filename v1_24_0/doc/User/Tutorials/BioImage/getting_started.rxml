@@ -157,7 +157,20 @@ cd /usr/local/SCIRun/bin
 
   <section>
     <title>The User Interface</title>
-    <para></para>
+    <para>
+      BioImage is divided into three main panes: the Processing Pane on the left, 
+      the Rendering Windows in the center, and the Visualization Pane on the right. 
+      The two side panes can be detached from the Rendering Windows by clicking on 
+      the pane detachment/attachment controls which are the vertical dashed lines 
+      separating the panes. 
+    </para>
+    <para>
+      The Rendering Window pane contains four main windows. The top
+      window is the 3D viewer window. The bottom viewer windows display 
+      2D images of the standard slice planes (in order from left to right)
+      of Sagittal, Coronal, and Axial.
+    </para>
+    <!-- DV: Need figure of most of ui greyed out and 3 panes and maybe vis windows labeled -->
   </section>
 
 </chapter>

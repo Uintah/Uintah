@@ -55,7 +55,7 @@ DEALINGS IN THE SOFTWARE.
       <para>
 	Under the Processing Pane menus are the filter buttons.  These buttons allow
 	the user to add steps to a dynamic pipeline. See 
-	<xref linkend="s.dynamic_filters"/> 
+	<xref linkend="sec.dynamic_filters"/> 
 	below for more information regarding adding filters to the pipeline.
       </para>
     </section> <!-- End of Filter Buttons section -->
@@ -68,7 +68,7 @@ DEALINGS IN THE SOFTWARE.
 	<xref linkend="ch.ref_data"/> for more information regarding loading data. 
 	Any filters added by the user will appear in the pipeline with their unique UI.
       </para>
-      <section id="s.dynamic_filters">
+      <section id="sec.dynamic_filters">
 	<title>Dynamic Filters</title>
 	<para>
 	  Not every user's pre-processing steps will be the same nor in the same
