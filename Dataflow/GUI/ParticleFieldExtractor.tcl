@@ -112,7 +112,7 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
  	pack $w.f -side top -expand yes -fill both
 
         makeSciButtonPanel $w $w $this
-
+        moveToCursor $w
 	makeFrames $w.f
     }
 
