@@ -122,7 +122,7 @@ WARNING
 
 	 //////////
 	 // Insert Documentation Here:
-         void computeHeatRateGeneratedByInternalHeatFlux(
+         void computeInternalHeatRate(
                                      const ProcessorContext*,
 				     const Region* region,
 				     DataWarehouseP& old_dw,
@@ -134,6 +134,14 @@ WARNING
 				   const Region* region,
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw);
+
+	 //////////
+	 // Insert Documentation Here:
+         void solveHeatEquations(const ProcessorContext*,
+				     const Region* region,
+				     DataWarehouseP& /*old_dw*/,
+				     DataWarehouseP& new_dw);
+
 	 //////////
 	 // Insert Documentation Here:
 	 void integrateAcceleration(const ProcessorContext*,
@@ -188,7 +196,7 @@ WARNING
 	 const VarLabel* gExternalForceLabel;
 	 const VarLabel* gInternalForceLabel;
 	 const VarLabel* gSelfContactLabel; //for fracture
-	 const VarLabel* gTemperatureLabel; //for heat conduction
+	 const VarLabel* gTemperatureRateLabel; //for heat conduction
 	 const VarLabel* gInternalHeatRateLabel; //for heat conduction
 	 const VarLabel* gExternalHeatRateLabel; //for heat conduction
 	 
@@ -202,6 +210,9 @@ WARNING
    
 //
 // $Log$
+// Revision 1.32  2000/05/26 17:14:43  tan
+// Added solveHeatEquations on grid.
+//
 // Revision 1.31  2000/05/26 02:27:38  tan
 // Added computeHeatRateGeneratedByInternalHeatFlux() for thermal field
 // computation.
