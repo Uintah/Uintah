@@ -33,6 +33,7 @@ fi
 summary_log="${BUILDROOT}/${mode}/summary_log"
 rm -f $summary_log
 
+echo ""
 
 cd TestScripts
 
@@ -66,8 +67,8 @@ for test in *; do
 	    failed=1
 	    continue; # skip arches test
 	fi
-	echo ""
-	echo "Running test \"${test}-${mode}\" at `date`"
+#	echo ""
+#	echo "Running test \"${test}-${mode}\" at `date`"
 
 	cd "${BUILDROOT}/${mode}"
 	doTestScript="do${test}tests"
@@ -76,6 +77,7 @@ for test in *; do
         echo "setenv OS $OS" >> "$doTestScript"
 	echo "python TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
 	/bin/chmod a+x "$doTestScript"
+	rm -f "${BUILDROOT}/${mode}/${test}-short.log"
 	"$doTestScript" > "${test}.log"  2>&1
 	retval=$?
 	cat "${test}.log" >> "$summary_log"
@@ -83,16 +85,19 @@ for test in *; do
 	cd TestScripts
 
 	if [ $retval = "0" ]; then
-	    echo "   Test Passed"
+	    echo "${test}-${mode} tests passed!"
 	    # It was successful, so it can remove the lock
 	    if [ -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
 	        # test ran successfully - remove the lock
 	        rm "${BUILD_DIR}/${test}-${mode}.lock"
 	    fi
 	else
-	    echo "*** Test failed with code $retval"
+	    echo "${test}-${mode} tests *failed*"
 	    if [ ! -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
 	        ln -s "$BUILDROOT" "${BUILD_DIR}/${test}-${mode}.lock" > /dev/null 2>&1
+		if [ -f "${BUILDROOT}/${mode}/${test}-short.log" ]; then
+		    cat "${BUILDROOT}/${mode}/${test}-short.log"
+		fi
 	    fi
 	    failed=1
 	fi
