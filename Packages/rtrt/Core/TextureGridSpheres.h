@@ -18,7 +18,7 @@ protected:
   int tex_res;
   Color color;
   
-  void get_uv(UV& uv, const Point& hitpos, const Point& cen);
+  void get_uv(UV& uv, const Point& hitpos, const HitInfo& hit);
   float interp_luminance(unsigned char *image, double u, double v);
 
 public:

@@ -88,13 +88,9 @@ void PCAGridSpheres::shade(Color& result, const Ray& ray,
   // Get the hitpos
   Point hitpos(ray.origin()+ray.direction()*hit.min_t);
 
-  // Get the center
-  float* p=spheres+cell;
-  Point cen(p[0], p[1], p[2]);
-  
   // Get the UV coordinates
   UV uv;
-  get_uv(uv, hitpos, cen);
+  get_uv(uv, hitpos, hit);
 
   // Do the uv lookup stuff.  Here we are only clamping
   double u=uv.u()*uscale;
