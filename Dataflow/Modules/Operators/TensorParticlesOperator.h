@@ -55,6 +55,7 @@ void TensorParticlesOperator::computeScalars(TensorParticles* pTP,
 {
   Matrix3 M;
   pSP->Set(pTP->getParticleSet());
+  pSP->Set(pTP->getLevel());
   ShareAssignParticleVariable<double> scalarSet;
  
   vector< ShareAssignParticleVariable<Matrix3> >& tensors = pTP->get();
