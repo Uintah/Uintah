@@ -90,13 +90,22 @@ MoveElemToNode::execute()
     return;
   }
 
+  // Get the output port now, because we may be able to pass the field
+  // directly through if it is already cell centered.
+  FieldOPort *ofp = (FieldOPort *)get_oport("Node Field");
+  if (!ofp) {
+    error("Unable to initialize oport 'Node Field'.");
+    return;
+  }
+
   string ext = "";
   const TypeDescription *mtd = ifield->mesh()->get_type_description();
   if (mtd->get_name() == "LatVolMesh")
   {
     if (ifield->basis_order() != 0)
     {
-      error("LatVolMesh data must be at cell centers.");
+      remark("Field is already cell centered.  Passing through.");
+      ofp->send(ifield);
       return;
     }
     ext = "Lat";
@@ -105,7 +114,8 @@ MoveElemToNode::execute()
   {
     if (ifield->basis_order() != 0)
     {
-      error("StructHexVolMesh data must be at cell centers.");
+      remark("Field is already cell centered.  Passing through.");
+      ofp->send(ifield);
       return;
     }
     ext = "SHex";
@@ -137,12 +147,6 @@ MoveElemToNode::execute()
 
     FieldHandle ofield = algo->execute(this, ifield);
   
-    FieldOPort *ofp = (FieldOPort *)get_oport("Node Field");
-    if (!ofp) {
-      error("Unable to initialize oport 'Node Field'.");
-      return;
-    }
-
     ofp->send(ofield);
   }
 }
