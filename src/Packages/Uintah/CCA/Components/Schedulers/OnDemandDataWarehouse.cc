@@ -1570,6 +1570,7 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
       currentDelset->addParticle(*d);
     d_delsetDB[key]=currentDelset;
     //currentDelset->addReference();
+    delete delset;
   } else {
     d_delsetDB[key]=delset;
     delset->addReference();
