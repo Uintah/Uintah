@@ -489,8 +489,7 @@ GLTexture3D::build_bon_tree(Point min, Point max,
       
     thread_sema->down();
 
-    // commented out thread t because it is an unused variable
-    Thread *t =
+    //    Thread *t =
       scinew Thread(new GLTexture3D::run_make_low_res_brick_data(this, 
 						     thread_sema,
 						     xmax_, ymax_, zmax_,
@@ -506,7 +505,7 @@ GLTexture3D::build_bon_tree(Point min, Point max,
     delete group;
   }
   return node;
- }
+}
 
 template <class T>
 void GLTexture3D::build_child(int i, Point min, Point mid, Point max,
