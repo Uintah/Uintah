@@ -71,3 +71,4 @@ static MatrixIEPlugin MatlabMatrix_plugin("Matlab Matrix",".mat", "*.mat", Matla
 static FieldIEPlugin MatlabField_plugin("Matlab Field",".mat", "*.mat",MatlabField_reader,MatlabField_writer);   
 
 }
+
