@@ -70,18 +70,7 @@ SelectField::SelectField(GuiContext* ctx)
 
 SelectField::~SelectField()
 {
-  if (widgetid_)
-  {
-    GeometryOPort *ogport = (GeometryOPort*)get_oport("Selection Widget");
-    if (!ogport)
-    {
-      error("Unable to initialize " + name + "'s oport.");
-      return;
-    }
-    ogport->delObj(widgetid_);
-    ogport->flushViews();
-    widgetid_ = 0;
-  }
+  delete box_;
 }
 
 

@@ -41,24 +41,24 @@
 
 #include <iostream>
 using std::cerr;
-//using std::endl;
 
 namespace SCIRun {
 
 extern "C" {
-PSECORESHARE IPort* make_GeometryIPort(Module* module, const string& name) {
-  return scinew GeometryIPort(module,name);
+  PSECORESHARE IPort* make_GeometryIPort(Module* module, const string& name) {
+    return scinew GeometryIPort(module,name);
+  }
+  PSECORESHARE OPort* make_GeometryOPort(Module* module, const string& name) {
+    return scinew GeometryOPort(module,name);
+  }
 }
-PSECORESHARE OPort* make_GeometryOPort(Module* module, const string& name) {
-  return scinew GeometryOPort(module,name);
-}
-}
+
 
 static string Geometry_type("Geometry");
 static string Geometry_color("magenta3");
 
 GeometryIPort::GeometryIPort(Module* module, const string& portname)
-: IPort(module, Geometry_type, portname, Geometry_color)
+  : IPort(module, Geometry_type, portname, Geometry_color)
 {
 }
 
@@ -66,18 +66,6 @@ GeometryIPort::~GeometryIPort()
 {
 }
 
-GeometryOPort::GeometryOPort(Module* module, const string& portname)
-  : OPort(module, Geometry_type, portname, Geometry_color),
-    serial(1),
-    dirty(false),
-    save_msgs(0),
-    outbox(0)
-{
-}
-
-GeometryOPort::~GeometryOPort()
-{
-}
 
 void GeometryIPort::reset()
 {
@@ -87,224 +75,431 @@ void GeometryIPort::finish()
 {
 }
 
-void GeometryOPort::reset()
+
+
+GeometryOPort::GeometryOPort(Module* module, const string& portname)
+  : OPort(module, Geometry_type, portname, Geometry_color),
+    serial_(1),
+    dirty_(false)
 {
-    if(nconnections() == 0)
-    {
-        outbox = 0;
-	return;
-    }
-    if(!outbox){
-	if (module->showStats()) turn_on(Resetting);
-	Connection* connection=connections[0];
-	Module* mod=connection->iport->get_module();
-	outbox=&mod->mailbox;
-	// Send the registration message...
-	Mailbox<GeomReply> tmp("Temporary GeometryOPort mailbox", 1);
-	outbox->send(scinew GeometryComm(&tmp));
-	GeomReply reply=tmp.receive();
-	portid=reply.portid;
-	if (module->showStats()) turn_off();
-    }
-    dirty=false;
 }
 
-void GeometryOPort::flush()
+
+GeometryOPort::~GeometryOPort()
 {
-  GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryFlush, portid);
-  if(outbox){
-    outbox->send(msg);
-  } else {
-    save_msg(msg);
-  } 
+}
+
+
+void
+GeometryOPort::reset()
+{
+  saved_msgs_.clear();
+  dirty_ = false;
+}
+
+
+void
+GeometryOPort::flush()
+{
+  for (unsigned int i=0; i<outbox_.size(); i++)
+  {
+    GeometryComm* msg = scinew GeometryComm(MessageTypes::GeometryFlush,
+					    portid_[i]);
+    outbox_[i]->send(msg);
+  }
+  GeometryComm* msg = scinew GeometryComm(MessageTypes::GeometryFlush, 0);
+  save_msg(msg);
 }
   
-void GeometryOPort::finish()
-{
-    if(dirty){
-	GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryFlush, portid);
-	if(outbox){
-	    if (module->showStats()) turn_on(Finishing);
-	    outbox->send(msg);
-	    if (module->showStats()) turn_off();
-	} else {
-	    save_msg(msg);
-	}
-    }
-}
 
-GeomID GeometryOPort::addObj(GeomHandle obj, const string& name,
-			     CrowdMonitor* lock)
+void
+GeometryOPort::finish()
 {
-    if (module->showStats()) turn_on();
-    GeomID id=serial++;
-    GeometryComm* msg=scinew GeometryComm(portid, id, obj, name, lock);
-    if(outbox){
-	outbox->send(msg);
-    } else {
-	save_msg(msg);
-    }
-    dirty=true;
+  if (dirty_)
+  {
+    if (module->showStats()) turn_on(Finishing);
+    flush();
     if (module->showStats()) turn_off();
-    return id;
+  }
 }
 
-bool GeometryOPort::direct_forward(GeometryComm* msg)
+
+
+GeomID
+GeometryOPort::addObj(GeomHandle obj, const string& name, CrowdMonitor* lock)
 {
-    if(outbox){
-	outbox->send(msg);
-	return true;
-    } else {
-        return false;
-    }
+  if (module->showStats()) turn_on();
+  GeomID id = serial_++;
+  for (unsigned int i = 0; i < outbox_.size(); i++)
+  {
+    GeometryComm* msg = scinew GeometryComm(portid_[i], id, obj, name, lock);
+    outbox_[i]->send(msg);
+  }
+  GeometryComm* msg = scinew GeometryComm(0, id, obj, name, lock);
+  save_msg(msg);
+  dirty_ = true;
+  if (module->showStats()) turn_off();
+  return id;
 }
 
-void GeometryOPort::forward(GeometryComm* msg)
+
+
+bool
+GeometryOPort::direct_forward(GeometryComm* msg)
 {
-    /*turn_on();*/
-    if(outbox){
-	msg->portno=portid;
-	outbox->send(msg);
-    } else {
-	save_msg(msg);
-    }
-    /*turn_off();*/
+  for (unsigned int i = 0; i < outbox_.size(); i++)
+  {
+    GeometryComm *cpy = scinew GeometryComm(*msg);
+    cpy->portno = portid_[i];
+    outbox_[i]->send(cpy);
+  }
+  return outbox_.size() > 0;
 }
 
-void GeometryOPort::delObj(GeomID id, int del)
+
+
+void
+GeometryOPort::forward(GeometryComm* msg0)
 {
-    if (module->showStats()) turn_on();
-    GeometryComm* msg=scinew GeometryComm(portid, id);
-    if(outbox)
-	outbox->send(msg);
-    else
-	save_msg(msg);
-    dirty=true;
-    if (module->showStats()) turn_off();
+  for (unsigned int i = 0; i < outbox_.size(); i++)
+  {
+    GeometryComm *msg = scinew GeometryComm(*msg0);
+    msg->portno = portid_[i];
+    outbox_[i]->send(msg);
+  }
+  save_msg(msg0);
 }
 
-void GeometryOPort::delAll()
+
+
+void
+GeometryOPort::delObj(GeomID id, int del)
 {
-    if (module->showStats()) turn_on();
-    GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryDelAll, portid);
-    if(outbox)
-	outbox->send(msg);
-    else
-	save_msg(msg);
-    dirty=true;
-    if (module->showStats()) turn_off();
+  if (module->showStats()) turn_on();
+
+  for (unsigned int i=0; i < outbox_.size(); i++)
+  {
+    GeometryComm* msg = scinew GeometryComm(portid_[i], id);
+    outbox_[i]->send(msg);
+  }
+  GeometryComm* msg = scinew GeometryComm(0, id);
+  save_msg(msg);
+  dirty_ = true;
+  if (module->showStats()) turn_off();
 }
 
-void GeometryOPort::flushViews()
+
+
+void
+GeometryOPort::delAll()
 {
-    if (module->showStats()) turn_on();
-    GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryFlushViews, portid, (Semaphore*)0);
-    if(outbox)
-	outbox->send(msg);
-    else
-	save_msg(msg);
-    dirty=false;
-    if (module->showStats()) turn_off();
+  if (module->showStats()) turn_on();
+  for (unsigned int i = 0; i < outbox_.size(); i++)
+  {
+    GeometryComm* msg = scinew GeometryComm(MessageTypes::GeometryDelAll,
+					    portid_[i]);
+    outbox_[i]->send(msg);
+  }
+  GeometryComm* msg = scinew GeometryComm(MessageTypes::GeometryDelAll, 0);
+  save_msg(msg);
+  dirty_ = true;
+  if (module->showStats()) turn_off();
 }
 
-void GeometryOPort::flushViewsAndWait()
+
+
+void
+GeometryOPort::flushViews()
 {
-    if (module->showStats()) turn_on();
-    Semaphore waiter("flushViewsAndWait wait semaphore", 0);
-    GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryFlushViews, portid, &waiter);
-    if(outbox)
-	outbox->send(msg);
-    else
-	save_msg(msg);
+  if (module->showStats()) turn_on();
+  for (unsigned int i = 0; i < outbox_.size(); i++)
+  {
+    GeometryComm* msg = scinew GeometryComm(MessageTypes::GeometryFlushViews,
+					    portid_[i], (Semaphore*)0);
+    outbox_[i]->send(msg);
+  }
+  GeometryComm* msg = scinew GeometryComm(MessageTypes::GeometryFlushViews,
+					  0, (Semaphore*)0);
+  save_msg(msg);
+  dirty_ = false;
+  if (module->showStats()) turn_off();
+}
+
+
+void
+GeometryOPort::flushViewsAndWait()
+{
+  if (module->showStats()) turn_on();
+  Semaphore waiter("flushViewsAndWait wait semaphore", 0);
+  for (unsigned int i = 0; i < outbox_.size(); i++)
+  {
+    GeometryComm* msg = scinew GeometryComm(MessageTypes::GeometryFlushViews,
+					    portid_[i], &waiter);
+    outbox_[i]->send(msg);
+  }
+  GeometryComm* msg = scinew GeometryComm(MessageTypes::GeometryFlushViews,
+					  0, &waiter);
+  save_msg(msg); // TODO:  Should a synchronized primitive be queued?
+
+  // Wait on everyone.
+  for (unsigned int i = 0; i < outbox_.size(); i++)
+  {
     waiter.down();
-    dirty=false;
-    if (module->showStats()) turn_off();
-}
-
-void GeometryOPort::save_msg(GeometryComm* msg)
-{
-    if(save_msgs){
-	save_msgs_tail->next=msg;
-	save_msgs_tail=msg;
-    } else {
-	save_msgs=save_msgs_tail=msg;
-    }
-    msg->next=0;
-}
-
-void GeometryOPort::attach(Connection* c)
-{
-    OPort::attach(c);
-    reset();
-    if (module->showStats()) turn_on();
-    GeometryComm* p=save_msgs;
-    while(p){
-	GeometryComm* next=p->next;
-	p->portno=portid;
-	outbox->send(p);
-	p=next;
-    }
-    save_msgs=0;
-    if (module->showStats()) turn_off();
+  }
+  dirty_ = false;
+  if (module->showStats()) turn_off();
 }
 
 
-void GeometryOPort::detach(Connection* c)
+void
+GeometryOPort::save_msg(GeometryComm* msg)
 {
-    OPort::detach(c);
-    if (nconnections() == 0)
+  switch(msg->type)
+  {
+  case MessageTypes::GeometryDelObj:
+    // Delete the object from the message queue.
     {
-      outbox = 0;
+      list<GeometryComm *>::iterator itr0 = saved_msgs_.begin();
+      while (itr0 != saved_msgs_.end())
+      {
+	list<GeometryComm *>::iterator itr  = itr0;
+	++itr0;
+	if ((*itr)->type == MessageTypes::GeometryAddObj &&
+	    (*itr)->serial == msg->serial)
+	{
+	  delete *itr;
+	  saved_msgs_.erase(itr);
+	}
+      }
+      delete msg;
     }
+    break;
+
+  case MessageTypes::GeometryDelAll:
+    // Delete all AddObj messages from the queue.
+    {
+      list<GeometryComm *>::iterator itr0 = saved_msgs_.begin();
+      while (itr0 != saved_msgs_.end())
+      {
+	list<GeometryComm *>::iterator itr  = itr0;
+	++itr0;
+	if ((*itr)->type == MessageTypes::GeometryAddObj)
+	{
+	  delete *itr;
+	  saved_msgs_.erase(itr);
+	}
+      }
+      delete msg;
+    }
+    break;
+
+  case MessageTypes::GeometryFlush:
+    // Delete the object from the message queue.
+    {
+      list<GeometryComm *>::iterator itr0 = saved_msgs_.begin();
+      while (itr0 != saved_msgs_.end())
+      {
+	list<GeometryComm *>::iterator itr  = itr0;
+	++itr0;
+	if ((*itr)->type == MessageTypes::GeometryFlush)
+	{
+	  delete *itr;
+	  saved_msgs_.erase(itr);
+	}
+      }
+      saved_msgs_.push_back(msg);
+    }
+    break;
+
+  case MessageTypes::GeometryFlushViews:
+    // Delete the object from the message queue.
+    {
+      list<GeometryComm *>::iterator itr0 = saved_msgs_.begin();
+      while (itr0 != saved_msgs_.end())
+      {
+	list<GeometryComm *>::iterator itr  = itr0;
+	++itr0;
+	if ((*itr)->type == MessageTypes::GeometryFlushViews)
+	{
+	  delete *itr;
+	  saved_msgs_.erase(itr);
+	}
+      }
+      saved_msgs_.push_back(msg);
+    }
+    break;
+
+  case MessageTypes::GeometrySetView:
+    // Delete the object from the message queue.
+    {
+      list<GeometryComm *>::iterator itr0 = saved_msgs_.begin();
+      while (itr0 != saved_msgs_.end())
+      {
+	list<GeometryComm *>::iterator itr  = itr0;
+	++itr0;
+	if ((*itr)->type == MessageTypes::GeometrySetView)
+	{
+	  delete *itr;
+	  saved_msgs_.erase(itr);
+	}
+      }
+      saved_msgs_.push_back(msg);
+    }
+    break;
+
+  default:
+    saved_msgs_.push_back(msg);
+  }
 }
 
 
-bool GeometryOPort::have_data()
+void
+GeometryOPort::attach(Connection* c)
 {
-    return false;
+  OPort::attach(c);
+
+  int which = outbox_.size();
+
+  // Set up the outbox_ and portid_ variables.
+  if (module->showStats()) turn_on(Resetting);
+  Module* mod = c->iport->get_module();
+  outbox_.push_back(&mod->mailbox);
+  // Send the registration message.
+  Mailbox<GeomReply> tmp("Temporary GeometryOPort mailbox", 1);
+  outbox_[which]->send(scinew GeometryComm(&tmp));
+  GeomReply reply = tmp.receive();
+  portid_.push_back(reply.portid);
+  if (module->showStats()) turn_off();
+
+  // Forward all of the queued up messages.
+  if (module->showStats()) turn_on();
+  list<GeometryComm *>::iterator itr = saved_msgs_.begin();
+  while (itr != saved_msgs_.end())
+  {
+    GeometryComm *msg = scinew GeometryComm(**itr);
+    msg->portno = portid_[which];
+    outbox_[which]->send(msg);
+    ++itr;
+  }
+  if (module->showStats()) turn_off();
 }
 
-void GeometryOPort::resend(Connection*)
+
+void
+GeometryOPort::detach(Connection* c)
 {
-    cerr << "GeometryOPort can't resend and shouldn't need to!\n";
+  // Determine which connection gets it.
+  unsigned int i;
+  for (i = 0; i < connections.size(); i++)
+  {
+    if (connections[i] == c)
+    {
+      break;
+    }
+  }
+  
+  if (i < connections.size())
+  {
+    // Delete all live objects and flush.
+    bool sent = false;
+    list<GeometryComm *>::iterator itr = saved_msgs_.begin();
+    while (itr != saved_msgs_.end())
+    {
+      if ((*itr)->type == MessageTypes::GeometryAddObj)
+      {
+	GeometryComm *msg = scinew GeometryComm(portid_[i], (*itr)->serial);
+	outbox_[i]->send(msg);
+	sent = true;
+      }
+      ++itr;
+    }
+    if (sent)
+    {
+      GeometryComm *msg = scinew GeometryComm(MessageTypes::GeometryFlushViews,
+					      portid_[i], (Semaphore*)0);
+      outbox_[i]->send(msg);
+    }
+
+    // Clean up the outbox_ and portid_ vectors.
+    outbox_.erase(outbox_.begin() + i);
+    portid_.erase(portid_.begin() + i);
+  }
+
+  OPort::detach(c);
 }
 
-int GeometryOPort::getNViewWindows()
+
+bool
+GeometryOPort::have_data()
 {
-    if(nconnections() == 0)
-	return 0;
-    FutureValue<int> reply("Geometry getNViewWindows reply");
-    outbox->send(new GeometryComm(MessageTypes::GeometryGetNViewWindows, portid, &reply));
-    return reply.receive();
+  return false;
 }
 
-GeometryData* GeometryOPort::getData(int which_viewwindow, int datamask)
+
+void
+GeometryOPort::resend(Connection*)
 {
-    if(nconnections() == 0)
-	return 0;
-    FutureValue<GeometryData*> reply("Geometry getData reply");
-    outbox->send(new GeometryComm(MessageTypes::GeometryGetData, portid, &reply, which_viewwindow, datamask));
-    return reply.receive();
+  cerr << "GeometryOPort can't resend and shouldn't need to!\n";
 }
 
-void GeometryOPort::setView(int which_viewwindow, View view)
+
+int
+GeometryOPort::getNViewers()
 {
-    if(nconnections() == 0)
-	return;
-    
-    GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometrySetView, portid, which_viewwindow, view);
-
-    if(outbox)
-	outbox->send(msg);
-    else
-	save_msg(msg);
+  return outbox_.size();
 }
+
+
+int
+GeometryOPort::getNViewWindows(int viewer)
+{
+  if (viewer < 0 || viewer >= outbox_.size()) return 0;
+
+  FutureValue<int> reply("Geometry getNViewWindows reply");
+  GeometryComm *msg =
+    scinew GeometryComm(MessageTypes::GeometryGetNViewWindows,
+			portid_[viewer], &reply);
+  outbox_[viewer]->send(msg);
+
+  return reply.receive();
+}
+
+
+GeometryData *
+GeometryOPort::getData(int which_viewer, int which_viewwindow, int datamask)
+{
+  if (which_viewer >= outbox_.size() || which_viewer < 0) return 0;
+
+  FutureValue<GeometryData*> reply("Geometry getData reply");
+  GeometryComm *msg = scinew GeometryComm(MessageTypes::GeometryGetData,
+					  portid_[which_viewer],
+					  &reply, which_viewwindow,
+					  datamask);
+  outbox_[which_viewer]->send(msg);
+  return reply.receive();
+}
+
+
+void
+GeometryOPort::setView(int which_viewer, int which_viewwindow, View view)
+{
+  if (which_viewer >= outbox_.size() || which_viewer < 0) return;
+
+  GeometryComm* msg = scinew GeometryComm(MessageTypes::GeometrySetView,
+					  portid_[which_viewer],
+					  which_viewwindow,
+					  view);
+  outbox_[which_viewer]->send(msg);
+}
+
+
 
 GeometryComm::GeometryComm(Mailbox<GeomReply>* reply)
   : MessageBase(MessageTypes::GeometryInit),
     reply(reply)
 {
 }
+
 
 GeometryComm::GeometryComm(int portno, GeomID serial, GeomHandle obj,
 			   const string& name, CrowdMonitor* lock)
@@ -317,12 +512,14 @@ GeometryComm::GeometryComm(int portno, GeomID serial, GeomHandle obj,
 {
 }
 
+
 GeometryComm::GeometryComm(int portno, GeomID serial)
   : MessageBase(MessageTypes::GeometryDelObj),
     portno(portno),
     serial(serial)
 {
 }
+
 
 GeometryComm::GeometryComm(MessageTypes::MessageType type,
 			   int portno, Semaphore* wait)
@@ -332,11 +529,13 @@ GeometryComm::GeometryComm(MessageTypes::MessageType type,
 {
 }
 
+
 GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno)
   : MessageBase(type),
     portno(portno)
 {
 }
+
 
 GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
 			   FutureValue<GeometryData*>* datareply,
@@ -349,14 +548,16 @@ GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
 {
 }
 
+
 GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
 			   int which_viewwindow, View view)
-: MessageBase(type),
-  portno(portno),
-  view(view),
-  which_viewwindow(which_viewwindow)
+  : MessageBase(type),
+    portno(portno),
+    view(view),
+    which_viewwindow(which_viewwindow)
 {
 }
+
 
 GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
 			   FutureValue<int>* nreply)
@@ -367,25 +568,50 @@ GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
 }
 
 
+GeometryComm::GeometryComm(const GeometryComm &copy)
+  : MessageBase(copy),
+    reply(copy.reply),
+    portno(copy.portno),
+    serial(copy.serial),
+    obj(copy.obj),
+    name(copy.name),
+    lock(0),
+    wait(0),
+    view(copy.view),
+    next(0),
+    which_viewwindow(copy.which_viewwindow),
+    datamask(copy.datamask),
+    datareply(0),
+    nreply(0)
+{
+}
+
+
 GeometryComm::~GeometryComm()
 {
 }
 
+
+
 GeomReply::GeomReply()
 {
 }
+
 
 GeomReply::GeomReply(int portid)
   : portid(portid)
 {
 }
 
+
+
 GeometryData::GeometryData()
 {
-    view=0;
-    colorbuffer=0;
-    depthbuffer=0;
+  view=0;
+  colorbuffer=0;
+  depthbuffer=0;
 }
+
 
 void
 GeometryData::Print()

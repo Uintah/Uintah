@@ -122,18 +122,7 @@ BuildTransform::BuildTransform(GuiContext* ctx)
 
 BuildTransform::~BuildTransform()
 {
-  if (widgetid_)
-  {
-    GeometryOPort *ogport = (GeometryOPort*)get_oport("Geometry");
-    if (!ogport)
-    {
-      error("Unable to initialize " + name + "'s oport.");
-      return;
-    }
-    ogport->delObj(widgetid_);
-    ogport->flushViews();
-    widgetid_ = 0;
-  }
+  delete box_widget_;
 }
 
 void BuildTransform::execute()

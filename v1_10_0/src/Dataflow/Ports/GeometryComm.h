@@ -63,6 +63,7 @@ public:
 		 int which_viewwindow, int datamask);
     GeometryComm(MessageTypes::MessageType, int portid,
 		 FutureValue<int>* reply);
+    GeometryComm(const GeometryComm &copy);
     virtual ~GeometryComm();
 
     Mailbox<GeomReply>* reply;
