@@ -348,6 +348,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
                                                                   mpm_matls_sub,
                                                                   press_matl,
                                                                   all_matls);
+                                                                  
+  d_ice->scheduleComputeLagrangian_Transported_Vars(sched,patches,ice_matls);
 
   scheduleInterpolateCCToNC(                      sched, patches, mpm_matls);
   d_mpm->scheduleExMomIntegrated(                 sched, patches, mpm_matls);
