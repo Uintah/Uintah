@@ -8,7 +8,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
-
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
@@ -52,8 +52,9 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
       int idx = getPatchwiseProcessorAssignment(patch);
       ASSERTRANGE(idx, 0, d_myworld->size());
 
-      if (task->getTask()->getType() == Task::Output)
+      if (task->getTask()->getType() == Task::Output) {
         task->assignResource((idx/d_outputNthProc)*d_outputNthProc);
+      }
       else        
         task->assignResource(idx);
 
@@ -196,12 +197,14 @@ void
 LoadBalancerCommon::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
 {
   d_sharedState = state;
+  d_scheduler = dynamic_cast<Scheduler*>(getPort("scheduler"));
   ProblemSpecP p = pspec->findBlock("LoadBalancer");
   string dynamicAlgo;
   double interval = 0;
   double cellFactor;
   int timestepInterval = 0;
   d_outputNthProc = 1;
+  double threshold = 0.0;
   
   if (p != 0) {
     p->getWithDefault("outputNthProc", d_outputNthProc, 1);
@@ -211,6 +214,7 @@ LoadBalancerCommon::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
       interval = 0.0; // default
     p->getWithDefault("dynamicAlgorithm", dynamicAlgo, "static");
     p->getWithDefault("cellFactor", cellFactor, .1);
+    p->getWithDefault("gainThreshold", threshold, 0.0);
   }
-  setDynamicAlgorithm(dynamicAlgo, interval, timestepInterval, cellFactor);
+  setDynamicAlgorithm(dynamicAlgo, interval, timestepInterval, cellFactor, threshold);
 }
