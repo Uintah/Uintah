@@ -3,8 +3,6 @@
 
 #include <Packages/Uintah/Core/Grid/GeomPiece/SmoothGeomPiece.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 
 #include <math.h>
 #ifndef M_PI
@@ -55,6 +53,19 @@ namespace Uintah {
      <num_axial>100</num_axial> 
    </smoothcyl> 
    \endverbatim
+   If the points are to be written to an output file, use the following
+   \verbatim
+   <smoothcyl> 
+     <bottom>[0.0,0.0,0.0]</bottom> 
+     <top>[0.0,0.0,10.0]</top> 
+     <radius>2.0</radius> 
+     <thickness>0.1</thickness> 
+     <endcap_thickness>1.0</endcap_thickness> 
+     <num_radial>20</num_radial> 
+     <num_axial>100</num_axial> 
+     <output_file>"fileName"</output_file>
+   </smoothcyl> 
+   \endverbatim
 	
 */
 /////////////////////////////////////////////////////////////////////////////
@@ -85,51 +96,28 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     virtual Box getBoundingBox() const;
 
-    //////////////////////////////////////////////////////////////////////
-    /*! Returns the number of particles */
-    //////////////////////////////////////////////////////////////////////
-    int returnParticleCount(const Patch* patch);
+  protected:
 
     //////////////////////////////////////////////////////////////////////
     /*! Creates the particles */
     //////////////////////////////////////////////////////////////////////
-    int createParticles(const Patch* patch,
-			ParticleVariable<Point>&  pos,
-			ParticleVariable<double>& vol,
-			ParticleVariable<Vector>& psize,
-			particleIndex start);
-
-  protected:
+    int createPoints();
 
     //////////////////////////////////////////////////////////////////////
     /*! Creates the particles for the two end caps */
     //////////////////////////////////////////////////////////////////////
-    int createOrCountEndCapParticles(const Patch* patch,
-				     ParticleVariable<Point>&  pos,
-				     ParticleVariable<double>& vol,
-				     ParticleVariable<Vector>& psize,
-				     particleIndex start,
-                                     bool doCreate);
+    int createEndCapPoints();
 
     //////////////////////////////////////////////////////////////////////
     /*! Creates the particles for the solid cylinder */
     //////////////////////////////////////////////////////////////////////
-    int createOrCountSolidCylParticles(const Patch* patch,
-				       ParticleVariable<Point>&  pos,
-				       ParticleVariable<double>& vol,
-				       ParticleVariable<Vector>& psize,
-				       particleIndex start,
-                                       bool doCreate);
+    int createSolidCylPoints();
 
     //////////////////////////////////////////////////////////////////////
     /*! Creates the particles for the hollow cylinder */
     //////////////////////////////////////////////////////////////////////
-    int createOrCountHollowCylParticles(const Patch* patch,
-					ParticleVariable<Point>&  pos,
-					ParticleVariable<double>& vol,
-					ParticleVariable<Vector>& psize,
-					particleIndex start,
-                                        bool doCreate);
+    int createHollowCylPoints();
+
   private:
 	 
     Point  d_top;
@@ -139,6 +127,7 @@ namespace Uintah {
     double d_capThick;
     int d_numRadial;
     int d_numAxial;
+
   };
 } // End namespace Uintah
 
