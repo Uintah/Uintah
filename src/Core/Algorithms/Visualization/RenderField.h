@@ -37,6 +37,7 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/Geom/GeomArrows.h>
 #include <Core/Geom/GeomSphere.h>
@@ -50,6 +51,7 @@
 #include <Core/Geom/GeomDL.h>
 #include <Core/Geom/GeomColorMap.h>
 #include <Core/Geom/GeomPoint.h>
+#include <Core/Geom/GeomTexRectangle.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Util/TypeDescription.h>
@@ -57,11 +59,13 @@
 #include <Core/Containers/StringUtil.h>
 #include <sci_hash_map.h>
 #include <Core/Datatypes/TetVolMesh.h>
-
+#include <Core/Datatypes/ImageMesh.h>
 #include <sstream>
+#include <iostream>
+
+using std::cerr;
 
 namespace SCIRun {
-
 class GeomEllipsoid;
 class GeomArrows;
 
@@ -70,6 +74,26 @@ inline void
 sciVectorToColor(Color &c, const Vector &v)
 {
   c = Color(fabs(v.x()), fabs(v.y()), fabs(v.z()));
+}
+
+inline bool IsPowerOf2(uint n)
+{
+  return (n & (n-1)) == 0;
+}
+
+inline unsigned int NextPowerOf2( unsigned int n)
+{
+  // if n is power of 2, return 
+  if (IsPowerOf2(n)) return n;
+  unsigned int v;
+  for(int i=31; i>=0; i--) {
+    v = n & (1 << i);
+    if (v) {
+      v = (1 << (i+1));
+      break;
+    }
+  }
+  return v;
 }
 
 //! RenderFieldBase supports the dynamically loadable algorithm concept.
@@ -90,7 +114,8 @@ public:
 		      bool face_transparency,
 		      bool node_force_def_color,
 		      bool edge_force_def_color,
-		      bool face_force_def_color) = 0;
+		      bool face_force_def_col,
+		      bool face_usetexture) = 0;
 
   virtual GeomHandle render_text(FieldHandle fld,
 				 bool use_color_map,
@@ -142,7 +167,8 @@ public:
 		      bool face_transparency,
 		      bool node_force_def_color,
 		      bool edge_force_def_color,
-		      bool face_force_def_color);
+		      bool face_force_def_color,
+		      bool face_usetexture);
 
   virtual GeomHandle render_text(FieldHandle fld,
 				 bool use_color_map,
@@ -175,6 +201,13 @@ private:
 			  int cylinder_resolution,
 			  bool transparent_p);
   GeomHandle render_faces(Fld *fld, 
+			  ColorMapHandle color_handle,
+			  MaterialHandle def_mat,
+			  bool force_def_color,
+			  bool use_normals,
+			  bool use_transparency,
+			  bool use_texture_for_face = false);
+  GeomHandle render_texture_face(Fld *fld, 
 			  ColorMapHandle color_handle,
 			  MaterialHandle def_mat,
 			  bool force_def_color,
@@ -255,6 +288,27 @@ template <>
 bool
 to_double(const string&, double &);
 
+template <class T>
+bool
+to_float(const T& tmp, float &val)
+{
+  val = (float)tmp;
+  return true;
+}
+
+template <>
+bool
+to_float(const Vector&, float &);
+
+template <>
+bool
+to_float(const Tensor&, float &);
+
+
+template <>
+bool
+to_float(const string&, float &);
+
 
 template <class Dat>
 bool 
@@ -287,7 +341,7 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
 			      int sphere_res, int cyl_res,
 			      bool use_normals,
 			      bool n_transp, bool e_transp, bool f_transp,
-			      bool nfdc, bool efdc, bool ffdc)
+			      bool nfdc, bool efdc, bool ffdc, bool fut)
 {
   Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
   ASSERT(fld != 0);
@@ -307,7 +361,7 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
   if (faces)
   {
     face_switch_ = render_faces(fld, color_handle, def_mat, ffdc,
-				use_normals, f_transp);
+				use_normals, f_transp, fut);
   }
 }
 
@@ -702,6 +756,204 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
   return display_list;
 }
 
+template <class Fld, class Loc>
+GeomHandle
+RenderField<Fld, Loc>::render_texture_face(Fld *sfld,
+				    ColorMapHandle color_handle,
+				    MaterialHandle def_mat,
+				    bool force_def_color,
+				    bool use_normals,
+				    bool use_transparency)
+{
+  typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
+  GeomHandle texture_face;
+  float tex_coords[8];
+  float pos_coords[12];
+  int colorbytes;
+//    cerr<<"set bytes\n";
+//    if( use_transparency ) {
+    colorbytes = 4;
+//    } else {
+//      colorbytes = 3;
+//    }
+  GeomTexRectangle *tr = scinew GeomTexRectangle();
+  texture_face = tr;
+//    cerr<<"cast ImageMesh\n";
+  ImageMesh *im = dynamic_cast<ImageMesh *> (mesh.get_rep());
+  // set up the texture parameters //
+  // power of 2 dimensions
+  int width = NextPowerOf2(im->get_ni());
+  int height = NextPowerOf2(im->get_nj());
+
+  // use for the texture coordinates 
+  double tmin_x, tmax_x, tmin_y, tmax_y;
+
+  // create texture array 
+  unsigned char texture[colorbytes*width*height];
+  //  cerr<<"texture size is "<< colorbytes*width*height<<"\n";
+
+  //***************************************************
+  // we need to find the corners of the square in space
+  // use the node indices to grab the corner points
+  typename Fld::mesh_type::Node::index_type ll(im, 0, 0);
+  typename Fld::mesh_type::Node::index_type lr(im, im->get_ni() - 1, 0);
+  typename Fld::mesh_type::Node::index_type ul(im, 0, im->get_nj() - 1);
+  typename Fld::mesh_type::Node::index_type ur(im, im->get_ni() - 1, 
+					       im->get_nj() - 1);
+  
+  Point p1, p2, p3, p4;
+  im->get_center(p1, ll);
+  pos_coords[0] = p1.x();
+  pos_coords[1] = p1.y();
+  pos_coords[2] = p1.z();
+//    cerr<<"got minx, miny\n";
+
+  im->get_center(p2, lr);
+  pos_coords[3] = p2.x();
+  pos_coords[4] = p2.y();
+  pos_coords[5] = p2.z();
+//    cerr<<"got minx, maxy\n";
+
+
+  im->get_center(p3, ur);
+  pos_coords[6] = p3.x();
+  pos_coords[7] = p3.y();
+  pos_coords[8] = p3.z();
+//    cerr<<"got max, maxy\n";
+
+  im->get_center(p4, ul);
+  pos_coords[9] = p4.x();
+  pos_coords[10] = p4.y();
+  pos_coords[11] = p4.z();
+//    cerr<<"got maxx, miny\n";
+  //***************************************************
+
+
+  vector<typename Fld::value_type> vals(20);
+  vector<double> dvals(20);
+
+  if( sfld->basis_order() == 1){ 
+    tr->interpolate(true);
+
+    tmin_x = 0.5/(double)width;
+    tmax_x = (im->get_ni()- 0.5)/(double)width;
+    tmin_y = 0.5/(double)height;
+    tmax_y = (im->get_nj()-0.5)/(double)height;
+//     tmin_x = tmin_y = 0.0;
+//     tmax_x = tmax_y = 1.0;
+
+    tex_coords[0] = tmin_x; tex_coords[1] = tmin_y;
+    tex_coords[2] = tmax_x; tex_coords[3] = tmin_y;
+    tex_coords[4] = tmax_x; tex_coords[5] = tmax_y;
+    tex_coords[6] = tmin_x; tex_coords[7] = tmax_y;
+
+
+    typename Fld::mesh_type::Node::iterator niter; mesh->begin(niter);  
+    typename Fld::mesh_type::Node::iterator niter_end; mesh->end(niter_end);  
+    typename Fld::mesh_type::Node::array_type nodes;
+    while(niter != niter_end ){
+      int i, idx;
+      // convert data values to double
+      typename Fld::value_type val;
+      double dval;      
+      sfld->value(val, *niter);
+      to_double(val, dval);
+      // compute index into texture array
+      idx = (niter.i_ * colorbytes) + (niter.j_ * width * colorbytes);
+      
+
+
+      // compute the ColorMap index and retreive the color
+      double cmin = color_handle->getMin();
+      double cmax = color_handle->getMax();
+      double index = (dval - cmin)/(cmax - cmin);
+      const Color &c = color_handle->getColor(index);
+
+//        cerr<<"inputting color into the texture, idx = "<<idx
+//  	  <<", (i,j) = ("<<niter.i_<<","<<niter.j_<<"),  dval = "<<dval
+//  	  <<", cmap_index = "<<index<<"\n";
+      // fill the texture
+      texture[idx] = (unsigned char)(Clamp(c.r(), 0.0, 1.0)*255);
+//        cerr<<"("<<(int)texture[idx]<<", ";
+      texture[idx+1] =  (unsigned char)(Clamp(c.g(), 0.0, 1.0)*255);
+//        cerr<<(int)texture[idx+1]<<", ";
+      texture[idx+2] = (unsigned char)(Clamp(c.b(), 0.0, 1.0)*255);
+//        cerr<<(int)texture[idx+2]<<", ";
+      // check for transparency
+//        if( use_transparency ){
+      texture[idx+3] = (unsigned char)(Clamp(color_handle->getAlpha(index), 0.0, 1.0)*255);
+//        cerr<<(int)texture[idx+3]<<") ";
+//        }
+//      cerr<<"done with color input\n";
+      ++niter;
+    }
+//      cerr<<"\n";
+   } else if( sfld->basis_order() == 0){
+     tr->interpolate( false );
+     tmin_x = 0.0;
+     tmax_x = (im->get_ni()-1)/(double)width;
+     tmin_y = 0.0;
+     tmax_y = (im->get_nj()-1)/(double)height;
+     tex_coords[0] = tmin_x; tex_coords[1] = tmin_y;
+     tex_coords[2] = tmax_x; tex_coords[3] = tmin_y;
+     tex_coords[4] = tmax_x; tex_coords[5] = tmax_y;
+     tex_coords[6] = tmin_x; tex_coords[7] = tmax_y;
+     int idx;
+      
+     typename Fld::mesh_type::Face::iterator fiter; mesh->begin(fiter);  
+     typename Fld::mesh_type::Face::iterator fiter_end; mesh->end(fiter_end);  
+
+     while (fiter != fiter_end) {
+       typename Fld::value_type val;
+       double dval;
+       sfld->value(val, *fiter);
+       to_double(val, dval);
+
+       // compute index into texture array
+       idx = (fiter.i_ * colorbytes) + (fiter.j_ * width * colorbytes);
+       // compute the ColorMap index and retreive the color
+       double cmin = color_handle->getMin();
+       double cmax = color_handle->getMax();
+       double index = (dval - cmin)/(cmax - cmin);
+       const Color &c = color_handle->getColor(index);
+
+       //        cerr<<"inputting color into the texture, idx = "<<idx
+       //  	  <<", (i,j) = ("<<fiter.i_<<","<<fiter.j_<<"),  dval = "<<dval
+       //  	  <<", cmap_index = "<<index<<"\n";
+       // fill the texture
+       texture[idx] = (unsigned char)(Clamp(c.r(), 0.0, 1.0)*255);
+       //        cerr<<"("<<(int)texture[idx]<<", ";
+       texture[idx+1] =  (unsigned char)(Clamp(c.g(), 0.0, 1.0)*255);
+       //        cerr<<(int)texture[idx+1]<<", ";
+       texture[idx+2] = (unsigned char)(Clamp(c.b(), 0.0, 1.0)*255);
+       //        cerr<<(int)texture[idx+2]<<", ";
+       // check for transparency
+       //        if( use_transparency ){
+       texture[idx+3] = (unsigned char)(Clamp(color_handle->getAlpha(index), 0.0, 1.0) * 255);
+     //      cerr<<"done with color input\n";
+     ++fiter;
+     }
+   }
+
+  // set normal for lighting
+  Vector normal = Cross( p2 - p1, p4 - p1 );
+  normal.normalize();
+  float n[3];
+  n[0] = normal.x(); n[1] = normal.y(); n[2] = normal.z();
+  tr->set_normal( n );
+
+  if( use_transparency ){
+    tr->set_transparency( true );
+  }
+
+//    cerr<<"setting texture coords\n";
+  tr->set_coords(tex_coords, pos_coords);
+//    cerr<<"setting texture\n";
+  tr->set_texture( texture, colorbytes, width, height );
+//    cerr<<"texture set\n";
+//    delete [] texture;
+  return texture_face;
+}
 
 
 template <class Fld, class Loc>
@@ -711,11 +963,23 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 				    MaterialHandle def_mat,
 				    bool force_def_color,
 				    bool use_normals,
-				    bool use_transparency)
+				    bool use_transparency,
+				    bool use_texture_for_face)
 {
   unsigned int i;
 
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
+
+  // if we have an ImageMesh, we can render it as a single polygon
+  // with a textured face, providing the flag is true.
+  if(ImageMesh *im = dynamic_cast<ImageMesh *> (mesh.get_rep())){
+    if( use_texture_for_face ){
+      return render_texture_face(sfld, color_handle, def_mat,
+				 force_def_color, use_normals,
+				 use_transparency);
+      }
+  }
+  
   const bool with_normals = (use_normals && mesh->has_normals());
 
   GeomHandle face_switch;
