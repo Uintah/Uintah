@@ -1,0 +1,7 @@
+SRCTOP  = @top_srcdir@
+SRCDIR  = @srcdir@
+OBJTOP  = ../../..
+
+SUBDIRS = 
+
+include $(SRCTOP)/scripts/recurse.mk
