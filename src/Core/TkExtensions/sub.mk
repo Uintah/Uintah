@@ -33,6 +33,7 @@ SRCS += $(SRCDIR)/tclUnixNotify-$(TK_VERSION).c
 
 PSELIBS := 
 LIBS := $(BLT_LIBRARY) \
+	$(PLPLOT_LIBRARY) \
 	$(ITK_LIBRARY) \
 	$(ITCL_LIBRARY) \
 	$(TK_LIBRARY) \
