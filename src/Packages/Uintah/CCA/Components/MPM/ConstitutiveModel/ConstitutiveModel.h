@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <vector>
+#include <Packages/Uintah/Core/Math/Sparse.h>
 #include <Core/Containers/StaticArray.h>
 
 #define MAX_BASIS 27
@@ -15,6 +16,7 @@ namespace Uintah {
   class MPMLabel;
   class MPMMaterial;
   class DataWarehouse;
+
 
 /**************************************
 
@@ -57,7 +59,20 @@ WARNING
 					  const MPMMaterial* matl,
 					  DataWarehouse* old_dw,
 					  DataWarehouse* new_dw) = 0;
+
+	 virtual void computeStressTensorImplicit(const PatchSubset* patches,
+						  const MPMMaterial* matl,
+						  DataWarehouse* old_dw,
+						  DataWarehouse* new_dw,
+						  SparseMatrix<double,int>& K);
 	 
+	 virtual void computeStressTensorImplicitOnly(const PatchSubset* patches,
+						  const MPMMaterial* matl,
+						  DataWarehouse* old_dw,
+						  DataWarehouse* new_dw,
+						  SparseMatrix<double,int>& K);
+	 
+
 	 //////////
 	 // Create space in data warehouse for CM data
 	 virtual void initializeCMData(const Patch* patch,

@@ -5,6 +5,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/CCA/Components/MPM
 
 SRCS     += $(SRCDIR)/SerialMPM.cc \
+	$(SRCDIR)/ImpMPM.cc \
 	$(SRCDIR)/BoundaryCond.cc \
 	$(SRCDIR)/MPMLabel.cc 
 
@@ -23,6 +24,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/Core/Math        \
+	Core/Datatypes		         \
 	Core/Exceptions Core/Thread      \
 	Core/Disclosure                  \
 	Core/Geometry Dataflow/XMLUtil   \

@@ -21,6 +21,24 @@ ConstitutiveModel::~ConstitutiveModel()
 {
 }
 
+
+void ConstitutiveModel::computeStressTensorImplicit(const PatchSubset* patches,
+						    const MPMMaterial* matl,
+						    DataWarehouse* old_dw,
+						    DataWarehouse* new_dw,
+						    SparseMatrix<double,int>& K)
+{
+}
+
+
+void ConstitutiveModel::computeStressTensorImplicitOnly(const PatchSubset* patches,
+						    const MPMMaterial* matl,
+						    DataWarehouse* old_dw,
+						    DataWarehouse* new_dw,
+						    SparseMatrix<double,int>& K)
+{
+}
+
 //______________________________________________________________________
 //          HARDWIRE FOR AN IDEAL GAS -Todd 
 double ConstitutiveModel::computeRhoMicro(double press, double gamma,
