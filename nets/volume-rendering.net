@@ -19,7 +19,7 @@
 
 if {[llength [array get env SCIRUN_DATA]] == 0} {
    puts ""
-   puts "*** Error: this net depends on the SCIRUN_DATA enviroment variable."
+   puts "*** Error: This net depends on the SCIRUN_DATA enviroment variable."
    puts "*** Please exit, set it in your shell, and rerun."
    puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
    puts ""
