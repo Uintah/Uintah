@@ -39,6 +39,8 @@
  *  Copyright (C) 199? SCI Group
  */
 
+#include <stdio.h>
+
 #include <sci_defs/lapack_defs.h>
 #include <sci_defs/blas_defs.h>
 
