@@ -37,7 +37,6 @@ class Streamline : public Module {
 //    ColormapPort* incolormap;
     ScalarFieldIPort* incolorfield;
     GeometryOPort* ogeom;
-    int abort_flag;
 
     TCLstring widgettype;
     clString oldwidgettype;
@@ -179,7 +178,6 @@ Module* Streamline::clone(int deep)
 
 void Streamline::execute()
 {
-    abort_flag=0;
     if(streamline_id)
 	ogeom->delObj(streamline_id);
     VectorFieldHandle field;

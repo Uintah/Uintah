@@ -24,7 +24,6 @@
 
 class FrameTest : public Module {
     GeometryOPort* ogeom;
-    int abort_flag;
 
 private:
     int init;
@@ -40,7 +39,6 @@ public:
     virtual ~FrameTest();
     virtual Module* clone(int deep);
     virtual void execute();
-    virtual void mui_callback(void*, int);
 };
 
 static Module* make_FrameTest(const clString& id)
@@ -93,11 +91,11 @@ void FrameTest::execute()
         init = 0;
         widget_id=ogeom->addObj(widget->GetWidget(), widget_name);
     }
-    abort_flag=0;
     widget->SetScale(widget_scale.get());
     widget->execute();
 }
 
+#ifdef OLDUI
 void FrameTest::mui_callback(void*, int)
 {
     if(!abort_flag){
@@ -105,6 +103,7 @@ void FrameTest::mui_callback(void*, int)
 	want_to_execute();
     }
 }
+#endif
 
 void FrameTest::geom_moved(int axis, double dist, const Vector& delta,
 			   void* cbdata)

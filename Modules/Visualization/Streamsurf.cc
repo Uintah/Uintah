@@ -38,7 +38,6 @@ class Streamsurf : public Module {
 //    ColormapPort* incolormap;
     ScalarFieldIPort* incolorfield;
     GeometryOPort* ogeom;
-    int abort_flag;
 
 public:
     enum Algorithm {
@@ -192,7 +191,6 @@ Module* Streamsurf::clone(int deep)
 
 void Streamsurf::execute()
 {
-    abort_flag=0;
     if(streamsurf_id)
 	ogeom->delObj(streamsurf_id);
     VectorFieldHandle field;
