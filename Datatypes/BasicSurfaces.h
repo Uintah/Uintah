@@ -106,6 +106,7 @@ public:
 };
 
 class PointsSurface : public Surface {
+public:
     Array1<Point> pos;
     Array1<double> val;
 public:

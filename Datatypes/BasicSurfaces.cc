@@ -576,13 +576,13 @@ PersistentTypeID PointsSurface::type_id("PointsSurface", "Surface",
 				       make_PointsSurface);
 
 PointsSurface::PointsSurface(const Array1<Point>& pos, const Array1<double>& val)
-: Surface(Other, 0), pos(pos), val(val)
+: Surface(PointsSurf, 0), pos(pos), val(val)
 
 {
 }
 
 PointsSurface::PointsSurface()
-: Surface(Other, 0)
+: Surface(PointsSurf, 0)
 {
 }
 
