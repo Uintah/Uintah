@@ -117,7 +117,15 @@ WARNING
       void getRequiresForComputes(const Task::Dependency* comp,
 				  vector<const Task::Dependency*>& reqs);
 
+      // Note: This just returns one of the computes for a given requires.
+      // Some reduction variables may have several computes and this will
+      // only return one of them.
       const Task::Dependency* getComputesForRequires(const Task::Dependency* req);
+
+      // Get all of the requires needed from the old data warehouse
+      // (carried forward).
+      const vector<const Task::Dependency*>& getInitialRequires()
+      { return d_initreqs; }
 
       int getNumTasks() const;
       Task* getTask(int i);
@@ -140,11 +148,9 @@ WARNING
 	 return d_maxSerial;
       }
 
-      // Makes and returns a map that maps strings to VarLabels of
-      // that name and a list of material indices for which that
-      // variable is valid (at least according to d_allcomps).
-      typedef map< string, pair< const VarLabel*, list<int> > >
-              VarLabelMaterialMap;
+      // Makes and returns a map that associates VarLabel names with
+      // the materials the variable is computed for.
+      typedef map< string, list<int> > VarLabelMaterialMap;
       VarLabelMaterialMap* makeVarLabelMaterialMap();
    private:
       TaskGraph(const TaskGraph&);
@@ -158,15 +164,18 @@ WARNING
       
       vector<Task*>        d_tasks;
 
-      typedef map<TaskProduct, const Task::Dependency*> actype;
+      typedef multimap<TaskProduct, const Task::Dependency*> actype;
       actype d_allcomps;
-
+      
       typedef multimap<TaskProduct, const Task::Dependency*> artype;
       artype d_allreqs;
+
+      // data required from old data warehouse
+      vector<const Task::Dependency*> d_initreqs;
+      
       int d_maxSerial;
    };
-} // End namespace Uintah
-   
 
+} // End namespace Uintah
 
 #endif

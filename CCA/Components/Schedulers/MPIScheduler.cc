@@ -22,8 +22,8 @@
 #include <Packages/Uintah/Core/Parallel/Vampir.h>
 #endif //USE_VAMPIR
 
-using namespace Uintah;
 using namespace std;
+using namespace Uintah;
 using namespace SCIRun;
 
 static DebugStream dbg("MPIScheduler", false);
@@ -726,7 +726,7 @@ namespace Uintah {
    struct MPIScatterRecord : public ScatterGatherBase {
       vector<MPIScatterMaterialRecord*> matls;
    };
-}
+} // End namespace Uintah
 
 void
 MPIScheduler::scatterParticles(const ProcessorGroup* pc,
@@ -877,8 +877,8 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
    vector<MPIScatterRecord*> sr;
    vector<int> recvsize(neighbors.size());
    int me = d_myworld->myrank();
-   ASSERTEQ(sgargs.dest.size(), neighbors.size());
-   ASSERTEQ(sgargs.tags.size(), neighbors.size());
+   ASSERTEQ((int)sgargs.dest.size(), (int)neighbors.size());
+   ASSERTEQ((int)sgargs.tags.size(), (int)neighbors.size());
    vector<char*> recvbuf(neighbors.size());
    vector<int> recvpos(neighbors.size());
    for(int i=0;i<(int)neighbors.size();i++){
@@ -1041,4 +1041,4 @@ MPIScheduler::emitTime(char* label, double dt)
 {
    d_labels.push_back(label);
    d_times.push_back(dt);
-} // End namespace Uintah
+}

@@ -54,6 +54,16 @@ SimulationController::~SimulationController()
 {
 }
 
+void SimulationController::doRestart(std::string restartFromDir, int timestep,
+				     bool removeOldDir)
+{
+   d_restarting = true;
+   d_restartFromDir = restartFromDir;
+   d_restartTimestep = timestep;
+   d_restartRemoveOldDir = removeOldDir;
+}
+
+
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
 double stdDeviation(list<double>& vals, double& mean)
 {
@@ -139,8 +149,24 @@ void SimulationController::run()
    old_dw->setGrid(grid);
    
    scheduler->initialize();
+
+   double t;
+
+   // Parse time struct
+   SimulationTime timeinfo(ups);
+
    if(d_restarting){
-      cerr << "Restart not finised!\n";
+      // create a temporary DataArchive for reading in the checkpoints
+      // archive for restarting.
+      Dir restartFromDir(d_restartFromDir);
+      Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
+      DataArchive archive(checkpointRestartDir.getName(),
+			  d_myworld->myrank(), d_myworld->size());
+      
+      archive.restartInitialize(d_restartTimestep, grid, old_dw, &t);
+      
+      output->restartSetup(restartFromDir, d_restartTimestep, t,
+			   d_restartRemoveOldDir);
    } else {
       // Initialize the CFD and/or MPM data
       for(int i=0;i<grid->numLevels();i++){
@@ -155,13 +181,14 @@ void SimulationController::run()
    LevelP level = grid->getLevel(0);
    
    // Parse time struct
-   SimulationTime timeinfo(ups);
+   /* SimulationTime timeinfo(ups); */
    
    double start_time = Time::currentSeconds();
-   double t = timeinfo.initTime;
+   if (!d_restarting){
+     t = timeinfo.initTime;
+   }
    
    scheduleComputeStableTimestep(level,scheduler, old_dw, cfd, mpm, mpmcfd, md);
-
    Analyze* analyze = dynamic_cast<Analyze*>(getPort("analyze"));
    if(analyze)
       analyze->problemSetup(ups, grid, sharedState);

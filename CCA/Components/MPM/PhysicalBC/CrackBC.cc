@@ -1,9 +1,10 @@
 #include <Uintah/Components/MPM/PhysicalBC/CrackBC.h>
 
-#include <Uintah/Interface/ProblemSpec.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <iostream>
 
-using namespace Uintah::MPM;
+using namespace Uintah;
+using namespace SCIRun;
 using namespace std;
 
 CrackBC::CrackBC(ProblemSpecP& ps)
@@ -116,11 +117,3 @@ std::string CrackBC::getType() const
 {
   return "Crack";
 }
-
-// $Log$
-// Revision 1.1  2001/01/17 22:41:26  dav
-// Moved to new tree
-//
-// Revision 1.1  2000/12/30 05:23:15  tan
-// Added crack boundary condition.
-//

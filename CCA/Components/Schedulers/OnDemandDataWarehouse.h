@@ -65,6 +65,11 @@ public:
 
    virtual bool exists(const VarLabel*, int matIndex, const Patch*) const;
 
+   // Generic put, passing Variable as a pointer rather than by reference
+   // to avoid ambiguity with other put overloaded methods.
+   virtual void put(const Variable*, const VarLabel*, int matlIndex,
+		    const Patch*);   
+   
    // Reduction Variables
    virtual void allocate(ReductionVariableBase&, const VarLabel*,
 			 int matIndex = -1);
@@ -112,31 +117,6 @@ public:
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void put(const CCVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*);
-
-   // FC Variables -- fron jas ... need to be fixed...
-   virtual void allocate(XFCVariableBase&, const VarLabel*,
-			 int matlIndex, const Patch*);
-   virtual void get(XFCVariableBase&, const VarLabel*, int matlIndex,
-		    const Patch*, Ghost::GhostType, int numGhostCells);
-   virtual void put(const XFCVariableBase&, const VarLabel*,
-		    int matlIndex, const Patch*);
-
-   // FC Variables -- fron jas ... need to be fixed...
-   virtual void allocate(YFCVariableBase&, const VarLabel*,
-			 int matlIndex, const Patch*);
-   virtual void get(YFCVariableBase&, const VarLabel*, int matlIndex,
-		    const Patch*, Ghost::GhostType, int numGhostCells);
-   virtual void put(const YFCVariableBase&, const VarLabel*,
-		    int matlIndex, const Patch*);
-
-   // FC Variables -- fron jas ... need to be fixed...
-   virtual void allocate(ZFCVariableBase&, const VarLabel*,
-			 int matlIndex, const Patch*);
-   virtual void get(ZFCVariableBase&, const VarLabel*, int matlIndex,
-		    const Patch*, Ghost::GhostType, int numGhostCells);
-   virtual void put(const ZFCVariableBase&, const VarLabel*,
-		    int matlIndex, const Patch*);
-
 
    // SFC[X-Z]Variables Variables
    virtual void allocate(SFCXVariableBase&, const VarLabel*,
@@ -206,9 +186,6 @@ private:
 
    DWDatabase<NCVariableBase>        d_ncDB;
    DWDatabase<CCVariableBase>        d_ccDB;
-   DWDatabase<XFCVariableBase>       d_xfcDB;
-   DWDatabase<YFCVariableBase>       d_yfcDB;
-   DWDatabase<ZFCVariableBase>       d_zfcDB;
    DWDatabase<SFCXVariableBase>      d_sfcxDB;
    DWDatabase<SFCYVariableBase>      d_sfcyDB;
    DWDatabase<SFCZVariableBase>      d_sfczDB;
@@ -234,6 +211,6 @@ private:
    // ??? with respect to what ???? 
    //const VarLabel * d_positionLabel;
 };
-} // End namespace Uintah
 
-#endif
+} // end namespace Uintah
+

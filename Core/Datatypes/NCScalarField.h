@@ -65,8 +65,8 @@ private:
   LevelP _level;
   string _varname;
   int _matIndex;
-  IntVector low;
   IntVector high;
+  IntVector low;
 };
 
 
@@ -86,7 +86,7 @@ NCScalarField<T>::NCScalarField(const NCScalarField<T>& copy)
    high(-MAXINT,-MAXINT,-MAXINT),
    low(MAXINT,MAXINT,MAXINT)
 {
-  for(int i = 0; i < copy._vars.size(); i++){
+  for(int i = 0; i < (int)copy._vars.size(); i++){
     _vars.push_back( copy._vars[i] );
   }
   computeHighLowIndices();
@@ -106,7 +106,7 @@ NCScalarField<T>::NCScalarField(GridP grid, LevelP level,
    high(-MAXINT,-MAXINT,-MAXINT),
    low(MAXINT,MAXINT,MAXINT)
 {
-  for(int i = 0; i < vars.size(); i++){
+  for(int i = 0; i < (int)vars.size(); i++){
     _vars.push_back( vars[i]);
   }
   computeHighLowIndices();
@@ -207,7 +207,7 @@ void NCScalarField<T>::compute_bounds()
  
   for(Level::const_patchIterator r = _level->patchesBegin();
       r != _level->patchesEnd(); r++){
-    min = Min( min, (*r)->getBox().lower());
+    min = nMin( min, (*r)->getBox().lower());
     max = Max( max, (*r)->getBox().upper());
   }
 
@@ -283,14 +283,14 @@ int NCScalarField<T>::interpolate(const Point& p, double& value, double,
     for(i = 0, r = _level->patchesBegin();
 	r != _level->patchesEnd(); r++, i++){
       
-      if (i >= _vars.size()){
+      if (i >= (int)_vars.size()){
 	patch = 0;
 	return 0;
       }
       
       IntVector ni[8];
       double S[8];
-      if( patch->findCell( p, *ni) ){
+      if( (*r)->findCell( p, *ni) ){
 	(*r)->findCellAndWeights(p, ni, S);
 	value=0;
 	for(int k = 0; k < 8; k++){
@@ -320,7 +320,8 @@ int NCScalarField<T>::interpolate(const Point& p, double& value, double,
 template <class T>
 Vector NCScalarField<T>::gradient(const Point& p)
 {
-  Box b;
+  using SCICore::Math::Interpolate;
+  Uintah::Box b;
   int i;
   Level::const_patchIterator r;
   for(i = 0, r = _level->patchesBegin();
@@ -331,7 +332,7 @@ Vector NCScalarField<T>::gradient(const Point& p)
     }
   }
 
-  if (i >= _vars.size())
+  if (i >= (int)_vars.size())
     return Vector(0,0,0);
   
   IntVector index;
@@ -386,7 +387,7 @@ Vector NCScalarField<T>::gradient(const Point& p)
   double dy=(z1-z0)*(upper.y()-1)/diagonal.y();
   return Vector(dx, dy, dz);
 }  
-} // End namespace Uintah
 
+} // End namespace Uintah
 
 #endif

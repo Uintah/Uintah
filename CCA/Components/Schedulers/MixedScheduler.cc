@@ -335,6 +335,8 @@ MixedScheduler::createDepencyList( DataWarehouseP & old_dw,
 	if( ( task->isReductionTask() ) ||
 	    ( task->getType() == Task::Gather ) || 
 	    ( task->getType() == Task::Scatter ) ) {
+	   // MAY NEED TO WORRY ABOUT MULTIPLE COMPUTES FOR REDUCTION
+	   // TASKS.
 	  const Task::Dependency* cmp = d_graph.getComputesForRequires(dep);
 	  if( cmp->d_task->getAssignedResourceIndex() != me ){
 	    continue; 
@@ -1171,7 +1173,7 @@ namespace Uintah {
    struct MPIScatterRecord : public ScatterGatherBase {
       vector<MPIScatterMaterialRecord*> matls;
    };
-}
+} // End namespace Uintah
 
 void
 MixedScheduler::scatterParticles(const ProcessorGroup* pc,
@@ -1324,8 +1326,8 @@ MixedScheduler::gatherParticles(const ProcessorGroup* pc,
    vector<MPIScatterRecord*> sr;
    vector<int> recvsize(neighbors.size());
    int me = d_myworld->myrank();
-   ASSERTEQ(sgargs.dest.size(), neighbors.size());
-   ASSERTEQ(sgargs.tags.size(), neighbors.size());
+   ASSERTEQ((int)sgargs.dest.size(), (int)neighbors.size());
+   ASSERTEQ((int)sgargs.tags.size(), (int)neighbors.size());
    vector<char*> recvbuf(neighbors.size());
    vector<int> recvpos(neighbors.size());
    for(int i=0;i<(int)neighbors.size();i++){
@@ -1684,4 +1686,4 @@ void
 MixedScheduler::releaseLoadBalancer()
 {
    releasePort("load balancer");
-} // End namespace Uintah
+}

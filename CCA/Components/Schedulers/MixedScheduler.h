@@ -20,6 +20,7 @@ namespace Uintah {
 class Task;
 
 /**************************************
+
 CLASS
    MixedScheduler
    
@@ -99,6 +100,8 @@ WARNING
        virtual VarLabelMaterialMap* makeVarLabelMaterialMap()
        { return d_graph.makeVarLabelMaterialMap(); }
 
+       virtual const vector<const Task::Dependency*>& getInitialRequires()
+       { return d_graph.getInitialRequires(); }
    private:
       void scatterParticles(const ProcessorGroup*,
 			    const Patch* patch,

@@ -44,25 +44,21 @@ public:
   T grid(int i, int j, int k);
   virtual double get_value( int i, int j, int k);
   void computeHighLowIndices();
-//   virtual ScalarField::Rep getType(){ return Packages/UintahScalarField::CC;}
 
   void SetGrid( GridP g ){ _grid = g; }
   void SetLevel( LevelP l){ _level = l; }
   void SetName( string vname ) { _varname = vname; }
   void SetMaterial( int index) { _matIndex = index; }
   void AddVar( const CCVariable<T>& var,  const Patch* p);
-//   int nPatches(){ return _vars.size();}
-//   string& name(){ return _varname; }
-//   int material(){ return _matIndex; }
-//   const CCVariable<T>& var(int i){ return _vars[i];}
+
 private:
   vector< CCVariable<T> > _vars;
   GridP _grid;
   LevelP _level;
   string _varname;
   int _matIndex;
-  IntVector low;
   IntVector high;
+  IntVector low;
 };
 
 template <class T>
@@ -75,7 +71,6 @@ CCScalarField<T>::CCScalarField()
 
 template <class T>
 CCScalarField<T>::CCScalarField(const CCScalarField<T>& copy)
-//   : ScalarField( copy )
   :ScalarFieldRGBase( copy ), _grid(copy._grid), _level(copy._level),
     _varname(copy._varname), _matIndex(copy._matIndex), 
    high(-MAXINT,-MAXINT,-MAXINT),
@@ -94,7 +89,6 @@ template <class T>
 CCScalarField<T>::CCScalarField(GridP grid, LevelP level,
 				string var, int mat,
 				const vector< CCVariable<T> >& vars)
-//   : ScalarField( grid, level, var, mat )
   : ScalarFieldRGBase(), _grid(grid), _level(level),
     _varname(var), _matIndex(mat),
    high(-MAXINT,-MAXINT,-MAXINT),
@@ -158,9 +152,6 @@ void CCScalarField<T>::AddVar( const CCVariable<T>& v, const Patch* p)
   nx = high.x() - low.x();
   ny = high.y() - low.y();
   nz = high.z() - low.z();
-
-  //cerr<<"High index = "<<high<<",  low index = "<< low << endl;
-  
 }
 
 template<class T>
@@ -246,31 +237,43 @@ template <class T>
 int CCScalarField<T>::interpolate(const Point& p, double& value, double,
                                    double)
 {
-
-  int i;
-
+  static const Patch* patch = 0;
+  static int i = 0;
+  static int count = 0;
   IntVector index;
-  index = _level->getCellIndex( p );
-  Level::const_patchIterator r;
-  for(i = 0, r = _level->patchesBegin();
-      r != _level->patchesEnd(); r++, i++){
-    if( (*r)->containsCell( index )){
-      break;
-    }
-  }
+  if( patch !=0 && patch->findCell(p, index)){
+    value = _vars[i][index];
+    return 1;
+  } else {
 
-  if (i >= (int)_vars.size() || r == _level->patchesEnd() )
-    return 0;
-  
-  value = _vars[i][index];
-  return 1;
+    Level::const_patchIterator r;
+    for(i = 0, r = _level->patchesBegin();
+	r != _level->patchesEnd(); r++, i++){
+     
+      
+      if( (*r)->findCell(p, index)){
+	patch = *r;
+	value = _vars[i][index];
+
+	return 1;
+      }
+    }
+    if (i >= (int)_vars.size() || r == _level->patchesEnd() ){
+      patch = 0;
+      return 0;
+    }
+    
+  }
+  patch = 0;
+  return 0;
 }
 
 
 template <class T>
 Vector CCScalarField<T>::gradient(const Point& p)
 {
-  Box b;
+  using SCICore::Math::Interpolate;
+  Uintah::Box b;
   int i;
   Level::const_patchIterator r;
   for(i = 0, r = _level->patchesBegin();

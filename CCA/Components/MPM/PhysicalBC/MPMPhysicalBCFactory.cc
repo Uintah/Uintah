@@ -15,7 +15,13 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps)
    for(ProblemSpecP child = current_ps->findBlock("force"); child != 0;
        child = child->findNextBlock("force") )
    {
-      mpmPhysicalBCs.push_back(new ForceBC(child));
+      mpmPhysicalBCs.push_back(scinew ForceBC(child));
+   }
+
+   for(ProblemSpecP child = current_ps->findBlock("crack"); child != 0;
+       child = child->findNextBlock("crack") )
+   {
+      mpmPhysicalBCs.push_back(scinew CrackBC(child));
    }
 }
 

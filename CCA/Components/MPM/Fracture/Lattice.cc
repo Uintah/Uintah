@@ -7,9 +7,9 @@ namespace Uintah {
 Lattice::
 Lattice(const ParticleVariable<Point>& pX)
 : Array3<Cell>( pX.getParticleSubset()->getPatch()->getCellLowIndex()
-                  - IntVector(1,1,1),
+                  - IntVector(2,2,2),
                 pX.getParticleSubset()->getPatch()->getCellHighIndex()
-		  + IntVector(1,1,1) ),
+		  + IntVector(2,2,2) ),
     d_patch( pX.getParticleSubset()->getPatch() ),
     d_pX(pX)
 {
@@ -42,6 +42,32 @@ const ParticleVariable<Point>& Lattice::getpX() const
 {
   return d_pX;
 }
+
+void fit(ParticleSubset* pset_patchOnly,
+	 const ParticleVariable<Point>& pX_patchOnly,
+         ParticleSubset* pset_patchAndGhost,
+	 const ParticleVariable<Point>& pX_patchAndGhost,
+	 vector<int>& particleIndexExchange)
+{
+  for(ParticleSubset::iterator iter_patchOnly = pset_patchOnly->begin();
+       iter_patchOnly != pset_patchOnly->end(); iter_patchOnly++)
+  {
+    const Point& v = pX_patchOnly[*iter_patchOnly];
+    for(ParticleSubset::iterator iter_patchAndGhost = pset_patchAndGhost->begin();
+         iter_patchAndGhost != pset_patchAndGhost->end(); iter_patchAndGhost++)
+    {
+      const Point& p = pX_patchAndGhost[*iter_patchAndGhost];
+      if( v.x() == p.x() && 
+          v.y() == p.y() && 
+          v.z() == p.z() )
+      {
+        particleIndexExchange[*iter_patchOnly] = *iter_patchAndGhost;
+	break;
+      }
+    }
+  }
+}
+
 } // End namespace Uintah
   
 

@@ -28,10 +28,16 @@ public:
 		const ParticleVariable<Vector>& pCrackSurfaceNormal,
 		const ParticleVariable<double>& pVolume) const;
 
+  bool visible(particleIndex idxA,
+               particleIndex idxB,
+	       const ParticleVariable<Point>& pX,
+	       const ParticleVariable<int>& pIsBroken,
+	       const ParticleVariable<Vector>& pCrackSurfaceNormal,
+	       const ParticleVariable<double>& pVolume) const;
+
 private:
 };
+
 } // End namespace Uintah
 
-
 #endif //__PARTICLESNEIGHBOR_H__
-

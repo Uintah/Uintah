@@ -41,7 +41,7 @@ void NormalFracture::computeNodeVisibility(
   // Create arrays for the particle data
   ParticleVariable<Point>  pX;
   ParticleVariable<double> pVolume;
-  ParticleVariable<Vector> pCrackSurfaceNormal;
+  ParticleVariable<Vector> pCrackNormal;
   ParticleVariable<int>    pIsBroken;
 
   int matlindex = mpm_matl->getDWIndex();
@@ -51,7 +51,7 @@ void NormalFracture::computeNodeVisibility(
 
   old_dw->get(pX, lb->pXLabel, pset_patchAndGhost);
   old_dw->get(pVolume, lb->pVolumeLabel, pset_patchAndGhost);
-  old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, 
+  old_dw->get(pCrackNormal, lb->pCrackNormalLabel, 
      pset_patchAndGhost);
   old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset_patchAndGhost);
 
@@ -83,7 +83,7 @@ void NormalFracture::computeNodeVisibility(
                             patch->nodePosition(nodeIdx[i]),
 		            pX,
 		            pIsBroken,
-		            pCrackSurfaceNormal,
+		            pCrackNormal,
 		            pVolume) ) vis.setVisible(i);
       else vis.setUnvisible(i);
     }
@@ -223,7 +223,7 @@ stressRelease(const Patch* patch,
      matlindex, patch);
 
   ParticleVariable<int> pIsBroken;
-  ParticleVariable<Vector> pCrackSurfaceNormal;
+  ParticleVariable<Vector> pCrackNormal;
   ParticleVariable<Vector> pImageVelocity;
   ParticleVariable<Vector> pVelocity;
 
@@ -232,7 +232,7 @@ stressRelease(const Patch* patch,
   ParticleVariable<Vector> pRotationRate;
 
   old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset_patchOnly);
-  old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset_patchOnly);
+  old_dw->get(pCrackNormal, lb->pCrackNormalLabel, pset_patchOnly);
   old_dw->get(pImageVelocity, lb->pImageVelocityLabel, pset_patchOnly);
   new_dw->get(pVelocity, lb->pVelocityAfterUpdateLabel, pset_patchOnly);
 
@@ -245,13 +245,13 @@ stressRelease(const Patch* patch,
   
   ParticleVariable<Matrix3> pStress_new;
   ParticleVariable<int> pIsBroken_new;
-  ParticleVariable<Vector> pCrackSurfaceNormal_new;
+  ParticleVariable<Vector> pCrackNormal_new;
   ParticleVariable<Vector> pImageVelocity_new;
   ParticleVariable<Vector> pVelocity_new;
 
   new_dw->allocate(pStress_new, lb->pStressLabel, pset_patchOnly);
   new_dw->allocate(pIsBroken_new, lb->pIsBrokenLabel, pset_patchOnly);
-  new_dw->allocate(pCrackSurfaceNormal_new, lb->pCrackSurfaceNormalLabel, 
+  new_dw->allocate(pCrackNormal_new, lb->pCrackNormalLabel, 
      pset_patchOnly);
   new_dw->allocate(pImageVelocity_new, lb->pImageVelocityLabel, pset_patchOnly);
   new_dw->allocate(pVelocity_new, lb->pVelocityLabel, pset_patchOnly);
@@ -280,17 +280,15 @@ stressRelease(const Patch* patch,
     pVelocity_new[idx] = pVelocity[idx];
 
     if(pIsBroken[idx]) {
-      pCrackSurfaceNormal_new[idx] = pCrackSurfaceNormal[idx] +
+      pCrackNormal_new[idx] = pCrackNormal[idx] +
                                   Cross( pRotationRate[idx] * delT, 
-	                                 pCrackSurfaceNormal[idx] );
-      pCrackSurfaceNormal_new[idx].normalize();
+	                                 pCrackNormal[idx] );
+      pCrackNormal_new[idx].normalize();
     }
   }
 
-  delt_vartype delTAfterConstitutiveModel;
-  new_dw->get(delTAfterConstitutiveModel, lb->delTAfterConstitutiveModelLabel);
-  double delTAfterFracture = delTAfterConstitutiveModel;
-  
+  double delTAfterFracture = 1.e12;
+
   for(ParticleSubset::iterator iter = pset_patchAndGhost->begin(); 
      iter != pset_patchAndGhost->end(); iter++)
   {
@@ -351,7 +349,7 @@ stressRelease(const Patch* patch,
       v = sqrt( pStrainEnergy[idx] * sRelease * sRelease / I2 / pMass[idx] );
       pVelocity_new[idx] -= (N * v);
       pStress_new[idx] -= stress;
-      pCrackSurfaceNormal_new[idx] = N;
+      pCrackNormal_new[idx] = N;
       pIsBroken_new[idx] = 1;
       if(v>0) delTAfterFracture = Min(delTAfterFracture, range/v/2);
       pStressReleased[idx] = 1;
@@ -369,7 +367,7 @@ stressRelease(const Patch* patch,
          pMass[pairIdx] );
       pVelocity_new[pairIdx] += (N * v);
       pStress_new[pairIdx] -= stress;
-      pCrackSurfaceNormal_new[pairIdx] = -N;
+      pCrackNormal_new[pairIdx] = -N;
       pIsBroken_new[pairIdx] = 1;
       if(v>0) delTAfterFracture = Min(delTAfterFracture, range/v/2);
       pStressReleased[pairIdx] = 1;
@@ -384,13 +382,13 @@ stressRelease(const Patch* patch,
   }
   */
   
-  new_dw->put(pCrackSurfaceNormal_new, lb->pCrackSurfaceNormalLabel_preReloc);
+  new_dw->put(pCrackNormal_new, lb->pCrackNormalLabel_preReloc);
   new_dw->put(pIsBroken_new, lb->pIsBrokenLabel_preReloc);
   new_dw->put(pStress_new, lb->pStressAfterFractureReleaseLabel);
   new_dw->put(pImageVelocity_new, lb->pImageVelocityLabel_preReloc);
   new_dw->put(pVelocity_new, lb->pVelocityAfterFractureLabel);
 
-  new_dw->put(delt_vartype(delTAfterFracture), lb->delTAfterFractureLabel);
+  new_dw->put(delt_vartype(delTAfterFracture), lb->delTLabel);
 }
 
 NormalFracture::
@@ -398,6 +396,5 @@ NormalFracture(ProblemSpecP& ps)
 : Fracture(ps)
 {
 }
+
 } // End namespace Uintah
-
-
