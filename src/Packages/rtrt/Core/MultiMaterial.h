@@ -76,8 +76,9 @@ class MultiMaterial : public Material {
     if (length>0) {
       material_stack_[0]->material->shade(result,ray,hit,depth,
                                          atten, accumcolor,cx);
-      //percent = material_stack_[0]->percent;
-      percent = sin(time/3.);
+      percent = material_stack_[0]->percent;
+      //percent = sin(time/3.);
+      if (percent<0) percent = 0;
       final = result*percent;
       for (loop=1; loop<length; ++loop) {
         result = original;
