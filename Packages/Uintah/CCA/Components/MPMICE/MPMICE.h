@@ -67,7 +67,15 @@ public:
   virtual void scheduleInitialize(const LevelP& level,
 				  SchedulerP&,
 				  DataWarehouseP&);
+
+  virtual void scheduleFixVolFrac(const Patch* patch,
+                                  SchedulerP&,
+                                  DataWarehouseP&,
+                                  DataWarehouseP&);
 	 
+  void actuallyFixVolFrac(const ProcessorGroup*, const Patch* patch,
+                          DataWarehouseP&  old_dw, DataWarehouseP& new_dw);
+
   //////////
   // Insert Documentation Here:
   virtual void scheduleComputeStableTimestep(const LevelP& level,
@@ -80,6 +88,11 @@ public:
 				   const LevelP& level, SchedulerP&,
 				   DataWarehouseP&, DataWarehouseP&);
 
+  void scheduleInterpolateNCToCC_0(const Patch* patch,
+                                   SchedulerP&,
+                                   DataWarehouseP&,
+                                   DataWarehouseP&);
+
   void scheduleInterpolateNCToCC(const Patch* patch,
                                  SchedulerP&,
                                  DataWarehouseP&,
@@ -90,12 +103,27 @@ public:
                              DataWarehouseP&,
                              DataWarehouseP&);
 
+  void scheduleComputeEquilibrationPressure(const Patch* patch,
+					    SchedulerP&,
+					    DataWarehouseP&,
+					    DataWarehouseP&);
+
   //////////
   // Insert Documentation Here:
+  void interpolateNCToCC_0(const ProcessorGroup*,
+                           const Patch* patch,
+                           DataWarehouseP& old_dw,
+                           DataWarehouseP& new_dw);
+
   void interpolateNCToCC(const ProcessorGroup*,
                          const Patch* patch,
                          DataWarehouseP& old_dw,
                          DataWarehouseP& new_dw);
+
+  void computeEquilibrationPressure(const ProcessorGroup*,
+				    const Patch* patch,
+				    DataWarehouseP&, 
+				    DataWarehouseP&);
 
   void doCCMomExchange(const ProcessorGroup*,
                        const Patch* patch,
