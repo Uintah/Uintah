@@ -21,6 +21,7 @@
 #include <Uintah/Datatypes/Particles/ParticleSetPort.h>
 #include <Uintah/Datatypes/Particles/MPVizParticleSet.h>
 #include "ParticleGridVisControl.h"
+#include "VizControl.h"
 
 #include <SCICore/Geom/GeomArrows.h>
 #include <SCICore/Geom/Color.h>
@@ -321,7 +322,7 @@ void PartToGeom::geom_pick(GeomPick* pick, void* userdata, int index)
   cerr << "sphere index = "<<index<<endl<<endl;
   
   if( cbClass != 0 )
-    ((ParticleGridVisControl *) cbClass)->callback( index );
+    ((VizControl *)cbClass)->callback( index );
   // Now modify so that points and spheres store index.
 }
   
@@ -335,6 +336,9 @@ Module* make_PartToGeom( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.9  1999/12/09 21:29:54  kuzimmer
+// Change necessary to fix picking
+//
 // Revision 1.8  1999/10/07 02:08:27  sparker
 // use standard iostreams and complex type
 //
