@@ -16,14 +16,15 @@
    </Time>
    <DataArchiver>
         <filebase>brickCrackPropWhole.uda</filebase>
-	<outputInterval>5e-6</outputInterval>
+	<outputInterval>1e-6</outputInterval>
+        <outputCFInterval>0.4e-6</outputCFInterval>
         <save label = "p.x"/>
         <save label = "p.volume"/>
         <save label = "p.stress"/>
         <save label = "p.deformationMeasure"/>
         <save label = "p.velocity"/>
         <save label = "p.externalforce"/>
-	<checkpoint cycle = "2" interval = "50e-6"/>
+	<checkpoint cycle = "2" interval = "5e-6"/>
    </DataArchiver>
 
     <MPM>
