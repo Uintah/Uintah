@@ -17,7 +17,8 @@ OBJTOP_ABS    = $(shell cd $(OBJTOP) ; pwd)
 SRCTOP_ABS    = $(shell cd $(SRCTOP) ; pwd)
 
 ifeq (@BUILD_PARALLEL@,yes)
-COMPONENTLIBS = -L$(OBJTOP)/Component -lComponent
+COMPONENTLIBS = $(LDRUN_PREFIX)$(OBJTOP_ABS)/Component \
+			-L$(OBJTOP)/Component -lComponent
 GLOBUS_LIB_DIR = @GLOBUS_LIB@
 GLOBUSLIBS = -L$(GLOBUS_LIB_DIR) -lglobus_nexus -lglobus_io
 endif
@@ -34,10 +35,9 @@ LIBRARIES = $(LDRUN_PREFIX)$(TCL_LIB_DIR) \
             $(LDRUN_PREFIX)$(TK_LIB_DIR) \
             $(LDRUN_PREFIX)$(ITCL_LIB_DIR) \
             $(LDRUN_PREFIX)$(OBJTOP_ABS)/PSECore \
-            $(LDRUN_PREFIX)$(OBJTOP_ABS)/Component \
             $(LDRUN_PREFIX)$(OBJTOP_ABS)/SCICore \
             -L$(OBJTOP)/PSECore -lPSECore \
-	    -L$(OBJTOP)/Component -lComponent \
+	    $(COMPONENTLIBS) \
             -L$(OBJTOP)/SCICore -lSCICore \
 	    $(GLOBUSLIBS) \
             -L$(OBJTOP)/ThirdParty \
