@@ -17,7 +17,8 @@ SRCS     += $(SRCDIR)/Fracture.cc \
 	$(SRCDIR)/ExponentialSpline.cc \
 	$(SRCDIR)/Visibility.cc \
 	$(SRCDIR)/Connectivity.cc \
-	$(SRCDIR)/CrackFace.cc
+	$(SRCDIR)/CrackFace.cc \
+	$(SRCDIR)/BoundaryBand.cc
 
 PSELIBS	:= Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Exceptions
