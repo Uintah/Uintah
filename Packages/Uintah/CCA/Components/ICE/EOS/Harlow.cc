@@ -9,13 +9,10 @@ Harlow::Harlow(ProblemSpecP& ps)
 {
    // Constructor
   ps->get("gas_constant",d_gas_constant);
-  lb = scinew ICELabel();
-
 }
 
 Harlow::~Harlow()
 {
-  delete lb;
 }
 
 

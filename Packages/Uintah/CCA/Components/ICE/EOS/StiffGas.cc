@@ -9,13 +9,10 @@ StiffGas::StiffGas(ProblemSpecP& ps)
 {
    // Constructor
   ps->get("gas_constant",d_gas_constant);
-  lb = scinew ICELabel();
-
 }
 
 StiffGas::~StiffGas()
 {
-  delete lb;
 }
 
 double StiffGas::getGasConstant() const
