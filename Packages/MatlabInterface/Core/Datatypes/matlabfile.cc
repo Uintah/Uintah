@@ -51,62 +51,62 @@ matlabfile::~matlabfile()
 
 void matlabfile::open(std::string filename,std::string accessmode)
 {
-    matfile::open(filename,accessmode);
+  matfile::open(filename,accessmode);
     
-    if (isreadaccess())
+  if (isreadaccess())
     {   //scan the file for the number of matrices
-		// This function will index the file and get all the matrix names
-		// If it is a compressed file, it will automatically uncompress every
-		// block (this behavior may be changed to become more memory efficient)
+      // This function will index the file and get all the matrix names
+      // If it is a compressed file, it will automatically uncompress every
+      // block (this behavior may be changed to become more memory efficient)
     	
-    	long tagptr;
-    	matfiledata mfd;
-    	std::stack<long> ptrstack;
-		std::stack<std::string> strstack;
-		bool compressedmatrix = false;
+      long tagptr;
+      matfiledata mfd;
+      std::stack<long> ptrstack;
+      std::stack<std::string> strstack;
+      bool compressedmatrix = false;
 		
-		tagptr = firsttag();
-    	while(tagptr)
+      tagptr = firsttag();
+      while(tagptr)
     	{
-    	    readtag(mfd);
+          readtag(mfd);
 			
-			// Bug fix, this bool was not reset
-			compressedmatrix = false;
-			// If the tag tells that the next block is compressed
-			// Open this compressed block before continuing
-			if (mfd.type() == miCOMPRESSED)
-			{
-				compressedmatrix = true; // to mark that we have to close the compressed session
-				opencompression(); // uncompress the data
-				readtag(mfd); // read the first tag, which should be miMATRIX
-			}
-			if (mfd.type() != miMATRIX) throw invalid_file_format();
+          // Bug fix, this bool was not reset
+          compressedmatrix = false;
+          // If the tag tells that the next block is compressed
+          // Open this compressed block before continuing
+          if (mfd.type() == miCOMPRESSED)
+            {
+              compressedmatrix = true; // to mark that we have to close the compressed session
+              opencompression(); // uncompress the data
+              readtag(mfd); // read the first tag, which should be miMATRIX
+            }
+          if (mfd.type() != miMATRIX) throw invalid_file_format();
     	    
-			openchild();
-				readtag(mfd);
-				nexttag();
-				readtag(mfd);
-				nexttag();
-				readdat(mfd);
-			closechild();
-			if (compressedmatrix) closecompression();
+          openchild();
+          readtag(mfd);
+          nexttag();
+          readtag(mfd);
+          nexttag();
+          readdat(mfd);
+          closechild();
+          if (compressedmatrix) closecompression();
 			
-			strstack.push(mfd.getstring());
-    	    ptrstack.push(tagptr);
-			tagptr = nexttag();    		
+          strstack.push(mfd.getstring());
+          ptrstack.push(tagptr);
+          tagptr = nexttag();    		
     	}
     	
-		matrixaddress_.resize(ptrstack.size());
-    	matrixname_.resize(strstack.size());
-		for (long p=static_cast<long>(ptrstack.size()-1);p>=0;p--) 
-		{
-			matrixaddress_[p] = ptrstack.top();
-			ptrstack.pop();
-			matrixname_[p] = strstack.top();
-			strstack.pop();
-		}
+      matrixaddress_.resize(ptrstack.size());
+      matrixname_.resize(strstack.size());
+      for (long p=static_cast<long>(ptrstack.size()-1);p>=0;p--) 
+        {
+          matrixaddress_[p] = ptrstack.top();
+          ptrstack.pop();
+          matrixname_[p] = strstack.top();
+          strstack.pop();
+        }
 		
-		rewind();
+      rewind();
     }
 	
 }
