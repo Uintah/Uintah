@@ -41,7 +41,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Render
 
 SRCS     += \
-	$(SRCDIR)/BaWGL.cc\
 	$(SRCDIR)/Ball.cc\
 	$(SRCDIR)/BallAux.cc\
 	$(SRCDIR)/BallMath.cc\
