@@ -11,6 +11,7 @@ SUBDIRS := \
 	$(SRCDIR)/Datatypes \
 	$(SRCDIR)/Modules \
 	$(SRCDIR)/GUI \
+#	$(SRCDIR)/convert 
 
 include $(SRCTOP)/scripts/recurse.mk
 
