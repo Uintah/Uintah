@@ -44,7 +44,7 @@ namespace SCIRun {
 template <class HType> 
 class GenericReader : public Module
 {
-  GuiString filename_;
+  GuiFilename filename_;
   HType     handle_;
   string    old_filename_;
   time_t    old_filemodification_;
