@@ -52,6 +52,7 @@ TaskGraph::initialize()
    d_tasks.clear();
    d_allcomps.clear();
    d_allreqs.clear();
+   d_initreqs.clear();
 }
 
 map<DependData, int> depToSN;
@@ -341,6 +342,8 @@ TaskGraph::addTask(Task* task)
 	 TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
 	 d_allreqs.insert(artype::value_type(p, dep));
       }
+      else
+	 d_initreqs.push_back(dep);
    }
 }
 
@@ -468,6 +471,9 @@ DependData::operator()( const DependData & d1, const DependData & d2 ) const {
 
 //
 // $Log$
+// Revision 1.17  2001/01/09 00:55:21  witzel
+// Added getInitialRequires() method.
+//
 // Revision 1.16  2001/01/05 21:52:08  witzel
 // One more try -- I should really compile before I commit something
 //

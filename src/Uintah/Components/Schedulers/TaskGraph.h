@@ -123,6 +123,12 @@ WARNING
       // only return one of them.
       const Task::Dependency* getComputesForRequires(const Task::Dependency* req);
 
+      // Get all of the requires needed from the old data warehouse
+      // (carried forward).
+      const vector<const Task::Dependency*>& getInitialRequires()
+      { return d_initreqs; }
+
+
       int getNumTasks() const;
       Task* getTask(int i);
       void assignSerialNumbers();
@@ -165,6 +171,9 @@ WARNING
       
       typedef multimap<TaskProduct, const Task::Dependency*> artype;
       artype d_allreqs;
+
+      // data required from old data warehouse
+      vector<const Task::Dependency*> d_initreqs;
       
       int d_maxSerial;
    };
@@ -173,6 +182,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.11  2001/01/09 00:55:21  witzel
+// Added getInitialRequires() method.
+//
 // Revision 1.10  2001/01/05 21:26:56  witzel
 // Made d_allcomps a multimap so that some reduction variables may allow
 // themselves to be computed multiple times (i.e. desirable for delT).

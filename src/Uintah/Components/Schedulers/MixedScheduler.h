@@ -89,15 +89,17 @@ WARNING
 					      int numMatls);
 
 
-       virtual LoadBalancer* getLoadBalancer();
-       virtual void releaseLoadBalancer();
+      virtual LoadBalancer* getLoadBalancer();
+      virtual void releaseLoadBalancer();
        
-       // Makes and returns a map that maps strings to VarLabels of
-       // that name and a list of material indices for which that
-       // variable is valid (according to d_allcomps in d_graph).
-       virtual VarLabelMaterialMap* makeVarLabelMaterialMap()
-       { return d_graph.makeVarLabelMaterialMap(); }
-
+      // Makes and returns a map that maps strings to VarLabels of
+      // that name and a list of material indices for which that
+      // variable is valid (according to d_allcomps in d_graph).
+      virtual VarLabelMaterialMap* makeVarLabelMaterialMap()
+      { return d_graph.makeVarLabelMaterialMap(); }
+      
+      virtual const vector<const Task::Dependency*>& getInitialRequires()
+      { return d_graph.getInitialRequires(); }
    private:
       void scatterParticles(const ProcessorGroup*,
 			    const Patch* patch,
@@ -163,6 +165,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.6  2001/01/09 00:55:21  witzel
+// Added getInitialRequires() method.
+//
 // Revision 1.5  2000/12/10 09:06:10  sparker
 // Merge from csafe_risky1
 //
