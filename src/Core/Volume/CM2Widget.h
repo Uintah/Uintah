@@ -32,10 +32,12 @@
 #ifndef CM2Widget_h
 #define CM2Widget_h
 
-#include <Core/Datatypes/Datatype.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Containers/Array3.h>
 #include <Core/Datatypes/Color.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/Array3.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Persistent/Persistent.h>
+
 #include <string>
 
 namespace SCIRun {
