@@ -140,7 +140,7 @@ void ascii_get_element(PlyFile *, char *);
 void binary_get_element(PlyFile *, char *);
 
 /* memory allocation */
-char *my_alloc(size_t, int, char *);
+char *ply_alloc(size_t, int, char *);
 
 /* To test endianness */
 static int machineIsBigEndian();
@@ -1654,16 +1654,16 @@ void binary_get_element(PlyFile *plyfile, char *elem_ptr)
   PlyElement *elem;
   PlyProperty *prop;
   FILE *fp = plyfile->fp;
-  char *elem_data,*item;
+  char *elem_data,*item = 0;
   char *item_ptr;
-  int item_size;
+  int item_size = 0;
   int int_val;
   unsigned int uint_val;
   double double_val;
   int list_count;
   int store_it;
   char **store_array;
-  char *other_data;
+  char *other_data = 0;
   int other_flag;
 
   /* the kind of element we're reading currently */
@@ -2575,7 +2575,7 @@ Entry:
   fname - file name from which memory was requested
 ******************************************************************************/
 
-static char *my_alloc(size_t size, int lnum, char *fname)
+char *ply_alloc(size_t size, int lnum, char *fname)
 {
   char *ptr;
 
