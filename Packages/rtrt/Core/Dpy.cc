@@ -551,25 +551,28 @@ Dpy::checkGuiFlags()
       if( nworkers != numThreadsRequested_ ) {
 
 	changeNumThreads_ = true;
-	for( int cnt = 0; cnt < nworkers; cnt++ ){ // Tell all workers sync up
+        // remove excess threads if need be;
+        int numToRemove = 0;
+
+	if( nworkers > numThreadsRequested_ )
+          numToRemove = nworkers - numThreadsRequested_;
+
+        int cnt;
+        // Tell the first bunch to just sync up
+	for( cnt = 0; cnt < nworkers-numToRemove; cnt++ ) {
 	  workers_[cnt]->syncForNumThreadChange( nworkers );
 	}
 
-	if( nworkers > numThreadsRequested_ ) {
+        // Tell the rest to exit after syncing up
+        for( ; cnt < nworkers; cnt++ ) {
+          Worker * worker = workers_[ cnt ];
+          workers_.pop_back();
+          cout << "worker " << cnt << " told to stop!\n";
+          // Tell the worker to stop.
+          worker->syncForNumThreadChange( nworkers, true );
+        }
 
-	  // remove excess threads
-	  int numToRemove = nworkers - numThreadsRequested_;
-
-	  for( int cnt = 1; cnt <= numToRemove; cnt++ )
-	    {
-	      Worker * worker = workers_[ nworkers - cnt ];
-	      workers_.pop_back();
-	      cout << "worker " << nworkers - cnt << " told to stop!\n";
-	      // Tell the worker to stop.
-	      worker->syncForNumThreadChange( nworkers, true );
-	    }
-	  cout << "done removing threads\n";
-	}
+        if (numToRemove) cout << "done removing threads\n";
       }
     } // end if showing_scene == 0 (thread number change code)
 
@@ -609,6 +612,43 @@ bool Dpy::should_close() {
 
 void
 Dpy::renderFrameless() {
+
+  // If we need to change the number of worker threads:
+  if( changeNumThreads_ ) {
+    //    cout << "changeNumThreads\n";
+    int oldNumWorkers = nworkers;
+    nworkers = numThreadsRequested_;
+
+    if( oldNumWorkers < nworkers ) { // Create more workers
+      int numNeeded     = nworkers - oldNumWorkers;
+      int stopAt        = oldNumWorkers + numNeeded;
+
+      workers_.resize( nworkers );
+      for( int cnt = oldNumWorkers; cnt < stopAt; cnt++ ) {
+	char buf[100];
+	sprintf(buf, "worker %d", cnt);
+	Worker * worker = new Worker(this, scene, cnt,
+				     pp_size_, scratchsize_,
+				     ncounters, c0, c1);
+
+        //	cout << "created worker: " << cnt << ", " << worker << "\n";
+	Thread * thread = new Thread( worker, buf);
+	thread->detach();
+      }
+
+      //// THIS IS FOR DEBUGGING:
+      //cout << "workers are:\n";
+      //for( int cnt = 0; cnt < numThreadsRequested_; cnt++ )
+      //{
+      //cout << "worker " << cnt << ": " << workers_[cnt] << "\n";
+      //}
+    }
+    //    cout << "sync with workers for change: " << oldNumWorkers+1 << "\n";
+    cout << "Number of workers is now "<<nworkers<<"\n";
+    addSubThreads_->wait( oldNumWorkers + 1 );
+    changeNumThreads_ = false;
+  }
+
   int   & showing_scene = priv->showing_scene;
   // only 1 buffer for frameless...
   showing_scene = 0;
@@ -768,11 +808,10 @@ Dpy::renderFrameless() {
       if (priv->show_frame_rate) {
         // Display textual information on the screen:
         char buf[200];
-        if (priv->FrameRate > 1)
-          sprintf( buf, "%3.1lf fps", (priv->FrameRate) );
+        if (framerate > 1)
+          sprintf( buf, "%3.1lf fps", framerate);
         else
-          sprintf( buf, "%2.2lf fps - %3.1lf spf", (priv->FrameRate) ,
-                   1.0f/(priv->FrameRate));
+          sprintf( buf, "%2.2lf fps - %3.1lf spf", framerate , 1.0f/framerate);
 	// Figure out how wide the string is
 	int width = calc_width(fontInfo, buf);
 	// Now we want to draw a gray box beneth the font using blending. :)
