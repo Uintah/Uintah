@@ -97,9 +97,6 @@ ChangeFieldDataAt::update_input_attributes(FieldHandle f)
   {
     fldname_.set("--- No Name ---");
   }
-
-  // copy valid settings to the un-checked output field attributes
-  gui->execute(id+" copy_attributes; update idletasks");
 }
 
 
