@@ -102,6 +102,7 @@ if [ -f "$BUILDROOT"/opt/summary_log ]; then
     cat "$BUILDROOT"/opt/summary_log >> "$HTMLLOG"
 
 fi
+echo "</pre></body></html>" >> "$HTMLLOG"
 echo "" >> "$BUILDROOT"/log
 
 chmod -R g+w "$BUILDROOT"
