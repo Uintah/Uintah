@@ -139,9 +139,15 @@ void TecplotReader::GetParticleData(int particleId,
 	      ii = find( 'I', buf);
 	      if (ii < particleId) return;
 	      p = buf;
-	      while ( !isdigit(*p) && *p != '\0') p++;
+	      while ( *p != '"') p++;
+	      while ( !isdigit(*p) && *p != '\0' && *p != '"') p++;
 	      if( *p == '\0' ) cerr<<"Error in Particle format\n";
-	      num[0] = *p;
+	      else if( *p == '"' ){
+		//cerr<<"Error in Particle format\n";
+		num[0] = '1';
+	      } else {
+		num[0] = *p;
+	      }
 	      num[1] = '\0';
 	      fluidIndex = atoi(num);
 	      if ( fluidIndex != fluidId ) {

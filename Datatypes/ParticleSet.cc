@@ -34,6 +34,6 @@ ParticleSet::~ParticleSet()
 
 void ParticleSet::io(Piostream& stream)
 {
-    stream.begin_class("ParticleSet", PARTICLESET_VERSION);
+  /* int verstion = */stream.begin_class("ParticleSet", PARTICLESET_VERSION);
     stream.end_class();
 }
