@@ -519,7 +519,7 @@ if test "$ITCL_MAJOR_VERSION" = "3" ; then
   ITCLSH="${ITCL_BIN_DIR}/itclsh${ITCL_VERSION}"
 #  ITCL_LIB_FLAG="-litk3.1 -litcl3.1"
   ITCL_WIDGETS="${ITCL_LIB_DIR}/iwidgets/scripts"
-  ITCL_INIT_DIR="${ITCL_LIB_DIR}/itcl${TCL_VERSION}"
+  ITCL_INIT_DIR="${ITCL_LIB_DIR}/itcl${ITCL_VERSION}"
   #echo -L$ITCL_PREFIX $ITCL_LIB_FLAG
   echo ${ITCL_LIB_SPEC}
 else
@@ -860,6 +860,11 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.79  2000/11/29 07:54:26  moulding
+# - changed some instances of TCL_VERSION to ITCL_VERSION
+# - moved ITCL_INIT_DIR ahead of TCL_INIT_DIR in the createTclIndex
+#   sed script
+#
 # Revision 1.78  2000/11/16 23:04:08  witzel
 # Took of hardcoded /lib for xerces
 #
