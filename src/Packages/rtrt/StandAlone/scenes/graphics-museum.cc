@@ -74,6 +74,7 @@ rtrt -np 14 -eye -10.2111 -16.2099 1.630637 -lookat -11.7826 -20.5142 0.630637 -
 #include <Packages/rtrt/Core/PLYReader.h>
 #include <Packages/rtrt/Core/TriMesh.h>
 #include <Packages/rtrt/Core/VideoMap.h>
+#include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/TrisReader.h>
 
 using namespace rtrt;
@@ -86,7 +87,7 @@ using namespace SCIRun;
 // all the following should be 1 for demos  (0 to speedup for debugging)
 #define IMGSONWALL 1
 #define INSERTDAVID 0
-#define INSERTCEILING 0
+#define INSERTCEILING 1
 
 void add_image_on_wall (char *image_name, const Point &top_left, 
 			 const Vector &right, const Vector &down,
@@ -97,6 +98,8 @@ void add_image_on_wall (char *image_name, const Point &top_left,
   Object* image_obj = 
     new Parallelogram(image_mat, top_left, right, down);
 
+  //  image_mat->my_lights.add(l);
+  image_mat->local_ambient_mode=Arc_Ambient;
   wall_group->add(image_obj);
 }
 
@@ -113,19 +116,20 @@ void add_poster_on_wall (char *image_name, const Point &top_left,
 			 const Vector &right, const Vector &down,
 			 Group* wall_group) {
 
-#if IMGSONWALL
-  add_image_on_wall(image_name, top_left, right, down, wall_group);
-#endif
-
   /* add glass frame */
   Material* glass= new DielectricMaterial(1.5, 1.0, 0.05, 400.0, 
 					  Color(.80, .93 , .87), 
 					  Color(1,1,1), false);
-
+  Material* grey = new PhongMaterial(Color(.5,.5,.5),1,0.3,100,true);
   Vector in = Cross (right,down);
   Vector out = Cross (down, right);
   in.normalize();
   out.normalize();
+
+#if IMGSONWALL
+  add_image_on_wall(image_name, top_left, right, down, wall_group);
+#endif
+
   in *= 0.01;
   out *= 0.05;
 
@@ -137,7 +141,6 @@ void add_poster_on_wall (char *image_name, const Point &top_left,
   //  wall_group->add(new Box (clear, glass_bbox.min(), glass_bbox.max()));
 
   /* add cylinders */
-  Material* grey = new PhongMaterial(Color(.5,.5,.5),1,0.3,100,true);
   wall_group->add(new Cylinder (grey, top_left+in+right*0.05+down*0.05,
 				top_left+out*1.1+right*0.05+down*0.05, 0.01));
   wall_group->add(new Disc (grey, top_left+out*1.1+right*0.05+down*0.05, 
@@ -157,6 +160,48 @@ void add_poster_on_wall (char *image_name, const Point &top_left,
 				top_left+out*1.1+right*0.95+down*0.95, 0.01));
   wall_group->add(new Disc (grey, top_left+out*1.1+right*0.95+down*0.95, 
 			    out, 0.01));
+
+}
+
+void add_baseboards (Group* obj_group, Light *h0, Light *h1, Light *h2,
+		     Light *dav1, Light *dav2, Light *mod1){
+  Material* ebase = new Phong (Color(0.0,0.0,0.0),Color(.5,.5,.5),30);
+  Material* wbase = new Phong (Color(0.0,0.0,0.0),Color(.5,.5,.5),30);
+  Material* nbase = new Phong (Color(0.0,0.0,0.0),Color(.5,.5,.5),30);
+  Material* sbase = new Phong (Color(0.0,0.0,0.0),Color(.5,.5,.5),30);
+  Material* nebase = new Phong (Color(0.0,0.0,0.0),Color(.5,.5,.5),30);
+
+  /* four directions 
+  Vector w (-1,0,0);
+  Vector e (1,0,0);
+  Vector n (0,1,0);
+  Vector s (0,-1,0);
+  Vector up (0,0,0.12);  */
+
+  // east wall
+  obj_group->add(new Box(ebase, Point(-4.03,-5,0), Point(-4,-4,0.12)));
+  obj_group->add(new Box(ebase, Point(-4.03,-28,0), Point(-4,-7,0.12)));
+
+  // west wall
+  obj_group->add(new Box(wbase, Point(-20,-28,0), Point(-19.97,-4,0.12)));
+
+  // south wall
+  obj_group->add(new Box(sbase, Point(-20,-28,0), Point(-4,-27.97,0.12)));
+
+  // north wall
+  obj_group->add(new Box(nbase, Point(-20,-4.03,0), Point(-11,-4,0.12)));
+  obj_group->add(new Box(nebase, Point(-9,-4.03,0), Point(-4,-4,0.12)));
+
+  ebase->my_lights.add(h0);
+  ebase->my_lights.add(h1);
+  sbase->my_lights.add(h1);
+  sbase->my_lights.add(h2);
+  sbase->my_lights.add(dav1);
+  wbase->my_lights.add(dav1);
+  wbase->my_lights.add(dav2);
+  nbase->my_lights.add(mod1);
+  nebase->my_lights.add(mod1);
+  nebase->my_lights.add(h0);
 }
 
 void add_glass_box (Group* obj_group, const Point UpperCorner,Vector FarDir) {
@@ -177,40 +222,45 @@ void add_glass_box (Group* obj_group, const Point UpperCorner,Vector FarDir) {
   obj_group->add(new Rect(clear, OppUppCorner-v+w, v, w));  
 }
 
-void add_pedestal (Group* obj_group, const Point UpperCorner, 
-		   const Vector FarDir) {
-  Material* ped_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-pill.ppm",
-					  ImageMaterial::Tile,
-					  ImageMaterial::Tile, 1,
-					  Color(0,0,0), 0);
+void add_lit_glass_box (Group* obj_group, const Point UpperCorner,Vector FarDir,
+			Light *l1, Light *l2) {
+  
+  Material* clear = new PhongMaterial (Color(0.45,0.5,0.45),0.1,0.15,50,false);
+  clear->my_lights.add(l1);
+  clear->my_lights.add(l2);
+
   Vector u (FarDir.x()/2., 0, 0);
   Vector v (0,FarDir.y()/2.,0);
   Vector w (0,0,FarDir.z()/2.);
   Point OppUppCorner = UpperCorner+u+u+v+v;
+
   // top  
-  obj_group->add(new Rect(ped_white, UpperCorner+u+v, -u, -v));
+  obj_group->add(new Rect(clear, UpperCorner+u+v, -u, -v));
   // sides
-  obj_group->add(new Rect(ped_white, UpperCorner+u+w, -u, w));
-  obj_group->add(new Rect(ped_white, UpperCorner+v+w, -v, w));
-  obj_group->add(new Rect(ped_white, OppUppCorner-u+w, u, w));  
-  obj_group->add(new Rect(ped_white, OppUppCorner-v+w, v, w));  
+  obj_group->add(new Rect(clear, UpperCorner+u+w, -u, w));
+  obj_group->add(new Rect(clear, UpperCorner+v+w, -v, w));
+  obj_group->add(new Rect(clear, OppUppCorner-u+w, u, w));  
+  obj_group->add(new Rect(clear, OppUppCorner-v+w, v, w));  
 }
 
 /* year is shifted to right, glass box included */
 void add_pedestal_and_year (Group* obj_group, Group *glass_group,
 			    char* sign_name, const Point UpperCorner, 
 			    const Vector FarDir, const Point GlassCorner, 
-			    const Vector GlassDir, float sign_ratio) {
+			    const Vector GlassDir, float sign_ratio, 
+			    const Vector u, const Vector v, const Vector w,
+			    Light* l1, Light* l2) {
   Group* solid_group = new Group();
   Material* ped_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-pill.ppm",
 					  ImageMaterial::Tile,
 					  ImageMaterial::Tile, 1,
 					  Color(0,0,0), 0);
 
-  Vector u (FarDir.x()/2., 0, 0);
-  Vector v (0,FarDir.y()/2.,0);
-  Vector w (0,0,FarDir.z()/2.); 
   Point OppUppCorner = UpperCorner+u+u+v+v;
+
+  ped_white->my_lights.add(l1);
+  ped_white->my_lights.add(l2);
+
   // top  
   solid_group->add(new Rect(ped_white, UpperCorner+u+v, -u, -v));
   // sides
@@ -222,9 +272,13 @@ void add_pedestal_and_year (Group* obj_group, Group *glass_group,
 #if IMGSONWALL
   Material* sign = new ImageMaterial(sign_name, ImageMaterial::Tile,
 				     ImageMaterial::Tile, 1, Color(0,0,0), 0);
+  sign->my_lights.add(l1);
+  sign->my_lights.add(l2);
+
   // signs on all sides
   const float part = 0.8;
   Vector small_u=u*0.1;
+
   Vector small_v=v*0.1;
   Vector small_w=w*0.1;
   Vector part_u=u*part;
@@ -243,7 +297,7 @@ void add_pedestal_and_year (Group* obj_group, Group *glass_group,
 #endif
   obj_group->add(solid_group);
 
-  add_glass_box (glass_group, GlassCorner, GlassDir);
+  add_lit_glass_box (glass_group, GlassCorner, GlassDir, l1, l2);
 }
 
 /* label is centered */
@@ -290,7 +344,87 @@ void add_pedestal_and_label (Group* obj_group, char* sign_name, const Point Uppe
 
 }
 
-void build_cornell_box (Group* main_group, const Point CBoxPoint, float ped_size) {
+void add_pedestal (Group* obj_group, const Point UpperCorner, 
+		   const Vector FarDir) {
+  Material* ped_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-pill.ppm",
+					  ImageMaterial::Tile,
+					  ImageMaterial::Tile, 1,
+					  Color(0,0,0), 0);
+  Vector u (FarDir.x()/2., 0, 0);
+  Vector v (0,FarDir.y()/2.,0);
+  Vector w (0,0,FarDir.z()/2.);
+  Point OppUppCorner = UpperCorner+u+u+v+v;
+  // top  
+  obj_group->add(new Rect(ped_white, UpperCorner+u+v, -u, -v));
+  // sides
+  obj_group->add(new Rect(ped_white, UpperCorner+u+w, -u, w));
+  obj_group->add(new Rect(ped_white, UpperCorner+v+w, -v, w));
+  obj_group->add(new Rect(ped_white, OppUppCorner-u+w, u, w));  
+  obj_group->add(new Rect(ped_white, OppUppCorner-v+w, v, w));  
+}
+
+void add_east_pedestal (Group* obj_group, Group *glass_group,
+			char* sign_name, const Point UpperCorner, 
+			const Vector FarDir, const Point GlassCorner, 
+			const Vector GlassDir, float sign_ratio, Scene *scene) {
+
+  Vector u (FarDir.x()/2., 0, 0);
+  Vector v (0,FarDir.y()/2.,0);
+  Vector w (0,0,FarDir.z()/2.); 
+
+  Light *l1=new Light(UpperCorner-u*3-v*3-w*3,Color(1.,1.,1.),0,0.6);
+  Light *l2=new Light(UpperCorner-u*3+v*5-w*3,Color(1.,1.,1.),0,0.6);
+  //  l1->name_ = "His Ped1";
+  //  l2->name_ = "His Ped2";
+  scene->add_per_matl_light(l1);
+  scene->add_per_matl_light(l2);
+  
+  add_pedestal_and_year (obj_group, glass_group, sign_name, UpperCorner, 
+			 FarDir, GlassCorner, GlassDir, sign_ratio, u,v,w,l1,l2);
+}
+
+void add_west_pedestal (Group* obj_group, Group *glass_group,
+			char* sign_name, const Point UpperCorner, 
+			const Vector FarDir, const Point GlassCorner, 
+			const Vector GlassDir, float sign_ratio, Scene *scene) {
+
+  Vector u (FarDir.x()/2., 0, 0);
+  Vector v (0,FarDir.y()/2.,0);
+  Vector w (0,0,FarDir.z()/2.); 
+
+  Light *l1=new Light(UpperCorner+u*5-v*3-w*3,Color(1.,1.,1.),0,0.6);
+  Light *l2=new Light(UpperCorner+u*5+v*5-w*3,Color(1.,1.,1.),0,0.6);
+  //  l1->name_ = "His Ped1";
+  //  l2->name_ = "His Ped2";
+  scene->add_per_matl_light(l1);
+  scene->add_per_matl_light(l2);
+  
+  add_pedestal_and_year (obj_group, glass_group, sign_name, UpperCorner, 
+			 FarDir, GlassCorner, GlassDir, sign_ratio, u,v,w,l1,l2);
+}
+
+void add_north_pedestal (Group* obj_group, Group *glass_group,
+			char* sign_name, const Point UpperCorner, 
+			const Vector FarDir, const Point GlassCorner, 
+			const Vector GlassDir, float sign_ratio, Scene *scene) {
+
+  Vector u (FarDir.x()/2., 0, 0);
+  Vector v (0,FarDir.y()/2.,0);
+  Vector w (0,0,FarDir.z()/2.); 
+
+  Light *l1=new Light(UpperCorner-u*3-v*3-w*3,Color(1.,1.,1.),0,0.6);
+  Light *l2=new Light(UpperCorner+u*5-v*3-w*3,Color(1.,1.,1.),0,0.6);
+  //  l1->name_ = "His Ped1";
+  //  l2->name_ = "His Ped2";
+  scene->add_per_matl_light(l1);
+  scene->add_per_matl_light(l2);
+  
+  add_pedestal_and_year (obj_group, glass_group, sign_name, UpperCorner, 
+			 FarDir, GlassCorner, GlassDir, sign_ratio, u,v,w,l1,l2);
+}
+
+void build_cornell_box (Group* main_group, const Point CBoxPoint, float ped_size, 
+			Scene* scene) {
   Material* flat_white = new LambertianMaterial(Color(.8,.8,.8));
   // read in and place the Cornell box.
   Parallelogram *cboxfloor, *cboxceiling, *back_wall, *left_wall, *right_wall,
@@ -299,6 +433,10 @@ void build_cornell_box (Group* main_group, const Point CBoxPoint, float ped_size
     *short_block_front, *short_block_back,
     *tall_block_top, *tall_block_left, *tall_block_right,
     *tall_block_front, *tall_block_back;
+  Light *l = new Light(CBoxPoint+Vector(-1,1,4),Color(1.,1.,1.),0,0.7);
+  l->name_ = "Cornell Box";
+  scene->add_per_matl_light(l);
+  flat_white->my_lights.add(l);
   
   Point cbmin(0,0,0);
   Point cbmax(556,548.8,559.2);
@@ -405,17 +543,16 @@ void build_cornell_box (Group* main_group, const Point CBoxPoint, float ped_size
   cornellg->add(tall_block_front);
   cornellg->add(tall_block_back);
 
-  
   char tens_buf[256];
   
   for (int i=0; i<cornellg->numObjects(); i++)
     {
       sprintf(tens_buf,"/usr/sci/data/Geometry/textures/museum/history/cbox/TENSOR.%d.rad.tex",i);
-      cornellg->objs[i]->set_matl(new ImageMaterial(tens_buf,
-						    ImageMaterial::Clamp,
-						    ImageMaterial::Clamp,
-						    1,
-						    Color(0,0,0), 0));
+      Material *matl = new ImageMaterial(tens_buf,ImageMaterial::Clamp,
+					 ImageMaterial::Clamp,1,
+					 Color(0,0,0), 0);
+      matl->my_lights.add(l);
+      cornellg->objs[i]->set_matl(matl);
     }
 
   main_group->add(cornellg);
@@ -426,29 +563,6 @@ void build_cornell_box (Group* main_group, const Point CBoxPoint, float ped_size
 /*********************** ROOMS START HERE *******************************/
 
 void build_history_hall (Group* main_group, Group* no_shadow_group, Scene *scene) {
-
-  Material* yellow = new LambertianMaterial(Color(.95,.8,.0));
-  Material* turquoise = new LambertianMaterial(Color(.21,.55,.65));
-  Material* flat_white = new LambertianMaterial(Color(.8,.8,.8));
-  Material* flat_grey = new LambertianMaterial(Color(.4,.4,.4));
-  Material* lightblue = new LambertianMaterial(Color(.4,.67,.90));
-  Material* blue = new LambertianMaterial(Color(.08,.08,.62));
-  Material* black = new LambertianMaterial(Color(0.08,.08,.1));
-  Material* clear = new PhongMaterial (Color(0.1,0.3,0.4),0.1,0.5,100,true);  
-  /*
-  Material* clear = new PhongMaterial (Color(0.4,0.8,0.6),0.1,0.5,100,true);  
-  Material* glass= new DielectricMaterial(1.5, 1.0, 0.04, 400.0, 
-					  Color(.80, .93 , .87), 
-					  Color(1,1,1), true, .001);
-  */
-  Material* outside_glass= new DielectricMaterial(1.5, 1.0, 0.04, 400.0, 
-					  Color(.80, .93 , .87), 
-					  Color(1,1,1), false, 0.001);
-  Material* inv_glass= new DielectricMaterial(1.0, 1.5, 0.04, 400.0, 
-					  Color(.80, .93 , .87), 
-					  Color(1,1,1), true, 0.001);
-  Material* silver = new MetalMaterial( Color(0.8, 0.8, 0.8),20);
-
   FILE *fp;
   char buf[MAXBUFSIZE];
   char *name;
@@ -491,8 +605,7 @@ void build_history_hall (Group* main_group, Group* no_shadow_group, Scene *scene
 		      Vector(0,0,-1.5),historyg);
 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/jelloC-fill.ppm",
-		      NorthPoint, NorthRight, NorthDown,
-		      historyg);
+		      NorthPoint, NorthRight, NorthDown,historyg);
 
   NorthPoint += Vector(-2*img_div-img_size, 0,0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/herb1280C-fill.ppm",
@@ -502,10 +615,10 @@ void build_history_hall (Group* main_group, Group* no_shadow_group, Scene *scene
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/copter-fill.ppm",
 		      NorthPoint, NorthRight, NorthDown,historyg);
   PedPoint.x(NorthPoint.x()+ped_div);
-  add_pedestal_and_year (solidg,clearg,
-			 "/usr/sci/data/Geometry/textures/museum/history/years-blur/1989.ppm",
-			 PedPoint+Vector(0,0,ped_ht), Vector(ped_size,ped_size,-ped_ht),
-			 PedPoint+Vector(diff,diff,ped_ht+gbox_ht), Vector(gbox_size,gbox_size,-gbox_ht), sign_ratio);
+  add_north_pedestal (solidg,clearg,
+		      "/usr/sci/data/Geometry/textures/museum/history/years-blur/1989.ppm",
+		      PedPoint+Vector(0,0,ped_ht), Vector(ped_size,ped_size,-ped_ht),
+		      PedPoint+Vector(0,0,ped_ht+gbox_ht), Vector(ped_size,ped_size,-gbox_ht),sign_ratio,scene);
   Point CopterPt (PedPoint+Vector(0,ped_size,ped_ht));
 
   NorthPoint += Vector(-2*img_div-img_size, 0,0);
@@ -515,8 +628,7 @@ void build_history_hall (Group* main_group, Group* no_shadow_group, Scene *scene
 
   NorthPoint += Vector(-2*img_div-img_size, 0,0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/tinC-fill.ppm",
-		      NorthPoint, NorthRight, NorthDown,
-		      historyg);
+		      NorthPoint, NorthRight, NorthDown,historyg);
 
   //  cerr << "North Wall: " << NorthPoint << endl;
   
@@ -528,111 +640,98 @@ void build_history_hall (Group* main_group, Group* no_shadow_group, Scene *scene
   
   Point EastPoint (-4-IMG_EPS, -7-img_div, img_ht);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/phongC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      historyg);
+		      EastPoint, EastRight, EastDown,historyg);
   PedPoint.y(EastPoint.y()-ped_div);
-  add_pedestal_and_year (solidg,clearg,
-			 "/usr/sci/data/Geometry/textures/museum/history/years-blur/1973.ppm",
-			 PedPoint-Vector(ped_size,ped_size,0), Vector(ped_size,ped_size,-ped_ht),
-			 PedPoint-Vector(ped_size-diff,ped_size-diff,-gbox_ht), Vector(gbox_size,gbox_size,-gbox_ht), sign_ratio);
+  add_east_pedestal (solidg,clearg,
+		     "/usr/sci/data/Geometry/textures/museum/history/years-blur/1973.ppm",
+		     PedPoint-Vector(ped_size,ped_size,0), Vector(ped_size,ped_size,-ped_ht),
+		     PedPoint-Vector(ped_size-diff,ped_size-diff,-gbox_ht), Vector(gbox_size,gbox_size,-gbox_ht), sign_ratio, scene);
   Point PhongPt (PedPoint-Vector(ped_size/2.,ped_size/2.,0));  
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/eggC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      historyg);
+		      EastPoint, EastRight, EastDown,historyg);
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/blinnC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      historyg);
+		      EastPoint, EastRight, EastDown, historyg);
 
   PedPoint.y(EastPoint.y()-ped_div);
-  add_pedestal_and_year (solidg,clearg,
-			 "/usr/sci/data/Geometry/textures/museum/history/years-blur/1978.ppm",
-			 PedPoint-Vector(ped_size,ped_size,0),Vector(ped_size,ped_size,-ped_ht),
-			 PedPoint-Vector(ped_size-diff,ped_size-diff,-tall_gbox_ht),Vector(gbox_size,gbox_size,-tall_gbox_ht), sign_ratio);
+  add_east_pedestal (solidg,clearg,
+		     "/usr/sci/data/Geometry/textures/museum/history/years-blur/1978.ppm",
+		     PedPoint-Vector(ped_size,ped_size,0),
+		     Vector(ped_size,ped_size,-ped_ht),
+		     PedPoint-Vector(ped_size-diff,ped_size-diff,-tall_gbox_ht),Vector(gbox_size,gbox_size,-tall_gbox_ht), sign_ratio, scene);
   Point BumpMapPoint (PedPoint-Vector(ped_size/2.,ped_size/2.,0));
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/rthetaC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      historyg);
+		      EastPoint, EastRight, EastDown, historyg);
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/vasesC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      historyg);
+		      EastPoint, EastRight, EastDown,historyg);
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/ringsC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      historyg);
+		      EastPoint, EastRight, EastDown,historyg);
   PedPoint.y(EastPoint.y()-ped_div);
-  add_pedestal_and_year (solidg,clearg,
-			 "/usr/sci/data/Geometry/textures/museum/history/years-blur/1982.ppm",
-			 PedPoint-Vector(ped_size,ped_size,0),Vector(ped_size,ped_size,-ped_ht),
-			 PedPoint-Vector(ped_size-diff,ped_size-diff,-gbox_ht),Vector(gbox_size,gbox_size,-gbox_ht), sign_ratio);
+  add_east_pedestal (solidg,clearg,
+		     "/usr/sci/data/Geometry/textures/museum/history/years-blur/1982.ppm",
+		     PedPoint-Vector(ped_size,ped_size,0),Vector(ped_size,ped_size,-ped_ht),
+		     PedPoint-Vector(ped_size-diff,ped_size-diff,-gbox_ht),Vector(gbox_size,gbox_size,-gbox_ht), sign_ratio, scene);
   Point RingsPoint (PedPoint-Vector(ped_size/2.,ped_size/2.,0)); 	
 		
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/reyesC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      historyg);
+		      EastPoint, EastRight, EastDown, historyg);
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/boxmontageC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      historyg);
+		      EastPoint, EastRight, EastDown,historyg);
   PedPoint.y(EastPoint.y()-ped_div);
   Point CBoxPoint (PedPoint-Vector(ped_size/2.,ped_size/2.,0)); 
-  add_pedestal_and_year (solidg,clearg,
-			 "/usr/sci/data/Geometry/textures/museum/history/years-blur/1984.ppm",
-			 PedPoint-Vector(ped_size-diff,ped_size-diff,0),Vector(ped_size,ped_size,-ped_ht),
-			 PedPoint-Vector(ped_size,ped_size,-tall_gbox_ht),Vector(gbox_size,gbox_size,-tall_gbox_ht), sign_ratio);
-  build_cornell_box (historyg, CBoxPoint, gbox_size);
+  add_east_pedestal (solidg,clearg,
+		     "/usr/sci/data/Geometry/textures/museum/history/years-blur/1984.ppm",
+		     PedPoint-Vector(ped_size-diff,ped_size-diff,0),Vector(ped_size,ped_size,-ped_ht),
+		     PedPoint-Vector(ped_size,ped_size,-tall_gbox_ht),Vector(gbox_size,gbox_size,-tall_gbox_ht), sign_ratio, scene);
+  build_cornell_box (historyg, CBoxPoint, gbox_size, scene);
   
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/museum-4.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      historyg);
+		      EastPoint, EastRight, EastDown,historyg);
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/perlin.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      historyg);
+		      EastPoint, EastRight, EastDown,historyg);
   PedPoint.y(EastPoint.y()-ped_div);
-  add_pedestal_and_year (solidg,clearg,
-			 "/usr/sci/data/Geometry/textures/museum/history/years-blur/1985.ppm",
-			 PedPoint-Vector(ped_size,ped_size,0),Vector(ped_size,ped_size,-ped_ht),
-			 PedPoint-Vector(ped_size-diff,ped_size-diff,-tall_gbox_ht),Vector(gbox_size,gbox_size,-tall_gbox_ht), sign_ratio);
+  add_east_pedestal (solidg,clearg,
+		     "/usr/sci/data/Geometry/textures/museum/history/years-blur/1985.ppm",
+		     PedPoint-Vector(ped_size,ped_size,0),Vector(ped_size,ped_size,-ped_ht),
+		     PedPoint-Vector(ped_size-diff,ped_size-diff,-tall_gbox_ht),Vector(gbox_size,gbox_size,-tall_gbox_ht), sign_ratio, scene);
   Point PerlinPt (PedPoint-Vector(ped_size/2.,ped_size/2.,0)); 
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/mapleC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      historyg);
+		      EastPoint, EastRight, EastDown, historyg);
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/luxoC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      historyg);
+		      EastPoint, EastRight, EastDown, historyg);
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/chessC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      historyg);
+		      EastPoint, EastRight, EastDown, historyg);
   PedPoint.y(EastPoint.y()-ped_div);
-  add_pedestal_and_year (solidg,clearg,
-			 "/usr/sci/data/Geometry/textures/museum/history/years-blur/1986.ppm",
-			 PedPoint-Vector(ped_size,ped_size,0),Vector(ped_size,ped_size,-ped_ht),
-			 PedPoint-Vector(ped_size-diff,ped_size-diff,-gbox_ht),Vector(gbox_size,gbox_size,-gbox_ht), sign_ratio);
+  add_east_pedestal (solidg,clearg,
+		     "/usr/sci/data/Geometry/textures/museum/history/years-blur/1986.ppm",
+		     PedPoint-Vector(ped_size,ped_size,0),Vector(ped_size,ped_size,-ped_ht),
+		     PedPoint-Vector(ped_size-diff,ped_size-diff,-gbox_ht),Vector(gbox_size,gbox_size,-gbox_ht), sign_ratio, scene);
   Point ChessPt (PedPoint-Vector(ped_size/2.,ped_size/2.,0)); 
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/dancersC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      historyg);
+		      EastPoint, EastRight, EastDown,historyg);
 
   //  cerr << "East Wall:  " << EastPoint-Vector(0,img_size,0) << endl;
 
@@ -645,61 +744,54 @@ void build_history_hall (Group* main_group, Group* no_shadow_group, Scene *scene
 
   PedPoint = Point (-7.375, 0, 0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/VWC-fill.ppm",
-		      WestPoint, WestRight, WestDown, 
-		      historyg);
+		      WestPoint, WestRight, WestDown,historyg);
   PedPoint.y(WestPoint.y()+ped_div);
-  add_pedestal_and_year (solidg,clearg,
-			 "/usr/sci/data/Geometry/textures/museum/history/years-blur/1973.ppm",
-			 PedPoint+Vector(0,0,ped_ht),Vector(ped_size,ped_size,-ped_ht),
-			 PedPoint+Vector(diff,diff,ped_ht+gbox_ht),Vector(gbox_size,gbox_size,-gbox_ht), sign_ratio);
+  add_west_pedestal (solidg,clearg,
+		     "/usr/sci/data/Geometry/textures/museum/history/years-blur/1973.ppm",
+		     PedPoint+Vector(0,0,ped_ht),Vector(ped_size,ped_size,-ped_ht),
+		     PedPoint+Vector(0,0,ped_ht+gbox_ht),Vector(ped_size,ped_size,-gbox_ht),sign_ratio,scene);
   Vector VWVector (PedPoint.vector()+Vector(ped_size/2.,ped_size/2.,ped_ht));
 
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/catmullC-fill.ppm",
-		      WestPoint, WestRight, WestDown, 
-		      historyg);
+		      WestPoint, WestRight, WestDown, historyg);
   
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/newellC-fill.ppm",
-		      WestPoint, WestRight, WestDown, 
-		      historyg);
+		      WestPoint, WestRight, WestDown,historyg);
   PedPoint.y(WestPoint.y()+ped_div);
-  add_pedestal_and_year (solidg,clearg,
-			 "/usr/sci/data/Geometry/textures/museum/history/years-blur/1974.ppm",
-			 PedPoint+Vector(0,0,ped_ht),Vector(ped_size,ped_size,-ped_ht),
-			 PedPoint+Vector(diff,diff,ped_ht+gbox_ht),Vector(gbox_size,gbox_size,-gbox_ht), sign_ratio);
+  add_west_pedestal (solidg,clearg,
+		     "/usr/sci/data/Geometry/textures/museum/history/years-blur/1974.ppm",
+		     PedPoint+Vector(0,0,ped_ht),Vector(ped_size,ped_size,-ped_ht),
+		     PedPoint+Vector(0,0,ped_ht+gbox_ht),Vector(ped_size,ped_size,-gbox_ht),sign_ratio,scene);
   Point NewellPt (PedPoint+Vector(ped_size/2., ped_size/2., ped_ht));
   
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/tea-potC-fill.ppm",
-		      WestPoint, WestRight, WestDown, 
-		      historyg);
+		      WestPoint, WestRight, WestDown,historyg);
   PedPoint.y(WestPoint.y()+ped_div);
-  add_pedestal_and_year (solidg,clearg,
-			 "/usr/sci/data/Geometry/textures/museum/history/years-blur/1975.ppm",
-			 PedPoint+Vector(0,0,ped_ht),Vector(ped_size,ped_size,-ped_ht),
-			 PedPoint+Vector(diff,diff,ped_ht+tall_gbox_ht),Vector(gbox_size,gbox_size,-tall_gbox_ht), sign_ratio);
+  add_west_pedestal (solidg,clearg,
+		     "/usr/sci/data/Geometry/textures/museum/history/years-blur/1975.ppm",
+		     PedPoint+Vector(0,0,ped_ht),Vector(ped_size,ped_size,-ped_ht),
+		     PedPoint+Vector(diff,diff,ped_ht+tall_gbox_ht),Vector(gbox_size,gbox_size,-tall_gbox_ht), sign_ratio, scene);
   Vector TeapotVector (PedPoint.vector()+Vector(ped_size/2.,ped_size/2.,ped_ht));
 
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/maxC-fill.ppm",
-		      WestPoint, WestRight, WestDown, 
-		      historyg);
+		      WestPoint, WestRight, WestDown,historyg);
 
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/blurC-fill.ppm",
-		      WestPoint, WestRight, WestDown, 
-		      historyg);
+		      WestPoint, WestRight, WestDown,historyg);
 
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/recursive-rt-fill.ppm",
-      WestPoint, WestRight, WestDown, 
-		      historyg);
+		      WestPoint, WestRight, WestDown, historyg);
   PedPoint.y(WestPoint.y()+ped_div);
-  add_pedestal_and_year (solidg,clearg,
+  add_west_pedestal (solidg,clearg,
 			 "/usr/sci/data/Geometry/textures/museum/history/years-blur/1980.ppm",
 			 PedPoint+Vector(0,0,ped_ht),Vector(ped_size,ped_size,-ped_ht),
-			 PedPoint+Vector(diff,diff,ped_ht+gbox_ht),Vector(gbox_size,gbox_size,-gbox_ht), sign_ratio);
+			 PedPoint+Vector(diff,diff,ped_ht+gbox_ht),Vector(gbox_size,gbox_size,-gbox_ht), sign_ratio, scene);
   Point RTPoint (PedPoint+Vector(ped_size/2., ped_size/2., ped_ht));
 
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
@@ -712,10 +804,10 @@ void build_history_hall (Group* main_group, Group* no_shadow_group, Scene *scene
 		      WestPoint, WestRight, WestDown, 
 		      historyg);
   PedPoint.y(WestPoint.y()+ped_div);
-  add_pedestal_and_year (solidg,clearg,
-			 "/usr/sci/data/Geometry/textures/museum/history/years-blur/1983.ppm",
-			 PedPoint+Vector(0,0,ped_ht),Vector(ped_size,ped_size,-ped_ht),
-			 PedPoint+Vector(diff,diff,ped_ht+tall_gbox_ht),Vector(gbox_size,gbox_size,-tall_gbox_ht), sign_ratio);
+  add_west_pedestal (solidg,clearg,
+		     "/usr/sci/data/Geometry/textures/museum/history/years-blur/1983.ppm",
+		     PedPoint+Vector(0,0,ped_ht),Vector(ped_size,ped_size,-ped_ht),
+		     PedPoint+Vector(diff,diff,ped_ht+tall_gbox_ht),Vector(gbox_size,gbox_size,-tall_gbox_ht), sign_ratio, scene);
   Point MorphinePt(PedPoint.vector()+Vector(ped_size/2.,ped_size/2.,ped_ht));
   
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
@@ -728,10 +820,10 @@ void build_history_hall (Group* main_group, Group* no_shadow_group, Scene *scene
 		      WestPoint, WestRight, WestDown, 
  		      historyg);
   PedPoint.y(WestPoint.y()+ped_div);
-  add_pedestal_and_year (solidg,clearg,
-			 "/usr/sci/data/Geometry/textures/museum/history/years-blur/1984.ppm",
-			 PedPoint+Vector(0,0,ped_ht),Vector(ped_size,ped_size,-ped_ht),
-			 PedPoint+Vector(diff,diff,ped_ht+gbox_ht),Vector(gbox_size,gbox_size,-gbox_ht), sign_ratio);
+  add_west_pedestal (solidg,clearg,
+		     "/usr/sci/data/Geometry/textures/museum/history/years-blur/1984.ppm",
+		     PedPoint+Vector(0,0,ped_ht),Vector(ped_size,ped_size,-ped_ht),
+		     PedPoint+Vector(diff,diff,ped_ht+gbox_ht),Vector(gbox_size,gbox_size,-gbox_ht), sign_ratio, scene);
   Point BallsPoint (PedPoint+Vector(ped_size/2., ped_size/2., ped_ht));
   
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
@@ -811,8 +903,8 @@ void build_history_hall (Group* main_group, Group* no_shadow_group, Scene *scene
   
   SouthPoint -= Vector(2*img_div+img_size,0,0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/towerC-fill.ppm",
-     SouthPoint, SouthRight, SouthDown, 
-historyg);
+		      SouthPoint, SouthRight, SouthDown, 
+		      historyg);
 
   SouthPoint -= Vector(2*img_div+img_size,0,0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/SpatchIllustrationC-fill.ppm",
@@ -860,9 +952,16 @@ historyg);
   //  cerr << "South Wall: " << SouthPoint-Vector(img_size, 0,0) << endl;
 
   /* **************** teapot **************** */
+  Material* teapot_silver = new MetalMaterial( Color(0.8, 0.8, 0.8),20);
   ImageMaterial* wood = new ImageMaterial("/usr/sci/data/Geometry/models/livingroom/livingroom-obj2_fullpaths/maps/bubing_2.ppm",
 		      ImageMaterial::Tile, ImageMaterial::Tile,
 		      1, Color(0,0,0), 0); 
+  Light *l;
+  l = (new Light(TeapotVector.point()+Vector(1,1,4),Color(1.,1.,1.),0,0.7));
+  l->name_ = "teapot";
+  scene->add_per_matl_light (l);
+  teapot_silver->my_lights.add(l);
+  wood->my_lights.add(l);
 
   historyg->add (new Parallelogram(wood,
 				   TeapotVector.point()-Vector(ped_size/2.-diff,ped_size/2.-diff,-0.001),
@@ -898,7 +997,7 @@ historyg);
               m->mesh[j][k] = p;
             }
           }
-          b = new Bezier(silver,m);
+          b = new Bezier(teapot_silver,m);
           b->SubDivide(subdivlevel,.5);
           teapot_g->add(b->MakeBVH());
     }
@@ -908,10 +1007,17 @@ historyg);
   historyg->add(new Grid(teapot_g,10));
 
   /* **************** car **************** */
+  Material* lightblue = new LambertianMaterial(Color(.4,.67,.90));
+  Material* vwmat=new Phong (Color(.6,.6,0),Color(.5,.5,.5),30);
+  l = (new Light(VWVector.point()+Vector(1,-1,4),Color(1.,1.,1.),0,0.7));  
+  l->name_ = "vw bug";
+  scene->add_per_matl_light (l);
+  lightblue->my_lights.add(l);
+  vwmat->my_lights.add(l);
+
   historyg->add (new Parallelogram(lightblue,
 				   VWVector.point()-Vector(ped_size/2.-diff,ped_size/2.-diff,-0.001),
 				   Vector(0,gbox_size,0),Vector(gbox_size,0,0)));
-  Material* vwmat=new Phong (Color(.6,.6,0),Color(.5,.5,.5),30);
   fp = fopen("/usr/sci/data/Geometry/models/vw.geom","r");
   if (!fp) {
     fprintf(stderr,"No such file!\n");
@@ -965,6 +1071,7 @@ historyg);
   }
   historyg->add(new Grid(vw,15));
   /* **************** bump-mapped sphere **************** */
+  Material* blue = new LambertianMaterial(Color(.08,.08,.62));
   historyg->add (new Parallelogram(blue,
 				   BumpMapPoint+Vector(ped_size/2.-diff,ped_size/2.-diff,0.001),
 				   Vector(0,-gbox_size,0),Vector(-gbox_size,0,0)));
@@ -972,6 +1079,12 @@ historyg);
     new ImageMaterial("/usr/sci/data/Geometry/textures/museum/history/orange3.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,1,Color(0,0,0),0); 
 
+  l = (new Light(BumpMapPoint+Vector(-1,1,4),Color(1.,1.,1.),0,0.7));
+  l->name_ = "Bump Map";
+  scene->add_per_matl_light (l);
+  blue->my_lights.add(l);
+  orange->my_lights.add(l);
+  
   /*  
   Material* orange = new Phong(Color(.7,.4,.0),Color(.2,.2,.2),40);
 
@@ -981,28 +1094,56 @@ historyg);
 			       BumpMapPoint+Vector(0,0,0.3),0.2)); 
 
   /* **************** ray-traced scene **************** */
+  Material* outside_glass= new DielectricMaterial(1.5, 1.0, 0.04, 400.0, 
+					  Color(.80, .93 , .87), 
+					  Color(1,1,1), false, 0.001);
+  Material* inv_glass= new DielectricMaterial(1.0, 1.5, 0.04, 400.0, 
+					  Color(.80, .93 , .87), 
+					  Color(1,1,1), true, 0.001);
+  Material* silver = new MetalMaterial( Color(0.8, 0.8, 0.8),20);
+
+  Material* rtchessbd = 
+    new ImageMaterial("/usr/sci/data/Geometry/textures/museum/misc/recursive.ppm",
+		      ImageMaterial::Clamp, ImageMaterial::Clamp,
+		      1, Color(0,0,0), 0); 
+
+  l = (new Light(RTPoint+Vector(1,1,4),Color(1.,1.,1.),0,0.7));
+  l->name_ = "Whitted";
+  scene->add_per_matl_light (l);
+  outside_glass->my_lights.add(l);
+  inv_glass->my_lights.add(l);
+  silver->my_lights.add(l);
+  rtchessbd->my_lights.add(l);
+
   historyg->add (new Sphere(outside_glass, RTPoint+Vector(0.25,-0.1,0.3),0.1));
   historyg->add (new Sphere(inv_glass, RTPoint+Vector(0.25,-0.1,0.3),0.099));
   //  historyg->add (new Sphere(clearg, RTPoint+Vector(0.25,-0.1,0.3),0.1));  
   historyg->add (new Sphere(silver, RTPoint+Vector(0,0.1,0.2),0.08));
   /* -eye -5.43536 -13.0406 2 -lookat -15.9956 -12.5085 2 -up 0 0 1 -fov 60*/
-  Material* chessbd = 
-    new ImageMaterial("/usr/sci/data/Geometry/textures/museum/misc/recursive.ppm",
-		      ImageMaterial::Clamp, ImageMaterial::Clamp,
-		      1, Color(0,0,0), 0); 
-  historyg->add (new Parallelogram(chessbd,
+  historyg->add (new Parallelogram(rtchessbd,
 				   RTPoint-Vector(ped_size/2.-diff,ped_size/2.-diff,-0.001),
 				   Vector(0,gbox_size,0),Vector(gbox_size,0,0)));
   
   /* **************** Saturn scene **************** */
-  historyg->add (new Parallelogram(black,
-				   RingsPoint+Vector(ped_size/2.-diff,ped_size/2.-diff,0.001),
-				   Vector(0,-gbox_size,0),Vector(-gbox_size,0,0)));
-
+  Material* flat_white = new LambertianMaterial(Color(.8,.8,.8));
+  Material* flat_grey = new LambertianMaterial(Color(.4,.4,.4));
+  Material* saturn_black = new LambertianMaterial(Color(0.08,.08,.1));
   Material* Saturn_color = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/history/saturn.ppm",
 					   ImageMaterial::Clamp,
 					   ImageMaterial::Clamp, 1,
 					   Color(0,0,0), 0);
+
+  l = (new Light(RingsPoint+Vector(-1,1,4),Color(1.,1.,1.),0,0.7));
+  l->name_ = "Saturn";
+  scene->add_per_matl_light (l);
+  flat_white->my_lights.add(l);
+  flat_grey->my_lights.add(l);
+  saturn_black->my_lights.add(l);
+  Saturn_color->my_lights.add(l);
+
+  historyg->add (new Parallelogram(saturn_black,
+				   RingsPoint+Vector(ped_size/2.-diff,ped_size/2.-diff,0.001),
+				   Vector(0,-gbox_size,0),Vector(-gbox_size,0,0)));
 
   historyg->add (new UVSphere(Saturn_color, RingsPoint+Vector(0,0,0.25),0.15,
 		   Vector(-.2,-.25,1))); 
@@ -1016,7 +1157,8 @@ historyg);
 			  Vector(-.2,-.25,1),0.2915,0.04));  
 
   /* **************** Billiard Balls **************** */
-  historyg->add (new Parallelogram(black,
+  Material* balls_black = new LambertianMaterial(Color(0.08,.08,.1));
+  historyg->add (new Parallelogram(balls_black,
 				   BallsPoint-Vector(ped_size/2.-diff,ped_size/2.-diff,-0.001),
 				   Vector(0,gbox_size,0),Vector(gbox_size,0,0))); 
   Material* ball1 = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/history/1ball_s1.ppm",
@@ -1037,6 +1179,16 @@ historyg);
 				      Color(1.0,1.0,1.0), 50, 0.05, false);
   Material* white = new PhongMaterial(Color(.9,.9,.7),1,0.05,50,false);
 
+  l = (new Light(BallsPoint+Vector(1,1,4),Color(1.,1.,1.),0,0.7));
+  l->name_ = "Billiards";
+  scene->add_per_matl_light (l);
+  balls_black->my_lights.add(l);
+  ball1->my_lights.add(l);
+  ball4->my_lights.add(l);
+  ball8->my_lights.add(l);
+  ball9->my_lights.add(l);
+  white->my_lights.add(l);
+
   historyg->add (new UVSphere(ball1, BallsPoint+Vector(-0.1,-0.2,0.07),0.07,
 			      Vector(-0.2,0.2,1),Vector(0,1,0)));
   historyg->add (new UVSphere(ball9, BallsPoint+Vector(0,-0.03,0.07),0.07));
@@ -1047,13 +1199,19 @@ historyg);
 			      Vector(0,-.1,.9),Vector(-.15,.85,0)));
 
   /* **************** Newell's Chess Scene **************** */
-  chessbd = 
+  Material* newchessbd = 
     new ImageMaterial("/usr/sci/data/Geometry/textures/museum/misc/newell.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0); 
-  historyg->add (new Parallelogram(chessbd,
+
+  historyg->add (new Parallelogram(newchessbd,
 				   NewellPt-Vector(ped_size/2.-diff,ped_size/2.-diff,-0.001),
 				   Vector(0,gbox_size,0),Vector(gbox_size,0,0)));
+
+  l = new Light(NewellPt+Vector(1,1,4),Color(1.,1.,1.),0,0.5);
+  l->name_ = "Newell";
+  scene->add_per_matl_light (l);
+  newchessbd->my_lights.add(l);
 
   Group *pawn_g = new Group();
 
@@ -1061,11 +1219,14 @@ historyg);
     for (int j = 0; j<6; j++) { 
       t.load_identity();
     t.pre_translate(NewellPt.vector()+Vector(i*ped_size/8.-ped_size/16.,j*ped_size/8.-5*ped_size/16.,0.));
+    Array1<Material*> matl;
     if (!readObjFile("/usr/sci/data/Geometry/models/museum/pawn.obj",
 		     "/usr/sci/data/Geometry/models/museum/pawn2.mtl",
-		     t, pawn_g)) {
+		     t, matl, pawn_g)) {
       exit(0);
     }  
+    for (int k = 0; k<matl.size(); k++)
+      matl[k]->my_lights.add(l);
   }
   
   historyg->add(new HierarchicalGrid(pawn_g,5,5,5,4,16,4));
@@ -1076,6 +1237,13 @@ historyg);
   Material* kaj_glass= new DielectricMaterial(1.5, 1.0, 0.05, 400.0, 
 					  Color(.80, .93 , .87), 
 					      Color(.40,.93,.47), true, 3);
+
+  l = (new Light(ChessPt+Vector(-1,1,4),Color(1.,1.,1.),0,0.7));
+  l->name_ = "Kajiya";
+  scene->add_per_matl_light (l);
+  kaj_white->my_lights.add(l);
+  pink->my_lights.add(l);
+  kaj_glass->my_lights.add(l);
 
   Group* kajiya_g = new Group();
   kajiya_g->add (new Box(kaj_white,ChessPt+Vector(-0.26,0.08,0),ChessPt+Vector(-0.10,0.24,0.03)));
@@ -1111,14 +1279,22 @@ historyg);
   /* **************** Phong Glass Scene **************** */
 
   Transform phong_glass;
-  //phong_glass.pre_rotate(M_PI_2,Vector(1,0,0));
-  //  phong_glass.pre_translate(Vector(0,-0.0633,0));
-  phong_glass.pre_scale(Vector(3,3,3));
-  chessbd = 
+  Material* clear = new PhongMaterial (Color(0.1,0.3,0.4),0.1,0.5,100,true);  
+  Material* phchessbd = 
     new ImageMaterial("/usr/sci/data/Geometry/textures/museum/misc/phong-bk.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0); 
-  historyg->add (new Parallelogram(chessbd,
+
+  l = (new Light(PhongPt+Vector(-1,1,4),Color(1.,1.,1.),0,0.7));
+  l->name_ = "Phong";
+  scene->add_per_matl_light (l);
+  clear->my_lights.add(l);
+  phchessbd->my_lights.add(l);
+
+  //phong_glass.pre_rotate(M_PI_2,Vector(1,0,0));
+  //  phong_glass.pre_translate(Vector(0,-0.0633,0));
+  phong_glass.pre_scale(Vector(3,3,3));
+  historyg->add (new Parallelogram(phchessbd,
 				   PhongPt+Vector(ped_size/2.-diff,ped_size/2.-diff,0.001),
 				   Vector(0,-gbox_size,0),Vector(-gbox_size,0,0)));
   t=phong_glass;
@@ -1134,7 +1310,8 @@ historyg);
   historyg->add(new Grid(phong_g,15));
 
   /* **************** Perlin vase **************** */
-  historyg->add (new Parallelogram(black,
+  Material* vase_black = new LambertianMaterial(Color(0.08,.08,.1));
+  historyg->add (new Parallelogram(vase_black,
 				   PerlinPt+Vector(ped_size/2.-diff,ped_size/2.-diff,0.001),
 				   Vector(0,-gbox_size,0),Vector(-gbox_size,0,0)));
 
@@ -1142,6 +1319,13 @@ historyg);
     = new CrowMarble(8, Vector(-.3, -.3, 1), Color(.98,.82,.78),
 		     //		     Color(.28,.25,.02), Color(.16,.16,.16),0,50);
 		     Color(.78,.35,.02), Color(.16,.16,.16),0.1,80);
+
+  l = (new Light(PerlinPt+Vector(-1,1,4),Color(1.,1.,1.),0,0.7));
+  l->name_ = "Perlin";
+  scene->add_per_matl_light (l);
+  vase_black->my_lights.add(l);
+  perlin_marble->my_lights.add(l);
+
   Transform perlint;
   //  perlint.pre_rotate(M_PI_2,Vector(1,0,0));
   perlint.pre_scale(Vector(5,5,5));
@@ -1158,6 +1342,17 @@ historyg);
   historyg->add(new HierarchicalGrid(perlin_g,10,10,10,8,32,4));
 
   /* **************** morphine  **************** */
+  Material* yellow = new LambertianMaterial(Color(.95,.8,.0));
+  Material* Ccolor = new MetalMaterial(Color(0.35,0.63,0.63),20);
+  Material* Hcolor = new MetalMaterial(Color(0.3,0.15,0.15),20);
+
+  l = (new Light(MorphinePt+Vector(1,1,4),Color(1.,1.,1.),0,0.7));
+  l->name_ = "Morphine";
+  scene->add_per_matl_light (l);
+  yellow->my_lights.add(l);
+  Ccolor->my_lights.add(l);
+  Hcolor->my_lights.add(l);
+
   historyg->add (new Parallelogram(yellow,
 				   MorphinePt-Vector(ped_size/2.-diff,ped_size/2.-diff,-0.001),
 				   Vector(0,gbox_size,0),Vector(gbox_size,0,0)));
@@ -1165,9 +1360,6 @@ historyg);
   const float Hrad = 0.03;
   const float s3 = sqrt(3.)*0.5;
   float mol_ht = Hrad;
-  /* Ccolor= 90,160,160   HColor = 80,40,40*/
-  Material* Ccolor = new MetalMaterial(Color(0.35,0.63,0.63),20);
-  Material* Hcolor = new MetalMaterial(Color(0.3,0.15,0.15),20);
 
   historyg->add (new Sphere(Hcolor, MorphinePt+Vector(Crad+0.5*(Crad+Hrad),
 							  0,mol_ht),Hrad));
@@ -1199,6 +1391,13 @@ historyg);
 							  0,-mol_ht),Hrad));
 
   /* **************** alpha1 helicopter **************** */
+  Material* turquoise = new LambertianMaterial(Color(.21,.55,.65));
+  
+  l = (new Light(CopterPt+Vector(-1,-1,4),Color(1.,1.,1.),0,0.7));
+  l->name_ = "Copter";
+  scene->add_per_matl_light (l);
+  turquoise->my_lights.add(l);
+
   historyg->add (new Parallelogram(turquoise,
 				   CopterPt+Vector(-diff,-diff,0.001),
 				   Vector(gbox_size,0,0),Vector(0,-gbox_size,0)));
@@ -1208,19 +1407,6 @@ historyg);
   
   no_shadow_group->add(clearg);
 
-  /* history hall global lights */
-  //  scene->add_light(new Light(Point(-6, -16, 5), Color(.401,.4,.4), 0));
-  Light *l;
- 
-  l = new Light(Point(-12, -26, 4), Color(.402,.4,.4), 0);
-  l->name_ = "History Hall A";
-  scene->add_light(l);
-  l = new Light(Point(-6, -10, 4), Color(.403,.4,.4), 0);
-  l->name_ = "History Hall B";
-  scene->add_light(l);
-
-  //  g->add(new Sphere(flat_yellow,Point(-6,-16,5),0.5));
-  //  g->add(new Sphere(flat_yellow,Point(-12,-26,5),0.5));
 }
 
 /* **************** david room **************** */
@@ -1333,12 +1519,12 @@ void build_david_room (Group* main_group, Scene *scene) {
   Group *david_signs = new Group();
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/david/digital_michelangelo.ppm",
 		      Point (-20+IMG_EPS,-20,3.1), Vector(0,2,0), Vector(0,0,-2),
-		     david_signs);
+		      david_signs);
 
 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/david/digital_michelangelo.ppm",
 		      Point (-8.15-IMG_EPS,-20,3.1), Vector (0,-2,0), Vector(0,0,-2),
-		     david_signs);
+		      david_signs);
 
   /* **************** rope barrier in David room **************** */
   Group *ropeg1, *ropeg2, *ropeg3, *ropeg4, *ropeg5, *ropeg6;
@@ -1472,23 +1658,8 @@ void build_david_room (Group* main_group, Scene *scene) {
   main_group->add(david_swall);
   main_group->add(davidp);
 
-  /* David room lights */
   /*
-  scene->add_light(new Light(Point(-14, -18, 7.9), Color(.403,.4,.4), 0));
-  scene->add_light(new Light(Point(-14, -22, 7.9), Color(.404,.4,.4), 0));
-  */
   Light *l;
-  l = new Light(Point(-14, -10, 7), Color(.405,.4,.4), 0);
-  l->name_ = "David A";
-  scene->add_light(l);
-  l = new Light(Point(-11.3, -18.05, 4), Color(.406,.4,.4), 0);
-  l->name_ = "David B";
-  scene->add_light(l);
-  l = new Light(Point(-17, -22, 1.4), Color(.407,.4,.4), 0);
-  l->name_ = "David C";
-  scene->add_light(l);
-
-  /*
   l = (new Light(Point(-11,-22.25,7.9),Color (.4,.401,.4), 0));
   l->name_ = "per David A";
   scene->add_per_matl_light (l);
@@ -1579,9 +1750,314 @@ void build_modern_room (Group *main_group, Scene *scene) {
 
   main_group->add(new HierarchicalGrid(crankg,16,16,64,16,1024,4));
 
+  /*  David's head  */
+  Point head_ped_top(-10,-11,ped_ht);
+  add_pedestal (moderng, head_ped_top-Vector(half_ped_size,half_ped_size,0),
+		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
+
+  Material *dhead_white = new LambertianMaterial(Color(1,1,1));
+  Group* dheadg = new Group();
+  TriMesh* dhead_tm = new TriMesh();
+
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_head_1mm_color.ply",dhead_white, dhead_tm, dheadg);
+  BBox dhead_bbox;
+
+  dheadg->compute_bounds(dhead_bbox,0);
+
+  Point dhead_min = dhead_bbox.min();
+  Point dhead_max = dhead_bbox.max();
+  Vector dhead_diag = dhead_bbox.diagonal();
+  Transform dheadT;
+
+  dheadT.pre_translate(-Vector((dhead_max.x()+dhead_min.x())/2.,(dhead_max.y()+dhead_min.y())/2,dhead_min.z())); // center david over 0
+  dheadT.pre_rotate(M_PI/4,Vector(0,0,1));  // make z up
+  dheadT.pre_scale(Vector(.001,.001,.001)); // make units meters
+  dheadT.pre_translate(head_ped_top.asVector());
+
+  dhead_tm->transform(dheadT);
+
+  main_group->add(new HierarchicalGrid(dheadg,23,64,64,32,1024,4));
+
+  // south wall 
+  /* dragon */
+  Point dragon_ped_top(-13,-14,ped_ht);
+  add_pedestal_and_label (moderng, "/usr/sci/data/Geometry/textures/museum/modern/pillar-text/dragon.ppm",
+			  dragon_ped_top-Vector(half_ped_size,half_ped_size,0),
+		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht), sign_ratio);
+
+  Color dragon_green(.15,.7,.15);
+  Material* shiny_green = new Phong(dragon_green,
+				    Color(.2,.2,.2),
+				    60);
+
+  // read in the dragon geometry
+  TriMesh* dragon_tm = new TriMesh();
+  Group* dragong = new Group();
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip_res4.ply",shiny_green,dragon_tm,dragong);
   
+  BBox dragon_bbox;
+
+  dragong->compute_bounds(dragon_bbox,0);
+
+  Point dmin = dragon_bbox.min();
+  Point dmax = dragon_bbox.max();
+  Vector ddiag = dragon_bbox.diagonal();
+  /*
+  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+	 dmin.x(),dmin.y(), dmin.z(),
+	 dmax.x(),dmax.y(), dmax.z(),
+	 ddiag.x(),ddiag.y(),ddiag.z());
+  */
+  Transform dragonT;
+
+  dragonT.pre_translate(-Vector((dmax.x()+dmin.x())/2.,dmin.y(),(dmax.z()+dmin.z())/2.)); // center dragon over 0
+  dragonT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
+  dragonT.pre_rotate(-M_PI_2,Vector(0,0,1));  // make it face front
+  double dragon_scale = .375*2./(sqrt(ddiag.x()*ddiag.x()+ddiag.z()*ddiag.z()));
+  dragonT.pre_scale(Vector(dragon_scale,
+			   dragon_scale,
+			   dragon_scale));
+  dragonT.pre_translate(dragon_ped_top.asVector());
+
+  dragon_tm->transform(dragonT);
+
+  dragon_bbox.reset();
+  dragong->compute_bounds(dragon_bbox,0);
+
+  dmin = dragon_bbox.min();
+  dmax = dragon_bbox.max();
+  ddiag = dragon_bbox.diagonal();
+
+  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+	 dmin.x(),dmin.y(), dmin.z(),
+	 dmax.x(),dmax.y(), dmax.z(),
+	 ddiag.x(),ddiag.y(),ddiag.z());
+  main_group->add(new Grid(dragong,64));
+
+  /* SCI torso */
+  Vector torso_ped_top (-15,-14,ped_ht);
+  add_pedestal_and_label (moderng, "/usr/sci/data/Geometry/textures/museum/modern/pillar-text/utah.ppm",
+			  torso_ped_top.point()-Vector(half_ped_size,half_ped_size,0),
+		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht), sign_ratio);
+
+  Transform torso_trans;
+
+  // first, get it centered at the origin (in x and y), and scale it
+  torso_trans.pre_translate(Vector(0,0,-280));
+  torso_trans.pre_scale(Vector(0.001, 0.001, 0.001));
+
+  // now rotate/translate it to the right angle/position
+  Transform t = torso_trans;
+
+  double rot=(M_PI);
+  t.pre_rotate(rot, Vector(0,0,1));
+  t.pre_translate(torso_ped_top+Vector(0,0,0.3));
+
+  Group *torsog = new Group();
+  if (!readObjFile("/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-isosurface.obj",
+		   "/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-isosurface.mtl",
+		   t, torsog)) {
+      exit(0);
+  }
+  if (!readObjFile("/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-heart.obj",
+		   "/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-heart.mtl",
+		   t, torsog)) {
+      exit(0);
+  }
+  if (!readObjFile("/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-lung.obj",
+		   "/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-lung.mtl",
+		   t, torsog)) {
+      exit(0);
+  }
+  if (!readObjFile("/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-skin.obj",
+		   "/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-skin.mtl",
+		   t, torsog)) {
+      exit(0);
+  }
+
+  main_group->add(new Grid(torsog,10));
+
+  // along west wall 
+  /* buddha */
+  Point buddha_ped_top(-18,-13,0.3*ped_ht);
+  add_pedestal_and_label (moderng, "/usr/sci/data/Geometry/textures/museum/modern/pillar-text/buddha.ppm",
+			  buddha_ped_top-Vector(half_ped_size,half_ped_size,0),
+			  Vector(2.*half_ped_size,2.*half_ped_size,-0.3*ped_ht), sign_ratio);
+
+  // read in the buddha geometry
+  Color buddha_diff(113./255.,  53./255.,  17./255.);
+  Color buddha_spec(180./255.,  180./255.,  180./255.);
+  Material* buddha_mat = new Phong(buddha_diff,
+				    buddha_spec,
+				    40);
+
+  TriMesh* buddha_tm = new TriMesh();
+  Group* buddhag = new Group();
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip_res2.ply",buddha_mat,buddha_tm,buddhag);
+
+  BBox buddha_bbox;
+
+  buddhag->compute_bounds(buddha_bbox,0);
+
+  Point bmin = buddha_bbox.min();
+  Point bmax = buddha_bbox.max();
+  Vector bdiag = buddha_bbox.diagonal();
+  /*
+  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+	 bmin.x(),bmin.y(), bmin.z(),
+	 bmax.x(),bmax.y(), bmax.z(),
+	 bdiag.x(),bdiag.y(),bdiag.z());
+  */
+  Transform buddhaT;
+  buddhaT.pre_translate(-Vector((bmax.x()+bmin.x())/2.,bmin.y(),(bmax.z()+bmin.z())/2.)); // center buddha over 0
+  buddhaT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
+  buddhaT.pre_rotate(M_PI_2,Vector(0,0,1));  // make z up
+  double buddha_scale = .375*2./(sqrt(bdiag.x()*bdiag.x()+bdiag.z()*bdiag.z()));
+  buddhaT.pre_scale(Vector(buddha_scale,
+			   buddha_scale,
+			   buddha_scale));
+  buddhaT.pre_translate(buddha_ped_top.asVector());
+
+  buddha_tm->transform(buddhaT);
+
+  buddha_bbox.reset();
+  buddhag->compute_bounds(buddha_bbox,0);
+
+  bmin = buddha_bbox.min();
+  bmax = buddha_bbox.max();
+  bdiag = buddha_bbox.diagonal();
+  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+	 bmin.x(),bmin.y(), bmin.z(),
+	 bmax.x(),bmax.y(), bmax.z(),
+	 bdiag.x(),bdiag.y(),bdiag.z());
+  main_group->add(new HierarchicalGrid(buddhag,16,16,64,16,1024,4));
+
+  /*  UNC well */
+  Point unc_ped_top (-18,-10,short_ped_ht);
+  add_pedestal_and_label (moderng,"/usr/sci/data/Geometry/textures/museum/modern/pillar-text/unc.ppm",
+			  unc_ped_top-Vector(half_ped_size,half_ped_size,0),
+		Vector(2.*half_ped_size,2.*half_ped_size,-short_ped_ht), sign_ratio);
+  Group* well_g = new Group();
+
+  t.load_identity();
+  t.pre_translate(unc_ped_top.vector()); 
+  if (!readObjFile("/usr/sci/data/Geometry/models/museum/old-well.obj",
+		   "/usr/sci/data/Geometry/models/museum/old-well.mtl",
+		   t, well_g)) {
+      exit(0);
+  }
+  main_group->add( new HierarchicalGrid(well_g,10,10,10,8,8,4));
+
+  /*  Venus  */
+  Point venus_ped_top(-18,-7,0.2*ped_ht);
+    add_pedestal (moderng,venus_ped_top-Vector(half_ped_size,half_ped_size,0),
+		  Vector(2.*half_ped_size,2.*half_ped_size,-0.2*ped_ht));
+
+  // read in the venus geometry
+  TriMesh* venus_tm = new TriMesh();
+  Group* venusg = new Group();
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/venus.ply",flat_white, venus_tm, venusg);
+
+  BBox venus_bbox;
+
+  venusg->compute_bounds(venus_bbox,0);
+
+  Point vmin = venus_bbox.min();
+  Point vmax = venus_bbox.max();
+  Vector vdiag = venus_bbox.diagonal();
+  /*
+  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+	 vmin.x(),vmin.y(), vmin.z(),
+	 vmax.x(),vmax.y(), vmax.z(),
+	 vdiag.x(),vdiag.y(),vdiag.z());
+  */
+  Transform venusT;
+
+  venusT.pre_translate(-Vector((vmax.x()+vmin.x())/2.,vmin.y(),(vmax.z()+vmin.z())/2.)); 
+  venusT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
+  double ven_scale = .375*2./(sqrt(vdiag.x()*vdiag.x()+vdiag.z()*vdiag.z()));
+  venusT.pre_scale(Vector(ven_scale,ven_scale,ven_scale)); // make units meters
+  venusT.pre_translate(venus_ped_top.asVector());
+
+  venus_tm->transform(venusT);
+
+  venus_bbox.reset();
+  venusg->compute_bounds(venus_bbox,0)
+;
+  vmin = venus_bbox.min();
+  vmax = venus_bbox.max();
+  vdiag = venus_bbox.diagonal();
+
+  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+	 vmin.x(),vmin.y(), vmin.z(),
+	 vmax.x(),vmax.y(), vmax.z(),
+	 vdiag.x(),vdiag.y(),vdiag.z());
+  main_group->add(new HierarchicalGrid(venusg,16,32,64,8,1024,4));
+
+  // along north wall
+  /* Stanford bunny */
+  Point bun_ped_top (-15,-6,ped_ht);
+  add_pedestal_and_label (moderng,"/usr/sci/data/Geometry/textures/museum/modern/pillar-text/bunny.ppm",
+			  bun_ped_top-Vector(half_ped_size,half_ped_size,0),
+		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht), sign_ratio);
+
+  FILE *fp;
+
+  Transform bunnyT;
+
+  fp = fopen("/usr/sci/data/Geometry/models/bun.ply","r");
+  if (!fp) {
+    fprintf(stderr,"No such file!\n");
+    exit(-1);
+  }
+  int num_verts, num_tris;
+  
+  fscanf(fp,"%d %d",&num_verts,&num_tris);
+  
+  double (*vert)[3] = new double[num_verts][3];
+  double conf,intensity;
+  int i;
+
+  Material *bunnymat = new Phong(Color(.63,.51,.5),Color(.3,.3,.3),400);
+  
+  BBox bunny_bbox;
+
+  for (i=0; i<num_verts; i++) {
+    fscanf(fp,"%lf %lf %lf %lf %lf",&vert[i][0],&vert[i][2],&vert[i][1],
+	   &conf,&intensity);
+    bunny_bbox.extend(Point(vert[i][0],vert[i][1],vert[i][2]));
+  }
+  
+  Point bunny_min = bunny_bbox.min();
+  Point bunny_max = bunny_bbox.max();
+  Vector bunny_diagonal = bunny_bbox.diagonal();
+
+  bunnyT.pre_translate(Vector(-.5*(bunny_max.x()+bunny_min.x()),
+			      -.5*(bunny_max.y()+bunny_min.y()),
+			      -bunny_min.z()));
+  bunnyT.pre_rotate(M_PI,Vector(0,0,1));
+  double bunny_rad = 2*.375 / (sqrt(bunny_diagonal.x()*bunny_diagonal.x() + 
+				  bunny_diagonal.y()*bunny_diagonal.y()));
+  bunnyT.pre_scale(Vector(bunny_rad,bunny_rad,bunny_rad));
+  bunnyT.pre_translate(bun_ped_top.asVector());
+
+  int num_pts, pi0, pi1, pi2;
+  
+  Group* bunny=new Group();
+  for (i=0; i<num_tris; i++) {
+    fscanf(fp,"%d %d %d %d\n",&num_pts,&pi0,&pi1,&pi2);
+    bunny->add(new Tri(bunnymat,
+		       bunnyT.project(Point(vert[pi0][0],vert[pi0][1],vert[pi0][2])),
+		       bunnyT.project(Point(vert[pi1][0],vert[pi1][1],vert[pi1][2])),
+		       bunnyT.project(Point(vert[pi2][0],vert[pi2][1],vert[pi2][2]))));
+  }
+  delete vert;
+  fclose(fp);
+
+  main_group->add (new HierarchicalGrid(bunny,8,16,16,16,1024,4));
+
   /*  Gooch NPR models */
-  Point npr_ped_top(-18,-7,ped_ht);
+  Point npr_ped_top(-12,-6,ped_ht);
   add_pedestal_and_label (moderng, "/usr/sci/data/Geometry/textures/museum/modern/pillar-text/npr.ppm",
 			  npr_ped_top-Vector(half_ped_size,half_ped_size,0),
 			  Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht), 
@@ -1614,312 +2090,6 @@ void build_modern_room (Group *main_group, Scene *scene) {
   partg->transform(partT);
 
   main_group->add(new HierarchicalGrid(partg,16,16,64,16,1024,4));
-
-//    /*  David's head  */
-//    Point head_ped_top(-10,-11,ped_ht);
-//    add_pedestal (moderng, head_ped_top-Vector(half_ped_size,half_ped_size,0),
-//  		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
-//    Material *dhead_white = new LambertianMaterial(Color(1,1,1));
-//    Group* dheadg = new Group();
-//    TriMesh* dhead_tm = new TriMesh();
-
-//    read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_head_1mm_color.ply",dhead_white, dhead_tm, dheadg);
-//    BBox dhead_bbox;
-
-//    dheadg->compute_bounds(dhead_bbox,0);
-
-//    Point dhead_min = dhead_bbox.min();
-//    Point dhead_max = dhead_bbox.max();
-//    Vector dhead_diag = dhead_bbox.diagonal();
-//    Transform dheadT;
-
-//    dheadT.pre_translate(-Vector((dhead_max.x()+dhead_min.x())/2.,(dhead_max.y()+dhead_min.y())/2,dhead_min.z())); // center david over 0
-//    dheadT.pre_rotate(M_PI/4,Vector(0,0,1));  // make z up
-//    dheadT.pre_scale(Vector(.001,.001,.001)); // make units meters
-//    dheadT.pre_translate(head_ped_top.asVector());
-
-//    dhead_tm->transform(dheadT);
-
-//    main_group->add(new HierarchicalGrid(dheadg,23,64,64,32,1024,4));
-
-//    /* dragon */
-//    Point dragon_ped_top(-13,-14,ped_ht);
-//    add_pedestal_and_label (moderng, "/usr/sci/data/Geometry/textures/museum/modern/pillar-text/dragon.ppm",
-//  			  dragon_ped_top-Vector(half_ped_size,half_ped_size,0),
-//  		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht), sign_ratio);
-
-//    Color dragon_green(.15,.7,.15);
-//    Material* shiny_green = new Phong(dragon_green,
-//  				    Color(.2,.2,.2),
-//  				    60);
-
-//    // read in the dragon geometry
-//    TriMesh* dragon_tm = new TriMesh();
-//    Group* dragong = new Group();
-//    read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip_res4.ply",shiny_green,dragon_tm,dragong);
-  
-//    BBox dragon_bbox;
-
-//    dragong->compute_bounds(dragon_bbox,0);
-
-//    Point dmin = dragon_bbox.min();
-//    Point dmax = dragon_bbox.max();
-//    Vector ddiag = dragon_bbox.diagonal();
-//    /*
-//    printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
-//  	 dmin.x(),dmin.y(), dmin.z(),
-//  	 dmax.x(),dmax.y(), dmax.z(),
-//  	 ddiag.x(),ddiag.y(),ddiag.z());
-//    */
-//    Transform dragonT;
-
-//    dragonT.pre_translate(-Vector((dmax.x()+dmin.x())/2.,dmin.y(),(dmax.z()+dmin.z())/2.)); // center dragon over 0
-//    dragonT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
-//    dragonT.pre_rotate(-M_PI_2,Vector(0,0,1));  // make it face front
-//    double dragon_scale = .375*2./(sqrt(ddiag.x()*ddiag.x()+ddiag.z()*ddiag.z()));
-//    dragonT.pre_scale(Vector(dragon_scale,
-//  			   dragon_scale,
-//  			   dragon_scale));
-//    dragonT.pre_translate(dragon_ped_top.asVector());
-
-//    dragon_tm->transform(dragonT);
-
-//    dragon_bbox.reset();
-//    dragong->compute_bounds(dragon_bbox,0);
-
-//    dmin = dragon_bbox.min();
-//    dmax = dragon_bbox.max();
-//    ddiag = dragon_bbox.diagonal();
-
-//    printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
-//  	 dmin.x(),dmin.y(), dmin.z(),
-//  	 dmax.x(),dmax.y(), dmax.z(),
-//  	 ddiag.x(),ddiag.y(),ddiag.z());
-//    main_group->add(new Grid(dragong,64));
-
-//    /* SCI torso */
-//    Vector torso_ped_top (-15,-14,ped_ht);
-//    add_pedestal_and_label (moderng, "/usr/sci/data/Geometry/textures/museum/modern/pillar-text/utah.ppm",
-//  			  torso_ped_top.point()-Vector(half_ped_size,half_ped_size,0),
-//  		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht), sign_ratio);
-//    Transform torso_trans;
-
-//    // first, get it centered at the origin (in x and y), and scale it
-//    torso_trans.pre_translate(Vector(0,0,-280));
-//    torso_trans.pre_scale(Vector(0.001, 0.001, 0.001));
-
-//    // now rotate/translate it to the right angle/position
-//    Transform t = torso_trans;
-//    double rot=(M_PI);
-//    t.pre_rotate(rot, Vector(0,0,1));
-//    t.pre_translate(torso_ped_top+Vector(0,0,0.3));
-
-//    Group *torsog = new Group();
-//    if (!readObjFile("/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-isosurface.obj",
-//  		   "/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-isosurface.mtl",
-//  		   t, torsog)) {
-//        exit(0);
-//    }
-//    if (!readObjFile("/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-heart.obj",
-//  		   "/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-heart.mtl",
-//  		   t, torsog)) {
-//        exit(0);
-//    }
-//    if (!readObjFile("/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-lung.obj",
-//  		   "/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-lung.mtl",
-//  		   t, torsog)) {
-//        exit(0);
-//    }
-//    if (!readObjFile("/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-skin.obj",
-//  		   "/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-skin.mtl",
-//  		   t, torsog)) {
-//        exit(0);
-//    }
-
-//    main_group->add(new Grid(torsog,10));
-
-
-//    // along west wall 
-//    /* buddha */
-//    Point buddha_ped_top(-18,-13,0.3*ped_ht);
-//    add_pedestal_and_label (moderng, "/usr/sci/data/Geometry/textures/museum/modern/pillar-text/buddha.ppm",
-//  			  buddha_ped_top-Vector(half_ped_size,half_ped_size,0),
-//  			  Vector(2.*half_ped_size,2.*half_ped_size,-0.3*ped_ht), sign_ratio);
-
-//    // read in the buddha geometry
-//    Color buddha_diff(113./255.,  53./255.,  17./255.);
-//    Color buddha_spec(180./255.,  180./255.,  180./255.);
-//    Material* buddha_mat = new Phong(buddha_diff,
-//  				    buddha_spec,
-//  				    40);
-
-//    TriMesh* buddha_tm = new TriMesh();
-//    Group* buddhag = new Group();
-//    read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip_res2.ply",buddha_mat,buddha_tm,buddhag);
-
-//    BBox buddha_bbox;
-
-//    buddhag->compute_bounds(buddha_bbox,0);
-
-//    Point bmin = buddha_bbox.min();
-//    Point bmax = buddha_bbox.max();
-//    Vector bdiag = buddha_bbox.diagonal();
-//    /*
-//    printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
-//  	 bmin.x(),bmin.y(), bmin.z(),
-//  	 bmax.x(),bmax.y(), bmax.z(),
-//  	 bdiag.x(),bdiag.y(),bdiag.z());
-//    */
-//    Transform buddhaT;
-
-//    buddhaT.pre_translate(-Vector((bmax.x()+bmin.x())/2.,bmin.y(),(bmax.z()+bmin.z())/2.)); // center buddha over 0
-//    buddhaT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
-//    buddhaT.pre_rotate(M_PI_2,Vector(0,0,1));  // make z up
-//    double buddha_scale = .375*2./(sqrt(bdiag.x()*bdiag.x()+bdiag.z()*bdiag.z()));
-//    buddhaT.pre_scale(Vector(buddha_scale,
-//  			   buddha_scale,
-//  			   buddha_scale));
-//    buddhaT.pre_translate(buddha_ped_top.asVector());
-
-//    buddha_tm->transform(buddhaT);
-
-//    buddha_bbox.reset();
-//    buddhag->compute_bounds(buddha_bbox,0);
-
-//    bmin = buddha_bbox.min();
-//    bmax = buddha_bbox.max();
-//    bdiag = buddha_bbox.diagonal();
-
-//    printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
-//  	 bmin.x(),bmin.y(), bmin.z(),
-//  	 bmax.x(),bmax.y(), bmax.z(),
-//  	 bdiag.x(),bdiag.y(),bdiag.z());
-//    main_group->add(new HierarchicalGrid(buddhag,16,16,64,16,1024,4));
-
-//    /*  UNC well */
-//    Point unc_ped_top (-18,-10,short_ped_ht);
-//    add_pedestal_and_label (moderng,"/usr/sci/data/Geometry/textures/museum/modern/pillar-text/unc.ppm",
-//  			  unc_ped_top-Vector(half_ped_size,half_ped_size,0),
-//  		Vector(2.*half_ped_size,2.*half_ped_size,-short_ped_ht), sign_ratio);
-//    Group* well_g = new Group();
-
-//    t.load_identity();
-//    t.pre_translate(unc_ped_top.vector()); 
-//    if (!readObjFile("/usr/sci/data/Geometry/models/museum/old-well.obj",
-//  		   "/usr/sci/data/Geometry/models/museum/old-well.mtl",
-//  		   t, well_g)) {
-//        exit(0);
-//    }
-//    main_group->add( new HierarchicalGrid(well_g,10,10,10,8,8,4));
-
-
-//    // along north wall
-//    /* Stanford bunny */
-//    Point bun_ped_top (-15,-6,ped_ht);
-//    add_pedestal_and_label (moderng,"/usr/sci/data/Geometry/textures/museum/modern/pillar-text/bunny.ppm",
-//  			  bun_ped_top-Vector(half_ped_size,half_ped_size,0),
-//  		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht), sign_ratio);
-
-//    FILE *fp;
-
-//    Transform bunnyT;
-  
-//    fp = fopen("/usr/sci/data/Geometry/models/bun.ply","r");
-//    if (!fp) {
-//      fprintf(stderr,"No such file!\n");
-//      exit(-1);
-//    }
-//    int num_verts, num_tris;
-  
-//    fscanf(fp,"%d %d",&num_verts,&num_tris);
-  
-//    double (*vert)[3] = new double[num_verts][3];
-//    double conf,intensity;
-//    int i;
-
-//    Material *bunnymat = new Phong(Color(.63,.51,.5),Color(.3,.3,.3),400);
-  
-//    BBox bunny_bbox;
-
-//    for (i=0; i<num_verts; i++) {
-//      fscanf(fp,"%lf %lf %lf %lf %lf",&vert[i][0],&vert[i][2],&vert[i][1],
-//  	   &conf,&intensity);
-//      bunny_bbox.extend(Point(vert[i][0],vert[i][1],vert[i][2]));
-//    }
-  
-//    Point bunny_min = bunny_bbox.min();
-//    Point bunny_max = bunny_bbox.max();
-//    Vector bunny_diagonal = bunny_bbox.diagonal();
-
-//    bunnyT.pre_translate(Vector(-.5*(bunny_max.x()+bunny_min.x()),
-//  			      -.5*(bunny_max.y()+bunny_min.y()),
-//  			      -bunny_min.z()));
-//    bunnyT.pre_rotate(M_PI,Vector(0,0,1));
-//    double bunny_rad = 2*.375 / (sqrt(bunny_diagonal.x()*bunny_diagonal.x() + 
-//  				  bunny_diagonal.y()*bunny_diagonal.y()));
-//    bunnyT.pre_scale(Vector(bunny_rad,bunny_rad,bunny_rad));
-//    bunnyT.pre_translate(bun_ped_top.asVector());
-
-//    int num_pts, pi0, pi1, pi2;
-  
-//    Group* bunny=new Group();
-//    for (i=0; i<num_tris; i++) {
-//      fscanf(fp,"%d %d %d %d\n",&num_pts,&pi0,&pi1,&pi2);
-//      bunny->add(new Tri(bunnymat,
-//  		       bunnyT.project(Point(vert[pi0][0],vert[pi0][1],vert[pi0][2])),
-//  		       bunnyT.project(Point(vert[pi1][0],vert[pi1][1],vert[pi1][2])),
-//  		       bunnyT.project(Point(vert[pi2][0],vert[pi2][1],vert[pi2][2]))));
-//    }
-//    delete vert;
-//    fclose(fp);
-
-//    main_group->add (new HierarchicalGrid(bunny,8,16,16,16,1024,4));
-
-//    /*  Venus  */
-//    Point venus_ped_top(-12,-6,0.2*ped_ht);
-//      add_pedestal (moderng,venus_ped_top-Vector(half_ped_size,half_ped_size,0),
-//  		  Vector(2.*half_ped_size,2.*half_ped_size,-0.2*ped_ht));
-
-//    // read in the venus geometry
-//    TriMesh* venus_tm = new TriMesh();
-//    Group* venusg = new Group();
-//    read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/venus.ply",flat_white, venus_tm, venusg);
-
-//    BBox venus_bbox;
-
-//    venusg->compute_bounds(venus_bbox,0);
-
-//    Point vmin = venus_bbox.min();
-//    Point vmax = venus_bbox.max();
-//    Vector vdiag = venus_bbox.diagonal();
-//    /*
-//    printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
-//  	 vmin.x(),vmin.y(), vmin.z(),
-//  	 vmax.x(),vmax.y(), vmax.z(),
-//  	 vdiag.x(),vdiag.y(),vdiag.z());
-//    */
-//    Transform venusT;
-
-//    venusT.pre_translate(-Vector((vmax.x()+vmin.x())/2.,vmin.y(),(vmax.z()+vmin.z())/2.)); 
-//    venusT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
-//    double ven_scale = .375*2./(sqrt(vdiag.x()*vdiag.x()+vdiag.z()*vdiag.z()));
-//    venusT.pre_scale(Vector(ven_scale,ven_scale,ven_scale)); // make units meters
-//    venusT.pre_translate(venus_ped_top.asVector());
-
-//    venus_tm->transform(venusT);
-
-//    venus_bbox.reset();
-//    venusg->compute_bounds(venus_bbox,0)
-//  ;
-//    vmin = venus_bbox.min();
-//    vmax = venus_bbox.max();
-//    vdiag = venus_bbox.diagonal();
-
-//    printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
-//  	 vmin.x(),vmin.y(), vmin.z(),
-//  	 vmax.x(),vmax.y(), vmax.z(),
-//  	 vdiag.x(),vdiag.y(),vdiag.z());
-//    main_group->add(new HierarchicalGrid(venusg,16,32,64,8,1024,4));
 
 
 //    // center of lucy
@@ -1969,46 +2139,52 @@ void build_modern_room (Group *main_group, Scene *scene) {
   moderng->add(StMattPedTop);
   */
 
-  // center of lucy
-//    double stadium_ht = 1.2;
-//    Point stadium_centerpt(-14,-10,stadium_ht);
-//    double stadium_radius = 1;
-//    add_pedestal (moderng, stadium_centerpt-Vector(stadium_radius,stadium_radius,0),
-//  		Vector(2*stadium_radius,2*stadium_radius,-stadium_ht));
+  // center of stadium
+  double stadium_ht = 1.2;
+  Point stadium_centerpt(-14,-10,stadium_ht);
+  double stadium_radius = 1;
+  add_pedestal (moderng, stadium_centerpt-Vector(stadium_radius,stadium_radius,0),
+		Vector(2*stadium_radius,2*stadium_radius,-stadium_ht));
 
-//    Array1<Material*> ase_matls;
-//    string env_map;
+  Array1<Material*> ase_matls;
+  string env_map;
 
-//    Transform stadiumt;
-//    stadiumt.load_identity();
-//    Group *stadiumg = new Group();
-//    if (!readASEFile("/usr/sci/data/Geometry/models/stadium/fordfield3.ase", stadiumt, stadiumg, 
-//  		   ase_matls, env_map)) return;
-//    BBox stadium_bbox;
+  Transform stadiumt;
+  stadiumt.load_identity();
+  Group *stadiumg = new Group();
+  if (!readASEFile("/usr/sci/data/Geometry/models/stadium/fordfield3.ase", stadiumt, stadiumg, 
+		   ase_matls, env_map)) return;
+  Light *l1 = new Light(stadium_centerpt+Vector(0,0,2),Color(1.,1.,1.),0,0.7);
+  l1->name_ = "Stadium 1";
+  scene->add_per_matl_light (l1);
+  for (int i=0;i<ase_matls.size();i++)
+    ase_matls[i]->my_lights.add(l1);
+			
+  BBox stadium_bbox;
 
-//    stadiumg->compute_bounds(stadium_bbox,0);
+  stadiumg->compute_bounds(stadium_bbox,0);
   
-//    Point stadium_min = stadium_bbox.min();
-//    Point stadium_max = stadium_bbox.max();
-//    Vector stadium_diag = stadium_bbox.diagonal();
+  Point stadium_min = stadium_bbox.min();
+  Point stadium_max = stadium_bbox.max();
+  Vector stadium_diag = stadium_bbox.diagonal();
 
-//  //    printf("bbox: min %lf %lf %lf max %lf %lf %lf\n",
-//  //  	 stadium_min.x(), stadium_min.y(), stadium_min.z(),
-//  //  	 stadium_max.x(), stadium_max.y(), stadium_max.z());
-//  //    exit(-1);
+//    printf("bbox: min %lf %lf %lf max %lf %lf %lf\n",
+//  	 stadium_min.x(), stadium_min.y(), stadium_min.z(),
+//  	 stadium_max.x(), stadium_max.y(), stadium_max.z());
+//    exit(-1);
 
-//    Transform stadiumT;
+  Transform stadiumT;
 
-//    stadiumT.pre_translate(-Vector((stadium_max.x()+stadium_min.x())/2.,(stadium_min.y()+stadium_max.y()),stadium_min.z())); // center buddha over 0
-//    double stadium_scale = stadium_radius*2./(sqrt(stadium_diag.x()*stadium_diag.x()+stadium_diag.y()*stadium_diag.y()));
-//    stadiumT.pre_scale(Vector(stadium_scale,
-//  			    stadium_scale,
-//  			    stadium_scale));
-//    stadiumT.pre_translate(stadium_centerpt.asVector());
+  stadiumT.pre_translate(-Vector((stadium_max.x()+stadium_min.x())/2.,(stadium_min.y()+stadium_max.y()),stadium_min.z())); // center buddha over 0
+  double stadium_scale = stadium_radius*2./(sqrt(stadium_diag.x()*stadium_diag.x()+stadium_diag.y()*stadium_diag.y()));
+  stadiumT.pre_scale(Vector(stadium_scale,
+			    stadium_scale,
+			    stadium_scale));
+  stadiumT.pre_translate(stadium_centerpt.asVector());
 
-//    stadiumg->transform(stadiumT);
+  stadiumg->transform(stadiumT);
 
-//    main_group->add(new HierarchicalGrid(stadiumg,10,10,10,100,20,4));
+  main_group->add(new HierarchicalGrid(stadiumg,10,10,10,100,20,4));
 
   /* **************** image on North wall in modern room **************** */
   const float img_size = 1.1;     
@@ -2020,28 +2196,23 @@ void build_modern_room (Group *main_group, Scene *scene) {
   Point NorthPoint (-11.1-img_div-img_size, -4.1-IMG_EPS, img_ht);
 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/Figure12C-fill.ppm",
-		      NorthPoint, NorthRight, NorthDown,
-		      moderng);
+		      NorthPoint, NorthRight, NorthDown, moderng);
 
   NorthPoint += Vector(-2*img_div-img_size, 0,0);  
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/aging-venusC-fill.ppm",
-		      NorthPoint, NorthRight, NorthDown,
-		      moderng);
+		      NorthPoint, NorthRight, NorthDown, moderng);
 
   NorthPoint += Vector(-2*img_div-img_size, 0,0);  
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/bookscroppedC-fill.ppm",
-		      NorthPoint, NorthRight, NorthDown,
-		      moderng);
+		      NorthPoint, NorthRight, NorthDown, moderng);
 
   NorthPoint += Vector(-2*img_div-img_size, 0,0);  
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/buddhasC-fill.ppm",
-		      NorthPoint, NorthRight, NorthDown,
-		      moderng);
+		      NorthPoint, NorthRight, NorthDown, moderng);
 
   NorthPoint += Vector(-2*img_div-img_size, 0,0);  
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/bugsC-fill.ppm",
-		      NorthPoint, NorthRight, NorthDown,
-		      moderng);
+		      NorthPoint, NorthRight, NorthDown, moderng);
 
   //  cerr << "North Wall: " << NorthPoint << endl;
 
@@ -2051,38 +2222,31 @@ void build_modern_room (Group *main_group, Scene *scene) {
 
 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/bunnyC-fill.ppm",
-		      WestPoint, WestRight, WestDown,
-		      moderng);
+		      WestPoint, WestRight, WestDown, moderng);
 
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/chickenposter2C-fill.ppm",
-		      WestPoint, WestRight, WestDown,
-		      moderng);
+		      WestPoint, WestRight, WestDown, moderng);
 
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/collage_summaryC-fill.ppm",
-		      WestPoint, WestRight, WestDown, 
-		      moderng);
+		      WestPoint, WestRight, WestDown, moderng);
 
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/discontinuityC-fill.ppm",
-		      WestPoint, WestRight, WestDown, 
-		      moderng);
+		      WestPoint, WestRight, WestDown, moderng);
 
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/dressC-fill.ppm",
-		      WestPoint, WestRight, WestDown, 
-		      moderng);
+		      WestPoint, WestRight, WestDown, moderng);
 
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/flower_combC-fill.ppm",
-		      WestPoint, WestRight, WestDown, 		      
-		      moderng);
+		      WestPoint, WestRight, WestDown, moderng);
 
   WestPoint -= Vector (0, 2*img_div+img_size, 0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/geriC-fill.ppm",
-		      WestPoint, WestRight, WestDown, 		      
-		      moderng);
+		      WestPoint, WestRight, WestDown, moderng);
 
   //  cerr << "West Wall:  " << WestPoint << endl;
 
@@ -2092,24 +2256,20 @@ void build_modern_room (Group *main_group, Scene *scene) {
   Point SouthPoint (-20+img_div+img_size, -15.85+IMG_EPS, img_ht);
 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/ir-imageC-fill.ppm",
-		      SouthPoint, SouthRight, SouthDown, 
-		      moderng);
+		      SouthPoint, SouthRight, SouthDown, moderng);
 
   SouthPoint += Vector(2*img_div+img_size,0,0);  
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/large-lakeC-fill.ppm",
-		      SouthPoint, SouthRight, SouthDown, 
-		      moderng);
+		      SouthPoint, SouthRight, SouthDown, moderng);
 
   SouthPoint += Vector(2*img_div+img_size,0,0);  
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/louvreC-fill.ppm",
 
-		      SouthPoint, SouthRight, SouthDown, 
-		      moderng);
+		      SouthPoint, SouthRight, SouthDown, moderng);
 
   SouthPoint += Vector(2*img_div+img_size,0,0);  
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/lumigraph2C-fill.ppm",
-		      SouthPoint, SouthRight, SouthDown, 
-		      moderng);
+		      SouthPoint, SouthRight, SouthDown, moderng);
 
   //  cerr << "South Wall: " << SouthPoint-Vector(img_size, 0,0) << endl;
 
@@ -2118,40 +2278,29 @@ void build_modern_room (Group *main_group, Scene *scene) {
   Point EastPoint (-8.15-IMG_EPS, -4-img_div, img_ht);
 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/the_endC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      moderng);
+		      EastPoint, EastRight, EastDown,moderng);
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0);   
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/subd-venusC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      moderng);
+		      EastPoint, EastRight, EastDown,moderng);
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/storyC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      moderng);
+		      EastPoint, EastRight, EastDown,moderng);
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/poolC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      moderng);
+		      EastPoint, EastRight, EastDown,moderng);
 
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/mayaC-fill.ppm",
-		      EastPoint, EastRight, EastDown, 
-		      moderng);
+		      EastPoint, EastRight, EastDown,moderng);
 
   //  cerr << "East Wall:  " << EastPoint-Vector(0,img_size,0) << endl;
 
 
   main_group->add(moderng);
 
-  /* modern room lights */
-  Light *l;
-  l = new Light(Point(-17, -7, 4), Color(.404,.4,.4), 0);
-  l->name_ = "Modern Room A";
-  scene->add_light(l);
-  
   //  scene->add_light(new Light(Point(-6, -16, 5), Color(.401,.4,.4), 0));
   //  scene->add_light(new Light(Point(-12, -26, 5), Color(.402,.4,.4), 0));
 
@@ -2234,9 +2383,45 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 					   ImageMaterial::Tile,
 					   ImageMaterial::Tile, 1,
 					   Color(0,0,0), 0);
+  Material* his1_wall_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-wall.ppm",
+					   ImageMaterial::Tile,
+					   ImageMaterial::Tile, 1,
+					   Color(0,0,0), 0);
+  Material* his2_wall_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-wall.ppm",
+					   ImageMaterial::Tile,
+					   ImageMaterial::Tile, 1,
+					   Color(0,0,0), 0);
+  Material* dav_wall_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-wall.ppm",
+					   ImageMaterial::Tile,
+					   ImageMaterial::Tile, 1,
+					   Color(0,0,0), 0);
+  Material* mod_wall_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-wall.ppm",
+					   ImageMaterial::Tile,
+					   ImageMaterial::Tile, 1,
+					   Color(0,0,0), 0);
+  Material* west_wall_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-wall.ppm",
+					   ImageMaterial::Tile,
+					   ImageMaterial::Tile, 1,
+					   Color(0,0,0), 0);
+  Material* north_wall_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-wall.ppm",
+					   ImageMaterial::Tile,
+					   ImageMaterial::Tile, 1,
+					   Color(0,0,0), 0);
+  Material* his_wall_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-wall.ppm",
+					   ImageMaterial::Tile,
+					   ImageMaterial::Tile, 1,
+					   Color(0,0,0), 0);
+  Material* his2_dav_wall_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-wall.ppm",
+					   ImageMaterial::Tile,
+					   ImageMaterial::Tile, 1,
+					   Color(0,0,0), 0);
+  Material* all_wall_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-wall.ppm",
+					   ImageMaterial::Tile,
+					   ImageMaterial::Tile, 1,
+					   Color(0,0,0), 0);
   const float wall_width = .16;
 
-  south_wall->add(new Rect(wall_white, Point(-12, -28, 4), 
+  south_wall->add(new Rect(his2_wall_white, Point(-12, -28, 4), 
 		       Vector(8, 0, 0), Vector(0, 0, 4)));
 
   south_wall->add(new Rect(wall_white, Point(-12, -28-wall_width, 4), 
@@ -2260,7 +2445,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   }
   */
 
-  west_wall->add(new Rect(wall_white, Point(-20, -16, 4), 
+  west_wall->add(new Rect(west_wall_white, Point(-20, -16, 4), 
 		       Vector(0, 12, 0), Vector(0, 0, 4)));
 
   west_wall->add(new Rect(wall_white, Point(-20-wall_width, -16, 4), 
@@ -2271,11 +2456,11 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // doorway cut out of North wall for W. tube: attaches to Hologram scene
   // door is from (-9,-4,0) to (-11,-4,0)
 
-  north_wall->add(new Rect(wall_white, Point(-15.5, -4, 4), 
+  north_wall->add(new Rect(north_wall_white, Point(-15.5, -4, 4), 
 		       Vector(4.5, 0, 0), Vector(0, 0, 4)));
-  north_wall->add(new Rect(wall_white, Point(-7.5, -4, 5), 
+  north_wall->add(new Rect(north_wall_white, Point(-7.5, -4, 5), 
 		       Vector(3.5, 0, 0), Vector(0, 0, 3)));
-  north_wall->add(new Rect(wall_white, Point(-6.5, -4, 1), 
+  north_wall->add(new Rect(north_wall_white, Point(-6.5, -4, 1), 
 		       Vector(2.5, 0, 0), Vector(0, 0, 1)));
 
   north_wall->add(new Rect(wall_white, Point(-15.5-wall_width/2., -4+wall_width, 4), 
@@ -2291,11 +2476,11 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // doorway cut out of East wall for S. tube: attaches to Sphere Room scene
   // door is from (-4,-5,0) to (-4,-7,0)
 
-  east_wall->add(new Rect(wall_white, Point(-4, -17.5, 4), 
+  east_wall->add(new Rect(his1_wall_white, Point(-4, -17.5, 4), 
 		       Vector(0, 10.5, 0), Vector(0, 0, 4)));
-  east_wall->add(new Rect(wall_white, Point(-4, -6, 5), 
+  east_wall->add(new Rect(his1_wall_white, Point(-4, -6, 5), 
 		       Vector(0, 1, 0), Vector(0, 0, 3)));
-  east_wall->add(new Rect(wall_white, Point(-4, -4.5, 4), 
+  east_wall->add(new Rect(his1_wall_white, Point(-4, -4.5, 4), 
 		       Vector(0, 0.5, 0), Vector(0, 0, 4)));
 
   east_wall->add(new Rect(wall_white, Point(-4+wall_width, -17.5, 4), 
@@ -2319,50 +2504,51 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 */
 
 #if INSERTCEILING 
-  ceiling_floor->add(new Rect(wall_white, Point(-12, -16, 8),
+  ceiling_floor->add(new Rect(all_wall_white, Point(-12, -16, 8),
   			      Vector(8.16, 0, 0), Vector(0, 12.16, 0)));
 #endif
 
-  partitions->add(new Rect(wall_white, Point(-8-.15,-14,2.5),
+  partitions->add(new Rect(west_wall_white, Point(-8-.15,-14,2.5),
 			   Vector(0,10,0),Vector(0,0,2.5)));
-  partitions->add(new Rect(wall_white, Point(-8+.15,-14,2.5),
+  partitions->add(new Rect(his1_wall_white, Point(-8+.15,-14,2.5),
 			   Vector(0,-10,0),Vector(0,0,2.5)));
-  partitions->add(new UVCylinder(wall_white, Point(-8,-4,5),
+  partitions->add(new UVCylinder(all_wall_white, Point(-8,-4,5),
 			       Point(-8,-24-.15,5),0.15));
-  partitions->add(new UVCylinder(wall_white, Point(-8,-24,0),
+  partitions->add(new UVCylinder(his_wall_white, Point(-8,-24,0),
 			       Point(-8,-24,5),0.15));
-  partitions->add(new Sphere(wall_white, Point(-8,-24,5),0.15));
+  partitions->add(new Sphere(all_wall_white, Point(-8,-24,5),0.15));
 
 
-  partitions->add(new Rect(wall_white, Point(-12,-24-.15,2.5),
+  partitions->add(new Rect(his2_wall_white, Point(-12,-24-.15,2.5),
 			   Vector(4, 0, 0), Vector(0,0,2.5)));
-  partitions->add(new Rect(wall_white, Point(-12,-24+.15,2.5),
+  partitions->add(new Rect(dav_wall_white, Point(-12,-24+.15,2.5),
 			   Vector(-4, 0, 0), Vector(0,0,2.5)));
-  partitions->add(new UVCylinder(wall_white, Point(-16,-24,0),
+  partitions->add(new UVCylinder(his2_dav_wall_white, Point(-16,-24,0),
 			       Point(-16,-24,5),0.15));
-  partitions->add(new UVCylinder(wall_white, Point(-16,-24,5),
+  partitions->add(new UVCylinder(his2_dav_wall_white, Point(-16,-24,5),
 			       Point(-8+.15,-24,5),0.15));
-  partitions->add(new Sphere(wall_white, Point(-16,-24,5),0.15));
+  partitions->add(new Sphere(his2_dav_wall_white, Point(-16,-24,5),0.15));
 
 
-  partitions->add(new Rect(wall_white, Point(-16,-16-.15,2.5),
+  partitions->add(new Rect(dav_wall_white, Point(-16,-16-.15,2.5),
 			   Vector(4,0,0), Vector(0,0,2.5)));
-  partitions->add(new Rect(wall_white, Point(-16,-16+.15,2.5),
+  partitions->add(new Rect(mod_wall_white, Point(-16,-16+.15,2.5),
 			   Vector(-4,0,0), Vector(0,0,2.5)));
-  partitions->add(new UVCylinder(wall_white, Point(-12,-16,0),
+  partitions->add(new UVCylinder(west_wall_white, Point(-12,-16,0),
 			       Point(-12,-16,5),0.15));
-  partitions->add(new UVCylinder(wall_white, Point(-12,-16,5),
+  partitions->add(new UVCylinder(west_wall_white, Point(-12,-16,5),
 			       Point(-20,-16,5),0.15));
-  partitions->add(new Sphere(wall_white, Point(-12,-16,5),0.15));
+  partitions->add(new Sphere(west_wall_white, Point(-12,-16,5),0.15));
 
-  Color cdown(0.1, 0.1, 0.1);
-  Color cup(0.1, 0.1, 0.1);
+  Color cdown(1,1,1);
+  Color cup(1,1,1);
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(0.1, 0.1, 0.6);
 
   //  Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane, 0.5); 
-  Scene *scene = new Scene(new Grid(g,16), cam, bgcolor, cdown, cup, groundplane, 0.5, 
+  Scene *scene = new Scene(new Grid(g,16), cam, bgcolor, cdown, cup, groundplane, 0.8, 
 			   Constant_Ambient);
+  scene->setBaseAmbientColor(Color(0.5,0.5,0.5));
   EnvironmentMapBackground *emap = new EnvironmentMapBackground ("/usr/sci/data/Geometry/textures/holo-room/environmap2.ppm", Vector(0,0,1));
   scene->set_ambient_environment_map(emap);
 
@@ -2372,11 +2558,11 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *solidg = new Group();
   Group *clearg = new Group();
   
-//    build_david_room (solidg,scene);
-//    build_history_hall (solidg, clearg, scene); 
+  build_david_room (solidg,scene);
+  build_history_hall (solidg, clearg, scene); 
   build_modern_room (solidg,scene);
 
-  /*
+ /*
   Transform outlet_trans;
   // first, get it centered at the origin (in x and y), and scale it
   outlet_trans.pre_translate(Vector(238,-9,-663));
@@ -2392,9 +2578,64 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   g->add(solidg);
   g->add(clearg);
-
   shadow->add(solidg);
 
+  /* history hall lights */
+  Light *HistoryL0 = new Light(Point(-6, -10, 4), Color(1.,1.,1.), 0, 0.4);
+  HistoryL0->name_ = "History Hall A";
+  Light *HistoryL1 = new Light(Point(-6, -19, 4), Color(1.,1.,1.), 0, 0.4);
+  HistoryL1->name_ = "History Hall B";
+  Light *HistoryL2 = new Light(Point(-12, -26, 4), Color(1.,1.,1.), 0, 0.4);
+  HistoryL2->name_ = "History Hall C";
+  scene->add_per_matl_light(HistoryL0);
+  scene->add_per_matl_light(HistoryL1);
+  scene->add_per_matl_light(HistoryL2);
+
+  /* David room lights */
+  Light *DavL1 = new Light(Point(-14, -10, 7), Color(1.,1.,1.), 0, 0.4);
+  DavL1->name_ = "David A";
+  scene->add_per_matl_light(DavL1);
+  Light *DavL2 = new Light(Point(-11.3, -18.05, 4), Color(1.,1.,1.), 0, 0.4);
+  DavL2->name_ = "David B";
+  scene->add_per_matl_light(DavL2);
+  /*  Light *DavL3 = new Light(Point(-17, -22, 1.4), Color(1.,1.,1.), 0, 0.4);
+  DavL3->name_ = "David C";
+  scene->add_per_matl_light(DavL3); */
+
+  /* modern room lights */
+  Light *ModL1 = new Light(Point(-17, -7, 4), Color(1.,1.,1.), 0, 0.4);
+  ModL1->name_ = "Modern Room A";
+  scene->add_per_matl_light(ModL1);
+
+  add_baseboards (ceiling_floor, HistoryL0,HistoryL1,HistoryL2, DavL1, DavL2, ModL1);
+
+  his1_wall_white->my_lights.add (HistoryL0);
+  his1_wall_white->my_lights.add (HistoryL1);
+  his2_wall_white->my_lights.add (HistoryL2);
+  dav_wall_white->my_lights.add (DavL1);
+  dav_wall_white->my_lights.add (DavL2);
+  mod_wall_white->my_lights.add (ModL1);
+  west_wall_white->my_lights.add (DavL1);
+  west_wall_white->my_lights.add (DavL2);
+  west_wall_white->my_lights.add (ModL1);
+  north_wall_white->my_lights.add (ModL1);
+  north_wall_white->my_lights.add (HistoryL0);
+  his_wall_white->my_lights.add (HistoryL0);
+  his_wall_white->my_lights.add (HistoryL1);
+  his_wall_white->my_lights.add (HistoryL2);
+  his2_dav_wall_white->my_lights.add (HistoryL2);
+  his2_dav_wall_white->my_lights.add (DavL1);
+  his2_dav_wall_white->my_lights.add (DavL2);
+  all_wall_white->my_lights.add (HistoryL0);
+  all_wall_white->my_lights.add (HistoryL1);
+  all_wall_white->my_lights.add (HistoryL2);
+  all_wall_white->my_lights.add (DavL1);
+  all_wall_white->my_lights.add (DavL2);
+  all_wall_white->my_lights.add (ModL1);
+  floor_mat->my_lights.add(HistoryL2);
+  floor_mat->my_lights.add(DavL1);
+  floor_mat->my_lights.add(DavL2);
+  
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
   scene->shadowobj = new BV1(shadow);
@@ -2404,7 +2645,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 }
 
 /* images to be moved to star:
-
+   /home/sci/dmw/stadium/big/alltextures/
 
 */
 
