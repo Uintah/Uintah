@@ -10,3 +10,5 @@ MultiMeshReader.cc MultiMeshReader.tcl
 ScalarFieldReader.cc ScalarFieldReader.tcl
 SurfaceReader.cc SurfaceReader.tcl
 VectorFieldReader.cc VectorFieldReader.tcl
+ColorMapReader.cc ColorMapReader.tcl
+VoidStarReader.cc VoidStarReader.tcl
