@@ -243,6 +243,41 @@ WARNING
 	 }
       }; // end Action3
 
+      template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+      class Action4 : public ActionBase {
+	 
+	 T* ptr;
+	 void (T::*pmf)(const ProcessorGroup*,
+			const Patch*,
+			DataWarehouseP&,
+			DataWarehouseP&,
+			Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4);
+	 Arg1 arg1;
+	 Arg2 arg2;
+	 Arg3 arg3;
+	 Arg4 arg4;
+      public: // class Action4
+	 Action4( T* ptr,
+		 void (T::*pmf)(const ProcessorGroup*, 
+				const Patch*, 
+				DataWarehouseP&,
+				DataWarehouseP&,
+				Arg1, Arg2, Arg3, Arg4),
+		  Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
+	    : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2),
+	      arg3(arg3), arg4(arg4) {}
+	 virtual ~Action4() {}
+	 
+	 //////////
+	 // Insert Documentation Here:
+	 virtual void doit(const ProcessorGroup* pc,
+			   const Patch* patch,
+			   DataWarehouseP& fromDW,
+			   DataWarehouseP& toDW) {
+	    (ptr->*pmf)(pc, patch, fromDW, toDW, arg1, arg2, arg3, arg4);
+	 }
+      }; // end Action4
+
    public: // class Task
 
       enum TaskType {
@@ -435,6 +470,31 @@ WARNING
 	 d_tasktype = Normal;
       }
       
+      template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+      Task(const SimpleString&         taskName,
+	   const Patch*         patch,
+	   DataWarehouseP&       fromDW,
+	   DataWarehouseP&       toDW,
+	   T*                    ptr,
+	   void (T::*pmf)(const ProcessorGroup*,
+			  const Patch*,
+			  DataWarehouseP&,
+			  DataWarehouseP&,
+			  Arg1, Arg2, Arg3, Arg4),
+	   Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
+	 : d_taskName( taskName ), 
+	   d_patch( patch ),
+	   d_action( scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4) ),
+	   d_fromDW( fromDW ),
+	   d_toDW( toDW )
+      {
+	 d_completed = false;
+	 d_usesThreads = false;
+	 d_usesMPI = false;
+	 d_subpatchCapable = false;
+	 d_tasktype = Normal;
+      }
+
       ~Task();
       
       void usesMPI(bool state=true);
@@ -618,6 +678,9 @@ ostream & operator << ( ostream & out, const Uintah::Task::Dependency & dep );
 
 //
 // $Log$
+// Revision 1.29  2001/01/23 22:21:14  witzel
+// Added support for 4 argument tasks
+//
 // Revision 1.28  2000/12/10 09:06:18  sparker
 // Merge from csafe_risky1
 //
