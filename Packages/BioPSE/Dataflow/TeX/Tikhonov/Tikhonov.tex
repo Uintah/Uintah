@@ -74,7 +74,7 @@
 
 % Summary of module's purpose. No more than one paragraph.
 
-\subsection{Summary}
+\ModuleRefSummary
 
 The purpose of this module is to apply Tikhonov regularization to an
 existing forward model, with flexible control of regularization type and
@@ -89,7 +89,7 @@ head surface potentials.
 % an EPS version and a web-friendly version (e.g., jpeg or gif).
 % See the note above that explains how to include images.
 
-\subsection{Use}
+\ModuleRefUse
 
 The \module{Tikhonov} module has three inputs, two outputs, and a user
 interface (UI) to select the regularization parameter. 
@@ -156,7 +156,7 @@ at a particular time instant is shown in Fig.[Tikh-net].
 
 % Description of module's algorithms, mathematics, etc.
 
-\subsection{Detail}
+\ModuleRefDetails
 
 \begin{itemize}
   \item The standard discretized formulation for the forward problem:
@@ -190,7 +190,7 @@ at a particular time instant is shown in Fig.[Tikh-net].
       minimization of the residual norm. 
 \end{itemize}         
 
-\subsubsection{Selecting regularization parameter, $\lambda$}
+\ModuleRefSubSection{Selecting regularization parameter, $\lambda$}
 \label{Sec:regpar}
 
 \begin{itemize}
@@ -212,19 +212,14 @@ at a particular time instant is shown in Fig.[Tikh-net].
 % Special notes.  These may be installation instructions, bugs, limitations,
 % etc.
 
-\subsection{Notes}
+\ModuleRefNotes
 
 Write notes here.
 
 % Who is responsible? 
 
-\subsection{Credits}
+\ModuleRefCredits
 
 Authors of the \module{Tikhonov} module are Yesim Serinagaoglu, Alireza
 Ghodrati and Dana H. Brooks with assistance from Rob MacLeod and Dave
 Weinstein.
-
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: t
-%%% End: 
