@@ -109,10 +109,6 @@ public:
     background->color_in_direction( v, result );
   }
   
-  inline const Color& get_average_bg( ) const {
-    return background->average( );
-  }
-  
   inline void set_background_ptr( Background* ptr ) {
     background = ptr;
   }
