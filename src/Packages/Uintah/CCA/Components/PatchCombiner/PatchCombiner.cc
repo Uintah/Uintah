@@ -43,6 +43,7 @@ void PatchCombiner::problemSetup(const ProblemSpecP& /*params*/, GridP& grid,
   // try to add a time to times_ that will get us passed the end of the
   // simulation -- yes this is a hack!!
   times_.push_back(10 * times_[times_.size() - 1]);
+  timesteps_.push_back(999999999);
 
   GridP newGrid = scinew Grid();
   GridP oldGrid = dataArchive_->queryGrid(times_[0]);
@@ -113,6 +114,7 @@ void
 PatchCombiner::scheduleTimeAdvance( const LevelP& level,
 				    SchedulerP& sched, int, int )
 {
+  
   double time = times_[timeIndex_];
   const PatchSet* eachPatch = level->eachPatch();
     
@@ -199,6 +201,19 @@ void PatchCombiner::readAndSetDelT(const ProcessorGroup*,
   double time = times_[timeIndex_];
   //cerr << "The time is now: " << time << endl;
   int timestep = timesteps_[timeIndex_];
+
+  if (timeIndex_ >= (int) (times_.size()-1)) {
+    // error situation - we have run out of timesteps in the uda, but 
+    // the time does not satisfy the maxTime, so the simulation wants to 
+    // keep going
+    cerr << "The timesteps in the uda directory do not extend to the maxTime\n"
+         << "in the input.ups file.  To not get this exception, adjust the\n"
+         << "maxTime in <udadir>/input.xml to be\n"
+         << "between " << (times_.size() >= 3 ? times_[times_.size()-3] : 0)
+         << " and " << times_[times_.size()-2] << " (the last time in the uda)\n"
+         << "This is not a critical error - it just adds one more timestep\n"
+         << "that you may have to remove manually\n\n";
+  }
   
   delete dw_;
   dw_=scinew OnDemandDataWarehouse(0, 0, generation, oldGrid_);
