@@ -72,7 +72,14 @@
 #define TAU_PROFILE_CALLSTACK()
 
 #define TAU_REGISTER_THREAD()
+#define TAU_REGISTER_FORK(id, op)
 #define TAU_DB_DUMP()
+
+#define TAU_PHASE_CREATE_STATIC(var, name, type, group) 
+#define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) 
+#define TAU_PHASE_START(var) 
+#define TAU_PHASE_STOP(var) 
+
 
 #endif
 
