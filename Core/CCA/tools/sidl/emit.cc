@@ -180,9 +180,9 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   hdr << "#include <Core/CCA/Component/PIDL/Object.h>\n";
   hdr << "#include <Core/CCA/Component/PIDL/pidl_cast.h>\n";
   hdr << "#include <Core/CCA/Component/PIDL/MxNArrayRep.h>\n";
-  hdr << "#include <Core/CCA/Component/CIA/CIA_sidl.h>\n";
-  hdr << "#include <Core/CCA/Component/CIA/array.h>\n";
-  hdr << "#include <Core/CCA/Component/CIA/string.h>\n";
+  hdr << "#include <Core/CCA/Component/SIDL/sidl_sidl.h>\n";
+  hdr << "#include <Core/CCA/Component/SIDL/array.h>\n";
+  hdr << "#include <Core/CCA/Component/SIDL/string.h>\n";
   hdr << "#include <Core/CCA/SmartPointer.h>\n";
   hdr << "#include <complex>\n";
   hdr << "\n";
@@ -520,14 +520,14 @@ void CI::emit_handlers(EmitState& e)
     e.out << "  //Unmarshal recieved distribution\n";
     e.out << "  int _arg1_dim[2];\n";
     e.out << "  message->unmarshalInt(&_arg1_dim[0], 2);\n";
-    e.out << "  ::CIA::array2< int> _arg1(_arg1_dim[0], _arg1_dim[1]);\n";
+    e.out << "  ::SIDL::array2< int> _arg1(_arg1_dim[0], _arg1_dim[1]);\n";
     e.out << "  int _arg1_totalsize=_arg1_dim[0]*_arg1_dim[1];\n";
-    e.out << "  ::CIA::array2< int>::pointer _arg1_uptr=const_cast< ::CIA::array2< int>::pointer>(&_arg1[0][0]);\n";
+    e.out << "  ::SIDL::array2< int>::pointer _arg1_uptr=const_cast< ::SIDL::array2< int>::pointer>(&_arg1[0][0]);\n";
     e.out << "  message->unmarshalInt(_arg1_uptr, _arg1_totalsize);\n";
     e.out << "  message->unmarshalReply();\n\n";
     e.out << "  //Reply with my own distribution\n";
     e.out << "  ::SCIRun::MxNArrayRep* arrrep = _sc->d_sched->calleeGetCalleeRep(dname);\n";
-    e.out << "  ::CIA::array2< int> _ret;\n";
+    e.out << "  ::SIDL::array2< int> _ret;\n";
     e.out << "  if (arrrep != NULL) {\n";
     e.out << "    _ret = arrrep->getArray();\n";
     e.out << "  }\n";
@@ -538,7 +538,7 @@ void CI::emit_handlers(EmitState& e)
     e.out << "  int _ret_mtotalsize=_ret_mdim[0]*_ret_mdim[1];\n";
     e.out << "  int _flag=0;\n";
     e.out << "  message->marshalInt(&_flag);\n";
-    e.out << "  ::CIA::array2< int>::pointer _ret_mptr=const_cast< ::CIA::array2< int>::pointer>(&_ret[0][0]);\n";
+    e.out << "  ::SIDL::array2< int>::pointer _ret_mptr=const_cast< ::SIDL::array2< int>::pointer>(&_ret[0][0]);\n";
     e.out << "  message->marshalInt(&_ret_mdim[0], 2);\n";
     e.out << "  message->marshalInt(_ret_mptr, _ret_mtotalsize);\n";
     e.out << "  message->sendMessage(0);\n";
@@ -608,7 +608,6 @@ void CI::emit_handler_table_body(EmitState& e, int& vtable_base, bool top)
     e.out << "\n  //setCallerDistribution handler";
     e.out << "\n  epc->registerHandler(" << (++i)
           << ",(void*)_handler" << callerDistHandler << ");";
-    callerDistHandler = i-1;
     vtable_base+=vtab.size()+2;
   }
   else {
@@ -1229,16 +1228,15 @@ void CI::emit_proxy(EmitState& e)
     e.out << "  d_sched->clear(distname);\n";
     e.out << "  d_sched->setCallerRepresentation(distname,arrrep);\n";
     e.out << "  //Scatter to all callee objects\n";
-    e.out << "  ::CIA::array2< int> _rep = arrrep->getArray();\n";
+    e.out << "  ::SIDL::array2< int> _rep = arrrep->getArray();\n";
     e.out << "  ::SCIRun::refList _refL;\n";
     e.out << "  ::SCIRun::refList::iterator iter;\n";
     e.out << "  _proxyGetReferenceList(_refL,false);\n";
-    e.out << "  #ifdef DEBUGMXN\n";
-    e.out << "    //Turn on debug to a file\n";
-    e.out << "    std::ostringstream fname;\n";
-    e.out << "    fname << distname << \"_\" <<  _refL[0].par_rank << \".caller.out\";\n";
-    e.out << "    d_sched->dbg.open(fname.str().c_str(), std::ios_base::app);\n";
-    e.out << "  #endif\n";
+    e.out << "  //Turn on debug to a file\n";
+    e.out << "  std::ostringstream fname;\n";
+    e.out << "  fname << distname << \"_\" <<  _refL[0].par_rank << \".caller.out\";\n";
+    e.out << "  d_sched->dbg.open(fname.str().c_str(), std::ios_base::app);\n";
+    e.out << "  \n";
     e.out << "  iter = _refL.begin();\n";
     e.out << "  for(unsigned int i=0; i < _refL.size(); i++, iter++) {\n";
     e.out << "    ::SCIRun::Message* message = (*iter).chan->getMessage();\n";
@@ -1258,7 +1256,7 @@ void CI::emit_proxy(EmitState& e)
     e.out << "    _rep_mdim[0]=_rep.size1();\n";
     e.out << "    _rep_mdim[1]=_rep.size2();\n";
     e.out << "    int _rep_mtotalsize=_rep_mdim[0]*_rep_mdim[1];\n";
-    e.out << "    ::CIA::array2< int>::pointer _rep_mptr=const_cast< ::CIA::array2< int>::pointer>(&_rep[0][0]);\n";
+    e.out << "    ::SIDL::array2< int>::pointer _rep_mptr=const_cast< ::SIDL::array2< int>::pointer>(&_rep[0][0]);\n";
     e.out << "    message->marshalInt(&_rep_mdim[0], 2);\n";
     e.out << "    message->marshalInt(_rep_mptr, _rep_mtotalsize);\n";
     e.out << "    int _handler=" << callerDistHandler << ";\n";
@@ -1276,18 +1274,16 @@ void CI::emit_proxy(EmitState& e)
     e.out << "    //Unmarshal distribution representation array\n";
     e.out << "    int _ret_dim[2];\n";
     e.out << "    message->unmarshalInt(&_ret_dim[0], 2);\n";
-    e.out << "    ::CIA::array2< int> _ret(_ret_dim[0], _ret_dim[1]);\n";
+    e.out << "    ::SIDL::array2< int> _ret(_ret_dim[0], _ret_dim[1]);\n";
     e.out << "    int _ret_totalsize=_ret_dim[0]*_ret_dim[1];\n";
-    e.out << "    ::CIA::array2< int>::pointer _ret_uptr=const_cast< ::CIA::array2< int>::pointer>(&_ret[0][0]);\n";
+    e.out << "    ::SIDL::array2< int>::pointer _ret_uptr=const_cast< ::SIDL::array2< int>::pointer>(&_ret[0][0]);\n";
     e.out << "    message->unmarshalInt(_ret_uptr, _ret_totalsize);\n";
     e.out << "    message->destroyMessage();\n";
     e.out << "    ::SCIRun::MxNArrayRep* arep = new ::SCIRun::MxNArrayRep(_ret,&(*iter));\n";
     e.out << "    d_sched->setCalleeRepresentation(distname,arep);\n";
     e.out << "  }\n";
     e.out << "  d_sched->print();\n";
-    e.out << "  #ifdef DEBUGMXN\n";
-    e.out << "    d_sched->dbg.close();\n";
-    e.out << "  #endif\n";
+    e.out << "  d_sched->dbg.close();\n";
     e.out << "}\n\n";
   }  
 }
@@ -2157,9 +2153,9 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  //Unmarshal distribution metadata\n";
 	e.out << leader2 << "  int _meta_rep_dim[2];\n";
 	e.out << leader2 << "  message->unmarshalInt(&_meta_rep_dim[0], 2);\n";
-	e.out << leader2 << "  ::CIA::array2< int> _meta_rep(_meta_rep_dim[0], _meta_rep_dim[1]);\n";
+	e.out << leader2 << "  ::SIDL::array2< int> _meta_rep(_meta_rep_dim[0], _meta_rep_dim[1]);\n";
 	e.out << leader2 << "  int _meta_rep_totalsize=_meta_rep_dim[0]*_meta_rep_dim[1];\n";
-	e.out << leader2 << "  ::CIA::array2< int>::pointer _meta_rep_uptr=const_cast< ::CIA::array2< int>::pointer>(&_meta_rep[0][0]);\n";
+	e.out << leader2 << "  ::SIDL::array2< int>::pointer _meta_rep_uptr=const_cast< ::SIDL::array2< int>::pointer>(&_meta_rep[0][0]);\n";
 	e.out << leader2 << "  message->unmarshalInt(_meta_rep_uptr, _meta_rep_totalsize);\n";
 	e.out << leader2 << "  //Unmarshal received distribution\n";
 	
@@ -2208,13 +2204,13 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  message->marshalInt(&rank);\n";
 	e.out << leader2 << "  //Intersect and create distribution representation\n";
 	e.out << leader2 << "  SCIRun::MxNArrayRep* _meta_arr_rep = _this_rep->Intersect(_rl_out[i]);\n"; 
-	e.out << leader2 << "  ::CIA::array2< int> _meta_arr = _meta_arr_rep->getArray();\n";
+	e.out << leader2 << "  ::SIDL::array2< int> _meta_arr = _meta_arr_rep->getArray();\n";
 	e.out << leader2 << "  //Marshal distribution representation array\n";
 	e.out << leader2 << "  int _rep_mdim[2];\n";
 	e.out << leader2 << "  _rep_mdim[0]=_meta_arr.size1();\n";
 	e.out << leader2 << "  _rep_mdim[1]=_meta_arr.size2();\n";
 	e.out << leader2 << "  int _rep_mtotalsize=_rep_mdim[0]*_rep_mdim[1];\n";
-	e.out << leader2 << "  ::CIA::array2< int>::pointer _rep_mptr=const_cast< ::CIA::array2< int>::pointer>(&_meta_arr[0][0]);\n";
+	e.out << leader2 << "  ::SIDL::array2< int>::pointer _rep_mptr=const_cast< ::SIDL::array2< int>::pointer>(&_meta_arr[0][0]);\n";
 	e.out << leader2 << "  message->marshalInt(&_rep_mdim[0], 2);\n";
 	e.out << leader2 << "  message->marshalInt(_rep_mptr, _rep_mtotalsize);\n";
 	e.out << leader2 << "  //Send Message \n";
@@ -2244,7 +2240,6 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "}\n";
 
 	//TEMPORARY TEST:
-	e.out << "#ifdef DEBUGMXN\n";
 	e.out << leader2 << "//Test\n";
 	e.out << leader2 << "if (1) {\n";
 	e.out << leader2 << "std::ostringstream fname;\n";
@@ -2264,7 +2259,6 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "if (d_sched->dbg)\n";
 	e.out << leader2 << "  d_sched->dbg.close();\n";
 	e.out << leader2 << "}\n";
-	e.out << "#endif\n";
 	//EOF TEMPORARY TEST
 
 	// *********** END OF OUT arg -- Special Redis ******************************	
@@ -2280,7 +2274,6 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "#define " << arg << " (* " << arr_ptr_name << ")\n";
 	
 	//TEMPORARY TEST
-	e.out << "#ifdef DEBUGMXN\n";
 	e.out << leader2 << "//Test\n";
 	e.out << leader2 << "if (1) {\n";
 	e.out << leader2 << "std::ostringstream fname;\n";
@@ -2302,20 +2295,18 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "if (_sc->d_sched->dbg)\n";
 	e.out << leader2 << " _sc->d_sched->dbg.close();\n";
 	e.out << leader2 << "}\n";
-	e.out << "#endif\n";
 	//EOF TEMPORARY TEST
 	// *********** END OF IN arg -- No Special Redis ******************************
       }
       else if (ctx == ArgOut) {
 	// *********** OUT arg -- No Special Redis ********************************
-	string Dname = distarr->getName();
 	e.out << leader2 << "//OUT redistribution array detected. Get it afterwards\n";
 	e.out << leader2 << "//Resize array \n";
-	e.out << leader2 << "SCIRun::MxNArrayRep* _d_rep_" << Dname << " = d_sched->callerGetCallerRep(\"" 
-	      << Dname << "\");\n";
+	e.out << leader2 << "SCIRun::MxNArrayRep* _d_rep = d_sched->callerGetCallerRep(\"" 
+	      << distarr->getName() << "\");\n";
 	e.out << leader2 << arg << ".resize(";
 	for(int i=arr_t->dim; i > 0; i--) {
-	  e.out << "_d_rep_" << Dname << "->getSize(" << i << ")";
+	  e.out << "_d_rep->getSize(" << i << ")";
 	  if (i != 1) e.out << ", ";
 	}
 	e.out << ");\n";
@@ -2452,13 +2443,13 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  message->marshalInt(&rank);\n";
 	e.out << leader2 << "  //Intersect and create distribution representation\n";
 	e.out << leader2 << "  SCIRun::MxNArrayRep* _meta_arr_rep = this_rep->Intersect(rl[i]);\n"; 
-	e.out << leader2 << "  ::CIA::array2< int> _meta_arr = _meta_arr_rep->getArray();\n";
+	e.out << leader2 << "  ::SIDL::array2< int> _meta_arr = _meta_arr_rep->getArray();\n";
 	e.out << leader2 << "  //Marshal distribution representation array\n";
 	e.out << leader2 << "  int _rep_mdim[2];\n";
 	e.out << leader2 << "  _rep_mdim[0]=_meta_arr.size1();\n";
 	e.out << leader2 << "  _rep_mdim[1]=_meta_arr.size2();\n";
 	e.out << leader2 << "  int _rep_mtotalsize=_rep_mdim[0]*_rep_mdim[1];\n";
-	e.out << leader2 << "  ::CIA::array2< int>::pointer _rep_mptr=const_cast< ::CIA::array2< int>::pointer>(&_meta_arr[0][0]);\n";
+	e.out << leader2 << "  ::SIDL::array2< int>::pointer _rep_mptr=const_cast< ::SIDL::array2< int>::pointer>(&_meta_arr[0][0]);\n";
 	e.out << leader2 << "  message->marshalInt(&_rep_mdim[0], 2);\n";
 	e.out << leader2 << "  message->marshalInt(_rep_mptr, _rep_mtotalsize);\n";
 	e.out << leader2 << "  //Marshal the data:\n";
@@ -2500,9 +2491,9 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  //Unmarshal distribution metadata\n";
 	e.out << leader2 << "  int _meta_rep_dim[2];\n";
 	e.out << leader2 << "  message->unmarshalInt(&_meta_rep_dim[0], 2);\n";
-	e.out << leader2 << "  ::CIA::array2< int> _meta_rep(_meta_rep_dim[0], _meta_rep_dim[1]);\n";
+	e.out << leader2 << "  ::SIDL::array2< int> _meta_rep(_meta_rep_dim[0], _meta_rep_dim[1]);\n";
 	e.out << leader2 << "  int _meta_rep_totalsize=_meta_rep_dim[0]*_meta_rep_dim[1];\n";
-	e.out << leader2 << "  ::CIA::array2< int>::pointer _meta_rep_uptr=const_cast< ::CIA::array2< int>::pointer>(&_meta_rep[0][0]);\n";
+	e.out << leader2 << "  ::SIDL::array2< int>::pointer _meta_rep_uptr=const_cast< ::SIDL::array2< int>::pointer>(&_meta_rep[0][0]);\n";
 	e.out << leader2 << "  message->unmarshalInt(_meta_rep_uptr, _meta_rep_totalsize);\n";
 	e.out << leader2 << "  message->unmarshalReply();\n";
 	e.out << leader2 << "  message->createMessage();\n";
