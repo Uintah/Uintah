@@ -40,7 +40,6 @@ class ShowColorMap : public Module {
   GuiDouble gui_scale_;
   GuiString gui_units_;
   GuiInt gui_text_color_;
-  MaterialHandle text_color_;
 
 public:
   ShowColorMap(GuiContext*);
@@ -85,10 +84,11 @@ ShowColorMap::execute()
   Vector out;
   Vector along;
 
+  Color text_color;
   if( gui_text_color_.get() == 0 ){
-    text_color_ = new Material(Color(0,0,0), Color(0,0,0), Color(0,0,0), 1);
+    text_color = Color(0,0,0);
   }else{
-    text_color_ = new Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 1);
+    text_color = Color(1,1,1);
   }
   if (gui_side_.get() == "left")
   {
@@ -156,11 +156,12 @@ ShowColorMap::execute()
     {
       sprintf(value, "%.2g %s", minval + (maxval-minval)*(i/(numlabels-1.0)),
 	      str.c_str());
-      labels->add(scinew GeomText(value, p0 + along * (i/(numlabels-1.0))));
+      labels->add(scinew GeomText(value, p0 + along * (i/(numlabels-1.0)),
+				  text_color));
       labels->add(new GeomLine(p0 + along * (i/(numlabels-1.0)),
 			       p0 + along * (i/(numlabels-1.0)) + out * 0.5));
     }    
-    all->add(scinew GeomMaterial(labels, text_color_));
+    all->add(scinew GeomMaterial(labels, new Material(text_color)));
   }
 
   GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
