@@ -1,6 +1,7 @@
 
 #include "GeometryObject.h"
 #include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Components/MPM/MPMPhysicalModules.h>
 #include <iostream>
 
 using namespace Uintah::MPM;
@@ -11,7 +12,10 @@ GeometryObject::GeometryObject(GeometryPiece* piece,
 {
    ps->require("res", d_resolution);
    ps->require("velocity", d_initialVel);
-   ps->require("temperature", d_initialTemperature);
+   
+   if(MPMPhysicalModules::heatConductionModel) {
+     ps->require("temperature", d_initialTemperature);
+   }
 }
 
 GeometryObject::~GeometryObject()
@@ -24,6 +28,10 @@ IntVector GeometryObject::getNumParticlesPerCell()
 }
 
 // $Log$
+// Revision 1.16  2000/06/23 02:51:48  tan
+// temperature is required when MPMPhysicalModules::heatConductionModel
+// considered.
+//
 // Revision 1.15  2000/05/31 17:17:22  guilkey
 // Added getInitialTemperature to GeometryObject.
 //
