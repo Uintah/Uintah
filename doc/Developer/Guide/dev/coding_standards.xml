@@ -1,0 +1,376 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<chapter id="dev.codingstandards">
+<title>SCIRun C++ Coding Standards</title>
+
+<section>
+<title>Required</title>
+
+<para>
+<orderedlist>
+<listitem>
+<para>All code and comments are to be written in English.</para>
+</listitem>
+<listitem>
+<para>All files must include appropriate license information.</para>
+</listitem>
+<listitem>
+<para>Use the C++ mode in GNU Emacs and
+<filename>sci-c++-style.el</filename> to format code.</para>
+</listitem>
+<listitem>
+<para>Include files in C++ always have the file name
+extension<filename> .h</filename>.</para>
+</listitem>
+<listitem>
+<para>Implementation files in C++ always have the file name extension
+<filename>.cc</filename>.</para>
+</listitem>
+<listitem>
+<para>Every include file must contain a <quote>guard</quote> that prevents
+multiple inclusions of the file, for example:
+
+<programlisting>
+<![CDATA[
+#ifndef Geometry_BBox_h
+#define Geometry_BBox_h
+
+// Code...
+
+#endif // Geometry_BBox_h
+]]>
+</programlisting>
+
+The name of the guard should be of the following form:
+<replaceable>libraryname</replaceable>_<replaceable>filename</replaceable><literal>_h</literal>
+</para>
+</listitem>
+<listitem>
+<para>Use forward declarations wherever possible as opposed to
+including full definitions for classes, functions, and data:
+
+<programlisting>
+<![CDATA[
+// Class
+class PointToMe;
+
+// Function
+void my_function(PointToMe &p, PointToMe *ptm);
+
+// Data
+PointToMe *m;
+]]>
+</programlisting>
+
+</para>
+</listitem>
+<listitem>
+<para>The names of variables and functions will begin with a lowercase
+letter and include underscore word separators.  Names of constants
+should be in all CAPITALS, with underscore word separation:
+
+<programlisting>
+<![CDATA[
+static int CONSTANT_INT_FIVE = 5;
+void my_function_name();
+int my_local_variable_name = 0;
+]]>
+</programlisting>
+</para>
+</listitem>
+<listitem>
+<para>The names of class member variables are to end with an
+underscore, <quote>_</quote>:
+<programlisting>
+<![CDATA[
+struct SomeObject {
+  int count_;
+};
+]]>
+</programlisting>
+</para>
+</listitem>
+<listitem>
+<para>The names of abstract data types (eg: Classes), and structs are
+to begin with an uppercase letter and each new word in the name
+should also be capitalized.
+<programlisting>
+<![CDATA[
+class MyNewClassName {
+    // ...
+};
+]]>
+</programlisting>
+</para>
+</listitem>
+<listitem>
+<para>
+Declare as <type>const</type> a member function that does not
+change the state of an object.
+</para>
+</listitem>
+<listitem>
+<para>
+Constants are to be defined using <type>const</type> or
+<type>enum</type>. Never use <literal>#define</literal> to
+create constants.
+</para>
+</listitem>
+<listitem>
+<para>
+A class which uses <function>new</function> to allocate instances
+managed by the class must define a copy constructor and an assignment
+operator.
+</para>
+</listitem>
+<listitem>
+<para>All classes which are used as base classes and which have
+virtual functions, must define a virtual destructor.</para>
+</listitem>
+<listitem>
+<para>Always use <function>delete[]</function> to deallocate arrays.</para>
+</listitem>
+<listitem>
+<para>Use exception handling to trap errors (although exceptions
+should only be used for trapping truly exceptional events).</para>
+
+<para>Our exception model includes two levels of exceptions.  The top
+level of exceptions are defined in
+<filename>Classlib/Exceptions.h</filename> and are thrown when a class
+specific exception is not appropriate.</para> 
+
+<para>The bottom level of exceptions are class specific, defined in
+the class that throws them, and are subclassed off of the top level
+exceptions.  These class specific exceptions are exceptions that can
+be caught and handled from the calling function (1 level above the
+class.)  However, if the calling function chooses not to (or cannot)
+handle the class specific exception, the exception will propagate to
+the next level at which point it can be trapped and handled in the
+form of a top level exception.  An example of a class specific
+exception would be a
+<exceptionname>StackUnderFlowException</exceptionname> for a stack
+class.</para>
+</listitem>
+<listitem>
+<para>Comments should support generated documentation format. Comments in
+declarations should be of the form:
+<programlisting>
+//! &hellip;
+</programlisting>
+or 
+<programlisting>
+/*! &hellip; */ 
+</programlisting>
+These comments will then be
+visible in our online documentation.</para>
+
+<para>Comments in the definition part of your code need not have the
+!, as all the code is visible online including comments. </para>
+
+<para>Create comments that help the reader navigate your
+code. Comments should help the reader find the area of code he/she is
+looking for quickly.</para>
+</listitem>
+<listitem>
+<para>Do not use identifiers which begin with one ('_') or two ('__')
+underscores.</para>
+</listitem>
+<listitem>
+<para>Never use the <literal>$Id</literal> or <literal>$Log</literal>
+cvs directives.  This confuses merging between branches.</para>
+</listitem>
+<listitem>
+<para>Do not use <literal>#define</literal> to obtain more efficient
+code&mdash; use inline functions instead.</para>
+</listitem>
+<listitem>
+<para>Avoid the use of numeric values in code; use symbolic values
+instead.  This applies to numeric values that are repeated within the
+code but represent the same value.  Eg: <literal>MAX_ARRAY_SIZE =
+1024</literal>.</para>
+</listitem>
+<listitem>
+<para>Do not compare a pointer to NULL or assign NULL to a pointer;
+use 0 instead.</para>
+</listitem>
+<listitem>
+<para>Avoid explicit type conversions (casts).  If you must cast use
+<function>dynamic_cast</function> and insert a comment explaining why.</para>
+</listitem>
+<listitem>
+<para>Never convert a constant to a non-constant.  Use
+<type>mutable</type> if necesary. However, be aware of the
+thread safety problems this causes.</para>
+</listitem>
+<listitem>
+<para>Never use <literal>goto</literal>.</para>
+</listitem>
+<listitem>
+<para>Do not use <function>malloc</function>,
+<function>realloc</function>, or <function>free</function>.</para>
+</listitem>
+</orderedlist>
+</para>
+
+</section>
+
+<section>
+<title>Recommended</title>
+<para>
+<orderedlist>
+<listitem>
+<para>Never use more than 80 columns per line.</para>
+</listitem>
+<listitem>
+<para>An include file for a class should have a file name of the form
+<filename><replaceable>class name</replaceable>.h</filename>. Use
+uppercase and lowercase letters in the same way as in the source
+code.</para>
+</listitem>
+<listitem>
+<para>Never include <filename>/usr/include/*.h</filename>, for example
+<filename>iostream.h</filename> in any header file. This causes a huge
+amount of code to be recursively included and needlessly compiled.
+Use forward declarations to avoid this</para>
+</listitem>
+<listitem>
+<para>Group local includes together, then group system includes
+together.</para>
+</listitem>
+<listitem>
+<para>Avoid global data if possible.</para>
+</listitem>
+<listitem>
+<para>Optimize code only if you know that you have a performance
+problem. Think twice before you begin.</para>
+</listitem>
+<listitem>
+<para>Always force your compiler to compile with the maximum warning
+setting, and before you check in code, fix all warnings.</para>
+</listitem>
+<listitem>
+<para>Place machine-dependent code in a special file so that it may be
+easily located when porting code from one machine to another.</para>
+</listitem>
+<listitem>
+<para>Encapsulate global variables and constants, enumerated types,
+and typedefs in a class.</para>
+</listitem>
+<listitem>
+<para>Functions in general should not be more than 25 lines long. If
+you find this situation, break the function into several smaller
+functions.</para>
+</listitem>
+<listitem>
+<para>If a function stores a pointer to an object which is accessed
+via an argument, let the argument have the type pointer. Use reference
+arguments in other cases.</para>
+</listitem>
+<listitem>
+<para>When overloading functions, all variations should have the same
+semantics (be used for the same purpose).</para>
+</listitem>
+<listitem>
+<para>Do not assume that you know how the invocation mechanism for a
+function is implemented.</para>
+</listitem>
+<listitem>
+<para>Do not assume that an object is initialized in any special order
+in constructors.</para>
+</listitem>
+<listitem>
+<para>Do not assume that static objects are initialized in any special
+order.</para>
+</listitem>
+<listitem>
+<para>Use a typedef to simplify program syntax when declaring function
+pointers, or templated types.</para>
+</listitem>
+<listitem>
+<para>When two operators are opposites (such as == and !=), it is
+appropriate to define both.</para>
+</listitem>
+<listitem>
+<para>Use constant references (<type>const &amp;</type>) instead
+of call-by-value, unless using a pre-defined data type or a
+pointer.</para>
+</listitem>
+<listitem>
+<para>Minimize the number of temporary objects that are created as
+return values from functions or as arguments to functions.</para>
+</listitem>
+<listitem>
+<para>Do not write code which is dependent on the lifetime of a
+temporary object.</para>
+</listitem>
+<listitem>
+<para>Do not assume that the operands in an expression are evaluated
+in a definite order. Use parenthesis to enforce an order.</para>
+</listitem>
+<listitem>
+<para>Use parentheses to clarify the order of evaluation for operators
+in expressions.</para>
+</listitem>
+<listitem>
+<para>Avoid using shift operations instead of arithmetic operations.</para>
+</listitem>
+<listitem>
+<para>Use <varname>cout</varname> instead of
+<function>printf</function>.</para>
+</listitem>
+<listitem>
+<para>Do not assume that an <type>int</type> and a <type>long</type>
+have the same size.</para>
+</listitem>
+<listitem>
+<para>Do not assume that pointers and integers have the same size.</para>
+</listitem>
+<listitem>
+<para>Do not assume that <type>long</type>s, <type>float</type>s,
+<type>double</type>s or <type>long double</type>s may begin at
+arbitrary addresses.</para>
+</listitem>
+<listitem>
+<para>Avoid pointer arithmetic.</para>
+</listitem>
+<listitem>
+<para>Always use plain <type>char</type> if 8-bit ASCII is used.
+Otherwise, use <type>signed char</type> or <type>unsigned
+char</type>.</para>
+</listitem>
+<listitem>
+<para>Do not assume that a <type>char</type> is signed or unsigned.</para>
+</listitem>
+<listitem>
+<para>Do not depend on underflow or overflow functioning in any
+special way.</para>
+</listitem>
+</orderedlist>
+</para>
+</section>
+
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->
