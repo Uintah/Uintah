@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
 
 	if(server) {
 	  PingPong_impl* pp=new PingPong_impl;
-
+	  pp->addReference();
           //Set up server's requirement of the distribution array 
 	  Index** dr = new Index* [1]; 
 	  dr[0] = new Index(myrank,myrank+1,1);
