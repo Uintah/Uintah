@@ -665,7 +665,47 @@ PackageDB::categoryNames(const string& packageName) const
   for(iter.first();iter.ok();++iter) result[i++]=iter.get_key();
   return result;
 }
+
+
+string
+PackageDB::getCategoryName(const string &packName,
+			   const string &catName,
+			   const string &modName)
+{
+  Package *package;
+  if (!db_->lookup(packName, package)){
+    cerr << "WARNING: Unknown package " << packName << "\n";
+    return catName;
+  }
+
+  Category *category;
+  ModuleInfo* modinfo;
+  if (package->lookup(catName, category) &&
+      category->lookup(modName, modinfo))
+  {
+    // Original category was fine, just return that.
+    return catName;
+  }
+
+  PackageIter iter(package);
+  for (iter.first(); iter.ok();++iter)
+  {
+    if (iter.get_data()->lookup(modName, modinfo))
+    {
+      string newcatname = iter.get_key();
+      if (newcatname != catName)
+      {
+	cerr << "WARNING: Remapping " <<
+	  packName << "_" << catName << "_" << modName << " to " <<
+	  packName << "_" << newcatname << "_" << modName << "\n";
+      }
+      return newcatname;
+    }
+  }
+  return catName;
+}
  
+
 vector<string>
 PackageDB::moduleNames(const string& packageName,
 		       const string& categoryName) const

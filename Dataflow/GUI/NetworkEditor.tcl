@@ -435,7 +435,11 @@ proc addModuleAtPosition {package category module xpos ypos} {
     global maincanvas minicanvas
     global loading
     global inserting
-    
+
+    # Look up the real category for a module.  This allows networks to
+    # be read in if the modules change categories.
+    set category [netedit getCategoryName $package $category $module]
+
     set mainCanvasWidth 4500
     set mainCanvasHeight 4500
     
