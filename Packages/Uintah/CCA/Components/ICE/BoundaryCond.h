@@ -1,8 +1,11 @@
 #ifndef Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
 #define Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
 
+#include <Packages/Uintah/CCA/Components/ICE/microSlipBCs.h>
 #include <Packages/Uintah/CCA/Components/ICE/NG_NozzleBCs.h>
 #include <Packages/Uintah/CCA/Components/ICE/LODI2.h>
+#include <Packages/Uintah/Core/BoundaryConditions/BCDataArray.h>
+#include <Packages/Uintah/Core/BoundaryConditions/DensityBoundCond.h>
 #include <Packages/Uintah/Core/BoundaryConditions/BoundCond.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Variables/VarTypes.h>
@@ -11,8 +14,7 @@
 #include <Packages/Uintah/Core/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Variables/Stencil7.h>
-#include <Packages/Uintah/Core/BoundaryConditions/BCDataArray.h>
-#include <Packages/Uintah/Core/BoundaryConditions/DensityBoundCond.h>
+
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Containers/StaticArray.h>
@@ -24,6 +26,34 @@ static DebugStream BC_dbg(  "ICE_BC_DBG", false);
 static DebugStream BC_doing("ICE_BC_DOING", false);
 
   class DataWarehouse;
+
+  //_____________________________________________________________
+  // This struct contains misc. variables that are need by the 
+  // the different custom boundary conditions
+  struct customBC_var_basket{
+    
+    // LODI boundary condtions
+    bool usingLodi;
+    Lodi_variable_basket* Lodi_var_basket;
+    Lodi_vars* lv;
+    bool setLodiBcs;
+ 
+    // Northrup Grumman Boundary Conditions
+    bool usingNG_nozzle;
+    bool setNGBcs;
+    NG_BC_vars* ng;
+    
+    // Micro slip boundary conditions
+    bool usingMicroSlipBCs;
+    bool setMicroSlipBcs;
+    Slip_vars* sv;
+    Slip_variable_basket* Slip_var_basket;
+    
+    Output* dataArchiver; 
+    SimulationStateP sharedState;
+    
+  };
+
 
   void is_BC_specified(const ProblemSpecP& prob_spec, string variable);
   
@@ -37,8 +67,7 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
             SimulationStateP& sharedState,
             const int mat_id,
             DataWarehouse* new_dw,
-            Lodi_vars* lv,
-            NG_BC_vars* NGVars);
+            customBC_var_basket* C_BC_basket);
             
   void setBC(CCVariable<double>& var,     
             const std::string& type,     // stub function
@@ -58,8 +87,7 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
              SimulationStateP& sharedState,
              const int mat_id, 
              DataWarehouse* new_dw,
-             Lodi_vars_pressBC*,
-             NG_BC_vars* NGVars);
+             customBC_var_basket* C_BC_basket);
              
   void setBC(CCVariable<double>& press_CC,          
              StaticArray<CCVariable<double> >& rho_micro,
@@ -80,8 +108,7 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
              SimulationStateP& sharedState,
              const int mat_id,
              DataWarehouse* new_dw, 
-             Lodi_vars* lv,
-             NG_BC_vars* NGVars);
+             customBC_var_basket* C_BC_basket);
              
    void setBC(CCVariable<Vector>& variable,  // stub function
              const std::string& type,
@@ -110,7 +137,24 @@ template<class T>
   
   void ImplicitMatrixBC(CCVariable<Stencil7>& var, const Patch* patch);
   
+  //__________________________________
+  //     C U S T O M   B C S
+  void computesRequires_CustomBCs(Task* t, 
+                                  const string& where,
+                                  ICELabel* lb,
+                                  const MaterialSubset* ice_matls,
+                                  customBC_var_basket* C_BC_basket);
  
+  void preprocess_CustomBCs(const string& where,
+                            DataWarehouse* old_dw, 
+                            DataWarehouse* new_dw,
+                            ICELabel* lb,
+                            const Patch* patch,
+                            const int indx,
+                            customBC_var_basket* C_BC_basket);
+                            
+  void delete_CustomBCs(customBC_var_basket* C_BC_basket); 
+  
 /* --------------------------------------------------------------------- 
  Function~  getIteratorBCValueBCKind--
  Purpose~   does the actual work
@@ -336,7 +380,7 @@ void setBC(T& vel_FC,
            const Patch* patch,    
            const int mat_id,
            SimulationStateP& sharedState,
-           NG_BC_vars* ng)      
+           customBC_var_basket* custom_BC_basket)      
 {
   BC_doing << "setBCFC (SFCVariable) "<< desc<< " mat_id = " << mat_id <<endl;
   Vector cell_dx = patch->dCell();
@@ -418,7 +462,8 @@ void setBC(T& vel_FC,
             bc_kind == "Custom" &&  
             face == Patch::xminus) {
           setNGC_Nozzle_BC<T, double>(patch, face, vel_FC, "Vel_FC","FC", bound, 
-                                   bc_kind,mat_id, child, sharedState, ng); 
+                                   bc_kind,mat_id, child, sharedState, 
+                                   custom_BC_basket->ng); 
         }        
         
         //__________________________________
