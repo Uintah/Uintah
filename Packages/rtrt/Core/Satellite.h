@@ -2,6 +2,8 @@
 #ifndef SATELLITE_H
 #define SATELLITE_H 1
 
+#include <Packages/rtrt/Core/UVSphere.h>
+
 namespace rtrt {
 
 class Satellite : public UVSphere
@@ -9,27 +11,30 @@ class Satellite : public UVSphere
 
  protected:
 
-  Object *parent_;
-  string name_;
-  double rev_speed_;
-  double orb_radius_;
-  double orb_speed_;
-  double theta_;
+  Satellite *parent_;
+  string    name_;
+  double    rev_speed_;
+  double    orb_radius_;
+  double    orb_speed_;
+  double    theta_;
 
  public:
 
   Satellite(const string &name, Material *mat, const Point &center, 
             double radius, const Vector &up=Vector(0,0,1), 
-            Object *parent=0) 
+            Satellite *parent=0) 
     : UVSphere(mat,center,radius,up), parent_(parent), 
-    name_(name), rev_speed_(.1), orb_radius_(5), orb_speed_(.0001)
+    name_(name), rev_speed_(.1), orb_speed_(.0001)
   {
     theta_ = sqrt(cen.x()*cen.x()+cen.y()*cen.y());
+    orb_radius_ = sqrt(cen.x()*cen.x()+
+                       cen.y()*cen.y()+
+                       cen.z()*cen.z());
   }
   virtual ~Satellite() {}
 
-  Object *get_parent() { return parent_; }
-  void set_parent(Object *p) { parent_ = p; }
+  Satellite *get_parent() { return parent_; }
+  void set_parent(Satellite *p) { parent_ = p; }
 
   double get_rev_speed() const { return rev_speed_; }
   void set_rev_speed(double speed) { rev_speed_ = speed; }
@@ -41,7 +46,7 @@ class Satellite : public UVSphere
   void set_orb_radius(double radius) { orb_radius_ = radius; }
 
   double get_radius() const { return radius; }
-  void set_radius(double radius) { radius = radius; }
+  void set_radius(double r) { radius = r; }
 
   Point &get_center() { return cen; }
   void set_center(const Point &p) { cen = p; }
@@ -58,7 +63,7 @@ class Satellite : public UVSphere
   {
     // orbit
     theta_ += orb_speed_*t;
-    if (theta_>6.2832) theta_=0;
+    if (theta_>628318.53) theta_=0; /* start over after 200,000 PI */
     double x = orb_radius_*cos(theta_);
     double y = orb_radius_*sin(theta_);
     cen = Point(x,y,0);
