@@ -75,7 +75,7 @@ QuadraticTetVolMesh::io(Piostream &stream)
 QuadraticTetVolMesh::QuadraticTetVolMesh() :
   TetVolMesh(),
   node_2_edge_(),
-#ifdef HAVE_HASH_SET
+#ifdef HAVE_HASH_MAP
   edge_2_node_(100,edge_hasher_,edge_eq_),
 #else
   edge_2_node_(edge_eq_),
