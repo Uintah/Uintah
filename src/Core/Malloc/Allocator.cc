@@ -27,8 +27,9 @@
  *  Copyright (C) 199? SCI Group
  */
 
+#define LINUX_GETENV_HACK 0
+
 /* TODO:
-5) Printout of leaks
 6) Destroy allocators
 */
 
@@ -61,9 +62,9 @@
 
 /* we use UCONV to avoid compiler warnings. */
 #if (_MIPS_SZLONG == 64)
-#define UCONV "%lx"
+#define UCONV "%ld"
 #else
-#define UCONV "%x"
+#define UCONV "%d"
 #endif
 
 extern "C" void audit() {
@@ -73,6 +74,10 @@ extern "C" void audit() {
 }
 
 namespace SCIRun {
+
+#define STATSIZE (4096+BUFSIZ)
+  static char stat_buffer[STATSIZE];
+  static char trace_buffer[STATSIZE];
 
 Allocator* default_allocator;
 
@@ -129,7 +134,7 @@ static void account_bin(Allocator* a, AllocBin* bin, FILE* out,
 	bytes_fragmented+=a->obj_maxsize(p)-p->reqsize;
 	if(out){
 	    fprintf(out, "%p: "UCONV" bytes (%s)\n", 
-		    p+sizeof(Tag)+sizeof(Sentinel),
+		    (char*)p+sizeof(Tag)+sizeof(Sentinel),
 		    p->reqsize, p->tag);
 	}
     }
@@ -200,9 +205,9 @@ static void shutdown()
 	fprintf(a->stats_out, ""UCONV" bytes missing ("UCONV" memory objects)\n",
 		a->sizealloc-a->sizefree, a->nalloc-a->nfree);
 
+	a->unlock();
 	if(a->stats_out != stderr)
 	    fclose(a->stats_out);
-	a->unlock();
     }
 }
 
@@ -392,7 +397,7 @@ Allocator* MakeAllocator()
 
 
     // See if we are in strict mode
-    if(getenv("MALLOC_STRICT")){
+    if(LINUX_GETENV_HACK||getenv("MALLOC_STRICT")){
 	a->strict=1;
     } else {
 	a->strict=0;
@@ -420,6 +425,7 @@ Allocator* MakeAllocator()
     // Must run this block of code before the MALLOC_STATS code
     // because the "alloc" in the MALLOC_STATS block uses the
     // "trace_out" var that is set here.
+    bool atexit_added=false;
     if(getenv("MALLOC_TRACE")){
 	// Set the default allocator, since the fopen below may
 	// call malloc.
@@ -432,7 +438,7 @@ Allocator* MakeAllocator()
 	    char filename[MAXPATHLEN];
 	    sprintf(filename, file, getpid());
 	    a->trace_out=fopen(filename, "w");
-	    setvbuf(a->trace_out, (char*)a->alloc(4096+BUFSIZ, "Malloc trace buffer"), _IOFBF, 4096+BUFSIZ);
+	    setvbuf(a->trace_out, trace_buffer, _IOFBF, STATSIZE);
 	    if(!a->trace_out){
 		perror("fopen");
 		fprintf(stderr, "cannot open trace file: %s, not tracing\n",
@@ -444,33 +450,35 @@ Allocator* MakeAllocator()
 	    if(!a->stats_out){
 		a->stats_out=a->trace_out;
 		atexit(shutdown);
+		atexit_added=true;
 	    }
 	}
     } else {
 	a->trace_out=0;
     }
 
-    if(getenv("MALLOC_STATS")){
+    char* statsfile = getenv("MALLOC_STATS");
+    if(LINUX_GETENV_HACK||statsfile){
 	// Set the default allocator, since the fopen below may
 	// call malloc.
 	if(!default_allocator)
 	    default_allocator=a;
-	char* file=getenv("MALLOC_STATS");
-	if(!file || strlen(file) == 0){
+	if(!statsfile || strlen(statsfile) == 0){
 	    a->stats_out=stderr;
 	} else {
-	    char filename[MAXPATHLEN];
-	    sprintf(filename, file, getpid());
+	  //char filename[MAXPATHLEN];
+	  //sprintf(filename, statsfile, getpid());
+	  char* filename=statsfile;
 	    a->stats_out=fopen(filename, "w");
-	    setvbuf(a->stats_out, (char*)a->alloc(4096+BUFSIZ, "Malloc stats buffer"), _IOFBF, 4096+BUFSIZ);
+	    setvbuf(a->stats_out, stat_buffer, _IOFBF, STATSIZE);
 	    if(!a->stats_out){
 		perror("fopen");
 		fprintf(stderr, "cannot open stats file: %s, will not print stats\n",
-			file);
+			statsfile);
 		a->stats_out=0;
 	    }
 	}
-	if(a->stats_out){
+	if(a->stats_out && !atexit_added){
 	    atexit(shutdown);
 	}
     } else {
