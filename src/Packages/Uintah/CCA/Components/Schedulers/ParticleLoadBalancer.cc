@@ -740,7 +740,10 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, bool
     }
 
     d_oldAssignment = d_processorAssignment;
-    d_state = checkLoadBalance;  // l.b. on next timestep
+    if (d_dynamicAlgorithm != static_lb)
+      d_state = checkLoadBalance;  // l.b. on next timestep
+    else
+      d_state = postLoadBalance;
   }
   // set up on a restart when lb is static
   else if (d_dynamicAlgorithm == static_lb) {
