@@ -114,6 +114,9 @@ itcl_class Teem_Filters_NrrdSelectTime {
 	radiobutton $w.playmode.bounce2 -text "Bounce2" \
 		-variable $this-playmode -value bounce2
 
+	radiobutton $w.playmode.inc_w_exec -text "Increment with Execute" \
+	    -variable $this-playmode -value inc_w_exec
+
 	frame $w.playmode.delay
 	label $w.playmode.delay.label -text "Delay (ms)" \
 		-width 10 -just left
@@ -124,8 +127,8 @@ itcl_class Teem_Filters_NrrdSelectTime {
 
 	pack $w.playmode.label -side top -expand yes -fill both
 	pack $w.playmode.once $w.playmode.loop \
-		$w.playmode.bounce1 $w.playmode.bounce2 $w.playmode.delay \
-	        -side top -anchor w
+	    $w.playmode.bounce1 $w.playmode.bounce2 $w.playmode.inc_w_exec\
+	    $w.playmode.delay -side top -anchor w
 
 
         button $w.execmode.play -text "Play" -command "$this run_play"

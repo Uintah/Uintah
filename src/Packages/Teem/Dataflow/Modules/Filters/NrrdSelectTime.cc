@@ -304,7 +304,17 @@ NrrdSelectTime::execute()
   }
   else
   {
-    send_selection(nrrd_handle, current_.get(), time_axis, true);
+    if (playmode_.get() == "inc_w_exec")
+    {
+      cerr << "inc with exec mode" << endl;
+      int which = current_.get();
+
+      send_selection(nrrd_handle, which, time_axis, true);
+      which = increment(which, lower, upper);
+      current_.set(which);
+    } else {
+      send_selection(nrrd_handle, current_.get(), time_axis, true);
+    }
   }
   execmode_.set("init");
 }
