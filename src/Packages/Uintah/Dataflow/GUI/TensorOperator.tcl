@@ -27,7 +27,7 @@ itcl_class Uintah_Visualization_TensorOperator {
 	frame $w
 	label $w.l -text "$text"
 	pack $w.l -side left -anchor w
-	entry $w.e -textvariable $v -width 3
+	entry $w.e -textvariable $v -width 8
 	bind $w.e <Return> $c
 	pack $w.e -side right -anchor e
     }
