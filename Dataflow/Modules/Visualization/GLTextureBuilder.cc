@@ -75,6 +75,8 @@ void GLTextureBuilder::execute(void)
 {
 
   FieldHandle sfield;
+  infield_ = (FieldIPort *)get_iport("Field");
+  otexture_ = (GLTexture3DOPort *)get_oport("GL Texture");
   if (!infield_->get(sfield)){
     return;
   } else if( sfield.get_rep() && sfield->get_type_name(0) == "LatticeVol"){
