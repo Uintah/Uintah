@@ -5,7 +5,7 @@
 
 SRCDIR := Uintah/Components
 
-SUBDIRS := $(SRCDIR)/Arches $(SRCDIR)/ICE $(SRCDIR)/MPM \
+SUBDIRS := $(SRCDIR)/ICE $(SRCDIR)/MPM \
 	$(SRCDIR)/ProblemSpecification \
 	$(SRCDIR)/Schedulers $(SRCDIR)/SimulationController
 
@@ -13,6 +13,9 @@ include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.3  2000/04/07 23:02:14  sparker
+# Fixed arches compile
+#
 # Revision 1.2  2000/03/20 19:38:17  sparker
 # Added VPATH support
 #
