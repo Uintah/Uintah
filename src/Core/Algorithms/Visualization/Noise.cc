@@ -51,40 +51,54 @@ NoiseAlg::get_field()
 
 
 CompileInfoHandle
-NoiseAlg::get_compile_info(const TypeDescription *td) {
+NoiseAlg::get_compile_info(const TypeDescription *td,
+			   bool cell_centered_p,
+			   bool face_centered_p)
+{
   string subname;
   string subinc;
   string sname = td->get_name("", "");
-  
+
   //Test for LatVolField inheritance...
   if (sname.find("LatVolField") != string::npos ||
       sname.find("StructHexVolField") != string::npos) {
     // we are dealing with a lattice vol or inherited version
     subname.append("HexMC<" + td->get_name() + "> ");
     subinc.append(HexMCBase::get_h_file_path());
+    face_centered_p = false;
   } else if (sname.find("TetVolField") != string::npos) {
     subname.append("TetMC<" + td->get_name() + "> ");
     subinc.append(TetMCBase::get_h_file_path());
+    face_centered_p = false;
   } else if (sname.find("HexVolField") != string::npos) {
     subname.append("UHexMC<" + td->get_name() + "> ");
     subinc.append(UHexMCBase::get_h_file_path());
+    face_centered_p = false;
   } else if (sname.find("TriSurfField") != string::npos) {
     subname.append("TriMC<" + td->get_name() + "> ");
     subinc.append(TriMCBase::get_h_file_path());
+    cell_centered_p = false;
   } else if (sname.find("QuadSurfField") != string::npos) {
     subname.append("QuadMC<" + td->get_name() + "> ");
     subinc.append(QuadMCBase::get_h_file_path());
+    cell_centered_p = false;
   } else if (sname.find("ImageField") != string::npos) {
     subname.append("QuadMC<" + td->get_name() + "> ");
     subinc.append(QuadMCBase::get_h_file_path());
+    cell_centered_p = false;
   } else {
     cerr << "Unsupported Field, needs to be of Lattice or Tet type." << endl;
     subname.append("Cannot compile this unsupported type");
   }
 
-  string fname("Noise." + td->get_filename() + ".");
+  string dloc = "";
+  if (cell_centered_p) { dloc = "Cell"; }
+  if (face_centered_p) { dloc = "Face"; }
+
+  string fname("Noise" + dloc + "." + td->get_filename() + ".");
   CompileInfo *rval = scinew CompileInfo(fname, "NoiseAlg", 
-					 "Noise", subname);
+					 "Noise" + dloc,
+					 subname);
   rval->add_include(get_h_file_path());
   rval->add_include(subinc);
   td->fill_compile_info(rval);

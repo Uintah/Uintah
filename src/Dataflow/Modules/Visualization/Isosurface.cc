@@ -310,7 +310,10 @@ Isosurface::execute()
       LockingHandle<NoiseAlg> noise_alg;
       if (! noise_alg.get_rep())
       {
-	CompileInfoHandle ci = NoiseAlg::get_compile_info(td);
+	CompileInfoHandle ci =
+	  NoiseAlg::get_compile_info(td,
+				     field->data_at() == Field::CELL,
+				     field->data_at() == Field::FACE);
 	if (! module_dynamic_compile(ci, noise_alg))
 	{
 	  error( "NOISE can not work with this field.");

@@ -50,6 +50,7 @@ class TriMC : public TriMCBase
 public:
   typedef Field                                  field_type;
   typedef typename Field::mesh_type::Face::index_type  cell_index_type;
+  typedef typename Field::mesh_type::Node::index_type  node_index_type;
   typedef typename Field::value_type             value_type;
   typedef typename Field::mesh_type              mesh_type;
   typedef typename Field::mesh_handle_type       mesh_handle_type;
@@ -63,8 +64,13 @@ private:
   map<long int, CurveMesh::Node::index_type> vertex_map_;
   int nnodes_;
   int n_;
+  vector<long int> node_vector_;
 
   CurveMesh::Node::index_type find_or_add_edgepoint(int, int, const Point &);
+  CurveMesh::Node::index_type find_or_add_nodepoint(node_index_type &idx);
+
+  void extract_n( cell_index_type, double );
+  void extract_f( cell_index_type, double );
 
 public:
   TriMC( Field *field ) : field_(field), mesh_(field->get_typed_mesh()) {}
@@ -96,6 +102,14 @@ void TriMC<Field>::reset( int n, bool build_mesh )
   typename Field::mesh_type::Node::size_type nsize;
   mesh_->size(nsize);
   nnodes_ = nsize;
+
+  if (field_->data_at() == Field::FACE)
+  {
+    mesh_->synchronize(Mesh::EDGES_E);
+    mesh_->synchronize(Mesh::EDGE_NEIGHBORS_E);
+    node_vector_ = vector<long int>(nsize, -1);
+  }
+
   if (build_mesh)
     out_mesh_ = new CurveMesh; 
   else 
@@ -120,8 +134,26 @@ TriMC<Field>::find_or_add_edgepoint(int n0, int n1, const Point &p)
   return node_idx;
 }
 
+
 template<class Field>
-void TriMC<Field>::extract( cell_index_type cell, double v )
+CurveMesh::Node::index_type
+TriMC<Field>::find_or_add_nodepoint(node_index_type &tri_node_idx)
+{
+  CurveMesh::Node::index_type curve_node_idx;
+  long int i = node_vector_[(long int)(tri_node_idx)];
+  if (i != -1) curve_node_idx = (CurveMesh::Node::index_type) i;
+  else {
+    Point p;
+    mesh_->get_point(p, tri_node_idx);
+    curve_node_idx = out_mesh_->add_point(p);
+    node_vector_[(long int)tri_node_idx] = (long int)curve_node_idx;
+  }
+  return curve_node_idx;
+}
+
+
+template<class Field>
+void TriMC<Field>::extract_n( cell_index_type cell, double v )
 {
   typename mesh_type::Node::array_type node;
   Point p[3];
@@ -161,6 +193,54 @@ void TriMC<Field>::extract( cell_index_type cell, double v )
     }
   }
 }
+
+
+template<class Field>
+void TriMC<Field>::extract_f( cell_index_type cell, double iso )
+{
+  value_type selfvalue, nbrvalue;
+  if (!field_->value( selfvalue, cell )) return;
+  typename mesh_type::Edge::array_type edges;
+  mesh_->get_edges(edges, cell);
+
+  cell_index_type nbr;
+  Point p[2];
+  typename mesh_type::Node::array_type nodes;
+  CurveMesh::Node::array_type vertices(2);
+  unsigned int i, j;
+  for (i = 0; i < edges.size(); i++)
+  {
+    if (mesh_->get_neighbor(nbr, cell, edges[i]) &&
+	field_->value(nbrvalue, nbr) &&
+	//(selfvalue > nbrvalue) &&
+	((selfvalue-iso) * (nbrvalue-iso) < 0))
+    {
+      mesh_->get_nodes(nodes, edges[i]);
+      for (j=0; j < 2; j++) { mesh_->get_center(p[j], nodes[j]); }
+      lines_->add(p[0], p[1]);
+
+      if (build_mesh_)
+      {
+	for (j=0; j < 2; j ++)
+	{
+	  vertices[j] = find_or_add_nodepoint(nodes[j]);
+	}
+	out_mesh_->add_elem(vertices);
+      }
+    }
+  }
+}
+
+
+template<class Field>
+void TriMC<Field>::extract( cell_index_type cell, double v )
+{
+  if (field_->data_at() == Field::NODE)
+    extract_n(cell, v);
+  else
+    extract_f(cell, v);
+}
+
 
 
 template<class Field>
