@@ -85,7 +85,7 @@ void swapbytes( Uintah::Matrix3& m){
 void Matrix3::set(int i, int j, double value)
 {
   // Assign the Matrix3 the value components
-   mat3[i-1][j-1] = value;
+   mat3[i][j] = value;
 }
 
 Matrix3 Matrix3::Inverse() const
@@ -104,15 +104,15 @@ Matrix3 Matrix3::Inverse() const
   }
   else
   {
-    inv_matrix(1,1) = (*this)(2,2)*(*this)(3,3) - (*this)(2,3)*(*this)(3,2);
-    inv_matrix(1,2) = -(*this)(1,2)*(*this)(3,3) + (*this)(3,2)*(*this)(1,3);
-    inv_matrix(1,3) = (*this)(1,2)*(*this)(2,3) - (*this)(2,2)*(*this)(1,3);
-    inv_matrix(2,1) = -(*this)(2,1)*(*this)(3,3) + (*this)(3,1)*(*this)(2,3);
-    inv_matrix(2,2) = (*this)(1,1)*(*this)(3,3) - (*this)(1,3)*(*this)(3,1);
-    inv_matrix(2,3) = -(*this)(1,1)*(*this)(2,3) + (*this)(2,1)*(*this)(1,3);
-    inv_matrix(3,1) = (*this)(2,1)*(*this)(3,2) - (*this)(3,1)*(*this)(2,2);
-    inv_matrix(3,2) = -(*this)(1,1)*(*this)(3,2) + (*this)(3,1)*(*this)(1,2);
-    inv_matrix(3,3) = (*this)(1,1)*(*this)(2,2) - (*this)(1,2)*(*this)(2,1);
+    inv_matrix(0,0) = (*this)(1,1)*(*this)(2,2) - (*this)(1,2)*(*this)(2,1);
+    inv_matrix(0,1) = -(*this)(0,1)*(*this)(2,2) + (*this)(2,1)*(*this)(0,2);
+    inv_matrix(0,2) = (*this)(0,1)*(*this)(1,2) - (*this)(2,1)*(*this)(0,2);
+    inv_matrix(1,0) = -(*this)(1,0)*(*this)(2,2) + (*this)(2,0)*(*this)(1,2);
+    inv_matrix(1,1) = (*this)(0,0)*(*this)(2,2) - (*this)(0,2)*(*this)(2,0);
+    inv_matrix(1,2) = -(*this)(0,0)*(*this)(1,2) + (*this)(1,0)*(*this)(0,2);
+    inv_matrix(2,0) = (*this)(1,0)*(*this)(2,1) - (*this)(2,0)*(*this)(1,1);
+    inv_matrix(2,1) = -(*this)(0,0)*(*this)(2,1) + (*this)(2,0)*(*this)(0,1);
+    inv_matrix(2,2) = (*this)(0,0)*(*this)(1,1) - (*this)(0,1)*(*this)(1,0);
  
     inv_matrix = inv_matrix/det;
 
@@ -566,9 +566,9 @@ ostream & operator << (ostream &out_file, const Matrix3 &m3)
 {
   // Overload the output stream << operator
 
-  out_file <<  m3(1,1) << ' ' << m3(1,2) << ' ' << m3(1,3) << endl;
-  out_file <<  m3(2,1) << ' ' << m3(2,2) << ' ' << m3(2,3) << endl;
-  out_file <<  m3(3,1) << ' ' << m3(3,2) << ' ' << m3(3,3) ;
+  out_file <<  m3(0,0) << ' ' << m3(0,1) << ' ' << m3(0,2) << endl;
+  out_file <<  m3(1,0) << ' ' << m3(1,1) << ' ' << m3(1,2) << endl;
+  out_file <<  m3(2,0) << ' ' << m3(2,1) << ' ' << m3(2,2) ;
 
   return out_file;
 }

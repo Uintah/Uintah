@@ -212,7 +212,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 	
        	  for (int j = 0; j<3; j++){
             for (int i = 0; i<3; i++) {
-              dispGrad(i+1,j+1) += disp[i] * d_S[k][j]* oodx[j];
+              dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
             }
           }
 
@@ -318,7 +318,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
         FastMatrix sig(3,3);
         for (int i = 0; i < 3; i++) {
           for (int j = 0; j < 3; j++) {
-            sig(i,j)=pstress_new[idx](i+1,j+1);
+            sig(i,j)=pstress_new[idx](i,j);
           }
         }
 
@@ -434,7 +434,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
         for (int j = 0; j<3; j++){
           for (int i = 0; i<3; i++) {
-            dispGrad(i+1,j+1) += disp[i] * d_S[k][j]* oodx[j];
+            dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
           }
         }
       }

@@ -396,7 +396,7 @@ inline void Matrix3::operator = (const Matrix3 &m3)
 
   for(int i=0;i<3;i++){
     for(int j=0;j<3;j++){
-        mat3[i][j] = m3(i+1,j+1);
+        mat3[i][j] = m3(i,j);
     }
   }
 
@@ -430,7 +430,7 @@ inline void Matrix3::operator += (const Matrix3 &m3)
 
   for(int i=0;i<3;i++){
     for(int j=0;j<3;j++){
-        mat3[i][j] += m3(i+1,j+1);
+        mat3[i][j] += m3(i,j);
     }
   }
 
@@ -442,7 +442,7 @@ inline void Matrix3::operator -= (const Matrix3 &m3)
 
   for(int i=0;i<3;i++){
     for(int j=0;j<3;j++){
-        mat3[i][j] -= m3(i+1,j+1);
+        mat3[i][j] -= m3(i,j);
     }
   }
 
@@ -474,17 +474,17 @@ inline Matrix3 Matrix3::operator * (const Matrix3 &m3) const
 {
 //   Multiply a Matrix3 by a Matrix3
 
-  return Matrix3(mat3[0][0]*m3(1,1)+mat3[0][1]*m3(2,1)+mat3[0][2]*m3(3,1),
-		 mat3[0][0]*m3(1,2)+mat3[0][1]*m3(2,2)+mat3[0][2]*m3(3,2),
-		 mat3[0][0]*m3(1,3)+mat3[0][1]*m3(2,3)+mat3[0][2]*m3(3,3),
+  return Matrix3(mat3[0][0]*m3(0,0)+mat3[0][1]*m3(1,0)+mat3[0][2]*m3(2,0),
+		 mat3[0][0]*m3(0,1)+mat3[0][1]*m3(1,1)+mat3[0][2]*m3(2,1),
+		 mat3[0][0]*m3(0,2)+mat3[0][1]*m3(1,2)+mat3[0][2]*m3(2,2),
 
-		 mat3[1][0]*m3(1,1)+mat3[1][1]*m3(2,1)+mat3[1][2]*m3(3,1),
-                 mat3[1][0]*m3(1,2)+mat3[1][1]*m3(2,2)+mat3[1][2]*m3(3,2),
-                 mat3[1][0]*m3(1,3)+mat3[1][1]*m3(2,3)+mat3[1][2]*m3(3,3),
+		 mat3[1][0]*m3(0,0)+mat3[1][1]*m3(1,0)+mat3[1][2]*m3(2,0),
+                 mat3[1][0]*m3(0,1)+mat3[1][1]*m3(1,1)+mat3[1][2]*m3(2,1),
+                 mat3[1][0]*m3(0,2)+mat3[1][1]*m3(1,2)+mat3[1][2]*m3(2,2),
 
-		 mat3[2][0]*m3(1,1)+mat3[2][1]*m3(2,1)+mat3[2][2]*m3(3,1),
-                 mat3[2][0]*m3(1,2)+mat3[2][1]*m3(2,2)+mat3[2][2]*m3(3,2),
-                 mat3[2][0]*m3(1,3)+mat3[2][1]*m3(2,3)+mat3[2][2]*m3(3,3));
+		 mat3[2][0]*m3(0,0)+mat3[2][1]*m3(1,0)+mat3[2][2]*m3(2,0),
+                 mat3[2][0]*m3(0,1)+mat3[2][1]*m3(1,1)+mat3[2][2]*m3(2,1),
+                 mat3[2][0]*m3(0,2)+mat3[2][1]*m3(1,2)+mat3[2][2]*m3(2,2));
 }
 
 inline Vector Matrix3::operator * (const Vector& V) const
@@ -499,26 +499,26 @@ inline Matrix3 Matrix3::operator + (const Matrix3 &m3) const
 {
 //   Add a Matrix3 to a Matrix3
 
-  return Matrix3(mat3[0][0] + m3(1,1),mat3[0][1] + m3(1,2),mat3[0][2] + m3(1,3),
-		 mat3[1][0] + m3(2,1),mat3[1][1] + m3(2,2),mat3[1][2] + m3(2,3),
-		 mat3[2][0] + m3(3,1),mat3[2][1] + m3(3,2),mat3[2][2] + m3(3,3));
+  return Matrix3(mat3[0][0] + m3(0,0),mat3[0][1] + m3(0,1),mat3[0][2] + m3(0,2),
+		 mat3[1][0] + m3(1,0),mat3[1][1] + m3(1,1),mat3[1][2] + m3(1,2),
+		 mat3[2][0] + m3(2,0),mat3[2][1] + m3(2,1),mat3[2][2] + m3(2,2));
 }
 
 inline Matrix3 Matrix3::operator - (const Matrix3 &m3) const
 {
 //   Subtract a Matrix3 from a Matrix3
 
-  return Matrix3(mat3[0][0] - m3(1,1),mat3[0][1] - m3(1,2),mat3[0][2] - m3(1,3),
-		 mat3[1][0] - m3(2,1),mat3[1][1] - m3(2,2),mat3[1][2] - m3(2,3),
-		 mat3[2][0] - m3(3,1),mat3[2][1] - m3(3,2),mat3[2][2] - m3(3,3));
+  return Matrix3(mat3[0][0] - m3(0,0),mat3[0][1] - m3(0,1),mat3[0][2] - m3(0,2),
+		 mat3[1][0] - m3(1,0),mat3[1][1] - m3(1,1),mat3[1][2] - m3(1,2),
+		 mat3[2][0] - m3(2,0),mat3[2][1] - m3(2,1),mat3[2][2] - m3(2,2));
 }
 
 inline bool Matrix3::operator==(const Matrix3 &m3) const
 {
   return
-    mat3[0][0] == m3(1,1) && mat3[0][1] == m3(1,2) && mat3[0][2] == m3(1,3) &&
-    mat3[1][0] == m3(2,1) && mat3[1][1] == m3(2,2) && mat3[1][2] == m3(2,3) &&
-    mat3[2][0] == m3(3,1) && mat3[2][1] == m3(3,2) && mat3[2][2] == m3(3,3);
+    mat3[0][0] == m3(0,0) && mat3[0][1] == m3(0,1) && mat3[0][2] == m3(0,2) &&
+    mat3[1][0] == m3(1,0) && mat3[1][1] == m3(1,1) && mat3[1][2] == m3(1,2) &&
+    mat3[2][0] == m3(2,0) && mat3[2][1] == m3(2,1) && mat3[2][2] == m3(2,2);
 }
 
 inline Matrix3 Matrix3::operator / (const double value) const
@@ -588,13 +588,13 @@ inline bool Matrix3::solveCramer(Vector& b, Vector& x) const
 inline double Matrix3::operator () (int i, int j) const
 {
   // Access the i,j component
-  return mat3[i-1][j-1];
+  return mat3[i][j];
 }
 
 inline double &Matrix3::operator () (int i, int j)
 {
   // Access the i,j component
-  return mat3[i-1][j-1];
+  return mat3[i][j];
 }
 
 inline std::vector<Vector> Matrix3::getEigenVectors(double eigen_value,
@@ -648,9 +648,9 @@ inline bool Matrix3::solve(Vector rhs, Vector& xp,
 inline Vector operator*(const Vector& v, const Matrix3& m3) {
   // Right multiply a Vector by a Matrix3
 
-  double x = v.x()*m3(1,1)+v.y()*m3(1,2)+v.z()*m3(1,3);
-  double y = v.x()*m3(2,1)+v.y()*m3(2,2)+v.z()*m3(2,3);
-  double z = v.x()*m3(3,1)+v.y()*m3(3,2)+v.z()*m3(3,3);
+  double x = v.x()*m3(0,0)+v.y()*m3(0,1)+v.z()*m3(0,2);
+  double y = v.x()*m3(1,0)+v.y()*m3(1,1)+v.z()*m3(1,2);
+  double z = v.x()*m3(2,0)+v.y()*m3(2,1)+v.z()*m3(2,2);
 
   return Vector(x, y, z);
 }

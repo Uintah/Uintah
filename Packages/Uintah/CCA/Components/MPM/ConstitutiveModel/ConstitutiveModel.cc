@@ -201,7 +201,7 @@ ConstitutiveModel::computeVelocityGradient(const Patch* patch,
     //cout << "GridVel = " << gvel << endl;
     for (int j = 0; j<3; j++){
       for (int i = 0; i<3; i++) {
-	velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+	velGrad(i,j) += gvel[i] * d_S[k][j] * oodx[j];
       }
     }
     //}
@@ -230,7 +230,7 @@ ConstitutiveModel::computeVelocityGradient(const Patch* patch,
     //cout << "GridVel = " << gvel << endl;
     for (int j = 0; j<3; j++){
       for (int i = 0; i<3; i++) {
-	velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+	velGrad(i,j) += gvel[i] * d_S[k][j] * oodx[j];
       }
     }
   }
@@ -266,7 +266,7 @@ ConstitutiveModel::computeVelocityGradient(const Patch* patch,
     //cout << "GridVel = " << gvel << endl;
     for (int j = 0; j<3; j++){
       for (int i = 0; i<3; i++) {
-        velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+        velGrad(i,j) += gvel[i] * d_S[k][j] * oodx[j];
       }
     }
     //}
@@ -300,7 +300,7 @@ ConstitutiveModel::computeVelocityGradient(const Patch* patch,
     //cout << "GridVel = " << gvel << endl;
     for (int j = 0; j<3; j++){
       for (int i = 0; i<3; i++) {
-        velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+        velGrad(i,j) += gvel[i] * d_S[k][j] * oodx[j];
       }
     }
   }

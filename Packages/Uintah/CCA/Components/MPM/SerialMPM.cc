@@ -1322,7 +1322,7 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
 	  for(int j = 0; j<3; j++){
             double d_SXoodx = d_S[k][j] * oodx[j];
             for(int i = 0; i<3; i++) {
-	      velGrad(i+1,j+1) += gvel[i] * d_SXoodx;
+	      velGrad(i,j) += gvel[i] * d_SXoodx;
             }
 	  }
 	}
@@ -1499,8 +1499,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 	    for (int i = low.x(); i<hi.x(); i++) {
               for (int j = low.y(); j<hi.y(); j++) {
 		integralTraction +=
-		  gstress[IntVector(i,j,K)](3,3)*dx.x()*dx.y();
-		if(fabs(gstress[IntVector(i,j,K)](3,3)) > 1.e-12){
+		  gstress[IntVector(i,j,K)](2,2)*dx.x()*dx.y();
+		if(fabs(gstress[IntVector(i,j,K)](2,2)) > 1.e-12){
 		  integralArea+=dx.x()*dx.y();
                 }
               }

@@ -59,12 +59,12 @@ namespace Uintah {
 
   inline SymmMatrix3::SymmMatrix3(const Matrix3& copy)
     {
-      mat3[0] = copy(1,1);
-      mat3[1] = copy(2,2);
-      mat3[2] = copy(3,3);
-      mat3[3] = copy(2,3);
-      mat3[4] = copy(3,1);
-      mat3[5] = copy(1,2);
+      mat3[0] = copy(0,0);
+      mat3[1] = copy(1,1);
+      mat3[2] = copy(2,2);
+      mat3[3] = copy(1,2);
+      mat3[4] = copy(2,0);
+      mat3[5] = copy(0,1);
     }
 
   inline SymmMatrix3::~SymmMatrix3()

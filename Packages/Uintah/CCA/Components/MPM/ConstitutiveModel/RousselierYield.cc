@@ -132,15 +132,15 @@ RousselierYield::computeTangentModulus(const TangentModulusTensor& Ce,
   double rCr = 0.0;
   for (int ii = 0; ii < 3; ++ii) {
     for (int jj = 0; jj < 3; ++jj) {
-      Cr(ii+1,jj+1) = 0.0;
-      rC(ii+1,jj+1) = 0.0;
+      Cr(ii,jj) = 0.0;
+      rC(ii,jj) = 0.0;
       for (int kk = 0; kk < 3; ++kk) {
 	for (int ll = 0; ll < 3; ++ll) {
-          Cr(ii+1,jj+1) += Ce(ii,jj,kk,ll)*f_sigma(kk+1,ll+1);
-          rC(ii+1,jj+1) += f_sigma(kk+1,ll+1)*Ce(kk,ll,ii,jj);
+          Cr(ii,jj) += Ce(ii,jj,kk,ll)*f_sigma(kk,ll);
+          rC(ii,jj) += f_sigma(kk,ll)*Ce(kk,ll,ii,jj);
         }
       }
-      rCr += rC(ii+1,jj+1)*f_sigma(ii+1,jj+1);
+      rCr += rC(ii,jj)*f_sigma(ii,jj);
     }
   }
   for (int ii = 0; ii < 3; ++ii) {
@@ -148,7 +148,7 @@ RousselierYield::computeTangentModulus(const TangentModulusTensor& Ce,
       for (int kk = 0; kk < 3; ++kk) {
 	for (int ll = 0; ll < 3; ++ll) {
           Cep(ii,jj,kk,ll) = Ce(ii,jj,kk,ll) - 
-	    Cr(ii+1,jj+1)*rC(kk+1,ll+1)/(-fqhq + rCr);
+	    Cr(ii,jj)*rC(kk,ll)/(-fqhq + rCr);
 	}  
       }  
     }  

@@ -666,8 +666,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Calculate rate of deformation tensor (D) and spin tensor (W)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
       tensorW = (tensorL - tensorL.Transpose())*0.5;
-      for (int ii = 1; ii < 4; ++ii) {
-	for (int jj = 1; jj < 4; ++jj) {
+      for (int ii = 0; ii < 3; ++ii) {
+	for (int jj = 0; jj < 3; ++jj) {
 	  tensorD(ii,jj)=(fabs(tensorD(ii,jj)) < d_tol) ? 0.0 : tensorD(ii,jj);
 	  tensorW(ii,jj)=(fabs(tensorW(ii,jj)) < d_tol) ? 0.0 : tensorW(ii,jj);
 	}
@@ -1006,12 +1006,12 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Compute the strain energy for the particles
       Matrix3 avgStress = (pStress_new[idx] + pStress[idx])*0.5;
-      double pStrainEnergy = (tensorD(1,1)*avgStress(1,1) +
+      double pStrainEnergy = (tensorD(0,0)*avgStress(0,0) +
+			      tensorD(1,1)*avgStress(1,1) +
 			      tensorD(2,2)*avgStress(2,2) +
-			      tensorD(3,3)*avgStress(3,3) +
-			      2.0*(tensorD(1,2)*avgStress(1,2) + 
-				   tensorD(1,3)*avgStress(1,3) +
-				   tensorD(2,3)*avgStress(2,3)))*
+			      2.0*(tensorD(0,1)*avgStress(0,1) + 
+				   tensorD(0,2)*avgStress(0,2) +
+				   tensorD(1,2)*avgStress(1,2)))*
 	pVolume_deformed[idx]*delT;
       totalStrainEnergy += pStrainEnergy;		   
 
@@ -1335,7 +1335,7 @@ HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
 	for (int j = 0; j<3; j++){
           double d_SXoodx = d_S[k][j] * oodx[j];
 	  for (int i = 0; i<3; i++) {
-	    tensorL(i+1,j+1) += gvel[i] * d_SXoodx;
+	    tensorL(i,j) += gvel[i] * d_SXoodx;
 	  }
 	}
       }
@@ -1343,8 +1343,8 @@ HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
       // Calculate rate of deformation tensor (D) and spin tensor (W)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
       tensorW = (tensorL - tensorL.Transpose())*0.5;
-      for (int ii = 1; ii < 4; ++ii) {
-	for (int jj = 1; jj < 4; ++jj) {
+      for (int ii = 0; ii < 3; ++ii) {
+	for (int jj = 0; jj < 3; ++jj) {
 	  tensorD(ii,jj)=(fabs(tensorD(ii,jj)) < d_tol) ? 0.0 : tensorD(ii,jj);
 	  tensorW(ii,jj)=(fabs(tensorW(ii,jj)) < d_tol) ? 0.0 : tensorW(ii,jj);
 	}
@@ -1458,7 +1458,7 @@ HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
 	} else if (d_erosionAlgorithm == "AllowNoTension") {
 
           // Do not allow any tensile or shear stresses
-          for (int ii = 1; ii < 4; ++ii) {
+          for (int ii = 0; ii < 3; ++ii) {
 	    if (tensorHy(ii,ii) > 0.0) tensorHy(ii,ii) = 0.0;
           }
 	  tensorHy = (tensorR*tensorHy)*tensorR.Transpose();
@@ -1742,12 +1742,12 @@ HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
 
       // Compute the strain energy for the particles
       Matrix3 avgStress = (pStress_new[idx] + pStress[idx])*0.5;
-      double pStrainEnergy = (tensorD(1,1)*avgStress(1,1) +
+      double pStrainEnergy = (tensorD(0,0)*avgStress(0,0) +
+			      tensorD(1,1)*avgStress(1,1) +
 			      tensorD(2,2)*avgStress(2,2) +
-			      tensorD(3,3)*avgStress(3,3) +
-			      2.0*(tensorD(1,2)*avgStress(1,2) + 
-				   tensorD(1,3)*avgStress(1,3) +
-				   tensorD(2,3)*avgStress(2,3)))*
+			      2.0*(tensorD(0,1)*avgStress(0,1) + 
+				   tensorD(0,2)*avgStress(0,2) +
+				   tensorD(1,2)*avgStress(1,2)))*
 	pVolume_deformed[idx]*delT;
       totalStrainEnergy += pStrainEnergy;		   
 
@@ -1883,8 +1883,8 @@ HypoElasticPlastic::computeUpdatedVR(const double& delT,
   // Update the left Cauchy-Green stretch tensor (V)
   VV = VV + ((DD+WW)*VV - VV*Omega)*delT;
 
-  for (int ii = 1; ii < 4; ++ii) {
-    for (int jj = 1; jj < 4; ++jj) {
+  for (int ii = 0; ii < 3; ++ii) {
+    for (int jj = 0; jj < 3; ++jj) {
       VV(ii,jj) = (fabs(VV(ii,jj)) < d_tol) ? 0.0 : VV(ii,jj);
       RR(ii,jj) = (fabs(RR(ii,jj)) < d_tol) ? 0.0 : RR(ii,jj);
       //if (fabs(VV(ii,jj)) < d_tol) VV(ii,jj) = 0.0;
@@ -1903,21 +1903,19 @@ HypoElasticPlastic::computeRateofRotation(const Matrix3& tensorV,
   // Belytschko, T. and others, 2000, Nonlinear finite elements ..., p.86.
 
   // Calculate vector w 
-  double w[4];
-  w[0] = 0.0;
-  w[1] = -0.5*(tensorW(2,3)-tensorW(3,2));
-  w[2] = -0.5*(tensorW(3,1)-tensorW(1,3));
-  w[3] = -0.5*(tensorW(1,2)-tensorW(2,1));
+  double w[3];
+  w[0] = -0.5*(tensorW(1,2)-tensorW(2,1));
+  w[1] = -0.5*(tensorW(2,0)-tensorW(0,2));
+  w[2] = -0.5*(tensorW(0,1)-tensorW(1,0));
 
   // Calculate tensor Z
   Matrix3 tensorZ = (tensorD*tensorV) - (tensorV*tensorD);
 
   // Calculate vector z
-  double z[4];
-  z[0] = 0.0;
-  z[1] = -0.5*(tensorZ(2,3)-tensorZ(3,2));
-  z[2] = -0.5*(tensorZ(3,1)-tensorZ(1,3));
-  z[3] = -0.5*(tensorZ(1,2)-tensorZ(2,1));
+  double z[3];
+  z[0] = -0.5*(tensorZ(1,2)-tensorZ(2,1));
+  z[1] = -0.5*(tensorZ(2,0)-tensorZ(0,2));
+  z[2] = -0.5*(tensorZ(0,1)-tensorZ(1,0));
 
   // Calculate I Trace(V) - V
   Matrix3 one;   one.Identity();
@@ -1926,11 +1924,10 @@ HypoElasticPlastic::computeRateofRotation(const Matrix3& tensorV,
   temp = temp.Inverse();
 
   // Calculate vector omega = w + temp*z
-  double omega[4];
-  omega[0] = 0.0;
-  for (int ii = 1; ii < 4; ++ii) {
+  double omega[3];
+  for (int ii = 0; ii < 3; ++ii) {
     double sum = 0.0;
-    for (int jj = 1; jj < 4; ++jj) {
+    for (int jj = 0; jj < 3; ++jj) {
       sum += temp(ii,jj)*z[jj]; 
     }
     omega[ii] = w[ii] + sum;
@@ -1938,12 +1935,12 @@ HypoElasticPlastic::computeRateofRotation(const Matrix3& tensorV,
 
   // Calculate tensor Omega
   Matrix3 tensorOmega;
-  tensorOmega(1,2) = -omega[3];  
-  tensorOmega(1,3) = omega[2];  
-  tensorOmega(2,1) = omega[3];  
-  tensorOmega(2,3) = -omega[1];  
-  tensorOmega(3,1) = -omega[2];  
-  tensorOmega(3,2) = omega[1];  
+  tensorOmega(0,1) = -omega[2];  
+  tensorOmega(0,2) = omega[1];  
+  tensorOmega(1,0) = omega[2];  
+  tensorOmega(1,2) = -omega[0];  
+  tensorOmega(2,0) = -omega[1];  
+  tensorOmega(2,1) = omega[0];  
 
   return tensorOmega;
 }

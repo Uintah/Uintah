@@ -28,7 +28,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 #define FRACTURE
-#undef FRACTURE
+//#undef FRACTURE
 
 HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 {
@@ -312,9 +312,9 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 #endif
 	  for (int j = 0; j<3; j++){
 	    for (int i = 0; i<3; i++) {
-	      velGrad(i+1,j+1)+=gvel[i] * d_S[k][j] * oodx[j];
+	      velGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
 #ifdef FRACTURE
-             pvelGrads[idx](i+1,j+1)  = velGrad(i+1,j+1);
+             pvelGrads[idx](i,j)  = velGrad(i,j);
 #endif
 	    }
 	  }
@@ -350,12 +350,12 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       // Compute the strain energy for all the particles
       Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
 
-      double e = (D(1,1)*AvgStress(1,1) +
+      double e = (D(0,0)*AvgStress(0,0) +
+	          D(1,1)*AvgStress(1,1) +
 	          D(2,2)*AvgStress(2,2) +
-	          D(3,3)*AvgStress(3,3) +
-	       2.*(D(1,2)*AvgStress(1,2) +
-		   D(1,3)*AvgStress(1,3) +
-		   D(2,3)*AvgStress(2,3))) * pvolume_deformed[idx]*delT;
+	       2.*(D(0,1)*AvgStress(0,1) +
+		   D(0,2)*AvgStress(0,2) +
+		   D(1,2)*AvgStress(1,2))) * pvolume_deformed[idx]*delT;
 
       se += e;
 
