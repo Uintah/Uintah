@@ -16,7 +16,6 @@ using namespace Uintah::MPM;
 
 ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps)
 {
-
    for (ProblemSpecP child = ps->findBlock(); child != 0;
 	child = child->findNextBlock()) {
       std::string mat_type = child->getNodeName();
@@ -43,4 +42,5 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps)
 	 //      exit(1);
       }
    }
+   return 0;
 }

@@ -8,6 +8,7 @@ Region -> Patch/Box
 Particle initialization - how?
 get MPM working
 semi-consistent struct printou
+really slow creating particles for 10x10x10 patches
 
 
 Region contains point

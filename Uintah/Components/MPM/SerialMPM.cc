@@ -130,7 +130,7 @@ void SerialMPM::scheduleComputeStableTimestep(const LevelP&,
    // consitutive model
 }
 
-void SerialMPM::scheduleTimeAdvance(double t, double dt,
+void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 				    const LevelP&         level,
 				          SchedulerP&     sched,
 				    const DataWarehouseP& old_dw, 
@@ -329,13 +329,16 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    cerr << "numMatls = " << numMatls << '\n';
     if(mpm_matl){
+       cerr << "dwindex=" << matl->getDWIndex() << '\n';
        particleIndex numParticles = mpm_matl->countParticles(region);
        ParticleVariable<Point> particles;
        new_dw->allocate(numParticles, particles, pXLabel,
 			matl->getDWIndex(), region);
 
        mpm_matl->createParticles(particles, region);
+       mpm_matl->getConstitutiveModel()->initializeCMData(region, mpm_matl, new_dw);
     }
   }
 }
@@ -700,6 +703,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.33  2000/04/28 08:11:29  sparker
+// ConstitutiveModelFactory should return null on failure
+// MPMMaterial checks for failed constitutive model creation
+// DWindex and VFindex are now initialized
+// Fixed input file to match ConstitutiveModelFactory
+//
 // Revision 1.32  2000/04/28 07:35:26  sparker
 // Started implementation of DataWarehouse
 // MPM particle initialization now works

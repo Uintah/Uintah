@@ -21,10 +21,6 @@ using namespace SCICore::Geometry;
 MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 {
 
-   std::string material_type;
-   ps->require("material_type", material_type);
-   cerr << "material_type is " <<  material_type << endl;
-
    // Loop through all of the pieces in this geometry object
 
    int piece_num = 0;
@@ -53,13 +49,13 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
    }
    // Constructor
 
-   ps->require("material_type", material_type);
-   cerr << "material_type is " <<  material_type << endl;
    double den;
    ps->require("density",den);
    cerr << "density is " << den << endl;
    
    d_cm = ConstitutiveModelFactory::create(ps);
+   if(!d_cm)
+      throw ParameterNotFound("No constitutive model");
    std::cerr << "works here after cm factory" << std::endl;
 
    ps->require("density",d_density);
