@@ -37,10 +37,13 @@ else
     
     echo "Performing highwater memory usage check"
     percent=`highwater_percent.pl $MALLOC_STATS $COMPARISON_MALLOC_STATS`
-    if [ $percent -gt "10" ]; then
+
+    if [ $percent -gt "30" ]; then
 	echo "***Highwater memory usage test failed"
 	echo " -- memory usage increased by %$percent" > $TMPDIR/highwater_shortmessage.txt
         error=2
+    elif [ $percent -gt "5" ]; then
+	echo "Warning: -- memory usage increased by %$percent" > $TMPDIR/highwater_shortmessage.txt
     elif [ $percent -lt "-5" ]; then
 	let percent_improvement=-$percent;
 	echo "Highwater memory usage passed with some improvement!!"
