@@ -25,20 +25,17 @@ else
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
         Packages/Uintah/Core/Math          \
-        Packages/Uintah/Core/Disclosure    \
         Packages/Uintah/Core/ProblemSpec   \
         Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/DataArchive   \
-	Packages/Uintah/CCA/Ports          \
         Core/Exceptions  \
         Core/Geometry    \
-        Core/Thread      \
+        Core/Persistent  \
         Core/Util        \
-        Core/OS          \
+        Core/Thread      \
         Core/Containers
 endif
 
-LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS    := $(XML_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
