@@ -132,7 +132,8 @@ ConstraintSolver::AddVariable( BaseVariable* v )
 void
 ConstraintSolver::RemoveVariable( BaseVariable* v )
 {
-  std::remove(variables.begin(), variables.end(), v);
+  variables.erase(std::remove(variables.begin(), variables.end(), v),
+		  variables.end());
 }
 
 
