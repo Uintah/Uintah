@@ -126,7 +126,7 @@ EnvironmentMapBackground::color_in_direction( const Vector& DIR , Color& result)
     //
     // Convert to local basis
     //
-    Vector dir = ChangeToBasis( DIR );
+  Vector dir = DIR /*ChangeToBasis( DIR )*/;
 
     // cerr << "direction  = " << dir << endl;
     // Map direction vector dir to (u,v) coordinates
@@ -134,11 +134,11 @@ EnvironmentMapBackground::color_in_direction( const Vector& DIR , Color& result)
     //double r = atan2( sqrt( dir.x()*dir.x() + dir.y()*dir.y() ), dir.z() );
     //r /= M_PI;  /* -0.5 .. 0.5 */
     //double phi = atan2( dir.y(), dir.x() );
-    double r =  sqrt( dir.x()*dir.x() + dir.y()*dir.y() );
-    double v = atan2( dir.x(), dir.y() ) / ( 2.0*M_PI ) + 0.5;
-    double u = atan2( r, dir.z() ) / M_PI;
-    // double u = ( ( atan2( dir.y(), dir.x() ) + M_PI ) / ( 2.0*M_PI ) );
-    // double v = ( ( asin( dir.z() ) + (0.5*M_PI) ) / M_PI );
+  //double r =  sqrt( dir.x()*dir.x() + dir.y()*dir.y() );
+  //double v = atan2( dir.x(), dir.y() ) / ( 2.0*M_PI ) + 0.5;
+  //double u = atan2( r, dir.z() ) / M_PI;
+    double u = ( ( atan2( dir.y(), dir.x() ) + M_PI ) / ( 2.0*M_PI ) );
+    double v = ( ( asin( dir.z() ) + (0.5*M_PI) ) / M_PI );
     //double u = Clamp( r * cos( phi ) + 0.5, 0.0, 1.0 );
     //double v = Clamp( r * sin( phi ) + 0.5, 0.0, 1.0 );
 
