@@ -937,12 +937,14 @@ proc disableConnection { conn } {
     if {$disabled} {
 	set Disabled($connid) 0
 	foreach conn [findRealConnections $conn] {
-	    eval netedit addconnection $conn
+# MCKAY: FIXME	    eval netedit addconnection $conn
+	    netedit unblockconnection [makeConnID $conn]
 	}
     } else {
 	set Disabled($connid) 1
 	foreach conn [findRealConnections $conn] {
-	    netedit deleteconnection [makeConnID $conn]
+# MCKAY: FIXME	    netedit deleteconnection [makeConnID $conn]
+	    netedit blockconnection [makeConnID $conn]
 	}
     }
 
