@@ -59,7 +59,7 @@ C-----------------------------------------------------------------------
                endif
                if (xplus) then
                   IF (PCELL(iend+1,J,K).EQ.PFIELD) THEN
-                     UU(iend+1,J,K) = UU(iend+2,J,K) *
+                     UU(iend+1,J,K) = factor*UU(iend+2,J,K) *
      &                    DEN(iend+1,J,K)
      &                    / (PT5*(DEN(iend+1,J,K) + DEN(IEND,J,K)))
                   ENDIF
@@ -75,14 +75,14 @@ C--------------------------------------------------------------------
             DO 200 I = ist,iend
                if (yminus) then
                   IF (PCELL(I,jst-1,K).EQ.PFIELD) THEN
-                     VV(I,jst,K) = VV(I,jst-1,K) * 
+                     VV(I,jst,K) = factor*VV(I,jst-1,K) * 
      &                    DEN(I,jst-1,K)
      &                    / (PT5*(DEN(I,jst-1,K) + DEN(I,JST,K)))
                   ENDIF
                endif
                if (yplus) then
                   IF (PCELL(I,jend+1,K).EQ.PFIELD) THEN
-                     VV(I,jend+1,K) = VV(I,jend+2,K) * 
+                     VV(I,jend+1,K) = factor*VV(I,jend+2,K) * 
      &                    DEN(I,jend+1,K)
      &                    / (PT5*(DEN(I,jend+1,K) + DEN(I,JEND,K)))
                   ENDIF
@@ -98,14 +98,14 @@ C--------------------------------------------------------------------
             DO 300 I = ist,iend
                if (zminus) then
                   IF (PCELL(I,J,kst-1).EQ.PFIELD) THEN
-                     WW(I,J,kst) = WW(I,J,kst-1)
+                     WW(I,J,kst) = factor*WW(I,J,kst-1)
      &                    * DEN(I,J,kst-1)
      &                    / (PT5*(DEN(I,J,kst-1) + DEN(I,J,KST)))
                   ENDIF
                endif
                if (zplus) then
                   IF (PCELL(I,J,kend+1).EQ.PFIELD) THEN
-                     WW(I,J,kend+1) = WW(I,J,kend+2)
+                     WW(I,J,kend+1) = factor*WW(I,J,kend+2)
      &                    * DEN(I,J,kend+1)
      &                    / (PT5*(DEN(I,J,kend+1) + DEN(I,J,KEND)))
                   endif
