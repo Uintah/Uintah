@@ -31,9 +31,11 @@
 #ifndef SCI_Core_Util_SizeTypeConvert_h
 #define SCI_Core_Util_SizeTypeConvert_h
 
-#ifdef __sgi
+#include <sci_config.h>
+#if HAVE_INTTYPES_H
 #include <inttypes.h>
-#else
+#endif
+#if HAVE_STDINT_H
 #include <stdint.h>
 #endif
 
