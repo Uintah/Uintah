@@ -130,32 +130,33 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& grid,
 
   // Find the debug switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
-  for (ProblemSpecP child = debug_ps->findBlock("debug"); child != 0;
-       child = child->findNextBlock("debug")) {
-    map<string,string> debug_attr;
-    child->getAttributes(debug_attr);
-    if (debug_attr["label"] == "switchDebugInitialize")
-      switchDebugInitialize = true;
-    else if (debug_attr["label"] == "switchDebug_equilibration_press")
-      switchDebug_equilibration_press = true;
-    else if (debug_attr["label"] == "switchDebug_vel_FC")
-      switchDebug_vel_FC = true;
-    else if (debug_attr["label"] == "switchDebug_Exchange_FC")
-      switchDebug_Exchange_FC = true;
-    else if (debug_attr["label"] == "switchDebug_explicit_press")
-      switchDebug_explicit_press = true;
-    else if (debug_attr["label"] == "switchDebug_PressFC")
-      switchDebug_PressFC = true;
-    else if (debug_attr["label"] == "switchDebugLagrangianValues")
-      switchDebugLagrangianValues = true;
-    else if (debug_attr["label"] == "switchDebugSource_Sink")
-      switchDebugSource_Sink = true;
-    else if (debug_attr["label"] == "switchDebug_advance_advect")
-      switchDebug_advance_advect = true;
-    else if (debug_attr["label"] == "switchDebug_advectQFirst")
-      switchDebug_advectQFirst = true;
+  if (debug_ps) {
+    for (ProblemSpecP child = debug_ps->findBlock("debug"); child != 0;
+	 child = child->findNextBlock("debug")) {
+      map<string,string> debug_attr;
+      child->getAttributes(debug_attr);
+      if (debug_attr["label"] == "switchDebugInitialize")
+	switchDebugInitialize = true;
+      else if (debug_attr["label"] == "switchDebug_equilibration_press")
+	switchDebug_equilibration_press = true;
+      else if (debug_attr["label"] == "switchDebug_vel_FC")
+	switchDebug_vel_FC = true;
+      else if (debug_attr["label"] == "switchDebug_Exchange_FC")
+	switchDebug_Exchange_FC = true;
+      else if (debug_attr["label"] == "switchDebug_explicit_press")
+	switchDebug_explicit_press = true;
+      else if (debug_attr["label"] == "switchDebug_PressFC")
+	switchDebug_PressFC = true;
+      else if (debug_attr["label"] == "switchDebugLagrangianValues")
+	switchDebugLagrangianValues = true;
+      else if (debug_attr["label"] == "switchDebugSource_Sink")
+	switchDebugSource_Sink = true;
+      else if (debug_attr["label"] == "switchDebug_advance_advect")
+	switchDebug_advance_advect = true;
+      else if (debug_attr["label"] == "switchDebug_advectQFirst")
+	switchDebug_advectQFirst = true;
+    }
   }
-
 
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
   cfd_ps->require("cfl",d_CFL);
@@ -3900,6 +3901,11 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.89  2001/01/11 20:38:39  jas
+// Added check to problemSpecification for <Debug> tag.  Default behavior
+// is to not print out any debugging info if the <Debug> </Debug> tag is
+// not in the input file.
+//
 // Revision 1.88  2001/01/11 20:17:19  jas
 // Added debug switches to the input file specification.
 // #if 0 the hard wired exchange coefficients.
