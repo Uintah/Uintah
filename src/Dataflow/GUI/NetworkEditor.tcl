@@ -116,22 +116,20 @@ proc makeNetworkEditor {} {
     wm protocol . WM_DELETE_WINDOW { NiceQuit }
     wm minsize . 100 100
 
-    set neWidth  800
-    set neHeight 800
 
-    # Check screen geometry before creating window.  Then create window
-    # to fit on screen.
-    set screenwidth [winfo screenwidth .]
-    set screenheight [winfo screenheight .]
-
-    if { $screenwidth < $neWidth } {
-	set neWidth [expr $screenwidth - 30]
+    if { [validFile ~/.scirun.geom] } {
+	set geomfile [open ~/.scirun.geom r]
+        wm geometry . [gets $geomfile]
+	close $geomfile
+    } else {
+	# Check screen geometry before creating window.  
+	# To ensure window fits on screen.
+	set swidth [winfo screenwidth .]
+	set sheight [winfo screenheight .]
+	set neWidth  [expr ($swidth <  800) ? ($swidth-30) : 800]
+	set neHeight [expr ($sheight < 800) ? ($sheight-30) : 800]
+	wm geometry . ${neWidth}x${neHeight}
     }
-    if { $screenheight < $neHeight } {
-	set neHeight [expr $screenheight - 30]
-    }
-
-    wm geometry . ${neWidth}x${neHeight}
 
     wm title . "SCIRun v[netedit getenv SCIRUN_VERSION]"
     setIcons . large
@@ -909,6 +907,9 @@ proc NiceQuit {} {
 	    }
 	}
     }
+    set geom [open ~/.scirun.geom w]
+    puts $geom [wm geom .]
+    close $geom
     puts "Goodbye!"
     netedit quit
 }
