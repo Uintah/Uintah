@@ -18,7 +18,6 @@
 <chapter id="ch.inst">
 <title>&sr; Installation Instructions</title>
 
-
 <section>
 <title>Introduction</title>
 <para>This chapter provides instructions for installing
@@ -66,8 +65,8 @@ installing but before starting &sr;.
 <title>Introduction</title>
 
 <para>
-You must have root privilages to install &sr;.  Contact your system
-administrator if you don't.
+You must have root privilages to install &sr;.  Ask your system
+administrator to install &sr; if you don't have root privilages.
 </para>
 
 <para>
@@ -79,13 +78,14 @@ The following procedure installs &sr; in
 RPM installation consists of the following steps:
 <orderedlist>
 <listitem>
-<para>Downloading the &sr; rpm distribution.</para>
+<para>Downloading the &sr; RPM distribution and &sr;'s sample data
+sets.</para>
 </listitem>
 <listitem>
 <para>Installing &sr; using the <command>rpm</command> command.</para>
 </listitem>
 <listitem>
-<para>Unpacking &sr;'s sample data sets.</para>
+<para>Installing &sr;'s sample data sets.</para>
 </listitem>
 </orderedlist>
 </para>
@@ -97,7 +97,7 @@ RPM installation consists of the following steps:
 <para>
 Obtain the appropriate &sr; rpm, either
 <filename>SCIRun-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm</filename>
-for Mandrake 9 systems or or
+for Mandrake 9 systems or
 <filename>SCIRun-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm</filename>
 for Redhad 8 systems.  Be sure to get
 <filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
@@ -111,47 +111,81 @@ archive</ulink> page.
 <title>Installing</title>
 
 <para>
-Become superuser:
-<literallayout class="monospaced">
-su
-Password:
-</literallayout>
-<command>Cd</command> to the directory where &sr; was downloaded
+Open a shell terminal (e.g. xterm) and enter the command
+<command>su</command> to become the root user (superuser).  The
+<command>su</command> command will prompt you for root's password.  If
+you do not have root access then ask your system administrator to
+install the RPM for you.
+</para>
+
+<para>
+Now <command>cd</command> to the directory where &sr; was downloaded
 and type:
 <literallayout class="monospaced">
 rpm -ivh SCIRun-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm
 </literallayout>
-or
+for Mandrake 9 systems and
 <literallayout class="monospaced">
 rpm -ivh SCIRun-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm
 </literallayout>
+for Red Hat 8 systems.  The RPM should take approximately one minute
+to install.
+</para>
+<para>
 Type <command>exit</command> to leave the root account.
-<xref linkend="fig.rpm_cmd"/> shows this process.  
+</para>
+<para>
+<xref linkend="fig.rpm_cmd"/> shows this process.
+</para>
+<para>
+You may remove &sr; using the <command>rpm</command> command:
+<literallayout class="monospaced">
+rpm -e &sr;
+</literallayout>
+<para>
+Be sure to read section&nbsp;<citetitle pubwork="section"><xref
+endterm="title.prepare" linkend="sec.prepare"/></citetitle> before
+<link linkend="sec.starting">starting</link> &sr;.
+</para>
+
 </para>
 <figure id="fig.rpm_cmd">
+<title>RPM installation process</title>
 <mediaobject>
 <imageobject>
 <imagedata fileref="rpm_cmd.gif" format="GIF"/>
 </imageobject>
 <caption>
 <para>
-RPM installation command.  Assumes rpm file was downloaded to
+RPM installation process.  Assumes RPM file was downloaded to
 <filename>/tmp</filename>.
 </para>
 </caption>
 </mediaobject>
 </figure>
+
 </section>
 
 <section>
-<title>Unpacking Sample Data Sets</title>
+<title>Installing &sr;'s Sample Data Sets</title>
 <para>
-Unpack &sr;'s sample data sets by typing:
+You may want to install the sample data sets in a location accessible
+by all &sr; users.  The following procedure assumes you will install
+the sample data sets in the directory
+<filename>/usr/local/SCIRun</filename>.  It also assumes you can
+become the root user.
+</para>
+<para>
+Use the <command>su</command> command to become the root user.  Then
+<command>Cd</command> to the directory containing the compressed data
+sets tarball and type:
 <literallayout class="monospaced">
-tar zxf DataSets.<replaceable>x.x.x</replaceable>.tar.gz
+gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | \
+  (cd /usr/local/SCIRun &amp;&amp; tar xf -)
 </literallayout>
-This will create <filename>SCIRunData</filename>, a directory
-containing sample data sets.
+This will create <filename>/usr/local/&sr;/&sr;Data</filename>, the
+sample data sets directory.  Type <command>exit</command> to exit the
+root account.
 </para>
 </section>
 
@@ -245,7 +279,9 @@ Unpack the tarball containing sample datasets:
 <literallayout class="monospaced">
 gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
-This will create the directory <filename>SCIRunData</filename>.
+This will create the directory <filename>SCIRunData</filename>.  You
+may want to move this directory to a location accessible to all &sr;
+users. 
 </para>
 </listitem>
 
@@ -424,8 +460,18 @@ where <replaceable>N</replaceable> is the number of processors
 available for use by make.  Using this option on a multiprocessor
 machine will often significantly reduce the time to build &sr;.
 </para>
+<para>
+Be sure to read section&nbsp;<citetitle pubwork="section"><xref
+endterm="title.prepare" linkend="sec.prepare"/></citetitle> before
+<link linkend="sec.starting">starting</link> &sr;.
+</para>
 </listitem>
 </orderedlist>
+
+<para>
+After a successful build, <replaceable>build_dir</replaceable>
+will contain the <filename>scirun</filename> executable.
+</para>
 
 </section>
 
@@ -437,15 +483,15 @@ machine will often significantly reduce the time to build &sr;.
 <para>
 Before starting &sr; you should initialize the environment variables
 <envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar> and
-<envar>SCIRUN_DATA</envar>.  The following sections describe how to do
-this.
+<envar>SCIRUN_DATA</envar>.  The following sections describe the
+purpose of the variables and how to initalize them.
 </para>
 
 <section id="sec.dyncomp">
 <title id="title.dyncomp">Dynamic
 Compilation (and <envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar>)</title>
 
-<para>Before executing &sr; you
+<para>Before starting &sr; you
 should be aware of a feature called <firstterm>Dynamic
 Compilation</firstterm>.</para> 
 
@@ -453,42 +499,59 @@ Compilation</firstterm>.</para>
 and generates code for the data types and algorithms used by modules
 in your networks.  This is done at runtime and is done once for each
 new data type and algorithm encountered.  This technique provides a
-number of benefits not discussed here.</para>
+number of benefits (not discussed here).</para>
 
 <para>By default, code generated by dynamic compilation is stored in
 the directory
-<filename><replaceable>build_dir</replaceable>/on-the-fly-libs</filename>.
-The location of dynamically generated code can be changed (and doing
-so provides a number of benefits&mdash;see below) by setting
-the value of the environment variable
-<envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar> to the desired directory, for
-example:
+<filename><replaceable>build_dir</replaceable>/on-the-fly-libs</filename>
+for tarball installations and
+<filename>/usr/local/SCIRun/bin/on-the-fly-libs</filename> for rpm
+installations.  The location of dynamically generated code can be
+changed by setting the value of the environment variable
+<envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar> to the desired directory,
+for example, in a shell terminal type:
 <literallayout class="monospaced">
-SCIRUN_ON_THE_FLY_LIBS_DIR=~/&sr;_otf export SCIRUN_ON_THE_FLY_LIBS_DIR
+mkdir ~/&sr;_otf
 </literallayout>
-for Bourne-like shells (sh, ksh, bash, etc.) or
+and then
+<literallayout class="monospaced">
+SCIRUN_ON_THE_FLY_LIBS_DIR=~/&sr;_otf
+export SCIRUN_ON_THE_FLY_LIBS_DIR
+</literallayout>
+for Bourne-like shells (ksh, bash, etc.) or
 <literallayout class="monospaced">
 setenv SCIRUN_ON_THE_FLY_LIBS_DIR ~/&sr;_otf
 </literallayout>
-for csh-like shells.
-</para> 
+for csh-like shells. Changing the location of the
+<quote>on-the-fly</quote> library directory provides a number of
+benefits <link linkend="para.otfl_benefits">described later</link>.
+</para>
 
 <para>
-It can also be changed by setting the value of this variable in
-your <filename>.scirunrc</filename>
-file. Your <filename>.scirunrc</filename> file would contain, for example:
+The location of the <quote>on-the-fly</quote> directory can also be
+changed by setting the value of
+<envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar> in your
+<filename>.scirunrc</filename> file which is read by &sr; at startup. Your
+<filename>.scirunrc</filename> file would contain, for example:
 <literallayout class="monospaced">
 SCIRUN_ON_THE_FLY_LIBS_DIR=$(HOME)/&sr;_otf
 </literallayout>
-Your <filename>.scirunrc</filename> file is read by &sr; at startup.
 See the <ulink
 url="../../User/Guide/usersguide/srug3.html#SECTION00045000000000000000">&sr;
 Users Guide</ulink> for more information on the use of
 <filename>.scirunrc</filename>.
 </para>
 
-<para>Customizing the value of this variable for each &sr; user has
-the following benefits:
+<note>
+<para>It is recommended that each &sr; user create an
+<quote>on-the-fly</quote> library directory in their home directory
+and set the value of <envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar> to
+point to this directory.
+</para>
+</note>
+
+<para id="para.otfl_benefits">Customizing the value of this variable
+for each &sr; user has the following benefits:
 <itemizedlist>
 <listitem>
 <para>It allows multiple users to run the same instance of &sr; (at
@@ -517,8 +580,10 @@ between instances of &sr;.</para>
 <title>Accessing Data Sets (and <envar>SCIRUN_DATA</envar>)</title>
 
 <para>
-<envar>SCIRUN_DATA</envar> specifies the default data directory
-of &sr; data sets. Initially you will want to set it to point to the
+<envar>SCIRUN_DATA</envar> specifies the default data directory of
+&sr; data sets. If you will be working through &sr;'s <ulink
+url="../../User/Tutorial/index.html">tutorial</ulink> then you will
+want to set the value of <envar>SCIRUN_DATA</envar> to point to the
 sample data sets directory, <filename>SCIRunData</filename>:
 <literallayout class="monospaced">
 export SCIRUN_DATA=<replaceable>/path/to/</replaceable>SCIRunData
@@ -533,19 +598,32 @@ setenv SCIRUN_DATA <replaceable>/path/to/</replaceable>SCIRunData
 </section>
 
 
-<section>
+<section id="sec.starting">
 <title>Starting &sr;</title>
 
-<para> After a successful build, <replaceable>build_dir</replaceable>
-will contain the <filename>scirun</filename> executable. To start &sr;
-type <command>./scirun</command>.  &sr;'s network editor window should
-appear and the &sr; shell should start.</para>
+<para>
+If you installed &sr; from it's rpm you can test it's installation by
+typing <command>/usr/local/SCIRun/bin/scirun</command> (you may want
+to add <filename>/usr/local/SCIRun/bin</filename> to your
+<envar>PATH</envar> variable).
+</para>
+
+<para>
+If you built &sr; from it's source code tarballs then you can test
+it's installation by <command>cd</command>ing to it's build directory
+and typing <command>./scirun</command>.
+</para>
+
+<para>
+After starting &sr; you should see &sr;'s network editor window and
+the &sr; shell prompt.
+</para>
 
 <para>If the window does not appear note any errors displayed in the
 &sr; console and see <xref endterm="title.help"
 linkend="sec.help"/>.</para>
 
-<para>See &sr;'s <ulink
+<para>Now see &sr;'s <ulink
 url="../../User/Tutorial/index.html"><citetitle>&sr;
 Tutorial</citetitle></ulink> for an introduction to the use of
 &sr;.  The tutorial uses the sample data sets previously downloaded.</para>
