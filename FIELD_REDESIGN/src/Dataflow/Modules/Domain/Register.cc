@@ -114,8 +114,6 @@ void Register::execute(){
       //}
       fwh = fw = 0;
       fwh = fw = new FieldWrapper(sfh, NEW);
-      dbg << "in register, geom: " << sfh->get_geom().get_rep() << endl;
-      dbg << "in register, attrib: " << sfh->get_attrib().get_rep() << endl;
       oport->send(fw);
     }
     else if(sfh->status == OLD){
