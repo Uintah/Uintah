@@ -99,6 +99,7 @@ WARNING
             double b1;
             double b2;
             double b3;
+            double mu_0;
 	 };	 
          const VarLabel* pMTSLabel; // For MTS model
          const VarLabel* pMTSLabel_preReloc; // For MTS model
