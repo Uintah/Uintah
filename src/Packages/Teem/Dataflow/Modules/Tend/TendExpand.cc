@@ -98,7 +98,7 @@ TendExpand::execute()
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
 
-  nrrd->nrrd->axis[0].kind = nrrdKind3DTensor;
+  nrrd->nrrd->axis[0].kind = nrrdKind3DMatrix;
 
   NrrdDataHandle out(nrrd);
 

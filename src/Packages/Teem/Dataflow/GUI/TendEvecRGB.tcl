@@ -52,6 +52,9 @@ itcl_class Teem_Tend_TendEvecRGB {
 
 	global $this-gamma
 	set $this-gamma 1.0
+
+	global $this-threshold
+	set $this-threshold 0.5
     }
 
     method ui {} {
@@ -109,6 +112,10 @@ itcl_class Teem_Tend_TendEvecRGB {
         iwidgets::entryfield $w.f.options.gamma -labeltext \
 	    "Gamma:" -textvariable $this-gamma
         pack $w.f.options.gamma -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.threshold -labeltext \
+	    "Threshold:" -textvariable $this-threshold
+        pack $w.f.options.threshold -side top -expand yes -fill x
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w

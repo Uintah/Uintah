@@ -239,19 +239,19 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
            << " {nrrdKind3Normal}";
       gui->execute(kind.str());
       break;
-    case nrrdKind3DSymTensor:
+    case nrrdKind3DSymMatrix:
       kind << "set " << id << "-kind" << i 
-           << " {nrrdKind3DSymTensor}";
+           << " {nrrdKind3DSymMatrix}";
       gui->execute(kind.str());
       break;
-    case nrrdKind3DMaskedSymTensor:
+    case nrrdKind3DMaskedSymMatrix:
       kind << "set " << id << "-kind" << i 
-           << " {nrrdKind3DMaskedSymTensor}";
+           << " {nrrdKind3DMaskedSymMatrix}";
       gui->execute(kind.str());
       break;
-    case nrrdKind3DTensor:
+    case nrrdKind3DMatrix:
       kind << "set " << id << "-kind" << i 
-           << " {nrrdKind3DTensor}";
+           << " {nrrdKind3DMatrix}";
       gui->execute(kind.str());
       break;
     case nrrdKindList:

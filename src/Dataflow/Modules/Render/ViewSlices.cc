@@ -2479,7 +2479,7 @@ ViewSlices::execute()
     for (a = 0; a < 3; ++a) {
       const double spacing = nrrdH->nrrd->axis[a].spacing;
       if (airIsNaN(scale_[a]))
-	scale_[a] = (airExists_d(spacing) ? spacing : 1.0);
+	scale_[a] = (airExists(spacing) ? spacing : 1.0);
       else if (scale_[a] != spacing) {
 	error("Nrrd #"+to_string(n)+
 	      " has spacing different than a previous nrrd. Stopping.");

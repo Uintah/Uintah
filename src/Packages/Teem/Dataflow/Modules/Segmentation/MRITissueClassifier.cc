@@ -3527,7 +3527,7 @@ MRITissueClassifier::gaussian(const NrrdDataHandle &data, double sigma)
     } 
     memcpy(info->parm[a], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
     if (info->kernel[a] && 
-	(!(airExists_d(data->nrrd->axis[a].min) && airExists_d(data->nrrd->axis[a].max)))) {
+	(!(airExists(data->nrrd->axis[a].min) && airExists(data->nrrd->axis[a].max)))) {
       nrrdAxisInfoMinMaxSet(data->nrrd, a, data->nrrd->axis[a].center ? 
 			data->nrrd->axis[a].center : nrrdDefCenter);
     }
