@@ -1868,35 +1868,48 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
          #endif
 /*==========TESTING==========`*/
          if ((MaxMass-MinMass)/MaxMass > 0.4
-          && (MaxMass-MinMass)/MaxMass < 1.0){
+          && (MaxMass-MinMass)/MaxMass < 1.0
+          &&  MaxMass > 1.e-100){
 
-             double gradRhoX, gradRhoY, gradRhoZ;
-             double normalX,  normalY,  normalZ;
+            double gradRhoX, gradRhoY, gradRhoZ;
+            double normalX,  normalY,  normalZ;
 
-             gradRhoX = 0.25 * (( NCsolidMass[nodeIdx[0]]+
-                                NCsolidMass[nodeIdx[1]]+
-                                NCsolidMass[nodeIdx[2]]+
-                                NCsolidMass[nodeIdx[3]] ) -
-                              ( NCsolidMass[nodeIdx[4]]+
-                                NCsolidMass[nodeIdx[5]]+
-                                NCsolidMass[nodeIdx[6]]+
-                                NCsolidMass[nodeIdx[7]] )) / delX;
-             gradRhoY = 0.25 * (( NCsolidMass[nodeIdx[0]]+
-                                NCsolidMass[nodeIdx[1]]+
-                                NCsolidMass[nodeIdx[4]]+
-                                NCsolidMass[nodeIdx[5]] ) -
-                              ( NCsolidMass[nodeIdx[2]]+
-                                NCsolidMass[nodeIdx[3]]+
-                                NCsolidMass[nodeIdx[6]]+
-                                NCsolidMass[nodeIdx[7]] )) / delY;
-             gradRhoZ = 0.25 * (( NCsolidMass[nodeIdx[1]]+
-                                NCsolidMass[nodeIdx[3]]+
-                                NCsolidMass[nodeIdx[5]]+
-                                NCsolidMass[nodeIdx[7]] ) -
-                              ( NCsolidMass[nodeIdx[0]]+
-                                NCsolidMass[nodeIdx[2]]+
-                                NCsolidMass[nodeIdx[4]]+
-                                NCsolidMass[nodeIdx[6]] )) / delZ;
+            gradRhoX = 0.25 *
+                              ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                                NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                                NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                                NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]])
+                              -
+                              (
+                                NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                                NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
+                                NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
+                                NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
+                              ) / delX;
+            gradRhoY = 0.25 *
+                              ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                                NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                                NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                                NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]])
+                              -
+                              (
+                                NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                                NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
+                                NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
+                                NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
+                              ) / delY;
+            gradRhoZ = 0.25 *
+                              ((NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[0]]+
+                                NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
+                                NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
+                                NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
+                              -
+                              (
+                                NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                                NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                                NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                                NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]])
+                              ) / delZ;
 
              double absGradRho = sqrt(gradRhoX*gradRhoX +
                                    gradRhoY*gradRhoY +
