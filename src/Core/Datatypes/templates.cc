@@ -118,6 +118,19 @@ Vector TetVol<Tensor>::cell_gradient(TetVolMesh::cell_index ci)
   return Vector(0, 0, 0);
 }
 
+template <> bool LatticeVol<Tensor>::get_gradient(Vector &, Point &p)
+{
+  ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
+  return false;
+}
+
+template <> bool LatticeVol<Vector>::get_gradient(Vector &, Point &p)
+{
+  ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
+  return false;
+}
+
+
 #ifdef __sgi
 #pragma reset woff 1468
 #endif

@@ -125,7 +125,7 @@ Gradient::execute()
   {
     return;
   }
-#if 0
+
   // Create a new Vector field with the same geometry handle as field.
   const string geom_name = field->get_type_name(0);
   const string data_name = field->get_type_name(1);
@@ -183,7 +183,7 @@ Gradient::execute()
     // Signal some sort of error.
     return;
   }
-#endif
+
 }
 
 } // End namespace SCIRun
