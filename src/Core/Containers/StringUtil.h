@@ -32,10 +32,11 @@
 #define SCI_Core_StringUtil_h 1
 
 #include <string>
-
-using std::string;
+#include <vector>
 
 namespace SCIRun {
+  using std::string;
+  using std::vector;
 
 bool string_to_int(const string &str, int &result);
 bool string_to_double(const string &str, double &result);
@@ -50,6 +51,9 @@ string basename(const string &path);
 //////////
 // Return directory name
 string pathname(const string &path);
+
+  // Split a string into multiple parts, separated by the character sep
+  vector<string> split_string(const std::string& str, char sep);
 
 //////////
 // Unsafe cast from string to char *, used to export strings to C functions.
