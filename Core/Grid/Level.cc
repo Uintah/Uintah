@@ -352,9 +352,13 @@ void Level::finalizeLevel()
    d_rangeTree = scinew PatchRangeTree(d_patches);
 #endif   
 #endif
-  for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++){
+   patchIterator iter;
+   int ii;
+  for(iter=d_patches.begin(), ii = 0;
+      iter != d_patches.end(); iter++, ii++){
     Patch* patch = *iter;
-    cout << "Patch bounding box = " << patch->getBox() << endl;
+    patch->setLevelIndex( ii );
+    //cout << "Patch bounding box = " << patch->getBox() << endl;
     // See if there are any neighbors on the 6 faces
     for(Patch::FaceType face = Patch::startFace;
 	face <= Patch::endFace; face=Patch::nextFace(face)){

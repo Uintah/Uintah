@@ -290,6 +290,9 @@ WARNING
 	 }
       private:
       };
+
+      // get the index into the Level::d_patches array
+      int getLevelIndex() const { return d_level_index; }
    protected:
      friend class Level;
      
@@ -307,7 +310,11 @@ WARNING
      Patch(const Patch&);
      Patch& operator=(const Patch&);
      
-     const Level* d_level;
+     const Level* d_level; // I live in this grid level;
+     int d_level_index;  // I'm at this index in the Level vector;
+     
+     // used only by friend class Level
+     inline void setLevelIndex( int idx ){ d_level_index = idx;}
      
      //////////
      // Insert Documentation Here:
