@@ -146,8 +146,22 @@ PROGRAM := $(SRCDIR)/TextToSparseRowMatrix
 SRCS := $(SRCDIR)/TextToSparseRowMatrix.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-
-
 PROGRAM := $(SRCDIR)/TextToColorMap
 SRCS := $(SRCDIR)/TextToColorMap.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/TriSurfToVtk
+SRCS := $(SRCDIR)/TriSurfToVtk.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/TriSurfToOBJ
+SRCS := $(SRCDIR)/TriSurfToOBJ.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/TriSurfToTetgen
+SRCS := $(SRCDIR)/TriSurfToTetgen.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/TetgenToTetVol
+SRCS := $(SRCDIR)/TetgenToTetVol.cc
 include $(SCIRUN_SCRIPTS)/program.mk
