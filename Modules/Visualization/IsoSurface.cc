@@ -73,18 +73,25 @@ class IsoSurface : public Module {
 
     MaterialHandle matl;
 
-    int iso_cube(int, int, int, double, GeomTriangles*, ScalarFieldRG*);
-    int iso_tetra(Element*, Mesh*, ScalarFieldUG*, double, GeomTriangles*);
-    int iso_tetra_s(int,Element*, Mesh*, ScalarFieldUG*, double, GeomTriStrip*);
+    int iso_cube(int, int, int, double, GeomTrianglesP*, ScalarFieldRG*);
+    int iso_tetra(Element*, Mesh*, ScalarFieldUG*, double, GeomTrianglesP*);
+    int iso_tetra_s(int,Element*, Mesh*, ScalarFieldUG*, double, 
+		    GeomTriStripList*);
+    void iso_tetra_strip(int, Mesh*, ScalarFieldUG*, double, 
+			 GeomGroup*, BitArray1&);
 
-    void iso_reg_grid(ScalarFieldRG*, const Point&, GeomTriangles*);
-    void iso_reg_grid(ScalarFieldRG*, double, GeomTriangles*);
-    void iso_tetrahedra(ScalarFieldUG*, const Point&, GeomTriangles*);
-    void iso_tetrahedra(ScalarFieldUG*, double, GeomTriangles*);
+    void iso_reg_grid(ScalarFieldRG*, const Point&, GeomTrianglesP*);
+    void iso_reg_grid(ScalarFieldRG*, double, GeomTrianglesP*);
+    void iso_tetrahedra(ScalarFieldUG*, const Point&, GeomTrianglesP*);
+    void iso_tetrahedra(ScalarFieldUG*, double, GeomTrianglesP*);
+
+    // extract an iso-surface into a tri-strip
 
     void iso_tetrahedra_strip(ScalarFieldUG*, const Point&, GeomGroup*);
+    void iso_tetrahedra_strip(ScalarFieldUG*, double, GeomGroup*);
     
-    int iso_strip_enter(int,Element*, Mesh*, ScalarFieldUG*, double, GeomTriStrip*);
+    int iso_strip_enter(int,Element*, Mesh*, ScalarFieldUG*, double, 
+			GeomTriStripList*);
     void remap_element(int& rval, Element *src, Element *dst);
 
     void find_seed_from_value(const ScalarFieldHandle&);
@@ -268,7 +275,7 @@ void IsoSurface::execute()
 	}
 	cerr << "at p=" << sp << ", iv=" << iv << endl;
     }
-    GeomTriangles* group = scinew GeomTriangles;
+    GeomTrianglesP* group = scinew GeomTrianglesP;
     GeomGroup* tgroup=scinew GeomGroup;
     GeomObj* topobj=tgroup;
     if(have_colormap && !have_colorfield){
@@ -330,6 +337,7 @@ void IsoSurface::execute()
 	} else {
 	    iso_tetrahedra(unstructured_grid, iv, group);
 	    tgroup->add(group);
+//	    iso_tetrahedra_strip(unstructured_grid,iv,tgroup);
 	}
     } else {
 	error("I can't IsoSurface this type of field...");
@@ -357,7 +365,8 @@ void IsoSurface::execute()
  
 void IsoSurface::order_and_add_points(const Point &p1, const Point &p2, 
 				      const Point &p3, const Point &v1,
-				      double val) {
+				      double val) 
+{
 
     if (Plane(p1,p2,p3).eval_point(v1)*val >= 0)	// is the order right?
 	surf->cautious_add_triangle(p1,p2,p3,1);
@@ -372,7 +381,7 @@ void IsoSurface::order_and_add_points(const Point &p1, const Point &p2,
 
 
 int IsoSurface::iso_cube(int i, int j, int k, double isoval,
-			 GeomTriangles* group, ScalarFieldRG* field)
+			 GeomTrianglesP* group, ScalarFieldRG* field)
 {
     double oval[9];
     oval[1]=field->grid(i, j, k)-isoval;
@@ -412,9 +421,9 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
 	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    group->add(p1, p2, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p2,p3,v[1],val[1]);
+	    if (group->add(p1, p2, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p2,p3,v[1],val[1]);
 	}
 	break;
     case 2:
@@ -422,13 +431,13 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    Point p2(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
 	    Point p3(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
-	    group->add(p1, p2, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p2,p3,v[1],val[1]);
+	    if (group->add(p1, p2, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p2,p3,v[1],val[1]);
 	    Point p4(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    group->add(p3, p4, p1);
-	    if (emit_surface.get())
-		order_and_add_points(p3,p4,p1,v[1],val[1]);
+	    if (group->add(p3, p4, p1))
+		if (emit_surface.get())
+		    order_and_add_points(p3,p4,p1,v[1],val[1]);
 	}
 	break;
     case 3:
@@ -436,15 +445,15 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
 	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    group->add(p1, p2, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p2,p3,v[1],val[1]);
+	    if (group->add(p1, p2, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p2,p3,v[1],val[1]);
 	    Point p4(Interpolate(v[3], v[2], val[3]/(val[3]-val[2])));
 	    Point p5(Interpolate(v[3], v[7], val[3]/(val[3]-val[7])));
 	    Point p6(Interpolate(v[3], v[4], val[3]/(val[3]-val[4])));
-	    group->add(p4, p5, p6);
-	    if (emit_surface.get())
-		order_and_add_points(p4,p5,p6,v[3],val[3]);
+	    if (group->add(p4, p5, p6))
+		if (emit_surface.get())
+		    order_and_add_points(p4,p5,p6,v[3],val[3]);
 	}
 	break;
     case 4:
@@ -452,15 +461,15 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
 	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    group->add(p1, p2, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p2,p3,v[1],val[1]);
+	    if (group->add(p1, p2, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p2,p3,v[1],val[1]);
 	    Point p4(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
 	    Point p5(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
 	    Point p6(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
-	    group->add(p4, p5, p6);
-	    if (emit_surface.get())
-		order_and_add_points(p4,p5,p6,v[7],val[7]);
+	    if (group->add(p4, p5, p6))
+		if (emit_surface.get())
+		    order_and_add_points(p4,p5,p6,v[7],val[7]);
 	}
 	break;
     case 5:
@@ -468,17 +477,17 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
 	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    Point p3(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
-	    group->add(p1, p2, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p2,p3,v[2],val[2]);
+	    if (group->add(p1, p2, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p2,p3,v[2],val[2]);
 	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
-	    group->add(p4, p3, p2);
-	    if (emit_surface.get())
-		order_and_add_points(p4,p3,p2,v[2],val[2]);
+	    if (group->add(p4, p3, p2))
+		if (emit_surface.get())
+		    order_and_add_points(p4,p3,p2,v[2],val[2]);
 	    Point p5(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    group->add(p5, p4, p2);
-	    if (emit_surface.get())
-		order_and_add_points(p5,p4,p2,v[2],val[2]);
+	    if (group->add(p5, p4, p2))
+		if (emit_surface.get())
+		    order_and_add_points(p5,p4,p2,v[2],val[2]);
 	}
 	break;
     case 6:
@@ -486,19 +495,19 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    Point p2(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
 	    Point p3(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
-	    group->add(p1, p2, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p2,p3,v[1],val[1]);
+	    if (group->add(p1, p2, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p2,p3,v[1],val[1]);
 	    Point p4(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    group->add(p3, p4, p1);
-	    if (emit_surface.get())
-		order_and_add_points(p3,p4,p1,v[1],val[1]);
+	    if (group->add(p3, p4, p1))
+		if (emit_surface.get())
+		    order_and_add_points(p3,p4,p1,v[1],val[1]);
 	    Point p5(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
 	    Point p6(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
 	    Point p7(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
-	    group->add(p5, p6, p7);
-	    if (emit_surface.get())
-		order_and_add_points(p5,p6,p7,v[7],val[7]);
+	    if (group->add(p5, p6, p7))
+		if (emit_surface.get())
+		    order_and_add_points(p5,p6,p7,v[7],val[7]);
 	}
 	break;
     case 7:
@@ -506,21 +515,21 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
 	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    Point p3(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
-	    group->add(p1, p2, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p2,p3,v[2],val[2]);
+	    if (group->add(p1, p2, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p2,p3,v[2],val[2]);
 	    Point p4(Interpolate(v[4], v[1], val[4]/(val[4]-val[1])));
 	    Point p5(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
 	    Point p6(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
-	    group->add(p4, p5, p6);
-	    if (emit_surface.get())
-		order_and_add_points(p4,p5,p6,v[4],val[4]);
+	    if (group->add(p4, p5, p6))
+		if (emit_surface.get())
+		    order_and_add_points(p4,p5,p6,v[4],val[4]);
 	    Point p7(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
 	    Point p8(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
 	    Point p9(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
-	    group->add(p7, p8, p9);
-	    if (emit_surface.get())
-		order_and_add_points(p7,p8,p9,v[7],val[7]);
+	    if (group->add(p7, p8, p9))
+		if (emit_surface.get())
+		    order_and_add_points(p7,p8,p9,v[7],val[7]);
 	}
 	break;
     case 8:
@@ -528,13 +537,13 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    group->add(p1, p2, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p2,p3,v[1],val[1]);
+	    if (group->add(p1, p2, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p2,p3,v[1],val[1]);
 	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
-	    group->add(p4, p1, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p4,p1,p3,v[1],val[1]);
+	    if (group->add(p4, p1, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p4,p1,p3,v[1],val[1]);
 	}
 	break;
     case 9:
@@ -542,21 +551,21 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
 	    Point p2(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
 	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    group->add(p1, p2, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p2,p3,v[5],val[5]);
+	    if (group->add(p1, p2, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p2,p3,v[5],val[5]);
 	    Point p4(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
-	    group->add(p1, p3, p4);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p3,p4,v[5],val[5]);
+	    if (group->add(p1, p3, p4))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p3,p4,v[5],val[5]);
 	    Point p5(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    group->add(p1, p4, p5);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p4,p5,v[5],val[5]);
+	    if (group->add(p1, p4, p5))
+		if (emit_surface.get())	
+		    order_and_add_points(p1,p4,p5,v[5],val[5]);
 	    Point p6(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
-	    group->add(p5, p4, p6);
-	    if (emit_surface.get())
-		order_and_add_points(p5,p4,p6,v[5],val[5]);
+	    if (group->add(p5, p4, p6))
+		if (emit_surface.get())
+		    order_and_add_points(p5,p4,p6,v[5],val[5]);
 	}
 	break;
     case 10:
@@ -564,23 +573,23 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
 	    Point p2(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
 	    Point p3(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
-	    group->add(p1, p2, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p2,p3,v[1],val[1]);
+	    if (group->add(p1, p2, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p2,p3,v[1],val[1]);
 	    Point p4(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
-	    group->add(p2, p4, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p2,p4,p3,v[1],val[1]);
+	    if (group->add(p2, p4, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p2,p4,p3,v[1],val[1]);
 	    Point p5(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
 	    Point p6(Interpolate(v[6], v[5], val[6]/(val[6]-val[5])));
 	    Point p7(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
-	    group->add(p5, p6, p7);
-	    if (emit_surface.get())
-		order_and_add_points(p5,p6,p7,v[6],val[6]);
+	    if (group->add(p5, p6, p7))
+		if (emit_surface.get())
+		    order_and_add_points(p5,p6,p7,v[6],val[6]);
 	    Point p8(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
-	    group->add(p2, p8, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p2,p8,p3,v[6],val[6]);
+	    if (group->add(p2, p8, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p2,p8,p3,v[6],val[6]);
 	}
 	break;
     case 11:
@@ -588,21 +597,21 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
 	    Point p2(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
 	    Point p3(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
-	    group->add(p1, p2, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p2,p3,v[5],val[5]);
+	    if (group->add(p1, p2, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p2,p3,v[5],val[5]);
 	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
-	    group->add(p1, p3, p4);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p3,p4,v[5],val[5]);
+	    if (group->add(p1, p3, p4))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p3,p4,v[5],val[5]);
 	    Point p5(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    group->add(p1, p4, p5);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p4,p5,v[5],val[5]);
+	    if (group->add(p1, p4, p5))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p4,p5,v[5],val[5]);
 	    Point p6(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
-	    group->add(p4, p3, p6);
-	    if (emit_surface.get())
-		order_and_add_points(p4,p3,p6,v[5],val[5]);
+	    if (group->add(p4, p3, p6))
+		if (emit_surface.get())	
+		    order_and_add_points(p4,p3,p6,v[5],val[5]);
 	}
 	break;
     case 12:
@@ -610,23 +619,23 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
 	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    Point p3(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
-	    group->add(p1, p2, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p2,p3,v[5],val[5]);
+	    if (group->add(p1, p2, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p2,p3,v[5],val[5]);
 	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
-	    group->add(p3, p2, p4);
-	    if (emit_surface.get())
-		order_and_add_points(p3,p2,p4,v[5],val[5]);
+	    if (group->add(p3, p2, p4))
+		if (emit_surface.get())	
+		    order_and_add_points(p3,p2,p4,v[5],val[5]);
 	    Point p5(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    group->add(p4, p2, p5);
-	    if (emit_surface.get())
-		order_and_add_points(p4,p2,p5,v[5],val[5]);
+	    if (group->add(p4, p2, p5))
+		if (emit_surface.get())
+		    order_and_add_points(p4,p2,p5,v[5],val[5]);
 	    Point p6(Interpolate(v[4], v[1], val[4]/(val[4]-val[1])));
 	    Point p7(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
 	    Point p8(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
-	    group->add(p6, p7, p8);
-	    if (emit_surface.get())
-		order_and_add_points(p6,p7,p8,v[4],val[4]);
+	    if (group->add(p6, p7, p8))
+		if (emit_surface.get())
+		    order_and_add_points(p6,p7,p8,v[4],val[4]);
 	}
 	break;
     case 13:
@@ -634,27 +643,27 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
 	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    group->add(p1, p2, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p2,p3,v[1],val[1]);
+	    if (group->add(p1, p2, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p2,p3,v[1],val[1]);
 	    Point p4(Interpolate(v[3], v[2], val[3]/(val[3]-val[2])));
 	    Point p5(Interpolate(v[3], v[7], val[3]/(val[3]-val[7])));
 	    Point p6(Interpolate(v[3], v[4], val[3]/(val[3]-val[4])));
-	    group->add(p4, p5, p6);
-	    if (emit_surface.get())
-		order_and_add_points(p4,p5,p6,v[3],val[3]);
+	    if (group->add(p4, p5, p6))
+		if (emit_surface.get())
+		    order_and_add_points(p4,p5,p6,v[3],val[3]);
 	    Point p7(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
 	    Point p8(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
 	    Point p9(Interpolate(v[6], v[5], val[6]/(val[6]-val[5])));
-	    group->add(p7, p8, p9);
-	    if (emit_surface.get())
-		order_and_add_points(p7,p8,p9,v[6],val[6]);
+	    if (group->add(p7, p8, p9))
+		if (emit_surface.get())
+		    order_and_add_points(p7,p8,p9,v[6],val[6]);
 	    Point p10(Interpolate(v[8], v[5], val[8]/(val[8]-val[5])));
 	    Point p11(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
 	    Point p12(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
-	    group->add(p10, p11, p12);
-	    if (emit_surface.get())
-		order_and_add_points(p10,p11,p12,v[8],val[8]);
+	    if (group->add(p10, p11, p12))
+		if (emit_surface.get())
+		    order_and_add_points(p10,p11,p12,v[8],val[8]);
 	}
 	break;
     case 14:
@@ -662,21 +671,21 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
 	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    group->add(p1, p2, p3);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p2,p3,v[5],val[5]);
+	    if (group->add(p1, p2, p3))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p2,p3,v[5],val[5]);
 	    Point p4(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
-	    group->add(p1, p3, p4);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p3,p4,v[5],val[5]);
+	    if (group->add(p1, p3, p4))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p3,p4,v[5],val[5]);
 	    Point p5(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
-	    group->add(p1, p4, p5);
-	    if (emit_surface.get())
-		order_and_add_points(p1,p4,p5,v[5],val[5]);
+	    if (group->add(p1, p4, p5))
+		if (emit_surface.get())
+		    order_and_add_points(p1,p4,p5,v[5],val[5]);
 	    Point p6(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
-	    group->add(p3, p6, p4);
-	    if (emit_surface.get())
-		order_and_add_points(p3,p6,p4,v[5],val[5]);
+	    if (group->add(p3, p6, p4))
+		if (emit_surface.get())
+		    order_and_add_points(p3,p6,p4,v[5],val[5]);
 	}
 	break;
     default:
@@ -687,7 +696,7 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 }
 
 void IsoSurface::iso_reg_grid(ScalarFieldRG* field, double isoval,
-			      GeomTriangles* group)
+			      GeomTrianglesP* group)
 {
     int nx=field->nx;
     int ny=field->ny;
@@ -705,7 +714,7 @@ void IsoSurface::iso_reg_grid(ScalarFieldRG* field, double isoval,
 }
 
 void IsoSurface::iso_reg_grid(ScalarFieldRG* field, const Point& p,
-			      GeomTriangles* group)
+			      GeomTrianglesP* group)
 {
     int nx=field->nx;
     int ny=field->ny;
@@ -728,6 +737,7 @@ void IsoSurface::iso_reg_grid(ScalarFieldRG* field, const Point& p,
     int counter=1;
     GeomID groupid=0;
     while(!surfQ.is_empty()) {
+#if 0
 	if (sp && counter%400 == 0) {
 	    if(!ogeom->busy()){
 		if (groupid)
@@ -736,6 +746,7 @@ void IsoSurface::iso_reg_grid(ScalarFieldRG* field, const Point& p,
 		ogeom->flushViews();
 	    }
 	}
+#endif
 	if(sp && abort_flag){
 	    if(groupid)
 		ogeom->delObj(groupid);
@@ -798,12 +809,13 @@ void IsoSurface::iso_reg_grid(ScalarFieldRG* field, const Point& p,
 	counter++;
     }
     if (counter > 400)
-	ogeom->delObj(groupid);
+	if (groupid)
+	    ogeom->delObj(groupid);
 }
 
 int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
 			  ScalarFieldUG* field, double isoval,
-			  GeomTriangles* group)
+			  GeomTrianglesP* group)
 {
     double v1=field->data[element->n[0]]-isoval;
     double v2=field->data[element->n[1]]-isoval;
@@ -926,7 +938,7 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
 }
 
 void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, double isoval,
-				GeomTriangles* group)
+				GeomTrianglesP* group)
 {
     Mesh* mesh=field->mesh.get_rep();
     int nelems=mesh->elems.size();
@@ -934,6 +946,26 @@ void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, double isoval,
 	//update_progress(i, nelems);
 	Element* element=mesh->elems[i];
 	iso_tetra(element, mesh, field, isoval, group);
+	if(sp && abort_flag)
+	    return;
+    }
+}
+
+// build tri-strips from iso-value
+
+
+void IsoSurface::iso_tetrahedra_strip(ScalarFieldUG* field, double isoval,
+				      GeomGroup* group)
+{
+    Mesh* mesh=field->mesh.get_rep();
+    int nelems=mesh->elems.size();
+    BitArray1 visited(nelems, 0);
+
+    for(int i=0;i<nelems;i++){
+	if (!visited.is_set(i)) {
+	    visited.set(i);
+	    iso_tetra_strip(i, mesh, field, isoval, group,visited);
+	}
 	if(sp && abort_flag)
 	    return;
     }
@@ -1014,7 +1046,7 @@ inline int HIGHE(int e) { return (e&(7<<3))>>3; }
 inline int F_FACE(int e1, int e2) { return EDGE_TO_FACE[(e1<<3)|e2]; }
 inline int E_FACE(int e1, int e2) { return ((e1<<3)|e2); }
 
-inline void add_strip_point(const int nvert, GeomTriStrip* group,
+inline void add_strip_point(const int nvert, GeomTriStripList* group,
 			    const NodeHandle& n1,
 			    const NodeHandle& n2,
 			    const NodeHandle& n3,
@@ -1024,96 +1056,41 @@ inline void add_strip_point(const int nvert, GeomTriStrip* group,
 			    const double v3,
 			    const double v4)
 {
-    int i = group->size();
+    int i = group->num_since();
+    Point pm1(group->get_pm1());
+    Point pm2(group->get_pm2());
+    Point p1;
+
 	switch (nvert) {
 	case E12:
-	    {
-		Point p1(Interpolate(n1->p,n2->p,v1/(v1-v2)));
-		Point pm1(group->verts[i-1]->p);
-		Point pm2(group->verts[i-2]->p);
-		Vector n(Cross(p1-pm2,pm1-pm2));
-		if (n.length2() > 0){
-		    n.normalize();
-		}
-		if (!(i&1)) // this implies a different sign convention
-		    n *=-1.0;
-		group->add(p1,n);
-	    }
+	    p1 = (Interpolate(n1->p,n2->p,v1/(v1-v2)));
 	    break;
 	case E13:
-	    {
-		Point p1(Interpolate(n1->p,n3->p,v1/(v1-v3)));
-		Point pm1(group->verts[i-1]->p);
-		Point pm2(group->verts[i-2]->p);
-		Vector n(Cross(p1-pm2,pm1-pm2));
-		if (n.length2() > 0){
-		    n.normalize();
-		}
-		if (!(i&1)) // this implies a different sign convention
-		    n *=-1.0;
-		group->add(p1,n);
-	    }
+	    p1 =  (Interpolate(n1->p,n3->p,v1/(v1-v3)));
 	    break;
 	case E14:
-	    {
-		Point p1(Interpolate(n1->p,n4->p,v1/(v1-v4)));
-		Point pm1(group->verts[i-1]->p);
-		Point pm2(group->verts[i-2]->p);
-		Vector n(Cross(p1-pm2,pm1-pm2));
-		if (n.length2() > 0){
-		    n.normalize();
-		}
-
-		if (!(i&1)) // this implies a different sign convention
-		    n *=-1.0;
-		group->add(p1,n);
-	    }
+	    p1 = (Interpolate(n1->p,n4->p,v1/(v1-v4)));
 	    break;
 	case E23:
-	    {
-		Point p1(Interpolate(n2->p,n3->p,v2/(v2-v3)));
-		Point pm1(group->verts[i-1]->p);
-		Point pm2(group->verts[i-2]->p);
-		Vector n(Cross(p1-pm2,pm1-pm2));
-		if (n.length2() > 0){
-		    n.normalize();
-		}
-		if (!(i&1)) // this implies a different sign convention
-		    n *=-1.0;
-		group->add(p1,n);
-	    }
+	    p1 = (Interpolate(n2->p,n3->p,v2/(v2-v3)));
 	    break;
 	case E24:
-	    {
-		Point p1(Interpolate(n2->p,n4->p,v2/(v2-v4)));
-		Point pm1(group->verts[i-1]->p);
-		Point pm2(group->verts[i-2]->p);
-		Vector n(Cross(p1-pm2,pm1-pm2));
-		if (n.length2() > 0){
-		    n.normalize();
-		}
-		if (!(i&1)) // this implies a different sign convention
-		    n *=-1.0;
-		group->add(p1,n);
-	    }
+	    p1 = (Interpolate(n2->p,n4->p,v2/(v2-v4)));
 	    break;
 	case E34:
-	    {
-		Point p1(Interpolate(n3->p,n4->p,v3/(v3-v4)));
-		Point pm1(group->verts[i-1]->p);
-		Point pm2(group->verts[i-2]->p);
-		Vector n(Cross(p1-pm2,pm1-pm2));
-		if (n.length2() > 0){
-		    n.normalize();
-		}
-		if (!(i&1)) // this implies a different sign convention
-		    n *=-1.0;
-		group->add(p1,n);
-	    }
+	    p1 = (Interpolate(n3->p,n4->p,v3/(v3-v4)));
 	    break;
 	default:
 	    cerr << "Major error, unnkown code: " << nvert << "\n";
 	}
+
+    Vector n(Cross(p1-pm2,pm1-pm2));
+    if (n.length2() > 0){
+	n.normalize();
+    }
+    if (!(i&1)) // this implies a different sign convention
+	n *=-1.0;
+    group->add(p1,n);
 }
 
 // an "entrance" contains 6 bits - 3 bits for 1st edge, 3 for second
@@ -1124,7 +1101,7 @@ inline void add_strip_point(const int nvert, GeomTriStrip* group,
 int IsoSurface::iso_strip_enter(int inc, 
 				Element *element, Mesh* mesh, 
 				ScalarFieldUG* field, double isoval, 
-				GeomTriStrip* group)
+				GeomTriStripList* group)
 {
     double v1=field->data[element->n[0]]-isoval;
     double v2=field->data[element->n[1]]-isoval;
@@ -1219,7 +1196,7 @@ void IsoSurface::remap_element(int& rval, Element *src, Element *dst)
 void inline emit_in_2(int& rf, int& pf,
 		      int& eA,int& eB,int& eC,int& eD,
 		      Point& pA,Point& pB,Point& pC,Point& pD,
-		      GeomTriStrip* group)
+		      GeomTriStripList* group)
 {
     rf = E_FACE(eC,eD);
     pf = ALLFACES&(~F_FACE(eC,eD));
@@ -1239,7 +1216,7 @@ void inline emit_in_2(int& rf, int& pf,
 
 int IsoSurface::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh, 
 			    ScalarFieldUG* field, double isoval, 
-			    GeomTriStrip* group)
+			    GeomTriStripList* group)
 {
     double v1=field->data[element->n[0]]-isoval;
     double v2=field->data[element->n[1]]-isoval;
@@ -1268,8 +1245,8 @@ int IsoSurface::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     switch(mask){
     case 0:
     case 15:
-	// Nothing to do....
-	break;
+	// Nothing to do...
+	return 0;
     case 1:
     case 14:
 	// Point 4 is inside
@@ -1323,15 +1300,10 @@ int IsoSurface::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 12:
 	// Point 3 and 4 are inside
  	{
-	    Point p1(Interpolate(n3->p, n1->p, v3/(v3-v1)));
-	    Point p2(Interpolate(n3->p, n2->p, v3/(v3-v2)));
-	    Point p3(Interpolate(n4->p, n1->p, v4/(v4-v1)));
-	    Point p4(Interpolate(n4->p, n2->p, v4/(v4-v2)));
-	    
-	    pA = p1;
-	    pB = p2;
-	    pC = p3;
-	    pD = p4;
+	    pA=Interpolate(n3->p, n1->p, v3/(v3-v1));
+	    pB=Interpolate(n3->p, n2->p, v3/(v3-v2));
+	    pC=Interpolate(n4->p, n1->p, v4/(v4-v1));
+	    pD=Interpolate(n4->p, n2->p, v4/(v4-v2));
 
 	    eA = E31;
 	    eB = E32;
@@ -1366,15 +1338,10 @@ int IsoSurface::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 10:
 	// Point 2 and 4 are inside
  	{
-	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
-	    Point p2(Interpolate(n2->p, n3->p, v2/(v2-v3)));
-	    Point p3(Interpolate(n4->p, n1->p, v4/(v4-v1)));
-	    Point p4(Interpolate(n4->p, n3->p, v4/(v4-v3)));
-
-	    pA = p1;
-	    pB = p2;
-	    pC = p3;
-	    pD = p4;
+	    pA=Interpolate(n2->p, n1->p, v2/(v2-v1));
+	    pB=Interpolate(n2->p, n3->p, v2/(v2-v3));
+	    pC=Interpolate(n4->p, n1->p, v4/(v4-v1));
+	    pD=Interpolate(n4->p, n3->p, v4/(v4-v3));
 
 	    eA = E21;
 	    eB = E23;
@@ -1387,14 +1354,10 @@ int IsoSurface::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 9:
 	// Point 2 and 3 are inside
  	{
-	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
-	    Point p2(Interpolate(n2->p, n4->p, v2/(v2-v4)));
-	    Point p3(Interpolate(n3->p, n1->p, v3/(v3-v1)));
-	    Point p4(Interpolate(n3->p, n4->p, v3/(v3-v4)));
-	    pA = p1;
-	    pB = p2;
-	    pC = p3;
-	    pD = p4;
+	    pA=Interpolate(n2->p, n1->p, v2/(v2-v1));
+	    pB=Interpolate(n2->p, n4->p, v2/(v2-v4));
+	    pC=Interpolate(n3->p, n1->p, v3/(v3-v1));
+	    pD=Interpolate(n3->p, n4->p, v3/(v3-v4));
 
 	    eA = E21;
 	    eB = E24;
@@ -1429,18 +1392,20 @@ int IsoSurface::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
 	if ((nbr_status&EDGE_TO_FACE[rfaces]))
 	    return rfaces | (pfaces<<6);
 	else if ((nbr_status&EDGE_TO_FACE[rfc2])) {
-	    GeomVertex *tmp = group->verts[2];
-	    group->verts[2] = group->verts[1];
-	    group->verts[1] = group->verts[0];
-	    group->verts[0] = tmp;
+//	    GeomVertex *tmp = group->verts[2];
+//	    group->verts[2] = group->verts[1];
+//	    group->verts[1] = group->verts[0];
+//	    group->verts[0] = tmp;
+	    group->permute(2,0,1);
 	    rfaces = rfc2;
 	    pfaces = EDGE_TO_FACE[rfaces]|EDGE_TO_FACE[rfc3];
 	}
 	else if ((nbr_status&EDGE_TO_FACE[rfc3])) {
-	    GeomVertex *tmp = group->verts[2];
-	    group->verts[2] = group->verts[0];
-	    group->verts[0] = group->verts[1];
-	    group->verts[1] = tmp;
+//	    GeomVertex *tmp = group->verts[2];
+//	    group->verts[2] = group->verts[0];
+//	    group->verts[0] = group->verts[1];
+//	    group->verts[1] = tmp;
+	    group->permute(1,2,0);
 	    rfaces = rfc3;
 	    pfaces = EDGE_TO_FACE[rfaces]|EDGE_TO_FACE[rfc2];
 	}
@@ -1471,6 +1436,59 @@ int IsoSurface::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     return rfaces|(pfaces<<6);
 }
 
+void IsoSurface::iso_tetra_strip(int ix, Mesh* mesh, 
+				 ScalarFieldUG* field, double iv, 
+				 GeomGroup* group, BitArray1& visited)
+{
+    GeomTriStripList* nstrip = scinew GeomTriStripList;
+    Element* element=mesh->elems[ix];
+    int strip_done=0;
+
+    visited.set(ix); // mark it as really done...
+
+    int f0=element->face(0);
+    int f1=element->face(1);
+    int f2=element->face(2);
+    int f3=element->face(3);
+    int nbrmask = (((f0!=-1) && !visited.is_set(f0))?FACE1:0) |
+	(((f1!=-1) && !visited.is_set(f1))?FACE2:0) |
+	    (((f2!=-1) && !visited.is_set(f2))?FACE3:0) |
+		(((f3!=-1) && !visited.is_set(f3))?FACE4:0);
+
+    int rval = iso_tetra_s(nbrmask,element, mesh, field, iv, nstrip);
+
+    if (!rval) {
+	if (!nstrip->size())
+	    delete nstrip;
+	return;
+    }
+    int nface = FREMAP(EDGE_TO_FACE[rval&(63)]);
+    
+    int nf = element->face(nface);
+    // 1st try and push if we can
+
+    while(!strip_done) {
+	if (visited.is_set(nf))
+	    nf = -1;
+	if (nf > -1) {
+	    visited.set(nf);
+	    Element *nelement = mesh->elems[nf];
+	    // you have to remap the edges into the
+	    // face you are recursing into to match the
+	    // current element...
+
+	    remap_element(rval,element,nelement);
+	    rval = iso_strip_enter(rval&63,nelement,mesh,field,iv,nstrip);
+	    nf = nelement->face(FREMAP(EDGE_TO_FACE[rval&(63)]));
+	    element = nelement; // so later code works...
+	}
+	else
+	    strip_done = 1;
+    }
+    
+    group->add(nstrip);
+}
+
 // this uses a depth-first search, and builds tri-strips...
 // this could easily be multi-threaded, and I am sure
 // that it is extremely inefficient (as far as stack space goes)
@@ -1490,7 +1508,7 @@ void IsoSurface::iso_tetrahedra_strip(ScalarFieldUG* field, const Point& p,
     int max_prim=0;
     int strip_prims=0;
     int grp_prims=0;
-    GeomTriangles *bgroup = 0;
+    GeomTrianglesP *bgroup = 0;
     isoval.set(iv);
     // 1st bit array is for ones that are done
     // second is for ones we need to check...
@@ -1504,6 +1522,8 @@ void IsoSurface::iso_tetrahedra_strip(ScalarFieldUG* field, const Point& p,
 
     if (ix == -1)
 	return;
+
+    GeomTriStripList* ts = scinew GeomTriStripList;
 
     tocheck.set(ix);
     surfQ.append(ix);
@@ -1526,7 +1546,7 @@ void IsoSurface::iso_tetrahedra_strip(ScalarFieldUG* field, const Point& p,
 	ix = surfQ.pop();
 	if (!visited.is_set(ix)) {
 	    Element* element=mesh->elems[ix];
-	    GeomTriStrip* ts = scinew GeomTriStrip;
+//	    GeomTriStripList* ts = scinew GeomTriStripList;
 	    int f0=element->face(0);
 	    int f1=element->face(1);
 	    int f2=element->face(2);
@@ -1600,23 +1620,27 @@ void IsoSurface::iso_tetrahedra_strip(ScalarFieldUG* field, const Point& p,
 		else
 		    nf = -1;
 	    } while (nf != -1);
-
+#if 0
 	    if (ts->size() == 3) { // to small for a complete tri-strip
 		if (!bgroup) 
-		    bgroup = scinew GeomTriangles;
+		    bgroup = scinew GeomTrianglesP;
 		bgroup->add(ts->verts[0]->p,ts->verts[1]->p,ts->verts[2]->p);
 		grp_prims++;
 		delete ts;
 	    }
 	    else
+#endif
 		{
 		strip_prims += ts->size()-2;
-		group->add(ts);
+//		group->add(ts);
 		if (ts->size()-2 > max_prim)
 		    max_prim = ts->size()-2;
+		ts->end_strip();
 	    }
 	}
     }
+
+    group->add(ts);
 
     if (bgroup) {
 	group->add(bgroup);
@@ -1626,7 +1650,7 @@ void IsoSurface::iso_tetrahedra_strip(ScalarFieldUG* field, const Point& p,
 // this is the version that just generates standard triangles
 
 void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
-				GeomTriangles* group)
+				GeomTrianglesP* group)
 {
     Mesh* mesh=field->mesh.get_rep();
     int nelems=mesh->elems.size();
@@ -1648,6 +1672,7 @@ void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
     while(!surfQ.is_empty()){
 	if(sp && abort_flag)
 	    break;
+#if 0
 	if(sp && counter%400 == 0){
 	    if(!ogeom->busy()){
 		if(groupid)
@@ -1656,6 +1681,7 @@ void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
 		ogeom->flushViews();
 	    }
 	}
+#endif
 	ix=surfQ.pop();
 	Element* element=mesh->elems[ix];
 	int nbrs=iso_tetra(element, mesh, field, iv, group);

@@ -100,7 +100,10 @@ void SurfToGeom::execute()
     ScalarFieldHandle sfield;
 
     int have_sf=ifield->get(sfield);
-    GeomTriangles* group = scinew GeomTriangles;
+//    GeomTriangles* group = scinew GeomTriangles;
+    GeomTrianglesPC* PCgroup = scinew GeomTrianglesPC;
+    GeomTrianglesP* Pgroup = scinew GeomTrianglesP;
+
     TriSurface* ts=surf->getTriSurface();
     
     if(ts){
@@ -123,28 +126,43 @@ void SurfToGeom::execute()
 		else ok=0;
 		if (ok) {
 		  if (cmap->non_diffuse_constant) {
-		    group->add(ts->points[ts->elements[i]->i1], mat1->diffuse,
+		    PCgroup->add(ts->points[ts->elements[i]->i1], mat1->diffuse,
 			       ts->points[ts->elements[i]->i2],mat2->diffuse,
 			       ts->points[ts->elements[i]->i3],mat3->diffuse);
+		    
 		  }
 		  else	
-		    group->add(ts->points[ts->elements[i]->i1], mat1,
-			       ts->points[ts->elements[i]->i2],mat2,
-			       ts->points[ts->elements[i]->i3],mat3);
+		Pgroup->add(ts->points[ts->elements[i]->i1], 
+			    ts->points[ts->elements[i]->i2],
+			    ts->points[ts->elements[i]->i3]);
+//		    Pgroup->add(ts->points[ts->elements[i]->i1], mat1,
+//			       ts->points[ts->elements[i]->i2],mat2,
+//			       ts->points[ts->elements[i]->i3],mat3);
 		} else {
 		    cerr << "One of the points was out of the field.\n";
 		}
 	    } else {
-		group->add(ts->points[ts->elements[i]->i1], 
-			   ts->points[ts->elements[i]->i2],
-			   ts->points[ts->elements[i]->i3]);
+		Pgroup->add(ts->points[ts->elements[i]->i1], 
+			    ts->points[ts->elements[i]->i2],
+			    ts->points[ts->elements[i]->i3]);
+		if (PCgroup) {
+		    delete PCgroup;
+		    PCgroup = 0;
+		}
 	    }
 	}
 
     } else {
 	error("Unknown representation for Surface in SurfToGeom");
     }
-    GeomObj* topobj=group;
+//    GeomObj* topobj=group;
+    GeomGroup* ngroup = scinew GeomGroup;
+
+    if (PCgroup->size())
+	ngroup->add(PCgroup);
+    if (Pgroup->size())
+	ngroup->add(Pgroup);
+    
 #if 0
     // what is this for????
     if (surf->name == "sagital.scalp") {
@@ -154,5 +172,6 @@ void SurfToGeom::execute()
     }
 #endif
     ogeom->delAll();
-    ogeom->addObj(topobj, surf->name);
+//    ogeom->addObj(topobj, surf->name);
+    ogeom->addObj(ngroup,surf->name);
 }
