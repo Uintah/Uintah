@@ -79,6 +79,27 @@ void Level::performConsistencyCheck() const
   // See if abutting boxes have consistent bounds
 }
 
+void Level::getIndexRange(BBox& b)
+{
+  for(int i=0;i<d_regions.size();i++){
+    Region* r = d_regions[i];
+    IntVector l( r->getNodeLowIndex() );
+    IntVector u( r->getNodeHighIndex() );
+    Point lower( l.x(), l.y(), l.z() );
+    Point upper( u.x(), u.y(), u.z() );
+    b.extend(lower);
+    b.extend(upper);
+  }
+}
+void Level::getSpatialRange(BBox& b)
+{
+  for(int i=0;i<d_regions.size();i++){
+    Region* r = d_regions[i];
+    b.extend(r->getBox().lower());
+    b.extend(r->getBox().upper());
+  }
+}
+
 long Level::totalCells() const
 {
   long total=0;
@@ -94,6 +115,9 @@ GridP Level::getGrid() const
 
 //
 // $Log$
+// Revision 1.8  2000/05/20 02:36:05  kuzimmer
+// Multiple changes for new vis tools and DataArchive
+//
 // Revision 1.7  2000/05/15 19:39:47  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups

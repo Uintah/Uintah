@@ -50,8 +50,10 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      void addParticles(particleIndex n) {
-	  d_numParticles+=n;
+      particleIndex addParticles(particleIndex n) {
+	particleIndex old_numParticles = d_numParticles;
+	d_numParticles+=n;
+	return old_numParticles;
       }
       
       //////////
@@ -72,6 +74,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.7  2000/05/20 02:36:06  kuzimmer
+// Multiple changes for new vis tools and DataArchive
+//
 // Revision 1.6  2000/05/15 19:39:48  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups
