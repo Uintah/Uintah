@@ -129,6 +129,8 @@ WARNING
 
     double oldProbeDumpTime;
     Scalar* d_scalar;
+    VarLabel* heatLoss_CCLabel;
+    VarLabel* heatLoss_src_CCLabel;
     
     SimulationStateP sharedState;
     Output* dataArchiver;
@@ -151,6 +153,10 @@ WARNING
     int d_cv_index;
     int d_viscosity_index;
     int d_temp_index;
+    int d_initial_cp_index;
+    int d_initial_cv_index;
+    int d_initial_gamma_index;
+    int d_initial_temp_index;
   };
 }
 
