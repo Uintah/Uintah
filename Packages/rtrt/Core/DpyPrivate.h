@@ -13,8 +13,6 @@ namespace rtrt {
 
     bool  exposed;
     bool  animate;
-    bool  draw_pstats;
-    bool  draw_rstats;
 
     int   showing_scene;
 
