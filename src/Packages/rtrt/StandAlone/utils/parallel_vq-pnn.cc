@@ -67,7 +67,7 @@ float* computeCentroid(Cluster c1, Cluster c2);
 // Declare global variables
 int Cluster::ndims=0;
 float* vec=0;
-int* index=0;
+int* index_loc=0;
 NearestNeighbor* nnt=0;
 Cluster* cluster=0;
 int cb_size=0;
@@ -169,9 +169,9 @@ int main(int argc, char* argv[]) {
   }
   
   // Allocate necessary memory
-  index=new int[nvecs];
-  if (!index) {
-    cerr<<me<<":  error allocating memory for index array"<<endl;
+  index_loc=new int[nvecs];
+  if (!index_loc) {
+    cerr<<me<<":  error allocating memory for index_loc array"<<endl;
     exit(1);
   }
   
@@ -190,14 +190,14 @@ int main(int argc, char* argv[]) {
   // Begin timer
   double stime=Time::currentSeconds();
   
-  // Initialize codebook and index array
+  // Initialize codebook and index_loc array
   if (verbose)
-    cout<<"Initializing codebook and index array"<<endl;
+    cout<<"Initializing codebook and index_loc array"<<endl;
   
   float* vec_data=(float*)(vec->data);
   for (int i=0; i<nvecs; i++) {
     cluster[i]=Cluster(vec_data);
-    index[i]=i;
+    index_loc[i]=i;
     
     vec_data+=Cluster::ndims;
   }
@@ -315,11 +315,11 @@ int main(int argc, char* argv[]) {
     cb_data+=Cluster::ndims;
   }
   
-  // Create index nrrd
+  // Create index_loc nrrd
   Nrrd* idx=nrrdNew();
-  if (nrrdWrap(idx, index, nrrdTypeInt, 1, nvecs)) {
+  if (nrrdWrap(idx, index_loc, nrrdTypeInt, 1, nvecs)) {
     err=biffGet(NRRD);
-    cerr<<me<<":  error creating index nrrd:  "<<err<<endl;
+    cerr<<me<<":  error creating index_loc nrrd:  "<<err<<endl;
     free(err);
     biffDone(NRRD);
     exit(1);
@@ -336,7 +336,7 @@ int main(int argc, char* argv[]) {
 
   // Free allocated memory
   delete [] vec;
-  delete [] index;
+  delete [] index_loc;
   delete [] nnt;
   delete [] cluster;
   cb=nrrdNuke(cb);
@@ -624,13 +624,13 @@ void ParallelVQ::mergeClusters(int proc) {
 
   // Adjust vector-cluster mappings
   for (int i=vec_start; i<vec_end; i++) {
-    if (index[i]==idx2)
-      index[i]=idx1;
+    if (index_loc[i]==idx2)
+      index_loc[i]=idx1;
   }
 
   if (verbose>9) {
     for (int i=vec_start; i<vec_end; i++)
-      cout<<"vector["<<i<<"] maps to cluster["<<index[i]<<"]"<<endl;
+      cout<<"vector["<<i<<"] maps to cluster["<<index_loc[i]<<"]"<<endl;
     cout<<endl;
   }
   
@@ -655,8 +655,8 @@ void ParallelVQ::mergeClusters(int proc) {
 
     // Update vector-cluster mappings
     for (int i=vec_start; i<vec_end; i++) {
-      if (index[i]==last)
-	index[i]=idx2;
+      if (index_loc[i]==last)
+	index_loc[i]=idx2;
     }
   }
 
