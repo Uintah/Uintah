@@ -78,7 +78,6 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(ostream&, const string& format, GeomSave*);
 };
 
 inline void GeomGrid::set(int i, int j, double h)
@@ -195,7 +194,6 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
 } // End namespace SCIRun

@@ -140,14 +140,6 @@ GeomPoints::io(Piostream& stream)
 }
 
 
-bool
-GeomPoints::saveobj(ostream&, const string&, GeomSave*)
-{
-  NOT_FINISHED("GeomPoints::saveobj");
-  return false;
-}
-
-
 GeomTranspPoints::GeomTranspPoints()
   : GeomPoints(),
     xreverse_(false),
@@ -251,14 +243,6 @@ GeomTranspPoints::io(Piostream& stream)
   int version=stream.begin_class("GeomTranspPoints", GEOMTRANSPPOINTS_VERSION);
   GeomPoints::io(stream);
   stream.end_class();
-}
-
-
-bool
-GeomTranspPoints::saveobj(ostream&, const string&, GeomSave*)
-{
-  NOT_FINISHED("GeomTranspPoints::saveobj");
-  return false;
 }
 
 
@@ -426,12 +410,6 @@ void GeomTimedParticles::io(Piostream& stream)
     stream.begin_class("GeomTimedParticles", GeomTimedParticles_VERSION);
     GeomObj::io(stream);
     stream.end_class();
-}
-
-bool GeomTimedParticles::saveobj(ostream&, const string&, GeomSave*)
-{
-    NOT_FINISHED("GeomTimedParticles::saveobj");
-    return false;
 }
 
 void GeomTimedParticles::draw(DrawInfoOpenGL*, Material*, double)

@@ -79,8 +79,6 @@ public:
     IterIntGeomObj getIter(); // gets an iter 
     
     MapIntGeomObj* getHash(); // gets the table
-    
-    virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
 } // End namespace SCIRun

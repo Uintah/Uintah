@@ -113,32 +113,6 @@ void GeomSphere::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomSphere::saveobj(ostream& out, const string& format,
-			 GeomSave* saveinfo)
-{
-    cerr << "saveobj Sphere\n";
-    if(format == "vrml" || format == "iv"){
-	saveinfo->start_tsep(out);
-	saveinfo->start_node(out, "Sphere");
-	saveinfo->indent(out);
-	out << "radius " << rad << "\n";
-	saveinfo->end_node(out);
-	saveinfo->end_tsep(out);
-	return true;
-    } else if(format == "rib"){
-	saveinfo->start_trn(out);
-	saveinfo->indent(out);
-	out << "Translate " << cen.x() << " "  << cen.y() << " "  << cen.z() << "\n";
-	saveinfo->indent(out);
-	out << "Sphere " << rad << " " << -rad << " " << rad << " 360\n";
-	saveinfo->end_trn(out);
-	return true;
-    } else {
-	NOT_FINISHED("GeomSphere::saveobj");
-	return false;
-    }
-}
-
 void GeomSphere::getnunv(int num_polygons, int &nu, int &nv) {
 #define MIN_POLYS 8
 #define MAX_POLYS 400

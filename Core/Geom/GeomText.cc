@@ -104,13 +104,6 @@ GeomText::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomText::saveobj(ostream&, const string&, GeomSave*)
-{
-  return 0;
-}
-
-
-
 static Persistent* make_GeomTexts()
 {
     return scinew GeomTexts;
@@ -195,12 +188,6 @@ GeomTexts::io(Piostream& stream)
     Pio(stream, color_);
     stream.end_class();
 }
-
-bool GeomTexts::saveobj(ostream&, const string&, GeomSave*)
-{
-  return 0;
-}
-
 
 static Persistent* make_GeomTextsCulled()
 {

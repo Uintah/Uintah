@@ -77,7 +77,6 @@ public:
   static PersistentTypeID type_id;
 
   virtual void io(Piostream&);    
-  virtual bool saveobj(std::ostream&, const std::string& format, GeomSave*)=0;
 
   // we want to return false if value is the default value
   virtual void setId(int id) { id_int_ = id; }

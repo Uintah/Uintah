@@ -82,10 +82,5 @@ void HistogramTex::io(Piostream& stream) {
   stream.end_class();
 }
 
-bool HistogramTex::saveobj(ostream&, const string&, GeomSave*) {
-  NOT_FINISHED("HistogramTex::saveobj");
-  return false;
-}
-
 } // End namespace SCIRun
 

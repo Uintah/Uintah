@@ -81,23 +81,6 @@ void GeomSwitch::get_bounds(BBox& bbox)
 }
 
 
-bool
-GeomSwitch::saveobj(ostream& out, const string& format,
-			 GeomSave* saveinfo)
-{
-    cerr << "saveobj Switch ";
-    if(state)
-      {
-	cerr << "yep.\n";
-	return child_->saveobj(out, format, saveinfo);
-      }
-    else
-      {
-	cerr << "nope.\n";
-	return true;
-      }
-}
-
 #define GEOMSWITCH_VERSION 1
 
 void GeomSwitch::io(Piostream& stream)
@@ -134,12 +117,6 @@ void GeomTimeSwitch::io(Piostream& stream)
     Pio(stream, tbeg);
     Pio(stream, tend);
     stream.end_class();
-}
-
-bool GeomTimeSwitch::saveobj(ostream&, const string&, GeomSave*)
-{
-    NOT_FINISHED("GeomTimeSwitch::saveobj");
-    return false;
 }
 
 } // End namespace SCIRun

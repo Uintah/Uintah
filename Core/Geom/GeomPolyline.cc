@@ -71,12 +71,6 @@ void GeomPolyline::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomPolyline::saveobj(ostream&, const string&, GeomSave*)
-{
-    NOT_FINISHED("GeomPolyline::saveobj");
-    return false;
-}
-
 GeomPolylineTC::GeomPolylineTC(int drawmode, double drawdist)
 : drawmode(drawmode), drawdist(drawdist)
 {
@@ -120,12 +114,6 @@ void GeomPolylineTC::io(Piostream& stream)
 
   Pio(stream, bbox);
   Pio(stream, data);
-}
-
-bool GeomPolylineTC::saveobj(ostream&, const string&, GeomSave*)
-{
-  NOT_FINISHED("GeomPolylineTC::saveobj");
-  return false;
 }
 
 } // End namespace SCIRun

@@ -94,13 +94,6 @@ void GeomBox::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomBox::saveobj(ostream&, const string&, GeomSave*)
-{
-    NOT_FINISHED("GeomBox::saveobj");
-    return false;
-}
-
-
 Persistent* make_GeomSimpleBox()
 {
     return scinew GeomSimpleBox(Point(0,0,0), Point(1,1,1));
@@ -150,13 +143,6 @@ GeomSimpleBox::io(Piostream& stream)
     stream.end_class();
 }
 
-bool
-GeomSimpleBox::saveobj(ostream&, const string&, GeomSave*)
-{
-    NOT_FINISHED("GeomSimpleBox::saveobj");
-    return false;
-}
-
 
 Persistent* make_GeomCBox()
 {
@@ -195,14 +181,6 @@ GeomCBox::io(Piostream& stream)
     GeomSimpleBox::io(stream);
     stream.end_class();
 }
-
-bool
-GeomCBox::saveobj(ostream&, const string&, GeomSave*)
-{
-    NOT_FINISHED("GeomCBox::saveobj");
-    return false;
-}
-
 
 } // End namespace SCIRun
 

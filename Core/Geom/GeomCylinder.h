@@ -74,7 +74,6 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
 
@@ -105,7 +104,6 @@ public:
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
 
@@ -124,7 +122,6 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
     
 } // End namespace SCIRun

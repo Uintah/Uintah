@@ -256,13 +256,6 @@ void GeomTriangles::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTriangles::saveobj(ostream&, const string&, GeomSave*)
-{
-    NOT_FINISHED("GeomTriangles::saveobj");
-    return false;
-}
-
-
 GeomFastTriangles::GeomFastTriangles()
   : material_(0)
 {
@@ -416,20 +409,13 @@ void GeomFastTriangles::io(Piostream& stream)
 }
 
 
-bool GeomFastTriangles::saveobj(ostream&, const string&, GeomSave*)
-{
-    NOT_FINISHED("GeomFastTriangles::saveobj");
-    return false;
-}
-
-
-
 GeomTranspTriangles::GeomTranspTriangles()
   : xreverse_(false),
     yreverse_(false),
     zreverse_(false)
 {
 }
+
 
 GeomTranspTriangles::GeomTranspTriangles(const GeomTranspTriangles& copy)
   : GeomFastTriangles(copy),
@@ -555,212 +541,6 @@ void GeomTrianglesPT1d::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTrianglesPT1d::saveobj(ostream& out, const string& format,
-				GeomSave* saveinfo)
-{
-#if 0
-    static int cnt=0;
-    if(++cnt > 2)
-	return true;
-#endif
-    if(format == "vrml" || format == "iv"){
-	saveinfo->start_sep(out);
-	saveinfo->start_node(out, "Coordinate3");
-	saveinfo->indent(out);
-	out << "point [";
-	int np=size();
-	int idx=0;
-	int i;
-	for(i=0;i<np*3;i++){
-	    if(i>0)
-		out << ", ";
-	    out << '\n';
-	    saveinfo->indent(out);
-	    out << " " << points[idx] << " " << points[idx+1] << " " << points[idx+2];
-	    idx+=3;
-	}
-	saveinfo->indent(out);
-	out << " ]\n";
-	saveinfo->end_node(out);
-	saveinfo->start_node(out, "NormalBinding");
-	saveinfo->indent(out);
-	out << "value PER_FACE\n";
-	saveinfo->end_node(out);
-	saveinfo->start_node(out, "Normal");
-	saveinfo->indent(out);
-	out << "vector [";
-	idx=0;
-	for(i=0;i<np;i++){
-	    if(i>0)
-		out << ", ";
-	    out << '\n';
-	    saveinfo->indent(out);
-	    out << " " << normals[idx] << " " << normals[idx+1] << " " << normals[idx+2];
-	    idx+=3;
-	}
-	saveinfo->indent(out);
-	out << " ]\n";
-	saveinfo->end_node(out);
-	saveinfo->start_node(out, "MaterialBinding");
-	saveinfo->indent(out);
-#if 0
-	out << "value PER_FACE_INDEXED\n";
-#else
-	out << "value OVERALL\n";
-#endif
-	saveinfo->end_node(out);	
-#if 0
-	saveinfo->start_node(out, "Texture2");
-	saveinfo->indent(out);
-	out << "image  1 256 4 ";
-	if(cmap){
-	    unsigned char* p=cmap;
-	    for(i=0;i<256;i++){
-		char buf[20];
-		out << '\n';
-		saveinfo->indent(out);
-		sprintf(buf, "0x%02x%02x%02x%02x ", p[0], p[1], p[2], 255-p[3]);
-		out << buf;
-		p+=4;
-	    }
-	} else {
-	    cerr << "colormap not saved, making up a lame one\n";
-	    for(i=0;i<256;i++){
-		char buf[20];
-		unsigned char r,g,b,a;
-		r=i;
-		b=255-r;
-		g=0;
-		a=255;
-		out << '\n';
-		saveinfo->indent(out);
-		sprintf(buf, "0x%02x%02x%02x%02x ", r, g, b, a);
-		out << buf;
-	    }
-	}
-	saveinfo->end_node(out);
-#endif
-	saveinfo->start_node(out, "Material");
-	saveinfo->indent(out);
-	out << "ambientColor 0.2 0.2 0.2\n";
-#if 0
-	saveinfo->indent(out);
-	out << "diffuseColor 0.8 0.8 0.8\n";
-#else
-#if 1
-	saveinfo->indent(out);
-	static int cc=0;
-	cc++;
-	cerr << "cc=" << cc << '\n';
-	if(cc<=11)
-	    out << "diffuseColor 0.8 0.0 0.0\n";
-	else
-	    out << "diffuseColor 0.0 0.8 0.0\n";
-#else
-	saveinfo->indent(out);
-	out << "diffuseColor [\n";
-	if(cmap){
-	    unsigned char* p=cmap;
-	    for(i=0;i<256;i++){
-		if(i>0)
-		    out << ',';
-		out << '\n';
-		saveinfo->indent(out);
-		out << p[0]/255. << ' ' << p[1]/255. << ' ' << p[2]/255.;
-		p+=4;
-	    }
-	} else {
-	    cerr << "colormap not saved, making up a lame one\n";
-	    for(i=0;i<256;i++){
-		if(i>0)
-		    out << ',';
-		out << '\n';
-		saveinfo->indent(out);
-		out << i/255. << ' ' << 0. << ' ' << (255-i)/255.;
-	    }
-	}
-	out << '\n';
-	saveinfo->indent(out);
-	out << "]\n";
-#endif
-#endif	
-	saveinfo->indent(out);
-	out << "specularColor 0.6 0.6 0.6\n";
-	saveinfo->end_node(out);
-#if 0
-	saveinfo->start_node(out, "TextureCoordinate2");
-	saveinfo->indent(out);
-	out << "point [";
-	for(i=0;i<np;i++){
-	    if(i>0)
-		out << ", ";
-	    out << '\n';
-	    saveinfo->indent(out);
-	    out << " 0 " << scalars[i];
-	}
-	saveinfo->indent(out);
-	out << " ]\n";
-	saveinfo->end_node(out);
-#endif
-	saveinfo->start_node(out, "IndexedFaceSet");
-	saveinfo->indent(out);
-#if 0
-	out << "textureCoordIndex [";
-	for(i=0;i<np;i++){
-	    if(i>0)
-		out << ",";
-	    out << '\n';
-	    saveinfo->indent(out);
-	    out << " " << i << ", " << i << ", " << i << ", " << -1;
-	}
-	out << " ]\n";
-#else
-	out << "materialIndex [";
-	for(i=0;i<np;i++){
-	    if(i>0)
-		out << ",";
-	    if(i%10==0){
-		out << '\n';
-		saveinfo->indent(out);
-	    }
-	    int idx=(int)(scalars[i]*255.);
-	    if(idx<0)
-		idx=0;
-	    else if(idx>255)
-		idx=255;
-	    out << idx;
-	}
-	out << " ]\n";
-#endif
-	out << "coordIndex [";
-	for(i=0;i<3*np;i++){
-	    if(i>0){
-		out << ",";
-		if(i%3==0){
-		    out << '\n';
-		    saveinfo->indent(out);
-		}
-	    }
-	    out << " " << i;
-	    if(i%3==2) {
-		out << ", -1";
-	    }
-	}
-	saveinfo->indent(out);
-	out << " ]\n";
-	saveinfo->indent(out);
-	saveinfo->end_node(out);
-	saveinfo->start_node(out, "Texture2");
-	saveinfo->indent(out);
-	out << "filename \"\"\n";
-	saveinfo->end_node(out);
-	saveinfo->end_sep(out);
-	return true;
-    } else {
-	NOT_FINISHED("GeomTrianglesPT1d::saveobj");
-	return false;
-    }
-}
 
 GeomTranspTrianglesP::GeomTranspTrianglesP()
   : alpha_(0.2), sorted_p_(false)
@@ -976,12 +756,6 @@ void GeomTrianglesP::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTrianglesP::saveobj(ostream&, const string&, GeomSave*)
-{
-    NOT_FINISHED("GeomTrianglesP::saveobj");
-    return false;
-}
-
 GeomTrianglesPC::GeomTrianglesPC()
 {
     // don't really need to do anythin...
@@ -1023,75 +797,6 @@ void GeomTrianglesPC::io(Piostream& stream)
     GeomTrianglesP::io(stream);
     Pio(stream, colors);
     stream.end_class();
-}
-
-
-bool GeomTrianglesPC::saveobj(ostream& out, const string& format,
-			      GeomSave* saveinfo)
-{
-    if(format == "vrml"){
-	saveinfo->start_sep(out);
-	saveinfo->start_node(out, "Coordinate3");
-	saveinfo->indent(out);
-	out << "point [";
-	int np=points.size()/3;
-	int i;
-	for(i=0;i<np;i++){
-	    if(i>0)
-		out << ", ";
-	    int idx=i*3;
-	    out << " " << points[idx] << " " << points[idx+1] << " " << points[idx+2];
-	}
-	out << " ]\n";
-	saveinfo->end_node(out);
-	saveinfo->start_node(out, "NormalBinding");
-	saveinfo->indent(out);
-	out << "value PER_VERTEX\n";
-	saveinfo->end_node(out);
-	saveinfo->start_node(out, "Normal");
-	saveinfo->indent(out);
-	out << "vector [";
-	for(i=0;i<np;i+=3){
-	    if(i>0)
-		out << ", ";
-	    int idx=i;
-	    out << " " << normals[idx] << " " << normals[idx+1] << " " << normals[idx+2];
-	}
-	out << " ]\n";
-	saveinfo->end_node(out);
-	saveinfo->start_node(out, "MaterialBinding");
-	saveinfo->indent(out);
-	out << "value PER_VERTEX\n";
-	saveinfo->end_node(out);
-	saveinfo->start_node(out, "Material");
-	saveinfo->indent(out);
-	out << "diffuseColor [";
-	for(i=0;i<np;i++){
-	    if(i>0)
-		out << ", ";
-	    int idx=i*3;
-	    out << " " << colors[idx] << " " << colors[idx+1] << " " << colors[idx+2];
-	}
-	out << " ]\n";
-	saveinfo->end_node(out);
-	saveinfo->start_node(out, "IndexedFaceSet");
-	saveinfo->indent(out);
-	out << "coordIndex [";
-	for(i=0;i<np;i++){
-	    if(i>0)
-		out << ", ";
-	    out << " " << i;
-	    if(i%3==2)
-		out << ", -1";
-	}
-	out << " ]\n";
-	saveinfo->end_node(out);
-	saveinfo->end_sep(out);
-	return true;
-    } else {
-	NOT_FINISHED("GeomTrianglesPC::saveobj");
-	return false;
-    }
 }
 
 GeomTrianglesVP::GeomTrianglesVP()
@@ -1177,14 +882,6 @@ void GeomTrianglesVP::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTrianglesVP::saveobj(ostream&, 
-			      const string& /*format*/,
-			      GeomSave*)
-{
-    NOT_FINISHED("GeomTrianglesVP::saveobj");
-    return false;
-}
-
 GeomTrianglesVPC::GeomTrianglesVPC()
 {
     // don't really need to do anythin...
@@ -1228,74 +925,6 @@ void GeomTrianglesVPC::io(Piostream& stream)
     stream.end_class();
 }
 
-
-bool GeomTrianglesVPC::saveobj(ostream& out, const string& format,
-			      GeomSave* saveinfo)
-{
-    if(format == "vrml" || format == "iv"){
-	saveinfo->start_sep(out);
-	saveinfo->start_node(out, "Coordinate3");
-	saveinfo->indent(out);
-	out << "point [";
-	int np=points.size()/3;
-	int i;
-	for(i=0;i<np;i++){
-	    if(i>0)
-		out << ", ";
-	    int idx=i*3;
-	    out << " " << points[idx] << " " << points[idx+1] << " " << points[idx+2];
-	}
-	out << " ]\n";
-	saveinfo->end_node(out);
-	saveinfo->start_node(out, "NormalBinding");
-	saveinfo->indent(out);
-	out << "value PER_VERTEX\n";
-	saveinfo->end_node(out);
-	saveinfo->start_node(out, "Normal");
-	saveinfo->indent(out);
-	out << "vector [";
-	for(i=0;i<np;i+=3){
-	    if(i>0)
-		out << ", ";
-	    int idx=i;
-	    out << " " << normals[idx] << " " << normals[idx+1] << " " << normals[idx+2];
-	}
-	out << " ]\n";
-	saveinfo->end_node(out);
-	saveinfo->start_node(out, "MaterialBinding");
-	saveinfo->indent(out);
-	out << "value PER_VERTEX\n";
-	saveinfo->end_node(out);
-	saveinfo->start_node(out, "Material");
-	saveinfo->indent(out);
-	out << "diffuseColor [";
-	for(i=0;i<np;i++){
-	    if(i>0)
-		out << ", ";
-	    int idx=i*3;
-	    out << " " << colors[idx] << " " << colors[idx+1] << " " << colors[idx+2];
-	}
-	out << " ]\n";
-	saveinfo->end_node(out);
-	saveinfo->start_node(out, "IndexedFaceSet");
-	saveinfo->indent(out);
-	out << "coordIndex [";
-	for(i=0;i<np;i++){
-	    if(i>0)
-		out << ", ";
-	    out << " " << i;
-	    if(i%3==2)
-		out << ", -1";
-	}
-	out << " ]\n";
-	saveinfo->end_node(out);
-	saveinfo->end_sep(out);
-	return true;
-    } else {
-	NOT_FINISHED("GeomTrianglesVPC::saveobj");
-	return false;
-    }
-}
 
 } // End namespace SCIRun
 

@@ -81,32 +81,6 @@ void GeomTriStrip::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTriStrip::saveobj(ostream& out, const string& format, GeomSave* saveinfo)
-{
-    if(format == "vrml" || format == "iv") {
-      NOT_FINISHED("GeomTriStrip::saveobj");
-    } else if(format == "rib") {
-	saveinfo->indent(out);
-	out << "PointsPolygons " << verts.size() << " [ ";
-	int i;
-	for(i=0; i < verts.size(); i++)
-	  out << "3 ";
-	out << "] ";
-	for(i=0; i < verts.size(); i++)
-	  out << i * 3 << " ";
-	out << "] \"P\" [ ";
-	for(i=0; i < verts.size(); i++)
-	  out << verts[i]->p.x() << " "
-	      << verts[i]->p.y() << " "
-	      << verts[i]->p.z() << " ";
-	out << " ]\n\n";
-	cerr << "Should output color and normal here.\n";
-    } else {
-      NOT_FINISHED("GeomTriStrip::saveobj");
-    }
-    return false;
-}
-
 int GeomTriStrip::size(void)
 {
     return verts.size();
@@ -181,12 +155,6 @@ void GeomTriStripList::io(Piostream& stream)
     Pio(stream, nrmls);
     Pio(stream, strips);
     stream.end_class();
-}
-
-bool GeomTriStripList::saveobj(ostream&, const string&, GeomSave*)
-{
-    NOT_FINISHED("GeomTriStripList::saveobj");
-    return false;
 }
 
 Point GeomTriStripList::get_pm1(void)
