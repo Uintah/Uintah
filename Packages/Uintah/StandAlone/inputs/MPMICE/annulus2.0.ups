@@ -210,15 +210,9 @@
         <MPM>
 	    <material name = "Copper Ring" >
                 <burn type = "null" />
-		<fracture type = "normal">
-		  <constraint> 0 </constraint>
-		</fracture>
 	        <EOS type = "ideal_gas">
 		    <gas_constant>      287               </gas_constant>
 	        </EOS>
-		<pressure_rate> 0. </pressure_rate>
-		<explosive_pressure> 0 </explosive_pressure>
-		<initial_pressure> 0. </initial_pressure>
                 <density>   8900.0   </density>
                 <constitutive_model type="comp_neo_hook">
 		    <shear_modulus>      43.875e9      </shear_modulus>
@@ -244,23 +238,14 @@
                   <res>                 [2,2,1]         </res>
                   <velocity>            [0.0,0.0,0.0]   </velocity>
                   <temperature>         300             </temperature>
-                    <toughness_min>  1e6.0 </toughness_min>
-		    <toughness_max>  1e6.0 </toughness_max>
-		    <toughness_variation>1</toughness_variation>
                 </geom_object>
             </material>
 
 	    <material name = "Contents" >
                 <burn type = "null" />
-		<fracture type = "normal">
-		  <constraint> 0 </constraint>
-		</fracture>
 	        <EOS type = "ideal_gas">
 		    <gas_constant>      287               </gas_constant>
 	        </EOS>
-		<pressure_rate> 0. </pressure_rate>
-		<explosive_pressure> 0 </explosive_pressure>
-		<initial_pressure> 0. </initial_pressure>
                 <density>   1828.0   </density>
                 <constitutive_model type="comp_neo_hook">
 		    <shear_modulus>      2.5661.0e9  </shear_modulus>
@@ -286,9 +271,6 @@
                   <res>                 [2,2,1]         </res>
                   <velocity>            [0.0,0.0,0.0]   </velocity>
                   <temperature>         300             </temperature>
-                  <toughness_min>  1e6.0 </toughness_min>
-		  <toughness_max>  1e6.0 </toughness_max>
-		  <toughness_variation>1</toughness_variation>
                 </geom_object>
             </material>
 
@@ -366,30 +348,6 @@
 
     <PhysicalBC>
         <MPM>
-                <crack>
-                        <corner1>[-0.006,  -0.006,  0.      ]</corner1>
-                        <corner2>[-0.006,  -0.006,  0.00015 ]</corner2>
-                        <corner3>[-0.007,  -0.007,  0.00015 ]</corner3>
-                        <corner4>[-0.007,  -0.007,  0.      ]</corner4>
-                </crack>
-                <crack>
-                        <corner1>[-0.006,   0.006,  0.      ]</corner1>
-                        <corner2>[-0.006,   0.006,  0.00015 ]</corner2>
-                        <corner3>[-0.007,   0.007,  0.00015 ]</corner3>
-                        <corner4>[-0.007,   0.007,  0.      ]</corner4>
-                </crack>
-                <crack>
-                        <corner1>[ 0.006,  -0.006,  0.      ]</corner1>
-                        <corner2>[ 0.006,  -0.006,  0.00015 ]</corner2>
-                        <corner3>[ 0.007,  -0.007,  0.00015 ]</corner3>
-                        <corner4>[ 0.007,  -0.007,  0.      ]</corner4>
-                </crack>
-                <crack>
-                        <corner1>[ 0.006,   0.006,  0.      ]</corner1>
-                        <corner2>[ 0.006,   0.006,  0.00015 ]</corner2>
-                        <corner3>[ 0.007,   0.007,  0.00015 ]</corner3>
-                        <corner4>[ 0.007,   0.007,  0.      ]</corner4>
-                </crack>
         </MPM>
     </PhysicalBC>
 	
