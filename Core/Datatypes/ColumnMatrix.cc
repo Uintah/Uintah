@@ -248,14 +248,6 @@ double ColumnMatrix::sumOfCol(int c) {
   return sum;
 }
 
-void ColumnMatrix::getRowNonzeros(int r, Array1<int>& idx, 
-				  Array1<double>& val) { 
-  idx.resize(1);
-  val.resize(1);
-  idx[0]=0;
-  val[0]=data[r];
-}
-
 void
 ColumnMatrix::getRowNonzerosNoCopy(int r, int &size, int &stride,
                                    int *&cols, double *&vals)
