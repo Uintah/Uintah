@@ -23,6 +23,7 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Geom/Color.h>
 
 namespace MIT {
 
@@ -75,8 +76,9 @@ typedef LockingHandle<Distribution> DistributionHandle;
 
 class SCICORESHARE Results : public Datatype {
  public:  
-  Array1< double > k;
-  Array1< Array1<double> > theta;
+  Array1< double > k_;
+  Array1< Array1<double> > data_;
+  Array1< Color > color_;
 
   Results() : Datatype() {}
   virtual ~Results() {}
@@ -84,6 +86,8 @@ class SCICORESHARE Results : public Datatype {
   // Persistent representation.
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+
+  int size() { return data_.size(); }
 };
 
  typedef LockingHandle<Results> ResultsHandle;

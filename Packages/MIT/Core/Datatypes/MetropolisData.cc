@@ -77,8 +77,9 @@ void
 Results::io(Piostream& stream){
 
  stream.begin_class("Results", RESULTS_VERSION);
-  Pio(stream, k);
-  Pio(stream, theta );
+  Pio(stream, k_);
+  Pio(stream, data_ );
+  Pio(stream, color_ );
   stream.end_class();
 }
 }
