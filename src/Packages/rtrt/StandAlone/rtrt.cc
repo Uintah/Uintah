@@ -248,7 +248,7 @@ int
 main(int argc, char* argv[])
 {
 #if HAVE_IEEEFP_H
-    fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
+  //    fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
 #endif
 
   RTRT* rtrt_engine = new RTRT();
