@@ -114,6 +114,14 @@ public:
   void set_point(const Point &point, node_index index)
   { points_[index] = point; }
 
+  double get_volume(cell_index &) { return 0; }
+  double get_area(face_index &fi) {
+    node_array ra; 
+    get_nodes(ra,fi);
+    return (Cross(ra[1]-ra[0],ra[2]-ra[0])).length2()*0.5;
+  }
+  double get_element_size(face_index &fi) { return get_area(fi); }
+
   virtual void finish_mesh(); // to get normals calculated.
   void compute_normals();
   virtual bool has_normals() const { return true; }
