@@ -43,7 +43,7 @@ DEALINGS IN THE SOFTWARE.
     <title>Loading Data</title>
     <para>
       To load data, start by clicking the <guilabel>Nrrd</guilabel> tab
-      in the Processing Pan, then click the
+      in the Processing Pane, then click the
       <guibutton>Browse</guibutton> button.  See item 2 in <xref
       linkend="fig.load"/>.
     </para>
@@ -56,7 +56,7 @@ DEALINGS IN THE SOFTWARE.
     </para>
 
     <figure id="fig.load">
-      <title>Loading Data User Interface</title>
+      <title>Processing Pane</title>
       <mediaobject>
 	<textobject>
 	  <phrase>Loading the Tooth dataset.</phrase>
@@ -129,44 +129,83 @@ DEALINGS IN THE SOFTWARE.
   <section>
     <title>Resampling and Cropping.</title>
     <para>
-      BioImage focuses on data display, interaction, and manipulation.
-      This is all possible through the use of Dynamic Filters.  The
-      various filters available are located at the top of the
-      Processing Pane.  These filters, Resample, Crop, Histogram, and
-      CMedian allow finer control over the interaction and
-      manipulation of the data displayed in the visualization windows.
+      BioImage supports <firstterm>Dynamic Filters</firstterm>.
+      Dynamic filters change data in some way.  Currently, BioImage
+      supports Resample, Crop, Histogram, and Cmedian.  Filters can be
+      added, modified, and removed at any time.  Filters are added by
+      pressing one of the filter buttons located at the top of the
+      Processing Pane, see item 1 in <xref linkend="fig.load"/>.
     </para>
 
     <para>
-      To help manage space in the filter history, minimize the Load
-      Data frame by clicking on the black triangle next to the label
-      "Data - Unknown". This will hide the specific ui and leave only
-      the label showing.
+      In this section the resampling and cropping filters will be
+      used.  Before adding filters, minimize the <guilabel>Load
+      Data</guilabel> frame by clicking on the black triangle next to
+      the label <guilabel>Data - Unknown</guilabel>. This will hide
+      the <guilabel>Load Data</guilabel> frame's user interface,
+      leaving space for subsequent filters.
     </para>
 
     <para>
-      To add a Resample filter, click the "Resample" button from the
-      menu of buttons labeled 1 in <xref linkend="fig.load"/>.  A new
-      window will appear immediately below the Load Data window as
-      shown in label 2 of <xref linkend="fig.filter"/>.  This window
-      allows for resampling in each dimension as well as a
-      parameterized method for resampling.  To downsample this data
-      set in each dimension, change the "x1" to "x0.5" in each
-      dimension.  The "x0.5" is a magnification factor applied to the
-      dataset along each dimension.
+      Add a resample filter by clicking the Processing Pane's
+      <guibutton>Resample</guibutton> button, item 1 in <xref
+      linkend="fig.load"/>.  A new frame will appear immediately below
+      the <guilabel>Load Data</guilabel> frame as shown in item 2 of
+      <xref linkend="fig.filter"/>.
     </para>
 
     <para>
-      Click the "Update" button to finalize and apply the Resample
-      filter.
+      The resampling filter resamples and smooths data in each
+      dimension.  To produce half as many samples in each dimension,
+      change <userinput>x1</userinput> (multiply by 1) to
+      <userinput>x0.5</userinput> in each dimension.  The
+      <userinput>x0.5</userinput> is a magnification factor applied to
+      the dataset along each dimension.  Then select a filter type
+      (cubic B-spline is the default).
     </para>
 
     <para>
-      To add a cropping filter, click the "Crop" button.  A new window
-      will appear immediately below the Resample filter.  Also, notice
-      that a set of boxes appears over the dataset in the 2D Viewers.
+      Click the Processing Pane's <guibutton>Update</guibutton> button
+      to apply the filter.
+    </para>
+
+    <para>
+      To add a cropping filter, click the Processing Pane's
+      <guibutton>Crop</guibutton> button.  A new frame will appear
+      below the resample filter frame and cropping controls (box)
+      will appear within the 2D Viewers.
     </para>
     
+    <figure id="fig.filter">
+      <title>Resample Filter</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>User Interface for the Resample Filter.</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/filters.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/filters.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>
+      The extents of the cropping controls present a visual indication
+      of data remaining after the application of the cropping filter.
+      A cropping control can be resized by clicking and dragging a
+      control's corner or side.  A box can be moved by clicking and
+      dragging the control's interior.  <xref
+      linkend="fig.crop_module_added"/> demonstrates use of cropping
+      controls.
+    </para>
+    
+    <para>
+      Click the <guibutton>Update</guibutton> button to finalize and
+      apply the crop filter to the resampled dataset.
+    </para>
+
     <figure id="fig.crop_module_added">
       <title>Adding a crop filter</title>
       <mediaobject>
@@ -183,47 +222,24 @@ DEALINGS IN THE SOFTWARE.
     </figure>
 
     <para>
-      The extents of the various boxes present a visual indication of
-      the area of the dataset that will remain after the application
-      of the Cropping filter.  The small yellow circles at the corners
-      can be clicked-and-dragged in order to interactively change the
-      size of the cropping filter as seen in <xref
-      linkend="fig.crop_module_added"/>
-    </para>
-    
-    <para>
-      Section <xref linkend="chap.filters"/>
-      discusses each filter in more detail and their common uses.
+      Notice that each of these filters are applied sequentially,
+      first to last (top to bottom) in the Processing Pane window.
     </para>
 
     <para>
-      Click the "Update" button to finalize and apply the Crop filter
-      to the Resampled dataset.
-    </para>
-
-    <figure id="fig.filter">
-      <title>Dynamic Filters</title>
-      <mediaobject>
-	<textobject>
-	  <phrase>Adding and using Dynamic Filters.</phrase>
-	</textobject>
+      To remove a filter click on its delete button, 
+      <inlinemediaobject>
 	<imageobject>
-	  <imagedata fileref="Figures/filters.eps" align="center" format="EPS"/>
+	  <imagedata fileref="Figures/delete_filter.eps" format="EPS"/>
 	</imageobject>
 	<imageobject>
-	  <imagedata fileref="Figures/filters.jpg" align="center" format="JPG"/>
+	  <imagedata fileref="Figures/delete_filter.gif" format="GIF"/>
 	</imageobject>
-      </mediaobject>
-    </figure>
-
-    <para>
-      Notice that each of these filters are applied sequentially from
-      the Load Data window to the last filter in the list.  To remove
-      a filter from the list of filters applied to the data, simply
-      click on the red 'X' button in the appropriate filter.  This
-      will remove the filter from the pipeline completely. See <xref
-      linkend="sec.dynamic_filters"/> for more information regarding
-      dynamic filters and how to insert and delete them.
+	<textobject><phrase>Filter delete button.</phrase></textobject>
+      </inlinemediaobject>.
+      This will remove the filter from the pipeline completely. See
+      <xref linkend="sec.dynamic_filters"/> for more information
+      regarding dynamic filters and how to insert and delete them.
     </para>
 
   </section><!-- end:Resampling and Cropping -->
