@@ -564,14 +564,19 @@ using namespace SCIRun;
       bool switchDebugSource_Sink;
       bool switchDebug_advance_advect;
       bool switchTestConservation; 
+      
+      // debugging variables
+      int d_dbgVar1;
+      int d_dbgVar2;
+      vector<IntVector>d_dbgIndices;
      
+      // flags
       int  d_surroundingMatl_indx;
       bool d_RateForm;
       bool d_EqForm;
       bool d_impICE;
       bool d_Turb;
-      int d_dbgVar1;
-      int d_dbgVar2;
+      
       int d_max_iter_equilibration;
       int d_max_iter_implicit;
       int d_iters_before_timestep_restart;
