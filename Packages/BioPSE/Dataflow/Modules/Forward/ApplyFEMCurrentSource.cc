@@ -30,6 +30,7 @@
  *   Lorena Kreda, Northeastern University, November 2003
  */
 
+#include <Core/Containers/Array1.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
@@ -37,7 +38,7 @@
 #include <Core/Datatypes/HexVolField.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/PointCloudField.h>
-#include <Dataflow/Modules/Fields/FieldInfo.h>
+#include <Core/Datatypes/CurveField.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Widgets/BoxWidget.h>
@@ -64,10 +65,13 @@ class ApplyFEMCurrentSource : public Module {
   MatrixIPort*  iportCurrentPattern_;
   MatrixIPort*  iportCurrentPatternIndex_;
   MatrixIPort*  iportElectrodeParams_;
+  FieldIPort*   iportFieldBoundary_;
+  MatrixIPort*  iportBoundaryToMesh_;
 
   //! Output ports
   MatrixOPort*  oportRhs_;
   MatrixOPort*  oportWeights_;
+  MatrixOPort*  oportMeshToElectrodeMap_;
 
   int gen_;
   TetVolMesh::Cell::index_type loc;
@@ -77,13 +81,24 @@ class ApplyFEMCurrentSource : public Module {
   bool hex;
   bool tri;
 
+  enum ElectrodeModelType
+  {
+      CONTINUUM_MODEL = 0,
+      GAP_MODEL
+  };
+
 private:
   virtual double CalculateCurrent(double theta, double arclength, int index, int numElectrodes);
+  virtual double CalcContinuumTrigCurrent(Point p, int index, int numBoundaryNodes);
+  virtual double ComputeTheta(Point);
+  void ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMeshHandle hTriMesh );
 
 public:
   GuiInt sourceNodeTCL_;
   GuiInt sinkNodeTCL_;
-  GuiString modeTCL_; //"dipole" or "electrodes" (if electrodes use interp map)
+  GuiString modeTCL_; 
+  // modeTCL_ (above) can be either: "dipole", "electrode pair", or "electrode set" 
+  // The iportInter_ input is only used if mode is "electrode pair" or "electrode set". 
 
   //! Constructor/Destructor
   ApplyFEMCurrentSource(GuiContext *context);
@@ -110,7 +125,6 @@ ApplyFEMCurrentSource::~ApplyFEMCurrentSource()
 
 void ApplyFEMCurrentSource::execute()
 {
-  int numParams=3;
   iportField_ = (FieldIPort *)get_iport("Mesh");
   iportSource_ = (FieldIPort *)get_iport("Dipole Sources");
   iportRhs_ = (MatrixIPort *)get_iport("Input RHS");
@@ -118,8 +132,14 @@ void ApplyFEMCurrentSource::execute()
   iportCurrentPattern_ = (MatrixIPort *)get_iport("Current Pattern");
   iportCurrentPatternIndex_ = (MatrixIPort *)get_iport("CurrentPatternIndex");
   iportElectrodeParams_ = (MatrixIPort *)get_iport("Electrode Parameters");
+  iportFieldBoundary_ = (FieldIPort *)get_iport("Boundary");
+  iportBoundaryToMesh_ = (MatrixIPort *)get_iport("Boundary Transfer Matrix");
+
   oportRhs_ = (MatrixOPort *)get_oport("Output RHS");
   oportWeights_ = (MatrixOPort *)get_oport("Output Weights");
+
+  // The following output is only produced in TriSurf + ElectrodeSet mode
+  oportMeshToElectrodeMap_ = (MatrixOPort *)get_oport("Mesh to Electrode Map"); 
 
   if (!iportField_) {
     error("Unable to initialize iport 'Mesh'.");
@@ -149,12 +169,27 @@ void ApplyFEMCurrentSource::execute()
     error("Unable to initialize iport 'Interpolant'.");
     return;
   }
+  // FieldBoundary and BoundaryInterp inputs are only utilized in the
+  // TriSurf + ElectrodeSet configuration  
+  if (!iportFieldBoundary_) {
+    error("Unable to initialize iport 'Boundary'.");
+    return;
+  }
+  if (!iportBoundaryToMesh_) {
+    error("Unable to initialize iport 'Boundary Transfer Matrix'.");
+    return;
+  }
+
   if (!oportRhs_) {
     error("Unable to initialize oport 'Output RHS'.");
     return;
   }
   if (!oportWeights_) {
     error("Unable to initialize oport 'Output Weights'.");
+    return;
+  }
+  if (!oportMeshToElectrodeMap_) {
+    error("Unable to initialize oport 'Mesh to Electrode Map'.");
     return;
   }
   
@@ -172,16 +207,6 @@ void ApplyFEMCurrentSource::execute()
   // Handle TriSurfField inconsistently for now - fix in 1.20.2
   TriSurfMeshHandle hTriMesh;
   LockingHandle<TriSurfField<int> > hTriCondField;
-
-
-  /* put this with the TriSurf code 
-
-  // Check for valid data type - must be <int>
-  if (hField->get_type_name(1) != "int") {
-    error("Data in supplied field is not of type int");
-    return;
-  }
-  */
 
   tet = false;
   hex = false;
@@ -215,7 +240,7 @@ void ApplyFEMCurrentSource::execute()
   MatrixHandle  hRhsIn;
   ColumnMatrix* rhsIn;
   ColumnMatrix* rhs;
-  int nsize;
+  int nsize = 0;
 
   if(tet) {
 	TetVolMesh::Node::size_type nsizeTet; hMesh->size(nsizeTet);
@@ -229,8 +254,16 @@ void ApplyFEMCurrentSource::execute()
         TriSurfMesh::Node::size_type nsizeTri; hTriMesh->size(nsizeTri);
 	nsize = nsizeTri;
   }
-
-  rhs = scinew ColumnMatrix(nsize);
+  
+  if (nsize > 0)
+  {
+      rhs = scinew ColumnMatrix(nsize);
+  }
+  else
+  {
+    error("Input mesh has zero size");
+    return;
+  }
 
   // -- if the user passed in a vector the right size, copy it into ours 
   if (iportRhs_->get(hRhsIn) && 
@@ -250,8 +283,8 @@ void ApplyFEMCurrentSource::execute()
     rhs->zero();
   }
 
-  // process tet mesh
-  if(tet) {
+  // process mesh
+  if (tet) {
         // TET + DIPOLE
 	if (modeTCL_.get() == "dipole") {
 	  FieldHandle hSource;
@@ -324,7 +357,7 @@ void ApplyFEMCurrentSource::execute()
 	  oportWeights_->send(MatrixHandle(w));
 	  oportRhs_->send(MatrixHandle(rhs)); 
 	} // TET + ELECTRODE PAIR 
-        else if(modeTCL_.get() == "electrode pair") {  // electrode pair source
+        else if(modeTCL_.get() == "electrode pair") {
 	  FieldHandle hInterp;
 	  iportInterp_->get(hInterp);
 	  FieldHandle hSource;
@@ -431,12 +464,9 @@ void ApplyFEMCurrentSource::execute()
 
   }
   else if (hex) { // process hex mesh
-        // HEX + ELECTRODE PAIR (not implemented yet)
-	if (modeTCL_.get() == "electrodes") { // electrodes -> has to be implemented
-	  error("source/sink modelling is not yet available for HexFEM");
-	  return;
-	}
-	// HEX + DIPOLE
+
+    // HEX + DIPOLE
+    if (modeTCL_.get() == "dipole") { 
 	FieldHandle hSource;
 	if (!iportSource_->get(hSource) || !hSource.get_rep()) {
 	  error("Can't get handle to source field.");
@@ -503,417 +533,908 @@ void ApplyFEMCurrentSource::execute()
 	  
 	}
 	oportRhs_->send(MatrixHandle(rhs));
+    }
+    // HEX + ELECTRODE PAIR (not implemented yet)
+    else if (modeTCL_.get() == "electrode pair") { 
+	error("source/sink modelling is not yet available for HexFEM");
+	return;
+    }
+
+    // HEX + ELECTRODE SET (not implemented yet)
+    else if (modeTCL_.get() == "electrode set") { 
+	error("electrode set modelling is not yet available for HexFEM");
+	return;
+    }
+
   }
-    // The following code supporting TriSurf's will be improved in 1.20.2
-    // It's here as a place holder, just to get it in, but it's really not very good
-  else if(tri) {
+  else if (tri) {
     // TRI + DIPOLE
 
-  if (modeTCL_.get() == "dipole") {
+    if (modeTCL_.get() == "dipole") {
 
-    FieldHandle hSource;
-    if (!iportSource_->get(hSource) || !hSource.get_rep()) {
-      error("Can't get handle to source field.");
-      return;
-    }
+        FieldHandle hSource;
+        if (!iportSource_->get(hSource) || !hSource.get_rep()) {
+            error("Can't get handle to source field.");
+            return;
+        }
   
-    LockingHandle<PointCloudField<Vector> > hDipField;
+        LockingHandle<PointCloudField<Vector> > hDipField;
     
-    if (hSource->get_type_name(0)!="PointCloudField" || hSource->get_type_name(1)!="Vector"){
-      error("Supplied field is not of type PointCloudField<Vector>.");
-      return;
-    }
-    else {
-      hDipField = dynamic_cast<PointCloudField<Vector>*> (hSource.get_rep());
-    }
+        if (hSource->get_type_name(0)!="PointCloudField" || hSource->get_type_name(1)!="Vector"){
+          error("Supplied field is not of type PointCloudField<Vector>.");
+          return;
+        }
+        else {
+          hDipField = dynamic_cast<PointCloudField<Vector>*> (hSource.get_rep());
+        }
   
-    //! Computing contributions of dipoles to RHS
-    PointCloudMesh::Node::iterator ii;
-    PointCloudMesh::Node::iterator ii_end;
-    Array1<double> weights;
-    hDipField->get_typed_mesh()->begin(ii);
-    hDipField->get_typed_mesh()->end(ii_end);
-    for (; ii != ii_end; ++ii) {
+        //! Computing contributions of dipoles to RHS
+        PointCloudMesh::Node::iterator ii;
+        PointCloudMesh::Node::iterator ii_end;
+        Array1<double> weights;
+        hDipField->get_typed_mesh()->begin(ii);
+        hDipField->get_typed_mesh()->end(ii_end);
+        for (; ii != ii_end; ++ii) {
       
-      Vector dir = hDipField->value(*ii);
-      Point p;
-      hDipField->get_typed_mesh()->get_point(p, *ii);
+          Vector dir = hDipField->value(*ii);
+          Point p;
+          hDipField->get_typed_mesh()->get_point(p, *ii);
 
-        if (hTriMesh->locate(locTri, p)) {
-          msgStream_ << "Source p="<<p<<" dir="<<dir<<" found in elem "<< locTri <<endl;
+            if (hTriMesh->locate(locTri, p)) {
+              msgStream_ << "Source p="<<p<<" dir="<<dir<<" found in elem "<< locTri <<endl;
 
-  	  if (fabs(dir.x()) > 0.000001) {
-	    weights.add(locTri*3);
-	    weights.add(dir.x());
-	  }
-	  if (fabs(dir.y()) > 0.000001) {
-	    weights.add(locTri*3+1);
-	    weights.add(dir.y());
-	  }
-	  if (fabs(dir.z()) > 0.000001) {
-	    weights.add(locTri*3+2);
-	    weights.add(dir.z());
-	  }
+              if (fabs(dir.x()) > 0.000001) {
+	        weights.add(locTri*3);
+	        weights.add(dir.x());
+	      }
+	      if (fabs(dir.y()) > 0.000001) {
+	        weights.add(locTri*3+1);
+	        weights.add(dir.y());
+	      }
+	      if (fabs(dir.z()) > 0.000001) {
+	        weights.add(locTri*3+2);
+	        weights.add(dir.z());
+	      }
 	
-	  double s1, s2, s3;
-	  Vector g1, g2, g3;
-   	  hTriMesh->get_gradient_basis(locTri, g1, g2, g3);
+	      double s1, s2, s3;
+	      Vector g1, g2, g3;
+   	      hTriMesh->get_gradient_basis(locTri, g1, g2, g3);
 
-	  s1=Dot(g1,dir);
-	  s2=Dot(g2,dir);
-	  s3=Dot(g3,dir);
+	      s1=Dot(g1,dir);
+	      s2=Dot(g2,dir);
+	      s3=Dot(g3,dir);
 		
-	  TriSurfMesh::Node::array_type face_nodes;
-	  hTriMesh->get_nodes(face_nodes, locTri);
-	  (*rhs)[face_nodes[0]]+=s1;
-	  (*rhs)[face_nodes[1]]+=s2;
-	  (*rhs)[face_nodes[2]]+=s3;
-        } else {
-	  msgStream_ << "Dipole: "<< p <<" not located within mesh!"<<endl;
-        }
-    } // end for loop
-    gen_=hSource->generation;
-    ColumnMatrix* w = scinew ColumnMatrix(weights.size());
-    for (int i=0; i<weights.size(); i++) (*w)[i]=weights[i];
-    oportWeights_->send(MatrixHandle(w));
-  }
-  // TRI + ELECTRODE PAIR 
-  else if (modeTCL_.get() == "electrode pair") {
+	      TriSurfMesh::Node::array_type face_nodes;
+	      hTriMesh->get_nodes(face_nodes, locTri);
+	      (*rhs)[face_nodes[0]]+=s1;
+	      (*rhs)[face_nodes[1]]+=s2;
+	      (*rhs)[face_nodes[2]]+=s3;
+            } else {
+	      msgStream_ << "Dipole: "<< p <<" not located within mesh!"<<endl;
+            }
+        } // end for loop
+        gen_=hSource->generation;
+        ColumnMatrix* w = scinew ColumnMatrix(weights.size());
+        for (int i=0; i<weights.size(); i++) (*w)[i]=weights[i];
+        oportWeights_->send(MatrixHandle(w));
+    }
+    // TRI + ELECTRODE PAIR 
+    else if (modeTCL_.get() == "electrode pair") {
 
-    FieldHandle hInterp;
-    iportInterp_->get(hInterp);
-    unsigned int sourceNode = Max(sourceNodeTCL_.get(), 0);
-    unsigned int sinkNode = Max(sinkNodeTCL_.get(), 0);
+        FieldHandle hInterp;
+        iportInterp_->get(hInterp);
+        unsigned int sourceNode = Max(sourceNodeTCL_.get(), 0);
+        unsigned int sinkNode = Max(sinkNodeTCL_.get(), 0);
       
-    if (hInterp.get_rep()) {
+        if (hInterp.get_rep()) {
    
-        PointCloudField<vector<pair<TriSurfMesh::Node::index_type, double> > >* interp;
-        interp = dynamic_cast<PointCloudField<vector<pair<TriSurfMesh::Node::index_type, double> > > *>(hInterp.get_rep());
-        if (!interp) {
-	  error("Input interp field wasn't interp'ing PointCloudField from a TriSurfMesh::Node.");
-	  return;
-        } else if (sourceNode < interp->fdata().size() &&
+            PointCloudField<vector<pair<TriSurfMesh::Node::index_type, double> > >* interp;
+            interp = dynamic_cast<PointCloudField<vector<pair<TriSurfMesh::Node::index_type, double> > > *>(hInterp.get_rep());
+            if (!interp) {
+	      error("Input interp field wasn't interp'ing PointCloudField from a TriSurfMesh::Node.");
+	      return;
+            } else if (sourceNode < interp->fdata().size() &&
 	  	   sinkNode < interp->fdata().size()) {
-  	  sourceNode = interp->fdata()[sourceNode].begin()->first;
-	  sinkNode = interp->fdata()[sinkNode].begin()->first;
-        } else {
-	  error("SourceNode or SinkNode was out of interp range.");
-	  return;
+  	      sourceNode = interp->fdata()[sourceNode].begin()->first;
+	      sinkNode = interp->fdata()[sinkNode].begin()->first;
+            } else {
+	      error("SourceNode or SinkNode was out of interp range.");
+	      return;
+            }
         }
+        if (sourceNode >= (unsigned int) nsize || sinkNode >= (unsigned int) nsize)
+        {
+          error("SourceNode or SinkNode was out of mesh range.");
+          return;
+        }
+        msgStream_ << "sourceNode="<<sourceNode<<" sinkNode="<<sinkNode<<"\n";
+        (*rhs)[sourceNode] += -1;
+        (*rhs)[sinkNode] += 1;
     }
-    if (sourceNode >= nsize || sinkNode >= nsize)
-    {
-      error("SourceNode or SinkNode was out of mesh range.");
-      return;
-    }
-    msgStream_ << "sourceNode="<<sourceNode<<" sinkNode="<<sinkNode<<"\n";
-    (*rhs)[sourceNode] += -1;
-    (*rhs)[sinkNode] += 1;
-    }
-  else // TRI + ELECTRODE SET
-    {
+    // TRI + ELECTRODE SET
+    else if (modeTCL_.get() == "electrode set") {
 
-    // Get the current pattern input - these are the input currents at each 
-    // electrode - later we will combine with electrode information 
-    // to produce an electrode density. In 2D, we assume the electrode height is
-    // 1 because we assume no variation in the z direction, hence we set h=1
-    // so that it doesn't influence the computation. I think this input is used
-    // only for models other than the continuum model
-    MatrixHandle  hCurrentPattern;
-    if (!iportCurrentPattern_->get(hCurrentPattern) || !hCurrentPattern.get_rep()) {
-      error("Can't get handle to current pattern matrix.");
-      return;
-    }
+      ProcessTriElectrodeSet( rhs, hTriMesh );
 
-    // Get the current pattern index - this is used for calculating the current value
-    // if the continuum model is used 
-    MatrixHandle  hCurrentPatternIndex;
-    ColumnMatrix* currPatIdx;
-    int           k;
+    } // end electrode set else clause
 
-    // Copy the input current index into local variable, k 
-    if (iportCurrentPatternIndex_->get(hCurrentPatternIndex) && 
-        (currPatIdx=dynamic_cast<ColumnMatrix*>(hCurrentPatternIndex.get_rep())) && 
-        (currPatIdx->nrows() == 1))
-    {
-      k=static_cast<int>((*currPatIdx)[0]);
-    }
-    else{
-      msgStream_ << "The supplied current pattern index is not a 1x1 matrix" << endl;
-    }
+    //! Sending result
+    oportRhs_->send(MatrixHandle(rhs)); 
+  
+  } // end of 'if' statement over mesh type
 
-    // Get the interp field - this is the location of the electrodes interpolated onto the 
-    // body mesh
-    FieldHandle hInterp;
-    iportInterp_->get(hInterp);
+}
 
-    // determine the dimension (number of electrodes) in the interp'd field of electrodes
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//
+// ApplyFEMCurrentSource::ProcessTriElectrodeSet
+//
+// Description: This method isolates a specialized block of code that handles the TriSurfMesh
+//              and 'Electrode Set' mode.
+//
+// Inputs:
+//
+// Returns: 
+//
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    int numElectrodes;
+void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMeshHandle hTriMesh )
+{
+    int numParams=4;
 
-    PointCloudMesh::Node::size_type nsize; 
-    LockingHandle<PointCloudField<vector<pair<NodeIndex<int>,double> > > >hInterpField;
-    PointCloudMeshHandle hPtCldMesh;
-    PointCloudField<vector<pair<NodeIndex<int>,double> > >* interp = dynamic_cast<PointCloudField<vector<pair<NodeIndex<int>,double> > > *> (hInterp.get_rep());
-    hPtCldMesh = interp->get_typed_mesh();
-    hPtCldMesh->size(nsize);
-    numElectrodes = (int) nsize;
-
-    ColumnMatrix* currentPattern = scinew ColumnMatrix(numElectrodes);
-    currentPattern=dynamic_cast<ColumnMatrix*>(hCurrentPattern.get_rep()); 
-
-    // Get the electrode length from the parameters matrix
+    // Get the electrode parameters input vector
+    // -----------------------------------------
     MatrixHandle  hElectrodeParams;
-    if (!iportElectrodeParams_->get(hElectrodeParams) || !hElectrodeParams.get_rep()) {
-      error("Can't get handle to electrode parameters matrix.");
-      return;
+
+    if (!iportElectrodeParams_->get(hElectrodeParams) || !hElectrodeParams.get_rep()) 
+    {
+        error("Can't get handle to electrode parameters matrix.");
+        return;
     }
+
     ColumnMatrix* electrodeParams = scinew ColumnMatrix(numParams);
     electrodeParams=dynamic_cast<ColumnMatrix*>(hElectrodeParams.get_rep());
 
     unsigned int electrodeModel = (unsigned int)((*electrodeParams)[0]);
-    double electrodeLen = (*electrodeParams)[2];
+    int numElectrodes           = (int) ( (*electrodeParams)[1]);
+    double electrodeLen         = (*electrodeParams)[2];
+    int startNodeIndex          = (int) ( (*electrodeParams)[3]);
+
     cout << "electrode model = " << electrodeModel << "  length= " << electrodeLen << endl;
 
-    if (hInterp.get_rep()) {
-      PointCloudField<vector<pair<TriSurfMesh::Node::index_type, double> > >* interp = dynamic_cast<PointCloudField<vector<pair<TriSurfMesh::Node::index_type, double> > > *>(hInterp.get_rep());
-      if (!interp) {
-	error("Input interp field wasn't interp'ing PointCloudField from a TriSurfMesh::Node.");
-	return;
-      }
- 
-      // TRI + ELECTRODE SET + GAP MODEL
-      if (electrodeModel == 1) // gap model
-      {
-        // Convert the input current to a current density by dividing by the area of the 
-        // electrodes. For 2D, assume the electrode height is equal to one.        
-        for (int i=0; i<numElectrodes; i++) {
-          (*currentPattern)[i] = (*currentPattern)[i] / electrodeLen;  // (units = amps/m)
-        }
-        for (int i=0; i<numElectrodes; i++) {
-          cout << "***** output for electrode: " << i << " *** 0.5*electrodeLen = "<< electrodeLen/2 << endl;
-          // find neighbors of this node
-          int centerNode = interp->fdata()[i].begin()->first;
-          int nextNodes[2];
-          TriSurfMesh::Node::array_type neib_nodes;
-          neib_nodes.clear();
-          hTriMesh->synchronize(Mesh::EDGES_E | Mesh::NODE_NEIGHBORS_E);
-          hTriMesh->get_neighbors(neib_nodes, TriSurfMesh::Node::index_type(centerNode));
-          // find the neighbors that are on the boundary
-          Point coord,centerCoord, nextPt[2];
-          hTriMesh->get_point(centerCoord, centerNode);
-          double boundaryRadius = sqrt(pow(centerCoord.x(),2) + pow(centerCoord.y(),2));          
-          double radius;
-          int boundaryNeighborCount=0;
-          for (unsigned int jj=0; jj<neib_nodes.size(); jj++)
-	  {
-            hTriMesh->get_point(coord,neib_nodes[jj]);
-            radius = sqrt(pow(coord.x(),2) + pow(coord.y(),2));  
-            // if the radial distance of this point from the center is within 
-            // 3% of the boundary radius, conclude this is a boundary node   
-            if (abs(boundaryRadius-radius) < (0.03)*boundaryRadius)
-	    {
-              nextPt[boundaryNeighborCount]=coord;
-              nextNodes[boundaryNeighborCount]=neib_nodes[jj];
-              boundaryNeighborCount++;
-	    }
-            if (boundaryNeighborCount == 2) break;
-	  }
-          // traverse boundary in direction of nextNodes[jj] and update rhs
-          // current vector as we go
-          double s, d;
 
-          for (unsigned int jj=0; jj<2; jj++)
-	  {
-            int lastNode, currNode, nextNode;
-            Point currCoord, nextCoord;
-            double cumulativeDistance=0.0;
-            currCoord = centerCoord;
-            nextCoord = nextPt[jj];
-            currNode = centerNode;
-            nextNode = nextNodes[jj];
+    // Get the current pattern input
+    // -----------------------------
+    // These are the input currents at each electrode - later we will combine with electrode 
+    // information to produce an electrode density. In 2D, we assume the electrode height is
+    // 1 because we assume no variation in the z direction, hence we set h=1
+    // so that it doesn't influence the computation. 
+    // This input is used only for models other than the continuum model
+
+    MatrixHandle  hCurrentPattern;
+    if ((!iportCurrentPattern_->get(hCurrentPattern) || !hCurrentPattern.get_rep()) && (electrodeModel != CONTINUUM_MODEL)) 
+    {
+        error("Can't get handle to current pattern matrix.");
+        return;
+    }
+
+    // Get the current pattern index
+    // -----------------------------
+    // This is used for calculating the current value if the continuum model is used 
+    MatrixHandle  hCurrentPatternIndex;
+    ColumnMatrix* currPatIdx;
+    int           k = 0;
+
+    // Copy the input current index into local variable, k 
+    // ---------------------------------------------------
+    if (iportCurrentPatternIndex_->get(hCurrentPatternIndex) && 
+        (currPatIdx=dynamic_cast<ColumnMatrix*>(hCurrentPatternIndex.get_rep())) && 
+        (currPatIdx->nrows() == 1))
+    {
+        k=static_cast<int>((*currPatIdx)[0]);
+    }
+    else
+    {
+        msgStream_ << "The supplied current pattern index is not a 1x1 matrix" << endl;
+    }
+
+    // Get the FieldBoundary input
+    // ---------------------------
+    FieldHandle      hFieldBoundary;
+    CurveMeshHandle  hBoundaryMesh;
+    LockingHandle<CurveField<double> > hCurveBoundary;
+    bool boundary = false;
+    if ( iportFieldBoundary_->get(hFieldBoundary) )
+    { 
+        if (hFieldBoundary.get_rep())
+        {
+            // Check field type - this only works for CurveFields<double> extracted from a TriSurf
+            // -----------------------------------------------------------------------------------
+            if ( (hFieldBoundary->get_type_name(0) == "CurveField") &&
+                 (hFieldBoundary->get_type_name(1) == "double") )
+            {
+	        remark("Field boundary input is a CurveField<double>");
+                hCurveBoundary = dynamic_cast<CurveField<double>*> ( hFieldBoundary.get_rep() );
+                hBoundaryMesh = hCurveBoundary->get_typed_mesh();
+
+  	        CurveMesh::Node::size_type nsize;
+                hBoundaryMesh->size(nsize);
+                int numCurveNodes = (int) nsize;
+                cout << "There are " << numCurveNodes << " nodes in the boundary field." << endl;
+
+                boundary = true;
+	    }
+            else
+	    {
+                remark("Supplied boundary field is not of type CurveField<double>");
+	    }
+	}
+    }
+    else
+    {
+        msgStream_ << "There is an error in the supplied boundary field" << endl;
+    }
+
+    // If a boundary field was supplied, check for the matrix that maps boundary
+    // nodes to mesh nodes. This matrix is the output of the module: InterpolantToTransferMatrix
+    // -----------------------------------------------------------------------------------------
+
+    MatrixHandle      hBoundaryToMesh;
+
+    if (boundary)
+    {
+        if ( !(iportBoundaryToMesh_->get(hBoundaryToMesh) &&
+	       hBoundaryToMesh.get_rep()) )
+	{
+     	    // disable susequent boundary-related code if we had a problem here
+            boundary = false;
+	}
+
+    }
+    
+    
+    // Get the interp field 
+    // --------------------
+    // This is the location of the electrodes interpolated onto the body mesh. The 
+    // presence of this input means the user is electing to specify electrode locations
+    // manually rather than use an automatic placement scheme selected through the 
+    // electrode manager.
+    // --------------------------------------------------------------------------------
+    FieldHandle hInterp;
+    int numInterpFieldElectrodes;
+
+    if ( iportInterp_->get(hInterp) && hInterp.get_rep()) 
+    {
+        // determine the dimension (number of electrodes) in the interp'd field of electrodes
+        // ----------------------------------------------------------------------------------
+        PointCloudMesh::Node::size_type nsize; 
+        LockingHandle<PointCloudField<vector<pair<NodeIndex<int>,double> > > >hInterpField;
+        PointCloudMeshHandle hPtCldMesh;
+        PointCloudField<vector<pair<NodeIndex<int>,double> > >* interp = 
+            dynamic_cast<PointCloudField<vector<pair<NodeIndex<int>,double> > > *> (hInterp.get_rep());
+        hPtCldMesh = interp->get_typed_mesh();
+        hPtCldMesh->size(nsize);
+        numInterpFieldElectrodes = (int) nsize;
+    }
+    // if electrode interp field is not supplied, determine electrode centers using 
+    // number of electrodes, spacing from the electrode manager and extracted field boundary
+    // -------------------------------------------------------------------------------------
+    else
+    {
+
+    }
+    
+    // Make a local copy of the input current pattern 
+    // Hold off on copying the current pattern until after we check if there's an interpolated 
+    // electrode field as this could influence the value of numElectrodes
+    // Also, this input is not needed for the continuum case and may not be present in this case.
+    // ------------------------------------------------------------------------------------------
+    ColumnMatrix* currentPattern = scinew ColumnMatrix(numElectrodes);
+    currentPattern=dynamic_cast<ColumnMatrix*>(hCurrentPattern.get_rep()); 
+
+
+    // Allocate vector for the mesh-to-electrode-map
+    ColumnMatrix* meshToElectrodeMap;
+    TriSurfMesh::Node::size_type msize;
+    hTriMesh->size(msize);
+    int numMeshNodes = (int) msize;
+
+    meshToElectrodeMap = scinew ColumnMatrix(msize);
+
+    // Initialize meshToElectrodeMap to all -1s. -1 indicates a non-electrode node; later we will 
+    // identify the electrode nodes.
+    for (int i = 0; i < numMeshNodes; i++)
+    {
+        (*meshToElectrodeMap)[i] = -1;
+    }
+
+
+    // TRI + ELECTRODE SET + CONTINUUM MODEL
+    // -------------------------------------
+    if (electrodeModel == CONTINUUM_MODEL)
+    {
+        if (boundary)
+  	{
+	    // Visit each node on the boundary mesh.
+  	    CurveMesh::Node::iterator nodeItr;
+	    CurveMesh::Node::iterator nodeItrEnd;
+  	  
+            hBoundaryMesh->begin(nodeItr);
+            hBoundaryMesh->end(nodeItrEnd);
   
-            cout << "center node: " << centerNode << " next node: " << nextNode << endl;
+            Array1<int>       meshNodeIndex;
+            Array1<double>    weight;
 
-            while (cumulativeDistance < electrodeLen/2)
-	    {
-              s = sqrt(pow((currCoord.x()-nextCoord.x()),2) + pow((currCoord.y()-nextCoord.y()),2));
-              if ((cumulativeDistance + s) < electrodeLen/2)
-	      {
-                // this segment lies completely under the electrode
-                cumulativeDistance = cumulativeDistance + s;
-		//cout << "cumulativeDistance: " << cumulativeDistance << endl;
-                (*rhs)[currNode] += 0.5*s/electrodeLen*(*currentPattern)[i]; // contribution to current node
-		//cout << (0.5)*(s/electrodeLen)*(*currentPattern)[i] << " added to node " << currNode << endl;
-                cout << currNode << "  " << (*rhs)[currNode] << endl;
-                (*rhs)[nextNode] += (0.5)*s/electrodeLen*(*currentPattern)[i]; // contribution to next node
-                //cout << (0.5)*(s/electrodeLen)*(*currentPattern)[i] << " added to node " << nextNode << endl;
-                cout << nextNode << "  " << (*rhs)[nextNode] << endl;
-              
-                lastNode = currNode;
-                currNode = nextNode;
-                // find new nextNode, ie. the neighbor of the new currNode that does not equal lastNode
-                hTriMesh->get_neighbors(neib_nodes, TriSurfMesh::Node::index_type(currNode));
-                for (unsigned int jj=0; jj<neib_nodes.size(); jj++)
-	        {
-                  hTriMesh->get_point(coord,neib_nodes[jj]);
-                  radius = sqrt(pow(coord.x(),2) + pow(coord.y(),2));  
-                  // if the radial distance of this point from the center is within 
-                  // 3% of the boundary radius, conclude this is a boundary node   
-                  if (abs(boundaryRadius-radius) < (0.03)*boundaryRadius)
-      	          {
-                    if (neib_nodes[jj] != lastNode) 
-                    {
-                      nextNode = neib_nodes[jj];           
-                      break;
-                    }
-                  }
-	        }
-                hTriMesh->get_point(currCoord,currNode);
-                hTriMesh->get_point(nextCoord,nextNode);
+            int numBoundaryNodes = hBoundaryToMesh->nrows();
 
-                //cout << "  " << nextNode << endl;
-                     
-	      }
-              else
-	      {
-                // this segment is only partially covered by the electrode
-                d = (electrodeLen/2) - cumulativeDistance;
-                // find area of trapezoidal region
-                double area = d*(s-d)/s + (0.5)*d*(1-(s-d)/s);
+            for (; nodeItr != nodeItrEnd; ++nodeItr) 
+            {		  
+                Point p;
+	        hBoundaryMesh->get_point(p, *nodeItr);
 
-		cout << "s = "<< s<< " d = " << d << " area = " << area << " currDens = " << (*currentPattern)[i] << endl;
+  	        cout << "Cont------------ *nodeItr  = " << *nodeItr << " -----------------------------" << endl;
+		                                                
+                cout << " p=" << p << endl;
 
-                (*rhs)[currNode] += d/electrodeLen*(*currentPattern)[i]; // contribution to current node
-
-                cout << (d/electrodeLen)*(*currentPattern)[i] << " added to node " << currNode << endl;
-                cout << currNode << "  " << (*rhs)[currNode] << endl;
+                // Find the corresponding node index in the body (TriSurf) mesh.
+    		hBoundaryToMesh->getRowNonzeros(*nodeItr, meshNodeIndex, weight);
+		
+                cout << "Boundary node " << (int) (*nodeItr) << " maps to mesh node " << meshNodeIndex[0] << endl; 
                 
-                break; // we are done with this half of the electrode.
-	      }
+                int rhsIndex = meshNodeIndex[0];
 
-	    } // end while
-	  } // end for loop over two neighbors of central node
-        } // end for loop over electrodes
+                // Get the value for the current at this node and store this value in the RHS output vector
+	        (*rhs)[rhsIndex] = CalcContinuumTrigCurrent(p, k, numBoundaryNodes);
+
+                // Tag this node as an "electrode" node
+                (*meshToElectrodeMap)[rhsIndex] = (*nodeItr);
+	    }
+    
+	} // end if (boundary)
+
+    } // end else (if model == CONTINUUM_MODEL) 
+
+    // TRI + ELECTRODE SET + GAP MODEL
+    // -------------------------------
+    else if (electrodeModel == GAP_MODEL ) 
+    {
+      // print out the current pattern
+      // -----------------------------
+      for (int i = 0; i < numElectrodes; i++)
+      {
+      	  cout << i << "  " << (*currentPattern)[i] << endl;
       }
 
-      // TRI + ELECTRODE SET + CONTINUUM MODEL
-      else if (electrodeModel == 0) // continuum model
+      // print out number of electrodes according to electrode manager
+      cout << "Creating " << numElectrodes << " electrodes of length " << electrodeLen << endl;
+
+      // Note:
+      // Originally, we didn't execute if an electrode interp field was not supplied because
+      // this is the only way we know where the electrodes are on the input mesh.
+      // Supplying a point cloud field of electrode positions could still be an option, but it is not supported now.
+      // The equivalent effect can be obtained using the ElectrodeManager module.
+      // The hInterp input is ignored by this part of ApplyFEMCurrentSource.
+      // -----------------------------------------------------------------------------------------------------------
+
+      // The code below places electrodes on the boundary of the input field.
+      // --------------------------------------------------------------------
+
+      // Traverse the boundary (curve) field and determine its length
+      if (!boundary)
       {
-	int count = 0;
-	// start with the first electrode node
-          hTriMesh->synchronize(Mesh::EDGES_E | Mesh::NODE_NEIGHBORS_E);
-          int startNode = interp->fdata()[0].begin()->first;
-          Point startCoord;
-          hTriMesh->get_point(startCoord, startNode);
-          Point coord,currCoord,nextCoord;
-          int currNode = startNode;
-          currCoord = startCoord;
-          int nextNode, lastNode;
-          double radius, nextTheta, s;
-          double boundaryRadius = sqrt(pow(startCoord.x(),2) + pow(startCoord.y(),2));
-          double theta = Atan(startCoord.y()/startCoord.x());
-	  //          cout << "x: " << startCoord.x() << "  y: " << startCoord.y() << "  theta : " << theta << endl;
+	  error("Cannot proceed without a field boundary");
+	  return;
+      }
+                              
+      // Iterate over edges in the boundary and build a look-up-table that maps each
+      // node index to its neighbor node indices
+      CurveMesh::Node::size_type nsize;
+      hBoundaryMesh->size(nsize);
+      int numBoundaryNodes = (int) nsize;
 
-            // find the next node in order to determine value for arclength
-            TriSurfMesh::Node::array_type neib_nodes;
-            neib_nodes.clear();
-            hTriMesh->get_neighbors(neib_nodes, TriSurfMesh::Node::index_type(currNode));
-            // find the neighbor that is on the boundary and of increasing angle
-            for (unsigned int jj=0; jj<neib_nodes.size(); jj++)
-  	    {
-              hTriMesh->get_point(coord,neib_nodes[jj]);
-              //cout << "x " << coord.x() << "  y " << coord.y();
-              radius = sqrt(pow(coord.x(),2) + pow(coord.y(),2));
-              if ((coord.x() < 0) && (coord.y() > 0)) nextTheta = Atan(coord.y()/(coord.x() + 0.0000000001)) + 3.14159;
-              if ((coord.x() < 0) && (coord.y() < 0)) nextTheta = Atan(coord.y()/(coord.x() + 0.0000000001)) + 3.14159;
-              if ((coord.x() > 0) && (coord.y() < 0)) nextTheta = Atan(coord.y()/(coord.x() + 0.0000000001)) + 2*3.14159;
-              if ((coord.x() > 0) && (coord.y() > 0)) nextTheta = Atan(coord.y()/(coord.x() + 0.0000000001));
+      Array1<Array1<CurveMesh::Node::index_type> > neighborNodes;
+      neighborNodes.resize(numBoundaryNodes);
 
-              //cout << " theta " << theta << " nextTheta " << nextTheta << " radius " << radius << endl;
-              // if the radial distance of this point from the center is within 
-              // 3% of the boundary radius and the angle is increasing
-              if ((abs(boundaryRadius-radius) < (0.03)*boundaryRadius) && (nextTheta > theta))
-	      {
-                nextNode=neib_nodes[jj];
-                break;
+      Array1<Array1<CurveMesh::Edge::index_type> > neighborEdges;
+      neighborEdges.resize(numBoundaryNodes);
+
+      Array1<double> edgeLength;
+      edgeLength.resize(numBoundaryNodes);
+
+      CurveMesh::Node::array_type childNodes;
+
+      CurveMesh::Edge::iterator edgeItr;
+      CurveMesh::Edge::iterator edgeItrEnd;
+
+      hBoundaryMesh->begin(edgeItr);
+      hBoundaryMesh->end(edgeItrEnd);
+
+      double boundaryLength = 0.0;
+
+      for (; edgeItr != edgeItrEnd; ++edgeItr) 
+      {		  
+          hBoundaryMesh->get_nodes(childNodes, *edgeItr);
+          unsigned int nodeIndex0 = (unsigned int) childNodes[0];
+          unsigned int nodeIndex1 = (unsigned int) childNodes[1];
+
+          neighborNodes[nodeIndex0].add(nodeIndex1);
+          neighborNodes[nodeIndex1].add(nodeIndex0);   
+          neighborEdges[nodeIndex0].add(*edgeItr);
+          neighborEdges[nodeIndex1].add(*edgeItr);
+
+          // Store the edge length for future reference
+          edgeLength[(unsigned int) *edgeItr] = hBoundaryMesh->get_size(*edgeItr);
+
+          // Accumulate the total boundary length
+          boundaryLength += edgeLength[(unsigned int) *edgeItr];
+
+      }
+
+      cout << "Boundary length: " << boundaryLength << endl;
+
+      double electrodeSeparation = boundaryLength / numElectrodes;
+
+      cout << "Electrode separation = " << electrodeSeparation << endl;
+
+      // Using the map we just created (neighborNodes), traverse the boundary and assign electrode nodes
+      // Create an array that maps boundary node index to electrode index. Initialize this array to -1's
+      // meaning each boundary node is not assigned to an electrode. A boundary node may only belong to 
+      // one electrode.
+
+      Array1<int> nodeElectrodeMap;
+      nodeElectrodeMap.resize(numBoundaryNodes);
+      for (int i = 0; i < numBoundaryNodes; i++)
+      {
+          nodeElectrodeMap[i] = -1;
+      }
+
+      Array1<Array1<bool> > nodeFlags;
+      nodeFlags.resize(numBoundaryNodes);
+      for (int i = 0; i < numBoundaryNodes; i++)
+      {
+	  nodeFlags[i].resize(2);
+          for (int j = 0; j < 2; j++)
+	  {
+              nodeFlags[i][j] = false;
+	  }
+      }
+
+      Array1<Array1<double> > adjacentEdgeLengths;
+      adjacentEdgeLengths.resize(numBoundaryNodes);
+      for (int i = 0; i < numBoundaryNodes; i++)
+      {
+	  adjacentEdgeLengths[i].resize(2);
+          for (int j = 0; j < 2; j++)
+	  {
+             adjacentEdgeLengths[i][j] = 0.0;
+	  }
+      }
+
+      // Let the node in the boundary mesh given by startNodeIndex (in the electrodeParams input) be the 
+      // first node in the first electrode.
+      int prevNode = -1;
+      int currNode = startNodeIndex;
+      int nextNode = neighborNodes[currNode][1];  // selecting element [0] or [1] influences the direction
+                                                  // in which we traverse the boundary (this should be investigated;
+                                                  // [1] seems to work well relative to the analytic solution.
+
+      double cumulativeElectrodeLength = 0.0;
+      double cumulativeElectrodeSeparation = 0.0;
+
+      bool done = false;
+
+      double maxError = boundaryLength/numBoundaryNodes/2;  // maximum error we can accept = 1/2 avg. edge length
+      double currError = 0.0;  // abs difference between a desired length and a current cumulative length
+
+      int currEdgeIndex = 0;   // index of the boundary edge currently being considered
+
+      bool firstNode = true;  // flag to indicate this is the first node in an electrode
+
+      for (int i = 0; i < numElectrodes; i++)
+      {
+
+          int lastElectrodeNode = -1;  // for use in determining first node in next electrode
+
+	  cout << "Gap=================== i = " << i << " =============================" << endl;
+          while (!done)
+	  {
+	      // Label the current node with the current electrode ID 
+	      if (nodeElectrodeMap[currNode] == -1) 
+              {
+                  nodeElectrodeMap[currNode] = i;
 	      }
-	    }
-            hTriMesh->get_point(nextCoord,nextNode);
 
-            s = sqrt(pow((currCoord.x()-nextCoord.x()),2) + pow((currCoord.y()-nextCoord.y()),2));
-
-            double current =  CalculateCurrent(theta, s, k, numElectrodes); // contribution to current node
-            cout << current << endl;
-          // compute current for this node
-	    (*rhs)[startNode] = current; //CalculateCurrent(theta,s,k,numElectrodes); // contribution to current node
-
-          cout << startNode << "  "<<(*rhs)[startNode] << endl;
-
-          lastNode = startNode;
-          // initialize cumulativeDistance and lastNode
-          double cumulativeDistance = 0.0;
-          double cumulativeTheta = theta;
-          while ((cumulativeDistance < 2*3.14159*boundaryRadius) && (count < 128))
- 	  {
-            count++;
-            cout << count << endl;
-            // find the next node
-            TriSurfMesh::Node::array_type neib_nodes;
-            neib_nodes.clear();
-            hTriMesh->get_neighbors(neib_nodes, TriSurfMesh::Node::index_type(currNode));
-            // find the neighbor that is on the boundary and of increasing angle
-            for (unsigned int jj=0; jj<neib_nodes.size(); jj++)
-  	    {
-              hTriMesh->get_point(coord,neib_nodes[jj]);
-              //cout << "x " << coord.x() << "  y " << coord.y();
-              radius = sqrt(pow(coord.x(),2) + pow(coord.y(),2));
-              if ((coord.x() < 0) && (coord.y() > 0)) nextTheta = Atan(coord.y()/(coord.x() + 0.0000000001)) + 3.14159;
-              if ((coord.x() < 0) && (coord.y() < 0)) nextTheta = Atan(coord.y()/(coord.x() + 0.0000000001)) + 3.14159;
-              if ((coord.x() > 0) && (coord.y() < 0)) nextTheta = Atan(coord.y()/(coord.x() + 0.0000000001)) + 2*3.14159;
-              if ((coord.x() > 0) && (coord.y() > 0)) nextTheta = Atan(coord.y()/(coord.x() + 0.0000000001));
-
-              //cout << " theta " << theta << " nextTheta " << nextTheta << " radius " << radius << endl;
-              // if the radial distance of this point from the center is within 
-              // 3% of the boundary radius and the angle is increasing
-              if ((abs(boundaryRadius-radius) < (0.03)*boundaryRadius) && (neib_nodes[jj] != lastNode) && (count < 128))
-	      {
-                nextNode=neib_nodes[jj];
-                break;
+              if (firstNode) 
+              {
+		  cout << "First node is: " << currNode << endl;
+                  nodeFlags[currNode][0] = true;
+                  firstNode = false;
 	      }
-	    }
-            hTriMesh->get_point(nextCoord,nextNode);
 
-            s = sqrt(pow((currCoord.x()-nextCoord.x()),2) + pow((currCoord.y()-nextCoord.y()),2));
-            cumulativeDistance = cumulativeDistance + s;
-            cumulativeTheta = cumulativeTheta + nextTheta;
+  	      // Traverse the boundary until distance closest to the desired electrode length is achieved.
+              // -----------------------------------------------------------------------------------------
 
-            if ((cumulativeDistance > 2*3.14159*boundaryRadius)|| (count > 127)) break;
+              // First, determine if this is the degenerate 1-node electrode case
+              // ----------------------------------------------------------------
+              if (electrodeLen <= maxError)
+	      {
+                  nodeFlags[currNode][1] = true;  // the current node is the last node
+                  done = true;
+                  cumulativeElectrodeLength = 0.0;
+                  cout << "done with this electrode (aa) " << currNode << " is last node in this electrode" << endl;
+                  lastElectrodeNode = currNode;
+	      }
+             
+              // Find the index of the edge between currNode and nextNode
+              // --------------------------------------------------------
+  	      int candidateEdgeIndex0 = neighborEdges[currNode][0];
+	      int candidateEdgeIndex1 = neighborEdges[currNode][1];
 
-            //cout << " cumulativeDistance = " << cumulativeDistance << " theta = " << theta << " nextTheta = " << nextTheta <<  endl;
-           
-            double current =  CalculateCurrent(nextTheta, s, k, numElectrodes); // contribution to current node
-            cout << current << endl;
+              if ((int) neighborEdges[nextNode][0] == candidateEdgeIndex0 )
+	      {
+  		  currEdgeIndex = candidateEdgeIndex0;
+	      }
+              else if ((int) neighborEdges[nextNode][1] == candidateEdgeIndex0 )
+	      {
+		  currEdgeIndex = candidateEdgeIndex0;
+	      }
+              else if ((int) neighborEdges[nextNode][0] == candidateEdgeIndex1 )
+	      {
+	          currEdgeIndex = candidateEdgeIndex1;
+	      }
+              else if ((int) neighborEdges[nextNode][1] == candidateEdgeIndex1 )
+	      {
+	          currEdgeIndex = candidateEdgeIndex1;
+	      }
 
-            (*rhs)[nextNode] = current; //CalculateCurrent(nextTheta, s, k, numElectrodes); // contribution to current node
+	      // For first nodes that are not also last nodes, store the forward direction adjacent edge length
+              if (nodeFlags[currNode][1] != true)
+	      {
+                  adjacentEdgeLengths[currNode][1] = edgeLength[currEdgeIndex];
+	      }
+              
+              // Handle case where electrode covers more than one node
+              if (!done)  
+	      {
+		  // Determine if it is better to include the next node or the next two nodes 
+                  // (If the effective electrode length will be closer to the desired electrode length.)
+
+	          double testLength1 = cumulativeElectrodeLength + edgeLength[currEdgeIndex];
+                  double testError1 = abs(electrodeLen - testLength1);
+
+                  // advance along boundary to test addition of the next node
+                  int tempPrevNode = currNode;
+                  int tempCurrNode = nextNode;
+                  int tempNextNode = -1;
+                  if ((int) neighborNodes[tempCurrNode][1] != tempPrevNode)
+	          {
+                      tempNextNode = (int) neighborNodes[tempCurrNode][1];
+	          }
+	          else
+	          {
+                      tempNextNode = (int) neighborNodes[tempCurrNode][0];
+	          }
+  
+                  // Find the index of the edge between tempCurrNode and tempNextNode
+                  // ----------------------------------------------------------------
+  	          int candidateEdgeIndex0 = neighborEdges[tempCurrNode][0];
+	          int candidateEdgeIndex1 = neighborEdges[tempCurrNode][1];
+
+                  int tempEdgeIndex = -1;
+
+                  if ((int) neighborEdges[tempNextNode][0] == candidateEdgeIndex0 )
+	          {
+  		      tempEdgeIndex = candidateEdgeIndex0;
+	          }
+                  else if ((int) neighborEdges[tempNextNode][1] == candidateEdgeIndex0 )
+	          {
+		      tempEdgeIndex = candidateEdgeIndex0;
+	          }
+                  else if ((int) neighborEdges[tempNextNode][0] == candidateEdgeIndex1 )
+	          {
+	              tempEdgeIndex = candidateEdgeIndex1;
+	          }
+                  else if ((int) neighborEdges[tempNextNode][1] == candidateEdgeIndex1 )
+	          {
+	              tempEdgeIndex = candidateEdgeIndex1;
+	          }
+
+	          double testLength2 = testLength1 + edgeLength[tempEdgeIndex];
+                  double testError2 = abs(electrodeLen - testLength2);
+
+                  if (testError1 < testError2)
+		  {
+  		      // this means the nearer node achieves an electrode length closer to that desired
+                      // and that this node is the last node in the electrode
+  		      nodeElectrodeMap[nextNode] = i;
+                      nodeFlags[nextNode][1] = true;
+                      cumulativeElectrodeLength = testLength1;
+  	             
+                      // We also need to store the backward direction adjacent edge length for nextNode
+                      adjacentEdgeLengths[nextNode][0] = edgeLength[currEdgeIndex];
+
+                      done = true;
+		      cout << "Last node is: " << nextNode << endl;
+                      lastElectrodeNode = nextNode;
+
+		  }
+                  else
+		  {
+                      // this means the further node achieves an electrode length closer to that desired
+  		      nodeElectrodeMap[nextNode] = i;
+                      cumulativeElectrodeLength = testLength1;
+
+                      // For middle nodes, we need to store both the backward and forward adjacent edge lengths for nextNode
+                      adjacentEdgeLengths[nextNode][0] = edgeLength[currEdgeIndex];
+                      adjacentEdgeLengths[nextNode][1] = edgeLength[tempEdgeIndex];
+
+		      cout << "Node " << nextNode << " is a middle node" << endl;
+
+		  }
+
+                  // advance node pointers whether the electrode stops or continues
+                  prevNode = tempPrevNode;
+                  currNode = tempCurrNode;
+                  nextNode = tempNextNode;
+
+	      } // end if (!done)
+
+          }  // end while (!done)
+
+	  // At this point, we've finished with the current electrode.
+          // Now we need to find the first node in the next electrode - this will be based on the value of
+          // cumulativeElectrodeSeparation which we can initialize here to the value of cumulativeElectrodeLength.
+	  cumulativeElectrodeSeparation = cumulativeElectrodeLength;
+          cout << "cumulativeElectrodeSeparation = " << cumulativeElectrodeSeparation << endl;
+
+          bool startNewElectrode = false;
+
+          while (!startNewElectrode)
+	  {
+	      cumulativeElectrodeSeparation += edgeLength[currEdgeIndex];
+
+              currError = abs(electrodeSeparation - cumulativeElectrodeSeparation);
+
+              if (currError <= maxError)
+	      {
+		  // We're within 1/2 an edge segment of the ideal electrode separation.
+		  prevNode = currNode;
+                  currNode = nextNode;
+
+                  // Initialize nextNode
+                  if ((int) neighborNodes[currNode][1] != prevNode)
+	          {
+                      nextNode = neighborNodes[currNode][1];
+	          }
+	          else
+	          {
+                      nextNode = neighborNodes[currNode][0];
+	          }
+
+                  startNewElectrode = true;
+                      
+
+		  cout << "First node in next electrode : " << currNode << endl;
+	      }
+              else if (cumulativeElectrodeSeparation > electrodeSeparation)
+	      {
+		  // The current error is greater than we allow, and we've exceeded the separation we want.
+		  // We're trying to make the first node in the next electrode equal to the last node 
+                  // in the last electrode - this is not allowed
+	          error("Electrodes cannot overlap.");
+	          return;                  
+	      }
+              // Otherwise,
+              // The current error is greater than 1/2 an edge segment, and the cumulativeElectrodeSeparation
+              // is still less than what we want. This happens when we have more than one non-electrode
+              // node between electrodes.
+              // do nothing in this case... 
+                 
+	      if (!startNewElectrode)
+	      {
+                  prevNode = currNode;
+                  currNode = nextNode;
+                  if ((int)neighborNodes[currNode][1] != prevNode)
+	          {
+                      nextNode = neighborNodes[currNode][1];
+	          }
+	          else
+	          {
+                      nextNode = neighborNodes[currNode][0];
+	          }
+                  cout << "prev: " << prevNode << " curr: " << currNode << " next: " << nextNode << endl;        
+	      }
+
+	  }  // end while (!startNewElectrode)
+
+	  done = false;
+          firstNode = true;
+          cumulativeElectrodeLength = 0.0;
+          cumulativeElectrodeSeparation = 0.0;
+
+      } 
+
+      // The following code was used for testing while under development - commented out for now
+     
+      for (int i = 0; i < numBoundaryNodes; i++)
+      {
+          cout << i << "  " << nodeElectrodeMap[i] << endl;
+      }
+
+      for (int i = 0; i < numBoundaryNodes; i++)
+      {
+      	  cout << i << "  " << (int) nodeFlags[i][0] << " " << (int) nodeFlags[i][1] << endl;
+      }
+
+      for (int i = 0; i < numBoundaryNodes; i++)
+      {
+      	  cout << i << "  " << adjacentEdgeLengths[i][0] << "  " << adjacentEdgeLengths[i][1] << endl;
+      }
+      
+
+      cout << "Currents assigned to electrode nodes" << endl;
+      cout << "------------------------------------" << endl;
+
+      // Determine the currents for the RHS vector
+      // -----------------------------------------
+      for (int i = 0; i < numBoundaryNodes; i++)
+      {
+	// Note: size of the currentPattern vector must be equal to the number of electrodes!!
+        // test this above
+        // -----------------------------------------------------------------------------------
+	  if (nodeElectrodeMap[i] != -1 )  // this is an electrode node
+	  {
+	      double basisInt = 0.0;
+              double current = 0.0;
+              if ( (nodeFlags[i][0] == 1) && (nodeFlags[i][1] == 1) )  // special case: single node electrode
+	      {
+		  current = (*currentPattern)[ nodeElectrodeMap[i] ];
+	      }
+  	      else if (nodeFlags[i][0] == 1)  // this is the first node in an electrode
+	      {
+		  basisInt = 0.5 * adjacentEdgeLengths[i][1];
+                  current = basisInt * (*currentPattern)[ nodeElectrodeMap[i] ];
+	      }
+              else if (nodeFlags[i][1] == 1)  // this is the last node in an electrode
+	      {
+		  basisInt = 0.5 * adjacentEdgeLengths[i][0];
+                  current = basisInt * (*currentPattern)[ nodeElectrodeMap[i] ];
+
+	      }
+	      else  // this is a middle node in an electrode
+	      {
+	          basisInt = 0.5 * adjacentEdgeLengths[i][0] + 0.5 * adjacentEdgeLengths[i][1];
+                  current = basisInt * (*currentPattern)[ nodeElectrodeMap[i] ];
+              }
+
+              Array1<int>       meshNodeIndex;
+              Array1<double>    weight;
+
+              // Find the corresponding TriSurfMesh node index
+	      hBoundaryToMesh->getRowNonzeros(i, meshNodeIndex, weight);
+	
+              //cout << "Gap Model " << i << "  equivalent node meshNodeIndex[0] = " << meshNodeIndex[0] << endl; 
+              
+              int rhsIndex = meshNodeIndex[0];
+
+              (*rhs)[rhsIndex] = current;
+
+              cout << "Bound. Idx: " << i << " Mesh Idx: " << rhsIndex << " current: " << current << endl;
+
+              // Tag this node as an "electrode" node using the electrode index
+              (*meshToElectrodeMap)[rhsIndex] = nodeElectrodeMap[i];
+
+          }
+      }
+
+      // The following code was used for testing while under development - commented out for now
+      
+      //TriSurfMesh::Node::size_type msize;
+      //hTriMesh->size(msize);
+      //int numMeshNodes = (int) msize;
+
+
+      //cout << "There are " << numMeshNodes << " nodes in the TriSurf field" << endl;
+     
+      //for (int i = 0; i < numMeshNodes; i++)
+      //{
+      //          cout << (*rhs)[i] << endl;
+      //}
+
+    } // end if GAP model
    
-            cout << nextNode << "  "<< (*rhs)[nextNode] << endl;
+    //  Debugging statements - leave commented out for now
+    //  TriSurfMesh::Node::size_type msize;
+    //  hTriMesh->size(msize);
+    //  int numMeshNodes = (int) msize;
 
-            lastNode = currNode;
-            currNode = nextNode;
-            currCoord = nextCoord;
-            theta = nextTheta;
+    //  for (int i = 0; i < numMeshNodes; i++)
+    //  {
+    //	if ( abs( (*rhs)[i] ) > 0 )  cout << "mesh node index: " << i << " "<< (*rhs)[i] << endl;
+    //  }
 
-	  } // end while cumulativeDistance
-      } // end else (if model == 0) 
-    } // end if interp.get_rep()
-  } // end electrode set else clause
-
-  //! Sending result
-  oportRhs_->send(MatrixHandle(rhs)); 
- }
-
+    //! Send the meshToElectrodeMap
+    oportMeshToElectrodeMap_->send(MatrixHandle(meshToElectrodeMap)); 
+    
 }
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//
+// ApplyFEMCurrentSource::CalcContinuumTrigCurrent
+//
+// Description:
+//
+// Inputs:
+//
+// Returns: 
+//
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+double ApplyFEMCurrentSource::CalcContinuumTrigCurrent(Point p, int k, int numBoundaryNodes)
+{
+    double current;
+
+    double theta = ComputeTheta(p);
+
+    cout << "p = " << p.x() << "," << p.y() << "  theta = " << theta*180/PI << " k = " << k ;
+    cout << " numBoundaryNodes = " << numBoundaryNodes << endl;  
+    
+    if ( k < (numBoundaryNodes/2) + 1 )
+    {
+        cout << "using cos" << endl;
+        current = cos(k*theta);
+    }
+    else
+    {
+        cout << "using sin" << endl;
+        current = sin((k-numBoundaryNodes/2)*theta);
+    }
+
+    cout << "current = " << current << endl;
+
+    return current;
+}
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//
+// ApplyFEMCurrentSource::ComputeTheta
+//
+// Description: Find the angle, theta, the input point makes with the positive x axis.
+//              This is a helper method for CalcContinuumTrigCurrent.
+//
+// Inputs:  Point p
+//
+// Returns: double theta, ( 0 <= theta < 2*PI )
+//
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+double ApplyFEMCurrentSource::ComputeTheta(Point p)
+{
+
+    double theta = 0.0;
+
+    if ((p.x() <= 0) && (p.y() >= 0)) 
+    {
+        theta = Atan(p.y()/(p.x() + 0.0000000001)) + PI;
+    }
+
+    if ((p.x() <= 0) && (p.y() <= 0)) 
+    {
+        theta = Atan(p.y()/(p.x() + 0.0000000001)) + PI;
+    }
+
+    if ((p.x() >= 0) && (p.y() <= 0)) 
+    {
+        theta = Atan(p.y()/(p.x() + 0.0000000001)) + 2*PI;
+    }
+
+    if ((p.x() >= 0) && (p.y() >= 0))
+    {
+        theta = Atan(p.y()/(p.x() + 0.0000000001));
+    }
+
+    return theta;
+}
+
+// old version
 
 double ApplyFEMCurrentSource::CalculateCurrent(double theta,double arclength, int index, int numElectrodes)
 {
@@ -927,7 +1448,6 @@ double ApplyFEMCurrentSource::CalculateCurrent(double theta,double arclength, in
     {
     current = arclength * sin(((index+1)-numElectrodes/2)*theta);
     }
-
   return current;
 }
 
