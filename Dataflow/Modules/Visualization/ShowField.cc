@@ -87,6 +87,7 @@ class ShowField : public Module
   GuiInt                   normalize_vectors_;
   GuiInt                   has_vector_data_;
   GuiInt                   bidirectional_;
+  GuiInt                   vector_usedefcolor_;
   bool                     data_dirty_;
   string                   cur_field_data_type_;
   Field::data_location     cur_field_data_at_;
@@ -205,6 +206,7 @@ ShowField::ShowField(GuiContext* ctx) :
   normalize_vectors_(ctx->subVar("normalize-vectors")),
   has_vector_data_(ctx->subVar("has_vector_data")),
   bidirectional_(ctx->subVar("bidirectional")),
+  vector_usedefcolor_(ctx->subVar("vector-usedefcolor")),
   data_dirty_(true),
   cur_field_data_type_("none"),
   cur_field_data_at_(Field::NONE),
@@ -738,6 +740,7 @@ ShowField::execute()
 					     fld_handle,
 					     color_map_,
 					     def_material_,
+					     vector_usedefcolor_.get(),
 					     vdt, vscale,
 					     normalize_vectors_.get(),
 					     bidirectional_.get(),
@@ -1073,7 +1076,6 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     maybe_execute(DATA); // Must redraw the vectors.
   } else if (args[1] == "toggle_bidirectional"){
     // Toggle the GeomSwitch.
-    bidirectional_.reset();
     data_dirty_ = true;
     maybe_execute(DATA); // Must redraw the vectors.
   } else if (args[1] == "execute_policy"){

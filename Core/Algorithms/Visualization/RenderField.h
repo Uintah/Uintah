@@ -1597,6 +1597,7 @@ public:
 				 FieldHandle cfld_handle,
 				 ColorMapHandle cmap,
 				 MaterialHandle default_material,
+				 bool force_def_color,
 				 const string &data_display_mode,
 				 double scale, bool normalize,
 				 bool bidirectional,
@@ -1622,6 +1623,7 @@ public:
 				 FieldHandle cfld_handle,
 				 ColorMapHandle cmap,
 				 MaterialHandle default_material,
+				 bool force_def_color,
 				 const string &data_display_mode,
 				 double scale,
 				 bool normalize,
@@ -1636,6 +1638,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 						FieldHandle cfld_handle,
 						ColorMapHandle cmap,
 						MaterialHandle default_material,
+						bool force_def_color,
 						const string &display_mode,
 						double scale, 
 						bool normalize,
@@ -1696,10 +1699,11 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   }
 
   // Use a default color?
-  bool def_color = !(cmap.get_rep());
+  bool def_color = !(cmap.get_rep()) || force_def_color;
   bool vec_color = false;
   MaterialHandle vcol(0);
-  if (def_color && cfld->query_vector_interface().get_rep())
+  if (def_color && cfld->query_vector_interface().get_rep()
+      && !force_def_color)
   {
     def_color = false;
     vec_color = true;
