@@ -15,6 +15,21 @@
 #define SCI_Classlib_Assert_h 1
 
 #include <config.h>
+#ifdef SCI_ASSERTION_LEVEL_0
+#define SCI_ASSERTION_LEVEL 0
+#endif
+#ifdef SCI_ASSERTION_LEVEL_1
+#define SCI_ASSERTION_LEVEL 1
+#endif
+#ifdef SCI_ASSERTION_LEVEL_2
+#define SCI_ASSERTION_LEVEL 2
+#endif
+#ifdef SCI_ASSERTION_LEVEL_3
+#define SCI_ASSERTION_LEVEL 3
+#endif
+#ifdef SCI_ASSERTION_LEVEL_4
+#define SCI_ASSERTION_LEVEL 4
+#endif
 
 #include "Exceptions.h"
 
