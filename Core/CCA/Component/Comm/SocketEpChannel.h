@@ -32,7 +32,7 @@ namespace SCIRun {
     void openConnection();
     void activateConnection(void* obj);
     void closeConnection();
-    string getUrl(); 
+    std::string getUrl(); 
     Message* getMessage();
     void allocateHandlerTable(int size);
     void registerHandler(int num, void* handle);
@@ -42,7 +42,7 @@ namespace SCIRun {
   
     /////////////
     // Hostname of this computer
-    string hostname;
+    std::string hostname;
 
     /////////////
     // File descriptor for the socket
