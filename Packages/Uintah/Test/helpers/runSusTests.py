@@ -293,6 +293,11 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     memory_msg  = '\tSee %s/mem_leak_check.log.txt for more comparison information.' % (logpath)
     perf_msg  = '\tSee %s/performance_check.log.txt for more performance information.' % (logpath)
 
+  # actually run the test!
+  print "Command Line: %s %s" % (command, susinput)
+  rc = system("%s %s > sus.log.txt 2>&1" % (command, susinput))
+
+
   # determine path of replace_msg in 2 places to not have 2 different msgs.
   replace_msg = "\tTo replace the gold standard uda and memory usage with these results,\n\trun: "
 
@@ -304,11 +309,6 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     chdir("restart")
   else:
     replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())      
-
-  # actually run the test!
-  print "Command Line: %s %s" % (command, susinput)
-  rc = system("%s %s > sus.log.txt 2>&1" % (command, susinput))
-
 
   if rc != 0:
     print "\t*** Test %s failed with code %d" % (testname, rc)
