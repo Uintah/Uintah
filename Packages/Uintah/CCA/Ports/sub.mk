@@ -8,7 +8,8 @@ SRCS     += $(SRCDIR)/SimulationInterface.cc $(SRCDIR)/DataArchive.cc \
 	$(SRCDIR)/DataWarehouse.cc $(SRCDIR)/LoadBalancer.cc \
 	$(SRCDIR)/Output.cc \
 	$(SRCDIR)/ProblemSpecInterface.cc \
-	$(SRCDIR)/Scheduler.cc
+	$(SRCDIR)/Scheduler.cc \
+	$(SRCDIR)/SolverInterface.cc
 
 PSELIBS := \
 	Packages/Uintah/Core/Parallel    \
