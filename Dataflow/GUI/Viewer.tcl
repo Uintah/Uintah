@@ -619,8 +619,7 @@ itcl_class ViewWindow {
 	    puts "Non-existing frame to initialize!"
 	}
 
-        checkbutton $m.caxes -text "Center Axes" -variable $this-caxes -onvalue 1 -offvalue 0 -command "$this-c redraw"
-        # checkbutton $m.caxes -text "Center Axes" -variable $this-caxes -onvalue 1 -offvalue 0 -command "$this-c centerGenAxes; $this-c redraw"
+        checkbutton $m.caxes -text "Center Axes" -variable $this-caxes -onvalue 1 -offvalue 0 -command "$this-c centerGenAxes; $this-c redraw"
 	# checkbutton $m.iaxes -text "Icon Axes" -variable $this-iaxes -onvalue 1 -offvalue 0 -command "$this-c iconGenAxes; $this-c redraw"
 	# pack $m.caxes $m.iaxes -side top
 	pack $m.caxes -side top

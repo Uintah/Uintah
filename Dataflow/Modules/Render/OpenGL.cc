@@ -403,8 +403,8 @@ void OpenGL::redraw_frame()
   //  --  BAWGL  -- 
 #endif
   // Compute znear and zfar...
-  if(compute_depth(viewwindow, view, znear, zfar)){
 
+  if(compute_depth(viewwindow, view, znear, zfar)){
 
     // Set up graphics state
     glDepthFunc(GL_LEQUAL);
@@ -1379,10 +1379,11 @@ void OpenGL::redraw_frame()
 
     BBox bb;
     //    child->reset_bbox();
+
     child->get_bounds(bb);
     if(!bb.valid())
       return;
-
+    
     // might as well try and draw the arcball also...
 
     Point min,max;

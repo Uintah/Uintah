@@ -1724,19 +1724,17 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
     if( !bawgl_error ) bawgl->stop();
     // --  BAWGL -- 
   } else if(args[1] == "centerGenAxes") { 
-    // DMW: We'll check this in do_for_visible() instead
-//    if(caxes.get() == 1) {  // checked
-//      viewwindow_objs_draw[0] = 1;
-//    } else {    // unchecked
-//      viewwindow_objs_draw[0] = 0;
-//    }
-  } else if(args[1] == "iconGenAxes") {    
-    if(iaxes.get() == 1) {  // checked
-    } 
-    else {   // unchecked 
-    
+    // have to do this here, as well as in redraw() so the axes can be
+    // turned on/off even while spinning with inertia
+    if(caxes.get() == 1) {
+      viewwindow_objs_draw[0] = 1;
+    } else {
+      viewwindow_objs_draw[0] = 0;
     }
-
+  } else if(args[1] == "iconGenAxes") {    
+    if(iaxes.get() == 1) {
+    } else {    
+    }
   }else
     args.error("Unknown minor command '" + args[1] + "' for ViewWindow");
 }
@@ -1834,13 +1832,19 @@ void ViewWindow::redraw()
 {
   need_redraw=0;
   reset_vars();
-
   // Get animation variables
   double ct;
   if(!get_gui_doublevar(id, "current_time", ct)){
     manager->error("Error reading current_time");
     return;
   }
+
+  // Find out whether to draw the axes or not.  Generally, this is handled
+  //  in the centerGenAxes case of the tcl_command, but for the first redraw
+  //  it's needed here (can't check it in the constructor since the variable
+  //  might not exist on the tcl side yet)
+  viewwindow_objs_draw[0] = caxes.get();
+
   current_renderer->redraw(manager, this, ct, ct, 1, 0);
 }
 
@@ -1922,7 +1926,8 @@ void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
 {
 				// Do internal objects first...
   int i;
-  viewwindow_objs_draw[0]=caxes.get();
+//  viewwindow_objs_draw[0]=caxes.get();
+//  cerr << "caxes = "<<(int)viewwindow_objs_draw[0]<<"\n";
   for (i = 0; i < viewwindow_objs.size(); i++){
     if(viewwindow_objs_draw[i] == 1) {
       (r->*pmf)(manager, this, viewwindow_objs[i]);
