@@ -263,10 +263,8 @@ void HierarchicalRegridder::MarkPatches( const GridP& oldGrid, int levelIdx  )
       if (flaggedCellsExist(*d_dilatedCellsCreated[levelIdx], startCellSubPatch, endCellSubPatch)) {
         rdbg << "Marking Active [ " << levelIdx+1 << " ]: " << latticeStartIdx << endl;
         (*d_patchActive[levelIdx+1])[latticeStartIdx] = 1;
-      } else {
-        rdbg << "Not Marking Active [ " << levelIdx+1 << " ]: " << latticeStartIdx << endl;
       }
-      if (!flaggedCellsExist(*d_dilatedCellsDeleted[levelIdx], startCellSubPatch, endCellSubPatch)) {
+      else if (!flaggedCellsExist(*d_dilatedCellsDeleted[levelIdx], startCellSubPatch, endCellSubPatch)) {
         // Do we need to check for flagged cells in the children?
         IntVector childLatticeStartIdx = latticeStartIdx;
         IntVector childLatticeEndIdx = latticeEndIdx;
@@ -279,6 +277,8 @@ void HierarchicalRegridder::MarkPatches( const GridP& oldGrid, int levelIdx  )
           childLatticeStartIdx = childLatticeStartIdx * d_latticeRefinementRatio[childLevelIdx];
           childLatticeEndIdx = childLatticeEndIdx * d_latticeRefinementRatio[childLevelIdx];
         }
+      } else {
+        rdbg << "Not Marking or deleting [ " << levelIdx+1 << " ]: " << latticeStartIdx << endl;
       }
     }
   }
