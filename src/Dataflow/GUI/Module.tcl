@@ -449,14 +449,22 @@ itcl_class Module {
 
 	frame $w.fbuttons 
 	# TODO: unregister only for streams with the supplied output
+	button $w.fbuttons.clear -text "Clear" \
+	    -command "$this clearStreamOutput"
 	button $w.fbuttons.ok -text "OK" \
 	    -command "$this destroyStreamOutput $w"
 	
-	pack $w.fbuttons.ok -side bottom -padx 5 -pady 5 -ipadx 3 -ipady 3
+	pack $w.fbuttons.clear $w.fbuttons.ok -side left \
+	    -padx 5 -pady 5 -ipadx 3 -ipady 3
 	pack $w.log -side top -padx 5 -pady 5 -fill both -expand 1
 	pack $w.fbuttons -side bottom -padx 5 -pady 5 -fill none -expand 0
 
 	$msgLogStream registerOutput $w.log.txt
+    }
+
+    method clearStreamOutput { } {
+	# Clear the text widget 
+	$msgLogStream clearTextWidget
     }
     
     method destroyStreamOutput {w} {
