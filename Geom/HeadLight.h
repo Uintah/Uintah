@@ -21,10 +21,11 @@
 class HeadLight : public Light {
     Color c;
 public:
-    HeadLight(const Color&);
+    HeadLight(const clString& name, const Color&);
     virtual ~HeadLight();
     virtual void compute_lighting(const View& view, const Point& at,
 				  Color&, Vector&);
+    virtual GeomObj* geom();
 #ifdef SCI_OPENGL
     virtual void opengl_setup(const View& view, DrawInfoOpenGL*, int& idx);
 #endif
