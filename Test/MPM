@@ -62,7 +62,7 @@ for test in TESTS:
     else:
 	print "\tComparing dat files"
 	errors_to = environ['ERRORS_TO']
-	if environ['errormail'] != "yes":
+	if environ['ERRORMAIL'] != "yes":
 	    errors_to = ""
     	rc = system("dat_test %s %s/MPM-%s %s/SCIRun/src/Packages/Uintah/Test/ComparisonDats/%s '%s' > dat_test.log 2>&1" % (testname, environ['BUILDROOT'], mode, environ['BUILDROOT'], environ['OS'], errors_to))
     	if rc != 0:
