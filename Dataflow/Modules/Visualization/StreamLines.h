@@ -61,9 +61,9 @@ typedef struct _SLData {
   _SLData() : lock("StreamLines Lock") {}
 } SLData;
 
-void StreamLinesCleanupPoints(vector<Point> &v, const vector<Point> &input,
-			      double e2);
 
+vector<Point>::iterator
+StreamLinesCleanupPoints(vector<Point> &input, double e2);
 
 class StreamLinesAlgo : public DynamicAlgoBase
 {
@@ -414,9 +414,7 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::FindNodes(vector<Point> &v,
 
   if (remove_colinear_p)
   {
-    vector<Point> tmp;
-    StreamLinesCleanupPoints(tmp, v, 1.0e-6);
-    v = tmp;
+    v.erase(StreamLinesCleanupPoints(v, 1.0e-6), v.end());
   }
 }
 						  
