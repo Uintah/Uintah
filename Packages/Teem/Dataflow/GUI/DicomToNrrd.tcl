@@ -24,9 +24,9 @@ itcl_class Teem_DataIO_DicomToNrrd {
 
     method set_defaults {} {
 	global $this-dir
-	global $this-start-index
-	global $this-end-index
-        global $this-browse
+	#global $this-start-index
+	#global $this-end-index
+        #global $this-browse
         global $this-series-uid
         global $this-series-files
         global $this-messages
@@ -34,9 +34,9 @@ itcl_class Teem_DataIO_DicomToNrrd {
         global $this-series-del
         global $this-dir-tmp
 	set $this-dir [pwd]
-	set $this-start-index 0
-	set $this-end-index 0
-	set $this-browse 0
+	#set $this-start-index 0
+	#set $this-end-index 0
+	#set $this-browse 0
         set $this-series-uid ""
         set $this-series-files ""
         set $this-messages ""
@@ -73,7 +73,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
              $this UpdateSeriesUIDs"
        
 
-	entry $w.row10.browse -textvariable $this-browse
+	#entry $w.row10.browse -textvariable $this-browse
 	
 	label $w.row10.dir_label -text "Directory  " 
 	entry $w.row10.dir -textvariable $this-dir -width 80
