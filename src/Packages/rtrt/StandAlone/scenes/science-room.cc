@@ -65,8 +65,8 @@ using SCIRun::Thread;
 #define ADD_VIS_FEM
 #define ADD_HEAD
 #define ADD_CSAFE_FIRE
-//#define ADD_GEO_DATA
-#define ADD_GEO_DATA2
+#define ADD_GEO_DATA
+//#define ADD_GEO_DATA2
 #define ADD_SHEEP
 #define ADD_DTIGLYPH
 
