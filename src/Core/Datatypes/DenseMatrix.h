@@ -134,12 +134,6 @@ public:
   void mult(double s);
   virtual DenseMatrix* clone();
   
-#if defined(HAVE_LAPACK)
-  //    virtual void svd(DenseMatrix&, SparseRowMatrix&, DenseMatrix&);
-  //  virtual void eigenvalues(ColumnMatrix&, ColumnMatrix&);
-  //  virtual void eigenvectors(ColumnMatrix&, ColumnMatrix&, DenseMatrix&);
-#endif
-
   //! Friend functions
   friend SCICORESHARE void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
   friend SCICORESHARE void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
