@@ -54,3 +54,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PROGRAM := $(SRCDIR)/FieldTextToBin
 SRCS := $(SRCDIR)/FieldTextToBin.cc
 include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/GenerateMPMData
+SRCS := $(SRCDIR)/GenerateMPMData.cc
+include $(SCIRUN_SCRIPTS)/program.mk
