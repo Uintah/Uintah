@@ -15,6 +15,7 @@
 #include <Packages/Uintah/Core/Grid/PerPatchBase.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
+#include <Core/Geometry/IntVector.h>
 
 #include <iosfwd>
 

@@ -102,7 +102,7 @@ void ScalarFieldExtractor::setVars()
 
 
   // get all of the ScalarField Variables
-  for( int i = 0; i < names.size(); i++ ){
+  for( int i = 0; i < (int)names.size(); i++ ){
     const TypeDescription *td = types[i];
     const TypeDescription *subtype = td->getSubType();
     cerr << "\tVariable: " << names[i] << ", type " << td->getName() << "\n";

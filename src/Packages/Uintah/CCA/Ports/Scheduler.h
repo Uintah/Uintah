@@ -5,11 +5,13 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <map>
 #include <list>
 #include <string>
 #include <set>
+#include <vector>
 
 namespace Uintah {
   using namespace std;

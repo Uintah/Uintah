@@ -74,7 +74,6 @@ void computeGridEigens(TensorField* tensorField,
   typename VectorField::mesh_handle_type vmh = eVectorField->get_typed_mesh();
 
   BBox box;
-  Point lb(0, 0, 0), ub(0, 0, 0);
   box = tmh->get_bounding_box();
 
   //resize the geometry
