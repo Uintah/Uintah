@@ -8,9 +8,9 @@ from sys import argv,exit
 TESTS = [   ("disks.ups",		    ["dbg", "opt"]),    \
     	    ("disks2mat.ups",		    ["dbg", "opt"]),    \
 	    ("disks2mat4patch.ups",	    ["dbg", "opt"]),	\
-    	    ("disks_4patch.ups",	    ["dbg", "opt"]), 	\
-	    ("disksel.ups",		    ["dbg", "opt"]), 	\
-	    ("disksplas.ups",		    ["dbg", "opt"]), 	\
+    	    ("disks2mat_fc.ups",	    ["dbg", "opt"]),    \
+    	    ("disks_complex.ups",	    ["dbg", "opt"]),    \
+	    ("disks_fracture.ups",	    ["dbg", "opt"]),	\
 	    ("heatcond.ups",		    ["dbg", "opt"]),	\
 	    ("heatcond2mat.ups",	    ["dbg", "opt"]),	\
     	    ("inclined_plane_sphere.ups",   ["dbg", "opt"]),	\
