@@ -42,9 +42,15 @@ PersistentTypeID GeomObj::type_id("GeomObj", "Persistent", 0);
 #define GEOM_LOCK_POOL_SIZE 257
 MutexPool lock_pool("GeomObj pool", GEOM_LOCK_POOL_SIZE);
 
+static int lock_pool_hash(GeomObj *ptr)
+{
+  long k = ((long)ptr) >> 3; // Disgard unused bits, byte aligned pointers.
+  return (int)((k^(3*GEOM_LOCK_POOL_SIZE+1))%GEOM_LOCK_POOL_SIZE);
+}   
+
 GeomObj::GeomObj(int id) :
   ref_cnt(0),
-  lock(*(lock_pool.getMutex(lock_pool.nextIndex()))),
+  lock(*(lock_pool.getMutex(lock_pool_hash(this)))),
   id(id),
   _id(0x1234567,0x1234567,0x1234567)
 {
@@ -52,7 +58,7 @@ GeomObj::GeomObj(int id) :
 
 GeomObj::GeomObj(IntVector i) :
   ref_cnt(0),
-  lock(*(lock_pool.getMutex(lock_pool.nextIndex()))),
+  lock(*(lock_pool.getMutex(lock_pool_hash(this)))),
   id( 0x1234567 ),
   _id(i)
 {
@@ -60,7 +66,7 @@ GeomObj::GeomObj(IntVector i) :
 
 GeomObj::GeomObj(int id_int, IntVector i) :
   ref_cnt(0),
-  lock(*(lock_pool.getMutex(lock_pool.nextIndex()))),
+  lock(*(lock_pool.getMutex(lock_pool_hash(this)))),
   id( id_int ),
   _id(i)
 {
@@ -68,7 +74,7 @@ GeomObj::GeomObj(int id_int, IntVector i) :
 
 GeomObj::GeomObj(const GeomObj&) :
   ref_cnt(0),
-  lock(*(lock_pool.getMutex(lock_pool.nextIndex())))
+  lock(*(lock_pool.getMutex(lock_pool_hash(this))))
   // TODO: id and _id uninitialized.
 {
 }
