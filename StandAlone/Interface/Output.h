@@ -11,7 +11,7 @@
 
 namespace Uintah {
    class ProcessorContext;
-   class Region;
+   class Patch;
 
 /**************************************
 
@@ -67,6 +67,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.8  2000/05/30 20:19:41  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.7  2000/05/15 19:39:52  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups

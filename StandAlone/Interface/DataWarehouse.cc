@@ -30,7 +30,7 @@ DataWarehouse::get(double& value, const std::string& name) const
 
 void
 DataWarehouse::get(CCVariable<Vector>&, const std::string& name,
-		   const Region*)
+		   const Patch*)
 {
     cerr << "DataWarehouse::get not done: " << name << "\n";
 }
@@ -38,6 +38,10 @@ DataWarehouse::get(CCVariable<Vector>&, const std::string& name,
 
 //
 // $Log$
+// Revision 1.6  2000/05/30 20:19:40  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.5  2000/05/11 20:10:22  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //
