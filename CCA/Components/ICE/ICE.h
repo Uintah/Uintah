@@ -79,7 +79,6 @@ using namespace SCIRun;
       
       void scheduleComputeLagrangianValues(SchedulerP&, 
                                           const PatchSet*,
-                                          const MaterialSubset*,
 					       const MaterialSet*);
                  
       void scheduleAddExchangeToMomentumAndEnergy(SchedulerP&, 
