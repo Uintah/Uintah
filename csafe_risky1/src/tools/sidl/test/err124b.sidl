@@ -1,0 +1,11 @@
+
+class z extends CIA.Throwable {
+};
+
+interface x {
+      void y(in int);
+};
+
+interface y extends x {
+      void y(in int) throws z;
+};

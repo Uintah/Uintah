@@ -1,0 +1,53 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (X11; I; IRIX64 6.5 IP28) [Netscape]">
+   <link rel=stylesheet type="text/css" href="http://www.sci.utah.edu/scirun_docs/doc/doc_styles.css">
+<TITLE>CVS Repository Information</TITLE>
+</HEAD>
+<body>
+
+<a href="http://www.sci.utah.edu"><img style="margin-left:-2em" src="/images/SCI_logo.gif" border="0" height="66" hspace=10 width="150"></a>
+
+<p class="title">CVS Repository Information</p>
+
+<p class="head">Adding or Updating a file in the repository</p>
+
+<p class="firstpara">Set these environmental variables first, or make
+sure they are set:</p>
+
+<pre class="example">
+setenv CVS_RSH ssh
+setenv CVSROOT csf.cs.utah.edu:/csafe_noexport/cvs/cvsroot
+setenv CVSUMASK 000
+</pre>
+
+<P class="nextpara">To add a new directory to the repository, go to the directory where you want it to be and use:
+
+<p class="example">cvs add &lt;dirname&gt;
+</p>
+
+<p class="nextpara">To add a new file to the repository, in the directory
+where you want the file to appear and use:</p>
+
+<P class="example">
+cvs add &lt;filename&gt;
+</p>
+
+<p class="nextpara">To commit changes to a file to the repository enter:</p>
+
+<P class="example">
+cvs commit -m "explain your changes" &lt;filename&gt;
+</p>
+
+<P class="nextpara">Access to the repository is password-protected.
+Your password is the same as your UNIX password. If you get any errors, first
+double check your environment settings, then send mail to <b>scirun-develop@cs.</b></p>
+
+<center>
+<hr>
+<p><font size=-1><a href="http://www.sci.utah.edu">Scientific Computing and Imaging Institute</a> &#149; <a href="http://www.utah.edu">University of Utah</a> &#149; (801) 585-1867</font></p>
+</center>
+
+</BODY>
+</HTML>

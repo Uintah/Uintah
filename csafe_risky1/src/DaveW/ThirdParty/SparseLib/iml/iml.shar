@@ -1,0 +1,876 @@
+#!/bin/sh
+# This is a shell archive (produced by shar 3.49)
+# To extract the files from this archive, save it to a file, remove
+# everything above the "!/bin/sh" line above, and type "sh file_name".
+#
+# made 01/05/1995 18:23 UTC by pozo@salsa
+# Source directory /tmp_mnt/home/fs3b/pozo/projects/SparseLib++/1.3/iml/include
+#
+# existing files will NOT be overwritten unless -c is specified
+#
+# This shar contains:
+# length  mode       name
+# ------ ---------- ------------------------------------------
+#   2037 -r--r--r-- bicg.h
+#   2227 -r--r--r-- bicgstab.h
+#   1711 -r--r--r-- cg.h
+#   1978 -r--r--r-- cgs.h
+#   2092 -r--r--r-- cheby.h
+#   3400 -r--r--r-- gmres.h
+#   1379 -r--r--r-- ir.h
+#   4089 -r--r--r-- qmr.h
+#
+# ============= bicg.h ==============
+if test -f 'bicg.h' -a X"$1" != X"-c"; then
+	echo 'x - skipping bicg.h (File already exists)'
+else
+echo 'x - extracting bicg.h (Text)'
+sed 's/^X//' << 'SHAR_EOF' > 'bicg.h' &&
+//*****************************************************************
+// Iterative template routine -- BiCG
+//
+// BiCG solves the unsymmetric linear system Ax = b 
+// using the Preconditioned BiConjugate Gradient method
+//
+// BiCG follows the algorithm described on p. 22 of the 
+// SIAM Templates book.
+//
+// The return value indicates convergence within max_iter (input)
+// iterations (0), or no convergence within max_iter iterations (1).
+//
+// Upon successful return, output arguments have the following values:
+//  
+//        x  --  approximate solution to Ax = b
+// max_iter  --  the number of iterations performed before the
+//               tolerance was reached
+//      tol  --  the residual after the final iteration
+//  
+//*****************************************************************
+X
+X
+template < class Matrix, class Vector, class Preconditioner, class Real >
+int 
+BiCG(const Matrix &A, Vector &x, const Vector &b,
+X     const Preconditioner &M, int &max_iter, Real &tol)
+{
+X  Real resid;
+X  Vector rho_1(1), rho_2(1), alpha(1), beta(1);
+X  Vector z, ztilde, p, ptilde, q, qtilde;
+X
+X  Real normb = norm(b);
+X  Vector r = b - A * x;
+X  Vector rtilde = r;
+X
+X  if (normb == 0.0)
+X    normb = 1;
+X  
+X  if ((resid = norm(r) / normb) <= tol) {
+X    tol = resid;
+X    max_iter = 0;
+X    return 0;
+X  }
+X
+X  for (int i = 1; i <= max_iter; i++) {
+X    z = M.solve(r);
+X    ztilde = M.trans_solve(rtilde);
+X    rho_1(0) = dot(z, rtilde);
+X    if (rho_1(0) == 0) { 
+X      tol = norm(r) / normb;
+X      max_iter = i;
+X      return 2;
+X    }
+X    if (i == 1) {
+X      p = z;
+X      ptilde = ztilde;
+X    } else {
+X      beta(0) = rho_1(0) / rho_2(0);
+X      p = z + beta(0) * p;
+X      ptilde = ztilde + beta(0) * ptilde;
+X    }
+X    q = A * p;
+X    qtilde = A.trans_mult(ptilde);
+X    alpha(0) = rho_1(0) / dot(ptilde, q);
+X    x += alpha(0) * p;
+X    r -= alpha(0) * q;
+X    rtilde -= alpha(0) * qtilde;
+X
+X    rho_2(0) = rho_1(0);
+X    if ((resid = norm(r) / normb) < tol) {
+X      tol = resid;
+X      max_iter = i;
+X      return 0;
+X    }
+X  }
+X
+X  tol = resid;
+X  return 1;
+}
+X  
+SHAR_EOF
+chmod 0444 bicg.h ||
+echo 'restore of bicg.h failed'
+Wc_c="`wc -c < 'bicg.h'`"
+test 2037 -eq "$Wc_c" ||
+	echo 'bicg.h: original size 2037, current size' "$Wc_c"
+fi
+# ============= bicgstab.h ==============
+if test -f 'bicgstab.h' -a X"$1" != X"-c"; then
+	echo 'x - skipping bicgstab.h (File already exists)'
+else
+echo 'x - extracting bicgstab.h (Text)'
+sed 's/^X//' << 'SHAR_EOF' > 'bicgstab.h' &&
+//*****************************************************************
+// Iterative template routine -- BiCGSTAB
+//
+// BiCGSTAB solves the unsymmetric linear system Ax = b 
+// using the Preconditioned BiConjugate Gradient Stabilized method
+//
+// BiCGSTAB follows the algorithm described on p. 27 of the 
+// SIAM Templates book.
+//
+// The return value indicates convergence within max_iter (input)
+// iterations (0), or no convergence within max_iter iterations (1).
+//
+// Upon successful return, output arguments have the following values:
+//  
+//        x  --  approximate solution to Ax = b
+// max_iter  --  the number of iterations performed before the
+//               tolerance was reached
+//      tol  --  the residual after the final iteration
+//  
+//*****************************************************************
+X
+X
+template < class Matrix, class Vector, class Preconditioner, class Real >
+int 
+BiCGSTAB(const Matrix &A, Vector &x, const Vector &b,
+X         const Preconditioner &M, int &max_iter, Real &tol)
+{
+X  Real resid;
+X  Vector rho_1(1), rho_2(1), alpha(1), beta(1), omega(1);
+X  Vector p, phat, s, shat, t, v;
+X
+X  Real normb = norm(b);
+X  Vector r = b - A * x;
+X  Vector rtilde = r;
+X
+X  if (normb == 0.0)
+X    normb = 1;
+X  
+X  if ((resid = norm(r) / normb) <= tol) {
+X    tol = resid;
+X    max_iter = 0;
+X    return 0;
+X  }
+X
+X  for (int i = 1; i <= max_iter; i++) {
+X    rho_1(0) = dot(rtilde, r);
+X    if (rho_1(0) == 0) {
+X      tol = norm(r) / normb;
+X      return 2;
+X    }
+X    if (i == 1)
+X      p = r;
+X    else {
+X      beta(0) = (rho_1(0)/rho_2(0)) * (alpha(0)/omega(0));
+X      p = r + beta(0) * (p - omega(0) * v);
+X    }
+X    phat = M.solve(p);
+X    v = A * phat;
+X    alpha(0) = rho_1(0) / dot(rtilde, v);
+X    s = r - alpha(0) * v;
+X    if ((resid = norm(s)/normb) < tol) {
+X      x += alpha(0) * phat;
+X      tol = resid;
+X      return 0;
+X    }
+X    shat = M.solve(s);
+X    t = A * shat;
+X    omega = dot(t,s) / dot(t,t);
+X    x += alpha(0) * phat + omega(0) * shat;
+X    r = s - omega(0) * t;
+X
+X    rho_2(0) = rho_1(0);
+X    if ((resid = norm(r) / normb) < tol) {
+X      tol = resid;
+X      max_iter = i;
+X      return 0;
+X    }
+X    if (omega(0) == 0) {
+X      tol = norm(r) / normb;
+X      return 3;
+X    }
+X  }
+X
+X  tol = resid;
+X  return 1;
+}
+SHAR_EOF
+chmod 0444 bicgstab.h ||
+echo 'restore of bicgstab.h failed'
+Wc_c="`wc -c < 'bicgstab.h'`"
+test 2227 -eq "$Wc_c" ||
+	echo 'bicgstab.h: original size 2227, current size' "$Wc_c"
+fi
+# ============= cg.h ==============
+if test -f 'cg.h' -a X"$1" != X"-c"; then
+	echo 'x - skipping cg.h (File already exists)'
+else
+echo 'x - extracting cg.h (Text)'
+sed 's/^X//' << 'SHAR_EOF' > 'cg.h' &&
+//*****************************************************************
+// Iterative template routine -- CG
+//
+// CG solves the symmetric positive definite linear
+// system Ax=b using the Conjugate Gradient method.
+//
+// CG follows the algorithm described on p. 15 in the 
+// SIAM Templates book.
+//
+// The return value indicates convergence within max_iter (input)
+// iterations (0), or no convergence within max_iter iterations (1).
+//
+// Upon successful return, output arguments have the following values:
+//  
+//        x  --  approximate solution to Ax = b
+// max_iter  --  the number of iterations performed before the
+//               tolerance was reached
+//      tol  --  the residual after the final iteration
+//  
+//*****************************************************************
+X
+template < class Matrix, class Vector, class Preconditioner, class Real >
+int 
+CG(const Matrix &A, Vector &x, const Vector &b,
+X   const Preconditioner &M, int &max_iter, Real &tol)
+{
+X  Real resid;
+X  Vector p, z, q;
+X  Vector alpha(1), beta(1), rho(1), rho_1(1);
+X
+X  Real normb = norm(b);
+X  Vector r = b - A*x;
+X
+X  if (normb == 0.0) 
+X    normb = 1;
+X  
+X  if ((resid = norm(r) / normb) <= tol) {
+X    tol = resid;
+X    max_iter = 0;
+X    return 0;
+X  }
+X
+X  for (int i = 1; i <= max_iter; i++) {
+X    z = M.solve(r);
+X    rho(0) = dot(r, z);
+X    
+X    if (i == 1)
+X      p = z;
+X    else {
+X      beta(0) = rho(0) / rho_1(0);
+X      p = z + beta(0) * p;
+X    }
+X    
+X    q = A*p;
+X    alpha(0) = rho(0) / dot(p, q);
+X    
+X    x += alpha(0) * p;
+X    r -= alpha(0) * q;
+X    
+X    if ((resid = norm(r) / normb) <= tol) {
+X      tol = resid;
+X      max_iter = i;
+X      return 0;     
+X    }
+X
+X    rho_1(0) = rho(0);
+X  }
+X  
+X  tol = resid;
+X  return 1;
+}
+X
+SHAR_EOF
+chmod 0444 cg.h ||
+echo 'restore of cg.h failed'
+Wc_c="`wc -c < 'cg.h'`"
+test 1711 -eq "$Wc_c" ||
+	echo 'cg.h: original size 1711, current size' "$Wc_c"
+fi
+# ============= cgs.h ==============
+if test -f 'cgs.h' -a X"$1" != X"-c"; then
+	echo 'x - skipping cgs.h (File already exists)'
+else
+echo 'x - extracting cgs.h (Text)'
+sed 's/^X//' << 'SHAR_EOF' > 'cgs.h' &&
+//*****************************************************************
+// Iterative template routine -- CGS
+//
+// CGS solves the unsymmetric linear system Ax = b 
+// using the Conjugate Gradient Squared method
+//
+// CGS follows the algorithm described on p. 26 of the 
+// SIAM Templates book.
+//
+// The return value indicates convergence within max_iter (input)
+// iterations (0), or no convergence within max_iter iterations (1).
+//
+// Upon successful return, output arguments have the following values:
+//  
+//        x  --  approximate solution to Ax = b
+// max_iter  --  the number of iterations performed before the
+//               tolerance was reached
+//      tol  --  the residual after the final iteration
+//  
+//*****************************************************************
+X
+template < class Matrix, class Vector, class Preconditioner, class Real >
+int 
+CGS(const Matrix &A, Vector &x, const Vector &b,
+X    const Preconditioner &M, int &max_iter, Real &tol)
+{
+X  Real resid;
+X  Vector rho_1(1), rho_2(1), alpha(1), beta(1);
+X  Vector p, phat, q, qhat, vhat, u, uhat;
+X
+X  Real normb = norm(b);
+X  Vector r = b - A*x;
+X  Vector rtilde = r;
+X
+X  if (normb == 0.0)
+X    normb = 1;
+X  
+X  if ((resid = norm(r) / normb) <= tol) {
+X    tol = resid;
+X    max_iter = 0;
+X    return 0;
+X  }
+X
+X  for (int i = 1; i <= max_iter; i++) {
+X    rho_1(0) = dot(rtilde, r);
+X    if (rho_1(0) == 0) {
+X      tol = norm(r) / normb;
+X      return 2;
+X    }
+X    if (i == 1) {
+X      u = r;
+X      p = u;
+X    } else {
+X      beta(0) = rho_1(0) / rho_2(0);
+X      u = r + beta(0) * q;
+X      p = u + beta(0) * (q + beta(0) * p);
+X    }
+X    phat = M.solve(p);
+X    vhat = A*phat;
+X    alpha(0) = rho_1(0) / dot(rtilde, vhat);
+X    q = u - alpha(0) * vhat;
+X    uhat = M.solve(u + q);
+X    x += alpha(0) * uhat;
+X    qhat = A * uhat;
+X    r -= alpha(0) * qhat;
+X    rho_2(0) = rho_1(0);
+X    if ((resid = norm(r) / normb) < tol) {
+X      tol = resid;
+X      max_iter = i;
+X      return 0;
+X    }
+X  }
+X  
+X  tol = resid;
+X  return 1;
+}
+X
+SHAR_EOF
+chmod 0444 cgs.h ||
+echo 'restore of cgs.h failed'
+Wc_c="`wc -c < 'cgs.h'`"
+test 1978 -eq "$Wc_c" ||
+	echo 'cgs.h: original size 1978, current size' "$Wc_c"
+fi
+# ============= cheby.h ==============
+if test -f 'cheby.h' -a X"$1" != X"-c"; then
+	echo 'x - skipping cheby.h (File already exists)'
+else
+echo 'x - extracting cheby.h (Text)'
+sed 's/^X//' << 'SHAR_EOF' > 'cheby.h' &&
+//*****************************************************************
+// Iterative template routine -- CHEBY
+//
+// CHEBY solves the symmetric positive definite linear
+// system Ax = b using the Preconditioned Chebyshev Method
+//
+// CHEBY follows the algorithm described on p. 30 of the 
+// SIAM Templates book.
+//
+// The return value indicates convergence within max_iter (input)
+// iterations (0), or no convergence within max_iter iterations (1).
+//
+// Upon successful return, output arguments have the following values:
+//  
+//        x  --  approximate solution to Ax = b
+// max_iter  --  the number of iterations performed before the
+//               tolerance was reached
+//      tol  --  the residual after the final iteration
+//  
+//*****************************************************************
+X
+X
+template < class Matrix, class Vector, class Preconditioner, class Real,
+X           class Type >
+int 
+CHEBY(const Matrix &A, Vector &x, const Vector &b,
+X      const Preconditioner &M, int &max_iter, Real &tol,
+X      Type eigmin, Type eigmax)
+{
+X  Real resid;
+X  Type alpha, beta, c, d;
+X  Vector p, q, z;
+X
+X  Real normb = norm(b);
+X  Vector r = b - A * x;
+X
+X  if (normb == 0.0)
+X    normb = 1;
+X  
+X  if ((resid = norm(r) / normb) <= tol) {
+X    tol = resid;
+X    max_iter = 0;
+X    return 0;
+X  }
+X
+X  c = (eigmax - eigmin) / 2.0;
+X  d = (eigmax + eigmin) / 2.0;
+X
+X  for (int i = 1; i <= max_iter; i++) {
+X    z = M.solve(r);                 // apply preconditioner
+X
+X    if (i == 1) {
+X      p = z;
+X      alpha = 2.0 / d;
+X    } else {
+X      beta = c * alpha / 2.0;       // calculate new beta
+X      beta = beta * beta;
+X      alpha = 1.0 / (d - beta);     // calculate new alpha
+X      p = z + beta * p;             // update search direction
+X    }
+X
+X    q = A * p;
+X    x += alpha * p;                 // update approximation vector
+X    r -= alpha * q;                 // compute residual
+X
+X    if ((resid = norm(r) / normb) <= tol) {
+X      tol = resid;
+X      max_iter = i;
+X      return 0;                     // convergence
+X    }
+X  }
+X
+X  tol = resid;
+X  return 1;                         // no convergence
+}
+SHAR_EOF
+chmod 0444 cheby.h ||
+echo 'restore of cheby.h failed'
+Wc_c="`wc -c < 'cheby.h'`"
+test 2092 -eq "$Wc_c" ||
+	echo 'cheby.h: original size 2092, current size' "$Wc_c"
+fi
+# ============= gmres.h ==============
+if test -f 'gmres.h' -a X"$1" != X"-c"; then
+	echo 'x - skipping gmres.h (File already exists)'
+else
+echo 'x - extracting gmres.h (Text)'
+sed 's/^X//' << 'SHAR_EOF' > 'gmres.h' &&
+//*****************************************************************
+// Iterative template routine -- GMRES
+//
+// GMRES solves the unsymmetric linear system Ax = b using the 
+// Generalized Minimum Residual method
+//
+// GMRES follows the algorithm described on p. 20 of the 
+// SIAM Templates book.
+//
+// The return value indicates convergence within max_iter (input)
+// iterations (0), or no convergence within max_iter iterations (1).
+//
+// Upon successful return, output arguments have the following values:
+//  
+//        x  --  approximate solution to Ax = b
+// max_iter  --  the number of iterations performed before the
+//               tolerance was reached
+//      tol  --  the residual after the final iteration
+//  
+//*****************************************************************
+X
+X
+template < class Matrix, class Vector >
+void 
+Update(Vector &x, int k, Matrix &h, Vector &s, Vector v[])
+{
+X  Vector y(s);
+X
+X  // Backsolve:  
+X  for (int i = k; i >= 0; i--) {
+X    y(i) /= h(i,i);
+X    for (int j = i - 1; j >= 0; j--)
+X      y(j) -= h(j,i) * y(i);
+X  }
+X
+X  for (int j = 0; j <= k; j++)
+X    x += v[j] * y(j);
+}
+X
+X
+template < class Real >
+Real 
+abs(Real x)
+{
+X  return (x > 0 ? x : -x);
+}
+X
+X
+template < class Operator, class Vector, class Preconditioner,
+X           class Matrix, class Real >
+int 
+GMRES(const Operator &A, Vector &x, const Vector &b,
+X      const Preconditioner &M, Matrix &H, int &m, int &max_iter,
+X      Real &tol)
+{
+X  Real resid;
+X  int i, j = 1, k;
+X  Vector s(m+1), cs(m+1), sn(m+1), w;
+X  
+X  Real normb = norm(M.solve(b));
+X  Vector r = M.solve(b - A * x);
+X  Real beta = norm(r);
+X  
+X  if (normb == 0.0)
+X    normb = 1;
+X  
+X  if ((resid = norm(r) / normb) <= tol) {
+X    tol = resid;
+X    max_iter = 0;
+X    return 0;
+X  }
+X
+X  Vector *v = new Vector[m+1];
+X
+X  while (j <= max_iter) {
+X    v[0] = r * (1.0 / beta);    // ??? r / beta
+X    s = 0.0;
+X    s(0) = beta;
+X    
+X    for (i = 0; i < m && j <= max_iter; i++, j++) {
+X      w = M.solve(A * v[i]);
+X      for (k = 0; k <= i; k++) {
+X        H(k, i) = dot(w, v[k]);
+X        w -= H(k, i) * v[k];
+X      }
+X      H(i+1, i) = norm(w);
+X      v[i+1] = w * (1.0 / H(i+1, i)); // ??? w / H(i+1, i)
+X
+X      for (k = 0; k < i; k++)
+X        ApplyPlaneRotation(H(k,i), H(k+1,i), cs(k), sn(k));
+X      
+X      GeneratePlaneRotation(H(i,i), H(i+1,i), cs(i), sn(i));
+X      ApplyPlaneRotation(H(i,i), H(i+1,i), cs(i), sn(i));
+X      ApplyPlaneRotation(s(i), s(i+1), cs(i), sn(i));
+X      
+X      if ((resid = abs(s(i+1)) / normb) < tol) {
+X        Update(x, i, H, s, v);
+X        tol = resid;
+X        max_iter = j;
+X        delete [] v;
+X        return 0;
+X      }
+X    }
+X    Update(x, m - 1, H, s, v);
+X    r = M.solve(b - A * x);
+X    beta = norm(r);
+X    if ((resid = beta / normb) < tol) {
+X      tol = resid;
+X      max_iter = j;
+X      delete [] v;
+X      return 0;
+X    }
+X  }
+X  
+X  tol = resid;
+X  delete [] v;
+X  return 1;
+}
+X
+X
+#include <math.h> 
+X
+X
+template<class Real> 
+void GeneratePlaneRotation(Real &dx, Real &dy, Real &cs, Real &sn)
+{
+X  if (dy == 0.0) {
+X    cs = 1.0;
+X    sn = 0.0;
+X  } else if (abs(dy) > abs(dx)) {
+X    Real temp = dx / dy;
+X    sn = 1.0 / sqrt( 1.0 + temp*temp );
+X    cs = temp * sn;
+X  } else {
+X    Real temp = dy / dx;
+X    cs = 1.0 / sqrt( 1.0 + temp*temp );
+X    sn = temp * cs;
+X  }
+}
+X
+X
+template<class Real> 
+void ApplyPlaneRotation(Real &dx, Real &dy, Real &cs, Real &sn)
+{
+X  Real temp  =  cs * dx + sn * dy;
+X  dy = -sn * dx + cs * dy;
+X  dx = temp;
+}
+X
+SHAR_EOF
+chmod 0444 gmres.h ||
+echo 'restore of gmres.h failed'
+Wc_c="`wc -c < 'gmres.h'`"
+test 3400 -eq "$Wc_c" ||
+	echo 'gmres.h: original size 3400, current size' "$Wc_c"
+fi
+# ============= ir.h ==============
+if test -f 'ir.h' -a X"$1" != X"-c"; then
+	echo 'x - skipping ir.h (File already exists)'
+else
+echo 'x - extracting ir.h (Text)'
+sed 's/^X//' << 'SHAR_EOF' > 'ir.h' &&
+//*****************************************************************
+// Iterative template routine -- Preconditioned Richardson
+//
+// IR solves the unsymmetric linear system Ax = b using 
+// Iterative Refinement (preconditioned Richardson iteration).
+//
+// The return value indicates convergence within max_iter (input)
+// iterations (0), or no convergence within max_iter iterations (1).
+//
+// Upon successful return, output arguments have the following values:
+//  
+//        x  --  approximate solution to Ax = b
+// max_iter  --  the number of iterations performed before the
+//               tolerance was reached
+//      tol  --  the residual after the final iteration
+//  
+//*****************************************************************
+X
+template < class Matrix, class Vector, class Preconditioner, class Real >
+int 
+IR(const Matrix &A, Vector &x, const Vector &b,
+X   const Preconditioner &M, int &max_iter, Real &tol)
+{
+X  Real resid;
+X  Vector z;
+X
+X  Real normb = norm(b);
+X  Vector r = b - A*x;
+X
+X  if (normb == 0.0) 
+X    normb = 1;
+X  
+X  if ((resid = norm(r) / normb) <= tol) {
+X    tol = resid;
+X    max_iter = 0;
+X    return 0;
+X  }
+X  
+X  for (int i = 1; i <= max_iter; i++) {
+X    z = M.solve(r);
+X    x += z;
+X    r = b - A * x;
+X    
+X    if ((resid = norm(r) / normb) <= tol) {
+X      tol = resid;
+X      max_iter = i;
+X      return 0;
+X    }
+X  }
+X
+X  tol = resid;
+X  return 1;
+}
+X
+X
+X
+SHAR_EOF
+chmod 0444 ir.h ||
+echo 'restore of ir.h failed'
+Wc_c="`wc -c < 'ir.h'`"
+test 1379 -eq "$Wc_c" ||
+	echo 'ir.h: original size 1379, current size' "$Wc_c"
+fi
+# ============= qmr.h ==============
+if test -f 'qmr.h' -a X"$1" != X"-c"; then
+	echo 'x - skipping qmr.h (File already exists)'
+else
+echo 'x - extracting qmr.h (Text)'
+sed 's/^X//' << 'SHAR_EOF' > 'qmr.h' &&
+//*****************************************************************
+// Iterative template routine -- QMR
+//
+// QMR.h solves the unsymmetric linear system Ax = b using the
+// Quasi-Minimal Residual method following the algorithm as described
+// on p. 24 in the SIAM Templates book.
+//
+//   -------------------------------------------------------------
+//   return value     indicates
+//   ------------     ---------------------
+//        0           convergence within max_iter iterations
+//        1           no convergence after max_iter iterations
+//                    breakdown in:
+//        2             rho
+//        3             beta
+//        4             gamma
+//        5             delta
+//        6             ep
+//        7             xi
+//   -------------------------------------------------------------
+//   
+// Upon successful return, output arguments have the following values:
+//
+//        x  --  approximate solution to Ax=b
+// max_iter  --  the number of iterations performed before the
+//               tolerance was reached
+//      tol  --  the residual after the final iteration
+//
+//*****************************************************************
+X
+X
+#include <math.h>
+X
+template < class Matrix, class Vector, class Preconditioner1,
+X           class Preconditioner2, class Real >
+int 
+QMR(const Matrix &A, Vector &x, const Vector &b, const Preconditioner1 &M1, 
+X    const Preconditioner2 &M2, int &max_iter, Real &tol)
+{
+X  Real resid;
+X
+X  Vector rho(1), rho_1(1), xi(1), gamma(1), gamma_1(1), theta(1), theta_1(1);
+X  Vector eta(1), delta(1), ep(1), beta(1);
+X
+X  Vector r, v_tld, y, w_tld, z;
+X  Vector v, w, y_tld, z_tld;
+X  Vector p, q, p_tld, d, s;
+X
+X  Real normb = norm(b);
+X
+X  r = b - A * x;
+X
+X  if (normb == 0.0)
+X    normb = 1;
+X
+X  if ((resid = norm(r) / normb) <= tol) {
+X    tol = resid;
+X    max_iter = 0;
+X    return 0;
+X  }
+X
+X  v_tld = r;
+X  y = M1.solve(v_tld);
+X  rho(0) = norm(y);
+X
+X  w_tld = r;
+X  z = M2.trans_solve(w_tld);
+X  xi(0) = norm(z);
+X
+X  gamma(0) = 1.0;
+X  eta(0) = -1.0;
+X  theta(0) = 0.0;
+X
+X  for (int i = 1; i <= max_iter; i++) {
+X
+X    if (rho(0) == 0.0)
+X      return 2;                        // return on breakdown
+X
+X    if (xi(0) == 0.0)
+X      return 7;                        // return on breakdown
+X
+X    v = (1. / rho(0)) * v_tld;
+X    y = (1. / rho(0)) * y;
+X
+X    w = (1. / xi(0)) * w_tld;
+X    z = (1. / xi(0)) * z;
+X
+X    delta(0) = dot(z, y);
+X    if (delta(0) == 0.0)
+X      return 5;                        // return on breakdown
+X
+X    y_tld = M2.solve(y);               // apply preconditioners
+X    z_tld = M1.trans_solve(z);
+X
+X    if (i > 1) {
+X      p = y_tld - (xi(0) * delta(0) / ep(0)) * p;
+X      q = z_tld - (rho(0) * delta(0) / ep(0)) * q;
+X    } else {
+X      p = y_tld;
+X      q = z_tld;
+X    }
+X
+X    p_tld = A * p;
+X    ep(0) = dot(q, p_tld);
+X    if (ep(0) == 0.0)
+X      return 6;                        // return on breakdown
+X
+X    beta(0) = ep(0) / delta(0);
+X    if (beta(0) == 0.0)
+X      return 3;                        // return on breakdown
+X
+X    v_tld = p_tld - beta(0) * v;
+X    y = M1.solve(v_tld);
+X
+X    rho_1(0) = rho(0);
+X    rho(0) = norm(y);
+X    w_tld = A.trans_mult(q) - beta(0) * w;
+X    z = M2.trans_solve(w_tld);
+X
+X    xi(0) = norm(z);
+X
+X    gamma_1(0) = gamma(0);
+X    theta_1(0) = theta(0);
+X
+X    theta(0) = rho(0) / (gamma_1(0) * beta(0));
+X    gamma(0) = 1.0 / sqrt(1.0 + theta(0) * theta(0));
+X
+X    if (gamma(0) == 0.0)
+X      return 4;                        // return on breakdown
+X
+X    eta(0) = -eta(0) * rho_1(0) * gamma(0) * gamma(0) / 
+X      (beta(0) * gamma_1(0) * gamma_1(0));
+X
+X    if (i > 1) {
+X      d = eta(0) * p + (theta_1(0) * theta_1(0) * gamma(0) * gamma(0)) * d;
+X      s = eta(0) * p_tld + (theta_1(0) * theta_1(0) * gamma(0) * gamma(0)) * s;
+X    } else {
+X      d = eta(0) * p;
+X      s = eta(0) * p_tld;
+X    }
+X
+X    x += d;                            // update approximation vector
+X    r -= s;                            // compute residual
+X
+X    if ((resid = norm(r) / normb) <= tol) {
+X      tol = resid;
+X      max_iter = i;
+X      return 0;
+X    }
+X  }
+X
+X  tol = resid;
+X  return 1;                            // no convergence
+}
+SHAR_EOF
+chmod 0444 qmr.h ||
+echo 'restore of qmr.h failed'
+Wc_c="`wc -c < 'qmr.h'`"
+test 4089 -eq "$Wc_c" ||
+	echo 'qmr.h: original size 4089, current size' "$Wc_c"
+fi
+exit 0
