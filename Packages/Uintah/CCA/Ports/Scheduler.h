@@ -82,6 +82,8 @@ WARNING
     
     virtual DataWarehouse* get_old_dw() = 0;
     virtual DataWarehouse* get_new_dw() = 0;
+    virtual void set_old_dw(DataWarehouse*) = 0;
+    virtual void set_new_dw(DataWarehouse*) = 0;
 
     virtual void logMemoryUse() = 0;
       
