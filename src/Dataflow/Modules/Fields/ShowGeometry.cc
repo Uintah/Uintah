@@ -209,8 +209,6 @@ public:
 
     GeomGroup *bb = scinew GeomGroup;
     d_conSwitch = scinew GeomSwitch(bb);
-    bb->add(scinew GeomSphere(bbox.min(), 0.3, 8, 4));
-    bb->add(scinew GeomSphere(bbox.max(), 0.3, 8, 4));
 
     GeomGroup *verts = scinew GeomGroup;
     Geom *geom = d_sfield->get_geom();
@@ -223,16 +221,24 @@ public:
       int ny = grid->get_ny();
       int nz = grid->get_nz();
 
-      Vector xDir;
-      Vector yDir;
-      Vector zDir;
-      setUpDirs(xDir, yDir, zDir, grid, bbox);
+      d_dbg << "grid->nx" << nx << endl;
+      d_dbg << "grid->ny" << ny << endl;
+      d_dbg << "grid->nz" << nz << endl;
+
+      Vector xDir, yDir, zDir;
+      double sx, sy, sz, aveScale;
+
+      setUpDirs(xDir, yDir, zDir, sx, sy, sz, grid, bbox);
+      aveScale = (sx + sy + sz) * 0.33L;
+      bb->add(scinew GeomSphere(bbox.min(), aveScale*2.0, 8, 4));
+      bb->add(scinew GeomSphere(bbox.max(), aveScale*2.0, 8, 4));
+      
 
       for (int i = 0; i < nx; i++) {
 	for (int j = 0; j < ny; j++) {
 	  for (int k = 0; k < nz; k++) {	
 	    if (d_nodeDisplayType.get() == "Spheres") {
-	      addSphere(i, j, k, grid, verts);
+	      addSphere(i, j, k, grid, verts, aveScale);
 	    } else {
 	      addAxis(i, j, k, xDir, yDir, zDir, grid, verts);
 	    }
@@ -287,10 +293,10 @@ public:
   // addSphere
   // 
   inline void addSphere(int i, int j, int k, Lattice3Geom *grid, 
-			GeomGroup *g) {
+			GeomGroup *g, double size) {
 
     Point p0 = grid->get_point(i, j, k);
-    g->add(scinew GeomSphere(p0, 0.2, 8, 4));
+    g->add(scinew GeomSphere(p0, size, 8, 4));
   }
 
   //////////
@@ -373,19 +379,23 @@ public:
   // setUpDirs
   // 
   void setUpDirs(Vector &x, Vector &y, Vector &z, 
+		 double &sx, double &sy,  double &sz, 
 		 Lattice3Geom *grid, BBox &bbox) {
 
-    double scalex = (bbox.max().x() - bbox.min().x()) * 0.1L;
-    double scaley = (bbox.max().y() - bbox.min().y()) * 0.1L;
-    double scalez = (bbox.max().z() - bbox.min().z()) * 0.1L;
-    
+    sx = (bbox.max().x() - bbox.min().x()) * 0.2L;
+    sy = (bbox.max().y() - bbox.min().y()) * 0.2L;
+    sz = (bbox.max().z() - bbox.min().z()) * 0.2L;
+    d_dbg << "sx: " << sx << endl;
+    d_dbg << "sy: " << sy << endl;
+    d_dbg << "sz: " << sz << endl;
+
     int nx = grid->get_nx();
     int ny = grid->get_ny();
     int nz = grid->get_nz();
 
-    scalex /= nx;
-    scaley /= ny;
-    scalez /= nz;
+    sx /= nx;
+    sy /= ny;
+    sz /= nz;
 
     if (nx > 0) {
       Point p0 = grid->get_point(0, 0, 0);
@@ -419,9 +429,11 @@ public:
 
     //Scale the dirs...
     x.normalize();
-    x *= scalex;
-    y *= scaley;
-    z *= scalez;
+    x *= sx;
+    y.normalize();
+    y *= sy;
+    z.normalize();
+    z *= sz;
   }
 };
 
