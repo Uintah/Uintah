@@ -97,9 +97,13 @@ class TexturedTri : public Object, public UVMapping {
 	tvn3.normalize();
       }
       
-      return TexturedTri(this->get_matl(),
-			 tp1,tp2,tp3,
-			 tvn1,tvn2,tvn3);
+      TexturedTri copy_tri(this->get_matl(),
+                           tp1,tp2,tp3,
+                           tvn1,tvn2,tvn3);
+
+      copy_tri.set_texcoords(t1,t2,t3);
+
+      return copy_tri;
     }
   
   void transform(Transform& T)
