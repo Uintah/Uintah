@@ -221,6 +221,14 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			Ghost::AroundNodes, 1 );
    	       t->requires(old_dw, lb->pMicrocrackPositionLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
+			
+   	       t->requires(old_dw, lb->pVelocityLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+   	       t->requires(old_dw, lb->pVolumeLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+   	       t->requires(old_dw, lb->pMassLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+	       t->requires(old_dw, d_sharedState->get_delt_label() );
    	    }
 
 	    t->computes(new_dw, lb->pVisibilityLabel, idx, patch );
@@ -1862,6 +1870,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.146  2000/09/11 19:45:15  tan
+// Implemented crack surface contact force calculation algorithm.
+//
 // Revision 1.145  2000/09/11 19:01:47  tan
 // Crack surface contact force is now considered in the simulation.
 //
