@@ -525,29 +525,92 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 	string_value = std::string(s);
 	delete [] s;
 
-	// Parse out the [num,num,num]
-	// Now pull apart the string_value
-	std::string::size_type i1 = string_value.find("[");
-	std::string::size_type i2 = string_value.find_first_of(",");
-	std::string::size_type i3 = string_value.find_last_of(",");
-	std::string::size_type i4 = string_value.find("]");
-	
-	std::string x_val(string_value,i1+1,i2-i1-1);
-	std::string y_val(string_value,i2+1,i3-i2-1);
-	std::string z_val(string_value,i3+1,i4-i3-1);
-
-	checkForInputError(x_val, "int");     
-	checkForInputError(y_val, "int");     
-	checkForInputError(z_val, "int");     
-                
-	value.x(atoi(x_val.c_str()));
-	value.y(atoi(y_val.c_str()));
-	value.z(atoi(z_val.c_str()));	
+        parseIntVector(string_value, value);
       }
     }
   }
           
   return ps;
+
+}
+
+ProblemSpecP ProblemSpec::get(const std::string& name, vector<IntVector>& value)
+{
+  std::string string_value;
+  ProblemSpecP ps = this;
+  ProblemSpecP node = findBlock(name);
+  if (node == 0) {
+    ps = 0;
+    return ps;
+  }
+  else {
+    DOMNode* found_node = node->d_node;
+    for (DOMNode* child = found_node->getFirstChild(); child != 0;
+        child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	const char *s = XMLString::transcode(child->getNodeValue());
+	string_value = std::string(s);
+	delete [] s;
+
+        istringstream in(string_value);
+	char c,next;
+        bool first_bracket = false;
+        bool inner_bracket = false;
+	string result;
+        // what we're going to do is look for the first [ then pass it.
+        // then if we find another [, make a string out of it until we see ],
+        // then pass that into parseIntVector, and repeat.
+	while (!in.eof()) {
+          in >> c;
+          if (c == ',' || c == ' ')
+            continue;
+          if (c == '[') {
+            if (!first_bracket) {
+              first_bracket = true;
+              continue;
+            }
+            else {
+              inner_bracket = true;
+              result += c;
+            }
+          }
+          else if (c == ']') {
+            if (inner_bracket) {
+              // parse the string for an IntVector
+              IntVector val;
+              parseIntVector(result, val);
+              value.push_back(val);
+              result.erase();
+            }
+            else
+              break; // end parsing on outer ]
+          }
+        }  // end while (!in.eof())
+      } // end if (child->getNodeType() == DOMNode::TEXT_NODE)
+    }
+  }
+}
+
+void ProblemSpec::parseIntVector(const std::string& string_value, IntVector& value)
+{
+  // Parse out the [num,num,num]
+  // Now pull apart the string_value
+  std::string::size_type i1 = string_value.find("[");
+  std::string::size_type i2 = string_value.find_first_of(",");
+  std::string::size_type i3 = string_value.find_last_of(",");
+  std::string::size_type i4 = string_value.find("]");
+  
+  std::string x_val(string_value,i1+1,i2-i1-1);
+  std::string y_val(string_value,i2+1,i3-i2-1);
+  std::string z_val(string_value,i3+1,i4-i3-1);
+
+  checkForInputError(x_val, "int");     
+  checkForInputError(y_val, "int");     
+  checkForInputError(z_val, "int");     
+          
+  value.x(atoi(x_val.c_str()));
+  value.y(atoi(y_val.c_str()));
+  value.z(atoi(z_val.c_str()));	
 
 }
 
