@@ -73,8 +73,10 @@ ifeq ($(CC),newmpxlc)
         $(GL_LIBRARY) $(Z_LIBRARY) \
         $(THREAD_LIBRARY) \
         $(F_LIBRARY) \
-        $(MPI_LIBRARY) \
         $(PETSC_LIBRARY) \
+        $(HYPRE_LIBRARY) \
+        $(BLAS_LIBRARY) \
+        $(MPI_LIBRARY) \
         -lld $(M_LIBRARY)
 else
   LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(F_LIBRARY) \
