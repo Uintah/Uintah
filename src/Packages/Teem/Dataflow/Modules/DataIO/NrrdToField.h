@@ -92,14 +92,9 @@ execute(MeshHandle& mHandle, NrrdDataHandle dataH, int data_size)
 {
   Point minpt, maxpt;
 
-  //if( mesh.size() == 1 ) {
   DNTYPE *ptr = (DNTYPE *)(dataH->nrrd->data);
 
   int rank = data_size;
-  //if (data_size >= 3)
-  //rank = 2;
-  //if (data_size >= 6)
-  //rank = 3;
 
   float xVal = 0, yVal = 0, zVal = 0;
 
@@ -116,33 +111,6 @@ execute(MeshHandle& mHandle, NrrdDataHandle dataH, int data_size)
   if( rank >= 3 ) zVal = ptr[rank + 2];
 
   maxpt = Point( xVal, yVal, zVal );
-
-    //} 
-//   else {
-//     int rank = mesh.size();
-
-//     DNTYPE *ptr[3] = {NULL, NULL, NULL};
-
-//     if( rank >= 1 ) ptr[0] = (DNTYPE *)(nHandles[mesh[0]]->nrrd->data);
-//     if( rank >= 2 ) ptr[1] = (DNTYPE *)(nHandles[mesh[1]]->nrrd->data);
-//     if( rank >= 3 ) ptr[2] = (DNTYPE *)(nHandles[mesh[2]]->nrrd->data);
-
-//     float xVal = 0, yVal = 0, zVal = 0;
-
-//     if( ptr[0] ) xVal = ptr[0][0];
-//     if( ptr[1] ) yVal = ptr[1][0];
-//     if( ptr[2] ) zVal = ptr[2][0];
-	
-//     minpt = Point( xVal, yVal, zVal );
-
-//     xVal = 0; yVal = 0; zVal = 0;
-	    
-//     if( ptr[0] ) xVal = ptr[0][1];
-//     if( ptr[1] ) yVal = ptr[1][1];
-//     if( ptr[2] ) zVal = ptr[2][1];
-	
-//     maxpt = Point( xVal, yVal, zVal );
-//   }
 
   MESH *imesh = (MESH *) mHandle.get_rep();
 
@@ -211,14 +179,8 @@ execute(MeshHandle& mHandle,
   register int i, j, k;
   int rank = pointsH->nrrd->axis[1].size;
 
-  //if( mesh.size() == 1 ) {
     PNTYPE *ptr = (PNTYPE *)(pointsH->nrrd->data);
     
-//     int rank = 1;
-//     if (data_size == 3)
-//       rank = 2;
-//     if (data_size == 7)
-//       rank = 3;
     for( k=0; k<kdim; k++ ) {
       for( j=0; j<jdim; j++ ) {
 	for( i=0; i<idim; i++ ) {
@@ -238,35 +200,6 @@ execute(MeshHandle& mHandle,
 	}
       }
     }
-    //} else {
-//     int rank = mesh.size();
-
-//     PNTYPE *ptr[3] = {NULL, NULL, NULL};
-
-//     if( rank >= 1 ) ptr[0] = (PNTYPE *)(nHandles[mesh[0]]->nrrd->data);
-//     if( rank >= 2 ) ptr[1] = (PNTYPE *)(nHandles[mesh[1]]->nrrd->data);
-//     if( rank >= 3 ) ptr[2] = (PNTYPE *)(nHandles[mesh[2]]->nrrd->data);
-
-//     for( k=0; k<kdim; k++ ) {
-//       for( j=0; j<jdim; j++ ) {
-// 	for( i=0; i<idim; i++ ) {
-	  
-// 	  int index = (i * jdim + j) * kdim + k;
-
-// 	  float xVal = 0, yVal = 0, zVal = 0;
-
-// 	  // Mesh
-// 	  if( ptr[0] ) xVal = ptr[0][index];
-// 	  if( ptr[1] ) yVal = ptr[1][index];
-// 	  if( ptr[2] ) zVal = ptr[2][index];
-
-// 	  imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
-
-// 	  ++inodeItr;
-// 	}
-//       }
-//}
-//}
 }
 
 
@@ -309,7 +242,6 @@ execute(MeshHandle& mHandle,
   int npts = pointsH->nrrd->axis[0].size;
   int rank = pointsH->nrrd->axis[1].size;
 
-  //if( mesh.size() == 2 ) {
   PNTYPE *pPtr = (PNTYPE *)(pointsH->nrrd->data);
   
   for( int index=0; index<npts; index++ ) {
@@ -322,27 +254,6 @@ execute(MeshHandle& mHandle,
     
     imesh->add_point( Point(xVal, yVal, zVal) );
   }
-    //} else {
-//     int rank = mesh.size() - 1;
-    
-//     PNTYPE *pPtr[3] = {NULL, NULL, NULL};
-    
-//     if( rank >= 1 ) pPtr[0] = (PNTYPE *)(nHandles[mesh[1]]->nrrd->data);
-//     if( rank >= 2 ) pPtr[1] = (PNTYPE *)(nHandles[mesh[2]]->nrrd->data);
-//     if( rank >= 3 ) pPtr[2] = (PNTYPE *)(nHandles[mesh[3]]->nrrd->data);
-
-//     for( int index=0; index<npts; index++ ) {
-//       float xVal = 0, yVal = 0, zVal = 0;
-
-//       // Mesh
-//       if( rank >= 1 ) xVal = pPtr[0][index];
-//       if( rank >= 2 ) yVal = pPtr[1][index];
-//       if( rank >= 3 ) zVal = pPtr[2][index];
-    
-//       imesh->add_point( Point(xVal, yVal, zVal) );
-//     }
-//   }
-
 
   if( connectivity > 0 ) {
 
@@ -405,10 +316,20 @@ execute(MeshHandle& mHandle,
 {
   cerr << "Inside i,j,k execute\n";
   MESH *imesh = (MESH *) mHandle.get_rep();
-  FIELD *ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
-
-  //if( data.size() == 1 ) {
+  FIELD *ifield = 0;
+  
   if (dataH != 0) {
+    // determine if nrrd is unknown, node or cell centered
+    int data_center = nrrdCenterUnknown;
+    for (int a = 0; a<dataH->nrrd->dim; a++) {
+      if (dataH->nrrd->axis[a].center != nrrdCenterUnknown)
+	data_center = dataH->nrrd->axis[a].center;
+    }
+    if (data_center == nrrdCenterCell)
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::FACE);
+    else
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+
     cerr << "has data!\n";
     typename FIELD::mesh_type::Node::iterator inodeItr;
     
@@ -433,9 +354,10 @@ execute(MeshHandle& mHandle,
 	}
       }
     }
+  } else {
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
   }
-  //}
-  cerr << "Returning\n";
+  
   return FieldHandle( ifield );
 }
 
@@ -450,10 +372,21 @@ execute(MeshHandle& mHandle,
 {
   cerr << "Inside NORMAL execute\n";
   MESH *imesh = (MESH *) mHandle.get_rep();
-  FIELD *ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+  FIELD *ifield = 0;
 
-  //if( data.size() == 1 ) {
   if (dataH != 0) {
+    // determine if nrrd is unknown, node or cell centered
+    int data_center = nrrdCenterUnknown;
+    for (int a = 0; a<dataH->nrrd->dim; a++) {
+      if (dataH->nrrd->axis[a].center != nrrdCenterUnknown)
+	data_center = dataH->nrrd->axis[a].center;
+    }
+    if (data_center == nrrdCenterCell)
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::FACE);
+    else
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+
+    cerr << "has data...\n";
     typename FIELD::mesh_type::Node::iterator inodeItr, end;
     
     imesh->begin( inodeItr );
@@ -467,17 +400,9 @@ execute(MeshHandle& mHandle,
       ++inodeItr;
       i++;
     }
-    
-//     int npts = dataH->nrrd->axis[1].size;
-    
-//     // Value
-//     for( int i=0; i<npts; i++ ) {
-//       ifield->set_value( ptr[i], *inodeItr);
-      
-//       ++inodeItr;
-//     }
+  } else {
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
   }
-  //}
   
   return FieldHandle( ifield );
 }
@@ -508,10 +433,19 @@ execute(MeshHandle& mHandle,
 	int idim, int jdim, int kdim, int permute)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
-  FIELD *ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+  FIELD *ifield = 0;
 
-  //if( data.size() == 1 ) {
   if (dataH != 0 ) {
+    int data_center = nrrdCenterUnknown;
+    for (int a = 0; a<dataH->nrrd->dim; a++) {
+      if (dataH->nrrd->axis[a].center != nrrdCenterUnknown)
+	data_center = dataH->nrrd->axis[a].center;
+    }
+    if (data_center == nrrdCenterCell)
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::FACE);
+    else
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+
     typename FIELD::mesh_type::Node::iterator inodeItr;
 
     imesh->begin( inodeItr );
@@ -536,37 +470,9 @@ execute(MeshHandle& mHandle,
 	}
       }
     }
+  } else {
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
   }
-//     //} else {
-//     typename FIELD::mesh_type::Node::iterator inodeItr;
-
-//     imesh->begin( inodeItr );
-
-//     register int i, j, k, index;
-				  
-//     NTYPE *ptr[3] ={NULL,NULL,NULL};
-
-//     ptr[0] = (NTYPE *)(nHandles[data[0]]->nrrd->data);
-//     ptr[1] = (NTYPE *)(nHandles[data[1]]->nrrd->data);
-//     ptr[2] = (NTYPE *)(nHandles[data[2]]->nrrd->data);
-
-//     for( k=0; k<kdim; k++ ) {
-//       for( j=0; j<jdim; j++ ) {
-// 	for( i=0; i<idim; i++ ) {
-// 	  if( permute )
-// 	    index = (k * jdim + j) * idim + i;
-// 	  else 
-// 	    index = (i * jdim + j) * kdim + k;
-	
-// 	  ifield->set_value( Vector( ptr[0][index],
-// 				     ptr[1][index],
-// 				     ptr[2][index] ), *inodeItr);
-	
-// 	  ++inodeItr;
-// 	}
-//       }
-//     }
-//}
 
   return FieldHandle( ifield );
   
@@ -579,10 +485,21 @@ execute(MeshHandle& mHandle,
 	NrrdDataHandle dataH)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
-  FIELD *ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+  FIELD *ifield = 0;
 
-  //if( data.size() == 1 ) {
+
   if (dataH != 0) {
+    // determine if nrrd is unknown, node or cell centered
+    int data_center = nrrdCenterUnknown;
+    for (int a = 0; a<dataH->nrrd->dim; a++) {
+      if (dataH->nrrd->axis[a].center != nrrdCenterUnknown)
+	data_center = dataH->nrrd->axis[a].center;
+    }
+    if (data_center == nrrdCenterCell)
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::FACE);
+    else
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+
     typename FIELD::mesh_type::Node::iterator inodeItr, end;
     
     imesh->begin( inodeItr );
@@ -598,43 +515,204 @@ execute(MeshHandle& mHandle,
       ++inodeItr;
       i++;
     }
-    
-//     int npts = nHandles[data[0]]->nrrd->axis[1].size;
-    
-//     for( int i=0; i<npts; i++ ) {
-      
-//       ifield->set_value( Vector( ptr[i*3  ],
-// 				 ptr[i*3+1],
-// 				 ptr[i*3+2]),
-// 			 *inodeItr);	
-//       ++inodeItr;
-//     }
+  } else {
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
   }
-//   } else {
-//     typename FIELD::mesh_type::Node::iterator inodeItr;
-
-//     imesh->begin( inodeItr );
-
-//     NTYPE *ptr[3];
-
-//     ptr[0] = (NTYPE *)(nHandles[data[0]]->nrrd->data);
-//     ptr[1] = (NTYPE *)(nHandles[data[1]]->nrrd->data);
-//     ptr[2] = (NTYPE *)(nHandles[data[2]]->nrrd->data);
-
-//     int npts = nHandles[data[0]]->nrrd->axis[1].size;
-
-//     for( int i=0; i<npts; i++ ) {
-
-//       ifield->set_value( Vector( ptr[0][i],
-// 				 ptr[1][i],
-// 				 ptr[2][i]),
-// 			 *inodeItr);	
-//       ++inodeItr;
-//    }
-//   }
 
   return FieldHandle( ifield );
 }
+
+
+
+
+template< class FIELD, class MESH, class NTYPE >
+class NrrdFieldConverterFieldAlgoTensor : public NrrdFieldConverterFieldAlgo
+{
+public:
+  //! virtual interface.
+  virtual FieldHandle execute(MeshHandle& mHandle,
+		       NrrdDataHandle dataH,
+		       int idim, int jdim, int kdim, int permute);
+
+  virtual FieldHandle execute(MeshHandle& mHandle,
+			      NrrdDataHandle dataH);  
+};
+
+
+template< class FIELD, class MESH, class NTYPE >
+FieldHandle
+NrrdFieldConverterFieldAlgoTensor<FIELD, MESH, NTYPE>::
+execute(MeshHandle& mHandle,
+	NrrdDataHandle dataH,
+	int idim, int jdim, int kdim, int permute)
+{
+  MESH *imesh = (MESH *) mHandle.get_rep();
+  FIELD *ifield = 0;
+
+  if (dataH != 0 ) {
+    // determine if nrrd is unknown, node or cell centered
+    int data_center = nrrdCenterUnknown;
+    for (int a = 0; a<dataH->nrrd->dim; a++) {
+      if (dataH->nrrd->axis[a].center != nrrdCenterUnknown)
+	data_center = dataH->nrrd->axis[a].center;
+    }
+    if (data_center == nrrdCenterCell)
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::FACE);
+    else
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+
+    typename FIELD::mesh_type::Node::iterator inodeItr;
+
+    imesh->begin( inodeItr );
+
+    register int i, j, k, index;
+				  
+    NTYPE *ptr = (NTYPE *)(dataH->nrrd->data);
+
+    for( k=0; k<kdim; k++ ) {
+      for( j=0; j<jdim; j++ ) {
+	for( i=0; i<idim; i++ ) {
+	  if( permute )
+	    index = (k * jdim + j) * idim + i;
+	  else 
+	    index = (i * jdim + j) * kdim + k;
+	
+	  Tensor tmp;
+	  if (nrrdKindSize( dataH->nrrd->axis[0].kind) == 6) {
+	    // 3D symmetric tensor
+	    tmp.mat_[0][0] = ptr[index*3];
+	    tmp.mat_[0][1] = tmp.mat_[1][0] = ptr[index*3+1];
+	    tmp.mat_[0][2] = tmp.mat_[2][0] = ptr[index*3+2];
+	    tmp.mat_[1][1] = ptr[index*3+3];
+	    tmp.mat_[1][2] = tmp.mat_[2][1] = ptr[index*3+4];
+	    tmp.mat_[2][2] = ptr[index*3+5];
+	    ifield->set_value( tmp, *inodeItr);
+	  } else if (nrrdKindSize( dataH->nrrd->axis[0].kind) == 7) {
+	    // 3D symmetric tensor with mask
+	    // if mask < 0.5, all tensor values are 0
+	    if (ptr[index*3] < 0.5) {
+	      for (int x=0; x<3; x++) 
+		for (int y=0; y<3; y++)
+		  tmp.mat_[x][y]=0;
+
+	    } else {
+	      // skip mask
+	      tmp.mat_[0][0] = ptr[index*3+1];
+	      tmp.mat_[0][1] = tmp.mat_[1][0] = ptr[index*3+2];
+	      tmp.mat_[0][2] = tmp.mat_[2][0] = ptr[index*3+3];
+	      tmp.mat_[1][1] = ptr[index*3+4];
+	      tmp.mat_[1][2] = tmp.mat_[2][1] = ptr[index*3+5];
+	      tmp.mat_[2][2] = ptr[index*3+6];	      
+	    }
+	    ifield->set_value( tmp, *inodeItr);
+	  } else if (nrrdKindSize( dataH->nrrd->axis[0].kind) == 9) {
+	    // not symmetric, do a straight across copy
+	    tmp.mat_[0][0] = ptr[index*3];
+	    tmp.mat_[0][1] = ptr[index*3+1];
+	    tmp.mat_[0][2] = ptr[index*3+2];
+	    tmp.mat_[1][0] = ptr[index*3+3];
+	    tmp.mat_[1][1] = ptr[index*3+4];
+	    tmp.mat_[1][2] = ptr[index*3+4];
+	    tmp.mat_[2][0] = ptr[index*3+5];
+	    tmp.mat_[2][1] = ptr[index*3+6];
+	    tmp.mat_[2][2] = ptr[index*3+7];
+	  } else {
+	    return FieldHandle( ifield );
+	  }
+	
+	  ++inodeItr;
+	}
+      }
+    }
+  } else {
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+  }
+
+  return FieldHandle( ifield );
+  
+}
+
+template< class FIELD, class MESH, class NTYPE >
+FieldHandle
+NrrdFieldConverterFieldAlgoTensor<FIELD, MESH, NTYPE>::
+execute(MeshHandle& mHandle,
+	NrrdDataHandle dataH)
+{
+  MESH *imesh = (MESH *) mHandle.get_rep();
+  FIELD *ifield = 0;
+
+  if (dataH != 0) {
+    // determine if nrrd is unknown, node or cell centered
+    int data_center = nrrdCenterUnknown;
+    for (int a = 0; a<dataH->nrrd->dim; a++) {
+      if (dataH->nrrd->axis[a].center != nrrdCenterUnknown)
+	data_center = dataH->nrrd->axis[a].center;
+    }
+    if (data_center == nrrdCenterCell)
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::FACE);
+    else
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+
+    typename FIELD::mesh_type::Node::iterator inodeItr, end;
+    
+    imesh->begin( inodeItr );
+    imesh->end( end );
+    
+    NTYPE *ptr = (NTYPE *)(dataH->nrrd->data);
+    int i = 0;
+    while (inodeItr != end) {
+      Tensor tmp;
+      if (nrrdKindSize( dataH->nrrd->axis[0].kind) == 6) {
+	// 3D symmetric tensor
+	tmp.mat_[0][0] = ptr[index*3];
+	tmp.mat_[0][1] = tmp.mat_[1][0] = ptr[index*3+1];
+	tmp.mat_[0][2] = tmp.mat_[2][0] = ptr[index*3+2];
+	tmp.mat_[1][1] = ptr[index*3+3];
+	tmp.mat_[1][2] = tmp.mat_[2][1] = ptr[index*3+4];
+	tmp.mat_[2][2] = ptr[index*3+5];
+	ifield->set_value( tmp, *inodeItr);
+      } else if (nrrdKindSize( dataH->nrrd->axis[0].kind) == 7) {
+	// 3D symmetric tensor with mask
+	// if mask < 0.5, all tensor values are 0
+	if (ptr[index*3] < 0.5) {
+	  for (int x=0; x<3; x++) 
+	    for (int y=0; y<3; y++)
+	      tmp.mat_[x][y]=0;
+	  
+	} else {
+	  // skip mask
+	  tmp.mat_[0][0] = ptr[index*3+1];
+	  tmp.mat_[0][1] = tmp.mat_[1][0] = ptr[index*3+2];
+	  tmp.mat_[0][2] = tmp.mat_[2][0] = ptr[index*3+3];
+	  tmp.mat_[1][1] = ptr[index*3+4];
+	  tmp.mat_[1][2] = tmp.mat_[2][1] = ptr[index*3+5];
+	  tmp.mat_[2][2] = ptr[index*3+6];	      
+	}
+	ifield->set_value( tmp, *inodeItr);
+      } else if (nrrdKindSize( dataH->nrrd->axis[0].kind) == 9) {
+	// not symmetric, do a straight across copy
+	tmp.mat_[0][0] = ptr[index*3];
+	tmp.mat_[0][1] = ptr[index*3+1];
+	tmp.mat_[0][2] = ptr[index*3+2];
+	tmp.mat_[1][0] = ptr[index*3+3];
+	tmp.mat_[1][1] = ptr[index*3+4];
+	tmp.mat_[1][2] = ptr[index*3+4];
+	tmp.mat_[2][0] = ptr[index*3+5];
+	tmp.mat_[2][1] = ptr[index*3+6];
+	tmp.mat_[2][2] = ptr[index*3+7];
+      } else {
+	return FieldHandle( ifield );
+      }
+      ++inodeItr;
+      i++;
+    }    
+  } else {
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+  }
+  return FieldHandle( ifield );
+}
+  
+
 
 } // end namespace SCITeem
 

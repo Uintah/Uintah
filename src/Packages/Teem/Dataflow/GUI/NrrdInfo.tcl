@@ -31,6 +31,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	global $this-dimension
 	global $this-active_tab
 	global $this-label0
+	global $this-kind0
 	global $this-center0
 	global $this-size0
 	global $this-spacing0
@@ -44,6 +45,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	set $this-dimension 0
 	set $this-active_tab "Axis 0"
 	set $this-label0 "---"
+	set $this-kind0 "---"
 	set $this-center0 "---"
 	set $this-size0 "---"
 	set $this-spacing0 "---"
@@ -110,6 +112,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	    # Clear Axis 0 and dimension
 	    set $this-dimension 0
 	    set $this-label0 "---"
+	    set $this-kind0 "---"
 	    set $this-center0 "---"
 	    set $this-size0 "---"
 	    set $this-spacing0 "---"
@@ -131,6 +134,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 			       -command "$this set_active_tab \"Axis 0\""]
 		    
 		    labelpair $t.l "Label" $this-label0
+		    labelpair $t.k "Kind" $this-kind0
 		    labelpair $t.c "Center" $this-center0
 		    labelpair $t.sz "Size" $this-size0
 		    labelpair $t.sp "Spacing" $this-spacing0
@@ -147,6 +151,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 			       -command "$this set_active_tab \"Axis $i\""]
 		    
 		    labelpair $t.l "Label" $this-label$i
+		    labelpair $t.k "Kind" $this-kind$i
 		    labelpair $t.c "Center" $this-center$i
 		    labelpair $t.sz "Size" $this-size$i
 		    labelpair $t.sp "Spacing" $this-spacing$i
@@ -162,6 +167,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 			   -command "$this set_active_tab \"Axis 0\""]
 		    
 		labelpair $t.l "Label" $this-label0
+		labelpair $t.k "Kind" $this-kind0
 		labelpair $t.c "Center" $this-center0
 		labelpair $t.sz "Size" $this-size0
 		labelpair $t.sp "Spacing" $this-spacing0

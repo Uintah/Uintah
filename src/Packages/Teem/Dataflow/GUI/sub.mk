@@ -70,6 +70,7 @@ SRCS := \
 	$(SRCDIR)/UnuQuantize.tcl\
 	$(SRCDIR)/UnuResample.tcl\
 	$(SRCDIR)/UnuSlice.tcl\
+	$(SRCDIR)/NrrdToMatrix.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

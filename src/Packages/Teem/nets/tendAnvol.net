@@ -14,6 +14,7 @@ set m8 [addModuleAtPosition "Teem" "Tend" "TendAnvol" 364 325]
 set m9 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldDataType" 304 70]
 set m10 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 186 489]
 
+addConnection $m2 0 $m6 3
 addConnection $m2 0 $m4 0
 addConnection $m4 0 $m3 0
 addConnection $m2 0 $m1 0

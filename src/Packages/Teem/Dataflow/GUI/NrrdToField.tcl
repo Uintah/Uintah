@@ -28,7 +28,6 @@ itcl_class Teem_DataIO_NrrdToField {
 
     method set_defaults {} {
 	global $this-permute
-	global $this-non-scalar-data
 	global $this-build-eigens
 	global $this-quad-or-tet
 	global $this-struct-unstruct
@@ -37,7 +36,6 @@ itcl_class Teem_DataIO_NrrdToField {
 	global $this-nk
 
 	set $this-permute 0
-	set $this-non-scalar-data 0
 	set $this-build-eigens 0
 	set $this-quad-or-tet "Auto"
 	set $this-struct-unstruct "Auto"
@@ -63,10 +61,6 @@ itcl_class Teem_DataIO_NrrdToField {
 	    -variable $this-permute
 	pack $w.f.options.permute -side top  -expand yes -fill x
 	
-
-	checkbutton $w.f.options.scalardata -text "First dimension is vector or tensor data" -variable $this-non-scalar-data
-	pack $w.f.options.scalardata -side top -expand yes -fill x
-
 	checkbutton $w.f.options.eigens -text "Build Eigen decomposition for Tensor field" -variable $this-build-eigens
 	pack $w.f.options.eigens -side top -expand yes -fill x
 

@@ -148,7 +148,7 @@ NrrdReader::read_nrrd()
       for (int i = 0; i < read_handle_->nrrd->dim; i++) {
 	if (!(AIR_EXISTS(read_handle_->nrrd->axis[i].min) && 
 	      AIR_EXISTS(read_handle_->nrrd->axis[i].max)))
-	  nrrdAxisMinMaxSet(read_handle_->nrrd, i, nrrdCenterNode);
+	  nrrdAxisInfoMinMaxSet(read_handle_->nrrd, i, nrrdCenterNode);
       }
     }
     return true;

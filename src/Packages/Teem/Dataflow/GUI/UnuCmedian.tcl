@@ -30,7 +30,6 @@ itcl_class Teem_Unu_UnuCmedian {
 	global $this-weight
 	global $this-bins
 	global $this-pad
-	global $this-non-scalar-data
 	
 
 	set $this-radius 1
@@ -38,7 +37,6 @@ itcl_class Teem_Unu_UnuCmedian {
 	set $this-bins 2048
 	set $this-mode 0
 	set $this-pad 0
-	set $this-non-scalar-data 0
     }
 
     method valid_int {new} {
@@ -68,9 +66,6 @@ itcl_class Teem_Unu_UnuCmedian {
 	
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
-
-	checkbutton $w.f.options.scalardata -text "First dimension is vector or tensor data" -variable $this-non-scalar-data
-	pack $w.f.options.scalardata -side top -expand yes -fill x
 
 	#radius
 	iwidgets::entryfield $w.f.options.radius -labeltext "Radius:" \

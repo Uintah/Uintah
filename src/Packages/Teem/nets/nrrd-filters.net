@@ -36,7 +36,6 @@ if {![file isdirectory $DATADIR]} {
    ::netedit scheduleok
    return
 }
-puts "*** Using SCIRUN_DATA $DATADIR"
 
 source $DATADIR/brain-dmw/brain-dmw.settings
 
@@ -66,6 +65,7 @@ set m9 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 268 356]
 set m10 [addModuleAtPosition "Teem" "Unu" "UnuPermute" 437 151]
 set m11 [addModuleAtPosition "Teem" "Unu" "UnuPad" 413 217]
 
+addConnection $m7 0 $m8 3
 addConnection $m1 1 $m2 0
 addConnection $m0 0 $m7 0
 addConnection $m8 0 $m9 0
