@@ -8,7 +8,7 @@ SRCDIR	:= Remote/Tools/Model
 # grab a copy of $SRCDIR since it changes later
 MYSRCDIR := $(SRCTOP)/$(SRCDIR)
 
-$(MYSRCDIR)/BisonMe.cc: $(MYSRCDIR)/BisonMe.y $(MYSRCDIR)/FlexMe.cc
+$(MYSRCDIR)/BisonMe.cc: $(MYSRCDIR)/BisonMe.y
 	bison -v -d $<
 	mv -f $(MYSRCDIR)/BisonMe.tab.c $(MYSRCDIR)/BisonMe.cc
 	mv -f $(MYSRCDIR)/BisonMe.tab.h $(MYSRCDIR)/BisonMe.h
@@ -29,6 +29,9 @@ SRCS     += \
 
 #
 # $Log$
+# Revision 1.3  2000/07/12 18:43:08  dahart
+# Removed circular dependency in sub.mk
+#
 # Revision 1.2  2000/07/11 20:30:10  yarden
 # minor bug fixes
 #
