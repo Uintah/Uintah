@@ -217,10 +217,8 @@ using namespace SCIRun;
                                   DataWarehouse*,
                                   DataWarehouse*);
                                   
-/*__________________________________
-*   PUT THE RF TASKS HERE FOR 
-*   NOW
-*__________________________________*/                               
+//__________________________________
+//   RF TASKS                             
      void computeRateFormPressure(const ProcessorGroup*,
                                    const PatchSubset* patch,
                                    const MaterialSubset* matls,
@@ -245,36 +243,13 @@ using namespace SCIRun;
                                            DataWarehouse*,
                                            DataWarehouse*);  
 
-/*__________________________________
-* END OF RF TASKS
-*__________________________________*/                                
+//__________________________________
+                               
       void printConservedQuantities(const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset* matls,
                                     DataWarehouse*,
                                     DataWarehouse*);
-            
-      void setBC(CCVariable<double>& variable,const std::string& type, 
-               const Patch* p, const int mat_id);
-               
-      void setBC(CCVariable<double>& press_CC, const CCVariable<double>& rho,
-               const std::string& whichVar, const std::string& type, 
-               const Patch* p, const int mat_id, DataWarehouse*);
-
-      void setBC(CCVariable<Vector>& variable,const std::string& type,
-               const Patch* p, const int mat_id);
-               
-      void setBC(SFCXVariable<double>& variable,const std::string& type,
-               const std::string& comp, const Patch* p, const int mat_id);
-               
-      void setBC(SFCYVariable<double>& variable,const std::string& type,
-               const std::string& comp, const Patch* p, const int mat_id);
-               
-      void setBC(SFCZVariable<double>& variable,const std::string& type,
-               const std::string& comp, const Patch* p, const int mat_id);   
-
-      void setBC(SFCXVariable<Vector>& variable,const std::string& type,
-               const Patch* p, const int mat_id);   
 
       void printData(const  Patch* patch,int include_GC,const string& message1,
                    const string& message2, const  CCVariable<int>& q_CC);
