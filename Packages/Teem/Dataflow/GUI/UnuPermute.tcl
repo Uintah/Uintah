@@ -44,14 +44,14 @@ itcl_class Teem_Unu_UnuPermute {
 	set w .ui[modname]
         if {[winfo exists $w]} {
   
-	    if {[winfo exists $w.f.axisf.t]} {
-		destroy $w.f.axisf.t
+	    if {[winfo exists $w.f.t]} {
+		destroy $w.f.t
 	    }
 	    for {set i 1} {$i < [set $this-dim]} {incr i} {
 		#puts $i
-		if {! [winfo exists $w.f.axisf.a$i]} {
-		    make_entry $w.f.axisf.a$i "Axis $i <- " $this-axis$i
-		    pack $w.f.axisf.a$i -side top -expand 1 -fill x
+		if {! [winfo exists $w.f.a$i]} {
+		    make_entry $w.f.a$i "Axis $i <- " $this-axis$i
+		    pack $w.f.a$i -side top -expand 1 -fill x
 		}
 	    }
 	}
@@ -73,13 +73,13 @@ itcl_class Teem_Unu_UnuPermute {
 	set w .ui[modname]
         if {[winfo exists $w]} {
 	    
-	    if {[winfo exists $w.f.axisf.t]} {
-		destroy $w.f.axisf.t
+	    if {[winfo exists $w.f.t]} {
+		destroy $w.f.t
 	    }
 	    for {set i 1} {$i < [set $this-dim]} {incr i} {
 		#puts $i
-		if {[winfo exists $w.f.axisf.a$i]} {
-		    destroy $w.f.axisf.a$i
+		if {[winfo exists $w.f.a$i]} {
+		    destroy $w.f.a$i
 		}
 		unset $this-axis$i
 	    }
@@ -105,17 +105,17 @@ itcl_class Teem_Unu_UnuPermute {
         toplevel $w
         wm minsize $w 100 80
         frame $w.f
-        pack $w.f -padx 2 -pady 2 -side top -expand yes
-	frame $w.f.axisf
 
 	if {[set $this-dim] == 0} {
-	    label $w.f.axisf.t -text "Need Execute to know the number of Axes."
-	    pack $w.f.axisf.t
+	    label $w.f.t -text "Need Execute to know the number of Axes."
+	    pack $w.f.t
 	} else {
 	    init_axes 
 	}
 
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.axisf $w.f.b -side top -expand 1 -fill x
+	pack $w.f
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }

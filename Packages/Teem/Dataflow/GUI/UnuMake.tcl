@@ -477,9 +477,9 @@ itcl_class Teem_Unu_UnuMake {
 
 	pack $w.f1 -fill x -expand yes -side top
 
+
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
-
     }
 }
 

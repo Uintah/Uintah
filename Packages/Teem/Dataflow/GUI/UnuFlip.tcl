@@ -50,8 +50,8 @@ itcl_class Teem_Unu_UnuFlip {
         iwidgets::entryfield $w.f.options.axis -labeltext "axis:" -textvariable $this-axis
         pack $w.f.options.axis -side top -expand yes -fill x
 
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.b -side top -expand 1 -fill x
-	pack $w.f -expand 1 -fill x
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }

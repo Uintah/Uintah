@@ -136,7 +136,8 @@ itcl_class Teem_Unu_UnuPad {
 	    init_axes 
 	}
 
-	button $w.fb.b -text "Execute" -command "$this-c needexecute"
-	pack $w.fb.b -side top -expand 1 -fill x
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }

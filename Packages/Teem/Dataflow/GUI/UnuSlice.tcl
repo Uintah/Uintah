@@ -55,8 +55,9 @@ itcl_class Teem_Unu_UnuSlice {
         iwidgets::entryfield $w.f.options.position -labeltext "position:" -textvariable $this-position
         pack $w.f.options.position -side top -expand yes -fill x
 
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.b -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
