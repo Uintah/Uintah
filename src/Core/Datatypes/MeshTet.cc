@@ -38,6 +38,7 @@ MeshTet::~MeshTet()
 BBox
 MeshTet::get_bounding_box() const
 {
+#if 0
   BBox result;
 
   for (int i = 0; i < points_.size(); i++)
@@ -46,6 +47,19 @@ MeshTet::get_bounding_box() const
   }
 
   return result;
+#else
+  BBox result;
+
+  node_iterator ni = node_begin();
+  while (ni != node_end())
+  {
+    Point p;
+    get_point(p, *ni);
+    result.extend(p);
+    ni++;
+  }
+  return result;
+#endif
 }
 
 

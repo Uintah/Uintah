@@ -71,6 +71,13 @@ class SCICORESHARE MeshRG : public Datatype
       }
       return *this;
     }
+
+    NodeIter operator++(int)
+    {
+      NodeIter result(*this);
+      operator++();
+      return result;
+    }
   };
 
 
@@ -92,6 +99,13 @@ class SCICORESHARE MeshRG : public Datatype
 	}
       }
       return *this;
+    }
+
+    CellIter operator++(int)
+    {
+      CellIter result(*this);
+      operator++();
+      return result;
     }
   };
 
