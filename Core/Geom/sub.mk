@@ -43,6 +43,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/GeomPick.cc		                \
 	$(SRCDIR)/GeomPolyline.cc	                \
 	$(SRCDIR)/GeomQMesh.cc		                \
+	$(SRCDIR)/GeomQuads.cc		                \
 	$(SRCDIR)/GeomRenderMode.cc	                \
 	$(SRCDIR)/GeomScene.cc		                \
 	$(SRCDIR)/GeomSphere.cc		                \
