@@ -6387,7 +6387,9 @@ void GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
       glEnable(GL_ALPHA_TEST);
 #endif
       glEnable(GL_BLEND);
+#ifdef GL_FUNC_ADD // Workaround for old bad nvidia headers.
       glBlendEquation(GL_FUNC_ADD);
+#endif
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 

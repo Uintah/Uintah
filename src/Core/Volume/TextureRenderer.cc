@@ -412,7 +412,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
 		       brick->tex_type(), brick->tex_data(c));
 	}
       }
-#else
+#elif defined(GL_VERSION_1_2) // Workaround for old bad nvidia headers.
       {
 	if (reuse)
 	{
