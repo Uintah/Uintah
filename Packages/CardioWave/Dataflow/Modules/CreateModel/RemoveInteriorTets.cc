@@ -52,13 +52,13 @@ void RemoveInteriorTets::execute(){
   // must find ports and have valid data on inputs
   FieldIPort *imesh = (FieldIPort*)get_iport("TetsIn");
   if (!imesh) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'TetsIn'.");
     return;
   }
   
   FieldOPort *omesh = (FieldOPort*)get_oport("TetsOut");
   if (!omesh) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'TetsOut'.");
     return;
   }
 

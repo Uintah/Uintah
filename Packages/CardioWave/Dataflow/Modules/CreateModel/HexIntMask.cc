@@ -113,7 +113,7 @@ HexIntMask::execute()
 {
   FieldIPort *ifieldport = (FieldIPort *)get_iport("Input HexVol");
   if (!ifieldport) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Input HexVol'.");
     return;
   }
   FieldHandle ifieldhandle;

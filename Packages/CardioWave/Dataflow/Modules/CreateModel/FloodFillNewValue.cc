@@ -49,7 +49,7 @@ void FloodFillNewValue::execute(){
   pname="Volume";
   FieldIPort *ivol = (FieldIPort*)get_iport(pname);
   if (!ivol) {
-    postMessage("Unable to initialize "+name+"'s "+pname+" input port\n");
+    error("Unable to initialize iport '" + pname + "'.");
     return;
   }
   FieldHandle volH;
@@ -67,7 +67,7 @@ void FloodFillNewValue::execute(){
   pname="Point";
   FieldIPort *ipt = (FieldIPort*)get_iport(pname);
   if (!ipt) {
-    postMessage("Unable to initialize "+name+"'s "+pname+" input port\n");
+    error("Unable to initialize iport '"+ pname + "'.");
     return;
   }
   FieldHandle ptH;
@@ -88,7 +88,7 @@ void FloodFillNewValue::execute(){
   pname="FloodFilled Volume";
   FieldOPort *ovol = (FieldOPort*)get_oport(pname);
   if (!ovol) {
-    postMessage("Unable to initialize "+name+"'s "+pname+" output port\n");
+    error("Unable to initialize output port '"+pname+"'.");
     return;
   }
 

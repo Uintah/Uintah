@@ -132,11 +132,11 @@ NrrdResample::execute()
   inrrd_ = (NrrdIPort *)get_iport("Nrrd");
   onrrd_ = (NrrdOPort *)get_oport("Nrrd");
   if (!inrrd_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Nrrd'.");
     return;
   }
   if (!onrrd_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Nrrd'.");
     return;
   }
   if (!inrrd_->get(nrrdH))

@@ -69,7 +69,7 @@ void NrrdWriter::execute()
   NrrdDataHandle handle;
   inport_ = (NrrdIPort *)get_iport("Input Data");
   if (!inport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Input Data'.");
     return;
   }
 

@@ -82,11 +82,11 @@ void NrrdToField::execute()
   ofield = (FieldOPort *)get_oport("Field");
 
   if (!inrrd) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Nrrd'.");
     return;
   }
   if (!ofield) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Field'.");
     return;
   }
 

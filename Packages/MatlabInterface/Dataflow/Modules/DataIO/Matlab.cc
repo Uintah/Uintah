@@ -153,7 +153,7 @@ Matlab::execute()
     ip[k] = (MatrixIPort *)get_iport(chr);
     if (!ip[k])
     {
-      postMessage("Unable to initialize "+name+"'s iport\n");
+      error("Unable to initialize iport '" + string(chr) + "'.");
       return;
     }
 
@@ -161,7 +161,7 @@ Matlab::execute()
     op[k] = (MatrixOPort *)get_oport(chr);
     if (!op[k])
     {
-      postMessage("Unable to initialize "+name+"'s oport\n");
+      error("Unable to initialize oport '" + string(chr) + "'.");
       return;
     }
   }
