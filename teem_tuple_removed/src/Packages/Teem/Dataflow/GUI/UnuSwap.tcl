@@ -13,29 +13,30 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
 #  
-#    File   : UnuFlip.tcl
-#    Author : Martin Cole
-#    Date   : Mon Sep  8 09:46:23 2003
+#    File   : UnuSwap.tcl
+#    Author : Darby Van Uitert
+#    Date   : April 2004
 
-catch {rename Teem_Unu_UnuFlip ""}
-
-itcl_class Teem_Unu_UnuFlip {
+itcl_class Teem_Unu_UnuSwap {
     inherit Module
     constructor {config} {
-        set name UnuFlip
+        set name UnuSwap
         set_defaults
     }
+
     method set_defaults {} {
-        global $this-axis
-        set $this-axis 0
+	global $this-axisA
+	set $this-axisA 0
+
+	global $this-axisB
+	set $this-axisB 1
     }
 
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            return;
+            return
         }
-
         toplevel $w
 
         frame $w.f
@@ -44,12 +45,19 @@ itcl_class Teem_Unu_UnuFlip {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.axis -labeltext "Axis to flip along:" -textvariable $this-axis
-        pack $w.f.options.axis -side top -expand yes -fill x
+        iwidgets::entryfield $w.f.options.axisA -labeltext "Axis A:" \
+	    -textvariable $this-axisA
+        pack $w.f.options.axisA -side top -expand yes -fill x
 
-	makeSciButtonPanel $w $w $this
+        iwidgets::entryfield $w.f.options.axisB -labeltext "Axis B:" \
+	    -textvariable $this-axisB
+        pack $w.f.options.axisB -side top -expand yes -fill x
+
+	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
 
 	pack $w.f -expand 1 -fill x
     }
 }
+
+

@@ -13,7 +13,7 @@
 //  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 //  University of Utah. All Rights Reserved.
 //  
-//    File   : UnuAxsplit.cc
+//    File   : UnuAxinsert.cc Add a "stub" (length 1) axis to a nrrd.
 //    Author : Martin Cole
 //    Date   : Mon Sep  8 09:46:49 2003
 
@@ -21,41 +21,39 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Core/Containers/StringUtil.h>
 
 namespace SCITeem {
 
 using namespace SCIRun;
 
-class UnuAxsplit : public Module {
+class UnuAxinsert : public Module {
 public:
-  UnuAxsplit(SCIRun::GuiContext *ctx);
-  virtual ~UnuAxsplit();
+  UnuAxinsert(SCIRun::GuiContext *ctx);
+  virtual ~UnuAxinsert();
   virtual void execute();
 
 private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
-  GuiInt       axis_;
-  GuiInt       fastsize_;
-  GuiInt       slowsize_;
+  GuiInt          axis_;
+  GuiString       label_;
 };
 
-DECLARE_MAKER(UnuAxsplit)
+DECLARE_MAKER(UnuAxinsert)
 
-UnuAxsplit::UnuAxsplit(SCIRun::GuiContext *ctx) : 
-  Module("UnuAxsplit", ctx, Filter, "Unu", "Teem"), 
-  axis_(ctx->subVar("axis")),
-  fastsize_(ctx->subVar("fastsize")),
-  slowsize_(ctx->subVar("slowsize"))
+UnuAxinsert::UnuAxinsert(SCIRun::GuiContext *ctx) : 
+  Module("UnuAxinsert", ctx, Filter, "Unu", "Teem"), 
+  axis_(ctx->subVar("axis")), label_(ctx->subVar("label"))
 {
 }
 
-UnuAxsplit::~UnuAxsplit() {
+UnuAxinsert::~UnuAxinsert() {
 }
 
 void 
-UnuAxsplit::execute()
+UnuAxinsert::execute()
 {
   NrrdDataHandle nrrd_handle;
   update_state(NeedData);
@@ -81,10 +79,16 @@ UnuAxsplit::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-  if (nrrdAxesSplit(nout, nin, axis_.get(), fastsize_.get(), slowsize_.get())) {
-    char *err = biffGetDone(NRRD);
-    error(string("Error Axsplitting nrrd: ") + err);
+  
+  if (nrrdAxesInsert(nout, nin, axis_.get())) {
+   char *err = biffGetDone(NRRD);
+    error(string("Error Axinserting nrrd: ") + err);
     free(err);
+  }
+
+  if (strlen(label_.get().c_str())) {
+    int axis = axis_.get();
+    nout->axis[axis].label = airStrdup(label_.get().c_str());
   }
 
   NrrdData *nrrd = scinew NrrdData;
@@ -96,7 +100,23 @@ UnuAxsplit::execute()
   *((PropertyManager *) out.get_rep()) =
     *((PropertyManager *) nrrd_handle.get_rep());
 
+  // set kind
+  // Copy the axis kinds
+  int offset = 0;
+  for (int i=0; i<nin->dim; i++) {
+    if (i == axis_.get()) {
+      offset = 1;
+      nout->axis[i].kind = nrrdKindStub;
+    }
+    nout->axis[i+offset].kind = nin->axis[i].kind;
+  }
+  if (axis_.get() == nin->dim) 
+    nout->axis[axis_.get()].kind = nrrdKindStub;
+
   onrrd_->send(out);
+
 }
 
 } // End namespace SCITeem
+
+

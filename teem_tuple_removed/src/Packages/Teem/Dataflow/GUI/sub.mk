@@ -53,10 +53,15 @@ SRCS := \
 	$(SRCDIR)/TendPoint.tcl\
 	$(SRCDIR)/TendSatin.tcl\
 	$(SRCDIR)/TendShrink.tcl\
+	$(SRCDIR)/UnuAxdelete.tcl\
 	$(SRCDIR)/UnuAxinfo.tcl\
+	$(SRCDIR)/UnuAxinsert.tcl\
+	$(SRCDIR)/UnuAxmerge.tcl\
+	$(SRCDIR)/UnuAxsplit.tcl\
 	$(SRCDIR)/UnuCmedian.tcl\
 	$(SRCDIR)/UnuConvert.tcl\
 	$(SRCDIR)/UnuCrop.tcl\
+	$(SRCDIR)/UnuFlip.tcl\
 	$(SRCDIR)/UnuInset.tcl\
 	$(SRCDIR)/UnuJoin.tcl\
 	$(SRCDIR)/UnuMake.tcl\
@@ -69,6 +74,8 @@ SRCS := \
 	$(SRCDIR)/UnuReshape.tcl\
 	$(SRCDIR)/UnuSlice.tcl\
 	$(SRCDIR)/UnuSplice.tcl\
+	$(SRCDIR)/UnuShuffle.tcl\
+	$(SRCDIR)/UnuSwap.tcl\
 	$(SRCDIR)/NrrdToMatrix.tcl\
 	$(SRCDIR)/UnuUnquantize.tcl\
 #[INSERT NEW TCL FILE HERE]

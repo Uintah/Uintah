@@ -26,17 +26,14 @@ itcl_class Teem_Unu_UnuAxmerge {
         set_defaults
     }
     method set_defaults {} {
-        global $this-axis_merge_list
-        set $this-axis_merge_list ""
-
-
+        global $this-axes
+        set $this-axes "0"
     }
 
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -47,11 +44,12 @@ itcl_class Teem_Unu_UnuAxmerge {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.axis_merge_list -labeltext "axis_merge_list:" -textvariable $this-axis_merge_list
-        pack $w.f.options.axis_merge_list -side top -expand yes -fill x
+        iwidgets::entryfield $w.f.options.axis -labeltext "Axis (or axes) to merge:" -textvariable $this-axes
+        pack $w.f.options.axis -side top -expand yes -fill x
 
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.b -side top -expand 1 -fill x
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
+
 	pack $w.f -expand 1 -fill x
     }
 }

@@ -13,50 +13,52 @@
 //  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 //  University of Utah. All Rights Reserved.
 //  
-//    File   : UnuAxsplit.cc
-//    Author : Martin Cole
-//    Date   : Mon Sep  8 09:46:49 2003
+//    File   : UnuSwap.cc Interchange scan-line ordering of two axes
+//    Author : Darby Van Uitert
+//    Date   : April 2004
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 
+
 namespace SCITeem {
 
 using namespace SCIRun;
 
-class UnuAxsplit : public Module {
+class PSECORESHARE UnuSwap : public Module {
 public:
-  UnuAxsplit(SCIRun::GuiContext *ctx);
-  virtual ~UnuAxsplit();
+  UnuSwap(GuiContext*);
+
+  virtual ~UnuSwap();
+
   virtual void execute();
+
+  virtual void tcl_command(GuiArgs&, void*);
 
 private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
-  GuiInt       axis_;
-  GuiInt       fastsize_;
-  GuiInt       slowsize_;
+  GuiInt          axisA_;
+  GuiInt          axisB_;
 };
 
-DECLARE_MAKER(UnuAxsplit)
 
-UnuAxsplit::UnuAxsplit(SCIRun::GuiContext *ctx) : 
-  Module("UnuAxsplit", ctx, Filter, "Unu", "Teem"), 
-  axis_(ctx->subVar("axis")),
-  fastsize_(ctx->subVar("fastsize")),
-  slowsize_(ctx->subVar("slowsize"))
+DECLARE_MAKER(UnuSwap)
+UnuSwap::UnuSwap(GuiContext* ctx)
+  : Module("UnuSwap", ctx, Source, "Unu", "Teem"),
+    inrrd_(0), onrrd_(0), axisA_(ctx->subVar("axisA")),
+    axisB_(ctx->subVar("axisB"))
 {
 }
 
-UnuAxsplit::~UnuAxsplit() {
+UnuSwap::~UnuSwap(){
 }
 
-void 
-UnuAxsplit::execute()
-{
+void
+ UnuSwap::execute(){
   NrrdDataHandle nrrd_handle;
   update_state(NeedData);
   inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
@@ -77,13 +79,14 @@ UnuAxsplit::execute()
     error("Empty input Nrrd.");
     return;
   }
+  reset_vars();
 
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-  if (nrrdAxesSplit(nout, nin, axis_.get(), fastsize_.get(), slowsize_.get())) {
+  if (nrrdAxesSwap(nout, nin, axisA_.get(), axisB_.get())) {
     char *err = biffGetDone(NRRD);
-    error(string("Error Axsplitting nrrd: ") + err);
+    error(string("Error Swapping nrrd: ") + err);
     free(err);
   }
 
@@ -96,7 +99,22 @@ UnuAxsplit::execute()
   *((PropertyManager *) out.get_rep()) =
     *((PropertyManager *) nrrd_handle.get_rep());
 
+  // Copy the axis kinds
+  for (int i=0; i<nin->dim, i<nout->dim; i++) {
+    nout->axis[i].kind = nin->axis[i].kind;
+  }
+  nout->axis[axisA_.get()].kind = nin->axis[axisB_.get()].kind;
+  nout->axis[axisB_.get()].kind = nin->axis[axisA_.get()].kind;
+
   onrrd_->send(out);
 }
 
-} // End namespace SCITeem
+void
+ UnuSwap::tcl_command(GuiArgs& args, void* userdata)
+{
+  Module::tcl_command(args, userdata);
+}
+
+} // End namespace Teem
+
+

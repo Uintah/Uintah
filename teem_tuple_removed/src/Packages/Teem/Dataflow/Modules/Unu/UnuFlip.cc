@@ -21,11 +21,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
-
-#include <sstream>
-#include <iostream>
-using std::endl;
-#include <stdio.h>
+#include <Core/Containers/StringUtil.h>
 
 namespace SCITeem {
 
@@ -41,7 +37,7 @@ private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
-  GuiInt       axis_;
+  GuiInt          axis_;
 };
 
 DECLARE_MAKER(UnuFlip)
@@ -60,15 +56,15 @@ UnuFlip::execute()
 {
   NrrdDataHandle nrrd_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  onrrd_ = (NrrdOPort *)get_oport("nout");
+  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
+  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
   if (!inrrd_) {
-    error("Unable to initialize iport 'Nrrd'.");
+    error("Unable to initialize iport 'InputNrrd'.");
     return;
   }
   if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
+    error("Unable to initialize oport 'OutputNrrd'.");
     return;
   }
   if (!inrrd_->get(nrrd_handle))
@@ -80,10 +76,34 @@ UnuFlip::execute()
   }
 
   Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nout = nrrdNew();
+  
+  if (axis_.get() >= nin->dim) {
+    error("Axis " + to_string(axis_.get()) + " out of bounds [0," + to_string(nin->dim-1));
+    return;
+  }
 
-  error("This module is a stub.  Implement me.");
+  if (nrrdFlip(nout, nin, axis_.get())) {
+   char *err = biffGetDone(NRRD);
+    error(string("Error Flipping nrrd: ") + err);
+    free(err);
+  }
 
-  //onrrd_->send(NrrdDataHandle(nrrd_joined));
+  NrrdData *nrrd = scinew NrrdData;
+  nrrd->nrrd = nout;
+
+  NrrdDataHandle out(nrrd);
+  // Copy the properties.
+  *((PropertyManager *) out.get_rep()) =
+    *((PropertyManager *) nrrd_handle.get_rep());
+
+  // Copy the axis kinds
+  for (int i=0; i<nin->dim; i++) {
+    nout->axis[i].kind = nin->axis[i].kind;
+  }
+
+  onrrd_->send(out);
+
 }
 
 } // End namespace SCITeem

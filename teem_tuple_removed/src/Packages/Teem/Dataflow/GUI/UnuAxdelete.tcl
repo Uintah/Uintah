@@ -13,16 +13,16 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
 #  
-#    File   : UnuFlip.tcl
-#    Author : Martin Cole
-#    Date   : Mon Sep  8 09:46:23 2003
+#    File   : UnuAxdelete.tcl
+#    Author : Darby Van Uitert
+#    Date   : April 2004
 
-catch {rename Teem_Unu_UnuFlip ""}
+catch {rename Teem_Unu_UnuAxdelete ""}
 
-itcl_class Teem_Unu_UnuFlip {
+itcl_class Teem_Unu_UnuAxdelete {
     inherit Module
     constructor {config} {
-        set name UnuFlip
+        set name UnuAxdelete
         set_defaults
     }
     method set_defaults {} {
@@ -44,7 +44,7 @@ itcl_class Teem_Unu_UnuFlip {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.axis -labeltext "Axis to flip along:" -textvariable $this-axis
+        iwidgets::entryfield $w.f.options.axis -labeltext "Axis:" -textvariable $this-axis
         pack $w.f.options.axis -side top -expand yes -fill x
 
 	makeSciButtonPanel $w $w $this
@@ -53,3 +53,4 @@ itcl_class Teem_Unu_UnuFlip {
 	pack $w.f -expand 1 -fill x
     }
 }
+
