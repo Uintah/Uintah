@@ -22,7 +22,8 @@ OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	VectorFieldPort.o  VectorFieldRG.o  VectorFieldUG.o \
         HexMesh.o HexMeshPort.o  ScalarFieldHUG.o VectorFieldHUG.o \
 	VoidStar.o  VoidStarPort.o cMatrix.o cSMatrix.o cDMatrix.o \
-	cVector.o cVectorPort.o cMatrixPort.o
+	cVector.o cVectorPort.o cMatrixPort.o ParticleSet.o ParticleSetPort.o \
+	cfdlibParticleSet.o
 GENSRCS = ScalarFieldRGchar.cc  ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
 	ScalarFieldRGdouble.cc  ScalarFieldRG.cc
 SRCS = $(GENSRCS) BasicSurfaces.cc  \
@@ -47,7 +48,8 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	VectorFieldPort.cc VectorFieldRG.cc VectorFieldUG.cc \
         HexMesh.cc HexMeshPort.cc ScalarFieldHUG.cc VectorFieldHUG.cc \
 	LockArray3.cc \
-	VectorFieldZone.cc
+	VectorFieldZone.cc ParticleSetPort.cc ParticleSet.cc \
+	cfdlibParticleSet.cc
 GENH = ScalarFieldRGchar.h  ScalarFieldRGint.h  ScalarFieldRGfloat.h \
 	ScalarFieldRGdouble.h ScalarFieldRG.h \
 	VectorFieldPort.cc VectorFieldRG.cc VectorFieldUG.cc \
@@ -77,7 +79,7 @@ scalars::
 	$(RM) $(SCALARC) $(SCALARH)
 
 ScalarFieldRGchar.o: ScalarFieldRGchar.h
-	
+
 ScalarFieldRGchar.h: ScalarFieldRGTYPE.h
 	sed 's/TYPE/char/g' < ScalarFieldRGTYPE.h > ScalarFieldRGchar.h
 
@@ -85,7 +87,7 @@ ScalarFieldRGchar.cc: ScalarFieldRGTYPE.cc
 	sed 's/TYPE/char/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGchar.cc
 
 ScalarFieldRGshort.o: ScalarFieldRGshort.h
-	
+
 ScalarFieldRGshort.h: ScalarFieldRGTYPE.h
 	sed 's/TYPE/short/g' < ScalarFieldRGTYPE.h > ScalarFieldRGshort.h
 
@@ -93,7 +95,7 @@ ScalarFieldRGshort.cc: ScalarFieldRGTYPE.cc
 	sed 's/TYPE/short/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGshort.cc
 
 ScalarFieldRGint.o: ScalarFieldRGint.h
-	
+
 ScalarFieldRGint.h: ScalarFieldRGTYPE.h
 	sed 's/TYPE/int/g' < ScalarFieldRGTYPE.h > ScalarFieldRGint.h
 
@@ -101,7 +103,7 @@ ScalarFieldRGint.cc: ScalarFieldRGTYPE.cc
 	sed 's/TYPE/int/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGint.cc
 
 ScalarFieldRGfloat.o: ScalarFieldRGfloat.h
-	
+
 ScalarFieldRGfloat.h: ScalarFieldRGTYPE.h
 	sed 's/TYPE/float/g' < ScalarFieldRGTYPE.h > ScalarFieldRGfloat.h
 
@@ -109,7 +111,7 @@ ScalarFieldRGfloat.cc: ScalarFieldRGTYPE.cc
 	sed 's/TYPE/float/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGfloat.cc
 
 ScalarFieldRGdouble.o: ScalarFieldRGdouble.h
-	
+
 ScalarFieldRGdouble.h: ScalarFieldRGTYPE.h
 	sed 's/TYPE/double/g' < ScalarFieldRGTYPE.h > ScalarFieldRGdouble.h
 
@@ -117,7 +119,7 @@ ScalarFieldRGdouble.cc: ScalarFieldRGTYPE.cc
 	sed 's/TYPE/double/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGdouble.cc
 
 ScalarFieldRG.o: ScalarFieldRG.h
-	
+
 ScalarFieldRG.h: ScalarFieldRGdouble.h
 	sed 's/ScalarFieldRGdouble/ScalarFieldRG/g' < ScalarFieldRGdouble.h > ScalarFieldRG.h
 
