@@ -37,7 +37,8 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
             SimulationStateP& sharedState,
             const int mat_id,
             DataWarehouse* new_dw,
-            Lodi_vars* lv);
+            Lodi_vars* lv,
+            NG_BC_vars* NGVars);
             
   void setBC(CCVariable<double>& var,     
             const std::string& type,     // stub function
@@ -57,7 +58,8 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
              SimulationStateP& sharedState,
              const int mat_id, 
              DataWarehouse* new_dw,
-             Lodi_vars_pressBC*);
+             Lodi_vars_pressBC*,
+             NG_BC_vars* NGVars);
              
   void setBC(CCVariable<double>& press_CC,          
              StaticArray<CCVariable<double> >& rho_micro,
@@ -78,7 +80,8 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
              SimulationStateP& sharedState,
              const int mat_id,
              DataWarehouse* new_dw, 
-             Lodi_vars* lv);
+             Lodi_vars* lv,
+             NG_BC_vars* NGVars);
              
    void setBC(CCVariable<Vector>& variable,  // stub function
              const std::string& type,
@@ -322,7 +325,8 @@ void setBC(T& vel_FC,
            const string& desc,
            const Patch* patch,    
            const int mat_id,
-           SimulationStateP& sharedState)      
+           SimulationStateP& sharedState,
+           NG_BC_vars* ng)      
 {
   BC_doing << "setBCFC (SFCVariable) "<< desc<< " mat_id = " << mat_id <<endl;
   Vector cell_dx = patch->dCell();
@@ -404,7 +408,7 @@ void setBC(T& vel_FC,
             bc_kind == "Custom" &&  
             face == Patch::xminus) {
           setNGC_Nozzle_BC<T, double>(patch, face, vel_FC, "Vel_FC","FC", bound, 
-                                   bc_kind,mat_id, child, sharedState); 
+                                   bc_kind,mat_id, child, sharedState, ng); 
         }        
         
         //__________________________________
