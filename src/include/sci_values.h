@@ -31,7 +31,7 @@
 #define MAXSHORT  SHRT_MAX
 #define MAXINT    INT_MAX
 
-#elif defined __GNUG__
+#else
 
 #include <values.h>
 
