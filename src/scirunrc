@@ -153,6 +153,12 @@ SCIRUN_FONT_PATH = $(SCIRUN_SRCDIR)/pixmaps
 #   Directory for writting temporary files - must be world read/writeable
 SCIRUN_TMP_DIR = /tmp
 
+### SCIRUN_SERV_TMP_DIR = [path]
+#   Directory for writting temporary files - must be world read/writeable
+#   This is one is used by the external application interface. Both scirun
+#   and scirunremote use this one to exchange files.
+SCIRUN_SERV_TMP_DIR = /tmp
+
 
 ### SCI_DBXCOMMAND = [command]
 #   Command to run when SCIRun dies and the user chooses to run a debugger
@@ -255,15 +261,6 @@ SCIRUN_TMP_DIR = /tmp
 #   Viewer's "File->Record Movie" menu) by setting the value of
 #   SCIRUN_MPEG_LICENSE_ACCEPT to "true".
 # SCIRUN_MPEG_LICENSE_ACCEPT = false
-
-### SCIRUN_NO_PORT_CACHING = [boolean]
-#   Turns of caching of data by the module ports.  This can
-#   significantly improve memory performance as it causes fields and
-#   other large objects to go away after they have been used.  However
-#   it will BREAK interactive use of SCIRun because the modules assume
-#   that the data is cached and do not always recompute it correctly.
-#   Use at own risk.
-# SCIRUN_NO_PORT_CACHING = false
 
 
 ############################
