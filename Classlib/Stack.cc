@@ -19,75 +19,46 @@
 #endif
 
 template<class T>
-Stack<T>::Stack()
+Stack<T>::Stack(int initial_alloc)
+: stack(0, initial_alloc)
 {
-    stack_top=0;
-    _size=0;
 }
 
 template<class T>
 Stack<T>::~Stack()
 {
-    StackNode<T>* p=stack_top;
-    while(p){
-	StackNode<T>* next=p->next;
-	delete p;
-	p=next;
-    }
 }
 
 template<class T>
 void Stack<T>::push(const T& item)
 {
-    stack_top=new StackNode<T>(item, stack_top);
-    _size++;
+   stack.add(item);
 }
 
 template<class T>
 void Stack<T>::dup()
 {
-    ASSERT(stack_top != 0);
-    stack_top=new StackNode<T>(stack_top->item, stack_top);
-    _size++;
+   stack.add(stack[stack.size()-1]);
 }
 
 template<class T>
 T Stack<T>::pop()
 {
-    ASSERT(stack_top != 0);
-    StackNode<T>* p=stack_top;
-    stack_top=stack_top->next;
-    T item(p->item);
-    delete p;
-    _size--;
+    ASSERT(stack.size() != 0);
+    T item(stack[stack.size()-1]);
+    stack.remove(stack.size()-1);
     return item;
 }
 
 template<class T>
 void Stack<T>::yank(int n)
 {
-    StackNode<T>* p=stack_top;
-    for(int i=1;i<n;i++){
-	ASSERT(p != 0);
-	p=p->next;
-    }
-    ASSERT(p != 0);
-    StackNode<T>* yy=p->next;
-    ASSERT(p->next != 0);
-    p->next=p->next->next;
-    _size--;
-    delete yy;
+   stack.remove(n);
 }
 
 template<class T>
-T& Stack<T>::top()
+void Stack<T>::remove_all()
 {
-    ASSERT(stack_top != 0);
-    return stack_top->item;
+   stack.remove_all();
 }
 
-template<class T>
-int Stack<T>::size()
-{
-    return _size;
-}
