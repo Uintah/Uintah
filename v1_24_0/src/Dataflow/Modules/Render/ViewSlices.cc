@@ -3344,7 +3344,6 @@ ViewSlices::fill_paint_slices(SliceWindow &window) {
   if (!gradient_.get_rep() || !cm2_.get_rep()) return;
   
   rasterize_colormap2();
-  cerr << "Filling Paint\n";
   unsigned int a;
   if (!window.paint_slices_.size()) {
     for (a = 0; a < 3; ++a) {
