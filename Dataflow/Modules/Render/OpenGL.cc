@@ -44,6 +44,7 @@
 #include <sci_gl.h>
 #include <sci_glu.h>
 #include <sci_glx.h>
+#include <sci_defs/bits_defs.h>
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/logo.h>
 #include <Core/Containers/StringUtil.h>
@@ -1146,7 +1147,7 @@ OpenGL::real_get_pick(int x, int y,
     glSelectBuffer(pick_buffer_size, pick_buffer);
     glRenderMode(GL_SELECT);
     glInitNames();
-#if (_MIPS_SZPTR == 64)
+#ifdef SCI_64BITS
     glPushName(0);
     glPushName(0);
     glPushName(0x12345678);
@@ -1198,7 +1199,7 @@ OpenGL::real_get_pick(int x, int y,
     view_window_->do_for_visible(this,
 				 (ViewWindowVisPMF)&OpenGL::pick_draw_obj);
 
-#if (_MIPS_SZPTR == 64)
+#ifdef SCI_64BITS
     glPopName();
     glPopName();
     glPopName();
@@ -1217,7 +1218,7 @@ OpenGL::real_get_pick(int x, int y,
     }
     gui_->unlock();
     GLuint min_z;
-#if (_MIPS_SZPTR == 64)
+#ifdef SCI_64BITS
     unsigned long hit_obj=0;
     GLuint hit_obj_index = 0x12345678;
     unsigned long hit_pick=0;
@@ -1244,7 +1245,7 @@ OpenGL::real_get_pick(int x, int y,
 	  min_z=z;
 	  have_one=1;
 	  idx++; // Skip Max Z
-#if (_MIPS_SZPTR == 64)
+#ifdef SCI_64BITS
 	  idx+=nnames-5; // Skip to the last one...
 	  unsigned int ho1=pick_buffer[idx++];
 	  unsigned int ho2=pick_buffer[idx++];
@@ -1392,7 +1393,7 @@ OpenGL::put_scanline(int y, int width, Color* scanline, int repeat)
 void
 OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomHandle obj)
 {
-#if (_MIPS_SZPTR == 64)
+#ifdef SCI_64BITS
   unsigned long o=(unsigned long)(obj.get_rep());
   unsigned int o1=(o>>32)&0xffffffff;
   unsigned int o2=o&0xffffffff;
