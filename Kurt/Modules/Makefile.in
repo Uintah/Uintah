@@ -1,0 +1,12 @@
+SRCTOP  = @top_srcdir@
+SRCDIR  = @srcdir@
+OBJTOP  = ../..
+
+SUBDIRS = VolVis
+
+include $(OBJTOP)/scripts/recurse.mk
+
+SRCS     = index.cc
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
+
+include $(SRCTOP)/scripts/objs.mk
