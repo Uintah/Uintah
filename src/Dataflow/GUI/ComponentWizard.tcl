@@ -216,6 +216,7 @@ proc placePort {icon portnum pos type} {
         set menu $icon.$port.menu
         global $menu
         menu $menu -tearoff 0
+        $menu add command -label "Edit" -command "edit_port $portnum"
         $menu add command -label "Delete" \
             -command "remove_port $icon $portnum $type"
         bind $icon.$port <ButtonPress-3> "tk_popup $menu %X %Y"
@@ -234,6 +235,62 @@ proc placePort {icon portnum pos type} {
     }
 }
 
+proc edit_port {portnum} {
+    set w .edit_$portnum
+    global $w
+    if {[winfo exists $w]} {
+	    destroy $w
+    }
+
+    toplevel $w
+
+    set f $w.f
+    global $f
+    frame $f
+    
+    set lname $w.f.lname
+    global $lname
+    label $lname -text "Name:"
+    grid $lname -column 0 -row 0 -sticky e -padx .1c -pady .1c
+
+    set ename $w.f.ename
+    global $ename
+    prompted_entry $ename "<port name>"
+    grid $ename -column 1 -row 0 -sticky w -padx .1c -pady .1c
+
+    set ldatatype $w.f.ldatatype
+    global $ldatatype
+    label $ldatatype -text "Datatype:"
+    grid $ldatatype -column 0 -row 1 -sticky e -padx .1c -pady .1c
+    
+    set edatatype $w.f.edatatype
+    global $edatatype
+    prompted_entry $edatatype "<datatype>"
+    grid $edatatype -column 1 -row 1 -sticky w -padx .1c -pady .1c
+
+    set fdescript $w.f.fdescript
+    global $fdescript
+    frame $fdescript
+
+    set ldescript $fdescript.l
+    global $ldescript
+    label $ldescript -text "Description:"
+    pack $ldescript -side top -anchor w -pady .1c
+
+    set edescript $fdescript.e
+    global $edescript
+    set sydescript $fdescript.sy
+    global $sydescript
+    prompted_text $edescript "<description information in HTML>" \
+        -wrap word -yscrollcommand "$sydescript set"
+    pack $edescript -side left -fill both -expand true
+    scrollbar $sydescript -orient vert -command "$edescript yview"
+    pack $sydescript -side right -fill y
+
+    grid $fdescript -column 0 -row 3 -columnspan 2 -rowspan 2 -padx .1c -pady .1c
+
+    pack $f -fill both -expand yes
+}
 
 proc remove_port {icon portnum type} {
     set port ${type}port${portnum}
