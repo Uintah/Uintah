@@ -2021,9 +2021,13 @@ for i in $with_imagemagick $thirdparty $SCI_LAB_TP_DEFAULT; do
     MAGICK_LIB="$i/lib"
     #parse out the -L parts and leave only the -l parts
     MAGICK_LINK=`echo $IM_LIBS | sed 's|-L[[A-Za-z0-9/\.\-]]* ||g'`
+    MAGICK_DEF_FLAG="-DMAGICK"
     break
+  else
+    MAGICK_DEF_FLAG=""
   fi
 done
+AC_SUBST(MAGICK_DEF_FLAG)
 AC_SUBST(HAVE_MAGICK)
 AC_SUBST(DEF_MAGICK)
 AC_SUBST(MAGICK_INCLUDE)
