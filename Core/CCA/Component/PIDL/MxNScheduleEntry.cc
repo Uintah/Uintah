@@ -46,6 +46,7 @@ MxNScheduleEntry::~MxNScheduleEntry()
 {
   callee_rep.clear();
   caller_rep.clear();
+  sched.clear();
 }
 
 void MxNScheduleEntry::addCallerRep(MxNArrayRep* arr_rep)
