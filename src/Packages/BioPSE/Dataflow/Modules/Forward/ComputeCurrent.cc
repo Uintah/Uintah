@@ -118,10 +118,12 @@ void ComputeCurrent::execute() {
   tris->end(fe);
   double current=0;
   TriSurfMesh::Node::array_type nodes;
+  double total_area=0;
   while (fi != fe) {
     Point center;
     tris->get_center(center, *fi);
     double area = tris->get_area(*fi);
+    total_area += area;
     tris->get_nodes(nodes, *fi);
     Point p0, p1, p2;
     tris->get_center(p0, nodes[0]);
@@ -142,9 +144,11 @@ void ComputeCurrent::execute() {
     Vector c(s.mat_[0][0]*e.x()+s.mat_[0][1]*e.y()+s.mat_[0][2]*e.z(),
 	     s.mat_[1][0]*e.x()+s.mat_[1][1]*e.y()+s.mat_[1][2]*e.z(),
 	     s.mat_[2][0]*e.x()+s.mat_[2][1]*e.y()+s.mat_[2][2]*e.z());
-    current += Dot(c,normal) * area;
+    current += fabs(Dot(c,normal)) * area;
+//    cerr << (int) *fi << ": c="<<c<<" n="<<normal<<" (c.n)="<<Dot(c,normal)<<" (a="<<area<<")   ";
     ++fi;
   }
+//  cerr << "\n\ntotal area = "<<total_area<<"\n";
   if (have_units) {
     if (units == "mm") current/=1000;
     else if (units == "cm") current/=100;
