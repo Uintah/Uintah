@@ -117,7 +117,7 @@ WARNING
     // Only called by the SimulationController, and only once, and only
     // if the simulation has been "restarted."
     virtual void setGeneration( int id ) { d_generation = id; }
-    virtual const MaterialSet* getMaterialSet() {return 0;}
+    virtual const MaterialSet* getMaterialSet() const {return 0;}
 
   protected:
     void finalizeTimestep();
