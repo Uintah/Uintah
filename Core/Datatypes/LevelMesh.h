@@ -380,7 +380,7 @@ public:
   static  const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
-  virtual const TypeDescription *get_type_description() const;
+  virtual const SCIRun::TypeDescription *get_type_description() const;
 
 private:
 
@@ -400,12 +400,15 @@ private:
   static Persistent *maker() { return scinew LevelMesh(); }
 };
 
+}
 
-const TypeDescription* get_type_description(LevelMesh *);
-const TypeDescription* get_type_description(LevelMesh::Node *);
-const TypeDescription* get_type_description(LevelMesh::Edge *);
-const TypeDescription* get_type_description(LevelMesh::Face *);
-const TypeDescription* get_type_description(LevelMesh::Cell *);
+namespace SCIRun {
+
+const SCIRun::TypeDescription* get_type_description(Uintah::LevelMesh *);
+const SCIRun::TypeDescription* get_type_description(Uintah::LevelMesh::Node *);
+const SCIRun::TypeDescription* get_type_description(Uintah::LevelMesh::Edge *);
+const SCIRun::TypeDescription* get_type_description(Uintah::LevelMesh::Face *);
+const SCIRun::TypeDescription* get_type_description(Uintah::LevelMesh::Cell *);
 
 
 } // namespace SCIRun
