@@ -1,9 +1,7 @@
 #include <Uintah/Components/ICE/ICE.h>
-#include <Uintah/Interface/CFDInterface.h>
+#include <Uintah/Components/ICE/ICEMaterial.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/CCVariable.h>
-#include <SCICore/Geometry/Vector.h>
-#include <Uintah/Parallel/ProcessorGroup.h>
 #include <Uintah/Grid/Array3Index.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
@@ -11,7 +9,6 @@
 #include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/ParticleVariable.h>
-#include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/NodeIterator.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/PerPatch.h>
@@ -19,20 +16,22 @@
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SoleVariable.h>
 #include <Uintah/Grid/Task.h>
-#include <Uintah/Interface/DataWarehouse.h>
-#include <Uintah/Interface/Scheduler.h>
-#include <Uintah/Exceptions/ParameterNotFound.h>
-#include <Uintah/Parallel/ProcessorGroup.h>
-#include <Uintah/Components/ICE/ICEMaterial.h>
-#include <Uintah/Interface/ProblemSpecP.h>
-#include <Uintah/Grid/VarTypes.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <vector>
 #include <Uintah/Grid/BoundCond.h>
 #include <Uintah/Grid/PressureBoundCond.h>
 #include <Uintah/Grid/VelocityBoundCond.h>
 #include <Uintah/Grid/TemperatureBoundCond.h>
 #include <Uintah/Grid/DensityBoundCond.h>
+#include <Uintah/Grid/VarTypes.h>
+#include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Interface/CFDInterface.h>
+#include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Exceptions/ParameterNotFound.h>
+#include <Uintah/Parallel/ProcessorGroup.h>
+#include <SCICore/Datatypes/DenseMatrix.h>
+#include <SCICore/Geometry/Vector.h>
+#include <vector>
 #include <iomanip>
 
 using std::vector;
@@ -2580,7 +2579,7 @@ void ICE::actuallyStep5b(
 {
   cout << "Doing actually step5b -- Heat and momentum exchange" << endl;
 
-  int     numMatls  = d_sharedState->getNumICEMatls();
+  int     numICEMatls  = d_sharedState->getNumICEMatls();
   double  temp;
   int     itworked;
   Vector dx         = patch->dCell();
@@ -2589,28 +2588,31 @@ void ICE::actuallyStep5b(
   old_dw->get(delT, d_sharedState->get_delt_label());
   //__________________________________
   //  - Create local variables 
-  vector<CCVariable<double> > rho_CC(numMatls);
-  vector<CCVariable<double> > xmom_L(numMatls);
-  vector<CCVariable<double> > ymom_L(numMatls);
-  vector<CCVariable<double> > zmom_L(numMatls);
-  vector<CCVariable<double> > int_eng_L(numMatls);
-  vector<CCVariable<double> > vol_frac_CC(numMatls);
-  vector<CCVariable<double> > rho_micro_CC(numMatls);
-  vector<CCVariable<double> > cv_CC(numMatls);
+  vector<CCVariable<double> > rho_CC(numICEMatls);
+  vector<CCVariable<double> > xmom_L(numICEMatls);
+  vector<CCVariable<double> > ymom_L(numICEMatls);
+  vector<CCVariable<double> > zmom_L(numICEMatls);
+  vector<CCVariable<double> > int_eng_L(numICEMatls);
+  vector<CCVariable<double> > vol_frac_CC(numICEMatls);
+  vector<CCVariable<double> > rho_micro_CC(numICEMatls);
+  vector<CCVariable<double> > cv_CC(numICEMatls);
+
   // Create variables for the results
-  vector<CCVariable<double> > xmom_L_ME(numMatls);
-  vector<CCVariable<double> > ymom_L_ME(numMatls);
-  vector<CCVariable<double> > zmom_L_ME(numMatls);
-  vector<CCVariable<double> > int_eng_L_ME(numMatls);
-    
-  vector<double> b(numMatls);
-  vector<double> mass(numMatls);
-  DenseMatrix beta(numMatls,numMatls),acopy(numMatls,numMatls);
-  DenseMatrix K(numMatls,numMatls),H(numMatls,numMatls),a(numMatls,numMatls);
+  vector<CCVariable<double> > xmom_L_ME(numICEMatls);
+  vector<CCVariable<double> > ymom_L_ME(numICEMatls);
+  vector<CCVariable<double> > zmom_L_ME(numICEMatls);
+  vector<CCVariable<double> > int_eng_L_ME(numICEMatls);
+
+  vector<double> b(numICEMatls);
+  vector<double> mass(numICEMatls);
+  DenseMatrix beta(numICEMatls,numICEMatls),acopy(numICEMatls,numICEMatls);
+  DenseMatrix K(numICEMatls,numICEMatls),H(numICEMatls,numICEMatls);
+  DenseMatrix a(numICEMatls,numICEMatls);
+
   //__________________________________
   // - fill local vars with dw data
   // - allocate space for results in dw
-  for(int m = 0; m < numMatls; m++)
+  for(int m = 0; m < numICEMatls; m++)
   {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
     int dwindex = matl->getDWIndex();
@@ -2638,15 +2640,15 @@ void ICE::actuallyStep5b(
   }
   //__________________________________
   // - pull out the exchange coefficients
-  for (int i = 0; i < numMatls; i++ ) 
+  for (int i = 0; i < numICEMatls; i++ ) 
   {
-      K[numMatls-1-i][i] = d_K_mom[i];
-      H[numMatls-1-i][i] = d_K_heat[i];
+      K[numICEMatls-1-i][i] = d_K_mom[i];
+      H[numICEMatls-1-i][i] = d_K_heat[i];
   }
   //__________________________________
   // Set (*)mom_L_ME = (*)mom_L
   // if you have only 1 mat then there is no exchange
-  for (int m = 0; m < numMatls; m++) 
+  for (int m = 0; m < numICEMatls; m++) 
   {
    xmom_L_ME[m] = xmom_L[m];
    ymom_L_ME[m] = ymom_L[m];
@@ -2659,12 +2661,12 @@ void ICE::actuallyStep5b(
   {
     //__________________________________
     //   Form BETA matrix (a), off diagonal terms
-    for(int m = 0; m < numMatls; m++)
+    for(int m = 0; m < numICEMatls; m++)
     {
         temp    = rho_micro_CC[m][*iter];
         mass[m] = rho_CC[m][*iter] * vol;
         
-        for(int n = 0; n < numMatls; n++)
+        for(int n = 0; n < numICEMatls; n++)
         {
             beta[m][n] = delT * vol_frac_CC[n][*iter] * K[n][m]/temp;
             a[m][n] = -beta[m][n];
@@ -2672,10 +2674,10 @@ void ICE::actuallyStep5b(
     }
     //__________________________________
     //   Form matrix (a) diagonal terms
-    for(int m = 0; m < numMatls; m++)
+    for(int m = 0; m < numICEMatls; m++)
     {
         a[m][m] = 1.;
-        for(int n = 0; n < numMatls; n++)
+        for(int n = 0; n < numICEMatls; n++)
         {
             a[m][m] +=  beta[m][n];
         }
@@ -2684,10 +2686,10 @@ void ICE::actuallyStep5b(
     //     X - M O M E N T U M
     // -  F O R M   R H S   (b)
     //   convert flux to primiative variable
-    for(int m = 0; m < numMatls; m++)
+    for(int m = 0; m < numICEMatls; m++)
     {
         b[m] = 0.0;
-        for(int n = 0; n < numMatls; n++)
+        for(int n = 0; n < numICEMatls; n++)
         {
             b[m] += beta[m][n] *
                     (xmom_L[n][*iter]/mass[n] - xmom_L[m][*iter]/mass[m]);
@@ -2699,7 +2701,7 @@ void ICE::actuallyStep5b(
     //  - Add exchange contribution to orig value
     acopy = a;
     itworked = acopy.solve(b);
-    for(int m = 0; m < numMatls; m++)
+    for(int m = 0; m < numICEMatls; m++)
     {
         xmom_L_ME[m][*iter] = xmom_L[m][*iter] + b[m]*mass[m];
     }
@@ -2707,10 +2709,10 @@ void ICE::actuallyStep5b(
     //     Y - M O M E N T U M
     // -  F O R M   R H S   (b)
     //   convert flux to primiative variable
-    for(int m = 0; m < numMatls; m++)
+    for(int m = 0; m < numICEMatls; m++)
     {
         b[m] = 0.0;
-        for(int n = 0; n < numMatls; n++)
+        for(int n = 0; n < numICEMatls; n++)
         {
             b[m] += beta[m][n] *
                     (ymom_L[n][*iter]/mass[n] - ymom_L[m][*iter]/mass[m]);
@@ -2722,7 +2724,7 @@ void ICE::actuallyStep5b(
     //  - Add exchange contribution to orig value
     acopy    = a;
     itworked = acopy.solve(b);
-    for(int m = 0; m < numMatls; m++)
+    for(int m = 0; m < numICEMatls; m++)
     {
         ymom_L_ME[m][*iter] = ymom_L[m][*iter] + b[m]*mass[m];
     }
@@ -2730,10 +2732,10 @@ void ICE::actuallyStep5b(
     //     Z - M O M E N T U M
     // -  F O R M   R H S   (b)
     //   convert flux to primiative variable
-    for(int m = 0; m < numMatls; m++)
+    for(int m = 0; m < numICEMatls; m++)
     {
         b[m] = 0.0;
-        for(int n = 0; n < numMatls; n++)
+        for(int n = 0; n < numICEMatls; n++)
         {
             b[m] += beta[m][n] *
                     (zmom_L[n][*iter]/mass[n] - zmom_L[m][*iter]/mass[m]);
@@ -2745,17 +2747,17 @@ void ICE::actuallyStep5b(
     //  - Add exchange contribution to orig value
     acopy    = a;
     itworked = acopy.solve(b);
-    for(int m = 0; m < numMatls; m++)
+    for(int m = 0; m < numICEMatls; m++)
     {
       zmom_L_ME[m][*iter] = zmom_L[m][*iter] + b[m]*mass[m];
     }
     //______________________________________________________________________
     //    E N E R G Y   E X C H A N G E
     //   Form BETA matrix (a) off diagonal terms
-    for(int m = 0; m < numMatls; m++)
+    for(int m = 0; m < numICEMatls; m++)
     {
         temp = cv_CC[m][*iter]*rho_micro_CC[m][*iter];
-        for(int n = 0; n < numMatls; n++)
+        for(int n = 0; n < numICEMatls; n++)
         {
             beta[m][n] = delT * vol_frac_CC[n][*iter] * H[n][m]/temp;
             a[m][n] = -beta[m][n];
@@ -2763,20 +2765,20 @@ void ICE::actuallyStep5b(
     }
     //__________________________________
     //   Form matrix (a) diagonal terms
-    for(int m = 0; m < numMatls; m++)
+    for(int m = 0; m < numICEMatls; m++)
     {
         a[m][m] = 1.;
-        for(int n = 0; n < numMatls; n++)
+        for(int n = 0; n < numICEMatls; n++)
         {
             a[m][m] +=  beta[m][n];
         }
     }
     //__________________________________
     // -  F O R M   R H S   (b), convert flux to primiative variable
-    for(int m = 0; m < numMatls; m++)
+    for(int m = 0; m < numICEMatls; m++)
     {
         b[m] = 0.0;
-        for(int n = 0; n < numMatls; n++)
+        for(int n = 0; n < numICEMatls; n++)
         {
             b[m] += beta[m][n] *
                     (int_eng_L[n][*iter]/(mass[n]*cv_CC[n][*iter]) -
@@ -2786,7 +2788,7 @@ void ICE::actuallyStep5b(
     //__________________________________
     //     S O L V E, Add exchange contribution to orig value
     itworked = a.solve(b);
-    for(int m = 0; m < numMatls; m++)
+    for(int m = 0; m < numICEMatls; m++)
     {
         int_eng_L_ME[m][*iter] =
                   int_eng_L[m][*iter] + b[m]*mass[m]*cv_CC[m][*iter];
@@ -2794,7 +2796,7 @@ void ICE::actuallyStep5b(
   }
   //__________________________________
   //  Update any neumann boundary conditions
-  for (int m = 0; m < numMatls; m++) 
+  for (int m = 0; m < numICEMatls; m++) 
   {
       setBC(xmom_L_ME[m],"Velocity",patch);
       setBC(ymom_L_ME[m],"Velocity",patch);
@@ -2802,8 +2804,7 @@ void ICE::actuallyStep5b(
   }
   //__________________________________
   //  Put data into new dw  
-  for(int m = 0; m < numMatls; m++)
-  {
+  for(int m = 0; m < numICEMatls; m++) {
      ICEMaterial* matl = d_sharedState->getICEMaterial( m );
      int dwindex = matl->getDWIndex();
      new_dw->put(xmom_L_ME[m],   lb->xmom_L_ME_CCLabel,   dwindex, patch);
@@ -4009,6 +4010,9 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.68  2000/12/29 00:00:12  guilkey
+// Changed numMatls to numICEMatls in 5b, reorganized #includes
+//
 // Revision 1.67  2000/12/27 14:26:51  harman
 // ICE.cc: Added comments and changed formatting.  Orginal code wasn't touched.
 //
