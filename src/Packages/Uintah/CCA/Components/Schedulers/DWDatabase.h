@@ -182,7 +182,7 @@ void DWDatabase<VarType>::scrubExtraneous()
 	 ++patchRecordIter) {
       PatchRecord* patchRecord = patchRecordIter->second;
       const dataDBtype& vars = patchRecord->getVars();
-      for (int m = 0; m < vars.size(); m++) {
+      for (int m = 0; m < (int)vars.size(); m++) {
 	DataItem* dataItem = patchRecord->getDataItem(m);
 	if (dataItem && dataItem->scrubCount == 0)
 	  patchRecord->removeVar(m);
