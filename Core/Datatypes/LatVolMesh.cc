@@ -41,8 +41,22 @@ using namespace std;
 
 PersistentTypeID LatVolMesh::type_id("LatVolMesh", "Mesh", maker);
 
-void LatVolMesh::get_random_point(Point &p, const Elem::index_type &ei,
-				  int seed) const
+
+LatVolMesh::LatVolMesh(unsigned x, unsigned y, unsigned z,
+		       const Point &min, const Point &max)
+  : min_x_(0), min_y_(0), min_z_(0),
+    nx_(x), ny_(y), nz_(z)
+{
+  transform_.pre_scale(Vector(1.0 / (x-1.0), 1.0 / (y-1.0), 1.0 / (z-1.0)));
+  transform_.pre_scale(max - min);
+  transform_.pre_translate(Vector(min));
+  transform_.compute_imat();
+}
+
+
+void
+LatVolMesh::get_random_point(Point &p, const Elem::index_type &ei,
+			     int seed) const
 {
   static MusilRNG rng;
 
@@ -76,18 +90,32 @@ void LatVolMesh::get_random_point(Point &p, const Elem::index_type &ei,
 BBox
 LatVolMesh::get_bounding_box() const
 {
+  Point p0(0.0, 0.0, 0.0);
+  Point p1(nx_, 0.0, 0.0);
+  Point p2(nx_, ny_, 0.0);
+  Point p3(0.0, ny_, 0.0);
+  Point p4(0.0, 0.0, nz_);
+  Point p5(nx_, 0.0, nz_);
+  Point p6(nx_, ny_, nz_);
+  Point p7(0.0, ny_, nz_);
+  
   BBox result;
-  result.extend(min_);
-  result.extend(max_);
+  result.extend(transform_.project(p0));
+  result.extend(transform_.project(p1));
+  result.extend(transform_.project(p2));
+  result.extend(transform_.project(p3));
+  result.extend(transform_.project(p4));
+  result.extend(transform_.project(p5));
+  result.extend(transform_.project(p6));
+  result.extend(transform_.project(p7));
   return result;
 }
 
 
-// TODO: Fix this
 void
 LatVolMesh::transform(Transform &t)
 {
-  ASSERTFAIL("Fix this when latvolmesh is transformable");
+  transform_.pre_trans(t);
 }
 
 
@@ -107,7 +135,7 @@ LatVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 
 //! return all cell_indecies that overlap the BBox in arr.
 void
-LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox) const
+LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox)
 {
   arr.clear();
   Cell::index_type min;
@@ -132,38 +160,27 @@ LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox) const
 void
 LatVolMesh::get_center(Point &result, Node::index_type idx) const
 {
-  const double sx = (max_.x() - min_.x()) / (nx_ - 1);
-  const double sy = (max_.y() - min_.y()) / (ny_ - 1);
-  const double sz = (max_.z() - min_.z()) / (nz_ - 1);
-
-  result.x(idx.i_ * sx + min_.x());
-  result.y(idx.j_ * sy + min_.y());
-  result.z(idx.k_ * sz + min_.z());
+  Point p(idx.i_, idx.j_, idx.k_);
+  result = transform_.project(p);
 }
 
 
 void
 LatVolMesh::get_center(Point &result, Cell::index_type idx) const
 {
-  const double sx = (max_.x() - min_.x()) / (nx_ - 1);
-  const double sy = (max_.y() - min_.y()) / (ny_ - 1);
-  const double sz = (max_.z() - min_.z()) / (nz_ - 1);
-
-  result.x((idx.i_ + 0.5) * sx + min_.x());
-  result.y((idx.j_ + 0.5) * sy + min_.y());
-  result.z((idx.k_ + 0.5) * sz + min_.z());
+  Point p(idx.i_ + 0.5, idx.j_ + 0.5, idx.k_ + 0.5);
+  result = transform_.project(p);
 }
 
-bool
-LatVolMesh::locate(Cell::index_type &cell, const Point &p) const
-{
-  double i = (p.x() - min_.x()) / (max_.x() - min_.x()) * (nx_ - 1) + 0.5;
-  double j = (p.y() - min_.y()) / (max_.y() - min_.y()) * (ny_ - 1) + 0.5;
-  double k = (p.z() - min_.z()) / (max_.z() - min_.z()) * (nz_ - 1) + 0.5;
 
-  cell.i_ = (unsigned int)i;
-  cell.j_ = (unsigned int)j;
-  cell.k_ = (unsigned int)k;
+bool
+LatVolMesh::locate(Cell::index_type &cell, const Point &p)
+{
+  const Point r = transform_.unproject(p);
+
+  cell.i_ = (unsigned int)r.x();
+  cell.j_ = (unsigned int)r.y();
+  cell.k_ = (unsigned int)r.z();
 
   if (cell.i_ >= (nx_-1) ||
       cell.j_ >= (ny_-1) ||
@@ -177,8 +194,10 @@ LatVolMesh::locate(Cell::index_type &cell, const Point &p) const
   }
 }
 
+
+
 bool
-LatVolMesh::locate(Node::index_type &node, const Point &p) const
+LatVolMesh::locate(Node::index_type &node, const Point &p)
 {
   Node::array_type nodes;     // storage for node_indeces
   Cell::index_type cell;
@@ -346,12 +365,12 @@ const string find_type_name(LatVolMesh::CellIndex *)
   return name;
 }
 
-#define LATVOLMESH_VERSION 1
+#define LATVOLMESH_VERSION 2
 
 void
 LatVolMesh::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1), LATVOLMESH_VERSION);
+  int version = stream.begin_class(type_name(-1), LATVOLMESH_VERSION);
 
   Mesh::io(stream);
 
@@ -359,8 +378,23 @@ LatVolMesh::io(Piostream& stream)
   Pio(stream, nx_);
   Pio(stream, ny_);
   Pio(stream, nz_);
-  Pio(stream, min_);
-  Pio(stream, max_);
+
+  if (version < 2 && stream.reading())
+  {
+    Point min, max;
+    Pio(stream, min);
+    Pio(stream, max);
+    transform_.pre_scale(Vector(1.0 / (nx_ - 1.0),
+				1.0 / (ny_ - 1.0),
+				1.0 / (nz_ - 1.0)));
+    transform_.pre_scale(max - min);
+    transform_.pre_translate(Vector(min));
+    transform_.compute_imat();
+  }
+  else
+  {
+    Pio(stream, transform_);
+  }
 
   stream.end_class();
 }

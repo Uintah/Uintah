@@ -304,17 +304,20 @@ template <> bool LatticeVol<Vector>::get_gradient(Vector &, const Point &p);
 
 
 template <class Data>
-bool LatticeVol<Data>::get_gradient(Vector &g, const Point &p) {
+bool LatticeVol<Data>::get_gradient(Vector &g, const Point &p)
+{
   // for now we only know how to do this for fields with scalars at the nodes
-
-  if( type_name(1) == "double" ||
-      type_name(1) == "long" ||
-      type_name(1) == "float" ||
-      type_name(1) == "int" ||
-      type_name(1) == "char") {
-
-    if( data_at() == Field::NODE){
+  if (query_scalar_interface())
+  {
+    if( data_at() == Field::NODE)
+    {
       mesh_handle_type mesh = get_typed_mesh();
+      const Point r = mesh->get_transform()->unproject(p);
+      double x = r.x();
+      double y = r.y();
+      double z = r.z();
+      
+#if 0
       Vector pn=p-mesh->get_min();
       Vector diagonal = mesh->diagonal();
       int nx=mesh->get_nx();
@@ -326,44 +329,46 @@ bool LatticeVol<Data>::get_gradient(Vector &g, const Point &p) {
       double x=pn.x()*(nx-1)/diagx;
       double y=pn.y()*(ny-1)/diagy;
       double z=pn.z()*(nz-1)/diagz;
-      int ix0=(int)x;
-      int iy0=(int)y;
-      int iz0=(int)z;
-      int ix1=ix0+1;
-      int iy1=iy0+1;
-      int iz1=iz0+1;
+#endif
+
+      int ix0 = (int)x;
+      int iy0 = (int)y;
+      int iz0 = (int)z;
+      int ix1 = ix0+1;
+      int iy1 = iy0+1;
+      int iz1 = iz0+1;
       if(ix0<0 || ix1>=nx)return false;
       if(iy0<0 || iy1>=ny)return false;
       if(iz0<0 || iz1>=nz)return false;
-      double fx=x-ix0;
-      double fy=y-iy0;
-      double fz=z-iz0;
-      double d000=(double)value(LatVolMesh::Node::index_type(ix0,iy0,iz0));
-      double d100=(double)value(LatVolMesh::Node::index_type(ix1,iy0,iz0));
-      double d010=(double)value(LatVolMesh::Node::index_type(ix0,iy1,iz0));
-      double d110=(double)value(LatVolMesh::Node::index_type(ix1,iy1,iz0));
-      double d001=(double)value(LatVolMesh::Node::index_type(ix0,iy0,iz1));
-      double d101=(double)value(LatVolMesh::Node::index_type(ix1,iy0,iz1));
-      double d011=(double)value(LatVolMesh::Node::index_type(ix0,iy1,iz1));
-      double d111=(double)value(LatVolMesh::Node::index_type(ix1,iy1,iz1));
-      double z00=Interpolate(d000, d001, fz);
-      double z01=Interpolate(d010, d011, fz);
-      double z10=Interpolate(d100, d101, fz);
-      double z11=Interpolate(d110, d111, fz);
-      double yy0=Interpolate(z00, z01, fy);
-      double yy1=Interpolate(z10, z11, fy);
-      double dx=(yy1-yy0)*(nx-1)/diagx;
-      double x00=Interpolate(d000, d100, fx);
-      double x01=Interpolate(d001, d101, fx);
-      double x10=Interpolate(d010, d110, fx);
-      double x11=Interpolate(d011, d111, fx);
-      double y0=Interpolate(x00, x10, fy);
-      double y1=Interpolate(x01, x11, fy);
-      double dz=(y1-y0)*(nz-1)/diagz;
-      double z0=Interpolate(x00, x01, fz);
-      double z1=Interpolate(x10, x11, fz);
-      double dy=(z1-z0)*(ny-1)/diagy;
-      g = Vector(dx, dy, dz);
+      double fx = x-ix0;
+      double fy = y-iy0;
+      double fz = z-iz0;
+      double d000 = (double)value(LatVolMesh::Node::index_type(ix0,iy0,iz0));
+      double d100 = (double)value(LatVolMesh::Node::index_type(ix1,iy0,iz0));
+      double d010 = (double)value(LatVolMesh::Node::index_type(ix0,iy1,iz0));
+      double d110 = (double)value(LatVolMesh::Node::index_type(ix1,iy1,iz0));
+      double d001 = (double)value(LatVolMesh::Node::index_type(ix0,iy0,iz1));
+      double d101 = (double)value(LatVolMesh::Node::index_type(ix1,iy0,iz1));
+      double d011 = (double)value(LatVolMesh::Node::index_type(ix0,iy1,iz1));
+      double d111 = (double)value(LatVolMesh::Node::index_type(ix1,iy1,iz1));
+      double z00 = Interpolate(d000, d001, fz);
+      double z01 = Interpolate(d010, d011, fz);
+      double z10 = Interpolate(d100, d101, fz);
+      double z11 = Interpolate(d110, d111, fz);
+      double yy0 = Interpolate(z00, z01, fy);
+      double yy1 = Interpolate(z10, z11, fy);
+      double dx = (yy1-yy0);
+      double x00 = Interpolate(d000, d100, fx);
+      double x01 = Interpolate(d001, d101, fx);
+      double x10 = Interpolate(d010, d110, fx);
+      double x11 = Interpolate(d011, d111, fx);
+      double y0 = Interpolate(x00, x10, fy);
+      double y1 = Interpolate(x01, x11, fy);
+      double dz = (y1-y0);
+      double z0 = Interpolate(x00, x01, fz);
+      double z1 = Interpolate(x10, x11, fz);
+      double dy = (z1-z0);
+      g = mesh->get_transform()->unproject(Vector(dx, dy, dz));
       return true;
     }
   }
