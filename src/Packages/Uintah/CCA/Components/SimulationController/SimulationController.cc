@@ -176,12 +176,16 @@ void SimulationController::run()
       Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
       DataArchive archive(checkpointRestartDir.getName(),
 			  d_myworld->myrank(), d_myworld->size());
-      
+
+      double delt = 0;
       archive.restartInitialize(d_restartTimestep, grid,
-				scheduler->get_new_dw(), &t);
+				scheduler->get_new_dw(), &t, &delt);
       
       output->restartSetup(restartFromDir, d_restartTimestep, t,
 			   d_restartRemoveOldDir);
+      // in case restart initialize doesn't put delt
+      delt_vartype delt_var(delt);
+      scheduler->get_new_dw()->put(delt_var, sharedState->get_delt_label());
    } else {
       // Initialize the CFD and/or MPM data
       for(int i=0;i<grid->numLevels();i++){
