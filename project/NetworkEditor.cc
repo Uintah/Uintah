@@ -302,7 +302,7 @@ void NetworkEditor::do_scheduling()
     //
     int changed=1;
     int nmodules=net->nmodules();
-    int any_changed=0;
+    int any_changed=1;
     while(changed){
 	changed=0;
 	int nmodules=net->nmodules();
