@@ -58,6 +58,9 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef _WIN32
+#include <sys/signal.h>
+#endif
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -70,7 +73,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/signal.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Runnable.h>

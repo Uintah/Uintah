@@ -51,7 +51,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/select.h>
 
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Mutex.h>
