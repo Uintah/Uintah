@@ -40,7 +40,9 @@ KillMap::~KillMap()
   for(;iter != typelist->end();iter++)
     delete *iter;
   delete types;
+  types = 0;
   delete typelist;
+  typelist = 0;
 }
 
 KillMap killit;
@@ -53,9 +55,11 @@ void TypeDescription::register_type()
     types=scinew map<string, const TypeDescription*>;
     typelist=new vector<const TypeDescription*>;
   }
+  
   map<string, const TypeDescription*>::iterator iter = types->find(getName());
-  if(iter == types->end())
+  if(iter == types->end()){
     (*types)[getName()]=this;
+  }
   typelist->push_back(this);
 }
 
@@ -99,9 +103,10 @@ string TypeDescription::getName() const
 
 const TypeDescription* TypeDescription::lookupType(const std::string& t)
 {
-  if(!types)
+  if(!types){
     types=scinew map<string, const TypeDescription*>;   
-  
+    typelist=new vector<const TypeDescription*>;
+  }
   map<string, const TypeDescription*>::iterator iter = types->find(t);
   if(iter == types->end())
       return 0;
