@@ -2215,8 +2215,12 @@ public:
 
 protected:
 
-  void add_item(GeomHandle glyph, const Point &p, Tensor &t,
-		double scale, int resolution, GeomGroup *g, bool colorize);
+  void add_item(GeomGroup *g, GeomHandle glyph, const Point &p, Tensor &t,
+		double scale, bool colorize);
+
+  void add_super_quadric(GeomGroup *g, MaterialHandle mat,
+			 const Point &p, Tensor &t,
+			 double scale, int resolution, bool colorize);
 };
 
 
@@ -2267,9 +2271,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   }
   else if (squad_p)
   {
-    glyph = scinew GeomCappedCylinder(Point(0.0, 0.0, -1.0),
-				      Point(0.0, 0.0, 1.0),
-				      1.0, resolution, 1, 1);
+    glyph = 0;
   }
   else // cbox_p, default
   {
@@ -2320,7 +2322,14 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 
       if (colorstyle == 0)
       {
-	add_item(glyph, p, tmp, scale, resolution, objs, true);
+	if (squad_p)
+	{
+	  add_super_quadric(objs, 0, p, tmp, scale, resolution, true);
+	}
+	else
+	{
+	  add_item(objs, glyph, p, tmp, scale, true);
+	}
       }
       else if (colorstyle == 1)
       {
@@ -2329,8 +2338,16 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	double ctmpd;
 	to_double(ctmp, ctmpd);
 
-	add_item(scinew GeomMaterial(glyph, cmap->lookup(ctmpd)),
-		 p, tmp, scale, resolution, objs, false);
+	if (squad_p)
+	{
+	  add_super_quadric(objs, cmap->lookup(ctmpd),
+			    p, tmp, scale, resolution, false);
+	}
+	else
+	{
+	  add_item(objs, scinew GeomMaterial(glyph, cmap->lookup(ctmpd)),
+		   p, tmp, scale, false);
+	}
       }
       else if (colorstyle == 2)
       {
@@ -2341,12 +2358,26 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 
 	MaterialHandle vcol = scinew Material();
 	vcol->diffuse = Color(ctmpv.x(), ctmpv.y(), ctmpv.z());
-	add_item(scinew GeomMaterial(glyph, vcol),
-		 p, tmp, scale, resolution, objs, false);
+	if (squad_p)
+	{
+	  add_super_quadric(objs, vcol, p, tmp, scale, resolution, false);
+	}
+	else
+	{
+	  add_item(objs, scinew GeomMaterial(glyph, vcol),
+		   p, tmp, scale, false);
+	}
       }
       else
       {
-	add_item(glyph, p, tmp, scale, resolution, objs, false);
+	if (squad_p)
+	{
+	  add_super_quadric(objs, 0, p, tmp, scale, resolution, false);
+	}
+	else
+	{
+	  add_item(objs, glyph, p, tmp, scale, false);
+	}
       }
     }
     ++iter;
