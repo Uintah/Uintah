@@ -112,8 +112,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     debug_ps->get("dbg_timeStart",     d_dbgStartTime);
     debug_ps->get("dbg_timeStop",      d_dbgStopTime);
     debug_ps->get("dbg_outputInterval",d_dbgOutputInterval);
-    debug_ps->get("d_dbgBeginIndx",    d_dbgBeginIndx);
-    debug_ps->get("d_dbgEndIndx",      d_dbgEndIndx );
+    debug_ps->get("dbg_BeginIndex",    d_dbgBeginIndx);
+    debug_ps->get("dbg_EndIndex",      d_dbgEndIndx );
     d_dbgOldTime      = -d_dbgOutputInterval;
     d_dbgNextDumpTime = 0.0;
 
@@ -386,8 +386,9 @@ void ICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
                                                           ice_matls_sub, 
                                                           all_matls);
 
-  scheduleAdvectAndAdvanceInTime(         sched, patches, all_matls);
-  
+  scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
+                                                          mpm_matls_sub,
+                                                          all_matls);
   if(switchTestConservation) {
     schedulePrintConservedQuantities(     sched, patches, press_matl,
                                                           all_matls); 
@@ -772,6 +773,8 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
                                     const PatchSet* patches,
+                                    const MaterialSubset* ice_matls,
+                                    const MaterialSubset* mpm_matls,
                                     const MaterialSet* matls)
 {
   cout_doing << "ICE::scheduleAdvectAndAdvanceInTime" << endl;
@@ -788,8 +791,11 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
  
   task->modifies(lb->rho_CCLabel);
   task->modifies(lb->sp_vol_CCLabel);
-  task->computes(lb->temp_CCLabel);
-  task->computes(lb->vel_CCLabel);
+  task->computes(lb->temp_CCLabel, ice_matls);
+  task->computes(lb->vel_CCLabel,  ice_matls);
+                            
+  task->modifies(lb->temp_CCLabel, mpm_matls);
+  task->modifies(lb->vel_CCLabel,  mpm_matls);
   sched->addTask(task, patches, matls);
 }
 /* ---------------------------------------------------------------------
@@ -1315,7 +1321,7 @@ template<class T> void ICE::computeVelFace(int dir, CellIterator it,
     //__________________________________
     // pressure term           
     double sp_vol_brack = 2.*(sp_vol_CC[adj] * sp_vol_CC[c])/
-      (sp_vol_CC[adj] + sp_vol_CC[c]); 
+                             (sp_vol_CC[adj] + sp_vol_CC[c]); 
     
     double term2 = delT * sp_vol_brack * (press_CC[c] - press_CC[adj])/dx;
     
@@ -1377,7 +1383,7 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
                   Ghost::AroundCells, 1);
               
       //---- P R I N T   D A T A ------
-  #if 0
+  #if 1
       if (switchDebug_vel_FC ) {
         ostringstream desc;
         desc << "TOP_vel_FC_Mat_" << indx << "_patch_"<< patch->getID(); 
@@ -1845,6 +1851,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     if (switchDebug_explicit_press) {
       ostringstream desc;
       desc << "Bottom_of_explicit_Pressure_patch_" << patch->getID();
+    //printData( patch, 1,desc.str(), "term2",         term2);
+    //printData( patch, 1,desc.str(), "term3",         term3); 
       printData( patch, 1,desc.str(), "delP_Dilatate", delP_Dilatate);
     //printData( patch, 1,desc.str(), "delP_MassX",    delP_MassX);
       printData( patch, 1,desc.str(), "Press_CC",      press_CC);
@@ -2852,6 +2860,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double vol = dx.x()*dx.y()*dx.z(),mass;
     double invvol = 1.0/vol;
+    double cv;
 
     // These arrays get re-used for each material, and for each
     // advected quantity
@@ -2864,10 +2873,13 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     new_dw->allocate(qV_advected,lb->qV_advectedLabel,0, patch);
     new_dw->allocate(qV_CC,      lb->qV_CCLabel, 0,patch,Ghost::AroundCells,1);
     new_dw->allocate(q_CC,       lb->q_CCLabel,  0,patch,Ghost::AroundCells,1);
-
-    for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) {
-      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-      int indx = ice_matl->getDWIndex();
+    int numALLMatls = d_sharedState->getNumMatls();
+    
+    for (int m = 0; m < numALLMatls; m++ ) {
+      Material* matl = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      int indx = matl->getDWIndex(); 
 
       CCVariable<double> rho_CC, temp, sp_vol_CC;
       CCVariable<Vector> vel_CC;
@@ -2893,14 +2905,23 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
                                lb->sp_vol_CCLabel,indx,patch);
       new_dw->getModifiable(rho_CC,  
                                lb->rho_CCLabel,indx,patch);
-
-      new_dw->allocate(temp,      lb->temp_CCLabel,           indx,patch);
-      new_dw->allocate(vel_CC,    lb->vel_CCLabel,            indx,patch);
+      if(ice_matl){
+        cv = ice_matl->getSpecificHeat();
+        new_dw->allocate(temp,      lb->temp_CCLabel, indx,patch);          
+        new_dw->allocate(vel_CC,    lb->vel_CCLabel,  indx,patch);          
+      }
+      if(mpm_matl){
+        cv = mpm_matl->getSpecificHeat();
+        new_dw->getModifiable(temp,  lb->temp_CCLabel,indx,patch);  
+        new_dw->getModifiable(vel_CC,lb->vel_CCLabel, indx,patch);  
+      }
+ 
       rho_CC.initialize(0.0);
       temp.initialize(0.0);
+      q_advected.initialize(0.0); 
       vel_CC.initialize(Vector(0.0,0.0,0.0));
       qV_advected.initialize(Vector(0.0,0.0,0.0));
-      double cv = ice_matl->getSpecificHeat();
+
       //__________________________________
       //   Advection preprocessing
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch);
@@ -2917,7 +2938,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
         rho_CC[c]  = (mass_L[c] + q_advected[c]) * invvol;
-      }
+      }   
+     
       setBC(rho_CC, "Density", patch, d_sharedState, indx);
 
       //__________________________________
@@ -2951,6 +2973,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         mass = rho_CC[c] * vol;
         temp[c] = (int_eng_L_ME[c] + q_advected[c])/(mass*cv);
       }
+      
       setBC(temp, "Temperature", patch, d_sharedState, indx);
 
       //__________________________________
@@ -2984,9 +3007,10 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
        printVector( patch,1, desc.str(), "vvel_CC", 1,  vel_CC);
        printVector( patch,1, desc.str(), "wvel_CC", 2,  vel_CC);
       }
-      new_dw->put(vel_CC,   lb->vel_CCLabel,           indx,patch);
-      new_dw->put(temp,     lb->temp_CCLabel,          indx,patch);
-
+      if(ice_matl) {
+        new_dw->put(vel_CC,   lb->vel_CCLabel,           indx,patch);
+        new_dw->put(temp,     lb->temp_CCLabel,          indx,patch);
+      } 
     }
     delete advector;
   }  // patch loop 
