@@ -118,6 +118,16 @@ public:
   double get_gradient_basis(cell_index ci, Vector& g0, Vector& g1, 
 			    Vector& g2, Vector& g3);
 
+  //! function to test if at least one of cell's nodes are in supplied range
+  inline bool test_nodes_range(cell_index ci, int sn, int en){
+    if (cells_[ci*4]>=sn && cells_[ci*4]<en
+	|| cells_[ci*4+1]>=sn && cells_[ci*4+1]<en
+	|| cells_[ci*4+2]>=sn && cells_[ci*4+2]<en
+	|| cells_[ci*4+3]>=sn && cells_[ci*4+3]<en)
+      return true;
+    else
+      return false;
+  }
   template <class Iter, class Functor>
   void fill_points(Iter begin, Iter end, Functor fill_ftor);
   template <class Iter, class Functor>
