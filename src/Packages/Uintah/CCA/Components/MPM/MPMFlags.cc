@@ -15,6 +15,7 @@ static DebugStream dbg("MPMFlags", false);
 MPMFlags::MPMFlags()
 {
   d_8or27 = 8;
+  d_ref_temp = 0.0; // for thermal stress
   d_integrator_type = "explicit";
   d_integrator = Explicit;
 
@@ -60,6 +61,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   else 
     d_integrator = Explicit;
   ps->get("nodes8or27", d_8or27);
+  ps->get("reference_temperature", d_ref_temp); // for thermal stress
   ps->get("withColor",  d_with_color);
   ps->get("artificial_damping_coeff", d_artificialDampCoeff);
   ps->get("artificial_viscosity",     d_artificial_viscosity);
@@ -102,6 +104,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     dbg << "---------------------------------------------------------\n";
     dbg << " Time Integration            = " << d_integrator_type << endl;
     dbg << " Nodes for interpolation     = " << d_8or27 << endl;
+    dbg << " Reference temperature       = " << d_ref_temp << endl;  
     dbg << " With Color                  = " << d_with_color << endl;
     dbg << " Artificial Damping Coeff    = " << d_artificialDampCoeff << endl;
     dbg << " Artificial Viscosity On     = " << d_artificial_viscosity<< endl;
