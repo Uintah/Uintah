@@ -19,14 +19,16 @@
 #include <sci_config.h>
 #include "Spec.h"
 #include "SymbolTable.h"
-#ifdef HAVE_SYS_UUID_H
+#if HAVE_SYS_UUID_H
 extern "C" { // SGI uuid.h doesn't have this, so we need extern C here
 #include <sys/uuid.h>
 }
 #define UUID_CREATE
 #else
-#ifdef HAVE_UUID_UUID_H
+#if HAVE_UUID_UUID_H
+extern "C" { // Linux uuid.h doesn't have this, so we need extern C here
 #include <uuid/uuid.h>
+}
 #define UUID_GENERATE
 #else
 #error We need either sys/uuid.h or uuid/uuid.h
