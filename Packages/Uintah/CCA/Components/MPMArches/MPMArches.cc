@@ -1,6 +1,7 @@
 // MPMArches.cc
 
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMPhysicalModules.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
