@@ -33,9 +33,6 @@ RigidBodyContact::RigidBodyContact(ProblemSpecP& ps,SimulationStateP& d_sS,
 				   MPMLabel* Mlb, MPMFlags* MFlag)
 {
   // Constructor
-
-  IntVector v_f;
-  ps->require("vel_fields",v_f);
   d_stop_time = 999999.99;  // default is to never stop
   ps->get("stop_time",d_stop_time);
 
