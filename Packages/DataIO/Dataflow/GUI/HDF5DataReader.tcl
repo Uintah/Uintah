@@ -1168,16 +1168,14 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	}
     }
 
-    method run_step {} {
-	set $this-execmode "step"
-	$this-c needexecute
+    method execmode { mode } {
+	$this-c $mode
+
+	if { "$mode" != "stop" } {
+	    $this-c needexecute
+	}
     }
 
-    method run_play {} {
-	set $this-execmode "play"
-	$this-c needexecute
-    }
-    
     method make_animate_box {} {
 	set w [format "%s-animate" .ui[modname]]
 
@@ -1263,9 +1261,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    $w.playmode.delay -side top -anchor w
 
 
-        button $w.execmode.play -text "Play" -command "$this run_play"
-        button $w.execmode.stop -text "Stop" -command "$this-c stop"
-        button $w.execmode.step -text "Step" -command "$this run_step"
+        button $w.execmode.play -text "Play" -command "$this execmode play"
+        button $w.execmode.stop -text "Stop" -command "$this execmode stop"
+        button $w.execmode.step -text "Step" -command "$this execmode step"
         pack $w.execmode.play $w.execmode.stop $w.execmode.step \
 		-side left -fill both -expand yes
 

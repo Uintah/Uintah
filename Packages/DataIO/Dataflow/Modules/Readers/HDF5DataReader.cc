@@ -66,14 +66,12 @@ HDF5DataReader::HDF5DataReader(GuiContext *context)
     playmode_(ctx->subVar("playmode")),
     dependence_(ctx->subVar("dependence")),
     current_(ctx->subVar("current")),
-    execmode_(ctx->subVar("execmode")),
     delay_(ctx->subVar("delay")),
     inc_amount_(ctx->subVar("inc-amount")),
     inc_(1),
-    stop_(false),
+    execmode_("none"),
     last_input_(-1),
     last_output_(0),
-
 
     filename_(context->subVar("filename")),
     datasets_(context->subVar("datasets")),
@@ -1521,8 +1519,8 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     args.error("HDF5DataReader needs a minor command");
     return;
   }
-  if (args[1] == "stop") {
-    stop_ = true;
+  if (args[1] == "play" || args[1] == "stop" || args[1] == "step") {
+    execmode_ = string(args[1]);
 
   } else if (args[1] == "update_file") {
 #ifdef HAVE_HDF5
@@ -1730,7 +1728,7 @@ HDF5DataReader::increment(int which, int lower, int upper)
   // Do nothing if no range.
   if (upper == lower) {
     if (playmode_.get() == "once")
-      stop_ = true;
+      execmode_ = string("stop");
     return upper;
   }
 
@@ -1746,7 +1744,7 @@ HDF5DataReader::increment(int which, int lower, int upper)
       return upper;
     } else {
       if (playmode_.get() == "once")
-	stop_ = true;
+	execmode_ = string("stop");
       return lower;
     }
   }
@@ -1760,7 +1758,7 @@ HDF5DataReader::increment(int which, int lower, int upper)
       return lower;
     } else {
       if (playmode_.get() == "once")
-	stop_ = true;
+	execmode_ = string("stop");
       return upper;
     }
   }
@@ -1792,16 +1790,12 @@ HDF5DataReader::animate_execute( string new_filename,
   }
 
   // Cash execmode and reset it in case we bail out early.
-  const string execmode = execmode_.get();
-
 
   int which = current_.get();
 
    bool cache = (playmode_.get() != "inc_w_exec");
 
-  //  cerr << execmode << "  " << playmode_.get() << "  "  << cache<< endl;
-
-  if (execmode == "step") {
+  if (execmode_ == "step") {
 
     which = increment(which, lower, upper);
     current_.set(which);
@@ -1810,16 +1804,16 @@ HDF5DataReader::animate_execute( string new_filename,
     ReadandSendData( new_filename, frame_paths[which],
 		     frame_datasets[which], true, cache, which );
 
-  } else if (execmode == "play") {
-    stop_ = false;
+  } else if (execmode_ == "play") {
+
     if (playmode_.get() == "once" && which >= end)
       which = start;
 
     const int delay = delay_.get();
-    int stop;
+    bool stop;
     do {
       int next = increment(which, lower, upper);
-      stop = stop_;
+      stop = (execmode_ == "stop");
 
       current_.set(which);
       current_.reset();
@@ -1851,7 +1845,7 @@ HDF5DataReader::animate_execute( string new_filename,
     }
   }
 
-  execmode_.set("exec");
+  execmode_ = string("none");
 }
 
 } // End namespace DataIO
