@@ -1,4 +1,4 @@
-
+`
 /*
  *  Mesh.h: Unstructured meshes
  *
@@ -426,6 +426,8 @@ double Mesh::get_grad(Element* elem, const Point&,
     double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
     double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
     g4=Vector(b4*iV6, c4*iV6, d4*iV6);
+
+    return((a1+a2+a3+a4)/6.0);
 }
 
 int Mesh::locate(const Point& p, int& ix)
