@@ -59,8 +59,7 @@ itcl_class SCIRun_FieldsOther_Coregister {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    raise $w
-	    return;
+	    return
 	}
 	
 	toplevel $w
@@ -75,9 +74,7 @@ itcl_class SCIRun_FieldsOther_Coregister {
 	checkbutton $w.f.t -text "Allow translate" \
 		-variable $this-allowTranslate
 	
-	button $w.f.go -text "Execute" -command $n
-
-	pack $w.f.s $w.f.r $w.f.t $w.f.go
+	pack $w.f.s $w.f.r $w.f.t
 
 	#  Methods
 	iwidgets::labeledframe $w.f.meth -labelpos nw -labeltext "Methods"
@@ -127,6 +124,9 @@ itcl_class SCIRun_FieldsOther_Coregister {
 	
 	pack $mf.tabs -side top
 	pack $w.f.meth -side top
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
     method select-alg { alg } {
