@@ -679,11 +679,11 @@ inline double  SetupBEMatrix::get_new_auto_g(
     {
       gama_j = gama_j + gama;
       rhoj = h / cos(alfa - gama_j);
-      sum = sum + sqrt( abs(rhoj * rhoj_1) );
+      sum = sum + sqrt( Abs(rhoj * rhoj_1) );
       rhoj_1 = rhoj;
     }
-    sai_new = sum * sqrt( abs(gama * sin(gama)) );
-    delta = abs( (sai_new - sai_old) / (sai_new + sai_old) );
+    sai_new = sum * sqrt( Abs(gama * sin(gama)) );
+    delta = Abs( (sai_new - sai_old) / (sai_new + sai_old) );
     sai_old = sai_new;
   }
    return sai_new;
