@@ -3,7 +3,7 @@
 static char *id="$Id$";
 
 /*
- *  Runnable.h: The base class for all threads
+ *  Runnable: The base class for all threads
  *
  *  Written by:
  *   Author: Steve Parker
@@ -14,42 +14,31 @@ static char *id="$Id$";
  *  Copyright (C) 1997 SCI Group
  */
 
-#include "Runnable.h"
-#include "Thread.h"
-#include <iostream.h>
+#include <SCICore/Thread/Runnable.h>
+#include <SCICore/Thread/Thread.h>
+#include <SCICore/Thread/ThreadError.h>
 
-/*
- * This class should be a base class for any class which is to be
- * attached to a thread.  It provides a <i>run</i> virtual method
- * which can be overridden to provide the thread body.  When this
- * method returns, or the thread calls <i>Thread::exit</i>, the
- * thread terminates.  A <b>Runnable</b> should be attached to
- * only one thread.
- *
- * <p> It is very important that the <b>Runnable</b> object (or any
- * object derived from it) is never explicitly deleted.  It will be
- * deleted by the <b>Thread</b> to which it is attached, when the
- * thread terminates.  The destructor will be executed in the context
- * of this same thread.
- */
-
-Runnable::Runnable()
+SCICore::Thread::Runnable::Runnable()
 {
-    d_myThread=0;
+    d_my_thread=0;
 }
 
-Runnable::~Runnable()
+SCICore::Thread::Runnable::~Runnable()
 {
-    if(d_myThread){
-        d_myThread->error("Runnable is being destroyed while thread is still running\n");
+    if(d_my_thread){
+	throw ThreadError("Runnable is being destroyed while thread is still running\n");
     }
 }
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 19:00:50  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.3  1999/08/25 02:37:59  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun
 //
 //
-

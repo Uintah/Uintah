@@ -3,7 +3,7 @@
 static char *id="$Id$";
 
 /*
- *  CrowdMonitor.h: Multiple reader/single writer locks
+ *  CrowdMonitor: Multiple reader/single writer locks
  *
  *  Written by:
  *   Author: Steve Parker
@@ -14,32 +14,18 @@ static char *id="$Id$";
  *  Copyright (C) 1997 SCI Group
  */
 
-#include "Guard.h"
-#include "CrowdMonitor.h"
-#include "Mutex.h"
+#include <SCICore/Thread/CrowdMonitor.h>
+#include <SCICore/Thread/Guard.h>
+#include <SCICore/Thread/Mutex.h>
 
-/*
- * Utility class to lock and unlock a <b>Mutex</b> or a <b>CrowdMonitor</b>.
- * The constructor of the <b>Guard</b> object will lock the mutex
- * (or <b>CrowdMonitor</b>), and the destructor will unlock it.
- * <p>
- * This would be used like this:
- * <blockquote><pre>
- * {
- * <blockquote>Guard mlock(&mutex);  // Acquire the mutex
- *     ... critical section ...</blockquote>
- * } // mutex is released when mlock goes out of scope
- * </pre></blockquote>
- */
-
-Guard::Guard(Mutex* mutex)
+SCICore::Thread::Guard::Guard(Mutex* mutex)
     : d_mutex(mutex), d_monitor(0)
 {
     d_mutex->lock();
 }
 
-Guard::Guard(CrowdMonitor* crowdMonitor, Which action) 
-    : d_mutex(0), d_monitor(crowdMonitor), action(action)
+SCICore::Thread::Guard::Guard(CrowdMonitor* crowd_monitor, Which action) 
+    : d_mutex(0), d_monitor(crowd_monitor), action(action)
 {
     if(action==Read)
         d_monitor->readLock();
@@ -47,7 +33,7 @@ Guard::Guard(CrowdMonitor* crowdMonitor, Which action)
         d_monitor->writeLock();
 }
 
-Guard::~Guard()
+SCICore::Thread::Guard::~Guard()
 {
     if(d_mutex)
         d_mutex->unlock();
@@ -59,9 +45,13 @@ Guard::~Guard()
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 19:00:48  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.2  1999/08/25 02:37:56  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun
 //
 //
-

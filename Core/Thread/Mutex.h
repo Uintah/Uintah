@@ -2,7 +2,7 @@
 // $Id$
 
 /*
- *  Mutex.h: Standard locking primitive
+ *  Mutex: Standard locking primitive
  *
  *  Written by:
  *   Author: Steve Parker
@@ -22,7 +22,7 @@ CLASS
    Mutex
    
 KEYWORDS
-   Mutex
+   Thread
    
 DESCRIPTION
    Provides a simple <b>Mut</b>ual <b>Ex</b>clusion primitive.  Atomic
@@ -41,8 +41,6 @@ namespace SCICore {
 	class Mutex_private;
 
 	class Mutex {
-	    Mutex_private* d_priv;
-	    const char* d_name;
 	public:
 	    //////////
 	    // Create the mutex.  The mutex is allocated in the unlocked
@@ -69,6 +67,9 @@ namespace SCICore {
 	    // Release the Mutex, unblocking any other threads that are
 	    // blocked waiting for the Mutex.
 	    void unlock();
+	private:
+	    Mutex_private* d_priv;
+	    const char* d_name;
 	};
     }
 }
@@ -77,6 +78,11 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 19:00:49  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.4  1999/08/25 02:37:57  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun

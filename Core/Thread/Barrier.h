@@ -2,7 +2,7 @@
 // $Id$
 
 /*
- *  Barrier.h: Barrier synchronization primitive
+ *  Barrier: Barrier synchronization primitive
  *
  *  Written by:
  *   Author: Steve Parker
@@ -22,7 +22,7 @@ CLASS
    Barrier
    
 KEYWORDS
-   Barrier
+   Thread
    
 DESCRIPTION
    Barrier synchronization primitive.  Provides a single wait
@@ -45,11 +45,6 @@ namespace SCICore {
 	class Barrier_private;
 
 	class Barrier {
-	    Barrier_private* d_priv;
-	    const char* d_name;
-	protected:
-	    int d_num_threads;
-	    ThreadGroup* d_thread_group;
 	public:
 	    //////////
 	    // Create a barrier which will be used by nthreads threads.
@@ -72,6 +67,14 @@ namespace SCICore {
 	    // After all threads have arrived, they are all allowed
 	    // to return.
 	    void wait();
+
+	protected:
+	    int d_num_threads;
+	    ThreadGroup* d_thread_group;
+
+	private:
+	    Barrier_private* d_priv;
+	    const char* d_name;
 	};
     }
 }
@@ -80,9 +83,13 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 19:00:46  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.4  1999/08/25 02:37:54  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun
 //
 //
-

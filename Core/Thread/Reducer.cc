@@ -3,7 +3,7 @@
 static char *id="$Id$";
 
 /*
- *  Reducer.h: A barrier with reduction operations
+ *  Reducer: A barrier with reduction operations
  *
  *  Written by:
  *   Author: Steve Parker
@@ -14,17 +14,40 @@ static char *id="$Id$";
  *  Copyright (C) 1997 SCI Group
  */
 
-#include "Reducer.h"
-#include "ThreadGroup.h"
+#include <SCICore/Thread/Reducer.h>
+#include <SCICore/Thread/ThreadGroup.h>
 
-/**
- * Perform reduction operations over a set of threads.  Reduction
- * operations include things like global sums, global min/max, etc.
- * In these operations, a local sum (operation) is performed on each
- * thread, and these sums are added together.
- */
+SCICore::Thread::Reducer::Reducer(const char* name, int numThreads)
+    : Barrier(name, numThreads)
+{
+    d_array_size=numThreads;
+    d_join[0]=new joinArray[numThreads];
+    d_join[1]=new joinArray[numThreads];
+    d_p=new pdata[d_num_threads];
+    for(int i=0;i<d_num_threads;i++)
+        d_p[i].d_buf=0;
+}
 
-void Reducer::collectiveResize(int proc)
+SCICore::Thread::Reducer::Reducer(const char* name, ThreadGroup* group)
+    : Barrier(name, group)
+{
+    d_array_size=group->numActive(true);
+    d_join[0]=new joinArray[d_array_size];
+    d_join[1]=new joinArray[d_array_size];
+    d_p=new pdata[d_array_size];
+    for(int i=0;i<d_array_size;i++)
+        d_p[i].d_buf=0;
+}
+
+SCICore::Thread::Reducer::~Reducer()
+{
+    delete[] d_join[0];
+    delete[] d_join[1];
+    delete[] d_p;
+}
+
+void
+SCICore::Thread::Reducer::collectiveResize(int proc)
 {
     // Extra barrier here to change the array size...
 
@@ -32,7 +55,7 @@ void Reducer::collectiveResize(int proc)
     // or they will skip down too soon...
     wait();
     if(proc==0){
-        int n=d_threadGroup?d_threadGroup->numActive(true):d_numThreads;
+        int n=d_thread_group?d_thread_group->numActive(true):d_num_threads;
         delete[] d_join[0];
         delete[] d_join[1];
         d_join[0]=new joinArray[n];
@@ -41,44 +64,16 @@ void Reducer::collectiveResize(int proc)
         d_p=new pdata[n];
         for(int i=0;i<n;i++)
 	    d_p[i].d_buf=0;
-        d_arraySize=n;
+        d_array_size=n;
     }
     wait();
 }
 
-Reducer::Reducer(const std::string& name, int numThreads)
-    : Barrier(name, numThreads)
+double
+SCICore::Thread::Reducer::sum(int proc, double mysum)
 {
-    d_arraySize=numThreads;
-    d_join[0]=new joinArray[numThreads];
-    d_join[1]=new joinArray[numThreads];
-    d_p=new pdata[d_numThreads];
-    for(int i=0;i<d_numThreads;i++)
-        d_p[i].d_buf=0;
-}
-
-Reducer::Reducer(const std::string& name, ThreadGroup* group)
-    : Barrier(name, group)
-{
-    d_arraySize=group->numActive(true);
-    d_join[0]=new joinArray[d_arraySize];
-    d_join[1]=new joinArray[d_arraySize];
-    d_p=new pdata[d_arraySize];
-    for(int i=0;i<d_arraySize;i++)
-        d_p[i].d_buf=0;
-}
-
-Reducer::~Reducer()
-{
-    delete[] d_join[0];
-    delete[] d_join[1];
-    delete[] d_p;
-}
-
-double Reducer::sum(int proc, double mysum)
-{
-    int n=d_threadGroup?d_threadGroup->numActive(true):d_numThreads;
-    if(n != d_arraySize){
+    int n=d_thread_group?d_thread_group->numActive(true):d_num_threads;
+    if(n != d_array_size){
         collectiveResize(proc);
     }
 
@@ -94,10 +89,11 @@ double Reducer::sum(int proc, double mysum)
     return sum;
 }
 
-double Reducer::max(int proc, double mymax)
+double
+SCICore::Thread::Reducer::max(int proc, double mymax)
 {
-    int n=d_threadGroup?d_threadGroup->numActive(true):d_numThreads;
-    if(n != d_arraySize){
+    int n=d_thread_group?d_thread_group->numActive(true):d_num_threads;
+    if(n != d_array_size){
         collectiveResize(proc);
     }
 
@@ -116,9 +112,13 @@ double Reducer::max(int proc, double mymax)
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 19:00:50  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.3  1999/08/25 02:37:59  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun
 //
 //
-
