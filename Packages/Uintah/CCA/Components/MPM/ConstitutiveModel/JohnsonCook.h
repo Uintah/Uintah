@@ -97,6 +97,8 @@ WARNING
       const VarLabel* pDeformRatePlasticLabel_preReloc;  // For Hypoelastic-plasticity
       const VarLabel* pPlasticStrainLabel;  // For Hypoelastic-plasticity
       const VarLabel* pPlasticStrainLabel_preReloc;  // For Hypoelastic-plasticity
+      const VarLabel* pDamageLabel;  // For Hypoelastic-plasticity
+      const VarLabel* pDamageLabel_preReloc;  // For Hypoelastic-plasticity
 
       private:
 	 friend const TypeDescription* fun_getTypeDescription(CMData*);
@@ -178,9 +180,6 @@ WARNING
 					 const Point& px, 
 					 const Vector& psize, 
 					 constNCVariable<Vector>& gVelocity);
-         bool outsideGrid(const IntVector& index, 
-                          const IntVector& lowIndex, 
-                          const IntVector& highIndex);
 
          Matrix3 computeVelocityGradient(const Patch* patch,
                                          const double* oodx, 
@@ -197,13 +196,13 @@ WARNING
 				       const Matrix3& tensorD,
 				       const Matrix3& tensorW);
 
-	 double evaluateFlowStress(double& ep, 
-				   double& epdot,
-				   double& T);
+	 double evaluateFlowStress(const double& ep, 
+				   const double& epdot,
+				   const double& T);
 
-         double calcStrainAtFracture(double& sig, 
-                                     double& epdot,
-                                     double& T);
+         double calcStrainAtFracture(const Matrix3& sig, 
+                                     const double& epdot,
+                                     const double& T);
       };
 
 } // End namespace Uintah
