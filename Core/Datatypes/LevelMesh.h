@@ -45,28 +45,33 @@ public:
   struct LevelIndex
   {
     public:
-    LevelIndex() : i_(0), j_(0), k_(0) {}
-    LevelIndex(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k) {}
+    LevelIndex(const LevelMesh *m,
+	       unsigned i, unsigned j, unsigned k);
+    const LevelMesh *mesh_;
+    const Patch* patch_;
     unsigned i_, j_, k_;
+    protected:
+    LevelIndex(){}  
   };
   
   struct CellIndex : public LevelIndex
   {
     CellIndex() : LevelIndex() {}
-    CellIndex(unsigned i, unsigned j, unsigned k) :
-      LevelIndex(i,j,k) {}    
+    CellIndex(const LevelMesh *m, unsigned i, unsigned j, unsigned k) :
+      LevelIndex(m,i,j,k) {}    
   };
   
   struct NodeIndex : public LevelIndex
   {
     NodeIndex() : LevelIndex() {}
-    NodeIndex(unsigned i, unsigned j, unsigned k) :
-      LevelIndex(i,j,k) {}    
+    NodeIndex(const LevelMesh *m, unsigned i, unsigned j, unsigned k) :
+      LevelIndex(m,i,j,k) {}    
   };
   
   struct LevelIter : public LevelIndex
   {
-    LevelIter(const LevelMesh *m, unsigned i, unsigned j, unsigned k ); 
+    LevelIter(const LevelMesh *m, unsigned i, unsigned j, unsigned k ) :
+      LevelIndex(m,i,j,k){}
     
     const LevelIndex &operator *() { return *this; }
     
@@ -81,8 +86,6 @@ public:
       return !(*this == a);
     }
     
-    const Patch* patch_;
-    const LevelMesh *mesh_;
   };
   
   
@@ -96,15 +99,15 @@ public:
     NodeIter &operator++()
     {
       i_++;
-      if (i_ >= mesh_->nx_)	{
-	i_ = 0;
+      if (i_ >= mesh_->idxLow_.x() + mesh_->nx_)	{
+	i_ = mesh_->idxLow_.x();
 	j_++;
-	if (j_ >= mesh_->ny_) {
-	  j_ = 0;
+	if (j_ >= mesh_->idxLow_.y() +mesh_->ny_) {
+	  j_ = mesh_->idxLow_.y();
 	  k_++;
 	}
       }
-      IntVector idx = mesh_->idxLow_ + IntVector( i_, j_, k_);
+      IntVector idx = IntVector( i_, j_, k_);
       if( !(patch_->containsNode( idx ) ) )
 	patch_ = mesh_->grid_->getLevel(mesh_->level_)-> selectPatch( idx ); 
       return *this;
@@ -131,15 +134,15 @@ public:
     CellIter &operator++()
     {
       i_++;
-      if (i_ >= mesh_->nx_-1) {
-	i_ = 0;
+      if (i_ >= mesh_->idxLow_.x() +mesh_->nx_-1) {
+	i_ = mesh_->idxLow_.x();
 	j_++;
-	if (j_ >= mesh_->ny_-1) {
-	  j_ = 0;
+	if (j_ >= mesh_->idxLow_.y() + mesh_->ny_-1) {
+	  j_ = mesh_->idxLow_.y();
 	  k_++;
 	}
       }
-      IntVector idx = mesh_->idxLow_ + IntVector( i_, j_, k_);
+      IntVector idx = IntVector( i_, j_, k_);
       if( !(patch_->containsCell( idx ) ))
 	patch_ = mesh_->grid_->getLevel(mesh_->level_)-> selectPatch( idx ); 
       return *this;
@@ -186,6 +189,11 @@ public:
 
   // For now we must create a Level Mesh for each level of the Level
   LevelMesh( GridP  g, int level);
+  LevelMesh(const LevelMesh &copy) :
+    grid_(copy.grid_), level_(copy.level_), idxLow_(copy.idxLow_),
+    nx_(copy.nx_), ny_(copy.ny_), nz_(copy.nz_), min_(copy.min_),
+    max_(copy.max_) {}
+  virtual MeshBase *clone(){ return new LevelMesh(*this); }
   virtual ~LevelMesh() {}
 
   node_iterator node_begin() const { return node_iterator(this, 0, 0, 0); }
@@ -203,6 +211,7 @@ public:
   unsigned get_nz() const { return nz_; }
   Point get_min() const { return min_; }
   Point get_max() const { return max_; }
+  Vector diagonal() const { return max_ - min_; }
   virtual BBox get_bounding_box() const;
 
   //! set the mesh statistics
