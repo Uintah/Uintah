@@ -46,6 +46,7 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/ThreadError.h>
 #include <Core/Thread/ThreadGroup.h>
+#include <Core/Thread/Time.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,7 +60,12 @@
 #include <string.h>
 #include <sys/types.h>
 #ifdef _WIN32
+#include <windows.h>
+#include <winnt.h>
 #include <io.h>
+#include <process.h>
+#include <imagehlp.h>
+#include <tlhelp32.h>
 #else
 #include <unistd.h>
 #endif
@@ -85,8 +91,8 @@ class ParallelHelper : public Runnable {
   const ParallelBase* helper;
   int proc;
 public:
-  ParallelHelper(const ParallelBase* helper, int proc)
-    : helper(helper), proc(proc) {}
+  ParallelHelper(const ParallelBase& helper, int proc)
+    : helper(&helper), proc(proc) {}
   virtual ~ParallelHelper() {}
   virtual void run() {
     ParallelBase* cheat=(ParallelBase*)helper;
@@ -233,7 +239,7 @@ Thread::parallel(const ParallelBase& helper, int nthreads,
   for(int i=0;i<nthreads;i++){
     char buf[50];
     sprintf(buf, "Parallel thread %d of %d", i, nthreads);
-    new Thread(new ParallelHelper(&helper, i), buf,
+    new Thread(new ParallelHelper(helper, i), buf,
 	       newgroup, Thread::Stopped);
   }
   newgroup->gangSchedule();
@@ -251,10 +257,8 @@ Thread::parallel(const ParallelBase& helper, int nthreads,
 }
 
 void
-Thread::niceAbort()
+Thread::niceAbort(void* Context /* = 0 */)
 {
-#ifndef _WIN32
-
   static const int MAXSTACK = 100;
 #ifdef HAVE_EXC
   // Use -lexc to print out a stack trace
@@ -286,6 +290,72 @@ Thread::niceAbort()
     } 
     free(names);
   } 
+#elif defined(_WIN32)
+  // fix for IA64, and AMD64 later
+  // inits of sf.* and 1st param to stackwalk64 are for i386 currently
+  // use ImageNtHeader, look in PE header
+
+
+  // setup initial structs
+  int i = 0;
+  static const int MAXNAMELEN = 1000;
+  static const int IMGSYMLEN = sizeof(IMAGEHLP_SYMBOL);
+  static IMAGEHLP_SYMBOL* image_sym = 0;
+  char name[MAXNAMELEN]; // undecorated name
+
+  // this is where the symbol info will be stored
+  if (image_sym == 0) {
+    image_sym = (IMAGEHLP_SYMBOL *) malloc( IMGSYMLEN + MAXNAMELEN );
+  }
+  memset( image_sym, 0, IMGSYMLEN + MAXNAMELEN );
+  image_sym->SizeOfStruct = IMGSYMLEN;
+  image_sym->MaxNameLength = MAXNAMELEN;
+
+  // thread context and stack frame
+  CONTEXT context;
+  if (Context == 0) {
+    memset(&context, 0, sizeof(CONTEXT));
+    context.ContextFlags = CONTEXT_FULL;
+
+    GetThreadContext(GetCurrentThread(), &context); 
+  }
+  else {
+    context = *(CONTEXT*)Context;
+  }
+  STACKFRAME sf;
+  memset(&sf, 0, sizeof(STACKFRAME));
+  sf.AddrPC.Offset = context.Eip; // for X86
+  sf.AddrPC.Mode = AddrModeFlat;
+  sf.AddrFrame.Offset = context.Ebp; // for X86
+  sf.AddrFrame.Mode = AddrModeFlat;
+  HANDLE hProc = GetCurrentProcess();
+
+  static bool first = true;
+
+  if (first) {
+    SymInitialize(hProc, 0, true);
+    first = false;
+  }
+
+  bool success = StackWalk(IMAGE_FILE_MACHINE_I386, hProc, GetCurrentThread(), &sf, 0, 0, SymFunctionTableAccess, SymGetModuleBase, 0) && sf.AddrPC.Offset != 0;
+
+  while (success) {
+    DWORD offset = 0;
+    if (SymGetSymFromAddr(hProc, sf.AddrPC.Offset, &offset, image_sym)) {
+      UnDecorateSymbolName(image_sym->Name, name, MAXNAMELEN, UNDNAME_COMPLETE);
+      fprintf(stderr, "#%d %s\n", i, name);
+    }
+    else {
+      fprintf(stderr, "#%d ???\n", i);
+      static int bad = 0;
+      bad++;
+      if (bad > 25)
+        break;
+    }  
+    i++;
+    success = StackWalk(IMAGE_FILE_MACHINE_I386, hProc, GetCurrentThread(), &sf, 0, 0, SymFunctionTableAccess, SymGetModuleBase, 0) && sf.AddrPC.Offset != 0;
+  }
+  fflush(stderr);
 #endif
 
   char* smode = getenv("SCI_SIGNALMODE");
@@ -309,7 +379,7 @@ Thread::niceAbort()
       while(read(fileno(stdin), buf, 100) <= 0){
 	if(errno != EINTR){
 	  fprintf(stderr, "\nCould not read response, sleeping for 20 seconds.\n");
-	  sleep(20);
+          Time::waitFor(20.0);
 	  buf[0]='e';
 	  exitAll(1);
 	}
@@ -364,7 +434,6 @@ Thread::niceAbort()
       smode = "exit";
     }
   }
-#endif	// _WIN32
 }
 
 int

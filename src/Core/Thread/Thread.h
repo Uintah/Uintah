@@ -47,7 +47,7 @@
 #include <Core/Thread/Parallel1.h>
 #include <Core/Thread/Parallel2.h>
 #include <Core/Thread/Parallel3.h>
-#include <Core/share/share.h>
+#include <Core/Thread/share.h>
 
 namespace SCIRun {
 	struct Thread_private;
@@ -70,7 +70,7 @@ DESCRIPTION
    executed in another thread.
    
 ****************************************/
-	class SCICORESHARE Thread {
+	class SHARE Thread {
 	public:
 	    //////////
 	    // Possible thread start states
@@ -194,8 +194,8 @@ DESCRIPTION
 	    template<class T>
 	    static void parallel(T* ptr, void (T::*pmf)(int),
 				 int numThreads, bool block) {
-                Parallel<T> p(ptr, pmf);
-		parallel(p, numThreads, block);
+        Parallel<T> p(ptr, pmf);
+        parallel(p, numThreads, block);
 	    }
 
 	    //////////
@@ -204,8 +204,8 @@ DESCRIPTION
 	    static void parallel(T* ptr, void (T::*pmf)(int, Arg1),
 				 int numThreads, bool block,
 				 Arg1 a1) {
-	        Parallel1<T, Arg1> p(ptr, pmf, a1);
-		parallel(p, numThreads, block);
+        Parallel1<T, Arg1> p(ptr, pmf, a1);
+        parallel(p, numThreads, block);
 	    }
 
 	    //////////
@@ -214,8 +214,8 @@ DESCRIPTION
 	    static void parallel(T* ptr, void (T::* pmf)(int, Arg1, Arg2),
 				 int numThreads, bool block,
 				 Arg1 a1, Arg2 a2) {
-                Parallel2<T, Arg1, Arg2> p(ptr, pmf, a1, a2);
-		parallel(p, numThreads, block);
+        Parallel2<T, Arg1, Arg2> p(ptr, pmf, a1, a2);
+        parallel(p, numThreads, block);
 	    }
 
 	    //////////
@@ -224,15 +224,16 @@ DESCRIPTION
 	    static void parallel(T* ptr, void (T::* pmf)(int, Arg1, Arg2, Arg3),
 				 int numThreads, bool block,
 				 Arg1 a1, Arg2 a2, Arg3 a3) {
-                Parallel3<T, Arg1, Arg2, Arg3> p(ptr, pmf, a1, a2, a3);
-		parallel(p, numThreads, block);
+        Parallel3<T, Arg1, Arg2, Arg3> p(ptr, pmf, a1, a2, a3);
+        parallel(p, numThreads, block);
 	    }
 
 	    //////////
 	    // Abort the current thread, or the process.  Prints a message on
 	    // stderr, and the user may choose one of:
 	    // <pre>continue(c)/dbx(d)/cvd(v)/kill thread(k)/exit(e)</pre>
-	    static void niceAbort();
+            // context is necesary on Windows to catch a segfault
+	    static void niceAbort(void* Context = 0);
 	    
 	    //////////
 	    // Mark a section as one that could block for debugging purposes.
