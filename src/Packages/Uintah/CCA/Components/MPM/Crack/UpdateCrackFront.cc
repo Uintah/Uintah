@@ -183,7 +183,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 
               for(int k = 0; k < d_8or27; k++) {
                 double totalMass=gmass[ni[k]]+Gmass[ni[k]];
-                if(totalMass<1.e-3*d_cell_mass) {
+                if(totalMass<d_cell_mass/32.) {
                   inMat[j]=NO;
                   break;
                 }
@@ -226,7 +226,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 
             for(int k = 0; k < d_8or27; k++) {
               double totalMass=gmass[ni[k]]+Gmass[ni[k]];
-              if(totalMass<1.e-3*d_cell_mass) {
+              if(totalMass<d_cell_mass/32.) {
                 cfSegCenterInMat=NO;
                 break;
               }
