@@ -183,6 +183,7 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 					 ArchesConstVariables* constvars)
 
 {
+  /*
       IntVector domLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
       IntVector domHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
 
@@ -191,6 +192,12 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 
       idxLo = idxLo - IntVector(1,1,1);
       idxHi = idxHi + IntVector(1,1,1);
+  */
+
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector domLo = patch->getCellLowIndex();
+  IntVector domHi = patch->getCellHighIndex();
 
     CCVariable<double> shgamma;
     vars->shgamma.allocate(domLo,domHi);
@@ -304,8 +311,8 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   volq.initialize(0.0);    
   arean.initialize(0.0);
   areatb.initialize(0.0);
-  double timeRadMatrix = 0;
-  double timeRadCoeffs = 0;
+  //  double timeRadMatrix = 0;
+  //  double timeRadCoeffs = 0;
   vars->cenint.initialize(0.0);
 
   //begin discrete ordinates
@@ -361,12 +368,14 @@ if(d_SHRadiationCalc==false) {
         exit(1);
       }
       d_linearSolver->destroyMatrix();
+
       fort_rdomvolq(idxLo, idxHi, direcn, wt, vars->cenint, volq);
       fort_rdomflux(idxLo, idxHi, direcn, oxi, omu, oeta, wt, vars->cenint,
 		    plusX, plusY, plusZ, vars->qfluxe, vars->qfluxw,
 		    vars->qfluxn, vars->qfluxs,
 		    vars->qfluxt, vars->qfluxb);
     }
+
       fort_rdomsrc(idxLo, idxHi, vars->ABSKG, vars->ESRCG,
 		   volq, vars->src);
   }
