@@ -104,14 +104,14 @@ CIA::array1<gov::cca::ComponentClassDescription::pointer> ComponentRegistry::get
   return ccalist;
 }
 
-gov::cca::TypeMap::pointer ComponentRegistry::getClassProperties(const std::string& className)
+gov::cca::TypeMap::pointer ComponentRegistry::getClassProperties(const std::string& /*className*/)
 {
   cerr << "ComponentRegistry::getClassProperties not finished\n";
   return gov::cca::TypeMap::pointer(0);
 }
 
-void ComponentRegistry::setClassProperties(const std::string& className,
-					   const gov::cca::TypeMap::pointer& properties)
+void ComponentRegistry::setClassProperties(const std::string& /*className*/,
+					   const gov::cca::TypeMap::pointer& /*properties*/)
 {
   cerr << "ComponentRegistry::setClassProperties not finished\n";
 }
@@ -123,19 +123,19 @@ CIA::array1<std::string> ComponentRegistry::getLoadableComponentClasses()
   return junk;
 }
 
-void ComponentRegistry::loadClass(const std::string& uri, float timeout,
-				  const gov::cca::TypeMap::pointer& componentProperties)
+void ComponentRegistry::loadClass(const std::string& /*uri*/, float /*timeout*/,
+				  const gov::cca::TypeMap::pointer& /*componentProperties*/)
 {
   cerr << "ComponentRegistry::loadClass not finished\n";
 }
 
-void ComponentRegistry::unloadClass(const std::string& className)
+void ComponentRegistry::unloadClass(const std::string& /*className*/)
 {
   cerr << "ComponentRegistry::unloadClass not finished\n";
 }
 
-CIA::array1<std::string> ComponentRegistry::findComponentClasses(const CIA::array1<std::string>& repositoryURIs,
-								 float timeout)
+CIA::array1<std::string> ComponentRegistry::findComponentClasses(const CIA::array1<std::string>& /*repositoryURIs*/,
+								 float /*timeout*/)
 {
   cerr << "ComponentRegistry::findComponentClasses not finished\n";
   CIA::array1<std::string> junk(0);

@@ -37,7 +37,7 @@ using namespace SCIRun;
 CCAComponentInstance::CCAComponentInstance(SCIRunFramework* framework,
 					   const std::string& instanceName,
 					   const std::string& typeName,
-					   const gov::cca::TypeMap::pointer& properties,
+					   const gov::cca::TypeMap::pointer& /*properties*/,
 					   const gov::cca::Component::pointer& component
 )
   : ComponentInstance(framework, instanceName, typeName), component(component)

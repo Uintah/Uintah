@@ -148,7 +148,7 @@ string SCIRunComponentModel::getName() const
 }
 
 void SCIRunComponentModel::listAllComponentTypes(vector<ComponentDescription*>& list,
-						 bool listInternal)
+						 bool /*listInternal*/)
 {
   vector<string> packages = packageDB->packageNames();
   typedef vector<string>::iterator striter;

@@ -43,7 +43,7 @@ InternalComponentInstance::~InternalComponentInstance()
 }
 
 PortInstance*
-InternalComponentInstance::getPortInstance(const std::string& name)
+InternalComponentInstance::getPortInstance(const std::string& /*name*/)
 {
   cerr << "InternalComponentInstance::getPortInstance not finished\n";
   return 0;

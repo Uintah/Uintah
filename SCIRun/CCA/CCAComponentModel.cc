@@ -146,11 +146,6 @@ void CCAComponentModel::readComponentDescription(const std::string& file)
       cd->type = name.getNodeValue().transcode();
     }
   
-    for (DOM_Node child = d.getFirstChild();
-	 child!=0;
-	 child = child.getNextSibling()) {
-      DOMString childname = child.getNodeName();
-    }
     componentDB_type::iterator iter = components.find(cd->type);
     if(iter != components.end()){
       cerr << "WARNING: Component multiply defined: " << cd->type << '\n';
@@ -228,7 +223,7 @@ string CCAComponentModel::getName() const
 }
 
 void CCAComponentModel::listAllComponentTypes(vector<ComponentDescription*>& list,
-						 bool listInternal)
+					      bool /*listInternal*/)
 {
   for(componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++){
