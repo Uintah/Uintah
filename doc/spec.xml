@@ -1,33 +1,39 @@
 <?xml version='1.0' encoding='us-ascii' ?>
 <!DOCTYPE spec SYSTEM "spec.dtd">
-
 <spec>
   <info>
     <name></name>
     <creation></creation>
     <description>
-      <purpose>
+      <summary></summary>
+      <info-builder>
 	<para></para>
-      </purpose>
-      <builder>
-	<para></para>
-      </builder>
-      <dev>
+      </info-builder>
+      <info-developer>
 	<para></para>
 	<img></img>
-      </dev>
+      </info-developer>
     </description>
     <author>
+      <name></name>
       <name></name>
     </author>
     <version></version>
     <IO>
       <ports>
-	<in type="t1">
-	  <EMPTY></EMPTY>
+	<in>
+	  <port></port>
+	  <datatype></datatype>
+	  <usage>
+	    <para></para>
+	  </usage>
 	</in>
-	<out type="t4">
-	  <EMPTY></EMPTY>
+	<out>
+	  <port></port>
+	  <datatype></datatype>
+	  <usage>
+	    <para></para>
+	  </usage>
 	</out>
       </ports>
       <modules>
@@ -42,42 +48,43 @@
     </IO>
     <also>
       <ref></ref>
+      <link></link>
     </also>
+    <caution>
+      <knownbugs>
+	<bugNum></bugNum>
+      </knownbugs>
+      <platformIssues>
+	<issue></issue>
+      </platformIssues>
+    </caution>
+    <enhancements>
+      <para></para>
+    </enhancements>
   </info>
   <gui>
     <parameter>
       <label></label>
-      <use>
+      <guidance>
 	<para></para>
-      </use>
-      <developer>
+      </guidance>
+      <gui-developer>
 	<widgets></widgets>
-	<polling></polling>
-      </developer>
-    </parameter>
-    <parameter>
-      <label></label>
-      <use>
-	<para></para>
-      </use>
-      <developer>
-	<widgets></widgets>
-	<polling></polling>
-      </developer>
+	<use></use>
+      </gui-developer>
     </parameter>
     <img></img>
   </gui>
   <testing>
     <plan>
-      <purpose>
+      <procedure>
 	<para></para>
-      </purpose>
+      </procedure>
       <steps>
+	<step></step>
 	<step></step>
       </steps>
     </plan>
-    <expected>
-      <para></para>
-    </expected>
   </testing>
 </spec>
+

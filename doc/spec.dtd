@@ -1,56 +1,66 @@
 <!-- paragraph element common to many other elements -->
 <!ELEMENT para (#PCDATA)>
 <!ELEMENT img (#PCDATA)>
+<!ELEMENT link (#PCDATA)>
 <!ELEMENT name (#PCDATA)>
 <!ELEMENT ref (#PCDATA)>
+<!ELEMENT port (#PCDATA)>
+<!ELEMENT datatype (#PCDATA)>
 
 <!-- top level element spec -->
 <!ELEMENT spec (info, gui*, testing)>
 
 <!-- info element has all the build and meta data -->
-<!ELEMENT info (name, creation, description, author, version, IO, also)>
+<!ELEMENT info (name, creation, description, author, 
+                version, IO, also, caution?, enhancements?)>
 
 <!-- creation function name -->
 <!ELEMENT creation (#PCDATA)>
-<!ELEMENT description (purpose, builder, dev, references?)>
-<!ELEMENT purpose (para+)>
-<!ELEMENT builder (para+)>
-<!ELEMENT dev (para+,img*)>
-<!ELEMENT references (ref+)>
+<!ELEMENT description (summary, info-builder, info-developer)>
+<!ELEMENT summary (#PCDATA)>
+<!ELEMENT info-builder (para+)>
+<!ELEMENT info-developer (para+, img*)>
 <!ELEMENT author (name+)>
 <!ELEMENT version (#PCDATA)>
 
 <!-- IO input and output info both datatype info and context info -->
 <!ELEMENT IO (ports, modules, example)>
 <!ELEMENT ports (in*, out*)>
-<!ELEMENT in (EMPTY)>
-<!ATTLIST in type (t1 | t2 | t3 | t4) "t1">
-<!ELEMENT out (EMPTY)>
-<!ATTLIST out type (t1 | t2 | t3 | t4) "t4">
-
+<!ELEMENT in (port, datatype+, usage?)>
+<!ELEMENT out (port, datatype+, usage?)>
+<!ELEMENT usage (para+)>
 <!-- typical modules used upstream and downstream -->
 <!ELEMENT modules (typin+, typout+)>
 <!ELEMENT typin (name+)>
 <!ELEMENT typout (name+)>
-
 <!-- pointer to and example map (some .sr file) -->
 <!ELEMENT example (#PCDATA)>
 
 <!-- refer to similar modules, datatypes, etc... -->
-<!ELEMENT also (ref+)>
+<!ELEMENT also (ref+, link*)>
+
+<!-- optional caution info -->
+<!ELEMENT caution (knownbugs?, platformIssues?)>
+<!ELEMENT knownbugs (bugNum+)>
+<!ELEMENT bugNum (#PCDATA)>
+<!ELEMENT platformIssues (issue+)>
+<!ELEMENT issue (#PCDATA)>
+
+<!-- optional enhancement info -->
+<!ELEMENT enhancements (para+)>
 
 <!-- gui element has all the gui related documentation -->
 <!ELEMENT gui (parameter+, img+)>
-<!ELEMENT parameter (label, use, developer)>
+<!ELEMENT parameter (label, guidance, gui-developer)>
 <!ELEMENT label (#PCDATA)>
-<!ELEMENT use (para+)>
-<!ELEMENT developer (widgets, polling)>
+<!ELEMENT guidance (para+)>
+<!ELEMENT gui-developer (widgets, use)>
 <!ELEMENT widgets (#PCDATA)>
-<!ELEMENT polling (#PCDATA)>
+<!ELEMENT use (#PCDATA)>
 
 <!-- testing element has all the testing related info -->
-<!ELEMENT testing (plan, expected)>
-<!ELEMENT plan (purpose, steps)>
+<!ELEMENT testing (plan)>
+<!ELEMENT plan (procedure, steps)>
 
 <!-- procedure describes what the steps below are trying to accomplish -->
 <!ELEMENT procedure (para+)>
@@ -58,6 +68,3 @@
 
 <!-- each step in the test plan (a script telling you what to do)-->
 <!ELEMENT step (#PCDATA)>
-
-<!-- expected element has paragraphs that describe the expected results -->
-<!ELEMENT expected (para+)>
