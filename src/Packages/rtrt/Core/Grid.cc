@@ -1,6 +1,8 @@
 #include <Packages/rtrt/Core/Grid.h>
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Array1.h>
+#include <Packages/rtrt/Core/TexturedTri.h>
+#include <Packages/rtrt/Core/Tri.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Packages/rtrt/Core/Ray.h>
@@ -12,8 +14,7 @@
 #include "LambertianMaterial.h"
 
 using namespace rtrt;
-using SCIRun::Thread;
-using SCIRun::Time;
+using namespace SCIRun;
 
 SCIRun::Persistent* grid_maker() {
   return new Grid;
@@ -125,6 +126,11 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 
     double itime=time;
     int nynz=ny*nz;
+
+    Vector p0,p1,p2,n;
+    real verts[3][3];
+    real polynormal[3];
+ 
     for(int i=0;i<prims.size();i++){
 	double tnow=Time::currentSeconds();
 	if(tnow-itime > 5.0){
@@ -133,14 +139,66 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 	}
 	BBox obj_bbox;
 	prims[i]->compute_bounds(obj_bbox, maxradius);
-	int sx, sy, sz, ex, ey, ez;
-	calc_se(obj_bbox, bbox, diag, nx, ny, nz, sx, sy, sz, ex, ey, ez);
-	for(int x=sx;x<=ex;x++){
-	    for(int y=sy;y<=ey;y++){
-		int idx=x*nynz+y*nz+sz;
+
+        Tri *tri = dynamic_cast<Tri*>(prims[i]);
+        if (tri) {
+            if (tri->isbad()){
+               //cerr << "WARNING -- tri isbad() true!!" << endl;
+                continue;
+            }
+            p0 = (tri->pt(0) - bbox.min())*(Vector(nx,ny,nz)/diag);
+            p1 = (tri->pt(1) - bbox.min())*(Vector(nx,ny,nz)/diag);
+            p2 = (tri->pt(2) - bbox.min())*(Vector(nx,ny,nz)/diag);
+            n = Cross((p2-p0),(p1-p0));
+            n.normalize();
+            polynormal[0] = n.x();
+            polynormal[1] = n.y();
+            polynormal[2] = n.z();
+        }
+       
+        
+        TexturedTri *ttri = dynamic_cast<TexturedTri*>(prims[i]);
+        if (ttri) {
+            if (ttri->isbad()){
+               //cerr << "WARNING -- ttri isbad() true!!" << endl;
+                continue;
+            }
+            p0 = (ttri->pt(0) - bbox.min())*(Vector(nx,ny,nz)/diag);
+            p1 = (ttri->pt(1) - bbox.min())*(Vector(nx,ny,nz)/diag);
+            p2 = (ttri->pt(2) - bbox.min())*(Vector(nx,ny,nz)/diag);
+            Vector n = Cross((p2-p0),(p1-p0));
+            n.normalize();
+            polynormal[0] = n.x();
+            polynormal[1] = n.y();
+            polynormal[2] = n.z();
+        }
+    
+        int sx, sy, sz, ex, ey, ez;
+        calc_se(obj_bbox, bbox, diag, nx, ny, nz, sx, sy, sz, ex, ey, ez);
+        for(int x=sx;x<=ex;x++){
+            for(int y=sy;y<=ey;y++){
+                int idx=x*nynz+y*nz+sz;
 		for(int z=sz;z<=ez;z++){
-		    counts[idx*2+1]++;
-		    idx++;
+                    if (tri || ttri) {
+                       verts[0][0] = p0.x() - ((double)x+.5);
+                       verts[1][0] = p1.x() - ((double)x+.5);
+                       verts[2][0] = p2.x() - ((double)x+.5);
+                       verts[0][1] = p0.y() - ((double)y+.5);
+                       verts[1][1] = p1.y() - ((double)y+.5);
+                       verts[2][1] = p2.y() - ((double)y+.5);
+                       verts[0][2] = p0.z() - ((double)z+.5);
+                       verts[1][2] = p1.z() - ((double)z+.5);
+                       verts[2][2] = p2.z() - ((double)z+.5);
+                       if (fast_polygon_intersects_cube(3, verts, polynormal, 0, 0))
+                       {
+                          counts[idx*2+1]++;
+                       }
+                       idx++;
+                    }
+                    else {
+                       counts[idx*2+1]++;
+		       idx++;
+                    }
 		}
 	    }
 	}
@@ -165,6 +223,7 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     itime=time;
     Array1<int> current(ngrid);
     current.initialize(0);
+
     for(int i=0;i<prims.size();i++){
 	double tnow=Time::currentSeconds();
 	if(tnow-itime > 5.0){
@@ -173,17 +232,73 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 	}
 	BBox obj_bbox;
 	prims[i]->compute_bounds(obj_bbox, maxradius);
+
+        Tri *tri = dynamic_cast<Tri*>(prims[i]);
+
+        if (tri) {
+            if (tri->isbad()){
+               //cerr << "WARNING -- tri isbad() true!!" << endl;
+                continue;
+            }
+            p0 = (tri->pt(0) - bbox.min())*(Vector(nx,ny,nz)/diag);
+            p1 = (tri->pt(1) - bbox.min())*(Vector(nx,ny,nz)/diag);
+            p2 = (tri->pt(2) - bbox.min())*(Vector(nx,ny,nz)/diag);
+            n = Cross((p2-p0),(p1-p0));
+            n.normalize();
+            polynormal[0] = n.x();
+            polynormal[1] = n.y();
+            polynormal[2] = n.z();
+        }
+        TexturedTri *ttri = dynamic_cast<TexturedTri*>(prims[i]);
+
+        if (ttri) {
+            if (ttri->isbad()){
+               //cerr << "WARNING -- ttri isbad() true!!" << endl;
+                continue;
+            }
+            p0 = (ttri->pt(0) - bbox.min())*(Vector(nx,ny,nz)/diag);
+            p1 = (ttri->pt(1) - bbox.min())*(Vector(nx,ny,nz)/diag);
+            p2 = (ttri->pt(2) - bbox.min())*(Vector(nx,ny,nz)/diag);
+            Vector n = Cross((p2-p0),(p1-p0));
+            n.normalize();
+            polynormal[0] = n.x();
+            polynormal[1] = n.y();
+            polynormal[2] = n.z();
+        }
+
+
 	int sx, sy, sz, ex, ey, ez;
 	calc_se(obj_bbox, bbox, diag, nx, ny, nz, sx, sy, sz, ex, ey, ez);
 	for(int x=sx;x<=ex;x++){
 	    for(int y=sy;y<=ey;y++){
 		int idx=x*nynz+y*nz+sz;
 		for(int z=sz;z<=ez;z++){
-		    int cur=current[idx];
-		    int pos=counts[idx*2]+cur;
-		    grid[pos]=prims[i];
-		    current[idx]++;
-		    idx++;
+                    if (tri || ttri) {
+                       verts[0][0] = p0.x() - ((double)x+.5);
+                       verts[1][0] = p1.x() - ((double)x+.5);
+                       verts[2][0] = p2.x() - ((double)x+.5);
+                       verts[0][1] = p0.y() - ((double)y+.5);
+                       verts[1][1] = p1.y() - ((double)y+.5);
+                       verts[2][1] = p2.y() - ((double)y+.5);
+                       verts[0][2] = p0.z() - ((double)z+.5);
+                       verts[1][2] = p1.z() - ((double)z+.5);
+                       verts[2][2] = p2.z() - ((double)z+.5);
+                       if (fast_polygon_intersects_cube(3, verts, polynormal, 0, 0))
+                       {
+                          int cur=current[idx];
+                          int pos=counts[idx*2]+cur;
+                          grid[pos]=prims[i];
+                          current[idx]++;
+                       }
+                       idx++;
+                    }
+                    else {
+		       int cur=current[idx];
+		       int pos=counts[idx*2]+cur;
+		       grid[pos]=prims[i];
+		       current[idx]++;
+		       idx++;
+                    }
 		}
 	    }
 	}
