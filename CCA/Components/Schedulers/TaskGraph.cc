@@ -15,6 +15,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 
@@ -412,17 +413,6 @@ void TaskGraph::processDependencies(Task* task, Task::Dependency* req,
     dbg << "processDependencies for req: " << *req << '\n';
     if(sc->isNewDW(req->mapDataWarehouse())){
       Task::Edge* edge = req->comp_head;
-#if 0
-      if(edge && edge->compNext){
-	// more than one compute for a require
-	if (!task->isReductionTask())
-	  // Only let reduction tasks require a multiple computed
-	  // variable. We may wish to change this in the future but
-	  // it isn't supported now.
-	  SCI_THROW(InternalError(string("Only reduction tasks may require a variable that has multiple computes.\n'") + task->getName() + "' is therefore invalid.\n"));
-      }
-#endif
-      
       for (;edge != 0; edge = edge->compNext){
 	Task* vtask = edge->comp->task;
 	if(!vtask->sorted){
@@ -467,13 +457,17 @@ TaskGraph::topologicalSort(vector<Task*>& sortedTasks)
 {
   setupTaskConnections();
 
-  vector<Task*>::iterator iter;
-  for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
+  for(vector<Task*>::iterator iter=d_tasks.begin();
+      iter != d_tasks.end(); iter++ ) {
     Task* task = *iter;
     if(!task->sorted){
       processTask(task, sortedTasks);
     }
   }
+  int n=0;
+  for(vector<Task*>::iterator iter = sortedTasks.begin();
+      iter != sortedTasks.end(); iter++)
+    (*iter)->sortedOrder = n++;
 }
 
 void
@@ -622,11 +616,8 @@ class CompTable {
 		    const PatchSubset* patches, const MaterialSubset* matls);
   bool findcomp(Task::Dependency* req, const Patch* patch, int matlIndex,
 		DetailedTask*& dt, Task::Dependency*& comp);
-  bool findReplaceComp(Task::Dependency* req, const Patch* patch,
-		       int matlIndex,
-		       DetailedTask* newTask, Task::Dependency* newComp,
-		       DetailedTask*& foundTask, Task::Dependency*& foundComp);
-  
+private:
+  void remembercomp(Data* newData);
 };
 
 }
@@ -639,34 +630,41 @@ CompTable::~CompTable()
 {
 }
 
-void CompTable::insert(Data* d)
+void CompTable::remembercomp(Data* newData)
 {
-  cerr << "CompTable::insert should check for duplication!\n";
-  data.insert(d);
+  if(dbg.active()){
+    dbg << "remembercomp: " << *newData->comp << ", matl=" << newData->matl;
+    if(newData->patch)
+      dbg << ", patch=" << *newData->patch;
+    dbg << '\n';
+  }
+  if(newData->comp->deptype != Task::Modifies){
+    if(data.lookup(newData)){
+      cerr << "Multiple compute found:\n";
+      cerr << "matl: " << newData->matl << "\n";
+      cerr << "patch: " << *newData->patch << "\n";
+      cerr << *newData->comp << "\n";
+      cerr << *newData->task << "\n";
+      cerr << "It was originally computed by the following task(s):\n";
+      for(Data* old = data.lookup(newData); old != 0; old = data.nextMatch(newData, old)){
+	old->comp->task->displayAll(cerr);
+      }
+      SCI_THROW(InternalError("Multiple computes for variable: "+newData->comp->var->getName()));
+    }
+  }
+  data.insert(newData);
 }
 
 void CompTable::remembercomp(DetailedTask* task, Task::Dependency* comp,
 			     const PatchSubset* patches, const MaterialSubset* matls)
 {
-  Data* dummy;
   if(patches && matls){
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       for(int m=0;m<matls->size();m++){
 	int matl = matls->get(m);
 	Data* newData = new Data(task, comp, patch, matl);
-
-	if( (dummy = data.lookup(newData)) != 0 ){ // multiple compute found???
-	  cerr << "Multiple compute found for\n";
-	  cerr << "matl: " << matl << "\n";
-	  cerr << "patch: " << *patch << "\n";
-	  cerr << *comp << "\n";
-	  cerr << *task << "\n";
-	  cerr << "IT WAS IN:\n";
-	  dummy->task->getTask()->displayAll(cerr);
-	  SCI_THROW(InternalError("Multiple computes for variable: "+comp->var->getName()));
-	}
-	data.insert(newData);
+	remembercomp(newData);
       }
     }
   } 
@@ -674,46 +672,19 @@ void CompTable::remembercomp(DetailedTask* task, Task::Dependency* comp,
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
       Data* newData = new Data(task, comp, 0, matl);      
-      if( (dummy = data.lookup(newData)) != 0 ){ // multiple compute found???
-	cerr << "Multiple compute found for\n";
-	cerr << "matl: " << matl << "\n";
-	cerr << *comp << "\n";
-	cerr << *task << "\n";
-	cerr << "IT WAS IN:\n";
-	dummy->task->getTask()->displayAll(cerr);
-	SCI_THROW(InternalError("Multiple computes for variable: "+comp->var->getName()));
-      }
-      data.insert(newData);
+      remembercomp(newData);
     }
   }
   else if (patches) {
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       Data* newData = new Data(task, comp, patch, 0);
-      if( (dummy = data.lookup(newData)) != 0 ){ // multiple compute found???
-	cerr << "Multiple compute found for\n";
-	cerr << "patch: " << *patch << "\n";
-	cerr << *comp << "\n";
-	cerr << *task << "\n";
-	cerr << "IT WAS IN:\n";
-	dummy->task->getTask()->displayAll(cerr);
-	SCI_THROW(InternalError("Multiple computes for variable: "+comp->var->getName()));
-      }
-      data.insert(newData);
+      remembercomp(newData);
     }
   }
   else {
     Data* newData = new Data(task, comp, 0, 0);
-    if( (dummy = data.lookup(newData)) != 0 ){ // multiple compute found???
-      cerr << "Multiple compute found for\n";
-      cerr << *comp << "\n";
-      cerr << *task << "\n";
-      cerr << "IT WAS IN:\n";
-      dummy->task->getTask()->displayAll(cerr);
-      SCI_THROW(InternalError("Multiple computes for variable: "+comp->var->getName()));
-    }
-    ASSERT(data.lookup(newData) == 0); // no multiple computes    
-    data.insert(newData);
+    remembercomp(newData);
   }
 }
 
@@ -721,30 +692,23 @@ bool CompTable::findcomp(Task::Dependency* req, const Patch* patch,
 			 int matlIndex, DetailedTask*& dt,
 			 Task::Dependency*& comp)
 {
+  dbg << "Finding comp of req: " << *req << " for task: " << *req->task << "/" << '\n';
   Data key(0, req, patch, matlIndex);
-  Data* result;
-  if( (result = data.lookup(&key))){
+  Data* result = 0;
+  for(Data* p = data.lookup(&key); p != 0; p = data.nextMatch(&key, p)){
+    dbg << "Examining comp from: " << p->comp->task->getName() << ", order=" << p->comp->task->getSortedOrder() << '\n';
+    ASSERT(!result || p->comp->task->getSortedOrder() != result->comp->task->getSortedOrder());
+    if(p->comp->task->getSortedOrder() < req->task->getSortedOrder()){
+      if(!result || p->comp->task->getSortedOrder() > result->comp->task->getSortedOrder()){
+	dbg << "New best is comp from: " << p->comp->task->getName() << ", order=" << p->comp->task->getSortedOrder() << '\n';
+	result = p;
+      }
+    }
+  }
+  if(result){
+    dbg << "Found comp at: " << result->comp->task->getName() << ", order=" << result->comp->task->getSortedOrder() << '\n';
     dt=result->task;
     comp=result->comp;
-    return true;
-  } else {
-    return false;
-  }
-}
-
-bool
-CompTable::findReplaceComp(Task::Dependency* req, const Patch* patch,
-			   int matlIndex, DetailedTask* newTask,
-			   Task::Dependency* newComp, DetailedTask*& foundTask,
-			   Task::Dependency*& foundComp)
-{
-  Data key(0, req, patch, matlIndex);
-  Data* result;
-  if((result=data.lookup(&key))){
-    foundTask=result->task;
-    foundComp=result->comp;
-    data.remove(&key);
-    data.insert(new Data(newTask, newComp, patch, matlIndex));
     return true;
   } else {
     return false;
@@ -755,8 +719,6 @@ void
 TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 				      const ProcessorGroup* pg)
 {
-  int me = pg->myrank();
-  
   // Collect all of the comps
   CompTable ct;
   for(int i=0;i<dt->numTasks();i++){
@@ -767,35 +729,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
       task->task->displayAll( dbg );
     }
 
-    for(Task::Dependency* comp = task->task->getComputes();
-	comp != 0; comp = comp->next){
-
-      if (comp->var->typeDescription()->isReductionVariable()){
-	if(task->getTask()->getType() == Task::Reduction) {
-	  // Reduction task
-	  ct.remembercomp(task, comp, 0, comp->matls);
-	} else {
-	  // create internal dependencies to reduction tasks from any task
-	  // computing the reduction
-	  DetailedTask* reductionTask = d_reductionTasks[comp->var];
-	  if (reductionTask->getAssignedResourceIndex() == 
-	      task->getAssignedResourceIndex() &&
-	      task->getAssignedResourceIndex() == me) {
-	    // the tasks are on the same processor, so add an internal dependency
-	    reductionTask->addInternalDependency(task, comp->var);
-	  }
-	}
-      } else {
-	// Normal tasks
-	constHandle<PatchSubset> patches =
-	  comp->getPatchesUnderDomain(task->patches);
-	constHandle<MaterialSubset> matls =
-	  comp->getMaterialsUnderDomain(task->matls);
-	if(!patches->empty() && !matls->empty()) {
-	  ct.remembercomp(task, comp, patches.get_rep(), matls.get_rep());
-	}
-      }
-    }
+    remembercomps(task, task->task->getComputes(), pg, ct);
+    remembercomps(task, task->task->getModifies(), pg, ct);
   }
 
   // Put internal links between the reduction tasks so a mixed thread/mpi
@@ -838,6 +773,39 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
     dbg << "Done creating detailed tasks\n";
 }
 
+void TaskGraph::remembercomps(DetailedTask* task, Task::Dependency* comp,
+			      const ProcessorGroup* pg, CompTable& ct)
+{
+  int me = pg->myrank();
+  
+  for(;comp != 0; comp = comp->next){
+    if (comp->var->typeDescription()->isReductionVariable()){
+      if(task->getTask()->getType() == Task::Reduction) {
+	// Reduction task
+	ct.remembercomp(task, comp, 0, comp->matls);
+      } else {
+	// create internal dependencies to reduction tasks from any task
+	// computing the reduction
+	DetailedTask* reductionTask = d_reductionTasks[comp->var];
+	if (reductionTask->getAssignedResourceIndex() == 
+	    task->getAssignedResourceIndex() &&
+	    task->getAssignedResourceIndex() == me) {
+	  // the tasks are on the same processor, so add an internal dependency
+	  reductionTask->addInternalDependency(task, comp->var);
+	}
+      }
+    } else {
+      // Normal tasks
+      constHandle<PatchSubset> patches =
+	comp->getPatchesUnderDomain(task->patches);
+      constHandle<MaterialSubset> matls =
+	comp->getMaterialsUnderDomain(task->matls);
+      if(!patches->empty() && !matls->empty()) {
+	  ct.remembercomp(task, comp, patches.get_rep(), matls.get_rep());
+      }
+    }
+  }
+}
 
 void
 TaskGraph::createDetailedDependencies(DetailedTasks* dt,
@@ -894,17 +862,12 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	    DetailedTask* creator;
 	    Task::Dependency* comp = 0;
 	    if(sc->isOldDW(req->mapDataWarehouse())){
+	      ASSERT(!modifies);
 	      int proc = findVariableLocation(lb, pg, req, neighbor, matl);
 	      creator = dt->getOldDWSendTask(proc);
 	      comp=0;
 	    } else {
-	      bool didFind;
-	      if (modifies)
-		didFind = ct.findReplaceComp(req, neighbor, matl, task, req,
-					     creator, comp);
-	      else
-		didFind = ct.findcomp(req, neighbor, matl, creator, comp);
-	      if (!didFind) {
+	      if (!ct.findcomp(req, neighbor, matl, creator, comp)){
 		cerr << "Failure finding " << *req << " for " << *task
 		     << "\n";
 		cerr << "creator=" << *creator << '\n';
@@ -926,7 +889,10 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 		   reqTaskIter != requireBeforeModifiedTasks.end();
 		   ++reqTaskIter) {
 		DetailedTask* prevReqTask = *reqTaskIter;
-		if (prevReqTask != task) {		
+		if(prevReqTask->task == task->task){
+		  if(!task->task->d_hasSubScheduler)
+		    cerr << "\n\n\nWARNING - task that requires with Ghost cells *and* modifies may not be correct\n";
+		} else if(prevReqTask != task){
 		  // dep requires what is to be modified before it is to be
 		  // modified so create a dependency between them so the
 		  // modifying won't conflist with the previous require.
@@ -954,8 +920,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	int matl = matls->get(m);
 	DetailedTask* creator;
 	Task::Dependency* comp = 0;
-	bool didFind = ct.findcomp(req, 0, matl, creator, comp);
-	if(!didFind) {
+	if(!ct.findcomp(req, 0, matl, creator, comp)){
 	  cerr << "Failure finding " << *req << " for " 
 	       << task->getTask()->getName() << "\n"; 
 	  SCI_THROW(InternalError("Failed to find comp for dep!"));
