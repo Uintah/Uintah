@@ -48,7 +48,7 @@ namespace SCIRun {
 template <class F, class L>
 class SFInterface : public ScalarFieldInterface {
 public:
-  SFInterface(const F *fld) :
+  SFInterface(LockingHandle<F> fld) :
     fld_(fld)
   {}
   
@@ -61,7 +61,7 @@ private:
 
   bool finterpolate(double &result, const Point &p) const;
 
-  const F        *fld_;
+  LockingHandle<F> fld_;
 };
 
 
@@ -210,7 +210,7 @@ SFInterface<F, L>::find_closest(double &minout, const Point &p) const
 template <class F, class L>
 class VFInterface : public VectorFieldInterface {
 public:
-  VFInterface(const F *fld) :
+  VFInterface(LockingHandle<F> fld) :
     fld_(fld)
   {}
   
@@ -223,7 +223,7 @@ public:
 private:
   bool finterpolate(Vector &result, const Point &p) const;
 
-  const F        *fld_;
+  LockingHandle<F>  fld_;
 };
 
 
@@ -377,7 +377,7 @@ VFInterface<F, L>::find_closest(Vector &minout, const Point &p) const
 template <class F, class L>
 class TFInterface : public TensorFieldInterface {
 public:
-  TFInterface(const F *fld) :
+  TFInterface(LockingHandle<F> fld) :
     fld_(fld)
   {}
 
@@ -389,7 +389,7 @@ public:
 private:
   bool finterpolate(Tensor &result, const Point &p) const;
 
-  const F        *fld_;
+  LockingHandle<F> fld_;
 };
 
 
