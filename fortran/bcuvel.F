@@ -132,7 +132,7 @@ c .AND.
 c     $        (VV(I,jEndGhost+1,K).GT.0.0D0)) THEN
 c             UU(I,jEndGhost,K) = UU(I,jend,K)
 c             AN(I,jend,K) = 2.0D0*TINY
-             UU(I,jEndGhost,K) = UU(I,jend,K)
+c             UU(I,jEndGhost,K) = UU(I,jend,K)
 c             AN(I,jend,K) = 2.0D0*TINY
           END IF
           IF (PCELL(I,jBegGhost,K).EQ.PBCFLD) then

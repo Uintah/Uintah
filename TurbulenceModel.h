@@ -98,21 +98,21 @@ public:
       // Interface for Schedule the recomputation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
-      virtual void sched_reComputeTurbSubmodel(SchedulerP&, const PatchSet* patches,
-					       const MaterialSet* matls) = 0;
+      virtual void sched_reComputeTurbSubmodel(SchedulerP&,
+				 const PatchSet* patches,
+				 const MaterialSet* matls,
+				 const int Runge_Kutta_current_step,
+				 const bool Runge_Kutta_last_step) = 0;
 
-      virtual void sched_computeTurbSubmodelPred(SchedulerP&,
-						 const PatchSet* patches,
-					       const MaterialSet* matls) = 0;
-
-      virtual void sched_computeTurbSubmodelInterm(SchedulerP&,
-						 const PatchSet* patches,
-					       const MaterialSet* matls) = 0;
 
       virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
-					       const MaterialSet* matls) = 0;
+					       const MaterialSet* matls,
+				 const int Runge_Kutta_current_step,
+				 const bool Runge_Kutta_last_step) = 0;
       virtual void sched_computeScalarDissipation(SchedulerP&, const PatchSet* patches,
-						  const MaterialSet* matls) = 0;
+						  const MaterialSet* matls,
+				 const int Runge_Kutta_current_step,
+				 const bool Runge_Kutta_last_step) = 0;
       // GROUP: Action Computations :
       ///////////////////////////////////////////////////////////////////////
       // Interface for Calculate the wall velocity boundary conditions

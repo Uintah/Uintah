@@ -231,7 +231,12 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     // require : densityCP, viscosityIN, [u,v,w]VelocitySPBC
     // compute : viscosityCTS
 
-    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls);
+    //The following two variables a set just to get appropriate
+    //data for reComputeTurbSubmodel
+    int Runge_Kutta_current_step = Arches::FIRST;//this one doesn't matter here
+    bool Runge_Kutta_last_step = true;
+    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
     ++nlIterations;
 
 #if 0    

@@ -72,6 +72,12 @@ WARNING
 #ifdef Scalar_WENO
   #define Scalar_ENO
 #endif
+
+// Choices of scheme for convection of velocity
+// So far only central differencing is implemented for filtered convection terms
+
+//#define filter_convection_terms
+
 #ifdef HAVE_PETSC
   #define PetscFilter
 #endif
@@ -105,6 +111,7 @@ public:
       enum d_stencilName { AP, AE, AW, AN, AS, AT, AB };
       enum d_numGhostCells {ZEROGHOSTCELLS , ONEGHOSTCELL, TWOGHOSTCELLS,
 			    THREEGHOSTCELLS, FOURGHOSTCELLS, FIVEGHOSTCELLS };
+      enum d_Runge_Kutta_current_step {FIRST, SECOND, THIRD};
 
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////

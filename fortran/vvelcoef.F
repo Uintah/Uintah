@@ -15,7 +15,7 @@ c*********************************************************************
       integer ISTV, JSTV, KSTV, IENDV, JENDV, KENDV
       integer i, j, k
 
-      logical*1 L2UP, LSMPT, LCEND, LCENTRAL
+      logical*1 L2UP, LSMPT, LCEND, LCENTRAL, filtcend
 
       double precision AREAN, AREAS, AREAEW, AREATB, VOL
       double precision GE, GP, GW, GN, GSE, GS, GSW, GT, GST, GSB, GB
@@ -48,6 +48,8 @@ c*********************************************************************
 c      LCEND = .TRUE.
       LCEND = .FALSE.
       LCENTRAL = .FALSE.
+c      filtcend = .true.
+      filtcend = .false.
 
 c*********************************************************************
 c     Go thru all the cells
@@ -262,6 +264,19 @@ c                 SU(I,J,K) = 0.0
                   AB(I,J,K) = DB
 c                 AC(I,J,K) = 0.0
 c                 SU(I,J,K) = 0.0
+               ELSE IF (FILTCEND) THEN
+                  AE(I,J,K) = DE
+                  AW(I,J,K) = DW
+                  AN(I,J,K) = DN
+                  AS(I,J,K) = DS
+                  AT(I,J,K) = DT
+                  AB(I,J,K) = DB
+                  CESAV(I,J,K) = 0.0D0
+                  CWSAV(I,J,K) = 0.0D0
+                  CNSAV(I,J,K) = 0.0D0
+                  CSSAV(I,J,K) = 0.0D0
+                  CTSAV(I,J,K) = 0.0D0
+                  CBSAV(I,J,K) = 0.0D0
                ELSE IF (L2UP) THEN
                   AE(I,J,K) = DE*(1.0D0-dMAX1(0.0D0,dSIGN(1.0D0,COEFE)))
      &                 + dMAX1(0.0D0,COEFE) + dMAX1(0.0D0,-CE)

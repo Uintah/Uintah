@@ -929,7 +929,8 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
 					CellInformation* cellinfo,
 					double maxAbsU, double maxAbsV,
 					double maxAbsW,
-					ArchesVariables*  scal_vars)
+					ArchesVariables*  scal_vars,
+					int wall_celltypeval)
 {
   // ONLY SECOND ORDER ENO
   // ONLY FOR UNIFORM GRID
@@ -1000,6 +1001,10 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
 			   (scal_vars->density[currCell]+
 			   scal_vars->density[xminusCell]) *
 			   scal_vars->uVelocity[currCell];
+        if ((scal_vars->cellType[xminusCell] == wall_celltypeval)
+	    && (!(scal_vars->cellType[currCell] == wall_celltypeval))) {
+                     x_flux[currCell] = 0.0;
+        }
       }
     }
     x_start ++;
@@ -1395,7 +1400,8 @@ Discretization::calculateScalarWENOscheme(const ProcessorGroup*,
 					CellInformation* cellinfo,
 					double maxAbsU, double maxAbsV,
 					double maxAbsW,
-					ArchesVariables*  scal_vars)
+					ArchesVariables*  scal_vars,
+					int wall_celltypeval)
 {
   // ONLY SECOND ORDER WENO
   // ONLY FOR UNIFORM GRID
@@ -1463,6 +1469,10 @@ Discretization::calculateScalarWENOscheme(const ProcessorGroup*,
 			   (scal_vars->density[currCell]+
 			   scal_vars->density[xminusCell]) *
 			   scal_vars->uVelocity[currCell];
+        if ((scal_vars->cellType[xminusCell] == wall_celltypeval)
+	    && (!(scal_vars->cellType[currCell] == wall_celltypeval))) {
+                     x_flux[currCell] = 0.0;
+        }
       }
     }
     x_start ++;

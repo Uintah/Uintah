@@ -15,7 +15,8 @@ c*********************************************************************
 
       integer i, j, k
       double precision PMIXL, DMESH
-      double precision scale, scalw, scaln, scals, scalt, scalb
+      double precision scalare, scalarw, scalarn
+      double precision scalars, scalart, scalarb
       double precision dfdx, dfdy, dfdz
 
 
@@ -48,15 +49,15 @@ C--------------------------------------------------------------------
 C--------------------------------------------------------------------
 C     CALCULATE GENERATION OF TURBULENCE
 C--------------------------------------------------------------------
-               scale = pt5*(Scalar(i,j,k)+Scalar(i+1,j,k))
-               scalw = pt5*(Scalar(i,j,k)+Scalar(i-1,j,k))
-               scaln = pt5*(Scalar(i,j,k)+Scalar(i,j+1,k))
-               scals = pt5*(Scalar(i,j,k)+Scalar(i,j-1,k))
-               scalt = pt5*(Scalar(i,j,k)+Scalar(i,j,k+1))
-               scalb = pt5*(Scalar(i,j,k)+Scalar(i,j,k-1))
-               dfdx = (scale - scalw)/sew(I)
-               dfdy = (scaln - scals)/sns(J)
-               dfdz = (scalt - scalb)/stb(K)
+               scalare = pt5*(Scalar(i,j,k)+Scalar(i+1,j,k))
+               scalarw = pt5*(Scalar(i,j,k)+Scalar(i-1,j,k))
+               scalarn = pt5*(Scalar(i,j,k)+Scalar(i,j+1,k))
+               scalars = pt5*(Scalar(i,j,k)+Scalar(i,j-1,k))
+               scalart = pt5*(Scalar(i,j,k)+Scalar(i,j,k+1))
+               scalarb = pt5*(Scalar(i,j,k)+Scalar(i,j,k-1))
+               dfdx = (scalare - scalarw)/sew(I)
+               dfdy = (scalarn - scalars)/sns(J)
+               dfdz = (scalart - scalarb)/stb(K)
                ScalarVar(I,J,K) = CFVar*(PMIXL**2)*
      $                            (dfdx**2 + dfdy**2 + dfdz**2)
  200        CONTINUE

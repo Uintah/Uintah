@@ -15,6 +15,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/ScalarSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/ReactiveScalarSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -177,6 +178,16 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   // compute drhophidt, compute dphidt and using both of them compute
   // compute drhodt
 
+  int Runge_Kutta_current_step;
+  bool Runge_Kutta_last_step;
+
+  Runge_Kutta_current_step = Arches::FIRST;
+  #ifdef correctorstep
+    Runge_Kutta_last_step = false;
+  #else
+    Runge_Kutta_last_step = true;
+  #endif
+
   // check if filter is defined...only required if using dynamic or scalesimilarity models
 #ifdef PetscFilter
   if (d_turbModel->getFilter()) {
@@ -201,9 +212,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     for (int index = 0;index < nofScalarVars; index ++) {
       // in this case we're only solving for one scalarVar...but
       // the same subroutine can be used to solve multiple scalarVars
-      d_turbModel->sched_computeScalarVariance(sched, patches, matls);
+      d_turbModel->sched_computeScalarVariance(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
     }
-    d_turbModel->sched_computeScalarDissipation(sched, patches, matls);
+    d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
   }
 
   if (d_enthalpySolve)
@@ -226,7 +239,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   //           presResidualPS, presCoefPBLM, presNonLinSrcPBLM,(matrix_dw)
   //           pressurePS (new_dw)
   // first computes, hatted velocities and then computes the pressure poisson equation
-  d_pressSolver->solvePred(level, sched);
+  d_pressSolver->solvePred(level, sched,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
   // Momentum solver
   // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
   // viscosityIN (new_dw)
@@ -244,16 +258,20 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   
   #ifdef correctorstep
     d_boundaryCondition->sched_predcomputePressureBC(sched, patches, matls);
-    d_turbModel->sched_computeTurbSubmodelPred(sched, patches, matls);
+  // Schedule an interpolation of the face centered velocity data 
+    sched_interpolateFromFCToCCPred(sched, patches, matls);
   #else
     d_boundaryCondition->sched_lastcomputePressureBC(sched, patches, matls);
-    // ***warning* fix it for multiple step rk...required for scalesimilarity model
+  // Schedule an interpolation of the face centered velocity data 
     sched_interpolateFromFCToCC(sched, patches, matls);
-    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls);
   #endif
+    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
 
   #ifdef Runge_Kutta_3d
     // intermediate step for 3d order Runge-Kutta method
+    Runge_Kutta_current_step = Arches::SECOND;
+    Runge_Kutta_last_step = false;
     for (int index = 0;index < nofScalars; index ++) {
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve multiple scalars
@@ -264,6 +282,16 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve multiple scalars
       d_reactingScalarSolver->solveInterm(sched, patches, matls, index);
+    }
+    if (nofScalarVars > 0) {
+      for (int index = 0;index < nofScalarVars; index ++) {
+      // in this case we're only solving for one scalarVar...but
+      // the same subroutine can be used to solve multiple scalarVars
+        d_turbModel->sched_computeScalarVariance(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
+      }
+      d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
     }
     if (d_enthalpySolve)
       d_enthalpySolver->solveInterm(sched, patches, matls);
@@ -282,7 +310,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     //           pressurePS (new_dw)
     // first computes, hatted velocities and then computes the pressure 
     // poisson equation
-    d_pressSolver->solveInterm(level, sched);
+    d_pressSolver->solveInterm(level, sched,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
     // Momentum solver
     // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
     // viscosityIN (new_dw)
@@ -299,11 +328,20 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
   
     d_boundaryCondition->sched_intermcomputePressureBC(sched, patches, matls);
-    d_turbModel->sched_computeTurbSubmodelInterm(sched, patches, matls);
+  // Schedule an interpolation of the face centered velocity data 
+    sched_interpolateFromFCToCCInterm(sched, patches, matls);
+    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
   #endif
 
   #ifdef correctorstep
     // corrected step
+    #ifdef Runge_Kutta_3d
+       Runge_Kutta_current_step = Arches::THIRD;
+    #else
+       Runge_Kutta_current_step = Arches::SECOND;
+    #endif
+    Runge_Kutta_last_step = true;
     for (int index = 0;index < nofScalars; index ++) {
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve multiple scalars
@@ -314,6 +352,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve multiple scalars
       d_reactingScalarSolver->solveCorr(sched, patches, matls, index);
+    }
+
+    if (nofScalarVars > 0) {
+      for (int index = 0;index < nofScalarVars; index ++) {
+      // in this case we're only solving for one scalarVar...but
+      // the same subroutine can be used to solve multiple scalarVars
+        d_turbModel->sched_computeScalarVariance(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
+      }
+      d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
     }
     if (d_enthalpySolve)
       d_enthalpySolver->solveCorr(sched, patches, matls);
@@ -332,7 +381,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     //           pressurePS (new_dw)
     // first computes, hatted velocities and then computes the pressure 
     // poisson equation
-    d_pressSolver->solveCorr(level, sched);
+    d_pressSolver->solveCorr(level, sched,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
     // Momentum solver
     // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
     // viscosityIN (new_dw)
@@ -353,15 +403,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // compute : [u,v,w]VelocityCPBC, pressureSPBC
   
     d_boundaryCondition->sched_lastcomputePressureBC(sched, patches, matls);
-    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls);
-  #endif
-  
- 
   // Schedule an interpolation of the face centered velocity data 
-  // to a cell centered vector for used by the viz tools
-    // ***warning fix it for multiple step RK
-    //  sched_interpolateFromFCToCC(sched, patches, matls);
-  
+    sched_interpolateFromFCToCC(sched, patches, matls);
+    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
+  #endif
   // print information at probes provided in input file
 
   if (d_probe_data)
@@ -954,4 +1000,204 @@ ExplicitSolver::computeResidual(const LevelP&,
   return nlresidual;
 }
 
+// ****************************************************************************
+// Schedule Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
+// ****************************************************************************
+void 
+ExplicitSolver::sched_interpolateFromFCToCCPred(SchedulerP& sched, 
+						   const PatchSet* patches,
+						   const MaterialSet* matls)
+{
+  Task* tsk = scinew Task( "ExplicitSolver::interpFCToCCPred",
+			   this, &ExplicitSolver::interpolateFromFCToCCPred);
 
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel,
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel,
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+
+  tsk->computes(d_lab->d_newCCUVelocityPredLabel);
+  tsk->computes(d_lab->d_newCCVVelocityPredLabel);
+  tsk->computes(d_lab->d_newCCWVelocityPredLabel);
+      
+  sched->addTask(tsk, patches, matls);
+
+  
+}
+// ****************************************************************************
+// Actual interpolation from FC to CC Variable of type Vector 
+// ** WARNING ** For multiple patches we need ghost information for
+//               interpolation
+// ****************************************************************************
+void 
+ExplicitSolver::interpolateFromFCToCCPred(const ProcessorGroup* ,
+					     const PatchSubset* patches,
+					     const MaterialSubset*,
+					     DataWarehouse*,
+					     DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    // Get the new velocity
+    constSFCXVariable<double> newUVel;
+    constSFCYVariable<double> newVVel;
+    constSFCZVariable<double> newWVel;
+    new_dw->get(newUVel, d_lab->d_uVelocityPredLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(newVVel, d_lab->d_vVelocityPredLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(newWVel, d_lab->d_wVelocityPredLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    
+    // Get the low and high index for the Cell Centered Variables
+    IntVector idxLo = patch->getCellLowIndex();
+    IntVector idxHi = patch->getCellHighIndex();
+
+    // Allocate the interpolated velocities
+    CCVariable<double> newCCUVel;
+    CCVariable<double> newCCVVel;
+    CCVariable<double> newCCWVel;
+    new_dw->allocateAndPut(newCCUVel, d_lab->d_newCCUVelocityPredLabel,
+			   matlIndex, patch);
+    new_dw->allocateAndPut(newCCVVel, d_lab->d_newCCVVelocityPredLabel,
+			   matlIndex, patch);
+    new_dw->allocateAndPut(newCCWVel, d_lab->d_newCCWVelocityPredLabel,
+			   matlIndex, patch);
+
+    // Interpolate the FC velocity to the CC
+    for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
+      for (int jj = idxLo.y(); jj < idxHi.y(); ++jj) {
+	for (int ii = idxLo.x(); ii < idxHi.x(); ++ii) {
+	  
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  // new U velocity (linear interpolation)
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idxU]);
+	  
+	  // new V velocity (linear interpolation)
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idxV]);
+	  
+	  // new W velocity (linear interpolation)
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idxW]);
+	  
+	  // Add the data to the CC Velocity Variables
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+	}
+      }
+    }
+  }
+}
+
+// ****************************************************************************
+// Schedule Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
+// ****************************************************************************
+void 
+ExplicitSolver::sched_interpolateFromFCToCCInterm(SchedulerP& sched, 
+						   const PatchSet* patches,
+						   const MaterialSet* matls)
+{
+  Task* tsk = scinew Task( "ExplicitSolver::interpFCToCCInterm",
+			   this, &ExplicitSolver::interpolateFromFCToCCInterm);
+
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityIntermLabel,
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityIntermLabel,
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+
+  tsk->computes(d_lab->d_newCCUVelocityIntermLabel);
+  tsk->computes(d_lab->d_newCCVVelocityIntermLabel);
+  tsk->computes(d_lab->d_newCCWVelocityIntermLabel);
+      
+  sched->addTask(tsk, patches, matls);
+
+  
+}
+// ****************************************************************************
+// Actual interpolation from FC to CC Variable of type Vector 
+// ** WARNING ** For multiple patches we need ghost information for
+//               interpolation
+// ****************************************************************************
+void 
+ExplicitSolver::interpolateFromFCToCCInterm(const ProcessorGroup* ,
+					     const PatchSubset* patches,
+					     const MaterialSubset*,
+					     DataWarehouse*,
+					     DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    // Get the new velocity
+    constSFCXVariable<double> newUVel;
+    constSFCYVariable<double> newVVel;
+    constSFCZVariable<double> newWVel;
+    new_dw->get(newUVel, d_lab->d_uVelocityIntermLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(newVVel, d_lab->d_vVelocityIntermLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(newWVel, d_lab->d_wVelocityIntermLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    
+    // Get the low and high index for the Cell Centered Variables
+    IntVector idxLo = patch->getCellLowIndex();
+    IntVector idxHi = patch->getCellHighIndex();
+
+    // Allocate the interpolated velocities
+    CCVariable<double> newCCUVel;
+    CCVariable<double> newCCVVel;
+    CCVariable<double> newCCWVel;
+    new_dw->allocateAndPut(newCCUVel, d_lab->d_newCCUVelocityIntermLabel,
+			   matlIndex, patch);
+    new_dw->allocateAndPut(newCCVVel, d_lab->d_newCCVVelocityIntermLabel,
+			   matlIndex, patch);
+    new_dw->allocateAndPut(newCCWVel, d_lab->d_newCCWVelocityIntermLabel,
+			   matlIndex, patch);
+
+    // Interpolate the FC velocity to the CC
+    for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
+      for (int jj = idxLo.y(); jj < idxHi.y(); ++jj) {
+	for (int ii = idxLo.x(); ii < idxHi.x(); ++ii) {
+	  
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  // new U velocity (linear interpolation)
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idxU]);
+	  
+	  // new V velocity (linear interpolation)
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idxV]);
+	  
+	  // new W velocity (linear interpolation)
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idxW]);
+	  
+	  // Add the data to the CC Velocity Variables
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+	}
+      }
+    }
+  }
+}
