@@ -88,7 +88,7 @@ ICE::~ICE()
 /* ---------------------------------------------------------------------
  Function~  ICE::problemSetup--
 _____________________________________________________________________*/
-void  ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
+void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
                         SimulationStateP&   sharedState)
 {
   d_sharedState = sharedState;
@@ -217,10 +217,18 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   exch_co_ps->require("momentum",d_K_mom);
   exch_co_ps->require("heat",d_K_heat);
 
-  for (int i = 0; i<(int)d_K_mom.size(); i++)
+  for (int i = 0; i<(int)d_K_mom.size(); i++) {
     cout_norm << "K_mom = " << d_K_mom[i] << endl;
-  for (int i = 0; i<(int)d_K_heat.size(); i++)
+    if( d_K_mom[i] < 0.0 || d_K_mom[i] > 1e15 ) {
+      throw ProblemSetupException( "E R R O R\n Momentum exchange coef. is either too big or negative\n");
+    }
+  }
+  for (int i = 0; i<(int)d_K_heat.size(); i++) {
     cout_norm << "K_heat = " << d_K_heat[i] << endl;
+    if( d_K_heat[i] < 0.0 || d_K_heat[i] > 1e15 ) {
+      throw ProblemSetupException( "E R R O R\n Heat exchange coef. is either too big or negative\n");
+    }
+  }
   cout_norm << "Pulled out exchange coefficients of the input file" << endl;
 
   string mass_exch_in;
@@ -515,7 +523,7 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleMassExchange--
 _____________________________________________________________________*/
-void  ICE::scheduleMassExchange(SchedulerP& sched,
+void ICE::scheduleMassExchange(SchedulerP& sched,
                             const PatchSet* patches,
                             const MaterialSet* matls)
 {
@@ -554,13 +562,9 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->requires( Task::NewDW, lb->vvel_FCMELabel,    Ghost::AroundCells,2);
   task->requires( Task::NewDW, lb->wvel_FCMELabel,    Ghost::AroundCells,2);
   task->requires( Task::NewDW, lb->sp_vol_CCLabel,    Ghost::None);
-  task->requires( Task::NewDW, lb->rho_CCLabel,       Ghost::None);
-  task->requires( Task::OldDW, lb->vel_CCLabel,       ice_matls, 
-                                                      Ghost::None); 
-  task->requires( Task::NewDW, lb->vel_CCLabel,       mpm_matls, 
-                                                      Ghost::None);     
-  task->requires(Task::NewDW,lb->burnedMass_CCLabel,  Ghost::None);
-  task->requires(Task::NewDW,lb->speedSound_CCLabel,  Ghost::None);
+  task->requires( Task::NewDW, lb->rho_CCLabel,       Ghost::None);    
+  task->requires( Task::NewDW, lb->burnedMass_CCLabel,Ghost::None);
+  task->requires( Task::NewDW, lb->speedSound_CCLabel,Ghost::None);
 
   task->computes(lb->press_CCLabel,        press_matl);
   task->computes(lb->delP_DilatateLabel,   press_matl);
@@ -1689,6 +1693,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
        int indx = matl->getDWIndex();
        ostringstream desc;
        desc <<"Exchange_FC_after_BC_Mat_" << indx <<"_patch_"<<patch->getID();
+       printData(    patch,1, desc.str(), "sp_vol_CC", sp_vol_CC[m]);   
        printData_FC( patch,1, desc.str(), "uvel_FCME", uvel_FCME[m]);
        printData_FC( patch,1, desc.str(), "vvel_FCME", vvel_FCME[m]);
        printData_FC( patch,1, desc.str(), "wvel_FCME", wvel_FCME[m]);
@@ -1765,7 +1770,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       constCCVariable<double> speedSound;
       constCCVariable<double> vol_frac;
-      constCCVariable<Vector> vel_CC;
       constCCVariable<double> rho_CC;
       constSFCXVariable<double> uvel_FC;
       constSFCYVariable<double> vvel_FC;
@@ -1782,12 +1786,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel,   indx,patch,Ghost::None,0);
       new_dw->get(burnedMass,  lb->burnedMass_CCLabel,indx,patch,Ghost::None,0);
       new_dw->get(speedSound,  lb->speedSound_CCLabel,indx,patch,Ghost::None,0);
-      if(ice_matl) {
-        old_dw->get(vel_CC,   lb->vel_CCLabel,       indx,patch,Ghost::None,0);
-      }
-      if(mpm_matl) {
-        new_dw->get(vel_CC,   lb->vel_CCLabel,       indx,patch,Ghost::None,0);
-      }
 
       //__________________________________
       // Advection preprocessing
@@ -1807,9 +1805,11 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       if (switchDebug_explicit_press ) {
         ostringstream desc;
         desc<<"middle_explicit_Pressure_Mat_"<<indx<<"_patch_"<<patch->getID();
-        printData_FC( patch,1, desc.str(), "uvel_FC", uvel_FC);
-        printData_FC( patch,1, desc.str(), "vvel_FC", vvel_FC);
-        printData_FC( patch,1, desc.str(), "wvel_FC", wvel_FC);
+        printData(    patch,1, desc.str(), "speedSound", speedSound);
+        printData(    patch,1, desc.str(), "sp_vol_CC",  sp_vol_CC[m]);
+        printData_FC( patch,1, desc.str(), "uvel_FC",    uvel_FC);
+        printData_FC( patch,1, desc.str(), "vvel_FC",    vvel_FC);
+        printData_FC( patch,1, desc.str(), "wvel_FC",    wvel_FC);
       }    
 
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
@@ -2975,6 +2975,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
        printVector( patch,1, desc.str(), "xmom_L_CC", 0,mom_L_ME); 
        printVector( patch,1, desc.str(), "ymom_L_CC", 1,mom_L_ME); 
        printVector( patch,1, desc.str(), "zmom_L_CC", 2,mom_L_ME);
+       printData(   patch,1, desc.str(), "sp_vol_L",    spec_vol_L);
        printData(   patch,1, desc.str(), "int_eng_L_CC",int_eng_L_ME);
        printData(   patch,1, desc.str(), "rho_CC",      rho_CC);
        printData(   patch,1, desc.str(), "Temp_CC",     temp);
@@ -3007,7 +3008,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
             
 CAVEAT:     Only works -gravity.x(), -gravity.y() and -gravity.z()           
 _______________________________________________________________________ */
-void   ICE::hydrostaticPressureAdjustment(const Patch* patch,
+void ICE::hydrostaticPressureAdjustment(const Patch* patch,
                           const CCVariable<double>& sp_vol_CC,
                                 CCVariable<double>& press_CC)
 {
