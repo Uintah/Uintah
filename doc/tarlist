@@ -58,6 +58,7 @@ $stdout.print("#{root}/doc/index.html
 #{root}/doc/User/Tutorials/BioTensor
 #{root}/doc/User/Tutorials/SCIRun_Intro
 #{root}/doc/User/Tutorials/BioImage/bioimage.pdf
+#{root}/doc/User/Tutorials/BioImage/Figures
 #{root}/doc/Developer/index.html
 #{root}/doc/Developer/FAQ/faq.html
 #{root}/doc/Developer/FAQ/faq.pdf
@@ -79,7 +80,6 @@ $stdout.print("#{root}/doc/index.html
 # Now do wildcards
 globs = ["#{root}/doc/User/FAQ/*.gif",
   "#{root}/doc/User/Tutorials/BioImage/*.html",  
-  "#{root}/doc/User/Tutorials/BioImage/*.gif",  
   "#{root}/doc/Installation/Guide/*/srig.pdf",
   "#{root}/doc/Installation/Guide/*/*.html",
   "#{root}/doc/Documentum/*.html",
