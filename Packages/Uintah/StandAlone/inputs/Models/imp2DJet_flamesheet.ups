@@ -115,7 +115,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>test.uda</filebase>
+      <filebase>flameSheet.uda</filebase>
       <outputInterval>0.01</outputInterval>
       <save label="press_equil_CC"/>
       <save label="delP_Dilatate"/>
@@ -155,6 +155,7 @@
         <ImplicitSolver>
            <max_outer_iterations>      20    </max_outer_iterations>
            <outer_iteration_tolerance> 1e-8 </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
 	     <!-- Common options -->
               <tolerance>1.e-8    </tolerance>
@@ -192,7 +193,7 @@
            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  15.89e-6        </viscosity>
-           <thermal_conductivity>       23.6e-3         </thermal_conductivity>
+           <thermal_conductivity>       26.3e-3         </thermal_conductivity>
            <specific_heat>      716.0                   </specific_heat>
            <speed_of_sound>     376                     </speed_of_sound>
            <gamma>              1.4                     </gamma>
@@ -241,6 +242,7 @@
     <!--____________________________________________________________________-->
     <!--    Note: you need a slug of fuel above the jet as an initial       -->
     <!--          condition to get it to fly  Methane + Air                 -->
+    <!--         - diffusivity = thermal diffusivity of air                 -->
     <!--____________________________________________________________________--> 
       <Model type="flameSheet_rxn">
         <material>source</material>
@@ -250,6 +252,7 @@
           <delta_H_combustion>     1000     </delta_H_combustion>
           <oxidizer_temp_infinity> 300      </oxidizer_temp_infinity>
           <initial_fuel_temp>      300      </initial_fuel_temp>
+          <diffusivity>            22.5e-6  </diffusivity>
         </reaction_constants>
            <geom_object>
               <difference>
