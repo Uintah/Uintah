@@ -1028,9 +1028,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
      // printData(patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC[m]);
         printData(patch,   1, desc.str(), "Temp_CC",     Temp_CC[m]);
         printData(patch,   1, desc.str(), "vol_frac_CC", vol_frac_CC[m]);
-        printVector(patch, 1, desc.str(), "uvel_CC", 0,  vel_CC[m]);
-        printVector(patch, 1, desc.str(), "vvel_CC", 1,  vel_CC[m]);
-        printVector(patch, 1, desc.str(), "wvel_CC", 2,  vel_CC[m]);
+        printVector(patch, 1, desc.str(), "vel_CC", 0,   vel_CC[m]);;
       }   
     }
     setBC(press_CC,   rho_micro[SURROUND_MAT], 
@@ -1419,9 +1417,7 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
         desc << "TOP_vel_FC_Mat_" << indx << "_patch_"<< patch->getID(); 
         printData(  patch, 1, desc.str(), "rho_CC",      rho_CC);
         printData(  patch, 1, desc.str(), "sp_vol_CC",  sp_vol_CC);
-        printVector( patch,1, desc.str(), "uvel_CC", 0, vel_CC);
-        printVector( patch,1, desc.str(), "vvel_CC", 1, vel_CC);
-        printVector( patch,1, desc.str(), "wvel_CC", 2, vel_CC);
+        printVector( patch,1, desc.str(), "vel_CC",  0, vel_CC);
       }
   #endif
       SFCXVariable<double> uvel_FC;
@@ -2306,9 +2302,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       if (switchDebugSource_Sink) {
         ostringstream desc;
         desc << "sources/sinks_Mat_" << indx << "_patch_"<<  patch->getID();
-        printVector(patch, 1, desc.str(), "xmom_source", 0, mom_source);
-        printVector(patch, 1, desc.str(), "ymom_source", 1, mom_source);
-        printVector(patch, 1, desc.str(), "zmom_source", 2, mom_source);
+        printVector(patch, 1, desc.str(), "mom_source", 0, mom_source);
       }
     }
   }
@@ -2547,9 +2541,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
         if (switchDebugLagrangianValues ) {
           ostringstream desc;
           desc <<"Bot_Lagrangian_Values_Mat_"<<indx<< "_patch_"<<patch->getID();
-          printVector(patch,1, desc.str(), "xmom_L_CC", 0, mom_L);
-          printVector(patch,1, desc.str(), "ymom_L_CC", 1, mom_L);
-          printVector(patch,1, desc.str(), "zmom_L_CC", 2, mom_L);
+          printVector(patch,1, desc.str(), "mom_L_CC", 0, mom_L);
           printData(  patch,1, desc.str(), "int_eng_L_CC", int_eng_L); 
 
         }
@@ -2789,15 +2781,13 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       for (int m = 0; m < numALLMatls; m++) {
         Material* matl = d_sharedState->getMaterial( m );
         int indx = matl->getDWIndex();
-        char desc[50];
-        sprintf(desc, "TOP_addExchangeToMomentumAndEnergy_%d_patch_%d ",
-                       indx, patch->getID());
-        printData(   patch,1, desc,"Temp_CC",    Temp_CC[m]);     
-        printData(   patch,1, desc,"int_eng_L",  int_eng_L[m]);   
-        printData(   patch,1, desc,"mass_L",     mass_L[m]);      
-        printVector( patch,1, desc,"uvel_CC", 0, vel_CC[m]);      
-        printVector( patch,1, desc,"vvel_CC", 1, vel_CC[m]);      
-        printVector( patch,1, desc,"wvel_CC", 2, vel_CC[m]);      
+        ostringstream desc;
+        desc<<"TOP_addExchangeToMomentumAndEnergy_%d_patch_%d "<<
+                       indx<< patch->getID();
+        printData(   patch,1, desc.str(),"Temp_CC",    Temp_CC[m]);     
+        printData(   patch,1, desc.str(),"int_eng_L",  int_eng_L[m]);   
+        printData(   patch,1, desc.str(),"mass_L",     mass_L[m]);      
+        printVector( patch,1, desc.str(),"vel_CC", 0,  vel_CC[m]);            
       }
     }
  
@@ -2888,14 +2878,12 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     if (switchDebugMomentumExchange_CC ) {
       for(int m = 0; m < numALLMatls; m++) {
         Material* matl = d_sharedState->getMaterial( m );
-        int dwindex = matl->getDWIndex();
-        char description[50];;
-        sprintf(description, "addExchangeToMomentumAndEnergy_%d_patch_%d ", 
-                dwindex, patch->getID());
-        printVector(patch,1, description, "xmom_L_ME", 0, mom_L_ME[m]);
-        printVector(patch,1, description, "ymom_L_ME", 1, mom_L_ME[m]);
-        printVector(patch,1, description, "zmom_L_ME", 2, mom_L_ME[m]);
-        printData(  patch,1, description,"int_eng_L_ME",int_eng_L_ME[m]);
+        int indx = matl->getDWIndex();
+        ostringstream desc;
+        desc<<"addExchangeToMomentumAndEnergy_%d_patch_%d "<<
+                       indx<< patch->getID();
+        printVector(patch,1, desc.str(), "mom_L_ME", 0,mom_L_ME[m]);
+        printData(  patch,1, desc.str(),"int_eng_L_ME",int_eng_L_ME[m]);
       }
     }
     //__________________________________
@@ -3073,17 +3061,13 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       if (switchDebug_advance_advect ) {
        ostringstream desc;
        desc <<"BOT_Advection_after_BC_Mat_" <<indx<<"_patch_"<<patch->getID();
-       printVector( patch,1, desc.str(), "xmom_L_CC", 0,mom_L_ME); 
-       printVector( patch,1, desc.str(), "ymom_L_CC", 1,mom_L_ME); 
-       printVector( patch,1, desc.str(), "zmom_L_CC", 2,mom_L_ME);
+       printVector( patch,1, desc.str(), "mom_L_CC", 0, mom_L_ME); 
        printData(   patch,1, desc.str(), "sp_vol_L",    spec_vol_L);
        printData(   patch,1, desc.str(), "int_eng_L_CC",int_eng_L_ME);
        printData(   patch,1, desc.str(), "rho_CC",      rho_CC);
        printData(   patch,1, desc.str(), "Temp_CC",     temp);
        printData(   patch,1, desc.str(), "sp_vol_CC",   sp_vol_CC);
-       printVector( patch,1, desc.str(), "uvel_CC", 0,  vel_CC);
-       printVector( patch,1, desc.str(), "vvel_CC", 1,  vel_CC);
-       printVector( patch,1, desc.str(), "wvel_CC", 2,  vel_CC);
+       printVector( patch,1, desc.str(), "vel_CC", 0,   vel_CC);
       }
       //____ B U L L E T   P R O O F I N G----
       if (!areAllValuesPositive(rho_CC, neg_cell)) {
