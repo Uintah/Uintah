@@ -22,6 +22,8 @@ using namespace SCIRun;
 
 static int portNum = 0;
 
+// We are doing stereo (ie: 2 channels.)  If you change this, a number
+// of things will have to be fixed!
 const int SoundThread::numChannels_ = 2;
 
 SoundThread::SoundThread( const Camera * eyepoint, Scene * scene ) :
@@ -55,8 +57,9 @@ SoundThread::SoundThread( const Camera * eyepoint, Scene * scene ) :
   config_ = alNewConfig();
   // Enough space to hold numChannels_ of 1/10 second frames.
   alSetQueueSize( config_, samplingRate_ * 2 );
-  alSetSampFmt( config_, AL_SAMPFMT_FLOAT );
-  alSetChannels( config_, numChannels_ );
+  alSetSampFmt(   config_, AL_SAMPFMT_TWOSCOMP );
+  alSetChannels(  config_, numChannels_ );
+  alSetWidth(     config_, AL_SAMPLE_8 );
 
   char portName[20];
   sprintf( portName, "rtrt sounds %d", portNum );
@@ -82,10 +85,10 @@ SoundThread::~SoundThread()
 void
 SoundThread::run()
 {
-  float * quiet = new float[ (int)(samplingRate_+1) * numChannels_ ];
-  float * mix   = new float[ (int)(samplingRate_+1) * numChannels_ ];
+  signed char * quiet = new signed char[(int)(samplingRate_+1) * numChannels_];
+  signed char * mix   = new signed char[(int)(samplingRate_+1) * numChannels_];
 
-  // Initialize "quiet" buffer to all 0's.
+  // Initialize "quiet" buffer to all -128's.
   for( int cnt = 0; cnt < samplingRate_*numChannels_; cnt++ ) {
     quiet[cnt] = 0; 
   }
@@ -121,50 +124,31 @@ SoundThread::run()
 	  for( int cnt = 0; (globalVolume > 0) && (cnt < soundQueue_.size()); 
 	       cnt++ )
 	    {
-	      Sound * sound = soundQueue_[cnt];
-	      int     frames;
-	      float * buffer;
+	      Sound       * sound = soundQueue_[cnt];
+	      int           frames;
+	      signed char * buffer;
 
-	      // DO LEFT EAR (CHANNEL 1)
-	      double  volume = sound->volume( left );
-	      //cout << cnt << ": left volume is " << volume << "\n";
+	      double leftVolume = sound->volume( left );
+	      double rightVolume = sound->volume( right );
 
-	      if( volume > 0 )
+	      if( leftVolume > 0 || rightVolume > 0 )
 		{
 		  buffer = sound->getFrames( samplingRate_, frames );
 
-		  maxFrames = Max( frames, maxFrames );
-
-		  if( frames < samplingRate_ && !sound->repeat() ) 
-		    {
-		      cout << "removing sound\n";
-		      //iter = soundQueue_.erase( iter ); // ran out of sound
-		      soundQueue_.pop_back(); // ran out of sound
-		    }
-		  for( int cnt = 1; cnt < (frames*numChannels_); cnt+=2 )
-		    {
-		      mix[cnt] += buffer[cnt] * volume * (globalVolume/100.0);
-		    }
-		}
-	      // DO RIGHT EAR (CHANNEL 2)
-	      volume = sound->volume( right );
-	      //cout << cnt << ": right volume is " << volume << "\n";
-
-	      if( volume > 0 )
-		{
-		  buffer = sound->getFrames( samplingRate_, frames );
+		  //cout << "vol: " <<leftVolume<< ", " << rightVolume << "\n";
 
 		  maxFrames = Max( frames, maxFrames );
 
-		  if( frames < samplingRate_ && !sound->repeat() ) 
+		  //if( frames < samplingRate_ && !sound->repeat() ) 
+		  //  {
+		  //    cout << "removing sound\n";
+		  //  }
+		  for( int cnt = 0; cnt < frames; cnt++ )
 		    {
-		      cout << "removing sound\n";
-		      //iter = soundQueue_.erase( iter ); // ran out of sound
-		      soundQueue_.pop_back(); // ran out of sound
-		    }
-		  for( int cnt = 0; cnt < (frames*numChannels_); cnt+=2 )
-		    {
-		      mix[cnt] += buffer[cnt] * volume * (globalVolume/100.0);
+		      mix[cnt*2]   += buffer[cnt] * leftVolume  * 
+		      	(globalVolume/100.0);
+		      mix[cnt*2+1] += buffer[cnt] * rightVolume *
+			(globalVolume/100.0);
 		    }
 		}
 	    }
