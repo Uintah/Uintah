@@ -135,6 +135,7 @@ MapDataToMeshCoord::execute()
       error("Unable to initialize oport 'Output Field'.");
       return;
     }
+
     ofp->send(ofield);
   }
 }
