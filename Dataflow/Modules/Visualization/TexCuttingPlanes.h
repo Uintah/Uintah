@@ -75,7 +75,9 @@ private:
   GuiInt interp_mode;
 
   GLVolumeRenderer* volren;
-  Vector ddv;
+  Vector ddx;
+  Vector ddy;
+  Vector ddz;
   double ddview;
 };
 
