@@ -814,7 +814,8 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   }
 //__________________________________
   if(d_models.size() > 0){
-    task->requires(Task::NewDW, lb->modelVol_srcLabel, gn);
+    task->requires(Task::NewDW, lb->modelVol_srcLabel,  gn);
+    task->requires(Task::NewDW, lb->modelMass_srcLabel, gn);
   }
   
   task->modifies(lb->press_CCLabel,        press_matl);
