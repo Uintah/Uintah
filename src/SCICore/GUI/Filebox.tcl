@@ -37,7 +37,11 @@ proc makeFileboxWithFilter { w var command cancel filter } {
     set $w-oldsel ""
 
     global env
-    set $w-path $env(PSE_DATA)
+    if { [info exists env(PSE_DATA)] } {
+	set $w-path $env(PSE_DATA)
+    } else {
+	set $w-path $env(PWD)
+    }
     set $w-oldpath [set $w-path]
 
     frame $w.f
@@ -124,7 +128,7 @@ proc makeFileboxWithFilter { w var command cancel filter } {
     button $w.f.but.ok -text OK -command $command
     button $w.f.but.filt -text Filter -command "fbupdate $w $dirs $files"
     button $w.f.but.home -text Home -command "fbcd $w $env(PWD) $dirs $files"
-    button $w.f.but.data -text Data -command "fbcd $w $env(PSE_DATA) $dirs $files"
+    button $w.f.but.data -text Data -command "fbcd $w $w-path $dirs $files"
     button $w.f.but.cancel -text Cancel -command $cancel
     pack $w.f.but.ok -in $w.f.but -side left -padx 2 -pady 2 -anchor w
     pack $w.f.but.cancel -in $w.f.but -side right -padx 2 -pady 2 \
