@@ -30,8 +30,7 @@ SRCS     += $(SRCDIR)/ColorMapPort.cc             \
 	    $(SRCDIR)/ImagePort.cc		  \
             $(SRCDIR)/MatrixPort.cc               \
             $(SRCDIR)/PathPort.cc                 \
-            $(SRCDIR)/VoidStarPort.cc             \
-            $(SRCDIR)/templates.cc
+            $(SRCDIR)/templates.cc		  \
 
 
 PSELIBS := Dataflow/Network Dataflow/Comm Core/Containers \
