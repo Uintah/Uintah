@@ -190,7 +190,7 @@ void NrrdReader::execute()
     Nrrd *pn = nrrdNew();
     handle_->nrrd->axis[handle_->nrrd->dim].size = 1;
     handle_->nrrd->dim += 1;
-    int sz = handle_->nrrd->dim;
+    const int sz = handle_->nrrd->dim;
     int perm[sz];
     perm[0] = sz - 1; 
     for(int i = 1; i < sz; i++) {
