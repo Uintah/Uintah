@@ -521,7 +521,7 @@ void Roe::initCB(CallbackData*, void*) {
     graphics->GetValues();
     // Create a GLX context
     evl->lock();
-    cx = glXCreateContext(XtDisplay(*graphics), vi, 0, GL_FALSE);
+    cx = glXCreateContext(XtDisplay(*graphics), vi, 0, GL_TRUE);
     if(!cx){
 	cerr << "Error making glXCreateContext\n";
 	exit(0);
