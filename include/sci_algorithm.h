@@ -36,7 +36,7 @@
 #include <algorithm>
 
 #if defined(__digital__) || defined(_AIX) || defined(__APPLE__) \
-   || HAVE_EXT_ALGORITHM // forget about using extension library
+   || defined(__ECC) || HAVE_EXT_ALGORITHM // forget about using extension library
 // AIX and DEC don't have this...X
 namespace std {
   template <class Iter, class Compare>
