@@ -3,8 +3,8 @@
 
 LOCALINCLUDES = -I.. -I../../project
 
-OBJS = ScalarFieldReader.o  SurfaceReader.o
-SRCS = ScalarFieldReader.cc SurfaceReader.cc
+OBJS = ScalarFieldReader.o  SurfaceReader.o  VectorFieldReader.o
+SRCS = ScalarFieldReader.cc SurfaceReader.cc VectorFieldReader.cc
 
 .cc.o:
 	$(CCC) $(CCFLAGS) -c $<
@@ -27,3 +27,9 @@ SurfaceReader.h: Reader.h
 
 SurfaceReader.cc: Reader.cc SurfaceReader.h
 	sed 's/TYPE/Surface/g' < Reader.cc > SurfaceReader.cc
+
+VectorFieldReader.h: Reader.h
+	sed 's/TYPE/VectorField/g' < Reader.h > VectorFieldReader.h
+
+VectorFieldReader.cc: Reader.cc VectorFieldReader.h
+	sed 's/TYPE/VectorField/g' < Reader.cc > VectorFieldReader.cc
