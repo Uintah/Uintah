@@ -249,12 +249,3 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
 						 particle_state_preReloc);
 
 }
-
-void 
-ParticleCreator::getPermanentParticleState(vector<const VarLabel* >& pstate,
-					   vector<const VarLabel* >& pstate_rel)
-{
-  pstate = particle_state;
-  pstate_rel = particle_state_preReloc;
-
-}
