@@ -151,11 +151,11 @@ ManageFieldData::execute()
 
     result_field =
       algo_mesh->execute(this, ifieldhandle->mesh(), imatrixhandle);
-  }
 
-  // copy the properties
-  *((PropertyManager *)(result_field.get_rep())) =
-    *((PropertyManager *)(ifieldhandle.get_rep()));
+    // copy the properties
+    *((PropertyManager *)(result_field.get_rep())) =
+      *((PropertyManager *)(ifieldhandle.get_rep()));
+  }
 
   string units;
   if (imatrixhandle.get_rep() && imatrixhandle->get_property("units", units))
