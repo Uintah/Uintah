@@ -1,4 +1,23 @@
 
+DONE 1) Fix allocator - use doubly linked list???
+Tag malloc - put in TK/TCL
+DONE Use scinew everywhere...
+2) Fix memory leak - where to 36k 0-8 byte objects go in cp.sr for
+torso_ug.
+3) Better test files for Colette
+4) Fix scheduler
+5) Better interactive widgets
+6) Stats broken - fragmentation in wrong place
+7) James - 
+	Frame widget broken
+	Widget scale with mouse
+convert directory
+Use direct context now for 5.3?
+Output VRML/Inventor
+Import VRML/Inventor
+Persistent GeomObj
+
+1) Fix convert directories
 Fix convert directories
 Streamline...
 3) Add generation numbers to Geom
