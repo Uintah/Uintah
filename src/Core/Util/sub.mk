@@ -11,12 +11,18 @@ SRCS     += $(SRCDIR)/Debug.cc $(SRCDIR)/Timer.cc \
 	$(SRCDIR)/soloader.cc $(SRCDIR)/DebugStream.cc
 
 PSELIBS := SCICore/Containers SCICore/Exceptions
-LIBS := 
+LIBS := $(DL_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2.2.1  2000/09/28 02:54:51  mcole
+# merge trunk into FIELD_REDESIGN branch
+#
+# Revision 1.3  2000/09/25 18:04:29  sparker
+# Added DL_LIBRARY to link line
+#
 # Revision 1.2  2000/03/20 19:37:57  sparker
 # Added VPATH support
 #
