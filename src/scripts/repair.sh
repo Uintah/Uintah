@@ -58,8 +58,6 @@ for file in $files; do
 
    if test "$filename" = "depend.mk"; then
      c_files=`grep $bad_inc $file | cut -f1 -d":"`
-     echo "rm $file"
-           rm $file
    else
      c_files=$file
    fi
@@ -71,6 +69,11 @@ for file in $files; do
      if test "$filename" != "depend.mk"; then
         echo "rm -rf $base.d"
               rm -rf $base.d
+     else
+        # remove the individual bad line from the __depend.mk__ file.
+        rm -rf $file.temp
+        grep -v $bad_inc $file > $file.temp
+        mv $file.temp $file
      fi 
    done
 done
