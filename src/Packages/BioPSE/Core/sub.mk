@@ -39,6 +39,7 @@ include $(SRCTOP_ABS)/scripts/largeso_prologue.mk
 SRCDIR := Packages/BioPSE/Core
 SUBDIRS := \
 	$(SRCDIR)/Datatypes \
+	$(SRCDIR)/Algorithms \
 
 include $(SRCTOP_ABS)/scripts/recurse.mk
 
