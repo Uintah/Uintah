@@ -464,8 +464,7 @@ itcl_class Roe {
 	checkbutton $w.visibile -text "Visible" -relief flat \
 		-variable "$clip-visible" -command "$this setClip ; $this-c redraw"
 	pack $w.visibile
-	button $w.invert -text "Invert" -command "$this invertClip ; $this-c redraw"
-	pack $w.invert
+
 	makePlane $w.normal "Plane Normal" $clip-normal $c
 	pack $w.normal -side left -expand yes -fill x
 	frame $w.f -relief groove -borderwidth 2
