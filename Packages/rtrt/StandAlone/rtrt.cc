@@ -19,9 +19,6 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Gui.h>
-#if !defined(linux)
-#  include <Packages/rtrt/Sound/SoundThread.h>
-#endif
 
 #include <iostream>
 
@@ -476,20 +473,6 @@ main(int argc, char* argv[])
   Gui::setActiveGui( gui );
   gui->setDpy( dpy );
 
-#if !defined(linux)
-  SoundThread * soundthread = NULL;
-
-  if( startSoundThread ) {
-    if( scene->getSounds().size() > 0 ) {
-      cout << "Starting Sound Thread!\n";
-      soundthread = new SoundThread( dpy->getGuiCam(), scene );
-      Thread * t = new Thread( soundthread, "Sound thread");
-      t->detach();
-    } else {
-      cout << "No sounds! Not starting sound thread!\n";
-    }
-  }
-#endif
 
   // Initialize GLUT and GLUI stuff.
   printf("start glut inits\n");
@@ -514,7 +497,7 @@ main(int argc, char* argv[])
   glutDisplayFunc( doNothingCB );
 
   // Must do this after glut is initialized.
-  Gui::createMenus( mainWindowId, show_gui);  
+  Gui::createMenus( mainWindowId, startSoundThread, show_gui);  
 
   // Let the GUI know about the lights.
   int cnt;
