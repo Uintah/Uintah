@@ -38,6 +38,7 @@ public:
 			      double tolerance,
 			      double stepsize,
 			      int maxsteps,
+			      int direction,
 			      bool remove_colinear_p) = 0;
 
 
@@ -68,6 +69,7 @@ public:
 			      double tolerance,
 			      double stepsize,
 			      int maxsteps,
+			      int direction,
 			      bool remove_colinear_p);
 };
 
@@ -80,6 +82,7 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
 				       double tolerance,
 				       double stepsize,
 				       int maxsteps,
+				       int direction,
 				       bool rcp)
 {
   SMESH *smesh = dynamic_cast<SMESH *>(seed_mesh_h.get_rep());
@@ -114,13 +117,17 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
 
     nodes.clear();
     nodes.push_back(seed);
+
     // Find the negative streamlines.
-    FindStreamLineNodes(nodes, seed, tolerance2, -stepsize,
-			maxsteps, vfi, rcp);
-    std::reverse(nodes.begin(), nodes.end());
+    if( direction <= 1 ) {
+      FindStreamLineNodes(nodes, seed, tolerance2, -stepsize,
+			  maxsteps, vfi, rcp);
+      std::reverse(nodes.begin(), nodes.end());
+    }
     // Append the positive streamlines.
-    FindStreamLineNodes(nodes, seed, tolerance2, stepsize,
-			maxsteps, vfi, rcp);
+    if( direction >= 1 )
+      FindStreamLineNodes(nodes, seed, tolerance2, stepsize,
+			  maxsteps, vfi, rcp);
 
     node_iter = nodes.begin();
     if (node_iter != nodes.end())

@@ -75,6 +75,7 @@ private:
   GuiDouble                     stepsize_;
   GuiDouble                     tolerance_;
   GuiInt                        maxsteps_;
+  GuiInt                        direction_;
   GuiInt                        remove_colinear_;
 };
 
@@ -89,6 +90,7 @@ StreamLines::StreamLines(const string& id) :
   stepsize_("stepsize", id, this),
   tolerance_("tolerance", id, this),
   maxsteps_("maxsteps", id, this),
+  direction_("direction", id, this),
   remove_colinear_("remove-colinear", id, this)
 {
 }
@@ -286,9 +288,11 @@ void StreamLines::execute()
   double tolerance;
   double stepsize;
   int maxsteps;
+  int direction;
   get_gui_doublevar(id, "tolerance", tolerance);
   get_gui_doublevar(id, "stepsize", stepsize);
   get_gui_intvar(id, "maxsteps", maxsteps);
+  get_gui_intvar(id, "direction", direction);
 
   const TypeDescription *smtd = sf_->mesh()->get_type_description();
   const TypeDescription *sltd = sf_->data_at_type_description();
@@ -308,7 +312,7 @@ void StreamLines::execute()
   }
 
   oport_->send(algo->execute(sf_->mesh(), vfi,
-			     tolerance, stepsize, maxsteps,
+			     tolerance, stepsize, maxsteps, direction,
 			     remove_colinear_.get()));
 }
 
