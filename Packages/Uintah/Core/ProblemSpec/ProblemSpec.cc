@@ -1289,7 +1289,8 @@ ostream& operator<<(ostream& out, ProblemSpecP pspec) {
 void outputContent(ostream& target, const char *chars /**to_write*/)
 {
   //const char* chars = strdup(to_char_ptr(to_write));
-  for (unsigned int index = 0; index < strlen(chars); index++) {
+  unsigned int len = chars?strlen(chars):0;
+  for (unsigned int index = 0; index < len; index++) {
     switch (chars[index]) {
     case chAmpersand :
       target << "&amp;";
