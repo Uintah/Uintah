@@ -67,12 +67,13 @@ WARNING
     std::vector<IntVector> boundary,nboundary,sfcx,sfcy,sfcz;
   };
 
-  bool cmp_type(BCGeomBase* p);
-  template<class T> bool cmp_type(BCGeomBase* p) 
-    {
+  template<class T> class cmp_type {
+    public:
+    bool operator()(BCGeomBase* p) {
       return (typeid(T) == typeid(*p));
     }
-  
+  };
+
 } // End namespace Uintah
 
 #endif
