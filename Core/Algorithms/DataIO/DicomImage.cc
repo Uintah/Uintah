@@ -36,7 +36,7 @@
  *
  * Copyright (C) 2003 SCI Group
 */
- 
+  
 // SCIRun includes
 #include <Core/Algorithms/DataIO/DicomImage.h>
 
@@ -61,6 +61,7 @@ DicomImage::DicomImage()
   index_ = 0;
   id_ = "";
 }
+  
 /*===========================================================================*/
 // 
 // DicomImage
@@ -69,7 +70,7 @@ DicomImage::DicomImage()
 //
 // Arguments   : none
 //
-
+ 
 DicomImage::DicomImage( itk::DicomImageIO::Pointer io, 
                         ImageNDType::Pointer image, string id )
 {
@@ -80,12 +81,31 @@ DicomImage::DicomImage( itk::DicomImageIO::Pointer io,
   num_pixels_ = region.GetNumberOfPixels();
   pixel_buffer_ = scinew PixelType[num_pixels_];
   PixelType * data = image->GetPixelContainer()->GetBufferPointer();
-  for(unsigned int i=0; i < num_pixels_; i++ )
-  {
-    pixel_buffer_[i] = *data++;
-  }
 
-  // ??? data_type;
+  memcpy( pixel_buffer_, data, num_pixels_ * sizeof(PixelType) );
+
+  const std::type_info& type = io->GetPixelType();
+
+  if( type == typeid(short) )
+  {
+    data_type_ = "SHORT";
+  }
+  else if( type == typeid(unsigned short) )
+  {
+    data_type_ = "USHORT";
+  }
+  else if( type == typeid(char) )
+  {
+    data_type_ = "CHAR";
+  }
+  else if( type == typeid(unsigned char) )
+  {
+    data_type_ = "UCHAR";
+  }
+  else
+  {
+    data_type_ = "UNKNOWN";
+  }
 
   dim_ = region.GetImageDimension();
 
@@ -151,7 +171,7 @@ DicomImage::DicomImage(const DicomImage& d)
     index_[j] =  d.index_[j]; 
   }
 }
-
+ 
 /*===========================================================================*/
 // 
 // ~DicomImage
@@ -208,20 +228,17 @@ PixelType * DicomImage::get_pixel_buffer()
 /*===========================================================================*/
 // 
 // get_data_type
-//
+// 
 // Description : Returns the type of data stored at each pixel in the DICOM
 //               files, (i.e. float, unsigned short, etc.)  This is the type 
 //               of data in the array returned by get_pixel_buffer.
 //
 // Arguments   : none
 //
-//void DicomImage::get_data_type()
-//{
-  // TODO: Fix this
-  //std::type_info type = io_->GetPixelType();
-  //io_->GetPixelType();
-  //cerr << "Pixel Type: " << io_->GetPixelType();
-//}
+string DicomImage::get_data_type()
+{
+  return data_type_;
+}
 
 /*===========================================================================*/
 // 
@@ -342,15 +359,29 @@ void DicomImage::print_image_info()
   cout << "(DicomImage::print_image_info) Num Pixels: " << num_pixels << "\n";
 
   // Get pixel buffer data (array)
-  //PixelType * pixel_data = get_pixel_buffer();
-  //for( int i = 0; i < num_pixels; i++ )
-  // {
-  //  cout << "(DicomImage) Pixel value " << i << ": " << pixel_data[i] 
-  //      << "\n"; 
-  //}
+  PixelType min = INT_MAX;
+  PixelType max = 0;
+  
+  PixelType * pixel_data = get_pixel_buffer();
+  for( int i = 0; i < num_pixels; i++ )
+  {
+    //cout << "(DicomImage) Pixel value " << i << ": " << pixel_data[i] 
+    //    << "\n"; 
+    if( pixel_data[i] < min ) 
+    {
+      min = pixel_data[i];
+      //cout << "(DicomImage) Pixel value " << i << ": " << pixel_data[i] 
+      //     << " is new minimum\n"; 
+    }
+    if( pixel_data[i] > max ) max = pixel_data[i];    
+  }
+
+  cout << "(DicomImage::print_image_info) Min, Max: [ " << min 
+       << " " << max << " ]\n";
 
   // Get pixel type
-  //get_data_type();
+  string data_type = get_data_type();
+  cout << "(DicomImage::print_image_info) Data Type: " << data_type << "\n";
 
   // Get image dimension
   int image_dim = get_dimension();
