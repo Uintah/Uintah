@@ -98,7 +98,7 @@ void ObjGroup::get_bounds(BBox& in_bb)
 	    objs[i]->get_bounds(bb);
     }
     if(bb.valid())
-	bb.extend(in_bb);
+	in_bb.extend(bb);
 }
 
 Triangle::Triangle(const Point& p1, const Point& p2, const Point& p3)
@@ -656,8 +656,8 @@ void GeomDisc::draw(DrawInfo* di)
     case DrawInfo::Flat:
 	for(i=0;i<nv;i++){
 	    glBegin(GL_TRIANGLE_STRIP);
-	    double r1=double(i)/double(nv);
-	    double r2=double(i+1)/double(nv);
+	    double r1=rad*double(i)/double(nv);
+	    double r2=rad*double(i+1)/double(nv);
 	    for(int j=0;j<nu;j++){
 		double d1=u.sin(j);
 		double d2=u.cos(j);
