@@ -54,13 +54,13 @@ int SCIRun::gcd(int a, int b, int &x, int &y) {
   }
 
   int size = q.size();
-  int s[size+2];
+  int * s = new int[size+2];
   s[0] = 1; s[1]=0;
   for(int i=2; i < (size+2); i++) {
     s[i] = s[i-2] - (q[i-2]*s[i-1]);
   }
 
-  int t[size+2];
+  int * t = new int[size+2];
   t[0] = 0; t[1]=1;
   for(int i=2; i < (size+2); i++) {
     t[i] = t[i-2] - (q[i-2]*t[i-1]);
@@ -73,6 +73,10 @@ int SCIRun::gcd(int a, int b, int &x, int &y) {
     x = t[size+1];
     y = s[size+1];
   }
+
+  delete[] s;
+  delete[] t;
+
   return ret;
 }
 
