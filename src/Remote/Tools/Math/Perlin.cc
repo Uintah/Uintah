@@ -104,7 +104,7 @@ Perlin::Perlin(double persist, int Oct)
 // X and Y should be in 0.0 -> pretty big.
 double Perlin::InterpolatedNoise(double x, int Oct)
 {
-  int xi = int(ffloor(x));
+  int xi = int(floor(x));
   double xf = x - xi;
 
   double v0 = RandNoise(xi, Oct);
@@ -118,8 +118,8 @@ double Perlin::InterpolatedNoise(double x, int Oct)
 // X and Y should be in 0.0 -> pretty big.
 double Perlin::InterpolatedNoise(double x, double y, int Oct)
 {
-  int xi = int(ffloor(x));
-  int yi = int(ffloor(y));
+  int xi = int(floor(x));
+  int yi = int(floor(y));
   double xf = x - xi;
   double yf = y - yi;
 
@@ -149,9 +149,9 @@ double Perlin::InterpolatedNoise(double x, double y, double z, int Oct)
   yf = yf - yi;
   zf = zf - zi;
 #else
-  int xi = int(ffloor(x));
-  int yi = int(ffloor(y));
-  int zi = int(ffloor(z));
+  int xi = int(floor(x));
+  int yi = int(floor(y));
+  int zi = int(floor(z));
   double xf = x - xi;
   double yf = y - yi;
   double zf = z - zi;
