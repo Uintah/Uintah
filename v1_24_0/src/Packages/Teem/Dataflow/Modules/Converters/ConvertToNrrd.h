@@ -339,7 +339,12 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
       break;
     case 0:
       {
-	if (m->dimensionality() == 1) {
+	if (m->dimensionality() == 0) {
+	  typename Fld::mesh_type::Node::size_type size;
+	  m->synchronize(Mesh::NODES_E);
+	  m->size(size);
+	  sz = size;
+	} else if (m->dimensionality() == 1) {
 	  typename Fld::mesh_type::Edge::size_type size;
 	  m->synchronize(Mesh::EDGES_E);
 	  m->size(size);
