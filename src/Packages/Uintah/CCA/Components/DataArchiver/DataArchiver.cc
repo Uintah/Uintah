@@ -149,8 +149,14 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    if (d_checkpointInterval != 0.0 && d_checkpointTimestepInterval != 0)
      throw ProblemSetupException("Use <checkpoint interval=...> or <checkpoint timestepInterval=...>, not both");
  
-   
+
    d_currentTimestep = 0;
+   
+   int startTimestep;
+   if (p->get("startTimestep", startTimestep)) {
+     d_currentTimestep = startTimestep - 1;
+   }
+  
    d_lastTimestepLocation = "invalid";
    d_wasOutputTimestep = false;
 
@@ -353,6 +359,55 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
 	 ceil(time / d_checkpointInterval);
    else if (d_checkpointTimestepInterval > 0)
       d_nextCheckpointTimestep = d_currentTimestep + d_checkpointTimestepInterval;
+}
+
+//////////
+// Call this when doing a combine_patches run after calling
+// problemSetup.  It will copy the data files over and make it ignore
+// dumping reduction variables.
+void DataArchiver::combinePatchSetup(Dir& fromDir)
+{
+   if (d_writeMeta) {
+     // partial copy of dat files
+     copyDatFiles(fromDir, d_dir, 0, -1, false);
+     copySection(fromDir, d_dir, "globals");
+   }
+   
+   string iname = fromDir.getName()+"/index.xml";
+   DOM_Document indexDoc = loadDocument(iname);
+
+   DOM_Node globals = findNode("globals", indexDoc.getDocumentElement());
+   if (globals != 0) {
+      DOM_Node variable = findNode("variable", globals);
+      while (variable != 0) {
+	DOM_NamedNodeMap attributes = variable.getAttributes();
+	DOM_Node nameNode = attributes.getNamedItem("name");
+	if (nameNode == 0)
+	  throw InternalError("global variable name attribute not found");
+	string varname = nameNode.getNodeValue().transcode();
+
+	// this isn't the most efficient, but i don't think it matters
+	// to much for this initialization code
+	list<SaveNameItem>::iterator it = d_saveLabelNames.begin();
+	while (it != d_saveLabelNames.end()) {
+	  if ((*it).labelName == varname) {
+	    it = d_saveLabelNames.erase(it);
+	  }
+	  else {
+	    it++;
+	  }
+	}
+	variable = findNextNode("variable", variable);	
+      }
+   }
+
+   // don't transfer checkpoints when combining patches
+   d_checkpointInterval = 0.0;
+   d_checkpointTimestepInterval = 0;
+
+   // output every timestep -- each timestep is transferring data
+   d_outputInterval = 0.0;
+   d_outputTimestepInterval = 1;
 }
 
 void DataArchiver::copySection(Dir& fromDir, Dir& toDir, string section)
@@ -1381,8 +1436,9 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
 	  " variable not computed for all materials specified to save.");
       }
       
-      if (saveItem.label_->typeDescription()->isReductionVariable())
-         d_saveReductionLabels.push_back(saveItem);
+      if (saveItem.label_->typeDescription()->isReductionVariable()) {
+	d_saveReductionLabels.push_back(saveItem);
+      }
       else
          d_saveLabels.push_back(saveItem);
    }
