@@ -23,7 +23,9 @@ itcl_class DaveW_FEM_DipoleMatToGeom {
     }
     method set_defaults {} {
 	global $this-widgetSizeTCL
+	global $this-fixedSizeTCL
 	set $this-widgetSizeTCL 1
+	set $this-fixedSizeTCL 0
     }
     method make_entry {w text v c} {
         frame $w
@@ -46,7 +48,10 @@ itcl_class DaveW_FEM_DipoleMatToGeom {
         frame $w.f
 	global $this-widgetSizeTCL
 	make_entry $w.f.s "WidgetSize:" $this-widgetSizeTCL "$this-c needexecute"
-	pack $w.f.s -side top -fill x -expand yes
+	global $this-fixedSizeTCL
+	checkbutton $w.f.f -text "Fixed Size" -variable $this-fixedSizeTCL
+
+	pack $w.f.s $w.f.f -side top -fill x -expand yes
         pack $w.f -side top -fill x -expand yes
     }
 }
