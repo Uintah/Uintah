@@ -33,6 +33,10 @@
 #include <SCIRun/Bridge/BridgeComponentModel.h>
 #include <SCIRun/Babel/BabelComponentModel.h>
 #endif
+
+//Vtk Component model
+#include <SCIRun/Vtk/VtkComponentModel.h>
+
 #include <SCIRun/ComponentInstance.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/CCA/PIDL/PIDL.h>
@@ -62,6 +66,7 @@ SCIRunFramework::SCIRunFramework()
   models.push_back(new BridgeComponentModel(this));
   models.push_back(babel=new BabelComponentModel(this));
 #endif
+  models.push_back(vtk=new VtkComponentModel(this));
 }
 
 SCIRunFramework::~SCIRunFramework()

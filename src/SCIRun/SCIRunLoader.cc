@@ -186,6 +186,7 @@ int SCIRunLoader::getAllComponentTypes(::SSIDL::array1< ::std::string>& componen
       iter != components.end(); iter++){
     componentTypes.push_back(iter->second->getType());
   }
+  return 0;
 }
 
 int SCIRunLoader::shutdown(float timeout)
