@@ -424,7 +424,7 @@ DataArchive::query( Variable& var, const std::string& name,
 
 void
 DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
-		    int matlIndex, const Patch* patch )
+		    int matlIndex, const Patch* patch, const IntVector* boundary /* = 0 */)
 {
   d_lock.lock();
   map<string,string> attributes;
@@ -455,9 +455,13 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
     (static_cast<ParticleVariableBase*>(&var))->allocate(psubset);
 //      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
   }
-  else if (td->getType() != TypeDescription::ReductionVariable)
-    var.allocate(patch);
-  
+  else if (td->getType() != TypeDescription::ReductionVariable) {
+    if (!boundary)
+      var.allocate(patch, IntVector(0,0,0));
+    else
+      var.allocate(patch, *boundary);
+  }
+
   long start;
   if(!vnode->get("start", start))
     throw InternalError("Cannot get start");
@@ -697,7 +701,8 @@ DataArchive::initVariable(const Patch* patch,
   Variable* var = label->typeDescription()->createInstance();
   ProblemSpecP vnode = dataRef.first;
   XMLURL url = dataRef.second;
-  query(*var, vnode, url, matl, patch);
+  IntVector bl = label->getBoundaryLayer();
+  query(*var, vnode, url, matl, patch, &bl);
 
   ParticleVariableBase* particles;
   if ((particles = dynamic_cast<ParticleVariableBase*>(var))) {
