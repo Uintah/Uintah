@@ -53,7 +53,7 @@ public:
     NODE_NEIGHBORS_E	= 1 << 5,
     EDGE_NEIGHBORS_E	= 1 << 6,
     FACE_NEIGHBORS_E	= 1 << 7,
-    GRID_E		= 1 << 8
+    LOCATE_E		= 1 << 8
   };
   virtual bool		synchronize(unsigned int) { return false; };
 

@@ -285,7 +285,7 @@ TetVolMesh::synchronize(unsigned int tosync)
   if (tosync & FACES_E && !(synchronized_ & FACES_E) || 
       tosync & FACE_NEIGHBORS_E && !(synchronized_ & FACE_NEIGHBORS_E))
     compute_faces();
-  if (tosync & GRID_E && !(synchronized_ & GRID_E))
+  if (tosync & LOCATE_E && !(synchronized_ & LOCATE_E))
     compute_grid();
   return true;
 }
@@ -642,7 +642,7 @@ TetVolMesh::set_nodes(Node::array_type &array, Cell::index_type idx)
   for (int n = 4; n < 4; ++n)
     cells_[idx * 4 + n] = array[n];
   
-  synchronized_ &= ~GRID_E;
+  synchronized_ &= ~LOCATE_E;
   if (synchronized_ & EDGES_E) create_cell_edges(idx);
   if (synchronized_ & FACES_E) create_cell_faces(idx);
   if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(idx);
@@ -1118,7 +1118,7 @@ TetVolMesh::compute_grid()
     }
     ++ci;
   }
-  synchronized_ |= GRID_E;
+  synchronized_ |= LOCATE_E;
   grid_lock_.unlock();
 }
 
@@ -1316,7 +1316,7 @@ TetVolMesh::add_tet(Node::index_type a, Node::index_type b,
   if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(tet);
   if (synchronized_ & EDGES_E) create_cell_edges(tet);
   if (synchronized_ & FACES_E) create_cell_faces(tet);
-  synchronized_ &= ~GRID_E;
+  synchronized_ &= ~LOCATE_E;
 
   return tet; 
 }
@@ -1355,7 +1355,7 @@ TetVolMesh::add_elem(Node::array_type a)
   if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(tet);
   if (synchronized_ & EDGES_E) create_cell_edges(tet);
   if (synchronized_ & FACES_E) create_cell_faces(tet);
-  synchronized_ &= ~GRID_E;
+  synchronized_ &= ~LOCATE_E;
 
   return tet;
 }

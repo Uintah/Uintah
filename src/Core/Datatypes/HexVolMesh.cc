@@ -276,7 +276,10 @@ HexVolMesh::synchronize(unsigned int tosync)
 {
   if (tosync & EDGES_E && !(synchronized_ & EDGES_E)) compute_edges();
   if (tosync & FACES_E && !(synchronized_ & FACES_E)) compute_faces();
-  if (tosync & GRID_E && !(synchronized_ & GRID_E)) compute_grid();
+  if (tosync & LOCATE_E && !(synchronized_ & LOCATE_E)) {
+    compute_grid();
+    if (!(synchronized_ & FACES_E)) compute_faces();
+  }
   if (tosync & NODE_NEIGHBORS_E && !(synchronized_ & NODE_NEIGHBORS_E)) 
     compute_node_neighbors();
   return true;
@@ -733,8 +736,8 @@ HexVolMesh::locate(Face::index_type &face, const Point &p)
 bool
 HexVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
-  ASSERTMSG(synchronized_ & GRID_E,
-	    "Must call synchronize GRID_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & LOCATE_E,
+	    "Must call synchronize LOCATE_E on HexVolMesh first");
   if (grid_.get_rep() == 0)
   {
     compute_grid();
@@ -935,7 +938,7 @@ HexVolMesh::compute_grid()
     ++ci;
   }
 
-  synchronized_ |= GRID_E;
+  synchronized_ |= LOCATE_E;
   grid_lock_.unlock();
 }
 

@@ -190,6 +190,7 @@ SampleFieldRandomAlgoT<Mesh>::execute(ModuleReporter *mod,
       (sfi = field->query_scalar_interface(mod)) ||
       (vfi = field->query_vector_interface(mod)))
   {
+    mesh->synchronize(Mesh::LOCATE_E);
     if (!build_weight_table(mesh, sfi, vfi, table, distmode))
     {
       mod->error("Bad distribution of weights, unable to choose any.");

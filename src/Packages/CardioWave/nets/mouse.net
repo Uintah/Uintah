@@ -44,13 +44,13 @@ set $m0-notes {}
 set $m0-show_status {1}
 set $m1-notes {}
 set $m1-show_status {1}
-set $m1-filename {/home/sci/dmw/mydata/duke/mouse-heart-64-e1.lvv.fld}
+set $m1-filename {/usr/sci/data/Medical/mouse/activation/sr/64/mouse-heart-64-e1.lvv.fld}
 set $m2-notes {}
 set $m2-show_status {1}
-set $m2-filename {/home/sci/dmw/mydata/duke/mouse-heart-64-e2.lvv.fld}
+set $m2-filename {/usr/sci/data/Medical/mouse/activation/sr/64/mouse-heart-64-e2.lvv.fld}
 set $m3-notes {}
 set $m3-show_status {1}
-set $m3-filename {/home/sci/dmw/mydata/duke/mouse-heart-64.lvt.fld}
+set $m3-filename {/usr/sci/data/Medical/mouse/activation/sr/64/mouse-heart-64.lvt.fld}
 set $m3-filetype {ASCII}
 set $m4-notes {}
 set $m4-show_status {1}

@@ -98,7 +98,7 @@ void FloodFillNewValue::execute(){
   int data_at = pcf->data_at();
   
   if (data_at == Field::NODE) {
-    hvf->get_typed_mesh()->synchronize(Mesh::GRID_E | Mesh::FACES_E);
+    hvf->get_typed_mesh()->synchronize(Mesh::LOCATE_E);
     HexVolMesh::Node::index_type loc;
     if (!hvf->get_typed_mesh()->locate(loc, p)) {
       ovol->send(volH);
