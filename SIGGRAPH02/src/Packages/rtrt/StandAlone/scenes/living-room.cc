@@ -41,7 +41,7 @@ using namespace rtrt;
 extern "C"
 Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 {
-  Point center(8, -8, 0);  
+  Point center(12.5, -8.5, 0);  
 
   Point eye = center + Vector(0,0,60);
   Point lookat = center + Vector(1,1,60);
@@ -52,8 +52,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group * group = new Group();
 
   Transform room_trans;
+  room_trans.pre_scale( Vector(0.025,0.025,0.025) );
   room_trans.pre_translate( center.vector() );
-  room_trans.pre_scale( Vector(0.02,0.02,0.02) );
 
   Camera cam(room_trans.project(eye),room_trans.project(lookat),up,fov);
 
@@ -174,52 +174,60 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   scene->addObjectOfInterest( si, true );
 
 #if !defined(linux)
-  string path = "/home/sci/dav/sounds/";
-  vector<Point> loc; loc.push_back(Point(82,90,59)); // piano
-  Sound * sound = new Sound( path+"player-piano-cd026_73.wav", "piano", loc, 150, true );
+  string path = "/home/sci/dav/sounds/"; // piano
+  vector<Point> loc; loc.push_back(room_trans.project(Point(82,90,59)));
+  Sound * sound = new Sound( path+"player-piano-cd026_73.wav", "piano", 
+			     loc, 3, true );
   scene->addSound( sound );
   loc.clear();
 
-  loc.push_back(Point(0,0,0));  // harp back ground
-  sound = new Sound( path+"harp-melodic-cd027_59.wav", "harp", loc, 150, true, .5 );
+  loc.push_back(room_trans.project(Point(0,0,0))); // harp back ground
+  sound = new Sound( path+"harp-melodic-cd027_59.wav", "harp", loc,
+		     5, true, .5 );
   scene->addSound( sound );
   loc.clear();
 
-  loc.push_back(Point(-152,23,50));  // clock
-  sound = new Sound( path+"ticking-clock-cd058_07.wav", "ticking", loc, 150, true );
+  loc.push_back(Point(-2.53,-2.42,2.24));  // clock
+  sound = new Sound( path+"ticking-clock-cd058_07.wav", "ticking", 
+		     loc, 2, true );
   scene->addSound( sound );
   loc.clear();
 
-  loc.push_back(Point(-162,23,50));  // clock
-  sound = new Sound( path+"clock-tower-bells-cd025_75.wav", "chime", loc, 150, true );
+  loc.push_back(Point(-2.53,-2.42,2.24));  // clock
+  sound = new Sound( path+"clock-tower-bells-cd025_75.wav", "chime",
+		     loc, 2, true );
   scene->addSound( sound );
   loc.clear();
 
-  loc.push_back(Point(-8,-91,31)); // fruit
-  sound = new Sound( path+"music-box-cd074_96.wav", "music-box", loc, 150, true );
+  loc.push_back(room_trans.project(Point(-8,-91,31))); // fruit
+  sound = new Sound( path+"music-box-cd074_96.wav", "music-box",
+		     loc, 2, true );
   scene->addSound( sound );
   loc.clear();
 
-  loc.push_back(Point(-121,453,62)); // outside
-  sound = new Sound( path+"waves-ocean-shoreline-cd039_27.wav", "under water", loc, 200, true );
+  loc.push_back(room_trans.project(Point(-121,453,62))); // outside
+  sound = new Sound( path+"waves-ocean-shoreline-cd039_27.wav",
+		     "under water", loc, 4, true );
   scene->addSound( sound );
   loc.clear();
 
-  loc.push_back(Point(154,-84,110)); // books
-  sound = new Sound( path+"cool_music.wav", "cool", loc, 150, true );
+  loc.push_back(Point(3.25,-3.15,1.47)); // books
+  sound = new Sound( path+"cool_music.wav", "cool", loc, 2, true );
   scene->addSound( sound );
 
 #endif
 
-  double lightBrightness = 0.5;
+  double lightBrightness = 0.7;
 
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 4;
   Light * light = new Light( Point(0.15,0.15,2.8), 
-			     Color(1.0,1.0,1.0), 0, lightBrightness );
+			     Color(1.0,1.0,1.0), 1, lightBrightness );
   light->name_ = "Overhead";
   scene->add_light( light );
   
+  lightBrightness = 0.3;
+
   light = new Light( Point(-1.48,-3.76,1.68),
 		     Color(1.0,1.0,1.0), 0, lightBrightness );
   light->name_ = "Right Sconce";
@@ -230,17 +238,19 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   light->name_ = "Left Sconce";
   scene->add_light( light );
 
-  light = new Light( Point(3.498,-3.432,2.7),
+  lightBrightness = 0.5;
+  light = new Light( Point(3.06,-3.06,2.79),
 		     Color(1.0,1.0,1.0), 0, lightBrightness );
   light->name_ = "Horse";
   scene->add_light( light );
 
-  light = new Light( Point(-3.281,-3.66,2.7),
+  light = new Light( Point(-2.71,-3.06,2.79),
 		     Color(1.0,1.0,1.0), 0, lightBrightness );
   light->name_ = "Venus";
   scene->add_light( light );
 
-  light = new Light( Point(32.81,16,5.96),
+  lightBrightness = 0.0;
+  light = new Light( Point(32.81,16,7),
 		     Color(1.0,1.0,1.0), 0, lightBrightness );
   light->name_ = "Sun";
   scene->add_light( light );
