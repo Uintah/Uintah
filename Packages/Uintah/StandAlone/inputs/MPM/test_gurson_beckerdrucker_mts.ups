@@ -13,7 +13,7 @@
   </Meta>
 
   <Time>
-    <maxTime>1.0e-6</maxTime>
+    <maxTime>5.0e-6</maxTime>
     <initTime>0.0</initTime>
     <delt_min>1.0e-16</delt_min>
     <delt_max>1.0e-6</delt_max>
@@ -37,6 +37,7 @@
     <save label = "p.strainRate"/>
     <save label = "p.plasticStrain"/>
     <save label = "p.plasticTemp"/>
+    <save label = "p.temperature"/>
     <save label = "p.localized"/>
     <save label = "p.plasticTempInc"/>
     <save label = "p.damage"/>
