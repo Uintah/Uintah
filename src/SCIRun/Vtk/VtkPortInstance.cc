@@ -37,6 +37,7 @@ VtkPortInstance::VtkPortInstance(VtkComponentInstance* ci,
 				       Port* port, PortType porttype)
   : ci(ci), port(port), porttype(porttype)
 {
+  nConnections=0;
 }
 
 VtkPortInstance::~VtkPortInstance()
@@ -64,21 +65,21 @@ bool VtkPortInstance::connect(PortInstance* to)
   if(!canConnectTo(to))
     return false;
   // VtkPortInstance* p2 = dynamic_cast<VtkPortInstance*>(to);
-
+  VtkPortInstance* peer=(VtkPortInstance*)to;
+  nConnections++;
+  
   //  Network* net = port->get_module()->getNetwork();
   if(porttype == Output){
-    //    net->connect(port->get_module(), port->get_which_port(),
-    //		 p2->port->get_module(), p2->port->get_which_port());
+    peer->port->connect(port);
   } else {
-    //net->connect(p2->port->get_module(), p2->port->get_which_port(),
-    //		 port->get_module(), port->get_which_port());
+    port->connect(port);
   }
   return true;
 }
 
 bool VtkPortInstance::disconnect(PortInstance*)
 {
-  //TODO:
+  //TODO: need decrement nConnections for both instances.
   return false;
 }
 
@@ -86,24 +87,26 @@ bool VtkPortInstance::canConnectTo(PortInstance *to)
 {
   // TODO: use Port's interface to decide if can be connected. 
   //VtkPortInstance* p2 = dynamic_cast<VtkPortInstance*>(to);
- 
-  return true;/*
+  cerr<<"#1"<<endl;
   if(porttype == Input){
-    if(to->porttype ==Input) return false;
-    
-
+    cerr<<"#2"<<endl;
+    if(((VtkPortInstance*)to)->porttype ==Input) return false;
+    // Input port does not allow multiple connections.
+    cerr<<"#3"<<endl;
+    if(nConnections>1) return false; 
+    cerr<<"#4"<<endl;
+    if(port->accept(((VtkPortInstance*)to)->port)) return true;
+    cerr<<"#5"<<endl;
   }else{
-    if(to->porttype ==Output) return false;
-
+    cerr<<"#6"<<endl;
+    if(((VtkPortInstance*)to)->porttype ==Output) return false;
+    cerr<<"#7"<<endl;
+    // Input port does not allow multiple connections.
+    if(((VtkPortInstance*)to)->nConnections>1) return false; 
+    cerr<<"#8"<<endl;
+    if(((VtkPortInstance*)to)->port->accept(port)) return true;
+    cerr<<"#9"<<endl;
   }
-
-  // if( p2 && porttype != p2->porttype &&
-  //    port->get_typename() == p2->port->get_typename()){
-  //  if(porttype == Input && port->nconnections() > 0)
-  //    return false;
-  //  if(p2->porttype == Input && p2->port->nconnections() > 0)
-  //    return false;
-  //  return true;
-  //}
-  return false;*/
+  cerr<<"#10"<<endl;
+  return false;
 }
