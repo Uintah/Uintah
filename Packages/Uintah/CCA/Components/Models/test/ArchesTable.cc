@@ -628,11 +628,12 @@ void ArchesTable::interpolate(int index, CCVariable<double>& result,
             int l=0;
             int h=ind->weights.size()-1;
             if(value < ind->weights[l] || value > ind->weights[h]){
-              if(value < ind->weights[l] && value > ind->weights[l]-1.e-10)
+              if(value < ind->weights[l] && value > ind->weights[l]-1.e-1)
                 value = ind->weights[l];
-              else if(value > ind->weights[h] && value < ind->weights[h]+1.e-10)
+              else if(value > ind->weights[h] && value < ind->weights[h]+1.e-1)
                 value = ind->weights[h];
               else {
+                cerr.precision(17);
                 cerr << *iter << ", value=" << value << ", low=" << ind->weights[l] << ", high=" << ind->weights[h] << "\n";
                 throw InternalError("Interpolate outside range of table");
               }
