@@ -336,30 +336,34 @@ void NodeHedgehog::execute()
 	Point down( center.x(), min.y(), center.z());	    
 	widget2d->SetPosition( center, right, down);
 	max_scale = Max( (max.z() - min.z()), (max.y() - min.y()) );
-	max_scale = Max( (max.x() - min.x()), (max.z() - min.z()) );
       } else {
 	// Find the field and put in optimal place
 	// in xz plane with reasonable frame thickness
 	Point right( max.x(), center.y(), center.z());
 	Point down( center.x(), center.y(), min.z());	    
 	widget2d->SetPosition( center, right, down);
+	max_scale = Max( (max.x() - min.x()), (max.z() - min.z()) );
       }
       widget2d->SetScale( max_scale/20. );
       need_find2d = 0;
     }
   }
   
-  // get the position of the frame widget and determine
-  // the scale of the sliders.  Only the value on one of
-  // the sliders is used to determine the density of the
-  // vectors.
-  Point center, R, D, I;
   // because skip is used for the interator increment
   // it must be 1 or more otherwise you enter an
   // infinite loop (and that really sucks for performance)
   int skip = skip_node.get();
   if (skip < 1)
     skip = 1;
+  // get the position of the frame widget and determine
+  // the boundaries
+  Point center, R, D, I;
+  if(do_3d){
+    widget3d->GetPosition( center, R, D, I);
+  } else {
+    widget2d->GetPosition( center, R, D);
+    I = center;
+  }
   Vector v1 = R - center;
   Vector v2 = D - center;
   Vector v3 = I - center;
@@ -411,7 +415,7 @@ void NodeHedgehog::execute()
 	    else {
 	      matl = outcolor;
 	    }
-	    
+
 	    if(vv.length2()*lenscale > 1.e-3) {
 	      arrows->add(p, vv*lenscale, matl, matl, matl);
 	    }
@@ -479,6 +483,12 @@ void NodeHedgehog::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.3  2000/08/03 15:09:21  bigler
+// Fixed some bugs that was causing the module to crash when
+// the 2d widget on the xz plane was selected.  Also a bug that
+// was sending a faulty box to getNodeIterator.  Must have previously
+// checked in the wrong file???  Anyway, it works now.
+//
 // Revision 1.2  2000/06/27 17:13:19  bigler
 // Took out some old code.
 //
