@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
 	  cerr << "Waiting for memstress connections...\n";
 	  cerr << pp->getURL().getString() << '\n';
 	} else {
-	    PIDL::Object::pointer obj=PIDL::PIDL::objectFrom(client_url);
+	    Object::pointer obj=PIDL::objectFrom(client_url);
 	    Server::pointer s(pidl_cast<Server::pointer>(obj));
 
 	    if(test == "ping" || test == "all"){
@@ -159,9 +159,9 @@ int main(int argc, char* argv[])
 	    if(test == "urlcast"){
 		double stime=Time::currentSeconds();
 		for(int i=0;i<reps;i++){
-		    PIDL::Object::pointer obj2=PIDL::PIDL::objectFrom(client_url);
-		    Server::pointer s2=pidl_cast<Server::pointer>(obj2);
-		    s2->ping();
+		  Object::pointer obj2=PIDL::objectFrom(client_url);
+		  Server::pointer s2=pidl_cast<Server::pointer>(obj2);
+		  s2->ping();
 		}
 		double dt=Time::currentSeconds()-stime;
 		cerr << "urlcast: " << reps << " reps in " << dt << " seconds\n";

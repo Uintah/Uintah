@@ -244,7 +244,7 @@ int main(int argc, char* argv[])
       cerr << "Waiting for mitest connections...\n";
       cerr << pp->getURL().getString() << '\n';
     } else {
-      PIDL::Object::pointer obj=PIDL::PIDL::objectFrom(client_url);
+      Object::pointer obj=PIDL::objectFrom(client_url);
       bool failed=false;
 
       // From base Object

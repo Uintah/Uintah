@@ -31,6 +31,7 @@
 #include <CCA/Components/Builder/NetworkCanvasView.h>
 #include <qwmatrix.h>
 #include <Core/CCA/spec/cca_sidl.h>
+#include <iostream>
 using namespace std;
 
 //using namespace SCIRun;

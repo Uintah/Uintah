@@ -150,16 +150,16 @@ int main(int argc, char* argv[])
 
 	RingMaster::pointer pp;
 	if(server) {
-	    cerr << "Creating objects object\n";
-	    pp=RingMaster::pointer(new RingMaster_impl);
-	    cerr << "Waiting for objects connections...\n";
-	    cerr << pp->getURL().getString() << '\n';
+	  cerr << "Creating objects object\n";
+	  pp=RingMaster::pointer(new RingMaster_impl);
+	  cerr << "Waiting for objects connections...\n";
+	  cerr << pp->getURL().getString() << '\n';
 	} else {
-	    PIDL::Object::pointer obj=PIDL::PIDL::objectFrom(client_url);
-	    RingMaster::pointer rm=pidl_cast<RingMaster::pointer>(obj);
-	    Client_impl* me=new Client_impl;
-	    int myid=rm->registerClient(Client::pointer(me));
-	    cerr << "Test Successful!!\n";
+	  Object::pointer obj=PIDL::objectFrom(client_url);
+	  RingMaster::pointer rm=pidl_cast<RingMaster::pointer>(obj);
+	  Client_impl* me=new Client_impl;
+	  int myid=rm->registerClient(Client::pointer(me));
+	  cerr << "Test Successful!!\n";
 	}
 	PIDL::PIDL::serveObjects();
     } catch(const Exception& e) {

@@ -25,7 +25,7 @@ else
 PSELIBS := Core/CCA/Component/CIA Core/CCA/Component/PIDL Core/Thread \
 	Core/Exceptions Core/CCA/Component/Comm Core/globus_threads
 endif
-LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common -lglobus_io
+LIBS := 
 
 PROGRAM := $(SRCDIR)/memstress
 SRCS := $(SRCDIR)/memstress.cc $(SRCDIR)/memstress_sidl.cc

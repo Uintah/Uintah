@@ -47,7 +47,7 @@ GENHDRS := $(SRCDIR)/CIA_sidl.h
 
 PSELIBS := Core/CCA/Component/PIDL
 
-LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common
+LIBS := 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
       cerr << "Waiting for spectest connections...\n";
       cerr << fw->getURL().getString() << '\n';
     } else {
-      PIDL::Object::pointer obj = PIDL::PIDL::objectFrom(client_url);
+      Object::pointer obj = PIDL::objectFrom(client_url);
       cerr << "in the middle\n";
       Framework::pointer fw = pidl_cast<Framework::pointer>(obj);
       CCA::Services::pointer s = fw->get_services();
