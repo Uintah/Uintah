@@ -1125,59 +1125,40 @@ FORTRAN_UNDERSCORE=1
 case $host in 
   *-irix*)
     ac_objext=o
-    MIPSPRO=/opt/MIPSpro/bin
     USRBIN=/usr/bin
-    AC_PATH_PROG(CC,cc,,$MIPSPRO,)
+    AC_PATH_PROG(CC,cc,,$USRBIN,)
     if test -z "$CC"; then
-      AC_PATH_PROG(CC,cc,,$USRBIN,)
-      if test -z "$CC"; then
-        SCI_MSG_ERROR(Could not find the MIPSPro C compiler (cc))
-      fi
+      SCI_MSG_ERROR(Could not find the MIPSPro C compiler (cc))
     fi
     SCI_CHECK_VERSION($CC,-version,7.3.1.1,,
-      echo configure: error: wrong $CC version.; exit)
-    AC_PATH_PROG(F77,f77,,$MIPSPRO,)
+         echo configure: error: wrong $CC version.; exit)
+    AC_PATH_PROG(F77,f77,,$USRBIN,)
     if test -z "$F77"; then
-      AC_PATH_PROG(F77,f77,,$USRBIN,)
-      if test -z "$F77"; then
-        SCI_MSG_ERROR(Could not find the MIPSPro Fortran compiler (f77))
-      fi
+      SCI_MSG_ERROR(Could not find the MIPSPro Fortran compiler (f77))
     fi
     SCI_CHECK_VERSION($F77,-version,7.3.1.1,,
-      echo configure: error: wrong $CC version.; exit)
-    AC_PATH_PROG(CXX,CC,,$MIPSPRO,)
+        echo configure: error: wrong $CC version.; exit)
+    AC_PATH_PROG(CXX,CC,,$USRBIN,)
     if test -z "$CXX"; then
-      AC_PATH_PROG(CXX,CC,,$USRBIN,)
-      if test -z "$CXX"; then
-        SCI_MSG_ERROR(Could not find the MIPSPro C++ compiler (CC))
-      fi
+      SCI_MSG_ERROR(Could not find the MIPSPro C++ compiler (CC))
     fi
     SCI_CHECK_VERSION($CXX,-version,7.3.1.1,,
-      echo configure: error: wrong $CXX version.; exit)
-    AC_PATH_PROG(AS,as,,$MIPSPRO,)
+        echo configure: error: wrong $CXX version.; exit)
+    AC_PATH_PROG(AS,as,,$USRBIN,)
     if test -z "$AS"; then
-      AC_PATH_PROG(AS,as,,$USRBIN,)
-      if test -z "$AS"; then
-        SCI_MSG_ERROR(Could not find the MIPSPro assembler (as))
-      fi
+      SCI_MSG_ERROR(Could not find the MIPSPro assembler (as))
     fi
     SCI_CHECK_VERSION($CXX,-version,7.3.1.1,,
-      echo configure: error: wrong $CXX version.; exit)
-    AC_PATH_PROG(AS,as,,$MIPSPRO,)
+        echo configure: error: wrong $CXX version.; exit)
+    AC_PATH_PROG(AS,as,,$USRBIN,)
     if test -z "$AS"; then
-      AC_PATH_PROG(AS,as,,$USRBIN,)
-      if test -z "$AS"; then
-        SCI_MSG_ERROR(Could not find the MIPSPro linker (as))
-      fi
+      SCI_MSG_ERROR(Could not find the MIPSPro linker (as))
     fi
     SCI_CHECK_VERSION($AS,-version,7.3.1.1,,
-      echo configure: error: wrong $CC version.; exit)
-    AC_PATH_PROG(LD,ld,,$MIPSPRO,)
+        echo configure: error: wrong $CC version.; exit)
+    AC_PATH_PROG(LD,ld,,$USRBIN,)
     if test -z "$LD"; then
-      AC_PATH_PROG(LD,ld,,$USRBIN,)
-      if test -z "$LD"; then
-        AC_MSG_ERROR(Could not find the MIPSPro linker (ld))
-      fi
+      AC_MSG_ERROR(Could not find the MIPSPro linker (ld))
     fi
     CPP="$CC"
     CXXCPP="$CXX -c"
