@@ -26,12 +26,15 @@
  *
  */
 
-#include <iostream.h>
+#include <CCA/Components/Zlist/ZList.h>
+
+#include <iostream>
 #include <qapplication.h>
 #include <qpushbutton.h>
 #include <qmessagebox.h>
-#include "ZList.h"
+
 //#include "ListForm.h"
+
 extern "C" sci::cca::Component::pointer make_SCIRun_ZList()
 {
   return sci::cca::Component::pointer(new ZList());
@@ -40,8 +43,8 @@ extern "C" sci::cca::Component::pointer make_SCIRun_ZList()
 
 ZList::ZList()
 {
-	uiport.setParent(this);
-	listport.setParent(this);
+  uiport.setParent(this);
+  listport.setParent(this);
 }
 
 ZList::~ZList()
@@ -69,6 +72,6 @@ int ImUIPort1::ui()
 
 SSIDL::array1<double> ImZListPort::getList()
 {
- SSIDL::array1<double> data;
- return com->datalist;
+  SSIDL::array1<double> data;
+  return com->datalist;
 }
