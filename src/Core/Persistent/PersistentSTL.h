@@ -42,6 +42,21 @@ using std::pair;
 
 #define MAP_VERSION 1
 
+
+// Persistent IO for maps
+template <class Key, class Data>
+SCICORESHARE void
+Pio(Piostream& stream, map<Key, Data>& data );
+
+//////////
+// Persistent IO of vector containers
+template <class T>
+SCICORESHARE void Pio(Piostream& stream, vector<T>& data);
+
+template<class T,class S>
+SCICORESHARE void 
+Pio( Piostream &stream, pair<T,S>& pair);
+
 //////////
 // Persistent io for maps
 template <class Key, class Data>
