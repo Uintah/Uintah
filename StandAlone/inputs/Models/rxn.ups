@@ -254,7 +254,7 @@
 
       <Model type="Mixing2">
         <material>source</material>
-	<file>gri30.xml</file>
+	<file>inputs/Models/gri30.xml</file>
 	<id>gri30</id>
 	<stream name="O2">
            <geom_object>
