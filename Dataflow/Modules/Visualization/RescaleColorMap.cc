@@ -78,6 +78,28 @@ RescaleColorMap::execute()
   cmap = new ColorMap(*cmap.get_rep());
   if( isFixed.get() ){
     cmap->Scale(min.get(), max.get());
+    port_range_type range = get_iports("Field");
+    if (range.first == range.second)
+      return;
+    port_map_type::iterator pi = range.first;
+    while (pi != range.second)
+    {
+      FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);
+      if (!ifield) {
+	postMessage("Unable to initialize "+name+"'s iport\n");
+	return;
+      }
+      FieldHandle field;
+      if (ifield->get(field) && field.get_rep()) {
+
+	ScalarFieldInterface *sfi = field->query_scalar_interface();
+	VectorFieldInterface *vfi = field->query_vector_interface();
+	string units;
+	if (field->get_property("units", units))
+	  cmap->units=units;
+      }
+      ++pi;
+    }
   } else {
     port_range_type range = get_iports("Field");
     if (range.first == range.second)
