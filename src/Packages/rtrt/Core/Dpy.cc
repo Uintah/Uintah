@@ -1204,7 +1204,7 @@ void Dpy::change_nworkers(int num) {
   if (newnum >= 1 && newnum <= SCIRun::Thread::numProcessors())
     numThreadsRequested_new += num;
   else
-    cerr << "Dpy::change_nworkers:: Number of threads requested ("<<num<<") is outside the acceptable range [1, "<<SCIRun::Threads::numProcessors()<<"].\n";
+    cerr << "Dpy::change_nworkers:: Number of threads requested ("<<num<<") is outside the acceptable range [1, "<<SCIRun::Thread::numProcessors()<<"].\n";
 }
 
 #if 0 /////////////////////////////////////////////////////////
