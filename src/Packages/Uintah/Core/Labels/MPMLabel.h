@@ -118,6 +118,7 @@ using std::vector;
       const VarLabel* KineticEnergyLabel;
       const VarLabel* ThermalEnergyLabel;
       const VarLabel* TotalMassLabel;
+      const VarLabel* NeedAddMPMMaterialLabel;
       const VarLabel* BndyForceLabel[6];
       const VarLabel* BndyContactAreaLabel[6];
       const VarLabel* CenterOfMassPositionLabel;
