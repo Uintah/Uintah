@@ -13,16 +13,16 @@
 #include <SCICore/Malloc/Allocator.h>
 #include "DaVinci.h"
 #include "graphview.h"
-#include "TaskGraph.h"
+#include "GV_TaskGraph.h"
 
 using namespace std;
 using namespace SCICore::Exceptions;
 
-static ostream& operator<<(ostream& out, const Task* task);
+static ostream& operator<<(ostream& out, const GV_Task* task);
 static string readline(int fd);
 static void writeline(int fd, string str);
 
-static void displayAttributes(std::ostream& out, const Task* task);
+static void displayAttributes(std::ostream& out, const GV_Task* task);
 static void displayAttributes(std::ostream& out, const Edge* edge);
 static const char* getColor(float percent /* max incl path / critical path */,
 			    float thresholdPercent);
@@ -122,7 +122,7 @@ DaVinci::~DaVinci()
 }
 
 void
-DaVinci::setGraph(const TaskGraph* graph)
+DaVinci::setGraph(const GV_TaskGraph* graph)
 {
   if (graph == NULL)
     return;
@@ -132,8 +132,8 @@ DaVinci::setGraph(const TaskGraph* graph)
   graph_str << "graph(new_placed([";
 
   bool first_node = true;
-  const list<Task*> tasks = graph->getTasks();
-  for (list<Task*>::const_iterator task_iter = tasks.begin();
+  const list<GV_Task*> tasks = graph->getTasks();
+  for (list<GV_Task*>::const_iterator task_iter = tasks.begin();
        task_iter != tasks.end(); task_iter++) {
 
    if (doExclusion && ((*task_iter)->getMaxPathPercent() < (*task_iter)->getGraph()->getThresholdPercent()))
@@ -286,7 +286,7 @@ void DaVinci::parseAnswer(char* cmd, std::list<char*>& args)
 
 static
 ostream&
-operator<<(ostream& out, const Task* task)
+operator<<(ostream& out, const GV_Task* task)
 {  
   out << "l(\"" << task->getName()
       << "\",n(\"\",[a(\"OBJECT\",\"" << task->getName()
@@ -306,7 +306,7 @@ operator<<(ostream& out, const Task* task)
     else
       first_edge = false;
 	    
-    Task* dep = (*dep_edge_iter)->getTarget();
+    GV_Task* dep = (*dep_edge_iter)->getTarget();
     out << "l(\"" << task->getName() << "->" << dep->getName()
 	<< "\",e(\"\",[a(\"_DIR\",\"inverse\"),";
     displayAttributes(out, (*dep_edge_iter));
@@ -375,7 +375,7 @@ writeline(int fd, string str)
 
 
 static
-void displayAttributes(ostream& out, const Task* task)
+void displayAttributes(ostream& out, const GV_Task* task)
 {
   float thresholdPercent = task->getGraph()->getThresholdPercent();
   float maxPathPercent = task->getMaxPathPercent();

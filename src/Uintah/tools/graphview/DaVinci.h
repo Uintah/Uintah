@@ -6,8 +6,8 @@
 #include <list>
 #include <unistd.h>
 
-class TaskGraph;
-class Task;
+class GV_TaskGraph;
+class GV_Task;
 class Edge;
 
 class DaVinci {
@@ -27,7 +27,7 @@ public:
 
   void handleInput();
 
-  void setGraph(const TaskGraph* graph);
+  void setGraph(const GV_TaskGraph* graph);
   void setOrientation(Orientation orientation);
   void setFontSize(int font_size);
 
