@@ -71,7 +71,7 @@ PSELIBS := Dataflow/Network Dataflow/Widgets Dataflow/Ports \
 	Core/TkExtensions Core/Algorithms/Visualization \
 	Core/GLVolumeRenderer Core/GeomInterface Core/Volume
 
-LIBS := $(FTGL_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(FTGL_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 INCLUDES += $(FTGL_INCLUDE)
 
