@@ -41,11 +41,6 @@ Color Color::operator*(const Color& c) const
     return Color(_r*c._r, _g*c._g, _b*c._b);
 }
 
-Color Color::operator+(const Color& c) const
-{
-    return Color(_r+c._r, _g+c._g, _b+c._b);
-}
-
 void Pio(Piostream& stream, Color& p)
 {
     stream.begin_cheap_delim();

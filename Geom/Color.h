@@ -48,6 +48,10 @@ public:
     inline float g() const {return _g;}
     inline float b() const {return _b;}
 
+    inline void r( const float v ) { _r = v; }
+    inline void g( const float v ) { _g = v; }
+    inline void b( const float v ) { _b = v; }
+
     friend void Pio(Piostream&, Color&);
     friend class HSVColor;
 
@@ -71,6 +75,12 @@ Color::Color(const Color& c)
 inline
 Color::~Color()
 {
+}
+
+inline Color
+Color::operator+(const Color& c) const
+{
+    return Color(_r+c._r, _g+c._g, _b+c._b);
 }
 
 inline
