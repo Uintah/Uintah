@@ -4,6 +4,7 @@
 #include "Connectivity.h"
 #include "CrackFace.h"
 #include "CellsNeighbor.h"
+#include "IndexExchange.h"
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -69,8 +70,7 @@ void NormalFracture::computeBoundaryContact(
     new_dw->get(pX_p, lb->pXXLabel, pset_p);
 
     //particle index exchange from patch to patch+ghost
-    vector<int> pIdxEx( pset_p->numParticles() );
-    fit(pset_p,pX_p,pset_pg,pX_pg,pIdxEx);
+    IndexExchange indexExchange(pset_p,pX_p,pset_pg,pX_pg);
 
     Lattice lattice(pX_pg);
 
@@ -82,7 +82,7 @@ void NormalFracture::computeBoundaryContact(
       iter != pset_p->end(); iter++)
     {
       particleIndex pIdx_p = *iter;
-      particleIndex pIdx_pg = pIdxEx[pIdx_p];
+      particleIndex pIdx_pg = indexExchange.getPatchAndGhostIndex(pIdx_p);
 
       const Point& particlePoint = pX_pg[pIdx_pg];
       double size0 = pow(pVolume_pg[pIdx_pg],1./3.);
@@ -194,8 +194,7 @@ void NormalFracture::computeConnectivity(
     ParticleVariable<Point>  pX_p;
     new_dw->get(pX_p, lb->pXXLabel, pset_p);
 
-    vector<int> pIdxEx( pset_p->numParticles() );
-    fit(pset_p,pX_p,pset_pg,pX_pg,pIdxEx);
+    IndexExchange indexExchange(pset_p,pX_p,pset_pg,pX_pg);
 
     ParticleVariable<int>       pConnectivity_p_new;
     ParticleVariable<int>       pIsolated_p_new;
@@ -240,9 +239,8 @@ void NormalFracture::computeConnectivity(
     for(ParticleSubset::iterator iter = pset_p->begin();
           iter != pset_p->end(); iter++)
     {
-      particleIndex pIdx_p, pIdx_pg;
-      pIdx_p = *iter;
-      pIdx_pg = pIdxEx[pIdx_p];
+      particleIndex pIdx_p = *iter;
+      particleIndex pIdx_pg = indexExchange.getPatchAndGhostIndex(pIdx_p);
       
       pIsolated_p_new[pIdx_p] = pIsolated_pg[pIdx_pg];
       
@@ -376,8 +374,8 @@ void NormalFracture::computeFracture(
     old_dw->get(pMass_p, lb->pMassLabel, pset_p);
     
     //particle index exchange from patch to patch+ghost
-    vector<int> pIdxEx( pset_p->numParticles() );
-    fit(pset_p,pX_p,pset_pg,pX_pg,pIdxEx);
+    IndexExchange indexExchange(pset_p,pX_p,pset_pg,pX_pg);
+
     Lattice lattice(pX_pg);
 
     ParticleVariable<int> pIsBroken_p_new;
@@ -397,7 +395,7 @@ void NormalFracture::computeFracture(
           iter != pset_p->end(); iter++)
     {
       particleIndex pIdx_p = *iter;
-      particleIndex pIdx_pg = pIdxEx[pIdx_p];
+      particleIndex pIdx_pg = indexExchange.getPatchAndGhostIndex(pIdx_p);
     
       pIsBroken_p_new[pIdx_p] = pIsBroken_p[pIdx_p];
       pStress_p_new[pIdx_p] = pStress_p[pIdx_p];
@@ -530,8 +528,7 @@ void NormalFracture::computeCrackExtension(
     new_dw->get(pRotationRate_p, lb->pRotationRateLabel, pset_p);
 
     //Lattice for particle neighbor finding
-    vector<int> pIdxEx( pset_p->numParticles() );
-    fit(pset_p,pX_p,pset_pg,pX_pg,pIdxEx);
+    IndexExchange indexExchange(pset_p,pX_p,pset_pg,pX_pg);
     Lattice lattice(pX_pg);
 
     //variables to be computed
@@ -546,7 +543,7 @@ void NormalFracture::computeCrackExtension(
           iter != pset_p->end(); iter++)
     {
       particleIndex pIdx_p = *iter;
-      particleIndex pIdx_pg = pIdxEx[pIdx_p];
+      particleIndex pIdx_pg = indexExchange.getPatchAndGhostIndex(pIdx_p);
     
       if(pExtensionDirection_pg[pIdx_pg].length2()>0.5 && 
          pIsBroken_pg[pIdx_pg])
