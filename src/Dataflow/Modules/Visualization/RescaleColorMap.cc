@@ -49,6 +49,7 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
+#include <values.h>
 
 namespace SCIRun {
 
@@ -113,9 +114,9 @@ RescaleColorMap::execute()
     if (range.first == range.second)
       return;
     port_map_type::iterator pi = range.first;
-    double minv, maxv;
-    minv=maxv=0; // initialize them to the compiler will stop warning us about
-                 // possibly using unitialized variables
+    // initialize the following so that the compiler will stop warning us about
+    // possibly using unitialized variables
+    double minv = MAXDOUBLE, maxv = -MAXDOUBLE;
     int have_some=0;
     while (pi != range.second)
     {
