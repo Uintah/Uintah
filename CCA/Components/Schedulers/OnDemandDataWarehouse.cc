@@ -6,6 +6,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/FancyAssert.h>
 
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -949,7 +950,8 @@ OnDemandDataWarehouse::put(NCVariableBase& var,
 			   int matlIndex, const Patch* patch,
 			   bool replace /*= false*/)
 {
-  putGridVar(*var.clone(), d_ncDB, label, matlIndex, patch, replace);
+  putGridVar<Patch::NodeBased>(*var.clone(), d_ncDB, label, matlIndex, patch,
+			       replace);
 }
 
 void
@@ -1036,7 +1038,8 @@ OnDemandDataWarehouse::put(CCVariableBase& var, const VarLabel* label,
 			   int matlIndex, const Patch* patch,
 			   bool replace /*= false*/)
 {
-  putGridVar(*var.clone(), d_ccDB, label, matlIndex, patch, replace);  
+  putGridVar<Patch::CellBased>(*var.clone(), d_ccDB, label, matlIndex, patch,
+			       replace);  
 }
 
 void
@@ -1092,7 +1095,8 @@ OnDemandDataWarehouse::put(SFCXVariableBase& var,
 			   int matlIndex, const Patch* patch,
 			   bool replace /*= false*/)
 {
-  putGridVar(*var.clone(), d_sfcxDB, label, matlIndex, patch, replace);
+  putGridVar<Patch::XFaceBased>(*var.clone(), d_sfcxDB, label, matlIndex,
+				patch, replace);
 }
 
 void
@@ -1148,7 +1152,8 @@ OnDemandDataWarehouse::put(SFCYVariableBase& var,
 			   int matlIndex, const Patch* patch,
 			   bool replace /*= false*/)
 {
-  putGridVar(*var.clone(), d_sfcyDB, label, matlIndex, patch, replace);  
+  putGridVar<Patch::YFaceBased>(*var.clone(), d_sfcyDB, label, matlIndex,
+				patch, replace);  
 }
 
 void
@@ -1204,7 +1209,8 @@ OnDemandDataWarehouse::put(SFCZVariableBase& var,
 			   int matlIndex, const Patch* patch,
 			   bool replace /*= false*/)
 {
-  putGridVar(*var.clone(), d_sfczDB, label, matlIndex, patch, replace);
+  putGridVar<Patch::ZFaceBased>(*var.clone(), d_sfczDB, label, matlIndex,
+				patch, replace);
 }
 
 bool
@@ -1237,7 +1243,7 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
 {
   d_lock.readLock();
    checkGetAccess(label, matlIndex, patch);
-     
+
    Variable* var = NULL;
    if(d_ncDB.exists(label, matlIndex, patch))
       var = d_ncDB.get(label, matlIndex, patch);
@@ -1332,7 +1338,7 @@ getGridVar(VariableBase& var, DWDatabase& db,
 	   const VarLabel* label, int matlIndex, const Patch* patch,
 	   Ghost::GhostType gtype, int numGhostCells)
 {
-  ASSERT(basis == Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));  
+  ASSERTEQ(basis, Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));  
 
   if(!db.exists(label, matlIndex, patch))
     throw UnknownVariable(label->getName(), patch, matlIndex);
@@ -1340,13 +1346,19 @@ getGridVar(VariableBase& var, DWDatabase& db,
   
   IntVector low = patch->getLowIndex(basis);
   IntVector high = patch->getHighIndex(basis);
+
+  // The data should have been put in the database,
+  // windowed with this low and high.
+  ASSERTEQ(var.getLow(), low);
+  ASSERTEQ(var.getHigh(), high);
   
   if (gtype == Ghost::None) {
     if(numGhostCells != 0)
       throw InternalError("Ghost cells specified with task type none!\n");
     // if this assertion fails, then it is having problems getting the
     // correct window of the data.
-    ASSERT(var.rewindow(low, high));
+    bool no_realloc = var.rewindow(low, high);
+    ASSERT(no_realloc);
   }
   else {
     IntVector dn = high - low;
@@ -1567,13 +1579,14 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
   var.rewindow(lowIndex, highIndex);
 }
 
-template <class VariableBase, class DWDatabase>
+template <Patch::VariableBasis basis, class VariableBase, class DWDatabase>
 void OnDemandDataWarehouse::
 putGridVar(VariableBase& var, DWDatabase& db,
 	   const VarLabel* label, int matlIndex, const Patch* patch,
 	   bool replace /* = false */)
 {
   ASSERT(!d_finalized);
+  ASSERTEQ(basis, Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));    
  d_lock.writeLock();  
 
   checkPutAccess(label, matlIndex, patch, replace);
@@ -1588,7 +1601,20 @@ putGridVar(VariableBase& var, DWDatabase& db,
 			  label->getName());
 
    // Put it in the database
-   db.put(label, matlIndex, patch, &var, true);
+   IntVector low = patch->getLowIndex(basis);
+   IntVector high = patch->getHighIndex(basis);
+   if (Min(var.getLow(), low) != var.getLow() ||
+       Max(var.getHigh(), high) != var.getHigh()) {
+     ostringstream msg_str;
+     msg_str << "put: Variable's window (" << var.getLow() << " - " << var.getHigh() << ") must encompass patches extent (" << low << " - " << high;
+     throw InternalError(msg_str.str());
+   }
+   VariableBase* clone = var.clone();
+   bool no_realloc = clone->rewindow(low, high);
+   // error would have been thrown above if the any reallocation would be
+   // needed
+   ASSERT(no_realloc);
+   db.put(label, matlIndex, patch, clone, true);
   d_lock.writeUnlock();
 }
 

@@ -247,7 +247,7 @@ private:
 			      const Patch* patch,
 			      Ghost::GhostType gtype, int numGhostCells);
 
-   template <class VariableBase, class DWDatabase>
+   template <Patch::VariableBasis basis, class VariableBase, class DWDatabase>
    void putGridVar(VariableBase& var, DWDatabase& db,
 		   const VarLabel* label, int matlIndex, const Patch* patch,
 		   bool replace = false);
