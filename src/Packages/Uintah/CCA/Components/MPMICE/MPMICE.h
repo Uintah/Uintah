@@ -67,6 +67,8 @@ public:
   virtual void scheduleInitialize(const LevelP& level,
 				  SchedulerP&);
 
+  virtual void restartInitialize();
+
   //////////
   // Insert Documentation Here:
   virtual void scheduleComputeStableTimestep(const LevelP& level,
