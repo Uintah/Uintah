@@ -659,12 +659,12 @@ void Dpy::get_input()
 	  ball->Mouse(mouse);
 	  ball->BeginDrag();
 
-	  prev_time[0] = Time::currentSeconds();
+	  prev_time[0] = SCIRun::Time::currentSeconds();
 	  prev_quat[0] = mouse;
 	  prev_time[1] = prev_time[2] = -100;
 
 	  ball->Update();
-	  last_time=Time::currentSeconds();
+	  last_time=SCIRun::Time::currentSeconds();
 	  break;
 	}
       case Button3:
@@ -697,7 +697,7 @@ void Dpy::get_input()
 
 	  prev_time[2] = prev_time[1];
 	  prev_time[1] = prev_time[0];
-	  prev_time[0] = Time::currentSeconds();
+	  prev_time[0] = SCIRun::Time::currentSeconds();
 
 	  ball->Mouse(mouse);
 	  ball->Update();
@@ -728,7 +728,7 @@ void Dpy::get_input()
 	  camera->eye=camera->lookat+z_a*eye_dist;
 	  camera->setup();
 			
-	  last_time=Time::currentSeconds();
+	  last_time=SCIRun::Time::currentSeconds();
 	  //inertia_mode=0;
 	}
       break;
@@ -771,7 +771,7 @@ void Dpy::get_input()
       case Button2:
 	{
 #if 1
-	  if(Time::currentSeconds()-last_time < .1){
+	  if(SCIRun::Time::currentSeconds()-last_time < .1){
 	    // now setup the normalized quaternion
 #endif
 	    Transform tmp_trans;
@@ -1015,7 +1015,7 @@ void Dpy::run()
   priv->last_time=0;
   //HVect prev_quat[3];
   //double eye_dist=0;
-  double last_frame=Time::currentSeconds();
+  double last_frame=SCIRun::Time::currentSeconds();
   bool draw_framerate=true;
   priv->draw_pstats=false;
   priv->draw_rstats=false;
@@ -1043,7 +1043,7 @@ void Dpy::run()
   int accum_count;
   priv->exposed=true;
   xlock.unlock();
-  double lasttime=Time::currentSeconds();
+  double lasttime=SCIRun::Time::currentSeconds();
   double cum_ttime=0;
   double cum_dt=0;
   priv->stereo=false;
@@ -1078,7 +1078,7 @@ void Dpy::run()
     for(;;){
       // Sync with the rendering processes...
       frame++;
-      drawstats[showing_scene]->add(Time::currentSeconds(), Color(1,0,0));
+      drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(), Color(1,0,0));
       barrier->wait(nworkers+1);
       // exit if you are supposed to
       if (scene->rtrt_engine->stop_execution()) {
@@ -1097,7 +1097,7 @@ void Dpy::run()
 	  changed=true;
 	}
 	if(animate && scene->animate)
-	  obj->animate(Time::currentSeconds(), changed);
+	  obj->animate(SCIRun::Time::currentSeconds(), changed);
 	if(scene->shadow_mode != shadow_mode){
 	  scene->shadow_mode=shadow_mode;
 	  changed=true;
@@ -1139,7 +1139,7 @@ void Dpy::run()
 	  scene->yoffset=0;
 	}
       }
-      drawstats[showing_scene]->add(Time::currentSeconds(), Color(0,1,0));
+      drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(), Color(0,1,0));
       // sync all the workers.  scene->get_image(rendering_scene) should now
       // be completed
       barrier->wait(nworkers+1);
@@ -1152,12 +1152,12 @@ void Dpy::run()
       }
       counter--;
       // This is the last stat for the rendering scene (cyan)
-      drawstats[showing_scene]->add(Time::currentSeconds(), Color(0,1,1));
+      drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(), Color(0,1,1));
       counters->end_frame();
 	
       Stats* st=drawstats[rendering_scene];
       st->reset();
-      double tnow=Time::currentSeconds();
+      double tnow=SCIRun::Time::currentSeconds();
       st->add(tnow, Color(1,0,0));
       double dt=tnow-last_frame;
       double framerate=1./dt;
@@ -1232,12 +1232,12 @@ void Dpy::run()
       midchanged=changed;
       last_changed=midchanged;
       // color blue
-      st->add(Time::currentSeconds(), Color(0,0,1));
-      //      st->add(Time::currentSeconds(), Color(0.4,0.2,1));
+      st->add(SCIRun::Time::currentSeconds(), Color(0,0,1));
+      //      st->add(SCIRun::Time::currentSeconds(), Color(0.4,0.2,1));
       priv->camera=scene->get_camera(showing_scene);
       if (display_frames) {
       // color 
-      st->add(Time::currentSeconds(), Color(1,0.5,0));
+      st->add(SCIRun::Time::currentSeconds(), Color(1,0.5,0));
       if(!bench && draw_framerate){
 	char buf[100];
 	sprintf(buf, "%3.1ffps", framerate);
@@ -1249,7 +1249,7 @@ void Dpy::run()
 	printString(fontbase, 10, 3, buf, Color(1,1,1));
       }
       // color light blue
-      st->add(Time::currentSeconds(), Color(0.5,0.5,1));
+      st->add(SCIRun::Time::currentSeconds(), Color(0.5,0.5,1));
       if(draw_pstats){
 	Stats* mystats=drawstats[showing_scene];
 	if(im->get_stereo()){
@@ -1264,7 +1264,7 @@ void Dpy::run()
 		   cum_dt);
       }
       // color grey
-      st->add(Time::currentSeconds(), Color(0.5,0.5,0.5));
+      st->add(SCIRun::Time::currentSeconds(), Color(0.5,0.5,0.5));
       if(draw_rstats){
 	if(im->get_stereo()){
 	  glDrawBuffer(GL_BACK_LEFT);
@@ -1277,15 +1277,15 @@ void Dpy::run()
 		   showing_scene, fontbase2, priv->xres, priv->yres,
 		   fontInfo2, left, up, dt);
       }
-      st->add(Time::currentSeconds(), Color(1,0,1));
+      st->add(SCIRun::Time::currentSeconds(), Color(1,0,1));
       glFinish();
 #ifdef GL_INCLUDE
-      st->add(Time::currentSeconds(), Color(1,0.5,1));
+      st->add(SCIRun::Time::currentSeconds(), Color(1,0.5,1));
       if(!dontswap)
 	glXSwapBuffers(priv->dpy, win);
       XFlush(priv->dpy);
 #endif
-      st->add(Time::currentSeconds(), Color(1,0.5,0.3));
+      st->add(SCIRun::Time::currentSeconds(), Color(1,0.5,0.3));
       } // end if (display_frames)
       
       if(scene->logframes){
@@ -1293,7 +1293,7 @@ void Dpy::run()
 	  if(!scene->frametime_fp){
 	      scene->frametime_fp=fopen("framerate.out", "w");
 	  }
-	  double curtime=Time::currentSeconds();
+	  double curtime=SCIRun::Time::currentSeconds();
 	  double dt=curtime-scene->lasttime;
 	  scene->lasttime=curtime;
 	  Camera* camera=scene->get_camera(showing_scene);
@@ -1322,16 +1322,16 @@ void Dpy::run()
 	  --benchstartcount;
 	  if(benchstartcount==0){
 	    cerr << "Warmup done, starting bench\n";
-	    benchstart=Time::currentSeconds();
+	    benchstart=SCIRun::Time::currentSeconds();
 	  }
 	} else if(!--benchcount){
-	  double dt=Time::currentSeconds()-benchstart;
+	  double dt=SCIRun::Time::currentSeconds()-benchstart;
 	  cerr << "Benchmark completed in " <<  dt << " seconds ("
 	       << benchframes/dt << " frames/second)\n";
 	  Thread::exitAll(0);
 	}
       }
-      st->add(Time::currentSeconds(), Color(1,0,0));
+      st->add(SCIRun::Time::currentSeconds(), Color(1,0,0));
       rendering_scene=1-rendering_scene;
       showing_scene=1-showing_scene;
     }
@@ -1368,7 +1368,7 @@ void Dpy::run()
 #endif
 	//do_synch=1; // do the right thing for barriers...
       } else {
-	starttime = Time::currentSeconds();
+	starttime = SCIRun::Time::currentSeconds();
       }
 
       bool changed=true;
@@ -1380,7 +1380,7 @@ void Dpy::run()
 	  changed=true;
 	}
 	if(animate)
-	  obj->animate(Time::currentSeconds(), changed);
+	  obj->animate(SCIRun::Time::currentSeconds(), changed);
 	if(scene->shadow_mode != shadow_mode){
 	  scene->shadow_mode=shadow_mode;
 	  changed=true;
@@ -1426,16 +1426,16 @@ void Dpy::run()
       // no stats for frameless stuff for now...
 
 #if 0
-      drawstats[showing_scene]->add(Time::currentSeconds(), Color(0,1,0));
+      drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(), Color(0,1,0));
 
       // This is the last stat for the rendering scene (cyan)
-      drawstats[showing_scene]->add(Time::currentSeconds(), Color(0,1,1));
+      drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(), Color(0,1,1));
       counters->end_frame();
       
       Stats* st=drawstats[rendering_scene];
       st->reset();
 #endif
-      double tnow=Time::currentSeconds();
+      double tnow=SCIRun::Time::currentSeconds();
       //st->add(tnow, Color(1,0,0));
       double dt=tnow-last_frame;
       double framerate=1./dt;
@@ -1511,7 +1511,7 @@ void Dpy::run()
       Image* im=scene->get_image(showing_scene);
       midchanged=changed;
       last_changed=midchanged;
-      //st->add(Time::currentSeconds(), Color(0,0,1));
+      //st->add(SCIRun::Time::currentSeconds(), Color(0,0,1));
       
       if(!bench && draw_framerate){
 	char buf[100];
@@ -1548,14 +1548,14 @@ void Dpy::run()
 		   showing_scene, fontbase2, priv->xres, priv->yres,
 		   fontInfo2, left, up, dt);
       }
-      //st->add(Time::currentSeconds(), Color(1,0,1));
+      //st->add(SCIRun::Time::currentSeconds(), Color(1,0,1));
       glFinish();
 #ifdef GL_INCLUDE
       if(!dontswap)
 	glXSwapBuffers(priv->dpy, win);
       XFlush(priv->dpy);
 #endif
-      //st->add(Time::currentSeconds(), Color(1,1,0));
+      //st->add(SCIRun::Time::currentSeconds(), Color(1,1,0));
       
       int did_synch=synch_frameless;
 
@@ -1605,22 +1605,22 @@ void Dpy::run()
 	  --benchstartcount;
 	  if(benchstartcount==0){
 	    cerr << "Warmup done, starting bench\n";
-	    benchstart=Time::currentSeconds();
+	    benchstart=SCIRun::Time::currentSeconds();
 	  }
 	} else if(!--benchcount){
-	  double dt=Time::currentSeconds()-benchstart;
+	  double dt=SCIRun::Time::currentSeconds()-benchstart;
 	  cerr << "Benchmark completed in " <<  dt << " seconds ("
 	       << benchframes/dt << " frames/second)\n";
 	  Thread::exitAll(0);
 	}
       }
-      //st->add(Time::currentSeconds(), Color(1,0,0));
+      //st->add(SCIRun::Time::currentSeconds(), Color(1,0,0));
       //rendering_scene=1-rendering_scene;
       //showing_scene=1-showing_scene;
 
-      double endtime = Time::currentSeconds();
+      double endtime = SCIRun::Time::currentSeconds();
       if (!synch_frameless)
-	Time::waitFor(FrameRate - (endtime-starttime));
+	SCIRun::Time::waitFor(FrameRate - (endtime-starttime));
     }
   }
 }
