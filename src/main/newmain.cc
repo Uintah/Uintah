@@ -71,130 +71,114 @@ usage()
 void
 parse_args( int argc, char *argv[])
 {
-  for( int cnt = 0; cnt < argc; cnt++ )
-    {
+  for( int cnt = 0; cnt < argc; cnt++ ) {
     std::string arg( argv[ cnt ] );
     if( ( arg == "--version" ) || ( arg == "-version" )
-        || ( arg == "-v" ) || ( arg == "--v" ) )
-      {
+        || ( arg == "-v" ) || ( arg == "--v" ) ) {
       std::cout << "Version: " << VERSION << std::endl;
       exit( 0 );
-      }
-    else if ( ( arg == "--help" ) || ( arg == "-help" ) ||
-              ( arg == "-h" ) ||  ( arg == "--h" ) )
-      {
+    } else if ( ( arg == "--help" ) || ( arg == "-help" ) ||
+              ( arg == "-h" ) ||  ( arg == "--h" ) ) {
       usage();
-      }
-    else if ( ( arg == "--builder" ) || ( arg == "-builder" ) ||
-              ( arg == "-b" ) ||  ( arg == "--b" ) )
-      {
-      if(++cnt<argc)
-        {
+    } else if ( ( arg == "--builder" ) || ( arg == "-builder" ) ||
+              ( arg == "-b" ) ||  ( arg == "--b" ) ) {
+      if(++cnt<argc) {
         defaultBuilder=argv[cnt];
-        }
-      else
-        {
+      } else {
         std::cerr << "Unkown builder."<<std::endl;
         usage();
-        }
       }
-    else
-      {
+    } else {
       struct stat buf;
-      if (stat(arg.c_str(),&buf) < 0)
-        {
+      if (stat(arg.c_str(),&buf) < 0) {
         std::cerr << "Couldn't find net file " << arg
                   << ".\nNo such file or directory.  Exiting." << std::endl;
         exit(0);
-        }
       }
     }
+  }
 }
 
 int
-main(int argc, char *argv[] )
-{
+main(int argc, char *argv[]) {
   bool framework = true;
   MPI_Init(&argc,&argv);
   
   parse_args( argc, argv);
   
-  try
-    {
+  try {
     // TODO: Move this out of here???
     PIDL::initialize();
     PIDL::isfrwk=true;
     //all threads in the framework share the same
     //invocation id
     PRMI::setInvID(ProxyID(1,0));
-    }
-  catch(const Exception& e)
-    {
+  }
+  catch(const Exception& e) {
     std::cerr << "Caught exception:\n";
     std::cerr << e.message() << std::endl;
     abort();
-    }
-  catch(...)
-    {
+  }
+  catch(...) {
     std::cerr << "Caught unexpected exception!\n";
     abort();
-    }
+  }
   
   // Create a new framework
-  try
-    {
+  try {
     AbstractFramework::pointer sr;
-    if(framework)
-      {
+    if(framework) {
       sr = AbstractFramework::pointer(new SCIRunFramework());
       std::cerr << "URL to framework:\n" << sr->getURL().getString() << std::endl;
       //ofstream f("framework.url");
       //std::string s;
       //f<<sr->getURL().getString();
       //f.close();
-      }
-    else
-      {
+    } else {
       std::cerr << "Not finished: pass url to existing framework\n";
-      }
+    }
     
     sci::cca::Services::pointer main_services
       = sr->getServices("SCIRun main", "main", sci::cca::TypeMap::pointer(0));
+
+    sci::cca::ports::FrameworkProperties::pointer fwkProperties =
+      pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
+			main_services->getPort("cca.FrameworkProperties"));
+    if (fwkProperties.isNull()) {
+      std::cerr << "Fatal Error: Cannot find framework properties service\n";
+      Thread::exitAll(1);
+    }
+
     sci::cca::ports::BuilderService::pointer builder
       = pidl_cast<sci::cca::ports::BuilderService::pointer>(
                           main_services->getPort("cca.BuilderService"));
-    if(builder.isNull())
-      {
+    if(builder.isNull()) {
       std::cerr << "Fatal Error: Cannot find builder service\n";
       Thread::exitAll(1);
-      }
+    }
     
 #   if !defined(HAVE_QT)
     defaultBuilder="txt";
 #   endif
     
-    if(defaultBuilder=="qt")
-      {
+    if(defaultBuilder=="qt") {
       ComponentID::pointer gui_id =
         builder->createInstance("QtBuilder", "cca:SCIRun.Builder",
                                   sci::cca::TypeMap::pointer(0));
-      if(gui_id.isNull())
-        {
+      if(gui_id.isNull()) {
         std::cerr << "Cannot create component: cca:SCIRun.Builder\n";
         Thread::exitAll(1);
-        }
       }
-    else
-      {
+    } else {
       ComponentID::pointer gui_id =
         builder->createInstance("TxtBuilder", "cca:SCIRun.TxtBuilder",
                                 sci::cca::TypeMap::pointer(0));
-      if(gui_id.isNull())
-        {
+      if(gui_id.isNull()) {
         std::cerr << "Cannot create component: cca:SCIRun.TxtBuilder\n";
         Thread::exitAll(1);
-        }
       }
+    }
+    main_services->releasePort("cca.FrameworkProperties");
     main_services->releasePort("cca.BuilderService");
     std::cout << "SCIRun " << VERSION << " started..." << std::endl;
   
@@ -205,17 +189,15 @@ main(int argc, char *argv[] )
     std::cout << "serveObjects done!\n";
     PIDL::finalize();
     
-    }
-  catch(const Exception& e)
-    {
+  }
+  catch(const Exception& e) {
     std::cerr << "Caught exception:\n";
     std::cerr << e.message() << std::endl;
     abort();
-    }
-  catch(...)
-    {
+  }
+  catch(...) {
     std::cerr << "Caught unexpected exception!\n";
     abort();
-    }
+  }
   return 0;
 }
