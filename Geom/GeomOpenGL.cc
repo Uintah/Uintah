@@ -34,6 +34,7 @@
 #include <Geom/Tetra.h>
 #include <Geom/Torus.h>
 #include <Geom/Tri.h>
+#include <Geom/Triangles.h>
 #include <Geom/Tube.h>
 #include <Geom/TriStrip.h>
 #include <Geom/View.h>
@@ -926,6 +927,50 @@ void GeomTri::draw(DrawInfoOpenGL* di, Material* matl, double)
 	verts[1]->emit_all(di);
 	verts[2]->emit_all(di);
 	glEnd();
+	break;
+    }
+}
+
+void GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+    pre_draw(di, matl, 1);
+    if(verts.size() <= 2)
+	return;
+    di->polycount+=verts.size()/3;
+    switch(di->get_drawtype()){
+    case DrawInfoOpenGL::WireFrame:
+	{
+	    for(int i=0;i<verts.size();i+=3){
+		glBegin(GL_LINE_LOOP);
+		verts[i]->emit_point(di);
+		verts[i+1]->emit_point(di);
+		verts[i+2]->emit_point(di);
+		glEnd();
+	    }
+	}
+	break;
+    case DrawInfoOpenGL::Flat:
+	{
+	    glBegin(GL_TRIANGLES);
+	    for(int i=0;i<verts.size();i++){
+		verts[i]->emit_point(di);
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfoOpenGL::Gouraud:
+    case DrawInfoOpenGL::Phong:
+	{
+	    glBegin(GL_TRIANGLES);
+	    for(int i=0;i<verts.size();i+=3){
+		glNormal3d(normals[i/3].x(), normals[i/3].y(), 
+			   normals[i/3].z());
+		verts[i]->emit_all(di);
+		verts[i+1]->emit_all(di);
+		verts[i+2]->emit_all(di);
+	    }
+	    glEnd();
+	}
 	break;
     }
 }
