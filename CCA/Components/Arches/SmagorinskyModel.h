@@ -77,16 +77,12 @@ public:
       // Schedule the recomputation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
-      virtual void sched_reComputeTurbSubmodel(SchedulerP&, const PatchSet* patches,
-					       const MaterialSet* matls);
+      virtual void sched_reComputeTurbSubmodel(SchedulerP&,
+					       const PatchSet* patches,
+					       const MaterialSet* matls,
+				 	       const int Runge_Kutta_current_step,
+				 	       const bool Runge_Kutta_last_step);
 
-      virtual void sched_computeTurbSubmodelPred(SchedulerP&, 
-						 const PatchSet* patches,
-						 const MaterialSet* matls);
-
-      virtual void sched_computeTurbSubmodelInterm(SchedulerP&, 
-						 const PatchSet* patches,
-						 const MaterialSet* matls);
 
 
       // GROUP: Schedule Action :
@@ -95,9 +91,13 @@ public:
       //    [in] 
       //        data User data needed for solve 
       virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
-					       const MaterialSet* matls);
+					       const MaterialSet* matls,
+				 	       const int Runge_Kutta_current_step,
+				 	       const bool Runge_Kutta_last_step);
       virtual void sched_computeScalarDissipation(SchedulerP&, const PatchSet* patches,
-						  const MaterialSet* matls);
+					       const MaterialSet* matls,
+				 	       const int Runge_Kutta_current_step,
+				 	       const bool Runge_Kutta_last_step);
       // GROUP: Access Methods :
       ///////////////////////////////////////////////////////////////////////
       // Get the molecular viscosity
@@ -160,19 +160,10 @@ private:
 				 const PatchSubset* patches,
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw);
+				 DataWarehouse* new_dw,
+				 const int Runge_Kutta_current_step,
+				 const bool Runge_Kutta_last_step);
  
-      void computeTurbSubmodelPred(const ProcessorGroup*,
-				   const PatchSubset* patches,
-				   const MaterialSubset* matls,
-				   DataWarehouse* old_dw,
-				   DataWarehouse* new_dw);
-
-      void computeTurbSubmodelInterm(const ProcessorGroup*,
-				   const PatchSubset* patches,
-				   const MaterialSubset* matls,
-				   DataWarehouse* old_dw,
-				   DataWarehouse* new_dw);
       ///////////////////////////////////////////////////////////////////////
       // Actually Calculate the subgrid scale variance
       //    [in] 
@@ -181,12 +172,16 @@ private:
 				 const PatchSubset* patches,
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw);
+				 DataWarehouse* new_dw,
+				 const int Runge_Kutta_current_step,
+				 const bool Runge_Kutta_last_step);
       void computeScalarDissipation(const ProcessorGroup*,
 				    const PatchSubset* patches,
 				    const MaterialSubset* matls,
 				    DataWarehouse* old_dw,
-				    DataWarehouse* new_dw);
+				    DataWarehouse* new_dw,
+				    const int Runge_Kutta_current_step,
+				    const bool Runge_Kutta_last_step);
 
  protected:
       double d_CF; //model constant

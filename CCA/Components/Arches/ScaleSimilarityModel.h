@@ -34,7 +34,6 @@ WARNING
    none
 ****************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/SmagorinskyModel.h>
 
 namespace Uintah {
@@ -76,8 +75,11 @@ public:
       // Schedule the recomputation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
-      virtual void sched_reComputeTurbSubmodel(SchedulerP&, const PatchSet* patches,
-					       const MaterialSet* matls);
+      virtual void sched_reComputeTurbSubmodel(SchedulerP&,
+				 const PatchSet* patches,
+				 const MaterialSet* matls,
+				 const int Runge_Kutta_current_step,
+				 const bool Runge_Kutta_last_step);
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
@@ -85,10 +87,14 @@ public:
       //    [in] 
       //        data User data needed for solve 
       virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
-					       const MaterialSet* matls);
+					const MaterialSet* matls,
+				 	const int Runge_Kutta_current_step,
+				 	const bool Runge_Kutta_last_step);
 
       virtual void sched_computeScalarDissipation(SchedulerP&, const PatchSet* patches,
-						  const MaterialSet* matls);
+						const MaterialSet* matls,
+				 		const int Runge_Kutta_current_step,
+				 		const bool Runge_Kutta_last_step);
 
 protected:
 
@@ -118,7 +124,9 @@ private:
 				 const PatchSubset* patches,
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw);
+				 DataWarehouse* new_dw,
+				 const int Runge_Kutta_current_step,
+				 const bool Runge_Kutta_last_step);
  
       ///////////////////////////////////////////////////////////////////////
       // Actually Calculate the subgrid scale variance
@@ -128,13 +136,17 @@ private:
 				 const PatchSubset* patches,
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw);
+				 DataWarehouse* new_dw,
+				 const int Runge_Kutta_current_step,
+				 const bool Runge_Kutta_last_step);
 
       void computeScalarDissipation(const ProcessorGroup*,
 				    const PatchSubset* patches,
 				    const MaterialSubset* matls,
 				    DataWarehouse* old_dw,
-				    DataWarehouse* new_dw);
+				    DataWarehouse* new_dw,
+				    const int Runge_Kutta_current_step,
+				    const bool Runge_Kutta_last_step);
 
 private:
       double d_CF; //model constant

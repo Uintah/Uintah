@@ -143,7 +143,8 @@ public:
 				   CellInformation* cellinfo,
 				   double maxAbsU, double maxAbsV,
 				   double maxAbsW,
-				   ArchesVariables* vars);
+				   ArchesVariables* vars,
+				   int wall_celltypeval);
 
 
       void calculateScalarWENOscheme(const ProcessorGroup*,
@@ -152,7 +153,8 @@ public:
 				   CellInformation* cellinfo,
 				   double maxAbsU, double maxAbsV,
 				   double maxAbsW,
-				   ArchesVariables* vars);
+				   ArchesVariables* vars,
+				   int wall_celltypeval);
 
 
       void computeDivergence(const ProcessorGroup*,

@@ -4,6 +4,7 @@
 #define Uintah_Components_Arches_PressureSolver_h
 
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
+#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
@@ -100,7 +101,9 @@ public:
 				     SchedulerP& sched);
 
       void solvePred(const LevelP& level,
-		     SchedulerP&);
+		     SchedulerP&,
+		     const int Runge_Kutta_current_step,
+		     const bool Runge_Kutta_last_step);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule the build of the linearized eqn
@@ -111,7 +114,9 @@ public:
 				     SchedulerP& sched);
 
       void solveCorr(const LevelP& level,
-		     SchedulerP&);
+		     SchedulerP&,
+		     const int Runge_Kutta_current_step,
+		     const bool Runge_Kutta_last_step);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule the build of the linearized eqn
@@ -129,7 +134,9 @@ public:
 					      const MaterialSet* matls);
       
       void solveInterm(const LevelP& level,
-		     SchedulerP&);
+		     SchedulerP&,
+		     const int Runge_Kutta_current_step,
+		     const bool Runge_Kutta_last_step);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule the build of the linearized eqn
@@ -139,6 +146,12 @@ public:
       void sched_pressureLinearSolveInterm(const LevelP& level,
 				     SchedulerP& sched);
 
+	void sched_computeNonlinearTerms(SchedulerP&, 
+					const PatchSet* patches,
+					const MaterialSet* matls,
+					const ArchesLabel* d_lab,
+					const int Runge_Kutta_current_step,
+					const bool Runge_Kutta_last_step);
 
 protected:
 
@@ -274,6 +287,20 @@ private:
 			       DataWarehouse* matrix_dw,
 			       ArchesVariables& pressureVars);
 
+	void computeNonlinearTerms(const ProcessorGroup* pc,
+					const PatchSubset* patches,
+					const MaterialSubset* matls,
+					DataWarehouse* old_dw,
+					DataWarehouse* new_dw,
+					const ArchesLabel* d_lab,
+					const int Runge_Kutta_current_step,
+					const bool Runge_Kutta_last_step);
+
+	void filterNonlinearTerms(const ProcessorGroup* pc,
+					const Patch* patch,
+					int index,
+					CellInformation* cellinfo,
+					ArchesVariables* vars);
 
   
 

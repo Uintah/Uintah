@@ -3531,3 +3531,94 @@ BoundaryCondition::intermcomputePressureBC(const ProcessorGroup* ,
   }
 }
 
+//****************************************************************************
+// Set the boundary conditions for convection fluxes
+//****************************************************************************
+void 
+BoundaryCondition::setFluxBC(const ProcessorGroup*,
+			      const Patch* patch,
+			      int index,
+			      ArchesVariables* vars) 
+{
+  int wall_celltypeval = d_wallBdry->d_cellTypeID;
+
+  // Get the low and high index for the patch and the variables
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+  if (xplus) idxHi = idxHi + IntVector(1,0,0);
+  if (yplus) idxHi = idxHi + IntVector(0,1,0);
+  if (zplus) idxHi = idxHi + IntVector(0,0,1);
+
+  switch(index) {
+  case Arches::XDIR:
+      if (xminus) {
+	int colX = idxLo.x() - 1;
+	for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	  for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+            IntVector currCell(colX, colY, colZ);
+            IntVector xplusCell(colX+1, colY, colZ);
+            IntVector xplusplusCell(colX+2, colY, colZ);
+
+	    if ((vars->cellType[currCell] == wall_celltypeval)
+		&& (!(vars->cellType[xplusCell] == wall_celltypeval))) {
+                     (vars->filteredRhoUjU[0])[xplusplusCell] = 0.0;
+            }
+	  }
+	}
+      }
+    break;
+  case Arches::YDIR:
+      if (xminus) {
+	int colX = idxLo.x() - 1;
+	for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	  for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+            IntVector currCell(colX, colY, colZ);
+            IntVector xplusCell(colX+1, colY, colZ);
+            IntVector yminusCell(colX, colY-1, colZ);
+
+            if ((vars->cellType[currCell] == wall_celltypeval)&&
+                (!((yminus)&&(colY == idxLo.y())))) {
+                     (vars->filteredRhoUjV[0])[xplusCell] = 0.0;
+            }
+            else if ((vars->cellType[yminusCell] == wall_celltypeval)&&
+                     (!(vars->cellType[currCell] == wall_celltypeval))) {
+                     (vars->filteredRhoUjV[0])[xplusCell] = 0.0;
+            }
+	  }
+	}
+      }
+    break;
+  case Arches::ZDIR:
+      if (xminus) {
+	int colX = idxLo.x() - 1;
+	for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	  for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+            IntVector currCell(colX, colY, colZ);
+            IntVector xplusCell(colX+1, colY, colZ);
+            IntVector zminusCell(colX, colY, colZ-1);
+
+            if ((vars->cellType[currCell] == wall_celltypeval)&&
+                (!((zminus)&&(colZ == idxLo.z())))) {
+                     (vars->filteredRhoUjW[0])[xplusCell] = 0.0;
+            }
+            else if ((vars->cellType[zminusCell] == wall_celltypeval)&&
+                     (!(vars->cellType[currCell] == wall_celltypeval))) {
+                     (vars->filteredRhoUjW[0])[xplusCell] = 0.0;
+            }
+	  }
+	}
+      }
+    break;
+  default:
+    cerr << "Invalid Index value" << endl;
+    break;
+  }
+}
+
