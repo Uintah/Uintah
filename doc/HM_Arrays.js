@@ -1,8 +1,8 @@
 HM_Array1 = [
-[150,,,,,,,,,,,,,,,,],
-["Quick Start","",1,0,0],
-["Install SCIRun","InstallGuide/pseInstall.html",1,0,0],
-["Install 3rd Party","InstallGuide/ThirdpartyInfo.html",1,0,0]
+[200,,,,,,,,,,,,,,,,],
+["Quick Start SCIRun Installation","InstallGuide/quickInstall.html",1,0,0],
+["SCIRun Installation and Build Instructions","InstallGuide/pseInstall.html",1,0,0],
+["Thirdparty Installation Information","InstallGuide/ThirdpartyInfo.html",1,0,0]
 ]
 
 HM_Array2 = [
