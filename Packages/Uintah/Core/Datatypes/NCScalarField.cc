@@ -7,7 +7,7 @@
 #include <Uintah/Grid/Grid.h>
 #include "NCScalarField.h"
 #include <values.h>
-#include <ostream>
+#include <iostream>
 using std::vector;
 using std::cerr;
 
