@@ -200,7 +200,6 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 	iter != pset->end(); iter++){
        particleIndex idx = *iter;
 
-       velGrad.set(0.0);
        // Get the node indices that surround the cell
        IntVector ni[MAX_BASIS];
        Vector d_S[MAX_BASIS];
@@ -212,14 +211,17 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
           patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
         }
 
+       velGrad.set(0.0);
        for(int k = 0; k < d_8or27; k++) {
 	const Vector& gvel = gvelocity[ni[k]];
 	 for (int j = 0; j<3; j++){
-	    for (int i = 0; i<3; i++) {
-	      velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
-	    }
+            double d_SXoodx = d_S[k][j] * oodx[j];
+            for (int i = 0; i<3; i++) {
+              velGrad(i+1,j+1) += gvel[i] * d_SXoodx;
+            }
 	 }
        }
+
       T1[idx] = ptang1[idx];
       T2[idx] = ptang2[idx];
 
@@ -234,8 +236,6 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 
       // get the volumetric part of the deformation
       Jvol    = deformationGradient_new[idx].Determinant();
-
-//      double Jinc = deformationGradientInc.Determinant();
 
 //    Compute the rotation using Simo page 244
       Matrix3 C = deformationGradient_new[idx].Transpose()*
@@ -269,7 +269,7 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 	double n = (3.*c)/(m*b);
 //	cout << "n = " << n << endl;
 	if (fabs(n) > 1.0){
-		n = (n/fabs(n));
+          n = (n/fabs(n));
         }
 	double t = atan(sqrt(1-n*n)/n)/3.0;
 //	cout << "t = " << t << endl;
@@ -296,10 +296,6 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 
 //      cout << R << endl << endl;
 
-//      Matrix3 Check = R.Transpose()*R;
-
-//      cout << "R^T*R " << Check << endl;
-
 //    End of rotation tensor computation
 
       T1[idx] = R*ptang1[idx];
@@ -310,30 +306,40 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
                       -(T1[idx].x()*T2[idx].z() - T1[idx].z()*T2[idx].x()),
                         T1[idx].x()*T2[idx].y() - T1[idx].y()*T2[idx].x());
 
-      Matrix3 Q(Dot(T1[idx],I), Dot(T1[idx],J), Dot(T1[idx],K),
-                Dot(T2[idx],I), Dot(T2[idx],J), Dot(T2[idx],K),
-                Dot(T3[idx],I), Dot(T3[idx],J), Dot(T3[idx],K));
+      // The following code is carrying out:
+      //Matrix3 Q(Dot(T1[idx],I), Dot(T1[idx],J), Dot(T1[idx],K),
+      //          Dot(T2[idx],I), Dot(T2[idx],J), Dot(T2[idx],K),
+      //          Dot(T3[idx],I), Dot(T3[idx],J), Dot(T3[idx],K));
+      // assuming that I, J and K are the (1,0,0), (0,1,0) and (0,0,1)
+
+      Matrix3 Q(T1[idx].x(), T1[idx].y(), T1[idx].z(),
+                T2[idx].x(), T2[idx].y(), T2[idx].z(),
+                T3[idx].x(), T3[idx].y(), T3[idx].z());
 
       Matrix3 L_ij_ip(0.0), L_ip(0.0), L_local;
 
-      L_ij_ip(1,1) = Dot(T1[idx], velGrad*T1[idx]);
-      L_ij_ip(1,2) = Dot(T1[idx], velGrad*T2[idx]);
-      L_ij_ip(1,3) = Dot(T1[idx], velGrad*T3[idx]);
-      L_ij_ip(2,1) = Dot(T2[idx], velGrad*T1[idx]);
-      L_ij_ip(2,2) = Dot(T2[idx], velGrad*T2[idx]);
-      L_ij_ip(2,3) = Dot(T2[idx], velGrad*T3[idx]);
-      L_ij_ip(3,1) = Dot(T3[idx], velGrad*T1[idx]);
-      L_ij_ip(3,2) = Dot(T3[idx], velGrad*T2[idx]);
-      L_ij_ip(3,3) = Dot(T3[idx], velGrad*T3[idx]);
+      Vector vGT1 = velGrad*T1[idx];
+      Vector vGT2 = velGrad*T2[idx];
+      Vector vGT3 = velGrad*T3[idx];
+
+      L_ij_ip(1,1) = Dot(T1[idx], vGT1);
+      L_ij_ip(1,2) = Dot(T1[idx], vGT2);
+      L_ij_ip(1,3) = Dot(T1[idx], vGT3);
+      L_ij_ip(2,1) = Dot(T2[idx], vGT1);
+      L_ij_ip(2,2) = Dot(T2[idx], vGT2);
+      L_ij_ip(2,3) = Dot(T2[idx], vGT3);
+      L_ij_ip(3,1) = Dot(T3[idx], vGT1);
+      L_ij_ip(3,2) = Dot(T3[idx], vGT2);
+      L_ij_ip(3,3) = Dot(T3[idx], vGT3);
 
       Matrix3 T1T1, T1T2, T2T1, T2T2;
 
-      for(int i = 1; i<=3; i++){
-        for(int j = 1; j<=3; j++){
-          T1T1(i,j) = T1[idx][i]*T1[idx][j];
-          T1T2(i,j) = T1[idx][i]*T2[idx][j];
-          T2T1(i,j) = T2[idx][i]*T1[idx][j];
-          T2T2(i,j) = T2[idx][i]*T2[idx][j];
+      for(int i = 0; i<3; i++){
+        for(int j = 0; j<3; j++){
+          T1T1(i+1,j+1) = T1[idx][i]*T1[idx][j];
+          T1T2(i+1,j+1) = T1[idx][i]*T2[idx][j];
+          T2T1(i+1,j+1) = T2[idx][i]*T1[idx][j];
+          T2T2(i+1,j+1) = T2[idx][i]*T2[idx][j];
         }
       }
 
@@ -343,6 +349,10 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       L_local = Q * L_ip * Q.Transpose();
 
       // BE SURE TO FIX THIS
+      // I'm currently setting the tangent and normals back to
+      // their original position, and then each timestep rotating
+      // them by the total R.  It should be possible to do this
+      // incrementally, but the error might be greater.
       T1[idx] = ptang1[idx];
       T2[idx] = ptang2[idx];
       T3[idx] = pnorm[idx];
@@ -364,11 +374,9 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       while(fabs(delta) > epsilon){
         double detF2=(F(1,1)*F(2,2) - F(2,1)*F(1,2));
         jv = f33*detF2;
-
+        double FinF = F(1,1)*F(1,1)+F(1,2)*F(1,2)+F(2,1)*F(2,1)+F(2,2)*F(2,2);
         sig33 = (shear/(3.*pow(jv,2./3.)))*
-                (2.*f33*f33 -
-                   (F(1,1)*F(1,1)+F(1,2)*F(1,2)+F(2,1)*F(2,1)+F(2,2)*F(2,2))) 
-              + (bulk/2.)*(jv - 1/jv);
+                (2.*f33*f33 - FinF) + (.5*bulk)*(jv - 1./jv);
 
 	f33p = 1.01*f33;
 	f33m = 0.99*f33;
@@ -376,14 +384,10 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
         jvm = f33m*detF2;
 
         sig33p = (shear/(3.*pow(jvp,2./3.)))*
-                (2.*f33p*f33p -
-                   (F(1,1)*F(1,1)+F(1,2)*F(1,2)+F(2,1)*F(2,1)+F(2,2)*F(2,2)))
-               + (bulk/2.)*(jvp - 1/jvp);
+                (2.*f33p*f33p - FinF) + (.5*bulk)*(jvp - 1./jvp);
 
         sig33m = (shear/(3.*pow(jvm,2./3.)))*
-                (2.*f33m*f33m -
-                   (F(1,1)*F(1,1)+F(1,2)*F(1,2)+F(2,1)*F(2,1)+F(2,2)*F(2,2)))
-               + (bulk/2.)*(jvm - 1/jvm);
+                (2.*f33m*f33m - FinF) + (.5*bulk)*(jvm - 1./jvm);
 
         delta = -sig33/((sig33p-sig33m)/(f33p-f33m));
 
@@ -413,7 +417,7 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 
 
       // Compute the strain energy for all the particles
-      U = .5*bulk*(.5*(pow(jv,2.0) - 1.0) - log(jv));
+      U = .5*bulk*(.5*(jv*jv - 1.0) - log(jv));
       W = .5*shear*(bElBar_new.Trace() - 3.0);
 
       pvolume_deformed[idx]=(pmass[idx]/rho_orig)*jv;
