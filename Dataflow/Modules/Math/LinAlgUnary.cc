@@ -12,9 +12,9 @@
 
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Math/function.h>
 #include <iostream>
 #include <sstream>
-#include <Core/Math/function.h>
 
 namespace SCIRun {
 

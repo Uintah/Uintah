@@ -45,6 +45,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/EditField.tcl\
 	$(SRCDIR)/EditPath.tcl \
 	$(SRCDIR)/ErrorMetric.tcl \
+	$(SRCDIR)/FieldMeasures.tcl \
 	$(SRCDIR)/FieldReader.tcl \
 	$(SRCDIR)/FieldWriter.tcl \
 	$(SRCDIR)/FieldSetReader.tcl \

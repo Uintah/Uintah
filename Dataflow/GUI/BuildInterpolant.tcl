@@ -42,10 +42,10 @@ itcl_class SCIRun_Fields_BuildInterpolant {
         toplevel $w
 
 	checkbutton $w.interp -text "Enable Interpolation" \
-		-variable $this-use_interp -command "$this-c needexecute"
+		-variable $this-use_interp
 
 	checkbutton $w.closest -text "Use Closest Element If Not Interpable" \
-		-variable $this-use_closest -command "$this-c needexecute"
+		-variable $this-use_closest
 
 	frame $w.chelper
 	label $w.chelper.label -text "Maximum Closeness"
