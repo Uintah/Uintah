@@ -71,7 +71,7 @@ ExclusiveOS:	linux
 
 
 source0:	Thirdparty_install.%{thirdpartyversion}.tar.gz
-source1:	%{name}.%{version}.tar.gz
+source1:	%{defname}.%{version}.tar.gz
 source2:	cmake-1.8.1-x86-linux-files.tar
 source3:	InsightToolkit-%{insightver}.tar.gz
 source4:	SCIRun-release-otf-files.tar.gz
