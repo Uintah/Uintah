@@ -71,6 +71,10 @@ WARNING
                                     
    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                       SchedulerP& sched);
+                                      
+   virtual void scheduleTestConservation(SchedulerP&,
+                                         const PatchSet* patches,
+                                         const ModelInfo* mi);
   private:    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,

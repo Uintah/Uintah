@@ -79,6 +79,10 @@ WARNING
    virtual void scheduleCheckNeedAddMaterial(SchedulerP&,
                                              const LevelP& level,
                                              const ModelInfo*);
+                                             
+   virtual void scheduleTestConservation(SchedulerP&,
+                                         const PatchSet* patches,
+                                         const ModelInfo* mi);
                                       
   private:    
     void computeModelSources(const ProcessorGroup*, 
