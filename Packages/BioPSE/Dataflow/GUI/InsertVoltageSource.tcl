@@ -45,7 +45,7 @@ itcl_class BioPSE_Forward_InsertVoltageSource {
 	set $this-groundfirst 0
     }
     method ui {} {
-        set w .ui$[modname]
+        set w .ui[modname]
         if {[winfo exists $w]} {
             raise $w
             return;
