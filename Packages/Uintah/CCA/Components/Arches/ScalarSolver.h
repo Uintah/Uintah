@@ -175,7 +175,7 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     const int index);
+			     int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Solver the Linear System for Scalar[index]
@@ -197,7 +197,7 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     const int index);
+			     int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Solve the Linear System for Scalar[index]
@@ -219,7 +219,7 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     const int index);
+			     int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Solve the Linear System for Scalar[index]
@@ -241,7 +241,7 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     const int index);
+			     int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Solve the Linear System for Scalar[index]

@@ -542,7 +542,7 @@ bool
 GLAnimatedStreams::interpolate(FieldHandle texfld_, const Point& p, Vector& val)
 {
   //  const string field_type = texfld_->get_type_name(0);
-  const string type = texfld_->get_type_name(1);
+  //const string type = texfld_->get_type_name(1);
   if( texfld_->get_type_name(0) == "LatVolField" ){
     VectorFieldInterface *vfi;
     // use virtual field interpolation

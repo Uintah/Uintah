@@ -5,7 +5,7 @@
 
 using namespace Uintah;
 
-GeometryObject::GeometryObject(MPMMaterial* mpm_matl,
+GeometryObject::GeometryObject(MPMMaterial*,
                                GeometryPiece* piece,
 			       ProblemSpecP& ps)
    : d_piece(piece)

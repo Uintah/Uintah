@@ -49,7 +49,7 @@ WARNING
   
 ****************************************/
 
-class SerialMPM : public UintahParallelComponent, public SimulationInterface {
+class SerialMPM : public SimulationInterface, public UintahParallelComponent {
 public:
   SerialMPM(const ProcessorGroup* myworld);
   virtual ~SerialMPM();

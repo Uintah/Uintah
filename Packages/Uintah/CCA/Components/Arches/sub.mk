@@ -37,16 +37,12 @@ endif
 # include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
-	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/Core/Disclosure  \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/CCA/Components/Arches/fortran \
 	Packages/Uintah/CCA/Components/Arches/Mixing \
-	Core/Thread 			 \
-	Core/Geometry                    \
 	Core/Exceptions
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) -lm

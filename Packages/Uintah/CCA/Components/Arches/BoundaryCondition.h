@@ -203,7 +203,7 @@ public:
       // Actually compute velocity BC terms
       void velocityBC(const ProcessorGroup* pc,
 		      const Patch* patch,
-		      const int index,
+		      int index,
 		      CellInformation* cellinfo,
 		      ArchesVariables* vars);
 
@@ -220,7 +220,7 @@ public:
       // Actually compute scalar BC terms
       void scalarBC(const ProcessorGroup* pc,
 		    const Patch* patch,
-		    const int index,
+		    int index,
 		    CellInformation* cellinfo,
 		    ArchesVariables* vars);
 

@@ -61,7 +61,7 @@ namespace Uintah {
       Stream& linInterpolate(double upfactor, double lowfactor,
 			     Stream& rightvalue);
       void addStream(const Stream& strm, ChemkinInterface* chemInterf,
-		     const double factor) ;
+		     double factor) ;
       void addSpecies(const ChemkinInterface* chemInterf, 
 		      const char* speciesName, double mfrac);
       int speciesIndex(const ChemkinInterface* chemInterf, const char* name);

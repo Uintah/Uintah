@@ -20,7 +20,7 @@ using std::ostringstream;
 
 #define THREADED_MPI_AVAILABLE
 
-static bool            allowThreads;
+//static bool            allowThreads;
 static bool            determinedIfUsingMPI = false;
 static bool            usingMPI = false;
 static int             maxThreads = 1;
@@ -61,13 +61,13 @@ void
 Parallel::setMaxThreads( int maxNumThreads )
 {
    ::maxThreads = maxNumThreads;
-   ::allowThreads = true;
+   //::allowThreads = true;
 }
 
 void
 Parallel::noThreading()
 {
-  ::allowThreads = false;
+  //::allowThreads = false;
   ::maxThreads = 1;
 }
 
@@ -76,7 +76,7 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
 {
   if( char * max = getenv( "PSE_MAX_THREADS" ) ){
     ::maxThreads = atoi( max );
-    ::allowThreads = true;
+    //::allowThreads = true;
     cerr << "PSE_MAX_THREADS set to " << ::maxThreads << "\n";
 
     if( ::maxThreads <= 0 || ::maxThreads > 16 ){

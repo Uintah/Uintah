@@ -28,6 +28,7 @@ PSELIBS := \
 	Core/Exceptions Core/Thread      \
 	Core/Disclosure                  \
 	Core/Geometry Dataflow/XMLUtil   \
+	Core/Util \
 	Packages/Uintah/CCA/Components/HETransformation
 
 

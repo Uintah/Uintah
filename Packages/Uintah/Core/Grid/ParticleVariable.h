@@ -317,10 +317,10 @@ private:
 
   template<class T>
     void ParticleVariable<T>::gather(ParticleSubset* pset,
-				            vector<ParticleSubset*> subsets,
-				            vector<ParticleVariableBase*> srcs,
-				            const vector<const Patch*>& srcPatches,
-				            particleIndex extra)
+				     vector<ParticleSubset*> subsets,
+				     vector<ParticleVariableBase*> srcs,
+				     const vector<const Patch*>& /*srcPatches*/,
+				     particleIndex extra)
   { gather(pset, subsets, srcs, extra); }
 
 template<class T>
@@ -401,7 +401,7 @@ template<class T>
     ParticleVariable<T>::packMPI(void* buf, int bufsize, int* bufpos,
 				 const ProcessorGroup* pg,
 				 ParticleSubset* pset,
-				 const Patch* forPatch)
+				 const Patch* /*forPatch*/)
     { packMPI(buf, bufsize, bufpos, pg, pset); }
 
 

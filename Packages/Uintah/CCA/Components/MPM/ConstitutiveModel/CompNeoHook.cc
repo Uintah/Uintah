@@ -565,17 +565,17 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
 	Vector d_S[8];
 
 	patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-	int dof[24];
+	//int dof[24];
 
 	for(int k = 0; k < 8; k++) {
 	  const Vector& disp = dispNew[ni[k]];
 
-	  int ii = 0;
-	  int node_num = ni[k].x() + (nodes.x()+1)*ni[k].y() + (nodes.x() + 1)*
-	    (nodes.y()+1)*ni[k].z();
-	  dof[ii++] = 3*node_num;
-	  dof[ii++] = 3*node_num+1;
-	  dof[ii++] = 3*node_num+2;
+	  //int ii = 0;
+	  //int node_num = ni[k].x() + (nodes.x()+1)*ni[k].y() + (nodes.x() + 1)*
+	  //(nodes.y()+1)*ni[k].z();
+	  //dof[ii++] = 3*node_num;
+	  //dof[ii++] = 3*node_num+1;
+	  //dof[ii++] = 3*node_num+2;
 
 	  for (int j = 0; j<3; j++){
 	    for (int i = 0; i<3; i++) {
@@ -637,8 +637,8 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
    }
 }
 
-void CompNeoHook::addInitialComputesAndRequires(Task* task,
-                                                const MPMMaterial* matl,
+void CompNeoHook::addInitialComputesAndRequires(Task*,
+                                                const MPMMaterial*,
                                                 const PatchSet*) const
 {
 
@@ -709,7 +709,7 @@ void CompNeoHook::addComputesAndRequiresImplicit(Task* task,
 void CompNeoHook::addComputesAndRequiresImplicitOnly(Task* task,
 						     const MPMMaterial* matl,
 						     const PatchSet*,
-						     const bool recursion)
+						     const bool)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
@@ -765,7 +765,7 @@ void CompNeoHook::computePressEOSCM(const double rho_cur,double& pressure,
 {
   //double p_ref=101325.0;
   double bulk = d_initialData.Bulk;
-  double shear = d_initialData.Shear;
+  //double shear = d_initialData.Shear;
   double rho_orig = matl->getInitialDensity();
   
   double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);

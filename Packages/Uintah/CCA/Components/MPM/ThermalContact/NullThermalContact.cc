@@ -23,7 +23,7 @@ NullThermalContact::~NullThermalContact()
 
 void NullThermalContact::computeHeatExchange(const ProcessorGroup*,
 					     const PatchSubset* patches,
-					     const MaterialSubset* matls,
+					     const MaterialSubset*,
 					     DataWarehouse* ,
 					     DataWarehouse* new_dw)
 {

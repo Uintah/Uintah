@@ -8,7 +8,7 @@ using namespace std;
 namespace Uintah {
 
 valarray<double> cgSolve(SparseMatrix<double, int>& A, 
-			     valarray<double>& b, int conflag)
+			 valarray<double>& b, int /*conflag*/)
 {
   
   valarray<double> M(A.Rows());
@@ -79,13 +79,11 @@ valarray<double> cgSolve(SparseMatrix<double, int>& A,
     if (t <= 1.e-8) {
       cout << "number of iterations is " << i << endl;
       cout << "residual is " << t << endl;
-      conflag = 1;
       break;
     }
 
     if (i == max_iterations) {
       cout << "No convergence" << endl;
-      conflag = 0;
     }
     
     rho_i_2= rho_i_1;

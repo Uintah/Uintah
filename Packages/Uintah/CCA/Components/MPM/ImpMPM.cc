@@ -420,7 +420,7 @@ void ImpMPM::scheduleComputeInternalForceR(SchedulerP& sched,
 
 
 void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
-			     const PatchSet* patches, const MaterialSet* matls)
+			     const PatchSet*, const MaterialSet*)
 {
 
   // NOT DONE
@@ -453,9 +453,9 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
 }
 
 
-void ImpMPM::iterate(const ProcessorGroup* pg,
+void ImpMPM::iterate(const ProcessorGroup*,
 		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
+		     const MaterialSubset*,
 		     DataWarehouse* old_dw, DataWarehouse* new_dw,
 		     LevelP level, SchedulerP sched)
 {
@@ -1386,7 +1386,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 					     const PatchSubset* patches,
 					     const MaterialSubset* ,
-					     DataWarehouse* old_dw,
+					     DataWarehouse*,
 					     DataWarehouse* new_dw)
 {
   // NOT DONE
@@ -1686,8 +1686,8 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 void ImpMPM::applyRigidBodyCondition(const ProcessorGroup*, 
 				      const PatchSubset* patches,
 				      const MaterialSubset*, 
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw)
+				      DataWarehouse*,
+				      DataWarehouse*)
 {
   // NOT DONE
   
@@ -1819,9 +1819,9 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
 void ImpMPM::solveForDuCG(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* ,
-			  DataWarehouse* old_dw,
+			  DataWarehouse*,
 			  DataWarehouse* new_dw,
-			  const bool recursion)
+			  const bool /*recursion*/)
 
 {
   // DONE
@@ -1947,9 +1947,9 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
 void ImpMPM::checkConvergence(const ProcessorGroup*,
 			      const PatchSubset* patches,
 			      const MaterialSubset* ,
-			      DataWarehouse* old_dw,
+			      DataWarehouse*,
 			      DataWarehouse* new_dw,
-			      LevelP level, SchedulerP sched,
+			      LevelP, SchedulerP,
 			      const bool recursion)
 {
 

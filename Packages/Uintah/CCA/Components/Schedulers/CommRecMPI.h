@@ -88,7 +88,7 @@ waitsome(MPI_Comm comm, int/* me*/)
 
 template <class AfterCommunicationHandler>
 bool CommRecMPI<AfterCommunicationHandler>::
-testsome(MPI_Comm comm, int me)
+testsome(MPI_Comm comm, int)
 {
   if(ids.size() == 0)
     return false; // no more to test
@@ -146,7 +146,7 @@ donesome( MPI_Comm & comm, int donecount )
 
 template <class AfterCommunicationHandler>
 void CommRecMPI<AfterCommunicationHandler>::
-waitall(MPI_Comm comm, int me)
+waitall(MPI_Comm comm, int)
 {
   if(ids.size() == 0)
     return;

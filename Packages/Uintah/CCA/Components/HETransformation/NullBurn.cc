@@ -28,8 +28,8 @@ void NullBurn::computeBurn(double /*gasTemperature */,
 			   double /*materialTemperature */,
 			   double &burnedMass,
 			   double &releasedHeat,
-			   double &delT,
-			   double &surfaceArea)
+			   double &/*delT*/,
+			   double &/*surfaceArea*/)
 {
   burnedMass = 0;
   releasedHeat = 0;

@@ -663,8 +663,8 @@ double ViscoScram::computeRhoMicroCM(double pressure,
 #endif
 }
 
-void ViscoScram::computePressEOSCM(const double rho_cur,double& pressure,
-                                   const double p_ref,
+void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
+                                   double p_ref,
                                    double& dp_drho, double& tmp,
                                    const MPMMaterial* matl)
 {

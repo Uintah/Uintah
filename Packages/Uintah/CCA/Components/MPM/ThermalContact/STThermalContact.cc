@@ -24,7 +24,7 @@ STThermalContact::~STThermalContact()
 
 void STThermalContact::computeHeatExchange(const ProcessorGroup*,
 					 const PatchSubset* patches,
-					 const MaterialSubset* matls,
+					 const MaterialSubset*,
 					 DataWarehouse* old_dw,
 					 DataWarehouse* new_dw)
 {
