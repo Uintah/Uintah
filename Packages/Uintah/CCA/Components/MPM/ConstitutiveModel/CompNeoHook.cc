@@ -277,6 +277,24 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 					      const bool recursion)
 
 {
+  int nn = 0;
+  IntVector nodes(0,0,0);
+  cout << "nodes = " << nodes << endl;
+  cout << "number of patches = " << patches->size() << endl;
+  for(int pp=0;pp<patches->size();pp++){
+    const Patch* patch = patches->get(pp);
+    IntVector num_nodes = patch->getNNodes();
+    nn += (num_nodes.x())*(num_nodes.y())*(num_nodes.z())*3;
+    nodes = IntVector(Max(num_nodes.x(),nodes.x()),
+		      Max(num_nodes.y(),nodes.y()),
+		      Max(num_nodes.z(),nodes.z()));
+    cout << "nodes = " << nodes << endl;
+  }
+  KK.setSize(nn,nn);
+#ifdef HAVE_PETSC
+  MatCreateMPIAIJ(PETSC_COMM_WORLD,PETSC_DETERMINE,PETSC_DETERMINE,nn,nn,
+		  PETSC_DEFAULT,PETSC_NULL,PETSC_DEFAULT,PETSC_NULL,&A);
+#endif
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     Matrix3 velGrad,Shear,deformationGradientInc,dispGrad,fbar;
@@ -306,7 +324,6 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);
     if (recursion) {
-      cout << "Trying to get deformationMeasure+" << endl;
       old_dw->get(deformationGradient,lb->pDeformationMeasureLabel_preReloc,
 		  pset);
       old_dw->get(bElBar_old, lb->bElBarLabel_preReloc, pset);
@@ -319,9 +336,9 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     
   
     if (recursion)
-      old_dw->get(dispNew,lb->dispNewLabel,dwi,patch,Ghost::None,0);
+      old_dw->get(dispNew,lb->dispNewLabel,dwi,patch,Ghost::AroundCells,1);
     else
-      new_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::None,0);
+      new_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
     
     new_dw->allocateAndPut(pstress,        lb->pStressLabel_preReloc, pset);
     
@@ -339,14 +356,16 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     FastMatrix Btrans(24,6);
     FastMatrix Bnl(3,24);
     FastMatrix Bnltrans(24,3);
-    
+#if 0
     IntVector nodes = patch->getNNodes();
     int num_nodes = (nodes.x())*(nodes.y())*(nodes.z())*3;
     KK.setSize(num_nodes,num_nodes);
+
 #ifdef HAVE_PETSC
     MatCreateMPIAIJ(PETSC_COMM_WORLD,num_nodes,num_nodes,PETSC_DETERMINE,
 		    PETSC_DETERMINE,PETSC_DEFAULT,PETSC_NULL,PETSC_DEFAULT,
 		    PETSC_NULL,&A);
+#endif
 #endif
 
     for(ParticleSubset::iterator iter = pset->begin();
@@ -622,7 +641,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	  PetscScalar v = kmat(I,J) + kgeo(I,J);
 	  MatSetValues(A,1,&dofi,1,&dofj,&v,ADD_VALUES);
 #endif
-#if 0
+#if 1
 	  cout << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
 	       << endl;
 #endif
@@ -847,13 +866,13 @@ void CompNeoHook::addComputesAndRequiresImplicit(Task* task,
     task->requires(Task::OldDW, lb->pDeformationMeasureLabel_preReloc,
 		   matlset,Ghost::None);
     task->requires(Task::OldDW,lb->bElBarLabel_preReloc,matlset,Ghost::None);
-    task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::None,0);
+    task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
   }
   else {
     task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
 		   matlset, Ghost::None);
     task->requires(Task::OldDW,lb->bElBarLabel,matlset,Ghost::None);
-    task->requires(Task::NewDW,lb->dispNewLabel,matlset,Ghost::None,0);
+    task->requires(Task::NewDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
   }
   
 
@@ -883,7 +902,7 @@ void CompNeoHook::addComputesAndRequiresImplicitOnly(Task* task,
 		 matlset, Ghost::None);
   task->requires(Task::OldDW,lb->bElBarLabel,matlset,Ghost::None);
 #endif
-  task->requires(Task::NewDW,lb->dispNewLabel,matlset,Ghost::None,0);
+  task->requires(Task::NewDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
   
   task->requires(Task::OldDW, lb->delTLabel);
   
