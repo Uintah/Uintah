@@ -219,8 +219,8 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
        buf[7+last-2]='\0';
        string fname(&buf[7]);
        cerr << "FNAME=>>"<<fname<<"<<\n";
-       mtl.add(new ImageMaterial(fname, ImageMaterial::Clamp,
-				 ImageMaterial::Clamp, 1, Color(0,0,0), 0));
+       mtl.add(new ImageMaterial(fname, ImageMaterial::Tile,
+				 ImageMaterial::Tile, 1, Color(0,0,0), 0));
        have_matl=0;
      } else {
        cerr << "Ignoring mtl line: "<<buf<<"\n";
