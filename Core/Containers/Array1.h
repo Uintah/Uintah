@@ -336,7 +336,7 @@ T* Array1<T>::get_objs()
   return objs;
 }
 
-#define ARRAY1_VERSION 1
+#define ARRAY1_VERSION 2
 
 template<class T>
 void Pio(Piostream& stream, Array1<T>& array)
