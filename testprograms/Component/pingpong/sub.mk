@@ -16,11 +16,15 @@ LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common -lglobus_io
 PROGRAM := $(SRCDIR)/pingpong
 SRCS := $(SRCDIR)/pingpong.cc $(SRCDIR)/PingPong_sidl.cc \
 	$(SRCDIR)/PingPong_impl.cc
+GENHDRS := $(SRCDIR)/PingPong_sidl.h
 
 include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.4  2000/03/23 11:05:31  sparker
+# Added *_sidl.h files to GENHDRS so that they will get built in time
+#
 # Revision 1.3  2000/03/21 06:13:40  sparker
 # Added pattern rule for .sidl files
 # Compile component testprograms

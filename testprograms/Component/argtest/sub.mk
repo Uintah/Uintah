@@ -15,11 +15,15 @@ LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common -lglobus_io
 
 PROGRAM := $(SRCDIR)/argtest
 SRCS := $(SRCDIR)/argtest.cc $(SRCDIR)/argtest_sidl.cc
+GENHDRS := $(SRCDIR)/argtest_sidl.h
 
 include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.4  2000/03/23 11:05:19  sparker
+# Added *_sidl.h files to GENHDRS so that they will get built in time
+#
 # Revision 1.3  2000/03/21 06:13:34  sparker
 # Added pattern rule for .sidl files
 # Compile component testprograms
