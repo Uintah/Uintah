@@ -24,6 +24,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define AIR_CONDUCTIVITY 0.0
+#define SKIN_CONDUCTIVITY 1.0
+#define BONE_CONDUCTIVITY 0.05
+#define CSF_CONDUCTIVITY 4.620
+#define GREY_CONDUCTIVITY 1.0
+#define WHITE_CONDUCTIVITY 0.43
+
 using std::cerr;
 using std::ifstream;
 using std::endl;
@@ -133,6 +140,32 @@ int main(int argc, char **argv)
     cerr << "Had "<<mesh->nodes.size()<<" nodes.\n";
     mesh->pack_all();
     cerr << "Now "<<mesh->nodes.size()<<" nodes.\n";
+
+    mesh->cond_tensors.resize(6);
+    mesh->cond_tensors[0].resize(6);
+    mesh->cond_tensors[0].initialize(0);
+    mesh->cond_tensors[0][0]=mesh->cond_tensors[0][3]=mesh->cond_tensors[0][5]=AIR_CONDUCTIVITY;
+
+    mesh->cond_tensors[1].resize(6);
+    mesh->cond_tensors[1].initialize(0);
+    mesh->cond_tensors[1][0]=mesh->cond_tensors[1][3]=mesh->cond_tensors[1][5]=SKIN_CONDUCTIVITY;
+
+    mesh->cond_tensors[2].resize(6);
+    mesh->cond_tensors[2].initialize(0);
+    mesh->cond_tensors[2][0]=mesh->cond_tensors[2][3]=mesh->cond_tensors[2][5]=BONE_CONDUCTIVITY;
+
+    mesh->cond_tensors[3].resize(6);
+    mesh->cond_tensors[3].initialize(0);
+    mesh->cond_tensors[3][0]=mesh->cond_tensors[3][3]=mesh->cond_tensors[3][5]=CSF_CONDUCTIVITY;
+
+    mesh->cond_tensors[4].resize(6);
+    mesh->cond_tensors[4].initialize(0);
+    mesh->cond_tensors[4][0]=mesh->cond_tensors[4][3]=mesh->cond_tensors[4][5]=GREY_CONDUCTIVITY;
+    
+    mesh->cond_tensors[5].resize(6);
+    mesh->cond_tensors[5].initialize(0);
+    mesh->cond_tensors[5][0]=mesh->cond_tensors[5][3]=mesh->cond_tensors[5][5]=WHITE_CONDUCTIVITY;
+    
     BinaryPiostream stream(clString(argv[1])+".mesh", Piostream::Write);
     Pio(stream, mesh);
     return 0;
