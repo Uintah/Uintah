@@ -426,7 +426,6 @@ void Task::initialize(char* pn)
     progname=strdup(pn);
     tick=CLK_TCK;
     pagesize=getpagesize();
-    devzero_fd=open("/dev/zero", O_RDWR);
     if(devzero_fd == -1){
 	perror("open");
 	exit(-1);

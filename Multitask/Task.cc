@@ -61,3 +61,34 @@ TaskInfo::~TaskInfo()
     delete[] tinfo;
 }
 
+class Multiprocess : public Task {
+public:
+    void (*starter)(void*, int);
+    void* userdata;
+    int processor;
+    Multiprocess(void (*starter)(void*, int), void* userdata, int processor);
+    virtual int body(int);
+};
+
+Multiprocess::Multiprocess(void (*starter)(void*, int), void* userdata, int processor)
+: Task("Multiprocess helper"), 
+  starter(starter), userdata(userdata), processor(processor)
+{
+}
+
+int Multiprocess::body(int)
+{
+    cerr << "started: " << processor << endl;
+    (*starter)(userdata, processor);
+    return 0;
+}
+
+void Task::multiprocess(int nprocessors, void (*starter)(void*, int), void* userdata)
+{
+    for(int i=0;i<nprocessors;i++){
+	Multiprocess* mp=new Multiprocess(starter, userdata, i);
+	cerr << "starting: " << i << endl;
+	mp->activate(0);
+    }
+}
+

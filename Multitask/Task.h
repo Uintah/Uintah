@@ -68,8 +68,8 @@ protected:
 	int id;
     };
     ITimer** timers;
-    int ntimers;
     int timer_id;
+    int ntimers;
 public:
     TaskPrivate* priv;
 public:
@@ -116,6 +116,7 @@ public:
     static void set_concurrency();
     static void get_concurrency();
     static int nprocessors();
+    static void multiprocess(int ntasks, void (*startfn)(void*, int), void* data);
 
     static void exit_all(int code);
     

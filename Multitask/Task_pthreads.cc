@@ -69,6 +69,7 @@ struct TaskPrivate {
     caddr_t stackbot;
     size_t stacklen;
     size_t redlen;
+    void (*handle_alrm)(void*);
 };
 
 struct TaskArgs {
@@ -85,7 +86,7 @@ static void makestack(TaskPrivate* priv)
 {
     priv->stacklen=DEFAULT_STACK_LENGTH+pagesize;
     priv->stackbot=(caddr_t)mmap(0, priv->stacklen, PROT_READ|PROT_WRITE,
-				 MAP_SHARED, devzero_fd, 0);
+				 MAP_PRIVATE, devzero_fd, 0);
     if((long)priv->stackbot == -1){
 	perror("mmap");
 	Task::exit_all(-1);
@@ -477,12 +478,12 @@ void Task::main_exit()
 }
 
 
-#if 0
 void Task::yield()
 {
-    sginap(0);
+    pthread_yield();
 }
 
+#if 0
 
 int Task::wait_for_task(Task* task)
 {
@@ -676,28 +677,22 @@ void Task::sleep(const TaskTime& time)
 {
     sginap((time.secs*1000+time.usecs)/tick);
 }
+#endif
 
 TaskInfo* Task::get_taskinfo()
 {
-    if(uspsema(sched_lock) == -1){
-	perror("uspsema");
-	Task::exit_all(-1);
-    }
     TaskInfo* ti=scinew TaskInfo(ntasks);
     for(int i=0;i<ntasks;i++){
 	ti->tinfo[i].name=tasks[i]->name;
 	ti->tinfo[i].stacksize=tasks[i]->priv->stacklen-pagesize;
 	ti->tinfo[i].stackused=tasks[i]->priv->stacklen-tasks[i]->priv->redlen;
-	ti->tinfo[i].pid=tasks[i]->priv->tid;
+	ti->tinfo[i].pid=tasks[i]->priv->threadid;
 	ti->tinfo[i].taskid=tasks[i];
-    }
-    if(usvsema(sched_lock) == -1){
-	perror("usvsema");
-	Task::exit_all(-1);
     }
     return ti;
 }
 
+#if 0
 void Task::coredump(Task* task)
 {
     kill(task->priv->tid, SIGABRT);
@@ -784,6 +779,8 @@ int Task::start_itimer(const TaskTime& start, const TaskTime& interval,
     priv->alrm_data=cbdata;
     return t->id;
 }
+#endif
+
 
 void Task::cancel_itimer(int which_timer)
 {
@@ -807,8 +804,6 @@ void Task::cancel_itimer(int which_timer)
 	timers[i]=timers[i+1];
     ntimers--;
 }
-
-#endif
 
 int Task::start_itimer(const TaskTime& start, const TaskTime& interval,
 		       void (*handler)(void*), void* cbdata)
