@@ -61,12 +61,14 @@ void NetworkEditor::main_loop()
 	switch(msg->type){
 	case MessageTypes::MultiSend:
 	    {
+		cerr << "Start multisend...\n";
 		Module_Scheduler_Message* mmsg=(Module_Scheduler_Message*)msg;
 		multisend(mmsg->p1);
 		if(mmsg->p2)
 		    multisend(mmsg->p2);
 		// Do not re-execute sender
 		do_scheduling(mmsg->p1->get_module());
+		cerr << "End multisend...\n";
 	    }
 	    break;
 	case MessageTypes::ReSchedule:
@@ -105,8 +107,10 @@ void NetworkEditor::do_scheduling(Module* exclude)
 	if(module->need_execute)
 	    needexecute.append(module);
     }
-    if(needexecute.is_empty())
+    if(needexecute.is_empty()){
+	cerr << "Nothing in execute list\n";
 	return;
+    }
 
     // For all of the modules that need executing, execute the
     // downstream modules and arrange for the data to be sent to them

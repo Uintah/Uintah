@@ -115,9 +115,7 @@ Module* Network::add_module(const clString& name)
 	    break;
 	}
     }
-    cerr << "Calling maker\n";
     Module* mod=(*maker)(id);
-    cerr << "Maker called\n";
     modules.add(mod);
     mod->set_context(netedit, this);
     module_ids.insert(mod->id, mod);

@@ -91,7 +91,6 @@ void Module::add_iport(IPort* port)
 void Module::add_oport(OPort* port)
 {
     port->set_which_port(oports.size());
-    cerr << "have_data=" << port->have_data();
     oports.add(port);
     reconfigure_oports();
 }
