@@ -29,7 +29,7 @@ namespace Uintah {
       Tensor4D(const Tensor4D<T>& tensor);
 
       /** Destructor */
-      ~Tensor4D();
+      virtual ~Tensor4D();
 
       /** Assignment operator */
       Tensor4D<T>& operator=(const Tensor4D<T>& tensor); 

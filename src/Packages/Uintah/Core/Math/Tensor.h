@@ -29,7 +29,7 @@ namespace Uintah {
       Tensor(const Tensor<T>& tensor);
 
       /** Destructor */
-      ~Tensor();
+      virtual ~Tensor();
 
       /** Get rank of tensor */
       int rank() const;

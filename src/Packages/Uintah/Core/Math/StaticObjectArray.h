@@ -82,7 +82,7 @@ public:
     return *this;
   }
   
-  ~StaticObjectArray()
+  virtual ~StaticObjectArray()
   { delete[] data_; }
 
   T& operator[](int index)
