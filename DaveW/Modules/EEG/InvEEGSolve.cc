@@ -769,7 +769,9 @@ void InvEEGSolve::solveDense(int nr, int nc, double **A, double *x,
     tsvd(&AA,&bb,&xx,cut_off);  
     
     cout<<"TSVD solution"<<endl;
-    cout <<xx<<endl;
+
+
+//    cout <<xx<<endl;
     
     //call dsvd with dumping 
 //    double lambda = 0.01;
@@ -954,6 +956,9 @@ void InvEEGSolve::execute() {
 
 //
 // $Log$
+// Revision 1.4  1999/09/02 05:21:44  dmw
+// trying to figure out a linking problem
+//
 // Revision 1.3  1999/08/29 00:46:37  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++
