@@ -21,7 +21,7 @@ GENERAL INFORMATION
 
    SliceTable.h
 
-   Packages/Kurt Zimmerman
+   Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -62,6 +62,7 @@ public:
 
   // GROUP: Computation
   //////////
+  //
   void getParameters(const Brick&,double& tmin,
 		     double& tmax, double& dt) const;
 

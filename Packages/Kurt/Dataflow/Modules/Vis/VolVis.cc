@@ -28,7 +28,7 @@
 
 
 namespace Kurt {
-using namespace Kurt::GeomSpace;
+
 using namespace SCIRun;
 using std::cerr;
 
@@ -38,7 +38,6 @@ static clString res_name("Resolution Widget");
 extern "C" Module* make_VolVis( const clString& id) {
   return new VolVis(id);
 }
-
 
 VolVis::VolVis(const clString& id)
   : Module("VolVis", id, Filter), widget_lock("VolVis widget lock"),
@@ -314,7 +313,7 @@ void VolVis::execute(void)
       ogeom->flushViews();
     }
   }
-} // End namespace Kurt
-}
+} // End execute(void);
 
+} // End namespace Kurt
 

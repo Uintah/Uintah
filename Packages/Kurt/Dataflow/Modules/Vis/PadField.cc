@@ -13,9 +13,8 @@
 #include <iostream>
 #include "PadField.h"
 
-
-
 namespace Kurt {
+
 using namespace SCIRun;
 using std::cerr;
 
@@ -113,7 +112,5 @@ void PadField::execute(void)
   outscalarfield->send(ScalarFieldHandle(rg));
 
 }
+
 } // End namespace Kurt
-
-
-

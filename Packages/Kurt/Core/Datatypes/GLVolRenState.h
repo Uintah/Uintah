@@ -6,15 +6,14 @@
 #include <vector>
 #include <GL/glu.h>
 
-  class Brick;
-}
-
 namespace Kurt {
 
 using namespace SCIRun;
-  using std::vector;
-  using namespace Kurt::Datatypes;
-  
+using std::vector;
+
+class Brick;
+class Polygon;
+
 /**************************************
 					 
 CLASS
@@ -26,7 +25,7 @@ GENERAL INFORMATION
 
    GLVolRenState.h
 
-   Packages/Kurt Zimmerman
+   Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -84,6 +83,8 @@ protected:
 
   GLuint* texName;
   unsigned char* reload;
+
+};
 
 } // End namespace Kurt
 

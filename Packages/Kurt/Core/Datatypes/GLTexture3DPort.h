@@ -18,11 +18,10 @@
 #include <Packages/Kurt/Core/Datatypes/GLTexture3D.h>
 
 namespace Kurt {
-using namespace Kurt::Datatypes;
 
 typedef SimpleIPort<GLTexture3DHandle> GLTexture3DIPort;
 typedef SimpleOPort<GLTexture3DHandle> GLTexture3DOPort;
-} // End namespace Kurt
 
+} // End namespace Kurt
 
 #endif

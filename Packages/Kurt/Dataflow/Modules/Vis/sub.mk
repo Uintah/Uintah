@@ -16,17 +16,23 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 #		$(SRCDIR)/VolVis.cc \
-#		$(SRCDIR)/Packages/KurtScalarFieldReader.cc \
+#		$(SRCDIR)/KurtScalarFieldReader.cc \
 #		$(SRCDIR)/VisControl.cc \
 #		$(SRCDIR)/ParticleVis.cc \
 
 
-PSELIBS :=  Dataflow/Network Core/Datatypes \
+PSELIBS := \
+	Dataflow/Network \
         Core/Thread Core/Persistent Core/Exceptions \
         Core/TclInterface Core/Containers Core/Datatypes \
-        Core/Geom Core/Geometry Dataflow/Widgets PSECore/XMLUtil \
-	Dataflow/Modules/Fields  Kurt/Datatypes SCICore/Util \
-	Packages/Uintah/Core/Datatypes Uintah/Grid Uintah/Interface Uintah/Exceptions 
+        Core/Geom Core/Geometry Dataflow/Widgets \
+	Datatypes/XMLUtil \
+	Dataflow/Modules/Fields Core/Util \
+	Packages/Kurt/Datatypes           \
+	Packages/Uintah/Core/Datatypes    \
+	Packages/Uintah/Core/Grid         \
+	Packages/Uintah/CCA/Ports         \
+	Packages/Uintah/Core/Exceptions 
 
 
 LIBS := $(XML_LIBRARY) -lm

@@ -40,7 +40,7 @@ const VTYPE CCINT = 10;
 
 
 
-class Packages/KurtSHARE SFRG : public SFRGfile {
+class KurtSHARE SFRG : public SFRGfile {
 
 
   NCScalarField<int> *inci;
@@ -60,7 +60,7 @@ public:
 
 };
 
-extern "C" Packages/KurtSHARE Module* make_SFRG(const clString& id) {
+extern "C" KurtSHARE Module* make_SFRG(const clString& id) {
   return scinew SFRG(id);
 }
 
@@ -434,10 +434,3 @@ void SFRG::revoxelize() {
   }
 }
 } // End namespace Kurt
-
-
-
-
-
-
-

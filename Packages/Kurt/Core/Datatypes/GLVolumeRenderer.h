@@ -11,6 +11,7 @@
 #include <Core/Geom/GeomObj.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <iostream>
 
 #include "Brick.h"
 #include "Octree.h"
@@ -30,7 +31,7 @@
 namespace Kurt {
 
 using namespace SCIRun;
-using namespace Kurt::Datatypes;
+using std::cerr;
 
 class GLVolumeRenderer : public GeomObj
 {
@@ -71,6 +72,7 @@ public:
 
   void SetNSlices(int s) { slices = s;}
   void SetSliceAlpha( double as){ slice_alpha = as;}
+  void SetScaleAlpha( double as){ scale_alpha = as;}
   void BuildTransferFunctions();
 
 
@@ -117,7 +119,10 @@ public:
 #endif
   
   virtual GeomObj* clone();
-  virtual void get_bounds(BBox& bb){ tex->get_bounds( bb ); }
+  virtual void get_bounds(BBox& bb){ 
+    tex->get_bounds( bb );
+    cerr<<"Volume Bounds are "<<bb.min()<<", "<<bb.max()<< std::endl;
+  }
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
@@ -141,6 +146,7 @@ private:
   Point controlPoint;
   
   double slice_alpha;
+  double scale_alpha;
 
   bool cmapHasChanged;
   bool drawX, drawY, drawZ, drawView;
@@ -159,9 +165,6 @@ private:
   unsigned char TransferFunctions[8][1024];
 };
 
-
 } // End namespace Kurt
- 
-
 
 #endif

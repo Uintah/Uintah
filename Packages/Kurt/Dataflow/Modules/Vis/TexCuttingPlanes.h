@@ -21,9 +21,8 @@
 #include <Packages/Kurt/Core/Datatypes/GLTexture3D.h>
 
 namespace Kurt {
+
 using namespace SCIRun;
-
-
 
 class TexCuttingPlanes : public Module {
 
@@ -37,7 +36,6 @@ public:
 
 private:
 
-   
   GLTexture3DHandle tex;
 
   ColorMapIPort* incolormap;
@@ -48,9 +46,7 @@ private:
   PointWidget *control_widget;
   GeomID control_id;
 
-
   int cmap_id;  // id associated with color map...
-  
 
   TCLint drawX;
   TCLint drawY;
@@ -64,6 +60,5 @@ private:
 };
 
 } // End namespace Kurt
-
 
 #endif

@@ -28,10 +28,9 @@
 
 
 namespace Kurt {
-using namespace Kurt::Datatypes;
+
 using namespace SCIRun;
 using std::cerr;
-
 
 static clString control_name("Control Widget");
 			 
@@ -164,6 +163,8 @@ void TexCuttingPlanes::execute(void)
     ogeom->addObj( volren, "Volume Slicer");
     volren->GLPlanes();
     volren->DrawPlanes();
+    if(control_widget)
+      volren->SetControlPoint(control_widget->ReferencePoint());
   } else {    
     if( tex.get_rep() != oldtex.get_rep() ){
       oldtex = tex;

@@ -2,7 +2,7 @@
 # makefile, at $(TOP).  The targets for this directory are
 # specified in sub.mk in this directory
 SRCTOP := .
-OBJTOP := ../../..
-HERE_TARGET := lib/libPackages/Kurt_Modules_Vis.so
+OBJTOP := ../../../../..
+HERE_TARGET := lib/libPackages_Kurt_Dataflow_Modules_Vis.so
 
 include $(OBJTOP)/$(SRCTOP)/scripts/default.mk

@@ -7,13 +7,11 @@
 #include <iostream>
 
 namespace Kurt {
+
 using std::cerr;
-
 using namespace SCIRun;
-using Kurt::Datatypes::Octree;
-using Kurt::Datatypes::Brick;
-  //using Mutex;
 
+//using Mutex;
 
 double GLVolumeRenderer::swapMatrix[16] = { 0,0,1,0,
 					    0,1,0,0,
@@ -124,14 +122,8 @@ GLVolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 GLVolumeRenderer::setup()
 {
-
-
-
-  glEnable(GL_TEXTURE_3D_EXT);
+  glEnable(GL_TEXTURE_3D);
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE); 
-
-
-
 
   if( cmap.get_rep() ) {
 #ifdef __sgi
@@ -296,16 +288,17 @@ GLVolumeRenderer::BuildTransferFunctions( )
 
 	  alpha1 = pow(alpha, bp);
 
-	  if( j == 128 ) cerr <<" alpha = "<< alpha<<std::endl;
-	  if( j == 128 ) cerr <<" alpha1 = "<< alpha1<<std::endl;
+	  //	  if( j == 128 ) cerr <<" alpha = "<< alpha<<std::endl;
+	  //if( j == 128 ) cerr <<" alpha1 = "<< alpha1<<std::endl;
 
 	  alpha2 = 1.0 - pow((1.0 - alpha1), sliceRatio);
-	  if( j == 128 ) cerr <<" alpha2 = "<< alpha2<<std::endl;
+	  // if( j == 128 ) cerr <<" alpha2 = "<< alpha2<<std::endl;
 	  TransferFunctions[i][4*j + 0] = (c.r()*255);
 	  TransferFunctions[i][4*j + 1] = (c.g()*255);
 	  TransferFunctions[i][4*j + 2] = (c.b()*255);
 	  TransferFunctions[i][4*j + 3] = (alpha2*255);
 	}
   }
-} // End namespace Kurt
 }
+
+} // End namespace Kurt

@@ -15,13 +15,10 @@
 #include "Polygon.h"
 #include "GLVolRenState.h"
 
-
-
-
 namespace Kurt {
+
 using namespace SCIRun;
 using std::vector;
-
 
 /**************************************
 
@@ -34,7 +31,7 @@ GENERAL INFORMATION
 
    Brick.h
 
-   Packages/Kurt Zimmerman
+   Kurt Zimmerman
    Department of Computer Science
    University of Utah
 

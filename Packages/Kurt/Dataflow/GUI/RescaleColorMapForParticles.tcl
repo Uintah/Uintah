@@ -1,4 +1,4 @@
-itcl_class Packages/Kurt_Vis_RescaleColorMapForParticles { 
+itcl_class Kurt_Vis_RescaleColorMapForParticles { 
 
     inherit Module 
 
