@@ -240,8 +240,10 @@ void StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
   sf_mesh_type *smesh =
     dynamic_cast<sf_mesh_type*>(sf->get_typed_mesh().get_rep());
 
-  //! needed by some meshes before locate will work
-  smesh->finish_mesh();
+  vf_mesh_type *vmesh =
+    dynamic_cast<vf_mesh_type*>(vf->get_typed_mesh().get_rep());
+
+  vmesh->finish_mesh();
 
   cerr << "finished the mesh..." << endl;
 
