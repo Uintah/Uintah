@@ -104,7 +104,7 @@ main(int argc, char *argv[] )
     }
 
     gov::cca::Services::pointer main_services = sr->getServices("SCIRun main", "main", gov::cca::TypeMap::pointer(0));
-    gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(main_services->getPort("cca.builderService"));
+    gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(main_services->getPort("cca.BuilderService"));
     if(builder.isNull()){
       cerr << "Fatal Error: Cannot find builder service\n";
       Thread::exitAll(1);
@@ -117,7 +117,7 @@ main(int argc, char *argv[] )
 	Thread::exitAll(1);
       }
     }
-    main_services->releasePort("cca.builderService");
+    main_services->releasePort("cca.BuilderService");
     cerr << "SCIRun " << VERSION << " started...\n";
     PIDL::PIDL::serveObjects();
     cerr << "serveObjects done!\n";

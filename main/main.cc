@@ -24,23 +24,19 @@
  *   University of Utah
  *   Feb. 1994
  *
- *  Modified for distributed Dataflow by:
- *   Michelle Miller
- *   May 1998
- *
  *  Copyright (C) 1999 U of U
  */
 
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/PackageDB.h>
-#include <Core/GuiInterface/GuiServer.h>
-#include <Core/GuiInterface/GuiManager.h>
+#include <Dataflow/Network/Scheduler.h>
 #include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/TCLInterface.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Util/RCParse.h>
+#include <sci_defs.h>
 
 #include <iostream>
 using std::cerr;
@@ -58,20 +54,11 @@ using std::endl;
 
 using namespace SCIRun;
 
-namespace SCIRun {
-extern bool global_remote;
-void set_guiManager( GuiManager * );
-}
-
 int global_argc;
 char** global_argv;
 
 namespace SCIRun {
 extern env_map scirunrc;             // contents of .scirunrc
-// these symbols live in Dataflow/Network/PackageDB.cc
-extern string SCIRUN_SRCTOP;         // = INSTALL_DIR/SCIRun/src
-extern string SCIRUN_OBJTOP;         // = BUILD_DIR
-extern string DEFAULT_LOAD_PACKAGE;  // configured packages
 }
 
 #ifndef PSECORETCL
@@ -135,39 +122,38 @@ main(int argc, char *argv[] )
   global_argc=argc;
   global_argv=argv;
 
-  // these symbols live in Dataflow/Network/PackageDB.cc but are reset here
-  SCIRUN_SRCTOP = SRCTOP;
-  SCIRUN_OBJTOP = OBJTOP;
-  DEFAULT_LOAD_PACKAGE = DEF_LOAD_PACK;
-
   // Start up TCL...
   TCLTask* tcl_task = new TCLTask(argc, argv);
   Thread* t=new Thread(tcl_task, "TCL main event loop");
   t->detach();
   tcl_task->mainloop_waitstart();
 
+  // Create user interface link
+  GuiInterface* gui = new TCLInterface();
+
   // Set up the TCL environment to find core components
   string result;
-  TCL::eval("global PSECoreTCL CoreTCL",result);
-  TCL::eval("set DataflowTCL "PSECORETCL,result);
-  TCL::eval("set CoreTCL "SCICORETCL,result);
-  TCL::eval("lappend auto_path "SCICORETCL,result);
-  TCL::eval("lappend auto_path "PSECORETCL,result);
-  TCL::eval("lappend auto_path "ITCL_WIDGETS,result);
+  gui->eval("global PSECoreTCL CoreTCL",result);
+  gui->eval("set DataflowTCL "PSECORETCL,result);
+  gui->eval("set CoreTCL "SCICORETCL,result);
+  gui->eval("lappend auto_path "SCICORETCL,result);
+  gui->eval("lappend auto_path "PSECORETCL,result);
+  gui->eval("lappend auto_path "ITCL_WIDGETS,result);
+  gui->eval("global scirun2", result);
+  gui->eval("set scirun2 0", result);
 
   // Create initial network
-  // We build the Network with a 1, indicating that this is the
-  // first instantiation of the network class, and this network
-  // should read the command line specified files (if any)
-  Network* net=new Network(1);
+  packageDB = new PackageDB(gui);
 
-  // Fork off task for the network editor.  It is a detached
-  // task, and the Task* will be deleted by the task manager
-  NetworkEditor* gui_task=new NetworkEditor(net);
+  Network* net=new Network();
 
-  // Activate the network editor and scheduler.  Arguments and return
+  Scheduler* sched_task=new Scheduler(net);
+
+  new NetworkEditor(net, gui);
+
+  // Activate the scheduler.  Arguments and return
   // values are meaningless
-  Thread* t2=new Thread(gui_task, "Scheduler");
+  Thread* t2=new Thread(sched_task, "Scheduler");
   t2->setDaemon(true);
   t2->detach();
 
@@ -181,10 +167,10 @@ main(int argc, char *argv[] )
 
   // check the BUILD_DIR
   if (!foundrc) {
-    foundrc = RCParse((SCIRUN_OBJTOP + "/.scirunrc").c_str(),
+    foundrc = RCParse((string(OBJTOP) + "/.scirunrc").c_str(),
                       SCIRun::scirunrc);
     if (foundrc)
-      cout << SCIRUN_OBJTOP + "/.scirunrc" << endl;
+      cout << OBJTOP << "/.scirunrc" << endl;
   }
 
   // check the user's home directory
@@ -202,22 +188,21 @@ main(int argc, char *argv[] )
 
   // check the INSTALL_DIR
   if (!foundrc) {
-    foundrc = RCParse((SCIRUN_SRCTOP + "/.scirunrc").c_str(),
+    foundrc = RCParse((string(SRCTOP) + "/.scirunrc").c_str(),
                       SCIRun::scirunrc);
     if (foundrc)
-      cout << SCIRUN_SRCTOP + "/.scirunrc" << endl;
+      cout << SRCTOP << "/.scirunrc" << endl;
   }
 
   if (!foundrc)
     cout << "not found" << endl;
 
   // wait for the main window to display before continuing the startup.
-  TCL::eval("tkwait visibility .top.globalViewFrame.canvas",result);
+  gui->eval("tkwait visibility .top.globalViewFrame.canvas",result);
 
 
   // load the packages
-  packageDB.loadPackage();
-    
+  packageDB->loadPackage();
 
   // Now activate the TCL event loop
   tcl_task->release_mainloop();
