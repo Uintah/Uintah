@@ -113,8 +113,7 @@ using namespace SCIRun;
 class DDDASSHARE StreamReader : public Module {
 
 public:
-
-    
+  
   //! Virtual interface
 
   StreamReader(GuiContext* ctx);
@@ -196,6 +195,8 @@ private:
 
 /*===========================================================================*/
 // 
+// ReaderThread
+// 
 // Description : Constructor
 //
 // Arguments   :
@@ -210,6 +211,8 @@ ReaderThread::ReaderThread( StreamReader * sr ) :
 
 /*===========================================================================*/
 // 
+// ~ReaderThread
+//
 // Description : Destructor
 //
 // Arguments   : none
@@ -220,14 +223,15 @@ ReaderThread::~ReaderThread()
 
 /*===========================================================================*/
 // 
+// run
+//
 // Description : This is essentially a callback that gets called when the 
 //               reader thread is initialized.  In this case the thread begins
 //               reading a stream when it is initialized.
 //
 // Arguments   : none
 //
-void
-ReaderThread::run()
+void ReaderThread::run()
 {
   cout << "(ReaderThread::run) I'm running!\n";
 
@@ -253,6 +257,8 @@ private:
 
 /*===========================================================================*/
 // 
+// ProcessorThread
+//
 // Description : Constructor
 //
 // Arguments   :
@@ -267,6 +273,8 @@ ProcessorThread::ProcessorThread( StreamReader * sr ) :
 
 /*===========================================================================*/
 // 
+// ~ProcessorThread
+//
 // Description : Destructor
 //
 // Arguments   : none
@@ -277,6 +285,8 @@ ProcessorThread::~ProcessorThread()
 
 /*===========================================================================*/
 // 
+// run
+//
 // Description : This is essentially a callback that gets called when the 
 //               reader thread is initialized.  In this case the thread begins
 //               waiting for available stream data to process as soon as it
@@ -284,8 +294,7 @@ ProcessorThread::~ProcessorThread()
 //
 // Arguments   : none
 //
-void
-ProcessorThread::run()
+void ProcessorThread::run()
 {
   cout << "(ProcessorThread::run) I'm running!\n";
 
@@ -298,6 +307,8 @@ DECLARE_MAKER(StreamReader)
 
 /*===========================================================================*/
 // 
+// StreamReader
+//
 // Description : Constructor
 //
 // Arguments   : 
@@ -319,6 +330,8 @@ StreamReader::StreamReader(GuiContext* ctx)
 
 /*===========================================================================*/
 // 
+// ~StreamReader
+//
 // Description : Destructor
 //
 // Arguments   : none
@@ -329,6 +342,8 @@ StreamReader::~StreamReader()
 
 /*===========================================================================*/
 // 
+// execute 
+//
 // Description : The execute function for this module.  This is the control
 //               center for the module.
 //
@@ -366,6 +381,8 @@ StreamReader::execute()
 
 /*===========================================================================*/
 // 
+// tcl_command
+//
 // Description : The tcl_command function for this module.
 //
 // Arguments   :
@@ -374,14 +391,15 @@ StreamReader::execute()
 //
 // void* userdata - ???
 // 
-void
-StreamReader::tcl_command(GuiArgs& args, void* userdata)
+void StreamReader::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }
 
 /*===========================================================================*/
 // 
+// find_string
+//
 // Description : Reads an input stream until a specified string is encountered 
 //               or the input ends.  If the string is encountered, returns the 
 //               index of the string in the internal buffer.  Otherwise, 
@@ -394,8 +412,7 @@ StreamReader::tcl_command(GuiArgs& args, void* userdata)
 //
 // string str - The string to find within the given input stream 
 //
-int 
-StreamReader::find_string( istringstream& input, string str ) const
+int StreamReader::find_string( istringstream& input, string str ) const
 {
   cout << "(StreamReader::find_string) Inside\n";
   string s;
@@ -416,6 +433,8 @@ StreamReader::find_string( istringstream& input, string str ) const
 
 /*===========================================================================*/
 // 
+// get_stream
+//
 // Description : This is the xccs stream reading code provided by Chad.  It 
 //               uses low-level socket code to open an mp3 file on a specified 
 //               port and host.  Returns the socket descriptor for the stream 
@@ -424,8 +443,7 @@ StreamReader::find_string( istringstream& input, string str ) const
 //
 // Arguments   : none
 //
-int
-StreamReader::get_stream()
+int StreamReader::get_stream()
 {
   // This code is taken almost entirely from xccs
   char host[80], filename[80];
@@ -521,14 +539,15 @@ StreamReader::get_stream()
 
 /*===========================================================================*/
 // 
+// kill_helper
+//
 // Description : Kill a specified helper thread.
 //
 // Arguments   :
 //
 // Thread * helper_thread - A pointed to the thread to be killed
 //
-void
-StreamReader::kill_helper( Thread * helper_thread )  
+void StreamReader::kill_helper( Thread * helper_thread )  
 {
   // kill the helper thread
   if (helper_thread)
@@ -539,6 +558,8 @@ StreamReader::kill_helper( Thread * helper_thread )
 }
 
 /*===========================================================================*/
+//
+// process_stream
 // 
 // Description : Parses the contents of a given buffer of data that 
 //               has been read from the stream.  Figures out what kind of data
@@ -547,8 +568,7 @@ StreamReader::kill_helper( Thread * helper_thread )
 //
 // Arguments   : none
 //
-void
-StreamReader::process_stream()
+void StreamReader::process_stream()
 {
   cout << "(StreamReader::process_stream) Inside\n";
 
@@ -619,6 +639,8 @@ StreamReader::process_stream()
 
 /*===========================================================================*/
 // 
+// read_stream 
+//
 // Description : Continually read from the mp3 stream, remove mp3 headers, 
 //               and check for recognized headers.  When the first recognized
 //               header is found, call the appropriate function to process
@@ -630,8 +652,7 @@ StreamReader::process_stream()
 // 
 // Arguments   : none
 //
-void 
-StreamReader::read_stream() 
+void StreamReader::read_stream() 
 {
   // Get stream socket
   int sock = get_stream();
@@ -702,6 +723,8 @@ StreamReader::read_stream()
 
 /*===========================================================================*/
 // 
+// remove_headers
+//
 // Description : Removes all mp3 headers (which occur every 417 bytes) from a 
 //               buffer.  Returns the modified buffer as new_buffer and the 
 //               buffer size by reference as num_bytes. Fills the remaining 
@@ -721,9 +744,8 @@ StreamReader::read_stream()
 //                  to contains the number of bytes in new_buffer after the mp3
 //                  headers have been stripped.
 //
-void
-StreamReader::remove_headers( unsigned char * old_buffer, 
-                              unsigned char * new_buffer, int& num_bytes )  
+void StreamReader::remove_headers( unsigned char * old_buffer, 
+                                   unsigned char * new_buffer, int& num_bytes )
 {
   // Grab some extra bytes just in case
   int num = num_bytes;
@@ -760,6 +782,8 @@ StreamReader::remove_headers( unsigned char * old_buffer,
 
 /*===========================================================================*/
 // 
+// seek_header 
+//
 // Description : Reads data from a stream until a string is found that matches 
 //               one of the entries in the array of header strings.  Returns
 //               the internal buffer index where the header string begins.
@@ -782,11 +806,10 @@ StreamReader::remove_headers( unsigned char * old_buffer,
 // int & nread - Returned by reference as the number of bytes read in the last
 //               read
 //
-int
-StreamReader::seek_header( istringstream& input, int sock, 
-                           unsigned char * buffer,  
-                           string * headers, int num_headers, 
-                           string & header_name, int & nread ) 
+int StreamReader::seek_header( istringstream& input, int sock, 
+                               unsigned char * buffer,  
+                               string * headers, int num_headers, 
+                               string & header_name, int & nread ) 
 {
   int stop_sr =stop_sr_.get() ;
 
@@ -825,6 +848,8 @@ StreamReader::seek_header( istringstream& input, int sock,
 
 /*===========================================================================*/
 // 
+// update_input
+//
 // Description : Reads the next chunk of data off of the mp3 stream, removes 
 //               the mp3 headers, and updates the input stream and buffer so 
 //               that they contain the updated data.  Returns the number of 
@@ -843,8 +868,8 @@ StreamReader::seek_header( istringstream& input, int sock,
 //                          in this buffer gets copied to the input string 
 //                          stream.
 //
-int 
-StreamReader::update_input( istringstream& input, int sock, unsigned char * buffer ) 
+int StreamReader::update_input( istringstream& input, int sock, 
+                                unsigned char * buffer ) 
 {
   
   cout << "(StreamReader::update_input) Inside\n"; 
@@ -899,6 +924,8 @@ StreamReader::update_input( istringstream& input, int sock, unsigned char * buff
 
 /*===========================================================================*/
 // 
+// fill_mesh 
+//
 // Description : Reads solution points from an array, populates a LatVol mesh 
 //               with them, and sends the mesh down the SCIRun pipeline to be 
 //               eventually visualized by the Viewer.
@@ -911,8 +938,7 @@ StreamReader::update_input( istringstream& input, int sock, unsigned char * buff
 //
 // int num_sols - Number of entries / solution points in the sol_pts array
 //
-void
-StreamReader::fill_mesh( double * sol_pts, int num_sols ) const
+void StreamReader::fill_mesh( double * sol_pts, int num_sols ) const
 {
   Point minb, maxb;
   minb = Point(-1.0, -1.0, -1.0);
@@ -962,6 +988,8 @@ StreamReader::fill_mesh( double * sol_pts, int num_sols ) const
 
 /*===========================================================================*/
 // 
+// get_sols
+// 
 // Description : Reads in the solution points from a stream until all
 //               of the solution points have been read or an error has 
 //               occurred.  Stores the solution points in the sol_pts array.
@@ -978,8 +1006,8 @@ StreamReader::fill_mesh( double * sol_pts, int num_sols ) const
 // int num_sols - size of the sol_pts array and the number of solution points
 //                to read in
 //
-int 
-StreamReader::get_sols( istringstream& input, double * sol_pts, int num_sols ) 
+int StreamReader::get_sols( istringstream& input, double * sol_pts, 
+                            int num_sols ) 
 {
   int num_read = 0;
   double sol;
@@ -1040,6 +1068,8 @@ StreamReader::get_sols( istringstream& input, double * sol_pts, int num_sols )
 
 /*===========================================================================*/
 // 
+// process_mesh 
+//
 // Description : Parse buffered data that contains solution points for a 
 //               LatVol mesh.  Populates an array with all of the solution 
 //               points for a single mesh and then constructs a LatVol mesh 
@@ -1051,8 +1081,7 @@ StreamReader::get_sols( istringstream& input, double * sol_pts, int num_sols )
 //                        that is followed by a list of solution points that
 //                        represent the data for one LatVol mesh
 //
-void 
-StreamReader::process_mesh( istringstream& input ) 
+void StreamReader::process_mesh( istringstream& input ) 
 {
     /*
     Here's an sample of what the buffer data should look like:
@@ -1157,6 +1186,8 @@ StreamReader::process_mesh( istringstream& input )
 
 /*===========================================================================*/
 // 
+// read_mesh
+//
 // Description : Reads all of the data for one mesh off of the mp3 stream 
 //               starting from the beginning of a mesh header.
 //
@@ -1174,9 +1205,9 @@ StreamReader::process_mesh( istringstream& input )
 // ssize_t nread - Number of bytes in the last chunk of data read from the mp3 
 //                 stream 
 //
-void
-StreamReader::read_mesh( istringstream& input, int sock, 
-                         unsigned char * buffer, int start, ssize_t nread ) 
+void StreamReader::read_mesh( istringstream& input, int sock, 
+                              unsigned char * buffer, int start, 
+                              ssize_t nread )
 {
   
   // Parse the header to get number of solutions
