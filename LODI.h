@@ -26,6 +26,7 @@ namespace Uintah {
     constCCVariable<double> speedSound;    
     constCCVariable<Vector> vel_old;
     CCVariable<double> rho_CC;      // rho *after* BC has been applied
+    CCVariable<Vector> vel_CC;      // vel *after* BC has been applied  
     CCVariable<double> press_tmp;        
     CCVariable<double> e;                
     CCVariable<Vector> nu;               
