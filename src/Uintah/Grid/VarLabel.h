@@ -54,7 +54,7 @@ namespace Uintah {
 
       // VarLabel(const string&, const TypeDescription*);
       
-      const string& getName() const {
+      inline const string& getName() const {
 	 return d_name;
       }
       string getFullName(int matlIndex, const Patch* patch) const;
@@ -85,6 +85,9 @@ ostream & operator<<( ostream & out, const Uintah::VarLabel & vl );
 
 //
 // $Log$
+// Revision 1.12  2000/09/26 21:39:22  dav
+// inlined some things
+//
 // Revision 1.11  2000/09/25 20:37:43  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
