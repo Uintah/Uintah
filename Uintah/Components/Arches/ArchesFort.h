@@ -196,9 +196,12 @@ extern "C"
     //
     void
     FORT_PROFSCALAR(const int* domainLow, const int* domainHigh, 
+		    const int* domainLowCT, const int* domainHighCT, 
 		    const int* indexLow, const int* indexHigh,
 		    double* scalar, int* cellType,
-		    double * sValue, const int* celltypeval);
+		    double * sValue, const int* celltypeval,
+		    int* xminus, int* xplus, int* yminus, int* yplus,
+		    int* zminus, int* zplus);
 
     ////////////////////////////////////////////////////////////////////////
     //
@@ -250,11 +253,15 @@ extern "C"
 		double* vVelocity, 
 		const int* domLoW, const int* domHiW, 
 		double* wVelocity, 
-		const int* domLo, const int* domHi, 
+		const int* domLoden, const int* domHiden, 
+		const int* domLopress, const int* domHipress, 
+		const int* domLoct, const int* domHict, 
 		const int* idxLo, const int* idxHi,
 		double* pressure, double* density,
 		int* celltype, const int* celltypeval,
-		double* refPressure);
+		double* refPressuren,
+		int* xminus, int* xplus, int* yminus, int* yplus,
+		int* zminus, int* zplus);
 
     ////////////////////////////////////////////////////////////////////////
     //
@@ -961,6 +968,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.44  2000/10/11 16:37:29  rawat
+// modified calpbc for ghost cells
+//
 // Revision 1.43  2000/10/10 19:30:57  rawat
 // added scalarsolver
 //
