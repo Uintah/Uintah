@@ -24,9 +24,9 @@
 #define SCI_HASH_SET_H
 
 #if defined __GNUC__ && __GNUC__ >= 3 // newer GCC keeps it in ext
-#  include <ext/hash_map>
+#  include <ext/hash_set>
 #else // sgi and older gnu have it with the standard STL headers
-#  include <hash_map>
+#  include <hash_set>
 #endif
 
 #endif // SCI_Hash_Map_h
