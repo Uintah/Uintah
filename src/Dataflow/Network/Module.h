@@ -268,6 +268,6 @@ namespace SCIRun {
     Module(const Module&);
     Module& operator=(const Module&);
   };
-};
+}
 
 #endif
