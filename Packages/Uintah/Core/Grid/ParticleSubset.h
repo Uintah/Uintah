@@ -9,7 +9,6 @@
 #include <vector>
 
 namespace Uintah {
-
 /**************************************
 
 CLASS
@@ -101,12 +100,6 @@ WARNING
       // Insert Documentation Here:
       particleIndex numParticles() {
 	 return (particleIndex) d_particles.size();
-      }
-      
-      //////////
-      // Insert Documentation Here:
-      iterator seek(int idx) {
-	 return d_particles.begin() + idx;
       }
       
       //////////
