@@ -10,7 +10,10 @@
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/ConditionVariable.h>
 #include <list>
+#include <queue>
 #include <vector>
+#include <map>
+#include <set>
 
 namespace Uintah {
   class ProcessorGroup;
@@ -18,7 +21,7 @@ namespace Uintah {
   class DetailedTask;
   class DetailedTasks;
   class TaskGraph;
-
+  
   class DetailedDep {
   public:
     DetailedDep(DetailedDep* next, Task::Dependency* comp,
@@ -100,14 +103,19 @@ namespace Uintah {
   };
 
   struct InternalDependency {
-    InternalDependency(DetailedTask* prerequisiteTask, DetailedTask* dependentTask,
+    InternalDependency(DetailedTask* prerequisiteTask,
+		       DetailedTask* dependentTask, const VarLabel* var,
 		       long satisfiedGeneration)
       : prerequisiteTask(prerequisiteTask), dependentTask(dependentTask),
 	satisfiedGeneration(satisfiedGeneration)
-    { }
+    { addVarLabel(var); }
+
+    void addVarLabel(const VarLabel* var)
+    { vars.insert(var); }
     
     DetailedTask* prerequisiteTask;
     DetailedTask* dependentTask;
+    set<const VarLabel*, VarLabel::Compare> vars;
     unsigned long satisfiedGeneration;
   };
 
@@ -159,13 +167,17 @@ namespace Uintah {
       return scrublist;
     }
 
+    void findRequiringTasks(const VarLabel* var,
+			    list<DetailedTask*>& requiringTasks);
+
     void emitEdges(DOM_Element edgesElement);
 
     bool addRequires(DependencyBatch*);
     void addComputes(DependencyBatch*);
     void addScrub(const VarLabel* var, Task::WhichDW dw);
 
-    void addInternalDependency(DetailedTask* prerequisiteTask);
+    void addInternalDependency(DetailedTask* prerequisiteTask,
+			       const VarLabel* var);
 
     bool areInternalDependenciesSatisfied()
     { return (numPendingInternalDependencies == 0); }
@@ -218,7 +230,7 @@ namespace Uintah {
       return tasks[i];
     }
 
-    void assignMessageTags(vector<Task*>& tasks);
+    void assignMessageTags(int me);
     void possiblyCreateDependency(DetailedTask* from, Task::Dependency* comp,
 				  const Patch* fromPatch,
 				  DetailedTask* to, Task::Dependency* req,
@@ -280,8 +292,15 @@ namespace Uintah {
     // depedencies.
     bool mustConsiderInternalDependencies_;
 
-    list<DetailedTask*> internalDependencySatisfiedTasks_;
-    list<DetailedTask*> initiallyReadyTasks_;
+    // In the future, we may want to prioritize tasks for the MixedScheduler
+    // to run.  I implemented this using topological sort order as the priority
+    // but that probably isn't a good way to do unless you make it a breadth
+    // first topological order.
+    //typedef priority_queue<DetailedTask*, vector<DetailedTask*>, TaskNumberCompare> TaskQueue;    
+    typedef queue<DetailedTask*> TaskQueue;
+    
+    TaskQueue readyTasks_; 
+    TaskQueue initiallyReadyTasks_;
 
     // This "generation" number is to keep track of which InternalDependency
     // links have been satisfied in the current timestep and avoids the
