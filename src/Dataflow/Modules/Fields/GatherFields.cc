@@ -132,8 +132,13 @@ GatherFields::execute()
       }
       else if (pi != range.second)
       {
-	error("Input port " + to_string(nFields) + " contained no data.");
-	return;
+	//error("Input port " + to_string(nFields) + " contained no data.");
+	//return;
+
+	// changed this to a warning because in the case of BioTensor, some
+	// of the input connections get disabled based on what the user wants
+	// to see
+	warning("Input port " + to_string(nFields) + " contained no data.");
       }
     }
   }
