@@ -520,7 +520,17 @@ void VolumeVisDpy::rescale_alphas(float new_t_inc) {
   // a_2 = 1 - (1 - a_1)^(d_2/d_1)
   float d2_div_d1 = new_t_inc/current_t_inc;
   for(int i = 0; i < alpha_transform.size(); i++) {
-    alpha_transform[i] = 1 - powf(1 - alpha_transform[i], d2_div_d1);
+    // Here we have to be careful with powf.  It doesn't like values
+    // that equal 0.  I tried just comparing val to 1, but that didn't
+    // work I'm assuming because of floating point precision problems.
+    // I tried comparing 1-val to zero, but that failed for the same
+    // reasons.  I finally tried comparing to some epsilon.  That is
+    // what you see below.
+    float one_minus_val = 1.0f - alpha_transform[i];
+    if (one_minus_val >= 1e-6f)
+      alpha_transform[i] = 1 - powf(one_minus_val, d2_div_d1);
+    else
+      alpha_transform[i] = 1;
     //    cout <<"alpha_transform[i="<<i<<"] = "<<alpha_transform[i]<<", ";
   }
   cout << endl;
@@ -549,11 +559,22 @@ void VolumeVisDpy::create_alpha_transfer() {
     float val = alpha_list[a_index].val;
     float val_inc = (alpha_list[a_index+1].val - val) / (end - start);
     for (int i = start; i <= end; i++) {
-      //    cout << "val = "<<val<<", ";
+      //      cout << "val = "<<val<<", ";
       alpha_stripes[i] = val;
-      // apply the alpha scaling
-      alpha_transform[i] = 1 - powf(1 - val, d2_div_d1);
-      //    cout <<"alpha_transform[i="<<i<<"] = "<<alpha_transform[i]<<"\n";
+      // apply the alpha scaling.
+      //
+      // Here we have to be careful with powf.  It doesn't like values
+      // that equal 0.  I tried just comparing val to 1, but that
+      // didn't work I'm assuming because of floating point precision
+      // problems.  I tried comparing 1-val to zero, but that failed
+      // for the same reasons.  I finally tried comparing to some
+      // epsilon.  That is what you see below.
+      float one_minus_val = 1.0f - val;
+      if (one_minus_val >= 1e-6f)
+        alpha_transform[i] = 1 - powf(one_minus_val, d2_div_d1);
+      else
+        alpha_transform[i] = 1;
+      //      cout <<"alpha_transform[i="<<i<<"] = "<<alpha_transform[i]<<"\n";
       val += val_inc;
     }
     start = end;
