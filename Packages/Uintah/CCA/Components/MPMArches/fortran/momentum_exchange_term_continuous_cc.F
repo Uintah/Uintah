@@ -326,12 +326,13 @@ C-----------------------------------------------------------------------
       double precision rmean
       double precision tmult
       double precision factor
+      double precision visturb
 
       logical lmltm
 
 *     executable statements
 
-      lmltm = .false.
+      lmltm = .true.
 
 c--------------------------------------------------------------------
 c     define arrays for one ghost around patch
@@ -419,34 +420,16 @@ c     later we will get discrete fraction from mpm to input here.
                   area = darea*darea
 
                   factor = epss(i,j,k)/(one - epsg(i,j,k))
-                  
-                  tmult = factor*viscos/dist
-                     
-#if 0
-c     debug, sk, April 21, 2002
-                  if (koff.eq.1 .and. i.eq.3 .and. j.eq.9 .and.
-     $                 k.eq.9) then
-                     print*, 'PRINTING debug values of ug and up'
-                     print*, 'position = ',i,j,k
-                     print*, 'void fraction = ',epsg(i,j,k), i,j,k
-                     print*, 'gas velocity = ',ug_cc(i,j,k), i,j,k
-                     print*, 'solid velocity = ',up_cc(i,j,k), i,j,k
-                     print*, 'solid fraction = ',epss(i,j,k), i,j,k
-                     print*, 'factor = ',factor, i,j,k
-                     print*, 'tmult = ',tmult, i,j,k
-                     print*, 'dist = ',dist, i,j,k
-                     print*, 'drep = ',drep, i,j,k
-                     print*, 'epsg_cont = ',epsg_cont, i,j,k
-                     print*, 'two = ',two, i,j,k
-                     print*, 'idf = ',idf, i,j,k
-                     print*, 'idt1 = ', idt1, i,j,k
-                     print*, 'idt2 = ', idt2, i,j,k
-                     print*, 'sew(idf) = ',sew(idf)
-                     print*, 'sns(idt1) = ',sns(idt1)
-                     print*, 'stb(idt2) = ',stb(idt2)
+
+                  if (lmltm) then
+                     visturb = factor*((csmag*dist)**2*
+     $                    denMicro(i,j,k)*abs(
+     $                    (ug_cc(i,j,k) - up_cc(i,j,k))/
+     $                    dist) + viscos)
+                     tmult = visturb/dist
+                  else
+                     tmult = factor*viscos/dist
                   endif
-c     end debug, sk, April 21, 2002
-#endif
                      
                   sux_cc(i,j,k) = sux_cc(i,j,k) + 
      $                 tmult*area*up_cc(i,j,k) 
@@ -457,14 +440,6 @@ c     end debug, sk, April 21, 2002
                   dfx_cc(i,j,k) = dfx_cc(i,j,k) +
      $                 tmult*area*
      $                 (ug_cc(i,j,k) - up_cc(i,j,k))
-
-c     debug, sk, April 14, 2001
-
-                  if (ioff.eq.1) then
-c                     print*, i,j,k, dfx_cc(i,j,k)
-                  endif
-
-c     end debug, sk, April 14, 2002
 
                end if
 
@@ -510,6 +485,8 @@ c     causing the build to fail on linux.
      $     PASS3B(up_fcy), 
      $     PASS3A(epsg)
      $     PASS3B(epsg), 
+     $     PASS3A(den)
+     $     PASS3B(den), 
      $     PASS3A(epss)
      $     PASS3B(epss),
      $     PASS1(sew), 
@@ -545,6 +522,8 @@ c     direction 2 (i.e., bottom and top faces)
      $     PASS3B(up_fcz), 
      $     PASS3A(epsg)
      $     PASS3B(epsg), 
+     $     PASS3A(den)
+     $     PASS3B(den), 
      $     PASS3A(epss)
      $     PASS3B(epss),
      $     PASS1(sew), 
