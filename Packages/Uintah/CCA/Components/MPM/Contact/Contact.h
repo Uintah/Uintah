@@ -5,9 +5,6 @@
 
 #include <math.h>
 
-#define FRACTURE
-#undef FRACTURE
-
 namespace Uintah {
 using namespace SCIRun;
   class DataWarehouse;
