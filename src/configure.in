@@ -514,6 +514,7 @@ if test "$ITCL_MAJOR_VERSION" = "3" ; then
   ITK_SRC_DIR="`eval echo $ITK_SRC_DIR`"
   ITK_LIB_SPEC="`eval echo $ITK_LIB_SPEC`"
   ITCL_LIB_DIR="${ITCL_PREFIX}/lib"
+  ITK_LIB_DIR="${ITCL_PREFIX}/lib"
   ITCL_BIN_DIR="${ITCL_PREFIX}/bin"
   ITCLSH="${ITCL_BIN_DIR}/itclsh${ITCL_VERSION}"
 #  ITCL_LIB_FLAG="-litk3.1 -litcl3.1"
@@ -859,6 +860,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.77  2000/11/15 20:46:45  yarden
+# minor bug with itk_lib_dir
+#
 # Revision 1.76  2000/11/15 05:43:30  yarden
 # add -rpath for the tk,itcl and itk libraries
 #
