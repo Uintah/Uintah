@@ -44,10 +44,9 @@ namespace SCIRun {
 
 template <class HType>
 class GenericWriter : public Module {
+public:
   GuiString filename_;
   GuiString filetype_;
-
-public:
   GenericWriter(const string &name, const string& id,
 		const string &category, const string &package);
   virtual ~GenericWriter();
