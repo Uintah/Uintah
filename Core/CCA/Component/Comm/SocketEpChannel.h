@@ -62,6 +62,6 @@ namespace SCIRun {
 
 
   };
-}
+}// namespace SCIRun
 
 #endif

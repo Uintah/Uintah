@@ -17,20 +17,35 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <errno.h>
+
+#include <Core/CCA/Component/Comm/CommError.h>
 #include <Core/CCA/Component/Comm/SocketMessage.h>
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
+#include <Core/CCA/Component/Comm/SocketSpChannel.h>
 
 using namespace std;
 using namespace SCIRun;
 
-SocketMessage::SocketMessage() { 
-  sep=NULL;
-  msg=NULL;
+SocketMessage::SocketMessage(void *msg)
+{
+  this->msg=msg;
 }
 
-SocketMessage::SocketMessage(SocketEpChannel* sep) { 
-  this->sep=sep;
+SocketMessage::SocketMessage(SocketEpChannel* ep) { 
+  this->ep=ep;
   msg=NULL;
+  isEp=true;
+  createMessage();
+}
+
+SocketMessage::SocketMessage(SocketSpChannel* sp) { 
+  this->sp=sp;
+  msg=NULL;
+  isEp=false;
+  createMessage();
 }
 
 SocketMessage::~SocketMessage() {
@@ -39,9 +54,9 @@ SocketMessage::~SocketMessage() {
 
 void 
 SocketMessage::createMessage()  { 
-  realloc(msg, INIT_SIZE);
+  msg=realloc(msg, INIT_SIZE);
   capacity=INIT_SIZE;
-  msg_size=0;
+  msg_size=sizeof(long)+sizeof(int);
 }
 
 void 
@@ -80,7 +95,17 @@ SocketMessage::marshalSpChannel(SpChannel* channel){
 
 void 
 SocketMessage::sendMessage(int handler){
-  //...
+  memcpy((char*)msg, &msg_size, sizeof(long));
+  memcpy((char*)msg+sizeof(long), &handler, sizeof(int));
+
+  if(isEp){
+    //...
+  }
+  else{
+    if(send(sp->sockfd, msg, msg_size, 0) == -1){ 
+      throw CommError("send", errno);
+    }
+  }
 }
 
 void 
@@ -129,7 +154,7 @@ SocketMessage::unmarshalSpChannel(SpChannel* channel){
 
 void* 
 SocketMessage::getLocalObj(){
-  return sep->object; 
+  return ep->object; 
 }
 
 void SocketMessage::destroyMessage() {
@@ -144,7 +169,7 @@ SocketMessage::marshalBuf(const void *buf, int fullsize){
   msg_size+=fullsize;
   if(msg_size>capacity){
     capacity=msg_size+INIT_SIZE;
-    realloc(msg, capacity);
+    msg=realloc(msg, capacity);
   }
   memcpy((char*)msg+msg_size-fullsize, buf, fullsize); 
 }

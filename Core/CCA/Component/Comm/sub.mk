@@ -32,6 +32,7 @@ SRCS     += \
 	$(SRCDIR)/NexusSpMessage.cc \
 	$(SRCDIR)/NexusEpMessage.cc \
 	$(SRCDIR)/SocketMessage.cc \
+	$(SRCDIR)/SocketThread.cc \
 	$(SRCDIR)/ReplyEP.cc \
 	$(SRCDIR)/NexusHandlerThread.cc \
 	$(SRCDIR)/CommNexus.cc
