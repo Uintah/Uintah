@@ -78,6 +78,8 @@ extern "C" {
 #include <string>
 #include <unistd.h>
 
+#include <TauProfilerForSCIRun.h>
+
 //#define __ia64__
 #ifdef __ia64__
 #  include <ia64intrin.h>
@@ -402,6 +404,8 @@ static
 void*
 run_threads(void* priv_v)
 {
+  TAU_REGISTER_THREAD();
+
   Thread_private* priv = (Thread_private*)priv_v;
   if (pthread_setspecific(thread_key, priv->thread))
   {
