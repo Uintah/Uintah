@@ -58,7 +58,7 @@ PSELIBS := Core/Datatypes Core/Persistent Core/Containers \
 	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Geometry Core/GeomInterface \
         Core/TkExtensions Core/Algorithms/DataIO \
-	Dataflow/Network Dataflow/Ports \
+	Dataflow/Network Dataflow/Ports Core/Volume
 
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY)
 
