@@ -34,6 +34,7 @@ namespace Modules {
 
 static map<clString, ObjTag*>::iterator viter;
 
+int CAPTURE_Z_DATA_HACK = 0;
 
 static OpenGL* current_drawer=0;
 static const int pick_buffer_size = 512;
@@ -253,11 +254,7 @@ void OpenGL::redraw_loop()
 	    Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
 	    
 	    tmpview.up(y_a.vector());
-
-	    if (roe->inertia_mode==1)
 	      tmpview.eyep((z_a*(roe->eye_dist)) + tmpview.lookat().vector());
-	    else if (roe->inertia_mode==2)
-	      tmpview.lookat(tmpview.eyep()-(z_a*(roe->eye_dist)).vector());
 
 	    roe->view.set(tmpview);	    
 	} else {
@@ -380,7 +377,8 @@ void OpenGL::redraw_frame()
     View view(roe->view.get());
     lastview=view;
     double aspect=double(xres)/double(yres);
-    double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov()/2.))));
+    // XXX - UNICam change-- should be '1.0/aspect' not 'aspect' below
+    double fovy=RtoD(2*Atan(1.0/aspect*Tan(DtoR(view.fov()/2.))));
 
     drawinfo->reset();
     int do_stereo=roe->do_stereo.get();
@@ -421,8 +419,7 @@ void OpenGL::redraw_frame()
 	throttle.start();
 	Vector eyesep(0,0,0);
 	if(do_stereo){
-	  //double eye_sep_dist=0.025/2;
-	  double eye_sep_dist=roe->sbase.get()*(roe->sr.get()?0.048:0.0125);
+	    double eye_sep_dist=0.025/2;
 	  Vector u, v;
 	  view.get_viewplane(aspect, 1.0, u, v);
 	  u.normalize();
@@ -511,11 +508,9 @@ void OpenGL::redraw_frame()
 		if(do_stereo){
 		  if(i==0){
 		    eyep-=eyesep;
-		    if (!roe->sr.get())
 		      lookat-=eyesep;
 		  } else {
 		    eyep+=eyesep;
-		    if(!roe->sr.get())
 		       lookat+=eyesep;
 		  }
 		}
@@ -554,6 +549,11 @@ void OpenGL::redraw_frame()
 	    // now make the Roe setup its clipping planes...
 	    roe->setClip(drawinfo);
 	         
+            // UNICAM addition
+            glGetDoublev (GL_MODELVIEW_MATRIX, get_depth_model);
+            glGetDoublev (GL_PROJECTION_MATRIX, get_depth_proj);
+            glGetIntegerv(GL_VIEWPORT, get_depth_view);
+
 	    // Draw it all...
 	    current_time=modeltime;
 	    roe->do_for_visible(this, (RoeVisPMF)&OpenGL::redraw_obj);
@@ -700,6 +700,16 @@ void OpenGL::redraw_frame()
 	      glCallList(imglist);
 	  }
 #endif
+
+          // save z-buffer data
+          if (CAPTURE_Z_DATA_HACK) {
+            CAPTURE_Z_DATA_HACK = 0;
+            glReadPixels( 0, 0,
+                          xres, yres,
+                          GL_DEPTH_COMPONENT, GL_FLOAT,
+                          pixel_depth_data );
+            cerr << "(read from (0,0) to (" << xres << "," << yres << ")" << endl;
+          }
 
 	  // Wait for the right time before swapping buffers
 	  //TCLTask::unlock();
@@ -910,7 +920,8 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
     // Setup the view...
     View view(roe->view.get());
     double aspect=double(xres)/double(yres);
-    double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov()/2.))));
+    // XXX - UNICam change-- should be '1.0/aspect' not 'aspect' below
+    double fovy=RtoD(2*Atan(1.0/aspect*Tan(DtoR(view.fov()/2.))));
 
     salmon->geomlock.readLock();
 
@@ -1785,6 +1796,29 @@ void OpenGL::EndMpeg()
 #endif
 }
 
+// return world-space depth to point under pixel (x, y)
+int OpenGL::pick_scene( int x, int y, Point *p )
+{
+  // y = 0 is bottom of screen (not top of screen, which is what X
+  // events reports)
+  y = (yres - 1) - y;
+  int index = x + (y * xres);
+  double z = pixel_depth_data[index];
+
+  if (p) {
+    // unproject the window point (x, y, z)
+    GLdouble world_x, world_y, world_z;
+    gluUnProject(x, y, z,
+                 get_depth_model, get_depth_proj, get_depth_view,
+                 &world_x, &world_y, &world_z);
+    
+    *p = Point(world_x, world_y, world_z);
+  }
+    
+  // if z is close to 1, then assume no object was picked
+  return (z < .999999);
+}
+
 GetReq::GetReq()
 {
 }
@@ -1807,11 +1841,18 @@ ImgReq::ImgReq(const clString& n, const clString& t)
 
 //
 // $Log$
-// Revision 1.30  2000/10/08 05:42:38  samsonov
-// Added rotation around eye point and corresponding inertia mode; to use the mode , use ALT key and middle mouse button
+// Revision 1.31  2000/12/01 23:24:42  yarden
+// remove Alexi's rotations.
+// add new 3D navigation from Brown.
+//   1. press right button and move *initially* left/right means Pan mode
+//   2. press right button and move *initially* up/down    means Move in/out
+//   3. click right button create a point as origin of rotation
+//      then, press right button to rotate around that point.
+//      after the rotation, the point disappear.
+// Alexi will now reinsert his code.
 //
-// Revision 1.29  2000/09/29 08:06:59  samsonov
-// Changes in stereo implementation
+// Revision 1.1.1.1  2000/08/25 16:49:50  jr
+// SCIRun source on 08252000 from yarden
 //
 // Revision 1.28  2000/08/12 20:41:52  dmw
 // set fog color to be the same as the background color (instead of always being black)

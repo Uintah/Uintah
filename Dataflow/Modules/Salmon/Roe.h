@@ -32,6 +32,29 @@
 
 #include <map.h>
 
+// define 'the_time()' function for UniCam
+#ifdef WIN32
+#include <windows.h>
+#include <winbase.h>
+
+inline double the_time() {
+    return double(GetTickCount())/1000.0;
+}
+#else
+#include <sys/time.h>
+
+inline double the_time() {
+    struct timeval ts; struct timezone tz;
+    gettimeofday(&ts, &tz);
+    return (double)(ts.tv_sec + ts.tv_usec/1e6);
+}
+#endif
+
+template <class Type>
+inline Type clamp(const Type a,const Type b,const Type c) { return a > b ? (a < 
+c ? a : c) : b ; }
+inline int  Sign (double a)             { return a > 0 ? 1 : a < 0 ? -1 : 0; }
+
 namespace SCICore {
   namespace GeomSpace {
     class GeomObj;
@@ -64,7 +87,7 @@ using PSECore::Datatypes::GeometryData;
 using SCICore::GeomSpace::TCLColor;
 using SCICore::GeomSpace::TCLView;
 using SCICore::GeomSpace::View;
- using SCICore::GeomSpace::GeomGroup; 
+using SCICore::GeomSpace::GeomGroup; 
 using SCICore::GeomSpace::GeomObj;
 using SCICore::GeomSpace::GeomPick;
 using SCICore::GeomSpace::GeomSphere;
@@ -77,7 +100,6 @@ using SCICore::Containers::Array1;
 using SCICore::Thread::FutureValue;
 
 using namespace SCICore::TclInterface;
-
 
 class DBContext;
 class Renderer;
@@ -111,7 +133,7 @@ public:
 public:
   typedef map<clString, Renderer*>	MapClStringRenderer;
   typedef map<clString, ObjTag*>	MapClStringObjTag;
-  TCLstring pos;
+  TCLstring pos;  
   TCLint caxes;
   TCLint iaxes;  
 protected:
@@ -229,6 +251,53 @@ public:
   void mouse_rotate_eyep(int, int, int, int, int, int);
   void mouse_pick(int, int, int, int, int, int);
 
+#if 1
+  // ---- start UniCam interactor methods & member variables
+
+  // XXX - note: dependencies did not work in my (asf's) hierarchy at
+  // brown.  When i added variables here, it caused the renderer to
+  // crash.  After debugging, i'm 99% sure the reason is files that
+  // depend on Roe.h are not updated when it is modified.  Is this a
+  // bug in the Makefiles?
+
+  double _dtime;
+  double _dist;
+  float _last_pos[3], _start_pix[2], _last_pix[2];
+
+  Point _down_pt;
+  int   _down_x, _down_y;
+  Point _center;  // center of camera rotation
+
+  GeomSphere     *focus_sphere;
+  int             is_dot;  // is the focus_sphere being displayed?
+
+  enum {UNICAM_CHOOSE = 0, UNICAM_ROT, UNICAM_PAN, UNICAM_ZOOM};
+  int  unicam_state;
+
+  void choose(int X, int Y);
+  void rot   (int X, int Y);
+  void zoom  (int X, int Y);
+  void pan   (int X, int Y);
+
+  void   ShowFocusSphere();
+  void   HideFocusSphere();
+  Point  GetPointUnderCursor( int x, int y );
+
+  void   MyTranslateCamera(Vector offset);
+  void   MyRotateCamera   (Point  center,
+                           Vector axis,
+                           double angle);
+  Vector CameraToWorld(Vector v);
+  void   NormalizeMouseXY( int X, int Y, float *NX, float *NY);
+  float  WindowAspect();
+
+  // for 'film_dir' and 'film_pt', x & y should be in the range [-1, 1].
+  Vector film_dir   (double x, double y);
+  Point  film_pt    (double x, double y, double z=1.0);
+
+  // ---- end UniCam interactor methods & member variables
+#endif
+
   void tcl_command(TCLArgs&, void*);
   void get_bounds(BBox&);
 
@@ -259,8 +328,6 @@ public:
 
 				// Stereo
   TCLint do_stereo;
-  TCLvardouble sbase;           // multiplier to stereo base
-  TCLvarint    sr;              // if 0 - parallel shift, 1 - rotational shift
   
   // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
   TCLint do_bawgl;
@@ -304,6 +371,16 @@ public:
 
 //
 // $Log$
+// Revision 1.20  2000/12/01 23:24:42  yarden
+// remove Alexi's rotations.
+// add new 3D navigation from Brown.
+//   1. press right button and move *initially* left/right means Pan mode
+//   2. press right button and move *initially* up/down    means Move in/out
+//   3. click right button create a point as origin of rotation
+//      then, press right button to rotate around that point.
+//      after the rotation, the point disappear.
+// Alexi will now reinsert his code.
+//
 // Revision 1.19  2000/11/27 23:09:38  darbyb
 // -Axes are now omnipresent in Roe
 // -Ability to turn axes on/off
