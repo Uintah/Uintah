@@ -108,8 +108,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 //  Material* water_to_glass   = new InvisibleMaterial(); 
   Material* white = new LambertianMaterial(Color(0.8,0.8,0.8));
   Material* red = new LambertianMaterial(Color(1,0,0));
-  Material* tan = new SeaLambertianMaterial(Color(0.6,0.6,0.2), tvcc);
-  Material* seawhite = new SeaLambertianMaterial(Color(0.3,0.3,0.3), tvcc);
+  SeaLambertianMaterial* tan = new SeaLambertianMaterial(Color(0.6,0.6,0.2), tvcc);
+  SeaLambertianMaterial* seawhite = new SeaLambertianMaterial(Color(0.3,0.3,0.3), tvcc);
   Material* black = new PhongMaterial(Color(0.05,0.05,0.05), 1.0);
   Material* metal = new MetalMaterial(Color(0.1,0.1,0.1));
   Material* marble1 = new CrowMarble(4.5, Vector(.3, .3, 0), Color(.9,.9,.9), Color(.8, .8, .8), Color(.7, .7, .7)); 
