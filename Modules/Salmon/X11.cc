@@ -262,7 +262,7 @@ void X11::redraw(Salmon* salmon, Roe* roe)
     str << roe->id << " updatePerf \"";
     str << npolys << " polygons in " << timer.time()
 	<< " seconds\" \"" << npolys/timer.time()
-	<< " polygons/second\"" << '\0';
+	<< " polygons/second\" \"\"" << '\0';
     cerr << "str=" << str.str() << endl;
     TCL::execute(str.str());
 }

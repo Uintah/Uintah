@@ -93,6 +93,8 @@ itcl_class Roe {
 	pack $w.bframe.pf.perf1 -side top -anchor n
 	label $w.bframe.pf.perf2 -width 32 -text "Hello"
 	pack $w.bframe.pf.perf2 -side top -anchor n
+	label $w.bframe.pf.perf3 -width 32 -text "Hello"
+	pack $w.bframe.pf.perf3 -side top -anchor n
 	canvas $w.bframe.mousemode -width 200 -height 70 -relief groove -borderwidth 2
 	pack $w.bframe.mousemode -side left -fill y -pady 2 -padx 2
 	frame $w.bframe.v
@@ -189,10 +191,11 @@ itcl_class Roe {
 	pack $w.wframe.draw -expand yes -fill both
     }
 
-    method updatePerf {p1 p2} {
+    method updatePerf {p1 p2 p3} {
 	set w .ui$this
 	$w.bframe.pf.perf1 configure -text $p1
 	$w.bframe.pf.perf2 configure -text $p2
+	$w.bframe.pf.perf3 configure -text $p3
     }
 
     method makeViewPopup {} {

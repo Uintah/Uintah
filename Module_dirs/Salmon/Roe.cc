@@ -513,30 +513,28 @@ void Roe::mouse_pick(int action, int x, int y)
 	    View tmpview(view.get());
 	    Point cen(itemBB.center());
 	    double depth=tmpview.depth(cen);
-
+	    Vector u,v;
 	    int xres=current_renderer->xres;
 	    int yres=current_renderer->yres;
-	    Point p1(2*x/double(xres)-1, 2*y/double(yres)-1, depth);
-	    Point p0(2*last_x/double(xres)-1, 2*last_y/double(yres)-1, depth);
 	    double aspect=double(xres)/double(yres);
-	    cerr << "Eye: p1=" << p1 << endl;
-	    p1=tmpview.eyespace_to_objspace(p1, aspect);
-	    cerr << "Object: p1=" << p1 << endl;
-	    cerr << "cen=" << cen << endl;
-	    p0=tmpview.eyespace_to_objspace(p0, aspect);
-	    Vector dir(p1-p0);
-	    double dist=dir.normalize();
+	    tmpview.get_viewplane(aspect, depth, u, v);
+	    int dx=x-last_x;
+	    int dy=y-last_y;
+	    double ndx=(2*dx/(double(xres)-1));
+	    double ndy=(2*dy/(double(yres)-1));
+	    Vector motionv(u*ndx+v*ndy);
 
 	    double maxdot=0;
 	    int prin_dir=-1;
 	    for (int i=0; i<pick_pick->nprincipal(); i++) {
-		double pdot=Dot(dir, pick_pick->principal(i));
+		double pdot=Dot(motionv, pick_pick->principal(i));
 		if(pdot > maxdot){
 		    maxdot=pdot;
 		    prin_dir=i;
 		}
 	    }
 	    if(prin_dir != -1){
+		double dist=motionv.length();
 		Vector mtn(pick_pick->principal(prin_dir)*dist);
 		total_x+=mtn.x();
 		total_y+=mtn.y();

@@ -43,6 +43,7 @@ class OpenGL : public Renderer {
     char* strbuf;
     int maxlights;
     DrawInfoOpenGL* drawinfo;
+    WallClockTimer fpstimer;
 
     void redraw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
     void pick_draw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
@@ -88,10 +89,12 @@ OpenGL::OpenGL()
 {
     strbuf=new char[STRINGSIZE];
     drawinfo=new DrawInfoOpenGL;
+    fpstimer.start();
 }
 
 OpenGL::~OpenGL()
 {
+    fpstimer.stop();
     delete[] strbuf;
 }
 
@@ -257,11 +260,19 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 
     // Report statistics
     timer.stop();
+    fpstimer.stop();
+    double fps=1./fpstimer.time();
+    fps+=0.05; // Round to nearest tenth
+    int fps_whole=(int)fps;
+    int fps_tenths=(int)((fps-fps_whole)*10);
+    fpstimer.clear();
+    fpstimer.start(); // Start it running for next time
     ostrstream str(strbuf, STRINGSIZE);
     str << roe->id << " updatePerf \"";
     str << drawinfo->polycount << " polygons in " << timer.time()
 	<< " seconds\" \"" << drawinfo->polycount/timer.time()
-	<< " polygons/second\"" << '\0';
+	<< " polygons/second\"" << " \"" << fps_whole << "."
+	<< fps_tenths << " frames/sec\""	<< '\0';
     TCL::execute(str.str());
     TCLTask::unlock();
 }

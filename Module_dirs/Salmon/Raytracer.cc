@@ -114,7 +114,7 @@ void Raytracer::redraw(Salmon* _salmon, Roe* _roe)
 	    ostrstream str(strbuf, STRINGSIZE);
 	    str << roe->id << " updatePerf \""
 		<< int(double(yc)/double(yres)*100) << "% in "
-		<< timer.time() << " seconds\" \"\";update idletasks" << '\0';
+		<< timer.time() << " seconds\" \"\" \"\";update idletasks" << '\0';
 	    TCL::execute(str.str());
 	}
 	int y, nscan;
@@ -134,7 +134,7 @@ void Raytracer::redraw(Salmon* _salmon, Roe* _roe)
     timer.stop();
     ostrstream str(strbuf, STRINGSIZE);
     str << roe->id << " updatePerf \"Done in "
-	<< timer.time() << " seconds\" \"\";update idletasks" << '\0';
+	<< timer.time() << " seconds\" \"\" \"\";update idletasks" << '\0';
     TCL::execute(str.str());
 }
 
