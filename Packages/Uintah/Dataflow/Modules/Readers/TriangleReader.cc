@@ -180,6 +180,8 @@ void TriangleReader::execute()
   }
 
   if( !animate.get() && checkFile( filename.get() )){
+     clString command( id + " activate");
+     TCL::execute(command);
     status.set("Reading file");
     ifstream is(filename.get()(), ios::in);
     wasRead = Read( is, cmh, tris );
@@ -241,6 +243,9 @@ void TriangleReader::doAnimation( ColorMapHandle cmh )
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 22:42:38  kuzimmer
+// fixed error in animation
+//
 // Revision 1.6  1999/10/07 02:08:31  sparker
 // use standard iostreams and complex type
 //
