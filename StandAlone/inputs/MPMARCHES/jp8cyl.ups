@@ -58,6 +58,8 @@
 	<save label="totHtFluxY"/>
 	<save label="totHtFluxZ"/>
 
+	<save label="heaTranSolid_NC"/>
+
 	<checkpoint timestepInterval="10" cycle="2"/>
 
    </DataArchiver>
@@ -369,7 +371,6 @@
 	<turbulentPrandtNo>0.7</turbulentPrandtNo>
 	<fluidHeatCapacity>1007.</fluidHeatCapacity>
 	<IfCutCell>false</IfCutCell>
-	<StationarySolid>false</StationarySolid>
 	<inviscid>false</inviscid>
 	<restart>true</restart>
 
