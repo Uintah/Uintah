@@ -50,15 +50,15 @@ BCData::getBCValues(int mat_id,const string& type) const
 #if 0
     cerr << "Size of d_data is less than mat_id, must be an ALL" << endl;
 #endif
-    map<string,BoundCondBase*>::const_iterator it1;
+    map<string,Handle<BoundCondBase> >::const_iterator it1;
     it1 = d_data[0].find(type);
     if (it1 == d_data[0].end())
       return 0;
     else
-      return it1->second;
+      return it1->second.get_rep();
     
   } else {
-    map<string,BoundCondBase*>::const_iterator iter;   
+    map<string,Handle<BoundCondBase> >::const_iterator iter;   
     iter = d_data[mat_id].find(type);
     if (iter == d_data[mat_id].end()) {
 #if 0
@@ -71,9 +71,9 @@ BCData::getBCValues(int mat_id,const string& type) const
 #endif
 	return 0;
       } else 
-	return iter->second;
+	return iter->second.get_rep();
     } else
-      return iter->second;
+      return iter->second.get_rep();
   }
 	
 }
