@@ -923,6 +923,110 @@ TetVolMesh::combine_3_to_2(Cell::index_type &removed,
   mod_tet(c2, extrema[1], face[1], face[0], face[2]);
   return true;
 }
+
+//! Undoes a previous center split.
+bool
+TetVolMesh::combine_4_to_1_cell(Cell::array_type &tets, 
+				set<int> &removed_tets,
+				set<int> &removed_nodes) 
+{
+  // the center node gets removed, it is at index 3 for each cell.
+  unsigned c0, c1, c2, c3;
+  c0 = tets[0]*4;
+  c1 = tets[1]*4;
+  c2 = tets[2]*4;
+  c3 = tets[3]*4;
+
+  // Sanity check that that we are removing the right node.
+  if ((cells_[c0 + 3] == cells_[c1 + 3]) && 
+      (cells_[c0 + 3] == cells_[c2 + 3]) && 
+      (cells_[c0 + 3] == cells_[c3 + 3])) 
+  {
+    removed_nodes.insert(cells_[c0+3]);
+    removed_tets.insert(tets[1]);
+    removed_tets.insert(tets[2]);
+    removed_tets.insert(tets[3]);
+    // clean up to be removed tets
+    for (int i = 1; i < 4; i++) {
+      delete_cell_node_neighbors(tets[i]);
+      delete_cell_edges(tets[i]);
+      delete_cell_faces(tets[i]);
+    }
+    
+    // redefine the remaining tet.
+    // get the 4 unique nodes that make up the new single tet.
+    set<int> new_tet;
+    new_tet.insert(cells_[c0]);
+    new_tet.insert(cells_[c0 + 1]);
+    new_tet.insert(cells_[c0 + 2]);
+    new_tet.insert(cells_[c1]);
+    new_tet.insert(cells_[c1 + 1]);
+    new_tet.insert(cells_[c1 + 2]);
+    new_tet.insert(cells_[c2]);
+    new_tet.insert(cells_[c2 + 1]);
+    new_tet.insert(cells_[c2 + 2]);
+    new_tet.insert(cells_[c3]);
+    new_tet.insert(cells_[c3 + 1]);
+    new_tet.insert(cells_[c3 + 2]);
+    ASSERT(new_tet.size() == 4);
+
+    set<int>::iterator iter = new_tet.begin();
+    mod_tet(tets[0], *iter++, *iter++, *iter++, *iter);
+
+    return true;
+  }
+  // should all share a center point, this set does not.
+  return false;
+}
+
+void
+TetVolMesh::nbors_from_2_to_3_split(Cell::index_type ci, 
+				    Cell::array_type &nbors)
+{
+  //! The first 2 nodes make up the edge that the 3 tets share.
+  //! Search the all_edges_ multiset for edges matching our edge.
+  Edge::index_type ei;
+  get_edge(ei, ci, ci * 4, ci * 4 + 1);
+
+  pair<Edge::HalfEdgeSet::iterator, Edge::HalfEdgeSet::iterator> range =
+    all_edges_.equal_range(ei);
+
+  
+  Edge::HalfEdgeSet::iterator edge_iter = range.first;
+  nbors.clear();
+  while(edge_iter != range.second) {
+    nbors.push_back(*edge_iter / 6);
+    ++edge_iter;
+  }
+}
+
+
+//! ASSUMPTION: call this only if you know ci was created from a center split
+//! operation. This call will succeed even if ci was not created this way
+//! except if it is a boundary cell.
+void
+TetVolMesh::nbors_from_center_split(Cell::index_type ci, 
+				    Cell::array_type &tets)
+{
+  // Any tet in the center split, knows its 3 nbors.  All faces
+  // except the face opposite the center node define the nbors.
+
+  unsigned index = ci * 4;
+  Face::index_type f0 = cells_[index];
+  Face::index_type f1 = cells_[index + 1];
+  Face::index_type f2 = cells_[index + 2];
+  
+  tets.clear();
+  tets.push_back(ci);
+  Cell::index_type n;
+  get_neighbor(n, ci, f0);
+  tets.push_back(n);
+  get_neighbor(n, ci, f1);
+  tets.push_back(n);
+  get_neighbor(n, ci, f2);
+  tets.push_back(n);
+}
+
 //! Return in fi the face that is opposite the node ni in the cell ci.
 //! Return false if bad input, else true indicating the face was found.
 bool
@@ -1589,6 +1693,7 @@ TetVolMesh::add_elem(Node::array_type a)
 void
 TetVolMesh::delete_cells(set<int> &to_delete)
 {
+  cells_lock_.lock();
   set<int>::reverse_iterator iter = to_delete.rbegin();
   while (iter != to_delete.rend()) {
     // erase the correct cell
@@ -1599,6 +1704,32 @@ TetVolMesh::delete_cells(set<int> &to_delete)
     ce+=4;
     cells_.erase(cb, ce);
   }
+  cells_lock_.unlock();
+
+  synchronized_ &= ~LOCATE_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  if (synchronized_ & FACE_NEIGHBORS_E) {
+    synchronized_ &= ~FACE_NEIGHBORS_E;
+    compute_faces();
+  }
+  if (synchronized_ & EDGE_NEIGHBORS_E) {
+    synchronized_ &= ~EDGE_NEIGHBORS_E;
+    compute_edges();
+  }
+
+}
+
+void
+TetVolMesh::delete_nodes(set<int> &to_delete)
+{
+  points_lock_.lock();
+  set<int>::reverse_iterator iter = to_delete.rbegin();
+  while (iter != to_delete.rend()) {
+    TetVolMesh::Node::index_type n = *iter++;
+    vector<Point>::iterator pit = points_.begin() + n;
+    points_.erase(pit);
+  }
+  points_lock_.unlock();
 
   synchronized_ &= ~LOCATE_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;

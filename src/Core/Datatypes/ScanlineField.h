@@ -152,19 +152,29 @@ ScanlineField<T>::get_type_description(int n) const
   static string namesp("SCIRun");
   static string path(__FILE__);
 
-  if(!td){
-    if (n == -1) {
+  if (n == -1) {
+    static TypeDescription* tdn1 = 0;
+    if (tdn1 == 0) {
       const TypeDescription *sub = SCIRun::get_type_description((T*)0);
       TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
       (*subs)[0] = sub;
-      td = scinew TypeDescription(name, subs, path, namesp);
+      tdn1 = scinew TypeDescription(name, subs, path, namesp);
+    } 
+    td = tdn1;
+  }
+  else if(n == 0) {
+    static TypeDescription* tdn0 = 0;
+    if (tdn0 == 0) {
+      tdn0 = scinew TypeDescription(name, 0, path, namesp);
     }
-    else if(n == 0) {
-      td = scinew TypeDescription(name, 0, path, namesp);
+    td = tdn0;
+  }
+  else {
+    static TypeDescription* tdnn = 0;
+    if (tdnn == 0) {
+      tdnn = (TypeDescription *) SCIRun::get_type_description((T*)0);
     }
-    else {
-      td = (TypeDescription *) SCIRun::get_type_description((T*)0);
-    }
+    td = tdnn;
   }
   return td;
 }
