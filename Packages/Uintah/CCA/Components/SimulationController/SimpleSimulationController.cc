@@ -48,6 +48,7 @@ SimpleSimulationController::SimpleSimulationController(const ProcessorGroup* myw
   SimulationController(myworld)
 {
    d_restarting = false;
+   d_combinePatches = false;
 }
 
 SimpleSimulationController::~SimpleSimulationController()
@@ -59,12 +60,17 @@ SimpleSimulationController::doRestart(std::string restartFromDir, int timestep,
 				      bool fromScratch, bool removeOldDir)
 {
    d_restarting = true;
-   d_restartFromDir = restartFromDir;
+   d_fromDir = restartFromDir;
    d_restartTimestep = timestep;
    d_restartFromScratch = fromScratch;
    d_restartRemoveOldDir = removeOldDir;
 }
 
+void SimpleSimulationController::doCombinePatches(std::string fromDir)
+{
+   d_combinePatches = true;
+   d_fromDir = fromDir;
+}
 
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
 double stdDeviation(list<double>& vals, double& mean)
@@ -162,10 +168,21 @@ SimpleSimulationController::run()
    // Parse time struct
    SimulationTime timeinfo(ups);
 
+   if (d_combinePatches) {
+     Dir combineFromDir(d_fromDir);
+     output->combinePatchSetup(combineFromDir);
+
+     // somewhat of a hack, but the patch combiner specifies exact delt's
+     // and should not use a delt factor.
+     timeinfo.delt_factor = 1;
+     timeinfo.delt_min = 0;
+     timeinfo.delt_max = timeinfo.maxTime;
+   }   
+   
    if(d_restarting){
       // create a temporary DataArchive for reading in the checkpoints
       // archive for restarting.
-      Dir restartFromDir(d_restartFromDir);
+      Dir restartFromDir(d_fromDir);
       Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
       DataArchive archive(checkpointRestartDir.getName(),
 			  d_myworld->myrank(), d_myworld->size());
