@@ -310,6 +310,15 @@ itcl_class Roe {
 	bind $w <Shift-ButtonPress-1> "$this-c mpick start %x %y %s %b"
 	bind $w <Shift-ButtonPress-2> "$this-c mpick start %x %y %s %b"
 	bind $w <Shift-ButtonPress-3> "$this-c mpick start %x %y %s %b"
+	
+	#-----------------------------------------------------------------
+	# by AS:
+	bind $w <Alt-ButtonPress-2> "$this-c mrotate_eyep start %x %y %t"
+	bind $w <Alt-Button2-Motion> "$this-c mrotate_eyep move %x %y %t"
+	bind $w <Alt-ButtonRelease-2> "$this-c mrotate_eyep end %x %y %t"
+	# end by AS
+	#-----------------------------------------------------------------
+
 	bind $w <Shift-Button1-Motion> "$this-c mpick move %x %y %s 1"
 	bind $w <Shift-Button2-Motion> "$this-c mpick move %x %y %s 2"
 	bind $w <Shift-Button3-Motion> "$this-c mpick move %x %y %s 3"
