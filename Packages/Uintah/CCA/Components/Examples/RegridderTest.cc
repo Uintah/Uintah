@@ -61,6 +61,7 @@ namespace Uintah
 
     d_radiusGrowth = false;
     d_radiusGrowthDir = true; // true is to expand, false to shrink
+
   }
 
   void RegridderTest::scheduleInitialize ( const LevelP& level, SchedulerP& scheduler )
@@ -124,8 +125,8 @@ namespace Uintah
     Task* task = scinew Task( "refine", this, &RegridderTest::refine );
     task->requires(Task::NewDW, d_examplesLabel->density, 0, Task::CoarseLevel, 0,
 		   Task::NormalDomain, Ghost::None, 0);
-    task->requires(Task::NewDW, d_oldDensityLabel, 0, Task::CoarseLevel, 0,
-		   Task::NormalDomain, Ghost::None, 0);
+    //    task->requires(Task::NewDW, d_oldDensityLabel, 0, Task::CoarseLevel, 0,
+    //		   Task::NormalDomain, Ghost::None, 0);
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
 
@@ -164,11 +165,14 @@ namespace Uintah
 
 
   void RegridderTest::computeStableTimestep (const ProcessorGroup*,
-					     const PatchSubset* /*patches*/,
+					     const PatchSubset* patches,
 					     const MaterialSubset* /*matls*/,
 					     DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
   {
-    new_dw->put(delt_vartype(1), d_sharedState->get_delt_label());
+    const Level* level = getLevel(patches);
+    double delt = level->dCell().x();
+    delt = level->adjustDelt(delt);
+    new_dw->put(delt_vartype(delt), d_sharedState->get_delt_label());
   }
 
   void RegridderTest::timeAdvance ( const ProcessorGroup*,
