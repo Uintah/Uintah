@@ -3,8 +3,10 @@
 #include "banbks.h"
 #include "vector.h"
 #include <stdlib.h>
-#include "iostream.h"
+#include <iostream>
 #include "matrix.h"
+
+using namespace std;
 
 void banmprv(double **a, double **al, double **au, int n, int m1, int m2, int indx[], double b[], double x[])
 {

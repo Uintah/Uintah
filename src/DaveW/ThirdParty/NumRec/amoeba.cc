@@ -2,7 +2,10 @@
 #define NRANSI
 #include "nrutil.h"
 //#define NMAX 100000
-#include <iostream.h>
+#include <iostream>
+
+using namespace std;
+
 #define GET_PSUM \
 for (j=1;j<=ndim;j++) {\
    for (sum=0.0,i=1;i<=mpts;i++) sum += p[i][j];\
