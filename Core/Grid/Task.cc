@@ -351,6 +351,8 @@ Task::Dependency::Dependency(Task* task, WhichDW dw, const VarLabel* var,
   patches_dom(patches_dom), matls_dom(matls_dom),
   gtype(gtype), dw(dw), numGhostCells(numGhostCells)
 {
+  if (var)
+    var->addReference();
   req_head=req_tail=comp_head=comp_tail=0;
   if(patches)
     patches->addReference();
@@ -360,6 +362,7 @@ Task::Dependency::Dependency(Task* task, WhichDW dw, const VarLabel* var,
 
 Task::Dependency::~Dependency()
 {
+  VarLabel::destroy(var); // just remove the ref
   if(patches && patches->removeReference())
     delete patches;
   if(matls && matls->removeReference())
