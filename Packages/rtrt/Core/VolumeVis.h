@@ -55,7 +55,7 @@ public:
 
   ///////////////////////////////////////
   // From SCIRun::Persistent
-  virtual void io(SCIRun::Piostream &stream) {
+  virtual void io(SCIRun::Piostream &) {
     ASSERTFAIL("Pio not implemented for VolumeVis");
   }
 
@@ -63,7 +63,7 @@ public:
   // From Object
   virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
-  virtual Vector normal(const Point&, const HitInfo& hit) {
+  virtual Vector normal(const Point&, const HitInfo&) {
     // There really isn't a normal suitable for this object
     return Vector(1,0,0);
   }
@@ -316,35 +316,137 @@ void VolumeVis<DataType>::shade(Color& result, const Ray& ray,
   //                                  0 - completly transparent
   float alpha = 0;
   Color total(0,0,0);
-  Point p;
+  Point current_p;
 
-  for(float t = t_min; t < t_max; t += dpy->t_inc) {
+  // This is precomputed stuff for the fast rendering mode
+  double x_weight_high, y_weight_high, z_weight_high;
+  double tx, ty, tz;
+  int x_low, y_low, z_low;
+  int dxdx = 1, dydy = 1, dzdz = 1;
+
+  float t_inc = dpy->t_inc;
+  bool fast_render_mode = dpy->fast_render_mode;
+  
+  if (fast_render_mode) {
+    // This is the start
+    current_p = ray.origin() + ray.direction() * t_min;
+    // Compute tx, ty, tz
+    tx = ray.direction().x() * t_inc * (nx-1) * inv_diag.x();
+    ty = ray.direction().y() * t_inc * (ny-1) * inv_diag.y();
+    tz = ray.direction().z() * t_inc * (nz-1) * inv_diag.z();
+    // Do stuff for x
+    if (tx >= 0) {
+      dxdx = 1;
+      double norm = (current_p.x() - min.x()) * inv_diag.x();
+      double step = norm * (nx - 1);
+      x_low = clamp(0, (int)step, nx - 2);
+      x_weight_high = step - x_low;
+    } else {
+      dxdx = -1;
+      double norm = (max.x() - current_p.x()) * inv_diag.x();
+      double step = norm * (nx - 1);
+      x_low = clamp(0, (int)step, nx - 2);
+      x_weight_high = step - x_low;
+      x_low = nx - 1 - x_low;
+      tx *= -1;
+    }
+    // Do stuff for y
+    if (ty >= 0) {
+      dydy = 1;
+      double norm = (current_p.y() - min.y()) * inv_diag.y();
+      double step = norm * (ny - 1);
+      y_low = clamp(0, (int)step, ny - 2);
+      y_weight_high = step - y_low;
+    } else {
+      dydy = -1;
+      double norm = (max.y() - current_p.y()) * inv_diag.y();
+      double step = norm * (ny - 1);
+      y_low = clamp(0, (int)step, ny - 2);
+      y_weight_high = step - y_low;
+      y_low = ny - 1 - y_low;
+      ty *= -1;
+    }
+    // Do stuff for z
+    if (tz >= 0) {
+      dzdz = 1;
+      double norm = (current_p.z() - min.z()) * inv_diag.z();
+      double step = norm * (nz - 1);
+      z_low = clamp(0, (int)step, nz - 2);
+      z_weight_high = step - z_low;
+    } else {
+      dzdz = -1;
+      double norm = (max.z() - current_p.z()) * inv_diag.z();
+      double step = norm * (nz - 1);
+      z_low = clamp(0, (int)step, nz - 2);
+      z_weight_high = step - z_low;
+      z_low = nz - 1 - z_low;
+      tz *= -1;
+    }
+  }
+  
+  for(float t = t_min; t < t_max; t += t_inc) {
     // opaque values are 0, so terminate the ray at alpha values close to zero
     if (alpha < RAY_TERMINATION_THRESHOLD) {
-      // get the point to interpolate
-      p = ray.origin() + ray.direction() * t - min.vector();
+      int x_high, y_high, z_high;
+      if (fast_render_mode) {
+	// update all of our values
+	x_high = x_low + dxdx;
+	y_high = y_low + dydy;
+	z_high = z_low + dzdz;
 
-      ////////////////////////////////////////////////////////////
-      // interpolate the point
-
-      // get the indices and weights for the indicies
-      float norm = p.x() * inv_diag.x();
-      float step = norm * (nx - 1);
-      int x_low = clamp(0, (int)step, data.dim1()-2);
-      int x_high = x_low+1;
-      float x_weight_low = x_high - step;
-
-      norm = p.y() * inv_diag.y();
-      step = norm * (ny - 1);
-      int y_low = clamp(0, (int)step, data.dim2()-2);
-      int y_high = y_low+1;
-      float y_weight_low = y_high - step;
-
-      norm = p.z() * inv_diag.z();
-      step = norm * (nz - 1);
-      int z_low = clamp(0, (int)step, data.dim3()-2);
-      int z_high = z_low+1;
-      float z_weight_low = z_high - step;
+	if (x_low < 0 || x_low >= nx) {
+	  //	  cerr << "x_low bad: "<<x_low<<endl;
+	  continue;
+	}
+	if (x_high < 0 || x_high >= nx) {
+	  //	  cerr << "x_high bad: "<<x_high<<endl;
+	  continue;
+	}
+	if (y_low < 0 || y_low >= ny) {
+	  //	  cerr << "y_low bad: "<<y_low<<endl;
+	  continue;
+	}
+	if (y_high < 0 || y_high >= ny) {
+	  //	  cerr << "y_high bad: "<<y_high<<endl;
+	  continue;
+	}
+	if (z_low < 0 || z_low >= nz) {
+	  //	  cerr << "z_low bad: "<<z_low<<endl;
+	  continue;
+	}
+	if (z_high < 0 || z_high >= nz) {
+	  //	  cerr << "z_high bad: "<<z_high<<endl;
+	  continue;
+	}
+      } else {
+	// get the point to interpolate
+	current_p = ray.origin() + ray.direction() * t - min.vector();
+	
+	////////////////////////////////////////////////////////////
+	// interpolate the point
+	
+	// get the indices and weights for the indicies
+	double norm = current_p.x() * inv_diag.x();
+	double step = norm * (nx - 1);
+	x_low = clamp(0, (int)step, data.dim1()-2);
+	x_high = x_low+1;
+	//      float x_weight_low = x_high - step;
+	x_weight_high = step - x_low;
+	
+	norm = current_p.y() * inv_diag.y();
+	step = norm * (ny - 1);
+	y_low = clamp(0, (int)step, data.dim2()-2);
+	y_high = y_low+1;
+	//      float y_weight_low = y_high - step;
+	y_weight_high = step - y_low;
+	
+	norm = current_p.z() * inv_diag.z();
+	step = norm * (nz - 1);
+	z_low = clamp(0, (int)step, data.dim3()-2);
+	z_high = z_low+1;
+	//      float z_weight_low = z_high - step;
+	z_weight_high = step - z_low;
+      }
 
       ////////////////////////////////////////////////////////////
       // do the interpolation
@@ -358,17 +460,17 @@ void VolumeVis<DataType>::shade(Color& result, const Ray& ray,
       f = data(x_high, y_low,  z_high);
       g = data(x_high, y_high, z_low);
       h = data(x_high, y_high, z_high);
-
+      
       float lz1, lz2, lz3, lz4, ly1, ly2, value;
-      lz1 = a * z_weight_low + b * (1 - z_weight_low);
-      lz2 = c * z_weight_low + d * (1 - z_weight_low);
-      lz3 = e * z_weight_low + f * (1 - z_weight_low);
-      lz4 = g * z_weight_low + h * (1 - z_weight_low);
+      lz1 = a * (1 - z_weight_high) + b * z_weight_high;
+      lz2 = c * (1 - z_weight_high) + d * z_weight_high;
+      lz3 = e * (1 - z_weight_high) + f * z_weight_high;
+      lz4 = g * (1 - z_weight_high) + h * z_weight_high;
 
-      ly1 = lz1 * y_weight_low + lz2 * (1 - y_weight_low);
-      ly2 = lz3 * y_weight_low + lz4 * (1 - y_weight_low);
+      ly1 = lz1 * (1 - y_weight_high) + lz2 * y_weight_high;
+      ly2 = lz3 * (1 - y_weight_high) + lz4 * y_weight_high;
 
-      value = ly1 * x_weight_low + ly2 * (1 - x_weight_low);
+      value = ly1 * (1 - x_weight_high) + ly2 * x_weight_high;
       
       //cout << "value = " << value << endl;
 
@@ -397,27 +499,29 @@ void VolumeVis<DataType>::shade(Color& result, const Ray& ray,
 	float dy, dy1, dy2;
 	dy1 = lz2 - lz1;
 	dy2 = lz4 - lz3;
-	dy = dy1 * x_weight_low + dy2 * (1 - x_weight_low);
+	dy = dy1 * (1 - x_weight_high) + dy2 * x_weight_high;
 	
 	float dz, dz1, dz2, dz3, dz4, dzly1, dzly2;
 	dz1 = b - a;
 	dz2 = d - c;
 	dz3 = f - e;
 	dz4 = h - g;
-	dzly1 = dz1 * y_weight_low + dz2 * (1 - y_weight_low);
-	dzly2 = dz3 * y_weight_low + dz4 * (1 - y_weight_low);
-	dz = dzly1 * x_weight_low + dzly2 * (1 - x_weight_low);
+	dzly1 = dz1 * (1 - y_weight_high) + dz2 * y_weight_high;
+	dzly2 = dz3 * (1 - y_weight_high) + dz4 * y_weight_high;
+	dz = dzly1 * (1 - x_weight_high) + dzly2 * x_weight_high;
 	if (dx || dy || dz){
 	  float length2 = dx*dx+dy*dy+dz*dz;
 	  // this lets the compiler use a special 1/sqrt() operation
 	  float ilength2 = 1/sqrtf(length2);
-	  gradient = Vector(dx*ilength2, dy*ilength2, dz*ilength2);
-	} else
+	  gradient = Vector(dx*ilength2*dxdx, dy*ilength2*dydy,
+			    dz*ilength2*dzdz);
+	} else {
 	  gradient = Vector(0,0,0);
+	}
 
 	Light* light=cx->scene->light(0);
 	Vector light_dir;
-	light_dir = light->get_pos()-p;
+	light_dir = light->get_pos()-current_p;
 
 	Color temp = color(gradient, ray.direction(), light_dir.normal(), 
 			   *(dpy->lookup_color(value)),
@@ -425,14 +529,33 @@ void VolumeVis<DataType>::shade(Color& result, const Ray& ray,
 	total += temp * alpha_factor;
 	alpha += alpha_factor;
       }
+      if (fast_render_mode) {
+	x_weight_high += tx;
+	if (x_weight_high > 1) {
+	  int xinc = (int)x_weight_high;
+	  x_weight_high = x_weight_high - xinc;
+	  x_low += xinc * dxdx;
+	}
+	y_weight_high += ty;
+	if (y_weight_high > 1) {
+	  int yinc = (int)y_weight_high;
+	  y_weight_high = y_weight_high - yinc;
+	  y_low += yinc * dydy;
+	}
+	z_weight_high += tz;
+	if (z_weight_high > 1) {
+	  int zinc = (int)z_weight_high;
+	  z_weight_high = z_weight_high - zinc;
+	  z_low += zinc * dzdz;
+	}
+      }	
     } else {
       break;
     }
   }
   if (alpha < RAY_TERMINATION_THRESHOLD) {
     Color bgcolor;
-    Point origin(p.x(),p.y(),p.z());
-    Ray r(origin,ray.direction());
+    Ray r(current_p,ray.direction());
     cx->worker->traceRay(bgcolor, r, depth+1, atten,
 			 accumcolor, cx);
     total += bgcolor * (1-alpha);
