@@ -130,6 +130,9 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
       t->requires(Task::ParentNewDW,V_Label, ice_matls);
     }
   } 
+  if(d_usingNG_hack){
+    addRequires_NGNozzle(t, "imp_update_press_CC", lb, ice_matls);  // NG hack
+  }
 /*===========TESTING==========`*/
   
   t->computes(lb->press_CCLabel,      press_matl,oims); 
@@ -184,6 +187,13 @@ void ICE::scheduleImplicitVel_FC(SchedulerP& sched,
   task->requires(Task::NewDW,       lb->uvel_FCLabel,      gac,2);
   task->requires(Task::NewDW,       lb->vvel_FCLabel,      gac,2);
   task->requires(Task::NewDW,       lb->wvel_FCLabel,      gac,2);
+  
+/*`==========TESTING==========*/
+  if(d_usingNG_hack){
+    addRequires_NGNozzle(task, "imp_velFC_Exchange", lb, ice_matls);  // NG hack
+  } 
+/*===========TESTING==========`*/
+  
   task->computes(lb->sp_volX_FCLabel);
   task->computes(lb->sp_volY_FCLabel);
   task->computes(lb->sp_volZ_FCLabel);
@@ -410,17 +420,14 @@ void ICE::setupMatrix(const ProcessorGroup*,
 
       A_tmp.t *= -tmp_t_b;
       A_tmp.b *= -tmp_t_b;
+      
+      A_tmp.p = beta[c] -
+          (A_tmp.n + A_tmp.s + A_tmp.e + A_tmp.w + A_tmp.t + A_tmp.b);
     }  
     //__________________________________
     //  Boundary conditons on A.e, A.w, A.n, A.s, A.t, A.b
     ImplicitMatrixBC( A, patch);   
-     
-    for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){ 
-      IntVector c = *iter;
-      Stencil7&  A_tmp=A[c];
-      A_tmp.p = beta[c] -
-                (A_tmp.n + A_tmp.s + A_tmp.e + A_tmp.w + A_tmp.t + A_tmp.b);
-    }        
+
     //---- P R I N T   D A T A ------   
     if (switchDebug_setupMatrix) {    
       ostringstream desc;
@@ -499,10 +506,11 @@ void ICE::setupRHS(const ProcessorGroup*,
       new_dw->allocateAndPut(vol_fracZ_FC, lb->vol_fracZ_FCLabel, indx,patch);
       
       // lowIndex is the same for all vel_FC
-      IntVector lowIndex(patch->getSFCXLowIndex());   
-      vol_fracX_FC.initialize(0.0, lowIndex,patch->getSFCXHighIndex());
-      vol_fracY_FC.initialize(0.0, lowIndex,patch->getSFCYHighIndex());
-      vol_fracZ_FC.initialize(0.0, lowIndex,patch->getSFCZHighIndex()); 
+      IntVector lowIndex(patch->getSFCXLowIndex());
+      double nan= getNan();
+      vol_fracX_FC.initialize(nan, lowIndex,patch->getSFCXHighIndex());
+      vol_fracY_FC.initialize(nan, lowIndex,patch->getSFCYHighIndex());
+      vol_fracZ_FC.initialize(nan, lowIndex,patch->getSFCZHighIndex()); 
       
       new_dw->get(uvel_FC,           lb->uvel_FCMELabel,     indx,patch,gac, 2);
       new_dw->get(vvel_FC,           lb->vvel_FCMELabel,     indx,patch,gac, 2);
@@ -563,8 +571,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       double term2 = delT * massExchTerm[c];
       
       rhs[c] = -term1 + term2 + sumAdvection[c];
-      
-      rhs_max = std::max(rhs_max, rhs[c] * rhs[c]);
+      rhs_max = std::max(rhs_max, rhs[c] * rhs[c]); 
     }
     new_dw->put(max_vartype(rhs_max), lb->max_RHSLabel);
 
@@ -640,6 +647,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     }
 
 
+/*`==========TESTING==========*/
     //__________________________________
     //  Set Boundary Conditions
     // if LODI are specified then set them.
@@ -671,12 +679,22 @@ void ICE::updatePressure(const ProcessorGroup*,
                    patch, new_dw, d_sharedState, d_Lodi_variable_basket, true);
       }
     }
-    NG_BC_vars* ng = new NG_BC_vars;  // NG hack
-    ng->setNGBcs = false;
+    
+    NG_BC_vars* ng = new NG_BC_vars; // NG hack
+    if(d_usingNG_hack){
+      ng->setNGBcs = true;
+      new_dw->allocateTemporary(ng->press_CC, patch);
+      ng->press_CC.copy(press_CC);
+      getVars_for_NGNozzle(parent_old_dw,parent_new_dw, lb, patch, 1,
+                          "update_press_CC",ng);
+    } 
+/*===========TESTING==========`*/
+    
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw, lv, ng);
           
-    delete lv, ng;
+    delete lv;
+    delete ng;
         
     //---- P R I N T   D A T A ------  
     if (switchDebug_updatePressure) {
