@@ -29,17 +29,18 @@
  */
 
 
-#ifndef SCI_project_Frame_Widget_h
-#define SCI_project_Frame_Widget_h 1
+#ifndef SCI_project_ScaledFrame_Widget_h
+#define SCI_project_ScaledFrame_Widget_h 1
 
 #include <Dataflow/Widgets/BaseWidget.h>
+
 
 namespace SCIRun {
 
 class FrameWidget : public BaseWidget {
-  friend class LightWidget;
 public:
-  FrameWidget( Module* module, CrowdMonitor* lock, double widget_scale );
+  FrameWidget( Module* module, CrowdMonitor* lock, double widget_scale,
+		     bool is_slideable = false);
   FrameWidget( const FrameWidget& );
   virtual ~FrameWidget();
 
@@ -59,6 +60,11 @@ public:
   void GetPosition( Point& center, Vector& normal,
 		    double& size1, double& size2 );
 
+  void SetRatioR( const double ratio );
+  double GetRatioR() const;
+  void SetRatioD( const double ratio );
+  double GetRatioD() const;
+
   void SetSize( const double sizeR, const double sizeD );
   void GetSize( double& sizeR, double& sizeD ) const;
    
@@ -66,15 +72,18 @@ public:
   const Vector& GetDownAxis();
 
   // Variable indexs
-  enum { CenterVar, PointRVar, PointDVar, DistRVar, DistDVar, HypoVar };
+  enum { CenterVar, PointRVar, PointDVar, DistRVar, DistDVar, HypoVar,
+	 SDistRVar, RatioRVar, SDistDVar, RatioDVar, NumVars };
 
   // Material indexs
-  enum { PointMatl, EdgeMatl, ResizeMatl };
+  enum { PointMatl, EdgeMatl, ResizeMatl, SliderMatl, NumMatls };
 
 protected:
   virtual string GetMaterialName( const Index mindex ) const;   
    
 private:
+  bool is_slideable_;
+
   Vector oldrightaxis, olddownaxis;
   Point rot_start_pt_;
   Point rot_start_d_;

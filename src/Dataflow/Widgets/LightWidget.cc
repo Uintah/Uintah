@@ -232,7 +232,6 @@ LightWidget::redraw()
   if (mode_switches[3]->get_state())
   {
     arealight->SetScale(widget_scale_);
-    arealight->execute(0);
   }
 
   if (direct.length2() > 1e-6)

@@ -28,11 +28,11 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-
-#ifndef SCI_project_Box_Widget_h
-#define SCI_project_Box_Widget_h 1
+#ifndef SCI_project_ScaledBox_Widget_h
+#define SCI_project_ScaledBox_Widget_h 1
 
 #include <Dataflow/Widgets/BaseWidget.h>
+#include <Core/Datatypes/Clipper.h>
 
 
 namespace SCIRun {
@@ -40,39 +40,54 @@ namespace SCIRun {
 class BoxWidget : public BaseWidget {
 public:
   BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
-	     Index aligned=0 );
+	     bool is_aligned = false, bool is_slideable = false );
   BoxWidget( const BoxWidget& );
   virtual ~BoxWidget();
 
   virtual void redraw();
-  virtual void geom_moved(GeomPick*, int, double, const Vector&,
-			  int, const BState&, const Vector &pick_offset);
+  virtual void geom_moved(GeomPick*, int, double, const Vector&, int,
+			  const BState&, const Vector &pick_offset);
   virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
 
   virtual void MoveDelta( const Vector& delta );
   virtual Point ReferencePoint() const;
 
+  void SetPosition( const Point& center, const Point& R, const Point& D,
+		    const Point& I );
+  void GetPosition( Point& center, Point& R, Point& D, Point& I );
+
+  void SetRatioR( const double ratio );
+  double GetRatioR() const;
+  void SetRatioD( const double ratio );
+  double GetRatioD() const;
+  void SetRatioI( const double ratio );
+  double GetRatioI() const;
+
   const Vector& GetRightAxis();
   const Vector& GetDownAxis();
   const Vector& GetInAxis();
 
-  // 0=no, 1=yes
-  Index IsAxisAligned() const;
-  void AxisAligned( const Index yesno );
+  bool IsAxisAligned() const { return is_aligned_; }
+  bool IsSlideable() const { return is_slideable_; }
 
   // Variable indexs
   enum { CenterVar, PointRVar, PointDVar, PointIVar,
-	 DistRVar, DistDVar, DistIVar, HypoRDVar, HypoDIVar, HypoIRVar };
+	 DistRVar, DistDVar, DistIVar, HypoRDVar, HypoDIVar, HypoIRVar,
+	 SDistRVar, RatioRVar, SDistDVar, RatioDVar, SDistIVar, RatioIVar,
+	 NumVars };
 
   // Material indexs
-  enum { PointMatl, EdgeMatl, ResizeMatl };
+  enum { PointMatl, EdgeMatl, ResizeMatl, SliderMatl, NumMatls };
+
+  ClipperHandle get_clipper();
 
 protected:
   virtual string GetMaterialName( const Index mindex ) const;   
    
 private:
-  Index aligned;
-   
+  bool is_aligned_;
+  bool is_slideable_;
+
   Vector oldrightaxis, olddownaxis, oldinaxis;
   Point rot_start_pt_;
   Point rot_start_d_;

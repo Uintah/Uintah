@@ -32,7 +32,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Thread/CrowdMonitor.h>
-#include <Dataflow/Widgets/ScaledBoxWidget.h>
+#include <Dataflow/Widgets/BoxWidget.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Clipper.h>
 #include <Dataflow/Modules/Fields/ClipField.h>
@@ -46,7 +46,7 @@ using std::stack;
 class ClipField : public Module
 {
 private:
-  ScaledBoxWidget *box_;
+  BoxWidget *box_;
   CrowdMonitor widget_lock_;
   BBox last_bounds_;
   GuiString clip_location_;
@@ -86,7 +86,7 @@ ClipField::ClipField(const string& id)
     last_input_generation_(0),
     last_clip_generation_(0)
 {
-  box_ = scinew ScaledBoxWidget(this, &widget_lock_, 1.0, false, false);
+  box_ = scinew BoxWidget(this, &widget_lock_, 1.0, false, false);
 }
 
 

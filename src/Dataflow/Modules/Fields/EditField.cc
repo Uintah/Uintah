@@ -35,7 +35,7 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Modules/Fields/EditField.h>
-#include <Dataflow/Widgets/ScaledBoxWidget.h>
+#include <Dataflow/Widgets/BoxWidget.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <map>
@@ -71,7 +71,7 @@ public:
   GuiInt cgeom_;         // change geometry
 
   CrowdMonitor     widget_lock_;
-  ScaledBoxWidget *box_;
+  BoxWidget *box_;
   Transform        box_initial_transform_;
   BBox             box_initial_bounds_;
   int              generation_;
@@ -122,7 +122,7 @@ EditField::EditField(const string& id)
     minmax_(1,0)
   
 {
-  box_ = scinew ScaledBoxWidget(this, &widget_lock_, 1.0, false, false);
+  box_ = scinew BoxWidget(this, &widget_lock_, 1.0, false, false);
   widgetid_ = 0;
 }
 
