@@ -2148,7 +2148,7 @@ HistogramDumper::Step::Step(DataArchive * da, string datadir, int index, double 
   Dir stepdir;
   try {
     stepdir.create(stepdname_);
-  } catch (ErrornoException & e) {
+  } catch (ErrnoException& e) {
     cerr << "WARNING " << e.message() << endl;
   }
 }
