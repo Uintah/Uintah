@@ -324,25 +324,8 @@ class BioImageApp {
 	    return
 	}         
 
-
 	if {$msg_state == "Error"} {
-	    if {[string first "ViewSlices" $which] != -1} {
-		# hopefully, getting here means that we have new data, and that NrrdInfo
-		# has caught it but didn't change slice stuff in time before the ViewSlices
-		# module executed
-		global mods
-		if {$mods(ViewSlices) != ""} {
-		    if {$ViewSlices_executed_on_error == 0} {
-			set ViewSlices_executed_on_error 1
-			after 100 "$mods(ViewSlices)-c needexecute"
-		    } elseif {$error_module == ""} {
-			set error_module $which
-			# turn progress graph red
-			change_indicator_labels "E R R O R !"
-			change_indicate_val 3
-		    }
-		}
-	    } elseif {$error_module == ""} {
+	    if {$error_module == ""} {
 		set error_module $which
 		# turn progress graph red
 		change_indicator_labels "E R R O R !"
@@ -519,26 +502,6 @@ class BioImageApp {
                     after 0 {tk_messageBox -type ok -icon info -parent .standalone -message "BioImage only supports 3D data.\nPlease load in a 3D dataset."}
  		}
 	    }	
-	} elseif {[string first "NrrdInfo" $which 0] != -1 && \
-		      $state == "Completed"} { 
-	    # possibly one of the crop NrrdInfos
-	    # if it is, set the bounds values in the filters array
-            for {set i 1} {$i < $num_filters} {incr i} {
-		if {[lindex $filters($i) $filter_type] == "crop" &&
-		    [lindex [lindex $filters($i) $modules] 1] == $which} {
-		    global $which-size0
-		    global $which-size1
-		    global $which-size2
-		    set bounds_vals [list [expr [set $which-size0]-1] \
-					 [expr [set $which-size1]-1] \
-					 [expr [set $which-size2]-1]]
-		    set filters($i) [lreplace $filters($i) 10 10 $bounds_vals]
-		    # set the bounds_set flag to on
-		    set filters($i) [lreplace $filters($i) 11 11 1]
-		    break
-		}
-	    }
-
         } elseif {[string first "UnuResample" $which 0] != -1 && \
 		      $state == "JustStarted"} {
 	    change_indicate_val 1
@@ -1356,7 +1319,7 @@ class BioImageApp {
  	pack $data.ui.samples -side top -anchor nw -pady 3
 
 	# Build data tabs
-	iwidgets::tabnotebook $data.ui.tnb -width [expr $process_width-80] \
+	iwidgets::tabnotebook $data.ui.tnb -width [expr $process_width-86] \
 	    -height 75 -tabpos n -equaltabs false -backdrop gray
 	pack $data.ui.tnb -side top -anchor nw -padx 0 -pady 3
 	Tooltip $data.ui.tnb \
@@ -2474,14 +2437,15 @@ class BioImageApp {
  	radiobutton $rb -variable eye -value $which \
 	    -command "$this change_eye"
 	Tooltip $rb "Select to change current view\nof 3D and 2D windows"
-# 	grid config $rb -column 0 -row 1
 
 	# Add a bar that when a user clicks, will bring
 	# up the menu of filters to insert
-	global insertimg
-  	button $f.insert -image $insertimg -anchor n -relief sunken -borderwidth 0 
-#	grid config $f.insert -row 1 -column 1 -pady 0	
-	pack $rb $f.insert -side left -fill x -expand 1
+	set img [image create photo -width 1 -height 1]	
+  	button $f.insert -image $img -borderwidth 2 -relief raised \
+	    -cursor plus -background "#6c90ce" \
+	    -activebackground "#4c70ae" -height 3 -width 198
+	pack $rb -side left -anchor w
+	pack $f.insert -side left -fill x -expand 1
 	grid config $f -column 0 -row 1
 	bind $f.insert <ButtonPress-1> "app popup_insert_menu %X %Y $which"
   	bind $f.insert <ButtonPress-2> "app popup_insert_menu %X %Y $which"
@@ -2557,7 +2521,6 @@ class BioImageApp {
 	    upvar \#0 $mods(EditColorMap2D)-filename cm2filename
 	    upvar \#0 $NrrdReader-filename nrrdfilename
 	    set cmap2 [join [lrange [split $nrrdfilename .] 0 end-1] .].cmap2
-	    puts "cmap2: $cmap2"
 	    if { [validFile $cmap2] } {
 		set cm2filename $cmap2
 		$mods(EditColorMap2D)-c load
@@ -2598,11 +2561,9 @@ class BioImageApp {
 	insert_filter $num_filters
 	# add the UI to the left pane
 	create_filter_UI $num_filters
-
-	incr num_filters
-
-        change_indicator_labels "Press Update to Resample Volume..."
         $this enable_update $num_filters
+        change_indicator_labels "Press Update to Resample Volume..."
+	incr num_filters
     }
 
 
@@ -2662,10 +2623,10 @@ class BioImageApp {
 
 	insert_filter $num_filters
 	create_filter_UI $num_filters
-	incr num_filters
-
         change_indicator_labels "Press Update to Perform Median Filtering..."
         $this enable_update $num_filters
+
+	incr num_filters
     }
 
     method add_Histo {which} {
@@ -2718,6 +2679,9 @@ class BioImageApp {
 	
 	insert_filter $num_filters
 	create_filter_UI $num_filters
+        change_indicator_labels \
+	    "Press Update to Perform Histogram Equalization..."
+	$this enable_update $num_filters
 	incr num_filters
 
         # execute histogram part so that is visible to user
@@ -2725,9 +2689,6 @@ class BioImageApp {
 	    $m4-c needexecute
 	}
 
-        change_indicator_labels \
-	    "Press Update to Perform Histogram Equalization..."
-	$this enable_update [expr $which+1]
     }
 
 
@@ -2932,6 +2893,7 @@ class BioImageApp {
 
     method update_crop_roi { which } {
 	if {$which >= $num_filters || \
+		[lindex $filters($which) $which_row] == -1 || \
 		[lindex $filters($which) $filter_type] != "crop"} {
 	    stop_crop
 	    return
@@ -3384,92 +3346,53 @@ class BioImageApp {
 
 
     method filter_Delete {which} {
-	global mods
-
 	# Do not remove Load (0)
-	if {$which == 0} {
-	    tk_messageBox -message "Cannot delete Load step." -type ok -icon info -parent .standalone
-	    return
-	}
-
-	set current_row [lindex $filters($which) $which_row]
-
+	if {$which == 0} return
+	set filter $filters($which)
 	# remove ui
 	grid remove $history0.$which
 	grid remove $history1.$which
-	
-	set next [lindex $filters($which) $next_index]
-	set current_choose [lindex $filters($which) $choose_port]
-	
-	if {$next != "end"} {
-	    move_up_filters [lindex $filters($which) $which_row]
-	}
-
         # delete filter modules
-        set l [llength [lindex $filters($which) $modules]]
-        for {set i 0} {$i < $l} {incr i} {
-            moduleDestroy [lindex [lindex $filters($which) $modules] $i]
-        }
-
-        # update choose ports of other filters
-        set port [lindex $filters($which) $choose_port]
-        $this update_choose_ports $port
-
-	set prev_mod [lindex [lindex $filters([lindex $filters($which) $prev_index]) $output] 0]
-	set prev_port [lindex [lindex $filters([lindex $filters($which) $prev_index]) $output] 1]
-	set current_mod [lindex [lindex $filters($which) $output] 0]
-	set current_port [lindex [lindex $filters($which) $output] 1]
-
-	# add connection from previous to next
-	if {$next != "end"} {
-	    set next_mod [lindex [lindex $filters([lindex $filters($which) $next_index]) $output] 0]
-	    set next_port [lindex [lindex $filters([lindex $filters($which) $next_index]) $output] 1]
-	    addConnection $prev_mod $prev_port $next_mod $next_port
-	}    
-
-	# set which_row to be -1
-	set filters($which) [lreplace $filters($which) $which_row $which_row -1]
-
-	# update prev's next
-	set p [lindex $filters($which) $prev_index]
-	set n [lindex $filters($which) $next_index]
-	set filters($p) [lreplace $filters($p) $next_index $next_index $n]
-
-	# update next's prev (only if not end)
-	if {$next != "end"} {
-	    set filters($n) [lreplace $filters($n) $prev_index $prev_index $p]
-	} 
-
-	# determine next filter to be currently selected
-	# by iterating over all valid filters and choosing
-	# the one on the previous row
-        set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis]  
-	global $ChooseNrrd-port-index
-
-	set next_row [expr $which_row + 1]
-	set next_filter 0
-
-	if {[string equal $next "end"]} {
-	    set next_row [expr $which_row - 1]
-	} else {
-	    set next_row [expr $next_row - 1]
+	foreach mod [lindex $filter $modules] {
+	    moduleDestroy $mod
 	}
+        # update choose ports of other filters
+        $this update_choose_ports [lindex $filter $choose_port]
+	# update the Previous and Next filters to be neighbors
+	set prev [lindex $filter $prev_index]
+	set next [lindex $filter $next_index]	
+	set filters($prev) \
+	    [lreplace $filters($prev) $next_index $next_index $next]
+	if {$next != "end"} {
+	    move_up_filters [lindex $filter $which_row]
+	    set filters($next) \
+		[lreplace $filters($next) $prev_index $prev_index $prev]
+	    # patch connections from previous filter to next filter
+	    foreach {pmod pport} [lindex $filters($prev) $output] {
+		foreach {nmod nport} [lindex $filters($next) $input] {
+		    addConnection $pmod $pport $nmod $nport
+		}
+	    }
+	}    
+	# Delete Filter Information
+	set filters($which) { {} {} {} {} -1 -1 -1 -1 0 {} }
+	incr grid_rows -1
+	global eye
+	if { [expr $eye+1] == $which } {
+	    setGlobal eye $prev
+	    change_eye 1
+	}
+	arrange_filter_modules
 
- 	for {set i 0} {$i < $num_filters} {incr i} {
- 	    # check if it hasn't been deleted
- 	    set r [lindex $filters($i) $which_row]
- 	    if {$r == $next_row} {
- 		set next_filter $i
- 	    }
- 	}
-	set next_choose [lindex $filters($next_filter) $choose_port]
-
-	set $ChooseNrrd--port-index $next_choose
-
-	set grid_rows [expr $grid_rows - 1]
     }
 
     method update_changes {} {
+	global eye
+	if { $last_filter_changed == [expr $eye+1] } {
+	    set eye $last_filter_changed
+	    change_eye 0
+	}
+
 	if { !$has_executed } {
 	    $this set_viewer_position
 	    $this execute_Data
@@ -3477,11 +3400,6 @@ class BioImageApp {
 	    return
 	}
 
-	global eye
-	if { $last_filter_changed == [expr $eye+1] } {
-	    set eye $last_filter_changed
-	    change_eye 0
-	}
 
 	if {$grid_rows == 1} {
 	    $this execute_Data
