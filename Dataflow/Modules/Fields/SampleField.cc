@@ -205,19 +205,19 @@ SampleField::widget_moved(bool last, BaseWidget*)
       gui_endpoint1x_.set( endpoint1_.x() );
       gui_endpoint1y_.set( endpoint1_.y() );
       gui_endpoint1z_.set( endpoint1_.z() );
-      
-      widget_change_ = true;
     }
+
+    widget_change_ = true;
 
     gui_autoexec_.reset();
     if (gui_autoexec_.get())
       want_to_execute();
 
   } else { // rescaling the widget forces a "last=false" widget_moved event
-    if (rake_) {
+    if (rake_)
       gui_widgetscale_.set(rake_->GetScale());
-      widget_change_ = true;
-    }
+
+    widget_change_ = true;
   }
 }
 
