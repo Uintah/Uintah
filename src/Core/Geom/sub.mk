@@ -63,7 +63,6 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/Light.cc		    		\
 	$(SRCDIR)/Lighting.cc		    		\
 	$(SRCDIR)/Material.cc		    		\
-	$(SRCDIR)/Pickable.cc		    		\
 	$(SRCDIR)/PointLight.cc		    		\
 	$(SRCDIR)/Pt.cc			    		\
 	$(SRCDIR)/Sticky.cc		    		\

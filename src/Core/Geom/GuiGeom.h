@@ -34,26 +34,22 @@
 #include <Core/GuiInterface/GuiVar.h>
 
 namespace SCIRun {
+  class Color;
 
-
-class Color;
-
-class SCICORESHARE GuiColor : public GuiVar {
+  class SCICORESHARE GuiColor : public GuiVar {
     GuiDouble r;
     GuiDouble g;
     GuiDouble b;
-public:
-    GuiColor(const string& name, const string& id, TCL* tcl);
+  public:
+    GuiColor(GuiContext* ctx);
     ~GuiColor();
 
-    virtual void reset();
     Color get();
     void set(const Color&);
-    virtual void emit(std::ostream& out, string& midx);
-};
+  };
 
-class Material;
-class SCICORESHARE GuiMaterial : public GuiVar {
+  class Material;
+  class SCICORESHARE GuiMaterial : public GuiVar {
     GuiColor ambient;
     GuiColor diffuse;
     GuiColor specular;
@@ -62,16 +58,13 @@ class SCICORESHARE GuiMaterial : public GuiVar {
     GuiDouble reflectivity;
     GuiDouble transparency;
     GuiDouble refraction_index;
- public:
-    GuiMaterial(const string& name, const string& id, TCL* tcl);
+  public:
+    GuiMaterial(GuiContext* ctx);
     ~GuiMaterial();
    
-    virtual void reset();
     Material get();
     void set(const Material&);
-    virtual void emit(std::ostream& out, string& midx);
-};
-
+  };
 } // End namespace SCIRun
 
 

@@ -73,7 +73,7 @@ public:
   static PersistentTypeID type_id;
 
   virtual void io(Piostream&);    
-  virtual bool saveobj(std::ostream&, const string& format, GeomSave*)=0;
+  virtual bool saveobj(std::ostream&, const std::string& format, GeomSave*)=0;
   // we want to return false if value is the default value
   virtual bool getId( int& ) { return false; }
   virtual bool getId( IntVector& ){ return false; }

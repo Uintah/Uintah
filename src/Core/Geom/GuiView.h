@@ -49,14 +49,12 @@ class SCICORESHARE GuiView : public GuiVar {
     GuiDouble fov;
     GuiVector eyep_offset;
 public:
-    GuiView(const string& name, const string& id, TCL* tcl);
+    GuiView(GuiContext* ctx);
     ~GuiView();
     GuiView(const GuiView&);
 
-    virtual void reset();
     View get();
     void set(const View&);
-    virtual void emit(std::ostream& out, string& midx);
 };
 
 class SCICORESHARE GuiExtendedView : public GuiVar {
@@ -71,14 +69,12 @@ class SCICORESHARE GuiExtendedView : public GuiVar {
 
 public:
     GuiColor bg;
-    GuiExtendedView(const string& name, const string& id, TCL* tcl);
+    GuiExtendedView(GuiContext* ctx);
     ~GuiExtendedView();
     GuiExtendedView(const GuiExtendedView&);
 
-    virtual void reset();
     ExtendedView get();
     void set(const ExtendedView&);
-    virtual void emit(std::ostream& out, string& midx);
   };
 
 } // End namespace SCIRun
