@@ -24,6 +24,9 @@ latex version of the module description.
 In particular, it maps xml:summary to latex:summary;
 xml:(description,io,gui) to latex:use; xml:authors to latex:credits; xml
 developer notes in the overview/description to latex:notes.  
+
+Note: This stylesheet may generate bad latex if the xml input does not conform
+to component.dtd.  Validate the xml input first!
 -->
 
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
@@ -34,7 +37,12 @@ developer notes in the overview/description to latex:notes.
   <xsl:text>\documentclass[notitlepage,10pt]{article}&#xA;</xsl:text>
   <xsl:text>\usepackage{graphicx}&#xA;</xsl:text>
   <xsl:text>\usepackage{html}&#xA;</xsl:text>
+  <xsl:text>%begin{latexonly}&#xA;</xsl:text>
   <xsl:text>\usepackage{scirun-doc}&#xA;</xsl:text>
+  <xsl:text>%end{latexonly}&#xA;</xsl:text>
+  <xsl:text>\begin{htmlonly}&#xA;</xsl:text>
+  <xsl:text>\input{scirun-doc.tex}&#xA;</xsl:text>
+  <xsl:text>\end{htmlonly}&#xA;</xsl:text>
   <xsl:text>\begin{document}&#xA;</xsl:text>
 
   <xsl:text>\section{Summary}&#xA;</xsl:text>
@@ -55,13 +63,12 @@ developer notes in the overview/description to latex:notes.
      so we will just omit it for now -->
 <!-- \section{Details} -->
 
-  <xsl:text>\section{Notes}&#xA;</xsl:text>
   <xsl:call-template name="notes"/>
 
   <xsl:text>\section{Credits}&#xA;</xsl:text>
   <xsl:apply-templates select="./component/overview/authors"/>  
 
-  <xsl:text>\end{document}&#xA;</xsl:text>
+  <xsl:text>&#xA;\end{document}&#xA;</xsl:text>
 </xsl:template>
 
 <xsl:template match="description">
@@ -188,7 +195,21 @@ developer notes in the overview/description to latex:notes.
 
 <xsl:template match="gui">
   <xsl:apply-templates select="description"/>
-  <xsl:text>&#xA;&#xA;Each \acronym{GUI} widget is described next:\\&#xA;</xsl:text>
+  <xsl:text>&#xA;&#xA;Each \acronym{GUI} widget is described next.  See also Figure</xsl:text>
+  <xsl:if test="count(img)&gt;1">s</xsl:if>~<xsl:text/>
+  <xsl:for-each select="img">
+    <xsl:variable name="fig">guifig<xsl:number count='img' format='A'/></xsl:variable>
+    <xsl:text/>\ref{fig:<xsl:value-of select="$fig"/>}<xsl:text/>
+    <xsl:choose>
+      <xsl:when test="position()+1=last()">
+        <xsl:text> and </xsl:text>
+      </xsl:when>
+      <xsl:when test="position() != last()">
+        <xsl:text>, </xsl:text>
+      </xsl:when>
+    </xsl:choose>
+  </xsl:for-each>
+  <xsl:text>.&#xA;</xsl:text>
   <xsl:text>\begin{centering}&#xA;</xsl:text>
   <xsl:for-each select="parameter">
     <xsl:text>\begin{tabular}{|p{4cm}|p{4cm}|p{4cm}|} \hline&#xA;</xsl:text>
@@ -200,26 +221,62 @@ developer notes in the overview/description to latex:notes.
     <xsl:text>\vspace{0.25cm}&#xA;</xsl:text>
   </xsl:for-each>
   <xsl:text>\end{centering}&#xA;</xsl:text>
+
+  <!-- Generate figure commands -->
   <xsl:for-each select="img">
-    <xsl:text/>\centerline{\includegraphics[]{<xsl:value-of select="concat(substring-before(., '.'),'.eps')"/>}}&#xA;<xsl:text/>
+    <xsl:variable name="figcmd">\guifig<xsl:number count='img' format='A'/></xsl:variable>
+    <xsl:text>%begin{latexonly}&#xA;</xsl:text>
+    <xsl:text/>\newcommand{<xsl:value-of select="$figcmd"/>}%&#xA;<xsl:text/>
+    <xsl:text/>{\centerline{\includegraphics[]{<xsl:value-of select="concat(substring-before(., '.'),'.eps')"/>}}}&#xA;<xsl:text/>
+    <xsl:text>%end{latexonly}&#xA;</xsl:text>
+    <xsl:text>\begin{htmlonly}&#xA;</xsl:text>
+    <xsl:text/>\newcommand{<xsl:value-of select="$figcmd"/>}{%&#xA;<xsl:text/>
+    <xsl:text/>\htmladdimg[]{../<xsl:value-of select="."/>}}&#xA;<xsl:text/>
+    <xsl:text>\end{htmlonly}&#xA;</xsl:text>
+  </xsl:for-each>
+
+  <!-- Generate figure calling commands -->
+  <xsl:for-each select="img">
+    <xsl:text>\begin{figure}[htb]&#xA;</xsl:text>
+    <xsl:text>\begin{makeimage}&#xA;</xsl:text>
+    <xsl:text>\end{makeimage}&#xA;</xsl:text>
+    <xsl:variable name="figcmd">guifig<xsl:number count='img' format='A'/></xsl:variable>
+    <xsl:text/>\<xsl:value-of select="$figcmd"/><xsl:text>&#xA;</xsl:text>
+    <xsl:variable name="captionnode" select="following-sibling::*[1][self::caption]"/>
+    <xsl:choose>
+      <xsl:when test="$captionnode">
+        <xsl:text/>\caption{<xsl:value-of select="$captionnode"/>}&#xA;<xsl:text/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text/>\caption{GUI for module <xsl:value-of select="/component/@name"/>}&#xA;<xsl:text/>
+      </xsl:otherwise>
+    </xsl:choose>
+    <xsl:text/>\label{fig:<xsl:value-of select="$figcmd"/>}&#xA;<xsl:text/>
+    <xsl:text>\end{figure}&#xA;</xsl:text>
   </xsl:for-each>
 </xsl:template>
 
 <xsl:template match="latex">
   <xsl:choose>
-  <xsl:when test="parent::p">
-    <xsl:value-of select="."/>    
-  </xsl:when>
-  <xsl:otherwise><xsl:text>&#xA;&#xA;</xsl:text><xsl:value-of select="."/><xsl:text>&#xA;&#xA;</xsl:text></xsl:otherwise>
+    <xsl:when test="parent::p">
+      <xsl:value-of select="."/>    
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:text>&#xA;&#xA;</xsl:text><xsl:value-of select="."/><xsl:text>&#xA;&#xA;</xsl:text>
+    </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
 
 <xsl:template name="notes">
-  <xsl:text>&#xA;\begin{itemize}&#xA;</xsl:text>
-  <xsl:for-each select="./component/overview/description/developer">
-    <xsl:text/>\item <xsl:apply-templates/>
-  </xsl:for-each>
-  <xsl:text>&#xA;\end{itemize}&#xA;</xsl:text>
+  <xsl:variable name="notes" select="./component/overview/description/developer"/>
+  <xsl:if test="$notes">
+    <xsl:text>\section{Notes}&#xA;</xsl:text>
+    <xsl:text>&#xA;\begin{itemize}&#xA;</xsl:text>
+    <xsl:for-each select="$notes">
+      <xsl:text/>\item <xsl:apply-templates/>
+    </xsl:for-each>
+    <xsl:text>&#xA;\end{itemize}&#xA;</xsl:text>
+  </xsl:if>
 </xsl:template>
 
 </xsl:stylesheet>
