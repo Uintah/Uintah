@@ -31,6 +31,8 @@
 #include <Core/Datatypes/ColorMap.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
+#include <algorithm>
+
 using std::cerr;
 using std::endl;
 
@@ -115,53 +117,48 @@ ColorMap::ColorMap(const vector<Color>& rgb,
 Color
 ColorMap::FindColor(double t)
 {
-  unsigned int j=0;
-
-  if (t <= rawRampColorT[0])
+  vector<float>::iterator location = 
+    std::lower_bound(rawRampColorT.begin(), rawRampColorT.end(), t);
+  if (location == rawRampColorT.begin())
   {
     return rawRampColor[0];
   }
-  if (t >= rawRampColorT[rawRampColorT.size()-1])
+  else if (location == rawRampColorT.end())
   {
     return rawRampColor[rawRampColor.size()-1];
   }
-
-  // t is within the interval...
-  while((j < rawRampColor.size()) && (t > rawRampColorT[j]))
+  else
   {
-    j++;
+    unsigned int j = location - rawRampColorT.begin();
+    const double slop =
+      (rawRampColorT[j] - t)/(rawRampColorT[j]-rawRampColorT[j-1]);
+
+    return rawRampColor[j-1]*slop + rawRampColor[j]*(1.0-slop);
   }
-
-  const double slop =
-    (rawRampColorT[j] - t)/(rawRampColorT[j]-rawRampColorT[j-1]);
-
-  return rawRampColor[j-1]*slop + rawRampColor[j]*(1.0-slop);
 }
 
 
 double
 ColorMap::FindAlpha(double t)
 {
-  unsigned int j=0;
-
-  if (t <= rawRampAlphaT[0])
+  vector<float>::iterator location = 
+    std::lower_bound(rawRampAlphaT.begin(), rawRampAlphaT.end(), t);
+  if (location == rawRampAlphaT.begin())
   {
     return rawRampAlpha[0];
   }
-  if (t >= rawRampAlphaT[rawRampAlphaT.size()-1])
+  else if (location == rawRampAlphaT.end())
   {
     return rawRampAlpha[rawRampAlpha.size()-1];
   }
-  // t is within the interval...
-  while((j < rawRampAlpha.size()) && (t < rawRampAlphaT[j]))
+  else
   {
-    j++;
+    unsigned int j = location - rawRampAlphaT.begin();
+    const double slop =
+      (rawRampAlphaT[j] - t)/(rawRampAlphaT[j]-rawRampAlphaT[j-1]);
+
+    return rawRampAlpha[j-1]*slop + rawRampAlpha[j]*(1.0-slop);
   }
-
-  const double slop =
-    (rawRampAlphaT[j] - t)/(rawRampAlphaT[j]-rawRampAlphaT[j-1]);
-
-  return rawRampAlpha[j-1]*slop + rawRampAlpha[j]*(1.0-slop);
 }
 
 
