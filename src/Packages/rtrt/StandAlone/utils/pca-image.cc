@@ -6,6 +6,8 @@ unu permute -i ../sphere00000.nrrd -p 0 3 1 2 | unu reshape -s 24 64 64 -o group
 
 unu reshape -i munged1.nrrd -s 3 8 64 64 | unu permute -p 0 2 3 1 | unu reshape -s 3 64 64 2 4 | unu permute -p 0 1 3 2 4 | unu reshape -s 3 128 256 | XV &
 
+icpc -O3 -o pca-image ../pca-image.cc -I/home/sci/bigler/SCIRun/src/include -I/home/sci/bigler/pub/src/teem/linux.64/include -Wl,-rpath -Wl,/home/sci/bigler/pub/src/teem/linux.64/lib -L/home/sci/bigler/pub/src/teem/linux.64/lib -lteem -lpng -lbz2 -llapack -L/usr/lib/gcc-lib/ia64-redhat-linux/3.0.4 -lg2c -lm
+
 */
 
 #include <teem/nrrd.h>
@@ -17,20 +19,20 @@ unu reshape -i munged1.nrrd -s 3 8 64 64 | unu permute -p 0 2 3 1 | unu reshape 
 #include <sgi_stl_warnings_on.h>
 
 extern "C" {
-  void dsyev_(const char& jobz, const char& uplo,
-	      const int& n, double data_array[],
-	      const int& lda, double eigen_val[],
-	      double dwork[], const int& ldwork,
+  void ssyev_(const char& jobz, const char& uplo,
+	      const int& n, float data_array[],
+	      const int& lda, float eigen_val[],
+	      float dwork[], const int& ldwork,
 	      int& info);
 
-  void dsyevx_(const char& jobz, const char& range, const char& uplo,
-	       const int& n, double data_array[], const int& lda,
-	       const double& vl, const double& vu,
+  void ssyevx_(const char& jobz, const char& range, const char& uplo,
+	       const int& n, float data_array[], const int& lda,
+	       const float& vl, const float& vu,
 	       const int& il, const int& iu,
-	       const double& tolerance,
-	       int& eval_cnt, double eigen_val[],
-	       double eigen_vec[], const int& ldz,
-	       double work[], const int& lwork, int iwork[],
+	       const float& tolerance,
+	       int& eval_cnt, float eigen_val[],
+	       float eigen_vec[], const int& ldz,
+	       float work[], const int& lwork, int iwork[],
 	       int ifail[], int& info);
 }
 
@@ -45,7 +47,6 @@ void usage(char *me, const char *unknown = 0) {
   printf("-input  <filename>   input nrrd, channels as fastest axis (null)\n");
   printf("-output <filename>   basename of output nrrds (\"pca\")\n");
   printf("-numbases <int>      number of basis textures to use (0)\n");
-  printf("-usegk               use teem's ell library to do 3x3 eigensolves (false)\n");
   printf("-simple              use the LAPACK simple driver (false)\n");
   printf("-v                   print verbose status messages (false)\n");
   printf("-vv <int>            verbosity level (0)\n");
@@ -62,7 +63,6 @@ int main(int argc, char *argv[]) {
   // -1 defaults to all
   int num_bases = 0;
   int num_channels;
-  bool usegk = false;
   bool use_simple = false;
   int verbose = 0;
 
@@ -79,8 +79,6 @@ int main(int argc, char *argv[]) {
       outfilename_base = argv[++i];
     } else if (arg == "-numbases" ) {
       num_bases = atoi(argv[++i]);
-    } else if (arg == "-usegk" ) {
-      usegk = true;
     } else if (arg == "-simple") {
       use_simple = true;
     } else if (arg == "-v" ) {
@@ -110,11 +108,6 @@ int main(int argc, char *argv[]) {
   
   num_channels = nin->axis[0].size;
 
-  if (usegk && num_channels != 3) {
-    cerr << me << ":  size of axis[0] is not equal to 3" << endl;
-    exit(2);
-  }
-  
   // Determine the number of eigen thingies to use
   if (num_bases < 1)
     // Use all of them
@@ -184,7 +177,7 @@ int main(int argc, char *argv[]) {
   
   // Allocate our covariance matrix
   Nrrd *cov = nrrdNew();
-  if (nrrdAlloc(cov, nrrdTypeDouble,2, num_channels, num_channels))
+  if (nrrdAlloc(cov, nrrdTypeFloat,2, num_channels, num_channels))
     {
       err = biffGetDone(NRRD);
       fprintf(stderr, "%s: error allocating covariance matrix:\n%s", me, err);
@@ -198,7 +191,7 @@ int main(int argc, char *argv[]) {
   for (int y=0; y < height; y++) {
     for (int x = 0; x < width; x++ ) {
       // compute cov(x,y) for current pixel
-      double *cov_data = (double*)(cov->data);
+      float *cov_data = (float*)(cov->data);
       for(int c = 0; c < num_channels; c++) {
 	for(int r = c; r < num_channels; r++) {
 	  cov_data[r] += data[c] * data[r];
@@ -213,7 +206,7 @@ int main(int argc, char *argv[]) {
     cout << "Done computing first part of covariance matrix.\n";
   
   if (verbose > 10) {
-    double *cov_data = (double*)(cov->data);
+    float *cov_data = (float*)(cov->data);
     for(int c = 0; c < cov->axis[1].size; c++)
       {
 	cout << "[";
@@ -226,7 +219,7 @@ int main(int argc, char *argv[]) {
   }
 
   {
-    double *cov_data = (double*)(cov->data);
+    float *cov_data = (float*)(cov->data);
     float *mean_data = (float*)(mean->data);
     float inv_num_pixels = 1.0f/(width*height);
     for(int c = 0; c < num_channels; c++) {
@@ -241,7 +234,7 @@ int main(int argc, char *argv[]) {
 
   if (verbose > 10)
   {
-    double *cov_data = (double*)(cov->data);
+    float *cov_data = (float*)(cov->data);
     for(int r = 0; r < cov->axis[0].size; r++)
       {
 	cout << "[";
@@ -251,26 +244,15 @@ int main(int argc, char *argv[]) {
       }
   }
 
-  // Compute eigen values/vectors
-  double *eval = new double[num_channels];
-  double *cov_data = (double*)(cov->data);
-  double *evec_data = 0;
-
   if (verbose)
     cout<<"Beginning eigensolve"<<endl;
   
-  if (usegk) {
-    if (verbose)
-      cout<<"Using teem 3x3 eigensolver"<<endl;
-    // Here's where the general solution diverges to the RGB case.
-    evec_data = new double[9];
-    int roots = ell_3m_eigensolve_d(eval, evec_data, (double*)(cov->data), 1);
-    if (roots != ell_cubic_root_three) {
-      cerr << me << "Something with the eighen solve went haywire.  "
-	   <<"Did not get three roots but "<<roots<<" roots.\n";
-      exit(2);
-    }
-  } else {
+  // Compute eigen values/vectors
+  float *eval = new float[num_channels];
+  float *cov_data = (float*)(cov->data);
+  float *evec_data = 0;
+  
+  {
     // Variables common to both LAPACK drivers
     const char jobz = 'V';
     const char uplo = 'L';
@@ -281,17 +263,17 @@ int main(int argc, char *argv[]) {
     if (use_simple) {
       // Use LAPACK's simple driver
       if (verbose)
-	cout<<"Using LAPACK's simple driver (dsyev)"<<endl;
+	cout<<"Using LAPACK's simple driver (ssyev)"<<endl;
       
       const int lwork = (3*N-1)*2;
-      cout << "Wanting to allocate "<<lwork<<" doubles.\n";
-      double *work = new double[lwork];
+      cout << "Wanting to allocate "<<lwork<<" floats.\n";
+      float *work = new float[lwork];
       if (!work) {
 	cerr << "Could not allocate the memory for work\n";
 	exit(2);
       }
       
-      dsyev_(jobz, uplo, N, cov_data, lda, eval, work, lwork, info);
+      ssyev_(jobz, uplo, N, cov_data, lda, eval, work, lwork, info);
       
       delete[] work;
       
@@ -305,26 +287,26 @@ int main(int argc, char *argv[]) {
     } else {
       // Use LAPACK's expert driver
       if (verbose)
-	cout<<"Using LAPACK's expert driver (dsyevx)"<<endl;
+	cout<<"Using LAPACK's expert driver (ssyevx)"<<endl;
       
       const char range = 'I';
-      const double vl = 0;
-      const double vu = 0;
+      const float vl = 0;
+      const float vu = 0;
       const int il = N - num_bases + 1;
       const int iu = N;
       if (verbose > 10)
 	cout<<"Solving for eigenvalues/vectors in the range = ["
 	    <<il<<", "<<iu<<"]"<<endl;
-      const double tolerance = 0;
+      const float tolerance = 0;
       int eval_cnt;
       const int ldz = N;
-      evec_data=new double[ldz*N];
+      evec_data=new float[ldz*N];
       if (!evec_data) {
 	cerr<<"Couldn't allocate the memory for evec_data"<<endl;
 	exit(2);
       }
       const int lwork = 8*N;
-      double *work = new double[lwork];
+      float *work = new float[lwork];
       if (!work) {
 	cerr<<"Couldn't allocate the memory for work"<<endl;
 	exit(2);
@@ -336,21 +318,21 @@ int main(int argc, char *argv[]) {
       }
       int *ifail=new int[N];;
       
-      dsyevx_(jobz, range, uplo, N, cov_data, lda, vl, vu, il, iu,
+      ssyevx_(jobz, range, uplo, N, cov_data, lda, vl, vu, il, iu,
 	      tolerance, eval_cnt, eval, evec_data, ldz, work, lwork,
 	      iwork, ifail, info);
-
+      
       delete [] work;
       delete [] iwork;
       delete [] ifail;
       
       if (info != 0) {
 	if (info < 0) {
-	  cerr<<"dsyevx_ error:  "<<(-info)
+	  cerr<<"ssyevx_ error:  "<<(-info)
 	      <<"th argument has an illegal value"<<endl;
 	  exit(2);
 	} else if (info > 0) {
-	  cerr<<"dsyevx_ error:  "<<info
+	  cerr<<"ssyevx_ error:  "<<info
 	      <<" eigenvalues failed to converge"<<endl;
 	  exit(2);
 	}
@@ -368,17 +350,18 @@ int main(int argc, char *argv[]) {
     cout << "]\n";
   }
 
-  double recovered_var = 0;
+  float recovered_var = 0;
   if (use_simple) {
-    double total_var = 0;
+    float total_var = 0;
     for (int i=0; i<num_channels; i++) {
       total_var += eval[i];
       if(i>=(num_channels-num_bases))
 	recovered_var+=eval[i];
     }
-    
-    cout <<"Recovered "<<(recovered_var/total_var)*100.0<<"% of the "
-	 <<"variance with "<<num_bases<<" basis textures"<<endl;
+
+    cout<<"Total variance equals "<<total_var<<endl;
+    cout<<"Recovered "<<(recovered_var/total_var)*100.0<<"% of the "
+	<<"variance with "<<num_bases<<" basis textures"<<endl;
   } else {
     // XXX - how to account for the total, now that we only solve
     //       for num_bases eigenvalues/vectors?
@@ -402,16 +385,8 @@ int main(int argc, char *argv[]) {
   nrrdAxisInfoSet(transform, nrrdAxisInfoLabel, "channels", "bases");
   
   float *tdata = (float*)(transform->data);
-  double *edata = evec_data;
-  if (usegk) {
-    // Cull the eigenvectors
-    for (int basis = 0; basis < num_bases; basis++) {
-      for(int channel = 0; channel < num_channels; channel++) {
-	*tdata = edata[basis * num_channels + channel];
-	tdata++;
-      }
-    }
-  } else if (use_simple) {
+  float *edata = evec_data;
+  if (use_simple) {
     // Cull the eigenvectors
     int basis_start = num_channels - 1;
     int basis_end = basis_start - num_bases;
