@@ -2358,36 +2358,45 @@ class BioImageApp {
             Tooltip $page.thresh.s "Change background threshold. Data\nvalues less than or equal to the threshold\nwill be transparent in planes."
             Tooltip $page.thresh.l2 "Change background threshold. Data\nvalues less than or equal to the threshold\nwill be transparent in planes."
 
+	    # Fonts
+	    frame $page.fonts -relief groove -borderwidth 2
+	    pack $page.fonts -side top -fill x -expand 0 -padx 5 -pady 3
 
-            frame $page.font
-            label $page.font.l -text "Font Size:"
+	    global $mods(ViewSlices)-show_text
+	    checkbutton $page.fonts.fonttog -text "Show 2D Window Text" \
+		-variable $mods(ViewSlices)-show_text \
+		-command "$mods(ViewSlices)-c set_font_sizes"
+           pack $page.fonts.fonttog -side top -anchor nw  -expand 0
+	    
+            frame $page.fonts.font
+            label $page.fonts.font.l -text "Font Size:"
 
-            scale $page.font.s \
+            scale $page.fonts.font.s \
                 -from 2 -to 30 -orient horizontal -showvalue 0 \
  	        -width 14 -length 100  -resolution 0.1 \
 	        -variable $mods(ViewSlices)-font_size \
                 -command "$mods(ViewSlices)-c set_font_sizes"
-            entry $page.font.l2 -textvariable $mods(ViewSlices)-font_size \
+            entry $page.fonts.font.l2 -textvariable $mods(ViewSlices)-font_size \
                 -width 4 
-            bind $page.font.l2 <KeyPress> \
+            bind $page.fonts.font.l2 <KeyPress> \
                 "$mods(ViewSlices)-c set_font_sizes"
 	    bind $page.thresh.s <Button1-Motion> \
                 "$mods(ViewSlices)-c set_font_sizes"
 
-            pack $page.font.l -side left -anchor w -padx 2
-            pack $page.font.l2 $page.font.s -side right -anchor e -padx 2
-            pack $page.font -side top -fill x -expand 0
+            pack $page.fonts.font.l -side left -anchor w -padx 2
+            pack $page.fonts.font.l2 $page.fonts.font.s -side right -anchor e -padx 2
+            pack $page.fonts.font -side top -fill x -expand 0
 
 
-            frame $page.fontc
-            label $page.fontc.l -text "Font Color:"
+            frame $page.fonts.fontc
+            label $page.fonts.fontc.l -text "Font Color:"
 
-	    button $page.fontc.c -width 4 -command \
-	        "$mods(ViewSlices) raise_color $page.fontc.c $mods(ViewSlices)-color_font set_font_sizes" -background white -activebackground white
+	    button $page.fonts.fontc.c -width 4 -command \
+	        "$mods(ViewSlices) raise_color $page.fonts.fontc.c $mods(ViewSlices)-color_font set_font_sizes" -background white -activebackground white
 
-            pack $page.fontc.l -side left -anchor w -padx 2
-            pack $page.fontc.c -side right -anchor e -padx 2
-            pack $page.fontc -side top -fill x -expand 0
+            pack $page.fonts.fontc.l -side left -anchor w -padx 2
+            pack $page.fonts.fontc.c -side right -anchor e -padx 2
+            pack $page.fonts.fontc -side top -fill x -expand 0
 
            
 	    checkbutton $page.lines -text "Show Guidelines" \
