@@ -55,7 +55,7 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
 {
   if(fineLevel->getIndex() > 0){
     cout_doing << "AMRICE::scheduleRefineInterface \t\tL-" 
-               << fineLevel->getIndex() << '\n';
+               << fineLevel->getIndex() << " step "<< step <<'\n';
                
     double subCycleProgress = double(step)/double(nsteps);
     
@@ -101,7 +101,7 @@ void AMRICE::refineInterface(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   if(level->getIndex() > 0){     
     cout_doing << "Doing refineInterface"<< "\t\t\t\t\t AMRICE L-" 
-               << level->getIndex() << endl;
+               << level->getIndex() << " step " << subCycleProgress<<endl;
     int  numMatls = d_sharedState->getNumICEMatls();
     Ghost::GhostType  gac = Ghost::AroundCells;
     
@@ -159,7 +159,8 @@ void AMRICE::refineInterface(const ProcessorGroup*,
         //__________________________________
         //  Print Data 
         ostringstream desc;     
-        desc << "refineInterface_Mat_" << indx << "_patch_"<< patch->getID();
+        desc << "refineInterface_Mat_" << indx << "_patch_"<< patch->getID()
+             << " step " << subCycleProgress;
         printData(indx, patch,   1, desc.str(), "press_CC",    press_CC);
         printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC);
         printData(indx, patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
@@ -257,9 +258,16 @@ void refineFaces(const Patch* patch,
 {
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    if(patch->getBCType(face) != Patch::Coarse)
+
+/*`==========TESTING==========*/
+#if 0  
+    Need to test this when the fine level is 
+    on the edge of the computational domain
+    if(patch->getBCType(face) != Patch::Coarse){
       continue;
 
+#endif
+/*===========TESTING==========`*/
     {
      //__________________________________
      // fine level hi & lo cell iter limits
@@ -284,9 +292,8 @@ void refineFaces(const Patch* patch,
                                || face == Patch::zplus) {
         coarseLow -= oneCell;
       }
-
-      cout_dbg << "face " << face << " FineLevel " << iter_tmp;
-      cout_dbg << "  coarseLow " << coarseLow << " coarse high " << coarseHigh;
+      cout_dbg << "face " << face << " FineLevel " << iter_tmp << endl;
+      cout_dbg << "  coarseLow " << coarseLow << " coarse high " << coarseHigh<<endl;
       cout_dbg << "  refine Patch " << *patch << endl;
       
       //__________________________________
@@ -402,8 +409,15 @@ void refineFaces(const Patch* patch,
 {
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    if(patch->getBCType(face) != Patch::Coarse)
+/*`==========TESTING==========*/
+#if 0  
+    Need to test this when the fine level is 
+    on the edge of the computational domain
+    if(patch->getBCType(face) != Patch::Coarse){
       continue;
+
+#endif
+/*===========TESTING==========`*/
 
     {
      //__________________________________
