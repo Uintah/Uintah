@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
@@ -57,6 +58,9 @@ WARNING
 
     //! Asks if we are going to do regridding
     virtual bool isAdaptive() = 0;
+
+    //! Schedules task to initialize the error flags to 0
+    virtual void scheduleInitializeErrorEstimate(SchedulerP& sched, const LevelP& level) = 0;
 
     //! Asks if we are going to do regridding
     virtual bool flaggedCellsOnFinestLevel(const GridP& grid, SchedulerP& sched) = 0;
