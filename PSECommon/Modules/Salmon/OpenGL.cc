@@ -300,6 +300,8 @@ OpenGLHelper::~OpenGLHelper()
 
 void OpenGLHelper::run()
 {
+    cerr << "Calling allow..." << getpid() << "\n";
+    Thread::allow_sgi_OpenGL_page0_sillyness();
     opengl->redraw_loop();
 }
 
@@ -1540,6 +1542,8 @@ void OpenGL::listvisuals(TCLArgs& args)
 {
   TCLTask::lock();
 
+  cerr << "Calling allow..." << getpid() << "\n";
+  Thread::allow_sgi_OpenGL_page0_sillyness();
   Tk_Window topwin=Tk_NameToWindow(the_interp,
 				   const_cast<char *>(args[2]()),
 				   Tk_MainWindow(the_interp));
@@ -1742,6 +1746,9 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.20  2000/02/24 06:08:43  sparker
+// Added call to Thread::allow_sgi_OpenGL_page0_sillyness()
+//
 // Revision 1.19  2000/02/09 00:31:31  ikits
 // Fixed empty pick bug in OpenGL.cc.
 //
