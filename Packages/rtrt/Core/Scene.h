@@ -129,8 +129,6 @@ public:
 
     ambientColor_ = origAmbientColor_ * scale;
 
-    cout << "ambientColor_ : " << ambientColor_ << "\n";
-
     background->updateAmbient( scale );
   }
   
