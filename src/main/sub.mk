@@ -31,7 +31,7 @@
 # Makefile fragment for this subdirectory
 
 SRCDIR   := main
-SRCS     := $(SRCDIR)/main.cc
+SRCS     := $(SRCDIR)/main.cc $(SRCDIR)/init.cc
 
 
 ifeq ($(LARGESOS),yes)
