@@ -501,7 +501,7 @@ void CI::emit_handlers(EmitState& e)
     e.out << "{\n";
     e.out << "  void* _v=message->getLocalObj();\n";
     e.out << "  ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(_v);\n";
-    e.out << "  //Unmarshal recieved distribution name\n";
+    e.out << "  //Unmarshal received distribution name\n";
     e.out << "  int distname_s;\n";
     e.out << "  message->unmarshalInt(&distname_s, 1);\n";
     e.out << "  char name[distname_s+1];\n";
@@ -941,7 +941,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out << leader2 << "if (_flag == 1) {  /*REDISONLY*/ \n";
 
     f_leader=e.out.push_leader();
-    e.out << leader2 << "//Unmarshal recieved distribution name\n";
+    e.out << leader2 << "//Unmarshal received distribution name\n";
     e.out << leader2 << "int distname_s;\n";
     e.out << leader2 << "message->unmarshalInt(&distname_s, 1);\n";
     e.out << leader2 << "char name[distname_s+1];\n";
@@ -2154,13 +2154,12 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  int _meta_rep_totalsize=_meta_rep_dim[0]*_meta_rep_dim[1];\n";
 	e.out << leader2 << "  ::CIA::array2< int>::pointer _meta_rep_uptr=const_cast< ::CIA::array2< int>::pointer>(&_meta_rep[0][0]);\n";
 	e.out << leader2 << "  message->unmarshalInt(_meta_rep_uptr, _meta_rep_totalsize);\n";
-	e.out << leader2 << "  //Unmarshal recieved distribution\n";
+	e.out << leader2 << "  //Unmarshal received distribution\n";
 	
 	string templeader = e.out.leader;
 	for(int i=arr_t->dim-1; i >= 0; i--) {
 	  e.out << leader2 << "  for(int adj" << i << "=_this_rep->getFirst(" << i+1  
-		<< ")/_this_rep->getStride(" << i+1 << "), "    
-		<< "str" << i << "=_this_rep->getStride(" << i+1 << "), " 
+		<< "), str" << i << "=_this_rep->getStride(" << i+1 << "), " 
 		<< "i" << i << "=" << "_meta_rep[0][" << i << "]; " << "i" << i << "<=" 
 		<< "_meta_rep[1][" << i << "]; " << "i" << i << "+=" << "_meta_rep[2][" 
 		<< i << "])\n"; 
@@ -2170,7 +2169,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	std::ostringstream var2unmarshal2;
 	var2unmarshal2 << "(*_arr_ptr)";
 	for(int i=arr_t->dim-1; i >= 0; i--) {
-	  var2unmarshal2 << "[i" << i << "/str" << i << " - adj" << i << "]";
+	  var2unmarshal2 << "[(i" << i << "-adj" << i << ")/str" << i << "]";
 	}   
 	arr_t->subtype->emit_unmarshal(e, var2unmarshal2.str(), "1", handler, ctx, false, false);
 	e.out.pop_leader(templeader); 
@@ -2218,8 +2217,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	string templeader = e.out.leader;
 	for(int i=arr_t->dim-1; i >= 0; i--) {
 	  e.out << leader2 << "  for(int adj" << i << "=_this_rep->getFirst(" << i+1  
-		<< ")/_this_rep->getStride(" << i+1 << "), "    
-		<< "str" << i << "=_this_rep->getStride(" << i+1 << "), " 
+		<< "), str" << i << "=_this_rep->getStride(" << i+1 << "), " 
 		<< "i" << i << "=" << "_meta_arr[0][" << i << "]; " << "i" << i << "<=" 
 		<< "_meta_arr[1][" << i << "]; " << "i" << i << "+=" << "_meta_arr[2][" 
 		<< i << "])\n"; 
@@ -2229,7 +2227,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	std::ostringstream var2unmarshal2;
 	var2unmarshal2 << "(" << arg;
 	for(int i=arr_t->dim-1; i >= 0; i--) {
-	  var2unmarshal2 << "[i" << i << "/str" << i << " - adj" << i << "]";
+	  var2unmarshal2 << "[(i" << i << "-adj" << i << ")/str" << i << "]";
 	}   
 	var2unmarshal2 << ")";
 	arr_t->subtype->emit_unmarshal(e, var2unmarshal2.str(), "1", handler, ctx, false, false);
@@ -2454,17 +2452,18 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  //Marshal the data:\n";
 	string templeader = e.out.leader;
 	for(int i=arr_t->dim-1; i >= 0; i--) {
-	  e.out << leader2 << "  for(int " << "i" << i << "=" << "_meta_arr[0][" << i 
-		<< "], adj" << i << "=this_rep->getFirst(" << i+1  << "); " << "i" 
-		<< i << "<=" << "_meta_arr[1][" << i << "]; " << "i" << i << "+=" 
-		<< "_meta_arr[2][" << i << "])\n"; 
+	  e.out << leader2 << "  for(int adj" << i << "=this_rep->getFirst(" << i+1  
+		<< "), str" << i << "=this_rep->getStride(" << i+1 << "), " 
+		<< "i" << i << "=" << "_meta_arr[0][" << i << "]; " << "i" << i << "<=" 
+		<< "_meta_arr[1][" << i << "]; " << "i" << i << "+=" << "_meta_arr[2][" 
+		<< i << "])\n"; 
 	  e.out.push_leader();
 	}
 	e.out.push_leader(); 
 	std::ostringstream var2marshal;
 	var2marshal << arg;
 	for(int i=arr_t->dim-1; i >= 0; i--) {
-	  var2marshal << "[i" << i << "-adj" << i << "]";
+	  var2marshal << "[(i" << i << "-adj" << i << ")/str" << i << "]"; 
 	}   
 	arr_t->subtype->emit_marshal(e, var2marshal.str(), "1", handler, top, ctx, false);
 	e.out.pop_leader(templeader);   
@@ -2498,17 +2497,18 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  //Marshal the data:\n";
 	string templeader = e.out.leader;
 	for(int i=arr_t->dim-1; i >= 0; i--) {
-	  e.out << leader2 << "  for(int " << "i" << i << "=" << "_meta_rep[0][" << i 
-		<< "], adj" << i << "=_this_rep->getFirst(" << i+1  << "); " << "i" 
-		<< i << "<=" << "_meta_rep[1][" << i << "]; " << "i" << i << "+=" 
-		<< "_meta_rep[2][" << i << "])\n"; 
+	  e.out << leader2 << "  for(int adj" << i << "=_this_rep->getFirst(" << i+1  
+		<< "), str" << i << "=_this_rep->getStride(" << i+1 << "), " 
+		<< "i" << i << "=" << "_meta_rep[0][" << i << "]; " << "i" << i << "<=" 
+		<< "_meta_rep[1][" << i << "]; " << "i" << i << "+=" << "_meta_rep[2][" 
+		<< i << "])\n"; 
 	  e.out.push_leader();
 	}
 	e.out.push_leader(); 
 	std::ostringstream var2marshal;
 	var2marshal << "((*_arr_ptr)";
 	for(int i=arr_t->dim-1; i >= 0; i--) {
-	  var2marshal << "[i" << i << "-adj" << i << "]";
+	  var2marshal << "[(i" << i << "-adj" << i << ")/str" << i << "]";
 	}   
 	var2marshal << ")";
 	arr_t->subtype->emit_marshal(e, var2marshal.str(), "1", handler, top, ctx, false);

@@ -17,11 +17,12 @@
 
 
 package OESort_ns {
-    distribution array O <int, 1>;
-    distribution array E <int, 1>;	
     distribution array X <int, 1>;
     interface OESort {
-	int sort(in O oarr, in E earr, out X aft);
+	int sort(inout X arr);
+    };
+    interface OESplit {	
+	int split(inout X arr);
     };
 };
 

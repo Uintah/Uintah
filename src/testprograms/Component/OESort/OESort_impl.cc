@@ -34,6 +34,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <algo.h>
 #include <iostream>
 
 using namespace OESort_ns;
@@ -47,38 +49,100 @@ OESort_impl::~OESort_impl()
 {
 }
 
-int OESort_impl::sort(const CIA::array1<int>& arr1, const CIA::array1<int>& arr2, CIA::array1<int>& aft)
+int OESort_impl::sort(CIA::array1<int>& arr)
 {
+  sort(arr);
+  return 0;
+}
 
-  unsigned int l = 0;
-  unsigned int i = 0;
-  unsigned int j = 0;
-  unsigned int total_sz = arr1.size() + arr2.size() - 1;
-  aft.resize(total_sz);
+OESplit_impl::OESplit_impl()
+{
+}
 
-  /*Merge the array:*/
-  while (i < arr1.size()) {
-    if (j < arr2.size()) {
-      if (arr1[i] < arr2[j]) {
-	aft[l] = arr1[i];
-	i++;
+OESplit_impl::~OESplit_impl()
+{
+}
+
+int OESplit_impl::split(CIA::array1<int>& arr)
+{
+  
+  //pp->sort(arr);
+
+  CIA::array1<int> Tarr(arr);
+  int totalsize = arr.size();
+  int halfsize = totalsize / 2;
+  int arri;
+  int Tarri;
+  int Tarrj;
+
+  /*Odd-Even -> Even*/
+  arri = 0;
+  Tarri = 1;
+  Tarrj = halfsize;
+  while (Tarri < halfsize) {
+    if (Tarrj < totalsize) {
+      if (Tarr[Tarri] < Tarr[Tarrj]) {
+	arr[arri] = Tarr[Tarri];
+	Tarri+=2;
       }
       else {
-	aft[l] = arr2[j];
-	j++;
+	arr[arri] = Tarr[Tarrj];
+	Tarrj+=2;
       }
     }
     else {
-      aft[l] = arr1[i];
-      i++;
+      arr[arri] = Tarr[Tarri];
+      Tarri+=2;
     }
-    l++;
+    arri+=2;
   }
-  while (j < arr2.size()) {
-    aft[l] = arr2[j];
-    l++;
-    j++;
+  while (Tarrj < totalsize) {
+    arr[arri] = Tarr[Tarrj];
+    arri+=2;
+    Tarrj+=2;
   }
 
+  /*Even-Odd -> Odd*/
+  arri = 1;
+  Tarri = 0;
+  Tarrj = halfsize+1;
+  while (Tarri < halfsize) {
+    if (Tarrj < totalsize) {
+      if (Tarr[Tarri] < Tarr[Tarrj]) {
+	arr[arri] = Tarr[Tarri];
+	Tarri+=2;
+      }
+      else {
+	arr[arri] = Tarr[Tarrj];
+	Tarrj+=2;
+      }
+    }
+    else {
+      arr[arri] = Tarr[Tarri];
+      Tarri+=2;
+    }
+    arri+=2;
+  }
+  while (Tarrj < totalsize) {
+    arr[arri] = Tarr[Tarrj];
+    arri+=2;
+    Tarrj+=2;
+  }
+  
+  /*Pairwise check of merged array:*/
+  for(arri = 0; arri+1 < totalsize; arri+=2)
+    if (arr[arri] > arr[arri+1]) {
+      int t = arr[arri];
+      arr[arri] = arr[arri+1];
+      arr[arri+1] = t;
+    }
+  
+  
   return 0;
 }
+
+
+
+
+
+
