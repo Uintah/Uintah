@@ -36,6 +36,10 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
   d_dbgStartTime = 9;
   d_dbgStopTime  = 9;
   d_dbgOutputInterval = 9;
+  d_dbgSymPlanes= IntVector(0,0,0);
+  d_dbgSymmetryTest = false;
+  d_dbgSym_relative_tol = 1e-6;
+  d_dbgSym_absolute_tol = 1e-9;  
   //__________________________________
   // Find the switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
@@ -52,6 +56,16 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
     debug_ps->get("dbg_BeginIndex",               d_dbgBeginIndx);
     debug_ps->get("dbg_EndIndex",                 d_dbgEndIndx);
     debug_ps->get("dbg_Matls",                    d_dbgMatls);
+    debug_ps->get("dbg_SymmetryPlanes",           d_dbgSymPlanes);
+    debug_ps->get("dbg_Sym_absolute_tol",         d_dbgSym_absolute_tol); 
+    debug_ps->get("dbg_Sym_relative_tol",         d_dbgSym_relative_tol);
+    
+    if(d_dbgSymPlanes.x()>0 || d_dbgSymPlanes.y()>0 || d_dbgSymPlanes.z() > 0){
+      d_dbgSymmetryTest = true;
+      cout << "Perform Symmetry test:  Planes of symmetry " << d_dbgSymPlanes
+           << " absolute Tolerance: " << d_dbgSym_absolute_tol
+           << " relative Tolerance: " << d_dbgSym_relative_tol << endl;
+    }
 
     for (ProblemSpecP child = debug_ps->findBlock("debug"); child != 0;
         child = child->findNextBlock("debug")) {
@@ -121,6 +135,22 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
 /*_______________________________________________________________________ 
  Function:  printData--  convience function
 _______________________________________________________________________ */
+void    ICE::printVector(int matl,
+                         const Patch* patch, 
+                         int include_EC,
+                         const string&    message1,       
+                         const string&    message2,
+	                  int   component,
+                         const CCVariable<Vector>& q_CC)
+{
+  if(d_dbgSymmetryTest){  // symmetry test
+    symmetryTest_Vector(matl, patch, message1, message2, q_CC);
+  } else {  
+    printVector_driver(matl,patch,include_EC,message1,message2,component,q_CC);
+  }
+}
+
+
 void    ICE::printData( int matl,
                         const Patch* patch, 
                         int include_EC,
@@ -131,6 +161,7 @@ void    ICE::printData( int matl,
   printData_driver<CCVariable<int> >
         (matl, patch, include_EC, message1, message2, "CC",q_CC);
 }
+//__________________________________
 void    ICE::printData( int matl,
                         const Patch* patch, 
                         int include_EC,
@@ -138,9 +169,19 @@ void    ICE::printData( int matl,
                         const string&    message2,       
                         const CCVariable<double>& q_CC)
 {
-  printData_driver<CCVariable<double> >
+
+  if(d_dbgSymmetryTest){  // symmetry test
+    IntVector cellShift(0,0,0);
+    symmetryTest_driver<CCVariable<double> >
+        (matl, patch, cellShift, message1, message2, q_CC);
+  } else {                // 
+    printData_driver<CCVariable<double> >
         (matl, patch, include_EC, message1, message2, "CC", q_CC);
+  }  
+
 }
+//__________________________________
+//
 void    ICE::printData_FC(int matl,
                           const Patch* patch, 
                           int include_EC,
@@ -148,9 +189,16 @@ void    ICE::printData_FC(int matl,
                           const string&    message2,  
                           const SFCXVariable<double>& q_FC)
 {
-  printData_driver< SFCXVariable<double> >
+  if(d_dbgSymmetryTest){  // symmetry test
+    IntVector cellShift(1,0,0);
+    symmetryTest_driver< SFCXVariable<double> >
+          (matl, patch, cellShift, message1, message2, q_FC);
+  } else {
+    printData_driver< SFCXVariable<double> >
           (matl, patch, include_EC, message1, message2, "FC", q_FC);
+  }
 }
+//__________________________________
 void    ICE::printData_FC(int matl,
                           const Patch* patch, 
                           int include_EC,
@@ -158,9 +206,16 @@ void    ICE::printData_FC(int matl,
                           const string&    message2,  
                           const SFCYVariable<double>& q_FC)
 {
-  printData_driver< SFCYVariable<double> >
+  if(d_dbgSymmetryTest){  // symmetry test
+    IntVector cellShift(0,1,0);
+    symmetryTest_driver< SFCYVariable<double> >
+          (matl, patch, cellShift, message1, message2, q_FC);
+  } else {
+    printData_driver< SFCYVariable<double> >
           (matl, patch, include_EC, message1, message2, "FC", q_FC);
+  }
 }
+//__________________________________
 void    ICE::printData_FC(int matl,
                           const Patch* patch, 
                           int include_EC,
@@ -168,8 +223,14 @@ void    ICE::printData_FC(int matl,
                           const string&    message2,  
                           const SFCZVariable<double>& q_FC)
 {
-  printData_driver< SFCZVariable<double> >
+  if(d_dbgSymmetryTest){  // symmetry test
+    IntVector cellShift(0,0,1);
+    symmetryTest_driver< SFCZVariable<double> >
+          (matl, patch, cellShift, message1, message2, q_FC);
+  } else {
+    printData_driver< SFCZVariable<double> >
           (matl, patch, include_EC, message1, message2, "FC", q_FC);
+  }
 }
 
 
@@ -249,6 +310,7 @@ void    ICE::printData_driver( int matl,
 
       for(int k = low.z(); k < high.z(); k++)  {
         for(int j = low.y(); j < high.y(); j++) {
+
           for(int i = low.x(); i < high.x(); i++) {
             IntVector idx(i, j, k);
             fprintf(fp, "%16.15E %16.15E\n", x, q_CC[idx]);
@@ -268,16 +330,16 @@ void    ICE::printData_driver( int matl,
 }
 
 /*_______________________________________________________________________
- Function:  printVector--
+ Function:  printVector_driver--
  Purpose:  Print to stderr a cell-centered, single material
 _______________________________________________________________________ */
-void    ICE::printVector(int matl,
-                         const Patch* patch, 
-                         int include_EC,
-                         const string&    message1,       
-                         const string&    message2,
-	                  int   /*component*/,  /*  x = 0,y = 1, z = 1  */
-                         const CCVariable<Vector>& q_CC)
+void    ICE::printVector_driver(int matl,
+                                const Patch* patch, 
+                                int include_EC,
+                                const string&    message1,       
+                                const string&    message2,
+	                         int   /*component*/,  /*  x = 0,y = 1, z = 1  */
+                                const CCVariable<Vector>& q_CC)
 {
 
   //__________________________________
@@ -375,6 +437,263 @@ void    ICE::printVector(int matl,
   }
 }
 
+/*_______________________________________________________________________
+ Function:  symmetryTest_driver-- test for symmetry
+ Note:      The comments were written presuming that the plane of symmetry
+            is in the X direction.
+            - CC Variables examine all cells including extra calls
+            - (Y,Z)_FC variables examine only patch interior cells
+            - X_FC variables the mirrorCell index must be shifted by 1
+              and only examine patch interior cells
+_______________________________________________________________________ */
+template<class T>
+void    ICE::symmetryTest_driver( int matl,
+                                  const Patch* patch,
+                                  const IntVector& cellShift,
+                                  const string& message1,        
+                                  const string& message2,       
+                                  const T& q_CC)
+{
+ 
+  //__________________________________
+  // bulletproofing -- only works on 1 patch
+  const Level* level = patch->getLevel();
+  int numPatches = level->numPatches();
+  if(numPatches !=1 ){
+      throw ProblemSetupException("PRINT_DATA: symmetryTest_driver:  "
+                                  "this only works with one patch");
+  }
+
+  // This only works with an even number of cells in the patch interior
+  IntVector low, high, ncell;
+  low   = patch->getInteriorCellLowIndex();
+  high  = patch->getInteriorCellHighIndex();
+  IntVector nCells = high - low;
+ 
+  if((nCells.x() % 2 !=0 && d_dbgSymPlanes.x()) ||
+     (nCells.y() % 2 !=0 && d_dbgSymPlanes.y()) ||
+      nCells.z() % 2 !=0 && d_dbgSymPlanes.z()){
+      cout << " number of interior cells " << nCells << endl;
+      throw ProblemSetupException("PRINT_DATA: symmetryTest_driver:  "
+             "Only works if the number of interior cells is even ");
+  }
+  
+  //__________________________________
+  // Is this the right material
+  bool dumpThisMatl = false;
+  for (int m = 0; m<(int) d_dbgMatls.size(); m++) {
+    if (matl == d_dbgMatls[m]) {
+      dumpThisMatl = true;
+    }
+  }
+    
+  //__________________________________
+  if ( dumpThisMatl == true && d_dbgTime_to_printData ) { 
+    IntVector low, high, high_twk;
+
+    if(cellShift != IntVector(0,0,0)){  // FC variables
+      low   = patch->getInteriorCellLowIndex();
+      high  = patch->getInteriorCellHighIndex();
+    }else{                              // CC variable
+      low   = patch->getCellLowIndex();
+      high  = patch->getCellHighIndex();
+    }
+
+    bool is_FC_variable = false;
+    if (cellShift != IntVector(0,0,0)){  
+      is_FC_variable = true;
+    }
+
+    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.precision(10);
+    bool printHeader = true;
+
+    //__________________________________
+    for (int dir = 0; dir <3; dir++){
+      if (d_dbgSymPlanes[dir] == 1){  // examine this plane of symmetry?
+
+        int extraCell = 1;
+        int FC_shift = 0;
+
+        // FC_shift and ghost cells for FC Variables     
+        if (is_FC_variable){
+          FC_shift = cellShift[dir] * d_dbgSymPlanes[dir];
+
+          if (FC_shift == 1){
+            high += cellShift;  // X_FC variables need to shift high
+          }else{
+            extraCell = 0;      // no Ghost cells for (Y,Z)_FC vars
+          }
+        }
+
+        // upper looping limit
+        high_twk = high;
+        high_twk[dir] = (nCells[dir]/2);
+
+
+        // loop over the lower half of the plane of symmetry
+        // and compare corresponding cell on the opposite side of the plane
+        for(int k = low.z(); k < high_twk.z(); k++) {
+          for(int j = low.y(); j < high_twk.y(); j++) {
+            for(int i = low.x(); i < high_twk.x(); i++) {
+
+              IntVector c(i, j, k);
+
+              // find the mirroring cell index--this is tricky for FC variables
+              IntVector mirrorCell = c;  // set transverse indicies
+
+              // paper and pencil to figure this out
+              mirrorCell[dir] = (high[dir]-1) - (c[dir]+extraCell);
+
+              // X_FC variable shift
+              mirrorCell[dir] += FC_shift;
+
+              // calc. absolute and relative differences
+              double abs_diff = fabs(q_CC[c] - q_CC[mirrorCell]);
+              double rel_diff = abs_diff/(fabs(q_CC[c]) + 1e-100);
+              
+              // catch any asymmetries
+              if (abs_diff > d_dbgSym_absolute_tol || 
+                  rel_diff > d_dbgSym_relative_tol){
+                if (printHeader) {  
+                  cerr << "____________________________________________Symmetry Test\n";
+                  cerr << "$" << message2 <<"\t " << message1 <<endl;
+                  printHeader = false; 
+                } 
+                cerr << "c " << c <<  " " << q_CC[c] <<" vs " 
+                     << mirrorCell<< " " << q_CC[mirrorCell]
+                     << " abs_diff: " << abs_diff 
+                     << " relative diff: "<<rel_diff 
+                     << " plane " << dir << endl;;
+              }  
+            }  // i loop
+          }  // j loop
+        }  // k loop
+      }  // test this plane
+    } // direction loop
+   cerr.setf(ios::scientific ,ios::floatfield);
+  }  // time to dump
+  //__________________________________
+  //  bullet proof
+  if (d_dbgMatls.size() == 0){
+    throw ProblemSetupException(
+          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
+  }
+}
+/*_______________________________________________________________________
+ Function:  symmetryTest_Vector-- test for symmetry
+ Notes:     This only works for CCVariables
+_______________________________________________________________________ */
+void    ICE::symmetryTest_Vector( int matl,
+                                  const Patch* patch,
+                                  const string& message1,        
+                                  const string& message2,       
+                                  const CCVariable<Vector>& q_CC)
+{
+  //__________________________________
+  // bulletproofing -- only works on 1 patch
+  const Level* level = patch->getLevel();
+  int numPatches = level->numPatches();
+  if(numPatches !=1 ){
+      throw ProblemSetupException("PRINT_DATA: symmetryTest_driver:  "
+                                  "this only works with one patch");
+  }
+
+  // The patch interior can only have an even number of cells
+  IntVector low, high, ncell;
+  low   = patch->getInteriorCellLowIndex();
+  high  = patch->getInteriorCellHighIndex();
+  IntVector nCells = high - low;
+  
+  if((nCells.x() % 2 !=0 && d_dbgSymPlanes.x()) ||
+     (nCells.y() % 2 !=0 && d_dbgSymPlanes.y()) ||
+      nCells.z() % 2 !=0 && d_dbgSymPlanes.z()){
+      cout << " number of interior cells " << nCells << endl;
+      throw ProblemSetupException("PRINT_DATA: symmetryTest_driver:  "
+             "Only works if the number of interior cells is even ");
+  }
+    
+  //__________________________________
+  // is this the right material
+  bool dumpThisMatl = false;
+  for (int m = 0; m<(int) d_dbgMatls.size(); m++) {
+    if (matl == d_dbgMatls[m]) {
+      dumpThisMatl = true;
+    }
+  }
+  //__________________________________
+  if ( dumpThisMatl == true && d_dbgTime_to_printData ) { 
+    IntVector low, high, high_twk;
+    low   = patch->getCellLowIndex();
+    high  = patch->getCellHighIndex();
+
+    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.precision(5);
+    bool printHeader = true;
+    
+    //__________________________________
+    for (int dir = 0; dir <3; dir++){
+      if (d_dbgSymPlanes[dir] == 1){
+        high_twk = high;
+        high_twk[dir] = (nCells[dir]/2);
+
+        int extraCell = 1;
+
+        // loop over the lower half of the plane of symmetry
+        // and compare with the on the opposite side of the plane
+        for(int k = low.z(); k < high_twk.z(); k++) {
+          for(int j = low.y(); j < high_twk.y(); j++) {
+            for(int i = low.x(); i < high_twk.x(); i++) {
+
+              IntVector c(i, j, k);
+              
+              // pencil and paper
+              IntVector mirrorCell = c;
+              mirrorCell[dir] = (high[dir]-1) - (c[dir]+extraCell);
+
+              // absolute difference
+              Vector abs_diff;
+              for(int d = 0; d < 3; d ++ ){
+                abs_diff[d] = fabs(q_CC[c][d] - q_CC[mirrorCell][d]);
+              }
+              // normal component is equal and opposite
+              abs_diff[dir] = fabs(q_CC[c][dir] + q_CC[mirrorCell][dir]);
+
+              // relative difference
+              Vector rel_diff;
+              rel_diff.x(abs_diff.x()/(fabs(q_CC[c].x()) + 1e-100) );
+              rel_diff.y(abs_diff.y()/(fabs(q_CC[c].y()) + 1e-100) );
+              rel_diff.z(abs_diff.z()/(fabs(q_CC[c].z()) + 1e-100) );
+
+              // catch any asymmetries  
+              if (abs_diff.length() > d_dbgSym_absolute_tol || 
+                  rel_diff.length() > d_dbgSym_relative_tol){
+                  
+               if (printHeader) {  
+                  cerr << "____________________________________________Symmetry Test\n";
+                  cerr << "$" << message2 <<"\t " << message1 <<endl;
+                  printHeader = false; 
+                } 
+                cerr << c << " "  << q_CC[c]
+                     << "     abs_diff: " << abs_diff 
+                     << " relative diff: "<<rel_diff << endl;
+                cerr << mirrorCell<< " " << q_CC[mirrorCell]  << endl;
+
+              }  
+            }  // i loop
+          }  // j loop
+        }  // k loop
+      }  // test this plane
+    } // direction loop
+   cerr.setf(ios::scientific ,ios::floatfield);
+  }  // time to dump
+  //__________________________________
+  //  bullet proof
+  if (d_dbgMatls.size() == 0){
+    throw ProblemSetupException(
+          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
+  }
+}
 /*_______________________________________________________________________
  Function:  printStencil--
 _______________________________________________________________________ */
