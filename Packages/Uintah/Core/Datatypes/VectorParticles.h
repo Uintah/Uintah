@@ -1,18 +1,21 @@
 #ifndef VECTORPARTICLES_H
 #define VECTORPARTICLES_H
 
+#include "PSet.h"
 #include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <Uintah/Interface/DataArchive.h>
-//#include <Uintah/Components/MPM/Util/Matrix3D.h>
+//#include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Grid/ParticleVariable.h>
-#include <SCICore/Persistent/Persistent.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Patch.h>
+#include <SCICore/Persistent/Persistent.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
 #include <iostream>
+#include <vector>
+using std::vector;
 
 namespace Uintah {
 namespace Datatypes {
@@ -65,9 +68,8 @@ public:
   VectorParticles();
   //////////
   // Constructor
-  VectorParticles(const vector <ParticleVariable<Point> >& positions,
-		 const vector <ParticleVariable<Vector> >& scalars,
-		 void* callbackClass);
+  VectorParticles(const vector <ParticleVariable<Vector> >& vectors,
+		  PSet* pset );
 
   // GROUP: Destructors
   //////////
@@ -76,67 +78,50 @@ public:
  
   // GROUP: Access
   //////////
-  // return the Points
-   vector<ParticleVariable<Point> >& getPositions(){ return positions;}
-  //////////
   // return the Vectors
   vector<ParticleVariable<Vector> >& get(){ return vectors; }
-  //////////
-  // return the callback
-  void* getCallbackClass(){ return cbClass; }
+  PSet* getParticleSet(){ return psetH.get_rep(); }
+
+
   // GROUP: Modify
   //////////  
+  // Set the Particle Set Handle
+  void Set(PSetHandle psh){ psetH = psh;}
+  //////////  
   // Set the Vectors
-  void Set(const vector<ParticleVariable<Vector> >& s){ vectors = s; }
-  //////////
-  // Set the particle Positions
-  void SetPositions(const vector<ParticleVariable<Point> >& p){ positions = p;}
-  //////////
-  // Set callback class
-  void SetCallbackClass( void* cbc){ cbClass = cbc; }
+  void Set(vector <ParticleVariable<Vector> >& s){ vectors = s; }
 
-  void AddVar( const ParticleVariable<Point> locs,
-	       const ParticleVariable<Vector> parts,
-	       const Patch* p);
+  void AddVar( const ParticleVariable<Vector> parts );
 
-  void SetGrid( GridP g ){ _grid = g; }
-  void SetLevel( LevelP l){ _level = l; }
+
   void SetName( string vname ) { _varname = vname; }
   void SetMaterial( int index) { _matIndex = index; }
+	       
+
   // Persistant representation
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
-  // returns the min & max vectory length
   void get_minmax(double& v0, double& v1);
-  void get_bounds(Point& p0, Point& p1);
-
+  void get_bounds(Point& p0, Point& p1){ psetH->get_bounds(p0,p1);}
 protected:
-
-  bool have_bounds;
-  Point bmin;
-  Point bmax;
-  Vector diagonal;
-  void compute_bounds();
 
   bool have_minmax;
   double data_min;
   double data_max;
   void compute_minmax();
 
+
 private:
+  PSetHandle psetH;
 
 
-  void* cbClass;
-  GridP  _grid;
-  LevelP _level;
   string _varname;
   int _matIndex;
+  vector<ParticleVariable<Vector> >  vectors;
 
-  vector<ParticleVariable<Point> > positions;
-  vector<ParticleVariable<Vector> >vectors;
 };
 
 } // end namespace Datatypes
-} // end namespace Kurt
+} // end namespace Uintah
 #endif
