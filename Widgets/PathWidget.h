@@ -29,7 +29,7 @@ public:
    ~PathWidget();
 
    virtual void widget_execute();
-   virtual void geom_moved(int, double, const Vector&, void*);
+   virtual void geom_moved(int, double, const Vector&, int);
 
    virtual void MoveDelta( const Vector& delta );
 

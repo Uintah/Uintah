@@ -44,9 +44,8 @@ ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scal
    geometries[GeomHead] = new GeomCappedCone;
    GeomMaterial* conem = new GeomMaterial(geometries[GeomHead], EdgeMaterial);
    arr->add(conem);
-   picks[Pick] = new GeomPick(arr, module);
+   picks[Pick] = new GeomPick(arr, module, this, Pick);
    picks[Pick]->set_highlight(HighlightMaterial);
-   picks[Pick]->set_cbdata((void*)Pick);
    CreateModeSwitch(0, picks[Pick]);
 
    SetMode(Mode1, Switch0);
@@ -86,13 +85,14 @@ ArrowWidget::widget_execute()
 
 void
 ArrowWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			 void* cbdata )
+			 int cbdata )
 {
-   switch((int)cbdata){
-   case Pick:
-      MoveDelta(delta);
-      break;
-   }
+    switch(cbdata){
+    case Pick:
+	MoveDelta(delta);
+	break;
+    }
+    execute();
 }
 
 

@@ -113,44 +113,41 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale,
 
    GeomGroup* eyes = new GeomGroup;
    geometries[GeomEye] = new GeomSphere;
-   picks[PickEye] = new GeomPick(geometries[GeomEye], module);
+   picks[PickEye] = new GeomPick(geometries[GeomEye], module,
+				 this, PickEye);
    picks[PickEye]->set_highlight(HighlightMaterial);
-   picks[PickEye]->set_cbdata((void*)PickEye);
    eyes->add(picks[PickEye]);
 
    geometries[GeomUp] = new GeomSphere;
-   picks[PickUp] = new GeomPick(geometries[GeomUp], module);
+   picks[PickUp] = new GeomPick(geometries[GeomUp], module, this, PickUp);
    picks[PickUp]->set_highlight(HighlightMaterial);
-   picks[PickUp]->set_cbdata((void*)PickUp);
    eyes->add(picks[PickUp]);
 
    geometries[GeomFore] = new GeomSphere;
-   picks[PickFore] = new GeomPick(geometries[GeomFore], module);
+   picks[PickFore] = new GeomPick(geometries[GeomFore], module, this, PickFore);
    picks[PickFore]->set_highlight(HighlightMaterial);
-   picks[PickFore]->set_cbdata((void*)PickFore);
    eyes->add(picks[PickFore]);
 
    geometries[GeomLookAt] = new GeomSphere;
-   picks[PickLookAt] = new GeomPick(geometries[GeomLookAt], module);
+   picks[PickLookAt] = new GeomPick(geometries[GeomLookAt], module, this, PickLookAt);
    picks[PickLookAt]->set_highlight(HighlightMaterial);
-   picks[PickLookAt]->set_cbdata((void*)PickLookAt);
    eyes->add(picks[PickLookAt]);
    GeomMaterial* eyesm = new GeomMaterial(eyes, PointMaterial);
 
    Index geom;
    GeomGroup* resizes = new GeomGroup;
    geometries[GeomResizeUp] = new GeomCappedCylinder;
-   picks[PickResizeUp] = new GeomPick(geometries[GeomResizeUp], module);
+   picks[PickResizeUp] = new GeomPick(geometries[GeomResizeUp], module, this,
+				      PickResizeUp);
    picks[PickResizeUp]->set_highlight(HighlightMaterial);
-   picks[PickResizeUp]->set_cbdata((void*)PickResizeUp);
    resizes->add(picks[PickResizeUp]);
    geometries[GeomResizeEye] = new GeomCappedCylinder;
-   picks[PickResizeEye] = new GeomPick(geometries[GeomResizeEye], module);
+   picks[PickResizeEye] = new GeomPick(geometries[GeomResizeEye], module,
+				       this, PickResizeEye);
    picks[PickResizeEye]->set_highlight(HighlightMaterial);
-   picks[PickResizeEye]->set_cbdata((void*)PickResizeEye);
    resizes->add(picks[PickResizeEye]);
    GeomMaterial* resizem = new GeomMaterial(resizes, ResizeMaterial);
-   
+
    geometries[GeomUpVector] = new GeomCylinder;
    GeomMaterial* upvm = new GeomMaterial(geometries[GeomUpVector], EdgeMaterial);
 
@@ -183,9 +180,8 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale,
       geometries[geom] = new GeomCylinder;
       cyls->add(geometries[geom]);
    }
-   picks[PickCyls] = new GeomPick(cyls, module);
+   picks[PickCyls] = new GeomPick(cyls, module, this, PickCyls);
    picks[PickCyls]->set_highlight(HighlightMaterial);
-   picks[PickCyls]->set_cbdata((void*)PickCyls);
    GeomMaterial* cylsm = new GeomMaterial(picks[PickCyls], EdgeMaterial);
    CreateModeSwitch(1, cylsm);
 
@@ -303,11 +299,11 @@ ViewWidget::widget_execute()
 
 void
 ViewWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			void* cbdata )
+		        int cbdata )
 {
    Vector delt(delta);
    
-   switch((int)cbdata){
+   switch(cbdata){
    case PickEye:
       variables[EyeVar]->SetDelta(delta);
       break;
@@ -330,6 +326,7 @@ ViewWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
       MoveDelta(delta);
       break;
    }
+   execute();
 }
 
 

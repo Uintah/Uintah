@@ -57,8 +57,8 @@ private:
    GeomMaterial TangentHeadMatl;
    GeomMaterial OrientShaftMatl;
    GeomMaterial OrientHeadMatl;
-   GeomGroup tangent;
-   GeomGroup orient;
+   GeomGroup* tangent;
+   GeomGroup* orient;
    GeomPick PickPoint;
    GeomPick PickTangent;
    GeomPick PickOrient;
@@ -76,10 +76,11 @@ PathPoint::PathPoint( PathWidget* w, const Index i, const Point& p )
   TangentHeadMatl((GeomObj*)&GeomTangentHead, w->EdgeMaterial),
   OrientShaftMatl((GeomObj*)&GeomOrientShaft, w->EdgeMaterial),
   OrientHeadMatl((GeomObj*)&GeomOrientHead, w->SpecialMaterial),
-  tangent(0), orient(0),
-  PickPoint(&PointMatl, w->module),
-  PickTangent(&tangent, w->module),
-  PickOrient(&orient, w->module),
+  PickPoint(&PointMatl, w->module, w, i),
+  tangent(new GeomGroup(0)),
+  orient(new GeomGroup(0)),
+  PickTangent(tangent, w->module, w, i+10000),
+  PickOrient(orient, w->module, w, i+20000),
   index(i), widget(w)
 {
    ConstTangent.VarChoices(Scheme1, 0, 0, 0);
@@ -96,17 +97,14 @@ PathPoint::PathPoint( PathWidget* w, const Index i, const Point& p )
    TangentVar.Order();
    OrientVar.Order();
    
-   tangent.add(&TangentShaftMatl);
-   tangent.add(&TangentHeadMatl);
-   orient.add(&OrientShaftMatl);
-   orient.add(&OrientHeadMatl);
+   tangent->add(&TangentShaftMatl);
+   tangent->add(&TangentHeadMatl);
+   orient->add(&OrientShaftMatl);
+   orient->add(&OrientHeadMatl);
    
    PickPoint.set_highlight(w->HighlightMaterial);
-   PickPoint.set_cbdata((void*)i);
    PickTangent.set_highlight(w->HighlightMaterial);
-   PickTangent.set_cbdata((void*)(i+10000));
    PickOrient.set_highlight(w->HighlightMaterial);
-   PickOrient.set_cbdata((void*)(i+20000));
 
    w->pointgroup->add(&PickPoint);
    w->tangentgroup->add(&PickTangent);
@@ -128,9 +126,9 @@ void
 PathPoint::SetIndex( const Index i )
 {
    index = i;
-   PickPoint.set_cbdata((void*)(i));
-   PickTangent.set_cbdata((void*)(i+10000));
-   PickOrient.set_cbdata((void*)(i+20000));
+   PickPoint.set_widget_data(i);
+   PickTangent.set_widget_data(i+10000);
+   PickOrient.set_widget_data(i+20000);
 }
 
 void
@@ -216,9 +214,8 @@ PathWidget::PathWidget( Module* module, CrowdMonitor* lock, double widget_scale,
    sqrt2dist = new RealVariable("sqrt2Dist", solve, Scheme1, sqrt(2)*widget_scale*5.0);
 
    splinegroup = new GeomGroup;
-   GeomPick* sp = new GeomPick(splinegroup, module);
+   GeomPick* sp = new GeomPick(splinegroup, module, this, -1);
    sp->set_highlight(HighlightMaterial);
-   sp->set_cbdata((void*)-1);
    CreateModeSwitch(0, sp);
    pointgroup = new GeomGroup(0);
    CreateModeSwitch(1, pointgroup);
@@ -283,10 +280,8 @@ PathWidget::GenerateSpline()
 
 void
 PathWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			 void* cbdata )
+			int i )
 {
-   int i((int)cbdata);
-
    if (i == -1) // Spline pick.
       MoveDelta(delta);
    else if (i < 10000)
@@ -295,6 +290,7 @@ PathWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
       points[i-10000]->geom_moved(delta, 1);
    else
       points[i-20000]->geom_moved(delta, 2);
+   execute();
 }
 
 

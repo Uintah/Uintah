@@ -33,9 +33,8 @@ PointWidget::PointWidget( Module* module, CrowdMonitor* lock, double widget_scal
 
    geometries[GeomPoint] = new GeomSphere;
    GeomMaterial* sphm = new GeomMaterial(geometries[GeomPoint], PointMaterial);
-   picks[Pick] = new GeomPick(sphm, module);
+   picks[Pick] = new GeomPick(sphm, module, this, Pick);
    picks[Pick]->set_highlight(HighlightMaterial);
-   picks[Pick]->set_cbdata((void*)Pick);
    CreateModeSwitch(0, picks[Pick]);
 
    SetMode(Mode1, Switch0);
@@ -59,13 +58,14 @@ PointWidget::widget_execute()
 
 void
 PointWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			 void* cbdata )
+			 int cbdata )
 {
-   switch((int)cbdata){
+   switch(cbdata){
    case Pick:
       MoveDelta(delta);
       break;
    }
+   execute();
 }
 
 

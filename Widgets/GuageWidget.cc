@@ -84,41 +84,39 @@ GuageWidget::GuageWidget( Module* module, CrowdMonitor* lock, double widget_scal
    constraints[ConstRatio]->Priorities(P_Highest, P_Highest, P_Highest);
 
    geometries[GeomShaft] = new GeomCappedCylinder;
-   picks[PickCyl] = new GeomPick(geometries[GeomShaft], module);
+   picks[PickCyl] = new GeomPick(geometries[GeomShaft], module, this, PickCyl);
    picks[PickCyl]->set_highlight(HighlightMaterial);
-   picks[PickCyl]->set_cbdata((void*)PickCyl);
    GeomMaterial* cylm = new GeomMaterial(picks[PickCyl], EdgeMaterial);   
    CreateModeSwitch(0, cylm);
 
    geometries[GeomPointL] = new GeomSphere;
-   picks[PickSphL] = new GeomPick(geometries[GeomPointL], module);
+   picks[PickSphL] = new GeomPick(geometries[GeomPointL],
+				  module, this, PickSphL);
    picks[PickSphL]->set_highlight(HighlightMaterial);
-   picks[PickSphL]->set_cbdata((void*)PickSphL);
    GeomMaterial* sphlm = new GeomMaterial(picks[PickSphL], PointMaterial);
    geometries[GeomPointR] = new GeomSphere;
-   picks[PickSphR] = new GeomPick(geometries[GeomPointR], module);
+   picks[PickSphR] = new GeomPick(geometries[GeomPointR],
+				  module, this, PickSphR);
    picks[PickSphR]->set_highlight(HighlightMaterial);
-   picks[PickSphR]->set_cbdata((void*)PickSphR);
    GeomMaterial* sphrm = new GeomMaterial(picks[PickSphR], PointMaterial);
    GeomGroup* resizes = new GeomGroup;
    geometries[GeomResizeL] = new GeomCappedCylinder;
-   picks[PickResizeL] = new GeomPick(geometries[GeomResizeL], module);
+   picks[PickResizeL] = new GeomPick(geometries[GeomResizeL],
+					    module, this, PickResizeL);
    picks[PickResizeL]->set_highlight(HighlightMaterial);
-   picks[PickResizeL]->set_cbdata((void*)PickResizeL);
    resizes->add(picks[PickResizeL]);
    geometries[GeomResizeR] = new GeomCappedCylinder;
-   picks[PickResizeR] = new GeomPick(geometries[GeomResizeR], module);
+   picks[PickResizeR] = new GeomPick(geometries[GeomResizeR],
+				     module, this, PickResizeR);
    picks[PickResizeR]->set_highlight(HighlightMaterial);
-   picks[PickResizeR]->set_cbdata((void*)PickResizeR);
    resizes->add(picks[PickResizeR]);
    GeomMaterial* resizesm = new GeomMaterial(resizes, ResizeMaterial);
    
    geometries[GeomSlider] = new GeomCappedCylinder;
-   picks[PickSlider] = new GeomPick(geometries[GeomSlider], module);
+   picks[PickSlider] = new GeomPick(geometries[GeomSlider],
+				    module, this, PickSlider);
    picks[PickSlider]->set_highlight(HighlightMaterial);
-   picks[PickSlider]->set_cbdata((void*)PickSlider);
    GeomMaterial* sliderm = new GeomMaterial(picks[PickSlider], SliderMaterial);
-   
    GeomGroup* w = new GeomGroup;
    w->add(sphlm);
    w->add(sphrm);
@@ -179,12 +177,12 @@ GuageWidget::widget_execute()
 
 void
 GuageWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			 void* cbdata )
+			 int cbdata )
 {
    ((DistanceConstraint*)constraints[ConstSDist])->SetDefault(GetAxis());
    ((DistanceConstraint*)constraints[ConstDist])->SetDefault(GetAxis());
 
-   switch((int)cbdata){
+   switch(cbdata){
    case PickSphL:
       variables[PointLVar]->SetDelta(delta);
       break;
@@ -204,6 +202,7 @@ GuageWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
       MoveDelta(delta);
       break;
    }
+   execute();
 }
 
 

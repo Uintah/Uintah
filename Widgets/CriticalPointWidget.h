@@ -30,7 +30,7 @@ public:
    ~CriticalPointWidget();
 
    virtual void widget_execute();
-   virtual void geom_moved(int, double, const Vector&, void*);
+   virtual void geom_moved(int, double, const Vector&, int);
 
    virtual void NextMode();
 

@@ -258,9 +258,8 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
       geometries[geom] = new GeomCylinder;
       cyls->add(geometries[geom]);
    }
-   picks[PickCyls] = new GeomPick(cyls, module);
+   picks[PickCyls] = new GeomPick(cyls, module, this, PickCyls);
    picks[PickCyls]->set_highlight(HighlightMaterial);
-   picks[PickCyls]->set_cbdata((void*)PickCyls);
    GeomMaterial* cylsm = new GeomMaterial(picks[PickCyls], EdgeMaterial);
    CreateModeSwitch(0, cylsm);
 
@@ -268,9 +267,8 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
    for (geom = SphereIUL, pick = PickSphIUL;
 	geom <= SphereODL; geom++, pick++) {
       geometries[geom] = new GeomSphere;
-      picks[pick] = new GeomPick(geometries[geom], module);
+      picks[pick] = new GeomPick(geometries[geom], module, this, pick);
       picks[pick]->set_highlight(HighlightMaterial);
-      picks[pick]->set_cbdata((void*)pick);
       pts->add(picks[pick]);
    }
    GeomMaterial* ptsm = new GeomMaterial(pts, PointMaterial);
@@ -285,9 +283,8 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
 	 geometries[geom2] = new GeomCappedCylinder;
 	 face->add(geometries[geom2]);
       }
-      picks[pick] = new GeomPick(face, module);
+      picks[pick] = new GeomPick(face, module, this, pick);
       picks[pick]->set_highlight(HighlightMaterial);
-      picks[pick]->set_cbdata((void*)pick);
       resizes->add(picks[pick]);
    }
    GeomMaterial* resizem = new GeomMaterial(resizes, ResizeMaterial);
@@ -539,9 +536,9 @@ BoxWidget::widget_execute()
 
 void
 BoxWidget::geom_moved( int /* axis*/, double /*dist*/, const Vector& delta,
-		       void* cbdata )
+		       int cbdata )
 {
-   switch((int)cbdata){
+   switch(cbdata){
    case PickSphIUL:
       variables[PointIULVar]->SetDelta(delta);
       break;
@@ -606,6 +603,7 @@ BoxWidget::geom_moved( int /* axis*/, double /*dist*/, const Vector& delta,
       MoveDelta(delta);
       break;
    }
+   execute();
 }
 
 

@@ -271,9 +271,8 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock,
       geometries[geom] = new GeomCylinder;
       cyls->add(geometries[geom]);
    }
-   picks[PickCyls] = new GeomPick(cyls, module);
+   picks[PickCyls] = new GeomPick(cyls, module, this, PickCyls);
    picks[PickCyls]->set_highlight(HighlightMaterial);
-   picks[PickCyls]->set_cbdata((void*)PickCyls);
    GeomMaterial* cylsm = new GeomMaterial(picks[PickCyls], EdgeMaterial);
    CreateModeSwitch(0, cylsm);
 
@@ -281,9 +280,8 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock,
    for (geom = SphereUL, pick = PickSphUL;
 	geom <= SphereDL; geom++, pick++) {
       geometries[geom] = new GeomSphere;
-      picks[pick] = new GeomPick(geometries[geom], module);
+      picks[pick] = new GeomPick(geometries[geom], module, this, pick);
       picks[pick]->set_highlight(HighlightMaterial);
-      picks[pick]->set_cbdata((void*)pick);
       pts->add(picks[pick]);
    }
    GeomMaterial* ptsm = new GeomMaterial(pts, PointMaterial);
@@ -293,9 +291,8 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock,
    for (geom = GeomResizeU, pick = PickResizeU;
 	geom <= GeomResizeL; geom++, pick++) {
       geometries[geom] = new GeomCappedCylinder;
-      picks[pick] = new GeomPick(geometries[geom], module);
+      picks[pick] = new GeomPick(geometries[geom], module, this, pick);
       picks[pick]->set_highlight(HighlightMaterial);
-      picks[pick]->set_cbdata((void*)pick);
       resizes->add(picks[pick]);
    }
    GeomMaterial* resizem = new GeomMaterial(resizes, ResizeMaterial);
@@ -303,14 +300,14 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock,
 
    GeomGroup* sliders = new GeomGroup;
    geometries[SliderCyl1] = new GeomCappedCylinder;
-   picks[PickSlider1] = new GeomPick(geometries[SliderCyl1], module);
+   picks[PickSlider1] = new GeomPick(geometries[SliderCyl1],
+					     module, this, PickSlider1);
    picks[PickSlider1]->set_highlight(HighlightMaterial);
-   picks[PickSlider1]->set_cbdata((void*)PickSlider1);
    sliders->add(picks[PickSlider1]);
    geometries[SliderCyl2] = new GeomCappedCylinder;
-   picks[PickSlider2] = new GeomPick(geometries[SliderCyl2], module);
+   picks[PickSlider2] = new GeomPick(geometries[SliderCyl2],
+					     module, this, PickSlider2);
    picks[PickSlider2]->set_highlight(HighlightMaterial);
-   picks[PickSlider2]->set_cbdata((void*)PickSlider2);
    sliders->add(picks[PickSlider2]);
    GeomMaterial* slidersm = new GeomMaterial(sliders, SliderMaterial);
    CreateModeSwitch(3, slidersm);
@@ -415,7 +412,7 @@ ScaledFrameWidget::widget_execute()
 
 void
 ScaledFrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			       void* cbdata )
+			       int cbdata )
 {
    Vector delt(delta);
    ((DistanceConstraint*)constraints[ConstULUR])->SetDefault(GetAxis1());
@@ -425,7 +422,7 @@ ScaledFrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& 
    ((DistanceConstraint*)constraints[ConstSDist1])->SetDefault(GetAxis1());
    ((DistanceConstraint*)constraints[ConstSDist2])->SetDefault(-GetAxis2());
 
-   switch((int)cbdata){
+   switch(cbdata){
    case PickSphUL:
       variables[PointULVar]->SetDelta(delta);
       break;
@@ -484,6 +481,7 @@ ScaledFrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& 
       MoveDelta(delta);
       break;
    }
+   execute();
 }
 
 

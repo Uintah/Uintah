@@ -44,9 +44,8 @@ CrosshairWidget::CrosshairWidget( Module* module, CrowdMonitor* lock, double wid
    geometries[GeomAxis3] = new GeomCappedCylinder;
    axes->add(geometries[GeomAxis3]);
    GeomMaterial* axesm = new GeomMaterial(axes, EdgeMaterial);
-   picks[Pick] = new GeomPick(axesm, module);
+   picks[Pick] = new GeomPick(axesm, module, this, Pick);
    picks[Pick]->set_highlight(HighlightMaterial);
-   picks[Pick]->set_cbdata((void*)Pick);
    CreateModeSwitch(0, picks[Pick]);
 
    SetMode(Mode1, Switch0);
@@ -85,13 +84,14 @@ CrosshairWidget::widget_execute()
 
 void
 CrosshairWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			     void* cbdata )
+			     int cbdata )
 {
-   switch((int)cbdata){
+   switch(cbdata){
    case Pick:
       MoveDelta(delta);
       break;
    }
+   execute();
 }
 
 

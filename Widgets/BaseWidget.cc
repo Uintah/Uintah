@@ -35,8 +35,8 @@ MaterialHandle BaseWidget::SpecialWidgetMaterial(new Material(Color(0,0,0),
 							      Color(.5,.5,.5),
 							      20));
 MaterialHandle BaseWidget::HighlightWidgetMaterial(new Material(Color(0,0,0),
-								Color(.7,.7,.7),
-								Color(0,0,.6),
+								Color(.8,0,0),
+								Color(.5,.5,.5),
 								20));
 
 BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
@@ -164,23 +164,15 @@ BaseWidget::execute()
 
 
 void
-BaseWidget::geom_pick( void* /* cbdata */)
+BaseWidget::geom_pick( int /* cbdata */)
 {
 }
 
 
 void
-BaseWidget::geom_release( void* /* cbdata */)
+BaseWidget::geom_release( int /* cbdata */)
 {
 }
-
-
-void
-BaseWidget::geom_moved( int /* axis*/, double /* dist */,
-			const Vector& /* delta */, void* /* cbdata */)
-{
-}
-
 
 void
 BaseWidget::CreateModeSwitch( const Index snum, GeomObj* o )

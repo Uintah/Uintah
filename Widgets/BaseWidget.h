@@ -61,9 +61,9 @@ public:
    
    void execute();
 
-   virtual void geom_pick(void*);
-   virtual void geom_release(void*);
-   virtual void geom_moved(int, double, const Vector&, void*);
+   virtual void geom_pick(int);
+   virtual void geom_release(int);
+   virtual void geom_moved(int, double, const Vector&, int)=0;
 
    BaseWidget& operator=( const BaseWidget& );
    int operator==( const BaseWidget& );

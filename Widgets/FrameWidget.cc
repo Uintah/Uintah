@@ -159,9 +159,8 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale 
       geometries[geom] = new GeomCylinder;
       cyls->add(geometries[geom]);
    }
-   picks[PickCyls] = new GeomPick(cyls, module);
+   picks[PickCyls] = new GeomPick(cyls, module, this, PickCyls);
    picks[PickCyls]->set_highlight(HighlightMaterial);
-   picks[PickCyls]->set_cbdata((void*)PickCyls);
    GeomMaterial* cylsm = new GeomMaterial(picks[PickCyls], EdgeMaterial);
    CreateModeSwitch(0, cylsm);
 
@@ -169,9 +168,8 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale 
    for (geom = GeomPointUL, pick = PickSphUL;
 	geom <= GeomPointDL; geom++, pick++) {
       geometries[geom] = new GeomSphere;
-      picks[pick] = new GeomPick(geometries[geom], module);
+      picks[pick] = new GeomPick(geometries[geom], module, this, pick);
       picks[pick]->set_highlight(HighlightMaterial);
-      picks[pick]->set_cbdata((void*)pick);
       pts->add(picks[pick]);
    }
    GeomMaterial* ptsm = new GeomMaterial(pts, PointMaterial);
@@ -181,9 +179,8 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale 
    for (geom = GeomResizeU, pick = PickResizeU;
 	geom <= GeomResizeL; geom++, pick++) {
       geometries[geom] = new GeomCappedCylinder;
-      picks[pick] = new GeomPick(geometries[geom], module);
+      picks[pick] = new GeomPick(geometries[geom], module, this, pick);
       picks[pick]->set_highlight(HighlightMaterial);
-      picks[pick]->set_cbdata((void*)pick);
       resizes->add(picks[pick]);
    }
    GeomMaterial* resizem = new GeomMaterial(resizes, ResizeMaterial);
@@ -285,7 +282,7 @@ FrameWidget::widget_execute()
 
 void
 FrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			 void* cbdata )
+			 int cbdata )
 {
    Vector delt(delta);
    ((DistanceConstraint*)constraints[ConstULUR])->SetDefault(GetAxis1());
@@ -293,7 +290,7 @@ FrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
    ((DistanceConstraint*)constraints[ConstULDL])->SetDefault(GetAxis2());
    ((DistanceConstraint*)constraints[ConstDRUR])->SetDefault(GetAxis2());
    
-   switch((int)cbdata){
+   switch(cbdata){
    case PickSphUL:
       variables[PointULVar]->SetDelta(delta);
       break;
@@ -346,6 +343,7 @@ FrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
       MoveDelta(delta);
       break;
    }
+   execute();
 }
 
 
