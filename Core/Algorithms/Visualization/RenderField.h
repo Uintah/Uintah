@@ -641,7 +641,14 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
       break;
 
     case 2: // Axes
-      add_axis(p, node_scale, lines, choose_mat(def_color, *niter));
+      if (def_color)
+      {
+	add_axis(p, node_scale, lines, 0);
+      }
+      else
+      {
+	add_axis(p, node_scale, lines, choose_mat(def_color, *niter));
+      }
       break;
 
     case 3: // Disks
@@ -662,8 +669,8 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
   if (mode == 0) { // Points
     nodes->add(scinew GeomMaterial(points, def_mat_handle_));
   }
-  else if (mode == 2) { // Points
-    nodes->add(lines);
+  else if (mode == 2) { // Axes
+    nodes->add(scinew GeomMaterial(lines, def_mat_handle_));
   }
 
   return node_switch;
@@ -706,7 +713,8 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
       lines = scinew GeomCLines;
     }
     lines->setLineWidth(edge_scale);
-    GeomDL *display_list = scinew GeomDL(lines);
+    GeomDL *display_list =
+      scinew GeomDL(scinew GeomMaterial(lines, def_mat_handle_));
     edge_switch = scinew GeomSwitch(display_list);
   }
 
@@ -760,7 +768,7 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 	}
 	else
 	{
-	  lines->add(p1, m1, p2, m1);
+	  lines->add(p1, p2);
 	}
       }
       break;
@@ -1605,7 +1613,8 @@ public:
 				  MaterialHandle default_material,
 				  const string &data_display_mode,
 				  double scale,
-				  int resolution) = 0;
+				  int resolution,
+				  bool transparent_p) = 0;
 
 
 
@@ -1619,7 +1628,8 @@ public:
 
 protected:
 
-  void add_sphere(const Point &p, double scale, int resolution, GeomGroup *g,
+  void add_sphere(const Point &p, double scale, int resolution,
+		  GeomGroup *g, GeomPoints *points,
 		  MaterialHandle color = 0);
 };
 
@@ -1634,7 +1644,8 @@ public:
 				  MaterialHandle default_material,
 				  const string &data_display_mode,
 				  double scale,
-				  int resolution);
+				  int resolution,
+				  bool transparent_p);
 };
 
 
@@ -1646,14 +1657,14 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
 						MaterialHandle def_mat,
 						const string &display_mode,
 						double scale, 
-						int resolution)
+						int resolution,
+						bool transparent_p)
 {
-  VFld *sfld = dynamic_cast<SFld*>(vfld_handle.get_rep());
+  SFld *sfld = dynamic_cast<SFld*>(sfld_handle.get_rep());
   CFld *cfld = dynamic_cast<CFld*>(cfld_handle.get_rep()); 
 
   const bool points_p = (display_mode == "Points");
-  const bool spheres_p = (display_mode == "Spheres");
-  const bool sized_p = (display_mode == "Sized Spheres");
+  const bool sized_p = (display_mode == "Scaled Spheres");
 
   GeomSwitch *data_switch = 0;
   GeomGroup *objs = 0;
@@ -1661,13 +1672,25 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
 
   if (points_p)
   {
-    points = scinew GeomPoints();
+    if (transparent_p)
+    {
+      points = scinew GeomTranspPoints();
+    }
+    else
+    {
+      points = scinew GeomPoints();
+    }
     data_switch = scinew GeomSwitch(scinew GeomMaterial(points, def_mat));
   }
   else
   {
     objs = scinew GeomGroup();
     data_switch = scinew GeomSwitch(scinew GeomMaterial(objs, def_mat));
+    if (sized_p)
+    {
+      points = scinew GeomPoints();
+      objs->add(points);
+    }
   }
   
   typename SFld::mesh_handle_type mesh = sfld->get_typed_mesh();
@@ -1683,7 +1706,7 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
       Point p;
       mesh->get_center(p, *iter);
 
-      if (points_)
+      if (points_p)
       {
 	if (cmap.get_rep())
 	{
@@ -1710,11 +1733,12 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
 	  double ctmpd;
 	  to_double(ctmp, ctmpd);
 
-	  add_sphere(p, scale * dtmp, resolution, objs, cmap->lookup(ctmpd));
+	  add_sphere(p, scale * dtmp, resolution, objs, points,
+		     cmap->lookup(ctmpd));
 	}
 	else
 	{
-	  add_sphere(p, scale * dtmp, resolution, objs);
+	  add_sphere(p, scale * dtmp, resolution, objs, points);
 	}
       }
     }

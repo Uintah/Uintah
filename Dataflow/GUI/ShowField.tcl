@@ -32,15 +32,18 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-faces-on
 	global $this-vectors-on
 	global $this-tensors-on
+	global $this-scalars-on
 	global $this-text-on
 	global $this-use-normals
 	global $this-edges-transparency
+	global $this-scalars-transparency
 	global $this-use-transparency
 	global $this-normalize_vectors
 	global $this-node_display_type
 	global $this-edge_display_type
 	global $this-data_display_type
 	global $this-tensor_display_type
+	global $this-scalar_display_type
 	global $this-def-color-r
 	global $this-def-color-g
 	global $this-def-color-b
@@ -49,12 +52,14 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-edge_scale
 	global $this-vectors_scale
 	global $this-tensors_scale
+	global $this-scalars_scale
 	global $this-node-resolution
 	global $this-edge-resolution
 	global $this-data-resolution
 	global $this-active_tab
 	global $this-has_vector_data
 	global $this-has_tensor_data
+	global $this-has_scalar_data
 	global $this-interactive_mode
 	global $this-bidirectional
 	global $this-arrow-heads-on
@@ -71,14 +76,16 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-text-show-edges
 	global $this-text-show-faces
 	global $this-text-show-cells
-	set $this-node_display_type Spheres
+	set $this-node_display_type Points
 	set $this-edge_display_type Lines
 	set $this-data_display_type Arrows
 	set $this-tensor_display_type Boxes
+	set $this-scalar_display_type Points
 	set $this-node_scale 0.03
 	set $this-edge_scale 0.015
 	set $this-vectors_scale 0.30
 	set $this-tensors_scale 0.30
+	set $this-scalars_scale 0.30
 	set $this-def-color-r 0.5
 	set $this-def-color-g 0.5
 	set $this-def-color-b 0.5
@@ -91,15 +98,18 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-text-on 0
 	set $this-vectors-on 0
 	set $this-tensors-on 0
+	set $this-scalars-on 0
 	set $this-normalize_vectors 0
 	set $this-node-resolution 6
 	set $this-edge-resolution 6
 	set $this-data-resolution 6
 	set $this-has_vector_data 0
 	set $this-has_tensor_data 0
+	set $this-has_scalar_data 0
 	set $this-active_tab "Nodes"
 	set $this-use-normals 0
 	set $this-edges-transparency 0
+	set $this-scalars-transparency 0
 	set $this-use-transparency 0
 	set $this-interactive_mode "Interactive"
 	set $this-bidirectional 0
@@ -120,6 +130,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-has_vector_data w "$this vector_tab_changed"
 	trace variable $this-has_tensor_data w "$this tensor_tab_changed"
+	trace variable $this-has_scalar_data w "$this scalar_tab_changed"
 	trace variable $this-nodes-as-disks w "$this disk_render_status_changed"
     }
 
@@ -354,7 +365,7 @@ itcl_class SCIRun_Visualization_ShowField {
     }
 
 
-    # Vector Tab
+    # Tensor Tab
     method add_tensor_tab {dof} {
 
 	set tensor [$dof.tabs add -label "Tensors" \
@@ -384,6 +395,47 @@ itcl_class SCIRun_Visualization_ShowField {
 	pack $tensor.resolution -side top -fill x -expand 1
 
 	set res [$tensor.resolution childsite]
+	scale $res.scale -orient horizontal -variable $this-data-resolution \
+	    -from 3 -to 20 -showvalue true -resolution 1
+	bind $res.scale <ButtonRelease> "$this-c data_resolution_scale"
+	pack $res.scale -side top -fill both -expand 1
+    }
+
+    # Scalar Tab
+    method add_scalar_tab {dof} {
+
+	set scalar [$dof.tabs add -label "Scalars" \
+		-command "$this set_active_tab \"Scalars\""]
+	checkbutton $scalar.show_scalars \
+		-text "Show Scalars" \
+		-command "$this-c toggle_display_scalars" \
+		-variable $this-scalars-on
+
+	checkbutton $scalar.transparency \
+		-text "Enable Transparency (Points Only)" \
+		-command "$this-c data_scale" \
+		-variable $this-scalars-transparency
+
+	make_labeled_radio $scalar.radio \
+	    "Scalar Display Type" "$this-c data_display_type" top \
+	    $this-scalar_display_type \
+	    {{Points Points} {Spheres Spheres} \
+		 {"Scaled Spheres" "Scaled Spheres"}}
+	
+	pack $scalar.show_scalars $scalar.transparency $scalar.radio \
+		-side top -fill y -anchor w
+
+	expscale $scalar.slide -label "Scalar Scale" \
+		-orient horizontal \
+		-variable $this-scalars_scale
+
+	bind $scalar.slide.scale <ButtonRelease> "$this-c data_scale"
+
+	iwidgets::labeledframe $scalar.resolution \
+	    -labelpos nw -labeltext "Sphere Resolution"
+	pack $scalar.resolution -side top -fill x -expand 1
+
+	set res [$scalar.resolution childsite]
 	scale $res.scale -orient horizontal -variable $this-data-resolution \
 	    -from 3 -to 20 -showvalue true -resolution 1
 	bind $res.scale <ButtonRelease> "$this-c data_resolution_scale"
@@ -505,6 +557,21 @@ itcl_class SCIRun_Visualization_ShowField {
 	}
     }
 
+    method scalar_tab_changed {name1 name2 op} {
+	global $this-has_scalar_data
+
+	set window .ui[modname]
+	if {[winfo exists $window]} {
+	    set dof [$window.options.disp.frame_title childsite]	
+	    if {[set $name1] == 1} { 
+		add_scalar_tab $dof
+		$dof.tabs view [set $this-active_tab]
+	    } else {
+		$dof.tabs delete "Scalars"
+	    }
+	}
+    }
+
     method ui {} {
 	set window .ui[modname]
 	if {[winfo exists $window]} {
@@ -540,6 +607,9 @@ itcl_class SCIRun_Visualization_ShowField {
 	}
 	if {[set $this-has_tensor_data] == 1} {
 	    add_tensor_tab $dof
+	}
+	if {[set $this-has_scalar_data] == 1} {
+	    add_scalar_tab $dof
 	}
 
 	global $this-active_tab
