@@ -373,15 +373,15 @@ main(int argc, char** argv)
 	cout << "About to run simulation\n";
 	sim->run();
 
-    delete mpm;
-    delete cfd;
-    delete mpmcfd;
-    delete output;
-    delete bal;
-    delete sim;
-    delete reader;
-    sch->removeReference();
-    delete sch;
+	delete mpm;
+	delete cfd;
+	delete mpmcfd;
+	delete output;
+	delete bal;
+	delete sim;
+	delete reader;
+	sch->removeReference();
+	delete sch;
     } catch (Exception& e) {
 
       cerrLock.lock();
