@@ -34,6 +34,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Dataflow/XMLUtil/StrX.h>
@@ -155,6 +156,7 @@ private:
   GuiString injurylistdatasource_;
   GuiString oqafmadatasource_;
   GuiString geometrypath_;
+  GuiString hipvarpath_;
 
   // the current selection
   GuiString currentselection_;
@@ -168,6 +170,9 @@ private:
   VH_AdjacencyMapping *adjacencytable;
   VH_AnatomyBoundingBox *boundBoxList;
   VH_AnatomyBoundingBox *maxSegmentVol;
+
+  // physiology parameter mapping
+  VH_HIPvarMap *hipVarFileList;
 
   // the injured tissue list
   XercesDOMParser injListParser;
@@ -183,6 +188,7 @@ private:
   GuiDouble gui_probe_scale_;
 
   FieldHandle InputFieldHandle;
+  NrrdDataHandle InputNrrdHandle;
   int probeWidgetid_;
   Point probeLoc;
   int labelIndexVal;
@@ -198,6 +204,7 @@ private:
   void makeInjGeometry();
   void executeOQAFMA();
   void executeHighlight();
+  void executePhysio();
 
 protected:
   FieldHandle  geomFilehandle_;
@@ -271,6 +278,7 @@ HotBox::HotBox(GuiContext* ctx)
   injurylistdatasource_(ctx->subVar("injurylistdatasource")),
   oqafmadatasource_(ctx->subVar("oqafmadatasource")),
   geometrypath_(ctx->subVar("geometrypath")),
+  hipvarpath_(ctx->subVar("hipvarpath")),
   currentselection_(ctx->subVar("currentselection")),
   gui_curTime_(ctx->subVar("currentTime")),
   probeWidget_lock_("PointWidget lock"),
@@ -286,6 +294,7 @@ HotBox::HotBox(GuiContext* ctx)
   anatomytable = new VH_MasterAnatomy();
   adjacencytable = new VH_AdjacencyMapping();
   boundBoxList = (VH_AnatomyBoundingBox *)NULL;
+  hipVarFileList = new VH_HIPvarMap();
   // create the probe widget
   probeWidget_ = scinew PointWidget(this, &probeWidget_lock_, 1.0);
   probeWidget_->Connect((GeometryOPort*)get_oport("Probe Widget"));
@@ -297,6 +306,7 @@ HotBox::~HotBox(){
   delete anatomytable;
   delete adjacencytable;
   delete probeWidget_;
+  delete hipVarFileList;
 }
 
 void
@@ -406,6 +416,7 @@ HotBox::execute()
   const string adjacencyDataSrc(adjacencydatasource_.get());
   const string boundingBoxDataSrc(boundingboxdatasource_.get());
   const string enableDraw(enableDraw_.get());
+  const string hipVarPath(hipvarpath_.get());
 
   // The segmented volume (input field to the Probe)
   // is an index into the MasterAnatomy list -- this only comes from a file
@@ -589,8 +600,44 @@ HotBox::execute()
   {
     cout << "Adjacency Map file contains " << adjacencytable->get_num_names();
     cout << " entries" << endl;
+  } // end else(adjacency list has been read)
+
+  string hipFileMapName;
+  // the mapping from anatomical names to physiological parameters
+  if( hipVarPath == "" )
+  {
+    error("No HIP data path has been selected.  Please choose a directory.");
+    return;
   }
-  // end else(
+  else
+  {
+    // assume there is a file named HIP_file_map.txt in the hipVarPath
+    hipFileMapName = hipVarPath + "HIP_file_map.txt";
+    if (stat(hipFileMapName.c_str(), &buf))
+    {
+      error("File '" + hipFileMapName + "' not found.");
+      return;
+    }
+    if(!hipVarFileList->get_num_names())
+    { // label maps have not been read
+      hipVarFileList->readFile((char *)hipFileMapName.c_str());
+    }
+    else if(hipFileMapName != hipVarFileList->getActiveFile())
+    { // label map data source has changed
+      delete hipVarFileList;
+      hipVarFileList = new VH_HIPvarMap();
+      hipVarFileList->readFile((char *)(hipFileMapName.c_str()));
+    }
+    else
+    {
+      cout << "HIP file map contains " << hipVarFileList->get_num_names();
+      cout << " names" << endl;
+    }
+  } // end else (HIP data path has been selected)
+
+  // execute reading the HIP time-varying physiological parameters
+  // for the selected anatomical structure
+  executePhysio();
 
   // get the surface geometry corresponding to the current selection
   executeHighlight();
@@ -680,6 +727,16 @@ HotBox::execute()
   }
   else if(injuryfieldHandle_.get_rep() != 0)
     injuryOutport->send(injuryfieldHandle_);
+
+  // send the NrrdData downstream
+  NrrdOPort *nrrdOutPort = (NrrdOPort *)get_oport("Physiology Data");
+  if(!nrrdOutPort)
+  {
+    error("Unable to initialize nrrdOutPort 'Physiology Data'");
+    return;
+  }
+  if(InputNrrdHandle.get_rep())
+      nrrdOutPort->send(InputNrrdHandle);
 
   if(selectBox && selectionSource == "fromHotBoxUI")
   { // set the Probe location to center of selection
@@ -1630,6 +1687,66 @@ HotBox::makeInjGeometry()
 
   cerr << " done" << endl;
 } // end makeInjGeometry()
+
+/*****************************************************************************
+ * method HotBox::executePhysio()
+ *****************************************************************************/
+
+void
+HotBox::executePhysio()
+{
+  // get the current selection
+  const string currentSelection(currentselection_.get());
+  // get the name of the Nrrd file containing the parameters for this selection
+  char *nrrdFileName = 
+                 hipVarFileList->get_HIPvarFile((char *)
+                                                currentSelection.c_str());
+
+  if(!nrrdFileName)
+  { // there are no physiological parameters corresponding to the selection
+    return;
+  }
+  string nrrdFileNameStr(nrrdFileName);
+
+  // Read the status of this file so we can compare modification timestamps.
+  struct stat statbuf;
+  if (stat(nrrdFileName, &statbuf) == - 1)
+  {
+    error(string("NrrdReader error - file not found: '")+nrrdFileNameStr+"'");
+    return;
+  }
+
+  // (else) read the Nrrd file
+  InputNrrdHandle = 0;
+  int namelen = nrrdFileNameStr.size();
+  const string ext(".nd");
+
+  // check that the last 3 chars are .nd for us to pio
+  if (nrrdFileNameStr.substr(namelen - 3, 3) == ext)
+  {
+    Piostream *stream = auto_istream(nrrdFileNameStr);
+    if (!stream)
+    {
+      error("Error reading file '" + nrrdFileNameStr + "'.");
+      return;
+    }
+
+    // Read the file
+    Pio(*stream, InputNrrdHandle);
+    if (!InputNrrdHandle.get_rep() || stream->error())
+    {
+      error("Error reading data from file '" + nrrdFileNameStr +"'.");
+      delete stream;
+      return;
+    }
+    delete stream;
+  }
+  else
+  { // assume it is just a nrrd
+    // ICU Monitor needs Properties section of NrrdData file
+    error("Input file must be a '.nd' file");
+  }
+} // end executePhysio()
 
 /*****************************************************************************
  * method HotBox::executeHighlight()
