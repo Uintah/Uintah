@@ -43,12 +43,20 @@ PROGRAM := $(SRCDIR)/CVRTItoTetVolPot
 SRCS := $(SRCDIR)/CVRTItoTetVolPot.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/CVRTItoTetVolMesh
+SRCS := $(SRCDIR)/CVRTItoTetVolMesh.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/TetVolToCVRTI
 SRCS := $(SRCDIR)/TetVolToCVRTI.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/CVRTItoTriSurfGrad
 SRCS := $(SRCDIR)/CVRTItoTriSurfGrad.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/CVRTItoTriSurf
+SRCS := $(SRCDIR)/CVRTItoTriSurf.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/CVRTItoTriSurfPot
