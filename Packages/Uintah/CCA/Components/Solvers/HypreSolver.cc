@@ -1,8 +1,9 @@
 // TODO:
-// Logging?
-// Destroy stuff
-// Use a symmetric matrix
 // Read hypre options from input file
+// 3D performance
+// Logging?
+// Report mflops
+// Use a symmetric matrix
 // More efficient set?
 // Reuse some data between solves?
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>
@@ -27,7 +28,17 @@
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
 
+// hypre includes
+//#define HYPRE_TIMING
+#include <utilities.h>
 #include <HYPRE_struct_ls.h>
+#include <krylov.h>
+#ifndef HYPRE_TIMING
+#ifndef hypre_ClearTiming
+// This isn't in utilities.h for some reason...
+#define hypre_ClearTiming()
+#endif
+#endif
 
 using namespace Uintah;
 //__________________________________
@@ -53,6 +64,14 @@ public:
   {
   }
   ~HypreSolver2Params() {}
+  string solvertype;
+  string precondtype;
+  double tolerance;
+  int maxiterations;
+  int npre;
+  int npost;
+  int skip;
+  int jump;
 };
 
 template<class Types>
@@ -218,51 +237,276 @@ public:
 					     const_cast<double*>(values));
 	    }
 	  }
-	} else {
-	  // Zero initial guess
-	  Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-	  IntVector ec = params->getSolveOnExtraCells() ?
-	    IntVector(0,0,0) : -level->getExtraCells();
-	  IntVector l = patch->getLowIndex(basis, ec);
-	  IntVector h = patch->getHighIndex(basis, ec);
-
-	  // Feed it to Hypre
-	  int size = h.x()-l.x();
-	  double* values = new double[size];
-	  for(int i=0;i<size;i++)
-	    values[i]=0;
-	  for(int z=l.z();z<h.z();z++){
-	    for(int y=l.y();y<h.y();y++){
-	      IntVector ll(l.x(), y, z);
-	      IntVector hh(h.x()-1, y, z);
-	      HYPRE_StructVectorSetBoxValues(HX,
-					     ll.get_pointer(), hh.get_pointer(),
-					     values);
-	    }
-	  }
 	}
       }
       HYPRE_StructVectorAssemble(HX);
 
       double solve_start = Time::currentSeconds();
-      HYPRE_StructSolver solver;
-      HYPRE_StructSMGCreate(pg->getComm(), &solver);
-      HYPRE_StructSMGSetMemoryUse(solver, 0);
-      HYPRE_StructSMGSetMaxIter(solver, 75);
-      HYPRE_StructSMGSetTol(solver, 1.e-14);
-      HYPRE_StructSMGSetRelChange(solver, 0);
-      HYPRE_StructSMGSetNumPreRelax(solver, 1);
-      HYPRE_StructSMGSetNumPostRelax(solver, 1);
-      HYPRE_StructSMGSetLogging(solver, 1);
-      HYPRE_StructSMGSetup(solver, HA, HB, HX);
-      HYPRE_StructSMGSolve(solver, HA, HB, HX);
-      double solve_dt = Time::currentSeconds()-solve_start;
-
       int num_iterations;
-      HYPRE_StructSMGGetNumIterations(solver, &num_iterations);
       double final_res_norm;
-      HYPRE_StructSMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
-      HYPRE_StructSMGDestroy(solver);
+#if 0
+      if(solvertype == "SMG" || solvertype == "smg"){
+	HYPRE_StructSolver solver;
+	HYPRE_StructSMGCreate(pg->getComm(), &solver);
+	if(guess_label)
+	  HYPRE_StructSMGSetNonZeroGuess(solver);
+	else
+	  HYPRE_StructSMGSetZeroGuess(solver);
+	HYPRE_StructSMGSetMemoryUse(solver, 0);
+	HYPRE_StructSMGSetMaxIter(solver, 75);
+	HYPRE_StructSMGSetTol(solver, 1.e-14);
+	HYPRE_StructSMGSetRelChange(solver, 0);
+	HYPRE_StructSMGSetNumPreRelax(solver, 1);
+	HYPRE_StructSMGSetNumPostRelax(solver, 1);
+	HYPRE_StructSMGSetLogging(solver, 1);
+	HYPRE_StructSMGSetup(solver, HA, HB, HX);
+	HYPRE_StructSMGSolve(solver, HA, HB, HX);
+	double solve_dt = Time::currentSeconds()-solve_start;
+
+	HYPRE_StructSMGGetNumIterations(solver, &num_iterations);
+	double final_res_norm;
+	HYPRE_StructSMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
+	HYPRE_StructSMGDestroy(solver);
+	...;
+      }
+#endif
+      // Solve the system
+      if (params->solvertype == "SMG" || params->solvertype == "smg"){
+	int time_index = hypre_InitializeTiming("SMG Setup");
+	hypre_BeginTiming(time_index);
+
+	HYPRE_StructSolver  solver;
+	HYPRE_StructSMGCreate(MPI_COMM_WORLD, &solver);
+	HYPRE_StructSMGSetMemoryUse(solver, 0);
+	HYPRE_StructSMGSetMaxIter(solver, params->maxiterations);
+	HYPRE_StructSMGSetTol(solver, params->tolerance);
+	HYPRE_StructSMGSetRelChange(solver, 0);
+	HYPRE_StructSMGSetNumPreRelax(solver, params->npre);
+	HYPRE_StructSMGSetNumPostRelax(solver, params->npost);
+	HYPRE_StructSMGSetLogging(solver, 0);
+	HYPRE_StructSMGSetup(solver, HA, HB, HX);
+
+	hypre_EndTiming(time_index);
+	hypre_PrintTiming("Setup phase times", pg->getComm());
+	hypre_FinalizeTiming(time_index);
+	hypre_ClearTiming();
+
+	time_index = hypre_InitializeTiming("SMG Solve");
+	hypre_BeginTiming(time_index);
+
+	HYPRE_StructSMGSolve(solver, HA, HB, HX);
+
+	hypre_EndTiming(time_index);
+	hypre_PrintTiming("Solve phase times", pg->getComm());
+	hypre_FinalizeTiming(time_index);
+	hypre_ClearTiming();
+   
+	HYPRE_StructSMGGetNumIterations(solver, &num_iterations);
+	HYPRE_StructSMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
+	HYPRE_StructSMGDestroy(solver);
+      } else if(params->solvertype == "PFMG" || params->solvertype == "pfmg"){
+	int time_index = hypre_InitializeTiming("PFMG Setup");
+	hypre_BeginTiming(time_index);
+
+	HYPRE_StructSolver  solver;
+	HYPRE_StructPFMGCreate(pg->getComm(), &solver);
+	HYPRE_StructPFMGSetMaxIter(solver, params->maxiterations);
+	HYPRE_StructPFMGSetTol(solver, params->tolerance);
+	HYPRE_StructPFMGSetRelChange(solver, 0);
+	/* weighted Jacobi = 1; red-black GS = 2 */
+	HYPRE_StructPFMGSetRelaxType(solver, 1);
+	HYPRE_StructPFMGSetNumPreRelax(solver, params->npre);
+	HYPRE_StructPFMGSetNumPostRelax(solver, params->npost);
+	HYPRE_StructPFMGSetSkipRelax(solver, params->skip);
+	HYPRE_StructPFMGSetLogging(solver, 1);
+	HYPRE_StructPFMGSetup(solver, HA, HB, HX);
+
+	hypre_EndTiming(time_index);
+	hypre_PrintTiming("Setup phase times", pg->getComm());
+	hypre_FinalizeTiming(time_index);
+	hypre_ClearTiming();
+
+	time_index = hypre_InitializeTiming("PFMG Solve");
+	hypre_BeginTiming(time_index);
+
+	HYPRE_StructPFMGSolve(solver, HA, HB, HX);
+	
+	hypre_EndTiming(time_index);
+	hypre_PrintTiming("Solve phase times", pg->getComm());
+	hypre_FinalizeTiming(time_index);
+	hypre_ClearTiming();
+      
+	HYPRE_StructPFMGGetNumIterations(solver, &num_iterations);
+	HYPRE_StructPFMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
+	HYPRE_StructPFMGDestroy(solver);
+      } else if(params->solvertype == "SparseMSG" || params->solvertype == "sparsemsg"){
+	int time_index = hypre_InitializeTiming("SparseMSG Setup");
+	hypre_BeginTiming(time_index);
+
+	HYPRE_StructSolver  solver;
+	HYPRE_StructSparseMSGCreate(pg->getComm(), &solver);
+	HYPRE_StructSparseMSGSetMaxIter(solver, params->maxiterations);
+	HYPRE_StructSparseMSGSetJump(solver, params->jump);
+	HYPRE_StructSparseMSGSetTol(solver, params->tolerance);
+	HYPRE_StructSparseMSGSetRelChange(solver, 0);
+	/* weighted Jacobi = 1; red-black GS = 2 */
+	HYPRE_StructSparseMSGSetRelaxType(solver, 1);
+	HYPRE_StructSparseMSGSetNumPreRelax(solver, params->npre);
+	HYPRE_StructSparseMSGSetNumPostRelax(solver, params->npost);
+	HYPRE_StructSparseMSGSetLogging(solver, 1);
+	HYPRE_StructSparseMSGSetup(solver, HA, HB, HX);
+
+	hypre_EndTiming(time_index);
+	hypre_PrintTiming("Setup phase times", pg->getComm());
+	hypre_FinalizeTiming(time_index);
+	hypre_ClearTiming();
+
+	time_index = hypre_InitializeTiming("SparseMSG Solve");
+	hypre_BeginTiming(time_index);
+
+	HYPRE_StructSparseMSGSolve(solver, HA, HB, HX);
+
+	hypre_EndTiming(time_index);
+	hypre_PrintTiming("Solve phase times", pg->getComm());
+	hypre_FinalizeTiming(time_index);
+	hypre_ClearTiming();
+   
+	HYPRE_StructSparseMSGGetNumIterations(solver, &num_iterations);
+	HYPRE_StructSparseMSGGetFinalRelativeResidualNorm(solver,
+							  &final_res_norm);
+	HYPRE_StructSparseMSGDestroy(solver);
+      } else if(params->solvertype == "CG" || params->solvertype == "cg" || params->solvertype == "conjugategradient" || params->solvertype == "PCG" || params->solvertype == "cg"){
+	int time_index = hypre_InitializeTiming("PCG Setup");
+	hypre_BeginTiming(time_index);
+
+	HYPRE_StructSolver solver;
+	HYPRE_StructPCGCreate(pg->getComm(), &solver);
+	HYPRE_PCGSetMaxIter( (HYPRE_Solver)solver, params->maxiterations);
+	HYPRE_PCGSetTol( (HYPRE_Solver)solver, params->tolerance);
+	HYPRE_PCGSetTwoNorm( (HYPRE_Solver)solver, 1 );
+	HYPRE_PCGSetRelChange( (HYPRE_Solver)solver, 0 );
+	HYPRE_PCGSetLogging( (HYPRE_Solver)solver, 1 );
+
+	HYPRE_PtrToSolverFcn precond;
+	HYPRE_PtrToSolverFcn precond_setup;
+	HYPRE_StructSolver precond_solver;
+	setupPrecond(pg, precond, precond_setup, precond_solver);
+	HYPRE_PCGSetPrecond((HYPRE_Solver)solver, precond,
+			    precond_setup, (HYPRE_Solver)precond_solver);
+	HYPRE_PCGSetup( (HYPRE_Solver)solver, (HYPRE_Matrix)HA,
+			(HYPRE_Vector)HB, (HYPRE_Vector)HX);
+
+	hypre_EndTiming(time_index);
+	hypre_PrintTiming("Setup phase times", pg->getComm());
+	hypre_FinalizeTiming(time_index);
+	hypre_ClearTiming();
+   
+	time_index = hypre_InitializeTiming("PCG Solve");
+	hypre_BeginTiming(time_index);
+
+	HYPRE_PCGSolve( (HYPRE_Solver)solver, (HYPRE_Matrix)HA, (HYPRE_Vector)HB, (HYPRE_Vector)HX);
+
+	hypre_EndTiming(time_index);
+	hypre_PrintTiming("Solve phase times", pg->getComm());
+	hypre_FinalizeTiming(time_index);
+	hypre_ClearTiming();
+
+	HYPRE_PCGGetNumIterations( (HYPRE_Solver)solver, &num_iterations );
+	HYPRE_PCGGetFinalRelativeResidualNorm( (HYPRE_Solver)solver, &final_res_norm );
+	HYPRE_StructPCGDestroy(solver);
+
+	destroyPrecond(precond_solver);
+      } else if(params->solvertype == "Hybrid" || params->solvertype == "hybrid"){
+	/*-----------------------------------------------------------
+	 * Solve the system using Hybrid
+	 *-----------------------------------------------------------*/
+
+	int time_index = hypre_InitializeTiming("Hybrid Setup");
+	hypre_BeginTiming(time_index);
+
+	HYPRE_StructSolver  solver;
+	HYPRE_StructHybridCreate(pg->getComm(), &solver);
+	HYPRE_StructHybridSetDSCGMaxIter(solver, 100);
+	HYPRE_StructHybridSetPCGMaxIter(solver, params->maxiterations);
+	HYPRE_StructHybridSetTol(solver, params->tolerance);
+	HYPRE_StructHybridSetConvergenceTol(solver, 0.90);
+	HYPRE_StructHybridSetTwoNorm(solver, 1);
+	HYPRE_StructHybridSetRelChange(solver, 0);
+	HYPRE_StructHybridSetLogging(solver, 1);
+
+	HYPRE_PtrToSolverFcn precond;
+	HYPRE_PtrToSolverFcn precond_setup;
+	HYPRE_StructSolver precond_solver;
+	setupPrecond(pg, precond, precond_setup, precond_solver);
+	HYPRE_StructHybridSetPrecond(solver,
+				     (HYPRE_PtrToStructSolverFcn)precond,
+				     (HYPRE_PtrToStructSolverFcn)precond_setup,
+				     (HYPRE_StructSolver)precond_solver);
+
+	HYPRE_StructHybridSetup(solver, HA, HB, HX);
+
+	hypre_EndTiming(time_index);
+	hypre_PrintTiming("Setup phase times", pg->getComm());
+	hypre_FinalizeTiming(time_index);
+	hypre_ClearTiming();
+   
+	time_index = hypre_InitializeTiming("Hybrid Solve");
+	hypre_BeginTiming(time_index);
+
+	HYPRE_StructHybridSolve(solver, HA, HB, HX);
+
+	hypre_EndTiming(time_index);
+	hypre_PrintTiming("Solve phase times", pg->getComm());
+	hypre_FinalizeTiming(time_index);
+	hypre_ClearTiming();
+
+	HYPRE_StructHybridGetNumIterations(solver, &num_iterations);
+	HYPRE_StructHybridGetFinalRelativeResidualNorm(solver, &final_res_norm);
+	HYPRE_StructHybridDestroy(solver);
+
+	destroyPrecond(precond_solver);
+      } else if(params->solvertype == "GMRES" || params->solvertype == "gmres"){
+	int time_index = hypre_InitializeTiming("GMRES Setup");
+	hypre_BeginTiming(time_index);
+
+	HYPRE_StructSolver solver;
+	HYPRE_StructGMRESCreate(pg->getComm(), &solver);
+	HYPRE_GMRESSetMaxIter( (HYPRE_Solver)solver, params->maxiterations);
+	HYPRE_GMRESSetTol( (HYPRE_Solver)solver, params->tolerance );
+	HYPRE_GMRESSetRelChange( (HYPRE_Solver)solver, 0 );
+	HYPRE_GMRESSetLogging( (HYPRE_Solver)solver, 1 );
+	HYPRE_PtrToSolverFcn precond;
+	HYPRE_PtrToSolverFcn precond_setup;
+	HYPRE_StructSolver precond_solver;
+	setupPrecond(pg, precond, precond_setup, precond_solver);
+	HYPRE_GMRESSetPrecond((HYPRE_Solver)solver, precond, precond_setup,
+			      (HYPRE_Solver)precond_solver);
+	HYPRE_GMRESSetup( (HYPRE_Solver)solver, (HYPRE_Matrix)HA, (HYPRE_Vector)HB, (HYPRE_Vector)HX);
+
+	hypre_EndTiming(time_index);
+	hypre_PrintTiming("Setup phase times", pg->getComm());
+	hypre_FinalizeTiming(time_index);
+	hypre_ClearTiming();
+   
+	time_index = hypre_InitializeTiming("GMRES Solve");
+	hypre_BeginTiming(time_index);
+
+	HYPRE_GMRESSolve( (HYPRE_Solver)solver, (HYPRE_Matrix)HA, (HYPRE_Vector)HB, (HYPRE_Vector)HX);
+
+	hypre_EndTiming(time_index);
+	hypre_PrintTiming("Solve phase times", pg->getComm());
+	hypre_FinalizeTiming(time_index);
+	hypre_ClearTiming();
+
+	HYPRE_GMRESGetNumIterations( (HYPRE_Solver)solver, &num_iterations);
+	HYPRE_GMRESGetFinalRelativeResidualNorm( (HYPRE_Solver)solver, &final_res_norm);
+	HYPRE_StructGMRESDestroy(solver);
+	
+	destroyPrecond(precond_solver);
+      } else {
+	throw InternalError("Unknown solver type: "+params->solvertype);
+      }
+      double solve_dt = Time::currentSeconds()-solve_start;
 
       for(int p=0;p<patches->size();p++){
 	const Patch* patch = patches->get(p);
@@ -312,7 +556,90 @@ public:
       tstart = Time::currentSeconds();
     }
   }
-    
+
+  void setupPrecond(const ProcessorGroup* pg,
+		    HYPRE_PtrToSolverFcn& precond,
+		    HYPRE_PtrToSolverFcn& pcsetup,
+		    HYPRE_StructSolver& precond_solver){
+    if(params->precondtype == "SMG" || params->precondtype == "smg"){
+      /* use symmetric SMG as preconditioner */
+      HYPRE_StructSMGCreate(pg->getComm(), &precond_solver);
+      HYPRE_StructSMGSetMemoryUse(precond_solver, 0);
+      HYPRE_StructSMGSetMaxIter(precond_solver, 1);
+      HYPRE_StructSMGSetTol(precond_solver, 0.0);
+      HYPRE_StructSMGSetZeroGuess(precond_solver);
+      HYPRE_StructSMGSetNumPreRelax(precond_solver, params->npre);
+      HYPRE_StructSMGSetNumPostRelax(precond_solver, params->npost);
+      HYPRE_StructSMGSetLogging(precond_solver, 0);
+      precond = (HYPRE_PtrToSolverFcn)HYPRE_StructSMGSolve;
+      pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructSMGSetup;
+    } else if(params->precondtype == "PFMG" || params->precondtype == "pfmg"){
+      /* use symmetric PFMG as preconditioner */
+      HYPRE_StructPFMGCreate(pg->getComm(), &precond_solver);
+      HYPRE_StructPFMGSetMaxIter(precond_solver, 1);
+      HYPRE_StructPFMGSetTol(precond_solver, 0.0);
+      HYPRE_StructPFMGSetZeroGuess(precond_solver);
+      /* weighted Jacobi = 1; red-black GS = 2 */
+      HYPRE_StructPFMGSetRelaxType(precond_solver, 1);
+      HYPRE_StructPFMGSetNumPreRelax(precond_solver, params->npre);
+      HYPRE_StructPFMGSetNumPostRelax(precond_solver, params->npost);
+      HYPRE_StructPFMGSetSkipRelax(precond_solver, params->skip);
+      HYPRE_StructPFMGSetLogging(precond_solver, 0);
+      precond = (HYPRE_PtrToSolverFcn)HYPRE_StructPFMGSolve;
+      pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructPFMGSetup;
+    } else if(params->precondtype == "SparseMSG" || params->precondtype == "sparsemsg"){
+      /* use symmetric SparseMSG as preconditioner */
+      HYPRE_StructSparseMSGCreate(pg->getComm(), &precond_solver);
+      HYPRE_StructSparseMSGSetMaxIter(precond_solver, 1);
+      HYPRE_StructSparseMSGSetJump(precond_solver, params->jump);
+      HYPRE_StructSparseMSGSetTol(precond_solver, 0.0);
+      HYPRE_StructSparseMSGSetZeroGuess(precond_solver);
+      /* weighted Jacobi = 1; red-black GS = 2 */
+      HYPRE_StructSparseMSGSetRelaxType(precond_solver, 1);
+      HYPRE_StructSparseMSGSetNumPreRelax(precond_solver, params->npre);
+      HYPRE_StructSparseMSGSetNumPostRelax(precond_solver, params->npost);
+      HYPRE_StructSparseMSGSetLogging(precond_solver, 0);
+      precond = (HYPRE_PtrToSolverFcn)HYPRE_StructSparseMSGSolve;
+      pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructSparseMSGSetup;
+    } else if(params->precondtype == "Jacobi" || params->precondtype == "jacobi"){
+      /* use two-step Jacobi as preconditioner */
+      HYPRE_StructJacobiCreate(pg->getComm(), &precond_solver);
+      HYPRE_StructJacobiSetMaxIter(precond_solver, 2);
+      HYPRE_StructJacobiSetTol(precond_solver, 0.0);
+      HYPRE_StructJacobiSetZeroGuess(precond_solver);
+      precond = (HYPRE_PtrToSolverFcn)HYPRE_StructJacobiSolve;
+      pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructJacobiSetup;
+    } else if(params->precondtype == "Diagonal" || params->precondtype == "diagonal"){
+      /* use diagonal scaling as preconditioner */
+#ifdef HYPRE_USE_PTHREADS
+      for (i = 0; i < hypre_NumThreads; i++)
+	precond[i] = NULL;
+#else
+      precond = NULL;
+#endif
+      precond = (HYPRE_PtrToSolverFcn)HYPRE_StructDiagScale;
+      pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructDiagScaleSetup;
+    } else {
+      // This should have been caught in readParameters...
+      throw InternalError("Unknown preconditionertype: "+params->precondtype);
+    }
+  }
+  void destroyPrecond(HYPRE_StructSolver precond_solver){
+    if(params->precondtype == "SMG" || params->precondtype == "smg"){
+      HYPRE_StructSMGDestroy(precond_solver);
+    } else if(params->precondtype == "PFMG" || params->precondtype == "pfmg"){
+      HYPRE_StructPFMGDestroy(precond_solver);
+    } else if(params->precondtype == "SparseMSG" || params->precondtype == "sparsemsg"){
+      HYPRE_StructSparseMSGDestroy(precond_solver);
+    } else if(params->precondtype == "Jacobi" || params->precondtype == "jacobi"){
+      HYPRE_StructJacobiDestroy(precond_solver);
+    } else if(params->precondtype == "Diagonal" || params->precondtype == "diagonal"){
+    } else {
+      // This should have been caught in readParameters...
+      throw InternalError("Unknown preconditionertype in destroyPrecond: "+params->precondtype);
+    }
+  }
+
 private:
   const Level* level;
   const MaterialSet* matlset;
@@ -325,9 +652,37 @@ private:
   const HypreSolver2Params* params;
 };
 
-SolverParameters* HypreSolver2::readParameters(const ProblemSpecP& params, const string& varname)
+SolverParameters* HypreSolver2::readParameters(ProblemSpecP& params, const string& varname)
 {
   HypreSolver2Params* p = new HypreSolver2Params();
+  bool found=false;
+  if(params){
+    for(ProblemSpecP param = params->findBlock("Parameters"); param != 0;
+	param = param->findNextBlock("Parameters")) {
+      string variable;
+      if(param->getAttribute("variable", variable) && variable != varname)
+	continue;
+      param->getWithDefault("solver", p->solvertype, "smg");
+      param->getWithDefault("preconditioner", p->precondtype, "diagonal");
+      param->getWithDefault("tolerance", p->tolerance, 1.e-10);
+      param->getWithDefault("maxiterations", p->maxiterations, 75);
+      param->getWithDefault("npre", p->npre, 1);
+      param->getWithDefault("npost", p->npost, 1);
+      param->getWithDefault("skip", p->skip, 0);
+      param->getWithDefault("jump", p->jump, 0);
+      found=true;
+    }
+  }
+  if(!found){
+    p->solvertype = "smg";
+    p->precondtype = "diagonal";
+    p->tolerance = 1.e-10;
+    p->maxiterations = 75;
+    p->npre = 1;
+    p->npost = 1;
+    p->skip = 0;
+    p->jump = 0;
+  }
   return p;
 }
 

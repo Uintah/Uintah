@@ -1213,7 +1213,7 @@ private:
   bool modifies_x;
 };
 
-SolverParameters* CGSolver::readParameters(const ProblemSpecP& params, const string& varname)
+SolverParameters* CGSolver::readParameters(ProblemSpecP& params, const string& varname)
 {
   CGSolverParams* p = new CGSolverParams();
   if(params){
