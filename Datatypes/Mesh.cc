@@ -136,7 +136,8 @@ Node::Node(const Node& copy)
 {
 }
 
-static int unify(int not, const Array1<int>& n1, const Array1<int>& n2, const Array1<int>& n3)
+int Mesh::unify(Element* not,
+				const Array1<int>& n1, const Array1<int>& n2, const Array1<int>& n3)
 {
     int s1=n1.size();
     int s2=n2.size();
@@ -150,7 +151,7 @@ static int unify(int not, const Array1<int>& n1, const Array1<int>& n2, const Ar
 	int d3=n3[i3];
 	if(d1==d2){
 	    if(d2==d3){
-		if(d1 != not){
+		if(elems[d1] != not){
 		    // Found it...
 		    return d1;
 		} else {
@@ -191,7 +192,7 @@ int Element::face(int i)
 	Node* n2=mesh->nodes[i2];
 	Node* n3=mesh->nodes[i3];
 	// Compute it...
-	faces[i]=unify(i, n1->elems, n2->elems, n3->elems);
+	faces[i]=mesh->unify(this, n1->elems, n2->elems, n3->elems);
     }
     return faces[i];
 }
