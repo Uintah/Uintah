@@ -879,12 +879,16 @@ void DataArchiver::beginOutputTimestep( double time, double delt,
     }
   }
   
+  int currsecs = (int)Time::currentSeconds();
+  if(Parallel::usingMPI() && d_checkpointWalltimeInterval != 0)
+     MPI_Bcast(&currsecs, 1, MPI_INT, 0, d_myworld->getComm());
+   
   // same thing for checkpoints
   if ((d_checkpointInterval != 0.0 && time+delt >= d_nextCheckpointTime) ||
       (d_checkpointTimestepInterval != 0 &&
        timestep >= d_nextCheckpointTimestep) ||
       (d_checkpointWalltimeInterval != 0 &&
-       Time::currentSeconds() >= d_nextCheckpointWalltime)) {
+       currsecs >= d_nextCheckpointWalltime)) {
     d_wasCheckpointTimestep=true;
     string timestepDir;
     outputTimestep(d_checkpointsDir, d_checkpointLabels, time, delt,
