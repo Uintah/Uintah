@@ -3027,16 +3027,14 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
         term2[c] -= q_advected[c]; 
-
-      }  //iter loop 
+      }
 
       //__________________________________
-      //   NO Models   MODEL REMOVE
       // term3 is the same now with or without models
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
         term3[c] += vol_frac[c]*sp_vol_CC[m][c]/(speedSound[c]*speedSound[c]);
-      }  //iter loop 
+      }
       
       //__________________________________
       //   term1 contribution from models
@@ -3948,7 +3946,6 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
           printData( indx, patch,1, desc.str(), "Modelsp_vol_src", Modelsp_vol_src);
         }
       }
-
       //____ B U L L E T   P R O O F I N G----
       IntVector neg_cell;
       if (!areAllValuesPositive(sp_vol_L, neg_cell)) {
@@ -4981,30 +4978,25 @@ bool ICE::areAllValuesPositive( CCVariable<double> & src, IntVector& neg_cell )
 { 
   double numCells = 0;
   double sum_src = 0;
-  //#if SCI_ASSERTION_LEVEL != 0  // turn off if assertion level = 0
-  //    add this when you turn it on (#include <sci_defs/error_defs.h>)
-  IntVector lowIndex  = src.getLowIndex();
-  IntVector highIndex = src.getHighIndex();
-  for(int i=lowIndex.x();i<highIndex.x();i++) {
-    for(int j=lowIndex.y();j<highIndex.y();j++) {
-      for(int k=lowIndex.z();k<highIndex.z();k++) {
-       sum_src += src[IntVector(i,j,k)]/fabs(src[IntVector(i,j,k)]);
-       numCells++;
-      }
-    }
+  int sumNan = 0;
+  IntVector l = src.getLowIndex();
+  IntVector h = src.getHighIndex();
+  CellIterator iterLim = CellIterator(l,h);
+  
+  for(CellIterator iter=iterLim; !iter.done();iter++) {
+    IntVector c = *iter;
+    sumNan += isnan(src[c]);       // check for nans
+    sum_src += src[c]/fabs(src[c]);
+    numCells++;
   }
-  //#endif  
-  // now find the first cell where the value is < 0   
-  if (fabs(sum_src - numCells) > 1.0e-2) {
 
-    for(int i=lowIndex.x();i<highIndex.x();i++) {
-      for(int j=lowIndex.y();j<highIndex.y();j++) {
-       for(int k=lowIndex.z();k<highIndex.z();k++) {
-         if (src[IntVector(i,j,k)] < 0.0) {
-           neg_cell = IntVector(i,j,k);
-           return false;
-         }
-       }
+  // now find the first cell where the value is < 0   
+  if ( (fabs(sum_src - numCells) > 1.0e-2) || sumNan !=0) {
+    for(CellIterator iter=iterLim; !iter.done();iter++) {
+      IntVector c = *iter;
+      if (src[c] < 0.0 || isnan(src[c]) !=0) {
+        neg_cell = c;
+        return false;
       }
     }
   } 
