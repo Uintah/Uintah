@@ -16,6 +16,7 @@ namespace Uintah {
 namespace MPM {
    
 class Fracture;
+class ThermalContact;
 
 /**************************************
 
@@ -169,6 +170,8 @@ private:
   SimulationStateP d_sharedState;
   Contact*         d_contactModel;
   Fracture*        d_fractureModel;
+  ThermalContact*  d_thermalContactModel;
+
   bool             d_heatConductionInvolved;
 };
       
@@ -177,6 +180,9 @@ private:
    
 //
 // $Log$
+// Revision 1.37  2000/05/31 18:30:10  tan
+// Create linkage to ThermalContact model.
+//
 // Revision 1.36  2000/05/30 20:18:59  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
