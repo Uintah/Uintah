@@ -42,7 +42,8 @@ TimestepSelector::TimestepSelector(GuiContext* ctx)
     def_color_g_(ctx->subVar("def-color-g")),
     def_color_b_(ctx->subVar("def-color-b")),
     def_color_a_(ctx->subVar("def-color-a")),
-    def_mat_handle_(scinew Material(Color(1.0, 1.0, 1.0)))
+    def_mat_handle_(scinew Material(Color(1.0, 1.0, 1.0))),
+    font_size_(ctx->subVar("font_size"))
 { 
 } 
 
@@ -122,7 +123,6 @@ void TimestepSelector::execute()
    GeomGroup *all = scinew GeomGroup();
    Point ref(14.0/16, 31.0/16, 0.0);
    Vector along(-0.5, -1.0, 0.0);
-   char value[40];
    double v, hour, min, sec, microseconds;
    v =  times[idx];
    hour = trunc( v/3600.0);
@@ -142,14 +142,10 @@ void TimestepSelector::execute()
      oss<<sec<<" + ";
    }
    oss<<microseconds<<"ms";
-   
-   cerr<<"time is "<<v<<" hour = "<<hour<<
-     ", min = "<<min<<", secs = "<<sec<<", microseconds = "<<
-     microseconds<<", formatted: "<< oss.str()<<endl;
-//    sprintf(value,"%.2d:%.2d:%.2g ", hour, min, sec);
-//  sprintf(value,"%02d:%02d:%02.6g", hour, min, sec);
+
    all->add(scinew GeomText(oss.str(), ref + along,
-				 def_mat_handle_->diffuse));
+			    def_mat_handle_->diffuse, 
+			    font_size_.get()));
    GeomSticky *sticky = scinew GeomSticky(all);
    ogeom->delAll();
    ogeom->addObj(sticky, "TimeStamp");
