@@ -130,6 +130,12 @@ fi
 if [ -f "${BUILDROOT}"/opt/make_results.log ]; then
     cat "${BUILDROOT}"/opt/make_results.log >> "$HTMLLOG"
 fi
+
+# build_and_run should write summary_log files
+if [ -f "$BUILDROOT"/opt/summary_log ]; then
+    cat "$BUILDROOT"/opt/summary_log >> "$HTMLLOG"
+fi
+
 echo "</pre></body></html>" >> "$HTMLLOG"
 echo "" >> "$BUILDROOT"/log
 
