@@ -125,6 +125,9 @@ public:
                                   const MaterialSubset*,
 				      const MaterialSet*);
   
+  void scheduleInterpolateMassBurnFractionToNC( SchedulerP&, const PatchSet*,
+						const MaterialSet*);
+
 //______________________________________________________________________
 //       A C T U A L   S T E P S : 
   void actuallyInitialize(const ProcessorGroup*,
@@ -182,18 +185,18 @@ public:
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw);
                             
-  void massExchange(const ProcessorGroup*,
-                    const PatchSubset* patch,   
-		    const MaterialSubset* matls,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw);
-
   void computeMassBurnRate(const ProcessorGroup*,
 			   const PatchSubset* patch,
 			   const MaterialSubset* matls,
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw);
   
+  void interpolateMassBurnFractionToNC(const ProcessorGroup*,
+		                       const PatchSubset* patch,
+				       const MaterialSubset* matls,
+		                       DataWarehouse* old_dw,
+		                       DataWarehouse* new_dw);
+
   enum bctype { NONE=0,
                 FIXED,
                 SYMMETRY,
@@ -216,7 +219,7 @@ protected:
   bool             d_fracture;
   double d_SMALL_NUM;
 };
-      
+
 } // End namespace Uintah
       
 #endif
