@@ -138,6 +138,9 @@ TaskGraph::setupTaskConnections()
    map<const VarLabel*, Task*, VarLabel::Compare> reductionTasks;
    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
       Task* task = *iter;
+      if (task->isReductionTask())
+	 continue; // already a reduction task so skip it
+      
       const Task::compType& comps = task->getComputes();
       for(Task::compType::const_iterator dep = comps.begin();
 	  dep != comps.end(); dep++){
@@ -152,8 +155,11 @@ TaskGraph::setupTaskConnections()
 	       it = reductionTasks.find(var);
 	       it->second->computes(dep->d_dw, var, -1, 0);
 	    }
-	    it->second->requires(dep->d_dw, var, -1, task->getPatch(),
-				 Ghost::None);
+	    if (task->getPatch())
+	       it->second->requires(dep->d_dw, var, -1, task->getPatch(),
+				    Ghost::None);
+	    else
+	       it->second->requires(dep->d_dw, var);
 	 }
       }
    }
@@ -301,13 +307,15 @@ TaskGraph::addTask(Task* task)
    for(Task::compType::const_iterator dep = comps.begin();
        dep != comps.end(); dep++){
       TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
-      actype::iterator aciter = d_allcomps.find(p);
-      if(aciter != d_allcomps.end()){
-	 cerr << "First task:\n";
-	 task->displayAll(cerr);
-	 cerr << "Second task:\n";
-	 aciter->second->d_task->displayAll(cerr);
-	 throw InternalError("Two tasks compute the same result: "+dep->d_var->getName()+" (tasks: "+task->getName()+" and "+aciter->second->d_task->getName()+")");
+      if (!dep->d_var->allowsMultipleComputes()) {
+	 actype::iterator aciter = d_allcomps.find(p);
+	 if(aciter != d_allcomps.end()){
+	    cerr << "First task:\n";
+	    task->displayAll(cerr);
+	    cerr << "Second task:\n";
+	    aciter->second->d_task->displayAll(cerr);
+	    throw InternalError("Two tasks compute the same result: "+dep->d_var->getName()+" (tasks: "+task->getName()+" and "+aciter->second->d_task->getName()+")");
+	 }
       }
       d_allcomps[p] = dep;
    }
@@ -446,6 +454,12 @@ DependData::operator()( const DependData & d1, const DependData & d2 ) const {
 
 //
 // $Log$
+// Revision 1.14  2001/01/04 22:36:19  witzel
+// Added check of a VarLabel's allowMultipleComputes flag in addTask to
+// determine whether or not to complain when a VarLabel is computed multiple
+// times.  Also made a few fairly minor changes to setupTaskConnections()
+// to handle some special cases better.
+//
 // Revision 1.13  2001/01/02 23:47:57  witzel
 // Changed VarLabelMaterialMap to be a map from a VarLabel string name to
 // the materials rather than from a VarLabel* because VarLabel*'s may
