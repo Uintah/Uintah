@@ -4,25 +4,25 @@ inline Point::Point(const Point& p)
     _x=p._x;
     _y=p._y;
     _z=p._z;
-#if SCI_ASSERTION_LEVEL >= 3
+#if SCI_ASSERTION_LEVEL >= 4
     uninit=0;
 #endif
 }
 
 inline Point::Point()
 {
-#if SCI_ASSERTION_LEVEL >= 3
+#if SCI_ASSERTION_LEVEL >= 4
     uninit=1;
 #endif
 }
 
 inline Point& Point::operator=(const Point& p)
 {
-    ASSERTL3(!p.uninit);
+    ASSERTL4(!p.uninit);
     _x=p._x;
     _y=p._y;
     _z=p._z;
-#if SCI_ASSERTION_LEVEL >= 3
+#if SCI_ASSERTION_LEVEL >= 4
     uninit=0;
 #endif
     return *this;
@@ -30,25 +30,25 @@ inline Point& Point::operator=(const Point& p)
 
 inline Vector Point::operator-(const Point& p) const
 {
-    ASSERTL3(!uninit && !p.uninit);
+    ASSERTL4(!uninit && !p.uninit);
     return Vector(_x-p._x, _y-p._y, _z-p._z);
 }
 
 inline Point Point::operator-() const
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     return Point(-_x, -_y, -_z);
 }
 
 inline Point Point::operator-(const Vector& v) const
 {
-    ASSERTL3(!uninit && !v.uninit);
+    ASSERTL4(!uninit && !v.uninit);
     return Point(_x-v._x, _y-v._y, _z-v._z);
 }
 
 inline Point& Point::operator-=(const Vector& v)
 {
-    ASSERTL3(!uninit && !v.uninit);
+    ASSERTL4(!uninit && !v.uninit);
     _x-=v._x;
     _y-=v._y;
     _z-=v._z;
@@ -57,26 +57,26 @@ inline Point& Point::operator-=(const Vector& v)
 
 inline Point Point::operator+(const Vector& v) const
 {
-    ASSERTL3(!uninit && !v.uninit);
+    ASSERTL4(!uninit && !v.uninit);
     return Point(_x+v._x, _y+v._y, _z+v._z);
 }
 
 inline Point Point::operator*(double d) const
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     return Point(_x*d, _y*d, _z*d);
 }
 
 inline Point& Point::operator*=(const double d)
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     _x*=d;_y*=d;_z*=d;
     return *this;
 }
 
 inline Point& Point::operator+=(const Vector& v)
 {
-    ASSERTL3(!uninit && !v.uninit);
+    ASSERTL4(!uninit && !v.uninit);
     _x+=v._x;
     _y+=v._y;
     _z+=v._z;
@@ -85,7 +85,7 @@ inline Point& Point::operator+=(const Vector& v)
 
 inline Point& Point::operator/=(const double d)
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     _x/=d;
     _y/=d;
     _z/=d;
@@ -94,27 +94,27 @@ inline Point& Point::operator/=(const double d)
 
 inline Point Point::operator/(const double d) const
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     return Point(_x/d,_y/d,_z/d);
 }
 
 inline void Point::x(const double d)
 {
     _x=d;
-#if SCI_ASSERTION_LEVEL >= 3
+#if SCI_ASSERTION_LEVEL >= 4
     uninit=0;
 #endif
 }
 
 inline double Point::x() const
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     return _x;
 }
 
 inline void Point::y(const double d)
 {
-#if SCI_ASSERTION_LEVEL >= 3
+#if SCI_ASSERTION_LEVEL >= 4
     uninit=0;
 #endif
     _y=d;
@@ -122,13 +122,13 @@ inline void Point::y(const double d)
 
 inline double Point::y() const
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     return _y;
 }
 
 inline void Point::z(const double d)
 {
-#if SCI_ASSERTION_LEVEL >= 3
+#if SCI_ASSERTION_LEVEL >= 4
     uninit=0;
 #endif
     _z=d;
@@ -136,31 +136,31 @@ inline void Point::z(const double d)
 
 inline double Point::z() const
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     return _z;
 }
 
 inline Vector Point::vector() const
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     return Vector(_x,_y,_z);
 }
 
 inline double Dot(const Point& p, const Vector& v)
 {
-    ASSERTL3(!p.uninit && !v.uninit);
+    ASSERTL4(!p.uninit && !v.uninit);
     return p._x*v._x+p._y*v._y+p._z*v._z;
 }
 
 inline double Dot(const Point& p1, const Point& p2)
 {
-    ASSERTL3(!p1.uninit && !p2.uninit);
+    ASSERTL4(!p1.uninit && !p2.uninit);
     return p1._x*p2._x+p1._y*p2._y+p1._z*p2._z;
 }
 
 inline Point Min(const Point& p1, const Point& p2)
 {
-    ASSERTL3(!p1.uninit && !p2.uninit);
+    ASSERTL4(!p1.uninit && !p2.uninit);
     double x=Min(p1._x, p2._x);
     double y=Min(p1._y, p2._y);
     double z=Min(p1._z, p2._z);
@@ -169,7 +169,7 @@ inline Point Min(const Point& p1, const Point& p2)
 
 inline Point Max(const Point& p1, const Point& p2)
 {
-    ASSERTL3(!p1.uninit && !p2.uninit);
+    ASSERTL4(!p1.uninit && !p2.uninit);
     double x=Max(p1._x, p2._x);
     double y=Max(p1._y, p2._y);
     double z=Max(p1._z, p2._z);

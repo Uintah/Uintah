@@ -17,7 +17,7 @@ clString Vector::string() const
 
 double Vector::normalize()
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     double l2=_x*_x+_y*_y+_z*_z;
     double l=Sqrt(l2);
     ASSERT(l>0.0);
@@ -29,7 +29,7 @@ double Vector::normalize()
 
 void Vector::find_orthogonal(Vector& v1, Vector& v2)
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     Vector v0(Cross(*this, Vector(1,0,0)));
     if(v0.length2() == 0){
 	v0=Cross(*this, Vector(0,1,0));
