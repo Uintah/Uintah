@@ -33,6 +33,8 @@ using namespace rtrt;
 #define ROOMRADIUS    4
 #define WALLTHICKNESS .1
 
+#define INSCILAB 1
+
 extern "C"
 Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 {
@@ -40,20 +42,29 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
    ImageMaterial* bookcoverimg = 
        new ImageMaterial(1,
+#if INSCILAB
+                         "/usr/sci/projects/rtrt/textures/i3d97.smaller.gamma",
+#else
                          "/home/moulding/i3d97.smaller.gamma",
+#endif
                          ImageMaterial::Tile,
                          ImageMaterial::Tile,
                          Color(0,0,0), 1,
                          Color(1,1,1), 4000);
 
-  ImageMaterial *matl0 = new ImageMaterial("/home/moulding/holo.ppm",
+  ImageMaterial *matl0 = new ImageMaterial(
+#if INSCILAB                                         
+                                           "/home/cs/moulding/holo.ppm",
+#else
+                                           "/home/moulding/holo.ppm",
+#endif
                                            ImageMaterial::Tile,
                                            ImageMaterial::Tile,Color(0,0,0),
                                            4,Color(.5,.5,.5),40,0,0);
 
   matl0->flip();
   bookcoverimg->flip();
-  Material *white = new LambertianMaterial(Color(0.8,0.8,0.8));
+  Material *white = new LambertianMaterial(Color(1,1,1));
   
   UVCylinderArc* uvcylarc0 = new UVCylinderArc(matl0,Point(ROOMCENTER,0),
                                                Point(ROOMCENTER,DOORHEIGHT),
