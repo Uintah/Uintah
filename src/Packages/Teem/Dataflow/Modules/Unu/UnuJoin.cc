@@ -92,11 +92,6 @@ UnuJoin::execute()
   if (! onrrd_) {
     onrrd_ = (NrrdOPort *)get_oport("JoinedNrrd");
   }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrds'.");
-    return;
-  }
-  
   port_range_type range = get_iports("Nrrds");
   if (range.first == range.second) { return; }
 
@@ -108,11 +103,6 @@ UnuJoin::execute()
   while (pi != range.second)
   {
     NrrdIPort *inrrd = (NrrdIPort *)get_iport(pi->second);
-    if (!inrrd) {
-      error("Unable to initialize iport '" + to_string(pi->second) + "'.");
-      return;
-    }
-
     NrrdDataHandle nrrd;
     
     if (inrrd->get(nrrd) && nrrd.get_rep()) {

@@ -225,14 +225,9 @@ UnuPad::execute()
   }
 
 
-  if (last_nrrdH_.get_rep()) {
-
+  if (last_nrrdH_.get_rep())
+  {
     NrrdOPort* onrrd = (NrrdOPort *)get_oport("Nrrd");
-    if (!onrrd) {
-      error("Unable to initialize oport 'Nrrd'.");
-      return;
-    }
-
     onrrd->send(last_nrrdH_);
   }
 }

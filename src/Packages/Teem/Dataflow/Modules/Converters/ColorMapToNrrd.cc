@@ -85,15 +85,6 @@ ColorMapToNrrd::execute()
   icmap_ = (ColorMapIPort *)get_iport("ColorMap");
   nout_ = (NrrdOPort *)get_oport("Output");
 
-  if (!icmap_) {
-    error("Unable to initialize iport 'ColorMap'.");
-    return;
-  }
-  if (!nout_) {
-    error("Unable to initialize oport 'Output.");
-    return;
-  }
-
   ColorMapHandle cmapH;
   if (!icmap_->get(cmapH)) {
     return;

@@ -88,12 +88,6 @@ TendSatin::execute()
 
   update_state(NeedData);
 
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
-
-  if (!onrrd_) {
-    error("Unable to initialize oport 'OutputNrrd'.");
-    return;
-  }
   Nrrd *nout = nrrdNew();
 
   if (tend_satinGen(nout, anisotropy_.get(), minca1_.get(), 
@@ -112,10 +106,10 @@ TendSatin::execute()
 
   NrrdDataHandle out(nrrd);
 
+  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
   onrrd_->send(out);
-
-
 }
+
 
 } // End namespace SCITeem
 

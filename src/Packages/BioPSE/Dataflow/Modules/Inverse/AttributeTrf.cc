@@ -81,21 +81,12 @@ AttributeTrf::~AttributeTrf(){
 ///////////////////////////////////////////////
 // MODULE EXECUTION
 ///////////////////////////////////////////////
-void AttributeTrf::execute(){
-
+void AttributeTrf::execute()
+{
   FieldIPort *iportGeomF = (FieldIPort *)get_iport("InputFld");
   MatrixOPort *oportAttrib = (MatrixOPort *)get_oport("OutputMat");
 
-  if (!iportGeomF) {
-    error("Unable to initialize iport 'InputFld'.");
-    return;
-  }
-  if (!oportAttrib) {
-    error("Unable to initialize oport 'OutputMat'.");
-    return;
-  }
-
-  // getting input field
+  // Getting input field.
   FieldHandle hFieldGeomF;
   if(!iportGeomF->get(hFieldGeomF) || !hFieldGeomF.get_rep()) { 
     error("Couldn't get handle to the Input Field.");

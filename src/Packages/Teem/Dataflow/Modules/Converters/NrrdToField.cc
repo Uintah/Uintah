@@ -157,27 +157,6 @@ void
   ifield_ = (FieldIPort *)get_iport("OriginalField");
   ofield_ = (FieldOPort *)get_oport("OutputField");
 
-  if (!ndata_) {
-    error("Unable to initialize iport 'Data'.");
-    return;
-  }
-  if (!npoints_) {
-    error("Unable to initialize iport 'Points'.");
-    return;
-  }
-  if (!nconnect_) {
-    error("Unable to initialize iport 'Connections'.");
-    return;
-  }
-  if (!ifield_) {
-    error("Unable to initialize iport 'OriginalField'.");
-    return;
-  }
-  if (!ofield_) {
-    error("Unable to initialize oport 'OutputField'.");
-    return;
-  }
-  
   NrrdDataHandle dataH;
   NrrdDataHandle pointsH;
   NrrdDataHandle connectH;

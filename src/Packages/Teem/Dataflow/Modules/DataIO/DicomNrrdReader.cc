@@ -212,18 +212,9 @@ void DicomNrrdReader::execute(){
     return;
   }
 
-  // Create handle to data
+  // Send nrrd data downstream.
   NrrdDataHandle sciNrrdHandle(sciNrrd);
-
-  // Initialize output port
   onrrd_ = (NrrdOPort *)get_oport("Nrrd");
-
-  if( !onrrd_ ) {
-    error("(DicomNrrdReader::execute) Unable to initialize oport 'Nrrd'.");
-    return;
-  }
-
-  // Send nrrd data downstream
   onrrd_->send(sciNrrdHandle);
 
   /*

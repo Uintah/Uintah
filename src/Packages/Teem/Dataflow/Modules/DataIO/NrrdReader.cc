@@ -262,11 +262,6 @@ NrrdReader::execute()
 
   // Send the data downstream.
   NrrdOPort *outport = (NrrdOPort *)get_oport("Output Data");
-  if (!outport) {
-    error("Unable to initialize oport 'Outport Data'.");
-    return;
-  }
-
   outport->send(read_handle_);
 
   update_state(Completed);

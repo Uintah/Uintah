@@ -100,27 +100,11 @@ void CreateDisAnisoSpheres::execute() {
 
   // get input ports
   hInField = (FieldIPort*)get_iport("Mesh");
-  if(!hInField) {
-	error("impossible to initialize input port 'Mesh'");
-	return;
-  }
   hInRadii = (MatrixIPort*)get_iport("SphereRadii");
-  if(!hInRadii) {
-	error("impossible to initialize input port 'SphereRadii'");
-	return;
-  }
   hInConductivities = (MatrixIPort*)get_iport("AnisoConductivities");
-  if(!hInConductivities) {
-	error("impossible to initialize input port 'AnisoConductivities'");
-	return;
-  }
 
   // get output port
   hOutField = (FieldOPort*)get_oport("Mesh");
-  if(!hOutField) {
-	error("impossible to initialize output port 'Mesh'");
-	return;
-  }
 
   // get input handles
   if(!hInField->get(field_) || !field_.get_rep()) {

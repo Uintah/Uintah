@@ -76,21 +76,15 @@ ExtractSingleSurface::~ExtractSingleSurface()
 {
 }
 
-void ExtractSingleSurface::execute() {
-  // make sure the ports exist
+void
+ExtractSingleSurface::execute()
+{
+  // Make sure the ports exist.
   FieldIPort *ifp = (FieldIPort *)get_iport("SepSurf");
-  FieldHandle ifieldH;
-  if (!ifp) {
-    error("Unable to initialize iport 'SepSurf'.");
-    return;
-  }
   FieldOPort *ofp = (FieldOPort *)get_oport("QuadSurf");
-  if (!ofp) {
-    error("Unable to initialize oport 'QuadSurf'.");
-    return;
-  }
 
-  // make sure the input data exists
+  // Make sure the input data exists.
+  FieldHandle ifieldH;
   if (!ifp->get(ifieldH) || !ifieldH.get_rep()) {
     error("No input data");
     return;

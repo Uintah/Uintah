@@ -89,19 +89,6 @@ void
 
   oportCurrentVector_ = (MatrixOPort *)get_oport("CurrentPatternVector");
 
-  if (!iportCurrentPatternIndex_) {
-    error("Unable to initialize iport 'Current Pattern Index'.");
-    return;
-  }
-  if (!iportElectrodeParams_) {
-    error("Unable to initialize iport 'Electrode Parameters'.");
-    return;
-  }
-  if (!oportCurrentVector_) {
-    error("Unable to initialize oport 'Current Pattern Vector'.");
-    return;
-  }
-
   double currentMagnitude = Max(magnitudeTCL_.get(), 0.0);
 
 

@@ -596,15 +596,7 @@ void ExtractSepSurfs::buildSurfs(SegLatVolField &field, SepSurf &surf) {
 void ExtractSepSurfs::execute()
 {
   FieldIPort *ifp = (FieldIPort *)get_iport("SegField");
-  if (!ifp) {
-    error("Unable to initialize port 'SegFld'.");
-    return;
-  }
   FieldOPort *ofp = (FieldOPort *)get_oport("SepSurf");
-  if (!ofp) {
-    error("Unable to initialize port 'SepSurf'.");
-    return;
-  }
 
   FieldHandle ifieldH;
   if (!ifp->get(ifieldH) || !ifieldH.get_rep()) {

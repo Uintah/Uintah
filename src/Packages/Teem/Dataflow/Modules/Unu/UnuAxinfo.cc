@@ -89,18 +89,6 @@ void UnuAxinfo::execute()
   
   update_state(NeedData);
   
-  if (!iport) 
-    {
-      error("Unable to initialize iport 'Nrrd'.");
-      return;
-    }
-  
-  if (!oport) 
-    {
-      error("Unable to initialize oport 'Nrrd'.");
-      return;
-    }
-  
   // The input port (with data) is required.
   NrrdDataHandle nh;
   if (!iport->get(nh)) 
