@@ -34,11 +34,46 @@ MP(Anneal)
 MP(BuildFDMatrix)
 MP(BuildFDField)
 
+// FEM
+MP(DipoleMatToGeom)
+MP(DipoleSourceRHS)
+MP(ErrorMetric)
+MP(RemapVector)
+MP(VecSplit)
+
+// ISL
+MP(Downhill_Simplex)
+MP(OptDip)
+MP(SGI_LU)
+MP(SGI_Solve)
+
+// MEG
+MP(MakeCurrentDensityField)
+MP(MagneticScalarField)
+MP(SurfToVectGeom)
+MP(FieldCurl)
+
+// Readers
+MP(ContourSetReader)
+MP(SegFldReader)
+MP(SigmaSetReader)
+MP(TensorFieldReader)
+
 // SiRe
 MP(SiReAll)
 MP(SiReCrunch)
 MP(SiReInput)
 MP(SiReOutput)
+
+// Tensor
+MP(TensorAccessFields)
+MP(TensorAnisotropy)
+
+// Writers
+MP(ContourSetWriter)
+MP(SegFldWriter)
+MP(SigmaSetWriter)
+MP(TensorFieldWriter)
 
 using namespace PSECore::Dataflow;
 using namespace DaveW::Modules;
@@ -64,6 +99,7 @@ void initPackage(const clString& tcl) {
   RM("EEG",	      "RescaleSegFld",		 make_RescaleSegFld,	    tcl+"/RescaleSegFld.tcl");
   RM("EEG",	      "STreeExtractSurf",	 make_STreeExtractSurf,	    tcl+"/STreeExtractSurf.tcl");
   RM("EEG",	      "SegFldOps",		 make_SegFldOps,	    tcl+"/SegFldOps.tcl");
+  RM("EEG",	      "SegFldToSurfTree",	 make_SegFldToSurfTree,	    "");
   RM("EEG",	      "SelectSurfNodes",	 make_SelectSurfNodes,	    tcl+"/SelectSurfNodes.tcl");
   RM("EEG",	      "Taubin",			 make_Taubin,		    tcl+"/Taubin.tcl");
   RM("EEG",	      "Thermal",		 make_Thermal,		    tcl+"/Thermal.tcl");
@@ -72,14 +108,49 @@ void initPackage(const clString& tcl) {
   RM("EGI",	      "Anneal",		 	 make_Anneal,		    tcl+"/Anneal.tcl");
 
   // FDM
-  RM("FDM",	      "BuildFDField",		 make_BuildFDField,	    tcl+"/BuildFDField.tcl");
-  RM("FDM",	      "BuildFDMatrix",		 make_BuildFDMatrix,	    tcl+"/BuildFDMatrix.tcl");
+  RM("FDM",	      "BuildFDField",		 make_BuildFDField,	    "");
+  RM("FDM",	      "BuildFDMatrix",		 make_BuildFDMatrix,	    "");
+
+  // FEM
+  RM("FEM",	      "DipoleMatToGeom",	 make_DipoleMatToGeom,	    tcl+"/DipoleMatToGeom.tcl");
+  RM("FEM",	      "DipoleSourceRHS",	 make_DipoleSourceRHS,	    "");
+  RM("FEM",	      "ErrorMetric",		 make_ErrorMetric,	    tcl+"/ErrorMetric.tcl");
+  RM("FEM",	      "RemapVector",		 make_RemapVector,	    "");
+  RM("FEM",	      "VecSplit",		 make_VecSplit,	            "");
+  
+  // ISL
+  RM("ISL",	      "Downhill_Simplex",	 make_Downhill_Simplex,	    tcl+"/Downhill_Simplex.tcl");
+  RM("ISL",	      "OptDip",			 make_OptDip,	   	    tcl+"/OptDip.tcl");
+  RM("ISL",	      "SGI_Solve",		 make_SGI_Solve,	    tcl+"/SGI_Solve.tcl");
+  RM("ISL",	      "SGI_LU",			 make_SGI_LU,		    tcl+"/SGI_LU.tcl");
+
+  // MEG
+  RM("MEG",	      "MakeCurrentDensityField", make_MakeCurrentDensityField, "");
+  RM("MEG",	      "MagneticScalarField",	 make_MagneticScalarField,  "");
+  RM("MEG",	      "SurfToVectGeom",		 make_SurfToVectGeom,	    tcl+"/SurfToVectGeom.tcl");
+  RM("MEG",	      "FieldCurl",		 make_FieldCurl,	    "");
+
+  // Readers
+  RM("Readers",	      "ContourSetReader",	 make_ContourSetReader,	    tcl+"/ContourSetReader.tcl");
+  RM("Readers",	      "SegFldReader",		 make_SegFldReader,	    tcl+"/SegFldReader.tcl");
+  RM("Readers",	      "SigmaSetReader",		 make_SigmaSetReader,	    tcl+"/SigmaSetReader.tcl");
+  RM("Readers",	      "TensorFieldReader",	 make_TensorFieldReader,    tcl+"/TensorFieldReader.tcl");
 
   // SiRe
   RM("SiRe",	      "SiReAll",		 make_SiReAll,	    	    tcl+"/SiReAll.tcl");
   RM("SiRe",	      "SiReCrunch",		 make_SiReCrunch,	    tcl+"/SiReCrunch.tcl");
   RM("SiRe",	      "SiReInput",		 make_SiReInput,	    tcl+"/SiReInput.tcl");
   RM("SiRe",	      "SiReOutput",		 make_SiReOutput,	    tcl+"/SiReOutput.tcl");
+
+  // Tensor
+  RM("Tensor",	      "TensorAccessFields",	 make_TensorAccessFields,   "");
+  RM("Tensor",	      "TensorAnisotropy",	 make_TensorAnisotropy,	    "");
+
+  // Writers
+  RM("Writers",	      "ContourSetWriter",	 make_ContourSetWriter,	    tcl+"/ContourSetWriter.tcl");
+  RM("Writers",	      "SegFldWriter",		 make_SegFldWriter,	    tcl+"/SegFldWriter.tcl");
+  RM("Writers",	      "SigmaSetWriter",		 make_SigmaSetWriter,	    tcl+"/SigmaSetWriter.tcl");
+  RM("Writers",	      "TensorFieldWriter",	 make_TensorFieldWriter,    tcl+"/TensorFieldWriter.tcl");
 
   cerr << "Initfn done -- TCL path was " << tcl << "\n";
 }
