@@ -34,9 +34,8 @@
 
 proc initGuiPreferences { } {
     global guiPreferences
-    set guiPreferences("UseGuiFetch") off
-    set guiPreferences("MoveGuiToMouse") on
-    
+    set guiPreferences("UseGuiFetch") 0
+    set guiPreferences("MoveGuiToMouse") 1    
 }
 
 # Called from scirun_env.cc:
