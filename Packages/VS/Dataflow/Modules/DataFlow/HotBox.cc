@@ -15,6 +15,7 @@
 
 #include <Core/Containers/HashTable.h>
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/CurveField.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/FieldInterface.h>
@@ -206,6 +207,7 @@ private:
   FieldHandle InputFieldHandle_;
   NrrdDataHandle InputNrrdHandle_;
   ColorMapHandle inputCMapHandle_;
+  ColorMapHandle outputCMapHandle_;
   int probeWidgetid_;
   Point probeLoc_;
   int labelIndexVal_;
@@ -227,6 +229,7 @@ private:
 protected:
   FieldHandle  geomFilehandle_;
   FieldHandle injuryfieldHandle_;
+  Transform    inputTransform_;
   string    geomFilename_;
   string    activeBoundBoxSrc_;
   string    activeInjList_;
@@ -383,51 +386,53 @@ HotBox::execute()
     remark("Tensor Data on Input");
   }
 
-  // get input matrix port
-  MatrixIPort *inputMatrixPort = (MatrixIPort *)get_iport("Input TimeStep");
-  if (!inputMatrixPort) {
+  // get input Time matrix port
+  MatrixIPort *
+  inputTimeMatrixPort = (MatrixIPort *)get_iport("Input TimeStep");
+  if (!inputTimeMatrixPort) {
     error("Unable to initialize input TimeStep matrix port.");
   }
 
-  // get handle to matrix from the input port
-  MatrixHandle inputMatrixHandle;
-  if(inputMatrixPort != NULL && (!inputMatrixPort->get(inputMatrixHandle) ||
-     !inputMatrixHandle.get_rep()))
+  // get handle to matrix from the input Time port
+  MatrixHandle inputTimeMatrixHandle;
+  if(inputTimeMatrixPort != NULL &&
+    (!inputTimeMatrixPort->get(inputTimeMatrixHandle) ||
+     !inputTimeMatrixHandle.get_rep()))
   {
-    remark("No data on input matrix port.");
+    remark("No data on input Time matrix port.");
   }
   else
   {
     // get the matrix data
-    Matrix *matrixPtr = inputMatrixHandle.get_rep();
-    if(matrixPtr)
+    Matrix *timeMatrixPtr = inputTimeMatrixHandle.get_rep();
+    if(timeMatrixPtr)
     {
       double minlabel;
-      if(!inputMatrixHandle->get_property("row_min", minlabel))
+      if(!inputTimeMatrixHandle->get_property("row_min", minlabel))
         minlabel = 0.0;
-      double nrows = inputMatrixHandle->nrows();
+      double nrows = inputTimeMatrixHandle->nrows();
       double maxlabel;
-      if (!inputMatrixHandle->get_property("row_max", maxlabel))
-        maxlabel = inputMatrixHandle->nrows() - 1.0;
+      if (!inputTimeMatrixHandle->get_property("row_max", maxlabel))
+        maxlabel = inputTimeMatrixHandle->nrows() - 1.0;
 
       cerr << "row_min " << minlabel << " row_max " << maxlabel;
       cerr << " nrows " << nrows << endl;
 
-      if(!inputMatrixHandle->get_property("col_min", minlabel))
+      if(!inputTimeMatrixHandle->get_property("col_min", minlabel))
       minlabel = 0.0;
-      double ncols =  inputMatrixHandle->ncols();
-      if (!inputMatrixHandle->get_property("col_max", maxlabel))
-      maxlabel = inputMatrixHandle->ncols() - 1.0;
+      double ncols =  inputTimeMatrixHandle->ncols();
+      if (!inputTimeMatrixHandle->get_property("col_max", maxlabel))
+      maxlabel = inputTimeMatrixHandle->ncols() - 1.0;
 
       cerr << "col_min " << minlabel << " col_max " << maxlabel;
       cerr << " ncols " << ncols << endl;
 
       ColumnMatrix *cm;
-      cm = scinew ColumnMatrix(inputMatrixHandle->nrows());
+      cm = scinew ColumnMatrix(inputTimeMatrixHandle->nrows());
       // cm->zero();
       double *data = cm->get_data();
 
-      data[0] = inputMatrixHandle->get(0, 0);
+      data[0] = inputTimeMatrixHandle->get(0, 0);
 
       // expect one value in the input timeStep
       currentTime_ = (int)data[0];
@@ -447,6 +452,68 @@ HotBox::execute()
   {
     error( "No colormap handle or representation" );
   }
+
+  // get input Transform matrix port
+  MatrixIPort *
+  inputXFormMatrixPort = (MatrixIPort *)get_iport("Input Transform");
+  if (!inputXFormMatrixPort) {
+    error("Unable to initialize input Transform matrix port.");
+  }
+
+  // get handle to matrix from the input Transform port
+  MatrixHandle inputXFormMatrixHandle;
+  if(inputXFormMatrixPort != NULL && 
+    (!inputXFormMatrixPort->get(inputXFormMatrixHandle) ||
+     !inputXFormMatrixHandle.get_rep()))
+  {
+    remark("No data on input Transform matrix port.");
+  }
+  else
+  {
+    // get the Transform matrix data
+    Matrix *xformMatrixPtr = inputXFormMatrixHandle.get_rep();
+    if(xformMatrixPtr)
+    {
+      double minlabel;
+      if(!inputXFormMatrixHandle->get_property("row_min", minlabel))
+        minlabel = 0.0;
+      double nrows = inputXFormMatrixHandle->nrows();
+      double maxlabel;
+      if (!inputXFormMatrixHandle->get_property("row_max", maxlabel))
+        maxlabel = inputXFormMatrixHandle->nrows() - 1.0;
+
+      cerr << "row_min " << minlabel << " row_max " << maxlabel;
+      cerr << " nrows " << nrows << endl;
+
+      if(!inputXFormMatrixHandle->get_property("col_min", minlabel))
+      minlabel = 0.0;
+      double ncols =  inputXFormMatrixHandle->ncols();
+      if (!inputXFormMatrixHandle->get_property("col_max", maxlabel))
+      maxlabel = inputXFormMatrixHandle->ncols() - 1.0;
+
+      cerr << "col_min " << minlabel << " col_max " << maxlabel;
+      cerr << " ncols " << ncols << endl;
+
+      DenseMatrix *dm;
+      dm = scinew DenseMatrix(inputXFormMatrixHandle->nrows(),
+                              inputXFormMatrixHandle->ncols());
+      // dm->zero();
+      double **xformData = dm->getData2D();
+
+      for(int r = 0; r < nrows; r++)
+      {
+        for(int c = 0; c < ncols; c++)
+        {
+          xformData[r][c] = inputXFormMatrixHandle->get(r, c);
+          cerr << xformData[r][c] << " ";
+        }
+        cerr << endl;
+      }
+
+      // expect a 4 x 4 matrix in the input Transform
+      inputTransform_ = dm->toTransform();
+    }
+  } // end else (data on input Transform matrix port)
 
   // get the current selection source -- either Probe or HotBox Tcl UI
   labelIndexVal_ = 0;
@@ -810,11 +877,11 @@ HotBox::execute()
 
     if (!ocolormap_port) {
       error("Unable to initialize "+name+"'s oport\n");
-      return;
     }
-
-    // Send the data downstream
-    ocolormap_port->send( inputCMapHandle_ );
+    else
+    {// Send the data downstream
+      ocolormap_port->send( inputCMapHandle_ );
+    }
   }
 
   if(selectBox && selectionSource == "fromHotBoxUI")
@@ -828,13 +895,7 @@ HotBox::execute()
     probeLoc_ = bmin + Vector(bmax - bmin) * 0.5;
     // scale the bounding box of the segmented region
     // to match the bounding box of the labelmap volume
-    probeLoc_ = Point(probeLoc_.x() + boxTran_.x(),
-                     probeLoc_.y() + boxTran_.y(),
-                     probeLoc_.z() + boxTran_.z());
-    probeLoc_ = Point(probeLoc_.x()*boxScale_.x(),
-                     probeLoc_.y()*boxScale_.y(),
-                     probeLoc_.z()*boxScale_.z()
-                    );
+    probeLoc_ = inputTransform_.project(probeLoc_);
     probeWidget_->SetPosition(probeLoc_);
 
     // update probe location in the Tcl GUI
@@ -1073,9 +1134,33 @@ HotBox::execSelColorMap()
     error("An input field is not a scalar field.");
     return;
   }
-  inputCMapHandle_->Scale( minmax.first, minmax.second);
+  // inputCMapHandle_->Scale( minmax.first, minmax.second);
 
+  // create the output colormap from the modified input
+  // vector<float> rgbt = inputCMapHandle_->get_rgbT();
+
+  // set injury colors
+  // for each element of the injury list
+  for(unsigned int i = 0; i < injured_tissue_.size(); i++)
+  {
+    VH_injury injPtr = (VH_injury)injured_tissue_[i];
+    // find the colorMap entry for this label value
+    int injTissueIndex =
+        anatomytable_->get_labelindex((char *)injPtr.anatomyname.c_str());
+    // set this entry to RED
+    // if(injTissueIndex >= 0)
+    //     rgbt[injTissueIndex] = (float)18.0;
+  }
   // set selection colors
+  // set this entry to YELLOW
+  // rgbt[labelIndexVal_] = (float)19.0;
+
+  // build the output colormap
+  // ColorMap cm(inputCMapHandle_->get_rgbs(), rgbt,
+  //                             inputCMapHandle_->get_alphas(),
+  //                             inputCMapHandle_->get_alphaT(),
+  //                             inputCMapHandle_->resolution());
+  // outputCMapHandle_ = &cm;
 } // end HotBox::execSelColorMap()
 
 /*****************************************************************************
@@ -1563,6 +1648,7 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
 {
   // debugging...
   if(!strcmp(to_char_ptr(woundNode.getNodeName()), "timeStamp") ||
+     !strcmp(to_char_ptr(woundNode.getNodeName()), "probability") ||
      !strcmp(to_char_ptr(woundNode.getNodeName()), "primaryInjuryList") ||
      !strcmp(to_char_ptr(woundNode.getNodeName()), "secondaryInjuryList") ||
      !strcmp(to_char_ptr(woundNode.getNodeName()), "ablateRegion") ||
@@ -1670,7 +1756,7 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
   else if(!strcmp(to_char_ptr(woundNode.getNodeName()),
           "secondaryInjuryList"))
   {
-    (*injuryPtr)->isPrimaryInjury = true;
+    (*injuryPtr)->isSecondaryInjury = true;
   }
   else if(!strcmp(to_char_ptr(woundNode.getNodeName()),
           "ablateRegion"))
