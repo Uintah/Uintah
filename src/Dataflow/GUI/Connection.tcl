@@ -572,9 +572,9 @@ proc insertModuleOnConnectionMenu { conn menu } {
 
     set added ""
     foreach path $moduleList {
-	set last [lindex $added end]
-	lappend added $path
-	if { ![string equal [lindex $path 0] [lindex $last 0]] } {
+
+	if { [lsearch $added [lindex $path 0]] == -1 } {
+	    lappend added [lindex $path 0]
 	    # Add a menu separator if this package isn't the first one
 	    if { [$menu index end] != "none" } {
 		$menu add separator 
@@ -584,15 +584,12 @@ proc insertModuleOnConnectionMenu { conn menu } {
 	}
 
 	set submenu $menu.menu_[join [lrange $path 0 1] _]
-	if { ![string equal [lindex $path 1] [lindex $last 1]] } {
+	if { ![winfo exists $submenu] } {
 	    menu $submenu -tearoff false
 	    $menu add cascade -label "  [lindex $path 1]" -menu $submenu
 	}
-
-	if { ![string equal [lindex $path 2] [lindex $last 2]] } {
-	    $submenu add command -label [lindex $path 2] \
-		-command "insertModuleOnConnection \{$conn\} $path"
-	}
+	set command "insertModuleOnConnection \{$conn\} $path"
+	$submenu add command -label [lindex $path 2] -command $command
     }
     update idletasks
     return 1
