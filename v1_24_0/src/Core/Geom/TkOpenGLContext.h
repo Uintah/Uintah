@@ -65,7 +65,7 @@ namespace SCIRun {
 
 class TkOpenGLContext {
 public:
-  TkOpenGLContext(const string &, int visualid=0);
+  TkOpenGLContext(const string &, int width, int height, int visualid=0);
   virtual ~TkOpenGLContext();
   
   static string		listvisuals();
