@@ -3914,7 +3914,7 @@ trap 'rm -fr `echo "configVars.mk \
 		disjointPackageMakefile \
                 Dataflow/Modules/Fields/Manip/Makefile\
 		Dataflow/Modules/Math/Manip/Makefile\
-		sci_defs.h \
+		sci_testdefs.h \
 		 sci_config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -4098,7 +4098,7 @@ CONFIG_FILES=\${CONFIG_FILES-"configVars.mk \
 		disjointPackageMakefile \
                 Dataflow/Modules/Fields/Manip/Makefile\
 		Dataflow/Modules/Math/Manip/Makefile\
-		sci_defs.h \
+		sci_testdefs.h \
 		"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
@@ -4273,3 +4273,10 @@ rm -fr confdefs* $ac_clean_files
 test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
 
 
+if cmp -s sci_defs.h sci_testdefs.h 2>/dev/null; then
+  echo "sci_defs.h is unchanged"
+  rm -f sci_testdefs.h
+else
+  mv sci_testdefs.h sci_defs.h
+  echo "sci_defs.h is changed"
+fi
