@@ -2,8 +2,8 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
-SRCS     = banbks.cc bandec.cc banmprv.cc banmul.cc dpythag.cc dsvbksb.cc \
-	   dsvdcmp.cc linbcg.cc nrutil.cc
+SRCS     = amoeba.cc amotry.cc banbks.cc bandec.cc banmprv.cc banmul.cc \
+	   dpythag.cc dsvbksb.cc dsvdcmp.cc linbcg.cc nrutil.cc
 
 INCLUDES = -I../OldLinAlg
 
