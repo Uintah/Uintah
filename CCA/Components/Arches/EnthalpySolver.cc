@@ -85,11 +85,14 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("EnthalpySolver");
   db->require("radiation",d_radiationCalc);
   if (d_radiationCalc) {
-    if (db->findBlock("radiationCalFreq"))
-      db->require("radiationFreq",d_radCalcFreq);
+    if (db->findBlock("radiationCalcFreq"))
+      db->require("radiationCalcFreq",d_radCalcFreq);
     else
       d_radCalcFreq = 3; // default: radiation is computed every third time step
-    db->require("discrete_ordinates", d_DORadiationCalc);
+    if (db->findBlock("discrete_ordinates"))
+      db->require("discrete_ordinates", d_DORadiationCalc);
+    else
+      d_DORadiationCalc = true;
     if (d_DORadiationCalc) {
       d_DORadiation = scinew DORadiationModel(d_boundaryCondition, d_myworld);
       d_DORadiation->problemSetup(db);
