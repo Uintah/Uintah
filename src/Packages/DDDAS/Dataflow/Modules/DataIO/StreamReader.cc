@@ -29,7 +29,10 @@
  *                 occurs between reads.  This data loss is ignored for now
  *                 since the solution headers aren't frequent and 
  *                 informational enough to determine which chunks of data 
- *                 have been lost so that they can be replaced.
+ *                 have been lost so that they can be replaced.  As a result,
+ *                 the LatVol meshes produced almost always have some degree 
+ *                 of error and this shows up as nodes in the mesh being
+ *                 shifted from their correct position. 
  *                     
  * AUTHOR(S)     : Chad Shannon
  *      	   Center for Computational Sciences, University of Kentucky
@@ -50,6 +53,7 @@
  *                 Callahan and the xccs package created by Chad Shannon. Most 
  *                 of the xccs code was stripped from XMMS-1.2.7 source code.
  *
+ * Copyright (C) 2003 SCI Group
 */
  
 // SCIRun includes
@@ -558,6 +562,12 @@ StreamReader::process_stream()
     // Convert buffer to input stream since a stream is easier to parse
     string str = (const char *) final_buffer_;
     istringstream input( str, istringstream::in );
+
+    // Deallocate final buffer memory
+    if( final_buffer_ != 0 )
+    {
+      delete [] final_buffer_;
+    }
 
     // Grab the first string in the input stream
     input >> str;
@@ -1097,6 +1107,7 @@ StreamReader::process_mesh( istringstream& input )
     cout << "(StreamReader::process_mesh) Filling mesh\n"; 
 
     cout << "(StreamReader::process_mesh) Unlocking mutex\n"; 
+
     // Unlock buffer mutex
     buffer_lock_.unlock();
 
