@@ -14,16 +14,21 @@
 #ifndef SCI_project_ColumnMatrix_h
 #define SCI_project_ColumnMatrix_h 1
 
-#include <Datatypes/Matrix.h>
-class ostream;
+#include <Datatypes/Datatype.h>
+#include <Classlib/LockingHandle.h>
 
-class ColumnMatrix {
+class ColumnMatrix;
+class ostream;
+typedef LockingHandle<ColumnMatrix> ColumnMatrixHandle;
+
+class ColumnMatrix : public Datatype {
     int rows;
     double* data;
 public:
     ColumnMatrix(int);
     ~ColumnMatrix();
     ColumnMatrix(const ColumnMatrix&);
+    virtual ColumnMatrix* ColumnMatrix::clone();
     ColumnMatrix& operator=(const ColumnMatrix&);
     int nrows();
     double& operator[](int);
@@ -31,6 +36,9 @@ public:
 
     void zero();
     void print(ostream&);
+    // Persistent representation...
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
 
 #include <Classlib/Assert.h>

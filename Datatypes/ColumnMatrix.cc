@@ -13,6 +13,7 @@
 
 #include <Datatypes/ColumnMatrix.h>
 #include <Classlib/Assert.h>
+#include <Classlib/NotFinished.h>
 #include <Math/Expon.h>
 #include <iostream.h>
 
@@ -23,11 +24,16 @@ ColumnMatrix::ColumnMatrix(int rows)
 }
 
 ColumnMatrix::ColumnMatrix(const ColumnMatrix& c)
-: rows(c.rows)
+: rows(c.rows), ref_cnt(0)
 {
     data=new double[rows];
     for(int i=0;i<rows;i++)
 	data[i]=c.data[i];
+}
+
+ColumnMatrix* ColumnMatrix::clone()
+{
+    return new ColumnMatrix(*this);
 }
 
 ColumnMatrix& ColumnMatrix::operator=(const ColumnMatrix& c)
@@ -75,3 +81,9 @@ void ColumnMatrix::print(ostream& str)
 	str << data[i] << endl;
     }
 }
+
+void ColumnMatrix::io(Piostream&)
+{
+    NOT_FINISHED("Matrix::io");
+}
+

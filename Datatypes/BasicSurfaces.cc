@@ -13,6 +13,8 @@
 
 #include <Datatypes/BasicSurfaces.h>
 #include <Classlib/NotFinished.h>
+#include <Math/Trig.h>
+#include <Math/TrigTable.h>
 
 static Persistent* make_CylinderSurface()
 {
@@ -24,7 +26,7 @@ PersistentTypeID CylinderSurface::type_id("CylinderSurface", "Surface",
 
 CylinderSurface::CylinderSurface(const Point& p1, const Point& p2,
 				 double radius, int nu, int nv, int ndiscu)
-: Surface(Other),
+: Surface(Other, 1),
   p1(p1), p2(p2), radius(radius), nu(nu), nv(nv), ndiscu(ndiscu)
 {
     axis=p2-p1;
@@ -36,6 +38,7 @@ CylinderSurface::CylinderSurface(const Point& p1, const Point& p2,
 	height=0;
 	axis=Vector(0,0,1);
     }
+    axis.find_orthogonal(u, v);
 }
 
 CylinderSurface::~CylinderSurface()
@@ -70,21 +73,28 @@ int CylinderSurface::inside(const Point& p)
 void CylinderSurface::get_surfpoints(Array1<Point>& pts)
 {
     pts.add(p1);
-#if 0
+    SinCosTable tab(nv, 0, 2*Pi, radius);
     for(int i=1;i<ndiscu-1;i++){
-	
-    }
-    for(int i=0;i<=nu;i++){
+	double r=double(i)/double(ndiscu-1);
 	for(int j=0;j<nv;j++){
-	    Point p(u*du+v*dv+p1);
+	    Point p(p1+(u*tab.sin(j)+v*tab.cos(j))*r);
 	    pts.add(p);
 	}
     }
-    for(int i=ndiscu-2;i>=1;i++){
-	
+    for(i=0;i<=nu;i++){
+	double h=double(i)/double(nu)*height;
+	for(int j=0;j<nv;j++){
+	    Point p(p1+u*tab.sin(j)+v*tab.cos(j)+axis*h);
+	    pts.add(p);
+	}
     }
-#endif
-    NOT_FINISHED("CylinderSurface::get_surfpoints");
+    for(i=ndiscu-2;i>=1;i--){
+	double r=double(i)/double(ndiscu-1);
+	for(int j=0;j<nv;j++){
+	    Point p(p1+(u*tab.sin(j)+v*tab.cos(j))*r);
+	    pts.add(p);
+	}
+    }
     pts.add(p2);
 }
 
@@ -100,6 +110,53 @@ void CylinderSurface::io(Piostream& stream)
     Pio(stream, nu);
     Pio(stream, nv);
     Pio(stream, ndiscu);
+    stream.end_class();
+}
+
+static Persistent* make_PointSurface()
+{
+    return new PointSurface(Point(0,0,0));
+}
+
+PersistentTypeID PointSurface::type_id("PointSurface", "Surface",
+				       make_PointSurface);
+
+PointSurface::PointSurface(const Point& pos)
+: Surface(Other, 0), pos(pos)
+{
+}
+
+PointSurface::~PointSurface()
+{
+}
+
+PointSurface::PointSurface(const PointSurface& copy)
+: Surface(copy), pos(copy.pos)
+{
+}
+
+Surface* PointSurface::clone()
+{
+    return new PointSurface(*this);
+}
+
+int PointSurface::inside(const Point& p)
+{
+    return 0;
+}
+
+void PointSurface::get_surfpoints(Array1<Point>& pts)
+{
+    pts.add(pos);
+}
+
+#define POINTSURFACE_VERSION 1
+
+void PointSurface::io(Piostream& stream)
+{
+    int version=stream.begin_class("PointSurface", POINTSURFACE_VERSION);
+    Surface::io(stream);
+    Pio(stream, pos);
     stream.end_class();
 }
 
