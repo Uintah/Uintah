@@ -40,7 +40,9 @@ using namespace SCIRun;
 GuiContext::GuiContext(GuiInterface* gui, const std::string& name, bool save)
   : gui(gui), name(name), cached(false), save(save), usedatadir(false)
 {
-  if (save) { gui->execute("initVar \""+name+"\""); }
+  const string save_flag = (save)?"1 ":"0 ";
+  const string sub_flag = (usedatadir)?"1":"0";
+  gui->execute("initVar \""+name+"\" "+save_flag+sub_flag);
 }
 
 GuiContext* GuiContext::subVar(const std::string& subname, bool saveChild)
@@ -298,6 +300,10 @@ GuiInterface* GuiContext::getInterface()
 void GuiContext::dontSave()
 {
   save=false;
+  const string save_flag = (save)?"1 ":"0 ";
+  const string sub_flag = 
+    (usedatadir&&sci_getenv_p("SCIRUN_NET_SUBSTITUTE_DATADIR"))?"1":"0";
+  gui->execute("setVarStates \""+name+"\" "+save_flag+sub_flag);
 }
 
 
@@ -305,4 +311,7 @@ void
 GuiContext::setUseDatadir(bool flag)
 {
   usedatadir = flag;
+  const string save_flag = (save)?"1 ":"0 ";
+  const string sub_flag = (usedatadir)?"1":"0";
+  gui->execute("setVarStates \""+name+"\" "+save_flag+sub_flag);
 }
