@@ -103,7 +103,7 @@ addConnection $m5 0 $m7 0
 addConnection $m7 0 $m8 0
 addConnection $m7 0 $m19 0
 addConnection $m7 0 $m10 0
-addConnection $m7 0 $m20 0
+addConnection $m10 0 $m20 0
 addConnection $m20 0 $m18 1
 addConnection $m16 0 $m3 0
 addConnection $m17 0 $m7 1
