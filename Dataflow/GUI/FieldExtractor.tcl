@@ -36,8 +36,10 @@ itcl_class Uintah_Selectors_FieldExtractor {
 	global $this-tcl_status
 	global $this-sVar;
 	global $this-sMatNum;
+	global $this-level
 	set $this-sVar ""
 	set $this-sMatNum 0
+	set $this-level 0
 	set $this-tcl_status "Idle"
     } 
     
@@ -132,6 +134,28 @@ itcl_class Uintah_Selectors_FieldExtractor {
 	set varList $args;
     }
 
+
+    method buildLevels { levels } {
+	set w $gf
+	set buttontype radiobutton
+	set c "$this-c needexecute"
+	frame $w.lf -relief flat -borderwidth 2
+	pack $w.lf -side top
+	label $w.lf.l -text Levels
+	pack $w.lf.l -side top
+	frame $w.lf.bf -relief flat
+	pack $w.lf.bf -side top -expand yes -fill both
+        for {set j 0} { $j < $levels } {incr j} {
+            $buttontype $w.lf.bf.b$j -text $j \
+                -variable $this-level  -value $j -command $c
+            pack $w.lf.bf.b$j -side left
+        }
+	
+	if { [set $this-level] > $levels } {
+	    set $this-level [expr $levels -1]
+	}
+    }
+	
  
     method buildMaterials { args } {
         set parent $gf
