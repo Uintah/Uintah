@@ -29,6 +29,11 @@ public:
     GenericField<TetVolMesh, vector<T> >() {};
   TetVol(Field::data_location data_at) : 
     GenericField<TetVolMesh, vector<T> >(data_at) {};
+  TetVol(TetVolMeshHandle mesh) :
+    GenericField<TetVolMesh, vector<T> >(mesh) {};
+  TetVol(TetVolMeshHandle mesh, Field::data_location data_at) : 
+    GenericField<TetVolMesh, vector<T> >(mesh, data_at) {};
+
   virtual ~TetVol() {};
 
   void    io(Piostream &stream);

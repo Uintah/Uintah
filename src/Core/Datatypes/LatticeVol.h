@@ -72,6 +72,11 @@ public:
     GenericField<LatVolMesh, FData3d<Data> >() {}
   LatticeVol(Field::data_location data_at) :
     GenericField<LatVolMesh, FData3d<Data> >(data_at) {}
+  LatticeVol(LatVolMeshHandle mesh) :
+    GenericField<LatVolMesh, FData3d<Data> >(mesh) {};
+  LatticeVol(LatVolMeshHandle mesh, Field::data_location data_at) : 
+    GenericField<LatVolMesh, FData3d<Data> >(mesh, data_at) {};
+  
   virtual ~LatticeVol(){}
 
   virtual LatticeVol<Data> *clone() const 
