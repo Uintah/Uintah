@@ -35,8 +35,8 @@
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/Clipper.h>
+#include <Dataflow/Modules/Fields/Probe.h>
 #include <iostream>
-#include <sstream>
 #include <stack>
 
 namespace SCIRun {
@@ -50,6 +50,15 @@ private:
   CrowdMonitor widget_lock_;
   int  last_input_generation_;
   BBox last_bounds_;
+
+  GuiDouble gui_locx_;
+  GuiDouble gui_locy_;
+  GuiDouble gui_locz_;
+  GuiString gui_value_;
+  GuiString gui_node_;
+  GuiString gui_edge_;
+  GuiString gui_face_;
+  GuiString gui_cell_;
 
   bool bbox_similar_to(const BBox &a, const BBox &b);
 
@@ -71,7 +80,15 @@ extern "C" Module* make_Probe(const string& id)
 Probe::Probe(const string& id)
   : Module("Probe", id, Source, "Fields", "SCIRun"),
     widget_lock_("Probe widget lock"),
-    last_input_generation_(0)
+    last_input_generation_(0),
+    gui_locx_("locx", id, this),
+    gui_locy_("locy", id, this),
+    gui_locz_("locz", id, this),
+    gui_value_("value", id, this),
+    gui_node_("node", id, this),
+    gui_edge_("edge", id, this),
+    gui_face_("face", id, this),
+    gui_cell_("cell", id, this)
 {
   widget_ = scinew PointWidget(this, &widget_lock_, 1.0);
 }
@@ -182,11 +199,14 @@ Probe::execute()
     last_bounds_ = bbox;
   }
 
+  const Point location = widget_->GetPosition();
+  PointCloudMesh *mesh = scinew PointCloudMesh();
+  PointCloudMesh::Node::index_type pcindex = mesh->add_point(location);
+  FieldHandle ofield;
   std::ostringstream valstr;
   ScalarFieldInterface *sfi = ifieldhandle->query_scalar_interface();
   VectorFieldInterface *vfi = ifieldhandle->query_vector_interface();
   TensorFieldInterface *tfi = ifieldhandle->query_tensor_interface();
-  const Point location = widget_->GetPosition();
   if (sfi)
   {
     double result;
@@ -195,6 +215,10 @@ Probe::execute()
       sfi->find_closest(result, location);
     }
     valstr << result;
+
+    PointCloud<double> *field = scinew PointCloud<double>(mesh, Field::NODE);
+    field->set_value(result, pcindex);
+    ofield = field;
   }
   else if (vfi)
   {
@@ -204,6 +228,10 @@ Probe::execute()
       vfi->find_closest(result, location);
     }
     valstr << result;
+
+    PointCloud<Vector> *field = scinew PointCloud<Vector>(mesh, Field::NODE);
+    field->set_value(result, pcindex);
+    ofield = field;
   }
   else if (tfi)
   {
@@ -213,13 +241,40 @@ Probe::execute()
       tfi->find_closest(result, location);
     }
     valstr << result;
+
+    PointCloud<Tensor> *field = scinew PointCloud<Tensor>(mesh, Field::NODE);
+    field->set_value(result, pcindex);
+    ofield = field;
   }
-  cout << "PROBE VALUE AT " << location << " IS " << valstr.str() << '\n';
+  gui_locx_.set(location.x());
+  gui_locy_.set(location.y());
+  gui_locz_.set(location.z());
+  gui_value_.set(valstr.str());
 
+  const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
+  CompileInfo *ci = ProbeLocateAlgo::get_compile_info(mtd);
+  DynamicAlgoHandle algo_handle;
+  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+  {
+    error("Could not compile algorithm.");
+    return;
+  }
+  ProbeLocateAlgo *algo =
+    dynamic_cast<ProbeLocateAlgo *>(algo_handle.get_rep());
+  if (algo == 0)
+  {
+    error("Could not get algorithm.");
+    return;
+  }
+  string nodestr, edgestr, facestr, cellstr;
+  algo->execute(ifieldhandle->mesh(), location,
+		nodestr, edgestr, facestr, cellstr);
 
-  PointCloudMesh *mesh = scinew PointCloudMesh();
-  mesh->add_point(location);
-  PointCloud<double> *ofield = scinew PointCloud<double>(mesh, Field::NODE);
+  gui_node_.set(nodestr);
+  gui_edge_.set(edgestr);
+  gui_face_.set(facestr);
+  gui_cell_.set(cellstr);
+  //cout << "PROBE VALUE AT " << location << " IS " << valstr.str() << '\n';
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Probe Point");
   if (!ofp) {
@@ -237,6 +292,29 @@ Probe::widget_moved(int i)
   {
     want_to_execute();
   }
+}
+
+
+
+CompileInfo *
+ProbeLocateAlgo::get_compile_info(const TypeDescription *msrc)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("ProbeLocateAlgoT");
+  static const string base_class_name("ProbeLocateAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       msrc->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       msrc->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  msrc->fill_compile_info(rval);
+  return rval;
 }
 
 
