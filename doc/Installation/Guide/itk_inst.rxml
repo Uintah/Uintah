@@ -1,6 +1,3 @@
-<!--% require("../../Utilities/Publish/srdoc.rb") %-->
-<!--% doc = Doc.create(Doc::DocBook) %-->
-
 <!--
 For more information, please see: http://software.sci.utah.edu
 
@@ -29,6 +26,8 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
 
 <appendix id="sec.itk_inst">
   <title id="title.itk_inst">Insight Toolkit (<acronym>ITK</acronym>) Installation</title>
@@ -53,6 +52,7 @@ DEALINGS IN THE SOFTWARE.
     doc.treeUrl(%Q{doc/User/Guide/usersguide/srug8.html}) %)">&sr; Users
     Guide</ulink> for more information.</para>
 
+    <!--%= doc.ifP(Doc::Linux) {%Q{-->
     <note>
       <para>The &sr;/Insight <acronym>RPM</acronym> distribution of &sr;
       <emphasis>includes</emphasis> support for <acronym>ITK</acronym>.  The
@@ -60,14 +60,13 @@ DEALINGS IN THE SOFTWARE.
       /usr/local/lib/InsightTookit.  The instructions in sections <xref
       linkend="sec.obitk"/>, <xref linkend="sec.cmake"/>, and <xref
       linkend="sec.itk_configsr"/> apply only to a source code installation
-      of &sr;.  Insight is not supported on Irix systems.</para>
+      of &sr;.</para>
     </note>
 
     <para>&sr;'s <acronym>ITK</acronym> support depends on the presence of
-    Java JDK 1.2.2 or later.  On Linux systems, environment
+    Java JDK 1.2.2 or later.  Environment
     variable <envar>JAVA_HOME</envar> must contain the path to the java
-    <quote>JDK</quote> directory.  <envar>JAVA_HOME</envar> does not need
-    to be set on &osx;. The JDK directory is typically
+    <quote>JDK</quote> directory. The JDK directory is typically
     <filename>/usr/java</filename>, <filename>/usr/java2</filename>, or
     <filename>/usr/java/jdk<replaceable>x.x.x</replaceable></filename>.</para>
 
@@ -83,10 +82,9 @@ setenv JAVA_HOME /usr/java
       </literallayout>
     </para>
 
-    <para>On Linux systems, environment variable
-    <envar>PATH</envar> must contain the path to the
-    <command>java</command> command. <envar>PATH</envar> does not need to
-    be set on &osx;.  <envar>PATH</envar> is set as follows:</para>
+    <para>Environment variable <envar>PATH</envar> must contain the
+    path to the <command>java</command> command.  <envar>PATH</envar>
+    is set as follows:</para>
     <para>
       For an sh-type shell:
       <literallayout class="monospaced">
@@ -97,6 +95,7 @@ PATH=$JAVA_HOME/bin:$PATH
 setenv PATH $JAVA_HOME/bin:$PATH
       </literallayout>
     </para>
+    <!--}} %-->
 
   </section>
 
@@ -122,15 +121,13 @@ setenv PATH $JAVA_HOME/bin:$PATH
     <title id="sec.title.cmake">CMake Special Instructions</title>
 
     <para>CMake is a program that generates Makefiles that build ITK.
-    CMake's configuration variables determine how ITK is built.  Command
-    <command>ccmake</command> is used to configure CMake's variables.  In
-    particular, the value of CMake variable
-    <varname>BUILD_SHARED_LIBS</varname> must be explicitly set.</para>
-
-    <para>On SGI and Linux, <varname>BUILD_SHARED_LIBS</varname> must be
-    set <userinput>ON</userinput>.  On OSX
-    <varname>BUILD_SHARED_LIBS</varname> must be set
-    <userinput>OFF</userinput></para>
+    CMake's configuration variables determine how ITK is built.
+    Command <command>ccmake</command> is used to configure CMake's
+    variables.  In particular, the value of CMake variable
+    <varname>BUILD_SHARED_LIBS</varname> must be explicitly set to
+    <userinput>
+    <!--%= doc.ifP(Doc::Linux) {"ON"};
+    doc.ifP(Doc::OSX) {"OFF"} %--></userinput>.</para>
 
     <para>If <acronym>PNG</acronym> support in third party software has
     been enabled (<xref linkend="sec.third_party_inst"/>) then CMake
@@ -144,8 +141,7 @@ setenv PATH $JAVA_HOME/bin:$PATH
   </section>
 
   <section id="sec.itk_configsr">
-    <title id="sec.title.itk_configsr">&sr; Insight
-    Configure Options</title>
+    <title id="sec.title.itk_configsr">&sr; Insight Configure Options</title>
 
     <para>The configure options below add support for Insight
     in &sr;.  Include these options in the &sr;
@@ -170,11 +166,17 @@ setenv PATH $JAVA_HOME/bin:$PATH
     <para>Here is an example &sr; <command>configure</command> command:
     <literallayout class="monospaced">
 ../src/configure \
---with-thirdparty=/usr/local/Thirdparty_lib_osx.1.22.0 \
---enable-package="BioPSE TEEM Insight" \
+<!--%= doc.ifP(Doc::Linux) {%Q{-->
+--with-thirdparty=/usr/local/Thirdparty/1.8.0/Linux/gcc-3.2-32bit \
+<!--}} %-->
+<!--%= doc.ifP(Doc::OSX) {%Q{-->
+--with-thirdparty=/usr/local/Thirdparty_osx \
+<!--}} %-->
+--enable-package="BioPSE Teem Insight" \
 --with-insight=/usr/local/lib/InsightToolkit
+&#x22EE;
     </literallayout>
-    Note that package TEEM must be enabled.
+    Note that package Teem must be enabled.
     </para>
 
   </section>

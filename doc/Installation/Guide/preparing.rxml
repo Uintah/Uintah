@@ -1,4 +1,4 @@
-<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
 <!--

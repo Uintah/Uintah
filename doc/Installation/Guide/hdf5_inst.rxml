@@ -1,4 +1,4 @@
-<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
 <!--
@@ -29,6 +29,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
 <appendix id="sec.hdf5_inst">
   <title>HDF5 Installation</title>
 
@@ -41,10 +44,12 @@ DEALINGS IN THE SOFTWARE.
   supports HDF5 versions 1.6.x.</para>
   <note>
     <itemizedlist>
+      <!--% doc.ifP(Doc::Linux) {%Q{-->
       <listitem>
 	<para>The &sr; RPMs include support for HDF5 and the HDF5
 	libraries are distributed with the &sr; RPMs.</para>
       </listitem>
+      <!--}} %-->
       <listitem>
 	<para>HDF5 must be installed before building &sr;</para>
       </listitem>

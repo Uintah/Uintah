@@ -26,16 +26,22 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
 <section id="sec.opt_inst">
   <title id="title.opt_inst">Optional Thirdparty Software</title>
 
   <para>
-    &sr; provides support for
+    &sr; for &pf; provides support for
     <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>, <ulink
     url="http://www-unix.mcs.anl.gov/petsc/petsc-2/"><acronym>PETSc</acronym></ulink>,
-    <ulink url="http://www.itk.org">Insight (<acronym>ITK</acronym>)</ulink>, <ulink
-    url="http://www.mdsplus.org"><acronym>MDSplus</acronym></ulink>, and
+    <ulink url="http://www.itk.org">Insight (<acronym>ITK</acronym>)</ulink>,
+    <!--%= doc.ifNotP(Doc::Irix) {%Q{-->
     <ulink
+    url="http://www.mdsplus.org"><acronym>MDSplus</acronym></ulink>,
+    <!--}} %-->
+    and <ulink
     url="http://www.hdf.ncsa.uiuc.edu"><acronym>HDF5</acronym></ulink>
     software.  Optional third party software provides &sr; with additional
     capabilities:
@@ -45,20 +51,36 @@ DEALINGS IN THE SOFTWARE.
 	<para><acronym>LAPACK</acronym> routines are used by &sr; modules to
 	perform SVD, eigenvalue, and eigenvector computations.
 	<acronym>BLAS</acronym> is used by &sr; modules for matrix
-	multiplication.  &sr; modules will use less efficient algorithms if
+	multiplication.
+	<!--%= doc.ifNotP(Doc::OSX) {%Q{-->
+	&sr; modules will use less efficient algorithms if
 	<acronym>BLAS</acronym> and <acronym>LAPACK</acronym> are not
-	installed.</para>
-
+	installed.
+	<!--}} %-->
+	<!--%= doc.ifP(Doc::OSX) {%Q{-->
+	&pf; contains
+	<acronym>BLAS</acronym>/<acronym>LAPACK</acronym> libraries.
+	There is no need to install
+	<acronym>BLAS</acronym>/<acronym>LAPACK</acronym> libraries on
+	a &pf; system.
+	<!--}} %-->
+	</para>
+	<!--%= doc.ifNotP(Doc::OSX) {%Q{-->
 	<para><acronym>BLAS</acronym>/<acronym>LAPACK</acronym> must be
 	installed if <acronym>PETSc</acronym> support is desired.</para>
+	<!--}} %-->
       </listitem>
 
       <listitem>
 	<para><acronym>PETSC</acronym> library provides equation
 	solvers to &sr;'s SolveMatrix module.
 	<acronym>PETSC</acronym> support is available by building &sr;
-	from source code.  The &sr; RPMs do not include support for
-	<acronym>PETSC</acronym>.</para>
+	from source code.
+	<!--%= doc.ifP(Doc::Linux) {%Q{-->
+	The &sr; RPMs do not include support for
+	<acronym>PETSC</acronym>.
+	<!--}} %-->
+	</para>
       </listitem>
 
       <listitem>
@@ -73,28 +95,36 @@ DEALINGS IN THE SOFTWARE.
 	<acronym>HDF5</acronym> data.</para>
       </listitem>
 
+      <!--%= doc.ifNotP(Doc::Irix) {%Q{-->
       <listitem>
 	<para><acronym>MDSplus</acronym> libraries gives modules of
 	&sr;'s DataIO package the ability to
 	read<acronym>MDSplus</acronym> data from an
 	<acronym>MDSplus</acronym> server.</para>
       </listitem>
+      <!--}} %-->
     </itemizedlist>
   </para>
 
+  <!--%= doc.ifNotP(Doc::OSX) {%Q{-->
   <para><xref linkend="sec.blas_lapack_inst"/> provides installation
   instructions for <acronym>BLAS</acronym> and
   <acronym>LAPACK</acronym>.</para>
+  <!--}} %-->
 
   <para><xref linkend="sec.petsc"/> provides installation
   instructions for <acronym>PETSC</acronym>.</para>
 
+  <!--%= doc.ifNotP(Doc::Irix) {%Q{-->
   <para><xref linkend="sec.itk_inst"/> provides installation
   instructions for Insight.</para>
+  <!--}} %-->
 
   <para><xref linkend="sec.hdf5_inst"/> provides installation
   instructions for the <acronym>HDF5</acronym> libraries.</para>
 
+  <!--%= doc.ifNotP(Doc::Irix) {%Q{-->
   <para><xref linkend="sec.mdsplus_inst"/> provides installation
   instructions for the <acronym>MDSplus</acronym> libraries.</para>
+  <!--}} %-->
 </section>

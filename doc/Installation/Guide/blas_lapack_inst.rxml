@@ -26,9 +26,12 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
 <appendix id="sec.blas_lapack_inst">
   <title id="title.blas_lapack_inst">
-    <acronym>BLAS</acronym>( or <acronym>ATLAS</acronym>), and
+    <acronym>BLAS</acronym>(or <acronym>ATLAS</acronym>), and
     <acronym>LAPACK</acronym> Installation
   </title>
 
@@ -42,20 +45,20 @@ DEALINGS IN THE SOFTWARE.
     <acronym>BLAS</acronym>/<acronym>ATLAS</acronym> is recommended.
     Skip this section if
     <acronym>BLAS</acronym>/<acronym>ATLAS</acronym> and
-    <acronym>LAPACK</acronym> are installed.  There is no need to
-    install <acronym>BLAS</acronym>/<acronym>ATLAS</acronym> or
-    <acronym>LAPACK</acronym> on a &osx; system.  &osx; users can skip
-    to <xref linkend="sec.petsc"/>.
+    <acronym>LAPACK</acronym> are installed.
   </para>
 
   <para>
-    <acronym>BLAS</acronym> and <acronym>LAPACK</acronym> can be
-    installed from <link
-    linkend="sec.blas_lapack_rpm"><acronym>RPM</acronym>'s
-    (Linux)</link> or a combined
+    <acronym>BLAS</acronym> and <acronym>LAPACK</acronym> is
+    installed from
+    <!--% doc.ifP(Doc::Linux) {%Q{-->
+    <link linkend="sec.blas_lapack_rpm"><acronym>RPM</acronym>'s</link>.
+    <!--}} %-->
+    <!--% doc.ifNotP(Doc::Linux) {%Q{-->
+    a combined
     <acronym>BLAS</acronym> and <acronym>LAPACK</acronym> <link
-    linkend="sec.blas_lapack_source">source distribution (SGI)</link>.
-    Linux users should install the <acronym>RPM</acronym>s.
+    linkend="sec.blas_lapack_source">source distribution</link>.
+    <!--}} %-->
   </para>
 
   <para>
@@ -63,14 +66,14 @@ DEALINGS IN THE SOFTWARE.
     url="http://math-atlas.sourceforge.net/"><acronym>ATLAS</acronym></ulink>
     is a portable <acronym>BLAS</acronym> implementation.
     <acronym>ATLAS</acronym> can be installed in place of
-    <acronym>BLAS</acronym>.  <acronym>ATLAS</acronym> should be
+    <acronym>BLAS</acronym>.  <acronym>ATLAS</acronym> is
     installed from its <link linkend="sec.atlas_source">source
     code distribution</link>.
   </para>
 
+  <!--% doc.ifP(Doc::Linux) {%Q{-->
   <section id="sec.blas_lapack_rpm">
-    <title id="title.blas_lapack_rpm"><acronym>RPM</acronym>s
-    (Linux)</title>
+    <title id="title.blas_lapack_rpm"><acronym>RPM</acronym>s</title>
     <para>
       Root privileges are needed to install the
       <acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
@@ -101,9 +104,11 @@ rpm -ivh lapack-3_0-2_i386.rpm
       Type <command>exit</command> to leave the root account.
     </para>
   </section>
+  <!--}} %-->
 
+  <!--% doc.ifNotP(Doc::Linux) {%Q{-->
   <section id="sec.blas_lapack_source">
-    <title id="title.blas_lapack_source">Source Code (SGI)</title>
+    <title id="title.blas_lapack_source">Source Code</title>
 
     <para>
       Follow these steps to install <acronym>BLAS</acronym> and
@@ -142,9 +147,10 @@ make
       </orderedlist>
     </para>
   </section>
+  <!--}} %-->
 
   <section id="sec.atlas_source">
-    <title id="title.atlas_source"><acronym>ATLAS</acronym> (Linux, SGI)</title>
+    <title id="title.atlas_source"><acronym>ATLAS</acronym></title>
     <para>
       Follow these steps to install <acronym>ATLAS</acronym>:
       <orderedlist>
