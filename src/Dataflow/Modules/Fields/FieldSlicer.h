@@ -101,8 +101,11 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
 
   unsigned int new_min_i, new_min_j, new_i, new_j;
 
-  Array1<unsigned int> dim = imesh->get_dim();
-  Array1<unsigned int> min = imesh->get_min();
+  vector<unsigned int> dim;
+
+  imesh->get_dim( dim );
+
+  vector<unsigned int> min = imesh->get_min();
 
   if( dim.size() == 3 ) {
     old_min_i = min[0];           old_i = dim[0];
@@ -219,7 +222,8 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle ifield_h,
   unsigned int old_i, old_j, old_k;
   unsigned int new_i, new_j;
 
-  Array1<unsigned int> dim = imesh->get_dim();
+  vector<unsigned int> dim;
+  imesh->get_dim( dim );
 
   if( dim.size() == 3 ) {
     old_i = dim[0];
