@@ -7,6 +7,7 @@
 #endif
 
 #include <Classlib/Assert.h>
+#include <Tester/RigorousTest.h>
 
 class Vector;
 class clString;
@@ -75,6 +76,10 @@ public:
 
     int Overlap( double a, double b, double e );
     int InInterval( Point a, double epsilon );
+    
+    static void test_rigorous(RigorousTest* __test);
+
+
 };
 
 ostream& operator<<(ostream& os, const Point& p);

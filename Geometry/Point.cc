@@ -138,5 +138,10 @@ Point::InInterval( Point a, double epsilon )
 }
 
 
+void Point::test_rigorous(RigorousTest* __test)
+{
+    TEST(1);
+}
+
 
 #endif

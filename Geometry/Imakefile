@@ -2,15 +2,15 @@
 #include <config/sci.cf>
 
 OBJS = BBox.o  BSphere.o  Grid.o  Plane.o  Point.o  Ray.o  \
-	Transform.o  Vector.o
+	Transform.o  Vector.o tests.o
 SRCS = BBox.cc BSphere.cc Grid.cc Plane.cc Point.cc Ray.cc \
-	Transform.cc Vector.cc
+	Transform.cc Vector.cc	tests.cc
 
 LIBNAME = Geometry
 
 SCI_CLIBS = SCI_CCLibs
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lClasslib -lMalloc -lm
+SO_LDFLAGS = -L$(TOP)/lib -lClasslib -lMalloc -lm -lTester
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
