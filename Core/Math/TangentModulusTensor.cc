@@ -74,5 +74,28 @@ TangentModulusTensor::convertToVoigtForm(FastMatrix& C_6x6)
 			     index[jj][0], index[jj][1]);
     }
   }
-  
+}
+
+// Convert to 3x3x3x3 matrix 
+void
+TangentModulusTensor::convertToTensorForm(const FastMatrix& C_6x6) 
+{
+  ASSERT(!(C_6x6.numRows() != 6 || C_6x6.numCols() != 6));
+  int index[3][3];
+  for (int ii = 0; ii < 3; ++ii) index[ii][ii] = ii;
+  index[0][1] = 5; index[1][0] = 5;
+  index[0][2] = 4; index[2][0] = 4;
+  index[1][2] = 3; index[2][1] = 3;
+
+  for (int ii = 0; ii < 3; ++ii) {
+    for (int jj = 0; jj < 3; ++jj) {
+      int row = index[ii][jj];
+      for (int kk = 0; kk < 3; ++kk) {
+	for (int ll = 0; ll < 3; ++ll) {
+          int col = index[kk][ll];
+          (*this)(ii,jj,kk,ll) = C_6x6(row,col);
+	}
+      }
+    }
+  }
 }
