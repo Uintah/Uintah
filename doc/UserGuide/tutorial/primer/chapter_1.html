@@ -198,11 +198,32 @@
                 button.  What you should see is a yellow datapipe
                 connection between FieldReader and ShowField.
 
-		<p>(Paragraph from Marty: "...press the "Execute"
-                button on the ShowField UI to force the module to
-                compute ... the module might have to go off and
-                dynamically compile and load some code... here's
-                a brief sentence about why/how we have it do that...")
+		<p>Press the "Execute" button on the ShowField UI to force the
+                   module to execute its algorithm. ShowField is expected to
+                   work on any of our Field types. We have numerous field
+                   types, each that can contain any data type. For example
+                   ShowField should visualize TetVol's with double data, or
+                   TetVol's with Vector or Tensor data. This is true of
+                   TriSurf's and all of our Field types. You may see how
+                   this creates a combinatorial explosion of accepted types.
+                   As you might quess we have used the C++ Template mechanism
+                   to achieve this versatility, but it comes at the price of
+                   having to compile all of the types we might ever use into
+                   our code base.
+
+                <p>Our approach is to only compile algorithms that use an
+                   exact field type. This information is not known until a
+                   module gets its input data, so we wait and compile that
+                   algorithm then. We use<a href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic Compilation</a>
+                   to accomplish this.  So when ShowField executes for the
+                   first time, you will notice a delay while it compiles the
+                   algorithm specific to the field type and loads it into
+                   SCIRun.  We cache away this compiled algorithm in a shared
+                   library so that it can be loaded the next time you run
+                   without delay.
+
+                <p>ShowField will then execute the newly loaded algorithm
+                   passing its results along downstream.
 
                 <p>&lt;subhead:Viewer module&gt;<br>
 
