@@ -103,7 +103,6 @@ public:
 
   void run() 
     {
-      IntVector levelLo, LevelHi, lo, hi, sz;
       Var v; 
       archive_.query( v, name_, mat_, patch_, time_);
       
@@ -111,22 +110,27 @@ public:
       
 
       if( fld_->data_at() == Field::CELL){
-	lo = patch_->getCellLowIndex() - offset_;
-	hi = patch_->getCellHighIndex() - offset_;
-	sz = hi - lo;
-	LatVolMesh mesh(m, lo.x(), lo.y(), lo.z(), 
-			sz.x()+1, sz.y()+1, sz.z()+1);
-	LatVolMesh::CellIter it; mesh.begin(it);
-	LatVolMesh::CellIter it_end; mesh.end(it_end);
+
+	IntVector lo(patch_->getCellLowIndex() - offset_);
+	IntVector hi(patch_->getCellHighIndex() - offset_);
+	// Get an iterator over a subgrid of the mesh
+	LatVolMesh::Cell::range_iter it(m, lo.x(), lo.y(), lo.z(),
+					hi.x(), hi.y(), hi.z());
+	// The end iterator is just a cell iterator
+	LatVolMesh::Cell::iterator it_end;
+	// See Core/Datatypes/LatVolMesh.cc
+	if( lo.z() != hi.z() )
+	  it_end = LatVolMesh::Cell::iterator(m, lo.x(), lo.y(), hi.z());
+	else
+	  it_end = LatVolMesh::Cell::iterator(m, lo.x(), lo.y(), hi.z()+1);
+
 	const Array3<Data> &vals = v;
 	Array3<Data>::const_iterator vit = vals.begin();
 	if(swapbytes_){
-	  Data val;
 	  for(;it != it_end; ++it){
 	    IntVector idx = vit.getIndex() - offset_;
-	    val  = *vit;
-	    swapbytes( val );
-	    fld_->fdata()[*it] = val;
+	    fld_->fdata()[*it] = *vit;
+	    swapbytes( fld_->fdata()[*it]);
 	    ++vit;
 	  }
 	} else {
@@ -137,16 +141,23 @@ public:
 	  }
 	}
       } else {
-	lo = patch_->getNodeLowIndex() - offset_;
-	hi = patch_->getNodeHighIndex() - offset_;
-	sz = hi - lo;
-	LatVolMesh mesh(m, lo.x(), lo.y(), lo.z(),
-			sz.x(), sz.y(), sz.z());
-	LatVolMesh::Node::iterator it; mesh.begin(it);
-	LatVolMesh::Node::iterator it_end; mesh.begin(it_end);
+
+	IntVector lo(patch_->getNodeLowIndex() - offset_);
+	IntVector hi(patch_->getNodeHighIndex() - offset_);
+	// Get an iterator over a subgrid of the mesh
+	LatVolMesh::Node::range_iter it(m, lo.x(), lo.y(), lo.z(),
+					hi.x(), hi.y(), hi.z());
+	// The end iterator is just a node iterator
+	LatVolMesh::Node::iterator it_end;
+	// See Core/Datatypes/LatVolMesh.cc
+	if( lo.z() != hi.z() )
+	  it_end = LatVolMesh::Node::iterator(m, lo.x(), lo.y(), hi.z());
+	else
+	  it_end = LatVolMesh::Node::iterator(m, lo.x(), lo.y(), hi.z()+1);
+
 	const Array3<Data> &vals = v;
 	Array3<Data>::const_iterator vit = vals.begin();
-		if(swapbytes_){
+	if(swapbytes_){
 	  for(;it != it_end; ++it){
 	    IntVector idx = vit.getIndex() - offset_;
 	    fld_->fdata()[*it] = *vit;

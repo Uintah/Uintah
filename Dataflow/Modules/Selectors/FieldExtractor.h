@@ -109,7 +109,7 @@ void FieldExtractor::build_field(DataArchive& archive,
 				 LevelField<T>*& sfd,
 				 bool swapbytes)
 {
-  int max_workers = Max(Thread::numProcessors()/2, 2);
+  int max_workers = Min(Thread::numProcessors(), 4);
   Semaphore* thread_sema = scinew Semaphore( "extractor semahpore",
 					     max_workers); 
   WallClockTimer my_timer;
@@ -150,7 +150,7 @@ void FieldExtractor::build_field2(DataArchive& archive,
 				  LatVolField<T>*& sfd,
 				  bool swapbytes)
 {
-  int max_workers = Max(Thread::numProcessors()/2, 4);
+  int max_workers = Min(Thread::numProcessors(), 4);
   Semaphore* thread_sema = scinew Semaphore( "extractor semahpore",
 					     max_workers);
   WallClockTimer my_timer;
@@ -164,16 +164,16 @@ void FieldExtractor::build_field2(DataArchive& archive,
     update_progress(count++/size, my_timer);
     thread_sema->down();
     
-    PatchDataToLatVolFieldThread<Var, T>* pdlvt = 
-      scinew PatchDataToLatVolFieldThread<Var, T>
-      (archive, sfd, lo, varname, mat, *r, time, thread_sema, swapbytes);
-    pdlvt->run();
-/*      Thread *thrd =  */
-/*        scinew Thread(scinew PatchDataToLatVolFieldThread<Var, T> */
-/*  		    (archive, sfd, lo, varname, mat, *r, time, thread_sema, */
-/*  		     swapbytes), */
-/*  		    "patch_data_to_lattice_vol_worker"); */
-/*      thrd->detach(); */
+/*      PatchDataToLatVolFieldThread<Var, T>* pdlvt =  */
+/*        scinew PatchDataToLatVolFieldThread<Var, T> */
+/*        (archive, sfd, lo, varname, mat, *r, time, thread_sema, swapbytes); */
+/*      pdlvt->run(); */
+    Thread *thrd = 
+      scinew Thread(scinew PatchDataToLatVolFieldThread<Var, T>
+		    (archive, sfd, lo, varname, mat, *r, time, thread_sema,
+		     swapbytes),
+		    "patch_data_to_lattice_vol_worker");
+    thrd->detach();
   }
   thread_sema->down(max_workers);
   if( thread_sema ) delete thread_sema;
