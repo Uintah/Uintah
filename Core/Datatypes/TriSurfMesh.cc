@@ -72,8 +72,8 @@ void TriSurfMesh::get_random_point(Point &p, const Face::index_type &ei) const
   get_point(p0,ra[0]);
   get_point(p1,ra[1]);
   get_point(p2,ra[2]);
-  Vector v0 = ra[1]-ra[0];
-  Vector v1 = ra[2]-ra[0];
+  Vector v0(p1-p0);
+  Vector v1(p2-p0);
   double t = rng()*v0.length2();
   double u = rng()*v1.length2();
   if ( (t+u)>1 ) {
