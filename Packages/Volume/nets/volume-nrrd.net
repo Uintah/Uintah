@@ -1,12 +1,15 @@
 # SCIRun Network v1.22.0
 
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
 
 set name {Main}
 set bbox {23 27 398 415}
-set creationDate {Sun Jun 27 2004}
-set creationTime {14:51:14}
-set runDate {Sun Jun 27 2004}
-set runTime {14:51:40}
+set creationDate {Mon Jun 28 2004}
+set creationTime {19:42:07}
+set runDate {}
+set runTime {}
 set notes {}
 
 # Create a Volume->Visualization->NrrdTextureBuilder Module
@@ -100,13 +103,12 @@ set $m4-ViewWindow_0-global-cull {0}
 set $m4-ViewWindow_0-global-dl {0}
 set $m4-ViewWindow_0-global-type {Gouraud}
 set $m4-ViewWindow_0-ortho-view {0}
-set "$m4-ViewWindow_0-VolumeRenderer TransParent (1)" {1}
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
-set $m5-filename {/home/ikits/SCIRunData/1.20.2/volume/tooth-nv-uc.nrrd}
+set $m5-filename {$DATADIR/volume/tooth-nv-uc.nrrd}
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
-set $m6-filename {/home/ikits/SCIRunData/1.20.2/volume/tooth-gm-uc.nrrd}
+set $m6-filename {$DATADIR/volume/tooth-gm-uc.nrrd}
 
 
 ::netedit scheduleok

@@ -1,12 +1,15 @@
 # SCIRun Network v1.22.0
 
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
 
 set name {Main}
 set bbox {19 17 486 456}
-set creationDate {Sun Jun 27 2004}
-set creationTime {14:52:14}
-set runDate {Sun Jun 27 2004}
-set runTime {14:52:39}
+set creationDate {Mon Jun 28 2004}
+set creationTime {19:41:33}
+set runDate {}
+set runTime {}
 set notes {}
 
 # Create a Volume->Visualization->VolumeVisualizer Module
@@ -53,12 +56,12 @@ set $m2-gmin {0.0}
 set $m2-gmax {371.835313008}
 
 # Set GUI variables for the SCIRun->DataIO->FieldReader Module
-set $m3-filename "/home/ikits/SCIRunData/1.20.2/volume/tooth-value.fld"
+set $m3-filename "$DATADIR/volume/tooth-value.fld"
 set $m3-types {{{{SCIRun Field File} {.fld} } {{SCIRun Field Any} {.*} } {{TextCurveField} {{.pts} {.edge}} } {{TextHexVolField} {{.pts} {.hex}} } {{TextPointCloudField} {.pts} } {{TextPointCloudString} {.pcs.txt} } {{TextQuadSurfField} {{.pts} {.quad}} } {{TextStructCurveField} {.pts} } {{TextStructHexVolField} {.pts} } {{TextStructQuadSurfField} {.pts} } {{TextTetVolField} {{.pts} {.tet}} } {{TextTriSurfField} {{.pts} {.fac} {.tri}} } {{VTKtoTriSurfField} {.vtk} } {{VTKtoTriSurfField-swap} {.vtk} } }}
 set $m3-filetype {SCIRun Field File (*.fld)}
 
 # Set GUI variables for the SCIRun->DataIO->FieldReader Module
-set $m4-filename "/home/ikits/SCIRunData/1.20.2/volume/tooth-gradient.fld"
+set $m4-filename "$DATADIR/volume/tooth-gradient.fld"
 set $m4-types {{{{SCIRun Field File} {.fld} } {{SCIRun Field Any} {.*} } {{TextCurveField} {{.pts} {.edge}} } {{TextHexVolField} {{.pts} {.hex}} } {{TextPointCloudField} {.pts} } {{TextPointCloudString} {.pcs.txt} } {{TextQuadSurfField} {{.pts} {.quad}} } {{TextStructCurveField} {.pts} } {{TextStructHexVolField} {.pts} } {{TextStructQuadSurfField} {.pts} } {{TextTetVolField} {{.pts} {.tet}} } {{TextTriSurfField} {{.pts} {.fac} {.tri}} } {{VTKtoTriSurfField} {.vtk} } {{VTKtoTriSurfField-swap} {.vtk} } }}
 set $m4-filetype {SCIRun Field File (*.fld)}
 
@@ -110,7 +113,6 @@ set $m5-ViewWindow_0-global-cull {0}
 set $m5-ViewWindow_0-global-dl {0}
 set $m5-ViewWindow_0-global-type {Gouraud}
 set $m5-ViewWindow_0-ortho-view {0}
-set "$m5-ViewWindow_0-VolumeRenderer TransParent (1)" {1}
 
 # Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
 set $m6-positionList {{0 40} {122 40} {140 20} {166 20} {176 40} {302 40}}
