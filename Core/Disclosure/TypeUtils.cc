@@ -61,6 +61,16 @@ const TypeDescription* fun_getTypeDescription(long*)
    return td;
 }
 
+const TypeDescription* fun_getTypeDescription(long64*)
+{
+   static TypeDescription* td;
+   if(!td){
+      td = scinew TypeDescription(TypeDescription::long64_type,
+				  "long64", true, MPI_LONG_LONG_INT);
+   }
+   return td;
+}
+
 const TypeDescription* fun_getTypeDescription(bool*)
 {
    static TypeDescription* td;
