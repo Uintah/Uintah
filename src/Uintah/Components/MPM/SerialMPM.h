@@ -175,6 +175,8 @@ WARNING
 	 const VarLabel* gMomExedVelocityStarLabel;
 	 const VarLabel* gExternalForceLabel;
 	 const VarLabel* gInternalForceLabel;
+	 const VarLabel* gSelfContactLabel; //for fracture
+	 
 	 const VarLabel* cSelfContactLabel; //for fracture, CCVariable
 	 const VarLabel* cSurfaceNormalLabel; //for fracture, CCVariable
 	 
@@ -185,6 +187,9 @@ WARNING
    
 //
 // $Log$
+// Revision 1.29  2000/05/23 02:26:53  tan
+// Added gSelfContactLabel NCVariable for farcture usage.
+//
 // Revision 1.28  2000/05/19 23:18:01  guilkey
 // Added VarLabel pSurfLabel
 //
