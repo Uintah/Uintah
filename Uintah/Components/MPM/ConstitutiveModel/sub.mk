@@ -11,8 +11,14 @@ SRCS     += $(SRCDIR)/CompMooneyRivlin.cc $(SRCDIR)/CompNeoHook.cc \
 	$(SRCDIR)/HyperElasticDamage.cc $(SRCDIR)/ViscoElasticDamage.cc \
 	$(SRCDIR)/MPMMaterial.cc 
 
+PSELIBS := Uintah/Grid
+
 #
 # $Log$
+# Revision 1.4  2000/03/30 18:31:22  guilkey
+# Moved Material base class to Grid directory.  Modified MPMMaterial
+# and sub.mk to coincide with these changes.
+#
 # Revision 1.3  2000/03/24 00:44:33  guilkey
 # Added MPMMaterial class, as well as a skeleton Material class, from
 # which MPMMaterial is inherited.  The Material class will be filled in

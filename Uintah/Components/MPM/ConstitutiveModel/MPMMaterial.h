@@ -2,7 +2,7 @@
 #define __MPM_MATERIAL_H__
 
 #include <Uintah/Interface/DataWarehouseP.h>
-#include "Material.h"
+#include <Uintah/Grid/Material.h>
 class ConstitutiveModel;
 
 /**************************************
@@ -40,27 +40,12 @@ public:
 
   ~MPMMaterial();
 
-
   //////////
   // Return correct constitutive model pointer for this material
   ConstitutiveModel * getConstitutiveModel();
 
-  //////////
-  // Return index associated with this material's
-  // location in the data warehouse
-  int getDWIndex();
-
-  //////////
-  // Return index associated with this material's
-  // velocity field
-  int getVFIndex();
-
 private:
 
-  // Index associated with this material's spot in the DW
-  int d_dwindex;
-  // Index associated with this material's velocity field
-  int d_vfindex;
   // Specific constitutive model associated with this material
   ConstitutiveModel *d_cm;
 
@@ -74,6 +59,10 @@ private:
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.2  2000/03/30 18:31:22  guilkey
+// Moved Material base class to Grid directory.  Modified MPMMaterial
+// and sub.mk to coincide with these changes.
+//
 // Revision 1.1  2000/03/24 00:45:43  guilkey
 // Added MPMMaterial class, as well as a skeleton Material class, from
 // which MPMMaterial is inherited.  The Material class will be filled in

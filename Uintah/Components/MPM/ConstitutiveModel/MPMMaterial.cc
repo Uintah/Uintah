@@ -1,9 +1,3 @@
-//QUESTION FOR STEVE OR DAVE:
-//Where is the Material information stored?  Does it go into the
-//data warehouse?  Also, MPMMaterial stores a pointer to a CM,
-//does that CM need to be stored in the DW or does it just hang
-//out in the ether?
-
 //  MPMMaterial.cc
 //
 
@@ -23,18 +17,6 @@ MPMMaterial::MPMMaterial(int dwi, int vfi, ConstitutiveModel *cm)
 MPMMaterial::~MPMMaterial()
 {
   // Destructor
-}
-
-int MPMMaterial::getDWIndex()
-{
-  // Return this material's index into the data warehouse
-  return d_dwindex;
-}
-
-int MPMMaterial::getVFIndex()
-{
-  // Return this material's index for velocity field
-  return d_vfindex;
 }
 
 ConstitutiveModel * MPMMaterial::getConstitutiveModel()
