@@ -412,6 +412,7 @@ VolumeRenderer::draw()
       texbuffer_->bind(GL_FRONT);
     } else {
       glEnable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, cmap_tex_);
     }
     glActiveTexture(GL_TEXTURE1_ARB);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -732,6 +733,7 @@ VolumeRenderer::draw()
       texbuffer_->release(GL_FRONT);
     } else {
       glDisable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, 0);
     }
   } else {
     glDisable(GL_TEXTURE_1D);
@@ -881,6 +883,7 @@ VolumeRenderer::BuildTransferFunction()
 void
 VolumeRenderer::BuildTransferFunction2()
 {
+  use_pbuffer_ = false;
   if(use_pbuffer_ && !pbuffer_) {
     pbuffer_ = new Pbuffer(256, 64, GL_FLOAT, 32, true, GL_FALSE);
     texbuffer_ = new Pbuffer(256, 64, GL_INT, 8, true, GL_FALSE);
@@ -992,63 +995,76 @@ VolumeRenderer::BuildTransferFunction2()
     
     texbuffer_->swapBuffers();
     texbuffer_->deactivate();
-  }
-  
-#if 0
-  bool size_dirty = false;
-  cmap2_->lock_array();
-  Array3<float>& c = cmap2_->array();
-  if(c.dim1() != cmap2_array_.dim1()
-     || c.dim2() != cmap2_array_.dim2()) {
-    cmap2_array_.resize(c.dim1(), c.dim2(), 4);
-    size_dirty = true;
-  }
-
-  double bp = 0;
-  if( mode_ != MIP) {
-    bp = tan( 1.570796327 * (0.5 - slice_alpha_*0.49999));
   } else {
-    bp = tan( 1.570796327 * 0.5 );
-  }
-  int defaultSamples = 512;
-  double sliceRatio =  defaultSamples/(double(slices_));
-  for(int i=0; i<c.dim1(); i++) {
-    for(int j=0; j<c.dim2(); j++) {
-      double alpha = c(i,j,3);
-      if( mode_ != MIP ) {
-        double alpha1 = pow(alpha, bp);
-        double alpha2 = 1.0-pow(1.0-alpha1, sliceRatio);
-        cmap2_array_(i,j,0) = (unsigned char)(c(i,j,0)*alpha2*255);
-        cmap2_array_(i,j,1) = (unsigned char)(c(i,j,1)*alpha2*255);
-        cmap2_array_(i,j,2) = (unsigned char)(c(i,j,2)*alpha2*255);
-        cmap2_array_(i,j,3) = (unsigned char)(alpha2*255);
-      } else {
-        cmap2_array_(i,j,0) = (unsigned char)(c(i,j,0)*alpha*255);
-        cmap2_array_(i,j,1) = (unsigned char)(c(i,j,1)*alpha*255);
-        cmap2_array_(i,j,2) = (unsigned char)(c(i,j,2)*alpha*255);
-        cmap2_array_(i,j,3) = (unsigned char)(alpha*255);
+    // software rasterization
+    bool size_dirty = 256 != array_.dim2() || 64 != array_.dim1();
+    if(size_dirty) {
+      array_.resize(64, 256, 4);
+      cmap_array_.resize(64, 256, 4);
+    }
+    // clear cmap
+    for(int i=0; i<array_.dim1(); i++) {
+      for(int j=0; j<array_.dim2(); j++) {
+        array_(i,j,0) = 0.0;
+        array_(i,j,1) = 0.0;
+        array_(i,j,2) = 0.0;
+        array_(i,j,3) = 0.0;
       }
     }
-  }
-  if(size_dirty) {
-    if(glIsTexture(cmap2_texture_)) {
-      glDeleteTextures(1, &cmap2_texture_);
-      cmap2_texture_ = 0;
+    cmap2_->lock_widgets();
+    vector<CM2Widget*>& widget = cmap2_->widgets();
+    // rasterize widgets
+    for (unsigned int i=0; i<widget.size(); i++) {
+      widget[i]->rasterize(array_);
     }
-    glGenTextures(1, &cmap2_texture_);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, cmap2_texture_);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, cmap2_array_.dim2(), cmap2_array_.dim1(),
-                 0, GL_RGBA, GL_UNSIGNED_BYTE, &cmap2_array_(0,0,0));
-  } else {
-    glBindTexture(GL_TEXTURE_2D, cmap2_texture_);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cmap2_array_.dim2(), cmap2_array_.dim1(),
-                    GL_RGBA, GL_UNSIGNED_BYTE, &cmap2_array_(0,0,0));
+    cmap2_->unlock_widgets();
+    // opacity correction
+    double bp = 0;
+    if(mode_ != MIP) {
+      bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
+    } else {
+      bp = tan(1.570796327 * 0.5);
+    }
+    int defaultSamples = 512;
+    double sliceRatio = defaultSamples/(double(slices_));
+    for(int i=0; i<array_.dim1(); i++) {
+      for(int j=0; j<array_.dim2(); j++) {
+        double alpha = array_(i,j,3);
+        if(mode_ != MIP) {
+          double alpha1 = pow(alpha, bp);
+          double alpha2 = 1.0-pow(1.0-alpha1, sliceRatio);
+          cmap_array_(i,j,0) = (unsigned char)(array_(i,j,0)*alpha2*255);
+          cmap_array_(i,j,1) = (unsigned char)(array_(i,j,1)*alpha2*255);
+          cmap_array_(i,j,2) = (unsigned char)(array_(i,j,2)*alpha2*255);
+          cmap_array_(i,j,3) = (unsigned char)(alpha2*255);
+        } else {
+          cmap_array_(i,j,0) = (unsigned char)(array_(i,j,0)*alpha*255);
+          cmap_array_(i,j,1) = (unsigned char)(array_(i,j,1)*alpha*255);
+          cmap_array_(i,j,2) = (unsigned char)(array_(i,j,2)*alpha*255);
+          cmap_array_(i,j,3) = (unsigned char)(alpha*255);
+        }
+      }
+    }
+    // update texture
+    if(size_dirty) {
+      if(glIsTexture(cmap_tex_)) {
+        glDeleteTextures(1, &cmap_tex_);
+        cmap_tex_ = 0;
+      }
+      glGenTextures(1, &cmap_tex_);
+      glBindTexture(GL_TEXTURE_2D, cmap_tex_);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, cmap_array_.dim2(), cmap_array_.dim1(),
+                   0, GL_RGBA, GL_UNSIGNED_BYTE, &cmap_array_(0,0,0));
+      glBindTexture(GL_TEXTURE_2D, 0);
+    } else {
+      glBindTexture(GL_TEXTURE_2D, cmap_tex_);
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cmap_array_.dim2(), cmap_array_.dim1(),
+                      GL_RGBA, GL_UNSIGNED_BYTE, &cmap_array_(0,0,0));
+      glBindTexture(GL_TEXTURE_2D, 0);
+    }
   }
-  cmap2_->lock_array();
-#endif
 }
