@@ -30,7 +30,13 @@
 itcl_class SCIRun_FieldsCreate_Probe {
     inherit Module
     constructor {config} {
-        set name Probe
+        set name Probe	
+        set_defaults
+    }
+
+    method set_defaults {} {
+	global main_frame
+	set main_frame ""
 
 	global $this-value
 	global $this-show-value
@@ -47,11 +53,7 @@ itcl_class SCIRun_FieldsCreate_Probe {
 	global $this-show-cell
 	global $this-moveto
 	global $this-probe_scale
-	
-        set_defaults
-    }
 
-    method set_defaults {} {
 	set $this-value ""
 	set $this-show-value 1
 	set $this-locx ""
@@ -148,6 +150,13 @@ itcl_class SCIRun_FieldsCreate_Probe {
 
         toplevel $w
 
+	build_ui $w
+
+	makeSciButtonPanel $w $w $this -no_execute "\"Reset\" \"$this move_center\" \"\""
+	moveToCursor $w
+    }
+
+    method build_ui { w } {
 	frame $w.f
 	frame $w.f.g
 	frame $w.f.g.labels
@@ -214,9 +223,6 @@ itcl_class SCIRun_FieldsCreate_Probe {
 	bind $w.f.g.entries.edge <KeyPress-Return> "$this move_edge"
 	bind $w.f.g.entries.face <KeyPress-Return> "$this move_face"
 	bind $w.f.g.entries.cell <KeyPress-Return> "$this move_cell"
-
-	makeSciButtonPanel $w $w $this -no_execute "\"Reset\" \"$this move_center\" \"\""
-	moveToCursor $w
     }
 }
 
