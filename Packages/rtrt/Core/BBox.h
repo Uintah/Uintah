@@ -2,6 +2,7 @@
 #ifndef BBOX_H
 #define BBOX_H 1
 
+#include <Packages/rtrt/Core/Ray.h>
 #include <Core/Geometry/Point.h>
 
 namespace rtrt {
@@ -17,6 +18,9 @@ public:
     inline BBox() {
 	have_some=false;
     }
+    inline BBox(const Point& min, const Point &max) : cmin(min), cmax(max), have_some(true) {
+    }
+
     ~BBox() {
     }
     BBox(const BBox& copy);
@@ -57,6 +61,18 @@ public:
 		have_some=true;
 	    }
 	}
+    }
+
+    bool intersect_nontrivial(const Ray& ray, double &min_t);
+
+    inline bool intersect(const Ray& ray, double &min_t) {
+      // if we're already inside the box, set min_t to zero and return true
+      if (cmin.x()<ray.origin().x() && ray.origin().x()<cmax.x() &&
+	  cmin.y()<ray.origin().y() && ray.origin().y()<cmax.y() &&
+	  cmin.z()<ray.origin().z() && ray.origin().z()<cmax.z()) {
+	min_t=0;
+	return true;
+      } else return intersect_nontrivial(ray, min_t);
     }
 
     Point center() const;
