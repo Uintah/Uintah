@@ -81,55 +81,200 @@ itcl_class SubnetModule {
 	place $indicator -relheight 1 -anchor nw 
 	bind $indicator <Button> "foreach modid {$msg_open} {\$modid displayLog}"
 	
-	
 	if {[winfo exists .standalone]} {
 	    app indicate_error [modname] $msg_state
 	}
-	
     }
 
-
+    #  Make the modules icon on a particular canvas
+    method make_icon {modx mody { ignore_placement 0 } } {
+	global $this-done_bld_icon Disabled Subnet Color ToolTipText
+	set $this-done_bld_icon 0
+	set Disabled([modname]) 0
+	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
+	set minicanvas $Subnet(Subnet$Subnet([modname])_minicanvas)
 	
+	set modframe $canvas.module[modname]
+	frame $modframe -relief raised -borderwidth 3 
+	
+	bind $modframe <1> "moduleStartDrag [modname] %X %Y 0"
+	bind $modframe <B1-Motion> "moduleDrag [modname] %X %Y"
+	bind $modframe <ButtonRelease-1> "moduleEndDrag [modname] %X %Y"
+	bind $modframe <Control-Button-1> "moduleStartDrag [modname] %X %Y 1"
+	bind $modframe <3> "moduleMenu %X %Y [modname]"
+	
+	frame $modframe.ff
+	set p $modframe.ff
+	pack $p -side top -expand yes -fill both -padx 5 -pady 6
+
+	global ui_font modname_font time_font
+	if {[have_ui]} {
+	    button $p.ui -text "UI" -borderwidth 2 -font $ui_font \
+		-anchor center -command "$this initialize_ui"
+	    pack $p.ui -side left -ipadx 5 -ipady 2 -pady 6 -anchor nw
+#	    place $p.ui -in $p -x 5 -y 10 -anchor nw
+	    Tooltip $p.ui $ToolTipText(ModuleUI)
+	}
+	# Make the Subnet Button
+	if {$isSubnetModule} {
+	    global smallIcon
+	    button $p.subnet -image $smallIcon -borderwidth 0 \
+		-font $ui_font -anchor center -padx 0 -pady  0\
+		-command "showSubnetWindow $subnetNumber"
+	    pack $p.subnet -side left -ipadx 3 -ipady 0 -anchor w
+#	    place $p.subnet -in $p -x 5 -y 50 -anchor nw
+
+	    Tooltip $p.ui $ToolTipText(ModuleSubnetBtn)
+	}
+
+	# Make the message indicator
+	frame $p.msg -relief sunken -height 15 -borderwidth 1 \
+	    -width [expr $indicator_width+2]
+	pack $p.msg -side right \
+	    -padx 2 -pady 2
+	frame $p.msg.indicator -relief raised -width 0 -height 0 \
+	    -borderwidth 2 -background blue
+	bind $p.msg.indicator <Button> "$this displayLog"
+	Tooltip $p.msg.indicator $ToolTipText(ModuleMessageBtn)
+
+
+	# Make the title
+	label $p.title -text "$name" -font $modname_font -anchor w
+	pack $p.title -side top -padx 2 -anchor w
+	bind $p.title <Map> "$this setDone"
+
+	setIfExists instance Subnet(Subnet$Subnet([modname])_Insntace)] ""
+	label $p.type -text "$instance" -font $modname_font -anchor w
+	pack $p.type -side top -padx 2 -anchor w
+	bind $p.type <Map> "$this setDone"
+
+	update_msg_state
+	update_progress
+	update_time
+
+	# compute the placement of the module icon
+	if { !$ignore_placement } {
+	    set pos [findModulePosition $Subnet([modname]) $modx $mody]
+	} else {
+	    set pos [list $modx $mody]
+	}
+	
+	set pos [eval clampModuleToCanvas $pos]
+	
+	# Stick it in the canvas
+	$canvas create window [lindex $pos 0] [lindex $pos 1] -anchor nw \
+	    -window $modframe -tags "module [modname]"
+
+	set pos [scalePath $pos]
+	$minicanvas create rectangle [lindex $pos 0] [lindex $pos 1] \
+	    [expr [lindex $pos 0]+4] [expr [lindex $pos 1]+2] \
+	    -outline "" -fill $Color(Basecolor) -tags "module [modname]"
+
+	# Create, draw, and bind all input and output ports
+	drawPorts [modname]
+	
+	# create the Module Menu
+	menu $p.menu -tearoff false -disabledforeground white
+
+	Tooltip $p $ToolTipText(Module)
+
+	bindtags $p [linsert [bindtags $p] 1 $modframe]
+	bindtags $p.title [linsert [bindtags $p.title] 1 $modframe]
+	if {$make_time} {
+	    bindtags $p.time [linsert [bindtags $p.time] 1 $modframe]
+	}
+	if {$make_progress_graph} {
+	    bindtags $p.inset [linsert [bindtags $p.inset] 1 $modframe]
+	}
+
+	# If we are NOT currently running a script... ie, not loading the net
+	# from a file
+	if ![string length [info script]] {
+	    unselectAll
+	    global CurrentlySelectedModules
+	    set CurrentlySelectedModules "[modname]"
+	}
+	
+	fadeinIcon [modname]
+    }
+    # end make_icon
+
+
 }
        
-proc updateSubnetName { subnet name1 name2 op } {
+
+# updateSubnetName is called via a trace when the
+# Subnet(Subnet${subnet_number}_Name) variable is written
+# Automatically updates the Subnet Icon and the Subnet Network Editor names
+proc updateSubnetName { subnet_number name1 name2 op } {
     global Subnet
-    # extract the Subnet Number from the array index
-    # set subnet [string range $name2 6 [expr [string first _Name $name2]-1]]
-    set w .subnet${subnet}
-    if [winfo exists $w] {
-	wm title $w "$Subnet($name2) Sub-Network Editor"
+    # Set the title bar for the Subnet Network Editor Window
+    if [winfo exists .subnet${subnet_number}] {
+	wm title .subnet${subnet_number} "$Subnet($name2) Sub-Network Editor"
     }
-    if { [llength [info command SubnetIcon${subnet}]] } { 
-	SubnetIcon${subnet} setColorAndTitle
+    # Set the title for the Subnet Icon
+    if { [llength [info command SubnetIcon${subnet_number}]] } { 
+	SubnetIcon${subnet_number} setColorAndTitle
     }
 }
 
 
-proc makeSubnet { from_subnet x y { bbox "0 0 0 0" }} {
+# updateSubnetState is called via a trace when the
+# Subnet(Subnet${subnet_number}_State) variable is written
+proc updateSubnetState { subnet_number name1 name2 op } {
+    global Subnet InstanceNames
+    set name $Subnet(Subnet${subnet_number}_Name)
+    if { [string equal embedded $Subnet(Subnet${subnet_number}_State)] } {
+	set Subnet(Subnet${subnet_number}_Instance) [generateInstanceName $name]
+    } else {
+	set pos [lsearch $InstanceNames($name) $Subnet(Subnet${subnet_number}_Instance)]
+	set InstanceNames($name) [lreplace $InstanceNames($name) $pos $pos]
+	set Subnet(Subnet${subnet_number}_Instance) "On Disk"
+    }
+    SubnetIcon$subnet_number setColorAndTitle
+}
+
+
+
+# makeSubnetEditorWindow 
+# creates:
+#  An empty Subnet Editor and a new subnet icon in the subnet $from_subnet
+# returns:
+#  The newly created Subnet's number
+proc makeSubnetEditorWindow { from_subnet x y { bbox "0 0 0 0" } } {
     global Subnet mainCanvasHeight mainCanvasWidth Color
 
     # Setup default Subnet Variables
     incr Subnet(num)
-    set Subnet(Subnet$Subnet(num))		$Subnet(num)
-    set Subnet(Subnet$Subnet(num)_Name)		"Sub-Network \#$Subnet(num)"
-    set Subnet(Subnet$Subnet(num)_Modules)	""
-    set Subnet(Subnet$Subnet(num)_connections)	""
+    set subnet_id				$Subnet(num)
+    set Subnet(Subnet${subnet_id})		${subnet_id}
+    set Subnet(Subnet${subnet_id}_Name)		"                           "
+    set Subnet(Subnet${subnet_id}_Instance)	""
+    set Subnet(Subnet${subnet_id}_Modules)	""
+    set Subnet(Subnet${subnet_id}_connections)	""
+    set Subnet(Subnet${subnet_id}_State)	"embedded"
+    initInfo $subnet_id
 
     # Automatically update icon and window title when Subnet name changes
-    trace variable Subnet(Subnet$Subnet(num)_Name) w \
-	"updateSubnetName $Subnet(num)"
+    trace variable Subnet(Subnet${subnet_id}_Name) w \
+	"updateSubnetName ${subnet_id}"
 
-    set w .subnet$Subnet(num)
+    trace variable Subnet(Subnet${subnet_id}_State) w \
+	"updateSubnetState ${subnet_id}"
+
+    set w .subnet${subnet_id}
     
-    # TODO: probably should raise Subnet window
-    if {[winfo exists $w]} { puts here; wm deiconfiy $w; return }
+    # I don't think condition will ever be true, but be prudent anyways
+    if {[winfo exists $w]} { wm deiconfiy $w; raise $w; return }
 
     # Create the Subnet window and hide it
     toplevel $w -width [getAdjWidth $bbox] -height [getAdjHeight $bbox] 
     wm withdraw $w
 
-    wm title $w "$Subnet(Subnet$Subnet(num)_Name) Sub-Network Editor"
+    # Set the window title
+    wm title $w "$Subnet(Subnet${subnet_id}_Name) Sub-Network Editor"
+
+    # When user clicks the X to delete the window, really just hide it
     wm protocol $w WM_DELETE_WINDOW "wm withdraw $w"
     update idletasks
 
@@ -141,43 +286,56 @@ proc makeSubnet { from_subnet x y { bbox "0 0 0 0" }} {
 	-menu $w.main_menu.file.menu
     menu $w.main_menu.file.menu -tearoff false
     $w.main_menu.file.menu add command -label "Save As Template..." \
-	-underline 0 -command "saveSubnet $Subnet(num)"
+	-underline 0 -command "saveSubnet ${subnet_id} 1"
+    $w.main_menu.file.menu add command -label "Save Template..." \
+	-underline 0 -command "saveSubnet ${subnet_id} 0"
+
     pack $w.main_menu.file -side left
 
     # Make the Edit menu item
     menubutton $w.main_menu.edit -text "Edit" -underline 0 \
-	-menu $w.main_menu.file.menu
-#    menu $w.main_menu.file.edit -tearoff false
-    pack $w.main_menu.edit -side left
+	-menu $w.main_menu.edit.menu
+    menu $w.main_menu.edit.menu -tearoff false
+    $w.main_menu.edit.menu add command -label "Network Info..." \
+	-underline 0 -command "popupInfoMenu ${subnet_id}"
+    $w.main_menu.edit.menu add command -label "Cut" \
+	-underline 0 -command "" -state disabled
+    $w.main_menu.edit.menu add command -label "Copy" \
+	-underline 0 -command "" -state disabled
+    $w.main_menu.edit.menu add command -label "Paste" \
+	-underline 0 -command "" -state disabled
 
+
+    pack $w.main_menu.edit -side left
 
     # Make the Packages menu item
     menubutton $w.main_menu.packages -text "Packages" -underline 0 \
-	-menu $w.main_menu.file.packages
-    menu $w.main_menu.file.packagesnew -tearoff false
+	-menu $w.main_menu.packages.menu
+    menu $w.main_menu.packages.menu -tearoff false
     pack $w.main_menu.packages -side left
-
 
     # Make the Subnet Name Entry Field
     frame $w.fname -borderwidth 2
     label $w.fname.label -text "Name"
-    entry $w.fname.entry -validate all -textvariable Subnet(Subnet$Subnet(num)_Name)
+    entry $w.fname.entry -validate all \
+	-textvariable Subnet(Subnet${subnet_id}_Name)
     pack $w.fname.label $w.fname.entry -side left -pady 5
 
     # Make the Subnet Canvas
     frame $w.can -relief flat -borderwidth 0
     frame $w.can.can -relief sunken -borderwidth 3
     pack $w.can.can -fill both -expand yes -pady 8
-    set Subnet(Subnet$Subnet(num)_canvas) "$w.can.can.canvas"
-    set canvas $Subnet(Subnet$Subnet(num)_canvas)
+    set Subnet(Subnet${subnet_id}_canvas) "$w.can.can.canvas"
+    set canvas $Subnet(Subnet${subnet_id}_canvas)
     canvas $canvas -bg $Color(SubnetEditor) \
         -scrollregion "0 0 $mainCanvasWidth $mainCanvasHeight"
     pack $canvas -expand yes -fill both
 
     # Create a BOGUS minicanvas for Subnet/Main Editor code compatibility
-    set Subnet(Subnet$Subnet(num)_minicanvas) $w.can.minicanvas
-    canvas $Subnet(Subnet$Subnet(num)_minicanvas)
-    
+    # it just never gets packed and therefore not displayed
+    set Subnet(Subnet${subnet_id}_minicanvas) $w.can.minicanvas
+    canvas $Subnet(Subnet${subnet_id}_minicanvas)
+       
     # Make the background square in the canvas to catch all mouse events
     $canvas create rectangle 0 0 $mainCanvasWidth $mainCanvasWidth \
 	-fill $Color(SubnetEditor) -tags "bgRect"
@@ -188,16 +346,17 @@ proc makeSubnet { from_subnet x y { bbox "0 0 0 0" }} {
     scrollbar $w.vscroll -relief sunken -command "$canvas yview" 
 
     # Configure the Subnet Editor Canvas Scrollbars
+    # drawSubnetConnections causes connections to be redrawn on a scroll
     $canvas configure \
-	-yscrollcommand "drawSubnetConnections $Subnet(num);$w.vscroll set" \
-	-xscrollcommand "drawSubnetConnections $Subnet(num);$w.hscroll set"
+	-yscrollcommand "drawSubnetConnections ${subnet_id};$w.vscroll set" \
+	-xscrollcommand "drawSubnetConnections ${subnet_id};$w.hscroll set"
 
-    set Subnet(Subnet$Subnet(num)_state) embedded
+    # Make the Subnet State radio buttons
     frame $w.state
-    radiobutton $w.state.embedded -text Embedded -variable Subnet(Subnet$Subnet(num)_state) \
-	-value embedded 
-    radiobutton $w.state.ondisk -text "On Disk" -variable Subnet(Subnet$Subnet(num)_state) \
-	-value ondisk
+    radiobutton $w.state.embedded -text Embedded -value embedded \
+	-variable Subnet(Subnet${subnet_id}_State) 
+    radiobutton $w.state.ondisk -text "On Disk" -value ondisk \
+	-variable Subnet(Subnet${subnet_id}_State)
     pack $w.state.embedded $w.state.ondisk -side left -fill x -expand yes
 
     # Create Grid Layout for all Items in Subnet Editor Window
@@ -221,52 +380,66 @@ proc makeSubnet { from_subnet x y { bbox "0 0 0 0" }} {
     grid config $w.state -column 0 -row 4\
 	    -columnspan 2 -rowspan 1 -sticky sn -padx 2
 
+    # Create the Subnet itcl class
+    set Subnet(SubnetIcon${subnet_id}) $from_subnet
+    SubnetModule SubnetIcon${subnet_id} \
+	-name $Subnet(Subnet${subnet_id}_Name) -subnetNumber ${subnet_id}
+    set Subnet(SubnetIcon${subnet_id}_num) ${subnet_id}
+    set Subnet(SubnetIcon${subnet_id}_connections) ""
 
-    # Create the icon for the new Subnet on the old canvas
-    set Subnet(SubnetIcon$Subnet(num)) $from_subnet
-    SubnetModule SubnetIcon$Subnet(num) \
-	-name $Subnet(Subnet$Subnet(num)_Name) -subnetNumber $Subnet(num)
-    set Subnet(SubnetIcon$Subnet(num)_num) $Subnet(num)
-    set Subnet(SubnetIcon$Subnet(num)_connections) ""
-    SubnetIcon$Subnet(num) make_icon $x $y 1
-    lappend Subnet(Subnet${from_subnet}_Modules) SubnetIcon$Subnet(num)
+    # Make the icon for the new Subnet on the old canvas
+    SubnetIcon${subnet_id} make_icon $x $y 1
+    lappend Subnet(Subnet${from_subnet}_Modules) SubnetIcon${subnet_id}
 
-    # Select the item in focus, and unselect all others
-    $canvas bind bgRect <3> "modulesMenu $Subnet(num) %x %y"
+    # Keybinding to bring up the Packages Menu
+    $canvas bind bgRect <3> "modulesMenu ${subnet_id} %x %y"
+    # Keybindings for Select Operations
     $canvas bind bgRect <1> "startBox $canvas %X %Y 0"
     $canvas bind bgRect <Control-Button-1> "startBox $canvas %X %Y 1"
     $canvas bind bgRect <B1-Motion> "makeBox $canvas %X %Y"
     $canvas bind bgRect <ButtonRelease-1> "$canvas delete tempbox"
-
-    # SubCanvas up-down bound to mouse scroll wheel
+    # Redraw the connections when the Subnet Editor window is resized
+    bind $canvas <Configure> "drawSubnetConnections ${subnet_id}"
+    # Mouse Binding up-down on scroll wheel to move up-down on SubCanvas
     bind $w <ButtonPress-5>  "canvasScroll $canvas 0.0 0.01"
     bind $w <ButtonPress-4>  "canvasScroll $canvas 0.0 -0.01"
-
-    # Canvas movement on arrow keys press
+    # Bindings for SubCanvas movement on arrow keys press
     bind $w <KeyPress-Down>  "canvasScroll $canvas 0.0 0.01"
     bind $w <KeyPress-Up>    "canvasScroll $canvas 0.0 -0.01"
     bind $w <KeyPress-Left>  "canvasScroll $canvas -0.01 0.0"
     bind $w <KeyPress-Right> "canvasScroll $canvas 0.01 0.0" 
-    bind $canvas <Configure> "drawSubnetConnections $Subnet(num)"
-
-    bind all <Control-d> "moduleDestroySelected"
-    bind all <Control-l> "ClearCanvas 1 $Subnet(num)"
-    bind all <Control-z> "undo"
-    bind all <Control-a> "selectAll $Subnet(num)"
-    bind all <Control-y> "redo"
-    return $Subnet(num)
+    # Other misc. SubCanvas key bindings
+    bind $w <Control-d> "moduleDestroySelected"
+    bind $w <Control-l> "ClearCanvas 1 ${subnet_id}"
+    bind $w <Control-z> "undo"
+    bind $w <Control-a> "selectAll ${subnet_id}"
+    bind $w <Control-y> "redo"
+    return ${subnet_id}
 }
 
 
+# createSubnetFromModules
+proc createSubnetFromModules { args } {
+    # Dont create an empty subnet
+    if { ![llength $args] } return
 
-proc createSubnet { from_subnet { modules "" } } {
-    global Subnet CurrentlySelectedModules mouseX mouseY Notes backupNotes
-    array unset backupNotes
-    if { [llength $CurrentlySelectedModules ] } {
-	set modules $CurrentlySelectedModules
+    set modules $args
+    global Subnet Notes
+
+    # Figure out what subnet we are taking the modules from
+    set from_subnet $Subnet([lindex $modules 0])
+
+    # Verify that all the modules are all from the same subnet
+    foreach modid $modules {
+	if { $from_subnet != $Subnet($modid) } {
+	    displayErrorWarningOrInfo \ 
+	    "*** $modid does not exist in subnet level $from_subnet" error
+	    return
+	}
     }
-
-    # First, delete the connections and module icons from the old canvas
+    
+    # Delete the module icons from the old canvas, 
+    # also, create a list of connections that need to be deleted
     set connections ""
     foreach modid $modules {
 	listFindAndRemove Subnet(Subnet${from_subnet}_Modules) $modid
@@ -275,80 +448,81 @@ proc createSubnet { from_subnet { modules "" } } {
 
     # remove all duplicate connections from the list
     set connections [lsort -unique $connections]
+
     # delete connections in decreasing input port number for dynamic ports
     foreach conn [lsort -decreasing -integer -index 3 $connections] {
-	array set backupNotes [array get Notes [makeConnID $conn]*]
+	set id [makeConnID $conn]
+	setIfExists backupNotes($id) Notes($id) 
+	setIfExists backupNotes($id-Position) Notes($id-Position) 
+	setIfExists backupNotes($id-Color) Notes($id-Color) 
 	destroyConnection $conn 0 0
     }    
-    
-    # only the first two coordinates matter
-    set bbox "$mouseX $mouseY [expr $mouseX+100] [expr $mouseY+100]"
-    if { $modules != "" } {
-	set canvas $Subnet(Subnet${from_subnet}_canvas)
-	set bbox [compute_bbox $canvas $modules]
-    }
 
-    set subnet [makeSubnet $from_subnet [lindex $bbox 0] [lindex $bbox 1] $bbox]
-    set Subnet(Subnet${subnet}_Modules) $modules
-    # Then move the modules to the new canvas
+    set from_canvas $Subnet(Subnet${from_subnet}_canvas)    
+    set bbox [compute_bbox $from_canvas $modules]
+    set x [lindex $bbox 0]
+    set y [lindex $bbox 1]
+
+    # Create the empty Subnet Network Editor and its Icon
+    set subnet_number [makeSubnetEditorWindow $from_subnet $x $y $bbox]
+    set Subnet(Subnet${subnet_number}_Modules) $modules
+
+    # Move each module to the new canvas
     foreach modid $modules {
-	set canvas $Subnet(Subnet$Subnet($modid)_canvas)
-	set minicanvas $Subnet(Subnet$Subnet($modid)_minicanvas)
-	set modbbox [$canvas bbox $modid]
-	$canvas delete $modid $modid-notes $modid-notes-shadow
-	$minicanvas delete $modid
-	destroy $canvas.module$modid
-	set x [expr [lindex $modbbox 0] - [lindex $bbox 0] + 10]
-	set y [expr [lindex $modbbox 1] - [lindex $bbox 1] + 25]
-	set Subnet($modid) $subnet
-	$modid make_icon $x $y 1
+	# Get old module's icon position before deleting it
+	set modbbox [$from_canvas bbox $modid]
+	# Delete the icon on the from canvases
+	$from_canvas delete $modid $modid-notes $modid-notes-shadow
+	destroy $from_canvas.module$modid
+	$Subnet(Subnet$Subnet($modid)_minicanvas) delete $modid
+	# Compute position of the icon on the new canvas
+	set newx [expr [lindex $modbbox 0] - $x + 10]
+	set newy [expr [lindex $modbbox 1] - $y + 25]
+	set Subnet($modid) $subnet_number
+	# Create icon on new canvas
+	$modid make_icon $newx $newy 1
     }
-
+    update idletasks
     # Create new connections to Subnet Icon and within Subnet Editor
     # Note the 0 0 parameters to createConnection:  SCIRun wont be
     # notified of any creation or deletion of connections between modules
     # since no actual connections are being changed
-    set connections [sortPorts $subnet $connections]
+    # sort the connections by port's horizontal location
+    set connections [sortPorts $subnet_number $connections]
+    set notesList ""
     while { [llength $connections] } {
 	# pop the connection off the end of the list
 	set conn [lindex $connections 0]
 	set connections [lrange $connections 1 end]
 	
+	# If the connection is contained entirely within the new subnet
+	# it doesn't need any extra external connections
 	if { $Subnet([oMod conn]) == $Subnet([iMod conn]) } {
 	    createConnection $conn 0 0
-	    array set Notes [array get backupNotes [makeConnID $conn]]
+	    lappend notesList "[makeConnID $conn] [makeConnID $conn]"
 	    continue
 	}
 
-	if { $Subnet([oMod conn]) == ${subnet} } {
+	if { $Subnet([oMod conn]) == ${subnet_number} } {
 	    # Split the connection across the subnet boundary
-	    set which [portCount "Subnet${subnet} 0 i"]
-	    set newconn "[oMod conn] [oNum conn] Subnet${subnet} $which"
+	    set which [portCount "Subnet${subnet_number} 0 i"]
+	    set newconn "[oMod conn] [oNum conn] Subnet${subnet_number} $which"
 	    createConnection $newconn 0 0	    
-	    set newconn "SubnetIcon${subnet} $which [iMod conn] [iNum conn]"
+	    set newconn "SubnetIcon${subnet_number} $which [iMod conn] [iNum conn]"
 	    createConnection $newconn 0 0
-	    # take care of connection notes
-	    set oldID [makeConnID $conn]
-	    set newID [makeConnID $newconn]
-	    setIfExists Notes($newID) backupNotes($oldID)
-	    setIfExists Notes($newID-Position) backupNotes($oldID-Position)
-	    setIfExists Notes($newID-Color) backupNotes($oldID-Color)
-	    drawNotes $newID
-	} elseif { $Subnet([iMod conn]) == ${subnet} } {
-	    set which [portCount "Subnet${subnet} 0 o"]
-	    set newconn "[oMod conn] [oNum conn] SubnetIcon${subnet} $which"
+	    lappend notesList "[makeConnID $conn] [makeConnID $newconn]"
+	} elseif { $Subnet([iMod conn]) == ${subnet_number} } {
+	    # Split the connection across the subnet boundary
+	    set which [portCount "Subnet${subnet_number} 0 o"]
+	    set newconn "[oMod conn] [oNum conn] SubnetIcon${subnet_number} $which"
 	    createConnection $newconn 0 0
-	    set newconn "Subnet${subnet} $which [iMod conn] [iNum conn]"
+	    set newconn "Subnet${subnet_number} $which [iMod conn] [iNum conn]"
 	    createConnection $newconn 0 0
-	    # take care of connection notes
-	    set oldID [makeConnID $conn]
-	    set newID [makeConnID $newconn]
-	    setIfExists Notes($newID) backupNotes($oldID)
-	    setIfExists Notes($newID-Position) backupNotes($oldID-Position)
-	    setIfExists Notes($newID-Color) backupNotes($oldID-Color)
-	    drawNotes $newID
+	    lappend notesList "[makeConnID $conn] [makeConnID $newconn]"
 	}
 	
+	# Find all other connections out of this port to modules on other
+	# side of Subnet interface and share the connection
 	foreach xconn $connections {
 	    if { $Subnet([oMod xconn]) == $Subnet([iMod xconn]) } continue
 	    if [string equal [oPort conn] [oPort xconn]] {
@@ -356,95 +530,104 @@ proc createSubnet { from_subnet { modules "" } } {
 		set newconn [lreplace $newconn 2 2 [iMod xconn]]
 		set newconn [lreplace $newconn 3 3 [iNum xconn]]
 		createConnection $newconn 0 0
-		set oldID [makeConnID $xconn]
-		set newID [makeConnID $newconn]
-		setIfExists Notes($newID) backupNotes($oldID)
-		setIfExists Notes($newID-Position) backupNotes($oldID-Position)
-		setIfExists Notes($newID-Color) backupNotes($oldID-Color)
-		drawNotes $newID
+		lappend notesList "[makeConnID $xconn] [makeConnID $newconn]"
 	    }
-	}
+	}            
     }
-    showSubnetWindow $subnet [subnet_bbox $subnet]
+    
+    # copy over the notes to the new connections
+    foreach oldnewid $notesList {
+	set oldID [lindex $oldnewid 0]
+	set newID [lindex $oldnewid 1]
+	setIfExists Notes($newID) backupNotes($oldID)
+	setIfExists Notes($newID-Position) backupNotes($oldID-Position)
+	setIfExists Notes($newID-Color) backupNotes($oldID-Color)
+	drawNotes $newID
+    }
+
+    # Put the window on top and resize it to good dimensions
+    showSubnetWindow $subnet_number [subnet_bbox $subnet_number]
     unselectAll
 }
 
 
-
+# expandSubnet will replace the Subnet icon with its internal modules
+# and delete the Subnet Editor associated with that subnet
+# Its basically the reverse of createSubnetFromModules
 proc expandSubnet { modid } {
-    global Subnet CurrentlySelectedModules
+    global Subnet
     set from $Subnet(${modid}_num)
     set to $Subnet($modid)
 
-    set fromcanvas $Subnet(Subnet${from}_canvas)
-    set tocanvas $Subnet(Subnet${to}_canvas)
-    set x [lindex [$tocanvas coords $modid] 0]
-    set y [lindex [$tocanvas coords $modid] 1]
-    set toDelete ""
+    # create a list of all connections that cross the Subnet Interface
     set toAdd ""
-
-    foreach iconn $Subnet(Subnet${from}_connections) {
-	lappend toDelete $iconn
-	foreach econn $Subnet(SubnetIcon${from}_connections) {
-	    lappend toDelete $econn
-	    if { [iNum econn] == [oNum iconn] &&
-		 [string equal SubnetIcon$from [iMod econn]] &&
-		 [string equal Subnet$from [oMod iconn]] } {
-		lappend toAdd \
-		    "[oMod econn] [oNum econn] [iMod iconn] [iNum iconn]"
-		
+    foreach in $Subnet(Subnet${from}_connections) {
+	foreach ex $Subnet(SubnetIcon${from}_connections) {
+	    if { [iNum ex] == [oNum in] &&
+		 [string equal SubnetIcon$from [iMod ex]] &&
+		 [string equal Subnet$from [oMod in]] } {
+		# add collapsed connection without Subnet Interface
+		lappend toAdd "[oMod ex] [oNum ex] [iMod in] [iNum in]"
 	    }
-	    if { [oNum econn] == [iNum iconn] &&
-		 [string equal SubnetIcon$from [oMod econn]] &&
-		 [string equal Subnet$from [iMod iconn]] } {
-		lappend toAdd \
-		    "[oMod iconn] [oNum iconn] [iMod econn] [iNum econn]"
+	    if { [oNum ex] == [iNum in] &&
+		 [string equal SubnetIcon$from [oMod ex]] &&
+		 [string equal Subnet$from [iMod in]] } {
+		# add collapsed connection without Subnet Interface
+		lappend toAdd "[oMod in] [oNum in] [iMod ex] [iNum ex]"
 	    }
 	}
     }
 
-    foreach conn $toDelete {
-	# the last 0 paramater means to not tell scirun, just delete TCL reps
-	destroyConnection $conn 0 0
+    # Delete all connections in Subnet connecting to interface
+    # This will cause the external connections to be automatically deleted.
+    # While loop evaluates list each time allowing for moved connections
+    while { [llength $Subnet(Subnet${from}_connections)] } {
+	destroyConnection [lindex $Subnet(Subnet${from}_connections) 0] 0 0
     }
 
+
+    # Move each module from the Subnet Editor to its containing net
+    set x [lindex [$Subnet(Subnet${to}_canvas) coords $modid] 0]
+    set y [lindex [$Subnet(Subnet${to}_canvas) coords $modid] 1]
     foreach module $Subnet(Subnet${from}_Modules) {
-	set bbox [$fromcanvas bbox $module]
+	set bbox [$Subnet(Subnet${from}_canvas) bbox $module]
 	set newx [expr $x + [lindex $bbox 0] - 10]
 	set newy [expr $y + [lindex $bbox 1] - 25]
 	set Subnet($module) $to
 	lappend Subnet(Subnet${to}_Modules) $module
-	$fromcanvas delete $module
-	destroy $fromcanvas.module$module
 	$module make_icon $newx $newy 1
     }	
-
-    foreach conn $toAdd {
-	# the last 0 paramater means to not tell scirun, just delete TCL reps
-	createConnection $conn 0 0
-    }
-
-    # Delete Icon from canvases
-    $Subnet(Subnet$Subnet($modid)_canvas) delete $modid
-    destroy $Subnet(Subnet$Subnet($modid)_canvas).module$modid
-    $Subnet(Subnet$Subnet($modid)_minicanvas) delete $modid
     
-    # Remove references to module is various state arrays
-    array unset Subnet ${modid}_connections
-    listFindAndRemove CurrentlySelectedModules $modid
-    listFindAndRemove Subnet(Subnet$Subnet($modid)_Modules) $modid
-
-    set CurrentlySelectedModules $Subnet(Subnet${from}_Modules)
-    foreach module $Subnet(Subnet${from}_Modules) {
-	drawConnections $Subnet(${module}_connections)
-	$module setColorAndTitle
+    # Create the connections between the modules that were just moved
+    # from the subnet and the modules that were connecting to the subnet
+    foreach conn $toAdd {
+	createConnection $conn 0 0 ;# 0 0 = dont tell SCIRun & dont record undo
     }
 
+    # Just select the modules that came in from in the expanded subnet
+    unselectAll
+    foreach module $Subnet(Subnet${from}_Modules) {
+	$module addSelected
+    }
+
+    # Delete the Subnet Icon from canvases
+    $Subnet(Subnet${to}_canvas) delete $modid
+    $Subnet(Subnet${to}_minicanvas) delete $modid
+    destroy $Subnet(Subnet${to}_canvas).module$modid
+    
+    # Destroy the Subnet Editor Window
+    destroy SubnetIcon$from    
+
+    # Remove the trace when the Subnet name is changed
     trace vdelete Subnet(Subnet${from}_Name) w updateSubnetName
+
+    # Remove refrences to subnet instance from Subnet global array
+    listFindAndRemove Subnet(Subnet${to}_Modules) $modid
+    array unset Subnet ${modid}_connections
     array unset Subnet Subnet${from}*
-    array unset Subnet SubnetIcon${from}*
-    destroy .subnet$from    
+    array unset Subnet SubnetIcon${from}*    
 }
+
 
 # Sorts a list of connections by input port position left to right
 proc sortPorts { subnet connections } {
@@ -500,7 +683,7 @@ proc restoreLoadVars { key } {
 }
 
 proc loadSubnet { filename { x 0 } { y 0 } } {
-    global Subnet SCIRUN_SRCDIR Name
+    global Subnet Name
     set subnet $Subnet(Loading)
     if {!$x && !$y} {
 	global mouseX mouseY
@@ -510,7 +693,7 @@ proc loadSubnet { filename { x 0 } { y 0 } } {
     set splitname [file split $filename]
     set netname [lindex $splitname end]
     if { [llength $splitname] == 1 } {
-	set filename [file join $SCIRUN_SRCDIR Subnets $netname]
+	set filename [file join [netedit getenv SCIRUN_SRCDIR] Subnets $netname]
 	if ![file exists $filename] {
 	    set filename [file join ~ SCIRun Subnets $netname]
 	}
@@ -522,7 +705,7 @@ proc loadSubnet { filename { x 0 } { y 0 } } {
 	return
     }
 
-    set subnetNumber [makeSubnet $subnet $x $y]
+    set subnetNumber [makeSubnetEditorWindow $subnet $x $y]
     set Subnet(Loading) $subnetNumber
     backupLoadVars $filename
     uplevel \#0 source \{$filename\}
@@ -537,12 +720,46 @@ proc loadSubnet { filename { x 0 } { y 0 } } {
 proc addSubnetInstanceAtPosition { name x y } {
     global Subnet
     set from $Subnet(Loading)    
-    set to [makeSubnet $from $x $y]
+    set to [makeSubnetEditorWindow $from $x $y]
     set Subnet(Loading) $to
     instantiateSubnet$name
     set Subnet(Loading) $from
     return SubnetIcon$to
 }
+
+proc generateInstanceName { name } {
+    global InstanceNames
+    set i 1
+    set retval "Instance \#1"
+    if { [info exists InstanceNames($name)] } {
+	while { [lsearch $InstanceNames($name) $retval] != -1 } {
+	    incr i
+	    set retval "Instance \#$i"
+	}
+    }
+    lappend InstanceNames($name) $retval
+    return $retval
+}
+
+proc instanceSubnet { subnet_name { x 0 } { y 0 } { from 0 } } {
+    global Subnet Notes Disabled SubnetScripts
+    if {!$x && !$y} {
+	global mouseX mouseY
+	set x [expr $mouseX+[$Subnet(Subnet${from}_canvas) canvasx 0]]
+	set y [expr $mouseY+[$Subnet(Subnet${from}_canvas) canvasy 0]]
+	set mouseX 10
+	set mouseY 10
+    }
+    set to [makeSubnetEditorWindow $from $x $y]
+    set Subnet(Loading) $to
+    eval $SubnetScripts($subnet_name)
+    set Subnet(Subnet${to}_Name) "$name"
+    set Subnet(Subnet${to}_Instance) [generateInstanceName $name]
+    SubnetIcon$to setColorAndTitle
+    set Subnet(Loading) $from
+    return SubnetIcon$to
+}
+
 
 proc isaDefaultValue { var } {
     set scope [string first :: $var]
@@ -587,23 +804,62 @@ proc writeSubnets { filename { subnet 0 } } {
     writeSubnet $filename $subnet
 }
 
-proc writeSubnet { filename subnet } {
+proc scripted_addModuleAtPosition { args } {
+#    puts "scripted_addModuleAtPosition $args"
+    return scripted_ModuleInstance
+}
+
+proc scripted_addConnection { args } {
+#    puts "scripted_addConnection $args"
+    return scripted_addConnection
+}
+
+proc scripted_ModuleInstance { args } {
+ #   puts "scripted_ModuleInstance: $args"
+}
+
+proc addSubnetToDatabase { script } {
+    global SubnetScripts
+    rename addModuleAtPosition real_addModuleAtPosition
+    rename addConnection real_addConnection
+    rename scripted_addModuleAtPosition addModuleAtPosition
+    rename scripted_addConnection addConnection
+    eval $script
+    set SubnetScripts($name) $script
+    rename addModuleAtPosition scripted_addModuleAtPosition 
+    rename addConnection scripted_addConnection
+    rename real_addModuleAtPosition addModuleAtPosition 
+    rename real_addConnection addConnection 
+}
+
+
+proc writeSubnet { filename subnet { create_file 0 } } {
     global Subnet Disabled Notes
-    set out [open $filename {WRONLY APPEND}]
+    if { $create_file } {
+	set out [open $filename {WRONLY CREAT TRUNC}]
+    } else {
+	set out [open $filename {WRONLY APPEND}]
+    }
     set connections ""
     set modVar(Subnet${subnet}) "Subnet"
     
     if $subnet {
 	set tab "   "
-	puts $out "proc instantiateSubnet$Subnet(Subnet${subnet}_instance) \{\} \{"
+#	puts $out "proc instantiateSubnet$Subnet(Subnet${subnet}_instance) \{\} \{"
+	puts $out "\naddSubnetToDatabase \{"
+#	puts $out "${tab}global Subnet Notes Disabled"
+
     } else {
 	set tab ""
     }
-    
-    puts $out "${tab}global Subnet"
-    puts $out "${tab}set Subnet(Subnet\$Subnet(Loading)_Name) \{$Subnet(Subnet${subnet}_Name)\}"
+    puts $out "${tab}set name \{$Subnet(Subnet${subnet}_Name)\}"
     puts $out "${tab}set bbox \{[subnet_bbox $subnet]\}"
-
+    puts $out "${tab}set creationDate \{$Subnet(Subnet${subnet}_creationDate)\}"
+    puts $out "${tab}set creationTime \{$Subnet(Subnet${subnet}_creationTime)\}"
+    puts $out "${tab}set runDate \{$Subnet(Subnet${subnet}_runDate)\}"
+    puts $out "${tab}set runTime \{$Subnet(Subnet${subnet}_runTime)\}"
+    puts $out "${tab}set notes \{$Subnet(Subnet${subnet}_notes)\}"
+    
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
 	incr i
@@ -611,7 +867,7 @@ proc writeSubnet { filename subnet } {
 	if { [isaSubnetIcon $module] } {
 	    puts $out "\n${tab}\# Instiantiate a SCIRun Sub-Network"
 	    set number $Subnet(${module}_num)
-	    puts -nonewline $out "${tab}set m$i \[addSubnetInstanceAtPosition $Subnet(Subnet${number}_instance) "
+	    puts -nonewline $out "${tab}set m$i \[instanceSubnet \"$Subnet(Subnet${number}_Name)\" "
 	} else {
 	    set modpath [modulePath $module]
 	    puts $out "\n${tab}\# Create a [join $modpath ->] Module"
@@ -623,14 +879,14 @@ proc writeSubnet { filename subnet } {
 	# Cache all connections to a big list to write out later in the file
 	eval lappend connections $Subnet(${module}_connections)
 	# Write user notes 
-	if [info exists Notes($module)] {
-	    puts $out "${tab}setGlobal Notes(\$m$i) \{$Notes($module)\}"
-	}
-	if [info exists Notes($module-Position)] {
-	    puts $out "${tab}setGlobal Notes(\$m$i-Position) \{$Notes($module-Position)\}"
-	}
-	if [info exists Notes($module-Color)] {
-	    puts $out "${tab}setGlobal Notes(\$m$i--Color) \{$Notes($module-Color)\}"
+	if { [info exists Notes($module)] && [string length $Notes($module)] } {
+	    puts $out "${tab}set Notes(\$m$i) \{$Notes($module)\}"
+	    if { [info exists Notes($module-Position)] } {
+		puts $out "${tab}set Notes(\$m$i-Position) \{$Notes($module-Position)\}"
+	    }
+	    if { [info exists Notes($module-Color)] } {
+		puts $out "${tab}set Notes(\$m$i--Color) \{$Notes($module-Color)\}"
+	    }
 	}
     }
 
@@ -646,17 +902,19 @@ proc writeSubnet { filename subnet } {
 	puts -nonewline $out "${tab}set c$i \[addConnection "
 	puts $out "$modVar([oMod conn]) [oNum conn] $modVar([iMod conn]) [iNum conn]\]"
 	set id [makeConnID $conn]
-	if [info exists Notes($id-Color)] {
-	    puts $out "${tab}setGlobal Notes(\$c$i-Color) \{$Notes($id-Color)\}"
-	}	
 	if { [info exists Disabled($id)] && $Disabled($id) } {
-	    puts $out "${tab}setGlobal Disabled(\$c$i) \{1\}"
+	    puts $out "${tab}set Disabled(\$c$i) \{1\}"
 	}
+
 	if { [info exists Notes($id)] && [string length $Notes($id)] } {
-	    puts $out "${tab}setGlobal Notes(\$c$i) \{$Notes($id)\}"
-	}
-	if [info exists Notes($id-Position)] {
-	    puts $out "${tab}setGlobal Notes(\$c$i-Position) \{$Notes($id-Position)\}"
+	    puts $out "${tab}set Notes(\$c$i) \{$Notes($id)\}"
+	    if [info exists Notes($id-Position)] {
+		puts $out "${tab}set Notes(\$c$i-Position) \{$Notes($id-Position)\}"
+	    }
+	    if { [info exists Notes($id-Color)] } {
+		puts $out "${tab}set Notes(\$c$i-Color) \{$Notes($id-Color)\}"
+	    }	
+	    puts $out "" ;# newline between connections
 	}
     }
     close $out
@@ -718,7 +976,7 @@ proc getAdjHeight { bbox } {
     
 proc showSubnetWindow { subnet { bbox "" } } {
     wm deiconify .subnet${subnet}
-#    raise .subnet${subnet}
+    raise .subnet${subnet}
     update idletasks
     global Subnet
     if { $bbox == "" } {
@@ -732,3 +990,24 @@ proc showSubnetWindow { subnet { bbox "" } } {
 	[expr ([lindex $bbox 1]-20)/([lindex $scroll 3]-[lindex $scroll 1])]
     update idletasks
 }
+
+
+proc saveSubnet { subnet_id ask } {
+    global Subnet
+    if { ![info exists Subnet(Subnet${subnet_id}_Filename)] || \
+	     ![string length $Subnet(Subnet${subnet_id}_Filename)]} {
+	set ask 1
+    }
+    if { $ask } {
+	set types {
+	    {{SCIRun Net} {.net} }
+	    {{Other} { * } }
+	} 
+	set Subnet(Subnet${subnet_id}_Filename) \
+	    [tk_getSaveFile -defaultextension {.net} -filetypes $types ]
+    }
+    if { [string length $Subnet(Subnet${subnet_id}_Filename)]} {
+	writeSubnet $Subnet(Subnet${subnet_id}_Filename) $subnet_id 1
+    }
+}
+    
