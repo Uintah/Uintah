@@ -136,23 +136,26 @@ using namespace SCIRun;
       void setBC(CCVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
                
+      void setBC(CCVariable<double>& press_CC, CCVariable<double>& rho,
+               const std::string& type, const Patch* p);
+               
       void setBC(CCVariable<Vector>& variable,const std::string& type,
 		 const Patch* p);
                
-      void setBC(SFCXVariable<double>& variable,const std::string& type, 
-		 const Patch* p);
+      void setBC(SFCXVariable<double>& variable, CCVariable<double>&rho,
+                const std::string& type, const Patch* p);
                
       void setBC(SFCXVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);
-               
-      void setBC(SFCYVariable<double>& variable,const std::string& type, 
-		 const Patch* p);
+  
+      void setBC(SFCYVariable<double>& variable, CCVariable<double>&rho,
+                const std::string& type, const Patch* p);
                
       void setBC(SFCYVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);
                
-      void setBC(SFCZVariable<double>& variable,const std::string& type, 
-		 const Patch* p);
+      void setBC(SFCZVariable<double>& variable, CCVariable<double>&rho,
+                const std::string& type, const Patch* p);
                
       void setBC(SFCZVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);      
@@ -303,7 +306,7 @@ using namespace SCIRun;
 #define LEFT       3          /* index used to designate the left cell face   */
 #define FRONT      4          /* index used to designate the front cell face  */
 #define BACK       5          /* index used to designate the back cell face   */
-    
+#define SURROUND_MAT 0        /* Mat index of surrounding material, assumed */  
             //__________________________________
             //   E D G E   F L U X E S
 #define TOP_R               0               /* edge on top right of cell    */
@@ -335,5 +338,3 @@ using namespace SCIRun;
 } // End namespace Uintah
 
 #endif
-
-
