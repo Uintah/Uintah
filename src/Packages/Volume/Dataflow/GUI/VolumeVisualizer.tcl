@@ -29,6 +29,14 @@ itcl_class Volume_Visualization_VolumeVisualizer {
 	set $this-num_slices_lo 128
 	global $this-num_slices_hi
 	set $this-num_slices_hi 768
+	global $this-sampling_rate_lo
+	set $this-sampling_rate_lo 1.0
+	global $this-sampling_rate_hi
+	set $this-sampling_rate_hi 4.0
+        global $this-adaptive
+        set $this-adaptive 1
+        global $this-cmap_size
+        set $this-cmap_size 7
 	global $this-alpha_scale
 	set $this-alpha_scale 0
 	global $this-render_style
@@ -140,35 +148,60 @@ itcl_class Volume_Visualization_VolumeVisualizer {
 		-anchor w -command $n
 	pack $w.f3.l $w.f3.interp $w.f3.near -side top -fill x -padx 4
 
-	global $this-num_slices_lo
-	scale $w.nslice_lo -variable $this-num_slices_lo \
-		-from 1 -to 1024 -label "Number of Slices (Interactive)" \
-		-showvalue true \
-		-orient horizontal \
+        #-----------------------------------------------------------
+        # Sampling
+        #-----------------------------------------------------------
+        frame $w.sampling -relief groove -borderwidth 2
+        pack $w.sampling -padx 2 -pady 2 -fill x
+        label $w.sampling.l -text "Sampling"
 
-	global $this-num_slices_hi
-	scale $w.nslice_hi -variable $this-num_slices_hi \
-		-from 1 -to 1024 -label "Number of Slices (High Quality)" \
-		-showvalue true \
-		-orient horizontal \
+	scale $w.sampling.srate_hi -variable $this-sampling_rate_hi \
+            -from 0.5 -to 10.0 -label "Sampling Rate" \
+            -showvalue true -resolution 0.1 \
+            -orient horizontal \
 
-	global $this-alpha_scale
-	
-	scale $w.stransp -variable $this-alpha_scale \
+	checkbutton $w.sampling.adaptive -text "Adaptive Sampling" -relief flat \
+            -variable $this-adaptive -onvalue 1 -offvalue 0 \
+            -anchor w -command "$s; $n"
+
+	scale $w.sampling.srate_lo -variable $this-sampling_rate_lo \
+            -from 0.1 -to 5.0 -label "Interactive Sampling Rate" \
+            -showvalue true -resolution 0.1 \
+            -orient horizontal \
+
+	pack $w.sampling.l $w.sampling.srate_hi $w.sampling.adaptive \
+            $w.sampling.srate_lo -side top -fill x -padx 4 -pady 2
+        
+        #-----------------------------------------------------------
+        # Transfer Function
+        #-----------------------------------------------------------
+        frame $w.tf -relief groove -borderwidth 2
+        pack $w.tf -padx 2 -pady 2 -fill x
+        label $w.tf.l -text "Transfer Function"
+
+	scale $w.tf.stransp -variable $this-alpha_scale \
 		-from -1.0 -to 1.0 -label "Slice Transparency" \
 		-showvalue true -resolution 0.001 \
 		-orient horizontal 
 
-	pack $w.stransp $w.nslice_lo $w.nslice_hi -side top -fill x -padx 4 -pady 2
+	scale $w.tf.cmap_size -variable $this-cmap_size \
+		-from 4 -to 10 -label "Table Size (2^n)" \
+		-showvalue true -resolution 1 \
+		-orient horizontal \
+
+	pack $w.tf.l $w.tf.stransp $w.tf.cmap_size \
+            -side top -fill x -padx 4 -pady 2
 
         bind $w.f6.ambient <ButtonRelease> $n
         bind $w.f6.diffuse <ButtonRelease> $n
         bind $w.f6.specular <ButtonRelease> $n
         bind $w.f6.shine <ButtonRelease> $n
 
-	bind $w.nslice_lo <ButtonRelease> $n
-	bind $w.nslice_hi <ButtonRelease> $n
-	bind $w.stransp <ButtonRelease> $n
+	bind $w.sampling.srate_hi <ButtonRelease> $n
+	bind $w.sampling.srate_lo <ButtonRelease> $n
+
+	bind $w.tf.cmap_size <ButtonRelease> $n
+	bind $w.tf.stransp <ButtonRelease> $n
 	
 	makeSciButtonPanel $w $w $this
         $this state
@@ -198,6 +231,11 @@ itcl_class Volume_Visualization_VolumeVisualizer {
             $this deactivate $w.f5.light2
             $this deactivate $w.f5.light3
 	}
+	if {[set $this-adaptive] == 1} {
+            $this activate $w.sampling.srate_lo
+        } else {
+            $this deactivate $w.sampling.srate_lo
+        }
     }
     method activate { w } {
 	$w configure -state normal -foreground black

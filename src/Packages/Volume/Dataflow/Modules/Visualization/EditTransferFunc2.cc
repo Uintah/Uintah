@@ -38,6 +38,7 @@
 #include <sci_gl.h>
 #include <Packages/Volume/Core/Util/Pbuffer.h>
 #include <Packages/Volume/Dataflow/Ports/Colormap2Port.h>
+#include <Packages/Volume/Core/Datatypes/CM2Widget.h>
 #include <Packages/Teem/Core/Datatypes/NrrdData.h>
 #include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
 
@@ -79,7 +80,7 @@ class EditTransferFunc2 : public Module {
   Colormap2Handle cmap_;
   bool cmap_dirty_;
   bool cmap_size_dirty_;
-  bool cmap_out_dirty_;
+  bool cmap_exec_dirty_;
   GLuint cmap_tex_;
   
   int pick_widget_; // Which widget is selected.
@@ -97,7 +98,6 @@ public:
 
   bool create_histo();
   
-  void update();
   void redraw();
 
   void push(int x, int y, int button);
@@ -115,7 +115,7 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
     pbuffer_(0), use_pbuffer_(true), use_back_buffer_(true),
     histo_(0), histo_dirty_(false), histo_tex_(0),
     cmap_(new Colormap2),
-    cmap_dirty_(true), cmap_out_dirty_(true), cmap_tex_(0),
+    cmap_dirty_(true), cmap_exec_dirty_(true), cmap_tex_(0),
     pick_widget_(-1), pick_object_(0), updating_(false)
 {
   widget_.push_back(scinew TriangleCM2Widget());
@@ -167,11 +167,9 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
     //cerr << "EVENT: resize" << endl;
     string_to_int(args[2], width_);
     string_to_int(args[3], height_);
-    update();
     redraw();
   } else if (args[1] == "expose") {
     //cerr << "EVENT: expose" << endl;
-    update();
     redraw();
   } else if (args[1] == "closewindow") {
     //cerr << "EVENT: close" << endl;
@@ -225,7 +223,6 @@ EditTransferFunc2::push(int x, int y, int button)
     }
   }
   if(pick_widget_ != -1) {
-    update();
     redraw();
   }
 }
@@ -241,8 +238,8 @@ EditTransferFunc2::motion(int x, int y)
   {
     widget_[pick_widget_]->move(pick_object_, x, height_-1-y, width_, height_);
     cmap_dirty_ = true;
+    cmap_exec_dirty_ = true;
     updating_ = true;
-    update();
     redraw();
   }
 }
@@ -260,7 +257,7 @@ EditTransferFunc2::release(int x, int y, int button)
     widget_[pick_widget_]->release(pick_object_, x, height_-1-y, width_, height_);
     updating_ = false;
     cmap_dirty_ = true;
-    update();
+    cmap_exec_dirty_ = true;
     redraw();
   }
 }
@@ -295,36 +292,37 @@ EditTransferFunc2::execute()
     histo_ = 0;
   }
 
-  update();
-  redraw();
+  if(histo_dirty_) {
+    redraw();
+  }
+
+  if(cmap_exec_dirty_) {
+    cmap_->lock_widgets();
+    cmap_->set_widgets(widget_);
+    cmap_->set_updating(updating_);
+    cmap_->set_dirty(true);
+    cmap_->unlock_widgets();
+    cmap_exec_dirty_ = false;
+  }
 
   Colormap2OPort* cmap_port = (Colormap2OPort*)get_oport("Output Colormap");
   if(cmap_port) {
-    cmap_->lock_widgets();
-    cmap_->widgets() = widget_;
-    cmap_->unlock_widgets();
     cmap_port->send(cmap_);
   }
 }
 
-
-
 void
-EditTransferFunc2::update()
+EditTransferFunc2::redraw()
 {
-  //cerr << "update" << endl;
-
-  bool do_execute = false;
-  
   gui->lock();
 
   //----------------------------------------------------------------
   // obtain rendering ctx 
-  if (!ctx_) {
+  if(!ctx_) {
     const string myname(".ui" + id + ".f.gl.gl");
     Tk_Window tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
                                       Tk_MainWindow(the_interp));
-    if (!tkwin) {
+    if(!tkwin) {
       warning("Unable to locate window!");
       gui->unlock();
       return;
@@ -351,7 +349,8 @@ EditTransferFunc2::update()
       if(shader_factory_->create()) {
         use_pbuffer_ = false;
         use_back_buffer_ = false;
-        cerr << "[EditTransferFunction2] Shaders not supported; switching to software rasterization" << endl;
+        cerr << "[EditTransferFunction2] Shaders not supported; "
+             << "switching to software rasterization" << endl;
       }
     }
   }
@@ -368,7 +367,8 @@ EditTransferFunc2::update()
       delete pbuffer_;
       pbuffer_ = 0;
       use_pbuffer_ = false;
-      cerr << "[EditTransferFunction2] Pbuffers not supported; switching to back buffer rasterization" << endl;
+      cerr << "[EditTransferFunction2] Pbuffers not supported; "
+           << "switching to back buffer rasterization" << endl;
     } else {
       use_back_buffer_ = false;
       cerr << "[EditTransferFunction2] Using Pbuffer rasterization" << endl;
@@ -407,10 +407,9 @@ EditTransferFunc2::update()
       }
 
       glDisable(GL_BLEND);
-    
       pbuffer_->swapBuffers();
-    
       glXMakeCurrent(dpy_, win_, ctx_);
+      cmap_dirty_ = false;
     }
   } else {
     // software rasterization
@@ -453,6 +452,7 @@ EditTransferFunc2::update()
                         GL_RGBA, GL_FLOAT, &array_(0,0,0));
         glBindTexture(GL_TEXTURE_2D, 0);
       }
+      cmap_dirty_ = false;
     }
   }
 
@@ -477,29 +477,6 @@ EditTransferFunc2::update()
     glBindTexture(GL_TEXTURE_2D, 0);
     histo_dirty_ = false;
   }
-
-  if(cmap_dirty_) {
-    cmap_->lock_widgets();
-    cmap_->widgets() = widget_;
-    cmap_->set_updating(updating_);
-    cmap_->unlock_widgets();
-    cmap_dirty_ = false;
-    do_execute = true;
-  }
-  
-  gui->unlock();
-
-  if(do_execute) {
-    want_to_execute();
-  }
-}
-
-void
-EditTransferFunc2::redraw()
-{
-  //cerr << "redraw" << endl;
-
-  gui->lock();
   
   //----------------------------------------------------------------
   // draw

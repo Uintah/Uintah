@@ -34,10 +34,13 @@
 #include <Packages/Volume/Core/Geom/VolumeRenderer.h>
 #include <Packages/Volume/Core/Util/ShaderProgramARB.h>
 #include <Packages/Volume/Core/Util/SliceTable.h>
+#include <Packages/Volume/Core/Util/Pbuffer.h>
 #include <Packages/Volume/Core/Datatypes/Brick.h>
 #include <Core/Util/DebugStream.h>
 
 using std::string;
+
+namespace Volume {
 
 static SCIRun::DebugStream dbg("VolumeRenderer", false);
 
@@ -72,9 +75,6 @@ static const string ShaderString4_2 =
 "ATTRIB t = fragment.texcoord[0]; \n"
 "TEX v.w, t, texture[0], 3D; \n"
 "TEX v.x, t, texture[1], 3D; \n"
-"#MUL c.xyz, v.x, 0.1; \n"
-"#MOV c.w, 0.1; \n"
-"#MOV result.color, c; \n"
 "TEX result.color, v.wxyz, texture[2], 2D; \n"
 "END";
 
@@ -262,93 +262,61 @@ static const string FogVertexShaderString =
 "DP4 oPos.w, mvp[3], iPos; \n"
 "END";
 
-static const string TexShaderString =
-"!!ARBfp1.0 \n"
-"TEMP c, z; \n"
-"ATTRIB t = fragment.texcoord[0]; \n"
-"PARAM s = program.local[0]; # {bp, sliceRatio, 0.0, 0.0} \n"
-"TEX c, t, texture[0], RECT; \n"
-"POW z.w, c.w, s.x; # alpha1 = pow(alpha, bp); \n"
-"SUB z.w, 1.0, z.w; # alpha2 = 1.0-pow(1.0-alpha1, sliceRatio); \n"
-"POW c.w, z.w, s.y; \n"
-"SUB c.w, 1.0, c.w; \n"
-"MUL c.xyz, c.xyzz, c.w; # c *= alpha2; \n"
-"MOV result.color, c; \n"
-"END";
-
 using namespace Volume;
 using SCIRun::DrawInfoOpenGL;
 
-VolumeRenderer::VolumeRenderer() :
-  slices_(64), slice_alpha_(0.5), mode_(OVEROP),
-  shading_(false), ambient_(0.5), diffuse_(0.5), specular_(0.0),
-  shine_(30.0), light_(0), pbuffer_(0), shader_factory_(0),
-  texbuffer_(0), use_pbuffer_(true)
+VolumeRenderer::VolumeRenderer(TextureHandle tex,
+                               ColorMapHandle cmap1, Colormap2Handle cmap2):
+  TextureRenderer(tex, cmap1, cmap2),
+  shading_(false),
+  ambient_(0.5),
+  diffuse_(0.5),
+  specular_(0.0),
+  shine_(30.0),
+  light_(0),
+  adaptive_(true)
 {
-  VolShader1 = new FragmentProgramARB(ShaderString1);
-  VolShader4 = new FragmentProgramARB(ShaderString4);
-  FogVolShader1 = new FragmentProgramARB(FogShaderString1);
-  FogVolShader4 = new FragmentProgramARB(FogShaderString4);
-  LitVolShader = new FragmentProgramARB(LitVolShaderString);
-  LitFogVolShader = new FragmentProgramARB(LitFogVolShaderString);
-  VolShader1_2 = new FragmentProgramARB(ShaderString1_2);
-  VolShader4_2 = new FragmentProgramARB(ShaderString4_2);
-  FogVolShader1_2 = new FragmentProgramARB(FogShaderString1_2);
-  FogVolShader4_2 = new FragmentProgramARB(FogShaderString4_2);
-  LitVolShader_2 = new FragmentProgramARB(LitVolShaderString_2);
-  LitFogVolShader_2 = new FragmentProgramARB(LitFogVolShaderString_2);
-  FogVertexShader = new VertexProgramARB(FogVertexShaderString);
-  texshader_ = new FragmentProgramARB(TexShaderString);
+  mode_ = MODE_OVER;
+  vol_shader1_ = new FragmentProgramARB(ShaderString1);
+  vol_shader4_ = new FragmentProgramARB(ShaderString4);
+  fog_vol_shader1_ = new FragmentProgramARB(FogShaderString1);
+  fog_vol_shader4_ = new FragmentProgramARB(FogShaderString4);
+  lit_vol_shader_ = new FragmentProgramARB(LitVolShaderString);
+  lit_fog_vol_shader_ = new FragmentProgramARB(LitFogVolShaderString);
+  vol_shader1_2_ = new FragmentProgramARB(ShaderString1_2);
+  vol_shader4_2_ = new FragmentProgramARB(ShaderString4_2);
+  fog_vol_shader1_2_ = new FragmentProgramARB(FogShaderString1_2);
+  fog_vol_shader4_2_ = new FragmentProgramARB(FogShaderString4_2);
+  lit_vol_shader_2_ = new FragmentProgramARB(LitVolShaderString_2);
+  lit_fog_vol_shader_2_ = new FragmentProgramARB(LitFogVolShaderString_2);
 }
 
-VolumeRenderer::VolumeRenderer(TextureHandle tex, ColorMapHandle cmap, Colormap2Handle cmap2):
-  TextureRenderer(tex, cmap, cmap2),
-  slices_(64), slice_alpha_(0.5), mode_(OVEROP),
-  shading_(false), ambient_(0.5), diffuse_(0.5), specular_(0.0),
-  shine_(30.0), light_(0), pbuffer_(0), shader_factory_(0),
-  texbuffer_(0), use_pbuffer_(true)
+VolumeRenderer::VolumeRenderer(const VolumeRenderer& copy):
+  TextureRenderer(copy),
+  shading_(copy.shading_),
+  ambient_(copy.ambient_),
+  diffuse_(copy.diffuse_),
+  specular_(copy.specular_),
+  shine_(copy.shine_),
+  light_(copy.light_),
+  adaptive_(copy.adaptive_)
 {
-  VolShader1 = new FragmentProgramARB(ShaderString1);
-  VolShader4 = new FragmentProgramARB(ShaderString4);
-  FogVolShader1 = new FragmentProgramARB(FogShaderString1);
-  FogVolShader4 = new FragmentProgramARB(FogShaderString4);
-  LitVolShader = new FragmentProgramARB(LitVolShaderString);
-  LitFogVolShader = new FragmentProgramARB(LitFogVolShaderString);
-  VolShader1_2 = new FragmentProgramARB(ShaderString1_2);
-  VolShader4_2 = new FragmentProgramARB(ShaderString4_2);
-  FogVolShader1_2 = new FragmentProgramARB(FogShaderString1_2);
-  FogVolShader4_2 = new FragmentProgramARB(FogShaderString4_2);
-  LitVolShader_2 = new FragmentProgramARB(LitVolShaderString_2);
-  LitFogVolShader_2 = new FragmentProgramARB(LitFogVolShaderString_2);
-  FogVertexShader = new VertexProgramARB(FogVertexShaderString);
-  texshader_ = new FragmentProgramARB(TexShaderString);
+  vol_shader1_ = copy.vol_shader1_;
+  vol_shader4_ = copy.vol_shader4_;
+  fog_vol_shader1_ = copy.fog_vol_shader1_;
+  fog_vol_shader4_ = copy.fog_vol_shader4_;
+  lit_vol_shader_ = copy.lit_vol_shader_;
+  lit_fog_vol_shader_ = copy.lit_fog_vol_shader_;
+  vol_shader1_2_ = copy.vol_shader1_2_;
+  vol_shader4_2_ = copy.vol_shader4_2_;
+  fog_vol_shader1_2_ = copy.fog_vol_shader1_2_;
+  fog_vol_shader4_2_ = copy.fog_vol_shader4_2_;
+  lit_vol_shader_2_ = copy.lit_vol_shader_2_;
+  lit_fog_vol_shader_2_ = copy.lit_fog_vol_shader_2_;
 }
 
-VolumeRenderer::VolumeRenderer( const VolumeRenderer& copy):
-  TextureRenderer(copy.tex_, copy.cmap_, copy.cmap2_),
-  slices_(copy.slices_),
-  slice_alpha_(copy.slice_alpha_),
-  mode_(copy.mode_),
-  pbuffer_(copy.pbuffer_),
-  shader_factory_(copy.shader_factory_),
-  texbuffer_(copy.texbuffer_),
-  use_pbuffer_(copy.use_pbuffer_)
-{
-  VolShader1 = copy.VolShader1;
-  VolShader4 = copy.VolShader4;
-  FogVolShader1 = copy.FogVolShader1;
-  FogVolShader4 = copy.FogVolShader4;
-  LitVolShader = copy.LitVolShader;
-  LitFogVolShader = copy.LitFogVolShader;
-  VolShader1_2 = copy.VolShader1_2;
-  VolShader4_2 = copy.VolShader4_2;
-  FogVolShader1_2 = copy.FogVolShader1_2;
-  FogVolShader4_2 = copy.FogVolShader4_2;
-  LitVolShader_2 = copy.LitVolShader_2;
-  LitFogVolShader_2 = copy.LitFogVolShader_2;
-  FogVertexShader = copy.FogVertexShader;
-  texshader_ = copy.texshader_;
-}
+VolumeRenderer::~VolumeRenderer()
+{}
 
 GeomObj*
 VolumeRenderer::clone()
@@ -356,6 +324,48 @@ VolumeRenderer::clone()
   return scinew VolumeRenderer(*this);
 }
 
+void
+VolumeRenderer::set_mode(RenderMode mode)
+{
+  if(mode_ != mode) {
+    mode_ = mode;
+    alpha_dirty_ = true;
+  }
+}
+
+void
+VolumeRenderer::set_sampling_rate(double rate)
+{
+  if(sampling_rate_ != rate) {
+    sampling_rate_ = rate;
+    alpha_dirty_ = true;
+  }
+}
+
+void
+VolumeRenderer::set_interactive_rate(double rate)
+{
+  if(irate_ != rate) {
+    irate_ = rate;
+    alpha_dirty_ = true;
+  }
+}
+
+void
+VolumeRenderer::set_interactive_mode(bool mode)
+{
+  if(imode_ != mode) {
+    imode_ = mode;
+    alpha_dirty_ = true;
+  }
+}
+
+void
+VolumeRenderer::set_adaptive(bool b)
+{
+  adaptive_ = b;
+}
+    
 #ifdef SCI_OPENGL
 void
 VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
@@ -365,7 +375,7 @@ VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
   mutex_.lock();
   di_ = di;
   if(di->get_drawtype() == DrawInfoOpenGL::WireFrame ) {
-    drawWireFrame();
+    draw_wireframe();
   } else {
     //AuditAllocator(default_allocator);
     draw();
@@ -377,694 +387,280 @@ VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 VolumeRenderer::draw()
 {
-  GLenum errcode;
-
   Ray viewRay;
-  compute_view( viewRay );
+  compute_view(viewRay);
 
+  if(adaptive_ && ((cmap2_.get_rep() && cmap2_->is_updating()) || di_->mouse_action))
+    set_interactive_mode(true);
+  else
+    set_interactive_mode(false);
+  
   vector<Brick*> bricks;
-  tex_->get_sorted_bricks( bricks, viewRay );
-
+  tex_->get_sorted_bricks(bricks, viewRay);
   vector<Brick*>::iterator it = bricks.begin();
   vector<Brick*>::iterator it_end = bricks.end();
-
   BBox brickbounds;
-  tex_->get_bounds( brickbounds );
+  tex_->get_bounds(brickbounds);
+  Vector data_size(tex_->max()-tex_->min()+Vector(1.0,1.0,1.0));
+  double rate = imode_ ? irate_ : sampling_rate_;
+  int slices = (int)(data_size.length()*rate);
+  SliceTable st(brickbounds.min(), brickbounds.max(), viewRay, slices);
+  if(bricks.size() == 0) return;
   
-  SliceTable st(brickbounds.min(), brickbounds.max(), viewRay, slices_);
-  
-  vector<Polygon* > polys;
-  vector<Polygon* >::iterator pit;
-  double tmin, tmax, dt;
-  double ts[8];
-  //Brick *brick;
-
   //--------------------------------------------------------------------------
 
-  if(cmap2_.get_rep()) {
-    if(cmap2_dirty_) {
-      BuildTransferFunction2();
-      cmap2_dirty_ = false;
-    }
-    glActiveTexture(GL_TEXTURE2_ARB);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    if(use_pbuffer_) {
-      texbuffer_->bind(GL_FRONT);
-    } else {
-      glEnable(GL_TEXTURE_2D);
-      glBindTexture(GL_TEXTURE_2D, cmap_tex_);
-    }
-    glActiveTexture(GL_TEXTURE1_ARB);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    glEnable(GL_TEXTURE_3D);
-    glActiveTexture(GL_TEXTURE0_ARB);
+  int nc = (*bricks.begin())->data()->nc();
+  int nb0 = (*bricks.begin())->data()->nb(0);
+  bool use_cmap2 = cmap2_.get_rep() && nc == 2;
+  bool use_shading = shading_ && nb0 == 4;
+  GLboolean use_fog;
+  glGetBooleanv(GL_FOG, &use_fog);
+
+  //--------------------------------------------------------------------------
+  // load colormap texture
+  if(use_cmap2) {
+    // rebuild if needed
+    build_colormap2();
+    bind_colormap2();
+  } else {
+    // rebuild if needed
+    build_colormap1();
+    bind_colormap1();
   }
   
-  if(cmap_.get_rep()) {
-    if(cmap_has_changed_ || r_count_ != 1) {
-      BuildTransferFunction();
-      // cmap_has_changed_ = false;
-    }
-    load_colormap();
-    glActiveTexture(GL_TEXTURE2_ARB);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    glEnable(GL_TEXTURE_1D);
-    glActiveTexture(GL_TEXTURE0_ARB);
-  }
-
-  // First set up the Textures.
+  //--------------------------------------------------------------------------
+  // enable data texture unit 0
   glActiveTexture(GL_TEXTURE0_ARB);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glEnable(GL_TEXTURE_3D);
 
-  glColor4f(1.0, 1.0, 1.0, 1.0);
-  glDepthMask(GL_FALSE);
-  
-  // now set up the Blending
+  //--------------------------------------------------------------------------
+  // now set up blending
   glEnable(GL_BLEND);
   switch(mode_) {
-  case OVEROP:
+  case MODE_OVER:
     glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     break;
-  case MIP:
+  case MODE_MIP:
     glBlendEquation(GL_MAX);
     glBlendFunc(GL_ONE, GL_ONE);
     break;
+  default:
+    break;
   }
   
+  glColor4f(1.0, 1.0, 1.0, 1.0);
+  glDepthMask(GL_FALSE);
+
   //--------------------------------------------------------------------------
+  // set up shaders
+  FragmentProgramARB* fragment_shader = 0;
 
-  if(mode_ == OVEROP) {
-    GLboolean fog;
-    glGetBooleanv(GL_FOG, &fog);
-
-    int nc = (*bricks.begin())->data()->nc();
-    int nb0 = (*bricks.begin())->data()->nb(0);
-    
-    if (fog) {
-      if (!FogVertexShader->valid()) {
-        FogVertexShader->create();
-      }
-      FogVertexShader->bind();
-    }
-
-    if(nc == 2 && cmap2_.get_rep()) {
-      if (shading_ && nb0 == 4) {
-        if(fog) {
-          if (!LitFogVolShader_2->valid()) {
-            LitFogVolShader_2->create();
-          }
-          LitFogVolShader_2->bind();
+  if(mode_ == MODE_OVER) {
+    if(use_cmap2) {
+      if(use_shading) {
+        if(use_fog) {
+          fragment_shader = lit_fog_vol_shader_2_;
         } else {
-          if (!LitVolShader_2->valid()) {
-            LitVolShader_2->create();
-          }
-          LitVolShader_2->bind();
+          fragment_shader = lit_vol_shader_2_;
         }
-        // set shader parameters
-        GLfloat pos[4];
-        glGetLightfv(GL_LIGHT0+light_, GL_POSITION, pos);
-        Vector l(pos[0], pos[1], pos[2]);
-        //cerr << "LIGHTING: " << pos << endl;
-        double m[16], m_tp[16];
-        glGetDoublev(GL_MODELVIEW_MATRIX, m);
-        for (int ii=0; ii<4; ii++)
-          for (int jj=0; jj<4; jj++)
-            m_tp[ii*4+jj] = m[jj*4+ii];
-        Transform mv;
-        mv.set(m_tp);
-        Transform t = tex_->get_field_transform();
-        l = mv.unproject(l);
-        l = t.unproject(l);
-        if(fog) {
-          LitFogVolShader_2->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
-          LitFogVolShader_2->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
-        } else {
-          LitVolShader_2->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
-          LitVolShader_2->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
-        }
-      } else { // !shading
-        if(fog) {
-          switch (nb0) {
-          case 1:
-            if(!FogVolShader1_2->valid()) {
-              FogVolShader1_2->create();
-            }
-            FogVolShader1_2->bind();
-            break;
-          case 4:
-            if(!FogVolShader4_2->valid()) {
-              FogVolShader4_2->create();
-            }
-            FogVolShader4_2->bind();
-            break;
-          }
-        } else { // !fog
+      } else { // !use_shading
+        if(use_fog) {
           switch(nb0) {
           case 1:
-            if(!VolShader1_2->valid()) {
-              VolShader1_2->create();
-            }
-            VolShader1_2->bind();
+            fragment_shader = fog_vol_shader1_2_;
             break;
           case 4:
-            if(!VolShader4_2->valid()) {
-              VolShader4_2->create();
-            }
-            VolShader4_2->bind();
+            fragment_shader = fog_vol_shader4_2_;
+            break;
+          }
+        } else { // !use_fog
+          switch(nb0) {
+          case 1:
+            fragment_shader = vol_shader1_2_;
+            break;
+          case 4:
+            fragment_shader = vol_shader4_2_;
             break;
           }
         }
       }
-    } else {// nc == 1
-      if (shading_ && nb0 == 4) {
-        if(fog) {
-          if (!LitFogVolShader->valid()) {
-            LitFogVolShader->create();
-          }
-          LitFogVolShader->bind();
+    } else { // nc == 1
+      if(use_shading) {
+        if(use_fog) {
+          fragment_shader = lit_fog_vol_shader_;
         } else {
-          if (!LitVolShader->valid()) {
-            LitVolShader->create();
-          }
-          LitVolShader->bind();
+          fragment_shader = lit_vol_shader_;
         }
-        // set shader parameters
-        GLfloat pos[4];
-        glGetLightfv(GL_LIGHT0+light_, GL_POSITION, pos);
-        Vector l(pos[0], pos[1], pos[2]);
-        dbg << pos << endl;
-        double m[16], m_tp[16];
-        glGetDoublev(GL_MODELVIEW_MATRIX, m);
-        for (int ii=0; ii<4; ii++)
-          for (int jj=0; jj<4; jj++)
-            m_tp[ii*4+jj] = m[jj*4+ii];
-        Transform mv;
-        mv.set(m_tp);
-        Transform t = tex_->get_field_transform();
-        l = mv.unproject(l);
-        l = t.unproject(l);
-        if(fog) {
-          LitFogVolShader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
-          LitFogVolShader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
-        } else {
-          LitVolShader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
-          LitVolShader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
-        }
-      } else { // !shading
-        if(fog) {
+      } else { // !use_shading
+        if(use_fog) {
           switch (nb0) {
           case 1:
-            if(!FogVolShader1->valid()) {
-              FogVolShader1->create();
-            }
-            FogVolShader1->bind();
+            fragment_shader = fog_vol_shader1_;
             break;
           case 4:
-            if(!FogVolShader4->valid()) {
-              FogVolShader4->create();
-            }
-            FogVolShader4->bind();
+            fragment_shader = fog_vol_shader4_;
             break;
           }
-        } else { // !fog
+        } else { // !use_fog
           switch(nb0) {
           case 1:
-            if(!VolShader1->valid()) {
-              VolShader1->create();
-            }
-            VolShader1->bind();
+            fragment_shader = vol_shader1_;
             break;
           case 4:
-            if(!VolShader4->valid()) {
-              VolShader4->create();
-            }
-            VolShader4->bind();
+            fragment_shader = vol_shader4_;
             break;
           }
         }
       }
     }
-  } else if(mode_ == MIP) {
-    int nc = (*bricks.begin())->data()->nc();
-    int nb0 = (*bricks.begin())->data()->nb(0);
-    if(nc == 2 && cmap2_.get_rep()) {
-      if(nb0 == 4) {
-        if (!VolShader4_2->valid()) {
-          VolShader4_2->create();
-        }
-        VolShader4_2->bind();
-      } else {
-        if (!VolShader1_2->valid()) {
-          VolShader1_2->create();
-        }
-        VolShader1_2->bind();
+  } else if(mode_ == MODE_MIP) {
+    if(use_cmap2) {
+      switch(nb0) {
+      case 1:
+        fragment_shader = vol_shader1_2_;
+        break;
+      case 4:
+        fragment_shader = vol_shader4_2_;
+        break;
       }
-    } else {
-      if(nb0 == 4) {
-        if (!VolShader4->valid()) {
-          VolShader4->create();
-        }
-        VolShader4->bind();
-      } else {
-        if (!VolShader1->valid()) {
-          VolShader1->create();
-        }
-        VolShader1->bind();
+    } else { // !use_cmap2
+      switch(nb0) {
+      case 1:
+        fragment_shader = vol_shader1_;
+        break;
+      case 4:
+        fragment_shader = vol_shader4_;
+        break;
       }
     }
   }
+
+  if(fragment_shader) {
+    if(!fragment_shader->valid()) {
+      fragment_shader->create();
+    }
+    fragment_shader->bind();
+  }
+  
+  if(use_shading) {
+    // set shader parameters
+    GLfloat pos[4];
+    glGetLightfv(GL_LIGHT0+light_, GL_POSITION, pos);
+    Vector l(pos[0], pos[1], pos[2]);
+    //cerr << "LIGHTING: " << pos << endl;
+    double m[16], m_tp[16];
+    glGetDoublev(GL_MODELVIEW_MATRIX, m);
+    for (int ii=0; ii<4; ii++)
+      for (int jj=0; jj<4; jj++)
+        m_tp[ii*4+jj] = m[jj*4+ii];
+    Transform mv;
+    mv.set(m_tp);
+    Transform t = tex_->get_field_transform();
+    l = mv.unproject(l);
+    l = t.unproject(l);
+    fragment_shader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
+    fragment_shader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
+  }
   
   //--------------------------------------------------------------------------
-  
+  // render bricks
+  vector<Polygon*> polys;
+  vector<Polygon*>::iterator pit;
   for( ; it != it_end; it++ ) {
     for(pit = polys.begin(); pit != polys.end(); pit++) delete *pit;
     polys.clear();
     Brick& b = *(*it);
-    for(int i = 0; i < 8; i++)
+    double ts[8];
+    for(int i=0; i<8; i++)
       ts[i] = intersectParam(-viewRay.direction(), b[i], viewRay);
     sortParameters(ts, 8);
+    double tmin, tmax, dt;
     st.getParameters(b, tmin, tmax, dt);
     b.ComputePolys(viewRay, tmin, tmax, dt, ts, polys);
-    load_texture(b);
-    drawPolys(polys);
+    load_brick(b);
+    draw_polys(polys, use_fog);
   }
 
   //--------------------------------------------------------------------------
+  // release shaders
 
-  if(mode_ == OVEROP) {
-    GLboolean fog;
-    glGetBooleanv(GL_FOG, &fog);
-    int nc = (*bricks.begin())->data()->nc();
-    int nb0 = (*bricks.begin())->data()->nb(0);
-    //int nb1 = (*bricks.begin())->data()->nb(1);
-
-    if (fog) {
-      FogVertexShader->release();
-    }
-
-    if(nc == 2 && cmap2_.get_rep()) {
-      switch(nb0) {
-      case 1: {
-        VolShader1_2->release();
-      } break;
-      case 4: {
-        VolShader4_2->release();
-      }
-      default:
-        break;
-      }
-    } else { // nc == 1
-      if(shading_ && nb0 == 4) {
-        if(fog) {
-          LitFogVolShader->release();
-        } else {
-          LitVolShader->release();
-        }
-      } else {
-        if(fog) {
-          switch(nb0) {
-          case 1:
-            FogVolShader1->release();
-            break;
-          case 4:
-            FogVolShader4->release();
-            break;
-          }
-        } else {
-          switch(nb0) {
-          case 1:
-            VolShader1->release();
-            break;
-          case 4:
-            VolShader4->release();
-            break;
-          }
-        }
-      }
-    }
-  } else if(mode_ == MIP) {
-    int nc = (*bricks.begin())->data()->nc();
-    int nb0 = (*bricks.begin())->data()->nb(0);
-    if(nc == 2 && cmap2_.get_rep()) {
-      if(nb0 == 4) {
-        VolShader4_2->release();
-      } else {
-        VolShader1_2->release();
-      }
-    } else {
-      if(nb0 == 4) {
-        VolShader4->release();
-      } else {
-        VolShader1->release();
-      }
-    }
-  }
+  if(fragment_shader && fragment_shader->valid())
+    fragment_shader->release();
   
   //--------------------------------------------------------------------------
 
   glDisable(GL_BLEND);
   glDepthMask(GL_TRUE);
+  // glEnable(GL_DEPTH_TEST);  
 
-  glActiveTexture(GL_TEXTURE2_ARB);
-  if(cmap2_.get_rep()) {
-    if(use_pbuffer_) {
-      texbuffer_->release(GL_FRONT);
-    } else {
-      glDisable(GL_TEXTURE_2D);
-      glBindTexture(GL_TEXTURE_2D, 0);
-    }
+  //--------------------------------------------------------------------------
+  // release textures
+  if(use_cmap2) {
+    release_colormap2();
   } else {
-    glDisable(GL_TEXTURE_1D);
+    release_colormap1();
   }
-  glActiveTexture(GL_TEXTURE1_ARB);
-  glDisable(GL_TEXTURE_3D);
   glActiveTexture(GL_TEXTURE0_ARB);
   glDisable(GL_TEXTURE_3D);
-  // glEnable(GL_DEPTH_TEST);  
-  
+  glBindTexture(GL_TEXTURE_3D, 0);
+
+
   // Look for errors
-  if ((errcode=glGetError()) != GL_NO_ERROR)
-  {
+  GLenum errcode;
+  if((errcode=glGetError()) != GL_NO_ERROR) {
     cerr << "VolumeRenderer::end | "
-         << (char*)gluErrorString(errcode)
-         << "\n";
+         << (char*)gluErrorString(errcode) << "\n";
   }
 }
 
 void
-VolumeRenderer::drawWireFrame()
+VolumeRenderer::draw_wireframe()
 {
   Ray viewRay;
-  compute_view( viewRay );
-
-  double mvmat[16];
+  compute_view(viewRay);
   TextureHandle tex = tex_;
   Transform field_trans = tex_->get_field_transform();
   // set double array transposed.  Our matricies are stored transposed 
   // from OpenGL matricies.
+  double mvmat[16];
   field_trans.get_trans(mvmat);
-  
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glMultMatrixd(mvmat);
   glEnable(GL_DEPTH_TEST);
-
-
   vector<Brick*> bricks;
-  tex_->get_sorted_bricks( bricks, viewRay );
+  tex_->get_sorted_bricks(bricks, viewRay);
   vector<Brick*>::iterator it = bricks.begin();
   vector<Brick*>::iterator it_end = bricks.end();
-  for(; it != it_end; ++it){
+  for(; it != it_end; ++it) {
     Brick& brick = *(*it);
-    glColor4f(0.8,0.8,0.8,1.0);
-
+    glColor4f(0.8, 0.8, 0.8, 1.0);
     glBegin(GL_LINES);
-    for(int i = 0; i < 4; i++){
+    for(int i=0; i<4; i++) {
       glVertex3d(brick[i].x(), brick[i].y(), brick[i].z());
       glVertex3d(brick[i+4].x(), brick[i+4].y(), brick[i+4].z());
     }
     glEnd();
-
     glBegin(GL_LINE_LOOP);
     glVertex3d(brick[0].x(), brick[0].y(), brick[0].z());
     glVertex3d(brick[1].x(), brick[1].y(), brick[1].z());
     glVertex3d(brick[3].x(), brick[3].y(), brick[3].z());
     glVertex3d(brick[2].x(), brick[2].y(), brick[2].z());
     glEnd();
-
     glBegin(GL_LINE_LOOP);
     glVertex3d(brick[4].x(), brick[4].y(), brick[4].z());
     glVertex3d(brick[5].x(), brick[5].y(), brick[5].z());
     glVertex3d(brick[7].x(), brick[7].y(), brick[7].z());
     glVertex3d(brick[6].x(), brick[6].y(), brick[6].z());
     glEnd();
-
   }
   glDisable(GL_DEPTH_TEST);
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 }
 
-void 
-VolumeRenderer::load_colormap()
-{
-  const unsigned char *arr = transfer_function_;
-
-  glActiveTexture(GL_TEXTURE2);
-  {
-    glEnable(GL_TEXTURE_1D);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    if( cmap_texture_ == 0 || cmap_has_changed_ ){
-      glDeleteTextures(1, &cmap_texture_);
-      glGenTextures(1, &cmap_texture_);
-      glBindTexture(GL_TEXTURE_1D, cmap_texture_);
-      glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);      
-      glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexImage1D(GL_TEXTURE_1D, 0,
-		   GL_RGBA,
-		   256, 0,
-		   GL_RGBA, GL_UNSIGNED_BYTE,
-		   arr);
-      cmap_has_changed_ = false;
-    } else {
-      glBindTexture(GL_TEXTURE_1D, cmap_texture_);
-    }
-  }
-  glActiveTexture(GL_TEXTURE0_ARB);
-
-  int errcode = glGetError(); 
-  if (errcode != GL_NO_ERROR)
-  {
-    cerr << "VolumeRenderer::load_colormap | "
-         << (char*)gluErrorString(errcode)
-         << "\n";
-  }
-}
 #endif // SCI_OPENGL
 
-void
-VolumeRenderer::BuildTransferFunction()
-{
-  const int tSize = 256;
-  int defaultSamples = 512;
-  float mul = 1.0/(tSize - 1);
-  double bp = 0;
-  if( mode_ != MIP) {
-    bp = tan( 1.570796327 * (0.5 - slice_alpha_*0.49999));
-  } else {
-    bp = tan( 1.570796327 * 0.5 );
-  }
-  double sliceRatio =  defaultSamples/(double(slices_));
-  for ( int j = 0; j < tSize; j++ )
-  {
-    const Color c = cmap_->getColor(j*mul);
-    const double alpha = cmap_->getAlpha(j*mul);
-    
-    const double alpha1 = pow(alpha, bp);
-    const double alpha2 = 1.0 - pow((1.0 - alpha1), sliceRatio);
-    if( mode_ != MIP ) {
-      transfer_function_[4*j + 0] = (unsigned char)(c.r()*alpha2*255);
-      transfer_function_[4*j + 1] = (unsigned char)(c.g()*alpha2*255);
-      transfer_function_[4*j + 2] = (unsigned char)(c.b()*alpha2*255);
-      transfer_function_[4*j + 3] = (unsigned char)(alpha2*255);
-    } else {
-      transfer_function_[4*j + 0] = (unsigned char)(c.r()*alpha*255);
-      transfer_function_[4*j + 1] = (unsigned char)(c.g()*alpha*255);
-      transfer_function_[4*j + 2] = (unsigned char)(c.b()*alpha*255);
-      transfer_function_[4*j + 3] = (unsigned char)(alpha*255);
-    }
-  }
-}
-
-void
-VolumeRenderer::BuildTransferFunction2()
-{
-  use_pbuffer_ = false;
-  if(use_pbuffer_ && !pbuffer_) {
-    pbuffer_ = new Pbuffer(256, 64, GL_FLOAT, 32, true, GL_FALSE);
-    texbuffer_ = new Pbuffer(256, 64, GL_INT, 8, true, GL_FALSE);
-    shader_factory_ = new CM2ShaderFactory();
-    if(pbuffer_->create() || texbuffer_->create() || texshader_->create()
-       || shader_factory_->create()) {
-      pbuffer_->destroy();
-      texbuffer_->destroy();
-      texshader_->destroy();
-      shader_factory_->destroy();
-      delete pbuffer_;
-      delete texbuffer_;
-      delete shader_factory_;
-      pbuffer_ = 0;
-      texbuffer_ = 0;
-      shader_factory_ = 0;
-      use_pbuffer_ = false;
-    } else {
-      pbuffer_->set_use_default_shader(false);
-      texbuffer_->set_use_default_shader(false);
-    }
-  }
-
-  if(use_pbuffer_) {
-
-    pbuffer_->activate();
-
-    glDrawBuffer(GL_FRONT);
-    glViewport(0, 0, pbuffer_->width(), pbuffer_->height());
-
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef(-1.0, -1.0, 0.0);
-    glScalef(2.0, 2.0, 2.0);
-
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_CULL_FACE);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    
-    // rasterize widgets
-    cmap2_->lock_widgets();
-    vector<CM2Widget*> widgets = cmap2_->widgets();
-    for (unsigned int i=0; i<widgets.size(); i++)
-    {
-      widgets[i]->rasterize(*shader_factory_);
-    }
-    cmap2_->unlock_widgets();
-    
-    glDisable(GL_BLEND);
-    
-    pbuffer_->swapBuffers();
-    pbuffer_->deactivate();
-
-    // opacity correction and quantization
-    double bp = 0;
-    if(mode_ != MIP) {
-      bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
-    } else {
-      bp = tan(1.570796327 * 0.5 );
-    }
-    int defaultSamples = 512;
-    double sliceRatio =  defaultSamples/(double(slices_));
-
-    
-    texbuffer_->activate();
-
-    glDrawBuffer(GL_FRONT);
-    glViewport(0, 0, texbuffer_->width(), texbuffer_->height());
-    
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef(-1.0, -1.0, 0.0);
-    glScalef(2.0, 2.0, 2.0);
-
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_CULL_FACE);
-
-    texshader_->bind();
-    texshader_->setLocalParam(0, bp, sliceRatio, 0.0, 0.0);
-
-    glActiveTexture(GL_TEXTURE0);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    pbuffer_->bind(GL_FRONT);
-    glBegin(GL_QUADS);
-    {
-      glTexCoord2f( 0.0,  0.0);
-      glVertex2f( 0.0,  0.0);
-      glTexCoord2f( 1.0,  0.0);
-      glVertex2f( 1.0,  0.0);
-      glTexCoord2f( 1.0,  1.0);
-      glVertex2f( 1.0,  1.0);
-      glTexCoord2f( 0.0,  1.0);
-      glVertex2f( 0.0,  1.0);
-    }
-    glEnd();
-    pbuffer_->release(GL_FRONT);
-    texshader_->release();
-    
-    texbuffer_->swapBuffers();
-    texbuffer_->deactivate();
-  } else {
-    // software rasterization
-    bool size_dirty = 256 != array_.dim2() || 64 != array_.dim1();
-    if(size_dirty) {
-      array_.resize(64, 256, 4);
-      cmap_array_.resize(64, 256, 4);
-    }
-    // clear cmap
-    for(int i=0; i<array_.dim1(); i++) {
-      for(int j=0; j<array_.dim2(); j++) {
-        array_(i,j,0) = 0.0;
-        array_(i,j,1) = 0.0;
-        array_(i,j,2) = 0.0;
-        array_(i,j,3) = 0.0;
-      }
-    }
-    cmap2_->lock_widgets();
-    vector<CM2Widget*>& widget = cmap2_->widgets();
-    // rasterize widgets
-    for (unsigned int i=0; i<widget.size(); i++) {
-      widget[i]->rasterize(array_);
-    }
-    cmap2_->unlock_widgets();
-    // opacity correction
-    double bp = 0;
-    if(mode_ != MIP) {
-      bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
-    } else {
-      bp = tan(1.570796327 * 0.5);
-    }
-    int defaultSamples = 512;
-    double sliceRatio = defaultSamples/(double(slices_));
-    for(int i=0; i<array_.dim1(); i++) {
-      for(int j=0; j<array_.dim2(); j++) {
-        double alpha = array_(i,j,3);
-        if(mode_ != MIP) {
-          double alpha1 = pow(alpha, bp);
-          double alpha2 = 1.0-pow(1.0-alpha1, sliceRatio);
-          cmap_array_(i,j,0) = (unsigned char)(array_(i,j,0)*alpha2*255);
-          cmap_array_(i,j,1) = (unsigned char)(array_(i,j,1)*alpha2*255);
-          cmap_array_(i,j,2) = (unsigned char)(array_(i,j,2)*alpha2*255);
-          cmap_array_(i,j,3) = (unsigned char)(alpha2*255);
-        } else {
-          cmap_array_(i,j,0) = (unsigned char)(array_(i,j,0)*alpha*255);
-          cmap_array_(i,j,1) = (unsigned char)(array_(i,j,1)*alpha*255);
-          cmap_array_(i,j,2) = (unsigned char)(array_(i,j,2)*alpha*255);
-          cmap_array_(i,j,3) = (unsigned char)(alpha*255);
-        }
-      }
-    }
-    // update texture
-    if(size_dirty) {
-      if(glIsTexture(cmap_tex_)) {
-        glDeleteTextures(1, &cmap_tex_);
-        cmap_tex_ = 0;
-      }
-      glGenTextures(1, &cmap_tex_);
-      glBindTexture(GL_TEXTURE_2D, cmap_tex_);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, cmap_array_.dim2(), cmap_array_.dim1(),
-                   0, GL_RGBA, GL_UNSIGNED_BYTE, &cmap_array_(0,0,0));
-      glBindTexture(GL_TEXTURE_2D, 0);
-    } else {
-      glBindTexture(GL_TEXTURE_2D, cmap_tex_);
-      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cmap_array_.dim2(), cmap_array_.dim1(),
-                      GL_RGBA, GL_UNSIGNED_BYTE, &cmap_array_(0,0,0));
-      glBindTexture(GL_TEXTURE_2D, 0);
-    }
-  }
-}
+} // End namespace Volume

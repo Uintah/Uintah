@@ -8,8 +8,8 @@ SRCS     += \
 	$(SRCDIR)/EditTransferFunc2.cc \
 	$(SRCDIR)/NrrdTextureBuilder.cc \
 	$(SRCDIR)/TextureBuilder.cc \
-	$(SRCDIR)/VolumeSlicer.cc \
 	$(SRCDIR)/VolumeVisualizer.cc \
+	$(SRCDIR)/VolumeSlicer.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \

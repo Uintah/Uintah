@@ -44,12 +44,14 @@ class CM2Widget
 public:
   CM2Widget();
   virtual ~CM2Widget();
-
+  CM2Widget(CM2Widget& copy);
+  
   // appearance
   virtual void draw() = 0;
   virtual void rasterize(CM2ShaderFactory& factory) = 0;
   virtual void rasterize(SCIRun::Array3<float>& array) = 0;
-
+  virtual CM2Widget* clone() = 0;
+  
   // behavior
   virtual int pick1 (int x, int y, int w, int h) = 0;
   virtual int pick2 (int x, int y, int w, int h) = 0;
@@ -105,7 +107,10 @@ public:
   TriangleCM2Widget(float base, float top_x, float top_y,
                     float width, float bottom);
   ~TriangleCM2Widget();
+  TriangleCM2Widget(TriangleCM2Widget& copy);
 
+  virtual CM2Widget* clone();
+  
   // appearance
   void draw();
   void rasterize(CM2ShaderFactory& factory);
@@ -135,6 +140,9 @@ public:
   RectangleCM2Widget(int type, float left_x, float left_y,
                      float width, float height, float offset);
   ~RectangleCM2Widget();
+  RectangleCM2Widget(RectangleCM2Widget& copy);
+
+  virtual CM2Widget* clone();
 
   // appearance
   void draw();

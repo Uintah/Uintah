@@ -32,6 +32,7 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Persistent/Persistent.h>
 #include <Packages/Volume/Core/Datatypes/Colormap2.h>
+#include <Packages/Volume/Core/Datatypes/CM2Widget.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
@@ -58,7 +59,18 @@ Colormap2::Colormap2()
 
 Colormap2::~Colormap2()
 {
-  // TODO:  Delete widgets here.
+ for(unsigned int i=0; i<widget_.size(); i++)
+    delete widget_[i];
+}
+
+void
+Colormap2::set_widgets(vector<CM2Widget*>& widgets)
+{
+  for(unsigned int i=0; i<widget_.size(); i++)
+    delete widget_[i];
+  widget_.clear();
+  for(unsigned int i=0; i<widgets.size(); i++)
+    widget_.push_back(widgets[i]->clone());
 }
 
 } // End namespace Volume

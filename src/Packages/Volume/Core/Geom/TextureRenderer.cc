@@ -36,74 +36,361 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Color.h>
 #include <Packages/Volume/Core/Util/Utils.h>
+#include <Packages/Volume/Core/Util/Pbuffer.h>
+#include <Packages/Volume/Core/Util/ShaderProgramARB.h>
+
 #include <iostream>
 using std::cerr;
 
-using namespace Volume;
 using Volume::Brick;
 
-int TextureRenderer::r_count_ = 0;
+namespace Volume {
 
-TextureRenderer::TextureRenderer() :
-  GeomObj(),
-  cmap_texture_(0),
-  tex_(0),
-  mutex_("TextureRenderer Mutex"),
-  cmap_(0),
-  cmap_has_changed_(true),
-  interp_(true),
-  lighting_(0),
-  reload_(true)
-{
-  r_count_++;
-  NOT_FINISHED("TextureRenderer::TextureRenderer()");
-}
+static const string ShaderString1 =
+"!!ARBfp1.0 \n"
+"TEMP v; \n"
+"ATTRIB t = fragment.texcoord[0]; \n"
+"TEX v, t, texture[0], 3D; \n"
+"TEX result.color, v, texture[2], 1D; \n"
+"END";
 
-TextureRenderer::TextureRenderer(TextureHandle tex, ColorMapHandle map, Colormap2Handle cmap2) :
+static const string ShaderString4 =
+"!!ARBfp1.0 \n"
+"TEMP v; \n"
+"ATTRIB t = fragment.texcoord[0]; \n"
+"TEX v, t, texture[0], 3D; \n"
+"TEX result.color, v.w, texture[2], 1D; \n"
+"END";
+
+static const string ShaderString1_2 =
+"!!ARBfp1.0 \n"
+"TEMP v, c; \n"
+"ATTRIB t = fragment.texcoord[0]; \n"
+"TEX v.x, t, texture[0], 3D; \n"
+"TEX v.y, t, texture[1], 3D; \n"
+"TEX result.color, v, texture[2], 2D; \n"
+"END";
+
+static const string ShaderString4_2 =
+"!!ARBfp1.0 \n"
+"TEMP v, c; \n"
+"ATTRIB t = fragment.texcoord[0]; \n"
+"TEX v.w, t, texture[0], 3D; \n"
+"TEX v.x, t, texture[1], 3D; \n"
+"#MUL c.xyz, v.x, 0.1; \n"
+"#MOV c.w, 0.1; \n"
+"#MOV result.color, c; \n"
+"TEX result.color, v.wxyz, texture[2], 2D; \n"
+"END";
+
+//fogParam = {density, start, end, 1/(end-start) 
+//fogCoord.x = z
+//f = (end - fogCoord)/(end-start)
+static const string FogShaderString1 =
+"!!ARBfp1.0 \n"
+"TEMP c0, c, fogFactor, finalColor; \n"
+"PARAM fogColor = state.fog.color; \n"
+"PARAM fogParam = state.fog.params; \n"
+"ATTRIB fogCoord = fragment.texcoord[1];\n"
+"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
+"ATTRIB tf = fragment.texcoord[0]; \n"
+"SUB c, fogParam.z, fogCoord.x; \n"
+"MUL_SAT fogFactor.x, c, fogParam.w; \n"
+"TEX c0, tf, texture[0], 3D; \n"
+"TEX finalColor, c0, texture[2], 1D; \n"
+"LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
+"MOV result.color, finalColor; \n"
+"END";
+
+static const string FogShaderString1_2 =
+"!!ARBfp1.0 \n"
+"TEMP v, c, fogFactor, finalColor; \n"
+"PARAM fogColor = state.fog.color; \n"
+"PARAM fogParam = state.fog.params; \n"
+"ATTRIB fogCoord = fragment.texcoord[1];\n"
+"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
+"ATTRIB tf = fragment.texcoord[0]; \n"
+"SUB c, fogParam.z, fogCoord.x; \n"
+"MUL_SAT fogFactor.x, c, fogParam.w; \n"
+"TEX v.x, tf, texture[0], 3D; \n"
+"TEX v.y, tf, texture[1], 3D; \n"
+"TEX finalColor, v, texture[2], 2D; \n"
+"LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
+"MOV result.color, finalColor; \n"
+"END";
+
+static const string FogShaderString4 =
+"!!ARBfp1.0 \n"
+"TEMP c0, c, fogFactor, finalColor; \n"
+"PARAM fogColor = state.fog.color; \n"
+"PARAM fogParam = state.fog.params; \n"
+"ATTRIB fogCoord = fragment.texcoord[1];\n"
+"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
+"ATTRIB tf = fragment.texcoord[0]; \n"
+"SUB c, fogParam.z, fogCoord.x; \n"
+"MUL_SAT fogFactor.x, c, fogParam.w; \n"
+"TEX c0, tf, texture[0], 3D; \n"
+"TEX finalColor, c0.w, texture[2], 1D; \n"
+"LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
+"MOV result.color, finalColor; \n"
+"END";
+
+static const string FogShaderString4_2 =
+"!!ARBfp1.0 \n"
+"TEMP v, c, fogFactor, finalColor; \n"
+"PARAM fogColor = state.fog.color; \n"
+"PARAM fogParam = state.fog.params; \n"
+"ATTRIB fogCoord = fragment.texcoord[1];\n"
+"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
+"ATTRIB tf = fragment.texcoord[0]; \n"
+"SUB c, fogParam.z, fogCoord.x; \n"
+"MUL_SAT fogFactor.x, c, fogParam.w; \n"
+"TEX v.w, tf, texture[0], 3D; \n"
+"TEX v.x, tf, texture[1], 3D; \n"
+"TEX finalColor, v.wxyz, texture[2], 2D; \n"
+"LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
+"MOV result.color, finalColor; \n"
+"END";
+
+static const string LitVolShaderString =
+"!!ARBfp1.0 \n"
+"ATTRIB t = fragment.texcoord[0];\n"
+"PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
+"PARAM k = program.local[1]; # {ka, kd, ks, ns} \n"
+"TEMP v, n, c, d, s; \n"
+"TEX v, t, texture[0], 3D; \n"
+"MAD n, v, 2.0, -1.0; \n"
+"DP3 n.w, n, n; \n"
+"RSQ n.w, n.w; \n"
+"MUL n, n, n.w; \n"
+"DP3 d.w, l, n; \n"
+"ABS_SAT d.w, d.w; # two-sided lighting \n"
+"POW s.w, d.w, k.w; \n"
+"MAD d.w, d.w, k.y, k.x; \n"
+"MAD d.w, s.w, k.z, d.w; \n"
+"TEX c, v.w, texture[2], 1D; \n"
+"MUL c.xyz, c.xyzz, d.w; \n"
+"MOV result.color, c; \n"
+"END";
+
+static const string LitVolShaderString_2 =
+"!!ARBfp1.0 \n"
+"ATTRIB t = fragment.texcoord[0];\n"
+"PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
+"PARAM k = program.local[1]; # {ka, kd, ks, ns} \n"
+"TEMP v, n, c, d, s; \n"
+"TEX v, t, texture[0], 3D; \n"
+"MAD n, v, 2.0, -1.0; \n"
+"DP3 n.w, n, n; \n"
+"RSQ n.w, n.w; \n"
+"MUL n, n, n.w; \n"
+"DP3 d.w, l, n; \n"
+"ABS_SAT d.w, d.w; # two-sided lighting \n"
+"POW s.w, d.w, k.w; \n"
+"MAD d.w, d.w, k.y, k.x; \n"
+"MAD d.w, s.w, k.z, d.w; \n"
+"TEX v.x, t, texture[1], 3D; \n"
+"TEX c, v.wxyz, texture[2], 2D; \n"
+"MUL c.xyz, c.xyzz, d.w; \n"
+"MOV result.color, c; \n"
+"END";
+
+static const string LitFogVolShaderString =
+"!!ARBfp1.0 \n"
+"ATTRIB t = fragment.texcoord[0];\n"
+"PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
+"PARAM k = program.local[1]; # {ka, kd, ks, ns} \n"
+"PARAM fc = state.fog.color; \n"
+"PARAM fp = state.fog.params; \n"
+"ATTRIB f = fragment.texcoord[1];\n"
+"TEMP v, n, c, d, s; \n"
+"TEX v, t, texture[0], 3D; \n"
+"MAD n, v, 2.0, -1.0; \n"
+"DP3 n.w, n, n; \n"
+"RSQ n.w, n.w; \n"
+"MUL n, n, n.w; \n"
+"DP3 d.w, l, n; \n"
+"ABS_SAT d.w, d.w; # two-sided lighting \n"
+"POW s.w, d.w, k.w; \n"
+"MAD d.w, d.w, k.y, k.x; \n"
+"MAD d.w, s.w, k.z, d.w; \n"
+"TEX c, v.w, texture[2], 1D; \n"
+"MUL c.xyz, c.xyzz, d.w; \n"
+"SUB d.x, fp.z, f.x; \n"
+"MUL_SAT d.x, d.x, fp.w; \n"
+"LRP c.xyz, d.x, c.xyzz, fc.xyzz; \n"
+"MOV result.color, c; \n"
+"END";
+
+static const string LitFogVolShaderString_2 =
+"!!ARBfp1.0 \n"
+"ATTRIB t = fragment.texcoord[0];\n"
+"PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
+"PARAM k = program.local[1]; # {ka, kd, ks, ns} \n"
+"PARAM fc = state.fog.color; \n"
+"PARAM fp = state.fog.params; \n"
+"ATTRIB f = fragment.texcoord[1];\n"
+"TEMP v, n, c, d, s; \n"
+"TEX v, t, texture[0], 3D; \n"
+"MAD n, v, 2.0, -1.0; \n"
+"DP3 n.w, n, n; \n"
+"RSQ n.w, n.w; \n"
+"MUL n, n, n.w; \n"
+"DP3 d.w, l, n; \n"
+"ABS_SAT d.w, d.w; # two-sided lighting \n"
+"POW s.w, d.w, k.w; \n"
+"MAD d.w, d.w, k.y, k.x; \n"
+"MAD d.w, s.w, k.z, d.w; \n"
+"TEX v.x, t, texture[1], 3D; \n"
+"TEX c, v.wxyz, texture[2], 2D; \n"
+"MUL c.xyz, c.xyzz, d.w; \n"
+"SUB d.x, fp.z, f.x; \n"
+"MUL_SAT d.x, d.x, fp.w; \n"
+"LRP c.xyz, d.x, c.xyzz, fc.xyzz; \n"
+"MOV result.color, c; \n"
+"END";
+
+static const string FogVertexShaderString =
+"!!ARBvp1.0 \n"
+"ATTRIB iPos = vertex.position; \n"
+"ATTRIB iTex0 = vertex.texcoord[0]; \n"
+"OUTPUT oPos = result.position; \n"
+"OUTPUT oTex0 = result.texcoord[0]; \n"
+"OUTPUT oTex1 = result.texcoord[1]; \n"
+"PARAM mvp[4] = { state.matrix.mvp }; \n"
+"PARAM mv[4] = { state.matrix.modelview }; \n"
+"MOV oTex0, iTex0; \n"
+"DP4 oTex1.x, -mv[2], iPos; \n"
+"DP4 oPos.x, mvp[0], iPos; \n"
+"DP4 oPos.y, mvp[1], iPos; \n"
+"DP4 oPos.z, mvp[2], iPos; \n"
+"DP4 oPos.w, mvp[3], iPos; \n"
+"END";
+
+static const string Cmap2ShaderString =
+"!!ARBfp1.0 \n"
+"TEMP c, z; \n"
+"ATTRIB t = fragment.texcoord[0]; \n"
+"PARAM s = program.local[0]; # {bp, sliceRatio, 0.0, 0.0} \n"
+"TEX c, t, texture[0], RECT; \n"
+"POW z.w, c.w, s.x; # alpha1 = pow(alpha, bp); \n"
+"SUB z.w, 1.0, z.w; # alpha2 = 1.0-pow(1.0-alpha1, sliceRatio); \n"
+"POW c.w, z.w, s.y; \n"
+"SUB c.w, 1.0, c.w; \n"
+"MUL c.xyz, c.xyzz, c.w; # c *= alpha2; \n"
+"MOV result.color, c; \n"
+"END";
+
+TextureRenderer::TextureRenderer(TextureHandle tex,
+                                 ColorMapHandle cmap1, Colormap2Handle cmap2) :
   GeomObj(),
-  cmap_texture_(0),
-  cmap2_texture_(0),
   tex_(tex),
   mutex_("TextureRenderer Mutex"),
-  cmap_(map),
+  cmap1_(cmap1),
   cmap2_(cmap2),
-  cmap_has_changed_(true),
+  cmap1_dirty_(true),
   cmap2_dirty_(true),
+  mode_(MODE_NONE),
   interp_(true),
   lighting_(0),
-  reload_(true)
-{
-  r_count_++;
-}
+  sampling_rate_(1.0),
+  irate_(0.5),
+  imode_(false),
+  slice_alpha_(0.5),
+  cmap_size_(128),
+  cmap1_tex_(0),
+  cmap2_tex_(0),
+  use_pbuffer_(true),
+  raster_buffer_(0),
+  shader_factory_(0),
+  cmap2_buffer_(0),
+  cmap2_shader_(new FragmentProgramARB(Cmap2ShaderString))
+{}
 
 TextureRenderer::TextureRenderer(const TextureRenderer& copy) :
-  GeomObj( copy ),
-  cmap_texture_(copy.cmap_texture_),
+  GeomObj(copy),
   tex_(copy.tex_),
   mutex_("TextureRenderer Mutex"),
-  cmap_(copy.cmap_),
+  cmap1_(copy.cmap1_),
   cmap2_(copy.cmap2_),
-  cmap_has_changed_(copy.cmap_has_changed_),
+  cmap1_dirty_(copy.cmap1_dirty_),
   cmap2_dirty_(copy.cmap2_dirty_),
+  mode_(copy.mode_),
   interp_(copy.interp_),
   lighting_(copy.lighting_),
-  reload_(copy.reload_)
-{
-   r_count_++;
-}
+  sampling_rate_(copy.sampling_rate_),
+  irate_(copy.irate_),
+  imode_(copy.imode_),
+  slice_alpha_(copy.slice_alpha_),
+  cmap_size_(copy.cmap_size_),
+  cmap1_tex_(copy.cmap1_tex_),
+  cmap2_tex_(copy.cmap2_tex_),
+  use_pbuffer_(copy.use_pbuffer_),
+  raster_buffer_(copy.raster_buffer_),
+  shader_factory_(copy.shader_factory_),
+  cmap2_buffer_(copy.cmap2_buffer_),
+  cmap2_shader_(copy.cmap2_shader_)
+{}
 
 TextureRenderer::~TextureRenderer()
+{}
+
+
+void
+TextureRenderer::set_texture(TextureHandle tex)
 {
-  r_count_--;
+  mutex_.lock();
+  tex_ = tex;
+  mutex_.unlock();
 }
 
+void
+TextureRenderer::set_colormap1(ColorMapHandle cmap1)
+{
+  mutex_.lock();
+  cmap1_ = cmap1;
+  cmap1_dirty_ = true;
+  mutex_.unlock();
+}
+
+void
+TextureRenderer::set_colormap2(Colormap2Handle cmap2)
+{
+  mutex_.lock();
+  cmap2_ = cmap2;
+  cmap2_dirty_ = true;
+  mutex_.unlock();
+}
+
+void
+TextureRenderer::set_colormap_size(int size)
+{
+  if(cmap_size_ != size) {
+    mutex_.lock();
+    cmap_size_ = size;
+    cmap1_dirty_ = true;
+    cmap2_dirty_ = true;
+    mutex_.unlock();
+  }
+}
+
+void
+TextureRenderer::set_slice_alpha(double alpha)
+{
+  if(slice_alpha_ != alpha) {
+    mutex_.lock();
+    slice_alpha_ = alpha;
+    alpha_dirty_ = true;
+    mutex_.unlock();
+  }
+}
 
 #define TEXTURERENDERER_VERSION 1
 
 void 
 TextureRenderer::io(Piostream&)
 {
-  // Nothing for now...
+  // nothing for now...
   NOT_FINISHED("TextureRenderer::io");
 }
 
@@ -115,7 +402,7 @@ TextureRenderer::saveobj(std::ostream&, const string&, GeomSave*)
 }
 
 void
-TextureRenderer::compute_view( Ray& ray)
+TextureRenderer::compute_view(Ray& ray)
 {
   double mvmat[16];
   Transform mat;
@@ -170,13 +457,13 @@ TextureRenderer::compute_view( Ray& ray)
 
 
 void
-TextureRenderer::load_texture(Brick& brick)
+TextureRenderer::load_brick(Brick& brick)
 {
   TypedBrickData<unsigned char> *br =
     dynamic_cast<TypedBrickData<unsigned char>*>(brick.data());
   
   if(br) {
-    if( !brick.texName(0) || (br->nc() > 1 && !brick.texName(1)) || brick.needsReload() ) {
+    if(!brick.texName(0) || (br->nc() > 1 && !brick.texName(1)) || brick.needsReload()) {
       if(!brick.texName(0)) {
         glGenTextures(1, brick.texNameP(0));
       }
@@ -278,89 +565,7 @@ TextureRenderer::load_texture(Brick& brick)
 }
 
 void
-TextureRenderer::make_texture_matrix( const Brick& brick)
-{
-  double splane[4]={0,0,0,0};
-  double tplane[4]={0,0,0,0};
-  double rplane[4]={0,0,0,0};
-  double qplane[4]={0,0,0,1};
-
-
-  Vector diag;
-
-  
-  /* The cube is numbered in the following way 
-      
-         2________ 6        y
-        /|       /|         |  
-       / |      / |         |
-      /  |     /  |         |
-    3/__0|____/7__|4        |_________ x
-     |   /    |   /         /
-     |  /     |  /         /
-     | /      | /         /
-    1|/_______|/5        /
-                        z  
-  */
-
-
-
-  diag = brick[7] - brick[0];
-
-
-  glTexGend(GL_S,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
-  glTexGend(GL_T,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
-  glTexGend(GL_R,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
-  glTexGend(GL_Q,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
-
-  //  This code is for render overlapping bricks.  The plane equations
-  //  for s are  (Nx * Pxmin) + d = aX/2  and
-  //  (Nx * Pxmax) + d = 1 - aX/2 where
-  //  Nx is the x component of the normal,  Pxmin and Pxmax are the x 
-  //  components of the min and max points on the TexCube, and  aX is one
-  //  texel width.  Solving for Nx and d we get
-  //  Nx = (1 - aX)/(Pxmax - Pxmin) and
-  //  d = aX/2 - (Pxmin *(1 - aX))/(Pxmax - Pxmin)
-
-  splane[0] = (1 - brick.ax() * (brick.padx() + 1))/diag.x();
-  splane[3] = brick.ax() * 0.5 - (brick[0].x() *
-				(1 - brick.ax() * (brick.padx()+1))/diag.x());
-  tplane[1] = (1 - brick.ay() * (brick.pady() + 1))/diag.y();
-  tplane[3] = brick.ay() * 0.5 - (brick[0].y() *
-				(1 - brick.ay() * (brick.pady()+1))/diag.y());
-  rplane[2] = (1 - brick.az() * (brick.padz() + 1))/diag.z();
-  rplane[3] = brick.az() * 0.5 - (brick[0].z() *
-				(1 - brick.az() * (brick.padz()+1))/diag.z());
-
-  
-  glTexGendv(GL_S,GL_OBJECT_PLANE,splane);
-  glTexGendv(GL_T,GL_OBJECT_PLANE,tplane);
-  glTexGendv(GL_R,GL_OBJECT_PLANE,rplane);
-  glTexGendv(GL_Q,GL_OBJECT_PLANE,qplane);
-
-}
-
-void
-TextureRenderer::enable_tex_coords()
-{
-  glEnable(GL_TEXTURE_GEN_S);
-  glEnable(GL_TEXTURE_GEN_T);
-  glEnable(GL_TEXTURE_GEN_R);
-  glEnable(GL_TEXTURE_GEN_Q);
-}
-
-void 
-TextureRenderer::disable_tex_coords()
-{
-  glDisable(GL_TEXTURE_GEN_S);
-  glDisable(GL_TEXTURE_GEN_T);
-  glDisable(GL_TEXTURE_GEN_R);
-  glDisable(GL_TEXTURE_GEN_Q);
-}
-
-
-void
-TextureRenderer::drawPolys( vector<Polygon *> polys )
+TextureRenderer::draw_polys(vector<Polygon *> polys, bool z)
 {
   double mvmat[16];
   TextureHandle tex = tex_;
@@ -372,6 +577,8 @@ TextureRenderer::drawPolys( vector<Polygon *> polys )
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glMultMatrixd(mvmat);
+
+  glGetDoublev(GL_MODELVIEW_MATRIX, mvmat);
   
   Point p0, t0;
   unsigned int i;
@@ -383,19 +590,25 @@ TextureRenderer::drawPolys( vector<Polygon *> polys )
       t0 = polys[i]->getTexCoord(0);
       p0 = polys[i]->getVertex(0);
       glBegin(GL_POINTS);
-//       glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
-      glTexCoord3f(t0.x(), t0.y(), t0.z());
+      if(z) {
+        double pz = mvmat[2]*p0.x()+mvmat[6]*p0.y()+mvmat[10]*p0.z()+mvmat[14];
+        glMultiTexCoord3f(GL_TEXTURE1, -pz, 0.0, 0.0);
+      }
+      glMultiTexCoord3f(GL_TEXTURE0, t0.x(), t0.y(), t0.z());
       glVertex3f(p0.x(), p0.y(), p0.z());
       glEnd();
       break;
     case 2:
-            glBegin(GL_LINES);
+      glBegin(GL_LINES);
       for(k =0; k < (unsigned int)polys[i]->size(); k++)
       {
         t0 = polys[i]->getTexCoord(k);
         p0 = polys[i]->getVertex(k);
-//         glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
-        glTexCoord3f(t0.x(), t0.y(), t0.z());
+        if(z) {
+          double pz = mvmat[2]*p0.x()+mvmat[6]*p0.y()+mvmat[10]*p0.z()+mvmat[14];
+          glMultiTexCoord3f(GL_TEXTURE1, -pz, 0.0, 0.0);
+        }
+        glMultiTexCoord3f(GL_TEXTURE0, t0.x(), t0.y(), t0.z());
         glVertex3f(p0.x(), p0.y(), p0.z());
       }
       glEnd();
@@ -411,8 +624,11 @@ TextureRenderer::drawPolys( vector<Polygon *> polys )
         {
           t0 = polys[i]->getTexCoord(k);
           p0 = polys[i]->getVertex(k);
-//           glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
-          glTexCoord3f(t0.x(), t0.y(), t0.z());
+          if(z) {
+            double pz = mvmat[2]*p0.x()+mvmat[6]*p0.y()+mvmat[10]*p0.z()+mvmat[14];
+            glMultiTexCoord3f(GL_TEXTURE1, -pz, 0.0, 0.0);
+          }
+          glMultiTexCoord3f(GL_TEXTURE0, t0.x(), t0.y(), t0.z());
           glVertex3f(p0.x(), p0.y(), p0.z());
         }
 	glEnd();
@@ -432,13 +648,12 @@ TextureRenderer::drawPolys( vector<Polygon *> polys )
 	{
 	  t0 = polys[i]->getTexCoord(k);
 	  p0 = polys[i]->getVertex(k);
-// 	  glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
-	  glTexCoord3f(t0.x(), t0.y(), t0.z());
+          if(z) {
+            double pz = mvmat[2]*p0.x()+mvmat[6]*p0.y()+mvmat[10]*p0.z()+mvmat[14];
+            glMultiTexCoord3f(GL_TEXTURE1, -pz, 0.0, 0.0);
+          }
+          glMultiTexCoord3f(GL_TEXTURE0, t0.x(), t0.y(), t0.z());
 	  glVertex3f(p0.x(), p0.y(), p0.z());
-	  //            sprintf(s, "3D texture coordinates are ( %f, %f, %f, )\n", t0.x(), t0.y(), t0.z() );
-	  // 	cerr<<s;
-	  //            sprintf(s, "2D texture coordinates are ( %f, %f )\n", t1_0, t1_1);
-	  //            cerr<<s;
 	}
 	glEnd();
 	break;
@@ -448,3 +663,330 @@ TextureRenderer::drawPolys( vector<Polygon *> polys )
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 }
+
+void
+TextureRenderer::build_colormap1()
+{
+  if(cmap1_dirty_ || alpha_dirty_) {
+    bool size_dirty = false;
+    if(cmap_size_ != cmap1_array_.dim1()) {
+      cmap1_array_.resize(cmap_size_, 4);
+      size_dirty = true;
+    }
+    // rebuild texture
+    double dv = 1.0/(cmap1_array_.dim1() - 1);
+    switch(mode_) {
+    case MODE_SLICE: {
+      for(int j=0; j<cmap1_array_.dim1(); j++) {
+        // interpolate from colormap
+        Color c = cmap1_->getColor(j*dv);
+        double alpha = cmap1_->getAlpha(j*dv);
+        // pre-multiply and quantize
+        cmap1_array_(j,0) = (unsigned char)(c.r()*alpha*255);
+        cmap1_array_(j,1) = (unsigned char)(c.g()*alpha*255);
+        cmap1_array_(j,2) = (unsigned char)(c.b()*alpha*255);
+        cmap1_array_(j,3) = (unsigned char)(alpha*255);
+      }
+    } break;
+    case MODE_MIP: {
+      for(int j=0; j<cmap1_array_.dim1(); j++) {
+        // interpolate from colormap
+        Color c = cmap1_->getColor(j*dv);
+        double alpha = cmap1_->getAlpha(j*dv);
+        // pre-multiply and quantize
+        cmap1_array_(j,0) = (unsigned char)(c.r()*alpha*255);
+        cmap1_array_(j,1) = (unsigned char)(c.g()*alpha*255);
+        cmap1_array_(j,2) = (unsigned char)(c.b()*alpha*255);
+        cmap1_array_(j,3) = (unsigned char)(alpha*255);
+      }
+    } break;
+    case MODE_OVER: {
+      double bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
+      for(int j=0; j<cmap1_array_.dim1(); j++) {
+        // interpolate from colormap
+        Color c = cmap1_->getColor(j*dv);
+        double alpha = cmap1_->getAlpha(j*dv);
+        // scale slice opacity
+        alpha = pow(alpha, bp);
+        // opacity correction
+        alpha = 1.0 - pow((1.0 - alpha), imode_ ? 1.0/irate_ : 1.0/sampling_rate_);
+        // pre-multiply and quantize
+        cmap1_array_(j,0) = (unsigned char)(c.r()*alpha*255);
+        cmap1_array_(j,1) = (unsigned char)(c.g()*alpha*255);
+        cmap1_array_(j,2) = (unsigned char)(c.b()*alpha*255);
+        cmap1_array_(j,3) = (unsigned char)(alpha*255);
+      }
+    } break;
+    default:
+      break;
+    }
+    // update texture
+    if(cmap1_tex_ == 0 || size_dirty) {
+      glDeleteTextures(1, &cmap1_tex_);
+      glGenTextures(1, &cmap1_tex_);
+      glBindTexture(GL_TEXTURE_1D, cmap1_tex_);
+      glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, cmap1_array_.dim1(), 0,
+                   GL_RGBA, GL_UNSIGNED_BYTE, &cmap1_array_(0,0));
+    } else {
+      glBindTexture(GL_TEXTURE_1D, cmap1_tex_);
+      glTexSubImage1D(GL_TEXTURE_1D, 0, 0, cmap1_array_.dim1(),
+                      GL_RGBA, GL_UNSIGNED_BYTE, &cmap1_array_(0,0));
+    }
+    cmap1_dirty_ = false;
+    alpha_dirty_ = false;
+  }
+}
+
+void
+TextureRenderer::build_colormap2()
+{
+  if(cmap2_dirty_ || alpha_dirty_) {
+    use_pbuffer_ = false;
+
+    if(use_pbuffer_ && !raster_buffer_) {
+      raster_buffer_ = new Pbuffer(256, 64, GL_FLOAT, 32, true, GL_FALSE);
+      cmap2_buffer_ = new Pbuffer(256, 64, GL_INT, 8, true, GL_FALSE);
+      shader_factory_ = new CM2ShaderFactory();
+      if(raster_buffer_->create() || cmap2_buffer_->create() || cmap2_shader_->create()
+         || shader_factory_->create()) {
+        raster_buffer_->destroy();
+        cmap2_buffer_->destroy();
+        cmap2_shader_->destroy();
+        shader_factory_->destroy();
+        delete raster_buffer_;
+        delete cmap2_buffer_;
+        delete shader_factory_;
+        raster_buffer_ = 0;
+        cmap2_buffer_ = 0;
+        shader_factory_ = 0;
+        use_pbuffer_ = false;
+      } else {
+        raster_buffer_->set_use_default_shader(false);
+        cmap2_buffer_->set_use_default_shader(false);
+      }
+    }
+
+    if(use_pbuffer_) {
+      //--------------------------------------------------------------
+      // hardware rasterization
+      if(cmap2_dirty_) {
+        raster_buffer_->activate();
+        glDrawBuffer(GL_FRONT);
+        glViewport(0, 0, raster_buffer_->width(), raster_buffer_->height());
+        glClearColor(0.0, 0.0, 0.0, 0.0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glTranslatef(-1.0, -1.0, 0.0);
+        glScalef(2.0, 2.0, 2.0);
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_CULL_FACE);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        // rasterize widgets
+        cmap2_->lock_widgets();
+        vector<CM2Widget*> widgets = cmap2_->get_widgets();
+        for (unsigned int i=0; i<widgets.size(); i++)
+        {
+          widgets[i]->rasterize(*shader_factory_);
+        }
+        cmap2_->unlock_widgets();
+        glDisable(GL_BLEND);
+        raster_buffer_->swapBuffers();
+        raster_buffer_->deactivate();
+      }
+      //--------------------------------------------------------------
+      // opacity correction and quantization
+      cmap2_buffer_->activate();
+      glDrawBuffer(GL_FRONT);
+      glViewport(0, 0, cmap2_buffer_->width(), cmap2_buffer_->height());
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      glTranslatef(-1.0, -1.0, 0.0);
+      glScalef(2.0, 2.0, 2.0);
+      glDisable(GL_DEPTH_TEST);
+      glDisable(GL_LIGHTING);
+      glDisable(GL_CULL_FACE);
+      cmap2_shader_->bind();
+      double bp = mode_ == MODE_MIP ? 1.0 : 
+        tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
+      cmap2_shader_->setLocalParam(0, bp, sampling_rate_, 0.0, 0.0);
+      glActiveTexture(GL_TEXTURE0);
+      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+      raster_buffer_->bind(GL_FRONT);
+      glBegin(GL_QUADS);
+      {
+        glTexCoord2f( 0.0,  0.0);
+        glVertex2f( 0.0,  0.0);
+        glTexCoord2f( 1.0,  0.0);
+        glVertex2f( 1.0,  0.0);
+        glTexCoord2f( 1.0,  1.0);
+        glVertex2f( 1.0,  1.0);
+        glTexCoord2f( 0.0,  1.0);
+        glVertex2f( 0.0,  1.0);
+      }
+      glEnd();
+      raster_buffer_->release(GL_FRONT);
+      cmap2_shader_->release();
+      cmap2_buffer_->swapBuffers();
+      cmap2_buffer_->deactivate();
+    } else {
+      //--------------------------------------------------------------
+      // software rasterization
+      bool size_dirty =
+        cmap_size_ != raster_array_.dim2()
+        || cmap_size_/4 != raster_array_.dim1();
+      if(cmap2_dirty_ || size_dirty) {
+        if(size_dirty) {
+          raster_array_.resize(cmap_size_/4, cmap_size_, 4);
+          cmap2_array_.resize(cmap_size_/4, cmap_size_, 4);
+        }
+        // clear cmap
+        for(int i=0; i<raster_array_.dim1(); i++) {
+          for(int j=0; j<raster_array_.dim2(); j++) {
+            raster_array_(i,j,0) = 0.0;
+            raster_array_(i,j,1) = 0.0;
+            raster_array_(i,j,2) = 0.0;
+            raster_array_(i,j,3) = 0.0;
+          }
+        }
+        cmap2_->lock_widgets();
+        vector<CM2Widget*>& widget = cmap2_->get_widgets();
+        // rasterize widgets
+        for(unsigned int i=0; i<widget.size(); i++) {
+          widget[i]->rasterize(raster_array_);
+        }
+        cmap2_->unlock_widgets();
+      }
+      //--------------------------------------------------------------
+      // opacity correction
+      switch(mode_) {
+      case MODE_MIP:
+      case MODE_SLICE: {
+        for(int i=0; i<raster_array_.dim1(); i++) {
+          for(int j=0; j<raster_array_.dim2(); j++) {
+            double alpha = raster_array_(i,j,3);
+            cmap2_array_(i,j,0) = (unsigned char)(raster_array_(i,j,0)*alpha*255);
+            cmap2_array_(i,j,1) = (unsigned char)(raster_array_(i,j,1)*alpha*255);
+            cmap2_array_(i,j,2) = (unsigned char)(raster_array_(i,j,2)*alpha*255);
+            cmap2_array_(i,j,3) = (unsigned char)(alpha*255);
+          }
+        }
+      } break;
+      case MODE_OVER: {
+        double bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
+        for(int i=0; i<raster_array_.dim1(); i++) {
+          for(int j=0; j<raster_array_.dim2(); j++) {
+            double alpha = raster_array_(i,j,3);
+            alpha = pow(alpha, bp);
+            alpha = 1.0-pow(1.0-alpha, imode_ ? 1.0/irate_ : 1.0/sampling_rate_);
+            cmap2_array_(i,j,0) = (unsigned char)(raster_array_(i,j,0)*alpha*255);
+            cmap2_array_(i,j,1) = (unsigned char)(raster_array_(i,j,1)*alpha*255);
+            cmap2_array_(i,j,2) = (unsigned char)(raster_array_(i,j,2)*alpha*255);
+            cmap2_array_(i,j,3) = (unsigned char)(alpha*255);
+          }
+        }
+      } break;
+      default:
+        break;
+      }
+      //--------------------------------------------------------------
+      // update texture
+      if(!cmap2_tex_ || size_dirty) {
+        if(glIsTexture(cmap2_tex_)) {
+          glDeleteTextures(1, &cmap2_tex_);
+        }
+        glGenTextures(1, &cmap2_tex_);
+        glBindTexture(GL_TEXTURE_2D, cmap2_tex_);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, cmap2_array_.dim2(), cmap2_array_.dim1(),
+                     0, GL_RGBA, GL_UNSIGNED_BYTE, &cmap2_array_(0,0,0));
+        glBindTexture(GL_TEXTURE_2D, 0);
+      } else {
+        glBindTexture(GL_TEXTURE_2D, cmap2_tex_);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cmap2_array_.dim2(), cmap2_array_.dim1(),
+                        GL_RGBA, GL_UNSIGNED_BYTE, &cmap2_array_(0,0,0));
+        glBindTexture(GL_TEXTURE_2D, 0);
+      }
+    }
+  }
+  cmap2_dirty_ = false;
+  alpha_dirty_ = false;
+}
+
+void
+TextureRenderer::bind_colormap1()
+{
+  // bind texture to unit 2
+  glActiveTexture(GL_TEXTURE2_ARB);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  glEnable(GL_TEXTURE_1D);
+  glBindTexture(GL_TEXTURE_1D, cmap1_tex_);
+  // enable data texture unit 1
+  glActiveTexture(GL_TEXTURE1_ARB);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  glEnable(GL_TEXTURE_3D);
+  glActiveTexture(GL_TEXTURE0_ARB);
+}
+
+void
+TextureRenderer::bind_colormap2()
+{
+  // bind texture to unit 2
+  glActiveTexture(GL_TEXTURE2_ARB);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  if(use_pbuffer_) {
+    cmap2_buffer_->bind(GL_FRONT);
+  } else {
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, cmap2_tex_);
+  }
+  // enable data texture unit 1
+  glActiveTexture(GL_TEXTURE1_ARB);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  glEnable(GL_TEXTURE_3D);
+  glActiveTexture(GL_TEXTURE0_ARB);
+}
+
+void
+TextureRenderer::release_colormap1()
+{
+  glActiveTexture(GL_TEXTURE2_ARB);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  glDisable(GL_TEXTURE_1D);
+  glBindTexture(GL_TEXTURE_1D, 0);
+  // enable data texture unit 1
+  glActiveTexture(GL_TEXTURE1_ARB);
+  glDisable(GL_TEXTURE_3D);
+  glBindTexture(GL_TEXTURE_3D, 0);
+  glActiveTexture(GL_TEXTURE0_ARB);
+}
+
+void
+TextureRenderer::release_colormap2()
+{
+  glActiveTexture(GL_TEXTURE2_ARB);
+  if(use_pbuffer_) {
+    cmap2_buffer_->release(GL_FRONT);
+  } else {
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
+  glActiveTexture(GL_TEXTURE1_ARB);
+  glDisable(GL_TEXTURE_3D);
+  glBindTexture(GL_TEXTURE_3D, 0);
+  glActiveTexture(GL_TEXTURE0_ARB);
+}
+
+} // namespace Volume

@@ -5,8 +5,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := Packages/Volume/Core/Geom
 SRCS   += \
 	$(SRCDIR)/TextureRenderer.cc \
-	$(SRCDIR)/SliceRenderer.cc \
 	$(SRCDIR)/VolumeRenderer.cc \
+	$(SRCDIR)/SliceRenderer.cc \
 #[INSERT NEW CODE FILE HERE]
 
 
