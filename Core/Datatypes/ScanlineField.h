@@ -99,6 +99,9 @@ template <> ScalarFieldInterface *
 ScanlineField<double>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
+ScanlineField<float>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
 ScanlineField<int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*

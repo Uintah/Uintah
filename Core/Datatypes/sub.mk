@@ -26,6 +26,12 @@ SRCS += $(SRCDIR)/BoxClipper.cc		    	\
         $(SRCDIR)/ColumnMatrix.cc	    	\
 	$(SRCDIR)/ContourMesh.cc            	\
         $(SRCDIR)/cd_templates.cc	    	\
+        $(SRCDIR)/cd_templates_fields_0.cc    	\
+        $(SRCDIR)/cd_templates_fields_1.cc    	\
+        $(SRCDIR)/cd_templates_fields_2.cc    	\
+        $(SRCDIR)/cd_templates_fields_3.cc    	\
+        $(SRCDIR)/cd_templates_fields_4.cc    	\
+        $(SRCDIR)/cd_templates_fields_5.cc    	\
         $(SRCDIR)/Datatype.cc		    	\
         $(SRCDIR)/DenseMatrix.cc	    	\
         $(SRCDIR)/Field.cc		    	\
