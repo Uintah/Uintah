@@ -18,6 +18,7 @@
 #include <Core/Datatypes/GLVolRenState.h>
 #include <Core/Datatypes/GLVolumeRenderer.h>
 #include <Core/Datatypes/GLTexture3D.h>
+#include <Core/Geom/GeomOpenGL.h>
 #include <Core/Datatypes/Brick.h>
 #include <Core/Datatypes/Polygon.h>
 #include <GL/gl.h>
@@ -77,7 +78,7 @@ void
 GLVolRenState::drawPolys( vector<Polygon *> polys )
 {
   unsigned int i;
-  
+  volren->di_->polycount += polys.size();
   for (i = 0; i < polys.size(); i++) {
     switch (polys[i]->size() ) {
     case 1:
@@ -96,6 +97,10 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
       break;
     case 3:
       glBegin(GL_TRIANGLES);
+      Vector n = Cross(Vector((*(polys[i]))[0] - (*polys[i])[1]),
+		       Vector((*(polys[i]))[0] - (*polys[i])[2]));
+      n.normalize();
+      glNormal3f(n.x(), n.y(), n.z());
       glVertex3f((*(polys[i]))[0].x(),(*(polys[i]))[0].y(),
 		 (*(polys[i]))[0].z());
       glVertex3f((*(polys[i]))[1].x(), (*(polys[i]))[1].y(),
