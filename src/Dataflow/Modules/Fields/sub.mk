@@ -35,7 +35,6 @@ SRCS     += \
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\
 	$(SRCDIR)/Centroids.cc\
-	$(SRCDIR)/ChangeCoordinates.cc\
 	$(SRCDIR)/ChangeFieldDataAt.cc\
 	$(SRCDIR)/ChangeFieldDataType.cc\
 	$(SRCDIR)/ChangeFieldBounds.cc\
