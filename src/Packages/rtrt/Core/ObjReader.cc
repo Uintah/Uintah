@@ -208,7 +208,7 @@ void addObjMaterial(Array1<Material*> &matl,
 
 bool
 rtrt::readObjFile(const string geom_fname, const string matl_fname, 
-		  Transform &t, Group *g) {
+		  Transform &t, Group *g, int gridsize) {
    Array1<int> matl_has_tmap;
    Array1<int> matl_has_bmap;
    Array1<Material *> matl;
@@ -238,6 +238,7 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
    is_metal=0;
 
    while(fgets(buf,4096,f)) {
+     if (buf[0] == '#') continue;
      if (strncmp(&(buf[0]), "newmtl", strlen("newmtl")) == 0) {
        if (matl_complete) {
 	 addObjMaterial(matl, Kd, Ks, opacity, Ns, name, names,
@@ -348,6 +349,7 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
    Array1<Point> pts;
    Array1<Vector> nml;
    Array1<Point> tex;
+   Group *g1 = new Group;
    while(fgets(buf,4096,f)) {
      switch(buf[0]) {
      case 'v': // see wich type of vertex...
@@ -372,7 +374,7 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
        }
      case 'f': // see which type of face...
        // Add tri to g
-       GetFace(&buf[2], pts, nml, tex, g, curr_matl, t);
+       GetFace(&buf[2], pts, nml, tex, g1, curr_matl, t);
        break;
      case 'u': // usemtl
        string matl_str(&buf[7]);
@@ -389,5 +391,8 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
      }
    }
    fclose(f);
+   if (gridsize) g->add(new Grid(g1, gridsize));
+   else g->add(g1);
+
    return true;
 }

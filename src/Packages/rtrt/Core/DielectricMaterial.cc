@@ -49,6 +49,9 @@ DielectricMaterial::DielectricMaterial(double n_in, double n_out, bool nothing_i
     eg = log( extinction_out.green() );
     eb = log( extinction_out.blue() );
     extinction_constant_out = Color(er, eg, eb);
+
+    bg_in=Color(1,1,1);
+    bg_out=Color(1,1,1);
 }
 
 
@@ -67,6 +70,14 @@ DielectricMaterial::DielectricMaterial( double n_in, double n_out, double R0,
     eg = log( extinction_out.green() );
     eb = log( extinction_out.blue() );
     extinction_constant_out = Color(er, eg, eb);
+
+    bg_in=Color(extinction_in.red()==1, 
+		extinction_in.green()==1, 
+		extinction_in.blue()==1);
+    bg_out=Color(extinction_out.red()==1, 
+		 extinction_out.green()==1, 
+		 extinction_out.blue()==1);
+
 }
 
 DielectricMaterial::~DielectricMaterial()
@@ -175,16 +186,21 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
 		   cx->worker->traceRay(rcolor, rray, depth+1, atten,
 					accumcolor, cx, dist);
 	       }
-	       double scaled_t = dist * extinction_scale;
-	       if (incoming) {
-		 filter = Color(exp(extinction_constant_out.red()*scaled_t),
-				exp(extinction_constant_out.green()*scaled_t),
-				exp(extinction_constant_out.blue()*scaled_t));
+	       if (dist == MAXDOUBLE) {
+		 if (incoming) filter=bg_in;
+		 else filter=bg_in;
 	       } else {
-		 filter = Color(exp(extinction_constant_in.red()*scaled_t),
-				exp(extinction_constant_in.green()*scaled_t),
-				exp(extinction_constant_in.blue()*scaled_t));
-	       }		 
+		 double scaled_t = dist * extinction_scale;
+		 if (incoming) {
+		   filter = Color(exp(extinction_constant_out.red()*scaled_t),
+				  exp(extinction_constant_out.green()*scaled_t),
+				  exp(extinction_constant_out.blue()*scaled_t));
+		 } else {
+		   filter = Color(exp(extinction_constant_in.red()*scaled_t),
+				  exp(extinction_constant_in.green()*scaled_t),
+				  exp(extinction_constant_in.blue()*scaled_t));
+		 }		 
+	       }
 	       result+= filter*rcolor;
 	       cx->stats->ds[depth].nrefl++;
                return;

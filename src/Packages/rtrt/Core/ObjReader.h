@@ -17,7 +17,7 @@ using SCIRun::Transform;
 
 bool
 readObjFile(const string geom_fname, const string matl_fname, 
-	    Transform &t, Group *g);
+	    Transform &t, Group *g, int gridsize=0);
 }
 
 #endif
