@@ -19,11 +19,11 @@ TCLS = $(GENTCLS) TetraWriter.tcl TiffWriter.tcl
 
 LIBNAME = Writers
 
-LOCALINCLUDES = -I~/libtiff/libtiff
+LOCALINCLUDES = 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL \
 	-lClasslib -lMultitask -lMalloc -lm -lC -lc \
-	~/libtiff/libtiff/libtiff.a
+	-ltiff
 
 depend:: $(GENSRCS)
 
