@@ -1,0 +1,24 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../..
+
+include $(SRCTOP)/scripts/targets.mk
+
+all:: tclIndex
+
+tclIndex : Anneal.tcl BldBRDF.tcl BldEEGMesh.tcl BldScene.tcl \
+           Bundles.tcl ContourSetReader.tcl ContourSetWriter.tcl \
+           Coregister.tcl \
+           DipoleInSphere.tcl DipoleMatToGeom.tcl Downhill_Simplex.tcl \
+           ErrorMetric.tcl InvEEGSolve.tcl OptDip.tcl RTrace.tcl \
+	   Radiosity.tcl \
+           RayMatrix.tcl RayTest.tcl RescaleSegFld.tcl SGI_LU.tcl \
+           SGI_Solve.tcl \
+           STreeExtractSurf.tcl SegFldOps.tcl SegFldReader.tcl \
+           SegFldWriter.tcl \
+           SelectSurfNodes.tcl SiReAll.tcl SiReCrunch.tcl SiReInput.tcl \
+           SiReOutput.tcl SigmaSetReader.tcl SigmaSetWriter.tcl \
+           SurfToVectGeom.tcl Taubin.tcl TensorFieldReader.tcl \
+           TensorFieldWriter.tcl Thermal.tcl TopoSurfToGeom.tcl XYZtoRGB.tcl
+	$(SRCTOP)/scripts/createTclIndex
+
