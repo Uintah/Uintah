@@ -42,13 +42,82 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
+// Standard Constructor
 MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
 			 string integrator, bool haveLoadCurve,
 			 bool doErosion)
   : Material(ps), lb(lb), d_cm(0), d_burn(0), d_eos(0), d_particle_creator(0)
 {
-   // Constructor
+  // The standard set of initializations needed
+  standardInitialization(ps, lb, n8or27, integrator, haveLoadCurve, doErosion);
 
+  // Check to see which ParticleCreator object we need
+  if (integrator == "implicit") 
+    d_particle_creator = scinew ImplicitParticleCreator(this,lb,n8or27,
+							haveLoadCurve,
+							doErosion);
+
+  else if (integrator == "fracture") 
+    d_particle_creator = scinew FractureParticleCreator(this,lb,n8or27,
+							haveLoadCurve,
+							doErosion);
+
+  else if (dynamic_cast<Membrane*>(d_cm) != 0)
+    d_particle_creator = scinew MembraneParticleCreator(this,lb,n8or27,
+							haveLoadCurve,
+							doErosion);
+  else
+    d_particle_creator = scinew DefaultParticleCreator(this,lb,n8or27,
+						       haveLoadCurve,
+						       doErosion);
+}
+
+// MPMMaterial constructor specific to shell formulation
+// WARNING : This may need to be changed if the Shell stuff is to be
+// incorporated into SerialMPM or other MPMs
+MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
+			 string integrator, bool haveLoadCurve,
+			 bool doErosion, bool haveShell)
+  : Material(ps), lb(lb), d_cm(0), d_burn(0), d_eos(0), d_particle_creator(0)
+{
+  // The standard set of initializations needed
+  standardInitialization(ps, lb, n8or27, integrator, haveLoadCurve, doErosion);
+
+   // Check to see which ParticleCreator object we need
+   if (integrator == "implicit") 
+     d_particle_creator = scinew ImplicitParticleCreator(this,lb,n8or27,
+		                                         haveLoadCurve,
+							 doErosion,
+                                                         haveShell);
+
+   else if (integrator == "fracture") 
+     d_particle_creator = scinew FractureParticleCreator(this,lb,n8or27,
+		                                         haveLoadCurve,
+							 doErosion,
+                                                         haveShell);
+
+   else if (dynamic_cast<Membrane*>(d_cm) != 0)
+     d_particle_creator = scinew MembraneParticleCreator(this,lb,n8or27,
+		                                         haveLoadCurve,
+							 doErosion,
+                                                         haveShell);
+   else if (dynamic_cast<ShellMaterial*>(d_cm) != 0)
+     d_particle_creator = scinew ShellParticleCreator(this,lb,n8or27,
+		                                      haveLoadCurve,
+						      doErosion);
+   else
+     d_particle_creator = scinew DefaultParticleCreator(this,lb,n8or27,
+		                                        haveLoadCurve,
+							doErosion,
+                                                        haveShell);
+	
+}
+
+void
+MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
+			            string integrator, bool haveLoadCurve,
+			            bool doErosion)
+{
   // Follow the layout of the input file
   // Steps:
   // 1.  Determine the type of constitutive model and create it.
@@ -61,80 +130,55 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
   // 5.  Assign the velocity field.
 
   // Step 1 -- create the constitutive gmodel.
+  d_cm = ConstitutiveModelFactory::create(ps,lb,n8or27,integrator);
+  if(!d_cm){
+    ostringstream desc;
+    desc << "An error occured in the ConstitutiveModelFactory that has \n" 
+	 << " slipped through the existing bullet proofing. Please tell \n"
+	 << " either Jim, John or Todd "<< endl; 
+    throw ParameterNotFound(desc.str());
+  }
+  d_burn = BurnFactory::create(ps);
 
-   d_cm = ConstitutiveModelFactory::create(ps,lb,n8or27,integrator);
-   if(!d_cm){
-     ostringstream desc;
-     desc << "An error occured in the ConstitutiveModelFactory that has \n" 
-          << " slipped through the existing bullet proofing. Please tell \n"
-          << " either Jim, John or Todd "<< endl; 
-     throw ParameterNotFound(desc.str());
-   }
-   d_burn = BurnFactory::create(ps);
+  //d_eos = EquationOfStateFactory::create(ps);
 
-   // Check to see which ParticleCreator object we need
-   if (integrator == "implicit") 
-     d_particle_creator = scinew ImplicitParticleCreator(this,lb,n8or27,
-		                                         haveLoadCurve,
-							 doErosion);
+  // Step 2 -- get the general material properties
 
-   else if (integrator == "fracture") 
-     d_particle_creator = scinew FractureParticleCreator(this,lb,n8or27,
-		                                         haveLoadCurve,
-							 doErosion);
+  ps->require("density",d_density);
+  ps->require("thermal_conductivity",d_thermalConductivity);
+  ps->require("specific_heat",d_specificHeat);
+  ps->get("gamma",d_gamma);
 
-   else if (dynamic_cast<Membrane*>(d_cm) != 0)
-     d_particle_creator = scinew MembraneParticleCreator(this,lb,n8or27,
-		                                         haveLoadCurve,
-							 doErosion);
-   else if (dynamic_cast<ShellMaterial*>(d_cm) != 0)
-     d_particle_creator = scinew ShellParticleCreator(this,lb,n8or27,
-		                                         haveLoadCurve,
-							 doErosion);
-   else
-     d_particle_creator = scinew DefaultParticleCreator(this,lb,n8or27,
-		                                        haveLoadCurve,
-							doErosion);
-	
-//   d_eos = EquationOfStateFactory::create(ps);
+  d_troom = 294.0; d_tmelt = 295.0;
+  ps->get("room_temp", d_troom);
+  ps->get("melt_temp", d_tmelt);
 
-   // Step 2 -- get the general material properties
-
-   ps->require("density",d_density);
-   ps->require("thermal_conductivity",d_thermalConductivity);
-   ps->require("specific_heat",d_specificHeat);
-   ps->get("gamma",d_gamma);
-
-   d_troom = 294.0; d_tmelt = 295.0;
-   ps->get("room_temp", d_troom);
-   ps->get("melt_temp", d_tmelt);
-
-   // This is currently only used in the implicit code, but should
-   // be put to use in the explicit code as well.
-   d_is_rigid=false;
-   ps->get("is_rigid", d_is_rigid);
+  // This is currently only used in the implicit code, but should
+  // be put to use in the explicit code as well.
+  d_is_rigid=false;
+  ps->get("is_rigid", d_is_rigid);
    
-   // Step 3 -- Loop through all of the pieces in this geometry object
-   int piece_num = 0;
-   for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
-	geom_obj_ps != 0; 
-	geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+  // Step 3 -- Loop through all of the pieces in this geometry object
+  int piece_num = 0;
+  for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
+       geom_obj_ps != 0; 
+       geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
-      vector<GeometryPiece*> pieces;
-      GeometryPieceFactory::create(geom_obj_ps, pieces);
+    vector<GeometryPiece*> pieces;
+    GeometryPieceFactory::create(geom_obj_ps, pieces);
 
-      GeometryPiece* mainpiece;
-      if(pieces.size() == 0){
-	 throw ParameterNotFound("No piece specified in geom_object");
-      } else if(pieces.size() > 1){
-	 mainpiece = scinew UnionGeometryPiece(pieces);
-      } else {
-	 mainpiece = pieces[0];
-      }
+    GeometryPiece* mainpiece;
+    if(pieces.size() == 0){
+      throw ParameterNotFound("No piece specified in geom_object");
+    } else if(pieces.size() > 1){
+      mainpiece = scinew UnionGeometryPiece(pieces);
+    } else {
+      mainpiece = pieces[0];
+    }
 
-      piece_num++;
-      d_geom_objs.push_back(scinew GeometryObject(this,mainpiece, geom_obj_ps));
-   }
+    piece_num++;
+    d_geom_objs.push_back(scinew GeometryObject(this,mainpiece, geom_obj_ps));
+  }
 }
 
 MPMMaterial::~MPMMaterial()

@@ -64,15 +64,9 @@ void
 ShellMaterial::addParticleState(std::vector<const VarLabel*>& from,
 				std::vector<const VarLabel*>& to)
 {
-  from.push_back(lb->pInitialThickTopLabel);
-  from.push_back(lb->pInitialThickBotLabel);
-  from.push_back(lb->pInitialNormalLabel);
   from.push_back(lb->pDeformationMeasureLabel);
   from.push_back(lb->pStressLabel);
 
-  to.push_back(lb->pInitialThickTopLabel_preReloc);
-  to.push_back(lb->pInitialThickBotLabel_preReloc);
-  to.push_back(lb->pInitialNormalLabel_preReloc);
   to.push_back(lb->pDeformationMeasureLabel_preReloc);
   to.push_back(lb->pStressLabel_preReloc);
 }
@@ -193,9 +187,6 @@ ShellMaterial::addComputesAndRequires(Task* task,
   task->requires(Task::NewDW, lb->gNormalRotRateLabel,      matlset, gac, NGN);
   task->requires(Task::OldDW, lb->delTLabel);
 
-  task->computes(lb->pInitialThickTopLabel_preReloc,    matlset);
-  task->computes(lb->pInitialThickBotLabel_preReloc,    matlset);
-  task->computes(lb->pInitialNormalLabel_preReloc,      matlset);
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
@@ -252,12 +243,15 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pMass,       lb->pMassLabel,               pset);
     old_dw->get(pThickTop,   lb->pThickTopLabel,           pset);
     old_dw->get(pThickBot,   lb->pThickBotLabel,           pset);
+    old_dw->get(pThickTop0,  lb->pInitialThickTopLabel,    pset);
+    old_dw->get(pThickBot0,  lb->pInitialThickBotLabel,    pset);
     old_dw->get(pX,          lb->pXLabel,                  pset);
     if (d_8or27 == 27)
       old_dw->get(pSize,     lb->pSizeLabel,               pset);
     old_dw->get(pVelocity,   lb->pVelocityLabel,           pset);
     old_dw->get(pRotRate,    lb->pNormalRotRateLabel,      pset);
     old_dw->get(pNormal,     lb->pNormalLabel,             pset);
+    old_dw->get(pNormal0,    lb->pInitialNormalLabel,      pset);
     old_dw->get(pRotation,   lb->pRotationLabel,           pset);
     old_dw->get(pDefGradTop, lb->pDefGradTopLabel,         pset);
     old_dw->get(pDefGradCen, lb->pDefGradCenLabel,         pset);
