@@ -52,6 +52,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/FieldMeasures.tcl \
 	$(SRCDIR)/FieldReader.tcl \
 	$(SRCDIR)/FieldSlicer.tcl\
+	$(SRCDIR)/FieldSubSample.tcl\
 	$(SRCDIR)/FieldWriter.tcl \
 	$(SRCDIR)/FrameWidget.tcl \
 	$(SRCDIR)/GLTextureBuilder.tcl \
