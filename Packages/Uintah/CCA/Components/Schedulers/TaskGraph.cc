@@ -62,47 +62,6 @@ TaskGraph::initialize()
   edges.clear();
 }
 
-template<class T>
-bool csoverlaps(const ComputeSubset<T>* s1, const ComputeSubset<T>* s2)
-{
-  if(s1 == s2)
-    return true;
-  if(s1->size() == 0 || s2->size() == 0)
-    return false;
-#if 0
-  T el1 = s1->get(0);
-  for(int i=1;i<s1->size();i++){
-    T el = s1->get(i);
-    if(el <= el1){
-      cerr << "Set not sorted: " << el1 << ", " << el << '\n';
-    }
-    el1=el;
-  }
-  T el2 = s2->get(0);
-  for(int i=1;i<s2->size();i++){
-    T el = s2->get(i);
-    if(el <= el2){
-      cerr << "Set not sorted: " << el2 << ", " << el << '\n';
-    }
-    el2=el;
-  }
-#endif
-  int i1=0;
-  int i2=0;
-  for(;;){
-    if(s1->get(i1) == s2->get(i2)){
-      return true;
-    } else if(s1->get(i1) < s2->get(i2)){
-      if(++i1 == s1->size())
-	break;
-    } else {
-      if(++i2 == s2->size())
-	break;
-    }
-  }
-  return false;
-}
-
 bool
 TaskGraph::overlaps(Task::Dependency* comp, Task::Dependency* req) const
 {
@@ -119,7 +78,7 @@ TaskGraph::overlaps(Task::Dependency* comp, Task::Dependency* req) const
       return false;
     ps2 = req->task->getPatchSet()->getUnion();
   }
-  if(!csoverlaps(ps1, ps2))
+  if(!PatchSubset::overlaps(ps1, ps2))
     return false;
 
   const MaterialSubset* ms1 = comp->matls;
@@ -134,7 +93,7 @@ TaskGraph::overlaps(Task::Dependency* comp, Task::Dependency* req) const
       return false;
     ms2 = req->task->getMaterialSet()->getUnion();
   }
-  if(!csoverlaps(ms1, ms2))
+  if(!MaterialSubset::overlaps(ms1, ms2))
     return false;
   return true;
 }
