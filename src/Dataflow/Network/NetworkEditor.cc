@@ -673,6 +673,10 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    return;
 	}
 	save_network(args[2]);
+    } else if (args[1] == "load_component_spec"){
+      if (args.count()!=3) {
+	args.error("load_component_spec needs 1 argument");
+      }
     } else if (args[1] == "create_pac_cat_mod"){
         int check = 1;
         if (args.count()!=5) {
@@ -724,11 +728,24 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
     }
 }
 
+void postMessage(const clString& errmsg, bool err)
+{
+  clString tag;
+  if(err)
+    tag += " errtag";
+  TCL::execute(clString(".top.errorFrame.text insert end \"")+
+	       errmsg+"\\n\""+tag);
+  TCL::execute(".top.errorFrame.text see end");
+}
+
 } // End namespace Dataflow
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.16  2000/10/21 18:35:10  moulding
+// more work for new module maker.
+//
 // Revision 1.15  2000/08/31 15:25:47  nbenson
 // modified save_network()
 //
