@@ -24,8 +24,7 @@ ContourGeom::ContourGeom()
 
 ContourGeom::ContourGeom(const vector<NodeSimp>& inodes,
 			 const vector<EdgeSimp>& iedges)
-  : PointCloudGeom(inodes),
-    d_has_neighbors(0)
+  : PointCloudGeom(inodes)
 {
   d_edge = iedges;
 }
