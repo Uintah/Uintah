@@ -112,10 +112,6 @@ public:
 
    //////////
    // Insert Documentation Here:
-   virtual void carryForward(const DataWarehouseP& from);
-
-   //////////
-   // Insert Documentation Here:
    virtual void scheduleParticleRelocation(const LevelP& level,
 					   SchedulerP& sched,
 					   DataWarehouseP& dw,
@@ -238,6 +234,9 @@ private:
 
 //
 // $Log$
+// Revision 1.29  2000/06/16 19:48:55  sparker
+// Eliminated carryForward
+//
 // Revision 1.28  2000/06/16 05:03:08  sparker
 // Moved timestep multiplier to simulation controller
 // Fixed timestep min/max clamping so that it really works now
