@@ -129,11 +129,16 @@
    <DataArchiver>
       <filebase>impHotBlob.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
+      <save label="press_equil_CC"/>
       <save label="vel_CC"/>
       <save label="temp_CC"/>
       <save label="press_CC"/>
       <save label="delP_Dilatate"/>
+      <save label="uvel_FCME"/>
+      <save label="vvel_FCME"/>
+      <save label="wvel_FCME"/>
       <save label="rhs"/>
+      <checkpoint interval="0.05" cycle="2"/>"
    </DataArchiver>
    
    <Debug>
