@@ -52,7 +52,7 @@ tar: products
 		$${root}/doc/Developer/Modules/*.html \
 		$${root}/doc/Developer/CodeViews/html \
 		$${root}/doc/FAQBook/*.html \
-                $${root}/doc/Utilities/HTML/doc_styles.css \
+                $${root}/doc/Utilities/HTML/*.css \
                 $${root}/doc/Utilities/HTML/*.js \
 		$${root}/doc/Utilities/Figures \
 		$${root}/src/Dataflow/XML/*.html \
