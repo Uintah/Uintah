@@ -423,6 +423,12 @@ ArchesLabel::ArchesLabel()
 
   d_InitNormLabel = VarLabel::create("initNorm",
 				       max_vartype::getTypeDescription() );
+  d_uVelNormLabel = VarLabel::create("uVelNorm",
+				       sum_vartype::getTypeDescription() );
+  d_vVelNormLabel = VarLabel::create("vVelNorm",
+				       sum_vartype::getTypeDescription() );
+  d_wVelNormLabel = VarLabel::create("wVelNorm",
+				       sum_vartype::getTypeDescription() );
 // labels for max(abs(velocity)) for Lax-Friedrichs flux
   d_maxAbsU_label = VarLabel::create("maxAbsU",
 				       max_vartype::getTypeDescription() );
@@ -637,6 +643,9 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_continuityResidualLabel);
 
   VarLabel::destroy(d_InitNormLabel);
+  VarLabel::destroy(d_uVelNormLabel);
+  VarLabel::destroy(d_vVelNormLabel);
+  VarLabel::destroy(d_wVelNormLabel);
 // labels for max(abs(velocity)) for Lax-Friedrichs flux
   VarLabel::destroy(d_maxAbsU_label);
   VarLabel::destroy(d_maxAbsV_label);
