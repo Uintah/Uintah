@@ -441,7 +441,11 @@ WARNING
      void getFace(FaceType face, const IntVector& insideOffset,
 		  const IntVector& outsideOffset,
 		  IntVector& l, IntVector& h) const;
+                
      IntVector faceDirection(FaceType face) const;
+     
+     string getFaceName(FaceType face) const;
+     
      void getFaceNodes(FaceType face, int offset, IntVector& l,
 		       IntVector& h) const;
 
