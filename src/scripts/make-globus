@@ -31,7 +31,7 @@ cvs checkout dist/ssleay-0.9.0-irix-patch
 cvs checkout dist/globus-1.1-utah.patch
 
 echo "Untarring"
-gunzip < dist/globus-1.1.0-beta-latest.tar.gz | tar xf -
+gunzip < dist/globus-1.1.0b16.tar.gz | tar xf -
 gunzip < dist/SSLeay-0.9.0b.tar.gz | tar xf -
 
 echo "Patching ssl"
