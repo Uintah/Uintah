@@ -626,9 +626,9 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   // Create the interpolant matrix.
   typename FIELD::mesh_type::Node::size_type nodesize;
   clipped->size(nodesize);
-  const int nrows = nodesize;
+  const int nrows = (int)nodesize;
   mesh->size(nodesize);
-  const int ncols = nodesize;
+  const int ncols = (int)nodesize;
   int *rr = scinew int[nrows+1];
   int *cctmp = scinew int[nrows*3];
   double *dtmp = scinew double[nrows*3];
@@ -989,9 +989,9 @@ IsoClipAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   // Create the interpolant matrix.
   typename FIELD::mesh_type::Node::size_type nodesize;
   clipped->size(nodesize);
-  const int nrows = nodesize;
+  const int nrows = (int)nodesize;
   mesh->size(nodesize);
-  const int ncols = nodesize;
+  const int ncols = (int)nodesize;
   int *rr = scinew int[nrows+1];
   int *cctmp = scinew int[nrows*2];
   double *dtmp = scinew double[nrows*2];

@@ -241,7 +241,7 @@ MatrixSelectVector::execute()
       changed_p = true;
     }
 
-    double minlabel;
+    double minlabel = 0.0;
     if (!mh->get_property("row_min", minlabel))
       minlabel = 0.0;
 
@@ -250,7 +250,7 @@ MatrixSelectVector::execute()
       changed_p = true;
     }
 
-    double maxlabel;
+    double maxlabel = 0.0;
     if (!mh->get_property("row_max", maxlabel))
       maxlabel = mh->nrows() - 1.0;
 
@@ -275,7 +275,7 @@ MatrixSelectVector::execute()
       changed_p = true;
     }
 
-    double minlabel;
+    double minlabel = 0.0;
     if (!mh->get_property("col_min", minlabel))
       minlabel = 0.0;
 
@@ -284,7 +284,7 @@ MatrixSelectVector::execute()
       changed_p = true;
     }
 
-    double maxlabel;
+    double maxlabel = 0.0;
     if (!mh->get_property("col_max", maxlabel))
       maxlabel = mh->ncols() - 1.0;
 

@@ -80,7 +80,6 @@ itcl_class SCIRun_Render_ViewSlices {
 	set children [winfo children .]
 	set pos [lsearch $children .ui[modname]*]
 	while { $pos != -1 } {
-	    puts "destroy [lindex $children $pos]"
 	    destroy [lindex $children $pos]
 	    set children [winfo children .]
 	    set pos [lsearch $children .ui[modname]*]
@@ -116,14 +115,14 @@ itcl_class SCIRun_Render_ViewSlices {
 	return $frame.scale
     }
 
-    method generate_window_name {} {
-	set num 0
+    method generate_window_num {} {
+	set num 1
 	set w .ui[modname]_$num
 	set children [winfo children .]
 	while { [lsearch $children $w] != -1 } {
 	    set w .ui[modname]_[incr num]
 	}
-	return $w
+	return $num
     }
 
     # writeStateToScript
@@ -166,10 +165,11 @@ itcl_class SCIRun_Render_ViewSlices {
     }
 
     method add_tab { w title } {
-	set w [$w.cp.tabs add -label $title].f
-	frame $w -bd 2 -relief sunken
-	pack $w -expand 1 -fill both
-	return $w
+	set f [$w.cp.tabs add -label $title].f
+	frame $f -bd 2 -relief sunken
+	pack $f -expand 1 -fill both
+	$w.cp.tabs select end
+	return $f
     }
 	
 
@@ -261,38 +261,47 @@ itcl_class SCIRun_Render_ViewSlices {
 	    -cursor based_arrow_down
     }
 
-    method ui { {four_view 0} } {
+    method ui { } {
 	set children [winfo children .]
-	set pos [lsearch $children .ui[modname]*]
-	if { $pos != -1 } {
-	    set w [lindex $children $pos]
-	    wm deiconify $w
-	    raise $w
-	    return
+	set pos 0
+	set create 1
+	while { $pos != -1 } {
+	    set children [lrange $children $pos end]
+	    set pos [lsearch  $children .ui[modname]*]
+	    if { $pos != -1 } {
+		SciRaise [lindex $children $pos]
+		incr pos
+		set create 0
+	    }
 	}
-	    
-	set w [generate_window_name]
+	if { $create } create_ui
+    }
+
+    method create_ui { } {
+	set num [generate_window_num]
+	set title "Window $num"
+	set w .ui[modname]_$num
 	toplevel $w
-	wm title $w [modname]
-	       
+	wm title $w "[modname] $title"
+	wm protocol $w WM_DELETE_WINDOW "wm withdraw $w"
+
 	frame $w.f -bd 0 -background red
 	set img [image create photo -width 1 -height 1]
 	button $w.e -height 4 -bd 2 -relief raised -image $img \
 	    -cursor based_arrow_down
+	button $w.b -text "New Slice Viewer Window" -command "$this create_ui"
+	pack $w.b -anchor w
 	pack $w.e -side bottom -fill x
 	pack $w.f -expand 1 -fill both
-	control_panel $w.cp
-	add_nrrd_tab $w 1
-	add_nrrd_tab $w 2
-	hide_control_panel $w
 
-	if { $four_view } {
-	    four_view $w.f $w
-	} else {
-	    gl_frame $w.f.main
-	    pack $w.f.main -expand 1 -fill both
-	    add_viewport_tab $w Main main-viewport0 $w.f.main
-	}
+	control_panel $w.cp
+	show_control_panel $w
+
+	set winname [join [string tolower $title] ""]
+	gl_frame $w.f.$winname
+	pack $w.f.$winname -expand 1 -fill both
+
+	add_viewport_tab $w $title $winname-viewport0 $w.f.$winname
     }
 
     method four_view { w main } {

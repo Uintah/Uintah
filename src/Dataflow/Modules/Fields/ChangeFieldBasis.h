@@ -41,6 +41,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 
+#include <algorithm>
 
 namespace SCIRun {
 
@@ -200,6 +201,10 @@ ChangeFieldBasisAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
 
     if (rr && cc)
     {
+      for (int i = 0; i < nrows; i++)
+      {
+        std::sort(cc + rr[i], cc + rr[i+1]);
+      }
       interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, d);
     }
     else if (rr)
@@ -215,11 +220,11 @@ ChangeFieldBasisAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
 
       typename FSRC::mesh_type::Cell::size_type nsize;
       mesh->size(nsize);
-      const int ncols = nsize;
+      const int ncols = (int)nsize;
 
       typename FSRC::mesh_type::Node::size_type osize;
       mesh->size(osize);
-      const int nrows = osize;
+      const int nrows = (int)osize;
 
       int *rr = scinew int[nrows + 1];
       vector<unsigned int> cctmp;
@@ -253,7 +258,7 @@ ChangeFieldBasisAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
 	cc[i] = cctmp[i];
 	d[i] = dtmp[i];
       }
-    
+
       interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, d);
     }    
     else if (basis_order == 1 && fsrc->basis_order() == 0 && 
@@ -263,11 +268,11 @@ ChangeFieldBasisAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
 
       typename FSRC::mesh_type::Face::size_type nsize;
       mesh->size(nsize);
-      const int ncols = nsize;
+      const int ncols = (int)nsize;
 
       typename FSRC::mesh_type::Node::size_type osize;
       mesh->size(osize);
-      const int nrows = osize;
+      const int nrows = (int)osize;
 
       int *rr = scinew int[nrows + 1];
       vector<unsigned int> cctmp;
@@ -311,11 +316,11 @@ ChangeFieldBasisAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
 
       typename FSRC::mesh_type::Edge::size_type nsize;
       mesh->size(nsize);
-      const int ncols = nsize;
+      const int ncols = (int)nsize;
 
       typename FSRC::mesh_type::Node::size_type osize;
       mesh->size(osize);
-      const int nrows = osize;
+      const int nrows = (int)osize;
 
       int *rr = scinew int[nrows + 1];
       vector<unsigned int> cctmp;
@@ -349,7 +354,7 @@ ChangeFieldBasisAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
 	cc[i] = cctmp[i];
 	d[i] = dtmp[i];
       }
-    
+
       interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, d);
     }
   } catch (...)

@@ -129,7 +129,8 @@ void BuildFEMatrix::parallel(int proc)
   
   //----------------------------------------------------------------------
   //! Creating sparse matrix structure
-  Array1<int> mycols(0, 15*ndof);
+  vector<unsigned int> mycols;
+  mycols.reserve(ndof*15);
   
   if (proc==0){
     hMesh_->synchronize(Mesh::EDGES_E | Mesh::NODE_NEIGHBORS_E);
@@ -148,8 +149,12 @@ void BuildFEMatrix::parallel(int proc)
     neib_nodes.push_back(TetVolMesh::Node::index_type(i));
     sort(neib_nodes.begin(), neib_nodes.end());
  
-    for (unsigned int jj=0; jj<neib_nodes.size(); jj++){
-      mycols.add(neib_nodes[jj]);
+    for (unsigned int jj=0; jj<neib_nodes.size(); jj++)
+    {
+      if (jj == 0 || neib_nodes[jj] != mycols.back())
+      {
+        mycols.push_back(neib_nodes[jj]);
+      }
     }
   }
   
@@ -178,7 +183,7 @@ void BuildFEMatrix::parallel(int proc)
   int n=mycols.size();
   
   for(i=0;i<n;i++){
-    allCols_[i+s]=mycols[i];
+    allCols_[i+s] = mycols[i];
   }
   
   for(i=start_node;i<end_node;i++){
@@ -239,10 +244,8 @@ BuildFEMatrix::build_local_matrix( double lcl_a[4][4],
   if (index_based_) el_cond = tens_[hFieldInt_->value(c_ind)].second.mat_;
   else el_cond = hFieldTensor_->value(c_ind).mat_;
 
-  if(fabs(vol) < 1.e-10){
-    for(int i = 0; i<4; i++)
-      for(int j = 0; j<4; j++)
-	lcl_a[i][j]=0;
+  if (fabs(vol) < 1.e-10) {
+    memset(lcl_a, 0, sizeof(double) * 16);
     return;
   }
   

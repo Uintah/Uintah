@@ -133,7 +133,8 @@ void BuildTriFEMatrix::parallel(int proc)
   
   //----------------------------------------------------------------------
   //! Creating sparse matrix structure
-  Array1<int> mycols(0, 15*ndof);
+  vector<unsigned int> mycols;
+  mycols.reserve(ndof*15);
 
   if (proc==0){
     hMesh_->synchronize(Mesh::EDGES_E | Mesh::NODE_NEIGHBORS_E);
@@ -152,8 +153,12 @@ void BuildTriFEMatrix::parallel(int proc)
     neib_nodes.push_back(TriSurfMesh::Node::index_type(i));
     sort(neib_nodes.begin(), neib_nodes.end());
  
-    for (unsigned int jj=0; jj<neib_nodes.size(); jj++){
-      mycols.add(neib_nodes[jj]);
+    for (unsigned int jj=0; jj<neib_nodes.size(); jj++)
+    {
+      if (jj == 0 || neib_nodes[jj] != mycols.back())
+      {
+        mycols.push_back(neib_nodes[jj]);
+      }
     }
   }
 
@@ -242,10 +247,8 @@ void BuildTriFEMatrix::build_local_matrix(double lcl_a[3][3],
   if (index_based_) el_cond = tens_[hFieldInt_->value(f_ind)].second.mat_;
   else el_cond = hFieldTensor_->value(f_ind).mat_;
 
-  if(fabs(area) < 1.e-10){
-    for(int i = 0; i<3; i++)
-      for(int j = 0; j<3; j++)
-	lcl_a[i][j]=0;
+  if (fabs(area) < 1.e-10) {
+    memset(lcl_a, 0, sizeof(double) * 9);
     return;
   }
   

@@ -38,9 +38,8 @@
       <author>Ruth Nicholson Klepfer</author>
     </authors>
     
-    <summary>The module sets up a mesh with conductivity tensors and
-      Dirichlet boundary conditions specifically for bioelectric field
-      problems.
+    <summary>The module sets up a mesh with conductivity tensors for
+      bioelectric field problems.
     </summary>
     
     <description>
@@ -49,37 +48,30 @@
       <p>The module provides basic means for construction of the FE
       matrix with linear elements for bioelectric field problems
       (discretization of Poisson equation for volume conductor
-      problem). The input field should have properties with lookup
-      names that correspondend to the bioelectric field problem. The
-      module conventions appear below:</p>
-      
-      <orderedlist>
-	<listitem>
-	  <p>The Field containing a mesh should be a TetVolField(char) type,
-	  which contains indices to the property 'table'; actual values of the 
-	  conductivity tensors, optimizing
-	  storage.</p>
-	</listitem>
-	<listitem>
-	  <p>The property of the conductivity mesh name 'table' should
-	  have the associated data object Array1(Tensor) type. Any
-	  lookup into the table is done by dereferencing indices of
-	  conductivity mesh, the module performs any lookup into the table.</p>
-	</listitem>
-	<listitem>
-	  <p>Dirichlet boundary conditions, if any, should be
-	  represented as a property with the name "dirichlet" and be
-	  of a vector(pair(int, double)) type, where "int" field
-	  corresponds to node index, and "double" field is the value
-	  of potential at the node.</p>
-	</listitem>
-      </orderedlist>
+      problem). The input field should be a Field (TriSurf,
+      HexVol, or TetVol) of either Tensors or integers, with the data
+      values defined at the elements (constant over each element).  If
+      it is a Field of Tensors, each Tensor indicates the local
+      conductivity tensor at that location in the mesh.  If it is a
+      Field of Integers, then each integer is an index into a lookup
+      table, where the table contains a set of conductivity tensors.
+      When using the index/table approach, a "conductivity_table"
+      Property must be stored with the Field, where the conductivity
+      table is of type pair&lt;string,Tensor> (i.e. the individual
+      material types can have descriptive names).  The
+      BioPSE::Modeling::ModifyConductivities module can be used to
+      generate (as well as to modify) the conductivity_table
+      property.  The BioPSE::Forward::IndicesToTensors and
+      BioPSE::Forward::TensorsToIndices modules are useful for
+      converting between the index/table (Field of integer with a
+      conductivity_table Propert) and the full Tensor (Field of
+      Tensors) representations.</p>
       
       <note>
 	<p>BioPSE::Algorithm::BuildFEMatrix::build_FEMatrix() performs
 	the actual computation of the matrix. Other modules or any
 	other code may use the algorithm for other kinds of problems
-	involving discretization of the Poisson equation in 3D by
+	involving discretization of the Poisson equation by
 	linear finite elements.</p>
       </note>
       
@@ -92,27 +84,21 @@
   </overview>
   <io>
     <inputs lastportdynamic="no">
-      <!-- one of (device port file) -->
       <port>
 	<name>Mesh</name>
 	<description>
-	  <p>Takes a handle to Field object containing properties
-	  described in overview section</p>
+	  <p>Takes a Field of integers or Tensors, as described in the
+	  Overview section.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
-      <!-- one of (device port file) -->
       <port>
 	<name>Stiffness Matrix</name>
 	<description>
 	  <p>Sends a handle to the sparse matrix obtained from
-	  discretization of the problem by finite elements</p>
-	  <note>
-	    <p>The handle is to base class of SparseRowMatrix, namely,
-	    Matrix</p>
-	  </note>
+	  discretization of the problem by finite elements.</p>
 	</description>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
@@ -138,7 +124,7 @@
 	<p>
           The "Use Conductivities" box tells the module to look up the
           conductivity for each element and to use that information
-          when constructing the stiffness matrices.  If it is not
+          when constructing the stiffness matrix.  If it is not
           checked, the module will use the identity matrix for each
           element instead (i.e. what was div(sigma x grad(phi)) turns
           into div(grad(phi))).  This is useful for demonstrating the
@@ -165,9 +151,9 @@
           conductivity_table Property, rather than a Field&lt;Tensor>
           where each element has a unique Tensor).  This option will
           precompute a decomposition of A into:
-
+	</p><p>
           A = sigma_1 x A'_1 + sigma_2 x A'_2 + ... sigma_N x A'_N 
-
+	</p><p>
           where the A'_n matrices are the same size and structure (in
           the sparse matrix sense) as A, but just contain
           contributions from elements of material type n.  The sigma_n

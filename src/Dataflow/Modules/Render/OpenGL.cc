@@ -432,6 +432,7 @@ OpenGL::redraw_loop()
     for(int i=0;i<nreply;i++) {
       recv_mailbox_.send(REDRAW_DONE);
     }
+    view_window_->gui_total_frames_.set(view_window_->gui_total_frames_.get()+1);
   } // end for(;;)
 }
 
@@ -988,6 +989,7 @@ OpenGL::redraw_frame()
       }
       //gui->lock();
       gui_->execute("update idletasks");
+      view_window_->gui_total_frames_.set(view_window_->gui_total_frames_.get()+1);
 
       // Show the pretty picture
 #if defined(HAVE_PBUFFER)

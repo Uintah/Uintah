@@ -83,6 +83,7 @@ public:
   virtual void			presave();
   
 private:
+  void				force_execute();
   void				add_triangle_widget();
   void				add_rectangle_widget();
   void				add_paint_widget();
@@ -91,28 +92,28 @@ private:
   void				update_from_gui();
   void				update_to_gui(bool forward = true);
   void				tcl_unpickle();
-
   void				undo();
-
-  void				save_ppm(const string &filename,
-					 int sx, int sy,
-					 int bpp, const unsigned char * buf);
-  void				save_function(const string& filename);
-
+  void				save_ppm_file(string filename,
+					      int sx, int sy, int bpp, 
+					      const unsigned char *buf);
+  void				save_file(bool save_ppm=false);
+  void				load_file();
   void				init_shader_factory();
   void				build_colormap_texture();
   void				build_histogram_texture();
   void				draw_texture(GLuint &id);
-  void				redraw();
+  void				redraw(bool force_cmap_dirty = false,
+				       bool save_ppm = false);
+  void				faux_changed();
 
   void				push(int x, int y, int button);
   void				motion(int x, int y);
   void				release(int x, int y);
   void				mouse_pick(int x, int y, int b);
   void				set_window_cursor(int x, int y);
-  void				select_widget(int, int);
+  bool				select_widget(int w=-1, int o=-1);
   void				screen_val(int &x, int &y);
-  pair<double, double>		normalized_val(int x, int y);
+  pair<double, double>		rescaled_val(int x, int y);
   //! functions for panning.
   void				translate_start(int x, int y);
   void				translate_motion(int x, int y);
@@ -121,6 +122,10 @@ private:
   void				scale_start(int x, int y);
   void				scale_motion(int x, int y);
   void				scale_end(int x, int y);
+  // functions for changing state via GUI
+  void				gui_color_change(GuiArgs &args);
+  void				gui_shade_change(GuiArgs &args);
+  void				gui_toggle_change(GuiArgs &args);
   
   // Input/Output Ports
   ColorMap2IPort*		cmap_iport_;
@@ -129,6 +134,8 @@ private:
   ColorMap2Handle		sent_cmap2_;
 
   bool				just_resend_selection_;
+  bool				force_execute_;
+  int				execute_count_;
   TkOpenGLContext *		ctx_;
   int				width_;
   int				height_;
@@ -154,7 +161,6 @@ private:
   PaintCM2Widget *		paint_widget_;
   // Push on undo when motion occurs, not on select.
   bool				first_motion_;
-  bool				save_ppm_;
   
   int				mouse_last_x_;
   int				mouse_last_y_;
@@ -163,7 +169,6 @@ private:
   GuiDouble			scale_;
 
   bool				updating_; // updating the tf or not
-
   GuiDouble			gui_histo_;
 
   // The currently selected widget
@@ -184,8 +189,6 @@ private:
 
   // variables for file loading and saving
   GuiFilename			filename_;
-  string			old_filename_;
-  time_t			old_filemodification_;
   GuiString *			end_marker_;
   pair<float,float>		value_range_;
 };
@@ -201,6 +204,8 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     hist_iport_((NrrdIPort*)get_iport("Histogram")),
     sent_cmap2_(0),
     just_resend_selection_(0),
+    force_execute_(false),
+    execute_count_(0),
     ctx_(0), 
     width_(0),
     height_(0),
@@ -221,7 +226,6 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     mouse_object_(0),
     paint_widget_(0),
     first_motion_(true),
-    save_ppm_(false),
     mouse_last_x_(0),
     mouse_last_y_(0),
     pan_x_(ctx->subVar("panx")),
@@ -242,11 +246,11 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     gui_sstate_(),
     gui_onstate_(),
     filename_(ctx->subVar("filename")),
-    old_filename_(),
-    old_filemodification_(0),
     end_marker_(0),
     value_range_(0.0, -1.0)
 {
+  // Mac OSX requires 512K of stack space for GL context rendering threads
+  setStackSize(1024*512);
   pan_x_.set(0.0);
   pan_y_.set(0.0);
   scale_.set(1.0);
@@ -265,6 +269,12 @@ EditColorMap2D::~EditColorMap2D()
     delete end_marker_;
 }
 
+void
+EditColorMap2D::force_execute()
+{
+  force_execute_ = true;
+  want_to_execute();
+}
 
 void
 EditColorMap2D::translate_start(int x, int y)
@@ -337,9 +347,12 @@ EditColorMap2D::screen_val(int &x, int &y)
 
 
 pair<double, double>
-EditColorMap2D::normalized_val(int x, int y)
+EditColorMap2D::rescaled_val(int x, int y)
 {
   double xx = x/double(width_);
+  double range = value_range_.second - value_range_.first;
+  if (range > 0.0)
+    xx = xx * range + value_range_.first;
   y = height_ - y - 1;
   double yy = y/double(height_);
   return make_pair(xx, yy);
@@ -360,19 +373,20 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
   else if (args[1] == "deletewidget") delete_selected_widget();
   else if (args[1] == "undowidget") undo();
   else if (args[1] == "unpickle") tcl_unpickle();
-  else if (args[1] == "resend_selection") {
+  else if (args[1] == "load") load_file();
+  else if (args[1] == "save") save_file((args.count() > 2));
+  else if (args[1] == "shade") gui_shade_change(args);
+  else if (args[1] == "toggle") gui_toggle_change(args);
+  else if (args[1] == "color") gui_color_change(args);
+  else if (args[1] == "select_widget") {
     just_resend_selection_ = true;
+    select_widget();
     want_to_execute();
   } else if (args[1] == "mouse") {
-    int X, Y; // X, Y are unscaled/untranslated coordinates
-    string_to_int(args[3], X);
-    string_to_int(args[4], Y);
-
-    int x = X, y = Y; // x, y are scaled/translated coordinates
-    screen_val(x,y);
-
-    int b;
-    string_to_int(args[5], b); // which button it was
+    int b = args.get_int(5); // which button it was
+    int X = args.get_int(3), Y = args.get_int(4); // unscaled/untranslated
+    int x = X, y = Y;
+    screen_val(x,y); // x, y are scaled/translated coordinates
 
     if (args[2] == "motion") motion(x, y);
     else if (args[2] == "push") push(x, y, b);
@@ -390,14 +404,7 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
       redraw();
     }
   } else if (args[1] == "redraw") {
-    if (args.count() > 2)
-    {
-      gui_selected_widget_.reset();
-      gui_selected_object_.reset();
-      select_widget(gui_selected_widget_.get(), 
-		    gui_selected_object_.get());
-      cmap_dirty_ = true;
-    }
+    histo_dirty_ |= gui_histo_.changed();
     redraw();
   } else if (args[1] == "destroygl") {
     if (ctx_) {
@@ -414,171 +421,59 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
     height_ = ctx_->height();
     width_ = 512;
     height_ = 256;
-  } else if (!args[1].compare(0, 13, "color_change-")) {
-    int n;
-    string_to_int(args[1].substr(13), n);
-    gui_num_entries_.reset();
-    resize_gui();
-    if (n < 0 || n >= gui_num_entries_.get()) return;
-
-    gui_color_r_[n]->reset();
-    gui_color_g_[n]->reset();
-    gui_color_b_[n]->reset();
-    gui_color_a_[n]->reset();
-    const double a = gui_color_a_[n]->get();
-    Color new_color
-      (gui_color_r_[n]->get(), gui_color_g_[n]->get(),  gui_color_b_[n]->get());
-    if (new_color != widgets_[n]->get_color() || a != widgets_[n]->get_alpha())
-    {
-      undo_stack_.push(UndoItem(UndoItem::UNDO_CHANGE, n,
-				widgets_[n]->clone()));
-      widgets_[n]->set_color(new_color);
-      widgets_[n]->set_alpha(a);
-      want_to_execute();
-    }
-
-  } else if (!args[1].compare(0, 12, "shadewidget-")) {
-    int n;
-    string_to_int(args[1].substr(12), n);
-    resize_gui();  // make sure the guivar vector exists
-    gui_num_entries_.reset();
-    if (n < 0 || n >= gui_num_entries_.get()) return;
-
-    // Toggle the shading type from flat to normal and vice-versa
-    gui_sstate_[n]->reset();
-    widgets_[n]->set_shadeType(gui_sstate_[n]->get());
-    cmap_dirty_ = true;
-    redraw();
-    want_to_execute();
-  } else if(!args[1].compare(0, 9, "toggleon-")) {
-    int n;
-    string_to_int(args[1].substr(9), n);
-    resize_gui();  // make sure the guivar vector exists
-    gui_num_entries_.reset();
-    if (n < 0 || n >= gui_num_entries_.get()) return;
-
-    gui_onstate_[n]->reset();
-    widgets_[n]->set_onState(gui_onstate_[n]->get());  // toggle on/off state.
-    
-    cmap_dirty_ = true;
-    redraw();
-    want_to_execute();
-  } else if (args[1] == "swatch_save") {
-    save_ppm_ = true;
-    filename_.reset();
-    cmap_dirty_ = true;
-    redraw();
-  } else if (args[1] == "load") {
-    // The implementation of this was taken almost directly from
-    // NrrdReader Module.  
-    filename_.reset();
-    string fn(filename_.get());
-    if(fn == "") {
-      error("Please Specify a Transfer Function filename.");
-      return;
-    }
-
-    struct stat buf;
-    if(stat(fn.c_str(), &buf) == -1) {
-      error(string("EditColorMap2D error - file not found: '")+fn+"'");
-      return;
-    }
-
-    // if we haven't read yet, or if it's new, or if time has changed, read.
-#ifdef __sgi
-    time_t new_filemodification = buf.st_mtim.tv_sec;
-#else 
-    time_t new_filemodification = buf.st_mtime;
-#endif
-    if( new_filemodification != old_filemodification_)
-    {
-      old_filemodification_ = new_filemodification;
-      old_filename_ = fn;
-      
-      int len = fn.size();
-      const string suffix(".xff");
-
-      // Check the suffix.
-      if (fn.substr(len - 4, 4) == suffix) {
-        BinaryPiostream *stream = new BinaryPiostream(fn, Piostream::Read);
-        if (!stream) {
-          error("Error reading file '" + fn + "'.");
-          return;
-        }
-
-        // read the file.
-        int size;
-        stream->io(size);
-        if(stream->reading()) widgets_.resize(size);
-        for(unsigned int i = 0; i < widgets_.size(); i++) {
-          Pio(*stream, widgets_[i]);
-        }
-        delete stream;
-
-        cmap_dirty_ = true;
-        redraw();
-        update_to_gui();
-        want_to_execute();
-      }
-    }    
-  } else if (args[1] == "save") {
-    const string fn(filename_.get());
-    save_function(fn);
-
-  } else if (args[1] == "saveppm") { 
-    save_ppm_ = true;
-    cmap_dirty_ = true;
-    redraw();
-    // Now we trim off the .ppm, add a .xff and call
-    // the save_function() method
-    string fn = filename_.get();
-    fn += ".xff";
-    char buf[256];
-    sprintf(buf, fn.c_str());
-    
-    const string xff_file = buf;
-    save_function(xff_file);
-  }
-  else {
-    Module::tcl_command(args, userdata);
-  }
+  } 
+  else Module::tcl_command(args, userdata);
 }
 
 
 void
+EditColorMap2D::faux_changed() {
+  gui_faux_.reset();
+  const bool faux = gui_faux_.get();
+  for (unsigned int w = 0; w < widgets_.size(); ++w)
+    if (widgets_[w]->get_faux() != faux) {
+      widgets_[w]->set_faux(faux);
+      cmap_dirty_ = true;
+    }
+}
+
+void
 EditColorMap2D::add_triangle_widget()
 {
-    widgets_.push_back(scinew TriangleCM2Widget());
-    undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
-    update_to_gui();
-    select_widget(widgets_.size()-1, 1);
-    cmap_dirty_ = true;
-    redraw();
-    want_to_execute();
+  widgets_.push_back(scinew TriangleCM2Widget());
+  widgets_.back()->set_faux(gui_faux_.get());
+  widgets_.back()->set_value_range(value_range_);
+  undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
+  update_to_gui();
+  select_widget(widgets_.size()-1, 1);
+  redraw(true);
+  force_execute();
 }
 
 
 void
 EditColorMap2D::add_rectangle_widget()
 {
-    widgets_.push_back(scinew RectangleCM2Widget());
-    undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
-    update_to_gui();
-    select_widget(widgets_.size()-1, 1);
-    cmap_dirty_ = true;
-    redraw();
-    want_to_execute();
+  widgets_.push_back(scinew RectangleCM2Widget());
+  widgets_.back()->set_faux(gui_faux_.get());
+  widgets_.back()->set_value_range(value_range_);
+  undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
+  update_to_gui();
+  select_widget(widgets_.size()-1, 1);
+  redraw(true);
+  force_execute();
 }
 
 void
 EditColorMap2D::add_paint_widget()
 {
   widgets_.push_back(scinew PaintCM2Widget());
+  widgets_.back()->set_faux(gui_faux_.get());
+  widgets_.back()->set_value_range(value_range_);
   undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
   update_to_gui();
   select_widget(widgets_.size()-1, 1);
-  // PaintCM2Widgets start blank, so no need set cmap_dirty and redraw here
-  want_to_execute();
+  force_execute();
 }
 
 void
@@ -597,19 +492,22 @@ EditColorMap2D::delete_selected_widget()
     select_widget(widgets_.size()-1, 1);
   else 
     select_widget(gui_selected_widget_.get(), 1);
-  cmap_dirty_ = true;
-  redraw();
-  want_to_execute();
+  redraw(true);
+  force_execute();
 }
 
 
 void
-EditColorMap2D::save_function(const string& filename)
+EditColorMap2D::save_file(bool save_ppm)
 {
+  filename_.reset();
+  const string filename = filename_.get();
   if (filename == "") {
     error("Warning;  No filename provided to EditColorMap2D");
     return;
   }
+  
+  redraw(true, save_ppm);
   
   // Open ostream
   Piostream* stream;
@@ -617,15 +515,59 @@ EditColorMap2D::save_function(const string& filename)
   if (stream->error())
     error("Could not open file for writing" + filename);
   else {
-    int size = widgets_.size();
-    Pio(*stream, size);
-    for(unsigned int i = 0; i < widgets_.size(); i++) {
-      Pio(*stream, widgets_[i]);
-    }
+    Pio(*stream, sent_cmap2_);
     delete stream;
+    remark ("Saved ColorMap2 to file: "+filename);
   }
 }
 
+void
+EditColorMap2D::load_file() {
+  // The implementation of this was taken almost directly from
+  // NrrdReader Module.  
+  filename_.reset();
+  string fn(filename_.get());
+  if(fn == "") {
+    error("Please Specify a Transfer Function filename.");
+    return;
+  }
+  
+  struct stat buf;
+  if(stat(fn.c_str(), &buf) == -1) {
+    error(string("EditColorMap2D error - file not found: '")+fn+"'");
+    return;
+  }
+
+  const int len = fn.size();
+  const string suffix(".cmap2");
+  // Return if the suffix is wrong
+  if (fn.substr(len - suffix.size(), suffix.size()) != suffix) return;
+
+  BinaryPiostream *stream = new BinaryPiostream(fn, Piostream::Read);
+  if (!stream) {
+    error("Error reading file '" + fn + "'.");
+    return;
+  }  
+  // read the file.
+  ColorMap2Handle icmap = scinew ColorMap2();
+  try {
+    Pio(*stream, icmap);
+  } catch (...) {
+    error("Error loading "+fn);
+    icmap = 0;
+  }
+  delete stream;
+  if (icmap.get_rep()) {
+    widgets_ = icmap->widgets();
+    icmap_generation_ = icmap->generation;
+    while (!undo_stack_.empty()) undo_stack_.pop();
+  }
+  
+  update_to_gui();
+  select_widget(-1,0); 
+  redraw(true);
+  force_execute();
+}
 
 
 void
@@ -673,7 +615,6 @@ EditColorMap2D::presave()
 void
 EditColorMap2D::undo()
 {
-  bool gui_update = false;
   if (!undo_stack_.empty())
   {
     const UndoItem &item = undo_stack_.top();
@@ -682,22 +623,24 @@ EditColorMap2D::undo()
     {
     case UndoItem::UNDO_CHANGE:
       widgets_[item.selected_] = item.widget_;
-      gui_update = true;
+      select_widget(item.selected_, 1);
       break;
 
     case UndoItem::UNDO_ADD:
       widgets_.erase(widgets_.begin() + item.selected_);
-      gui_update = true;
+      resize_gui();
       break;
    
     case UndoItem::UNDO_DELETE:
       widgets_.insert(widgets_.begin() + item.selected_, item.widget_);
-      gui_update = true;
+      select_widget(item.selected_, 1);
       break;
     }
     undo_stack_.pop();
-    cmap_dirty_ = true;
-    want_to_execute();
+    select_widget();
+    redraw(true);
+    update_to_gui();
+    force_execute();
   }
 }
 
@@ -751,6 +694,10 @@ EditColorMap2D::update_to_gui(bool forward)
     gui_sstate_[i]->set(widgets_[i]->get_shadeType());
     gui_onstate_[i]->set(widgets_[i]->get_onState());
   }
+  gui_selected_widget_.reset();
+  int selected = gui_selected_widget_.get();
+  if (selected < 0 || selected >= int(widgets_.size()))
+    gui_selected_widget_.set(widgets_.size()-1);
   if (forward) { 
     gui->execute(id + " create_entries"); 
   }
@@ -776,7 +723,7 @@ EditColorMap2D::update_from_gui()
       cmap_dirty_ = true;
     }
     
-    if (widgets_[i]->get_alpha() != gui_color_a_[i]->get()) {
+    if (fabs(widgets_[i]->get_alpha() - gui_color_a_[i]->get()) > 0.001) {
       widgets_[i]->set_alpha(gui_color_a_[i]->get());
       cmap_dirty_ = true;
     }
@@ -827,16 +774,22 @@ EditColorMap2D::tcl_unpickle()
 }
 
 
-void
+bool
 EditColorMap2D::select_widget(int widget, int object) {
-  for (int i = 0; i < (int)widgets_.size(); i++)
-  {
-    widgets_[i]->unselect_all();
+  int changed = false;
+  if (widget == -1 && object == -1) {
+    changed = gui_selected_widget_.changed() || gui_selected_object_.changed();
+    widget = gui_selected_widget_.get();
+    object = gui_selected_object_.get();
+  } else {
+    changed = gui_selected_widget_.get() != widget;
+    gui_selected_widget_.set(widget);
+    gui_selected_object_.set(object);
   }
-  gui_selected_widget_.set(widget);
-  gui_selected_object_.set(object);
-  if (widget >= 0 && widget < (int)widgets_.size())
-    widgets_[widget]->select(object);
+
+  for (int i = 0; i < (int)widgets_.size(); i++)
+    widgets_[i]->select(i == widget ? object : 0);
+  return changed;
 }
   
 
@@ -857,12 +810,16 @@ EditColorMap2D::push(int x, int y, int button)
   select_widget(mouse_widget_, mouse_object_);
 
   // If the currently selected widget is a paint layer, start a new stroke
-  if (mouse_widget_ > 0 && mouse_widget_ < int(widgets_.size())) {
+  if (mouse_widget_ >= 0 && mouse_widget_ < int(widgets_.size())) {
     paint_widget_ = 
       dynamic_cast<PaintCM2Widget *>(widgets_[mouse_widget_].get_rep());
     if (paint_widget_) {
-      paint_widget_->add_stroke();
-      paint_widget_->add_coordinate(normalized_val(x,y));
+      double range = 1.0;
+      if (value_range_.first < value_range_.second)
+	range = value_range_.second - value_range_.first;
+      range /= scale_.get();
+      paint_widget_->add_stroke(range/35.0);
+      paint_widget_->add_coordinate(rescaled_val(x,y));
     }
   }
 
@@ -909,24 +866,27 @@ EditColorMap2D::motion(int x, int y)
     return;
   }
 
+  const int selected = gui_selected_widget_.get();
+  if (selected < 0 || selected >= (int)widgets_.size()) return;
+
   if (button_ == 1 && paint_widget_) {
-    paint_widget_->add_coordinate(normalized_val(x,y));
+    paint_widget_->add_coordinate(rescaled_val(x,y));
   } else {
-    const int selected = gui_selected_widget_.get();
-    if (selected != -1)
+    if (!gui_selected_object_.get()) return;
+    if (first_motion_)
     {
-      if (first_motion_)
-      {
-	undo_stack_.push(UndoItem(UndoItem::UNDO_CHANGE, selected,
-				  widgets_[selected]->clone()));
-	first_motion_ = false;
-      }
-      widgets_[selected]->move(x, height_-1-y, width_, height_);
+      undo_stack_.push(UndoItem(UndoItem::UNDO_CHANGE, selected,
+				widgets_[selected]->clone()));
+      first_motion_ = false;
     }
+    widgets_[selected]->move(x, height_-1-y, width_, height_);
   }
-  cmap_dirty_ = true;
+  redraw(true);
   updating_ = true;
-  want_to_execute();
+  if (execute_count_ == 0) {
+    execute_count_ = 1;
+    force_execute();
+  }
 }
 
 
@@ -935,73 +895,91 @@ void
 EditColorMap2D::release(int x, int y)
 {
   button_ = 0;
-  paint_widget_ = 0;
   set_window_cursor(x,y);
   const int selected = gui_selected_widget_.get();
-  if (selected != -1)
+  if (selected >= 0 && selected < (int)widgets_.size())
   {
+    if (!paint_widget_ && !gui_selected_object_.get()) return;
     widgets_[selected]->release(x, height_-1-y, width_, height_);
     updating_ = false;
-    want_to_execute();
+    force_execute();
   }
+  paint_widget_ = 0;
 }
 
 void
 EditColorMap2D::execute()
 {
-  ASSERTMSG(cmap_iport_, "EditColorMap2D: cant find input CM2 port");  
-  ASSERTMSG(cmap_oport_, "EditColorMap2D: cant find output CM2 port");
-  ASSERTMSG(hist_iport_, "EditColorMap2D: cant find input histo port");
-
   update_from_gui();
+
   ColorMap2Handle icmap = 0;
+  NrrdDataHandle h = 0;
+
   cmap_iport_->get(icmap);
-  
-  if (icmap.get_rep() && icmap->generation != icmap_generation_) {
+  hist_iport_->get(h);
+
+  if ((!icmap.get_rep() || icmap->generation == icmap_generation_) &&
+      (!h.get_rep() || h->generation == hist_generation_) &&
+      !gui_faux_.changed() && !gui_histo_.changed() &&
+      !just_resend_selection_ && !force_execute_ &&
+      !cmap_dirty_ && !histo_dirty_)
+    return;
+  force_execute_ = false;
+
+  if (icmap.get_rep() && icmap->generation > icmap_generation_) {
     widgets_ = icmap->widgets();
     icmap_generation_ = icmap->generation;
     cmap_dirty_ = true;
     if (!just_resend_selection_ && icmap->selected() != -1) 
       gui_selected_widget_.set(icmap->selected());
+    update_to_gui();
   }
-
-  update_to_gui();
-
-  NrrdDataHandle h = 0;
-  hist_iport_->get(h);
 
   if (h.get_rep() && h->generation != hist_generation_) {
     hist_generation_ = h->generation;
     if(h->nrrd->dim != 2 && h->nrrd->dim != 3) {
-      error("Invalid input dimension.");
+      error("Invalid input histogram dimension.");
+      return;
     }
     histo_ = h->nrrd;
     histo_dirty_ = true;
+
+    if (histo_ && histo_->kvp) {
+      const char *min = nrrdKeyValueGet(histo_, "jhisto_nrrd0_min");
+      const char *max = nrrdKeyValueGet(histo_, "jhisto_nrrd0_max");
+      double dmin, dmax;
+      if (min && max &&
+	  string_to_double(min, dmin) && string_to_double(max, dmax))
+      {
+	value_range_ = make_pair(float(dmin), float(dmax));
+	cmap_dirty_ = true;
+      }
+    }
+
+
   } else if (!h.get_rep()) {
-    if(histo_ != 0)
+    if (histo_ != 0)
       histo_dirty_ = true;
     histo_ = 0;
   }
 
-  for (unsigned int w = 0; w < widgets_.size(); ++w)
-    widgets_[w]->set_faux(bool(gui_faux_.get()));
-  
+  faux_changed();
   redraw();
 
   if (!just_resend_selection_)
     sent_cmap2_ = scinew ColorMap2(widgets_, updating_, 
 				   gui_selected_widget_.get(),
 				   value_range_);
+  sent_cmap2_->selected() = gui_selected_widget_.get();
   just_resend_selection_ = false;
   icmap_generation_ = sent_cmap2_->generation;
+  if (execute_count_ > 0) execute_count_--;
   cmap_oport_->send(sent_cmap2_);
-
 }
 
 
-void EditColorMap2D::save_ppm(const string &filename,
-			      int sx, int sy,
-			      int bpp, const unsigned char * buf)
+void EditColorMap2D::save_ppm_file(string filename, int sx, int sy, int bpp,
+				   const unsigned char * buf)
 {
   int R = 3;
   int G = 2;
@@ -1054,20 +1032,18 @@ void EditColorMap2D::save_ppm(const string &filename,
 void
 EditColorMap2D::init_shader_factory() 
 {
+  if (!use_back_buffer_ || shader_factory_) return;
+
   if (sci_getenv_p("SCIRUN_SOFTWARE_CM2")) {
-    if (use_back_buffer_) 
-      remark("SCIRUN_SOFWARE_CM2 set. Rasterizing Colormap in software.");
+    remark("SCIRUN_SOFWARE_CM2 set. Rasterizing Colormap in software.");
     use_back_buffer_ = false;
-  } else if (use_back_buffer_ && !shader_factory_ && 
-	     ShaderProgramARB::shaders_supported()) {
+  } else if (!shader_factory_ && ShaderProgramARB::shaders_supported()) {
     shader_factory_ = new CM2ShaderFactory();
     remark ("ARB Shaders are supported.");
     remark ("Using hardware rasterization for widgets.");
   } else {
-    if (use_back_buffer_) {
-      remark ("Shaders not supported.");
-      remark ("Using software rasterization for widgets.");
-    }
+    remark ("Shaders not supported.");
+    remark ("Using software rasterization for widgets.");
     use_back_buffer_ = false;
   }
 }
@@ -1121,7 +1097,6 @@ EditColorMap2D::build_colormap_texture()
       glEnable(GL_BLEND);
       glDrawBuffer(GL_BACK);
       glReadBuffer(GL_BACK);
-      glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); 
       for(unsigned int i=0; i<widgets_.size(); i++) {
 	widgets_[i]->set_value_range(value_range_);
@@ -1129,7 +1104,7 @@ EditColorMap2D::build_colormap_texture()
       }
 
       if (rebuild_texture)
-	glCopyTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8, 0,0,width_, height_,0);
+	glCopyTexImage2D(GL_TEXTURE_2D,0,GL_RGBA, 0,0,width_, height_,0);
       else
 	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0,width_, height_);
       glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -1145,7 +1120,7 @@ EditColorMap2D::build_colormap_texture()
       }
 
       if (rebuild_texture)
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 
 		     colormap_texture_.dim2(), colormap_texture_.dim1(),
 		     0, GL_RGBA, GL_FLOAT, &colormap_texture_(0,0,0));
       else
@@ -1192,27 +1167,15 @@ EditColorMap2D::build_histogram_texture()
 
   if (!histo_) {
     unsigned char zero = 0;
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE8, 1,1,
+    glTexImage2D(GL_TEXTURE_2D, 0, 1, 1,1,
 		 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,  &zero);
     glBindTexture(GL_TEXTURE_2D, 0);
   } else {
     nrrdAxisInfoGet_nva(histo_, nrrdAxisInfoSize, axis_size);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE8, axis_size[histo_->dim-2],
+    glTexImage2D(GL_TEXTURE_2D, 0, 1, axis_size[histo_->dim-2],
 		 axis_size[histo_->dim-1], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
 		 histo_->data);
     glBindTexture(GL_TEXTURE_2D, 0);
-    
-    if (histo_->kvp) {
-      const char *min = nrrdKeyValueGet(histo_, "jhisto_nrrd0_new_min");
-      const char *max = nrrdKeyValueGet(histo_, "jhisto_nrrd0_new_max");
-      double dmin, dmax;
-      if (min && max &&
-	  string_to_double(min, dmin) && string_to_double(max, dmax))
-      {
-	value_range_ = make_pair(float(dmin), float(dmax));
-	cmap_dirty_ = true;
-      }
-    }
   }
 }
 
@@ -1242,15 +1205,18 @@ EditColorMap2D::draw_texture(GLuint &texture_id)
 
 
 void
-EditColorMap2D::redraw()
+EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
 {
   gui->lock();
 
-  if(!ctx_ || ctx_->width() < 3 || ctx_->height() < 3 || !ctx_->make_current()) {
+  if(!ctx_ || ctx_->width()<3 || ctx_->height()<3 || !ctx_->make_current()) {
     gui->unlock(); 
     return; 
   }
-  
+  CHECK_OPENGL_ERROR()
+  if (force_cmap_dirty) cmap_dirty_ = true;
+  if (select_widget()) cmap_dirty_ = true;
+
   init_shader_factory();
 
   glDrawBuffer(GL_BACK);
@@ -1258,7 +1224,6 @@ EditColorMap2D::redraw()
   glClear(GL_COLOR_BUFFER_BIT);
   
   glViewport(0, 0, width_, height_);
-  glViewport(0, 0, 512, 256);//width_, height_);
 
   build_histogram_texture();
   build_colormap_texture();
@@ -1306,7 +1271,7 @@ EditColorMap2D::redraw()
   }
   glEnd();
 
-  if (save_ppm_) {
+  if (save_ppm) {
     unsigned int* FrameBuffer = scinew unsigned int[width_*height_];
     glFlush();
     glReadBuffer(GL_BACK);
@@ -1315,19 +1280,64 @@ EditColorMap2D::redraw()
     glReadPixels(0, 0,width_, height_,
 		 GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, FrameBuffer);
 #endif
-    char tmp[256];
-    sprintf(tmp, filename_.get().c_str());
-    remark("Writing to file: "+filename_.get());
-    save_ppm(tmp, width_, height_,
-	     4, (const unsigned char *)(FrameBuffer));
-    remark("Done saving framebuffer..."+filename_.get());
+    string fn = filename_.get()+".ppm";
+    remark("Writing PPM to file: "+fn);
+    save_ppm_file(fn, width_, height_, 4,(const unsigned char *)(FrameBuffer));
     delete FrameBuffer;
-    save_ppm_ = false;
   }
   
   ctx_->swap();
   ctx_->release();
+  CHECK_OPENGL_ERROR()
   gui->unlock();
 }
 
+void
+EditColorMap2D::gui_color_change(GuiArgs &args) {
+  int n = args.get_int(2);
+  resize_gui();
+  if (n < 0 || n >= gui_num_entries_.get()) return;
+  
+  gui_color_r_[n]->reset();
+  gui_color_g_[n]->reset();
+  gui_color_b_[n]->reset();
+  gui_color_a_[n]->reset();
+  const double a = gui_color_a_[n]->get();
+  Color new_color
+    (gui_color_r_[n]->get(), gui_color_g_[n]->get(),  gui_color_b_[n]->get());
+  if (new_color != widgets_[n]->get_color() || a != widgets_[n]->get_alpha())
+  {
+    undo_stack_.push(UndoItem(UndoItem::UNDO_CHANGE, n,
+			      widgets_[n]->clone()));
+    widgets_[n]->set_color(new_color);
+    widgets_[n]->set_alpha(a);
+    redraw(true);
+    force_execute();
+  }
+}
+
+void
+EditColorMap2D::gui_shade_change(GuiArgs &args) {
+  int n = args.get_int(2);
+  resize_gui();  // make sure the guivar vector exists
+  if (n < 0 || n >= gui_num_entries_.get()) return;
+  // Toggle the shading type from flat to normal and vice-versa
+  gui_sstate_[n]->reset();
+  widgets_[n]->set_shadeType(gui_sstate_[n]->get());
+  redraw(true);
+  force_execute();
+}
+
+void
+EditColorMap2D::gui_toggle_change(GuiArgs &args) {
+  int n = args.get_int(2);
+  resize_gui();  // make sure the guivar vector exists
+  if (n < 0 || n >= gui_num_entries_.get()) return;
+  gui_onstate_[n]->reset();
+  widgets_[n]->set_onState(gui_onstate_[n]->get());  // toggle on/off state.
+  redraw(true);
+  force_execute();
+}
+
 } // end namespace SCIRun
+

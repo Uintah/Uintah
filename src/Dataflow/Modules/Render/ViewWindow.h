@@ -182,6 +182,7 @@ public:
   GuiDouble             gui_fog_start_;
   GuiDouble             gui_fog_end_;
   GuiInt                gui_fog_visibleonly_;
+  GuiInt		gui_total_frames_;
 
 private:
   ViewWindow(const ViewWindow&); // Should not be called

@@ -41,6 +41,7 @@ SRCDIR   := Packages/BioPSE/Dataflow/Modules/Forward
 
 SRCS     += $(SRCDIR)/AnisoSphereModel.cc\
 	    $(SRCDIR)/ApplyFEMCurrentSource.cc\
+	    $(SRCDIR)/ApplyFEMElectrodeSource.cc\
 	    $(SRCDIR)/ApplyFEMVoltageSource.cc\
 	    $(SRCDIR)/BuildFEMatrixQuadratic.cc\
 	    $(SRCDIR)/ComputeCurrent.cc\
