@@ -135,10 +135,11 @@ void Scene::init(const Camera& cam, const Color& bgcolor)
 
   select_shadow_mode( Hard_Shadows );
 
-  origAmbientColor_ = Color(1,1,1);
-  ambientColor_     = origAmbientColor_;
-  setAmbientLevel( ambientScale_ );
   orig_ambientScale_ = ambientScale_;
+  origAmbientColor_  = Color(1,1,1);
+  ambientColor_      = origAmbientColor_;
+
+  setAmbientLevel( ambientScale_ );
 }
 
 void
@@ -315,6 +316,7 @@ void Scene::show_auxiliary_displays() {
 void
 Scene::turnOffAllLights( double left )
 {
+  // Save the beginning ambient scale:
   static double beginScale;
   if (left == 1.0) beginScale = ambientScale_;
 
@@ -331,22 +333,26 @@ Scene::turnOffAllLights( double left )
     if (left>0.0) {
 
       if( light->isMoodLight() ) {
-	light->modifyCurrentIntensity( 1.0 - left );
+	float curI = light->get_intensity();
+
+	light->updateIntensity( Min(1.0*(1-left) + curI,1.0) );
 	light->turnOn();
       } else {
 	light->modifyCurrentIntensity( left );
       }
     } else {
-      if( !light->isMoodLight() ){
-	light->turnOff();
+      if( light->isMoodLight() ){
+	light->updateIntensity( 1.0 );
       } else {
-	light->updateIntensity(1.0);
+	light->turnOff();
       }
     }
   }
+
   // Scale down from current ambient level to minimum ambient of
-  // 1/4th of original ambient.
-  setAmbientLevel( (beginScale*left) + (orig_ambientScale_ / 2.0) );
+  // 1/2 of original ambient.
+  double value = (beginScale*left) + (1-left)*(orig_ambientScale_ / 2.0);
+  setAmbientLevel( value );
 }
 
 void
