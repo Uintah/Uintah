@@ -111,15 +111,30 @@ static oport_maker FindOPort(const string &package, const string &datatype)
 Module::Module(const string& name, GuiContext* ctx,
 	       SchedClass sched_class, const string& cat,
 	       const string& pack)
-  : mailbox("Module execution FIFO", 100), gui(ctx->getInterface()),
-    ctx(ctx), name(name), moduleName(name), packageName(pack),
-    categoryName(cat), sched(0), pid_(0), have_own_dispatch(0),
-    helper_done("Module helper finished flag"), id(ctx->getfullname()), 
-    abort_flag(0), msgStream_(ctx->subVar("msgStream")), need_execute(0),
-    sched_class(sched_class), state(NeedData), msg_state(Reset), 
+  : mailbox("Module execution FIFO", 100),
+    gui(ctx->getInterface()),
+    ctx(ctx),
+    name(name),
+    moduleName(name),
+    packageName(pack),
+    categoryName(cat),
+    sched(0),
+    pid_(0),
+    have_own_dispatch(0),
+    helper_done("Module helper finished flag"),
+    id(ctx->getfullname()), 
+    abort_flag(0),
+    msgStream_(ctx->subVar("msgStream")),
+    need_execute(0),
+    sched_class(sched_class),
+    state(NeedData),
+    msg_state(Reset), 
     progress(0),
-    show_stat(false), helper(0), network(0), 
-    notes(ctx->subVar("notes")), show_status(ctx->subVar("show_status"))
+    show_stat(false),
+    helper(0),
+    network(0), 
+    notes(ctx->subVar("notes")),
+    show_status(ctx->subVar("show_status"))
 {
   stacksize=0;
 
@@ -262,6 +277,8 @@ void Module::update_progress(double p)
     update_state(Executing);
   int opp=(int)(progress*100);
   int npp=(int)(p*100);
+  if (npp < 0) npp = 0;
+  if (npp > 100) npp = 100;
   if(opp != npp){
     double time=timer.time();
     gui->execute(id+" set_progress "+to_string(p)+" "+to_string(time));
@@ -276,6 +293,8 @@ void Module::update_progress(double p, Timer &t)
     update_state(Executing);
   int opp=(int)(progress*100);
   int npp=(int)(p*100);
+  if (npp < 0) npp = 0;
+  if (npp > 100) npp = 100;
   if(opp != npp){
     double time=t.time();
     gui->execute(id+" set_progress "+to_string(p)+" "+to_string(time));
