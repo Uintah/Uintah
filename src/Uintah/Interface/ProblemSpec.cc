@@ -18,8 +18,8 @@ using namespace std;
 using namespace SCICore::Geometry;
 using namespace PSECore::XMLUtil;
 
-ProblemSpec::ProblemSpec(const DOM_Node& node)
-  : d_node(node), d_write(true)
+ProblemSpec::ProblemSpec(const DOM_Node& node, bool doWrite)
+  : d_node(node), d_write(doWrite)
 {
 }
 ProblemSpec::~ProblemSpec()
@@ -28,7 +28,7 @@ ProblemSpec::~ProblemSpec()
 
 ProblemSpecP ProblemSpec::findBlock() const
 {
-  ProblemSpecP prob_spec = scinew ProblemSpec(d_node);
+  ProblemSpecP prob_spec = scinew ProblemSpec(d_node, d_write);
 
   DOM_Node child = d_node.getFirstChild();
   if (child != 0) {
@@ -39,7 +39,7 @@ ProblemSpecP ProblemSpec::findBlock() const
   if (child.isNull() )
      return 0;
   else
-     return scinew ProblemSpec(child);
+     return scinew ProblemSpec(child, d_write);
 
 }
 
@@ -55,7 +55,7 @@ ProblemSpecP ProblemSpec::findBlock(const std::string& name) const
     return 0;
   }
   else {
-     return scinew ProblemSpec(found_node);
+     return scinew ProblemSpec(found_node, d_write);
   }
 }
 
@@ -73,7 +73,7 @@ ProblemSpecP ProblemSpec::findNextBlock() const
      return 0;
   }
   else {
-     return scinew ProblemSpec(found_node);
+     return scinew ProblemSpec(found_node, d_write);
   }
 }
 
@@ -101,7 +101,7 @@ ProblemSpecP ProblemSpec::findNextBlock(const std::string& name) const
      return 0;
   }
   else {
-     return scinew ProblemSpec(found_node);
+     return scinew ProblemSpec(found_node, d_write);
   }
 }
 
@@ -453,6 +453,10 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.24  2000/09/26 23:12:19  witzel
+// Make the ProblemSpec carry on its d_write flag to the children
+// it creates.
+//
 // Revision 1.23  2000/09/26 21:34:07  witzel
 // minor revision of the change I submitted before
 //
