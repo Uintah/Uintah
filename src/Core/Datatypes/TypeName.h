@@ -83,6 +83,12 @@ template <class T> const string find_type_name(vector<T>*)
   return name;
 }
 
+template<class T, class S> const string find_type_name( pair<T,S> *)
+{
+  static const string name = string("pair") + FTNS + find_type_name((T*)0) + FTNM + find_type_name((S*)0) + FTNE;
+  return name;
+}
+
 } // namespace SCIRun
 
 #endif
