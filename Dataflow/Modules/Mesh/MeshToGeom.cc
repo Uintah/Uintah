@@ -85,7 +85,7 @@ void MeshToGeom::execute()
     for(i=0;i<MAX_CLASS;i++) groups[i] = scinew GeomTrianglesP;
 #endif
     bool have_tris[MAX_CLASS];
-    int j;
+    int j; 
     for(j=0;j<MAX_CLASS;j++)
       have_tris[j]=false;
     for (i=0; i<mesh->elems.size(); i++) {
@@ -202,6 +202,9 @@ void MeshToGeom::execute()
 
 //
 // $Log$
+// Revision 1.5  2000/09/07 00:12:19  zyp
+// MakeScalarField.cc
+//
 // Revision 1.4  2000/03/17 09:29:13  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
