@@ -61,6 +61,32 @@ SamplerGui::set_kappa( double k )
   tcl_exec();
 }
 
+void
+SamplerGui::set_nparms( int i ) 
+{
+  tcl_ << "set-nparms " << i;
+  tcl_exec();
+}
+
+void
+SamplerGui::set_theta( vector<double> *v)
+{
+  tcl_ << "set-theta";
+  for (int i = 0; i < v->size(); i++)
+    tcl_ << ' ' << (*v)[i];
+  tcl_exec();
+}
+
+void
+SamplerGui::set_sigma( vector<vector<double> > *v)
+{
+  tcl_ << "set-sigma";
+  for (int i = 0; i < v->size(); i++)
+    for (int j = 0; j < (*v)[i].size(); j++)
+      tcl_ << ' ' << (*v)[i][j];
+  tcl_exec();
+}
+
 void 
 SamplerGui::done()
 {
@@ -71,7 +97,7 @@ SamplerGui::done()
 void 
 SamplerGui::tcl_command( TCLArgs &args, void *data)
 {
-  int i;
+  int i, num;
   double d;
   if ( args[1] == "iterations") {
     string_to_int(args[2],i);
@@ -93,6 +119,20 @@ SamplerGui::tcl_command( TCLArgs &args, void *data)
   }
   else if ( args[1] == "stop" ) {
     go( 0 );
+  }
+  else if ( args[1] == "theta" ) {
+    vector<double> t;
+    string_to_int(args[2], num);
+    t.resize(num);
+    for (i = 0; i < num; i++)
+    {
+      string_to_double(args[i+3], d);
+      t[i] = d;
+    }
+    theta(&t);
+  }
+  else if ( args[1] == "sigma" ) {
+    
   }
   else
     PartGui::tcl_command( args, data);

@@ -178,6 +178,7 @@ Sampler::reset()
     
     srand48(0);
     nparms = m;
+    nparms_changed(nparms);
   }
 
   if ( graph_ )
@@ -189,7 +190,9 @@ Sampler::reset()
   // input probable distribution
   for (int i=0; i<nparms; i++) 
     theta[current][i] = distribution_->theta[i]; // we should let the user change 
-                                             // it too
+  // it too
+
+  theta_changed(&theta[current]);
   interface_->kappa( distribution_->kappa );
 
   int len = interface_->iterations();
@@ -260,6 +263,7 @@ void Sampler::metropolis()
 
     if ( sum <= 500 && exp(sum) >= u ) {
       swap( current, star );   // yes
+      theta_changed(&theta[current]);
       post_ = new_post;
       lpr_ = new_lpr;
     }
@@ -319,12 +323,17 @@ Sampler::tcl_command( TCLArgs &args, void *data)
     connect( gui->subsample, interface_, &SamplerInterface::subsample );
     connect( gui->kappa, interface_, &SamplerInterface::kappa);
     connect( gui->go, interface_, &SamplerInterface::go);
-
+    connect( gui->theta, interface_, &SamplerInterface::theta);
+    connect( gui->sigma, interface_, &SamplerInterface::sigma);
+    
     connect( interface_->kappa_changed, gui, &SamplerGui::set_kappa );
     connect( interface_->current_iter_changed, gui, &SamplerGui::set_iter );
     connect( interface_->has_child, (PartGui* )gui, &PartGui::add_child );
     connect( interface_->done, gui, &SamplerGui::done );
-
+    connect( this->nparms_changed, gui, &SamplerGui::set_nparms );
+    connect( this->theta_changed, gui, &SamplerGui::set_theta );
+    connect( this->sigma_changed, gui, &SamplerGui::set_sigma );
+    
     interface_->report_children( (PartGui* )gui, &PartGui::add_child );
   }
   else Module::tcl_command( args, data );
