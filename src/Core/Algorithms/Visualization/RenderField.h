@@ -226,28 +226,17 @@ template <class T>
 bool
 to_double(const T& tmp, double &val)
 {
-  return false;
+  val = (double)tmp;
+  return true;
 }
 
 template <>
 bool
-to_double(const double&, double &);
-
-template <>
-bool
-to_double(const int&, double &);
-
-template <>
-bool
-to_double(const short&, double &);
-
-template <>
-bool
-to_double(const unsigned char&, double &);
-
-template <>
-bool
 to_double(const Vector&, double &);
+
+template <>
+bool
+to_double(const Tensor&, double &);
 
 
 template <class Dat>
