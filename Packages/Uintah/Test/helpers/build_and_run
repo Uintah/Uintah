@@ -22,6 +22,11 @@ chmod a+x configure_command
 
 build $mode "$CONFIGURE_ARGS"
 retval=$?
+
+echo "Changing permissions in `pwd`"
+chgrp -R csafe .
+chmod -R g+rwX . 
+
 if [ "$retval" = "0" -a "$NOTESTS" = "0" ]; then
   run $1
   exit $?
