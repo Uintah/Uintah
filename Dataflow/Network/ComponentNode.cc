@@ -11,15 +11,12 @@
 #include <PSECore/XMLUtil/XMLUtil.h>
 #include <PSECore/Dataflow/PackageDBHandler.h>
 #include <PSECore/Dataflow/StrX.h>
-#include <PSECore/Dataflow/NetworkEditor.h>
 
 #include <iostream>
 #include <fstream>
 #include <strstream>
 #include <stdlib.h>
 #include <SCICore/Containers/String.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <SCICore/TclInterface/TCLvar.h>
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1375
@@ -1063,19 +1060,12 @@ void ReadComponentNodeFromFile(component_node* n, const char* filename)
   try {
     parser.parse(filename);
   }  catch (const XMLException& toCatch) {
-    postMessage(clString("Error during parsing: '")+
+    std::cerr << clString("Error during parsing: '")+
 		filename+"'\nException message is:  "+
-		xmlto_string(toCatch.getMessage()));
+		xmlto_string(toCatch.getMessage());
     handler.foundError=true;
   }
   
-  if(handler.foundError){
-    TCL::execute("tk_dialog .errorPopup"
-		 " {Parse Error}"
-		 " {Error parsing package file,"
-		 " see message window for more information} error 0 Ok");
-  }
-
   DOM_Document doc = parser.getDocument();
   DOM_NodeList list = doc.getElementsByTagName("component");
   int nlist = list.getLength();
