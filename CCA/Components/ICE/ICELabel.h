@@ -46,8 +46,9 @@ namespace Uintah {
     const VarLabel* qV_CCLabel;
     const VarLabel* qV_advectedLabel;
     const VarLabel* burnedMass_CCLabel;
-    const VarLabel* releasedHeat_CCLabel;
+    const VarLabel* int_eng_comb_CCLabel;
     const VarLabel* created_vol_CCLabel;
+    const VarLabel* mom_comb_CCLabel;
     const VarLabel* term1Label;
     const VarLabel* term2Label;
     const VarLabel* term3Label;
