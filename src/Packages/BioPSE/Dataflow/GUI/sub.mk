@@ -10,6 +10,8 @@ SRCDIR := Packages/BioPSE/Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
+	$(SRCDIR)/ApplyFEMCurrentSource.tcl\
+	$(SRCDIR)/BuildFEMatrix.tcl\
 	$(SRCDIR)/ConductivitySearch.tcl\
 	$(SRCDIR)/DipoleSearch.tcl\
 	$(SRCDIR)/SurfaceToSurface.tcl\

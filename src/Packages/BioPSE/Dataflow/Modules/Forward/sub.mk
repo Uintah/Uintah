@@ -10,11 +10,14 @@ include $(SRCTOP_ABS)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/Forward
 
 SRCS     += \
-	$(SRCDIR)/BuildFDMatrix.cc\
+	$(SRCDIR)/ApplyFEMCurrentSource.cc\
+	$(SRCDIR)/BuildFEMatrix.cc\
+#	$(SRCDIR)/BuildFDMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/DipoleInSphere.cc\
 
-PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
+PSELIBS := Packages/BioPSE/Core/Datatypes Core/Datatypes \
+	Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/TclInterface \
         Core/Geom Core/Datatypes Core/Geometry \

@@ -31,8 +31,9 @@ using std::endl;
 
 #define PINVAL 0
 
-namespace SCIRun {
+namespace BioPSE {
 
+using namespace SCIRun;
 
 class BuildFEMatrix : public Module {
     MeshIPort* inmesh;
@@ -428,5 +429,5 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
      }
 }
 
-} // End namespace SCIRun
+} // End namespace BioPSE
 
