@@ -19,7 +19,7 @@
 
    <DataArchiver>
         <filebase>sidecrack.uda</filebase>
-        <outputInterval>.01</outputInterval>
+        <outputInterval>.1</outputInterval>
         <save label="KineticEnergy"/>
         <save label="TotalMass"/>
         <save label="StrainEnergy"/>
@@ -47,8 +47,8 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
-                <burn type = "null" />
-                <fracture type = "normal" />
+		<burn type = "null" />
+		<fracture type = "normal" />
                 <density>1000.0</density>
                 <thermal_conductivity>237.0</thermal_conductivity>
                 <specific_heat>903</specific_heat>
@@ -66,8 +66,8 @@
 		    <res>[2,2,2]</res>
 		    <velocity>[0.,0.,0.]</velocity>
 		    <temperature>300.</temperature>
-                    <toughness_min>  10 </toughness_min>
-		    <toughness_max>  10 </toughness_max>
+                    <toughness_min>  4000.0 </toughness_min>
+		    <toughness_max>  4000.0 </toughness_max>
 		    <toughness_variation>1</toughness_variation>
  		</geom_object>
 		<velocity_field>0</velocity_field>
@@ -98,18 +98,18 @@
 		<force>
 			<lower>[-1.0, -0.2,  0.  ]</lower>
 			<upper>[-0.9,  0.2,  0.1 ]</upper>
-		        <force_density>[-400.,0.,0.]</force_density>
+		        <force_density>[-3000.,0.,0.]</force_density>
 		</force>
 		<force>
 			<lower>[0.9, -0.2,  0.  ]</lower>
 			<upper>[1.0,  0.2,  0.1 ]</upper>
-		        <force_density>[400.,0.,0.]</force_density>
+		        <force_density>[3000.,0.,0.]</force_density>
 		</force>
                 <crack>
-                        <corner1>[0., 0.,  0.  ]</corner1>
-                        <corner2>[0., 0.,  0.1 ]</corner2>
-                        <corner3>[0., 0.4, 0.1 ]</corner3>
-                        <corner4>[0., 0.4, 0.  ]</corner4>
+                        <corner1>[0.2,  0.,  0.  ]</corner1>
+                        <corner2>[0.2,  0.,  0.1 ]</corner2>
+                        <corner3>[0.2,  0.4, 0.1 ]</corner3>
+                        <corner4>[0.2,  0.4, 0.  ]</corner4>
                 </crack>
 	</MPM>
     </PhysicalBC>

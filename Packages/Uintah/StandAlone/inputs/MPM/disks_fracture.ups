@@ -1,34 +1,24 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
+<?xml version="1.0" encoding="iso-8859-1"?>
 <!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
-<!-- @version: Updated 7/31/00-->
+
+<!-- @version: Updated 2/3/01-->
+
 <Uintah_specification>
 
    <Meta>
-	<title>Colliding Disks With Fracture</title>
+	<title>Colliding Disks with Fracture</title>
    </Meta>
 
    <Time>
-	<maxTime>0.2</maxTime>
+	<maxTime>0.15</maxTime>
 	<initTime>0.0</initTime>
-	<delt_min>0.00001</delt_min>
+	<delt_min>0.0</delt_min>
 	<delt_max>0.001</delt_max>
 	<timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>disks_fracture.uda</filebase>
 	<outputInterval>.01</outputInterval>
-	<save label = "KineticEnergy"/>
-	<save label = "TotalMass"/>
-	<save label = "StrainEnergy"/>
-	<save label = "CenterOfMassPosition"/>
-	<save label = "CenterOfMassVelocity"/>
-	<save label = "p.x"/>
-	<save label = "p.volume"/>
-	<save label = "p.stress"/>
-	<save label = "g.mass"/>
-	<save label = "g.stressFS"/>
-
-	<checkpoint cycle = "2" interval = "0.01"/>
    </DataArchiver>
 
     <MPM>
@@ -42,8 +32,8 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
-                <burn type = "null" />
-                <fracture type = "simple" />
+		<burn type = "null" />
+		<fracture type = "normal" />
 		<density>1000.0</density>
 		<constitutive_model type="comp_mooney_rivlin"> 
 		   <he_constant_1>100000.0</he_constant_1>
@@ -53,35 +43,35 @@
 		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
+
 		<geom_object>
-		    <cylinder label = "gp1">
-			<bottom>[.25,.25,.05]</bottom>
-			<top>[.25,.25,.1]</top>
+		    <cylinder label="gp1">
+			<bottom>[.34,.34,.05]</bottom>
+			<top>[.34,.34,.1]</top>
 			<radius> .2 </radius>
 		    </cylinder>
 		    <res>[2,2,2]</res>
-		    <velocity>[2.0,2.0,0]</velocity>
+		    <velocity>[2,2,0]</velocity>
 		    <temperature>12</temperature>
-                    <tensile_strength_min> 200000</tensile_strength_min>
-		    <tensile_strength_max> 200000</tensile_strength_max>
-		    <tensile_strength_variation>1</tensile_strength_variation>
-		    <explosive_energy_density>1</explosive_energy_density>
+                    <toughness_min> 4000.0 </toughness_min>
+		    <toughness_max> 4000.0 </toughness_max>
+		    <toughness_variation>1</toughness_variation>
  		</geom_object>
 
 		<geom_object>
-		    <cylinder label = "gp2">
-			<bottom>[.75,.75,.05]</bottom>
-			<top>[.75,.75,.1]</top>
+		    <cylinder label="gp2">
+			<bottom>[.66,.66,.05]</bottom>
+			<top>[.66,.66,.1]</top>
 			<radius> .2 </radius>
 		    </cylinder>
 		    <res>[2,2,2]</res>
-		    <velocity>[-2.0,-2.0,0]</velocity>
+		    <velocity>[-2,-2,0]</velocity>
 		    <temperature>12</temperature>
-                    <tensile_strength_min> 200000</tensile_strength_min>
-		    <tensile_strength_max> 200000</tensile_strength_max>
-		    <tensile_strength_variation>1</tensile_strength_variation>
-		    <explosive_energy_density>1</explosive_energy_density>
+                    <toughness_min> 20 </toughness_min>
+		    <toughness_max> 20 </toughness_max>
+		    <toughness_variation>1</toughness_variation>
  		</geom_object>
+
 		<velocity_field>0</velocity_field>
 	    </material>
 
@@ -122,8 +112,8 @@
                 </Face>                           
 	</BoundaryConditions>
 	<Level>
-	    <Box label = "1">
-		<lower>[0,0,0]</lower>
+	    <Box label="1">
+		<lower>[0.,0.,0]</lower>
 		<upper>[1.0,1.0,.15]</upper>
 	        <resolution>[20,20,3]</resolution>
 		<patches>[1,1,1]</patches>
@@ -133,8 +123,19 @@
 
     <PhysicalBC>
 	<MPM>
+		<crack>
+			<corner1>[0.29, 0.34,  0. ]</corner1>
+			<corner2>[0.29, 0.34,  1. ]</corner2>
+			<corner3>[0.39, 0.34,  1. ]</corner3>
+			<corner4>[0.39, 0.34,  0. ]</corner4>
+		</crack>
+		<crack>
+			<corner1>[0.66, 0.61,  0. ]</corner1>
+			<corner2>[0.66, 0.61,  1. ]</corner2>
+			<corner3>[0.66, 0.71,  1. ]</corner3>
+			<corner4>[0.66, 0.71,  0. ]</corner4>
+		</crack>
 	</MPM>
     </PhysicalBC>
     
 </Uintah_specification>
-
