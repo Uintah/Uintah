@@ -29,7 +29,10 @@
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Parallel/ProcessorGroup.h>
 #include <SCICore/Exceptions/Exception.h>
+
+#if HAVE_FPSETMASK
 #include <ieeefp.h>
+#endif
 
 #include <iostream>
 #include <string>
@@ -79,7 +82,9 @@ int main(int argc, char** argv)
      */
     Parallel::initializeManager(argc, argv);
 
+#if HAVE_FPSETMASK
     fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
+#endif
 
     /*
      * Default values
@@ -121,6 +126,9 @@ int main(int argc, char** argv)
 		    s, argv[0]);
 	   }
 	   loadbalancer = argv[i];
+	} else if(s.substr(0,3) == "-p4") {
+	   // mpich - skip the rest
+	   break;
 	} else {
 	    if(filename!="")
 		usage("", s, argv[0]);
@@ -248,7 +256,6 @@ int main(int argc, char** argv)
     delete output;
     delete bal;
     //    delete sched;
-
     } catch (Exception& e) {
 	cerr << "Caught exception: " << e.message() << '\n';
 	if(e.stackTrace())
@@ -270,11 +277,14 @@ int main(int argc, char** argv)
      * Finalize MPI
      */
     Parallel::finalizeManager();
-    
 }
 
 //
 // $Log$
+// Revision 1.22  2000/09/25 18:05:27  sparker
+// Deal with mpich arguments
+// Started FP_SETMASK configuration
+//
 // Revision 1.21  2000/09/20 16:04:07  sparker
 // Fixed code to set LoadBalancer
 //
