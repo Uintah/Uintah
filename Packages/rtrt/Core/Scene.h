@@ -268,6 +268,38 @@ public:
   // (Net effect of this is to double the frame rate.)
   inline bool doTransmissionMode() const { return transmissionMode_; }
 
+  // These objects will have animate called on them.  They will not be
+  // added to the gui.  Use addGuiObject instead.
+  void addAnimateObject( Object* obj );
+
+  // These are objects whose bounding box will be dynamically changed
+  // during rendering.  They will not be added to the gui or animated.
+  // Use addGuiObject and/or addAnimateObject instead.
+  void addBBoxResizeObject( Object* obj );
+
+  // These objects are those who can be manipulated by the Gui.
+  //
+  // Only objects with names can be added.  If there is no name, then
+  // a generic default name will be provided.
+  //
+  // The default behavior is for obj to be in the animateObjects_
+  // list.  It will search to see if the object is already in there
+  // comparing pointers.  If it is not then it will add obj to the
+  // list.  This default behavior can be overrided by specifying
+  // animate to false.
+  //
+  // You can also specify a name with the function variant.
+  void addGuiObject( Object* obj, bool animate = true );
+  void addGuiObject( const string& name, Object* obj, bool animate = true );
+
+  //////////////////////////////////////////////////////////////////
+  //
+  //  These functions will be deprecated, as they are too overloaded
+  //  in function.  Use addAnimateObject, addBBoxResizeObject, and
+  //  addGuiObject instead.
+  //
+  //////////////////////////////////////////////////////////////////
+
   // Any object that the GUI should allow "direct" interaction with
   // or that needs to be animated should notify the scene of this
   // via this call.  If the "name_" of the object is "", then the
