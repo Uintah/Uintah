@@ -57,11 +57,11 @@ SEG_OBJS = SegToCS.o
 SEG_LIBS = \
 	Datatypes/libDatatypes.a \
 	Geometry/libGeometry.a \
-	Classlib/libClasslib.a \
 	Multitask/libMultitask.a \
+	Classlib/libClasslib.a \
 	Malloc/libMalloc.a
 
-SC_LDFLAGS = SCI_LM
+SEG_LDFLAGS = SCI_LM
 SCIProgramTarget2($(SEG_TARGET), $(SEG_OBJS), $(SEG_LIBS), $(SEG_LDFLAGS))
 
 SC_TARGET = GenScalp
