@@ -122,16 +122,21 @@ void ParticleVis::execute()
   }
 
   if(spin1->get(scaleSet)){
-    hasScale = true;
+    if( scaleSet.get_rep() != 0)
+      hasScale = true;
   }
 
   if(vpin->get(vect)){
-    hasVectors = true;
+    if( vect.get_rep() != 0)
+      hasVectors = true;
   }
 
   if(tpin->get(tens)){
-    hasTensors = true;
+    if(tens.get_rep() != 0 )
+      hasTensors = true;
   }
+  
+  if(part.get_rep() == 0) return;
 
   cbClass = part->getCallbackClass();
 
@@ -167,8 +172,15 @@ void ParticleVis::execute()
   vector<ParticleVariable<double> >& values = part->get();
   vector<ParticleVariable<Point> >::iterator p_it;
   vector<ParticleVariable<double> >::iterator s_it = values.begin();
+  vector<ParticleVariable<double> >::iterator scale_it;
   vector<ParticleVariable<Vector> >::iterator v_it;
+  vector<ParticleVariable<Matrix3> >::iterator t_it;
+
+  if( hasScale ) scale_it = scaleSet->get().begin();
   if( hasVectors ) v_it = vect->get().begin();
+  if( hasTensors ) t_it = tens->get().begin();
+  
+
   for(p_it = points.begin(); p_it != points.end(); p_it++, s_it++){
     ParticleSubset *ps = (*p_it).getParticleSubset();
 
@@ -181,11 +193,11 @@ void ParticleVis::execute()
 	max += 0.001;
       }
       cmap->Scale(min,max);
-      cerr << "min=" << min << ", max=" << max << '\n';
+      //cerr << "min=" << min << ", max=" << max << '\n';
     }  
 
     //--------------------------------------
-    cerr << "numParticles: " << ps->getParticleSet()->numParticles() << '\n';
+    //cerr << "numParticles: " << ps->getParticleSet()->numParticles() << '\n';
 
 
     if( drawspheres.get() == 1 && ps->getParticleSet()->numParticles()) {
@@ -210,8 +222,8 @@ void ParticleVis::execute()
       //     ParticleSubset::iterator ssendaddr;
 
 
-      //     if( hasScale ){
-      //       ss = scaleSet->getPositions().getParticleSubset();
+      // if( hasScale ){
+	//       ss = scaleSet->getPositions().getParticleSubset();
       //       siter = ss->begin();
       //       ssbeginaddr = ss->begin();
       //       ssendaddr = ss->end();
@@ -222,63 +234,61 @@ void ParticleVis::execute()
 	count++;
 	if (count == show_nth.get() ){ 
 	  GeomObj *sp = 0;
-	  if (false){//if( hasScale ){
+	  
+	  if( hasScale ) {
 	    double smin = 0, smax = 0;
 	    scaleSet->get_minmax(smin,smax);
-// 	    double scalefactor =
-// 	      (scaleSet->get()[*iter] - smin)/(smax - smin);
-// 	    if( scalefactor >= 1e-6 )
-// 	      if(true){//if(!hasTensors){
-// 		sp = scinew GeomSphere( (*p_it)[*iter],
-// 					scalefactor * radius.get(),
-// 					nu, nv, *iter);
-// 		sp = scinew GeomSphere( part->getPositions()[*iter],
-// 					scalefactor * radius.get(),
-// 					nu, nv, *iter);
-// 	      } else { // make an ellips
-// 		double matrix[16];
-// 		Matrix3 M = tens->get()[*iter];
-// 		double e1,e2,e3;
-// 		M.getEigenValues(e1,e2,e3);
-// 		matrix[3] = matrix[7] = matrix[11] = matrix[12] =
-// 		  matrix[13] = matrix[14] = 0;
-// 		matrix[15] = 1;
-// 		matrix[0] = M(0,0); matrix[1] = M(1,0); matrix[2] = M(2,0);
-// 		matrix[4] = M(0,1); matrix[5] = M(1,1); matrix[6] = M(2,1);
-// 		matrix[8] = M(0,2); matrix[9] = M(1,2); matrix[10] = M(2,2);
-
-// 		sp = scinew GeomEllipsoid(part->getPositions()[*iter],
-// 					  scalefactor * radius.get(),
-// 					  nu, nv, &(matrix[0]), 2, *iter);
-// 	      }
+ 	    double scalefactor =
+ 	      ((*scale_it)[*iter] - smin)/(smax - smin);
+	    if( scalefactor >= 1e-6 ){
+	      if(!hasTensors){
+		sp = scinew GeomSphere( (*p_it)[*iter],
+					scalefactor * radius.get(),
+					nu, nv, *iter);
+	      } else { // make an ellips
+		double matrix[16];
+		Matrix3 M = (*t_it)[*iter];
+		double e1,e2,e3;
+		M.getEigenValues(e1,e2,e3);
+		matrix[3] = matrix[7] = matrix[11] = matrix[12] =
+		  matrix[13] = matrix[14] = 0;
+		matrix[15] = 1;
+		matrix[0] = M(0,0); matrix[1] = M(1,0); matrix[2] = M(2,0);
+		matrix[4] = M(0,1); matrix[5] = M(1,1); matrix[6] = M(2,1);
+		matrix[8] = M(0,2); matrix[9] = M(1,2); matrix[10] = M(2,2);
+		
+		sp = scinew GeomEllipsoid((*p_it)[*iter],
+					  scalefactor * radius.get(),
+					  nu, nv, &(matrix[0]), 2, *iter);
+	      }
+	    }
 	  } else {
-	    if(true){//if(!hasTensors){
+	    if(!hasTensors){
 	      sp = scinew GeomSphere( (*p_it)[*iter],
 				      radius.get(), nu, nv, *iter);
 	    } else {
-// 	      double matrix[16];
-// 	      Matrix3 M = tens->get()[*iter];
-// 	      if( M.Norm() > 1e-8){
-// 		Vector v1(M(1,1),M(2,1),M(3,1));
-// 		Vector v2(M(1,2),M(2,2),M(3,2));
-// 		Vector v3(M(1,3),M(2,3),M(3,3));
-// 		double norm = 1/Max(v1.length(), v2.length(), v3.length());
-// 		matrix[3] = matrix[7] = matrix[11] = matrix[12] =
-// 		  matrix[13] = matrix[14] = 0;
-// 		matrix[15] = 1;
-// 		matrix[0] = M(1,1)*norm; matrix[1] = M(2,1)*norm;
-// 		matrix[2] = M(3,1)*norm; matrix[4] = M(1,2)*norm;
-// 		matrix[5] = M(2,2)*norm; matrix[6] = M(3,2)*norm;
-// 		matrix[8] = M(1,3)*norm; matrix[9] = M(2,3)*norm;
-// 		matrix[10] = M(3,3)*norm;
-	      
-// 		sp = scinew GeomEllipsoid(part->getPositions()[*iter],
-// 					  radius.get(), nu, nv, &(matrix[0]),
-// 					  2, *iter);
-// 	      }
+	      double matrix[16];
+	      Matrix3 M = (*t_it)[*iter];
+	      if( M.Norm() > 1e-8){
+		Vector v1(M(1,1),M(2,1),M(3,1));
+		Vector v2(M(1,2),M(2,2),M(3,2));
+		Vector v3(M(1,3),M(2,3),M(3,3));
+		double norm = 1/Max(v1.length(), v2.length(), v3.length());
+		matrix[3] = matrix[7] = matrix[11] = matrix[12] =
+		  matrix[13] = matrix[14] = 0;
+		matrix[15] = 1;
+		matrix[0] = M(1,1)*norm; matrix[1] = M(2,1)*norm;
+		matrix[2] = M(3,1)*norm; matrix[4] = M(1,2)*norm;
+		matrix[5] = M(2,2)*norm; matrix[6] = M(3,2)*norm;
+		matrix[8] = M(1,3)*norm; matrix[9] = M(2,3)*norm;
+		matrix[10] = M(3,3)*norm;
+		
+		sp = scinew GeomEllipsoid((*p_it)[*iter],
+					  radius.get(), nu, nv, &(matrix[0]),
+					  2, *iter);
+	      }
 	    }
 	  }
-	  //	  double value = part->get()[*iter];
 	  double value = (*s_it)[*iter];
 	  if( sp != 0)
 	    obj->add( scinew GeomMaterial( sp,(cmap->lookup(value).get_rep())));
@@ -291,8 +301,9 @@ void ParticleVis::execute()
  			 V*length_scale.get(),
  			 outcolor, outcolor, outcolor);
  	}
-      } 
-      if(false){//if( drawVectors.get() == 1 && hasVectors){
+      }
+      
+      if( drawVectors.get() == 1 && hasVectors){
 	obj->add( arrows );
       }
       // Let's set it up so that we can pick the particle set -- Kurt Z. 12/18/98
@@ -317,9 +328,7 @@ void ParticleVis::execute()
 	count++;
 	if (count == show_nth.get() ){ 
 	  double value = (*s_it)[*iter];
-	  //	  double value = part->get()[*iter];
 	  pts->add((*p_it)[*iter], cmap->lookup(value)->diffuse);
-  	  //pts->add(part->getPositions()[*iter], cmap->lookup(value)->diffuse);
 	  count = 0;
 	}
  	if( drawVectors.get() == 1 && hasVectors){
@@ -339,6 +348,7 @@ void ParticleVis::execute()
       ogeom->addObj(obj, "Particles");      
     }
     if(hasVectors) v_it++;
+    if(hasTensors) t_it++;
   }
 //     GeomMaterial* matl=new GeomMaterial(obj,
 //    					  scinew Material(Color(0,0,0),
