@@ -8,6 +8,12 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 
+// TODO:
+// Implement flux registers
+// refine patches
+// Refine faces for boundaries
+// periodic boundaries broken...
+
 using namespace Uintah;
 
 AMRWave::AMRWave(const ProcessorGroup* myworld)
@@ -32,19 +38,27 @@ void AMRWave::scheduleRefineInterface(const LevelP& fineLevel,
 					 SchedulerP& scheduler,
 					 int step, int nsteps)
 {
-  cerr << "AMRWave::scheduleRefineInterface not finished\n";
 }
 
 void AMRWave::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
 {
-  cerr << "AMRWave::scheduleCoarsen not finished\n";
+  Task* task = scinew Task("coarsen", this, &AMRWave::coarsen);
+  task->requires(Task::NewDW, phi_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+  task->modifies(phi_label);
+  task->requires(Task::NewDW, pi_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+  task->modifies(pi_label);
+  sched->addTask(task, coarseLevel->eachPatch(), sharedState_->allMaterials());
 }
 
 void AMRWave::scheduleRefine (const LevelP& fineLevel, SchedulerP& sched)
 {
-  cerr << "AMRWave::scheduleRefine  not finished\n";
+  Task* task = scinew Task("refine", this, &AMRWave::refine);
+  task->requires(Task::NewDW, phi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::None, 0);
+  task->computes(phi_label);
+  task->requires(Task::NewDW, pi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::None, 0);
+  task->computes(pi_label);
+  sched->addTask(task, fineLevel->eachPatch(), sharedState_->allMaterials());
 }
-
 
 void AMRWave::scheduleErrorEstimate(const LevelP& coarseLevel,
 				       SchedulerP& sched)
@@ -117,4 +131,21 @@ void AMRWave::errorEstimate(const ProcessorGroup*,
         refinePatch->set();
     }
   }
+}
+
+
+void AMRWave::refine(const ProcessorGroup*,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse*, DataWarehouse* new_dw)
+{
+  cerr << "AMRWave::refine not finished\n";
+}
+
+void AMRWave::coarsen(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse*, DataWarehouse* new_dw)
+{
+  cerr << "AMRWave::coarsen not finished\n";
 }
