@@ -29,7 +29,7 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/Assert.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
-#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>

@@ -20,20 +20,22 @@ PSELIBS := \
 	Dataflow/Network \
 	Dataflow/XMLUtil \
 	Core/Exceptions  \
-	Core/Geom    \
+	Core/Geom        \
 	Core/Geometry    \
 	Core/Persistent  \
 	Core/Datatypes   \
 	Core/Containers  \
 	Core/Thread      \
-	Core/Disclosure \
+	Core/Disclosure  \
 	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Core/Math        \
+	Packages/Uintah/Core/Disclosure  \
 	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/CCA/Ports       \
-        Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/CCA/Components/MPM
+	Packages/Uintah/CCA/Ports        \
+        Packages/Uintah/Core/Exceptions  
 
-LIBS := $(XML_LIBRARY) $(GL_LIBS) -lm 
+
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(GL_LIBS) -lm 
 
 ifeq ($(BUILD_PARALLEL),yes)
 PSELIBS := $(PSELIBS) Core/CCA/Component/CIA Core/CCA/Component/PIDL

@@ -33,9 +33,10 @@ PSet::PSet( const vector <ShareAssignParticleVariable<Point> >& positions,
 	    const vector <ShareAssignParticleVariable<long> >& ids,
 	    const vector <const Patch *> patches,
 	    void* callbackClass):
-  positions(positions), particle_ids(ids),
-  patches( patches ), cbClass(callbackClass),
-  have_bounds(false)
+  have_bounds( false ),
+  cbClass( callbackClass ),
+  positions( positions ), particle_ids( ids ),
+  patches( patches )
 {
 }
 
