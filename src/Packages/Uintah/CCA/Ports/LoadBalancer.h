@@ -6,7 +6,9 @@
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 
 namespace Uintah {
 
@@ -49,24 +51,20 @@ WARNING
     LoadBalancer();
     virtual ~LoadBalancer();
     
-    virtual void assignResources(DetailedTasks& tg,
-				 const ProcessorGroup* resources) = 0;
-    virtual int getPatchwiseProcessorAssignment(const Patch* patch,
-						const ProcessorGroup* pg) = 0;
-    virtual int getOldProcessorAssignment(const VarLabel * /*var*/,
-					  const Patch* patch, int /*matl*/, 
-					  const ProcessorGroup * pg) 
-      { return getPatchwiseProcessorAssignment(patch, pg); }
+    virtual void assignResources(DetailedTasks& tg) = 0;
+    virtual int getPatchwiseProcessorAssignment(const Patch* patch) = 0;
+    virtual int getOldProcessorAssignment(const VarLabel*,
+					  const Patch* patch, const int)
+      { return getPatchwiseProcessorAssignment(patch); }
     virtual bool needRecompile(double, double, const GridP&)
       { return false; }
-    virtual void problemSetup(ProblemSpecP&) {};
-    virtual void createNeighborhood(const GridP& grid, const ProcessorGroup*,
-				    const Scheduler* sc) = 0;
+    virtual void problemSetup(ProblemSpecP&, SimulationStateP& state) = 0;
+    virtual void createNeighborhood(const GridP& grid) = 0;
     virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*) = 0;
     virtual bool inNeighborhood(const Patch*) = 0;
 
-    virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level,
-						       const ProcessorGroup* resources) = 0;
+    virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level) = 0;
+    virtual void dynamicReallocation(const GridP&, const SchedulerP&) {}
 
   private:
     LoadBalancer(const LoadBalancer&);

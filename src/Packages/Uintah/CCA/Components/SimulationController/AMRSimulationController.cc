@@ -132,7 +132,7 @@ void AMRSimulationController::run()
 
    LoadBalancer* lb = dynamic_cast<LoadBalancer*>
      (dynamic_cast<SchedulerCommon*>(sched)->getPort("load balancer"));
-   lb->problemSetup(ups/*, sharedState*/);
+   lb->problemSetup(ups, sharedState);
 
    output->initializeOutput(ups);
 
@@ -144,7 +144,7 @@ void AMRSimulationController::run()
    scheduler->initialize(1, 1);
    scheduler->advanceDataWarehouse(grid);
    // for dynamic lb's, set up initial patch config
-   //lb->dynamicReallocation(grid, scheduler); 
+   lb->dynamicReallocation(grid, scheduler); 
 
    double t;
 
@@ -371,7 +371,7 @@ void AMRSimulationController::run()
        
        scheduler->initialize(1, totalFine);
        scheduler->fillDataWarehouses(grid);
-       //lb->dynamicReallocation(grid, scheduler); 
+       lb->dynamicReallocation(grid, scheduler); 
 
        // Set up new DWs, DW mappings.
        scheduler->clearMappings();
