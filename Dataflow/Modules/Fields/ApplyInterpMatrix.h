@@ -102,6 +102,7 @@ ApplyInterpMatrixAlgoT<FSRC, LSRC, FDST, LDST, ACCUM>::execute_aux(FieldHandle s
 {
   FSRC *fsrc = dynamic_cast<FSRC *>(src_h.get_rep());
   FDST *fdst = dynamic_cast<FDST *>(dst_h.get_rep());
+  typename FSRC::mesh_handle_type msrc = fsrc->get_typed_mesh();
 
   //ASSERT(interp.is_sparse());
   ASSERT((unsigned int)(interp->nrows()) == fdst->fdata().size())
@@ -126,7 +127,9 @@ ApplyInterpMatrixAlgoT<FSRC, LSRC, FDST, LDST, ACCUM>::execute_aux(FieldHandle s
     for (i = 0; i < idx.size(); i++)
     {
       typename FSRC::value_type v;
-      fsrc->value(v, typename LSRC::index_type(idx[i]));
+      typename LSRC::index_type index;
+      msrc->to_index(index, (unsigned int)idx[i]);
+      fsrc->value(v, index);
       accum += v * val[i];
     }
     fdst->set_value((typename FDST::value_type)accum, *dbi);
