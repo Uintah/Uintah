@@ -24,9 +24,7 @@ class Server : public Runnable {
 public:
   Server() {}
 
-  void run() { PIDL::PIDL::serveObjects(); 
-               cout << "Done serveObjects()\n";
-               CCA::semaphore_.up(); }
+  void run() { PIDL::PIDL::serveObjects(); CCA::semaphore_.up(); }
 };
 
 
@@ -40,6 +38,8 @@ string CCA::framework_url_;
 string CCA::hostname_;
 string CCA::program_;
 Semaphore CCA::semaphore_("CCA", 0 );
+
+FrameworkImpl *f;
 
 CCA::CCA() 
 {
@@ -84,19 +84,17 @@ CCA::init( int &argc, char *argv[] )
 
   try {
 
-    cout << "pidl::init()\n";
-
     PIDL::PIDL::initialize( argc, argv );
+    
     if ( is_server_ ) {
       // start server
-      cout << "here\n";
 
       framework_ = new FrameworkImpl;
 
       cerr << "server = " << framework_->getURL().getString() << endl;
       framework_thread_ = new Thread( new Server,"cca server thread" );
       framework_thread_->setDaemon();
-      framework_thread_->detach();
+      //      framework_thread_->detach();
     }
     else {
       // connect to server
@@ -141,9 +139,7 @@ CCA::done()
     {
       local_framework_ = 0;
       framework_ = 0;
-      cout << "done() is blocking\n";
       semaphore_.down();
-      cout << "done() done blocking\n";
     }
 }
 

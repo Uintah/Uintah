@@ -1,6 +1,6 @@
 
-#ifndef ConnectionSericesImpl_h
-#define ConnectionSericesImpl_h
+#ifndef BuilderSericesImpl_h
+#define BuilderSericesImpl_h
 
 #include <testprograms/Component/framework/cca_sidl.h>
 
@@ -19,12 +19,12 @@ using CIA::array1;
 
 class Registry;
 
-class ConnectionServicesImpl : public ConnectionServices_interface {
+class BuilderServicesImpl : public BuilderServices_interface {
 
 public:
-  ConnectionServicesImpl();
+  BuilderServicesImpl();
 
-  ~ConnectionServicesImpl();
+  ~BuilderServicesImpl();
 
   // Framework internals
   void init( const Framework & );

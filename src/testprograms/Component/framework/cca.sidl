@@ -68,7 +68,7 @@ package sci_cca {
   // ConnectionServices
   //
 
-  interface ConnectionServices extends Port {
+  interface BuilderServices extends Port {
     bool connect( in ComponentID use, in string use_name,
 		  in ComponentID provide, in string provide_name );
     bool disconnect( in ComponentID use, in string use_name,

@@ -48,8 +48,7 @@ RegistryServicesImpl::getActiveComponentList( array1<ComponentID> & cIds )
 void
 RegistryServicesImpl::shutdown()
 {
-  FrameworkImpl * fw = 
-                      dynamic_cast<FrameworkImpl*>( framework_.getPointer() );
+  FrameworkImpl *fw = dynamic_cast<FrameworkImpl*>( framework_.getPointer() );
   fw->shutdown();
 }
 
