@@ -199,7 +199,8 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	$att.tabs view [set $this-active_tab]	
 	$att.tabs configure -tabpos "n"
 	
-	pack $att.name $att.type $att.dim -side top -anchor nw
+	pack $att.name $att.type $att.dim -side top -anchor nw \
+	    -expand yes -fill x
 	pack $att.tabs -side top -fill x -expand yes
 	
 	makeSciButtonPanel $w $w $this
