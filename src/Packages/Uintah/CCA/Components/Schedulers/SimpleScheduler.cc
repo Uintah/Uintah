@@ -5,7 +5,7 @@
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
@@ -28,7 +28,14 @@ SimpleScheduler::~SimpleScheduler()
 {
 }
 
-void SimpleScheduler::compile(const ProcessorGroup*, bool)
+void
+SimpleScheduler::verifyChecksum()
+{
+  // SimpleScheduler doesn't need this
+}
+
+void
+SimpleScheduler::compile(const ProcessorGroup*, bool)
 {
   graph.topologicalSort(tasks);
 }
@@ -52,18 +59,19 @@ SimpleScheduler::execute(const ProcessorGroup * pc)
 	const PatchSubset* patch_subset = patchset->getSubset(p);
 	for(int m=0;m<matlset->size();m++){
 	  const MaterialSubset* matl_subset = matlset->getSubset(m);
-	  task->doit(pc, patch_subset, matl_subset, dw[0], dw[1]);
+	  task->doit( pc, patch_subset, matl_subset, 
+		      dws_[Task::OldDW], dws_[Task::NewDW] );
 	}
       }
     } else {
-      task->doit(pc, 0, 0, dw[0], dw[1]);
+      task->doit(pc, 0, 0, dws_[Task::OldDW], dws_[Task::NewDW]);
     }
     double dt = Time::currentSeconds()-start;
     dbg << "Completed task: " << tasks[i]->getName()
 	<< " (" << dt << " seconds)\n";
   }
 
-  dw[1]->finalize();
+  dws_[Task::NewDW]->finalize();
   finalizeNodes();
 }
 

@@ -13,6 +13,7 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
 
 #ifdef __sgi
 #pragma set woff 1468
@@ -46,4 +47,5 @@ template class vector<int>;
 //template class map<const VarLabel*, NameRecord*, VarLabel::Compare>;
 //template class 
 
+template class CommRecMPI<Sendlist>;
 
