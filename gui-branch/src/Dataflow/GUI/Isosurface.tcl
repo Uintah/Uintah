@@ -34,7 +34,7 @@ itcl::class SCIRun_Visualization_Isosurface {
     public variable build_trisurf 0
     public variable np          1
     public variable active_tab  "MC"
-    public variable update_type {or release}
+    public variable update_type Release
     public variable opt
 
     # SAGE vars
@@ -54,6 +54,7 @@ itcl::class SCIRun_Visualization_Isosurface {
 
 	trace variable [scope active_tab] w "$this switch_to_active_tab"
 	trace variable [scope update_type] w "$this set_update_type"
+	auto-var-set [scope active_tab]
     }
 
     method switch_to_active_tab {name1 name2 op}
@@ -126,7 +127,7 @@ body SCIRun_Visualization_Isosurface::ui {} {
     iwidgets::optionmenu $opt.update -labeltext "Update:" \
 	-labelpos w -command "$this update-type $opt.update"
     
-    $opt.update insert end {on release} Manual Auto
+    $opt.update insert end Release Manual Auto
     $opt.update select Manual
     #$update_type
     
@@ -179,7 +180,7 @@ body SCIRun_Visualization_Isosurface::change_isoval { n } {
 
 body SCIRun_Visualization_Isosurface::set-isoval {} {
     set type [$opt.update get]
-    if { $type == "on release" } {
+    if { $type == "Release" } {
 	eval "$this-c needexecute"
     }
 }
