@@ -37,8 +37,9 @@
 #define APIENTRY __stdcall
 #define CALLBACK APIENTRY
 #endif
-#include <GL/gl.h>
 
+#include <GL/gl.h>
+#include <Core/Geom/Color.h>
 namespace SCIRun {
 
 class SCICORESHARE GeomText : public GeomObj {
@@ -48,8 +49,8 @@ public:
   Color c;
 public:
   GeomText();
-  GeomText( const string &, const Point &, const Color &c = Color(1,1,1));
   GeomText(const GeomText&);
+  GeomText( const string &, const Point &, const Color &c = Color(1,1,1));
   virtual ~GeomText();
   virtual GeomObj* clone();
 
