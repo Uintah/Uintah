@@ -16,13 +16,10 @@
 #
 
 # *** NOTE ***
-#
 # Do not remove or modify the comment line:
-#
 # #[INSERT NEW ?????? HERE]
-#
-# It is required by the Component Wizard to properly edit this file.
-# if you want to edit this file by hand, see the "Create A New Component"
+# It is required by the Core/CCA/Component Wizard to properly edit this file.
+# if you want to edit this file by hand, see the "Create A New Core/CCA/Component"
 # documentation on how to do it correctly.
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
@@ -30,10 +27,18 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/MatlabInterface/Core/Datatypes
 
 SRCS     += \
+	$(SRCDIR)/matfile.cc \
+	$(SRCDIR)/matfiledata.cc \
+	$(SRCDIR)/matlabarray.cc \
+	$(SRCDIR)/matlabfile.cc \
+	$(SRCDIR)/matlabconverter.cc \
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS :=
-LIBS :=
+PSELIBS := Packages/Teem/Core/Datatypes \
+	 Core/Datatypes Core/Containers \
+	 Core/Exceptions Core/Thread \
+	 Core/Persistent Core/Geometry \
+	 Core/Util  
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

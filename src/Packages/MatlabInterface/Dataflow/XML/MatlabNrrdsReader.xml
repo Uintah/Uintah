@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<component name="MatlabNrrdsReader" category="DataIO">
+  <overview>
+    <authors>Jeroen Stinstra
+    </authors>
+	    <summary> MatlabNrrdsReader allows the user to load a matrix from a MATLAB .mat file</summary>
+    <description>
+	<p>	This module imports N-dimensional matrices from MATLAB .mat files. Currently only files from matlab version
+	5 and higher are supported by this module. The module reads dense matrices of any of the supported data classes
+	in matlab (short, int, double, etc.).  </p> 
+	<p> In order to facilitate the selection process the module will list all matrices in the file that
+	are compatible with the SCIRun NRRD class and will select the most obvious one as a default. </p>
+	<p> The module has six output ports that can be assigned different matrices. As the matlab file format supports
+	more than one matrix per file, mutliple matrices can be read at once by this module. Use the "Port 1" to "Port 6"
+	buttons to select the port and set the matrix that should be loaded at this output port. </p>
+    </description>   
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+    </inputs>
+    <outputs>
+      <port>
+        <name>Nrrd1</name>
+		<datatype>Teem::Nrrd</datatype>
+      </port>
+	  <port>
+        <name>Nrrd2</name>
+		<datatype>Teem::Nrrd</datatype>
+      </port>
+	  <port>
+        <name>Nrrd3</name>
+		<datatype>Teem::Nrrd</datatype>
+      </port>
+	  <port>
+        <name>Nrrd4</name>
+		<datatype>Teem::Nrrd</datatype>
+      </port>
+	  <port>
+        <name>Nrrd5</name>
+		<datatype>Teem::Nrrd</datatype>
+      </port>
+	  <port>
+        <name>Nrrd6</name>
+		<datatype>Teem::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <parameter>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+</component>

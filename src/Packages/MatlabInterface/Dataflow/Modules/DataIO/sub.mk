@@ -31,6 +31,11 @@ SRCDIR   := Packages/MatlabInterface/Dataflow/Modules/DataIO
 
 SRCS     += \
 	$(SRCDIR)/Matlab.cc\
+	$(SRCDIR)/MatlabMatricesReader.cc\
+	$(SRCDIR)/MatlabMatricesWriter.cc \
+	$(SRCDIR)/MatlabNrrdsReader.cc \
+	$(SRCDIR)/MatlabNrrdsWriter.cc \
+	$(SRCDIR)/MatlabFieldsReader.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
@@ -38,9 +43,12 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface \
         Core/TkExtensions \
+	Packages/Teem/Core/Datatypes \
+	Packages/Teem/Dataflow/Ports \
+	Packages/MatlabInterface/Core/Datatypes \
         Packages/MatlabInterface/Core/Util
 
-LIBS := $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
