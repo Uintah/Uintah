@@ -259,8 +259,8 @@ void ScalarFieldExtractor::execute()
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  sfd->set_property( "vartype",int(TypeDescription::CCVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  sfout->send(sfd);
+ 	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
+ 	  sfout->send(sfd);
 	  return;
 	}
       case TypeDescription::int_type:

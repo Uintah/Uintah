@@ -110,10 +110,11 @@ void TimestepSelector::execute()
 
    if( animate.get() ){
      //DataArchive& archive = *((*(handle.get_rep()))());
-     while( animate.get() && idx < (int)times.size() - 1){
+     while( animate.get() ) { // && idx < (int)times.size() - 1){
        //       archive.purgeTimestepCache( times[idx] );
        DataArchive::cacheOnlyCurrentTimestep = true;
        idx++;
+       if (idx == times.size()-1 ) break;  // idx = 0; //for continuous cycle
        tcl_status.set( to_string( times[idx] ));
        time.set( idx );
        handle->SetTimestep( idx );
@@ -146,6 +147,7 @@ void TimestepSelector::execute()
        ogeom->delAll();
        ogeom->addObj(sticky, "TimeStamp");
        ogeom->flushViews();
+       
      }
      animate.set(0);
    }
