@@ -34,7 +34,7 @@ define xmltohtml
 @echo $@
 @sed "s#\".*component.dtd#\"${treetop}/doc/Utilities/XML/component.dtd#" $< > ${1}-tmp.xml
 @java org.apache.xalan.xslt.Process -IN ${1}-tmp.xml -XSL ${stylesheet} \
--OUT $@ -PARAM treetop ../${treetop} -HTML
+-OUT $@ -PARAM treetop ../${treetop}/ -HTML
 @rm ${1}-tmp.xml
 endef
 
@@ -62,7 +62,7 @@ endef
 # ########## Variables
 
 # Top of tree relative to this directory
-treetop:=../../../
+treetop:=../../..
 
 # Location of stylesheet relative to this directory.
 stylesheet:=${treetop}/doc/Utilities/XML/component.xsl
