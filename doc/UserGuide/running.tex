@@ -136,23 +136,65 @@ prompt \screen{scirun\ra}.  This program is actually a modified \dfna{Tool
 will be described in \hyperref{a later section}{Section~}{}{sec:termapp}.
 
 
-\subsection{\envvar{SCIRUN\_DATA}}
-\label{sec:scirundata}
+\subsection{Environment Variables}
+\label{sec:environ} 
+\index{Environment Variables}
 
-The environment variable \envvar{SCIRUN\_DATA} specifies the default
-directory of \sr{} data files.  \sr will first look in this directory to
-find data and network files.  It affects the behavior of file browsing
-dialogs -- they will prompt for a file within the \envvar{SCIRUN\_DATA}
-directory (of course you may have the dialog look elsewhere).
+There are several environment variables that \sr{} uses to make it easier
+to use.  These are all optional, but paying attention to them can make it
+easier to find files during a \sr{} session and to improve performance via
+remote connections.
+
+\begin{description}
+  \item{\envvar{SCIRUN\_DATA}}\mbox{}: ]
+        \index{SCIRUN\_DATA}
+        \label{sec:scirundata}
+        The environment variable \envvar{SCIRUN\_DATA} specifies the
+        default directory of \sr{} data files.  \sr will first look in this
+        directory to find data and network files.  It affects the behavior
+        of file browsing dialogs -- they will prompt for a file within the
+        \envvar{SCIRUN\_DATA} directory (of course you may have the dialog
+        look elsewhere).  This can be very handy when using shared
+        datasets, like the one shipped with the software.  Many of the
+        demonstration nets with the software also assume that
+        \envvar{SCIRUN\_DATA} points to the location of these datasets.
+
+  \item[\envvar{SCIRUN\_DATASET}}\mbox{}: ]\mbox{}
+        \label{sec:scirundataset} 
+        This variable refines the search for data files within the director
+        pointed at by \envvar{SCIRUN\_DATA}.  By setting these two
+        variables, one can easily select different data sets for the same
+        network.  See the network files distributed with the software, for
+        example \filename{forward-fem.net}, so examples of how to use these
+        variables.  Some of the demonstration nets do require setting
+        \envvar{SCIRUN\_DATASET} so see the documentation on those.
+
+  \item[\envvar{DISPLAY}: ]\mbox{}
+        As with other programs that require a second window, \sr{} uses the
+        \envvar{DISPLAY} environment variable to determine where output
+        goes.  While you may have your \envvar{DISPLAY} variable set
+        automatically when using ssh (secure shell) to log into another
+        computers, the encryption on this communication pathway makes for
+        very slow response from \sr{}.  To greatly accelerate display, set
+        the \envvar{DISPLAY} variable to your local computer.  Note that at
+        this point, communication between the host computer and your own
+        will not be encrypted and thus is insecure; unless you are entering
+        a password, however, this is not usually a problem.  Also not that
+        for this to work, your local computer has to be willing to host the
+        \sr{} window; this may require the use of the \command{xhost}
+        command so see appropriate documentation for X11 or speak to your
+        local system administrator.
+\end{description}
 
 
-\subsection{Stopping}
+
+\subsection{Quitting or Exiting \sr{}}
 \label{sec:stopping}
 
 Quit \sr{} by selecting the \menuitem{Quit} item from the \menu{File} menu
 
-\warning{Don't press \keyboard{control-c} to exit \sr.  Doing this will drop you into
-a debugger which is probably not what you want to do}.
+\warning{Don't press \keyboard{control-c} to exit \sr.  Doing this will
+drop you into a debugger which is probably not what you want to do}.
 
 
 %%% Local Variables: 
