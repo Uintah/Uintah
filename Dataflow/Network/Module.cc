@@ -510,10 +510,11 @@ OPort* Module::getOPort(int item)
 
 void Module::connection(Port::ConnectionState mode, int which_port, bool is_oport)
 {
-  if(!is_oport && lastportdynamic && dynamic_port_maker && (which_port >= first_dynamic_port)) {
+  if(!is_oport && lastportdynamic && 
+     dynamic_port_maker && (which_port >= first_dynamic_port)) {
     if(mode == Port::Disconnected) {
       remove_iport(which_port);
-    } else {
+    } else if (which_port == iports.size()-1) {
       add_iport(dynamic_port_maker(this,lastportname));
     }
   }
@@ -749,6 +750,7 @@ void Module::tcl_command(GuiArgs& args, void*)
 
 void Module::setPid(int pid)
 {
+  std::cerr << "Setting Moudle PID: " << pid << std::endl;
   pid_=pid;
 }
 

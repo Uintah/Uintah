@@ -65,7 +65,7 @@ void Port::attach(Connection* conn)
   module->connection(Connected, which_port, this==conn->oport);
 }
 
-void Port::detach(Connection* conn)
+void Port::detach(Connection* conn, bool blocked)
 {
   unsigned int i;
   for (i=0; i<connections.size(); i++)
@@ -75,7 +75,7 @@ void Port::detach(Connection* conn)
     return;
   }
   connections.erase(connections.begin() + i);
-  module->connection(Disconnected, which_port, this==conn->oport);
+  module->connection(Disconnected, which_port, this==conn->oport || blocked);
 }
 
 Connection* Port::connection(int i)
