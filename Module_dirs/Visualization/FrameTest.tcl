@@ -22,6 +22,7 @@ proc uiFrameTest {modid} {
     frame $w.f.wids
     radiobutton $w.f.wids.arrow -text ArrowWidget -variable widget_type,$modid -value 0
     radiobutton $w.f.wids.frame -text FrameWidget -variable widget_type,$modid -value 1
-    pack $w.f.wids.arrow $w.f.wids.frame -in $w.f.wids -side left -padx 2 -pady 2 -anchor w
+    radiobutton $w.f.wids.guage -text GuageWidget -variable widget_type,$modid -value 2
+    pack $w.f.wids.arrow $w.f.wids.frame $w.f.wids.guage -in $w.f.wids -side left -padx 2 -pady 2 -anchor w
     pack $w.f.wids -in $w.f
 }

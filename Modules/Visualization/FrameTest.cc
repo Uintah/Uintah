@@ -21,11 +21,12 @@
 
 #include <Widgets/ArrowWidget.h>
 #include <Widgets/FrameWidget.h>
+#include <Widgets/GuageWidget.h>
 
 #include <iostream.h>
 
-const Index NumWidgetTypes = 2;
-enum WidgetTypes {Arrow, Frame};
+const Index NumWidgetTypes = 3;
+enum WidgetTypes {Arrow, Frame, Guage};
 
 class FrameTest : public Module {
     GeometryOPort* ogeom;
@@ -67,8 +68,11 @@ FrameTest::FrameTest(const clString& id)
 
     widgets[Arrow]=new ArrowWidget(this, .1);
     widgets[Frame]=new FrameWidget(this, .1);
+    widgets[Frame]=new GuageWidget(this, .1);
     widget_scale.set(.1);
     init = 1;
+
+    widget_type.set(1);
 }
 
 FrameTest::FrameTest(const FrameTest& copy, int deep)
@@ -94,11 +98,11 @@ void FrameTest::execute()
         init = 0;
         widget_id=ogeom->addObj(widgets[0]->GetWidget(), widget_name);
         widget_id=ogeom->addObj(widgets[1]->GetWidget(), widget_name+"2");
+        widget_id=ogeom->addObj(widgets[1]->GetWidget(), widget_name+"3");
     }
-    for (Index i=0; i<NumWidgetTypes; i++) {
-       widgets[i]->SetScale(widget_scale.get());
-       widgets[i]->execute();
-    }
+
+    widgets[widget_type.get()]->SetScale(widget_scale.get());
+    widgets[widget_type.get()]->execute();
     ogeom->flushViews();
 }
 
@@ -107,9 +111,7 @@ void FrameTest::geom_moved(int axis, double dist, const Vector& delta,
 {
     cerr << "Moved called..." << endl;
 
-    for (Index i=0; i<NumWidgetTypes; i++) {
-       widgets[i]->geom_moved(axis, dist, delta, cbdata);
-    }
+    widgets[widget_type.get()]->geom_moved(axis, dist, delta, cbdata);
     
     if(!abort_flag){
 	abort_flag=1;
