@@ -93,7 +93,7 @@
                               <value> 298.0  </value>
         </BCType>
         <BCType id = "all" label = "Density"      var = "Dirichlet">
-                              <value> 1.1784717376136  </value>
+                              <value> 1.1798322  </value>
         </BCType>
         <BCType id = "all" label = "scalar-f"     var = "Dirichlet">
                               <value> 0.0</value>
@@ -278,20 +278,20 @@
               </box>
                 <cylinder label = "fuelSlug">
                    <bottom>           [0.0,0.0,0.0]   </bottom>
-                   <top>              [0.0,0.25,0.0]   </top>
+                   <top>              [0.0,0.10,0.0]   </top>
                    <radius>           0.5             </radius>
                 </cylinder>
               </difference>
               <res>                [2,2,2]             </res>
               <velocity>           [.0,.01,.0]         </velocity>
-              <density>            1.1784717376136     </density>
+              <density>            1.1798322           </density>
               <pressure>           101325.0            </pressure>     
               <temperature>        300.0               </temperature>
            </geom_object>
            <geom_object>
                 <cylinder label = "fuelSlug">
                    <bottom>           [0.0,0.0,0.0]    </bottom>
-                   <top>              [0.0,0.25,0.0]    </top>
+                   <top>              [0.0,0.10,0.0]    </top>
                    <radius>           0.5              </radius>
                 </cylinder>
               <res>                [2,2,2]             </res>
@@ -341,7 +341,7 @@
              </box>
                 <cylinder label = "fuelSlug">
                    <bottom>           [0.0,0.0,0.0]   </bottom>
-                   <top>              [0.0,0.25,0.0]  </top>
+                   <top>              [0.0,0.10,0.0]  </top>
                    <radius>           0.5             </radius>
                 </cylinder>
               </difference>
@@ -350,7 +350,7 @@
            <geom_object>
                <cylinder label = "fuelSlug">
                   <bottom>           [0.0,0.0,0.0]   </bottom>
-                  <top>              [0.0,0.25,0.0]  </top>
+                  <top>              [0.0,0.10,0.0]  </top>
                   <radius>           0.5             </radius>
                </cylinder>
                <scalar>    1.00   </scalar>
