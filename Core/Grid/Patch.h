@@ -2,13 +2,16 @@
 #define UINTAH_HOMEBREW_Patch_H
 
 #include <Packages/Uintah/Core/Grid/Ghost.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+//#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/BCDataArray.h>
+#include <Packages/Uintah/Core/Grid/fixedvector.h>
 
+#include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
+
 #undef None
 
 #include <sgi_stl_warnings_off.h>
@@ -16,6 +19,8 @@
 #include <map>
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
+
+using namespace SCIRun;
 
 namespace Uintah {
 
@@ -25,6 +30,8 @@ namespace Uintah {
   class NodeIterator;
   class CellIterator;
   class BCData;
+  class Level;
+  class Box;
    
 /**************************************
       
@@ -114,12 +121,10 @@ WARNING
      static VariableBasis translateTypeToBasis(TypeDescription::Type type,
 					       bool mustExist);
      
+
      //////////
-     // Insert Documentation Here:
-     Vector dCell() const {
-       // This will need to change for stretched grids
-       return d_level->dCell();
-     }
+     // Insert Documentation Here:  
+     Vector dCell() const;
 
      //////////
      // Find the closest node index to a point
@@ -392,13 +397,10 @@ WARNING
      
      //////////
      // Insert Documentation Here:
-     Point nodePosition(const IntVector& idx) const {
-       return d_level->getNodePosition(idx);
-     }
+     Point nodePosition(const IntVector& idx) const;
 
-     Point cellPosition(const IntVector& idx) const {
-       return d_level->getCellPosition(idx);
-     }
+     Point cellPosition(const IntVector& idx) const;
+
 
      Box getGhostBox(const IntVector& lowOffset,
 		     const IntVector& highOffset) const;
@@ -422,15 +424,19 @@ WARNING
      void getFaceCells(FaceType face, int offset, IntVector& l,
 		       IntVector& h) const;
 
+     static const int MAX_PATCH_SELECT = 32;
+     typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
+
+
      void computeVariableExtents(VariableBasis basis,
 				 const IntVector& boundaryLayer,
 				 Ghost::GhostType gtype, int numGhostCells,
-				 Level::selectType& neighbors,
+				 selectType& neighbors,
 				 IntVector& low, IntVector& high) const;
      void computeVariableExtents(TypeDescription::Type basis,
 				 const IntVector& boundaryLayer,
 				 Ghost::GhostType gtype, int numGhostCells,
-				 Level::selectType& neighbors,
+				 selectType& neighbors,
 				 IntVector& low, IntVector& high) const;
 
      void computeVariableExtents(VariableBasis basis,
@@ -453,13 +459,13 @@ WARNING
 
      /* Get overlapping patches on other levels. */
      
-     void getFineLevelPatches(Level::selectType& finePatches) const
+     void getFineLevelPatches(selectType& finePatches) const
      { getOtherLevelPatches(1, finePatches); }
      
-     void getCoarseLevelPatches(Level::selectType& coarsePatches) const
+     void getCoarseLevelPatches(selectType& coarsePatches) const
      { getOtherLevelPatches(-1, coarsePatches); }
 
-     void getOtherLevelPatches(int levelOffset, Level::selectType& patches)
+     void getOtherLevelPatches(int levelOffset, selectType& patches)
        const;
      
      class Compare {
