@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/GeometryPiece.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
@@ -81,7 +82,7 @@ WARNING
 	 particleIndex countParticles(GeometryObject* obj,
 				      const Patch*) const;
 	 void createParticles(particleIndex numParticles,
-			      PerPatch<long> NAPID,
+			      CCVariable<short int>& cellNAPID,
 			      const Patch*,
 			      DataWarehouse* new_dw);
 
@@ -96,7 +97,7 @@ WARNING
 				       ParticleVariable<double>& temperature,
 				       ParticleVariable<double>& tensilestrength,
 				       ParticleVariable<long>& particleID,
-				       PerPatch<long>& NAPID,
+				       CCVariable<short int>& cellNAPID,
 				       const Patch*);
 
 	 int checkForSurface(const GeometryPiece* piece,
