@@ -248,6 +248,8 @@ void HDF5DataReader::execute() {
 	  NrrdDataHandle first = *niter;
 	  string first_tlab(first->nrrd->axis[0].label);
 	  new_label = first_tlab;
+	  string first_tuple_types = first->concat_tuple_types();
+	  cout << "the tuple types are: " << first_tuple_types << endl;
 	  ++niter;
 	  join_me.push_back(first->nrrd);
 	  while (niter != vec.end()) {
@@ -255,7 +257,8 @@ void HDF5DataReader::execute() {
 	    ++niter;
 	    join_me.push_back(n->nrrd);
 	    string tlab(n->nrrd->axis[0].label);
-	    if (tlab != first_tlab) time_axis = false;
+	    string types = n->concat_tuple_types();
+	    if (types != first_tuple_types) time_axis = false;
 
 	    new_label += string(",") + tlab;
 
@@ -263,7 +266,7 @@ void HDF5DataReader::execute() {
 	  int axis = 0; // tuple
 	  int incr = 0; // tuple case.
 	  if (time_axis) {
-	    axis = join_me[0]->dim + 1;
+	    axis = join_me[0]->dim;
 	    incr = 1;
 	  }
 	  onrrd->nrrd = nrrdNew();
@@ -278,6 +281,26 @@ void HDF5DataReader::execute() {
 
 	  if (time_axis) {
 	    onrrd->nrrd->axis[axis].label = "Time";
+	    // remove all numbers from name
+	    string s(join_me[0]->axis[0].label);
+	    string new_label;
+
+	    const string nums("0123456789");
+	      
+	    //cout << "checking in_name " << s << endl;
+	    // test against valid char set.
+
+	    for(string::size_type i = 0; i < s.size(); i++) {
+	      bool in_set = false;
+	      for (unsigned int c = 0; c < nums.size(); c++) {
+		if (s[i] == nums[c]) {
+		  in_set = true;
+		  break;
+		}
+	      }
+	      if (! in_set) { new_label.push_back(s[i]); }
+	    }
+	    onrrd->nrrd->axis[0].label = strdup(new_label.c_str());
 	  } else {
 	    // Take care of tuple axis label.
 	    onrrd->nrrd->axis[0].label = strdup(new_label.c_str());
