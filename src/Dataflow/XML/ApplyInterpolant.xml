@@ -25,10 +25,35 @@
   <overview>
     <authors>
       <author>David Weinstein</author>
+      <author>Michael Callahan</author>
     </authors>
-    <summary>Apply an interpolant field to project the data from one
-    field onto the mesh of another field.</summary>
+    <summary>
+      Apply an interpolant field to project the data from one
+      field onto the mesh of another field.
+    </summary>
     <description>
+      <p>
+        This module interpolates the "Source" field onto the geometry of
+        the Interpolant field.  The Interpolant field would be
+        preconstructed using the BuildInterpolant module.
+      </p>
+      <p>
+        The source field for BuildInterpolant and ApplyInterpolant
+        must contain the same geometry and data locations.  However
+        they do not have to contain the same data values or value
+        types.  For instance, a TetVol of doubles with data at the
+        nodes can be passed into the Source port of BuildInterpolant,
+        and a TetVol of Vectors with data also at the nodes and with
+        the same mesh can be passed into the source port of
+        ApplyInterpolant.
+      </p>
+      <p>
+        DirectInterpolate should be used instead of BuildInterpolant
+        and ApplyInterpolant if the Interpolant is not to be reused,
+        as it does the same interpolation without building the
+        intermediate interpolant field.  This should be used if the
+        source field changes much more often than the destination field.
+      <p> 
     </description>
   </overview>
   <io>

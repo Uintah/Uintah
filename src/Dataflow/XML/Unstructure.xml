@@ -26,8 +26,17 @@
     <authors>
       <author>Michael Callahan</author>
     </authors>
-    <summary>Geometric Transform of a field.</summary>
+    <summary>
+      Convert a structured field into an unstructured field for editing.
+    </summary>
     <description>
+      <p>
+        This converts a LatticeVol into a HexVol, an ImageField into a
+        QuadSurf, and a ScanlineField into a ContourField.  The
+        structured meshes are not editable, as that operation does not
+        preserve structure.  Data values and locations are preserved
+        in the transformation.
+      </p>
     </description>
   </overview>
   <io>

@@ -26,8 +26,25 @@
     <authors>
       <author>Michael Callahan</author>
     </authors>
-    <summary>Select data from a field.</summary>
+    <summary>Select a subset of a field.</summary>
     <description>
+      <p>
+        This module clips out a subset of a field.  The new field
+        contains just the selected portion of the input field.  The
+        module runs in two modes.  If the "clip field" is connected,
+        it will clip the input field such that only those elements
+        inside of the clip field are preserved.  If no clip field is
+        connected, the GUI widget is used to select which portion of
+        the input field to preserve.
+      </p>
+      <p>
+        The type of the field is preserved in the clip, as well as the
+        data values if possible.  Some field types are structured and
+        thus not clippable.  This includes the LatticeVol, ImageField,
+        and Scanline field types.  There is an Unstructure module that
+        can be used to convert these fields to appropriately
+        unstructured versions before clipping.
+      </p>
     </description>
   </overview>
   <io>

@@ -34,7 +34,9 @@
         data values linearly interpolated from the source field.
         It should work correctly with all of the current field
         and data types.  The data will be stored at the elements
-        specified in the destination field.
+        specified in the destination field.  Elements that are not
+        within the source field are set to their closest in-field
+        values.
       </p>
     </description>
   </overview>
