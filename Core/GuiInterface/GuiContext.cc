@@ -95,6 +95,8 @@ bool GuiContext::getSub(const std::string& subname, std::string& value)
 
 void GuiContext::set(const std::string& value)
 {
+  string tmp;
+  if (get(tmp) && tmp == value) { return; }
   cached=false;
   gui->set(name, value);
 }
@@ -133,9 +135,11 @@ bool GuiContext::getSub(const std::string& subname, double& value)
 
 void GuiContext::set(double value)
 {
-  cached=false;
   ostringstream val;
   val << setprecision(17) << value;
+  string tmp;
+  if (get(tmp) && tmp == val.str()) { return; }
+  cached=false;
   gui->set(name, val.str());
 }
 
@@ -175,9 +179,11 @@ bool GuiContext::getSub(const std::string& subname, int& value)
 
 void GuiContext::set(int value)
 {
-  cached=false;
   ostringstream val;
   val << value;
+  string tmp;
+  if (get(tmp) && tmp == val.str()) { return; }
+  cached=false;
   gui->set(name, val.str());
 }
 
