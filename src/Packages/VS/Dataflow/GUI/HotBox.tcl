@@ -73,6 +73,7 @@ itcl_class VS_DataFlow_HotBox {
     global $this-injurylistdatasource
     global $this-oqafmadatasource
     global $this-geometrypath
+    global $this-hipvarpath
     global $this-querytype
     # The Probe Widget UI
     global $this-gui_probeLocx
@@ -184,7 +185,7 @@ itcl_class VS_DataFlow_HotBox {
     # Create a new top-level window for the file browser
                                                                                 
     if {$whichdatasource == "anatomy"} {
-    set title "Open LabelMap file"
+    set title "Open MasterAntomy file"
     set $this-anatomydatasource [ tk_getOpenFile \
         -title $title \
         -filetypes $types \
@@ -230,6 +231,14 @@ itcl_class VS_DataFlow_HotBox {
         -title $title \
         -initialdir $initdir ]
     if { [set  $this-geometrypath] != "" } {
+         $this-c needexecute
+       }
+    } elseif {$whichdatasource == "HIPvars"} {
+    set title "Set HIP var file path"
+    set $this-hipvarpath [ tk_chooseDirectory \
+        -title $title \
+        -initialdir $initdir ]
+    if { [set  $this-hipvarpath] != "" } {
          $this-c needexecute
        }
     }
@@ -373,10 +382,15 @@ itcl_class VS_DataFlow_HotBox {
     button  $w.files.row5.browsebutton -text "Browse..." -command "$this launch_filebrowser geometry"
 
     frame $w.files.row6
-    label $w.files.row6.oqafmaURIlabel -text "OQAFMA URL: "
-    entry $w.files.row6.oqafmaURIentry -textvar $this-oqafmadatasource -width 50
+    label $w.files.row6.hippathlabel -text "HIP data Directory: "
+    entry $w.files.row6.dirnamentry -textvar $this-hipvarpath -width 50
+    button  $w.files.row6.browsebutton -text "Browse..." -command "$this launch_filebrowser HIPvars"
 
-    pack $w.files.row1 $w.files.row2 $w.files.row3 $w.files.row4 $w.files.row5 $w.files.row6 -side top -anchor w
+    frame $w.files.row7
+    label $w.files.row7.oqafmaURIlabel -text "OQAFMA URL: "
+    entry $w.files.row7.oqafmaURIentry -textvar $this-oqafmadatasource -width 50
+
+    pack $w.files.row1 $w.files.row2 $w.files.row3 $w.files.row4 $w.files.row5 $w.files.row6 $w.files.row7 -side top -anchor w
     pack $w.files.row1.anatomylabel $w.files.row1.filenamentry\
 	$w.files.row1.browsebutton\
         -side left -anchor n -expand yes -fill x
@@ -392,7 +406,10 @@ itcl_class VS_DataFlow_HotBox {
     pack $w.files.row5.geompathlabel $w.files.row5.dirnamentry\
         $w.files.row5.browsebutton\
         -side left -anchor n -expand yes -fill x
-    pack $w.files.row6.oqafmaURIlabel $w.files.row6.oqafmaURIentry\
+    pack $w.files.row6.hippathlabel $w.files.row6.dirnamentry\
+        $w.files.row6.browsebutton\
+        -side left -anchor n -expand yes -fill x
+    pack $w.files.row7.oqafmaURIlabel $w.files.row7.oqafmaURIentry\
 	-side left -anchor n -expand yes -fill x
     }
     # end if { [set $this-Files_on] == "yes" }
