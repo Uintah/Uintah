@@ -67,6 +67,7 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
     id_(id)
     
 {
+  TCLTask::lock();
   mainwin_ = Tk_MainWindow(the_interp);
   display_ = Tk_Display(mainwin_);
   release();
@@ -168,6 +169,8 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
   }
   context_ = glXCreateContext(display_, vi_, first_context, 1);
   if (!context_) throw scinew InternalError("Cannot create GLX Context");
+
+  TCLTask::unlock();
 }
 
 TkOpenGLContext::~TkOpenGLContext()
@@ -184,6 +187,7 @@ TkOpenGLContext::~TkOpenGLContext()
 bool
 TkOpenGLContext::make_current()
 {
+  TCLTask::lock();
   if (!context_) 
   {
     XSync(display_, False);
@@ -193,40 +197,53 @@ TkOpenGLContext::make_current()
     ASSERT(context_);
   }
 
-  if (!glXMakeCurrent(display_, x11_win_, context_)) 
+  const bool result = glXMakeCurrent(display_, x11_win_, context_);
+  TCLTask::unlock();
+
+  if (!result)
   {
     std::cerr << "GL context: " << id_ << " failed make current.\n";
-    return false;
   }
-  return true;
+
+  return result;
 }
 
 
 void
 TkOpenGLContext::release()
 {
+  TCLTask::lock();
   glXMakeCurrent(display_, None, NULL);
+  TCLTask::unlock();
 }
 
 
 int
 TkOpenGLContext::width()
 {
-  return Tk_Width(tkwin_);
+  TCLTask::lock();
+  const int result = Tk_Width(tkwin_);
+  TCLTask::unlock();
+  return result;
 }
 
 
 int
 TkOpenGLContext::height()
 {
-  return Tk_Height(tkwin_);
+  TCLTask::lock();
+  const int result = Tk_Height(tkwin_);
+  TCLTask::unlock();
+  return result;
 }
 
 
 void
 TkOpenGLContext::swap()
 {
+  TCLTask::lock();
   glXSwapBuffers(display_, x11_win_);
+  TCLTask::unlock();
 }
 
 
@@ -234,6 +251,7 @@ TkOpenGLContext::swap()
 #define GETCONFIG(attrib) \
 if(glXGetConfig(display, &vinfo[i], attrib, &value) != 0){\
   cerr << "Error getting attribute: " << #attrib << std::endl; \
+  TCLTask::unlock(); \
   return string(""); \
 }
 
