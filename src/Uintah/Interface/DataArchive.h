@@ -155,15 +155,14 @@ public:
 	      const IntVector& index,
 	      double min, double max);
    
-#if 0
    //////////
    // similarly, we want to be able to track variable values in a particular
    // patch cell over time.
    template<class T>
-   void query( std::vector< T >, const std::string& name,  
-	      const Patch *,
-	      IntVector i, const time& min, const time& max);
+   void query(std::vector<T>& values, const std::string& name, int matlIndex,
+    	      IntVector loc, double startTime, double endTime);
    
+#if 0
    //////////
    // In other cases we will have noticed something interesting and we
    // will want to access some small portion of a patch.  We will need
@@ -380,10 +379,98 @@ void DataArchive::query( CCVariable< T >&, const std::string& name, int matlInde
    cerr << "DataArchive::query not finished\n";
 }
 
+template<class T>
+void DataArchive::query(std::vector<T>& values, const std::string& name,
+    	    	    	int matlIndex, IntVector loc,
+			double startTime, double endTime)
+{
+    double call_start = Time::currentSeconds();
+
+    if (!have_timesteps) {
+    	vector<int> index;
+	vector<double> times;
+	queryTimesteps(index, times);
+	    // will build d_ts* as a side effect
+    }
+
+    // figure out what kind of variable we're looking for
+    vector<string> type_names;
+    vector<const TypeDescription*> type_descriptions;
+    queryVariables(type_names, type_descriptions);
+    const TypeDescription* type = NULL;
+    vector<string>::iterator name_iter = type_names.begin();
+    vector<const TypeDescription*>::iterator type_iter = type_descriptions.begin();
+    for ( ; name_iter != type_names.end() && type == NULL;
+    	 name_iter++, type_iter++) {
+    	if (*name_iter == name)
+	    type = *type_iter;
+    }
+    if (type == NULL)
+    	throw InternalError("Unable to determine variable type");
+    
+    // find the first timestep
+    int ts = 0;
+    while ((ts < d_tstimes.size()) && (startTime > d_tstimes[ts]))
+    	ts++;
+
+    for ( ; (ts < d_tstimes.size()) && (d_tstimes[ts] < endTime); ts++) {
+    	double t = d_tstimes[ts];
+
+    	// figure out what patch contains the cell. As far as I can tell,
+	// nothing prevents this from changing between timesteps, so we have to
+	// do this every time -- if that can't actually happen we might be able
+	// to speed this up.
+    	Patch* patch = NULL;
+    	GridP grid = queryGrid(t);
+    	for (int level_nr = 0;
+	     (level_nr < grid->numLevels()) && (patch == NULL); level_nr++) {
+    	    const LevelP level = grid->getLevel(level_nr);
+
+    	    switch (type->getType()) {
+    	    case TypeDescription::CCVariable:
+    	    	for (Level::const_patchIterator iter = level->patchesBegin();
+    	    	     (iter != level->patchesEnd()) && (patch == NULL); iter++) {
+    	    	    if ((*iter)->containsCell(loc))
+    	    	    	patch = *iter;
+    	    	}
+    	    	break;
+	    
+	    case TypeDescription::NCVariable:
+	    	// Unfortunately, this const cast hack is necessary.
+    	    	patch = ((LevelP)level)->getPatchFromPoint(level->getNodePosition(loc));
+		break;
+	    }
+	}
+	if (patch == NULL)
+	    throw InternalError("Couldn't find patch containing location");
+
+    	switch (type->getType()) {
+    	    case TypeDescription::CCVariable: {
+    	    	CCVariable<T> var;
+		query(var, name, matlIndex, patch, t);
+		values.push_back(var[loc]);
+	    } break;
+
+	    case TypeDescription::NCVariable: {
+	    	NCVariable<T> var;
+		query(var, name, matlIndex, patch, t);
+    	    	values.push_back(var[loc]);
+	    } break;
+	}
+    }
+
+    dbg << "DataArchive::query(values) completed in "
+        << (Time::currentSeconds() - call_start) << " seconds\n";
+}
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.9  2000/08/12 23:29:18  jehall
+// Added a DataArchive query for tracking the value of a variable at a
+// node/cell across multiple timesteps.
+//
 // Revision 1.8  2000/07/11 19:44:50  kuzimmer
 // commented out line 284:  ASSERT(td == NCVariable<T>::getTypeDescription()); This was failing because two NCVariable<double> typeDescriptors were getting created.  This should not happen, so a bug report has been filed
 //
