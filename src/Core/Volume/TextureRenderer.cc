@@ -95,7 +95,7 @@ TextureRenderer::TextureRenderer(TextureHandle tex,
   imode_(false),
   slice_alpha_(0.5),
   sw_raster_(false),
-  cmap_size_(128),
+  cmap2_size_(128),
   cmap1_tex_(0),
   cmap2_tex_(0),
   use_pbuffer_(true),
@@ -128,7 +128,7 @@ TextureRenderer::TextureRenderer(const TextureRenderer& copy) :
   imode_(copy.imode_),
   slice_alpha_(copy.slice_alpha_),
   sw_raster_(copy.sw_raster_),
-  cmap_size_(copy.cmap_size_),
+  cmap2_size_(copy.cmap2_size_),
   cmap1_tex_(copy.cmap1_tex_),
   cmap2_tex_(copy.cmap2_tex_),
   use_pbuffer_(copy.use_pbuffer_),
@@ -181,10 +181,9 @@ TextureRenderer::set_colormap2(ColorMap2Handle cmap2)
 void
 TextureRenderer::set_colormap_size(int size)
 {
-  if(cmap_size_ != size) {
+  if(cmap2_size_ != size) {
     mutex_.lock();
-    cmap_size_ = size;
-    cmap1_dirty_ = true;
+    cmap2_size_ = size;
     cmap2_dirty_ = true;
     mutex_.unlock();
   }
@@ -481,8 +480,8 @@ TextureRenderer::build_colormap1(Array2< unsigned char>& cmap_array,
 {
   if(cmap_dirty || alpha_dirty) {
     bool size_dirty = false;
-    if(cmap_size_ != cmap_array.dim1()) {
-      cmap_array.resize(cmap_size_, 4);
+    if(256 != cmap_array.dim1()) {
+      cmap_array.resize(256, 4);
       size_dirty = true;
     }
     // rebuild texture
@@ -665,12 +664,12 @@ TextureRenderer::build_colormap2()
       //--------------------------------------------------------------
       // software rasterization
       bool size_dirty =
-        cmap_size_ != raster_array_.dim2()
-        || cmap_size_/4 != raster_array_.dim1();
+        cmap2_size_ != raster_array_.dim2()
+        || cmap2_size_/4 != raster_array_.dim1();
       if(cmap2_dirty_ || size_dirty) {
         if(size_dirty) {
-          raster_array_.resize(cmap_size_/4, cmap_size_, 4);
-          cmap2_array_.resize(cmap_size_/4, cmap_size_, 4);
+          raster_array_.resize(cmap2_size_/4, cmap2_size_, 4);
+          cmap2_array_.resize(cmap2_size_/4, cmap2_size_, 4);
         }
         // clear cmap
         for(int i=0; i<raster_array_.dim1(); i++) {
