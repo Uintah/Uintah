@@ -893,8 +893,9 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 		   d_ramping_inlet_flowrate, actual_flow_rate);
 
 	d_flowInlets[indx].flowRate = actual_flow_rate;
-	new_dw->put(delt_vartype(actual_flow_rate),
-		    d_flowInlets[indx].d_flowRate_label);
+        if (d_carbon_balance)
+	  new_dw->put(delt_vartype(actual_flow_rate),
+		      d_flowInlets[indx].d_flowRate_label);
 
         fort_profscalar(idxLo, idxHi, density, cellType,
 		        fi.calcStream.d_density, fi.d_cellTypeID,
