@@ -4,6 +4,7 @@ proc makeFilebox {w var command cancel} {
 
     set filter,$w "*.*"
 
+    set $var ""
     set oldsel,$w ""
 
     set path,$w [exec pwd]
@@ -108,15 +109,14 @@ proc makeFilebox {w var command cancel} {
 }
 
 proc fbsel {w dirs files var command} {
-    global path,$w oldpath,$w oldsel,$w var,$w $var
+    global path,$w oldpath,$w oldsel,$w $var
 
-    if [file isfile [set var,$w]] {
-	set $var [set var,$w]
+    if [file isfile [set $var]] {
 	eval $command
-    } elseif [file isdirectory [set var,$w]] {
-	fbcd $w [set var,$w] $dirs $files
+    } elseif [file isdirectory [set $var]] {
+	fbcd $w [set $var] $dirs $files
     } else {
-	set var,$w [set oldsel,$w]
+	set $var [set oldsel,$w]
     }
 }
 
@@ -181,11 +181,10 @@ proc fbchoose {y w files var command} {
 }
 
 proc fbselect {y w files var} {
-    global path,$w var,$w oldsel,$w $var
+    global path,$w oldsel,$w $var
 
     set ind [$files nearest $y]
     $files select from $ind
-    set var,$w [set path,$w]/[$files get $ind]
-    set oldsel,$w [set var,$w]
-    set $var [set var,$w]
+    set $var [set path,$w]/[$files get $ind]
+    set oldsel,$w [set $var]
 }
