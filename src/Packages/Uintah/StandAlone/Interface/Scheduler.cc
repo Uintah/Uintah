@@ -17,8 +17,8 @@ using namespace Uintah;
 using namespace PSECore::XMLUtil;
 using namespace std;
 
-Scheduler::Scheduler()
-  : m_graphDoc(NULL), m_nodes(NULL), m_executeCount(0)
+Scheduler::Scheduler(Output* oport)
+  : m_outPort(oport), m_graphDoc(NULL), m_nodes(NULL), m_executeCount(0)
 {
 }
 
@@ -68,9 +68,10 @@ Scheduler::emitEdges(const vector<Task*>& tasks)
 	}
     }
 
-    ofstream depfile("dependencies");
+    string depfile_name(m_outPort->getOutputLocation() + "/taskgraph");
+    ofstream depfile(depfile_name.c_str());
     if (!depfile) {
-	cerr << "TaskGraph::dumpDependencies: unable to open output file!\n";
+	cerr << "Scheduler::emitEdges(): unable to open output file!\n";
 	return;	// dependency dump failure shouldn't be fatal to anything else
     }
 
@@ -139,7 +140,8 @@ Scheduler::finalizeNodes()
     if (m_graphDoc == NULL)
     	return;
     
-    ofstream deps("dependencies.xml");
+    string deps_name(m_outPort->getOutputLocation() + "/taskgraph.xml");
+    ofstream deps(deps_name.c_str());
     deps << *m_graphDoc << endl;
     
     delete m_nodes;
@@ -150,6 +152,12 @@ Scheduler::finalizeNodes()
 
 //
 // $Log$
+// Revision 1.7  2000/07/26 20:14:13  jehall
+// Moved taskgraph/dependency output files to UDA directory
+// - Added output port parameter to schedulers
+// - Added getOutputLocation() to Uintah::Output interface
+// - Renamed output files to taskgraph[.xml]
+//
 // Revision 1.6  2000/07/25 20:59:27  jehall
 // - Simplified taskgraph output implementation
 // - Sort taskgraph edges; makes critical path algorithm eastier
