@@ -418,16 +418,17 @@ DWDatabase<VarType>::logMemoryUse(ostream& out, const std::string& tag,
     for(patchDBtype::iterator iter = nr->patches.begin();
 	iter != nr->patches.end(); iter++){
       PatchRecord* pr = iter->second;
-      for(dataDBtype::iterator iter = pr->vars.begin();
-	  iter != pr->vars.end(); iter++){
-	VarType* var = *iter;
-	const VarLabel* label = nr->label;
-	string elems;
-	unsigned long totsize;
-	void* ptr;
-	var->getSizeInfo(elems, totsize, ptr);
-	const TypeDescription* td = label->typeDescription();
-	out << dwid << "\t" << tag << "\t" << (td?td->getName():"-") << "\t" << label->getName() << "\t" << elems << "\t" << totsize << "\t" << ptr << '\n';
+      for(int i=0;i<pr->vars.size();i++){
+	VarType* var = pr->vars[i];
+	if(var){
+	  const VarLabel* label = nr->label;
+	  string elems;
+	  unsigned long totsize;
+	  void* ptr;
+	  var->getSizeInfo(elems, totsize, ptr);
+	  const TypeDescription* td = label->typeDescription();
+	  out << dwid << "\t" << tag << "\t" << (td?td->getName():"-") << "\t" << label->getName() << "\t" << pr->patch->getID() << "\t" << i << "\t" << elems << "\t" << totsize << "\t" << ptr << '\n';
+	}
       }
     }
   }
@@ -441,7 +442,7 @@ DWDatabase<VarType>::logMemoryUse(ostream& out, const std::string& tag,
     void* ptr;
     var->getSizeInfo(elems, totsize, ptr);
     const TypeDescription* td = label->typeDescription();
-    out << dwid << "\t" << tag << "\t" << (td?td->getName():"-") << "\t" << label->getName() << "\t" << elems << "\t" << totsize << "\t" << ptr << '\n';
+    out << dwid << "\t" << tag << "\t" << (td?td->getName():"-") << "\t" << label->getName() << "\t-\t-\t" << elems << "\t" << totsize << "\t" << ptr << '\n';
   }
 }
 
