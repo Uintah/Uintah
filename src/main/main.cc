@@ -53,6 +53,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#ifdef HAVE_SCISOCK
+#  include <Core/Util/Comm/NetInterface.h>
+#endif
+
 #if defined(__APPLE__)
 #  include <Core/Datatypes/MacForceLoad.h>
    namespace SCIRun {
@@ -82,13 +86,19 @@ using namespace SCIRun;
 #error You must set ITCL_WIDGETS to the iwidgets/scripts path
 #endif
 
+
 static bool execute_flag = false;
+GuiInterface *gui = 0;
+
 
 void
 usage()
 {
   cout << "Usage: scirun [args] [net_file] [session_file]\n";
   cout << "       [-]-r[egression] : regression test a network\n";
+#ifdef HAVE_SCISOCK
+  cout << "       [-]-s[erver] PORT: start a TCL server on port number PORT\n";
+#endif
   cout << "       [-]-e[xecute]    : executes the given network on startup\n";
   cout << "       [-]-v[ersion]    : prints out version information\n";
   cout << "       [-]-h[elp]       : prints usage information\n";
@@ -98,6 +108,38 @@ usage()
   exit( 0 );
 }
 
+
+#ifdef HAVE_SCISOCK
+/*===========================================================================*/
+// Description : Callback that processes data read from a connected socket.
+// Arguments   : 
+// NetConnection * conn - Connection data was read from.
+// char * recv_buffer - Buffer containing data read.
+// int num_read - Number of bytes read from connection.
+void socket_reader( NetInterface * interface, NetConnection * conn, 
+                    char * recv_buffer, int num_read )
+{
+  // Run a reader for this connection
+  //  if(pthread_setspecific(thread_key, (void*)gui_thread) != 0) return;
+  char buff_str[num_read + 1];
+  strncpy( buff_str, recv_buffer, num_read );
+  buff_str[num_read] = '\0';
+  //  string result = gui->eval(buff_str);
+  string result("The SCIRun socket is currently broken.\n");
+  interface->writen(conn, (char *)result.c_str(), result.length());
+} 
+
+void 
+socket_listener(NetInterface *interface, NetConnection *conn ) 
+{
+  interface->start_read_loop( conn, socket_reader);
+} 
+
+#endif
+
+
+
+
 // Parse the supported command-line arugments.
 // Returns the argument # of the .net file
 int
@@ -105,7 +147,8 @@ parse_args( int argc, char *argv[] )
 {
   int found = 0;
   bool powerapp = false;
-  for( int cnt = 1; cnt < argc; cnt++ )
+  int cnt = 1;
+  while (cnt < argc)
   {
     string arg( argv[ cnt ] );
     if( ( arg == "--version" ) || ( arg == "-version" )
@@ -133,6 +176,29 @@ parse_args( int argc, char *argv[] )
     {
       sci_putenv("SCIRUN_NOSPLASH", "1");
     }
+#ifdef HAVE_SCISOCK
+    else if ( ( arg == "--server" ) || ( arg == "-server" ) ||
+	      ( arg == "-s" ) ||  ( arg == "--s" ) )
+    {
+      if (cnt+1 < argc) {
+	int port;
+	if (string_to_int(argv[cnt+1], port)) {
+	  if (port < 1 || port > 9999) {
+	    cerr << "Server port must be in range 1-9999\n";
+	    exit(0);
+	  }
+	  cnt++;
+	} else {
+	  std::cerr << "Couldn't parse server port number: " << argv[cnt+1]
+		    << std::endl << "Exiting." << std::endl;
+	  exit(0);
+	}
+	std::cerr <<"port: " << port << std::endl;
+	NetInterface *server_socket = scinew NetInterface;
+	server_socket->listen(port, 0, socket_listener);
+      }
+    }    
+#endif
     else
     {
       struct stat buf;
@@ -157,6 +223,7 @@ parse_args( int argc, char *argv[] )
 	found = cnt;
       }
     }
+    cnt++;
   }
   return found;
 }
@@ -239,7 +306,7 @@ main(int argc, char *argv[], char **environment) {
   tcl_task->mainloop_waitstart();
 
   // Create user interface link
-  GuiInterface* gui = new TCLInterface();
+  gui = new TCLInterface();
   // setup TCL auto_path to find core components
   gui->eval("lappend auto_path "SCIRUN_SRCDIR"/Core/GUI "
 	    SCIRUN_SRCDIR"/Dataflow/GUI "ITCL_WIDGETS);
