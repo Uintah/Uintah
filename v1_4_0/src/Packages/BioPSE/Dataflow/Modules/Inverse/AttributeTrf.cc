@@ -14,8 +14,8 @@
 //  University of Utah. All Rights Reserved.
 //  
 //    File   : AttributeTrf.cc
-//    Author : yesim
-//    Date   : Sat Feb  9 11:36:47 2002
+//    Author : Yesim Serinagaoglu
+//    Date   : Wed Feb 27 23:18:17 2002
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -66,7 +66,7 @@ extern "C" BioPSESHARE Module* make_AttributeTrf(const string& id) {
 
 // CONSTRUCTOR
 AttributeTrf::AttributeTrf(const string& id)
-  : Module("AttributeTrf", id, Source, "Inverse", "BioPSE")
+  : Module("AttributeTrf", id, Source, "FieldManip", "BioPSE")
 {
 }
 
@@ -299,24 +299,6 @@ void AttributeTrf::execute(){
   // DenseMatrix *laplacian of size nNodes x nNodes
 
   DenseMatrix *laplacian = calc_laplacian(pts, tris);
-
-  ////////////////////////////////////////////////////
-  ////////// This part is added to write the 
-  ////////// laplacian Matrix in the file
-  ////////////////////////////////////////////////////
-
-  int i, j;
-  FILE *fp;
-  fp = fopen("laplacian.txt","wt");
-  for(i=0; i<64; i++)
-  {  
-	for(j=0; j<64; j++)
-		fprintf(fp,"%f ",(*laplacian)[i][j]);
-    fprintf(fp,"\n");
-  }			
-  fclose(fp);
-
-  ////////////////////////////////////////////////////
 
   oportAttrib->send(MatrixHandle(laplacian));
 }
