@@ -385,7 +385,7 @@ void Mesh::get_interp(Element* elem, const Point& p,
     s4=iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
 }
 
-void Mesh::get_grad(Element* elem, const Point&,
+double Mesh::get_grad(Element* elem, const Point&,
 		    Vector& g1, Vector& g2, Vector& g3, Vector& g4)
 {
     Point p1(nodes[elem->n[0]]->p);
