@@ -539,7 +539,27 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       // Apply grid boundary conditions to the velocity
       // before storing the data
       for(int face = 0; face<6; face++){
-	Region::FaceType f = Region::xplus;
+	Region::FaceType f;
+	switch (face) {
+	case 0:
+	    f = Region::xplus;
+	    break;
+	case 1:
+	  f = Region::xminus;
+	  break;
+	case 2:
+	  f = Region::yplus;
+	  break;
+	case 3:
+	  f = Region::yminus;
+	  break;
+	case 4:
+	  f = Region::zplus;
+	  break;
+	case 5:
+	  f = Region::zminus;
+	  break;
+	}
 	switch(region->getBCType(f)){
 	case Region::None:
 	     // Do nothing
@@ -884,6 +904,10 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 
 
 // $Log$
+// Revision 1.48  2000/05/09 23:45:09  jas
+// Fixed the application of grid boundary conditions.  It is probably slow
+// as mud but hopefully the gist is right.
+//
 // Revision 1.47  2000/05/09 21:33:02  guilkey
 // Added gravity to the acceleration.  Currently hardwired, I need a little
 // help seeing how to get it out of the ProblemSpec.
