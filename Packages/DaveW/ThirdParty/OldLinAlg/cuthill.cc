@@ -1,8 +1,10 @@
 /* cuthillMcKee.c -- swapnodes to minimize the bandwidth of our matrix */
 #include <stdlib.h>
 #include <stdio.h>
-#include <iostream.h>
+#include <iostream>
 #include "vector.h"
+
+using namespace std;
 
 typedef struct _link
 {

@@ -2,7 +2,9 @@
 #define COMPLEX_H 1
 
 #include<math.h>
-#include<iostream.h>
+#include<iostream>
+
+using namespace std;
 
 //Complex Class Definitions
 //-------------------------------------------------------------------------

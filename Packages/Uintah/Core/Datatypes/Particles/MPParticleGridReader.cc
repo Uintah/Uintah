@@ -14,11 +14,10 @@
 #include <SCICore/Datatypes/ScalarFieldRG.h>
 #include <SCICore/Datatypes/VectorFieldRG.h>
 
-#include <fstream.h>
+#include <fstream>
 #include <iomanip>
-using std::setw;
 #include <sstream>
-using std::ostringstream;
+using namespace std;
 
 namespace Uintah {
 namespace Datatypes {
@@ -293,6 +292,9 @@ void MPParticleGridReader::readParticles(MPRead& reader)
 
 //
 // $Log$
+// Revision 1.3  1999/11/18 22:13:43  jsday
+// fixed Uintah and DaveW stuff to use STL iostream
+//
 // Revision 1.2  1999/10/07 02:08:23  sparker
 // use standard iostreams and complex type
 //

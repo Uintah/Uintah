@@ -19,7 +19,7 @@ MP(XYZtoRGB)
 // EEG
 MP(BldEEGMesh)
 MP(Coregister)
-MP(InvEEGSolve)
+//MP(InvEEGSolve)
 MP(RescaleSegFld)
 MP(STreeExtractSurf)
 MP(SegFldOps)
@@ -101,7 +101,7 @@ void initPackage(const clString& tcl) {
   // EEG
   RM("EEG",	      "BldEEGMesh",		 make_BldEEGMesh,	    tcl+"/BldEEGMesh.tcl");
   RM("EEG",	      "Coregister",		 make_Coregister,	    tcl+"/Coregister.tcl");
-  RM("EEG",	      "InvEEGSolve",	 	 make_InvEEGSolve,	    tcl+"/InvEEGSolve.tcl");
+//  RM("EEG",	      "InvEEGSolve",	 	 make_InvEEGSolve,	    tcl+"/InvEEGSolve.tcl");
   RM("EEG",	      "RescaleSegFld",		 make_RescaleSegFld,	    tcl+"/RescaleSegFld.tcl");
   RM("EEG",	      "STreeExtractSurf",	 make_STreeExtractSurf,	    tcl+"/STreeExtractSurf.tcl");
   RM("EEG",	      "SegFldOps",		 make_SegFldOps,	    tcl+"/SegFldOps.tcl");

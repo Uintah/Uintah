@@ -15,13 +15,15 @@
 #ifndef ZVECTOR_H
 #define ZVECTOR_H 1
 
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include <assert.h>
 
 #include "Index.h"
 #include "utils.h"
 #include "Complex.h"
+
+using namespace std;
 
 template<class Data_Type> class MatrixDense;
 template<class Data_Type> class MatrixSparse;

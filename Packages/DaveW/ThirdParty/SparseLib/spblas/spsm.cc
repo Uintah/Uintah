@@ -39,8 +39,10 @@
  */
 
 #include <stdlib.h>
-#include <iostream.h>
+#include <iostream>
 #include "spblas.h"
+
+using namespace std;
 
 #define _SpMatVal(_a,_lda,_row,_col) ((_a)[(_lda)*(_col)+(_row)])
 
