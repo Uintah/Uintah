@@ -127,7 +127,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
     TableValue* tv = new TableValue;
     child->get(tv->name);
     tv->index = table->addDependentVariable(tv->name);
-    string labelname = tablename+"-"+tv->name;
+    string labelname = tv->name;
     tv->label = VarLabel::create(labelname, CCVariable<double>::getTypeDescription());
     tablevalues.push_back(tv);
   }
