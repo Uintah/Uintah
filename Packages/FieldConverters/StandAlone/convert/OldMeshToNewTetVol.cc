@@ -17,9 +17,9 @@
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
-#include <stdio.h>
 
 using std::cerr;
+using std::cout;
 using std::ifstream;
 using std::endl;
 
@@ -64,8 +64,8 @@ main(int argc, char **argv) {
   TetVolMeshHandle tvm = field->get_typed_mesh();
 
   // Assume that the old Mesh and the new arrange nodes the same way.
-  for (int i = 0; i < handle->nodesize(); i++) {
-    cout << "node " << i << ": " << handle->node(i).p << endl;
+  for (int i = 0; i < handle->nodes.size(); i++) {
+    cout << "node " << i << ": " << handle->nodes[i]->p << endl;
   }
   
   // TO_DO:
