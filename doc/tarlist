@@ -56,6 +56,7 @@ $stdout.print("#{root}/doc/index.html
 #{root}/doc/User/Guide/usersguide.pdf
 #{root}/doc/User/Tutorials/BioFEM
 #{root}/doc/User/Tutorials/BioTensor
+#{root}/doc/User/Tutorials/FusionViewer
 #{root}/doc/User/Tutorials/SCIRun_Intro
 #{root}/doc/User/Tutorials/BioImage/bioimage.pdf
 #{root}/doc/User/Tutorials/BioImage/Figures
