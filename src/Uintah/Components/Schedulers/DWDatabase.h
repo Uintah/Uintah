@@ -212,22 +212,30 @@ VarType* DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
 {
    nameDBtype::const_iterator nameiter = names.find(label);
    if(nameiter == names.end())
-      throw UnknownVariable(label->getName());
+      throw UnknownVariable(label->getName(), patch->getID(),
+			    patch->toString(), matlIndex,
+			    "no variable name");
 
    NameRecord* nr = nameiter->second;
    patchDBtype::const_iterator patchiter = nr->patches.find(patch);
    if(patchiter == nr->patches.end())
-      throw UnknownVariable(label->getName());
+      throw UnknownVariable(label->getName(), patch->getID(),
+			    patch->toString(), matlIndex,
+			    "no patch with this variable name");
 
    PatchRecord* rr = patchiter->second;
    if(matlIndex < 0)
       throw InternalError("matlIndex must be >= 0");
 
    if(matlIndex >= rr->vars.size())
-      throw UnknownVariable(label->getName());
+      throw UnknownVariable(label->getName(), patch->getID(),
+			    patch->toString(), matlIndex,
+			    "no material with this patch and variable name");
 
    if(!rr->vars[matlIndex])
-      throw UnknownVariable(label->getName());
+      throw UnknownVariable(label->getName(), patch->getID(),
+			    patch->toString(), matlIndex,
+			    "no material with this patch and variable name");
 
    return rr->vars[matlIndex];
 }
@@ -266,6 +274,9 @@ void DWDatabase<VarType>::copyAll(const DWDatabase& from,
 
 //
 // $Log$
+// Revision 1.12  2000/06/19 22:37:18  sparker
+// Improved messages for UnknownVariable
+//
 // Revision 1.11  2000/06/15 21:57:11  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data
