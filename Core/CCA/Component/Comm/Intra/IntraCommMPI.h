@@ -20,8 +20,6 @@
 #define INTRACOMM_MPI_H 
 
 #include <Core/CCA/Component/Comm/Intra/IntraComm.h>
-#include <sci_config.h> // For MPIPP_H on SGI
-#include <mpi.h>
 
 namespace SCIRun {
   /**************************************
