@@ -36,7 +36,7 @@ char component_skeleton[] = \
 "};\n"
 "\n"
 "extern \"C\" %sSHARE Module* make_%s(const clString& id) {\n" /* package name, component name */
-"  return new %s(id);\n" /* component name */
+"  return scinew %s(id);\n" /* component name */
 "}\n"
 "\n"
 "%s::%s(const clString& id)\n" /* component name, component name */
