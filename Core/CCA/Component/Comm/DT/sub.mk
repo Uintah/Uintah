@@ -26,6 +26,7 @@ SRCS := \
 	$(SRCDIR)/DataTransmitter.cc \
 	$(SRCDIR)/DTThread.cc \
 	$(SRCDIR)/DTPoint.cc \
+	$(SRCDIR)/DTMessage.cc 
 
 LIBS := 
 

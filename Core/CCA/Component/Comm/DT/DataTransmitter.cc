@@ -269,7 +269,7 @@ DataTransmitter::runRecvingThread(){
 	  msg->to_addr=addr;
 	  msg->autofree=true;
 	  msg->fr_addr=iter->first;
-	  msg->display();
+	  int id=*((int *)msg->buf);
 	  recvQ_mutex->lock();
 	  recv_msgQ.push_back(msg);
 	  recvQ_mutex->unlock();
