@@ -140,7 +140,7 @@
       <save label = "intE_source_CC"/>
       <save label = "mom_source_CC"/>
       <save label = "sp_vol_CC"/>
-      <save label = "spVol_source_CC"/>
+      <save label = "sp_vol_src_CC"/>
       <save label = "temp_CC"/>
       <save label = "rho_CC"/>
       <save label = "vel_CC"/>  
