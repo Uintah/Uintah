@@ -147,7 +147,9 @@ namespace Uintah {
     virtual void computeRxnStateSpace(const Stream& unreactedMixture, 
 				      const std::vector<double>& mixRxnVar, 
 				      Stream& equilStateSpace);
-
+    virtual double computeTemperature(const double absEnthalpy, 
+				      const std::vector<double>& massFract, 
+				      double initTemp);   
 
   private:
     // Looks for needed entry in KDTree and returns that entry. If entry 
@@ -157,9 +159,6 @@ namespace Uintah {
     void computeEquilibrium(double initTemp, double initPress,
 			    const std::vector<double>& initMassFract, 
 			    Stream& equilSoln);
-    double computeTemperature(const double absEnthalpy, 
-			      const std::vector<double>& massFract, 
-			      double initTemp);   
     void computeRadiationProperties();
     // Class object that stores all the information about the reaction
     // mechanism read in through Chemkin including species, elements, reaction

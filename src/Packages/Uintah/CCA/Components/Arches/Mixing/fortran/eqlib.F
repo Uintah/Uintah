@@ -587,11 +587,11 @@ C
      1             ATOM, KSYM, IEQWRK, REQWRK, REQWRK(NRWORK+1), NOP)
 C
        IF (IEQWRK(IoKERR) .NE. 0) THEN
-           WRITE (LOUT,'(/A)') ' ERROR RETURNING FROM STANJAN !'
-           WRITE (LOUT,'(A,I3)') ' KERR =', IEQWRK(IoKERR)
+C           WRITE (LOUT,'(/A)') ' ERROR RETURNING FROM STANJAN !'
+C           WRITE (LOUT,'(A,I3)') ' KERR =', IEQWRK(IoKERR)
 C           STOP
-           write (lout,'(/A)') ' Unreacted values will be used'
-           ierr = 1
+C           write (lout,'(/A)') ' Unreacted values will be used'
+            ierr = 1
            return
        ENDIF
 C

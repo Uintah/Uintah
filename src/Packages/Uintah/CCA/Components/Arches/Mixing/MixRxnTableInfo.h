@@ -142,8 +142,14 @@ namespace Uintah {
   double inline getStoicValue(int index) const{
     return d_stoicValue[index];
   }
-  
+
+  inline int getDensityIndex () const {
+    return 0; //Density is in first position in output vector
+  }
  
+  inline int getTemperatureIndex () const {
+    return 2; //Temperature is in third position in output vector
+  }
 
  private:
   int d_numTableDim;
@@ -164,6 +170,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.9  2003/01/22 00:43:04  spinti
+// Added improved BetaPDF mixing model and capability to create a betaPDF table a priori. Cleaned up favre averaging and streamlined sections of code.
+//
 // Revision 1.8  2002/05/31 22:04:44  spinti
 // *** empty log message ***
 //

@@ -85,6 +85,8 @@ class DynamicTable {
   // two dimensional arrays for storing information for linear interpolation
   int **d_tableIndexVec;
   double **d_tableBoundsVec;
+  Stream d_upValue; // Used in interpolate
+  Stream d_lowValue; // Used in interpolate
 
     
 }; // End Class DynamicTable
@@ -95,6 +97,9 @@ class DynamicTable {
 
 //
 // $Log$
+// Revision 1.8  2003/01/22 00:43:04  spinti
+// Added improved BetaPDF mixing model and capability to create a betaPDF table a priori. Cleaned up favre averaging and streamlined sections of code.
+//
 // Revision 1.7  2002/05/31 22:04:44  spinti
 // *** empty log message ***
 //
