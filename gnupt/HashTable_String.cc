@@ -5,7 +5,6 @@
 #include <Classlib/HashTable.cc>
 #include <Classlib/String.h>
 
-
 class PersistentTypeID;
 class Arg_item;
 class Arg_base;

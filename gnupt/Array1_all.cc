@@ -14,6 +14,7 @@
 #include <Datatypes/TriSurface.h>
 
 class Connection;
+class DebugSwitch;
 class GeomObj;
 class IPort;
 class Light;
@@ -26,6 +27,7 @@ class SoundMixer_PortInfo;
 class SSLine;
 class SSurf;
 class TCLvar;
+class TCLvarintp;
 
 typedef Array1<Connection*> _dummy1_;
 typedef Array1<IPort*> _dummy4_;
@@ -51,6 +53,7 @@ typedef Array1<VPriority> _dummy24_;
 typedef Array1<Light*> _dummy25_;
 typedef Array1<ContourSetIPort*> _dummy26_;
 typedef Array1<ContourSetHandle> _dummy27_;
+typedef Array1<TCLvarintp*> _dummy28_;
 
 typedef Array1<Point> _dummy30_;
 typedef Array1<Vector> _dummy31_;
@@ -66,6 +69,7 @@ typedef Array1<GeomObj*> _dummy35_;
 typedef Array1<MaterialHandle> _dummy36_;
 typedef Array1<SurfaceIPort*> _dummy37_;
 typedef Array1<SurfaceHandle> _dummy38_;
+typedef Array1<DebugSwitch*> _dummy39_;
 
 static void _fn1_(Piostream& p1, Array1<TSElement*>& p2)
 {
