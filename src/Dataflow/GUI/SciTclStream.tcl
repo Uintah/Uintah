@@ -97,11 +97,24 @@ itcl_class SciTclStream {
 		    set isNewOutput 0
 		}
 		
+		# Find out if the text widget is currently disabled.  If so,
+		# we must enable it to put text into it.
+		set currentState [lindex [$txtWidget config -state] 4]
+		if { $currentState == "disabled" } { 
+		    $txtWidget config -state normal
+		}
 		if {$redraw} {
+		    # Must set to normal to write to, but then back to 
+		    $txtWidget config -state normal
 		    $txtWidget delete 1.0 end
 		    $txtWidget insert end $strBuff
+		    $txtWidget config -state disabled
 		} else {
 		    $txtWidget insert end $tmpBuff
+		}
+		# If it was disabled, then but it back to disabled
+		if { $currentState == "disabled" } { 
+		    $txtWidget config -state disabled
 		}
 	    }
 	    
@@ -111,11 +124,21 @@ itcl_class SciTclStream {
     }
 
     method clearTextWidget {} {
+	# Find out if the text widget is currently disabled.  If so,
+	# we must enable it to clear text.
+	set currentState [lindex [$txtWidget config -state] 4]
+	if { $currentState == "disabled" } { 
+	    $txtWidget config -state normal
+	}
+
 	# Clear the text widget
 	set strBuff ""
 	$txtWidget delete 0.0 end
-	
-	
+
+	# If it was disabled, then but it back to disabled
+	if { $currentState == "disabled" } { 
+	    $txtWidget config -state disabled
+	}
     }
 
 }
