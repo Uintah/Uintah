@@ -199,7 +199,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   case PRESSURE:
     if (index == Arches::UVEL) {
       new_dw->allocate(variableCalledDU, d_DUPBLMLabel, matlIndex, patch);
-    }
+    } 
     break;
   case MOMENTUM:
     break;
@@ -315,59 +315,143 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
     IntVector idxLoV = patch->getSFCYFORTLowIndex();
     IntVector idxHiV = patch->getSFCYFORTHighIndex();
 
+    // Calculate the coeffs
+    FORT_VVELCOEF(domLoV.get_pointer(), domHiV.get_pointer(),
+		  idxLoV.get_pointer(), idxHiV.get_pointer(),
+		  vVelocity.getPointer(),
+		  vVelocityConvectCoeff[Arches::AE].getPointer(), 
+		  vVelocityConvectCoeff[Arches::AW].getPointer(), 
+		  vVelocityConvectCoeff[Arches::AN].getPointer(), 
+		  vVelocityConvectCoeff[Arches::AS].getPointer(), 
+		  vVelocityConvectCoeff[Arches::AT].getPointer(), 
+		  vVelocityConvectCoeff[Arches::AB].getPointer(), 
+		  vVelocityCoeff[Arches::AP].getPointer(), 
+		  vVelocityCoeff[Arches::AE].getPointer(), 
+		  vVelocityCoeff[Arches::AW].getPointer(), 
+		  vVelocityCoeff[Arches::AN].getPointer(), 
+		  vVelocityCoeff[Arches::AS].getPointer(), 
+		  vVelocityCoeff[Arches::AT].getPointer(), 
+		  vVelocityCoeff[Arches::AB].getPointer(), 
+		  variableCalledDU.getPointer(),
+		  domLoU.get_pointer(), domHiU.get_pointer(),
+		  uVelocity.getPointer(),
+		  domLoW.get_pointer(), domHiW.get_pointer(),
+		  wVelocity.getPointer(),
+		  domLo.get_pointer(), domHi.get_pointer(),
+		  density.getPointer(),
+		  viscosity.getPointer(),
+		  &delta_t,
+		  cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(),
+		  cellinfo->cww.get_objs(),
+		  cellinfo->cnnv.get_objs(), cellinfo->csnv.get_objs(),
+		  cellinfo->cssv.get_objs(),
+		  cellinfo->ctt.get_objs(), cellinfo->cbt.get_objs(),
+		  cellinfo->cbb.get_objs(),
+		  cellinfo->sew.get_objs(), cellinfo->snsv.get_objs(),
+		  cellinfo->stb.get_objs(),
+		  cellinfo->dxep.get_objs(), cellinfo->dxpw.get_objs(),
+		  cellinfo->dynpv.get_objs(), cellinfo->dypsv.get_objs(),
+		  cellinfo->dztp.get_objs(), cellinfo->dzpb.get_objs(),
+		  cellinfo->fac1v.get_objs(), cellinfo->fac2v.get_objs(),
+		  cellinfo->fac3v.get_objs(), cellinfo->fac4v.get_objs(),
+		  cellinfo->jnsdv.get_objs(), cellinfo->jssdv.get_objs(), 
+		  cellinfo->efac.get_objs(), cellinfo->wfac.get_objs(),
+		  cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs());
   } else if (index == Arches::WVEL) {
 
     // Get the patch indices
     IntVector idxLoW = patch->getSFCZFORTLowIndex();
     IntVector idxHiW = patch->getSFCZFORTHighIndex();
 
+    // Calculate the coeffs
+    FORT_WVELCOEF(domLoW.get_pointer(), domHiW.get_pointer(),
+		  idxLoW.get_pointer(), idxHiW.get_pointer(),
+		  wVelocity.getPointer(),
+		  wVelocityConvectCoeff[Arches::AE].getPointer(), 
+		  wVelocityConvectCoeff[Arches::AW].getPointer(), 
+		  wVelocityConvectCoeff[Arches::AN].getPointer(), 
+		  wVelocityConvectCoeff[Arches::AS].getPointer(), 
+		  wVelocityConvectCoeff[Arches::AT].getPointer(), 
+		  wVelocityConvectCoeff[Arches::AB].getPointer(), 
+		  wVelocityCoeff[Arches::AP].getPointer(), 
+		  wVelocityCoeff[Arches::AE].getPointer(), 
+		  wVelocityCoeff[Arches::AW].getPointer(), 
+		  wVelocityCoeff[Arches::AN].getPointer(), 
+		  wVelocityCoeff[Arches::AS].getPointer(), 
+		  wVelocityCoeff[Arches::AT].getPointer(), 
+		  wVelocityCoeff[Arches::AB].getPointer(), 
+		  variableCalledDU.getPointer(),
+		  domLoU.get_pointer(), domHiU.get_pointer(),
+		  uVelocity.getPointer(),
+		  domLoV.get_pointer(), domHiV.get_pointer(),
+		  vVelocity.getPointer(),
+		  domLo.get_pointer(), domHi.get_pointer(),
+		  density.getPointer(),
+		  viscosity.getPointer(),
+		  &delta_t,
+		  cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(),
+		  cellinfo->cww.get_objs(),
+		  cellinfo->cnn.get_objs(), cellinfo->csn.get_objs(),
+		  cellinfo->css.get_objs(),
+		  cellinfo->cttw.get_objs(), cellinfo->cbtw.get_objs(),
+		  cellinfo->cbbw.get_objs(),
+		  cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
+		  cellinfo->stbw.get_objs(),
+		  cellinfo->dxep.get_objs(), cellinfo->dxpw.get_objs(),
+		  cellinfo->dynp.get_objs(), cellinfo->dyps.get_objs(),
+		  cellinfo->dztpw.get_objs(), cellinfo->dzpbw.get_objs(),
+		  cellinfo->fac1w.get_objs(), cellinfo->fac2w.get_objs(),
+		  cellinfo->fac3w.get_objs(), cellinfo->fac4w.get_objs(),
+		  cellinfo->ktsdw.get_objs(), cellinfo->kbsdw.get_objs(), 
+		  cellinfo->efac.get_objs(), cellinfo->wfac.get_objs(),
+		  cellinfo->enfac.get_objs(), cellinfo->sfac.get_objs());
   }
 
-#ifdef WONT_COMPILE_YET  
-  int ioff = 1;
-  int joff = 0;
-  int koff = 0;
+#ifdef MAY_BE_USEFUL_LATER  
+  // int ioff = 1;
+  // int joff = 0;
+  // int koff = 0;
 
   // 3-d array for volume - fortran uses it for temporary storage
-  Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
-  FORT_VELCOEF(domLoU.get_pointer(), domHiU.get_pointer(),
-	       idxLoU.get_pointer(), idxHiU.get_pointer(),
-	       uVelocity.getPointer(),
-	       domLoV.get_pointer(), domHiV.get_pointer(),
-	       idxLoV.get_pointer(), idxHiV.get_pointer(),
-	       vVelocity.getPointer(),
-	       domLoW.get_pointer(), domHiW.get_pointer(),
-	       idxLoW.get_pointer(), idxHiW.get_pointer(),
-	       wVelocity.getPointer(),
-	       domLo.get_pointer(), domHi.get_pointer(),
-	       idxLo.get_pointer(), idxHi.get_pointer(),
-	       density.getPointer(),
-	       viscosity.getPointer(),
-	       uVelocityConvectCoeff[Arches::AP].getPointer(), 
-	       uVelocityConvectCoeff[Arches::AE].getPointer(), 
-	       uVelocityConvectCoeff[Arches::AW].getPointer(), 
-	       uVelocityConvectCoeff[Arches::AN].getPointer(), 
-	       uVelocityConvectCoeff[Arches::AS].getPointer(), 
-	       uVelocityConvectCoeff[Arches::AT].getPointer(), 
-	       uVelocityConvectCoeff[Arches::AB].getPointer(), 
-	       uVelocityCoeff[Arches::AP].getPointer(), 
-	       uVelocityCoeff[Arches::AE].getPointer(), 
-	       uVelocityCoeff[Arches::AW].getPointer(), 
-	       uVelocityCoeff[Arches::AN].getPointer(), 
-	       uVelocityCoeff[Arches::AS].getPointer(), 
-	       uVelocityCoeff[Arches::AT].getPointer(), 
-	       uVelocityCoeff[Arches::AB].getPointer(), 
-	       delta_t,
-	       ioff, joff, koff, 
-	       cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
-	       cellinfo->cnn, cellinfo->csn, cellinfo->css,
-	       cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-	       cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-	       cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
-	       cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
-	       cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
-	       cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
-	       cellinfo->tfac, cellinfo->bfac, volume);
+  // Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
+  // FORT_VELCOEF(domLoU.get_pointer(), domHiU.get_pointer(),
+  //       idxLoU.get_pointer(), idxHiU.get_pointer(),
+  //       uVelocity.getPointer(),
+  //       domLoV.get_pointer(), domHiV.get_pointer(),
+  //       idxLoV.get_pointer(), idxHiV.get_pointer(),
+  //       vVelocity.getPointer(),
+  //       domLoW.get_pointer(), domHiW.get_pointer(),
+  //       idxLoW.get_pointer(), idxHiW.get_pointer(),
+  //       wVelocity.getPointer(),
+  //       domLo.get_pointer(), domHi.get_pointer(),
+  //       idxLo.get_pointer(), idxHi.get_pointer(),
+  //       density.getPointer(),
+  //       viscosity.getPointer(),
+  //       uVelocityConvectCoeff[Arches::AP].getPointer(), 
+  //       uVelocityConvectCoeff[Arches::AE].getPointer(), 
+  //       uVelocityConvectCoeff[Arches::AW].getPointer(), 
+  //       uVelocityConvectCoeff[Arches::AN].getPointer(), 
+  //       uVelocityConvectCoeff[Arches::AS].getPointer(), 
+  //       uVelocityConvectCoeff[Arches::AT].getPointer(), 
+  //       uVelocityConvectCoeff[Arches::AB].getPointer(), 
+  //       uVelocityCoeff[Arches::AP].getPointer(), 
+  //       uVelocityCoeff[Arches::AE].getPointer(), 
+  //       uVelocityCoeff[Arches::AW].getPointer(), 
+  //       uVelocityCoeff[Arches::AN].getPointer(), 
+  //       uVelocityCoeff[Arches::AS].getPointer(), 
+  //       uVelocityCoeff[Arches::AT].getPointer(), 
+  //       uVelocityCoeff[Arches::AB].getPointer(), 
+  //       delta_t,
+  //       ioff, joff, koff, 
+  //       cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
+  //       cellinfo->cnn, cellinfo->csn, cellinfo->css,
+  //       cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
+  //       cellinfo->sewu, cellinfo->sns, cellinfo->stb,
+  //       cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
+  //       cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
+  //       cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
+  //       cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
+  //       cellinfo->tfac, cellinfo->bfac, volume);
 #endif
 
   for (int ii = 0; ii < nofStencils; ii++) {
@@ -885,6 +969,10 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.24  2000/07/08 23:08:54  bbanerje
+// Added vvelcoef and wvelcoef ..
+// Rawat check the ** WARNING ** tags in these files for possible problems.
+//
 // Revision 1.23  2000/07/08 08:03:33  bbanerje
 // Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
 // made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc

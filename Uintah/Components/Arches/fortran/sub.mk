@@ -10,7 +10,8 @@ SRCDIR   := Uintah/Components/Arches/fortran
 SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/cellg.F $(SRCDIR)/areain.F $(SRCDIR)/profv.F \
 	$(SRCDIR)/profscalar.F  $(SRCDIR)/smagmodel.F $(SRCDIR)/calpbc.F \
-	$(SRCDIR)/inlbcs.F $(SRCDIR)/uvelcoef.F
+	$(SRCDIR)/inlbcs.F $(SRCDIR)/uvelcoef.F $(SRCDIR)/vvelcoef.F \
+	$(SRCDIR)/wvelcoef.F
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
 #	$(SRCDIR)/arrmax.F $(SRCDIR)/assign.F $(SRCDIR)/bcp.F \
@@ -43,6 +44,10 @@ FFLAGS += -g -O3 -OPT:IEEE_arithmetic=3 -CG:if_conversion=false:reverse_if_conve
 
 #
 # $Log$
+# Revision 1.17  2000/07/08 23:08:56  bbanerje
+# Added vvelcoef and wvelcoef ..
+# Rawat check the ** WARNING ** tags in these files for possible problems.
+#
 # Revision 1.16  2000/07/08 08:03:37  bbanerje
 # Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
 # made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
