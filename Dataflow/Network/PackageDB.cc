@@ -17,7 +17,6 @@
 
 // PackageDB.cc - Interface to module-finding and loading mechanisms
 
-#include <Core/Util/scirun_env.h>
 #ifdef ASSERT
 #undef ASSERT
 #endif
@@ -52,9 +51,6 @@ using namespace std;
 #endif
 
 #include <sys/stat.h>
-static string SCIRUN_SRCTOP = SRCTOP;   // = INSTALL_DIR/SCIRun/src
-static string SCIRUN_OBJTOP = OBJTOP;   // = BUILD_DIR
-static string DEFAULT_LOAD_PACKAGE = LOAD_PACKAGE;  // configured packages
 
 #ifdef __APPLE__
 static string lib_ext = ".dylib";
@@ -65,7 +61,6 @@ static string lib_ext = ".so";
 namespace SCIRun {
 
   PackageDB* packageDB = 0;
-  //env_map scirunrc;                        // contents of .scirunrc
 
   typedef struct {
     string name;
@@ -100,14 +95,14 @@ PackageDB::~PackageDB()
 
 typedef void (*pkgInitter)(const string& tclPath);
 
-LIBRARY_HANDLE PackageDB::findLibInPath(string lib, string path)
+LIBRARY_HANDLE PackageDB::findLib(string lib)
 {
-  LIBRARY_HANDLE handle;
-  string tempPaths = path;
-  string dir;
-
+  LIBRARY_HANDLE handle=0;
+  const char *env = getenv("PACKAGE_LIB_PATH");
+  string tempPaths(env?env:"");
   // try to find the library in the specified path
   while (tempPaths!="") {
+    string dir;
     const unsigned int firstColon = tempPaths.find(':');
     if(firstColon < tempPaths.size()) {
       dir=tempPaths.substr(0,firstColon);
@@ -138,33 +133,26 @@ bool PackageDB::findMaker(ModuleInfo* moduleInfo)
     cat_bname = "Packages_" + moduleInfo->packageName + "_Dataflow_Modules_";
     pak_bname = "Packages_" + moduleInfo->packageName + "_Dataflow";
   }
-
-  string libpath="";
-  env_iter envi = scirunrc.find("PACKAGE_LIB_PATH");
-  if (envi!=scirunrc.end())
-    libpath=(*envi).second;
+  string errstr;
 
   // try the large version of the shared library
-  string libname = "lib" + pak_bname +lib_ext;
-  LIBRARY_HANDLE package_so = findLibInPath(libname,libpath);
-  string package_error;
+  LIBRARY_HANDLE package_so = findLib("lib" + pak_bname+lib_ext);
   if (!package_so)
-    package_error = SOError();
+    errstr = string(" - ")+SOError()+string("\n");
 
-  // try the small version of the shared library
+  // If package is FieldsChoose, FieldsCreate, FieldsHandle Fields Packages
   string cat_name = moduleInfo->categoryName;
   if (cat_name.substr(0, 6) == "Fields") { cat_name = "Fields"; }
-  libname = "lib" + cat_bname + cat_name + lib_ext;
-  LIBRARY_HANDLE category_so = findLibInPath(libname,libpath);
-  string category_error;
+
+  // try the small version of the shared library
+  LIBRARY_HANDLE category_so = findLib("lib" + cat_bname+cat_name+lib_ext);
   if (!category_so)
-    category_error = SOError();
+    errstr = string(" - ")+SOError()+string("\n");
+
 
   if (!category_so && !package_so) {
-
     string msg = "Unable to load all of package '" + moduleInfo->packageName +
-      "' (category '" + moduleInfo->categoryName + "' failed) :\n - " +
-      package_error + "\n - " + category_error;
+      "' (category '" + moduleInfo->categoryName + "' failed) :\n" + errstr;
 
     if(gui){
       gui->postMessage( msg );
@@ -183,15 +171,13 @@ bool PackageDB::findMaker(ModuleInfo* moduleInfo)
     moduleInfo->maker = 
       (ModuleMaker)GetHandleSymbolAddress(package_so,makename.c_str());
   if (!moduleInfo->maker) {
+    errstr = "Unable to load module '" + moduleInfo->moduleName +
+      "' :\n - can't find symbol '" + makename + "'\n";
     if(gui){
-      gui->postMessage("Unable to load module '" + moduleInfo->moduleName +
-		       "' :\n - can't find symbol 'make_" +
-		       moduleInfo->moduleName + "'\n");
+      gui->postMessage(errstr);
       gui->execute("update idletasks");
     } else {
-      cerr << "Unable to load module '" << moduleInfo->moduleName
-	   << "' :\n - can't find symbol 'make_" << moduleInfo->moduleName
-	   << "'\n";
+      cerr << errstr;
     }
     return false;
   }
@@ -227,22 +213,19 @@ void PackageDB::loadPackage(bool resolve)
 			   "__ZN6SCIRun10CurveFieldINS_6TensorEE2ioERNS_9PiostreamE");
 #endif
 
+  char *env;
   // the format of PACKAGE_PATH is a colon seperated list of paths to the
   // root(s) of package source trees.
-  // build the complete package path (var in .scirunrc + default)
-  env_iter envi = scirunrc.find(string("PACKAGE_SRC_PATH"));
-  if (envi!=scirunrc.end())
-    packagePath = (*envi).second + ":" + SCIRUN_SRCTOP +"/Packages";
-  else
-    packagePath = SCIRUN_SRCTOP + "/Packages";
+  packagePath = string(SCIRUN_SRCDIR) + "/Packages";
+
+  // if the user specififes it, build the complete package path
+  env = getenv("PACKAGE_SRC_PATH");
+  if (env) packagePath = string(env) + ":" + packagePath;
 
   // the format of LOAD_PACKAGE is a comma seperated list of package names.
   // build the complete list of packages to load
-  envi = scirunrc.find(string("LOAD_PACKAGE"));
-  if (envi!=scirunrc.end())
-    loadPackage = (*envi).second;
-  else
-    loadPackage = DEFAULT_LOAD_PACKAGE;
+  env = getenv("LOAD_PACKAGE");
+  loadPackage = string(env?env:LOAD_PACKAGE);
 
   while(loadPackage!="") {
     // Strip off the first element, leave the rest for the next
@@ -296,18 +279,12 @@ void PackageDB::loadPackage(bool resolve)
 
     do_command("lappend auto_path "+pathElt+"/"+packageElt+"/Dataflow/GUI");
 
-    string bname = packageElt;
-    string pname = packageElt;
     string xmldir;
     
-    if(bname == "SCIRun") {
-      bname = "";
-      pname = "SCIRun";
-      xmldir = SCIRUN_SRCTOP + "/Dataflow/XML";
-      do_command(string("lappend auto_path ")+SCIRUN_SRCTOP+
-		 "/Dataflow/GUI");
+    if(packageElt == "SCIRun") {
+      xmldir = string(SCIRUN_SRCDIR) + "/Dataflow/XML";
+      do_command("lappend auto_path "+string(SCIRUN_SRCDIR)+"/Dataflow/GUI");
     } else {
-      bname = "Packages_" + bname + "_";
       xmldir = pathElt+"/"+packageElt+"/Dataflow/XML";
       do_command(string("lappend auto_path ")+pathElt+"/"+packageElt+
 		 "/Dataflow/GUI");
@@ -317,13 +294,13 @@ void PackageDB::loadPackage(bool resolve)
 
     if (!files) {
       if(gui)
-	gui->postMessage("Unable to load package " + pname +
+	gui->postMessage("Unable to load package " + packageElt +
 			 ":\n - Couldn't find *.xml in " + xmldir );
       continue;
     }
 
     new_package = new package;
-    new_package->name=pname;
+    new_package->name = packageElt;
     packages.insert(std::pair<int,
 		    package*>(packages.size(),new_package));
 
@@ -354,7 +331,7 @@ void PackageDB::loadPackage(bool resolve)
 	new_module = new ModuleInfo;
 	new_module->moduleName = node->name;
 	new_module->categoryName = node->category;
-	new_module->packageName = pname;
+	new_module->packageName = packageElt;
 	new_module->help_description = node->overview->description;
 	new_module->maker = 0;
 	new_module->uiFile = "not currently used";
@@ -390,7 +367,8 @@ void PackageDB::loadPackage(bool resolve)
   }
   if (gui && !getenv("SCI_NOSPLASH"))
   {
-    gui->execute("showSplash ""[file join " + SCIRUN_SRCTOP + " " + splash_path_ + "]"" " + to_string(mod_count));
+    gui->execute("showSplash ""[file join " + string(SCIRUN_SRCDIR) + 
+		 " " + splash_path_ + "]"" " + to_string(mod_count));
   }
   int index = 0;
   int numreg;
@@ -497,33 +475,6 @@ void PackageDB::registerModule(ModuleInfo* info) {
   } else cerr << "WARNING: Overriding multiply registered module "
 	      << info->packageName << "." << info->categoryName << "."
 	      << info->moduleName << "\n";  
-}
- 
-void PackageDB::createAlias(const string& fromPackageName,
-			    const string& fromCategoryName,
-			    const string& fromModuleName,
-			    const string&,// toPackageName,
-			    const string&,// toCategoryName,
-			    const string&)// toModuleName)
-{
-  Package* package;
-  if(!db_->lookup(fromPackageName,package)) {
-    gui->postMessage("Warning: creating an alias from a nonexistant package "+fromPackageName+" (ignored)");
-    return;
-  }
-  
-  Category* category;
-  if(!package->lookup(fromCategoryName,category)) {
-    gui->postMessage("Warning: creating an alias from a nonexistant category "+fromPackageName+"."+fromCategoryName+" (ignored)");
-    return;
-  }
-  
-  ModuleInfo* moduleInfo;
-  if(!category->lookup(fromModuleName,moduleInfo)) {
-    gui->postMessage("Warning: creating an alias from a nonexistant module "+fromPackageName+"."+fromCategoryName+"."+fromModuleName+" (ignored)");
-    return;
-  }
-  registerModule(moduleInfo);
 }
  
 Module* PackageDB::instantiateModule(const string& packageName,
@@ -751,8 +702,10 @@ void PackageDB::do_command(const string& command)
     delayed_commands.push_back(command);
 }
 
-ModuleInfo* PackageDB::GetModuleInfo(const string& name, const string& catname,
-				     const string& packname)
+ModuleInfo*
+PackageDB::GetModuleInfo(const string& name,
+			 const string& catname,
+			 const string& packname)
 {
   Package* package;
   if (!db_->lookup(packname,package))
