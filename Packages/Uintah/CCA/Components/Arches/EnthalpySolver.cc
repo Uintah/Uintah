@@ -323,6 +323,11 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
     tsk->modifies(d_lab->d_enthNonLinSrcSBLMLabel);
   }
 
+  if (d_radiationCalc) 
+   if (d_DORadiationCalc)
+     if (timelabels->integrator_last_step)
+       tsk->computes(d_lab->d_totalRadSrcLabel);
+
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
    if (d_radiationCalc) 
     if (d_DORadiationCalc) {
@@ -347,8 +352,6 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->modifies(d_lab->d_radiationFluxSINLabel);
       tsk->modifies(d_lab->d_radiationFluxTINLabel);
       tsk->modifies(d_lab->d_radiationFluxBINLabel);
-      if (timelabels->integrator_last_step)
-        tsk->computes(d_lab->d_totalRadSrcLabel);
     }
   }
 
