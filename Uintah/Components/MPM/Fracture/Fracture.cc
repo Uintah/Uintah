@@ -66,11 +66,13 @@ crackGrow(const Patch* patch,
    ParticleVariable<Vector> pCrackSurfaceNormal;
    ParticleVariable<double> pMicrocrackSize;
    ParticleVariable<double> pDilationalWaveSpeed;
+   ParticleVariable<double> pVolume;
 
    new_dw->get(pStress, lb->pStressLabel_preReloc, pset);
    old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
    old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
    old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
+   old_dw->get(pVolume, lb->pVolumeLabel, pset);
    new_dw->get(pDilationalWaveSpeed, lb->pDilationalWaveSpeedLabel, pset);
 
    delt_vartype delT;
@@ -100,11 +102,13 @@ crackGrow(const Patch* patch,
 	}
 
 	if(eigenVectors.size() == 2) {
+	  //cout<<"eigenVectors.size = 2"<<endl;
 	  double theta = drand48() * M_PI * 2;
 	  maxDirection = (eigenVectors[0] * cos(theta) + eigenVectors[1] * sin(theta));
 	}
 	
 	if(eigenVectors.size() == 3) {
+	  //cout<<"eigenVectors.size = 3"<<endl;
 	  double theta = drand48() * M_PI * 2;
 	  double beta = drand48() * M_PI;
 	  double cos_beta = cos(beta);
@@ -120,16 +124,19 @@ crackGrow(const Patch* patch,
 	  pIsBroken[idx] = 1;
 	  pCrackSurfaceNormal[idx] = maxDirection;
 	  pMicrocrackSize[idx] = 0;
-	  cout<<"Microcrack initiated!"<<endl;
+	  cout<<"Microcrack initiated in direction "<<maxDirection<<"."<<endl;
 	}
       }
       else {
         //crack propagation
+        double sizeLimit = pow(pVolume[idx],0.333) /2;
+	
 	double tensilStress = Dot(pStress[idx] * pCrackSurfaceNormal[idx],
 	   pCrackSurfaceNormal[idx]);
 	
 	pMicrocrackSize[idx] += pDilationalWaveSpeed[idx] * 
 	  ( 1 - exp(tensilStress/d_tensileStrength - 1) ) * delT;
+	if(pMicrocrackSize[idx] > sizeLimit) pMicrocrackSize[idx] = sizeLimit;
       }
    }
 
@@ -212,6 +219,11 @@ Fracture::~Fracture()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.39  2000/09/10 22:51:13  tan
+// Added particle rotationRate computation in computeStressTensor functions
+// in each constitutive model classes.  The particle rotationRate will be used
+// for fracture.
+//
 // Revision 1.38  2000/09/09 19:34:16  tan
 // Added MPMLabel::pVisibilityLabel and SerialMPM::computerNodesVisibility().
 //

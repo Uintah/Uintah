@@ -126,7 +126,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
                                            DataWarehouseP& old_dw,
                                            DataWarehouseP& new_dw)
 {
-  Matrix3 Identity,deformationGradientInc,B,velGrad;
+  Matrix3 Identity,deformationGradientInc,B,velGrad,rotationRate;
   double invar1,invar2,invar3,J,w1,w2,w3,i3w3,w1pi1w2;
   Identity.Identity();
   double c_dil = 0.0,se=0.0;
@@ -172,8 +172,10 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
   old_dw->get(delT, lb->delTLabel);
 
   ParticleVariable<int> pVisibility;
+  ParticleVariable<Vector> pRotationRate;
   if(matl->getFractureModel()) {
     new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
+    new_dw->allocate(pRotationRate, lb->pRotationRateLabel, pset);
   }
 
   for(ParticleSubset::iterator iter = pset->begin();
@@ -181,6 +183,11 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
      particleIndex idx = *iter;
 
      velGrad.set(0.0);
+     
+     if( matl->getFractureModel() ) {
+       rotationRate.set(0.0);
+     }
+     
      // Get the node indices that surround the cell
      IntVector ni[8];
      Vector d_S[8];
@@ -197,23 +204,39 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
       	vis.modifyShapeDerivatives(d_S);
      }
 
+     //ratation rate: (omega1,omega2,omega3)
+     double omega1 = 0;
+     double omega2 = 0;
+     double omega3 = 0;
+     
      for(int k = 0; k < 8; k++) {
-	 if(vis.visible(k) ) {
+	 if(vis.visible(k)) {	    
 	    Vector& gvel = gvelocity[ni[k]];
 	    for (int j = 0; j<3; j++){
 	       for (int i = 0; i<3; i++) {
-	          velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
+	          velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];		  
 	       }
 	    }
+
+	    //rotation rate computation, required for fracture
+            if(matl->getFractureModel()) {
+	      omega1 += gvel(3) * d_S[k](2) * oodx[2] - gvel(2) * d_S[k](3) * oodx[3];
+	      omega2 += gvel(1) * d_S[k](3) * oodx[3] - gvel(3) * d_S[k](1) * oodx[1];
+	      omega3 += gvel(2) * d_S[k](1) * oodx[1] - gvel(1) * d_S[k](2) * oodx[2];
+	    }
+	    
 	 }
      }
 
+     if( matl->getFractureModel() ) {
+        pRotationRate[idx] = Vector(omega1,omega2,omega3);
+     }
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
       // F_n^np1 = dudx * dt + Identity
       deformationGradientInc = velGrad * delT + Identity;
-
+      
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient[idx] = deformationGradientInc * deformationGradient[idx];
 
@@ -269,14 +292,18 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     new_dw->put(pstress, lb->pStressLabel_preReloc);
     new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
 
+    //
+    if( matl->getFractureModel() ) {
+      new_dw->put(pRotationRate, lb->pRotationRateLabel);
+      new_dw->put(pDilationalWaveSpeed, lb->pDilationalWaveSpeedLabel);
+    }
+
     new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
 
     // This is just carried forward.
     new_dw->put(cmdata, p_cmdata_label_preReloc);
     // Volume is currently just carried forward, but will be updated.
     new_dw->put(pvolume, lb->pVolumeDeformedLabel);
-
-    new_dw->put(pDilationalWaveSpeed, lb->pDilationalWaveSpeedLabel);
 }
 
 void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
@@ -307,17 +334,17 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
 		  Ghost::AroundCells, 1);
    task->requires(old_dw, lb->delTLabel);
 
-   if(matl->getFractureModel()) {
-      task->requires(new_dw, lb->pVisibilityLabel, matl->getDWIndex(), patch,
-			Ghost::AroundNodes, 1 );
-   }
-
    task->computes(new_dw, lb->pStressLabel_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
    task->computes(new_dw, p_cmdata_label_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
    
-   task->computes(new_dw, lb->pDilationalWaveSpeedLabel, matl->getDWIndex(), patch);
+   if(matl->getFractureModel()) {
+      task->requires(new_dw, lb->pVisibilityLabel, matl->getDWIndex(), patch,
+		  Ghost::None);
+      task->computes(new_dw, lb->pDilationalWaveSpeedLabel, matl->getDWIndex(), patch);
+      task->computes(new_dw, lb->pRotationRateLabel, matl->getDWIndex(),  patch);
+   }
 }
 
 double CompMooneyRivlin::computeStrainEnergy(const Patch* patch,
@@ -356,6 +383,11 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.61  2000/09/10 22:51:12  tan
+// Added particle rotationRate computation in computeStressTensor functions
+// in each constitutive model classes.  The particle rotationRate will be used
+// for fracture.
+//
 // Revision 1.60  2000/09/09 20:23:20  tan
 // Replace BrokenCellShapeFunction with particle visibility information in shape
 // function computation.

@@ -670,6 +670,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			 Ghost::None);
 	      t->requires( old_dw, lb->pMicrocrackSizeLabel, idx, patch,
 			 Ghost::None);
+	      t->requires( old_dw, lb->pVolumeLabel, idx, patch,
+			 Ghost::None);
 	      t->requires( new_dw, lb->pDilationalWaveSpeedLabel, idx, patch,
 			 Ghost::None);
 			 
@@ -1829,6 +1831,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.140  2000/09/10 22:51:09  tan
+// Added particle rotationRate computation in computeStressTensor functions
+// in each constitutive model classes.  The particle rotationRate will be used
+// for fracture.
+//
 // Revision 1.139  2000/09/09 20:39:12  tan
 // Modify interpolation weights and shape function derivatives when fracture
 // involved.

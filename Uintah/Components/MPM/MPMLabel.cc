@@ -20,6 +20,9 @@ MPMLabel::MPMLabel()
   pDilationalWaveSpeedLabel = scinew VarLabel("p.dilationalWaveSpeed",
 			ParticleVariable<double>::getTypeDescription());
 
+  pRotationRateLabel = scinew VarLabel("p.rotationRate",
+			ParticleVariable<Vector>::getTypeDescription());
+
   pVisibilityLabel = scinew VarLabel("p.visibility",
 			ParticleVariable<int>::getTypeDescription());
   
@@ -321,6 +324,11 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.33  2000/09/10 22:51:09  tan
+// Added particle rotationRate computation in computeStressTensor functions
+// in each constitutive model classes.  The particle rotationRate will be used
+// for fracture.
+//
 // Revision 1.32  2000/09/09 19:34:11  tan
 // Added MPMLabel::pVisibilityLabel and SerialMPM::computerNodesVisibility().
 //
