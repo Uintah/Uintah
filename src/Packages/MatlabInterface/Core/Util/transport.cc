@@ -45,7 +45,7 @@ void transport(int wordy, int flag, const char *hport, char *cmd)
 
   if(flag==2) /* Send character variable */
   {
-    int lbuf=strlen(cmd)+1;
+    int lbuf=static_cast<int>(strlen(cmd)+1);
     char cb[128];
     int  lcb=sizeof(cb);
     sprintf(cb,"%i %i %i %i %i\n",lbuf,1,endian(),1,lbuf);
