@@ -404,10 +404,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
                                                                  press_matl,
                                                                  ice_matls);
                                                                   
-  if(d_ice->switchTestConservation) {
-    d_ice->schedulePrintConservedQuantities(     sched, patches, ice_matls_sub,
+  d_ice->scheduleTestConservation(               sched, patches, ice_matls_sub,
                                                                  all_matls); 
-  }
 
   if(d_ice->d_canAddICEMaterial){
     //  This checks to see if the model on THIS patch says that it's
