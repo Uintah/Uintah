@@ -465,7 +465,7 @@ void PackageDB::loadPackage(bool resolve)
     gui->postMessage("\nFinished loading packages.",false);
     if (!getenv("SCI_NOSPLASH"))
     {
-      gui->execute("if [winfo exists .splash] {destroy .splash}");
+      gui->execute("if [winfo exists .splash] {hideSplash \"true\"}");
       gui->eval("update idletasks",result);
     }
   } else {
