@@ -55,9 +55,7 @@ class SampleField : public Module
   FieldOPort     *ofport_;  
   GeometryOPort  *ogport_;
 
-  FieldHandle    vfhandle_;
-
-  bool           firsttime_;
+  BBox           ifield_bbox_;
   int            widgetid_;
   int            wtype_;   // 0 none, 1 rake, 2 ring, 3 frame
   Point          endpoint0_;
@@ -79,23 +77,21 @@ class SampleField : public Module
   GuiInt rngInc_;
   GuiInt clamp_;
   GuiInt autoexec_;
-  GuiString widgetType_;
-  GuiString randDist_;
+  GuiString randDistribution_;
   GuiString whichTab_;
   GuiInt force_rake_reset_;
 
-  int vf_generation_;
-
-  void execute_rake();
-  void execute_ring();
-  void execute_frame();
-  void execute_random();
-
-public:
   CrowdMonitor widget_lock_;
   GaugeWidget *rake_;
   RingWidget *ring_;
   FrameWidget *frame_;
+
+  void execute_rake(FieldHandle ifield);
+  void execute_ring(FieldHandle ifield);
+  void execute_frame(FieldHandle ifield);
+  void execute_random(FieldHandle ifield);
+  bool bbox_similar_to(const BBox &a, const BBox &b);
+public:
   SampleField(GuiContext* ctx);
   virtual ~SampleField();
   virtual void execute();
@@ -108,8 +104,6 @@ DECLARE_MAKER(SampleField)
 
 SampleField::SampleField(GuiContext* ctx)
   : Module("SampleField", ctx, Filter, "FieldsCreate", "SCIRun"),
-    
-    firsttime_(true),
     widgetid_(0),
     wtype_(0),
     gui_wtype_(ctx->subVar("wtype")),
@@ -121,19 +115,16 @@ SampleField::SampleField(GuiContext* ctx)
     endpoint1y_(ctx->subVar("endpoint1y")),
     endpoint1z_(ctx->subVar("endpoint1z")),
     widgetscale_ (ctx->subVar("widgetscale")),
-
     maxSeeds_(ctx->subVar("maxseeds")),
     numSeeds_(ctx->subVar("numseeds")),
     rngSeed_(ctx->subVar("rngseed")),
     rngInc_(ctx->subVar("rnginc")),
     clamp_(ctx->subVar("clamp")),
     autoexec_(ctx->subVar("autoexecute")),
-    widgetType_(ctx->subVar("type")),
-    randDist_(ctx->subVar("dist")),
+    randDistribution_(ctx->subVar("dist")),
     whichTab_(ctx->subVar("whichtab")),
     force_rake_reset_(ctx->subVar("force-rake-reset", false)),
-    vf_generation_(0),
-    widget_lock_("StreamLines widget lock"),
+    widget_lock_("SampleField widget lock"),
     rake_(0),
     ring_(0),
     frame_(0)
@@ -176,41 +167,70 @@ SampleField::widget_moved(bool last)
 }
 
 
+static bool
+check_ratio(double x, double y, double lower, double upper)
+{
+  if (fabs(x) < 1e-6)
+  {
+    if (!(fabs(y) < 1e-6))
+    {
+      return false;
+    }
+  }
+  else
+  {
+    const double ratio = y / x;
+    if (ratio < lower || ratio > upper)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+bool
+SampleField::bbox_similar_to(const BBox &a, const BBox &b)
+{
+  return 
+    a.valid() &&
+    b.valid() &&
+    check_ratio(a.min().x(), b.min().x(), 0.5, 2.0) &&
+    check_ratio(a.min().y(), b.min().y(), 0.5, 2.0) &&
+    check_ratio(a.min().z(), b.min().z(), 0.5, 2.0) &&
+    check_ratio(a.min().x(), b.min().x(), 0.5, 2.0) &&
+    check_ratio(a.min().y(), b.min().y(), 0.5, 2.0) &&
+    check_ratio(a.min().z(), b.min().z(), 0.5, 2.0);
+}
+
+
 
 void
-SampleField::execute_rake()
+SampleField::execute_rake(FieldHandle ifield)
 {
-  force_rake_reset_.reset();
-  if (firsttime_ || force_rake_reset_.get())
+  const BBox ibox = ifield->mesh()->get_bounding_box();
+  if (!bbox_similar_to(ifield_bbox_, ibox) || force_rake_reset_.get())
   {
-    firsttime_ = false;
-
-    if(!endpoints_.get() || force_rake_reset_.get())
+    if (!endpoints_.get() || ifield_bbox_.valid() || force_rake_reset_.get())
     {
-      const BBox bbox = vfhandle_->mesh()->get_bounding_box();
-      const Point min = bbox.min();
-      const Point max = bbox.max();
+      const Point &min = ibox.min();
+      const Point &max = ibox.max();
 
-      Point center(min.x()+(max.x()-min.x())/2.,
-		   min.y()+(max.y()-min.y())/2.,
-		   min.z()+(max.z()-min.z())/2.);
-
-      double x  = max.x()-min.x();
-      double x2 = x*x;
-      double y  = max.y()-min.y();
-      double y2 = y*y;
-      double z  = max.z()-min.z();
-      double z2 = z*z;
+      const Point center(((max.asVector() + min.asVector()) * 0.5).asPoint());
+      const double dx  = max.x() - min.x();
+      const double dy  = max.y() - min.y();
+      const double dz  = max.z() - min.z();
   
-      const double quarterl2norm = sqrt(x2+y2+z2)/4.;
-      widgetscale_.set( quarterl2norm*.06 );// this size seems empirically good
+      // This size seems empirically good.
+      const double quarterl2norm = sqrt(dx * dx + dy * dy + dz * dz) / 4.0;
+      widgetscale_.set( quarterl2norm * .06 );
 
-      endpoint0x_.set( center.x()-quarterl2norm   );
-      endpoint0y_.set( center.y()-quarterl2norm/3 );
-      endpoint0z_.set( center.z()-quarterl2norm/4 );
-      endpoint1x_.set( center.x()+quarterl2norm   );
-      endpoint1y_.set( center.y()+quarterl2norm/2 );
-      endpoint1z_.set( center.z()+quarterl2norm/3 );
+      endpoint0x_.set( center.x() - quarterl2norm     );
+      endpoint0y_.set( center.y() - quarterl2norm / 3 );
+      endpoint0z_.set( center.z() - quarterl2norm / 4 );
+      endpoint1x_.set( center.x() + quarterl2norm     );
+      endpoint1y_.set( center.y() + quarterl2norm / 2 );
+      endpoint1z_.set( center.z() + quarterl2norm / 3 );
 
       endpoints_.set( 1 );
     }
@@ -218,17 +238,15 @@ SampleField::execute_rake()
     endpoint0_ = Point(endpoint0x_.get(),endpoint0y_.get(),endpoint0z_.get()); 
     endpoint1_ = Point(endpoint1x_.get(),endpoint1y_.get(),endpoint1z_.get()); 
 
-    
-    if (force_rake_reset_.get())
+    if (rake_)
     {
-      if (rake_)
-      {
-	rake_->SetEndpoints(endpoint0_,endpoint1_);
-	rake_->SetScale(widgetscale_.get());
-	if (wtype_ == 1) { ogport_->flushViews(); }
-      }
-      force_rake_reset_.set(0);
+      rake_->SetEndpoints(endpoint0_, endpoint1_);
+      rake_->SetScale(widgetscale_.get());
+      if (wtype_ == 1) { ogport_->flushViews(); }
     }
+
+    ifield_bbox_ = ibox;
+    force_rake_reset_.set(0);
   }
 
   if (!rake_)
@@ -287,10 +305,8 @@ SampleField::execute_rake()
 
 
 void
-SampleField::execute_ring()
+SampleField::execute_ring(FieldHandle ifield)
 {
-  warning("Ring not yet supported.\n");
-
   if (!ring_)
   {
     Vector xaxis0(0.0, 0.0, 0.2);
@@ -350,10 +366,8 @@ SampleField::execute_ring()
 
 
 void
-SampleField::execute_frame()
+SampleField::execute_frame(FieldHandle ifield)
 {
-  warning("Frame not yet supported.\n");
-
   if (!frame_)
   {
     Vector xaxis0(0.0, 0.0, 0.2);
@@ -422,14 +436,15 @@ SampleField::execute_frame()
 
 
 void
-SampleField::execute_random()
+SampleField::execute_random(FieldHandle ifield)
 {
-  const TypeDescription *mtd = vfhandle_->mesh()->get_type_description();
+  const TypeDescription *mtd = ifield->mesh()->get_type_description();
   CompileInfoHandle ci = SampleFieldRandomAlgo::get_compile_info(mtd);
   Handle<SampleFieldRandomAlgo> algo;
   if (!module_dynamic_compile(ci, algo)) return;
-  FieldHandle seedhandle(algo->execute(this, vfhandle_, numSeeds_.get(),
-				       rngSeed_.get(), randDist_.get(), 
+  FieldHandle seedhandle(algo->execute(this, ifield, numSeeds_.get(),
+				       rngSeed_.get(),
+				       randDistribution_.get(), 
 				       clamp_.get()));
   if (rngInc_.get())
   {
@@ -470,8 +485,9 @@ SampleField::execute()
     error("Unable to initialize oport 'Sampling Widget'.");
     return;
   }
+  FieldHandle ifield;
   // The field input is required.
-  if (!ifport_->get(vfhandle_) || !vfhandle_.get_rep())
+  if (!ifport_->get(ifield) || !ifield.get_rep())
   {
     error("Required input field is empty.");
     return;
@@ -483,20 +499,20 @@ SampleField::execute()
   {
     if (wtype == "rake")
     {
-      execute_rake();
+      execute_rake(ifield);
     }
     else if (wtype == "ring")
     {
-      execute_ring();
+      execute_ring(ifield);
     }
     else if (wtype == "frame")
     {
-      execute_frame();
+      execute_frame(ifield);
     }
   }
   else if (tab == "Random")
   {
-    execute_random();
+    execute_random(ifield);
   }
 }
 
