@@ -28,7 +28,10 @@ namespace SCIRun {
 
 using std::vector;
 using std::string;
+using std::ostringstream;
 
+class ContourGeom;
+typedef LockingHandle<ContourGeom> ContourGeomHandle;
 
 class ContourGeom : public PointCloudGeom
 {

@@ -24,10 +24,11 @@
 
 namespace SCIRun {
 
-using std::vector;
-using std::string;
+using namespace std;
 
-  
+class LatticeGeom;
+typedef LockingHandle<LatticeGeom> LatticeGeomHandle;
+
 class LatticeGeom : public StructuredGeom
 {
 public:
