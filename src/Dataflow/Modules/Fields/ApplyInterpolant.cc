@@ -596,9 +596,7 @@ ApplyInterpolant::execute()
       {
 	cout << "Non-interpable source field type\n";
       }
-    }
-#if 0
-    else if (itp_geom_name == "TriSurf")
+    } else if (itp_geom_name == "TriSurf")
     {
       if (src_data_name == "Vector")
       {
@@ -727,7 +725,6 @@ ApplyInterpolant::execute()
 	cout << "Non-interpable source field type\n";
       }
     }
-#endif
     else
     {
       cout << "bad interp field type";
@@ -821,7 +818,6 @@ ApplyInterpolant::execute()
 	cout << "Non-interpable source field type\n";
       }
     }
-#if 0
     else if (itp_geom_name == "TriSurf")
     {
       if (src_data_name == "Vector")
@@ -951,7 +947,6 @@ ApplyInterpolant::execute()
 	cout << "Non-interpable source field type\n";
       }
     }
-#endif
     else
     {
       cout << "bad interp field type";
