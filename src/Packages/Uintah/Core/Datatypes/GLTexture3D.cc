@@ -165,9 +165,9 @@ void GLTexture3D::build_texture()
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
 	       dynamic_cast<LevelField<float>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
-  } else if (type == "long int") {
+  } else if (type == "long") {
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
-	       dynamic_cast<LevelField<long int>*>(texfld_.get_rep()), 0, 
+	       dynamic_cast<LevelField<long>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
 //   } else if (type == "int") {
 //     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
@@ -252,8 +252,8 @@ GLTexture3D::get_dimensions( int& nx, int& ny, int& nz)
       dynamic_cast<LevelField<float>*>(texfld_.get_rep());
     mesh_ = fld->get_typed_mesh();
   } else if (type == "unsigned_int") {
-    LevelField<long int> *fld =
-      dynamic_cast<LevelField<long int>*>(texfld_.get_rep());
+    LevelField<long> *fld =
+      dynamic_cast<LevelField<long>*>(texfld_.get_rep());
     mesh_ = fld->get_typed_mesh();
   } else {
     cerr << "GLTexture3D constructor error - unknown LevelMesh type: " <<
