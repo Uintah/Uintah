@@ -8,20 +8,42 @@
  *   University of Utah
  *   March 1994
  *
+ *  Distribution mechanisms:
+ *   Michelle Miller
+ *   Feb. 1998
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <Classlib/Pstreams.h>
+
 #include <Datatypes/SimplePort.h>
 #include <Classlib/Assert.h>
+#include <Classlib/Timer.h>
 #include <Dataflow/Connection.h>
 #include <Dataflow/Module.h>
 #include <Malloc/Allocator.h>
+#include <TCL/Remote.h>
 
+#include <stdio.h>
 #include <iostream.h>
+#include <fstream.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #ifdef __GNUG__
 #pragma interface
 #endif
+
+//#define DEBUG 1
+
+extern char** global_argv;
+
+//CPUTimer timer;
+WallClockTimer timer1;
 
 template<class T>
 SimpleIPort<T>::SimpleIPort(Module* module, const clString& portname,
@@ -78,6 +100,16 @@ void SimpleOPort<T>::reset()
 template<class T>
 void SimpleOPort<T>::finish()
 {
+
+    // get timestamp here to measure communication time, print to screen
+    timer1.stop();
+    double time = timer1.time();
+    cerr << "Done in " << time << " seconds\n"; 
+
+#ifdef DEBUG
+    cerr << "Entering SimpleOPort<T>::finish()\n";
+#endif
+
     if(!sent_something && nconnections() > 0){
 	// Tell them that we didn't send anything...
 	turn_on(Finishing);
@@ -92,6 +124,10 @@ void SimpleOPort<T>::finish()
 	    }
 #endif
 	}
+
+#ifdef DEBUG
+	cerr << "Exiting SimpleOPort<T>::finish()\n";
+#endif
 	turn_off();
     }
 }
@@ -99,32 +135,55 @@ void SimpleOPort<T>::finish()
 template<class T>
 void SimpleOPort<T>::send(const T& data)
 {
-    handle=data;
-    if(nconnections() == 0)
+
+#ifdef DEBUG
+    cerr << "Entering SimpleOPort<T>::send (data)\n";
+#endif
+
+    handle = data;
+    if (nconnections() == 0)
 	return;
 #if 0
     if(sent_something){
-	// Tell the scheduler that we are going to do this...
-	cerr << "The data got sent twice - ignoring second one...\n";
-	return;
+      // Tell the scheduler that we are going to do this...
+      cerr << "The data got sent twice - ignoring second one...\n";
     }
 #endif
+
+    // change oport state and colors on screen
     turn_on();
-    for(int i=0;i<nconnections();i++){
-#if 0
-        if(connections[i]->demand){
-#endif
-	    SimplePortComm<T>* msg=scinew SimplePortComm<T>(data);
-	    ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
-#if 0
-	    connections[i]->demand--;
+
+    for (int i = 0; i < nconnections(); i++) {
+	if (connections[i]->isRemote()) {
+
+	    // start timer here
+	    timer1.clear();
+	    timer1.start();
+
+	    // send data - must only be binary files, text truncates and causes
+	    // problems when diffing outputs 
+   	    Piostream *outstream= new BinaryPiostream(connections[i]->remSocket,
+						      Piostream::Write);
+   	    if (!outstream) {
+                perror ("Couldn't open outfile");
+        	exit (-1);
+   	    }
+
+   	    // stream data out
+            Pio (*outstream, handle);
+   	    delete outstream;
+
 	} else {
-	    // Advise the module of the change...
-	  //connections[i]->iport->get_module()->mailbox.send(msg);
+            SimplePortComm<T>* msg = scinew SimplePortComm<T>(data);
+            ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
 	}
-#endif
     }
-    sent_something=1;
+    sent_something = 1;
+
+#ifdef DEBUG
+    cerr << "Exiting SimpleOPort<T>::send (data)\n";
+#endif
+
     turn_off();
 }
 
@@ -146,28 +205,65 @@ void SimpleOPort<T>::send_intermediate(const T& data)
 template<class T>
 int SimpleIPort<T>::get(T& data)
 {
+#ifdef DEBUG
+    cerr << "Entering SimpleIPort<T>::get (data)\n";
+#endif
+
     if(nconnections()==0)
 	return 0;
     turn_on();
+
 #if 0
     // Send the demand token...
     Connection* conn=connections[0];
     conn->oport->get_module()->mailbox.send(new Demand_Message(conn));
 #endif
 
-    // Wait for the data...
-    SimplePortComm<T>* comm=mailbox.receive();
-    recvd=1;
-    if(comm->have_data){
-       data=comm->data;
-       delete comm;
-       turn_off();
-       return 1;
-   } else {
-       delete comm;
-       turn_off();
-       return 0;
-   }
+    if (connections[0]->isRemote()) {
+
+        // receive data - unmarshal data read from socket. no auto_istream as
+	// it could try to mmap a file, which doesn't apply here.
+        Piostream *instream = new BinaryPiostream(connections[0]->remSocket,
+						  Piostream::Read);
+        if (!instream) {
+           perror ("Couldn't open infile");
+           exit (-1);
+        }
+        Pio (*instream, data);
+        delete instream;
+
+        if (!data.get_rep()) {
+           perror ("Error reading data from socket");
+           exit (-1);
+        }
+	
+#ifdef DEBUG
+ 	cerr << "SimpleIPort<T>::get (data) read data from socket\n";
+#endif
+	turn_off();
+	return 1;
+    } else {
+
+    	// Wait for the data...
+        SimplePortComm<T>* comm=mailbox.receive();
+        recvd=1;
+        if(comm->have_data){
+            data=comm->data;
+            delete comm;
+#ifdef DEBUG
+	    cerr << "SimpleIPort<T>::get (data) has data\n";
+#endif
+            turn_off();
+            return 1;
+        } else {
+#ifdef DEBUG
+	    cerr << "SimpleIPort<T>::get (data) mailbox has no data\n";
+#endif
+            delete comm;
+            turn_off();
+            return 0;
+        }
+    }
 }
 
 template<class T>
