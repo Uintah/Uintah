@@ -684,7 +684,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   }
   
   if (idx_flag) {
-    cout<<"Allocating space for  "<<total_nindices<<" indices"<<endl;
+    cout<<"Allocating space for "<<total_nindices<<" indices"<<endl;
     index_data=new int[total_nindices];
     if (!index_data) {
       cerr<<"failed to allocate "<<sizeof(int)*total_nindices<<" bytes "
