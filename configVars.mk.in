@@ -46,9 +46,10 @@ VPATH := $(SRCTOP)
 PACKAGE_DIRS := @PACKAGE_DIRS@
 PACKAGE_PATH := @PACKAGE_PATH@
 BUILD_PARALLEL := @BUILD_PARALLEL@
-ifeq ($(BUILD_PARALLEL),yes)
-COMPONENT_DIRS := Core/CCA/tools/sidl Core/CCA/Component
-endif
+# Dd: don't need to do it explicitly this way... I think.
+#ifeq ($(BUILD_PARALLEL),yes)
+#COMPONENT_DIRS := Core/CCA/tools/sidl Core/CCA/Component
+#endif
 
 # These cannot be :=
 THREAD_IMPL = $(SRCDIR)/@THREAD_IMPL@
@@ -163,7 +164,7 @@ XML_TLINK := -L$(XML_LIB_DIR)
 
 ifeq ($(BUILD_PARALLEL),yes)
 GLOBUS_LIB_DIR := @GLOBUS_LIB@
-GLOBUS_LIBS := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_nexus
+GLOBUS_LIBS := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_nexus -lglobus_io -lglobus_dc -lglobus_common
 GLOBUS_COMMON := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_common
 GLOBUS_TLINK := -L$(GLOBUS_LIB_DIR)
 endif
