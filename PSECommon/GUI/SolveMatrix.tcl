@@ -283,7 +283,7 @@ itcl_class PSECommon_Matrix_SolveMatrix {
     }
     
     method append_graph {iter values errvalues} {
-	puts "append_graph $iter $values $errvalues"
+#	puts "append_graph $iter $values $errvalues"
 	set w .ui[modname]
 	if {![winfo exists $w]} {
 	    return
@@ -297,8 +297,8 @@ itcl_class PSECommon_Matrix_SolveMatrix {
 		incr i
 		lappend yvals [lindex $values $i]
 	    }
-	    puts "xevals=$xvals"
-	    puts "yevals=$yvals"
+#	    puts "xevals=$xvals"
+#	    puts "yevals=$yvals"
 	    $w.graph element configure "Current Error" -xdata $xvals
 	    $w.graph element configure "Current Error" -ydata $yvals
 	}
@@ -311,8 +311,8 @@ itcl_class PSECommon_Matrix_SolveMatrix {
 		incr i
 		lappend yvals [lindex $errvalues $i]
 	    }
-	    puts "xtvals=$xvals"
-	    puts "ytvals=$yvals"
+#	    puts "xtvals=$xvals"
+#	    puts "ytvals=$yvals"
 	    $w.graph element configure "Target Error" -xdata $xvals
 	    $w.graph element configure "Target Error" -ydata $yvals
 	}
