@@ -34,6 +34,7 @@
 #include "utilities.h"
 #include "HYPRE_struct_ls.h"
 #include "krylov.h"
+#include "struct_mv.h"
 
 #undef CHKERRQ
 #define CHKERRQ(x) if(x) throw PetscError(x, __FILE__);
@@ -484,10 +485,25 @@ HypreSolver::pressLinearSolve()
      19 = CG as the solver with no preconditioner
   */
      
-  
+  HYPRE_StructVector tmp;  
   int num_iterations;
   int n_pre, n_post, skip;
-  double final_res_norm;
+  double sum_b, iprod, init_norm, final_res_norm;
+
+  /*Calculating initial norm*/
+  HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &tmp);
+  HYPRE_StructVectorInitialize(tmp);  
+  hypre_StructCopy(d_b,tmp);
+  hypre_StructMatvec(1.0, d_A, d_x, -1.0,tmp);
+  iprod = hypre_StructInnerProd(tmp,tmp);
+  init_norm = sqrt(iprod);
+  HYPRE_StructVectorDestroy(tmp);
+
+  /*Calculating sum of RHS*/
+  iprod = hypre_StructInnerProd(d_b,d_b);
+  sum_b = sqrt(iprod);
+
+  
   n_pre = 1;
   n_post = 1;
   skip = 1;
@@ -620,6 +636,8 @@ HypreSolver::pressLinearSolve()
   }
   if(me == 0) {
     cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", solver time: " << Time::currentSeconds()-start_time << " seconds\n";
+    cerr << "Init Norm: " << init_norm << " Error reduced by: " <<  final_res_norm/init_norm << endl;
+    cerr << "Sum of RHS vector: " << sum_b << endl;
   }
   if (final_res_norm < 2.0)
     return true;
