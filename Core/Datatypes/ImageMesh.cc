@@ -196,6 +196,7 @@ ImageMesh::get_neighbor(Face::index_type &neighbor,
 			Face::index_type from,
 			Edge::index_type edge) const
 {
+  neighbor.mesh_ = this;
   const int j_idx = edge - (ni_-1) * nj_;
   if (j_idx >= 0)
   {
@@ -241,7 +242,6 @@ ImageMesh::get_neighbors(Face::array_type &array, Face::index_type idx) const
 int
 ImageMesh::get_valence(Edge::index_type idx) const
 {
-  
   const int j_idx = idx - (ni_-1) * nj_;
   if (j_idx >= 0)
   {
