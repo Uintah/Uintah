@@ -21,6 +21,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Thread/CrowdMonitor.h>
 #include <iostream>
 
 #include <Packages/BioPSE/share/share.h>
