@@ -110,13 +110,13 @@ setenv PATH $JAVA_HOME/bin:$PATH
       available on the <ulink
       url="http://www.itk.org"><acronym>ITK</acronym> web
       site</ulink>.  SCIRun supports <acronym>ITK</acronym> versions
-      1.6, 1.8, and 1.10.
+      1.6, 1.8, and 2.0.
     </para>
 
     <note os="linux;osx">
       <para>
 	<acronym>ITK</acronym> versions 1.6 and 1.8 are not compatible
-	with GCC 3.4.  Use <acronym>ITK</acronym> 1.10 if compiling
+	with GCC 3.4.  Use <acronym>ITK</acronym> 2.0 if compiling
 	with GCC 3.4.
       </para>
     </note>

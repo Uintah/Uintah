@@ -44,7 +44,7 @@ DEALINGS IN THE SOFTWARE.
   <para>
     Note that SCIRun is compatible with GCC 3.4. However,  when building
     ITK, for use with
-    SCIRun's ITK package, ITK version 1.10 must be used because
+    SCIRun's ITK package, ITK version 2.0 must be used because
     earlier ITK versions are not compatible with GCC 3.4.
   </para>
 </listitem>}
