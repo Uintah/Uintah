@@ -41,7 +41,6 @@ WARNING
 #define FORT_AREAIN areain_
 #define FORT_PROFV profv_
 #define FORT_PROFSCALAR profscalar_
-#define FORT_SMAGMODEL smagmodel_
 #define FORT_SCALARVARMODEL scalarvarmodel_
 #define FORT_CALPBC calpbc_
 #define FORT_INLBCS inlbcs_
@@ -211,25 +210,6 @@ extern "C"
 		    double * sValue, const int* celltypeval,
 		    int* xminus, int* xplus, int* yminus, int* yplus,
 		    int* zminus, int* zplus);
-
-    ////////////////////////////////////////////////////////////////////////
-    // turbulence model
-    void
-    FORT_SMAGMODEL(const int* domLoU, const int* domHiU, 
-		   double* uVelocity, 
-		   const int* domLoV, const int* domHiV, 
-		   double* vVelocity, 
-		   const int* domLoW, const int* domHiW, 
-		   double* wVelocity, 
-		   const int* domLoDen, const int* domHiDen, 
-		   double* density,
-		   const int* domLoVis, const int* domHiVis, 
-		   const int* idxLoVis, const int* idxHiVis,
-		   double* viscosity,
-		   const int* domLo, const int* domHi, 
-		   double* sew, double * sns, double* stb, double* mol_visc,
-		   double* cf, double* fac_msh, double* filterl);
-
 
     ////////////////////////////////////////////////////////////////////////
     // sub-grid scale scalar variance model
@@ -1323,12 +1303,6 @@ extern "C"
 			 const int* wallid,
 			 int* xminus, int* xplus, int* yminus, int* yplus,
 			 int* zminus, int* zplus);
-
-
-
-
-
-
 
 }
 

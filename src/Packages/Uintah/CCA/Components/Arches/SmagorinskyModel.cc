@@ -29,6 +29,8 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
+#include <Packages/Uintah/CCA/Components/Arches/fortran/smagmodel_fort.h>
+
 //****************************************************************************
 // Default constructor for SmagorinkyModel
 //****************************************************************************
@@ -221,21 +223,10 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
     // get physical constants
     double mol_viscos; // molecular viscosity
     mol_viscos = d_physicalConsts->getMolecularViscosity();
-    FORT_SMAGMODEL(domLoVelx.get_pointer(), domHiVelx.get_pointer(), 
-		   uVelocity.getPointer(),
-		   domLoVely.get_pointer(), domHiVely.get_pointer(), 
-		   vVelocity.getPointer(),
-		   domLoVelz.get_pointer(), domHiVelz.get_pointer(), 
-		   wVelocity.getPointer(),
-		   domLoDen.get_pointer(), domHiDen.get_pointer(), 
-		   density.getPointer(),
-		   domLoVis.get_pointer(), domHiVis.get_pointer(), 
-		   lowIndex.get_pointer(), highIndex.get_pointer(), 
-		   viscosity.getPointer(),
-		   domLo.get_pointer(), domHi.get_pointer(),
-		   cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
-		   cellinfo->stb.get_objs(), &mol_viscos,
-		   &d_CF, &d_factorMesh, &d_filterl);
+    fort_smagmodel(uVelocity, vVelocity, wVelocity, density, viscosity,
+		   lowIndex, highIndex,
+		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
+		   mol_viscos, d_CF, d_factorMesh, d_filterl);
 
 #ifdef multimaterialform
     if (d_mmInterface) {
@@ -357,23 +348,11 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     IntVector domHiVis = viscosity.getFortHighIndex();
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
-    
-    FORT_SMAGMODEL(domLoU.get_pointer(), domHiU.get_pointer(), 
-		   uVelocity.getPointer(),
-		   domLoV.get_pointer(), domHiV.get_pointer(), 
-		   vVelocity.getPointer(),
-		   domLoW.get_pointer(), domHiW.get_pointer(), 
-		   wVelocity.getPointer(),
-		   domLoDen.get_pointer(), domHiDen.get_pointer(), 
-		   density.getPointer(),
-		   domLoVis.get_pointer(), domHiVis.get_pointer(),
-		   idxLo.get_pointer(), idxHi.get_pointer(), 
-		   viscosity.getPointer(),
-		   domLo.get_pointer(), domHi.get_pointer(),
-		   cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
-		   cellinfo->stb.get_objs(), &mol_viscos,
-		   &d_CF, &d_factorMesh, &d_filterl);
 
+    fort_smagmodel(uVelocity, vVelocity, wVelocity, density, viscosity,
+		   idxLo, idxHi,
+		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
+		   mol_viscos, d_CF, d_factorMesh, d_filterl);
 
     if (d_MAlab) {
       IntVector indexLow = patch->getCellLowIndex();
