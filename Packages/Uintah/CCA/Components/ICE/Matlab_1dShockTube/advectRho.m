@@ -6,7 +6,7 @@ function [q_advected,gradLim,grad_x, rho_slab, rho_vrtx_1, rho_vrtx_2] = ...
 
 [gradLim, grad_x, rho_vrtx_1, rho_vrtx_2]   = gradientLimiter_Rho(rho, delX, nCells);
 [rho_slab, gradLim, grad_x]                 = qAverageFluxRho(rho, rx, grad_x, gradLim, nCells);
-q_advected                                  = advectSlabs(xvel_FC, rho_slab, ofs, nCells);
+q_advected                                  = advectSlabs(xvel_FC, rho_slab, ofs, nCells,delX);
 
 %_____________________________________________________________
 % Function: gradientLimiter_Rho
@@ -52,7 +52,7 @@ end
 % computes Q in the slab according to the reference. 
 function [q_slab, gradLim, grad_x] = qAverageFluxRho(q, rx, grad_x, gradLim, nCells)
 fprintf('Inside qAverageFluxRho\n');
-q_slab      = zeros(1,nCells,1);
+q_slab      = zeros(1,nCells);
 for j = 1:nCells                                                % For cells 1 and nCells, disregard contributions in this matlab code (note: grads=0 there)
     q_slab(j) = q(j);                                           % Limiter=0, first order upwind scheme
 %    q_slab(j) = q(j) + grad_x(j) * gradLim(j) * rx(j);          % Eq.(3.2.9)
