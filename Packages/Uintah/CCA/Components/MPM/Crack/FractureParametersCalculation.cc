@@ -8,7 +8,7 @@
 #include "Crack.h"
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h> // for Fracture
+#include <Packages/Uintah/Core/Math/Short27.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -739,7 +739,7 @@ void Crack::OutputCrackFrontResults(const int& m)
                   << setw(15) << cp.z()
                   << setw(15) << cfPara.x()
                   << setw(15) << cfPara.y()
-                  << setw(15) << cfPara.z();
+                  << setw(5) << cfPara.z();
         if(cfPara.x()!=0.) 
           outCrkFrt << setw(15) << cfPara.y()/cfPara.x() << endl;
         else 
