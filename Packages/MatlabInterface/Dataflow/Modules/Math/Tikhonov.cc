@@ -64,10 +64,10 @@ void Tikhonov::execute()
 
   MatrixHandle mh1,mh2,mh3,mh4;
 
-  iport1 = (MatrixIPort *)get_iport("Matrix1");
-  iport2 = (MatrixIPort *)get_iport("Matrix2");
-  oport1 = (MatrixOPort *)get_oport("Matrix1");
-  oport2 = (MatrixOPort *)get_oport("Matrix2");
+  iport1 = (MatrixIPort *)get_iport("Lead Field (Sensitivity) Matrix");
+  iport2 = (MatrixIPort *)get_iport("RHS (data)");
+  oport1 = (MatrixOPort *)get_oport("Resulting Model (Sources)");
+  oport2 = (MatrixOPort *)get_oport("Residual");
 
   if (!iport1) {
     postMessage("Unable to initialize "+name+"'s iport\n");
