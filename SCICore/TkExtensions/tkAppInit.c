@@ -270,15 +270,22 @@ printf("main = %p\n", main);
      * Call Tcl_CreateCommand for application-specific commands, if
      * they weren't already created by the init procedures called above.
      */
+
+#ifdef _WIN32
+#define PARAMETERTYPE int*
+#else
+#define PARAMETERTYPE
+#endif
+
 #ifdef SCI_OPENGL
     Tcl_CreateCommand(interp, "opengl", OpenGLCmd, (ClientData) Tk_MainWindow(interp),
-		      (void (*)()) NULL);
+		      (void (*)(PARAMETERTYPE)) NULL);
 #endif
 	printf("Adding bevel\n");
     Tcl_CreateCommand(interp, "bevel", BevelCmd, (ClientData) Tk_MainWindow(interp),
-		      (void (*)()) NULL);
+		      (void (*)(PARAMETERTYPE)) NULL);
     Tcl_CreateCommand(interp, "range", Tk_RangeCmd, (ClientData) Tk_MainWindow(interp),
-                      (void (*)()) NULL);
+                      (void (*)(PARAMETERTYPE)) NULL);
     Tcl_CreateCommand(interp, "cursor", Tk_CursorCmd,
 		      (ClientData) Tk_MainWindow(interp), NULL);
 
