@@ -107,13 +107,13 @@ void Scene::preprocess(double bvscale, int& pp_offset, int& scratchsize)
 	if(lights[i]->radius > maxradius)
 	    maxradius=lights[i]->radius;
     maxradius*=bvscale;
-    double time=Time::currentSeconds();
+    double time=SCIRun::Time::currentSeconds();
     obj->preprocess(maxradius, pp_offset, scratchsize);
     if(shadowobj)
 	shadowobj->preprocess(maxradius, pp_offset, scratchsize);
     else
 	shadowobj=obj;
-    cerr << "Preprocess took " << Time::currentSeconds()-time << " seconds\n";
+    cerr << "Preprocess took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
 }
 
 void Scene::copy_camera(int which)
