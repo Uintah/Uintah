@@ -761,6 +761,17 @@ template<class A, class B>
 void Heightfield<A,B>::intersect(Ray& ray, HitInfo& hit,
 				 DepthStats* st, PerProcessorContext* ppc)
 {
+  if (ray.already_tested[0] == this ||
+      ray.already_tested[1] == this ||
+      ray.already_tested[2] == this ||
+      ray.already_tested[3] == this)
+    return;
+  else {
+    ray.already_tested[3] = ray.already_tested[2];
+    ray.already_tested[2] = ray.already_tested[1];
+    ray.already_tested[1] = ray.already_tested[0];
+    ray.already_tested[0] = this;
+  }  
     const Vector dir(ray.direction());
     const Point orig(ray.origin());
     Point max(min+hierdiag);

@@ -484,10 +484,11 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     cerr << "camera->eyesep="<<activeGui->camera_->get_eyesep()<<"\n";
     break;
   case 'o':
+    printf("Number materials: %d\n",activeGui->dpy_->scene->nmaterials());
     for (int m=0; m<activeGui->dpy_->scene->nmaterials(); m++) {
       CycleMaterial * cm =
 	dynamic_cast<CycleMaterial*>(activeGui->dpy_->scene->get_material(m));
-      if (cm) cm->next();
+      if (cm) { cm->next(); printf("Got a cycle material!\n");}
     }
     break;
 

@@ -29,6 +29,7 @@ rtrt -np 14 -eye -10.2111 -16.2099 1.630637 -lookat -11.7826 -20.5142 0.630637 -
 
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Grid.h>
+#include <Packages/rtrt/Core/HierarchicalGrid.h>
 #include <Packages/rtrt/Core/Disc.h>
 #include <Packages/rtrt/Core/Ring.h>
 #include <Packages/rtrt/Core/Group.h>
@@ -69,6 +70,8 @@ rtrt -np 14 -eye -10.2111 -16.2099 1.630637 -lookat -11.7826 -20.5142 0.630637 -
 #include <Packages/rtrt/Core/ply.h>
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/PerlinBumpMaterial.h>
+#include <Packages/rtrt/Core/PLYReader.h>
+#include <Packages/rtrt/Core/TriMesh.h>
 
 using namespace rtrt;
 using namespace SCIRun;
@@ -76,205 +79,6 @@ using namespace SCIRun;
 #define MAXBUFSIZE 256
 #define IMG_EPS 0.01
 #define SCALE 500
-
-typedef struct Vertex {
-  float x,y,z;             /* the usual 3-space position of a vertex */
-} Vertex;
-
-typedef struct Face {
-  unsigned char nverts;    /* number of vertex indices in list */
-  int *verts;              /* vertex index list */
-} Face;
-
-typedef struct TriStrip {
-  int nverts;    /* number of vertex indices in list */
-  int *verts;              /* vertex index list */
-} TriStrip;
-
-char *elem_names[] = { /* list of the kinds of elements in the user's object */
-  "vertex", "face", "tristrips"
-};
-
-PlyProperty vert_props[] = { /* list of property information for a vertex */
-  {"x", PLY_FLOAT, PLY_FLOAT, offsetof(Vertex,x), 0, 0, 0, 0},
-  {"y", PLY_FLOAT, PLY_FLOAT, offsetof(Vertex,y), 0, 0, 0, 0},
-  {"z", PLY_FLOAT, PLY_FLOAT, offsetof(Vertex,z), 0, 0, 0, 0},
-};
-
-PlyProperty face_props[] = { /* list of property information for a vertex */
-  {"vertex_indices", PLY_INT, PLY_INT, offsetof(Face,verts),
-   1, PLY_UCHAR, PLY_UCHAR, offsetof(Face,nverts)},
-};
-
-PlyProperty tristrip_props[] = { /*list of property information for a vertex*/
-  {"vertex_indices", PLY_INT, PLY_INT, offsetof(TriStrip,verts),
-   1, PLY_INT, PLY_INT, offsetof(TriStrip,nverts)},
-};
-
-Group *
-read_ply(char *fname, Material* matl)
-{
-  Group *g = new Group();
-  int i,j,k;
-  PlyFile *ply;
-  int nelems;
-  char **elist;
-  int file_type;
-  float version;
-  int nprops;
-  int num_elems;
-  PlyProperty **plist;
-  Vertex **vlist;
-  char *elem_name;
-  int num_comments;
-  char **comments;
-  int num_obj_info;
-  char **obj_info;
-
-  int NVerts=0;
-
-  /* open a PLY file for reading */
-  ply = ply_open_for_reading(fname, &nelems, &elist, &file_type, &version);
-  /* print what we found out about the file */
-  printf ("version %f\n", version);
-  printf ("type %d\n", file_type);
-
-  /* go through each kind of element that we learned is in the file */
-  /* and read them */
-  
-  for (i = 0; i < nelems; i++) {
-
-    /* get the description of the first element */
-    elem_name = elist[i];
-    plist = ply_get_element_description (ply, elem_name, &num_elems, &nprops);
-    
-    /* print the name of the element, for debugging */
-    printf ("element %s %d\n", elem_name, num_elems);
-    
-    /* if we're on vertex elements, read them in */
-    if (equal_strings ("vertex", elem_name)) {
-      
-      /* create a vertex list to hold all the vertices */
-      vlist = (Vertex **) malloc (sizeof (Vertex *) * num_elems);
-      
-      NVerts = num_elems;
-
-      /* set up for getting vertex elements */
-      
-      ply_get_property (ply, elem_name, &vert_props[0]);
-      ply_get_property (ply, elem_name, &vert_props[1]);
-      ply_get_property (ply, elem_name, &vert_props[2]);
-      
-      /* grab all the vertex elements */
-      for (j = 0; j < num_elems; j++) {
-	
-        /* grab and element from the file */
-        vlist[j] = (Vertex *) malloc (sizeof (Vertex));
-        ply_get_element (ply, (void *) vlist[j]);
-	
-        /* print out vertex x,y,z for debugging */
-//          printf ("vertex: %g %g %g\n", vlist[j]->x, vlist[j]->y, vlist[j]->z);
-      }
-    }
-    
-    /* if we're on face elements, read them in */
-    if (equal_strings ("face", elem_name)) {
-      
-      /* set up for getting face elements */
-      
-      ply_get_property (ply, elem_name, &face_props[0]);
-      
-      /* grab all the face elements */
-
-      // don't need to save faces for this application,
-      // so discard after use.
-      Face face;
-      for (j = 0; j < num_elems; j++) {
-	
-        /* grab an element from the file */
-        ply_get_element (ply, (void *) &face);
-	
-        /* print out face info, for debugging */
-        for (k = 0; k < face.nverts-2; k++) {
-	  Vertex *v0 = vlist[face.verts[0]];
-	  Vertex *v1 = vlist[face.verts[k+1]];
-	  Vertex *v2 = vlist[face.verts[k+2]];
-	  
-	  Point p0(v0->x,v0->y,v0->z);
-	  Point p1(v1->x,v1->y,v1->z);
-	  Point p2(v2->x,v2->y,v2->z);
-	  
-	  g->add(new Tri(matl,p0,p1,p2));
-	}
-      }
-    }
-
-    /* if we're on triangle strip elements, read them in */
-    if (equal_strings ("tristrips", elem_name)) {
-      
-      /* set up for getting face elements */
-      
-      ply_get_property (ply, elem_name, &tristrip_props[0]);
-      
-      TriStrip strip;
-
-      /* grab all the face elements */
-      for (j = 0; j < num_elems; j++) {
-	
-        /* grab an element from the file */
-        ply_get_element (ply, (void *) &strip);
-	
-	/* Make triangle strips from vertices */
-        for (k = 0; k < strip.nverts-2; k++) {
-	  int idx0 = strip.verts[k+0];
-	  int idx1 = strip.verts[k+1];
-	  int idx2 = strip.verts[k+2];
-
-	  if (idx0 < 0 || idx1 < 0 || idx2 < 0)
-	    {
-	      continue;
-	    }
-
-	  Vertex *v0 = vlist[idx0];
-	  Vertex *v1 = vlist[idx1];
-	  Vertex *v2 = vlist[idx2];
-
-	  Point p0(v0->x,v0->y,v0->z);
-	  Point p1(v1->x,v1->y,v1->z);
-	  Point p2(v2->x,v2->y,v2->z);
-
-	  
-	  g->add(new Tri(matl,p0,p1,p2));
-
-	}
-      }
-    }
-    /* print out the properties we got, for debugging */
-    /*    for (j = 0; j < nprops; j++)
-	  printf ("property %s\n", plist[j]->name); */
-  }
-  /* grab and print out the comments in the file */
-  comments = ply_get_comments (ply, &num_comments);
-  for (i = 0; i < num_comments; i++)
-    printf ("comment = '%s'\n", comments[i]);
-  
-  /* grab and print out the object information */
-  obj_info = ply_get_obj_info (ply, &num_obj_info);
-  for (i = 0; i < num_obj_info; i++)
-    printf ("obj_info = '%s'\n", obj_info[i]);
-
-  /* close the PLY file */
-  ply_close (ply);
-
-  printf("*********************************DONE************************\n");
-
-  for (int j=0; j<NVerts; j++)
-      delete vlist[j];
-  delete(vlist);
-
-  return g;
-
-}
 
 void add_image_on_wall (char *image_name, const Point &top_left, 
 			 const Vector &right, const Vector &down,
@@ -1033,7 +837,7 @@ historyg);
   }
   fclose(fp);
 
-  main_group->add(new Grid(teapot_g,5));
+  main_group->add(new Grid(teapot_g,10));
 
   /* **************** car **************** */
   historyg->add (new Parallelogram(lightblue,
@@ -1135,7 +939,6 @@ historyg);
   historyg->add (new Ring(flat_white, RingsPoint+Vector(0,0,0.25),
 			  Vector(-.2,-.25,1),0.2915,0.04));  
 
-  
   /* **************** Billiard Balls **************** */
   historyg->add (new Parallelogram(black,
 				   BallsPoint-Vector(ped_size/2.,ped_size/2.,-0.001),
@@ -1329,7 +1132,8 @@ historyg);
 }
 
 void build_david_room (Group* main_group, Scene *scene) {
-  Material* david_white = new LambertianMaterial(Color(.8,.75,.7));
+//    Material* david_white = new LambertianMaterial(Color(.8,.75,.7));
+  Material* david_white = new PhongMaterial(Color(.8,.75,.7),1,.2,40);
   Material* flat_white = new LambertianMaterial(Color(.8,.8,.8));
   Material* light_marble1 
     = new CrowMarble(4.5, Vector(.3, .3, 0), Color(.9,.9,.9), 
@@ -1349,7 +1153,7 @@ void build_david_room (Group* main_group, Scene *scene) {
 
   /*  0 for David, 1 for Bender */
 
-#if 0
+#if 1
  Transform bender_trans;
   Point bender_center (-12.5,-20,0);
 
@@ -1383,7 +1187,9 @@ void build_david_room (Group* main_group, Scene *scene) {
   g->add(davidg);
     */
 
-  Group* davidg = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_2mm.ply",david_white);
+    Group* davidg = new Group();
+    TriMesh* david_tm = new TriMesh();
+    read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_2mm.ply",david_white, david_tm, davidg);
 
   BBox david_bbox;
 
@@ -1405,7 +1211,7 @@ void build_david_room (Group* main_group, Scene *scene) {
   davidT.pre_scale(Vector(.001,.001,.001)); // make units meters
   davidT.pre_translate(dav_ped_top.asVector());
 
-  davidg->transform(davidT);
+  david_tm->transform(davidT);
 
   david_bbox.reset();
   davidg->compute_bounds(david_bbox,0);
@@ -1418,7 +1224,8 @@ void build_david_room (Group* main_group, Scene *scene) {
 	 min.x(),min.y(), min.z(),
 	 max.x(),max.y(), max.z(),
 	 diag.x(),diag.y(),diag.z());
-  main_group->add(new Grid(davidg,64));
+  main_group->add(new HierarchicalGrid(davidg,
+				       16,64,64,32,1024,4));
 
 #endif
 
@@ -1518,13 +1325,12 @@ void build_david_room (Group* main_group, Scene *scene) {
 		   t, ropeg6)) {
     exit(0);
   }
-  main_group->add(new Grid(ropeg1,15));
-  main_group->add(new Grid(ropeg2,15));
-  main_group->add(new Grid(ropeg3,15));
-  main_group->add(new Grid(ropeg4,15));
-  main_group->add(new Grid(ropeg5,15));
-  main_group->add(new Grid(ropeg6,15));
-
+  main_group->add(new HierarchicalGrid(ropeg1,6,16,64,8,1024,4));
+  main_group->add(new HierarchicalGrid(ropeg2,6,16,64,8,1024,4));
+  main_group->add(new HierarchicalGrid(ropeg3,6,16,64,8,1024,4));
+  main_group->add(new HierarchicalGrid(ropeg4,8,16,64,8,1024,4));
+  main_group->add(new HierarchicalGrid(ropeg5,6,16,64,8,1024,4));
+  main_group->add(new HierarchicalGrid(ropeg6,6,16,64,8,1024,4));
 
   /* **************** images on North partition in David room **************** */
   Group* david_nwall=new Group();
@@ -1717,7 +1523,9 @@ void build_modern_room (Group *main_group, Scene *scene) {
 				    60);
 
   // read in the dragon geometry
-  Group* dragong = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip_res4.ply",shiny_green);
+  TriMesh* dragon_tm = new TriMesh();
+  Group* dragong = new Group();
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip_res4.ply",shiny_green,dragon_tm,dragong);
   
   BBox dragon_bbox;
 
@@ -1743,7 +1551,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
 			   dragon_scale));
   dragonT.pre_translate(dragon_ped_top.asVector());
 
-  dragong->transform(dragonT);
+  dragon_tm->transform(dragonT);
 
   dragon_bbox.reset();
   dragong->compute_bounds(dragon_bbox,0);
@@ -1811,7 +1619,9 @@ void build_modern_room (Group *main_group, Scene *scene) {
 				    buddha_spec,
 				    40);
 
-Group* buddhag = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip_res2.ply",buddha_mat);
+  TriMesh* buddha_tm = new TriMesh();
+  Group* buddhag = new Group();
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip_res2.ply",buddha_mat,buddha_tm,buddhag);
 
   BBox buddha_bbox;
 
@@ -1850,7 +1660,7 @@ Group* buddhag = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip
 	 bmin.x(),bmin.y(), bmin.z(),
 	 bmax.x(),bmax.y(), bmax.z(),
 	 bdiag.x(),bdiag.y(),bdiag.z());
-  main_group->add(new Grid(buddhag,64));
+  main_group->add(new HierarchicalGrid(buddhag,16,16,64,16,1024,4));
 
 
   /*  UNC well */
@@ -1866,7 +1676,7 @@ Group* buddhag = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip
 		   t, well_g)) {
       exit(0);
   }
-  main_group->add( new Grid(well_g,10));
+  main_group->add( new HierarchicalGrid(well_g,10,10,10,8,8,4));
 
   // along north wall
   /* Stanford bunny */
@@ -1927,7 +1737,7 @@ Group* buddhag = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip
   delete vert;
   fclose(fp);
 
-  main_group->add (new Grid(bunny,32));
+  main_group->add (new HierarchicalGrid(bunny,8,16,16,16,1024,4));
 
   /*  Venus  */
   Point venus_ped_top(-13,-6,0.2*ped_ht);
@@ -1935,7 +1745,9 @@ Group* buddhag = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip
 		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
 
   // read in the venus geometry
-    Group* venusg = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/venus.ply",flat_white);
+  TriMesh* venus_tm;
+  Group* venusg = new Group();
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/venus.ply",flat_white, venus_tm, venusg);
 
   BBox venus_bbox;
 
@@ -1971,17 +1783,14 @@ Group* buddhag = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip
 	 vmin.x(),vmin.y(), vmin.z(),
 	 vmax.x(),vmax.y(), vmax.z(),
 	 vdiag.x(),vdiag.y(),vdiag.z());
-  main_group->add(new Grid(venusg,64));
+  main_group->add(new HierarchicalGrid(venusg,16,32,64,8,1024,4));
 
 
   // center of room
-  /* rtrt room 
   Point rtrt_room_centerpt(-14,-10,.6);
   double rtrt_room_radius = .6;
   add_pedestal (moderng, rtrt_room_centerpt-Vector(0.6,0.6,0),
 		Vector(1.2,1.2,-rtrt_room_radius));
-  moderng->add(insert_rtrt_room(rtrt_room_centerpt,rtrt_room_radius));
-  */
 
   // St Matthew's Pedestal in northwest corner of room
   UVCylinderArc* StMattPed = (new UVCylinderArc(light_marble1, 
@@ -2312,7 +2121,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   //  Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane, 0.5); 
 
-  Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane, 0.5, 
+  Scene *scene = new Scene(new Grid(g,16), cam, bgcolor, cdown, cup, groundplane, 0.5, 
 			   Sphere_Ambient);
   EnvironmentMapBackground *emap = new EnvironmentMapBackground ("/usr/sci/data/Geometry/textures/holo-room/environmap2.ppm", Vector(0,0,1));
   scene->set_ambient_environment_map(emap);

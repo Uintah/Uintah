@@ -57,7 +57,14 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/single-sphere.mo  \
 	$(SRCDIR)/ramsey.mo \
 	$(SRCDIR)/spinning_instance_demo.mo \
-	$(SRCDIR)/cbox.mo 
+# 	$(SRCDIR)/cbox.mo \
+# 	$(SRCDIR)/david.mo \
+# 	$(SRCDIR)/davidhead.mo \
+# 	$(SRCDIR)/stmatthew.mo \
+# 	$(SRCDIR)/venus.mo \
+# 	$(SRCDIR)/lucy.mo \
+# 	$(SRCDIR)/mus_barrier.mo \
+# 	$(SRCDIR)/buddha.mo 
 #	$(SRCDIR)/dtiglyph.mo \
 
 ifeq ($(findstring Uintah, $(LOAD_PACKAGE)),Uintah)
