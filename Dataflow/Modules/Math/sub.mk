@@ -34,6 +34,7 @@ SRCS     += \
 	$(SRCDIR)/BuildTransform.cc\
 	$(SRCDIR)/CastMatrix.cc\
 	$(SRCDIR)/ErrorMetric.cc\
+	$(SRCDIR)/FieldToCanonicalTransform.cc\
 	$(SRCDIR)/LinAlgBinary.cc\
 	$(SRCDIR)/LinAlgUnary.cc\
         $(SRCDIR)/MatrixSelectVector.cc\

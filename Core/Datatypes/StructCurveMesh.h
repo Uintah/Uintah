@@ -63,7 +63,7 @@ public:
   //! get the mesh statistics
   double get_cord_length() const;
   virtual BBox get_bounding_box() const;
-  virtual void transform(Transform &t);
+  virtual void transform(const Transform &t);
 
   void set_dim(vector<unsigned int> dims) {
     ScanlineMesh::set_dim(dims);

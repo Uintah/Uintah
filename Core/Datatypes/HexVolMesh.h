@@ -87,7 +87,7 @@ public:
   bool get_dim(vector<unsigned int>&) const { return false;  }
 
   virtual BBox get_bounding_box() const;
-  virtual void transform(Transform &t);
+  virtual void transform(const Transform &t);
 
   void begin(Node::iterator &) const;
   void begin(Edge::iterator &) const;

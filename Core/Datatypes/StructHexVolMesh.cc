@@ -97,7 +97,7 @@ StructHexVolMesh::get_bounding_box() const
 }
 
 void
-StructHexVolMesh::transform(Transform &t)
+StructHexVolMesh::transform(const Transform &t)
 {
   Node::iterator i, ie;
   begin(i);

@@ -432,8 +432,10 @@ public:
   unsigned get_nk() const { return nk_; }
   bool get_dim(vector<unsigned int>&) const;
   Vector diagonal() const;
+
   virtual BBox get_bounding_box() const;
-  virtual void transform(Transform &t);
+  virtual void transform(const Transform &t);
+  virtual void get_canonical_transform(Transform &t);
 
   double get_volume(const Cell::index_type &) { return 0; }
   double get_area(const Face::index_type &) { return 0; }

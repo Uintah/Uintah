@@ -11,6 +11,7 @@
  */
 
 #include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Math/function.h>
 #include <iostream>
@@ -123,6 +124,13 @@ void LinAlgUnary::execute() {
   if (op == "Transpose") {
     Matrix *mat = mh->transpose();
     m = mat;
+  } else if (op == "Invert") {
+    DenseMatrix *dm = mh->dense();
+    if (! dm->invert()) {
+      error("Input Matrix not invertible.");
+      return;
+    }
+    m = dm;
   } else if (op == "Sort") {
     m = mh->clone();
     double *x = &((*(m.get_rep()))[0][0]);

@@ -65,7 +65,7 @@ CurveMesh::get_bounding_box() const
 
 
 void
-CurveMesh::transform(Transform &t)
+CurveMesh::transform(const Transform &t)
 {
   vector<Point>::iterator itr = nodes_.begin();
   vector<Point>::iterator eitr = nodes_.end();

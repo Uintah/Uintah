@@ -17,6 +17,8 @@
 
 
 #include <Core/Datatypes/Mesh.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Geometry/BBox.h>
 
 namespace SCIRun{
 
@@ -62,6 +64,17 @@ Mesh::get_type_name(int n) const
 {
   ASSERT(n==0);
   return get_type_description()->get_name();
+}
+
+
+//! Return the transformation that takes a 0-1 space bounding box 
+//! to the current bounding box of this mesh.
+void Mesh::get_canonical_transform(Transform &t) 
+{
+  t.load_identity();
+  BBox bbox = get_bounding_box();
+  t.pre_scale(bbox.diagonal());
+  t.pre_translate(Vector(bbox.min()));
 }
 
 }

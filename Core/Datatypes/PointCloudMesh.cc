@@ -63,7 +63,7 @@ PointCloudMesh::get_bounding_box() const
 
 
 void
-PointCloudMesh::transform(Transform &t)
+PointCloudMesh::transform(const Transform &t)
 {
   vector<Point>::iterator itr = points_.begin();
   vector<Point>::iterator eitr = points_.end();

@@ -74,7 +74,14 @@ Vector ImageMesh::diagonal() const
 }
 
 void
-ImageMesh::transform(Transform &t)
+ImageMesh::get_canonical_transform(Transform &t) 
+{
+  t = transform_;
+  t.post_scale(Vector(ni_ - 1.0, nj_ - 1.0, 1.0));
+}
+
+void
+ImageMesh::transform(const Transform &t)
 {
   transform_.pre_trans(t);
 }
