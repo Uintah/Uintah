@@ -420,7 +420,7 @@ itcl_class Module {
     
     method lightOPort {which color} {
 	global maincanvas
-	set p $maincanvas.module[modname].oportlight$which
+	set p $maincanvas.module[modname].portlighto$which
 	if {[winfo exists $p]} {
 	    $p configure -background $color
 	}
@@ -428,7 +428,7 @@ itcl_class Module {
 
     method lightIPort {which color} {
 	global maincanvas
-	set p $maincanvas.module[modname].iportlight$which
+	set p $maincanvas.module[modname].portlighti$which
 	if {[winfo exists $p]} {
 	    $p configure -background $color
 	}
@@ -709,25 +709,19 @@ proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
 global TracedPorts
 set TracedPorts ""
 
-proc TracePort { modid isa_o_port args } {
+proc TracePort { modid isoport args } {
     global TracedPorts
-    set sameportindex 3
-    set otherportindex 1
-    if $isa_o_port {
-	set sameportindex 1
-	set otherportindex 3
-    } 
+    set sameportindex [expr $isoport?1:3]
+    set otherportindex [expr $isoport?3:1]
     if [llength $args] { set TracedPorts "" }
-    set allConnections [netedit getconnected $modid]     
-    foreach conn $allConnections {
-	set connid [lindex $conn 0]
-	if { [lsearch $TracedPorts $connid] == -1 && \
+    foreach conn [netedit getconnected $modid] {
+	if { [lsearch $TracedPorts [lindex $conn 0]] == -1 && \
 	      $modid == [lindex $conn $sameportindex] && \
 	    (![llength $args] || \
 		 [lindex $conn [expr $sameportindex+1]] == [lindex $args 0])} {
-	    lappend TracedPorts $connid
+	    lappend TracedPorts [lindex $conn 0]
 	    eval lightPipe tempConnection [lrange $conn 1 4]
-	    TracePort [lindex $conn $otherportindex] $isa_o_port
+	    TracePort [lindex $conn $otherportindex] $isoport
 	}
     }
 }
@@ -812,7 +806,6 @@ proc addConnection {omodid owhich imodid iwhich args } {
     update idletasks
 }
 
-
 # set the optional args command to anything to record the undo action
 proc destroyConnection {connid omodid imodid args} { 
     global maincanvas minicanvas
@@ -846,27 +839,19 @@ proc scalePath { path } {
     return $minipath
 }
     
-proc rebuildConnection { connid omodid owhich imodid iwhich} {    
-    global maincanvas minicanvas
-    set path [routeConnection $omodid $owhich $imodid $iwhich]
-    eval $maincanvas coords $connid $path
-    eval $minicanvas coords $connid [scalePath $path]
-}
-
 proc rebuildConnections {list color} {
-    global maincanvas
-    foreach i $list {
-	set id [lindex $i 0]
-	canvasRaise $id	
-	if {$color} {
-	    $minicanvas itemconfigure $id -fill [$maincanvas itemcget $id -fill]
-	}
-	eval rebuildConnection $i
+    global maincanvas minicanvas
+    foreach conn $list {
+	set id [lindex $conn 0]
+	#canvasRaise $id
+	set path [eval routeConnection [lrange $conn 1 end]]
+	eval $maincanvas coords $id $path
+	eval $minicanvas coords $id [scalePath $path]
     }
 }
 
 proc startPortConnection {modid which porttype portname x y} {
-    global maincanvas modname_font new_connports potential_connection
+    global maincanvas modname_font new_conn_ports potential_connection
     set isoport [string equal $porttype o]
     set oppositeporttype [expr $isoport?"i":"o"]
     $maincanvas create text [computePortCoords $modid $which $isoport] \
