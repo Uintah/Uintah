@@ -303,22 +303,21 @@ proc createPackageMenu {index} {
 	}
     }
 
-    foreach pack $ModuleMenu(packages) {
-	# Add the cascade button and menu for the package to the menu bar
-	menubutton .main_menu.$pack -text "$ModuleMenu($pack)" -underline 0 \
-	    -menu .main_menu.$pack.menu
-	menu .main_menu.$pack.menu
-	pack .main_menu.$pack -side left
-	foreach cat $ModuleMenu(${pack}_categories) {
-	    # Add the category to the menu bar menu
-	    .main_menu.$pack.menu add cascade -label "$ModuleMenu($cat)" \
-		-menu .main_menu.$pack.menu.$cat
-	    menu .main_menu.$pack.menu.$cat -tearoff false
-	    foreach mod $ModuleMenu(${pack}_${cat}_modules) {
-		.main_menu.$pack.menu.$cat add command \
-		    -label "$ModuleMenu($mod)" \
-		    -command "addModule \"$ModuleMenu($pack)\" \"$ModuleMenu($cat)\" \"$ModuleMenu($mod)\""
-	    }
+    set pack $packageToken
+    # Add the cascade button and menu for the package to the menu bar
+    menubutton .main_menu.$pack -text "$ModuleMenu($pack)" -underline 0 \
+	-menu .main_menu.$pack.menu
+    menu .main_menu.$pack.menu
+    pack .main_menu.$pack -side left
+    foreach cat $ModuleMenu(${pack}_categories) {
+	# Add the category to the menu bar menu
+	.main_menu.$pack.menu add cascade -label "$ModuleMenu($cat)" \
+	    -menu .main_menu.$pack.menu.$cat
+	menu .main_menu.$pack.menu.$cat -tearoff false
+	foreach mod $ModuleMenu(${pack}_${cat}_modules) {
+	    .main_menu.$pack.menu.$cat add command \
+		-label "$ModuleMenu($mod)" \
+		-command "addModule \"$ModuleMenu($pack)\" \"$ModuleMenu($cat)\" \"$ModuleMenu($mod)\""
 	}
     }
     update idletasks
