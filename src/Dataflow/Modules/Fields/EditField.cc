@@ -73,6 +73,7 @@ public:
   bool firsttime_;
   int widgetid_;
   pair<double,double> minmax_;
+  Transform oldtrans_;
 
   EditField(const string& id);
 
@@ -284,6 +285,19 @@ void EditField::build_widget(FieldHandle f)
 
   l2norm = (max-min).length();
   
+  // Rotate * Scale * Translate.
+  Transform r;
+  Point unused;
+  oldtrans_.load_identity();
+  r.load_frame(unused, (right-center).normal(),
+	       (down-center).normal(),
+	       (in-center).normal());
+  oldtrans_.pre_trans(r);
+  oldtrans_.pre_scale(Vector((right-center).length(),
+			     (down-center).length(),
+			     (in-center).length()));
+  oldtrans_.pre_translate(center.asVector());
+
   box_ = scinew ScaledBoxWidget(this,&widget_lock_,1);
   box_->SetScale(l2norm * 0.015);
   box_->SetPosition(center, right, down, in);
@@ -450,8 +464,6 @@ void EditField::execute()
   // Transform the mesh if necessary.
   if (cbbox_.get())
   {
-    BBox old = fh->mesh()->get_bounding_box();
-    Point oldc = old.min() + (old.max() - old.min()) / 2.0;
     Point center, right, down, in;
     box_->GetPosition(center, right, down, in);
 
@@ -463,10 +475,14 @@ void EditField::execute()
 		 (down-center).normal(),
 		 (in-center).normal());
     t.pre_trans(r);
-    t.pre_scale(Vector((right-center).length() / (old.max().x() - oldc.x()),
-		       (down-center).length() / (old.max().y() - oldc.y()),
-		       (in-center).length() / (old.max().z() - oldc.z())));
-    t.pre_translate(Vector(center.x(), center.y(), center.z()));
+    t.pre_scale(Vector((right-center).length(),
+		       (down-center).length(),
+		       (in-center).length()));
+    t.pre_translate(center.asVector());
+
+    Transform inv(oldtrans_);
+    inv.invert();
+    t.post_trans(inv);
 
     ef->mesh_detach();
     ef->mesh()->transform(t);
@@ -536,6 +552,7 @@ void EditField::widget_moved(int i)
     maxx_.set(right.x());
     maxy_.set(down.y());
     maxz_.set(in.z());
+    cbbox_.set(1);
     want_to_execute();
   } else {
     //Module::widget_moved(i);
