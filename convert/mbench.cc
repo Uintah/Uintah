@@ -33,7 +33,7 @@ int main(int argc, char** argv)
 	    c1[i]=v1;
 	}
 	timer.start();
-	double norm;
+	double norm=0;
 	for(int ii=0;ii<r;ii++){
 	    norm=c1.vector_norm();
 	}
@@ -46,7 +46,8 @@ int main(int argc, char** argv)
 	ColumnMatrix b(n);
 	double v1=Sqrt((double)n);
 	double v2=Sqrt(v1);
-	for(int i=0;i<n;i+=2){
+	int i;
+	for(i=0;i<n;i+=2){
 	    a[i]=v1;
 	    b[i]=1;
 	}
@@ -70,7 +71,8 @@ int main(int argc, char** argv)
 	ColumnMatrix b(n);
 	double v1=n;
 	double v2=1/v1;
-	for(int i=0;i<n;i+=2){
+	int i;
+	for(i=0;i<n;i+=2){
 	    a[i]=1;
 	    b[i]=1;
 	}
@@ -79,7 +81,7 @@ int main(int argc, char** argv)
 	    b[i]=v2;
 	}
 
-	double norm;
+	double norm=0;
 	timer.start();
 	for(int ii=0;ii<r;ii++){
 	    norm=Dot(a, b);
@@ -119,7 +121,8 @@ int main(int argc, char** argv)
 
 	Array1<int> rows(n+1);
 	Array1<int> cols(n*k);
-	for(int i=0;i<=n;i++){
+	int i;
+	for(i=0;i<=n;i++){
 	    rows[i]=i*k;
 	}
 

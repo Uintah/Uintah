@@ -76,7 +76,8 @@ int main(int argc, char **argv)
 
     MusilRNG rng2;
     Array1<int> map(n);
-    for(int ii=0;ii<n;ii++){
+    int ii;
+    for(ii=0;ii<n;ii++){
 	map[ii]=ii;
     }
 #if 0
@@ -90,7 +91,8 @@ int main(int argc, char **argv)
     for(ii=0;ii<n;ii++){
 	cerr << "map[" << ii << "]=" << map[ii] << endl;
     }
-    for(int i=0;i<n;i++){
+    int i;
+    for(i=0;i<n;i++){
         cerr << i << "/" << n << endl;
 	double x=double(map[i])/double(n-1);
 	cerr << "x=" << x << endl;
@@ -102,18 +104,18 @@ int main(int argc, char **argv)
 		double yy=y;
 		double zz=z;
 		if(i>0 && i<n-1)
-		    //xx+=rng()*0.3/double(n-1);
+		    xx+=rng()*0.3/double(n-1);
 		    //xx+=rng()*0.0/double(n-1);
 		if(j>0 && j<n-1)
-		    //yy+=rng()*0.3/double(n-1);
-		    yy+=rng()*0.0/double(n-1);
+		    yy+=rng()*0.3/double(n-1);
+		    //yy+=rng()*0.0/double(n-1);
 		if(k>0 && k<n-1)
-		    //zz+=rng()*0.3/double(n-1);
-		    zz+=rng()*0.0/double(n-1);
+		    zz+=rng()*0.3/double(n-1);
+		    //zz+=rng()*0.0/double(n-1);
 		//mesh->nodes.add(NodeHandle(new Node(Point(xx,yy,zz))));
 		if(!mesh->insert_delaunay(Point(xx,yy,zz), 0)){
 		    cerr << "Mesher upset - point outside of domain...";
-		    return;
+		    return 0;
 		}
 		// Every 1000 nodes, cleanup the elems array...
 	    }
@@ -136,7 +138,7 @@ int main(int argc, char **argv)
     }
     cerr << "Total volume: " << vol << endl;
 
-    TextPiostream stream(argv[argc-1], Piostream::Write);
+    BinaryPiostream stream(argv[argc-1], Piostream::Write);
     Pio(stream, meshh);
     return 0;
 }
