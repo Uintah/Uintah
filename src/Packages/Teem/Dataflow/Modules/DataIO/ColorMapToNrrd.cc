@@ -107,15 +107,16 @@ ColorMapToNrrd::execute()
     const int size = 256;
   
     NrrdData *nd = scinew NrrdData();
-    nrrdAlloc(nd->nrrd, nrrdTypeUChar, 2, size, 4);
+    nrrdAlloc(nd->nrrd, nrrdTypeFloat, 2, size, 4);
+    nd->nrrd->axis[1].kind = nrrdKindDomain;
     nd->nrrd->axis[0].kind = nrrdKind4Color;
 
-    unsigned char *val = (unsigned char*)nd->nrrd->data;
+    float *val = (float *)nd->nrrd->data;
     unsigned char *data = cmapH->rawRGBA_;
 
     for(int i=0; i < size * 4; i++)
     {
-      *val = *data;
+      *val = (*data) / 255.0;
       ++data;
       ++val;
     }
