@@ -106,6 +106,10 @@ DWDatabase<VarType>::~DWDatabase()
        iter != names.end(); iter++){
       delete iter->second;
    }
+   for(globalDBtype::iterator iter = globals.begin();
+       iter != globals.end(); iter++){
+      delete iter->second;
+   }
 }
 
 template<class VarType>
@@ -128,6 +132,20 @@ DWDatabase<VarType>::cleanForeign()
 	 }
       }
    }
+
+   list<const VarLabel*> toBeRemoved;
+   for(globalDBtype::iterator iter = globals.begin();
+       iter != globals.end(); iter++){
+      VarType* var = iter->second;
+      if(var && var->isForeign()){
+	 toBeRemoved.push_back(iter->first);
+	 delete var;
+      }
+   }
+   
+   for (list<const VarLabel*>::iterator iter = toBeRemoved.begin();
+	iter != toBeRemoved.end(); iter++)
+      globals.erase(*iter);
 }
 
 template<class VarType>
@@ -219,7 +237,10 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
          // add to globals
          globalDBtype::const_iterator globaliter = globals.find(label);
          if ((globaliter == globals.end()) || replace) {
-	    globals[label] = var;
+	    VarType*& globalVar = globals[label];
+	    if (globalVar != NULL)
+	       delete globalVar;
+	    globalVar = var;
 	    return;
 	 }
          else
@@ -366,6 +387,9 @@ void DWDatabase<VarType>::print(std::ostream& out)
 
 //
 // $Log$
+// Revision 1.23  2001/01/23 18:40:59  witzel
+// Fixe memore leaks.  Note: this is already in the new SCIRun archive
+//
 // Revision 1.22  2000/12/23 00:57:27  witzel
 // changed UnknownVariable.h include because it has moved
 //
