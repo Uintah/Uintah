@@ -14,14 +14,13 @@ using namespace rtrt;
 using namespace SCIRun;
 using std::cerr;
 
-Camera::Camera() :
-  gravity_on( false )
+Camera::Camera()
 {
 }
 
 Camera::Camera(const Point& eye, const Point& lookat,
 	       const Vector& up, double fov)
-  : eye(eye), lookat(lookat), up(up), fov(fov), eyesep(1), gravity_on( false )
+  : eye(eye), lookat(lookat), up(up), fov(fov), eyesep(1)
 
 {
     setup();
