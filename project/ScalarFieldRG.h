@@ -31,6 +31,11 @@ public:
     ScalarFieldRG();
     virtual ~ScalarFieldRG();
 
+    virtual void compute_bounds();
+    virtual void compute_minmax();
+    virtual Vector gradient(const Point&);
+    virtual int interpolate(const Point&, double&);
+
     virtual void io(Piostream&);
     static PersistentTypeID typeid;
 };
