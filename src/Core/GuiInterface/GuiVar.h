@@ -32,15 +32,10 @@
 #define SCI_project_GuiVar_h 1
 
 #include <Core/share/share.h>
-#include <Core/GuiInterface/GuiManager.h>
-#include <Core/GuiInterface/Remote.h>
 #include <string>
+#include <Core/GuiInterface/GuiContext.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-
-#include <iostream>
-using std::string;
-using std::endl;
 
 namespace SCIRun {
   class Vector;
@@ -49,24 +44,16 @@ namespace SCIRun {
 
 namespace SCIRun {
 
-//extern GuiManager* gm_;
-
-class TCL;
+  class GuiContext;
 
 class SCICORESHARE GuiVar {
 protected:
-  string varname_;
-  int is_reset_;
-  TCL* tcl;
+  GuiContext* ctx;
 public:
-  GuiVar(const string& name, const string& id, TCL* tcl);
+  GuiVar(GuiContext* ctx);
   virtual ~GuiVar();
-  virtual void reset();
 
-  string format_varname();
-
-  string str();
-  virtual void emit(std::ostream& out, string& midx)=0;
+  void reset();
 };
   
   
@@ -76,23 +63,20 @@ class GuiSingle : public GuiVar
 {
   T value_;
 public:
-  GuiSingle(const string& name, const string& id, TCL* tcl) :
-    GuiVar(name, id, tcl) {}
+  GuiSingle(GuiContext* ctx) :
+    GuiVar(ctx) {}
   
   virtual ~GuiSingle() {}
 
   inline T get() {
-    return GuiManager::get(value_, varname_, is_reset_);
+    ctx->get(value_);
+    return value_;
   }
   inline void set(const T value) {
     if(value != value_) {
       value_ = value;
-      GuiManager::set(value_, varname_, is_reset_);
+      ctx->set(value_);
     }
-  }
-  virtual void emit(std::ostream& out, string& midx) {
-    out << "set " << midx << "-" << format_varname() << " {"
-	<< get() << "}" << endl;
   }
 };
 
@@ -109,11 +93,11 @@ class GuiTriple : public GuiVar
   GuiDouble y_;
   GuiDouble z_;
 public:
-  GuiTriple(const string& name, const string& id, TCL* tcl) :
-    GuiVar(name, id, tcl),
-    x_("x", str(), tcl),
-    y_("y", str(), tcl),
-    z_("z", str(), tcl)
+  GuiTriple(GuiContext* ctx) :
+    GuiVar(ctx),
+    x_(ctx->subVar("x")),
+    y_(ctx->subVar("y")),
+    z_(ctx->subVar("z"))
   {}
   virtual ~GuiTriple() {}
 
@@ -130,11 +114,6 @@ public:
       y_.set(var.y());
       z_.set(var.z());
     }
-  }
-  virtual void emit(std::ostream& out, string& midx) {
-    x_.emit(out, midx);
-    y_.emit(out, midx);
-    z_.emit(out, midx);
   }
 };
 

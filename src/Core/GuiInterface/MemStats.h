@@ -31,7 +31,7 @@
 #ifndef SCI_project_MemStats_h
 #define SCI_project_MemStats_h 1
 
-#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/GuiCallback.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -39,9 +39,9 @@
 namespace SCIRun {
 
 struct Allocator;
+  class GuiInterface;
 
-
-class SCICORESHARE MemStats : public TCL {
+class SCICORESHARE MemStats : public GuiCallback {
     Allocator* a;
     int textwidth;
     int graphwidth;
@@ -67,8 +67,8 @@ public:
     MemStats();
     ~MemStats();
 
-    void init_tcl();
-    virtual void tcl_command(TCLArgs&, void*);
+    void init_tcl(GuiInterface* gui);
+    virtual void tcl_command(GuiArgs&, void*);
 };
 
 } // End namespace SCIRun

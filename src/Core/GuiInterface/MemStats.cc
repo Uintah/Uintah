@@ -30,6 +30,8 @@
 
 #include <Core/GuiInterface/MemStats.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Containers/StringUtil.h>
+#include <Core/GuiInterface/GuiInterface.h>
 #include <stdio.h>
 
 namespace SCIRun {
@@ -71,12 +73,12 @@ MemStats::MemStats()
 MemStats::~MemStats()
 {
 }
-void MemStats::init_tcl()
+void MemStats::init_tcl(GuiInterface* gui)
 {
-    TCL::add_command("memstats", this, 0);
+  gui->add_command("memstats", this, 0);
 }
 
-void MemStats::tcl_command(TCLArgs& args, void*)
+void MemStats::tcl_command(GuiArgs& args, void*)
 {
 #ifndef _WIN32
     if(args.count() < 2){
