@@ -31,7 +31,7 @@ using namespace std;
 //using spectest::ref;
 //using spectest::Server;
 
-//using SIDL::array1;
+//using SSIDL::array1;
 //using std::istringstream;
 //using std::ostringstream;
 
@@ -60,22 +60,22 @@ PortInfo_impl::~PortInfo_impl()
   cerr << "PortInfo_impl destructor" << endl;
 }
 
-::SIDL::string 
+::SSIDL::string 
 PortInfo_impl::getType()
 {
   cerr << "PortInfo_impl::getType()" << endl;
   return type_;
 }
-::SIDL::string 
+::SSIDL::string 
 PortInfo_impl::getName()
 {
   cerr << "PortInfo_impl::getName()" << endl;
   return name_;
 }
-::SIDL::string 
-PortInfo_impl::getProperty(const ::SIDL::string& /*name*/)
+::SSIDL::string 
+PortInfo_impl::getProperty(const ::SSIDL::string& /*name*/)
 {
-  cerr << "PortInfo_impl::getProperty(const ::SIDL::string& name)" << endl;
+  cerr << "PortInfo_impl::getProperty(const ::SSIDL::string& name)" << endl;
 
 //    map<string, string>::iterator iter = properties_.find(name);
 //    if (iter != properties_.end()) {
@@ -96,30 +96,30 @@ Services_impl::~Services_impl()
 }
 
 Port::pointer
-Services_impl::getPort(const ::SIDL::string& /*name*/)
+Services_impl::getPort(const ::SSIDL::string& /*name*/)
 {
   Port::pointer p;
-  cerr << "Services_impl::getPort(const ::SIDL::string& name)" << endl;
+  cerr << "Services_impl::getPort(const ::SSIDL::string& name)" << endl;
   return p;
 }
 Port::pointer
-Services_impl::getPortNonblocking(const ::SIDL::string& /*name*/)
+Services_impl::getPortNonblocking(const ::SSIDL::string& /*name*/)
 {
   Port::pointer p;
-  cerr << "Services_impl::getPortNonblocking(const ::SIDL::string& name)" 
+  cerr << "Services_impl::getPortNonblocking(const ::SSIDL::string& name)" 
        << endl;
   return p;
 }
 PortInfo::pointer
-Services_impl::createPortInfo(const ::SIDL::string& name, 
-			  const ::SIDL::string& type, 
-			  const ::SIDL::array1< ::SIDL::string> &properties )
+Services_impl::createPortInfo(const ::SSIDL::string& name, 
+			  const ::SSIDL::string& type, 
+			  const ::SSIDL::array1< ::SSIDL::string> &properties )
 {
   PortInfo_impl *pi = new PortInfo_impl;
   pi->setName(name);
   pi->setType(type);
   pi->setProperties(properties);
-  cerr << "Services_impl::createPortInfo(const ::SIDL::string& name, " << endl;
+  cerr << "Services_impl::createPortInfo(const ::SSIDL::string& name, " << endl;
   return PortInfo::pointer(pi);
 }
 void 
@@ -129,9 +129,9 @@ Services_impl::registerUsesPort(const PortInfo::pointer &/*name_and_type*/)
        << endl;
 }
 void 
-Services_impl::unregisterUsesPort(const ::SIDL::string& /*name*/)
+Services_impl::unregisterUsesPort(const ::SSIDL::string& /*name*/)
 {
-  cerr << "Services_impl::unregisterUsesPort(const ::SIDL::string&name)" 
+  cerr << "Services_impl::unregisterUsesPort(const ::SSIDL::string&name)" 
        << endl;
 }
 void 
@@ -149,9 +149,9 @@ Services_impl::addProvidesPort(const Port::pointer &inPort, const PortInfo::poin
   }
 }
 void 
-Services_impl::removeProvidesPort(const ::SIDL::string&name)
+Services_impl::removeProvidesPort(const ::SSIDL::string&name)
 {
-  cerr << "Services_impl::removeProvidesPort(const ::SIDL::string&name)" 
+  cerr << "Services_impl::removeProvidesPort(const ::SSIDL::string&name)" 
        << endl;
 
   // store off the port.  make sure it does not already exist.
@@ -161,9 +161,9 @@ Services_impl::removeProvidesPort(const ::SIDL::string&name)
   }
 }
 void 
-Services_impl::releasePort(const ::SIDL::string& /*name*/)
+Services_impl::releasePort(const ::SSIDL::string& /*name*/)
 {
-  cerr << "Services_impl::releasePort(const ::SIDL::string&name)" << endl;
+  cerr << "Services_impl::releasePort(const ::SSIDL::string&name)" << endl;
 }
 ComponentID ::pointer
 Services_impl::getComponentID()
@@ -200,7 +200,7 @@ ComponentID_impl::~ComponentID_impl()
   cerr << "ComponentID_impl destructor" << endl;
 }
 
-::SIDL::string 
+::SSIDL::string 
 ComponentID_impl::toString()
 {
   cerr << "ComponentID_impl::toString()" << endl;
@@ -351,7 +351,7 @@ RandomInt::setServices(const CCA::Services::pointer &svc)
   cout << "RandomInt::setServices(const CCA::Services &svc)" << endl; 
   Component_impl::setServices(svc);
 
-  ::SIDL::array1< ::SIDL::string> prop;
+  ::SSIDL::array1< ::SSIDL::string> prop;
   prop.push_back("property one");
   PortInfo::pointer pi = services_->createPortInfo("RandomIntStream", 
 					  "IntegerStream",
@@ -384,7 +384,7 @@ ConsumerInt::setServices(const CCA::Services::pointer &svc)
   cout << "ConsumerInt::setServices(const CCA::Services &svc)" << endl; 
   Component_impl::setServices(svc);
 
-  ::SIDL::array1< ::SIDL::string> prop;
+  ::SSIDL::array1< ::SSIDL::string> prop;
   prop.push_back("property one");
   PortInfo::pointer pi = services_->createPortInfo("RandomIntStream", 
 					  "IntegerStream",

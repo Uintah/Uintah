@@ -27,7 +27,7 @@ using namespace std;
 //using spectest::ref;
 //using spectest::Server;
 
-using SIDL::array1;
+using SSIDL::array1;
 //using std::istringstream;
 //using std::ostringstream;
 
@@ -48,20 +48,20 @@ public:
   PortInfo_impl();
   virtual ~PortInfo_impl();
 
-  virtual ::SIDL::string getType();
-  virtual ::SIDL::string getName();
-  virtual ::SIDL::string getProperty(const ::SIDL::string& name);
+  virtual ::SSIDL::string getType();
+  virtual ::SSIDL::string getName();
+  virtual ::SSIDL::string getProperty(const ::SSIDL::string& name);
 
 
   // Non standard interface
   void setType(const string &type) { type_ = type; }
   void setName(const string &name) { name_ = name; }
-  void setProperties(const ::SIDL::array1< ::SIDL::string>& p) 
+  void setProperties(const ::SSIDL::array1< ::SSIDL::string>& p) 
   { properties_ = p; }
 private:
   string              type_;
   string              name_;
-  ::SIDL::array1< ::SIDL::string> properties_;
+  ::SSIDL::array1< ::SSIDL::string> properties_;
 };
 
 class Services_impl : public CCA::Services {
@@ -80,16 +80,16 @@ public:
 
   Services_impl();
   virtual ~Services_impl();
-  virtual Port::pointer getPort(const ::SIDL::string& name);
-  virtual Port::pointer getPortNonblocking(const ::SIDL::string& name);
-  virtual PortInfo::pointer createPortInfo(const ::SIDL::string& name, 
-				  const ::SIDL::string& type, 
-				  const ::SIDL::array1< ::SIDL::string> &properties );
+  virtual Port::pointer getPort(const ::SSIDL::string& name);
+  virtual Port::pointer getPortNonblocking(const ::SSIDL::string& name);
+  virtual PortInfo::pointer createPortInfo(const ::SSIDL::string& name, 
+				  const ::SSIDL::string& type, 
+				  const ::SSIDL::array1< ::SSIDL::string> &properties );
   virtual void registerUsesPort(const PortInfo::pointer &name_and_type);
-  virtual void unregisterUsesPort(const ::SIDL::string&name);
+  virtual void unregisterUsesPort(const ::SSIDL::string&name);
   virtual void addProvidesPort(const Port::pointer &inPort, const PortInfo::pointer &name);
-  virtual void removeProvidesPort(const ::SIDL::string&name);
-  virtual void releasePort(const ::SIDL::string&name);
+  virtual void removeProvidesPort(const ::SSIDL::string&name);
+  virtual void releasePort(const ::SSIDL::string&name);
   virtual ComponentID::pointer  getComponentID();
 private:
   port_map_t provides_;
@@ -109,7 +109,7 @@ class ComponentID_impl : public CCA::ComponentID {
 public:
   ComponentID_impl();
   virtual ~ComponentID_impl();
-  virtual ::SIDL::string toString();
+  virtual ::SSIDL::string toString();
 };
 
 class GoPort_impl : public CCAPORTS::GoPort {
