@@ -127,7 +127,12 @@ itcl_class SCIRun_Visualization_TexCuttingPlanes {
 	pack $cyl.sp0 -side top -fill x
 	pack $cyl.sp1 -side top -fill x
 
-
+	frame $cyl.z
+	button $cyl.z.plus -text "+" -command "$this-c MoveWidget zplus 1; $n"
+	label $cyl.z.label -text " Z "
+	button $cyl.z.minus -text "-" -command "$this-c MoveWidget zplus -1; $n"
+	pack $cyl.z.plus $cyl.z.label $cyl.z.minus -side left -fill x -expand 1
+	pack $cyl.z -side top -fill x -expand 1
 
 
     }
