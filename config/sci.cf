@@ -61,6 +61,19 @@ InstallProgram(program, $(BINDIR))				@@\
 clean::								@@\
 	$(RM) program
 
+#define SCIProgramTarget2(program, objs, libs, ldflags) 		@@\
+AllTarget(program)						@@\
+								@@\
+program: objs libs SCI_LinkerLib				@@\
+	SCI_TemplateCommand(objs, libs)\
+$(LOADER) -o $@ $(LDOPTIONS) objs libs SCI_LinkerLib ldflags @@\
+	$(SIZE) $@						@@\
+								@@\
+InstallProgram(program, $(BINDIR))				@@\
+								@@\
+clean::								@@\
+	$(RM) program
+
 
 #define SCIDependTarget(srcs)					@@\
 depend::							@@\
