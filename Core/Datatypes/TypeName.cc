@@ -104,4 +104,8 @@ template<> string findTypeName(Transform*){
   return string("Transform");
 }
 
+template<> string findTypeName(string*){
+  return string("string");
+}
+
 } // namespace SCIRun
