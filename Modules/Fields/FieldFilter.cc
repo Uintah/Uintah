@@ -21,7 +21,9 @@
 #include <Datatypes/ScalarFieldRGdouble.h>
 #include <Datatypes/ScalarFieldRGfloat.h>
 #include <Datatypes/ScalarFieldRGint.h>
+#include <Datatypes/ScalarFieldRGshort.h>
 #include <Datatypes/ScalarFieldRGchar.h>
+#include <Datatypes/ScalarFieldRGuchar.h>
 #include <Geometry/Point.h>
 #include <TCL/TCLvar.h>
 #include <Widgets/ScaledBoxWidget.h>
@@ -29,18 +31,18 @@
 #include <math.h>
 #include <iostream.h>
 
+#define RESIZE_MACRO   fX->resize(lastZ, isf->nx, isf->ny);fX->grid.initialize(0);fY->resize(lastY, lastZ, isf->nx);fY->grid.initialize(0);of->resize(lastX, lastY, lastZ);of->grid.initialize(0);fldX=fX;fldY=fY;osf=of;
+
+
 class FieldFilter : public Module {
-    void boxFilterX(ScalarFieldRGBase *in, ScalarFieldRGBase *out, int, int, int, int);
-    void boxFilterY(ScalarFieldRGBase *in, ScalarFieldRGBase *out, int, int, int, int);
-    void boxFilterZ(ScalarFieldRGBase *in, ScalarFieldRGBase *out, int, int, int, int);
-    void triangleFilterX(ScalarFieldRGBase *, ScalarFieldRGBase *, int, int, int, int);
-    void triangleFilterY(ScalarFieldRGBase *, ScalarFieldRGBase *, int, int, int, int);
-    void triangleFilterZ(ScalarFieldRGBase *, ScalarFieldRGBase *, int, int, int, int);
-    void mitchellFilterX(ScalarFieldRGBase *, ScalarFieldRGBase *, int, int, int, int);
-    void mitchellFilterY(ScalarFieldRGBase *, ScalarFieldRGBase *, int, int, int, int);
-    void mitchellFilterZ(ScalarFieldRGBase *, ScalarFieldRGBase *, int, int, int, int);
-    void filter(char dir, ScalarFieldRGBase* in, ScalarFieldRGBase* out, 
-		int minx, int miny, int minz, int maxx, int maxy, int maxz);
+    void boxFilter(ScalarFieldRGBase *in, ScalarFieldRGBase *out, 
+		   int, int, int, int);
+    void triangleFilter(ScalarFieldRGBase *, ScalarFieldRGBase *, 
+			int, int, int, int);
+    void mitchellFilter(ScalarFieldRGBase *, ScalarFieldRGBase *, 
+			int, int, int, int);
+    void filter(ScalarFieldRGBase* in, ScalarFieldRGBase* out, 
+		int minx, int miny, int minz, int maxz);
     void buildUndersampleTriangleTable(Array2<double>*, int, int, double);
     void buildOversampleTriangleTable(Array2<double>*, int, double);
     void buildUndersampleMitchellTable(Array2<double>*, int, int, double);
@@ -141,40 +143,15 @@ Module* FieldFilter::clone(int deep)
     return new FieldFilter(*this, deep);
 }
 
-void FieldFilter::filter(char dir, ScalarFieldRGBase* in, ScalarFieldRGBase* out,
-			 int min_x, int min_y, int min_z, int max_x, int max_y,
-			 int max_z) {
+void FieldFilter::filter(ScalarFieldRGBase* in, ScalarFieldRGBase* out,
+			 int min_x, int min_y, int min_z, int max_x) {
     if (lastFT == "Box") {
-	if (dir == 'x') {
-	    boxFilterX(in, out, min_x, min_y, min_z, max_x);
-	} else if (dir == 'y') {
-	    boxFilterY(in, out, min_x, min_y, min_z, max_y);
-	} else {
-	    boxFilterZ(in, out, min_x, min_y, min_z, max_z);
-	}
+	boxFilter(in, out, min_x, min_y, min_z, max_x);
     } else if (lastFT == "Triangle") {
-	if (dir == 'x') {
-	    triangleFilterX(in, out, min_x, min_y, min_z, max_x);
-	} else if (dir == 'y') {
-	    triangleFilterY(in, out, min_x, min_y, min_z, max_y);
-	} else {
-	    triangleFilterZ(in, out, min_x, min_y, min_z, max_z);
-	}
+	triangleFilter(in, out, min_x, min_y, min_z, max_x);
     } else {
-	if (dir == 'x') {
-	    triangleFilterX(in, out, min_x, min_y, min_z, max_x);
-	} else if (dir == 'y') {
-	    triangleFilterY(in, out, min_x, min_y, min_z, max_y);
-	} else {
-	    triangleFilterZ(in, out, min_x, min_y, min_z, max_z);
-	}
-//	if (dir == 'x') {
-//	    mitchellFilterX(in, out, min_x, min_y, min_z, max_x);
-//	} else if (dir == 'y') {
-//	    mitchellFilterY(in, out, min_x, min_y, min_z, max_y);
-//	} else {
-//	    mitchellFilterZ(in, out, min_x, min_y, min_z, max_z);
-//	}
+	triangleFilter(in, out, min_x, min_y, min_z, max_x);
+//	mitchellFilter(in, out, min_x, min_y, min_z, max_x);
     }
 }
 
@@ -205,7 +182,6 @@ void FieldFilter::execute() {
     Point p2;
     isf->get_bounds(p1, p2);
     if (check_widget) {
-cerr << "Saw that widget moved -- recomputing!\n";
 	// Set the sliders based on the widget parameters
 	Point center, right, down, in;
 	widget->GetPosition(center, right, down, in);
@@ -259,14 +235,15 @@ cerr << "Saw that widget moved -- recomputing!\n";
     widget->SetRatioI(1./nz.get());
 
     // Check if anything has changed (i.e. do we need to reexecute)
-    int no_range=0;
     if (((max_x-min_x) == 0) || ((max_y-min_y) == 0) || ((max_z-min_z) == 0))
-	no_range=1;
-    if (check_widget || no_range || 
-	(isf->nx == ox.get() && isf->ny == oy.get() && isf->nz == oz.get() &&
-	nx.get() == lastX && ny.get() == lastY && nz.get() == lastZ &&
-	sameInput.get() && lastFT == filterType.get())) {
+	return;
+	
+    if (!check_widget && (isf->nx == ox.get() && isf->ny == oy.get() && 
+			  isf->nz == oz.get() && nx.get() == lastX && 
+			  ny.get() == lastY && nz.get() == lastZ &&
+			  lastFT == filterType.get())) {
 	oField->send(oFldHandle);
+	cerr << "Field Filter: SAME AS BEFORE!\n";
 	return;
     }
     // reposition the widget
@@ -287,408 +264,208 @@ cerr << "Saw that widget moved -- recomputing!\n";
     ScalarFieldRGdouble *ifd=isf->getRGDouble();
     ScalarFieldRGfloat *iff=isf->getRGFloat();
     ScalarFieldRGint *ifi=isf->getRGInt();
+    ScalarFieldRGshort *ifs=isf->getRGShort();
     ScalarFieldRGchar *ifc=isf->getRGChar();
+    ScalarFieldRGuchar *ifu=isf->getRGUchar();
 
     ScalarFieldRGBase *fldX, *fldY;
     if (ifd) {
 	ScalarFieldRGdouble *fX, *fY, *of;
 	fX=new ScalarFieldRGdouble();
-	fX->resize(lastX, isf->ny, isf->nz);
-	fX->grid.initialize(0);
 	fY=new ScalarFieldRGdouble();
-	fY->resize(lastX, lastY, isf->nz);
-	fY->grid.initialize(0);
 	oFldHandle=of=new ScalarFieldRGdouble();
-	of->resize(lastX, lastY, lastZ);
-	of->grid.initialize(0);
-	fldX=fX;
-	fldY=fY;
-	osf=of;
+	RESIZE_MACRO
     } else if (iff) {
 	ScalarFieldRGfloat *fX, *fY, *of;
 	fX=new ScalarFieldRGfloat();
-	fX->resize(lastX, isf->ny, isf->nz);
-	fX->grid.initialize(0);
 	fY=new ScalarFieldRGfloat();
-	fY->resize(lastX, lastY, isf->nz);
-	fY->grid.initialize(0);
 	oFldHandle=of=new ScalarFieldRGfloat();
-	of->resize(lastX, lastY, lastZ);
-	of->grid.initialize(0);
-	fldX=fX;
-	fldY=fY;
-	osf=of;
+	RESIZE_MACRO
     } else if (ifi) {
 	ScalarFieldRGint *fX, *fY, *of;
 	fX=new ScalarFieldRGint();
-	fX->resize(lastX, isf->ny, isf->nz);
-	fX->grid.initialize(0);
 	fY=new ScalarFieldRGint();
-	fY->resize(lastX, lastY, isf->nz);
-	fY->grid.initialize(0);
 	oFldHandle=of=new ScalarFieldRGint();
-	of->resize(lastX, lastY, lastZ);
-	of->grid.initialize(0);
-	fldX=fX;
-	fldY=fY;
-	osf=of;
-    } else {					// must be char field
+	RESIZE_MACRO
+    } else if (ifs) {
+	ScalarFieldRGshort *fX, *fY, *of;
+	fX=new ScalarFieldRGshort();
+	fY=new ScalarFieldRGshort();
+	oFldHandle=of=new ScalarFieldRGshort();
+	RESIZE_MACRO
+    } else if (ifc) {
 	ScalarFieldRGchar *fX, *fY, *of;
 	fX=new ScalarFieldRGchar();
-	fX->resize(lastX, isf->ny, isf->nz);
-	fX->grid.initialize(0);
 	fY=new ScalarFieldRGchar();
-	fY->resize(lastX, lastY, isf->nz);
-	fY->grid.initialize(0);
 	oFldHandle=of=new ScalarFieldRGchar();
-	of->resize(lastX, lastY, lastZ);
-	of->grid.initialize(0);
-	fldX=fX;
-	fldY=fY;
-	osf=of;
+	RESIZE_MACRO
+    } else if (ifu) {
+	ScalarFieldRGuchar *fX, *fY, *of;
+	fX=new ScalarFieldRGuchar();
+	fY=new ScalarFieldRGuchar();
+	oFldHandle=of=new ScalarFieldRGuchar();
+	RESIZE_MACRO
+    } else {
+	cerr << "Unknown SFRG type in FieldFilter: "<<isf->getType()<<"\n";
+	return;
     }
-    fldX->set_bounds(p1, p2);
-    fldY->set_bounds(p1, p2);
-    osf->set_bounds(p1, p2);
-    filter('x', isf, fldX, min_x, min_y, min_z, max_x, max_y, max_z);
-    filter('y', fldX, fldY, min_x, min_y, min_z, max_x, max_y, max_z);
-    filter('z', fldY, osf, min_x, min_y, min_z, max_x, max_y, max_z);
+    fldX->set_bounds(minPt, maxPt);
+    fldY->set_bounds(minPt, maxPt);
+    osf->set_bounds(minPt, maxPt);
+    
+    filter(isf, fldX, min_x, min_y, min_z, max_z);
+    filter(fldX, fldY, min_z, min_x, min_y, max_y);
+    filter(fldY, osf, min_y, min_z, min_x, max_x);
     oField->send(oFldHandle);
 }
 
-void FieldFilter::boxFilterX(ScalarFieldRGBase* in, ScalarFieldRGBase* out,
-				  int fX, int fY, int fZ, int lX) {
-    ScalarFieldRGdouble *ifd, *ofd;
-    ScalarFieldRGfloat *iff, *off;
-    ScalarFieldRGint *ifi, *ofi;
-    ScalarFieldRGchar *ifc, *ofc;
-    ifd=in->getRGDouble();
-    ofd=out->getRGDouble();
-    iff=in->getRGFloat();
-    off=out->getRGFloat();
-    ifi=in->getRGInt();
-    ofi=out->getRGInt();
-    ifc=in->getRGChar();
-    ofc=out->getRGChar();
-    
-    double ratio=1./((out->nx-1.)/(lX-fX));
-cerr << "XRatio = " <<ratio<<"\n";
-    double curr=0;
-
-    for (int i=0; i<out->nx; i++, curr+=ratio) {
-	for (int j=0, jj=fY; j<out->ny; j++, jj++) {
-	    for (int k=0, kk=fZ; k<out->nz; k++, kk++) {
-		if (ifd)
-		    ofd->grid(i,j,k)=ifd->grid((int)curr+fX,jj,kk);
-		else if (iff)
-		    off->grid(i,j,k)=iff->grid((int)curr+fX,jj,kk);
-		else if (ifi)
-		    ofi->grid(i,j,k)=ifi->grid((int)curr+fX,jj,kk);
-		else 
-		    ofc->grid(i,j,k)=ifc->grid((int)curr+fX,jj,kk);
-	    }
-	}
-    }
-}
-
-void FieldFilter::boxFilterY(ScalarFieldRGBase* in, ScalarFieldRGBase* out,
-				  int fX, int fY, int fZ, int lY) {
-    ScalarFieldRGdouble *ifd, *ofd;
-    ScalarFieldRGfloat *iff, *off;
-    ScalarFieldRGint *ifi, *ofi;
-    ScalarFieldRGchar *ifc, *ofc;
-    ifd=in->getRGDouble();
-    ofd=out->getRGDouble();
-    iff=in->getRGFloat();
-    off=out->getRGFloat();
-    ifi=in->getRGInt();
-    ofi=out->getRGInt();
-    ifc=in->getRGChar();
-    ofc=out->getRGChar();
-    
-    double ratio=1./((out->ny-1.)/(lY-fY));
-cerr << "YRatio = " <<ratio<<"\n";
-    double curr=0;
-    for (int j=0; j<out->ny; j++, curr+=ratio) {
-	for (int i=0, ii=fX; i<out->nx; i++, ii++) {
-	    for (int k=0, kk=fZ; k<out->nz; k++, kk++) {
-		if (ifd)
-		    ofd->grid(i,j,k)=ifd->grid(ii,(int)curr+fY,kk);
-		else if (iff)
-		    off->grid(i,j,k)=iff->grid(ii,(int)curr+fY,kk);
-		else if (ifi)
-		    ofi->grid(i,j,k)=ifi->grid(ii,(int)curr+fY,kk);
-		else 
-		    ofc->grid(i,j,k)=ifc->grid(ii,(int)curr+fY,kk);
-	    }
-	}
-    }
-}
-
-void FieldFilter::boxFilterZ(ScalarFieldRGBase* in, ScalarFieldRGBase* out,
-			     int fX, int fY, int fZ, int lZ) {
-    ScalarFieldRGdouble *ifd, *ofd;
-    ScalarFieldRGfloat *iff, *off;
-    ScalarFieldRGint *ifi, *ofi;
-    ScalarFieldRGchar *ifc, *ofc;
-    ifd=in->getRGDouble();
-    ofd=out->getRGDouble();
-    iff=in->getRGFloat();
-    off=out->getRGFloat();
-    ifi=in->getRGInt();
-    ofi=out->getRGInt();
-    ifc=in->getRGChar();
-    ofc=out->getRGChar();
-    
-    double ratio=1./((out->nz-1.)/(lZ-fZ));
-cerr << "ZRatio = " <<ratio<<"\n";
-    double curr=0;
-    for (int k=0; k<out->nz; k++, curr+=ratio) {
-	for (int i=0, ii=fX; i<out->nx; i++, ii++) {
-	    for (int j=0, jj=fY; j<out->ny; j++, jj++) {
-		if (ifd)
-		    ofd->grid(i,j,k)=ifd->grid(ii,jj,(int)curr+fZ);
-		else if (iff)
-		    off->grid(i,j,k)=iff->grid(ii,jj,(int)curr+fZ);
-		else if (ifi)
-		    ofi->grid(i,j,k)=ifi->grid(ii,jj,(int)curr+fZ);
-		else 
-		    ofc->grid(i,j,k)=ifc->grid(ii,jj,(int)curr+fZ);
-	    }	
-	}
-    }
-}
-
-void FieldFilter::triangleFilterX(ScalarFieldRGBase* in, ScalarFieldRGBase* out,
-				  int fX, int fY, int fZ, int lX) {
-    ScalarFieldRGdouble *ifd, *ofd;
-    ScalarFieldRGfloat *iff, *off;
-    ScalarFieldRGint *ifi, *ofi;
-    ScalarFieldRGchar *ifc, *ofc;
-    ifd=in->getRGDouble();
-    ofd=out->getRGDouble();
-    iff=in->getRGFloat();
-    off=out->getRGFloat();
-    ifi=in->getRGInt();
-    ofi=out->getRGInt();
-    ifc=in->getRGChar();
-    ofc=out->getRGChar();
-    
-    double ratio=(out->nx-1.)/(lX-fX);
-    if (ratio == 1) {		// trivial filter
-	for (int i=0, ii=fX; i<out->nx; i++, ii++)
-	    for (int j=0, jj=fY; j<out->ny; j++, jj++)
-		for (int k=0, kk=fZ; k<out->nz; k++, kk++)
-		    if (ifd)
-			ofd->grid(i,j,k)=ifd->grid(ii, jj, kk);
-		    else if (iff)
-			off->grid(i,j,k)=iff->grid(ii, jj, kk);
-		    else if (ifi)
-			ofi->grid(i,j,k)=ifi->grid(ii, jj, kk);
-		    else 
-			ofc->grid(i,j,k)=ifc->grid(ii, jj, kk);
-	return;
-    }
-    if (ratio<1) {		// undersampling     big->small
-	int span=ceil(2./ratio);
-	Array2<double> table(out->nx, span);
-	buildUndersampleTriangleTable(&table, out->nx, span, ratio);
-	for (int i=0; i<out->nx; i++) {
-	    for (int l=0; l<span; l++) {
-		double tEntry=table(i,l);
-		int inPixelIdx=(int)((i-1)/ratio+fX+l);
-		if (inPixelIdx<fX) inPixelIdx=fX;
-		else if (inPixelIdx>lX) inPixelIdx=lX;
-		for (int j=0, jj=fY; j<out->ny; j++, jj++)
-		    for (int k=0, kk=fZ; k<out->nz; k++, kk++) 
-			if (ifd)
-			    ofd->grid(i,j,k)+=ifd->grid(inPixelIdx,jj,kk)*tEntry;
-			else if (iff)
-			    off->grid(i,j,k)+=iff->grid(inPixelIdx,jj,kk)*tEntry;
-			else if (ifi)
-			    ofi->grid(i,j,k)+=ifi->grid(inPixelIdx,jj,kk)*tEntry;
-			else 
-			    ofc->grid(i,j,k)+=ifc->grid(inPixelIdx,jj,kk)*tEntry;
-	    }
-	}
-    } else {			// oversampling      small->big
-	Array2<double> table(out->nx, 2);
-	buildOversampleTriangleTable(&table, out->nx, ratio);
-	for (int i=0; i<out->nx; i++) {
-	    int left=floor(i/ratio)+fX;
-	    int right=ceil(i/ratio)+fX;
-	    double lEntry=table(i,0);
-	    double rEntry=table(i,1);
-	    for (int j=0, jj=fY; j<out->ny; j++, jj++)
-		for (int k=0, kk=fZ; k<out->nz; k++, kk++)
-		    if (ifd)
-			ofd->grid(i,j,k)=ifd->grid(left,jj,kk)*lEntry+
-			    ifd->grid(right,jj,kk)*rEntry;
-		    else if (iff)
-			off->grid(i,j,k)=iff->grid(left,jj,kk)*lEntry+
-			    iff->grid(right,jj,kk)*rEntry;
-		    else if (ifi)
-			ofi->grid(i,j,k)=ifi->grid(left,jj,kk)*lEntry+
-			    ifi->grid(right,jj,kk)*rEntry;
-		    else 
-			ofc->grid(i,j,k)=ifc->grid(left,jj,kk)*lEntry+
-			    ifc->grid(right,jj,kk)*rEntry;
-	}
-    }
-}
-
-void FieldFilter::triangleFilterY(ScalarFieldRGBase* in, ScalarFieldRGBase* out,
-				  int fX, int fY, int fZ, int lY) {
-    ScalarFieldRGdouble *ifd, *ofd;
-    ScalarFieldRGfloat *iff, *off;
-    ScalarFieldRGint *ifi, *ofi;
-    ScalarFieldRGchar *ifc, *ofc;
-    ifd=in->getRGDouble();
-    ofd=out->getRGDouble();
-    iff=in->getRGFloat();
-    off=out->getRGFloat();
-    ifi=in->getRGInt();
-    ofi=out->getRGInt();
-    ifc=in->getRGChar();
-    ofc=out->getRGChar();
-    
-    double ratio=(out->ny-1.)/(lY-fY);
-    if (ratio == 1) {		// trivial filter
-	for (int i=0, ii=fX; i<out->nx; i++, ii++)
-	    for (int j=0, jj=fY; j<out->ny; j++, jj++)
-		for (int k=0, kk=fZ; k<out->nz; k++, kk++)
-		    if (ifd)
-			ofd->grid(i,j,k)=ifd->grid(ii, jj, kk);
-		    else if (iff)
-			off->grid(i,j,k)=iff->grid(ii, jj, kk);
-		    else if (ifi)
-			ofi->grid(i,j,k)=ifi->grid(ii, jj, kk);
-		    else 
-			ofc->grid(i,j,k)=ifc->grid(ii, jj, kk);
-	return;
-    }
-    if (ratio<1) {		// undersampling     big->small
-	int span=ceil(2./ratio);
-	Array2<double> table(out->ny, span);
-	buildUndersampleTriangleTable(&table, out->ny, span, ratio);
-	for (int j=0; j<out->ny; j++) {
-	    for (int l=0; l<span; l++) {
-		double tEntry=table(j,l);
-		int inPixelIdx=(int)((j-1)/ratio+fY+l);
-		if (inPixelIdx<fY) inPixelIdx=fY;
-		else if (inPixelIdx>lY) inPixelIdx=lY;
-		for (int i=0, ii=fX; i<out->nx; i++, ii++)
-		    for (int k=0, kk=fZ; k<out->nz; k++, kk++) 
-			if (ifd)
-			    ofd->grid(i,j,k)+=ifd->grid(ii,inPixelIdx,kk)*tEntry;
-			else if (iff)
-			    off->grid(i,j,k)+=iff->grid(ii,inPixelIdx,kk)*tEntry;
-			else if (ifi)
-			    ofi->grid(i,j,k)+=ifi->grid(ii,inPixelIdx,kk)*tEntry;
-			else 
-			    ofc->grid(i,j,k)+=ifc->grid(ii,inPixelIdx,kk)*tEntry;
-	    }
-	}
-    } else {			// oversampling      small->big
-	Array2<double> table(out->ny, 2);
-	buildOversampleTriangleTable(&table, out->ny, ratio);
-	for (int j=0; j<out->ny; j++) {
-	    int left=floor(j/ratio)+fY;
-	    int right=ceil(j/ratio)+fY;
-	    double lEntry=table(j,0);
-	    double rEntry=table(j,1);
-	    for (int i=0, ii=fY; i<out->nx; i++, ii++)
-		for (int k=0, kk=fZ; k<out->nz; k++, kk++)
-		    if (ifd)
-			ofd->grid(i,j,k)=ifd->grid(ii,left,kk)*lEntry+
-			    ifd->grid(ii,right,kk)*rEntry;
-		    else if (iff)
-			off->grid(i,j,k)=iff->grid(ii,left,kk)*lEntry+
-			    iff->grid(ii,right,kk)*rEntry;
-		    else if (ifi)
-			ofi->grid(i,j,k)=ifi->grid(ii,left,kk)*lEntry+
-			    ifi->grid(ii,right,kk)*rEntry;
-		    else 
-			ofc->grid(i,j,k)=ifc->grid(ii,left,kk)*lEntry+
-			    ifc->grid(ii,right,kk)*rEntry;
-	}
-    }
-}
-
-void FieldFilter::triangleFilterZ(ScalarFieldRGBase* in, ScalarFieldRGBase* out,
+void FieldFilter::boxFilter(ScalarFieldRGBase* in, ScalarFieldRGBase* out,
 				  int fX, int fY, int fZ, int lZ) {
     ScalarFieldRGdouble *ifd, *ofd;
     ScalarFieldRGfloat *iff, *off;
     ScalarFieldRGint *ifi, *ofi;
+    ScalarFieldRGshort *ifs, *ofs;
     ScalarFieldRGchar *ifc, *ofc;
+    ScalarFieldRGuchar *ifu, *ofu;
     ifd=in->getRGDouble();
     ofd=out->getRGDouble();
     iff=in->getRGFloat();
     off=out->getRGFloat();
     ifi=in->getRGInt();
     ofi=out->getRGInt();
+    ifs=in->getRGShort();
+    ofs=out->getRGShort();
     ifc=in->getRGChar();
     ofc=out->getRGChar();
-    
-    double ratio=(out->nz-1.)/(lZ-fZ);
-    if (ratio == 1) {		// trivial filter
-	for (int i=0, ii=fX; i<out->nx; i++, ii++)
-	    for (int j=0, jj=fY; j<out->ny; j++, jj++)
-		for (int k=0, kk=fZ; k<out->nz; k++, kk++)
-		    if (ifd)
-			ofd->grid(i,j,k)=ifd->grid(ii, jj, kk);
-		    else if (iff)
-			off->grid(i,j,k)=iff->grid(ii, jj, kk);
-		    else if (ifi)
-			ofi->grid(i,j,k)=ifi->grid(ii, jj, kk);
-		    else 
-			ofc->grid(i,j,k)=ifc->grid(ii, jj, kk);
-	return;
-    }
-    if (ratio<1) {		// undersampling     big->small
-	int span=ceil(2./ratio);
-	Array2<double> table(out->nz, span);
-	buildUndersampleTriangleTable(&table, out->nz, span, ratio);
-	for (int k=0; k<out->nz; k++) {
-	    for (int l=0; l<span; l++) {
-		double tEntry=table(k,l);
-		int inPixelIdx=(int)((k-1)/ratio+fZ+l);
-		if (inPixelIdx<fZ) inPixelIdx=fZ;
-		else if (inPixelIdx>lZ) inPixelIdx=lZ;
-		for (int i=0, ii=fX; i<out->nx; i++, ii++) 
-		    for (int j=0, jj=fY; j<out->ny; j++, jj++)
-			if (ifd)
-			    ofd->grid(i,j,k)+=ifd->grid(ii,jj,inPixelIdx)*tEntry;
-			else if (iff)
-			    off->grid(i,j,k)+=iff->grid(ii,jj,inPixelIdx)*tEntry;
-			else if (ifi)
-			    ofi->grid(i,j,k)+=ifi->grid(ii,jj,inPixelIdx)*tEntry;
-			else 
-			    ofc->grid(i,j,k)+=ifc->grid(ii,jj,inPixelIdx)*tEntry;
+    ifu=in->getRGUchar();
+    ofu=out->getRGUchar();
+
+    double ratio=(lZ-fZ)/(out->nx-1.);
+    for (int i=0, ii=fX; i<out->ny; i++, ii++) {
+	for (int j=0, jj=fY; j<out->nz; j++, jj++) {
+	    double curr=fZ;
+	    if (ifd) for (int k=0; k<out->nx; k++, curr+=ratio)
+		ofd->grid(k,i,j)=ifd->grid(ii, jj, (int)curr);
+	    else if (iff) for (int k=0; k<out->nx; k++, curr+=ratio)
+		off->grid(k,i,j)=iff->grid(ii, jj, (int)curr);
+	    else if (ifi) for (int k=0; k<out->nx; k++, curr+=ratio)
+		ofi->grid(k,i,j)=ifi->grid(ii, jj, (int)curr);
+	    else if (ifs) for (int k=0; k<out->nx; k++, curr+=ratio)
+		ofs->grid(k,i,j)=ifs->grid(ii, jj, (int)curr);
+	    else if (ifc) for (int k=0; k<out->nx; k++, curr+=ratio)
+		ofc->grid(k,i,j)=ifc->grid(ii, jj, (int)curr);
+	    else if (ifu) for (int k=0; k<out->nx; k++, curr+=ratio)
+		ofu->grid(k,i,j)=ifu->grid(ii, jj, (int)curr);
+	    else {
+		cerr << "Unknown SFRG type -- shouldn't ever get here!\n";
+		return;
 	    }
 	}
+    }
+}
+
+void FieldFilter::triangleFilter(ScalarFieldRGBase* in, ScalarFieldRGBase* out,
+				 int fX, int fY, int fZ, int lZ) {
+    ScalarFieldRGdouble *ifd, *ofd;
+    ScalarFieldRGfloat *iff, *off;
+    ScalarFieldRGint *ifi, *ofi;
+    ScalarFieldRGshort *ifs, *ofs;
+    ScalarFieldRGchar *ifc, *ofc;
+    ScalarFieldRGuchar *ifu, *ofu;
+    ifd=in->getRGDouble();
+    ofd=out->getRGDouble();
+    iff=in->getRGFloat();
+    off=out->getRGFloat();
+    ifi=in->getRGInt();
+    ofi=out->getRGInt();
+    ifs=in->getRGShort();
+    ofs=out->getRGShort();
+    ifc=in->getRGChar();
+    ofc=out->getRGChar();
+    ifu=in->getRGUchar();
+    ofu=out->getRGUchar();
+    
+    double ratio=(lZ-fZ)/(out->nx-1.);
+    if (ratio == 1) {		// trivial filter
+	for (int i=0, ii=fX; i<out->ny; i++, ii++)
+	    for (int j=0, jj=fY; j<out->nz; j++, jj++)
+		if (ifd) for (int k=0, kk=fZ; k<out->nx; k++, kk++)
+		    ofd->grid(k,i,j)=ifd->grid(ii, jj, kk);
+		else if (iff) for (int k=0, kk=fZ; k<out->nx; k++, kk++)
+		    off->grid(k,i,j)=iff->grid(ii, jj, kk);
+		else if (ifi) for (int k=0, kk=fZ; k<out->nx; k++, kk++)
+		    ofi->grid(k,i,j)=ifi->grid(ii, jj, kk);
+		else if (ifs) for (int k=0, kk=fZ; k<out->nx; k++, kk++)
+		    ofs->grid(k,i,j)=ifs->grid(ii, jj, kk);
+		else if (ifc) for (int k=0, kk=fZ; k<out->nx; k++, kk++)
+		    ofc->grid(k,i,j)=ifc->grid(ii, jj, kk);
+		else if (ifu) for (int k=0, kk=fZ; k<out->nx; k++, kk++)
+		    ofu->grid(k,i,j)=ifu->grid(ii, jj, kk);
+		else {
+		    cerr << "Unknown SFRG type -- shouldn't ever get here!\n";
+		    return;
+		}
+    } else if (ratio>1) {		// undersampling     big->small
+	int span=ceil(2.*ratio);
+	Array2<double> table(out->nx, span);
+	buildUndersampleTriangleTable(&table, out->nx, span, ratio);
+	for (int i=0, ii=fX; i<out->ny; i++, ii++)
+	    for (int j=0, jj=fY; j<out->nz; j++, jj++)
+		for (int k=0, kk=0; kk<out->nx; k++, kk++) {
+		    int inPixelIdxBase=(int)((k-1)*ratio+fZ);
+		    for (int l=0; l<span; l++) {
+			double tEntry=table(k,l);
+			int inPixelIdx=inPixelIdxBase+l;
+			if (inPixelIdx<fZ) inPixelIdx=fZ;
+			else if (inPixelIdx>lZ) inPixelIdx=lZ;
+			if (ifd) ofd->grid(k,i,j)+=
+				     ifd->grid(ii,jj,inPixelIdx)*tEntry;
+			else if (iff) off->grid(k,i,j)+=
+					  iff->grid(ii,jj,inPixelIdx)*tEntry;
+			else if (ifi) ofi->grid(k,i,j)+=
+					  ifi->grid(ii,jj,inPixelIdx)*tEntry;
+			else if (ifs) ofs->grid(k,i,j)+=
+					  ifs->grid(ii,jj,inPixelIdx)*tEntry;
+			else if (ifc) ofc->grid(k,i,j)+=
+					  ifc->grid(ii,jj,inPixelIdx)*tEntry;
+			else if (ifu) ofu->grid(k,i,j)+=
+					  ifu->grid(ii,jj,inPixelIdx)*tEntry;
+			else {
+			    cerr << "Error - shouldn't ever get here!\n";
+			}
+		    }
+		}
     } else {			// oversampling      small->big
-	Array2<double> table(out->nz, 2);
-	buildOversampleTriangleTable(&table, out->nz, ratio);
-	for (int k=0; k<out->nz; k++) {
-	    int left=floor(k/ratio)+fZ;
-	    int right=ceil(k/ratio)+fZ;
-	    double lEntry=table(k,0);
-	    double rEntry=table(k,1);
-	    for (int i=0, ii=fX; i<out->nx; i++, ii++)
-		for (int j=0, jj=fY; j<out->ny; j++, jj++)
+	Array2<double> table(out->nx, 2);
+	buildOversampleTriangleTable(&table, out->nx, ratio);
+	for (int i=0, ii=fX; i<out->ny; i++, ii++)
+	    for (int j=0, jj=fY; j<out->nz; j++, jj++)
+		for (int k=0; k<out->nx; k++) {
+		    int left=floor(k*ratio)+fZ;
+		    int right=ceil(k*ratio)+fZ;
+		    double lEntry=table(k,0);
+		    double rEntry=table(k,1);
 		    if (ifd)
-			ofd->grid(i,j,k)=ifd->grid(ii,jj,left)*lEntry+
+			ofd->grid(k,i,j)=ifd->grid(ii,jj,left)*lEntry+
 			    ifd->grid(ii,jj,right)*rEntry;
 		    else if (iff)
-			off->grid(i,j,k)=iff->grid(ii,jj,left)*lEntry+
+			off->grid(k,i,j)=iff->grid(ii,jj,left)*lEntry+
 			    iff->grid(ii,jj,right)*rEntry;
 		    else if (ifi)
-			ofi->grid(i,j,k)=ifi->grid(ii,jj,left)*lEntry+
+			ofi->grid(k,i,j)=ifi->grid(ii,jj,left)*lEntry+
 			    ifi->grid(ii,jj,right)*rEntry;
-		    else 
-			ofc->grid(i,j,k)=ifc->grid(ii,jj,left)*lEntry+
+		    else if (ifs)
+			ofs->grid(k,i,j)=ifs->grid(ii,jj,left)*lEntry+
+			    ifs->grid(ii,jj,right)*rEntry;
+		    else if (ifc)
+			ofc->grid(k,i,j)=ifc->grid(ii,jj,left)*lEntry+
 			    ifc->grid(ii,jj,right)*rEntry;
+		    else if (ifu)
+			ofu->grid(k,i,j)=ifu->grid(ii,jj,left)*lEntry+
+			    ifu->grid(ii,jj,right)*rEntry;
+		    else {
+			cerr << "Error - shoudln't ever get here!\n";
+		    }
 	}
     }
 }
@@ -707,14 +484,13 @@ void printTable(Array2<double>*a) {
 void FieldFilter::buildUndersampleTriangleTable(Array2<double> *table,
 						int size, int span, 
 						double ratio) {
-    double invRatio=1./ratio;
     for (int i=0; i<size; i++) {
         double total=0;
-	double inCtr=i*invRatio;
-	int inIdx=inCtr-invRatio;
+	double inCtr=i*ratio;
+	int inIdx=inCtr-ratio;
 	int j;
 	for (j=0; j<span; j++, inIdx++) {
-	    double val=invRatio-fabs(inCtr-inIdx);
+	    double val=ratio-fabs(inCtr-inIdx);
 	    if (val<0) {
 		val=0;
 	    }
@@ -730,247 +506,118 @@ void FieldFilter::buildUndersampleTriangleTable(Array2<double> *table,
 
 void FieldFilter::buildOversampleTriangleTable(Array2<double> *table,
 					       int size, double ratio) {
-    double inverse=1./ratio;
     double curr=1.;
     for (int i=0; i<size; i++) {
 	(*table)(i,0)=curr;
 	(*table)(i,1)=1.-curr;
-	curr-=inverse;
+	curr-=ratio;
 	if (curr<0) curr+=1.;
     }
+//  printTable(table);
 }
 
-void FieldFilter::mitchellFilterX(ScalarFieldRGBase* in, ScalarFieldRGBase* out,
-				  int fX, int fY, int fZ, int lX) {
+void FieldFilter::mitchellFilter(ScalarFieldRGBase* in, ScalarFieldRGBase* out,
+				 int fX, int fY, int fZ, int lZ) {
     ScalarFieldRGdouble *ifd, *ofd;
     ScalarFieldRGfloat *iff, *off;
     ScalarFieldRGint *ifi, *ofi;
+    ScalarFieldRGshort *ifs, *ofs;
     ScalarFieldRGchar *ifc, *ofc;
+    ScalarFieldRGuchar *ifu, *ofu;
     ifd=in->getRGDouble();
     ofd=out->getRGDouble();
     iff=in->getRGFloat();
     off=out->getRGFloat();
     ifi=in->getRGInt();
     ofi=out->getRGInt();
+    ifs=in->getRGShort();
+    ofs=out->getRGShort();
     ifc=in->getRGChar();
     ofc=out->getRGChar();
+    ifu=in->getRGUchar();
+    ofu=out->getRGUchar();
     
-    double ratio=(out->nx-1.)/(lX-fX);
+    double ratio=(lZ-fZ)/(out->nx-1.);
     if (ratio == 1) {		// trivial filter
-	for (int i=0, ii=fX; i<out->nx; i++, ii++)
-	    for (int j=0, jj=fY; j<out->ny; j++, jj++)
-		for (int k=0, kk=fZ; k<out->nz; k++, kk++)
-		    if (ifd)
-			ofd->grid(i,j,k)=ifd->grid(ii, jj, kk);
-		    else if (iff)
-			off->grid(i,j,k)=iff->grid(ii, jj, kk);
-		    else if (ifi)
-			ofi->grid(i,j,k)=ifi->grid(ii, jj, kk);
-		    else 
-			ofc->grid(i,j,k)=ifc->grid(ii, jj, kk);
-	return;
-    }
-    if (ratio<1) {		// undersampling     big->small
-	int span=ceil(4./ratio);
+	for (int i=0, ii=fX; i<out->ny; i++, ii++)
+	    for (int j=0, jj=fY; j<out->nz; j++, jj++)
+		if (ifd) for (int k=0, kk=fZ; k<out->nx; k++, kk++)
+		    ofd->grid(k,i,j)=ifd->grid(ii, jj, kk);
+		else if (iff) for (int k=0, kk=fZ; k<out->nx; k++, kk++)
+		    off->grid(k,i,j)=iff->grid(ii, jj, kk);
+		else if (ifi) for (int k=0, kk=fZ; k<out->nx; k++, kk++)
+		    ofi->grid(k,i,j)=ifi->grid(ii, jj, kk);
+		else if (ifs) for (int k=0, kk=fZ; k<out->nx; k++, kk++)
+		    ofs->grid(k,i,j)=ifs->grid(ii, jj, kk);
+		else if (ifc) for (int k=0, kk=fZ; k<out->nx; k++, kk++)
+		    ofc->grid(k,i,j)=ifc->grid(ii, jj, kk);
+		else if (ifu) for (int k=0, kk=fZ; k<out->nx; k++, kk++)
+		    ofu->grid(k,i,j)=ifu->grid(ii, jj, kk);
+		else {
+		    cerr << "Unknown SFRG type -- shouldn't ever get here!\n";
+		    return;
+		}
+    } else if (ratio>1) {		// undersampling     big->small
+	int span=ceil(2.*ratio);
 	Array2<double> table(out->nx, span);
 	buildUndersampleMitchellTable(&table, out->nx, span, ratio);
-	for (int i=0; i<out->nx; i++) {
-	    for (int l=0; l<span; l++) {
-		double tEntry=table(i,l);
-		int inPixelIdx=(int)((i-1)/ratio+fX+l);
-		if (inPixelIdx<fX) inPixelIdx=fX;
-		else if (inPixelIdx>lX) inPixelIdx=lX;
-		for (int j=0, jj=fY; j<out->ny; j++, jj++)
-		    for (int k=0, kk=fZ; k<out->nz; k++, kk++) 
-			if (ifd)
-			    ofd->grid(i,j,k)+=ifd->grid(inPixelIdx,jj,kk)*tEntry;
-			else if (iff)
-			    off->grid(i,j,k)+=iff->grid(inPixelIdx,jj,kk)*tEntry;
-			else if (ifi)
-			    ofi->grid(i,j,k)+=ifi->grid(inPixelIdx,jj,kk)*tEntry;
-			else 
-			    ofc->grid(i,j,k)+=ifc->grid(inPixelIdx,jj,kk)*tEntry;
-	    }
-	}
+	for (int i=0, ii=fX; i<out->ny; i++, ii++)
+	    for (int j=0, jj=fY; j<out->nz; j++, jj++)
+		for (int k=0, kk=0; kk<out->nx; k++, kk++) {
+		    int inPixelIdxBase=(int)((k-1)*ratio+fZ);
+		    for (int l=0; l<span; l++) {
+			double tEntry=table(k,l);
+			int inPixelIdx=inPixelIdxBase+l;
+			if (inPixelIdx<fZ) inPixelIdx=fZ;
+			else if (inPixelIdx>lZ) inPixelIdx=lZ;
+			if (ifd) ofd->grid(k,i,j)+=
+				     ifd->grid(ii,jj,inPixelIdx)*tEntry;
+			else if (iff) off->grid(k,i,j)+=
+					  iff->grid(ii,jj,inPixelIdx)*tEntry;
+			else if (ifi) ofi->grid(k,i,j)+=
+					  ifi->grid(ii,jj,inPixelIdx)*tEntry;
+			else if (ifs) ofs->grid(k,i,j)+=
+					  ifs->grid(ii,jj,inPixelIdx)*tEntry;
+			else if (ifc) ofc->grid(k,i,j)+=
+					  ifc->grid(ii,jj,inPixelIdx)*tEntry;
+			else if (ifu) ofu->grid(k,i,j)+=
+					  ifu->grid(ii,jj,inPixelIdx)*tEntry;
+			else {
+			    cerr << "Error - shouldn't ever get here!\n";
+			}
+		    }
+		}
     } else {			// oversampling      small->big
-	int span=ceil(4./ratio);
 	Array2<double> table(out->nx, 2);
 	buildOversampleMitchellTable(&table, out->nx, ratio);
-	for (int i=0; i<out->nx; i++) {
-	    int left=floor(i/ratio)+fX;
-	    int right=ceil(i/ratio)+fX;
-	    double lEntry=table(i,0);
-	    double rEntry=table(i,1);
-	    for (int j=0, jj=fY; j<out->ny; j++, jj++)
-		for (int k=0, kk=fZ; k<out->nz; k++, kk++)
+	for (int i=0, ii=fX; i<out->ny; i++, ii++)
+	    for (int j=0, jj=fY; j<out->nz; j++, jj++)
+		for (int k=0; k<out->nx; k++) {
+		    int left=floor(k*ratio)+fZ;
+		    int right=ceil(k*ratio)+fZ;
+		    double lEntry=table(k,0);
+		    double rEntry=table(k,1);
 		    if (ifd)
-			ofd->grid(i,j,k)=ifd->grid(left,jj,kk)*lEntry+
-			    ifd->grid(right,jj,kk)*rEntry;
-		    else if (iff)
-			off->grid(i,j,k)=iff->grid(left,jj,kk)*lEntry+
-			    iff->grid(right,jj,kk)*rEntry;
-		    else if (ifi)
-			ofi->grid(i,j,k)=ifi->grid(left,jj,kk)*lEntry+
-			    ifi->grid(right,jj,kk)*rEntry;
-		    else 
-			ofc->grid(i,j,k)=ifc->grid(left,jj,kk)*lEntry+
-			    ifc->grid(right,jj,kk)*rEntry;
-	}
-    }
-}
-
-void FieldFilter::mitchellFilterY(ScalarFieldRGBase* in, ScalarFieldRGBase* out,
-				  int fX, int fY, int fZ, int lY) {
-    ScalarFieldRGdouble *ifd, *ofd;
-    ScalarFieldRGfloat *iff, *off;
-    ScalarFieldRGint *ifi, *ofi;
-    ScalarFieldRGchar *ifc, *ofc;
-    ifd=in->getRGDouble();
-    ofd=out->getRGDouble();
-    iff=in->getRGFloat();
-    off=out->getRGFloat();
-    ifi=in->getRGInt();
-    ofi=out->getRGInt();
-    ifc=in->getRGChar();
-    ofc=out->getRGChar();
-    
-    double ratio=(out->ny-1.)/(lY-fY);
-    if (ratio == 1) {		// trivial filter
-	for (int i=0, ii=fX; i<out->nx; i++, ii++)
-	    for (int j=0, jj=fY; j<out->ny; j++, jj++)
-		for (int k=0, kk=fZ; k<out->nz; k++, kk++)
-		    if (ifd)
-			ofd->grid(i,j,k)=ifd->grid(ii, jj, kk);
-		    else if (iff)
-			off->grid(i,j,k)=iff->grid(ii, jj, kk);
-		    else if (ifi)
-			ofi->grid(i,j,k)=ifi->grid(ii, jj, kk);
-		    else 
-			ofc->grid(i,j,k)=ifc->grid(ii, jj, kk);
-	return;
-    }
-    if (ratio<1) {		// undersampling     big->small
-	int span=ceil(2./ratio);
-	Array2<double> table(out->ny, span);
-	buildUndersampleMitchellTable(&table, out->ny, span, ratio);
-	for (int j=0; j<out->ny; j++) {
-	    for (int l=0; l<span; l++) {
-		double tEntry=table(j,l);
-		int inPixelIdx=(int)((j-1)/ratio+fY+l);
-		if (inPixelIdx<fY) inPixelIdx=fY;
-		else if (inPixelIdx>lY) inPixelIdx=lY;
-		for (int i=0, ii=fX; i<out->nx; i++, ii++)
-		    for (int k=0, kk=fZ; k<out->nz; k++, kk++) 
-			if (ifd)
-			    ofd->grid(i,j,k)+=ifd->grid(ii,inPixelIdx,kk)*tEntry;
-			else if (iff)
-			    off->grid(i,j,k)+=iff->grid(ii,inPixelIdx,kk)*tEntry;
-			else if (ifi)
-			    ofi->grid(i,j,k)+=ifi->grid(ii,inPixelIdx,kk)*tEntry;
-			else 
-			    ofc->grid(i,j,k)+=ifc->grid(ii,inPixelIdx,kk)*tEntry;
-	    }
-	}
-    } else {			// oversampling      small->big
-	Array2<double> table(out->ny, 2);
-	buildOversampleMitchellTable(&table, out->ny, ratio);
-	for (int j=0; j<out->ny; j++) {
-	    int left=floor(j/ratio)+fY;
-	    int right=ceil(j/ratio)+fY;
-	    double lEntry=table(j,0);
-	    double rEntry=table(j,1);
-	    for (int i=0, ii=fY; i<out->nx; i++, ii++)
-		for (int k=0, kk=fZ; k<out->nz; k++, kk++)
-		    if (ifd)
-			ofd->grid(i,j,k)=ifd->grid(ii,left,kk)*lEntry+
-			    ifd->grid(ii,right,kk)*rEntry;
-		    else if (iff)
-			off->grid(i,j,k)=iff->grid(ii,left,kk)*lEntry+
-			    iff->grid(ii,right,kk)*rEntry;
-		    else if (ifi)
-			ofi->grid(i,j,k)=ifi->grid(ii,left,kk)*lEntry+
-			    ifi->grid(ii,right,kk)*rEntry;
-		    else 
-			ofc->grid(i,j,k)=ifc->grid(ii,left,kk)*lEntry+
-			    ifc->grid(ii,right,kk)*rEntry;
-	}
-    }
-}
-
-void FieldFilter::mitchellFilterZ(ScalarFieldRGBase* in, ScalarFieldRGBase* out,
-				  int fX, int fY, int fZ, int lZ) {
-    ScalarFieldRGdouble *ifd, *ofd;
-    ScalarFieldRGfloat *iff, *off;
-    ScalarFieldRGint *ifi, *ofi;
-    ScalarFieldRGchar *ifc, *ofc;
-    ifd=in->getRGDouble();
-    ofd=out->getRGDouble();
-    iff=in->getRGFloat();
-    off=out->getRGFloat();
-    ifi=in->getRGInt();
-    ofi=out->getRGInt();
-    ifc=in->getRGChar();
-    ofc=out->getRGChar();
-    
-    double ratio=(out->nz-1.)/(lZ-fZ);
-    if (ratio == 1) {		// trivial filter
-	for (int i=0, ii=fX; i<out->nx; i++, ii++)
-	    for (int j=0, jj=fY; j<out->ny; j++, jj++)
-		for (int k=0, kk=fZ; k<out->nz; k++, kk++)
-		    if (ifd)
-			ofd->grid(i,j,k)=ifd->grid(ii, jj, kk);
-		    else if (iff)
-			off->grid(i,j,k)=iff->grid(ii, jj, kk);
-		    else if (ifi)
-			ofi->grid(i,j,k)=ifi->grid(ii, jj, kk);
-		    else 
-			ofc->grid(i,j,k)=ifc->grid(ii, jj, kk);
-	return;
-    }
-    if (ratio<1) {		// undersampling     big->small
-	int span=ceil(2./ratio);
-	Array2<double> table(out->nz, span);
-	buildUndersampleMitchellTable(&table, out->nz, span, ratio);
-	for (int k=0; k<out->nz; k++) {
-	    for (int l=0; l<span; l++) {
-		double tEntry=table(k,l);
-		int inPixelIdx=(int)((k-1)/ratio+fZ+l);
-		if (inPixelIdx<fZ) inPixelIdx=fZ;
-		else if (inPixelIdx>lZ) inPixelIdx=lZ;
-		for (int i=0, ii=fX; i<out->nx; i++, ii++) 
-		    for (int j=0, jj=fY; j<out->ny; j++, jj++)
-			if (ifd)
-			    ofd->grid(i,j,k)+=ifd->grid(ii,jj,inPixelIdx)*tEntry;
-			else if (iff)
-			    off->grid(i,j,k)+=iff->grid(ii,jj,inPixelIdx)*tEntry;
-			else if (ifi)
-			    ofi->grid(i,j,k)+=ifi->grid(ii,jj,inPixelIdx)*tEntry;
-			else 
-			    ofc->grid(i,j,k)+=ifc->grid(ii,jj,inPixelIdx)*tEntry;
-	    }
-	}
-    } else {			// oversampling      small->big
-	Array2<double> table(out->nz, 2);
-	buildOversampleMitchellTable(&table, out->nz, ratio);
-	for (int k=0; k<out->nz; k++) {
-	    int left=floor(k/ratio)+fZ;
-	    int right=ceil(k/ratio)+fZ;
-	    double lEntry=table(k,0);
-	    double rEntry=table(k,1);
-	    for (int i=0, ii=fX; i<out->nx; i++, ii++)
-		for (int j=0, jj=fY; j<out->ny; j++, jj++)
-		    if (ifd)
-			ofd->grid(i,j,k)=ifd->grid(ii,jj,left)*lEntry+
+			ofd->grid(k,i,j)=ifd->grid(ii,jj,left)*lEntry+
 			    ifd->grid(ii,jj,right)*rEntry;
 		    else if (iff)
-			off->grid(i,j,k)=iff->grid(ii,jj,left)*lEntry+
+			off->grid(k,i,j)=iff->grid(ii,jj,left)*lEntry+
 			    iff->grid(ii,jj,right)*rEntry;
 		    else if (ifi)
-			ofi->grid(i,j,k)=ifi->grid(ii,jj,left)*lEntry+
+			ofi->grid(k,i,j)=ifi->grid(ii,jj,left)*lEntry+
 			    ifi->grid(ii,jj,right)*rEntry;
-		    else 
-			ofc->grid(i,j,k)=ifc->grid(ii,jj,left)*lEntry+
+		    else if (ifs)
+			ofs->grid(k,i,j)=ifs->grid(ii,jj,left)*lEntry+
+			    ifs->grid(ii,jj,right)*rEntry;
+		    else if (ifc)
+			ofc->grid(k,i,j)=ifc->grid(ii,jj,left)*lEntry+
 			    ifc->grid(ii,jj,right)*rEntry;
+		    else if (ifu)
+			ofu->grid(k,i,j)=ifu->grid(ii,jj,left)*lEntry+
+			    ifu->grid(ii,jj,right)*rEntry;
+		    else {
+			cerr << "Error - shoudln't ever get here!\n";
+		    }
 	}
     }
 }
@@ -978,14 +625,13 @@ void FieldFilter::mitchellFilterZ(ScalarFieldRGBase* in, ScalarFieldRGBase* out,
 void FieldFilter::buildUndersampleMitchellTable(Array2<double> *table,
 						int size, int span, 
 						double ratio) {
-    double invRatio=1./ratio;
     for (int i=0; i<size; i++) {
         double total=0;
-	double inCtr=i*invRatio;
-	int inIdx=inCtr-invRatio;
+	double inCtr=i*ratio;
+	int inIdx=inCtr-ratio;
 	int j;
 	for (j=0; j<span; j++, inIdx++) {
-	    double val=invRatio-fabs(inCtr-inIdx);
+	    double val=ratio-fabs(inCtr-inIdx);
 	    if (val<0) {
 		val=0;
 	    }
@@ -996,17 +642,18 @@ void FieldFilter::buildUndersampleMitchellTable(Array2<double> *table,
 	    (*table)(i,j)/=total;
 	}	
     }
-    printTable(table);
+//    printTable(table);
 }
 
 void FieldFilter::buildOversampleMitchellTable(Array2<double> *table,
 					       int size, double ratio) {
-    double inverse=1./ratio;
     double curr=1.;
     for (int i=0; i<size; i++) {
 	(*table)(i,0)=curr;
 	(*table)(i,1)=1.-curr;
-	curr-=inverse;
+	curr-=ratio;
 	if (curr<0) curr+=1.;
     }
+//  printTable(table);
 }
+
