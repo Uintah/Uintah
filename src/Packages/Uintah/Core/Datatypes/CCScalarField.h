@@ -16,8 +16,8 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
-using std::vector;
+  using namespace SCIRun;
+  using std::vector;
 
 template <class T>
 class SCICORESHARE CCScalarField : public ScalarFieldRGBase {

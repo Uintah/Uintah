@@ -41,8 +41,8 @@ POSSIBLE REVISIONS
 //#include <Packages/Uintah/CCA/Components/Arches/Mixing/PDFShape.h>
 
 #include <vector>
-using namespace std;
 namespace Uintah {
+using namespace std;
 
   ///////////////////////////////////////////////////////////////////////////
   // structure KD_Node is the basic element of the KD_Tree .

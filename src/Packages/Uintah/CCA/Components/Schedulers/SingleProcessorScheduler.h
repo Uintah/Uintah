@@ -8,9 +8,9 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <vector>
 #include <map>
-using std::vector;
 
 namespace Uintah {
+  using std::vector;
 
   class OnDemandDataWarehouse;
   class Task;

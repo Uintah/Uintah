@@ -3,9 +3,9 @@
 
 #include <Packages/Uintah/Core/Grid/BoundCondBase.h>
 #include <string>
-using std::string;
 
 namespace Uintah {
+using std::string;
    
 /**************************************
 

@@ -13,9 +13,8 @@
 #include <vector>
 #include <map>
 
-using std::vector;
-
 namespace Uintah {
+using std::vector;
 
 class Task;
 class SendState;

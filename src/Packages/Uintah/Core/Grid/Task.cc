@@ -441,8 +441,8 @@ Task::display( ostream & out ) const
   out << "]";
 }
 
-ostream &
-operator << ( ostream & out, const Uintah::Task::Dependency & dep )
+std::ostream &
+operator << ( std::ostream & out, const Uintah::Task::Dependency & dep )
 {
   out << "[" << *(dep.var) << " Patches: ";
   if( dep.patches ){

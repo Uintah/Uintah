@@ -4,9 +4,8 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <vector>
 
-using std::vector;
-
 namespace Uintah {
+using std::vector;
 
     class MPMICELabel {
     public:

@@ -637,9 +637,9 @@ WARNING
 } // End namespace Uintah
 
 
-ostream & operator << ( ostream & out, const Uintah::Task & task );
-ostream & operator << ( ostream & out, const Uintah::Task::TaskType & tt );
-ostream & operator << ( ostream & out, const Uintah::Task::Dependency & dep );
+std::ostream & operator << ( std::ostream & out, const Uintah::Task & task );
+std::ostream & operator << ( std::ostream & out, const Uintah::Task::TaskType & tt );
+std::ostream & operator << ( std::ostream & out, const Uintah::Task::Dependency & dep );
 
 
 #endif
