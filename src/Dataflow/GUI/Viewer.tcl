@@ -232,7 +232,7 @@ itcl_class ViewWindow {
 	set_defaults 
 
 	frame $w.menu -relief raised -borderwidth 3
-	pack $w.menu -fill x -side top
+	pack $w.menu -fill x
 
 	menubutton $w.menu.file -text "File" -underline 0 \
 		-menu $w.menu.file.menu
@@ -334,7 +334,7 @@ itcl_class ViewWindow {
 	iwidgets::scrolledframe $w.bsframe -width 640 -height 90 \
 		-vscrollmode none -hscrollmode dynamic \
 		-sbwidth 10 -relief groove
-	pack $w.bsframe -side bottom -before $w.wframe -anchor w -expand yes -fill x
+	pack $w.bsframe -side bottom -before $w.wframe -anchor w -fill x
 
 	# get the childsite to add stuff to
 	set bsframe [$w.bsframe childsite]
@@ -570,7 +570,7 @@ itcl_class ViewWindow {
     method addMFrame {w} {
 
 	if { $IsAttached!=0} {
-	    pack $attachedFr -anchor w -side bottom -before $w.bsframe -expand yes -fill x
+	    pack $attachedFr -anchor w -side bottom -before $w.bsframe -fill x
 	    append geom [expr [winfo width $w]>[winfo width $w.msframe] ?[winfo width $w]:[winfo width $w.msframe]] x [expr [winfo height $w]+[winfo reqheight $w.msframe]]
 	    wm geometry $w $geom
 	    update
@@ -811,7 +811,7 @@ itcl_class ViewWindow {
 	    } else {
 		wm withdraw $detachedFr
 		
-		pack $attachedFr -anchor w -side bottom -before $w.bsframe -expand yes -fill x
+		pack $attachedFr -anchor w -side bottom -before $w.bsframe -fill x
 		append geom [winfo width $w] x [expr [winfo height $w]+[winfo reqheight $w.msframe]]
 		wm geometry $w $geom
 		set IsAttached 1
