@@ -1822,6 +1822,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       constCCVariable<double> speedSound;
       constCCVariable<double> vol_frac;
       constCCVariable<double> rho_CC;
+      constCCVariable<double> created_vol;
       constSFCXVariable<double> uvel_FC;
       constSFCYVariable<double> vvel_FC;
       constSFCZVariable<double> wvel_FC;
@@ -1837,6 +1838,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel,   indx,patch,Ghost::None,0);
       new_dw->get(burnedMass,  lb->burnedMass_CCLabel,indx,patch,Ghost::None,0);
       new_dw->get(speedSound,  lb->speedSound_CCLabel,indx,patch,Ghost::None,0);
+      new_dw->get(created_vol,lb->created_vol_CCLabel,indx,patch,Ghost::None,0);
       
       //---- P R I N T   D A T A ------  
       if (switchDebug_explicit_press ) {
@@ -1870,8 +1872,13 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         //   Divergence of velocity * face area 
         term2[c] -= q_advected[c];
 
-        term3[c] += vol_frac[c] * sp_vol_CC[m][c]/
-                            (speedSound[c]*speedSound[c]);
+//        term3[c] += vol_frac[c] * sp_vol_CC[m][c]/
+//                            (speedSound[c]*speedSound[c]);
+
+        term3[c] += (vol_frac[c] + created_vol[c]/vol)*sp_vol_CC[m][c]/
+                                             (speedSound[c]*speedSound[c]);
+
+//        cout << c << " " << m << " " << term3[c] << " " << created_vol[c] << " " << sp_vol_CC[m][c] << endl;
       }  //iter loop 
     }  //matl loop
     delete advector;
@@ -2616,7 +2623,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
 
     int numALLMatls = d_sharedState->getNumMatls();
     Vector  dx = patch->dCell();
-    //double cell_vol = dx.x()*dx.y()*dx.z();
+    double cell_vol = dx.x()*dx.y()*dx.z();
 
     constCCVariable<double> rho_CC, spec_vol_src, sp_vol;
     constCCVariable<double> mass_L_CC;
