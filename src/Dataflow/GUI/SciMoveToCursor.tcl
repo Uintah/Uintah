@@ -12,6 +12,12 @@ set screenHeight [winfo screenheight .]
 
 proc moveToCursor { window } {
 
+  # If we are currently running a script... ie, we are loading the net
+  # from a file, then do not move GUI to the mouse.
+  if [string length [info script]] {
+      return
+  }
+
   global screenHeight screenWidth
 
   set cursorXLoc [expr [winfo pointerx .]]
