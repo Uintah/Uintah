@@ -139,7 +139,7 @@ GuiContext* TCLInterface::createContext(const string& name)
   return new GuiContext(this, name);
 }
 
-void TCLInterface::postMessage(const string& errmsg, bool err = false)
+void TCLInterface::postMessage(const string& errmsg, bool err)
 {
   string tag;
   if(err)
