@@ -42,10 +42,10 @@ static Module* make_SurfToGeom(const clString& id)
     return new SurfToGeom(id);
 }
 
-static RegisterModule db1("Surfaces", "Surface to Geometry", make_SurfToGeom);
-static RegisterModule db2("Visualization", "Surface to Geometry", 
+static RegisterModule db1("Surfaces", "SurfToGeom", make_SurfToGeom);
+static RegisterModule db2("Visualization", "SurfToGeom",
 			  make_SurfToGeom);
-static RegisterModule db3("Dave", "Surface to Geometry", make_SurfToGeom);
+static RegisterModule db3("Dave", "SurfToGeom", make_SurfToGeom);
 
 SurfToGeom::SurfToGeom(const clString& id)
 : Module("SurfToGeom", id, Filter)
