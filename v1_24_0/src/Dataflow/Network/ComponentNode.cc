@@ -41,7 +41,9 @@
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Dataflow/XMLUtil/StrX.h>
 #include <Dataflow/Network/PackageDBHandler.h>
+
 #include <Core/Util/RWS.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <stdlib.h>
 
@@ -163,7 +165,9 @@ DestroyFileNode(file_node* n)
 void
 DestroyInportNode(inport_node* n)
 {
-  if (n->name && n->name!=NOT_SET) delete[] n->name;
+  if (n->name && n->name!=NOT_SET) {
+    delete[] n->name;
+  }
   if (n->description && n->description!=NOT_SET) delete[] n->description;
   if (n->datatype && n->datatype!=NOT_SET) delete[] n->datatype;
   if (n->upstream) {
@@ -182,7 +186,9 @@ DestroyInportNode(inport_node* n)
 void
 DestroyOutportNode(outport_node* n)
 {
-  if (n->name && n->name!=NOT_SET) delete[] n->name;
+  if (n->name && n->name!=NOT_SET) {
+    delete[] n->name;
+  }
   if (n->description && n->description!=NOT_SET) delete[] n->description;
   if (n->datatype && n->datatype!=NOT_SET) delete[] n->datatype;
   if (n->downstream) {
@@ -319,7 +325,9 @@ DestroyImplementationNode(implementation_node* n)
 void
 SCIRun::DestroyComponentNode(component_node* n)
 {
-  if (n->name && n->name!=NOT_SET) delete[] n->name;
+  if (n->name && n->name!=NOT_SET) {
+    delete[] n->name;
+  }
   if (n->category && n->category!=NOT_SET) delete[] n->category;
   if (n->optional && n->optional!=NOT_SET) delete[] n->optional;
   if (n->overview) DestroyOverviewNode(n->overview);
@@ -524,8 +532,9 @@ ProcessInportNode(const DOMNode& d, inport_node* n)
     const XMLCh* childname = child->getNodeName();
     if (string_is(childname, "description") && n->description==NOT_SET)
       n->description = rWSgSC(child);
-    else if (string_is(childname, "name") && n->name==NOT_SET)
+    else if (string_is(childname, "name") && n->name==NOT_SET) {
       n->name = rWSgSC(child);
+    }
     else if (string_is(childname, "datatype") && n->datatype==NOT_SET)
       n->datatype = rWSgSC(child);
     else if (string_is(childname, "componentname") && n->upstream)
@@ -543,8 +552,9 @@ ProcessOutportNode(const DOMNode& d, outport_node* n)
     const XMLCh* childname = child->getNodeName();
     if (string_is(childname, "description") && n->description==NOT_SET)
       n->description = rWSgSC(child);
-    else if (string_is(childname, "name") && n->name==NOT_SET)
+    else if (string_is(childname, "name") && n->name==NOT_SET) {
       n->name = rWSgSC(child);
+    }
     else if (string_is(childname, "datatype") && n->datatype==NOT_SET)
       n->datatype = rWSgSC(child);
     else if (string_is(childname, "componentname") && n->downstream)
@@ -728,7 +738,7 @@ ProcessOverviewNode(const DOMNode& d, overview_node* n)
           
           // Copy the author into a new string.
           const char * author_p = to_char_ptr(author->getFirstChild()->getNodeValue());
-          char * nv = new char[strlen( author_p )];
+          char * nv = scinew char[strlen( author_p )+1];
           sprintf( nv, "%s", author_p );
 
           n->authors->insert(std::pair<int,char*>(n->authors->size(), nv));
@@ -770,8 +780,7 @@ SCIRun::ProcessComponentNode(const DOMNode& d, component_node* n)
     if (name == 0) 
       cout << "ERROR: Component has no name." << endl;
     else {
-
-      char * name_p = new char[strlen(to_char_ptr(name->getNodeValue()))];
+      char * name_p = scinew char[strlen(to_char_ptr(name->getNodeValue()))+1];
       sprintf( name_p, "%s", to_char_ptr(name->getNodeValue()) );
       n->name = name_p;
     }
@@ -782,9 +791,8 @@ SCIRun::ProcessComponentNode(const DOMNode& d, component_node* n)
     if (name == 0)
       cout << "ERROR: Component has no category." << endl;
     else {
-      char * cat_p = new char[strlen(to_char_ptr(name->getNodeValue()))];
+      char * cat_p = scinew char[strlen(to_char_ptr(name->getNodeValue()))+1];
       sprintf( cat_p, "%s", to_char_ptr(name->getNodeValue()) );
-
       n->category = cat_p;
     }
   }
@@ -794,10 +802,8 @@ SCIRun::ProcessComponentNode(const DOMNode& d, component_node* n)
     if (name == 0)
       cout << "ERROR: Component has no optional." << endl;
     else {
-
-      char * opt_p = new char[strlen(to_char_ptr(name->getNodeValue()))];
+      char * opt_p = scinew char[strlen(to_char_ptr(name->getNodeValue()))+1];
       sprintf( opt_p, "%s", to_char_ptr(name->getNodeValue()) );
-
       n->optional = opt_p;
     }
   }
