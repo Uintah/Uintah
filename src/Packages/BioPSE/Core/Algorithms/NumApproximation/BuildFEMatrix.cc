@@ -204,7 +204,7 @@ void BuildFEMatrix::parallel(int proc)
   
   double lcl_matrix[4][4];
    
-  TetVolMesh::Node::array_type cell_nodes(4);
+  TetVolMesh::Node::array_type cell_nodes;
   hMesh_->begin(ii); hMesh_->end(iie);
   for (; ii != iie; ++ii){
  
