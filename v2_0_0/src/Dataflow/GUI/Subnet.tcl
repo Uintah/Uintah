@@ -188,7 +188,8 @@ proc makeSubnet { from_subnet x y { bbox "0 0 0 0" }} {
 
 
 proc createSubnet { from_subnet { modules "" } } {
-    global Subnet CurrentlySelectedModules mouseX mouseY
+    global Subnet CurrentlySelectedModules mouseX mouseY Notes backupNotes
+    array unset backupNotes
     if { [llength $CurrentlySelectedModules ] } {
 	set modules $CurrentlySelectedModules
     }
@@ -204,6 +205,7 @@ proc createSubnet { from_subnet { modules "" } } {
     set connections [lsort -unique $connections]
     # delete connections in decreasing input port number for dynamic ports
     foreach conn [lsort -decreasing -integer -index 3 $connections] {
+	array set backupNotes [array get Notes [makeConnID $conn]*]
 	destroyConnection $conn 0 0
     }    
     
@@ -220,7 +222,7 @@ proc createSubnet { from_subnet { modules "" } } {
     foreach modid $modules {
 	set canvas $Subnet(Subnet$Subnet($modid)_canvas)
 	set modbbox [$canvas bbox $modid]
-	$canvas delete $modid
+	$canvas delete $modid $modid-notes $modid-notes-shadow
 	destroy $canvas.module$modid
 	set x [expr [lindex $modbbox 0] - [lindex $bbox 0] + 10]
 	set y [expr [lindex $modbbox 1] - [lindex $bbox 1] + 25]
@@ -234,37 +236,57 @@ proc createSubnet { from_subnet { modules "" } } {
     # since no actual connections are being changed
     set connections [sortPorts $subnet $connections]
     while { [llength $connections] } {
+	# pop the connection off the end of the list
 	set conn [lindex $connections 0]
 	set connections [lrange $connections 1 end]
+	
 	if { $Subnet([oMod conn]) == $Subnet([iMod conn]) } {
 	    createConnection $conn 0 0
-	} elseif { $Subnet([oMod conn]) == ${subnet} } {
+	    array set Notes [array get backupNotes [makeConnID $conn]]
+	    continue
+	}
+
+	if { $Subnet([oMod conn]) == ${subnet} } {
+	    # Split the connection across the subnet boundary
 	    set which [portCount "Subnet${subnet} 0 i"]
-	    createConnection \
-		"[oMod conn] [oNum conn] Subnet${subnet} $which" 0 0
-	    createConnection \
-		"SubnetIcon${subnet} $which [iMod conn] [iNum conn]" 0 0
-	    foreach xconn $connections {
-		if { [oNum conn] == [oNum xconn] &&
-		     [string equal [oMod conn] [oMod xconn]] } {
-		    listFindAndRemove connections $xconn
-		    createConnection \
-			"SubnetIcon${subnet} $which [iMod xconn] [iNum xconn]" 0 0
-		}
-	    }
+	    set newconn "[oMod conn] [oNum conn] Subnet${subnet} $which"
+	    createConnection $newconn 0 0	    
+	    set newconn "SubnetIcon${subnet} $which [iMod conn] [iNum conn]"
+	    createConnection $newconn 0 0
+	    # take care of connection notes
+	    set oldID [makeConnID $conn]
+	    set newID [makeConnID $newconn]
+	    setIfExists Notes($newID) backupNotes($oldID)
+	    setIfExists Notes($newID-Position) backupNotes($oldID-Position)
+	    setIfExists Notes($newID-Color) backupNotes($oldID-Color)
+	    drawNotes $newID
 	} elseif { $Subnet([iMod conn]) == ${subnet} } {
 	    set which [portCount "Subnet${subnet} 0 o"]
-	    createConnection \
-		"Subnet${subnet} $which [iMod conn] [iNum conn]" 0 0
-	    createConnection \
-		"[oMod conn] [oNum conn] SubnetIcon${subnet} $which" 0 0
-	    foreach xconn $connections {
-		if { [oNum conn] == [oNum xconn] &&
-		     [string equal [oMod conn] [oMod xconn]] } {
-		    listFindAndRemove connections $xconn
-		    createConnection \
-			"Subnet${subnet} $which [iMod xconn] [iNum xconn]" 0 0
-		}
+	    set newconn "[oMod conn] [oNum conn] SubnetIcon${subnet} $which"
+	    createConnection $newconn 0 0
+	    set newconn "Subnet${subnet} $which [iMod conn] [iNum conn]"
+	    createConnection $newconn 0 0
+	    # take care of connection notes
+	    set oldID [makeConnID $conn]
+	    set newID [makeConnID $newconn]
+	    setIfExists Notes($newID) backupNotes($oldID)
+	    setIfExists Notes($newID-Position) backupNotes($oldID-Position)
+	    setIfExists Notes($newID-Color) backupNotes($oldID-Color)
+	    drawNotes $newID
+	}
+	
+	foreach xconn $connections {
+	    if [string equal [oPort conn] [oPort xconn]] {
+		listFindAndRemove connections $xconn
+		set newconn [lreplace $newconn 2 2 [iMod xconn]]
+		set newconn [lreplace $newconn 3 3 [iNum xconn]]
+		createConnection $newconn 0 0
+		set oldID [makeConnID $xconn]
+		set newID [makeConnID $newconn]
+		setIfExists Notes($newID) backupNotes($oldID)
+		setIfExists Notes($newID-Position) backupNotes($oldID-Position)
+		setIfExists Notes($newID-Color) backupNotes($oldID-Color)
+		drawNotes $newID
 	    }
 	}
     }
