@@ -67,6 +67,9 @@ namespace Uintah {
     //  Returns the bounding box surrounding the cylinder.
     virtual Box getBoundingBox() const;
 
+    void readPoints(int pid);
+
+    string d_file_name,d_var_name;
   private:
 
     void readPoints(const string& f_name, bool var = false);
