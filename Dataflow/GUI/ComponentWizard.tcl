@@ -12,6 +12,7 @@ proc ComponentWizard { {window .componentWizard} } {
     set WIDTH [expr $MAIN_WIDTH - .2]
     set HEIGHT [expr $MAIN_HEIGHT - .7]
     set PAD .1
+    set PADi [concat $PAD i]
 
     global ui_font
     global sci_root
@@ -22,27 +23,24 @@ proc ComponentWizard { {window .componentWizard} } {
     wm title $w "Component Wizard"
 
     iwidgets::tabnotebook $w.tabs -width [concat $WIDTH i]\
-	                  -height [concat $HEIGHT i]
-    place $w.tabs -x [concat $PAD i] -y [concat $PAD i] 
+	                  -height [concat $HEIGHT i] -backdrop [$w cget -background]
+    #place $w.tabs -x [concat $PAD i] -y [concat $PAD i] 
+    pack $w.tabs -padx $PADi -pady $PADi -fill both -expand yes -side top
 
-    button $w.open -text "Open" 
-    place $w.open -x [concat $PAD i] -y [expr $HEIGHT + [expr 2* $PAD]]i\
-          -width 1i -height .33i
+    frame $w.buttons
+    pack $w.buttons -ipadx $PADi -ipady $PADi -fill both -expand yes -side top
 
-    button $w.save -text "Save" 
-    place $w.save -x [concat [expr $PAD + 1] i]\
-	  -y [expr $HEIGHT + [expr 2* $PAD]]i\
-          -width 1i -height .33i
+    button $w.buttons.open -text "Open" 
+    pack $w.buttons.open -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
 
-    button $w.create -text "Create" 
-    place $w.create -x [concat [expr $PAD + 2.25] i]\
-	  -y [expr $HEIGHT + [expr 2* $PAD]]i\
-          -width 1i -height .33i
+    button $w.buttons.save -text "Save" 
+    pack $w.buttons.save -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
 
-    button $w.cancel -text "Cancel" -command "destroy $w"  
-    place $w.cancel -x [concat [expr $PAD + 3.5] i]\
-	  -y [expr $HEIGHT + [expr 2* $PAD]]i\
-          -width 1i -height .33i
+    button $w.buttons.create -text "Create" 
+    pack $w.buttons.create -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
+
+    button $w.buttons.cancel -text "Cancel" -command "destroy $w"  
+    pack $w.buttons.cancel -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
 
     set tab1 [$w.tabs add -label "I/O and GUI"]
     canvas $tab1.c -relief sunken -borderwidth 3 -background #038
@@ -59,6 +57,9 @@ proc ComponentWizard { {window .componentWizard} } {
 
     set tab2 [$w.tabs add -label "Overview"]
     frame $tab2.f
+    combo_listbox $tab2.f.clb "<author name>"
+    pack $tab2.f -side top -fill both -expand true
+    pack $tab2.f.clb -side top -fill both -expand true
 
     set tab3 [$w.tabs add -label "Implementation"]
     frame $tab3.f
@@ -73,6 +74,11 @@ proc ComponentWizard { {window .componentWizard} } {
     pack $testing.f.sy -side right -fill y
 
     $w.tabs view "I/O and GUI"
+}
+
+proc description_pane {p} {
+    frame $p.f
+    
 }
 
 proc gui {canvas has} {
