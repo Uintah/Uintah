@@ -151,8 +151,8 @@ public:
 
   double get_element_size(const Elem::index_type &fi) { return get_area(fi); }
 
-  virtual void flush_changes(); // to get normals calculated.
-  void compute_normals();
+  virtual bool		synchronize(const synchronized_t &which);
+
   virtual bool has_normals() const { return true; }
 
   virtual void io(Piostream&);
@@ -170,9 +170,6 @@ public:
 
   Node::index_type add_point(const Point &p);
 
-  void connect(double err = 1.0e-8);
-
-
   //bool intersect(const Point &p, const Vector &dir, double &min, double &max,
   //		 Face::index_type &face, double &u, double &v);
 
@@ -180,6 +177,10 @@ public:
   const Point &point(Node::index_type i) { return points_[i]; }
 
 private:
+  void			compute_normals();
+  void			compute_node_neighbors();  
+  void			compute_edge_neighbors(double err = 1.0e-8);
+
   bool inside3_p(int, const Point &p) const;
 
   int next(int i) { return ((i%3)==2) ? (i-2) : (i+1); }
@@ -187,13 +188,10 @@ private:
 
   vector<Point>  points_;
   vector<int>    faces_;
-  vector<int>    neighbors_;
-  //! normalized per node normal.
-  vector<Vector> normals_;
-
-  void			compute_nodes();  
-  vector<set<int> >	nodes_;
-  bool			nodes_computed_p_;
+  vector<int>		edge_neighbors_;
+  vector<Vector>	normals_;   //! normalized per node normal.
+  vector<set<int> >	node_neighbors_;
+  synchronized_t	synchronized_;  
 
 };
 
