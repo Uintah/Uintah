@@ -12,7 +12,7 @@
 #define SCI_NativeOptimizeCFlags -O2
 #define SCI_NativeDebugCFlags -g
 #define SCI_NativeOtherCFlags -mips2 -fullwarn
-#define SCI_NativeCppCompiler CC -Dbool=int -Dtrue=1 -Dfalse=0
+#define SCI_NativeCppCompiler CC
 #define SCI_NativeOptimizeCppFlags SCI_NativeOptimizeCFlags
 #define SCI_NativeDebugCppFlags SCI_NativeDebugCFlags
 #define SCI_NativeOtherCppFlags SCI_OtherCFlags +w -pte.cc -ptr$(TOP)/templates
@@ -48,7 +48,7 @@
 #endif
 
 #define SCI_DeltaOtherCFlags -xansi -fullwarn SCI_BinFlags
-#define SCI_DeltaCppCompiler CC -Dbool=int -Dtrue=1 -Dfalse=0
+#define SCI_DeltaCppCompiler CC
 #define SCI_DeltaOptimizeCppFlags SCI_DeltaOptimizeCFlags
 #define SCI_DeltaDebugCppFlags SCI_DeltaDebugCFlags
 #ifdef SCI_IRIX_BIN_32_mips2
@@ -83,7 +83,7 @@
 #define SCI_LGL -lGL -lGLU
 
 #ifdef SCI_PTHREADS
-#define SCI_SHLinkTail -lGL -lpthread $(SCI_CLIBS)
+#define SCI_SHLinkTail $(SCI_CLIBS)
 #define SCI_ThreadLib -lpthread
 #else
 #define SCI_SHLinkTail $(SCI_CLIBS)
