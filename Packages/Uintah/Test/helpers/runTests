@@ -95,10 +95,10 @@ EOF
 fi
 
 remake_file=""
-if [ -f "$BUILDROOT"/dbg/remake.log ]; then
-    remake_file="$BUILDROOT"/dbg/remake.log
-elif [ -f  "$BUILDROOT"/opt/remake.log ]; then
-    remake_file="$BUILDROOT"/opt/remake.log
+if [ -f "$BUILDROOT"/dbg/remake_failed_scirun.log ]; then
+    remake_file="$BUILDROOT"/dbg/remake_failed_scirun.log
+elif [ -f  "$BUILDROOT"/opt/remake_failed_scirun.log ]; then
+    remake_file="$BUILDROOT"/opt/remake_failed_scirun.log
 fi
 
 if [ "$MAIL_REMAKE_LOG_TO" != "" -a "$remake_file" != "" ]; then
