@@ -83,14 +83,14 @@ class Light;
 class Vector;
 class Transform;
 struct GeometryData;
-  class OpenGL;
+class OpenGL;
 class DBContext;
 class Viewer;
 class SCIBaWGL;
 
 class GeomViewerItem;
 class BallData;
-  class OpenGL;
+class OpenGL;
 class TexStruct1D;
 class TexStruct2D;
 class TexStruct3D;

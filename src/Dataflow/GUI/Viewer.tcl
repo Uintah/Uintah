@@ -139,6 +139,30 @@ itcl_class ViewWindow {
 	if {![info exists $this-polygon-offset-units]} \
 	    {set $this-polygon-offset-units 0.0}
 
+	# Set up lights
+	global $this-global-light0 # light 0 is the head light
+	if {![info exists $this-global-light0]} { set $this-global-light0 1 }
+	global $this-global-light1 
+	if {![info exists $this-global-light1]} { set $this-global-light1 0 }
+	global $this-global-light2 
+	if {![info exists $this-global-light2]} { set $this-global-light2 0 }
+	global $this-global-light3 
+	if {![info exists $this-global-light3]} { set $this-global-light3 0 }
+	global $this-global-light4 
+	if {![info exists $this-global-light4]} { set $this-global-light4 0 }
+	global $this-global-light5 
+	if {![info exists $this-global-light5]} { set $this-global-light5 0 }
+	global $this-global-light6
+	if {![info exists $this-global-light6]} { set $this-global-light6 0 }
+	global $this-global-light7 
+	if {![info exists $this-global-light7]} { set $this-global-light7 0 }
+	global $this-global-vectors
+	if {![info exists $this-global-vectors]} { 
+	    set $this-global-vectors \
+		[list { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } \
+		     { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }]
+	}
+
 	global $this-sbase
 	if {![info exists $this-sbase]} {set $this-sbase 0.4}
 	global $this-sr
@@ -187,7 +211,8 @@ itcl_class ViewWindow {
 		-command "$this makeViewPopup"
 #	$w.menu.edit.menu add command -label "Renderer..." -underline 0
 #	$w.menu.edit.menu add command -label "Materials..." -underline 0
-#	$w.menu.edit.menu add command -label "Light Sources..." -underline 0
+	$w.menu.edit.menu add command -label "Light Sources..." -underline 0 \
+	    -command "$this makeLightSources"
 	$w.menu.edit.menu add command -label "Background..." -underline 0 \
 		-command "$this makeBackgroundPopup"
 	$w.menu.edit.menu add command -label "Clipping Planes..." -underline 0 -command "$this makeClipPopup"
@@ -1435,6 +1460,95 @@ itcl_class ViewWindow {
 	puts $t
     }
 
+    method makeLightSources {} {
+	set $this-resx [winfo width .ui[modname].wframe.draw]
+	set $this-resy [winfo height .ui[modname].wframe.draw]
+	
+	toplevel .ui[modname]-lightSources
+	set w .ui[modname]-lightSources
+	frame $w.tf -relief flat
+	pack $w.tf -side top
+	frame $w.bf -relief flat
+	pack $w.bf -side top
+	set i 0
+	for { } {$i < 4} {incr i 1} {
+	    $this makeLightControl $w.tf $i
+	}
+	for { } {$i < 8} {incr i 1} {
+	    $this makeLightControl $w.bf $i
+	}
+
+	label $w.l -text \
+	    "Click on number to move light. Note: Headlight will not move."
+
+	button $w.bclose -text Close -command "destroy $w"
+	pack $w.l $w.bclose -side top -expand yes -fill x
+    }
+	
+    method makeLightControl { w i } {
+#	global $this-global-light$i
+	global $this-global-lights
+	frame $w.f$i -relief flat
+	pack $w.f$i -side left
+	canvas $w.f$i.c -bg black -width 100 -height 100
+	pack $w.f$i.c -side top
+	set c $w.f$i.c
+	checkbutton $w.f$i.b$i -text "on/off" \
+	    -variable $this-global-light$i \
+	    -command "$this lightSwitch $i"
+	pack $w.f$i.b$i
+	set news [$c create oval 5 5 95 95 -outline "#999999" \
+		     -fill "#999999" ]
+	set t  $i
+	if { $t == 0 } { set t "HL" }
+	set newt [$c create text 50 50 -fill white -text $t -tags lname ]
+	$c bind lname <B1-Motion> "$this moveLight $c $i %x %y"
+    }
+
+    method moveLight { c i x y } {
+	if { $i == 0 } return
+	set cw [winfo width $c]
+	set ch [winfo height $c]
+	set selected [$c find withtag current]
+	set coords [$c coords current]
+	set curX [lindex $coords 0]
+	set curY [lindex $coords 1]
+	set xn $x
+	set yn $y
+	set len2 [expr (( $x-50 )*( $x-50 ) + ($y-50) * ($y-50))]
+	if { $len2 < 2025 } { 
+	    $c move $selected [expr $xn-$curX] [expr $yn-$curY]
+	} else { 
+	    # keep the text inside the circle
+	    set scale [expr 45 / sqrt($len2)]
+	    set xn [expr 50 + ($x - 50) * $scale]
+	    set yn [expr 50 + ($y - 50) * $scale]
+	    $c move $selected [expr $xn-$curX] [expr $yn-$curY]
+	}
+	# now compute the vector, we know x and y, compute z
+	if { $len2 >= 2025 } { 
+	    set newz 0 
+	} else { set newz [expr sqrt(2025 - $len2)]}
+	set newx [expr $xn - 50]
+	set newy [expr $yn - 50]
+	# normalize the vector
+	set len3 [expr sqrt($newx*$newx + $newy*$newy + $newz*$newz)]
+	set vec [list [expr $newx/$len3] [expr -$newy/$len3] [expr $newz/$len3]]
+	set $this-global-vectors \
+	    [lreplace [set $this-global-vectors] $i $i $vec]
+	if { [set $this-global-light$i] } {
+	    $this lightSwitch $i
+	}
+    }
+
+    method lightSwitch {i} {
+	if { [set $this-global-light$i] == 0 } {
+	    $this-c switch_light $i 0 [lindex [set $this-global-vectors] $i]
+	} else {
+	    $this-c switch_light $i 1 [lindex [set $this-global-vectors] $i]
+	}
+    }
+	
     method makeSaveImagePopup {} {
 	global $this-saveFile
 	global $this-saveType

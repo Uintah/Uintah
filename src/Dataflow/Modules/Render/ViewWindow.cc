@@ -1937,6 +1937,24 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
       df.up(v);
     }
     animate_to_view(df, 2.0);
+  } else if (args[1] == "edit_light" ){
+    if (args.count() != 5) {
+      args.error("ViewWindow::switch_light  needs light num, val and vector");
+      return;
+    }
+    // We need to dispatch a message to the remote viewer thread
+    // via the manager.
+    bool on;
+    int lightNo;
+    float x = 0,y = 0,z = 0;    
+
+    sscanf(args[2].c_str(), "%d", &lightNo);
+    sscanf(args[3].c_str(), "%d", &on);
+    sscanf(args[4].c_str(), "%f%f%f", &x, &y, &z);
+    manager->
+      mailbox.send(scinew ViewerMessage(MessageTypes::ViewWindowEditLight,
+					id, lightNo, on, Vector(x,y,z)));
+
   } else if (args[1] == "killwindow") {
     current_renderer->kill_helper();
     inertia_mode=0;

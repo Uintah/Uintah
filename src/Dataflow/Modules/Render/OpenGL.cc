@@ -2077,8 +2077,6 @@ OpenGL::saveImage(const string& fname,
   img_mb.send(ImgReq(fname,type,x,y));
 }
 
-
-
 void
 OpenGL::getData(int datamask, FutureValue<GeometryData*>* result)
 {

@@ -101,9 +101,15 @@ public:
   double tbeg, tend;
   int nframes;
   double framerate;
+  Vector lightDir;
+  int lightNo;
+  bool on;
+
   ViewerMessage(const string& rid);
   ViewerMessage(const string& rid, double tbeg, double tend,
 		int nframes, double framerate);
+  ViewerMessage(MessageTypes::MessageType,
+		const string& rid, int lightNo, bool on, const Vector& dir);
   ViewerMessage(MessageTypes::MessageType,
 		const string& rid, const string& filename);
   ViewerMessage(MessageTypes::MessageType,
