@@ -66,18 +66,10 @@
    it from  being included.  We don't use it anyway. */
 #define MPIPP_H
 
-/* paths for alternate compilation directories */
 #define SCIRUN_SRCDIR "@abs_srcdir@"
 #define SCIRUN_OBJDIR "@abs_conftop_dir@"
-
 #define LOAD_PACKAGE "@LOAD_PACKAGE@"
-
-#define PSECORETCL "@abs_srcdir@/Dataflow/GUI"
-#define SCICORETCL "@abs_srcdir@/Core/GUI"
 #define ITCL_WIDGETS "@LIB_DIR_ITCL@/iwidgets/scripts"
-#define SRCTOP "@abs_srcdir@"
-#define OBJTOP "@abs_conftop_dir@"
-
 
 /* Someday, we should make this a config variable - it might help the
    optimizer, at the cost of more difficult debugging */
