@@ -307,20 +307,22 @@ class Crack
     void DiscretizeEllipticCracks(const int&,int&);
     void DiscretizePartialEllipticCracks(const int&,int&);
     void OutputInitialCrackMesh(const int&);
-
+ 
+    // Move crack-front points if they become unreasoanable
+    void PruneCrackFrontAfterPropagation(const int& m);
+    
     // Calculate crack-front normals, tangential normals and bi-normals
     void CalculateCrackFrontNormals(const int& m);
 
     // Smooth crack-front and then calculate crack-front normals
     short SmoothCrackFrontAndCalculateNormals(const int& m);
-    
-    // Output crack elems and crack points for visualization
-    void OutputCrackGeometry(const int&, const int&);
-
     // Cubic-spline fitting function
     short CubicSpline(const int& n, const int& m, const int& n1,
                       double [], double [], double [],
                       int [], double [], const double&);
+                                                         
+    // Output crack elems and crack points for visualization
+    void OutputCrackGeometry(const int&, const int&);
 
  protected:
      
