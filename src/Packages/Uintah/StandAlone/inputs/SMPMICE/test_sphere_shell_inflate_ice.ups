@@ -146,7 +146,7 @@
          <burn type = "null"/>
          <EOS type = "ideal_gas">
          </EOS>
-         <viscosity>                  1.0e-2         </viscosity>
+         <dynamic_viscosity>          1.0e-2         </dynamic_viscosity>
          <thermal_conductivity>       0.0            </thermal_conductivity>
          <specific_heat>              716.0          </specific_heat>
          <speed_of_sound>             376            </speed_of_sound>
@@ -173,7 +173,7 @@
          <burn type = "null"/>
          <EOS type = "ideal_gas">
          </EOS>
-         <viscosity>                  1.0e-2         </viscosity>
+         <dynamic_viscosity>          1.0e-2         </dynamic_viscosity>
          <thermal_conductivity>       0.0            </thermal_conductivity>
          <specific_heat>              716.0          </specific_heat>
          <speed_of_sound>             376            </speed_of_sound>
