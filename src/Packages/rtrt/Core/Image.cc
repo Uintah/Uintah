@@ -138,6 +138,7 @@ void Image::draw( int window_size, bool fullscreen )
   }
 }
 
+#if 0
 void Image::draw_depth( float max_depth ) {
   int num_pixels = xres*yres;
   float *pixel = &depth[0][0];
@@ -158,12 +159,70 @@ void Image::draw_depth( float max_depth ) {
   for(int i = 0; i < num_pixels; i++) {
     //
     *pixel = sqrtf((*pixel)*inv_md);    
+    //*pixel = ((*pixel)*inv_md);    
     pixel++;
   }
   glDrawBuffer(GL_BACK);
   glRasterPos2i(0,0);
   glDrawPixels(xres, yres, GL_LUMINANCE, GL_FLOAT, &depth[0][0]);
 }
+
+//void Image::draw_sils( float max_depth ) {
+#else
+void Image::draw_depth( float max_depth ) {
+  int num_pixels = xres*yres;
+  float *pixel = &depth[0][0];
+  float inv_md = 1.0f/max_depth;
+  pixel = &depth[0][0];
+
+  float max_val = -MAXFLOAT;
+  float min_val = MAXFLOAT;
+  for(int j = 0; j < yres; j++) {
+    int ylow = j>0?j-1:0;
+    int yhigh = j<yres-1?j+1:yres-1;
+    for(int i = 0; i < xres; i++) {
+      float val = depth[j][i];
+#if 0
+      if (val > 0) {
+        if (val < max_depth)
+          val = sqrtf(val*inv_md) * 255;
+        else
+          val = 255;
+      } else {
+        val = 0;
+      }
+      image[j][i] = Pixel(val, val, val, 255);
+#else
+      // Compute the laplacian
+      val *= 8;
+      int xlow = i>0?i-1:0;
+      int xhigh = i<xres-1?i+1:xres-1;
+
+      val -=
+        depth[j][xlow] +
+        depth[j][xhigh] +
+        depth[ylow][xlow] +
+        depth[ylow][i] +
+        depth[ylow][xhigh] +
+        depth[yhigh][xlow] +
+        depth[yhigh][i] +
+        depth[yhigh][xhigh];
+
+      if (val > max_val) max_val = val;
+      if (val < min_val) min_val = val;
+      val = (val*.5)+128;
+      image[j][i] = Pixel(val, val, val, 255);
+#endif
+    }
+  }
+
+  cout << "val range = ("<<min_val<<", "<<max_val<<")\n";
+  
+  glDrawBuffer(GL_BACK);
+  glRasterPos2i(0,0);
+  glDrawPixels(xres, yres, GL_RGBA, GL_UNSIGNED_BYTE, &image[0][0]);
+}
+#endif
 
 void Image::set(const Pixel& value)
 {
