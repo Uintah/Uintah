@@ -280,7 +280,7 @@ void GridSpheresDpy::run()
       case XK_S:
         // Right now there are only two methods, but there could be
         // more in the future.  Change the 2 to num_shade_methods.
-        new_shade_method = (new_shade_method+1)%2;
+        new_shade_method = (new_shade_method+1)%3;
         break;
       }
       break;
