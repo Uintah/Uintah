@@ -119,6 +119,7 @@ private:
     friend class TimeHashMaps;
   public:
     PatchHashMaps();
+    ~PatchHashMaps();  // to free the saved XML Data
     void init(XMLURL tsUrl, DOMNode* tsTopNode,
 	      int processor, int numProcessors);
     void purgeCache(); // purge the cached data

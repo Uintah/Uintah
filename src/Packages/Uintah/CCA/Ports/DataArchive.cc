@@ -767,6 +767,13 @@ DataArchive::PatchHashMaps::PatchHashMaps()
 {
 }
 
+DataArchive::PatchHashMaps::~PatchHashMaps() {
+  int size = docs.size();
+  for (int i = 0; i < size; i++) {
+    docs[i]->release();
+  }
+}
+
 void DataArchive::PatchHashMaps::init(XMLURL tsUrl, DOMNode* tsTopNode,
 				      int processor, int numProcessors)
 {
