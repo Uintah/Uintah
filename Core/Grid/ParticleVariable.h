@@ -15,7 +15,6 @@
 #include <Packages/Uintah/Core/Grid/ParticleData.h>
 #include <Packages/Uintah/Core/Grid/ParticleSubset.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
@@ -114,7 +113,7 @@ public:
   virtual void copyPointer(ParticleVariableBase&);
   virtual void allocate(ParticleSubset*);
   virtual void allocate(const Patch*)
-  { throw InternalError("Should not call ParticleVariable<T>::allocate(const Patch*), use allocate(ParticleSubset*) instead."); }
+  { SCI_THROW(InternalError("Should not call ParticleVariable<T>::allocate(const Patch*), use allocate(ParticleSubset*) instead.")); }
 
   // specialized for T=Point
   virtual void gather(ParticleSubset* dest,
@@ -255,7 +254,7 @@ private:
   {
     const ParticleVariable<T>* c = dynamic_cast<const ParticleVariable<T>* >(srcptr);
     if(!c)
-      throw TypeMismatchException("Type mismatch in Particle variable");
+      SCI_THROW(TypeMismatchException("Type mismatch in Particle variable"));
     return *c;
   }
 
@@ -304,7 +303,7 @@ private:
   {
     ParticleVariable<T>* c = dynamic_cast<ParticleVariable<T>* >(&copy);
     if(!c)
-      throw TypeMismatchException("Type mismatch in particle variable");
+      SCI_THROW(TypeMismatchException("Type mismatch in particle variable"));
     copyPointer(*c);
   }
   
@@ -344,7 +343,7 @@ template<class T>
     for(int i=0;i<(int)subsets.size();i++){
       ParticleVariable<T>* srcptr = dynamic_cast<ParticleVariable<T>*>(srcs[i]);
       if(!srcptr)
-	throw TypeMismatchException("Type mismatch in ParticleVariable::gather");
+	SCI_THROW(TypeMismatchException("Type mismatch in ParticleVariable::gather"));
       ParticleVariable<T>& src = *srcptr;
       ParticleSubset* subset = subsets[i];
       for(ParticleSubset::iterator srciter = subset->begin();
@@ -386,7 +385,7 @@ template<class T>
 		   pg->getComm());
       }
     } else {
-      throw InternalError("packMPI not finished\n");
+      SCI_THROW(InternalError("packMPI not finished\n"));
     }
   }
   
@@ -421,7 +420,7 @@ template<class T>
 		 buf, bufsize, bufpos, pg->getComm());
       }
     } else {
-      throw InternalError("packMPI not finished\n");
+      SCI_THROW(InternalError("packMPI not finished\n"));
     }
   }
 
@@ -439,7 +438,7 @@ template<class T>
       MPI_Pack_size(n, td->getMPIType(), pg->getComm(), &size);
       (*bufpos)+= size;
     } else {
-      throw InternalError("packsizeMPI not finished\n");
+      SCI_THROW(InternalError("packsizeMPI not finished\n"));
     }
   }
 
@@ -453,7 +452,7 @@ template<class T>
       appendElement(varnode, "numParticles", d_pset->numParticles());
       
     if(!td->isFlat()){
-      throw InternalError("Cannot yet write non-flat objects!\n");
+      SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
     }
     else {
       // This could be optimized...
@@ -480,7 +479,7 @@ template<class T>
     if (findNode("numParticles", varnode) == 0)
       appendElement(varnode, "numParticles", d_pset->numParticles());
     if(!td->isFlat()){
-      throw InternalError("Cannot yet write non-flat objects!\n");
+      SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
     }
     else {
       // emit in runlength encoded format
@@ -499,7 +498,7 @@ template<class T>
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
     if(!td->isFlat()) {
-      throw InternalError("Cannot yet read non-flat objects!\n");
+      SCI_THROW(InternalError("Cannot yet read non-flat objects!\n"));
     }
     else {
       // This could be optimized...
@@ -529,7 +528,7 @@ template<class T>
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
     if(!td->isFlat()) {
-      throw InternalError("Cannot yet read non-flat objects!\n");
+      SCI_THROW(InternalError("Cannot yet read non-flat objects!\n"));
     }
     else {
       RunLengthEncoder<T> rle;
@@ -541,7 +540,7 @@ template<class T>
 	(*this)[*iter] = *rle_iter;
 
       if ((rle_iter != rle.end()) || (iter != d_pset->end()))
-	throw InternalError("ParticleVariable::read RLE data is not consistent with the particle subset size");
+	SCI_THROW(InternalError("ParticleVariable::read RLE data is not consistent with the particle subset size"));
     }
   }
 

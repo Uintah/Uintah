@@ -24,6 +24,7 @@ using namespace Uintah;
 GeometryPiece::GeometryPiece()
 {
 }
+
 GeometryPiece::~GeometryPiece()
 {
 }

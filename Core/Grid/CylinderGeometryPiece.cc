@@ -26,10 +26,10 @@ CylinderGeometryPiece::CylinderGeometryPiece(ProblemSpecP& ps) {
   if ( xdiff < near_zero   &&
        ydiff < near_zero   &&
        zdiff < near_zero ) {
-    throw ProblemSetupException("Input File Error: Cylinder max <= min coordinates");
+    SCI_THROW(ProblemSetupException("Input File Error: Cylinder max <= min coordinates"));
   }
   if ( rad <= 0.0) {
-    throw ProblemSetupException("Input File Error: Cylinder radius must be > 0.0");
+    SCI_THROW(ProblemSetupException("Input File Error: Cylinder radius must be > 0.0"));
   }
   d_bottom = bottom;
   d_top = top;

@@ -43,6 +43,8 @@ WARNING
   template<class T> class Array3 {
 
   public:
+    typedef T value_type;
+
     // iterator class for iterating through the array in x, y, z
     // low index to high index order.
     class iterator {

@@ -27,8 +27,8 @@ VarLabel* VarLabel::create(const string& name,
     // AIX uses lib.a's, therefore the "same" var labels are different...
     // Need to look into fixing this in a better way...
     if (td != dup->d_td || vartype != dup->d_vartype)
-      throw InternalError(string("VarLabel with same name exists, '")
-			  + name + "', but with different type");
+      SCI_THROW(InternalError(string("VarLabel with same name exists, '")
+			  + name + "', but with different type"));
 #endif
     label = dup;
   }
@@ -101,7 +101,7 @@ VarLabel::getFullName(int matlIndex, const Patch* patch) const
 void VarLabel::allowMultipleComputes()
 {
    if (!d_td->isReductionVariable())
-      throw InternalError(string("Only reduction variables may allow multiple computes.\n'" + d_name + "' is not a reduction variable."));
+     SCI_THROW(InternalError(string("Only reduction variables may allow multiple computes.\n'" + d_name + "' is not a reduction variable.")));
    d_allowMultipleComputes = true;
 }
 

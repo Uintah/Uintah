@@ -96,8 +96,8 @@ WARNING
      
     virtual void allocate(const Patch*)
     {
-      throw InternalError("Should not call ReductionVariable<T, Op>"
-			  "::allocate(const Patch*)"); 
+      SCI_THROW(InternalError("Should not call ReductionVariable<T, Op>"
+			  "::allocate(const Patch*)")); 
     }
 
     virtual const TypeDescription* virtualGetTypeDescription() const;
@@ -161,7 +161,7 @@ WARNING
   {
     const ReductionVariable<T, Op>* c = dynamic_cast<const ReductionVariable<T, Op>* >(&copy);
     if(!c)
-      throw TypeMismatchException("Type mismatch in reduction variable");
+      SCI_THROW(TypeMismatchException("Type mismatch in reduction variable"));
     *this = *c;
   }
    
@@ -171,7 +171,7 @@ WARNING
   {
     const ReductionVariable<T, Op>* c = dynamic_cast<const ReductionVariable<T, Op>* >(&other);
     if(!c)
-      throw TypeMismatchException("Type mismatch in reduction variable");
+      SCI_THROW(TypeMismatchException("Type mismatch in reduction variable"));
     Op op;
     value = op(value, c->value);
   }

@@ -1,4 +1,5 @@
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
@@ -26,7 +27,7 @@ using namespace std;
 	  MPI_Pack(&p, 1, td->getMPIType(), buf, bufsize, bufpos, pg->getComm());
 	}
       } else {
-	throw InternalError("packMPI not finished\n");
+	SCI_THROW(InternalError("packMPI not finished\n"));
       }
     }
   }
@@ -62,7 +63,7 @@ using namespace std;
       ParticleVariable<Point>* srcptr =
 	dynamic_cast<ParticleVariable<Point>*>(srcs[i]);
       if(!srcptr)
-	throw TypeMismatchException("Type mismatch in ParticleVariable::gather");
+	SCI_THROW(TypeMismatchException("Type mismatch in ParticleVariable::gather"));
       ParticleVariable<Point>& src = *srcptr;
       ParticleSubset* subset = subsets[i];
       const Patch* srcPatch = srcPatches[i];

@@ -55,6 +55,10 @@ WARNING
 	 // Constructor that takes a ProblemSpecP argument.   It reads the xml 
 	 // input specification and builds a generalized box.
 	 BoxGeometryPiece(ProblemSpecP&);
+
+	 //////////
+	 // Construct a box from a min/max point
+	 BoxGeometryPiece(const Point& p1, const Point& p2);
 	 
 	 //////////
 	 // Destructor

@@ -19,26 +19,25 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
+  using namespace SCIRun;
+  class Level; 
+  class Patch;
 
-class Patch;
-
-   class UnknownVariable : public Exception {
-   public:
-      UnknownVariable(const std::string& varname, const Patch* patch,
-		      int matlIndex, const std::string& extramsg = "");
-      UnknownVariable(const std::string& varname,
-		      const std::string& extramsg);
-      UnknownVariable(const UnknownVariable&);
-      virtual ~UnknownVariable();
-      virtual const char* message() const;
-      virtual const char* type() const;
-   protected:
-   private:
-      std::string d_msg;
-      UnknownVariable& operator=(const UnknownVariable&);
-   };
-
+  class UnknownVariable : public Exception {
+  public:
+    UnknownVariable(const std::string& varname, int dwid, const Patch* patch,
+		    int matlIndex, const std::string& extramsg = "");
+    UnknownVariable(const std::string& varname, int dwid, const Level* level,
+		    int matlIndex, const std::string& extramsg = "");
+    UnknownVariable(const UnknownVariable&);
+    virtual ~UnknownVariable();
+    virtual const char* message() const;
+    virtual const char* type() const;
+  protected:
+  private:
+    std::string d_msg;
+    UnknownVariable& operator=(const UnknownVariable&);
+  };
 } // End namespace Uintah
 
 #endif

@@ -19,7 +19,7 @@ SphereGeometryPiece::SphereGeometryPiece(ProblemSpecP& ps)
   ps->require("radius",rad);
   
   if ( rad <= 0.0)
-    throw ProblemSetupException("Input File Error: Sphere radius must be > 0.0");
+    SCI_THROW(ProblemSetupException("Input File Error: Sphere radius must be > 0.0"));
   
   d_origin = orig;
   d_radius = rad;

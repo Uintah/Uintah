@@ -228,7 +228,7 @@ using namespace Uintah;
       }
       break;
     default:
-      throw InternalError("Illegal FaceType in NCVariable::fillFace");
+      SCI_THROW(InternalError("Illegal FaceType in NCVariable::fillFace"));
     }
   }
   

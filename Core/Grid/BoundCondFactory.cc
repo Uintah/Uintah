@@ -30,7 +30,7 @@ void BoundCondFactory::create(const ProblemSpecP& ps,BCData& objs)
      int mat_id;
      // Check to see if "id" is defined
      if (bc_attr.find("id") == bc_attr.end()) 
-       throw ProblemSetupException("id is not specified in the BCType tag");
+       SCI_THROW(ProblemSetupException("id is not specified in the BCType tag"));
      
      if (bc_attr["id"] != "all")
        mat_id = atoi(bc_attr["id"].c_str());

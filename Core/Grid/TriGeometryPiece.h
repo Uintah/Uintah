@@ -2,10 +2,6 @@
 #define __TRI_GEOMETRY_OBJECT_H__
 
 #include "GeometryPiece.h"
-#include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <string>
-
 
 namespace Uintah {
 

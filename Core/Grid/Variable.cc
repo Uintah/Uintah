@@ -58,7 +58,7 @@ void Variable::emit(OutputContext& oc, const string& compressionModeHint)
   else if (compressionModeHint == "gzip")
     use_gzip = true;
   else if (compressionModeHint != "" && compressionModeHint != "none") {
-    throw InvalidCompressionMode(compressionModeHint);
+    SCI_THROW(InvalidCompressionMode(compressionModeHint));
   }
 
   used_rle = use_rle;
@@ -68,8 +68,8 @@ void Variable::emit(OutputContext& oc, const string& compressionModeHint)
 
   if (use_rle) {
     if (!emitRLE(outstream, oc.varnode))
-      throw InvalidCompressionMode("rle",
-				   virtualGetTypeDescription()->getName());
+      SCI_THROW(InvalidCompressionMode("rle",
+				   virtualGetTypeDescription()->getName()));
   }
   else
     emitNormal(outstream, oc.varnode);
@@ -111,7 +111,7 @@ void Variable::emit(OutputContext& oc, const string& compressionModeHint)
   ssize_t s = ::write(oc.fd, writebuffer, writebufferSize);
 
   if(s != (long)writebufferSize)
-    throw ErrnoException("Variable::emit (write call)", errno);
+    SCI_THROW(ErrnoException("Variable::emit (write call)", errno));
   oc.cur += writebufferSize;
 
   string compressionMode = compressionModeHint;
@@ -187,7 +187,7 @@ void Variable::read(InputContext& ic, long end, bool swapBytes, int nByteMode,
   else if (compressionMode == "gzip")
     use_gzip = true;
   else if (compressionMode != "") {
-    throw InvalidCompressionMode(compressionMode);
+    SCI_THROW(InvalidCompressionMode(compressionMode));
   }
 
   long datasize = end - ic.cur;
@@ -199,7 +199,7 @@ void Variable::read(InputContext& ic, long end, bool swapBytes, int nByteMode,
   // casting from const char* -- use caution
   ssize_t s = ::read(ic.fd, const_cast<char*>(data.c_str()), datasize);
   if(s != datasize)
-    throw ErrnoException("Variable::read (read call)", errno);
+    SCI_THROW(ErrnoException("Variable::read (read call)", errno));
 
   
   ic.cur += datasize;
@@ -246,8 +246,8 @@ bool Variable::emitRLE(ostream& /*out*/, DOM_Element /*varnode*/)
   
 void Variable::readRLE(istream& /*in*/, bool /*swapBytes*/, int /*nByteMode*/)
 {
-  throw InvalidCompressionMode("rle",
-			       virtualGetTypeDescription()->getName());
+  SCI_THROW(InvalidCompressionMode("rle",
+			       virtualGetTypeDescription()->getName()));
 }
 
 void Variable::offsetGrid(const IntVector& /*offset*/)

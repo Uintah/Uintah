@@ -47,7 +47,7 @@ PackBufferInfo::get_type(void*& out_buf, int& out_count,
 void PackBufferInfo::get_type(void*&, int&, MPI_Datatype&)
 {
   // Should use other overload for a PackBufferInfo
-  throw SCIRun::InternalError("get_type(void*&, int&, MPI_Datatype&) should not be called on PackBufferInfo objects");
+  SCI_THROW(SCIRun::InternalError("get_type(void*&, int&, MPI_Datatype&) should not be called on PackBufferInfo objects"));
 }
 
 
@@ -59,8 +59,9 @@ PackBufferInfo::pack(MPI_Comm comm, int& out_count)
   int position = 0;
   int bufsize = packedBuffer->getBufSize();
   for (int i = 0; i < (int)startbufs.size(); i++) {
-    MPI_Pack(startbufs[i], counts[i], datatypes[i], buf, bufsize,
-	     &position, comm);
+    if(counts[i])
+      MPI_Pack(startbufs[i], counts[i], datatypes[i], buf, bufsize,
+	       &position, comm);
   }
   out_count = position;
 

@@ -58,5 +58,9 @@ void GeometryPieceFactory::create(const ProblemSpecP& ps,
 	       << endl;
 	//	exit(1);
       }
+      string name;
+      if(child->getAttribute("name", name)){
+	objs[objs.size()-1]->setName(name);
+      }
    }
 }
