@@ -32,12 +32,9 @@ font-size: 100%;
 font-style: oblique;
 margin-bottom:1em;}
 
-div.sciinfo {
-text-align: center;
-color: black;
-}
-
 p {
 margin-bottom:1em;
 font-size: small}
 
+a.disclaimer:link { 
+color: #FFCC33;}
