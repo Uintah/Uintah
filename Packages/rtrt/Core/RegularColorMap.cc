@@ -6,6 +6,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
+#include <string>
 #include <sgi_stl_warnings_on.h>
 
 using namespace rtrt;
@@ -22,7 +23,7 @@ RegularColorMap::RegularColorMap(const char* filename, int size):
   if (!fillColor(filename, color_list)) {
     cerr << "RegularColorMap::RegularColorMap(file)"
 	 << ": Unable to load colormap from file, using default\n";
-    fillColor(GrayScale, color_list);
+    fillColor(RegCMap_GrayScale, color_list);
   }
   fillBlendedColors(blended_colors);
   blended_colors_lookup.set_results_ptr(&blended_colors);
@@ -60,7 +61,7 @@ void RegularColorMap::fillColor(int type, Array1<Color> &colors) {
   colors.remove_all();
   // Need to switch off based on the type
   switch (type) {
-  case InvRainbow:
+  case RegCMap_InvRainbow:
     colors.add(Color(0, 0, 1));
     colors.add(Color(0, 0.40000001, 1));
     colors.add(Color(0, 0.80000001, 1));
@@ -74,7 +75,7 @@ void RegularColorMap::fillColor(int type, Array1<Color> &colors) {
     colors.add(Color(1, 0.40000001, 0));
     colors.add(Color(1, 0, 0));
     break;
-  case Rainbow:
+  case RegCMap_Rainbow:
     colors.add(Color(1, 0, 0));
     colors.add(Color(1, 0.40000001, 0));
     colors.add(Color(1, 0.80000001, 0));
@@ -88,7 +89,7 @@ void RegularColorMap::fillColor(int type, Array1<Color> &colors) {
     colors.add(Color(0, 0.40000001, 1));
     colors.add(Color(0, 0, 1));
     break;
-  case InvBlackBody:
+  case RegCMap_InvBlackBody:
     colors.add(Color(1, 1, 1));
     colors.add(Color(1, 1, 0.70588237));
     colors.add(Color(1, 0.96862745, 0.47058824));
@@ -103,7 +104,7 @@ void RegularColorMap::fillColor(int type, Array1<Color> &colors) {
     colors.add(Color(0.20392157, 0, 0));
     colors.add(Color(0, 0, 0));
     break;
-  case BlackBody:
+  case RegCMap_BlackBody:
     colors.add(Color(0, 0, 0));
     colors.add(Color(0.20392157, 0, 0));
     colors.add(Color(0.40000001, 0.0078431377, 0));
@@ -118,11 +119,11 @@ void RegularColorMap::fillColor(int type, Array1<Color> &colors) {
     colors.add(Color(1, 1, 0.70588237));
     colors.add(Color(1, 1, 1));
     break;
-  case GrayScale:
+  case RegCMap_GrayScale:
     colors.add(Color(0,0,0));
     colors.add(Color(1,1,1));
     break;
-  case InvGrayScale:
+  case RegCMap_InvGrayScale:
     colors.add(Color(1,1,1));
     colors.add(Color(0,0,0));
     break;
@@ -188,6 +189,38 @@ void RegularColorMap::fillBlendedColors(Array1<Color> &blended) {
 //////////////////////////////////////////////////////////////////
 // public functions
 //////////////////////////////////////////////////////////////////
+
+int RegularColorMap::parseType(const char* typeSin) {
+  int type = RegCMap_Unknown;
+
+  string typeS(typeSin);
+  if (typeS == "InvRainbow" ||
+      typeS == "invrainbow" ||
+      typeS == "ir"         )
+    type = RegCMap_InvRainbow;
+  else if (typeS == "Rainbow" ||
+           typeS == "rainbow" ||
+           typeS == "r"         )
+    type = RegCMap_Rainbow;
+  else if (typeS == "InvBlackBody" ||
+           typeS == "invblackbody" ||
+           typeS == "ib"         )
+    type = RegCMap_InvBlackBody;
+  else if (typeS == "BlackBody" ||
+           typeS == "blackbody" ||
+           typeS == "b"         )
+    type = RegCMap_BlackBody;
+  else if (typeS == "InvGrayScale" ||
+           typeS == "invgrayscale" ||
+           typeS == "ig"         )
+    type = RegCMap_InvGrayScale;
+  else if (typeS == "GrayScale" ||
+           typeS == "grayscale" ||
+           typeS == "g"         )
+    type = RegCMap_GrayScale;
+  
+  return type;
+}
 
 void RegularColorMap::changeColorMap(int type) {
   lock.lock();
