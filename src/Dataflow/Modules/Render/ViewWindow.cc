@@ -133,6 +133,7 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     // CollabVis code begin
     HaveCollabVis_(ctx->subVar("have_collab_vis")),
     // CollabVis code end
+    doingImage(false),
     doingMovie(false),
     makeMPEG(false),
     curFrame(0),

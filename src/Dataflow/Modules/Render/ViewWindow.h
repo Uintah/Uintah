@@ -216,6 +216,7 @@ public:
   int prev_time[3];		// history for quaternions and time
   HVect prev_quat[3];
   
+  bool doingImage;
   bool doingMovie;
   bool makeMPEG;
   int curFrame;
