@@ -32,23 +32,49 @@
 #include <itkImage.h>
 #include <itkImageRegionIterator.h>
 #include <itkImageRegionConstIterator.h>
+#include <itkRegion.h>
 
 namespace Insight {
 
 using std::string;
 using namespace SCIRun;
-
+using namespace itk;
 
 template<class T> class ITKFData3d;
 template<class T> void Pio(Piostream& stream, ITKFData3d<T>& array);
 
 template <class Data>
+class ITKIterator : public ImageRegionIterator<Image<Data,3> > {
+public:
+  typedef Image<Data, 3> ImageType;
+  typedef ImageType::RegionType Region;
+
+  ITKIterator() : ImageRegionIterator< ImageType >() { }
+  ITKIterator(ImageType* ptr, Region &region) : ImageRegionIterator< ImageType >(ptr, region) { }
+  virtual ~ITKIterator() {}
+  Data operator*() { return this.Get();}
+};
+
+template <class Data>
+class ITKConstIterator : public ImageRegionConstIterator<Image<Data,3> > {
+public:
+  typedef Image<Data, 3> ImageType;
+  typedef ImageType::RegionType Region;
+
+  ITKConstIterator() : ImageRegionConstIterator< ImageType >() {}
+  ITKConstIterator(ImageType* ptr, Region &region) : ImageRegionConstIterator< ImageType >(ptr, region) { }
+  virtual ~ITKConstIterator() {}
+  Data operator*() { return this.Get();}
+};
+
+
+template <class Data>
 class ITKFData3d {
 public:
   typedef Data value_type;
-  typedef itk::Image<Data, 3> image_type;
-  typedef typename itk::ImageRegionIterator<image_type> iterator;
-  typedef typename  itk::ImageRegionConstIterator<image_type> const_iterator;
+  typedef Image<Data, 3> image_type;
+  typedef typename ITKIterator<Data> iterator;
+  typedef typename ITKConstIterator<Data> const_iterator;
   
   iterator begin() {
     iterator i(image_, image_->GetRequestedRegion());
@@ -173,7 +199,7 @@ public:
     }
   }
   
-  void set_image(itk::Image<Data, 3>* img) {
+  void set_image(Image<Data, 3>* img) {
     image_ = img;
   }
   
@@ -293,11 +319,11 @@ public:
   ITKLatVolField();
   ITKLatVolField(Field::data_location data_at);
   ITKLatVolField(LatVolMeshHandle mesh, Field::data_location data_at);
-  ITKLatVolField(LatVolMeshHandle mesh, Field::data_location data_at, itk::Object* img);
+  ITKLatVolField(LatVolMeshHandle mesh, Field::data_location data_at, Object* img);
   virtual ITKLatVolField<Data> *clone() const;
   virtual ~ITKLatVolField();
 
-  void SetImage(itk::Object*);
+  void SetImage(Object*);
 
   //! Persistent IO
   static PersistentTypeID type_id;
@@ -339,17 +365,17 @@ ITKLatVolField<Data>::ITKLatVolField(LatVolMeshHandle mesh,
 
 template <class Data>
 ITKLatVolField<Data>::ITKLatVolField(LatVolMeshHandle mesh,
-			     Field::data_location data_at, itk::Object* img)
+			     Field::data_location data_at, Object* img)
   : GenericField<LatVolMesh, ITKFData3d<Data> >(mesh, data_at)
 {
   this->SetImage(img);
 }
 
 template <class Data>
-void ITKLatVolField<Data>::SetImage(itk::Object* img)
+void ITKLatVolField<Data>::SetImage(Object* img)
 {
-  if(dynamic_cast<itk::Image<Data, 3>* >(img)) {
-    fdata().set_image(dynamic_cast<itk::Image<Data, 3>* >(img));
+  if(dynamic_cast<Image<Data, 3>* >(img)) {
+    fdata().set_image(dynamic_cast<Image<Data, 3>* >(img));
   }
   else {
     ASSERT(0);
