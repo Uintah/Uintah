@@ -54,9 +54,9 @@ void LatVolMesh::get_random_point(Point &p, const Cell::index_type &ei) const
   Vector v0(p1-p0);
   Vector v1(p2-p0);
   Vector v2(p3-p0);
-  double t = rng()*v0.length2();
-  double u = rng()*v1.length2();
-  double v = rng()*v2.length2();
+  double t = rng()*v0.length();
+  double u = rng()*v1.length();
+  double v = rng()*v2.length();
   if ( (t+u+v)>1 ) {
     t = 1.-t;
     u = 1.-u;

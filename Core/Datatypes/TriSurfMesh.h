@@ -143,7 +143,7 @@ public:
     get_point(p0,ra[0]);
     get_point(p1,ra[1]);
     get_point(p2,ra[2]);
-    return (Cross(p0-p1,p2-p0)).length2()*0.5;
+    return (Cross(p0-p1,p2-p0)).length()*0.5;
   }
 
   void get_random_point(Point &p, const Face::index_type &ei) const;
