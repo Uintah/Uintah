@@ -776,6 +776,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     double junk=-9, tmp;
     int numALL_matls = d_sharedState->getNumMatls();
     int numMPM_matls = d_sharedState->getNumMPMMatls();
+    double p_ref = d_sharedState->getRefPress();
     for (int m = 0; m < numMPM_matls; m++ ) {
       CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, speedSound;
       CCVariable<Vector> vel_CC;
@@ -802,7 +803,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
         sp_vol_CC[c] = 1.0/rho_micro[c];
 
         mpm_matl->getConstitutiveModel()->
-            computePressEOSCM(rho_micro[c],junk, junk, junk, tmp,mpm_matl); 
+            computePressEOSCM(rho_micro[c],junk, p_ref, junk, tmp,mpm_matl); 
         speedSound[c] = sqrt(tmp);
       }
       
