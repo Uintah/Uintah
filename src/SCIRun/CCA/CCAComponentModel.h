@@ -54,6 +54,16 @@ class SCIRunFramework;
 class CCAComponentDescription;
 class CCAComponentInstance;
 
+/**
+ * \class CCAComponentModel
+ *
+ * A SCIRun metacomponent model for CCA compliant components.  This class
+ * handles the allocation/destruction of CCA components and maintains a
+ * database of CCA components that may be instantiated by the SCIRun
+ * framework. See ComponentModel for more information.
+ *
+ * \sa BabelComponentModel InternalComponentModel SCIRunComponentModel VtkComponentModel
+*/
 class CCAComponentModel : public ComponentModel
 {
 public:

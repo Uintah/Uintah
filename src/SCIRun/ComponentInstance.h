@@ -75,9 +75,10 @@ public:
   /** The type of the component. */
   std::string className;
 
-  /** ? */
+  /** Returns a pointer to the port named \em name.  If no such port exists in
+      this component, returns a null pointer. */
   virtual PortInstance* getPortInstance(const std::string& name) = 0;
-  /** ? */
+  /** Returns the list of ports associated with this component. */
   virtual PortInstanceIterator* getPorts() = 0;
 private:
   ComponentInstance(const ComponentInstance&);
