@@ -6,6 +6,7 @@ SRCDIR := Packages/rtrt
 SUBDIRS := \
 	$(SRCDIR)/Core         \
 	$(SRCDIR)/Dataflow     \
+	$(SRCDIR)/Sound        \
 	$(SRCDIR)/visinfo
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
