@@ -1,0 +1,25 @@
+
+#include <config/sci.cf>
+
+LOCALINCLUDES = -I. -I../../modules -I../../project
+OBJS = MakeContourSet.o
+SRCS = MakeContourSet.o
+TARGET = MakeContourSet
+
+SCI_LIBS = \
+	../../modules/modules.o \
+	SCI_MultitaskLib \
+	SCI_ClassLib \
+	SCI_GeometryLib \
+	SCI_MathLib \
+	../../../templates/fast_templates.o \
+	../../../wrapper/libMInT/libMInT.a \
+	SCI_MallocLib
+
+../../../templates/fast_templates.o: $(OBJS) ../../modules/modules.o
+	make_templates ../../../templates
+
+SCI_LDFLAGS = SCI_LM -ptv
+
+SCIDependTarget($(SRCS))
+SCIProgramTarget($(TARGET), $(OBJS), $(SCI_LIBS), $(SCI_LDFLAGS))
