@@ -2,8 +2,9 @@
 % Filename: viewer.tex
 % Author: Rob MacLeod and Dave Weinstein
 %
-% Last update: Fri Feb 23 15:51:37 2001 by Rob MacLeod
+% Last update:Tue Mar 13 19:08:17 MST 2001 by Dave Weinstein
 %    - created
+%    - DMW: proof-reading and minor corrections
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%  Figures used in this file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -36,7 +37,7 @@
 This section describes perhaps the most frequently used module of \SR{},
 the \viewer{}, which has the task of displaying interactive graphical output
 to the computer screen.  You will use the \viewer{} any time you wish to see
-a geometry, some spatial data.  More important for the computational
+a geometry, or spatial data.  More important for the computational
 steering (described in Section~\ref{sec:con-steering}), is that the \viewer{}
 provides access to many simulation parameters and controls and thus
 indirectly initiates new iterations of the simulation steps.
@@ -94,7 +95,8 @@ configurations as follows:
 
 In the left corner of the control panel of the \viewer{} window are
 performance indicators that document the current rendering speed for the
-display.  The better the workstation you have, the higher the drawing rate.
+display.  The better the graphics performance of the workstation you
+have, the higher the drawing rate.
 
 In the lower right corner of the \viewer{} window is a small plus sign
 (``+'').  Clicking on this reveals the extended control panel with controls
@@ -104,15 +106,15 @@ that we will describe in detail in Section~\ref{sec:view-control}.
 
 \subsubsection{Menus}
 
-At the top of the \viewer{} window are to pull-down menus.
+At the top of the \viewer{} window are two pull-down menus.
 \begin{description}
   \item [Edit: ] provides access to controls for the background color for
-        the window as well as the clipping planes (requires the ``Use
+        the window, as well as the clipping planes (requires the ``Use
         Clip'' control to be selected in the extended controls described in
-        Section~\ref{sec:view-control}.
+        Section~\ref{sec:view-control}).
   \item [Visual: ] allows you to select between different graphics hardware
-        settings available.  The list is ordered from most to least
-        appropriate for the actual workstation hardware.
+        settings available.  The list is ordered heuristically from
+        most to least generally useful.
 \end{description}
 
 \subsection{Mouse control in the \viewer{} window}
@@ -130,20 +132,21 @@ learn it if you use it enough).
     \multicolumn{1}{|c|}{Control Key} & 
     \multicolumn{1}{|c|}{Button} & 
     \multicolumn{1}{|c|}{Action}\\ \hline
-None & Left & translate objects \\
-     & Middle & rotate objects about the center of the scene on an arc ball
-    that surrounds the object; rotation direction is a function of the
+None & Left & translate scene \\
+     & Middle & rotate scene about its center on an arc ball
+    that surrounds it; rotation direction is a function of the
     initial mouse location so try different sites and note response. \\ 
-     & Right & zoom or scale objects (downwards and to the right increases
+     & Right & zoom or scale scene (downwards and to the right increases
      size, upwards or to the left decreases size) \\ 
-     & Right & activate pull-down menu \\ \hline
-Shift & Left & select an object or a widget in the display \\
-      & Middle &  no action \\
-      & Right &  no action \\ \hline
+Shift & Left & select and move a widget in the display \\
+      & Middle & toggle through the modes for a widget \\
+      & Right & pop up a widget information window \\ \hline
 Control & Left & translate in the Z-direction, \ie{} in and out of the
-    screen (down moves closer, up further away).  If the cursor is over a
-    point in an object when clicked, this point becomes the center of the
-    screen for translation.\\ 
+    screen (down moves closer, up further away).  Moving left and
+    right increases the ``throttle'' of the Z-direction motion.  If
+    the cursor is over a point on an object when clicked, this point
+    becomes the center of the screen for translation.\\ 
+      & Middle & rotate the camera view (using arcball motion). \\
       & Right & Unicam movement (see next table)\\ \hline
 \end{tabular}
 
@@ -157,10 +160,10 @@ Control & Left & translate in the Z-direction, \ie{} in and out of the
     \multicolumn{2}{|c|}{Left mouse button (Dolly movement)}\\
     Horizontal & change acceleration of zoom (right increases) \\
     Vertical & zoom in (down) and out (up) at fixed acceleration \\
-    None & selects the look at point that we then zoom toward \\
+    None & selects the look at point that we then zoom towards \\
     \hline
-    \multicolumn{2}{|c|}{Panning (Middle mouse button)} \\
-    All  & rotate the lookat point about the eye location \\
+    \multicolumn{2}{|c|}{Camera rotate (Middle mouse button)} \\
+    All  & rotate the world about the eye point \\
     \hline
     \multicolumn{2}{|c|}{Unicam Behavior (Control-Right Mouse}\\
     \multicolumn{1}{|c|}{Initial mouse location} & 
@@ -183,8 +186,8 @@ Control & Left & translate in the Z-direction, \ie{} in and out of the
 \subsection{Extended control window}
 \label{sec:view-control} 
 
-Clicking on the ``+'' sign in the lower right corner of the default
-\viewer{} window and the window expands to reveal an extended panel of
+Click on the ``+'' sign in the lower right corner of the default
+\viewer{} window, and the window expands to reveal an extended panel of
 control buttons, as shown in Figure~\ref{fig:extviewwindow}.  Click on the
 ``-'' sign that now replaces the ``+'' and this extended panel disappears
 again.  Here we describe the control options available in the extended
@@ -216,9 +219,11 @@ the following controls, reading from left to right:
         selected.  The \viewer{} window only displays those objects that
         are selected.
   \item Next comes the name of the object.
-  \item The control box that comes next determines the type of lighting in
-        effect for the object.  Choices include ??.
-  \item As the right end of each entry is the ?? control.
+  \item The control box that comes next determines the shading options
+        that will be used for rendering the object.  Options include:
+        Lighting, BBox, Fog, Use Clip, Back Cull, and Display List.
+  \item As the right end of each entry is the lighting control.
+        Choices include Wire, Flat and Gouraud.
 \end{itemize}
 
 Clicking on an entry in the list selects that object for all the rendering
@@ -226,31 +231,27 @@ controls described in the next section.
 
 \subsubsection{Rendering controls}
 
-The left column of the  extended \viewer{} window contains controls that
-apply to all the selected objects in the display.  If no object is
-selected, than rendering changes apply to all visible surfaces.  Selecting
-one or more surfaces
-%?? Can we select multiple surfaces??
-causes all changes to act on only the selected surface(s).  The individual
-controls are all toggles that switch the following actions:
+The left column of the extended \viewer{} window contains controls that
+apply to all of the selected objects with Default lighting selected.
+Those that have not slected Default will use their own, object specfic
+settings.  These are the various lighting and shading options:
 \begin{description}
   \item [Lighting: ] toggle whether the \viewer{} applies lighting to the
-        display. 
+        display.  If objects are not lit, they have a constant color.
   \item [Fog: ] fog is also known as ``depth cueing'' and draws objects
         with different intensity based on their distance from the user.
-        Close object appear brighter while distant objects fade graduate
+        Close object appear brighter while distant objects fade gradually
         into the background as a function of distance from the front. 
-  \item [BBox: ] selecting the control displays a box in the display that
-        contains all the objects 
-%?? both visible and invisible ones??
-  \item [Use Clip: ] apply up to six clipping planes to the display
-%?? how does this work??
+  \item [BBox: ] toggles whether selected object are drawn in full
+        detail or are replaced by a simple bounding box.
+  \item [Use Clip: ] apply up to six clipping planes to the display.
+        The clipping plane locations are specified from using the
+        ``Edit -> Clipping Planes'' menu at the top.
   \item [Back Cull: ] display only the forward facing facets of any surface
         objects in the display.
-  \item [Display List: ]
-%?? what does this do??
-  \item [Shading: ] select the type of shading for the objects with
-        surfaces in the display about the following options:
+  \item [Display List: ] cache the list of objects to be displayed.
+  \item [Shading: ] select the type of shading for objects with the
+        following options:
         \begin{description}
           \item [Wire: ] show only the wire mesh of objects.
           \item [Flat: ] draw each facet with a constant color.
@@ -267,8 +268,6 @@ display of the appropriate view.  The ``Fusion Scale'' control provides a
 means of setting the eye separation and thus setting the view that is most
 suited to facial anatomy and distance from the screen.
 
-%?? More detail on the stereo viewing models
-
 \subsubsection{Making movies}
 \label{sec:view-movies} 
 
@@ -279,4 +278,10 @@ In the left column of the extended \viewer{} window are controls for
 selecting movie type and then initiating and stopping the acquisition of
 individual frames in the movie.
 
-%?? More details on how this works.
+A frame is dumped on each redraw.  If the MPEG package was installed
+and enabled during system configuration, then an option will be
+available for saving out MPEG movies.
+
+There is a button for forcing the size of the graphical window to be
+352x240 resolution.  This mode is useful for recording MPEG's to be
+used with PowerPoint.
