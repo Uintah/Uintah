@@ -93,7 +93,7 @@ int main(int argc, char** argv)
    	   << "\n\tand first signifant error at: "
 	   << first_significant_error_time[0] << " / "
 	   << first_significant_error_time[1] << endl;
-      cout << "\nThe following is the suggesting command to compare these files:\n";
+      cout << "\nThe following is the suggested command to compare these files:\n";
 
       cout << "xdiff " << datfilename[0] << " " << datfilename[1] << "\n\n";
       
