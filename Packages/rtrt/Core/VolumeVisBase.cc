@@ -9,7 +9,7 @@ SCIRun::PersistentTypeID VolumeVisBase::type_id("VolumeVisBase", "Object", 0);
 
 
 VolumeVisBase::VolumeVisBase(VolumeVisDpy* dpy) : 
-  Object(this), 
+  Object(this), child(0),
   dpy(dpy)
 {
 }
@@ -18,11 +18,16 @@ VolumeVisBase::~VolumeVisBase()
 {
 }
 
-void VolumeVisBase::animate(double, bool& changed)
+void VolumeVisBase::animate(double t, bool& changed)
 {
   dpy->animate(changed);
+  if (child) child->animate(t, changed);
 }
 
+void VolumeVisBase::preprocess(double maxradius, int& pp_offset,
+                               int& scratchsize) {
+  if (child) child->preprocess(maxradius, pp_offset, scratchsize);
+}
 
 const int VOLUMEVISBASE_VERSION = 1;
 
