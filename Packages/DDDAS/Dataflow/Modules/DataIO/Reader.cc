@@ -61,7 +61,7 @@ public:
 
   virtual void tcl_command(GuiArgs&, void*);
 
-  virtual double * read_ccfv( string filename, int& size );
+  double * read_ccfv( string filename, int& size );
 
   void fill_mesh( string filename, FieldOPort * ofp );
   
