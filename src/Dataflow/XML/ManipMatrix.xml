@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/ReferenceGuide/component.dtd">
+
+<component name="ManipMatrix" category="Math">
+  <overview>
+    <authors>
+      <author>Dimitri Yatsenko</author>
+    </authors>
+    <summary>
+      General framework for matrix manipulation
+    </summary>
+    <description>
+      <p>Version Date: Fri Nov 17 12:03:26 MST 2000</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <implementation>
+    <!-- one of (ffile cfile ccfile) -->
+  </implementation>
+  <io>
+    <inputs lastportdynamic="yes">
+      <port>
+        <name>ManipMatrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <!-- one of (device port file) -->
+    </inputs>
+    <outputs>
+      <port>
+        <name>Output Matrix</name>
+        <description>
+          <p>
+            The matrix that results from applying the indicated manipulation
+            to the input matrices.
+          </p>
+        </description>
+        <datatype>SCIRun::Matrix</datatype>
+        <componentname>Render3D</componentname>
+        <componentname>WriteGeometry</componentname>
+      </port>
+    </outputs>
+  </io>
+
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+
