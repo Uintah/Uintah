@@ -36,12 +36,15 @@ PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Comm \
 	SCICore/Geom SCICore/Thread SCICore/Containers \
 	SCICore/TclInterface SCICore/TkExtensions SCICore/Util \
 	SCICore/TkExtensions SCICore/Datatypes
-LIBS := $(TK_LIBRARY) $(GL_LIBS) -lifl -lm
+LIBS := $(TK_LIBRARY) $(GL_LIBS) $(IMAGE_LIBS) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/06/08 20:32:01  kuzimmer
+#  modified sub.mk so that linux will compile: you need to load new configure.in
+#
 # Revision 1.4  2000/06/07 20:59:27  kuzimmer
 # Modifications to make the image save menu item work on SGIs
 #
