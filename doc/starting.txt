@@ -19,6 +19,14 @@ endif
    and then source your .cshrc file in each window which you will be
    working.  Alternatively, you can log out and log back in.
 
+If you are using the Korn Shell, try this:
+if [ -r /home/sci/data1/development/scripts/develop.ksh ]
+ then
+    SCI_WORK=~/SCIRun
+    export SCI_WORK
+    . /home/sci/data1/development/scripts/develop.ksh
+fi
+
 4) Choose a suitable space for your work directory to be located.
    It is best to have the work directory on a disk which is local
    to the machine from which you usually compile.  Compiles take
