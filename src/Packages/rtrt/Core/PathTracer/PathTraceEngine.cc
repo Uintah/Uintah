@@ -28,10 +28,12 @@ PathTraceContext::PathTraceContext(const Color &color,
 				   const PathTraceLight &light,
 				   Object* geometry,
 				   Background *background,
-                                   int num_samples, int max_depth,
-				   Semaphore *semi):
+                                   int num_samples, int max_depth, bool dilate,
+				   int support, int use_weighted_ave,
+				   float threshold, Semaphore *sem) :
   light(light), color(color), geometry(geometry), background(background),
-  num_samples(num_samples), max_depth(max_depth), semi(semi)
+  num_samples(num_samples), max_depth(max_depth), dilate(dilate), support(support),
+  use_weighted_ave(use_weighted_ave), threshold(threshold), sem(sem)
 {
   // Fix num_samples to be a complete square
   num_samples_root = (int)(ceil(sqrt((double)num_samples)));
@@ -85,7 +87,7 @@ PathTraceWorker::PathTraceWorker(Group *group, PathTraceContext *ptc,
 }
 
 PathTraceWorker::~PathTraceWorker() {
-  cerr << "PathTraceWorker::~PathTraceWorker()\n";
+//  cerr << "PathTraceWorker::~PathTraceWorker()\n";
   if (ppc) delete ppc;
   if (depth_stats) delete depth_stats;
   if (basename) free(basename);
@@ -251,10 +253,10 @@ void PathTraceWorker::run() {
         // Normalize result
 	sphere->texture(u,v)=inv_num_samples*sphere->texture(u,v);
       } // end texel
-    cout << "Finished sphere "<<sindex<<"\n";
+    // cout << "Finished sphere "<<sindex<<"\n";
   } // end sphere
 
-  cout << "Computing width and height for all.\n";
+  // cout << "Computing width and height for all.\n";
   int width = -1;
   int height = -1;
   bool do_separate = false;
@@ -286,7 +288,7 @@ void PathTraceWorker::run() {
 
   if (!do_separate) {
     char *buf = new char[strlen(basename) + 20];
-    sprintf(buf, "%s%05lu.nrrd", basename, offset);
+    sprintf(buf, "%s%07lu.nrrd", basename, offset);
     FILE *out = fopen(buf, "wb");
     if (!out) {
       cerr << "Cannot open "<<buf<<" for writing\n";
@@ -309,29 +311,6 @@ void PathTraceWorker::run() {
     fprintf(out, "encoding: raw\n");
     fprintf(out, "\n");
     
-    sprintf(buf, "%s-i%05lu.nrrd", basename, offset);
-    FILE *out2 = fopen(buf, "wb");
-    if (!out2) {
-      cerr << "Cannot open "<<buf<<" for writing\n";
-      return;
-    }
-
-    cout << "Writing combined texture to "<<buf<<"\n";
-
-    fprintf(out2, "NRRD0001\n");
-    fprintf(out2, "type: float\n");
-    fprintf(out2, "dimension: 3\n");
-    fprintf(out2, "sizes: %d %d %d\n", width, height, local_spheres->objs.size());
-    fprintf(out2, "spacings: 1 1 NaN\n");
-#ifdef __sgi
-    fprintf(out2, "endian: big\n");
-#else
-    fprintf(out2, "endian: little\n");
-#endif
-    fprintf(out2, "labels: \"x\" \"y\" \"sphere\"\n");
-    fprintf(out2, "encoding: raw\n");
-    fprintf(out2, "\n");
-
     for(int sindex = 0; sindex < local_spheres->objs.size(); sindex++) {
       TextureSphere *sphere  =
 	dynamic_cast<TextureSphere*>(local_spheres->objs[sindex]);
@@ -341,13 +320,11 @@ void PathTraceWorker::run() {
 	continue;
       }
       
-      sphere->writeData(out, out2);
-  
+      sphere->writeData(out, sindex, ptc);
+      
     }
-
+    
     fclose(out);
-    fclose(out2);
-
   } else {
     // This really shouldn't happen now
     cerr << "Textures do not all have the same size.  You will now get individual textures.\n";
@@ -359,11 +336,11 @@ void PathTraceWorker::run() {
 	cerr << "Warning object is not a TextureSphere.  You in big trouble mister!  Nrrd will not have the right amount of data.\n";
 	continue;
       }
-      sphere->writeTexture(basename, sindex);
+      sphere->writeTexture(basename, sindex, ptc);
     }
   }
-  if (ptc->semi)
-    ptc->semi->up();
+  if (ptc->sem)
+    ptc->sem->up();
 }
 
 TextureSphere::TextureSphere(const Point &cen, double radius, int tex_res):
@@ -373,17 +350,110 @@ TextureSphere::TextureSphere(const Point &cen, double radius, int tex_res):
   inside.initialize(0);
 }
 
-void TextureSphere::writeTexture(char* basename, size_t index)
+void TextureSphere::dilateTexture(size_t index, PathTraceContext* ptc) {
+  cout<<"Dilating texture "<<index<<" ("<<"s="<<ptc->support
+      <<", uwa="<<ptc->use_weighted_ave<<", t="<<ptc->threshold<<")"
+      <<endl;
+  
+  // Compute the min and max of inside texture
+  int width = inside.dim1();
+  int height = inside.dim2();
+  float min=inside(0,0);
+  float max=inside(0,0);
+  for (int y=1;y<height;y++)
+    for (int x=1;x<width;x++) {
+      float tmp=inside(x,y);
+      if (tmp < min)
+	min = tmp;
+      if (tmp > max)
+	max = tmp;
+    }
+  
+  // Normalize the inside texture
+  float inv_maxmin = 1/(max-min);
+  for (int y=0;y<height;y++)
+    for (int x=0;x<width;x++)
+      inside(x,y)=(inside(x,y)-min)*inv_maxmin;
+
+  // Initialize the dilated texture
+  Array2<Color> dilated;
+  dilated.resize(width, height);
+  for (int y=0;y<height;y++)
+    for (int x=0;x<width;x++)
+      dilated(x,y)=texture(x,y);
+  
+  // Dilate any necessary pixels
+  int support=ptc->support;
+  int use_weighted_ave=ptc->use_weighted_ave;
+  float threshold=ptc->threshold;
+  
+  for(int y = 0; y < height; y++)
+    for(int x = 0; x < width; x++)
+      {
+	// Determine if the given pixel should be dilated
+	float value=inside(x,y);
+	if (value<=0)
+	  // Pixel is not occluded, so go to the next one
+	  continue;
+	
+	float ave[3] = {0,0,0};
+	float contribution_total = 0;
+	// Loop over each neighbor
+	for(int j = y-support; j <= y+support; j++)
+	  for(int i = x-support; i <= x+support; i++)
+	    {
+	      // Check boundary conditions
+	      int newi = i;
+	      if (newi >= width)
+		newi = newi - width;
+	      else if (newi < 0)
+		newi += width;
+	      
+	      int newj = j;
+	      if (newj >= height)
+		newj = height - 1;
+	      else if (newj < 0)
+		newj = 0;
+
+	      // Determine neighbor's contribution
+	      float contributer=inside(newi, newj);
+	      if (contributer < threshold) {
+		contributer*=use_weighted_ave;
+		Color tex=texture(newi, newj);
+		ave[0]=ave[0]+tex[0]*(1-contributer);
+		ave[1]=ave[1]+tex[1]*(1-contributer);
+		ave[2]=ave[2]+tex[2]*(1-contributer);
+		contribution_total+=(1-contributer);
+	      }
+	    }
+	
+	// Dilate the pixel
+	if (contribution_total > 0) {
+	  dilated(x,y)[0]=ave[0]/contribution_total;
+	  dilated(x,y)[1]=ave[1]/contribution_total;
+	  dilated(x,y)[2]=ave[2]/contribution_total;
+	}
+      }
+  
+  // Update texture with dilated results
+  for (int y=0;y<height;y++)
+    for (int x=0;x<width;x++)
+      texture(x,y)=dilated(x,y);
+}
+
+void TextureSphere::writeTexture(char* basename, size_t index,
+				 PathTraceContext* ptc)
 {
   // Create the filename
   char *buf = new char[strlen(basename) + 20];
-  sprintf(buf, "%s%05lu.nrrd", basename, (unsigned long)index);
+  sprintf(buf, "%s%07lu.nrrd", basename, (unsigned long)index);
   FILE *out = fopen(buf, "wb");
   if (!out) {
     cerr << "Cannot open "<<buf<<" for writing\n";
     return;
   }
   
+  // write out texutre
   int width = texture.dim1();
   int height = texture.dim2();
   fprintf(out, "NRRD0001\n");
@@ -399,13 +469,17 @@ void TextureSphere::writeTexture(char* basename, size_t index)
   fprintf(out, "labels: \"rgb\" \"x\" \"y\"\n");
   fprintf(out, "encoding: raw\n");
   fprintf(out, "\n");
-
-  writeData(out, 0);
+  
+  writeData(out, index, ptc);
   
   fclose(out);
 }
 
-void TextureSphere::writeData(FILE *outfile, FILE *outfile2) {
+void TextureSphere::writeData(FILE *outfile, size_t index, PathTraceContext* ptc) {
+  // Dilate the texture
+  if (ptc->dilate)
+    dilateTexture(index, ptc);
+  
   // Iterate over each texel
   int width = texture.dim1();
   int height = texture.dim2();
@@ -420,16 +494,6 @@ void TextureSphere::writeData(FILE *outfile, FILE *outfile2) {
 	return;
       }
     }
-  if (outfile2) {
-    for(int v = 0; v < height; v++)
-      for(int u = 0; u < width; u++) {
-	float data = inside(u,v);
-	if (fwrite(&data, sizeof(float), 1, outfile2) != 1) {
-	  cerr << "Trouble writing texel for sphere at ["<<u<<", "<<v<<"]\n";
-	  return;
-	}
-      }
-  }
 }
 
 PathTraceLight::PathTraceLight(const Point &cen, double radius,
