@@ -285,6 +285,9 @@ Vector Tri::normal(const Point&, const HitInfo& hitinfo)
 
 //    printf("beta: %lf gamma: %lf\n",beta,gamma);
 
+  if (isbad())
+    return Vector(1,0,0);
+
   Vector norm((1.-beta-gamma)*vn1 + beta*vn2 + gamma*vn3);
 
   norm.normalize();

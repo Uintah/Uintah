@@ -49,7 +49,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/cutdemo.mo  \
 	$(SRCDIR)/envmap-sphere.mo  \
 	$(SRCDIR)/single-sphere.mo  \
-	$(SRCDIR)/ramsey.mo
+	$(SRCDIR)/ramsey.mo 
 
 ifeq ($(findstring Uintah, $(LOAD_PACKAGE)),Uintah)
 SCENES += \

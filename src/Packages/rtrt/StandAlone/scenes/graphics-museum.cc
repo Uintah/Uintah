@@ -68,6 +68,7 @@ rtrt -np 14 -eye -10.2111 -16.2099 1.630637 -lookat -11.7826 -20.5142 0.630637 -
 #include <Packages/rtrt/Core/Cylinder.h>
 #include <Packages/rtrt/Core/ply.h>
 #include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/PerlinBumpMaterial.h>
 
 using namespace rtrt;
 using namespace SCIRun;
@@ -752,7 +753,7 @@ void build_history_hall (Group* main_group, Scene *scene) {
   Material* flat_yellow = new LambertianMaterial(Color(.8,.8,.0));
   Material* flat_white = new LambertianMaterial(Color(.8,.8,.8));
   Material* flat_grey = new LambertianMaterial(Color(.4,.4,.4));
-  Material* orange = new Phong(Color(.7,.4,.0),Color(.2,.2,.2),200);
+  Material* orange = new Phong(Color(.7,.4,.0),Color(.2,.2,.2),40);
   Material* white = new PhongMaterial(Color(.9,.9,.7),1,0.1,50,false);
   Material* glass= new DielectricMaterial(1.5, 1.0, 0.04, 400.0, 
 					  Color(.80, .93 , .87), 
@@ -1180,7 +1181,7 @@ historyg);
   }
   main_group->add(vw);
   /* **************** bump-mapped sphere **************** */
-  historyg->add (new Sphere(orange, BumpMapPoint+Vector(0,0,0.3),0.2));
+  historyg->add (new Sphere ( new PerlinBumpMaterial(new Phong(Color(.72,.27,.0),Color(.2,.2,.2),50)), BumpMapPoint+Vector(0,0,0.3),0.2));
 
   /* **************** ray-traced scene **************** */
   historyg->add (new Sphere(glass, RTPoint+Vector(0.25,-0.1,0.3),0.1));
@@ -1717,6 +1718,51 @@ void build_modern_room (Group *main_group, Scene *scene) {
   /* dragon */
   add_pedestal (moderng, Point(-14-half_ped_size,-14-half_ped_size,ped_ht),
 		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
+
+  Point dragon_ped_top(-14,-14,ped_ht);
+
+  // read in the dragon geometry
+    Group* dragong = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip_res4.ply",flat_white);
+
+  BBox dragon_bbox;
+
+  dragong->compute_bounds(dragon_bbox,0);
+
+  Point dmin = dragon_bbox.min();
+  Point dmax = dragon_bbox.max();
+  Vector ddiag = dragon_bbox.diagonal();
+  /*
+  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+	 dmin.x(),dmin.y(), dmin.z(),
+	 dmax.x(),dmax.y(), dmax.z(),
+	 ddiag.x(),ddiag.y(),ddiag.z());
+  */
+  Transform dragonT;
+
+  dragonT.pre_translate(-Vector((dmax.x()+dmin.x())/2.,dmin.y(),(dmax.z()+dmin.z())/2.)); // center dragon over 0
+  dragonT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
+  dragonT.pre_rotate(-M_PI_2,Vector(0,0,1));  // make it face front
+  double dragon_scale = .375*2./(sqrt(ddiag.x()*ddiag.x()+ddiag.z()*ddiag.z()));
+  dragonT.pre_scale(Vector(dragon_scale,
+			   dragon_scale,
+			   dragon_scale));
+  dragonT.pre_translate(dragon_ped_top.asVector());
+
+  dragong->transform(dragonT);
+
+  dragon_bbox.reset();
+  dragong->compute_bounds(dragon_bbox,0);
+
+  dmin = dragon_bbox.min();
+  dmax = dragon_bbox.max();
+  ddiag = dragon_bbox.diagonal();
+
+  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+	 dmin.x(),dmin.y(), dmin.z(),
+	 dmax.x(),dmax.y(), dmax.z(),
+	 ddiag.x(),ddiag.y(),ddiag.z());
+  main_group->add(dragong);
+
   /* SCI torso */
   add_pedestal (moderng, Point(-16-half_ped_size,-14-half_ped_size,ped_ht),
 		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
@@ -1725,6 +1771,51 @@ void build_modern_room (Group *main_group, Scene *scene) {
   /* buddha */
   add_pedestal (moderng, Point(-18-half_ped_size,-12-half_ped_size,ped_ht),
 		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
+  Point buddha_ped_top(-18,-12,ped_ht);
+
+  // read in the buddha geometry
+    Group* buddhag = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip_res2.ply",flat_white);
+
+  BBox buddha_bbox;
+
+  buddhag->compute_bounds(buddha_bbox,0);
+
+  Point bmin = buddha_bbox.min();
+  Point bmax = buddha_bbox.max();
+  Vector bdiag = buddha_bbox.diagonal();
+  /*
+  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+	 bmin.x(),bmin.y(), bmin.z(),
+	 bmax.x(),bmax.y(), bmax.z(),
+	 bdiag.x(),bdiag.y(),bdiag.z());
+  */
+  Transform buddhaT;
+
+  buddhaT.pre_translate(-Vector((bmax.x()+bmin.x())/2.,bmin.y(),(bmax.z()+bmin.z())/2.)); // center buddha over 0
+  buddhaT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
+  buddhaT.pre_rotate(M_PI_2,Vector(0,0,1));  // make z up
+  double buddha_scale = .375*2./(sqrt(bdiag.x()*bdiag.x()+bdiag.z()*bdiag.z()));
+  buddhaT.pre_scale(Vector(buddha_scale,
+			   buddha_scale,
+			   buddha_scale));
+  buddhaT.pre_translate(buddha_ped_top.asVector());
+
+  buddhag->transform(buddhaT);
+
+  buddha_bbox.reset();
+  buddhag->compute_bounds(buddha_bbox,0);
+
+  bmin = buddha_bbox.min();
+  bmax = buddha_bbox.max();
+  bdiag = buddha_bbox.diagonal();
+
+  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+	 bmin.x(),bmin.y(), bmin.z(),
+	 bmax.x(),bmax.y(), bmax.z(),
+	 bdiag.x(),bdiag.y(),bdiag.z());
+  main_group->add(buddhag);
+
+
   /*  UNC well */
   add_pedestal (moderng, Point(-18-half_ped_size,-10-half_ped_size,ped_ht),
 		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));

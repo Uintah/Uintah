@@ -123,7 +123,9 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/ColorMap.cc \
 	$(SRCDIR)/SpinningInstance.cc \
 	$(SRCDIR)/plyfile.c \
-	$(SRCDIR)/DynamicInstance.cc 
+	$(SRCDIR)/DynamicInstance.cc \
+	$(SRCDIR)/SolidNoise3.cc \
+	$(SRCDIR)/PerlinBumpMaterial.cc 
 
 #	$(SRCDIR)/LumiDpy.cc \
 #	$(SRCDIR)/LumiCamera.cc \
