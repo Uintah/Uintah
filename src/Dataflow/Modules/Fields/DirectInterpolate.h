@@ -74,8 +74,8 @@ class DirectInterpAlgoT : public DirectInterpAlgo
     int np;
     FieldHandle out_fieldH;
     hash_type dstmap;
-    Mutex maplock;
     Barrier barrier;
+    Mutex maplock;
     
     _DIData() : barrier("DirectInterpolate Barrier"), maplock("DirectInterpolate Map Lock") {}
   } DIData;
