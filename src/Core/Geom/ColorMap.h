@@ -43,7 +43,7 @@
 #ifndef SCI_project_ColorMap_h
 #define SCI_project_ColorMap_h 1
 
-#include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/PropertyManager.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Geom/Material.h>
 #include <Core/Datatypes/Color.h>
@@ -61,7 +61,8 @@ namespace SCIRun {
 
 using std::vector;
 
-class SCICORESHARE ColorMap : public Datatype, public GeomColormapInterface
+class SCICORESHARE ColorMap : public PropertyManager,
+                              public GeomColormapInterface
 {
 public:
   ColorMap(const ColorMap&);

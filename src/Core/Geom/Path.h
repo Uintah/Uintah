@@ -62,7 +62,7 @@ POSSIBLE REVISIONS
 #define SCI_Core_Datatypes_Path_h 1
 
 #include <Core/share/share.h>
-#include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/PropertyManager.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Handle.h>
@@ -89,7 +89,7 @@ typedef LockingHandle<Path> PathHandle;
 enum {KEYFRAMED=0, LINEAR, CUBIC};
 enum {NO_ACCEL=0, SMOOTH, USERMODE};
 
-class SCICORESHARE Path : public Datatype {
+class SCICORESHARE Path : public PropertyManager {
  
   double    pathP;                 // current value of distance from the start point
   int       keyF;                  // keyframe nearest to the current path point

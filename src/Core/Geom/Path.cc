@@ -124,7 +124,7 @@ Path* Path::clone()
 
 //-----------------------------------------------------------------------------
 
-#define Path_VERSION 3
+#define Path_VERSION 4
 
 void Path::io(Piostream& stream)
 {
@@ -132,6 +132,11 @@ void Path::io(Piostream& stream)
     int oldpath=path_t;
 
     int version=stream.begin_class("Path", Path_VERSION);
+
+    if (version > 3)
+    {
+      PropertyManager::io(stream);
+    }
 
     Pio(stream, is_loop);
     Pio(stream, is_back);
