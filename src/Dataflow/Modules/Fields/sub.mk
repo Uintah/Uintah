@@ -29,6 +29,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Fields
 
 SRCS     += \
+	$(SRCDIR)/ApplyInterpMatrix.cc\
 	$(SRCDIR)/ApplyInterpolant.cc\
 	$(SRCDIR)/AttractNormals.cc\
 	$(SRCDIR)/BuildInterpolant.cc\
