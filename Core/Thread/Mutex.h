@@ -58,7 +58,7 @@ public:
   // Create the mutex.  The mutex is allocated in the unlocked
   // state. <i>name</i> should be a static string which describes
   // the primitive for debugging purposes.  
-  Mutex(const char* name = "unnamed mutex");
+  Mutex(const char* name);
 
   //////////
   // Destroy the mutex.  Destroying the mutex in the locked state
