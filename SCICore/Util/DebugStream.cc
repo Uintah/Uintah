@@ -82,7 +82,10 @@ DebugStream::~DebugStream()
 
 void DebugStream::checkenv(string iname)
 {
-  string var = (string) getenv(ENV_VAR);
+  char* vars = getenv(ENV_VAR);
+  if(!vars)
+     return;
+  string var(vars);
   // if SCI_DEBUG was defined, parse the string and store appropriate
   // values in onstreams and offstreams
   if(!var.empty()){
