@@ -66,6 +66,7 @@ GuageWidget::GuageWidget( Module* module, double widget_scale )
 						 Color(0,0,.6), 20);
 
    Index geom;
+#ifdef BROKEN
    for (geom = GuageW_SphereL; geom <= GuageW_SphereL; geom++) {
       geometries[geom] = new GeomSphere;
       GeomPick* p = new GeomPick(module);
@@ -82,12 +83,12 @@ GuageWidget::GuageWidget( Module* module, double widget_scale )
       geometries[geom]->set_pick(p);
       geometries[geom]->set_matl(materials[GuageW_EdgeMatl]);
    }
+#endif
 
    widget = new GeomGroup;
    for (geom = 0; geom < NumGeoms; geom++) {
       widget->add(geometries[geom]);
    }
-   widget->set_pick(new GeomPick(module));
 
    // Init variables.
    for (Index vindex=0; vindex<NumVariables; vindex++)
@@ -120,12 +121,14 @@ GuageWidget::execute()
    Vector v(variables[GuageW_PointR]->Get() - variables[GuageW_PointL]->Get());
    v.normalize();
    for (Index geom = 0; geom < NumGeoms; geom++) {
+#ifdef BROKEN
       geometries[geom]->get_pick()->set_principal(v);
+#endif
    }
 }
 
 void
-GuageWidget::geom_moved( int axis, double dist, const Vector& delta,
+GuageWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
 {
    cerr << "Moved called..." << endl;

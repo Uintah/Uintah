@@ -245,6 +245,7 @@ CubeWidget::CubeWidget( Module* module, double widget_scale )
 						Color(0,0,.6), 20);
 
    Index geom;
+#ifdef BROKEN
    for (geom = CubeW_SphereIUL; geom <= CubeW_SphereODL; geom++) {
       geometries[geom] = new GeomSphere;
       GeomPick* p=new GeomPick(module);
@@ -261,12 +262,12 @@ CubeWidget::CubeWidget( Module* module, double widget_scale )
       geometries[geom]->set_pick(p);
       geometries[geom]->set_matl(materials[CubeW_EdgeMatl]);
    }
+#endif
 
    widget=new GeomGroup;
    for (geom = 0; geom < NumGeoms; geom++) {
       widget->add(geometries[geom]);
    }
-   widget->set_pick(new GeomPick(module));
 
    // Init variables.
    for (Index vindex=0; vindex<NumVariables; vindex++)
@@ -344,12 +345,14 @@ CubeWidget::execute()
    spvec2.normalize();
    Vector v = Cross(spvec1, spvec2);
    for (Index geom = 0; geom < NumGeoms; geom++) {
+#ifdef BROKEN
       geometries[geom]->get_pick()->set_principal(spvec1, spvec2, v);
+#endif
    }
 }
 
 void
-CubeWidget::geom_moved( int axis, double dist, const Vector& delta,
+CubeWidget::geom_moved( int /* axis*/, double /*dist*/, const Vector& delta,
 			void* cbdata )
 {
    cerr << "Moved called..." << endl;

@@ -20,6 +20,7 @@
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 #include <Geom/Geom.h>
+#include <Geom/Material.h>
 
 class GeomGroup;
 class Module;

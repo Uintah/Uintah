@@ -41,6 +41,7 @@ ArrowWidget::ArrowWidget( Module* module, double widget_scale )
    materials[ArrowW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
 						 Color(0,0,.6), 20);
 
+#ifdef BROKEN
    geometries[ArrowW_Sphere] = new GeomSphere;
    GeomPick* p=new GeomPick(module);
    p->set_highlight(materials[ArrowW_HighMatl]);
@@ -59,12 +60,12 @@ ArrowWidget::ArrowWidget( Module* module, double widget_scale )
    p->set_cbdata((void*)ArrowW_Cone);
    geometries[ArrowW_Cone]->set_pick(p);
    geometries[ArrowW_Cone]->set_matl(materials[ArrowW_EdgeMatl]);
+#endif
 
    widget = new GeomGroup;
    for (Index geom = 0; geom < NumGeoms; geom++) {
       widget->add(geometries[geom]);
    }
-   widget->set_pick(new GeomPick(module));
 
    // Init variables.
    for (Index vindex=0; vindex<NumVariables; vindex++)
@@ -97,12 +98,14 @@ ArrowWidget::execute()
 					      0);
 
    for (Index geom = 0; geom < NumGeoms; geom++) {
+#if BROKEN
       geometries[geom]->get_pick()->set_principal(direction);
+#endif
    }
 }
 
 void
-ArrowWidget::geom_moved( int axis, double dist, const Vector& delta,
+ArrowWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
 {
    cerr << "Moved called... ArrowWidget" << endl;

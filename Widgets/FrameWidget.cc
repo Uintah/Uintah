@@ -107,6 +107,7 @@ FrameWidget::FrameWidget( Module* module, Real widget_scale )
 						 Color(0,0,.6), 20);
 
    Index geom;
+#ifdef BROKEN
    for (geom = FrameW_SphereUL; geom <= FrameW_SphereDL; geom++) {
       geometries[geom] = new GeomSphere;
       GeomPick* p=new GeomPick(module);
@@ -123,13 +124,12 @@ FrameWidget::FrameWidget( Module* module, Real widget_scale )
       geometries[geom]->set_pick(p);
       geometries[geom]->set_matl(materials[FrameW_EdgeMatl]);
    }
+#endif
 
    widget = new GeomGroup;
    for (geom = 0; geom < NumGeoms; geom++) {
       widget->add(geometries[geom]);
    }
-   widget->set_pick(new GeomPick(module));
-
    
    SetEpsilon(widget_scale*1e-4);
    
@@ -182,12 +182,14 @@ FrameWidget::execute()
    spvec2.normalize();
    Vector v = Cross(spvec1, spvec2);
    for (Index geom = 0; geom < NumGeoms; geom++) {
+#ifdef BROKEN
       geometries[geom]->get_pick()->set_principal(spvec1, spvec2, v);
+#endif
    }
 }
 
 void
-FrameWidget::geom_moved( int axis, double dist, const Vector& delta,
+FrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
 {
    Vector delt = delta;
