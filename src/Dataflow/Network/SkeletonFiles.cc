@@ -152,7 +152,6 @@ char share_skeleton[] = \
 "\n";
 
 char package_submk_skeleton[] = \
-"include $(SRCTOP)/scripts/largeso_prologue.mk\n"
 "\n"
 "SRCDIR := Packages/%s\n" /* package name */
 "\n"
@@ -161,11 +160,6 @@ char package_submk_skeleton[] = \
 "        $(SRCDIR)/Dataflow \\\n"
 "\n"
 "include $(SRCTOP)/scripts/recurse.mk\n"
-"\n"
-"PSELIBS := \n"
-"LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm\n"
-"\n"
-"include $(SRCTOP)/scripts/largeso_epilogue.mk\n"
 "\n"
 "\n";
 
