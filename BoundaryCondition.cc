@@ -4005,14 +4005,14 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 //	   out_vel = 25.0;
 
 	   if (constvars->uVelocity[xplusCell] > 0.0)
-           vars->uVelRhoHat[xplusCell] = ( delta_t * (- out_vel *
+/*           vars->uVelRhoHat[xplusCell] = ( delta_t * (- out_vel *
             (avden*constvars->uVelocity[xplusCell] - 
 	     avdenlow*constvars->uVelocity[currCell]) / cellinfo->dxpwu[colX+1]
 	    +
 	     (avden-ref_avden) * gravity
 	     )+
-	    old_avden*constvars->old_uVelocity[xplusCell]) / new_avden;
-//           vars->uVelRhoHat[xplusCell] = vars->uVelRhoHat[currCell];
+	    old_avden*constvars->old_uVelocity[xplusCell]) / new_avden;*/
+           vars->uVelRhoHat[xplusCell] = vars->uVelRhoHat[currCell];
 	   else
 	   vars->uVelRhoHat[xplusCell] = 0.0;
 //	   if (vars->uVelRhoHat[xplusCell] < 0.0) vars->uVelRhoHat[xplusCell] = 0.0;

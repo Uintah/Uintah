@@ -2223,7 +2223,7 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
       }
     }
 
-    /*
+    
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -2305,7 +2305,7 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 	}
       }
     }
-    */
+    
   }
 }
 //****************************************************************************
@@ -2419,7 +2419,7 @@ IncDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
       }
     }
 
-    /*
+    
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -2501,6 +2501,6 @@ IncDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
 	}
       }
     }
-    */
+    
   }
 }
