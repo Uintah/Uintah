@@ -31,7 +31,7 @@
 
 #include <Core/Services/ServiceManager.h>
 
-using namespace SCIRun;
+namespace SCIRun {
 
 ServiceManager::ServiceManager(ServiceDBHandle db, IComAddress address,
                                ServiceLogHandle log) :
@@ -57,18 +57,21 @@ void ServiceManager::run()
   log_->putmsg("ServiceManager: Starting ServiceManager");
   IComSocket serversocket;
 	
-  if (!address_.isvalid()) {
+  if (!address_.isvalid()) 
+  {
     log_->putmsg("ServiceManager: invalid address for server, shutting down service manager");
     return;		
   }
   
-  if(!(serversocket.create(address_.getprotocol()))) {
+  if(!(serversocket.create(address_.getprotocol()))) 
+  {
     log_->putmsg("ServiceManager: socket.create() failed, shutting down service manager");
     log_->putmsg(std::string("ServiceFrame: socket error = ") + serversocket.geterror());
     return;	
   }
 	
-  if(!(serversocket.bind(address_))) {
+  if(!(serversocket.bind(address_))) 
+  {
     log_->putmsg("ServiceManager: socket.bind() failed, shutting down service manager");
     std::string errormsg = "ServiceManager: socket error = " + serversocket.geterror();
     log_->putmsg(errormsg);
@@ -81,7 +84,8 @@ void ServiceManager::run()
   
   for(;;) {
     // LOOP FOREVER...
-    if (!(serversocket.listen())) {
+    if (!(serversocket.listen())) 
+    {
       log_->putmsg("ServiceManager: socket.listen() failed, shutting down service manager");
       return;
     }
@@ -91,7 +95,8 @@ void ServiceManager::run()
     clientsocket.close();
     log_->putmsg("ServiceManager: connection attempt made by remote host");
     
-    if (serversocket.accept(clientsocket)) {
+    if (serversocket.accept(clientsocket)) 
+    {
       status = "ServiceManager: handeling new request, launching a ServiceFrame\n";
       log_->putmsg(status);
 
@@ -103,9 +108,13 @@ void ServiceManager::run()
       Thread* thread = scinew Thread(sf,"service server");
       log_->putmsg("ServiceManager: new thread to handle service");
       thread->detach();	// It will do all it's stuff by itself
-    } else {
+    }
+    else 
+    {
       log_->putmsg("ServiceManager: socket.accept() failed, trying once more");
       log_->putmsg(std::string("ServiceManager: socket error = ") + serversocket.geterror());
     }
   }
+}
+
 }

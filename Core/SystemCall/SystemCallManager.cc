@@ -85,13 +85,9 @@ void SystemCallProcess::kill(int secs)
         ret = ::select(fd_exit_+1,&fdset,0,0,&tv);
         if (ret > 0) killprocess = false;        
     
-        std::cout << "killprocess = " << killprocess << "\n";
-        std::cout << "pid = " << pid_ << "\n";
-    
         if (killprocess) 
         {
             int ret = ::killpg(pid_,SIGKILL);
-            std:: cout << "return value kill = " << ret << "\n";
         }
         pid_ = 0;
     }
@@ -104,7 +100,6 @@ void    SystemCallProcess::close()
 {
 #ifndef _WIN32
 
-    std::cout << "SystemCallProcess:close() called\n";
     if (pid_ > 0) kill();    // if the process is still running lets end it
 
     dolock();
@@ -435,7 +430,7 @@ void SystemCallManager::childmain()
     int    fd_stderr = -1;
     int    fd_exit = -1;
     
-    std::string instruction;
+    std::string    instruction;
     std::string    stdinfile;
     std::string    stdoutfile;
     std::string    stderrfile;
@@ -453,7 +448,7 @@ void SystemCallManager::childmain()
         fd_stdout = -1;
         if (fd_stderr > -1) ::close(fd_stderr);
         fd_stderr = -1;        
-        if (fd_exit > -1) ::close(fd_exit);
+        if (fd_exit > -1)   ::close(fd_exit);
         fd_exit = -1;        
         
         if(!(readline(child_in_,instruction)))
@@ -788,7 +783,7 @@ bool SystemCallManager::readline(int fd,std::string& str)
     int        bytestoread;
     int        bytesread;
     long       len;
-    char    *buffer;
+    char       *buffer;
     
     int   length;
 
@@ -824,8 +819,8 @@ bool SystemCallManager::writeline(int fd, std::string str)
 {
     int        bytestowrite;
     int        byteswritten;
-    long        len;
-    char*    buffer;
+    long       len;
+    char*      buffer;
     
     int length = static_cast<int>(str.size());
     

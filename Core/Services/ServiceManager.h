@@ -52,7 +52,7 @@ public:
   // Constructor/destructor
   ServiceManager(ServiceDBHandle db, IComAddress address,
                  ServiceLogHandle log = 0);
-  ~ServiceManager();
+  virtual ~ServiceManager();
 
   // Run will be called by the thread environment as the entry point
   // of a new thread.

@@ -32,17 +32,20 @@
 
 #include <Core/Services/ServiceLog.h>
 
-using namespace SCIRun;
+namespace SCIRun {
 
 ServiceLog::ServiceLog(std::string filename) :
   lock("servicelog lock"), haslog_(false), ref_cnt(0)
 {	
-  if (filename != "") {
-    try {
+  if (filename != "") 
+  {
+    try 
+    {
       logfile_.open(filename.c_str());
       haslog_ = true;
     }
-    catch(...) {
+    catch(...) 
+    {
       haslog_ = false;
     }
   }
@@ -50,16 +53,21 @@ ServiceLog::ServiceLog(std::string filename) :
 
 void ServiceLog::putmsg(std::string msg)
 {
-  if (haslog_) {
-    try {
+  if (haslog_) 
+  {
+    try 
+    {
       lock.lock();
       logfile_ << msg << std::endl;
       logfile_.flush();
       lock.unlock();
     }
-    catch(...) {	// make sure we always unlock
+    catch(...) 
+    {	// make sure we always unlock
       lock.lock();
       throw;
     }
   }
 }	
+
+}

@@ -56,7 +56,7 @@ class SimpleServiceOutputInfo : public ServiceBase
 
 	// Communication with main thread
 	void signal_exit();  
-	void add_packet(IComPacketHandle& packet);
+	void add_packet(IComPacketHandle& packet, bool atfront = false);
 
   public:
 	Mutex					lock;
@@ -86,13 +86,20 @@ inline void SimpleServiceOutputInfo::signal_exit()
 	lock.unlock();
 }
 
-inline void SimpleServiceOutputInfo::add_packet(IComPacketHandle &packet)
+inline void SimpleServiceOutputInfo::add_packet(IComPacketHandle &packet,bool atfront)
 {
-	lock.lock();
-	if (packet_list_ == 0) packet_list_ = scinew std::list<IComPacketHandle>;
-	packet_list_->push_back(packet);
-	wait_.conditionSignal();	
-	lock.unlock();
+    lock.lock();
+    if (packet_list_ == 0) packet_list_ = scinew std::list<IComPacketHandle>;
+    if (atfront)
+    {
+        packet_list_->push_front(packet);
+    }
+    else
+    {
+        packet_list_->push_back(packet);
+    }
+    wait_.conditionSignal();    
+    lock.unlock();
 }
 
 class SimpleServiceOutputThread : public Runnable, public ServiceBase
@@ -144,6 +151,7 @@ class SimpleService : public Service {
 	~SimpleService();
   
 	void			execute();						// Main loop
+    void            create_service_info();
 	void			create_output_thread();			// Create a separate thread for handling sending over socket
 	void			kill_output_thread();			// Close the thread by signalling that it should exit
 													// After this the packages in the buffer are still being send
@@ -176,7 +184,8 @@ class SimpleService : public Service {
 	SystemCallHandle					exit_syscall_;
 	SimpleServiceOutputHandlerHandle	exit_handler_;
 
-	
+
+    Thread*                            output_thread_;
 	// Output thread data
 	SimpleServiceOutputInfoHandle   info_handle_;	
 	// File forwarding functions	

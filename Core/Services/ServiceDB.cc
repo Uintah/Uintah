@@ -78,7 +78,8 @@ ServiceDB::ServiceDB() :
 {
 }
 
-ServiceDB::~ServiceDB() { 
+ServiceDB::~ServiceDB() 
+{ 
   // Free all memory we allocated in generating the information
   // database on available services
   std::map<std::string,ServiceInfo *>::iterator  pi;
@@ -95,7 +96,8 @@ ServiceDB::~ServiceDB() {
 // This function was copied from the package database
 // files.
 
-LIBRARY_HANDLE ServiceDB::findlib(string lib) {
+LIBRARY_HANDLE ServiceDB::findlib(string lib) 
+{
   LIBRARY_HANDLE handle=0;
   const char *env = sci_getenv("PACKAGE_LIB_PATH");
   std::string temppaths(env?env:"");
@@ -106,15 +108,15 @@ LIBRARY_HANDLE ServiceDB::findlib(string lib) {
       std::string dir;
       const size_t firstcolon = temppaths.find(':');
       if(firstcolon < temppaths.size()) 
-        {
+      {
           dir=temppaths.substr(0,firstcolon);
           temppaths=temppaths.substr(firstcolon+1);
-        } 
+      } 
       else 
-        {
+      {
           dir=temppaths;
           temppaths="";
-        }
+      }
 
       handle = GetLibraryHandle((dir+"/"+lib).c_str());
       if (handle)	return(handle);
@@ -128,16 +130,17 @@ LIBRARY_HANDLE ServiceDB::findlib(string lib) {
 }
 
 
-bool ServiceDB::findmaker(ServiceInfo* info) {
+bool ServiceDB::findmaker(ServiceInfo* info) 
+{
   std::string cat_bname, pak_bname;
   if(info->packagename == "SCIRun") 
-    {
+  {
       pak_bname = "Core_Services";
-    }	
+  }	
   else 
-    {
+  {
       pak_bname = "Packages_" + info->packagename + "_Services";
-    }
+  }
   
   std::string errstr;
 
@@ -146,26 +149,27 @@ bool ServiceDB::findmaker(ServiceInfo* info) {
   if (!package_so) errstr = string(" - ")+SOError()+string("\n");
 
   if (!package_so) 
-    {
+  {
       std::cerr << "Unable to load services of package '"  << info->packagename << "'\n :" << errstr;
       return(false);
-    }
+  }
 
   std::string makename = "make_service_" + info->classname;
   if (package_so)
-    {
+  {
       info->maker = (ServiceMaker) GetHandleSymbolAddress(package_so,makename.c_str());
-    }
+  }
   if (!info->maker) 
-    {
+  {
       std::cerr << "Unable to load service '" << info->servicename << "' :\n - cannot find symbol '" + makename + "'\n";
       return(false);
-    }
+  }
   return(true);
 }
 
 
-void ServiceDB::loadpackages() {
+void ServiceDB::loadpackages() 
+{
 
   // Inform the user on what the program is doing
   std::cout << "Loading services, please wait..." << std::endl;
@@ -189,79 +193,79 @@ void ServiceDB::loadpackages() {
   std::string packageelt;
 	
   while(loadpackage!="") 
-    {
+  {
       // Strip off the first element, leave the rest for the next
       // iteration.
       const size_t firstcomma = loadpackage.find(',');
       if(firstcomma < loadpackage.size()) 
-        {
+      {
           packageelt=loadpackage.substr(0,firstcomma);
           loadpackage=loadpackage.substr(firstcomma+1);
-        } 
+      } 
       else 
-        {
+      {
           packageelt=loadpackage;
           loadpackage="";
-        }
+      }
 
       std::string tmppath = packagepath;
       std::string pathelt;
 
       while (tmppath!="") 
-        {
+      {
           if (packageelt=="SCIRun") 
-            {
+          {
               tmppath = "found";
               break;
-            }
+          }
           const size_t firstcolon = tmppath.find(':');
           if(firstcolon < tmppath.size()) 
-            {
+          {
               pathelt=tmppath.substr(0,firstcolon);
               tmppath=tmppath.substr(firstcolon+1);
-            } 
+          } 
           else 
-            {
+          {
               pathelt=tmppath;
               tmppath="";
-            }
+          }
       
           struct stat buf;
           lstat((pathelt+"/"+packageelt).c_str(),&buf);
           if (S_ISDIR(buf.st_mode)) 
-            {
+          {
               tmppath = "found";
               break;
-            }
-        }
+          }
+      }
 
       if (tmppath=="") 
-        {
+      {
           std::cerr << "Unable to load package " << packageelt << ":\n - Can't find " << packageelt << " directory in package path" << std::endl;
           continue;
-        }
+      }
 
       std::string xmldir;
     
       if(packageelt == "SCIRun") 
-        {
+      {
           xmldir = std::string(srcdir) + "/Core/Services";
-        } 
+      } 
       else 
-        {
+      {
           xmldir = pathelt+"/"+packageelt+"/Services";
-        }
+      }
       std::map<int,char*>* files;
       files = GetFilenamesEndingWith((char*)xmldir.c_str(),".xml");
 
       if (!files) 
-        {
+      {
           // THIS PACKAGE APPARENTLY DOES NOT CONTAIN ANY SERVICES
           continue;
-        }
+      }
 
       for (std::map<int,char*>::iterator i=files->begin(); i!=files->end(); i++) 
-        {
+      {
           ServiceNode node;
           ReadServiceNodeFromFile(node,(xmldir+"/"+(*i).second).c_str());
 
@@ -294,18 +298,18 @@ void ServiceDB::loadpackages() {
 
           // Store the information so all threads can use it
           servicedb_[node.servicename] = new_service;
-        }
-    }
+      }
+  }
 
   std::map<std::string,ServiceInfo *>::iterator  pi;
   for (pi = servicedb_.begin(); pi!=servicedb_.end(); pi++) 
-    {
+  {
       if(!findmaker((*pi).second))
-        {
+      {
           std::cerr << "Unable to load service '" << (*pi).second->servicename <<
             "' :\n - can't find symbol 'make_service_" << (*pi).second->classname << "'" << std::endl;			
-        }
-    }
+      }
+  }
 }
   
 
@@ -325,7 +329,7 @@ void ServiceDB::parse_and_find_service_rcfile(ServiceInfo *new_service,std::stri
   // 1. check the user's home/SCIRun/services directory
   char *HOME;
   if (HOME = getenv("HOME")) 
-    {
+  {
       filename = HOME+std::string("/SCIRun/services/") + rcname;
       foundrc = parse_service_rcfile(new_service,filename);
       if (foundrc) return;
@@ -335,28 +339,28 @@ void ServiceDB::parse_and_find_service_rcfile(ServiceInfo *new_service,std::stri
       filename = HOME+std::string("/") + rcname;
       foundrc = parse_service_rcfile(new_service,filename);
       if (foundrc) return;
-    }
+  }
   
   // 2. check sourcedir where xml file was located as well
 
   filename = xmldir + std::string("/") + rcname;
   foundrc = parse_service_rcfile(new_service,filename);
   if (!foundrc) 
-    {
+  {
       std::cerr << "Could not locate the configuration file '" << rcname << "' for service " << new_service->servicename << std::endl;	
       return;
-    }
+  }
 	
   // If this one is a success 
   // try to copy this rc file to the SCIRun directory in the
   // users home directory
 	
   if (HOME = getenv("HOME")) 
-    {
+  {
       std::string dirname = HOME+std::string("/SCIRun/services");
       struct stat buf;
       if(::lstat(dirname.c_str(),&buf) < 0)
-        {
+      {
           // The target directory does not exist
 			
           // Test whether SCIRun directory exists
@@ -364,44 +368,44 @@ void ServiceDB::parse_and_find_service_rcfile(ServiceInfo *new_service,std::stri
 
           dirname = HOME+std::string("/SCIRun");
           if (::lstat(dirname.c_str(),&buf) < 0)
-            {
+          {
               std::string cmd = std::string("mkdir ") + std::string(HOME) + std::string("/SCIRun");
               sci_system(cmd.c_str());
               if(::lstat(dirname.c_str(),&buf) < 0) return;  // Try to get information once more
-            }
+          }
           if (!S_ISDIR(buf.st_mode))
-            {
+          {
               std::cerr << "Could not create " << dirname << " directory" << std::endl; 
               return;
-            }
+          }
 		
           // SCIRun directory must exist now
 		
           dirname = HOME+std::string("/SCIRun/services");
           if (::lstat(dirname.c_str(),&buf) < 0)
-            {
+          {
               std::string cmd = std::string("mkdir ") + std::string(HOME) + std::string("/SCIRun/services");
               sci_system(cmd.c_str());
               if(::lstat(dirname.c_str(),&buf) < 0) return;  // Try to get information once more
-            }
+          }
           if (!S_ISDIR(buf.st_mode))
-            {
+          { 
               std::cerr << "Could not create " << dirname << " directory" << std::endl; 
               return;
-            }
+          }
         }
 		
       if (!S_ISDIR(buf.st_mode))
-        {
+      {
           std::cerr << "Could not create " << dirname << " directory" << std::endl; 
           return;
-        }
+      }
 
       std::cout << "Copying " << rcname << " to local /SCIRun/services directory" << std::endl;
       std::string cmd = std::string("cp -f ") + filename + " " + std::string(HOME) + std::string("/SCIRun/services/") + rcname;
       sci_system(cmd.c_str());
 		
-    }
+  }
 
   return;
 }
@@ -431,20 +435,20 @@ bool ServiceDB::parse_service_rcfile(ServiceInfo *new_service,std::string filena
   std::string data;
 	
   while(!done)
-    {
+  {
       bytesread = fread(&(read_buffer[0]),1,read_buffer_length,filein);
       if ((bytesread == 0)&&(!feof(filein)))
-        {
+      {
           std::cerr << "Detected error while reading from file: " << filename << std::endl;
           return(false);
-        }
+      }
       if (bytesread > 0) linebuffer += read_buffer.substr(0,bytesread);
 
       if (feof(filein)) done = true;
 	
       need_new_read = false;
       while (!need_new_read)
-        {	
+      {	
           linestart = 0;
           buffersize = linebuffer.size();
           // Skip all newlines returns tabs and spaces at the start of a line
@@ -454,34 +458,34 @@ bool ServiceDB::parse_service_rcfile(ServiceInfo *new_service,std::string filena
           // if bytesread is 0, it indicates an EOF, hence we just need to add the remainder
           // of what is in the buffer. The file has not properly terminated strings....
           if (bytesread == 0)
-            {	
+          {	
               if(linestart < linebuffer.size()) newline = linebuffer.substr(linestart);
-            }
+          }
           else
-            {
+          {
               lineend = linestart;
               while((lineend < buffersize)&&(linebuffer[lineend]!='\n')&&(linebuffer[lineend]!='\r')&&(linebuffer[lineend]!='\0')) lineend++;
               if (lineend == linebuffer.size())
-                {	// end of line not yet read
+              {	// end of line not yet read
                   need_new_read = true;
-                }
+              }
               else
-                {	// split of the latest line read
+              {	// split of the latest line read
                   newline = linebuffer.substr(linestart,lineend+1);
                   linebuffer = linebuffer.substr(lineend+1);
                   need_new_read = false;
-                }
-            }
+              }
+          }
 			
           if (!need_new_read)
-            {
+          {
               if ((newline[0] == '#')||(newline[0] == '%'))
-                {   // Comment
+              {   // Comment
                   if (newline.substr(0,11) == "###VERSION=")
                     new_service->rcfileversion = newline.substr(11);
-                }
+              }
               else
-                {
+              {
                   lineequal = 0;
                   linetag = 0;
                   linesize = newline.size();
@@ -493,10 +497,10 @@ bool ServiceDB::parse_service_rcfile(ServiceInfo *new_service,std::string filena
                   while((linedata < linesize)&&((newline[linedata] == ' ')||(newline[linedata] == '\t'))) linedata++;
                   data = newline.substr(linedata);
                   new_service->parameters[tag] = data;
-                }
-            }
-        }
-    }
+              }
+          }
+      }
+  }
 			
   // Keep this for debugging purposes, it will end up in the log file
   new_service->rcfile = filename;
@@ -511,50 +515,50 @@ void ServiceDB::activateall()
 {
   std::map<std::string,ServiceInfo *>::iterator  pi;
   for (pi = servicedb_.begin(); pi!=servicedb_.end(); pi++) 
-    {
+  {
       if((*pi).second->maker)
-        {
+      {
           (*pi).second->activated = true;
-        }
-    }
+      }
+  }
 }
 
 void ServiceDB::deactivateall()
 {
   std::map<std::string,ServiceInfo *>::iterator  pi;
   for (pi = servicedb_.begin(); pi!=servicedb_.end(); pi++) 
-    {
+  {
       if((*pi).second->maker)
-        {
+      {
           (*pi).second->activated = false;
-        }
+      }
     }
 }
 
 void ServiceDB::activate(std::string name)
 {
   if(servicedb_[name])
-    {
+  {
       servicedb_[name]->activated = true;
-    }
+  }
 }
 
 void ServiceDB::deactivate(std::string name)
 {
   if(servicedb_[name])
-    {
+  {
       servicedb_[name]->activated = false;
-    }
+  }
 }
 
 
 bool ServiceDB::isservice(const std::string servicename)
 {
   if(servicedb_[servicename]) 
-    {
+  {
       if (servicedb_[servicename]->activated == false) return(false);
       return(true);
-    }
+  }
   return(false);
 }
 
@@ -570,19 +574,19 @@ ServiceDB* ServiceDB::clone()
   ServiceDB* newptr = scinew ServiceDB();
 	
   if (newptr == 0)
-    {
+  {
       std::cerr << "Could not clone Service Database" << std::endl;
       return(0);
-    }
+  }
 	
   std::map<std::string,ServiceInfo*>::iterator  pi;
   for (pi = servicedb_.begin(); pi!=servicedb_.end(); pi++) 
-    {
+  {
 	
       ServiceInfo *info = scinew ServiceInfo;
       info = (*pi).second;
       newptr->servicedb_[info->servicename] = info;
-    }
+  } 
 	
   return(newptr);
 }

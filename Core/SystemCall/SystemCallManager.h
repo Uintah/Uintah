@@ -107,12 +107,12 @@ class SystemCallProcess : public SystemCallBase {
     
   public:    
     int        processid_;        // Processid, to keep the different processes separated
-    pid_t    pid_;            // The PID of the process
+    pid_t      pid_;              // The PID of the process
     
     int        fd_stdin_;        // STDIN -> file descriptor to the STDIN channel to the external program
-    int        fd_stdout_;        // STDOUT
-    int        fd_stderr_;        // STDERR
-    int        fd_exit_;        // EXIT fifo, this fifo will only receive a message when the program 
+    int        fd_stdout_;       // STDOUT
+    int        fd_stderr_;       // STDERR
+    int        fd_exit_;         // EXIT fifo, this fifo will only receive a message when the program 
                             // ended. In the future this will be used to return an exit code
                             // The latter has not been implemented yet
     
@@ -168,9 +168,9 @@ class SystemCallManager : public SystemCallBase {
     // For creating shells in which to execute, use the following four set of commands
     
     int        exec(std::string command);
-    void    wait(int processid);    // wait for process to finish
-    void    kill(int processid,int secs=0);    // for the impatient: kill the process prematurely
-    void    close(int processid);    // close the communication descriptors
+    void       wait(int processid);    // wait for process to finish
+    void       kill(int processid,int secs=0);    // for the impatient: kill the process prematurely
+    void       close(int processid);    // close the communication descriptors
 
     // Get the descriptors to the communication channels
     int        getstdin(int processid);    // Receives the stdin
@@ -194,17 +194,17 @@ class SystemCallManager : public SystemCallBase {
   public:            // This needs to be public for the LockingHandle class
     // Communication channel with child process
     Mutex    lock;                        // Lock communication with child, parent is a multi threaded application
-    int        ref_cnt;
+    int      ref_cnt;
     
   private:
     pid_t    childpid_;                    // Pid for process launching the children
     int        child_in_;                    // input to child stream
     int        child_out_;                    // output from child stream
     
-    int                                processidcnt_;  // Each processes gets a new internal process ID
+    int                              processidcnt_;  // Each processes gets a new internal process ID
     std::list<SystemCallProcess*>    processlist_;   // Keep track of all processes launched
     
-    TempFileManager tfm_;
+    TempFileManager    tfm_;
     std::string        tempdir_;
 };
   

@@ -47,46 +47,48 @@ namespace SCIRun {
 class ServiceClient: public ServiceBase {
   public:
 
-  // Constructor/destructor
-  ServiceClient();
-  ~ServiceClient();
+    // Constructor/destructor
+    ServiceClient();
+    virtual ~ServiceClient();
 
-  // Run will be called by the thread environment as the entry point of
-  // a new thread.
+    // Run will be called by the thread environment as the entry point of
+    // a new thread.
 
-  bool  open(IComAddress address, std::string servicename, int session, std::string passwd);
-  bool  close();
+    bool  open(IComAddress address, std::string servicename, int session, std::string passwd);
+    bool  close();
   
-  IComSocket  getsocket();
+    IComSocket  getsocket();
     
-  inline std::string geterror();
-  inline std::string getremoteaddress();
-  inline std::string getversion();
-  inline std::string getsession();
-  ServiceClient*  clone();
+    std::string geterror();
+    std::string getremoteaddress();
+    std::string getversion();
+    std::string getsession();
+    void        setsession(int session);
+    
+    ServiceClient*  clone();
 
-  inline bool    send(IComPacketHandle &packet);
-  inline bool    recv(IComPacketHandle &packet);
-  inline bool    poll(IComPacketHandle &packet);
-  inline void    seterror(std::string);
-  inline void    clearerror();
+    bool    send(IComPacketHandle &packet);
+    bool    recv(IComPacketHandle &packet);
+    bool    poll(IComPacketHandle &packet);
+    void    seterror(std::string);
+    void    clearerror();
   
   public:
-  Mutex    lock;
-  int      ref_cnt;
+    Mutex    lock;
+    int      ref_cnt;
   
   private:
 
-  int      session_;
-  std::string version_;
-  std::string  error_;
-  int      errno_;
-  IComSocket  socket_;
+    int          session_;
+    std::string  version_;
+    std::string  error_;
+    int          errno_;
+    IComSocket   socket_;
 };
 
 typedef LockingHandle<ServiceClient> ServiceClientHandle;
 
-bool ServiceClient::send(IComPacketHandle &packet)
+inline bool ServiceClient::send(IComPacketHandle &packet)
 {
   if(socket_.send(packet) == false) 
   {
@@ -97,7 +99,7 @@ bool ServiceClient::send(IComPacketHandle &packet)
   return(true);
 }
 
-bool ServiceClient::recv(IComPacketHandle &packet)
+inline bool ServiceClient::recv(IComPacketHandle &packet)
 {
   if(socket_.recv(packet) == false) 
   {
@@ -108,7 +110,7 @@ bool ServiceClient::recv(IComPacketHandle &packet)
   return(true);
 }
 
-bool ServiceClient::poll(IComPacketHandle &packet)
+inline bool ServiceClient::poll(IComPacketHandle &packet)
 {
   if(socket_.poll(packet) == false) 
   {
@@ -119,43 +121,48 @@ bool ServiceClient::poll(IComPacketHandle &packet)
   return(true);
 }
 
-std::string ServiceClient::geterror()
+inline std::string ServiceClient::geterror()
 {
   return(error_);
 }
 
-std::string ServiceClient::getversion()
+inline std::string ServiceClient::getversion()
 {
   return(version_);
 }
 
-void ServiceClient::seterror(std::string error)
+inline void ServiceClient::seterror(std::string error)
 {
   error_ = error;
 }
 
-void ServiceClient::clearerror()
+inline void ServiceClient::clearerror()
 {
   error_ = "";
 }  
 
-std::string ServiceClient::getremoteaddress()
+inline std::string ServiceClient::getremoteaddress()
 {
   IComAddress address;
   socket_.getremoteaddress(address);
   return(address.geturl());
 }
 
-std::string ServiceClient::getsession()
+inline std::string ServiceClient::getsession()
 {
   std::ostringstream oss;
   oss << session_;
   return(oss.str());
 }
 
-IComSocket ServiceClient::getsocket()
+inline IComSocket ServiceClient::getsocket()
 {
   return(socket_);
+}
+
+inline void ServiceClient::setsession(int session)
+{
+    session_ = session;
 }
 
 }

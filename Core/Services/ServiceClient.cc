@@ -30,7 +30,7 @@
 
 #include <Core/Services/ServiceClient.h>
 
-using namespace SCIRun;
+namespace SCIRun {
 
 ServiceClient::ServiceClient() :
   lock("service client lock"),
@@ -208,5 +208,7 @@ bool ServiceClient::close()
   socket_.close();
   clearerror();
   return(true);
+}
+
 }
 

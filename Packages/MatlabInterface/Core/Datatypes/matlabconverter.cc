@@ -136,9 +136,9 @@ void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,PropertyManager *h
       mclass = subarray.getclass();
       if (mclass == matlabarray::mlSTRING)
       {   // only string arrays are converted
-	propname = proparray.getfieldname(p);
-	propval = subarray.getstring();
-	handle->set_property(propname,propval,false);
+      	 propname = proparray.getfieldname(p);
+     	 propval = subarray.getstring();
+         handle->set_property(propname,propval,false);
       }
     }
   }
@@ -182,15 +182,15 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Mod
   switch (mclass) {
   case matlabarray::mlDENSE:
   case matlabarray::mlSPARSE:
-    {
+  {
       // check whether the data is of a proper format
 	
       vector<long> dims;	
       dims = ma.getdims();
       if (dims.size() > 2)
       {   
-	postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (dimensions > 2)"));
-	return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
+	      postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (dimensions > 2)"));
+	      return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
       }
 	
       matlabarray::mitype type;
@@ -212,7 +212,7 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Mod
     }		
     break;
   case matlabarray::mlSTRUCT:
-    {
+  {
       long index;
       /* A lot of different names can be used for the data:
 	 This has mainly historical reasons: a lot of different
@@ -228,16 +228,16 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Mod
       if (index == -1) index = ma.getfieldnameindexCI("tensorfield");
       if (index == -1) 
       {
-	postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (cannot find a field with data: create a .data field)"));
-	return(0); // incompatible
+            postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (cannot find a field with data: create a .data field)"));
+            return(0); // incompatible
       }
 		
       long numel;
       numel = ma.getnumelements();
       if (numel > 1) 
       {
-	postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (the struct matrix is not 1x1: do not define more than one matrix)"));
-	return(0); // incompatible	
+            postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (the struct matrix is not 1x1: do not define more than one matrix)"));
+            return(0); // incompatible	
       }
       matlabarray subarray;
       subarray = ma.getfield(0,index);
@@ -246,15 +246,15 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Mod
 	
       if (subarray.isempty()) 
       {
-	postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (no data: matrix is empty)"));
-	return(0); // not compatible
+            postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (no data: matrix is empty)"));
+            return(0); // not compatible
       }
       vector<long> dims;	
       dims = subarray.getdims();
       if (dims.size() > 2)
       {   
-	postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (dimensions > 2)"));
-	return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
+            postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (dimensions > 2)"));
+            return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
       }
 	
       matlabarray::mitype type;
@@ -295,40 +295,40 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,MatrixHandle &handle, M
 			
       if (disable_transpose_)
       {
-	DenseMatrix* dmptr;							// pointer to a new dense matrix
-						
-	int m = static_cast<int>(ma.getm());
-	int n = static_cast<int>(ma.getn());
-					
-	dmptr = new DenseMatrix(n,m);   // create dense matrix
-						// copy and cast elements:
-						// getnumericarray is a templated function that casts the data to the supplied pointer
-						// type. It needs the dimensions of the memory block (in elements) to make sure
-						// everything is still OK. 
-	ma.getnumericarray(dmptr->getData(),(dmptr->nrows())*(dmptr->ncols()));  
-					
-	handle = static_cast<Matrix *>(dmptr); // cast it to a general matrix pointer
+        DenseMatrix* dmptr;							// pointer to a new dense matrix
+                            
+        int m = static_cast<int>(ma.getm());
+        int n = static_cast<int>(ma.getn());
+                        
+        dmptr = new DenseMatrix(n,m);   // create dense matrix
+                            // copy and cast elements:
+                            // getnumericarray is a templated function that casts the data to the supplied pointer
+                            // type. It needs the dimensions of the memory block (in elements) to make sure
+                            // everything is still OK. 
+        ma.getnumericarray(dmptr->getData(),(dmptr->nrows())*(dmptr->ncols()));  
+                        
+        handle = static_cast<Matrix *>(dmptr); // cast it to a general matrix pointer
       }
       else
       {
 				
-	DenseMatrix* dmptr;							// pointer to a new dense matrix
-					
-	int m = static_cast<int>(ma.getm());
-	int n = static_cast<int>(ma.getn());
-					
-	DenseMatrix  dm(n,m);   // create dense matrix
-	// copy and cast elements:
-	// getnumericarray is a templated function that casts the data to the supplied pointer
-	// type. It needs the dimensions of the memory block (in elements) to make sure
-	// everything is still OK. 
-	ma.getnumericarray(dm.getData(),(dm.nrows())*(dm.ncols()));  
-					
-	// There is no transpose function to operate on the same memory block
-	// Hence, it is a little memory inefficient.
-					
-	dmptr = dm.transpose();	// SCIRun has a C++-style matrix and matlab a FORTRAN-style matrix
-	handle = static_cast<Matrix *>(dmptr); // cast it to a general matrix pointer
+        DenseMatrix* dmptr;							// pointer to a new dense matrix
+                        
+        int m = static_cast<int>(ma.getm());
+        int n = static_cast<int>(ma.getn());
+                        
+        DenseMatrix  dm(n,m);   // create dense matrix
+        // copy and cast elements:
+        // getnumericarray is a templated function that casts the data to the supplied pointer
+        // type. It needs the dimensions of the memory block (in elements) to make sure
+        // everything is still OK. 
+        ma.getnumericarray(dm.getData(),(dm.nrows())*(dm.ncols()));  
+                        
+        // There is no transpose function to operate on the same memory block
+        // Hence, it is a little memory inefficient.
+                        
+        dmptr = dm.transpose();	// SCIRun has a C++-style matrix and matlab a FORTRAN-style matrix
+        handle = static_cast<Matrix *>(dmptr); // cast it to a general matrix pointer
       }
     }
     break;
@@ -337,64 +337,64 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,MatrixHandle &handle, M
     {
       if (disable_transpose_)
       {
-	SparseRowMatrix* smptr;
-					
-	// Since the SparseRowMatrix does not allocate memory but on the 
-	// otherhand frees it in the destructor. The memory needs to be
-	// allocated outside of the object and then linked to the object
-	// to have it freed lateron by the object.
-					
-	// in the matlabio classes they are defined as long, hence
-	// the casting operators
-	int nnz = static_cast<int>(ma.getnnz());
-	int m = static_cast<int>(ma.getm());
-	int n = static_cast<int>(ma.getn()); 
-					
-	double *values = scinew double[nnz];
-	int *rows   = scinew int[nnz];
-	int *cols   = scinew int[n+1];
-					
-	ma.getnumericarray(values,nnz);
-	ma.getrowsarray(rows,nnz); // automatically casts longs to ints
-	ma.getcolsarray(cols,(n+1));
-					
-	smptr = new SparseRowMatrix(n,m,cols,rows,nnz,values);
-					
-	handle = static_cast<Matrix *>(smptr); // cast it to a general matrix pointer
+        SparseRowMatrix* smptr;
+                        
+        // Since the SparseRowMatrix does not allocate memory but on the 
+        // otherhand frees it in the destructor. The memory needs to be
+        // allocated outside of the object and then linked to the object
+        // to have it freed lateron by the object.
+                        
+        // in the matlabio classes they are defined as long, hence
+        // the casting operators
+        int nnz = static_cast<int>(ma.getnnz());
+        int m = static_cast<int>(ma.getm());
+        int n = static_cast<int>(ma.getn()); 
+                        
+        double *values = scinew double[nnz];
+        int *rows   = scinew int[nnz];
+        int *cols   = scinew int[n+1];
+                        
+        ma.getnumericarray(values,nnz);
+        ma.getrowsarray(rows,nnz); // automatically casts longs to ints
+        ma.getcolsarray(cols,(n+1));
+                        
+        smptr = new SparseRowMatrix(n,m,cols,rows,nnz,values);
+                        
+        handle = static_cast<Matrix *>(smptr); // cast it to a general matrix pointer
       }
       else
       {
-	SparseRowMatrix* smptr;
-					
-	// Since the SparseRowMatrix does not allocate memory but on the 
-	// otherhand frees it in the destructor. The memory needs to be
-	// allocated outside of the object and then linked to the object
-	// to have it freed lateron by the object.
-					
-	// in the matlabio classes they are defined as long, hence
-	// the casting operators
-	int nnz = static_cast<int>(ma.getnnz());
-	int m = static_cast<int>(ma.getm());
-	int n = static_cast<int>(ma.getn()); 
-					
-	double *values = scinew double[nnz];
-	int *rows   = scinew int[nnz];
-	int *cols   = scinew int[n+1];
-					
-	ma.getnumericarray(values,nnz);
-	ma.getrowsarray(rows,nnz); // automatically casts longs to ints
-	ma.getcolsarray(cols,(n+1));
-					
-	SparseRowMatrix  sm(n,m,cols,rows,nnz,values);
-					
-	smptr = sm.transpose(); // SCIRun uses Row sparse matrices and matlab Column sparse matrices
-	handle = static_cast<Matrix *>(smptr); // cast it to a general matrix pointer
+        SparseRowMatrix* smptr;
+                        
+        // Since the SparseRowMatrix does not allocate memory but on the 
+        // otherhand frees it in the destructor. The memory needs to be
+        // allocated outside of the object and then linked to the object
+        // to have it freed lateron by the object.
+                        
+        // in the matlabio classes they are defined as long, hence
+        // the casting operators
+        int nnz = static_cast<int>(ma.getnnz());
+        int m = static_cast<int>(ma.getm());
+        int n = static_cast<int>(ma.getn()); 
+                        
+        double *values = scinew double[nnz];
+        int *rows   = scinew int[nnz];
+        int *cols   = scinew int[n+1];
+                        
+        ma.getnumericarray(values,nnz);
+        ma.getrowsarray(rows,nnz); // automatically casts longs to ints
+        ma.getcolsarray(cols,(n+1));
+                        
+        SparseRowMatrix  sm(n,m,cols,rows,nnz,values);
+                        
+        smptr = sm.transpose(); // SCIRun uses Row sparse matrices and matlab Column sparse matrices
+        handle = static_cast<Matrix *>(smptr); // cast it to a general matrix pointer
       }
     }
     break;
 			
   case matlabarray::mlSTRUCT:
-    {
+  {
       // A compatible struct has the following fields
       // - data:     submatrix with the actual matrix in it
       // - property: optional extra struct array with key
@@ -412,7 +412,7 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,MatrixHandle &handle, M
 				
       if (dataindex == -1)
       {
-	throw matlabconverter_error();
+        throw matlabconverter_error();
       }
 				
       matlabarray subarray;
@@ -421,7 +421,7 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,MatrixHandle &handle, M
 				
       if (propertyindex != -1)
       {
-	mlPropertyTOsciProperty(ma,static_cast<PropertyManager *>(handle.get_rep()));
+        mlPropertyTOsciProperty(ma,static_cast<PropertyManager *>(handle.get_rep()));
       }
 				
     }
@@ -521,7 +521,7 @@ bool matlabconverter::isvalidmatrixname(string name)
       foundchar = false;
       for (long q = 0; q < static_cast<long>(validstartchar.size()); q++) 
       {
-	if (name[p] == validstartchar[q]) { foundchar = true; break; }
+        if (name[p] == validstartchar[q]) { foundchar = true; break; }
       }
     }
     else
@@ -529,7 +529,7 @@ bool matlabconverter::isvalidmatrixname(string name)
       foundchar = false;
       for (long q = 0; q < static_cast<long>(validchar.size()); q++) 
       {
-	if (name[p] == validchar[q]) { foundchar = true; break; }
+        if (name[p] == validchar[q]) { foundchar = true; break; }
       }
     }
     if (foundchar == false) { valid = false; break; }
@@ -592,6 +592,12 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, string &infost
       return(0);
     }
 		
+    if (subarray.getnumdims() > 10)    
+    {
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (matrix dimension is larger than 10)"));
+      return(0);    
+    }
+        
     // We expect a double array.
     // This classification is pure for convenience
     // Any integer array can be dealt with as well
@@ -645,17 +651,17 @@ unsigned int matlabconverter::convertmitype(matlabarray::mitype type)
 {
   switch (type)
   {
-  case matlabarray::miINT8:   return(nrrdTypeChar);
-  case matlabarray::miUINT8:  return(nrrdTypeUChar);
-  case matlabarray::miINT16:  return(nrrdTypeShort);
-  case matlabarray::miUINT16: return(nrrdTypeUShort);
-  case matlabarray::miINT32:  return(nrrdTypeInt);
-  case matlabarray::miUINT32: return(nrrdTypeUInt);
-  case matlabarray::miINT64:  return(nrrdTypeLLong);
-  case matlabarray::miUINT64: return(nrrdTypeULLong);
-  case matlabarray::miSINGLE: return(nrrdTypeFloat);
-  case matlabarray::miDOUBLE: return(nrrdTypeDouble);
-  default: return(nrrdTypeUnknown);
+      case matlabarray::miINT8:   return(nrrdTypeChar);
+      case matlabarray::miUINT8:  return(nrrdTypeUChar);
+      case matlabarray::miINT16:  return(nrrdTypeShort);
+      case matlabarray::miUINT16: return(nrrdTypeUShort);
+      case matlabarray::miINT32:  return(nrrdTypeInt);
+      case matlabarray::miUINT32: return(nrrdTypeUInt);
+      case matlabarray::miINT64:  return(nrrdTypeLLong);
+      case matlabarray::miUINT64: return(nrrdTypeULLong);
+      case matlabarray::miSINGLE: return(nrrdTypeFloat);
+      case matlabarray::miDOUBLE: return(nrrdTypeDouble);
+      default: return(nrrdTypeUnknown);
   }
 }
 
@@ -667,17 +673,17 @@ matlabarray::mitype matlabconverter::convertnrrdtype(int type)
 {
   switch (type)
   {
-  case nrrdTypeChar : return(matlabarray::miINT8);
-  case nrrdTypeUChar : return(matlabarray::miUINT8);
-  case nrrdTypeShort : return(matlabarray::miINT16);
-  case nrrdTypeUShort : return(matlabarray::miUINT16);		
-  case nrrdTypeInt : return(matlabarray::miINT32);
-  case nrrdTypeUInt : return(matlabarray::miUINT32);
-  case nrrdTypeLLong : return(matlabarray::miINT64);
-  case nrrdTypeULLong : return(matlabarray::miUINT64);
-  case nrrdTypeFloat : return(matlabarray::miSINGLE);
-  case nrrdTypeDouble : return(matlabarray::miDOUBLE);
-  default: return(matlabarray::miUNKNOWN);
+      case nrrdTypeChar : return(matlabarray::miINT8);
+      case nrrdTypeUChar : return(matlabarray::miUINT8);
+      case nrrdTypeShort : return(matlabarray::miINT16);
+      case nrrdTypeUShort : return(matlabarray::miUINT16);		
+      case nrrdTypeInt : return(matlabarray::miINT32);
+      case nrrdTypeUInt : return(matlabarray::miUINT32);
+      case nrrdTypeLLong : return(matlabarray::miINT64);
+      case nrrdTypeULLong : return(matlabarray::miUINT64);
+      case nrrdTypeFloat : return(matlabarray::miSINGLE);
+      case nrrdTypeDouble : return(matlabarray::miDOUBLE);
+      default: return(matlabarray::miUNKNOWN);
   }
 }
 
@@ -700,106 +706,105 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
   switch(mclass)
   {
   case matlabarray::mlDENSE:
-    {   // new environment so I can create new variables
+  {   // new environment so I can create new variables
 
       try
       {
-	// new nrrd data handle
-	nrrddataptr = new NrrdData(); // nrrd is owned by the object
-	nrrddataptr->nrrd = nrrdNew();
-				
-	// obtain the type of the new nrrd
-	// we want to keep the nrrd type the same
-	// as the original matlab type
-					
-	unsigned int nrrdtype = convertmitype(mlarray.gettype());
-				
-	// obtain the dimensions of the new nrrd
-	int nrrddims[NRRD_DIM_MAX];
-	vector<long> dims = mlarray.getdims();
-	int nrrddim = static_cast<int>(dims.size());
+        // new nrrd data handle
+        nrrddataptr = new NrrdData(); // nrrd is owned by the object
+        nrrddataptr->nrrd = nrrdNew();
+                    
+        // obtain the type of the new nrrd
+        // we want to keep the nrrd type the same
+        // as the original matlab type
+                        
+        unsigned int nrrdtype = convertmitype(mlarray.gettype());
+                    
+        // obtain the dimensions of the new nrrd
+        int nrrddims[NRRD_DIM_MAX];
+        vector<long> dims = mlarray.getdims();
+        int nrrddim = static_cast<int>(dims.size());
         ASSERT(nrrddim <= NRRD_DIM_MAX);
-	for (int p=0;p<nrrddim;p++)
-          nrrddims[p] = dims[p];
+        for (int p=0;p<nrrddim;p++) nrrddims[p] = dims[p];
 				
-	nrrdAlloc_nva(nrrddataptr->nrrd,nrrdtype,nrrddim,nrrddims);
+        nrrdAlloc_nva(nrrddataptr->nrrd,nrrdtype,nrrddim,nrrddims);
 					
-	switch (nrrdtype)
-	{
-	case nrrdTypeChar:
-	  mlarray.getnumericarray(static_cast<signed char *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
-	  break;
-	case nrrdTypeUChar:
-	  mlarray.getnumericarray(static_cast<unsigned char *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
-	  break;
-	case nrrdTypeShort:
-	  mlarray.getnumericarray(static_cast<signed short *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
-	  break;
-	case nrrdTypeUShort:
-	  mlarray.getnumericarray(static_cast<unsigned short *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
-	  break;
-	case nrrdTypeInt:
-	  mlarray.getnumericarray(static_cast<signed long *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
-	  break;
-	case nrrdTypeUInt:
-	  mlarray.getnumericarray(static_cast<unsigned long *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
-	  break;
-#ifdef JGS_MATLABIO_USE_64INTS
-	case nrrdTypeLLong:
-	  mlarray.getnumericarray(static_cast<int64 *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
-	  break;
-	case nrrdTypeULLong:
-	  mlarray.getnumericarray(static_cast<uint64 *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
-	  break;
-#endif
-	case nrrdTypeFloat:
-	  mlarray.getnumericarray(static_cast<float *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
-	  break;
-	case nrrdTypeDouble:
-	  mlarray.getnumericarray(static_cast<double *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
-	  break;
-	default:
-	  throw matlabconverter_error();
-	  break;
-	}
-	
-	// set some info on the axis as not all SCIRun modules check whether there is any
-	// data and may crash if there is no label
-					
-	// Nrrd lib is C and needs a list with pointers to C-style strings
-	// The following C++ code does this without the need of the need for
-	// explicit dynamic memory allocation.
-					
-	vector<string> labels;
-	labels.resize(nrrddim);
-	const char *labelptr[NRRD_DIM_MAX];
-					
-	for (long p=0;p<nrrddim;p++)
-	{
-	  ostringstream oss; 
-	  oss << "dimension " << (p+1);
-	  labels[p] = oss.str();
-	  labelptr[p] = labels[p].c_str();
-	  // labelptr contains ptrs into labels and
-	  // the memory it points to will be destroyed with
-	  // the labels object. The const cast is needed as
-	  // nrrd
-	}
-									
-	nrrdAxisInfoSet_nva(nrrddataptr->nrrd,nrrdAxisInfoLabel,labelptr);
-																													
-	scinrrd = nrrddataptr;
+        switch (nrrdtype)
+        {
+        case nrrdTypeChar:
+          mlarray.getnumericarray(static_cast<signed char *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          break;
+        case nrrdTypeUChar:
+          mlarray.getnumericarray(static_cast<unsigned char *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          break;
+        case nrrdTypeShort:
+          mlarray.getnumericarray(static_cast<signed short *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          break;
+        case nrrdTypeUShort:
+          mlarray.getnumericarray(static_cast<unsigned short *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          break;
+        case nrrdTypeInt:
+          mlarray.getnumericarray(static_cast<signed long *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          break;
+        case nrrdTypeUInt:
+          mlarray.getnumericarray(static_cast<unsigned long *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          break;
+    #ifdef JGS_MATLABIO_USE_64INTS
+        case nrrdTypeLLong:
+          mlarray.getnumericarray(static_cast<int64 *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          break;
+        case nrrdTypeULLong:
+          mlarray.getnumericarray(static_cast<uint64 *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          break;
+    #endif
+        case nrrdTypeFloat:
+          mlarray.getnumericarray(static_cast<float *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          break;
+        case nrrdTypeDouble:
+          mlarray.getnumericarray(static_cast<double *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          break;
+        default:
+          throw matlabconverter_error();
+          break;
+        }
+        
+        // set some info on the axis as not all SCIRun modules check whether there is any
+        // data and may crash if there is no label
+                        
+        // Nrrd lib is C and needs a list with pointers to C-style strings
+        // The following C++ code does this without the need of the need for
+        // explicit dynamic memory allocation.
+                        
+        vector<string> labels;
+        labels.resize(nrrddim);
+        const char *labelptr[NRRD_DIM_MAX];
+                        
+        for (long p=0;p<nrrddim;p++)
+        {
+          ostringstream oss; 
+          oss << "dimension " << (p+1);
+          labels[p] = oss.str();
+          labelptr[p] = labels[p].c_str();
+          // labelptr contains ptrs into labels and
+          // the memory it points to will be destroyed with
+          // the labels object. The const cast is needed as
+          // nrrd
+        }
+                                        
+        nrrdAxisInfoSet_nva(nrrddataptr->nrrd,nrrdAxisInfoLabel,labelptr);
+                                                                                                                        
+        scinrrd = nrrddataptr;
       }
       catch (...)
       {
-	// in case something went wrong
-	// release the datablock attached to
-	// the nrrdhandle
-					
-	delete nrrddataptr;
-	scinrrd = 0;
-					
-	throw;
+        // in case something went wrong
+        // release the datablock attached to
+        // the nrrdhandle
+                        
+        delete nrrddataptr;
+        scinrrd = 0;
+                        
+        throw;
       }
     }
 			
@@ -830,7 +835,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
 				
       if (dataindex == -1)
       {
-	throw matlabconverter_error();
+        throw matlabconverter_error();
       }
 			
       matlabarray subarray;
@@ -841,16 +846,16 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
 				
       if (subclass != matlabarray::mlDENSE)
       {
-	throw matlabconverter_error();
-	return;
+        throw matlabconverter_error();
+        return;
       }
 				
       mlArrayTOsciNrrdData(subarray,scinrrd,module);
 				
       if (scinrrd == 0)
       {
-	throw matlabconverter_error();
-	return;
+        throw matlabconverter_error();
+        return;
       }
 				
       // Add axes properties if they are specified
@@ -860,215 +865,215 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
 				
       if (axisindex != -1)
       {
-	matlabarray::mlclass axisarrayclass;
-	matlabarray axisarray;
-	long		numaxis;
-	long		fnindex;
-	matlabarray farray;
-					
-	axisarray = mlarray.getfieldCI(0,"axis");
-					
-	if (!axisarray.isempty())
-	{
-	  numaxis = axisarray.getm();
-	  axisarrayclass =axisarray.getclass();
-					
-	  if ((axisarrayclass != matlabarray::mlSTRUCT)&&(axisarrayclass != matlabarray::mlOBJECT))
-	  {
-	    throw matlabconverter_error();
-	    return;
-	  }
-				
-				
-	  // insert labels into nnrd
-	  // labels can be defined in axis(n).label
-				
-	  fnindex = axisarray.getfieldnameindexCI("label");
-						
-	  if (fnindex != -1)
-	  {
-	    vector<string> labels(NRRD_DIM_MAX);
-	    const char *clabels[NRRD_DIM_MAX];
-					
-	    // Set some default values in case the
-	    // label is not defined by the matlabarray
-						
-	    for (long p=0;p<NRRD_DIM_MAX;p++)
-	    {
-	      ostringstream oss; 
-	      oss << "dimension " << (p+1);
-	      labels[p] = oss.str();
-	      clabels[p] = labels[p].c_str();
-	    }
-						
-	    // In case the label is set in the matlabarray
-	    // add this label to the clabels array
-						
-	    for (long p=0;p<numaxis;p++)
-	    {
-	      farray = axisarray.getfield(p,fnindex);
-	      if (farray.getclass() == matlabarray::mlSTRING)
-	      {
-		labels[p] = farray.getstring();
-		clabels[p] = labels[p].c_str();
-	      } 
-	    }
-						
-	    nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoLabel,clabels);
-	  }
+        matlabarray::mlclass axisarrayclass;
+        matlabarray axisarray;
+        long		numaxis;
+        long		fnindex;
+        matlabarray farray;
+                        
+        axisarray = mlarray.getfieldCI(0,"axis");
+                        
+        if (!axisarray.isempty())
+        {
+          numaxis = axisarray.getm();
+          axisarrayclass =axisarray.getclass();
+                        
+          if ((axisarrayclass != matlabarray::mlSTRUCT)&&(axisarrayclass != matlabarray::mlOBJECT))
+          {
+            throw matlabconverter_error();
+            return;
+          }
+                    
+                    
+          // insert labels into nnrd
+          // labels can be defined in axis(n).label
+                    
+          fnindex = axisarray.getfieldnameindexCI("label");
+                            
+          if (fnindex != -1)
+          {
+            vector<string> labels(NRRD_DIM_MAX);
+            const char *clabels[NRRD_DIM_MAX];
+                        
+            // Set some default values in case the
+            // label is not defined by the matlabarray
+                            
+            for (long p=0;p<NRRD_DIM_MAX;p++)
+            {
+              ostringstream oss; 
+              oss << "dimension " << (p+1);
+              labels[p] = oss.str();
+              clabels[p] = labels[p].c_str();
+            }
+                            
+            // In case the label is set in the matlabarray
+            // add this label to the clabels array
+                            
+            for (long p=0;p<numaxis;p++)
+            {
+              farray = axisarray.getfield(p,fnindex);
+              if (farray.getclass() == matlabarray::mlSTRING)
+              {
+                labels[p] = farray.getstring();
+                clabels[p] = labels[p].c_str();
+              } 
+            }
+                            
+            nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoLabel,clabels);
+          }
 
 						
-	  // insert unit names
-	  // into nrrd object
-						
-	  fnindex = axisarray.getfieldnameindexCI("unit");
-	  if (fnindex != -1)
-	  {
-	    vector<string> units(NRRD_DIM_MAX);
-	    const char *cunits[NRRD_DIM_MAX];
-					
-	    // Set some default values in case the
-	    // unit is not defined by the matlabarray
-						
-	    for (long p=0;p<NRRD_DIM_MAX;p++)
-	    {
-	      units[p] = "unknown";
-	      cunits[p] = units[p].c_str();
-	    }
-						
-	    // In case the unit is set in the matlabarray
-	    // add this unit to the clabels array
-						
-	    for (long p=0;p<numaxis;p++)
-	    {
-	      farray = axisarray.getfield(p,fnindex);
-	      if (farray.getclass() == matlabarray::mlSTRING)
-	      {
-		units[p] = farray.getstring();
-		cunits[p] = units[p].c_str();
-	      }
-	    }
-						
-	    nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoUnit,cunits);
-	  }
-					
-	  // insert spacing information
-				
-	  fnindex = axisarray.getfieldnameindexCI("spacing");
-	  if (fnindex != -1)
-	  {
-	    double spacing[NRRD_DIM_MAX];
-	    vector<double> data(1);
-						
-	    // Set some default values in case the
-	    // spacing is not defined by the matlabarray
-						
-	    for (long p=0;p<NRRD_DIM_MAX;p++)
-	    {
-	      spacing[p] = AIR_NAN;
-	    }
-						
-	    for (long p=0;p<numaxis;p++)
-	    {
-	      farray = axisarray.getfield(p,fnindex);
-	      if ((farray.getclass() == matlabarray::mlDENSE)&&(farray.getnumelements() > 0))
-	      {
-		farray.getnumericarray(data);
-		spacing[p] = data[0];
-	      }
-	    }
-						
-	    nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoSpacing,spacing);
-	  }
+          // insert unit names
+          // into nrrd object
+                            
+          fnindex = axisarray.getfieldnameindexCI("unit");
+          if (fnindex != -1)
+          {
+            vector<string> units(NRRD_DIM_MAX);
+            const char *cunits[NRRD_DIM_MAX];
+                        
+            // Set some default values in case the
+            // unit is not defined by the matlabarray
+                            
+            for (long p=0;p<NRRD_DIM_MAX;p++)
+            {
+              units[p] = "unknown";
+              cunits[p] = units[p].c_str();
+            }
+                            
+            // In case the unit is set in the matlabarray
+            // add this unit to the clabels array
+                            
+            for (long p=0;p<numaxis;p++)
+            {
+              farray = axisarray.getfield(p,fnindex);
+              if (farray.getclass() == matlabarray::mlSTRING)
+              {
+                units[p] = farray.getstring();
+                cunits[p] = units[p].c_str();
+              }
+            }
+                            
+            nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoUnit,cunits);
+          }
+                        
+          // insert spacing information
+                    
+          fnindex = axisarray.getfieldnameindexCI("spacing");
+          if (fnindex != -1)
+          {
+            double spacing[NRRD_DIM_MAX];
+            vector<double> data(1);
+                            
+            // Set some default values in case the
+            // spacing is not defined by the matlabarray
+                            
+            for (long p=0;p<NRRD_DIM_MAX;p++)
+            {
+              spacing[p] = AIR_NAN;
+            }
+                            
+            for (long p=0;p<numaxis;p++)
+            {
+              farray = axisarray.getfield(p,fnindex);
+              if ((farray.getclass() == matlabarray::mlDENSE)&&(farray.getnumelements() > 0))
+              {
+                farray.getnumericarray(data);
+                spacing[p] = data[0];
+              }
+            }
+                            
+            nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoSpacing,spacing);
+          }
 
-	  // insert minimum information
-					
-	  fnindex = axisarray.getfieldnameindexCI("min");
-	  if (fnindex != -1)
-	  {
-	    double mindata[NRRD_DIM_MAX];
-	    vector<double> data;
-						
-	    // Set some default values in case the
-	    // minimum is not defined by the matlabarray
-						
-	    for (long p=0;p<NRRD_DIM_MAX;p++)
-	    {
-	      mindata[p] = AIR_NAN;
-	    }
-						
-	    for (long p=0;p<numaxis;p++)
-	    {
-	      farray = axisarray.getfield(p,fnindex);
-	      if ((farray.getclass() == matlabarray::mlDENSE)&&(farray.getnumelements() > 0))
-	      {
-		farray.getnumericarray(data);
-		mindata[p] = data[0];
-	      }
-	    }
-						
-	    nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoMin,mindata);
-	  }
-					
-					
-	  // insert maximum information
-					
-	  fnindex = axisarray.getfieldnameindexCI("max");
-	  if (fnindex != -1)
-	  {
-	    double maxdata[NRRD_DIM_MAX];
-	    vector<double> data;
-						
-	    // Set some default values in case the
-	    // maximum is not defined by the matlabarray
-						
-	    for (long p=0;p<NRRD_DIM_MAX;p++)
-	    {
-	      maxdata[p] = AIR_NAN;
-	    }
-						
-	    for (long p=0;p<numaxis;p++)
-	    {
-	      farray = axisarray.getfield(p,fnindex);
-	      if ((farray.getclass() == matlabarray::mlDENSE)&&(farray.getnumelements() > 0))
-	      {
-		farray.getnumericarray(data);
-		maxdata[p] = data[0];
-	      }
-	    }
-						
-	    nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoMax,maxdata);
-	  }
-				
-	  // insert centering information
-					
-	  fnindex = axisarray.getfieldnameindexCI("center");
-	  if (fnindex != -1)
-	  {
-	    long centerdata[NRRD_DIM_MAX];
-	    vector<long> data;
-						
-	    // Set some default values in case the
-	    // maximum is not defined by the matlabarray
-						
-	    for (long p=0;p<NRRD_DIM_MAX;p++)
-	    {
-	      centerdata[p] = 0;
-	    }
-						
-	    for (long p=0;p<numaxis;p++)
-	    {
-	      farray = axisarray.getfield(p,fnindex);
-	      if ((farray.getclass() == matlabarray::mlDENSE)&&(farray.getnumelements() > 0))
-	      {
-		farray.getnumericarray(data);
-		centerdata[p] = data[0];
-	      }
-	    }
-						
-	    nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoCenter,centerdata);
-	  }
-	}
+          // insert minimum information
+                        
+          fnindex = axisarray.getfieldnameindexCI("min");
+          if (fnindex != -1)
+          {
+            double mindata[NRRD_DIM_MAX];
+            vector<double> data;
+                            
+            // Set some default values in case the
+            // minimum is not defined by the matlabarray
+                            
+            for (long p=0;p<NRRD_DIM_MAX;p++)
+            {
+              mindata[p] = AIR_NAN;
+            }
+                            
+            for (long p=0;p<numaxis;p++)
+            {
+              farray = axisarray.getfield(p,fnindex);
+              if ((farray.getclass() == matlabarray::mlDENSE)&&(farray.getnumelements() > 0))
+              {
+                farray.getnumericarray(data);
+                mindata[p] = data[0];
+              }
+            }
+                            
+            nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoMin,mindata);
+          }
+                        
+                        
+          // insert maximum information
+                        
+          fnindex = axisarray.getfieldnameindexCI("max");
+          if (fnindex != -1)
+          {
+            double maxdata[NRRD_DIM_MAX];
+            vector<double> data;
+                            
+            // Set some default values in case the
+            // maximum is not defined by the matlabarray
+                            
+            for (long p=0;p<NRRD_DIM_MAX;p++)
+            {
+              maxdata[p] = AIR_NAN;
+            }
+                            
+            for (long p=0;p<numaxis;p++)
+            {
+              farray = axisarray.getfield(p,fnindex);
+              if ((farray.getclass() == matlabarray::mlDENSE)&&(farray.getnumelements() > 0))
+              {
+                farray.getnumericarray(data);
+                maxdata[p] = data[0];
+              }
+            }
+                            
+            nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoMax,maxdata);
+          }
+                    
+          // insert centering information
+                        
+          fnindex = axisarray.getfieldnameindexCI("center");
+          if (fnindex != -1)
+          {
+            long centerdata[NRRD_DIM_MAX];
+            vector<long> data;
+                            
+            // Set some default values in case the
+            // maximum is not defined by the matlabarray
+                            
+            for (long p=0;p<NRRD_DIM_MAX;p++)
+            {
+              centerdata[p] = 0;
+            }
+                            
+            for (long p=0;p<numaxis;p++)
+            {
+              farray = axisarray.getfield(p,fnindex);
+              if ((farray.getclass() == matlabarray::mlDENSE)&&(farray.getnumelements() > 0))
+              {
+                farray.getnumericarray(data);
+                centerdata[p] = data[0];
+              }
+            }
+                            
+            nrrdAxisInfoSet_nva(scinrrd->nrrd,nrrdAxisInfoCenter,centerdata);
+          }
+        }
       }
 	
 				
@@ -1077,27 +1082,27 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
 				
       if (propertyindex != -1)
       {
-	mlPropertyTOsciProperty(mlarray,static_cast<PropertyManager *>(scinrrd.get_rep()));
+        mlPropertyTOsciProperty(mlarray,static_cast<PropertyManager *>(scinrrd.get_rep()));
       }
 
       if (mlarray.isfieldCI("name"))
       {
-	if (scinrrd != 0)
-	{	
-	  matlabarray matname;
-	  matname = mlarray.getfieldCI(0,"name");
-	  string str = matname.getstring();
-	  if (matname.isstring())	scinrrd->set_filename(str);
-	}
-		
+        if (scinrrd != 0)
+        {	
+          matlabarray matname;
+          matname = mlarray.getfieldCI(0,"name");
+          string str = matname.getstring();
+          if (matname.isstring())	scinrrd->set_filename(str);
+        }
+            
       }
       else
       {
-	if (scinrrd != 0)
-	{
-	  string str = mlarray.getname();
-	  scinrrd->set_filename(str);
-	}
+        if (scinrrd != 0)
+        {
+          string str = mlarray.getname();
+          scinrrd->set_filename(str);
+        }
       }
 			
     }	
@@ -1155,16 +1160,16 @@ void matlabconverter::sciNrrdDataTOmlMatrix(NrrdDataHandle &scinrrd, matlabarray
 	
   switch (nrrdptr->type)
   {
-  case nrrdTypeDouble  : mlarray.setnumericarray(static_cast<double *>(nrrdptr->data),totsize,dataformat); break;
-  case nrrdTypeFloat   : mlarray.setnumericarray(static_cast<float *>(nrrdptr->data),totsize,dataformat); break;
-  case nrrdTypeChar    : mlarray.setnumericarray(static_cast<signed char *>(nrrdptr->data),totsize,dataformat); break;
-  case nrrdTypeUChar   : mlarray.setnumericarray(static_cast<unsigned char *>(nrrdptr->data),totsize,dataformat); break;
-  case nrrdTypeShort   : mlarray.setnumericarray(static_cast<signed short *>(nrrdptr->data),totsize,dataformat); break;
-  case nrrdTypeUShort  : mlarray.setnumericarray(static_cast<unsigned short *>(nrrdptr->data),totsize,dataformat); break;
-  case nrrdTypeInt	 : mlarray.setnumericarray(static_cast<signed long *>(nrrdptr->data),totsize,dataformat); break;
-  case nrrdTypeUInt    : mlarray.setnumericarray(static_cast<unsigned long *>(nrrdptr->data),totsize,dataformat); break;
-  case nrrdTypeLLong   : mlarray.setnumericarray(static_cast<int64 *>(nrrdptr->data),totsize,dataformat); break;
-  case nrrdTypeULLong  : mlarray.setnumericarray(static_cast<uint64 *>(nrrdptr->data),totsize,dataformat); break;	
+      case nrrdTypeDouble  : mlarray.setnumericarray(static_cast<double *>(nrrdptr->data),totsize,dataformat); break;
+      case nrrdTypeFloat   : mlarray.setnumericarray(static_cast<float *>(nrrdptr->data),totsize,dataformat); break;
+      case nrrdTypeChar    : mlarray.setnumericarray(static_cast<signed char *>(nrrdptr->data),totsize,dataformat); break;
+      case nrrdTypeUChar   : mlarray.setnumericarray(static_cast<unsigned char *>(nrrdptr->data),totsize,dataformat); break;
+      case nrrdTypeShort   : mlarray.setnumericarray(static_cast<signed short *>(nrrdptr->data),totsize,dataformat); break;
+      case nrrdTypeUShort  : mlarray.setnumericarray(static_cast<unsigned short *>(nrrdptr->data),totsize,dataformat); break;
+      case nrrdTypeInt	 : mlarray.setnumericarray(static_cast<signed long *>(nrrdptr->data),totsize,dataformat); break;
+      case nrrdTypeUInt    : mlarray.setnumericarray(static_cast<unsigned long *>(nrrdptr->data),totsize,dataformat); break;
+      case nrrdTypeLLong   : mlarray.setnumericarray(static_cast<int64 *>(nrrdptr->data),totsize,dataformat); break;
+      case nrrdTypeULLong  : mlarray.setnumericarray(static_cast<uint64 *>(nrrdptr->data),totsize,dataformat); break;	
   }
 }
 
@@ -1396,7 +1401,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
   // is of that dimension otherwise skip it and declare the data not usable
 	
   // THIS WAS TO PREVENT WEIRD DATA CONVERSIONS, WITH THE NEW BASIS_ORDER
-  // WE DO NOT HAVE THESE WEIRD ONES	
+  // WE DO NOT HAVE THESE WEIRD ONES ANYMORE	
 	
   //if (fs.dims.isdense())
   //{
@@ -1433,36 +1438,36 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
 		
       if (fs.meshclass.isstring())
       {   // explicitly stated type: (check whether type confirms the guessed type, otherwise someone supplied us with improper data)
-	if ((fs.meshclass.compareCI("scanline"))&&(size!=1))
-	{
-	  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (scanline needs only one dimension)"));
-	  return(0);
-	}
-	if ((fs.meshclass.compareCI("image"))&&(size!=2)) 
-	{
-	  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (an image needs two dimensions)"));
-	  return(0);
-	}
+        if ((fs.meshclass.compareCI("scanline"))&&(size!=1))
+        {
+          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (scanline needs only one dimension)"));
+          return(0);
+        }
+        if ((fs.meshclass.compareCI("image"))&&(size!=2)) 
+        {
+          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (an image needs two dimensions)"));
+          return(0);
+        }
 
-	if ((fs.meshclass.compareCI("latvolmesh"))&&(size!=3))
-	{
-	  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (a latvolmesh needs three dimensions)"));
-	  return(0);
-	}
+        if ((fs.meshclass.compareCI("latvolmesh"))&&(size!=3))
+        {
+          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (a latvolmesh needs three dimensions)"));
+          return(0);
+        }
 
       }	
 
       switch (size)
       {
       case 1:
-	oss << "[SCANLINE - " << fieldtype << "]";
-	break;
+        oss << "[SCANLINE - " << fieldtype << "]";
+        break;
       case 2:
-	oss << "[IMAGE - " << fieldtype << "]";
-	break;
+        oss << "[IMAGE - " << fieldtype << "]";
+        break;
       case 3:	
-	oss << "[LATVOLMESH - " << fieldtype << "]";
-	break;
+        oss << "[LATVOLMESH - " << fieldtype << "]";
+        break;
       }
       infostring = oss.str();
       return(1);					
@@ -1504,13 +1509,13 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
     {
       if(dimsx[p] != dimsy[p]) 
       {
-	postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and y matrix do not match)"));
-	return(0);
+        postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and y matrix do not match)"));
+        return(0);
       }
       if(dimsx[p] != dimsz[p]) 
       {
-	postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and z matrix do not match)"));
-	return(0);
+        postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and z matrix do not match)"));
+        return(0);
       }
     }
 
@@ -1555,35 +1560,35 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
     {   // explicitly stated type (check whether type confirms the guessed type, otherwise someone supplied us with improper data)
       if ((fs.meshclass.compareCI("structcurve"))&&(numdims!=1))
       {
-	postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
-	return(0);
+        postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
+        return(0);
       }
       if ((fs.meshclass.compareCI("structquadsurf"))&&(numdims!=2)) 
       {
-	postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
-	return(0);
+        postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
+        return(0);
       }
       if ((fs.meshclass.compareCI("structhexvol"))&&(numdims!=3)) 
       {
-	postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
-	return(0);
+        postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
+        return(0);
       }
     }		
 			
     switch (numdims)
     {
-    case 1:
-      oss << "[STRUCTURED CURVEMESH (" << dimsx[0] << " nodes) - " << fieldtype << "]";
-      break;
-    case 2:
-      oss << "[STRUCTURED QUADSURFMESH (" << dimsx[0] << "x" << dimsx[1] << " nodes) - " << fieldtype << "]";
-      break;
-    case 3:
-      oss << "[STRUCTURED HEXVOLMESH (" << dimsx[0] << "x" << dimsx[1] << "x" << dimsx[2] << " nodes) - " << fieldtype << "]";
-      break;
-    default:
-      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions)"));
-      return(0);  // matrix is not compatible
+        case 1:
+          oss << "[STRUCTURED CURVEMESH (" << dimsx[0] << " nodes) - " << fieldtype << "]";
+          break;
+        case 2:
+          oss << "[STRUCTURED QUADSURFMESH (" << dimsx[0] << "x" << dimsx[1] << " nodes) - " << fieldtype << "]";
+          break;
+        case 3:
+          oss << "[STRUCTURED HEXVOLMESH (" << dimsx[0] << "x" << dimsx[1] << "x" << dimsx[2] << " nodes) - " << fieldtype << "]";
+          break;
+        default:
+          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions)"));
+          return(0);  // matrix is not compatible
     }
     infostring = oss.str();
     return(1);		
@@ -1633,8 +1638,8 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
     {   // explicitly stated type (check whether type confirms the guessed type, otherwise someone supplied us with improper data)
       if (!(fs.meshclass.compareCI("pointcloud"))) 
       {
-	postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data has to be of the pointcloud class)"));
-	return(0);
+        postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data has to be of the pointcloud class)"));
+        return(0);
       }
     }
 		
@@ -1752,11 +1757,11 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
       // check whether the element type is explicitly given
       if (fs.meshclass.isstring())
       {   // explicitly stated type 
-	if (!(fs.meshclass.compareCI("trisurf")))
-	{
-	  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (meshclass should be trisurf)"));
-	  return(0);
-	}
+        if (!(fs.meshclass.compareCI("trisurf")))
+        {
+          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (meshclass should be trisurf)"));
+          return(0);
+        }
       }
 	
       numel = n;
@@ -1778,11 +1783,11 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
       // check whether the element type is explicitly given
       if (fs.meshclass.isstring())
       {   // explicitly stated type 
-	if (!(fs.meshclass.compareCI("quadsurf"))) 
-	{
-	  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (meshclass should be quadsurf)"));
-	  return(0);
-	}
+        if (!(fs.meshclass.compareCI("quadsurf"))) 
+        {
+          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (meshclass should be quadsurf)"));
+          return(0);
+        }
       }
 			
       numel = n;
@@ -1823,11 +1828,11 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
     {
       if (fs.meshclass.isstring())
       {   // explicitly stated type 
-	if (!(fs.meshclass.compareCI("tetvol")))
-	{
-	  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be tetvol)"));
-	  return(0);
-	}
+        if (!(fs.meshclass.compareCI("tetvol")))
+        {
+          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be tetvol)"));
+          return(0);
+        }
       }	
 			
       numel = n;
@@ -1847,11 +1852,11 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
     {
       if (fs.meshclass.isstring())
       {   // explicitly stated type 
-	if (!(fs.meshclass.compareCI("hexvol"))) 
-	{
-	  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be hexvol)"));
-	  return(0);			
-	}
+        if (!(fs.meshclass.compareCI("hexvol"))) 
+        {
+          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be hexvol)"));
+          return(0);			
+        }
       }	
 			
       numel = n;
@@ -1870,11 +1875,11 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
     {
       if (fs.meshclass.isstring())
       {   // explicitly stated type 
-	if (!(fs.meshclass.compareCI("prismvol"))) 
-	{
-	  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be prismvol)"));
-	  return(0);			
-	}
+        if (!(fs.meshclass.compareCI("prismvol"))) 
+        {
+          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be prismvol)"));
+          return(0);			
+        }
       }	
 			
       numel = n;
@@ -1924,15 +1929,15 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
       vector<long> d = mlarray.getdims();
       if ((d[0]==1)||(d[1]==1))
       {
-	// Squeeze out a dimension if it has a size of one
-	// This to avoid problems with the image class, 
-	// which does crash in certain circumstances if one of the
-	// dimensions is one, hence we convert it into a 
-	// scanline object
-	if (d[0]==1) d[0] = d[1];
-	long temp = d[0];
-	d.resize(1);
-	d[0] = temp;
+        // Squeeze out a dimension if it has a size of one
+        // This to avoid problems with the image class, 
+        // which does crash in certain circumstances if one of the
+        // dimensions is one, hence we convert it into a 
+        // scanline object
+        if (d[0]==1) d[0] = d[1];
+        long temp = d[0];
+        d.resize(1);
+        d[0] = temp;
       }
 			
       // convert the dense matrix into a structured matrix.
@@ -1971,15 +1976,15 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
     matlabarray::mitype type = fs.scalarfield.gettype();
     switch (type)
     {
-    case matlabarray::miUINT8:  valuetype = "unsigned char"; break;
-    case matlabarray::miINT8:	valuetype = "signed char"; break;
-    case matlabarray::miINT16:	valuetype = "short"; break;
-    case matlabarray::miUINT16:	valuetype = "unsigned short"; break;
-    case matlabarray::miINT32:	valuetype = "long"; break;
-    case matlabarray::miUINT32:	valuetype = "unsigned long"; break;
-    case matlabarray::miSINGLE:	valuetype = "float"; break;
-    case matlabarray::miDOUBLE:	valuetype = "double"; break;
-    default: valuetype = "double";
+        case matlabarray::miUINT8:  valuetype = "unsigned char"; break;
+        case matlabarray::miINT8:	valuetype = "signed char"; break;
+        case matlabarray::miINT16:	valuetype = "short"; break;
+        case matlabarray::miUINT16:	valuetype = "unsigned short"; break;
+        case matlabarray::miINT32:	valuetype = "long"; break;
+        case matlabarray::miUINT32:	valuetype = "unsigned long"; break;
+        case matlabarray::miSINGLE:	valuetype = "float"; break;
+        case matlabarray::miDOUBLE:	valuetype = "double"; break;
+        default: valuetype = "double";
     }
     fs.field = fs.scalarfield;
   }
@@ -2052,8 +2057,8 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
     {   // explicitly stated type 
       if (fs.meshclass.compareCI("curve"))
       {
-	if ((n!=2)&&(m!=2)) throw matlabconverter_error();
-	if (m != 2) fs.edge.transpose();
+        if ((n!=2)&&(m!=2)) throw matlabconverter_error();
+        if (m != 2) fs.edge.transpose();
       }
     }
     else
@@ -2073,14 +2078,14 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
     {   // explicitly stated type 
       if (fs.meshclass.compareCI("trisurf"))
       {
-	if ((n!=3)&&(m!=3)) throw matlabconverter_error();
-	if (m!=3) fs.face.transpose();
+        if ((n!=3)&&(m!=3)) throw matlabconverter_error();
+        if (m!=3) fs.face.transpose();
       }
 			
       if (fs.meshclass.compareCI("quadsurf"))
       {
-	if ((n!=4)&&(m!=4)) throw matlabconverter_error();
-	if (m!=4) fs.face.transpose();
+        if ((n!=4)&&(m!=4)) throw matlabconverter_error();
+        if (m!=4) fs.face.transpose();
       }
     }
     else
@@ -2100,20 +2105,20 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
     {   // explicitly stated type 
       if (fs.meshclass.compareCI("tetvol"))
       {
-	if ((n!=4)&&(m!=4)) throw matlabconverter_error();
-	if (m!=4) fs.cell.transpose();
+        if ((n!=4)&&(m!=4)) throw matlabconverter_error();
+        if (m!=4) fs.cell.transpose();
       }
 			
       if (fs.meshclass.compareCI("hexvol"))
       {
-	if ((n!=8)&&(m!=8)) throw matlabconverter_error();
-	if (m!=8) fs.cell.transpose();
+        if ((n!=8)&&(m!=8)) throw matlabconverter_error();
+        if (m!=8) fs.cell.transpose();
       }
 			
       if (fs.meshclass.compareCI("prismvol"))
       {
-	if ((n!=6)&&(m!=6)) throw matlabconverter_error();
-	if (m!=6) fs.cell.transpose();
+        if ((n!=6)&&(m!=6)) throw matlabconverter_error();
+        if (m!=6) fs.cell.transpose();
       }
     }
     else
@@ -2134,9 +2139,9 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
       numdim = 1;
       if (fs.x.getm() == 1)
       {
-	fs.x.transpose();
-	fs.y.transpose();
-	fs.z.transpose();
+        fs.x.transpose();
+        fs.y.transpose();
+        fs.z.transpose();
       }
     }
   }
@@ -2313,6 +2318,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
   static const string template_class_name("MatlabFieldReaderAlgoT");
   static const string base_class_name("MatlabFieldReaderAlgo");
+
   
   // Everything we did is in the MatlabIO namespace so we need to add this
   // Otherwise the dynamically code generator will not generate a "using namespace ...."
@@ -2372,7 +2378,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
     {
       if (fs.name.isstring())
       {
-	scifield->set_property("name",fs.name.getstring(),false);
+        scifield->set_property("name",fs.name.getstring(),false);
       }
     }
   }
@@ -2403,7 +2409,7 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
 	
   // NODE MATRIX
   index = ma.getfieldnameindexCI("pts");	if (index > -1) fs.node = ma.getfield(0,index);
-  index = ma.getfieldnameindexCI("node"); if (index > -1) fs.node = ma.getfield(0,index);
+  index = ma.getfieldnameindexCI("node");   if (index > -1) fs.node = ma.getfield(0,index);
 
   // STRUCTURE MATRICES IN SUBMATRICES
   index = ma.getfieldnameindexCI("x"); if (index > -1) fs.x = ma.getfield(0,index);
@@ -2411,18 +2417,18 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
   index = ma.getfieldnameindexCI("z"); if (index > -1) fs.z = ma.getfield(0,index);
 
   // EDGE MATRIX
-  index = ma.getfieldnameindexCI("line"); if (index > -1) fs.edge = ma.getfield(0,index);
+  index = ma.getfieldnameindexCI("line");   if (index > -1) fs.edge = ma.getfield(0,index);
   index = ma.getfieldnameindexCI("edge");	if (index > -1) fs.edge = ma.getfield(0,index);
 
   // FACE MATRIX
-  index = ma.getfieldnameindexCI("fac");  if (index > -1) fs.face = ma.getfield(0,index);
+  index = ma.getfieldnameindexCI("fac");    if (index > -1) fs.face = ma.getfield(0,index);
   index = ma.getfieldnameindexCI("quad");	if (index > -1) fs.face = ma.getfield(0,index);
   index = ma.getfieldnameindexCI("face");	if (index > -1) fs.face = ma.getfield(0,index);
 	
   // CELL MATRIX
   index = ma.getfieldnameindexCI("tet"); 	if (index > -1) fs.cell = ma.getfield(0,index);
   index = ma.getfieldnameindexCI("hex");	if (index > -1) fs.cell = ma.getfield(0,index);
-  index = ma.getfieldnameindexCI("prism"); if (index > -1) fs.cell = ma.getfield(0,index);
+  index = ma.getfieldnameindexCI("prism");   if (index > -1) fs.cell = ma.getfield(0,index);
   index = ma.getfieldnameindexCI("cell");	if (index > -1) fs.cell = ma.getfield(0,index);
 	
   // FIELDNODE MATRIX
@@ -2459,7 +2465,7 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
   // meshclass is now the prefered name
   // meshclass MATRIX
   index = ma.getfieldnameindexCI("elemtype");		if (index > -1) fs.meshclass = ma.getfield(0,index);
-  index = ma.getfieldnameindexCI("meshclass");	if (index > -1) fs.meshclass = ma.getfield(0,index);
+  index = ma.getfieldnameindexCI("meshclass");	    if (index > -1) fs.meshclass = ma.getfield(0,index);
 
   // NAME OF THE MESH/FIELD
   index = ma.getfieldnameindexCI("name");		if (index > -1) fs.name = ma.getfield(0,index);
@@ -2567,9 +2573,9 @@ bool matlabconverter::addfield(FData3d<Vector> &fdata,matlabarray mlarray)
     for (r=0;(r<dim2)&&(p < numdata);r++)
       for (s=0;(s<dim3)&&(p <numdata);s++)
       {
-	data[q][r][s][0] = fielddata[p++];
-	data[q][r][s][1] = fielddata[p++];
-	data[q][r][s][2] = fielddata[p++];
+        data[q][r][s][0] = fielddata[p++];
+        data[q][r][s][1] = fielddata[p++];
+        data[q][r][s][2] = fielddata[p++];
       }
   return(true);
 }
@@ -2650,8 +2656,8 @@ bool matlabconverter::addfield(FData3d<Tensor> &fdata,matlabarray mlarray)
     unsigned int q,r,s,p;
     for (p=0,q=0;(q<dim1)&&(p < numdata);q++)
       for (r=0;(r<dim2)&&(p < numdata);r++)
-	for (s=0;(s<dim3)&&(p < numdata);s++,p +=6)
-	{   compressedtensor(fielddata,tens,p); data[q][r][s] = tens; }
+        for (s=0;(s<dim3)&&(p < numdata);s++,p +=6)
+        {   compressedtensor(fielddata,tens,p); data[q][r][s] = tens; }
   }
   else
   {  // UnCompressed tensor data : xx,xy,xz,yx,yy,yz,zx,zy,zz 
@@ -2659,8 +2665,8 @@ bool matlabconverter::addfield(FData3d<Tensor> &fdata,matlabarray mlarray)
     unsigned int q,r,s,p;
     for (p=0,q=0;(q<dim1)&&(p < numdata);q++)
       for (r=0;(r<dim2)&&(p < numdata);r++)
-	for (s=0; (s<dim3)&&(p <numdata); s++, p+= 9)
-	{   uncompressedtensor(fielddata,tens,p); data[q][r][s] = tens; }
+        for (s=0; (s<dim3)&&(p <numdata); s++, p+= 9)
+        {   uncompressedtensor(fielddata,tens,p); data[q][r][s] = tens; }
   }
   return(true);
 }
@@ -2876,8 +2882,8 @@ bool matlabconverter::createmesh(LockingHandle<StructHexVolMesh> &meshH,fieldstr
     for (r = 0; r < mdims[1]; r++)
       for (p = 0; p < mdims[0]; p++)
       {
-	meshH->set_point(Point(X[q],Y[q],Z[q]),StructHexVolMesh::Node::index_type(static_cast<LatVolMesh *>(meshH.get_rep()),p,r,s));
-	q++;
+        meshH->set_point(Point(X[q],Y[q],Z[q]),StructHexVolMesh::Node::index_type(static_cast<LatVolMesh *>(meshH.get_rep()),p,r,s));
+        q++;
       }
 	
   return(true);
@@ -2916,13 +2922,6 @@ MatlabFieldReaderAlgo::get_compile_info(const TypeDescription *fieldTD)
   // fieldTD->fill_compile_info(cinfo); This function does not serve any purpose in this case
   return(cinfo);
 }
-
-
-
-
-
-
-
 
 
 
@@ -3173,11 +3172,11 @@ void matlabconverter::mladdxyznodes(LockingHandle<StructHexVolMesh> meshH,matlab
     for (unsigned int q = 0; q < dim2 ; q++)
       for (unsigned int s = 0; s < dim3 ; s++)
       {   
-	meshH->get_point(P,StructHexVolMesh::Node::index_type(static_cast<LatVolMesh *>(meshH.get_rep()),p,q,s));
-	xbuffer[r] = P.x();
-	ybuffer[r] = P.y();
-	zbuffer[r] = P.z();
-	r++;
+        meshH->get_point(P,StructHexVolMesh::Node::index_type(static_cast<LatVolMesh *>(meshH.get_rep()),p,q,s));
+        xbuffer[r] = P.x();
+        ybuffer[r] = P.y();
+        zbuffer[r] = P.z();
+        r++;
       }
 
   // upload all the buffers to matlab
@@ -3313,9 +3312,9 @@ bool mladdfield(FData3d<Vector> &fdata,matlabarray mlarray)
     for (r=0;r<dim2;r++)
       for (s=0;s<dim3;s++)
       {
-	data[p++] = dataptr[q][r][s][0];
-	data[p++] = dataptr[q][r][s][1];
-	data[p++] = dataptr[q][r][s][2];
+        data[p++] = dataptr[q][r][s][0];
+        data[p++] = dataptr[q][r][s][1];
+        data[p++] = dataptr[q][r][s][2];
       }		
 
   field.setnumericarray(data);		
@@ -3395,15 +3394,15 @@ bool mladdfield(FData3d<Tensor> &fdata,matlabarray mlarray)
     for (r=0;r<dim2;r++)
       for (s=0;s<dim3;s++)
       {
-	data[p++] = dataptr[q][r][s].mat_[0][0];
-	data[p++] = dataptr[q][r][s].mat_[0][1];
-	data[p++] = dataptr[q][r][s].mat_[0][2];
-	data[p++] = dataptr[q][r][s].mat_[1][0];
-	data[p++] = dataptr[q][r][s].mat_[1][1];
-	data[p++] = dataptr[q][r][s].mat_[1][2];
-	data[p++] = dataptr[q][r][s].mat_[2][0];
-	data[p++] = dataptr[q][r][s].mat_[2][1];
-	data[p++] = dataptr[q][r][s].mat_[2][2];
+        data[p++] = dataptr[q][r][s].mat_[0][0];
+        data[p++] = dataptr[q][r][s].mat_[0][1];
+        data[p++] = dataptr[q][r][s].mat_[0][2];
+        data[p++] = dataptr[q][r][s].mat_[1][0];
+        data[p++] = dataptr[q][r][s].mat_[1][1];
+        data[p++] = dataptr[q][r][s].mat_[1][2];
+        data[p++] = dataptr[q][r][s].mat_[2][0];
+        data[p++] = dataptr[q][r][s].mat_[2][1];
+        data[p++] = dataptr[q][r][s].mat_[2][2];
       }		
 
   field.setnumericarray(data);		
@@ -3432,10 +3431,7 @@ MatlabFieldWriterAlgo::get_compile_info(const TypeDescription *fieldTD)
   // on-the-fly libs which will have the templated function in there
   string filename = template_class_name + "." + fieldTD->get_filename() + ".";
   CompileInfo *rval = 
-    scinew CompileInfo(filename,
-			       base_class_name, 
-			       template_class_name, 
-			       fieldTD->get_name());
+    scinew CompileInfo(filename,base_class_name,template_class_name,fieldTD->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path); 
@@ -3531,7 +3527,6 @@ long matlabconverter::sciBundleCompatible(matlabarray &mlarray, string &infostri
   if (!mlarray.isstruct()) return(0);
   if (mlarray.getnumelements()==0) return(0);
   long numfields = mlarray.getnumfields();
-	
 }
 
 void matlabconverter::mlArrayTOsciBundle(matlabarray &mlmat,CardioWave::BundleHandle &scibundle, Module *module)

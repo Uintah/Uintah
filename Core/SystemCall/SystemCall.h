@@ -94,8 +94,8 @@ class SystemCallHandler : public SystemCallBase
   virtual bool execute(std::string line);
   virtual void end();
   
-  inline void dolock() { lock.lock(); }
-  inline void unlock() { lock.unlock(); }
+  void dolock();
+  void unlock();
   
   // stuff for locking handles
   Mutex	lock;
