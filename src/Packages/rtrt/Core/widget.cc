@@ -482,6 +482,90 @@ TriWidget::invertColor( void ) {
 
 
 
+// creates a new rectangular widget
+RectWidget::RectWidget( float x, float y, float w, float h, float c[3], int t )
+{
+  type = t;
+  drawFlag = 10;
+  switchFlag = 0;
+  focus_x = x;
+  focus_y = y;
+  height = h;
+  width = w;
+  color[0] = c[0];
+  color[1] = c[1];
+  color[2] = c[2];
+  opacity = 1.0;
+  opac_x = x;
+  opac_y = y+h*0.5;
+  topLeftVertex[0] = x-w*0.5;
+  topLeftVertex[1] = y+h*0.5;
+  lowRightVertex[0] = x+w*0.5;
+  lowRightVertex[1] = y-h*0.5;
+
+  transText = new Texture<GLfloat>();
+  // determine which background texture to make from this widget's type
+  switch( t ) {
+  case 1:
+    transText->makeEllipseTextureImage();
+    break;
+  case 2:
+    transText->makeOneDimTextureImage();
+    break;
+  case 3:
+    transText->makeDefaultTextureImage();
+    break;
+  } // switch()
+  transText->current_color[0] = c[0];
+  transText->current_color[1] = c[1];
+  transText->current_color[2] = c[2];
+  transText->colormap_x_offset = 67;
+  transText->colormap_y_offset = 215;
+
+  translateStar = new GLStar( topLeftVertex[0], topLeftVertex[1], 
+			      5.0, c[0], c[1], c[2] );
+  translateBar = new GLBar( topLeftVertex[0]+width/2, topLeftVertex[1],
+			    width, color[0], color[1], color[2] );
+  barRounder = new GLStar( lowRightVertex[0], topLeftVertex[1], 
+			   5.0, c[0], c[1], c[2] );
+  resizeStar = new GLStar( lowRightVertex[0], lowRightVertex[1],
+			   8.0, c[0]+0.30, c[1], c[2] );
+  opacityStar = new GLStar( opac_x, opac_y, 6.5, 1-color[0],
+			    1-color[1], 1-color[2] );
+  focusStar = new GLStar( focus_x, focus_y, 8, 1-transText->current_color[0],
+			  1-transText->current_color[1],
+			  1-transText->current_color[2] );
+}
+
+// repositions an existing widget
+void
+RectWidget::reposition( float x, float y, float w, float h )
+{
+  focus_x = x;
+  focus_y = y;
+  width = w;
+  height = h;
+  opac_x = x;
+  opac_y = y+h*0.5f;
+  topLeftVertex[0] = x-w*0.5;
+  topLeftVertex[1] = y+h*0.5;
+  lowRightVertex[0] = x+w*0.5;
+  lowRightVertex[1] = y-h*0.5;
+  translateStar = new GLStar( topLeftVertex[0], topLeftVertex[1], 
+			      5.0, color[0], color[1], color[2] );
+  translateBar = new GLBar( topLeftVertex[0]+width/2, topLeftVertex[1],
+			    width, color[0], color[1], color[2] );
+  barRounder = new GLStar( lowRightVertex[0], topLeftVertex[1], 
+			   5.0, color[0], color[1], color[2] );
+  resizeStar = new GLStar( lowRightVertex[0], lowRightVertex[1],
+			   8.0, color[0]+0.30, color[1], color[2] );
+  opacityStar = new GLStar( opac_x, opac_y, 6.5, 1-color[0],
+			    1-color[1], 1-color[2] );
+  focusStar = new GLStar( focus_x, focus_y, 8, 1-transText->current_color[0],
+			  1-transText->current_color[1],
+			  1-transText->current_color[2] );
+}
+
 // replaces another widget with a rectangular widget
 RectWidget::RectWidget( float x, float y, float w, float h, float c[3],
 			float o, int t, float ox, float oy,
