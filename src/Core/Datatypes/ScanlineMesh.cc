@@ -76,14 +76,15 @@ ScanlineMesh::transform(Transform &t)
 }
 
 
-vector<unsigned int>
-ScanlineMesh::get_min() const
+
+bool ScanlineMesh::get_min(vector<unsigned int> &array ) const
 {
-  vector<unsigned int> array(2);
+  array.resize(1);
+  array.clear();
 
-  array[0] = min_i_;
+  array.push_back(min_i_);
 
-  return array;
+  return true;
 }
 
 bool
