@@ -14,7 +14,12 @@ def num_processes (test):
 def date ():
     return asctime(localtime(time()))
 
-def runSusTests(argv, TESTS, algo, errors_to):
+def nullCallback (test, susdir, inputsdir, compare_root, algo, mode, max_parallelism):
+    pass
+
+# if a callback is given, it is executed before running each test and given
+# all of the paramaters given to runSusTest
+def runSusTests(argv, TESTS, algo, callback = nullCallback):
   if len(argv) < 6 or len(argv) > 7 or not argv[4] in ["dbg", "opt"] :
     print "usage: %s <susdir> <inputsdir> <testdata_goldstandard> <mode> <max_parallelsim> <test>" % argv[0]
     print "    where <mode> is 'dbg' or 'opt' and <test> is optional"
@@ -111,14 +116,16 @@ def runSusTests(argv, TESTS, algo, errors_to):
 
     chdir(testname)
 
+    # call the callback function before running each test
+    callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism);
 
     # Run normal test
-    rc = runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism, errors_to)
+    rc = runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism)
     if rc == 0:
       # Run restart test
       mkdir("restart")
       chdir("restart")
-      rc = runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism, errors_to, DO_RESTART)
+      rc = runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism, DO_RESTART)
       if rc == 1:
         failcode = 1
       chdir("..")
@@ -147,7 +154,7 @@ def runSusTests(argv, TESTS, algo, errors_to):
   exit(failcode)
 
 
-def runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism, errors_to, do_restart = "no"):
+def runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism, do_restart = "no"):
   ALGO = upper(algo)
   testname = nameoftest(test)
   np = float(num_processes(test))
