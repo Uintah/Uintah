@@ -1,8 +1,8 @@
-//----- DynamicProcedure.cc --------------------------------------------------
+//----- IncDynamicProcedure.cc --------------------------------------------------
 
 #include <TauProfilerForSCIRun.h>
 #include <Packages/Uintah/CCA/Components/Arches/debug.h>
-#include <Packages/Uintah/CCA/Components/Arches/DynamicProcedure.h>
+#include <Packages/Uintah/CCA/Components/Arches/IncDynamicProcedure.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
@@ -36,9 +36,9 @@ using namespace Uintah;
 using namespace SCIRun;
 #define use_fortran
 #ifdef use_fortran
-#include <Packages/Uintah/CCA/Components/Arches/fortran/dynamic_1loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/dynamic_2loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/dynamic_3loop_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/inc_dynamic_1loop_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/inc_dynamic_2loop_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/inc_dynamic_3loop_fort.h>
 #endif
 
 // flag to enable filter check
@@ -49,9 +49,9 @@ using namespace SCIRun;
 #endif
 
 //****************************************************************************
-// Default constructor for DynamicProcedure
+// Default constructor for IncDynamicProcedure
 //****************************************************************************
-DynamicProcedure::DynamicProcedure(const ArchesLabel* label, 
+IncDynamicProcedure::IncDynamicProcedure(const ArchesLabel* label, 
 				   const MPMArchesLabel* MAlb,
 				   PhysicalConstants* phyConsts,
 				   BoundaryCondition* bndry_cond):
@@ -64,7 +64,7 @@ DynamicProcedure::DynamicProcedure(const ArchesLabel* label,
 //****************************************************************************
 // Destructor
 //****************************************************************************
-DynamicProcedure::~DynamicProcedure()
+IncDynamicProcedure::~IncDynamicProcedure()
 {
 }
 
@@ -72,7 +72,7 @@ DynamicProcedure::~DynamicProcedure()
 //  Get the molecular viscosity from the Physical Constants object 
 //****************************************************************************
 double 
-DynamicProcedure::getMolecularViscosity() const {
+IncDynamicProcedure::getMolecularViscosity() const {
   return d_physicalConsts->getMolecularViscosity();
 }
 
@@ -80,7 +80,7 @@ DynamicProcedure::getMolecularViscosity() const {
 // Problem Setup 
 //****************************************************************************
 void 
-DynamicProcedure::problemSetup(const ProblemSpecP& params)
+IncDynamicProcedure::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Turbulence");
   db->require("fac_mesh", d_factorMesh);
@@ -98,16 +98,16 @@ DynamicProcedure::problemSetup(const ProblemSpecP& params)
 // Schedule recomputation of the turbulence sub model 
 //****************************************************************************
 void 
-DynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched, 
+IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched, 
 					      const PatchSet* patches,
 					      const MaterialSet* matls,
 				         const TimeIntegratorLabel* timelabels)
 {
   {
-    string taskname =  "DynamicProcedure::reComputeTurbSubmodel" +
+    string taskname =  "IncDynamicProcedure::reComputeTurbSubmodel" +
 		       timelabels->integrator_step_name;
     Task* tsk = scinew Task(taskname, this,
-			    &DynamicProcedure::reComputeTurbSubmodel,
+			    &IncDynamicProcedure::reComputeTurbSubmodel,
 			    timelabels);
 
     // Requires
@@ -136,10 +136,10 @@ DynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     sched->addTask(tsk, patches, matls);
   }
   {
-    string taskname =  "DynamicProcedure::reComputeFilterValues" +
+    string taskname =  "IncDynamicProcedure::reComputeFilterValues" +
 		       timelabels->integrator_step_name;
     Task* tsk = scinew Task(taskname, this,
-			    &DynamicProcedure::reComputeFilterValues,
+			    &IncDynamicProcedure::reComputeFilterValues,
 			    timelabels);
 
     // Requires
@@ -177,10 +177,10 @@ DynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     sched->addTask(tsk, patches, matls);
   }
   {
-    string taskname =  "DynamicProcedure::reComputeSmagCoeff" +
+    string taskname =  "IncDynamicProcedure::reComputeSmagCoeff" +
 		       timelabels->integrator_step_name;
     Task* tsk = scinew Task(taskname, this,
-			    &DynamicProcedure::reComputeSmagCoeff,
+			    &IncDynamicProcedure::reComputeSmagCoeff,
 			    timelabels);
 
     // Requires
@@ -223,7 +223,7 @@ DynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 // Actual recompute 
 //****************************************************************************
 void 
-DynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
+IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
 					const PatchSubset* patches,
 					const MaterialSubset*,
 					DataWarehouse*,
@@ -710,7 +710,7 @@ DynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
 // Actual recompute 
 //****************************************************************************
 void 
-DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
+IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 					const PatchSubset* patches,
 					const MaterialSubset*,
 					DataWarehouse*,
@@ -1401,7 +1401,7 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     double start_turbTime = Time::currentSeconds();
 #ifdef PetscFilter
 #if 0
-    cerr << "In the Dynamic Procedure print ccuvel" << endl;
+    cerr << "In the IncDynamic Procedure print ccuvel" << endl;
     ccuVel.print(cerr);
 #endif
 
@@ -1821,7 +1821,7 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
 
 void 
-DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
+IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 				     const PatchSubset* patches,
 				     const MaterialSubset*,
 				     DataWarehouse*,
@@ -2088,15 +2088,15 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 
 
 void 
-DynamicProcedure::sched_computeScalarVariance(SchedulerP& sched, 
+IncDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched, 
 					      const PatchSet* patches,
 					      const MaterialSet* matls,
 			    		 const TimeIntegratorLabel* timelabels)
 {
-  string taskname =  "DynamicProcedure::computeScalarVaraince" +
+  string taskname =  "IncDynamicProcedure::computeScalarVaraince" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
-			  &DynamicProcedure::computeScalarVariance,
+			  &IncDynamicProcedure::computeScalarVariance,
 			  timelabels);
 
   
@@ -2119,7 +2119,7 @@ DynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
 
 
 void 
-DynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
+IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 					const PatchSubset* patches,
 					const MaterialSubset*,
 					DataWarehouse*,
@@ -2315,15 +2315,15 @@ DynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 // Schedule recomputation of the turbulence sub model 
 //****************************************************************************
 void 
-DynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched, 
+IncDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched, 
 						 const PatchSet* patches,
 						 const MaterialSet* matls,
 			    		 const TimeIntegratorLabel* timelabels)
 {
-  string taskname =  "DynamicProcedure::computeScalarDissipation" +
+  string taskname =  "IncDynamicProcedure::computeScalarDissipation" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
-			  &DynamicProcedure::computeScalarDissipation,
+			  &IncDynamicProcedure::computeScalarDissipation,
 			  timelabels);
 
   
@@ -2349,7 +2349,7 @@ DynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched,
 
 
 void 
-DynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
+IncDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
 					const PatchSubset* patches,
 					const MaterialSubset*,
 					DataWarehouse*,
