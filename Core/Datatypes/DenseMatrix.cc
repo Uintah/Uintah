@@ -265,7 +265,8 @@ DenseMatrix::transpose()
   return m;
 }
 
-void DenseMatrix::getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val)
+void
+DenseMatrix::getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val)
 {
   idx.resize(ncols_);
   val.resize(ncols_);
@@ -278,6 +279,18 @@ void DenseMatrix::getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val)
     }
   }
 }
+
+
+void
+DenseMatrix::getRowNonzerosNoCopy(int r, int &size, int &stride,
+                                  int *&cols, double *&vals)
+{
+  size = ncols_;
+  stride = 1;
+  cols = NULL;
+  vals = data[r];
+}
+
     
 void DenseMatrix::zero()
 {

@@ -103,6 +103,8 @@ public:
   virtual void put(int row, int col, double val);
   virtual void add(int row, int col, double val);
   virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
+  virtual void getRowNonzerosNoCopy(int r, int &size, int &stride,
+                                    int *&cols, double *&vals);
 
   //! 
   virtual SparseRowMatrix *transpose();

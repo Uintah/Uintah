@@ -87,7 +87,9 @@ public:
   virtual void    put(int r, int c, double val);
   virtual void    add(int r, int c, double val);
   virtual void    getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
-  
+  virtual void    getRowNonzerosNoCopy(int r, int &size, int &stride,
+                                       int *&cols, double *&vals);
+
   virtual DenseMatrix* transpose();
   virtual void    mult(const ColumnMatrix& x, ColumnMatrix& b,
 		       int& flops, int& memrefs, int beg=-1, int end=-1, 

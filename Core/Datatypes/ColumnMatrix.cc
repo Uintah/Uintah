@@ -256,6 +256,16 @@ void ColumnMatrix::getRowNonzeros(int r, Array1<int>& idx,
   val[0]=data[r];
 }
 
+void
+ColumnMatrix::getRowNonzerosNoCopy(int r, int &size, int &stride,
+                                   int *&cols, double *&vals)
+{
+  size = 1;
+  stride = 1;
+  cols = NULL;
+  vals = data + r;
+}
+
 int ColumnMatrix::solve(ColumnMatrix&) { 
   ASSERTFAIL("Error - called solve on a columnmatrix.\n");
 }
