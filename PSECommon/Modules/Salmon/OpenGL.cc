@@ -17,7 +17,6 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
-#include <GL/glut.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -51,6 +50,10 @@ using std::ofstream;
 #include <SCICore/Thread/Runnable.h>
 #include <SCICore/Thread/Thread.h>
 
+#include <SCICore/Geom/GeomCone.h>
+#include <SCICore/Geom/GeomCylinder.h>
+#include <SCICore/Geom/GeomSphere.h>
+
 #ifdef __sgi
 #include <X11/extensions/SGIStereo.h>
 #include "imagelib.h"
@@ -73,6 +76,10 @@ using SCICore::Containers::to_string;
 using SCICore::TclInterface::TCLTask;
 using SCICore::Thread::Runnable;
 using SCICore::Thread::Thread;
+
+using SCICore::GeomSpace::GeomCone;
+using SCICore::GeomSpace::GeomCylinder;
+using SCICore::GeomSpace::GeomSphere;
 
 class OpenGLHelper;
 
@@ -157,6 +164,11 @@ public:
     View lastview;
     double znear, zfar;
 
+    GeomCone* stylusCone1, *stylusCone2;
+    GeomCylinder* stylusCylinder1, *stylusCylinder2;
+    GeomSphere* pinchSphere;
+    Material* stylusMaterial1, *stylusMaterial2, *pinchMaterial;
+
     // these functions were added to clean things up a bit...
 
 protected:
@@ -195,6 +207,17 @@ OpenGL::OpenGL()
     encoding_mpeg = false;
     drawinfo=scinew SCICore::GeomSpace::DrawInfoOpenGL;
     fpstimer.start();
+
+    stylusMaterial1 = scinew Material(Color(0,0,0), Color(.8,0,0), Color(.5,.5,.5), 20);
+    stylusCone1 = scinew GeomCone(Point(0,2,0), Point(0,3,0), 0.5, 0, 20, 4);
+    stylusCylinder1 = scinew GeomCylinder(Point(0,0,0), Point(0,2,0), 0.3, 20, 10);
+    
+    stylusMaterial2 = scinew Material(Color(0,0,0), Color(0,0,.8), Color(.5,.5,.5), 20);
+    stylusCone2 = scinew GeomCone(Point(0,-2,0), Point(0,-3,0), 0.5, 0, 20, 4);
+    stylusCylinder2 = scinew GeomCylinder(Point(0,0,0), Point(0,-2,0), 0.3, 20, 10);
+
+    pinchMaterial = scinew Material(Color(0,0,0), Color(0,.8,0), Color(.5,.5,.5), 20);
+    pinchSphere = scinew GeomSphere(Point(0,0,0), 0.6, 20, 10);
 }
 
 OpenGL::~OpenGL()
@@ -533,10 +556,6 @@ void OpenGL::redraw_frame()
 
 	    if( do_bawgl ) // render head tracked stereo
 	      {
-		GLfloat stylusMatrix[16];
-		int stylus;
-		GLfloat pinchMatrix[16];
-
 		bawgl->setViewPort(0, 0, xres, yres);
 
 		if( i==1 )
@@ -549,69 +568,11 @@ void OpenGL::redraw_frame()
 		    bawgl->setModelViewMatrix(BAWGL_LEFT_EYE);
 		    bawgl->setProjectionMatrix(BAWGL_LEFT_EYE);
 		  }
-
-		bawgl->getControllerMatrix(bawgl->getControllerID(BAWGL_STYLUS),
-					   BAWGL_ONE, stylusMatrix, BAWGL_REAL_SPACE);
 		
-		bawgl->getControllerState(bawgl->getControllerID(BAWGL_STYLUS), &stylus);
-
-		bawgl->getControllerMatrix(bawgl->getControllerID(BAWGL_PINCH),
-					   BAWGL_LEFT, pinchMatrix, BAWGL_REAL_SPACE);
-
-#define A 1.0
-
-		/* Cube vertex array stuff. */
-		GLdouble vertex[] = { -A/2, -A/2, -A/2,
-				      -A/2,  A/2, -A/2,
-				      -A/2,  A/2,  A/2,
-				      -A/2, -A/2,  A/2,
-				      A/2, -A/2, -A/2,
-				      A/2,  A/2, -A/2,
-				      A/2,  A/2,  A/2,
-				      A/2, -A/2,  A/2 };
-
-		GLubyte face[] = { 2, 3, 7, 6,
-				   0, 3, 2, 1,
-				   0, 1, 5, 4,
-				   4, 5, 6, 7,
-				   1, 2, 6, 5,
-				   0, 4, 7, 3 };
-
-		glDisable(GL_LIGHTING);
-		glPolygonMode(GL_FRONT, GL_LINE);
-		glPolygonMode(GL_BACK, GL_LINE);
-
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glVertexPointer(3, GL_DOUBLE, 0, vertex);
-
-		if( stylus == BAWGL_STYLUS_ON )
-		  glColor3f(1.0, 0.0, 0.0);
-		else
-		  glColor3f(1.0, 1.0, 0.0);
-
-		glPushMatrix();
-		  glMultMatrixf(stylusMatrix);
-		  glScalef(1.0, 2.0, 1.0);
-		  glDrawElements(GL_QUADS, 24, GL_UNSIGNED_BYTE, face);
-		glPopMatrix();
-		
-		if( !bawgl->pick )
-		  {
-		    glPushMatrix();
-		      glMultMatrixf(pinchMatrix);
-		      glColor3f(0.0, 1.0, 0.0);
-		      glutWireSphere(0.6, 10, 10);
-		    glPopMatrix();
-		  }
-
-		glEnable(GL_LIGHTING);
-		glPolygonMode(GL_FRONT, GL_FILL);
-		glPolygonMode(GL_BACK, GL_FILL);
-
 		bawgl->setSurfaceView();
 		bawgl->setVirtualView();
-
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+
 	      } else { // render normal
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
@@ -660,6 +621,40 @@ void OpenGL::redraw_frame()
 	    // Draw it all...
 	    current_time=modeltime;
 	    roe->do_for_visible(this, (RoeVisPMF)&OpenGL::redraw_obj);
+
+// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+	    if( do_bawgl ) // render stylus and pinch 'metaphores'
+	      {
+		GLfloat virtualStylusMatrix[16];
+		bawgl->getControllerMatrix(bawgl->getControllerID(BAWGL_STYLUS),
+					   BAWGL_ONE, virtualStylusMatrix, BAWGL_VIRTUAL_SPACE);
+		glPushMatrix();
+		  glMultMatrixf(virtualStylusMatrix);
+		  glScalef(1.0/bawgl->virtualViewScale, 1.0/bawgl->virtualViewScale, 1.0/bawgl->virtualViewScale);
+		  stylusCone1->draw(drawinfo, stylusMaterial1, current_time);
+		  stylusCylinder1->draw(drawinfo, stylusMaterial1, current_time);
+		  stylusCone2->draw(drawinfo, stylusMaterial2, current_time);
+		  stylusCylinder2->draw(drawinfo, stylusMaterial2, current_time);
+		glPopMatrix();
+		
+		if( !bawgl->pick )
+		  {
+		    GLfloat virtualPinchMatrix[16];
+		    bawgl->getControllerMatrix(bawgl->getControllerID(BAWGL_PINCH),
+					   BAWGL_LEFT, virtualPinchMatrix, BAWGL_VIRTUAL_SPACE);
+
+		    drawinfo->multiple_transp = 1;
+		
+		    glPushMatrix();
+		      glMultMatrixf(virtualPinchMatrix);
+		      glScalef(1.0/bawgl->virtualViewScale, 1.0/bawgl->virtualViewScale, 1.0/bawgl->virtualViewScale);
+		      pinchSphere->draw(drawinfo, pinchMaterial, current_time);
+		    glPopMatrix();
+
+		    drawinfo->multiple_transp = 0;
+		  }
+	      }
+// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
 	  }
 
 #if 0
@@ -1577,6 +1572,10 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.13  1999/10/22 05:43:19  jmk
+// Made Isosurface by seedpoint work somewhat
+// Removed "inside called..." print statement from Mesh
+//
 // Revision 1.12  1999/10/21 22:39:06  ikits
 // Put bench.config into PSE/src (where the executable gets invoked from). Fixed bug in the bawgl code and added preliminary navigation and picking.
 //
