@@ -72,6 +72,8 @@ extern "C" {
 #include <fetchop.h>
 }
 
+#include <stack>
+
 /*
  * The irix implementation uses the default version of CrowdMonitor
  * and RecursiveMutex.  It provides native implementations of
@@ -114,7 +116,6 @@ static Thread_private* active[MAXTHREADS];
 static int nactive;
 static usema_t* schedlock;
 static usptr_t* arena;
-static atomic_reservoir_t reservoir;
 static bool use_fetchop=true;
 
 static usptr_t* main_sema;
@@ -128,6 +129,101 @@ static usema_t* control_c_sema;
 
 static void install_signal_handlers();
 
+
+  ///////////////////////////////////////////
+  // Smarts for atomic counters allocator
+  //
+  // Written by: James Bigler
+  //
+  // There is a bug in sgi's implementation of threads which doesn't
+  // deallocate atomic counters properly.  We need to have a way to
+  // recycle these atomic counters without deallocating them from the
+  // system.  The idea here is to keep the atomic counters around
+  // that no one needs for future use.
+
+  class AtomicCounterAllocator {
+    // Reservoir of counters
+    atomic_reservoir_t reservoir;
+
+    // indicated if reservoir has been initialized
+    bool initialized;
+
+    // Total number of counters allocated in reservoir
+    int num_counters;
+
+    // Number of counters allocated by atomic_alloc_variable.
+    // This number should not get larger than num_counters
+    int num_allocated;		
+
+    // These are the counters that have been freed waiting to be recycled
+    std::stack<atomic_var_t*> recycled_counters;
+  public:
+    AtomicCounterAllocator(): initialized(false), num_allocated(0) {}
+
+    // This should be called before get_counter is called
+    // Return true when reservoir is set properly, false otherwise.
+    // initialized should be set to the result of calling this function.
+    bool initialize(const int num_counters_in = 500) {
+      if (initialized)
+	// We'll assume that since it's already initialized that resevoir
+	// is set properly.
+	return true;
+      
+      num_counters = num_counters_in;
+
+      // Fetchop init prints out a really annoying message.  This
+      // ugly code is to make it not do that
+      // failed to create fetchopable area error
+      int tmpfd=dup(2);
+      close(2);
+      int nullfd=open("/dev/null", O_WRONLY);
+      if(nullfd != 2)
+	throw ThreadError("Wrong FD returned from open");
+      reservoir = atomic_alloc_reservoir(USE_DEFAULT_PM, num_counters, NULL);
+      close(2);
+      int newfd=dup(tmpfd);
+      if(newfd != 2)
+	throw ThreadError("Wrong FD returned from dup!");
+      close(tmpfd);
+
+      // If reservoir is equal to zero then you haven't initialized it
+      // properly as per the post condition.
+      initialized = reservoir != 0;
+      return initialized;
+    }
+    
+    // Tries to recycle old counters first, then tries to get one from
+    // the reservoir.  Should return 0 when failure occurs.
+    atomic_var_t *get_counter() {
+      if (!initialized) {
+	fprintf(stderr, "Thread_irix::AtomicCounterAllocator::error: ");
+	fprintf(stderr, "calling get_counter without initializing first.\n");
+	return 0;
+      }
+      // Check for a counter in recycled_counters
+      if (recycled_counters.size() > 0) {
+	atomic_var_t *new_counter = recycled_counters.top();
+	recycled_counters.pop();
+	return new_counter;
+      }
+      // There aren't any available to be recycled, so get a new one
+      if (num_allocated < num_counters) {
+	return atomic_alloc_variable(reservoir, 0);
+      } else {
+	fprintf(stderr, "Thread_irix::AtomicCounterAllocator::error: ");
+	fprintf(stderr, "requesting more atomic counters than are available(%d). You should set the default number higher in Thread_irix.cc\n", num_counters);
+	return 0;
+      }
+    }
+
+    // Save recycle_me for future use
+    void free_counter(atomic_var_t *recycle_me) {
+      recycled_counters.push(recycle_me);
+    }
+  };
+  
+static AtomicCounterAllocator atomic_counter_allocator;
+  
 struct ThreadLocalMemory {
   Thread* current_thread;
 };
@@ -296,25 +392,14 @@ Thread::initialize()
     throw ThreadError(std::string("Error calling usinit: ")
 		      +strerror(errno));
 
-  // Fetchop init prints out a really annoying message.  This
-  // ugly code is to make it not do that
-  // failed to create fetchopable area error
-  int tmpfd=dup(2);
-  close(2);
-  int nullfd=open("/dev/null", O_WRONLY);
-  if(nullfd != 2)
-    throw ThreadError("Wrong FD returned from open");
-  reservoir=atomic_alloc_reservoir(USE_DEFAULT_PM, 500, NULL);
-  close(2);
-  int newfd=dup(tmpfd);
-  if(newfd != 2)
-    throw ThreadError("Wrong FD returned from dup!");
-  close(tmpfd);
-
-  if(!reservoir){
-    use_fetchop=false;
-  } else {
+  // initialize has a default argument of 500.  If you want to change it,
+  // pass in something different (ie initialize(1000)).
+  // If the result of the call was true then the atomic counters were
+  // initialized properly and we can use them.
+  if(atomic_counter_allocator.initialize()){
     use_fetchop=true;
+  } else {
+    use_fetchop=false;
   }
 
   devzero_fd=open("/dev/zero", O_RDWR);
@@ -665,6 +750,12 @@ static
 void
 handle_abort_signals(int sig, int /* code */, sigcontext_t* context)
 {
+#if 0
+  printf ("Ready to handle_abort_signals\n");
+  fflush(stdout);
+  printf("%d\n", (int)*(int*)0x400144080);
+  fflush(stdout);
+#endif
   if(aborting)
     exit(0);
   struct sigaction action;
@@ -918,7 +1009,7 @@ Barrier_private::Barrier_private()
   if(nprocessors > 1){
     if(use_fetchop){
       flag=0;
-      pvar=atomic_alloc_variable(reservoir, 0);
+      pvar=atomic_counter_allocator.get_counter();
       //	    fprintf(stderr, "***Alloc: %p\n", pvar);
       if(!pvar)
 	throw ThreadError(std::string("fetchop_alloc failed")
@@ -949,6 +1040,7 @@ Barrier::~Barrier()
     if(use_fetchop){
       //	    fprintf(stderr, "***Alloc free: %p\n", priv_->pvar);
       //	    atomic_free_variable(reservoir, priv_->pvar);
+      atomic_counter_allocator.free_counter(priv_->pvar);
     } else {
       free_barrier(priv_->barrier);
     }
@@ -1014,7 +1106,7 @@ AtomicCounter::AtomicCounter(const char* name)
     Thread::initialize();
   }
   if(use_fetchop){
-    priv_=(AtomicCounter_private*)atomic_alloc_variable(reservoir, 0);
+    priv_=(AtomicCounter_private*)atomic_counter_allocator.get_counter();
     // 	fprintf(stderr, "***Alloc atomcounter: %p\n", priv_);
     if(!priv_)
       throw ThreadError(std::string("fetchop_alloc failed")
@@ -1034,7 +1126,7 @@ AtomicCounter::AtomicCounter(const char* name, int value)
     Thread::initialize();
   }
   if(use_fetchop){
-    priv_=(AtomicCounter_private*)atomic_alloc_variable(reservoir, 0);
+    priv_=(AtomicCounter_private*)atomic_counter_allocator.get_counter();
     // 	fprintf(stderr, "***Alloc atomcounter: %p\n", priv_);
     if(!priv_)
       throw ThreadError(std::string("fetchop_alloc failed")
@@ -1051,6 +1143,7 @@ AtomicCounter::~AtomicCounter()
   if(use_fetchop){
     // 	fprintf(stderr, "***Alloc free: %p\n", priv_);
     //	atomic_free_variable(reservoir, (atomic_var_t*)priv_);
+    atomic_counter_allocator.free_counter((atomic_var_t*)priv_);
   } else {
     delete priv_;
     priv_=0;
