@@ -1089,7 +1089,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 	string warn = "calc_equilibartion_press: Maximum number of iterations was reached " + warning.str();
 	throw InvalidValue(warn);
       }
-
+       IntVector c = *iter;	
        for (int m = 0; m < numMatls; m++) {
            ASSERT(( vol_frac[m][c] > 0.0 ) ||
                   ( vol_frac[m][c] < 1.0));
@@ -1104,7 +1104,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 	  warning.str();
 	throw InvalidValue(warn);
       }
-      IntVector c = *iter;
       if ( press_new[c] < 0.0 )   {
 	ostringstream warning;
 	IntVector c = *iter;
