@@ -190,7 +190,7 @@ Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
     int matlidx;
     if(!params->get(name, matlidx))
       throw ProblemSetupException("Cannot find material called "+matlname);
-    if(matlidx < 0 || matlidx >= matls.size())
+    if(matlidx < 0 || matlidx >= static_cast<int>(matls.size()))
       throw ProblemSetupException("Invalid material: "+to_string(matlidx));
     result = matls[matlidx];
   }
