@@ -74,6 +74,9 @@ WARNING
 	 //////////
 	 //  Returns the bounding box surrounding the cylinder.
 	 virtual Box getBoundingBox() const;
+
+	 vector<Point>* getPoints();
+	 vector<double>* getVolume();
 	 
       private:
 
