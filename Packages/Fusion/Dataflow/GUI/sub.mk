@@ -12,12 +12,11 @@ SRCDIR := Packages/Fusion/Dataflow/GUI
 
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
-#	$(SRCDIR)/FusionFieldSetReader.tcl\
-
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/FusionSlicePlot.tcl\
 	$(SRCDIR)/FusionFieldReader.tcl\
-	$(SRCDIR)/PPPLHDF5FieldReader.tcl\
+	$(SRCDIR)/FusionFieldSetReader.tcl\
+	$(SRCDIR)/PPPLNrrdConverter.tcl\
 	$(SRCDIR)/HDF5ProtoType.tcl\
 	$(SRCDIR)/MDSPlusFieldReader.tcl\
 	$(SRCDIR)/MDSPlusDataReader.tcl\
