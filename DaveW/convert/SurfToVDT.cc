@@ -35,9 +35,10 @@ main(int argc, char **argv) {
 
     SurfaceHandle handle;
     char name[100];
-
+    int flip=0;
+    if (argc == 3 && clString(argv[2])=="-flip") { flip=1; argc--;}
     if (argc !=2) {
-	printf("Need the file name!\n");
+	printf("Usage: %s basename [-flip]\n", argv[0]);
 	exit(0);
     }
 
@@ -86,7 +87,10 @@ main(int argc, char **argv) {
         int p1=st->faceI[i].patchIdx+1;
 	p1=1;
 //	cerr << "i1="<<i1<<"  i2="<<i2<<"  i3="<<i3<<"  r1="<<r1<<"  r2="<<r2<<"  p1="<<p1<<"  so="<<st->faceI[i].surfOrient[0]<<"\n";
-	if (!st->faceI[i].surfOrient[0]) SWAP(i1,i2)
+
+	if (flip) { if (st->faceI[i].surfOrient[0]) SWAP(i1,i2) }
+	else { if (!st->faceI[i].surfOrient[0]) SWAP(i1,i2) }
+
         if (r1<r2) { SWAP(i1,i2) SWAP(r1,r2) }
 	fprintf(fout, "bsf %d %d %d  %d %d", i1, i2, i3, p1, r1);
 	if (r2) fprintf(fout, " %d", r2);
