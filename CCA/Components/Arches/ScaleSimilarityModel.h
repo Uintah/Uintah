@@ -94,10 +94,6 @@ public:
       // Schedule the initialization of the Smagorinsky Coefficient
       //    [in] 
       //        data User data needed for solve 
-      virtual void sched_initializeSmagCoeff(SchedulerP&,
-                                             const PatchSet* patches,
-                                             const MaterialSet* matls,
-                                             const TimeIntegratorLabel* timelabels);
       
       // GROUP: Access Methods :
       ///////////////////////////////////////////////////////////////////////
@@ -166,13 +162,6 @@ private:
 			            const TimeIntegratorLabel* timelabels);
       // GROUP: Action Methods (private)  :
 
-
-      void initializeSmagCoeff( const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw,
-                                const TimeIntegratorLabel* timelabels);
 
       ///////////////////////////////////////////////////////////////////////
 
