@@ -27,6 +27,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   phys_cons_ps->get("reference_pressure",d_ref_press);
 
   all_mpm_matls = 0;
+  all_ice_matls = 0;
 }
 
 void SimulationState::registerMaterial(Material* matl)
@@ -55,6 +56,13 @@ void SimulationState::finalizeMaterials()
   for(int i=0;i<(int)mpm_matls.size();i++)
     tmp_mpm_matls[i] = mpm_matls[i]->getDWIndex();
   all_mpm_matls->addAll(tmp_mpm_matls);
+  
+  all_ice_matls = scinew MaterialSet();
+  all_ice_matls->addReference();
+  vector<int> tmp_ice_matls(ice_matls.size());
+  for(int i=0;i<(int)ice_matls.size();i++)
+    tmp_ice_matls[i] = ice_matls[i]->getDWIndex();
+  all_ice_matls->addAll(tmp_ice_matls);
 }
 
 int SimulationState::getNumVelFields() const {
@@ -73,6 +81,9 @@ SimulationState::~SimulationState()
     delete matls[i];
   if(all_mpm_matls && all_mpm_matls->removeReference())
     delete all_mpm_matls;
+    
+  if(all_ice_matls && all_ice_matls->removeReference())
+    delete all_ice_matls;
 }
 
 const MaterialSet* SimulationState::allMPMMaterials() const
