@@ -44,10 +44,12 @@ public:
     virtual double minValue();
     virtual double maxValue();
     inline double* getData() { return dataptr;}
+  inline double** getData2D() { return data; }
     virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
     virtual int solve(ColumnMatrix&);
     virtual int solve(vector<double>& sol);
     virtual void zero();
+  virtual double sumOfCol(int);
 
     virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
 		      int& flops, int& memrefs, int beg=-1, int end=-1, 
@@ -68,6 +70,8 @@ public:
 
     friend SCICORESHARE void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
     friend SCICORESHARE void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+    friend SCICORESHARE void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
+    friend SCICORESHARE void Add(double, DenseMatrix&, double, const DenseMatrix&);
     friend SCICORESHARE void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
     friend SCICORESHARE void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 
