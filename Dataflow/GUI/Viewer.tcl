@@ -28,7 +28,6 @@
 
 itcl_class SCIRun_Render_Viewer {
     inherit Module
-
     # List of ViewWindows that are children of this Viewer
     protected openViewersList ""
 
@@ -66,7 +65,7 @@ itcl_class SCIRun_Render_Viewer {
 	lappend openViewersList $rid
 	if { [string length $old_vw] } { ;# set view to same view as old_vw
 	    set $rid-pos ViewWindow[$old_vw number]
-	    $rid-c Views
+#	    $rid-c Views
 	}
 	return $rid
     }
@@ -232,7 +231,7 @@ itcl_class BaseViewWindow {
 	setGlobal $this-y-resize 512
 	setGlobal $this-do_bawgl 0
 	setGlobal $this-tracker_state 0
-	setGlobal $this-currentvisual 0
+	initGlobal $this-currentvisual 0
     }
 
     method bindEvents {w} {
@@ -284,8 +283,12 @@ itcl_class BaseViewWindow {
 	if {[winfo exists $renderWindow]} {
 	    destroy $renderWindow
 	}
-	$this-c listvisuals .standalone
-	$this-c switchvisual $renderWindow 0 $width $height
+#	$this-c listvisuals .standalone
+	opengl $renderWindow -geometry 512x256 -doublebuffer true \
+	    -direct false -rgba true \
+	    -redsize 1 -greensize 1 -bluesize 1 -depthsize 2
+	$this-c setgl $renderWindow
+#	$this-c switchvisual $renderWindow 0 $width $height
 	bindEvents $renderWindow
 	$this-c startup
     }
@@ -371,7 +374,6 @@ itcl_class BaseViewWindow {
 
 itcl_class ViewWindow {
     inherit BaseViewWindow
-
     # parameters to hold current state of detachable part
     protected IsAttached 1
     protected IsDisplayed 0
@@ -390,6 +392,8 @@ itcl_class ViewWindow {
     }
 
     destructor {
+	puts "here"
+	destroy $renderWindow
 	destroy .ui[modname]
     }
 
@@ -449,13 +453,14 @@ itcl_class ViewWindow {
 	    -menu $w.menu.visual.menu
 	menu $w.menu.visual.menu
 	set i 0
-	foreach t [$this-c listvisuals $w] {
-	    $w.menu.visual.menu add radiobutton -value $i -label $t \
-		-variable $this-currentvisual \
-		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*" \
-		-command "$this switchvisual"
-	    incr i
-	}
+
+#	foreach t [$this-c listvisuals $w] {
+#	    $w.menu.visual.menu add radiobutton -value $i -label $t \
+#		-variable $this-currentvisual \
+#		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*" \
+#		-command "$this switchvisual"
+#	    incr i
+#	}
 
 	# New ViewWindow button
 	button $w.menu.newviewer -text "NewViewer" \
@@ -884,18 +889,39 @@ itcl_class ViewWindow {
 	$bsframe.pf.perf3 configure -text $p3
     }
 
+    method visualcompare { v1 v2 } {
+	set s1 [lindex [split [lindex [split $v1 ,] end] =] end]
+	set s2 [lindex [split [lindex [split $v2 ,] end] =] end]
+	if { $s1 < $s2 } { return -1 
+	} elseif { $s1 > $s2 } { return 1 
+	} else { return 0 }
+    }
+
+
     method switchvisual {} {
 	upvar \#0 $this-currentvisual visual
 	set w .ui[modname]
 	set renderWindow $w.wframe.draw
-	if { [winfo exists $renderWindow] } {
-	    destroy $renderWindow
+	destroy $renderWindow
+	opengl $renderWindow -geometry 640x512 \
+	    -direct false -visualid 35
+	$this-c setgl $renderWindow
+
+	set i 0
+	set visuals [$renderWindow listvisuals]
+	set visuals [lsort -decreasing -command "$this visualcompare" $visuals]
+	foreach l $visuals {
+	    $w.menu.visual.menu add radiobutton \
+		-value $i \
+		-label $l \
+		-variable $this-currentvisual \
+		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*" \
+		-command "$this switchvisual"
+	    incr i
 	}
-	$this-c switchvisual $renderWindow $visual 640 512
-	if { [winfo exists $renderWindow] } {
-	    bindEvents $renderWindow
-	    pack $renderWindow -expand yes -fill both
-	}
+
+	bindEvents $renderWindow
+	pack $renderWindow -expand yes -fill both
     }	
 
     method makeViewPopup {} {
