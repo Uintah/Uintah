@@ -38,7 +38,7 @@ KEYWORDS
 
 DESCRIPTION
    
-   The rate of deformation and stress is rotated to initial configuration before
+   The rate of deformation and stress is rotated to material configuration before
    the updated values are calculated.  The left stretch and rotation are updated
    incrementatlly to get the deformation gradient.
 
@@ -67,6 +67,8 @@ WARNING
     const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
     const VarLabel* pDamageLabel;  // For Hypoelastic-plasticity
     const VarLabel* pDamageLabel_preReloc;  // For Hypoelastic-plasticity
+    const VarLabel* pPlasticTempLabel;  // For Hypoelastic-plasticity
+    const VarLabel* pPlasticTempLabel_preReloc;  // For Hypoelastic-plasticity
 
   private:
 
@@ -120,6 +122,7 @@ WARNING
     virtual void addParticleState(std::vector<const VarLabel*>& from,
 				  std::vector<const VarLabel*>& to);
 
+    // initialize  each particle's constitutive model data
     virtual void initializeCMData(const Patch* patch,
 				  const MPMMaterial* matl,
 				  DataWarehouse* new_dw);

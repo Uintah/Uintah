@@ -80,13 +80,13 @@ HyperElasticPlastic::HyperElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8
   }
 
   pBbarElasticLabel = VarLabel::create("p.bbarElastic",
-				       ParticleVariable<Matrix3>::getTypeDescription());
+	ParticleVariable<Matrix3>::getTypeDescription());
   pBbarElasticLabel_preReloc = VarLabel::create("p.bbarElastic+",
-						ParticleVariable<Matrix3>::getTypeDescription());
+	ParticleVariable<Matrix3>::getTypeDescription());
   pDamageLabel = VarLabel::create("p.damage",
-				  ParticleVariable<double>::getTypeDescription());
+	ParticleVariable<double>::getTypeDescription());
   pDamageLabel_preReloc = VarLabel::create("p.damage+",
-					   ParticleVariable<double>::getTypeDescription());
+	ParticleVariable<double>::getTypeDescription());
 
 }
 
@@ -304,11 +304,16 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pStress_new;
     ParticleVariable<double> pDamage_new;
     ParticleVariable<double> pVolume_new;
-    new_dw->allocateAndPut(pBbarElastic_new, pBbarElasticLabel_preReloc,            pset);
-    new_dw->allocateAndPut(pDeformGrad_new,  lb->pDeformationMeasureLabel_preReloc, pset);
-    new_dw->allocateAndPut(pStress_new,      lb->pStressLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pDamage_new,      pDamageLabel_preReloc,                 pset);
-    new_dw->allocateAndPut(pVolume_new, lb->pVolumeDeformedLabel,              pset);
+    new_dw->allocateAndPut(pBbarElastic_new, 
+                           pBbarElasticLabel_preReloc,            pset);
+    new_dw->allocateAndPut(pDeformGrad_new,  
+                           lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(pStress_new,      
+                           lb->pStressLabel_preReloc,             pset);
+    new_dw->allocateAndPut(pDamage_new,      
+                           pDamageLabel_preReloc,                 pset);
+    new_dw->allocateAndPut(pVolume_new, 
+                           lb->pVolumeDeformedLabel,              pset);
 
     // Get the plastic strain
     d_plasticity->getInternalVars(pset, old_dw);
@@ -367,7 +372,8 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Update the deformation gradient tensor to its time n+1 value.
       pDeformGrad_new[idx] = tensorFinc*pDeformGrad[idx];
       double J = pDeformGrad_new[idx].Determinant();
-      //cout << "J = " << J << "\n Updated deformation gradient =\n " << pDeformGrad_new[idx] << endl;
+      //cout << "J = " << J << "\n Updated deformation gradient =\n " 
+      //     << pDeformGrad_new[idx] << endl;
 
       // get the volume preserving part of the deformation gradient increment
       tensorFbar = tensorFinc*pow(Jinc,-oneThird);
@@ -382,14 +388,16 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Compute the trial deviatoric stress
       // trialS is equal to the shear modulus times dev(bElBar)
-      // and calculate the norm of the deviatoric stress (assuming isotropic yield surface)
+      // and calculate the norm of the deviatoric stress 
+      // (assuming isotropic yield surface)
       trialS = (trialBbarElastic - one*traceBbarElastic)*shear;
       trialSNorm = trialS.Norm();
       //cout << "Norm(s_trial) = " << trialSNorm 
       //     << "\n s_trial = " << trialS << endl;
 
       // Calculate the flow stress
-      flowStress = d_plasticity->computeFlowStress(tensorEta, tensorS, pTemperature[idx],
+      flowStress = d_plasticity->computeFlowStress(tensorEta, tensorS, 
+                                                   pTemperature[idx],
                                                    delT, d_tol, matl, idx);
       flowStress *= sqrtTwoThird;
       //cout << "Flow Stress = " << flowStress << endl;
@@ -402,7 +410,8 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
         double Ielastic = oneThird*traceBbarElastic;
         double muBar = shear*Ielastic;
 	double delGamma = (trialSNorm - flowStress)/(2.0*muBar);
-        //cout << "Ie = " << Ielastic << " mubar = " << muBar << " delgamma = " << delGamma << endl;
+        //cout << "Ie = " << Ielastic << " mubar = " << muBar 
+        //     << " delgamma = " << delGamma << endl;
 
         // Calculate normal
 	normal = trialS/trialSNorm;
@@ -417,7 +426,8 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
         // Calculate the updated scalar damage parameter
         pDamage_new[idx] = d_damage->computeScalarDamage(tensorEta, tensorS, 
                                                          pTemperature[idx],
-                                                         delT, matl, d_tol, pDamage[idx]);
+                                                         delT, matl, d_tol, 
+                                                         pDamage[idx]);
 
         // Update internal variables
         d_plasticity->updatePlastic(idx, delGamma);
@@ -443,11 +453,16 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // satisfy small strain elasticity
       tensorF_new = pDeformGrad_new[idx];
       double rho_cur = rho_0/J;
-      Matrix3 tensorHy = d_eos->computePressure(matl, bulk, shear, tensorF_new, tensorEta, 
-                                               tensorS, pTemperature[idx], rho_cur, delT);
+      Matrix3 tensorHy = d_eos->computePressure(matl, bulk, shear, 
+                                                tensorF_new, tensorEta, 
+                                                tensorS, pTemperature[idx], 
+                                                rho_cur, delT);
 
-      //cout << "tensorS = \n" << tensorS << endl << "tensorHy = \n" << tensorHy << endl;
-      // compute the total Cauchy stress = (Kirchhoff stress/J) (volumetric + deviatoric)
+      //cout << "tensorS = \n" << tensorS << endl << "tensorHy = \n" 
+      //     << tensorHy << endl;
+
+      // Compute the total Cauchy stress = 
+      // (Kirchhoff stress/J) (volumetric + deviatoric)
       pStress_new[idx] = tensorHy + tensorS/J;
       //cout << "Updated stress =\n " << pStress_new[idx] << endl;
 

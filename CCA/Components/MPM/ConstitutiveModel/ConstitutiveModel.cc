@@ -1,6 +1,6 @@
 
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include "ConstitutiveModel.h"
+#include "MPMMaterial.h"
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
@@ -10,8 +10,13 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
+#include <math.h>
 
 using namespace Uintah;
+
+#ifndef M_PI
+# define M_PI           3.14159265358979323846  /* pi */
+#endif
 
 #define FRACTURE
 #undef FRACTURE
@@ -290,3 +295,52 @@ void ConstitutiveModel::ConvertJToKWithErosion(const PatchSubset*,
 }
 
 #endif
+
+// Calculate polar decomposition using Simo page 244
+void 
+ConstitutiveModel::polarDecomposition(const Matrix3& F, 
+                                      Matrix3& R,
+                                      Matrix3& U) const
+{
+  Matrix3 C = F.Transpose()*F;
+  double I1 = C.Trace();
+  Matrix3 Csq = C*C;
+  double I2 = .5*(I1*I1 - Csq.Trace());
+  double I3 = C.Determinant();
+  double b = I2 - (I1*I1)/3.0;
+  double c = -(2.0/27.0)*I1*I1*I1 + (I1*I2)/3.0 - I3;
+  double TOL3 = 1e-8;
+  double x[4];
+
+  if(fabs(b) <= TOL3){
+    c = Max(c,0.); x[1] = -pow(c,1./3.); x[2] = x[1]; x[3] = x[1];
+  } else {
+    //	cout << "c = " << c << endl;
+    double m = 2.*sqrt(-b/3.);
+    //	cout << "m = " << m << endl;
+    double n = (3.*c)/(m*b);
+    //	cout << "n = " << n << endl;
+    if (fabs(n) > 1.0) n = (n/fabs(n));
+    double t = atan(sqrt(1-n*n)/n)/3.0;
+    //	cout << "t = " << t << endl;
+    for(int i=1;i<=3;i++){
+      x[i] = m * cos(t + 2.*(((double) i) - 1.)*M_PI/3.);
+      //	  cout << "x[i] = " << x[i] << endl;
+    }
+  }
+  double lam[4];
+  for(int i=1;i<=3;i++) lam[i] = sqrt(x[i] + I1/3.0);
+
+  double i1 = lam[1] + lam[2] + lam[3];
+  double i2 = lam[1]*lam[2] + lam[1]*lam[3] + lam[2]*lam[3];
+  double i3 = lam[1]*lam[2]*lam[3];
+  double D = i1*i2 - i3;
+  //      cout << "D = " << D << endl;
+
+  Matrix3 One; One.Identity();
+  U = (C*(i1*i1-i2) + One*i1*i3 - Csq)*(1./D);
+  Matrix3 Uinv = (C - U*i1 + One*i2)*(1./i3);
+  R = F*Uinv;
+  //      cout << U << endl << endl;
+  //      cout << R << endl << endl;
+}
