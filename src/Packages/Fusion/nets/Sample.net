@@ -2,9 +2,6 @@
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
 set m0 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 226 114]
 set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 208 386]
 set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 19 679]
@@ -85,8 +82,10 @@ set $m0-makeSymmetric {0}
 set $m1-notes {}
 set $m1-show_status {1}
 set $m1-nodes-on {1}
+set $m1-nodes-transparency {0}
 set $m1-nodes-as-disks {0}
 set $m1-edges-on {0}
+set $m1-edges-transparency {0}
 set $m1-faces-on {0}
 set $m1-use-normals {0}
 set $m1-use-transparency {0}
@@ -94,9 +93,11 @@ set $m1-vectors-on {0}
 set $m1-normalize-vectors {0}
 set $m1-has_vector_data {0}
 set $m1-bidirectional {0}
-set $m1-arrow-heads-on {1}
 set $m1-tensors-on {0}
 set $m1-has_tensor_data {0}
+set $m1-scalars-on {0}
+set $m1-scalars-transparency {0}
+set $m1-has_scalar_data {0}
 set $m1-text-on {0}
 set $m1-text-use-default-color {1}
 set $m1-text-color-r {1.0}
@@ -119,11 +120,13 @@ set $m1-node_display_type {Points}
 set $m1-edge_display_type {Lines}
 set $m1-data_display_type {Arrows}
 set $m1-tensor_display_type {Boxes}
+set $m1-scalar_display_type {Points}
 set $m1-active_tab {Nodes}
 set $m1-node_scale {0.03}
 set $m1-edge_scale {0.03}
 set $m1-vectors_scale {0.03}
 set $m1-tensors_scale {0.30}
+set $m1-scalars_scale {0.30}
 set $m1-show_progress {0}
 set $m1-interactive_mode {Interactive}
 set $m1-node-resolution {6}
@@ -131,66 +134,9 @@ set $m1-edge-resolution {6}
 set $m1-data-resolution {6}
 set $m2-notes {}
 set $m2-show_status {1}
-$m2 ui
-set $m2-ViewWindow_0-pos {}
-set $m2-ViewWindow_0-caxes {0}
-set $m2-ViewWindow_0-raxes {1}
-set $m2-ViewWindow_0-iaxes {}
-set $m2-ViewWindow_0-have_collab_vis {0}
-set $m2-ViewWindow_0-view-eyep-x {          13.8937}
-set $m2-ViewWindow_0-view-eyep-y {          11.6686}
-set $m2-ViewWindow_0-view-eyep-z {          7.28026}
-set $m2-ViewWindow_0-view-lookat-x {      4.13691e-12}
-set $m2-ViewWindow_0-view-lookat-y {       -9.635e-07}
-set $m2-ViewWindow_0-view-lookat-z {      0.000287206}
-set $m2-ViewWindow_0-view-up-x {        -0.315904}
-set $m2-ViewWindow_0-view-up-y {        -0.202202}
-set $m2-ViewWindow_0-view-up-z {         0.926995}
-set $m2-ViewWindow_0-view-fov {               20}
-set $m2-ViewWindow_0-view-eyep_offset-x {}
-set $m2-ViewWindow_0-view-eyep_offset-y {}
-set $m2-ViewWindow_0-view-eyep_offset-z {}
-set $m2-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
-set $m2-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
-set $m2-ViewWindow_0-bgcolor-r {                0}
-set $m2-ViewWindow_0-bgcolor-g {                0}
-set $m2-ViewWindow_0-bgcolor-b {                0}
-set $m2-ViewWindow_0-shading {}
-set $m2-ViewWindow_0-do_stereo {0}
-set $m2-ViewWindow_0-ambient-scale {1.0}
-set $m2-ViewWindow_0-diffuse-scale {1.0}
-set $m2-ViewWindow_0-specular-scale {0.4}
-set $m2-ViewWindow_0-emission-scale {1.0}
-set $m2-ViewWindow_0-shininess-scale {1.0}
-set $m2-ViewWindow_0-polygon-offset-factor {1.0}
-set $m2-ViewWindow_0-polygon-offset-units {0.0}
-set $m2-ViewWindow_0-point-size {1.0}
-set $m2-ViewWindow_0-line-width {1.0}
-set $m2-ViewWindow_0-sbase {0.40}
-set $m2-ViewWindow_0-sr {1}
-set $m2-ViewWindow_0-do_bawgl {0}
-set $m2-ViewWindow_0-drawimg {}
-set $m2-ViewWindow_0-saveprefix {}
-set $m2-ViewWindow_0-resx {}
-set $m2-ViewWindow_0-resy {}
-set $m2-ViewWindow_0-aspect {}
-set $m2-ViewWindow_0-aspect_ratio {}
-set $m2-ViewWindow_0-global-light {1}
-set $m2-ViewWindow_0-global-fog {0}
-set $m2-ViewWindow_0-global-debug {0}
-set $m2-ViewWindow_0-global-clip {0}
-set $m2-ViewWindow_0-global-cull {0}
-set $m2-ViewWindow_0-global-dl {0}
-set $m2-ViewWindow_0-global-type {Gouraud}
-set $m2-ViewWindow_0-unused {0}
-set $m2-ViewWindow_0-unused {1}
-set $m2-ViewWindow_0-unused {1}
-set $m2-ViewWindow_0-unused {1}
-set $m2-ViewWindow_0-unused {0}
-set $m2-ViewWindow_0-unused {1}
 set $m3-notes {}
 set $m3-show_status {1}
-set $m3-isoval {157363.927}
+set $m3-isoval {157363.92700000}
 set $m3-isoval-min {1.04083e-17}
 set $m3-isoval-max {476463}
 set $m3-isoval-typed {0}
@@ -261,7 +207,7 @@ set $m6-j-wrap {0}
 set $m6-k-wrap {0}
 set $m7-notes {}
 set $m7-show_status {1}
-set $m7-isoval {-0.388}
+set $m7-isoval {-0.38800000}
 set $m7-isoval-min {-0.534996}
 set $m7-isoval-max {0.651772}
 set $m7-isoval-typed {0}
@@ -297,6 +243,7 @@ set $m9-execmode {init}
 set $m9-delay {0}
 set $m9-inc-amount {1}
 set $m9-send-amount {1}
+set $m9-update-function {1}
 set $m10-notes {}
 set $m10-show_status {1}
 set $m11-notes {}
@@ -307,14 +254,16 @@ set $m11-max {         0.651772}
 set $m11-makeSymmetric {0}
 set $m12-notes {}
 set $m12-show_status {1}
-set $m12-filename {/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10089_00.mds}
+set $m12-filename {/z/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10089_00.mds}
 set $m13-notes {}
 set $m13-show_status {1}
 set $m14-notes {}
 set $m14-show_status {1}
 set $m14-nodes-on {0}
+set $m14-nodes-transparency {0}
 set $m14-nodes-as-disks {0}
 set $m14-edges-on {0}
+set $m14-edges-transparency {0}
 set $m14-faces-on {1}
 set $m14-use-normals {0}
 set $m14-use-transparency {1}
@@ -322,9 +271,11 @@ set $m14-vectors-on {0}
 set $m14-normalize-vectors {}
 set $m14-has_vector_data {0}
 set $m14-bidirectional {0}
-set $m14-arrow-heads-on {1}
 set $m14-tensors-on {0}
 set $m14-has_tensor_data {0}
+set $m14-scalars-on {0}
+set $m14-scalars-transparency {0}
+set $m14-has_scalar_data {0}
 set $m14-text-on {0}
 set $m14-text-use-default-color {1}
 set $m14-text-color-r {1.0}
@@ -347,11 +298,13 @@ set $m14-node_display_type {Spheres}
 set $m14-edge_display_type {Lines}
 set $m14-data_display_type {Arrows}
 set $m14-tensor_display_type {Boxes}
+set $m14-scalar_display_type {Points}
 set $m14-active_tab {Faces}
 set $m14-node_scale {0.03}
 set $m14-edge_scale {0.015}
 set $m14-vectors_scale {0.30}
 set $m14-tensors_scale {0.30}
+set $m14-scalars_scale {0.30}
 set $m14-show_progress {}
 set $m14-interactive_mode {Interactive}
 set $m14-node-resolution {6}
@@ -379,8 +332,10 @@ set $m15-k-wrap {1}
 set $m16-notes {}
 set $m16-show_status {1}
 set $m16-nodes-on {0}
+set $m16-nodes-transparency {0}
 set $m16-nodes-as-disks {1}
 set $m16-edges-on {0}
+set $m16-edges-transparency {0}
 set $m16-faces-on {0}
 set $m16-use-normals {0}
 set $m16-use-transparency {0}
@@ -388,9 +343,11 @@ set $m16-vectors-on {1}
 set $m16-normalize-vectors {0}
 set $m16-has_vector_data {1}
 set $m16-bidirectional {0}
-set $m16-arrow-heads-on {1}
 set $m16-tensors-on {0}
 set $m16-has_tensor_data {0}
+set $m16-scalars-on {0}
+set $m16-scalars-transparency {0}
+set $m16-has_scalar_data {0}
 set $m16-text-on {0}
 set $m16-text-use-default-color {1}
 set $m16-text-color-r {1.0}
@@ -413,11 +370,13 @@ set $m16-node_display_type {Spheres}
 set $m16-edge_display_type {Lines}
 set $m16-data_display_type {Arrows}
 set $m16-tensor_display_type {Boxes}
+set $m16-scalar_display_type {Points}
 set $m16-active_tab {Vectors}
 set $m16-node_scale {0.03}
 set $m16-edge_scale {0.015}
 set $m16-vectors_scale {0.0001}
 set $m16-tensors_scale {0.30}
+set $m16-scalars_scale {0.30}
 set $m16-show_progress {}
 set $m16-interactive_mode {Interactive}
 set $m16-node-resolution {6}
@@ -482,8 +441,10 @@ set $m21-np {1}
 set $m22-notes {}
 set $m22-show_status {1}
 set $m22-nodes-on {0}
+set $m22-nodes-transparency {0}
 set $m22-nodes-as-disks {0}
 set $m22-edges-on {1}
+set $m22-edges-transparency {0}
 set $m22-faces-on {0}
 set $m22-use-normals {0}
 set $m22-use-transparency {0}
@@ -491,9 +452,11 @@ set $m22-vectors-on {0}
 set $m22-normalize-vectors {25277570}
 set $m22-has_vector_data {0}
 set $m22-bidirectional {0}
-set $m22-arrow-heads-on {1}
 set $m22-tensors-on {0}
 set $m22-has_tensor_data {0}
+set $m22-scalars-on {0}
+set $m22-scalars-transparency {0}
+set $m22-has_scalar_data {0}
 set $m22-text-on {0}
 set $m22-text-use-default-color {1}
 set $m22-text-color-r {1.0}
@@ -516,11 +479,13 @@ set $m22-node_display_type {Spheres}
 set $m22-edge_display_type {Cylinders}
 set $m22-data_display_type {Arrows}
 set $m22-tensor_display_type {Boxes}
+set $m22-scalar_display_type {Points}
 set $m22-active_tab {Edges}
 set $m22-node_scale {0.04}
 set $m22-edge_scale {0.02}
 set $m22-vectors_scale {0.3}
 set $m22-tensors_scale {0.30}
+set $m22-scalars_scale {0.30}
 set $m22-show_progress {39848618}
 set $m22-interactive_mode {Interactive}
 set $m22-node-resolution {6}
@@ -554,7 +519,5 @@ set $m24-exhaustive_search_max_dist {-1}
 set $m24-np {1}
 set $m25-notes {}
 set $m25-show_status {1}
-$m3 initialize_ui
-$m7 initialize_ui
 
 ::netedit scheduleok
