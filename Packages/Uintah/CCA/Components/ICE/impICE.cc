@@ -20,6 +20,10 @@ using namespace Uintah;
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
+
+
+
+
 /* ---------------------------------------------------------------------
                                T O   D O
   - better initial guess
@@ -792,6 +796,10 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     subsched->execute(d_myworld);
     subNewDW->get(max_RHS,   lb->max_RHSLabel);
     counter ++;
+    if (counter > 3) {
+      ParentNewDW->abortTimestep();
+      ParentNewDW->restartTimestep();
+    }
     if(pg->myrank() == 0) {
       cout << "Outer iteration " << counter<< " max_rhs "<< max_RHS<< endl;
 

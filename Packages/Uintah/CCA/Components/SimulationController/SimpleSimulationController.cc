@@ -461,20 +461,51 @@ SimpleSimulationController::run()
         if (output)
           output->finalizeTimestep(t, delt, grid, scheduler, false);
       }
-      // Execute the current timestep
-      scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
-      scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
-      //scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
-      //scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
-      scheduler->execute(d_myworld);
-      if(output)
-       output->executedTimestep();
+
+      // Execute the current timestep.  If the timestep needs to be
+      // restarted, this loop will execute multiple times.
+      bool success = true;
+      do {
+	bool restartable = sim->restartableTimesteps();
+	if (restartable)
+	  scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
+	else
+	  scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
+	
+	scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+	
+	scheduler->execute(d_myworld);
+
+	if(scheduler->get_dw(1)->timestepRestarted()){
+	  ASSERT(restartable);
+	  // Figure out new delt
+	  double new_delt = sim->recomputeTimestep(delt);
+	  if(d_myworld->myrank() == 0)
+	    cerr << "Restarting timestep at " << t << ", changing delt from " 
+		 << delt << " to " << new_delt << '\n';
+	  delt = new_delt;
+	  scheduler->get_dw(0)->override(delt_vartype(delt), 
+					 sharedState->get_delt_label());
+	  success = false;
+	  
+	  scheduler->replaceDataWarehouse(1, grid);
+	} else {
+	  if(scheduler->get_dw(1)->timestepAborted()){
+	    throw InternalError("Execution aborted, cannot restart timestep\n");
+	  }
+	}
+	if(output && success) {
+	  output->executedTimestep();
+	  output->finalizeTimestep(t, 0, grid, scheduler);
+	}
+      } while(!success);
 
       t += delt;
    }
    TAU_DB_DUMP();
    ups->releaseDocument();
 }
+
 
 bool
 SimpleSimulationController::needRecompile(double time, double delt,
