@@ -50,6 +50,7 @@
 #include <sci_glu.h>
 #include <sci_glx.h>
 #include <iostream>
+#include <set>
 
 using namespace SCIRun;
 using namespace std;
@@ -57,18 +58,21 @@ using namespace std;
 extern "C" Tcl_Interp* the_interp;
 
 static GLXContext first_context = NULL;
+static set<GLXContext> contexts;
 vector<int> TkOpenGLContext::valid_visuals_ = vector<int>();
 
-TkOpenGLContext::TkOpenGLContext(const string &id, int width, int height, int visualid)
+TkOpenGLContext::TkOpenGLContext(const string &id, int visualid, 
+				 int width, int height)
   : visualid_(visualid),
     id_(id)
     
 {
   mainwin_ = Tk_MainWindow(the_interp);
   display_ = Tk_Display(mainwin_);
+  release();
   screen_number_ = Tk_ScreenNumber(mainwin_);
-  ASSERT(mainwin_);
-  ASSERT(display_);
+  if (!mainwin_) throw scinew InternalError("Cannot find main Tk window");
+  if (!display_) throw scinew InternalError("Cannot find X Display");
     
   geometry_ = 0;
   cursor_ = 0;
@@ -92,7 +96,7 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int width, int height, int vi
     temp_vi.visualid = visualid_;
     vi_ = XGetVisualInfo(display_, VisualIDMask, &temp_vi, &n);
     if(!vi_ || n!=1) {
-      ASSERT(0);
+      throw scinew InternalError("Cannot find Visual ID #"+to_string(visualid_));
     }
   } else {
     /* Pick the right visual... */
@@ -139,43 +143,40 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int width, int height, int vi
     vi_ = glXChooseVisual(display_, screen_number_, attributes);
   }
 
-  ASSERT(vi_);
+  if (!vi_) throw scinew InternalError("Cannot find Visual");
   colormap_ = XCreateColormap(display_, Tk_WindowId(mainwin_), 
 			      vi_->visual, AllocNone);
 
   tkwin_ = Tk_CreateWindowFromPath(the_interp, mainwin_, 
 				   ccast_unsafe(id),
 				   (char *) NULL);
+  if (!tkwin_) throw scinew InternalError("Cannot create Tk Window");
   Tk_GeometryRequest(tkwin_, width, height);
 
-  ASSERT(tkwin_);
+
   int result = Tk_SetWindowVisual(tkwin_, vi_->visual, vi_->depth, colormap_);
-  ASSERT(result == 1);
+  if (result != 1) throw scinew InternalError("Cannot set Tk Window Visual");
 
   Tk_MakeWindowExist(tkwin_);
-  //XSync(display_, False);
 
   x11_win_ = Tk_WindowId(tkwin_);
-  ASSERT(x11_win_);
-  ASSERT(tkwin_ == Tk_NameToWindow(the_interp, ccast_unsafe(id), mainwin_));
+  if (!x11_win_) throw scinew InternalError("Cannot get Tk X11 window ID");
 
-  if (!context_) 
-  {
-    XSync(display_, False);
-    context_ = glXCreateContext(display_, vi_, first_context, 1);
-    if (!first_context) first_context = context_;
-    
-    ASSERT(context_);
+  XSync(display_, False);
+  if (!first_context) {
+    first_context = glXCreateContext(display_, vi_, 0, 1);
   }
-
+  context_ = glXCreateContext(display_, vi_, first_context, 1);
+  if (!context_) throw scinew InternalError("Cannot create GLX Context");
 }
 
 TkOpenGLContext::~TkOpenGLContext()
 {
   TCLTask::lock();
   release();
+  //  cerr << "context destroy " << (int)context_ << std::endl;
   glXDestroyContext(display_, context_);
-  Tk_DestroyWindow(tkwin_);
+  //  Tk_DestroyWindow(tkwin_);
   XSync(display_, 0);
   TCLTask::unlock();
 }
