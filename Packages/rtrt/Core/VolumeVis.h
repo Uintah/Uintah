@@ -54,6 +54,7 @@ public:
 		     const HitInfo& hit, int depth,
 		     double atten, const Color& accumcolor,
 		     Context* cx);
+  virtual void animate(double t, bool& changed);
 };
   
 } // end namespace rtrt
