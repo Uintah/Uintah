@@ -178,9 +178,6 @@ ColorMap::Build1d(const int size)
   colors_.clear();
   colors_.resize(size);
 
-  // Blend if 256 colors.
-  set_blend(rawRampColor_.size() == 256);
-
   for (int i = 0; i < size; i++) {
     colors_[i] = scinew Material();
     
