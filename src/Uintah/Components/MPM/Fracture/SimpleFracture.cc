@@ -298,10 +298,6 @@ stressRelease(const Patch* patch,
     }
   }
 
-  delt_vartype delTAfterConstitutiveModel;
-  new_dw->get(delTAfterConstitutiveModel, lb->delTAfterConstitutiveModelLabel);
-  double delTAfterFracture = delTAfterConstitutiveModel;
-  
   for(ParticleSubset::iterator iter = pset_patchOnly->begin(); 
      iter != pset_patchOnly->end(); iter++)
   {
@@ -319,7 +315,6 @@ stressRelease(const Patch* patch,
   new_dw->put(pImageVelocity_new, lb->pImageVelocityLabel_preReloc);
   new_dw->put(pVelocity_new, lb->pVelocityAfterFractureLabel);
 
-  new_dw->put(delt_vartype(delTAfterFracture), lb->delTAfterFractureLabel);
 }
 
 SimpleFracture::
@@ -332,6 +327,13 @@ SimpleFracture(ProblemSpecP& ps)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.7  2001/01/05 23:04:17  guilkey
+// Using the code that Wayne just commited which allows the delT variable to
+// be "computed" multiple times per timestep, I removed the multiple derivatives
+// of delT (delTAfterFracture, delTAfterConstitutiveModel, etc.).  This also
+// now allows MPM and ICE to run together with a common timestep.  The
+// dream of the sharedState is realized!
+//
 // Revision 1.6  2001/01/04 00:18:05  jas
 // Remove g++ warnings.
 //

@@ -267,7 +267,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     double delT_new = WaveSpeed.minComponent();
     
     if(delT_new < 1.e-12) delT_new = MAXDOUBLE;
-    new_dw->put(delt_vartype(delT_new), lb->delTAfterConstitutiveModelLabel);    
+    new_dw->put(delt_vartype(delT_new), lb->delTLabel);    
     new_dw->put(pstress, lb->pStressAfterStrainRateLabel);
     new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
 
@@ -438,10 +438,8 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
 
 
   //time step requirement
-  delt_vartype delT;
-  new_dw->get(delT, lb->delTAfterFractureLabel);
 
-  double delT_new = delT;
+  double delT_new = 1.0e12;
 
   ParticleVariable<double> pMass;
   new_dw->get(pMass, lb->pMassLabel_preReloc, pset_patchOnly);
@@ -452,15 +450,14 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   double dxLength = dx.length() * tolerance;
 
   for(ParticleSubset::iterator iter = pset_patchOnly->begin();
-          iter != pset_patchOnly->end(); iter++)
-  {
+          iter != pset_patchOnly->end(); iter++) {
     double force = pCrackSurfaceContactForce[*iter].length();
     if(force > 0) {
       delT_new = Min(delT_new,sqrt(2*dxLength*pMass[*iter]/force));
     }
   }
 
-  new_dw->put(delt_vartype(delT_new), lb->delTAfterCrackSurfaceContactLabel);
+  new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
 void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
@@ -480,7 +477,7 @@ void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
 			Ghost::AroundCells, 1 );
   task->requires(new_dw, lb->pCrackSurfaceNormalLabel_preReloc, idx, patch,
 			Ghost::AroundCells, 1 );
-  task->requires(new_dw, lb->delTAfterFractureLabel );
+  task->requires(new_dw, lb->delTLabel );
   task->requires(new_dw, lb->pMassLabel_preReloc, idx, patch, Ghost::None);
 		  
   task->computes(new_dw, lb->pCrackSurfaceContactForceLabel_preReloc, idx, patch );
@@ -516,6 +513,13 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.78  2001/01/05 23:04:15  guilkey
+// Using the code that Wayne just commited which allows the delT variable to
+// be "computed" multiple times per timestep, I removed the multiple derivatives
+// of delT (delTAfterFracture, delTAfterConstitutiveModel, etc.).  This also
+// now allows MPM and ICE to run together with a common timestep.  The
+// dream of the sharedState is realized!
+//
 // Revision 1.77  2001/01/04 00:18:04  jas
 // Remove g++ warnings.
 //

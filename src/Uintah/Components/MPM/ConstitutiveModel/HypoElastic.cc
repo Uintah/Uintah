@@ -119,7 +119,6 @@ void HypoElastic::computeStableTimestep(const Patch* patch,
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-//    new_dw->put(delt_vartype(delT_new), lb->delTAfterConstitutiveModelLabel);
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
@@ -254,7 +253,7 @@ void HypoElastic::computeStressTensor(const Patch* patch,
 
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(delT_new),lb->delTAfterConstitutiveModelLabel);
+  new_dw->put(delt_vartype(delT_new),lb->delTLabel);
   new_dw->put(pstress, lb->pStressAfterStrainRateLabel);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
 
@@ -266,15 +265,6 @@ void HypoElastic::computeStressTensor(const Patch* patch,
   // Store deformed volume
   new_dw->put(pvolume,lb->pVolumeDeformedLabel);
 }
-
-//double HypoElastic::computeStrainEnergy(const Patch* patch,
-//                                        const MPMMaterial* matl,
-//                                        DataWarehouseP& new_dw)
-//{
-//  double se=0;
-//
-//  return se;
-//}
 
 void HypoElastic::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
