@@ -6,6 +6,14 @@
 
 using namespace rtrt;
 
+SCIRun::Persistent* group_maker() {
+  return new Group();
+}
+
+// initialize the static member type_id
+SCIRun::PersistentTypeID Group::type_id("Group", "Object", group_maker);
+
+
 Group::Group()
     : Object(0)
 {
@@ -122,6 +130,32 @@ void Group::transform(Transform& T)
   }
 
 }
+
+const int GROUP_VERSION = 1;
+
+void 
+Group::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Group", GROUP_VERSION);
+  Object::io(str);
+  Pio(str, was_processed);
+  Pio(str, bbox);
+  Pio(str, all_children_are_groups);
+  Pio(str, objs);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Group*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Group::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Group*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun
 
 bool Group::interior_value(double& ret_val, const Ray &ref, const double t)
 {

@@ -7,17 +7,34 @@
 #include <Core/Geometry/Point.h>
 
 namespace rtrt {
+class Disc;
+}
+
+namespace SCIRun {
+void Pio(Piostream&, rtrt::Disc*&);
+}
+
+namespace rtrt {
 
 class Disc : public Object, public UVMapping {
 protected:
   Point cen;
   Vector n;
+  double d;
   double radius;
   Vector tex_scale;
   Transform xform;
 public:
   Disc(Material* matl, const Point& cen, const Vector& n, double radius);
   virtual ~Disc();
+
+  Disc() : Object(0) {} // for Pio.
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, Disc*&);
+
   virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
   virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,

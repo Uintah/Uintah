@@ -13,15 +13,30 @@
 using namespace rtrt;
 using namespace SCIRun;
 
+Persistent* crowMarble_maker() {
+  return new CrowMarble();
+}
+
+// initialize the static member type_id
+PersistentTypeID CrowMarble::type_id("CrowMarble", "Material", 
+				     crowMarble_maker);
+
+
 CrowMarble::CrowMarble(double scale,
                const Vector& direction,
                const Color&  c1,
                const Color&  c2,
                const Color&  c3,
                double R0, 
-               double phong_exponent)
-    : direction(direction), scale(scale), c1(c1), c2(c2), c3(c3),
-     spline(c1,c1,c1,c1,c2,c2,c2,c3,c3,c3), R0(R0), phong_exponent(phong_exponent)
+               double phong_exponent) : 
+  scale(scale), 
+  c1(c1), 
+  c2(c2), 
+  c3(c3),
+  direction(direction), 
+  spline(c1,c1,c1,c1,c2,c2,c2,c3,c3,c3), 
+  phong_exponent(phong_exponent),
+  R0(R0) 
 {
 }
 
@@ -110,3 +125,34 @@ void CrowMarble::shade(Color& result, const Ray& ray,
 
     result=surfcolor;
 }
+
+const int CROWMARBLE_VERSION = 1;
+
+void 
+CrowMarble::io(SCIRun::Piostream &str)
+{
+  str.begin_class("CrowMarble", CROWMARBLE_VERSION);
+  Material::io(str);
+  Pio(str, scale);
+  Pio(str, c1);
+  Pio(str, c2);
+  Pio(str, c3);
+  Pio(str, direction);
+  Pio(str, spline);
+  Pio(str, turbulence);
+  Pio(str, phong_exponent);
+  Pio(str, R0);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::CrowMarble*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::CrowMarble::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::CrowMarble*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

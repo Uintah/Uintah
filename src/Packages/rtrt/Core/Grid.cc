@@ -15,6 +15,13 @@ using namespace rtrt;
 using SCIRun::Thread;
 using SCIRun::Time;
 
+SCIRun::Persistent* grid_maker() {
+  return new Grid;
+}
+
+// initialize the static member type_id
+SCIRun::PersistentTypeID Grid::type_id("Grid", "Object", grid_maker);
+
 Grid::Grid(Object* obj, int nsides)
     : Object(0), obj(obj), nsides(nsides)
 {
@@ -388,3 +395,53 @@ Vector Grid::normal(const Point&, const HitInfo&)
   cerr << "Error: Grid normal should not be called!\n";
   return Vector(0,0,0);
 }
+
+const int GRID_VERSION = 1;
+
+void 
+Grid::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Grid", GRID_VERSION);
+  Object::io(str);
+  Pio(str, obj);
+  Pio(str, bbox);
+  Pio(str, nx);
+  Pio(str, ny);
+  Pio(str, nz);
+  int ngrid = nx*ny*nz;
+  //Pio(str, grid);
+  //Pio(str, counts);
+  Pio(str, nsides);
+  if (str.reading()) {
+    set_matl(new LambertianMaterial(Color(1,0,0)));
+    counts=new int[2*ngrid];
+  }
+  // Read in the counts...
+  for(int i=0;i<ngrid*2;i++) {
+    Pio(str, counts[i]);
+  }
+  int total=0;
+  for(int i=0;i<ngrid;i++){
+    total+=counts[i*2+1];
+  }
+
+  if (str.reading()) {
+    grid=new Object*[total];
+  }
+  // Read in grid.
+  for(int j=0;j<total;j++) {
+    Pio(str, grid[j]);
+  }
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Grid*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Grid::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Grid*>(pobj);
+  }
+}
+} // end namespace SCIRun

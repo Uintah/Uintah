@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <fcntl.h>
-extern Mutex io;
+extern Mutex io_lock_;
 
 using namespace std;
 using namespace rtrt;
@@ -65,6 +65,13 @@ Slice<T,A,B>::Slice(VolumeDpy* dpy, PlaneDpy* pdpy,
 template<class T, class A, class B>
 Slice<T,A,B>::~Slice()
 {
+}
+
+template<class T, class A, class B>
+void 
+Slice::io(SCIRun::Piostream &str)
+{
+  ASSERTFAIL("Pio for Slice<T,A,B> not implemented");
 }
 
 template<class T, class A, class B>

@@ -7,6 +7,14 @@
 using namespace rtrt;
 using namespace SCIRun;  
 
+Persistent* light_maker() {
+  return new Light;
+}
+
+// initialize the static member type_id
+PersistentTypeID Light::type_id("Light", "Persistent", light_maker);
+
+
 void make_ortho(const Vector& v, Vector& v1, Vector& v2) 
 {
     Vector v0(Cross(v, Vector(1,0,0)));
@@ -45,27 +53,34 @@ void get_cone_vectors(const Vector& axis, double theta0, int n, Vector* incone)
 static Material * flat_yellow = NULL;
 static Material * flat_orange = NULL;
 
+void Light::init() {
+  Vector d(pos-Point(0,0,.5));
+  int n=3;
+  beamdirs.resize(n*n);
+  get_cone_vectors(d, .03, n, &beamdirs[0]);
+
+  if( !flat_yellow )
+    flat_yellow = new LightMaterial(Color(.8,.8,.0));
+  if( !flat_orange )
+    flat_orange = new LightMaterial(Color(1.0,.7,.0));
+
+  // Create a yellow sphere that can be rendered in the location
+  // of the light.
+  sphere_ = new Sphere( flat_yellow, pos, 0.1 );
+}
+
 Light::Light(const Point& pos,
 	     const Color& color,
 	     double radius,
 	     double intensity ) :
-  radius(radius), intensity_(intensity), pos(pos),
-  currentColor_(color*intensity), origColor_(color), isOn_( true )
+  radius(radius), 
+  intensity_(intensity), 
+  currentColor_(color*intensity), 
+  origColor_(color), 
+  pos(pos),
+  isOn_(true)
 {
-    Vector d(pos-Point(0,0,.5));
-    int n=3;
-    beamdirs.resize(n*n);
-    get_cone_vectors(d, .03, n, &beamdirs[0]);
-
-    if( !flat_yellow )
-        flat_yellow = new LightMaterial(Color(.8,.8,.0));
-    if( !flat_orange )
-        flat_orange = new LightMaterial(Color(1.0,.7,.0));
-
-    // Create a yellow sphere that can be rendered in the location
-    // of the light.
-    sphere_ = new Sphere( flat_yellow, pos, 0.1 );
-    //Sphere * s = new Sphere( flat_orange, pos, 0.1 );
+  init();
 }
 
 void
@@ -84,3 +99,31 @@ Light::updatePosition( const Point & newPos )
   pos = newPos; 
   sphere_->updatePosition( newPos );
 }
+
+const int LIGHT_VERSION = 1;
+
+void 
+Light::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Light", LIGHT_VERSION);
+  Pio(str, radius);
+  Pio(str, intensity_);
+  Pio(str, currentColor_);
+  Pio(str, origColor_);
+  Pio(str, pos);
+  Pio(str, isOn_);
+  if (str.reading()) {
+    init();
+  }
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Light*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Light::type_id);
+  if(stream.reading())
+    obj=(rtrt::Light*)pobj;
+}
+} // end namespace SCIRun

@@ -24,7 +24,7 @@ using namespace std;
 using namespace SCIRun;
 
 namespace rtrt {
-  extern SCIRun::Mutex io;
+  extern SCIRun::Mutex io_lock_;
   extern SCIRun::Mutex xlock;
   
 struct MIPVMCell {
@@ -515,6 +515,12 @@ void MIPHVB16::parallel_calc_mcell(int)
     }
 }
 
+void 
+MIPHVB16::io(SCIRun::Piostream &str)
+{
+  ASSERTFAIL("Pio for MIPHVB16 not implemented");
+}
+
 void MIPHVB16::compute_bounds(BBox& bbox, double offset)
 {
     bbox.extend(min-Vector(offset,offset,offset));
@@ -887,9 +893,9 @@ void MIPHVB16::brickit(int proc)
     int sx, ex;
     while(work.nextAssignment(sx, ex)){
 	for(int x=sx;x<ex;x++){
-	    io.lock();
+	    io_lock_.lock();
 	    cerr << "processor " << proc << ": " << x << " of " << nx-1 << "\n";
-	    io.unlock();
+	    io_lock_.unlock();
 	    for(int y=0;y<ny;y++){
 		int idx=x*nynz+y*nz;
 		for(int z=0;z<nz;z++){

@@ -108,7 +108,7 @@ void RTRTViewer::execute()
 
   // get the scene
   in_scene_port = (SceneIPort*) get_iport("Scene");
-  SceneHandle handle;
+  SceneContainerHandle handle;
   if(!in_scene_port->get(handle)){
     std::cerr<<"Didn't get a handle\n";
     return;

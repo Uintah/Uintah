@@ -64,6 +64,9 @@ public:
 	      float radius, int nmatls, Material** matls,
 	      string *var_names = 0);
   virtual ~GridSpheres();
+
+  virtual void io(SCIRun::Piostream &stream);
+
   virtual void intersect(const Ray& ray,
 			 HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);

@@ -9,6 +9,16 @@
 #include <math.h>
 
 using namespace rtrt;
+using namespace SCIRun;
+
+Persistent* cycleMaterial_maker() {
+  return new CycleMaterial();
+}
+
+// initialize the static member type_id
+PersistentTypeID CycleMaterial::type_id("CycleMaterial", "Material", 
+					cycleMaterial_maker);
+
 
 CycleMaterial::CycleMaterial()
     : current(0)
@@ -38,3 +48,27 @@ void CycleMaterial::shade(Color& result, const Ray& ray,
 {
   members[current]->shade(result, ray, hit, depth, atten, accumcolor, cx);
 }
+
+const int CYCLEMATERIAL_VERSION = 1;
+
+void 
+CycleMaterial::io(SCIRun::Piostream &str)
+{
+  str.begin_class("CycleMaterial", CYCLEMATERIAL_VERSION);
+  Material::io(str);
+  Pio(str, current);
+  Pio(str, members);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::CycleMaterial*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::CycleMaterial::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::CycleMaterial*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

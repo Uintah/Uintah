@@ -150,3 +150,23 @@ Vector Noise::dnoise(const Vector& p)
     double tmp;
     return dnoise(p, tmp);
 }
+
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& str, rtrt::Noise& obj)
+{
+  str.begin_cheap_delim();
+  Pio(str, obj.tablesize);
+  Pio(str, obj.bitmask);
+
+  if (str.reading()) {
+    // seed is not stored with the class, so hack an int to seed with. 
+    // if we want the same class, we should pio the seed as well.
+    RandomTable r1(obj.tablesize, obj.tablesize+15);
+    obj.noise_tab=r1.random();
+    RandomTable r2(obj.tablesize, obj.tablesize);
+    obj.scramble_tab=r2.scramble();
+  }
+  str.end_cheap_delim();
+}
+} // end namespace SCIRun

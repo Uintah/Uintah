@@ -11,6 +11,7 @@
 #include <iostream>
 
 using namespace rtrt;
+using namespace SCIRun;
 
 // when a ray travels through the medium it loses
 // intensity according to dI = -CI dx where dx is distance
@@ -20,6 +21,14 @@ using namespace rtrt;
 // I(x) = I0 exp(-Cx).  The second implies
 // I0 * extinction = I0 exp(-C) -> -C = log(extinction)
 // Color extinction_constant stores -C for each channel
+
+Persistent* dielectricMaterial_maker() {
+  return new DielectricMaterial();
+}
+
+// initialize the static member type_id
+PersistentTypeID DielectricMaterial::type_id("DielectricMaterial", "Material", 
+					     dielectricMaterial_maker);
 
 DielectricMaterial::DielectricMaterial(double n_in, double n_out, bool nothing_inside) :
     n_in( n_in ), n_out( n_out ), nothing_inside(nothing_inside)
@@ -235,3 +244,34 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
     }
 }
     
+const int DIELECTRICMATERIAL_VERSION = 1;
+
+void 
+DielectricMaterial::io(SCIRun::Piostream &str)
+{
+  str.begin_class("DielectricMaterial", DIELECTRICMATERIAL_VERSION);
+  Material::io(str);
+  Pio(str, R0);
+  Pio(str, n_in);
+  Pio(str, n_out);
+  Pio(str, phong_exponent);
+  Pio(str, extinction_in);
+  Pio(str, extinction_out);
+  Pio(str, extinction_constant_in);
+  Pio(str, extinction_constant_out);
+  Pio(str, nothing_inside);
+  Pio(str, extinction_scale);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::DielectricMaterial*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::DielectricMaterial::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::DielectricMaterial*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

@@ -3,6 +3,8 @@
 #define SCENE_H 1
 
 #include <Core/Thread/WorkQueue.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/Containers/LockingHandle.h>
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array1.h>
@@ -10,6 +12,7 @@
 #include <Packages/rtrt/Core/Plane.h>
 #include <Packages/rtrt/Core/Background.h>
 #include <Packages/rtrt/Core/Shadows/ShadowBase.h>
+#include <Core/Thread/Mutex.h>
 #include <stdio.h>
 
 namespace rtrt {
@@ -27,6 +30,8 @@ class Gui;
 class Material;
 class ShadowBase;
 class Group;
+class Scene;
+
 #if !defined(linux)
 class SoundThread;
 class Sound;
@@ -37,8 +42,11 @@ struct PerProcessorContext;
 
 enum AmbientType { Global_Ambient = 0, Constant_Ambient, Arc_Ambient, 
 		   Sphere_Ambient };
+};
 
-class Scene {
+namespace rtrt {
+
+class Scene : public SCIRun::Persistent {
   
 public:
   Scene(Object*, const Camera&, Image*, Image*, const Color& bgcolor,
@@ -83,6 +91,7 @@ public:
   inline Object* get_shadow_object() const {
     return shadowobj;
   }
+
   void set_object(Object* new_obj); 
   
   inline const Plane& get_groundplane() const {
@@ -219,6 +228,8 @@ public:
   int frameno;
   FILE* frametime_fp;
   double lasttime;
+  int ref_cnt;
+  SCIRun::Mutex lock;
 
   inline bool doHotSpots() const { return hotspots; }
 
@@ -249,6 +260,10 @@ public:
     return shadows[shadow_mode]->lit(hitpos, light, light_dir, dist,
 				     shadow_factor, depth, cx);
   }
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
 
   // public for testing.
   int shadow_mode;
@@ -318,6 +333,8 @@ private:
   Array1<Material*> materials;
 
 }; // end class Scene
+
+typedef SCIRun::LockingHandle<Scene> SceneHandle;
 
 } // end namespace rtrt
 

@@ -13,6 +13,13 @@
 using namespace rtrt;
 using namespace SCIRun;
 
+Persistent* box_maker() {
+  return new Box();
+}
+
+// initialize the static member type_id
+PersistentTypeID Box::type_id("Box", "Object", box_maker);
+
 Box::Box(Material* matl, const Point& min, const Point& max )
     : Object(matl), min(min), max(max)
 {
@@ -154,4 +161,26 @@ void Box::print(ostream& out)
 }
 
 
-  
+const int BOX_VERSION = 1;
+
+void 
+Box::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Box", BOX_VERSION);
+  Object::io(str);
+  Pio(str, min);
+  Pio(str, max);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Box*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Box::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Box*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

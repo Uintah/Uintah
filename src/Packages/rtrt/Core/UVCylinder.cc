@@ -10,10 +10,21 @@
 
 using namespace rtrt;
 
+SCIRun::Persistent* uvc_maker() {
+  return new UVCylinder();
+}
+
+// initialize the static member type_id
+SCIRun::PersistentTypeID UVCylinder::type_id("UVCylinder", "UVMapping", 
+					     uvc_maker);
+
 UVCylinder::UVCylinder(Material* matl, const Point& bottom, const Point& top,
-		   double radius)
-    : Object(matl,this), bottom(bottom), top(top), radius(radius), 
-    tex_scale(Vector(1,1,1))
+		   double radius) : 
+  Object(matl,this), 
+  top(top), 
+  bottom(bottom), 
+  radius(radius), 
+  tex_scale(Vector(1,1,1))
 {
 }
 
@@ -115,3 +126,32 @@ void UVCylinder::uv(UV &uv, const Point &p, const HitInfo &hit)
     double theta = acos(xp.x());
     uv.set((theta/6.283185)/tex_scale.x(),xp.z()/tex_scale.y());
 }
+
+const int UVCYLINDER_VERSION = 1;
+
+void 
+UVCylinder::io(SCIRun::Piostream &str)
+{
+  str.begin_class("UVCylinder", UVCYLINDER_VERSION);
+  Object::io(str);
+  UVMapping::io(str);
+  Pio(str, top);
+  Pio(str, bottom);
+  Pio(str, radius);
+  Pio(str, tex_scale);
+  Pio(str, xform);
+  Pio(str, ixform);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::UVCylinder*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::UVCylinder::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::UVCylinder*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

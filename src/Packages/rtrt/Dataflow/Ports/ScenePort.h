@@ -35,10 +35,10 @@ namespace rtrt {
     static PersistentTypeID type_id;
   };
 
-  typedef LockingHandle<SceneContainer> SceneHandle;
+  typedef LockingHandle<SceneContainer> SceneContainerHandle;
 
-  typedef SimpleIPort<SceneHandle> SceneIPort;
-  typedef SimpleOPort<SceneHandle> SceneOPort;
+  typedef SimpleIPort<SceneContainerHandle> SceneIPort;
+  typedef SimpleOPort<SceneContainerHandle> SceneOPort;
 
 } // end namespace rtrt
 

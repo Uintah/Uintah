@@ -7,26 +7,41 @@
 #include <Core/Geometry/Point.h>
 
 namespace rtrt {
+class Parallelogram;
+}
+namespace SCIRun {
+void Pio(Piostream&, rtrt::Parallelogram*&);
+}
+
+namespace rtrt {
 
 class Parallelogram : public Object, public UVMapping {
-    Point anchor;
-    Vector u,v;
-    Vector n;
-    double d;
-    double d1;
-    double d2;
-    Vector un, vn;
-    double du, dv;
+  Point anchor;
+  Vector u,v;
+  Vector n;
+  double d;
+  double d1;
+  double d2;
+  Vector un, vn;
+  double du, dv;
 public:
-    Parallelogram(Material* matl, const Point& cen, const Vector& u, const Vector& v);
-    virtual ~Parallelogram();
-    virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
-			   PerProcessorContext*);
+  Parallelogram() : Object(0), UVMapping() {}
+  Parallelogram(Material* matl, const Point& cen, const Vector& u, 
+		const Vector& v);
+  virtual ~Parallelogram();
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, Parallelogram*&);
+
+  virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+			 PerProcessorContext*);
   virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
 			       DepthStats* st, PerProcessorContext* ppc);
-    virtual Vector normal(const Point&, const HitInfo& hit);
-    virtual void uv(UV& uv, const Point&, const HitInfo& hit);
-    virtual void compute_bounds(BBox&, double offset);
+  virtual Vector normal(const Point&, const HitInfo& hit);
+  virtual void uv(UV& uv, const Point&, const HitInfo& hit);
+  virtual void compute_bounds(BBox&, double offset);
 };
 
 } // end namespace rtrt

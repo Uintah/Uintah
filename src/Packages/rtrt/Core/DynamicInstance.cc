@@ -7,6 +7,14 @@
 using namespace rtrt;
 using namespace SCIRun;
 
+Persistent* dynamicinstance_maker() {
+  return new DynamicInstance();
+}
+
+// initialize the static member type_id
+PersistentTypeID DynamicInstance::type_id("DynamicInstance", "Instance", 
+					  dynamicinstance_maker);
+
 DynamicInstance::DynamicInstance(InstanceWrapperObject * obj,
 				 Transform * trans,
 				 const Vector & location ) :
@@ -70,3 +78,28 @@ DynamicInstance::updatePosition( const Stealth * stealth, const Camera * cam )
     }
 
 }
+
+const int DYNAMICINSTANCE_VERSION = 1;
+
+void 
+DynamicInstance::io(SCIRun::Piostream &str)
+{
+  str.begin_class("DynamicInstance", DYNAMICINSTANCE_VERSION);
+  Instance::io(str);
+  Pio(str, origTransform);
+  Pio(str, newTransform);
+  Pio(str, location_);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::DynamicInstance*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::DynamicInstance::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::DynamicInstance*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

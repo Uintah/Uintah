@@ -28,7 +28,7 @@ using namespace std;
 using namespace SCIRun;
 
 namespace rtrt {
-  extern Mutex io;
+  extern Mutex io_lock_;
   extern Mutex xlock;
 
   class HVolumeBrickColorDpy : public Runnable {
@@ -274,9 +274,9 @@ void HVolumeBrickColor::brickit(int proc)
     int sx, ex;
     while(work.nextAssignment(sx, ex)){
 	for(unsigned long x=sx;x<ex;x++){
-	    io.lock();
+	    io_lock_.lock();
 	    cerr << "processor " << proc << ": " << x << " of " << nx-1 << "\n";
-	    io.unlock();
+	    io_lock_.unlock();
 	    for(int y=0;y<ny;y++){
 		unsigned long idx=x*nynz*3+y*nz*3;
 		for(int z=0;z<nz;z++){

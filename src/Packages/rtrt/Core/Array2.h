@@ -14,7 +14,13 @@
 #ifndef Package_rtrt_Core_Array2_h
 #define Package_rtrt_Core_Array2_h 1
 
+#include <sci_config.h>
+
 namespace rtrt {
+template<class T> class Array2;
+template<class T> void Pio(SCIRun::Piostream& stream, rtrt::Array2<T>& data);
+template<class T> void Pio(SCIRun::Piostream& stream, rtrt::Array2<T>*& data);
+
 
 template<class T>
 class Array2 {
@@ -45,10 +51,17 @@ public:
     return dm1*dm2*sizeof(T);
   }
   void share(const Array2<T>& copy);
+
+
+  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (SCIRun::Piostream&, Array2<T>&);
+  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (SCIRun::Piostream&, Array2<T>*&);
+
 };
+
+} // end namespace rtrt
 
 #include <Packages/rtrt/Core/Array2.cc>
 
-} // end namespace rtrt
+
 
 #endif // Package_rtrt_Core_Array2_h

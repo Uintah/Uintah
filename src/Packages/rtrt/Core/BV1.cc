@@ -14,18 +14,40 @@ using SCIRun::Thread;
 using SCIRun::Time;
 
 namespace rtrt {
-  struct BV1Tree {
-    double* slabs;
-    int primStart;
-    BBox bbox;
-    Array1<Object*> prims;
-    ~BV1Tree();
-  };
+struct BV1Tree : public SCIRun::Persistent {
+  double* slabs;
+  int primStart;
+  BBox bbox;
+  Array1<Object*> prims;
+  ~BV1Tree();
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+};
 } // end namespace rtrt
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream&, rtrt::BV1Tree*&);
+}
+
+SCIRun::Persistent* bv1_maker() {
+  return new BV1;
+}
+
+SCIRun::Persistent* bv1tree_maker() {
+  return new BV1Tree;
+}
+
+// initialize the static member type_id
+SCIRun::PersistentTypeID BV1::type_id("BV1", "Object", bv1_maker);
+SCIRun::PersistentTypeID BV1Tree::type_id("BV1Tree", "Persistent", 
+					  bv1tree_maker);
+
+
 
 BV1Tree::~BV1Tree()
 {
-    delete slabs;
+  delete[] slabs;
 }
 
 BV1::BV1(Object* obj)
@@ -722,3 +744,55 @@ void BV1::multi_light_intersect(Light* light, const Point& orig,
     }    
 }
 
+
+const int BV1_VERSION = 1;
+const int BV1TREE_VERSION = 1;
+
+void 
+BV1::io(SCIRun::Piostream &str)
+{
+  str.begin_class("BV1", BV1_VERSION);
+  Object::io(str);
+  Pio(str, obj);
+  Pio(str, normal_tree);
+  Pio(str, light_tree);
+  str.end_class();
+}
+
+void BV1Tree::io(SCIRun::Piostream& str)
+{
+  str.begin_class("BV1Tree", BV1TREE_VERSION);
+  Pio(str, primStart);
+  Pio(str, bbox);
+  Pio(str, prims);
+  if (str.reading()) {
+    slabs = new double[6*(2*prims.size()-1)];
+  }
+
+  for (int i=0; i < 6*(2*prims.size()-1); i++)
+  {
+    Pio(str, slabs[i]);
+  }
+  str.end_class();
+}
+
+namespace SCIRun {
+
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::BV1Tree*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::BV1Tree::type_id);
+  if(stream.reading())
+    obj=(rtrt::BV1Tree*)pobj;
+}
+
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::BV1*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::BV1::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::BV1*>(pobj);
+    ASSERT(obj != 0);
+  }
+}
+} // end namespace SCIRun

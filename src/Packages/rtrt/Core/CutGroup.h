@@ -31,49 +31,52 @@ namespace rtrt {
 //conflicts.
 
 class CutGroup : public Group, public Material {
-    double d;
-    CutPlaneDpy* dpy;
-    bool on;
+  double d;
+  CutPlaneDpy* dpy;
+  bool on;
 public:
-    Vector n;
-    CutGroup(const Vector& n, const Point& cen);
-    CutGroup(CutPlaneDpy *dpy);
+  Vector n;
+  CutGroup(const Vector& n, const Point& cen);
+  CutGroup(CutPlaneDpy *dpy);
 
-    virtual ~CutGroup();
-    virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
-			   PerProcessorContext*);
-    virtual void sub_intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
-			   PerProcessorContext*);
-    virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
-				 DepthStats* st, PerProcessorContext* ppc);
-    virtual void softshadow_intersect(Light* light, const Ray& ray, HitInfo& hit,
-				      double dist, Color& atten, DepthStats* st,
-				      PerProcessorContext* ppc);
+  virtual ~CutGroup();
+
+  virtual void io(SCIRun::Piostream &stream);
+
+  virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+			 PerProcessorContext*);
+  virtual void sub_intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+			     PerProcessorContext*);
+  virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+			       DepthStats* st, PerProcessorContext* ppc);
+  virtual void softshadow_intersect(Light* light, const Ray& ray, HitInfo& hit,
+				    double dist, Color& atten, DepthStats* st,
+				    PerProcessorContext* ppc);
     
-    virtual void multi_light_intersect(Light* light, const Point& orig,
-				       const Array1<Vector>& dirs,
-				       const Array1<Color>& attens,
-				       double dist,
-				       DepthStats* st, PerProcessorContext* ppc);
-    virtual void animate(double t, bool& changed);
-    virtual void collect_prims(Array1<Object*>& prims);
-    virtual void toggleOn() { 
-      on = !on; 
-      if (dpy) {
-	dpy->on = on; 
-	dpy->redisplay();
-      }
-    };
+  virtual void multi_light_intersect(Light* light, const Point& orig,
+				     const Array1<Vector>& dirs,
+				     const Array1<Color>& attens,
+				     double dist,
+				     DepthStats* st, PerProcessorContext* ppc);
+  virtual void animate(double t, bool& changed);
+  virtual void collect_prims(Array1<Object*>& prims);
+  virtual void toggleOn() { 
+    on = !on; 
+    if (dpy) {
+      dpy->on = on; 
+      dpy->redisplay();
+    }
+  };
 
-    virtual bool interior_value(double& ret_val, const Ray &ref, const double t);
+  virtual bool interior_value(double& ret_val, const Ray &ref, const double t);
 
 
-    virtual void shade(Color& result, const Ray& ray,
-		       const HitInfo& hit, int depth,
-		       double atten, const Color& accumcolor,
-		       Context* cx);
+  virtual void shade(Color& result, const Ray& ray,
+		     const HitInfo& hit, int depth,
+		     double atten, const Color& accumcolor,
+		     Context* cx);
 
-    virtual Vector normal(const Point&, const HitInfo& hit);
+  virtual Vector normal(const Point&, const HitInfo& hit);
 };
 
 

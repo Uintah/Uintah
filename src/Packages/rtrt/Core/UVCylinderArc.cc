@@ -10,11 +10,23 @@
 #include <math.h>
 
 using namespace rtrt;
+SCIRun::Persistent* uvca_maker() {
+  return new UVCylinderArc();
+}
 
-UVCylinderArc::UVCylinderArc(Material* matl, const Point& bottom, const Point& top,
-		   double radius)
-    : Object(matl,this), bottom(bottom), top(top), radius(radius), 
-    theta0(0), theta1(3.141593), tex_scale(Vector(1,1,1))
+// initialize the static member type_id
+SCIRun::PersistentTypeID UVCylinderArc::type_id("UVCylinderArc", "UVMapping", 
+						uvca_maker);
+
+UVCylinderArc::UVCylinderArc(Material* matl, const Point& bottom, 
+			     const Point& top, double radius) : 
+  Object(matl,this), 
+  top(top), 
+  bottom(bottom), 
+  radius(radius), 
+  theta0(0), 
+  theta1(3.141593), 
+  tex_scale(Vector(1,1,1))
 {
 }
 
@@ -115,7 +127,8 @@ void UVCylinderArc::compute_bounds(BBox& bbox, double offset)
 
 void UVCylinderArc::print(ostream& out)
 {
-    out << "UVCylinderArc: top=" << top << ", bottom=" << bottom << ", radius=" << radius << '\n';
+    out << "UVCylinderArc: top=" << top << ", bottom=" << bottom 
+	<< ", radius=" << radius << '\n';
 }
 
 void UVCylinderArc::uv(UV &uv, const Point &p, const HitInfo &hit)
@@ -125,3 +138,32 @@ void UVCylinderArc::uv(UV &uv, const Point &p, const HitInfo &hit)
     uv.set((theta/6.283185)/tex_scale.x(),
            xp.z()/tex_scale.y());
 }
+
+const int UVCYLINDERARC_VERSION = 1;
+
+void 
+UVCylinderArc::io(SCIRun::Piostream &str)
+{
+  str.begin_class("UVCylinderArc", UVCYLINDERARC_VERSION);
+  Object::io(str);
+  UVMapping::io(str);
+  Pio(str, top);
+  Pio(str, bottom);
+  Pio(str, radius);
+  Pio(str, tex_scale);
+  Pio(str, xform);
+  Pio(str, ixform);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::UVCylinderArc*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::UVCylinderArc::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::UVCylinderArc*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

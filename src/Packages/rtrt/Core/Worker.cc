@@ -41,14 +41,14 @@ using std::endl;
 
 extern void run_gl_test();
 
-extern Mutex io;
+extern Mutex io_lock_;
 
 #define CSCALE 5.e3
 /*#define CMAP(t) Color(t*CSCALE,0,1-(t)*CSCALE)*/
 #define CMAP(t) Color(t*CSCALE,t*CSCALE,t*CSCALE)
 
 namespace rtrt {
-  extern Mutex io;
+  extern Mutex io_lock_;
   
 } // end namespace rtrt
 
@@ -98,9 +98,9 @@ extern float Galpha;
 void Worker::run()
 {
 #if 0
-  io.lock();
+  io_lock_.lock();
   cerr << "worker pid " << getpid() << '\n';
-  io.unlock();
+  io_lock_.unlock();
 #endif
   if (scene->get_rtrt_engine()->worker_run_gl_test)
     run_gl_test();
@@ -112,9 +112,9 @@ void Worker::run()
 #if 0
   int np=Thread::numProcessors();
   int p=(50+num)%np;
-  io.lock();
+  io_lock_.lock();
   cerr << "Mustrun: " << p << "(pid=" << getpid() << ")\n";
-  io.unlock();
+  io_lock_.unlock();
   if(sysmp(MP_MUSTRUN, p) == -1){
     perror("sysmp - MP_MUSTRUN");
   }
@@ -393,9 +393,9 @@ void Worker::run()
 	slopstart = chunksize*chunki*np;
 	totslop = scene->get_rtrt_engine()->NUMCHUNKS*chunksize - np*chunki*chunksize;
 	if (!num) {
-	  io.lock();
+	  io_lock_.lock();
 	  cerr<< "Slop: " << slopstart << " " << totslop << endl;
-	  io.unlock();
+	  io_lock_.unlock();
 	}
 	  
 	// just do pixel interleaving of this stuff...
@@ -408,7 +408,7 @@ void Worker::run()
 	
       if (scene->get_rtrt_engine()->shuffleClusters) {
 	  
-	io.lock();
+	io_lock_.lock();
 	for(int jj=0;jj<chunkorder.size();jj++) {
 	  int swappos = drand48()*chunkorder.size();
 	  if (swappos == chunki) {
@@ -423,7 +423,7 @@ void Worker::run()
 	  chunksizes[swappos] = chunksizes[jj];
 	  chunksizes[jj] = tmp;
 	}
-	io.unlock();
+	io_lock_.unlock();
       }
 #endif
 	
@@ -447,9 +447,9 @@ void Worker::run()
 	
       // force the tables to be built for hilbert...
 	
-      io.lock();
+      io_lock_.lock();
       hilbert_i2c(2,bits,0,coords);
-      io.unlock();
+      io_lock_.unlock();
 #if 0	
       Pixel procColor;
 	
@@ -462,7 +462,7 @@ void Worker::run()
 	
       // the chunks should really be permuted...
 	
-      //io.lock();
+      //io_lock_.lock();
       for(int chnk=0;chnk<chunki;chnk++) {
 	  
 	basei = num*chunksize + chunkorder[chnk]*chunksize*np;
@@ -479,7 +479,7 @@ void Worker::run()
 	  }
 	}
       }
-      //io.unlock();
+      //io_lock_.unlock();
 #if 1
       if (totslop) {
 	int pos = slopstart + num;
@@ -528,7 +528,7 @@ void Worker::run()
       // need to add clusters for the slop...
 
       if (scene->get_rtrt_engine()->shuffleClusters) {
-	io.lock(); // drand48 isn't thread safe...
+	io_lock_.lock(); // drand48 isn't thread safe...
 	for(int i=0;i<myintervals.size();i++) {
 	  int swappos = drand48()*myintervals.size();
 	  if (swappos != i) {
@@ -541,7 +541,7 @@ void Worker::run()
 	    mysizes[swappos] = tmp;
 	  }
 	}
-	io.unlock();
+	io_lock_.unlock();
       }
 
       xpos.resize(iperproc*clusterSize);
@@ -549,7 +549,7 @@ void Worker::run()
 
       int pi=0;
 
-      io.lock();
+      io_lock_.lock();
       for(int chunk = 0;chunk<myintervals.size();chunk++) {
 	int yp = myintervals[chunk]/xres;
 	int xp = myintervals[chunk]-yp*xres;
@@ -585,7 +585,7 @@ void Worker::run()
 	}
 
       }
-      io.unlock();
+      io_lock_.unlock();
       nwork = pi;
     }
 	
@@ -643,7 +643,7 @@ void Worker::run()
     jPosY[2] = 0.5/sampY;
     jPosY[3] = 0.5/sampY;
 
-    io.lock(); // compute jittered offsets now...
+    io_lock_.lock(); // compute jittered offsets now...
 
     for(int ii=0;ii<110;ii++) {
       double val;
@@ -660,7 +660,7 @@ void Worker::run()
     for(int ii=0;ii<jitterMask.size();ii++)
       jitterMask[ii] = drand48()*100;
 
-    io.unlock();
+    io_lock_.unlock();
 
 #if 1     
     Array1<Color>* clrs[4] = {&lastCa,&lastCb,&lastCc,&lastCd};
@@ -776,13 +776,13 @@ void Worker::run()
 	if (synch_frameless) { // grab a camera...
 #if 1
 	  if (synch_change) {
-	    io.lock();
+	    io_lock_.lock();
 	    cerr << num << " Doing double block!\n";
-	    io.unlock();
+	    io_lock_.unlock();
 	    barrier->wait(dpy->get_num_procs()+1);
-	    io.lock();
+	    io_lock_.lock();
 	    cerr << num << " out of double block!\n";
-	    io.unlock();
+	    io_lock_.unlock();
 	  } // just do 2 of them here...
 #endif
 	  synch_change=0;
@@ -926,13 +926,13 @@ void Worker::run()
 
 	  if (synch_frameless) { // grab a camera...
 	    if (synch_change) {
-	      io.lock();
+	      io_lock_.lock();
 	      cerr << num << " Doing double block!\n";
-	      io.unlock();
+	      io_lock_.unlock();
 	      barrier->wait(dpy->get_num_procs()+1);
-	      io.lock();
+	      io_lock_.lock();
 	      cerr << num << " out of double block!\n";
-	      io.unlock();
+	      io_lock_.unlock();
 	    } // just do 2 of them here...
 
 	    synch_change=0;

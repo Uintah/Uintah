@@ -55,3 +55,15 @@ bool BBox::intersect_nontrivial(const Ray& ray, double &min_t) {
   if (Tnear < min_t) {min_t = Tnear; return true;}
   return false;
 }
+
+namespace SCIRun {
+void 
+Pio(SCIRun::Piostream &str, rtrt::BBox & b)
+{
+  str.begin_cheap_delim();
+  Pio(str, b.cmin);
+  Pio(str, b.cmax);
+  Pio(str, b.have_some);
+  str.end_cheap_delim();
+}
+} // end namespace SCIRun

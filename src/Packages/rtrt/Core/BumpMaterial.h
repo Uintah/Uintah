@@ -11,6 +11,14 @@
 #include <iostream>
 
 namespace rtrt {
+class BumpMaterial;
+}
+
+namespace SCIRun {
+void Pio(Piostream&, rtrt::BumpMaterial*&);
+}
+
+namespace rtrt {
 
 class BumpMaterial : public Material {
   Material *material;
@@ -24,6 +32,14 @@ class BumpMaterial : public Material {
 public:
   BumpMaterial(Material *, char *, double, double bump_scale=1);
   virtual ~BumpMaterial();
+
+  BumpMaterial() : Material() {} // for Pio.
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, BumpMaterial*&);
+
   virtual void shade(Color& result, const Ray& ray,
 		     const HitInfo& hit, int depth,
 		     double atten, const Color& accumcolor,

@@ -15,7 +15,7 @@ using SCIRun::Barrier;
 using SCIRun::ThreadGroup;
 using SCIRun::Thread;
 
-Mutex io("io lock");
+Mutex io_lock_("io lock");
 
 class BPS : public Runnable {
     Barrier* barrier;

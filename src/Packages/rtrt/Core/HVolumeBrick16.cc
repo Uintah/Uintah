@@ -24,7 +24,7 @@ using namespace SCIRun;
 
 
 namespace rtrt {
-  extern SCIRun::Mutex io;
+  extern SCIRun::Mutex io_lock_;
   
   struct VMCell16 {
     float max;
@@ -948,9 +948,9 @@ void HVolumeBrick16::brickit(int proc)
     int sx, ex;
     while(work->nextAssignment(sx, ex)){
 	for(int x=sx;x<ex;x++){
-	    io.lock();
+	    io_lock_.lock();
 	    cerr << "processor " << proc << ": " << x << " of " << nx-1 << "\n";
-	    io.unlock();
+	    io_lock_.unlock();
 	    for(int y=0;y<ny;y++){
 		int idx=x*nynz+y*nz;
 		for(int z=0;z<nz;z++){

@@ -12,7 +12,6 @@ namespace rtrt {
 using SCIRun::WorkQueue;
 
 struct GridTree;
-struct BoundedObject;
 
 class HierarchicalGrid : public Grid {
 

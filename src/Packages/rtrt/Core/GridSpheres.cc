@@ -91,6 +91,12 @@ GridSpheres::~GridSpheres()
 {
 }
 
+void 
+GridSpheres::io(SCIRun::Piostream &str)
+{
+  ASSERTFAIL("Pio for GridSpheres not implemented");
+}
+
 static inline void calc_se(float* p, const BBox& bbox,
 			   const Vector& diag,
 			   float radius,
