@@ -192,6 +192,39 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
     
       {
 	 /*
+	  * computerNodesVisibility
+	  *   in(P.X, P.VOLUME, P.ISBROKEN, P.CRACKSURFACENORMAL)
+	  *   operation(computer the visibility information of particles to the
+	  *             related nodes)
+	  * out(P.VISIBILITY)
+	  */
+	 Task* t = scinew Task("SerialMPM::computerNodesVisibility",
+			    patch, old_dw, new_dw,
+			    this,&SerialMPM::computerNodesVisibility);
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+	    if(mpm_matl->getFractureModel()) {
+  	       t->requires(old_dw, lb->pXLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+	       t->requires(old_dw, lb->pIsBrokenLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+   	       t->requires(old_dw, lb->pCrackSurfaceNormalLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+   	       t->requires(old_dw, lb->pMicrocrackSizeLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+   	       t->requires(old_dw, lb->pVolumeLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+   	    }
+
+	    t->computes(new_dw, lb->pVisibilityLabel, idx, patch );
+	 }
+	 sched->addTask(t);
+      }
+      
+      {
+	 /*
 	  * interpolateParticlesToGrid
 	  *   in(P.MASS, P.VELOCITY, P.NAT_X)
 	  *   operation(interpolate the P.MASS and P.VEL to the grid
@@ -925,6 +958,26 @@ void SerialMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 					      DataWarehouseP&,
 					      DataWarehouseP&)
 {
+}
+
+void SerialMPM::computerNodesVisibility(const ProcessorGroup*,
+					   const Patch* patch,
+					   DataWarehouseP& old_dw,
+					   DataWarehouseP& new_dw)
+{
+  int numMatls = d_sharedState->getNumMatls();
+
+  for(int m = 0; m < numMatls; m++)
+  {
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl) {
+      if(mpm_matl->getFractureModel()) {
+        mpm_matl->getFractureModel()->computerNodesVisibility(
+	  patch, mpm_matl, old_dw, new_dw);
+      }
+    }
+  }
 }
 
 void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
@@ -1794,6 +1847,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.137  2000/09/09 19:34:11  tan
+// Added MPMLabel::pVisibilityLabel and SerialMPM::computerNodesVisibility().
+//
 // Revision 1.136  2000/09/08 22:54:02  guilkey
 // Fixed an error with interpolateParticlesForSaving.
 //

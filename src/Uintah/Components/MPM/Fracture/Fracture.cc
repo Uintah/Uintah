@@ -1,6 +1,7 @@
 #include "Fracture.h"
 
 #include "ParticlesNeighbor.h"
+#include "Visibility.h"
 
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 
@@ -145,6 +146,64 @@ Fracture(ProblemSpecP& ps)
   lb = scinew MPMLabel();
 }
 
+void Fracture::computerNodesVisibility(const Patch* patch,
+                  MPMMaterial* mpm_matl, 
+		  DataWarehouseP& old_dw, 
+		  DataWarehouseP& new_dw)
+{
+  int matlindex = mpm_matl->getDWIndex();
+  int vfindex = mpm_matl->getVFIndex();
+
+  // Create arrays for the particle data
+  ParticleVariable<Point>  pX;
+  ParticleVariable<Vector> pCrackSurfaceNormal;
+  ParticleVariable<double> pMicrocrackSize;
+  ParticleVariable<int>    pIsBroken;
+  ParticleVariable<double> pVolume;
+
+  ParticleSubset* outsidePset = old_dw->getParticleSubset(matlindex, patch,
+	Ghost::AroundNodes, 1, lb->pXLabel);
+
+  old_dw->get(pX,             lb->pXLabel, outsidePset);
+  old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, outsidePset);
+  old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, outsidePset);
+  old_dw->get(pIsBroken, lb->pIsBrokenLabel, outsidePset);
+  old_dw->get(pVolume, lb->pVolumeLabel, outsidePset);
+
+  ParticleVariable<int>    pVisibility;
+  ParticleSubset* insidePset = old_dw->getParticleSubset(matlindex, patch);
+  new_dw->allocate(pVisibility, lb->pVisibilityLabel, insidePset);
+
+  Lattice lattice(pX);
+  ParticlesNeighbor particles( pX,
+                               pVolume,
+			       pIsBroken,
+			       pCrackSurfaceNormal,
+			       pMicrocrackSize);
+  IntVector cellIdx;
+  IntVector nodeIdx[8];
+  
+  for(ParticleSubset::iterator iter = insidePset->begin();
+          iter != insidePset->end(); iter++)
+  {
+    particleIndex pIdx = *iter;
+    patch->findCell(pX[pIdx],cellIdx);
+    particles.clear();
+    particles.buildIn(cellIdx,lattice);
+    
+    patch->findNodesFromCell(cellIdx,nodeIdx);
+    Visibility vis;
+    for(int i=0;i<8;++i) {
+      if( particles.visible( pX[pIdx],patch->nodePosition(nodeIdx[i]) ) )
+         vis.setVisible(i);
+      else vis.setUnvisible(i);
+    }
+    pVisibility[pIdx] = vis.flag();
+  }
+  
+  new_dw->put(pVisibility, lb->pVisibilityLabel);
+}
+
 Fracture::~Fracture()
 {
 }
@@ -153,6 +212,9 @@ Fracture::~Fracture()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.38  2000/09/09 19:34:16  tan
+// Added MPMLabel::pVisibilityLabel and SerialMPM::computerNodesVisibility().
+//
 // Revision 1.37  2000/09/08 20:28:02  tan
 // Added visibility calculation to fracture broken cell shape function
 // interpolation.
