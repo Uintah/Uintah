@@ -1,4 +1,4 @@
-puts "NetworkEditor.tcl start"
+#puts "NetworkEditor.tcl start"
 
 source $PSECoreTCL/defaults.tcl
 source $PSECoreTCL/devices.tcl
@@ -124,6 +124,7 @@ proc makeNetworkEditor {} {
 	    -yscrollcommand ".top.errorFrame.s set" -height 10 -width 180 
     .top.errorFrame.text insert end "Messages:\n"
     .top.errorFrame.text insert end "--------\n\n"
+    .top.errorFrame.text tag configure errtag -foreground red
 
 # Why on earth was this here?
 #    .top.errorFrame.text configure -state disabled
@@ -285,11 +286,11 @@ proc removeSpaces { str } {
 
 proc createCategoryMenu {} {
 
-  puts "Building Module Menus..."
+#  puts "Building Module Menus..."
 
   foreach package [netedit packageNames] {
     set packageToken [removeSpaces "menu_$package"]
-    puts "  $package -> $packageToken"
+#    puts "  $package -> $packageToken"
 
     # Add the cascade button and menu for the package to the menu bar
 
@@ -306,7 +307,7 @@ proc createCategoryMenu {} {
 
     foreach category [netedit categoryNames $package] {
       set categoryToken [removeSpaces "menu_${package}_$category"]
-      puts "    $category -> $categoryToken"
+#      puts "    $category -> $categoryToken"
 
       # Add the category to the menu bar menu
 
@@ -322,7 +323,7 @@ proc createCategoryMenu {} {
 
       foreach module [netedit moduleNames $package $category] {
         set moduleToken [removeSpaces $module]
-        puts "      $module -> $moduleToken"
+#        puts "      $module -> $moduleToken"
 
         # Add a button for each module to the menu bar category menu and the
         # right-button menu
@@ -604,3 +605,8 @@ proc infoCancel {w} {
     destroy $w
 } 
 
+proc createAlias {fromPackage fromCategory fromModule toPackage toCategory toModule} {
+    set fromClassName [removeSpaces "${fromPackage}_${fromCategory}_${fromModule}"]
+    set toClassName [removeSpaces "${toPackage}_${toCategory}_${toModule}"]
+    itcl_class $toClassName "inherit $fromClassName"
+}
