@@ -134,7 +134,7 @@ public:
   void get_center(Point &result, Cell::index_type idx) const;
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(Node::index_type idx) const { return 0.0; }
+  double get_size(Node::index_type /*idx*/) const { return 0.0; }
   double get_size(Edge::index_type idx) const 
   {
     Node::array_type arr;
@@ -173,15 +173,15 @@ public:
   double get_area(Face::index_type idx) const   { return get_size(idx); };
   double get_volume(Cell::index_type idx) const { return get_size(idx); };
 
-  int get_valence(Node::index_type idx) const
+  unsigned int get_valence(Node::index_type idx) const
   {
     Node::array_type nodes;
     get_neighbors(nodes, idx);
     return nodes.size();
   }
-  int get_valence(Edge::index_type idx) const { return 0; }
-  int get_valence(Face::index_type idx) const { return 0; }
-  int get_valence(Cell::index_type idx) const { return 0; }
+  unsigned int get_valence(Edge::index_type idx) const { return 0; }
+  unsigned int get_valence(Face::index_type idx) const { return 0; }
+  unsigned int get_valence(Cell::index_type idx) const { return 0; }
 
   //! returns false if point is out of range.
   bool locate(Node::index_type &loc, const Point &p);
