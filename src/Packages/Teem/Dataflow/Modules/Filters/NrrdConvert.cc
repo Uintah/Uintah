@@ -33,7 +33,6 @@
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 
 #include <iostream>
-using std::cerr;
 using std::endl;
 #include <stdio.h>
 
@@ -105,12 +104,12 @@ NrrdConvert::execute()
 
   Nrrd *nin = nrrdH->nrrd;
   Nrrd *nout = nrrdNew();
-  cerr << "New type is "<<type<<endl;
+  msgStream_ << "New type is "<<type<<endl;
 
   if (nrrdConvert(nout, nin, type)) {
     char *err = biffGetDone(NRRD);
-    fprintf(stderr, "NrrdResample: trouble resampling:\n%s\n", err);
-    cerr << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+    error(string("Trouble resampling: ") + err);
+    msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
     free(err);
   }
 

@@ -85,7 +85,7 @@ void NrrdWriter::execute()
 
   if (nrrdSave(strdup(fn.c_str()), handle->nrrd, 0)) {
     char *err = biffGetDone(NRRD);      
-    cerr << "Error writing nrrd " << fn << ": " << err << "\n";
+    error("Write error on '" + fn + "': " + err);
     free(err);
     return;
   }

@@ -33,7 +33,6 @@
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 
 #include <iostream>
-using std::cerr;
 using std::endl;
 #include <stdio.h>
 
@@ -83,7 +82,7 @@ int NrrdPermute::valid_data(int* axes) {
     if (axes[a]>=0 && axes[a]<=2 && !exists[a])
       exists[a]=1;
     else {
-      cerr << "Error - bad axis assignments!\n";
+      error("Bad axis assignments!");
       return 0;
     }
   }
@@ -137,7 +136,8 @@ NrrdPermute::execute()
 
   Nrrd *nin = nrrdH->nrrd;
   Nrrd *nout = nrrdNew();
-  cerr << "Permuting: 0->"<<axes[0]<<" 1->"<<axes[1]<<" 2->"<<axes[2]<<endl;
+  msgStream_ << "Permuting: 0->"<<axes[0]<<" 1->"<<
+    axes[1]<<" 2->"<<axes[2]<<endl;
 
   nrrdPermuteAxes(nout, nin, axes);
   NrrdData *nrrd = scinew NrrdData;

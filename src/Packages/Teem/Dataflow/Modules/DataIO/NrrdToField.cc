@@ -35,9 +35,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
-using std::cerr;
-using std::endl;
-
 namespace SCITeem {
 
 using namespace SCIRun;
@@ -100,13 +97,13 @@ void NrrdToField::execute()
 
   if (n->dim == 4) {  // vector or tensor data
     if (n->type != nrrdTypeFloat) {
-      cerr << "Error - tensor nrrd's must be floats.\n";
+      error("Tensor nrrd's must be floats.");
       return;
     }
     // matrix, x, y, z
     if (n->axis[0].size == 7) {
       if (n->type != nrrdTypeFloat) {
-	cerr << "Error - NrrdToField can only convert float data for tensors.\n";
+	error("Can only convert float data for tensors.");
 	return;
       }
       // the Nrrd assumed samples at nodes and gave min/max accordingly
@@ -135,14 +132,14 @@ void NrrdToField::execute()
       fieldH = f;      
       ofield->send(fieldH);
     } else {
-      cerr << "Error - 4D nrrd must have 7 entries per channel (1st dim).\n";
+      error("4D nrrd must have 7 entries per channel (1st dim).");
     }
     return;
   }
 
   if (n->dim != 3) {
-    cerr << "NrrdToField error: nrrd->dim="<<n->dim<<"\n";
-    cerr << "  Can only deal with 3-dimensional scalar fields... sorry.\n";
+    msgStream_ << "NrrdToField error: nrrd->dim="<<n->dim<<"\n";
+    error("Can only deal with 3-dimensional scalar fields.");
     return;
   }
   int nx = n->axis[0].size;
@@ -178,7 +175,7 @@ void NrrdToField::execute()
   } else if (n->type == nrrdTypeDouble) {
     COPY_INTO_FIELD_FROM_NRRD(double, dataat);
   } else {
-    cerr << "NrrdToField error - Unrecognized nrrd type.\n";
+    error("Unrecognized nrrd type.");
     return;
   }
   
