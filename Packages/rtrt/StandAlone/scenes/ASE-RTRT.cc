@@ -245,13 +245,17 @@ extern "C" Scene *make_scene(int argc, char** argv, int)
   Group *all = new Group();
   ConvertASEFileToRTRTObject(infile,all);
 
-  // switch the roof texture with a cycle texture
+  // switch the roof texture with a cycle texture (material 5)
   CycleMaterial *cm = new CycleMaterial();
   cm->members.add(ase_matls[5]);            
   cm->members.add(new InvisibleMaterial);
   cm->members.add(new PhongMaterial(Color(.5,.5,.5),.3,
                                     .3,400,true));
   ase_matls[5] = cm;
+
+  // polish the entrance marble floors
+  for (unsigned loop=53; loop<62; ++loop)
+    ((ImageMaterial*)ase_matls[loop])->set_refl(.8);
                   
   Camera cam(Point(1,0,0), Point(0,0,0),
              Vector(0,0,1), 40);
