@@ -7,7 +7,10 @@
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/GridSpheresDpy.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace rtrt {
 using std::string;
@@ -17,6 +20,7 @@ struct BoundedObject;
 struct MCell;
 
 class GridSpheres : public Object, public Material {
+protected:
   float* spheres;
   int* counts;
   int* cells;
