@@ -64,8 +64,6 @@ WARNING
       
    class DataWarehouse : public RefCounted {
 
-     friend class DWMpiHandler;
-     
    public:
       virtual ~DataWarehouse();
       
@@ -73,7 +71,7 @@ WARNING
       
       virtual void setGrid(const GridP&)=0;
 
-      virtual bool exists(const VarLabel*, int matlIndex, const Patch*) = 0;
+      virtual bool exists(const VarLabel*, int matlIndex, const Patch*) const =0;
       
       // Reduction Variables
       virtual void allocate(ReductionVariableBase&, const VarLabel*) = 0;
@@ -159,22 +157,6 @@ WARNING
       virtual void deleteParticles(ParticleSubset* delset) = 0;
 
       //////////
-      // When the Scheduler determines that another MPI node will be
-      // creating a piece of data (ie: a sibling DataWarehouse will have
-      // this data), it uses this procedure to let this DataWarehouse
-      // know which mpiNode has the data so that if this DataWarehouse
-      // needs the data, it will know who to ask for it.
-      virtual void registerOwnership( const VarLabel * label,
-				      const Patch   * patch,
-				            int        mpiNode ) = 0;
-      //////////
-      // Searches through the list containing which DataWarehouse's
-      // have which data to find the mpiNode that the requested
-      // variable (in the given patch) is on.
-      virtual int findMpiNode( const VarLabel * label,
-			       const Patch   * patch ) = 0;
-
-      //////////
       // Adds a variable to the save set
       virtual void pleaseSave(const VarLabel* label, int number) = 0;
        
@@ -220,6 +202,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.39  2000/09/26 21:40:54  dav
+// made exists() const, removed registerOwnership and findMpiNode as they are not used anymore
+//
 // Revision 1.38  2000/08/23 22:51:42  dav
 // Made d_generation a const
 //
