@@ -8,7 +8,7 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 
 SRCS := $(SRCDIR)/sus.cc
 
-ifeq ($(CC),newxlc)
+ifeq ($(CC),newmpxlc)
 AIX_LIBS := \
         Core/Datatypes    \
         Dataflow/Comm     \
@@ -61,7 +61,7 @@ else
         $(AIX_LIBS)
 endif
 
-ifeq ($(CC),newxlc)
+ifeq ($(CC),newmpxlc)
 LIBS := \
         -L$(TCL_LIB_DIR) $(TCL_LIB_FLAG) $(TK_LIB_FLAG) $(ITCL_LIB_FLAG) \
         $(ITK_LIB_FLAG) $(BLT_LIB_FLAG) \
@@ -71,6 +71,7 @@ LIBS := \
         $(THREAD_LIBS) \
         $(FLIBS) \
         $(MPI_LIBRARY) \
+        $(PETSC_LIBS) \
         -lld -lm
 else
 LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(FLIBS) \
