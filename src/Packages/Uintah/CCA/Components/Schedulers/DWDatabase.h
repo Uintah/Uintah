@@ -118,7 +118,7 @@ private:
       int count;
    };
 
-   typedef map<const int, DomainRecord*> domainDBtype;
+   typedef map<int, DomainRecord*> domainDBtype;
    struct NameRecord {
       const VarLabel* label;
       domainDBtype domains;
