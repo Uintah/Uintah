@@ -606,16 +606,12 @@ void ParallelVQ::mergeClusters(int proc) {
   if (proc==0)
     nnt[idx1].update=true;
 
-  barrier->wait(nt);
-
   for (int i=cb_start; i<cb_end; i++) {
     if (nnt[i].nearest==idx1 || nnt[i].nearest==idx2)
       nnt[i].update=true;
     else
       nnt[i].update=false;
   }
-
-  barrier->wait(nt);
 
   // Join nearest clusters
   if (proc==0) {
@@ -626,10 +622,8 @@ void ParallelVQ::mergeClusters(int proc) {
     delete [] centroid;
   }
 
-  barrier->wait(nt);
-
   // Adjust vector-cluster mappings
-  for (int i=cb_start; i<vec_end; i++) {
+  for (int i=vec_start; i<vec_end; i++) {
     if (index[i]==idx2)
       index[i]=idx1;
   }
@@ -640,8 +634,6 @@ void ParallelVQ::mergeClusters(int proc) {
     cout<<endl;
   }
   
-  barrier->wait(nt);
-
   // Fill empty position in codebook
   if (idx2!=last) {
     if (proc==0) {
@@ -655,8 +647,6 @@ void ParallelVQ::mergeClusters(int proc) {
       nnt[idx2]=nnt[last];
     }
 
-    barrier->wait(nt);
-
     // Update nearest neighbor table
     for (int i=cb_start; i<cb_end; i++) {
       if (nnt[i].nearest==last)
@@ -669,8 +659,6 @@ void ParallelVQ::mergeClusters(int proc) {
 	index[i]=idx2;
     }
   }
-
-  barrier->wait(nt);
 
   // Decrement codebook size
   if (proc==0)
@@ -693,8 +681,6 @@ void ParallelVQ::mergeClusters(int proc) {
       nnt[i].update=false;
     }
   }
-
-  barrier->wait(nt);
 }
 
 void ParallelVQ::range(int rank, int total, int* start, int* end) {
