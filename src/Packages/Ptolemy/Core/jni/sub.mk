@@ -43,6 +43,8 @@ SRCDIR   := Packages/Ptolemy/Core/jni
 
 SRCS     += \
             $(SRCDIR)/JNIUtil.cc \
+            $(SRCDIR)/VergilWrapper.cc \
+
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Core/Persistent \
@@ -54,8 +56,9 @@ PSELIBS := Core/Datatypes Core/Persistent \
 JAVA_LIB := $(JAVA_PATH)/jre/lib/i386
 JAVA_INC := $(JAVA_PATH)/include
 
-LDFLAGS += \
-           -L$(JAVA_LIB) \
+SOFLAGS := \
+           -shared -L$(LIBDIR) $(CFLAGS) \
+#           -L$(JAVA_LIB) \
            -L$(JAVA_LIB)/client \
            -ljava \
            -ljvm \
@@ -66,8 +69,6 @@ LDFLAGS += \
 INCLUDES += \
             -I$(JAVA_INC) \
             -I$(JAVA_INC)/linux
-
-CFLAGS += -MD
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

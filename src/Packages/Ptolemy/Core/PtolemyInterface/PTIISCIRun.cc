@@ -84,7 +84,6 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
 //  mostly copied from main.cc
 void StartSCIRun::run()
 {
-  //env->MonitorEnter(obj);
     std::cerr << "StartSCIRun::run()" << std::endl;
 
     char* argv[2];
@@ -112,14 +111,14 @@ void StartSCIRun::run()
     gui = new TCLInterface();
 
     // Create initial network
-    //packageDB = new PackageDB(gui);
-    packageDB = new PackageDB(0);
+    packageDB = new PackageDB(gui);
+    //packageDB = new PackageDB(0);
     Network* net=new Network();
     Scheduler* sched_task=new Scheduler(net);
     new NetworkEditor(net, gui);
 
-    gui->execute("wm withdraw ."); // used by SCIRun2 Dataflow Component Model
-    packageDB->setGui(gui);
+    //gui->execute("wm withdraw ."); // used by SCIRun2 Dataflow Component Model
+    //packageDB->setGui(gui);
 
     // If the user doesnt have a .scirunrc file, provide them with a default one
     if (!find_and_parse_scirunrc()) show_license_and_copy_scirunrc(gui);
@@ -144,25 +143,24 @@ void StartSCIRun::run()
     // Now activate the TCL event loop
     tcl_task->release_mainloop();
 
-    //sem_test->up();
     JNIUtils::sem().up();
-                                                                                              
-#ifdef _WIN32
-  // windows has a semantic problem with atexit(), so we wait here instead.
-  HANDLE forever = CreateSemaphore(0,0,1,"forever");
-  WaitForSingleObject(forever,INFINITE);
+
+#if 0
+//#ifdef _WIN32
+// windows has a semantic problem with atexit(), so we wait here instead.
+//  HANDLE forever = CreateSemaphore(0,0,1,"forever");
+//  WaitForSingleObject(forever,INFINITE);
+//#endif
+//
+//#if !defined(__sgi)
+//  Semaphore wait("main wait", 0);
+//  wait.down();
+//#endif
 #endif
-                                                                                              
-#if !defined(__sgi)
-  Semaphore wait("main wait", 0);
-  wait.down();
-#endif
-                                                                                              
-  //env->MonitorExit(obj);
 }
 
 
-void SCIRunTest::run()
+void PTIIWorker::run()
 {
-    std::cerr << "SCIRunTest::run()" << std::endl;
+    JNIUtils::sem().down();
 }

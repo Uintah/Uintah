@@ -17,13 +17,14 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 
-PSELIBS := Packages/Ptolemy/Core/jni Core/Datatypes \
-           Dataflow/Network Dataflow/Ports \
-           Core/Persistent Core/Containers Core/Util \
+PSELIBS := Dataflow/Network Dataflow/Ports \
+           Core/Datatypes Core/Persistent Core/Containers Core/Util \
            Core/Exceptions Core/Thread Core/GuiInterface \
-           Core/TkExtensions
+           Core/TkExtensions \
+           Packages/Ptolemy/Core/jni 
 
-LIBS := $(TK_LIBRARY)
+#LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
+LIBS := $(LIBS) $(TK_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
