@@ -368,7 +368,7 @@ RefineTetVol::subdivide_to_level(unsigned target_level)
     TetVolMesh::Cell::size_type num_tets;
     mh->size(num_tets);
 
-    for (int i = 0; i < num_tets; i++) {
+    for (unsigned int i = 0; i < num_tets; i++) {
       if (removed.count(i)) {
 	continue;
       }
@@ -391,11 +391,11 @@ RefineTetVol::locally_refine(TetVolField<int> *control)
   TetVolMesh::Cell::size_type num_tets;
   cnt->size(num_tets);
 
-  for (int i = 0; i < num_tets; i++) {
+  for (unsigned int i = 0; i < num_tets; i++) {
     if (removed.count(i)) {
       continue;
     }
-    int val = control->value((TetVolMesh::Cell::index_type)i);
+    unsigned int val = control->value((TetVolMesh::Cell::index_type)i);
     Point center;
     cnt->get_center(center, (TetVolMesh::Cell::index_type)i);
     TetVolMesh::Cell::index_type ci;

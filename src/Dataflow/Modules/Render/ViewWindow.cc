@@ -2713,7 +2713,7 @@ void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
 
 void ViewWindow::set_current_time(double time)
 {
-  gui_current_time_.set(time);
+  gui_current_time_.set((int)time);
 }
 
 void ViewWindow::dump_objects(const string& filename, const string& format)
