@@ -746,6 +746,7 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
   }
 
   // Third pass: over the faces
+  if (with_normals) mesh->synchronize(Mesh::NORMALS_E);
   mesh->synchronize(Mesh::FACES_E);
   typename Fld::mesh_type::Face::iterator fiter; mesh->begin(fiter);  
   typename Fld::mesh_type::Face::iterator fiter_end; mesh->end(fiter_end);  
