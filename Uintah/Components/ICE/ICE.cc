@@ -126,7 +126,6 @@ void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched,
 	t->computes(dw, lb->rho_micro_CCLabel,ice_matl->getDWIndex(),patch);
 	t->computes(dw, lb->rho_CCLabel,ice_matl->getDWIndex(),patch);
 	t->computes(dw, lb->cv_CCLabel,ice_matl->getDWIndex(),patch);
-	t->computes(dw, lb->press_CCLabel,matl->getDWIndex(), patch);
 	t->computes(dw, lb->viscosity_CCLabel, ice_matl->getDWIndex(),patch);
 
 	t->computes(dw, lb->uvel_CCLabel,ice_matl->getDWIndex(),patch);
@@ -134,6 +133,9 @@ void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched,
 	t->computes(dw, lb->wvel_CCLabel,ice_matl->getDWIndex(),patch);
       }
     }
+
+    t->computes(dw, lb->press_CCLabel,0, patch);
+
     sched->addTask(t);
   }
 
@@ -181,6 +183,8 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	Task* t = scinew Task("ICE::step1b",patch, old_dw, new_dw,this,
 			       &ICE::actuallyStep1b);
 
+	t->requires(old_dw,lb->press_CCLabel, 0,patch,Ghost::None);
+
 	for (int m = 0; m < numMatls; m++) {
 	  Material* matl = d_sharedState->getMaterial(m);
 	  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -200,16 +204,15 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 			   matl->getDWIndex(),patch,Ghost::None);
 	       t->requires(new_dw,lb->speedSound_CCLabel,
 			   matl->getDWIndex(),patch,Ghost::None);
-	       t->requires(old_dw,lb->press_CCLabel,
-			   matl->getDWIndex(),patch,Ghost::None);
-
-	       t->computes(new_dw,lb->press_CCLabel,matl->getDWIndex(), patch);
 	       t->computes(new_dw,lb->vol_frac_CCLabel,
 				matl->getDWIndex(), patch);
 	       t->computes(new_dw,lb->speedSound_equiv_CCLabel,
 				matl->getDWIndex(), patch);
 	  }
 	}
+
+        t->computes(new_dw,lb->press_CCLabel,0, patch);
+
 	sched->addTask(t);
       }
 
@@ -217,6 +220,8 @@ void ICE::scheduleTimeAdvance(double t, double dt,
       {
 	Task* t = scinew Task("ICE::step1c",patch, old_dw, new_dw,this,
 			       &ICE::actuallyStep1c);
+
+	t->requires(new_dw,lb->press_CCLabel,0,patch,Ghost::None);
 
 	for (int m = 0; m < numMatls; m++) {
 	  Material* matl = d_sharedState->getMaterial(m);
@@ -229,8 +234,6 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	    t->requires(old_dw,lb->vvel_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(old_dw,lb->wvel_CCLabel,
-			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(new_dw,lb->press_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
 
 	    t->computes(new_dw,lb->uvel_FCLabel,matl->getDWIndex(), patch);
@@ -274,6 +277,8 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	Task* t = scinew Task("ICE::step2",patch, old_dw, new_dw,this,
 			       &ICE::actuallyStep2);
 
+	t->requires(new_dw,lb->press_CCLabel, 0,patch,Ghost::None);
+
 	for (int m = 0; m < numMatls; m++) {
 	  Material* matl = d_sharedState->getMaterial(m);
 	  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -290,14 +295,14 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(new_dw,lb->rho_micro_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(new_dw,lb->press_CCLabel,
-			matl->getDWIndex(),patch,Ghost::None);
 
 	    t->computes(new_dw,lb->div_velfc_CCLabel,matl->getDWIndex(),patch);
-	    t->computes(new_dw,lb->pressdP_CCLabel,  matl->getDWIndex(),patch);
-	    t->computes(new_dw,lb->delPress_CCLabel, matl->getDWIndex(),patch);
           }
 	}
+
+	t->computes(new_dw,lb->pressdP_CCLabel,  0, patch);
+	t->computes(new_dw,lb->delPress_CCLabel, 0, patch);
+
 	sched->addTask(t);
       }
 
@@ -305,18 +310,20 @@ void ICE::scheduleTimeAdvance(double t, double dt,
       {
 	Task* t = scinew Task("ICE::step3",patch, old_dw, new_dw,this,
 			       &ICE::actuallyStep3);
+
+	t->requires(new_dw,lb->pressdP_CCLabel,0,patch,Ghost::None);
+
 	for (int m = 0; m < numMatls; m++) {
 	  Material* matl = d_sharedState->getMaterial(m);
 	  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
 	  if(ice_matl){
-	    t->requires(new_dw,lb->pressdP_CCLabel,
-			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(old_dw,lb->rho_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
-
-	    t->computes(new_dw,lb->press_FCLabel, matl->getDWIndex(),patch);
           }
 	}
+
+	t->computes(new_dw,lb->press_FCLabel, 0, patch);
+
 	sched->addTask(t);
       }
 
@@ -324,6 +331,9 @@ void ICE::scheduleTimeAdvance(double t, double dt,
       {
 	Task* t = scinew Task("ICE::step4a",patch, old_dw, new_dw,this,
 			       &ICE::actuallyStep4a);
+
+	t->requires(new_dw,lb->press_FCLabel, 0,patch,Ghost::None);
+
 	for (int m = 0; m < numMatls; m++) {
 	  Material* matl = d_sharedState->getMaterial(m);
 	  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -340,8 +350,6 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 			matl->getDWIndex(),patch,Ghost::None);
 
 	    t->requires(new_dw,lb->vol_frac_CCLabel,
-			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(new_dw,lb->press_FCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
 
 	    t->computes(new_dw,lb->xmom_source_CCLabel,
@@ -365,15 +373,15 @@ void ICE::scheduleTimeAdvance(double t, double dt,
       {
 	Task* t = scinew Task("ICE::step4b",patch, old_dw, new_dw,this,
 			       &ICE::actuallyStep4b);
+
+	t->requires(new_dw,lb->press_CCLabel,    0,patch,Ghost::None);
+	t->requires(new_dw,lb->delPress_CCLabel, 0,patch,Ghost::None);
+
 	for (int m = 0; m < numMatls; m++) {
 	  Material* matl = d_sharedState->getMaterial(m);
 	  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
 	  if(ice_matl){
 	    t->requires(new_dw,lb->rho_micro_CCLabel,
-			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(new_dw,lb->press_CCLabel,
-			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(new_dw,lb->delPress_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(new_dw,lb->speedSound_equiv_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
@@ -508,6 +516,8 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 
   CCVariable<double> rho_micro, temp, cv, rho_CC,press,speedSound;
   CCVariable<double> uvel_CC,vvel_CC,wvel_CC, visc_CC;
+  new_dw->allocate(press,lb->press_CCLabel,0,patch);
+
   for (int m = 0; m < d_sharedState->getNumMatls(); m++ ) {
     Material* matl = d_sharedState->getMaterial(m);
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -517,7 +527,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocate(rho_CC,lb->rho_CCLabel,vfindex,patch);
       new_dw->allocate(temp,lb->temp_CCLabel,vfindex,patch);
       new_dw->allocate(cv,lb->cv_CCLabel,vfindex,patch);
-      new_dw->allocate(press,lb->press_CCLabel,vfindex,patch);
       new_dw->allocate(speedSound,lb->speedSound_CCLabel,vfindex,patch);
       new_dw->allocate(visc_CC,lb->viscosity_CCLabel,vfindex,patch);
 
@@ -561,7 +570,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->put(rho_CC,lb->rho_CCLabel,vfindex,patch);
       new_dw->put(temp,lb->temp_CCLabel,vfindex,patch);
       new_dw->put(cv,lb->cv_CCLabel,vfindex,patch);
-      new_dw->put(press,lb->press_CCLabel,vfindex,patch);
       new_dw->put(speedSound,lb->speedSound_CCLabel,vfindex,patch);
       new_dw->put(uvel_CC,lb->uvel_CCLabel,vfindex,patch);
       new_dw->put(vvel_CC,lb->vvel_CCLabel,vfindex,patch);
@@ -569,6 +577,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->put(visc_CC,lb->viscosity_CCLabel,vfindex,patch);
     }
   }
+  new_dw->put(press,lb->press_CCLabel,0,patch);
   
 }
 
@@ -663,10 +672,12 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
   vector<CCVariable<double> > rho_micro(numMatls),rho(numMatls);
   vector<CCVariable<double> > cv(numMatls);
   vector<CCVariable<double> > Temp(numMatls);
-  vector<CCVariable<double> > press(numMatls),press_new(numMatls);
   vector<CCVariable<double> > speedSound(numMatls),speedSound_old(numMatls);
-
+  CCVariable<double> press,press_new;
   
+  old_dw->get(press,         lb->press_CCLabel, 0,patch,Ghost::None, 0); 
+  new_dw->allocate(press_new,lb->press_CCLabel, 0,patch);
+
   for (int m = 0; m < numMatls; m++) {
     Material* matl = d_sharedState->getMaterial(m);
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -675,11 +686,9 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
       old_dw->get(cv[m], lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
       old_dw->get(rho[m], lb->rho_CCLabel, vfindex,patch,Ghost::None, 0); 
       old_dw->get(Temp[m], lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
-      old_dw->get(press[m], lb->press_CCLabel, vfindex,patch,Ghost::None, 0); 
       old_dw->get(speedSound_old[m], lb->speedSound_CCLabel, vfindex,
 		  patch,Ghost::None, 0); 
 
-      new_dw->allocate(press_new[m],lb->press_CCLabel,vfindex,patch);
       new_dw->allocate(speedSound[m],lb->speedSound_equiv_CCLabel,vfindex,
 		       patch);
       new_dw->get(rho_micro[m],lb->rho_micro_CCLabel,vfindex,patch,
@@ -687,7 +696,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
     }
   }
 
-  for (int m = 0; m< numMatls; m++) press_new[m] = press[m];
+  press_new = press;
 
   bool converged = false;
 
@@ -717,7 +726,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
        Material* matl = d_sharedState->getMaterial(m);
        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
        if (ice_matl) {
-	 Q[m] = press_new[m][*iter] - press_eos[m];
+	 Q[m] = press_new[*iter] - press_eos[m];
 	 y[m] = rho[m][*iter]/(vol_frac[m][*iter]*vol_frac[m][*iter]) 
 	   * dp_drho[m];
 	 A += vol_frac[m][*iter];
@@ -727,8 +736,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
      }
      double vol_frac_not_close_packed = 1.;
      delPress = (A - vol_frac_not_close_packed - B)/C;
-     for (int m = 0; m < numMatls; m++)
-       press_new[m][*iter] += delPress;
+     press_new[*iter] += delPress;
 
      for (int m = 0; m < numMatls; m++) {
        Material* matl = d_sharedState->getMaterial(m);
@@ -736,7 +744,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
        if (ice_matl) {
 	 double gamma = ice_matl->getGamma();
 	 rho_micro[m][*iter] = ice_matl->getEOS()->
-	   computeRhoMicro(press_new[m][*iter], gamma,cv[m][*iter],
+	   computeRhoMicro(press_new[*iter], gamma,cv[m][*iter],
 			   Temp[m][*iter]);
        }
      }
@@ -792,8 +800,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 	  PressureBoundCond* bc = 
 	    static_cast<PressureBoundCond*>(bcs[i]);
 	  //cout << "bc value = " << bc->getPressure() << endl;
-	  for (int m = 0; m<numMatls; m++)
-	    press_new[m].fillFace(face,bc->getPressure());
+	    press_new.fillFace(face,bc->getPressure());
 	}
 	if (bcs_type == "Symmetric") {
 	  SymmetryBoundCond* bc =
@@ -811,7 +818,6 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 	}
       }
     }
-    
     
     // Hydrostatic pressure adjustment - subtract off the hydrostatic pressure
 
@@ -832,8 +838,8 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 	for (int m = 0; m < numMatls; m++) {
 	  press_hydro += rho[m][*iter]* gravity.x()*
 	    ((double) (curcell-highIndex).x()*dx.x()- width);
-	  press_new[m][*iter] -= press_hydro;
 	}
+	press_new[*iter] -= press_hydro;
       }
     }
     if (gravity.y() != 0.) {
@@ -844,8 +850,8 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 	for (int m = 0; m < numMatls; m++) {
 	  press_hydro += rho[m][*iter]* gravity.y()*
 	    ( (double) (curcell-highIndex).y()*dx.y()- height);
-	  press_new[m][*iter] -= press_hydro;
 	}
+	press_new[*iter] -= press_hydro;
       }
     }
     if (gravity.z() != 0.) {
@@ -856,25 +862,24 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 	for (int m = 0; m < numMatls; m++) {
 	  press_hydro += rho[m][*iter]* gravity.z()*
 	    ((double) (curcell-highIndex).z()*dx.z()- depth);
-	  press_new[m][*iter] -= press_hydro;
 	}
+	press_new[*iter] -= press_hydro;
       }
     }
-    
   }
+
   // Store new pressure, speedSound,vol_frac
   for (int m = 0; m < numMatls; m++) {
     Material* matl = d_sharedState->getMaterial(m);
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     if (ice_matl) {
 	int vfindex = matl->getVFIndex();
-	new_dw->put(press_new[m],lb->press_CCLabel,vfindex,patch);
 	new_dw->put(vol_frac[m],lb->vol_frac_CCLabel,vfindex,patch);
 	new_dw->put(speedSound[m],lb->speedSound_equiv_CCLabel,vfindex,patch);
     }
   }
+  new_dw->put(press_new,lb->press_CCLabel,0,patch);
     
-
 }
 
 void ICE::actuallyStep1c(const ProcessorGroup*,
@@ -892,22 +897,22 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
   Vector dx = patch->dCell();
   Vector gravity = d_sharedState->getGravity();
 
+  // Get required variables for this patch
+  CCVariable<double> rho_CC, rho_micro_CC;
+  CCVariable<double> uvel_CC, vvel_CC, wvel_CC;
+  CCVariable<double> press_CC;
+  old_dw->get(press_CC,lb->press_CCLabel, 0, patch, Ghost::None, 0);
+
   // Compute the face centered velocities
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     if(ice_matl){
       int vfindex = matl->getVFIndex();
-      // Get required variables for this patch
-      CCVariable<double> rho_CC;
-      CCVariable<double> rho_micro_CC;
-      CCVariable<double> press_CC;
-      CCVariable<double> uvel_CC, vvel_CC, wvel_CC;
 
       old_dw->get(rho_CC,  lb->rho_CCLabel,  vfindex, patch, Ghost::None, 0);
       old_dw->get(rho_micro_CC, lb->rho_micro_CCLabel,
 				vfindex, patch, Ghost::None, 0);
-      old_dw->get(press_CC,lb->press_CCLabel, vfindex, patch, Ghost::None, 0);
       old_dw->get(uvel_CC, lb->uvel_CCLabel,  vfindex, patch, Ghost::None, 0);
       old_dw->get(vvel_CC, lb->vvel_CCLabel,  vfindex, patch, Ghost::None, 0);
       old_dw->get(wvel_CC, lb->wvel_CCLabel,  vfindex, patch, Ghost::None, 0);
@@ -1192,7 +1197,6 @@ void ICE::actuallyStep2(const ProcessorGroup*,
   }
 
   // Compute the divergence of the face centered velocities
-  // Compute delPress and the new pressure
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -1212,7 +1216,7 @@ void ICE::actuallyStep2(const ProcessorGroup*,
       new_dw->get(speedSound,lb->speedSound_equiv_CCLabel,
 					         vfindex,patch,Ghost::None, 0);
 
-      // Create variables for the results
+      // Create variables for the divergence of the FC velocity
       CCVariable<double> div_velfc_CC;
       new_dw->allocate(div_velfc_CC, lb->div_velfc_CCLabel, vfindex, patch);
 
@@ -1251,28 +1255,22 @@ void ICE::actuallyStep2(const ProcessorGroup*,
     }
   }
 
-  for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-    if(ice_matl){
-      int vfindex = matl->getVFIndex();
-      // Create variables for the required variables and the results
-      CCVariable<double> pressure;
-      CCVariable<double> delPress;
-      CCVariable<double> pressdP;
-      new_dw->get(pressure,   lb->press_CCLabel, vfindex,patch,Ghost::None, 0);
-      new_dw->allocate(delPress,     lb->delPress_CCLabel,  vfindex, patch);
-      new_dw->allocate(pressdP,      lb->pressdP_CCLabel,   vfindex, patch);
+  // Compute delPress and the new pressure
+  // Create variables for the required variables and the results
+  CCVariable<double> pressure;
+  CCVariable<double> delPress;
+  CCVariable<double> pressdP;
+  new_dw->get(pressure,          lb->press_CCLabel,    0, patch,Ghost::None, 0);
+  new_dw->allocate(delPress,     lb->delPress_CCLabel, 0, patch);
+  new_dw->allocate(pressdP,      lb->pressdP_CCLabel,  0, patch);
 
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
 	delPress[*iter] = (delT * term1[*iter] - term2[*iter])/(term3[*iter]);
 	pressdP[*iter]  = pressure[*iter] + delPress[*iter];
-      }
-
-      new_dw->put(delPress, lb->delPress_CCLabel, vfindex, patch);
-      new_dw->put(pressdP,  lb->pressdP_CCLabel, vfindex, patch);
-    }
   }
+
+  new_dw->put(delPress, lb->delPress_CCLabel, 0, patch);
+  new_dw->put(pressdP,  lb->pressdP_CCLabel,  0, patch);
 
 }
 
@@ -1290,10 +1288,13 @@ void ICE::actuallyStep3(const ProcessorGroup*,
 
   // Get required variables for this patch
   vector<CCVariable<double> > rho_CC(NVFs);
-  vector<CCVariable<double> > press_CC(NVFs);
+  CCVariable<double> press_CC;
+  new_dw->get(press_CC,lb->pressdP_CCLabel, 0, patch, Ghost::None, 0);
+
 
   // Create variables for the results
-  vector<FCVariable<double> > press_FC(NVFs);
+  FCVariable<double> press_FC;
+  new_dw->allocate(press_FC,lb->press_FCLabel, 0, patch);
 
   // Compute the face centered velocities
   for(int m = 0; m < numMatls; m++){
@@ -1303,10 +1304,6 @@ void ICE::actuallyStep3(const ProcessorGroup*,
       int vfindex = matl->getVFIndex();
       old_dw->get(rho_CC[vfindex],  lb->rho_CCLabel,
 				vfindex, patch, Ghost::None, 0);
-      new_dw->get(press_CC[vfindex],lb->pressdP_CCLabel,
-				vfindex, patch, Ghost::None, 0);
-
-      new_dw->allocate(press_FC[vfindex],lb->press_FCLabel,vfindex, patch);
     }
   }
 
@@ -1326,18 +1323,42 @@ void ICE::actuallyStep3(const ProcessorGroup*,
     }
     sum_all_rho  = sum_rho     +  sum_rho_adj;
 
-    for(int m = 0; m < NVFs; m++){
-//	*press_FC[m][curcell][TOP]     =
-//                  press_CC[m][curcell] * sum_rho/sum_all_rho
-//                + press_CC[m][adjcell] * sum_rho_adj/sum_all_rho;
-    }
+    press_FC[curcell][TOP]      =
+             (press_CC[curcell] * sum_rho
+           +  press_CC[adjcell] * sum_rho_adj)/sum_all_rho;
 
- //  REPEAT THE PROCESS FOR THE OTHER TWO FACES
+
    // Right face
     adjcell = IntVector(curcell.x()+1,curcell.y(),curcell.z());
 
+    sum_rho=0.0;
+    sum_rho_adj  = 0.0;
+    for(int m = 0; m < NVFs; m++){
+	sum_rho      += (rho_CC[m][curcell] + d_SMALL_NUM);
+	sum_rho_adj  += (rho_CC[m][adjcell] + d_SMALL_NUM);
+    }
+    sum_all_rho  = sum_rho     +  sum_rho_adj;
+
+    press_FC[curcell][RIGHT]    =
+             (press_CC[curcell] * sum_rho
+           +  press_CC[adjcell] * sum_rho_adj)/sum_all_rho;
+
+
    // Front face
     adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+1);
+
+    sum_rho=0.0;
+    sum_rho_adj  = 0.0;
+    for(int m = 0; m < NVFs; m++){
+	sum_rho      += (rho_CC[m][curcell] + d_SMALL_NUM);
+	sum_rho_adj  += (rho_CC[m][adjcell] + d_SMALL_NUM);
+    }
+    sum_all_rho  = sum_rho     +  sum_rho_adj;
+
+    press_FC[curcell][FRONT]    =
+             (press_CC[curcell] * sum_rho
+           +  press_CC[adjcell] * sum_rho_adj)/sum_all_rho;
+
   }
 #endif
 
@@ -1346,9 +1367,7 @@ void ICE::actuallyStep3(const ProcessorGroup*,
         update_CC_FC_physical_boundary_conditions(
     *___________________________________*/
 
-  for(int m = 0; m < NVFs; m++){
-      new_dw->put(press_FC[m],lb->press_FCLabel, m, patch);
-  }
+   new_dw->put(press_FC,lb->press_FCLabel, 0, patch);
 }
 
 
@@ -1364,26 +1383,28 @@ void ICE::actuallyStep4a(const ProcessorGroup*,
   old_dw->get(delT, d_sharedState->get_delt_label());
   Vector dx = patch->dCell();
 
+  CCVariable<double> rho_CC;
+  CCVariable<double> uvel_CC;
+  CCVariable<double> vvel_CC;
+  CCVariable<double> wvel_CC;
+  CCVariable<double> visc_CC;
+  CCVariable<double> vol_frac;
+  FCVariable<double> press_FC;
+
+  new_dw->get(press_FC,lb->press_FCLabel, 0, patch,Ghost::None, 0);
+
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     if(ice_matl){
       int vfindex = matl->getVFIndex();
       // Get required variables for this patch
-      CCVariable<double> rho_CC;
-      CCVariable<double> uvel_CC;
-      CCVariable<double> vvel_CC;
-      CCVariable<double> wvel_CC;
-      CCVariable<double> visc_CC;
-      CCVariable<double> vol_frac;
-      FCVariable<double> press_FC;
       old_dw->get(rho_CC,  lb->rho_CCLabel,      vfindex,patch,Ghost::None, 0);
       old_dw->get(uvel_CC, lb->uvel_CCLabel,     vfindex,patch,Ghost::None, 0);
       old_dw->get(vvel_CC, lb->vvel_CCLabel,     vfindex,patch,Ghost::None, 0);
       old_dw->get(wvel_CC, lb->wvel_CCLabel,     vfindex,patch,Ghost::None, 0);
       old_dw->get(visc_CC, lb->viscosity_CCLabel,vfindex,patch,Ghost::None, 0);
       new_dw->get(vol_frac,lb->vol_frac_CCLabel, vfindex,patch,Ghost::None, 0);
-      new_dw->get(press_FC,lb->press_FCLabel,    vfindex,patch,Ghost::None, 0);
 
       // Create variables for the results
       CCVariable<double> xmom_source;
@@ -1420,6 +1441,17 @@ void ICE::actuallyStep4b(const ProcessorGroup*,
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
   Vector dx = patch->dCell();
+  double A, B, vol=dx.x()*dx.y()*dx.z();
+
+  CCVariable<double> rho_micro_CC;
+  CCVariable<double> speedSound;
+  CCVariable<double> vol_frac;
+  CCVariable<double> press_CC;
+  CCVariable<double> delPress;
+  CCVariable<double> int_eng_source;
+
+  new_dw->get(press_CC,lb->press_CCLabel,    0, patch,Ghost::None, 0);
+  new_dw->get(delPress,lb->delPress_CCLabel, 0, patch,Ghost::None, 0);
 
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
@@ -1427,26 +1459,19 @@ void ICE::actuallyStep4b(const ProcessorGroup*,
     if(ice_matl){
       int vfindex = matl->getVFIndex();
       // Get required variables for this patch
-      CCVariable<double> rho_micro_CC;
-      CCVariable<double> press_CC;
-      CCVariable<double> delPress;
-      CCVariable<double> speedSound;
-      CCVariable<double> wvel_CC;
-      CCVariable<double> visc_CC;
-      CCVariable<double> vol_frac;
       old_dw->get(rho_micro_CC,lb->rho_micro_CCLabel,
 						vfindex,patch,Ghost::None,0);
-      new_dw->get(press_CC,lb->press_CCLabel,   vfindex,patch,Ghost::None, 0);
-      new_dw->get(delPress,lb->delPress_CCLabel,vfindex,patch,Ghost::None,0);
       new_dw->get(speedSound, lb->speedSound_equiv_CCLabel,
 						vfindex,patch,Ghost::None, 0);
       new_dw->get(vol_frac,lb->vol_frac_CCLabel,vfindex,patch,Ghost::None, 0);
 
       // Create variables for the results
-      CCVariable<double> int_eng_source;
       new_dw->allocate(int_eng_source,lb->int_eng_source_CCLabel,vfindex,patch);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	A = vol * vol_frac[*iter] * press_CC[*iter];
+        B = rho_micro_CC[*iter] * speedSound[*iter]*speedSound[*iter];
+        int_eng_source[*iter] = (A/B) * delPress[*iter];
       }
 
       new_dw->put(int_eng_source,lb->int_eng_source_CCLabel,vfindex,patch);
@@ -2176,6 +2201,9 @@ const TypeDescription* fun_getTypeDescription(ICE::eflux*)
 
 //
 // $Log$
+// Revision 1.50  2000/10/26 00:24:46  guilkey
+// Made all pressures belong to material 0.  Implemented step4b.
+//
 // Revision 1.49  2000/10/25 23:12:17  guilkey
 // Fixed step2, reorganized 6and7 just a little bit.
 //
