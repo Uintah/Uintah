@@ -14,6 +14,7 @@ SUBDIRS := $(SRCDIR)/EOS
 include $(SRCTOP)/scripts/recurse.mk          
 
 PSELIBS := \
+	Packages/Uintah/CCA/Components/HETransformation \
 	Packages/Uintah/CCA/Ports \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/ProblemSpec \

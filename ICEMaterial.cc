@@ -39,12 +39,7 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps)
    if(!d_eos)
       throw ParameterNotFound("No EOS");
    
-#if 0
    d_burn = BurnFactory::create(ps);
-#else
-   d_burn = 0;
-   NOT_FINISHED("BurnFactory::create");
-#endif
 
 
    // Step 2 -- get the general material properties
