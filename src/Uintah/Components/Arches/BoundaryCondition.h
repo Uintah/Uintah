@@ -204,9 +204,7 @@ public:
 			    DataWarehouseP& old_dw,
 			    DataWarehouseP& new_dw);
 
-private:
-
-      // GROUP:  Actual Computations (Private)  :
+      // GROUP:  Actual Computations :
       ////////////////////////////////////////////////////////////////////////
       //
       // Actually compute velocity BC terms
@@ -217,6 +215,28 @@ private:
 		      DataWarehouseP& new_dw,
 		      const int index);
 
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Actually compute pressure BC terms
+      //
+      void pressureBC(const ProcessorContext*,
+		      const Patch* patch,
+		      DataWarehouseP& old_dw,
+		      DataWarehouseP& new_dw);
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Actually compute scalar BC terms
+      //
+      void scalarBC(const ProcessorContext* pc,
+		    const Patch* patch,
+		    DataWarehouseP& old_dw,
+		    DataWarehouseP& new_dw,
+		    const int index);
+
+private:
+
+      // GROUP:  Actual Computations (Private)  :
       ////////////////////////////////////////////////////////////////////////
       //
       // Call Fortran to compute u velocity BC terms
@@ -264,25 +284,6 @@ private:
 		       CCVariable<double>* density,
 		       const double* VISCOS,
 		       CellInformation* cellinfo);
-
-      ////////////////////////////////////////////////////////////////////////
-      //
-      // Actually compute pressure BC terms
-      //
-      void pressureBC(const ProcessorContext*,
-		      const Patch* patch,
-		      DataWarehouseP& old_dw,
-		      DataWarehouseP& new_dw);
-
-      ////////////////////////////////////////////////////////////////////////
-      //
-      // Actually compute scalar BC terms
-      //
-      void scalarBC(const ProcessorContext* pc,
-		    const Patch* patch,
-		    DataWarehouseP& old_dw,
-		    DataWarehouseP& new_dw,
-		    const int index);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -436,6 +437,9 @@ private:
   
 //
 // $Log$
+// Revision 1.22  2000/06/16 04:25:39  bbanerje
+// Uncommented BoundaryCondition related stuff.
+//
 // Revision 1.21  2000/06/15 22:13:22  rawat
 // modified boundary stuff
 //

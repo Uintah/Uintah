@@ -235,10 +235,7 @@ PressureSolver::buildLinearMatrix(const ProcessorContext* pc,
 					 new_dw,delta_t, index);
     d_source->calculateVelocitySource(pc, patch, old_dw,
 				      new_dw,delta_t, index);
-#ifdef WONT_COMPILE_YET
-    d_boundaryCondition->velocityBC(pc, patch, old_dw,
-				    new_dw,delta_t, index);
-#endif
+    d_boundaryCondition->velocityBC(pc, patch, old_dw, new_dw, index);
     // similar to mascal
     d_source->modifyVelMassSource(pc, patch, old_dw, new_dw, delta_t, index);
 
@@ -247,10 +244,7 @@ PressureSolver::buildLinearMatrix(const ProcessorContext* pc,
   }
   d_discretize->calculatePressureCoeff(pc, patch, old_dw, new_dw, delta_t);
   d_source->calculatePressureSource(pc, patch, old_dw, new_dw, delta_t);
-#ifdef WONT_COMPILE_YET
-  d_boundaryCondition->pressureBC(pc, patch, old_dw,
-				  new_dw,delta_t);
-#endif
+  d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw);
   d_discretize->calculatePressDiagonal(pc, patch, old_dw, new_dw);
 
 }
@@ -279,6 +273,9 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.19  2000/06/16 04:25:40  bbanerje
+// Uncommented BoundaryCondition related stuff.
+//
 // Revision 1.18  2000/06/14 20:40:49  rawat
 // modified boundarycondition for physical boundaries and
 // added CellInformation class

@@ -129,21 +129,17 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     DataWarehouseP nonlinear_dw = sched->createDataWarehouse(d_generation);
     ++d_generation;
 
-#ifdef WONt_COMPILE_YET
     //correct inlet velocities to account for change in properties
     d_boundaryCondition->sched_setInletVelocityBC(level, sched, new_dw, 
 						  new_dw);
-#endif
 
     // linearizes and solves pressure eqn
     d_pressSolver->solve(level, sched, new_dw, new_dw, time, delta_t);
 
-#ifdef WONt_COMPILE_YET
     // if external boundary then recompute velocities using new pressure
     // and puts them in nonlinear_dw
-    d_boundaryCondition->sched_computePressureBC(pc, level, new_dw,
+    d_boundaryCondition->sched_computePressureBC(level, sched, new_dw,
 						 new_dw);
-#endif
 
     // x-velocity    
     for (int index = 1; index <= Arches::NDIM; ++index) {
@@ -172,10 +168,8 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
     ++nlIterations;
 
-#ifdef WONT_COMPILE_YET
     // residual represents the degrees of inaccuracies
     nlResidual = computeResidual(level, sched, new_dw, new_dw);
-#endif
 
   }while((nlIterations < d_nonlinear_its)&&(nlResidual > d_resTol));
 
@@ -362,6 +356,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.24  2000/06/16 04:25:40  bbanerje
+// Uncommented BoundaryCondition related stuff.
+//
 // Revision 1.23  2000/06/14 20:40:49  rawat
 // modified boundarycondition for physical boundaries and
 // added CellInformation class
