@@ -44,7 +44,7 @@ namespace SCIRun {
 class ScaledBoxWidget : public BaseWidget {
 public:
    ScaledBoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
-		   Index aligned=0 );
+		    bool is_aligned = false, bool is_slideable = true );
    ScaledBoxWidget( const ScaledBoxWidget& );
    virtual ~ScaledBoxWidget();
 
@@ -69,9 +69,9 @@ public:
    const Vector& GetDownAxis();
    const Vector& GetInAxis();
 
-   // 0=no, 1=yes
-   Index IsAxisAligned() const;
-   void AxisAligned( const Index yesno );
+   bool IsAxisAligned() const { return is_aligned_; }
+   bool IsSlideable() const { return is_slideable_; }
+   //void AxisAligned( const Index yesno );
 
    // Variable indexs
    enum { CenterVar, PointRVar, PointDVar, PointIVar,
@@ -87,7 +87,8 @@ protected:
    virtual string GetMaterialName( const Index mindex ) const;   
    
 private:
-   Index aligned;
+   bool is_aligned_;
+   bool is_slideable_;
 
    Vector oldrightaxis, olddownaxis, oldinaxis;
 };

@@ -81,9 +81,10 @@ enum { PickSphR, PickSphL, PickSphD, PickSphU, PickSphI, PickSphO,
  *      includes some consistency checking to ensure full initialization.
  */
 ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, 
-				 double widget_scale, Index aligned )
+				  double widget_scale,
+				  bool aligned , bool slideable)
 : BaseWidget(module, lock, "ScaledBoxWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
-  aligned(aligned),
+  is_aligned_(aligned), is_slideable_(slideable),
   oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0), oldinaxis(0, 0, 1)
 {
    Real INIT = 5.0*widget_scale;
@@ -318,13 +319,45 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock,
    // Switch1 are the rotation points
    // Switch2 are the resize cylinders
    // Switch3 are the sliders
-   SetMode(Mode0, Switch0|Switch1|Switch2|Switch3);
-   SetMode(Mode1, Switch0|Switch1|Switch2);
-   SetMode(Mode2, Switch0|Switch1);
-   SetMode(Mode3, Switch0);
-   SetMode(Mode4, Switch0|Switch1|Switch3);
-   SetMode(Mode5, Switch0|Switch2|Switch3);
-   SetMode(Mode6, Switch0|Switch2);
+   if (is_aligned_)
+   {
+     if (is_slideable_)
+     {
+       SetNumModes(4);
+       SetMode(Mode0, Switch0|Switch2|Switch3);
+       SetMode(Mode1, Switch0|Switch2);
+       SetMode(Mode3, Switch0);
+       SetMode(Mode4, Switch0|Switch3);
+     }
+     else
+     {
+       SetNumModes(2);
+       SetMode(Mode0, Switch0|Switch2);
+       SetMode(Mode1, Switch0);
+     }
+   }
+   else
+   {
+     if (is_slideable_)
+     {
+       SetNumModes(7);
+       SetMode(Mode0, Switch0|Switch1|Switch2|Switch3);
+       SetMode(Mode1, Switch0|Switch1|Switch2);
+       SetMode(Mode2, Switch0|Switch1);
+       SetMode(Mode3, Switch0);
+       SetMode(Mode4, Switch0|Switch1|Switch3);
+       SetMode(Mode5, Switch0|Switch2|Switch3);
+       SetMode(Mode6, Switch0|Switch2);
+     }
+     else
+     {
+       SetNumModes(4);
+       SetMode(Mode0, Switch0|Switch1|Switch2);
+       SetMode(Mode1, Switch0|Switch1);
+       SetMode(Mode2, Switch0);
+       SetMode(Mode3, Switch0|Switch2);
+     }
+   }
 
    FinishWidget();
 }
@@ -477,27 +510,27 @@ ScaledBoxWidget::geom_moved( GeomPick*, int axis, double dist,
 {
    switch(pick){
    case PickSphU:
-       if (!aligned)
+       if (!is_aligned_)
       variables[PointDVar]->SetDelta(-delta);
       break;
    case PickSphR:
-       if (!aligned)
+       if (!is_aligned_)
       variables[PointRVar]->SetDelta(delta);
       break;
    case PickSphD:
-       if (!aligned)
+       if (!is_aligned_)
       variables[PointDVar]->SetDelta(delta);
       break;
    case PickSphL:
-       if (!aligned)
+       if (!is_aligned_)
       variables[PointRVar]->SetDelta(-delta);
       break;
    case PickSphI:
-       if (!aligned)
+       if (!is_aligned_)
       variables[PointIVar]->SetDelta(delta);
       break;
    case PickSphO:
-       if (!aligned)
+       if (!is_aligned_)
       variables[PointIVar]->SetDelta(-delta);
       break;
    case PickResizeU:
@@ -534,6 +567,7 @@ ScaledBoxWidget::geom_moved( GeomPick*, int axis, double dist,
       variables[CenterVar]->SetDelta(delta/2.0, Scheme6);
       break;
    case PickSliderR:
+      if (is_slideable_)
       {
 	  if (axis==1) dist*=-1.0;
 	  Real sdist(variables[SDistRVar]->real()+dist/2.0);
@@ -543,6 +577,7 @@ ScaledBoxWidget::geom_moved( GeomPick*, int axis, double dist,
       }
       break;
    case PickSliderD:
+      if (is_slideable_)
       {
 	  if (axis==1) dist*=-1.0;
 	  Real sdist = variables[SDistDVar]->real()+dist/2.0;
@@ -552,6 +587,7 @@ ScaledBoxWidget::geom_moved( GeomPick*, int axis, double dist,
       }
       break;
    case PickSliderI:
+      if (is_slideable_)
       {
 	  if (axis==1) dist*=-1.0;
 	  Real sdist = variables[SDistIVar]->real()+dist/2.0;
@@ -739,14 +775,7 @@ ScaledBoxWidget::GetMaterialName( const Index mindex ) const
 }
 
 
-
-Index
-ScaledBoxWidget::IsAxisAligned() const
-{
-   return aligned;
-}
-
-
+#if 0
 void
 ScaledBoxWidget::AxisAligned( const Index yesno )
 {
@@ -767,6 +796,7 @@ ScaledBoxWidget::AxisAligned( const Index yesno )
    
    execute(0);
 }
+#endif
 
 
 ClipperHandle
