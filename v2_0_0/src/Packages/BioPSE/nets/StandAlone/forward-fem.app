@@ -298,6 +298,7 @@ set mods(ShowField-Isosurface) $m22
 
 set mods(StreamLines) $m16
 set mods(StreamLines-rake) $m14
+set mods(StreamLines-Gradient) $m5
 set mods(ShowField-StreamLines) $m15
 
 set mods(ShowField-Electrodes) $m13
@@ -765,9 +766,9 @@ class ForwardFEMApp {
 	    pack $vis.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
 
             if {$case == 0} {
-               set vis_frame_tab1 $vis.tnb
+		set vis_frame_tab1 $vis.tnb
             } else {
-               set vis_frame_tab2 $vis.tnb	    
+		set vis_frame_tab2 $vis.tnb	    
             }
 	    
 	    set page [$vis.tnb add -label "Data Vis" -command "$this change_vis_frame 0"]
@@ -783,6 +784,11 @@ class ForwardFEMApp {
 	    
             pack $page.isoframe -padx 4 -pady 4 -fill x
 
+            if {$case == 0} {
+		set isosurface_tab1 $iso
+            } else {
+		set isosurface_tab2 $iso
+            }
 	    
 	    ### StreamLines
 	    iwidgets::labeledframe $page.slframe -labelpos nw \
@@ -794,6 +800,11 @@ class ForwardFEMApp {
 	    
             pack $page.slframe -padx 4 -pady 4 -fill x
 
+            if {$case == 0} {
+		set streamlines_tab1 $sl
+            } else {
+		set streamlines_tab2 $sl
+            }
 
 	    ### Electrodes
 	    iwidgets::labeledframe $page.elecframe -labelpos nw \
@@ -1728,12 +1739,47 @@ class ForwardFEMApp {
 	global $mods(ShowField-StreamLines)-edges-on
 	if { [set $mods(ShowField-StreamLines)-edges-on] } {
 	    disableModule $mods(StreamLines-rake) 0
+	    disableModule $mods(StreamLines-Gradient) 0
 	    set "$eviewer-StreamLines rake (5)" 1
 	    $eviewer-c redraw
+	    puts $streamlines_tab1
+	    $streamlines_tab1.isoval.s configure -state normal
+	    $streamlines_tab2.isoval.s configure -state normal
+	    $streamlines_tab1.isoval.l configure -state normal
+	    $streamlines_tab2.isoval.l configure -state normal
+	    $streamlines_tab1.isoval.val configure -state normal
+	    $streamlines_tab2.isoval.val configure -state normal
+	    $streamlines_tab1.fast configure -state normal
+	    $streamlines_tab2.fast configure -state normal
+	    $streamlines_tab1.adapt configure -state normal
+	    $streamlines_tab2.adapt configure -state normal
+	    bind $streamlines_tab1.isoval.s <ButtonRelease> \
+		"$mods(StreamLines-rake)-c needexecute"
+	    bind $streamlines_tab2.isoval.s <ButtonRelease> \
+		"$mods(StreamLines-rake)-c needexecute"
+	    bind $streamlines_tab1.isoval.val <Return> \
+		"$mods(StreamLines-rake)-c needexecute"
+	    bind $streamlines_tab2.isoval.val <Return> \
+		"$mods(StreamLines-rake)-c needexecute"
 	} else {
 	    disableModule $mods(StreamLines-rake) 1
+	    disableModule $mods(StreamLines-Gradient) 1
 	    set "$eviewer-StreamLines rake (5)" 0
 	    $eviewer-c redraw
+	    $streamlines_tab1.isoval.s configure -state disabled
+	    $streamlines_tab2.isoval.s configure -state disabled
+	    $streamlines_tab1.isoval.l configure -state disabled
+	    $streamlines_tab2.isoval.l configure -state disabled
+	    $streamlines_tab1.isoval.val configure -state disabled
+	    $streamlines_tab2.isoval.val configure -state disabled
+	    $streamlines_tab1.fast configure -state disabled
+	    $streamlines_tab2.fast configure -state disabled
+	    $streamlines_tab1.adapt configure -state disabled
+	    $streamlines_tab2.adapt configure -state disabled
+	    bind $streamlines_tab1.isoval.s <ButtonRelease> ""
+	    bind $streamlines_tab2.isoval.s <ButtonRelease> ""
+	    bind $streamlines_tab1.isoval.val <Return> ""
+	    bind $streamlines_tab2.isoval.val <Return> ""
 	}
 	$mods(ShowField-StreamLines)-c toggle_display_edges
     }
@@ -1741,6 +1787,8 @@ class ForwardFEMApp {
     method build_streamlines_tab { f } {
 	global mods
 	global $mods(ShowField-StreamLines)-edges-on
+
+	puts $f
 
 	if {![winfo exists $f.show]} {
 	    checkbutton $f.show -text "Show StreamLines" \
