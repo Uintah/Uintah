@@ -8,8 +8,10 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <iostream>
-#include <stdio.h>
+#include <fstream>
 
+using std::ifstream;
+using std::cerr;
 using namespace SCIRun;
 using namespace Uintah;
 
@@ -28,11 +30,6 @@ void    MPMICE::printData(const Patch* patch, int include_EC,
        d_dbgTime >= d_dbgNextDumpTime) {
     d_dbgOldTime = d_dbgTime;        
     IntVector low, high; 
-    cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(16);
-    fprintf(stderr,"______________________________________________\n");
-    fprintf(stderr,"$%s\n",message1);
-    fprintf(stderr,"$%s\n",message2);
 
     if (include_EC == 1)  { 
       low   = patch->getNodeLowIndex();
@@ -43,21 +40,27 @@ void    MPMICE::printData(const Patch* patch, int include_EC,
       high  = patch->getInteriorNodeHighIndex();
     }
     
-    d_ice->adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high);
-     
+    d_ice->adjust_dbg_indices( d_ice->d_dbgBeginIndx, d_ice->d_dbgEndIndx, 
+                               low, high);
+    cerr << "______________________________________________\n";
+    cerr << "$" << message1 << "\n";
+    cerr << "$" << message2 << "\n"; 
+    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.precision(16);
+        
     for(int k = low.z(); k < high.z(); k++)  {
-      for(int j = high.y()-1; j >= low.y(); j--) {
+      for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
          IntVector idx(i, j, k);
-         fprintf(stderr,"[%d,%d,%d]~ %6.5E  ",
-                i,j,k, q_NC[idx]);
-         /*  fprintf(stderr,"\n"); */
+          cerr << "[" << i << "," << j << "," << k << "]~ " 
+               << q_NC[idx] << "  ";
+         /*  cerr << "\n"); */
         }
-        fprintf(stderr,"\n");
+        cerr << "\n";
       }
-      fprintf(stderr,"\n");
+      cerr << "\n";
     }
-    fprintf(stderr," ______________________________________________\n");
+    cerr <<" ______________________________________________\n";
     cerr.setf(ios::scientific, ios::floatfield);
   }
 }
@@ -71,7 +74,6 @@ void    MPMICE::printNCVector(const Patch* patch, int include_EC,
         int     component,              /*  x = 0,y = 1, z = 2          */
         const NCVariable<Vector>& q_NC)
 {
-
  //__________________________________
  // Limit when we dump
   d_dbgTime= dataArchiver->getCurrentTime();   
@@ -80,12 +82,7 @@ void    MPMICE::printNCVector(const Patch* patch, int include_EC,
        d_dbgTime >= d_dbgNextDumpTime) {
     d_dbgOldTime = d_dbgTime;             
     IntVector low, high; 
-    cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(16);
-    fprintf(stderr,"______________________________________________\n");
-    fprintf(stderr,"$%s\n",message1);
-    fprintf(stderr,"$%s\n",message2);
-
+    
     if (include_EC == 1)  { 
       low   = patch->getNodeLowIndex();
       high  = patch->getNodeHighIndex();
@@ -95,22 +92,28 @@ void    MPMICE::printNCVector(const Patch* patch, int include_EC,
       high  = patch->getInteriorNodeHighIndex();
     }
     
-    d_ice->adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high);
-     
+    d_ice->adjust_dbg_indices( d_ice->d_dbgBeginIndx, d_ice->d_dbgEndIndx, 
+                               low, high);
+    cerr << "______________________________________________\n";
+    cerr << "$" << message1 << "\n";
+    cerr << "$" << message2 << "\n"; 
+    
+    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.precision(16);
+        
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
          IntVector idx(i, j, k);
-         fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
-                i,j,k, q_NC[idx](component));
-
-         /*  fprintf(stderr,"\n"); */
+         cerr << "[" << i << "," << j << "," << k << "]~ " 
+              << q_NC[idx](component) << "  ";  
+         /*  cerr << "\n"; */
         }
-        fprintf(stderr,"\n");
+        cerr << "\n";
       }
-      fprintf(stderr,"\n");
+      cerr << "\n";
     }
-    fprintf(stderr," ______________________________________________\n");
+    cerr <<" ______________________________________________\n";
     cerr.setf(ios::scientific, ios::floatfield);
   }
 }
