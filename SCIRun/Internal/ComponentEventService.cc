@@ -39,8 +39,10 @@
  */
 
 #include <SCIRun/Internal/ComponentEventService.h>
-//#include <SCIRun/SCIRunFramework.h>
+#include <SCIRun/Internal/ComponentEvent.h>
+#include <SCIRun/CCA/CCAComponentInstance.h>
 #include <SCIRun/CCA/CCAException.h>
+#include <SCIRun/TypeMap.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -75,12 +77,12 @@ ComponentEventService::addComponentEventListener(sci::cca::ports::ComponentEvent
                          const sci::cca::ports::ComponentEventListener::pointer& l,
                          bool playInitialEvents)
 {
-    std::cerr << "ComponentEventService::addComponentEventListener " << type << std::endl;
     Listener *listener = new Listener(type, l);
     listeners.push_back(listener);
     if (playInitialEvents) {
         // send listener all events stored in vector
-        for (std::vector<sci::cca::ports::ComponentEvent::pointer>::iterator iter = events.begin();
+        for (std::vector<sci::cca::ports::ComponentEvent::pointer>::iterator iter =
+                events.begin();
                 iter != events.end(); iter++) {
             listener->l->componentActivity((*iter));
         }
@@ -101,18 +103,49 @@ ComponentEventService::removeComponentEventListener(
 }
 
 void
-ComponentEventService::moveComponent(const sci::cca::ComponentID::pointer& /*id*/,
-                                     int /*x*/, int /*y*/)
+ComponentEventService::moveComponent(const sci::cca::ComponentID::pointer& id, int x, int y)
 {
-    std::cerr << "moveComponent not done!" << std::endl;
+    ComponentInstance* ci = framework->lookupComponent(id->getInstanceName());
+    if (ci) {
+        std::string cn = ci->className;
+        unsigned int firstColon = cn.find(':');
+        std::string modelName;
+        if (firstColon != std::string::npos) {
+            modelName = cn.substr(0, firstColon);
+        } else {
+            modelName = cn;
+        }
+        sci::cca::TypeMap::pointer properties;
+        if (modelName == "CCA") {
+            // empty string argument gets component properties;
+            properties =
+                ((CCAComponentInstance*)ci)->getPortProperties("");
+            if (properties.isNull()) {
+                properties = TypeMap::pointer(new TypeMap);
+            }
+        } else {
+            properties = TypeMap::pointer(new TypeMap);
+        }
+        properties->putInt("x", x);
+        properties->putInt("y", y);
+
+        sci::cca::ports::ComponentEvent::pointer ce =
+            ComponentEvent::pointer(
+                new ComponentEvent(sci::cca::ports::ComponentMoved, id, properties)
+            );
+        emitComponentEvent(ce);
+    } else {
+      // throw exception?
+      std::cerr << "Error: could not locate component instance for "
+                << id->getInstanceName() << " in ComponentEventService::moveComponent."
+                << std::endl;
+    }
 }
 
 void
 ComponentEventService::emitComponentEvent(const sci::cca::ports::ComponentEvent::pointer& event)
 {
     // iterate through listeners and call connectionActivity
-    std::cerr << "ComponentEventService::emitComponentEvent" << std::endl;
-
     // should the event type to be emitted be ALL?
     if (event->getEventType() == sci::cca::ports::AllComponentEvents) {
         return;
