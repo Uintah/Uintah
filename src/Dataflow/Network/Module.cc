@@ -479,11 +479,8 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
-// Revision 1.10.2.2  2000/10/26 10:03:57  moulding
+// Revision 1.10.2.3  2000/10/26 14:16:49  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.10.2.1  2000/09/28 03:14:57  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.12  2000/08/11 15:44:43  bigler
 // Changed geom_* functions that took an int index to take a GeomObj* picked_obj.
