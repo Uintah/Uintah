@@ -81,16 +81,20 @@ Time::waitUntil(double seconds)
 void
 Time::waitFor(double seconds)
 {
-    if(!initialized)
-	initialize();
-    if(seconds<=0)
-	return;
-    struct timespec ts;
-    ts.tv_sec=(int)seconds;
-    ts.tv_nsec=(int)(1.e9*(seconds-ts.tv_sec));
-    int oldstate=Thread::couldBlock("Timed wait");
-    while (nanosleep(&ts, &ts) == 0) /* Nothing */ ;
-    Thread::couldBlockDone(oldstate);
+  if(!initialized) 
+    initialize();
+
+  if(seconds<=0)
+    return;
+
+  struct timespec ts;
+  ts.tv_sec=(int)seconds;
+  ts.tv_nsec=(int)(1.e9*(seconds-ts.tv_sec));
+
+  int oldstate=Thread::couldBlock("Timed wait");
+  nanosleep(&ts, &ts);
+  //  while (nanosleep(&ts, &ts) == 0) /* Nothing */ ;
+  Thread::couldBlockDone(oldstate);
 }
 
 void
@@ -110,12 +114,16 @@ Time::waitFor(SysClock time)
     ts.tv_sec=(int)(time*1.e-6);
     ts.tv_nsec=(int)(1.e9*(time*1.e-6-ts.tv_sec));
     int oldstate=Thread::couldBlock("Timed wait");
-    while (nanosleep(&ts, &ts) == 0) /* Nothing */ ;
+    nanosleep(&ts, &ts);
+    //while (nanosleep(&ts, &ts) == 0) /* Nothing */ ;
     Thread::couldBlockDone(oldstate);
 }
 
 //
 // $Log$
+// Revision 1.5  2000/07/27 19:22:58  yarden
+// correct use of nanosleep
+//
 // Revision 1.4  1999/08/29 07:50:59  sparker
 // Mods to compile on linux
 //
