@@ -255,7 +255,11 @@ class Doc
   
   # Execute the given block if we be doin' html output.
   def doIfHTML()
-    htmlOutput?() ? yield() : ""
+    if htmlOutput?()
+      yield()
+    else
+      ""
+    end
   end
 
   # Is we a doin' print output?
@@ -265,7 +269,11 @@ class Doc
 
   # Execute the given block if we be doin' print output.
   def doIfPrint()
-    printOutput?() ? yield() : ""
+    if printOutput?()
+      yield()
+    else
+      ""
+    end
   end
 
   # Include a file with eruby substitution.
