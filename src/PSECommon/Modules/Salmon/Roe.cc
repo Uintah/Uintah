@@ -272,7 +272,6 @@ void Roe::mouse_translate(int action, int x, int y, int, int, int)
 {
     switch(action){
     case MouseStart:
-	  cerr << "in mouseStart" << endl;
 	last_x=x;
 	last_y=y;
 	total_x = 0;
@@ -281,7 +280,6 @@ void Roe::mouse_translate(int action, int x, int y, int, int, int)
 	break;
     case MouseMove:
 	{
-	  cerr << "in mouseMove" << endl;
 	    int xres=current_renderer->xres;
 	    int yres=current_renderer->yres;
 	    double xmtn=double(last_x-x)/double(xres);
@@ -321,7 +319,6 @@ void Roe::mouse_translate(int action, int x, int y, int, int, int)
 	}
 	break;
     case MouseEnd:
-	  cerr << "in mouseEnd" << endl;
 	update_mode_string("");
 	break;
     }
@@ -581,9 +578,7 @@ void Roe::mouse_pick(int action, int x, int y, int state, int btn, int)
 				       pick_obj, pick_pick, pick_n);
 
 	    if (pick_obj){
-		NOT_FINISHED("update mode string for pick");
-		//pick_pick->pick(this,bs,pick_n);
-
+		update_mode_string(pick_obj);
 		pick_pick->set_index(pick_n);
 		pick_pick->pick(this,bs);
 
@@ -635,11 +630,11 @@ void Roe::mouse_pick(int action, int x, int y, int state, int btn, int)
 		if (Abs(total_y) < .0001) total_y=0;
 		if (Abs(total_z) < .0001) total_z=0;
 		need_redraw=1;
-		update_mode_string("picked someting...");
+		update_mode_string(pick_obj);
 		pick_pick->moved(prin_dir, dist, mtn, bs);
 		need_redraw=1;
 	    } else {
-		update_mode_string("Bad direction...");
+		update_mode_string("pick: Bad direction...");
 	    }
 	    last_x = x;
 	    last_y = y;
@@ -945,7 +940,21 @@ void Roe::redraw(double tbeg, double tend, int nframes, double framerate)
     current_renderer->redraw(manager, this, tbeg, tend, nframes, framerate);
 }
 
-void Roe::update_mode_string(const char* msg)
+void Roe::update_mode_string(GeomObj* pick_obj)
+{
+    clString ms="pick: ";
+    GeomSalmonItem* si=dynamic_cast<GeomSalmonItem*>(pick_obj);
+    if(!si){
+	ms+="not a GeomSalmonItem?";
+    } else {
+	ms+=si->name;
+    }
+    if(pick_n != 0x12345678)
+	ms+=", index="+to_string(pick_n);
+    update_mode_string(ms);
+}
+
+void Roe::update_mode_string(const clString& msg)
 {
     ostrstream str(modecommand, MODEBUFSIZE);    
     str << id << " updateMode \"" << msg << "\"" << '\0';
@@ -987,10 +996,6 @@ Renderer* Roe::get_renderer(const clString& name)
 void Roe::force_redraw()
 {
     need_redraw=1;
-}
-
-void Roe::do_for_pick(Renderer* /*r*/, RoeVisPMF/* pmf*/)
-{
 }
 
 void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
@@ -1096,6 +1101,10 @@ void Roe::getData(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.5  1999/09/08 22:04:33  sparker
+// Fixed picking
+// Added messages for pick mode
+//
 // Revision 1.4  1999/08/29 00:46:42  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

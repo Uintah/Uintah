@@ -113,7 +113,8 @@ protected:
     GeomObj* pick_obj;
     int pick_n;
 
-    void update_mode_string(const char*);
+    void update_mode_string(const clString&);
+    void update_mode_string(GeomObj*);
     char* modebuf;
     char* modecommand;
 
@@ -235,8 +236,6 @@ public:
     // Object processing utility routines
     void do_for_visible(Renderer*, RoeVisPMF);
 
-    void do_for_pick(Renderer*, RoeVisPMF);
-
     void set_current_time(double time);
 
     void dump_objects(const clString&, const clString& format);
@@ -266,6 +265,10 @@ public:
 
 //
 // $Log$
+// Revision 1.5  1999/09/08 22:04:33  sparker
+// Fixed picking
+// Added messages for pick mode
+//
 // Revision 1.4  1999/08/29 00:46:42  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++
