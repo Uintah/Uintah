@@ -18,6 +18,11 @@
 
 PersistentTypeID ScalarFieldRGBase::type_id("ScalarFieldRGBase", "ScalarField", 0);
 
+ScalarFieldRGBase::ScalarFieldRGBase()
+: ScalarField(RegularGridBase), nx(0), ny(0), nz(0), rep(Void)
+{
+}
+
 ScalarFieldRGBase::ScalarFieldRGBase(clString r)
 : ScalarField(RegularGridBase), nx(0), ny(0), nz(0)
 {
@@ -27,8 +32,10 @@ ScalarFieldRGBase::ScalarFieldRGBase(clString r)
 	rep = Int;
     else if (r=="char")
 	rep = Char;
-    else
+    else if (r=="double")
 	rep = Double;
+    else
+	rep = Void;
 }
 
 ScalarFieldRGBase::ScalarFieldRGBase(const ScalarFieldRGBase& copy)
@@ -41,8 +48,10 @@ ScalarFieldRGBase::ScalarFieldRGBase(const ScalarFieldRGBase& copy)
 	rep = Int;
     else if (r=="char")
 	rep = Char;
-    else
+    else if (r=="double")
 	rep = Double;
+    else
+	rep = Void;
 }
 
 ScalarFieldRGBase::~ScalarFieldRGBase()
@@ -58,6 +67,8 @@ clString ScalarFieldRGBase::getType() const {
         return ("int");
     else if (rep==Char)
         return ("char");
+    else if (rep==Void)
+	return ("void");
     else
         return ("unknown");
 }
@@ -105,6 +116,7 @@ Point ScalarFieldRGBase::get_point(int i, int j, int k)
 void ScalarFieldRGBase::set_bounds(const Point &min, const Point &max) {
     bmin=min;
     bmax=max;
+    diagonal=max-min;
 }
     
 void ScalarFieldRGBase::locate(const Point& p, int& ix, int& iy, int& iz)
@@ -116,6 +128,20 @@ void ScalarFieldRGBase::locate(const Point& p, int& ix, int& iy, int& iz)
     double x=pn.x()*(nx-1)/dx;
     double y=pn.y()*(ny-1)/dy;
     double z=pn.z()*(nz-1)/dz;
+    ix=(int)x;
+    iy=(int)y;
+    iz=(int)z;
+}
+
+void ScalarFieldRGBase::midLocate(const Point& p, int& ix, int& iy, int& iz)
+{
+    Vector pn=p-bmin;
+    double dx=diagonal.x();
+    double dy=diagonal.y();
+    double dz=diagonal.z();
+    double x=pn.x()*(nx-1)/dx+.5;
+    double y=pn.y()*(ny-1)/dy+.5;
+    double z=pn.z()*(nz-1)/dz+.5;
     ix=(int)x;
     iy=(int)y;
     iz=(int)z;

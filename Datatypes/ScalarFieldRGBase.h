@@ -29,6 +29,7 @@ public:
 	Float,
 	Int,
 	Char,
+	Void
     };
     int nx;
     int ny;
@@ -46,7 +47,9 @@ public:
 
     Point get_point(int, int, int);
     void locate(const Point&, int&, int&, int&);
+    void midLocate(const Point&, int&, int&, int&);
     void set_bounds(const Point &min, const Point &max);
+    ScalarFieldRGBase();
     ScalarFieldRGBase(clString);
     ScalarFieldRGBase(const ScalarFieldRGBase&);
     virtual ~ScalarFieldRGBase();
