@@ -64,12 +64,11 @@ HDF5DataReader::HDF5DataReader(GuiContext *context)
     range_min_(ctx->subVar("range_min")),
     range_max_(ctx->subVar("range_max")),
     playmode_(ctx->subVar("playmode")),
-    dependence_(ctx->subVar("dependence")),
     current_(ctx->subVar("current")),
+    execmode_(ctx->subVar("execmode")),
     delay_(ctx->subVar("delay")),
     inc_amount_(ctx->subVar("inc-amount")),
     inc_(1),
-    execmode_("none"),
     last_input_(-1),
     last_output_(0),
 
@@ -88,6 +87,7 @@ HDF5DataReader::HDF5DataReader(GuiContext *context)
     mergedata_(-1),
     assumesvt_(-1),
 
+    loop_(false),
     error_(false)
 {
   for( int ic=0; ic<MAX_DIMS; ic++ ) {
@@ -258,7 +258,7 @@ void HDF5DataReader::execute() {
 	current_.reset();
 	
 	ReadandSendData( new_filename, frame_paths[which],
-			 frame_datasets[which], true, true, which );
+			 frame_datasets[which], true, which );
       } else {
 	error( "Input index is out of range" );
 	return;
@@ -266,8 +266,10 @@ void HDF5DataReader::execute() {
     } else {
 
       if( nframes != selectable_max_.get() ) {
+	selectable_max_.set(nframes-1);
+
 	ostringstream str;
-	str << id << " update_animate_range 0 " << nframes-1;
+	str << id << " update_range";
 	gui->execute(str.str().c_str());
       }
 
@@ -279,7 +281,7 @@ void HDF5DataReader::execute() {
   {
     error_ = false;
 
-    ReadandSendData( new_filename, paths, datasets, true, true, -1 );
+    ReadandSendData( new_filename, paths, datasets, true, -1 );
 
   } else {
     remark( "Already read the file " +  new_filename );
@@ -319,7 +321,6 @@ void HDF5DataReader::execute() {
 void HDF5DataReader::ReadandSendData( string& filename,
 				      vector< string >& paths,
 				      vector< string >& datasets,
-				      bool last,
 				      bool cache,
 				      int which ) {
 
@@ -520,10 +521,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
       ofield_port->set_cache( cache );
 
       // Send the data downstream
-      if( last )
-	ofield_port->send( nHandles_[ic] );
-      else
-	ofield_port->send_intermediate( nHandles_[ic] );
+      ofield_port->send( nHandles_[ic] );
     }
   }
 
@@ -538,14 +536,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
   ColumnMatrix *selected = scinew ColumnMatrix(1);
   selected->put(0, 0, (double)which);
 
-  bool isDependent = (dependence_.get()==string("dependent"));
-
-  if ( last )
-    omatrix_port->send(MatrixHandle(selected));
-  else if ( isDependent )
-    omatrix_port->send(MatrixHandle(selected));
-  else
-    omatrix_port->send_intermediate(MatrixHandle(selected));
+  omatrix_port->send(MatrixHandle(selected));
 }
 
 
@@ -614,23 +605,23 @@ void HDF5DataReader::parseDatasets( string new_datasets,
       error( "Found a path with mismatched braces - " + path );
       return;
     } else {
-      std::string::size_type last;
+      std::string::size_type pos;
 
       // Remove the braces.
-      while( (last = path.find( "{" )) != std::string::npos )
-	path.erase( last, 1 );
+      while( (pos = path.find( "{" )) != std::string::npos )
+	path.erase( pos, 1 );
     
-      while( (last = path.find( "}" )) != std::string::npos )
-	path.erase( last, 1 );
+      while( (pos = path.find( "}" )) != std::string::npos )
+	path.erase( pos, 1 );
 
-      // Get the dataset name which is after the last forward slash '/'.
-      last = path.find_last_of( "/" );
+      // Get the dataset name which is after the pos forward slash '/'.
+      pos = path.find_last_of( "/" );
       
       // Get the dataset name.
-      string dataset( path.substr( last+1, path.length()-last) );
+      string dataset( path.substr( pos+1, path.length()-pos) );
       
       // Remove the dataset name from the path.
-      path.erase( last, path.length()-last);
+      path.erase( pos, path.length()-pos);
 
       
       paths.push_back( path );
@@ -1355,8 +1346,8 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
     }
 
     // Remove the last group name from the path.
-    std::string::size_type last = parent.find_last_of("/");
-    parent.erase( last, parent.length()-last);
+    std::string::size_type pos = parent.find_last_of("/");
+    parent.erase( pos, parent.length()-pos);
   }
 
   parent = "/";
@@ -1405,10 +1396,8 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     args.error("HDF5DataReader needs a minor command");
     return;
   }
-  if (args[1] == "play" || args[1] == "stop" || args[1] == "step") {
-    execmode_ = string(args[1]);
 
-  } else if (args[1] == "update_file") {
+  if (args[1] == "update_file") {
 #ifdef HAVE_HDF5
     filename_.reset();
     string new_filename(filename_.get());
@@ -1440,12 +1429,12 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 	new_filemodification != old_filemodification_) {
 
       // Get the file hierarchy for the tcl browser.
-      std::string::size_type last = new_filename.find_last_of( "/" );
+      std::string::size_type pos = new_filename.find_last_of( "/" );
 
-      if( last == string::npos )
-	last = 0;
+      if( pos == string::npos )
+	pos = 0;
       else
-	last++;
+	pos++;
 
       char* tmpdir = getenv( "SCIRUN_TMP_DIR" );
 
@@ -1456,7 +1445,7 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       else
 	tmp_filename = string( "/tmp/" );
 
-      tmp_filename.append( new_filename, last, new_filename.length()-last );
+      tmp_filename.append( new_filename, pos, new_filename.length()-pos );
       tmp_filename.append( ".dump" );
 
       std::ofstream sPtr( tmp_filename.c_str() );
@@ -1614,9 +1603,11 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       int nframes =
 	parseAnimateDatasets( paths, datasets, frame_paths, frame_datasets);
 
-      if( nframes != selectable_max_.get() ) {
+      if( nframes-1 != selectable_max_.get() ) {
+	selectable_max_.set(nframes-1);
+
 	ostringstream str;
-	str << id << " update_animate_range 0 " << nframes-1;
+	str << id << " update_range";
 	gui->execute(str.str().c_str());
       }
     }
@@ -1636,11 +1627,12 @@ HDF5DataReader::increment(int which, int lower, int upper)
   // Do nothing if no range.
   if (upper == lower) {
     if (playmode_.get() == "once")
-      execmode_ = string("stop");
+      execmode_.set( "stop" );
     return upper;
   }
 
   const int inc_amount = Max(1, Min(upper, inc_amount_.get()));
+
   which += inc_ * inc_amount;
 
   if (which > upper) {
@@ -1652,7 +1644,7 @@ HDF5DataReader::increment(int which, int lower, int upper)
       return upper;
     } else {
       if (playmode_.get() == "once")
-	execmode_ = string("stop");
+	execmode_.set( "stop" );
       return lower;
     }
   }
@@ -1666,10 +1658,11 @@ HDF5DataReader::increment(int which, int lower, int upper)
       return lower;
     } else {
       if (playmode_.get() == "once")
-	execmode_ = string("stop");
+	execmode_.set( "stop" );
       return upper;
     }
   }
+
   return which;
 }
 
@@ -1682,79 +1675,98 @@ HDF5DataReader::animate_execute( string new_filename,
 
   reset_vars();
 
-  // Update the increment.
+  bool cache = (playmode_.get() != "inc_w_exec");
+
+  // Get the current start and end.
   const int start = range_min_.get();
-  const int end = range_max_.get();
+  const int end   = range_max_.get();
+
+  int lower = start;
+  int upper = end;
+  if (lower > upper) {int tmp = lower; lower = upper; upper = tmp; }
+
+  // Update the increment.
   if (playmode_.get() == "once" || playmode_.get() == "loop")
     inc_ = (start>end)?-1:1;
 
   // If the current value is invalid, reset it to the start.
-  int lower = start;
-  int upper = end;
-  if (lower > upper) {int tmp = lower; lower = upper; upper = tmp; }
-  if (current_.get() < lower || current_.get() > upper) {
+  if (current_.get() < lower || upper < current_.get()) {
     current_.set(start);
     inc_ = (start>end)?-1:1;
   }
 
   // Cash execmode and reset it in case we bail out early.
-
+  const string execmode = execmode_.get();
+  
   int which = current_.get();
+  
+  // If updating, we're done for now.
+  if (execmode == "update") {
 
-  bool cache = (playmode_.get() != "inc_w_exec");
-
-  if (execmode_ == "step") {
-
-    which = increment(which, lower, upper);
-    current_.set(which);
-    current_.reset();
+  } else if (execmode == "step") {
+    which = increment(current_.get(), lower, upper);
 
     ReadandSendData( new_filename, frame_paths[which],
-		     frame_datasets[which], true, cache, which );
+		     frame_datasets[which], cache, which );
+  } else if (execmode == "stepb") {
+    inc_ *= -1;
+    which = increment(current_.get(), lower, upper);
+    inc_ *= -1;
 
-  } else if (execmode_ == "play") {
+    ReadandSendData( new_filename, frame_paths[which],
+		     frame_datasets[which], cache, which );
 
-    if (playmode_.get() == "once" && which >= end)
-      which = start;
+  } else if (execmode == "play") {
 
-    bool stop;
-    do {
-      int delay = delay_.get();
+    if( !loop_ ) {
+      if (playmode_.get() == "once" && which >= end)
+	which = start;
+    }
 
-      int next = increment(which, lower, upper);
-      stop = (execmode_ == "stop");
-
-      current_.set(which);
-      current_.reset();
-
-      ReadandSendData( new_filename, frame_paths[which],
-		       frame_datasets[which], stop, stop ? cache : true,
-		       which );
-
-      if (!stop && delay > 0) {
+    ReadandSendData( new_filename, frame_paths[which],
+		     frame_datasets[which], cache, which );
+    
+    // User may have changed the execmode to stop so recheck.
+    execmode_.reset();
+    if ( loop_ = (execmode_.get() == "play") ) {
+      const int delay = delay_.get();
+      
+      if( delay > 0) {
 	const unsigned int secs = delay / 1000;
 	const unsigned int msecs = delay % 1000;
 	if (secs)  { sleep(secs); }
 	if (msecs) { usleep(msecs * 1000); }
       }
+    
+      int next = increment(which, lower, upper);    
 
-      if (playmode_.get() == "once" || !stop )
+      // Incrementing may cause a stop in the execmode so recheck.
+      execmode_.reset();
+      if( loop_ = (execmode_.get() == "play") ) {
 	which = next;
 
-    } while (!stop);
-  } else {
-    
-    ReadandSendData( new_filename, frame_paths[which],
-		     frame_datasets[which], true, cache, which );
+	want_to_execute();
+      }
 
+    }
+
+  } else {
+
+    if( execmode == "rewind" )
+      which = start;
+
+    else if( execmode == "fforward" )
+      which = end;
+
+    ReadandSendData( new_filename, frame_paths[which],
+		     frame_datasets[which], cache, which );
+    
     if (playmode_.get() == "inc_w_exec") {
       which = increment(which, lower, upper);
-      current_.set(which);
-      current_.reset();
     }
   }
 
-  execmode_ = string("none");
+  current_.set(which);
 }
 
 } // End namespace DataIO
