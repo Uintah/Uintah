@@ -1,6 +1,5 @@
 #include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
@@ -11,6 +10,7 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/FileGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/SmoothGeomPiece.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>

@@ -6,19 +6,23 @@
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Math/Short27.h> // for Fracture
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
+#if defined(_WIN32) || defined(__APPLE__)
+#include <float.h>
+#define MAXDOUBLE DBL_MAX
+#else
 #include <values.h>
+#endif
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>

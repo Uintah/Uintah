@@ -12,12 +12,11 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Core/Math/MinMax.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
-#include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityState.h>

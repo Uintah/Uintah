@@ -1,7 +1,14 @@
+
+#ifdef __APPLE__
+// This is a hack.  gcc 3.3 #undefs isnan in the cmath header, which
+// make the isnan function not work.  This define makes the cmath header
+// not get included since we do not need it anyway.
+#define _CPP_CMATH
+#endif
+
 #include <sci_defs.h>
 #include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h> 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -28,7 +35,6 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Core/Util/DebugStream.h>
 #include <Packages/Uintah/Core/Grid/fillFace.h>
@@ -40,6 +46,7 @@
 #include <iostream>
 #include <fstream>
 #include <sgi_stl_warnings_on.h>
+#include <math.h>
 
 using namespace Uintah;
 using namespace SCIRun;

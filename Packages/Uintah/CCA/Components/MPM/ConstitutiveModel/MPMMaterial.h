@@ -1,11 +1,13 @@
 #ifndef __MPM_MATERIAL_H__
 #define __MPM_MATERIAL_H__
 
+// Do not EVER put a #include for anything in CCA/Components in here.
+// Ask steve for a better way
+
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPiece.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -27,6 +29,7 @@ using namespace SCIRun;
  class GeometryObject;
  class GeometryPiece;
  class ConstitutiveModel;
+ class MPMLabel;
  class ParticleCreator;
       
 /**************************************

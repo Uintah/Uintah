@@ -1,7 +1,6 @@
 /* Synced with version 1.141 of SerialMPM (4/2/2003)*/
 #include <Packages/Uintah/CCA/Components/MPM/FractureMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/ContactFactory.h>
@@ -34,7 +33,6 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
 
 #include <sgi_stl_warnings_off.h>

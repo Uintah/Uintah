@@ -7,8 +7,8 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <sgi_stl_warnings_off.h>
