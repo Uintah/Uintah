@@ -72,6 +72,7 @@ rtrt -np 14 -eye -10.2111 -16.2099 1.630637 -lookat -11.7826 -20.5142 0.630637 -
 #include <Packages/rtrt/Core/PerlinBumpMaterial.h>
 #include <Packages/rtrt/Core/PLYReader.h>
 #include <Packages/rtrt/Core/TriMesh.h>
+#include <Packages/rtrt/Core/VideoMap.h>
 
 using namespace rtrt;
 using namespace SCIRun;
@@ -79,7 +80,8 @@ using namespace SCIRun;
 #define MAXBUFSIZE 256
 #define IMG_EPS 0.01
 #define SCALE 500
-#define IMGSONWALL 0
+#define IMGSONWALL 1
+#define INSERTBENDER 1
 
 void add_image_on_wall (char *image_name, const Point &top_left, 
 			 const Vector &right, const Vector &down,
@@ -89,6 +91,15 @@ void add_image_on_wall (char *image_name, const Point &top_left,
 		      1, Color(0,0,0), 0); 
   Object* image_obj = 
     new Parallelogram(image_mat, top_left, right, down);
+
+  wall_group->add(image_obj);
+}
+
+void add_video_on_wall (Material* video, const Point &top_left, 
+			 const Vector &right, const Vector &down,
+			 Group* wall_group) {
+  Object* image_obj = 
+    new Parallelogram(video, top_left, right, down);
 
   wall_group->add(image_obj);
 }
@@ -411,7 +422,6 @@ void build_history_hall (Group* main_group, Scene *scene) {
   Material* turquoise = new LambertianMaterial(Color(.21,.55,.65));
   Material* flat_white = new LambertianMaterial(Color(.8,.8,.8));
   Material* flat_grey = new LambertianMaterial(Color(.4,.4,.4));
-  Material* orange = new Phong(Color(.7,.4,.0),Color(.2,.2,.2),40);
   Material* lightblue = new LambertianMaterial(Color(.4,.67,.90));
   Material* blue = new LambertianMaterial(Color(.08,.08,.62));
   Material* black = new LambertianMaterial(Color(0.08,.08,.1));
@@ -714,10 +724,16 @@ void build_history_hall (Group* main_group, Scene *scene) {
 		      historyg);
 
   WestPoint = Point (-20+IMG_EPS+.1, -27, img_ht+0.4);
+  /*
   add_image_on_wall ("/usr/sci/data/Geometry/textures/museum/tmp/museum-7.ppm",
 		      WestPoint+Vector(0.15,0,1.4), Vector(0,2,0), Vector(0,0,-2),
 		      historyg); 
-
+  */
+  /*
+  Material* mjvideo = new VideoMap ("/usr/sci/data/Geometry/textures/museum/history/ppm-mj/mike%d.ppm",970,10,Color(0.7,.7,.7),20,0);
+  add_video_on_wall (mjvideo,WestPoint+Vector(0.15,0,1.4), Vector(0,2,0), 
+		     Vector(0,0,-2),historyg); 
+  */  
   Group *tvg = new Group();
   Transform t;
 
@@ -927,8 +943,15 @@ historyg);
   historyg->add (new Parallelogram(blue,
 				   BumpMapPoint+Vector(ped_size/2.-diff,ped_size/2.-diff,0.001),
 				   Vector(0,-gbox_size,0),Vector(-gbox_size,0,0)));
-  /*  historyg->add (new Sphere ( new PerlinBumpMaterial(new Phong(Color(.72,.27,.0),Color(.2,.2,.2),50)), BumpMapPoint+Vector(0,0,0.3),0.2));  
-      historyg->add (new UVSphere ( new Phong(Color(.41,.39,.16),Color(.2,.2,.2),50), */
+  Material* orange = 
+    new ImageMaterial("/usr/sci/data/Geometry/textures/museum/history/orange3.ppm",
+		      ImageMaterial::Clamp, ImageMaterial::Clamp,1,Color(0,0,0),0); 
+
+  /*  
+  Material* orange = new Phong(Color(.7,.4,.0),Color(.2,.2,.2),40);
+
+  historyg->add (new Sphere ( new PerlinBumpMaterial(new Phong(Color(.72,.27,.0),Color(.2,.2,.2),50)), BumpMapPoint+Vector(0,0,0.3),0.2));  
+  historyg->add (new UVSphere ( new Phong(Color(.41,.39,.16),Color(.2,.2,.2),50),  */
   historyg->add (new UVSphere (orange,
 			       BumpMapPoint+Vector(0,0,0.3),0.2)); 
 
@@ -1027,7 +1050,7 @@ historyg);
   Material* pink = new LambertianMaterial(Color(.78,.59,.50));
   Material* kaj_glass= new DielectricMaterial(1.5, 1.0, 0.05, 400.0, 
 					  Color(.80, .93 , .87), 
-					      Color(1,1,1), true, .01);
+					      Color(.40,.93,.47), true, 3);
 
   Group* kajiya_g = new Group();
   kajiya_g->add (new Box(kaj_white,ChessPt+Vector(-0.26,0.08,0),ChessPt+Vector(-0.10,0.24,0.03)));
@@ -1195,7 +1218,7 @@ void build_david_room (Group* main_group, Scene *scene) {
 
   /*  0 for David, 1 for Bender */
 
-#if 1
+#if INSERTBENDER
  Transform bender_trans;
   Point bender_center (-12.5,-20,0);
 
@@ -1453,7 +1476,7 @@ void build_david_room (Group* main_group, Scene *scene) {
   l = new Light(Point(-17, -22, 1.4), Color(.407,.4,.4), 0);
   l->name_ = "David C";
   scene->add_light(l);
-
+  /*
   l = (new Light(Point(-11,-22.25,7.9),Color (.4,.401,.4), 0));
   l->name_ = "per David A";
   scene->add_per_matl_light (l);
@@ -1494,33 +1517,7 @@ void build_david_room (Group* main_group, Scene *scene) {
   l->name_ = "per David J";
   scene->add_per_matl_light (l);
   david_white->my_lights.add (l);
-  /*
-  l = (new Light(Point(-11,-22.25,7.9),Color (.4,.4,.4), 0));
-  scene->add_light (l);
-  l = (new Light(Point(-17,-22.25,7.9),Color (.4,.4,.4), 0));
-  scene->add_light (l);
-  l = (new Light(Point(-14.75,-20.75,1),Color (.4,.4,.4), 0));
-  scene->add_light (l);
-  l = (new Light(Point(-17,-17.75,7.9),Color (.4,.4,.4), 0));
-  scene->add_light (l);
-  l = (new Light(Point(-14,-16.15,1), Color (.4,.4,.4), 0));
-  scene->add_light (l);
-  l = new Light(Point(-14,-23.85,7.9),Color (.4,.4,.4), 0);
-  scene->add_light (l);
-  l = (new Light(Point(-11,-17.75,7.9),	Color (.4,.4,.4), 0));
-  scene->add_light (l);
-  l = (new Light(Point(-11.25,-20.75,3.5),Color (.4,.4,.4), 0)); 
-  scene->add_light (l);
-
-  g->add(new Sphere(flat_yellow,Point(-11,-22.25,7.9),0.5));
-  g->add(new Sphere(flat_yellow,Point(-17,-22.25,7.9),0.5));
-  g->add(new Sphere(flat_yellow,Point(-14.75,-20.75,1),0.5));
-  g->add(new Sphere(flat_yellow,Point(-17,-17.75,7.9),0.5));
-  g->add(new Sphere(flat_yellow,Point(-14,-16.15,1), 0.5));
-  g->add(new Sphere(flat_yellow,Point(-14,-23.85,7.9),0.5));
-  g->add(new Sphere(flat_yellow,Point(-11,-17.75,7.9),0.5));
-  g->add(new Sphere(flat_yellow,Point(-11.25,-20.75,3.5),0.5));
-  */
+*/
 }
 
   /* **************** modern graphics room **************** */
@@ -2048,22 +2045,22 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 				   );
 				   
   Material* floor_mat = new LambertianMaterial(Color(.7,.7,.5));
-  */
   Material* dark_marble1 
     = new CrowMarble(4.5, Vector(-.3, -.3, 0), Color(.05,.05, .05),
-		     Color(.075, .075, .075), Color(.1, .1, .1),0);
+		     Color(.075, .075, .075), Color(.1, .1, .1),0,80);
 
   Material* marble=new Checker(dark_marble1,
 			       dark_marble1,
 			       Vector(3,0,0), Vector(0,3,0));
+  */
 
-  Material* floor_mat = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/carpet/carpet_black_blued2.ppm",
+  Material* floor_mat = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/floor1024.ppm",
 					  ImageMaterial::Tile,
 					  ImageMaterial::Tile, 1,
 					  Color(0,0,0), 0);
   floor_mat->SetScale (10,10);
 
-  Object* check_floor=new Rect(marble, Point(-12, -16, 0),
+  Object* check_floor=new Rect(floor_mat, Point(-12, -16, 0),
 			       Vector(8, 0, 0), Vector(0, 12, 0));
 
   Group* south_wall=new Group();
@@ -2131,10 +2128,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 		       Vector(0, 1+wall_width/2., 0), Vector(0, 0, 3)));
   east_wall->add(new Rect(wall_white, Point(-4+wall_width, -4.5+wall_width/2., 4), 
 		       Vector(0, 0.5+wall_width/2., 0), Vector(0, 0, 4)));
-
+  /*
   ceiling_floor->add(new Rect(wall_white, Point(-12, -16, 8),
   			      Vector(8.16, 0, 0), Vector(0, 12.16, 0)));
-
+  */
   partitions->add(new Rect(wall_white, Point(-8-.15,-14,2.5),
 			   Vector(0,10,0),Vector(0,0,2.5)));
   partitions->add(new Rect(wall_white, Point(-8+.15,-14,2.5),
@@ -2209,12 +2206,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   return scene;
 }
 
-
-/*
-original corner: [-5.375, -11.125, 1]
-glass corner: [-5.3375, -11.0875, 1.6]
-
-original vector: [0.75, 0.75, -1]
-glass vector: [0.7125, 0.7125, -0.6]
+/* images to be moved to star:
+/usr/sci/data/Geometry/textures/museum/history/orange.ppm
 
 */
