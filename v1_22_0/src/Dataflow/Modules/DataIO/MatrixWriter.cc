@@ -75,7 +75,7 @@ MatrixWriter::MatrixWriter(GuiContext* ctx)
   mgr.get_exporter_list(exporters);
   
   string exporttypes = "{";
-  exporttypes += "{{SCIRun Matrix File} {.fld} } ";
+  exporttypes += "{{SCIRun Matrix File} {.mat} } ";
   exporttypes += "{{SCIRun Matrix Any} {.*} } ";
 
   for (unsigned int i = 0; i < exporters.size(); i++)
