@@ -288,7 +288,7 @@ itcl_class Module {
 
 	frame $miniframe -borderwidth 0
 	frame $miniframe.ff
-	pack $miniframe.ff -side top -expand yes \
+	pack $miniframe.ff -side left -expand yes \
 		-fill both -padx 2 -pady 1
 
 	global SCALEX SCALEY
@@ -301,7 +301,11 @@ itcl_class Module {
 
 	# Make the title
 	label $p.title -text "$name" -font $modname_font -anchor w
-	pack $p.title -side top -padx 2 -anchor w
+	if {$make_progress_graph} {
+	    pack $p.title -side top -padx 2 -anchor w
+	} else {
+	    pack $p.title -side left -padx 2 -anchor w
+	}
 	bind $p.title <Map> "$this setDone"
 	
 	# Make the time label
@@ -325,15 +329,15 @@ itcl_class Module {
 	if {$make_msg_indicator} {
 	    if {!$make_progress_graph} {
 		# No progress graph so pack next to title
-		frame $p.msg -relief sunken -height 15 -borderwidth 2 \
+		frame $p.msg -relief sunken -height 15 -borderwidth 1 \
 			-width [expr $indicator_width+2]
-		pack $p.msg -side right  -fill both -padx 2 -pady 2
+		pack $p.msg -side right  -padx 2 -pady 2
 		frame $p.msg.indicator -relief raised -width 0 -height 0 -borderwidth 2 \
 			-background blue
 	    } else {
 		frame $p.msg -relief sunken -height 15 -borderwidth 1 \
 			-width [expr $indicator_width+2]
-		pack $p.msg -side left  -fill both -padx 2 -pady 2
+		pack $p.msg -side left  -padx 2 -pady 2
 		frame $p.msg.indicator -relief raised -width 0 -height 0 -borderwidth 2 \
 			-background blue
 	    }
