@@ -108,7 +108,7 @@ itcl_class Module {
     protected MenuList
     protected made_icon 0
     public state "NeedData" {$this update_state}
-    public msg_state "Nothing" {$this update_msg_state}
+    public msg_state "Reset" {$this update_msg_state}
     public progress 0 {$this update_progress}
     public time "00.00" {$this update_time}
     public group -1
@@ -699,6 +699,26 @@ itcl_class Module {
 	    }
 	}
     }
+    method flash {} {
+	if {$msg_state == "Error"} {
+	    set log .mLogWnd[modname]
+	    if [winfo exists $log] {
+		puts "Exists"
+	    }
+	    foreach t $canvases {
+		set w $t.module[modname].ff.msg.indicator
+		    if [winfo exists $w] {
+			set c [$w cget -background]
+			if { $c == "red" } {
+			    $w configure -background grey75
+			} else {    
+			    $w configure -background red
+			} 
+			after 500 "$this flash"
+		    }
+	    }
+	}
+    }
     method update_progress {} {
 	if {!$make_progress_graph} return
 	set width [expr int($progress*($graph_width-4))]
@@ -811,7 +831,6 @@ itcl_class Module {
     }
     
     method update_msg_state {} { 
-	
 	if {$msg_state == "Error"} {
 	    set p 1
 	    set color red
@@ -821,7 +840,7 @@ itcl_class Module {
 	} elseif {$msg_state == "Remark"} {
 	    set p 1
 	    set color blue
-	}  elseif {$msg_state == "Nothing"} {
+	}  elseif {$msg_state == "Reset"} {
 	    set p 1
 	    set color grey75
 	} else {
@@ -837,9 +856,9 @@ itcl_class Module {
 		    -background $color
 	    place $modframe.ff.msg.indicator -relheight 1 \
 		    -anchor nw 
-	    if {$msg_state == "Error"} {
-		flash $modframe.ff.msg.indicator red
-	    }
+	    #if {$msg_state == "Error"} {
+		#flash 
+	    #} 
 	}
 
     }
@@ -896,6 +915,8 @@ itcl_class Module {
     }
 
     method displayLog {} {
+	#puts "----------- LOG OPENED ----------"
+
 	set w .mLogWnd[modname]
 	
 	# does the window exist?
@@ -1017,19 +1038,6 @@ itcl_class Module {
 	}
     }
 }   
-
-# procedure to make a widget flash a color
-proc flash {w color} {
-    if [winfo exists $w] {
-	set c [$w cget -background]
-	if { $c == "red" } {
-	    $w configure -background grey75
-	} else {     
-	    $w configure -background $color
-	} 
-	after 500 flash $w $color
-    }
-}
 
 proc popup_menu {x y canvas minicanvas modid} {
     global CurrentlySelectedModules
@@ -2841,6 +2849,7 @@ proc okNotes {w mclass} {
 }
 
 proc moduleDestroy {maincanvas minicanvas modid} {
+    puts "  ** ** ** here "
     # Remove me from the modules list
 
     global modules

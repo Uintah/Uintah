@@ -241,7 +241,7 @@ namespace SCIRun {
       Remark,
       Warning,
       Error,
-      Nothing
+      Reset
     };
     void update_state(State);
     void light_module();
