@@ -15,43 +15,25 @@
 #define SCI_project_UserModule_h 1
 
 #include <Module.h>
-#include <Multitask/Task.h>
+#include <Classlib/Timer.h>
+#include <X11/Xlib.h>
+class CallbackData;
+class DrawingAreaC;
 class MUI_window;
 class MUI_widget;
 class MUI_onoff_switch;
 class InData;
 class OutData;
+class XQColor;
 
-class UserModule : public Module, public Task {
+class UserModule : public Module {
     MUI_window* window;
-
-    virtual void activate();
-    // Implementation of members from Task
-    virtual int body(int);
+    int old_gwidth;
+    WallClockTimer timer;
 public:
-    UserModule(const clString& name);
+    UserModule(const clString& name, SchedClass);
     UserModule(const UserModule&, int deep);
     virtual ~UserModule();
-
-    // Port manipulations
-    void add_iport(InData*, const clString&, int);
-    void add_oport(OutData*, const clString&, int);
-    void remove_iport(int);
-    void remove_oport(int);
-    void rename_iport(int, const clString&);
-    void rename_oport(int, const clString&);
-
-    // Execute Condition
-    enum CommonEC {
-	NewDataOnAllConnectedPorts,
-	Always,
-	OnOffSwitch,
-    };
-    CommonEC ec;
-    MUI_onoff_switch* sw;
-    int swval;
-    void execute_condition(CommonEC);
-    void execute_condition(MUI_onoff_switch*, int value);
 
     // User Interface Manipulations
     void remove_ui(MUI_widget*);
@@ -60,10 +42,41 @@ public:
 
     // Misc stuff for module writers
     void error(const clString&);
+    void update_progress(double);
+    void update_progress(int, int);
 
     // Callbacks...
-    virtual void connection(Module::ConnectionMode, int, int);
+    virtual void create_widget();
+    void redraw_widget(CallbackData*, void*);
+    int mapped;
+
+    void update_module(int);
+    virtual void do_execute();
+    virtual void execute()=0;
+    virtual int should_execute();
+
+    // Our interface...
+    GC gc;
+    DrawingAreaC* drawing_a;
+    XQColor* bgcolor;
+    XQColor* fgcolor;
+    XQColor* top_shadow;
+    XQColor* bottom_shadow;
+    XQColor* select_color;
+    XQColor* executing_color;
+    XQColor* executing_color_top;
+    XQColor* executing_color_bot;
+    XQColor* completed_color;
+    XQColor* completed_color_top;
+    XQColor* completed_color_bot;
+    int widget_ytitle;
+    int widget_ygraphtop;
+    int widget_ytime;
+    int widget_ygraphbot;
+    int widget_height;
+    int widget_width;
+    int widget_xgraphleft;
+    int widget_xgraphright;
 };
 
 #endif /* SCI_project_UserModule_h */
-

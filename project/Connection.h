@@ -15,19 +15,21 @@
 #define SCI_project_Connection_h 1
 
 class IPort;
+class Module;
 class OPort;
 
 class Connection {
 public:
-    Connection(OPort*, IPort*);
+    Connection(Module*, int, Module*, int);
     ~Connection();
+    void attach(OPort*);
+    void attach(IPort*);
 
     OPort* oport;
     IPort* iport;
     int local;
 
-    // Data members for the NetworkEdtitor
-    void* drawing_a[5];
+    void wait_ready();
 };
 
 #endif /* SCI_project_Connection_h */

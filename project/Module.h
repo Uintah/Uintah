@@ -14,15 +14,26 @@
 #ifndef SCI_project_Module_h
 #define SCI_project_Module_h 1
 
+#include <MessageBase.h>
 #include <Classlib/Array1.h>
 #include <Classlib/String.h>
-#include <Classlib/Timer.h>
 #include <Multitask/ITC.h>
+#include <Multitask/Task.h>
 class Connection;
-class ModuleWidgetCallbackData;
 class IPort;
+class Module;
+class Network;
+class NetworkEditor;
 class OPort;
-struct ModuleMsg;
+
+class ModuleHelper : public Task {
+    Module* module;
+public:
+    ModuleHelper(Module* module);
+    virtual ~ModuleHelper();
+
+    virtual int body(int);
+};
 
 class Module {
 public:
@@ -32,10 +43,12 @@ public:
 	Completed,
     };
 private:
-    clString name;
-    virtual int body(int);
-    WallClockTimer timer;
+    ModuleHelper* helper;
 protected:
+    friend class ModuleHelper;
+    virtual void do_execute()=0;
+
+    clString name;
     int need_update;
     double progress;
     State state;
@@ -46,62 +59,57 @@ public:
 	Connected,
 	Disconnected,
     };
-    Module(const clString& name);
+    enum SchedClass {
+	Sink,
+	Source,
+	Filter,
+    };
+    Module(const clString& name, SchedClass);
     virtual ~Module();
     Module(const Module&, int deep);
     virtual Module* clone(int deep)=0;
 
-    // Used by NetworkEditor
-    double get_progress();
-    State get_state();
-    clString get_name();
-    double get_execute_time();
-    int needs_update();
-    void updated();
-    int interface_initialized;
-    int xpos, ypos;
-    int width, height;
-    int ytitle;
-    int ygraphtop;
-    int ygraphbot;
-    int xgraphleft;
-    int xgraphright;
-    int ytime;
-    void* drawing_a;
-    ModuleWidgetCallbackData* wcbdata;
-    Mailbox<ModuleMsg*> mailbox;
+    Mailbox<MessageBase*> mailbox;
 
-    // Used by Scheduler
+    inline State get_state(){ return state;}
+    inline double get_progress(){ return progress;}
 
-    // Used by NetworkEditor and Scheduler
-    int niports();
-    IPort* iport(int);
-    int noports();
-    OPort* oport(int);
+    // Callbacks
+    virtual void connection(Module::ConnectionMode, int, int);
+
+    // Port manipulations
+    void add_iport(IPort*);
+    void add_oport(OPort*);
+    void remove_iport(int);
+    void remove_oport(int);
+    void rename_iport(int, const clString&);
+    void rename_oport(int, const clString&);
 
     // Used by Module subclasses
     void update_progress(double);
     void update_progress(int, int);
 
-    // Implemented by Module subclasses
-    virtual void activate();
-    virtual void execute()=0;
-};
+    // User Interface information
+    NetworkEditor* netedit;
+    Network* network;
+public:
+    IPort* iport(int);
+    OPort* oport(int);
+    int xpos;
+    int ypos;
+    void set_context(NetworkEditor*, Network*);
 
-struct ModuleMsg {
-    enum MType {
-	Connect,
+    // For the scheduler
+    enum SchedState {
+	SchedDormant,
+	SchedRegenData,
+	SchedNewData,
     };
-    ModuleMsg(Module::ConnectionMode, int output, int port,
-	      Module* tomod, int toport, Connection* conn);
-
-    MType type;
-    Module::ConnectionMode mode;
-    int output;
-    int port;
-    Module* tomod;
-    int toport;
-    Connection* connection;
+    SchedState sched_state;
+    SchedClass sched_class;
+    virtual int should_execute()=0;
+private:
+    virtual void create_widget()=0;
 };
 
 #endif /* SCI_project_Module_h */

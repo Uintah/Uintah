@@ -19,15 +19,21 @@
 class clString;
 class Connection;
 class Module;
+class NetworkEditor;
 
 class Network {
     Mutex the_lock;
     int read_file(const clString&);
     Array1<Module*> modules;
     Array1<Connection*> connections;
+    NetworkEditor* netedit;
+    int first;
+    int reschedule;
 public:
     Network(int first);
     ~Network();
+
+    void initialize(NetworkEditor*);
 
     void read_lock();
     void read_unlock();

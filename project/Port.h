@@ -16,36 +16,49 @@
 
 #include <Classlib/Array1.h>
 #include <Classlib/String.h>
+class ColorManager;
 class Connection;
-class Datatype;
 class Module;
-class InData;
-class OutData;
+class XQColor;
 
 class Port {
-    Array1<Connection*> connections;
-public:
-    Port(Module*, int, const clString&, const clString&);
-    clString name;
     Module* module;
     int which_port;
-    void attach(Connection*);
+    clString typename;
+    clString portname;
+    clString colorname;
+    int protocols;
+    int u_proto;
+protected:
+    Array1<Connection*> connections;
+public:
+    Port(Module*, const clString&, const clString&,
+	 const clString&, int protocols);
+    void set_port(int which_port);
+    int using_protocol();
     int nconnections();
     Connection* connection(int);
-    Datatype* datatype;
+    Module* get_module();
+    void attach(Connection*);
+    void detach(Connection*);
+    virtual void reset()=0;
+    virtual void finish()=0;
+    void get_colors(ColorManager*);
+    XQColor* bgcolor;
+    XQColor* top_shadow;
+    XQColor* bottom_shadow;
 };
 
 class IPort : public Port {
 public:
-    IPort(Module*, int, InData*, const clString&);
-    InData* data;
+    IPort(Module*, const clString&, const clString&,
+	  const clString&, int protocols);
 };
 
 class OPort : public Port {
 public:
-    OPort(Module*, int, OutData*, const clString&);
-    OutData* data;
+    OPort(Module*, const clString&, const clString&,
+	  const clString&, int protocols);
 };
-
 
 #endif /* SCI_project_Port_h */

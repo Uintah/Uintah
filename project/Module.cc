@@ -12,42 +12,50 @@
  */
 
 #include <Module.h>
+#include <Connection.h>
+#include <MotifCallbackBase.h>
 #include <NotFinished.h>
+#include <stdlib.h>
 
-Module::Module(const clString& name)
-: name(name), xpos(10), ypos(10),
-  interface_initialized(0), state(NeedData),
-  mailbox(10)
+#define DEFAULT_MODULE_PRIORITY 90
+ModuleHelper::ModuleHelper(Module* module)
+: Task("ModuleHelper", 1, DEFAULT_MODULE_PRIORITY),
+  module(module)
 {
 }
 
-Module::Module(const Module& copy, int deep)
-: name(copy.name), xpos(copy.xpos+10), ypos(copy.ypos+10),
-  interface_initialized(0),
-  state(NeedData),
-  mailbox(10)
+ModuleHelper::~ModuleHelper()
 {
+}
+
+int ModuleHelper::body(int)
+{
+    while(1){
+	MessageBase* msg=module->mailbox.receive();
+	delete msg;
+	module->do_execute();
+    }
+    return 0;
+}
+Module::Module(const clString& name, SchedClass sched_class)
+: name(name), sched_class(sched_class), state(NeedData), mailbox(5),
+  xpos(10), ypos(10)
+{
+    helper=new ModuleHelper(this);
+    helper->activate(0);
+}
+
+Module::Module(const Module& copy, int)
+: name(copy.name), state(NeedData), mailbox(5),
+  xpos(10), ypos(10)
+{
+    helper=new ModuleHelper(this);
+    helper->activate(0);
+    NOT_FINISHED("Module copy CTOR");
 }
 
 Module::~Module()
 {
-}
-
-clString Module::get_name()
-{
-    return name;
-}
-
-int Module::body(int)
-{
-    state=Executing;
-    timer.clear();
-    timer.start();
-    execute();
-    timer.stop();
-    state=Completed;
-    NOT_FINISHED("Module::body");
-    return 0;
 }
 
 void Module::update_progress(double p)
@@ -62,44 +70,49 @@ void Module::update_progress(int n, int max)
     need_update=1;
 }
 
-double Module::get_execute_time()
+// Port stuff
+void Module::add_iport(IPort* port)
 {
-    return timer.time();
+    iports.add(port);
+
+    // Send the update message to the user interface...
+    NOT_FINISHED("Module::add_iport");
 }
 
-int Module::needs_update()
+void Module::add_oport(OPort* port)
 {
-    return need_update;
+    oports.add(port);
+
+    // Send an update message to the user interface...
+    NOT_FINISHED("Module::add_oport");
 }
 
-void Module::updated()
+void Module::remove_iport(int)
 {
-    need_update=0;
+    NOT_FINISHED("Module::remove_iport");
 }
 
-double Module::get_progress()
+void Module::remove_oport(int)
 {
-    return progress;
+    NOT_FINISHED("Module::remove_oport");
 }
 
-Module::State Module::get_state()
+void Module::rename_iport(int, const clString&)
 {
-    return state;
+    NOT_FINISHED("Module::rename_iport");
 }
 
-int Module::niports()
+
+void Module::connection(ConnectionMode, int, int)
 {
-    return iports.size();
+    // Default - do nothing...
 }
 
-IPort* Module::iport(int i)
+void Module::set_context(NetworkEditor* _netedit, Network* _network)
 {
-    return iports[i];
-}
-
-int Module::noports()
-{
-    return oports.size();
+    netedit=_netedit;
+    network=_network;
+    create_widget();
 }
 
 OPort* Module::oport(int i)
@@ -107,13 +120,7 @@ OPort* Module::oport(int i)
     return oports[i];
 }
 
-void Module::activate()
+IPort* Module::iport(int i)
 {
-}
-
-ModuleMsg::ModuleMsg(Module::ConnectionMode mode, int output, int port,
-		     Module* tomod, int toport, Connection* connection)
-: type(Connect), mode(mode), output(output), port(port),
-  tomod(tomod), toport(toport), connection(connection)
-{
+    return iports[i];
 }

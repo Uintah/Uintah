@@ -12,26 +12,32 @@
  */
 
 #include <Port.h>
-#include <Data.h>
-#include <Datatype.h>
+#include <ColorManager.h>
+#include <Module.h>
+#include <NetworkEditor.h>
+#include <XQColor.h>
 #include <iostream.h>
 
-Port::Port(Module* module, int which_port, const clString& dt,
-	   const clString& name)
-: module(module), which_port(which_port), name(name)
-{
-    datatype=Datatype::lookup(dt);
-}
-
-IPort::IPort(Module* module, int which_port, InData* data,
-	     const clString& name)
-: Port(module, which_port, data->typename(), name), data(data)
+Port::Port(Module* module, const clString& typename,
+	   const clString& portname, const clString& colorname,
+	   int protocols)
+: module(module), typename(typename),
+  portname(portname), colorname(colorname),
+  protocols(protocols), u_proto(0)
 {
 }
 
-OPort::OPort(Module* module, int which_port, OutData* data,
-	     const clString& name)
-: Port(module, which_port, data->typename(), name), data(data)
+IPort::IPort(Module* module, const clString& typename,
+	     const clString& portname, const clString& colorname,
+	     int protocols)
+: Port(module, typename, portname, colorname, protocols)
+{
+}
+
+OPort::OPort(Module* module, const clString& typename,
+	     const clString& portname, const clString& colorname,
+	     int protocols)
+: Port(module, typename, portname, colorname, protocols)
 {
 }
 
@@ -45,7 +51,26 @@ int Port::nconnections()
     return connections.size();
 }
 
+int Port::using_protocol()
+{
+    return u_proto;
+}
+
+void Port::get_colors(ColorManager* cm)
+{
+    if(bgcolor)return;
+    bgcolor=new XQColor(cm, colorname());
+    top_shadow=bgcolor->top_shadow();
+    bottom_shadow=bgcolor->bottom_shadow();
+}
+
 Connection* Port::connection(int i)
 {
     return connections[i];
 }
+
+Module* Port::get_module()
+{
+    return module;
+}
+

@@ -13,12 +13,15 @@
 
 #include <Classlib/ArgProcessor.h>
 #include <Multitask/Task.h>
-#include <Datatype.h>
+#include <ColorManager.h>
 #include <ModuleList.h>
+#include <MtXEventLoop.h>
 #include <Network.h>
 #include <NetworkEditor.h>
-#include <Scheduler.h>
+#include <iostream.h>
 #include <stdlib.h>
+
+MtXEventLoop* evl;
 
 int main(int argc, char** argv)
 {
@@ -27,32 +30,38 @@ int main(int argc, char** argv)
     // the rest is handled "automagically".
     ArgProcessor::process_args(argc, argv);
 
-    // Build the list of datatypes...
-    Datatype::initialize_list();
-
     // Build the list of known modules...
     ModuleList::initialize_list();
 
     // Initialize the multithreader
     TaskManager::initialize();
 
+    // Fork off a task for the Event loop handler...
+    evl=new MtXEventLoop();
+    evl->activate(0);
+
+    // Wait until it gets started
+    evl->wait_start();
+
+    // Find the display and create a ColorManager for the default
+    // colormap
+    Display* display=evl->get_display();
+    Screen* screen=evl->get_screen();
+    ColorManager* color_manager=new ColorManager(display,
+						 DefaultColormapOfScreen(screen));
+    
     // Create initial network
     // We build the Network with a 1, indicating that this is the
     // first instantiation of the network class, and this network
     // should read the command line specified files (if any)
     Network* net=new Network(1);
-    
-    // Fork off task for the scheduler and the network editor
-    // and tell them about each other.  They are both detached
-    // tasks, and the Task* will be deleted by the task manager
-    Scheduler* sched_task=new Scheduler(net);
-    NetworkEditor* gui_task=new NetworkEditor(net);
-    sched_task->set_gui(gui_task);
-    gui_task->set_sched(sched_task);
 
-    // Activate the tasks...  Arguments and return values are
-    // meaningless
-    sched_task->activate(0);
+    // Fork off task for the network editor.  It is a detached
+    // task, and the Task* will be deleted by the task manager
+    NetworkEditor* gui_task=new NetworkEditor(net, display, color_manager);
+
+    // Activate the network editor and scheduler.  Arguments and return
+    // values are meaningless
     gui_task->activate(0);
 
     // This will wait until all tasks have completed before exiting
@@ -61,3 +70,4 @@ int main(int argc, char** argv)
     // Never reached
     return 0;
 }
+

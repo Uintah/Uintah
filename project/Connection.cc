@@ -12,18 +12,26 @@
  */
 
 #include <Connection.h>
+#include <Module.h>
 #include <Port.h>
 
-Connection::Connection(OPort* oport, IPort* iport)
-: oport(oport), iport(iport)
+Connection::Connection(Module* m1, int p1, Module* m2, int p2)
 {
-    iport->attach(this);
-    oport->attach(this);
+    oport=m1->oport(p1);
+    iport=m2->iport(p2);
     local=1;
 }
 
 Connection::~Connection()
 {
-    iport->attach(this);
-    oport->attach(this);
+}
+
+void Connection::attach(OPort* op)
+{
+    oport=op;
+}
+
+void Connection::attach(IPort* ip)
+{
+    iport=ip;
 }

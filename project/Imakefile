@@ -1,30 +1,38 @@
 
 #include <config/sci.cf>
 
-LOCALINCLUDES = -I. -I../modules
-OBJS = Connection.o  Data.o  Datatype.o  Datatypes.o  \
-	Module.o  Modules.o  ModuleList.o  \
+LOCALINCLUDES = -I. -I../modules -I../../wrapper -I../../wrapper/Mt
+OBJS = ColorManager.o  Connection.o  \
+	Module.o  Modules.o  ModuleList.o  MotifCallbackBase.o  \
 	MUI.o  \
-	Network.o  NetworkEditor.o  Port.o  Scheduler.o  \
-	SoundData.o \
-	UserModule.o  \
+	MtXEventLoop.o \
+	Network.o  NetworkEditor.o  Port.o  \
+	SoundPort.o \
+	UserModule.o  XQColor.o \
 	main.o
-SRCS = Connection.cc Data.cc Datatype.cc Datatypes.cc \
-	Module.cc Modules.cc ModuleList.cc \
+SRCS = ColorManager.cc Connection.cc \
+	Module.cc Modules.cc ModuleList.cc MotifCallbackBase.cc \
 	MUI.cc \
-	Network.cc NetworkEditor.cc Port.cc Scheduler.cc \
-	SoundData.cc \
-	UserModule.cc \
+	MtXEventLoop.cc \
+	Network.cc NetworkEditor.cc Port.cc \
+	SoundPort.cc \
+	UserModule.cc XQColor.cc \
 	main.cc
 TARGET = project
 
 SCI_LIBS = \
 	../modules/libmodules.a \
 	SCI_MultitaskLib \
-	SCI_ClassLib
+	SCI_ClassLib \
+	../../wrapper/libMInT/libMInT.a
 
-SCI_LDFLAGS = SCI_LM SCI_LTHREAD SCI_LMOTIF SCI_LX11
+SCI_LDFLAGS = -L../../audio -laudio SCI_LM SCI_LTHREAD SCI_LMOTIF SCI_LX11 -lgen
+
+depend:: XQColorDB.h
 
 SCIDependTarget($(SRCS))
 SCIProgramTarget($(TARGET), $(OBJS), $(SCI_LIBS), $(SCI_LDFLAGS))
 
+XQColorDB.h: rgb.txt gendb.awk
+	rm -f XQColorDB.h
+	awk -f gendb.awk rgb.txt > XQColorDB.h

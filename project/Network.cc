@@ -23,30 +23,15 @@
 static Arg_stringval initial_net("net", "", "specify initial network to load");
 
 Network::Network(int first)
+: first(first), netedit(0)
 {
-    if(first && initial_net.is_set()){
-	if(!read_file(initial_net.value())){
-	    cerr << "Can't read initial map\n";
-	    exit(-1);
-	}
-    }
-    modules.add((*ModuleList::lookup("SoundInput"))());
-    modules[0]->activate();
-    modules.add((*ModuleList::lookup("SoundFilter"))());
-    modules[1]->activate();
-    modules[1]->ypos=110;
-    modules.add((*ModuleList::lookup("SoundOutput"))());
-    modules[2]->activate();
-    modules[2]->ypos=210;
-    connect(modules[0], 0, modules[1], 0);
-    connect(modules[1], 0, modules[2], 0);
 }
 
 Network::~Network()
 {
 }
 
-int Network::read_file(const clString& filename)
+int Network::read_file(const clString&)
 {
     NOT_FINISHED("Network::read_file");
     return 1;
@@ -95,9 +80,29 @@ Connection* Network::connection(int i)
 
 void Network::connect(Module* m1, int p1, Module* m2, int p2)
 {
-    Connection* conn=new Connection(m1->oport(p1), m2->iport(p2));
+    Connection* conn=new Connection(m1, p1, m2, p2);
     connections.add(conn);
-    // Notify the modules of the connection...
-    m1->mailbox.send(new ModuleMsg(Module::Connected, 1, p1, m2, p2, conn));
-    m2->mailbox.send(new ModuleMsg(Module::Connected, 0, p2, m1, p1, conn));
+    // Reschedule next time we can...
+    reschedule=1;
+}
+
+void Network::initialize(NetworkEditor* _netedit)
+{
+    netedit=_netedit;
+    if(first && initial_net.is_set()){
+	if(!read_file(initial_net.value())){
+	    cerr << "Can't read initial map\n";
+	    exit(-1);
+	}
+    }
+    modules.add((*ModuleList::lookup("SoundReader"))());
+    modules[0]->set_context(netedit, this);
+    modules.add((*ModuleList::lookup("SoundFilter"))());
+    modules[1]->ypos=110;
+    modules[1]->set_context(netedit, this);
+    modules.add((*ModuleList::lookup("SoundOutput"))());
+    modules[2]->ypos=210;
+    modules[2]->set_context(netedit, this);
+    connect(modules[0], 0, modules[1], 0);
+    connect(modules[1], 0, modules[2], 0);
 }
