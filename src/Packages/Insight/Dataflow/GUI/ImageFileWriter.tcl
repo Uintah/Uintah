@@ -29,15 +29,31 @@ itcl_class Insight_DataIO_ImageFileWriter {
     }
 
     method ui {} {
+	global env
+
         set w .ui[modname]
 	if {[winfo exists $w]} {
 	    return
         }
 
+	set initdir ""
+	
+	# place to put preferred data directory
+	# it's used if $this-filename is empty
+	
+	if {[info exists env(SCIRUN_DATA)]} {
+	    set initdir $env(SCIRUN_DATA)
+	} elseif {[info exists env(SCI_DATA)]} {
+	    set initdir $env(SCI_DATA)
+	} elseif {[info exists env(PSE_DATA)]} {
+	    set initdir $env(PSE_DATA)
+	}
+
 	############
 	set types {
-	    {{Meta Image}        {.mhd} }
+	    {{Meta Image}        {.mhd .mha} }
 	    {{PNG Image}        {.png} }
+	    {{JPG Image}        {.jpg} }
 	    {{All Files}       {.*} }
 	}
 	set defname "MyImage.mhd"
@@ -45,7 +61,7 @@ itcl_class Insight_DataIO_ImageFileWriter {
 	############
         toplevel $w -class TkFDialog
 	makeSaveFilebox \
-	    -parent . \
+	    -parent $w \
 	    -filevar $this-FileName \
 	    -command "$this-c needexecute; wm withdraw $w" \
 	    -cancel "wm withdraw $w " \
@@ -54,6 +70,7 @@ itcl_class Insight_DataIO_ImageFileWriter {
 	    -initialfile $defname \
 	    -defaultextension $defext \
 	    -formatvar $this-filetype \
+	    -initialdir $initdir \
 	    -splitvar $this-split
     }
 }
