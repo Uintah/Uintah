@@ -3,16 +3,16 @@
 
 #include <iostream>
 
-#include "RationalMesh.h"
-#include "Object.h"
-#include "BBox.h"
-#include "Stats.h"
-#include "Light.h"
-#include "Ray.h"
-#include "Material.h"
-#include "HitInfo.h"
-#include "BV1.h"
-#include "Group.h"
+#include <Packages/rtrt/Core/RationalMesh.h>
+#include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/BV1.h>
+#include <Packages/rtrt/Core/Group.h>
 
 #define PATCH_OVERLAP 0.05
 #define FNAME "bez.without.overlap"

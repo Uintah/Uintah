@@ -1,6 +1,6 @@
 
-#include "Random.h"
-#include "MusilRNG.h"
+#include <Packages/rtrt/Core/Random.h>
+#include <Packages/rtrt/Core/MusilRNG.h>
 
 using namespace rtrt;
 

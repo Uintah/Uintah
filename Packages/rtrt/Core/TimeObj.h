@@ -2,8 +2,8 @@
 #ifndef TIMEOBJ_H
 #define TIMEOBJ_H 1
 
-#include "Object.h"
-#include "Array1.h"
+#include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/Array1.h>
 
 namespace rtrt {
 

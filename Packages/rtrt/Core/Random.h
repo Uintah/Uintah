@@ -2,7 +2,7 @@
 #ifndef Math_Random_h
 #define Math_Random_h 1
 
-#include "HashTable.h"
+#include <Packages/rtrt/Core/HashTable.h>
 
 namespace rtrt {
 

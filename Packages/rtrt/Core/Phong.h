@@ -2,8 +2,8 @@
 #ifndef PHONG_H
 #define PHONG_H 1
 
-#include "Material.h"
-#include "Color.h"
+#include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/Color.h>
 
 namespace rtrt {
 

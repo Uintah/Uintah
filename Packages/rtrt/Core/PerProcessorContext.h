@@ -2,7 +2,7 @@
 #ifndef PERPROCESSORCONTEXT_H
 #define PERPROCESSORCONTEXT_H 1
 
-#include "Assert.h"
+#include <Packages/rtrt/Core/Assert.h>
 
 namespace rtrt {
 

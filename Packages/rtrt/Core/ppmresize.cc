@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
-#include "Color.h"
+#include <Packages/rtrt/Core/Color.h>
 #include <mtl/matrix.h>
 #include <mtl/mtl.h>
 

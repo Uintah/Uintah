@@ -1,4 +1,4 @@
-#include "RationalBezier.h"
+#include <Packages/rtrt/Core/RationalBezier.h>
 
 using namespace rtrt;
 

@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <values.h>
 #include <stdio.h>
+#include <unistd.h>
 
 using namespace rtrt;
 using SCIRun::Mutex;
@@ -40,6 +41,7 @@ void VolumeDpy::attach(VolumeBase* vol)
 
 void VolumeDpy::run()
 {
+  sleep(3);
     // Compute the global minmax
     if(vols.size()==0)
 	exit(0);

@@ -1,6 +1,6 @@
 
-#include "VolumeBase.h"
-#include "VolumeDpy.h"
+#include <Packages/rtrt/Core/VolumeBase.h>
+#include <Packages/rtrt/Core/VolumeDpy.h>
 
 using namespace rtrt;
 

@@ -1,6 +1,6 @@
 
-#include "Stats.h"
-#include "Color.h"
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/Color.h>
 #include <strings.h>
 #include <iostream>
 
