@@ -25,6 +25,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
+#include <Packages/Uintah/CCA/Components/ICE/AMRICE.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
 #include <Packages/Uintah/CCA/Components/Examples/Poisson1.h>
@@ -496,6 +497,10 @@ main( int argc, char** argv )
 	  comp = arches;
 	} else if(do_ice) {
 	  ICE* ice = scinew ICE(world);
+          if(do_AMR)
+	    ice = scinew AMRICE(world);
+	  else
+	    ice = scinew ICE(world);
 	  sim = ice;
 	  comp = ice;
 	} else if(do_burger){
