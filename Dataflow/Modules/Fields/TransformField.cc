@@ -41,7 +41,6 @@
 #include <Core/Datatypes/TriSurf.h>
 #include <Core/Datatypes/ContourField.h>
 #include <Core/Datatypes/PointCloud.h>
-#include <Core/Datatypes/DispatchNonlattice1.h>
 #include <iostream>
 #include <string.h>
 #include <stdlib.h>
@@ -62,7 +61,7 @@ public:
 
 
   void matrix_to_transform(MatrixHandle mH, Transform& t);
-  template <class F> void dispatch(F *ifield);
+  template <class M> void callback(Field *ifield, M *);
 private:  
   Transform trans_;
 };
@@ -95,20 +94,21 @@ TransformField::matrix_to_transform(MatrixHandle mH, Transform& t)
   t.set(a);
 }
 
-template <class F>
+
+template <class M>
 void
-TransformField::dispatch(F *ifield)
+TransformField::callback(Field *ifield, M *)
 {
-  // do our own detach / clone
-  LockingHandle<typename F::mesh_type> omesh = ifield->get_typed_mesh();
-  omesh.detach();
-  F *ofield = scinew F(omesh, ifield->data_at());
-  ofield->fdata() = ifield->fdata();
-  int sz = omesh->nodes_size();
-  for (int i = 0; i < sz; i++) {
+  Field *ofield = ifield->clone();
+  ofield->mesh_detach();
+
+  M *mesh = (M *)(ofield->mesh().get_rep());
+  const int sz = mesh->nodes_size();
+  for (int i = 0; i < sz; i++)
+  {
     Point p;
-    omesh->get_point(p, i);
-    omesh->set_point(trans_.project(p), i);
+    mesh->get_point(p, i);
+    mesh->set_point(trans_.project(p), i);
   }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
@@ -123,7 +123,8 @@ TransformField::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifield_handle;
-  if (!(ifp->get(ifield_handle) && ifield_handle.get_rep()))
+  Field *ifield;
+  if (!(ifp->get(ifield_handle) && (ifield = ifield_handle.get_rep())))
   {
     return;
   }
@@ -136,8 +137,26 @@ TransformField::execute()
   }
   matrix_to_transform(imatrix_handle, trans_);
 
-  if (ifield_handle->get_type_name(0) != "LatticeVol") {
-    dispatch_nonlattice1(ifield_handle, dispatch);
+  const string geom_name = ifield->get_type_name(0);
+  if (geom_name == "TetVol")
+  {
+    callback(ifield, (TetVolMesh *)0);
+  }
+  else if (geom_name == "TriSurf")
+  {
+    callback(ifield, (TriSurfMesh *) 0);
+  }
+  else if (geom_name == "ContourField")
+  {
+    callback(ifield, (ContourMesh *) 0);
+  }
+  else if (geom_name == "PointCloud")
+  {
+    callback(ifield, (PointCloudMesh *) 0);
+  }
+  else
+  {
+    cout << "TransformField:: Unsupported mesh type\n";
   }
 }
 
