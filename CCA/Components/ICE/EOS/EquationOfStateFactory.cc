@@ -28,7 +28,7 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
       if (mat_type == "stiff_gas") {
 		 return(scinew StiffGas(child));
       } else {
-	 cerr << "Unknown Material Type R (" << mat_type << ")" << std::endl;
+	 cerr << "Unknown EOS Type R (" << mat_type << ")" << std::endl;
 	 //      exit(1);
       }
    }
