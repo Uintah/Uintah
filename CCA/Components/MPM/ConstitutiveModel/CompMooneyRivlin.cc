@@ -18,6 +18,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
+
 #include <sci_values.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -32,18 +33,14 @@ using namespace SCIRun;
 // The shear modulus = 2(C1 + C2).
 
 CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps, MPMLabel* Mlb, 
-                                                     MPMFlags* Mflag)
+				   MPMFlags* Mflag) 
+  : ConstitutiveModel(Mlb,Mflag)
 {
-  lb = Mlb;
-  flag = Mflag;
+
   ps->require("he_constant_1",d_initialData.C1);
   ps->require("he_constant_2",d_initialData.C2);
   ps->require("he_PR",d_initialData.PR);
-  if(flag->d_8or27==8){
-    NGN=1;
-  } else if(flag->d_8or27==27){
-    NGN=2;
-  }
+
 }
 
 CompMooneyRivlin::CompMooneyRivlin(const CompMooneyRivlin* cm)
@@ -221,6 +218,13 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     double c_dil = 0.0,se=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
+
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
     //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
@@ -240,10 +244,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     delt_vartype delT;
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
-
-    if(flag->d_8or27==27){
-      old_dw->get(psize,             lb->pSizeLabel,                     pset);
-    }
+    old_dw->get(psize,             lb->pSizeLabel,                     pset);
     old_dw->get(px,                  lb->pXLabel,                        pset);
     old_dw->get(pmass,               lb->pMassLabel,                     pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,                 pset);
@@ -296,16 +297,8 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       pIntHeatRate[idx] = 0.0;
 
       // Get the node indices that surround the cell
-      IntVector ni[MAX_BASIS];
-      Vector d_S[MAX_BASIS];
-      
       ASSERT(patch->getBox().contains(px[idx]));
-      if(flag->d_8or27==8){
-        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-      }
-      else if(flag->d_8or27==27){
-        patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
-      }
+      interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
       
       Vector gvel;
       velGrad.set(0.0);
@@ -402,6 +395,9 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                   lb->delTLabel);
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
   }
 }
 

@@ -1,5 +1,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/TransIsoHyperImplicit.h>
+#include <Packages/Uintah/CCA/Components/MPM/LinearInterpolator.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -218,6 +219,13 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
     double d2WdI4tilde2;
     //double shear = 0.0;
     Vector deformed_fiber_vector;
+
+    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
 //
     Matrix3 Identity;
     
@@ -292,10 +300,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         particleIndex idx = *iter;
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
-        IntVector ni[8];
-        Vector d_S[8];
-
-        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
         int dof[24];
         int l2g_node_num;
         for(int k = 0; k < 8; k++) {
@@ -599,6 +604,9 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         solver->fillMatrix(24,dof,24,dof,v);
       }  // end of loop over particles
     }
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
   }
   solver->flushMatrix();
 }
@@ -621,6 +629,12 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      //double shear = 0.0;
      Vector deformed_fiber_vector;
      Matrix3 deformationGradientInc,dispGrad;
+
+     LinearInterpolator* interpolator = new LinearInterpolator(patch);
+     IntVector* ni;
+     ni = new IntVector[interpolator->size()];
+     Vector* d_S;
+     d_S = new Vector[interpolator->size()];
 
      Matrix3 Identity;
 
@@ -692,8 +706,6 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
-        IntVector ni[8];
-        Vector d_S[8];
 
 #if 0
         if(ptemperature[idx] < 300.0){
@@ -705,7 +717,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
            bulk  = d_initialData.Bulk ;
         }
 #endif
-        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
         for(int k = 0; k < 8; k++) {
           const Vector& disp = dispNew[ni[k]];
@@ -800,6 +812,9 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         pvolume_deformed[idx] = pvolumeold[idx]*J;
       }
      }
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
    }
 }
 

@@ -2,6 +2,7 @@
 #define __MPM_FLAGS_H__
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/CCA/Components/MPM/ParticleInterpolator.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
@@ -18,6 +19,7 @@ namespace Uintah {
     Copyright (C) 2004 University of Utah
   */
   /////////////////////////////////////////////////////////////////////////////
+
 
   class MPMFlags {
 
@@ -54,6 +56,8 @@ namespace Uintah {
     double      d_forceIncrementFactor;
     bool        d_canAddMPMMaterial;
     double      d_addFrictionWork;     // 1 == add , 0 == do not add
+
+    ParticleInterpolator* d_interpolator;
 
     MPMFlags();
 

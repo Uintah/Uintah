@@ -1,5 +1,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
+#include <Packages/Uintah/CCA/Components/MPM/LinearInterpolator.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -28,21 +29,17 @@ using namespace Uintah;
 using namespace SCIRun;
 
 HypoElasticImplicit::HypoElasticImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, 
-                                                            MPMFlags* Mflag)
+					 MPMFlags* Mflag)
+  : ConstitutiveModel(Mlb,Mflag)
 {
-  lb = Mlb;
-  flag = Mflag;
+
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
 
-  NGN=1;
 }
 
 HypoElasticImplicit::HypoElasticImplicit(const HypoElasticImplicit* cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
   d_initialData.G = cm->d_initialData.G;
   d_initialData.K = cm->d_initialData.K;
 }
@@ -146,6 +143,13 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 {
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
+
+    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
@@ -224,10 +228,8 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
-        IntVector ni[8];
-        Vector d_S[8];
 
-        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
         int dof[24];
         int l2g_node_num;
         for(int k = 0; k < 8; k++) {
@@ -415,6 +417,9 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 	*/
      }
     }
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
   }
   solver->flushMatrix();
 }
@@ -435,6 +440,13 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 //    double c_dil=0.0
     double Jinc;
     double onethird = (1.0/3.0);
+
+    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
 
     Identity.Identity();
 
@@ -476,7 +488,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
     if(matl->getIsRigid()){
       for(ParticleSubset::iterator iter = pset->begin();
-                                   iter != pset->end(); iter++){
+	  iter != pset->end(); iter++){
         particleIndex idx = *iter;
         pstress_new[idx] = Matrix3(0.0);
         deformationGradient_new[idx] = Identity;
@@ -484,24 +496,22 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
       }
     }
     else{
-    for(ParticleSubset::iterator iter = pset->begin();
-					iter != pset->end(); iter++){
-      particleIndex idx = *iter;
-
-      // Get the node indices that surround the cell
-      IntVector ni[MAX_BASIS];
-      Vector d_S[MAX_BASIS];
-
-      patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-      for(int k = 0; k < 8; k++) {
-        const Vector& disp = dispNew[ni[k]];
-
-        for (int j = 0; j<3; j++){
-          for (int i = 0; i<3; i++) {
-            dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
-          }
-        }
-      }
+      for(ParticleSubset::iterator iter = pset->begin();
+	  iter != pset->end(); iter++){
+	particleIndex idx = *iter;
+	
+	// Get the node indices that surround the cell
+	
+	interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
+	for(int k = 0; k < 8; k++) {
+	  const Vector& disp = dispNew[ni[k]];
+	  
+	  for (int j = 0; j<3; j++){
+	    for (int i = 0; i<3; i++) {
+	      dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
+	    }
+	  }
+	}
 
       // Calculate the strain (here called D), and deviatoric rate DPrime
       Matrix3 D = (dispGrad + dispGrad.Transpose())*.5;
@@ -533,12 +543,15 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
               2.*(D(0,1)*AvgStress(0,1) +
                   D(0,2)*AvgStress(0,2) +
                   D(1,2)*AvgStress(1,2))) * pvolume_deformed[idx]*delT;
-
+      
       se += e;
+      }
+      new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
     }
-    new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
-  }
- }
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
+   }
 }
 
 void HypoElasticImplicit::addInitialComputesAndRequires(Task*,

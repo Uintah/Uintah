@@ -31,7 +31,6 @@ using namespace SCIRun;
 
 using namespace std;
 
-#define MAX_BASIS 27
 
 static DebugStream cout_doing("ShellMPM", false);
 

@@ -1,5 +1,6 @@
 #include "CNHDamage.h"
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/LinearInterpolator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
@@ -244,20 +245,29 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
 
   // Local variables 
-  short   pgFld[MAX_BASIS];
+  short   pgFld[27];
   double  J = 0.0, p = 0.0, IEl = 0.0, U = 0.0, W = 0.0, c_dil=0.0;
   Matrix3 velGrad(0.0), Shear(0.0), pBBar_new(0.0), pDefGradInc(0.0);
   Matrix3 pDispGrad(0.0), FF(0.0);
 
   // Loop thru patches
   for(int pp=0;pp<patches->size();pp++){
+    const Patch* patch = patches->get(pp);
+
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
+
 
     // Initialize patch variables
     double se = 0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
     // Get patch info
-    const Patch* patch = patches->get(pp);
+
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
@@ -265,7 +275,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     old_dw->get(pMass,                    lb->pMassLabel,               pset);
     old_dw->get(pX,                       lb->pXLabel,                  pset);
-    if (d_8or27 == 27) old_dw->get(pSize, lb->pSizeLabel,               pset);
+    old_dw->get(pSize, lb->pSizeLabel,               pset);
     old_dw->get(pVelocity,                lb->pVelocityLabel,           pset);
     old_dw->get(pDefGrad,                 lb->pDeformationMeasureLabel, pset);
     old_dw->get(pBeBar,                   bElBarLabel,                  pset);
@@ -309,15 +319,15 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pIntHeatRate[idx] = 0.0;
 
+      interpolator->findCellAndShapeDerivatives(pX[idx],ni,d_S,pSize[idx]);
+
       // Compute the velocity gradient
       if (flag->d_fracture) {
         for(int k = 0; k < flag->d_8or27; k++) pgFld[k] = pgCode[idx][k];
-        velGrad = computeVelGrad(patch, oodx, pX[idx], pSize[idx], pgFld, 
-                                 gVelocity, GVelocity);
+        computeVelocityGradient(velGrad,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
       } else {
         double erosion = pErosion[idx];
-        velGrad = computeVelGrad(patch, oodx, pX[idx], pSize[idx], 
-                                 gVelocity, erosion);
+        computeVelocityGradient(velGrad,ni,d_S, oodx, gVelocity, erosion);
       }
 
       // Compute the deformation gradient increment using the time_step
@@ -381,6 +391,10 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                 lb->delTLabel);
     new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
+
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
   }
 }
 
@@ -462,12 +476,18 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
 
   // Loop thru patches
   for(int pp=0;pp<patches->size();pp++){
+    const Patch* patch = patches->get(pp);
 
+    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+    
     // Initialize patch variables
     double se = 0.0;
 
-    // Get patch info
-    const Patch* patch = patches->get(pp);
+
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
@@ -511,8 +531,9 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pIntHeatRate[idx] = 0.0;
 
+      interpolator->findCellAndShapeDerivatives(pX[idx], ni, d_S);
       // Compute the displacement gradient and the deformation gradient
-      computeGrad(patch, oodx, pX[idx], gDisp, pDispGrad);
+      computeGrad(pDispGrad,ni,d_S, oodx, gDisp);
       pDefGradInc = pDispGrad + Identity;         
       double Jinc = pDefGradInc.Determinant();
 
@@ -557,6 +578,10 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
       se += e;
     }
     new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
+
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
   }
 }
 
@@ -620,6 +645,13 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 
+
+    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
@@ -645,8 +677,11 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Compute the displacement gradient and B matrices
-      computeGradAndBmats(patch, oodx, pX[idx], gDisp, l2g,
-                          pDispGrad, B, Bnl, dof);
+
+
+      interpolator->findCellAndShapeDerivatives(pX[idx], ni, d_S);
+
+      computeGradAndBmats(pDispGrad,ni,d_S, oodx, gDisp, l2g,B, Bnl, dof);
 
       // Compute the deformation gradient increment using the pDispGrad
       // Update the deformation gradient tensor to its time n+1 value.
@@ -717,6 +752,9 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       solver->fillMatrix(24,dof,24,dof,v);
 
     }  // end of loop over particles
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
   }
   solver->flushMatrix();
 }

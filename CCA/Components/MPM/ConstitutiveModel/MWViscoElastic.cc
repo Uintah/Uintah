@@ -27,12 +27,9 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-MWViscoElastic::MWViscoElastic(ProblemSpecP& ps, MPMLabel* Mlb, 
-                                                 MPMFlags* Mflag)
+MWViscoElastic::MWViscoElastic(ProblemSpecP& ps,MPMLabel* Mlb,MPMFlags* Mflag)
+    : ConstitutiveModel(Mlb,Mflag)
 {
-  lb = Mlb;
-  flag = Mflag;
-  
   ps->require("e_shear_modulus",d_initialData.E_Shear);
   ps->require("e_bulk_modulus",d_initialData.E_Bulk);
   ps->require("ve_shear_modulus",d_initialData.VE_Shear);
@@ -40,19 +37,10 @@ MWViscoElastic::MWViscoElastic(ProblemSpecP& ps, MPMLabel* Mlb,
   ps->require("ve_volumetric_viscosity",d_initialData.V_Viscosity);
   ps->require("ve_deviatoric_viscosity",d_initialData.D_Viscosity);
   
-  if(flag->d_8or27==8){
-    NGN=1;
-  } else if(flag->d_8or27==27){
-    NGN=2;
-  }
 }
 
 MWViscoElastic::MWViscoElastic(const MWViscoElastic* cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
-  
   d_initialData.E_Shear = cm->d_initialData.E_Shear;
   d_initialData.E_Bulk = cm->d_initialData.E_Bulk;
   d_initialData.VE_Shear = cm->d_initialData.VE_Shear;
@@ -235,6 +223,13 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     double onethird = (1.0/3.0);
 
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
+
     Identity.Identity();
 
     Vector dx = patch->dCell();
@@ -269,9 +264,8 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
     
-    if(flag->d_8or27==27){
-      old_dw->get(psize,             lb->pSizeLabel,               pset);
-    }
+    old_dw->get(psize,             lb->pSizeLabel,               pset);
+    
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pstress_e,           lb->pStress_eLabel,           pset);
     old_dw->get(pstress_ve_v,        lb->pStress_ve_vLabel,        pset);
@@ -317,15 +311,7 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
       pIntHeatRate[idx] = 0.0;
 
       // Get the node indices that surround the cell
-      IntVector ni[MAX_BASIS];
-      Vector d_S[MAX_BASIS];
-      if(flag->d_8or27==8){
-          patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-       }
-       else if(flag->d_8or27==27){
-          patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
-       }
-      
+      interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);      
        Vector gvel;
        velGrad.set(0.0);
        for(int k = 0; k < flag->d_8or27; k++) {
@@ -407,6 +393,10 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                 lb->delTLabel);
     new_dw->put(sum_vartype(se),               lb->StrainEnergyLabel);
+
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
   }
 }
 

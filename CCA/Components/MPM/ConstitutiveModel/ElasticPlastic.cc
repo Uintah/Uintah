@@ -41,13 +41,9 @@ using namespace SCIRun;
 static DebugStream cout_EP("EP",false);
 static DebugStream cout_EP1("EP1",false);
 
-ElasticPlastic::ElasticPlastic(ProblemSpecP& ps, 
-                               MPMLabel* Mlb, 
-                               MPMFlags* Mflag)
+ElasticPlastic::ElasticPlastic(ProblemSpecP& ps,MPMLabel* Mlb,MPMFlags* Mflag)
+  : ConstitutiveModel(Mlb,Mflag)
 {
-  lb = Mlb;
-  flag = Mflag;
-
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
   d_initialData.Chi = 0.9;
@@ -126,15 +122,6 @@ ElasticPlastic::ElasticPlastic(ProblemSpecP& ps,
   getInitialDamageData(ps);
   getSpecificHeatData(ps);
   initializeLocalMPMLabels();
-
-  switch(flag->d_8or27) {
-  case 8:
-    NGN = 1; break;
-  case 27:
-    NGN = 2; break;
-  default:
-    NGN = 1; break;
-  }
 
 }
 
@@ -551,13 +538,14 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw)
 {
-  cout_EP << getpid() << "ComputeStressTensor: In : Matl = " << matl 
-           << " id = " << matl->getDWIndex() <<  " patch = " 
-           << (patches->get(0))->getID();
+  if (cout_EP.active()) {
+    cout_EP << getpid() << "ComputeStressTensor: In : Matl = " << matl 
+	    << " id = " << matl->getDWIndex() <<  " patch = " 
+	    << (patches->get(0))->getID();
+  }
 
   // General stuff
   Matrix3 one; one.Identity(); Matrix3 zero(0.0);
-  Matrix3 tensorL(0.0); // Velocity gradient
   Matrix3 tensorD(0.0); // Rate of deformation
   Matrix3 tensorW(0.0); // Spin 
   Matrix3 tensorF; tensorF.Identity(); // Deformation gradient
@@ -580,6 +568,13 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
   // Loop thru patches
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+    
 
     //cerr << getpid() << " patch = " << patch->getID() << endl;
     // Get grid size
@@ -604,7 +599,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Vector> psize;
     constParticleVariable<double> pMass, pVolume;
     old_dw->get(px, lb->pXLabel, pset);
-    if(flag->d_8or27==27) old_dw->get(psize, lb->pSizeLabel, pset);
+    old_dw->get(psize, lb->pSizeLabel, pset);
     old_dw->get(pMass, lb->pMassLabel, pset);
     old_dw->get(pVolume, lb->pVolumeLabel, pset);
 
@@ -699,30 +694,29 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pIntHeatRate[idx] = 0.0;
 
-      cout_EP << getpid() << " idx = " << idx 
-              << " vel = " << pVelocity[idx] << endl;
+      if (cout_EP.active()) {
+	cout_EP << getpid() << " idx = " << idx 
+		<< " vel = " << pVelocity[idx] << endl;
+      }
+
       //-----------------------------------------------------------------------
       // Stage 1:
       //-----------------------------------------------------------------------
       // Calculate the velocity gradient (L) from the grid velocity
+
+      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+
+      Matrix3 tensorL(0.0);
       short pgFld[27];
       if (flag->d_fracture) {
-        for(int k=0; k<27; k++) 
-          pgFld[k]=pgCode[idx][k];
-        if (flag->d_8or27==27) 
-          tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx],
-                                            pgFld, gVelocity, GVelocity);
-        else 
-          tensorL = computeVelocityGradient(patch, oodx, px[idx], 
-                                            pgFld, gVelocity, GVelocity);
+	for(int k=0; k<27; k++) 
+	  pgFld[k]=pgCode[idx][k];
+	
+	computeVelocityGradient(tensorL,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
       } else {
-        if (flag->d_8or27==27)
-          tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx],
-                                            gVelocity, pErosion[idx]);
-        else
-          tensorL = computeVelocityGradient(patch, oodx, px[idx], 
-                                            gVelocity, pErosion[idx]);
+	computeVelocityGradient(tensorL,ni,d_S,oodx,gVelocity,pErosion[idx]);
       }
+
       for (int ii = 0; ii < 3; ++ii) {
         for (int jj = 0; jj < 3; ++jj) {
           tensorL(ii,jj)=(fabs(tensorL(ii,jj)) < d_tol) ? 0.0 : tensorL(ii,jj);
@@ -1187,7 +1181,10 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                 lb->delTLabel);
     new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
   }
-  cout_EP << getpid() << "... End." << endl;
+
+  if (cout_EP.active()) 
+    cout_EP << getpid() << "... End." << endl;
+
 }
 
 void ElasticPlastic::carryForward(const PatchSubset* patches,
@@ -1484,9 +1481,11 @@ void ElasticPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
-  cout_EP << getpid() << "checkNeedAddMPMMaterial: In : Matl = " << matl
-           << " id = " << matl->getDWIndex() <<  " patch = "
-           << (patches->get(0))->getID();
+  if (cout_EP.active()) {
+    cout_EP << getpid() << "checkNeedAddMPMMaterial: In : Matl = " << matl
+	    << " id = " << matl->getDWIndex() <<  " patch = "
+	    << (patches->get(0))->getID();
+  }
 
   double need_add=0.;
 

@@ -29,31 +29,20 @@ using namespace Uintah;
 using namespace SCIRun;
 
 CompNeoHook::CompNeoHook(ProblemSpecP& ps,  MPMLabel* Mlb, 
-                                            MPMFlags* Mflag)
+			 MPMFlags* Mflag)
+  : ConstitutiveModel(Mlb,Mflag)
 {
-  lb = Mlb;
-  flag = Mflag;
+
   d_useModifiedEOS = false;
   ps->require("bulk_modulus", d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
   ps->get("useModifiedEOS",d_useModifiedEOS); 
 
-  d_8or27 = flag->d_8or27;
-  if(d_8or27==8){
-    NGN=1;
-  } else if(d_8or27==27){
-    NGN=2;
-  }
 
 }
 
 CompNeoHook::CompNeoHook(const CompNeoHook* cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  d_8or27 = cm->d_8or27;
-  NGN = cm->NGN;
-
   d_useModifiedEOS = cm->d_useModifiedEOS ;
   d_initialData.Bulk = cm->d_initialData.Bulk;
   d_initialData.Shear = cm->d_initialData.Shear;
@@ -165,6 +154,13 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     double onethird = (1.0/3.0);
     Matrix3 Identity;
 
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
+
     Identity.Identity();
 
     Vector dx = patch->dCell();
@@ -190,9 +186,8 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     
-    if(d_8or27==27){
-      old_dw->get(psize,             lb->pSizeLabel,              pset);
-    }
+    old_dw->get(psize,             lb->pSizeLabel,              pset);
+    
     new_dw->allocateAndPut(pstress,        lb->pStressLabel_preReloc,    pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
     new_dw->allocateAndPut(deformationGradient_new,
@@ -226,19 +221,11 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
       pIntHeatRate[idx] = 0.0;
 
       // Get the node indices that surround the cell
-      IntVector ni[MAX_BASIS];
-      Vector d_S[MAX_BASIS];
-      
-      if(d_8or27==8){
-        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-      }
-      else if(d_8or27==27){
-        patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
-      }
+      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
       
       Vector gvel;
       velGrad.set(0.0);
-      for(int k = 0; k < d_8or27; k++) {
+      for(int k = 0; k < flag->d_8or27; k++) {
         if (flag->d_fracture) {
           if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
           if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]]; 
@@ -317,6 +304,9 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
                 lb->delTLabel);
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
 
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
   }
 }
 
