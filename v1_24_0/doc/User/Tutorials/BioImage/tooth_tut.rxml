@@ -27,39 +27,98 @@ DEALINGS IN THE SOFTWARE.
 -->
 
 <chapter>
-  <title>Tooth</title>
+  <title>Tooth Data</title>
 
-  <para> </para>
-
-  <sect1>
-    <title>Getting Started</title>
-    <para></para>
-
-    <sect2>
-      <title>Preparations</title>
-      <para></para>
-    </sect2>
-
-    <sect2>
-      <title>Starting BioImage</title>
-      <para></para>
-    </sect2>
-
-  </sect1>
-
-  <sect1>
-    <title>The User Interface</title>
-    <para></para>
-  </sect1>
+  <!-- Intro to tooth data.  How was it obtained, etc -->
+  <para></para>
 
   <sect1>
     <title>Loading Data</title>
-    <para></para>
+    <para>Loading a dataset is very easy.  Upon opening BioImage, the
+    first module visible on the left-hand panel is the Load Data
+    window.  To load data, in this case the Tooth CT data, select the
+    Nrrd tab.  This will automatically allow BioImage to properly
+    process the Nrrd datatype.  Please see the BioImage Reference
+    Guide for more instruction on loading other types of data.  After
+    selecting the Nrrd tab, press the "Browse" button to open the File
+    Selection Dialog.  Navigate to the proper location and select the
+    "tooth.nhdr" file.  After selecting the proper dataset, press the
+    "Set" button to load the data.  After selecting the dataset,
+    simply press the green "Update" button to complete the process of
+    loading the data into BioImage.  Although the data might be
+    displayed in the view windows, the loading process is not complete
+    until the "Update" button is clicked.</para>
+
+    <para>After loading the data into BioImage, the 4 view windows
+    will contain visualizations of the data.  The upper-left window
+    will contain a 3D reconstruction of the data, while the other
+    three windows will present 3 different, orthogonal, slices of the
+    data.  These three windows can be manipulated by the "Viewing
+    Cube."  The Viewing Cube, located in the Load Data window, allows
+    the user to change the orientation of the slices presented in the
+    3 windows.  The orientation of each view can be changed by
+    altering the abbreviation next to the proper arrow.  By default,
+    the axial, sagittal, and coronal slices are view from the
+    superior, anterior, left views respectively.  To change this,
+    simply select the appropriate arrow, change the value, and then
+    click the cube button in the middle.  This will change all four
+    views in the drawing space.  The valid options are:</para>
+    <simplelist type="vert" columns="1">
+      <member>S: Superior</member>
+      <member>I: Inferior</member>
+      <member>A: Anterior</member>
+      <member>P: Posterior</member>
+      <member>L: Left</member>
+      <member>R: Right</member>
+    </simplelist>
+    <para>To reset the views to the default parameters, simply press
+    the "Reset" button in the lower right corner of the Load Data
+    window.</para>
   </sect1>
 
   <sect1>
-    <title>Pre-processing Filters</title>
-    <para></para>
+    <title>Dynamic Filters</title>
+    <para>BioImage focuses on data display, interaction, and
+    manipulation.  This is all possible through the use of Dynamic
+    Filters.  The various filters available are located at the top of
+    the left hand pane.  These filters, Resample, Crop, Histogram, and
+    CMedian allow finer control over the interaction and manipulation
+    of the data displayed in the visualization windows.</para>
+
+    <para>To add a Resample filter, click the "Resample" button.  A
+    new window will appear immediately below the Load Data window.
+    This window allows for resampling in each dimension as well as a
+    parameterized method for resampling.  To downsample this data set
+    in each dimension, change the "x1" to "x0.5" in each dimension.
+    This will resample the dataset to 1/2 of the samples in each
+    dimension.</para>
+
+    <para>Click the "Update" button to finalize and apply the Resample
+    filter.</para>
+
+    <para>To add a cropping filter, click the "Crop" button.  A new
+    window will appear immediately below the Resample filter.  Also,
+    notice that a set of boxes appears over the dataset in the display
+    pane.  The extents of the various boxes present a visual
+    indication of the area of the dataset that will remain after the
+    application of the Cropping filter.  The small yellow circles at
+    the corners can be clicked-and-dragged in order to interactively
+    change the size of the cropping filter.</para>
+
+    <para>Click the "Update" button to finalize and apply the Crop
+    filter to the Resampled dataset.</para>
+
+    <para>Notice that each of these filters are applied sequentially
+    from the Load Data window to the last filter in the list.  To
+    remove a filter from the list of filters to apply to the data,
+    simply select the filter by clicking in its window, and then
+    clicking the red "Delete" button.  This will remove the filter
+    from the pipeline completely.</para>
+
+    <para>Click the "Update" button to finalize and apply the new
+    filter rules.  Only after clicking the Update button will any
+    changes made to the data be applied to the data being
+    visualized.</para>
   </sect1>
 
   <sect1>
