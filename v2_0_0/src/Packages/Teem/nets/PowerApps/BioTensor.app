@@ -15,6 +15,44 @@
 #  University of Utah. All Rights Reserved.
 #
 
+# SCI Network 1.20
+
+puts "\nLoading BioTensor (this may take a minute)...\n"
+
+# COLOR SCHEME
+set basecolor grey
+
+. configure -background $basecolor
+
+option add *Frame*background black
+
+option add *Button*padX 1
+option add *Button*padY 1
+
+option add *background $basecolor
+option add *activeBackground $basecolor
+option add *sliderForeground $basecolor
+option add *troughColor $basecolor
+option add *activeForeground white
+
+option add *Scrollbar*activeBackground $basecolor
+option add *Scrollbar*foreground $basecolor#
+#  The contents of this file are subject to the University of Utah Public
+#  License (the "License"); you may not use this file except in compliance
+#  with the License.
+#  
+#  Software distributed under the License is distributed on an "AS IS"
+#  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+#  License for the specific language governing rights and limitations under
+#  the License.
+#  
+#  The Original Source Code is SCIRun, released March 12, 2001.
+#  
+#  The Original Source Code was developed by the University of Utah.
+#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+#  University of Utah. All Rights Reserved.
+#
+
 puts "\nLoading BioTensor (this may take a minute)...\n"
 
 # COLOR SCHEME
@@ -49,8 +87,13 @@ option add *highlightThickness 0
 
 #######################################################################
 # Check environment variables.  Ask user for input if not set:
-set results [sourceSettingsFile]
-set DATADIR [lindex $results 0]
+   # Attempt to get environment variables:
+
+set DATADIR [lindex [array get env SCIRUN_DATA] 1]
+set DATASET brain-dt
+
+
+
 #######################################################################
 
 
@@ -387,7 +430,11 @@ set $m0-label {unknown}
 set $m0-type {Scalar}
 set $m0-axis {axis0}
 set $m0-add {0}
-set $m0-filename $DATADIR/brain-dt/demo-DWI.nrrd
+if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
+    set $m0-filename $DATADIR/$DATASET/demo-DWI.nrrd
+} else {
+    set $m0-filename {}
+} 
 set $m1-notes {}
 set $m1-axis {3}
 set $m1-position {8}
@@ -931,7 +978,11 @@ set $m48-label {unknown}
 set $m48-type {Scalar}
 set $m48-axis {axis0}
 set $m48-add {1}
-set $m48-filename $DATADIR/brain-dt/demo-B0.nrrd
+if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
+    set $m48-filename $DATADIR/$DATASET/demo-B0.nrrd
+} else {
+    set $m48-filename {}    
+} 
 set $m49-notes {}
 set $m49-port-index {0}
 set $m50-notes {}
@@ -939,7 +990,11 @@ set $m50-label {unknown}
 set $m50-type {Scalar}
 set $m50-axis {axis0}
 set $m50-add {0}
-set $m50-filename $DATADIR/brain-dt/demo-gradients.txt
+if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
+    set $m50-filename $DATADIR/$DATASET/demo-gradients.txt
+} else {
+    set $m50-filename {}
+} 
 # set $m51-notes {}
 # set $m51-join-axis {0}
 # set $m51-incr-dim {0}
@@ -1958,185 +2013,215 @@ class BioTensorApp {
 	global tips
 
  	# Menu
- 	set tips(FileMenuSaveSession) \
- 	    "Save a BioTensor session\nto load at a later time"
- 	set tips(FileMenuLoadSession) \
- 	    "Load a BioTensor session\n"
- 	set tips(FileMenuQuit) \
- 	    "Quit BioTensor"
- 	set tips(HelpMenuTooltips) \
- 	    "Turn tooltips on or off"
- 	set tips(HelpMenuHelp) \
- 	    "Help for BioTensor"
- 	set tips(HelpMenuAbout) \
- 	    "Information about\nBioTensor"
+	set tips(FileMenu) [subst {\
+        Save Session...  \tSave a BioTensor session\n\
+                         \t\tto load at a later time\n\
+        Load Session...  \tLoad a BioTensor session\n\
+        Quit             \tQuit BioTensor} ]
+
+	set tips(HelpMenu) [subst {\
+        Show Tooltips   \tTurn tooltips on or off\n\
+        Help Contents   \tHelp for BioTensor\n\
+        About BioTensor \tInformation about\n\
+		        \t\tBioTensor } ]
+
 
  	# Process Tabs
  	set tips(LoadDataTab) \
- 	    "Load DWI Images,\na T2 Reference\nImage\n or Tensors depending\non mode."
+ 	    "Load DWI images,\na T2 Reference image\n or Tensors depending\non mode."
  	set tips(RegistrationTab) \
- 	    "EPI Registration paramters"
+ 	    "EPI Registration paramters."
  	set tips(BuildTensorsTab) \
- 	    "Parameters for\nBuilding Tensors"
+ 	    "Parameters for\nBuilding Tensors."
 
  	# Indicator
  	set tips(IndicatorBar) \
- 	    "Indicates the status of\napplication. Click when\nred to view error\nmessages"
+ 	    "Indicates the status of\napplication. Click when\nred to view error message."
  	set tips(IndicatorLabel) \
- 	    "Indicates the current\nstep in progress"
+ 	    "Indicates the current\nstep in progress."
 
 
  	# Data Tab
  	set tips(DataExecute) \
  	    "Click to load data"
  	set tips(DataNext) \
- 	    "Click to proceed to\nthe Registration step\nonly after completing\nthe Load Data step.\nIf Tensors were loaded\ndirectly, proceed to\nvisualization"
+ 	    "Click to proceed to\nthe Registration step\nonly after completing\nthe Load Data step.\nIf Tensors were loaded\ndirectly, proceed to\nvisualization."
+	set tips(NrrdTab) \
+	    "Load Data in\nNrrd format."
+	set tips(NrrdFile1) \
+	    "Specify a .nrrd or\n.nhdr file."
+	set tips(NrrdFile2) \
+	    "Browse to a .nrrd\nor .nhdr file."
+	set tips(DicomTab) \
+	    "Load Data in\nDicom format."
+	set tips(DicomFiles) \
+	    "Load a series of\nDicom images using\nour Dicom Loader."
+	set tips(AnalyzeTab) \
+	    "Load Data in\nAnalyze format."
+	set tips(AnalyzeFiles) \
+	    "Load Analyze files\nusing our Analyze\nLoader."
+	set tips(LoadModeDWI) \
+	    "Load a set of Diffusion\nWeighted Images. These\ncan be registered and\nused to build diffusion\ntensors."
+	set tips(LoadModeTensor) \
+	    "Load Tensors directly.\nThe Registration and\nBuild Tensors steps\nwill be skipped. "
 
  	# Registration Tab
  	set tips(RegToggle) \
- 	    "Perform\nEPI Registration\nor skip step entirely\nand build tensors"
+ 	    "Perform EPI Registration\nor skip step entirely and\nbuild tensors."
  	set tips(RegImpRefImg) \
- 	    "Select to register\nall images to eachother"
+ 	    "Select to register all\nimages to each other."
  	set tips(RegChooseRefImg) \
- 	    "Select a reference\nimage to register\nall images to"
+ 	    "Select a reference\nimage to register\nall images to."
  	set tips(RegRefImgSlider) \
- 	    "Select a reference image\nby adjusting the slider"
+ 	    "Select a reference image\nby adjusting the slider."
  	set tips(RegBlurX) \
- 	    "Gaussian Smoothing\nin the X direction\n(units=samples)"
+ 	    "Gaussian Smoothing\nin the X direction.\n(units=samples)"
  	set tips(RegBlurY) \
  	    "Gaussian Smoothing\nin the Y direction\n(units=samples)"
  	set tips(RegFitting) \
- 	    "Select the percentage of\nslices for parameter\nestimation"
+ 	    "Select the percentage of\nslices for parameter estimation."
  	set tips(RegExecute) \
- 	    "Click to apply Registration\nchanges"
+ 	    "Click to apply\nRegistration\nchanges."
  	set tips(RegNext) \
- 	    "Click to proceed to\nBuilding Tensors"
+ 	    "Click to proceed to\nBuilding Tensors."
 	
  	# Build Tensors Tab
  	set tips(DTToggleSmoothing) \
- 	    "Perform Smoothing"
+ 	    "Perform Smoothing."
  	set tips(DTSmoothXY) \
- 	    "DWI Smoothing in the\nX and Y directions\n(units=samples)"
+ 	    "DWI Smoothing in the\nX and Y directions.\n(units=samples)"
  	set tips(DTSmoothZ) \
- 	    "DWI Smoothing in the\nZ direction\n(units=samples)"
+ 	    "DWI Smoothing in the\nZ direction.\n(units=samples)"
  	set tips(DTBMatrixCompute) \
- 	    "Select to compute the\nB-Matrix using the\nGradients file specified\nin the Registration\nstep"
+ 	    "Select to compute the\nB-Matrix using the\nGradients file specified\nin the Registration step."
  	set tips(DTBMatrixLoad) \
- 	    "Select to Load a\nB-Matrix file\ndirectly. Specify\nthe file using the\nentry or browse\nbutton"
+ 	    "Select to Load a\nB-Matrix file\ndirectly. Specify\nthe file using the\nentry or browse\nbutton."
  	set tips(DTExecute) \
- 	    "Click to apply changes\nfor Building Tensors\nand start visualization"
+ 	    "Click to apply changes\nfor Building Tensors\nand start visualization."
 
  	# Variance Tab
  	set tips(VarToggleOrig) \
- 	    "Turn visibility of\nOriginal Variance Slice\non or off"
+ 	    "Turn visibility of\noriginal variance\nslice on or off."
  	set tips(VarToggleReg) \
- 	    "Turn visibility of\nRegistered Variance Slice\non or off"
+ 	    "Turn visibility of\nregistered variance\nslice on or off."
 
  	# Planes Tab
  	set tips(PlanesToggle) \
- 	    "Turn visibility of\nall planes on or off"
+ 	    "Turn visibility of all\nplanes on or off."
  	set tips(PlanesXToggle) \
- 	    "Turn visibility of\nX plane on or off"
+ 	    "Turn visibility of\nX plane on or off.\nThis will also effect\nresults when seeding\nby planes."
  	set tips(PlanesYToggle) \
- 	    "Turn visibility of\nY plane on or off"
+ 	    "Turn visibility of\nY plane on or off.\nThis will also effect\nresults when seeding\nby planes."
  	set tips(PlanesZToggle) \
- 	    "Turn visibility of\nZ plane on or off"
+ 	    "Turn visibility of\nZ plane on or off.\nThis will also effect\nresults when seeding\nby planes."
  	set tips(PlanesXSlider) \
- 	    "Select a position\nof the plane in\nX. This applies\nto the visible planes,\nclipping planes,\nand grid selections"
+ 	    "Select a position of\nthe plane in X.\nThis applies to the\nvisible planes,\nclipping planes,\nand grid selections."
  	set tips(PlanesYSlider) \
- 	    "Select a position\nof the plane in\nY. This applies\nto the visible planes,\nclipping planes,\nand grid selections"
+ 	    "Select a position of\nthe plane in Y.\nThis applies to the\nvisible planes,\nclipping planes,\nand grid selections."
  	set tips(PlanesZSlider) \
- 	    "Select a position\nof the plane in\nZ. This applies\nto the visible planes,\nclipping planes,\nand grid selections"
+ 	    "Select a position of\nthe plane in Z.\nThis applies to the\nvisible planes,\nclipping planes,\nand grid selections."
  	set tips(PlanesColorMap) \
- 	    "Select a colormap\nto color the planes.\nThis will not apply when\nPrinciple Eigenvector\nis selected"
+ 	    "Select a colormap to\ncolor the planes. This\nwill not apply when\nPrinciple Eigenvector\nis selected."
  	set tips(PlanesClipToIso) \
- 	    "Select to clip the planes to the Isosurface"
+ 	    "Select to clip the planes\nto the Isosurface."
 
 	# Isosurface Tab
 	set tips(IsoToggle) \
-	    "Turn visibility of\nisosurface on or off"
+	    "Turn visibility of\nisosurface on or off."
 	set tips(IsoColorMap) \
- 	    "Select a colormap\nto color the isosurface.\nThis will not apply when\nPrinciple Eigenvector\nis selected"
+ 	    "Select a colormap to\ncolor the isosurface.\nThis will not apply when\nPrinciple Eigenvector\nis selected."
 	set tips(ToggleClipPlanes) \
-	    "Turn clipping by planes\non or off"
+	    "Turn clipping by\nplanes on or off.\nThis will clip all\nobjects in the Viewer."
 	set tips(FlipX) \
-	    "Flip about X Plane.\nOnly available when\nClip by Planes\n is set to on"
+	    "Flip about X Plane where\nclipping occurs. This is\nthe plane specified by\nthe slider on the planes\ntab. This option is only\navailable when Clip by\nPlanes is set to on."
 	set tips(FlipY) \
-	    "Flip about Y Plane.\nOnly available when\nClip by Planes\n is set to on"
+	    "Flip about Y Plane where\nclipping occurs. This is\nthe plane specified by\nthe slider on the planes\ntab. This option is only\navailable when Clip by\nPlanes is set to on."
 	set tips(FlipZ) \
-	    "Flip about Z Plane.\nOnly available when\nClip by Planes\n is set to on"
+	    "Flip about Z Plane where\nclipping occurs. This is\nthe plane specified by\nthe slider on the planes\ntab. This option is only\navailable when Clip by\nPlanes is set to on."
+
+
 
 	# Glyphs Tab
 	set tips(GlyphsToggle) \
-	    "Turn visibility of\nGlyphs on or off"
-	set tips(GlyphsToggleShape) \
-	    "Turn shape exageration\non or off"
-	set tips(GlyphsShapeSlider) \
-	    "Adjust the shape\nexageration by \nmoving the slider. Values < 1.0 will\nmake it more isotropic.\nValues > 1.0 will make\nit more anisotropic"
+	    "Turn visibility of\nGlyphs on or off."
+	set tips(GlyphsRes) \
+	    "Change resolution\nof glyphs."
+	set tips(GlyphsNormalize) \
+	    "Normalize all glyphs."
+	set tips(GlyphsScale) \
+	    "Scale all glyphs."
+	set tips(GlyphsShape) \
+	    "Toggle shape exageration.\nValues < 1.0 will\nmake it more isotropic.\nValues > 1.0 will make\nit more anisotropic."
 	set tips(GlyphsSeedPoint) \
-	    "Seed the Glyphs\nat a Point\nusing the Probe\nwidget (sphere)"
+	    "Seed the Glyphs\nat a Point using\nthe Probe widget\n(sphere)."
 	set tips(GlyphsSeedLine) \
-	    "Seed the Glyphs\nalong a line\nusing the Rake\nwidget"
+	    "Seed the Glyphs\nalong a line\nusing the Rake\nwidget."
 	set tips(GlyphsSeedPlanes) \
-	    "Seed the Glyphs\non the planes"
+	    "Seed the Glyphs\non the planes."
 	set tips(GlyphsSeedGrid) \
-	    "Seed the Glyphs\nin the grid defined\nby the planes"
+	    "Seed the Glyphs\nin the grid defined\nby the planes."
 	set tips(GlyphsColorMap) \
- 	    "Select a colormap\nto color the Glyphs.\nThis will not apply when\nPrinciple Eigenvector\nis selected"
+ 	    "Select a colormap\nto color the Glyphs.\nThis will not apply when\nPrinciple Eigenvector\nis selected."
 	set tips(GlyphsTogglePoint) \
-	    "Turn the visibility\nof the Probe widget\non or off"
-	set tips(GlyphsToggleLine) \
-	    "Turn the visibility\nof the Rake widget\non or off"
+	    "Turn the visibility\nof the Probe widget\non or off."
+	set tips(GlyphsToggleRake) \
+	    "Turn the visibility\nof the Rake widget\non or off."
+	set tips(GlyphsBoxes) \
+	    "View glyphs\nas boxes."
+	set tips(GlyphsEllipsoids) \
+	    "View glyphs\n as ellipsoids."
+	set tips(GlyphsSQ) \
+	    "View glyphs as\nsuper quadrics."
 
 
 	# Fibers Tab
 	set tips(FibersToggle) \
-	    "Turn visibility of\nFibers on or off"
+	    "Turn visibility of\nFibers on or off."
 	set tips(FibersAlgEigen) \
-	    "Select the Major\nEigenvector algorithm"
+	    "Select the Major\nEigenvector algorithm."
 	set tips(FibersAlgTL) \
-	    "Select the TensorLines\nalgorithm"
+	    "Select the TensorLines\nalgorithm."
 	set tips(FibersSeedPoint) \
-	    "Seed the Fibers\nat a Point\nusing the Probe\nwidget (sphere)"
+	    "Seed the Fibers\nat a Point\nusing the Probe\nwidget (sphere)."
 	set tips(FibersSeedLine) \
-	    "Seed the Fibers\nalong a line\nusing the Rake\nwidget"
+	    "Seed the Fibers\nalong a line\nusing the Rake\nwidget."
 	set tips(FibersSeedPlanes) \
-	    "Seed the Fibers\non the planes"
+	    "Seed the Fibers\non the planes."
 	set tips(FibersSeedGrid) \
-	    "Seed the Fibers\nin the grid defined\nby the planes"
+	    "Seed the Fibers\nin the grid defined\nby the planes."
 	set tips(FibersTogglePoint) \
-	    "Turn the visibility\nof the Probe widget\non or off"
+	    "Turn the visibility\nof the Probe widget\non or off."
 	set tips(FibersToggleLine) \
-	    "Turn the visibility\nof the Rake widget\non or off"
+	    "Turn the visibility\nof the Rake widget\non or off."
 	set tips(FibersColorMap) \
- 	    "Select a colormap\nto color the fibers.\nThis will not apply when\nPrinciple Eigenvector\nis selected"
+ 	    "Select a colormap\nto color the fibers.\nThis will not apply when\nPrinciple Eigenvector\nis selected."
 	set tips(FibersColorMap) \
- 	    "Select a colormap\nto color the Fibers.\nThis will not apply when\nPrinciple Eigenvector\nis selected"
+ 	    "Select a colormap\nto color the Fibers.\nThis will not apply when\nPrinciple Eigenvector\nis selected."
 
 
  	# Attach/Detach Mouseovers
- 	set tips(ProcAttachHashes) "Click hash marks to\nAttach to Viewer"
- 	set tips(ProcDetachHashes) "Click hash marks to\nDetach from the Viewer"
- 	set tips(VisAttachHashes) "Click hash marks to\nAttach to Viewer"
- 	set tips(VisDetachHashes) "Click hash marks to\nDetach from the Viewer"
+ 	set tips(ProcAttachHashes) "Click hash marks to\nattach to Viewer."
+ 	set tips(ProcDetachHashes) "Click hash marks to detach\nfrom the Viewer."
+ 	set tips(VisAttachHashes) "Click hash marks to\nattach to Viewer."
+ 	set tips(VisDetachHashes) "Click hash marks to detach\nfrom the Viewer."
 
 	# Viewer Options Tab
 	set tips(ViewerLighting) \
-	    "Toggle whether or not the\nViewer applies lighting to\nthe display. Objects\nwithout lighting have\na constant color"
+	    "Toggle whether or not the\nViewer applies lighting to\nthe display. Objects\nwithout lighting have a\nconstant color."
 	set tips(ViewerFog) \
-	    "Toggle to draw objects\nwith variable intensity\nbased on their distance\nfrom the user. Also\nknown as depth cueing.\nClose objects appear brighter"
+	    "Toggle to draw objects\nwith variable intensity\nbased on their distance\nfrom the user. Also\nknown as depth cueing.\nClose objects appear\nbrighter."
 	set tips(ViewerBBox) \
-	    "Toggle whether the Viewer\ndraws the selected objects\nin full detail or as\na simple bounding box"
+	    "Toggle whether the Viewer\ndraws the selected objects\nin full detail or as a simple\nbounding box."
 	set tips(ViewerCull) \
 	    "Display only the forward\nfacing facets."
 	set tips(ViewerSetHome) \
-	    "Captures the current view\nso the user can return\nto it later by clicking\nGo Home"
+	    "Captures the current view\nso the user can return to\nit later by clicking Go Home."
 	set tips(ViewerGoHome) \
-	    "Restores the current\nhome view"
+	    "Restores the\ncurrent\nhome view."
 	set tips(ViewerViews) \
-	    "Lists a number of\nstandard viewing angles\nand orientations"
+	    "Lists a number of\nstandard viewing\nangles and orientations."
 	set tips(ViewerAutoview) \
-	    "Restores the viewer\nto the default condition"
+	    "Restores the viewer to\nthe default condition."
 
     }
     
@@ -2308,6 +2393,8 @@ class BioTensorApp {
 
 	    menubutton $m.main_menu.file -text "File" -underline 0 \
 		-menu $m.main_menu.file.menu
+
+	    Tooltip $m.main_menu.file $tips(FileMenu)
 	    
 	    menu $m.main_menu.file.menu -tearoff false
 
@@ -2330,6 +2417,8 @@ class BioTensorApp {
 	    menubutton $m.main_menu.help -text "Help" -underline 0 \
 		-menu $m.main_menu.help.menu
 	    
+	    Tooltip $m.main_menu.help $tips(HelpMenu)
+
 	    menu $m.main_menu.help.menu -tearoff false
 
  	    $m.main_menu.help.menu add check -label "Show Tooltips" \
@@ -2365,6 +2454,7 @@ class BioTensorApp {
 	    
             set step_tab [$process.tnb add -label "Load Data" -command "$this change_processing_tab Data"]
 
+	    #Tooltip $step_tab $tips(LoadDataTab)
 	    
             if {$case == 0} {
                 set proc_tab1 $process.tnb
@@ -2381,9 +2471,13 @@ class BioTensorApp {
                 -variable data_mode -value "DWI" \
                 -command "$this toggle_data_mode"
 
+	    Tooltip $step_tab.mode1 $tips(LoadModeDWI)
+
             radiobutton $step_tab.mode2 -text "Load Tensor Volumes" \
                 -variable data_mode -value "tensor" \
                 -command "$this toggle_data_mode"
+
+	    Tooltip $step_tab.mode2 $tips(LoadModeTensor)
 
             pack $step_tab.mode1 $step_tab.mode2 -side top -anchor nw -padx 3 -pady 3
 
@@ -2405,6 +2499,8 @@ class BioTensorApp {
             ### Nrrd
             set page [$step_tab.tnb add -label "Nrrd" -command {app configure_readers Nrrd}]
 
+	    #Tooltip $page $tips(NrrdTab)
+
 	    if {$case == 0} {
                 set nrrd_tab1 $page
             } else {
@@ -2418,12 +2514,14 @@ class BioTensorApp {
             iwidgets::entryfield $page.file -labeltext "Nrrd File:" -labelpos w \
                 -textvariable $mods(NrrdReader1)-filename \
                 -command "$this execute_Data"
+	    Tooltip $page.file $tips(NrrdFile1)
             pack $page.file -side top -padx 3 -pady 6 -anchor n \
 	        -fill x 
 	    
             button $page.load -text "Browse" \
                 -command "$this load_nrrd_dwi" \
                 -width 12
+	    Tooltip $page.load $tips(NrrdFile2)
             pack $page.load -side top -anchor n -padx 3 -pady 6
 	    
 
@@ -2433,17 +2531,21 @@ class BioTensorApp {
 
             iwidgets::entryfield $page.file2 -labeltext "Nrrd File:" -labelpos w \
                 -textvariable $mods(NrrdReader-T2)-filename 
+	    Tooltip $page.file2 $tips(NrrdFile1)
             pack $page.file2 -side top -padx 3 -pady 6 -anchor n \
 	        -fill x 
 	    
             button $page.load2 -text "Browse" \
                 -command "$this load_nrrd_t2" \
                 -width 12
+	    Tooltip $page.load2 $tips(NrrdFile2)
             pack $page.load2 -side top -anchor n -padx 3 -pady 6
 	    
 	    
             ### Dicom
             set page [$step_tab.tnb add -label "Dicom" -command {app configure_readers Dicom}]
+
+	    #Tooltip $page $tips(DicomTab)
 
 	    if {$case == 0} {
                 set dicom_tab1 $page
@@ -2456,6 +2558,8 @@ class BioTensorApp {
 
 	    button $page.load -text "Dicom Loader" \
 		-command "$mods(DicomToNrrd1) ui"
+	    Tooltip $page.load $tips(DicomFiles)
+
 	    pack $page.load -side top -anchor n \
 		-padx 3 -pady 5 -ipadx 2 -ipady 2
 	    
@@ -2467,12 +2571,16 @@ class BioTensorApp {
 
 	    button $page.load2 -text "Dicom Loader" \
 		-command "$mods(DicomToNrrd-T2) ui"
+	    Tooltip $page.load2 $tips(DicomFiles)
+
 	    pack $page.load2 -side top -anchor n \
 		-padx 3 -pady 5 -ipadx 2 -ipady 2
 	    
 
             ### Analyze
             set page [$step_tab.tnb add -label "Analyze" -command {app configure_readers Analyze}]
+
+	    #Tooltip $page $tips(AnalyzeTab)
 
 	    if {$case == 0} {
                 set analyze_tab1 $page
@@ -2486,6 +2594,8 @@ class BioTensorApp {
 
 	    button $page.load -text "Analyze Loader" \
 		-command "$mods(AnalyzeToNrrd1) ui"
+	    Tooltip $page.load $tips(AnalyzeFiles)
+
 	    pack $page.load -side top -anchor n \
 		-padx 3 -pady 5 -ipadx 2 -ipady 2
 
@@ -2497,6 +2607,8 @@ class BioTensorApp {
 	    
 	    button $page.load2 -text "Analyze Loader" \
 		-command "$mods(AnalyzeToNrrd-T2) ui"
+	    Tooltip $page.load2 $tips(AnalyzeFiles)
+
 	    pack $page.load2 -side top -anchor n \
 		-padx 3 -pady 5 -ipadx 2 -ipady 2
             
@@ -2537,6 +2649,8 @@ class BioTensorApp {
 	    
 	    ### Registration
             set step_tab [$process.tnb add -label "Registration" -command "$this change_processing_tab Registration"]          
+
+	    #Tooltip $step_tab $tips(RegistrationTab)
 	    
             if {$case == 0} {
 		set reg_tab1 $step_tab
@@ -2549,6 +2663,9 @@ class BioTensorApp {
             checkbutton $step_tab.doreg -text "Perform Global EPI Registration" \
                 -variable do_registration -state disabled \
                 -command "$this toggle_do_registration"
+
+	    Tooltip $step_tab.doreg $tips(RegToggle)
+
             pack $step_tab.doreg -side top -anchor nw -padx 7 -pady 0
 	    
 	    # Gradient File
@@ -2594,6 +2711,7 @@ class BioTensorApp {
 		-state disabled \
 		-variable ref_image_state -value 0 \
 		-command "$this toggle_reference_image_state"
+	    Tooltip $refimg.est $tips(RegImpRefImg)
 	    
             pack $refimg.est -side top -anchor nw -padx 2 -pady 0
 	    
@@ -2604,6 +2722,7 @@ class BioTensorApp {
 		-state disabled \
 		-variable ref_image_state -value 1  \
 		-command "$this toggle_reference_image_state"
+	    Tooltip $refimg.s.choose $tips(RegChooseRefImg)
 	    
             label $refimg.s.label -textvariable ref_image -state disabled
             pack $refimg.s.choose $refimg.s.label -side left -anchor n
@@ -2617,6 +2736,8 @@ class BioTensorApp {
 		-sliderlength 15 \
 		-command "$this configure_reference_image" \
 		-orient horizontal
+
+	    Tooltip $refimg.s.ref $tips(RegRefImgSlider)
             pack $refimg.s.ref -side top -anchor ne -padx 0 -pady 0
 	    
 	    
@@ -2651,6 +2772,7 @@ class BioTensorApp {
 		-showvalue true \
 		-sliderlength 15 -width 15 -length 50 \
 		-orient horizontal
+	    Tooltip $blur.entryx $tips(RegBlurX)
             label $blur.labely -text "Y:" -state disabled
             scale $blur.entryy -label "" \
 		-state disabled \
@@ -2661,6 +2783,7 @@ class BioTensorApp {
 		-showvalue true \
 		-sliderlength 15 -width 15 -length 50 \
 		-orient horizontal
+	    Tooltip $blur.entryy $tips(RegBlurY)
             pack $blur.labelx $blur.entryx \
                 $blur.labely $blur.entryy \
                 -side left -anchor w -padx 2 -pady 0 \
@@ -2724,6 +2847,7 @@ class BioTensorApp {
 		-showvalue false \
 		-orient horizontal \
 		-command "$this configure_fitting_label "
+	    Tooltip $step_tab.fit.s $tips(RegFitting)
 	    
             pack $step_tab.fit.l $step_tab.fit.f $step_tab.fit.p \
 		$step_tab.fit.s  -side left \
@@ -2760,6 +2884,8 @@ class BioTensorApp {
 	    
 	    ### Build DT
             set step_tab [$process.tnb add -label "Build Tensors" -command "$this change_processing_tab \"Build Tensors\""]
+
+	    Tooltip $step_tab $tips(BuildTensorsTab)
 	    
             if {$case == 0} {
 		set dt_tab1 $step_tab
@@ -2782,6 +2908,7 @@ class BioTensorApp {
 		-state disabled \
 		-variable do_smoothing \
 		-command "$this toggle_do_smoothing"
+	    Tooltip $blur.smooth $tips(DTToggleSmoothing)
             pack $blur.smooth -side top -anchor nw -padx 3 -pady 3
 	    
             frame $blur.rad1
@@ -2798,6 +2925,7 @@ class BioTensorApp {
 		-sliderlength 15 \
 		-showvalue false \
 		-command "$this change_xy_smooth"
+	    Tooltip $blur.rad1.s $tips(DTSmoothXY)
             label $blur.rad1.v -textvariable xy_radius -state disabled
             pack $blur.rad1.l $blur.rad1.s $blur.rad1.v -side left -anchor nw \
 		-padx 1 -pady 0
@@ -2815,6 +2943,7 @@ class BioTensorApp {
 		-sliderlength 15 \
 		-showvalue false \
 		-command "$this change_z_smooth"
+	    Tooltip $blur.rad2.s $tips(DTSmoothZ)
             label $blur.rad2.v -textvariable z_radius -state disabled
             pack $blur.rad2.l $blur.rad2.s $blur.rad2.v -side left -anchor nw \
 		-padx 1 -pady 0
@@ -2870,6 +2999,7 @@ class BioTensorApp {
 		-variable bmatrix \
 		-value "compute" \
 		-command "$this toggle_b_matrix"
+	    Tooltip $bm.computeb $tips(DTBMatrixCompute)
             pack $bm.computeb  -side top -anchor nw -padx 2 -pady 0
 	    
             frame $bm.load
@@ -2880,6 +3010,7 @@ class BioTensorApp {
 		-variable bmatrix \
 		-value "load" \
 		-command "$this toggle_b_matrix"
+	    Tooltip $bm.load.b $tips(DTBMatrixLoad)
 	    
             pack $bm.load.b -side left -anchor nw \
 		-padx 2 -pady 0
@@ -3093,6 +3224,7 @@ class BioTensorApp {
     
 
     method create_viewer_tab { vis } {
+	global tips
 	global mods
 	set page [$vis.tnb add -label "Viewer Options" -command "$this change_vis_frame \"Viewer Options\""]
 	
@@ -3109,18 +3241,22 @@ class BioTensorApp {
 	checkbutton $view_opts.eframe.light -text "Lighting" \
 	    -variable $mods(Viewer)-ViewWindow_0-global-light \
 	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
+	Tooltip $view_opts.eframe.light $tips(ViewerLighting)
 	
 	checkbutton $view_opts.eframe.fog -text "Fog" \
 	    -variable $mods(Viewer)-ViewWindow_0-global-fog \
 	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
+	Tooltip $view_opts.eframe.fog $tips(ViewerFog)
 	
 	checkbutton $view_opts.eframe.bbox -text "BBox" \
 	    -variable $mods(Viewer)-ViewWindow_0-global-debug \
 	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
+	Tooltip $view_opts.eframe.bbox $tips(ViewerBBox)
 
 	checkbutton $view_opts.eframe.cull -text "Back Cull" \
 	    -variable $mods(Viewer)-ViewWindow_0-global-cull \
 	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
+	Tooltip $view_opts.eframe.cull $tips(ViewerCull)
 #	$view_opts.eframe.cull select
 	
 	pack $view_opts.eframe.light $view_opts.eframe.fog \
@@ -3138,6 +3274,7 @@ class BioTensorApp {
 	button $view_opts.buttons.v1.autoview -text "Autoview (Ctrl-v)" \
 	    -command "$mods(Viewer)-ViewWindow_0-c autoview" \
 	    -width 15 -padx 3 -pady 3
+	Tooltip $view_opts.buttons.v1.autoview $tips(ViewerAutoview)
 	
 	pack $view_opts.buttons.v1.autoview -side top -padx 3 -pady 3 \
 	    -anchor n -fill x
@@ -3149,6 +3286,7 @@ class BioTensorApp {
 	menubutton $view_opts.buttons.v1.views.def -text "Views" \
 	    -menu $view_opts.buttons.v1.views.def.m -relief raised \
 	    -padx 3 -pady 3  -width 15
+	Tooltip $view_opts.buttons.v1.views.def $tips(ViewerViews)
 	
 	menu $view_opts.buttons.v1.views.def.m -tearoff 0
 
@@ -3258,10 +3396,13 @@ class BioTensorApp {
 	
 	button $view_opts.buttons.v2.sethome -text "Set Home View" -padx 3 -pady 3 \
 	    -command "$mods(Viewer)-ViewWindow_0-c sethome" -width 15
+
+	Tooltip $view_opts.buttons.v2.sethome $tips(ViewerSetHome)
 	
 	button $view_opts.buttons.v2.gohome -text "Go Home" \
 	    -command "$mods(Viewer)-ViewWindow_0-c gohome" \
 	    -padx 3 -pady 3 -width 15
+	Tooltip $view_opts.buttons.v2.gohome $tips(ViewerGoHome)
 	
 	pack $view_opts.buttons.v2.sethome $view_opts.buttons.v2.gohome \
 	    -side top -padx 2 -pady 2 -anchor ne -fill x
@@ -4057,7 +4198,7 @@ class BioTensorApp {
 	set data_completed 1
 
 	if {$data_mode == "DWI"} {
-	    if {!$dt_completed} {
+	    if {!$dt_completed && } {
 		disableModule $mods(ChooseNrrd-DT) 1
 	    }
 
@@ -4901,6 +5042,7 @@ class BioTensorApp {
 
 ######## VARIANCE #########
     method build_variance_tab { f } {
+	global tips
 	global mods
         global $mods(UnuSlice1)-position
 
@@ -4918,6 +5060,7 @@ class BioTensorApp {
 		       global mods
 		       $mods(ShowField-Orig)-c toggle_display_faces
                    }
+	       Tooltip $f.orig $tips(VarToggleOrig)
 	       
 	       checkbutton $f.reg -text "View Variance of Registered Data" \
 		   -variable $mods(ShowField-Reg)-faces-on \
@@ -4926,6 +5069,7 @@ class BioTensorApp {
 		       global mods
 		       $mods(ShowField-Reg)-c toggle_display_faces
                    }
+	       Tooltip $f.reg $tips(VarToggleReg)
 	       
 	       pack $f.orig $f.reg -side top -anchor nw -padx 3 -pady 3
 	       
@@ -5008,6 +5152,7 @@ class BioTensorApp {
 ######## PLANES ##########
     
     method build_planes_tab {f} {
+	global tips
 	global mods
 	global show_planes
 	global show_plane_x show_plane_y show_plane_z
@@ -5016,6 +5161,8 @@ class BioTensorApp {
 	if {![winfo exists $f.show]} {
 	    checkbutton $f.show -text "Show Planes:" -variable show_planes \
 		-command "$this toggle_show_planes" -state disabled
+	    Tooltip $f.show $tips(PlanesToggle)
+
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3
 	    
 	    frame $f.axis -relief groove -borderwidth 2
@@ -5028,13 +5175,16 @@ class BioTensorApp {
 		-variable show_plane_x \
 		-state disabled \
 		-command "$this toggle_plane X"
+	    Tooltip $f.axis.x.check $tips(PlanesXToggle)
+
 	    scale $f.axis.x.slider -from 0 -to 512 \
 		-variable plane_x \
 		-showvalue false \
 		-length 150  -width 15 \
 		-sliderlength 15 \
 		-state disabled -foreground grey64 \
-		-orient horizontal  
+		-orient horizontal 
+	    Tooltip $f.axis.x.slider $tips(PlanesXSlider)
 	    bind $f.axis.x.slider <ButtonRelease> "app update_plane_x"
 	    label $f.axis.x.label -textvariable plane_x -state disabled
 	    pack $f.axis.x.check $f.axis.x.slider $f.axis.x.label -side left -anchor nw \
@@ -5046,6 +5196,7 @@ class BioTensorApp {
 		-variable show_plane_y \
 		-state disabled \
 		-command "$this toggle_plane Y"
+	    Tooltip $f.axis.y.check $tips(PlanesYToggle)
 	    scale $f.axis.y.slider -from 0 -to 512 \
 		-variable plane_y \
 		-showvalue false \
@@ -5053,6 +5204,7 @@ class BioTensorApp {
 		-sliderlength 15 \
 		-state disabled -foreground grey64 \
 		-orient horizontal 
+	    Tooltip $f.axis.y.slider $tips(PlanesYSlider)
 	    bind $f.axis.y.slider <ButtonRelease> "app update_plane_y"
 	    label $f.axis.y.label -textvariable plane_y -state disabled
 	    pack $f.axis.y.check $f.axis.y.slider $f.axis.y.label -side left -anchor nw \
@@ -5064,6 +5216,7 @@ class BioTensorApp {
 		-variable show_plane_z \
 		-state disabled \
 		-command "$this toggle_plane Z"
+	    Tooltip $f.axis.x.check $tips(PlanesZToggle)
 	    scale $f.axis.z.slider -from 0 -to 512 \
 		-variable plane_z \
 		-showvalue false \
@@ -5071,6 +5224,7 @@ class BioTensorApp {
 		-sliderlength 15 \
 		-state disabled -foreground grey64 \
 		-orient horizontal 
+	    Tooltip $f.axis.z.slider $tips(PlanesZSlider)
 	    bind $f.axis.z.slider <ButtonRelease> "app update_plane_z"
 	    label $f.axis.z.label -textvariable plane_z -state disabled
 	    pack $f.axis.z.check $f.axis.z.slider $f.axis.z.label -side left -anchor nw \
@@ -5114,6 +5268,7 @@ class BioTensorApp {
 		-value 0 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
+	    Tooltip $maps.gray.b $tips(PlanesColorMap)
 	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.gray.f -relief sunken -borderwidth 2
@@ -5133,6 +5288,7 @@ class BioTensorApp {
 		-value 2 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
+	    Tooltip $maps.rainbow.b $tips(PlanesColorMap)
 	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.rainbow.f -relief sunken -borderwidth 2
@@ -5151,6 +5307,7 @@ class BioTensorApp {
 		-value 5 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
+	    Tooltip $maps.darkhue.b $tips(PlanesColorMap)
 	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.darkhue.f -relief sunken -borderwidth 2
@@ -5170,6 +5327,7 @@ class BioTensorApp {
 		-value 7 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
+	    Tooltip $maps.blackbody.b $tips(PlanesColorMap)
 	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.blackbody.f -relief sunken -borderwidth 2 
@@ -5189,6 +5347,7 @@ class BioTensorApp {
 		-value 17 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
+	    Tooltip $maps.bpseismic.b $tips(PlanesColorMap)
 	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.bpseismic.f -relief sunken -borderwidth 2
@@ -5203,6 +5362,7 @@ class BioTensorApp {
 	    checkbutton $f.clipiso -text "Clip to Isosurface" \
 		-variable clip_to_isosurface \
 		-command "$this toggle_clip_to_isosurface" -state disabled
+	    Tooltip $f.clipiso $tips(PlanesClipToIso)
 	    pack $f.clipiso -side top -anchor nw -padx 5 -pady 5
 
 	} 
@@ -5929,6 +6089,7 @@ class BioTensorApp {
 ######## ISOSURFACE #########
 
     method build_isosurface_tab { f } {
+	global tips
 	global mods
 	global $mods(ShowField-Isosurface)-faces-on
 
@@ -5936,6 +6097,7 @@ class BioTensorApp {
 	    checkbutton $f.show -text "Show Isosurface" \
 		-variable $mods(ShowField-Isosurface)-faces-on \
 		-command "$this toggle_show_isosurface" -state disabled
+	    Tooltip $f.show $tips(IsoToggle)
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3
 	    
 	    # Isoval
@@ -6013,6 +6175,7 @@ class BioTensorApp {
 		-value 0 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
+	    Tooltip $maps.gray.b $tips(IsoColorMap)
 	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.gray.f -relief sunken -borderwidth 2
@@ -6032,6 +6195,7 @@ class BioTensorApp {
 		-value 2 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
+	    Tooltip $maps.rainbow.b $tips(IsoColorMap)
 	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.rainbow.f -relief sunken -borderwidth 2
@@ -6050,6 +6214,7 @@ class BioTensorApp {
 		-value 5 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
+	    Tooltip $maps.darkhue.b $tips(IsoColorMap)
 	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.darkhue.f -relief sunken -borderwidth 2
@@ -6069,6 +6234,7 @@ class BioTensorApp {
 		-value 7 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
+	    Tooltip $maps.blackbody.b $tips(IsoColorMap)
 	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.blackbody.f -relief sunken -borderwidth 2 
@@ -6087,6 +6253,7 @@ class BioTensorApp {
 		-value 17 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
+	    Tooltip $maps.bpseismic.b $tips(IsoColorMap)
 	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.bpseismic.f -relief sunken -borderwidth 2
@@ -6104,16 +6271,20 @@ class BioTensorApp {
 	    checkbutton $f.clip.check -text "Clip by Planes" \
 		-variable clip_by_planes -state disabled \
 		-command "$this toggle_clip_by_planes $f.clip"
+	    Tooltip $f.clip.check $tips(ToggleClipPlanes)
 	    
 	    button $f.clip.flipx -text "Flip X" \
 		-command "$this flip_x_clipping_plane" \
 		-state disabled
+	    Tooltip $f.clip.flipx $tips(FlipX)
 	    button $f.clip.flipy -text "Flip Y" \
 		-command "$this flip_y_clipping_plane" \
 		-state disabled
+	    Tooltip $f.clip.flipy $tips(FlipY)
 	    button $f.clip.flipz -text "Flip Z" \
 		-command "$this flip_z_clipping_plane" \
 		-state disabled
+	    Tooltip $f.clip.flipz $tips(FlipZ)
 	    
 	    pack $f.clip.check $f.clip.flipx $f.clip.flipy $f.clip.flipz \
 		-side left -anchor nw -padx 3 -pady 3 -ipadx 2 
@@ -6382,6 +6553,7 @@ class BioTensorApp {
 ########### GLYPHS ############
     
     method build_glyphs_tab { f } {
+	global tips
 	global mods
         global $mods(ShowField-Glyphs)-tensors-on
 	
@@ -6389,6 +6561,7 @@ class BioTensorApp {
 	    checkbutton $f.show -text "Show Glyphs" \
 		-variable $mods(ShowField-Glyphs)-tensors-on \
 		-command "$this toggle_show_glyphs" -state disabled
+	    Tooltip $f.show $tips(GlyphsToggle)
 	    
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3	
 
@@ -6409,6 +6582,8 @@ class BioTensorApp {
 		-showvalue false \
    	        -foreground grey64 \
 	        -variable $mods(ShowField-Glyphs)-data-resolution
+	    Tooltip $f.disc.s $tips(GlyphsRes)
+
 	    label $f.disc.l -textvariable $mods(ShowField-Glyphs)-data-resolution -state disabled
 	    bind $f.disc.s <ButtonRelease> {app change_glyph_disc}
 	    
@@ -6426,6 +6601,7 @@ class BioTensorApp {
 		-variable scale_glyph \
 		-state disabled \
 		-command "$this toggle_scale_glyph"
+	    Tooltip $f.scale.b $tips(GlyphsNormalize)
 
 	    label $f.scale.sc -text "   Scale:" -state disabled
 	    
@@ -6438,6 +6614,7 @@ class BioTensorApp {
 		-showvalue false \
    	        -foreground grey64 \
 	        -variable glyph_scale_val
+	    Tooltip $f.scale.s $tips(GlyphsScale)
 	    label $f.scale.l -textvariable glyph_scale_val -state disabled
 	    bind $f.scale.s <ButtonRelease> {app change_glyph_scale}
 	    
@@ -6454,6 +6631,7 @@ class BioTensorApp {
 		-variable exag_glyph \
 		-state disabled \
 		-command "$this toggle_exag_glyph"
+	    Tooltip $f.exag.b $tips(GlyphsShape)
 	    
 	    scale $f.exag.s -from 0.2 -to 5.0 \
                 -resolution 0.01 \
@@ -6464,6 +6642,8 @@ class BioTensorApp {
 		-showvalue false \
    	        -foreground grey64 \
 	        -variable $mods(TendAnscale-Glyphs)-scale
+	    Tooltip $f.exag.s $tips(GlyphsShape)
+
 	    label $f.exag.l -textvariable $mods(TendAnscale-Glyphs)-scale -state disabled
 	    bind $f.exag.s <ButtonRelease> {app change_glyph_exag}
 	    
@@ -6491,12 +6671,14 @@ class BioTensorApp {
 		-value 0 \
 		-state disabled \
 		-command "$this update_glyph_seed_method"
+	    Tooltip $seed.a.pointf.point $tips(GlyphsSeedPoint)
 
 	    global glyph_point
 	    checkbutton $seed.a.pointf.w -text "Widget" \
 		-variable glyph_point \
 		-state disabled \
 		-command "$this toggle_glyph_point"
+	    Tooltip $seed.a.pointf.w $tips(GlyphsTogglePoint)
 
 	    pack $seed.a.pointf.point $seed.a.pointf.w -side left -anchor nw -padx 0 -pady 0
 
@@ -6509,12 +6691,14 @@ class BioTensorApp {
 		-value 1 \
 		-state disabled \
 		-command "$this update_glyph_seed_method"
+	    Tooltip $seed.a.rakef.rake $tips(GlyphsSeedLine)
 
 	    global glyph_rake
 	    checkbutton $seed.a.rakef.w -text "Widget" \
 		-variable glyph_rake \
 		-state disabled \
 		-command "$this toggle_glyph_rake"
+	    Tooltip $seed.a.rakef.w $tips(GlyphsToggleRake)
 
 	    pack $seed.a.rakef.rake $seed.a.rakef.w -side left -anchor nw -padx 0 -pady 0
 	    
@@ -6525,12 +6709,14 @@ class BioTensorApp {
 		-value 2 \
 		-state disabled \
 		-command "$this update_glyph_seed_method"
+	    Tooltip $seed.b.plane $tips(GlyphsSeedLine)
 	    
 	    radiobutton $seed.b.grid -text "On Grid" \
 		-variable $mods(ChooseField-GlyphSeeds)-port-index \
 		-value 3 \
 		-state disabled \
 		-command "$this update_glyph_seed_method"
+	    Tooltip $seed.b.grid $tips(GlyphsSeedGrid)
 	    
 	    
 	    pack $seed.b.plane $seed.b.grid -side top \
@@ -6553,6 +6739,7 @@ class BioTensorApp {
 		-value boxes \
 		-state disabled \
 		-command "$this change_glyph_display_type radio $rep"
+	    Tooltip $rep.f1.boxes $tips(GlyphsBoxes)
 	    
 	    iwidgets::optionmenu $rep.f1.type -labeltext "" \
 		-width 150 -state disabled \
@@ -6570,6 +6757,7 @@ class BioTensorApp {
 		-value ellipsoids \
 		-state disabled \
 		-command "$this change_glyph_display_type radio $rep"
+	    Tooltip $rep.f2.ellips $tips(GlyphsEllipsoids)
 	    
 	    iwidgets::optionmenu $rep.f2.type -labeltext "" \
 		-width 150 \
@@ -6589,6 +6777,7 @@ class BioTensorApp {
 		-value superquadrics \
 		-state disabled \
 		-command "$this change_glyph_display_type radio $rep"
+	    Tooltip $rep.f3.quad $tips(GlyphsSQ)
 	    
 	    iwidgets::optionmenu $rep.f3.type -labeltext "" \
 		-width 150 -state disabled \
@@ -6620,6 +6809,7 @@ class BioTensorApp {
 		-value 0 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
+	    Tooltip $maps.gray.b $tips(GlyphsColorMap)
 	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.gray.f -relief sunken -borderwidth 2
@@ -6639,6 +6829,7 @@ class BioTensorApp {
 		-value 2 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
+	    Tooltip $maps.rainbow.b $tips(GlyphsColorMap)
 	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.rainbow.f -relief sunken -borderwidth 2
@@ -6657,6 +6848,7 @@ class BioTensorApp {
 		-value 5 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
+	    Tooltip $maps.darkhue.b $tips(GlyphsColorMap)
 	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.darkhue.f -relief sunken -borderwidth 2
@@ -6676,6 +6868,7 @@ class BioTensorApp {
 		-value 7 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
+	    Tooltip $maps.blackbody.b $tips(GlyphsColorMap)
 	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.blackbody.f -relief sunken -borderwidth 2 
@@ -6695,6 +6888,7 @@ class BioTensorApp {
 		-value 17 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
+	    Tooltip $maps.bpseismic.b $tips(GlyphsColorMap)
 	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.bpseismic.f -relief sunken -borderwidth 2
@@ -7157,6 +7351,7 @@ class BioTensorApp {
 ############# FIBERS #############
     
     method build_fibers_tab { f } {
+	global tips
 	global mods
         global $mods(ShowField-Fibers)-edges-on
 	
@@ -7164,6 +7359,7 @@ class BioTensorApp {
 	    checkbutton $f.show -text "Show Fibers" \
 		-variable $mods(ShowField-Fibers)-edges-on \
 		-command "$this toggle_show_fibers" -state disabled
+	    Tooltip $f.show $tips(FibersToggle)
 	    
 	    pack $f.show -side top -anchor nw -padx 3 -pady 0
 	    
@@ -7382,12 +7578,14 @@ class BioTensorApp {
 		-value 0 \
 		-state disabled \
 		-command "$this update_fiber_seed_method"
+	    Tooltip $seed.a.pointf.point $tips(FibersSeedPoint)
 
 	    global fiber_point
 	    checkbutton $seed.a.pointf.w -text "Widget" \
 		-variable fiber_point \
 		-state disabled \
 		-command "$this toggle_fiber_point"
+	    Tooltip $seed.a.pointf.w $tips(FibersTogglePoint)
 
 	    pack $seed.a.pointf.point $seed.a.pointf.w -side left -anchor nw -padx 0 -pady 0
 
@@ -7400,12 +7598,14 @@ class BioTensorApp {
 		-value 1 \
 		-state disabled \
 		-command "$this update_fiber_seed_method"
+	    Tooltip $seed.a.rakef.rake $tips(FibersSeedLine)
 
 	    global fiber_rake
 	    checkbutton $seed.a.rakef.w -text "Widget" \
 		-variable fiber_rake \
 		-state disabled \
 		-command "$this toggle_fiber_rake"
+	    Tooltip $seed.a.rakef.w $tips(FibersToggleLine)
 
 	    pack $seed.a.rakef.rake $seed.a.rakef.w -side left -anchor nw -padx 0 -pady 0
 
@@ -7416,12 +7616,14 @@ class BioTensorApp {
 		-value 2 \
 		-state disabled \
 		-command "$this update_fiber_seed_method"
+	    Tooltip $seed.b.plane $tips(FibersSeedPlanes)
 	    
 	    radiobutton $seed.b.grid -text "On Grid" \
 		-variable $mods(ChooseField-FiberSeeds)-port-index \
 		-value 3 \
 		-state disabled \
 		-command "$this update_fiber_seed_method"
+	    Tooltip $seed.b.grid $tips(FibersSeedGrid)
 	    
 	    
 	    pack $seed.b.plane $seed.b.grid -side top \
@@ -7472,6 +7674,7 @@ class BioTensorApp {
 		-value 0 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
+	    Tooltip $maps.a.gray.b $tips(FibersColorMap)
 	    pack $maps.a.gray.b -side left -anchor nw -padx 1 -pady 0
 	    
 	    frame $maps.a.gray.f -relief sunken -borderwidth 2
@@ -7492,6 +7695,7 @@ class BioTensorApp {
 		-value 2 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
+	    Tooltip $maps.a.rainbow.b $tips(FibersColorMap)
 	    pack $maps.a.rainbow.b -side left -anchor nw -padx 1 -pady 0
 	    
 	    frame $maps.a.rainbow.f -relief sunken -borderwidth 2
@@ -7510,6 +7714,7 @@ class BioTensorApp {
 		-value 5 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
+	    Tooltip $maps.a.darkhue.b $tips(FibersColorMap)
 	    pack $maps.a.darkhue.b -side left -anchor nw -padx 1 -pady 0
 	    
 	    frame $maps.a.darkhue.f -relief sunken -borderwidth 2
@@ -7536,6 +7741,7 @@ class BioTensorApp {
 		-value 7 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
+	    Tooltip $maps.b.blackbody.b $tips(FibersColorMap)
 	    pack $maps.b.blackbody.b -side left -anchor nw -padx 1 -pady 0
 	    
 	    frame $maps.b.blackbody.f -relief sunken -borderwidth 2 
@@ -7555,6 +7761,7 @@ class BioTensorApp {
 		-value 17 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
+	    Tooltip $maps.b.bpseismic.b $tips(FibersColorMap)
 	    pack $maps.b.bpseismic.b -side left -anchor nw -padx 1 -pady 0
 	    
 	    frame $maps.b.bpseismic.f -relief sunken -borderwidth 2
