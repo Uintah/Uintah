@@ -92,7 +92,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *rock2 = new Group;
   Group *rock3 = new Group;
   Group *rock4 = new Group;
-  Group *rock5 = new Group;
   Group *iceberg = new Group;
   Group *iceberg2 = new Group;
   Group *iceberg3 = new Group;
@@ -558,13 +557,13 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // plants by parthenon
   t3.load_identity();
   t3.pre_scale(Vector(.16, .06, .06));
-  t3.pre_rotate(-.8, Vector(0, 0, 1));
-  t3.pre_translate(Vector(-1, -27.6, 1.3));
+  //t3.pre_rotate(-.8, Vector(0, 0, 1));
+  t3.pre_translate(Vector(-1, -18.6, 1.3));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.mtl",
                    t3, patch5))
     exit(-1);
- 
+/* 
   t3.load_identity();
   t3.pre_rotate(3.78, Vector(0, 0, 1));
   t3.pre_scale(Vector(2.2, 2.3, 2));
@@ -591,7 +590,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13.mtl",
                    t3, patch6))
     exit(-1);
-
+*/
   /**********************************************************************/
   // gazebo ////////////////////////////////////////
   t3.load_identity();
@@ -635,7 +634,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     exit(-1);
 
   /**********************************************************************/
-  // parth 
+/*  // parth 
   t3.load_identity();
   t3.pre_rotate(M_PI + 1.5, Vector(0, 0, 1));
   t3.pre_scale(Vector(.08, .04, .08));
@@ -644,13 +643,13 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    "/usr/sci/data/Geometry/models/read_in_models/keith/parthenon/The_Parthenon.mtl",
                    t3, parth))
     exit(-1);
-
+*/
   /**********************************************************************/
   // temple2
   t3.load_identity();
   t3.pre_rotate(M_PI / 2.0 , Vector(1, 0, 0));
-  t3.pre_scale(Vector(3.5, 3.5, 3.5));
-  t3.pre_translate(Vector(6, -30, 0));
+  t3.pre_scale(Vector(4.5, 4.5, 4.5));
+  t3.pre_translate(Vector(3, -25, 0));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models1/temple/Greek_temple.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/models1/temple/Greek_temple.mtl",
                    t3, temple2))
@@ -680,14 +679,14 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // iceberg2
   t3.load_identity();
   t3.pre_scale(Vector(.3, .3, .3));
-  t3.pre_translate(Vector(60, -40, 0));
+  t3.pre_translate(Vector(30, -40, 0));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG1.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG1.mtl",
                    t3, iceberg2))
     exit(-1);
 
   /**********************************************************************/
-  // iceberg3
+/*  // iceberg3
   t3.load_identity();
   t3.pre_scale(Vector(.3, .3, .3));
   t3.pre_translate(Vector(50, 32, 0));
@@ -695,7 +694,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    "/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG2.mtl",
                    t3, iceberg3))
     exit(-1);
-
+*/
 
  
   /**********************************************************************/
@@ -705,7 +704,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *shell1 = new Group;
   Group *shell2 = new Group;
   Group *shell3 = new Group;
-  Group *anker = new Group;
   Group *krabbe = new Group;
   Group *school1 = new Group;
   Group *school2 = new Group;
@@ -714,7 +712,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *tiger = new Group;
   Group *pot1 = new Group;
   
-  t3.load_identity();
+/*  t3.load_identity();
   t3.pre_scale(Vector(.0001, .0001, .0001));
   // t3.pre_rotate(M_PI / 2.0 , Vector(1, 0, 0));
   t3.pre_translate(Vector(-2, 20, 2.5));
@@ -722,6 +720,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    "/usr/sci/data/Geometry/models/read_in_models/keith/sharks/shark1.mtl",
                    t3, shark1))
       exit(-1);
+*/
   t3.load_identity();
   t3.pre_rotate(-.25 * M_PI, Vector(0, 0, 1));
   t3.pre_rotate(.1 * M_PI, Vector(-1, 0, 0));
@@ -855,14 +854,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   temp->set_name("krabbe");
   all_tubes->add(temp);  
 
-  temp = new Grid (anker, 15);
-  temp->set_name("anker");
-  all_tubes->add(temp);  
-  
-  temp = new Grid (shark1, 15);
+/*  temp = new Grid (shark1, 15);
   temp->set_name("shark1");
   all_tubes->add(temp);
-  
+*/  
   temp = new Grid (col1, 15);
   temp->set_name("col1");
   all_tubes->add(temp);
@@ -898,22 +893,23 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   Group* erect_group = new Group();  
 
-  temp = new Grid (col5, 35);
+  //temp = new Grid (col5, 35);
+  temp = (new HierarchicalGrid (col5, 6, 6, 6, 10, 10, 4));
   temp->set_name("col5");
   all_tubes->add(temp);
   //all_tubes->add(new HierarchicalGrid (col5, 6, 4, 4, 10, 10, 4));
 
-  temp = new Grid (col6, 35);
+  //temp = new Grid (col6, 35);
+  temp = (new HierarchicalGrid (col6, 6, 6, 6, 10, 10, 4));
   temp->set_name("col6");
   all_tubes->add(temp);  
-  //all_tubes->add(new HierarchicalGrid (col6, 6, 4, 4, 10, 10, 4));
 
-  temp = new HierarchicalGrid (patch1, 4, 4, 4, 10, 10, 4);
+  temp = new HierarchicalGrid (patch1, 6, 6, 6, 10, 10, 4);
   temp->set_name("patch1");
   all_tubes->add(temp);  
   // all_tubes->add(new Grid (patch1, 25));
   
-  temp = new HierarchicalGrid (patch2, 4, 4, 4, 10, 10, 4); 
+  temp = new HierarchicalGrid (patch2, 6, 6, 6, 10, 10, 4); 
   temp->set_name("patch2");
   all_tubes->add(temp);
   // all_tubes->add(new Grid (patch2, 30));
@@ -937,18 +933,18 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // all_tubes->add(new BV1  (patch5));
   // all_tubes->add(new Grid (patch5, 20));
 
-  temp = new HierarchicalGrid (patch6, 6, 6, 6, 10, 10, 4);
+/*  temp = new HierarchicalGrid (patch6, 6, 6, 6, 10, 10, 4);
   temp->set_name("patch6");
   all_tubes->add(temp);
   // all_tubes->add(new BV1  (patch6));
   // all_tubes->add(new Grid (patch6, 20));
-      
+*/      
   temp = new HierarchicalGrid (gazebo, 8, 8, 6, 10, 10, 4);
   temp->set_name("gazebo");
   all_tubes->add(temp);  
   //  all_tubes->add(new Grid (gazebo, 15));
 
-  temp = new HierarchicalGrid (erect, 10, 6, 6, 10, 10, 4);
+  temp = new HierarchicalGrid (erect, 6, 6, 6, 10, 10, 4);
   temp->set_name("erect");
   all_tubes->add(temp);  
   // all_tubes->add(new Grid (erect, 10));
@@ -958,40 +954,38 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   all_tubes->add(temp);  
   // all_tubes->add(new Grid(temple, 10));
 
-  temp = new HierarchicalGrid(parth, 4, 4, 4, 10, 10, 4);
+/*  temp = new HierarchicalGrid(parth, 4, 4, 4, 10, 10, 4);
   temp->set_name("parth");
   all_tubes->add(temp);  
-  // all_tubes->add(new Grid(parth, 10));
+*/  // all_tubes->add(new Grid(parth, 10));
 
   temp = new HierarchicalGrid(temple2, 6, 6, 6, 10, 10, 4);
   temp->set_name("temple2");
   all_tubes->add(temp);  
   // all_tubes->add(new Grid(temple2, 20));
 
-  temp = new HierarchicalGrid (rock1, 20, 6, 6, 10, 10, 4);
+  temp = new HierarchicalGrid (rock1, 5, 5, 5, 10, 10, 4);
   temp->set_name("rock1");
   all_tubes->add(temp); 
   // all_tubes->add(new Grid (rock1, 40));
 
-  temp = new Grid (rock2, 80);
+  //temp = new Grid (rock2, 80);
+  temp = (new HierarchicalGrid (rock2, 5, 5, 5, 10, 10, 4));
   temp->set_name("rock2");
   all_tubes->add(temp);  
   // all_tubes->add(new HierarchicalGrid (rock2, 20, 6, 6, 10, 10, 4));
 
-  temp = new Grid (rock3, 80);
+  //temp = new Grid (rock3, 80);
+  temp = (new HierarchicalGrid (rock3, 5, 5, 5, 10, 10, 4));
   temp->set_name("rock3");
   all_tubes->add(temp);  
   // all_tubes->add(new HierarchicalGrid (rock3, 20, 6, 6, 10, 10, 4));
 
-  temp = new Grid (rock4, 80);
+  //temp = new Grid (rock4, 80);
+  temp = (new HierarchicalGrid (rock4, 5, 5, 5, 10, 10, 4));
   temp->set_name("rock4");
   all_tubes->add(temp);  
   //  all_tubes->add(new HierarchicalGrid (rock4, 20, 6, 6, 10, 10, 4));
-
-  temp = new Grid (rock5, 80);
-  temp->set_name("rock5");
-  all_tubes->add(temp);  
-  //  all_tubes->add(new HierarchicalGrid (rock5, 20, 6, 6, 10, 10, 4));
 
   temp = new Grid (iceberg, 40);
   temp->set_name("iceberg");
@@ -1001,10 +995,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   temp->set_name("iceberg2");
   all_tubes->add(temp);  
 
-  temp = new Grid (iceberg3, 40);
+/*  temp = new Grid (iceberg3, 40);
   temp->set_name("iceberg3");
   all_tubes->add(temp);  
-
+*/
   temp = new HierarchicalGrid(rock_tower, 6, 6, 6, 10, 10, 4);
   temp->set_name("rock_tower");
   all_tubes->add(temp);  
