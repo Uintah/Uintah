@@ -40,8 +40,7 @@ SRCS     += \
 [INSERT NEW CODE FILE HERE]
 
 
-PSELIBS := Core/Algorithms/Visualization \
-	Dataflow/Network Core/Datatypes Dataflow/Widgets \
+PSELIBS := Dataflow/Network Core/Datatypes Dataflow/Widgets \
 	Core/Containers Core/Exceptions Core/Thread \
 	Core/TclInterface Core/Geom Core/Persistent \
 	Dataflow/Ports Core/Geometry Core/Util \
