@@ -91,18 +91,11 @@ ManipFields::manips_map_t ManipFields::manips_;
 
 
 ManipFields::ManipFields( const string& id ) 
-  : Module("ManipFields", id.c_str(), Source)
+  : Module("ManipFields", id.c_str(), Source, "Fields", "SCIRun" )
   , name_("manipulationName", id.c_str(), this)
   , id_(id)
   , curFun_(0)
 {
-  // Create the input port
-  FieldIPort* infield = scinew FieldIPort( this, "Input Field", FieldIPort::Atomic );
-  add_iport( infield );
-    
-  // Create the output port
-  FieldOPort* ofield = scinew FieldOPort( this, "Output Field", FieldIPort::Atomic );
-  add_oport( ofield );
 }
 
 
