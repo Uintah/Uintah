@@ -11,6 +11,7 @@
 #include <Uintah/Components/ICE/ICELabel.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Grid/CellIterator.h>
 #include <SCICore/Geometry/Vector.h>
 
 using SCICore::Geometry::Vector;
@@ -53,63 +54,64 @@ public:
 			   DataWarehouseP& new_dw);
 
    void actuallyComputeStableTimestep(const ProcessorGroup*,
-			   const Patch* patch,
-			   DataWarehouseP&,
-			   DataWarehouseP&);
+				      const Patch* patch,
+				      DataWarehouseP&,
+				      DataWarehouseP&);
 
 
 
-   void actually_Bottom_of_main_loop(
-                        const ProcessorGroup*,
-			   const Patch* patch,
-			   DataWarehouseP&,
-			   DataWarehouseP&);
+   void actually_Bottom_of_main_loop(const ProcessorGroup*,
+				     const Patch* patch,
+			  	     DataWarehouseP&,
+				     DataWarehouseP&);
 
-   void actually_Top_of_main_loop(
-                        const ProcessorGroup*,
-		          const Patch* patch,
-		          DataWarehouseP&,
-		          DataWarehouseP&);
+   void actually_Top_of_main_loop(const ProcessorGroup*,
+			          const Patch* patch,
+			          DataWarehouseP&,
+			          DataWarehouseP&);
 
-   void actuallyStep1a(
-                       const ProcessorGroup*,
-		         const Patch* patch,
-		         DataWarehouseP&,
-		         DataWarehouseP&);
+   void actuallyStep1a(const ProcessorGroup*,
+		       const Patch* patch,
+		       DataWarehouseP&,
+		       DataWarehouseP&);
 
-   void actuallyStep1b(
-                       const ProcessorGroup*,
-		         const Patch* patch,
-		         DataWarehouseP&,
-		         DataWarehouseP&);
+   void actuallyStep1b(const ProcessorGroup*,
+		       const Patch* patch,
+		       DataWarehouseP&,
+		       DataWarehouseP&);
+
+   void actuallyStep1c(const ProcessorGroup*,
+		       const Patch* patch,
+		       DataWarehouseP&,
+		       DataWarehouseP&);
+
+   void actuallyStep1d(const ProcessorGroup*,
+		       const Patch* patch,
+		       DataWarehouseP&,
+		       DataWarehouseP&);
 
 
-   void actuallyStep2(
-                        const ProcessorGroup*,
-		          const Patch* patch,
-		          DataWarehouseP&,
-		          DataWarehouseP&);
+   void actuallyStep2(const ProcessorGroup*,
+		      const Patch* patch,
+		      DataWarehouseP&,
+		      DataWarehouseP&);
 
-   void actuallyStep3(
-                        const ProcessorGroup*,
-		          const Patch* patch,
-		          DataWarehouseP&,
-		          DataWarehouseP&);
+   void actuallyStep3(const ProcessorGroup*,
+		      const Patch* patch,
+		      DataWarehouseP&,
+		      DataWarehouseP&);
 
-   void actuallyStep4(
-                        const ProcessorGroup*,
-		          const Patch* patch,
-		          DataWarehouseP&,
-		          DataWarehouseP&);
+   void actuallyStep4(const ProcessorGroup*,
+		      const Patch* patch,
+		      DataWarehouseP&,
+		      DataWarehouseP&);
 
-   void actuallyStep5(
-                        const ProcessorGroup*,
-		          const Patch* patch,
-		          DataWarehouseP&,
-		          DataWarehouseP&);
+   void actuallyStep5(const ProcessorGroup*,
+		      const Patch* patch,
+		      DataWarehouseP&,
+		      DataWarehouseP&);
 
-   void actuallyStep6and7(
-                        const ProcessorGroup*,
+   void actuallyStep6and7(const ProcessorGroup*,
 		          const Patch* patch,
 		          DataWarehouseP&,
 		          DataWarehouseP&);
@@ -373,6 +375,9 @@ void after_each_step_wrapper(
 #endif
 
 // $Log$
+// Revision 1.25  2000/10/13 00:01:11  guilkey
+// More work on ICE
+//
 // Revision 1.24  2000/10/10 20:35:07  jas
 // Move some stuff around.
 //
