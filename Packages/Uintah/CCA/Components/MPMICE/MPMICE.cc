@@ -131,6 +131,8 @@ void MPMICE::scheduleTimeAdvance(double, double,
   d_mpm->scheduleExMomInterpolated(               sched, patches, matls);
   d_mpm->scheduleComputeStressTensor(             sched, patches, matls);
      
+  scheduleComputeMassBurnRate(                    sched, patches, matls);
+
   d_ice->scheduleComputePressFC(                  sched, patches, matls);
   d_ice->scheduleAccumulateMomentumSourceSinks(   sched, patches, matls);
   d_ice->scheduleAccumulateEnergySourceSinks(     sched, patches, matls);
@@ -152,9 +154,6 @@ void MPMICE::scheduleTimeAdvance(double, double,
 //    d_mpm->scheduleExMomIntegrated(sched, patches, matls);
 //    d_ice->scheduleAddExchangeToMomentumAndEnergy(sched, patches, matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, matls);
-  d_mpm->scheduleComputeMassRate(                 sched, patches, matls);
-
-  scheduleComputeMassBurnRate(                    sched, patches, matls);
 
   if(d_fracture) {
     d_mpm->scheduleComputeFracture(sched, patches, matls);
