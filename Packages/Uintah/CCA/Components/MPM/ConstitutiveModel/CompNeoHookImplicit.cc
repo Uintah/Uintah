@@ -275,17 +275,13 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
       
       // Find the stressTensor using the displacement gradient
       
-      // Inputs: dispGrad
-      // Outputs: D,sig (stress tensor), J
-      
-      
       // Compute the deformation gradient increment using the dispGrad
       
       deformationGradientInc = dispGrad + Identity;
 
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient_new[idx] = deformationGradientInc *
-	deformationGradient[idx];
+                                     deformationGradient[idx];
       
       // get the volumetric part of the deformation
       double J = deformationGradient_new[idx].Determinant();
@@ -361,28 +357,30 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
       pvolume_deformed[idx] = volnew;
 
-      // Perform kmat = B.transpose()*D*B*volold
-      FastMatrix out(24,6);
-      Btrans.transpose(B);
-      out.multiply(Btrans, D);
-      kmat.multiply(out, B);
-      kmat.multiply(volold);
-      
-      // Perform kgeo = Bnl.transpose*sig*Bnl*volnew;
-      FastMatrix out1(24,3);
-      Bnltrans.transpose(Bnl);
-      out1.multiply(Bnltrans, sig);
-      kgeo.multiply(out1, Bnl);
-      kgeo.multiply(volnew);
+      if(dwi==0){
+        // Perform kmat = B.transpose()*D*B*volold
+        FastMatrix out(24,6);
+        Btrans.transpose(B);
+        out.multiply(Btrans, D);
+        kmat.multiply(out, B);
+        kmat.multiply(volold);
+        
+        // Perform kgeo = Bnl.transpose*sig*Bnl*volnew;
+        FastMatrix out1(24,3);
+        Bnltrans.transpose(Bnl);
+        out1.multiply(Bnltrans, sig);
+        kgeo.multiply(out1, Bnl);
+        kgeo.multiply(volnew);
 
-      for (int I = 0; I < (int)dof.size();I++) {
+       for (int I = 0; I < (int)dof.size();I++) {
 	int dofi = dof[I];
 	for (int J = 0; J < (int)dof.size(); J++) {
 	  int dofj = dof[J];
 	  double v = kmat(I,J) + kgeo(I,J);
 	  solver->fillMatrix(dofi,dofj,v);
 	}
-      }
+       }
+      }  // Don't do it for the rigid body
       
     }
   }
@@ -463,10 +461,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
 	// Find the stressTensor using the displacement gradient
 
-	// Inputs: dispGrad
-	// Outputs: D,sig (stress tensor), J
-
-
        // Compute the deformation gradient increment using the dispGrad
 
        deformationGradientInc = dispGrad + Identity;
@@ -493,14 +487,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
        // compute the total stress (volumetric + deviatoric)
        pstress[idx] = Identity*p + shrTrl/J;
-
-
-       FastMatrix sig(3,3);
-       for (int i = 0; i < 3; i++) {
-	 for (int j = 0; j < 3; j++) {
-	   sig(i,j)= pstress[idx](i+1,j+1);
-	 }
-       }
 
        pvolume_deformed[idx] = pvolumeold[idx]*J;
      }
