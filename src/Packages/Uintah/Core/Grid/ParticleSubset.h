@@ -7,7 +7,11 @@
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <iostream>
 #include <sgi_stl_warnings_on.h>
+
+
+using std::ostream;
 
 namespace Uintah {
   class Patch;
@@ -46,6 +50,10 @@ WARNING
   public:
     ParticleSubset(ParticleSet* pset, bool fill,
 		   int matlIndex, const Patch*,
+		   particleIndex sizeHint);
+    ParticleSubset(ParticleSet* pset, bool fill,
+		   int matlIndex, const Patch*,
+                   Ghost::GhostType gt, int numgc,
 		   particleIndex sizeHint);
     ParticleSubset(ParticleSet* pset, bool fill,
 		   int matlIndex, const Patch*,
@@ -160,5 +168,7 @@ WARNING
     ParticleSubset& operator=(const ParticleSubset&);
   };
 } // End namespace Uintah
+
+ostream& operator<<(ostream& out, Uintah::ParticleSubset& pset);
 
 #endif

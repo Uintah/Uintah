@@ -27,6 +27,7 @@ SRCS     += \
 	$(SRCDIR)/VarLabelLevelDW.cc \
 	$(SRCDIR)/VarLabelMatlPatch.cc \
 	$(SRCDIR)/VarLabelMatlPatchDW.cc \
+	$(SRCDIR)/PSPatchMatlGhost.cc \
 	$(SRCDIR)/Variable.cc \
 	$(SRCDIR)/PerPatchBase.cc \
 	$(SRCDIR)/VelocityBoundCond.cc \
