@@ -27,8 +27,7 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-puts "\nLoading BioFEM (this may take a minute)...\n"
-
+setProgressText "Loading BioFEM Modules..."
 
 
 #######################################################################
@@ -70,6 +69,7 @@ set m19 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 447 607]
 set m20 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 300 24]
 set m22 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 160 822]
 
+setProgressText "Creating BioFEM Connections..."
 addConnection $m0 0 $m1 0
 addConnection $m0 0 $m2 0
 addConnection $m1 0 $m3 0
@@ -238,6 +238,8 @@ set mods(ShowDipole) $m6
 # Build up a simplistic standalone application.
 #######################################################
 wm withdraw .
+
+setProgressText "Creating BioFEM GUI..."
 
 set auto_index(::PowerAppBase) "source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/PowerAppBase.app"
 
@@ -1158,7 +1160,7 @@ class BioFEMApp {
 	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
 	    pack $maps.bpseismic.f.canvas -anchor e
 	    
-	    draw_colormap "Red-to-Blue" $maps.bpseismic.f.canvas
+	    draw_colormap "Blue-to-Red" $maps.bpseismic.f.canvas
 	}
     }
     
@@ -1303,8 +1305,11 @@ class BioFEMApp {
 
 BioFEMApp app
 
+setProgressText "Displaying BioFEM GUI..."
+
 app build_app
 
+hideProgress
 
 
 ### Bind shortcuts - Must be after instantiation of IsoApp
