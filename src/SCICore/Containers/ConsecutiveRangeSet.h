@@ -166,7 +166,7 @@ public:
   { return iterator(this, 0, 0); }
 
   inline iterator end()
-  { return iterator(this, d_rangeSet.size(), 0); }
+  { return iterator(this, (int)d_rangeSet.size(), 0); }
 
   unsigned long size() const
   { return d_size; }
@@ -175,7 +175,7 @@ public:
  
   // used for debugging
   int getNumRanges()
-  { return d_rangeSet.size(); }
+  { return (int)d_rangeSet.size(); }
 
   static const ConsecutiveRangeSet empty;
   static const ConsecutiveRangeSet all;  
