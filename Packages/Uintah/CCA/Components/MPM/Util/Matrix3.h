@@ -31,7 +31,9 @@ class Matrix3 {
   inline Matrix3(double v00, double v01, double v02,
                  double v10, double v11, double v12,
                  double v20, double v21, double v22);
-  inline Matrix3(double mat3[3][3]);
+//  Do not uncomment this to get it working.  It will break the
+//  field storage stuff.
+//  inline Matrix3(double mat3[3][3]);
   inline Matrix3(const Matrix3&);
 
   // copy constructor
