@@ -1387,8 +1387,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   double tempRate; /* tan: tempRate stands for "temperature variation
                            time rate", used for heat conduction.  */
 //  double thermal_energy = 0.0;
+  // DON'T MOVE THESE!!!
   Vector CMX(0.0,0.0,0.0);
   Vector CMV(0.0,0.0,0.0);
+  double ke=0;
   int numPTotal = 0;
 
   // This needs the datawarehouse to allow indexing by material
@@ -1400,7 +1402,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    double ke=0;
 
     if(mpm_matl){
       int matlindex = matl->getDWIndex();
@@ -1579,15 +1580,16 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pids, lb->pParticleIDLabel, pset);
       new_dw->put(pids, lb->pParticleIDLabel_preReloc);
 
-      new_dw->put(sum_vartype(ke), lb->KineticEnergyLabel);
-      new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
-      new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
-
       new_dw->put(pTemperatureRate, lb->pTemperatureRateLabel_preReloc);
       new_dw->put(pTemperature, lb->pTemperatureLabel_preReloc);
       new_dw->put(pTemperatureGradient, lb->pTemperatureGradientLabel_preReloc);
     }
   }
+  // DON'T MOVE THESE!!!
+  new_dw->put(sum_vartype(ke), lb->KineticEnergyLabel);
+  new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
+  new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
+
 //   cout << "THERMAL ENERGY " << thermal_energy << endl;
 
 #if 0
@@ -1649,6 +1651,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.119  2000/08/24 00:17:09  guilkey
+// Put saving and zeroing of integrated quantities in the correct places.
+//
 // Revision 1.118  2000/08/19 03:20:17  tan
 // Fix a fault by my misdeleting the code on boundary conditions in function
 // interpolateParticlesToGrid.
