@@ -96,16 +96,7 @@ END";
 #endif
 
 #include <sci_glu.h>
-GLenum errCode;
-const GLubyte *errString;
 
-void glCheckForError(const char* message)
-{
-  if((errCode = glGetError()) != GL_NO_ERROR){
-    errString = gluErrorString(errCode);
-    cerr<<"OpenGL Error: "<<message<<" "<<(const char*)errString<<endl;
-  }
-}
 
 namespace SCIRun {
 
@@ -276,7 +267,7 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
 void
 GLVolRenState::loadColorMap(Brick& brick)
 {
-  //glCheckForError("start of loadColorMap");
+  CHECK_OPENGL_ERROR("start of loadColorMap")
   const unsigned char *arr = volren->transfer_functions(brick.level());
 
 #if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture)  && defined(__APPLE__)
@@ -323,17 +314,17 @@ GLVolRenState::loadColorMap(Brick& brick)
 		  GL_RGBA,  // need an alpha value...
 		  GL_UNSIGNED_BYTE, // try shorts...
 		  arr);
-  //glCheckForError("After glColorTableEXT");
+  CHECK_OPENGL_ERROR("After glColorTableEXT")
 #endif
 
 #endif
-  //glCheckForError("end of loadColorMap");
+  CHECK_OPENGL_ERROR("end of loadColorMap")
 }
 
 void 
 GLVolRenState::loadTexture(Brick& brick)
 {
-  //glCheckForError("start of GLVolRenState::loadTexture");
+  CHECK_OPENGL_ERROR("start of GLVolRenState::loadTexture")
 #if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
   glActiveTexture(GL_TEXTURE0_ARB);
 //   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -345,15 +336,15 @@ GLVolRenState::loadTexture(Brick& brick)
       textureNames.push_back( brick.texName() );
      }
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
-    //glCheckForError("After glBindTexture");
+    CHECK_OPENGL_ERROR("After glBindTexture")
     if(volren->interp()){
       glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      //glCheckForError("glTexParameteri GL_LINEAR");
+      CHECK_OPENGL_ERROR("glTexParameteri GL_LINEAR");
     } else {
       glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      //glCheckForError("glTexParameteri GL_NEAREST");
+      CHECK_OPENGL_ERROR("glTexParameteri GL_NEAREST")
     }
 
 
@@ -368,16 +359,16 @@ GLVolRenState::loadTexture(Brick& brick)
 #else
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S,
 		    GL_CLAMP);
-    //glCheckForError("glTexParameteri GL_TEXTURE_WRAP_S GL_CLAMP");
+    CHECK_OPENGL_ERROR("glTexParameteri GL_TEXTURE_WRAP_S GL_CLAMP")
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T,
 		    GL_CLAMP);
-    //glCheckForError("glTexParameteri GL_TEXTURE_WRAP_T GL_CLAMP");
+    CHECK_OPENGL_ERROR("glTexParameteri GL_TEXTURE_WRAP_T GL_CLAMP")
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_R_EXT,
 		    GL_CLAMP);
-    //glCheckForError("glTexParameteri GL_TEXTURE_WRAP_R GL_CLAMP");
+    CHECK_OPENGL_ERROR("glTexParameteri GL_TEXTURE_WRAP_R GL_CLAMP")
 #endif
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    //glCheckForError("After glPixelStorei(GL_UNPACK_ALIGNMENT, 1)");
+    CHECK_OPENGL_ERROR("After glPixelStorei(GL_UNPACK_ALIGNMENT, 1)")
     
 #if defined( GL_ARB_fragment_program ) && defined(GL_ARB_multitexture) && defined(__APPLE__)
     glTexImage3D(GL_TEXTURE_3D, 0,
@@ -391,7 +382,7 @@ GLVolRenState::loadTexture(Brick& brick)
 #elif defined( GL_TEXTURE_COLOR_TABLE_SGI ) && defined(__sgi)
     // set up the texture
     //glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0,
-    glTexImage3D(GL_TEXTURE_3D, 0,
+    glTexImage3DEXT(GL_TEXTURE_3D, 0,
 		    GL_INTENSITY8,
 		    (brick.texture())->dim1(), 
 		    (brick.texture())->dim2(), 
@@ -399,17 +390,17 @@ GLVolRenState::loadTexture(Brick& brick)
 		    0,
 		    GL_RED, GL_UNSIGNED_BYTE,
 		    &(*(brick.texture()))(0,0,0));
-    //glCheckForError("After glTexImage3D SGI");
+    CHECK_OPENGL_ERROR("After glTexImage3D SGI")
 #elif defined( GL_SHARED_TEXTURE_PALETTE_EXT )
     glTexImage3D(GL_TEXTURE_3D_EXT, 0,
-		    GL_COLOR_INDEX8_EXT,
-		    (brick.texture())->dim1(), 
-		    (brick.texture())->dim2(), 
-		    (brick.texture())->dim3(),
-		    0,
-		    GL_COLOR_INDEX, GL_UNSIGNED_BYTE,
-		    &(*(brick.texture()))(0,0,0));
-    //glCheckForError("After glTexImage3D Linux");
+		 GL_COLOR_INDEX8_EXT,
+		 (brick.texture())->dim1(),
+		 (brick.texture())->dim2(),
+		 (brick.texture())->dim3(),
+		 0,
+		 GL_COLOR_INDEX, GL_UNSIGNED_BYTE,
+		 &(*(brick.texture()))(0,0,0));
+    CHECK_OPENGL_ERROR("After glTexImage3D Linux")
 #endif
   } else {
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());

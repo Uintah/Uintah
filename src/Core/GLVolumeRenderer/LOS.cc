@@ -88,7 +88,6 @@ LOS::draw()
     st.getParameters( b, tmin, tmax, dt);
 
     b.ComputePolys( viewRay,  tmin, tmax, dt, ts, polys);
-    
     loadColorMap( b );
     loadTexture( b );
     //setAlpha( b );

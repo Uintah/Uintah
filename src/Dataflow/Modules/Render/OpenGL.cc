@@ -754,13 +754,7 @@ OpenGL::redraw_frame()
     view_window_->setState(drawinfo_,globals);
     drawinfo_->pickmode=0;
 
-    GLenum errcode;
-    while((errcode=glGetError()) != GL_NO_ERROR)
-    {
-      cerr << "We got a GL error after setting up the graphics state: "
-	   << (char*)gluErrorString(errcode)
-	   << "\n";
-    }
+    CHECK_OPENGL_ERROR("after setting up the graphics state: ")
 
 #if defined(HAVE_PBUFFER)
     if( pbuffer.is_current() &&
@@ -973,13 +967,7 @@ OpenGL::redraw_frame()
   viewer_->geomlock_.readUnlock();
 
   // Look for errors
-  GLenum errcode;
-  while((errcode=glGetError()) != GL_NO_ERROR)
-  {
-    cerr << "We got an error from GL after drawing objects: "
-	 << (char*)gluErrorString(errcode)
-	 << "\n";
-  }
+  CHECK_OPENGL_ERROR("after drawing objects: ")
 
   // Report statistics
   timer.stop();

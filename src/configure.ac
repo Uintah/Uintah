@@ -861,15 +861,20 @@ sci_defs_files="$sci_defs_files include/sci_defs/error_testdefs.h"
 ##  ----------------------------------------------------------------------
 
 AC_MSG_CHECKING(whether debug was enabled)
+OGL_ERR_MACRO=""
 if test "$debug" = "no"; then
   AC_MSG_RESULT(no)
 elif test "$debug" = "yes"; then
+  OGL_ERR_MACRO="#define OGL_DBG 1"
   extra_cflags="-g ${extra_cflags}"
   AC_MSG_RESULT(yes (-g) )
 else
+  OGL_ERR_MACRO="#define OGL_DBG 1"
   extra_cflags="$debug ${extra_cflags}"
   AC_MSG_RESULT(yes ($debug) )
 fi
+
+AC_SUBST(OGL_ERR_MACRO)
 
 AC_MSG_CHECKING(whether optimize was enabled)
 if test "$optimize" = "no"; then

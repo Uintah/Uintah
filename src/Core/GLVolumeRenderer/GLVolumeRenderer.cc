@@ -172,6 +172,7 @@ GLVolumeRenderer::clone()
 void 
 GLVolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 {
+  CHECK_OPENGL_ERROR("GLVolumeRenderer::draw begin")
   //AuditAllocator(default_allocator);
   if( !pre_draw(di, mat, lighting_) ) return;
   mutex_.lock();
@@ -197,7 +198,7 @@ GLVolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
   }
   di_ = 0;
   mutex_.unlock();
-
+  CHECK_OPENGL_ERROR("GLVolumeRenderer::draw end")
 }
 #endif
 
@@ -205,6 +206,7 @@ GLVolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 GLVolumeRenderer::setup()
 {
+  CHECK_OPENGL_ERROR("GLVolumeRenderer::setup begin")
 #if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
   glActiveTextureARB(GL_TEXTURE0_ARB);
 #endif
@@ -215,7 +217,7 @@ GLVolumeRenderer::setup()
     glActiveTextureARB(GL_TEXTURE1_ARB);
     glEnable(GL_TEXTURE_1D);
     glActiveTextureARB(GL_TEXTURE0_ARB);
-#elif defined(GL_TEXTURE_COLOR_TABLE_SGI)
+#elif defined(GL_TEXTURE_COLOR_TABLE_SGI) && defined(__sgi)
     //cerr << "Using Lookup!\n";
     glEnable(GL_TEXTURE_COLOR_TABLE_SGI);
 #elif defined(GL_SHARED_TEXTURE_PALETTE_EXT)
@@ -229,6 +231,7 @@ GLVolumeRenderer::setup()
   }
   glColor4f(1,1,1,1); // set to all white for modulation
   glDepthMask(GL_FALSE);
+  CHECK_OPENGL_ERROR("GLVolumeRenderer::setup end")
 }
 
 void
@@ -241,7 +244,7 @@ GLVolumeRenderer::cleanup()
   glActiveTextureARB(GL_TEXTURE1_ARB);
   glDisable(GL_TEXTURE_1D);
   glActiveTextureARB(GL_TEXTURE0_ARB);
-#elif defined( GL_TEXTURE_COLOR_TABLE_SGI)
+#elif defined( GL_TEXTURE_COLOR_TABLE_SGI) && defined(__sgi)
     glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
 #elif defined(GL_SHARED_TEXTURE_PALETTE_EXT)
   glDisable(GL_SHARED_TEXTURE_PALETTE_EXT);

@@ -41,17 +41,6 @@
 
 namespace SCIRun {
 
-//  GLenum errCode;
-//  const GLubyte *errString;
-
-//  void glCheckForError(const char* message)
-//  {
-//    if((errCode = glGetError()) != GL_NO_ERROR){
-//      errString = gluErrorString(errCode);
-//      cerr<<"OpenGL Error: "<<message<<" "<<(const char*)errString<<endl;
-//    }
-//  }
-
 FullRes::FullRes(const GLVolumeRenderer* glvr ) :
 
   GLVolRenState( glvr )
@@ -62,6 +51,7 @@ FullRes::FullRes(const GLVolumeRenderer* glvr ) :
 void
 FullRes::draw()
 {
+  CHECK_OPENGL_ERROR("FullRes::draw")
   Ray viewRay;
   Brick* brick;
 
