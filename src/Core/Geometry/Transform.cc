@@ -324,6 +324,11 @@ void Transform::rotate(const Vector& from, const Vector& to)
   Vector t(to); t.normalize();
   Vector f(from); f.normalize();
   Vector axis(Cross(f,t));
+  if (axis.length2() < 0.00001) {
+    Vector j, k;
+    t.find_orthogonal(j,k);
+    axis=j.normal();
+  }
   double sinth=axis.length();
   double costh=Dot(f,t);
   pre_rotate(atan2(sinth, costh), axis.normal());
