@@ -47,7 +47,7 @@ void Centroids::execute()
   FieldIPort *ifieldPort = (FieldIPort*)get_iport("TetVolField");
 
   if (!ifieldPort) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'TetVolField'.");
     return;
   }
   FieldHandle ifieldH;
@@ -61,7 +61,7 @@ void Centroids::execute()
 
   FieldOPort *ofieldPort = (FieldOPort*)get_oport("PointCloudField");
   if (!ofieldPort) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'PointCloudField'.");
     return;
   }
 

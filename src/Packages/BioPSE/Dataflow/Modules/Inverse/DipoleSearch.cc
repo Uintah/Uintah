@@ -530,31 +530,31 @@ void DipoleSearch::execute() {
   dipole_oport_ = (FieldOPort *)get_oport("TestDipole");
 
   if (!seeds_iport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'DipoleSeeds'.");
     return;
   }
   if (!mesh_iport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'TetMesh'.");
     return;
   }
   if (!misfit_iport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'TestMisfit'.");
     return;
   }
   if (!dir_iport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'TestDirection'.");
     return;
   }
   if (!leadfield_select_oport_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'LeadFieldSelectionMatrix'.");
     return;
   }
   if (!simplex_oport_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'DipoleSimplex'.");
     return;
   }
   if (!dipole_oport_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'TestDipole'.");
     return;
   }
 

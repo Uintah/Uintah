@@ -99,27 +99,27 @@ void ApplyFEMCurrentSource::execute()
   oportWeights_ = (MatrixOPort *)get_oport("Output Weights");
 
   if (!iportField_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Mesh'.");
     return;
   }
   if (!iportSource_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Dipole Sources'.");
     return;
   }
   if (!iportRhs_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Input RHS'.");
     return;
   }
   if (!iportInterp_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Interpolant'.");
     return;
   }
   if (!oportRhs_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Output RHS'.");
     return;
   }
   if (!oportWeights_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Output Weights'.");
     return;
   }
   

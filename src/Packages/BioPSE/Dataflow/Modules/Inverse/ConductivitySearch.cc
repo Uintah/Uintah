@@ -492,27 +492,27 @@ void ConductivitySearch::execute() {
   fem_mat_oport_ = (MatrixOPort *)get_oport("FiniteElementMatrix");
 
   if (!mesh_iport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'FiniteElementMesh'.");
     return;
   }
   if (!cond_params_iport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'ConductivityParameters'.");
     return;
   }
   if (!misfit_iport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'TestMisfit'.");
     return;
   }
   if (!mesh_oport_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'FiniteElementMesh'.");
     return;
   }
   if (!cond_vector_oport_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'OldAndNewConductivities'.");
     return;
   }
   if (!fem_mat_oport_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'FiniteElementMatrix'.");
     return;
   }
   

@@ -331,7 +331,7 @@ EditField::build_widget(FieldHandle f)
 
   GeometryOPort *ogport = (GeometryOPort*)get_oport("Transformation Widget");
   if (!ogport) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Transformation Widget'.");
     return;
   }
   widgetid_ = ogport->addObj(widget_group,"EditField Transform widget",
@@ -344,7 +344,7 @@ EditField::execute()
 {
   FieldIPort *iport = (FieldIPort*)get_iport("Input Field"); 
   if (!iport) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Input Field'.");
     return;
   }
   
@@ -360,7 +360,7 @@ EditField::execute()
   // The output port is required.
   FieldOPort *oport = (FieldOPort*)get_oport("Output Field");
   if (!oport) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Output Field'.");
     return;
   }
 
@@ -527,7 +527,7 @@ EditField::execute()
   // The output port is required.
   MatrixOPort *moport = (MatrixOPort*)get_oport("Transformation Matrix");
   if (!moport) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Transformation Matrix'.");
     return;
   }  
 
@@ -550,7 +550,7 @@ void EditField::tcl_command(GuiArgs& args, void* userdata)
     cx_.reset(); cy_.reset(); cz_.reset();
     sizex_.reset(); sizey_.reset(); sizez_.reset();
     if (sizex_.get() <= 0 || sizey_.get() <= 0 || sizez_.get() <= 0) {
-      postMessage("EditField: Degenerate BBox requested!");
+      error("Degenerate BBox requested.");
       widget_moved(true);           // force values back to widget settings
       return;                    // degenerate 
     }

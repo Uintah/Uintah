@@ -81,7 +81,7 @@ DirectInterpolate::execute()
   dst_port_ = (FieldIPort *)get_iport("Destination");
   FieldHandle dfieldhandle;
   if (!dst_port_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Destination'.");
     return;
   }
   if (!(dst_port_->get(dfieldhandle) && dfieldhandle.get_rep()))
@@ -92,7 +92,7 @@ DirectInterpolate::execute()
   src_port_ = (FieldIPort *)get_iport("Source");
   FieldHandle sfieldhandle;
   if (!src_port_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Source'.");
     return;
   }
   if (!(src_port_->get(sfieldhandle) && sfieldhandle.get_rep()))

@@ -82,15 +82,15 @@ FieldBoundary::execute()
   ointerp_ = (FieldOPort *)get_oport("Interpolant");
   FieldHandle input;
   if (!infield_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Field'.");
     return;
   }
   if (!osurf_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'TriSurfField'.");
     return;
   }
   if(!ointerp_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Interpolant'.");
     return;
   }
   if (!infield_->get(input)) return;

@@ -48,11 +48,11 @@ void ConfigureElectrode::execute() {
   FieldOPort* oelec = (FieldOPort *) get_oport("Electrode");
   
   if (!ielec) {
-    postMessage("Unable to initialize "+name+"'s ielec port\n");
+    error("Unable to initialize iport 'Electrode'.");
     return;
   }
   if (!oelec) {
-    postMessage("Unable to initialize "+name+"'s oelec port\n");
+    error("Unable to initialize oport 'Electrode'.");
     return;
   }
   

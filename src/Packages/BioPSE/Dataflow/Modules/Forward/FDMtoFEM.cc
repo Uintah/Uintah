@@ -83,11 +83,11 @@ void FDMtoFEM::execute() {
   FieldHandle ifdmH;
 
   if (!ifdm_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'FDM (LVT, cell sigmas)'.");
     return;
   }
   if (!ofem_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'FEM (TVT, cell sigmas)'.");
     return;
   }
   

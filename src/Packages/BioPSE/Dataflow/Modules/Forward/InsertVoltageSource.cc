@@ -58,15 +58,15 @@ void InsertVoltageSource::execute() {
   FieldIPort* isource = (FieldIPort *) get_iport("VoltageSource");
   FieldOPort* omesh = (FieldOPort *) get_oport("TetMesh");
   if (!imesh) {
-    postMessage("Unable to initialize "+name+"'s imesh port\n");
+    error("Unable to initialize iport 'TetMesh'.");
     return;
   }
   if (!isource) {
-    postMessage("Unable to initialize "+name+"'s isource port\n");
+    error("Unable to initialize iport 'VoltageSource'.");
     return;
   }
   if (!omesh) {
-    postMessage("Unable to initialize "+name+"'s omesh port\n");
+    error("Unable to initialize oport 'TetMesh'.");
     return;
   }
 

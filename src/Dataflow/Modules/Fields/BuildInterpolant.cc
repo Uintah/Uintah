@@ -84,7 +84,7 @@ BuildInterpolant::execute()
   FieldHandle fdst_h;
 
   if (!dst_port) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Destination'.");
     return;
   }
   if (!(dst_port->get(fdst_h) && fdst_h.get_rep()))
@@ -95,7 +95,7 @@ BuildInterpolant::execute()
   src_port = (FieldIPort *)get_iport("Source");
   FieldHandle fsrc_h;
   if(!src_port) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Source'.");
     return;
   }
   if (!(src_port->get(fsrc_h) && fsrc_h.get_rep()))
@@ -125,7 +125,7 @@ BuildInterpolant::execute()
 
   ofp = (FieldOPort *)get_oport("Interpolant");
   if(!ofp) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Interpolant'.");
     return;
   }
   ofp->send(algo->execute(fsrc_h->mesh(), fdst_h->mesh(), fdst_h->data_at(),

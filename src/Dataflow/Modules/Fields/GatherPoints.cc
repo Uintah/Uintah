@@ -31,6 +31,7 @@
 #include <Dataflow/Modules/Fields/GatherPoints.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Core/Containers/StringUtil.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -57,7 +58,7 @@ GatherPoints::execute()
 {
   FieldOPort *ofld = (FieldOPort *)get_oport("Field");
   if (!ofld) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Field'.");
     return;
   }
 
@@ -72,7 +73,7 @@ GatherPoints::execute()
   {
     FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);
     if (!ifield) {
-      postMessage("Unable to initialize "+name+"'s iport\n");
+      error("Unable to initialize iport '" + to_string(pi->second) + "'.");
       return;
     }
     FieldHandle field;

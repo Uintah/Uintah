@@ -48,11 +48,11 @@ void BuildNoise::execute() {
   MatrixOPort *onoise = (MatrixOPort *)get_oport("Noise");
 
   if (!isignal) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Signal'.");
     return;
   }
   if (!onoise) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Noise'.");
     return;
   }
   

@@ -76,7 +76,7 @@ Unstructure::execute()
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
   if (!ifp) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Input Field'.");
     return;
   }
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))

@@ -64,7 +64,7 @@ void SelectElements::execute()
   FieldIPort *ifieldPort = (FieldIPort*)get_iport("TetVol");
 
   if (!ifieldPort) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'TetVol'.");
     return;
   }
   FieldHandle field;
@@ -105,19 +105,19 @@ void SelectElements::execute()
 
   FieldOPort *ofieldPort = (FieldOPort*)get_oport("TetVol");
   if (!ofieldPort) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'TetVol'.");
     return;
   }
 
   MatrixOPort *omat1Port = (MatrixOPort*)get_oport("LeadFieldRestrictColumns");
   if (!omat1Port) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'LeadFieldRestrictColumns'.");
     return;
   }
 
   MatrixOPort *omat2Port = (MatrixOPort*)get_oport("LeadFieldInflateRows");
   if (!omat2Port) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'LeadFieldInflateRows'.");
     return;
   }
 

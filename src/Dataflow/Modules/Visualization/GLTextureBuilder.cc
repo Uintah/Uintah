@@ -70,11 +70,11 @@ void GLTextureBuilder::execute(void)
   FieldHandle sfield;
 
   if (!infield_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Field'.");
     return;
   }
   if (!otexture_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'GL Texture'.");
     return;
   } 
   if (!infield_->get(sfield))

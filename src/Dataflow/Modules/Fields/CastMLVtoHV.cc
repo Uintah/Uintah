@@ -53,13 +53,13 @@ void CastMLVtoHV::execute()
   FieldIPort *iport_ = (FieldIPort*)get_iport("MaskedLatVolField");
 
   if (!iport_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'MaskedLatVolField'.");
     return;
   }
   
   FieldOPort *oport_ = (FieldOPort*)get_oport("HexVolField");
   if (!oport_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'HexVolField'.");
     return;
   }
 
@@ -78,12 +78,12 @@ void CastMLVtoHV::execute()
   if (ifieldH.get_rep()->get_type_description(0)->get_name() !=
       "MaskedLatVolField")
   {
-    postMessage("CastMLVtoHV: ERROR: input volume is not a MaskedLatVolField.  Exiting.");
+    error("Input volume is not a MaskedLatVolField.");
     return;
   }                     
 
   if (ifieldH->data_at() != Field::NODE) {
-    postMessage("CastMLVtoHV: ERROR: input volume data isn't node-centered.  Existing.");
+    error("Input volume data isn't node-centered.");
     return;
   }                         
 

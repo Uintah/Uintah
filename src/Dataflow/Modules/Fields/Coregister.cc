@@ -89,15 +89,15 @@ Coregister::execute()
   PointCloudMesh::Node::size_type nnodes;
   
   if (!fixed) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Fixed PointCloudField'.");
     return;
   }
   if (!mobile) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Mobile PointCloudField'.");
     return;
   }
   if (!dfield) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'DistanceField From Fixed'.");
     return;
   }
 
@@ -127,7 +127,7 @@ Coregister::execute()
 
   MatrixOPort *omat = (MatrixOPort *)get_oport("Transform");
   if (!omat) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Transform'.");
     return;
   }
 

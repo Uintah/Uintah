@@ -52,15 +52,15 @@ void LinAlgBinary::execute() {
   omat_ = (MatrixOPort *)get_oport("Output");
 
   if (!imatA_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'A'.");
     return;
   }
   if (!imatB_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'B'.");
     return;
   }
   if (!omat_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Output'.");
     return;
   }
   

@@ -92,7 +92,7 @@ AttractNormals::execute()
   FieldIPort *ifp = (FieldIPort *)getIPort("Input Field");
   FieldHandle ifieldhandle;
   if (!ifp) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Input Field'.");
     return;
   }
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
@@ -103,7 +103,7 @@ AttractNormals::execute()
   FieldIPort *ipp = (FieldIPort *)get_iport("Input Point");
   FieldHandle ipointhandle;
   if (!ipp) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Input Point'.");
     return;
   }
   if (!(ipp->get(ipointhandle) && ipointhandle.get_rep()))
@@ -172,7 +172,7 @@ AttractNormals::execute()
 
   FieldOPort *ofield_port = (FieldOPort *)getOPort("Output Field");
   if (!ofield_port) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Output Field'.");
     return;
   }
 

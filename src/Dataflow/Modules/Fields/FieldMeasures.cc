@@ -347,7 +347,7 @@ FieldMeasures::execute()
   ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle fieldhandle;
   if (!ifp) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Input Field'.");
     return;
   }
   if (!(ifp->get(fieldhandle) && fieldhandle.get_rep()))
@@ -357,7 +357,7 @@ FieldMeasures::execute()
 
   omp = (MatrixOPort *)get_oport("Output Measures Matrix");
   if (!omp) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Output Measures Matrix'.");
     return;
   }
 

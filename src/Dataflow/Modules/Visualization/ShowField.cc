@@ -303,15 +303,15 @@ ShowField::execute()
   FieldHandle fld_handle;
 
   if (!fld_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Field'.");
     return;
   }
   if (!color_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'ColorMap'.");
     return;
   }
   if (!ogeom_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Scene Graph'.");
     return;
   }
 
