@@ -27,7 +27,11 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/ContourMesh.h>
+#include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/PointCloud.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Persistent/Pstreams.h>
 
 #include <iostream>
@@ -43,32 +47,60 @@ using namespace SCIRun;
 int
 main(int argc, char **argv) {
   ContourMesh *cm = new ContourMesh();
-  if (argc != 4) {
-    cerr << "Usage: "<<argv[0]<<" pts edges TriSurf\n";
+  if (argc != 5) {
+    cerr << "Usage: "<<argv[0]<<" pts edges ContourField [PointCloud]\n";
     return 0;
   }
 
+  PointCloudMesh *pm = new PointCloudMesh();
+
   ifstream ptsstream(argv[1]);
   ifstream edgesstream(argv[2]);
+  Array1<Point> pts;
+  Point p;
+  Array1<Vector> vecs;
+  Vector v;
   char idx[100];
   double x, y, z;
   while (ptsstream) {
-    ptsstream >> idx >> x >> y >> z;
-    cm->add_node(Point(x,y,z));
+    ptsstream >> idx >> x >> y;
+    if (!ptsstream) break;
+    ptsstream >> z;
+    p = Point(x,y,z);
+    pts.add(p);
+    cm->add_node(p);
   }
-
+  
   while (edgesstream) {
     int n1, n2;
     double rad;
     edgesstream >> n1;
     if (!edgesstream) break;
     edgesstream >> n2 >> rad;
-    cm->add_edge(n1, n2);
+    cm->add_edge(n1,n2);
+    v = pts[n2]-pts[n1];
+    pm->add_node(pts[n1]+v/2.);
+    v.normalize();
+    vecs.add(v);
   }
 
-  ContourMeshHandle cmh(cm);
-
+  FieldHandle fh;
+  ContourField<Vector> *cf = scinew ContourField<Vector>(cm, Field::EDGE);
+  int i;
+  for (i=0; i<vecs.size(); i++)
+    cf->fdata()[i] = vecs[i];
   TextPiostream out_stream(argv[3], Piostream::Write);
-  Pio(out_stream, cmh);
+  fh = cf;
+  Pio(out_stream, fh);
+
+  PointCloud<Vector> *pc = scinew PointCloud<Vector>(pm, Field::NODE);
+  for (i=0; i<vecs.size(); i++)
+    pc->fdata()[i] = vecs[i];
+  TextPiostream out_stream2(argv[4], Piostream::Write);
+  fh = pc;
+
+  if (argc == 5) 
+    Pio(out_stream2, fh);
+  
   return 0;  
 }    
