@@ -33,7 +33,7 @@ HierarchicalRegridder::~HierarchicalRegridder()
 
 }
 
-Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP scheduler, const ProblemSpecP& ups)
+Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const ProblemSpecP& ups)
 {
   ProblemSpecP grid_ps = ups->findBlock("Grid");
   if (!grid_ps) {
@@ -207,6 +207,9 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP scheduler, const P
 
   rdbg << "HierarchicalRegridder::regrid() END" << endl;
 
+  
+  if (*newGrid == *oldGrid)
+    return oldGrid;
   return newGrid;
 }
 
