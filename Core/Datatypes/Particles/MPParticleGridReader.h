@@ -72,6 +72,7 @@ public:
 			      Array1<float>& values);
   
   virtual void GetParticleData(int particleId,
+			       clString pSetName,
 			       clString varname,
 			       Array1<double>& values);
 
@@ -127,6 +128,9 @@ private:
 
 //
 // $Log$
+// Revision 1.2  1999/12/28 21:09:08  kuzimmer
+// modified file readers so that we can read multiple files for parallel output
+//
 // Revision 1.1  1999/09/21 16:28:31  kuzimmer
 // forgot in previous update
 //
