@@ -64,12 +64,12 @@ color="maroon">
     
     <p><b>Chapter Overview</b><br>
     
-    <p>In this first chapter, we will construct a SCIRun network(see the 
+    <p>In this first chapter, we will construct a SCIRun network (see the 
     <a HREF="../Guide/usersguide/srug3.html#sec:startingup">User's Guide 3.0,
     Starting SCIRun</a>) to perform a visualization task: 
     rendering of a
     tetrahedral mesh.  Our &quot;net,&quot will consist of three
-    modules: data reader, geometry converter, and renderer.<br> 
+    types of modules: data reader, geometry converter, and renderer.  These modules are the FieldReader, ShowField, Viewer.<br> 
     
  
     <p>We will read the <dfn>Field</dfn> data from a file, set some rendering
@@ -97,24 +97,19 @@ color="maroon">
      before starting SCIRun. For more information about environment
      variables, you may consult the <a
      HREF="../Guide/usersguide/srug3.html#sec:scirundata">User's Guide 3.4,
-     SCIRun_DATA</a>.   
+     SCIRun_DATA</a>.  This process assumes that you have downloaded the SCIRunData directory that is a separate dowload from the SCIRun build.  
     <ol>
       <li value="1.">The SCIRUN_DATA variable points to the location 
       of the SCIRunData directory on your system.  
       <li value="2.0">The SCIRUN_DATASET variable indicates which dataset
       to load 
-      since many of our example networks run with a variety of inputs.
+      since many of our example networks run with a variety of data inputs such as sphere, brain-EG, and utahtorso-lowres.
     </ol> 
 
-<p>For example, we will construct a network that loads a geometric mesh
-from disk and renders it to the screen. Such a network will work on a wide
-variety of inputs.  The SCIRUN_DATASET variable selects the data set of
-interest.<br>
-
-<p>To begin, in your Unix shell window:
+<p>To begin, we will construct a network that loads a geometric mesh from disk and render it to the screen.  In your Unix shell window:</p><br>
 <ol>
   <li value="1.">Set your SCIRUN_DATA variable, pointing to the
-  location of SCIRun data.  
+  location of SCIRunData.  
   <li value="2.">Set your SCIRUN_DATASET variable to utahtorso-lowres
   (as shown in <b>Figure 1.2.</b>)</ol>
   
