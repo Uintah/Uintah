@@ -93,7 +93,7 @@ void SolveMatrix::execute()
     updater.solverid=id;
     updater.solport=solport;
     updater.module=this;
-    matrix->isolve(*solution.get_rep(), *rhs.get_rep(), .25, //1.e-4,
+    matrix->isolve(*solution.get_rep(), *rhs.get_rep(), 1.e-4,
 		   &updater);
     solport->send(solution);
 }
@@ -106,6 +106,8 @@ void SolveMatrixUpdater::update(int iter, double first_error,
     ostrstream str(buf, 1000);
     str << solverid << " update_iter " << iter << " " << first_error << " " << current_error << " " << final_error << '\0';
     TCL::execute(str.str());
+#if 0
     solport->send(ColumnMatrixHandle(solution.clone()));
     module->multisend(solport);
+#endif
 }
