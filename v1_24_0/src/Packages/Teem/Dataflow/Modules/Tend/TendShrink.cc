@@ -93,7 +93,7 @@ TendShrink::execute()
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
 
-  nrrd->nrrd->axis[0].kind = nrrdKind3DMaskedSymTensor;
+  nrrd->nrrd->axis[0].kind = nrrdKind3DMaskedSymMatrix;
 
   NrrdDataHandle out(nrrd);
 

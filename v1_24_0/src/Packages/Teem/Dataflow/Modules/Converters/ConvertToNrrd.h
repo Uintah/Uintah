@@ -267,7 +267,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
   if (data_name == ten) {
     pad_data = 7; // copy the data, and pad for tensor values
     sink_size = 7;
-    kind = nrrdKind3DMaskedSymTensor;
+    kind = nrrdKind3DMaskedSymMatrix;
     sink_label = label + string(":Tensor");
   } else if (data_name== vec) {
     pad_data = 3; // copy the data and pad for vector values

@@ -66,12 +66,12 @@ set m9 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 233 
 set m10 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 233 497]
 set m11 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 9 610]
 set m12 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 233 309]
-set m13 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 215 375]
+set m13 [addModuleAtPosition "SCIRun" "Fields" "DirectMapping" 215 375]
 set m14 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 215 593]
 set m15 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 658 432]
 set m16 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 622 617]
 set m17 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 640 493]
-set m18 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 622 554]
+set m18 [addModuleAtPosition "SCIRun" "Fields" "DirectMapping" 622 554]
 set m19 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 447 415]
 set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 447 479]
 
@@ -115,7 +115,7 @@ set $m3-orig_error {1}
 set $m3-current_error {9.84662e-07}
 set $m3-iteration {86}
 set $m3-maxiter {500}
-set $m3-use_previous_soln {1}
+set $m3-use_previous_soln {0}
 set $m3-emit_partial {0}
 
 set $m6-widgetSizeGui_ [expr 0.05 * ${global-scale}]

@@ -364,7 +364,7 @@ UnuCrop::execute()
     }
 
     if( (nout->axis[0].kind == nrrdKind3Vector     && nout->axis[0].size != 3) ||
-	(nout->axis[0].kind == nrrdKind3DSymTensor && nout->axis[0].size != 6) )
+	(nout->axis[0].kind == nrrdKind3DSymMatrix && nout->axis[0].size != 6) )
       nout->axis[0].kind = nrrdKindDomain;
   }
 

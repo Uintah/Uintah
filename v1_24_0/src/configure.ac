@@ -1418,7 +1418,7 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.24
+  sci_tp_version=1.24.1
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
 
