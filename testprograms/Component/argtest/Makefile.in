@@ -1,0 +1,47 @@
+SRCTOP  = @top_srcdir@
+SRCDIR  = @srcdir@
+OBJTOP  = ../../..
+
+GLOBUS_INCLUDE = @GLOBUS_INCLUDE@
+GLOBUS_LIB_DIR = @GLOBUS_LIB@
+
+TCL_LIB_DIR   = @TCL_LIB_DIR@
+TCL_LIB_FLAG  = @TCL_LIB_FLAG@
+TK_LIB_DIR    = @TK_LIB_DIR@
+
+TK_LIB_FLAG   = @TK_LIB_FLAG@
+ITCL_LIB_DIR  = @ITCL_LIB_DIR@
+ITCL_LIB_FLAG = @ITCL_LIB_FLAG@
+ITCL_WIDGETS  = @ITCL_WIDGETS@
+
+LDRUN_PREFIX  = @LDRUN_PREFIX@
+
+OBJTOP_ABS    = $(shell cd $(OBJTOP) ; pwd)
+SRCTOP_ABS    = $(shell cd $(SRCTOP) ; pwd)
+
+SRCS      = argtest.cc argtest_sidl.cc
+INCLUDES  = -I$(SRCTOP) -I$(OBJTOP) $(GLOBUS_INCLUDE) 
+            
+PROGRAM   = argtest
+LIBRARIES = $(LDRUN_PREFIX)$(OBJTOP_ABS)/SCICore \
+            -L$(OBJTOP)/SCICore -lSCICore \
+	    $(LDRUN_PREFIX)$(OBJTOP_ABS)/Component \
+            -L$(OBJTOP)/Component -lComponent \
+	    $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) \
+	    -L$(GLOBUS_LIB_DIR) -lglobus_nexus -lglobus_io \
+            -L$(ITCL_LIB_DIR) \
+            -L$(TK_LIB_DIR) \
+            -L$(TCL_LIB_DIR)
+
+include $(SRCTOP)/scripts/program.mk
+
+SIDL_EXE = $(OBJTOP)/tools/sidl/sidl
+
+argtest_sidl.o: argtest_sidl.cc argtest_sidl.h
+$(OBJS): argtest_sidl.h
+
+argtest_sidl.cc: argtest.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -o $@ $<
+
+argtest_sidl.h: argtest.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -h -o $@ $<
