@@ -94,6 +94,7 @@ CM2Widget::CM2Widget(CM2Widget& copy)
 
 void
 CM2Widget::set_value_range(range_t range) {
+  if (range.first > range.second) return;
   const bool recompute = (value_range_.first > value_range_.second);
   value_range_ = range;
   if (recompute) un_normalize();
@@ -728,6 +729,7 @@ RectangleCM2Widget::release (int /*x*/, int /*y*/,
 string
 RectangleCM2Widget::tcl_pickle()
 {
+  normalize();
   ostringstream s;
   s << "r ";
   s << (int)type_ << " ";
@@ -736,6 +738,7 @@ RectangleCM2Widget::tcl_pickle()
   s << width_ << " ";
   s << height_ << " ";
   s << offset_;
+  un_normalize();
   return s.str();
 }
 
@@ -753,6 +756,7 @@ RectangleCM2Widget::tcl_unpickle(const string &p)
   s >> width_;
   s >> height_;
   s >> offset_;
+  un_normalize();
 }
 
 
@@ -1554,41 +1558,42 @@ PaintCM2Widget::rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer)
   if(pbuffer)
     shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 
 			  0.0, 0.0);
-  double halfx = 1/35.0;
   
   GLdouble mid[4] = { color_.r(), color_.g(), color_.b(), alpha_ };
   GLdouble edg[4] = { color_.r(), color_.g(), color_.b(), 0 };
   glShadeModel(GL_SMOOTH);    
   for (unsigned int s = 0; s < strokes_.size(); ++s)
   {
-    const unsigned int coordinates = strokes_[s].size();
+    const double halfx = strokes_[s].first;
+    Stroke &stroke = strokes_[s].second;
+    const unsigned int coordinates = stroke.size();
     for (unsigned c = 1; c < coordinates; ++c)
     {
       glBegin(GL_QUADS);
       glColor4dv(edg);
-      glVertex2d(strokes_[s][c-1].first-halfx, strokes_[s][c-1].second);
+      glVertex2d(stroke[c-1].first-halfx, stroke[c-1].second);
       
       glColor4dv(mid);
-      glVertex2d(strokes_[s][c-1].first, strokes_[s][c-1].second);
+      glVertex2d(stroke[c-1].first, stroke[c-1].second);
       
       glColor4dv(mid);
-      glVertex2d(strokes_[s][c].first, strokes_[s][c].second);
+      glVertex2d(stroke[c].first, stroke[c].second);
       
       glColor4dv(edg);
-      glVertex2d(strokes_[s][c].first-halfx, strokes_[s][c].second);
+      glVertex2d(stroke[c].first-halfx, stroke[c].second);
       
       
       glColor4dv(mid);
-      glVertex2d(strokes_[s][c-1].first, strokes_[s][c-1].second);
+      glVertex2d(stroke[c-1].first, stroke[c-1].second);
       
       glColor4dv(edg);
-      glVertex2d(strokes_[s][c-1].first+halfx, strokes_[s][c-1].second);
+      glVertex2d(stroke[c-1].first+halfx, stroke[c-1].second);
       
       glColor4dv(edg);
-      glVertex2d(strokes_[s][c].first+halfx, strokes_[s][c].second);
+      glVertex2d(stroke[c].first+halfx, stroke[c].second);
       
       glColor4dv(mid);
-      glVertex2d(strokes_[s][c].first, strokes_[s][c].second);
+      glVertex2d(stroke[c].first, stroke[c].second);
       glEnd();
       if (pbuffer && (s < strokes_.size()-1)) {
 	pbuffer->release();
@@ -1604,8 +1609,8 @@ PaintCM2Widget::rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer)
 }
 
 void
-PaintCM2Widget::splat(Array3<float> &data, int x0, int y0) {
-  const int wid = Round(data.dim2()/35.0);
+PaintCM2Widget::splat(Array3<float> &data, double width, int x0, int y0) {
+  const int wid = Round(data.dim2()*width);
   float r = color_.r();
   float g = color_.g();
   float b = color_.b();
@@ -1631,7 +1636,7 @@ PaintCM2Widget::splat(Array3<float> &data, int x0, int y0) {
 
 // Bressenhams line algorithm modified to only draw when the x pos changes
 void 
-PaintCM2Widget::line(Array3<float> &data, 
+PaintCM2Widget::line(Array3<float> &data, double width,
 		     int x0, int y0, int x1, int y1, bool first)
 {
   if (x0 < 0 || x0 >= data.dim1() || 
@@ -1654,7 +1659,7 @@ PaintCM2Widget::line(Array3<float> &data,
   } 
   dy <<= 1;
   dx <<= 1;
-  if (first) splat(data, x0, y0);
+  if (first) splat(data, width, x0, y0);
   if (dx > dy) {
     frac = dy - (dx >> 1);
     while (x0 != x1) {
@@ -1664,7 +1669,7 @@ PaintCM2Widget::line(Array3<float> &data,
       }
       x0 += sx;
       frac += dy;
-      splat(data, x0, y0);
+      splat(data, width, x0, y0);
     }
   } else {
     frac = dx - (dy >> 1);
@@ -1677,7 +1682,7 @@ PaintCM2Widget::line(Array3<float> &data,
       y0 += sy;
       frac += dx;
       if (do_splat) {
-	splat(data, x0, y0);
+	splat(data, width, x0, y0);
 	do_splat = false;
       }
     }
@@ -1693,18 +1698,20 @@ PaintCM2Widget::rasterize(Array3<float>& array)
 
   for (unsigned int s = 0; s < strokes_.size(); ++s)
   {
-    const unsigned int coordinates = strokes_[s].size();
+    double width = strokes_[s].first;
+    Stroke &stroke = strokes_[s].second;
+    const unsigned int coordinates = stroke.size();
     if (coordinates == 1)
-      splat(array, 
-	    Floor(strokes_[s][0].second* array.dim1()), 
-	    Floor((strokes_[s][0].first+offset)*scale));
+      splat(array, width,
+	    Floor(stroke[0].second* array.dim1()), 
+	    Floor((stroke[0].first+offset)*scale));
     else
       for (unsigned c = 1; c < coordinates; ++c)
-	line(array,
-	     Floor(strokes_[s][c-1].second * array.dim1()), 
-	     Floor((strokes_[s][c-1].first+offset)*scale),
-	     Floor(strokes_[s][c].second   * array.dim1()), 
-	     Floor((strokes_[s][c].first+offset)*scale),
+	line(array, width,
+	     Floor(stroke[c-1].second * array.dim1()), 
+	     Floor((stroke[c-1].first+offset)*scale),
+	     Floor(stroke[c].second   * array.dim1()), 
+	     Floor((stroke[c].first+offset)*scale),
 	     (c == 1));
   }
 }
@@ -1716,9 +1723,9 @@ PaintCM2Widget::draw()
 }
 
 void
-PaintCM2Widget::add_stroke()
+PaintCM2Widget::add_stroke(double width)
 {
-  strokes_.push_back(Stroke());
+  strokes_.push_back(make_pair(width,Stroke()));
 }
 
 void
@@ -1726,12 +1733,13 @@ PaintCM2Widget::add_coordinate(const Coordinate &coordinate)
 {
   if (strokes_.empty()) return;
 
+  Stroke &stroke = strokes_.back().second;
   // filter duplicate points
-  if (!strokes_.back().empty() && 
-      coordinate.first == strokes_.back().back().first &&
-      coordinate.second == strokes_.back().back().second) return;
+  if (!stroke.empty() && 
+      coordinate.first == stroke.back().first &&
+      coordinate.second == stroke.back().second) return;
       
-  strokes_.back().push_back(coordinate);
+  stroke.push_back(coordinate);
 }
 
 bool
@@ -1748,8 +1756,9 @@ PaintCM2Widget::normalize()
   const float offset = -value_range_.first;
   const float scale = 1.0/(value_range_.second-value_range_.first);
   for (unsigned int s = 0; s < strokes_.size(); ++s)
-    for (unsigned int c = 0; c < strokes_[s].size(); ++c)
-      strokes_[s][c].first = (strokes_[s][c].first + offset) * scale;
+    for (unsigned int c = 0; c < strokes_[s].second.size(); ++c)
+      strokes_[s].second[c].first = 
+	(strokes_[s].second[c].first + offset) * scale;
 }
 
 void
@@ -1758,6 +1767,6 @@ PaintCM2Widget::un_normalize()
   const float offset = -value_range_.first;
   const float scale = 1.0/(value_range_.second-value_range_.first);
   for (unsigned int s = 0; s < strokes_.size(); ++s)
-    for (unsigned int c = 0; c < strokes_[s].size(); ++c)
-      strokes_[s][c].first = strokes_[s][c].first/scale - offset;
+    for (unsigned int c = 0; c < strokes_[s].second.size(); ++c)
+      strokes_[s].second[c].first = strokes_[s].second[c].first/scale - offset;
 }
