@@ -77,16 +77,18 @@ public:
 
   //! Compile and load .so for the selected manipulation
   bool get(const CompileInfo &info, DynamicAlgoHandle&);
+  bool maybe_get(const CompileInfo &info, DynamicAlgoHandle&);
 
   //! All modules should use this function to get the loader.
   static DynamicLoader& scirun_loader();
 
 private:
   bool create_cc(const CompileInfo &info);
+  bool create_empty_cc(const CompileInfo &info);
   bool compile_so(const string &file);
   void store( const string &, maker_fun);
   bool fetch(const CompileInfo &info, DynamicAlgoHandle&);
-  bool compile_and_store(const CompileInfo &info);
+  bool compile_and_store(const CompileInfo &info, bool maybe_compile_p);
   bool entry_exists(const string &entry);
   bool entry_is_null(const string &entry);
   bool wait_for_current_compile(const string &entry);

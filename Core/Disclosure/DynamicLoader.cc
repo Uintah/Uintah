@@ -176,7 +176,7 @@ DynamicLoader::wait_for_current_compile(const string &entry)
 //! libs at the same time, but forces only one thread can compile any one
 //! lib.
 bool
-DynamicLoader::compile_and_store(const CompileInfo &info)
+DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p)
 {  
   bool do_compile = false;
   
@@ -212,6 +212,13 @@ DynamicLoader::compile_and_store(const CompileInfo &info)
     compile_so(info.filename_);
     so = GetLibraryHandle(full_so.c_str());
 
+    if (maybe_compile_p && so == 0)
+    {
+      create_empty_cc(info);
+      compile_so(info.filename_);
+      so = GetLibraryHandle(full_so.c_str());
+    }
+     
     if (so == 0) { // does not compile
       cerr << "does not compile" << endl;
       cerr << "DYNAMIC COMPILATION ERROR: " << full_so 
@@ -248,6 +255,8 @@ DynamicLoader::compile_and_store(const CompileInfo &info)
   compilation_cond_.conditionBroadcast();
   return true;
 }
+
+
 
 //! DynamicLoader::compile_so
 //! 
@@ -336,6 +345,73 @@ DynamicLoader::create_cc(const CompileInfo &info)
   return true;
 }
 
+
+//! DynamicLoader::create_empty_cc
+//!
+//! Write a .cc file, from the compile info.
+//! It contains an empty maker function.  Used if the actual compilation
+//! fails.
+bool 
+DynamicLoader::create_empty_cc(const CompileInfo &info)
+{
+  const string STD_STR("std::");
+
+  // Try to open the file for writing.
+  string full = OTF_OBJ_DIR + "/" + info.filename_ + "cc";
+  ofstream fstr(full.c_str());
+
+  if (!fstr) {
+    cerr << "DynamicLoader::create_cc could not create file " << full << endl;
+    return false;
+  }
+  fstr << "// This is an autamatically generated file, do not edit!" << endl;
+
+  // generate standard includes
+  list<string>::const_iterator iter = info.includes_.begin();
+  while (iter != info.includes_.end()) { 
+    const string &s = *iter;
+    if (s.substr(0, 5) == STD_STR)
+    {
+      string std_include = s.substr(5, s.length() -1);
+      fstr << "#include <" << std_include << ">" << endl;
+    }
+    ++iter;
+  }
+
+  // generate other includes
+  iter = info.includes_.begin();
+  while (iter != info.includes_.end()) { 
+    const string &s = *iter;
+    if (!((s.substr(0, 5) == STD_STR) || s == "builtin"))
+    {
+      fstr << "#include \"" << s << "\"" << endl;
+    }
+    ++iter;
+  }
+
+  // output namespaces
+  CompileInfo::ci_map_type::const_iterator nsiter = info.namespaces_.begin();
+  while (nsiter != info.namespaces_.end()) { 
+    const string &s = (*nsiter).first;
+    if (s != "builtin") {
+      fstr << "using namespace " << s << ";" << endl;
+    }
+    ++nsiter;
+  }
+
+
+  fstr << endl;
+
+  fstr << "extern \"C\" {"  << endl
+       << info.base_class_name_ << "* maker() {" << endl
+       << "  return 0;" << endl
+       << "}" << endl << "}" << endl;
+
+  cerr << "DynamicLoader - successfully created " << full << endl;
+  return true;
+}
+
+
 void 
 DynamicLoader::store(const string &name, maker_fun m)
 {
@@ -367,9 +443,17 @@ DynamicLoader::fetch(const CompileInfo &ci, DynamicAlgoHandle &algo)
 bool 
 DynamicLoader::get(const CompileInfo &ci, DynamicAlgoHandle &algo)
 {
-  return (fetch(ci, algo) || (compile_and_store(ci) && fetch(ci, algo)));
+  return (fetch(ci, algo) ||
+	  (compile_and_store(ci, false) && fetch(ci, algo)));
 }
 
+
+bool
+DynamicLoader::maybe_get(const CompileInfo &ci, DynamicAlgoHandle &algo)
+{
+  return (fetch(ci, algo) ||
+	  (compile_and_store(ci, true) && fetch(ci, algo)));
+}
 
 } // End namespace SCIRun
 
