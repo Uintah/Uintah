@@ -12,7 +12,11 @@ public:
    ostringstream() {}
 // void append() { ((strstreambuf*)_strbuf)->padn('\0',1); }
    void append() { streampos pos = tellp(); ostream::put('\0'); ostream::seekp(pos); }
-   string str() { append(); return ostrstream::str();}
+   string str() 
+   { 
+     append(); 
+     return string(ostrstream::str(), ostrstream::pcount());
+   }
 };
 
 class istringstream : public istrstream {
