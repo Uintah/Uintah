@@ -16,6 +16,7 @@
 #
 
 # Makefile fragment for this subdirectory
+ifeq ($(HAVE_GLOBUS),yes)
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
@@ -25,6 +26,5 @@ SRCS     += $(SRCDIR)/globus_external_threads.cc
 
 PSELIBS := Core/Thread
 LIBS := $(GLOBUS_COMMON_LIBRARY)
-
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
+endif
