@@ -122,11 +122,11 @@ void BuildElemLeadField::execute() {
   }
   PointCloudMesh* interp_mesh = 
     (PointCloudMesh*)dynamic_cast<PointCloudMesh*>(interp_in->mesh().get_rep());
-  //PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > >* interp = 
-  //dynamic_cast<PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > > *>(interp_in.get_rep());
+  //  PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > >* interp = 
+  //    dynamic_cast<PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > > *>(interp_in.get_rep());
 
-  PointCloud<vector<pair<NodeIndex<int>, double> > >* interp = 
-    dynamic_cast<PointCloud<vector<pair<NodeIndex<int>, double> > > *>(interp_in.get_rep());
+  PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > >* interp = 
+    (PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > > *)(interp_in.get_rep());
 
   if (!interp) {
     cerr << "Error - Interp Field wasn't a PointCloud<vector<pair<TetVolMesh::Node::index_type,double>>>\n";
