@@ -8,8 +8,6 @@
    <Meta>
 	<title>Advection test</title>
    </Meta>
-    
-    
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--   maxTime          = ending time for simulation                    -->
@@ -124,29 +122,29 @@
 	</BoundaryConditions>
 	<Level>
 	    <Box label="1">
-	    	<lower>       [1,1,1]     </lower>
-	    	<upper>       [5,5,2]   </upper>
-                <extraCells>  [1,1,1]	  </extraCells>
-		<patches>     [1,1,1]     </patches>
+	    	<lower>           [1,1,1]                 </lower>
+	    	<upper>           [5,5,2]                 </upper>
+              <extraCells>      [1,1,1]                 </extraCells>
+		<patches>         [1,1,1]                 </patches>
 	    </Box>
-	    <spacing>[0.5,0.5,1] </spacing>
+	    <spacing>            [0.5,0.5,1]             </spacing>
 	</Level>
     </Grid>
    
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
-    <!--   filebase         = output file basenme                           -->
-    <!--   outputInterval   = Time between filedumps                        -->
     <!--____________________________________________________________________-->
    <DataArchiver>
 	<filebase>advect2.uda</filebase>
-	<outputInterval>.0001</outputInterval>
+	<outputInterval>.00</outputInterval>
 	<save label="vel_CC"/>
 	<save label="press_CC"/>
 	<save label="rho_CC"/>
    </DataArchiver>
+   
    <Debug>
        <debug label = "switchDebug_equilibration_press"/>
+   <!--<debug label = "switchDebugInitialize"/>         -->
    <!--<debug label = "switchDebug_vel_FC"/>            -->
    <!--<debug label = "switchDebug_explicit_press"/>    -->
    <!--<debug label = "switchDebug_PressFC"/>           -->
@@ -161,9 +159,6 @@
    <CFD>
   	<cfl>0.5</cfl>
 	<ICE>
-	    <time_integrator>explicit    </time_integrator>
-	    <max_iteration>  100         </max_iteration>
-  	    <delt_based_on>  convective  </delt_based_on>
 	    <max_iteration_equilibration> 50 </max_iteration_equilibration>
 	</ICE>	 
     </CFD>
@@ -178,69 +173,67 @@
 
 
     <!--____________________________________________________________________-->
-    <!--     M  A  T  E  R  I  A  L     P  R  O  P  E  R  T  I  E  S        -->
+    <!--      I N I T I A L   C O N D I T I O N S                           -->
     <!--____________________________________________________________________-->
-    <MaterialProperties>
+    <InitialConditions>
 	<ICE>
 	  <material>
 	    <ideal_gas>
-		<gas_constant>188.92</gas_constant>
+	    <gas_constant>       188.92                  </gas_constant>
 	    </ideal_gas>
-	    <density>        1.7899909957225715000e+00      </density>
-	    <viscosity>      0.0         </viscosity>
-	    <thermal_conductivity>0.0    </thermal_conductivity>
-	    <specific_heat>  652.9       </specific_heat>
-	    <speed_of_sound> 270.28699999999998</speed_of_sound>
-	    <gamma>          1.289       </gamma>	    
-	    <velocity_field>0</velocity_field>
+	    <viscosity>          0.0                     </viscosity>
+	    <thermal_conductivity>0.0                    </thermal_conductivity>
+	    <specific_heat>      652.9                   </specific_heat>
+	    <speed_of_sound>     270.28699999999998      </speed_of_sound>
+	    <gamma>              1.289                   </gamma>	    
+	    <velocity_field>     0                       </velocity_field>
 	    <geom_object>
 	      <difference>
-                <box label="gp1">
-                    <min>[ 0.0, 0.0, 0.0 ]</min>
-                    <max>[ 6.0, 6.0, 3.0 ]</max>
+                <box label="wholeDomain">
+                    <min>       [ 0.0, 0.0, 0.0 ]       </min>
+                    <max>       [ 6.0, 6.0, 3.0 ]       </max>
                 </box>
-                <box label="gp1hole">
-                    <min>[ 2.0, 2.0, 0.0 ]</min>
-                    <max>[ 3.0, 3.0, 3.0 ]</max>
+                <box label="blobInMiddle">
+                    <min>       [ 2.0, 2.0, 0.0 ]       </min>
+                    <max>       [ 3.0, 3.0, 3.0 ]       </max>
                 </box>
 	      </difference>
-	        <res>		   [2,2,2]  </res>
-	        <velocity>      [1,1,0]  </velocity>
-	        <temperature>   300.0    </temperature>
+	        <res>		   [2,2,2]                  </res>
+	        <velocity>      [1,1,0]                  </velocity>
+               <density>       1.7899909957225715000e+00</density>
+               <pressure>      101325.0                 </pressure>     
+	        <temperature>   300.0                    </temperature>
 	    </geom_object>
 	  </material>
+         
 	  <material>
 	    <ideal_gas>
-		<gas_constant>188.92</gas_constant>
+	    <gas_constant>       188.92                  </gas_constant>
 	    </ideal_gas>
-	    <density>        1.7899909957225715000e+00      </density>
-	    <viscosity>      0.0         </viscosity>
-	    <thermal_conductivity>0.0    </thermal_conductivity>
-	    <specific_heat>  652.9       </specific_heat>
-	    <speed_of_sound> 270.28699999999998  </speed_of_sound>
-	    <gamma>          1.289       </gamma>
-	    <velocity_field>1</velocity_field>
+	    <viscosity>          0.0                     </viscosity>
+	    <thermal_conductivity>0.0                    </thermal_conductivity>
+	    <specific_heat>      652.9                   </specific_heat>
+	    <speed_of_sound>     270.28699999999998      </speed_of_sound>
+	    <gamma>              1.289                   </gamma>
+	    <velocity_field>     1                       </velocity_field>
 	    <geom_object>
-                <box label="gp2">
-                    <min>[ 2.0, 2.0, 0.0 ]</min>
-                    <max>[ 3.0, 3.0, 3.0 ]</max>
+                <box label="blobInMiddle">
+                    <min>       [ 2.0, 2.0, 0.0 ]       </min>
+                    <max>       [ 3.0, 3.0, 3.0 ]       </max>
                 </box>
-	        <res>		    [2,2,2]    </res>
-	        <velocity>       [1,1,0]    </velocity>
-	        <temperature>    300.0      </temperature>
+	        <res>		    [2,2,2]                 </res>
+	        <velocity>       [1,1,0]                 </velocity>
+               <density>        1.789990995722571500e+00</density>
+               <pressure>       101325.0                </pressure>
+	        <temperature>    300.0                   </temperature>
 	    </geom_object>
 	  </material>
+         
 	  <exchange_coefficients>
-	     <momentum>	[0.0, 0.0] </momentum>
-	     <heat>          [0.0, 0.0]  </heat>
+	     <momentum>          [1e10, 1e10]            </momentum>
+	     <heat>              [0.0, 0.0]              </heat>
 	 </exchange_coefficients>
 	</ICE>	
-    </MaterialProperties>
-
-    <InitialConditions>
-        <ICE>
-         <pressure>          101325.0    </pressure>
-        </ICE>
-    </InitialConditions>                   
+    </InitialConditions>           
 	
 </Uintah_specification>
