@@ -30,9 +30,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/BuildTransform.tcl \
 	$(SRCDIR)/BoxWidget.tcl \
 	$(SRCDIR)/CastTVtoMLV.tcl \
-	$(SRCDIR)/CastField.tcl \
 	$(SRCDIR)/CastMatrix.tcl \
-	$(SRCDIR)/ChangeCellType.tcl \
+	$(SRCDIR)/ChangeCoordinates.tcl \
 	$(SRCDIR)/ChangeFieldDataAt.tcl \
 	$(SRCDIR)/ChangeFieldDataType.tcl \
 	$(SRCDIR)/ChangeFieldBounds.tcl \
@@ -63,10 +62,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/LightWidget.tcl \
 	$(SRCDIR)/LinAlgBinary.tcl \
 	$(SRCDIR)/LinAlgUnary.tcl \
-	$(SRCDIR)/LocateNbrhd.tcl \
 	$(SRCDIR)/MacroModule.tcl \
-	$(SRCDIR)/ManipFields.tcl \
-        $(SRCDIR)/ManipMatrix.tcl \
 	$(SRCDIR)/MapDataToMeshCoord.tcl \
 	$(SRCDIR)/MatrixReader.tcl \
 	$(SRCDIR)/MatrixSelectVector.tcl \
@@ -81,7 +77,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/PromptedText.tcl \
 	$(SRCDIR)/PromptedEntry.tcl \
 	$(SRCDIR)/ReplaceScalarDataValue.tcl \
-	$(SRCDIR)/Rescale.tcl \
 	$(SRCDIR)/RescaleColorMap.tcl \
 	$(SRCDIR)/RingWidget.tcl \
 	$(SRCDIR)/SampleField.tcl \

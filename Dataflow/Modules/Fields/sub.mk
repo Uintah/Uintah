@@ -35,6 +35,7 @@ SRCS     += \
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\
 	$(SRCDIR)/Centroids.cc\
+	$(SRCDIR)/ChangeCoordinates.cc\
 	$(SRCDIR)/ChangeFieldDataAt.cc\
 	$(SRCDIR)/ChangeFieldDataType.cc\
 	$(SRCDIR)/ChangeFieldBounds.cc\
@@ -65,7 +66,6 @@ SRCS     += \
 	$(SRCDIR)/SelectElements.cc\
 	$(SRCDIR)/SelectField.cc\
 	$(SRCDIR)/SetProperty.cc\
-	$(SRCDIR)/TetVolFieldCellToNode.cc\
 	$(SRCDIR)/TetVol2QuadraticTetVol.cc\
 	$(SRCDIR)/TransformField.cc\
 	$(SRCDIR)/TransformScalarData.cc\
