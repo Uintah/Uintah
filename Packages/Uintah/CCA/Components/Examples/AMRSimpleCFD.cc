@@ -576,6 +576,52 @@ void AMRSimpleCFD::scheduleCoarsen(const LevelP& coarseLevel,
   releasePort("solver");
 }
 //______________________________________________________________________
+//
+void AMRSimpleCFD::scheduleRefine(const LevelP& fineLevel,
+				   SchedulerP& sched)
+{
+  Ghost::GhostType  gn = Ghost::None; 
+  cout_doing << "AMRSimpleCFD::scheduleRefine on level " << fineLevel->getIndex() << '\n';
+  Task* task = scinew Task("refine",
+			   this, &AMRSimpleCFD::refine);
+  task->requires(Task::NewDW, lb_->density,
+		 0, Task::CoarseLevel, 0, Task::NormalDomain, gn, 0);
+
+  if(do_thermal){
+    task->requires(Task::NewDW, lb_->temperature,
+		   0, Task::CoarseLevel, 0, Task::NormalDomain,gn, 0);
+    task->computes(lb_->temperature);
+  }
+
+  task->requires(Task::NewDW, lb_->xvelocity,
+		 0, Task::CoarseLevel, 0, Task::NormalDomain, gn, 0);
+
+  task->requires(Task::NewDW, lb_->yvelocity,
+		 0, Task::CoarseLevel, 0, Task::NormalDomain, gn, 0);
+
+  task->requires(Task::NewDW, lb_->zvelocity,
+		 0, Task::CoarseLevel, 0, Task::NormalDomain,gn, 0);
+
+  task->computes(lb_->density);
+  task->computes(lb_->xvelocity);
+  task->computes(lb_->yvelocity);
+  task->computes(lb_->zvelocity);  
+  sched->addTask(task, fineLevel->eachPatch(), sharedState_->allMaterials());
+
+  /*
+  //__________________________________
+  // Re-solve/apply the pressure, using the pressure2 variable
+  // you need to clean up the pressure field after you coarsen so that
+  // you get a divergence free velocity field
+  SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
+  if(!solver)
+    throw InternalError("SimpleCFD needs a solver component to work");
+  schedulePressureSolve(fineLevel, sched, solver, lb_->pressure2,
+			lb_->pressure2_matrix, lb_->pressure2_rhs);
+  releasePort("solver");
+  */
+}
+//______________________________________________________________________
 //  This is only used to flag indicating which cells need to be refined.
 //  Nothing is done with this.
 void AMRSimpleCFD::scheduleErrorEstimate(const LevelP& coarseLevel,
@@ -817,6 +863,244 @@ void AMRSimpleCFD::coarsen(const ProcessorGroup*,
       //print(zvel, "coarsened zvel");      
     }
   }  // course patch loop 
+}
+//______________________________________________________________________
+//
+void AMRSimpleCFD::refine(const ProcessorGroup*,
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw)
+{
+  cout << "RANDY: AMRSimpleCFD::refine() BGN" << endl;
+//    new_dw->transferFrom(old_dw, lb_->bctype, patches, matls);
+
+  cout << "Doing refine \t\t\t AMRSimpleCFD" << '\n';
+  const Level* fineLevel = getLevel(patches);
+  const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+
+  //  IntVector rr(fineLevel->getRefinementRatio());
+  //  double ratio = 1./(rr.x()*rr.y()*rr.z());
+
+  for (int p = 0; p < patches->size(); p++) {  
+    const Patch* finePatch = patches->get(p);
+    cout << "\t\t on patch " << finePatch->getID();
+
+    // Find the overlapping regions...
+    Level::selectType coarsePatches;
+    finePatch->getCoarseLevelPatches(coarsePatches);
+
+    for(int m = 0;m<matls->size();m++){
+      int matl = matls->get(m);
+
+      //__________________________________
+      //   D E N S I T Y
+      if (old_dw->exists(lb_->density, m, finePatch)) {
+	new_dw->transferFrom(old_dw, lb_->density, patches, matls);
+      } else {
+	CCVariable<double> density;
+	Patch::VariableBasis basis = Patch::translateTypeToBasis(lb_->density->typeDescription()->getType(), true);
+	IntVector lowIndex = finePatch->getLowIndex(basis, lb_->density->getBoundaryLayer());
+	IntVector highIndex = finePatch->getHighIndex(basis, lb_->density->getBoundaryLayer());
+	density.rewindow(lowIndex, highIndex);
+	density.initialize(0);
+	new_dw->put(density, lb_->density, matl, finePatch);
+      }
+      /*
+      //print(density, "before coarsen density");
+      
+      for(int i=0;i<finePatches.size();i++){
+	const Patch* finePatch = finePatches[i];
+	constCCVariable<double> fine_den;
+	new_dw->get(fine_den, lb_->density, matl, finePatch,
+		    Ghost::None, 0);
+                  
+	IntVector fl(finePatch->getCellLowIndex());
+	IntVector fh(finePatch->getCellHighIndex());
+	IntVector l(fineLevel->mapCellToCoarser(fl));
+	IntVector h(fineLevel->mapCellToCoarser(fh));
+	l = Max(l, coarsePatch->getCellLowIndex());
+	h = Min(h, coarsePatch->getCellHighIndex());
+       
+	for(CellIterator iter(l, h); !iter.done(); iter++){
+	  double rho_tmp=0;
+	  IntVector fineStart(coarseLevel->mapCellToFiner(*iter));
+         
+	  for(CellIterator inside(IntVector(0,0,0), fineLevel->getRefinementRatio());
+	      !inside.done(); inside++){
+	    rho_tmp+=fine_den[fineStart+*inside];
+	  }
+	  density[*iter]=rho_tmp*ratio;
+	}
+      }  // fine patch loop
+      //print(density, "coarsened density");
+      //__________________________________
+      //      T E M P E R A T U R E
+      if(do_thermal){
+	CCVariable<double> temp;
+	new_dw->getModifiable(temp, lb_->temperature, matl, coarsePatch);
+	
+       for(int i=0;i<finePatches.size();i++){
+	  const Patch* finePatch = finePatches[i];
+	  constCCVariable<double> fine_temp;
+	  new_dw->get(fine_temp, lb_->temperature, matl, finePatch,
+		      Ghost::None, 0);
+                    
+	  IntVector fl(finePatch->getCellLowIndex());
+	  IntVector fh(finePatch->getCellHighIndex());
+	  IntVector l(fineLevel->mapCellToCoarser(fl));
+	  IntVector h(fineLevel->mapCellToCoarser(fh));
+	  l = Max(l, coarsePatch->getCellLowIndex());
+	  h = Min(h, coarsePatch->getCellHighIndex());
+	  
+         for(CellIterator iter(l, h); !iter.done(); iter++){
+	    double temp_tmp=0;
+	    IntVector fineStart(coarseLevel->mapCellToFiner(*iter));
+	    
+           for(CellIterator inside(IntVector(0,0,0), fineLevel->getRefinementRatio());
+		!inside.done(); inside++){
+	      temp_tmp+=fine_temp[fineStart+*inside];
+	    }
+	    temp[*iter]=temp_tmp*ratio;
+	  }
+	}
+	//print(temp, "coarsened temperature");
+      }  // do thermal
+      
+      //__________________________________
+      //      X V E L
+      SFCXVariable<double> xvel;
+      new_dw->getModifiable(xvel, lb_->xvelocity, matl, coarsePatch);
+      
+      for(int i=0;i<finePatches.size();i++){
+	const Patch* finePatch = finePatches[i];
+	
+       SFCXVariable<double> fine_xvel;
+	new_dw->getCopy(fine_xvel, lb_->xvelocity, matl, finePatch,
+			Ghost::AroundFacesX, 1);
+                     
+	refineFaces<SFCXVariable<double>, constSFCXVariable<double> >
+	  (finePatch, fineLevel, coarseLevel, IntVector(1,0,0),
+	   Patch::xminus, Patch::xplus, fine_xvel,
+	   lb_->xvelocity, 1.0, matl, old_dw, new_dw, Patch::XFaceBased);
+          
+	IntVector fl(finePatch->getSFCXLowIndex());
+	IntVector fh(finePatch->getSFCXHighIndex());
+	IntVector l(fineLevel->mapCellToCoarser(fl));
+	IntVector h(fineLevel->mapCellToCoarser(fh+IntVector(rr.x()-1, 0, 0)));
+	l = Max(l, coarsePatch->getSFCXLowIndex());
+	h = Min(h, coarsePatch->getSFCXHighIndex());
+       
+	for(CellIterator iter(l, h); !iter.done(); iter++){
+	  double xvel_tmp=0;
+	  IntVector fineStart(coarseLevel->mapCellToFiner(*iter));
+	  for(CellIterator inside(IntVector(-1,0,0), IntVector(0,rr.y(),rr.z()));
+	      !inside.done(); inside++){
+	    xvel_tmp+=fine_xvel[fineStart+*inside]*0.5;
+	  }
+	  for(CellIterator inside(IntVector(0,0,0), IntVector(1,rr.y(),rr.z()));
+	      !inside.done(); inside++){
+	    xvel_tmp+=fine_xvel[fineStart+*inside];
+	  }
+	  for(CellIterator inside(IntVector(1,0,0), IntVector(2,rr.y(),rr.z()));
+	      !inside.done(); inside++){
+	    xvel_tmp +=fine_xvel[fineStart+*inside]*0.5;
+	  }
+	  xvel[*iter]=xvel_tmp*ratio;
+	}
+      }
+      
+      //print(xvel, "coarsened xvel");
+      //__________________________________
+      //     Y V E L
+      SFCYVariable<double> yvel;
+      new_dw->getModifiable(yvel, lb_->yvelocity, matl, coarsePatch);
+      
+      for(int i=0;i<finePatches.size();i++){
+	const Patch* finePatch = finePatches[i];
+       
+	SFCYVariable<double> fine_yvel;
+	new_dw->getCopy(fine_yvel, lb_->yvelocity, matl, finePatch,
+			Ghost::AroundFacesY, 1);
+                     
+	refineFaces<SFCYVariable<double>, constSFCYVariable<double> >
+	  (finePatch, fineLevel, coarseLevel, IntVector(0,1,0),
+	   Patch::yminus, Patch::yplus, fine_yvel,
+	   lb_->yvelocity, 1.0, matl, old_dw, new_dw, Patch::YFaceBased);
+          
+	IntVector fl(finePatch->getSFCYLowIndex());
+	IntVector fh(finePatch->getSFCYHighIndex());
+	IntVector l(fineLevel->mapCellToCoarser(fl));
+	IntVector h(fineLevel->mapCellToCoarser(fh+IntVector(0, rr.y()-1, 0)));
+	l = Max(l, coarsePatch->getSFCYLowIndex());
+	h = Min(h, coarsePatch->getSFCYHighIndex());
+       
+	for(CellIterator iter(l, h); !iter.done(); iter++){
+	  double yvel_tmp=0;
+	  IntVector fineStart(coarseLevel->mapCellToFiner(*iter));
+	  for(CellIterator inside(IntVector(0,-1,0), IntVector(rr.x(),0,rr.z()));
+	      !inside.done(); inside++){
+	    yvel_tmp+=fine_yvel[fineStart+*inside]*0.5;
+	  }
+	  for(CellIterator inside(IntVector(0,0,0), IntVector(rr.x(),1,rr.z()));
+	      !inside.done(); inside++){
+	    yvel_tmp+=fine_yvel[fineStart+*inside];
+	  }
+	  for(CellIterator inside(IntVector(0,1,0), IntVector(rr.x(),2,rr.z()));
+	      !inside.done(); inside++){
+	    yvel_tmp+=fine_yvel[fineStart+*inside]*0.5;
+	  }
+	  yvel[*iter]=yvel_tmp*ratio;
+	}
+      }
+      //print(yvel, "coarsened yvel");
+      //__________________________________
+      //      Z   V E L
+      SFCZVariable<double> zvel;
+      new_dw->getModifiable(zvel, lb_->zvelocity, matl, coarsePatch);
+      for(int i=0;i<finePatches.size();i++){
+	const Patch* finePatch = finePatches[i];
+       
+	SFCZVariable<double> fine_zvel;
+	new_dw->getCopy(fine_zvel, lb_->zvelocity, matl, finePatch,
+			Ghost::AroundFacesZ, 1);
+	
+       refineFaces<SFCZVariable<double>, constSFCZVariable<double> >
+	  (finePatch, fineLevel, coarseLevel, IntVector(0,0,1),
+	   Patch::zminus, Patch::zplus, fine_zvel,
+	   lb_->zvelocity, 1.0, matl, old_dw, new_dw, Patch::ZFaceBased);
+	
+       IntVector fl(finePatch->getSFCZLowIndex());
+	IntVector fh(finePatch->getSFCZHighIndex());
+	IntVector l(fineLevel->mapCellToCoarser(fl));
+	IntVector h(fineLevel->mapCellToCoarser(fh+IntVector(0, 0, rr.z()-1)));
+	l = Max(l, coarsePatch->getSFCZLowIndex());
+	h = Min(h, coarsePatch->getSFCZHighIndex());
+	
+       for(CellIterator iter(l, h); !iter.done(); iter++){
+	  double zvel_tmp=0;
+	  IntVector fineStart(coarseLevel->mapCellToFiner(*iter));
+	  for(CellIterator inside(IntVector(0,0,-1), IntVector(rr.x(),rr.y(),0));
+	      !inside.done(); inside++){
+	    zvel_tmp+=fine_zvel[fineStart+*inside]*0.5;
+	  }
+	  for(CellIterator inside(IntVector(0,0,0), IntVector(rr.x(),rr.y(),1));
+	      !inside.done(); inside++){
+	    zvel_tmp+=fine_zvel[fineStart+*inside];
+	  }
+	  for(CellIterator inside(IntVector(0,0,1), IntVector(rr.x(),rr.y(),2));
+	      !inside.done(); inside++){
+	    zvel_tmp+=fine_zvel[fineStart+*inside]*0.5;
+	  }
+	  zvel[*iter]=zvel_tmp*ratio;
+	}
+      }
+      //print(zvel, "coarsened zvel");      
+      */
+    }
+  }  // course patch loop 
+
+  cout << "RANDY: AMRSimpleCFD::refine() END" << endl;
 }
 //______________________________________________________________________
 //  A diagnosic flag is generated in this task.
