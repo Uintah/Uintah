@@ -658,73 +658,59 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(const Patch* patch,
 						        DataWarehouseP& new_dw)
 
 {
-         /*
-          * interpolateToParticlesAndUpdate
-          *   in(G.ACCELERATION, G.VELOCITY_STAR, P.NAT_X)
-          *   operation(interpolate acceleration and v* to particles and
-          *             integrate these to get new particle velocity and
-          *             position)
-          * out(P.VELOCITY, P.X, P.NAT_X)
-          */
+ /*
+  * interpolateToParticlesAndUpdate
+  *   in(G.ACCELERATION, G.VELOCITY_STAR, P.NAT_X)
+  *   operation(interpolate acceleration and v* to particles and
+  *   integrate these to get new particle velocity and position)
+  * out(P.VELOCITY, P.X, P.NAT_X) */
+
   int numMatls = d_sharedState->getNumMPMMatls();
-         Task* t=scinew Task("SerialMPM::interpolateToParticlesAndUpdate",
-                    patch, old_dw, new_dw,
-                    this, &SerialMPM::interpolateToParticlesAndUpdate);
+  Task* t=scinew Task("SerialMPM::interpolateToParticlesAndUpdate",
+		    patch, old_dw, new_dw,
+		    this, &SerialMPM::interpolateToParticlesAndUpdate);
 
-         for(int m = 0; m < numMatls; m++){
-            MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-            int idx = mpm_matl->getDWIndex();
-            t->requires(new_dw, lb->gMomExedAccelerationLabel, idx, patch,
-                        Ghost::AroundCells, 1);
-            t->requires(new_dw, lb->gMomExedVelocityStarLabel, idx, patch,
-                        Ghost::AroundCells, 1);
-            t->requires(old_dw, lb->pXLabel, idx, patch,
-                        Ghost::None);
-            t->requires(old_dw, lb->pExternalForceLabel, idx, patch,
-                        Ghost::None);
+  t->requires(old_dw, d_sharedState->get_delt_label() );
 
-            if(mpm_matl->getFractureModel()) {
-               t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
-                        Ghost::None);
-               t->requires(old_dw, lb->pCrackSurfaceContactForceLabel,
-                                                idx, patch, Ghost::None);
-               t->requires(old_dw, lb->pImageVelocityLabel, idx, patch,
-                        Ghost::None);
-            }
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    int idx = mpm_matl->getDWIndex();
+    t->requires(new_dw, lb->gMomExedAccelerationLabel,idx, patch,
+			Ghost::AroundCells, 1);
+    t->requires(new_dw, lb->gMomExedVelocityStarLabel,idx, patch,
+			Ghost::AroundCells, 1);
+    t->requires(new_dw, lb->gTemperatureRateLabel,    idx, patch,
+			Ghost::AroundCells, 1);
+    t->requires(new_dw, lb->gTemperatureLabel,        idx, patch,
+			Ghost::AroundCells, 1);
+    t->requires(new_dw, lb->gTemperatureStarLabel,    idx, patch,
+			Ghost::AroundCells, 1);
+    t->requires(old_dw, lb->pXLabel,              idx, patch, Ghost::None);
+    t->requires(old_dw, lb->pExternalForceLabel,  idx, patch, Ghost::None);
+    t->requires(old_dw, lb->pMassLabel,           idx, patch, Ghost::None);
+    t->requires(old_dw, lb->pParticleIDLabel,     idx, patch, Ghost::None);
+    t->requires(old_dw, lb->pTemperatureLabel,    idx, patch, Ghost::None);
 
-            t->requires(old_dw, d_sharedState->get_delt_label() );
+    if(mpm_matl->getFractureModel()) {
+       t->requires(new_dw, lb->pVisibilityLabel,    idx, patch, Ghost::None);
+       t->requires(old_dw, lb->pImageVelocityLabel, idx, patch, Ghost::None);
+       t->requires(old_dw, lb->pCrackSurfaceContactForceLabel,
+						    idx, patch, Ghost::None);
+    }
 
-            t->requires(old_dw, lb->pMassLabel, idx, patch, Ghost::None);
-            t->computes(new_dw, lb->pVelocityAfterUpdateLabel, idx, patch );
-            t->computes(new_dw, lb->pXLabel_preReloc, idx, patch );
-            t->computes(new_dw, lb->pExternalForceLabel_preReloc,
-                                                        idx, patch);
+    t->computes(new_dw, lb->pVelocityAfterUpdateLabel,          idx, patch);
+    t->computes(new_dw, lb->pXLabel_preReloc,                   idx, patch);
+    t->computes(new_dw, lb->pExternalForceLabel_preReloc,       idx, patch);
+    t->computes(new_dw, lb->pParticleIDLabel_preReloc,          idx, patch);
+    t->computes(new_dw, lb->pTemperatureRateLabel_preReloc,     idx, patch);
+    t->computes(new_dw, lb->pTemperatureLabel_preReloc,         idx, patch);
+    t->computes(new_dw, lb->pTemperatureGradientLabel_preReloc, idx, patch);
+  }
 
-            t->requires(old_dw, lb->pParticleIDLabel, idx, patch,
-                                                        Ghost::None);
-            t->computes(new_dw, lb->pParticleIDLabel_preReloc,idx, patch);
-
-            t->requires(old_dw, lb->pTemperatureLabel, idx, patch,
-                        Ghost::None);
-            t->requires(new_dw, lb->gTemperatureRateLabel, idx, patch,
-                        Ghost::AroundCells, 1);
-            t->requires(new_dw, lb->gTemperatureLabel, idx, patch,
-                        Ghost::AroundCells, 1);
-
-            t->requires(new_dw, lb->gTemperatureStarLabel, idx, patch,
-                        Ghost::AroundCells, 1);
-            t->computes(new_dw, lb->pTemperatureRateLabel_preReloc,
-                                                        idx, patch);
-            t->computes(new_dw, lb->pTemperatureLabel_preReloc,
-                                                        idx, patch);
-            t->computes(new_dw, lb->pTemperatureGradientLabel_preReloc,
-                                                        idx, patch);
-         }
-
-         t->computes(new_dw, lb->KineticEnergyLabel);
-         t->computes(new_dw, lb->CenterOfMassPositionLabel);
-         t->computes(new_dw, lb->CenterOfMassVelocityLabel);
-         sched->addTask(t);
+  t->computes(new_dw, lb->KineticEnergyLabel);
+  t->computes(new_dw, lb->CenterOfMassPositionLabel);
+  t->computes(new_dw, lb->CenterOfMassVelocityLabel);
+  sched->addTask(t);
 }
 
 void SerialMPM::scheduleComputeMassRate(const Patch* patch,
@@ -932,8 +918,7 @@ void SerialMPM::scheduleInterpolateParticlesForSaving(const Patch* patch,
                          this, &SerialMPM::interpolateParticlesForSaving);
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    Material* matl = d_sharedState->getMaterial(m);
-    int idx = matl->getDWIndex();
+    int idx = mpm_matl->getDWIndex();
     // Add "requires" for each of the particle variables
     // to be interpolated, as well as the weighting variables.
     // Add "computes" for the resulting grid variables.
@@ -2027,7 +2012,6 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 		 IntVector ni[8];  double S[8];
 	 
 		 patch->findCellAndWeights(px[idx], ni, S);
-		    throw InternalError("Particle not in patch");
 
 		 // Add each particles contribution
 		 for(int k = 0; k < 8; k++) {
@@ -2087,6 +2071,10 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.171  2000/12/06 19:38:19  guilkey
+// Tidied up the scheduleInterpolateToParticlesAndUpdate function.  Should
+// still work with MPI.  Fixed a couple of warnings.
+//
 // Revision 1.170  2000/12/06 02:06:36  guilkey
 // Fixed the "won't run with MPI" problem.  It ain't pretty..., but I'll
 // beautify it later.
