@@ -90,7 +90,7 @@ public:
   {
     coords.resize(3,0);
   }
-
+  virtual int get_approx_face_elements() const { return 0; }
   static  const string type_name(int n = -1);
   virtual void io (Piostream& str);
 
@@ -120,11 +120,14 @@ ConstantBasis<T>::type_name(int n)
 template <class T>
 const TypeDescription* get_type_description(ConstantBasis<T> *)
 {
-  static TypeDescription *td = 0;
-  if (!td)
-  {
-    td = scinew TypeDescription(ConstantBasis<T>::type_name(-1), 
-				string(__FILE__), "SCIRun");
+  static TypeDescription* td = 0;
+  if(!td){
+    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew TypeDescription(ConstantBasis<T>::type_name(0), subs, 
+				string(__FILE__),
+				"SCIRun");
   }
   return td;
 }

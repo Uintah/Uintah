@@ -107,6 +107,11 @@ write_MPM_fibdir(FieldHandle& field_h, const string &outdir)
     coord[1] = 0.0;
     coord[2] = 1.0;
     mesh->interpolate(u, coord, *iter);
+    BBox elem_bbox;
+    elem_bbox.extend(o);
+    elem_bbox.extend(s);
+    elem_bbox.extend(t);
+    elem_bbox.extend(u);
 
 
     // assume length in mm's
@@ -116,7 +121,7 @@ write_MPM_fibdir(FieldHandle& field_h, const string &outdir)
 
     double vol = dx * dy * dz; 
     
-    const double part_per_mm = 4.;
+    const double part_per_mm = 2.;
     const int div_per_x = (int)round(part_per_mm * dx);
     const int div_per_y = (int)round(part_per_mm * dy);
     const int div_per_z = (int)round(part_per_mm * dz);
@@ -137,6 +142,11 @@ write_MPM_fibdir(FieldHandle& field_h, const string &outdir)
 	  //cerr << "at : [" << i << "," << j << "," << k << "]" << endl;
 	  Point c;
 	  mesh->interpolate(c, coord, *iter);
+	  //sanity check..
+// 	  if (! elem_bbox.inside(c)) {
+// 	    cerr << "Error: interpolated to a point outside the element!" 
+// 		 << endl;
+// 	  }
 
 	  Vector v;
 	  ifield->interpolate(v, coord, *iter);
@@ -154,15 +164,20 @@ write_MPM_fibdir(FieldHandle& field_h, const string &outdir)
 	    fcount[0] = 0;
 	  }
 	  ofstream* str = (*files)[0];
+// 	  (*str) << setprecision (9) 
+// 		 << c.x() << " " << c.y() << " " << c.z() << " " 
+// 		 << part_vol << " "
+// 		 << v.x() << " " << v.y() << " " << v.z() << endl;
+
 	  (*str) << setprecision (9) 
-		 << c.x() << " " << c.y() << " " << c.z() << " " 
-		 << part_vol << " "
-		 << v.x() << " " << v.y() << " " << v.z() << endl;
+		 << c.x() << " " << c.y() << " " << c.z() << endl; 
+
 	  fcount[0]++;
 	}
       }
     }
     cout << "." << *iter << ".";
+    cout.flush();
     ++iter;
   }
   cout << endl;

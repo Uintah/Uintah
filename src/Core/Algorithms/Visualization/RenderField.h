@@ -546,9 +546,9 @@ template <class fc_t>
 struct hash_nds
 {
   size_t operator()(const fc_t &f) const {
-    const unsigned spc = sizeof(size_t);
-    const unsigned div = f.size();
-    const unsigned spc_div = spc / div;
+    //const unsigned spc = sizeof(size_t);
+    //const unsigned div = f.size();
+    //const unsigned spc_div = spc / div;
     size_t val = 0;
 //     for (unsigned i = 0; i < div; ++i) {
 //       val = val | (f[i] << ((div - i - 1) * spc_div));
