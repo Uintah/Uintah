@@ -49,6 +49,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   d_sharedState = d_sS;
   lb = Mlb;
   d_8or27=n8or27;
+  d_outputCrackInterval=-1.0;
 
   if(d_8or27==8) {NGP=1; NGN=1;}
   else if(d_8or27==MAX_BASIS) {NGP=2; NGN=2;}
@@ -79,22 +80,27 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   // Flags for fracture analysis  
   d_calFractParameters = "false"; 
   d_doCrackPropagation = "false"; 
-  d_outputCrackResults = "false"; 
+  doCrackVisualization=false;
 
+  // Uda directory and output intervals
+  ProblemSpecP dataArchiver_ps = ps->findBlock("DataArchiver");
+  dataArchiver_ps->get("filebase", udaDir);
+  dataArchiver_ps->get("outputInterval",d_outputInterval);
+  dataArchiver_ps->get("outputCrackInterval", d_outputCrackInterval);
+  if(d_outputCrackInterval<0.) d_outputCrackInterval=d_outputInterval;
+  
   /* Task 2: Read in MPM parameters related to fracture analysis
   */
   ProblemSpecP mpm_soln_ps = ps->findBlock("MPM");
   if(mpm_soln_ps) {
      mpm_soln_ps->get("calculate_fracture_parameters", d_calFractParameters);
      mpm_soln_ps->get("do_crack_propagation", d_doCrackPropagation);
+     mpm_soln_ps->get("do_crack_visualization", doCrackVisualization);
      mpm_soln_ps->get("useVolumeIntegral", d_useVolumeIntegral);
      mpm_soln_ps->get("J_radius", rJ);
      mpm_soln_ps->get("save_J_matID", mS);
      mpm_soln_ps->get("dadx",rdadx);
   }
-
-  if(d_calFractParameters!="false" || d_doCrackPropagation!="false")
-    d_outputCrackResults = "true";
 
   // Read in extent of the global grid
   ProblemSpecP grid_level_ps = ps->findBlock("Grid")
@@ -211,7 +217,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
     m++; // Next material
   }  // End of loop over materials
 
-  OutputInitialCracks(numMPMMatls);
+  OutputInitialCrackPlane(numMPMMatls);
 }
 
 void Crack::ReadRectangularCracks(const int& m,const ProblemSpecP& geom_ps)
@@ -418,7 +424,7 @@ void Crack::ReadPartialEllipticCracks(const int& m,
   } // End of loop over partial ellipses
 }
 
-void Crack::OutputInitialCracks(const int& numMatls)
+void Crack::OutputInitialCrackPlane(const int& numMatls)
 {
   int pid;
   MPI_Comm_rank(mpi_crack_comm, &pid);
@@ -614,7 +620,7 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
         } // End of if(..) 
          
         // Output crack mesh information
-        OutputCrackPlaneMesh(m);
+        OutputInitialCrackMesh(m);
       }
     } // End of loop over matls
   } // End of loop over patches
@@ -1026,7 +1032,7 @@ void Crack::DiscretizePartialEllipticCracks(const int& m, int& nstart0)
   } 
 }
 
-void Crack::OutputCrackPlaneMesh(const int& m)
+void Crack::OutputInitialCrackMesh(const int& m)
 {
   int pid;
   MPI_Comm_rank(mpi_crack_comm, &pid);
