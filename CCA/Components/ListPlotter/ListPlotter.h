@@ -36,17 +36,12 @@
   class ImUIPort : public virtual gov::cca::ports::UIPort {
 
   public:
+    void setServices(const gov::cca::Services::pointer &svc);
     virtual ~ImUIPort(){}
     virtual void ui();
+  private:
+    gov::cca::Services::pointer services;
   };
-
-  class ImGoPort : public virtual gov::cca::ports::GoPort {
-
-  public:
-    virtual ~ImGoPort(){}
-    virtual int go();
-  };
-
 
 class ListPlotter : public gov::cca::Component{
                 
@@ -59,7 +54,7 @@ class ListPlotter : public gov::cca::Component{
 
     ListPlotter(const ListPlotter&);
     ListPlotter& operator=(const ListPlotter&);
-    ImUIPort ui, go;
+    ImUIPort ui;
     gov::cca::Services::pointer services;
   };
 //}

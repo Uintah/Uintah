@@ -101,7 +101,7 @@ void Hello::setServices(const gov::cca::Services::pointer& svc)
 
 void myUIPort::ui() 
 {
-  QMessageBox::warning(0, "myUIPort", "Hello!");
+  QMessageBox::warning(0, "Hello", "Hello World!");
   //cerr<<"$$$ui() is not implemented."<<endl;
 }
 

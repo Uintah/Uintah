@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Form implementation generated from reading ui file 'ListForm.ui'
 **
-** Created: Wed Apr 10 21:23:17 2002
+** Created: Fri Apr 12 19:53:10 2002
 **      by:  The User Interface Compiler (uic)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -20,7 +20,7 @@
 #include "ListForm.ui.h"
 #include <qimage.h>
 #include <qpixmap.h>
-
+#include "ZList.h"
 static QPixmap uic_load_pixmap_ListForm( const QString &name )
 {
     const QMimeSource *m = QMimeSourceFactory::defaultFactory()->data( name );
@@ -37,9 +37,10 @@ static QPixmap uic_load_pixmap_ListForm( const QString &name )
  *  The dialog will by default be modeless, unless you set 'modal' to
  *  TRUE to construct a modal dialog.
  */
-ListForm::ListForm( QWidget* parent,  const char* name, bool modal, WFlags fl )
+ListForm::ListForm(ZList *com, QWidget* parent,  const char* name, bool modal, WFlags fl )
     : QDialog( parent, name, modal, fl )
 {
+	this->com=com;
     if ( !name )
 	setName( "ListForm" );
     resize( 310, 480 ); 

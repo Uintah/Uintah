@@ -24,14 +24,14 @@
 class Connection:public QCanvasPolygon
 {
 public:
-  Connection(Module*, Module*, QCanvasView *cv);
+  Connection(Module*, int, Module*, int, QCanvasView *cv);
 	void resetPoints();
 	bool isConnectedTo(Module *);
 protected:
 	void drawShape ( QPainter & );
 	QCanvasView *cv;
 	Module *pUse, *pProvide;
-
+	int portnum1, portnum2;
 };
 
 #endif

@@ -1,9 +1,12 @@
 #include "Connection.h"
 
-Connection::Connection(Module *pU, Module *pP, QCanvasView *cview)
+Connection::Connection(Module *pU, int portnum1, Module *pP, int portnum2, QCanvasView *cview)
   :QCanvasPolygon(cview->canvas())
 
 {
+	this->portnum1=portnum1;
+	this->portnum2=portnum2;
+	
 		pUse=pU;
 		pProvide=pP;
 		cv=cview;
@@ -18,8 +21,8 @@ bool Connection::isConnectedTo(Module *who)
 
 void Connection::resetPoints()
 {
-		QPoint P=pUse->usePortPoint()+QPoint(cv->childX(pUse),cv->childY(pUse));
-		QPoint R=pProvide->providePortPoint()+QPoint(cv->childX(pProvide),cv->childY(pProvide));
+		QPoint R=pUse->usePortPoint(portnum1)+QPoint(cv->childX(pUse),cv->childY(pUse));
+		QPoint P=pProvide->providePortPoint(portnum2)+QPoint(cv->childX(pProvide),cv->childY(pProvide));
     QRect rUse(cv->childX(pUse),cv->childY(pUse),pUse->width(),pUse->height() );
 		QRect rProvide(cv->childX(pProvide),cv->childY(pProvide),pProvide->width(),pProvide->height() );
 

@@ -22,12 +22,21 @@
 #include <qpainter.h>
 #include <qmessagebox.h>
 Module::Module(QWidget *parent, const char *name,
-gov::cca::ports::UIPort::pointer uip, CIA::array1<std::string> & up, CIA::array1<std::string> &pp )
+gov::cca::ports::UIPort::pointer uip, CIA::array1<std::string> & up, CIA::array1<std::string> &pp , const gov::cca::ComponentID::pointer &cid)
   :QFrame(parent, name )
 {
+        pd=10; //distance between two ports
+        pw=10; //port width
+        ph=8; //prot height
+
+	this->cid=cid;
 	uiPort=uip;
+	for(unsigned int i=0; i<pp.size(); i++){
+		if(pp[i]!="ui") this->pp.push_back(pp[i]);
+	}
+		
         this->up=up;
-	this->pp=pp;
+	//this->pp=pp;
 	int dx=5;
 /*	int dy=10;
 	int d=5;
@@ -64,25 +73,37 @@ void Module::paintEvent(QPaintEvent *e)
    
     p.setPen(green);
     p.setBrush(green);    
-    for(int i=0;i<up.size();i++){
-	p.drawRect(10+i*20,0,10,4);
+    for(unsigned int i=0;i<up.size();i++){
+	p.drawRect(portRect(i, USES));
     }
 
     p.setPen(red);
     p.setBrush(red);
-    for(int i=0;i<pp.size();i++){
-        p.drawRect(10+i*20,height()-4,10,4);
-    }		
+    for(unsigned int i=0;i<pp.size();i++){
+	p.drawRect(portRect(i,PROVIDES));
+    }
 }
 
-QPoint Module::usePortPoint()
+QPoint Module::usePortPoint(int num)
 {
-	return QPoint(10,height());
+	int x=pd+(pw+pd)*num+pw/2;
+	return QPoint(x,0);
 }
 
-QPoint Module::providePortPoint()
+QPoint Module::providePortPoint(int num)
 {
-	return QPoint(10,0);	
+	int x=pd+(pw+pd)*num+pw/2;
+	return QPoint(x,height());	
+}
+
+std::string Module::usesPortName(int num)
+{
+	return up[num];
+}
+
+std::string Module::providesPortName(int num)
+{
+	return pp[num];
 }
 
 void Module::mousePressEvent(QMouseEvent *e)
@@ -90,6 +111,37 @@ void Module::mousePressEvent(QMouseEvent *e)
 	if(e->button()!=RightButton) QFrame::mousePressEvent(e);
 	else{
 		menu->popup(mapToGlobal(e->pos()));
+	}
+}
+
+bool Module::clickedPort(QPoint localpos, PortType &porttype, int &portnum)
+{
+    for(unsigned int i=0;i<pp.size();i++){
+	if(portRect(i, PROVIDES).contains(localpos)){
+		porttype=PROVIDES ;
+		portnum=i;
+		return true;
+	}
+    }	
+    for(unsigned int i=0;i<up.size();i++){
+        if(portRect(i, USES).contains(localpos)){ 
+                porttype=USES ;
+                portnum=i;
+                return true;
+        }
+    }
+    return false;
+}
+
+QRect Module::portRect(int portnum, PortType porttype)
+{
+	if(porttype==PROVIDES){ //provides	
+		QPoint	r=providePortPoint(portnum);
+		return QRect(r.x()-pw/2,r.y()-ph,pw,ph);
+	}
+	else{
+		QPoint r=usePortPoint(portnum);
+		return QRect(r.x()-pw/2,r.y(),pw,ph);
 	}
 }
 

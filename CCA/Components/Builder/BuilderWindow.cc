@@ -169,6 +169,11 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   QCanvas *big_canvas = new QCanvas(2000,2000);
   big_canvas->setBackgroundColor(bgcolor);
   big_canvas_view = new NetworkCanvasView(big_canvas, vsplit);
+
+
+  big_canvas_view->setServices(services);
+
+
   setCentralWidget( vsplit );
   statusBar()->message( "SCIRun 2.0.0 Ready");
 
@@ -384,8 +389,9 @@ void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescripti
   	  
   gov::cca::ports::UIPort::pointer uip=pidl_cast<gov::cca::ports::UIPort::pointer>(uiport);	  
   services->releasePort("cca.builderService");
-  big_canvas_view->addModule(cd->getClassName().c_str(), uip, usesPorts, providesPorts  );
-
+  if(cd->getClassName()!="SCIRun.Builder"){
+	  big_canvas_view->addModule(cd->getClassName().c_str(), uip, usesPorts, providesPorts, cid  );
+  }
 }
 
 void BuilderWindow::componentActivity(const gov::cca::ports::ComponentEvent::pointer& e)
