@@ -41,9 +41,10 @@
 #include <CCA/Components/Builder/BuilderWindow.h>
 #include <CCA/Components/Builder/QtUtils.h>
 #include <Core/CCA/spec/cca_sidl.h>
+#include <Core/Util/Environment.h>
 
 #include <qapplication.h>
-#include <qpushbutton.h>
+#include <qsplashscreen.h>
 
 #include <iostream>
 
@@ -52,6 +53,42 @@ namespace SCIRun {
 extern "C" sci::cca::Component::pointer make_SCIRun_Builder()
 {
   return sci::cca::Component::pointer(new Builder());
+}
+
+void myBuilderPort::setServices(const sci::cca::Services::pointer& svc)
+{
+  services=svc;
+  std::cerr<<"BuilderPort::setServices"<<std::endl;
+  
+  QApplication* app = QtUtils::getApplication();
+#ifdef QT_THREAD_SUPPORT
+  app->lock();
+#endif
+
+  QString path(sci_getenv("SCIRUN_SRCDIR"));
+  path.append("/CCA/Components/Builder/scirun2-splash.png");
+  QSplashScreen* splash = new QSplashScreen(QPixmap(path), Qt::WStyle_StaysOnTop);
+  splash->show();
+
+  std::cerr<<"creating builderwindow"<<std::endl;
+  builder = new BuilderWindow(services);
+  splash->finish(builder); // wait for a QMainWindow to show
+  std::cerr<<"builderwindow created"<<std::endl;
+
+  builder->addReference();
+  builder->show();
+  std::cerr<<"builderwindow is shown"<<std::endl;
+  delete splash;
+#ifdef QT_THREAD_SUPPORT
+  app->unlock();
+#endif
+}
+
+void myBuilderPort::buildRemotePackageMenus(const sci::cca::ports
+                                            ::ComponentRepository::pointer &reg,
+                                            const std::string &frameworkURL)
+{
+  builder->buildRemotePackageMenus(reg, frameworkURL);
 }
 
 Builder::Builder()
@@ -84,33 +121,6 @@ void Builder::setServices(const sci::cca::Services::pointer& services)
   //builder->registerServices(services);
   
   services->releasePort("cca.BuilderService"); 
-}
-
-void myBuilderPort::setServices(const sci::cca::Services::pointer& svc)
-{
-  services=svc;
-  std::cerr<<"BuilderPort::setServices"<<std::endl;
-  
-  QApplication* app = QtUtils::getApplication();
-#ifdef QT_THREAD_SUPPORT
-  app->lock();
-#endif
-  std::cerr<<"creating builderwindow"<<std::endl;
-  builder = new BuilderWindow(services);
-  std::cerr<<"builderwindow created"<<std::endl;
-  builder->addReference();
-  builder->show();
-  std::cerr<<"Builderwindow is shown"<<std::endl;
-#ifdef QT_THREAD_SUPPORT
-  app->unlock();
-#endif
-}
-
-void myBuilderPort::buildRemotePackageMenus(const sci::cca::ports
-                                            ::ComponentRepository::pointer &reg,
-                                            const std::string &frameworkURL)
-{
-  builder->buildRemotePackageMenus(reg, frameworkURL);
 }
 
 } // end namespace SCIRun
