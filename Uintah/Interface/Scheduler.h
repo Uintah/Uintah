@@ -104,8 +104,7 @@ WARNING
        // Makes and returns a map that maps strings to VarLabels of
        // that name and a list of material indices for which that
        // variable is valid (at least according to d_allcomps).
-       typedef map< string, pair< const VarLabel*, list<int> > >
-               VarLabelMaterialMap;
+       typedef map< const VarLabel*, list<int> > VarLabelMaterialMap;
        virtual VarLabelMaterialMap* makeVarLabelMaterialMap() = 0;
     protected:
        void makeTaskGraphDoc(const vector<Task*>& tasks,
@@ -127,6 +126,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.23  2000/12/23 01:00:50  witzel
+// changed VarLabelMaterialMap typedef
+//
 // Revision 1.22  2000/12/07 00:03:09  witzel
 // Added makeVarLabelMaterialMap method
 //
