@@ -50,7 +50,6 @@
 namespace SCIRun {
 
 class ConnectionEvent : public sci::cca::ports::ConnectionEvent
-//public InternalComponentInstance
 {
 public:
     ConnectionEvent(sci::cca::ports::EventType type, sci::cca::TypeMap::pointer tm);

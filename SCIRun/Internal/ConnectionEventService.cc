@@ -81,8 +81,6 @@ void
 ConnectionEventService::emitConnectionEvent(const sci::cca::ports::ConnectionEvent::pointer& event)
 {
     // iterate through listeners and call connectionActivity
-    std::cerr << "ConnectionEventService::emitConnectionEvent" << std::endl;
-
     // should the event type to be emitted be ALL?
     if (event->getEventType() == sci::cca::ports::ALL) {
         return;
