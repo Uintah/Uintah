@@ -516,10 +516,11 @@ void CI::emit_handlers(EmitState& e)
     e.out << "  //Unmarshal received distribution name\n";
     e.out << "  int distname_s;\n";
     e.out << "  message->unmarshalInt(&distname_s, 1);\n";
-    e.out << "  char name[distname_s+1];\n";
+    e.out << "  char * name = new char[distname_s+1];\n";
     e.out << "  message->unmarshalChar(name,distname_s);\n";
     e.out << "  name[distname_s] = 0;\n";
     e.out << "  std::string dname(name);\n";
+    e.out << "  delete[] name;\n";
     e.out << "  //Unmarshal rank\n";
     e.out << "  int rank;\n";
     e.out << "  message->unmarshalInt(&rank, 1);\n";
@@ -565,7 +566,8 @@ void CI::emit_handlers(EmitState& e)
 
 void CI::emit_recursive_vtable_comment(EmitState& e, bool top)
 {
-  e.out << "  // " << (top?"":"and ") << (iam_class()?"class ":"interface ") << name << "\n";
+  e.out << "  // " << (top?"":"and ") << (iam_class()?"class ":"interface ") 
+	<< name << "\n";
   if(parentclass)
     parentclass->emit_recursive_vtable_comment(e, false);
   
@@ -778,7 +780,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   if (isCollective) {
     e.out << leader2 << "//Unmarshal distribution flag\n";
     e.out << leader2 << "::SCIRun::callType _flag;\n";
-    e.out << leader2 << "message->unmarshalInt(&(int)_flag);\n";
+    e.out << leader2 << "message->unmarshalInt((int*)&_flag);\n";
     e.out << leader2 << "//Unmarshal sessionID and number of calls\n";
     e.out << leader2 << "::std::string _sessionID(64, ' ');\n";
     e.out << leader2 << "message->unmarshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
@@ -981,10 +983,12 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out << leader2 << "//Unmarshal received distribution name\n";
     e.out << leader2 << "int distname_s;\n";
     e.out << leader2 << "message->unmarshalInt(&distname_s, 1);\n";
-    e.out << leader2 << "char name[distname_s+1];\n";
+    e.out << leader2 << "char * name = new char[distname_s+1];\n";
     e.out << leader2 << "message->unmarshalChar(name,distname_s);\n";
     e.out << leader2 << "name[distname_s] = 0;\n";
     e.out << leader2 << "std::string dname(name);\n";
+    e.out << leader2 << "delete[] name;\n";
+    
     argNum=0;
     for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
       argNum++;
@@ -1386,7 +1390,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "//Marshal flag which informs handler that\n";
     e.out << leader2 << "// this message is NOCALLRET:\n";
     e.out << leader2 << "::SCIRun::callType _flag = ::SCIRun::NOCALLRET;\n";
-    e.out << leader2 << "message->marshalInt(&(int)_flag);\n";
+    e.out << leader2 << "message->marshalInt((int*)&_flag);\n";
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
     e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
@@ -1453,7 +1457,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "//Marshal flag which informs handler that\n";
     e.out << leader2 << "// this message is CALLNORET\n";
     e.out << leader2 << "::SCIRun::callType _flag = ::SCIRun::CALLNORET;\n";
-    e.out << leader2 << "message->marshalInt(&(int)_flag);\n";
+    e.out << leader2 << "message->marshalInt((int*)&_flag);\n";
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
     e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
@@ -1504,7 +1508,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "//Marshal flag which informs handler that\n";
     e.out << leader2 << "// this message is CALLONLY:\n";
     e.out << leader2 << "::SCIRun::callType _flag = ::SCIRun::CALLONLY;\n";
-    e.out << leader2 << "message->marshalInt(&(int)_flag);\n";
+    e.out << leader2 << "message->marshalInt((int*)&_flag);\n";
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
     e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
@@ -1754,7 +1758,7 @@ bool ArrayType::uniformsize() const
 
 void ArrayType::emit_marshal(EmitState& e, const string& arg,
 			     const string& /*qty*/, const int handler, 
-			     bool top, ArgContext ctx, bool specialRedis,
+			     bool /*top*/, ArgContext ctx, bool specialRedis,
 			     storageT bufferStore) const
 {
 
@@ -1844,8 +1848,8 @@ void ArrayType::emit_prototype(SState& out, ArgContext ctx,
 }
 
 void BuiltinType::emit_unmarshal(EmitState& e, const string& arg,
-				 const string& qty, const int handler,
-				 ArgContext ctx, const bool specialRedis,
+				 const string& qty, const int /*handler*/,
+				 ArgContext /*ctx*/, const bool specialRedis,
 				 bool declare) const
 {
   if(specialRedis) return;
@@ -2216,11 +2220,11 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	      << distarr->getName() << "\");\n";
 	e.out << leader2 << "for(int i = 0; i < (int)_rl_out.size(); i++) {\n";
 	e.out << leader2 << "  SCIRun::Message* message = _rl_out[i]->getReference()->chan->getMessage();\n";
-	string dimname=arg+"_mdim";
+	//string dimname=arg+"_mdim";
 	e.out << leader2 << "  message->createMessage();\n";
 	e.out << leader2 << "  //Marshal the redistribution call flag\n";
 	e.out << leader2 << "  ::SCIRun::callType _flag = ::SCIRun::REDIS;\n";
-	e.out << leader2 << "  message->marshalInt(&(int)_flag);\n";
+	e.out << leader2 << "  message->marshalInt((int*)&_flag);\n";
 	e.out << leader2 << "  //Marshal the sessionID and number of actual calls from this proxy\n";
         e.out << leader2 << "  ::std::string _sessionID = getProxyUUID();\n";
         e.out << leader2 << "  message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
@@ -2363,9 +2367,10 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 
 }
 
-void NamedType::emit_marshalsize(EmitState& e, const string& arg,
-				 const string& sizevar,
-				 const string& qty) const
+void
+NamedType::emit_marshalsize( EmitState& /*e*/, const string& /*arg*/,
+                             const string& /*sizevar*/,
+			     const string& /*qty*/) const
 {
 }
 
@@ -2474,11 +2479,11 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	      << distarr->getName() << "\");\n";
 	e.out << leader2 << "for(int i = 0; i < (int)rl.size(); i++) {\n";
 	e.out << leader2 << "  SCIRun::Message* message = rl[i]->getReference()->chan->getMessage();\n";
-	string dimname=arg+"_mdim";
+	//string dimname=arg+"_mdim";
 	e.out << leader2 << "  message->createMessage();\n";
 	e.out << leader2 << "  //Marshal the distribution flag\n";
 	e.out << leader2 << "  ::SCIRun::callType _flag = ::SCIRun::REDIS;\n";
-	e.out << leader2 << "  message->marshalInt(&(int)_flag);\n";
+	e.out << leader2 << "  message->marshalInt((int*)&_flag);\n";
 	e.out << leader2 << "  //Marshal the sessionID and number of actual calls from this proxy\n";
         e.out << leader2 << "  ::std::string _sessionID = getProxyUUID();\n";
         e.out << leader2 << "  message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
@@ -2679,7 +2684,7 @@ void Enumerator::emit(EmitState& e, bool first)
   e.fwd << leader2 << "  " << name << "=" << value;
 }
 
-void DistributionArray::emit(EmitState& e) 
+void DistributionArray::emit(EmitState& /*e*/) 
 {
 }
 
