@@ -5,7 +5,7 @@
 # if you want to edit this file by hand, see the "Create A New Core/CCA/Component"
 # documentation on how to do it correctly.
 
-include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+include $(SRCTOP_ABS)/scripts/smallso_prologue.mk
 
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/Inverse
 
@@ -22,6 +22,6 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/TkExtensions
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
-include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+include $(SRCTOP_ABS)/scripts/smallso_epilogue.mk
 
 
