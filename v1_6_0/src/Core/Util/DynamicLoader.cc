@@ -46,7 +46,6 @@ const string OTF_SRC_DIR(ON_THE_FLY_SRC);
 const string OTF_OBJ_DIR(ON_THE_FLY_OBJ);
 
 DynamicLoader* DynamicLoader::scirun_loader_ = 0;
-Mutex DynamicLoader::scirun_loader_lock_("DynamicLoader: static instance");
 
 CompileInfo::CompileInfo(const string &fn, const string &bcn, 
 			 const string &tcn, const string &tcdec) :
@@ -112,17 +111,22 @@ DynamicLoader::~DynamicLoader()
 
 //! DynamicLoader::scirun_loader
 //! 
+//! Create and initialize this before the threads are started,
+//!  for performance reasons.
+void
+DynamicLoader::init_scirun_loader()
+{
+  scirun_loader_ = new DynamicLoader;
+}
+
+
+//! DynamicLoader::scirun_loader
+//! 
 //! How to get at the global loader for scirun.
 DynamicLoader& 
 DynamicLoader::scirun_loader()
 {
-  scirun_loader_lock_.lock();
-  if (scirun_loader_ == 0)
-  {
-    scirun_loader_ = new DynamicLoader;
-  }
-  scirun_loader_lock_.unlock();
-
+  ASSERT(scirun_loader_);
   return *scirun_loader_;
 }
 
