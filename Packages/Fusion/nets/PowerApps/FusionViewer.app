@@ -1881,6 +1881,8 @@ class FusionViewerApp {
 	set tt _quantity_tab
 	set $suffix$tt$case $quantity
 
+	set tab $suffix$tt
+
 	global $isomod-isoval-quantity
 
 	iwidgets::spinner $quantity.isoquant \
@@ -1888,10 +1890,10 @@ class FusionViewerApp {
 	    -width 5 -fixed 5 \
 	    -validate "$this set-quantity %P $isomod-isoval-quantity]" \
 	    -decrement "$this spin-quantity -1 \
-                        $quantity.isoquant $isomod-isoval-quantity; \
+                        $tab $isomod-isoval-quantity; \
                         $this $cmd" \
 	    -increment "$this spin-quantity  1 \
-                        $quantity.isoquant $isomod-isoval-quantity; \
+                        $tab $isomod-isoval-quantity; \
                         $this $cmd" 
 
 	$quantity.isoquant insert 1 [set $isomod-isoval-quantity]
@@ -3710,6 +3712,16 @@ class FusionViewerApp {
 	global $mods(ChooseField-Isosurface-Surface)-usefirstvalid
 	set $mods(ChooseField-Isosurface-Surface)-usefirstvalid 1
 
+	spin-quantity 0 slice_quantity_tab \
+	    $mods(Isosurface-Scalar-Slice)-isoval-quantity
+
+	spin-quantity 0 contour_quantity_tab \
+	    $mods(Isosurface-Slice-Contours)-isoval-quantity
+
+	spin-quantity 0 iso_quantity_tab \
+	    $mods(Isosurface-Surface)-isoval-quantity
+
+
 	# set a few variables that need to be reset
 	set indicate 0
 	set cycle 0
@@ -3982,18 +3994,30 @@ class FusionViewerApp {
 	    return 0
 	}
 	set $quantity $new
-	$this-c needexecute
 	return 1
     }
 
-    method spin-quantity {step spinner quantity} {
+    method spin-quantity {step tab quantity} {
 	global $quantity
 	set newquantity [expr [set $quantity] + $step]
 
 	if {$newquantity < 1.0} {
 	    set newquantity 0
 	}   
+
 	set $quantity $newquantity
+
+	set c0 0
+	set tab0 $tab$c0
+	set spinner [set $tab0].isoquant
+	enable_widget $spinner
+	$spinner delete 0 end
+	$spinner insert 1 [set $quantity]
+
+	set c1 1
+	set tab1 $tab$c1
+	set spinner [set $tab1].isoquant
+	enable_widget $spinner
 	$spinner delete 0 end
 	$spinner insert 1 [set $quantity]
     }
