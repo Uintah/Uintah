@@ -86,7 +86,7 @@ public:
   // GROUP: Destructors
   //////////
   // Destructor
-  ~Brick();
+  virtual ~Brick();
 
   // GROUP: Access and Info
   //////////
@@ -111,8 +111,16 @@ public:
   void ComputePolys(Ray r, double  tmin, double  tmax,
 		    double dt, double* ts, vector<Polygon*>& polys) const;
   void ComputePoly(Ray r, double t, Polygon*& p) const;
-   unsigned int texName() const { return name;}
-   unsigned int* texNameP(){ return &name; }
+  unsigned int texName() const { return name;}
+  unsigned int* texNameP(){ return &name; }
+
+  double ax() const { return aX;}
+  double ay() const { return aY;}
+  double az() const { return aZ;}
+
+  int padX() const { return padx; }
+  int padY() const { return pady; }
+  int padZ() const { return padz; }
 
 protected:
 
