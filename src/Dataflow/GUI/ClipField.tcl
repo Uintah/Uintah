@@ -55,6 +55,11 @@ itcl_class SCIRun_Fields_ClipField {
 	$this-c needexecute
     }
 
+    method reset {} {
+	set $this-execmode reset
+	$this-c needexecute
+    }
+
     method locationclip {} {
 	set $this-execmode location
 	$this-c needexecute
@@ -115,7 +120,8 @@ itcl_class SCIRun_Fields_ClipField {
 	button $w.executes.execute -text "Execute" -command "$this execrunmode"
 	button $w.executes.invert -text "Invert" -command "$this invert"
 	button $w.executes.undo -text "Undo" -command "$this undo"
-	pack $w.executes.execute $w.executes.invert $w.executes.undo -side left -e y -f both -padx 5 -pady 5
+	button $w.executes.reset -text "Reset" -command "$this reset"
+	pack $w.executes.execute $w.executes.invert $w.executes.undo $w.executes.reset -side left -e y -f both -padx 5 -pady 5
 
 	pack $w.location $w.execmode $w.whenexecute $w.executes -side top -e y -f both -padx 5 -pady 5
 	

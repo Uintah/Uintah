@@ -244,7 +244,7 @@ ClipField::execute()
 
   // Update the widget.
   const BBox bbox = ifieldhandle->mesh()->get_bounding_box();
-  if (!bbox_similar_to(last_bounds_, bbox))
+  if (!bbox_similar_to(last_bounds_, bbox) || exec_mode_.get() == "reset")
   {
     Point bmin = bbox.min();
     Point bmax = bbox.max();
@@ -352,8 +352,6 @@ ClipField::execute()
     CompileInfoHandle ci = ClipFieldAlgo::get_compile_info(ftd);
     Handle<ClipFieldAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
-
-
 
     // Maybe invert the clipper again.
     ClipperHandle clipper(clipper_);
