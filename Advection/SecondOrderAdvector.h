@@ -34,6 +34,14 @@ namespace Uintah {
 				     const int& indx,
                                  const bool& bulletProof_test);
 			 
+    virtual void  advectQ(const CCVariable<double>& q_CC,
+                             const Patch* patch,
+                             CCVariable<double>& q_advected,
+                             SFCXVariable<double>& q_XFC,
+                             SFCYVariable<double>& q_YFC,
+                             SFCZVariable<double>& q_ZFC,
+				 DataWarehouse* /*new_dw*/);
+
     virtual void advectQ(const CCVariable<double>& q_CC,
                       const Patch* patch,
                       CCVariable<double>& q_advected,
@@ -45,24 +53,33 @@ namespace Uintah {
 			 DataWarehouse* new_dw);  
                                          
   private:
-    CCVariable<fflux> d_OFS, r_out_x, r_out_y, r_out_z;
+    CCVariable<fflux> d_OFS;
     const VarLabel* OFS_CCLabel;
     friend const TypeDescription* fun_getTypeDescription(fflux*); 
 
   private:                                 
     template<class T> 
-    void qAverageFlux(const CCVariable<T>& q_CC,
-		      const Patch* patch,
-		      CCVariable<T>& grad_lim,
-		      const CCVariable<T>& q_grad_x,
-		      const CCVariable<T>& q_grad_y,
-		      const CCVariable<T>& q_grad_z,
-		      StaticArray<CCVariable<T> >& q_OAFS);
-    
-    template<class T> 
-    void advect(StaticArray<CCVariable<T> >& q_OAFS,
-		const Patch* patch,
-		CCVariable<T>& q_advected);
+      void qAverageFlux(const CCVariable<T>& q_CC,
+		          const Patch* patch,
+		          CCVariable<T>& grad_lim,
+		          const CCVariable<T>& q_grad_x,
+		          const CCVariable<T>& q_grad_y,
+		          const CCVariable<T>& q_grad_z,
+		          StaticArray<CCVariable<T> >& q_OAFS);
+    template <class T>
+      void  allocateAndCompute_Q_ave(const CCVariable<T>& q_CC,
+                                     const Patch* patch,
+                                     DataWarehouse* new_dw,
+                                     StaticArray<CCVariable<T> >& q_OAFS );
+                                         
+    template<class T, typename F> 
+      void advectSlabs(StaticArray<CCVariable<T> >& q_OAFS,
+		         const Patch* patch,
+		         CCVariable<T>& q_advected,
+                       SFCXVariable<double>& q_XFC,
+                       SFCYVariable<double>& q_YFC,
+                       SFCZVariable<double>& q_ZFC,
+                       F save_q_FC);  // passed in function
 	 
   };  
 } // end namespace Uintah

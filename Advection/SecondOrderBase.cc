@@ -13,6 +13,7 @@ using namespace Uintah;
 SecondOrderBase::SecondOrderBase()
 {
 }
+
 SecondOrderBase::~SecondOrderBase()
 {
   // Destructor
