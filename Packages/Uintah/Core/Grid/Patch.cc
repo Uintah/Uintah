@@ -29,14 +29,18 @@ Patch::Patch(const Level* level,
       d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
       d_id( id ), d_level_index(-1)
 {
-   if(d_id == -1)
-      d_id = ids++;
+  if(d_id == -1){
+    d_id = ids++;
 
-   if(patches.find(d_id) != patches.end()){
-     cerr << "id=" << d_id << '\n';
-     throw InternalError("duplicate patch!");
-   }
-   patches[d_id]=this;
+    if(patches.find(d_id) != patches.end()){
+      cerr << "id=" << d_id << '\n';
+      throw InternalError("duplicate patch!");
+    }
+    patches[d_id]=this;
+    in_database=true;
+  } else {
+    in_database=false;
+  }
 
    d_bcs = vector<vector<BoundCondBase*> >(numFaces);
    for (int i = 0; i<numFaces; i++ ) {
@@ -51,7 +55,8 @@ Patch::Patch(const Level* level,
 
 Patch::~Patch()
 {
-  patches.erase(patches.find(getID()));
+  if(in_database)
+    patches.erase(patches.find(getID()));
 }
 
 const Patch* Patch::getByID(int id)
