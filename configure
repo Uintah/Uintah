@@ -14688,9 +14688,6 @@ echo "${ECHO_T}Using $_sci_lib/../bin/Magick-config to set ImageMagick variables
    dirs="$MAG_DIRS"
    libs="$MAG_LIBS"
 
-echo "dirs: $dirs"
-echo "libs: $libs"
-
    if test -z "$dirs" || test -z "$libs"; then
        { { echo "$as_me:$LINENO: error: The dirs '$dirs' and/or libs '$libs' parameters of SCI-REMOVE-MINUS-L are empty.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
 echo "$as_me: error: The dirs '$dirs' and/or libs '$libs' parameters of SCI-REMOVE-MINUS-L are empty.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
@@ -14703,30 +14700,22 @@ echo "$as_me: error: The dirs '$dirs' and/or libs '$libs' parameters of SCI-REMO
      found_libs=
 
      for libflag in $libs; do
-echo "found_libs: $found_libs"
 
        # Cut of the '-l'
        the_lib=lib`echo $libflag | sed 's/-l//'`
-
-echo "looking for the_lib: $the_lib"
 
        checked_dirs=
        for dirflag in $dirs; do
 
          # Cut of the '-L' from each library directory.
          the_dir=`echo $dirflag | sed 's/-L//'`
-echo "  in: $the_dir"
 
          # Disregard generic libraries:
          if test "$the_dir" = "/usr/lib"; then
-echo continue
            continue
          fi
 
-echo "already checked these dirs: $checked_dirs"
-echo "running this comand: echo $checked_dirs | grep $the_dir"
          already_checked=`echo $checked_dirs | grep "$the_dir "`
-echo "already_checked = $already_checked"
          if test -n "$already_checked"; then
            { echo "$as_me:$LINENO: WARNING: $the_dir listed more than once as a -L flag.  Skipping." >&5
 echo "$as_me: WARNING: $the_dir listed more than once as a -L flag.  Skipping." >&2;}
@@ -14754,12 +14743,9 @@ echo "$as_me: WARNING: $the_dir listed more than once as a -L flag.  Skipping." 
            fi
          fi
 
-echo "sci_found: $sci_found"
-echo "found_libs: $found_libs"
          if test -n "$sci_found"; then
            already_found=`echo $found_libs | grep "$sci_found "`
          fi
-echo "already_found: $already_found"
 
          if test -n "$already_found"; then
            { { echo "$as_me:$LINENO: error: $libflag found in more than one location -- $the_dir and $already_found!" >&5
@@ -22859,7 +22845,11 @@ case $host in
     fi
     ;;
   *linux*)
-    PETSC_ARCH=linux
+    if test "$enable_64bit" = "yes"; then
+      PETSC_ARCH=linux64
+    else
+      PETSC_ARCH=linux
+    fi
     ;;
   *-dec*)
     if test "$petsc"; then
@@ -23737,7 +23727,7 @@ done
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_H $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_H $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __sci_pound_includes=
@@ -23896,8 +23886,8 @@ _sci_includes=''
 
   if test "$with_petsc" && test ! "$DEF_PETSC"; then
     echo
-    { { echo "$as_me:$LINENO: error: One or more of the PETESC components is missing." >&5
-echo "$as_me: error: One or more of the PETESC components is missing." >&2;}
+    { { echo "$as_me:$LINENO: error: One or more of the PETSc components is missing." >&5
+echo "$as_me: error: One or more of the PETSc components is missing." >&2;}
    { (exit 1); exit 1; }; }
     echo
   fi

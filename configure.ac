@@ -2420,7 +2420,11 @@ case $host in
     fi
     ;;
   *linux*)
-    PETSC_ARCH=linux
+    if test "$enable_64bit" = "yes"; then
+      PETSC_ARCH=linux64
+    else
+      PETSC_ARCH=linux
+    fi
     ;;
   *-dec*)
     if test "$petsc"; then
@@ -2532,7 +2536,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPIUNI" = "yes") &&
     done  
   fi
 
-  SCI_TRY_LINK(PETSC,petsc libraries and headers,petsc.h,$_sci_inc /usr/include/petsc,petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran,$_sci_lib,$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_H $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_FLAG,,optional)
+  SCI_TRY_LINK(PETSC,petsc libraries and headers,petsc.h,$_sci_inc /usr/include/petsc,petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran,$_sci_lib,$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_H $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,,optional)
 
   if test "$HAVE_PETSC" = "yes" ; then
     DEF_PETSC="#define HAVE_PETSC 1"
@@ -2540,7 +2544,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPIUNI" = "yes") &&
     
   if test "$with_petsc" && test ! "$DEF_PETSC"; then
     echo
-    AC_MSG_ERROR(One or more of the PETESC components is missing.)
+    AC_MSG_ERROR(One or more of the PETSc components is missing.)
     echo
   fi
 
