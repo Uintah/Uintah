@@ -52,9 +52,6 @@ using std::istringstream;
 using namespace SCIRun;
 using namespace Uintah;
 
-#undef  CONVECT
-//#define CONVECT
-
 //__________________________________
 //  To turn on normal output
 //  setenv SCI_DEBUG "ICE_NORMAL_COUT:+,ICE_DOING_COUT:+"
@@ -312,6 +309,14 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
       throw ProblemSetupException(warn.str());
     }
   }
+
+  d_convective = false;
+  exch_ps->get("do_convective_heat_transfer", d_convective);
+  if(d_convective){
+    exch_ps->require("convective_fluid",d_conv_fluid_matlindex);
+    exch_ps->require("convective_solid",d_conv_solid_matlindex);
+  }
+
   cout_norm << "Pulled out exchange coefficients of the input file" << endl;
 
   //__________________________________
@@ -1212,13 +1217,11 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 //  t->requires(Task::OldDW, d_sharedState->get_delt_label()); for AMR
  
-/*`==========TESTING==========*/
-#ifdef CONVECT
-  Ghost::GhostType  gac  = Ghost::AroundCells; 
-  t->requires(Task::NewDW,MIlb->gMassLabel,    mpm_matls,     gac, 1);      
-  t->requires(Task::OldDW,MIlb->NC_CCweightLabel, press_matl, gac, 1);
-#endif 
-/*==========TESTING==========`*/
+  if(d_convective){
+    Ghost::GhostType  gac  = Ghost::AroundCells; 
+    t->requires(Task::NewDW,MIlb->gMassLabel,       mpm_matls,  gac, 1);      
+    t->requires(Task::OldDW,MIlb->NC_CCweightLabel, press_matl, gac, 1);
+  }
                                 // I C E
   t->requires(Task::OldDW,  lb->temp_CCLabel,      ice_matls, gn);
   t->requires(Task::NewDW,  lb->specific_heatLabel,ice_matls, gn);
@@ -3998,14 +4001,6 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     H.zero();
     a.zero();
 
-#ifdef CONVECT
-    FastMatrix cet(2,2),ac(2,2);
-    vector<double> RHSc(2),HX(2);
-    cet.zero();
-    int gm=4;  // gas material from which to get convected heat
-    int sm=0;  // solid material that heat goes to
-#endif
-
     getExchangeCoefficients( K, H);
 
     for (int m = 0; m < numALLMatls; m++) {
@@ -4231,7 +4226,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     cout << "Total time of solving with LSE                 = " << time_lse << endl;
     //----- END     Oren 28-Jul-2004: added timing of mom/energy exchange solution (old vs. new approach) -----
 #endif
-#ifdef CONVECT 
+  if(d_convective){
     //  Loop over matls
     //  if (mpm_matl)
     //  Loop over cells
@@ -4243,6 +4238,11 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     //  end loop over cells
     //  endif (mpm_matl)
     //  endloop over matls
+    FastMatrix cet(2,2),ac(2,2);
+    vector<double> RHSc(2),HX(2);
+    cet.zero();
+    int gm=d_conv_fluid_matlindex;  // gas matl from which to get heat
+    int sm=d_conv_solid_matlindex;  // solid matl that heat goes to
 
     Ghost::GhostType  gac = Ghost::AroundCells;
     constNCVariable<double> NC_CCweight, NCsolidMass;
@@ -4343,7 +4343,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         }    // cellIterator
       }      // if mpm_matl
     }        // for ALL matls
-#endif
+   }
 /*`==========TESTING==========*/
     //__________________________________
     //  Set the Boundary conditions
