@@ -51,6 +51,9 @@ MPMLabel::MPMLabel()
   pXXLabel = scinew VarLabel("p.positionXX",
 			ParticleVariable<Point>::getTypeDescription());
   
+  pPressureLabel  = scinew VarLabel( "p.pressure",
+			ParticleVariable<double>::getTypeDescription() );
+  
   //PermanentParticleState
   pStressLabel = scinew VarLabel( "p.stress",
 			ParticleVariable<Matrix3>::getTypeDescription() );

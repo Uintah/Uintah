@@ -59,6 +59,7 @@ using std::vector;
       const VarLabel* pParticleIDLabel;
       const VarLabel* pIsIgnitedLabel; //for burn models
       const VarLabel* pMassRateLabel; //for burn models
+      const VarLabel* pPressureLabel;
 
       const VarLabel* pDeformationMeasureLabel_preReloc;
       const VarLabel* pStressLabel_preReloc;

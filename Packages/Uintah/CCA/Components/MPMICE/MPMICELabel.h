@@ -28,6 +28,8 @@ namespace Uintah {
       const VarLabel* vol_frac_CCLabel;
       const VarLabel* mom_source_CCLabel;
 
+      const VarLabel* press_NCLabel;
+
       const VarLabel* uvel_FCLabel;
       const VarLabel* vvel_FCLabel;
       const VarLabel* wvel_FCLabel;

@@ -129,12 +129,6 @@ void MPMICE::scheduleTimeAdvance(double t, double dt,
 
     d_mpm->scheduleExMomInterpolated(patch,sched,old_dw,new_dw);
     d_mpm->scheduleComputeStressTensor(patch,sched,old_dw,new_dw);
-    d_mpm->scheduleComputeInternalForce(patch,sched,old_dw,new_dw);
-    d_mpm->scheduleComputeInternalHeatRate(patch,sched,old_dw,new_dw);
-    d_mpm->scheduleSolveEquationsMotion(patch,sched,old_dw,new_dw);
-    d_mpm->scheduleSolveHeatEquations(patch,sched,old_dw,new_dw);
-    d_mpm->scheduleIntegrateAcceleration(patch,sched,old_dw,new_dw);
-    d_mpm->scheduleIntegrateTemperatureRate(patch,sched,old_dw,new_dw);
 
 //    d_ice->scheduleComputeEquilibrationPressure(    patch,sched,old_dw,new_dw);
     // schedule the interpolation of mass and volume to the cell centers
@@ -144,6 +138,16 @@ void MPMICE::scheduleTimeAdvance(double t, double dt,
     d_ice->scheduleComputeFaceCenteredVelocities(   patch,sched,old_dw,new_dw);
     d_ice->scheduleAddExchangeContributionToFCVel(  patch,sched,old_dw,new_dw);
     d_ice->scheduleComputeDelPressAndUpdatePressCC( patch,sched,old_dw,new_dw);
+
+    scheduleInterpolatePressureToParticles(         patch,sched,old_dw,new_dw);
+
+    d_mpm->scheduleComputeInternalForce(patch,sched,old_dw,new_dw);
+    d_mpm->scheduleComputeInternalHeatRate(patch,sched,old_dw,new_dw);
+    d_mpm->scheduleSolveEquationsMotion(patch,sched,old_dw,new_dw);
+    d_mpm->scheduleSolveHeatEquations(patch,sched,old_dw,new_dw);
+    d_mpm->scheduleIntegrateAcceleration(patch,sched,old_dw,new_dw);
+    d_mpm->scheduleIntegrateTemperatureRate(patch,sched,old_dw,new_dw);
+
     d_ice->scheduleComputePressFC(                  patch,sched,old_dw,new_dw);
     d_ice->scheduleAccumulateMomentumSourceSinks(   patch,sched,old_dw,new_dw);
     d_ice->scheduleAccumulateEnergySourceSinks(     patch,sched,old_dw,new_dw);
@@ -168,8 +172,7 @@ void MPMICE::scheduleTimeAdvance(double t, double dt,
     d_mpm->scheduleCarryForwardVariables(patch,sched,old_dw,new_dw);
 
     // Step 6and7 advect and advance in time
-    d_ice->scheduleAdvectAndAdvanceInTime(
-            patch,sched,old_dw,new_dw);
+    d_ice->scheduleAdvectAndAdvanceInTime( patch,sched,old_dw,new_dw);
 
   }
 
@@ -181,6 +184,33 @@ void MPMICE::scheduleTimeAdvance(double t, double dt,
 				     numMPMMatls);
 }
 
+
+void MPMICE::scheduleInterpolatePressureToParticles(const Patch* patch,
+                                                SchedulerP& sched,
+                                                DataWarehouseP& old_dw,
+                                                DataWarehouseP& new_dw)
+{
+
+   cout << "scheduleInterpolatePressureToParticles" << endl;
+   int numMPMMatls = d_sharedState->getNumMPMMatls();
+   Task* t=scinew Task("MPMICE::interpolatePressureToParticles",
+		        patch, old_dw, new_dw,
+		        this, &MPMICE::interpolatePressureToParticles);
+
+   t->requires(new_dw,Ilb->press_CCLabel,0, patch, Ghost::AroundCells, 1);
+
+   for(int m = 0; m < numMPMMatls; m++){
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+     int idx = mpm_matl->getDWIndex();
+     t->requires(old_dw, Mlb->pXLabel,        idx, patch, Ghost::None);
+     t->computes(new_dw, Mlb->pPressureLabel, idx, patch);
+	cout << "matlindex computes = " << idx << endl;
+   }
+
+   sched->addTask(t);
+
+}
+
 void MPMICE::scheduleInterpolateNCToCC_0(const Patch* patch,
                                        SchedulerP& sched,
                                        DataWarehouseP& old_dw,
@@ -188,6 +218,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(const Patch* patch,
 {
    /* interpolateNCToCC */
 
+   cout << "scheduleInterpolateNCToCC_0" << endl;
    int numMPMMatls = d_sharedState->getNumMPMMatls();
    Task* t=scinew Task("MPMICE::interpolateNCToCC_0",
 		        patch, old_dw, new_dw,
@@ -219,6 +250,7 @@ void MPMICE::scheduleInterpolateNCToCC(const Patch* patch,
                                        DataWarehouseP& old_dw,
                                        DataWarehouseP& new_dw)
 {
+   cout << "scheduleInterpolateNCToCC" << endl;
    /* interpolateNCToCC */
 
    int numMPMMatls = d_sharedState->getNumMPMMatls();
@@ -250,6 +282,7 @@ void MPMICE::scheduleCCMomExchange(const Patch* patch,
                                    DataWarehouseP& old_dw,
                                    DataWarehouseP& new_dw)
 {
+   cout << "scheduleCCMomExchange" << endl;
    Task* t=scinew Task("MPMICE::doCCMomExchange",
 		        patch, old_dw, new_dw,
 		        this, &MPMICE::doCCMomExchange);
@@ -295,6 +328,7 @@ void MPMICE::scheduleComputeEquilibrationPressure(const Patch* patch,
 						  DataWarehouseP& old_dw,
 						  DataWarehouseP& new_dw)
 {
+   cout << "scheduleComputeEquilibrationPressure" << endl;
   Task* task = scinew Task("MPMICE::computeEquilibrationPressure",
                         patch, old_dw, new_dw,this,
 			   &MPMICE::computeEquilibrationPressure);
@@ -389,6 +423,59 @@ void MPMICE::actuallyFixVolFrac(const ProcessorGroup*,
 
       new_dw->put(rho_CC[m], Ilb->rho_CCLabel, dwindex, patch);
     }
+  }
+}
+
+void MPMICE::interpolatePressureToParticles(const ProcessorGroup*,
+                                            const Patch* patch,
+                                            DataWarehouseP& old_dw,
+                                            DataWarehouseP& new_dw)
+{
+
+  cout << "Doing interpolatePressureToParticles" << endl;
+  
+  CCVariable<double> pressCC;
+  NCVariable<double> pressNC;
+  IntVector ni[8];
+  double S[8];
+
+  new_dw->get(pressCC,       Ilb->press_CCLabel, 0, patch,Ghost::None, 0);
+  new_dw->allocate(pressNC, MIlb->press_NCLabel, 0, patch);
+
+  IntVector cIdx[8];
+  for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+     patch->findCellsFromNode(*iter,cIdx);
+     pressNC[*iter] = 0.0;
+     for (int in=0;in<8;in++){
+	pressNC[*iter]  += .125*pressCC[cIdx[in]];
+     }
+  }
+
+  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    int dwindex = mpm_matl->getDWIndex();
+    ParticleSubset* pset = old_dw->getParticleSubset(dwindex, patch);
+    ParticleVariable<double> pPressure;
+    ParticleVariable<Point> px;
+
+    new_dw->allocate(pPressure, Mlb->pPressureLabel, pset);
+    old_dw->get(px,             Mlb->pXLabel,         pset);
+
+    for(ParticleSubset::iterator iter = pset->begin();
+				          iter != pset->end(); iter++){
+	particleIndex idx = *iter;
+	double press = 0.;
+
+	// Get the node indices that surround the cell
+	patch->findCellAndWeights(px[idx], ni, S);
+	for (int k = 0; k < 8; k++) {
+	    press += pressNC[ni[k]] * S[k];
+	}
+	pPressure[idx] = press;
+    }
+
+    new_dw->put(pPressure,  Mlb->pPressureLabel);
+
   }
 }
 
@@ -502,6 +589,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
                              DataWarehouseP& old_dw,
                              DataWarehouseP& new_dw)
 {
+
+  cout << "Doing CCMomEx" << endl;
   int numMPMMatls = d_sharedState->getNumMPMMatls();
   int numICEMatls = d_sharedState->getNumICEMatls();
   int numALLMatls = numMPMMatls + numICEMatls;
@@ -746,7 +835,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
      Material* matl = d_sharedState->getMaterial( m );
      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
      if(mpm_matl){
-       int dwindex = mpm_matl->getDWIndex();
        for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
          patch->findCellsFromNode(*iter,cIdx);
 	 gMEvelocity[m][*iter]     = gvelocity[m][*iter];
