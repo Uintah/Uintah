@@ -102,27 +102,26 @@ void GLTextureBuilder::execute(void)
     // it will set the values to that range... otherwise it auto-scales
     tex_ = scinew GLTexture3D(sfield, minV, maxV, is_fixed);
 
-    if (!is_fixed) { // if not fixed, overwrite min/max values on Gui
-      tex_->getminmax(minV, maxV);
+    if(!is_fixed){
       min_.set(minV);
       max_.set(maxV);
     }
+
     TCL::execute(id + " SetDims " + to_string( tex_->get_brick_size()));
     max_brick_dim_.set(tex_->get_brick_size());
     old_brick_size_ = tex_->get_brick_size();
   }
   else if (sfield.get_rep() != sfrg_.get_rep())
   {
+    // see note above
     sfrg_ = sfield;
-    if (is_fixed) {
+    if (is_fixed) {  // if fixed, copy min/max into these locals
       minV = min;
       maxV = max;
     }
-
-    // see note above
     tex_ = scinew GLTexture3D(sfield, minV, maxV, is_fixed);
-    if (!is_fixed) {
-      tex_->getminmax(minV, maxV);
+
+    if(!is_fixed){
       min_.set(minV);
       max_.set(maxV);
     }
@@ -142,12 +141,11 @@ void GLTextureBuilder::execute(void)
 
     // see note above
     tex_ = scinew GLTexture3D(sfield, minV, maxV, is_fixed);
-    if (!is_fixed) {
-      tex_->getminmax(minV, maxV);
+    if(!is_fixed){
       min_.set(minV);
       max_.set(maxV);
     }
-  }    
+ }    
 
   old_min_ = (int)minV;
   old_max_ = (int)maxV;
