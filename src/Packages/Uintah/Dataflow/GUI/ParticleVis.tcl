@@ -28,10 +28,12 @@ itcl_class Uintah_Visualization_ParticleVis {
     method set_defaults {} {
 	global $this-current_time
 	global $this-radius
+	global $this-auto_radius
 	global $this-polygons
 	global $this-show_nth
 	global $this-drawVectors
 	global $this-length_scale
+	global $this-auto_length_scale
 	global $this-head_length
 	global $this-shaft_rad
 	global $this-width_scale
@@ -44,10 +46,12 @@ itcl_class Uintah_Visualization_ParticleVis {
 	global $this-max_crop_length
 	set $this-current_time 0
 	set $this-radius 0.01
+	set $this-auto_radius 1
 	set $this-polygons 32
 	set $this-show_nth 2
 	set $this-drawVectors 0
 	set $this-length_scale 0.1
+	set $this-auto_length_scale 1
 	set $this-head_length 0.3
 	set $this-shaft_rad 0.1
 	set $this-width_scale 0.1
@@ -88,9 +92,13 @@ itcl_class Uintah_Visualization_ParticleVis {
 	     top $this-drawspheres { {Points 0} {"Spheres (picking mode)" 1} }
 	pack $w.f1.geom -side top -fill x
 
-	set r [expscale $w.f1.radius -label "Radius:" -orient horizontal \
+	frame $w.f1.rad -relief flat
+	pack $w.f1.rad -side top -fill x
+	checkbutton $w.f1.rad.auto_radius -text "auto radius" \
+	    -variable $this-auto_radius -command $n
+	set r [expscale $w.f1.rad.radius -label "Radius:" -orient horizontal \
 		    -variable $this-radius -command $n ]
-	pack $w.f1.radius -side top -fill x
+	pack $w.f1.rad.radius $w.f1.rad.auto_radius -side bottom -fill x
 
 	scale $w.f1.res -label "Polygons:" -orient horizontal \
 	    -variable $this-polygons -command $n \
@@ -135,10 +143,14 @@ itcl_class Uintah_Visualization_ParticleVis {
 		top $this-drawcylinders { {Lines 0} {Cylinders 1} }
 	pack $w.f2.f.shaft -side left -padx 5 -anchor w
 
-	expscale $w.f2.length_scale -label "Length scale:" \
+	frame $w.f2.ls -relief flat
+	pack $w.f2.ls -side top -fill x
+	checkbutton $w.f2.ls.auto_length_scale -text "auto length scale" \
+	    -variable $this-auto_length_scale -command $n
+	expscale $w.f2.ls.length_scale -label "Length scale:" \
 	    -orient horizontal  -variable $this-length_scale \
 	    -command $n 
-	pack $w.f2.length_scale -side top -fill x
+	pack $w.f2.ls.length_scale $w.f2.ls.auto_length_scale -side bottom -fill x
 	expscale $w.f2.min_length -orient horizontal \
 		-label "Minimum Length:" \
 		-variable $this-min_crop_length -command $n
