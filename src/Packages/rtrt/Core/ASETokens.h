@@ -118,7 +118,6 @@ class MaterialToken : public Token
  public:
 
   MaterialToken(const string &s="*MATERIAL") : Token(s) {
-    nargs_ = 1;
     num_submtls_ = 0;
     AddChildMoniker("*MATERIAL_NAME");
     AddChildMoniker("*MATERIAL_CLASS");
@@ -236,9 +235,7 @@ class SubMaterialToken : public MaterialToken
 
  public:
 
-  SubMaterialToken() : MaterialToken("*SUBMATERIAL") {
-    nargs_ = 1; 
-  }
+  SubMaterialToken() : MaterialToken("*SUBMATERIAL") {}
   virtual ~SubMaterialToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
@@ -279,7 +276,7 @@ class NumSubMtlsToken : public Token
 
  public:
   
-  NumSubMtlsToken() : Token("*NUMSUBMTLS") { nargs_ = 1; }
+  NumSubMtlsToken() : Token("*NUMSUBMTLS") {}
   virtual ~NumSubMtlsToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
@@ -673,12 +670,13 @@ class MeshToken : public Token
   vector<unsigned> *tfaces_;
   vector<double>   *face_normals_;
   vector<double>   *vertex_normals_;
+  vector<unsigned> *mtlid_;
 
  public:
 
   MeshToken() : Token("*MESH"), numvertices_(0), numfaces_(0),
     vertices_(0), tvertices_(0), faces_(0), tfaces_(0), 
-    face_normals_(0), vertex_normals_(0) {
+    face_normals_(0), vertex_normals_(0), mtlid_(0) {
     AddChildMoniker("*MESH_NUMVERTEX");
     AddChildMoniker("*MESH_NUMFACES");
     AddChildMoniker("*MESH_VERTEX_LIST");
@@ -725,6 +723,9 @@ class MeshToken : public Token
   
   vector<double> *GetVertexNormals() { return vertex_normals_; }
   void SetVertexNormals(vector<double> *v) { vertex_normals_ = v; }
+  
+  vector<unsigned> *GetMtlId() { return mtlid_; }
+  void SetMtlId(vector<unsigned> *v) { mtlid_ = v; }
   
   virtual Token *MakeToken() { return new MeshToken(); }
 };
@@ -975,6 +976,7 @@ class MeshFaceListToken : public Token
  protected:
 
   vector<unsigned> faces_;
+  vector<unsigned> mtlid_;
 
  public:
 
@@ -984,6 +986,7 @@ class MeshFaceListToken : public Token
   virtual bool Parse(ifstream &str) {
     unsigned numfaces = ((MeshToken*)parent_)->GetNumFaces();
     faces_.resize(numfaces*3);
+    mtlid_.resize(numfaces);   // each face has a material ID
     string curstring;
     unsigned index;
     str >> curstring; // opening delimiter
@@ -1007,10 +1010,10 @@ class MeshFaceListToken : public Token
 	str >> curstring; //
 	str >> curstring; // *MESH_SMOOTHING
 	str >> curstring;
-	if (curstring != "*MESH_MTLID") 
-	  str >> curstring; // *MESH_MTLID
-	str >> curstring; // material ID
-	str >> curstring; // get next token (maybe closing delimiter)
+	while (curstring != "*MESH_MTLID") 
+	  str >> curstring;   // *MESH_MTLID
+	str >> mtlid_[index]; // material ID
+	str >> curstring;     // get next token (maybe closing delimiter)
       } else {
         if (match(delimiter,(DELIMITER)curstring[0]))
           break;
@@ -1024,6 +1027,7 @@ class MeshFaceListToken : public Token
 #endif
     
     ((MeshToken*)parent_)->SetFaces(&faces_);
+    ((MeshToken*)parent_)->SetMtlId(&mtlid_);
     
     return true;
   }
@@ -1051,6 +1055,7 @@ class MeshFaceListToken : public Token
   }
 
   vector<unsigned> *GetFaces() { return &faces_; }
+  vector<unsigned> *GetMtlId() { return &mtlid_; }
 
   virtual Token *MakeToken() { return new MeshFaceListToken(); }
 };
