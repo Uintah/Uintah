@@ -17,9 +17,6 @@
    <DataArchiver>
         <filebase>const_test_cmr.uda</filebase>
 	<outputInterval>.1</outputInterval>
-<!--
-	<save label = "NTractionZMinus"/>
--->
 	<save label = "KineticEnergy"/>
 	<save label = "TotalMass"/>
 	<save label = "StrainEnergy"/>
