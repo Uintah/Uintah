@@ -73,6 +73,7 @@ void Delaunay::execute()
 
     // Get our own copy of the mesh...
     mesh_handle.detach();
+    mesh_handle->detach_nodes();
     Mesh* mesh=mesh_handle.get_rep();
     mesh->elems.remove_all();
     mesh->compute_neighbors();
@@ -130,15 +131,13 @@ void Delaunay::execute()
 	    mesh->pack_elems();
 	}
     }
-    mesh->pack_elems();
-
+    mesh->compute_neighbors();
     if(cleanup.get()){
 	mesh->remove_delaunay(onn, 0);
 	mesh->remove_delaunay(onn+1, 0);
 	mesh->remove_delaunay(onn+2, 0);
 	mesh->remove_delaunay(onn+3, 0);
     }
-    mesh->pack_nodes();
-    mesh->pack_elems();
+    mesh->pack_all();
     oport->send(mesh);
 }

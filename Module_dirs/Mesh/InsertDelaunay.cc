@@ -88,7 +88,9 @@ void InsertDelaunay::execute()
 
     // Get our own copy of the mesh...
     mesh_handle.detach();
+    mesh_handle->detach_nodes();
     Mesh* mesh=mesh_handle.get_rep();
+    mesh->compute_neighbors();
 
     // Insert the points...
     int nsurfs=surfports.size();
@@ -125,8 +127,6 @@ void InsertDelaunay::execute()
 	    ntodo-=nnodes;
 	}
     }
-    mesh->compute_neighbors();
-    mesh->pack_nodes();
-    mesh->pack_elems();
+    mesh->pack_all();
     oport->send(mesh);
 }

@@ -297,7 +297,7 @@ void BuildMultiMesh::partial_execute() {
 	}
 	// set source widget sizes and colors, and on/off switches
 	for (i=0; i<numSources.get(); i++) {
-	    widgets[i]->SetMaterial(cmap->lookup(last_charge[i]));
+	    widgets[i]->SetMaterial(PointWidget::PointMatl, cmap->lookup(last_charge[i]));
 	    widgets[i]->SetScale(last_wsize[i]);
 	    widget_lock.write_lock();
 	    geom_switches[i]->set_state(last_source_sel[i]);
@@ -435,10 +435,10 @@ void BuildMultiMesh::execute()
 		update_progress(count, mesh_handle->nodes.size());
 	    }
 	}
-//	mesh->pack_elems();
-	mmesh->add_mesh(mesh_handle.get_rep(), i);
+	mesh->pack_elems();
+	mmesh->add_mesh(mesh, i);
     }
-//    mmesh->clean_up();
+    mmesh->clean_up();
     ommesh->send(mmeshHndl);
 }
 
