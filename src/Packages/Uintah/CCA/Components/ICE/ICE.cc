@@ -2746,9 +2746,9 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      setBC<SFCXVariable<double> >(uvel_FCME[m],"Velocity",patch,indx); 
-      setBC<SFCYVariable<double> >(vvel_FCME[m],"Velocity",patch,indx);
-      setBC<SFCZVariable<double> >(wvel_FCME[m],"Velocity",patch,indx);
+      setBC<SFCXVariable<double> >(uvel_FCME[m],"Velocity",patch,indx,d_sharedState); 
+      setBC<SFCYVariable<double> >(vvel_FCME[m],"Velocity",patch,indx,d_sharedState);
+      setBC<SFCZVariable<double> >(wvel_FCME[m],"Velocity",patch,indx,d_sharedState);
     }
 
    //---- P R I N T   D A T A ------ 
