@@ -52,6 +52,9 @@ Scene::Scene() :
   shadowobj(0),
   stereo(0),
   animate(0),
+  store_depth(0),
+  display_depth(0),
+  display_sils(0),
   ref_cnt(0),
   lock("rtrt::Scene lock"),
   obj(0),
@@ -84,6 +87,9 @@ Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
   shadowobj(0),
   stereo(0),
   animate(0),
+  store_depth(0),
+  display_depth(0),
+  display_sils(0),
   ambient_mode(ambient_mode),
   ambientScale_(ambientscale),
   ref_cnt(0),
@@ -398,6 +404,9 @@ Scene::io(SCIRun::Piostream &stream) {
   SCIRun::Pio(stream, shadowobj);
   SCIRun::Pio(stream, stereo);
   SCIRun::Pio(stream, animate);
+  SCIRun::Pio(stream, store_depth);
+  SCIRun::Pio(stream, display_depth);
+  SCIRun::Pio(stream, display_sils);
   SCIRun::Pio(stream, ambient_mode);
   SCIRun::Pio(stream, frameno);
   //  SCIRun::Pio(stream, frametime_fp);
