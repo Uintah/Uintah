@@ -37,6 +37,8 @@ static int iterNum = 0;
  
 //#define DOING
 #undef DOING
+//#define ANNULUSICE
+#undef ANNULUSICE
 
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
@@ -545,6 +547,10 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   task->requires(Task::NewDW, lb->rho_micro_CCLabel,             Ghost::None);
   task->requires(Task::NewDW, lb->speedSound_CCLabel,            Ghost::None);
   task->requires(Task::NewDW, lb->vol_frac_CCLabel,              Ghost::None);
+
+#ifdef ANNULUSICE
+  task->requires(Task::NewDW, lb->rho_CCLabel,                   Ghost::None);
+#endif
   
   task->computes(lb->int_eng_source_CCLabel);
   
@@ -2124,6 +2130,11 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
 				      DataWarehouse* old_dw, 
 				      DataWarehouse* new_dw)
 {
+#ifdef ANNULUSICE
+  static int n_iter;
+  n_iter ++;
+#endif
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
   #ifdef DOING
@@ -2157,8 +2168,13 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       new_dw->get(vol_frac,    lb->vol_frac_CCLabel,  indx,patch,
 		  Ghost::None, 0);
 
-      new_dw->allocate(int_eng_source,
-                                lb->int_eng_source_CCLabel,indx,patch);
+#ifdef ANNULUSICE
+      CCVariable<double> rho_CC;
+      new_dw->get(rho_CC,      lb->rho_CCLabel,       indx,patch,
+		  Ghost::None, 0);                                            
+#endif
+
+      new_dw->allocate(int_eng_source, lb->int_eng_source_CCLabel,indx,patch);
 
       //__________________________________
       //   Compute int_eng_source 
@@ -2168,6 +2184,16 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
         B = rho_micro_CC[*iter]   * speedSound[*iter] * speedSound[*iter];
         int_eng_source[*iter] = (A/B) * delPress[*iter];
       }
+
+#ifdef ANNULUSICE
+      if(n_iter <= 250){
+        if(m==1){
+          for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+            int_eng_source[*iter] += 0.1 * 716.0 * rho_CC[*iter] * vol;
+          }
+        }
+      }
+#endif
 
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
