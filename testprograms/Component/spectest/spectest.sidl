@@ -45,7 +45,6 @@ package CCA {
 	nonexistent. */
     string getProperty(in string name);
   };
-  interface ComponentID;
 
   interface Services {
     /** Ask for a previously registered Port; will return a Port or 
@@ -114,7 +113,6 @@ package CCAPORTS {
     */
     int go();
   };
-  interface ConnectionEventListener; // forward declare.
   interface ConnectionEventService extends CCA.Port{
     /** Sign up to be told about connection activity.
 	@param connectionEventType must be one of the integer values defined in
@@ -129,7 +127,6 @@ package CCAPORTS {
 				       in ConnectionEventListener l);
 
   };
-  interface ConnectionEvent; // forward declare.
   interface ConnectionEventListener {
     /** Called on all listeners when a connection is made or broken. */
     void connectionActivity(in ConnectionEvent evt);
