@@ -31,7 +31,7 @@
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Containers/LockingHandle.h>
-#include <nrrd.h>
+#include <teem/nrrd.h>
 
 namespace SCITeem {
 

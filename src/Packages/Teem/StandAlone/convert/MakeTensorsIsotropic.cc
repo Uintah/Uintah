@@ -27,7 +27,8 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <ell.h>
+
+#include <teem/ell.h>
 
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Geometry/Tensor.h>
@@ -45,6 +46,9 @@ using namespace SCIRun;
 
 int
 main(int argc, char **argv) {
+  float a[9];
+  ell_3m_to_q_f(a,a);
+
   FieldHandle handle;
   
   if (argc !=3) {
@@ -80,7 +84,7 @@ main(int argc, char **argv) {
       m[j*3+k]=(*conds)[i].second.mat_[j][k];
       (*conds)[i].second.mat_[j][k]=0;
     }
-    ell3mEigensolve(eval, evec, m, 0);
+    ell_3m_eigensolve_d(eval, evec, m, 0);
     double cbrt_vol = cbrt(eval[0]*eval[1]*eval[2]);
     if (cbrt_vol<0) { neg_vals++; cbrt_vol=0.1; }
     if (cbrt_vol<0.1) {small_vals++; cbrt_vol=0.1; }

@@ -34,6 +34,7 @@ itcl_class Teem_Filters_NrrdCmedian {
 	set $this-radius 1
 	set $this-weight 1.0
 	set $this-bins 2048
+	set $this-mode 0
 	set $this-pad 0
     }
 
@@ -81,8 +82,13 @@ itcl_class Teem_Filters_NrrdCmedian {
 	#pad
 	label $w.f.options.padlabel -text "Pad:"
 	checkbutton $w.f.options.pad -variable $this-pad
-	
+
+	#pad
+	label $w.f.options.modelabel -text "Use Mode Filtering:"
+	checkbutton $w.f.options.mode -variable $this-mode	
+
 	pack $w.f.options.radius $w.f.options.weight $w.f.options.bins -side top -expand yes -fill x
+	pack $w.f.options.modelabel $w.f.options.mode -side left -anchor w 
 	pack $w.f.options.padlabel $w.f.options.pad -side left -anchor w 
 	
 

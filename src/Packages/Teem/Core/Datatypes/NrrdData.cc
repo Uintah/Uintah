@@ -296,7 +296,7 @@ void NrrdData::io(Piostream& stream) {
 
   if (stream.reading()) {
     Pio(stream, nrrd_fname_);
-    if (nrrdLoad(nrrd = nrrdNew(), strdup(nrrd_fname_.c_str()))) {
+    if (nrrdLoad(nrrd = nrrdNew(), strdup(nrrd_fname_.c_str()), nrrdIONew())) {
       char *err = biffGet(NRRD);
       cerr << "Error reading nrrd " << nrrd_fname_ << ": " << err << endl;
       free(err);

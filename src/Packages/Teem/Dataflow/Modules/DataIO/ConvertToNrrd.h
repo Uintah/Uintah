@@ -306,14 +306,14 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, string &label)
       nrrdWrap(nout->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
 	       get_nrrd_type<val_t>(), 2, sink_size, dims[0]);
       if (f->data_at() == Field::NODE) {
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode);
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+			nrrdCenterNode);
       } else if (f->data_at() == Field::CELL) {
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterCell,
-		    nrrdCenterCell);
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterCell,
+			nrrdCenterCell);
       } else  {
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterUnknown,
-		    nrrdCenterUnknown);
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterUnknown,
+			nrrdCenterUnknown);
       }
       nout->nrrd->axis[0].label = strdup(sink_label.c_str());
       nout->nrrd->axis[1].label = strdup("x");
@@ -331,14 +331,14 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, string &label)
 	       get_nrrd_type<val_t>(), 3, sink_size, dims[0], dims[1]);
 
       if (f->data_at() == Field::NODE) {
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
       } else if (f->data_at() == Field::CELL) {
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
-		    nrrdCenterCell, nrrdCenterCell, nrrdCenterCell);
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+			nrrdCenterCell, nrrdCenterCell, nrrdCenterCell);
       } else  {
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
-		    nrrdCenterUnknown, nrrdCenterUnknown, nrrdCenterUnknown);
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+			nrrdCenterUnknown, nrrdCenterUnknown, nrrdCenterUnknown);
       }
 
       nout->nrrd->axis[0].label = strdup(sink_label.c_str());
@@ -362,16 +362,16 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, string &label)
 	nrrdWrap(nout->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
 		 get_nrrd_type<val_t>(), 4, 
 		 sink_size, dims[0], dims[1], dims[2]);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
-		    nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode);
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+			nrrdCenterNode, nrrdCenterNode, 
+			nrrdCenterNode, nrrdCenterNode);
       } else if (f->data_at() == Field::CELL) {
 	nrrdWrap(nout->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
 		 get_nrrd_type<val_t>(), 4, 
 		 sink_size, dims[0] - 1, dims[1] - 1, dims[2] - 1);
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
-		    nrrdCenterNode, nrrdCenterCell, 
-		    nrrdCenterCell, nrrdCenterCell);
+	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+			nrrdCenterNode, nrrdCenterCell, 
+			nrrdCenterCell, nrrdCenterCell);
       } else  {
 	ASSERTFAIL("no support for edge or face centers");
       }
