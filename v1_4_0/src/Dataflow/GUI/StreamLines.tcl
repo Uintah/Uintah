@@ -60,7 +60,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 	pack $w.row2.stepsize_label $w.row2.stepsize -side left
 	pack $w.row3.maxsteps_label $w.row3.maxsteps -side left
 
-	button $w.row4.execute -text "Execute" -command "$this-c execute"
+	button $w.row4.execute -text "Execute" -command "$this-c needexecute"
 	
 	pack $w.row4.execute -side top -e n -f both
     }
