@@ -2,6 +2,7 @@
 #include "NullContact.h"
 #include "SingleVelContact.h"
 #include "FrictionContact.h"
+#include <Uintah/Interface/DataWarehouse.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <string>
@@ -40,6 +41,9 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss)
 }
 
 // $Log$
+// Revision 1.6  2000/09/25 18:08:22  sparker
+// include datawarehouse.h for template instantiation
+//
 // Revision 1.5  2000/07/11 19:18:23  tan
 // Added #include <Uintah/Interface/ProblemSpec.h> into the .cc file.
 // Some compiling patterns need it.
