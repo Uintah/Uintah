@@ -16,6 +16,7 @@
 #include <Component/PIDL/GlobusError.h>
 #include <Component/PIDL/TypeInfo.h>
 #include <Component/PIDL/URL.h>
+#include <iostream>
 #include <string>
 
 using Component::PIDL::GlobusError;
@@ -41,15 +42,18 @@ Object_proxy::Object_proxy(const URL& url)
 
 Object_proxy::~Object_proxy()
 {
-    if(d_ref.d_vtable_base != TypeInfo::vtable_invalid){
-	if(int gerr=globus_nexus_startpoint_destroy_and_notify(&d_ref.d_sp)){
-	    throw GlobusError("nexus_startpoint_destroy_and_notify", gerr);
-	}
-    }
 }
 
 //
 // $Log$
+// Revision 1.4  1999/09/26 06:12:56  sparker
+// Added (distributed) reference counting to PIDL objects.
+// Began campaign against memory leaks.  There seem to be no more
+//   per-message memory leaks.
+// Added a test program to flush out memory leaks
+// Fixed other Component testprograms so that they work with ref counting
+// Added a getPointer method to PIDL handles
+//
 // Revision 1.3  1999/09/17 05:08:08  sparker
 // Implemented component model to work with sidl code generator
 //

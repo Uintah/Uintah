@@ -77,13 +77,17 @@ DESCRIPTION
 	    // The start of the methods in the vtable.  Do NOT change
 	    // this number unless the corresponding code generation is
 	    // changed in the sidl compiler.
-	    static const int vtable_methods_start = 2;
+	    static const int vtable_methods_start = 3;
 	protected:
 	private:
 
 	    //////////
 	    // The ID of the remote isa handler
 	    static const int vtable_isa_handler = 0;
+
+	    //////////
+	    // The ID of the remote delete reference handler
+	    static const int vtable_deleteReference_handler = 1;
 
 	    //////////
 	    // TypeInfo_internal needs access to the vtable_isa_handler
@@ -93,6 +97,10 @@ DESCRIPTION
 	    //////////
 	    // ServerContext needs access to the private TypeInfo_internal
 	    friend class ServerContext;
+
+	    //////////
+	    // ProxyBase needs access to the private handler numbers
+	    friend class ProxyBase;
 
 	    //////////
 	    // A pointer to the actual data.
@@ -105,6 +113,14 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.5  1999/09/26 06:12:57  sparker
+// Added (distributed) reference counting to PIDL objects.
+// Began campaign against memory leaks.  There seem to be no more
+//   per-message memory leaks.
+// Added a test program to flush out memory leaks
+// Fixed other Component testprograms so that they work with ref counting
+// Added a getPointer method to PIDL handles
+//
 // Revision 1.4  1999/09/24 20:03:38  sparker
 // Added cocoon documentation
 //

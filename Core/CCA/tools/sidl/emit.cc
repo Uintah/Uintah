@@ -30,18 +30,34 @@ public:\n\
     inline @(@_interface* ptr)\n\
         : ptr(ptr)\n\
     {\n\
+        if(ptr)\n\
+            ptr->_addReference();\n\
     }\n\
     inline ~@()\n\
     {\n\
+        if(ptr)\n\
+            ptr->_deleteReference();\n\
     }\n\
     inline @(const @& copy)\n\
         : ptr(copy.ptr)\n\
     {\n\
+        if(ptr)\n\
+            ptr->_addReference();\n\
     }\n\
     inline @& operator=(const @& copy)\n\
     {\n\
+        if(&copy != this){\n\
+            if(ptr)\n\
+                ptr->_deleteReference();\n\
+            if(copy.ptr)\n\
+                copy.ptr->_addReference();\n\
+        }\n\
         ptr=copy.ptr;\n\
         return *this;\n\
+    }\n\
+    inline @_interface* getPointer() const\n\
+    {\n\
+        return ptr;\n\
     }\n\
     inline @_interface* operator->() const\n\
     {\n\
@@ -51,7 +67,7 @@ public:\n\
     {\n\
         return ptr != 0;\n\
     }\n\
-    inline operator ::Component::PIDL::Object_interface*() const\n\
+    inline operator ::Component::PIDL::Object() const\n\
     {\n\
         return ptr;\n\
     }\n\
@@ -342,7 +358,7 @@ void CI::emit_handlers(EmitState& e)
     e.out << "// methods from " << name << " " << curfile << ":" << lineno << "\n\n";
     e.out << "// isa handler\n";
     isaHandler=++e.handlerNum;
-    e.out << "static void _handler" << isaHandler << "(globus_nexus_endpoint_t*,\n";
+    e.out << "static void _handler" << isaHandler << "(globus_nexus_endpoint_t* _ep,\n";
     e.out << "                      globus_nexus_buffer_t* _recvbuff, globus_bool_t)\n";
     e.out << "{\n";
     e.out << "    int classname_size;\n";
@@ -356,6 +372,8 @@ void CI::emit_handlers(EmitState& e)
     e.out << "    globus_nexus_get_char(_recvbuff, uuid, uuid_size);\n";
     e.out << "    uuid[uuid_size]=0;\n";
     e.out << "    globus_nexus_startpoint_t _sp;\n";
+    e.out << "    int _addRef;\n";
+    e.out << "    globus_nexus_get_int(_recvbuff, &_addRef, 1);\n";
     e.out << "    if(int _gerr=globus_nexus_get_startpoint(_recvbuff, &_sp, 1))\n";
     e.out << "        throw ::Component::PIDL::GlobusError(\"get_startpoint\", _gerr);\n";
     e.out << "    if(int _gerr=globus_nexus_buffer_destroy(_recvbuff))\n";
@@ -365,10 +383,16 @@ void CI::emit_handlers(EmitState& e)
     e.out << "    delete[] classname;\n";
     e.out << "    delete[] uuid;\n";
     e.out << "    int flag;\n";
-    e.out << "    if(result == ::Component::PIDL::TypeInfo::vtable_invalid)\n";
+    e.out << "    if(result == ::Component::PIDL::TypeInfo::vtable_invalid) {\n";
     e.out << "        flag=0;\n";
-    e.out << "    else\n";
+    e.out << "    } else {\n";
     e.out << "        flag=1;\n";
+    e.out << "        if(_addRef){\n";
+    e.out << "            void* _v=globus_nexus_endpoint_get_user_pointer(_ep);\n";
+    e.out << "            ::Component::PIDL::ServerContext* _sc=static_cast<::Component::PIDL::ServerContext*>(_v);\n";
+    e.out << "            _sc->d_objptr->_addReference();\n";
+    e.out << "        }\n";
+    e.out << "    }\n";
     e.out << "    globus_nexus_buffer_t sendbuff;\n";
     e.out << "    int rsize=globus_nexus_sizeof_int(2);\n";
     e.out << "    if(int gerr=globus_nexus_buffer_init(&sendbuff, rsize, 0))\n";
@@ -379,6 +403,20 @@ void CI::emit_handlers(EmitState& e)
     e.out << "        throw ::Component::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
     e.out << "    if(int _gerr=globus_nexus_startpoint_eventually_destroy(&_sp, GLOBUS_FALSE, 30))\n";
     e.out << "        throw ::Component::PIDL::GlobusError(\"startpoint_eventually_destroy\", _gerr);\n";
+    e.out << "}\n\n";
+
+    // Emit delete reference handler...
+    e.out << "// methods from " << name << " " << curfile << ":" << lineno << "\n\n";
+    e.out << "// delete reference handler\n";
+    deleteReferenceHandler=++e.handlerNum;
+    e.out << "static void _handler" << deleteReferenceHandler << "(globus_nexus_endpoint_t* _ep,\n";
+    e.out << "                      globus_nexus_buffer_t* _recvbuff, globus_bool_t)\n";
+    e.out << "{\n";
+    e.out << "    if(int _gerr=globus_nexus_buffer_destroy(_recvbuff))\n";
+    e.out << "        throw ::Component::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
+    e.out << "    void* _v=globus_nexus_endpoint_get_user_pointer(_ep);\n";
+    e.out << "    ::Component::PIDL::ServerContext* _sc=static_cast<::Component::PIDL::ServerContext*>(_v);\n";
+    e.out << "    _sc->d_objptr->_deleteReference();\n";
     e.out << "}\n\n";
 
     // Emit method handlers...
@@ -480,8 +518,9 @@ void CI::emit_handler_table(EmitState& e)
     e.out << "static globus_nexus_handler_t _handler_table" << e.instanceNum << "[] =\n";
     e.out << "{\n";
     e.out << "    {GLOBUS_NEXUS_HANDLER_TYPE_THREADED, _handler" << isaHandler << "},\n";
+    e.out << "    {GLOBUS_NEXUS_HANDLER_TYPE_THREADED, _handler" << deleteReferenceHandler << "},\n";
     e.out << "    {GLOBUS_NEXUS_HANDLER_TYPE_THREADED, 0},\n";
-    int vtable_base=2;
+    int vtable_base=3;
 
     emit_handler_table_body(e, vtable_base, true);
 
@@ -886,7 +925,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     if(reply_required())
 	e.out << "    ::Component::PIDL::ReplyEP* _reply=::Component::PIDL::ReplyEP::acquire();\n";
     e.out << "    globus_nexus_startpoint_t _sp;\n";
-    e.out << "    _reply->get_startpoint(&_sp);\n\n";
+    e.out << "    _reply->get_startpoint_copy(&_sp);\n\n";
     std::vector<Argument*>& list=args->getList();
     int argNum=0;
     for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
@@ -1211,6 +1250,7 @@ void NamedType::emit_startpoints(EmitState& e, const string& arg) const
 {
     e.out << "    ::Component::PIDL::Reference " << arg << "_ref;\n";
     e.out << "    if(" << arg << "){\n";
+    e.out << "        " << arg << "->_addReference();\n";
     e.out << "        " << arg << "->_getReference(" << arg << "_ref, true);\n";
     e.out << "    }\n";
 }
@@ -1258,6 +1298,14 @@ void NamedType::emit_prototype(SState& out, ArgContext ctx,
 
 //
 // $Log$
+// Revision 1.4  1999/09/26 06:13:01  sparker
+// Added (distributed) reference counting to PIDL objects.
+// Began campaign against memory leaks.  There seem to be no more
+//   per-message memory leaks.
+// Added a test program to flush out memory leaks
+// Fixed other Component testprograms so that they work with ref counting
+// Added a getPointer method to PIDL handles
+//
 // Revision 1.3  1999/09/24 06:26:30  sparker
 // Further implementation of new Component model and IDL parser, including:
 //  - fixed bugs in multiple inheritance
