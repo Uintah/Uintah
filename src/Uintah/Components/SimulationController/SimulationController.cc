@@ -105,10 +105,10 @@ void SimulationController::run()
    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
    SchedulerP scheduler(sched);
 
-   DataWarehouseP old_ds = scheduler->createDataWarehouse( d_generation );
+   DataWarehouseP old_dw = scheduler->createDataWarehouse( d_generation );
    d_generation++;
 
-   d_dwMpiHandler->registerDW( old_ds );
+   d_dwMpiHandler->registerDW( old_dw );
    // Should I check to see if MpiProcesses is > 1 before making this
    // thread?  If not, the thread will just die when it realizes
    // that there are only one MpiProcesses.  Should I have if tests
@@ -119,7 +119,7 @@ void SimulationController::run()
      d_MpiThread = scinew Thread( d_dwMpiHandler, "DWMpiHandler" );
    }
 
-   old_ds->setGrid(grid);
+   old_dw->setGrid(grid);
    
    scheduler->initialize();
    if(d_restarting){
@@ -128,7 +128,7 @@ void SimulationController::run()
       // Initialize the CFD and/or MPM data
       for(int i=0;i<grid->numLevels();i++){
 	 LevelP level = grid->getLevel(i);
-	 scheduleInitialize(level, scheduler, old_ds, cfd, mpm, md);
+	 scheduleInitialize(level, scheduler, old_dw, cfd, mpm, md);
       }
    }
    
@@ -143,18 +143,21 @@ void SimulationController::run()
    double start_time = Time::currentSeconds();
    double t = timeinfo.initTime;
    
-   scheduleComputeStableTimestep(level, scheduler, old_ds,
+   scheduleComputeStableTimestep(level, scheduler, old_dw,
 				 cfd, mpm, md);
    
+   if(output)
+      output->finalizeTimestep(t, 0, level, scheduler, old_dw);
+
    ProcessorContext* pc = ProcessorContext::getRootContext();
 
-   scheduler->execute(pc, old_ds);
+   scheduler->execute(pc, old_dw);
    
    while(t < timeinfo.maxTime) {
       double wallTime = Time::currentSeconds() - start_time;
 
       delt_vartype delt_var;
-      old_ds->get(delt_var, sharedState->get_delt_label());
+      old_dw->get(delt_var, sharedState->get_delt_label());
 
       double delt = delt_var;
       delt *= timeinfo.delt_factor;
@@ -169,28 +172,27 @@ void SimulationController::run()
 	      << " to maxmimum: " << timeinfo.delt_max << '\n';
 	 delt = timeinfo.delt_max;
       }
-      old_ds->override(delt_vartype(delt), sharedState->get_delt_label());
+      old_dw->override(delt_vartype(delt), sharedState->get_delt_label());
       cout << "Time=" << t << ", delt=" << delt 
 	   << ", elapsed time = " << wallTime << '\n';
 
       scheduler->initialize();
 
-      DataWarehouseP new_ds = scheduler->createDataWarehouse( d_generation );
+      DataWarehouseP new_dw = scheduler->createDataWarehouse( d_generation );
       d_generation++;
 
-      d_dwMpiHandler->registerDW( new_ds );
-      new_ds->carryForward(old_ds);
-      scheduleTimeAdvance(t, delt, level, scheduler, old_ds, new_ds,
+      d_dwMpiHandler->registerDW( new_dw );
+      scheduleTimeAdvance(t, delt, level, scheduler, old_dw, new_dw,
 			  cfd, mpm, md);
-      if(output)
-	 output->finalizeTimestep(t, delt, level, scheduler, old_ds, new_ds);
       t += delt;
+      if(output)
+	 output->finalizeTimestep(t, delt, level, scheduler, new_dw);
       
       // Begin next time step...
-      scheduleComputeStableTimestep(level, scheduler, new_ds, cfd, mpm, md);
-      scheduler->execute(pc, new_ds);
+      scheduleComputeStableTimestep(level, scheduler, new_dw, cfd, mpm, md);
+      scheduler->execute(pc, new_dw);
       
-      old_ds = new_ds;
+      old_dw = new_dw;
    }
 
    if( d_MpiRank == 0 && d_MpiProcesses > 1 ) {
@@ -306,56 +308,56 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 
 void SimulationController::scheduleInitialize(LevelP& level,
 					      SchedulerP& sched,
-					      DataWarehouseP& new_ds,
+					      DataWarehouseP& new_dw,
 					      CFDInterface* cfd,
 					      MPMInterface* mpm,
 					      MDInterface* md)
 {
   if(cfd) {
-    cfd->scheduleInitialize(level, sched, new_ds);
+    cfd->scheduleInitialize(level, sched, new_dw);
   }
   if(mpm) {
-    mpm->scheduleInitialize(level, sched, new_ds);
+    mpm->scheduleInitialize(level, sched, new_dw);
   }
   if(md) {
-    md->scheduleInitialize(level, sched, new_ds);
+    md->scheduleInitialize(level, sched, new_dw);
   }
 }
 
 void SimulationController::scheduleComputeStableTimestep(LevelP& level,
 							 SchedulerP& sched,
-							 DataWarehouseP& new_ds,
+							 DataWarehouseP& new_dw,
 							 CFDInterface* cfd,
 							 MPMInterface* mpm,
 							 MDInterface* md)
 {
    if(cfd)
-      cfd->scheduleComputeStableTimestep(level, sched, new_ds);
+      cfd->scheduleComputeStableTimestep(level, sched, new_dw);
    if(mpm)
-      mpm->scheduleComputeStableTimestep(level, sched, new_ds);
+      mpm->scheduleComputeStableTimestep(level, sched, new_dw);
    if(md)
-      md->scheduleComputeStableTimestep(level, sched, new_ds);
+      md->scheduleComputeStableTimestep(level, sched, new_dw);
 }
 
 void SimulationController::scheduleTimeAdvance(double t, double delt,
 					       LevelP& level,
 					       SchedulerP& sched,
-					       DataWarehouseP& old_ds,
-					       DataWarehouseP& new_ds,
+					       DataWarehouseP& old_dw,
+					       DataWarehouseP& new_dw,
 					       CFDInterface* cfd,
 					       MPMInterface* mpm,
 					       MDInterface* md)
 {
    // Temporary - when cfd/mpm are coupled this will need help
    if(cfd)
-      cfd->scheduleTimeAdvance(t, delt, level, sched, old_ds, new_ds);
+      cfd->scheduleTimeAdvance(t, delt, level, sched, old_dw, new_dw);
    if(mpm)
-      mpm->scheduleTimeAdvance(t, delt, level, sched, old_ds, new_ds);
+      mpm->scheduleTimeAdvance(t, delt, level, sched, old_dw, new_dw);
       
    // Added molecular dynamics module, currently it will not be coupled with 
    // cfd/mpm.  --tan
    if(md)
-      md->scheduleTimeAdvance(t, delt, level, sched, old_ds, new_ds);
+      md->scheduleTimeAdvance(t, delt, level, sched, old_dw, new_dw);
    
 #if 0
    
@@ -455,6 +457,12 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.35  2000/06/16 19:47:52  sparker
+// Changed _ds to _dw for data warehouse variables
+// Use new output interface
+// Eliminated dw->carryForward
+// Fixed off by 1 error in output (bugzilla #139)
+//
 // Revision 1.34  2000/06/16 05:03:09  sparker
 // Moved timestep multiplier to simulation controller
 // Fixed timestep min/max clamping so that it really works now
