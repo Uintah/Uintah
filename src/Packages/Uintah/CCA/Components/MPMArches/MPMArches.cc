@@ -100,9 +100,8 @@ void MPMArches::scheduleComputeStableTimestep(const LevelP& level,
 //______________________________________________________________________
 //
 
-void MPMArches::scheduleTimeAdvance(double time, double delt,
-				 const LevelP&   level,
-				 SchedulerP&     sched)
+void MPMArches::scheduleTimeAdvance(const LevelP&   level,
+				    SchedulerP&     sched)
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* arches_matls = d_sharedState->allArchesMaterials();
@@ -151,7 +150,7 @@ void MPMArches::scheduleTimeAdvance(double time, double delt,
   // Arches steps are identical with those in single-material code
   // once exchange terms are determined
 
-  d_arches->scheduleTimeAdvance(time, delt, level, sched);
+  d_arches->scheduleTimeAdvance(level, sched);
 
   // remaining MPM steps are explicitly shown here.
   d_mpm->scheduleExMomInterpolated(sched, patches, mpm_matls);
