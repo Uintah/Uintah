@@ -154,6 +154,8 @@ WARNING
     vector<Vector> d_probePts;
     vector<string> d_probePtsNames;
     bool d_usingProbePts;
+    double d_probeFreq;
+    double d_oldProbeDumpTime;
   };
 }
 
