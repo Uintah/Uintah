@@ -778,7 +778,7 @@ void ViewWindow::unicam_rot(int x, int y)
     //      Point  from = tmpview.eyep();
     //      Vector dvec = (from - center);
     //      double tdist = acos(Wvec::Y * dvec.normalize());
-    Vector Yvec(0,1,0);
+    //Vector Yvec(0,1,0);
 
     //    double tdist = acos(clamp(Dot(Yvec, dvec.normal()), -1., 1.));
 
