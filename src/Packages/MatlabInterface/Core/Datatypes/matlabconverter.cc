@@ -953,7 +953,33 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
               }
                                         
             nrrdAxisInfoSet_nva(nrrddataptr->nrrd,nrrdAxisInfoLabel,labelptr);
-                                                                                                                        
+             
+            double spacing[NRRD_DIM_MAX];
+
+            for (long p=0;p<NRRD_DIM_MAX;p++)
+            {
+              spacing[p] = 1.0;
+            }
+                          
+            nrrdAxisInfoSet_nva(nrrddataptr->nrrd,nrrdAxisInfoSpacing,spacing);
+            
+            double mindata[NRRD_DIM_MAX];
+            for (long p=0;p<NRRD_DIM_MAX;p++)
+              {
+                mindata[p] = 0.0;
+              }
+                            
+            nrrdAxisInfoSet_nva(nrrddataptr->nrrd,nrrdAxisInfoMin,mindata);            
+
+            double maxdata[NRRD_DIM_MAX];
+            for (long p=0;p<NRRD_DIM_MAX;p++)
+              {
+                maxdata[p] = 1.0;
+              }
+                            
+            nrrdAxisInfoSet_nva(nrrddataptr->nrrd,nrrdAxisInfoMax,maxdata);            
+            
+                                                                                                                                                                                                                                                                                                                                                                                                                                                         
             scinrrd = nrrddataptr;
           }
         catch (...)
@@ -1128,7 +1154,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                             
                     for (long p=0;p<NRRD_DIM_MAX;p++)
                       {
-                        spacing[p] = AIR_NAN;
+                        spacing[p] = 1.0;
                       }
                             
                     for (long p=0;p<numaxis;p++)
