@@ -4,7 +4,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Packages/BioPSE/Core/Algorithms/NumApproximation
 
-SRCS += $(SRCDIR)/BuildFEMatrix.cc
+SRCS += $(SRCDIR)/BuildFEMatrix.cc \
+	$(SRCDIR)/BuildBEMatrix.cc
 
 PSELIBS := Core/Datatypes Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
