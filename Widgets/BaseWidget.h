@@ -89,7 +89,9 @@ public:
    void print( ostream& os=cout ) const;
 
    void init_tcl();
-   virtual void tcl_command(TCLArgs&, void*);
+   void tcl_command( TCLArgs&, void* );
+   
+   // Use this to pop up the widget ui.
    void ui() const;
    
 protected:
@@ -133,6 +135,10 @@ protected:
    GeomSwitch* widget;
    Real widget_scale;
    Real epsilon;
+
+   // Individual widgets use this for tcl if necessary.
+   // tcl command in args[1], params in args[2], args[3], ...
+   virtual void widget_tcl( TCLArgs& );
 
    void CreateModeSwitch( const Index snum, GeomObj* o );
    void SetMode( const Index mode, const long swtchs );

@@ -20,11 +20,11 @@ source $sci_root/TCL/MaterialEditor.tcl
 itcl_class BaseWidget {
     constructor {config} {
 	set name BaseWidget
-	config
-    }
-    method config {config} {
 	global $this-material
 	initMaterial $this-material
+    }
+
+    method config {config} {
     }
 
     public name

@@ -249,9 +249,17 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 return;
       }
       SetScale(GetScale()*us);
+   } else {
+      widget_tcl(args);
    }
 
    reset_vars();
+}
+
+
+void
+BaseWidget::widget_tcl(TCLArgs&)
+{
 }
 
 

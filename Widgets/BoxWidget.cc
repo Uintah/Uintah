@@ -42,9 +42,11 @@ enum { PickSphR, PickSphL, PickSphD, PickSphU, PickSphI, PickSphO,
        PickResizeR, PickResizeL, PickResizeD, PickResizeU,
        PickResizeI, PickResizeO };
 
-BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
+BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
+		      Index aligned )
 : BaseWidget(module, lock, "BoxWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
-  oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0), oldinaxis(0, 0, 1)
+  oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0), oldinaxis(0, 0, 1),
+  aligned(aligned)
 {
    Real INIT = 5.0*widget_scale;
    variables[CenterVar] = new PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
@@ -262,7 +264,7 @@ BoxWidget::widget_execute()
       ((GeomSphere*)geometries[SmallSphereODL])->move(ODL, cylinderrad);
    }
 
-   if (mode_switches[1]->get_state()) {
+   if ((aligned == 0) && (mode_switches[1]->get_state())) {
       ((GeomSphere*)geometries[SphereR])->move(R, sphererad);
       ((GeomSphere*)geometries[SphereL])->move(L, sphererad);
       ((GeomSphere*)geometries[SphereD])->move(D, sphererad);
@@ -438,4 +440,32 @@ BoxWidget::GetMaterialName( const Index mindex ) const
    }
 }
 
+
+Index
+BoxWidget::IsAxisAligned() const
+{
+   return aligned;
+}
+
+
+void
+BoxWidget::AxisAligned( const Index yesno )
+{
+   if (aligned == yesno) return;
+   
+   aligned = yesno;
+
+   if (aligned) {
+      Point center(variables[CenterVar]->point());
+      // Shouldn't need to resolve constraints...
+      variables[PointRVar]->Move(center+Vector(1,0,0)*variables[DistRVar]->real());
+      variables[PointDVar]->Move(center+Vector(0,1,0)*variables[DistDVar]->real());
+      variables[PointIVar]->Move(center+Vector(0,0,1)*variables[DistIVar]->real());
+      oldrightaxis = Vector(1,0,0);
+      olddownaxis = Vector(0,1,0);
+      oldinaxis = Vector(0,0,1);
+   }
+   
+   execute();
+}
 
