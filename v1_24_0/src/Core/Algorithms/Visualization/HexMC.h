@@ -193,6 +193,8 @@ TriSurfMesh::Node::index_type
 HexMC<Field>::find_or_add_edgepoint(unsigned int u0, unsigned int u1,
 				    double d0, const Point &p) 
 {
+  if (d0 <= 0.0) { u1 = (unsigned int)-1; }
+  if (d0 >= 1.0) { u0 = (unsigned int)-1; }
   edgepair_t np;
   if (u0 < u1)  { np.first = u0; np.second = u1; np.dfirst = d0; }
   else { np.first = u1; np.second = u0; np.dfirst = 1.0 - d0; }
@@ -335,7 +337,12 @@ void HexMC<Field>::extract_n( const cell_index_type& cell, double iso )
     }
     if (build_field_)
     {
-      trisurf_->add_triangle(surf_node[v0], surf_node[v1], surf_node[v2]);
+      if (surf_node[v0] != surf_node[v1] &&
+          surf_node[v1] != surf_node[v2] &&
+          surf_node[v2] != surf_node[v0])
+      {
+        trisurf_->add_triangle(surf_node[v0], surf_node[v1], surf_node[v2]);
+      }
     }
   }
 }
