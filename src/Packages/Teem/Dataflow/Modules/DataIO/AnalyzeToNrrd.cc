@@ -83,6 +83,7 @@ public:
 private:
 
   //! GUI variables
+  GuiInt have_insight_;
   GuiString file_;
   GuiString file_del_;
   GuiString messages_;
@@ -111,11 +112,17 @@ DECLARE_MAKER(AnalyzeToNrrd)
 //
 AnalyzeToNrrd::AnalyzeToNrrd(GuiContext* ctx)
   : Module("AnalyzeToNrrd", ctx, Source, "DataIO", "Teem"),
+    have_insight_(ctx->subVar("have-insight", false)),
     file_(ctx->subVar("file")),
     file_del_(ctx->subVar("file-del")),
     messages_(ctx->subVar("messages")),
     num_files_(ctx->subVar("num-files"))
 {
+#ifdef HAVE_INSIGHT
+  have_insight_.set(1);
+#else
+  have_insight_.set(0);
+#endif
 }
 
 /*===========================================================================*/
