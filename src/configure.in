@@ -1657,12 +1657,12 @@ for i in $mpeg $thirdparty $SCI_LAB_TP_DEFAULT; do
 done
 
 if test -z "$HAVE_LIBMPEGE"; then
-  MPEG_DEF_FLAG=""
+  DEF_MPEG="#define HAVE_MPEG 1"
 else
-  MPEG_DEF_FLAG="-DMPEG"
+  DEF_MPEG="#define HAVE_MPEG 1"
 fi
 
-AC_SUBST(MPEG_DEF_FLAG)
+AC_SUBST(DEF_MPEG)
 AC_SUBST(HAVE_LIBMPEGE)
 AC_SUBST(LIBMPEGE)
 
@@ -1677,21 +1677,18 @@ for i in $mdsplus $thirdparty $SCI_LAB_TP_DEFAULT; do
   SCI_CHECK_LIB($i/lib,MdsLib_client,main,LIBMDSPLUS="$i/lib",continue)
 
   if test "$LIBMDSPLUS" && test "$INCMDSPLUS_H"; then
-
-    MDSPLUS_DEF_FLAG="#define MDSPLUS"
-
+    DEF_MDSPLUS="#define HAVE_MDSPLUS 1"
     break
   fi
 done
 
-if test "$mdsplus" && test ! "$MDSPLUS_DEF_FLAG"; then
+if test "$mdsplus" && test ! "$DEF_MDSPLUS"; then
   echo
   AC_MSG_ERROR(One or more of the MDS PLUS components is missing.)
   echo
 fi
 
-
-AC_SUBST(MDSPLUS_DEF_FLAG)
+AC_SUBST(DEF_MDSPLUS)
 AC_SUBST(INCMDSPLUS_H)
 AC_SUBST(LIBMDSPLUS)
 
@@ -2039,13 +2036,10 @@ for i in $with_imagemagick $thirdparty $SCI_LAB_TP_DEFAULT; do
     MAGICK_LIB="$i/lib"
     #parse out the -L parts and leave only the -l parts
     MAGICK_LINK=`echo $IM_LIBS | sed 's|-L[[A-Za-z0-9/\.\-]]* ||g'`
-    MAGICK_DEF_FLAG="-DMAGICK"
     break
-  else
-    MAGICK_DEF_FLAG=""
   fi
 done
-AC_SUBST(MAGICK_DEF_FLAG)
+
 AC_SUBST(HAVE_MAGICK)
 AC_SUBST(DEF_MAGICK)
 AC_SUBST(MAGICK_INCLUDE)
