@@ -60,6 +60,8 @@
 #include <Core/Services/ServiceManager.h>
 #include <Core/SystemCall/SystemCallManager.h>
 
+#include <TauProfilerForSCIRun.h>
+
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -253,6 +255,9 @@ public:
 
 int
 main(int argc, char *argv[], char **environment) {
+
+  TAU_PROFILE("main", "", TAU_DEFAULT);
+  TAU_PROFILE_SET_NODE(0);
 
   // Setup the SCIRun key/value environment
   create_sci_environment(environment, 0);
