@@ -245,7 +245,7 @@ int DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
   lhs=rhs;
 
   double **A;
-  DenseMatrix *cpy;
+  DenseMatrix *cpy = NULL;
   if (!overwrite) {cpy=clone(); A=cpy->getData2D();}
   else A=data;
 
@@ -342,7 +342,7 @@ int DenseMatrix::solve(const vector<double>& rhs, vector<double>& lhs,
   lhs=rhs;
 
   double **A;
-  DenseMatrix *cpy;
+  DenseMatrix *cpy = NULL;
   if (!overwrite) {cpy=clone(); A=cpy->getData2D();}
   else A=data;
 
