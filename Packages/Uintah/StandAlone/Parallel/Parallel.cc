@@ -65,7 +65,7 @@ Parallel::initializeManager(int argc, char* argv[])
 	worldRank=0;
 	worldSize=1;
     }
-    cerr << "Parallel: processor " << worldRank << " of " << worldSize;
+    cerr << "Parallel: processor " << worldRank + 1 << " of " << worldSize;
     if(usingMPI)
 	cerr << " (using MPI)";
     cerr << '\n';
@@ -86,6 +86,9 @@ Parallel::finalizeManager()
 
 //
 // $Log$
+// Revision 1.5  2000/04/25 00:41:23  dav
+// more changes to fix compilations
+//
 // Revision 1.4  2000/04/19 20:58:56  dav
 // adding MPI support
 //
