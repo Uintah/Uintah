@@ -24,10 +24,19 @@ class Hist2DDpy : public DpyBase {
   int** hist;
   int histmax;
   float vdatamin, vdatamax, gdatamin, gdatamax;
+
+  // Called whenever the window needs to be redrawn
+  virtual void display();
+
+  virtual void resize(const int width, const int height);
+
   void compute_hist(unsigned int fid);
   void draw_hist(unsigned int fid, XFontStruct* font_struct,
 		 bool redraw_hist);
 
+  // This handles the keyboard events
+  void key_pressed(unsigned long key);
+  
   // These handle mouse button events.  button indicates which button.
   // x and y are the location measured from the upper left corner of the
   // window.
@@ -56,8 +65,9 @@ class Hist2DDpy : public DpyBase {
   
   bool have_line;
   float px0, py0, px1, py1;
-  float cx, cy; // the center of the screen
-  float ix, iy; // the intersection point along the diagonal
+  float cx, cy; // The center of the screen.  These values never change.
+  // These identify the edges the perpline.
+  float perp_px0, perp_py0, perp_px1, perp_py1; 
   void set_p();
   void set_lines();
   int whichp;
@@ -73,7 +83,7 @@ public:
   Hist2DDpy(float a, float b, float c);
   void attach(VolumeVGBase*);
   virtual ~Hist2DDpy();
-  virtual void run();
+  //  virtual void run();
   void animate(bool& changed);
 };
 
