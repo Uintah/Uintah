@@ -511,8 +511,12 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     batch = scinew DependencyBatch(toresource, from, to);
     batches_.push_back(batch);
     from->addComputes(batch);
+#if SCI_ASSERTION_LEVEL >= 2
     bool newRequireBatch = to->addRequires(batch);
-    ASSERT(newRequireBatch);
+#else
+    to->addRequires(batch);
+#endif
+    ASSERTL2(newRequireBatch);
     if(dbg.active())
       dbg << d_myworld->myrank() << "          NEW BATCH!\n";
   } else if (mustConsiderInternalDependencies_) { // i.e. threaded mode
