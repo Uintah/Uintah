@@ -104,6 +104,7 @@ void ParticleFieldExtractor::add_type(string &type_list,
 {
   switch ( subtype->getType() ) {
   case TypeDescription::double_type:
+  case TypeDescription::int_type:
     type_list += " scaler";
     break;
   case TypeDescription::Vector:
@@ -160,6 +161,7 @@ void ParticleFieldExtractor::setVars(ArchiveHandle ar)
 							 times[0]);
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
+      case TypeDescription::int_type:
         scalarVars.push_back(VarInfo(names[i], matls));
 	break;
       case  TypeDescription::Vector:
@@ -395,6 +397,11 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
   bool have_vp = false;
   bool have_tp = false;
   bool have_ids = false;
+  int scalar_type;
+  for(int i = 0; i < (int)names.size() ; i++)
+    if (names[i] == psVar.get())
+      scalar_type = types[i]->getSubType()->getType();
+
   // iterate over patches
   for(Level::const_patchIterator r = level->patchesBegin();
       r != level->patchesEnd(); r++ ){
@@ -402,6 +409,7 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
     ParticleVariable< Matrix3 > pvt;
     ParticleVariable< double > pvs;
     ParticleVariable< Point  > pvp;
+    ParticleVariable< int > pvint;
     ParticleVariable< long > pvi;
      
     
@@ -417,7 +425,16 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
       }
       if( psVar.get() != ""){
 	have_sp = true;
-	archive.query(pvs, psVar.get(), matl, *r, time);
+	switch (scalar_type) {
+	case TypeDescription::double_type:
+	  archive.query(pvs, psVar.get(), matl, *r, time);
+	  break;
+	case TypeDescription::int_type:
+	  cerr << "Getting data for ParticleVariable<int>\n";
+	  archive.query(pvint, psVar.get(), matl, *r, time);
+	  cerr << "Got data\n";
+	  break;
+	}
       }
       if (ptVar.get() != ""){
 	have_tp = true;
@@ -431,8 +448,16 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 	have_ids = true;
 	archive.query(pvi, particleIDs, matl, *r, time);
       }
-      
-      ParticleSubset* source_subset = pvs.getParticleSubset();
+
+      ParticleSubset* source_subset;
+      switch (scalar_type) {
+      case TypeDescription::double_type:
+	source_subset = pvs.getParticleSubset();
+	break;
+      case TypeDescription::int_type:
+	source_subset = pvint.getParticleSubset();
+	break;
+      }
       particleIndex dest = dest_subset->addParticles(source_subset->numParticles());
       vectors.resync();
       positions.resync();
@@ -446,7 +471,17 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 	else
 	  vectors[dest]=Vector(0,0,0);
 	if(have_sp)
-	  scalars[dest]=pvs[*iter];
+	  switch (scalar_type) {
+	  case TypeDescription::double_type:
+	    scalars[dest]=pvs[*iter];
+	    break;
+	  case TypeDescription::int_type:
+	    scalars[dest]=pvint[*iter];
+	    if (scalars[dest] == 1) {
+	      cerr << "scalars[" << dest << "] = " << scalars[dest] << endl;
+	    }
+	    break;
+	  }
 	else
 	  scalars[dest]=0;
 	if(have_tp)
@@ -557,6 +592,26 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
       if (!is_cached(particleID+" "+varname+" "+mat_list[i],data)) {
 	// query the value and then cache it
 	vector< double > values;
+	int matl = atoi(mat_list[i].c_str());
+	archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	cerr << "Received data.  Size of data = " << values.size() << endl;
+	cache_value(particleID+" "+varname+" "+mat_list[i],values,data);
+      } else {
+	cerr << "Cache hit\n";
+      }
+      TCL::execute(id+" set_var_val "+data.c_str());
+      name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
+    }
+    break;
+  case TypeDescription::int_type:
+    cerr << "Graphing a variable of type double\n";
+    // loop over all the materials in the mat_list
+    for(int i = 0; i < (int)mat_list.size(); i++) {
+      string data;
+      // query the value
+      if (!is_cached(particleID+" "+varname+" "+mat_list[i],data)) {
+	// query the value and then cache it
+	vector< int > values;
 	int matl = atoi(mat_list[i].c_str());
 	archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
 	cerr << "Received data.  Size of data = " << values.size() << endl;
@@ -701,6 +756,12 @@ bool ParticleFieldExtractor::is_cached(string name, string& data) {
 }
 
 void ParticleFieldExtractor::cache_value(string where, vector<double>& values,
+				 string &data) {
+  data = vector_to_string(values);
+  material_data_list[where] = data;
+}
+
+void ParticleFieldExtractor::cache_value(string where, vector<int>& values,
 				 string &data) {
   data = vector_to_string(values);
   material_data_list[where] = data;
