@@ -706,10 +706,10 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
                                         numALL_matls,patch);  
       }
 
-      setBC(rho_CC,    "Density",      patch, d_sharedState, indx);    
-      setBC(rho_micro, "Density",      patch, d_sharedState, indx);    
-      setBC(Temp_CC,   "Temperature",  patch, d_sharedState, indx);    
-      setBC(vel_CC,    "Velocity",     patch, d_sharedState, indx);                   
+      setBC(rho_CC,    "Density",      patch, d_sharedState, indx, new_dw);    
+      setBC(rho_micro, "Density",      patch, d_sharedState, indx, new_dw);    
+      setBC(Temp_CC,   "Temperature",  patch, d_sharedState, indx, new_dw);    
+      setBC(vel_CC,    "Velocity",     patch, d_sharedState, indx, new_dw);                   
       for (CellIterator iter = patch->getExtraCellIterator();
                                                         !iter.done();iter++){
         IntVector c = *iter;
@@ -988,13 +988,13 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         rho_CC[c]    = cmass[c]/cell_vol;
       }
       //  Set BC's
-      setBC(Temp_CC, "Temperature",patch, d_sharedState, indx);
-      setBC(rho_CC,  "Density",    patch, d_sharedState, indx);
-      setBC(vel_CC,  "Velocity",   patch, d_sharedState, indx);
+      setBC(Temp_CC, "Temperature",patch, d_sharedState, indx, new_dw);
+      setBC(rho_CC,  "Density",    patch, d_sharedState, indx, new_dw);
+      setBC(vel_CC,  "Velocity",   patch, d_sharedState, indx, new_dw);
       //  Set if symmetric Boundary conditions
-      setBC(cmass,    "set_if_sym_BC",patch, d_sharedState, indx);
-      setBC(cvolume,  "set_if_sym_BC",patch, d_sharedState, indx);
-      setBC(sp_vol_CC,"set_if_sym_BC",patch, d_sharedState, indx); 
+      setBC(cmass,    "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
+      setBC(cvolume,  "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
+      setBC(sp_vol_CC,"set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
       
      //---- P R I N T   D A T A ------
      if(switchDebug_InterpolateNCToCC_0) {
@@ -1170,9 +1170,9 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
        
        //__________________________________
        //  Set Boundary conditions
-       setBC(cmomentum, "set_if_sym_BC",patch, d_sharedState, indx);
-       setBC(int_eng_L, "set_if_sym_BC",patch, d_sharedState, indx);
-       setBC(rho_CC,    "Density",      patch, d_sharedState, indx);  
+       setBC(cmomentum, "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
+       setBC(int_eng_L, "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
+       setBC(rho_CC,    "Density",      patch, d_sharedState, indx, new_dw);  
 
       //---- P R I N T   D A T A ------ 
       if(d_ice->switchDebugLagrangianValues) {

@@ -292,7 +292,7 @@ void SimpleRxn::initialize(const ProcessorGroup*,
                               f, FakeDiffusivity, fakedelT);
     }
         
-    setBC(f,"scalar-f", patch, sharedState,indx); 
+    setBC(f,"scalar-f", patch, sharedState,indx, new_dw); 
     
     //__________________________________
     // compute thermo-transport-physical quantities

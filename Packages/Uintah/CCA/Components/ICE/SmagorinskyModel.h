@@ -43,6 +43,7 @@ namespace Uintah {
                            const SFCZVariable<double>& wvel_FC,
                            const int indx,
                            SimulationStateP&  d_sharedState,
+                           DataWarehouse* new_dw,
                            StaticArray<CCVariable<double> >& SIJ);
     
     };// End class

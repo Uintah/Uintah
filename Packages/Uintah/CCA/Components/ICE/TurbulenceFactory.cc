@@ -83,7 +83,7 @@ void TurbulenceFactory::callTurb(DataWarehouse* new_dw,
     d_turbulence->computeTurbViscosity(new_dw,patch,vel_CC,uvel_FC,vvel_FC,
                                        wvel_FC,rho_CC,indx,d_sharedState,turb_viscosity);
 
-    setBC(turb_viscosity,    "zeroNeumann",  patch, d_sharedState, indx);
+    setBC(turb_viscosity, "zeroNeumann",  patch, d_sharedState, indx, new_dw);
     // make copy of turb_viscosity for visualization.
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
       IntVector c = *iter;    
