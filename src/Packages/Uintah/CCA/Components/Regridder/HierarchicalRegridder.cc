@@ -44,13 +44,23 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
 
 #ifdef BRYAN
   // this is for dividing the entire regridding problem into patchwise domains
+  DataWarehouse* old_dw = scheduler->get_dw(0);
+  DataWarehouse* new_dw = scheduler->getLastDW();
+  SchedulerP tempsched = scheduler->createSubScheduler();
+  tempsched->initialize(3, 1, old_dw, new_dw);
+  tempsched->clearMappings();
+  tempsched->mapDataWarehouse(Task::ParentOldDW, 0);
+  tempsched->mapDataWarehouse(Task::ParentNewDW, 1);
+  tempsched->mapDataWarehouse(Task::OldDW, 2);
+  tempsched->mapDataWarehouse(Task::NewDW, 3);
+  
   scheduler->initialize();
 
   int ngc;
   for ( int levelIndex = 0; levelIndex < oldGrid->numLevels(); levelIndex++ ) {
-    Task* dummy_task = new Task("DUMMY", this, &HierarchicalRegridder::dummyTask);
-    dummy_task->computes(d_sharedState->get_refineFlag_label());
-    scheduler->addTask(dummy_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
+    //Task* dummy_task = new Task("DUMMY", this, &HierarchicalRegridder::dummyTask);
+    //dummy_task->computes(d_sharedState->get_refineFlag_label());
+    //scheduler->addTask(dummy_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
 
     Task* dilate_task = new Task("RegridderCommon::Dilate2 Creation",
                                  dynamic_cast<RegridderCommon*>(this),
@@ -59,7 +69,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
     ngc = Max(d_cellCreationDilation.x(), d_cellCreationDilation.y());
     ngc = Max(ngc, d_cellCreationDilation.z());
     
-    dilate_task->requires(Task::NewDW, d_sharedState->get_refineFlag_label(), Ghost::AroundCells, ngc);
+    dilate_task->requires(Task::ParentNewDW, d_sharedState->get_refineFlag_label(), Ghost::AroundCells, ngc);
     dilate_task->computes(dilatedCellsCreation);
     scheduler->addTask(dilate_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
     if (d_cellCreationDilation != d_cellDeletionDilation) {
@@ -71,7 +81,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
       ngc = Max(d_cellDeletionDilation.x(), d_cellDeletionDilation.y());
       ngc = Max(ngc, d_cellDeletionDilation.z());
 
-      dilate_delete_task->requires(Task::NewDW, d_sharedState->get_refineFlag_label(), Ghost::AroundCells, ngc);
+      dilate_delete_task->requires(Task::ParentNewDW, d_sharedState->get_refineFlag_label(), Ghost::AroundCells, ngc);
       dilate_delete_task->computes(dilatedCellsDeletion);
       scheduler->addTask(dilate_delete_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
     }
@@ -208,8 +218,10 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
   rdbg << "HierarchicalRegridder::regrid() END" << endl;
 
   
-  if (*newGrid == *oldGrid)
+  if (*newGrid == *oldGrid) {
+    d_newGrid = false;
     return oldGrid;
+  }
   return newGrid;
 }
 
