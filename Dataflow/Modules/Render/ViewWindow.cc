@@ -77,13 +77,16 @@ namespace SCIRun {
 //static DebugSwitch autoview_sw("ViewWindow", "autoview");
 static ViewWindow::MapStringObjTag::iterator viter;
 
-void add_pt( ViewWindow *viewwindow, Point p, double s=.2 )
+#if 0
+static void
+add_pt( ViewWindow *viewwindow, Point p, double s=.2 )
 {
-  GeomSphere *obj = scinew GeomSphere;
-  obj->move(p, s);
-  viewwindow->viewwindow_objs.add(obj);
+  GeomSphere *obj = scinew GeomSphere(p, s);
+  viewwindow->viewwindow_objs.push_back(obj);
+  viewwindow->viewwindow_objs_draw.push_back(true);
   viewwindow->need_redraw = 1;
 }
+#endif
 
 ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
   : gui(gui), ctx(ctx), manager(s),
@@ -125,36 +128,24 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
   gui->add_command(id+"-c", this, 0);
   current_renderer=new OpenGL(gui);
   maxtag=0;
-  mouse_obj=0;
   ball = new BallData();
   ball->Init();
   // --  BAWGL -- 
   bawgl = new SCIBaWGL();
   // --  BAWGL -- 
-  viewwindow_objs.add( createGenAxes() );     
-  viewwindow_objs_draw.add(1);              
-//  viewwindow_objs_draw[0] = 1;
-  // XXX - UniCam addition:
-  // initialize focus sphere for UniCam
-  // the focus sphere is a sphere object -- let's color it blue.
-  // XXX - note to Utah-- it took a long time to figure out how to
-  // create a simple sphere & get it drawn.  I still can't easily
-  // control it's color.  I know i need to use a GeomMaterial, but
-  // when i include that file above in ViewWindow.cc & try to instantiate
-  // one w/ scinew (like in other example code), it claims
-  // GeomMaterial is an unknown type-- even though it's declaration
-  // has been included!?  very strange.  anyway, gave up on color.
-  // XXX - update:  Ah ha, i think i understand why it couldn't find the
-  // type GeomMaterial-- it isn't enough to just include that classes
-  // header file, you need to also have the declaration:
-  //       using <class name>
-  // In the case of GeomMaterial, it would look like:
-  //       #include <Core/Geom/Material.h>
-  //       using GeomMaterial;
-  focus_sphere      = scinew GeomSphere;
-  is_dot            = 0;
+  
+  // 0 - Axes, visible
+  viewwindow_objs.push_back( createGenAxes() );
+  viewwindow_objs_draw.push_back(true);              
 
+  // 1 - Unicam control sphere, not visible by default.
+  focus_sphere      = scinew GeomSphere;
+  Color c(0.0, 0.0, 1.0);
+  MaterialHandle focus_color = scinew Material(c);
+  viewwindow_objs.push_back(scinew GeomMaterial(focus_sphere, focus_color));
+  viewwindow_objs_draw.push_back(false);              
 }
+
 
 string ViewWindow::set_id(const string& new_id)
 {
@@ -894,25 +885,16 @@ void ViewWindow::unicam_pan(int X, int Y)
   MyTranslateCamera(trans);
 }
 
-void ViewWindow::ShowFocusSphere()
+void
+ViewWindow::ShowFocusSphere()
 {
-  for(int i=0;i<viewwindow_objs.size();i++)
-    if (viewwindow_objs[i] == focus_sphere) {
-      return;
-    }
-
-  viewwindow_objs.add(focus_sphere);
-  viewwindow_objs_draw.add(1);              
-//  viewwindow_objs_draw[viewwindow_objs_draw.size()-1] = 1;
+  viewwindow_objs_draw[1] = true;
 }
 
-void ViewWindow::HideFocusSphere()
+void
+ViewWindow::HideFocusSphere()
 {
-  for(int i=0;i<viewwindow_objs.size();i++)
-    if (viewwindow_objs[i] == focus_sphere) {
-      viewwindow_objs.remove(i);
-      viewwindow_objs_draw.remove(i);
-    }
+  viewwindow_objs_draw[1] = false;
 }
 
 // XXX - obsolete-- delete this method below.
@@ -1025,8 +1007,8 @@ void ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
       // they're not clicking on it now, OR if the user is
       // clicking on the perimeter of the screen, then we want
       // to go into rotation mode.
-      if ((fabs(curpt[0]) > .85 || fabs(curpt[1]) > .9) || is_dot) {
-	if (is_dot)
+      if ((fabs(curpt[0]) > .85 || fabs(curpt[1]) > .9) || viewwindow_objs_draw[1]) {
+	if (viewwindow_objs_draw[1])
 	  _center = focus_sphere->cen;
               
 	unicam_state = UNICAM_ROT;
@@ -1054,13 +1036,11 @@ void ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
     break;
 
   case MouseEnd:
-    if (unicam_state == UNICAM_ROT && is_dot ) {
+    if (unicam_state == UNICAM_ROT && viewwindow_objs_draw[1] ) {
       HideFocusSphere();
-      is_dot = 0;
     } else if (unicam_state == UNICAM_CHOOSE) {
-      if (is_dot) {
+      if (viewwindow_objs_draw[1]) {
 	HideFocusSphere();
-	is_dot = 0;
       } else {
 	// XXX - need to select 's' to make focus_sphere 1/4 or so
 	// inches on the screen always...  how?
@@ -1070,7 +1050,6 @@ void ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
 
 	focus_sphere->move(_down_pt, s);
 	ShowFocusSphere();
-	is_dot = 1;
       }
     }
         
@@ -2187,12 +2166,10 @@ void ViewWindow::force_redraw()
 void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
 {
 				// Do internal objects first...
-  int i;
-//  viewwindow_objs_draw[0]=caxes.get();
-//  cerr << "caxes = "<<(int)viewwindow_objs_draw[0]<<"\n";
+  unsigned int i;
   for (i = 0; i < viewwindow_objs.size(); i++){
-    if(viewwindow_objs_draw[i] == 1) {
-      (r->*pmf)(manager, this, viewwindow_objs[i]);
+    if (viewwindow_objs_draw[i] == 1) {
+      (r->*pmf)(manager, this, viewwindow_objs[i].get_rep());
     }
   }
 
@@ -2231,7 +2208,8 @@ void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
 	}
       }
       else {
-	cerr << "Warning: object " << si->name_ << " not in visibility database...\n";
+	cerr << "Warning: object " << si->name_ <<
+	  " not in visibility database...\n";
       }
     }
   }
@@ -2301,7 +2279,7 @@ void ViewWindow::setView(View newView) {
   manager->mailbox.send(scinew ViewerMessage(id)); // Redraw
 }
 
-GeomGroup* ViewWindow::createGenAxes() {     
+GeomHandle ViewWindow::createGenAxes() {     
   
   MaterialHandle dk_red = scinew Material(Color(0,0,0), Color(.2,0,0),
 					  Color(.5,.5,.5), 20);
