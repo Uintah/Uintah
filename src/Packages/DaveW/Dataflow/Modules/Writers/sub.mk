@@ -19,7 +19,6 @@ SRCDIR   := DaveW/Modules/Writers
 
 SRCS     += \
 	$(SRCDIR)/ContourSetWriter.cc\
-	$(SRCDIR)/PathWriter.cc\
 	$(SRCDIR)/SegFldWriter.cc\
 	$(SRCDIR)/SigmaSetWriter.cc\
 	$(SRCDIR)/TensorFieldWriter.cc\
@@ -34,6 +33,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/07/19 06:27:32  samsonov
+# aPathWriter moved to PSECommon
+#
 # Revision 1.4  2000/06/08 22:46:21  moulding
 # Added a comment note about not messing with the module maker comment lines,
 # and how to edit this file by hand.
