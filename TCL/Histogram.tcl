@@ -44,6 +44,10 @@ itcl_class Histogram {
     method config {config} {
     }
 
+    #method setsize {w h config} {
+	#puts stdout ".canvas - width = $w, height = $h"
+    #}
+
     protected canvasx
     protected canvasy
     protected xmin
@@ -68,6 +72,7 @@ itcl_class Histogram {
 	canvas $hist.canvas -scrollregion {0 0 745 410} \
 		-width 745 -height 410
 	bind $hist.canvas <Motion> "$this mouse %x"
+	# Resize? bind $hist.canvas <Configure> "$this setsize %w %h"
 	pack $hist.canvas -side left -padx 2 -pady 2 -fill both -expand yes
 	pack $hist -fill both -expand yes
 
