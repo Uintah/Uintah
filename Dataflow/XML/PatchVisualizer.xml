@@ -19,6 +19,10 @@
         <name>Data Archive</name>
         <datatype>Uintah::Archive</datatype>
       </port>
+     <port>
+       <name>ColorMap</name>
+       <datatype>SCIRun::ColorMap</datatype>
+     </port>
     </inputs>
     <outputs>
       <port>
