@@ -82,12 +82,14 @@ VectorMagnitude::execute()
 
   FieldHandle fieldin;
 
-  if (!ifp) {
+  if (!ifp)
+  {
     error( "Unable to initialize iport 'Input Field'.");
     return;
   }
 
-  if (!(ifp->get(fieldin) && fieldin.get_rep())) {
+  if (!(ifp->get(fieldin) && fieldin.get_rep()))
+  {
     error( "No handle or representation." );
     return;
   }
@@ -99,18 +101,13 @@ VectorMagnitude::execute()
   }
 
   // If no data or a changed recalcute.
-  if( !fieldout_.get_rep() ||
-      fGeneration_ != fieldin->generation ) {
+  if( !fieldout_.get_rep() || fGeneration_ != fieldin->generation )
+  {
     fGeneration_ = fieldin->generation;
 
     const TypeDescription *ftd = fieldin->get_type_description(0);
-
-#ifdef __sgi
     const TypeDescription *ttd = fieldin->get_type_description(-1);
     CompileInfoHandle ci = VectorMagnitudeAlgo::get_compile_info(ftd, ttd);
-#else
-    CompileInfoHandle ci = VectorMagnitudeAlgo::get_compile_info(ftd);
-#endif
 
     Handle<VectorMagnitudeAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
@@ -119,10 +116,12 @@ VectorMagnitude::execute()
   }
 
   // Get a handle to the output field port.
-  if( fieldout_.get_rep() ) {
+  if ( fieldout_.get_rep() )
+  {
     FieldOPort* ofp = (FieldOPort *) get_oport("Output VectorMagnitude");
 
-    if (!ofp) {
+    if (!ofp)
+    {
       error("Unable to initialize oport 'Output VectorMagnitude'.");
       return;
     }
@@ -134,12 +133,8 @@ VectorMagnitude::execute()
 
 
 CompileInfoHandle
-#ifdef __sgi
 VectorMagnitudeAlgo::get_compile_info(const TypeDescription *ftd,
 				      const TypeDescription *ttd)
-#else
-VectorMagnitudeAlgo::get_compile_info(const TypeDescription *ftd)
-#endif
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -148,19 +143,12 @@ VectorMagnitudeAlgo::get_compile_info(const TypeDescription *ftd)
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-#ifdef __sgi
 		       ttd->get_filename() + ".",
-#else
-		       ftd->get_filename() + ".",		       
-#endif
                        base_class_name, 
                        template_class_name, 
-#ifdef __sgi
                        ttd->get_name() + "," +
                        ftd->get_name() + "<double> ");
-#else
-                       ftd->get_name());
-#endif  
+
   // Add in the include path to compile this obj
   rval->add_include(include_path);
   ftd->fill_compile_info(rval);
