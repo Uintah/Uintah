@@ -19,7 +19,7 @@ void Pio(Piostream&, rtrt::Image*&);
 
 namespace rtrt {
 
-struct Pixel : SCIRun::Persistent {
+struct Pixel : public SCIRun::Persistent {
   unsigned char r;
   unsigned char g;
   unsigned char b;
