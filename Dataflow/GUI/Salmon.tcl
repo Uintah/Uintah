@@ -105,6 +105,8 @@ itcl_class Roe {
 	set $this-framerate 15
 	global $this-totframes
 	set $this-totframes 30
+        set $this-caxes 1
+
 	#
 	# Get the list of supported renderers for the pulldown
 	#
@@ -421,8 +423,7 @@ itcl_class Roe {
 	bind $w <Lock-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
-        set $this-caxes 1
-	$this-c autoview  
+	bind $w <Map> "$this-c autoview"
     }
 
     method removeMFrame {w} {
