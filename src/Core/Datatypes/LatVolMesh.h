@@ -269,22 +269,26 @@ public:
 
   LatVolMesh()
     : min_x_(0), min_y_(0), min_z_(0),
-      nx_(1),ny_(1),nz_(1),min_(Point(0,0,0)),max_(Point(1,1,1)) {}
+      nx_(1),ny_(1),nz_(1),min_(Point(0,0,0)),max_(Point(1,1,1)) 
+    {  Vector p = max_-min_; cell_volume_ = (p.x()/(nx_-1))*(p.y()/(ny_-1))*(p.z()/(nz_-1));}
   LatVolMesh(unsigned x, unsigned y, unsigned z, 
 	     const Point &min, const Point &max) 
     : min_x_(0), min_y_(0), min_z_(0),
-      nx_(x), ny_(y), nz_(z), min_(min),max_(max) {}
+      nx_(x), ny_(y), nz_(z), min_(min),max_(max) 
+    {  Vector p = max_-min_; cell_volume_ = (p.x()/(nx_-1))*(p.y()/(ny_-1))*(p.z()/(nz_-1));}
   LatVolMesh( LatVolMesh* mh,
 	      unsigned mx, unsigned my, unsigned mz,
 	      unsigned x, unsigned y, unsigned z)
     : min_x_(mx), min_y_(my), min_z_(mz),
-      nx_(x), ny_(y), nz_(z), min_(mh->min_),max_(mh->max_) {}
+      nx_(x), ny_(y), nz_(z), min_(mh->min_),max_(mh->max_) 
+    {  Vector p = max_-min_; cell_volume_ = (p.x()/(nx_-1))*(p.y()/(ny_-1))*(p.z()/(nz_-1));}
   LatVolMesh(const LatVolMesh &copy)
     : min_x_(copy.min_x_), min_y_(copy.min_y_), min_z_(copy.min_z_),
       nx_(copy.get_nx()),ny_(copy.get_ny()),nz_(copy.get_nz()),
       min_(copy.get_min()),max_(copy.get_max()) {}
   virtual LatVolMesh *clone() { return new LatVolMesh(*this); }
-  virtual ~LatVolMesh() {}
+  virtual ~LatVolMesh() 
+    {  Vector p = max_-min_; cell_volume_ = (p.x()/(nx_-1))*(p.y()/(ny_-1))*(p.z()/(nz_-1));}
 
   node_index  node(unsigned i, unsigned j, unsigned k) const
     { return node_index(i, j, k); }
@@ -319,16 +323,19 @@ public:
   Point get_max() const { return max_; }
   Vector diagonal() const { return max_-min_; }
   virtual BBox get_bounding_box() const;
+  double get_volume(cell_index &) { return cell_volume_; }
+  double get_area(face_index &) { return 0; }
+  double get_element_size(cell_index &) { return cell_volume_; }
 
   //! set the mesh statistics
   void set_min_x(unsigned x) {min_x_ = x; }
   void set_min_y(unsigned y) {min_y_ = y; }
   void set_min_z(unsigned z) {min_z_ = z; }
-  void set_nx(unsigned x) { nx_ = x; }
-  void set_ny(unsigned y) { ny_ = y; }
-  void set_nz(unsigned z) { nz_ = z; }
-  void set_min(Point p) { min_ = p; }
-  void set_max(Point p) { max_ = p; }
+  void set_nx(unsigned x) { nx_ = x; Vector v = max_-min_; cell_volume_ = (v.x()/(nx_-1))*(v.y()/(ny_-1))*(v.z()/(nz_-1));}
+  void set_ny(unsigned y) { ny_ = y; Vector v = max_-min_; cell_volume_ = (v.x()/(nx_-1))*(v.y()/(ny_-1))*(v.z()/(nz_-1));}
+  void set_nz(unsigned z) { nz_ = z; Vector v = max_-min_; cell_volume_ = (v.x()/(nx_-1))*(v.y()/(ny_-1))*(v.z()/(nz_-1));}
+  void set_min(Point p) { min_ = p; Vector v = max_-min_; cell_volume_ = (v.x()/(nx_-1))*(v.y()/(ny_-1))*(v.z()/(nz_-1));}
+  void set_max(Point p) { max_ = p; Vector v = max_-min_; cell_volume_ = (v.x()/(nx_-1))*(v.y()/(ny_-1))*(v.z()/(nz_-1));}
 
 
   //! get the child elements of the given index
@@ -388,6 +395,9 @@ private:
 
   //! the object space extents of a LatVolMesh
   Point min_, max_;
+
+  //! volume of each cell
+  double cell_volume_;
 
   // returns a LatVolMesh
   static Persistent *maker() { return new LatVolMesh(); }

@@ -118,6 +118,15 @@ public:
 
   void set_point(const Point &point, node_index index)
   { points_[index] = point; }
+
+  double get_volume(cell_index &ci) {
+    node_array ra; 
+    get_nodes(ra,ci);
+    return (Cross(Cross(ra[1]-ra[0],ra[2]-ra[0]),ra[3]-ra[0])).length2()*
+      0.1666666666666666;
+  }
+  double get_area(face_index &) { return 0; }
+  double get_element_size(cell_index &ci) { return get_volume(ci); }
   
   //! the double return val is the volume of the tet.
   double get_gradient_basis(cell_index ci, Vector& g0, Vector& g1, 
