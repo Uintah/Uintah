@@ -33,57 +33,27 @@
  */
 
 #include <Core/Parts/GuiVar.h>
+#include <Core/Parts/Part.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
-#include <iostream>
-using std::cerr;
-using std::endl;
-using std::ostream;
-
-
 namespace SCIRun {
 
-GuiVar::GuiVar(const string& name, const string& id, Part *part)
-  : varname_(name), is_reset_(1), part(part), id_(id)
+GuiVar::GuiVar(const string& name, Part *part)
+  : name_(name), part_(part)
 {
+  part_->add_gui_var( this );
 }
 
 GuiVar::~GuiVar()
 {
+  part_->rem_gui_var( this );
 }
 
-void 
-GuiVar::reset()
+void
+GuiVar::update() 
 {
-  is_reset_=1;
-}
-
-string 
-GuiVar::str()
-{
-  return varname_;
-}
-
-string 
-GuiVar::format_varname() 
-{
-  int state=0;
-  int end_of_modulename = -1;
-  //int space = 0;
-  for (unsigned int i=0; i<varname_.size(); i++) {
-    if (varname_[i] == ' ') return "unused";
-    if (state == 0 && varname_[i] == '_') state=1;
-    else if (state == 1 && isdigit(varname_[i])) state = 2;
-    else if (state == 2 && isdigit(varname_[i])) state = 2;
-    else if (state == 2 && varname_[i] == '-') {
-      end_of_modulename = i;
-      state = 0;
-    } else state = 0;
-  }
-  if (end_of_modulename == -1)
-    cerr << "Error -- couldn't format name "<< varname_ << endl;
-  return varname_.substr(end_of_modulename+1);
+  part_->var_set( this ); 
 }
 
 template class GuiTriple<Point>;

@@ -32,9 +32,6 @@
 #define GuiVar_h 
 
 #include <Core/share/share.h>
-#include <Core/Parts/Part.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/GuiInterface/GuiManager.h>
 #include <string>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -52,111 +49,52 @@ namespace SCIRun {
 
 class Part;
 
-class SCICORESHARE GuiVar {
+class GuiVar {
 protected:
-  string id_;
-  string varname_;
-  int is_reset_;
-  Part* part;
+  string name_;
+  Part* part_;
 public:
-  GuiVar(const string& name, const string& id, Part *part);
+  GuiVar(const string& name, Part *part) ;
   virtual ~GuiVar();
-  virtual void reset();
+  
+  const string &name() { return name_; }
 
-  string format_varname();
+  void update();
 
-  string str();
+  virtual void string_set( const string & ) {}
   virtual void emit(std::ostream& out, string& midx)=0;
 
-  const string &get_var() 
-  {
-    return part->get_var( id_, varname_ );
-  }
-
-  void set_var( const string& v ) 
-  {
-    part->set_var( id_, varname_, v );
-  }
+  // backward compatibility
+  const string &str() { return name_; }
+  void reset() {}
 };
   
-class GuiInt : public GuiVar {
-  int value_;
-public:
-  GuiInt( const string &name, const string &id, Part *part ) :
-    GuiVar( name, id, part ) {}
-  virtual ~GuiInt() {}
-
-  int get() { string_to_int( get_var(), value_ ); return value_; }
-  void set( const int v ) { set_var( to_string( v ) ); }
-  virtual void emit(std::ostream& out, string& midx) {
-    out << "set " << midx << "-" << format_varname() << " {"
-	<< get() << "}" << endl;
-  }
-};
-
-class GuiDouble : public GuiVar {
-  double value_;
-public:
-  GuiDouble( const string &name, const string &id, Part *part ) :
-    GuiVar( name, id, part ) {}
-  virtual ~GuiDouble() {}
-
-  double get() { string_to_double( get_var(), value_ ); return value_; }
-  void set( const double v ) { set_var( to_string( v ) ); }
-  virtual void emit(std::ostream& out, string& midx) {
-    out << "set " << midx << "-" << format_varname() << " {"
-	<< get() << "}" << endl;
-  }
-};
-
-class GuiString : public GuiVar {
-  string value_;
-public:
-  GuiString( const string &name, const string &id, Part *part ) :
-    GuiVar( name, id, part ) {}
-  virtual ~GuiString() {}
-
-  string get() { value_ = get_var(); return value_; }
-  void set( const string &v ) { set_var( v ); }
-  virtual void emit(std::ostream& out, string& midx) {
-    out << "set " << midx << "-" << format_varname() << " {"
-	<< get() << "}" << endl;
-  }
-};
-
-
-template <class T>
-class GuiSingle : public GuiVar
-{
+template<class T>
+class GuiTypedVar : public GuiVar {
   T value_;
 public:
-  GuiSingle(const string& name, const string& id, Part* part) :
-    GuiVar(name, id, part) {}
-  
-  virtual ~GuiSingle() {}
+  GuiTypedVar( const string &name, Part *part ) : GuiVar( name, part ) {}
 
-  inline T get() {
-    cerr << "GET " << id_ << " :: " << varname_ << endl;
-    return 0;
-    //return gm->get(value_, varname_, is_reset_);
-  }
-  inline void set(const T value) {
-    cerr << "SET " << id_ << " :: " << varname_ << " = " << value_ << endl;
-//     if(value != value_) {
-//       value_ = value;
-//       gm->set(value_, varname_, is_reset_);
-//     }
-  }
+  // backward compatibility
+  GuiTypedVar( const string &name, const string &, Part *part ) 
+    : GuiVar( name, part ) {}
+  virtual ~GuiTypedVar() {}
 
+  const T &get() { return value_; }
+  void set( const T &v ) { value_ = v; update(); }
   virtual void emit(std::ostream& out, string& midx) {
-    out << "set " << midx << "-" << format_varname() << " {"
-	<< get() << "}" << endl;
+    out << "set " << midx << "-" << name_ << " {" << value_ << "}" << endl;
   }
 };
 
 
-typedef GuiSingle<double> GuiVardouble;  // NEED TO GET RID OF
-typedef GuiSingle<int> GuiVarint;   // NEED TO GET RID OF
+typedef GuiTypedVar<int> GuiInt;
+typedef GuiTypedVar<double> GuiDouble;
+typedef GuiTypedVar<string> GuiString;
+
+
+typedef GuiTypedVar<double> GuiVardouble;  // NEED TO GET RID OF
+typedef GuiTypedVar<int> GuiVarint;   // NEED TO GET RID OF
 
 template <class T>
 class GuiTriple : public GuiVar
@@ -165,11 +103,11 @@ class GuiTriple : public GuiVar
   GuiDouble y_;
   GuiDouble z_;
 public:
-  GuiTriple(const string& name, const string& id, Part* part) :
-    GuiVar(name, id, part),
-    x_("x", str(), part),
-    y_("y", str(), part),
-    z_("z", str(), part)
+  GuiTriple(const string& name, Part* part) :
+    GuiVar(name, part),
+    x_("x", part),
+    y_("y", part),
+    z_("z", part)
   {}
   virtual ~GuiTriple() {}
 

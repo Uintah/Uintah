@@ -49,61 +49,70 @@ class GuiVar;
 class PartPort;
 
 class Part  {
+public:
+  typedef map<string, GuiVar *> VarList;
+
 protected:
   string name_;
   string type_;
   Part *parent_;
   PartPort *port_;
   vector<Part*> children_;
-  vector<GuiVar *> vars_;
+  VarList vars_;
 
 public:
-  Part( Part *parent=0, const string &name="", const string &type="" );
+  Part( Part *parent=0, const string &name="", const string &type="",
+	bool initialize=true);
   virtual ~Part();
 
   const string &name() { return name_; }
   const string &type() { return type_; }
+  PartPort *get_port() { return port_; };
 
   virtual void init();
 
   void add_child( Part *child );
   void rem_child( Part *child );
 
-  vector<GuiVar*> &get_gui_vars() { return vars_; }
+  const VarList &get_gui_vars() { return vars_; }
 
-  virtual void add_gui_var( GuiVar * );
-  virtual void rem_gui_var( GuiVar * );
-  const string &get_var( const string &, const string &);
-  void set_var( const string &, const string &, const string & );
-  
+  void add_gui_var( GuiVar * );
+  void rem_gui_var( GuiVar * );
+
+  // Send vars/commands to the GUI
+  void var_set( GuiVar *);
+  void command( const string & );
+  void eval( const string &, string & );
+
+  template <class T> T *find_var( const string &name ) 
+  {
+    map<string,GuiVar *>::iterator i = vars_.find( name );
+    if ( i == vars_.end() ) return 0;
+    return dynamic_cast<T *>(i->second);
+  }
+
   virtual void emit_vars( ostream& out, string &midx );
 
   // tcl compatibility
   virtual void tcl_command( TCLArgs &, void *) {}
-  void reset_vars();
+  void reset_vars() {}
   
-  static Signal1<const string &> tcl_execute;
-  static Signal2<const string &, string &> tcl_eval;
-  static Signal3<const string &, Part *, void *> tcl_add_command;
-  static Signal1<const string &> tcl_delete_command;
-
+  void tcl_execute( const string &cmd ) { command( cmd ); }
+  void tcl_eval( const string &cmd, string &results ) { eval(cmd, results); }
+  void tcl_add_command( const string & ) { cerr << "tcl_add_command\n"; }
+  void tcl_rem_command( const string & ) { cerr << "tcl_add_command\n"; }
+  
   static int get_gui_stringvar(const string &, const string &, string & );
   static int get_gui_doublevar(const string &, const string &, double & );
   static int get_gui_intvar(const string &, const string &, int & );
   static void set_gui_var(const string &, const string &, const string & );
+
+  friend PartPort;
 };
 
-class PartPort {
-private:
-  Part *part_;
-
-public:
-  PartPort( Part *part) : part_(part) {}
-  virtual ~PartPort() {}
-
-  vector<GuiVar *> &get_gui_vars() { return part_->get_gui_vars(); }
-};
 
 } // namespace SCIRun
 
 #endif // SCI_Part_h
+
+
