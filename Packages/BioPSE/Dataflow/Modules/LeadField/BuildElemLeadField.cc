@@ -143,21 +143,23 @@ void BuildElemLeadField::execute() {
     int i;
     for (i=0; i<nnodes; i++) (*rhs)[i]=0;
 
-    Array1<int> idx;
-    Array1<double> val;
+    int *idx;
+    double *val;
+    int idxsize;
+    int idxstride;
 
-    interp_in->getRowNonzeros(0, idx, val);
-    if (!idx.size()) ASSERTFAIL("No mesh node assigned to this element!");
-    for (i=0; i<idx.size(); i++) {
-      if (idx[i] >= nnodes) ASSERTFAIL("Mesh node out of range!");
-      (*rhs)[idx[i]]+=val[i];
+    interp_in->getRowNonzerosNoCopy(0, idxsize, idxstride, idx, val);
+    if (!idxsize) ASSERTFAIL("No mesh node assigned to this element!");
+    for (i=0; i<idxsize; i++) {
+      if (idx[i*idxstride] >= nnodes) ASSERTFAIL("Mesh node out of range!");
+      (*rhs)[idx?idx[i*idxstride]:i]+=val[i*idxstride];
     }
 
-    interp_in->getRowNonzeros(counter+1, idx, val);
-    if (!idx.size()) ASSERTFAIL("No mesh node assigned to this element!");
-    for (i=0; i<idx.size(); i++) {
-      if (idx[i] >= nnodes) ASSERTFAIL("Mesh node out of range!");
-      (*rhs)[idx[i]]-=val[i];
+    interp_in->getRowNonzerosNoCopy(counter+1, idxsize, idxstride, idx, val);
+    if (!idxsize) ASSERTFAIL("No mesh node assigned to this element!");
+    for (i=0; i<idxsize; i++) {
+      if (idx[i*idxstride] >= nnodes) ASSERTFAIL("Mesh node out of range!");
+      (*rhs)[idx?idx[i*idxstride]:i]-=val[i*idxstride];
     }
 
     if (counter<(nelecs-2)) {

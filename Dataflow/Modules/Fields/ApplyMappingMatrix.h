@@ -111,8 +111,11 @@ ApplyMappingMatrixAlgoT<FSRC, LSRC,
   ASSERT((unsigned int)(mapping->ncols()) == fsrc->fdata().size())
 
   typename LDST::iterator dbi, dei;
-  Array1<int> idx;
-  Array1<double> val;
+  int *idx;
+  double *val;
+  int idxsize;
+  int idxstride;
+
   int i;
   unsigned int counter = 0; 
 
@@ -121,18 +124,16 @@ ApplyMappingMatrixAlgoT<FSRC, LSRC,
 
   while (dbi != dei)
   {
-    idx.remove_all();
-    val.remove_all();
-    mapping->getRowNonzeros(counter, idx, val);
+    mapping->getRowNonzerosNoCopy(counter, idxsize, idxstride, idx, val);
     
     ACCUM accum(0);
-    for (i = 0; i < idx.size(); i++)
+    for (i = 0; i < idxsize; i++)
     {
       typename FSRC::value_type v;
       typename LSRC::index_type index;
-      msrc->to_index(index, (unsigned int)idx[i]);
+      msrc->to_index(index, idx?(unsigned int)idx[i*idxstride]:i);
       fsrc->value(v, index);
-      accum += v * val[i];
+      accum += v * val[i*idxstride];
     }
     fdst->set_value((typename FDST::value_type)accum, *dbi);
     

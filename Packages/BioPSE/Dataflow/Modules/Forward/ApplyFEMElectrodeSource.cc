@@ -359,8 +359,10 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
       hBoundaryMesh->begin(nodeItr);
       hBoundaryMesh->end(nodeItrEnd);
 
-      Array1<int>       meshNodeIndex;
-      Array1<double>    weight;
+      int *       meshNodeIndex;
+      double *    weight;
+      int meshNodeIndexsize;
+      int meshNodeIndexstride;
 
       int numBoundaryNodes = hBoundaryToMesh->nrows();
 
@@ -370,9 +372,11 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
         hBoundaryMesh->get_point(p, *nodeItr);
 
         // Find the corresponding node index in the body (TriSurf) mesh.
-        hBoundaryToMesh->getRowNonzeros(*nodeItr, meshNodeIndex, weight);
+        hBoundaryToMesh->getRowNonzerosNoCopy(*nodeItr, meshNodeIndexsize,
+                                              meshNodeIndexstride,
+                                              meshNodeIndex, weight);
 		
-        int rhsIndex = meshNodeIndex[0];
+        int rhsIndex = meshNodeIndex?meshNodeIndex[0]:0;
 
         // Get the value for the current at this node and store this
         // value in the RHS output vector
@@ -757,13 +761,17 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
           current = basisInt * (*currentPattern)[ nodeElectrodeMap[i] ];
         }
 
-        Array1<int>       meshNodeIndex;
-        Array1<double>    weight;
+        int *meshNodeIndex;
+        double *weight;
+        int meshNodeIndexsize;
+        int meshNodeIndexstride;
 
         // Find the corresponding TriSurfMesh node index
-        hBoundaryToMesh->getRowNonzeros(i, meshNodeIndex, weight);
+        hBoundaryToMesh->getRowNonzerosNoCopy(i, meshNodeIndexsize,
+                                              meshNodeIndexstride,
+                                              meshNodeIndex, weight);
 	
-        int rhsIndex = meshNodeIndex[0];
+        int rhsIndex = meshNodeIndex?meshNodeIndex[0]:0;
 
         (*rhs)[rhsIndex] = current;
 
