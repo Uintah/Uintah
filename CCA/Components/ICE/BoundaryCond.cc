@@ -11,6 +11,8 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/fillFace.h>
+#include <Packages/Uintah/Core/Grid/CircleBCData.h>
+
 #include <typeinfo>
 #include <Core/Util/DebugStream.h>
 #include <Core/Exceptions/InternalError.h>
@@ -350,7 +352,7 @@ void setBC(CCVariable<double>& press_CC,
         //  hardwiring for NGC nozzle simulation   
         #define ICEBoundaryCond_1
         #include "../MPMICE/NGC_nozzle.i"
-        #undef ICEBoundaryCond_1                                  
+        #undef ICEBoundaryCond_1                           
                                             
         //__________________________________________________________
         // Tack on hydrostatic pressure after Dirichlet or Neumann BC
