@@ -16,6 +16,8 @@ using namespace std;
 using SCIRun::Thread;
 using SCIRun::Time;
 
+namespace rtrt {
+
 Grid2::Grid2(Object* obj, int nsides)
     : Object(0), obj(obj), nsides(nsides)
 {
@@ -448,7 +450,7 @@ void Grid2::insert(Object* object, const BBox& obj_bbox)
   object->set_grid_position (tag_in > 0, tag_out > 0);
 }
 
-
+} // end namespace
 
 
 /*
