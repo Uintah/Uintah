@@ -1,0 +1,3820 @@
+/*
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+*/
+
+
+/*
+ *  MRITissueClassifier.cc
+ *
+ *  Written by:
+ *   Tolga Tasdizen and McKay Davis
+ *   Scientific Computing and Imaging Institute
+ *   University of Utah
+ *   February 2004
+ *
+ *  Copyright (C) 2004 SCI Institute
+ */
+
+
+#include <Teem/Dataflow/Modules/Segmentation/MRITissueClassifier.h>
+#include <Core/Math/MinMax.h>
+#include <iostream>
+#include <math.h>
+
+
+
+namespace SCIRun {
+
+
+
+// FUNCTIONS used from VISPACK:
+// VISmin, VISmax: min/max functions templated over argument type
+// floodFill: 2D and 3D floodfill, 2 versions: (i) label replacement, (ii) threshold
+// opening, closing, dilate, erode: morphology functions
+// misc. linear algebra functions
+
+#define TRYKEYWORD(var, pref, keyword) 
+/*{ 
+ * sprintf(scan_keyword, "%s%s", pref, keyword); 
+ * VPF::set(var, pf[scan_keyword][0]); 
+ * } 
+*/
+
+#define TINY (1.0e-12f)
+#define NBINMAX 500 // max number of bins to use in 1D histograms
+
+// tissue labels
+#define T_BACKGROUND 0
+#define T_CSF 1
+#define T_GM 2
+#define T_WM 3
+#define T_BONE 4
+#define T_MARROW 5
+#define T_MUSCLE 6
+#define T_FAT 7
+#define T_SINUS 8
+#define T_EYE 9
+#define T_EYE_LENS 10
+
+// temporary labels
+#define T_FOREGROUND 21
+#define T_INTRACRANIAL 22
+
+void
+bubble_sort (float *list, int n)
+{
+  float tmp;
+  int i, j;
+  
+  for (i=0; i<n-1; i++)
+    {
+    for (j=0; j<n-1-i; j++)
+      if (list[j+1] < list[j])
+        {  
+        tmp = list[j];     
+        list[j] = list[j+1];
+        list[j+1] = tmp;
+        }
+    }
+}
+
+int
+distmap_4ssed( int *map, int n[2] )
+{
+  /*=======================================================================
+    
+  Program:  Distance Transforms
+  Module:   $Id$
+  Date:     $Date$
+  Language: C
+   
+  Author:   Olivier Cuisenaire, http://ltswww.epfl.ch/~cuisenai
+             
+  Descr.: distmap_4ssed(int *map, int n[2])
+ 
+   Takes an image (map) of integers of size n[0]*n[1] as input. It
+   computes for all pixels the square of the Euclidean distance to
+   the nearest zero pixel using the 4SSED algorithm. Note that this is
+   only an approximation of the Euclidean DT.
+ 
+  Reference for the algorithm:
+   
+   P.E. Danielsson, "Euclidean distance mapping", Computer Graphics and
+   Image Processing, 14, pp. 227-248, 1980
+ 
+   F. Leymarie and M.L. Levine, "Fast raster-scan distance propagation on
+   the discrete rectangular lattice", CVGIP: Image Understanding, 55, pp.
+   85-94, 1992.
+    
+  Reference for the implementation:
+ 
+   Chapter 2 of "Distance transformations: fast algorithms and applications
+   to medical image processing", Olivier Cuisenaire's Ph.D. Thesis, October
+   1999, Universit? catholique de Louvain, Belgium.
+     
+  Terms of Use:
+ 
+   You can use/modify this program for any use you wish, provided you cite
+   the above references in any publication that uses it.
+     
+  Disclaimer:
+                                                                                                 
+   In no event shall the authors or distributors be liable to any party for
+   direct, indirect, special, incidental, or consequential damages arising out
+   of the use of this software, its documentation, or any derivatives thereof,
+   even if the authors have been advised of the possibility of such damage.
+    
+   The authors and distributors specifically disclaim any warranties, including,
+   but not limited to, the implied warranties of merchantability, fitness for a
+   particular purpose, and non-infringement.  this software is provided on an
+   "as is" basis, and the authors and distributors have no obligation to provide
+   maintenance, support, updates, enhancements, or modifications.
+    
+   =========================================================================*/
+  
+  /***********************
+    
+    IMPORTANT NOTICE: at first we generate a signed EDT, under the form 
+    of a array n[0]xn[1] of vectors (dx,dy) coded as two shorts in the
+    memory case of an integer in the input image. 
+
+    Later, these two shorts are replaced by the integer value dx*dx+dy*dy
+
+  **********************/
+
+  int *sq,*dummy;
+
+  int i;
+  int nmax,maxi;
+  int maxx=n[0]-1; int maxy=n[1]-1;
+
+  int x,y,*pt,*tpt;
+  short *dx,*dy,*tdx,*tdy;
+
+  short *ts;
+  int *ti;
+
+ /* initialisation */
+  nmax=n[0]; if(nmax<n[1]) nmax=n[1];
+  dummy=(int*)calloc(4*nmax+1,sizeof(int)); sq=dummy+2*nmax;
+  for(i=2*nmax;i>=0;i--) sq[-i]=sq[i]=i*i;
+
+  ti=&maxi; ts=(short*)ti; *ts=nmax; *(ts+1)=nmax;
+  maxi=nmax+256*256*nmax;
+
+  for(y=0,pt=map;y<=maxy;y++)
+    for(x=0;x<=maxx;x++,pt++) 
+      if(*pt!=0) *pt=maxi;
+  
+  /* compute simple signed DT */
+
+  /* first raster scan */
+
+  for(y=0;y<=maxy;y++)
+    {
+      pt=map+y*n[0];
+      for(x=0;x<=maxx;x++,pt++) 
+	{
+	  dx=(short *)pt;
+	  dy=dx+1;
+	  
+	  if(y>0)
+	    {
+	      tpt=pt-n[0];
+	      tdx=(short *)tpt;
+	      tdy=tdx+1;
+	      if(sq[*dx]+sq[*dy]>sq[*tdx]+sq[*tdy+1]) { *dx=*tdx; *dy=*tdy+1; }
+	    }
+
+	  if(x>0)
+	    {
+	      tpt=pt-1;
+	      tdx=(short *)tpt;
+	      tdy=tdx+1;
+	      if(sq[*dx]+sq[*dy]>sq[*tdx+1]+sq[*tdy]) { *dx=*tdx+1; *dy=*tdy; }
+	    }
+	}
+      pt=map+y*n[0]+maxx-1;
+      for(x=maxx-1;x>=0;x--,pt--) 
+	{
+	  dx=(short *)pt;
+	  dy=dx+1;
+	  
+	  tpt=pt+1;
+	  tdx=(short *)tpt;
+	  tdy=tdx+1;
+	  if(sq[*dx]+sq[*dy]>sq[*tdx-1]+sq[*tdy]) { *dx=*tdx-1; *dy=*tdy; }
+	}
+    }
+
+  /* second raster scan */
+
+  for(y=maxy,pt=map+n[0]*n[1]-1;y>=0;y--)
+    {
+      pt=map+n[0]*y+maxx;
+      for(x=maxx;x>=0;x--,pt--) 
+	{
+	  dx=(short *)pt;
+	  dy=dx+1;
+	  
+	  if(y<maxy)
+	    {
+	      tpt=pt+n[0];
+	      tdx=(short *)tpt;
+	      tdy=tdx+1;
+	      if(sq[*dx]+sq[*dy]>sq[*tdx]+sq[*tdy-1]) { *dx=*tdx; *dy=*tdy-1; }
+	    }
+
+	  if(x<maxx)
+	    {
+	      tpt=pt+1;
+	      tdx=(short *)tpt;
+	      tdy=tdx+1;
+	      if(sq[*dx]+sq[*dy]>sq[*tdx-1]+sq[*tdy]) { *dx=*tdx-1; *dy=*tdy; }
+	    }
+	}
+      pt=map+n[0]*y+1;
+      for(x=1;x<=maxx;x++,pt++) 
+	{
+	  dx=(short *)pt;
+	  dy=dx+1;
+	  
+	  tpt=pt-1;
+	  tdx=(short *)tpt;
+	  tdy=tdx+1;
+	  if(sq[*dx]+sq[*dy]>sq[*tdx+1]+sq[*tdy]) { *dx=*tdx+1; *dy=*tdy; }
+	}
+    }
+     
+  for(y=0,dx=(short *)map,pt=(int *)map;y<=maxy;y++)
+    for(x=0;x<=maxx;x++,pt++,dx+=2) 
+	*pt=sq[*dx]+sq[*(dx+1)];
+
+  return 1;
+}
+
+
+
+/*
+ * We use ParameterFile classin vispack to read arguments. This is passed 
+ * on to the constructor for the class MRITissueClassifier. The 
+ * constructor reads the data and other parameters. It also aligns the 
+ * data into a standard coordinate frame, top-down and front-back 
+ * alignment.
+ * The rest of the function names are self descriptive and I have 
+ * included comments at the top of the functions in the class files which 
+ * I will send next. Some functions are better documented than others for 
+ * now.
+
+ * Tolga
+ */
+
+void
+MRITissueClassifier::execute()
+{
+  BackgroundDetection();
+  ComputeForegroundCenter();
+  FatDetection();
+  BrainDetection(4.0,10.0);
+  BoneDetection(10.0);
+  ScalpClassification();
+  BrainClassification();
+}
+
+
+
+MRITissueClassifier::MRITissueClassifier (GuiContext *ctx) :
+  Module("MRITissueClassifier",ctx,Filter,"Segmentation","Teem"),
+  m_Data(0)
+{
+  std::cout<<"INITIALIZATION\n";
+#ifdef MCKAY_TODO
+  char scan_keyword[80], filename[100], keyword[100];
+  FILE *fp;
+  int i, j, x, y, z, zp, yp, NData;
+#endif
+
+
+
+  //  sprintf(m_OutputPrefix,"");                    
+  TRYKEYWORD(m_OutputPrefix,"","OUTPUT_PREFIX"); // prefix for all output files
+  TRYKEYWORD(m_width,"", "WIDTH");               // data volume dimensions
+  TRYKEYWORD(m_height,"","HEIGHT");
+  TRYKEYWORD(m_depth,"", "DEPTH");
+  m_MaxIteration = 1000;
+  m_MinChange = 0.1;
+  TRYKEYWORD(m_MaxIteration,"","MAX_ITERATION"); // max iterations for EM algorithms
+  TRYKEYWORD(m_MinChange,"","MIN_CHANGE");       // min change percantage to decide
+                                                 // convergence for EM algorithm
+  m_Top=m_Anterior=1;
+  TRYKEYWORD(m_Top,"","TOP");                    // data volume orientation information
+  TRYKEYWORD(m_Anterior,"","ANTERIOR");
+  m_PixelDim=1.0f;
+  TRYKEYWORD(m_PixelDim,"","PIXEL_DIM");         // pixel dimensions in axial plane
+  m_SliceThickness=3.0f;
+  TRYKEYWORD(m_SliceThickness,"","SLICE_THICKNESS"); // slice thickness in mm
+  m_EyesVisible=0;
+  TRYKEYWORD(m_EyesVisible,"","EYES");           // scan cover eyes?
+  m_FatSat = 0;
+  TRYKEYWORD(m_FatSat,"","FATSAT");              // do we have a fatsat image?
+
+  // allocate memory
+#ifdef MCKAY_TODO
+  m_Data      = VISVolume<VISVector> (m_width, m_height, m_depth);
+  m_Label     = VISVolume<int>       (m_width, m_height, m_depth);
+  m_DistBG    = VISVolume<float>     (m_width, m_height, m_depth);
+  m_Energy    = VISVolume<float>     (m_width, m_height, m_depth);
+  m_CSF_Energy= VISVolume<float>     (m_width, m_height, m_depth);
+
+
+  m_Label = T_BACKGROUND;
+  VISVector tempvec;
+  if (m_FatSat) tempvec = VISVector(4);
+  else tempvec = VISVector(3);
+
+  for (x=0;x<m_width;x++)
+    for (y=0;y<m_height;y++)
+      for (z=0;z<m_depth;z++)
+        m_Data.poke(x,y,z)=tempvec;
+
+  // load data
+  NData = m_width * m_height * m_depth;
+  float *tempdata = (float*)calloc(NData,sizeof(float));
+
+  TRYKEYWORD(filename,"","T1_FILE");
+  if ((fp=fopen(filename,"r")) != NULL)
+    {
+    fread(tempdata,sizeof(float),NData,fp);
+    fclose(fp);
+    j = 0;
+    for (z=0;z<m_depth;z++)
+      for (y=0;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          {
+          // put everything in a standard coordinate frame
+          // top of head higher z
+          // face towards higher y
+          if (m_Top!=1) zp=m_depth-1-z; else zp=z;
+          if (m_Anterior!=1) yp=m_height-1-y; else yp=y;
+          tempvec = m_Data(x,yp,zp);
+          tempvec.poke(0)=tempdata[j++];
+          m_Data.poke(x,yp,zp) = tempvec;
+          }
+    }
+  else
+    {
+    std::cout<<"Can't open file "<<keyword<<std::endl;
+    exit(-1);
+    }
+  
+  TRYKEYWORD(filename,"","T2_FILE");
+  if ((fp=fopen(filename,"r")) != NULL)
+    {
+    fread(tempdata,sizeof(float),NData,fp);
+    fclose(fp);
+    j = 0;
+    for (z=0;z<m_depth;z++)
+      for (y=0;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          {
+          if (m_Top!=1) zp=m_depth-1-z; else zp=z;
+          if (m_Anterior!=1) yp=m_height-1-y; else yp=y;
+          tempvec = m_Data(x,yp,zp);
+          tempvec.poke(1)=tempdata[j++];
+          m_Data.poke(x,yp,zp) = tempvec;
+          }
+    }
+  else
+    {
+    std::cout<<"Can't open file "<<keyword<<std::endl;
+    exit(-1);
+    }
+  
+  TRYKEYWORD(filename,"","PD_FILE");
+  if ((fp=fopen(filename,"r")) != NULL)
+    {
+    fread(tempdata,sizeof(float),NData,fp);
+    fclose(fp);
+    j = 0;
+    for (z=0;z<m_depth;z++)
+      for (y=0;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          {
+          if (m_Top!=1) zp=m_depth-1-z; else zp=z;
+          if (m_Anterior!=1) yp=m_height-1-y; else yp=y;
+          tempvec = m_Data(x,yp,zp);
+          tempvec.poke(2)=tempdata[j++];
+          m_Data.poke(x,yp,zp) = tempvec;
+          }
+    }
+  else
+    {
+    std::cout<<"Can't open file "<<keyword<<std::endl;
+    exit(-1);
+    }
+
+  if (m_FatSat)
+    {
+    TRYKEYWORD(filename,"","T1_FATSAT_FILE");
+    if ((fp=fopen(filename,"r")) != NULL)
+      {
+      fread(tempdata,sizeof(float),NData,fp);
+      fclose(fp);
+      j = 0;
+      for (z=0;z<m_depth;z++)
+        for (y=0;y<m_height;y++)
+          for (x=0;x<m_width;x++)
+            {
+            if (m_Top!=1) zp=m_depth-1-z; else zp=z;
+            if (m_Anterior!=1) yp=m_height-1-y; else yp=y;
+            tempvec = m_Data(x,yp,zp);
+            tempvec.poke(3)=tempdata[j++];
+            m_Data.poke(x,yp,zp) = tempvec;
+            }
+      }
+    else
+      {
+      std::cout<<"Can't open file "<<keyword<<std::endl;
+      exit(-1);
+      }
+    }
+  for (x=0;x<m_width;x++)
+    for (y=0;y<m_height;y++)
+      for (z=0;z<m_depth;z++)
+        {
+        tempvec=m_Data.peek(x,y,z);
+        m_CSF_Energy.poke(x,y,z) = tempvec(1) - tempvec(0); // T2 - T1
+        }
+  free (tempdata);
+#endif
+  if (m_EyesVisible)
+    EyeDetection();
+  else
+  {
+    m_TopOfEyeSlice = -1;
+    m_EyeSlice = -1;
+  }
+}
+
+void
+MRITissueClassifier::EyeDetection()
+{
+  // this function should be very reliable
+
+  // possible mode of failure: to speed up eye detection we restrict
+  // the search space to where we think eyes should be in the volume -- these
+  // assumptions are commented below in the code.
+
+  // possible user feedback: if eyes are missed user can either instruct
+  // algorithm to enlarge search space
+  
+  std::cout<<"EYE DETECTION\n";
+  float rad = 12.5/m_PixelDim; // approximate diameter for eye = 25mm
+  float radl = rad - 1.0;
+  float radh = rad + 1.0;
+  int mc = (int)ceil(radh);
+  int ms = 2*mc +1;
+  float radz = 12.5/m_SliceThickness;
+  int mzc = (int)ceil(radz + 1.0);
+  int mzs = 2*mzc +1;
+  int depth = m_depth/2; 
+  
+#ifdef MCKAY_TODO
+  NrrdDataHandle mask (ms, ms, mzs);
+#endif
+  int x, y, z, w, h, d, x2, y2, z2, x3, y3, z3, xl, yl, xm1, xm2, xh, yl2, yh2, yh, zl, zh, zlow, zhigh, zm, *xpl, *xpr, *ypl, *ypr;
+  float xo, yo, zo, r, sum, radhz, *maxl, *maxr, max, th, temp;
+
+  xpl = (int*)calloc(depth,sizeof(int));
+  xpr = (int*)calloc(depth,sizeof(int));
+  ypl = (int*)calloc(depth,sizeof(int));
+  ypr = (int*)calloc(depth,sizeof(int));
+  maxl = (float*)calloc(depth,sizeof(float));
+  maxr = (float*)calloc(depth,sizeof(float));
+
+#ifdef MCKAY_TODO
+  // prepare search mask
+  for (x=0;x<ms;x++)
+    for (y=0;y<ms;y++)
+      for (z=0;z<mzs;z++)
+      {
+        xo = x-(float)mc;
+        yo = y-(float)mc;
+        zo = (z-(float)mzc)*(m_SliceThickness/m_PixelDim);
+        r = sqrt(xo*xo+yo*yo+zo*zo);
+
+        if (r<radl) 
+	  mask.poke(x,y,z) = 1.0;
+        else if (r<radh)
+	  mask.poke(x,y,z) = 1.0+0.5*(radl-r);
+        else 
+	  mask.poke(x,y,z) = 0.0;
+      }
+  mask/=mask.sum();
+#endif
+
+  // we first do a slice by slice 2D search -- 2D convolutions faster than 3D
+  // define search space -- assumptions about eye location in axial slices
+  yl = (int)floor(0.66*(float)m_height);
+  yh = m_height-mc;
+  xl = (int)floor(0.25*(float)m_width);
+  xm1 = (int)rint(0.5*(float)m_width)-mc;
+  xm2 = xm1+2*mc;
+  xh = (int)ceil(0.75*(float)m_width);
+  std::cout<<"2d search in lower z-half of volume\n";
+  std::cout<<"left eye search space = ("<<xl<<","<<yl<<") - ("<<xm1<<","<<yh<<")\n";
+  std::cout<<"right eye search space = ("<<xm2<<","<<yl<<") - ("<<xh<<","<<yh<<")\n";
+  
+  for (z=0;z<depth;z++)
+    // depth  = m_depth/2, we assume eyes are in the first half of the axial
+    // slices. this asumption could fail if the data acquisition goes well
+    // beyond the lower end of the brain towards the neck 
+    {
+    maxl[z]=maxr[z]=-100000.0;
+    for (y=yl;y<yh;y+=2)
+      {
+      for (x=xl;x<=xm1;x+=2)
+        {
+        sum = 0.0;
+        for (x2=0;x2<ms;x2++)
+          for (y2=0;y2<ms;y2++)
+            {
+            x3 = x + x2 - mc;
+            y3 = y + y2 - mc;
+#ifdef MCKAY_TODO
+            if ((x3>=0)&&(x3<m_width)&&(y3>=0)&&(y3<m_height))
+              sum += ( m_CSF_Energy(x3,y3,z) * mask(x2,y2,mzc) );
+#endif
+            }
+        if (sum>maxl[z])
+          {
+          maxl[z]=sum;
+          xpl[z]=x;
+          ypl[z]=y;
+          }
+        } // eye #1
+
+      for (x=xm2;x<=xh;x+=2)
+        {
+        sum = 0.0;
+        for (x2=0;x2<ms;x2++)
+          for (y2=0;y2<ms;y2++)
+            {
+            x3 = x + x2 - mc;
+            y3 = y + y2 - mc;
+#ifdef MCKAY_TODO
+            if ((x3>=0)&&(x3<m_width)&&(y3>=0)&&(y3<m_height))
+              sum += ( m_CSF_Energy(x3,y3,z) * mask(x2,y2,mzc) );
+#endif
+            }
+        if (sum>maxr[z])
+          {
+          maxr[z]=sum;
+          xpr[z]=x;
+          ypr[z]=y;
+          }
+        } // eye #2
+      } // y-loop
+
+    if (z==0)
+      {
+      max = Max(maxl[0],maxr[0]);
+      zm = 0;
+      }
+    else
+      {
+      temp = Max(maxl[z],maxr[z]);
+      if (temp>max)
+        {
+        max = temp;
+        zm = z;
+        }
+      }
+    } // z-loop
+
+  // find maximum signal z-slice
+  th = 0.75*max;
+  for (z=zm-2;z>=0;z--)
+    {
+    temp = Max(maxl[z],maxr[z]);
+    if (temp<th) break;
+    }
+  zlow = Max(z,0);
+  for (z=zm+2;z<depth;z++)
+    {
+    temp = Max(maxl[z],maxr[z]);
+    if (temp<th) break;
+    }
+  zhigh = Max(z,depth-1);
+
+  // now use 2D results to define a narrow 3D search space
+  // this part shouldn't fail given that the above 2D search worked properly 
+  xl = xpl[zm]-(int)ceil(6.0/m_PixelDim);
+  xm1 = xpl[zm]+(int)ceil(6.0/m_PixelDim);
+  xm2 = xpr[zm]-(int)ceil(6.0/m_PixelDim);
+  xh = xpr[zm]+(int)ceil(6.0/m_PixelDim);
+  yl = ypl[zm]-(int)ceil(6.0/m_PixelDim);
+  yh = ypl[zm]+(int)ceil(6.0/m_PixelDim);
+  yl2 = ypr[zm]-(int)ceil(6.0/m_PixelDim);
+  yh2 = ypr[zm]+(int)ceil(6.0/m_PixelDim);
+  std::cout<<"3d search\n";
+  std::cout<<"left eye search space = ("<<xl<<","<<yl<<") - ("<<xm1<<","<<yh<<")\n";
+  std::cout<<"right eye search space = ("<<xm2<<","<<yl2<<") - ("<<xh<<","<<yh2<<")\n";
+  
+  for (z=zlow;z<=zhigh;z++)
+    {
+    maxl[z]=maxr[z]=-100000.0;
+    for (y=yl;y<yh;y++)
+      {
+      for (x=xl;x<=xm1;x++)
+        {
+        sum = 0.0;
+        for (x2=0;x2<ms;x2++)
+          for (y2=0;y2<ms;y2++)
+            for (z2=0;z2<mzs;z2++)
+              {
+              x3 = x + x2 - mc;
+              y3 = y + y2 - mc;
+              z3 = z + z2 - mzc;
+#ifdef MCKAY_TODO
+              if ((x3>=0)&&(x3<m_width)&&(y3>=0)&&(y3<m_height)&&(z3>=0)&&(z3<m_depth))
+                sum += ( m_CSF_Energy(x3,y3,z3) * mask(x2,y2,z2) );
+#endif
+              }
+        if (sum>maxl[z])
+          {
+          maxl[z]=sum;
+          xpl[z]=x;
+          ypl[z]=y;
+          }
+        } // eye #1
+      }
+    for (y=yl2;y<yh2;y++)
+      {
+      for (x=xm2;x<=xh;x++)
+        {
+        sum = 0.0;
+        for (x2=0;x2<ms;x2++)
+          for (y2=0;y2<ms;y2++)
+            for (z2=0;z2<mzs;z2++)
+              {
+              x3 = x + x2 - mc;
+              y3 = y + y2 - mc;
+              z3 = z + z2 - mzc;
+#ifdef MCKAY_TODO
+              if ((x3>=0)&&(x3<m_width)&&(y3>=0)&&(y3<m_height)&&(z3>=0)&&(z3<m_depth))
+                sum += ( m_CSF_Energy(x3,y3,z3) * mask(x2,y2,z2) );
+#endif
+              }
+        if (sum>maxr[z])
+          {
+          maxr[z]=sum;
+          xpr[z]=x;
+          ypr[z]=y;
+          }
+        } // eye #2
+      } 
+    } //  z-loop
+
+  // now that we located approximate centers of the eyes
+  // do floodfills to extract eyes and eye lenses -- this can be simplified if
+  // we don't want the eye-lens category
+  float a, b, zp;
+#ifdef MCKAY_TODO
+  NrrdDataHandle tempV; //   VISVolume<int> tempV;
+  NrrdDataHandle ff2;   //   VISImage<int> ff2;
+#endif
+  
+  max = maxl[zlow+1];
+  zm = zlow+1;
+  for (z=zlow+2;z<zhigh;z++)
+    if (maxl[z]>max)
+      {
+      max=maxl[z];
+      zm=z;
+      }
+  if ((zm==(zlow+1))&&(max<maxl[zlow]))
+    {
+    m_EyePosition[0][0]=(float)xpl[zlow];
+    m_EyePosition[0][1]=(float)ypl[zlow];
+    m_EyePosition[0][2]=(float)zlow;
+    }
+  else if ((zm==(zhigh-1))&&(max<maxl[zhigh]))
+    {
+    m_EyePosition[0][0]=(float)xpl[zhigh];
+    m_EyePosition[0][1]=(float)ypl[zhigh];
+    m_EyePosition[0][2]=(float)zhigh;
+    }
+  else
+    {
+    a = 0.5*(maxl[zm+1]+maxl[zm-1])-max;
+    b = 0.5*(maxl[zm+1]-maxl[zm-1]);
+    zp = -0.5*b/a;
+    sum = maxl[zm-1]+max+maxl[zm+1];
+    m_EyePosition[0][0]=((a-b+max)*(float)xpl[zm-1]+max*(float)xpl[zm]+(a+b+max)*(float)xpl[zm+1])/sum;
+    m_EyePosition[0][1]=((a-b+max)*(float)ypl[zm-1]+max*(float)ypl[zm]+(a+b+max)*(float)ypl[zm+1])/sum;
+    m_EyePosition[0][2]=zp+(float)zm;
+    }
+  th = 0.5*max;
+  radh = 1.5*rad/m_PixelDim;
+  // we work on a subset of the volume to speed things up
+  xl = Max((int)floor(m_EyePosition[0][0]-radh),0);
+  xh = Min((int)ceil(m_EyePosition[0][0]+radh),m_width-1);
+  yl = Max((int)floor(m_EyePosition[0][1]-radh),0);
+  yh = Min((int)ceil(m_EyePosition[0][1]+radh),m_height-1);
+  radhz = 1.5*rad/m_SliceThickness;
+  zl = Max((int)floor(m_EyePosition[0][2]-radhz),0);
+  zh =  Min((int)ceil(m_EyePosition[0][2]+radhz),m_depth-1);
+  w = xh-xl+1;
+  h = yh-yl+1;
+  d = zh-zl+1;
+#ifdef MCKAY_TODO
+  tempV= VISVolume<int>(w,h,d);
+  for (x=0;x<w;x++)
+    for (y=0;y<h;y++)
+      for (z=0;z<d;z++)
+        if (m_CSF_Energy(xl+x,yl+y,zl+z)>=th) tempV.poke(x,y,z)=1;
+        else tempV.poke(x,y,z)=0;
+
+  // flood fill eye from inside 
+  tempV.floodFill(1,2,(int)rint(radh),(int)rint(radh),(int)rint(radhz));
+
+  for (x=0;x<w;x++)
+    for (y=0;y<h;y++)
+      for (z=0;z<d;z++)
+        if (tempV(x,y,z)==1) tempV.poke(x,y,z)=0;
+
+  
+  m_TopOfEyeSlice=-1;
+  m_BottomOfEyeSlice=-1;
+  for (z=0;z<d;z++)
+    {
+    // flood fill from outside (4 corners) to discriminate eye lens which is enclosed
+    // within the eye tissue
+    ff2 = tempV.image(z).floodFill(0,3,0,0);
+    ff2 = ff2.floodFill(0,3,w-1,0);
+    ff2 = ff2.floodFill(0,3,0,h-1);
+    ff2 = ff2.floodFill(0,3,w-1,h-1);
+    
+    for (x=0;x<w;x++)
+      for (y=0;y<h;y++)
+        if (tempV(x,y,z)==2)
+          {
+          m_Label.poke(x+xl,y+yl,z+zl)=T_EYE;
+          if ((z+zl)>m_TopOfEyeSlice) m_TopOfEyeSlice=z+zl;
+          if (m_BottomOfEyeSlice<0) m_BottomOfEyeSlice=z+zl;
+          }
+        else if (ff2(x,y)!=3) m_Label.poke(x+xl,y+yl,z+zl)=T_EYE_LENS;
+    }
+#endif
+  std::cout<<"First eye position = ("<<m_EyePosition[0][0]<<","<<m_EyePosition[0][1]<<","<<m_EyePosition[0][2]<<")\n";
+
+  // do same things for the other eye
+  max = maxr[zlow+1];
+  zm = zlow+1;
+  for (z=zlow+2;z<zhigh;z++)
+    if (maxr[z]>max)
+      {
+      max=maxr[z];
+      zm=z;
+      }
+  if ((zm==(zlow+1))&&(max<maxr[zlow]))
+    {
+    m_EyePosition[1][0]=(float)xpr[zlow];
+    m_EyePosition[1][1]=(float)ypr[zlow];
+    m_EyePosition[1][2]=(float)zlow;
+    }
+  else if ((zm==(zhigh-1))&&(max<maxr[zhigh]))
+    {
+    m_EyePosition[1][0]=(float)xpr[zhigh];
+    m_EyePosition[1][1]=(float)ypr[zhigh];
+    m_EyePosition[1][2]=(float)zhigh;
+    }
+  else
+    {
+    a = 0.5*(maxr[zm+1]+maxr[zm-1])-max;
+    b = 0.5*(maxr[zm+1]-maxr[zm-1]);
+    zp = -0.5*b/a;
+    sum = maxr[zm-1]+max+maxr[zm+1];
+    m_EyePosition[1][0]=((a-b+max)*(float)xpr[zm-1]+max*(float)xpr[zm]+(a+b+max)*(float)xpr[zm+1])/sum;
+    m_EyePosition[1][1]=((a-b+max)*(float)ypr[zm-1]+max*(float)ypr[zm]+(a+b+max)*(float)ypr[zm+1])/sum;
+    m_EyePosition[1][2]=zp+(float)zm;
+    }
+  th = 0.5*max;
+  radh = 1.5*rad/m_PixelDim;
+  xl = Max((int)floor(m_EyePosition[1][0]-radh),0);
+  xh = Min((int)ceil(m_EyePosition[1][0]+radh),m_width-1);
+  yl = Max((int)floor(m_EyePosition[1][1]-radh),0);
+  yh = Min((int)ceil(m_EyePosition[1][1]+radh),m_height-1);
+  radhz = 1.5*rad/m_SliceThickness;
+  zl = Max((int)floor(m_EyePosition[1][2]-radhz),0);
+  zh =  Min((int)ceil(m_EyePosition[1][2]+radhz),m_depth-1);
+
+  w = xh-xl+1;
+  h = yh-yl+1;
+  d = zh-zl+1;
+#ifdef MCKAY_TODO
+  tempV= VISVolume<int>(w,h,d);
+
+  for (x=0;x<w;x++)
+    for (y=0;y<h;y++)
+      for (z=0;z<d;z++)
+        if (m_CSF_Energy(xl+x,yl+y,zl+z)>=th) tempV.poke(x,y,z)=1;
+        else tempV.poke(x,y,z)=0;
+
+  tempV.floodFill(1,2,(int)rint(radh),(int)rint(radh),(int)rint(radhz));
+  
+  for (x=0;x<w;x++)
+    for (y=0;y<h;y++)
+      for (z=0;z<d;z++)
+        if (tempV(x,y,z)==1) tempV.poke(x,y,z)=0;
+  
+  for (z=0;z<d;z++)
+    {
+    ff2 = tempV.image(z).floodFill(0,3,0,0);
+    ff2 = ff2.floodFill(0,3,w-1,0);
+    ff2 = ff2.floodFill(0,3,0,h-1);
+    ff2 = ff2.floodFill(0,3,w-1,h-1);
+    
+    for (x=0;x<w;x++)
+      for (y=0;y<h;y++)
+        if (tempV(x,y,z)==2)
+          {
+          m_Label.poke(x+xl,y+yl,z+zl)=T_EYE;
+          if ((z+zl)>m_TopOfEyeSlice) m_TopOfEyeSlice=z+zl;
+          if (m_BottomOfEyeSlice<0) m_BottomOfEyeSlice=z+zl;
+          }
+        else if (ff2(x,y)!=3) m_Label.poke(x+xl,y+yl,z+zl)=T_EYE_LENS;
+    }
+#endif
+  std::cout<<"Second eye position = ("<<m_EyePosition[1][0]<<","<<m_EyePosition[1][1]<<","<<m_EyePosition[1][2]<<")\n";
+  
+  m_EyeSlice = Max((int)rint(0.5*(m_EyePosition[0][2]+m_EyePosition[1][2])),0);
+  std::cout<<"Eye bottom slice = "<<m_BottomOfEyeSlice<<" , top slice = "<<m_TopOfEyeSlice<<std::endl;
+
+  free (xpl);
+  free (xpr);
+  free (ypl);
+  free (ypr);
+  free (maxl);
+  free (maxr);
+}
+
+float
+MRITissueClassifier::Compute2ClassThreshold (float *p, float *v, int n)
+{
+  int i;
+  float diffl, diffh, x;
+  for (i = n-1; i>=0; i--)       // we go backwards because foreground has
+                                 // larger variance and can have larger
+                                 // probability on either side of the background peak
+    if (p[i*2+1]<=p[i*2]) break; // is background probability larger?
+
+  if (i<=0) return v[0];
+  else
+    {
+    if (i>=(n-1)) return v[n-1];
+    diffl=p[i*2+1]-p[i*2];
+    diffh=p[(i+1)*2+1]-p[(i+1)*2];
+    x = diffl/(diffl-diffh);
+    return v[i] + x * (v[i+1]-v[i]);
+    }
+}
+
+void
+MRITissueClassifier::Clear1DHistogram (int *hist, int n)
+{
+  for (int i = 0; i<n; i++) hist[i]=0;
+}
+
+void
+MRITissueClassifier::Accumulate1DHistogram (float *upperlims, int *hist,
+					    int n,
+					    NrrdDataHandle data,
+					    int lx, int ly, int lz,
+					    int hx, int hy, int hz)
+{
+  // n is the size of hist
+  // (lx,ly,lz) and (hx,hy,hz) determine subvolume to be used
+  int x, y, z, i;
+
+  for (x=lx;x<=hx;x++)
+    for (y=ly;y<=hy;y++)
+      for (z=lz;z<=hz;z++)
+      {
+        for (i=0;i<n-1;i++) 
+#if MCKAY_TODO
+	  if (data.peek(x,y,z)<=upperlims[i]) break;
+#endif
+        hist[i]++;
+      }
+}
+
+void
+MRITissueClassifier::Accumulate1DHistogramWithLabel (float *upperlims, int *hist,
+						     int n, int m,
+						     int lx, int ly, int lz,
+						     int hx, int hy, int hz, int label)
+{
+  // n is the size of hist
+  // m is the data component selection
+  // (lx,ly,lz) and (hx,hy,hz) determine subvolume to be used
+#ifdef MCKAY_TODO
+  int x, y, z, i;
+  VISVector data;
+
+  
+  for (x=lx;x<=hx;x++)
+    for (y=ly;y<=hy;y++)
+      for (z=lz;z<=hz;z++)
+        if (m_Label(x,y,z)==label)
+          {
+          data = m_Data.peek(x,y,z);
+          for (i=0;i<n-1;i++) if (data.peek(m)<=upperlims[i]) break;
+          hist[i]++;
+          }
+#endif
+}
+
+void
+MRITissueClassifier::Accumulate1DHistogramWithLabel (float *upperlims, int *hist,
+						     int n,
+						     NrrdDataHandle data,
+						     int lx, int ly, int lz,
+						     int hx, int hy, int hz,
+						     int label)
+{
+  // n is the size of hist
+  // (lx,ly,lz) and (hx,hy,hz) determine subvolume to be used
+#ifdef MCKAY_TODO
+  int x, y, z, i;
+
+  for (x=lx;x<=hx;x++)
+    for (y=ly;y<=hy;y++)
+      for (z=lz;z<=hz;z++)
+        if (m_Label(x,y,z)==label)
+	{
+          for (i=0;i<n-1;i++) if (data.peek(x,y,z)<=upperlims[i]) break;
+          hist[i]++;
+	}
+#endif
+}
+
+float*
+MRITissueClassifier::EM1DWeighted (float *data, float *weight, int n,
+				   int c, float *mean, float *prior, float *var)
+{
+  // n is length of data
+  // c is number of classes
+  // mean, prior, var should be initialized before calling this function
+
+  bool flag = true;
+  int i, j, k, it = 0;
+  float diff, sum, sum2, distsq, dist, w;
+  float *prob = (float*)calloc(n*c,sizeof(float));
+  float *meanp= (float*)calloc(c,sizeof(float));
+  float *istd = (float*)calloc(c,sizeof(float));
+  
+  while (flag&&(it<m_MaxIteration))
+    {
+    for (j=0;j<c;j++) meanp[j]=mean[j];
+    for (j=0;j<c;j++) istd[j]=1.0f/sqrt(var[j]);
+
+    // evaluate probabilities
+    for (i=0;i<n;i++)
+      {
+      sum = 0.0f;
+      k=i*c;
+      for (j=0;j<c;j++)
+        {
+        diff=data[i]-mean[j];
+        distsq=(diff*diff)/var[j];
+        prob[k+j]=exp(-0.5*distsq)*prior[j]*istd[j];
+        sum+=prob[k+j];
+        }
+      for (j=0;j<c;j++) prob[k+j]/=Max(sum,TINY);
+      }
+
+    // evaluate statistics
+    sum2=dist=0.0f;
+    for (j=0;j<c;j++)
+      {
+      sum=0.0f;
+      mean[j]=var[j]=0.0f;
+
+      k=j;
+      for (i=0;i<n;i++)
+        {
+        w = prob[k]*weight[i];
+        mean[j]+=w*data[i];
+        sum+=w;
+        k+=c;
+        }
+      sum2+=sum;
+      prior[j]=sum;
+      mean[j]/=Max(sum,TINY);
+
+      k=j;
+      for (i=0;i<n;i++)
+        {
+        w = prob[k]*weight[i];
+        diff=data[i]-mean[j];
+        var[j]+=w*diff*diff;
+        k+=c;
+        }
+      var[j]/=Max(sum,TINY);
+      
+      // compute amount of change
+      if (it>0) dist+=fabs(mean[j]-meanp[j])/Max(istd[j],TINY);
+      meanp[j]=mean[j];
+      }
+    for (j=0;j<c;j++) prior[j]/=Max(sum2,TINY);
+
+    // check convergence
+    if (it>0)
+      {
+      dist/=(float)c;
+      if (dist<m_MinChange) flag=0;
+      }
+    it++;
+    }
+  std::cout<<it<<" EM iterations performed.\n";
+  
+  // evaluate final probabilities
+  for (j=0;j<c;j++) istd[j]=1.0f/sqrt(var[j]);
+  for (i=0;i<n;i++)
+    {
+    sum = 0.0f;
+    k=i*c;
+    for (j=0;j<c;j++)
+      {
+      diff=data[i]-mean[j];
+      distsq=(diff*diff)/var[j];
+      prob[k+j]=exp(-0.5*distsq)*prior[j]*istd[j];
+      sum+=prob[k+j];
+      }
+    for (j=0;j<c;j++) prob[k+j]/=Max(sum,TINY);
+    }
+  
+  free(istd);
+  free (meanp);
+  
+  return prob;
+}
+
+float *MRITissueClassifier::EM_CSF_GM_WM (VISVector &CSF_mean, VISMatrix &CSF_cov, float *CSF_prior,
+					  VISVector &GM_mean, VISMatrix &GM_cov, float *GM_prior,
+					  VISVector &WM_mean, VISMatrix &WM_cov, float *WM_prior,
+					  int label)
+{
+  int x, y, z, n, flag, it, j, k;    
+  VISVector CSF_meanp, GM_meanp, WM_meanp;
+  float sum, sum2, dist, CSF_const, GM_const, WM_const;
+  VISVector diff, data;
+  VISVector feature(3);
+  VISMatrix CSF_icov, GM_icov, WM_icov;
+  
+  n = 0;
+  for (z=0;z<m_depth;z++)
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (m_Label(x,y,z)==label) n++;
+
+  float *prob = (float*)calloc(n*3,sizeof(float));
+
+  flag = 1;
+  it = 0;
+  while (flag&&(it<25))
+    {
+    CSF_meanp = CSF_mean;GM_meanp = GM_mean;WM_meanp = WM_mean;
+
+    // evaluate probabilities
+    CSF_icov = CSF_cov.inv(); // compute matrix inverse
+    GM_icov = GM_cov.inv();
+    WM_icov = WM_cov.inv();
+
+    CSF_const = 1.0/sqrt(Max((float)(CSF_cov(0,0)*(CSF_cov(1,1)*CSF_cov(2,2)-CSF_cov(1,2)*CSF_cov(2,1))
+				     -CSF_cov(0,1)*(CSF_cov(1,0)*CSF_cov(2,2)-CSF_cov(2,0)*CSF_cov(1,2))
+				     +CSF_cov(0,2)*(CSF_cov(1,0)*CSF_cov(2,1)-CSF_cov(2,0)*CSF_cov(1,1))),TINY));
+    GM_const = 1.0/sqrt(Max((float)(GM_cov(0,0)*(GM_cov(1,1)*GM_cov(2,2)-GM_cov(1,2)*GM_cov(2,1))
+				    -GM_cov(0,1)*(GM_cov(1,0)*GM_cov(2,2)-GM_cov(2,0)*GM_cov(1,2))
+				    +GM_cov(0,2)*(GM_cov(1,0)*GM_cov(2,1)-GM_cov(2,0)*GM_cov(1,1))),TINY));
+    WM_const = 1.0/sqrt(Max((float)(WM_cov(0,0)*(WM_cov(1,1)*WM_cov(2,2)-WM_cov(1,2)*WM_cov(2,1))
+				    -WM_cov(0,1)*(WM_cov(1,0)*WM_cov(2,2)-WM_cov(2,0)*WM_cov(1,2))
+				    +WM_cov(0,2)*(WM_cov(1,0)*WM_cov(2,1)-WM_cov(2,0)*WM_cov(1,1))),TINY));
+    
+    k=0;
+    for (z=0;z<m_depth;z++)
+      for (y=0;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          if (m_Label(x,y,z)==label)
+            {
+            data = m_Data.peek(x,y,z);
+            if (m_FatSat)
+              {
+              feature.poke(0)=data.peek(0);
+              feature.poke(1)=data.peek(1);
+              feature.poke(2)=data.peek(2);
+              }
+            else feature = data;
+            
+            diff=feature-CSF_mean;
+            dist=Max(diff.dot(CSF_icov*diff),0.0);
+            prob[k]=exp(-0.5*dist)*(*CSF_prior)*CSF_const;
+            sum=prob[k];
+
+            diff=feature-GM_mean;
+            dist=Max(diff.dot(GM_icov*diff),0.0);
+            prob[k+1]=exp(-0.5*dist)*(*GM_prior)*GM_const;
+            sum+=prob[k+1];
+
+            diff=feature-WM_mean;
+            dist=Max(diff.dot(WM_icov*diff),0.0);
+            prob[k+2]=exp(-0.5*dist)*(*WM_prior)*WM_const;
+            sum+=prob[k+2];
+
+            for (j=0;j<3;j++) prob[k+j]/=Max(sum,TINY);
+            k+=3;
+            }
+
+    // compute new statistics
+    dist=0.0f;
+    sum2=0.0f;
+    CSF_mean = 0.0;GM_mean = 0.0;WM_mean = 0.0;
+    CSF_cov = 0.0;GM_cov = 0.0;WM_cov = 0.0;
+    (*CSF_prior) = 0.0; (*GM_prior) = 0.0;(*WM_prior) = 0.0;
+    
+    k = 0;
+    for (z=0;z<m_depth;z++)
+      for (y=0;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          if (m_Label(x,y,z)==label)
+            {
+            data = m_Data.peek(x,y,z);
+            if (m_FatSat)
+              {
+              feature.poke(0)=data.peek(0);
+              feature.poke(1)=data.peek(1);
+              feature.poke(2)=data.peek(2);
+              }
+            else feature = data;
+            
+            CSF_mean += prob[k]*feature;
+            GM_mean += prob[k+1]*feature;
+            WM_mean += prob[k+2]*feature;
+
+            (*CSF_prior) += prob[k];
+            (*GM_prior) += prob[k+1];
+            (*WM_prior) += prob[k+2];
+
+            k+=3;
+            }
+    CSF_mean /= Max((*CSF_prior), TINY);
+    GM_mean /= Max((*GM_prior), TINY);
+    WM_mean /= Max((*WM_prior), TINY);
+
+    k = 0;
+    for (z=0;z<m_depth;z++)
+      for (y=0;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          if (m_Label(x,y,z)==label)
+            {
+            data = m_Data.peek(x,y,z);
+            if (m_FatSat)
+              {
+              feature.poke(0)=data.peek(0);
+              feature.poke(1)=data.peek(1);
+              feature.poke(2)=data.peek(2);
+              }
+            else feature = data;
+            
+            diff = feature - CSF_mean;
+            CSF_cov += prob[k]*(diff.exterior(diff));
+
+            diff = feature - GM_mean;
+            GM_cov += prob[k+1]*(diff.exterior(diff));
+
+            diff = feature - WM_mean;
+            WM_cov += prob[k+2]*(diff.exterior(diff));
+
+            k+=3;
+            }
+    CSF_cov /= Max((*CSF_prior), TINY);
+    GM_cov /= Max((*GM_prior), TINY);
+    WM_cov /= Max((*WM_prior), TINY);
+
+    sum2 = (*CSF_prior)+(*GM_prior)+(*WM_prior);
+    (*CSF_prior)/=sum2;
+    (*GM_prior)/=sum2;
+    (*WM_prior)/=sum2;
+
+    // compute amount of change
+    dist = 0.0;
+    if (it!=0)
+      {
+      diff=CSF_mean - CSF_meanp;
+      dist+=(diff.norm()/(TINY+CSF_meanp.norm()));
+      diff=GM_mean - GM_meanp;
+      dist+=(diff.norm()/(TINY+GM_meanp.norm()));
+      diff=WM_mean - WM_meanp;
+      dist+=(diff.norm()/(TINY+WM_meanp.norm()));
+      dist=sqrt(dist/3.0);
+      if (dist<m_MinChange) flag=0;
+      }
+    it++;
+    } // end while
+
+  std::cout<<it<<" iterations performed\n";
+  std::cout<<"EM final\n";
+  std::cout<<"WM  mean = ("<<WM_mean(0)<<","<<WM_mean(1)<<","<<WM_mean(2)<<") prior = "<<(*WM_prior)<<"\n";
+  std::cout<<"    covariance "<<WM_cov<<"\n";
+  std::cout<<"GM  mean = ("<<GM_mean(0)<<","<<GM_mean(1)<<","<<GM_mean(2)<<") prior = "<<(*GM_prior)<<"\n";
+  std::cout<<"    covariance "<<GM_cov<<"\n";
+  std::cout<<"CSF mean = ("<<CSF_mean(0)<<","<<CSF_mean(1)<<","<<CSF_mean(2)<<") prior = "<<(*CSF_prior)<<"\n";
+  std::cout<<"    covariance "<<CSF_cov<<"\n";
+  
+  return prob;
+}
+
+float *MRITissueClassifier::EM_Muscle_Fat (VISVector &Muscle_mean, VISMatrix &Muscle_cov, float *Muscle_prior,
+                                             VISVector &Fat_mean, VISMatrix &Fat_cov, float *Fat_prior,
+                                             int label, int dim)
+{
+  int x, y, z, n, flag, it, j, k;    
+  VISVector Muscle_meanp, Fat_meanp;
+  float sum, sum2, dist, Muscle_const, Fat_const;
+  VISVector diff, data;
+  VISMatrix Muscle_icov, Fat_icov;
+
+  n = 0;
+  for (z=0;z<m_depth;z++)
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (m_Label(x,y,z)==label) n++;
+
+  float *prob = (float*)calloc(n*2,sizeof(float));
+
+  flag = 1;
+  it = 0;
+  while (flag&&(it<25))
+    {
+    Muscle_meanp = Muscle_mean;Fat_meanp = Fat_mean;
+
+    // evaluate probabilities
+    Muscle_icov = Muscle_cov.inv(); // compute matrix inverse
+    Fat_icov = Fat_cov.inv();
+
+    if (dim==3)
+      {
+      Muscle_const = 1.0/sqrt(Max((float)(Muscle_cov(0,0)*(Muscle_cov(1,1)*Muscle_cov(2,2)-Muscle_cov(1,2)*Muscle_cov(2,1))
+                                             -Muscle_cov(0,1)*(Muscle_cov(1,0)*Muscle_cov(2,2)-Muscle_cov(2,0)*Muscle_cov(1,2))
+                                             +Muscle_cov(0,2)*(Muscle_cov(1,0)*Muscle_cov(2,1)-Muscle_cov(2,0)*Muscle_cov(1,1))),TINY));
+      Fat_const = 1.0/sqrt(Max((float)(Fat_cov(0,0)*(Fat_cov(1,1)*Fat_cov(2,2)-Fat_cov(1,2)*Fat_cov(2,1))
+                                          -Fat_cov(0,1)*(Fat_cov(1,0)*Fat_cov(2,2)-Fat_cov(2,0)*Fat_cov(1,2))
+                                          +Fat_cov(0,2)*(Fat_cov(1,0)*Fat_cov(2,1)-Fat_cov(2,0)*Fat_cov(1,1))),TINY));
+      }
+    else
+      {
+      Muscle_const = 1.0/sqrt(Max((float)fabs(Muscle_cov.det()),TINY));  
+      // .det() computes determinant
+      Fat_const = 1.0/sqrt(Max((float)fabs(Fat_cov.det()),TINY));
+      }
+    
+    k=0;
+    for (z=0;z<m_depth;z++)
+      for (y=0;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          if (m_Label(x,y,z)==label)
+            {
+            data = m_Data.peek(x,y,z);
+            
+            diff=data-Muscle_mean;
+            dist=Max(diff.dot(Muscle_icov*diff),0.0);
+            prob[k]=exp(-0.5*dist)*(*Muscle_prior)*Muscle_const;
+            sum=prob[k];
+
+            diff=data-Fat_mean;
+            dist=Max(diff.dot(Fat_icov*diff),0.0);
+            prob[k+1]=exp(-0.5*dist)*(*Fat_prior)*Fat_const;
+            sum+=prob[k+1];
+
+            for (j=0;j<2;j++) if (isnan(prob[k+j]))
+              {
+              std::cout<<"NaN prob. in EM1DVolumetric "<<k<<"\n";
+              exit(-1);
+              }
+            
+            for (j=0;j<2;j++) prob[k+j]/=Max(sum,TINY);
+            k+=2;
+            }
+
+    // compute new statistics
+    dist=0.0f;
+    sum2=0.0f;
+    Muscle_mean = 0.0;Fat_mean = 0.0;
+    Muscle_cov = 0.0;Fat_cov = 0.0;
+    (*Muscle_prior) = 0.0; (*Fat_prior) = 0.0;
+    
+    k = 0;
+    for (z=0;z<m_depth;z++)
+      for (y=0;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          if (m_Label(x,y,z)==label)
+            {
+            data = m_Data.peek(x,y,z);
+            
+            Muscle_mean += prob[k]*data;
+            Fat_mean += prob[k+1]*data;
+
+            (*Muscle_prior) += prob[k];
+            (*Fat_prior) += prob[k+1];
+
+            k+=2;
+            }
+    Muscle_mean /= Max((*Muscle_prior), TINY);
+    Fat_mean /= Max((*Fat_prior), TINY);
+
+    k = 0;
+    for (z=0;z<m_depth;z++)
+      for (y=0;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          if (m_Label(x,y,z)==label)
+            {
+            data = m_Data.peek(x,y,z);
+
+            diff = data - Muscle_mean;
+            Muscle_cov += prob[k]*(diff.exterior(diff));
+
+            diff = data - Fat_mean;
+            Fat_cov += prob[k+1]*(diff.exterior(diff));
+
+            k+=2;
+            }
+    Muscle_cov /= Max((*Muscle_prior), TINY);
+    Fat_cov /= Max((*Fat_prior), TINY);
+
+    sum2 = (*Muscle_prior)+(*Fat_prior);
+
+    (*Muscle_prior)/=sum2;
+    (*Fat_prior)/=sum2;
+
+    // compute amount of change
+    dist = 0.0;
+    if (it!=0)
+      {
+      diff=Muscle_mean - Muscle_meanp;
+      dist+=(diff.norm()/(TINY+Muscle_meanp.norm()));
+      diff=Fat_mean - Fat_meanp;
+      dist+=(diff.norm()/(TINY+Fat_meanp.norm()));
+      dist=sqrt(dist/2.0);
+      if (dist<m_MinChange) flag=0;
+      }
+    it++;
+    } // end while
+
+  std::cout<<it<<" iterations performed\n";
+  std::cout<<"EM final\n";
+  if (dim==3)
+      {
+      std::cout<<"Fat    mean = ("<<Fat_mean(0)<<","<<Fat_mean(1)<<","<<Fat_mean(2)<<") prior = "<<(*Fat_prior)<<"\n";
+      std::cout<<"       covariance "<<Fat_cov<<"\n";
+      std::cout<<"Muscle mean = ("<<Muscle_mean(0)<<","<<Muscle_mean(1)<<","<<Muscle_mean(2)<<") prior = "<<(*Muscle_prior)<<"\n";
+      std::cout<<"       covariance "<<Muscle_cov<<"\n";
+      }
+    else
+      {
+      std::cout<<"Fat    mean = ("<<Fat_mean(0)<<","<<Fat_mean(1)<<","
+               <<Fat_mean(2)<<","<<Fat_mean(3)<<") prior = "<<(*Fat_prior)<<"\n";
+      std::cout<<"       covariance "<<Fat_cov<<"\n";
+      std::cout<<"Muscle mean = ("<<Muscle_mean(0)<<","<<Muscle_mean(1)<<","
+               <<Muscle_mean(2)<<","<<Muscle_mean(3)<<") prior = "<<(*Muscle_prior)<<"\n";
+      std::cout<<"       covariance "<<Muscle_cov<<"\n";
+      }
+
+  return prob;
+}
+
+void
+MRITissueClassifier::BackgroundDetection ()
+{
+  // ths function should be reliable
+  // possible mode of failure: background can leak into bone through ear canal
+  // we treat the volume in 2 parts divided at the axial slice through the
+  // centers of the eyes to avoid this
+  // possible user interaction: if leakage still occurs, the user can instruct
+  // the algoirth to decrease th_low
+  
+  std::cout<<"FOREGROUND/BACKGROUND DETECTION\n";
+  int x, y, z, i, flag;
+  VISVector vec;
+  float e, stepsize, w, mean[2], prior[2], var[2], temp, th_low, th_high, min, max;
+  float *pdfest;
+   
+  for (z=0;z<m_depth;z++)
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        {
+        e=0.0;
+        vec=m_Data.peek(x,y,z);
+        for (i=0;i<3;i++) e+=vec.peek(i);
+        m_Energy.poke(x,y,z)=e;
+        if (!(x||y||z)) min=max=e;
+        else
+          {
+          if (e>max) max=e;
+          else if (e<min) min=e;
+          }
+        }
+  w = 1.0/((float)(m_width*m_height*m_depth));
+  std::cout<<"Energy min = "<<min<<" , max = "<<max<<std::endl;
+  // compute 1d histogram
+  stepsize = ceil((max-min)/(float)NBINMAX);
+  int nbin = (int)rint((max-min)/stepsize);
+  int   *hist      = (int*)calloc(nbin, sizeof(int));
+  float *pdf       = (float*)calloc(nbin, sizeof(int));
+  float *centers   = (float*)calloc(nbin, sizeof(float));
+  float *upperlims = (float*)calloc(nbin-1, sizeof(float));
+  std::cout<<"Using "<<nbin<<" bins for histogram\n";
+  
+  upperlims[0]=min+stepsize;
+  centers[0]=min;
+  for (i=1;i<nbin-1;i++)
+    {
+    upperlims[i]=upperlims[i-1]+stepsize;
+    centers[i]=centers[i-1]+stepsize;
+    }
+  centers[nbin-1]=max-stepsize;
+  Clear1DHistogram(hist,nbin);
+  Accumulate1DHistogram (upperlims,hist,nbin,m_Energy,
+                         0,0,0,m_width-1,m_height-1,m_depth-1);
+  
+  // initialize gaussian parameters for EM algorithm
+  for (i=0;i<nbin;i++) pdf[i]=w*(float)hist[i];
+  mean[0] = centers[0];       // mean for background
+  mean[1] = centers[(int)ceil(0.5*(float)nbin)];   // mean for foreground is the middle bin
+  temp  = (mean[1]-mean[0])/4.0;
+  var[1] = temp*temp;
+  temp/=15.0; 
+  var[0]  = temp*temp;
+  // the algorithm is relatively insensitive to initialization of variances
+  prior[0]=prior[1]=0.5f;
+ 
+  std::cout<<"Initialization for EM :\n";
+  std::cout<<"Background energy mean = "<<mean[0]<<" , var = "<<var[0]<<std::endl;
+  std::cout<<"Foreground energy mean = "<<mean[1]<<" , var = "<<var[1]<<std::endl;
+  pdfest=EM1DWeighted (centers, pdf, nbin, 2, mean, prior, var);
+  std::cout<<"After EM:\n";
+  std::cout<<"Background energy mean = "<<mean[0]<<" , var = "<<var[0]<<std::endl;
+  std::cout<<"Foreground energy mean = "<<mean[1]<<" , var = "<<var[1]<<std::endl;
+
+  // compute foreground-background threshold
+  th_low = Compute2ClassThreshold (pdfest,centers,nbin);
+  th_high = (mean[0]+mean[1])/2.0;
+  std::cout<<"Foreground/Background low  threshold = "<<th_low<<std::endl;
+  std::cout<<"                      high threshold = "<<th_high<<std::endl;
+  
+  free (pdfest);
+  free (hist);
+  free (upperlims);
+  free (pdf);
+  free (centers);
+  
+  int xa, ya, k;
+  VISImage<int> slice(m_width, m_height);
+  int *slicebg = (int*)calloc(m_width*m_height,sizeof(int));
+  int slicesize[2];
+  slicesize[0]=m_width;
+  slicesize[1]=m_height;
+
+  m_TopOfHead = m_depth;
+  int zlim = Max(m_EyeSlice,0);
+  for (z=m_depth-1;z>=zlim;z--)
+    {
+    // this part of the volume (part of head above the eyes) should be very
+    // robust, we only use the high threshold here
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (m_Energy(x,y,z)>=th_high) slice.poke(x,y)=1; else slice.poke(x,y)=0;
+
+    // floodfill background from all boundary pixels -- could also just use the
+    // 4 corners
+    for (xa=0;xa<m_width;xa++)
+      {
+      if (slice(xa,0)==0) slice = slice.floodFill(0,2,xa,0);
+      if (slice(xa,m_height-1)==0) slice = slice.floodFill(0,2,xa,m_height-1);
+      }
+    for (ya=0;ya<m_height;ya++)
+      {
+      if (slice(0,ya)==0) slice = slice.floodFill(0,2,0,ya);
+      if (slice(m_width-1,ya)==0) slice = slice.floodFill(0,2,m_width-1,ya);
+      }
+
+    // mark the pixels in m_Labels image
+    flag=0;
+    k=0;
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if ((m_Label(x,y,z)==T_BACKGROUND)&&(slice(x,y)!=2))
+          {
+          flag=1;
+          m_Label.poke(x,y,z)=T_FOREGROUND;
+          slicebg[k++]=1;
+          }
+        else if (m_Label(x,y,z)==T_BACKGROUND) slicebg[k++]=0;
+        else slicebg[k++]=1;
+
+    // compute 2D distance transform the background pixels
+    if (!flag)
+      {
+      m_TopOfHead=z;
+      for (y=0;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          m_DistBG.poke(x,y,z)=0.0;
+      }
+    else 
+      {
+      distmap_4ssed(slicebg,slicesize);
+      k=0;
+      for (y=0;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          m_DistBG.poke(x,y,z)=m_PixelDim*sqrt((float)slicebg[k++]);
+      }
+    } // z-loop
+  std::cout<<"Top of head slice = "<<m_TopOfHead<<std::endl;
+
+  // slices below the eyes have to be dealt with differently because the
+  // background can leak into bone through the ears
+  for (;z>=0;z--)
+    {
+    // we use the low threshold here to avoid leaking
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (m_Energy(x,y,z)>=th_high) slice.poke(x,y)=1;
+        else if (m_Energy(x,y,z)>=th_low) slice.poke(x,y)=3;
+        else slice.poke(x,y)=0;
+
+    for (ya=0;ya<m_height;ya++)
+      for (xa=0;xa<m_width;xa++)
+        if ((slice(xa,ya)==3)&&(m_Label(xa,ya,z+1)!=T_BACKGROUND)&&(m_DistBG(xa,ya,z+1)>10.0))
+          slice = slice.floodFill(3,1,xa,ya);
+    // floodfill pixels between the low and high thresholds from seed
+    // locations 10mm deep in the head, by doing this we avoid some of
+    // the noise outside the head that we could pick up as foreground if
+    // we simply thresholded with the low threshold
+    
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (slice(x,y)==3) slice.poke(x,y)=0; // these are pixels outside the
+                                              // head that fall between the 2 thresholds
+    
+    // floodfill background from all boundary pixels -- could also just use the
+    // 4 corners
+    for (xa=0;xa<m_width;xa++)
+      {
+      if (slice(xa,0)==0) slice = slice.floodFill(0,2,xa,0);
+      if (slice(xa,m_height-1)==0) slice = slice.floodFill(0,2,xa,m_height-1);
+      }
+    for (ya=0;ya<m_height;ya++)
+      {
+      if (slice(0,ya)==0) slice = slice.floodFill(0,2,0,ya);
+      if (slice(m_width-1,ya)==0) slice = slice.floodFill(0,2,m_width-1,ya);
+      }
+    k=0;
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if ((m_Label(x,y,z)==T_BACKGROUND)&&(slice(x,y)!=2))
+          {
+          m_Label.poke(x,y,z)=T_FOREGROUND;
+          slicebg[k++]=1;
+          }
+        else if (m_Label(x,y,z)==T_BACKGROUND) slicebg[k++]=0;
+        else slicebg[k++]=1;
+
+    // compute 2D distance transform the background pixels
+    distmap_4ssed(slicebg,slicesize);
+    k=0;
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        m_DistBG.poke(x,y,z)=m_PixelDim*sqrt((float)slicebg[k++]);
+    } // z-loop
+  
+  free(slicebg);
+
+  m_DistBG2D = m_DistBG; // save 2D distance transform
+  // fix 2D distance to approximate 3D distance  
+  for (x=0;x<m_width;x++)
+    for (y=0;y<m_height;y++)
+      if (m_DistBG(x,y,m_TopOfHead-1)>0.0) m_DistBG.poke(x,y,m_TopOfHead-1)=m_SliceThickness;
+
+  for (z=m_TopOfHead-2;z>=0;z--)
+    {
+    for (x=0;x<m_width;x++)
+      for (y=0;y<m_height;y++)
+        if (m_DistBG(x,y,z)>0.0) m_DistBG.poke(x,y,z) = Min (m_DistBG(x,y,z),
+                                                                m_DistBG(x,y,z+1)+m_SliceThickness);
+    }
+}
+
+void
+MRITissueClassifier::ComputeForegroundCenter ()
+{
+  // simple function to compute center of mass locations for foreground pixels
+  // in each axial slice -- and a single global center as the median of these
+  int x, y, z, k, k2;
+  m_slicecenter[0]=(float*)calloc(m_depth,sizeof(float));
+  m_slicecenter[1]=(float*)calloc(m_depth,sizeof(float));
+
+  k2=0;
+  for (z=0;z<m_TopOfHead;z++)
+    {
+    m_slicecenter[0][z]=0.0f;
+    m_slicecenter[1][z]=0.0f;
+    k=0;
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (m_Label(x,y,z)==T_FOREGROUND)
+          {
+          k++;
+          m_slicecenter[0][z]+=(float)x;
+          m_slicecenter[1][z]+=(float)y;
+          }
+    if (k>0)
+      {
+      m_slicecenter[0][z]/=(float)k;
+      m_slicecenter[1][z]/=(float)k;
+      }
+    else
+      {
+      m_slicecenter[0][z]=-1.0f;
+      m_slicecenter[1][z]=-1.0f;
+      k2++;
+      }
+    }
+  for (z=m_TopOfHead;z<m_depth;z++)
+    {
+    m_slicecenter[0][z]=-1.0f;
+    m_slicecenter[1][z]=-1.0f;
+    k2++;
+    }
+
+  float median[2];
+  float *meanx = (float*)calloc(m_TopOfHead-k2,sizeof(float));
+  float *meany = (float*)calloc(m_TopOfHead-k2,sizeof(float));
+
+  k=0;
+  for (z=0;z<m_TopOfHead;z++)
+    if (m_slicecenter[0][z]>=0.0)
+      {
+      meanx[k]=m_slicecenter[0][z];
+      meany[k++]=m_slicecenter[1][z];
+      }
+
+  bubble_sort(meanx,k);
+  bubble_sort(meany,k);
+  k=(int)rint(0.5*(float)k);
+  median[0]=m_slicecenter[0][k];
+  median[1]=m_slicecenter[1][k];
+  m_center[0]=median[0];
+  m_center[1]=median[1];
+
+  free(meanx);
+  free(meany);
+}
+
+void
+MRITissueClassifier::FatDetection_NOFATSAT (float maskr)
+{
+  // this function serves 2 purposes: (i) to compute a threshold for fat using
+  // the T1 signal, this threshold is later used to initialize the scalp
+  // classification routine
+  // (ii) use the threshold here to do a pre-labelling in certain slices to
+  // aid in intra-extracranial separation -- this is needed in slices below the
+  // eyes because the skull no longer forms a closed surface around the brain
+  // and floodfill methods can leak -- we supplement the skull barrier with a
+  // fat barrier in these regions and this seems to solve the proble,
+
+  // I think this is the part of the algorithm most prone to failing
+  // If it does fail, the user can tell the algorithm to lower the fat
+  // threshold to increase the chances of succesfully blocking any leakage
+
+  // Furthermore, in the absence of a fatsat sequence we use the T1 signal (in
+  // which fat appears bright) but this is not totally reliable so we have to
+  // do some morphology to clean things up -- this is not done in the other
+  // FatDetection function which uses a T1 and a T1Fatsat sequence
+  
+  std::cout<<"FAT DETECTION (without fatsat)\n";
+  int x, y, z, cnt, i;
+  float min, max,  temp, mean[4], var[4], prior[4], *pdfest, th, fat_energy;
+  VISVector data;
+
+  cnt = 0;
+  for (z=0;z<m_TopOfHead;z++)
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        {
+        data = m_Data.peek(x,y,z);
+        fat_energy = data(0); // use T1 signal
+        if (m_Label(x,y,z)==T_FOREGROUND)
+          {
+          if (cnt==0) min=max=fat_energy;
+          else
+            {
+            if (fat_energy>max) max=fat_energy;
+            else if (fat_energy<min) min=fat_energy;
+            } 
+          cnt++;
+          }
+        }
+
+  std::cout<<"T1 min = "<<min<<" , max = "<<max<<std::endl;
+  // compute bins for the histogram
+  float stepsize = ceil((max-min)/(float)NBINMAX);
+  int nbin = (int)rint((max-min)/stepsize);
+  std::cout<<"Using "<<nbin<<" bins for histogram\n";
+  int   *hist      = (int*)calloc(nbin, sizeof(int));
+  float *pdf       = (float*)calloc(nbin, sizeof(int));
+  float *centers   = (float*)calloc(nbin, sizeof(float));
+  float *upperlims = (float*)calloc(nbin-1, sizeof(float));
+  float *cdf       = (float*)calloc(nbin, sizeof(int));
+  
+  upperlims[0]=min+stepsize;
+  centers[0]=min;
+  for (i=1;i<nbin-1;i++)
+    {
+    upperlims[i]=upperlims[i-1]+stepsize;
+    centers[i]=centers[i-1]+stepsize;
+    }
+  centers[nbin-1]=max-stepsize;
+  Clear1DHistogram(hist,nbin);
+  Accumulate1DHistogramWithLabel (upperlims,hist,nbin,0,
+                                  0,0,0,m_width-1,m_height-1,m_TopOfHead-1,
+                                  T_FOREGROUND); 
+  
+  // initialize gaussian parameters for EM algorithm -- algorithm is relatively
+  // insensitive to this initialization
+  for (i=0;i<nbin;i++) pdf[i]=(float)hist[i]/(float)cnt;
+  cdf[0] = pdf[0];
+  for (i=1;i<nbin;i++) cdf[i] = cdf[i-1] + pdf[i];
+
+  for (i=0;i<nbin;i++) if (cdf[i]>=0.1) break;
+  mean[0] = centers[i];
+  for (;i<nbin;i++) if (cdf[i]>=0.3) break;
+  mean[1] = centers[i];
+  for (;i<nbin;i++) if (cdf[i]>=0.6) break;
+  mean[2] = centers[i];
+  for (;i<nbin;i++) if (cdf[i]>=0.9) break;
+  mean[3] = centers[Min(i,nbin-1)];           // mean for fat
+  prior[0]= 0.2;
+  prior[1]= 0.2;
+  prior[2]= 0.4;
+  prior[3]= 0.2; 
+  temp  = (mean[1]-mean[0])/10.0;
+  var[0] = temp*temp;
+  var[1] = var[0];
+  var[2] = var[0];
+  var[3] = var[0];
+ 
+  std::cout<<"Initialization for EM:"<<std::endl;
+  std::cout<<"non-fat1 mean = "<<mean[0]<<" variance = "<<var[0]<<" prior = "<<prior[0]<<std::endl;
+  std::cout<<"non-fat2 mean = "<<mean[1]<<" variance = "<<var[1]<<" prior = "<<prior[1]<<std::endl;
+  std::cout<<"non-fat3 mean = "<<mean[2]<<" variance = "<<var[2]<<" prior = "<<prior[2]<<std::endl;
+  std::cout<<"fat      mean = "<<mean[3]<<" variance = "<<var[3]<<" prior = "<<prior[3]<<std::endl;
+  pdfest=EM1DWeighted (centers, pdf, nbin, 4, mean, prior, var);
+  std::cout<<"After EM:"<<std::endl;
+  std::cout<<"non-fat1 mean = "<<mean[0]<<" variance = "<<var[0]<<" prior = "<<prior[0]<<std::endl;
+  std::cout<<"non-fat2 mean = "<<mean[1]<<" variance = "<<var[1]<<" prior = "<<prior[1]<<std::endl;
+  std::cout<<"non-fat3 mean = "<<mean[2]<<" variance = "<<var[2]<<" prior = "<<prior[2]<<std::endl;
+  std::cout<<"fat      mean = "<<mean[3]<<" variance = "<<var[3]<<" prior = "<<prior[3]<<std::endl;
+  
+  float diffl, diffh, pos;
+  for (i=nbin-1;i>=0;i--) if (pdfest[i*4+3]<pdfest[i*4+2]) break;
+  if (i<=0) th = centers[0];
+  else
+    {
+    if (i>=(nbin-1)) th = centers[nbin-1];
+    diffl=pdfest[i*4+3]-pdfest[i*4+2];
+    diffh=pdfest[(i+1)*4+3]-pdfest[(i+1)*4+2];
+    pos = diffl/(diffl-diffh);
+    th = centers[i] + pos * stepsize;
+    }
+  
+  // free memory not needed any longer
+  free (pdfest);
+  free (hist);
+  free (upperlims);
+  free (pdf);
+  free (centers);
+  free (cdf);
+  
+  std::cout<<"Fat threshold = "<<th<<std::endl;
+  m_FatThreshold = th;
+
+  // labeling is done here in certain slices to aid in intra-extra cranial
+  // separation, actual fat detection is done in scalp classification
+  if (m_TopOfEyeSlice>=0)
+    {
+    int depth = 1 + m_TopOfEyeSlice + (int)ceil(6.0/m_SliceThickness);
+    int ycenter = (int)rint(m_center[1]);
+    
+    for (z=0;z<depth;z++)
+      for (y=ycenter;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          if (m_Label(x,y,z)==T_FOREGROUND)
+            {
+            data = m_Data.peek(x,y,z);
+            fat_energy = data.peek(0);
+            if (fat_energy>th)
+              m_Label.poke(x,y,z) = T_FAT;
+            }
+    
+    int rad = (int)floor(maskr);
+    int len = 2*rad+1;
+    
+    float xo, yo;
+    VISImage<int> tempI (m_width, m_height-ycenter);
+    VISImage<int> maskI (len, len);
+    
+    for (y=0;y<len;y++)
+      for (x=0;x<len;x++)
+        {
+        xo = (float)( x - rad );
+        yo = (float)( y - rad );
+        if ( sqrt(xo*xo + yo*yo) <=maskr ) maskI.poke(x,y) = 1;
+        else maskI.poke(x,y) = 0;
+        }
+    
+    for (z=0;z<depth;z++)
+      {
+      for (y=ycenter;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          if ((m_Label(x,y,z)==T_FAT)||(m_Label(x,y,z)==T_EYE)||(m_Label(x,y,z)==T_EYE_LENS))
+            tempI.poke(x,y-ycenter)=1; 
+          else tempI.poke(x,y-ycenter)=0;
+
+      // we need to clean up noise because T1 signal by itself is not very
+      // reliable for fat detection
+      tempI=tempI.closing(maskI); // close holes
+      tempI=tempI.opening(maskI); // remove outliers
+      tempI=tempI.dilate(maskI);  // increase fat volume just to make sure
+                                  // brain doesn't leak out 
+        
+      for (y=ycenter;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          if ((m_Label(x,y,z)==T_FAT)&&(tempI(x,y-ycenter)==0)) m_Label.poke(x,y,z)=T_FOREGROUND;
+          else if ((tempI(x,y-ycenter)==1)&&(m_Label(x,y,z)==T_FOREGROUND)) m_Label.poke(x,y,z)=T_FAT;
+      }
+    }
+}
+
+void
+MRITissueClassifier::FatDetection_FATSAT ()
+{
+  // this function serves 2 purposes: (i) to compute a threshold for fat using
+  // the T1 signal, this threshold is later used to initialize the scalp
+  // classification routine
+  // (ii) use the threshold here to do a pre-labelling in certain slices to
+  // aid in intra-extracranial separation -- this is needed in slices below the
+  // eyes because the skull no longer forms a closed surface around the brain
+  // and floodfill methods can leak -- we supplement the skull barrier with a
+  // fat barrier in these regions and this seems to solve the proble,
+
+  // I think this is the part of the algorithm most prone to failing
+  // If it does fail, the user can tell the algorithm to lower the fat
+  // threshold to increase the chances of succesfully blocking any leakage
+
+  std::cout<<"FAT DETECTION (with fatsat)\n";
+  m_Fat_Energy= VISVolume<float> (m_width, m_height, m_depth);
+  int x, y, z, cnt, i;
+  float min, max,  temp, mean[2], var[2], prior[2], *pdfest, th;
+  VISVector data;
+
+  cnt = 0;
+  for (z=0;z<m_TopOfHead;z++)
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        {
+        data = m_Data.peek(x,y,z);
+        m_Fat_Energy.poke(x,y,z) = data(0) - data(3);
+        if (m_Label(x,y,z)==T_FOREGROUND)
+          {
+          if (cnt==0) min=max=m_Fat_Energy(x,y,z);
+          else
+            {
+            if (m_Fat_Energy(x,y,z)>max) max=m_Fat_Energy(x,y,z);
+            else if (m_Fat_Energy(x,y,z)<min) min=m_Fat_Energy(x,y,z);
+            } 
+          cnt++;
+          }
+        }
+
+  std::cout<<"Fat energy min = "<<min<<" , max = "<<max<<std::endl;
+  // compute bins for the histogram
+  float stepsize = ceil((max-min)/(float)NBINMAX);
+  int nbin = (int)rint((max-min)/stepsize);
+  std::cout<<"Using "<<nbin<<" bins for histogram\n";
+  int   *hist      = (int*)calloc(nbin, sizeof(int));
+  float *pdf       = (float*)calloc(nbin, sizeof(int));
+  float *centers   = (float*)calloc(nbin, sizeof(float));
+  float *upperlims = (float*)calloc(nbin-1, sizeof(float));
+  float *cdf       = (float*)calloc(nbin, sizeof(int));
+  
+  upperlims[0]=min+stepsize;
+  centers[0]=min;
+  for (i=1;i<nbin-1;i++)
+    {
+    upperlims[i]=upperlims[i-1]+stepsize;
+    centers[i]=centers[i-1]+stepsize;
+    }
+  centers[nbin-1]=max-stepsize;
+  Clear1DHistogram(hist,nbin);
+  Accumulate1DHistogramWithLabel (upperlims,hist,nbin,m_Fat_Energy,
+                                  0,0,0,m_width-1,m_height-1,m_TopOfHead-1,T_FOREGROUND);
+  
+  // initialize gaussian parameters for EM algorithm
+  for (i=0;i<nbin;i++) pdf[i]=(float)hist[i]/(float)cnt;
+  cdf[0] = pdf[0];
+  for (i=1;i<nbin;i++) cdf[i] = cdf[i-1] + pdf[i];
+
+  for (i=0;i<nbin;i++) if (cdf[i]>=0.4) break;
+  mean[0] = centers[i];                          
+  for (;i<nbin;i++) if (cdf[i]>=0.9) break;
+  mean[1] = centers[Min(i,nbin-1)];           // mean for fat
+  prior[0]= 0.8; 
+  prior[1]= 0.2; // prior for fat
+  temp  = (mean[1]-mean[0])/10.0;
+  var[0] = temp*temp;  // bone/air has the smallest variance
+  var[1] = var[0]; // muscle has the largest
+ 
+  std::cout<<"Initialization for EM:"<<std::endl;
+  std::cout<<"non-fat    mean = "<<mean[0]<<" variance = "<<var[0]<<" prior = "<<prior[0]<<std::endl;
+  std::cout<<"fat      mean = "<<mean[1]<<" variance = "<<var[1]<<" prior = "<<prior[1]<<std::endl;
+
+  // Expectation-Maximization (EM) on the 1D histogram
+  pdfest=EM1DWeighted (centers, pdf, nbin, 2, mean, prior, var);
+
+  std::cout<<"After EM:"<<std::endl;
+  std::cout<<"non-fat    mean = "<<mean[0]<<" variance = "<<var[0]<<" prior = "<<prior[0]<<std::endl;
+  std::cout<<"fat      mean = "<<mean[1]<<" variance = "<<var[1]<<" prior = "<<prior[1]<<std::endl;
+
+  //th = mean[1];//+2.0*sqrt(var[1]);
+  th = Compute2ClassThreshold (pdfest,centers,nbin);
+  m_FatThreshold = th;
+  
+  // free memory not needed any longer
+  free (pdfest);
+  free (hist);
+  free (upperlims);
+  free (pdf);
+  free (centers);
+  free (cdf);
+  
+  std::cout<<"Fat threshold = "<<th<<std::endl;
+
+  if (m_TopOfEyeSlice>=0)
+    {
+    int depth = 1 + m_TopOfEyeSlice + (int)ceil(6.0/m_SliceThickness);
+    for (z=0;z<depth;z++)
+      for (y=0;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          if ((m_Label(x,y,z)==T_FOREGROUND)&&(m_Fat_Energy(x,y,z)>th))
+            m_Label.poke(x,y,z) = T_FAT;
+    }
+}
+
+void
+MRITissueClassifier::BrainDetection (float maskr, float maskr2)
+{
+  // this function separates brain from non-brain by using a 3 class clustering
+  // on the T1+T2+PD signal. Brain and skin are brightest in this signal but
+  // are separated by skull only in slices higher than the eyes and by skull
+  // and fat in other slices. So we do a floodfill from the area around the
+  // foreground center using the threshold and the skull/fat barriers. The
+  // fat barrier could fail (see comments in fat detection functions)
+  
+  // maskr size of mask to do opening closing to remove noise
+  // maskr2 parameter should be related to the size of the sinus cavities 
+  
+  std::cout<<"INTRA/EXTRA-CRANIAL SEPARATION"<<std::endl;
+  // compute new histogram without background pixels
+  int x, y, z, i, j, cnt;
+  float min, max, temp, mean[3], var[3], prior[3];
+  float *pdfest;
+
+  // find min-max of m_Energy
+  cnt = 0;
+  for (z=0;z<m_TopOfHead;z++)
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (m_Label(x,y,z)==T_FOREGROUND)
+          {
+          if (cnt==0) min=max=m_Energy(x,y,z);
+          else
+            {
+            if (m_Energy(x,y,z)>max) max=m_Energy(x,y,z);
+            else if (m_Energy(x,y,z)<min) min=m_Energy(x,y,z);
+            }
+          cnt++;
+          }
+
+  std::cout<<"Energy min = "<<min<<" , max = "<<max<<std::endl;
+  // compute bins for the histogram
+  float stepsize = ceil((max-min)/(float)NBINMAX);
+  int nbin = (int)rint((max-min)/stepsize);
+  std::cout<<"Using "<<nbin<<" bins for histogram\n";
+  int   *hist      = (int*)calloc(nbin, sizeof(int));
+  float *pdf       = (float*)calloc(nbin, sizeof(int));
+  float *centers   = (float*)calloc(nbin, sizeof(float));
+  float *upperlims = (float*)calloc(nbin-1, sizeof(float));
+  float *cdf       = (float*)calloc(nbin, sizeof(int));
+  
+  upperlims[0]=min+stepsize;
+  centers[0]=min;
+  for (i=1;i<nbin-1;i++)
+    {
+    upperlims[i]=upperlims[i-1]+stepsize;
+    centers[i]=centers[i-1]+stepsize;
+    }
+  centers[nbin-1]=max-stepsize;
+  Clear1DHistogram(hist,nbin);
+  Accumulate1DHistogramWithLabel (upperlims,hist,nbin,m_Energy,
+                                  0,0,0,m_width-1,m_height-1,m_TopOfHead-1,T_FOREGROUND);
+
+  // initialize gaussian parameters for EM algorithm
+  for (i=0;i<nbin;i++) pdf[i]=(float)hist[i]/(float)cnt;
+  cdf[0] = pdf[0];
+  for (i=1;i<nbin;i++) cdf[i] = cdf[i-1] + pdf[i];
+  mean[0] = centers[0];                          // mean for bone and air cavities
+  for (i=1;i<nbin;i++) if (cdf[i]>=0.2) break;
+  mean[1] = centers[i];                          // mean for muscle
+  for (;i<nbin;i++) if (cdf[i]>=0.65) break;
+  mean[2] = centers[Min(i,nbin-1)];           // mean for brain matter/fat/skin
+  prior[0]= 0.1; // prior for bone/air
+  prior[1]= 0.2; // prior for muscle
+  prior[2]= 0.7; // prior for brain matter 
+  temp  = 0.5*centers[(int)rint(0.05*(float)nbin)];
+  var[0] = temp*temp;  // bone/air has the smallest variance
+  var[1] = 9.0*var[0]; // muscle has the largest
+  var[2] = 6.0*var[0]; 
+ 
+  std::cout<<"Initialization for EM:"<<std::endl;
+  std::cout<<"bone/air    mean = "<<mean[0]<<" variance = "<<var[0]<<" prior = "<<prior[0]<<std::endl;
+  std::cout<<"muscle      mean = "<<mean[1]<<" variance = "<<var[1]<<" prior = "<<prior[1]<<std::endl;
+  std::cout<<"brain/scalp mean = "<<mean[2]<<" variance = "<<var[2]<<" prior = "<<prior[2]<<std::endl;
+  pdfest=EM1DWeighted (centers, pdf, nbin, 3, mean, prior, var);
+  std::cout<<"After EM:"<<std::endl;
+  std::cout<<"bone/air    mean = "<<mean[0]<<" variance = "<<var[0]<<" prior = "<<prior[0]<<std::endl;
+  std::cout<<"muscle      mean = "<<mean[1]<<" variance = "<<var[1]<<" prior = "<<prior[1]<<std::endl;
+  std::cout<<"brain/scalp mean = "<<mean[2]<<" variance = "<<var[2]<<" prior = "<<prior[2]<<std::endl;
+
+  // compute threshold for intra/extra-cranial separation
+  for (i=nbin-1;i>=0;i--) if (pdfest[i*3+1]<pdfest[i*3+2]) break;
+  for (;i>=0;i--) if (pdfest[i*3+1]>=pdfest[i*3+2]) break;
+  
+  float diffl, diffh, pos, threshold;
+  if (i<=0) threshold = centers[0];
+  else
+    {
+    if (i>=(nbin-1)) threshold = centers[nbin-1];
+    diffl=pdfest[i*3+2]-pdfest[i*3+1];
+    diffh=pdfest[(i+1)*3+2]-pdfest[(i+1)*3+1];
+    pos = diffl/(diffl-diffh);
+    threshold = centers[i] + pos * stepsize;
+    }
+  std::cout<<"Intra/Extra-cranial separation threshold = "<<threshold<<"\n";
+
+  // free memory not needed any longer
+  free (pdfest);
+  free (hist);
+  free (upperlims);
+  free (pdf);
+  free (centers);
+  free (cdf);
+
+  // prepare noise removal mask
+  int rad = (int)ceil(maskr);
+  int len = 2*rad+1;
+  float xo, yo;
+  VISImage<int> tempI (m_width,m_height);
+  VISImage<int> mask(len,len);
+  for (x=0;x<len;x++)
+    for (y=0;y<len;y++)
+      {
+      xo = (float)( x - rad );
+      yo = (float)( y - rad );
+      if ( sqrt(xo*xo + yo*yo) <=maskr ) mask.poke(x,y) = 1;
+      else mask.poke(x,y) = 0;
+      }
+
+  // prepare sinus detection mask
+  int rad2 = (int)ceil(maskr2);
+  int len2 = 2*rad2+1;
+  VISImage<int> mask2(len2,len2);
+  for (x=0;x<len2;x++)
+    for (y=0;y<len2;y++)
+      {
+      xo = (float)( x - rad2 );
+      yo = (float)( y - rad2 );
+      if ( sqrt(xo*xo + yo*yo) <=maskr2 ) mask2.poke(x,y) = 1;
+      else mask2.poke(x,y) = 0;
+      }
+  
+  int yl=(int)rint(m_center[1])-10;
+  int yh=yl+20;
+  int xl=(int)rint(m_center[0])-10;
+  int xh=xl+20;
+  int xa, ya, k;
+  int cnt2, cntp;
+  int zlow = m_TopOfHead-(int)rint(15.0/m_SliceThickness);
+  int ylow = (int)rint(Max(m_EyePosition[0][1],m_EyePosition[1][1])-10.0/m_PixelDim);
+  int zt = m_TopOfEyeSlice+(int)ceil(9.0/m_SliceThickness);
+  float r, rp;
+  float distth = 15.0/m_PixelDim;  
+  float dist, ndx, ndy, val, dl, dh;
+  int flag, flag2, xp, yp, xn, yn, yl2, yh2, xl2, xh2;
+  
+  m_TopOfBrain = -1;
+  // slices from eyes to top of head
+  for (z=Max(m_TopOfEyeSlice,0);z<m_TopOfHead;z++)
+    {
+    for (x=0;x<m_width;x++)
+      for (y=0;y<m_height;y++)
+        if ((m_Label(x,y,z)==T_FOREGROUND)&&(m_Energy(x,y,z)>threshold)) tempI.poke(x,y)=2;
+        else tempI.poke(x,y)=0;
+    
+    if (z<=zt)
+      {
+      // can't have any brain pixels within 15 mm of the background for these
+      // slices , we do this to avoid leaking around the eyes
+      for (x=0;x<m_width;x++)
+        for (y=ylow;y<m_height;y++)
+          if (m_DistBG(x,y,z)<distth)
+            tempI.poke(x,y)=0;
+      }
+
+    // floodfill from inside
+    for (xa=xl;xa<=xh;xa++)
+      for (ya=yl;ya<=yh;ya++)
+        if (tempI(xa,ya)==2)
+          tempI = tempI.floodFill(2,1,xa,ya);
+    
+    yl2 = m_height-1; yh2 = 0;
+    for (x=0;x<m_width;x++)
+      for (y=0;y<m_height;y++)
+        if (tempI(x,y)==2) tempI.poke(x,y)=0;
+        else if (tempI(x,y)==1)
+          {
+          if (y<yl2) yl2 = y;
+          if (y>yh2) yh2 = y;
+          }
+
+    // remove holes in brain (low energy pixels enclosed in brain tissue such
+    // as some sinuses)
+    tempI = tempI.closing(mask);
+    // find sinuses that are not totally enclosed in brain matter
+    yl2 = Max(yl2-3,0);
+    yh2 = Min(yh2+3,m_height-1);
+    if (z<=zt) yh2 = (int)rint(m_slicecenter[1][z]);
+    for (y=yl2;y<yh2;y++)
+      {
+      dist = Min(fabs((float)y-m_slicecenter[1][z]),15.0);
+      xl2 = Max((int)floor(m_slicecenter[0][z]-dist),0);
+      xh2 = Min((int)ceil(m_slicecenter[0][z]+dist),m_width-1);
+      for (x=xl2;x<=xh2;x++)
+        if (tempI(x,y)==0)
+          {
+          dist = m_DistBG2D(x,y,z);
+          ndx = m_DistBG2D(x+1,y,z)-m_DistBG2D(x-1,y,z);
+          ndy = m_DistBG2D(x,y+1,z)-m_DistBG2D(x,y-1,z);
+          val = sqrt(ndx*ndx+ndy*ndy);
+          ndx /= val;
+          ndy /= val;
+          dl = dist - 1.5*m_PixelDim;
+          dh = dist;
+          flag = flag2 = 0;
+          for (xp = -rad2; xp<=rad2; xp++)
+            {
+            for (yp = -rad2; yp<=rad2; yp++)
+              if (((xp!=0)||(yp!=0))&&mask2(xp+rad2,yp+rad2))
+                {
+                xn = x + xp ;
+                yn = y + yp;
+                if ((xn>=0)&&(xn<m_width)&&(yn>=0)&&(yn<m_height)&&
+                    (m_DistBG2D(xn,yn,z)>=dl)&&(m_DistBG2D(xn,yn,z)<=dh))
+                  {
+                  if (((!flag)||(!flag2))&&(tempI(xn,yn)==1))
+                    {
+                    val = ndy*(float)xp - ndx*(float)yp;
+                    if (val>0.0) flag = 1;
+                    else if (val<0.0) flag2 = 1;
+                    }
+                  }
+                }
+            }
+          if (flag&&flag2) tempI.poke(x,y) = 1;
+          }
+      }
+    tempI.floodFill(0,3,0,0);
+    tempI.floodFill(0,3,m_width-1,0);
+    tempI.floodFill(0,3,0,m_height-1);
+    tempI.floodFill(0,3,m_width-1,m_height-1);
+
+    for (x=0;x<m_width;x++)
+      for (y=0;y<m_height;y++)
+        if (tempI(x,y)==0) tempI.poke(x,y)=1;
+        else if (tempI(x,y)==3) tempI.poke(x,y)=0;
+    
+    if (z>=zlow)
+      {
+      cnt = cnt2 = 0;
+      for (x=0;x<m_width;x++)
+        for (y=0;y<m_height;y++)
+          if (m_Label(x,y,z) == T_FOREGROUND)
+            {
+            if (tempI(x,y)==1) cnt++;
+            cnt2++;
+            }
+      r = ((float)cnt)/((float)cnt2);
+      if ((z>zlow)&&(cnt>cntp)&&(rp<0.01))
+        {
+        m_TopOfBrain = z-1;
+        break;
+        }
+      rp = r;
+      cntp = cnt;
+      }
+
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if ((m_Label(x,y,z)==T_FOREGROUND)&&(tempI(x,y)==1))
+          m_Label.poke(x,y,z)=T_INTRACRANIAL; // brain pixel
+    }
+
+  if (m_TopOfBrain == -1) m_TopOfBrain = m_TopOfHead;
+  std::cout<<"Top of brain slice = "<<m_TopOfBrain<<"\n";
+
+  // slices below eyes.. things are done slightly differently here
+  zt = m_TopOfEyeSlice-(int)ceil(3.0/m_SliceThickness);
+  if ((m_EyesVisible==1)&&(m_TopOfEyeSlice>0))
+    {
+    VISVolume<int> tempV (m_width,m_height,m_TopOfEyeSlice);
+    
+    for (z=0;z<m_TopOfEyeSlice;z++)
+      {
+      for (x=0;x<m_width;x++)
+        for (y=0;y<m_height;y++)
+          if ((m_Label(x,y,z)==T_FOREGROUND)&&(m_Energy(x,y,z)>threshold)) tempI.poke(x,y)=1;
+          else tempI.poke(x,y)=0;
+      
+      if (z>=zt)
+        {
+        for (x=0;x<m_width;x++)
+          for (y=ylow;y<m_height;y++)
+            tempI.poke(x,y)=0;
+        }
+      tempI = tempI.opening(mask);
+
+      for (x=0;x<m_width;x++)
+        for (y=0;y<m_height;y++)
+          tempV.poke(x,y,z)=tempI(x,y);
+      }
+    
+    for (xa=xl;xa<=xh;xa++)
+      for (ya=yl;ya<=yh;ya++)
+        if (tempV(xa,ya,m_TopOfEyeSlice-1)==1)
+          tempV.floodFill(1,2,xa,ya,m_TopOfEyeSlice-1);
+    
+    for (z=0;z<m_TopOfEyeSlice;z++)
+      {
+      yl2 = m_height-1;
+      for (x=0;x<m_width;x++)
+        for (y=0;y<m_height;y++)
+          if (tempV(x,y,z)==2)
+            {
+            tempI.poke(x,y) = 1;
+            if (y<yl2) yl2 = y;
+            }
+          else tempI.poke(x,y) = 0;
+      
+      tempI = tempI.closing(mask);
+
+      if (z>=m_BottomOfEyeSlice)
+        {
+        yl2 = Max(yl2-3,0);
+        yh2 = (int)rint(m_slicecenter[1][z]);
+        for (y=yl2;y<yh2;y++)
+          {
+          dist = Min(fabs((float)y-m_slicecenter[1][z]),15.0);
+          xl2 = Max((int)floor(m_slicecenter[0][z]-dist),0);
+          xh2 = Min((int)ceil(m_slicecenter[0][z]+dist),m_width-1);
+          for (x=xl2;x<=xh2;x++)
+            if (tempI(x,y)==0)
+              {
+              dist = m_DistBG2D(x,y,z);
+              ndx = m_DistBG2D(x+1,y,z)-m_DistBG2D(x-1,y,z);
+              ndy = m_DistBG2D(x,y+1,z)-m_DistBG2D(x,y-1,z);
+              val = sqrt(ndx*ndx+ndy*ndy);
+              ndx /= val;
+              ndy /= val;
+              dl = dist - 1.5*m_PixelDim;
+              dh = dist;
+              flag = flag2 = 0;
+              for (xp = -rad2; xp<=rad2; xp++)
+                {
+                for (yp = -rad2; yp<=rad2; yp++)
+                  if (((xp!=0)||(yp!=0))&&mask2(xp+rad2,yp+rad2))
+                    {
+                    xn = x + xp ;
+                    yn = y + yp;
+                    if ((xn>=0)&&(xn<m_width)&&(yn>=0)&&(yn<m_height)&&
+                        (m_DistBG2D(xn,yn,z)>=dl)&&(m_DistBG2D(xn,yn,z)<=dh))
+                      {
+                      if (((!flag)||(!flag2))&&(tempI(xn,yn)==1))
+                        {
+                        val = ndy*(float)xp - ndx*(float)yp;
+                        if (val>0.0) flag = 1;
+                        else if (val<0.0) flag2 = 1;
+                        }
+                      }
+                    }
+                }
+              if (flag&&flag2) tempI.poke(x,y) = 1;
+              }
+          }
+        }
+      tempI.floodFill(0,3,0,0);
+      tempI.floodFill(0,3,m_width-1,0);
+      tempI.floodFill(0,3,0,m_height-1);
+      tempI.floodFill(0,3,m_width-1,m_height-1);
+      
+      for (x=0;x<m_width;x++)
+        for (y=0;y<m_height;y++)
+          if (tempI(x,y)==0) tempI.poke(x,y)=1;
+          else if (tempI(x,y)==3) tempI.poke(x,y)=0;
+      
+      for (y=0;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          if ((m_Label(x,y,z)==T_FOREGROUND)&&(tempI(x,y)==1))
+            m_Label.poke(x,y,z)=T_INTRACRANIAL; // brain pixel
+      }
+    }
+
+  int d = 1 + m_TopOfEyeSlice + (int)ceil(6.0/m_SliceThickness);
+  
+  for (z=0;z<d;z++)
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (m_Label(x,y,z)==T_FAT)
+          m_Label.poke(x,y,z)=T_FOREGROUND; // remove any previous fat markings
+                                            // in these slices -- they were
+                                            // only needed for the brain floodfills
+
+  if (m_EyesVisible) FindTemporalSlice();
+  else m_TopTemporalSlice = -1;
+
+  int N[8][2];
+  N[0][0] = 1;N[0][1] = 0;
+  N[1][0] = -1;N[1][1] = 0;
+  N[2][0] = 0;N[2][1] = 1;
+  N[3][0] = 0;N[3][1] = -1;
+  N[4][0] = 1;N[4][1] = 1;
+  N[5][0] = 1;N[5][1] = -1;
+  N[6][0] = -1;N[6][1] = 1;
+  N[7][0] = -1;N[7][1] = -1;
+  VISImIndexList list, rlist;
+
+  // connected component analysis to fill bigger holes in brain if any
+  unsigned int at_x, at_y, next_x, next_y;
+  int ymin, yc;
+  for (z=0;z<m_depth;z++)
+    {
+    tempI = m_Label.image(z);
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (tempI(x,y) == T_FOREGROUND)
+          {
+          list.clean();
+          rlist.clean();
+          list.appendItem(VISImIndex(x, y));
+          rlist.appendItem(VISImIndex(x, y));
+          tempI.poke(x,y) = 255;
+          list.reset();
+          flag=0;
+          for (j=0;j<8;j++)
+            {
+            xa = x + N[j][0];
+            ya = y + N[j][0];
+            if ((tempI.checkBounds((unsigned)xa,(unsigned)ya))&&(m_Label(xa,ya,z)==T_BACKGROUND))
+              {
+              flag=1;
+              break;
+              }
+            }
+          while (list.valid())
+            {
+            at_x = list.atCurrent().a();
+            at_y = list.atCurrent().b();
+    
+            for (i = 0; i < 4; i++)
+              {
+              next_x = at_x + N[i][0];
+              next_y = at_y + N[i][1];
+              if (tempI.checkBounds((unsigned)next_x, (unsigned)next_y))
+                {
+                if (tempI.itemAt(next_x, next_y) == T_FOREGROUND)
+                  {
+                  tempI.poke(next_x, next_y) = 255;
+                  list.appendItem(VISImIndex(next_x, next_y));
+                  rlist.appendItem(VISImIndex(next_x, next_y));
+                  if (!flag)
+                    for (j=0;j<8;j++)
+                      {
+                      xa = next_x + N[j][0];
+                      ya = next_y + N[j][0];
+                      if ((tempI.checkBounds((unsigned)xa,(unsigned)ya))&&(m_Label(xa,ya,z)==T_BACKGROUND))
+                        {
+                        flag=1;
+                        break;
+                        }
+                      }
+                  }
+                }
+              }
+            list.removeCurrent();
+            }
+
+          if (!flag)
+            {
+            rlist.reset();
+            while (rlist.valid())
+              {
+              at_x = rlist.atCurrent().a();
+              at_y = rlist.atCurrent().b();
+              m_Label.poke(at_x,at_y,z) = T_INTRACRANIAL;
+              rlist.removeCurrent();
+              }
+            }
+          }
+    
+    if (z<=m_TopTemporalSlice)
+      {
+      ymin = m_height;
+      for (y=0;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          if ((m_Label(x,y,z)==T_INTRACRANIAL)&&(y<ymin)) ymin = y;
+      yc = ymin + (int)rint(40.0/m_PixelDim);
+      }
+
+    // separate sinus vs. brain
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        {
+        if ((m_Label(x,y,z)==T_INTRACRANIAL)&&(m_Energy(x,y,z)<threshold))
+          {
+          if (z>m_TopTemporalSlice) m_Label.poke(x,y,z) = T_SINUS;
+          else
+            {
+            if (y<yc)  m_Label.poke(x,y,z) = T_SINUS;
+            else m_Label.poke(x,y,z) = T_FOREGROUND;
+            }
+          }
+        }
+    }
+
+  FindTemporalLobes(); 
+}
+
+void
+MRITissueClassifier::FindTemporalSlice ()
+{
+  // find the slice where temporal lobes begin
+  // this is used in later functions to break up the volume into parts that are
+  // treated differently
+  int x, y, z, xcl, xcr, maxl, maxr, maxc;
+
+  int x1l = (int)floor(m_EyePosition[0][0]-10.0/m_PixelDim);
+  int x1r = (int)ceil(m_EyePosition[0][0]+10.0/m_PixelDim);
+  int x2l = (int)floor(m_EyePosition[1][0]-10.0/m_PixelDim);
+  int x2r = (int)ceil(m_EyePosition[1][0]+10.0/m_PixelDim);
+  int zt = m_TopOfEyeSlice + (int)rint(20.0/m_SliceThickness);
+  m_brainlim = (int*)calloc(m_depth,sizeof(int));
+  
+  m_TopTemporalSlice = -1;
+  
+  for (z=zt;z>=0;z--)
+    {
+    xcl = (int)rint(m_slicecenter[0][z]-5.0/m_PixelDim);
+    xcr = (int)rint(m_slicecenter[0][z]+5.0/m_PixelDim);
+    
+    maxl = maxr = maxc = 0;
+
+    for (x = xcl; x<=xcr; x++)
+      {
+      for (y=m_height;y>=0;y--)
+        if ((m_Label(x,y,z)==T_INTRACRANIAL)||(m_Label(x,y,z)==T_SINUS))
+          break;
+      if (y>maxc) maxc=y;
+      }
+    m_brainlim[z]=maxc;
+    if (z<=m_TopOfEyeSlice)
+      {
+      for (x = x1l; x<=x1r; x++)
+        {
+        for (y=m_height;y>=0;y--)
+          if ((m_Label(x,y,z)==T_INTRACRANIAL)||(m_Label(x,y,z)==T_SINUS))
+            break;
+        if (y>maxl) maxl=y;
+        }
+      for (x = x2l; x<=x2r; x++)
+        {
+        for (y=m_height;y>=0;y--)
+          if ((m_Label(x,y,z)==T_INTRACRANIAL)||(m_Label(x,y,z)==T_SINUS))
+            break;
+        if (y>maxr) maxr=y;
+        }
+      
+      if ((m_TopTemporalSlice==-1)&&(Min(maxl,maxr)>maxc))
+        m_TopTemporalSlice = z;
+      }
+    }
+}
+
+void
+MRITissueClassifier::FindTemporalLobes ()
+{
+  // this function removes leakage from temporal lobes into non-brain pixels
+  int x, y, z, m, i, *pcnt, cnt, cnt2, flag, maxy, max;
+  int zt = m_TopTemporalSlice - (int)rint(21.0/m_SliceThickness);
+  int zb = m_TopTemporalSlice - (int)rint(28.0/m_SliceThickness);
+ 
+  if (zt>0) 
+    {
+    VISImage<int> slice;
+    for (z=zt;z>=0;z--)
+      {
+      flag = 0;
+      slice = m_Label.image(z);
+      for (x=0;x<m_width;x++)
+        for (y=0;y<m_height;y++)
+          if ((slice(x,y)==T_INTRACRANIAL)||(slice(x,y)==T_SINUS))
+            {
+            slice.poke(x,y) = 1;
+            flag = 1;
+            }
+          else slice.poke(x,y) = 0;
+
+      if (flag)
+        {
+        cnt = 2;
+        while (flag)
+          {
+          flag = 0;
+          for (x=0;x<m_width;x++)
+            for (y=0;y<m_height;y++)
+              if (slice(x,y)==1)
+                {
+                slice = slice.floodFill(1,cnt++,x,y);
+                flag = 1;
+                }
+          }
+
+        if (cnt>2)
+          {
+          pcnt = (int*)calloc(cnt-1,sizeof(int));
+          
+          for (x=0;x<m_width;x++)
+            for (y=0;y<m_height;y++)
+              if (slice(x,y)>1) pcnt[slice(x,y)-1]++;
+          max = 0;
+          for (i=0;i<cnt-1;i++)
+            if (pcnt[i]>max)
+              {
+              max = pcnt[i];
+              m = i+1;
+              }
+          
+          maxy = m_height-1;
+          if (z<zb)
+            {
+            maxy = 0;
+            for (y=m_height-1;y>=0;y--)
+              {
+              for (x=0;x<m_width;x++)
+                if (slice(x,y)==m)
+                  {
+                  maxy = y;
+                  break;
+                  }
+              if (maxy>0) break;
+              }
+            }
+          for (x=0;x<m_width;x++)
+            for (y=0;y<m_height;y++)
+              if (((m_Label(x,y,z)==T_INTRACRANIAL)||(m_Label(x,y,z)==T_SINUS))&&(slice(x,y)!=m))
+                {
+                if (!((m_Label(x,y,z+1)==T_INTRACRANIAL)||(m_Label(x,y,z+1)==T_SINUS)))
+                  {
+                  m_Label.poke(x,y,z) = T_FOREGROUND;
+                  pcnt[slice(x,y)-1]--;
+                  }
+                else if (y>maxy)
+                  {
+                  m_Label.poke(x,y,z) = T_FOREGROUND;
+                  pcnt[slice(x,y)-1]--;
+                  }
+                }
+          free(pcnt);
+          } // if more than 1 2D connected component
+        } // if brain pixel exists in slice
+      } // z-loop
+    }
+}
+
+void
+MRITissueClassifier::BoneDetection_PDthreshold (float *th_low, float *th_high)
+{
+  // this is a reliable function that does a 2 class clustering (bone+air
+  // vs. scalp) using the proton density signal. I found that pd works slightly
+  // better than  t1+t2+pd for some reason
+  int i, x, y, z, cnt;
+  float min, max, val, mean[2], var[2], prior[2], temp, *pdfest;
+  VISVector data;
+  
+  cnt = 0;
+  for (z=0;z<m_TopOfHead;z++)
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (m_Label(x,y,z)==T_FOREGROUND)
+          {
+          data = m_Data.peek(x,y,z);
+          m_Label.poke(x,y,z)=T_FOREGROUND;
+          val = data.peek(2);
+          if (cnt==0) min=max=val;
+          else
+            {
+            if (val>max) max=val;
+            else if (val<min) min=val;
+              }
+          cnt++;
+          }
+  
+  std::cout<<"PD min = "<<min<<" , max = "<<max<<std::endl;
+  // compute bins for the histogram
+  float stepsize = ceil((max-min)/(float)NBINMAX);
+  int nbin = (int)rint((max-min)/stepsize);
+  std::cout<<"Using "<<nbin<<" bins for histogram\n";
+  int   *hist      = (int*)calloc(nbin, sizeof(int));
+  float *pdf       = (float*)calloc(nbin, sizeof(int));
+  float *centers   = (float*)calloc(nbin, sizeof(float));
+  float *upperlims = (float*)calloc(nbin-1, sizeof(float));
+  float *cdf       = (float*)calloc(nbin, sizeof(int));
+  
+  upperlims[0]=min+stepsize;
+  centers[0]=min;
+  for (i=1;i<nbin-1;i++)
+    {
+    upperlims[i]=upperlims[i-1]+stepsize;
+    centers[i]=centers[i-1]+stepsize;
+    }
+  centers[nbin-1]=max-stepsize;
+  Clear1DHistogram(hist,nbin);
+  Accumulate1DHistogramWithLabel (upperlims,hist,nbin,2,
+                                  0,0,0,m_width-1,m_height-1,m_TopOfHead-1,
+                                  T_FOREGROUND);
+
+
+  for (i=0;i<nbin;i++) pdf[i]=(float)hist[i]/(float)cnt;
+  cdf[0] = pdf[0];
+  for (i=1;i<nbin;i++) cdf[i] = cdf[i-1] + pdf[i];
+
+  for (i=1;i<nbin;i++) if (cdf[i]>=0.15) break;
+  mean[0] = centers[i];                       
+  for (;i<nbin;i++) if (cdf[i]>=0.65) break;
+  mean[1] = centers[Min(i,nbin-1)];        
+  prior[0]= 0.3; 
+  prior[1]= 0.7; 
+  temp  = 0.5*centers[(int)rint(0.05*(float)nbin)];
+  var[0] = temp*temp;  // bone/air has the smallest variance
+  var[1] = 4.0*var[0];
+  
+  std::cout<<"Initialization for EM:"<<std::endl;
+  std::cout<<"bone/air    mean = "<<mean[0]<<" variance = "<<var[0]<<" prior = "<<prior[0]<<std::endl;
+  std::cout<<"scalp      mean = "<<mean[1]<<" variance = "<<var[1]<<" prior = "<<prior[1]<<std::endl;
+
+  pdfest=EM1DWeighted (centers, pdf, nbin, 2, mean, prior, var);
+
+  std::cout<<"After EM:"<<std::endl;
+  std::cout<<"bone/air    mean = "<<mean[0]<<" variance = "<<var[0]<<" prior = "<<prior[0]<<std::endl;
+  std::cout<<"scalp      mean = "<<mean[1]<<" variance = "<<var[1]<<" prior = "<<prior[1]<<std::endl;
+
+  // compute threshold for intra/extra-cranial separation
+  *th_low = 0.5*(mean[0]+mean[1]);
+  *th_high = (2.0*mean[1]+mean[0])/3.0;
+  std::cout<<"low threshold = "<<(*th_low)<<" , high threshold = "<<(*th_high)<<std::endl;
+}
+
+void
+MRITissueClassifier::BoneDetection (float maskr)
+{
+  std::cout<<"BONE DETECTION\n";
+  float th_low, th_high;
+
+  BoneDetection_PDthreshold (&th_low, &th_high);
+  m_BoneThreshold = th_low;
+  BoneDetection_TopSection (maskr, th_low, th_high); // from top of head to 15
+                                                     // mm above eye centers
+  BoneDetection_SecondSection (th_low);              // a thin region above
+                                                     // the eyes
+  BoneDetection_ThirdSection (th_low);               // the rest
+  AirDetection(2.0);
+  VISImageFile imf;
+  imf.write(m_Label.image().becomeFlat(),"labels.fit");
+}
+
+void
+MRITissueClassifier::BoneDetection_TopSection (float maskr, float th_low, float th_high)
+{
+  int i, x, y, z, xp, yp, xn, yn, flag, flag2, flag_OFF;;
+  float dist, dl, dh, th, val, ndx, ndy;
+  VISVector data;
+  int zt1 = m_TopOfEyeSlice + (int)ceil(35.0/m_SliceThickness);
+  int zt2 = m_TopOfEyeSlice + (int)ceil(15.0/m_SliceThickness);
+
+  VISImage<int> slice(m_width,m_height);
+  int N[8][2];
+  N[0][0] = 1;N[0][1] = 0;
+  N[1][0] = -1;N[1][1] = 0;
+  N[2][0] = 0;N[2][1] = 1;
+  N[3][0] = 0;N[3][1] = -1;
+  N[4][0] = 1;N[4][1] = 1;
+  N[5][0] = 1;N[5][1] = -1;
+  N[6][0] = -1;N[6][1] = 1;
+  N[7][0] = -1;N[7][1] = -1;
+
+  int rad = (int)ceil(maskr);
+  int len = 2*rad+1;
+  float xo, yo;
+  VISImage<int> mask(len,len);
+  for (x=0;x<len;x++)
+    for (y=0;y<len;y++)
+      {
+      xo = (float)( x - rad );
+      yo = (float)( y - rad );
+      if ( sqrt(xo*xo + yo*yo) <=maskr ) mask.poke(x,y) = 1;
+      else mask.poke(x,y) = 0;
+      }
+
+  for (z=m_TopOfHead-1;z>zt2;z--)
+    {
+    if (z>zt1) th = th_high;
+    else
+      {
+      val = ((float)(zt1 - z))/(float)(zt1-zt2);
+      th = val*th_low + (1.0-val)*th_high;
+      }
+    for (y=0;y<m_height;y++) 
+      for (x=0;x<m_width;x++)
+        if (m_Label(x,y,z)==T_FOREGROUND)
+          {
+          data = m_Data.peek(x,y,z);
+          val = data.peek(2);
+          if ((val>th)||(m_DistBG2D(x,y,z)<=3.0)) slice.poke(x,y)=1; // scalp
+          else slice.poke(x,y)=2; // bone
+          }
+        else slice.poke(x,y) = 0;
+    
+    for (y=1;y<m_height-1;y++) 
+      for (x=1;x<m_width-1;x++)
+        if (slice(x,y)==1)
+          {
+          dist = m_DistBG2D(x,y,z);
+          ndx = m_DistBG2D(x+1,y,z)-m_DistBG2D(x-1,y,z);
+          ndy = m_DistBG2D(x,y+1,z)-m_DistBG2D(x,y-1,z);
+          val = sqrt(ndx*ndx+ndy*ndy);
+          ndx /= val;
+          ndy /= val;
+          dl = dist - 1.5*m_PixelDim;
+          dh = dist + 0.5*m_PixelDim;
+          flag = flag2 = flag_OFF = 0;
+          for (xp = -rad; xp<=rad; xp++)
+            {
+            for (yp = -rad; yp<=rad; yp++)
+              if (((xp!=0)||(yp!=0))&&mask(xp+rad,yp+rad))
+                {
+                xn = x + xp ;
+                yn = y + yp;
+                if ((xn>=0)&&(xn<m_width)&&(yn>=0)&&(yn<m_height)&&
+                    (m_DistBG2D(xn,yn,z)>=dl)&&(m_DistBG2D(xn,yn,z)<=dh))
+                  {
+                  if (m_Label(xn,yn,z)==T_INTRACRANIAL)
+                    {
+                    flag_OFF = 1;
+                    break;
+                    }
+                  if (((!flag)||(!flag2))&&(slice(xn,yn)==2))
+                    {
+                    val = ndy*(float)xp - ndx*(float)yp;
+                    if (val>0.0) flag = 1;
+                    else if (val<0.0) flag2 = 1;
+                    }
+                  }
+                }
+            if (flag_OFF) break;
+            }
+          if (flag&&flag2&&(!flag_OFF)) slice.poke(x,y) = 3;
+          }
+    
+    // find scalp pixels touching the background
+    for (y=1;y<m_height-1;y++)
+      for (x=1;x<m_width-1;x++)
+        if (slice(x,y)==1)
+          {
+          flag = 0;
+          for (i=0;i<4;i++)
+            if (m_Label(x+N[i][0],y+N[i][1],z)==T_BACKGROUND)
+              {
+              flag = 1;
+              break;
+              }
+          if (flag) slice = slice.floodFill (1,0,x,y);
+          }
+
+    for (y=0;y<m_height;y++) 
+      for (x=0;x<m_width;x++)
+        if (slice(x,y)>0) slice.poke(x,y)=1;
+
+    for (y=0;y<m_height;y++) 
+      for (x=0;x<m_width;x++)
+        if (slice(x,y)==1)
+          {
+          flag = 0;
+          for (i=0;i<4;i++)
+            if ((m_Label(x+N[i][0],y+N[i][1],z)==T_INTRACRANIAL)||
+                (m_Label(x+N[i][0],y+N[i][1],z)==T_SINUS))
+              {
+              flag = 1;
+              break;
+              }
+          if (flag) slice = slice.floodFill (1,2,x,y);
+          }
+          
+    for (y=0;y<m_height;y++) 
+      for (x=0;x<m_width;x++)
+        if (m_Label(x,y,z)==T_FOREGROUND)
+          {
+          if (slice(x,y)==2)
+            {
+            data = m_Data.peek(x,y,z);
+            val = data.peek(2);
+            if (m_FatSat)
+              {
+              if (val<=th_low) m_Label.poke(x,y,z) = T_BONE;
+              else if (m_Fat_Energy(x,y,z)<=m_FatThreshold) m_Label.poke(x,y,z) = T_BONE;
+              else m_Label.poke(x,y,z) = T_MARROW;
+              }
+            else
+              {
+              if (val>th_low) m_Label.poke(x,y,z) = T_MARROW;
+              else m_Label.poke(x,y,z) = T_BONE;
+              }
+            }
+          else m_Label.poke(x,y,z)=T_FOREGROUND;
+          }
+    }
+
+}
+
+void
+MRITissueClassifier::BoneDetection_SecondSection (float th)
+{
+  int i, x, y, z, flag;
+  int zb = m_TopOfEyeSlice + (int)ceil(9.0/m_SliceThickness);
+  int zt = m_TopOfEyeSlice + (int)ceil(15.0/m_SliceThickness);
+  VISImage<int> boneim (m_width, m_height);
+  int N[8][2];
+  N[0][0] = 1;N[0][1] = 0;
+  N[1][0] = -1;N[1][1] = 0;
+  N[2][0] = 0;N[2][1] = 1;
+  N[3][0] = 0;N[3][1] = -1;
+  N[4][0] = 1;N[4][1] = 1;
+  N[5][0] = 1;N[5][1] = -1;
+  N[6][0] = -1;N[6][1] = 1;
+  N[7][0] = -1;N[7][1] = -1;
+  int ylow = (int)rint(Max(m_EyePosition[0][1],m_EyePosition[1][1])-12.5/m_PixelDim);
+  int yhigh = (int)rint(Max(m_EyePosition[0][1],m_EyePosition[1][1])+12.5/m_PixelDim);
+  
+  for (z=zb;z<=zt;z++)
+    {
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (m_Label(x,y,z)==T_FOREGROUND)
+          {
+          if ((m_Data.peek(x,y,z).peek(2)<=th)&&(m_DistBG2D(x,y,z)>3.0)) boneim.poke(x,y) = 1;
+          else boneim.poke(x,y) = 2;
+          }
+        else boneim.poke(x,y)=0;
+    
+    for (y=1;y<m_height-1;y++)
+      for (x=1;x<m_width-1;x++)
+        if (boneim(x,y)==2)
+          {
+          flag = 0;
+          for (i=0;i<4;i++)
+            if (m_Label(x+N[i][0],y+N[i][1],z)==T_BACKGROUND)
+              {
+              flag = 1;
+              break;
+              }
+          if (flag) boneim = boneim.floodFill (2,0,x,y);
+          }
+
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (boneim(x,y)==2) boneim.poke(x,y) = 1;
+
+    for (y=1;y<m_height-1;y++)
+      for (x=1;x<m_width-1;x++)
+        if (boneim(x,y)==1)
+          {
+          flag = 0;
+          for (i=0;i<4;i++)
+            if ((m_Label(x+N[i][0],y+N[i][1],z)==T_INTRACRANIAL)||
+                (m_Label(x+N[i][0],y+N[i][1],z)==T_SINUS))               
+              {
+              flag = 1;
+              break;
+              }
+          if (flag) boneim = boneim.floodFill (1,2,x,y);
+          }
+
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if ((boneim(x,y)==2)&&(m_Label(x,y,z)==T_FOREGROUND))
+          {
+          if (m_Data.peek(x,y,z).peek(2)<=th) m_Label.poke(x,y,z)=T_BONE;
+          else
+            {
+            if (m_FatSat)
+              {
+              if (m_Fat_Energy(x,y,z)>=m_FatThreshold)
+                {
+                if ((y<ylow)||(y>yhigh)) m_Label.poke(x,y,z)=T_MARROW;
+                else m_Label.poke(x,y,z)=T_FOREGROUND;
+                }
+              else m_Label.poke(x,y,z)=T_BONE;
+              }
+            else
+              {
+              if ((y<ylow)||(y>yhigh)) m_Label.poke(x,y,z)=T_MARROW;
+              else m_Label.poke(x,y,z)=T_FOREGROUND;
+              }
+            }
+          }
+        else if ((boneim(x,y)==1)&&(m_Label(x,y,z)==T_FOREGROUND)) m_Label.poke(x,y,z)=T_FOREGROUND;
+    }
+}
+
+
+
+void
+MRITissueClassifier::BoneDetection_ThirdSection (float th)
+{
+  int x, y, z;
+  int zt = m_TopOfEyeSlice + (int)ceil(9.0/m_SliceThickness);
+
+  for (z=0;z<zt;z++)
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if ((m_Label(x,y,z)==T_FOREGROUND)&&
+            (m_Data.peek(x,y,z).peek(2)<=th)&&
+            (m_DistBG2D(x,y,z)>3.0))
+          m_Label.poke(x,y,z)=T_BONE;
+        
+}
+
+float
+MRITissueClassifier::BackgroundNoiseLevel ()
+{
+  // simple function to estimate background variance
+  int x, y, z, cnt;
+  float var;
+
+  var = 0.0;
+  cnt = 0;
+  for (z=0;z<m_depth;z++)
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (m_Label(x,y,z)==T_BACKGROUND)
+          {
+          var += (m_Energy(x,y,z)*m_Energy(x,y,z));
+          cnt++;
+          }
+  var/=(float)cnt;
+  std::cout<<"Noise variance = "<<var<<"\n";
+
+  return sqrt(var);
+}
+
+void
+MRITissueClassifier::AirDetection (float maskr)
+{
+  int x, y, z, flag, yt;
+  int zt = m_TopOfEyeSlice + (int)rint(20.0/m_SliceThickness);
+  float th = BackgroundNoiseLevel ();
+  float th2;
+  int xl = (int)rint(m_EyePosition[0][0]-12.5/m_SliceThickness);
+  int xr = (int)rint(m_EyePosition[1][0]+12.5/m_SliceThickness);
+
+  int rad = (int)floor(maskr);
+  int len = 2*rad+1;
+    
+  float xo, yo;
+  VISImage<int> mask (len, len);
+  VISImage<int> tempI (m_width, m_height);
+  VISVolume<int> vol (m_width, m_height, zt);
+  VISVolume<int> seed (m_width, m_height, zt);
+  
+  for (y=0;y<len;y++)
+    for (x=0;x<len;x++)
+      {
+      xo = (float)( x - rad );
+      yo = (float)( y - rad );
+      if ( sqrt(xo*xo + yo*yo) <=maskr ) mask.poke(x,y) = 1;
+      else mask.poke(x,y) = 0;
+      }
+
+  for (z=0;z<=m_TopTemporalSlice;z++)
+    {
+    for (y=0;y<m_height;y++)
+      {
+      if (y>=m_brainlim[z]) th2 = 1.5*th; else th2 = th;
+      for (x=0;x<m_width;x++)
+        if (m_Label(x,y,z)==T_BONE)
+          {
+          if ((m_Energy(x,y,z)<=0.5*th)&&(m_Data.peek(x,y,z).peek(2)<=0.5*m_BoneThreshold))
+            {
+            tempI.poke(x,y)=1;
+            seed.poke(x,y,z)=1;
+            }
+          else if (m_Energy(x,y,z)<=th2)
+            {
+            tempI.poke(x,y)=1;
+            seed.poke(x,y,z)=0;
+            }
+          else
+            {
+            tempI.poke(x,y)=0;
+            seed.poke(x,y,z)=0;
+            }
+          }
+        else
+          {
+          tempI.poke(x,y)=0;
+          seed.poke(x,y,z)=0;
+          }
+      }
+    tempI = tempI.opening(mask);
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (tempI(x,y)) vol.poke(x,y,z)=1; else vol.poke(x,y,z)=0;
+    }
+
+  for (z=m_TopTemporalSlice+1;z<zt;z++)
+    {
+    for (y=m_brainlim[z];y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (m_Label(x,y,z)==T_BONE)
+          {
+          if ((m_Energy(x,y,z)<=0.5*th)&&(m_Data.peek(x,y,z).peek(2)<=0.5*m_BoneThreshold))
+            {
+            tempI.poke(x,y)=1;
+            seed.poke(x,y,z)=1;
+            }
+          else if (m_Energy(x,y,z)<=1.5*th)
+            {
+            tempI.poke(x,y)=1;
+            seed.poke(x,y,z)=0;
+            }
+          else
+            {
+            tempI.poke(x,y)=0;
+            seed.poke(x,y,z)=0;
+            }
+          }
+        else
+          {
+          tempI.poke(x,y)=0;
+          seed.poke(x,y,z)=0;
+          }
+    for (y=0;y<m_brainlim[z];y++)
+      for (x=0;x<m_width;x++)
+        {
+        tempI.poke(x,y)=0;
+        seed.poke(x,y,z)=0;
+        }
+    tempI = tempI.opening(mask);
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (tempI(x,y)) vol.poke(x,y,z)=1; else vol.poke(x,y,z)=0;
+    }
+  
+  for (z=0;z<zt;z++)
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if ((vol(x,y,z)==1)&&(seed(x,y,z)==1))
+          vol.floodFill(1,2,x,y,z);
+
+  for (z=0;z<zt;z++)
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (vol(x,y,z)==2)
+          m_Label.poke(x,y,z) = T_BACKGROUND;
+
+}
+
+void
+MRITissueClassifier::BrainClassification ()
+{
+  std::cout<<"INTRACRANIAL CLASSIFICATION\n";
+  int x, y, z, i;
+  int cnt = 0;
+  VISVector data;
+  float min, max, temp, mean[3], prior[3], var[3];
+  VISImageFile imf;
+
+  for (x=0;x<m_width;x++)
+    for (y=0;y<m_height;y++)
+      for (z=0;z<m_depth;z++)
+        if (m_Label(x,y,z)==T_INTRACRANIAL)
+          {
+          if (cnt==0) min=max=m_CSF_Energy(x,y,z);
+          else
+            {
+            if (m_CSF_Energy(x,y,z)>max) max=m_CSF_Energy(x,y,z);
+            else if (m_CSF_Energy(x,y,z)<min) min=m_CSF_Energy(x,y,z);
+            }
+          cnt++;
+          }
+
+  float stepsize = ceil((max-min)/(float)NBINMAX);
+  int nbin = (int)rint((max-min)/stepsize);
+  std::cout<<"Using "<<nbin<<" bins for histogram\n";
+  int   *hist      = (int*)calloc(nbin, sizeof(int));
+  float *cdf       = (float*)calloc(nbin, sizeof(int));
+  float *pdf       = (float*)calloc(nbin, sizeof(int));
+  float *centers   = (float*)calloc(nbin, sizeof(float));
+  float *upperlims = (float*)calloc(nbin-1, sizeof(float));
+  float *pdfest;
+  
+  upperlims[0]=min+stepsize;
+  centers[0]=min;
+  for (i=1;i<nbin-1;i++)
+    {
+    upperlims[i]=upperlims[i-1]+stepsize;
+    centers[i]=centers[i-1]+stepsize;
+    }
+  centers[nbin-1]=max-stepsize;
+  Clear1DHistogram(hist,nbin);
+  Accumulate1DHistogramWithLabel (upperlims,hist,nbin,m_CSF_Energy,
+                                  0,0,0,m_width-1,m_height-1,m_depth-1,
+                                  T_INTRACRANIAL);
+  
+  for (i=0;i<nbin;i++) pdf[i]=(float)hist[i]/(float)cnt;
+  cdf[0] = pdf[0];
+  for (i=1;i<nbin;i++) cdf[i] = cdf[i-1] + pdf[i];
+
+  // initialize gaussian parameters
+  for (i=0;i<nbin;i++) if (cdf[i]>=0.2) break;
+  mean[0] = centers[i];                           // mean for WM
+  for (;i<nbin;i++) if (cdf[i]>=0.65) break;
+  mean[1] = centers[i];                           // mean for GM
+  for (;i<nbin;i++) if (cdf[i]>=0.95) break;
+  mean[2] = centers[Min(i,nbin-1)];            // mean for CSF
+  prior[0]= 0.4;
+  prior[1]= 0.5;
+  prior[2]= 0.1;
+  temp  = (mean[1]-mean[0])/4.0;
+  var[0] = temp*temp;
+  var[1] = 4.0*var[0];
+  var[2] = 4.0*var[0];
+  
+  std::cout<<"Initialization for EM algorithm:\n";
+  std::cout<<"WM  mean = "<<mean[0]<<" variance = "<<var[0]<<" prior = "<<prior[0]<<std::endl;
+  std::cout<<"GM  mean = "<<mean[1]<<" variance = "<<var[1]<<" prior = "<<prior[1]<<std::endl;
+  std::cout<<"CSF mean = "<<mean[2]<<" variance = "<<var[2]<<" prior = "<<prior[2]<<std::endl;
+
+  // EM on histogram
+  pdfest=EM1DWeighted (centers, pdf, nbin, 3, mean, prior, var);
+
+  std::cout<<"After EM (on histogram):\n";
+  std::cout<<"WM  mean = "<<mean[0]<<" variance = "<<var[0]<<" prior = "<<prior[0]<<std::endl;
+  std::cout<<"GM  mean = "<<mean[1]<<" variance = "<<var[1]<<" prior = "<<prior[1]<<std::endl;
+  std::cout<<"CSF mean = "<<mean[2]<<" variance = "<<var[2]<<" prior = "<<prior[2]<<std::endl;
+  
+  float diffl, diffh, pos, threshold1, threshold2;
+  
+  // find thresholf between CSF and GM
+  for (i=nbin-1;i>=0;i--) if (pdfest[i*3+1]>=pdfest[i*3+2]) break;
+  if (i>=(nbin-1)) threshold1 = centers[nbin-1];
+  diffl=pdfest[i*3+2]-pdfest[i*3+1];
+  diffh=pdfest[(i+1)*3+2]-pdfest[(i+1)*3+1];
+  pos = diffl/(diffl-diffh);
+  threshold1 = centers[i] + pos * stepsize;
+  
+  // find thresholf between WM and GM
+  for (;i>=0;i--) if (pdfest[i*3]>=pdfest[i*3+1]) break;
+  if (i>=(nbin-1)) threshold2= centers[nbin-1];
+  diffl=pdfest[i*3+1]-pdfest[i*3];
+  diffh=pdfest[(i+1)*3+1]-pdfest[(i+1)*3];
+  pos = diffl/(diffl-diffh);
+  threshold2 = centers[i] + pos * stepsize;
+  std::cout<<"csf-gm threshold = "<<threshold1<<"\n";
+  std::cout<<"gm-wm  threshold = "<<threshold2<<"\n";
+
+  for (x=0;x<m_width;x++)
+    for (y=0;y<m_height;y++)
+      for (z=0;z<m_depth;z++)
+        if (m_Label(x,y,z)==T_INTRACRANIAL)
+          {
+          if (m_CSF_Energy(x,y,z)>=threshold1) m_Label.poke(x,y,z) = T_CSF;
+          else if (m_CSF_Energy(x,y,z)>=threshold2) m_Label.poke(x,y,z)=T_GM;
+          else m_Label.poke(x,y,z)=T_WM;
+          }
+  imf.write(m_Label.image().becomeFlat(),"labels.fit");
+
+  int dim = 3;
+  VISVector datavec, diff, feature(dim);
+  VISVector CSF_mean(dim), GM_mean(dim), WM_mean(dim);
+  VISMatrix CSF_cov(dim,dim), GM_cov(dim,dim), WM_cov(dim,dim);
+  float CSF_prior, GM_prior, WM_prior;
+
+  CSF_mean = 0.0;GM_mean = 0.0;WM_mean = 0.0;
+  CSF_cov = 0.0;GM_cov = 0.0;WM_cov = 0.0;
+  CSF_prior = GM_prior = WM_prior = 0.0;
+
+  for (x=0;x<m_width;x++)
+    for (y=0;y<m_height;y++)
+      for (z=0;z<m_depth;z++)
+        {
+        datavec = m_Data.peek(x,y,z);
+        if (m_FatSat)
+          {
+          feature.poke(0) = datavec(0);
+          feature.poke(1) = datavec(1);
+          feature.poke(2) = datavec(2);
+          }
+        else feature = datavec;
+        if (m_Label(x,y,z)==T_CSF)
+          {
+          CSF_mean += feature;
+          CSF_prior += 1.0;
+          }
+        if (m_Label(x,y,z)==T_GM)
+          {
+          GM_mean += feature;
+          GM_prior += 1.0;
+          }
+        if (m_Label(x,y,z)==T_WM)
+          {
+          WM_mean += feature;
+          WM_prior += 1.0;
+          }
+        }
+  CSF_mean /= CSF_prior;
+  GM_mean /= GM_prior;
+  WM_mean /= WM_prior;
+
+  for (x=0;x<m_width;x++)
+    for (y=0;y<m_height;y++)
+      for (z=0;z<m_depth;z++)
+        {
+        datavec = m_Data.peek(x,y,z);
+        if (m_FatSat)
+          {
+          feature.poke(0) = datavec(0);
+          feature.poke(1) = datavec(1);
+          feature.poke(2) = datavec(2);
+          }
+        else feature = datavec;
+        if (m_Label(x,y,z)==T_CSF)
+          {
+          diff = feature - CSF_mean;
+          CSF_cov += diff.exterior(diff);
+          m_Label.poke(x,y,z)=T_INTRACRANIAL;
+          }
+        if (m_Label(x,y,z)==T_GM)
+          {
+          diff = feature - GM_mean;
+          GM_cov += diff.exterior(diff);
+          m_Label.poke(x,y,z)=T_INTRACRANIAL;
+          }
+        if (m_Label(x,y,z)==T_WM)
+          {
+          diff = feature - WM_mean;
+          WM_cov += diff.exterior(diff);
+          m_Label.poke(x,y,z)=T_INTRACRANIAL;
+          }
+        }
+
+  CSF_cov /= CSF_prior;
+  GM_cov /= GM_prior;
+  WM_cov /= WM_prior;
+
+  CSF_prior = prior[2];
+  GM_prior = prior[1];
+  WM_prior = prior[0];
+
+  free (pdfest);
+  free (hist);
+  free (upperlims);
+  free (pdf);
+  free (centers);
+
+  pdfest=EM_CSF_GM_WM(CSF_mean,CSF_cov,&CSF_prior,
+                      GM_mean,GM_cov,&GM_prior,
+                      WM_mean,WM_cov,&WM_prior,
+                      T_INTRACRANIAL);
+
+  int k = 0;
+  for (z=0;z<m_depth;z++)
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (m_Label(x,y,z)==T_INTRACRANIAL)
+          {
+          if (pdfest[k]>pdfest[k+1])
+            {
+            if (pdfest[k]>pdfest[k+2]) m_Label.poke(x,y,z) = T_CSF;
+            else m_Label.poke(x,y,z) = T_WM;
+            }
+          else 
+            {
+            if (pdfest[k+1]>pdfest[k+2]) m_Label.poke(x,y,z) = T_GM;
+            else m_Label.poke(x,y,z) = T_WM;
+            }
+          k+=3;
+          }
+
+  imf.write(m_Label.image().becomeFlat(),"labels2.fit");
+
+  for (z=0;z<m_depth;z++)
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if ((m_Label(x,y,z)==T_CSF)||
+            (m_Label(x,y,z)==T_GM)||
+            (m_Label(x,y,z)==T_WM))
+          m_Label.poke(x,y,z) = T_INTRACRANIAL;
+  
+  float *spdf = SmoothProbabilities (pdfest,3,T_INTRACRANIAL,cnt,0.5);
+  free (pdfest);
+  pdfest = spdf;
+  
+  k = 0;
+  for (z=0;z<m_depth;z++)
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (m_Label(x,y,z)==T_INTRACRANIAL)
+          {
+          if (pdfest[k]>pdfest[k+1])
+            {
+            if (pdfest[k]>pdfest[k+2]) m_Label.poke(x,y,z) = T_CSF;
+            else m_Label.poke(x,y,z) = T_WM;
+            }
+          else 
+            {
+            if (pdfest[k+1]>pdfest[k+2]) m_Label.poke(x,y,z) = T_GM;
+            else m_Label.poke(x,y,z) = T_WM;
+            }
+          k+=3;
+          }
+
+  imf.write(m_Label.image().becomeFlat(),"labels3b.fit");
+
+  free(pdfest);
+}
+
+float *MRITissueClassifier::SmoothProbabilities (float *prob, int c, int l, int n, float sigma)
+{
+  int x, y, z, k, j, m;
+  float sum;
+  float *sprob = (float*)calloc(n*c,sizeof(float));
+
+  VISVolume<float> p (m_width, m_height, m_depth);
+  for (j=0;j<c;j++)
+    {
+    k = j;
+    m = j;
+    for (z=0;z<m_depth;z++)
+      for (y=0;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          if (m_Label(x,y,z)==l)
+            {
+            p.poke(x,y,z) = prob[k];
+            k+=c;
+            }
+          else p.poke(x,y,z) = 0.0f;
+    p = p.gauss(sigma);
+    for (z=0;z<m_depth;z++)
+      for (y=0;y<m_height;y++)
+        for (x=0;x<m_width;x++)
+          if (m_Label(x,y,z)==l)
+            {
+            sprob[m] = Max(p(x,y,z),0.0f);
+            m+=c;
+            }
+    }
+
+  for (k=0;k<(n*c);k+=c)
+    {
+    sum = 0.0f;
+    for (j=0;j<c;j++) sum+=sprob[k+j];
+    sum = Max(sum, TINY);
+    for (j=0;j<c;j++) sprob[k+j]/sum;
+    }
+  
+  return sprob;
+}
+
+
+void
+MRITissueClassifier::ScalpClassification ()
+{
+  std::cout<<"SCALP CLASSIFICATION\n";
+  int x, y, z;
+  int dim;
+  if (m_FatSat) dim = 4; else dim = 3;
+  VISVector datavec, diff;
+  VISVector Muscle_mean(dim), Fat_mean(dim);
+  VISMatrix Muscle_cov(dim,dim), Fat_cov(dim,dim);
+  float Muscle_prior, Fat_prior, fatenergy, *pdfest, sum;
+
+  Muscle_mean = 0.0;Fat_mean = 0.0;
+  Muscle_cov = 0.0;Fat_cov = 0.0;
+  Muscle_prior = Fat_prior = 0.0;
+  
+  for (x=0;x<m_width;x++)
+    for (y=0;y<m_height;y++)
+      for (z=0;z<m_depth;z++)
+        if (m_Label(x,y,z)==T_FOREGROUND)
+          {
+          datavec = m_Data.peek(x,y,z);
+          if (m_FatSat) fatenergy = m_Fat_Energy(x,y,z);
+          else fatenergy = datavec.peek(0);
+
+          if (fatenergy>m_FatThreshold)
+            {
+            Fat_mean += datavec;
+            Fat_prior += 1.0;
+            m_Label.poke(x,y,z) = T_FAT;
+            }
+          else 
+            {
+            Muscle_mean += datavec;
+            Muscle_prior += 1.0;
+            m_Label.poke(x,y,z) = T_MUSCLE;
+            }
+          }
+  Muscle_mean /= Muscle_prior;
+  Fat_mean /= Fat_prior;
+
+  for (x=0;x<m_width;x++)
+    for (y=0;y<m_height;y++)
+      for (z=0;z<m_depth;z++)
+        {
+        datavec = m_Data.peek(x,y,z);
+        if (m_Label(x,y,z)==T_MUSCLE)
+          {
+          diff = datavec - Muscle_mean;
+          Muscle_cov += diff.exterior(diff);
+          m_Label.poke(x,y,z)=T_FOREGROUND;
+          }
+        if (m_Label(x,y,z)==T_FAT)
+          {
+          diff = datavec - Fat_mean;
+          Fat_cov += diff.exterior(diff);
+          m_Label.poke(x,y,z)=T_FOREGROUND;
+          }
+        }
+
+  Muscle_cov /= Muscle_prior;
+  Fat_cov /= Fat_prior;
+
+  sum = Muscle_prior + Fat_prior;
+  Muscle_prior /= sum;
+  Fat_prior /= sum;
+
+  pdfest=EM_Muscle_Fat (Muscle_mean,Muscle_cov,&Muscle_prior,Fat_mean,Fat_cov,&Fat_prior,
+                        T_FOREGROUND,dim);
+
+  int k = 0;
+  for (z=0;z<m_depth;z++)
+    for (y=0;y<m_height;y++)
+      for (x=0;x<m_width;x++)
+        if (m_Label(x,y,z)==T_FOREGROUND)
+          {
+          if (pdfest[k]>pdfest[k+1]) m_Label.poke(x,y,z) = T_MUSCLE;
+          else m_Label.poke(x,y,z) = T_FAT;
+          k+=2;
+          }
+
+  free (pdfest);
+}
+
+
+
+//  are the 2D morphology functions and floodFill from vispack that I
+// use. The floodfill also uses some list classes, but I'm sure there are
+// corresponding things in SCIRun
+
+
+void
+MRITissueClassifier::dilate()
+{
+  /*
+  template< class T >
+  VISImage<T> VISImage<T>::dilate(const VISImage<<T> &mask) const
+  {
+      VISImage<T> r = this->createToSize();
+      T Tzero = (T)0;
+      T Tone  = (T)1;
+      T Tval;
+      int x, y, xm, ym, xo, yo;
+      int w = this->width();
+      int h = this->height();
+      int wm = mask.width();
+      int hm = mask.height();
+      int cx = (wm-1)/2;
+      int cy = (hm-1)/2;
+      for (x = 0; x<<w; x++)
+	for (y = 0; y<<h; y++)
+	{
+	  Tval = Tzero;
+	  for (xm = 0; xm<<wm; xm++)
+	  {
+	    for (ym = 0; ym<<hm; ym++)
+	      if (mask(xm,ym)>Tzero)           {
+		
+		xo = x + xm - cx;
+		yo = y + ym - cy;
+		if ((xo>=0)&&(xo<w)&&(yo>=0)&&(yo<h)&&((this->peek(xo,yo))>Tzero))
+		{
+		  Tval = Tone;
+		  break;
+		}
+	      }
+	    if (Tval>Tzero) break;
+	  }
+	  r.poke(x,y) = Tval;
+	}
+      return r;
+    }
+  */
+}
+
+
+
+void
+MRITissueClassifier::erode()
+{
+/*
+template< class T >
+VISImage<T> VISImage<T>::erode(const VISImage<T> &mask) const
+{
+  VISImage<T> r = this->createToSize();
+  T Tzero = (T)0;
+  T Tone  = (T)1;
+  T Tval;
+  int x, y, xm, ym, xo, yo;
+  int w = this->width();
+  int h = this->height();
+  int wm = mask.width();
+  int hm = mask.height();
+  int cx = (wm-1)/2;
+  int cy = (hm-1)/2;
+  for (x = 0; x<<w; x++)
+    for (y = 0; y<<h; y++)
+    {
+      Tval = Tone;
+      for (xm = 0; xm<<wm; xm++)
+      {
+	for (ym = 0; ym<<hm; ym++)
+	  if (mask(xm,ym)>Tzero)
+	  {
+	    xo = x + xm - cx;
+	    yo = y + ym - cy;
+	    if ((xo>=0)&&(xo<<w)&&(yo>=0)&&(yo<<h)&&((this->peek(xo,yo))<<=Tzero))
+	    {
+	      Tval = Tzero;
+	      break;
+	    }
+	  }
+	if (Tval<<Tone) break;
+      }
+      r.poke(x,y) = Tval;
+    }
+  return r;
+}
+*/
+}
+
+
+
+void
+MRITissueClassifier::opening() 
+{
+  /*
+template< class T >
+VISImage<T> VISImage<T>::opening(const VISImage<T> &mask) const
+{
+  VISImage<T> temp = this->erode (mask);
+  return temp.dilate (mask);
+}
+*/
+}
+
+
+void
+MRITissueClassifier::closing()
+{
+  /*
+template< class T >
+VISImage<T> VISImage<T>::closing(const VISImage<T> &mask) const
+{
+  int px = (mask.width()-1)/2;
+  int py = (mask.height()-1)/2;
+  int w = this->width();
+  int h = this->height();
+  // we need to pad the image because dilation might spill outside the
+  // boundaries of the original image making it impossible to recover the
+  // original with erosion
+  VISImage <T> padim = VISImage<T> (w+mask.width(), h+mask.height());
+  padim = (T)0;
+  int x, y;
+  for (x=0;x<<w;x++)
+    for (y=0;y<<h;y++)
+      padim.poke(x+px,y+py)=this->peek(x,y);
+  VISImage<T> temp  = padim.dilate (mask);
+  return (temp.erode (mask)).getROI(px,py,this->width(),this->height());
+}
+*/
+}
+
+
+
+
+void
+MRITissueClassifier::floodFill()
+{
+
+  /*
+template< class T >
+const VISImage<T>& VISImage<T>::floodFill(T label_from, T label_to,
+					  unsigned x, unsigned y)
+{
+   VISImIndexList list;
+
+   // these are the neighbors
+   int N[4][2];
+   N[0][0] = 1;
+   N[0][1] = 0;
+   N[1][0] = -1;
+   N[1][1] = 0;
+   N[2][0] = 0;
+   N[2][1] = 1;
+   N[3][0] = 0;
+   N[3][1] = -1;
+   unsigned at_x, at_y, next_x, next_y;
+   int i;
+   
+   if ((itemAt(x, y) != label_from) ||(label_from == label_to))
+     return(*this);
+   //  if it passes the threshold put the starting pixel on the list
+   list.appendItem(VISImIndex(x, y));
+   //  mark that pixel as "in"
+   //cout <<<< "inside ff";exit(1)
+   at(x, y) = label_to;
+   list.reset();
+   //    int n = 0;
+   while (list.valid())
+   {
+     at_x = list.atCurrent().a();
+     at_y = list.atCurrent().b();
+     //        printf("flood fill iteration %d x %d y %d\n", n++, at_x,
+     //           at_y );
+     // look at your neighbors and if they are: 1) in bounds, 2) more than the
+     // threshod and 3) not yet visited, put them on the list and mark themas
+     // visited.    
+     for (i = 0; i << 4; i++)
+     {
+       next_x = at_x + N[i][0];
+       next_y = at_y + N[i][1];
+       if (checkBounds((unsigned)next_x, (unsigned)next_y))
+       {
+	 if (itemAt(next_x, next_y) == label_from)
+	 {
+	   at(next_x, next_y) = label_to;
+	   list.appendItem(VISImIndex(next_x,
+				      next_y));
+	   // printf("append item %d x %d y %d z %d\n",
+	   // next_x, next_y);
+	 }
+       }
+     }
+     //
+     // remove the guy whose neighbors you have just visited
+     // when the list is empty, you are done.
+     //
+     list.removeCurrent();
+   }
+   return(*this);
+}
+*/
+}
+
+
+
+
+
+//3d floodfill
+
+void
+MRITissueClassifier::floodFill3d()
+{
+
+  /*
+template< class T >
+void VISVolume<T>::floodFill(T label_from, T label_to,
+			     unsigned x, unsigned y, unsigned z)
+
+{
+   VISVolIndexVISList list;
+   // these are the neighbors
+   int N[6][3];
+   N[0][0] = 1;
+   N[0][1] = 0;
+   N[0][2] = 0;
+   N[1][0] = -1;
+   N[1][1] = 0;
+   N[1][2] = 0;
+   N[2][0] = 0;
+   N[2][1] = 1;
+   N[2][2] = 0;
+   N[3][0] = 0;
+   N[3][1] = -1;
+   N[3][2] = 0;
+   N[4][0] = 0;
+   N[4][1] = 0;
+   N[4][2] = 1;
+   N[5][0] = 0;
+   N[5][1] = 0;
+   N[5][2] = -1;
+   unsigned at_x, at_y, at_z, next_x, next_y, next_z;
+   int i;
+   
+   if ((itemAt(x, y, z) != label_from) ||(label_from == label_to))
+     return;
+   //  if it passes the threshold put the starting pixel on the list
+   list.appendItem(VISVolIndex(x, y, z));
+   //  mark that pixel as "in"
+   //cout <<<< "inside ff";exit(1)
+   at(x, y, z) = label_to;
+   list.reset();
+   //    int n = 0;
+   while (list.valid())
+   {
+     at_x = list.atCurrent().a();
+     at_y = list.atCurrent().b();
+     at_z = list.atCurrent().c();
+     for (i = 0; i << 6; i++)
+     {
+       next_x = at_x + N[i][0];
+       next_y = at_y + N[i][1];
+       next_z = at_z + N[i][2];
+       if (checkBounds((unsigned)next_x, (unsigned)next_y, (unsigned)next_z))
+       {
+	 if (itemAt(next_x, next_y, next_z) == label_from)
+	 {
+	   at(next_x, next_y, next_z) = label_to;
+	   list.appendItem(VISVolIndex(next_x, next_y, next_z));
+	 }
+       }
+     }
+     list.removeCurrent();
+   }
+}
+*/
+}
+
+
+} //namespace SCIRun
