@@ -33,6 +33,7 @@
 #include <SCIRun/SCIRunErrorHandler.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/OS/Dir.h>
+#include <Dataflow/Network/Network.h>
 #include <Dataflow/XMLUtil/StrX.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Util/soloader.h>
@@ -61,6 +62,8 @@ using namespace SCIRun;
 BridgeComponentModel::BridgeComponentModel(SCIRunFramework* framework)
   : ComponentModel("cca"), framework(framework)
 {
+  if(!SCIRunComponentModel::gui) SCIRunComponentModel::initGuiInterface();
+  //SCIRunComponentModel::net->add_module2("Bridge", "", "BridgeModule"); 
   buildComponentList();
 }
 
@@ -85,7 +88,7 @@ void BridgeComponentModel::buildComponentList()
     XMLPlatformUtils::Initialize();
   } catch (const XMLException& toCatch) {
     std::cerr << "Error during initialization! :\n"
-	 << StrX(toCatch.getMessage()) << endl;
+	 << StrX(toCatch.getMessage()) << "\n";
     return;
   }
 
@@ -143,7 +146,7 @@ void BridgeComponentModel::readComponentDescription(const std::string& file)
     BridgeComponentDescription* cd = new BridgeComponentDescription(this);
     DOMNode* name = d->getAttributes()->getNamedItem(to_xml_ch_ptr("name"));
     if (name==0) {
-      cout << "ERROR: Component has no name." << endl;
+      cout << "ERROR: Component has no name." << "\n";
       cd->type = "unknown type";
     } else {
       cd->type = to_char_ptr(name->getNodeValue());
@@ -183,7 +186,7 @@ ComponentInstance* BridgeComponentModel::createInstance(const std::string& name,
 
 {
   std::string loaderName="";
-  cerr<<"creating component <"<<name<<","<<type<<"> with loader:"<<loaderName<<endl;
+  cerr<<"creating component <"<<name<<","<<type<<"> with loader:"<<loaderName<<"\n";
   BridgeComponent* component;
   if(loaderName==""){  //local component
     componentDB_type::iterator iter = components.find(type);
@@ -235,7 +238,7 @@ bool BridgeComponentModel::destroyInstance(ComponentInstance *ci)
 {
   BridgeComponentInstance* cca_ci = dynamic_cast<BridgeComponentInstance*>(ci);
   if(!cca_ci){
-	cerr<<"error: in destroyInstance() cca_ci is 0"<<endl;  	
+	cerr<<"error: in destroyInstance() cca_ci is 0"<<"\n";  	
     return false;
   }
   return true;	
@@ -271,7 +274,7 @@ void BridgeComponentModel::listAllComponentTypes(vector<ComponentDescription*>& 
 
 int BridgeComponentModel::addLoader(resourceReference *rr){
   loaderList.push_back(rr);
-  cerr<<"Loader "<<rr->getName()<<" is added into cca component model"<<endl;
+  cerr<<"Loader "<<rr->getName()<<" is added into cca component model"<<std::endl;
   return 0;
 }
 

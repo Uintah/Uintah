@@ -35,19 +35,23 @@
 //Babel:
 #include <SCIRun/Babel/framework.hh>
 #include <SCIRun/Babel/gov_cca.hh>
+//Dataflow:
+#include <Dataflow/Network/Port.h>
 
 namespace SCIRun {
 
   typedef enum {
     CCA = 1,
-    Babel
+    Babel,
+    Dataflow
   } modelT;
   
   class BridgeServices {
   public:
     BridgeServices::BridgeServices() { }
     virtual BridgeServices::~BridgeServices() { }
-    
+
+    //virtual Port* getDataflowPort(const std::string& name);    
     virtual sci::cca::Port::pointer getCCAPort(const std::string& name) = 0;
     virtual gov::cca::Port getBabelPort(const std::string& name) = 0;
     

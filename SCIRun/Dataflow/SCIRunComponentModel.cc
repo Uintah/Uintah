@@ -51,6 +51,12 @@ namespace SCIRun {
 env_map scirunrc;                        // contents of .scirunrc
 }
 
+GuiInterface*
+SCIRunComponentModel::gui(0);
+
+Network*
+SCIRunComponentModel::net(0);
+
 static bool split_name(const string& type, string& package,
 		       string& category, string& module)
 {
@@ -70,7 +76,7 @@ static bool split_name(const string& type, string& package,
 }
 
 SCIRunComponentModel::SCIRunComponentModel(SCIRunFramework* framework)
-  : ComponentModel("scirun"), framework(framework), gui(0)
+  : ComponentModel("scirun"), framework(framework)
 {
   packageDB = new PackageDB(0);
   // load the packages
@@ -96,50 +102,54 @@ SCIRunComponentModel::createInstance(const std::string& name,
   string package, category, module;
   if(!split_name(type, package, category, module))
     return 0;
-  if(!gui){
-    int argc=1;
-    char* argv[2];
-    argv[0]="sr";
-    argv[1]=0;
-    TCLTask* tcl_task = new TCLTask(argc, argv);
-    Thread* t=new Thread(tcl_task, "TCL main event loop");
-    t->detach();
-    tcl_task->mainloop_waitstart();
-
-    // Create user interface link
-    gui = new TCLInterface();
-
-    // Set up the TCL environment to find core components
-    gui->execute("global PSECoreTCL CoreTCL");
-    gui->execute("set DataflowTCL "PSECORETCL);
-    gui->execute("set CoreTCL "SCICORETCL);
-    gui->execute("lappend auto_path "SCICORETCL);
-    gui->execute("lappend auto_path "PSECORETCL);
-    gui->execute("lappend auto_path "ITCL_WIDGETS);
-    gui->execute("global scirun2");
-    gui->execute("set scirun2 1");
-    gui->source_once("$DataflowTCL/NetworkEditor.tcl");
-    gui->execute("wm withdraw .");
-
-    tcl_task->release_mainloop();
-
-    packageDB->setGui(gui);
-
-    net = new Network();
-
-    Scheduler* sched_task=new Scheduler(net);
-
-    // Activate the scheduler.  Arguments and return
-    // values are meaningless
-    Thread* t2=new Thread(sched_task, "Scheduler");
-    t2->setDaemon(true);
-    t2->detach();
+  if(!gui) {
+    initGuiInterface();
   }
 
   Module* m = net->add_module2(package, category, module);
   SCIRunComponentInstance* ci = new SCIRunComponentInstance(framework, name,
 							    type, m);
   return ci;
+}
+
+void SCIRunComponentModel::initGuiInterface() {
+  int argc=1;
+  char* argv[2];
+  argv[0]="sr";
+  argv[1]=0;
+  TCLTask* tcl_task = new TCLTask(argc, argv);
+  Thread* t=new Thread(tcl_task, "TCL main event loop");
+  t->detach();
+  tcl_task->mainloop_waitstart();
+  
+  // Create user interface link
+  gui = new TCLInterface();
+  
+  // Set up the TCL environment to find core components
+  gui->execute("global PSECoreTCL CoreTCL");
+  gui->execute("set DataflowTCL "PSECORETCL);
+  gui->execute("set CoreTCL "SCICORETCL);
+  gui->execute("lappend auto_path "SCICORETCL);
+  gui->execute("lappend auto_path "PSECORETCL);
+  gui->execute("lappend auto_path "ITCL_WIDGETS);
+  gui->execute("global scirun2");
+  gui->execute("set scirun2 1");
+  gui->source_once("$DataflowTCL/NetworkEditor.tcl");
+  gui->execute("wm withdraw .");
+  
+  tcl_task->release_mainloop();
+  
+  packageDB->setGui(gui);
+  
+  net = new Network();
+  
+  Scheduler* sched_task=new Scheduler(net);
+  
+  // Activate the scheduler.  Arguments and return
+  // values are meaningless
+  Thread* t2=new Thread(sched_task, "Scheduler");
+  t2->setDaemon(true);
+  t2->detach();
 }
 
 bool SCIRunComponentModel::destroyInstance(ComponentInstance * ic)

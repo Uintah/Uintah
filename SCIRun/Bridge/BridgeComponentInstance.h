@@ -34,8 +34,10 @@
 #include <SCIRun/PortInstanceIterator.h>
 
 #include <SCIRun/CCA/CCAPortInstance.h>
-
 #include <SCIRun/Babel/BabelPortInstance.h>
+#include <SCIRun/Dataflow/SCIRunPortInstance.h>
+
+#include <SCIRun/Bridge/BridgeModule.h>
 
 #include <SCIRun/Bridge/BridgeServices.h>
 #include <SCIRun/Bridge/BridgeComponent.h>
@@ -47,7 +49,6 @@
 namespace SCIRun {
   class Services;
   class Mutex;
-
   class BridgeComponentInstance : public ComponentInstance, public BridgeServices {
   public:
     BridgeComponentInstance(SCIRunFramework* framework,
@@ -57,6 +58,7 @@ namespace SCIRun {
     virtual ~BridgeComponentInstance();
 
     // Methods from BridgeServices
+    //Port* getDataflowPort(const std::string& name);
     sci::cca::Port::pointer getCCAPort(const std::string& name);
     gov::cca::Port getBabelPort(const std::string& name);
     void releasePort(const std::string& name,const modelT model);
@@ -96,6 +98,9 @@ namespace SCIRun {
     BridgeComponent* component;
     Mutex *mutex;
 
+    //Dataflow:
+    BridgeModule bmdl; 
+    
     BridgeComponentInstance(const BridgeComponentInstance&);
     BridgeComponentInstance& operator=(const BridgeComponentInstance&);
   };
