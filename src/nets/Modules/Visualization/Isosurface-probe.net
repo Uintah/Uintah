@@ -214,6 +214,7 @@ setGlobal $m6-isoval-min {-5.2531499999999998}
 setGlobal $m6-isoval-max {4.3192599999999999}
 setGlobal $m6-quantity-range {colormap}
 setGlobal $m6-algorithm {1}
+setGlobal $m6-active-isoval-selection-tab {Matrix}
 setGlobal $m6-active_tab {NOISE}
 $m6 initialize_ui
 
