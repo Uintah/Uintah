@@ -26,8 +26,9 @@
     <authors>
       <author>Robert Van Uitert</author>
     </authors>
-    <summary></summary>
+    <summary>Calculation of magnetic field at given detector points due to specificed dipoles. </summary>
     <description>
+      The modules calculates the magnetic field due to given dipoles at specified detector positions based on the Biot-Savart law.
     </description>
   </overview>
   <io>
@@ -36,21 +37,21 @@
       <port>
 	<name>Electric Field</name>
 	<description>
-	  <p></p>
+	  <p>Takes a handle to the field containing the electric field in the same geometry as the Conductivity Tensors port.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
 	<name>Conductivity Tensors</name>
 	<description>
-	  <p></p>
+	  <p>Takes a handle to the field containing the conductivity tensors of the geometry.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
 	<name>Dipole Sources</name>
 	<description>
-	  <p>Takes handle to the field containing dipole positions and
+	  <p>Takes a handle to the field containing dipole positions and
 	  their moment values</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
@@ -58,6 +59,8 @@
       <port>
 	<name>Detector Locations</name>
 	<description>
+	  <p>Takes a handle to the field containing detector positions and
+	  their normalized orientations</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
