@@ -33,8 +33,6 @@ using namespace SCIRun;
 
 DebugStream DataArchive::dbg("DataArchive", false);
 
-bool DataArchive::cacheOnlyCurrentTimestep = false;
-
 DataArchive::DataArchive(const std::string& filebase,
 			 int processor /* =0 */, int numProcessors /* =1 */)
   : d_filebase(filebase), d_varHashMaps(NULL),
@@ -696,21 +694,62 @@ DataArchive::initVariable(const Patch* patch,
   delete var; // should have been cloned when it was put
 }
 
-DataArchive::TimeHashMaps::TimeHashMaps(const vector<double>& tsTimes,
+// We want to cache at least a single timestep, so that we don't have
+// to reread the timestep for every patch queried.  This sets the
+// cache size to one, so that this condition is held.
+void
+DataArchive::turnOffXMLCaching() {
+  d_lock.lock();
+  getTopLevelVarHashMaps()->updateCacheSize(1);
+  d_lock.unlock();
+}
+
+// Sets the number of timesteps to cache back to the default_cache_size
+void
+DataArchive::turnOnXMLCaching() {
+  d_lock.lock();
+  getTopLevelVarHashMaps()->useDefaultCacheSize();
+  d_lock.unlock();
+}
+
+// Sets the timestep cache size to whatever you want.  This is useful
+// if you want to override the default cache size determined by
+// TimeHashMaps.
+void
+DataArchive::setTimestepCacheSize(int new_size) {
+  d_lock.lock();
+  getTopLevelVarHashMaps()->updateCacheSize(new_size);
+  d_lock.unlock();
+}
+
+DataArchive::TimeHashMaps::TimeHashMaps(DataArchive *archive,
+                                        const vector<double>& tsTimes,
 					const vector<XMLURL>& tsUrls,
 					const vector<ProblemSpecP>& tsTopNodes,
-					int processor, int numProcessors)
+					int processor, int numProcessors):
+  archive(archive)
 {
   ASSERTL3(tsTimes.size() == tsTopNodes.size());
   ASSERTL3(tsUrls.size() == tsTopNodes.size());
 
+  long double total_num_procs = 0;
   for (int i = 0; i < (int)tsTimes.size(); i++) {
     d_patchHashMaps[tsTimes[i]].setTime(tsTimes[i]);
     d_patchHashMaps[tsTimes[i]].init(tsUrls[i], tsTopNodes[i],
 				     processor, numProcessors);
+    total_num_procs += d_patchHashMaps[tsTimes[i]].numSimProcessors();
   }
    
   d_lastFoundIt = d_patchHashMaps.end();
+
+  // Try to make a guess of how many timesteps to cache
+  dbg << "Average number of processors per timestep is "<<total_num_procs/tsTimes.size()<<"\n";
+  // This estimate should use at least 2 timesteps for larger data
+  // sets and ramps them up to 10 based on the number of processors
+  // used to in the simulation.
+  int estimate = 10-(int)(log(total_num_procs/tsTimes.size())/log(2.0));
+  default_cache_size = timestep_cache_size = Max(2, estimate);
+  dbg << "TimeHashMaps::TimeHashMaps::estimate = "<<estimate<<", default_cache_size = "<<default_cache_size<<"\n";
 }
 
 inline ProblemSpecP
@@ -735,36 +774,81 @@ DataArchive::TimeHashMaps::findPatchData(double time, const Patch* patch)
 DataArchive::PatchHashMaps*
 DataArchive::TimeHashMaps::findTimeData(double time)
 {
-  //  cerr << "TimeHashMaps::findTimeData("<<time<<")\n";
+  dbg << "TimeHashMaps::findTimeData("<<time<<")\n";
   // assuming nearby queries will often be made sequentially,
   // checking the lastFound can reduce overall query times.
   if ((d_lastFoundIt != d_patchHashMaps.end()) &&
       ((*d_lastFoundIt).first == time)) {
-    //    cerr << "d_lastFoundIt.first = "<<(*d_lastFoundIt).first<<"\n";
+    //cerr << "d_lastFoundIt.first = "<<(*d_lastFoundIt).first<<"\n";
     return &(*d_lastFoundIt).second;
   }
   map<double, PatchHashMaps>::iterator foundIt =
     d_patchHashMaps.find(time);
   if (foundIt != d_patchHashMaps.end()) {
-    //    cerr << "foundIt.first = "<<(*foundIt).first<<"\n";
-    if (DataArchive::cacheOnlyCurrentTimestep) {
-      // Only caching the current timestep.
-      // purge the last accessed timestep, since this timestep is differen.t
-      if (d_lastFoundIt != d_patchHashMaps.end())
-	(*d_lastFoundIt).second.purgeCache();
+    //cerr << "foundIt.first = "<<(*foundIt).first<<"\n";
+    // See if our timestep was found in our cache list.
+    list<map<double, PatchHashMaps>::iterator>::iterator is_cached =
+      std::find(d_lastNtimesteps.begin(), d_lastNtimesteps.end(), foundIt);
+    if (is_cached != d_lastNtimesteps.end()) {
+      // It's in the list, so yank it in preperation for putting it at
+      // the top of the list.
+      dbg << "Already cached, putting at top of list.\n";
+      d_lastNtimesteps.erase(is_cached);
+    } else {
+      dbg << "Not in list.\n";
+      // Not in the list.  If the list is maxed out, purge the cache
+      // of the last item by removing it from the list.  If
+      // timestep_cache_size is <= 0, there is an unlimited size to
+      // the cache, so don't purge.
+      dbg << "timestep_cache_size = "<<timestep_cache_size<<", d_lastNtimesteps.size() = "<<d_lastNtimesteps.size()<<"\n";
+      if (timestep_cache_size > 0 &&
+          (int)(d_lastNtimesteps.size()) >= timestep_cache_size) {
+        dbg << "Making room.  Purging "<<(*(d_lastNtimesteps.back())).first<<"\n";
+        (*(d_lastNtimesteps.back())).second.purgeCache();
+        d_lastNtimesteps.pop_back();
+      }
     }
+    // Finally insert our new candidate at the top of the list.
+    d_lastNtimesteps.push_front(foundIt);
+
     d_lastFoundIt = foundIt;
     return &(*foundIt).second;
   }
+
   return NULL;
 }
 
-void DataArchive::TimeHashMaps::purgeTimeData(double time)
-{
-  // purge a timestep's cachine
-  PatchHashMaps* timeData = findTimeData(time);
-  if (timeData != 0) {
-    timeData->purgeCache();
+void DataArchive::TimeHashMaps::updateCacheSize(int new_size) {
+  dbg << "TimeHashMaps::updateCacheSize:new_size = "<<new_size<<", timestep_cache_size = "<<timestep_cache_size<<"\n";
+  if (new_size >= timestep_cache_size ||
+      new_size <= 0) {
+    timestep_cache_size = new_size;
+    return;
+  }
+
+  timestep_cache_size = new_size;
+
+  // Now we need to reduce the size
+  int current_size = (int)d_lastNtimesteps.size();
+  dbg << "current_size = "<<current_size<<"\n";
+  if (timestep_cache_size >= current_size)
+    // everything's fine
+    return;
+
+  int kill_count = current_size - timestep_cache_size;
+  dbg << "kill_count = "<<kill_count<<"\n";
+  for(int i = 0; i < kill_count; i++) {
+    dbg << "purging "<<(*(d_lastNtimesteps.back())).first<<"\n";
+    (*(d_lastNtimesteps.back())).second.purgeCache();
+    d_lastNtimesteps.pop_back();
+  }
+
+  if (!d_lastNtimesteps.empty()) {
+    d_lastFoundIt = d_lastNtimesteps.front();
+    dbg << "d_lastFoundIt = "<<(*d_lastFoundIt).first<<"\n";
+  } else {
+    dbg << "d_lastNtimesteps is empty??\n";
+    d_lastFoundIt = d_patchHashMaps.end();
   }
 }
 
