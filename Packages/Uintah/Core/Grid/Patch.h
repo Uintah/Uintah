@@ -152,14 +152,19 @@ WARNING
      
      CellIterator getCellIterator(const Box& b) const;
      CellIterator getExtraCellIterator(const Box& b) const;
+     
+     //__________________________________
+     //   I C E - M P M I C E   I T E R A T O R S
      CellIterator getFaceCellIterator(const FaceType& face, 
                                 const string& domain="minusEdgeCells") const;
 
      CellIterator getSFCXIterator(const int offset = 0) const;
      CellIterator getSFCYIterator(const int offset = 0) const;
      CellIterator getSFCZIterator(const int offset = 0) const;
-     CellIterator getSFCIterator( const int dir, const int offset = 0) const; 
-
+     CellIterator getSFCIterator( const int dir, const int offset = 0) const;
+     CellIterator addGhostCell_Iter(CellIterator hi_lo, const int nCells) const;
+      
+     //__________________________________
      //////////
      // Insert Documentation Here:
      NodeIterator getNodeIterator() const;
