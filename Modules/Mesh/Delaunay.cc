@@ -17,6 +17,7 @@
 #include <Datatypes/MeshPort.h>
 #include <Geometry/BBox.h>
 #include <Geometry/Point.h>
+#include <TCL/TCLvar.h>
 
 class Delaunay : public Module {
     MeshIPort* iport;
@@ -86,7 +87,7 @@ void Delaunay::execute()
 
     // Make the bbox square...
     Point center(bbox.center());
-    double le=bbox.longest_edge();
+    double le=1.0001*bbox.longest_edge();
     Vector diag(le, le, le);
     Point bmin(center-diag/2.);
     Point bmax(center+diag/2.);
@@ -108,6 +109,7 @@ void Delaunay::execute()
 	// Add this node...
 	cerr << "Adding node: " << node << " of " << nnodes << endl;
 	Point p(mesh->nodes[node]->p);
+	cerr << "p=" << p << endl;
 
 	// Find which element this node is in
 	int in_element;
@@ -160,11 +162,10 @@ void Delaunay::execute()
 
 	    for(int j=0;j<4;j++){
 		int skip=0;
-		int neighbor=e->faces[j];
+		int neighbor=e->face(j);
 		for(int ii=0;ii<done.size();ii++){
 		    if(neighbor==done[ii]){
 			skip=1;
-			cerr << "Breaking..." << endl;
 			break;
 		    }
 		}
@@ -174,9 +175,10 @@ void Delaunay::execute()
 		    // Process this neighbor
 		    if(!skip){
 			// See if this simplex is deleted by this point
+			Element* ne=mesh->elems[neighbor];
 			Point cen;
 			double rad2;
-			e->get_sphere2(cen, rad2);
+			ne->get_sphere2(cen, rad2);
 			double ndist2=(p-cen).length2();
 			if(ndist2 < rad2){
 			    // This one must go...
@@ -200,9 +202,27 @@ void Delaunay::execute()
 	for(fiter.first();fiter.ok();++fiter){
 	    Face f(fiter.get_key());
 	    Element* ne=new Element(mesh, node, f.n[0], f.n[1], f.n[2]);
-	    ne->orient();
-	    mesh->elems.add(ne);
+	    if(ne->orient()){
+		mesh->elems.add(ne);
+	    } else {
+		cerr << "Degenerate element not added!" << endl;
+		cerr << "n0=" << mesh->nodes[node]->p << endl;
+		cerr << "n1=" << mesh->nodes[f.n[0]]->p << endl;
+		cerr << "n2=" << mesh->nodes[f.n[1]]->p << endl;
+		cerr << "n3=" << mesh->nodes[f.n[2]]->p << endl;
+	    }
 	}
 	mesh->compute_neighbors();
     }
+    // Pack the elements...
+    Array1<Element*> new_elems;
+    int nelems=mesh->elems.size();
+    for(i=0;i<nelems;i++){
+	Element* e=mesh->elems[i];
+	if(e){
+	    new_elems.add(e);
+	}
+    }
+    mesh->elems=new_elems;
+    oport->send(mesh);
 }
