@@ -31,9 +31,6 @@
 #include <stdio.h>
 #include <Core/Util/DebugStream.h>
 
-#undef OREN_PRESS_EQ
-
-
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
@@ -1460,10 +1457,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     //______________________________________________________________________
     // Done with preliminary calcs, now loop over every cell
     int count, test_max_iter = 0;
-#ifdef OREN_PRESS_EQ
-    int num_bad_cells = 0;
-    double root_search_derivative = 0.;
-#endif
 
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;  
@@ -1471,20 +1464,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       bool converged  = false;
       double sum;
       count           = 0;
-#ifdef OREN_PRESS_EQ
-      //-------- Oren, better convergence criterion   10-AUG-2004 BEGIN --------
-      double vol_frac_not_close_packed = 1.0;                    // 1.0 is replaced everywhere by this constant
-      double sensitivity_criterion     = 10 * DBL_EPSILON;       // Threshold of root-search sensitivity
-      sum = 0.0;                                                 // Compute sum of volume fractions
-      for (int m = 0; m < numALLMatls; m++)  {
-        sum += vol_frac[m][c];
-      }
-      if (fabs(sum-vol_frac_not_close_packed) < convergence_crit) // Check the convergence factor
-	converged = true;                                         // before the loop. If ok, don't even
-                                                                  // enter it. Eliminates some potential
-                                                                  // Round-off errors.
-      //-------- Oren, better convergence criterion   10-AUG-2004 END   --------
-#endif
+
       while ( count < d_ice->d_max_iter_equilibration && converged == false) {
         count++;
         //__________________________________
@@ -1518,9 +1498,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         } 
         double vol_frac_not_close_packed = 1.;
         delPress = (A - vol_frac_not_close_packed - B)/C;
-#ifdef OREN_PRESS_EQ
-        root_search_derivative = C;
-#endif
 
         press_new[c] += delPress;
 
@@ -1573,17 +1550,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
       delPress_tmp[c] = delPress;
 
-#ifdef OREN_PRESS_EQ
-      //-------- Oren, better convergence criterion   10-AUG-2004 BEGIN --------
-      if ((fabs(root_search_derivative) < sensitivity_criterion*fabs(press_new[c])) // If |f'|/|p| < threshold
-	  && (num_bad_cells < 10) && (count > 0)) {
-	cout << "Warning: computeEquilibrationPressure() might give inaccurate " \
-	  "pressure result for cell = " << c << " ; |derivative|/|p| = " << fabs(root_search_derivative)/fabs(press_new[c]) << endl;
-	num_bad_cells++;
-      }
-      //-------- Oren, better convergence criterion   10-AUG-2004 END   --------
-#endif
-
      //__________________________________
      // If the pressure solution has stalled out 
      //  then try a binary search
@@ -1633,14 +1599,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     }     // end of cell interator
 
     cout_norm<<"max number of iterations in any cell \t"<<test_max_iter<<endl;
-#ifdef OREN_PRESS_EQ
-    //-------- Oren, better convergence criterion   10-AUG-2004 BEGIN --------
-    if (num_bad_cells > 0) {
-      cout << "Warning: computeEquilibrationPressure() might give inaccurate " \
-	"pressure result for " << num_bad_cells << endl;
-    }
-    //-------- Oren, better convergence criterion   10-AUG-2004 END   --------
-#endif
 
     //__________________________________
     // Now change how rho_CC is defined to 
@@ -1729,21 +1687,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
     }
     
-
-#if 0 //__________________________________
-      // BEGIN Debug Oren & Randy 2-Aug-04
-      double diff = 0.0;
-      int count = 0;
-      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-	IntVector c = *iter;
-	double temp = press_new[c] - press[c];
-	diff += abs(temp);
-	count++;
-      }
-      fprintf(stderr,"|New-Old|_L1 = %le\n",diff/count);
-      // END   Debug Oren & Randy 2-Aug-04
-#endif
-
   //---- P R I N T   D A T A ------
     if(d_ice -> switchDebug_EQ_RF_press)  { 
       ostringstream desc1;
