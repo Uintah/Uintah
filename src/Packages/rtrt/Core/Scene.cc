@@ -38,7 +38,7 @@ Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
     camera0(camera0), image0(image0), image1(image1),
     groundplane(groundplane), ambient_mode(ambient_mode),
     cup(cup), cdown(cdown), origCup_(cup), origCDown_(cdown),
-    work("frame tiles")
+    work("frame tiles"), transmissionMode_(false), soundVolume_(100)
 {
   lightsGroup_ = new Group;
   mainGroupWithLights_ = lightsGroup_;
@@ -111,7 +111,7 @@ Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
     camera0(camera0), image0(0), image1(0),
     groundplane(groundplane), ambient_mode(ambient_mode),
     cdown(cdown), cup(cup), origCup_(cup), origCDown_(cdown),
-    work("frame tiles")
+    work("frame tiles"), transmissionMode_(false), soundVolume_(100)
 {
   lightsGroup_ = new Group;
   mainGroupWithLights_ = lightsGroup_;
