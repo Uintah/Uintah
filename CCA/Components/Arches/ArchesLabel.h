@@ -250,6 +250,9 @@ namespace Uintah {
       // For storing the interpolated CC Velocity Variables
       const VarLabel* d_oldCCVelocityLabel;
       const VarLabel* d_newCCVelocityLabel;
+      const VarLabel* d_newCCUVelocityLabel;
+      const VarLabel* d_newCCVVelocityLabel;
+      const VarLabel* d_newCCWVelocityLabel;
 
     }; // End class ArchesLabel
 } // End namespace Uintah
