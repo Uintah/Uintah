@@ -196,7 +196,7 @@ ImageMaterial::read_hdr_image(const string &filename)
    }
    if(!indata){
      cerr << "Error reading ImageMaterial: " << filename << "\n";
-     image.resize(1,1);
+     image.resize(3,3);
      image(0,0)=Color(0.7,0.7,0.7);     
    }
   valid_ = true;

@@ -28,6 +28,17 @@ Group::~Group()
 void Group::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 		      PerProcessorContext* ppc)
 {
+  if (ray.already_tested[0] == this ||
+      ray.already_tested[1] == this ||
+      ray.already_tested[2] == this ||
+      ray.already_tested[3] == this)
+    return;
+  else {
+    ray.already_tested[3] = ray.already_tested[2];
+    ray.already_tested[2] = ray.already_tested[1];
+    ray.already_tested[1] = ray.already_tested[0];
+    ray.already_tested[0] = this;
+  }
   for(int i=0;i<objs.size();i++){
     objs[i]->intersect(ray, hit, st, ppc);
   }
@@ -107,6 +118,8 @@ void Group::collect_prims(Array1<Object*>& prims)
 
 void Group::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 {
+  if (objs.size() == 0)
+    ASSERTFAIL("Error - preprocess was called on a group with no objects!");
   if (!was_processed) {
     all_children_are_groups=1;
     bbox.reset();

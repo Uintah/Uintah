@@ -149,6 +149,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/PhongColorMapMaterial.cc \
 	$(SRCDIR)/ColorMapDpy.cc \
 	$(SRCDIR)/DynamicInstance.cc \
+	$(SRCDIR)/CellGroup.cc \
 	$(SRCDIR)/SolidNoise3.cc \
 	$(SRCDIR)/PerlinBumpMaterial.cc \
 	$(SRCDIR)/Instance.cc \
