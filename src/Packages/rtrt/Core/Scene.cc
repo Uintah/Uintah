@@ -431,6 +431,44 @@ Scene::io(SCIRun::Piostream &stream) {
   stream.end_class();
 }
 
+void Scene::addAnimateObject( Object* obj ) {
+  animateObjects_.add( obj );
+}
+
+void Scene::addBBoxResizeObject( Object* obj ) {
+  dynamicBBoxObjects_.add( obj );
+}
+
+void Scene::addGuiObject( Object* obj, bool animate) {
+  if( Names::hasName(obj) == false) {
+    // Create a name for the object
+    Names::nameObjectWithUnique(obj);
+  }
+  // We have guaranteed that there is a name, so add it to the list of
+  // gui objects.
+  objectsOfInterest_.add( obj );
+
+  // Now if we need to animate the object, we must make sure that it
+  // is in the list of animated object.  However, we don't want to add
+  // the object in twice, so we need to check to see if it is in there
+  // first.
+  if (animate) {
+    // Check to see if the object has already been been added
+    int i = 0;
+    for(; i < animateObjects_.size(); i++)
+      if (animateObjects_[i] == obj)
+	break;
+    // obj was not found, so add it.
+    if (i >= animateObjects_.size())
+      animateObjects_.add(obj);
+  }
+}
+
+void Scene::addGuiObject( const string& name, Object* obj, bool animate ) {
+  Names::nameObject(name, obj);
+  addGuiObject(obj, animate);
+}
+
 // Animate will only be called on objects added through this function.
 void
 Scene::addObjectOfInterest( Object * obj, bool animate, bool redobbox )
