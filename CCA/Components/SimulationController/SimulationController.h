@@ -36,7 +36,9 @@ class SimulationInterface;
        Simulation_Controller
       
   DESCRIPTION
-       Long description...
+       Abstract baseclass for the SimulationControllers.
+       Introduced to make the "old" SimulationController
+       and the new AMRSimulationController interchangeable.
      
   WARNING
       
@@ -47,33 +49,20 @@ class SimulationInterface;
       SimulationController(const ProcessorGroup* myworld);
       virtual ~SimulationController();
 
-      void doRestart(std::string restartFromDir, int timestep,
-		     bool fromScratch, bool removeOldDir);
-      void run();
+      virtual void doRestart(std::string restartFromDir, int timestep,
+		     bool fromScratch, bool removeOldDir) = 0;
+      virtual void run() = 0;
 
       // for calculating memory usage when sci-malloc is disabled.
       static char* start_addr;
    private:
-      void problemSetup(const ProblemSpecP&, GridP&);
+   /*
+      void problemSetup(const ProblemSpecP&, GridP&) = 0;
       bool need_recompile(double t, double delt, const LevelP& level,
-			  SimulationInterface* cfd, Output* output);
-      SimulationController(const SimulationController&);
-      SimulationController& operator=(const SimulationController&);
-
-      /* for restarting */
-      bool           d_restarting;
-      std::string d_restartFromDir;
-      int d_restartTimestep;
-
-      // If d_restartFromScratch is true then don't copy or move any of
-      // the old timesteps or dat files from the old directory.  Run as
-      // as if it were running from scratch but with initial conditions
-      // given by the restart checkpoint.
-      bool d_restartFromScratch;
-
-      // If !d_restartFromScratch, then this indicates whether to move
-      // or copy the old timesteps.
-      bool d_restartRemoveOldDir;
+			  SimulationInterface* cfd, Output* output) = 0;
+      SimulationController(const SimulationController&) = 0;
+      SimulationController& operator=(const SimulationController&) = 0;
+      */
    };
 
 } // End namespace Uintah
