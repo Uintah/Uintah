@@ -7,6 +7,7 @@
 #include <Packages/rtrt/Core/Dpy.h>
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Scene.h>
+#include <Packages/rtrt/Core/CycleMaterial.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Stealth.h>
 #include <Packages/rtrt/Core/Image.h>
@@ -561,6 +562,13 @@ Dpy::handle_keypress( unsigned long key )
     FPS += 1.0;
     FrameRate = 1.0/FPS;
     cerr << FPS << endl;
+    break;
+
+  case XK_o:
+    for (int m=0; m<scene->nmaterials(); m++) {
+      CycleMaterial *cm=dynamic_cast<CycleMaterial*>(scene->get_material(m));
+      if (cm) cm->next();
+    }
     break;
 
 	// turning on/off jittered sampling...
