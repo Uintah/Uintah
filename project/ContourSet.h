@@ -40,6 +40,7 @@ public:
     void rotate(const Vector &rot);
     // Persistent representation...
     virtual void io(Piostream&);
+    static PersistentTypeID typeid;
 };
 
 #endif /* SCI_project_ContourSet_h */

@@ -18,6 +18,12 @@
 
 #define Sqr(x) ((x)*(x))
 
+static Persistent* make_ContourSet(){
+    return new ContourSet;
+}
+
+PersistentTypeID ContourSet::typeid("ContourSet", "Datatype", make_ContourSet);
+
 Vector mmult(double *m, const Vector &v) {
     double x[3], y[3];
     x[0]=v.x();x[1]=v.y();x[2]=v.z();
