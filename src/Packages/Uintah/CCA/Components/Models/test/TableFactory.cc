@@ -1,7 +1,6 @@
 
 #include <Packages/Uintah/CCA/Components/Models/test/TableFactory.h>
 #include <Packages/Uintah/CCA/Components/Models/test/ArchesTable.h>
-#include <Packages/Uintah/CCA/Components/Models/test/ArchesV0Table.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
 using namespace Uintah;
