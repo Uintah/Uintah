@@ -70,3 +70,8 @@ class UnionGeometryObject : public GeometryObject {
 } //end namespace Uintah
 
 #endif // __UNION_GEOMETRY_OBJECT_H__
+
+// $Log$
+// Revision 1.6  2000/04/22 16:55:12  jas
+// Added logging of changes.
+//

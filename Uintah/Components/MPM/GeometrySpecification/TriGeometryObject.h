@@ -15,13 +15,13 @@ namespace Components {
 /**************************************
 	
 CLASS
-   GeometryObject
+   TriGeometryObject
 	
    Short description...
 	
 GENERAL INFORMATION
 	
-   GeometryObject.h
+   TriGeometryObject.h
 	
    John A. Schmidt
    Department of Mechanical Engineering
@@ -32,7 +32,7 @@ GENERAL INFORMATION
  
 	
 KEYWORDS
-   GeometryObject
+   TriGeometryObject
 	
 DESCRIPTION
    Long description...
@@ -69,6 +69,9 @@ class TriGeometryObject : public GeometryObject {
 #endif // __TRI_GEOMETRY_OBJECT_H__
 
 // $Log$
+// Revision 1.5  2000/04/22 16:55:12  jas
+// Added logging of changes.
+//
 // Revision 1.4  2000/04/22 16:51:04  jas
 // Put in a skeleton framework for documentation (coccoon comment form).
 // Comments still need to be filled in.
