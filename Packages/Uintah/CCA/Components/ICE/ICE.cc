@@ -37,7 +37,7 @@ static bool computeDt = false;
 #define HMX 1
  /*==========TESTING==========`*/
  
-#define DOING
+//#define DOING
 //#undef DOING
 
 ICE::ICE(const ProcessorGroup* myworld) 
@@ -287,6 +287,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
   cout << "ICE::scheduleTimeAdvance" << endl;
 #endif
   const PatchSet* patches = level->eachPatch();
+  const PatchSet* allPatches = level->allPatches();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();  
@@ -329,7 +330,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
   scheduleAdvectAndAdvanceInTime(sched, patches, all_matls);
 
   if (switchTestConservation){ 
-    schedulePrintConservedQuantities(sched, patches, all_matls); 
+    schedulePrintConservedQuantities(sched, allPatches, all_matls); 
   }
 }
 
@@ -655,7 +656,10 @@ void ICE::schedulePrintConservedQuantities(SchedulerP& sched,
   task->requires(Task::NewDW,lb->rho_CCLabel, Ghost::None);
   task->requires(Task::NewDW,lb->vel_CCLabel, Ghost::None);
   task->requires(Task::NewDW,lb->temp_CCLabel,Ghost::None);
-
+  task->computes(lb->TotalMassLabel);
+  task->computes(lb->KineticEnergyLabel);
+  task->computes(lb->TotalIntEngLabel);
+  task->computes(lb->CenterOfMassVelocityLabel); //momentum
   sched->addTask(task, patches, matls);
 }
 
@@ -1154,7 +1158,7 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
 					 DataWarehouse* old_dw, 
 					 DataWarehouse* new_dw)
 {
-  for(int p=0;p<patches->size();p++){
+  for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
 
   #ifdef DOING
@@ -1222,9 +1226,8 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
 
       double term1, term2, term3, press_coeff, rho_micro_FC, rho_FC;
 
-      for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+     for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector curcell = *iter;
-
         //__________________________________
         //   B O T T O M   F A C E S 
         //   Extend the computations into the left
@@ -1512,7 +1515,6 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
         for(int m = 0; m < numMatls; m++) {
 	  uvel_FCME[m][curcell] = uvel_FC[m][curcell] + b[m];
         }
-
       }
       //__________________________________
       //  B A C K  F A C E -- B  E  T  A      
@@ -1849,7 +1851,7 @@ void ICE::massExchange(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
   #ifdef DOING
     cout << "Doing massExchange on patch " <<
-      patch->getID() << "\t\t\t ICE" << endl;
+      patch->getID() << "\t\t\t\t ICE" << endl;
   #endif
 
    Vector dx        = patch->dCell();
@@ -2693,89 +2695,68 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
                                    DataWarehouse* /*old_dw*/,
                                    DataWarehouse* new_dw)
 {
-  for(int p=0;p<patches->size();p++){
+  
+  int numICEmatls = d_sharedState->getNumICEMatls();
+  int flag = -9;
+  double mass;
+  vector<Vector> mat_mom_xyz(numICEmatls);
+  vector<double> mat_mass(numICEmatls);
+  vector<double> mat_total_mom(numICEmatls);
+  vector<double> mat_total_eng(numICEmatls);
+  vector<double> mat_int_eng(numICEmatls);
+  vector<double> mat_KE(numICEmatls);
+  Vector total_mom_xyz(0.0, 0.0, 0.0);
+  
+  double total_momentum = 0.0;
+  double total_energy   = 0.0;
+  double total_mass     = 0.0;
+  double total_KE       = 0.0;
+  double total_int_eng  = 0.0; 
+  
+  static double initial_total_eng = 0.0;
+  static double initial_total_mom = 0.0;
+  static int n_passes;
+  
+  //__________________________________
+  //  Loop over all the patches
+  for(int p=0; p<patches->size(); p++)  {
     const Patch* patch = patches->get(p);
-
-    Vector mom_xyz_dir(0.0, 0.0, 0.0);
-
+    cout << "Doing printConservedQuantities on patch " << patch->getID()
+     << "\t\t ICE" << endl;
     CCVariable<Vector> vel_CC;
     CCVariable<double> rho_CC;
     CCVariable<double> Temp_CC;
     CCVariable<double> delPress_CC;
-    double mass, total_mass, mat_mass;
-    double mat_total_mom, total_momentum;
-    double mat_total_eng, total_energy, total_KE, total_int_eng;
-    static double initial_total_eng = 0.0;
-    static double initial_total_mom = 0.0;
-    static int n_passes;
     Vector dx       = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
-    int numICEmatls = d_sharedState->getNumICEMatls();
-
     new_dw->get(delPress_CC,lb->delPress_CCLabel, 0, patch,Ghost::None, 0);
+    
+    //__________________________________
+    // Loop over all the ICE matls
     for (int m = 0; m < numICEmatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
       new_dw->get(vel_CC, lb->vel_CCLabel, indx, patch,  Ghost::None, 0);
       new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch,  Ghost::None, 0);
       new_dw->get(Temp_CC,lb->temp_CCLabel,indx, patch,  Ghost::None, 0);
-      total_KE      = 0.0;
-      total_int_eng = 0.0;
-      mat_total_mom = 0.0;
-      mat_total_eng = 0.0;
-      mat_mass      = 0.0;
-      double cv = ice_matl->getSpecificHeat();
-
+      double cv = ice_matl->getSpecificHeat();   
+      
       //__________________________________
-      // Compute the momenta and energy
+      // Accumulate the momenta and energy
       for (CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
        mass            = rho_CC[*iter] * cell_vol;
-
-       mom_xyz_dir    += vel_CC[*iter]*rho_CC[*iter] * mass;
+       mat_mom_xyz[m] += vel_CC[*iter]*rho_CC[*iter] * mass;
        double vel_sq = vel_CC[*iter].length() * vel_CC[*iter].length();
-       total_KE       += 0.5 * mass * vel_sq;
-       total_int_eng  += mass * cv * Temp_CC[*iter];
-       mat_mass       += mass;
+       mat_KE[m]      += 0.5 * mass * vel_sq;
+       mat_int_eng[m] += mass * cv * Temp_CC[*iter];
+       mat_mass[m]    += mass;
       }
-      mat_total_mom   = mom_xyz_dir.x() + mom_xyz_dir.y() + mom_xyz_dir.z();
-      mat_total_eng   = total_int_eng + total_KE;
-      total_momentum += mat_total_mom;
-      total_energy   += mat_total_eng;
-      total_mass     += mat_mass;
-
-      fprintf(stderr, "[%i]Fluid mass %6.5g \n",m, mat_mass);
-      fprintf(stderr, "[%i]Fluid momentum[ %6.5g, %6.5g %6.5g]\t",
-                      m,mom_xyz_dir.x(), mom_xyz_dir.y(), mom_xyz_dir.z()); 
-      fprintf(stderr, "Components Sum: %6.5g\n",mat_total_mom);
-
-      fprintf(stderr, "[%i]Fluid eng[internal %6.5g, Kinetic: %6.5g]: %6.5g\n",
-                      m,total_int_eng, total_KE, mat_total_eng);
-      if ( n_passes < numICEmatls )  {
-        initial_total_eng += mat_total_eng;
-        initial_total_mom += mat_total_mom;
-        n_passes ++;
-      }
-    }
-
-    double change_total_mom = 
-                100.0 * (total_momentum - initial_total_mom)/
-                (initial_total_mom + d_SMALL_NUM);
-    double change_total_eng = 
-                100.0 * (total_energy - initial_total_eng)/
-                (initial_total_eng + d_SMALL_NUM);
-
-    fprintf(stderr, 
-      "Totals: \t mass %5.6g \t\tmomentum %5.6f \t\t energy %5.6g\n",
-                    total_mass, total_momentum, total_energy);
-    fprintf(stderr, 
-      "Percent change in total fluid mom.: %4.5f \t fluid total eng: %4.5f\n",
-                    change_total_mom, change_total_eng);
-
+    }  // numICEmatls loop
     //__________________________________
     // This grossness checks to see if delPress
-    // near a ghost cell is > 0
+    // near a ghost cell is > 0  
     IntVector low, hi;
-    int flag = -9;
+
     low = delPress_CC.getLowIndex();
     hi  = delPress_CC.getHighIndex();
     // x_plus
@@ -2826,16 +2807,55 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
         }
       }
     }
-    if (flag == 1)  {
-      cout<< " D E L P R E S S   >   0   O N   B O U N D A R Y"<<endl;
-      cout<< "******* N O   L O N G E R   C O N S E R V I N G *******\n"<<endl;
-    }   
-    new_dw->put(sum_vartype(total_mass),      lb->TotalMassLabel);
-    new_dw->put(sum_vartype(total_KE),        lb->KineticEnergyLabel);
-    new_dw->put(sum_vartype(total_int_eng),   lb->TotalIntEngLabel);
-    new_dw->put(sumvec_vartype(mom_xyz_dir),  lb->CenterOfMassVelocityLabel);
   }  // patch loop
+  
+  //__________________________________
+  //  Now compute totals and the change in quantities
+  for (int m = 0; m < numICEmatls; m++ ) {
+    mat_total_mom[m]= mat_mom_xyz[m].x() + mat_mom_xyz[m].y() + mat_mom_xyz[m].z();
+    mat_total_eng[m]= mat_int_eng[m] + mat_KE[m];
+    total_momentum += mat_total_mom[m];
+    total_energy   += mat_total_eng[m];
+    total_KE       += mat_KE[m];
+    total_int_eng  += mat_int_eng[m];
+    total_mass     += mat_mass[m];
+    total_mom_xyz  += mat_mom_xyz[m];
+    if ( n_passes < numICEmatls) {
+      initial_total_eng += mat_total_eng[m];
+      initial_total_mom += mat_total_mom[m];
+      n_passes ++;
+    } 
+    
+    fprintf(stderr, "[%i]Fluid mass %6.5g \n",m, mat_mass[m]);
+    fprintf(stderr, "[%i]Fluid momentum[ %6.5g, %6.5g %6.5g]\t",
+                    m,mat_mom_xyz[m].x(), mat_mom_xyz[m].y(), mat_mom_xyz[m].z()); 
+    fprintf(stderr, "Components Sum: %6.5g\n",mat_total_mom[m]);
+    fprintf(stderr, "[%i]Fluid eng[internal %6.5g, Kinetic: %6.5g]: %6.5g\n",
+                    m,mat_int_eng[m], mat_KE[m], mat_total_eng[m]);
+  }
+  double change_total_mom =
+              100.0 * (total_momentum - initial_total_mom)/
+              (initial_total_mom + d_SMALL_NUM);
+  double change_total_eng =
+              100.0 * (total_energy - initial_total_eng)/
+              (initial_total_eng + d_SMALL_NUM);
+
+  fprintf(stderr,
+    "Totals: \t mass %5.6g \t\tmomentum %5.6f \t\t energy %5.6g\n",
+                  total_mass, total_momentum, total_energy);
+  fprintf(stderr,
+    "Percent change in total fluid mom.: %4.5f \t fluid total eng: %4.5f\n",
+                  change_total_mom, change_total_eng);
+  if (flag == 1)  {
+    cout<< " D E L P R E S S   >   0   O N   B O U N D A R Y"<<endl;
+    cout<< "******* N O   L O N G E R   C O N S E R V I N G *******\n"<<endl;
+  }
+  new_dw->put(sum_vartype(total_mass),      lb->TotalMassLabel);
+  new_dw->put(sum_vartype(total_KE),        lb->KineticEnergyLabel);
+  new_dw->put(sum_vartype(total_int_eng),   lb->TotalIntEngLabel);
+  new_dw->put(sumvec_vartype(total_mom_xyz),  lb->CenterOfMassVelocityLabel);
 }
+
 /* --------------------------------------------------------------------- 
  Function~  ICE::setBC--
  Purpose~   Takes care Pressure_CC
