@@ -4,6 +4,8 @@ OBJTOP   = ../..
 
 include $(OBJTOP)/scripts/targets.mk
 
+VPATH = $(SRCDIR)
+
 all:: tclIndex
 
 tclIndex : AddWells.tcl AddWells2.tcl BitVisualize.tcl \
@@ -34,5 +36,5 @@ tclIndex : AddWells.tcl AddWells2.tcl BitVisualize.tcl \
            VectorSeg.tcl VisualizeMatrix.tcl VoidStarReader.tcl \
            VoidStarWriter.tcl VolRendTexSlices.tcl VolVis.tcl \
            WidgetTest.tcl Writer.tcl cConjGrad.tcl cPhase.tcl
-	$(SRCTOP)/scripts/createTclIndex
+	$(SRCTOP)/scripts/createTclIndex $(SRCDIR)
 
