@@ -62,8 +62,8 @@ VS_SCI_Hotbox::VS_SCI_Hotbox()
 
   relBoxCorners[VS_HB_SW].set_minX(-2*VS_HB_BOX_WID);
   relBoxCorners[VS_HB_SW].set_maxX(-VS_HB_BOX_WID);
-  relBoxCorners[VS_HB_NW].set_minY(-2*VS_HB_BOX_HGT);
-  relBoxCorners[VS_HB_NW].set_maxY(-VS_HB_BOX_HGT);
+  relBoxCorners[VS_HB_SW].set_minY(-2*VS_HB_BOX_HGT);
+  relBoxCorners[VS_HB_SW].set_maxY(-VS_HB_BOX_HGT);
 
   relBoxCorners[VS_HB_NORTH].set_minX(-VS_HB_BOX_WID/2);
   relBoxCorners[VS_HB_NORTH].set_maxX(VS_HB_BOX_WID/2);
@@ -82,8 +82,8 @@ VS_SCI_Hotbox::VS_SCI_Hotbox()
 
   relBoxCorners[VS_HB_EAST].set_minX(VS_HB_BOX_WID);
   relBoxCorners[VS_HB_EAST].set_maxX(2*VS_HB_BOX_WID);
-  relBoxCorners[VS_HB_EAST].set_minY(-VS_HB_BOX_WID/2);
-  relBoxCorners[VS_HB_EAST].set_maxY(VS_HB_BOX_WID/2);
+  relBoxCorners[VS_HB_EAST].set_minY(-VS_HB_BOX_HGT/2);
+  relBoxCorners[VS_HB_EAST].set_maxY(VS_HB_BOX_HGT/2);
 
   relBoxCorners[VS_HB_SE].set_minX(VS_HB_BOX_WID);
   relBoxCorners[VS_HB_SE].set_maxX(2*VS_HB_BOX_WID);
@@ -198,10 +198,11 @@ VS_SCI_Hotbox::draw(int x, int y, float newScale)
                      newScale * absBoxCorners[i].get_minY(),
                      0.0), SCIMtl);
     // draw the text label inside the box
-    // SCItexts->add(string(absBoxCorners[i].get_text()),
-    //               Point(newScale * absBoxCorners[i].get_minX(),
-    //		        newScale * absBoxCorners[i].get_minY(),
-    //                    0.0), Color(1, 1, 1));
+    // fprintf(stderr, "%s", absBoxCorners[i].get_text().c_str());
+    SCItexts->add(absBoxCorners[i].get_text(),
+                   Point(newScale * ( absBoxCorners[i].get_minX() + 5 ),
+                         newScale * ( absBoxCorners[i].get_minY() + 10 ),
+                         0.0), Color(1, 1, 1));
     
   } // end for(int i = 0; i < VS_HB_NUM_BOXES; i++)
   fprintf(stderr, " done\n");
