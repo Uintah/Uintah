@@ -13,7 +13,7 @@ using namespace rtrt;
 PhongColorMapMaterial::PhongColorMapMaterial(Object *value_source,
 			ScalarTransform1D<float,Color> *diffuse_transform,
 			ScalarTransform1D<float,float> *opacity_transform,
-					     double spec_coeff,
+					     int spec_coeff,
 					     double reflectance):
   value_source(value_source),
   diffuse_transform(diffuse_transform), opacity_transform(opacity_transform),

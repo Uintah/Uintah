@@ -19,21 +19,22 @@
 namespace rtrt {
 
 class PhongColorMapMaterial : public Material {
+  // This object must define a meaningful interior_value funtion, in order
+  // for any results to work.
+  Object *value_source;
+
   // diffuse_transform and opacity_transform should belong to someone
   // else, preferably to someone who can edit them at runtime.
   ScalarTransform1D<float,Color> *diffuse_transform;
   ScalarTransform1D<float,float> *opacity_transform;
-  double spec_coeff;
+  int spec_coeff;
   double reflectance; // Goes from 0 to 1
 
-  // This object must define a meaningful interior_value funtion, in order
-  // for any results to work.
-  Object *value_source;
 public:
   PhongColorMapMaterial(Object *value_source,
 			ScalarTransform1D<float,Color> *diffuse_transform,
 			ScalarTransform1D<float,float> *opacity_transform,
-			double spec_coeff = 100, double reflectance = 0);
+			int spec_coeff = 100, double reflectance = 0);
   virtual ~PhongColorMapMaterial();
 
   virtual void io(SCIRun::Piostream &/*str*/) { ASSERTFAIL("not implemented");}
