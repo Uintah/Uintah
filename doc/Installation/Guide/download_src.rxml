@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 <!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
-<!--% osx = (Doc::Platform == Doc::OSX) ? "_osx" : "" %-->
+<!--% tpsuffix = (Doc::Platform == Doc::OSX) ? "osx_src" : "install" %-->
 
 <section id="sec.sources">
   <title id="sec.title.sources">Downloading and Unpacking
@@ -52,19 +52,31 @@ DEALINGS IN THE SOFTWARE.
 
 	<simplelist>
 	  <member>
-	    <filename>SCIRun.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	    <filename>SCIRun.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
 	    <filename>BioPSE.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
-	    <filename>Insight.PKG.<!--%= doc.version() %-->.tar.gz</filename>
-	  </member>
-	  <member>
 	    <filename>MatlabInterface.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
-	    <filename>TEEM.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	    <filename>Teem.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	</simplelist>
+      </para>
+
+      <para os="linux;osx">
+	To build the Insight <acronym>PSE</acronym>, download the following:
+	<simplelist>
+	  <member>
+	    <filename>SCIRun.<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>Teem.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>Insight.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	</simplelist>
       </para>
@@ -73,13 +85,13 @@ DEALINGS IN THE SOFTWARE.
 	To build the Fusion <acronym>PSE</acronym>, download the following:
 	<simplelist>
 	  <member>
-	    <filename>SCIRun.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	    <filename>SCIRun<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
 	    <filename>Fusion.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
-	    <filename>TEEM.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	    <filename>Teem.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
 	    <filename>DataIO.PKG.<!--%= doc.version() %-->.tar.gz</filename>
@@ -87,23 +99,7 @@ DEALINGS IN THE SOFTWARE.
 	</simplelist>
       </para>
 
-      <para os="linux;osx">
-	To build, for example, an Insight only <acronym>PSE</acronym>,
-	download the following:
-	<simplelist>
-	  <member>
-	    <filename>SCIRun.PKG.<!--%= doc.version() %-->.tar.gz</filename>
-	  </member>
-	  <member>
-	    <filename>Insight.PKG.<!--%= doc.version() %-->.tar.gz</filename>
-	  </member>
-	  <member>
-	    <filename>TEEM.PKG.<!--%= doc.version() %-->.tar.gz</filename>
-	  </member>
-	</simplelist>
-      </para>
-
-      <para>In all cases, the file <filename>Thirdparty_install<!--%= osx
+      <para>In all cases, the file <filename>Thirdparty_<!--%= tpsuffix
       %-->.<!--%= doc.version() %-->.tar.gz</filename> must also be
       obtained.</para>
 
@@ -142,15 +138,48 @@ gunzip -c BioPSE.PKG.<!--%= doc.version() %-->.tar.gz | (cd SCIRun/src/Packages 
 
     <listitem>
       <para>
-	Unpack the sample datasets:
-	<literallayout class="monospaced">
-gunzip -c SCIRunData.<!--%= doc.version() %-->.tar.gz | tar xf -
-	</literallayout>
-	This creates the directory <filename>SCIRunData</filename>.
-	<filename>SCIRunData</filename> should be moved to a location
-	accessible to all SCIRun users, say
-	<filename>/usr/local</filename>.
-      </para>
+	Unpack the sample dataset tarball(s).  The following instructions
+	install the datasets in directory
+	<filename>SCIRunData</filename> inside of the download
+	directory.
+	<itemizedlist>
+	  <listitem>
+	    <para>
+	      If unpacking
+	      <filename>SCIRunData.1.24.0b_to_1.24.1.tar.gz</filename>,
+	      first rename the existing <filename>SCIRunData/1.20.0b</filename> to
+	      <filename>SCIRunData/1.20.1</filename>:
+	      <literallayout class="monospaced">
+pushd SCIRunData
+mv 1.20.0b 1.20.1
+	      </literallayout>
+	      then:
+	      <literallayout class="monospaced">
+popd
+gunzip -c SCIRunData.1.24.0b_to_1.24.1.tar.gz | tar xf -
+	      </literallayout>
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      If installing <filename>SCIRunData.<!--%= doc.version
+	      %-->.tar.gz</filename> type:
+	      <literallayout class="monospaced">
+gunzip -c SCIRunData.<!--%= doc.version %-->.tar.gz | tar xf -
+	      </literallayout>
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      If installing <filename>FusionData.<!--%= doc.version
+	      %-->.tar.gz</filename> type:
+	      <literallayout class="monospaced">
+gunzip -c FusionData.<!--%= doc.version %-->.tar.gz | tar xf -
+	      </literallayout>
+	    </para>
+	  </listitem>
+	</itemizedlist>
+     </para>
     </listitem>
 
     <listitem>
@@ -159,9 +188,9 @@ gunzip -c SCIRunData.<!--%= doc.version() %-->.tar.gz | tar xf -
       </para>
       <para>
 	<literallayout class="monospaced">
-gunzip -c Thirdparty_install<!--%= osx %-->.<!--%= doc.version() %-->.tar.gz | tar xf -
+gunzip -c Thirdparty_<!--%= tpsuffix %-->.<!--%= doc.version() %-->.tar.gz | tar xf -
 	</literallayout>
-	This creates the directory <filename>Thirdparty_install<!--%= osx %-->.<!--%= doc.version() %--></filename>.
+	This creates the directory <filename>Thirdparty_<!--%= tpsuffix %-->.<!--%= doc.version() %--></filename>.
       </para>
     </listitem>
 
@@ -172,12 +201,10 @@ gunzip -c Thirdparty_install<!--%= osx %-->.<!--%= doc.version() %-->.tar.gz | t
 gunzip -c SCIRunDocs.<!--%= doc.version() %-->.tar.gz | tar xf -
 	</literallayout>
 	This creates the directory
-	<filename>SCIRunDocs</filename>.<!--%= doc.version() %-->. This
-	directory may be moved to a new location (e.g.:
-	<filename>/usr/local</filename>) accessible to all SCIRun users.
-	Point a browser at
-	<filename>SCIRunDocs.<!--%= doc.version() %-->/doc/index.html</filename> to access SCIRun's
-	online documentation.
+	<filename>SCIRunDocs</filename>.<!--%= doc.version()
+	%-->.  Point a browser at <filename>SCIRunDocs.<!--%=
+	doc.version() %-->/doc/index.html</filename> to access
+	SCIRun's online documentation.
       </para>
     </listitem>
 
