@@ -41,7 +41,7 @@ itcl_class CardioWave_CreateModel_HexIntMask {
 
 	frame $w.chelper
 	label $w.chelper.label -text "Exclude List"
-	entry $w.chelper.entry -textvariable $this-closeness_distance
+	entry $w.chelper.entry -textvariable $this-exclude
 
 	pack $w.chelper.label $w.chelper.entry -side left -anchor n
 
