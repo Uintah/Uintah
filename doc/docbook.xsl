@@ -203,60 +203,6 @@
 
 </xsl:if>
 
-<!--
-
-<xsl:for-each select="/faq/description/p">
-  <p class="firstpara"><xsl:apply-templates/></p>
-</xsl:for-each>
-
-<hr size="1" />
-
-<xsl:for-each select="/faq/entry">
-  <xsl:variable name="num"><xsl:number/></xsl:variable>
-  <xsl:for-each select="./question">
-    <xsl:for-each select="./p">
-      <xsl:variable name="num2"><xsl:number/></xsl:variable>
-      <xsl:if test="$num2=1">
-        <p class="firstpara"><b><xsl:value-of select="$num"/></b>
-        <a><xsl:attribute name="href">
-           <xsl:value-of select="concat('techfaq.xml?dir=2','#',$num)"/></xsl:attribute>
-        <xsl:apply-templates/></a></p>
-      </xsl:if>
-    </xsl:for-each>
-  </xsl:for-each>
-</xsl:for-each>
-
-<hr size="1" />
-
-<xsl:for-each select="/faq/entry">
-  <xsl:variable name="num"><xsl:number/></xsl:variable>
-
-  <xsl:for-each select="./question">
-      <span class="dropcap">Q: </span>
-        <xsl:for-each select="./p">
-      <p class="question"><a><xsl:attribute name="name">
-         <xsl:value-of select="$num"/></xsl:attribute>
-      <b><xsl:apply-templates/></b></a></p>
-    </xsl:for-each>
-    <xsl:for-each select="./pre">
-      <pre class="example"><b><xsl:apply-templates/></b></pre>
-    </xsl:for-each>
-  </xsl:for-each>
-
-  <xsl:for-each select="./answer">
-    <span class="dropcap">A: </span>
-    <xsl:for-each select="./p">
-      <p  class="firstpara"><xsl:apply-templates/></p>
-    </xsl:for-each>
-    <xsl:for-each select="./pre">
-      <pre class="example"><xsl:apply-templates/></pre>
-    </xsl:for-each>
-  </xsl:for-each>
-  <hr size="1" />
-</xsl:for-each>
-
--->
-
 <!-- ******************************************************************* -->
 <!-- *********************** STANDARD SCI FOOTER *********************** -->
 <!-- ******************************************************************* -->
