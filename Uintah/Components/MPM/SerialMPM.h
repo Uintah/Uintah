@@ -163,6 +163,7 @@ WARNING
 	 const VarLabel* pVelocityLabel;
 	 const VarLabel* pExternalForceLabel;
 	 const VarLabel* pXLabel;
+	 const VarLabel* pSurfLabel;
 	 const VarLabel* pSurfaceNormalLabel; //for fracture
 	 
 	 const VarLabel* gMassLabel;
@@ -184,6 +185,9 @@ WARNING
    
 //
 // $Log$
+// Revision 1.28  2000/05/19 23:18:01  guilkey
+// Added VarLabel pSurfLabel
+//
 // Revision 1.27  2000/05/18 18:50:26  jas
 // Now using the gravity from the input file.
 //
