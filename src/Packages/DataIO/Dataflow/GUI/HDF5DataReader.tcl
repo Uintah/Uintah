@@ -31,6 +31,13 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
     method set_defaults {} {
 
+	global have_groups
+	global have_attributes
+	global have_datasets
+
+	set have_groups     0
+	set have_attributes 0
+	set have_datasets   0
  
         global $this-selectable_min
         global $this-selectable_max
@@ -54,7 +61,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set $this-current            0
 	set $this-execmode           "init"
 	set $this-delay              0
-	set $this-inc-amount        1
+	set $this-inc-amount         1
 
 
 	global $this-mergeData
@@ -250,7 +257,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	$treeview column configure "Node-Type" "Data-Type" "Value" \
 	    -justify left -edit no
 	$treeview column configure treeView -hide no -edit no
-	$treeview text configure -selectborderwidth 0
+#	$treeview text configure -selectborderwidth 0
 
 	focus $treeview
 
@@ -605,6 +612,14 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
     method process_file { tree parent fileId input } {
 
+	global have_groups
+	global have_attributes
+	global have_datasets
+
+	set have_groups     0
+	set have_attributes 0
+	set have_datasets   0
+ 
 	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
 
 	    if { [string first "GROUP" $line] != -1 } {
@@ -625,6 +640,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set info(Value) ""
 	set node [$tree insert $parent -tag "group" -label $gname \
 		      -data [array get info]]
+
+	global have_groups
+	set have_groups 1
 
 	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
 
@@ -680,6 +698,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set info(Value) $attr
 	    $tree insert $parent -tag "attribute" -label $aname \
 		-data [array get info]
+
+	    global have_attributes
+	    set have_attributes 1
 	}
     }
 
@@ -717,6 +738,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set node [$tree insert $parent -tag "dataset" -label $dsname \
 		      -data [array get info]]
   
+	global have_datasets
+	set have_datasets 1
+
 	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
 
 	    if { [string first "ATTRIBUTE" $line] != -1 } {
@@ -855,14 +879,27 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		set treeframe [$w.treeview childsite]
 		set treeview $treeframe.tree.tree
 
-		set groups     [$treeview tag nodes "group"]
-		set attributes [$treeview tag nodes "attribute"]
-
 		focus $treeview
 
 		set ids [$treeview curselection]
 
 		if { $ids != "" } {
+
+		    global have_groups
+		    global have_attributes
+
+		    if { $have_groups == 1 } {
+			set groups [$treeview tag nodes "group"]
+		    } else {
+			set groups ""
+		    }
+
+		    if { $have_attributes == 1 } {
+			set attributes [$treeview tag nodes "attribute"]
+		    } else {
+			set attributes ""
+		    }
+
 		    foreach id $ids {
 
 			# Check to see if the selection is an attribute
@@ -900,8 +937,20 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set treeframe [$w.treeview childsite]
 	    set treeview $treeframe.tree.tree
 
-	    set datasets [$treeview tag nodes "dataset"]
-	    set groups   [$treeview tag nodes "group"]
+	    global have_groups
+	    global have_datasets
+
+	    if { $have_groups == 1 } {
+		set groups [$treeview tag nodes "group"]
+	    } else {
+		set groups ""
+	    }
+
+	    if { $have_datasets == 1 } {
+		set datasets [$treeview tag nodes "dataset"]
+	    } else {
+		set datasets ""
+	    }
 
 	    set children [eval $treeview entry children $parent]
 	    
