@@ -31,8 +31,7 @@
 
 #include <stdio.h>
 #include <iostream>
-using std::cerr;
-using std::ostream;
+
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/BoxObj.h>
 #include <Core/2d/Point2d.h>
@@ -41,6 +40,7 @@ using std::ostream;
 #include <sci_glu.h>
 #include <GL/glx.h>
 
+using namespace std;
 
 namespace SCIRun {
 

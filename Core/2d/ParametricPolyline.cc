@@ -32,7 +32,10 @@
 #include <Core/2d/ParametricPolyline.h>
 #include <Core/2d/BBox2d.h>
 
-#include <stdio.h>
+#include <iostream>
+#include <sstream>
+
+using namespace std;
 
 namespace SCIRun {
 
@@ -174,7 +177,12 @@ ParametricPolyline::io(Piostream& stream)
 {
   stream.begin_class("ParametricPolyline", PARAMETRICPOLYLINE_VERSION);
   DrawObj::io(stream);
-  Pio(stream, data_);
+
+  // THIS pio seems to be undefined.
+  //  Pio(stream, data_);
+  cout << "fix the above pio in ParametricPolyline.cc.  Bye.\n";
+  exit(1);
+
   Pio(stream, tmin_);
   Pio(stream, tmax_);
   Pio(stream, xmin_);

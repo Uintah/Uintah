@@ -29,15 +29,16 @@
  */
 
 
-#include <stdio.h>
-
 #include <Core/Datatypes/Color.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/Axes.h>
 #include <Core/2d/Diagram.h>
 #include <Core/GuiInterface/GuiInterface.h>
 
+#include <iostream>
+
 using namespace SCIRun;
+using namespace std;
 
 Persistent* make_XAxis()
 {
