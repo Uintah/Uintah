@@ -145,6 +145,7 @@ void HypoElasticPlastic::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pDeformGrad, lb->pDeformationMeasureLabel, pset);
   new_dw->allocateAndPut(pStress, lb->pStressLabel, pset);
   new_dw->allocateAndPut(pDamage, pDamageLabel, pset);
+  new_dw->put(sum_vartype(0.0), lb->StrainEnergyLabel);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
 
@@ -235,13 +236,16 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
   double equivStress = 0.0;
   double flowStress = 0.0;
-  double totalStrainEnergy = 0.0;
   double bulk  = d_initialData.Bulk;
   double shear = d_initialData.Shear;
   double rho_0 = matl->getInitialDensity();
   double sqrtTwo = sqrt(2.0);
   double sqrtThree = sqrt(3.0);
 
+  // Get the totalStrainEnergy from the old datawarehouse
+  sum_vartype strainEnergy;
+  old_dw->get(strainEnergy, lb->StrainEnergyLabel);
+  double totalStrainEnergy = (double) strainEnergy;
   // Loop thru patches
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -389,14 +393,6 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         //cout << "tensorHy = \n" << tensorHy << endl;
         //cout << "tensorSig = \n" << tensorSig << endl;
 
-        // Compute the strain energy for the particles
-        double pStrainEnergy = (tensorD(1,1)*tensorSig(1,1) +
-				tensorD(2,2)*tensorSig(2,2) + tensorD(3,3)*tensorSig(3,3) +
-				2.0*(tensorD(1,2)*tensorSig(1,2) + 
-				tensorD(1,3)*tensorSig(1,3) + tensorD(2,3)*tensorSig(2,3)))*
-	                        pVolume_deformed[idx]*delT;
-        totalStrainEnergy += pStrainEnergy;		   
-
         // Rotate the stress rate back to the laboratory coordinates
         // to get the "true" Cauchy stress
         tensorSig = (tensorR*tensorSig)*(tensorR.Transpose());
@@ -491,14 +487,6 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         //cout << "tensorHy = \n" << tensorHy << endl;
         //cout << "tensorSig = \n" << tensorSig << endl;
 
-        // Compute the strain energy for the particles
-        double pStrainEnergy = (tensorD(1,1)*tensorSig(1,1) +
-		tensorD(2,2)*tensorSig(2,2) + tensorD(3,3)*tensorSig(3,3) +
-		2.0*(tensorD(1,2)*tensorSig(1,2) + 
-		tensorD(1,3)*tensorSig(1,3) + tensorD(2,3)*tensorSig(2,3)))*
-	        pVolume_deformed[idx]*delT;
-        totalStrainEnergy += pStrainEnergy;		   
-
         // Rotate the stress and deformation rate back to the laboratory coordinates
         tensorSig = (tensorR*tensorSig)*(tensorR.Transpose());
 
@@ -509,6 +497,17 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         d_plasticity->updatePlastic(idx, delGamma);
 
       }
+      // Compute the strain energy for the particles
+      // Rotate the deformation rate back to the laboratory coordinates
+      tensorD = (tensorR*tensorD)*(tensorR.Transpose());
+      Matrix3 avgStress = (pStress_new[idx] + pStress[idx])*0.5;
+      double pStrainEnergy = (tensorD(1,1)*avgStress(1,1) +
+				tensorD(2,2)*avgStress(2,2) + tensorD(3,3)*avgStress(3,3) +
+				2.0*(tensorD(1,2)*avgStress(1,2) + 
+				tensorD(1,3)*avgStress(1,3) + tensorD(2,3)*avgStress(2,3)))*
+	                        pVolume_deformed[idx]*delT;
+      totalStrainEnergy += pStrainEnergy;		   
+
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
       double c_dil = sqrt((bulk + 4.0*shear/3.0)*pVolume_deformed[idx]/pMass[idx]);
@@ -533,6 +532,7 @@ HypoElasticPlastic::addInitialComputesAndRequires(Task* task,
   task->computes(pLeftStretchLabel, matlset);
   task->computes(pRotationLabel, matlset);
   task->computes(pDamageLabel, matlset);
+  task->computes(lb->StrainEnergyLabel);
  
   // Add internal evolution variables computed by plasticity model
   d_plasticity->addInitialComputesAndRequires(task, matl, patch);
@@ -561,6 +561,7 @@ HypoElasticPlastic::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pLeftStretchLabel, matlset,Ghost::None);
   task->requires(Task::OldDW, pRotationLabel, matlset,Ghost::None);
   task->requires(Task::OldDW, pDamageLabel, matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->StrainEnergyLabel);
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
