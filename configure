@@ -858,9 +858,11 @@ cross_compiling=$ac_cv_prog_cc_cross
 
 cat > conftest.$ac_ext <<EOF
 #line 861 "configure"
+
 #include "confdefs.h"
 main(){return(0);}
 EOF
+
 if { (eval echo configure:865: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   ac_cv_prog_cc_works=yes
   # If we can't run a trivial program, we are probably using a cross compiler.
@@ -3534,7 +3536,19 @@ test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
 
 
 #
+# Modified so that linux and 64bit compiles won't choke on the new image
+#
+# Revision 1.55  2000/06/08 22:29:51  kuzimmer
+# fixed an error in IMAGE_LIBS
+#
+# Revision 1.54  2000/06/08 20:32:48  kuzimmer
+#  modified so that linux will compile without SGI specific image and compression libraries
+#
+# Revision 1.53  2000/05/11 20:26:05  mcole
 # $Log$
+# Revision 1.53  2000/06/21 04:14:09  kuzimmer
+# removed unneeded dependencies on Kurt
+#
 # Revision 1.52  2000/06/12 20:23:30  sparker
 # Commented out f77 config on linux - for now
 #

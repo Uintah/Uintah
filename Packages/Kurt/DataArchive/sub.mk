@@ -6,8 +6,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Kurt/DataArchive
 
-SRCS     += $(SRCDIR)/Archive.cc  $(SRCDIR)/ArchivePort.cc \
-		$(SRCDIR)/VisParticleSet.cc \
+SRCS     += $(SRCDIR)/VisParticleSet.cc \
 		$(SRCDIR)/VisParticleSetPort.cc 
 
 PSELIBS := SCICore/Exceptions SCICore/Geometry \
@@ -21,6 +20,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/06/21 04:14:12  kuzimmer
+# removed unneeded dependencies on Kurt
+#
 # Revision 1.3  2000/05/22 17:19:56  kuzimmer
 # Updating new Viz tools
 #
