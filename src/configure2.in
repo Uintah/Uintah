@@ -1090,6 +1090,25 @@ echo
 AC_CHECKING(for required standard components...)
 echo
 
+##  --  search for the math library  -------------------------------------
+
+SCI_CHECK_LIB(/usr/lib,m,main,HAVE_LIBMATH=yes,,)
+SCI_CHECK_HEADERS(/usr/include,math.h,,HAVE_GL_H=no)
+
+if test "$HAVE_LIBMATH" &&
+   test "$HAVE_MATH_H" != "no"; then
+  FOUND_ALL_MATH=yes
+  break
+fi
+
+if test "$FOUND_ALL_MATH" != "yes"; then
+  AC_MSG_ERROR(one or more math components is missing. exiting.)
+fi
+
+AC_SUBST(GL_INCLUDE_FLAG)
+AC_SUBST(LIBGL)
+AC_SUBST(INCGL_H)
+
 ##  --  search for X  ----------------------------------------------------
 AC_PATH_X
 AC_PATH_XTRA
@@ -1223,7 +1242,7 @@ AC_SUBST(LIBDL_FLAG)
 
 ##  --  required standard headers
 AC_CHECK_HEADERS(stdio.h stdlib.h stddef.h stdarg.h string.h limits.h \
-  errno.h fcntl.h math.h float.h values.h memory.h unistd.h netdb.h \
+  errno.h fcntl.h float.h values.h memory.h unistd.h netdb.h \
   ctype.h signal.h locale.h malloc.h dirent.h assert.h sys/select.h \
   sys/types.h sys/time.h sys/stat.h sys/socket.h sys/timeb.h \
   sys/mman.h sys/param.h sys/ioctl.h sys/resource.h sys/wait.h \
