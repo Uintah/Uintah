@@ -49,6 +49,7 @@ LatVolMesh::LatVolMesh(unsigned x, unsigned y, unsigned z,
 {
   transform_.pre_scale(Vector(1.0 / (x-1.0), 1.0 / (y-1.0), 1.0 / (z-1.0)));
   transform_.pre_scale(max - min);
+
   transform_.pre_translate(Vector(min));
   transform_.compute_imat();
 }
@@ -261,6 +262,42 @@ LatVolMesh::get_center(Point &result, Node::index_type idx) const
 
 
 void
+LatVolMesh::get_center(Point &result, Edge::index_type idx) const
+{
+#if 0 // TODO: Fix get_nodes
+  Node::array_type arr;
+  get_nodes(arr, idx);
+  Point p0, p1;
+  get_center(p0, arr[0]);
+  get_center(p1, arr[1]);
+
+  result = (p0.asVector() + p1.asVector() * 0.5).asPoint();
+#endif
+}
+
+
+void
+LatVolMesh::get_center(Point &result, Face::index_type idx) const
+{
+#if 0 // TODO: Fix get_nodes
+  Node::array_type nodes;
+  get_nodes(nodes, idx);
+  Node::array_type::iterator nai = nodes.begin();
+  Vector v(0.0, 0.0, 0.0);
+  while (nai != nodes.end())
+  {
+    Point pp;
+    get_point(pp, *nai);
+    v += pp.asVector();
+    ++nai;
+  }
+  v *= 1.0 / nodes.size();
+  result = v.asPoint();
+#endif
+}
+
+
+void
 LatVolMesh::get_center(Point &result, Cell::index_type idx) const
 {
   Point p(idx.i_ + 0.5, idx.j_ + 0.5, idx.k_ + 0.5);
@@ -364,7 +401,7 @@ const TypeDescription* get_type_description(LatVolMesh::NodeIndex *)
   static TypeDescription* td = 0;
   if(!td){
     td = scinew TypeDescription("LatVolMesh::NodeIndex",
-				LatVolMesh::get_h_file_path(),
+				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
   }
   return td;
@@ -374,7 +411,7 @@ const TypeDescription* get_type_description(LatVolMesh::EdgeIndex *)
   static TypeDescription* td = 0;
   if(!td){
     td = scinew TypeDescription("LatVolMesh::EdgeIndex",
-				LatVolMesh::get_h_file_path(),
+				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
 }
   return td;
@@ -384,7 +421,7 @@ const TypeDescription* get_type_description(LatVolMesh::FaceIndex *)
   static TypeDescription* td = 0;
   if(!td){
     td = scinew TypeDescription("LatVolMesh::FaceIndex",
-				LatVolMesh::get_h_file_path(),
+				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
   }
   return td;
@@ -394,7 +431,7 @@ const TypeDescription* get_type_description(LatVolMesh::CellIndex *)
   static TypeDescription* td = 0;
   if(!td){
     td = scinew TypeDescription("LatVolMesh::CellIndex",
-				LatVolMesh::get_h_file_path(),
+				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
   }
   return td;
@@ -572,12 +609,6 @@ LatVolMesh::size(LatVolMesh::Cell::size_type &s) const
   s = Cell::size_type(nx_-1, ny_-1,nz_-1);
 }
 
-
-const string& 
-LatVolMesh::get_h_file_path() {
-  static const string path(TypeDescription::cc_to_h(__FILE__));
-  return path;
-}
 
 const TypeDescription*
 LatVolMesh::get_type_description() const

@@ -34,6 +34,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/FieldIndex.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/share/share.h>
 #include <Core/Math/MusilRNG.h>
@@ -49,8 +50,6 @@ using std::endl;
 class SCICORESHARE LatVolMesh : public Mesh
 {
 public:
-
-  static const string& get_h_file_path();
 
   struct UnfinishedIndex
   {
@@ -458,7 +457,7 @@ public:
   void set_nz(unsigned z) { nz_ = z; }
 
   //! get the child elements of the given index
-  void get_nodes(Node::array_type &, Edge::index_type) const {}
+  void get_nodes(Node::array_type &, Edge::index_type) const;
   void get_nodes(Node::array_type &, Face::index_type) const {}
   void get_nodes(Node::array_type &, Cell::index_type) const;
   void get_edges(Edge::array_type &, Face::index_type) const {}
@@ -489,8 +488,8 @@ public:
   }
   //! get the center point (in object space) of an element
   void get_center(Point &, Node::index_type) const;
-  void get_center(Point &, Edge::index_type) const {}
-  void get_center(Point &, Face::index_type) const {}
+  void get_center(Point &, Edge::index_type) const;
+  void get_center(Point &, Face::index_type) const;
   void get_center(Point &, Cell::index_type) const;
 
   bool locate(Node::index_type &, const Point &);
