@@ -389,7 +389,7 @@ NrrdTextureBuilderAlgo::buildTree(int& mi, int& mj, int& mk,
     TypedBrickData<unsigned char> *bd =
       new TypedBrickData<unsigned char>(ti, tj, tk, nc, nb);
     Brick *b = new Brick(bd, ti - ni, tj - nj, tk - nk, &bb, &tb);
-    BrickNode *bn = new BrickNode(b, bw, index++);
+    BrickNode *bn = new BrickNode(b, bw, index++, axis);
     tree = new BinaryTree<BrickNode *>( bn, BinaryTree<BrickNode *>::LEAF);
   } else {
     int child_axis;
@@ -519,7 +519,7 @@ NrrdTextureBuilderAlgo::buildTree(int& mi, int& mj, int& mk,
 //     sprintf(str,"%d, %d, %d\n", ni, nj, nk);
 //     dbg<< str;
 
-    BrickNode *bn = new BrickNode( 0, bw, -1);
+    BrickNode *bn = new BrickNode(0, bw, -1, axis);
     tree = new BinaryTree<BrickNode *>(bn, BinaryTree<BrickNode*>::PARENT);
     tree->AddChild( child0, 0 );
     tree->AddChild( child1, 1 );
