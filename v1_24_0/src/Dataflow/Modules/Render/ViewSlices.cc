@@ -846,18 +846,16 @@ void
 ViewSlices::send_all_geometry()
 {
   if (window_level_) return;
+  TCLTask::lock();
   slice_lock_.writeLock();
   int flush = for_each(&ViewSlices::send_mip_textures) +
     for_each(&ViewSlices::send_slice_textures);
   slice_lock_.writeUnlock();
+  TCLTask::unlock();
   if (flush) 
   {
-    if (geom_flushed_())
-      geom_oport_->flush();
-    else {
-      geom_oport_->flushViewsAndWait();
-      geom_flushed_ = 1;
-    }
+    geom_oport_->flushViewsAndWait();
+    geom_flushed_ = 1;
   }
 }
 
@@ -2324,7 +2322,7 @@ ViewSlices::send_mip_textures(SliceWindow &window)
     GeomHandle gobj = group;
     slice.do_unlock();
     if (gobjs_[name]) geom_oport_->delObj(gobjs_[name]);
-    gobjs_[name] = geom_oport_->addObj(gobj, name);
+    gobjs_[name] = geom_oport_->addObj(gobj, name,slice_lock_);
   }
   return value;
 }
@@ -2536,7 +2534,6 @@ ViewSlices::execute()
     dim2_ = max_slice_[2]+1;
       
     if (nrrdH.get_rep() && nrrdH->generation != nrrd_generations_[n]) {
-      geom_flushed_ = 0;
       re_extract = true;
       nrrd_generations_[n] = nrrdH->generation;
       if (volumes_[n]) {
@@ -2965,7 +2962,7 @@ ViewSlices::send_slice_textures(NrrdSlice &slice) {
   slice.do_unlock();
 
   if (gobjs_[name]) geom_oport_->delObj(gobjs_[name]);
-  gobjs_[name] = geom_oport_->addObj(gobj, name, &slice_lock_);
+  gobjs_[name] = geom_oport_->addObj(gobj, name, slice_lock_);
   return 1;
 }
 
