@@ -6,6 +6,8 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/MPM/SerialMPM.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Components/MPM/Contact/ContactFactory.h>
+#include <Uintah/Components/MPM/Fracture/FractureFactory.h>
+#include <Uintah/Components/MPM/Fracture/Fracture.h>
 #include <Uintah/Grid/Array3Index.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
@@ -102,8 +104,8 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
    gMomExedVelocityStarLabel = new VarLabel( "g.momexedvelocity_star",
 			      NCVariable<Vector>::getTypeDescription() );
 
-   gSelfContactLabel = new VarLabel( "g.selfContact",
-			      NCVariable<bool>::getTypeDescription() );
+   cSelfContactLabel = new VarLabel( "c.selfContact",
+			      CCVariable<bool>::getTypeDescription() );
 
    // I'm not sure about this one:
    deltLabel = 
@@ -124,9 +126,13 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
    cerr << "Number of velocity fields = " << d_sharedState->getNumVelFields()
 	<< std::endl;
+
    d_contactModel = ContactFactory::create(prob_spec,sharedState);
    if (!d_contactModel)
      throw ParameterNotFound("No contact model");
+
+   d_fractureModel = FractureFactory::create(prob_spec,sharedState);
+
    cerr << "SerialMPM::problemSetup not done\n";
 }
 
@@ -249,7 +255,6 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 sched->addTask(t);
       }
 
-#if 0
       {
 	 /*
 	  * updateSurfaceNormalOfBoundaryParticle
@@ -257,16 +262,24 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	  *   operation(update the surface normal of each boundary particles)
 	  * out(P.SURFACENORMAL)
 	  */
-	 Task* t = new Task("SerialMPM::updateSurfaceNormalOfBoundaryParticle",
+	 Task* t = new Task("Fracture::updateSurfaceNormalOfBoundaryParticle",
 			    region, old_dw, new_dw,
-			    this, &SerialMPM::updateSurfaceNormalOfBoundaryParticle);
-	 t->requires(new_dw, pDeformationMeasureLabel, region, 0);
+			    d_fractureModel,
+			    &Fracture::updateSurfaceNormalOfBoundaryParticle);
 
-	 t->computes(new_dw, pSurfaceNormalLabel, region);
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    t->requires( old_dw, pDeformationMeasureLabel, idx, region,
+			 Task::None);
+	    t->requires( old_dw, pSurfaceNormalLabel, idx, region,
+			 Task::None);
+
+	    t->computes( new_dw, pSurfaceNormalLabel, idx, region );
+	 }
 
 	 sched->addTask(t);
       }
-#endif
       
       {
 	 /*
@@ -403,7 +416,6 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 sched->addTask(t);
       }
 
-#if 0
       {
 	 /*
 	  * crackGrow
@@ -413,16 +425,26 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	  *             more interior particles become boundary particles)
 	  * out(P.SURFACENORMAL)
 	  */
-	 Task* t = new Task("SerialMPM::crackGrow",
+	 Task* t = new Task("Fracture::crackGrow",
 			    region, old_dw, new_dw,
-			    this, &SerialMPM::crackGrow);
-	 t->requires(new_dw, pStressLabel, region, 0 );
+			    d_fractureModel,
+			    &Fracture::crackGrow);
 
-	 t->computes(new_dw, pSurfaceNormalLabel, region );
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    t->requires( new_dw, pStressLabel, idx, region,
+			 Task::None);
+	    t->requires( new_dw, pXLabel, idx, region,
+			 Task::None);
+	    t->requires( new_dw, pSurfaceNormalLabel, idx, region,
+			 Task::None);
+
+	    t->computes( new_dw, pSurfaceNormalLabel, idx, region );
+	 }
 
 	 sched->addTask(t);
       }
-#endif
 
     }
 }
@@ -904,6 +926,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 
 
 // $Log$
+// Revision 1.49  2000/05/10 05:01:33  tan
+// linked to farcture model.
+//
 // Revision 1.48  2000/05/09 23:45:09  jas
 // Fixed the application of grid boundary conditions.  It is probably slow
 // as mud but hopefully the gist is right.
