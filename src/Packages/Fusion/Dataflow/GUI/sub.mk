@@ -16,8 +16,6 @@ SRCS := \
 	$(SRCDIR)/FusionFieldSetReader.tcl\
 	$(SRCDIR)/NIMRODConverter.tcl\
 	$(SRCDIR)/NrrdFieldConverter.tcl\
-	$(SRCDIR)/MDSPlusDataReader.tcl\
-	$(SRCDIR)/MDSPlusFieldReader.tcl\
 	$(SRCDIR)/Plot2DViewer.tcl\
 #	$(SRCDIR)/ReactionDiffusion.tcl\
 #[INSERT NEW TCL FILE HERE]

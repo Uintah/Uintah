@@ -12,13 +12,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Fusion/Dataflow/Modules/DataIO
 
-INCLUDES += $(MDSPLUS_INCLUDE)
-
 SRCS     += \
 	$(SRCDIR)/FusionFieldReader.cc\
 	$(SRCDIR)/FusionFieldSetReader.cc\
-	$(SRCDIR)/MDSPlusDataReader.cc\
-	$(SRCDIR)/MDSPlusFieldReader.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
@@ -26,9 +22,8 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/TkExtensions \
-	Packages/Fusion/Core/ThirdParty \
 	Packages/Teem/Core/Datatypes
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(MDSPLUS_LIBRARY) $(M_LIBRARY)
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
