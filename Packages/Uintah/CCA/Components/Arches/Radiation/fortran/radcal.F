@@ -4,17 +4,18 @@ C	SUBROUTINE RADCAL - calculates spectral gas and soot absorption
 C	coefficients for cartesian or cylindrical geometries.
 C	(particle radiation properties are calculated in GLACIER)
 C***********************************************************************
+C      IMPLICIT NONE 
 	
       double precision PI,SIG,CTWO,PI1,PTOT,SDWEAK,UK, 
-     &x,y,z,xxx,yyy,zzz,TEMP,ABSKP,FV,RGAS,MWCOTWO,MWWATER,MWCO,
-     &RHO,MUONE,MUTWO,SUMONE,SUMTWO,FRACNONE,FRACNTWO,small
+     &x,y,z,xxx,yyy,zzz,TEMP,ABSKP,FV,FACTOR,
+     &MUONE,MUTWO,SUMONE,SUMTWO,FRACNONE,FRACNTWO,small
 
       Integer I,II,J,K,L
 
-      double precision GC(5),PkPa(6)
+      double precision DELTAX(idxlo(1)-1:idxhi(1)+1),
+     &GC(5),PkPa(6),PkPaL(6)
 
-      DATA PI/3.141593D0/,SIG/5.67E-08/,CTWO/1.4388d0/,small/1.0d-10/,
-     &RGAS/82.05d0/,MWCOTWO/44.0d0/,MWWATER/18.0d0/,MWCO/28.0d0/
+      DATA PI/3.141593D0/,SIG/5.67E-08/,CTWO/1.4388d0/,small/1.0d-10/
 
       PI1 = 1.0d0 / PI
 
@@ -56,51 +57,60 @@ C          5     PARTICULATES(SOOT)
 
                  SDWEAK  = 0.0d0
                  GC(L)   = 0.0d0
-                 PkPa(1) = CO2(I,J,K)/101.0d0
-                 PkPa(2) = H2O(I,J,K)/101.0d0
-                 PkPa(3) = 0.0d0/101.0d0
-                 PkPa(4) = 0.0d0/101.0d0
-                 PkPa(5) = 0.0d0/101.0d0
-                 PkPa(6) = (1.0d0-(CO2(I,J,K)+H2O(I,J,K)))/101.0d0
+
+c     Partial Pressures of each specie in (atm)
+
+                 PkPa(1) = CO2(I,J,K)
+                 PkPa(2) = H2O(I,J,K)
+                 PkPa(3) = 0.0d0
+                 PkPa(4) = 0.0d0
+                 PkPa(5) = 0.0d0
+c                 PkPa(6) = 0.0d0
+                 PkPa(6) = (1.0d0-(CO2(I,J,K)+H2O(I,J,K)))
+
+                 PkPaL(L)=(273./TG(I,J,K))*PkPa(L)*100.0d0*OPL
 
                  GC(L)=0.0d0
                  PTOT=0.0d0
-c BROKEN!!!!
                 DO 110 II=1,6
                  PTOT=PkPa(II)+PTOT
-                 GC(L)=GC(L)+RGAMMA(L)*PkPa(II)*
+                 GC(L)=GC(L)+RGAMMA(4*(II-1)+L)*PkPa(II)*
      &           (273.0d0/TG(I,J,K))**0.5
 110             CONTINUE
-                 GC(L)=GC(L)+RGAMMA(L)*PkPa(L)*273.0d0/TG(I,J,K)
+                 GC(L)=GC(L)+RGAMMA(4*(7-1)+L)*PkPa(L)*273.0d0/TG(I,J,K)
 
 111              IF(PkPa(L).EQ.0.0d0) GO TO 117
                  TEMP = TG(I,J,K)
 
                  GO TO(112,113,114,115),L
 
-112              CALL ECO2(OMEGA,TEMP,GC,SDWEAK,SD15)         
+112              CALL ECO2(OMEGA,TEMP,GC,SDWEAK,SD15)     
                  GO TO 116
-113              CALL EH2O(OMEGA,TEMP,SD,SDWEAK) 
+113              CALL EH2O(OMEGA,TEMP,GC,SD,PkPaL,SDWEAK)
                  GO TO 116
-114              CALL EFUEL(OMEGA,TEMP,PkPa,PTOT,GC,SDWEAK,SD7,SD3)
+c114              CALL EFUEL(OMEGA,TEMP,PkPa,PTOT,GC,SDWEAK,SD7,SD3)
+114              CONTINUE
                  GO TO 116
-115              CALL ECO(OMEGA,TEMP,SDWEAK)
+c115              CALL ECO(OMEGA,TEMP,SDWEAK)
+115              CONTINUE
 
-116              continue
+116              CONTINUE
 
-c     Note: RADCAL gives mass absorption coefficients(cm2/kg)
-c     The following converts it to (1/m)
+c     Note: RADCAL gives mass absorption coefficients at standard density 
+c     conditions(1/cm-STP).The following converts it to (1/m)
 
                  IF (SDWEAK.LE.small)SDWEAK = small
-c     Convert to (cm2/g)
-                 SDWEAK = SDWEAK*1000
-c     Calculate density (g/cm3)
-      IF (L.EQ.1) RHO = (CO2(I,J,K)*MWCOTWO)/(RGAS*TEMP)
-      IF (L.EQ.2) RHO = (H2O(I,J,K)*MWWATER)/(RGAS*TEMP)
-c      IF (L.EQ.4) RHO = (0.03*MWCO)/(RGAS*TEMP)
+
+c     Calculate the factor for equivalent path length
+      IF (L.EQ.1) FACTOR = (273.0d0*CO2(I,J,K))/TEMP
+      IF (L.EQ.2) FACTOR = (273.0d0*H2O(I,J,K))/TEMP
+c      IF (L.EQ.4) FACTOR = (273.0d0*0.03)/TEMP
+
 c     Convert to (1/cm)
-                 SDWEAK = SDWEAK*RHO
+                 SDWEAK = SDWEAK*FACTOR
+
 c     Convert to (1/m)
+
                  SDWEAK = SDWEAK*100
                  ABSKG(I,J,K)= ABSKG(I,J,K)+SDWEAK
 
@@ -108,10 +118,10 @@ c     Convert to (1/m)
 
 160             CONTINUE
 
-                 FV = SFV(I,J,K)
-                 CALL SOOT(I,J,K,OMEGA,FV,OPL,TEMP,ABSKP)
+c                 FV = SFV(I,J,K)
+c                 CALL SOOT(I,J,K,OMEGA,FV,OPL,TEMP,ABSKP)
 
-                 ABSKG(I,J,K)=ABSKG(I,J,K)+ABSKP
+c                 ABSKG(I,J,K)=ABSKG(I,J,K)+ABSKP
 C     Calculate blackbody emissive intensity (emissive power / pi)
 C     Based on function for fractional emission in each waveband 
 C     provided by Chang and Rhee (1984).
