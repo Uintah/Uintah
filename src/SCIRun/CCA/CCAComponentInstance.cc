@@ -82,7 +82,8 @@ CCAComponentInstance::getPortNonblocking(const std::string& name)
   pr->incrementUseCount();
   if(pr->connections.size() != 1)
     return gov::cca::Port::pointer(0); 
-  return pr->connections[0]->port;
+  CCAPortInstance *pi=dynamic_cast<CCAPortInstance*> (pr->getPeer());
+  return pi->port;
 }
 
 void CCAComponentInstance::releasePort(const std::string& name)

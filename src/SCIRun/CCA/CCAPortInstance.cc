@@ -58,17 +58,15 @@ bool CCAPortInstance::connect(PortInstance* to)
 {
   if(!canConnectTo(to))
     return false;
-  CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
+  //CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
+  PortInstance* p2 = to;
   if(!p2)
     return false;
-  if(porttype == Uses && p2->porttype == Provides){
+  if(portType() == From && p2->portType() == To){
     connections.push_back(p2);
-    return true;
-  } else if(porttype == Provides && p2->porttype == Uses){
-    p2->connections.push_back(this);
-    return true;
-  }
-  return false;
+  } 
+  else p2->connect(this);
+  return true;
 }
 
 PortInstance::PortType CCAPortInstance::portType()
@@ -78,6 +76,18 @@ PortInstance::PortType CCAPortInstance::portType()
   else
     return To;
 }
+
+
+std::string CCAPortInstance::getType()
+{
+  return type;
+}
+
+std::string CCAPortInstance::getModel()
+{
+  return "cca"; 
+}
+
 
 string CCAPortInstance::getUniqueName()
 {
@@ -95,7 +105,7 @@ bool CCAPortInstance::disconnect(PortInstance* to)
     cerr<<"disconnect can be called only by user"<<endl; 
     return false;
   } 
-  std::vector<CCAPortInstance*>::iterator iter;
+  std::vector<PortInstance*>::iterator iter;
   for(iter=connections.begin(); iter<connections.end();iter++){
     if(p2==(*iter)){
       connections.erase(iter);
@@ -107,15 +117,22 @@ bool CCAPortInstance::disconnect(PortInstance* to)
 
 bool CCAPortInstance::canConnectTo(PortInstance* to)
 {
-  CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
-  if( p2 && type==p2->type && porttype!=p2->porttype){
-    if(porttype==Uses && connections.size()>0)
-      return false;
-    if(p2->porttype==Uses && p2->connections.size()>0)
-      return false;
-    return true;
+  //CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
+  PortInstance* p2 = to;
+  if( p2 && getType()==p2->getType() && portType()!=p2->portType() ){
+    if(available() && p2->available()) return true;
   }
   return false;
+}
+
+bool CCAPortInstance::available()
+{
+  return portType()==To || connections.size()==0;
+}
+
+PortInstance* CCAPortInstance::getPeer()
+{
+  return connections[0];
 }
 
 string CCAPortInstance::getName()
