@@ -770,7 +770,6 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
 
   //__________________________________
   // define Matl sets and subsets
-  Ghost::GhostType  gn = Ghost::None;
   const MaterialSet* all_matls = d_sharedState->allMaterials();
   MaterialSubset* one_matl    = scinew MaterialSubset();
   MaterialSet* press_matlSet  = scinew MaterialSet();
@@ -938,58 +937,24 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     throw ConvergenceFailure(s.str(),counter,max_RHS,d_outer_iter_tolerance);
   }
 
-/*`==========TESTING==========*/
-//Todd, use transferFrom after it's been modified to work with modified variables. 
-/*===========TESTING==========`*/
-
   //__________________________________
   // Move products of iteration (only) from sub_new_dw -> parent_new_dw
-  // for modified variables you need to do it manually
   subNewDW  = subsched->get_dw(3);
-  constCCVariable<double> press_CC, term2, beta;
-  CCVariable<double>      press_new, term2_new, beta_new;
-
-  for (int p = 0; p < patch_sub->size();p++) {
-    const Patch* patch = patch_sub->get(p);
-    subNewDW->get(press_CC, lb->press_CCLabel,0,patch,gn,0);
-    subNewDW->get(term2,    lb->term2Label,   0,patch,gn,0);
-    subNewDW->get(beta,     lb->betaLabel,    0,patch,gn,0);
+  bool replace = true;
+  const MaterialSubset* all_matls_sub = all_matls->getUnion();
+  ParentNewDW->transferFrom(subNewDW,         // press
+                    lb->press_CCLabel,  patch_sub, press_matl, replace); 
+  ParentNewDW->transferFrom(subNewDW,         // term2
+                    lb->term2Label,     patch_sub, one_matl,   replace);   
+  ParentNewDW->transferFrom(subNewDW,         // beta
+                    lb->betaLabel,      patch_sub, one_matl,   replace);   
+  ParentNewDW->transferFrom(subNewDW,         // uvel_FC
+                    lb->uvel_FCMELabel, patch_sub, all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,         // vvel_FC
+                    lb->vvel_FCMELabel, patch_sub, all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,         // wvel_FC
+                    lb->wvel_FCMELabel, patch_sub, all_matls_sub,replace); 
     
-    ParentNewDW->getModifiable(press_new, lb->press_CCLabel,0,patch);
-    ParentNewDW->getModifiable(term2_new, lb->term2Label,   0,patch);
-    ParentNewDW->getModifiable(beta_new,  lb->betaLabel,    0,patch);
-    
-    press_new.copyData(press_CC);
-    term2_new.copyData(term2);
-    beta_new.copyData(beta);
-  }
-  // face centered velocities
-  for (int p = 0; p < patch_sub->size();p++) {
-    const Patch* patch = patch_sub->get(p);
-    int numMatls = d_sharedState->getNumMatls();
-    for(int m = 0; m < numMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
-      int indx = matl->getDWIndex();
-      constSFCXVariable<double> uvel_FCME;
-      constSFCYVariable<double> vvel_FCME;
-      constSFCZVariable<double> wvel_FCME;
-      
-      SFCXVariable<double> uvel_FCME_new;
-      SFCYVariable<double> vvel_FCME_new;
-      SFCZVariable<double> wvel_FCME_new;
-      
-      subNewDW->get(uvel_FCME, lb->uvel_FCMELabel, indx, patch,gn,0);
-      subNewDW->get(vvel_FCME, lb->vvel_FCMELabel, indx, patch,gn,0);
-      subNewDW->get(wvel_FCME, lb->wvel_FCMELabel, indx, patch,gn,0);
-      
-      ParentNewDW->getModifiable(uvel_FCME_new, lb->uvel_FCMELabel,indx,patch);
-      ParentNewDW->getModifiable(vvel_FCME_new, lb->vvel_FCMELabel,indx,patch);
-      ParentNewDW->getModifiable(wvel_FCME_new, lb->wvel_FCMELabel,indx,patch);
-      uvel_FCME_new.copyData(uvel_FCME);
-      vvel_FCME_new.copyData(vvel_FCME);
-      wvel_FCME_new.copyData(wvel_FCME);
-    }
-  }  
   //__________________________________
   //  Turn scrubbing back on
   ParentOldDW->setScrubbing(ParentOldDW_scrubmode);
