@@ -84,10 +84,10 @@ void Camera::setup()
 
 void Camera::print()
 {
-    cerr << "eye=" << eye << '\n';
-    cerr << "lookat=" << lookat << '\n';
-    cerr << "up=" << up << '\n';
-    cerr << "fov=" << fov << '\n';
+  cerr << "-eye " << eye.x() << ' ' << eye.y() << ' ' << eye.z() << ' ';
+  cerr << "-lookat " << lookat.x() << ' ' << lookat.y() << ' ' << lookat.z() << ' ';
+  cerr << "-up " << up.x() << ' ' << up.y() << ' ' << up.z() << ' ';
+  cerr << "-fov " << fov << '\n';
 }
 
 void Camera::set_eye(const Point& e)
