@@ -82,6 +82,7 @@ SRCS := \
 	$(SRCDIR)/FieldSubSample.tcl\
 	$(SRCDIR)/FieldWriter.tcl \
 	$(SRCDIR)/FrameWidget.tcl \
+	$(SRCDIR)/GatherFields.tcl \
 	$(SRCDIR)/GaugeWidget.tcl \
 	$(SRCDIR)/GenAxes.tcl \
 	$(SRCDIR)/GenClock.tcl \
