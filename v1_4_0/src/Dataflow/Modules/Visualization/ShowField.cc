@@ -103,6 +103,7 @@ class ShowField : public Module
   GuiDouble                def_color_r_;
   GuiDouble                def_color_g_;
   GuiDouble                def_color_b_;
+  GuiDouble                def_color_a_;
   MaterialHandle           def_mat_handle_;
 
   //! holds options for how to visualize nodes.
@@ -155,6 +156,7 @@ ShowField::ShowField(const string& id) :
   def_color_r_("def-color-r", id, this),
   def_color_g_("def-color-g", id, this),
   def_color_b_("def-color-b", id, this),
+  def_color_a_("def-color-a", id, this),
   def_mat_handle_(scinew Material(Color(0.5, 0.5, 0.5))),
   node_display_type_("node_display_type", id, this),
   edge_display_type_("edge_display_type", id, this),
@@ -166,9 +168,10 @@ ShowField::ShowField(const string& id) :
   resolution_("resolution", id, this),
   res_(0),
   renderer_(0)
- {
-   cerr << "ShowField constructor" << endl;
- }
+{
+  def_mat_handle_->transparency = 0.5;
+  //cerr << "ShowField constructor" << endl;
+}
 
 ShowField::~ShowField() {}
 
@@ -235,6 +238,7 @@ ShowField::execute()
     faces_dirty_ = true; data_dirty_ = true;
     Material *m = scinew Material(Color(def_color_r_.get(), def_color_g_.get(),
 					def_color_b_.get()));
+    m->transparency = def_color_a_.get();
     def_mat_handle_ = m;
   }
   
@@ -345,8 +349,10 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
     def_color_r_.reset();
     def_color_g_.reset();
     def_color_b_.reset();
+    def_color_a_.reset();
     Material *m = scinew Material(Color(def_color_r_.get(), def_color_g_.get(),
 					def_color_b_.get()));
+    m->transparency = def_color_a_.get();
     def_mat_handle_ = m;
     faces_dirty_ = true;
     edges_dirty_ = true;
